@@ -1,43 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iw0-f174.google.com ([209.85.214.174]:50643 "EHLO
-	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755399Ab0IQDCr (ORCPT
+Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:44057
+	"EHLO sunset.davemloft.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752164Ab0IVQWd (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 16 Sep 2010 23:02:47 -0400
-Received: by iwn5 with SMTP id 5so1579511iwn.19
-        for <linux-wireless@vger.kernel.org>; Thu, 16 Sep 2010 20:02:46 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <201009171148.39953.br1@einfach.org>
-References: <201009171148.39953.br1@einfach.org>
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Date: Thu, 16 Sep 2010 20:02:26 -0700
-Message-ID: <AANLkTinYo5qgXvSnQSHpLbhhBq0VG7Kh-X3dGK8NhXcj@mail.gmail.com>
-Subject: Re: wireless-testing or wireless-next
-To: Bruno Randolf <br1@einfach.org>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+	Wed, 22 Sep 2010 12:22:33 -0400
+Date: Wed, 22 Sep 2010 09:22:52 -0700 (PDT)
+Message-Id: <20100922.092252.116390431.davem@davemloft.net>
+To: chunkeey@googlemail.com
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
+Subject: Re: pull request: wireless-next-2.6 2010-09-21
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <201009221158.13806.chunkeey@googlemail.com>
+References: <20100921201705.GC2448@tuxdriver.com>
+	<20100921.183614.245388137.davem@davemloft.net>
+	<201009221158.13806.chunkeey@googlemail.com>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Sep 16, 2010 at 7:48 PM, Bruno Randolf <br1@einfach.org> wrote:
-> John, Luis,
->
-> I'm a little confused about which tree to use. I though we should base driver
-> development on wireless-testing, but I see that you merge patches into
-> wireless-next first. So should we re-base patches to wireless-next before we
-> send them?
+From: Christian Lamparter <chunkeey@googlemail.com>
+Date: Wed, 22 Sep 2010 11:58:13 +0200
 
-Rule of thumb is if its large use linux-next, wireless-testing just
-lets you actually boot a usable kernel.
+> On Wednesday 22 September 2010 03:36:14 David Miller wrote:
+>> From: "John W. Linville" <linville@tuxdriver.com>
+>> Date: Tue, 21 Sep 2010 16:17:05 -0400
+>> 
+>> Pulled, but I suspect the 'packed' attribute usage is wrong in
+>> ath/carl9170 and can just be deleted.
+> 
+> which __packed do you think can be removed?
+> 
+> Note:
+> The overzealous use of __packed is a result of a report from Al Viro
+> for ar9170usb: "arm will pad even between u8's".
 
-> Also, AFAIK, compat-wireless is based on linux-next, so if I want to create a
-> compat-wireless package based on my latest driver changes (I need to do this
-> frequently for testing my driver on my platform), I always run into problems
-> because my latest driver is in wireless-testing and not in linux-next. Do you
-> have any advise on a proper workflow here?
-
-I have a "wl" branch for wireless-testing too :)  the master branch is
-for linux-next.
-
-  Luis
+Then only the structure that has the "u8's" needs the __packed attribute
+not every single other structure it is included in.
