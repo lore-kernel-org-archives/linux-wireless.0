@@ -1,37 +1,88 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:55785 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757879Ab0IXT3j (ORCPT
+Received: from mail-iw0-f174.google.com ([209.85.214.174]:43550 "EHLO
+	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752598Ab0IVMdz (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 24 Sep 2010 15:29:39 -0400
-Date: Fri, 24 Sep 2010 15:25:04 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: matt mooney <mfm@muteddisk.com>
-Cc: kernel-janitors@vger.kernel.org,
-	Sjur Braendeland <sjur.brandeland@stericsson.com>,
-	Jouni Malinen <j@w1.fi>, Daniel Drake <dsd@gentoo.org>,
-	Ulrich Kunitz <kune@deine-taler.de>, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 15/24] net: change to new flag variable
-Message-ID: <20100924192504.GG8077@tuxdriver.com>
-References: <e0bdab5d2e8c52041c003de68ba774c3e706716c.1285355033.git.mfm@muteddisk.com>
- <facbf79cadc81f9043e89160b7b3b8a90926aba1.1285355033.git.mfm@muteddisk.com>
+	Wed, 22 Sep 2010 08:33:55 -0400
+Received: by iwn5 with SMTP id 5so528269iwn.19
+        for <linux-wireless@vger.kernel.org>; Wed, 22 Sep 2010 05:33:55 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <facbf79cadc81f9043e89160b7b3b8a90926aba1.1285355033.git.mfm@muteddisk.com>
+In-Reply-To: <201009221424.39949.chunkeey@googlemail.com>
+References: <AANLkTik3_o03=m0w8XM_B-YTQrR-ibkbtTBErXfcYwGG@mail.gmail.com>
+	<201009221336.14382.chunkeey@googlemail.com>
+	<AANLkTim3YQ4vNyM_OA4qc+mjGJiwYoHrLB=x1sp+R8vP@mail.gmail.com>
+	<201009221424.39949.chunkeey@googlemail.com>
+Date: Wed, 22 Sep 2010 16:33:54 +0400
+Message-ID: <AANLkTikbyQi7dJFrqJrVmr7kV==tZoLRPaufC6tJv743@mail.gmail.com>
+Subject: Re: p54spi (STLC4560) with Marvel XScale CPU (kernel 2.6.25.4)
+From: Alex Mihaylov <minimumlaw@gmail.com>
+To: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Sep 24, 2010 at 12:17:25PM -0700, matt mooney wrote:
-> Replace EXTRA_CFLAGS with ccflags-y.
-> 
-> Signed-off-by: matt mooney <mfm@muteddisk.com>
-> ---
->  drivers/net/wireless/hostap/hostap_config.h |    4 ++--
->  drivers/net/wireless/zd1211rw/Makefile      |    4 +---
+2010/9/22 Christian Lamparter <chunkeey@googlemail.com>:
+> why polling? They even say "14. Wait for the READY interrupt".
 
-ACK for these bits...
+This code from Sagrad:
+
+        SPI_IRQ(DISABLE);
+
+        // Turn the device Off and then On again.
+        SPIDRV_Pwr(FALSE);
+        SPIDRV_Pwr(TRUE);
+
+        // 1. Power up
+        // 2. Wait 240 ms.
+        Delay(480);
+
+[skiped]
+
+       // 14. Wait for the READY interrupt (100 ms timeout).
+        // Loop while waiting for SPI device to respond with
+interrupt, max timeout is WIFI_BOOT_TIMEOUT
+        for ( i = 0 ; i < WIFI_BOOT_TIMEOUT ; i++)
+        {
+                TempReg = SPIDRVReadReg32(SPI_ADRS_HOST_INTERRUPTS);
+                if( TempReg && SPI_HOST_INT_READY)
+                {
+                        // 15. Acknowledge the READY interrupt.
+                        SPIDRVWriteReg32(SPI_ADRS_HOST_INT_ACK,
+SPI_HOST_INT_READY);
+                        // 16. Issue the SLEEP interrupt.
+                        SPIDRVWriteReg32(SPI_ADRS_ARM_INTERRUPTS,
+SPI_ARM_INT_SLEEP);
+                        break;
+                }
+
+                Delay(1);
+        }
+
+        SPI_IRQ(ENABLE);
+
+        if (i == WIFI_BOOT_TIMEOUT)
+        {
+                ret = FALSE;
+        }
+        else
+        {
+                ret = TRUE;
+                SET_WIFI_ACTIVE();
+        }
+
+SPIDRVReadReg32(SPI_ADRS_HOST_INTERRUPTS) - poll SPI register. IRQ
+from STLC chip disabled.
+
+> Have you checked if the module parameters for power + irq are correct?
+
+Yes. I check this in code and on osciloscope.
+
+> Also, on power_on the driver currently waits just 10 and not 240 ms,
+> maybe this could just be the problem...
+
+OK. I try change this.
 
 -- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+Sincerely,
+Alex A. Mihaylov
+AKA MinimumLaw
