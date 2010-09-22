@@ -1,96 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f46.google.com ([209.85.161.46]:44593 "EHLO
-	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750735Ab0IUEFR convert rfc822-to-8bit (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:51463 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754778Ab0IVP1k (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 21 Sep 2010 00:05:17 -0400
-MIME-Version: 1.0
-In-Reply-To: <AANLkTinLR0Js0ueVOGEkbs27d4FEH14c=1wuhUqPsiHx@mail.gmail.com>
-References: <1fwtoy8sG5H.A.veG.9D7lMB@chimera>
-	<AANLkTinLR0Js0ueVOGEkbs27d4FEH14c=1wuhUqPsiHx@mail.gmail.com>
-Date: Tue, 21 Sep 2010 00:05:15 -0400
-Message-ID: <AANLkTikNm90F6rpi7u=XUOG-Ga6F0+h=bFwkC-sKaO4j@mail.gmail.com>
-Subject: Re: 2.6.36-rc4-git5: Reported regressions from 2.6.35
-From: Alex Deucher <alexdeucher@gmail.com>
-To: sedat.dilek@gmail.com
-Cc: "Rafael J. Wysocki" <rjw@sisk.pl>,
-	Linux SCSI List <linux-scsi@vger.kernel.org>,
-	Linux ACPI <linux-acpi@vger.kernel.org>,
-	Network Development <netdev@vger.kernel.org>,
-	Linux Wireless List <linux-wireless@vger.kernel.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	DRI <dri-devel@lists.freedesktop.org>,
-	Florian Mickler <florian@mickler.org>, harn-solo@gmx.de,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Kernel Testers List <kernel-testers@vger.kernel.org>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	Linux PM List <linux-pm@lists.linux-foundation.org>,
-	Maciej Rutecki <maciej.rutecki@gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1
+	Wed, 22 Sep 2010 11:27:40 -0400
+Subject: Re: [PATCH wireless-2.6] iwlwifi: do not perferm force reset while
+ doing scan
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Stanislaw Gruszka <sgruszka@redhat.com>
+Cc: Wey-Yi Guy <wey-yi.w.guy@intel.com>, linville@tuxdriver.com,
+	linux-wireless@vger.kernel.org, ipw3945-devel@lists.sourceforge.net
+In-Reply-To: <20100922172353.3e53d221@dhcp-lab-109.englab.brq.redhat.com>
+References: <1284758657-25267-1-git-send-email-wey-yi.w.guy@intel.com>
+	 <20100922105722.3be42969@dhcp-lab-109.englab.brq.redhat.com>
+	 <1285166397.3684.64.camel@jlt3.sipsolutions.net>
+	 <20100922165155.21cb6321@dhcp-lab-109.englab.brq.redhat.com>
+	 <1285168257.3684.65.camel@jlt3.sipsolutions.net>
+	 <20100922172353.3e53d221@dhcp-lab-109.englab.brq.redhat.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Wed, 22 Sep 2010 17:27:30 +0200
+Message-ID: <1285169250.3684.68.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Sep 20, 2010 at 3:19 PM, Sedat Dilek <sedat.dilek@googlemail.com> wrote:
-> Hi Rafael,
->
-> can you please add the following, Thanks in advance.
->> Bug-Entry       : http://bugzilla.kernel.org/show_bug.cgi?id=18872
->> Subject         : Radeon KMS r100 and STR problems
->> Submitter       : Richard Mittendorfer <delist@gmx.net>
->> Date            : 2010-09-17 18:26 (4 days old)
->> Message-ID      : <20100917202647.aa4b6300.delist@gmx.net>
->> References      : http://marc.info/?l=linux-kernel&m=128474802809779&w=2
->
-> On Mon, Sep 20, 2010 at 8:47 PM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
->> This message contains a list of some regressions from 2.6.35,
->> for which there are no fixes in the mainline known to the tracking team.
->> If any of them have been fixed already, please let us know.
->>
->> If you know of any other unresolved regressions from 2.6.35, please let us
->> know either and we'll add them to the list.  Also, please let us know
->> if any of the entries below are invalid.
->>
->> Each entry from the list will be sent additionally in an automatic reply
->> to this message with CCs to the people involved in reporting and handling
->> the issue.
->>
->>
->> Listed regressions statistics:
->>
->>  Date          Total  Pending  Unresolved
->>  ----------------------------------------
->>  2010-09-20       38       15          15
->>  2010-09-12       28       14          13
->>  2010-08-30       21       16          15
->>
->>
->> Unresolved regressions
->
-> Hi Rafael,
->
-> can you please add the following Bug, Thanks in advance.
->
-> Bug-Entry       : https://bugzilla.kernel.org/show_bug.cgi?id=16140
-> Subject         : Suspend To RAM/ Resume broken - Radeon KMS on RV250
-> Submitter       : Michael Long <harn-solo@gmx.de>
-> Date            : 2010-06-06 09:52
-> Message-ID      : ???
-> References      : ???
->
-> What is with "Regression:       No" in the BR? Change?
+On Wed, 2010-09-22 at 17:23 +0200, Stanislaw Gruszka wrote:
 
-This isn't a regression as according to your bug report, s/r has never
-worked on your board with kms.  The kms and ums drm components are
-completely different drivers even though they are compiled into the
-same binary.
+> > > Yes, bg_restart() force scan abort, but not if no scan is pending. It looks
+> > > like that:
+> > > 
+> > > cpu0						cpu1
+> > > 
+> > > 						iwl_bg_restart()
+> > > 						  __iwl_down()
+> > > 						     iwl_scan_cancel_timeout
+> > > 						     (do nothing since no pending scan)
+> > > 			  
+> > > __ieee80211_start_scan
+> > >   __set_bit(SCAN_HW_SCANNING, &local->scanning);
+> > 
+> > Ah, ok, makes sense. I think some mutex trickery could possibly help
+> > here though? But I'm not sure it's worth it...
+> 
+> I showed possible patch earlier in this thread, I will rethink about it and
+> eventually post. Perhaps applying the patch is good idea, since we will stop
+> seeing the warning it that harmless case, and be sure something is really
+> wrong when see it again.
 
-Alex
+Well I'm thinking that iwlwifi will reject or queue a scan while it's
+down, and if we do the check while holding the mutex that we also hold
+here, it should close the race? And then we'll only accept the scan
+again when we've been started by mac80211 again, or something?
 
->
-> Regards,
-> - Sedat -
-> _______________________________________________
-> dri-devel mailing list
-> dri-devel@lists.freedesktop.org
-> http://lists.freedesktop.org/mailman/listinfo/dri-devel
->
+johannes
+
