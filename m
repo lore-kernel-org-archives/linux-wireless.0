@@ -1,56 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.19.149.2]:25449 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751368Ab0I1LAI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 28 Sep 2010 07:00:08 -0400
-Received: from mail.atheros.com ([10.10.20.108])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Tue, 28 Sep 2010 04:00:00 -0700
-Message-ID: <4CA1CAB3.4070303@atheros.com>
-Date: Tue, 28 Sep 2010 16:30:03 +0530
-From: Mohammed Shafi <mshajakhan@atheros.com>
+Received: from mail-gw0-f46.google.com ([74.125.83.46]:43793 "EHLO
+	mail-gw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753106Ab0IVRQo convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 22 Sep 2010 13:16:44 -0400
+Received: by gwj17 with SMTP id 17so243237gwj.19
+        for <linux-wireless@vger.kernel.org>; Wed, 22 Sep 2010 10:16:44 -0700 (PDT)
 MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [RFC] mac80211: sets basic rate set parameter for IBSS creator
-References: <1285662586-31646-1-git-send-email-mshajakhan@atheros.com>	 <1285664569.3885.7.camel@jlt3.sipsolutions.net>	 <4CA1B5F3.5090801@atheros.com> <1285670865.3885.8.camel@jlt3.sipsolutions.net>
-In-Reply-To: <1285670865.3885.8.camel@jlt3.sipsolutions.net>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
+In-Reply-To: <1285126234.2142.3.camel@malta>
+References: <1285126234.2142.3.camel@malta>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Wed, 22 Sep 2010 10:16:23 -0700
+Message-ID: <AANLkTimFa0-JpAQpvcVcsoUqbkeBy8FAVZk1Qwj--aHf@mail.gmail.com>
+Subject: Re: Typo in wmi.c?
+To: Estoy <estoy@voxsobrius.org>, Vipin Mehta <Vipin.Mehta@atheros.com>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tuesday 28 September 2010 04:17 PM, Johannes Berg wrote:
-> On Tue, 2010-09-28 at 15:01 +0530, Mohammed Shafi wrote:
+On Tue, Sep 21, 2010 at 8:30 PM, Estoy <estoy@voxsobrius.org> wrote:
+> compat-wireless-2010-09-20/drivers/staging/ath6kl/wmi/wmi.c
 >
->    
->>>> +	if (ifibss->basic_rates == 0)
->>>> +		ifibss->basic_rates = ieee80211_mandatory_rates(local,
->>>> +					local->hw.conf.channel->band);
->>>>
->>>>          
->>> Shouldn't cfg80211 do this?
->>>        
->    
->>                         Thank you for your suggestion,just found out ,i
->> think  its already there to configure basic rates (if the user had not
->> expicitly specified the basic rates in user space) in the
->> nl80211_join_ibss(nl80211.c) , but the basic rates does not seems to get
->> set there.I had checked its status in mac80211 in function
->> ieee80211_ibss_join function , its still zero and I thought of calling
->> it there itself , but the basic rate was not properly set for 2Ghz, so
->> called it here and  I had tested it ,and everything working fine.
->> Pleas correct me if I am wrong .
->>      
-> Well, I still think cfg80211 should do this, and it looks like it will
-> except when you use iwconfig. So are you using iw or iwconfig? If
-> iwconfig latter, you need to fix the wext code in cfg80211, if the
-> former you need to figure out where the information gets lost.
+> Line 1465: i&bhi   ?
 >
-> johannes
->    
-Sorry , I was using iwconfig and thanks for fixing it.
+> Anyway I'm getting an "i" undefined error at line 1465 when building
+> from this release/file.
 
-with regards ,
+Can you give more context, I don't see that on linux-next.git on line
+1465... Also please e-mail the maintainer, which I've added.
 
-shafi
-
+  Luis
