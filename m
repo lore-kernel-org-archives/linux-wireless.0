@@ -1,48 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:39910 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754059Ab0IURD0 (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:39490 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755277Ab0IVP3r (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 21 Sep 2010 13:03:26 -0400
-Subject: Re: [mac80211] mac80211:  Support multiple VIFS per AP in debugfs.
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Ben Greear <greearb@candelatech.com>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <4C98E05B.8050609@candelatech.com>
-References: <1285071310-11440-1-git-send-email-greearb@candelatech.com>
-	 <4C98DC5D.2000108@candelatech.com>
-	 <1285086618.12764.3.camel@jlt3.sipsolutions.net>
-	 <4C98E05B.8050609@candelatech.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Tue, 21 Sep 2010 19:03:25 +0200
-Message-ID: <1285088605.12764.5.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+	Wed, 22 Sep 2010 11:29:47 -0400
+Date: Wed, 22 Sep 2010 11:15:57 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: "Guy, Wey-Yi" <wey-yi.w.guy@intel.com>
+Cc: Stanislaw Gruszka <sgruszka@redhat.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"ipw3945-devel@lists.sourceforge.net"
+	<ipw3945-devel@lists.sourceforge.net>,
+	Johannes Berg <johannes@sipsolutions.net>
+Subject: Re: [Fwd: Re: [PATCH wireless-2.6] iwlwifi: do not perferm force
+ reset while doing scan]
+Message-ID: <20100922151557.GE5515@tuxdriver.com>
+References: <1285166620.12056.29.camel@wwguy-huron>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1285166620.12056.29.camel@wwguy-huron>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2010-09-21 at 09:42 -0700, Ben Greear wrote:
-> On 09/21/2010 09:30 AM, Johannes Berg wrote:
-> > On Tue, 2010-09-21 at 09:25 -0700, Ben Greear wrote:
-> >
-> >>> -	snprintf(mac, sizeof(mac), "%pM", sta->sta.addr);
-> >>> +	snprintf(mac, sizeof(mac), "%pM-%s",
-> >>> +		 sta->sta.addr, sta->sdata->name);
-> >>>
-> >>>    	/*
-> >>>    	 * This might fail due to a race condition:
-> >>
-> >> I got to thinking:  Is there any reason to put the sta.addr in there?
-> >>
-> >> Maybe just use sta->sdata->name?  Seems it might be easier for
-> >> scripts to deal with?
-> >
-> > APs have many STAs
+On Wed, Sep 22, 2010 at 07:43:40AM -0700, Guy, Wey-Yi wrote:
+
+> The "iwlwifi: do not perferm force reset while doing scan" patch, make
+> sense for .36, but after Gruszka's scan patch(which will in .37), it is
+> not needed. What is your recommendation?
 > 
-> So, when in STA mode, sta_info are related to local VIFs, but
-> in AP mode, they represent the remote wireless devices, with sdata pointing
-> to the local AP interface?
+> 
+> commit#7acc7c683a747689aaaaad4fce1683fc3f85e552 iwlwifi: do not perferm
+> force reset while doing scan
 
-No, there's a sta_info for each peer, which in STA mode is only the AP.
+I can pull wireless-2.6 into wireless-next-2.6 and then revert the
+patch there.
 
-johannes
-
+John
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
