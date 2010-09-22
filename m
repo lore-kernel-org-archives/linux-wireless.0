@@ -1,64 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iw0-f174.google.com ([209.85.214.174]:45505 "EHLO
-	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750946Ab0IJRtT (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:51486 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753272Ab0IVRBj (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 10 Sep 2010 13:49:19 -0400
-Received: by iwn5 with SMTP id 5so2399582iwn.19
-        for <linux-wireless@vger.kernel.org>; Fri, 10 Sep 2010 10:49:18 -0700 (PDT)
-MIME-Version: 1.0
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Fri, 10 Sep 2010 10:48:58 -0700
-Message-ID: <AANLkTikAzX61npZ0WdzbqNoftaugwkL6H1w1A4ofAQMJ@mail.gmail.com>
-Subject: Wireles-regdb mailing list / process for changes
-To: linux-wireless <linux-wireless@vger.kernel.org>
-Cc: Ohad Ben-Cohen <ohad@wizery.com>,
-	Henry Ptasinski <henryp@broadcom.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Michael Green <Michael.Green@atheros.com>,
-	David Quan <David.Quan@atheros.com>,
-	Amod Bodas <Amod.Bodas@atheros.com>,
-	Cliff Holden <Cliff.Holden@atheros.com>,
-	Kathy Giori <Kathy.Giori@atheros.com>
-Content-Type: text/plain; charset=UTF-8
+	Wed, 22 Sep 2010 13:01:39 -0400
+Subject: Re: [mac80211] mac80211:  Support multiple VIFS per AP in debugfs.
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Ben Greear <greearb@candelatech.com>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <4C9A35FD.8060201@candelatech.com>
+References: <1285071310-11440-1-git-send-email-greearb@candelatech.com>
+	 <4C98DC5D.2000108@candelatech.com>
+	 <1285086618.12764.3.camel@jlt3.sipsolutions.net>
+	 <4C98E05B.8050609@candelatech.com>
+	 <1285088605.12764.5.camel@jlt3.sipsolutions.net>
+	 <1285091341.12764.7.camel@jlt3.sipsolutions.net>
+	 <4C9A35FD.8060201@candelatech.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Wed, 22 Sep 2010 19:01:36 +0200
+Message-ID: <1285174896.3684.71.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-As discussed at the 2010 San Francisco Linux wireless summit [0]
-please subscribe to the wireless-regdb mailing list [1] and/or ask
-your own company regulatory experts willing to help to do the same to
-help chime in in helping the community enhance the wireless-regdb. All
-cfg80211 drivers will get benefit from this. You can view database
-online via the webiew [2] or the direct git repository [3].
+On Wed, 2010-09-22 at 09:59 -0700, Ben Greear wrote:
 
-It seems the agreeable procedure moving forward is to send patches
-there and those who want to help review or *have* to review will help
-in reviewing the patches.
+> > maybe the stations should be moved from phy0/stations/ to
+> > phy0/wlan0/stations/ instead?
+> 
+> It doesn't matter either way to me, but I'd like to get one or another
+> patch upstream.
+> 
+> If you want me to change it to put stations under netdev:wlan0/ instead,
+> please just let me know.
 
-Moving forward, you are expected to at least provide some references
-if possible to regulatory documentation. At times it may not be
-possible to refer to the regulatory documentation due to copyright
-concerns over those documents. Rule of thumb is do what you can to
-help document regulatory changes.
+I'd prefer that, if you want to do this.
 
-A good example of a patch:
+johannes
 
-http://git.kernel.org/?p=linux/kernel/git/linville/wireless-regdb.git;a=commitdiff;h=fcbf9225d56e82d9a4e506187d42285e76d81523;hp=24b40af7f478b4a67343ee3543570f60b6bedf1f
-
-If you want to point out references directly from the webview you can
-embed your references through comments, for example:
-
-http://wireless.kernel.org/en/developers/Regulatory/Database?alpha2=DE
-
-A bad example of a patch:
-
-http://git.kernel.org/?p=linux/kernel/git/linville/wireless-regdb.git;a=commitdiff;h=6dcc5d7b02011ef3ef1f40163309911b5e92c4c8;hp=17d3d13641c021deaa4d4d2a3523a7f54133738b
-
-  Luis
-
-[0] http://wireless.kernel.org/en/developers/Summits/SanFranciscoBayArea-2010
-[1] http://lists.infradead.org/mailman/listinfo/wireless-regdb
-[2] http://wireless.kernel.org/en/developers/Regulatory/Database
-[3] http://git.kernel.org/?p=linux/kernel/git/linville/wireless-regdb.git
-
-  Luis
