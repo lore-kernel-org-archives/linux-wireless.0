@@ -1,132 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail30s.wh2.ocn.ne.jp ([125.206.180.198]:10356 "HELO
-	mail30s.wh2.ocn.ne.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1754700Ab0IQCgq (ORCPT
+Received: from mail-fx0-f46.google.com ([209.85.161.46]:48066 "EHLO
+	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751532Ab0IVM6r (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 16 Sep 2010 22:36:46 -0400
-Received: from vs3000.wh2.ocn.ne.jp (125.206.180.163)
-	by mail30s.wh2.ocn.ne.jp (RS ver 1.0.95vs) with SMTP id 3-0686641005
-	for <linux-wireless@vger.kernel.org>; Fri, 17 Sep 2010 11:36:45 +0900 (JST)
-Subject: [PATCH 09/11] ath5k: Keep last descriptor in queue
-To: linville@tuxdriver.com
-From: Bruno Randolf <br1@einfach.org>
-Cc: ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org
-Date: Fri, 17 Sep 2010 11:37:07 +0900
-Message-ID: <20100917023707.24997.98021.stgit@tt-desk>
-In-Reply-To: <20100917023543.24997.48466.stgit@tt-desk>
-References: <20100917023543.24997.48466.stgit@tt-desk>
+	Wed, 22 Sep 2010 08:58:47 -0400
+Received: by fxm3 with SMTP id 3so238966fxm.19
+        for <linux-wireless@vger.kernel.org>; Wed, 22 Sep 2010 05:58:46 -0700 (PDT)
+From: Christian Lamparter <chunkeey@googlemail.com>
+To: Alex Mihaylov <minimumlaw@gmail.com>
+Subject: Re: p54spi (STLC4560) with Marvel XScale CPU (kernel 2.6.25.4)
+Date: Wed, 22 Sep 2010 14:58:43 +0200
+Cc: linux-wireless@vger.kernel.org
+References: <AANLkTik3_o03=m0w8XM_B-YTQrR-ibkbtTBErXfcYwGG@mail.gmail.com> <201009221424.39949.chunkeey@googlemail.com> <AANLkTikbyQi7dJFrqJrVmr7kV==tZoLRPaufC6tJv743@mail.gmail.com>
+In-Reply-To: <AANLkTikbyQi7dJFrqJrVmr7kV==tZoLRPaufC6tJv743@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Message-Id: <201009221458.43434.chunkeey@googlemail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-If we return a TX descriptor to the pool of available descriptors, while a
-queues TXDP still points to it we could potentially run into all sorts of
-troube.
+On Wednesday 22 September 2010 14:33:54 Alex Mihaylov wrote:
+> 2010/9/22 Christian Lamparter <chunkeey@googlemail.com>:
+> > why polling? They even say "14. Wait for the READY interrupt".
+> 
+> This code from Sagrad:
 
-It has been suggested that there is hardware which can set the descriptors
-done bit before it reads ds_link and moves on to the next descriptor. While the
-documentation says this is not true for newer chipsets (the descriptor contents
-are copied to some internal memory), we don't know about older hardware.
+be careful with code... Haven't you read the comical license?!
+I'm not sure how ST react once they figured out that Sagrad
+leaked parts of the secret code, which might even cost them
+the FCC badge?! 
 
-To be safe, we always keep the last descriptor in the queue, and avoid dangling
-TXDP pointers. Unfortunately this does not fully resolve the problem - queues
-still get stuck!
+> SPIDRVReadReg32(SPI_ADRS_HOST_INTERRUPTS) - poll SPI register. IRQ
+> from STLC chip disabled.
 
-This is similar to what ath9k does.
+so what you are trying to say is that they have knowingly ignored
+their own specification? But who cares, as long as they do provide
+a "complete" driver+stack solution for their paying customers.
 
-Signed-off-by: Bruno Randolf <br1@einfach.org>
----
- drivers/net/wireless/ath/ath5k/base.c |   64 +++++++++++++++++----------------
- 1 files changed, 32 insertions(+), 32 deletions(-)
+> > Also, on power_on the driver currently waits just 10 and not 240 ms,
+> > maybe this could just be the problem...
+> 
+> OK. I try change this.
+> 
 
-diff --git a/drivers/net/wireless/ath/ath5k/base.c b/drivers/net/wireless/ath/ath5k/base.c
-index c4f0786..9b67cee 100644
---- a/drivers/net/wireless/ath/ath5k/base.c
-+++ b/drivers/net/wireless/ath/ath5k/base.c
-@@ -1590,44 +1590,44 @@ ath5k_tx_processq(struct ath5k_softc *sc, struct ath5k_txq *txq)
- 
- 	spin_lock(&txq->lock);
- 	list_for_each_entry_safe(bf, bf0, &txq->q, list) {
--		ds = bf->desc;
-+
-+		txq->txq_poll_mark = false;
-+
-+		/* skb might already have been processed last time. */
-+		if (bf->skb != NULL) {
-+			ds = bf->desc;
-+
-+			ret = sc->ah->ah_proc_tx_desc(sc->ah, ds, &ts);
-+			if (unlikely(ret == -EINPROGRESS))
-+				break;
-+			else if (unlikely(ret)) {
-+				ATH5K_ERR(sc,
-+					"error %d while processing "
-+					"queue %u\n", ret, txq->qnum);
-+				break;
-+			}
-+
-+			skb = bf->skb;
-+			bf->skb = NULL;
-+			pci_unmap_single(sc->pdev, bf->skbaddr, skb->len,
-+					PCI_DMA_TODEVICE);
-+			ath5k_tx_frame_completed(sc, skb, &ts);
-+		}
- 
- 		/*
- 		 * It's possible that the hardware can say the buffer is
- 		 * completed when it hasn't yet loaded the ds_link from
--		 * host memory and moved on.  If there are more TX
--		 * descriptors in the queue, wait for TXDP to change
--		 * before processing this one.
-+		 * host memory and moved on.
-+		 * Always keep the last descriptor to avoid HW races...
- 		 */
--		if (ath5k_hw_get_txdp(sc->ah, txq->qnum) == bf->daddr &&
--		    !list_is_last(&bf->list, &txq->q))
--			break;
--		ret = sc->ah->ah_proc_tx_desc(sc->ah, ds, &ts);
--		if (unlikely(ret == -EINPROGRESS))
--			break;
--		else if (unlikely(ret)) {
--			ATH5K_ERR(sc, "error %d while processing queue %u\n",
--				ret, txq->qnum);
--			break;
-+		if (ath5k_hw_get_txdp(sc->ah, txq->qnum) != bf->daddr) {
-+			spin_lock(&sc->txbuflock);
-+			list_move_tail(&bf->list, &sc->txbuf);
-+			sc->txbuf_len++;
-+			txq->txq_len--;
-+			spin_unlock(&sc->txbuflock);
- 		}
--
--		skb = bf->skb;
--		bf->skb = NULL;
--		pci_unmap_single(sc->pdev, bf->skbaddr, skb->len,
--				PCI_DMA_TODEVICE);
--
--		ath5k_tx_frame_completed(sc, skb, &ts);
--
--		spin_lock(&sc->txbuflock);
--		list_move_tail(&bf->list, &sc->txbuf);
--		sc->txbuf_len++;
--		txq->txq_len--;
--		spin_unlock(&sc->txbuflock);
--
--		txq->txq_poll_mark = false;
- 	}
--	if (likely(list_empty(&txq->q)))
--		txq->link = NULL;
- 	spin_unlock(&txq->lock);
- 	if (txq->txq_len < ATH5K_TXQ_LEN_LOW)
- 		ieee80211_wake_queue(sc->hw, txq->qnum);
-@@ -2192,7 +2192,7 @@ ath5k_tx_complete_poll_work(struct work_struct *work)
- 		if (sc->txqs[i].setup) {
- 			txq = &sc->txqs[i];
- 			spin_lock_bh(&txq->lock);
--			if (txq->txq_len > 0) {
-+			if (txq->txq_len > 1) {
- 				if (txq->txq_poll_mark) {
- 					ATH5K_DBG(sc, ATH5K_DEBUG_XMIT,
- 						  "TX queue stuck %d\n",
+note:
 
+2.6.25.4 is very old and the spi subsystem (which isn't backported in cw)
+has changed quite a bit since then.
