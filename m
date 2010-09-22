@@ -1,92 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:38929 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750840Ab0I1KxQ (ORCPT
+Received: from mail-iw0-f174.google.com ([209.85.214.174]:52062 "EHLO
+	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752104Ab0IVSuL convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 28 Sep 2010 06:53:16 -0400
-Subject: [PATCH] cfg80211: always set IBSS basic rates
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Mohammed Shafi <mshajakhan@atheros.com>
-Cc: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-In-Reply-To: <1285670865.3885.8.camel@jlt3.sipsolutions.net>
-References: <1285662586-31646-1-git-send-email-mshajakhan@atheros.com>
-	 <1285664569.3885.7.camel@jlt3.sipsolutions.net>
-	 <4CA1B5F3.5090801@atheros.com>
-	 <1285670865.3885.8.camel@jlt3.sipsolutions.net>
-Content-Type: text/plain; charset="UTF-8"
-Date: Tue, 28 Sep 2010 12:53:14 +0200
-Message-ID: <1285671194.3885.9.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+	Wed, 22 Sep 2010 14:50:11 -0400
+Received: by iwn5 with SMTP id 5so716889iwn.19
+        for <linux-wireless@vger.kernel.org>; Wed, 22 Sep 2010 11:50:11 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <20100922123953.67a4fc5e@danmob>
+References: <20100922123953.67a4fc5e@danmob>
+Date: Wed, 22 Sep 2010 21:50:10 +0300
+Message-ID: <AANLkTinh+NbGxUpKZ_Ad9zV4z9=jhnvrim1pjxYUHQHE@mail.gmail.com>
+Subject: Re: Manual Control about Sending ACKs
+From: Nick Kossifidis <mickflemm@gmail.com>
+To: Daniel Berger <daniel@dat-berger.de>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+2010/9/22 Daniel Berger <daniel@dat-berger.de>:
+> Hi,
+>
+> im a Student in Germany currently working on a project concerning
+> wireless security.
+> For testing purposes we would like to send ACKs to packets, which
+> weren't adressed to us, or suppress sending normal ACKs.
+> I've looked through mac80211's code and found there much, what looks
+> like the ACK-sending-action is triggered in rx.c (we're checking CRC,
+> length, adressed to us, ...). But, one the other hand, tx.c states in a
+> comment
+> /* TODO: These control frames are not currently sent by
+> * mac80211, but should they be implemented, this function
+> * needs to be updated to support duration field calculation. *
+> [...]
+> * ACK: 0 if immediately previous directed data/mgmt had
+> *    more=0, with more=1 duration in ACK frame is duration
+> *    from previous frame minus time needed to transmit ACK
+> *    and its SIFS
+> */
+> Furthermore ath9k e.g. write parameters for configuring the sending of
+> ACKs directly into hw's memory... and doesn't do much more.
+>
+> Thus I deduce ACK sending is completely done in hardware.
+> Is my conclusion and understanding right? Is there any possible solution
+> to my problem of sending ACKs manually? Would that be fast enough for
+> the SIFS and other stations' ACK timeout?
+>
+> I would appreciate a short message to help me out.
+> Greetings from sunny Germany
+> Daniel Berger
+>
 
-IBSS started from wireless extensions is currently
-missing basic rate configuration, fix this by moving
-the code to generate the default to the common code
-that gets invoked for both nl80211 and wext.
-
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- net/wireless/ibss.c    |   19 +++++++++++++++++++
- net/wireless/nl80211.c |   17 -----------------
- 2 files changed, 19 insertions(+), 17 deletions(-)
-
---- wireless-testing.orig/net/wireless/ibss.c	2010-09-28 12:49:14.000000000 +0200
-+++ wireless-testing/net/wireless/ibss.c	2010-09-28 12:51:24.000000000 +0200
-@@ -88,6 +88,25 @@ int __cfg80211_join_ibss(struct cfg80211
- 	if (wdev->ssid_len)
- 		return -EALREADY;
- 
-+	if (!params->basic_rates) {
-+		/*
-+		* If no rates were explicitly configured,
-+		* use the mandatory rate set for 11b or
-+		* 11a for maximum compatibility.
-+		*/
-+		struct ieee80211_supported_band *sband =
-+			rdev->wiphy.bands[params->channel->band];
-+		int j;
-+		u32 flag = params->channel->band == IEEE80211_BAND_5GHZ ?
-+			IEEE80211_RATE_MANDATORY_A :
-+			IEEE80211_RATE_MANDATORY_B;
-+
-+		for (j = 0; j < sband->n_bitrates; j++) {
-+			if (sband->bitrates[j].flags & flag)
-+				params->basic_rates |= BIT(j);
-+		}
-+	}
-+
- 	if (WARN_ON(wdev->connect_keys))
- 		kfree(wdev->connect_keys);
- 	wdev->connect_keys = connkeys;
---- wireless-testing.orig/net/wireless/nl80211.c	2010-09-28 12:49:14.000000000 +0200
-+++ wireless-testing/net/wireless/nl80211.c	2010-09-28 12:50:32.000000000 +0200
-@@ -4119,23 +4119,6 @@ static int nl80211_join_ibss(struct sk_b
- 				goto out;
- 			}
- 		}
--	} else {
--		/*
--		* If no rates were explicitly configured,
--		* use the mandatory rate set for 11b or
--		* 11a for maximum compatibility.
--		*/
--		struct ieee80211_supported_band *sband =
--			wiphy->bands[ibss.channel->band];
--		int j;
--		u32 flag = ibss.channel->band == IEEE80211_BAND_5GHZ ?
--			IEEE80211_RATE_MANDATORY_A :
--			IEEE80211_RATE_MANDATORY_B;
--
--		for (j = 0; j < sband->n_bitrates; j++) {
--			if (sband->bitrates[j].flags & flag)
--				ibss.basic_rates |= BIT(j);
--		}
- 	}
- 
- 	err = cfg80211_join_ibss(rdev, dev, &ibss, connkeys);
+On ath5k (and i think also ath9k) you can disable hw ACKS using the
+SW_DIAG register on PCU but i haven't tested it.
 
 
+-- 
+GPG ID: 0xD21DB2DB
+As you read this post global entropy rises. Have Fun ;-)
+Nick
