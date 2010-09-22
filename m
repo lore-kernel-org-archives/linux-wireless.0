@@ -1,47 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f46.google.com ([209.85.215.46]:64767 "EHLO
-	mail-ew0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754429Ab0IMIky (ORCPT
+Received: from mail-fx0-f46.google.com ([209.85.161.46]:45481 "EHLO
+	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752414Ab0IVNpv (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 13 Sep 2010 04:40:54 -0400
-From: Andy Shevchenko <andy.shevchenko@gmail.com>
-To: devel@driverdev.osuosl.org, linux-kernel@vger.kernel.org
-Cc: Greg Kroah-Hartman <gregkh@suse.de>,
-	Andy Shevchenko <andy.shevchenko@gmail.com>,
-	Nohee Ko <noheek@broadcom.com>, linux-wireless@vger.kernel.org
-Subject: [PATCHv2 03/10] staging: brcm80211: use '%pM' format to print MAC address
-Date: Mon, 13 Sep 2010 11:40:27 +0300
-Message-Id: <a017eca40cf5334b6c38a06c0cf9a831fee0e88d.1284316738.git.andy.shevchenko@gmail.com>
-In-Reply-To: <8ad2522ae82e753fcfa9fa9726d2a301e7b8b987.1284316733.git.andy.shevchenko@gmail.com>
-References: <8ad2522ae82e753fcfa9fa9726d2a301e7b8b987.1284316733.git.andy.shevchenko@gmail.com>
-In-Reply-To: <8ad2522ae82e753fcfa9fa9726d2a301e7b8b987.1284316733.git.andy.shevchenko@gmail.com>
-References: <8ad2522ae82e753fcfa9fa9726d2a301e7b8b987.1284316733.git.andy.shevchenko@gmail.com>
+	Wed, 22 Sep 2010 09:45:51 -0400
+Received: by fxm3 with SMTP id 3so277220fxm.19
+        for <linux-wireless@vger.kernel.org>; Wed, 22 Sep 2010 06:45:49 -0700 (PDT)
+From: Christian Lamparter <chunkeey@googlemail.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Subject: Re: Manual Control about Sending ACKs
+Date: Wed, 22 Sep 2010 15:45:40 +0200
+Cc: Daniel Berger <daniel@dat-berger.de>,
+	linux-wireless@vger.kernel.org
+References: <20100922123953.67a4fc5e@danmob> <20100922130245.GC5515@tuxdriver.com>
+In-Reply-To: <20100922130245.GC5515@tuxdriver.com>
+MIME-Version: 1.0
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Message-Id: <201009221545.41377.chunkeey@googlemail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Andy Shevchenko <andy.shevchenko@gmail.com>
-Cc: Nohee Ko <noheek@broadcom.com>
-Cc: linux-wireless@vger.kernel.org
----
- drivers/staging/brcm80211/util/bcmutils.c |    5 +----
- 1 files changed, 1 insertions(+), 4 deletions(-)
+On Wednesday 22 September 2010 15:02:45 John W. Linville wrote:
+> On Wed, Sep 22, 2010 at 12:39:53PM +0200, Daniel Berger wrote:
+> 
+> > Thus I deduce ACK sending is completely done in hardware.
+> 
+> Yes, I believe this is the case with all of our supported hardware.
+> 
+> > Is my conclusion and understanding right? Is there any possible solution
+> > to my problem of sending ACKs manually? Would that be fast enough for
+> > the SIFS and other stations' ACK timeout?
+> 
+> I suspect you need to be looking at hacking firmware.
+> You might look at the open-source ar9170 firmware
+> or the b43-openfwwf project.
 
-diff --git a/drivers/staging/brcm80211/util/bcmutils.c b/drivers/staging/brcm80211/util/bcmutils.c
-index 364f837..c6c63a8 100644
---- a/drivers/staging/brcm80211/util/bcmutils.c
-+++ b/drivers/staging/brcm80211/util/bcmutils.c
-@@ -792,10 +792,7 @@ int BCMROMFN(bcm_ether_atoe) (char *p, struct ether_addr * ea) {
- 
- char *bcm_ether_ntoa(const struct ether_addr *ea, char *buf)
- {
--	static const char template[] = "%02x:%02x:%02x:%02x:%02x:%02x";
--	snprintf(buf, 18, template,
--		 ea->octet[0] & 0xff, ea->octet[1] & 0xff, ea->octet[2] & 0xff,
--		 ea->octet[3] & 0xff, ea->octet[4] & 0xff, ea->octet[5] & 0xff);
-+	snprintf(buf, 18, "%pM", ea->octet);
- 	return (buf);
- }
- 
--- 
-1.7.2.2
-
+probably not ar9170 either.
+The ACK - mechanism (response control) is mostly hardwired in
+the chip, there is not much to control here.
