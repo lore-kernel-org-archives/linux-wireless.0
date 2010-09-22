@@ -1,62 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pv0-f174.google.com ([74.125.83.174]:39705 "EHLO
-	mail-pv0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750767Ab0I1EV2 (ORCPT
+Received: from mail-iw0-f174.google.com ([209.85.214.174]:59199 "EHLO
+	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752099Ab0IVNlt (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 28 Sep 2010 00:21:28 -0400
-Message-ID: <4CA16D54.2030502@gmail.com>
-Date: Mon, 27 Sep 2010 21:21:40 -0700
-From: "Justin P. Mattock" <justinmattock@gmail.com>
+	Wed, 22 Sep 2010 09:41:49 -0400
+Received: by iwn5 with SMTP id 5so575463iwn.19
+        for <linux-wireless@vger.kernel.org>; Wed, 22 Sep 2010 06:41:49 -0700 (PDT)
 MIME-Version: 1.0
-To: Finn Thain <fthain@telegraphics.com.au>
-CC: trivial@kernel.org, linux-kernel@vger.kernel.org,
-	linux-wireless@vger.kernel.org, linux-usb@vger.kernel.org,
-	linux-scsi@vger.kernel.org, linux-fbdev@vger.kernel.org,
-	alsa-devel@alsa-project.org, dri-devel@lists.freedesktop.org,
-	linux-ide@vger.kernel.org,
-	"Maciej W. Rozycki" <macro@linux-mips.org>,
-	Geert Uytterhoeven <geert@linux-m68k.org>,
-	Randy Dunlap <rdunlap@xenotime.net>,
-	Matt Turner <mattst88@gmail.com>,
-	Dimitry Torokhov <dmitry.torokhov@gmail.com>,
-	Mike Frysinger <vapier.adi@gmail.com>
-Subject: Re: [RFC v4]update broken web addresses in the kernel.
-References: <1285525875-9920-1-git-send-email-justinmattock@gmail.com> <alpine.OSX.2.00.1009271114330.275@localhost> <4CA15FA6.3040702@gmail.com> <alpine.OSX.2.00.1009281409040.276@localhost>
-In-Reply-To: <alpine.OSX.2.00.1009281409040.276@localhost>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+In-Reply-To: <201009221458.43434.chunkeey@googlemail.com>
+References: <AANLkTik3_o03=m0w8XM_B-YTQrR-ibkbtTBErXfcYwGG@mail.gmail.com>
+	<201009221424.39949.chunkeey@googlemail.com>
+	<AANLkTikbyQi7dJFrqJrVmr7kV==tZoLRPaufC6tJv743@mail.gmail.com>
+	<201009221458.43434.chunkeey@googlemail.com>
+Date: Wed, 22 Sep 2010 17:41:49 +0400
+Message-ID: <AANLkTimm_+4xXf-C2xVW0Q6Dex89Nt9UGKU60j0EAr2T@mail.gmail.com>
+Subject: Re: p54spi (STLC4560) with Marvel XScale CPU (kernel 2.6.25.4)
+From: Max Filippov <jcmvbkbc@gmail.com>
+To: Christian Lamparter <chunkeey@googlemail.com>
+Cc: Alex Mihaylov <minimumlaw@gmail.com>,
+	linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 09/27/2010 09:15 PM, Finn Thain wrote:
+> I have Toradex Colibri module ( PXA270 and PXA320 based -
+> http://www.toradex.com/Products/Colibri_Modules ) and want connect
+> them to Sagrad SG901-1028 module (
+> http://www.sagrad.com/index.php?option=com_content&view=article&id=55&Itemid=66
+> ) based on STLC450 chip.
 >
-> On Mon, 27 Sep 2010, Justin P. Mattock wrote:
->
->> alright.. I'll redu this... remove the brackets, and fix up the rest..
->> one note is:
->> http://dri.freedesktop.org/wiki/Documentation
->> this address is already there..
->
-> Right you are.
->
->> probably best to just leave the sourceforge
->> address and use the webarchive and/or if theirs a
->> proper address for the sourceforge dri..
->
-> I didn't find a sensible address for the sourceforge stuff now that
-> indexes are turned off for /doc/.
->
-> I agree, best just to leave it as is, since it is in the archive.
->
-> Finn
->
->>
->> Justin P. Mattock
->>
->>
->
+> Now I add next code to plaform file (kernel 2.6.35.4):
+...
+> their GPL driver looks funny. (Max, it's really worth a look)
+...
+> note:
+> 2.6.25.4 is very old and the spi subsystem (which isn't backported in cw)
+> has changed quite a bit since then.
 
+Alex, what driver is discussed? Christian, what GPL driver?
 
-alright... resent, hopefully I didnt miss any of them...
-eyes are going out of whack over here..
-
-Justin P. Mattock
+-- 
+Max
