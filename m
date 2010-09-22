@@ -1,110 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:36134 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752161Ab0IJO2S (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 10 Sep 2010 10:28:18 -0400
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: Johannes Berg <johannes@sipsolutions.net>,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>,
-	Reinette Chatre <reinette.chatre@intel.com>,
-	"John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org,
-	Stanislaw Gruszka <sgruszka@redhat.com>,
-	Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH 03/14] iwlwifi: move scan completed flags handling
-Date: Fri, 10 Sep 2010 16:26:36 +0200
-Message-Id: <1284128807-11436-4-git-send-email-sgruszka@redhat.com>
-In-Reply-To: <1284128807-11436-1-git-send-email-sgruszka@redhat.com>
-References: <1284128807-11436-1-git-send-email-sgruszka@redhat.com>
+Received: from mail-gy0-f174.google.com ([209.85.160.174]:52609 "EHLO
+	mail-gy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754366Ab0IVMBr convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 22 Sep 2010 08:01:47 -0400
+Received: by gyd8 with SMTP id 8so114616gyd.19
+        for <linux-wireless@vger.kernel.org>; Wed, 22 Sep 2010 05:01:47 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <201009221336.14382.chunkeey@googlemail.com>
+References: <AANLkTik3_o03=m0w8XM_B-YTQrR-ibkbtTBErXfcYwGG@mail.gmail.com>
+	<AANLkTi=M9zSKkckxqs6XwBg3290L9yijmCbRn9_E93xJ@mail.gmail.com>
+	<AANLkTinLbpycwLjVpHhx+ZdTzXkxC4jQ6iqrOOF6Fsc4@mail.gmail.com>
+	<201009221336.14382.chunkeey@googlemail.com>
+Date: Wed, 22 Sep 2010 16:01:46 +0400
+Message-ID: <AANLkTim3YQ4vNyM_OA4qc+mjGJiwYoHrLB=x1sp+R8vP@mail.gmail.com>
+Subject: Re: p54spi (STLC4560) with Marvel XScale CPU (kernel 2.6.25.4)
+From: Alex Mihaylov <minimumlaw@gmail.com>
+To: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+2010/9/22 Christian Lamparter <chunkeey@googlemail.com>:
+> their GPL driver looks funny. (Max, it's really worth a look)
+> anyway found this:
+>        /*
+>           Sequence taken from STLC4560 DataSheet
+>           This sequence can be run with the maximum SPI clock frequency (that is, 48 MHz).
+>           1. Power up.
+>           2. Wait 240 ms.
+>           3. Halt processor (EHostDeviceCntrl2 = KSetHostOverride | KSetHostCPUEn=0).
+>           4. Wait 1 us.
+>           5. Enable DMA TX (EHostDmaTxCntrl, KDmaTxCntrlEnable).
+>           6. Write DMA TX length (EHostDmaTxLength).
+>           7. Write DMA TX base (EHostDmaTxBase1).
+>           8. Wait 1 ìs.
+>           9. Write firmware image (EHostDmaData).
+>           10. RAM reset (EHostDeviceCntrl2 = KSetHostOverride | KSetHostReset | KSetRamBoot).
+>           11. Wait 40 ms.
+>           12. RAM boot (EHostDeviceCntrl2 = KSetHostOverride | KSetRamBoot),
+>           13. Enable host interrupts (EHostIntEnable1 = KIrqReady | KIrqWrReady | KHwUpdate | KSwUpdate).
+>           14. Wait for the READY interrupt (100 ms timeout).
+>           15. Acknowledge the READY interrupt.
+>           16. Issue the SLEEP interrupt.
+>         */
+>
+> maybe it helps
 
-Move the scan completed flags handling so that we
-can notify mac80211 about aborted scans with the
-correct status. Also queue the scan_completed work
-before the BT status update so that it won't see
-the bits still set (unless a new scan was started
-in which case that's fine.)
+Yes. I see this code. But in p54spi.c I found sequence from 1 to 13.
+Sagrad make this steps with disabler interrupt from card (poll chip
+register). But p54spi wait hardware READY IRQ from chip in 14 (and in
+IRQ routine send acknowledge from 15).
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
----
- drivers/net/wireless/iwlwifi/iwl-scan.c |   30 ++++++++++++++----------------
- 1 files changed, 14 insertions(+), 16 deletions(-)
+I think about rewrite this driver complete, but... This solution not so pretty.
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-scan.c b/drivers/net/wireless/iwlwifi/iwl-scan.c
-index 6bd14bc..22bdc98 100644
---- a/drivers/net/wireless/iwlwifi/iwl-scan.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-scan.c
-@@ -222,21 +222,11 @@ static void iwl_rx_scan_complete_notif(struct iwl_priv *priv,
- 		       jiffies_to_msecs(elapsed_jiffies
- 					(priv->scan_start, jiffies)));
- 
--	/*
--	 * If a request to abort was given, or the scan did not succeed
--	 * then we reset the scan state machine and terminate,
--	 * re-queuing another scan if one has been requested
--	 */
--	if (test_and_clear_bit(STATUS_SCAN_ABORTING, &priv->status))
--		IWL_DEBUG_INFO(priv, "Aborted scan completed.\n");
--
--	IWL_DEBUG_INFO(priv, "Setting scan to off\n");
--
--	clear_bit(STATUS_SCANNING, &priv->status);
-+	queue_work(priv->workqueue, &priv->scan_completed);
- 
- 	if (priv->iw_mode != NL80211_IFTYPE_ADHOC &&
--	    priv->cfg->advanced_bt_coexist && priv->bt_status !=
--	    scan_notif->bt_status) {
-+	    priv->cfg->advanced_bt_coexist &&
-+	    priv->bt_status != scan_notif->bt_status) {
- 		if (scan_notif->bt_status) {
- 			/* BT on */
- 			if (!priv->bt_ch_announce)
-@@ -254,7 +244,6 @@ static void iwl_rx_scan_complete_notif(struct iwl_priv *priv,
- 		priv->bt_status = scan_notif->bt_status;
- 		queue_work(priv->workqueue, &priv->bt_traffic_change_work);
- 	}
--	queue_work(priv->workqueue, &priv->scan_completed);
- }
- 
- void iwl_setup_rx_scan_handlers(struct iwl_priv *priv)
-@@ -554,7 +543,7 @@ static void iwl_bg_scan_completed(struct work_struct *work)
- {
- 	struct iwl_priv *priv =
- 	    container_of(work, struct iwl_priv, scan_completed);
--	bool internal = false;
-+	bool internal = false, aborted;
- 	struct iwl_rxon_context *ctx;
- 
- 	IWL_DEBUG_SCAN(priv, "SCAN complete scan\n");
-@@ -562,6 +551,15 @@ static void iwl_bg_scan_completed(struct work_struct *work)
- 	cancel_delayed_work(&priv->scan_check);
- 
- 	mutex_lock(&priv->mutex);
-+
-+	aborted = test_and_clear_bit(STATUS_SCAN_ABORTING, &priv->status);
-+	if (aborted)
-+		IWL_DEBUG_INFO(priv, "Aborted scan completed.\n");
-+
-+	IWL_DEBUG_INFO(priv, "Setting scan to off\n");
-+
-+	clear_bit(STATUS_SCANNING, &priv->status);
-+
- 	if (priv->is_internal_short_scan) {
- 		priv->is_internal_short_scan = false;
- 		IWL_DEBUG_SCAN(priv, "internal short scan completed\n");
-@@ -569,7 +567,7 @@ static void iwl_bg_scan_completed(struct work_struct *work)
- 	} else if (priv->scan_request) {
- 		priv->scan_request = NULL;
- 		priv->scan_vif = NULL;
--		ieee80211_scan_completed(priv->hw, false);
-+		ieee80211_scan_completed(priv->hw, aborted);
- 	}
- 
- 	if (test_bit(STATUS_EXIT_PENDING, &priv->status))
+
+// stage 13
+       /* enable host interrupts */
+        p54spi_write32(priv, SPI_ADRS_HOST_INT_EN,
+                       cpu_to_le32(SPI_HOST_INTS_DEFAULT));
+// stage 10
+        /* boot the device */
+        p54spi_write16(priv, SPI_ADRS_DEV_CTRL_STAT, cpu_to_le16(
+                       SPI_CTRL_STAT_HOST_OVERRIDE | SPI_CTRL_STAT_HOST_RESET |
+                       SPI_CTRL_STAT_RAM_BOOT));
+
+        msleep(TARGET_BOOT_SLEEP);
+//stage 12
+        p54spi_write16(priv, SPI_ADRS_DEV_CTRL_STAT, cpu_to_le16(
+                       SPI_CTRL_STAT_HOST_OVERRIDE | SPI_CTRL_STAT_RAM_BOOT));
+        msleep(TARGET_BOOT_SLEEP);
+
+May be after RAM BOOT interrupts in chip disabled?
+
 -- 
-1.7.1
-
+Sincerely,
+Alex A. Mihaylov
+AKA MinimumLaw
