@@ -1,64 +1,149 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f46.google.com ([209.85.214.46]:51690 "EHLO
-	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754993Ab0IIBpM convert rfc822-to-8bit (ORCPT
+Received: from mail-yx0-f174.google.com ([209.85.213.174]:62503 "EHLO
+	mail-yx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751392Ab0IVQKZ convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 8 Sep 2010 21:45:12 -0400
-Received: by bwz11 with SMTP id 11so709456bwz.19
-        for <linux-wireless@vger.kernel.org>; Wed, 08 Sep 2010 18:45:11 -0700 (PDT)
+	Wed, 22 Sep 2010 12:10:25 -0400
+Received: by yxp4 with SMTP id 4so218204yxp.19
+        for <linux-wireless@vger.kernel.org>; Wed, 22 Sep 2010 09:10:24 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <1283988329-44549-5-git-send-email-steve@cozybit.com>
-References: <1283988329-44549-1-git-send-email-steve@cozybit.com> <1283988329-44549-5-git-send-email-steve@cozybit.com>
-From: Julian Calaby <julian.calaby@gmail.com>
-Date: Thu, 9 Sep 2010 11:44:51 +1000
-Message-ID: <AANLkTinhiQAVJKpyjXduVKDqvLXA8EgX7VCFTEu_F272@mail.gmail.com>
-Subject: Re: [PATCH 4/9] libertas_tf: Add firmware reset to sdio driver and
- attempt firmware reload
-To: Steve deRosier <steve@cozybit.com>
-Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com,
-	johannes@sipsolutions.net, javier@cozybit.com
+In-Reply-To: <AANLkTinaaAp8XXbqEmA-BCEbSQ8oMV5M-BNSs2iKmyNk@mail.gmail.com>
+References: <AANLkTik3_o03=m0w8XM_B-YTQrR-ibkbtTBErXfcYwGG@mail.gmail.com>
+	<201009221336.14382.chunkeey@googlemail.com>
+	<AANLkTim3YQ4vNyM_OA4qc+mjGJiwYoHrLB=x1sp+R8vP@mail.gmail.com>
+	<201009221424.39949.chunkeey@googlemail.com>
+	<AANLkTikbyQi7dJFrqJrVmr7kV==tZoLRPaufC6tJv743@mail.gmail.com>
+	<AANLkTi=OF0=Ox7xoGpygL87eoxDyEgDiALi4R-pSNe+V@mail.gmail.com>
+	<AANLkTinaaAp8XXbqEmA-BCEbSQ8oMV5M-BNSs2iKmyNk@mail.gmail.com>
+Date: Wed, 22 Sep 2010 20:10:21 +0400
+Message-ID: <AANLkTinn-nPed0nCvveBUtkY3AEHf_+bVvV=q1J=XzdY@mail.gmail.com>
+Subject: Re: p54spi (STLC4560) with Marvel XScale CPU (kernel 2.6.25.4)
+From: Alex Mihaylov <minimumlaw@gmail.com>
+To: linux-wireless@vger.kernel.org
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Minor nit:
-
-On Thu, Sep 9, 2010 at 09:25, Steve deRosier <steve@cozybit.com> wrote:
-> This patch adds a method to do a firmware/chip reset to the sdio driver and
-> attempts to reload the firmware.
+2010/9/22 Max Filippov <jcmvbkbc@gmail.com>:
+>> This code from Sagrad:
+>>
+>>        SPI_IRQ(DISABLE);
+>>
+>> [skiped]
 >
-> Signed-off-by: Steve deRosier <steve@cozybit.com>
-> ---
->  drivers/net/wireless/libertas_tf/if_sdio.c |   40 +++++++++++++++++++++++----
->  drivers/net/wireless/libertas_tf/main.c    |    7 ++++-
->  2 files changed, 40 insertions(+), 7 deletions(-)
+> If you look closer into the skipped part you'll see
 >
-> diff --git a/drivers/net/wireless/libertas_tf/if_sdio.c b/drivers/net/wireless/libertas_tf/if_sdio.c
-> index fed5aff..1e72b4c 100644
-> --- a/drivers/net/wireless/libertas_tf/main.c
-> +++ b/drivers/net/wireless/libertas_tf/main.c
-> @@ -360,7 +364,8 @@ static int lbtf_op_start(struct ieee80211_hw *hw)
->        return 0;
+>        // 13. Enable host interrupts (EHostIntEnable1 = KIrqReady |
+> KIrqWrReady | KHwUpdate | KSwUpdate)
+>        TempReg = (SPI_HOST_INT_READY | SPI_HOST_INT_UPDATE |
+> SPI_HOST_INT_SW_UPDATE| SPI_HOST_INT_WR_READY);
+>        SPIDRVWriteReg32(SPI_ADRS_HOST_INT_EN, TempReg);
 >
->  err_prog_firmware:
-> -//     priv->hw_reset_device(card);
-> +       if (priv->hw_reset_device)
-> +               priv->hw_reset_device(card);
+> which actually enables interrupts, exactly as SPI_IRQ(ENABLE); does.
+>
+>>
+>>       // 14. Wait for the READY interrupt (100 ms timeout).
+>>        // Loop while waiting for SPI device to respond with
+>> interrupt, max timeout is WIFI_BOOT_TIMEOUT
+>>        for ( i = 0 ; i < WIFI_BOOT_TIMEOUT ; i++)
+>>        {
+>>                TempReg = SPIDRVReadReg32(SPI_ADRS_HOST_INTERRUPTS);
+>>                if( TempReg && SPI_HOST_INT_READY)
+>>                {
+>>                        // 15. Acknowledge the READY interrupt.
+>>                        SPIDRVWriteReg32(SPI_ADRS_HOST_INT_ACK,
+>> SPI_HOST_INT_READY);
+>>                        // 16. Issue the SLEEP interrupt.
+>>                        SPIDRVWriteReg32(SPI_ADRS_ARM_INTERRUPTS,
+>> SPI_ARM_INT_SLEEP);
+>>                        break;
+>>                }
+>>
+>>                Delay(1);
+>>        }
+>>
+>>        SPI_IRQ(ENABLE);
 
-Should this not be done in the first patch? - rather than just
-commenting out the call: Would commenting out this line in the first
-patch make the original version of libertas_tf unable to handle
-firmware errors properly?
+OK. Chip (STLC4560) have some reasons to make IRQ reqest to host
+(XScale or Omap). In code:
 
->        lbtf_deb_leave_args(LBTF_DEB_MACOPS, "error programing fw; ret=%d", ret);
->        return ret;
->  }
+SPIDRVWriteReg32(SPI_ADRS_HOST_INT_EN, TempReg);
 
-Thanks,
+we set IRQ mask for chip. So, chip CAN generate IRQ request to host
+(make pulse on host IRQ GPIO line). But host NOT serve this interrupt
+request ( SPI_IRQ(DISABLE) ). Host wait for event by pool interrupt
+reason register. In linux kernel (p54spi.c) host serve this IRQ.
+SPI_IRQ(ENABLE/DISABLE) used for enable/disable host handler, but
+SPIDRVWriteReg32(SPI_ADRS_HOST_INT_EN, TempReg) used for device IRQ
+reason control. I think so.
 
--- 
-Julian Calaby
+And some words about license. On Sagrad web site this file described:
 
-Email: julian.calaby@gmail.com
-Profile: http://www.google.com/profiles/julian.calaby/
-.Plan: http://sites.google.com/site/juliancalaby/
+URL: http://sagrad.com/index.php?option=com_docman&task=doc_details&gid=26&Itemid=101
+(download possible after registration on web site).
+Name: Sagrad_MAC GPL Source Code + IP Stack
+Description: FreeRTOS with: - WiFi SPI driver - Custom Sagrad MAC with
+ability to scan and associate to an Open AP - uIP stack to provide
+TCP/IP
+Filename:        STM32Wifi_V.1.0.0.1.zip
+
+FreeRTOS distributed under GPL. Sagrad say - GPL code. But, in head of
+file wrote:
+/*
+ * IMPORTANT--READ CAREFULLY:
+ *
+ * Right, including without limitation, use, reproduction,
+modification, and
+ * creation of derivative works, pertaining to this Source Code
+("Document")
+ * are governed by a legal Agreement ("Agreement") between you (either
+an
+ * individual or a single entity) and Sagrad Inc("Sagrad")
+ * and/or its licensee (both hereinafter called Licensor).
+ *
+ * By reproducing, modifying, creating derivative works, accepting,
+ * installing, viewing, accessing, transforming or otherwise using
+this
+ * Document, you agree to be bound by the terms of the Agreement. If
+you
+ * do not agree to the terms of the Agreement, Licensor is unwilling
+to
+ * license rights to this Document to you.  In such event, you may not
+ * use, reproduce, modify, create derivative works, install, view,
+access,
+ * transport, transform or circulate this Document, and you should
+promptly
+ * contact Licensor from which you acquired this Document for
+instructions
+ * on returning or destroying this Document.
+ *
+ *
+ * CONFIDENTIAL, PROPRIETARY AND TRADE SECRET INFORMATION: This
+Document
+ * contains confidential, proprietary and trade secret information of
+ * Intersil Americas Inc. and should be treated in a confidential
+manner.
+ * Furthermore, this Document is protected by national copyright laws
+and
+ * international treaties.
+ *
+ * Unauthorized use, reproduction, modification, creation of
+derivative
+ * works or circulation is strictly prohibited.
+ *
+ * Copyright (c) 2008 Sagrad Inc. All Rights Reserved.
+ *
+ * The intent of Sagrad is to release this source to the public under
+GPL
+ * upon the successful agreement with STMicro for the exclusive
+ * distribution rights for the STLC4560
+ */
+
+This code cant be directly placed into kernel source (FreeRTOS is NOT
+Linux). This code contents NOT a code, but initialization and working
+methods.
+
+--
+Sincerelly,
+Alex A. Mihaylov
+AKA MinimumLaw
