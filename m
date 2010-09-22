@@ -1,66 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:34980 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751484Ab0IUX5Q (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 21 Sep 2010 19:57:16 -0400
-From: greearb@candelatech.com
-To: linux-wireless@vger.kernel.org
-Cc: Ben Greear <greearb@candelatech.com>
-Subject: [wireless] wireless:  Keep phy name consistent across module reloads.
-Date: Tue, 21 Sep 2010 16:57:11 -0700
-Message-Id: <1285113431-25526-1-git-send-email-greearb@candelatech.com>
+Received: from nbd.name ([88.198.39.176]:44679 "EHLO ds10.nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751978Ab0IVIcH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 22 Sep 2010 04:32:07 -0400
+Message-ID: <4C99BEFC.2060209@openwrt.org>
+Date: Wed, 22 Sep 2010 10:31:56 +0200
+From: Felix Fietkau <nbd@openwrt.org>
+MIME-Version: 1.0
+To: Ben Greear <greearb@candelatech.com>
+CC: Johannes Berg <johannes@sipsolutions.net>,
+	"ath9k-devel@lists.ath9k.org" <ath9k-devel@venema.h4ckr.net>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [ath9k-devel] ath9k, multiple stations, and AMPDUs
+References: <4C9841BA.4080700@candelatech.com> <4C98848C.70005@openwrt.org>	 <4C98A022.7020106@candelatech.com> <4C98A2C4.8060108@openwrt.org>	 <4C98EAA1.7050908@candelatech.com>  <4C98F2D8.8020602@openwrt.org> <1285097307.12764.11.camel@jlt3.sipsolutions.net> <4C990859.70709@openwrt.org> <4C99135A.3090103@candelatech.com> <4C99348F.2090504@openwrt.org> <4C99870C.20006@candelatech.com>
+In-Reply-To: <4C99870C.20006@candelatech.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ben Greear <greearb@candelatech.com>
+On 2010-09-22 6:33 AM, Ben Greear wrote:
+> On 09/21/2010 03:41 PM, Felix Fietkau wrote:
+>> On 2010-09-21 10:19 PM, Ben Greear wrote:
+>>> On 09/21/2010 12:32 PM, Felix Fietkau wrote:
+>>>> On 2010-09-21 9:28 PM, Johannes Berg wrote:
+>>>>> On Tue, 2010-09-21 at 20:00 +0200, Felix Fietkau wrote:
+>>>>>
+>>>>>>> Could we just poke a pointer to the STA into the ath_buf structure?
+>>>>>
+>>>>>> No, that doesn't work because of RCU.
+>>>>>
+>>>>> Well, it could work, if you walk all the structures upon sta_notify and
+>>>>> remove now stale pointers (or just drop the frames or something).
+>>>> I think it would be much better to just add the helper function that
+>>>> checks the RA on STA lookup. Keeps things simple, especially since
+>>>> nothing else in the tx path needs the vif.
+>>>
+>>> How about this.  Seems to do the trick on my system:
+>>>
+>>>
+>>> diff --git a/drivers/net/wireless/ath/ath9k/xmit.c b/drivers/net/wireless/ath/ath9k/xmit.c
+>>> index 85a7323..09815a1 100644
+>>> --- a/drivers/net/wireless/ath/ath9k/xmit.c
+>>> +++ b/drivers/net/wireless/ath/ath9k/xmit.c
+>>> @@ -328,8 +328,7 @@ static void ath_tx_complete_aggr(struct ath_softc *sc, struct ath_txq *txq,
+>>>
+>>>           rcu_read_lock();
+>>>
+>>> -       /* XXX: use ieee80211_find_sta! */
+>>> -       sta = ieee80211_find_sta_by_hw(hw, hdr->addr1);
+>>> +       sta = tx_info->control.sta;
+>> As I mentioned in another email: at the time we get the tx status
+>> report, we have to consider the sta pointer stale. It may or may not
+>> still be valid.
+> 
+> How about this one.  I think it ensures that the sta will never be stale,
+No, it doesn't. At least not in AP mode.
 
-It adds needless pain to user-space scripts to change the name
-of the phy on each module reload.  Instead, find the first
-index.
+> since it flushes the tx queue on vif removal.  Minimal testing shows it
+> working, but of course I might be missing something.
+In AP mode, a vif has multiple sta. And draining the queue when a sta
+gets removed is not a good idea.
 
-Signed-off-by: Ben Greear <greearb@candelatech.com>
----
-:100644 100644 9c21ebf... 8226ba7... M	net/wireless/core.c
- net/wireless/core.c |   15 ++++++++++-----
- 1 files changed, 10 insertions(+), 5 deletions(-)
-
-diff --git a/net/wireless/core.c b/net/wireless/core.c
-index 9c21ebf..8226ba7 100644
---- a/net/wireless/core.c
-+++ b/net/wireless/core.c
-@@ -319,8 +319,7 @@ static void cfg80211_event_work(struct work_struct *work)
- 
- struct wiphy *wiphy_new(const struct cfg80211_ops *ops, int sizeof_priv)
- {
--	static int wiphy_counter;
--
-+	int i;
- 	struct cfg80211_registered_device *rdev;
- 	int alloc_size;
- 
-@@ -342,12 +341,18 @@ struct wiphy *wiphy_new(const struct cfg80211_ops *ops, int sizeof_priv)
- 
- 	mutex_lock(&cfg80211_mutex);
- 
--	rdev->wiphy_idx = wiphy_counter++;
-+	/* 64k wiphy devices is enough for anyone! */
-+	for (i = 0; i < 0xFFFF; i++) {
-+		if (!cfg80211_rdev_by_wiphy_idx(i))
-+			break;
-+	}
-+	if (i == 0xFFFF)
-+		i = -1; /* invalid */
-+	rdev->wiphy_idx = i;
- 
- 	if (unlikely(!wiphy_idx_valid(rdev->wiphy_idx))) {
--		wiphy_counter--;
- 		mutex_unlock(&cfg80211_mutex);
--		/* ugh, wrapped! */
-+		/* ugh, too many devices already! */
- 		kfree(rdev);
- 		return NULL;
- 	}
--- 
-1.7.2.2
-
+- Felix
