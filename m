@@ -1,58 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:43133 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754149Ab0IUSCW (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 21 Sep 2010 14:02:22 -0400
-Message-ID: <4C98F32A.8060604@candelatech.com>
-Date: Tue, 21 Sep 2010 11:02:18 -0700
-From: Ben Greear <greearb@candelatech.com>
-MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: linux-wireless@vger.kernel.org
-Subject: Re: [mac80211] mac80211:  Support multiple VIFS per AP in debugfs.
-References: <1285071310-11440-1-git-send-email-greearb@candelatech.com>	 <4C98DC5D.2000108@candelatech.com>	 <1285086618.12764.3.camel@jlt3.sipsolutions.net>	 <4C98E05B.8050609@candelatech.com>	 <1285088605.12764.5.camel@jlt3.sipsolutions.net> <1285091341.12764.7.camel@jlt3.sipsolutions.net>
-In-Reply-To: <1285091341.12764.7.camel@jlt3.sipsolutions.net>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Received: from mga09.intel.com ([134.134.136.24]:35822 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753894Ab0IVOdB (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 22 Sep 2010 10:33:01 -0400
+Subject: Re: [PATCH wireless-2.6] iwlwifi: do not perferm force reset while
+ doing scan
+From: "Guy, Wey-Yi" <wey-yi.w.guy@intel.com>
+To: Stanislaw Gruszka <sgruszka@redhat.com>
+Cc: "linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"ipw3945-devel@lists.sourceforge.net"
+	<ipw3945-devel@lists.sourceforge.net>,
+	Johannes Berg <johannes@sipsolutions.net>
+In-Reply-To: <20100922105722.3be42969@dhcp-lab-109.englab.brq.redhat.com>
+References: <1284758657-25267-1-git-send-email-wey-yi.w.guy@intel.com>
+	 <20100922105722.3be42969@dhcp-lab-109.englab.brq.redhat.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Wed, 22 Sep 2010 07:33:50 -0700
+Message-ID: <1285166030.12056.19.camel@wwguy-huron>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 09/21/2010 10:49 AM, Johannes Berg wrote:
-> On Tue, 2010-09-21 at 19:03 +0200, Johannes Berg wrote:
->
->>>>>> -	snprintf(mac, sizeof(mac), "%pM", sta->sta.addr);
->>>>>> +	snprintf(mac, sizeof(mac), "%pM-%s",
->>>>>> +		 sta->sta.addr, sta->sdata->name);
->>>>>>
->>>>>>     	/*
->>>>>>     	 * This might fail due to a race condition:
->>>>>
->>>>> I got to thinking:  Is there any reason to put the sta.addr in there?
->>>>>
->>>>> Maybe just use sta->sdata->name?  Seems it might be easier for
->>>>> scripts to deal with?
->>>>
->>>> APs have many STAs
->>>
->>> So, when in STA mode, sta_info are related to local VIFs, but
->>> in AP mode, they represent the remote wireless devices, with sdata pointing
->>> to the local AP interface?
->>
->> No, there's a sta_info for each peer, which in STA mode is only the AP.
->
-> maybe the stations should be moved from phy0/stations/ to
-> phy0/wlan0/stations/ instead?
+Hi Gruszka,
 
-That would be fine with me.
+On Wed, 2010-09-22 at 01:57 -0700, Stanislaw Gruszka wrote:
+> Hi Wey
+> 
+> On Fri, 17 Sep 2010 14:24:17 -0700
+> Wey-Yi Guy <wey-yi.w.guy@intel.com> wrote:
+> > When uCode error condition detected, driver try to perform either
+> > rf reset or firmware reload in order bring device back to
+> > working condition.
+> > 
+> > If rf reset is required and scan is in process, there is no need
+> > to issue rf reset since scan already reset the rf.
+> 
+> Yes, and that is already handled by iwl_scan_initiate().
+> 
+> > If firmware reload is required and scan is in process, skip the
+> > reload request. There is a possibility firmware reload during
+> > scan cause problem.
+> 
+> If we skip restart request now, next will be scheduled lately (correct?,
 
-Thanks,
-Ben
+That is correct, if we still encounter the problem.
 
->
-> johannes
+> I think there are firmware reset requests that are not repeatable). But we
+> still will have scan pending since firmware is in bad shape and will not
+> finish scan. So until scan_check delayed work (7s) will not finish scan,
+> will not be able to reset firmware. I do not think that is what we want.
+> I think patch is good for .36, but after my current scan patches, it is
+> not be needed and actually it should be reverted (see below).
+> 
+Agree, with your recent patch, it improve a lot on how scan abort work.
+I still don't like the warning, but like you say, it might be ok since
+we reloading firmware.
+
+I will ask John to revert the patch
+
+Thanks
+Wey
 
 
--- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
 
