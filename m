@@ -1,54 +1,117 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f46.google.com ([209.85.161.46]:43309 "EHLO
-	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752871Ab0I1Lf4 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 28 Sep 2010 07:35:56 -0400
-Received: by mail-fx0-f46.google.com with SMTP id 3so2492292fxm.19
-        for <linux-wireless@vger.kernel.org>; Tue, 28 Sep 2010 04:35:55 -0700 (PDT)
-From: Christian Lamparter <chunkeey@googlemail.com>
-To: Dale Turner <rx_guy@hotmail.com>
-Subject: Re: carl9170 problem
-Date: Tue, 28 Sep 2010 13:35:44 +0200
-Cc: linux-wireless@vger.kernel.org
-References: <SNT113-W182B461295E717BB27130BF1630@phx.gbl> <201009260057.38286.chunkeey@googlemail.com> <SNT113-W459FFC08EF0C4936BEDD5CF1660@phx.gbl>
-In-Reply-To: <SNT113-W459FFC08EF0C4936BEDD5CF1660@phx.gbl>
-MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Message-Id: <201009281335.44475.chunkeey@googlemail.com>
+Received: from mx1.redhat.com ([209.132.183.28]:23672 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751484Ab0IVI6c (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 22 Sep 2010 04:58:32 -0400
+Date: Wed, 22 Sep 2010 10:57:22 +0200
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>,
+	Johannes Berg <johannes@sipsolutions.net>
+Subject: Re: [PATCH wireless-2.6] iwlwifi: do not perferm force reset while
+ doing scan
+Message-ID: <20100922105722.3be42969@dhcp-lab-109.englab.brq.redhat.com>
+In-Reply-To: <1284758657-25267-1-git-send-email-wey-yi.w.guy@intel.com>
+References: <1284758657-25267-1-git-send-email-wey-yi.w.guy@intel.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tuesday 28 September 2010 03:47:00 Dale Turner wrote:
-> >> kernel: ieee80211 phy9: FW: MAC RESET
-> > The device failed to send pending data for more than 150ms(HT40) - 300ms,
-> > either because the medium was busy, or the AP failed to response at all
-> > mostly because it has crashed first.
-> > (check if your AP's TSF is no where near your AP's uptime)
+Hi Wey
+
+On Fri, 17 Sep 2010 14:24:17 -0700
+Wey-Yi Guy <wey-yi.w.guy@intel.com> wrote:
+> When uCode error condition detected, driver try to perform either
+> rf reset or firmware reload in order bring device back to
+> working condition.
 > 
-> I don't think there are any nearby networks on my channel.
-> I purposely change it from default ( 6 ) to 11 (actually wide 9).
-What's wide 9? HT40 with the primary channel on 11 and the extension
-on 6?
+> If rf reset is required and scan is in process, there is no need
+> to issue rf reset since scan already reset the rf.
+
+Yes, and that is already handled by iwl_scan_initiate().
+
+> If firmware reload is required and scan is in process, skip the
+> reload request. There is a possibility firmware reload during
+> scan cause problem.
+
+If we skip restart request now, next will be scheduled lately (correct?,
+I think there are firmware reset requests that are not repeatable). But we
+still will have scan pending since firmware is in bad shape and will not
+finish scan. So until scan_check delayed work (7s) will not finish scan,
+will not be able to reset firmware. I do not think that is what we want.
+I think patch is good for .36, but after my current scan patches, it is
+not be needed and actually it should be reverted (see below).
+
+> [  485.804046] WARNING: at net/mac80211/main.c:310 ieee80211_restart_hw+0x28/0x62()
+> [  485.804049] Hardware name: Latitude E6400
+> [  485.804052] ieee80211_restart_hw called with hardware scan in progress
+> [  485.804054] Modules linked in: iwlagn iwlcore bnep sco rfcomm l2cap crc16 bluetooth [last unloaded: iwlcore]
+> [  485.804069] Pid: 812, comm: kworker/u:3 Tainted: G        W   2.6.36-rc3-wl+ #74
+> [  485.804072] Call Trace:
+> [  485.804079]  [<c103019a>] warn_slowpath_common+0x60/0x75ieee80211_restart_hw
+> [  485.804084]  [<c1030213>] warn_slowpath_fmt+0x26/0x2a
+> [  485.804089]  [<c145da67>] ieee80211_restart_hw+0x28/0x62
+> [  485.804102]  [<f8b35dc6>] iwl_bg_restart+0x113/0x150 [iwlagn]
+
+In iwl_bg_restart() we cancel scan. First we try to send abort command
+via __iwl_down() ->  iwl_scan_cancel_timeout() -> iwl_do_scan_abort().
+If sending abort command fail we will complete scan in mac80211, otherwise
+if firmware do not finish scan, we will complete scan in
+iwl_cancel_deferred_work() -> iwl_cancel_scan_deferred_work(). Hence we should
+be safe.
+
+So why we can see this warning? During my testing I saw it also.
+There is race regarding SCAN_HW_SCANNING bit, usually we set/clear
+this bit under local->mtx, but not in ieee80211_restart_hw()
+
+cpu0						cpu1
+__ieee80211_start_scan
+  __set_bit(SCAN_HW_SCANNING, &local->scanning);
+  
+						iwl_bg_restart()
+						  ieee80211_restart_hw()
+						    WARN
+  
+   drv_hw_scan
+     iwl_mac_hw_scan
+     (OK, fail new scan, return error)
+   
+   local->scanning = 0;
+
+So nothing wrong will happen except printing a call trace. If we want fix that
+I would suggest patch like this:
+
+diff --git a/net/mac80211/main.c b/net/mac80211/main.c
+index 7c85426..31993c3 100644
+--- a/net/mac80211/main.c
++++ b/net/mac80211/main.c
+@@ -302,16 +302,20 @@ static void ieee80211_restart_work(struct work_struct *work)
+ void ieee80211_restart_hw(struct ieee80211_hw *hw)
+ {
+ 	struct ieee80211_local *local = hw_to_local(hw);
++	bool sw_scan = false;
  
-> The access point is a Linksys wrt120n (probably not the best, I know).
-Isn't this a 1-stream align-n (AR9285) platform? If so then there is
-no advantage of using an AR9170 over the AR9271.
+ 	trace_api_restart_hw(local);
+ 
+ 	/* wait for scan work complete */
+ 	flush_workqueue(local->workqueue);
+ 
++	mutex_lock(&local->mtx);
+ 	WARN(test_bit(SCAN_HW_SCANNING, &local->scanning),
+ 		"%s called with hardware scan in progress\n", __func__);
++	sw_scan = test_bit(SCAN_SW_SCANNING, &local->scanning);
++	mutex_unlock(&local->mtx);
+ 
+-	if (unlikely(test_bit(SCAN_SW_SCANNING, &local->scanning)))
++	if (unlikely(sw_scan))
+ 		ieee80211_scan_cancel(local);
+ 
+ 	/* use this reason, ieee80211_reconfig will unblock it */
 
-> To be honest, I don't know what a TSF is or how to check it.
-The TSF keeps the timers for all STAs in the "network" synchronized.
-http://en.wikipedia.org/wiki/Timing_Synchronization_Function_%28TSF%29
+Or just leave code as is, many (harmless) warning's can be printed when restarting
+iwlwifi firmware.
 
-It can be easily check by: iw dev wlanX scan
-
-e.g.: (sample output)
-BSS 00:02:32:0d:d1:32 (on wlan13)
-        TSF: 2669831323 usec (0d, 00:44:29) <-------
-        freq: 2437
-
-This will tell you that the "network" has an uptime of
-0 days, 0 hours, 44 minutes and 29 seconds.
-
-Regards,
-	Chr
+Stanislaw
