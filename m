@@ -1,38 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:51403 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752431Ab0IUGq6 (ORCPT
+Received: from mail-iw0-f174.google.com ([209.85.214.174]:55293 "EHLO
+	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754139Ab0IVV21 convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 21 Sep 2010 02:46:58 -0400
-Subject: Re: [mac80211] mac80211:  Support receiving data frames on
- multiple vifs.
-From: Johannes Berg <johannes@sipsolutions.net>
-To: greearb@candelatech.com
+	Wed, 22 Sep 2010 17:28:27 -0400
+Received: by iwn5 with SMTP id 5so811425iwn.19
+        for <linux-wireless@vger.kernel.org>; Wed, 22 Sep 2010 14:28:26 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <AANLkTiki=Ta-77MFJ-dnCs1iDu2f7OMXcnmeY3ht0Z7J@mail.gmail.com>
+References: <AANLkTik_68KKkQJ0N_BJFYRsv4L+iXa5V1+MQ=n-v=Y0@mail.gmail.com> <AANLkTiki=Ta-77MFJ-dnCs1iDu2f7OMXcnmeY3ht0Z7J@mail.gmail.com>
+From: Alberto Donato <alberto.donato@gmail.com>
+Date: Wed, 22 Sep 2010 23:28:05 +0200
+Message-ID: <AANLkTimfAdHOR7XeTxxPGWav1hWB6UKUJm5k2Zs6zcPc@mail.gmail.com>
+Subject: Re: Old Otus driver with WEP
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
 Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <1285018776-21795-1-git-send-email-greearb@candelatech.com>
-References: <1285018776-21795-1-git-send-email-greearb@candelatech.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Tue, 21 Sep 2010 08:47:21 +0200
-Message-ID: <1285051641.3710.8.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2010-09-20 at 14:39 -0700, greearb@candelatech.com wrote:
-> From: Ben Greear <greearb@candelatech.com>
-> 
-> When using multiple STA interfaces on the same radio, some
-> data packets need to be received on all interfaces
-> (broadcast, for instance).
-> 
-> Make the STA loop look similar to the mgt-data loop.
-> 
-> Also, add logic to check RX_FLAG_MMIC_ERROR for last
-> interface in mgt-data loop.
-> 
-> This needs review.
+On Wed, Sep 22, 2010 at 11:20 PM, Luis R. Rodriguez <mcgrof@gmail.com> wrote:
+> On Wed, Sep 22, 2010 at 1:38 PM, Alberto Donato
+> <alberto.donato@gmail.com> wrote:
+>> Hi all,
+>>  I'm using the old otus driver on a mips platform which is currently
+>> using a  2.6.18 kernel with a TP-Link TL-WN821N usb adapter.
+>
+> This driver is not supported, upgrade your kernel to something modern.
+>
+>  Luis
+>
 
-Looks fine to me, I think.
+Hi Luis,
+  I know this is no longer supported, but my kernel is vendor-provided
+for an embedded system, so I can't upgrade freely to newer kernels
+supporting the new ar9170 driver.
 
-johannes
-
+I'm just trying to know for sure if this driver does not support WEP
+or there is some problem with my current setup.
