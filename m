@@ -1,63 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:42027 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754521Ab0IUFZW (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 21 Sep 2010 01:25:22 -0400
-Message-ID: <4C9841BA.4080700@candelatech.com>
-Date: Mon, 20 Sep 2010 22:25:14 -0700
-From: Ben Greear <greearb@candelatech.com>
-MIME-Version: 1.0
-To: "ath9k-devel@lists.ath9k.org" <ath9k-devel@venema.h4ckr.net>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: ath9k, multiple stations, and AMPDUs
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Received: from mail.comsound.de ([188.40.207.2]:35599 "EHLO mail.comsound.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754508Ab0IVSip (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 22 Sep 2010 14:38:45 -0400
+Received: from localhost (localhost [127.0.0.1])
+	by mail.comsound.de (Postfix) with ESMTP id AEF6E6A279
+	for <linux-wireless@vger.kernel.org>; Wed, 22 Sep 2010 20:38:44 +0200 (CEST)
+Received: from mail.comsound.de ([127.0.0.1])
+	by localhost (mail.comsound.de [127.0.0.1]) (amavisd-new, port 10024)
+	with ESMTP id 9bjaEbek8NWR for <linux-wireless@vger.kernel.org>;
+	Wed, 22 Sep 2010 20:38:44 +0200 (CEST)
+Received: from danmob (static.121.77.40.188.clients.your-server.de [188.40.77.121])
+	by mail.comsound.de (Postfix) with ESMTPSA id 7F7BA6A277
+	for <linux-wireless@vger.kernel.org>; Wed, 22 Sep 2010 20:38:44 +0200 (CEST)
+Date: Wed, 22 Sep 2010 20:38:51 +0200
+From: Daniel Berger <daniel@dat-berger.de>
+To: linux-wireless@vger.kernel.org
+Subject: Re: Manual Control about Sending ACKs
+Message-ID: <20100922203851.28945ab5@danmob>
+In-Reply-To: <4C9A3A1C.4010704@candelatech.com>
+References: <20100922123953.67a4fc5e@danmob>
+	<20100922130245.GC5515@tuxdriver.com>
+	<201009221545.41377.chunkeey@googlemail.com>
+	<1285163687.15806.9.camel@maggie>
+	<AANLkTinr0omWQCaMj91P8=CFZLDLroxWdrV2c=9KjG4e@mail.gmail.com>
+	<4C9A3A1C.4010704@candelatech.com>
+Mime-Version: 1.0
+Content-Type: multipart/signed; micalg=PGP-SHA1;
+ boundary="Sig_/QJmFsSDl1wSM4iXBjjGa+wX"; protocol="application/pgp-signature"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I think I have narrowed down some problems I see when I create
-two STA interfaces on the same radio and associate with the
-same AP.
+--Sig_/QJmFsSDl1wSM4iXBjjGa+wX
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: quoted-printable
 
-I'm using wireless-testing plus some patches to the rx logic
-I posted earlier.
+Hi and thank you altogether,
+I am now in contact with the current maintainer of openfwwf.
+Francesco answered positive.
 
-It appears that the ath9k NIC does not transport AMPDUs properly,
-and after a few seconds, it's backlog is exhausted and the queues
-are stopped in ath_tx_start.
+Furthermore, overlooking their code, my plans really seem possible.
+If people here are in interest I may post back experience with this
+stuff?
 
-debugfs seems to agree:
+Daniel
 
-[root@atom ~]# cat /debug/ath9k/phy0/xmit
-                             BE         BK        VI        VO
+--Sig_/QJmFsSDl1wSM4iXBjjGa+wX
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Disposition: attachment; filename=signature.asc
 
-MPDUs Queued:                2          0         0        85
-MPDUs Completed:             2          0         0        85
-Aggregates:                  0          0         0         0
-AMPDUs Queued:             144          0         0         0
-AMPDUs Completed:           20          0         0         0
-AMPDUs Retried:             18          0         0         0
-AMPDUs XRetried:             0          0         0         0
-FIFO Underrun:               0          0         0         0
-TXOP Exceeded:               0          0         0         0
-TXTIMER Expiry:              0          0         0         0
-DESC CFG Error:              0          0         0         0
-DATA Underrun:               0          0         0         0
-DELIM Underrun:              0          0         0         0
-[root@atom ~]#
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.10 (GNU/Linux)
 
+iEYEARECAAYFAkyaTTsACgkQ+JUYmR11gaBsAwCdEwHlyCohYtfFNJWh1UMOevlI
+FtQAoKDN70vfVY4QdylHTOFWonnc0vdn
+=Sj51
+-----END PGP SIGNATURE-----
 
-I can still receive packets on the interface, but nothing is
-transmitted.
-
-I tested against an a/b/g AP (instead of N), and it ran clean
-for many minutes.
-
-Any ideas how to debug this further?
-
-Thanks,
-Ben
-	
--- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+--Sig_/QJmFsSDl1wSM4iXBjjGa+wX--
