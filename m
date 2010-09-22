@@ -1,582 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:44428 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1760081Ab0I0TPK (ORCPT
+Received: from mail-fx0-f46.google.com ([209.85.161.46]:51178 "EHLO
+	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753635Ab0IVMYo convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 27 Sep 2010 15:15:10 -0400
-From: greearb@candelatech.com
-To: linux-wireless@vger.kernel.org
-Cc: Ben Greear <greearb@candelatech.com>
-Subject: [PATCH v3] ath5k: Allow ath5k to support virtual STA and AP interfaces.
-Date: Mon, 27 Sep 2010 12:14:57 -0700
-Message-Id: <1285614897-7147-1-git-send-email-greearb@candelatech.com>
+	Wed, 22 Sep 2010 08:24:44 -0400
+Received: by fxm3 with SMTP id 3so220538fxm.19
+        for <linux-wireless@vger.kernel.org>; Wed, 22 Sep 2010 05:24:43 -0700 (PDT)
+From: Christian Lamparter <chunkeey@googlemail.com>
+To: Alex Mihaylov <minimumlaw@gmail.com>
+Subject: Re: p54spi (STLC4560) with Marvel XScale CPU (kernel 2.6.25.4)
+Date: Wed, 22 Sep 2010 14:24:39 +0200
+Cc: linux-wireless@vger.kernel.org
+References: <AANLkTik3_o03=m0w8XM_B-YTQrR-ibkbtTBErXfcYwGG@mail.gmail.com> <201009221336.14382.chunkeey@googlemail.com> <AANLkTim3YQ4vNyM_OA4qc+mjGJiwYoHrLB=x1sp+R8vP@mail.gmail.com>
+In-Reply-To: <AANLkTim3YQ4vNyM_OA4qc+mjGJiwYoHrLB=x1sp+R8vP@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Message-Id: <201009221424.39949.chunkeey@googlemail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ben Greear <greearb@candelatech.com>
+On Wednesday 22 September 2010 14:01:46 Alex Mihaylov wrote:
+> 2010/9/22 Christian Lamparter <chunkeey@googlemail.com>:
+> > their GPL driver looks funny. (Max, it's really worth a look)
+> > anyway found this:
+> >        /*
+> >           Sequence taken from STLC4560 DataSheet
+> >           This sequence can be run with the maximum SPI clock frequency (that is, 48 MHz).
+> >           1. Power up.
+> >           2. Wait 240 ms.
+> >           3. Halt processor (EHostDeviceCntrl2 = KSetHostOverride | KSetHostCPUEn=0).
+> >           4. Wait 1 us.
+> >           5. Enable DMA TX (EHostDmaTxCntrl, KDmaTxCntrlEnable).
+> >           6. Write DMA TX length (EHostDmaTxLength).
+> >           7. Write DMA TX base (EHostDmaTxBase1).
+> >           8. Wait 1 ìs.
+> >           9. Write firmware image (EHostDmaData).
+> >           10. RAM reset (EHostDeviceCntrl2 = KSetHostOverride | KSetHostReset | KSetRamBoot).
+> >           11. Wait 40 ms.
+> >           12. RAM boot (EHostDeviceCntrl2 = KSetHostOverride | KSetRamBoot),
+> >           13. Enable host interrupts (EHostIntEnable1 = KIrqReady | KIrqWrReady | KHwUpdate | KSwUpdate).
+> >           14. Wait for the READY interrupt (100 ms timeout).
+> >           15. Acknowledge the READY interrupt.
+> >           16. Issue the SLEEP interrupt.
+> >         */
+> >
+> > maybe it helps
+> 
+> Yes. I see this code. But in p54spi.c I found sequence from 1 to 13.
+> Sagrad make this steps with disabler interrupt from card (poll chip
+> register). But p54spi wait hardware READY IRQ from chip in 14 (and in
+> IRQ routine send acknowledge from 15).
 
-This patch is ported forward from a patch that Patrick McHardy
-did for me against 2.6.31.
+why polling? They even say "14. Wait for the READY interrupt".
 
-Signed-off-by: Ben Greear <greearb@candelatech.com>
----
-:100644 100644 95072db... 51c002e... M	drivers/net/wireless/ath/ath5k/base.c
-:100644 100644 7f9d0d3... 81a5c431.. M	drivers/net/wireless/ath/ath5k/base.h
-:100644 100644 58912cd... 5b179d0... M	drivers/net/wireless/ath/ath5k/reset.c
- drivers/net/wireless/ath/ath5k/base.c  |  242 +++++++++++++++++++++++++++-----
- drivers/net/wireless/ath/ath5k/base.h  |   26 +++-
- drivers/net/wireless/ath/ath5k/reset.c |    4 +-
- 3 files changed, 227 insertions(+), 45 deletions(-)
+Have you checked if the module parameters for power + irq are correct?
 
-diff --git a/drivers/net/wireless/ath/ath5k/base.c b/drivers/net/wireless/ath/ath5k/base.c
-index 95072db..51c002e 100644
---- a/drivers/net/wireless/ath/ath5k/base.c
-+++ b/drivers/net/wireless/ath/ath5k/base.c
-@@ -509,6 +509,27 @@ ath5k_setcurmode(struct ath5k_softc *sc, unsigned int mode)
- 	}
- }
- 
-+static void ath5k_update_bssid_mask(struct ath5k_softc *sc)
-+{
-+	struct ath5k_vif *avf;
-+	unsigned int i, j;
-+
-+	/*
-+	 * This doesn't include the address of the default STA device in case
-+	 * it is reconfigured since for some reason it is not created through
-+	 * ->add_interface().
-+	 */
-+	memset(sc->bssidmask, 0xff, ETH_ALEN);
-+	for (i = 0; i < ATH5K_VIF_MAX; i++) {
-+		if (sc->vifs[i] == NULL)
-+			continue;
-+		avf = (void *)sc->vifs[i]->drv_priv;
-+		for (j = 0; j < ETH_ALEN; j++)
-+			sc->bssidmask[j] &= ~(sc->lladdr[j] ^ avf->lladdr[j]);
-+	}
-+	ath5k_hw_set_bssid_mask(sc->ah, sc->bssidmask);
-+}
-+
- static void
- ath5k_mode_setup(struct ath5k_softc *sc)
- {
-@@ -520,7 +541,7 @@ ath5k_mode_setup(struct ath5k_softc *sc)
- 	ath5k_hw_set_rx_filter(ah, rfilt);
- 
- 	if (ath5k_hw_hasbssidmask(ah))
--		ath5k_hw_set_bssid_mask(ah, sc->bssidmask);
-+		ath5k_update_bssid_mask(sc);
- 
- 	/* configure operational mode */
- 	ath5k_hw_set_opmode(ah, sc->opmode);
-@@ -698,13 +719,13 @@ ath5k_txbuf_setup(struct ath5k_softc *sc, struct ath5k_buf *bf,
- 		flags |= AR5K_TXDESC_RTSENA;
- 		cts_rate = ieee80211_get_rts_cts_rate(sc->hw, info)->hw_value;
- 		duration = le16_to_cpu(ieee80211_rts_duration(sc->hw,
--			sc->vif, pktlen, info));
-+			NULL, pktlen, info));
- 	}
- 	if (rc_flags & IEEE80211_TX_RC_USE_CTS_PROTECT) {
- 		flags |= AR5K_TXDESC_CTSENA;
- 		cts_rate = ieee80211_get_rts_cts_rate(sc->hw, info)->hw_value;
- 		duration = le16_to_cpu(ieee80211_ctstoself_duration(sc->hw,
--			sc->vif, pktlen, info));
-+			NULL, pktlen, info));
- 	}
- 	ret = ah->ah_setup_tx_desc(ah, ds, pktlen,
- 		ieee80211_get_hdrlen_from_skb(skb), padsize,
-@@ -806,10 +827,13 @@ ath5k_desc_alloc(struct ath5k_softc *sc, struct pci_dev *pdev)
- 		list_add_tail(&bf->list, &sc->txbuf);
- 	}
- 
--	/* beacon buffer */
--	bf->desc = ds;
--	bf->daddr = da;
--	sc->bbuf = bf;
-+	/* beacon buffers */
-+	INIT_LIST_HEAD(&sc->bcbuf);
-+	for (i = 0; i < ATH_BCBUF; i++, bf++, ds++, da += sizeof(*ds)) {
-+		bf->desc = ds;
-+		bf->daddr = da;
-+		list_add_tail(&bf->list, &sc->bcbuf);
-+	}
- 
- 	return 0;
- err_free:
-@@ -824,11 +848,12 @@ ath5k_desc_free(struct ath5k_softc *sc, struct pci_dev *pdev)
- {
- 	struct ath5k_buf *bf;
- 
--	ath5k_txbuf_free_skb(sc, sc->bbuf);
- 	list_for_each_entry(bf, &sc->txbuf, list)
- 		ath5k_txbuf_free_skb(sc, bf);
- 	list_for_each_entry(bf, &sc->rxbuf, list)
- 		ath5k_rxbuf_free_skb(sc, bf);
-+	list_for_each_entry(bf, &sc->bcbuf, list)
-+		ath5k_txbuf_free_skb(sc, bf);
- 
- 	/* Free memory associated with all descriptors */
- 	pci_free_consistent(pdev, sc->desc_len, sc->desc, sc->desc_daddr);
-@@ -837,7 +862,6 @@ ath5k_desc_free(struct ath5k_softc *sc, struct pci_dev *pdev)
- 
- 	kfree(sc->bufptr);
- 	sc->bufptr = NULL;
--	sc->bbuf = NULL;
- }
- 
- 
-@@ -1741,6 +1765,7 @@ ath5k_beacon_update(struct ieee80211_hw *hw, struct ieee80211_vif *vif)
- {
- 	int ret;
- 	struct ath5k_softc *sc = hw->priv;
-+	struct ath5k_vif *avf = (void *)vif->drv_priv;
- 	struct sk_buff *skb;
- 
- 	if (WARN_ON(!vif)) {
-@@ -1757,11 +1782,34 @@ ath5k_beacon_update(struct ieee80211_hw *hw, struct ieee80211_vif *vif)
- 
- 	ath5k_debug_dump_skb(sc, skb, "BC  ", 1);
- 
--	ath5k_txbuf_free_skb(sc, sc->bbuf);
--	sc->bbuf->skb = skb;
--	ret = ath5k_beacon_setup(sc, sc->bbuf);
-+	if (!avf->bbuf) {
-+		WARN_ON(list_empty(&sc->bcbuf));
-+		avf->bbuf = list_first_entry(&sc->bcbuf, struct ath5k_buf,
-+					     list);
-+		list_del(&avf->bbuf->list);
-+
-+		/* Assign the vap to a beacon xmit slot. */
-+		if (avf->opmode == NL80211_IFTYPE_AP) {
-+			int slot;
-+
-+			avf->bslot = 0;
-+			for (slot = 0; slot < ATH_BCBUF; slot++) {
-+				if (sc->bslot[slot] == ATH5K_IF_ID_ANY) {
-+					avf->bslot = slot;
-+					break;
-+				}
-+			}
-+			BUG_ON(sc->bslot[avf->bslot] != ATH5K_IF_ID_ANY);
-+			sc->bslot[avf->bslot] = avf->if_id;
-+			sc->nbcnvifs++;
-+		}
-+	}
-+
-+	ath5k_txbuf_free_skb(sc, avf->bbuf);
-+	avf->bbuf->skb = skb;
-+	ret = ath5k_beacon_setup(sc, avf->bbuf);
- 	if (ret)
--		sc->bbuf->skb = NULL;
-+		avf->bbuf->skb = NULL;
- out:
- 	return ret;
- }
-@@ -1777,16 +1825,18 @@ out:
- static void
- ath5k_beacon_send(struct ath5k_softc *sc)
- {
--	struct ath5k_buf *bf = sc->bbuf;
- 	struct ath5k_hw *ah = sc->ah;
-+	struct ieee80211_vif *vif;
-+	struct ath5k_vif *avf;
-+	struct ath5k_buf *bf;
- 	struct sk_buff *skb;
-+	u64 tsf;
-+	u32 tsftu;
-+	u16 intval;
-+	int slot, if_id;
- 
- 	ATH5K_DBG_UNLIMIT(sc, ATH5K_DEBUG_BEACON, "in beacon_send\n");
- 
--	if (unlikely(bf->skb == NULL || sc->opmode == NL80211_IFTYPE_STATION)) {
--		ATH5K_WARN(sc, "bf=%p bf_skb=%p\n", bf, bf ? bf->skb : NULL);
--		return;
--	}
- 	/*
- 	 * Check if the previous beacon has gone out.  If
- 	 * not, don't don't try to post another: skip this
-@@ -1815,6 +1865,29 @@ ath5k_beacon_send(struct ath5k_softc *sc)
- 		sc->bmisscount = 0;
- 	}
- 
-+	intval = sc->bintval ? sc->bintval : ATH5K_DEFAULT_BINTVAL;
-+
-+	tsf = ath5k_hw_get_tsf64(ah);
-+	tsftu = TSF_TO_TU(tsf);
-+	slot = ((tsftu % intval) * ATH_BCBUF) / intval;
-+	if_id = sc->bslot[(slot + 1) % ATH_BCBUF];
-+
-+	pr_debug("tsf %llx tsftu %x intval %u slot %u if_id %x\n",
-+		 (unsigned long long)tsf, tsftu, intval, slot, if_id);
-+
-+	if (if_id != ATH5K_IF_ID_ANY) {
-+		vif = sc->vifs[if_id];
-+		avf = (void *)vif->drv_priv;
-+	} else
-+		return;
-+
-+	bf = avf->bbuf;
-+	if (unlikely(bf->skb == NULL || sc->opmode == NL80211_IFTYPE_STATION ||
-+			sc->opmode == NL80211_IFTYPE_MONITOR)) {
-+		ATH5K_WARN(sc, "bf=%p bf_skb=%p\n", bf, bf ? bf->skb : NULL);
-+		return;
-+	}
-+
- 	/*
- 	 * Stop any current dma and put the new frame on the queue.
- 	 * This should never fail since we check above that no frames
-@@ -1827,17 +1900,17 @@ ath5k_beacon_send(struct ath5k_softc *sc)
- 
- 	/* refresh the beacon for AP mode */
- 	if (sc->opmode == NL80211_IFTYPE_AP)
--		ath5k_beacon_update(sc->hw, sc->vif);
-+		ath5k_beacon_update(sc->hw, vif);
- 
- 	ath5k_hw_set_txdp(ah, sc->bhalq, bf->daddr);
- 	ath5k_hw_start_tx_dma(ah, sc->bhalq);
- 	ATH5K_DBG(sc, ATH5K_DEBUG_BEACON, "TXDP[%u] = %llx (%p)\n",
- 		sc->bhalq, (unsigned long long)bf->daddr, bf->desc);
- 
--	skb = ieee80211_get_buffered_bc(sc->hw, sc->vif);
-+	skb = ieee80211_get_buffered_bc(sc->hw, vif);
- 	while (skb) {
- 		ath5k_tx_queue(sc->hw, skb, sc->cabq);
--		skb = ieee80211_get_buffered_bc(sc->hw, sc->vif);
-+		skb = ieee80211_get_buffered_bc(sc->hw, vif);
- 	}
- 
- 	sc->bsent++;
-@@ -1867,6 +1940,12 @@ ath5k_beacon_update_timers(struct ath5k_softc *sc, u64 bc_tsf)
- 	u64 hw_tsf;
- 
- 	intval = sc->bintval & AR5K_BEACON_PERIOD;
-+	if (sc->opmode == NL80211_IFTYPE_AP) {
-+		intval /= ATH_BCBUF;	/* staggered multi-bss beacons */
-+		if (intval < 15)
-+			ATH5K_WARN(sc, "intval %u is too low, min 15\n",
-+				   intval);
-+	}
- 	if (WARN_ON(!intval))
- 		return;
- 
-@@ -2056,6 +2135,15 @@ ath5k_intr(int irq, void *dev_id)
- 
- 	do {
- 		ath5k_hw_get_isr(ah, &status);		/* NB: clears IRQ too */
-+		{
-+			static unsigned int irq_counter;
-+			if ((++irq_counter % 10000) == 9999) {
-+				ATH5K_WARN(sc, "status 0x%x/0x%x  dev_id: %p"
-+					   "  counter: %i  irq_counter: %i\n",
-+					   status, sc->imask, dev_id, counter,
-+					   irq_counter);
-+			}
-+		}
- 		ATH5K_DBG(sc, ATH5K_DEBUG_INTR, "status 0x%x/0x%x\n",
- 				status, sc->imask);
- 		if (unlikely(status & AR5K_INT_FATAL)) {
-@@ -2311,6 +2399,10 @@ ath5k_init(struct ath5k_softc *sc)
- 		ath_hw_keyreset(common, (u16) i);
- 
- 	ath5k_hw_set_ack_bitrate_high(ah, true);
-+
-+	for (i = 0; i < ARRAY_SIZE(sc->bslot); i++)
-+		sc->bslot[i] = ATH5K_IF_ID_ANY;
-+
- 	ret = 0;
- done:
- 	mmiowb();
-@@ -2370,7 +2462,6 @@ ath5k_stop_hw(struct ath5k_softc *sc)
- 		ATH5K_DBG(sc, ATH5K_DEBUG_RESET,
- 				"putting device to sleep\n");
- 	}
--	ath5k_txbuf_free_skb(sc, sc->bbuf);
- 
- 	mmiowb();
- 	mutex_unlock(&sc->lock);
-@@ -2575,9 +2666,9 @@ ath5k_attach(struct pci_dev *pdev, struct ieee80211_hw *hw)
- 	}
- 
- 	SET_IEEE80211_PERM_ADDR(hw, mac);
-+	memcpy(&sc->lladdr, mac, ETH_ALEN);
- 	/* All MAC address bits matter for ACKs */
--	memcpy(sc->bssidmask, ath_bcast_mac, ETH_ALEN);
--	ath5k_hw_set_bssid_mask(sc->ah, sc->bssidmask);
-+	ath5k_update_bssid_mask(sc);
- 
- 	regulatory->current_rd = ah->ah_capabilities.cap_eeprom.ee_regdomain;
- 	ret = ath_regd_init(regulatory, hw->wiphy, ath5k_reg_notifier);
-@@ -2675,30 +2766,63 @@ static int ath5k_add_interface(struct ieee80211_hw *hw,
- {
- 	struct ath5k_softc *sc = hw->priv;
- 	int ret;
-+	struct ath5k_hw *ah = sc->ah;
-+	struct ath5k_vif *avf = (void *)vif->drv_priv;
-+	unsigned int i;
- 
- 	mutex_lock(&sc->lock);
--	if (sc->vif) {
--		ret = 0;
-+
-+	if (sc->nvifs >= ATH5K_VIF_MAX ||
-+	    (vif->type == NL80211_IFTYPE_AP && sc->nbcnvifs >= ATH_BCBUF)) {
-+		ret = -ELNRNG;
- 		goto end;
- 	}
--
--	sc->vif = vif;
-+	for (i = 0; i < ATH5K_VIF_MAX; i++) {
-+		if (sc->vifs[i] != NULL)
-+			continue;
-+		sc->vifs[i] = vif;
-+		avf->if_id = i;
-+		break;
-+	}
-+	sc->nvifs++;
- 
- 	switch (vif->type) {
- 	case NL80211_IFTYPE_AP:
- 	case NL80211_IFTYPE_STATION:
- 	case NL80211_IFTYPE_ADHOC:
- 	case NL80211_IFTYPE_MESH_POINT:
--		sc->opmode = vif->type;
-+		avf->opmode = vif->type;
- 		break;
- 	default:
- 		ret = -EOPNOTSUPP;
- 		goto end;
- 	}
- 
--	ATH5K_DBG(sc, ATH5K_DEBUG_MODE, "add interface mode %d\n", sc->opmode);
-+	ATH5K_DBG(sc, ATH5K_DEBUG_MODE, "add interface mode %d\n", avf->opmode);
-+
-+	/* Set combined mode - when APs are configured, operate in AP mode.
-+	 * Otherwise use the mode of the new interface. This can currently
-+	 * only deal with combinations of APs and STAs I think ...
-+	 */
-+	if (sc->nbcnvifs)
-+		sc->opmode = NL80211_IFTYPE_AP;
-+	else
-+		sc->opmode = vif->type;
-+
-+	ath5k_hw_set_opmode(ah, sc->opmode);
- 
-+	/* Set to a reasonable value. Note that this will
-+	 * be set to mac80211's value at ath5k_config(). */
-+	sc->bintval = ATH5K_DEFAULT_BINTVAL;
-+
-+	/* Any MAC address is finee, all others are included through the
-+	 * filter.
-+	 */
-+	memcpy(&sc->lladdr, vif->addr, ETH_ALEN);
- 	ath5k_hw_set_lladdr(sc->ah, vif->addr);
-+
-+	memcpy(&avf->lladdr, vif->addr, ETH_ALEN);
-+
- 	ath5k_mode_setup(sc);
- 
- 	ret = 0;
-@@ -2712,15 +2836,32 @@ ath5k_remove_interface(struct ieee80211_hw *hw,
- 			struct ieee80211_vif *vif)
- {
- 	struct ath5k_softc *sc = hw->priv;
--	u8 mac[ETH_ALEN] = {};
-+	struct ath5k_vif *avf = (void *)vif->drv_priv, *avf2;
-+	u8 null_mac[ETH_ALEN] = {}, *mac = null_mac;
-+	unsigned int i;
- 
- 	mutex_lock(&sc->lock);
--	if (sc->vif != vif)
--		goto end;
-+	sc->vifs[avf->if_id] = NULL;
-+	sc->nvifs--;
-+
-+	for (i = 0; i < ATH5K_VIF_MAX; i++) {
-+		if (sc->vifs[i] == NULL)
-+			continue;
-+		avf2 = (void *)sc->vifs[i]->drv_priv;
-+		mac = avf2->lladdr;
-+		break;
-+	}
-+
-+	if (avf->bbuf) {
-+		ath5k_txbuf_free_skb(sc, avf->bbuf);
-+		list_add_tail(&avf->bbuf->list, &sc->bcbuf);
-+		sc->bslot[avf->bslot] = ATH5K_IF_ID_ANY;
-+		sc->nbcnvifs--;
-+		avf->bbuf = NULL;
-+	}
- 
- 	ath5k_hw_set_lladdr(sc->ah, mac);
--	sc->vif = NULL;
--end:
-+	ath5k_update_bssid_mask(sc);
- 	mutex_unlock(&sc->lock);
- }
- 
-@@ -2803,6 +2944,23 @@ static u64 ath5k_prepare_multicast(struct ieee80211_hw *hw,
- 	return ((u64)(mfilt[1]) << 32) | mfilt[0];
- }
- 
-+static bool ath_any_vif_assoc(struct ath5k_softc *sc)
-+{
-+	int i;
-+	int seen = 0;
-+	for (i = 0; i < ATH5K_VIF_MAX; i++) {
-+		if (sc->vifs[i]) {
-+			struct ath5k_vif *avf = (void *)sc->vifs[i]->drv_priv;
-+			seen++;
-+			if (avf->assoc)
-+				return true;
-+			if (seen >= sc->nvifs)
-+				break;
-+		}
-+	}
-+	return false;
-+}
-+
- #define SUPPORTED_FIF_FLAGS \
- 	FIF_PROMISC_IN_BSS |  FIF_ALLMULTI | FIF_FCSFAIL | \
- 	FIF_PLCPFAIL | FIF_CONTROL | FIF_OTHER_BSS | \
-@@ -2873,7 +3031,7 @@ static void ath5k_configure_filter(struct ieee80211_hw *hw,
- 
- 	/* FIF_BCN_PRBRESP_PROMISC really means to enable beacons
- 	* and probes for any BSSID */
--	if (*new_flags & FIF_BCN_PRBRESP_PROMISC)
-+	if ((*new_flags & FIF_BCN_PRBRESP_PROMISC) || (sc->nvifs > 1))
- 		rfilt |= AR5K_RX_FILTER_BEACON;
- 
- 	/* FIF_CONTROL doc says that if FIF_PROMISC_IN_BSS is not
-@@ -3058,13 +3216,14 @@ static void ath5k_bss_info_changed(struct ieee80211_hw *hw,
- 				    struct ieee80211_bss_conf *bss_conf,
- 				    u32 changes)
- {
-+	struct ath5k_vif *avf = (void *)vif->drv_priv;
- 	struct ath5k_softc *sc = hw->priv;
- 	struct ath5k_hw *ah = sc->ah;
- 	struct ath_common *common = ath5k_hw_common(ah);
- 	unsigned long flags;
- 
- 	mutex_lock(&sc->lock);
--	if (WARN_ON(sc->vif != vif))
-+	if (WARN_ON(sc->vifs[avf->if_id] != vif))
- 		goto unlock;
- 
- 	if (changes & BSS_CHANGED_BSSID) {
-@@ -3079,7 +3238,12 @@ static void ath5k_bss_info_changed(struct ieee80211_hw *hw,
- 		sc->bintval = bss_conf->beacon_int;
- 
- 	if (changes & BSS_CHANGED_ASSOC) {
--		sc->assoc = bss_conf->assoc;
-+		avf->assoc = bss_conf->assoc;
-+		if (bss_conf->assoc)
-+			sc->assoc = bss_conf->assoc;
-+		else
-+			sc->assoc = ath_any_vif_assoc(sc);
-+
- 		if (sc->opmode == NL80211_IFTYPE_STATION)
- 			set_beacon_filter(hw, sc->assoc);
- 		ath5k_hw_set_ledstate(sc->ah, sc->assoc ?
-@@ -3382,6 +3546,8 @@ ath5k_pci_probe(struct pci_dev *pdev,
- 		hw->max_rate_tries = 11;
- 	}
- 
-+	hw->vif_data_size = sizeof(struct ath5k_vif);
-+
- 	/* Finish private driver data initialization */
- 	ret = ath5k_attach(pdev, hw);
- 	if (ret)
-diff --git a/drivers/net/wireless/ath/ath5k/base.h b/drivers/net/wireless/ath/ath5k/base.h
-index 7f9d0d3..81a5c431 100644
---- a/drivers/net/wireless/ath/ath5k/base.h
-+++ b/drivers/net/wireless/ath/ath5k/base.h
-@@ -58,8 +58,8 @@
- 
- #define	ATH_RXBUF	40		/* number of RX buffers */
- #define	ATH_TXBUF	200		/* number of TX buffers */
--#define ATH_BCBUF	1		/* number of beacon buffers */
--
-+#define ATH_BCBUF	4		/* number of beacon buffers */
-+#define ATH5K_DEFAULT_BINTVAL	1000
- #define ATH5K_TXQ_LEN_MAX	(ATH_TXBUF / 4)		/* bufs per queue */
- #define ATH5K_TXQ_LEN_LOW	(ATH5K_TXQ_LEN_MAX / 2)	/* low mark */
- 
-@@ -152,6 +152,18 @@ struct ath5k_statistics {
- #define ATH_CHAN_MAX	(14+14+14+252+20)
- #endif
- 
-+#define ATH5K_VIF_MAX	512
-+#define ATH5K_IF_ID_ANY	-1
-+
-+struct ath5k_vif {
-+	bool			assoc; /* are we associated or not */
-+	int			if_id;
-+	enum nl80211_iftype	opmode;
-+	int			bslot;
-+	struct ath5k_buf	*bbuf;		/* beacon buffer */
-+	u8			lladdr[ETH_ALEN];
-+};
-+
- /* Software Carrier, keeps track of the driver state
-  * associated with an instance of a device */
- struct ath5k_softc {
-@@ -188,10 +200,12 @@ struct ath5k_softc {
- 	unsigned int		curmode;	/* current phy mode */
- 	struct ieee80211_channel *curchan;	/* current h/w channel */
- 
--	struct ieee80211_vif *vif;
-+	u16			nvifs;
-+	struct ieee80211_vif *vifs[ATH5K_VIF_MAX];
- 
- 	enum ath5k_int		imask;		/* interrupt mask copy */
- 
-+	u8			lladdr[ETH_ALEN];
- 	u8			bssidmask[ETH_ALEN];
- 
- 	unsigned int		led_pin,	/* GPIO pin for driving LED */
-@@ -219,7 +233,9 @@ struct ath5k_softc {
- 
- 	spinlock_t		block;		/* protects beacon */
- 	struct tasklet_struct	beacontq;	/* beacon intr tasklet */
--	struct ath5k_buf	*bbuf;		/* beacon buffer */
-+	struct list_head	bcbuf;		/* beacon buffer */
-+	int			bslot[ATH_BCBUF];
-+	u16			nbcnvifs;
- 	unsigned int		bhalq,		/* SW q for outgoing beacons */
- 				bmisscount,	/* missed beacon transmits */
- 				bintval,	/* beacon interval in TU */
-@@ -228,7 +244,7 @@ struct ath5k_softc {
- 	struct ath5k_txq	*cabq;		/* content after beacon */
- 
- 	int 			power_level;	/* Requested tx power in dbm */
--	bool			assoc;		/* associate state */
-+	bool                    assoc;          /* associate state */
- 	bool			enable_beacon;	/* true if beacons are on */
- 
- 	struct ath5k_statistics	stats;
-diff --git a/drivers/net/wireless/ath/ath5k/reset.c b/drivers/net/wireless/ath/ath5k/reset.c
-index 58912cd..5b179d0 100644
---- a/drivers/net/wireless/ath/ath5k/reset.c
-+++ b/drivers/net/wireless/ath/ath5k/reset.c
-@@ -167,7 +167,7 @@ static inline void ath5k_hw_write_rate_duration(struct ath5k_hw *ah,
- 		 * ieee80211_duration() for a brief description of
- 		 * what rate we should choose to TX ACKs. */
- 		tx_time = le16_to_cpu(ieee80211_generic_frame_duration(sc->hw,
--							sc->vif, 10, rate));
-+							NULL, 10, rate));
- 
- 		ath5k_hw_reg_write(ah, tx_time, reg);
- 
-@@ -1060,7 +1060,7 @@ int ath5k_hw_reset(struct ath5k_hw *ah, enum nl80211_iftype op_mode,
- 		 * XXX: rethink this after new mode changes to
- 		 * mac80211 are integrated */
- 		if (ah->ah_version == AR5K_AR5212 &&
--			ah->ah_sc->vif != NULL)
-+			ah->ah_sc->nvifs)
- 			ath5k_hw_write_rate_duration(ah, mode);
- 
- 		/*
--- 
-1.7.2.2
+static int p54spi_gpio_power = 97;
+MODULE_PARM_DESC(p54spi_gpio_power, "gpio number for power line");
 
+static int p54spi_gpio_irq = 87;
+MODULE_PARM_DESC(p54spi_gpio_irq, "gpio number for irq line");
+
+Also, on power_on the driver currently waits just 10 and not 240 ms,
+maybe this could just be the problem...
