@@ -1,47 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:41554 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754857Ab0IAOZQ (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 1 Sep 2010 10:25:16 -0400
-Subject: Re: [PATCH w-t] iwlwifi: rewrite iwl-scan.c to avoid race
- conditions
-From: Johannes Berg <johannes@sipsolutions.net>
+Received: from mga11.intel.com ([192.55.52.93]:39618 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752744Ab0IVPaB (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 22 Sep 2010 11:30:01 -0400
+Subject: Re: [PATCH wireless-2.6] iwlwifi: do not perferm force reset while
+ doing scan
+From: "Guy, Wey-Yi" <wey-yi.w.guy@intel.com>
 To: Stanislaw Gruszka <sgruszka@redhat.com>
-Cc: Wey-Yi Guy <wey-yi.w.guy@intel.com>,
-	Reinette Chatre <reinette.chatre@intel.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <20100901141658.GA20421@redhat.com>
-References: <20100831150021.GA10963@redhat.com>
-	 <1283345553.4124.6.camel@jlt3.sipsolutions.net>
-	 <20100901141658.GA20421@redhat.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Wed, 01 Sep 2010 16:24:59 +0200
-Message-ID: <1283351099.4124.8.camel@jlt3.sipsolutions.net>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	"linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"ipw3945-devel@lists.sourceforge.net"
+	<ipw3945-devel@lists.sourceforge.net>
+In-Reply-To: <20100922172353.3e53d221@dhcp-lab-109.englab.brq.redhat.com>
+References: <1284758657-25267-1-git-send-email-wey-yi.w.guy@intel.com>
+	 <20100922105722.3be42969@dhcp-lab-109.englab.brq.redhat.com>
+	 <1285166397.3684.64.camel@jlt3.sipsolutions.net>
+	 <20100922165155.21cb6321@dhcp-lab-109.englab.brq.redhat.com>
+	 <1285168257.3684.65.camel@jlt3.sipsolutions.net>
+	 <20100922172353.3e53d221@dhcp-lab-109.englab.brq.redhat.com>
+Content-Type: text/plain
+Date: Wed, 22 Sep 2010 08:29:02 -0700
+Message-Id: <1285169342.13944.12.camel@wwguy-ubuntu>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2010-09-01 at 16:16 +0200, Stanislaw Gruszka wrote:
-
-> > > +void iwl_wait_for_scan_end(struct iwl_priv *priv)
-> > > +{
-> > > +	unsigned long timeout = jiffies + IWL_SCAN_WAIT_END;
-> > > +
-> > > +	while (time_before_eq(jiffies, timeout)) {
-> > > +		if (!test_bit(STATUS_SCANNING, &priv->status))
-> > > +			break;
-> > > +		msleep(20);
-> > > +	}
-> > 
-> > this seems like it could use a completion?
+On Wed, 2010-09-22 at 08:23 -0700, Stanislaw Gruszka wrote:
+> On Wed, 22 Sep 2010 17:10:57 +0200
+> Johannes Berg <johannes@sipsolutions.net> wrote:
 > 
-> We don't know is scanning is currently performed or not,
-> so we nobody could ever call complete(). Above code works
-> fine if no scan is running. 
+> > On Wed, 2010-09-22 at 16:51 +0200, Stanislaw Gruszka wrote:
+> > 
+> > > Yes, bg_restart() force scan abort, but not if no scan is pending. It looks
+> > > like that:
+> > > 
+> > > cpu0						cpu1
+> > > 
+> > > 						iwl_bg_restart()
+> > > 						  __iwl_down()
+> > > 						     iwl_scan_cancel_timeout
+> > > 						     (do nothing since no pending scan)
+> > > 			  
+> > > __ieee80211_start_scan
+> > >   __set_bit(SCAN_HW_SCANNING, &local->scanning);
+> > 
+> > Ah, ok, makes sense. I think some mutex trickery could possibly help
+> > here though? But I'm not sure it's worth it...
+> 
+> I showed possible patch earlier in this thread, I will rethink about it and
+> eventually post. Perhaps applying the patch is good idea, since we will stop
+> seeing the warning it that harmless case, and be sure something is really
+> wrong when see it again.
+> 
 
-Then I guess it should be a waitqueue?
+I will prefer not seeing "warning" even it is harmless in this case
 
-johannes
+Thanks
+Wey
 
