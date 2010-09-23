@@ -1,59 +1,120 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pz0-f46.google.com ([209.85.210.46]:60557 "EHLO
-	mail-pz0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756655Ab0IHX0F (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:53316 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755351Ab0IWTc2 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 8 Sep 2010 19:26:05 -0400
-Received: by mail-pz0-f46.google.com with SMTP id 34so248716pzk.19
-        for <linux-wireless@vger.kernel.org>; Wed, 08 Sep 2010 16:26:05 -0700 (PDT)
-From: Steve deRosier <steve@cozybit.com>
-To: linux-wireless@vger.kernel.org, linville@tuxdriver.com
-Cc: johannes@sipsolutions.net, javier@cozybit.com,
-	Steve deRosier <steve@cozybit.com>
-Subject: [PATCH 9/9] libertas_tf: Allow tx up to full chip buffers
-Date: Wed,  8 Sep 2010 16:25:29 -0700
-Message-Id: <1283988329-44549-10-git-send-email-steve@cozybit.com>
-In-Reply-To: <1283988329-44549-1-git-send-email-steve@cozybit.com>
-References: <1283988329-44549-1-git-send-email-steve@cozybit.com>
+	Thu, 23 Sep 2010 15:32:28 -0400
+Message-Id: <20100923193138.247871680@sipsolutions.net>
+Date: Thu, 23 Sep 2010 21:31:02 +0200
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: Ben Greear <greearb@candelatech.com>
+Subject: [RFC 3/3] mac80211: clean up rx handling wrt. found_sta
+References: <20100923193059.805312839@sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+From: Johannes Berg <johannes.berg@intel.com>
 
-Signed-off-by: Steve deRosier <steve@cozybit.com>
+If a station was found, then we'll have exited
+the function already, so it is not necessary to
+have a variable keeping track of it.
+
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- drivers/net/wireless/libertas_tf/libertas_tf.h |    1 +
- drivers/net/wireless/libertas_tf/main.c        |    5 ++++-
- 2 files changed, 5 insertions(+), 1 deletions(-)
+ net/mac80211/rx.c |   60 ++++++++++++++++++++++++------------------------------
+ 1 file changed, 27 insertions(+), 33 deletions(-)
 
-diff --git a/drivers/net/wireless/libertas_tf/libertas_tf.h b/drivers/net/wireless/libertas_tf/libertas_tf.h
-index db6dd7b..5ccec4d 100644
---- a/drivers/net/wireless/libertas_tf/libertas_tf.h
-+++ b/drivers/net/wireless/libertas_tf/libertas_tf.h
-@@ -104,6 +104,7 @@ enum lbtf_mode {
- #define LBS_CMD_BUFFER_SIZE             (2 * 1024)
- #define MRVDRV_MAX_CHANNEL_SIZE		14
- #define MRVDRV_SNAP_HEADER_LEN          8
-+#define LBS_NUM_BUFFERS				7
+--- wireless-testing.orig/net/mac80211/rx.c	2010-09-23 21:27:23.000000000 +0200
++++ wireless-testing/net/mac80211/rx.c	2010-09-23 21:27:25.000000000 +0200
+@@ -2656,7 +2656,6 @@ static void __ieee80211_rx_handle_packet
+ 	struct ieee80211_rx_data rx;
+ 	struct ieee80211_sub_if_data *prev;
+ 	struct sta_info *sta, *tmp, *prev_sta;
+-	bool found_sta = false;
+ 	int err = 0;
  
- #define	LBS_UPLD_SIZE			2312
- #define DEV_NAME_LEN			32
-diff --git a/drivers/net/wireless/libertas_tf/main.c b/drivers/net/wireless/libertas_tf/main.c
-index 6c4a1b6..0b03fd5 100644
---- a/drivers/net/wireless/libertas_tf/main.c
-+++ b/drivers/net/wireless/libertas_tf/main.c
-@@ -315,8 +315,11 @@ static void lbtf_tx_work(struct work_struct *work)
- 		dev_kfree_skb_any(skb);
- 		skb_dequeue_tail(&priv->tx_skb_buf);
- 		pr_err("TX error: %d", err);
-+	} else {
-+		if (LBS_NUM_BUFFERS > skb_queue_len(&priv->tx_skb_buf))
-+			ieee80211_wake_queues(priv->hw);
-+		lbtf_deb_tx("TX success");
+ 	fc = ((struct ieee80211_hdr *)skb->data)->frame_control;
+@@ -2689,8 +2688,6 @@ static void __ieee80211_rx_handle_packet
+ 		prev_sta = NULL;
+ 
+ 		for_each_sta_info(local, hdr->addr2, sta, tmp) {
+-			found_sta = true;
+-
+ 			if (!prev_sta) {
+ 				prev_sta = sta;
+ 				continue;
+@@ -2712,43 +2709,40 @@ static void __ieee80211_rx_handle_packet
+ 		}
  	}
--	lbtf_deb_tx("TX success");
- 	lbtf_deb_leave(LBTF_DEB_MACOPS | LBTF_DEB_TX);
- }
  
--- 
-1.7.0
+-	if (!found_sta) {
+-		prev = NULL;
+-
+-		list_for_each_entry_rcu(sdata, &local->interfaces, list) {
+-			if (!ieee80211_sdata_running(sdata))
+-				continue;
+-
+-			if (sdata->vif.type == NL80211_IFTYPE_MONITOR ||
+-			    sdata->vif.type == NL80211_IFTYPE_AP_VLAN)
+-				continue;
+-
+-			/*
+-			 * frame is destined for this interface, but if it's
+-			 * not also for the previous one we handle that after
+-			 * the loop to avoid copying the SKB once too much
+-			 */
++	prev = NULL;
+ 
+-			if (!prev) {
+-				prev = sdata;
+-				continue;
+-			}
+-
+-			rx.sta = sta_info_get_bss(prev, hdr->addr2);
+-			rx.sdata = prev;
+-			ieee80211_prepare_and_rx_handle(&rx, skb, false);
++	list_for_each_entry_rcu(sdata, &local->interfaces, list) {
++		if (!ieee80211_sdata_running(sdata))
++			continue;
++
++		if (sdata->vif.type == NL80211_IFTYPE_MONITOR ||
++		    sdata->vif.type == NL80211_IFTYPE_AP_VLAN)
++			continue;
++
++		/*
++		 * frame is destined for this interface, but if it's
++		 * not also for the previous one we handle that after
++		 * the loop to avoid copying the SKB once too much
++		 */
+ 
++		if (!prev) {
+ 			prev = sdata;
++			continue;
+ 		}
+ 
+-		if (prev) {
+-			rx.sta = sta_info_get_bss(prev, hdr->addr2);
+-			rx.sdata = prev;
++		rx.sta = sta_info_get_bss(prev, hdr->addr2);
++		rx.sdata = prev;
++		ieee80211_prepare_and_rx_handle(&rx, skb, false);
+ 
+-			if (ieee80211_prepare_and_rx_handle(&rx, skb, true))
+-				return;
+-		}
++		prev = sdata;
++	}
++
++	if (prev) {
++		rx.sta = sta_info_get_bss(prev, hdr->addr2);
++		rx.sdata = prev;
+ 
++		if (ieee80211_prepare_and_rx_handle(&rx, skb, true))
++			return;
+ 	}
+ 
+ 	dev_kfree_skb(skb);
+
 
