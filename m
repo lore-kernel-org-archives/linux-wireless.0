@@ -1,108 +1,159 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:48486 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754327Ab0INTqJ (ORCPT
+Received: from smtp.nokia.com ([192.100.105.134]:25961 "EHLO
+	mgw-mx09.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752858Ab0IWKD5 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 14 Sep 2010 15:46:09 -0400
-From: greearb@candelatech.com
-To: linux-wireless@vger.kernel.org
-Cc: Ben Greear <greearb@candelatech.com>
-Subject: [ath9k] ath9k:  Print rxfilter in debugfs.
-Date: Tue, 14 Sep 2010 12:46:04 -0700
-Message-Id: <1284493564-26191-1-git-send-email-greearb@candelatech.com>
+	Thu, 23 Sep 2010 06:03:57 -0400
+From: Luciano Coelho <luciano.coelho@nokia.com>
+To: linux-omap@vger.kernel.org
+Cc: tony@atomide.com, linux-wireless@vger.kernel.org,
+	Ido Yariv <ido@wizery.com>, Ohad Ben-Cohen <ohad@wizery.com>
+Subject: [PATCH v3] omap: beagle: add support for wl1271 on the board file
+Date: Thu, 23 Sep 2010 13:03:35 +0300
+Message-Id: <1285236215-21136-1-git-send-email-luciano.coelho@nokia.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ben Greear <greearb@candelatech.com>
+Add board configuration for the wl1271 daughter board.  This patch is based
+on Ohad Ben-Cohen's patches for Zoom boards.
 
-Print raw and decoded rxfilter in debufs 'wiphy' file.
-
-Also, move variable-length printouts to bottom of file to
-make bounds checking easier.
-
-Signed-off-by: Ben Greear <greearb@candelatech.com>
+Cc: Ohad Ben-Cohen <ohad@wizery.com>
+Signed-off-by: Luciano Coelho <luciano.coelho@nokia.com>
 ---
-:100644 100644 54aae93... 863450d... M	drivers/net/wireless/ath/ath9k/debug.c
- drivers/net/wireless/ath/ath9k/debug.c |   53 ++++++++++++++++++++++++++------
- 1 files changed, 43 insertions(+), 10 deletions(-)
+from v2 to v3: removed accidental change to wl1271.h
 
-diff --git a/drivers/net/wireless/ath/ath9k/debug.c b/drivers/net/wireless/ath/ath9k/debug.c
-index 54aae93..863450d 100644
---- a/drivers/net/wireless/ath/ath9k/debug.c
-+++ b/drivers/net/wireless/ath/ath9k/debug.c
-@@ -492,12 +492,55 @@ static ssize_t read_file_wiphy(struct file *file, char __user *user_buf,
- 	unsigned int len = 0;
- 	int i;
- 	u8 addr[ETH_ALEN];
-+	u32 tmp;
+ arch/arm/mach-omap2/board-omap3beagle.c |   69 +++++++++++++++++++++++++++++++
+ 1 files changed, 69 insertions(+), 0 deletions(-)
+
+diff --git a/arch/arm/mach-omap2/board-omap3beagle.c b/arch/arm/mach-omap2/board-omap3beagle.c
+index 87969c7..755df29 100644
+--- a/arch/arm/mach-omap2/board-omap3beagle.c
++++ b/arch/arm/mach-omap2/board-omap3beagle.c
+@@ -29,7 +29,9 @@
+ #include <linux/mtd/nand.h>
  
- 	len += snprintf(buf + len, sizeof(buf) - len,
- 			"primary: %s (%s chan=%d ht=%d)\n",
- 			wiphy_name(sc->pri_wiphy->hw->wiphy),
- 			ath_wiphy_state_str(sc->pri_wiphy->state),
- 			sc->pri_wiphy->chan_idx, sc->pri_wiphy->chan_is_ht);
+ #include <linux/regulator/machine.h>
++#include <linux/regulator/fixed.h>
+ #include <linux/i2c/twl.h>
++#include <linux/wl12xx.h>
+ 
+ #include <mach/hardware.h>
+ #include <asm/mach-types.h>
+@@ -48,6 +50,9 @@
+ #include "mux.h"
+ #include "hsmmc.h"
+ 
++#define OMAP_BEAGLE_WLAN_EN_GPIO    (139)
++#define OMAP_BEAGLE_WLAN_IRQ_GPIO   (137)
 +
-+	put_unaligned_le32(REG_READ_D(sc->sc_ah, AR_STA_ID0), addr);
-+	put_unaligned_le16(REG_READ_D(sc->sc_ah, AR_STA_ID1) & 0xffff, addr + 4);
-+	len += snprintf(buf + len, sizeof(buf) - len,
-+			"addr: %pM\n", addr);
-+	put_unaligned_le32(REG_READ_D(sc->sc_ah, AR_BSSMSKL), addr);
-+	put_unaligned_le16(REG_READ_D(sc->sc_ah, AR_BSSMSKU) & 0xffff, addr + 4);
-+	len += snprintf(buf + len, sizeof(buf) - len,
-+			"addrmask: %pM\n", addr);
-+	tmp = ath9k_hw_getrxfilter(sc->sc_ah);
-+	len += snprintf(buf + len, sizeof(buf) - len,
-+			"rfilt: 0x%x", tmp);
-+	if (tmp & ATH9K_RX_FILTER_UCAST)
-+		len += snprintf(buf + len, sizeof(buf) - len, " UCAST");
-+	if (tmp & ATH9K_RX_FILTER_MCAST)
-+		len += snprintf(buf + len, sizeof(buf) - len, " MCAST");
-+	if (tmp & ATH9K_RX_FILTER_BCAST)
-+		len += snprintf(buf + len, sizeof(buf) - len, " BCAST");
-+	if (tmp & ATH9K_RX_FILTER_CONTROL)
-+		len += snprintf(buf + len, sizeof(buf) - len, " CONTROL");
-+	if (tmp & ATH9K_RX_FILTER_BEACON)
-+		len += snprintf(buf + len, sizeof(buf) - len, " BEACON");
-+	if (tmp & ATH9K_RX_FILTER_PROM)
-+		len += snprintf(buf + len, sizeof(buf) - len, " PROM");
-+	if (tmp & ATH9K_RX_FILTER_PROBEREQ)
-+		len += snprintf(buf + len, sizeof(buf) - len, " PROBEREQ");
-+	if (tmp & ATH9K_RX_FILTER_PHYERR)
-+		len += snprintf(buf + len, sizeof(buf) - len, " PHYERR");
-+	if (tmp & ATH9K_RX_FILTER_MYBEACON)
-+		len += snprintf(buf + len, sizeof(buf) - len, " MYBEACON");
-+	if (tmp & ATH9K_RX_FILTER_COMP_BAR)
-+		len += snprintf(buf + len, sizeof(buf) - len, " COMP_BAR");
-+	if (tmp & ATH9K_RX_FILTER_PSPOLL)
-+		len += snprintf(buf + len, sizeof(buf) - len, " PSPOLL");
-+	if (tmp & ATH9K_RX_FILTER_PHYRADAR)
-+		len += snprintf(buf + len, sizeof(buf) - len, " PHYRADAR");
-+	if (tmp & ATH9K_RX_FILTER_MCAST_BCAST_ALL)
-+		len += snprintf(buf + len, sizeof(buf) - len, " MCAST_BCAST_ALL\n");
-+	else
-+		len += snprintf(buf + len, sizeof(buf) - len, "\n");
-+		
-+	/* Put variable-length stuff down here, and check for overflows. */
- 	for (i = 0; i < sc->num_sec_wiphy; i++) {
- 		struct ath_wiphy *aphy = sc->sec_wiphy[i];
- 		if (aphy == NULL)
-@@ -508,16 +551,6 @@ static ssize_t read_file_wiphy(struct file *file, char __user *user_buf,
- 				ath_wiphy_state_str(aphy->state),
- 				aphy->chan_idx, aphy->chan_is_ht);
- 	}
--
--	put_unaligned_le32(REG_READ_D(sc->sc_ah, AR_STA_ID0), addr);
--	put_unaligned_le16(REG_READ_D(sc->sc_ah, AR_STA_ID1) & 0xffff, addr + 4);
--	len += snprintf(buf + len, sizeof(buf) - len,
--			"addr: %pM\n", addr);
--	put_unaligned_le32(REG_READ_D(sc->sc_ah, AR_BSSMSKL), addr);
--	put_unaligned_le16(REG_READ_D(sc->sc_ah, AR_BSSMSKU) & 0xffff, addr + 4);
--	len += snprintf(buf + len, sizeof(buf) - len,
--			"addrmask: %pM\n", addr);
--
- 	if (len > sizeof(buf))
- 		len = sizeof(buf);
+ #define NAND_BLOCK_SIZE		SZ_128K
  
+ static struct mtd_partition omap3beagle_nand_partitions[] = {
+@@ -163,12 +168,25 @@ static void __init beagle_display_init(void)
+ 
+ #include "sdram-micron-mt46h32m32lf-6.h"
+ 
++struct wl12xx_platform_data omap_beagle_wlan_data __initdata = {
++	.irq = OMAP_GPIO_IRQ(OMAP_BEAGLE_WLAN_IRQ_GPIO),
++	.board_ref_clock = 2, /* 38.4 MHz */
++};
++
+ static struct omap2_hsmmc_info mmc[] = {
+ 	{
+ 		.mmc		= 1,
+ 		.wires		= 8,
+ 		.gpio_wp	= 29,
+ 	},
++	{
++		.name           = "wl1271",
++		.mmc            = 2,
++		.wires          = 4,
++		.gpio_wp        = -EINVAL,
++		.gpio_cd        = -EINVAL,
++		.nonremovable   = true,
++	},
+ 	{}	/* Terminator */
+ };
+ 
+@@ -176,10 +194,43 @@ static struct regulator_consumer_supply beagle_vmmc1_supply = {
+ 	.supply			= "vmmc",
+ };
+ 
++static struct regulator_consumer_supply beagle_vmmc2_supply = {
++	.supply         = "vmmc",
++	.dev_name       = "mmci-omap-hs.1",
++};
++
++
+ static struct regulator_consumer_supply beagle_vsim_supply = {
+ 	.supply			= "vmmc_aux",
+ };
+ 
++
++static struct regulator_init_data beagle_vmmc2 = {
++	.constraints = {
++		.valid_ops_mask = REGULATOR_CHANGE_STATUS,
++	},
++	.num_consumer_supplies = 1,
++	.consumer_supplies = &beagle_vmmc2_supply,
++};
++
++static struct fixed_voltage_config beagle_vwlan = {
++	.supply_name = "vwl1271",
++	.microvolts = 1800000,  /* 1.8V */
++	.gpio = OMAP_BEAGLE_WLAN_EN_GPIO,
++	.startup_delay = 70000, /* 70ms */
++	.enable_high = 1,
++	.enabled_at_boot = 0,
++	.init_data = &beagle_vmmc2,
++};
++
++static struct platform_device omap_vwlan_device = {
++	.name           = "reg-fixed-voltage",
++	.id             = 1,
++	.dev = {
++		.platform_data = &beagle_vwlan,
++	},
++};
++
+ static struct gpio_led gpio_leds[];
+ 
+ static int beagle_twl_gpio_setup(struct device *dev,
+@@ -449,6 +500,19 @@ static const struct ehci_hcd_omap_platform_data ehci_pdata __initconst = {
+ 
+ #ifdef CONFIG_OMAP_MUX
+ static struct omap_board_mux board_mux[] __initdata = {
++	/* WLAN IRQ - GPIO 137 */
++	OMAP3_MUX(SDMMC2_DAT5,  OMAP_MUX_MODE4 | OMAP_PIN_INPUT_PULLUP),
++	/* WLAN POWER ENABLE - GPIO 139 */
++	OMAP3_MUX(SDMMC2_DAT7,  OMAP_MUX_MODE4 | OMAP_PIN_OUTPUT),
++	/* WLAN SDIO: MMC2 CMD */
++	OMAP3_MUX(SDMMC2_CMD,   OMAP_MUX_MODE0 | OMAP_PIN_INPUT_PULLUP),
++	/* WLAN SDIO: MMC2 CLK */
++	OMAP3_MUX(SDMMC2_CLK,   OMAP_MUX_MODE0 | OMAP_PIN_INPUT_PULLUP),
++	/* WLAN SDIO: MMC2 DAT[0-3] */
++	OMAP3_MUX(SDMMC2_DAT0,  OMAP_MUX_MODE0 | OMAP_PIN_INPUT_PULLUP),
++	OMAP3_MUX(SDMMC2_DAT1,  OMAP_MUX_MODE0 | OMAP_PIN_INPUT_PULLUP),
++	OMAP3_MUX(SDMMC2_DAT2,  OMAP_MUX_MODE0 | OMAP_PIN_INPUT_PULLUP),
++	OMAP3_MUX(SDMMC2_DAT3,  OMAP_MUX_MODE0 | OMAP_PIN_INPUT_PULLUP),
+ 	{ .reg_offset = OMAP_MUX_TERMINATOR },
+ };
+ #else
+@@ -464,9 +528,14 @@ static struct omap_musb_board_data musb_board_data = {
+ static void __init omap3_beagle_init(void)
+ {
+ 	omap3_mux_init(board_mux, OMAP_PACKAGE_CBB);
++	if (wl12xx_set_platform_data(&omap_beagle_wlan_data))
++		pr_err("error setting wl12xx data\n");
++
+ 	omap3_beagle_i2c_init();
+ 	platform_add_devices(omap3_beagle_devices,
+ 			ARRAY_SIZE(omap3_beagle_devices));
++	platform_device_register(&omap_vwlan_device);
++
+ 	omap_serial_init();
+ 
+ 	omap_mux_init_gpio(170, OMAP_PIN_INPUT);
 -- 
-1.7.2.2
+1.6.3.3
 
