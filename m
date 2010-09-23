@@ -1,62 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:43745 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754870Ab0I2SDJ (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 29 Sep 2010 14:03:09 -0400
-From: greearb@candelatech.com
-To: linux-wireless@vger.kernel.org
-Cc: Ben Greear <greearb@candelatech.com>
-Subject: [PATCH 1/2] mac80211:  Make no-probe-response kernel messages more useful.
-Date: Wed, 29 Sep 2010 11:03:02 -0700
-Message-Id: <1285783383-20822-1-git-send-email-greearb@candelatech.com>
+Received: from comal.ext.ti.com ([198.47.26.152]:40980 "EHLO comal.ext.ti.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753614Ab0IWMuP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 23 Sep 2010 08:50:15 -0400
+Date: Thu, 23 Sep 2010 15:50:01 +0300
+From: Felipe Balbi <balbi@ti.com>
+To: Ohad Ben-Cohen <ohad@wizery.com>
+Cc: "Balbi, Felipe" <balbi@ti.com>,
+	Luciano Coelho <luciano.coelho@nokia.com>,
+	"linux-omap@vger.kernel.org" <linux-omap@vger.kernel.org>,
+	"tony@atomide.com" <tony@atomide.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH v2] omap: beagle: add support for wl1271 on the board
+ file
+Message-ID: <20100923125001.GS4580@legolas.emea.dhcp.ti.com>
+Reply-To: balbi@ti.com
+References: <1285230003-5065-1-git-send-email-luciano.coelho@nokia.com>
+ <20100923114528.GL4580@legolas.emea.dhcp.ti.com>
+ <1285244253.3231.75.camel@chilepepper>
+ <20100923122048.GO4580@legolas.emea.dhcp.ti.com>
+ <AANLkTikN37=O8rnFkBfuJex25DdNPEieioL5jgenpoYY@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii; format=flowed
+In-Reply-To: <AANLkTikN37=O8rnFkBfuJex25DdNPEieioL5jgenpoYY@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ben Greear <greearb@candelatech.com>
+Hi,
 
-Add device name and flags to give better idea of what
-exactly is happening.
+On Thu, Sep 23, 2010 at 07:46:33AM -0500, Ohad Ben-Cohen wrote:
+>> irq = platform_get_irq(pdev, 0);
+>
+>only problem is that there is no platform device involved here :)
 
-Signed-off-by: Ben Greear <greearb@candelatech.com>
----
-:100644 100644 77913a1... 04f33cf... M	net/mac80211/mlme.c
- net/mac80211/mlme.c |   14 ++++++++------
- 1 files changed, 8 insertions(+), 6 deletions(-)
+heh, I thought the omap_beagle_vwlan_device was it, but it's only for
+the regulator :-p
 
-diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index 77913a1..04f33cf 100644
---- a/net/mac80211/mlme.c
-+++ b/net/mac80211/mlme.c
-@@ -1863,10 +1863,11 @@ void ieee80211_sta_work(struct ieee80211_sub_if_data *sdata)
- 
- 		else if (ifmgd->probe_send_count < IEEE80211_MAX_PROBE_TRIES) {
- #ifdef CONFIG_MAC80211_VERBOSE_DEBUG
--			printk(KERN_DEBUG "No probe response from AP %pM"
--				" after %dms, try %d\n", bssid,
-+			printk(KERN_DEBUG "%s: No probe response from AP %pM"
-+				" after %dms, try %d  flags: 0x%x\n",
-+				sdata->dev->name, bssid,
- 				(1000 * IEEE80211_PROBE_WAIT)/HZ,
--				ifmgd->probe_send_count);
-+				ifmgd->probe_send_count, ifmgd->flags);
- #endif
- 			ieee80211_mgd_probe_ap_send(sdata);
- 		} else {
-@@ -1876,9 +1877,10 @@ void ieee80211_sta_work(struct ieee80211_sub_if_data *sdata)
- 			 */
- 			ifmgd->flags &= ~(IEEE80211_STA_CONNECTION_POLL |
- 					  IEEE80211_STA_BEACON_POLL);
--			printk(KERN_DEBUG "No probe response from AP %pM"
--				" after %dms, disconnecting.\n",
--				bssid, (1000 * IEEE80211_PROBE_WAIT)/HZ);
-+			printk(KERN_DEBUG "%s: No probe response from AP %pM"
-+			       " after %dms, disconnecting, flags: 0x%x\n",
-+			       sdata->dev->name, bssid,
-+			       (1000 * IEEE80211_PROBE_WAIT)/HZ, ifmgd->flags);
- 			ieee80211_set_disassoc(sdata, true);
- 			mutex_unlock(&ifmgd->mtx);
- 			mutex_lock(&local->mtx);
+nevermind.
+
 -- 
-1.7.2.2
-
+balbi
