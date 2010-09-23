@@ -1,60 +1,121 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qw0-f46.google.com ([209.85.216.46]:48538 "EHLO
-	mail-qw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753217Ab0IKBX3 (ORCPT
+Received: from mail-ey0-f174.google.com ([209.85.215.174]:58346 "EHLO
+	mail-ey0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752394Ab0IWMDf convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 10 Sep 2010 21:23:29 -0400
-Received: by qwh6 with SMTP id 6so2014477qwh.19
-        for <linux-wireless@vger.kernel.org>; Fri, 10 Sep 2010 18:23:28 -0700 (PDT)
+	Thu, 23 Sep 2010 08:03:35 -0400
 MIME-Version: 1.0
-Date: Fri, 10 Sep 2010 18:23:28 -0700
-Message-ID: <AANLkTikCBPGjNmRxdkgpZdTnHNvcMSOa6g2V-Z3o6bCx@mail.gmail.com>
-Subject: mesh beacons broken on HEAD for libertas_tf
-From: Steve deRosier <steve@cozybit.com>
-To: linux-wireless <linux-wireless@vger.kernel.org>,
-	Johannes Berg <johannes@sipsolutions.net>
+In-Reply-To: <AANLkTinLjQbvbTj3LTnw+54S-ojWzojqgyd=-3F783We@mail.gmail.com>
+References: <1285230003-5065-1-git-send-email-luciano.coelho@nokia.com>
+	<AANLkTinLjQbvbTj3LTnw+54S-ojWzojqgyd=-3F783We@mail.gmail.com>
+Date: Thu, 23 Sep 2010 07:03:33 -0500
+Message-ID: <AANLkTimce-=MP2DDNTpRh_oRFW15_gSkKZJ6fQzwc4yJ@mail.gmail.com>
+Subject: Re: [PATCH v2] omap: beagle: add support for wl1271 on the board file
+From: Robert Nelson <robertcnelson@gmail.com>
+To: Luciano Coelho <luciano.coelho@nokia.com>
+Cc: linux-omap@vger.kernel.org, tony@atomide.com,
+	linux-wireless@vger.kernel.org, Ohad Ben-Cohen <ohad@wizery.com>
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I found an issue with recent changes to mac80211 that break mesh
-beacons at least for libertas_tf.
+On Thu, Sep 23, 2010 at 5:30 AM, Grazvydas Ignotas <notasas@gmail.com> wrote:
+> On Thu, Sep 23, 2010 at 11:20 AM, Luciano Coelho
+> <luciano.coelho@nokia.com> wrote:
+>> Add board configuration for the wl1271 daughter board.  This patch is based
+>> on Ohad Ben-Cohen's patches for Zoom boards.
+>
+> Hm can that daughter board be detected? With your patch all beagle
+> users will get GPIO139 toggled, and if someone has that wired to
+> chainsaw switch somebody might get hurt.
 
-I say "recent" in that the exact same libertas_tf code works fine in a
-2.6.34-rc5-wl kernel but not in head.
+Expansion boards really need to follow:
 
-ieee80211_do_open() calls ieee80211_start_mesh() which calls
-ieee80211_bss_info_change_notify() to turn on beaconing.
-ieee80211_bss_info_change_notify() checks that state is
-SDATA_STATE_RUNNING before it enables beacons.
+http://elinux.org/BeagleBoardPinMux#Expansion_boards
 
-Problem is, SDATA_STATE_RUNNING doesn't get set until right before
-ieee80211_do_open() exits, long after ieee80211_start_mesh() gets
-called and tries to enable beaconing.
+Is there any eeprom on i2c bus #2 for identification on this board?
 
-The SDATA_STATE_RUNNING stuff was added in commit 34d4bc4d about two weeks ago.
+Otherwise this is going to break a bunch of existing adapters.
 
-The basic symptom is that the commands go down to the firmware to
-setup the beaconing, but instead of beaconing being enabled, it's
-disabled in the command call.
+Regards,
 
-I can set the bit right before the start mesh call and all works as
-expected.  But, I'm sure this isn't the correct change.
+>
+>> Cc: Ohad Ben-Cohen <ohad@wizery.com>
+>> Signed-off-by: Luciano Coelho <luciano.coelho@nokia.com>
+>> ---
+>> There was a useless variable defined in omap3_beagle_init() that was causing a
+>> warning.  I have removed it in v2.
+>>
+>>  arch/arm/mach-omap2/board-omap3beagle.c |   69 +++++++++++++++++++++++++++++++
+>>  drivers/net/wireless/wl12xx/wl1271.h    |    2 +-
+>>  2 files changed, 70 insertions(+), 1 deletions(-)
+>>
+>> diff --git a/arch/arm/mach-omap2/board-omap3beagle.c b/arch/arm/mach-omap2/board-omap3beagle.c
+>> index 87969c7..755df29 100644
+>> --- a/arch/arm/mach-omap2/board-omap3beagle.c
+>> +++ b/arch/arm/mach-omap2/board-omap3beagle.c
+>
+> <snip>
+>
+>> +static struct regulator_consumer_supply beagle_vmmc2_supply = {
+>> +       .supply         = "vmmc",
+>> +       .dev_name       = "mmci-omap-hs.1",
+>> +};
+>> +
+>> +
+>
+> single newline is enough.
+>
+>>  static struct regulator_consumer_supply beagle_vsim_supply = {
+>>        .supply                 = "vmmc_aux",
+>>  };
+>>
+>> +
+>
+> here too.
+>
+>> +static struct regulator_init_data beagle_vmmc2 = {
+>> +       .constraints = {
+>> +               .valid_ops_mask = REGULATOR_CHANGE_STATUS,
+>> +       },
+>> +       .num_consumer_supplies = 1,
+>> +       .consumer_supplies = &beagle_vmmc2_supply,
+>> +};
+>> +
+>> +static struct fixed_voltage_config beagle_vwlan = {
+>> +       .supply_name = "vwl1271",
+>> +       .microvolts = 1800000,  /* 1.8V */
+>> +       .gpio = OMAP_BEAGLE_WLAN_EN_GPIO,
+>> +       .startup_delay = 70000, /* 70ms */
+>> +       .enable_high = 1,
+>> +       .enabled_at_boot = 0,
+>> +       .init_data = &beagle_vmmc2,
+>> +};
+>
+> We tabify all structures in board files, take a look at other structures.
+>
+> <snip>
+>
+>> diff --git a/drivers/net/wireless/wl12xx/wl1271.h b/drivers/net/wireless/wl12xx/wl1271.h
+>> index 4134f44..8bb028e 100644
+>> --- a/drivers/net/wireless/wl12xx/wl1271.h
+>> +++ b/drivers/net/wireless/wl12xx/wl1271.h
+>> @@ -60,7 +60,7 @@ enum {
+>>        DEBUG_ALL       = ~0,
+>>  };
+>>
+>> -#define DEBUG_LEVEL (DEBUG_NONE)
+>> +#define DEBUG_LEVEL (DEBUG_MAC80211 | DEBUG_CMD | DEBUG_ACX | DEBUG_BOOT)
+>
+> I guess you didn't want that?
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-omap" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
 
-I see four general strategies:
-1. Move the setting of SDATA_STATE_RUNNING to earlier in the function.
- This is obviously problematic, having to unset it on errors or so on.
-2. Remove the check in ieee80211_bss_info_change_notify().  Of course,
-this was probably put here for a reason.
-3. Put an exception to the check in ieee80211_bss_info_change_notify()
-so that if vif->type is mesh, that we don't check the
-SDATA_STATE_RUNNING bit.  Fairly straight forward and I know how to do
-that.
-4. Somehow delay the mesh setup from setting up beacons till after the
-ieee80211_do_open() call finishes.  I'm not sure how to accomplish
-this in a sensible way.
 
-Does anyone have any suggestions?
 
-Thanks,
-- Steve
+-- 
+Robert Nelson
+http://www.rcn-ee.com/
