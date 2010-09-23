@@ -1,88 +1,174 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.19.149.2]:35596 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753881Ab0IUKmu (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 21 Sep 2010 06:42:50 -0400
-Received: from mail.atheros.com ([10.10.20.105])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Tue, 21 Sep 2010 03:42:43 -0700
-Date: Tue, 21 Sep 2010 16:12:41 +0530
-From: Vasanthakumar Thiagarajan <vasanth@atheros.com>
-To: "linville@tuxdriver.com" <linville@tuxdriver.com>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH 2/2] ath9k: Kick start paprd calibration whenever
-	operating channel changes
-Message-ID: <20100921104241.GC4229@vasanth-laptop>
-References: <1285048487-16795-1-git-send-email-vasanth@atheros.com> <1285048487-16795-2-git-send-email-vasanth@atheros.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <1285048487-16795-2-git-send-email-vasanth@atheros.com>
+Received: from smtp.nokia.com ([192.100.122.230]:18657 "EHLO
+	mgw-mx03.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750779Ab0IWIUl (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 23 Sep 2010 04:20:41 -0400
+From: Luciano Coelho <luciano.coelho@nokia.com>
+To: linux-omap@vger.kernel.org
+Cc: tony@atomide.com, linux-wireless@vger.kernel.org,
+	Ohad Ben-Cohen <ohad@wizery.com>
+Subject: [PATCH v2] omap: beagle: add support for wl1271 on the board file
+Date: Thu, 23 Sep 2010 11:20:03 +0300
+Message-Id: <1285230003-5065-1-git-send-email-luciano.coelho@nokia.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Sep 21, 2010 at 11:24:47AM +0530, Vasanthakumar Thiagarajan wrote:
-> Signed-off-by: Vasanthakumar Thiagarajan <vasanth@atheros.com>
-> ---
->  drivers/net/wireless/ath/ath9k/hw.h   |    1 +
->  drivers/net/wireless/ath/ath9k/main.c |   18 +++++++++++++++++-
->  2 files changed, 18 insertions(+), 1 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/ath/ath9k/hw.h b/drivers/net/wireless/ath/ath9k/hw.h
-> index df47f79..c1b4962 100644
-> --- a/drivers/net/wireless/ath/ath9k/hw.h
-> +++ b/drivers/net/wireless/ath/ath9k/hw.h
-> @@ -645,6 +645,7 @@ struct ath_hw {
->  	struct ath9k_hw_capabilities caps;
->  	struct ath9k_channel channels[38];
->  	struct ath9k_channel *curchan;
-> +	struct ath9k_channel prev_paprd_chan;
->  
->  	union {
->  		struct ar5416_eeprom_def def;
-> diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
-> index a133878..9150788 100644
-> --- a/drivers/net/wireless/ath/ath9k/main.c
-> +++ b/drivers/net/wireless/ath/ath9k/main.c
-> @@ -266,6 +266,20 @@ int ath_set_channel(struct ath_softc *sc, struct ieee80211_hw *hw,
->  	return r;
->  }
->  
-> +static bool is_paprd_done(struct ath_hw *ah)
-> +{
-> +	struct ath9k_channel *curchan, *paprd_chan;
-> +
-> +	curchan = ah->curchan;
-> +	paprd_chan = &ah->prev_paprd_chan;
-> +
-> +	if ((paprd_chan->channel == curchan->channel) &&
-> +	    paprd_chan->chanmode == curchan->chanmode)
-> +		return true;
-> +
-> +	return false;
-> +}
-> +
->  static void ath_paprd_activate(struct ath_softc *sc)
->  {
->  	struct ath_hw *ah = sc->sc_ah;
-> @@ -375,6 +389,8 @@ void ath_paprd_calibrate(struct work_struct *work)
->  
->  	if (chain_ok) {
->  		caldata->paprd_done = true;
-> +		memcpy(&ah->prev_paprd_chan, ah->curchan,
-> +		       sizeof(struct ath9k_channel));
->  		ath_paprd_activate(sc);
->  	}
->  
-> @@ -489,7 +505,7 @@ set_timer:
->  
->  	mod_timer(&common->ani.timer, jiffies + msecs_to_jiffies(cal_interval));
->  	if ((sc->sc_ah->caps.hw_caps & ATH9K_HW_CAP_PAPRD) && ah->caldata) {
-> -		if (!ah->caldata->paprd_done)
-> +		if (!is_paprd_done(ah))
->  			ieee80211_queue_work(sc->hw, &sc->paprd_work);
->  		else
->  			ath_paprd_activate(sc);
+Add board configuration for the wl1271 daughter board.  This patch is based
+on Ohad Ben-Cohen's patches for Zoom boards.
 
-Please drop this particular one as it looks redundant.
+Cc: Ohad Ben-Cohen <ohad@wizery.com>
+Signed-off-by: Luciano Coelho <luciano.coelho@nokia.com>
+---
+There was a useless variable defined in omap3_beagle_init() that was causing a
+warning.  I have removed it in v2.
 
-Vasanth
+ arch/arm/mach-omap2/board-omap3beagle.c |   69 +++++++++++++++++++++++++++++++
+ drivers/net/wireless/wl12xx/wl1271.h    |    2 +-
+ 2 files changed, 70 insertions(+), 1 deletions(-)
+
+diff --git a/arch/arm/mach-omap2/board-omap3beagle.c b/arch/arm/mach-omap2/board-omap3beagle.c
+index 87969c7..755df29 100644
+--- a/arch/arm/mach-omap2/board-omap3beagle.c
++++ b/arch/arm/mach-omap2/board-omap3beagle.c
+@@ -29,7 +29,9 @@
+ #include <linux/mtd/nand.h>
+ 
+ #include <linux/regulator/machine.h>
++#include <linux/regulator/fixed.h>
+ #include <linux/i2c/twl.h>
++#include <linux/wl12xx.h>
+ 
+ #include <mach/hardware.h>
+ #include <asm/mach-types.h>
+@@ -48,6 +50,9 @@
+ #include "mux.h"
+ #include "hsmmc.h"
+ 
++#define OMAP_BEAGLE_WLAN_EN_GPIO    (139)
++#define OMAP_BEAGLE_WLAN_IRQ_GPIO   (137)
++
+ #define NAND_BLOCK_SIZE		SZ_128K
+ 
+ static struct mtd_partition omap3beagle_nand_partitions[] = {
+@@ -163,12 +168,25 @@ static void __init beagle_display_init(void)
+ 
+ #include "sdram-micron-mt46h32m32lf-6.h"
+ 
++struct wl12xx_platform_data omap_beagle_wlan_data __initdata = {
++	.irq = OMAP_GPIO_IRQ(OMAP_BEAGLE_WLAN_IRQ_GPIO),
++	.board_ref_clock = 2, /* 38.4 MHz */
++};
++
+ static struct omap2_hsmmc_info mmc[] = {
+ 	{
+ 		.mmc		= 1,
+ 		.wires		= 8,
+ 		.gpio_wp	= 29,
+ 	},
++	{
++		.name           = "wl1271",
++		.mmc            = 2,
++		.wires          = 4,
++		.gpio_wp        = -EINVAL,
++		.gpio_cd        = -EINVAL,
++		.nonremovable   = true,
++	},
+ 	{}	/* Terminator */
+ };
+ 
+@@ -176,10 +194,43 @@ static struct regulator_consumer_supply beagle_vmmc1_supply = {
+ 	.supply			= "vmmc",
+ };
+ 
++static struct regulator_consumer_supply beagle_vmmc2_supply = {
++	.supply         = "vmmc",
++	.dev_name       = "mmci-omap-hs.1",
++};
++
++
+ static struct regulator_consumer_supply beagle_vsim_supply = {
+ 	.supply			= "vmmc_aux",
+ };
+ 
++
++static struct regulator_init_data beagle_vmmc2 = {
++	.constraints = {
++		.valid_ops_mask = REGULATOR_CHANGE_STATUS,
++	},
++	.num_consumer_supplies = 1,
++	.consumer_supplies = &beagle_vmmc2_supply,
++};
++
++static struct fixed_voltage_config beagle_vwlan = {
++	.supply_name = "vwl1271",
++	.microvolts = 1800000,  /* 1.8V */
++	.gpio = OMAP_BEAGLE_WLAN_EN_GPIO,
++	.startup_delay = 70000, /* 70ms */
++	.enable_high = 1,
++	.enabled_at_boot = 0,
++	.init_data = &beagle_vmmc2,
++};
++
++static struct platform_device omap_vwlan_device = {
++	.name           = "reg-fixed-voltage",
++	.id             = 1,
++	.dev = {
++		.platform_data = &beagle_vwlan,
++	},
++};
++
+ static struct gpio_led gpio_leds[];
+ 
+ static int beagle_twl_gpio_setup(struct device *dev,
+@@ -449,6 +500,19 @@ static const struct ehci_hcd_omap_platform_data ehci_pdata __initconst = {
+ 
+ #ifdef CONFIG_OMAP_MUX
+ static struct omap_board_mux board_mux[] __initdata = {
++	/* WLAN IRQ - GPIO 137 */
++	OMAP3_MUX(SDMMC2_DAT5,  OMAP_MUX_MODE4 | OMAP_PIN_INPUT_PULLUP),
++	/* WLAN POWER ENABLE - GPIO 139 */
++	OMAP3_MUX(SDMMC2_DAT7,  OMAP_MUX_MODE4 | OMAP_PIN_OUTPUT),
++	/* WLAN SDIO: MMC2 CMD */
++	OMAP3_MUX(SDMMC2_CMD,   OMAP_MUX_MODE0 | OMAP_PIN_INPUT_PULLUP),
++	/* WLAN SDIO: MMC2 CLK */
++	OMAP3_MUX(SDMMC2_CLK,   OMAP_MUX_MODE0 | OMAP_PIN_INPUT_PULLUP),
++	/* WLAN SDIO: MMC2 DAT[0-3] */
++	OMAP3_MUX(SDMMC2_DAT0,  OMAP_MUX_MODE0 | OMAP_PIN_INPUT_PULLUP),
++	OMAP3_MUX(SDMMC2_DAT1,  OMAP_MUX_MODE0 | OMAP_PIN_INPUT_PULLUP),
++	OMAP3_MUX(SDMMC2_DAT2,  OMAP_MUX_MODE0 | OMAP_PIN_INPUT_PULLUP),
++	OMAP3_MUX(SDMMC2_DAT3,  OMAP_MUX_MODE0 | OMAP_PIN_INPUT_PULLUP),
+ 	{ .reg_offset = OMAP_MUX_TERMINATOR },
+ };
+ #else
+@@ -464,9 +528,14 @@ static struct omap_musb_board_data musb_board_data = {
+ static void __init omap3_beagle_init(void)
+ {
+ 	omap3_mux_init(board_mux, OMAP_PACKAGE_CBB);
++	if (wl12xx_set_platform_data(&omap_beagle_wlan_data))
++		pr_err("error setting wl12xx data\n");
++
+ 	omap3_beagle_i2c_init();
+ 	platform_add_devices(omap3_beagle_devices,
+ 			ARRAY_SIZE(omap3_beagle_devices));
++	platform_device_register(&omap_vwlan_device);
++
+ 	omap_serial_init();
+ 
+ 	omap_mux_init_gpio(170, OMAP_PIN_INPUT);
+diff --git a/drivers/net/wireless/wl12xx/wl1271.h b/drivers/net/wireless/wl12xx/wl1271.h
+index 4134f44..8bb028e 100644
+--- a/drivers/net/wireless/wl12xx/wl1271.h
++++ b/drivers/net/wireless/wl12xx/wl1271.h
+@@ -60,7 +60,7 @@ enum {
+ 	DEBUG_ALL	= ~0,
+ };
+ 
+-#define DEBUG_LEVEL (DEBUG_NONE)
++#define DEBUG_LEVEL (DEBUG_MAC80211 | DEBUG_CMD | DEBUG_ACX | DEBUG_BOOT)
+ 
+ #define DEBUG_DUMP_LIMIT 1024
+ 
+-- 
+1.6.3.3
+
