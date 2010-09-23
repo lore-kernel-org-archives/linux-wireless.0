@@ -1,86 +1,99 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f46.google.com ([209.85.214.46]:58384 "EHLO
-	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753894Ab0IOXay (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:53312 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754857Ab0IWTcY (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 15 Sep 2010 19:30:54 -0400
-From: Ohad Ben-Cohen <ohad@wizery.com>
-To: <linux-wireless@vger.kernel.org>, <linux-omap@vger.kernel.org>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	Mark Brown <broonie@opensource.wolfsonmicro.com>,
-	<linux-arm-kernel@lists.infradead.org>,
-	Chikkature Rajashekar Madhusudhan <madhu.cr@ti.com>,
-	Luciano Coelho <luciano.coelho@nokia.com>,
-	San Mehat <san@google.com>,
-	Roger Quadros <roger.quadros@nokia.com>,
-	Tony Lindgren <tony@atomide.com>,
-	Nicolas Pitre <nico@fluxnic.net>, Ido Yariv <ido@wizery.com>,
-	Kalle Valo <kalle.valo@iki.fi>,
-	Russell King <linux@arm.linux.org.uk>,
-	Vitaly Wool <vitalywool@gmail.com>,
-	Ohad Ben-Cohen <ohad@wizery.com>
-Subject: [PATCH v6 4/7] wl1271: take irq info from private board data
-Date: Thu, 16 Sep 2010 01:31:35 +0200
-Message-Id: <1284593495-30012-1-git-send-email-ohad@wizery.com>
+	Thu, 23 Sep 2010 15:32:24 -0400
+Message-Id: <20100923193137.867101720@sipsolutions.net>
+Date: Thu, 23 Sep 2010 21:31:00 +0200
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: Ben Greear <greearb@candelatech.com>
+Subject: [RFC 1/3] mac80211: remove prepare_for_handlers sdata argument
+References: <20100923193059.805312839@sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Remove the hard coded irq information, and instead take
-the irq information from the board's platform data.
+From: Johannes Berg <johannes.berg@intel.com>
 
-Signed-off-by: Ohad Ben-Cohen <ohad@wizery.com>
+The first argument to prepare_for_handlers is always
+the sdata that can just be stored in rx data directly
+(and even already is, in two of four code paths.)
+
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- drivers/net/wireless/wl12xx/wl1271_sdio.c |   15 ++++++++-------
- 1 files changed, 8 insertions(+), 7 deletions(-)
+ net/mac80211/rx.c |   16 ++++++++--------
+ 1 file changed, 8 insertions(+), 8 deletions(-)
 
-diff --git a/drivers/net/wireless/wl12xx/wl1271_sdio.c b/drivers/net/wireless/wl12xx/wl1271_sdio.c
-index 1d5dc72..987ecdc 100644
---- a/drivers/net/wireless/wl12xx/wl1271_sdio.c
-+++ b/drivers/net/wireless/wl12xx/wl1271_sdio.c
-@@ -29,14 +29,12 @@
- #include <linux/mmc/sdio_ids.h>
- #include <linux/mmc/card.h>
- #include <linux/gpio.h>
-+#include <linux/wl12xx.h>
+--- wireless-testing.orig/net/mac80211/rx.c	2010-09-23 20:58:22.000000000 +0200
++++ wireless-testing/net/mac80211/rx.c	2010-09-23 21:27:20.000000000 +0200
+@@ -2517,10 +2517,10 @@ void ieee80211_release_reorder_timeout(s
  
- #include "wl1271.h"
- #include "wl12xx_80211.h"
- #include "wl1271_io.h"
+ /* main receive path */
  
--
--#define RX71_WL1271_IRQ_GPIO		42
--
- #ifndef SDIO_VENDOR_ID_TI
- #define SDIO_VENDOR_ID_TI		0x0097
- #endif
-@@ -208,6 +206,7 @@ static int __devinit wl1271_probe(struct sdio_func *func,
- 				  const struct sdio_device_id *id)
+-static int prepare_for_handlers(struct ieee80211_sub_if_data *sdata,
+-				struct ieee80211_rx_data *rx,
++static int prepare_for_handlers(struct ieee80211_rx_data *rx,
+ 				struct ieee80211_hdr *hdr)
  {
- 	struct ieee80211_hw *hw;
-+	const struct wl12xx_platform_data *wlan_data;
- 	struct wl1271 *wl;
- 	int ret;
++	struct ieee80211_sub_if_data *sdata = rx->sdata;
+ 	struct sk_buff *skb = rx->skb;
+ 	struct ieee80211_rx_status *status = IEEE80211_SKB_RXCB(skb);
+ 	u8 *bssid = ieee80211_get_bssid(hdr, skb->len, sdata->vif.type);
+@@ -2660,7 +2660,7 @@ static void __ieee80211_rx_handle_packet
+ 			rx.sdata = prev_sta->sdata;
  
-@@ -227,13 +226,15 @@ static int __devinit wl1271_probe(struct sdio_func *func,
- 	/* Grab access to FN0 for ELP reg. */
- 	func->card->quirks |= MMC_QUIRK_LENIENT_FN0;
+ 			status->rx_flags |= IEEE80211_RX_RA_MATCH;
+-			prepares = prepare_for_handlers(rx.sdata, &rx, hdr);
++			prepares = prepare_for_handlers(&rx, hdr);
+ 			if (!prepares)
+ 				goto next_sta;
  
--	wl->irq = gpio_to_irq(RX71_WL1271_IRQ_GPIO);
--	if (wl->irq < 0) {
--		ret = wl->irq;
--		wl1271_error("could not get irq!");
-+	wlan_data = wl12xx_get_platform_data();
-+	if (IS_ERR(wlan_data)) {
-+		ret = PTR_ERR(wlan_data);
-+		wl1271_error("missing wlan platform data: %d", ret);
- 		goto out_free;
- 	}
+@@ -2694,7 +2694,7 @@ next_sta:
+ 			rx.sdata = prev_sta->sdata;
  
-+	wl->irq = wlan_data->irq;
-+
- 	ret = request_irq(wl->irq, wl1271_irq, 0, DRIVER_NAME, wl);
- 	if (ret < 0) {
- 		wl1271_error("request_irq() failed: %d", ret);
--- 
-1.7.0.4
+ 			status->rx_flags |= IEEE80211_RX_RA_MATCH;
+-			prepares = prepare_for_handlers(rx.sdata, &rx, hdr);
++			prepares = prepare_for_handlers(&rx, hdr);
+ 			if (!prepares)
+ 				prev_sta = NULL;
+ 
+@@ -2737,15 +2737,15 @@ next_sta:
+ 			}
+ 
+ 			rx.sta = sta_info_get_bss(prev, hdr->addr2);
++			rx.sdata = prev;
+ 
+ 			status->rx_flags |= IEEE80211_RX_RA_MATCH;
+-			prepares = prepare_for_handlers(prev, &rx, hdr);
++			prepares = prepare_for_handlers(&rx, hdr);
+ 
+ 			if (!prepares)
+ 				goto next;
+ 
+ 			if (status->flag & RX_FLAG_MMIC_ERROR) {
+-				rx.sdata = prev;
+ 				if (status->rx_flags & IEEE80211_RX_RA_MATCH)
+ 					ieee80211_rx_michael_mic_report(hdr,
+ 									&rx);
+@@ -2772,15 +2772,15 @@ next:
+ 
+ 		if (prev) {
+ 			rx.sta = sta_info_get_bss(prev, hdr->addr2);
++			rx.sdata = prev;
+ 
+ 			status->rx_flags |= IEEE80211_RX_RA_MATCH;
+-			prepares = prepare_for_handlers(prev, &rx, hdr);
++			prepares = prepare_for_handlers(&rx, hdr);
+ 
+ 			if (!prepares)
+ 				prev = NULL;
+ 
+ 			if (prev && status->flag & RX_FLAG_MMIC_ERROR) {
+-				rx.sdata = prev;
+ 				if (status->rx_flags & IEEE80211_RX_RA_MATCH)
+ 					ieee80211_rx_michael_mic_report(hdr,
+ 									&rx);
+
 
