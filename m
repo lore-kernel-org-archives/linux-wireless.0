@@ -1,174 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail30f.wh2.ocn.ne.jp ([220.111.41.203]:26921 "HELO
-	mail30f.wh2.ocn.ne.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1753285Ab0IQCga (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 16 Sep 2010 22:36:30 -0400
-Received: from vs3002.wh2.ocn.ne.jp (125.206.180.165)
-	by mail30f.wh2.ocn.ne.jp (RS ver 1.0.95vs) with SMTP id 4-029181988
-	for <linux-wireless@vger.kernel.org>; Fri, 17 Sep 2010 11:36:28 +0900 (JST)
-Subject: [PATCH 06/11] ath5k: Move tx frame completion into separate function
-To: linville@tuxdriver.com
-From: Bruno Randolf <br1@einfach.org>
-Cc: ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org
-Date: Fri, 17 Sep 2010 11:36:51 +0900
-Message-ID: <20100917023651.24997.19446.stgit@tt-desk>
-In-Reply-To: <20100917023543.24997.48466.stgit@tt-desk>
-References: <20100917023543.24997.48466.stgit@tt-desk>
+Received: from server19320154104.serverpool.info ([193.201.54.104]:44866 "EHLO
+	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752372Ab0IWTdJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 23 Sep 2010 15:33:09 -0400
+Message-ID: <4C9BAB6C.2010701@hauke-m.de>
+Date: Thu, 23 Sep 2010 21:33:00 +0200
+From: Hauke Mehrtens <hauke@hauke-m.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+To: Kshitij Kulshreshtha <kkhere.geo@gmail.com>
+CC: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	linux-wireless@vger.kernel.org, mcgrof@infradead.org
+Subject: Re: [PATCH 3/4] compat: move pmcia backport code into compat-2.6.36.h
+References: <1284918131-32065-1-git-send-email-hauke@hauke-m.de> <1284918131-32065-3-git-send-email-hauke@hauke-m.de> <4C9A34FB.5020809@gmail.com> <AANLkTinJG=mgYE-eUmptCVkXDDpSB9YDHA0AwbYi7xfw@mail.gmail.com> <4C9A5471.2090009@gmail.com>
+In-Reply-To: <4C9A5471.2090009@gmail.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Clearer separation between queue handling and what we do with completed frames.
+On 22.09.2010 21:09, Kshitij Kulshreshtha wrote:
+> 
+> 
+> As on 2010-09-22 18:59, Luis R. Rodriguez did write:
+>> On Wed, Sep 22, 2010 at 9:55 AM, Kshitij Kulshreshtha
+>> <kkhere.geo@gmail.com> wrote:
+>>> Hello,
+>>>
+>>> As on 2010-09-19 19:42, Hauke Mehrtens did write:
+>>>> We have all out backport headers in include/linux/compat-2.6.XX.h also the pcmcia
+>>>> part there.
+>>>
+>>> I'm not sure if this won't make all the compat-wireless modules depend
+>>> on pcmcia.ko for kernels < 2.6.36 where
+>>> pcmcia_access_configuation_register() is exported. Even if someone is
+>>> only building selected drivers like iwlwifi or ath.
+>>
+>> Have you tried loading ath9k or iwlagn on compat-wireless? Did you
+>> note compat doesn't get loaded? Anyway, patches welcomed to enhance
+>> this if your concern is if your kernel won't build with this. We also
+>> plan on dropping PCMCIA completely anyway.
+> 
+> Actually compat does get loaded since mac80211 needs it for noop_llseek
+> on 2.6.34, however my current build is not showing the pcmcia dependency
+> that I was afraid of, so please ignore this.
+> 
+> Thanks.
+Hi Kshitij,
+Hi Luis,
 
-Signed-off-by: Bruno Randolf <br1@einfach.org>
----
- drivers/net/wireless/ath/ath5k/base.c |  107 ++++++++++++++++++---------------
- 1 files changed, 57 insertions(+), 50 deletions(-)
+in this case pcmcia_read_config_byte() and pcmcia_write_config_byte()
+are inlined so the code will be placed in the drivers using this code
+and not compat.ko. The header files for pcmcia are available independent
+from how the kernel was configured.
 
-diff --git a/drivers/net/wireless/ath/ath5k/base.c b/drivers/net/wireless/ath/ath5k/base.c
-index 1e3d7b7..eba2e74 100644
---- a/drivers/net/wireless/ath/ath5k/base.c
-+++ b/drivers/net/wireless/ath/ath5k/base.c
-@@ -1520,6 +1520,61 @@ drop_packet:
- 	return NETDEV_TX_OK;
- }
- 
-+static void
-+ath5k_tx_frame_completed(struct ath5k_softc *sc, struct sk_buff *skb,
-+			 struct ath5k_tx_status *ts)
-+{
-+	struct ieee80211_tx_info *info;
-+	int i;
-+
-+	sc->stats.tx_all_count++;
-+	info = IEEE80211_SKB_CB(skb);
-+
-+	ieee80211_tx_info_clear_status(info);
-+	for (i = 0; i < 4; i++) {
-+		struct ieee80211_tx_rate *r =
-+			&info->status.rates[i];
-+
-+		if (ts->ts_rate[i]) {
-+			r->idx = ath5k_hw_to_driver_rix(sc, ts->ts_rate[i]);
-+			r->count = ts->ts_retry[i];
-+		} else {
-+			r->idx = -1;
-+			r->count = 0;
-+		}
-+	}
-+
-+	/* count the successful attempt as well */
-+	info->status.rates[ts->ts_final_idx].count++;
-+
-+	if (unlikely(ts->ts_status)) {
-+		sc->stats.ack_fail++;
-+		if (ts->ts_status & AR5K_TXERR_FILT) {
-+			info->flags |= IEEE80211_TX_STAT_TX_FILTERED;
-+			sc->stats.txerr_filt++;
-+		}
-+		if (ts->ts_status & AR5K_TXERR_XRETRY)
-+			sc->stats.txerr_retry++;
-+		if (ts->ts_status & AR5K_TXERR_FIFO)
-+			sc->stats.txerr_fifo++;
-+	} else {
-+		info->flags |= IEEE80211_TX_STAT_ACK;
-+		info->status.ack_signal = ts->ts_rssi;
-+	}
-+
-+	/*
-+	* Remove MAC header padding before giving the frame
-+	* back to mac80211.
-+	*/
-+	ath5k_remove_padding(skb);
-+
-+	if (ts->ts_antenna > 0 && ts->ts_antenna < 5)
-+		sc->stats.antenna_tx[ts->ts_antenna]++;
-+	else
-+		sc->stats.antenna_tx[0]++; /* invalid */
-+
-+	ieee80211_tx_status(sc->hw, skb);
-+}
- 
- static void
- ath5k_tx_processq(struct ath5k_softc *sc, struct ath5k_txq *txq)
-@@ -1528,8 +1583,7 @@ ath5k_tx_processq(struct ath5k_softc *sc, struct ath5k_txq *txq)
- 	struct ath5k_buf *bf, *bf0;
- 	struct ath5k_desc *ds;
- 	struct sk_buff *skb;
--	struct ieee80211_tx_info *info;
--	int i, ret;
-+	int ret;
- 
- 	spin_lock(&txq->lock);
- 	list_for_each_entry_safe(bf, bf0, &txq->q, list) {
-@@ -1545,7 +1599,6 @@ ath5k_tx_processq(struct ath5k_softc *sc, struct ath5k_txq *txq)
- 		if (ath5k_hw_get_txdp(sc->ah, txq->qnum) == bf->daddr &&
- 		    !list_is_last(&bf->list, &txq->q))
- 			break;
--
- 		ret = sc->ah->ah_proc_tx_desc(sc->ah, ds, &ts);
- 		if (unlikely(ret == -EINPROGRESS))
- 			break;
-@@ -1555,58 +1608,12 @@ ath5k_tx_processq(struct ath5k_softc *sc, struct ath5k_txq *txq)
- 			break;
- 		}
- 
--		sc->stats.tx_all_count++;
- 		skb = bf->skb;
--		info = IEEE80211_SKB_CB(skb);
- 		bf->skb = NULL;
--
- 		pci_unmap_single(sc->pdev, bf->skbaddr, skb->len,
- 				PCI_DMA_TODEVICE);
- 
--		ieee80211_tx_info_clear_status(info);
--		for (i = 0; i < 4; i++) {
--			struct ieee80211_tx_rate *r =
--				&info->status.rates[i];
--
--			if (ts.ts_rate[i]) {
--				r->idx = ath5k_hw_to_driver_rix(sc, ts.ts_rate[i]);
--				r->count = ts.ts_retry[i];
--			} else {
--				r->idx = -1;
--				r->count = 0;
--			}
--		}
--
--		/* count the successful attempt as well */
--		info->status.rates[ts.ts_final_idx].count++;
--
--		if (unlikely(ts.ts_status)) {
--			sc->stats.ack_fail++;
--			if (ts.ts_status & AR5K_TXERR_FILT) {
--				info->flags |= IEEE80211_TX_STAT_TX_FILTERED;
--				sc->stats.txerr_filt++;
--			}
--			if (ts.ts_status & AR5K_TXERR_XRETRY)
--				sc->stats.txerr_retry++;
--			if (ts.ts_status & AR5K_TXERR_FIFO)
--				sc->stats.txerr_fifo++;
--		} else {
--			info->flags |= IEEE80211_TX_STAT_ACK;
--			info->status.ack_signal = ts.ts_rssi;
--		}
--
--		/*
--		 * Remove MAC header padding before giving the frame
--		 * back to mac80211.
--		 */
--		ath5k_remove_padding(skb);
--
--		if (ts.ts_antenna > 0 && ts.ts_antenna < 5)
--			sc->stats.antenna_tx[ts.ts_antenna]++;
--		else
--			sc->stats.antenna_tx[0]++; /* invalid */
--
--		ieee80211_tx_status(sc->hw, skb);
-+		ath5k_tx_frame_completed(sc, skb, &ts);
- 
- 		spin_lock(&sc->txbuflock);
- 		list_move_tail(&bf->list, &sc->txbuf);
+But there are some other functions in compat-2.6.xx.c (e.g.
+pccard_loop_tuple() in compat-2.6.33.c) depending on pcmcia code. This
+will not cause an compile error because these backport functions are
+only build if pcmcia is configured in the kernel but if the kernel
+supports pcmcia compat.ko will depend on pcmcia. This does not harm on
+normal desktop systems like ubuntu because the devices do have enoth
+memory to load the probably unneeded pcmcia module. But if you are on an
+embedded device with e.g. 4 MB flash and 16 MB Ram you do not want to
+depend on pcmcia if you do not have to.
 
+The same thing also regards usb and probably some other modules. In
+OpenWrt we removed the usb backports from compat-wireless, because we
+had no support for any driver needing these functions and we do not want
+compat.ko to depend on usb, because some devices supported by OpenWrt do
+not even have an usb port, but an build in wireless card.
+
+It would make sense to split compat.ko up in compat-generic.ko,
+compat-net.ko, compat-pcmcia.ko, compat-usb.ko, and so on, but this will
+make maintaining them it really harder.
+
+Hauke
