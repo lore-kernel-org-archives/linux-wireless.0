@@ -1,65 +1,82 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from devils.ext.ti.com ([198.47.26.153]:52998 "EHLO
-	devils.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753341Ab0IWMVI (ORCPT
+Received: from mail.candelatech.com ([208.74.158.172]:44476 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753631Ab0IWNb2 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 23 Sep 2010 08:21:08 -0400
-Date: Thu, 23 Sep 2010 15:20:48 +0300
-From: Felipe Balbi <balbi@ti.com>
-To: Luciano Coelho <luciano.coelho@nokia.com>
-Cc: "Balbi, Felipe" <balbi@ti.com>,
-	"linux-omap@vger.kernel.org" <linux-omap@vger.kernel.org>,
-	"tony@atomide.com" <tony@atomide.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Ohad Ben-Cohen <ohad@wizery.com>
-Subject: Re: [PATCH v2] omap: beagle: add support for wl1271 on the board
- file
-Message-ID: <20100923122048.GO4580@legolas.emea.dhcp.ti.com>
-Reply-To: balbi@ti.com
-References: <1285230003-5065-1-git-send-email-luciano.coelho@nokia.com>
- <20100923114528.GL4580@legolas.emea.dhcp.ti.com>
- <1285244253.3231.75.camel@chilepepper>
+	Thu, 23 Sep 2010 09:31:28 -0400
+Message-ID: <4C9B56AC.6090608@candelatech.com>
+Date: Thu, 23 Sep 2010 06:31:24 -0700
+From: Ben Greear <greearb@candelatech.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-In-Reply-To: <1285244253.3231.75.camel@chilepepper>
+To: Felix Fietkau <nbd@openwrt.org>
+CC: greearb@gmail.com, linux-wireless@vger.kernel.org
+Subject: Re: [mac80211] ath5k:  Support virtual interfaces.
+References: <1285213229-19138-1-git-send-email-greearb@candelatech.com> <4C9B2444.9030608@openwrt.org> <4C9B517C.9050204@candelatech.com> <4C9B5567.4080306@openwrt.org>
+In-Reply-To: <4C9B5567.4080306@openwrt.org>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Luca,
+On 09/23/2010 06:25 AM, Felix Fietkau wrote:
+> On 2010-09-23 3:09 PM, Ben Greear wrote:
 
-On Thu, Sep 23, 2010 at 07:17:33AM -0500, Luciano Coelho wrote:
->On Thu, 2010-09-23 at 13:45 +0200, ext Felipe Balbi wrote:
->> On Thu, Sep 23, 2010 at 03:20:03AM -0500, Luciano Coelho wrote:
->> > static struct mtd_partition omap3beagle_nand_partitions[] = {
->> >@@ -163,12 +168,25 @@ static void __init beagle_display_init(void)
->> >
->> > #include "sdram-micron-mt46h32m32lf-6.h"
->> >
->> >+struct wl12xx_platform_data omap_beagle_wlan_data __initdata = {
->> >+	.irq = OMAP_GPIO_IRQ(OMAP_BEAGLE_WLAN_IRQ_GPIO),
+>>>> +	if (sc->nvifs>   1&&   !modparam_nohwcrypt) {
+>>>> +		pr_err("ath5k: can not add multiple virtual interfaces with hardware encryption\n");
+>>> Why not? Other drivers can do this just fine.
 >>
->> can you pass IRQ as a struct resource ?
+>> ath9k and ath5k, at least, cannot do multiple STA with hardware encryption,
+>> as far as I know.
+> I think that can be fixed in software by switching over to using address
+> based key lookup. In either case, this should not restrict the use of
+> multiple AP interfaces...
+
+Ok, I'll remove that code.
+
 >
->Sorry, I don't understand what you mean here.  Can you clarify?
+>>>> diff --git a/drivers/net/wireless/ath/ath5k/base.h b/drivers/net/wireless/ath/ath5k/base.h
+>>>> index 7f9d0d3..ec5c3c0 100644
+>>>> --- a/drivers/net/wireless/ath/ath5k/base.h
+>>>> +++ b/drivers/net/wireless/ath/ath5k/base.h
+>>>> @@ -58,8 +58,8 @@
+>>>>
+>>>>    #define	ATH_RXBUF	40		/* number of RX buffers */
+>>>>    #define	ATH_TXBUF	200		/* number of TX buffers */
+>>>> -#define ATH_BCBUF	1		/* number of beacon buffers */
+>>>> -
+>>>> +#define ATH_BCBUF	16		/* number of beacon buffers */
+>>> A value of 16 here seems a bit much for staggered beacons. IMHO that
+>>> will increase the likelihood of stuck beacon issues in the long run.
+>>> I think 4 would be a better value to start with for now.
+>>> In the future we should probably make the SWBA timing more dynamic based
+>>> on the actual number of AP mode interfaces.
+>>
+>> We ran tests before with at least 8 VAPs and it seemed to work fine.  Maybe
+>> we can compromise to 8?
+> Did you test it under very heavy load? My suggestion for supporting more
+> interfaces would be to keep 4 SWBA slots, and after the fourth interface
+> is added, assign the extra interfaces to the existing slots.
+> Then when transmitting beacons, link together all DMA descriptors
+> assigned to the current slot. That way you have less issues with
+> imprecise timers, IRQ delays and similar things, which are more likely
+> to show up on embedded hardware than on regular PCs. This also has the
+> advantage of using less power, as it generates less useless wakeups per
+> second.
 
-static struct resource wl12xx_resource[] = {
-	{
-		.start	= OMAP_GPIO_IRQ(OMAP_BEAGLE_WLAN_IRQ_GPIO),
-		.flags	= IORESOURCE_IRQ,
-	},
-};
+We did test under load.  But, the truth is, I don't really understand this
+beacon code..it was not originally written by me.  Also, I haven't tested
+APs yet in .36...just STA so far.
 
-static struct platform_device wl12xx_platform_device = {
-	.resource	= wl12xx_resource,
-	.num_resources	= ARRAY_SIZE(wl12xx_resource),
-	.....
-};
+If you think it should be limited to 4, I'll go ahead and do that.
 
-then on driver you would:
+Someone that understands it better can increase it later if desired.
 
-irq = platform_get_irq(pdev, 0);
+Thanks,
+Ben
 
-something like that :-)
+>
+> - Felix
+
 
 -- 
-balbi
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
