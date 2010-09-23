@@ -1,206 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:26893 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752244Ab0IJO23 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 10 Sep 2010 10:28:29 -0400
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: Johannes Berg <johannes@sipsolutions.net>,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>,
-	Reinette Chatre <reinette.chatre@intel.com>,
-	"John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org,
-	Stanislaw Gruszka <sgruszka@redhat.com>
-Subject: [PATCH 05/14] iwlwifi: report scan completion when abort fail
-Date: Fri, 10 Sep 2010 16:26:38 +0200
-Message-Id: <1284128807-11436-6-git-send-email-sgruszka@redhat.com>
-In-Reply-To: <1284128807-11436-1-git-send-email-sgruszka@redhat.com>
-References: <1284128807-11436-1-git-send-email-sgruszka@redhat.com>
+Received: from mail.candelatech.com ([208.74.158.172]:54652 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752639Ab0IWN42 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 23 Sep 2010 09:56:28 -0400
+Message-ID: <4C9B5C83.4000407@candelatech.com>
+Date: Thu, 23 Sep 2010 06:56:19 -0700
+From: Ben Greear <greearb@candelatech.com>
+MIME-Version: 1.0
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: Felix Fietkau <nbd@openwrt.org>,
+	"ath9k-devel@lists.ath9k.org" <ath9k-devel@venema.h4ckr.net>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [ath9k-devel] ath9k, multiple stations, and AMPDUs
+References: <4C9841BA.4080700@candelatech.com> <4C98848C.70005@openwrt.org>	 <4C98A022.7020106@candelatech.com> <4C98A2C4.8060108@openwrt.org>	 <4C98EAA1.7050908@candelatech.com>  <4C98F2D8.8020602@openwrt.org>	 <1285097307.12764.11.camel@jlt3.sipsolutions.net>	 <4C990859.70709@openwrt.org> <4C99135A.3090103@candelatech.com>	 <4C99348F.2090504@openwrt.org> <4C99870C.20006@candelatech.com>	 <4C99BEFC.2060209@openwrt.org>  <4C9ADE7E.5070406@candelatech.com> <1285230831.3691.5.camel@jlt3.sipsolutions.net>
+In-Reply-To: <1285230831.3691.5.camel@jlt3.sipsolutions.net>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-When we are not able to send abort command to firmware, notify mac80211
-that we complete scan, as we will newer do it lately. Check for all
-possible errors that low level sending command procedure does not check,
-to assure we catch all failures cases.
+On 09/23/2010 01:33 AM, Johannes Berg wrote:
+> On Wed, 2010-09-22 at 21:58 -0700, Ben Greear wrote:
+>
+>
+>> + * @addr2: local address (vif->sdata->dev->dev_addr).  Can be NULL for 'any'.
+>>     *
+>>     * This function must be called under RCU lock and the
+>>     * resulting pointer is only valid under RCU lock as well.
+>> @@ -2434,7 +2435,8 @@ struct ieee80211_sta *ieee80211_find_sta(struct ieee80211_vif *vif,
+>>     * DO NOT USE THIS FUNCTION.
+>>     */
+>>    struct ieee80211_sta *ieee80211_find_sta_by_hw(struct ieee80211_hw *hw,
+>> -                                              const u8 *addr);
+>> +                                              const u8 *addr,
+>> +                                              const u8 *localaddr);
+>
+> That's not going to generate proper documentation. Also, it now probably
+> shouldn't be called "by_hw" any more.
 
-Patch fix one of the causes of wdev_cleanup_work warning reported at
-https://bugzilla.redhat.com/show_bug.cgi?id=593566
+I can't think of a better name, and it still does take the hw struct,
+but if you have a suggestion you like better, I will use it.
 
-Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
----
- drivers/net/wireless/iwlwifi/iwl-scan.c |  131 ++++++++++++++++---------------
- 1 files changed, 67 insertions(+), 64 deletions(-)
+I re-posted with the rest of the changes you suggested.  Seems to
+be working fine.
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-scan.c b/drivers/net/wireless/iwlwifi/iwl-scan.c
-index ea33849..dbb07e8 100644
---- a/drivers/net/wireless/iwlwifi/iwl-scan.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-scan.c
-@@ -54,34 +54,83 @@
- #define IWL_PASSIVE_DWELL_BASE      (100)
- #define IWL_CHANNEL_TUNE_TIME       5
- 
-+static int iwl_send_scan_abort(struct iwl_priv *priv)
-+{
-+	int ret;
-+	struct iwl_rx_packet *pkt;
-+	struct iwl_host_cmd cmd = {
-+		.id = REPLY_SCAN_ABORT_CMD,
-+		.flags = CMD_WANT_SKB,
-+	};
- 
-+	/* Exit instantly with error when device is not ready
-+	 * to receive scan abort command or it does not perform
-+	 * hardware scan currently */
-+	if (!test_bit(STATUS_READY, &priv->status) ||
-+	    !test_bit(STATUS_GEO_CONFIGURED, &priv->status) ||
-+	    !test_bit(STATUS_SCAN_HW, &priv->status) ||
-+	    test_bit(STATUS_FW_ERROR, &priv->status) ||
-+	    test_bit(STATUS_EXIT_PENDING, &priv->status))
-+		return -EIO;
- 
--/**
-- * iwl_scan_cancel - Cancel any currently executing HW scan
-- *
-- * NOTE: priv->mutex is not required before calling this function
-- */
--int iwl_scan_cancel(struct iwl_priv *priv)
--{
--	if (!test_bit(STATUS_SCAN_HW, &priv->status)) {
--		clear_bit(STATUS_SCANNING, &priv->status);
--		return 0;
-+	ret = iwl_send_cmd_sync(priv, &cmd);
-+	if (ret)
-+		return ret;
-+
-+	pkt = (struct iwl_rx_packet *)cmd.reply_page;
-+	if (pkt->u.status != CAN_ABORT_STATUS) {
-+		/* The scan abort will return 1 for success or
-+		 * 2 for "failure".  A failure condition can be
-+		 * due to simply not being in an active scan which
-+		 * can occur if we send the scan abort before we
-+		 * the microcode has notified us that a scan is
-+		 * completed. */
-+		IWL_DEBUG_INFO(priv, "SCAN_ABORT ret %d.\n", pkt->u.status);
-+		ret = -EIO;
- 	}
- 
--	if (test_bit(STATUS_SCANNING, &priv->status)) {
--		if (!test_and_set_bit(STATUS_SCAN_ABORTING, &priv->status)) {
--			IWL_DEBUG_SCAN(priv, "Queuing scan abort.\n");
--			schedule_work(&priv->abort_scan);
-+	iwl_free_pages(priv, cmd.reply_page);
-+	return ret;
-+}
- 
--		} else
--			IWL_DEBUG_SCAN(priv, "Scan abort already in progress.\n");
-+static void iwl_do_scan_abort(struct iwl_priv *priv)
-+{
-+	int ret;
- 
--		return test_bit(STATUS_SCANNING, &priv->status);
-+	lockdep_assert_held(&priv->mutex);
-+
-+	if (!test_bit(STATUS_SCANNING, &priv->status)) {
-+		IWL_DEBUG_SCAN(priv, "Not performing scan to abort\n");
-+		return;
- 	}
- 
-+	if (test_and_set_bit(STATUS_SCAN_ABORTING, &priv->status)) {
-+		IWL_DEBUG_SCAN(priv, "Scan abort in progress\n");
-+		return;
-+	}
-+
-+	ret = iwl_send_scan_abort(priv);
-+	if (ret) {
-+		IWL_DEBUG_SCAN(priv, "Send scan abort failed %d\n", ret);
-+		clear_bit(STATUS_SCANNING, &priv->status);
-+		clear_bit(STATUS_SCAN_HW, &priv->status);
-+		clear_bit(STATUS_SCAN_ABORTING, &priv->status);
-+		ieee80211_scan_completed(priv->hw, true);
-+	} else
-+		IWL_DEBUG_SCAN(priv, "Sucessfully send scan abort\n");
-+}
-+
-+/**
-+ * iwl_scan_cancel - Cancel any currently executing HW scan
-+ */
-+int iwl_scan_cancel(struct iwl_priv *priv)
-+{
-+	IWL_DEBUG_SCAN(priv, "Queuing abort scan\n");
-+	schedule_work(&priv->abort_scan);
- 	return 0;
- }
- EXPORT_SYMBOL(iwl_scan_cancel);
-+
- /**
-  * iwl_scan_cancel_timeout - Cancel any currently executing HW scan
-  * @ms: amount of time to wait (in milliseconds) for scan to abort
-@@ -108,47 +157,6 @@ int iwl_scan_cancel_timeout(struct iwl_priv *priv, unsigned long ms)
- }
- EXPORT_SYMBOL(iwl_scan_cancel_timeout);
- 
--static int iwl_send_scan_abort(struct iwl_priv *priv)
--{
--	int ret = 0;
--	struct iwl_rx_packet *pkt;
--	struct iwl_host_cmd cmd = {
--		.id = REPLY_SCAN_ABORT_CMD,
--		.flags = CMD_WANT_SKB,
--	};
--
--	/* If there isn't a scan actively going on in the hardware
--	 * then we are in between scan bands and not actually
--	 * actively scanning, so don't send the abort command */
--	if (!test_bit(STATUS_SCAN_HW, &priv->status)) {
--		clear_bit(STATUS_SCAN_ABORTING, &priv->status);
--		return 0;
--	}
--
--	ret = iwl_send_cmd_sync(priv, &cmd);
--	if (ret) {
--		clear_bit(STATUS_SCAN_ABORTING, &priv->status);
--		return ret;
--	}
--
--	pkt = (struct iwl_rx_packet *)cmd.reply_page;
--	if (pkt->u.status != CAN_ABORT_STATUS) {
--		/* The scan abort will return 1 for success or
--		 * 2 for "failure".  A failure condition can be
--		 * due to simply not being in an active scan which
--		 * can occur if we send the scan abort before we
--		 * the microcode has notified us that a scan is
--		 * completed. */
--		IWL_DEBUG_INFO(priv, "SCAN_ABORT returned %d.\n", pkt->u.status);
--		clear_bit(STATUS_SCAN_ABORTING, &priv->status);
--		clear_bit(STATUS_SCAN_HW, &priv->status);
--	}
--
--	iwl_free_pages(priv, cmd.reply_page);
--
--	return ret;
--}
--
- /* Service response to REPLY_SCAN_CMD (0x80) */
- static void iwl_rx_reply_scan(struct iwl_priv *priv,
- 			      struct iwl_rx_mem_buffer *rxb)
-@@ -527,15 +535,10 @@ static void iwl_bg_abort_scan(struct work_struct *work)
- {
- 	struct iwl_priv *priv = container_of(work, struct iwl_priv, abort_scan);
- 
--	if (!test_bit(STATUS_READY, &priv->status) ||
--	    !test_bit(STATUS_GEO_CONFIGURED, &priv->status))
--		return;
--
- 	cancel_delayed_work(&priv->scan_check);
- 
- 	mutex_lock(&priv->mutex);
--	if (test_bit(STATUS_SCAN_ABORTING, &priv->status))
--		iwl_send_scan_abort(priv);
-+	iwl_do_scan_abort(priv);
- 	mutex_unlock(&priv->mutex);
- }
- 
+Thanks,
+Ben
+
 -- 
-1.7.1
-
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
