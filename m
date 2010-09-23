@@ -1,32 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from purkki.adurom.net ([80.68.90.206]:41381 "EHLO purkki.adurom.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750932Ab0INNfF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 14 Sep 2010 09:35:05 -0400
-To: Rajkumar Manoharan <rmanoharan@atheros.com>
-Cc: <linville@tuxdriver.com>, <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH] ath9k_htc: Enable fastcc for HTC devices.
-References: <1283497888-8294-1-git-send-email-rmanoharan@atheros.com>
-From: Kalle Valo <kvalo@adurom.com>
-Date: Tue, 14 Sep 2010 16:35:02 +0300
-In-Reply-To: <1283497888-8294-1-git-send-email-rmanoharan@atheros.com> (Rajkumar Manoharan's message of "Fri\, 3 Sep 2010 12\:41\:28 +0530")
-Message-ID: <87zkvk5tyx.fsf@purkki.adurom.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: from he.sipsolutions.net ([78.46.109.217]:49390 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753702Ab0IWOGd (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 23 Sep 2010 10:06:33 -0400
+Subject: Re: [mac80211] mac80211:  Support receiving data frames on
+ multiple vifs.
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Ben Greear <greearb@candelatech.com>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <4C9B5CE4.9040806@candelatech.com>
+References: <1285018776-21795-1-git-send-email-greearb@candelatech.com>
+	 <1285051641.3710.8.camel@jlt3.sipsolutions.net>
+	 <4C9B5CE4.9040806@candelatech.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Thu, 23 Sep 2010 16:06:32 +0200
+Message-ID: <1285250792.3770.110.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Rajkumar Manoharan <rmanoharan@atheros.com> writes:
+On Thu, 2010-09-23 at 06:57 -0700, Ben Greear wrote:
+> On 09/20/2010 11:47 PM, Johannes Berg wrote:
+> > On Mon, 2010-09-20 at 14:39 -0700, greearb@candelatech.com wrote:
+> >> From: Ben Greear<greearb@candelatech.com>
+> >>
+> >> When using multiple STA interfaces on the same radio, some
+> >> data packets need to be received on all interfaces
+> >> (broadcast, for instance).
+> >>
+> >> Make the STA loop look similar to the mgt-data loop.
+> >>
+> >> Also, add logic to check RX_FLAG_MMIC_ERROR for last
+> >> interface in mgt-data loop.
+> >>
+> >> This needs review.
+> >
+> > Looks fine to me, I think.
+> 
+> Does this need any more work before being accepted upstream?
 
-> By enabling fastcc, the scan time reduced to half.
+Well, I personally would've tried to reduce the code duplication between
+the two loops, but right now I'm not sure I see how to.
 
-It helps the users if a patch like this describes what fastcc really
-is and why it reduces the scan time. And what might be the side
-effects. This is valuable information especially when someone is
-debugging regressions. So please try to be as informative as possible,
-especially when enabling new features.
+johannes
 
-For example, I have no idea what fastcc means. Fast C Compiler? ;)
-
--- 
-Kalle Valo
