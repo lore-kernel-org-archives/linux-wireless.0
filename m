@@ -1,56 +1,31 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pv0-f174.google.com ([74.125.83.174]:48520 "EHLO
-	mail-pv0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751319Ab0IUEVx (ORCPT
+Received: from mail.candelatech.com ([208.74.158.172]:38329 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756700Ab0IWVS2 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 21 Sep 2010 00:21:53 -0400
-Received: by pvg2 with SMTP id 2so1320247pvg.19
-        for <linux-wireless@vger.kernel.org>; Mon, 20 Sep 2010 21:21:53 -0700 (PDT)
-From: greearb@gmail.com
-To: linux-wireless@vger.kernel.org
-Cc: Ben Greear <greearb@candelatech.com>
-Subject: [mac80211] mac80211:  Support multiple VIFS per AP in debugfs.
-Date: Mon, 20 Sep 2010 21:21:43 -0700
-Message-Id: <1285042903-19189-1-git-send-email-greearb@candelatech.com>
+	Thu, 23 Sep 2010 17:18:28 -0400
+Message-ID: <4C9BC41E.70804@candelatech.com>
+Date: Thu, 23 Sep 2010 14:18:22 -0700
+From: Ben Greear <greearb@candelatech.com>
+MIME-Version: 1.0
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: linux-wireless@vger.kernel.org,
+	Johannes Berg <johannes.berg@intel.com>
+Subject: Re: [RFC v2 1/3] mac80211: remove prepare_for_handlers sdata argument
+References: <20100923193747.677517441@sipsolutions.net> <20100923193818.656678519@sipsolutions.net>
+In-Reply-To: <20100923193818.656678519@sipsolutions.net>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ben Greear <greearb@candelatech.com>
+I applied these 3 patches and using two STA interfaces on ath9k
+appears to work fine.  I'll leave them in my tree and continue
+testing.
 
-MAC address of AP isn't unique..need to add the device
-name as well.
+Thanks,
+Ben
 
-Signed-off-by: Ben Greear <greearb@candelatech.com>
----
-:100644 100644 76839d4... 4cf451c... M	net/mac80211/debugfs_sta.c
- net/mac80211/debugfs_sta.c |    8 ++++++--
- 1 files changed, 6 insertions(+), 2 deletions(-)
-
-diff --git a/net/mac80211/debugfs_sta.c b/net/mac80211/debugfs_sta.c
-index 76839d4..4cf451c 100644
---- a/net/mac80211/debugfs_sta.c
-+++ b/net/mac80211/debugfs_sta.c
-@@ -301,14 +301,18 @@ STA_OPS(ht_capa);
- void ieee80211_sta_debugfs_add(struct sta_info *sta)
- {
- 	struct dentry *stations_dir = sta->local->debugfs.stations;
--	u8 mac[3*ETH_ALEN];
-+	u8 mac[3*ETH_ALEN + IFNAMSIZ + 2];
- 
- 	sta->debugfs.add_has_run = true;
- 
- 	if (!stations_dir)
- 		return;
- 
--	snprintf(mac, sizeof(mac), "%pM", sta->sta.addr);
-+	if (sta->sdata)
-+		snprintf(mac, sizeof(mac), "%pM-%s",
-+			 sta->sta.addr, sta->sdata->name);
-+	else
-+		snprintf(mac, sizeof(mac), "%pM-NULL", sta->sta.addr);
- 
- 	/*
- 	 * This might fail due to a race condition:
 -- 
-1.7.2.2
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
 
