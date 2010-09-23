@@ -1,37 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from snt0-omc2-s26.snt0.hotmail.com ([65.55.90.101]:20186 "EHLO
-	snt0-omc2-s26.snt0.hotmail.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754403Ab0ITCce convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 19 Sep 2010 22:32:34 -0400
-Message-ID: <SNT113-W3652C8510E7AB89D2036ECF17E0@phx.gbl>
-From: Dale Turner <rx_guy@hotmail.com>
+Received: from external1.orbit-lab.org ([128.6.192.131]:60362 "HELO
+	external1.orbit-lab.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1754972Ab0IWTD5 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 23 Sep 2010 15:03:57 -0400
+Received: from repository3.orbit-lab.org (repository3.orbit-lab.org [10.50.0.41])
+	by external1.orbit-lab.org (Postfix) with ESMTP id A4CE7418D8
+	for <linux-wireless@vger.kernel.org>; Thu, 23 Sep 2010 15:01:57 -0400 (EDT)
+Subject: Compat-wireless release for 2010-09-23 is baked
 To: <linux-wireless@vger.kernel.org>
-Subject: Compiling carl9170
-Date: Sun, 19 Sep 2010 23:32:33 -0300
-Content-Type: text/plain; charset=US-ASCII
-MIME-Version: 1.0
+Message-Id: <20100923190356.35AC4404FC@repository3.orbit-lab.org>
+Date: Thu, 23 Sep 2010 15:03:56 -0400 (EDT)
+From: compat@orbit-lab.org (Compat-wireless cronjob account)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+>From git://git.kernel.org/pub/scm/linux/kernel/git/mcgrof/compat-wireless-2.6
+   ebd550e..f3710cc  master     -> origin/master
+ + 6678d67...b1d3753 wl         -> origin/wl  (forced update)
+ * [new tag]         compat-wireless-2010-09-23 -> compat-wireless-2010-09-23
+>From git://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next
+   0912b47..91c40c1  history    -> origin/history
+ + fadb46c...797bd52 master     -> origin/master  (forced update)
+   b30a3f6..c79bd89  stable     -> origin/stable
+ * [new tag]         next-20100923 -> next-20100923
 
-Hello.
- 
-Can someone tell me how to compile the carl9170 module 
-WITHOUT compiling a complete kernel. I just purchased a TP-Link WN821N 
-based on the capabilities of this driver, but am disappointed that I 
-currently don't have the module.
- 
-I am familiar with the 
-compat-wireless packages as I have needed to compile the ath9k_htc 
-driver for my other adapter (TP-Link WN721N), but the carl driver does 
-not seem to be available in that package.
- 
-Can anyone help?? 
- 
-Thanks in advance.
+compat-wireless code metrics
 
-(Sorry about the first post without a subject)
+    747510 - Total upstream lines of code being pulled
+      2147 - backport code changes
+      1899 - backport code additions
+       248 - backport code deletions
+      6240 - backport from compat module
+      8387 - total backport code
+    1.1220 - % of code consists of backport work
+      1219 - Crap changes not yet posted
+      1181 - Crap additions not yet posted
+        38 - Crap deletions not yet posted
+    0.1631 - % of crap code
 
-Dale Turner 
- 		 	   		  
+Base tree: linux-next.git
+Base tree version: next-20100923
+compat-wireless release: compat-wireless-2010-09-23
