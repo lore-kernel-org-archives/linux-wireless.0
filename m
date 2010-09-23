@@ -1,106 +1,160 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:14287 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753361Ab0IKQGn (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 11 Sep 2010 12:06:43 -0400
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Tomas Winkler <tomas.winkler@intel.com>,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Subject: [PATCH 01/10] iwlwifi: fix default LQ table in 5.2 band
-Date: Sat, 11 Sep 2010 09:08:29 -0700
-Message-Id: <1284221318-28281-2-git-send-email-wey-yi.w.guy@intel.com>
-In-Reply-To: <1284221318-28281-1-git-send-email-wey-yi.w.guy@intel.com>
-References: <1284221318-28281-1-git-send-email-wey-yi.w.guy@intel.com>
+Received: from smtp.nokia.com ([192.100.122.230]:17714 "EHLO
+	mgw-mx03.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750750Ab0IWIOe (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 23 Sep 2010 04:14:34 -0400
+From: Luciano Coelho <luciano.coelho@nokia.com>
+To: linux-omap@vger.kernel.org
+Cc: tony@atomide.com, linux-wireless@vger.kernel.org,
+	Ohad Ben-Cohen <ohad@wizery.com>
+Subject: [PATCH] omap: beagle: add support for wl1271 on the board file
+Date: Thu, 23 Sep 2010 11:14:23 +0300
+Message-Id: <1285229663-4224-1-git-send-email-luciano.coelho@nokia.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Tomas Winkler <tomas.winkler@intel.com>
+Add board configuration for the wl1271 daughter board.  This patch is based
+on Ohad Ben-Cohen's patches for Zoom boards.
 
-The default LQ is filled decreasingly using
-iwl_get_prev_ieee_rate from a starting rate.
-Since the starting rate is already the lowest one for
-a specific band it should be actually filled evenly with
-the starting rate: 1M and 6M for 5.2GHZ and 2.4GH respectively.
-The bug is that for for A or G-only it decreases to
-CCK rates which are not supported.
-iwl_get_prev_ieee_rate function is just not band aware.
-This affects broadcast station which lq table
-is not updated by rs algorithm
-
-G-only scenario is not treated by this patch
-
-iwl_get_prev_ieee_rate is removed completely as it
-is not used in other contexts
-
-Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Cc: Ohad Ben-Cohen <ohad@wizery.com>
+Signed-off-by: Luciano Coelho <luciano.coelho@nokia.com>
 ---
- drivers/net/wireless/iwlwifi/iwl-agn-rs.h |    9 ---------
- drivers/net/wireless/iwlwifi/iwl-sta.c    |   19 ++++++++-----------
- 2 files changed, 8 insertions(+), 20 deletions(-)
+ arch/arm/mach-omap2/board-omap3beagle.c |   71 +++++++++++++++++++++++++++++++
+ 1 files changed, 71 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-rs.h b/drivers/net/wireless/iwlwifi/iwl-agn-rs.h
-index 3970ab1..357cdb2 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn-rs.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn-rs.h
-@@ -453,15 +453,6 @@ static inline u8 first_antenna(u8 mask)
- }
+diff --git a/arch/arm/mach-omap2/board-omap3beagle.c b/arch/arm/mach-omap2/board-omap3beagle.c
+index 87969c7..820a198 100644
+--- a/arch/arm/mach-omap2/board-omap3beagle.c
++++ b/arch/arm/mach-omap2/board-omap3beagle.c
+@@ -29,7 +29,9 @@
+ #include <linux/mtd/nand.h>
  
+ #include <linux/regulator/machine.h>
++#include <linux/regulator/fixed.h>
+ #include <linux/i2c/twl.h>
++#include <linux/wl12xx.h>
  
--static inline u8 iwl_get_prev_ieee_rate(u8 rate_index)
--{
--	u8 rate = iwl_rates[rate_index].prev_ieee;
--
--	if (rate == IWL_RATE_INVALID)
--		rate = rate_index;
--	return rate;
--}
--
- static inline u8 iwl3945_get_prev_ieee_rate(u8 rate_index)
+ #include <mach/hardware.h>
+ #include <asm/mach-types.h>
+@@ -48,6 +50,9 @@
+ #include "mux.h"
+ #include "hsmmc.h"
+ 
++#define OMAP_BEAGLE_WLAN_EN_GPIO    (139)
++#define OMAP_BEAGLE_WLAN_IRQ_GPIO   (137)
++
+ #define NAND_BLOCK_SIZE		SZ_128K
+ 
+ static struct mtd_partition omap3beagle_nand_partitions[] = {
+@@ -163,12 +168,25 @@ static void __init beagle_display_init(void)
+ 
+ #include "sdram-micron-mt46h32m32lf-6.h"
+ 
++struct wl12xx_platform_data omap_beagle_wlan_data __initdata = {
++	.irq = OMAP_GPIO_IRQ(OMAP_BEAGLE_WLAN_IRQ_GPIO),
++	.board_ref_clock = 2, /* 38.4 MHz */
++};
++
+ static struct omap2_hsmmc_info mmc[] = {
+ 	{
+ 		.mmc		= 1,
+ 		.wires		= 8,
+ 		.gpio_wp	= 29,
+ 	},
++	{
++		.name           = "wl1271",
++		.mmc            = 2,
++		.wires          = 4,
++		.gpio_wp        = -EINVAL,
++		.gpio_cd        = -EINVAL,
++		.nonremovable   = true,
++	},
+ 	{}	/* Terminator */
+ };
+ 
+@@ -176,10 +194,43 @@ static struct regulator_consumer_supply beagle_vmmc1_supply = {
+ 	.supply			= "vmmc",
+ };
+ 
++static struct regulator_consumer_supply beagle_vmmc2_supply = {
++	.supply         = "vmmc",
++	.dev_name       = "mmci-omap-hs.1",
++};
++
++
+ static struct regulator_consumer_supply beagle_vsim_supply = {
+ 	.supply			= "vmmc_aux",
+ };
+ 
++
++static struct regulator_init_data beagle_vmmc2 = {
++	.constraints = {
++		.valid_ops_mask = REGULATOR_CHANGE_STATUS,
++	},
++	.num_consumer_supplies = 1,
++	.consumer_supplies = &beagle_vmmc2_supply,
++};
++
++static struct fixed_voltage_config beagle_vwlan = {
++	.supply_name = "vwl1271",
++	.microvolts = 1800000,  /* 1.8V */
++	.gpio = OMAP_BEAGLE_WLAN_EN_GPIO,
++	.startup_delay = 70000, /* 70ms */
++	.enable_high = 1,
++	.enabled_at_boot = 0,
++	.init_data = &beagle_vmmc2,
++};
++
++static struct platform_device omap_vwlan_device = {
++	.name           = "reg-fixed-voltage",
++	.id             = 1,
++	.dev = {
++		.platform_data = &beagle_vwlan,
++	},
++};
++
+ static struct gpio_led gpio_leds[];
+ 
+ static int beagle_twl_gpio_setup(struct device *dev,
+@@ -449,6 +500,19 @@ static const struct ehci_hcd_omap_platform_data ehci_pdata __initconst = {
+ 
+ #ifdef CONFIG_OMAP_MUX
+ static struct omap_board_mux board_mux[] __initdata = {
++	/* WLAN IRQ - GPIO 137 */
++	OMAP3_MUX(SDMMC2_DAT5,  OMAP_MUX_MODE4 | OMAP_PIN_INPUT_PULLUP),
++	/* WLAN POWER ENABLE - GPIO 139 */
++	OMAP3_MUX(SDMMC2_DAT7,  OMAP_MUX_MODE4 | OMAP_PIN_OUTPUT),
++	/* WLAN SDIO: MMC2 CMD */
++	OMAP3_MUX(SDMMC2_CMD,   OMAP_MUX_MODE0 | OMAP_PIN_INPUT_PULLUP),
++	/* WLAN SDIO: MMC2 CLK */
++	OMAP3_MUX(SDMMC2_CLK,   OMAP_MUX_MODE0 | OMAP_PIN_INPUT_PULLUP),
++	/* WLAN SDIO: MMC2 DAT[0-3] */
++	OMAP3_MUX(SDMMC2_DAT0,  OMAP_MUX_MODE0 | OMAP_PIN_INPUT_PULLUP),
++	OMAP3_MUX(SDMMC2_DAT1,  OMAP_MUX_MODE0 | OMAP_PIN_INPUT_PULLUP),
++	OMAP3_MUX(SDMMC2_DAT2,  OMAP_MUX_MODE0 | OMAP_PIN_INPUT_PULLUP),
++	OMAP3_MUX(SDMMC2_DAT3,  OMAP_MUX_MODE0 | OMAP_PIN_INPUT_PULLUP),
+ 	{ .reg_offset = OMAP_MUX_TERMINATOR },
+ };
+ #else
+@@ -463,10 +527,17 @@ static struct omap_musb_board_data musb_board_data = {
+ 
+ static void __init omap3_beagle_init(void)
  {
- 	u8 rate = iwl3945_rates[rate_index].prev_ieee;
-diff --git a/drivers/net/wireless/iwlwifi/iwl-sta.c b/drivers/net/wireless/iwlwifi/iwl-sta.c
-index ccd0902..6edd034 100644
---- a/drivers/net/wireless/iwlwifi/iwl-sta.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-sta.c
-@@ -386,7 +386,8 @@ static struct iwl_link_quality_cmd *iwl_sta_alloc_lq(struct iwl_priv *priv,
- {
- 	int i, r;
- 	struct iwl_link_quality_cmd *link_cmd;
--	u32 rate_flags;
-+	u32 rate_flags = 0;
-+	__le32 rate_n_flags;
++	int ret;
++
+ 	omap3_mux_init(board_mux, OMAP_PACKAGE_CBB);
++	if (wl12xx_set_platform_data(&omap_beagle_wlan_data))
++		pr_err("error setting wl12xx data\n");
++
+ 	omap3_beagle_i2c_init();
+ 	platform_add_devices(omap3_beagle_devices,
+ 			ARRAY_SIZE(omap3_beagle_devices));
++	platform_device_register(&omap_vwlan_device);
++
+ 	omap_serial_init();
  
- 	link_cmd = kzalloc(sizeof(struct iwl_link_quality_cmd), GFP_KERNEL);
- 	if (!link_cmd) {
-@@ -400,18 +401,14 @@ static struct iwl_link_quality_cmd *iwl_sta_alloc_lq(struct iwl_priv *priv,
- 	else
- 		r = IWL_RATE_1M_INDEX;
- 
--	for (i = 0; i < LINK_QUAL_MAX_RETRY_NUM; i++) {
--		rate_flags = 0;
--		if (r >= IWL_FIRST_CCK_RATE && r <= IWL_LAST_CCK_RATE)
--			rate_flags |= RATE_MCS_CCK_MSK;
-+	if (r >= IWL_FIRST_CCK_RATE && r <= IWL_LAST_CCK_RATE)
-+		rate_flags |= RATE_MCS_CCK_MSK;
- 
--		rate_flags |= first_antenna(priv->hw_params.valid_tx_ant) <<
-+	rate_flags |= first_antenna(priv->hw_params.valid_tx_ant) <<
- 				RATE_MCS_ANT_POS;
--
--		link_cmd->rs_table[i].rate_n_flags =
--			iwl_hw_set_rate_n_flags(iwl_rates[r].plcp, rate_flags);
--		r = iwl_get_prev_ieee_rate(r);
--	}
-+	rate_n_flags = iwl_hw_set_rate_n_flags(iwl_rates[r].plcp, rate_flags);
-+	for (i = 0; i < LINK_QUAL_MAX_RETRY_NUM; i++)
-+		link_cmd->rs_table[i].rate_n_flags = rate_n_flags;
- 
- 	link_cmd->general_params.single_stream_ant_msk =
- 				first_antenna(priv->hw_params.valid_tx_ant);
+ 	omap_mux_init_gpio(170, OMAP_PIN_INPUT);
 -- 
-1.7.0.4
+1.6.3.3
 
