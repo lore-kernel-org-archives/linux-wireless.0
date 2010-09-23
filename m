@@ -1,40 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from external1.orbit-lab.org ([128.6.192.131]:40558 "HELO
-	external1.orbit-lab.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1750891Ab0IJTDm (ORCPT
+Received: from mail.candelatech.com ([208.74.158.172]:39602 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753365Ab0IWQ5n (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 10 Sep 2010 15:03:42 -0400
-Received: from repository3.orbit-lab.org (repository3.orbit-lab.org [10.50.0.41])
-	by external1.orbit-lab.org (Postfix) with ESMTP id BCF35418D8
-	for <linux-wireless@vger.kernel.org>; Fri, 10 Sep 2010 15:02:16 -0400 (EDT)
-Subject: Compat-wireless release for 2010-09-10 is baked
-To: <linux-wireless@vger.kernel.org>
-Message-Id: <20100910190340.613B741134@repository3.orbit-lab.org>
-Date: Fri, 10 Sep 2010 15:03:40 -0400 (EDT)
-From: compat@orbit-lab.org (Compat-wireless cronjob account)
+	Thu, 23 Sep 2010 12:57:43 -0400
+Message-ID: <4C9B8703.7070907@candelatech.com>
+Date: Thu, 23 Sep 2010 09:57:39 -0700
+From: Ben Greear <greearb@candelatech.com>
+MIME-Version: 1.0
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: linux-wireless@vger.kernel.org
+Subject: Re: [mac80211] mac80211:  Support receiving data frames on multiple
+ vifs.
+References: <1285018776-21795-1-git-send-email-greearb@candelatech.com>	 <1285051641.3710.8.camel@jlt3.sipsolutions.net>	 <4C9B5CE4.9040806@candelatech.com> <1285250792.3770.110.camel@jlt3.sipsolutions.net>
+In-Reply-To: <1285250792.3770.110.camel@jlt3.sipsolutions.net>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
->From git://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next
-   80dfeef..79959c2  history    -> origin/history
- + cbf9061...c204dd8 master     -> origin/master  (forced update)
- * [new tag]         next-20100910 -> next-20100910
-error: Invalid path ''
+On 09/23/2010 07:06 AM, Johannes Berg wrote:
+> On Thu, 2010-09-23 at 06:57 -0700, Ben Greear wrote:
+>> On 09/20/2010 11:47 PM, Johannes Berg wrote:
+>>> On Mon, 2010-09-20 at 14:39 -0700, greearb@candelatech.com wrote:
+>>>> From: Ben Greear<greearb@candelatech.com>
+>>>>
+>>>> When using multiple STA interfaces on the same radio, some
+>>>> data packets need to be received on all interfaces
+>>>> (broadcast, for instance).
+>>>>
+>>>> Make the STA loop look similar to the mgt-data loop.
+>>>>
+>>>> Also, add logic to check RX_FLAG_MMIC_ERROR for last
+>>>> interface in mgt-data loop.
+>>>>
+>>>> This needs review.
+>>>
+>>> Looks fine to me, I think.
+>>
+>> Does this need any more work before being accepted upstream?
+>
+> Well, I personally would've tried to reduce the code duplication between
+> the two loops, but right now I'm not sure I see how to.
 
-compat-wireless code metrics
+I could move some of the rx setup code into prepare_for_handlers,
+but not sure how much that would help readability.
 
-    591885 - Total upstream lines of code being pulled
-      1718 - backport code changes
-      1477 - backport code additions
-       241 - backport code deletions
-      6082 - backport from compat module
-      7800 - total backport code
-    1.3178 - % of code consists of backport work
-      1218 - Crap changes not yet posted
-      1179 - Crap additions not yet posted
-        39 - Crap deletions not yet posted
-    0.2058 - % of crap code
+In my opinion, that would be a good candidate for a followup
+patch instead of adding that to this patch, though.
 
-Base tree: linux-next.git
-Base tree version: next-20100910
-compat-wireless release: compat-wireless--2010-09-02
+Thanks,
+Ben
+
+-- 
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
+
