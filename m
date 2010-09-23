@@ -1,105 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iw0-f174.google.com ([209.85.214.174]:39032 "EHLO
-	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753427Ab0IVJob (ORCPT
+Received: from mail.candelatech.com ([208.74.158.172]:59859 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752714Ab0IWNMb (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 22 Sep 2010 05:44:31 -0400
-Received: by iwn5 with SMTP id 5so398536iwn.19
-        for <linux-wireless@vger.kernel.org>; Wed, 22 Sep 2010 02:44:31 -0700 (PDT)
+	Thu, 23 Sep 2010 09:12:31 -0400
+Message-ID: <4C9B5234.1060002@candelatech.com>
+Date: Thu, 23 Sep 2010 06:12:20 -0700
+From: Ben Greear <greearb@candelatech.com>
 MIME-Version: 1.0
-Date: Wed, 22 Sep 2010 13:44:30 +0400
-Message-ID: <AANLkTik3_o03=m0w8XM_B-YTQrR-ibkbtTBErXfcYwGG@mail.gmail.com>
-Subject: p54spi (STLC4560) with Marvel XScale CPU (kernel 2.6.25.4)
-From: Alex Mihaylov <minimumlaw@gmail.com>
-To: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org
+Subject: Re: [mac80211] mac80211:  Support multiple VIFS per AP in debugfs.
+References: <1285071310-11440-1-git-send-email-greearb@candelatech.com>	 <4C98DC5D.2000108@candelatech.com>	 <1285086618.12764.3.camel@jlt3.sipsolutions.net>	 <4C98E05B.8050609@candelatech.com>	 <1285088605.12764.5.camel@jlt3.sipsolutions.net>	 <1285091341.12764.7.camel@jlt3.sipsolutions.net>	 <4C9A35FD.8060201@candelatech.com>	 <1285174896.3684.71.camel@jlt3.sipsolutions.net>	 <4C9A3E1C.8070306@candelatech.com>	 <1285180265.3684.74.camel@jlt3.sipsolutions.net>	 <20100922184846.GI5515@tuxdriver.com>  <4C9A5CEB.9010708@candelatech.com> <1285230639.3691.1.camel@jlt3.sipsolutions.net>
+In-Reply-To: <1285230639.3691.1.camel@jlt3.sipsolutions.net>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello!
+On 09/23/2010 01:30 AM, Johannes Berg wrote:
+> On Wed, 2010-09-22 at 12:45 -0700, Ben Greear wrote:
+>
+>> This look better?
+>>
+>> diff --git a/net/mac80211/debugfs.c b/net/mac80211/debugfs.c
+>> index e81ef4e..ebd5b69 100644
+>> --- a/net/mac80211/debugfs.c
+>> +++ b/net/mac80211/debugfs.c
+>> @@ -368,7 +368,6 @@ void debugfs_hw_add(struct ieee80211_local *local)
+>>           if (!phyd)
+>>                   return;
+>>
+>> -       local->debugfs.stations = debugfs_create_dir("stations", phyd);
+>>           local->debugfs.keys = debugfs_create_dir("keys", phyd);
+>>
+>>           DEBUGFS_ADD(frequency);
+>
+> Yeah, but completely whitespace damaged, you're going to have to work on
+> your submissions :)
+>
+> Also, why do you do "[mac80211] mac80211" rather than "[PATCH]
+> mac80211"?
 
-I have Toradex Colibri module ( PXA270 and PXA320 based -
-http://www.toradex.com/Products/Colibri_Modules ) and want connect
-them to Sagrad SG901-1028 module (
-http://www.sagrad.com/index.php?option=com_content&view=article&id=55&Itemid=66
-) based on STLC450 chip.
+That was just pasted into email..I'll fix up your other suggestions and
+re-submit using git.  I'll see if I can get the email subject more correct
+as well.
 
-Now I add next code to plaform file (kernel 2.6.35.4):
+Thanks,
+Ben
 
-static mfp_cfg_t colibri_pxa320_ssp_pin_config[] __initdata = {
-    GPIO83_SSP1_SCLK,
-    GPIO85_SSP1_TXD,
-    GPIO86_SSP1_RXD,
-    GPIO84_GPIO,
-    GPIO94_GPIO | MFP_LPM_EDGE_RISE, // IRQ
-    GPIO95_GPIO,                     // SLEEP
-};
+>
+> johannes
 
-static struct pxa2xx_spi_master colibri_pxa320_spi_master = {
-    .clock_enable = CKEN_SSP1,
-    .num_chipselect = 1,
-    .enable_dma = 0,
-};
-
-static struct pxa2xx_spi_chip sagrad_spi_tuning = {
-    .gpio_cs    = 84,
-};
-
-static struct spi_board_info colibri_pxa320_spi_chips[] = {
-    { // Sagrad SG901-1028 or SG901-1039 - module p54spi, but... Joke
-from Nokia =)
-        .modalias       = "cx3110x",
-        .max_speed_hz   = 13000000,
-        .mode           = SPI_MODE_0,
-        .bus_num        = 1,
-        .chip_select    = 0,
-        .controller_data = &sagrad_spi_tuning,
-    },
-};
-
-static inline void colibri_pxa320_init_spi ( void ) {
-    pxa3xx_mfp_config( ARRAY_AND_SIZE( colibri_pxa320_ssp_pin_config ) );
-    pxa2xx_set_spi_info(1,&colibri_pxa320_spi_master);
-    spi_register_board_info( ARRAY_AND_SIZE( colibri_pxa320_spi_chips ) );
-}
-
-and pach p54spi.c for proper SPI speed (XScale have maximum SPI rate
-13Mhz) with addition module parameter:
-
-static long p54spi_max_rate = 24000000;
-module_param(p54spi_max_rate, long, 0444);
-MODULE_PARM_DESC(p54spi_max_rate, "maximum spi bus frequency");
-
-and replace string with
-       spi->max_speed_hz = 24000000;
-to
-       spi->max_speed_hz = p54spi_max_rate;
-
-Also i got firmware  2.13.0.0.a.13.14.arm from linux-wireles. After
-loading module with proper command line, I see message
-
-cx3110x spi1.0: firmware boot failed
-
-and no other error/warning message presents. SPI signals like good.
-
-
-phy0: p54 detected a LM20 firmware
-p54: rx_mtu reduced from 3240 to 2376
-phy0: FW rev 2.13.0.0.a.13.14 - Softmac protocol 5.6
-phy0: cryptographic accelerator WEP:YES, TKIP:YES, CCMP:YES
-cx3110x spi1.0: loading user eeprom...
-phy0: hwaddr 00:02:ee:c0:ff:ee, MAC:isl3820 RF:Longbc
-x3110x spi1.0: firmware boot failed
-
-What's trouble? Incorrect firmware? Unsupported (so slow) SPI rate?
-
-I try load another firmware from 2.13... series - result: firmware
-boot failed. I also try load firmware cutted from Sagrad source
-(version 2.19....) result is same: firmware boot failed.
-
-What is my next step for this idea?
 
 -- 
-Sincerely,
-Alex A. Mihaylov
-AKA MinimumLaw
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
