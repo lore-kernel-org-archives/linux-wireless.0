@@ -1,57 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.19.149.2]:20525 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754977Ab0IQXNt convert rfc822-to-8bit (ORCPT
+Received: from mail-gx0-f174.google.com ([209.85.161.174]:36883 "EHLO
+	mail-gx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751776Ab0IWKC0 convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 17 Sep 2010 19:13:49 -0400
-Received: from mail.atheros.com ([10.10.20.105])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Fri, 17 Sep 2010 16:13:43 -0700
-From: Vipin Mehta <Vipin.Mehta@Atheros.com>
-To: Randy Dunlap <randy.dunlap@oracle.com>,
-	"greg@kroah.com" <greg@kroah.com>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"devel@driverdev.osuosl.org" <devel@driverdev.osuosl.org>
-Date: Fri, 17 Sep 2010 16:11:57 -0700
-Subject: RE: [PATCH] staging: ath6kl: Including a header file to fix a
- compilation error
-Message-ID: <35B17FE5076C7040809188FBE7913F983F23937DAE@SC1EXMB-MBCL.global.atheros.com>
-References: <1284742495-2970-1-git-send-email-vmehta@atheros.com>
- <4C93A412.2070005@oracle.com>
-In-Reply-To: <4C93A412.2070005@oracle.com>
-Content-Type: text/plain; charset="us-ascii"
+	Thu, 23 Sep 2010 06:02:26 -0400
+Received: by gxk9 with SMTP id 9so478529gxk.19
+        for <linux-wireless@vger.kernel.org>; Thu, 23 Sep 2010 03:02:26 -0700 (PDT)
 MIME-Version: 1.0
+In-Reply-To: <AANLkTin7eTsGXBb5VXsRU_4rwvFpU3-BYe+2w5352SRE@mail.gmail.com>
+References: <SNT113-W3652C8510E7AB89D2036ECF17E0@phx.gbl>
+	<AANLkTin7eTsGXBb5VXsRU_4rwvFpU3-BYe+2w5352SRE@mail.gmail.com>
+Date: Thu, 23 Sep 2010 12:02:25 +0200
+Message-ID: <AANLkTimfvN5s4qPNvRvHHZo8fZ_y1ti=ukdTRybLd7=A@mail.gmail.com>
+Subject: Re: Compiling carl9170
+From: Christophe Chapuis <chris.chapuis@gmail.com>
+To: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> Hi,
-> Thanks for the patch, but I still get these errors & warnings:
-> 
-> on linux-next 2010-0915:
-> 
-> drivers/staging/ath6kl/hif/sdio/linux_sdio/src/hif_scatter.c: In function
-> 'SetupHIFScatterSupport':
-> drivers/staging/ath6kl/hif/sdio/linux_sdio/src/hif_scatter.c:288: error:
-> 'struct mmc_host' has no member named 'max_hw_segs'
-> drivers/staging/ath6kl/hif/sdio/linux_sdio/src/hif_scatter.c:289: error:
-> 'struct mmc_host' has no member named 'max_hw_segs'
-> 
-This is because of a recent change in the mmc_host structure that removes the distinction between hw and phys segments. The structure is different in the staging-next-2.6 tree which is where I usually build and test the changes. 
+Just for information, I managed to retrieve and compile
+compat-wireless from sept. 20th. I fixed manually the little typo in
+wmi.c, and then everything went well. I selected the driver "ath",
+resulting in all the "ath" drivers to be compiled, including carl9170.
 
-Greg, 
-   The two trees linux-next and staging-next are not in sync so what is the process that is usually followed under these circumstances? I see little point in using the staging-next-2.6 tree to generate and test my patches since the tree eventually drains into linux-next. Should I stop worrying about if the patch works for the staging-next tree and just focus on that things should work with linux-next?
+I'm now using this driver, with his firmware, with great success. It
+uses 802.11n, seems quite stable, keeps my wifi connection alive.
 
-> and on linux-next 2010-0917:
-> 
-> drivers/staging/ath6kl/os/linux/ar6000_drv.c: In function
-> 'ar6000_transfer_bin_file':
-> drivers/staging/ath6kl/os/linux/ar6000_drv.c:1129: warning: cast from
-> pointer to integer of different size
-> drivers/staging/ath6kl/os/linux/ar6000_drv.c:1129: warning: cast to
-> pointer from integer of different size
-> drivers/staging/ath6kl/wmi/wmi.c: In function 'wmi_bssInfo_event_rx':
-> drivers/staging/ath6kl/wmi/wmi.c:1459: error: 'i' undeclared (first use in
-> this function)
-> 
-> 
-This is due to a recent patch that went it to use '%pM' format specifier to print MAC addresses. I'll fix it.
+Bravo !
+
+
+On Mon, Sep 20, 2010 at 9:15 AM, Christophe Chapuis
+<chris.chapuis@gmail.com> wrote:
+> Actually, the carl9170 driver has been included in compat-wireless,
+> but the compilation of compat-wireless fails since then (latest
+> successful baking was sept. 12th). I hope this will be fixed soon.
+> Having the same adapter as you, I'm also following the situation daily :)
+>
+> On Mon, Sep 20, 2010 at 4:32 AM, Dale Turner <rx_guy@hotmail.com> wrote:
+>>
+>> Hello.
+>>
+>> Can someone tell me how to compile the carl9170 module
+>> WITHOUT compiling a complete kernel. I just purchased a TP-Link WN821N
+>> based on the capabilities of this driver, but am disappointed that I
+>> currently don't have the module.
+>>
+>> I am familiar with the
+>> compat-wireless packages as I have needed to compile the ath9k_htc
+>> driver for my other adapter (TP-Link WN721N), but the carl driver does
+>> not seem to be available in that package.
+>>
+>> Can anyone help??
+>>
+>> Thanks in advance.
+>>
+>> (Sorry about the first post without a subject)
+>>
+>> Dale Turner
+>>                                          --
+>> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+>> the body of a message to majordomo@vger.kernel.org
+>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
