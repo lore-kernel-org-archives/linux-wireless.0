@@ -1,37 +1,97 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:47420 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757120Ab0I0TGN (ORCPT
+Received: from mail-qy0-f181.google.com ([209.85.216.181]:47722 "EHLO
+	mail-qy0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751039Ab0IWKaX convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 27 Sep 2010 15:06:13 -0400
-Subject: Re: [RFC] mac80211: fix release_reorder_timeout in scan
-From: Johannes Berg <johannes@sipsolutions.net>
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Cc: wireless <linux-wireless@vger.kernel.org>, Jouni Malinen <j@w1.fi>,
-	Christian Lamparter <chunkeey@googlemail.com>
-In-Reply-To: <AANLkTimmZZiMbtA-8m69grwV_v95KcGKRQi6=-fz0JuT@mail.gmail.com>
-References: <1285266471.3770.384.camel@jlt3.sipsolutions.net>
-	 <AANLkTi=3GraBb9hTrieCNvCB0o3PXGORkW1b7F2PceK3@mail.gmail.com>
-	 <1285611630.4043.26.camel@jlt3.sipsolutions.net>
-	 <AANLkTin+1-_RA8fY8B5-omQi3kMJ3U0iw8Kdg=FC2rnP@mail.gmail.com>
-	 <1285613669.4043.27.camel@jlt3.sipsolutions.net>
-	 <AANLkTimmZZiMbtA-8m69grwV_v95KcGKRQi6=-fz0JuT@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Mon, 27 Sep 2010 21:06:11 +0200
-Message-ID: <1285614371.4043.28.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+	Thu, 23 Sep 2010 06:30:23 -0400
+MIME-Version: 1.0
+In-Reply-To: <1285230003-5065-1-git-send-email-luciano.coelho@nokia.com>
+References: <1285230003-5065-1-git-send-email-luciano.coelho@nokia.com>
+Date: Thu, 23 Sep 2010 13:30:21 +0300
+Message-ID: <AANLkTinLjQbvbTj3LTnw+54S-ojWzojqgyd=-3F783We@mail.gmail.com>
+Subject: Re: [PATCH v2] omap: beagle: add support for wl1271 on the board file
+From: Grazvydas Ignotas <notasas@gmail.com>
+To: Luciano Coelho <luciano.coelho@nokia.com>
+Cc: linux-omap@vger.kernel.org, tony@atomide.com,
+	linux-wireless@vger.kernel.org, Ohad Ben-Cohen <ohad@wizery.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2010-09-27 at 12:03 -0700, Luis R. Rodriguez wrote:
+On Thu, Sep 23, 2010 at 11:20 AM, Luciano Coelho
+<luciano.coelho@nokia.com> wrote:
+> Add board configuration for the wl1271 daughter board.  This patch is based
+> on Ohad Ben-Cohen's patches for Zoom boards.
 
-> > We put them into the reorder buffer, but if we get a reorder timeout
-> > while scanning we'll drop the frames which isn't necessary.
-> 
-> Ah, got it, thanks, good catch. Guess its not a terrible stable fix,
-> but at least important for those who care about VoIP and such.
+Hm can that daughter board be detected? With your patch all beagle
+users will get GPIO139 toggled, and if someone has that wired to
+chainsaw switch somebody might get hurt.
 
-You wouldn't typically use aggregation on VO traffic, I think?
+> Cc: Ohad Ben-Cohen <ohad@wizery.com>
+> Signed-off-by: Luciano Coelho <luciano.coelho@nokia.com>
+> ---
+> There was a useless variable defined in omap3_beagle_init() that was causing a
+> warning.  I have removed it in v2.
+>
+>  arch/arm/mach-omap2/board-omap3beagle.c |   69 +++++++++++++++++++++++++++++++
+>  drivers/net/wireless/wl12xx/wl1271.h    |    2 +-
+>  2 files changed, 70 insertions(+), 1 deletions(-)
+>
+> diff --git a/arch/arm/mach-omap2/board-omap3beagle.c b/arch/arm/mach-omap2/board-omap3beagle.c
+> index 87969c7..755df29 100644
+> --- a/arch/arm/mach-omap2/board-omap3beagle.c
+> +++ b/arch/arm/mach-omap2/board-omap3beagle.c
 
-johannes
+<snip>
 
+> +static struct regulator_consumer_supply beagle_vmmc2_supply = {
+> +       .supply         = "vmmc",
+> +       .dev_name       = "mmci-omap-hs.1",
+> +};
+> +
+> +
+
+single newline is enough.
+
+>  static struct regulator_consumer_supply beagle_vsim_supply = {
+>        .supply                 = "vmmc_aux",
+>  };
+>
+> +
+
+here too.
+
+> +static struct regulator_init_data beagle_vmmc2 = {
+> +       .constraints = {
+> +               .valid_ops_mask = REGULATOR_CHANGE_STATUS,
+> +       },
+> +       .num_consumer_supplies = 1,
+> +       .consumer_supplies = &beagle_vmmc2_supply,
+> +};
+> +
+> +static struct fixed_voltage_config beagle_vwlan = {
+> +       .supply_name = "vwl1271",
+> +       .microvolts = 1800000,  /* 1.8V */
+> +       .gpio = OMAP_BEAGLE_WLAN_EN_GPIO,
+> +       .startup_delay = 70000, /* 70ms */
+> +       .enable_high = 1,
+> +       .enabled_at_boot = 0,
+> +       .init_data = &beagle_vmmc2,
+> +};
+
+We tabify all structures in board files, take a look at other structures.
+
+<snip>
+
+> diff --git a/drivers/net/wireless/wl12xx/wl1271.h b/drivers/net/wireless/wl12xx/wl1271.h
+> index 4134f44..8bb028e 100644
+> --- a/drivers/net/wireless/wl12xx/wl1271.h
+> +++ b/drivers/net/wireless/wl12xx/wl1271.h
+> @@ -60,7 +60,7 @@ enum {
+>        DEBUG_ALL       = ~0,
+>  };
+>
+> -#define DEBUG_LEVEL (DEBUG_NONE)
+> +#define DEBUG_LEVEL (DEBUG_MAC80211 | DEBUG_CMD | DEBUG_ACX | DEBUG_BOOT)
+
+I guess you didn't want that?
