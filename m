@@ -1,132 +1,147 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:42166 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753577Ab0IKQGp (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 11 Sep 2010 12:06:45 -0400
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Subject: [PATCH 10/10] iwlwifi: remove code repetition
-Date: Sat, 11 Sep 2010 09:08:38 -0700
-Message-Id: <1284221318-28281-11-git-send-email-wey-yi.w.guy@intel.com>
-In-Reply-To: <1284221318-28281-1-git-send-email-wey-yi.w.guy@intel.com>
-References: <1284221318-28281-1-git-send-email-wey-yi.w.guy@intel.com>
+Received: from mail.candelatech.com ([208.74.158.172]:54030 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754958Ab0IWRW3 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 23 Sep 2010 13:22:29 -0400
+From: greearb@candelatech.com
+To: linux-wireless@vger.kernel.org
+Cc: Ben Greear <greearb@candelatech.com>
+Subject: [PATCH v2] mac80211: Support receiving data frames on multiple vifs.
+Date: Thu, 23 Sep 2010 10:22:24 -0700
+Message-Id: <1285262544-9731-1-git-send-email-greearb@candelatech.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+From: Ben Greear <greearb@candelatech.com>
 
-Move the duplicated code into single static function.
+When using multiple STA interfaces on the same radio, some
+data packets need to be received on all interfaces
+(broadcast, for instance).
 
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Make the STA loop look similar to the mgt-data loop.
+
+Also, add logic to check RX_FLAG_MMIC_ERROR for last
+interface in mgt-data loop.
+
+Signed-off-by: Ben Greear <greearb@candelatech.com>
 ---
- drivers/net/wireless/iwlwifi/iwl-agn-lib.c |   60 +++++++++++++---------------
- 1 files changed, 28 insertions(+), 32 deletions(-)
+:100644 100644 c036815... 29a582d... M	net/mac80211/rx.c
+ net/mac80211/rx.c |   80 ++++++++++++++++++++++++++++++++++++++++++++++------
+ 1 files changed, 70 insertions(+), 10 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-lib.c b/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
-index a8f2adf..ec99a72 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
-@@ -46,6 +46,28 @@ static inline u32 iwlagn_get_scd_ssn(struct iwl5000_tx_resp *tx_resp)
- 			    tx_resp->frame_count) & MAX_SN;
- }
+diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
+index c036815..29a582d 100644
+--- a/net/mac80211/rx.c
++++ b/net/mac80211/rx.c
+@@ -2613,7 +2613,7 @@ static void __ieee80211_rx_handle_packet(struct ieee80211_hw *hw,
+ 	int prepares;
+ 	struct ieee80211_sub_if_data *prev = NULL;
+ 	struct sk_buff *skb_new;
+-	struct sta_info *sta, *tmp;
++	struct sta_info *sta, *tmp, *prev_sta;
+ 	bool found_sta = false;
+ 	int err = 0;
  
-+static void iwlagn_set_tx_status(struct iwl_priv *priv,
-+				 struct ieee80211_tx_info *info,
-+				 struct iwl5000_tx_resp *tx_resp,
-+				 int txq_id, bool is_agg)
-+{
-+	u16  status = le16_to_cpu(tx_resp->status.status);
+@@ -2644,22 +2644,74 @@ static void __ieee80211_rx_handle_packet(struct ieee80211_hw *hw,
+ 	ieee80211_verify_alignment(&rx);
+ 
+ 	if (ieee80211_is_data(fc)) {
++		prev_sta = NULL;
+ 		for_each_sta_info(local, hdr->addr2, sta, tmp) {
+-			rx.sta = sta;
+ 			found_sta = true;
+-			rx.sdata = sta->sdata;
++			if (!prev_sta) {
++				prev_sta = sta;
++				continue;
++			}
 +
-+	info->status.rates[0].count = tx_resp->failure_frame + 1;
-+	if (is_agg)
-+		info->flags &= ~IEEE80211_TX_CTL_AMPDU;
-+	info->flags |= iwl_tx_status_to_mac80211(status);
-+	iwlagn_hwrate_to_tx_control(priv, le32_to_cpu(tx_resp->rate_n_flags),
-+				    info);
++			rx.sta = prev_sta;
++			rx.sdata = prev_sta->sdata;
+ 
+ 			rx.flags |= IEEE80211_RX_RA_MATCH;
+ 			prepares = prepare_for_handlers(rx.sdata, &rx, hdr);
+-			if (prepares) {
+-				if (status->flag & RX_FLAG_MMIC_ERROR) {
+-					if (rx.flags & IEEE80211_RX_RA_MATCH)
+-						ieee80211_rx_michael_mic_report(hdr, &rx);
+-				} else
+-					prev = rx.sdata;
++			if (!prepares)
++				goto next_sta;
 +
-+	IWL_DEBUG_TX_REPLY(priv, "TXQ %d status %s (0x%08x) rate_n_flags "
-+			   "0x%x retries %d\n",
-+			   txq_id,
-+			   iwl_get_tx_fail_reason(status), status,
-+			   le32_to_cpu(tx_resp->rate_n_flags),
-+			   tx_resp->failure_frame);
-+}
++			if (status->flag & RX_FLAG_MMIC_ERROR) {
++				if (rx.flags & IEEE80211_RX_RA_MATCH)
++					ieee80211_rx_michael_mic_report(hdr, &rx);
++				goto next_sta;
++			}
 +
- static int iwlagn_tx_status_reply_tx(struct iwl_priv *priv,
- 				      struct iwl_ht_agg *agg,
- 				      struct iwl5000_tx_resp *tx_resp,
-@@ -53,9 +75,7 @@ static int iwlagn_tx_status_reply_tx(struct iwl_priv *priv,
- {
- 	u16 status;
- 	struct agg_tx_status *frame_status = &tx_resp->status;
--	struct ieee80211_tx_info *info = NULL;
- 	struct ieee80211_hdr *hdr = NULL;
--	u32 rate_n_flags = le32_to_cpu(tx_resp->rate_n_flags);
- 	int i, sh, idx;
- 	u16 seq;
- 
-@@ -64,31 +84,20 @@ static int iwlagn_tx_status_reply_tx(struct iwl_priv *priv,
- 
- 	agg->frame_count = tx_resp->frame_count;
- 	agg->start_idx = start_idx;
--	agg->rate_n_flags = rate_n_flags;
-+	agg->rate_n_flags = le32_to_cpu(tx_resp->rate_n_flags);
- 	agg->bitmap = 0;
- 
- 	/* # frames attempted by Tx command */
- 	if (agg->frame_count == 1) {
- 		/* Only one frame was attempted; no block-ack will arrive */
--		status = le16_to_cpu(frame_status[0].status);
- 		idx = start_idx;
- 
--		/* FIXME: code repetition */
- 		IWL_DEBUG_TX_REPLY(priv, "FrameCnt = %d, StartIdx=%d idx=%d\n",
- 				   agg->frame_count, agg->start_idx, idx);
--
--		info = IEEE80211_SKB_CB(priv->txq[txq_id].txb[idx].skb);
--		info->status.rates[0].count = tx_resp->failure_frame + 1;
--		info->flags &= ~IEEE80211_TX_CTL_AMPDU;
--		info->flags |= iwl_tx_status_to_mac80211(status);
--		iwlagn_hwrate_to_tx_control(priv, rate_n_flags, info);
--
--		/* FIXME: code repetition end */
--
--		IWL_DEBUG_TX_REPLY(priv, "1 Frame 0x%x failure :%d\n",
--				    status & 0xff, tx_resp->failure_frame);
--		IWL_DEBUG_TX_REPLY(priv, "Rate Info rate_n_flags=%x\n", rate_n_flags);
--
-+		iwlagn_set_tx_status(priv,
-+				     IEEE80211_SKB_CB(
-+					priv->txq[txq_id].txb[idx].skb),
-+				     tx_resp, txq_id, true);
- 		agg->wait_for_ba = 0;
- 	} else {
- 		/* Two or more frames were attempted; expect block-ack */
-@@ -281,20 +290,7 @@ static void iwlagn_rx_reply_tx(struct iwl_priv *priv,
++			/*
++			 * frame was destined for the previous interface
++			 * so invoke RX handlers for it
++			 */
++			skb_new = skb_copy(skb, GFP_ATOMIC);
++			if (!skb_new) {
++				if (net_ratelimit())
++					wiphy_debug(local->hw.wiphy,
++						    "failed to copy multicast"
++						    " frame for %s\n",
++						    prev_sta->sdata->name);
++				goto next_sta;
++			}
++			ieee80211_invoke_rx_handlers(prev_sta->sdata, &rx,
++						     skb_new);
++next_sta:
++			prev_sta = sta;
++		} /* for all STA info */
++
++		if (prev_sta) {
++			rx.sta = prev_sta;
++			rx.sdata = prev_sta->sdata;
++
++			rx.flags |= IEEE80211_RX_RA_MATCH;
++			prepares = prepare_for_handlers(rx.sdata, &rx, hdr);
++			if (!prepares)
++				prev_sta = NULL;
++
++			if (prev_sta && status->flag & RX_FLAG_MMIC_ERROR) {
++				if (rx.flags & IEEE80211_RX_RA_MATCH)
++					ieee80211_rx_michael_mic_report(hdr, &rx);
++				prev_sta = NULL;
+ 			}
  		}
- 	} else {
- 		BUG_ON(txq_id != txq->swq_id);
--
--		info->status.rates[0].count = tx_resp->failure_frame + 1;
--		info->flags |= iwl_tx_status_to_mac80211(status);
--		iwlagn_hwrate_to_tx_control(priv,
--					le32_to_cpu(tx_resp->rate_n_flags),
--					info);
--
--		IWL_DEBUG_TX_REPLY(priv, "TXQ %d status %s (0x%08x) rate_n_flags "
--				   "0x%x retries %d\n",
--				   txq_id,
--				   iwl_get_tx_fail_reason(status), status,
--				   le32_to_cpu(tx_resp->rate_n_flags),
--				   tx_resp->failure_frame);
--
-+		iwlagn_set_tx_status(priv, info, tx_resp, txq_id, false);
- 		freed = iwlagn_tx_queue_reclaim(priv, txq_id, index);
- 		iwl_free_tfds_in_queue(priv, sta_id, tid, freed);
+-	}
++
++
++		if (prev_sta) {
++			ieee80211_invoke_rx_handlers(prev_sta->sdata, &rx, skb);
++			return;
++		} else {
++			if (found_sta) {
++				dev_kfree_skb(skb);
++				return;
++			}
++		}
++	} /* if data frame */
+ 	if (!found_sta) {
+ 		list_for_each_entry_rcu(sdata, &local->interfaces, list) {
+ 			if (!ieee80211_sdata_running(sdata))
+@@ -2722,6 +2774,14 @@ next:
  
+ 			if (!prepares)
+ 				prev = NULL;
++
++			if (prev && status->flag & RX_FLAG_MMIC_ERROR) {
++				rx.sdata = prev;
++				if (rx.flags & IEEE80211_RX_RA_MATCH)
++					ieee80211_rx_michael_mic_report(hdr,
++									&rx);
++				prev = NULL;
++			}
+ 		}
+ 	}
+ 	if (prev)
 -- 
-1.7.0.4
+1.7.2.2
 
