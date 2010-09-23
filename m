@@ -1,142 +1,250 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:40963 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751075Ab0IJWF2 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 10 Sep 2010 18:05:28 -0400
-From: greearb@candelatech.com
-To: linux-wireless@vger.kernel.org
-Cc: Ben Greear <greearb@candelatech.com>
-Subject: [virtual-sta 2/3] ath9k:  Calculate bssid-mask and rxfilter for 2+ STAs
-Date: Fri, 10 Sep 2010 15:04:57 -0700
-Message-Id: <1284156298-15863-2-git-send-email-greearb@candelatech.com>
-In-Reply-To: <1284156298-15863-1-git-send-email-greearb@candelatech.com>
-References: <1284156298-15863-1-git-send-email-greearb@candelatech.com>
+Received: from mga01.intel.com ([192.55.52.88]:10349 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752215Ab0IWVD7 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 23 Sep 2010 17:03:59 -0400
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+To: greg@kroah.com
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Subject: [PATCH wireless-2.6.35] use long timer for un-necessary reload the firmware
+Date: Thu, 23 Sep 2010 14:04:24 -0700
+Message-Id: <1285275864-12703-1-git-send-email-wey-yi.w.guy@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ben Greear <greearb@candelatech.com>
+Different devices has different timing requirement, change the timeout
+value for 5000 series devices to avoid un-necessary firmware reload which
+can cause device become unstable.For 5000 series of devices, use long monitor timer to check
+stuck tx queues.
 
-The rx-filter wasn't taking multiple VIFs into account
-when calculating the BEACON and OTHER_BSS filter.
+It is being reported firmware got reload more
+often than necessary, so extend the timer to avoid un-necessary reload.
 
-Make sure that bssid-mask is set up properly if we have
-more than 1 VIF.  The BSSID should be calculated over all
-VIFs, not just running ones.  Otherwise, secondary VIFS
-cannot receive enough packets to bring up their link.
+This fixes:
+http://article.gmane.org/gmane.linux.kernel.wireless.general/53552
 
-Signed-off-by: Ben Greear <greearb@candelatech.com>
+Cc: stable@kernel.org [2.6.35]
+Reported-by: drago01 <drago01@gmail.com>
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
 ---
-:100644 100644 2a6e45a... 26fb322... M	drivers/net/wireless/ath/ath9k/htc_drv_txrx.c
-:100644 100644 b32c8f0... 6e1aee0... M	drivers/net/wireless/ath/ath9k/recv.c
-:100644 100644 fd20241... 9c1d529... M	drivers/net/wireless/ath/ath9k/virtual.c
- drivers/net/wireless/ath/ath9k/htc_drv_txrx.c |    1 +
- drivers/net/wireless/ath/ath9k/recv.c         |   23 ++++++++++++++++-------
- drivers/net/wireless/ath/ath9k/virtual.c      |   12 +++++++-----
- 3 files changed, 24 insertions(+), 12 deletions(-)
+this patch is also available from wireless-2.6 branch on
+ git://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi-2.6.git
+---
+ drivers/net/wireless/iwlwifi/iwl-1000.c |    4 ++--
+ drivers/net/wireless/iwlwifi/iwl-3945.c |    4 ++--
+ drivers/net/wireless/iwlwifi/iwl-4965.c |    2 +-
+ drivers/net/wireless/iwlwifi/iwl-5000.c |   14 +++++++-------
+ drivers/net/wireless/iwlwifi/iwl-6000.c |   14 +++++++-------
+ drivers/net/wireless/iwlwifi/iwl-dev.h  |    3 ++-
+ 6 files changed, 21 insertions(+), 20 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_txrx.c b/drivers/net/wireless/ath/ath9k/htc_drv_txrx.c
-index 2a6e45a..26fb322 100644
---- a/drivers/net/wireless/ath/ath9k/htc_drv_txrx.c
-+++ b/drivers/net/wireless/ath/ath9k/htc_drv_txrx.c
-@@ -416,6 +416,7 @@ static void ath9k_htc_opmode_init(struct ath9k_htc_priv *priv)
+diff --git a/drivers/net/wireless/iwlwifi/iwl-1000.c b/drivers/net/wireless/iwlwifi/iwl-1000.c
+index 6be2992..f9fdb53 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-1000.c
++++ b/drivers/net/wireless/iwlwifi/iwl-1000.c
+@@ -257,7 +257,7 @@ struct iwl_cfg iwl1000_bgn_cfg = {
+ 	.support_ct_kill_exit = true,
+ 	.plcp_delta_threshold = IWL_MAX_PLCP_ERR_EXT_LONG_THRESHOLD_DEF,
+ 	.chain_noise_scale = 1000,
+-	.monitor_recover_period = IWL_MONITORING_PERIOD,
++	.monitor_recover_period = IWL_DEF_MONITORING_PERIOD,
+ 	.max_event_log_size = 128,
+ 	.ucode_tracing = true,
+ 	.sensitivity_calib_by_driver = true,
+@@ -289,7 +289,7 @@ struct iwl_cfg iwl1000_bg_cfg = {
+ 	.support_ct_kill_exit = true,
+ 	.plcp_delta_threshold = IWL_MAX_PLCP_ERR_EXT_LONG_THRESHOLD_DEF,
+ 	.chain_noise_scale = 1000,
+-	.monitor_recover_period = IWL_MONITORING_PERIOD,
++	.monitor_recover_period = IWL_DEF_MONITORING_PERIOD,
+ 	.max_event_log_size = 128,
+ 	.ucode_tracing = true,
+ 	.sensitivity_calib_by_driver = true,
+diff --git a/drivers/net/wireless/iwlwifi/iwl-3945.c b/drivers/net/wireless/iwlwifi/iwl-3945.c
+index c44a303..a52c468 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-3945.c
++++ b/drivers/net/wireless/iwlwifi/iwl-3945.c
+@@ -2895,7 +2895,7 @@ static struct iwl_cfg iwl3945_bg_cfg = {
+ 	.led_compensation = 64,
+ 	.broken_powersave = true,
+ 	.plcp_delta_threshold = IWL_MAX_PLCP_ERR_LONG_THRESHOLD_DEF,
+-	.monitor_recover_period = IWL_MONITORING_PERIOD,
++	.monitor_recover_period = IWL_DEF_MONITORING_PERIOD,
+ 	.max_event_log_size = 512,
+ 	.tx_power_by_driver = true,
+ };
+@@ -2916,7 +2916,7 @@ static struct iwl_cfg iwl3945_abg_cfg = {
+ 	.led_compensation = 64,
+ 	.broken_powersave = true,
+ 	.plcp_delta_threshold = IWL_MAX_PLCP_ERR_LONG_THRESHOLD_DEF,
+-	.monitor_recover_period = IWL_MONITORING_PERIOD,
++	.monitor_recover_period = IWL_DEF_MONITORING_PERIOD,
+ 	.max_event_log_size = 512,
+ 	.tx_power_by_driver = true,
+ };
+diff --git a/drivers/net/wireless/iwlwifi/iwl-4965.c b/drivers/net/wireless/iwlwifi/iwl-4965.c
+index d3afdda..abbfa02 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-4965.c
++++ b/drivers/net/wireless/iwlwifi/iwl-4965.c
+@@ -2274,7 +2274,7 @@ struct iwl_cfg iwl4965_agn_cfg = {
+ 	.led_compensation = 61,
+ 	.chain_noise_num_beacons = IWL4965_CAL_NUM_BEACONS,
+ 	.plcp_delta_threshold = IWL_MAX_PLCP_ERR_THRESHOLD_DEF,
+-	.monitor_recover_period = IWL_MONITORING_PERIOD,
++	.monitor_recover_period = IWL_DEF_MONITORING_PERIOD,
+ 	.temperature_kelvin = true,
+ 	.max_event_log_size = 512,
+ 	.tx_power_by_driver = true,
+diff --git a/drivers/net/wireless/iwlwifi/iwl-5000.c b/drivers/net/wireless/iwlwifi/iwl-5000.c
+index a28af7e..b5629a9 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-5000.c
++++ b/drivers/net/wireless/iwlwifi/iwl-5000.c
+@@ -462,7 +462,7 @@ struct iwl_cfg iwl5300_agn_cfg = {
+ 	.chain_noise_num_beacons = IWL_CAL_NUM_BEACONS,
+ 	.plcp_delta_threshold = IWL_MAX_PLCP_ERR_LONG_THRESHOLD_DEF,
+ 	.chain_noise_scale = 1000,
+-	.monitor_recover_period = IWL_MONITORING_PERIOD,
++	.monitor_recover_period = IWL_LONG_MONITORING_PERIOD,
+ 	.max_event_log_size = 512,
+ 	.ucode_tracing = true,
+ 	.sensitivity_calib_by_driver = true,
+@@ -493,7 +493,7 @@ struct iwl_cfg iwl5100_bgn_cfg = {
+ 	.chain_noise_num_beacons = IWL_CAL_NUM_BEACONS,
+ 	.plcp_delta_threshold = IWL_MAX_PLCP_ERR_LONG_THRESHOLD_DEF,
+ 	.chain_noise_scale = 1000,
+-	.monitor_recover_period = IWL_MONITORING_PERIOD,
++	.monitor_recover_period = IWL_LONG_MONITORING_PERIOD,
+ 	.max_event_log_size = 512,
+ 	.ucode_tracing = true,
+ 	.sensitivity_calib_by_driver = true,
+@@ -522,7 +522,7 @@ struct iwl_cfg iwl5100_abg_cfg = {
+ 	.chain_noise_num_beacons = IWL_CAL_NUM_BEACONS,
+ 	.plcp_delta_threshold = IWL_MAX_PLCP_ERR_LONG_THRESHOLD_DEF,
+ 	.chain_noise_scale = 1000,
+-	.monitor_recover_period = IWL_MONITORING_PERIOD,
++	.monitor_recover_period = IWL_LONG_MONITORING_PERIOD,
+ 	.max_event_log_size = 512,
+ 	.ucode_tracing = true,
+ 	.sensitivity_calib_by_driver = true,
+@@ -553,7 +553,7 @@ struct iwl_cfg iwl5100_agn_cfg = {
+ 	.chain_noise_num_beacons = IWL_CAL_NUM_BEACONS,
+ 	.plcp_delta_threshold = IWL_MAX_PLCP_ERR_LONG_THRESHOLD_DEF,
+ 	.chain_noise_scale = 1000,
+-	.monitor_recover_period = IWL_MONITORING_PERIOD,
++	.monitor_recover_period = IWL_LONG_MONITORING_PERIOD,
+ 	.max_event_log_size = 512,
+ 	.ucode_tracing = true,
+ 	.sensitivity_calib_by_driver = true,
+@@ -584,7 +584,7 @@ struct iwl_cfg iwl5350_agn_cfg = {
+ 	.chain_noise_num_beacons = IWL_CAL_NUM_BEACONS,
+ 	.plcp_delta_threshold = IWL_MAX_PLCP_ERR_LONG_THRESHOLD_DEF,
+ 	.chain_noise_scale = 1000,
+-	.monitor_recover_period = IWL_MONITORING_PERIOD,
++	.monitor_recover_period = IWL_LONG_MONITORING_PERIOD,
+ 	.max_event_log_size = 512,
+ 	.ucode_tracing = true,
+ 	.sensitivity_calib_by_driver = true,
+@@ -615,7 +615,7 @@ struct iwl_cfg iwl5150_agn_cfg = {
+ 	.chain_noise_num_beacons = IWL_CAL_NUM_BEACONS,
+ 	.plcp_delta_threshold = IWL_MAX_PLCP_ERR_LONG_THRESHOLD_DEF,
+ 	.chain_noise_scale = 1000,
+-	.monitor_recover_period = IWL_MONITORING_PERIOD,
++	.monitor_recover_period = IWL_LONG_MONITORING_PERIOD,
+ 	.max_event_log_size = 512,
+ 	.ucode_tracing = true,
+ 	.sensitivity_calib_by_driver = true,
+@@ -644,7 +644,7 @@ struct iwl_cfg iwl5150_abg_cfg = {
+ 	.chain_noise_num_beacons = IWL_CAL_NUM_BEACONS,
+ 	.plcp_delta_threshold = IWL_MAX_PLCP_ERR_LONG_THRESHOLD_DEF,
+ 	.chain_noise_scale = 1000,
+-	.monitor_recover_period = IWL_MONITORING_PERIOD,
++	.monitor_recover_period = IWL_LONG_MONITORING_PERIOD,
+ 	.max_event_log_size = 512,
+ 	.ucode_tracing = true,
+ 	.sensitivity_calib_by_driver = true,
+diff --git a/drivers/net/wireless/iwlwifi/iwl-6000.c b/drivers/net/wireless/iwlwifi/iwl-6000.c
+index 9fbf54c..eaee975 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-6000.c
++++ b/drivers/net/wireless/iwlwifi/iwl-6000.c
+@@ -438,7 +438,7 @@ struct iwl_cfg iwl6000g2a_2agn_cfg = {
+ 	.support_ct_kill_exit = true,
+ 	.plcp_delta_threshold = IWL_MAX_PLCP_ERR_THRESHOLD_DEF,
+ 	.chain_noise_scale = 1000,
+-	.monitor_recover_period = IWL_MONITORING_PERIOD,
++	.monitor_recover_period = IWL_DEF_MONITORING_PERIOD,
+ 	.max_event_log_size = 512,
+ 	.ucode_tracing = true,
+ 	.sensitivity_calib_by_driver = true,
+@@ -478,7 +478,7 @@ struct iwl_cfg iwl6000i_2agn_cfg = {
+ 	.support_ct_kill_exit = true,
+ 	.plcp_delta_threshold = IWL_MAX_PLCP_ERR_THRESHOLD_DEF,
+ 	.chain_noise_scale = 1000,
+-	.monitor_recover_period = IWL_MONITORING_PERIOD,
++	.monitor_recover_period = IWL_DEF_MONITORING_PERIOD,
+ 	.max_event_log_size = 1024,
+ 	.ucode_tracing = true,
+ 	.sensitivity_calib_by_driver = true,
+@@ -513,7 +513,7 @@ struct iwl_cfg iwl6000i_2abg_cfg = {
+ 	.support_ct_kill_exit = true,
+ 	.plcp_delta_threshold = IWL_MAX_PLCP_ERR_THRESHOLD_DEF,
+ 	.chain_noise_scale = 1000,
+-	.monitor_recover_period = IWL_MONITORING_PERIOD,
++	.monitor_recover_period = IWL_DEF_MONITORING_PERIOD,
+ 	.max_event_log_size = 1024,
+ 	.ucode_tracing = true,
+ 	.sensitivity_calib_by_driver = true,
+@@ -548,7 +548,7 @@ struct iwl_cfg iwl6000i_2bg_cfg = {
+ 	.support_ct_kill_exit = true,
+ 	.plcp_delta_threshold = IWL_MAX_PLCP_ERR_THRESHOLD_DEF,
+ 	.chain_noise_scale = 1000,
+-	.monitor_recover_period = IWL_MONITORING_PERIOD,
++	.monitor_recover_period = IWL_DEF_MONITORING_PERIOD,
+ 	.max_event_log_size = 1024,
+ 	.ucode_tracing = true,
+ 	.sensitivity_calib_by_driver = true,
+@@ -585,7 +585,7 @@ struct iwl_cfg iwl6050_2agn_cfg = {
+ 	.support_ct_kill_exit = true,
+ 	.plcp_delta_threshold = IWL_MAX_PLCP_ERR_THRESHOLD_DEF,
+ 	.chain_noise_scale = 1500,
+-	.monitor_recover_period = IWL_MONITORING_PERIOD,
++	.monitor_recover_period = IWL_DEF_MONITORING_PERIOD,
+ 	.max_event_log_size = 1024,
+ 	.ucode_tracing = true,
+ 	.sensitivity_calib_by_driver = true,
+@@ -620,7 +620,7 @@ struct iwl_cfg iwl6050_2abg_cfg = {
+ 	.support_ct_kill_exit = true,
+ 	.plcp_delta_threshold = IWL_MAX_PLCP_ERR_THRESHOLD_DEF,
+ 	.chain_noise_scale = 1500,
+-	.monitor_recover_period = IWL_MONITORING_PERIOD,
++	.monitor_recover_period = IWL_DEF_MONITORING_PERIOD,
+ 	.max_event_log_size = 1024,
+ 	.ucode_tracing = true,
+ 	.sensitivity_calib_by_driver = true,
+@@ -657,7 +657,7 @@ struct iwl_cfg iwl6000_3agn_cfg = {
+ 	.support_ct_kill_exit = true,
+ 	.plcp_delta_threshold = IWL_MAX_PLCP_ERR_THRESHOLD_DEF,
+ 	.chain_noise_scale = 1000,
+-	.monitor_recover_period = IWL_MONITORING_PERIOD,
++	.monitor_recover_period = IWL_DEF_MONITORING_PERIOD,
+ 	.max_event_log_size = 1024,
+ 	.ucode_tracing = true,
+ 	.sensitivity_calib_by_driver = true,
+diff --git a/drivers/net/wireless/iwlwifi/iwl-dev.h b/drivers/net/wireless/iwlwifi/iwl-dev.h
+index f3f3473..df69540 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-dev.h
++++ b/drivers/net/wireless/iwlwifi/iwl-dev.h
+@@ -1057,7 +1057,8 @@ struct iwl_event_log {
+ #define IWL_DELAY_NEXT_FORCE_FW_RELOAD (HZ*5)
  
- 	/* configure bssid mask */
- 	if (ah->caps.hw_caps & ATH9K_HW_CAP_BSSIDMASK)
-+		/* NOTE:  Maybe this should be ath9k_set_bssid_mask?? */
- 		ath_hw_setbssidmask(common);
- 
- 	/* configure operational mode */
-diff --git a/drivers/net/wireless/ath/ath9k/recv.c b/drivers/net/wireless/ath/ath9k/recv.c
-index b32c8f0..6e1aee0 100644
---- a/drivers/net/wireless/ath/ath9k/recv.c
-+++ b/drivers/net/wireless/ath/ath9k/recv.c
-@@ -110,7 +110,6 @@ static void ath_setdefantenna(struct ath_softc *sc, u32 antenna)
- static void ath_opmode_init(struct ath_softc *sc)
- {
- 	struct ath_hw *ah = sc->sc_ah;
--	struct ath_common *common = ath9k_hw_common(ah);
- 
- 	u32 rfilt, mfilt[2];
- 
-@@ -118,9 +117,15 @@ static void ath_opmode_init(struct ath_softc *sc)
- 	rfilt = ath_calcrxfilter(sc);
- 	ath9k_hw_setrxfilter(ah, rfilt);
- 
--	/* configure bssid mask */
--	if (ah->caps.hw_caps & ATH9K_HW_CAP_BSSIDMASK)
--		ath_hw_setbssidmask(common);
-+	/* configure bssid mask, if ah->hw is configured.
-+	 * it is NOT configured when mac80211 is calling
-+	 * ieee80211_do_open, but probably just as well since
-+	 * this STA isn't in the list yet.
-+	 */
-+	if (ah->hw) {
-+		if (ah->caps.hw_caps & ATH9K_HW_CAP_BSSIDMASK)
-+			ath9k_set_bssid_mask(ah->hw);
-+	}
- 
- 	/* configure operational mode */
- 	ath9k_hw_setopmode(ah);
-@@ -426,6 +431,8 @@ u32 ath_calcrxfilter(struct ath_softc *sc)
- #define	RX_FILTER_PRESERVE (ATH9K_RX_FILTER_PHYERR | ATH9K_RX_FILTER_PHYRADAR)
- 
- 	u32 rfilt;
-+	int avifs = ieee80211_iterate_interfaces_helper(sc->hw, true, false,
-+							NULL, NULL);
- 
- 	rfilt = (ath9k_hw_getrxfilter(sc->sc_ah) & RX_FILTER_PRESERVE)
- 		| ATH9K_RX_FILTER_UCAST | ATH9K_RX_FILTER_BCAST
-@@ -448,7 +455,11 @@ u32 ath_calcrxfilter(struct ath_softc *sc)
- 	if (sc->rx.rxfilter & FIF_CONTROL)
- 		rfilt |= ATH9K_RX_FILTER_CONTROL;
- 
-+	/* If we have more than one active STA, then we need to
-+	 * accept more than just MYBEACON.
-+	 */
- 	if ((sc->sc_ah->opmode == NL80211_IFTYPE_STATION) &&
-+	    (avifs <= 1) &&
- 	    !(sc->rx.rxfilter & FIF_BCN_PRBRESP_PROMISC))
- 		rfilt |= ATH9K_RX_FILTER_MYBEACON;
- 	else
-@@ -463,9 +474,7 @@ u32 ath_calcrxfilter(struct ath_softc *sc)
- 	if (conf_is_ht(&sc->hw->conf))
- 		rfilt |= ATH9K_RX_FILTER_COMP_BAR;
- 
--	if (sc->sec_wiphy || (sc->rx.rxfilter & FIF_OTHER_BSS)) {
--		/* TODO: only needed if more than one BSSID is in use in
--		 * station/adhoc mode */
-+	if (sc->sec_wiphy || (avifs > 1) || (sc->rx.rxfilter & FIF_OTHER_BSS)) {
- 		/* The following may also be needed for other older chips */
- 		if (sc->sc_ah->hw_version.macVersion == AR_SREV_VERSION_9160)
- 			rfilt |= ATH9K_RX_FILTER_PROM;
-diff --git a/drivers/net/wireless/ath/ath9k/virtual.c b/drivers/net/wireless/ath/ath9k/virtual.c
-index fd20241..9c1d529 100644
---- a/drivers/net/wireless/ath/ath9k/virtual.c
-+++ b/drivers/net/wireless/ath/ath9k/virtual.c
-@@ -59,15 +59,17 @@ void ath9k_set_bssid_mask(struct ieee80211_hw *hw)
- 	} else
- 		iter_data.count = 0;
- 
--	/* Get list of all active MAC addresses */
-+	/* Get list of all MAC addresses for STA and ADHOC interfaces. */
- 	spin_lock_bh(&sc->wiphy_lock);
--	ieee80211_iterate_active_interfaces_atomic(sc->hw, ath9k_vif_iter,
--						   &iter_data);
-+	ieee80211_iterate_interfaces_helper(sc->hw, true, false,
-+					    ath9k_vif_iter,
-+					    &iter_data);
- 	for (i = 0; i < sc->num_sec_wiphy; i++) {
- 		if (sc->sec_wiphy[i] == NULL)
- 			continue;
--		ieee80211_iterate_active_interfaces_atomic(
--			sc->sec_wiphy[i]->hw, ath9k_vif_iter, &iter_data);
-+		ieee80211_iterate_interfaces_helper(
-+			sc->sec_wiphy[i]->hw, true, false,
-+			ath9k_vif_iter, &iter_data);
- 	}
- 	spin_unlock_bh(&sc->wiphy_lock);
+ /* timer constants use to monitor and recover stuck tx queues in mSecs */
+-#define IWL_MONITORING_PERIOD  (1000)
++#define IWL_DEF_MONITORING_PERIOD	(1000)
++#define IWL_LONG_MONITORING_PERIOD	(5000)
+ #define IWL_ONE_HUNDRED_MSECS   (100)
+ #define IWL_SIXTY_SECS          (60000)
  
 -- 
-1.7.2.2
+1.7.0.4
 
