@@ -1,40 +1,29 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:60184 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754590Ab0I2ISa (ORCPT
+Received: from mail-gw0-f46.google.com ([74.125.83.46]:59218 "EHLO
+	mail-gw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754083Ab0IWUfp convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 29 Sep 2010 04:18:30 -0400
-Subject: Re: [PATCH] mac80211: fix rate_control_send_low warnings for delbas
-From: Johannes Berg <johannes@sipsolutions.net>
-To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Cc: linville@tuxdriver.com, stable@kernel.org,
-	linux-wireless@vger.kernel.org, Paul Stewart <pstew@google.com>,
-	Amod Bodas <amod.bodas@atheros.com>,
-	Vasanthakumar Thiagarajan <vasanth@atheros.com>,
-	Jouni Malinen <j@w1.fi>
-In-Reply-To: <20100928222945.GB10932@tux>
-References: <20100928222945.GB10932@tux>
-Content-Type: text/plain; charset="UTF-8"
-Date: Wed, 29 Sep 2010 10:18:23 +0200
-Message-ID: <1285748303.3756.19.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+	Thu, 23 Sep 2010 16:35:45 -0400
+Received: by gwj17 with SMTP id 17so729598gwj.19
+        for <linux-wireless@vger.kernel.org>; Thu, 23 Sep 2010 13:35:44 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <4C9BA6ED.8080304@candelatech.com>
+References: <4C9BA6ED.8080304@candelatech.com>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Thu, 23 Sep 2010 13:35:24 -0700
+Message-ID: <AANLkTinY7y7Gf8K518293mdzXh5=42gQ64eUJjJFSaBw@mail.gmail.com>
+Subject: Re: Detect if phy is a/b/g/n?
+To: Ben Greear <greearb@candelatech.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2010-09-28 at 15:29 -0700, Luis R. Rodriguez wrote:
+On Thu, Sep 23, 2010 at 12:13 PM, Ben Greear <greearb@candelatech.com> wrote:
+> Is there a way to determine what a/b/g/n modes a particular phy
+> supports?  I tried 'iw phy', but I didn't see anything
+> obvious.
 
-> Since we end up associated to two different APs at the same
-> time to transmit to either AP consists of an offchannel
-> operation but today we just lack the state machine to be able
-> to do this properly so for now just drop those frames.
+'iw list' Rates?
 
-I really think that can be done more easily though. For one, clearly we
-already have the warning, so we don't need more infrastructure to catch
-such errors?! Also, this may end up hiding issues that we don't yet
-understand, like the nullfunc one you were talking about. The delBA one
-we now understand fully, so it makes more sense to simply suppress
-sending delBA when we are going to disassociate by way of associating
-with a new AP, no?
-
-johannes
-
+  Luis
