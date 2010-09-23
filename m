@@ -1,50 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:33853 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753361Ab0IKQUK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 11 Sep 2010 12:20:10 -0400
-From: Hauke Mehrtens <hauke@hauke-m.de>
-To: lrodriguez@atheros.com
-Cc: linux-wireless@vger.kernel.org, mcgrof@infradead.org,
-	Hauke Mehrtens <hauke@hauke-m.de>
-Subject: [PATCH 2/2] compat: backport printk_once
-Date: Sat, 11 Sep 2010 18:19:59 +0200
-Message-Id: <1284221999-22521-2-git-send-email-hauke@hauke-m.de>
-In-Reply-To: <1284221999-22521-1-git-send-email-hauke@hauke-m.de>
-References: <1284221999-22521-1-git-send-email-hauke@hauke-m.de>
+Received: from mga01.intel.com ([192.55.52.88]:8653 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754270Ab0IWOsP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 23 Sep 2010 10:48:15 -0400
+Subject: Re: [Fwd: Re: [PATCH wireless-2.6] iwlwifi: do not perferm force
+ reset while doing scan]
+From: "Guy, Wey-Yi" <wey-yi.w.guy@intel.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: Stanislaw Gruszka <sgruszka@redhat.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"ipw3945-devel@lists.sourceforge.net"
+	<ipw3945-devel@lists.sourceforge.net>,
+	Johannes Berg <johannes@sipsolutions.net>
+In-Reply-To: <20100922151557.GE5515@tuxdriver.com>
+References: <1285166620.12056.29.camel@wwguy-huron>
+	 <20100922151557.GE5515@tuxdriver.com>
+Content-Type: text/plain
+Date: Thu, 23 Sep 2010 07:47:25 -0700
+Message-Id: <1285253245.1382.0.camel@wwguy-ubuntu>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is needed by brcm80211.
+On Wed, 2010-09-22 at 08:15 -0700, John W. Linville wrote:
+> On Wed, Sep 22, 2010 at 07:43:40AM -0700, Guy, Wey-Yi wrote:
+> 
+> > The "iwlwifi: do not perferm force reset while doing scan" patch, make
+> > sense for .36, but after Gruszka's scan patch(which will in .37), it is
+> > not needed. What is your recommendation?
+> > 
+> > 
+> > commit#7acc7c683a747689aaaaad4fce1683fc3f85e552 iwlwifi: do not perferm
+> > force reset while doing scan
+> 
+> I can pull wireless-2.6 into wireless-next-2.6 and then revert the
+> patch there.
+> 
+Thank you very much for the help!
 
-Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
----
- include/linux/compat-2.6.30.h |   12 ++++++++++++
- 1 files changed, 12 insertions(+), 0 deletions(-)
-
-diff --git a/include/linux/compat-2.6.30.h b/include/linux/compat-2.6.30.h
-index eface8c..28f3d54 100644
---- a/include/linux/compat-2.6.30.h
-+++ b/include/linux/compat-2.6.30.h
-@@ -30,6 +30,18 @@ static inline void dev_set_uevent_suppress(struct device *dev, int val)
- 	dev->uevent_suppress = val;
- }
- 
-+/*
-+ * Print a one-time message (analogous to WARN_ONCE() et al):
-+ */
-+#define printk_once(x...) ({			\
-+	static bool __print_once;		\
-+						\
-+	if (!__print_once) {			\
-+		__print_once = true;		\
-+		printk(x);			\
-+	}					\
-+})
-+
- #endif /* (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,30)) */
- 
- #endif /* LINUX_26_30_COMPAT_H */
--- 
-1.7.0.4
+Wey
 
