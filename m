@@ -1,93 +1,130 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iw0-f174.google.com ([209.85.214.174]:33126 "EHLO
-	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752855Ab0ITPdU (ORCPT
+Received: from mail-pz0-f46.google.com ([209.85.210.46]:42564 "EHLO
+	mail-pz0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752423Ab0IWNyV (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 20 Sep 2010 11:33:20 -0400
-Received: by iwn5 with SMTP id 5so4337400iwn.19
-        for <linux-wireless@vger.kernel.org>; Mon, 20 Sep 2010 08:33:20 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <AANLkTikAszZ3tLf90d0AnBe-42c87GFpRfbh2EbMZhTT@mail.gmail.com>
-References: <1284918553-32365-1-git-send-email-hauke@hauke-m.de>
- <1284918969-19315-1-git-send-email-hauke@hauke-m.de> <AANLkTikAszZ3tLf90d0AnBe-42c87GFpRfbh2EbMZhTT@mail.gmail.com>
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Date: Mon, 20 Sep 2010 08:33:00 -0700
-Message-ID: <AANLkTikjfUuytFxRaBaFfU9jVuvDTeXnYuthCVB_8yf0@mail.gmail.com>
-Subject: Re: [PATCH 2/2 v2] compat-wireless: "backport" pcmcia api changes.
-To: Hauke Mehrtens <hauke@hauke-m.de>
-Cc: linux-wireless@vger.kernel.org, mcgrof@infradead.org
-Content-Type: text/plain; charset=UTF-8
+	Thu, 23 Sep 2010 09:54:21 -0400
+Received: by pzk34 with SMTP id 34so395424pzk.19
+        for <linux-wireless@vger.kernel.org>; Thu, 23 Sep 2010 06:54:20 -0700 (PDT)
+From: greearb@gmail.com
+To: linux-wireless@vger.kernel.org
+Cc: Ben Greear <greearb@candelatech.com>
+Subject: [PATCH] mac80211/ath9k:  Support AMPDU with multiple VIFs.
+Date: Thu, 23 Sep 2010 06:54:14 -0700
+Message-Id: <1285250054-32035-1-git-send-email-greearb@candelatech.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Sep 20, 2010 at 8:26 AM, Luis R. Rodriguez
-<lrodriguez@atheros.com> wrote:
-> On Sun, Sep 19, 2010 at 10:56 AM, Hauke Mehrtens <hauke@hauke-m.de> wrote:
->> The PCMCIA API changed again.
->> This patch was only compile tested, beacuse I do not have devices to
->> test this.
->>
->> Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
->
-> mcgrof@tux ~/devel/compat-wireless-2.6 (git::master)$ patch -p1 <
-> /home/mcgrof/patches/2010/09/20/02-cw.patch
-> patching file patches/24-pcmcia.patch
-> Hunk #1 succeeded at 1 with fuzz 1.
-> Hunk #2 FAILED at 13.
-> Hunk #3 FAILED at 25.
-> Hunk #4 FAILED at 37.
-> Hunk #5 FAILED at 49.
-> Hunk #6 FAILED at 61.
-> Hunk #7 FAILED at 73.
-> Hunk #8 FAILED at 85.
-> Hunk #9 FAILED at 97.
-> Hunk #10 FAILED at 109.
-> Hunk #11 FAILED at 119.
-> Hunk #12 FAILED at 147.
-> Hunk #13 FAILED at 161.
-> Hunk #14 FAILED at 177.
-> Hunk #15 FAILED at 189.
-> Hunk #16 FAILED at 201.
-> Hunk #17 FAILED at 213.
-> Hunk #18 FAILED at 230.
-> Hunk #19 FAILED at 287.
-> Hunk #20 FAILED at 303.
-> Hunk #21 FAILED at 315.
-> Hunk #22 FAILED at 327.
-> Hunk #23 FAILED at 339.
-> Hunk #24 FAILED at 351.
-> Hunk #25 FAILED at 363.
-> Hunk #26 FAILED at 380.
-> Hunk #27 FAILED at 437.
-> Hunk #28 FAILED at 453.
-> Hunk #29 FAILED at 465.
-> Hunk #30 FAILED at 477.
-> Hunk #31 FAILED at 489.
-> Hunk #32 FAILED at 503.
-> Hunk #33 FAILED at 515.
-> Hunk #34 FAILED at 530.
-> Hunk #35 FAILED at 573.
-> Hunk #36 FAILED at 591.
-> Hunk #37 FAILED at 606.
-> Hunk #38 FAILED at 634.
-> Hunk #39 FAILED at 673.
-> Hunk #40 FAILED at 691.
-> Hunk #41 FAILED at 703.
-> Hunk #42 FAILED at 717.
-> Hunk #43 FAILED at 726.
-> Hunk #44 FAILED at 758.
-> Hunk #45 FAILED at 803.
-> Hunk #46 FAILED at 820.
-> Hunk #47 FAILED at 831.
-> Hunk #48 FAILED at 863.
-> Hunk #49 FAILED at 908.
-> Hunk #50 FAILED at 925.
-> 49 out of 50 hunks FAILED -- saving rejects to file patches/24-pcmcia.patch.rej
->
-> We should just remove PCMCIA, at the summit no Linux distribution
-> present indicated their desire to keep it alive and maintained within
-> compat-wireless. This should save us some work.
+From: Ben Greear <greearb@candelatech.com>
 
-Applied the other 3/4 patches though, thanks!
+The old ieee80211_find_sta_by_hw method didn't properly
+find VIFS when there was more than one per AP.  This caused
+AMPDU logic in ath9k to get the wrong VIF when trying to
+account for transmitted SKBs.
 
-  Luis
+This patch changes ieee80211_find_sta_by_hw to take a
+localaddr argument to distinguish between VIFs with the
+same AP but different local addresses.
+
+Signed-off-by: Ben Greear <greearb@candelatech.com>
+---
+:100644 100644 c5e7af4... 9165ac8... M	drivers/net/wireless/ath/ath9k/recv.c
+:100644 100644 85a7323... 6543828... M	drivers/net/wireless/ath/ath9k/xmit.c
+:100644 100644 12a49f0... 9b25334... M	include/net/mac80211.h
+:100644 100644 44e10a9... f543331... M	net/mac80211/sta_info.c
+ drivers/net/wireless/ath/ath9k/recv.c |    6 +++++-
+ drivers/net/wireless/ath/ath9k/xmit.c |    2 +-
+ include/net/mac80211.h                |   14 ++++----------
+ net/mac80211/sta_info.c               |   11 +++++++++--
+ 4 files changed, 19 insertions(+), 14 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath9k/recv.c b/drivers/net/wireless/ath/ath9k/recv.c
+index c5e7af4..9165ac8 100644
+--- a/drivers/net/wireless/ath/ath9k/recv.c
++++ b/drivers/net/wireless/ath/ath9k/recv.c
+@@ -977,7 +977,11 @@ static void ath9k_process_rssi(struct ath_common *common,
+ 	 * at least one sdata of a wiphy on mac80211 but with ath9k virtual
+ 	 * wiphy you'd have to iterate over every wiphy and each sdata.
+ 	 */
+-	sta = ieee80211_find_sta_by_hw(hw, hdr->addr2);
++	if (is_multicast_ether_addr(hdr->addr1))
++		sta = ieee80211_find_sta_by_hw(hw, hdr->addr2, NULL);
++	else
++		sta = ieee80211_find_sta_by_hw(hw, hdr->addr2, hdr->addr1);
++		
+ 	if (sta) {
+ 		an = (struct ath_node *) sta->drv_priv;
+ 		if (rx_stats->rs_rssi != ATH9K_RSSI_BAD &&
+diff --git a/drivers/net/wireless/ath/ath9k/xmit.c b/drivers/net/wireless/ath/ath9k/xmit.c
+index 85a7323..6543828 100644
+--- a/drivers/net/wireless/ath/ath9k/xmit.c
++++ b/drivers/net/wireless/ath/ath9k/xmit.c
+@@ -329,7 +329,7 @@ static void ath_tx_complete_aggr(struct ath_softc *sc, struct ath_txq *txq,
+ 	rcu_read_lock();
+ 
+ 	/* XXX: use ieee80211_find_sta! */
+-	sta = ieee80211_find_sta_by_hw(hw, hdr->addr1);
++	sta = ieee80211_find_sta_by_hw(hw, hdr->addr1, hdr->addr2);
+ 	if (!sta) {
+ 		rcu_read_unlock();
+ 
+diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+index 12a49f0..9b25334 100644
+--- a/include/net/mac80211.h
++++ b/include/net/mac80211.h
+@@ -2419,22 +2419,16 @@ struct ieee80211_sta *ieee80211_find_sta(struct ieee80211_vif *vif,
+  * ieee80211_find_sta_by_hw - find a station on hardware
+  *
+  * @hw: pointer as obtained from ieee80211_alloc_hw()
+- * @addr: station's address
++ * @addr: remote station's address
++ * @localaddr: local address (vif->sdata->vif.addr). Use NULL for 'any'.
+  *
+  * This function must be called under RCU lock and the
+  * resulting pointer is only valid under RCU lock as well.
+  *
+- * NOTE: This function should not be used! When mac80211 is converted
+- *	 internally to properly keep track of stations on multiple
+- *	 virtual interfaces, it will not always know which station to
+- *	 return here since a single address might be used by multiple
+- *	 logical stations (e.g. consider a station connecting to another
+- *	 BSSID on the same AP hardware without disconnecting first).
+- *
+- * DO NOT USE THIS FUNCTION.
+  */
+ struct ieee80211_sta *ieee80211_find_sta_by_hw(struct ieee80211_hw *hw,
+-					       const u8 *addr);
++					       const u8 *addr,
++					       const u8 *localaddr);
+ 
+ /**
+  * ieee80211_sta_block_awake - block station from waking up
+diff --git a/net/mac80211/sta_info.c b/net/mac80211/sta_info.c
+index 44e10a9..f543331 100644
+--- a/net/mac80211/sta_info.c
++++ b/net/mac80211/sta_info.c
+@@ -839,12 +839,19 @@ void ieee80211_sta_expire(struct ieee80211_sub_if_data *sdata,
+ }
+ 
+ struct ieee80211_sta *ieee80211_find_sta_by_hw(struct ieee80211_hw *hw,
+-					       const u8 *addr)
++					       const u8 *addr,
++					       const u8 *localaddr)
+ {
+ 	struct sta_info *sta, *nxt;
+ 
+-	/* Just return a random station ... first in list ... */
++	/*
++	 * Just return a random station if localaddr is NULL
++	 * ... first in list.
++	 */
+ 	for_each_sta_info(hw_to_local(hw), addr, sta, nxt) {
++		if (localaddr &&
++		    compare_ether_addr(sta->sdata->vif.addr, localaddr) != 0)
++			continue;
+ 		if (!sta->uploaded)
+ 			return NULL;
+ 		return &sta->sta;
+-- 
+1.7.2.3
+
