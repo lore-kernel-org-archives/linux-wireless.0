@@ -1,60 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:45913 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754395Ab0I2TGE (ORCPT
+Received: from mail-iw0-f174.google.com ([209.85.214.174]:51268 "EHLO
+	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755128Ab0IWRbv (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 29 Sep 2010 15:06:04 -0400
-From: greearb@candelatech.com
-To: linux-wireless@vger.kernel.org
-Cc: Ben Greear <greearb@candelatech.com>
-Subject: [PATCH v2] mac80211:  Don't go off-channel in work_work unless needed.
-Date: Wed, 29 Sep 2010 12:05:59 -0700
-Message-Id: <1285787159-9207-1-git-send-email-greearb@candelatech.com>
+	Thu, 23 Sep 2010 13:31:51 -0400
+Received: by iwn5 with SMTP id 5so1612418iwn.19
+        for <linux-wireless@vger.kernel.org>; Thu, 23 Sep 2010 10:31:51 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <260374.78183.qm@web56801.mail.re3.yahoo.com>
+References: <D5F495A696324E51917098BB2D9BE5C8@ChuckPC> <260374.78183.qm@web56801.mail.re3.yahoo.com>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Thu, 23 Sep 2010 10:31:29 -0700
+Message-ID: <AANLkTik6r_xUD4Ct2iuWWbXPLUnDYb1HPzLTaym=GW8L@mail.gmail.com>
+Subject: Re: Compiling carl9170
+To: Walter Goldens <goldenstranger@yahoo.com>
+Cc: linux-wireless@vger.kernel.org,
+	Tim Gardner <tim.gardner@canonical.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ben Greear <greearb@candelatech.com>
+On Thu, Sep 23, 2010 at 7:11 AM, Walter Goldens
+<goldenstranger@yahoo.com> wrote:
+> I don't have atheros cards and this might be idiotic question, but won't ar9170 and carl9170 collide, since they cover the same VIDs ?
+>
+> http://linuxwireless.org/en/users/Drivers/ar9170#available_devices
+> http://wireless.kernel.org/en/users/Drivers/carl9170#available_devices
 
-If the work to be done is on the current active channel, then
-do not call the offchannel and return-to-channel logic.
+Yes, distributions should pick carl9170 over ar9170 though as ar9170
+will be removed from the kernel after a good kernel try out of it.
 
-Signed-off-by: Ben Greear <greearb@candelatech.com>
----
-v1 -> v2:  Remove went_off_channel logic, and don't set
-   tmp_channel if we're not going offchannel.
-
-:100644 100644 ae344d1... 8a2ff479.. M	net/mac80211/work.c
- net/mac80211/work.c |   17 +++++++++++------
- 1 files changed, 11 insertions(+), 6 deletions(-)
-
-diff --git a/net/mac80211/work.c b/net/mac80211/work.c
-index ae344d1..8a2ff479 100644
---- a/net/mac80211/work.c
-+++ b/net/mac80211/work.c
-@@ -910,12 +910,17 @@ static void ieee80211_work_work(struct work_struct *work)
- 			 *	 happen to be on the same channel as
- 			 *	 the requested channel
- 			 */
--			ieee80211_offchannel_stop_beaconing(local);
--			ieee80211_offchannel_stop_station(local);
--
--			local->tmp_channel = wk->chan;
--			local->tmp_channel_type = wk->chan_type;
--			ieee80211_hw_config(local, 0);
-+			WARN_ON(local->scan_channel != NULL);
-+			if (wk->chan != local->oper_channel ||
-+			    wk->chan_type != local->_oper_channel_type) {
-+				/* Only change channels if we need to */
-+				ieee80211_offchannel_stop_beaconing(local);
-+				ieee80211_offchannel_stop_station(local);
-+
-+				local->tmp_channel = wk->chan;
-+				local->tmp_channel_type = wk->chan_type;
-+				ieee80211_hw_config(local, 0);
-+			}
- 			started = true;
- 			wk->timeout = jiffies;
- 		}
--- 
-1.7.2.2
-
+  Luis
