@@ -1,35 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qw0-f46.google.com ([209.85.216.46]:50059 "EHLO
-	mail-qw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751966Ab0IBC3w (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:37671 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754085Ab0IWPDs (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 1 Sep 2010 22:29:52 -0400
-Received: by qwh6 with SMTP id 6so7084024qwh.19
-        for <linux-wireless@vger.kernel.org>; Wed, 01 Sep 2010 19:29:51 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <20100902013545.GB4744@kroah.com>
-References: <1283381473-20415-1-git-send-email-vmehta@atheros.com> <20100902013545.GB4744@kroah.com>
-From: =?ISO-8859-1?Q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>
-Date: Thu, 2 Sep 2010 04:29:31 +0200
-Message-ID: <AANLkTim-OPNM20swWXtHF0VufVjMHpcs-OUVTLCmTPRw@mail.gmail.com>
-Subject: Re: [PATCH 0/1] ath6kl: add ath6kl driver for AR6003 chip
-To: Greg KH <greg@kroah.com>
-Cc: Vipin Mehta <vmehta@atheros.com>, linux-wireless@vger.kernel.org,
-	lrodriguez@atheros.com, devel@linuxdriverproject.org
-Content-Type: text/plain; charset=ISO-8859-1
+	Thu, 23 Sep 2010 11:03:48 -0400
+Subject: Re: [PATCH] wifi-test: add simple roam test script
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Cc: "Rafael J. Wysocki" <rjw@sisk.pl>,
+	"jiajia.zheng@intel.com" <jiajia.zheng@intel.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"wifi-test-devel@lists.sourceforge.net"
+	<wifi-test-devel@lists.sourceforge.net>,
+	Luis Rodriguez <Luis.Rodriguez@atheros.com>,
+	Paul Stewart <pstew@google.com>
+In-Reply-To: <1285254157.3770.169.camel@jlt3.sipsolutions.net>
+References: <1285201037-29405-1-git-send-email-lrodriguez@atheros.com>
+	 <20100923002240.GA4484@tux>
+	 <1285231958.3691.10.camel@jlt3.sipsolutions.net>
+	 <AANLkTikh+Q0AK+RyouLOQ5RN5wnKaD2TMnHR-ofqrMKJ@mail.gmail.com>
+	 <1285254157.3770.169.camel@jlt3.sipsolutions.net>
+Content-Type: text/plain; charset="UTF-8"
+Date: Thu, 23 Sep 2010 17:03:46 +0200
+Message-ID: <1285254226.3770.171.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Sep 2, 2010 at 3:35 AM, Greg KH <greg@kroah.com> wrote:
-> On Wed, Sep 01, 2010 at 03:51:13PM -0700, Vipin Mehta wrote:
->> The patch adds support for the 802.11 chip, AR6003. It has been
->> generated against the linux-next tree and is being targeted
->> for the staging area.
->
-> -ENOPATCH :(
+On Thu, 2010-09-23 at 17:02 +0200, Johannes Berg wrote:
+> On Thu, 2010-09-23 at 07:53 -0700, Luis R. Rodriguez wrote:
+> 
+> > >> After roaming for a good while, this is what I got, not sure
+> > >> yet what caused the NULL pointer dereference... Am I the only
+> > >> one able to reproduce this?
+> > >
+> > >> [ 3276.730081] BUG: unable to handle kernel NULL pointer dereference at 0000000000000003
+> > >> [ 3276.730148] IP: [<0000000000000003>] 0x3
+> > >
+> > > Something called a NULL pointer function pointer. Rafael recently said
+> > > "cpuidle is buggy" when a similar issue came up:
+> > > http://mid.gmane.org/201009182344.12498.rjw@sisk.pl
+> > 
+> > But that seems related to ACPI, no? On my box I never suspended, I
+> > just associated and disassociated rapidly between two peers. The only
+> > suspicion I have is its obviously right after adding the STA peer.
+> 
+> Yes, but he said suspend/resume _fixed_ it :-)
 
-On Wed, Sep 01, 2010 at 03:51:13PM -0700, Vipin Mehta wrote:
-> The actual patch can be downloaded from the following location:
-> http://www.kernel.org/~vmehta/0001-staging-add-ath6kl-driver-for-AR6003-chip.patch.gz
+Hm never mind, misunderstood the original report ... suspend + wait +
+resume was what was broken.
 
-This one.
+But still, it's a NULL pointer call, and I can't really see how that
+would happen.
+
+johannes
+
