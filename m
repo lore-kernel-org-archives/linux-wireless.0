@@ -1,39 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:59801 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754778Ab0IXVCz (ORCPT
+Received: from mail.candelatech.com ([208.74.158.172]:54675 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752639Ab0IWN57 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 24 Sep 2010 17:02:55 -0400
-Subject: Re: [wireless] wireless:  Keep phy name consistent across module
- reloads.
-From: Johannes Berg <johannes@sipsolutions.net>
-To: greearb@candelatech.com
-Cc: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-In-Reply-To: <1285113431-25526-1-git-send-email-greearb@candelatech.com>
-References: <1285113431-25526-1-git-send-email-greearb@candelatech.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Fri, 24 Sep 2010 23:02:50 +0200
-Message-ID: <1285362170.11036.1.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+	Thu, 23 Sep 2010 09:57:59 -0400
+Message-ID: <4C9B5CE4.9040806@candelatech.com>
+Date: Thu, 23 Sep 2010 06:57:56 -0700
+From: Ben Greear <greearb@candelatech.com>
+MIME-Version: 1.0
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: linux-wireless@vger.kernel.org
+Subject: Re: [mac80211] mac80211:  Support receiving data frames on multiple
+ vifs.
+References: <1285018776-21795-1-git-send-email-greearb@candelatech.com> <1285051641.3710.8.camel@jlt3.sipsolutions.net>
+In-Reply-To: <1285051641.3710.8.camel@jlt3.sipsolutions.net>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2010-09-21 at 16:57 -0700, greearb@candelatech.com wrote:
-> From: Ben Greear <greearb@candelatech.com>
-> 
-> It adds needless pain to user-space scripts to change the name
-> of the phy on each module reload.  Instead, find the first
-> index.
+On 09/20/2010 11:47 PM, Johannes Berg wrote:
+> On Mon, 2010-09-20 at 14:39 -0700, greearb@candelatech.com wrote:
+>> From: Ben Greear<greearb@candelatech.com>
+>>
+>> When using multiple STA interfaces on the same radio, some
+>> data packets need to be received on all interfaces
+>> (broadcast, for instance).
+>>
+>> Make the STA loop look similar to the mgt-data loop.
+>>
+>> Also, add logic to check RX_FLAG_MMIC_ERROR for last
+>> interface in mgt-data loop.
+>>
+>> This needs review.
+>
+> Looks fine to me, I think.
 
-Crap, I clearly missed this patch, John, please revert this.
+Does this need any more work before being accepted upstream?
 
-We cannot do this because otherwise operations you attempt to do one one
-PHY will race with re-creating of the same phy index. For the same
-reason, interface indexes aren't reused for netdevs.
+Thanks,
+Ben
 
-If this bothers you so much, you can easily write a udev rule that
-renames all your phys to "myphy" or whatever.
-
-johannes
-
+-- 
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
