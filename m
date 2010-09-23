@@ -1,212 +1,96 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:20283 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753432Ab0IINxH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 9 Sep 2010 09:53:07 -0400
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: Johannes Berg <johannes@sipsolutions.net>,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>,
-	Reinette Chatre <reinette.chatre@intel.com>,
-	"John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org,
-	Stanislaw Gruszka <sgruszka@redhat.com>
-Subject: [PATCH 11/12] iwlwifi: do not force complete scan too early
-Date: Thu,  9 Sep 2010 15:52:29 +0200
-Message-Id: <1284040354-31703-12-git-send-email-sgruszka@redhat.com>
-In-Reply-To: <1284040354-31703-1-git-send-email-sgruszka@redhat.com>
-References: <1284040354-31703-1-git-send-email-sgruszka@redhat.com>
+Received: from mail-pv0-f174.google.com ([74.125.83.174]:61595 "EHLO
+	mail-pv0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751900Ab0IWD3L (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 22 Sep 2010 23:29:11 -0400
+Received: by pvg2 with SMTP id 2so310178pvg.19
+        for <linux-wireless@vger.kernel.org>; Wed, 22 Sep 2010 20:29:10 -0700 (PDT)
+From: greearb@gmail.com
+To: linux-wireless@vger.kernel.org
+Cc: Ben Greear <greearb@candelatech.com>
+Subject: [mac80211] mac80211:  Support multiple VIFS per AP in debugfs.
+Date: Wed, 22 Sep 2010 20:29:01 -0700
+Message-Id: <1285212541-6834-1-git-send-email-greearb@candelatech.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Currently we force scan complete at the end of iwl_scan_cancel_timeout
-function. This cause race condition when we can get a new scan request
-from mac80211 and complete it by iwl_bg_complete from older scan. Change
-code to force scan complete only when really needed: device goes down,
-interface is removed or scan timeout occurs.
+From: Ben Greear <greearb@candelatech.com>
 
-Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+Create 'stations' sub-directory under each netdev:[vif-name]
+directory to hold all stations for that network device.
+
+Signed-off-by: Ben Greear <greearb@candelatech.com>
 ---
- drivers/net/wireless/iwlwifi/iwl-agn.c      |    6 +++-
- drivers/net/wireless/iwlwifi/iwl-core.c     |    6 +++-
- drivers/net/wireless/iwlwifi/iwl-core.h     |    2 +
- drivers/net/wireless/iwlwifi/iwl-scan.c     |   40 ++++++++++++++++++++-------
- drivers/net/wireless/iwlwifi/iwl3945-base.c |    4 +-
- 5 files changed, 42 insertions(+), 16 deletions(-)
+:100644 100644 e81ef4e... ebd5b69... M	net/mac80211/debugfs.c
+:100644 100644 20b2998... 3e12430... M	net/mac80211/debugfs_netdev.c
+:100644 100644 76839d4... 6b7ff9f... M	net/mac80211/debugfs_sta.c
+:100644 100644 9346a6b... 3c7c230... M	net/mac80211/ieee80211_i.h
+ net/mac80211/debugfs.c        |    1 -
+ net/mac80211/debugfs_netdev.c |    3 +++
+ net/mac80211/debugfs_sta.c    |    2 +-
+ net/mac80211/ieee80211_i.h    |    2 +-
+ 4 files changed, 5 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
-index 0de2401..9ef48f8 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
-@@ -4054,13 +4054,15 @@ static void iwl_cancel_deferred_work(struct iwl_priv *priv)
- 		priv->cfg->ops->lib->cancel_deferred_work(priv);
+diff --git a/net/mac80211/debugfs.c b/net/mac80211/debugfs.c
+index e81ef4e..ebd5b69 100644
+--- a/net/mac80211/debugfs.c
++++ b/net/mac80211/debugfs.c
+@@ -368,7 +368,6 @@ void debugfs_hw_add(struct ieee80211_local *local)
+ 	if (!phyd)
+ 		return;
  
- 	cancel_delayed_work_sync(&priv->init_alive_start);
--	cancel_delayed_work(&priv->scan_check);
--	cancel_work_sync(&priv->start_internal_scan);
- 	cancel_delayed_work(&priv->alive_start);
- 	cancel_work_sync(&priv->run_time_calib_work);
- 	cancel_work_sync(&priv->beacon_update);
-+
-+	iwl_cancel_scan_deferred_work(priv);
-+
- 	cancel_work_sync(&priv->bt_full_concurrency);
- 	cancel_work_sync(&priv->bt_runtime_config);
-+
- 	del_timer_sync(&priv->statistics_periodic);
- 	del_timer_sync(&priv->ucode_trace);
- }
-diff --git a/drivers/net/wireless/iwlwifi/iwl-core.c b/drivers/net/wireless/iwlwifi/iwl-core.c
-index 7c1819f..57d157f 100644
---- a/drivers/net/wireless/iwlwifi/iwl-core.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-core.c
-@@ -2049,8 +2049,10 @@ void iwl_mac_remove_interface(struct ieee80211_hw *hw,
- 	WARN_ON(ctx->vif != vif);
- 	ctx->vif = NULL;
+-	local->debugfs.stations = debugfs_create_dir("stations", phyd);
+ 	local->debugfs.keys = debugfs_create_dir("keys", phyd);
  
--	if (priv->scan_vif == vif)
--		iwl_scan_cancel_timeout(priv, 100);
-+	if (priv->scan_vif == vif) {
-+		iwl_scan_cancel_timeout(priv, 200);
-+		iwl_force_scan_end(priv);
-+	}
- 	iwl_set_mode(priv, vif);
- 
- 	/*
-diff --git a/drivers/net/wireless/iwlwifi/iwl-core.h b/drivers/net/wireless/iwlwifi/iwl-core.h
-index 8dab074..f1d40c6 100644
---- a/drivers/net/wireless/iwlwifi/iwl-core.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-core.h
-@@ -553,6 +553,7 @@ static inline __le32 iwl_hw_set_rate_n_flags(u8 rate, u32 flags)
- void iwl_init_scan_params(struct iwl_priv *priv);
- int iwl_scan_cancel(struct iwl_priv *priv);
- int iwl_scan_cancel_timeout(struct iwl_priv *priv, unsigned long ms);
-+void iwl_force_scan_end(struct iwl_priv *priv);
- int iwl_mac_hw_scan(struct ieee80211_hw *hw,
- 		    struct ieee80211_vif *vif,
- 		    struct cfg80211_scan_request *req);
-@@ -568,6 +569,7 @@ u16 iwl_get_passive_dwell_time(struct iwl_priv *priv,
- 			       enum ieee80211_band band,
- 			       struct ieee80211_vif *vif);
- void iwl_setup_scan_deferred_work(struct iwl_priv *priv);
-+void iwl_cancel_scan_deferred_work(struct iwl_priv *priv);
- 
- /* For faster active scanning, scan will move to the next channel if fewer than
-  * PLCP_QUIET_THRESH packets are heard on this channel within
-diff --git a/drivers/net/wireless/iwlwifi/iwl-scan.c b/drivers/net/wireless/iwlwifi/iwl-scan.c
-index df61273..10b0ccc 100644
---- a/drivers/net/wireless/iwlwifi/iwl-scan.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-scan.c
-@@ -106,14 +106,22 @@ static void iwl_complete_scan(struct iwl_priv *priv, bool aborted)
- 	priv->scan_request = NULL;
+ 	DEBUGFS_ADD(frequency);
+diff --git a/net/mac80211/debugfs_netdev.c b/net/mac80211/debugfs_netdev.c
+index 20b2998..3e12430 100644
+--- a/net/mac80211/debugfs_netdev.c
++++ b/net/mac80211/debugfs_netdev.c
+@@ -409,6 +409,9 @@ void ieee80211_debugfs_add_netdev(struct ieee80211_sub_if_data *sdata)
+ 	sprintf(buf, "netdev:%s", sdata->name);
+ 	sdata->debugfs.dir = debugfs_create_dir(buf,
+ 		sdata->local->hw.wiphy->debugfsdir);
++	if (sdata->debugfs.dir)
++		sdata->debugfs.subdir_stations = debugfs_create_dir("stations",
++			sdata->debugfs.dir);
+ 	add_files(sdata);
  }
  
--static void iwl_force_scan_end(struct iwl_priv *priv)
-+void iwl_force_scan_end(struct iwl_priv *priv)
+diff --git a/net/mac80211/debugfs_sta.c b/net/mac80211/debugfs_sta.c
+index 76839d4..6b7ff9f 100644
+--- a/net/mac80211/debugfs_sta.c
++++ b/net/mac80211/debugfs_sta.c
+@@ -300,7 +300,7 @@ STA_OPS(ht_capa);
+ 
+ void ieee80211_sta_debugfs_add(struct sta_info *sta)
  {
-+	lockdep_assert_held(&priv->mutex);
-+
-+	if (!test_bit(STATUS_SCANNING, &priv->status)) {
-+		IWL_DEBUG_SCAN(priv, "Forcing scan end while not scanning\n");
-+		return;
-+	}
-+
- 	IWL_DEBUG_SCAN(priv, "Forcing scan end\n");
- 	clear_bit(STATUS_SCANNING, &priv->status);
- 	clear_bit(STATUS_SCAN_HW, &priv->status);
- 	clear_bit(STATUS_SCAN_ABORTING, &priv->status);
- 	iwl_complete_scan(priv, true);
- }
-+EXPORT_SYMBOL(iwl_force_scan_end);
+-	struct dentry *stations_dir = sta->local->debugfs.stations;
++	struct dentry *stations_dir = sta->sdata->debugfs.subdir_stations;
+ 	u8 mac[3*ETH_ALEN];
  
- static void iwl_do_scan_abort(struct iwl_priv *priv)
- {
-@@ -157,7 +165,6 @@ EXPORT_SYMBOL(iwl_scan_cancel);
-  */
- int iwl_scan_cancel_timeout(struct iwl_priv *priv, unsigned long ms)
- {
--	int ret;
- 	unsigned long timeout = jiffies + msecs_to_jiffies(ms);
- 
- 	lockdep_assert_held(&priv->mutex);
-@@ -172,10 +179,7 @@ int iwl_scan_cancel_timeout(struct iwl_priv *priv, unsigned long ms)
- 		msleep(20);
- 	}
- 
--	ret = test_bit(STATUS_SCAN_HW, &priv->status);
--	if (ret)
--		iwl_force_scan_end(priv);
--	return ret;
-+	return test_bit(STATUS_SCAN_HW, &priv->status);
- }
- EXPORT_SYMBOL(iwl_scan_cancel_timeout);
- 
-@@ -490,8 +494,11 @@ static void iwl_bg_scan_check(struct work_struct *data)
- 	struct iwl_priv *priv =
- 	    container_of(data, struct iwl_priv, scan_check.work);
- 
-+	/* Since we are here firmware does not finish scan and
-+	 * most likely is in bad shape, so we don't bother to
-+	 * send abort command, just force scan complete to mac80211 */
- 	mutex_lock(&priv->mutex);
--	iwl_scan_cancel_timeout(priv, 200);
-+	iwl_force_scan_end(priv);
- 	mutex_unlock(&priv->mutex);
- }
- 
-@@ -547,8 +554,8 @@ static void iwl_bg_abort_scan(struct work_struct *work)
- {
- 	struct iwl_priv *priv = container_of(work, struct iwl_priv, abort_scan);
- 
--	cancel_delayed_work(&priv->scan_check);
--
-+	/* We keep scan_check work queued in case when firmware will not
-+	 * report back scan completed notification */
- 	mutex_lock(&priv->mutex);
- 	iwl_scan_cancel_timeout(priv, 200);
- 	mutex_unlock(&priv->mutex);
-@@ -564,7 +571,7 @@ static void iwl_bg_scan_completed(struct work_struct *work)
- 	IWL_DEBUG_INFO(priv, "Completed %sscan.\n",
- 		       priv->is_internal_short_scan ? "internal short " : "");
- 
--	cancel_delayed_work(&priv->scan_check);
-+	cancel_delayed_work_sync(&priv->scan_check);
- 
- 	mutex_lock(&priv->mutex);
- 
-@@ -631,3 +638,16 @@ void iwl_setup_scan_deferred_work(struct iwl_priv *priv)
- }
- EXPORT_SYMBOL(iwl_setup_scan_deferred_work);
- 
-+void iwl_cancel_scan_deferred_work(struct iwl_priv *priv)
-+{
-+	cancel_work_sync(&priv->start_internal_scan);
-+	cancel_work_sync(&priv->abort_scan);
-+	cancel_work_sync(&priv->scan_completed);
-+
-+	if (cancel_delayed_work_sync(&priv->scan_check)) {
-+		mutex_lock(&priv->mutex);
-+		iwl_force_scan_end(priv);
-+		mutex_unlock(&priv->mutex);
-+	}
-+}
-+EXPORT_SYMBOL(iwl_cancel_scan_deferred_work);
-diff --git a/drivers/net/wireless/iwlwifi/iwl3945-base.c b/drivers/net/wireless/iwlwifi/iwl3945-base.c
-index fb894d8..6b8f654 100644
---- a/drivers/net/wireless/iwlwifi/iwl3945-base.c
-+++ b/drivers/net/wireless/iwlwifi/iwl3945-base.c
-@@ -3763,10 +3763,10 @@ static void iwl3945_cancel_deferred_work(struct iwl_priv *priv)
- 	iwl3945_hw_cancel_deferred_work(priv);
- 
- 	cancel_delayed_work_sync(&priv->init_alive_start);
--	cancel_delayed_work(&priv->scan_check);
- 	cancel_delayed_work(&priv->alive_start);
--	cancel_work_sync(&priv->start_internal_scan);
- 	cancel_work_sync(&priv->beacon_update);
-+
-+	iwl_cancel_scan_deferred_work(priv);
- }
- 
- static struct attribute *iwl3945_sysfs_entries[] = {
+ 	sta->debugfs.add_has_run = true;
+diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+index 9346a6b..3c7c230 100644
+--- a/net/mac80211/ieee80211_i.h
++++ b/net/mac80211/ieee80211_i.h
+@@ -564,6 +564,7 @@ struct ieee80211_sub_if_data {
+ #ifdef CONFIG_MAC80211_DEBUGFS
+ 	struct {
+ 		struct dentry *dir;
++		struct dentry *subdir_stations;
+ 		struct dentry *default_key;
+ 		struct dentry *default_mgmt_key;
+ 	} debugfs;
+@@ -899,7 +900,6 @@ struct ieee80211_local {
+ #ifdef CONFIG_MAC80211_DEBUGFS
+ 	struct local_debugfsdentries {
+ 		struct dentry *rcdir;
+-		struct dentry *stations;
+ 		struct dentry *keys;
+ 	} debugfs;
+ #endif
 -- 
-1.7.1
+1.7.2.3
 
