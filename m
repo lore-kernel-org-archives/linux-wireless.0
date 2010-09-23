@@ -1,48 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:33082 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754809Ab0IYLWc (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 25 Sep 2010 07:22:32 -0400
-From: Hauke Mehrtens <hauke@hauke-m.de>
-To: lrodriguez@atheros.com
-Cc: linux-wireless@vger.kernel.org, mcgrof@infradead.org,
-	Hauke Mehrtens <hauke@hauke-m.de>,
-	philipp_subx@redfish-solutions.com
-Subject: [PATCH] compat: fix build error in init_dummy_netdev
-Date: Sat, 25 Sep 2010 13:22:17 +0200
-Message-Id: <1285413737-782-1-git-send-email-hauke@hauke-m.de>
+Received: from mail.candelatech.com ([208.74.158.172]:46110 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753407Ab0IWXFV (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 23 Sep 2010 19:05:21 -0400
+Message-ID: <4C9BDD2C.1090806@candelatech.com>
+Date: Thu, 23 Sep 2010 16:05:16 -0700
+From: Ben Greear <greearb@candelatech.com>
+MIME-Version: 1.0
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: Patch to get iw building on Fedora 8
+References: <4C98DFB6.10902@candelatech.com> <1285090085.12764.6.camel@jlt3.sipsolutions.net>
+In-Reply-To: <1285090085.12764.6.camel@jlt3.sipsolutions.net>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-In kernel <= 2.6.28 the member napi_list in struct net_device is only
-availabe if CONFIG_NETPOLL is set. We should initialize it only if it
-is available.
+I notice that you added some code to try to get this working:
 
-This should fix the problem reported by Philip.
+#ifndef _ISOC99_SOURCE
+#define _ISOC99_SOURCE
+#endif
 
-This should also go into stable.
 
-CC: philipp_subx@redfish-solutions.com
-Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
----
- compat/compat-2.6.29.c |    2 ++
- 1 files changed, 2 insertions(+), 0 deletions(-)
+However, it still will not build for me on Fedora 8.  In case I'm doing something
+else strange..were you able to build it on FC8 by any chance?
 
-diff --git a/compat/compat-2.6.29.c b/compat/compat-2.6.29.c
-index bc4288f..cded3cc 100644
---- a/compat/compat-2.6.29.c
-+++ b/compat/compat-2.6.29.c
-@@ -153,8 +153,10 @@ int init_dummy_netdev(struct net_device *dev)
- 	/* initialize the ref count */
- 	atomic_set(&dev->refcnt, 1);
- 
-+#ifdef CONFIG_NETPOLL
- 	/* NAPI wants this */
- 	INIT_LIST_HEAD(&dev->napi_list);
-+#endif
- 
- 	/* a dummy interface is started by default */
- 	set_bit(__LINK_STATE_PRESENT, &dev->state);
+I can easily carry the fix in my own tree, but thought
+you might want to know...
+
+Thanks,
+Ben
+
 -- 
-1.7.0.4
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
 
