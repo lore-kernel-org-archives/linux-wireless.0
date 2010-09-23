@@ -1,58 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:59051 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755866Ab0INXkj (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:45333 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751179Ab0IWIdy (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 14 Sep 2010 19:40:39 -0400
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>, stable@kernel.org,
-	Paul Stewart <pstew@google.com>,
-	Amod Bodas <amod.bodas@atheros.com>
-Subject: [PATCH v3 08/11] mac80211: disable beacon monitor while going offchannel
-Date: Tue, 14 Sep 2010 19:40:21 -0400
-Message-Id: <1284507624-18176-9-git-send-email-lrodriguez@atheros.com>
-In-Reply-To: <1284507624-18176-1-git-send-email-lrodriguez@atheros.com>
-References: <1284507624-18176-1-git-send-email-lrodriguez@atheros.com>
+	Thu, 23 Sep 2010 04:33:54 -0400
+Subject: Re: [ath9k-devel] ath9k, multiple stations, and AMPDUs
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Ben Greear <greearb@candelatech.com>
+Cc: Felix Fietkau <nbd@openwrt.org>,
+	"ath9k-devel@lists.ath9k.org" <ath9k-devel@venema.h4ckr.net>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <4C9ADE7E.5070406@candelatech.com>
+References: <4C9841BA.4080700@candelatech.com> <4C98848C.70005@openwrt.org>
+	 <4C98A022.7020106@candelatech.com> <4C98A2C4.8060108@openwrt.org>
+	 <4C98EAA1.7050908@candelatech.com>  <4C98F2D8.8020602@openwrt.org>
+	 <1285097307.12764.11.camel@jlt3.sipsolutions.net>
+	 <4C990859.70709@openwrt.org> <4C99135A.3090103@candelatech.com>
+	 <4C99348F.2090504@openwrt.org> <4C99870C.20006@candelatech.com>
+	 <4C99BEFC.2060209@openwrt.org>  <4C9ADE7E.5070406@candelatech.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Thu, 23 Sep 2010 10:33:51 +0200
+Message-ID: <1285230831.3691.5.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The beacon monitor should be disabled when going off channel
-to prevent spurious warnings and triggering connection
-deterioration work such as sending probe requests. Re-enable
-the beacon monitor once we come back to the home channel.
+On Wed, 2010-09-22 at 21:58 -0700, Ben Greear wrote:
 
-This patch has fixes for stable kernels [2.6.34+].
 
-Cc: stable@kernel.org
-Cc: Paul Stewart <pstew@google.com>
-Cc: Amod Bodas <amod.bodas@atheros.com>
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
----
- net/mac80211/offchannel.c |    2 ++
- 1 files changed, 2 insertions(+), 0 deletions(-)
+> + * @addr2: local address (vif->sdata->dev->dev_addr).  Can be NULL for 'any'.
+>    *
+>    * This function must be called under RCU lock and the
+>    * resulting pointer is only valid under RCU lock as well.
+> @@ -2434,7 +2435,8 @@ struct ieee80211_sta *ieee80211_find_sta(struct ieee80211_vif *vif,
+>    * DO NOT USE THIS FUNCTION.
+>    */
+>   struct ieee80211_sta *ieee80211_find_sta_by_hw(struct ieee80211_hw *hw,
+> -                                              const u8 *addr);
+> +                                              const u8 *addr,
+> +                                              const u8 *localaddr);
 
-diff --git a/net/mac80211/offchannel.c b/net/mac80211/offchannel.c
-index 627a33e..4b56409 100644
---- a/net/mac80211/offchannel.c
-+++ b/net/mac80211/offchannel.c
-@@ -29,6 +29,7 @@ static void ieee80211_offchannel_ps_enable(struct ieee80211_sub_if_data *sdata)
- 	/* FIXME: what to do when local->pspolling is true? */
- 
- 	del_timer_sync(&local->dynamic_ps_timer);
-+	del_timer_sync(&ifmgd->bcn_mon_timer);
- 	del_timer_sync(&ifmgd->conn_mon_timer);
- 
- 	cancel_work_sync(&local->dynamic_ps_enable_work);
-@@ -89,6 +90,7 @@ static void ieee80211_offchannel_ps_disable(struct ieee80211_sub_if_data *sdata)
- 			  msecs_to_jiffies(local->hw.conf.dynamic_ps_timeout));
- 	}
- 
-+	ieee80211_sta_reset_beacon_monitor(sdata);
- 	ieee80211_sta_reset_conn_monitor(sdata);
- }
- 
--- 
-1.7.0.4
+That's not going to generate proper documentation. Also, it now probably
+shouldn't be called "by_hw" any more.
+
+> -       /* Just return a random station ... first in list ... */
+> +       /* Just return a random station if localaddr is NULL
+> +        * ... first in list.
+> +        */
+
+Please use the comment style like this:
+	/*
+	 * Just return a random station ...
+	 */
+
+I know davem personally doesn't like it, but it's the regular style in
+this code.
+
+>          for_each_sta_info(hw_to_local(hw), addr, sta, nxt) {
+> +               if (localaddr &&
+> +                   memcmp(sta->sdata->dev->dev_addr, localaddr, ETH_ALEN) != 0)
+> +                       continue;
+
+This should use compare_ether_addr() (if it's not aligned on a two-byte
+boundary something is seriously wrong), and also sta->sdata->vif.addr
+instead of dev->dev_addr.
+
+johannes
 
