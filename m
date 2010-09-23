@@ -1,49 +1,100 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:48454 "EHLO
+Received: from he.sipsolutions.net ([78.46.109.217]:37882 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752938Ab0IWPCm (ORCPT
+	with ESMTP id S1756205Ab0IWTiw (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 23 Sep 2010 11:02:42 -0400
-Subject: Re: [PATCH] wifi-test: add simple roam test script
+	Thu, 23 Sep 2010 15:38:52 -0400
+Message-Id: <20100923193818.656678519@sipsolutions.net>
+Date: Thu, 23 Sep 2010 21:37:48 +0200
 From: Johannes Berg <johannes@sipsolutions.net>
-To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Cc: "Rafael J. Wysocki" <rjw@sisk.pl>,
-	"jiajia.zheng@intel.com" <jiajia.zheng@intel.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"wifi-test-devel@lists.sourceforge.net"
-	<wifi-test-devel@lists.sourceforge.net>,
-	Luis Rodriguez <Luis.Rodriguez@atheros.com>,
-	Paul Stewart <pstew@google.com>
-In-Reply-To: <AANLkTikh+Q0AK+RyouLOQ5RN5wnKaD2TMnHR-ofqrMKJ@mail.gmail.com>
-References: <1285201037-29405-1-git-send-email-lrodriguez@atheros.com>
-	 <20100923002240.GA4484@tux>
-	 <1285231958.3691.10.camel@jlt3.sipsolutions.net>
-	 <AANLkTikh+Q0AK+RyouLOQ5RN5wnKaD2TMnHR-ofqrMKJ@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Thu, 23 Sep 2010 17:02:37 +0200
-Message-ID: <1285254157.3770.169.camel@jlt3.sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: Ben Greear <greearb@candelatech.com>,
+	Johannes Berg <johannes.berg@intel.com>
+Subject: [RFC v2 1/3] mac80211: remove prepare_for_handlers sdata argument
+References: <20100923193747.677517441@sipsolutions.net>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2010-09-23 at 07:53 -0700, Luis R. Rodriguez wrote:
+From: Johannes Berg <johannes.berg@intel.com>
 
-> >> After roaming for a good while, this is what I got, not sure
-> >> yet what caused the NULL pointer dereference... Am I the only
-> >> one able to reproduce this?
-> >
-> >> [ 3276.730081] BUG: unable to handle kernel NULL pointer dereference at 0000000000000003
-> >> [ 3276.730148] IP: [<0000000000000003>] 0x3
-> >
-> > Something called a NULL pointer function pointer. Rafael recently said
-> > "cpuidle is buggy" when a similar issue came up:
-> > http://mid.gmane.org/201009182344.12498.rjw@sisk.pl
-> 
-> But that seems related to ACPI, no? On my box I never suspended, I
-> just associated and disassociated rapidly between two peers. The only
-> suspicion I have is its obviously right after adding the STA peer.
+The first argument to prepare_for_handlers is always
+the sdata that can just be stored in rx data directly
+(and even already is, in two of four code paths.)
 
-Yes, but he said suspend/resume _fixed_ it :-)
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ net/mac80211/rx.c |   16 ++++++++--------
+ 1 file changed, 8 insertions(+), 8 deletions(-)
 
-johannes
+--- wireless-testing.orig/net/mac80211/rx.c	2010-09-23 21:35:11.000000000 +0200
++++ wireless-testing/net/mac80211/rx.c	2010-09-23 21:37:32.000000000 +0200
+@@ -2513,10 +2513,10 @@ void ieee80211_release_reorder_timeout(s
+ 
+ /* main receive path */
+ 
+-static int prepare_for_handlers(struct ieee80211_sub_if_data *sdata,
+-				struct ieee80211_rx_data *rx,
++static int prepare_for_handlers(struct ieee80211_rx_data *rx,
+ 				struct ieee80211_hdr *hdr)
+ {
++	struct ieee80211_sub_if_data *sdata = rx->sdata;
+ 	struct sk_buff *skb = rx->skb;
+ 	struct ieee80211_rx_status *status = IEEE80211_SKB_RXCB(skb);
+ 	u8 *bssid = ieee80211_get_bssid(hdr, skb->len, sdata->vif.type);
+@@ -2656,7 +2656,7 @@ static void __ieee80211_rx_handle_packet
+ 			rx.sdata = prev_sta->sdata;
+ 
+ 			rx.flags |= IEEE80211_RX_RA_MATCH;
+-			prepares = prepare_for_handlers(rx.sdata, &rx, hdr);
++			prepares = prepare_for_handlers(&rx, hdr);
+ 			if (!prepares)
+ 				goto next_sta;
+ 
+@@ -2690,7 +2690,7 @@ next_sta:
+ 			rx.sdata = prev_sta->sdata;
+ 
+ 			rx.flags |= IEEE80211_RX_RA_MATCH;
+-			prepares = prepare_for_handlers(rx.sdata, &rx, hdr);
++			prepares = prepare_for_handlers(&rx, hdr);
+ 			if (!prepares)
+ 				prev_sta = NULL;
+ 
+@@ -2733,15 +2733,15 @@ next_sta:
+ 			}
+ 
+ 			rx.sta = sta_info_get_bss(prev, hdr->addr2);
++			rx.sdata = prev;
+ 
+ 			rx.flags |= IEEE80211_RX_RA_MATCH;
+-			prepares = prepare_for_handlers(prev, &rx, hdr);
++			prepares = prepare_for_handlers(&rx, hdr);
+ 
+ 			if (!prepares)
+ 				goto next;
+ 
+ 			if (status->flag & RX_FLAG_MMIC_ERROR) {
+-				rx.sdata = prev;
+ 				if (rx.flags & IEEE80211_RX_RA_MATCH)
+ 					ieee80211_rx_michael_mic_report(hdr,
+ 									&rx);
+@@ -2768,15 +2768,15 @@ next:
+ 
+ 		if (prev) {
+ 			rx.sta = sta_info_get_bss(prev, hdr->addr2);
++			rx.sdata = prev;
+ 
+ 			rx.flags |= IEEE80211_RX_RA_MATCH;
+-			prepares = prepare_for_handlers(prev, &rx, hdr);
++			prepares = prepare_for_handlers(&rx, hdr);
+ 
+ 			if (!prepares)
+ 				prev = NULL;
+ 
+ 			if (prev && status->flag & RX_FLAG_MMIC_ERROR) {
+-				rx.sdata = prev;
+ 				if (rx.flags & IEEE80211_RX_RA_MATCH)
+ 					ieee80211_rx_michael_mic_report(hdr,
+ 									&rx);
+
 
