@@ -1,102 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([88.198.39.176]:57155 "EHLO ds10.nbd.name"
+Received: from mail.comsound.de ([188.40.207.2]:47442 "EHLO mail.comsound.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756278Ab0ITLqI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 20 Sep 2010 07:46:08 -0400
-From: Felix Fietkau <nbd@openwrt.org>
-To: linux-wireless@vger.kernel.org
-Cc: linville@tuxdriver.com, lrodriguez@atheros.com
-Subject: [PATCH 5/5] ath9k: make the driver specific rate control module optional
-Date: Mon, 20 Sep 2010 13:45:40 +0200
-Message-Id: <1284983140-30099-5-git-send-email-nbd@openwrt.org>
-In-Reply-To: <1284983140-30099-4-git-send-email-nbd@openwrt.org>
-References: <1284983140-30099-1-git-send-email-nbd@openwrt.org>
- <1284983140-30099-2-git-send-email-nbd@openwrt.org>
- <1284983140-30099-3-git-send-email-nbd@openwrt.org>
- <1284983140-30099-4-git-send-email-nbd@openwrt.org>
+	id S1753317Ab0IWUOn (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 23 Sep 2010 16:14:43 -0400
+Date: Thu, 23 Sep 2010 22:14:49 +0200
+From: Daniel Berger <daniel@dat-berger.de>
+To: "Bjoern Czybik" <wlfw@gmx.com>, <linux-wireless@vger.kernel.org>
+Subject: Re: Manual Control about Sending ACKs
+Message-ID: <20100923221449.641ead02@danmob>
+In-Reply-To: <000901cb5b51$18994e90$49cbebb0$@com>
+References: <20100922123953.67a4fc5e@danmob>
+	<20100922130245.GC5515@tuxdriver.com>
+	<201009221545.41377.chunkeey@googlemail.com>
+	<1285163687.15806.9.camel@maggie>
+	<AANLkTinr0omWQCaMj91P8=CFZLDLroxWdrV2c=9KjG4e@mail.gmail.com>
+	<4C9A3A1C.4010704@candelatech.com>
+	<20100922203851.28945ab5@danmob>
+	<000901cb5b51$18994e90$49cbebb0$@com>
+Mime-Version: 1.0
+Content-Type: multipart/signed; micalg=PGP-SHA1;
+ boundary="Sig_/GgVpYBsK_XfTPVG9tbNE6yc"; protocol="application/pgp-signature"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-ath9k can use minstrel_ht instead, so it makes sense to save some space here.
+--Sig_/GgVpYBsK_XfTPVG9tbNE6yc
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: quoted-printable
 
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
----
- drivers/net/wireless/ath/ath9k/Kconfig  |    8 ++++++++
- drivers/net/wireless/ath/ath9k/Makefile |    2 +-
- drivers/net/wireless/ath/ath9k/init.c   |    2 ++
- drivers/net/wireless/ath/ath9k/rc.h     |   11 +++++++++++
- 4 files changed, 22 insertions(+), 1 deletions(-)
+Hi Bj=F6rn,
 
-diff --git a/drivers/net/wireless/ath/ath9k/Kconfig b/drivers/net/wireless/ath/ath9k/Kconfig
-index 35f23bd..ad57a6d 100644
---- a/drivers/net/wireless/ath/ath9k/Kconfig
-+++ b/drivers/net/wireless/ath/ath9k/Kconfig
-@@ -32,6 +32,14 @@ config ATH9K_DEBUGFS
- 
- 	  Also required for changing debug message flags at run time.
- 
-+config ATH9K_RATE_CONTROL
-+	bool "Atheros ath9k rate control"
-+	depends on ATH9K
-+	default y
-+	---help---
-+	  Say Y, if you want to use the ath9k specific rate control
-+	  module instead of minstrel_ht.
-+
- config ATH9K_HTC
-        tristate "Atheros HTC based wireless cards support"
-        depends on USB && MAC80211
-diff --git a/drivers/net/wireless/ath/ath9k/Makefile b/drivers/net/wireless/ath/ath9k/Makefile
-index 4555e99..aca0162 100644
---- a/drivers/net/wireless/ath/ath9k/Makefile
-+++ b/drivers/net/wireless/ath/ath9k/Makefile
-@@ -5,8 +5,8 @@ ath9k-y +=	beacon.o \
- 		recv.o \
- 		xmit.o \
- 		virtual.o \
--		rc.o
- 
-+ath9k-$(CONFIG_ATH9K_RATE_CONTROL) += rc.o
- ath9k-$(CONFIG_PCI) += pci.o
- ath9k-$(CONFIG_ATHEROS_AR71XX) += ahb.o
- ath9k-$(CONFIG_ATH9K_DEBUGFS) += debug.o
-diff --git a/drivers/net/wireless/ath/ath9k/init.c b/drivers/net/wireless/ath/ath9k/init.c
-index e7c07b3..f9d84d4 100644
---- a/drivers/net/wireless/ath/ath9k/init.c
-+++ b/drivers/net/wireless/ath/ath9k/init.c
-@@ -654,7 +654,9 @@ void ath9k_set_hw_capab(struct ath_softc *sc, struct ieee80211_hw *hw)
- 	hw->sta_data_size = sizeof(struct ath_node);
- 	hw->vif_data_size = sizeof(struct ath_vif);
- 
-+#ifdef CONFIG_ATH9K_RATE_CONTROL
- 	hw->rate_control_algorithm = "ath9k_rate_control";
-+#endif
- 
- 	if (test_bit(ATH9K_MODE_11G, sc->sc_ah->caps.wireless_modes))
- 		hw->wiphy->bands[IEEE80211_BAND_2GHZ] =
-diff --git a/drivers/net/wireless/ath/ath9k/rc.h b/drivers/net/wireless/ath/ath9k/rc.h
-index dc10826..268072f 100644
---- a/drivers/net/wireless/ath/ath9k/rc.h
-+++ b/drivers/net/wireless/ath/ath9k/rc.h
-@@ -224,7 +224,18 @@ enum ath9k_internal_frame_type {
- 	ATH9K_IFT_UNPAUSE
- };
- 
-+#ifdef CONFIG_ATH9K_RATE_CONTROL
- int ath_rate_control_register(void);
- void ath_rate_control_unregister(void);
-+#else
-+static inline int ath_rate_control_register(void)
-+{
-+	return 0;
-+}
-+
-+static inline void ath_rate_control_unregister(void)
-+{
-+}
-+#endif
- 
- #endif /* RC_H */
--- 
-1.7.2.2
+actually we're a bit short on time and should come to an ending at the
+end of october (though ack control is only a part of our topic).
+Thus, today we've already worked on this topic and at a first step
+suceeded to compile the original stuff for the well-known WRT54GL
+hardware and created a new testbed...
 
+For further information me may communicate off list.
+
+Daniel
+
+--Sig_/GgVpYBsK_XfTPVG9tbNE6yc
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Disposition: attachment; filename=signature.asc
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.10 (GNU/Linux)
+
+iEYEARECAAYFAkybtTkACgkQ+JUYmR11gaBv3ACeODIkMGh8WaETyaoVYYn8a3V4
+bJcAoIYlblZotRX6dFnT5jaU3c2J8oeH
+=QO5+
+-----END PGP SIGNATURE-----
+
+--Sig_/GgVpYBsK_XfTPVG9tbNE6yc--
