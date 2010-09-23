@@ -1,54 +1,84 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:59455 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751408Ab0I2HCP (ORCPT
+Received: from smtpauth02.prod.mesa1.secureserver.net ([64.202.165.182]:52039
+	"HELO smtpauth02.prod.mesa1.secureserver.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1753614Ab0IWMtd (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 29 Sep 2010 03:02:15 -0400
-Subject: Re: [PATCH v3] mac80211:  Allow scanning single channel if other
- VIF is associated.
-From: Johannes Berg <johannes@sipsolutions.net>
-To: greearb@candelatech.com
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <1285708650-21858-1-git-send-email-greearb@candelatech.com>
-References: <1285708650-21858-1-git-send-email-greearb@candelatech.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Wed, 29 Sep 2010 09:02:13 +0200
-Message-ID: <1285743733.3756.3.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+	Thu, 23 Sep 2010 08:49:33 -0400
+Message-ID: <D5F495A696324E51917098BB2D9BE5C8@ChuckPC>
+From: "Chuck Crisler" <ccrisler@vgocom.com>
+To: <linux-wireless@vger.kernel.org>
+References: <SNT113-W3652C8510E7AB89D2036ECF17E0@phx.gbl><AANLkTin7eTsGXBb5VXsRU_4rwvFpU3-BYe+2w5352SRE@mail.gmail.com> <AANLkTimfvN5s4qPNvRvHHZo8fZ_y1ti=ukdTRybLd7=A@mail.gmail.com>
+In-Reply-To: <AANLkTimfvN5s4qPNvRvHHZo8fZ_y1ti=ukdTRybLd7=A@mail.gmail.com>
+Subject: Re: Compiling carl9170
+Date: Thu, 23 Sep 2010 08:49:26 -0400
+MIME-Version: 1.0
+Content-Type: text/plain;
+	format=flowed;
+	charset="iso-8859-1";
+	reply-type=original
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2010-09-28 at 14:17 -0700, greearb@candelatech.com wrote:
-> From: Ben Greear <greearb@candelatech.com>
-> 
-> This patch aims to decrease channel switching when there is at least one
-> interface associated.  This should help multiple station interfaces co-exist
-> on the same hardware, especially in WPA mode.
-> 
-> Signed-off-by: Ben Greear <greearb@candelatech.com>
-> ---
-> 
-> v2 -> v3:  Just check can_scan_one flag and if set and there is
->    a vif associated, select the active channel as scan-channel and
->    let core scanning logic function as designed.
-> 
->    This gets much of the really ugly logic changes out of the
->    scanning core, and any optimizations to this should help
->    general purpose scanning on a single channel as well.
+What kind of APs are you connecting to that n is working well with? I have 
+heard that n doesn't work well in general.
 
-> --- a/include/linux/nl80211.h
-> +++ b/include/linux/nl80211.h
-> @@ -965,6 +965,8 @@ enum nl80211_attrs {
->  	NL80211_ATTR_CONTROL_PORT_ETHERTYPE,
->  	NL80211_ATTR_CONTROL_PORT_NO_ENCRYPT,
->  
-> +	NL80211_ATTR_SCAN_ONE_IF_ASSOC,
-> +
+Chuck
+----- Original Message ----- 
+From: "Christophe Chapuis" <chris.chapuis@gmail.com>
+To: <linux-wireless@vger.kernel.org>
+Sent: Thursday, September 23, 2010 6:02 AM
+Subject: Re: Compiling carl9170
 
-Still NACK, I don't see the need for new API for this odd case.
 
-Please don't resubmit similar patches to this, I don't want to nack them
-all the time.
-
-johannes
+> Just for information, I managed to retrieve and compile
+> compat-wireless from sept. 20th. I fixed manually the little typo in
+> wmi.c, and then everything went well. I selected the driver "ath",
+> resulting in all the "ath" drivers to be compiled, including carl9170.
+>
+> I'm now using this driver, with his firmware, with great success. It
+> uses 802.11n, seems quite stable, keeps my wifi connection alive.
+>
+> Bravo !
+>
+>
+> On Mon, Sep 20, 2010 at 9:15 AM, Christophe Chapuis
+> <chris.chapuis@gmail.com> wrote:
+>> Actually, the carl9170 driver has been included in compat-wireless,
+>> but the compilation of compat-wireless fails since then (latest
+>> successful baking was sept. 12th). I hope this will be fixed soon.
+>> Having the same adapter as you, I'm also following the situation daily :)
+>>
+>> On Mon, Sep 20, 2010 at 4:32 AM, Dale Turner <rx_guy@hotmail.com> wrote:
+>>>
+>>> Hello.
+>>>
+>>> Can someone tell me how to compile the carl9170 module
+>>> WITHOUT compiling a complete kernel. I just purchased a TP-Link WN821N
+>>> based on the capabilities of this driver, but am disappointed that I
+>>> currently don't have the module.
+>>>
+>>> I am familiar with the
+>>> compat-wireless packages as I have needed to compile the ath9k_htc
+>>> driver for my other adapter (TP-Link WN721N), but the carl driver does
+>>> not seem to be available in that package.
+>>>
+>>> Can anyone help??
+>>>
+>>> Thanks in advance.
+>>>
+>>> (Sorry about the first post without a subject)
+>>>
+>>> Dale Turner
+>>> --
+>>> To unsubscribe from this list: send the line "unsubscribe 
+>>> linux-wireless" in
+>>> the body of a message to majordomo@vger.kernel.org
+>>> More majordomo info at http://vger.kernel.org/majordomo-info.html
+>>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" 
+> in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
 
