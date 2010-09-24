@@ -1,46 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:44357 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753807Ab0I1JCw (ORCPT
+Received: from mail.candelatech.com ([208.74.158.172]:40244 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757660Ab0IXVKP (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 28 Sep 2010 05:02:52 -0400
-Subject: Re: [RFC] mac80211: sets basic rate set parameter for IBSS creator
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Mohammed Shafi Shajakhan <mshajakhan@atheros.com>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <1285662586-31646-1-git-send-email-mshajakhan@atheros.com>
-References: <1285662586-31646-1-git-send-email-mshajakhan@atheros.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Tue, 28 Sep 2010 11:02:49 +0200
-Message-ID: <1285664569.3885.7.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+	Fri, 24 Sep 2010 17:10:15 -0400
+Message-ID: <4C9D13AC.4080308@candelatech.com>
+Date: Fri, 24 Sep 2010 14:10:04 -0700
+From: Ben Greear <greearb@candelatech.com>
+MIME-Version: 1.0
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>
+Subject: Re: [wireless] wireless:  Keep phy name consistent across module
+ reloads.
+References: <1285113431-25526-1-git-send-email-greearb@candelatech.com> <1285362170.11036.1.camel@jlt3.sipsolutions.net>
+In-Reply-To: <1285362170.11036.1.camel@jlt3.sipsolutions.net>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2010-09-28 at 13:59 +0530, Mohammed Shafi Shajakhan wrote:
-> From: Mohammed Shafi Shajakhan <mshajakhan@atheros.com>
-> 
-> This fix sets the basic rate set parameter for IBSS creator when the
-> basic rates are not explicitly specified in the user space.
-> 
-> Signed-off-by: Mohammed Shafi Shajakhan <mshajakhan@atheros.com>
-> ---
->  net/mac80211/ibss.c |    3 +++
->  1 files changed, 3 insertions(+), 0 deletions(-)
-> 
-> diff --git a/net/mac80211/ibss.c b/net/mac80211/ibss.c
-> index 1a3aae5..e117155 100644
-> --- a/net/mac80211/ibss.c
-> +++ b/net/mac80211/ibss.c
-> @@ -541,6 +541,9 @@ static void ieee80211_sta_create_ibss(struct ieee80211_sub_if_data *sdata)
->  		capability |= WLAN_CAPABILITY_PRIVACY;
->  	else
->  		sdata->drop_unencrypted = 0;
-> +	if (ifibss->basic_rates == 0)
-> +		ifibss->basic_rates = ieee80211_mandatory_rates(local,
-> +					local->hw.conf.channel->band);
+On 09/24/2010 02:02 PM, Johannes Berg wrote:
+> On Tue, 2010-09-21 at 16:57 -0700, greearb@candelatech.com wrote:
+>> From: Ben Greear<greearb@candelatech.com>
+>>
+>> It adds needless pain to user-space scripts to change the name
+>> of the phy on each module reload.  Instead, find the first
+>> index.
+>
+> Crap, I clearly missed this patch, John, please revert this.
+>
+> We cannot do this because otherwise operations you attempt to do one one
+> PHY will race with re-creating of the same phy index. For the same
+> reason, interface indexes aren't reused for netdevs.
+>
+> If this bothers you so much, you can easily write a udev rule that
+> renames all your phys to "myphy" or whatever.
 
-Shouldn't cfg80211 do this?
+Sorry about that.
 
-johannes
+Would a similar patch be acceptable that just set the name to the first
+available phyX, but left the index to increment monotomically as it does
+now be OK?
+
+I'd really like to not have to deal with udev if possible!
+
+Thanks,
+Ben
+
+>
+> johannes
+
+
+-- 
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
 
