@@ -1,48 +1,32 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:45071 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754564Ab0IBN3p (ORCPT
+Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:42487
+	"EHLO sunset.davemloft.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1758034Ab0IXUBi (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 2 Sep 2010 09:29:45 -0400
-Date: Thu, 2 Sep 2010 09:18:29 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: WARNING: at net/mac80211/tx.c:653 ieee80211_tx_h_rate_ctrl+0x460
-Message-ID: <20100902131828.GA6802@tuxdriver.com>
-References: <AANLkTiko4XRM=xQWHy2H5WUMbYBzRE+NfUeqS20S2D_S@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <AANLkTiko4XRM=xQWHy2H5WUMbYBzRE+NfUeqS20S2D_S@mail.gmail.com>
+	Fri, 24 Sep 2010 16:01:38 -0400
+Date: Fri, 24 Sep 2010 13:01:58 -0700 (PDT)
+Message-Id: <20100924.130158.246527937.davem@davemloft.net>
+To: mfm@muteddisk.com
+Cc: kernel-janitors@vger.kernel.org, sjur.brandeland@stericsson.com,
+	j@w1.fi, linville@tuxdriver.com, dsd@gentoo.org,
+	kune@deine-taler.de, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 15/24] net: change to new flag variable
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <facbf79cadc81f9043e89160b7b3b8a90926aba1.1285355033.git.mfm@muteddisk.com>
+References: <efe88633e146de3e173afea14f777c41c37e5db2.1285355033.git.mfm@muteddisk.com>
+	<e0bdab5d2e8c52041c003de68ba774c3e706716c.1285355033.git.mfm@muteddisk.com>
+	<facbf79cadc81f9043e89160b7b3b8a90926aba1.1285355033.git.mfm@muteddisk.com>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Sep 01, 2010 at 04:45:46PM -0700, Luis R. Rodriguez wrote:
-> Just hit this
+From: matt mooney <mfm@muteddisk.com>
+Date: Fri, 24 Sep 2010 12:17:25 -0700
+
+> Replace EXTRA_CFLAGS with ccflags-y.
 > 
->         /*
->          * Lets not bother rate control if we're associated and cannot
->          * talk to the sta. This should not happen.
->          */
->         if (WARN(test_bit(SCAN_SW_SCANNING, &tx->local->scanning) &&
->                  (sta_flags & WLAN_STA_ASSOC) &&
->                  !rate_usable_index_exists(sband, &tx->sta->sta),
->                  "%s: Dropped data frame as no usable bitrate found while "
->                  "scanning and associated. Target station: "
->                  "%pM on %d GHz band\n",
->                  tx->sdata->name, hdr->addr1,
->                  tx->channel->band ? 5 : 2))
->                 return TX_DROP;
+> Signed-off-by: matt mooney <mfm@muteddisk.com>
 
-Also seeing that here:
-
-	https://bugzilla.redhat.com/show_bug.cgi?id=606393
-
-"I surmise that the device is exiting dynamic power saving mode and
-attempting to transmit a frame to notify the AP that it is awake.
-Instead, it is hitting this check in ieee80211_tx_h_rate_ctrl". -- me
- 
-John
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+Acked-by: David S. Miller <davem@davemloft.net>
