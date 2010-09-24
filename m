@@ -1,100 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:37882 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756205Ab0IWTiw (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:40635 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757241Ab0IXSOe (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 23 Sep 2010 15:38:52 -0400
-Message-Id: <20100923193818.656678519@sipsolutions.net>
-Date: Thu, 23 Sep 2010 21:37:48 +0200
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Ben Greear <greearb@candelatech.com>,
-	Johannes Berg <johannes.berg@intel.com>
-Subject: [RFC v2 1/3] mac80211: remove prepare_for_handlers sdata argument
-References: <20100923193747.677517441@sipsolutions.net>
-Mime-Version: 1.0
+	Fri, 24 Sep 2010 14:14:34 -0400
+Date: Fri, 24 Sep 2010 14:00:13 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Christian Lamparter <chunkeey@googlemail.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] mac80211: fix possible null-pointer dereference
+Message-ID: <20100924180013.GD8077@tuxdriver.com>
+References: <201009210057.13297.chunkeey@googlemail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <201009210057.13297.chunkeey@googlemail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+On Tue, Sep 21, 2010 at 12:57:13AM +0200, Christian Lamparter wrote:
+> net/mac80211/mesh_plink.c +574 mesh_rx_plink_frame(168)
+> error: we previously assumed 'sta' could be null.
+> 
+> This bug was detected by smatch.
+> ( http://repo.or.cz/w/smatch.git )
+> 
+> Cc: <stable@kernel.org>
+> Signed-off-by: Christian Lamparter <chunkeey@googlemail.com>
+> ---
+> diff --git a/net/mac80211/mesh_plink.c b/net/mac80211/mesh_plink.c
+> index ea13a80..1d7c564 100644
+> --- a/net/mac80211/mesh_plink.c
+> +++ b/net/mac80211/mesh_plink.c
+> @@ -473,7 +473,7 @@ void mesh_rx_plink_frame(struct ieee80211_sub_if_data *sdata, struct ieee80211_m
+>  	rcu_read_lock();
+>  
+>  	sta = sta_info_get(sdata, mgmt->sa);
+> -	if (!sta && ftype != PLINK_OPEN) {
+> +	if (!sta || ftype != PLINK_OPEN) {
+>  		mpl_dbg("Mesh plink: cls or cnf from unknown peer\n");
+>  		rcu_read_unlock();
+>  		return;
 
-The first argument to prepare_for_handlers is always
-the sdata that can just be stored in rx data directly
-(and even already is, in two of four code paths.)
+Are you sure this is the intended check?  It isn't clear to me from looking at the code.
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- net/mac80211/rx.c |   16 ++++++++--------
- 1 file changed, 8 insertions(+), 8 deletions(-)
+Perhaps line 574 just needs to be protected by another NULL check?
 
---- wireless-testing.orig/net/mac80211/rx.c	2010-09-23 21:35:11.000000000 +0200
-+++ wireless-testing/net/mac80211/rx.c	2010-09-23 21:37:32.000000000 +0200
-@@ -2513,10 +2513,10 @@ void ieee80211_release_reorder_timeout(s
- 
- /* main receive path */
- 
--static int prepare_for_handlers(struct ieee80211_sub_if_data *sdata,
--				struct ieee80211_rx_data *rx,
-+static int prepare_for_handlers(struct ieee80211_rx_data *rx,
- 				struct ieee80211_hdr *hdr)
- {
-+	struct ieee80211_sub_if_data *sdata = rx->sdata;
- 	struct sk_buff *skb = rx->skb;
- 	struct ieee80211_rx_status *status = IEEE80211_SKB_RXCB(skb);
- 	u8 *bssid = ieee80211_get_bssid(hdr, skb->len, sdata->vif.type);
-@@ -2656,7 +2656,7 @@ static void __ieee80211_rx_handle_packet
- 			rx.sdata = prev_sta->sdata;
- 
- 			rx.flags |= IEEE80211_RX_RA_MATCH;
--			prepares = prepare_for_handlers(rx.sdata, &rx, hdr);
-+			prepares = prepare_for_handlers(&rx, hdr);
- 			if (!prepares)
- 				goto next_sta;
- 
-@@ -2690,7 +2690,7 @@ next_sta:
- 			rx.sdata = prev_sta->sdata;
- 
- 			rx.flags |= IEEE80211_RX_RA_MATCH;
--			prepares = prepare_for_handlers(rx.sdata, &rx, hdr);
-+			prepares = prepare_for_handlers(&rx, hdr);
- 			if (!prepares)
- 				prev_sta = NULL;
- 
-@@ -2733,15 +2733,15 @@ next_sta:
- 			}
- 
- 			rx.sta = sta_info_get_bss(prev, hdr->addr2);
-+			rx.sdata = prev;
- 
- 			rx.flags |= IEEE80211_RX_RA_MATCH;
--			prepares = prepare_for_handlers(prev, &rx, hdr);
-+			prepares = prepare_for_handlers(&rx, hdr);
- 
- 			if (!prepares)
- 				goto next;
- 
- 			if (status->flag & RX_FLAG_MMIC_ERROR) {
--				rx.sdata = prev;
- 				if (rx.flags & IEEE80211_RX_RA_MATCH)
- 					ieee80211_rx_michael_mic_report(hdr,
- 									&rx);
-@@ -2768,15 +2768,15 @@ next:
- 
- 		if (prev) {
- 			rx.sta = sta_info_get_bss(prev, hdr->addr2);
-+			rx.sdata = prev;
- 
- 			rx.flags |= IEEE80211_RX_RA_MATCH;
--			prepares = prepare_for_handlers(prev, &rx, hdr);
-+			prepares = prepare_for_handlers(&rx, hdr);
- 
- 			if (!prepares)
- 				prev = NULL;
- 
- 			if (prev && status->flag & RX_FLAG_MMIC_ERROR) {
--				rx.sdata = prev;
- 				if (rx.flags & IEEE80211_RX_RA_MATCH)
- 					ieee80211_rx_michael_mic_report(hdr,
- 									&rx);
-
-
+John
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
