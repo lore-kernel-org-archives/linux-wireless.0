@@ -1,53 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.19.149.2]:54573 "EHLO mail.atheros.com"
+Received: from ist.d-labs.de ([213.239.218.44]:53776 "EHLO mx01.d-labs.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753079Ab0IXMXm (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 24 Sep 2010 08:23:42 -0400
-Received: from mail.atheros.com ([10.10.20.105])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Fri, 24 Sep 2010 05:23:35 -0700
-From: Rajkumar Manoharan <rmanoharan@atheros.com>
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>,
-	Rajkumar Manoharan <rmanoharan@atheros.com>
-Subject: [PATCH] ath9k_htc: Fix TKIP disconnect failure with HTC drivers
-Date: Fri, 24 Sep 2010 17:58:50 +0530
-Message-ID: <1285331330-26105-1-git-send-email-rmanoharan@atheros.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	id S1753818Ab0IXQWQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 24 Sep 2010 12:22:16 -0400
+From: Florian Mickler <florian@mickler.org>
+To: linux-wireless@vger.kernel.org
+Cc: Florian Mickler <florian@mickler.org>,
+	Reinette Chatre <reinette.chatre@intel.com>,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>,
+	Intel Linux Wireless <ilw@linux.intel.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Johannes Berg <johannes.berg@intel.com>,
+	Zhu Yi <yi.zhu@intel.com>, Ben Cahill <ben.m.cahill@intel.com>,
+	netdev@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: [PATCH] iwl3945: queue the right work if the scan needs to be aborted
+Date: Fri, 24 Sep 2010 18:22:01 +0200
+Message-Id: <1285345323-4250-1-git-send-email-florian@mickler.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The following commit removed splitmic. But forgot to add
-ATH_CRYPT_CAP_MIC_COMBINED flag for HTC drivers which causes
-TKIP to fail.
+iwl3945's scan_completed calls into the mac80211 stack which triggers a
+warn on if there is no scan outstanding.
 
-Author: Bruno Randolf <br1@einfach.org>
-Date:   Wed Sep 8 16:04:54 2010 +0900
+This can be avoided by not calling scan_completed but abort_scan in
+iwl3945_request_scan  in the done: branch of the function which is used
+as an error out.
 
-    ath/ath9k: Replace common->splitmic with a flag
+The done: branch seems to be an error-out branch, as, for example, if
+iwl_is_ready(priv) returns false  the done: branch is executed.
 
-    Replace common->splitmic with ATH_CRYPT_CAP_MIC_COMBINED flag.
+NOTE:
+I'm not familiar with the driver at all.
+I just quickly scanned as a reaction to
 
-Signed-off-by: Rajkumar Manoharan <rmanoharan@atheros.com>
+https://bugzilla.kernel.org/show_bug.cgi?id=17722
+
+the users of scan_completed in the  iwl3945 driver and noted the odd
+discrepancy between the comment above this instance and the comment in
+mac80211 scan_completed function.
+
+Signed-off-by: Florian Mickler <florian@mickler.org>
 ---
- drivers/net/wireless/ath/ath9k/htc_drv_init.c |    3 +++
- 1 files changed, 3 insertions(+), 0 deletions(-)
+ drivers/net/wireless/iwlwifi/iwl-agn-lib.c  |    2 +-
+ drivers/net/wireless/iwlwifi/iwl3945-base.c |    2 +-
+ 2 files changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_init.c b/drivers/net/wireless/ath/ath9k/htc_drv_init.c
-index 33850c9..b100db2 100644
---- a/drivers/net/wireless/ath/ath9k/htc_drv_init.c
-+++ b/drivers/net/wireless/ath/ath9k/htc_drv_init.c
-@@ -561,6 +561,9 @@ static void ath9k_init_crypto(struct ath9k_htc_priv *priv)
- 		common->keymax = ATH_KEYMAX;
- 	}
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-lib.c b/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
+index 9dd9e64..8fd00a6 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
+@@ -1411,7 +1411,7 @@ void iwlagn_request_scan(struct iwl_priv *priv, struct ieee80211_vif *vif)
+ 	clear_bit(STATUS_SCAN_HW, &priv->status);
+ 	clear_bit(STATUS_SCANNING, &priv->status);
+ 	/* inform mac80211 scan aborted */
+-	queue_work(priv->workqueue, &priv->scan_completed);
++	queue_work(priv->workqueue, &priv->abort_scan);
+ }
  
-+	if (priv->ah->misc_mode & AR_PCU_MIC_NEW_LOC_ENA)
-+		common->crypt_caps |= ATH_CRYPT_CAP_MIC_COMBINED;
-+
- 	/*
- 	 * Reset the key cache since some parts do not
- 	 * reset the contents on initial power up.
+ int iwlagn_manage_ibss_station(struct iwl_priv *priv,
+diff --git a/drivers/net/wireless/iwlwifi/iwl3945-base.c b/drivers/net/wireless/iwlwifi/iwl3945-base.c
+index 59a308b..d31661c 100644
+--- a/drivers/net/wireless/iwlwifi/iwl3945-base.c
++++ b/drivers/net/wireless/iwlwifi/iwl3945-base.c
+@@ -3018,7 +3018,7 @@ void iwl3945_request_scan(struct iwl_priv *priv, struct ieee80211_vif *vif)
+ 	clear_bit(STATUS_SCANNING, &priv->status);
+ 
+ 	/* inform mac80211 scan aborted */
+-	queue_work(priv->workqueue, &priv->scan_completed);
++	queue_work(priv->workqueue, &priv->abort_scan);
+ }
+ 
+ static void iwl3945_bg_restart(struct work_struct *data)
 -- 
 1.7.3
 
