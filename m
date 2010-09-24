@@ -1,35 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([192.100.122.230]:25934 "EHLO
-	mgw-mx03.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753501Ab0ISTqW (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:35883 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751503Ab0IXJb3 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 19 Sep 2010 15:46:22 -0400
-Subject: Re: [PATCH 1/2] wl1271: avoid redundant memcpy of rx_status
-From: Luciano Coelho <luciano.coelho@nokia.com>
-To: ext Eliad Peller <eliad@wizery.com>
+	Fri, 24 Sep 2010 05:31:29 -0400
+Subject: Re: Patch to get iw building on Fedora 8
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Ben Greear <greearb@candelatech.com>
 Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <1284915309-999-1-git-send-email-eliad@wizery.com>
-References: <1284915309-999-1-git-send-email-eliad@wizery.com>
+In-Reply-To: <4C9BDD2C.1090806@candelatech.com>
+References: <4C98DFB6.10902@candelatech.com>
+	 <1285090085.12764.6.camel@jlt3.sipsolutions.net>
+	 <4C9BDD2C.1090806@candelatech.com>
 Content-Type: text/plain; charset="UTF-8"
-Date: Sun, 19 Sep 2010 22:46:12 +0300
-Message-ID: <1284925572.10001.4.camel@powerslave>
+Date: Fri, 24 Sep 2010 11:31:27 +0200
+Message-ID: <1285320687.3699.8.camel@jlt3.sipsolutions.net>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, 2010-09-19 at 18:55 +0200, ext Eliad Peller wrote:
-> copy the rx_status directly to skb->cb (control buffer) instead of copying
-> it to a local struct and then copying it again (for each rx packet)
+On Thu, 2010-09-23 at 16:05 -0700, Ben Greear wrote:
+> I notice that you added some code to try to get this working:
 > 
-> Signed-off-by: Eliad Peller <eliad@wizery.com>
-> ---
+> #ifndef _ISOC99_SOURCE
+> #define _ISOC99_SOURCE
+> #endif
+> 
+> 
+> However, it still will not build for me on Fedora 8.  In case I'm doing something
+> else strange..were you able to build it on FC8 by any chance?
+> 
+> I can easily carry the fix in my own tree, but thought
+> you might want to know...
 
-Acked-by: Luciano Coelho <luciano.coelho@nokia.com>
+No, I don't have FC8 anywhere ... Does it build for you with -std=c99?
+But that gives me a lot of warnings due to a libnl header file bug
+("extern inline").
 
-Thanks, Eliad!
-
-
--- 
-Cheers,
-Luca.
+johannes
 
