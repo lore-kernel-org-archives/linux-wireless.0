@@ -1,185 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail30s.wh2.ocn.ne.jp ([125.206.180.198]:20520 "HELO
-	mail30s.wh2.ocn.ne.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1751498Ab0IPJvC (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:35336 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758315Ab0IXWZs (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 16 Sep 2010 05:51:02 -0400
-Received: from vs3012.wh2.ocn.ne.jp (125.206.180.183)
-	by mail30s.wh2.ocn.ne.jp (RS ver 1.0.95vs) with SMTP id 5-090221659
-	for <linux-wireless@vger.kernel.org>; Thu, 16 Sep 2010 18:51:00 +0900 (JST)
-Subject: [PATCH 1/9] ath5k: Use four hardware queues
-To: linville@tuxdriver.com
-From: Bruno Randolf <br1@einfach.org>
-Cc: ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org
-Date: Thu, 16 Sep 2010 18:51:18 +0900
-Message-ID: <20100916095118.17637.26742.stgit@tt-desk>
-In-Reply-To: <20100916095112.17637.17207.stgit@tt-desk>
-References: <20100916095112.17637.17207.stgit@tt-desk>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+	Fri, 24 Sep 2010 18:25:48 -0400
+Subject: Re: [wireless] wireless:  Keep phy name consistent across module
+ reloads.
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Ben Greear <greearb@candelatech.com>
+Cc: linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>
+In-Reply-To: <4C9D2487.5040202@candelatech.com>
+References: <1285113431-25526-1-git-send-email-greearb@candelatech.com>
+	 <1285362170.11036.1.camel@jlt3.sipsolutions.net>
+	 <4C9D13AC.4080308@candelatech.com>
+	 <1285363135.11036.7.camel@jlt3.sipsolutions.net>
+	 <4C9D1760.3040103@candelatech.com>
+	 <1285363861.11036.8.camel@jlt3.sipsolutions.net>
+	 <4C9D2487.5040202@candelatech.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Sat, 25 Sep 2010 00:25:44 +0200
+Message-ID: <1285367144.11036.11.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Prepare ath5k for WME by using four hardware queues.
+On Fri, 2010-09-24 at 15:21 -0700, Ben Greear wrote:
 
-The way we set up our queues matches the mac80211 queue priority 1:1, so we
-don't have to do any mapping for queue numbers.
+> Here's a patch for consideration.  It's on top of my other patch,
+> but I can re-do it against a tree with that reverted if you prefer.
 
-Every queue uses 50 of the total 200 available transmit buffers, so the DMA
-memory usage does not increase with this patch, but it might be good to
-fine-tune the number of buffers per queue later (depending on the CPU speed and
-load, and the speed of the medium access, it might not be big enough).
+You also want to remove the restriction on renaming to phy%d now.
 
-Signed-off-by: Bruno Randolf <br1@einfach.org>
----
- drivers/net/wireless/ath/ath5k/base.c |   47 +++++++++++++++++++++++++++++----
- drivers/net/wireless/ath/ath5k/base.h |    5 +++-
- 2 files changed, 45 insertions(+), 7 deletions(-)
+> +	if (unlikely(!wiphy_idx_valid(rdev->wiphy_idx)))
+> +		goto too_many_devs;
+> +
+>   	/* 64k wiphy devices is enough for anyone! */
+>   	for (i = 0; i < 0xFFFF; i++) {
 
-diff --git a/drivers/net/wireless/ath/ath5k/base.c b/drivers/net/wireless/ath/ath5k/base.c
-index 9e4636f..c105dba 100644
---- a/drivers/net/wireless/ath/ath5k/base.c
-+++ b/drivers/net/wireless/ath/ath5k/base.c
-@@ -737,6 +737,7 @@ ath5k_txbuf_setup(struct ath5k_softc *sc, struct ath5k_buf *bf,
- 
- 	spin_lock_bh(&txq->lock);
- 	list_add_tail(&bf->list, &txq->q);
-+	txq->txq_len++;
- 	if (txq->link == NULL) /* is this first packet? */
- 		ath5k_hw_set_txdp(ah, txq->qnum, bf->daddr);
- 	else /* no, so only link it */
-@@ -893,6 +894,7 @@ ath5k_txq_setup(struct ath5k_softc *sc,
- 		INIT_LIST_HEAD(&txq->q);
- 		spin_lock_init(&txq->lock);
- 		txq->setup = true;
-+		txq->txq_len = 0;
- 	}
- 	return &sc->txqs[qnum];
- }
-@@ -987,6 +989,7 @@ ath5k_txq_drainq(struct ath5k_softc *sc, struct ath5k_txq *txq)
- 		spin_lock_bh(&sc->txbuflock);
- 		list_move_tail(&bf->list, &sc->txbuf);
- 		sc->txbuf_len++;
-+		txq->txq_len--;
- 		spin_unlock_bh(&sc->txbuflock);
- 	}
- 	txq->link = NULL;
-@@ -1483,6 +1486,9 @@ static int ath5k_tx_queue(struct ieee80211_hw *hw, struct sk_buff *skb,
- 		goto drop_packet;
- 	}
- 
-+	if (txq->txq_len >= ATH5K_TXQ_LEN_MAX)
-+		ieee80211_stop_queue(hw, txq->qnum);
-+
- 	spin_lock_irqsave(&sc->txbuflock, flags);
- 	if (list_empty(&sc->txbuf)) {
- 		ATH5K_ERR(sc, "no further txbuf available, dropping packet\n");
-@@ -1605,13 +1611,14 @@ ath5k_tx_processq(struct ath5k_softc *sc, struct ath5k_txq *txq)
- 		spin_lock(&sc->txbuflock);
- 		list_move_tail(&bf->list, &sc->txbuf);
- 		sc->txbuf_len++;
-+		txq->txq_len--;
- 		spin_unlock(&sc->txbuflock);
- 	}
- 	if (likely(list_empty(&txq->q)))
- 		txq->link = NULL;
- 	spin_unlock(&txq->lock);
--	if (sc->txbuf_len > ATH_TXBUF / 5)
--		ieee80211_wake_queues(sc->hw);
-+	if (txq->txq_len < ATH5K_TXQ_LEN_LOW)
-+		ieee80211_wake_queue(sc->hw, txq->qnum);
- }
- 
- static void
-@@ -2395,6 +2402,7 @@ ath5k_attach(struct pci_dev *pdev, struct ieee80211_hw *hw)
- 	struct ath5k_softc *sc = hw->priv;
- 	struct ath5k_hw *ah = sc->ah;
- 	struct ath_regulatory *regulatory = ath5k_hw_regulatory(ah);
-+	struct ath5k_txq *txq;
- 	u8 mac[ETH_ALEN] = {};
- 	int ret;
- 
-@@ -2460,12 +2468,33 @@ ath5k_attach(struct pci_dev *pdev, struct ieee80211_hw *hw)
- 		goto err_bhal;
- 	}
- 
--	sc->txq = ath5k_txq_setup(sc, AR5K_TX_QUEUE_DATA, AR5K_WME_AC_BK);
--	if (IS_ERR(sc->txq)) {
-+	/* This order matches mac80211's queue priority, so we can
-+	 * directly use the mac80211 queue number without any mapping */
-+	txq = ath5k_txq_setup(sc, AR5K_TX_QUEUE_DATA, AR5K_WME_AC_VO);
-+	if (IS_ERR(txq)) {
-+		ATH5K_ERR(sc, "can't setup xmit queue\n");
-+		ret = PTR_ERR(txq);
-+		goto err_queues;
-+	}
-+	txq = ath5k_txq_setup(sc, AR5K_TX_QUEUE_DATA, AR5K_WME_AC_VI);
-+	if (IS_ERR(txq)) {
- 		ATH5K_ERR(sc, "can't setup xmit queue\n");
--		ret = PTR_ERR(sc->txq);
-+		ret = PTR_ERR(txq);
- 		goto err_queues;
- 	}
-+	txq = ath5k_txq_setup(sc, AR5K_TX_QUEUE_DATA, AR5K_WME_AC_BE);
-+	if (IS_ERR(txq)) {
-+		ATH5K_ERR(sc, "can't setup xmit queue\n");
-+		ret = PTR_ERR(txq);
-+		goto err_queues;
-+	}
-+	txq = ath5k_txq_setup(sc, AR5K_TX_QUEUE_DATA, AR5K_WME_AC_BK);
-+	if (IS_ERR(txq)) {
-+		ATH5K_ERR(sc, "can't setup xmit queue\n");
-+		ret = PTR_ERR(txq);
-+		goto err_queues;
-+	}
-+	hw->queues = 4;
- 
- 	tasklet_init(&sc->rxtq, ath5k_tasklet_rx, (unsigned long)sc);
- 	tasklet_init(&sc->txtq, ath5k_tasklet_tx, (unsigned long)sc);
-@@ -2558,8 +2587,14 @@ static int
- ath5k_tx(struct ieee80211_hw *hw, struct sk_buff *skb)
- {
- 	struct ath5k_softc *sc = hw->priv;
-+	u16 qnum = skb_get_queue_mapping(skb);
-+
-+	if (WARN_ON(qnum >= sc->ah->ah_capabilities.cap_queues.q_tx_num)) {
-+		dev_kfree_skb_any(skb);
-+		return 0;
-+	}
- 
--	return ath5k_tx_queue(hw, skb, sc->txq);
-+	return ath5k_tx_queue(hw, skb, &sc->txqs[qnum]);
- }
- 
- static int ath5k_start(struct ieee80211_hw *hw)
-diff --git a/drivers/net/wireless/ath/ath5k/base.h b/drivers/net/wireless/ath/ath5k/base.h
-index dc1241f..5e2366d 100644
---- a/drivers/net/wireless/ath/ath5k/base.h
-+++ b/drivers/net/wireless/ath/ath5k/base.h
-@@ -60,6 +60,9 @@
- #define	ATH_TXBUF	200		/* number of TX buffers */
- #define ATH_BCBUF	1		/* number of beacon buffers */
- 
-+#define ATH5K_TXQ_LEN_MAX	(ATH_TXBUF / 4)		/* bufs per queue */
-+#define ATH5K_TXQ_LEN_LOW	(ATH5K_TXQ_LEN_MAX / 2)	/* low mark */
-+
- struct ath5k_buf {
- 	struct list_head	list;
- 	struct ath5k_desc	*desc;	/* virtual addr of desc */
-@@ -83,6 +86,7 @@ struct ath5k_txq {
- 	struct list_head	q;	/* transmit queue */
- 	spinlock_t		lock;	/* lock on q and link */
- 	bool			setup;
-+	int			txq_len; /* number of queued buffers */
- };
- 
- #define ATH5K_LED_MAX_NAME_LEN 31
-@@ -204,7 +208,6 @@ struct ath5k_softc {
- 	spinlock_t		txbuflock;
- 	unsigned int		txbuf_len;	/* buf count in txbuf list */
- 	struct ath5k_txq	txqs[AR5K_NUM_TX_QUEUES];	/* tx queues */
--	struct ath5k_txq	*txq;		/* main tx queue */
- 	struct tasklet_struct	txtq;		/* tx intr tasklet */
- 	struct ath5k_led	tx_led;		/* tx led */
- 
+why limit yourself to this? You're guaranteed to find a free index if
+you don't, so error handling could be easier?
+
+johannes
 
