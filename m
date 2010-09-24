@@ -1,51 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:44626 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932082Ab0I3Pb3 (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:59801 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754778Ab0IXVCz (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 30 Sep 2010 11:31:29 -0400
-Message-ID: <4CA4AD40.1010309@candelatech.com>
-Date: Thu, 30 Sep 2010 08:31:12 -0700
-From: Ben Greear <greearb@candelatech.com>
-MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: linux-wireless@vger.kernel.org
-Subject: Re: [RFC 1/2] wireless:  Show sta_flags for status in /proc/net/wireless
-References: <1285804637-5400-1-git-send-email-greearb@candelatech.com> <1285832587.3639.1.camel@jlt3.sipsolutions.net>
-In-Reply-To: <1285832587.3639.1.camel@jlt3.sipsolutions.net>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+	Fri, 24 Sep 2010 17:02:55 -0400
+Subject: Re: [wireless] wireless:  Keep phy name consistent across module
+ reloads.
+From: Johannes Berg <johannes@sipsolutions.net>
+To: greearb@candelatech.com
+Cc: linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>
+In-Reply-To: <1285113431-25526-1-git-send-email-greearb@candelatech.com>
+References: <1285113431-25526-1-git-send-email-greearb@candelatech.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Fri, 24 Sep 2010 23:02:50 +0200
+Message-ID: <1285362170.11036.1.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 09/30/2010 12:43 AM, Johannes Berg wrote:
-> On Wed, 2010-09-29 at 16:57 -0700, greearb@candelatech.com wrote:
->
->> User-space can then decode the flags to determine associated,
->> scanning, and other states.
->
-> I really don't think we should be extending the useful life of wireless
-> extensions.
->
->
->>    * @signal: signal strength of last received packet in dBm
->> + * @status: ieee80211_sta_info_flags plus:  (1<<15) Scanning.
->
->
-> And are you seriously proposing to make internal mac80211 flags part of
-> the externally visible cfg80211 API??
+On Tue, 2010-09-21 at 16:57 -0700, greearb@candelatech.com wrote:
+> From: Ben Greear <greearb@candelatech.com>
+> 
+> It adds needless pain to user-space scripts to change the name
+> of the phy on each module reload.  Instead, find the first
+> index.
 
-It would of course be easy to map them to a stable set of flags, but if you
-don't want to fix /proc/net/wireless anyway, then I might as well do minimal changes
-to make it easier to keep the patch in my own tree.
+Crap, I clearly missed this patch, John, please revert this.
 
-Aside from listening to 'iw event', is there any way to know if a STA is scanning,
-authenticated, associated, etc?  Some of this can be obtained from debugfs, but
-that's not a fun api to code against...
+We cannot do this because otherwise operations you attempt to do one one
+PHY will race with re-creating of the same phy index. For the same
+reason, interface indexes aren't reused for netdevs.
 
-Thanks,
-Ben
+If this bothers you so much, you can easily write a udev rule that
+renames all your phys to "myphy" or whatever.
 
+johannes
 
--- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
