@@ -1,72 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:39066 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755136Ab0I2UAi (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 29 Sep 2010 16:00:38 -0400
-Subject: Re: [RFC v2] mac80211: fix rx monitor filter refcounters
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Christian Lamparter <chunkeey@googlemail.com>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <201009292157.04141.chunkeey@googlemail.com>
-References: <201009281836.24529.chunkeey@googlemail.com>
-	 <1285744218.3756.10.camel@jlt3.sipsolutions.net>
-	 <201009292157.04141.chunkeey@googlemail.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Wed, 29 Sep 2010 22:00:39 +0200
-Message-ID: <1285790439.3756.35.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+Received: from mail.atheros.com ([12.19.149.2]:54573 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753079Ab0IXMXm (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 24 Sep 2010 08:23:42 -0400
+Received: from mail.atheros.com ([10.10.20.105])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Fri, 24 Sep 2010 05:23:35 -0700
+From: Rajkumar Manoharan <rmanoharan@atheros.com>
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>,
+	Rajkumar Manoharan <rmanoharan@atheros.com>
+Subject: [PATCH] ath9k_htc: Fix TKIP disconnect failure with HTC drivers
+Date: Fri, 24 Sep 2010 17:58:50 +0530
+Message-ID: <1285331330-26105-1-git-send-email-rmanoharan@atheros.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2010-09-29 at 21:57 +0200, Christian Lamparter wrote:
+The following commit removed splitmic. But forgot to add
+ATH_CRYPT_CAP_MIC_COMBINED flag for HTC drivers which causes
+TKIP to fail.
 
-> > > Is there a sane way to do that?
-> > 
-> > Is this not sane enough? Looks OK to me, even if it adds a bit of code.
-> > 
-> 
-> It's about MONITOR_FLAG_COOK_FRAMES. This flag gives me headaches.
-> I wish we could make this flag "const" and don't allow it be changed
-> by iw dev wlanX set monitor. 
+Author: Bruno Randolf <br1@einfach.org>
+Date:   Wed Sep 8 16:04:54 2010 +0900
 
-Ah. Then you can only specify it when creating an interface, right? Fine
-with me, really.
+    ath/ath9k: Replace common->splitmic with a flag
 
-> Another alternative would be to move
-> the "sdata->u.mntr_flag -> fif_* processing" into
-> ieee80211_configure_filter. 
-> 
-> or: 
-> ---
-> diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
-> index c981604..1ffe266 100644
-> --- a/net/mac80211/cfg.c
-> +++ b/net/mac80211/cfg.c
-> @@ -68,9 +68,61 @@ static int ieee80211_change_iface(struct wiphy *wiphy,
->  		 params && params->use_4addr >= 0)
->  		sdata->u.mgd.use_4addr = params->use_4addr;
->  
-> -	if (sdata->vif.type == NL80211_IFTYPE_MONITOR && flags)
-> +	if (sdata->vif.type == NL80211_IFTYPE_MONITOR && flags) {
-> +		struct ieee80211_local *local = sdata->local;
-> +		u32 changed_flags;
-> +		u32 old_flags;
-> +		u32 hw_reconf_flags = 0;
-> +
-> +		old_flags = sdata->u.mntr_flags;
-> +		changed_flags = old_flags ^ *flags;
-> +		if (!(old_flags & MONITOR_FLAG_COOK_FRAMES))
-> +			ieee80211_adjust_monitor_flags(sdata, -1);
-> +
-> +		if (changed_flags & MONITOR_FLAG_COOK_FRAMES) {
-> +			if (*flags & MONITOR_FLAG_COOK_FRAMES) {
-> +				local->cooked_mntrs++;
-> +				local->monitors--;
+    Replace common->splitmic with ATH_CRYPT_CAP_MIC_COMBINED flag.
 
-Yeah, that's kinda ugly. I'm fine with not allowing the cook flag to
-change, seems like a pretty special case anyway. Or, we can allow it to
-change, but only while the interface is down, right?
+Signed-off-by: Rajkumar Manoharan <rmanoharan@atheros.com>
+---
+ drivers/net/wireless/ath/ath9k/htc_drv_init.c |    3 +++
+ 1 files changed, 3 insertions(+), 0 deletions(-)
 
-johannes
+diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_init.c b/drivers/net/wireless/ath/ath9k/htc_drv_init.c
+index 33850c9..b100db2 100644
+--- a/drivers/net/wireless/ath/ath9k/htc_drv_init.c
++++ b/drivers/net/wireless/ath/ath9k/htc_drv_init.c
+@@ -561,6 +561,9 @@ static void ath9k_init_crypto(struct ath9k_htc_priv *priv)
+ 		common->keymax = ATH_KEYMAX;
+ 	}
+ 
++	if (priv->ah->misc_mode & AR_PCU_MIC_NEW_LOC_ENA)
++		common->crypt_caps |= ATH_CRYPT_CAP_MIC_COMBINED;
++
+ 	/*
+ 	 * Reset the key cache since some parts do not
+ 	 * reset the contents on initial power up.
+-- 
+1.7.3
 
