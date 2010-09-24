@@ -1,32 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:44738 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752593Ab0IXJLN (ORCPT
+Received: from mail.candelatech.com ([208.74.158.172]:60447 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753669Ab0IXSRh (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 24 Sep 2010 05:11:13 -0400
-Subject: Re: [RFC v2 1/3] mac80211: remove prepare_for_handlers sdata
- argument
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Ben Greear <greearb@candelatech.com>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <4C9BC41E.70804@candelatech.com>
-References: <20100923193747.677517441@sipsolutions.net>
-	 <20100923193818.656678519@sipsolutions.net>
-	 <4C9BC41E.70804@candelatech.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Fri, 24 Sep 2010 11:11:09 +0200
-Message-ID: <1285319469.3699.0.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+	Fri, 24 Sep 2010 14:17:37 -0400
+Message-ID: <4C9CEB3F.5090804@candelatech.com>
+Date: Fri, 24 Sep 2010 11:17:35 -0700
+From: Ben Greear <greearb@candelatech.com>
+MIME-Version: 1.0
+To: Nick Kossifidis <mickflemm@gmail.com>
+CC: linux-wireless@vger.kernel.org
+Subject: Re: [PATCH v2] This allows ath5k to support virtual STA and AP interfaces.
+References: <1285272430-9617-1-git-send-email-greearb@candelatech.com> <AANLkTi=n9GDjiBxiS0cen2objz+BO9CeC-Uy5c6hVWhS@mail.gmail.com>
+In-Reply-To: <AANLkTi=n9GDjiBxiS0cen2objz+BO9CeC-Uy5c6hVWhS@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2010-09-23 at 14:18 -0700, Ben Greear wrote:
-> I applied these 3 patches and using two STA interfaces on ath9k
-> appears to work fine.  I'll leave them in my tree and continue
-> testing.
+On 09/24/2010 10:46 AM, Nick Kossifidis wrote:
+> 2010/9/23<greearb@candelatech.com>:
+>> From: Ben Greear<greearb@candelatech.com>
+>>
+>> +#define ATH5K_VIF_MAX  2048
+>
+> This is too much !!! 2048 interfaces with a total of 4 beacon buffers
+> 40 rx buffers and 200 tx buffers ? Has anyone tested this ?
+>
+> Also think about embedded devices, we don't want to waste memory like this...
+>
+>> +       struct ieee80211_vif *vifs[ATH5K_VIF_MAX];
 
-Thanks, I've also tested them with two AP interfaces and it works fine,
-will be submitting them momentarily.
+It only costs 4 or 8 bytes per pointer as long as no one actually
+adds the vifs.
 
-johannes
+We've tested at least 128 on an old 1Ghz VIA system, and I'd hope for more
+on more modern hardware.  I didn't think the driver should make the decision
+to limit un-necessarily.
+
+If you still think this is too much, then tell me the biggest number
+you wouldn't complain about :)
+
+Thanks,
+Ben
+
+-- 
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
 
