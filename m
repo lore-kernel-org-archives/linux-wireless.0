@@ -1,36 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from external1.orbit-lab.org ([128.6.192.131]:52829 "HELO
-	external1.orbit-lab.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1755049Ab0ISTCa (ORCPT
+Received: from mail-qy0-f174.google.com ([209.85.216.174]:65481 "EHLO
+	mail-qy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757862Ab0IXTek (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 19 Sep 2010 15:02:30 -0400
-Received: from repository3.orbit-lab.org (repository3.orbit-lab.org [10.50.0.41])
-	by external1.orbit-lab.org (Postfix) with ESMTP id C5100418D8
-	for <linux-wireless@vger.kernel.org>; Sun, 19 Sep 2010 15:00:41 -0400 (EDT)
-Subject: Compat-wireless release for 2010-09-19 is baked
-To: <linux-wireless@vger.kernel.org>
-Message-Id: <20100919190229.934C3404FC@repository3.orbit-lab.org>
-Date: Sun, 19 Sep 2010 15:02:29 -0400 (EDT)
-From: compat@orbit-lab.org (Compat-wireless cronjob account)
+	Fri, 24 Sep 2010 15:34:40 -0400
+Received: by qyk36 with SMTP id 36so1747272qyk.19
+        for <linux-wireless@vger.kernel.org>; Fri, 24 Sep 2010 12:34:38 -0700 (PDT)
+Message-ID: <4C9CFD4E.10401@gmail.com>
+Date: Fri, 24 Sep 2010 15:34:38 -0400
+From: Richard Farina <sidhayn@gmail.com>
+MIME-Version: 1.0
+To: Nick Kossifidis <mickflemm@gmail.com>
+CC: greearb@candelatech.com, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH v2] This allows ath5k to support virtual STA and AP interfaces.
+References: <1285272430-9617-1-git-send-email-greearb@candelatech.com> <AANLkTi=n9GDjiBxiS0cen2objz+BO9CeC-Uy5c6hVWhS@mail.gmail.com>
+In-Reply-To: <AANLkTi=n9GDjiBxiS0cen2objz+BO9CeC-Uy5c6hVWhS@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
->From git://git.kernel.org/pub/scm/linux/kernel/git/mcgrof/compat-wireless-2.6
- * [new branch]      -          -> origin/-
-   9c47425..b5810c4  master     -> origin/master
-cat: /var/opt/compat/compat-wireless-2.6/compat_version: No such file or directory
-cat: compat_base_tree: No such file or directory
-cat: compat_base_tree_version: No such file or directory
-cat: compat_version: No such file or directory
-cat: /var/opt/compat/compat-wireless-2.6/compat_version: No such file or directory
-scripts/Makefile.clean:17: /var/opt/compat/compat-wireless-2.6/drivers/net/wireless/ath/carl9170/Makefile: No such file or directory
-make[5]: *** No rule to make target `/var/opt/compat/compat-wireless-2.6/drivers/net/wireless/ath/carl9170/Makefile'.  Stop.
-make[4]: *** [/var/opt/compat/compat-wireless-2.6/drivers/net/wireless/ath/carl9170] Error 2
-make[3]: *** [/var/opt/compat/compat-wireless-2.6/drivers/net/wireless/ath] Error 2
-make[2]: *** [/var/opt/compat/compat-wireless-2.6/drivers/net/wireless] Error 2
-make[1]: *** [_clean_/var/opt/compat/compat-wireless-2.6] Error 2
-make: *** [clean] Error 2
+Nick Kossifidis wrote:
+> 2010/9/23  <greearb@candelatech.com>:
+>   
+>> From: Ben Greear <greearb@candelatech.com>
+>>
+>> +#define ATH5K_VIF_MAX  2048
+>>     
+>
+> This is too much !!! 2048 interfaces with a total of 4 beacon buffers
+> 40 rx buffers and 200 tx buffers ? Has anyone tested this ?
+>
+> Also think about embedded devices, we don't want to waste memory like this...
+>
+>   
+As a sanity check, I can say I've seen AP vendors that permit 32 SSIDs 
+each with a unique BSSID/encryption, etc. I've never seen any device 
+that does more than that so 32 is a pretty reasonable max vif (the user 
+can always change it if desired, I'm looking at you openwrt team). Just 
+my 0.02$
 
-compat-wireless code metrics
+-Rick Farina
+>> +       struct ieee80211_vif *vifs[ATH5K_VIF_MAX];
+>>     
+>
+>   
 
-    706813 - Total upstream lines of code being pulled
