@@ -1,50 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yw0-f46.google.com ([209.85.213.46]:36929 "EHLO
-	mail-yw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752332Ab0IMR36 (ORCPT
+Received: from mail-pv0-f174.google.com ([74.125.83.174]:60723 "EHLO
+	mail-pv0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750985Ab0IXRqm convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 13 Sep 2010 13:29:58 -0400
-Received: by ywh1 with SMTP id 1so2102161ywh.19
-        for <linux-wireless@vger.kernel.org>; Mon, 13 Sep 2010 10:29:58 -0700 (PDT)
+	Fri, 24 Sep 2010 13:46:42 -0400
+Received: by pvg2 with SMTP id 2so741594pvg.19
+        for <linux-wireless@vger.kernel.org>; Fri, 24 Sep 2010 10:46:42 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <804B13F8F3D94A4AB18B9B01ACB68FA103AB02D1@EXCHSRV.fokus.fraunhofer.de>
-References: <804B13F8F3D94A4AB18B9B01ACB68FA1037B5158@EXCHSRV.fokus.fraunhofer.de>
- <20100727172020.GE8293@tux> <804B13F8F3D94A4AB18B9B01ACB68FA103AB02D1@EXCHSRV.fokus.fraunhofer.de>
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Date: Mon, 13 Sep 2010 10:29:26 -0700
-Message-ID: <AANLkTikcnHU+JFpt7o3UG0+=Py5HKVBMmpkvZNTpQ=uy@mail.gmail.com>
-Subject: Re: [ath9k-devel] [PATCH 4/5] mac80211: add WoW support
-To: "Simsek, Burak" <burak.simsek@fokus.fraunhofer.de>
-Cc: Luis Rodriguez <Luis.Rodriguez@atheros.com>,
-	linux-wireless@vger.kernel.org
+In-Reply-To: <1285272430-9617-1-git-send-email-greearb@candelatech.com>
+References: <1285272430-9617-1-git-send-email-greearb@candelatech.com>
+Date: Fri, 24 Sep 2010 20:46:41 +0300
+Message-ID: <AANLkTi=n9GDjiBxiS0cen2objz+BO9CeC-Uy5c6hVWhS@mail.gmail.com>
+Subject: Re: [PATCH v2] This allows ath5k to support virtual STA and AP interfaces.
+From: Nick Kossifidis <mickflemm@gmail.com>
+To: greearb@candelatech.com
+Cc: linux-wireless@vger.kernel.org
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Sep 13, 2010 at 10:11 AM, Simsek, Burak
-<burak.simsek@fokus.fraunhofer.de> wrote:
-> Dear Luis,
+2010/9/23  <greearb@candelatech.com>:
+> From: Ben Greear <greearb@candelatech.com>
 >
-> we are moving your patch to the latest version whenever we have the time to
-> do so... You had sent us two patch files:
->
-> http://www.mk.kernel.org/pub/linux/kernel/people/mcgrof/patches/wow-07-21.pa
-> tch
-> http://www.mk.kernel.org/pub/linux/kernel/people/mcgrof/patches/iw-add-wow.p
-> atch
->
->
-> The first one is successfully accomplished, but we have problems with the
-> second one. I am giving a summary of the errors that we get below. There are
-> files and variables defined in that patch that we cannot find anywhere and
-> do not know what they should do. Can you please provide us with some hints
-> regarding those errors?
+> +#define ATH5K_VIF_MAX  2048
 
-The first one is the biggest chunk of work, I can take care of the
-second one. Can you post the first patch so I can test?
+This is too much !!! 2048 interfaces with a total of 4 beacon buffers
+40 rx buffers and 200 tx buffers ? Has anyone tested this ?
 
-BTW, I learned that we can test WoW in the community by using Apple
-boxen, Apple devices seems to always have WoW capable 802.11 Atheros
-chipsets. What are you using for your testing?
+Also think about embedded devices, we don't want to waste memory like this...
 
-  Luis
+>+       struct ieee80211_vif *vifs[ATH5K_VIF_MAX];
+
+-- 
+GPG ID: 0xD21DB2DB
+As you read this post global entropy rises. Have Fun ;-)
+Nick
