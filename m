@@ -1,134 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f46.google.com ([209.85.214.46]:34781 "EHLO
-	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755982Ab0IAV1a (ORCPT
+Received: from mail-ww0-f44.google.com ([74.125.82.44]:43571 "EHLO
+	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758076Ab0IXUV0 convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 1 Sep 2010 17:27:30 -0400
-From: Ohad Ben-Cohen <ohad@wizery.com>
-To: <linux-wireless@vger.kernel.org>, <linux-mmc@vger.kernel.org>,
-	<linux-omap@vger.kernel.org>
-Cc: Mark Brown <broonie@opensource.wolfsonmicro.com>,
-	<linux-arm-kernel@lists.infradead.org>,
-	Chikkature Rajashekar Madhusudhan <madhu.cr@ti.com>,
-	Luciano Coelho <luciano.coelho@nokia.com>,
-	<akpm@linux-foundation.org>, San Mehat <san@google.com>,
-	Roger Quadros <roger.quadros@nokia.com>,
-	Tony Lindgren <tony@atomide.com>,
-	Nicolas Pitre <nico@fluxnic.net>, Ido Yariv <ido@wizery.com>,
-	Kalle Valo <kalle.valo@iki.fi>,
-	Russell King <linux@arm.linux.org.uk>,
-	Ohad Ben-Cohen <ohad@wizery.com>
-Subject: [PATCH v5 2/7] wireless: wl1271: support return value for the set power func
-Date: Thu,  2 Sep 2010 00:26:45 +0300
-Message-Id: <1283376410-9999-3-git-send-email-ohad@wizery.com>
-In-Reply-To: <1283376410-9999-1-git-send-email-ohad@wizery.com>
-References: <1283376410-9999-1-git-send-email-ohad@wizery.com>
+	Fri, 24 Sep 2010 16:21:26 -0400
+Subject: Re: [PATCH v3] omap: beagle: add support for wl1271 on the board file
+Mime-Version: 1.0 (Apple Message framework v1081)
+Content-Type: text/plain; charset=us-ascii
+From: Koen Kooi <koen@dominion.thruhere.net>
+In-Reply-To: <1285358414.9779.28.camel@powerslave>
+Date: Fri, 24 Sep 2010 22:21:20 +0200
+Cc: Tony Lindgren <tony@atomide.com>,
+	"ext John W. Linville" <linville@tuxdriver.com>,
+	"linux-omap@vger.kernel.org" <linux-omap@vger.kernel.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Ido Yariv <ido@wizery.com>, Ohad Ben-Cohen <ohad@wizery.com>
+Message-Id: <35E33C53-CABC-4367-BDAF-933695A550DF@dominion.thruhere.net>
+References: <1285236215-21136-1-git-send-email-luciano.coelho@nokia.com> <20100924180316.GE8077@tuxdriver.com> <1285354249.9779.3.camel@powerslave> <20100924191139.GI4211@atomide.com> <8004B807-6120-41C0-979B-214BFB75E5CA@dominion.thruhere.net> <1285358414.9779.28.camel@powerslave>
+To: Luciano Coelho <luciano.coelho@nokia.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Make it possible for the set power method to indicate a
-success/failure return value. This is needed to support
-more complex power on/off operations such as bringing up
-(and down) sdio functions.
 
-Signed-off-by: Ohad Ben-Cohen <ohad@wizery.com>
----
- drivers/net/wireless/wl12xx/wl1271.h      |    2 +-
- drivers/net/wireless/wl12xx/wl1271_io.h   |    9 ++++++---
- drivers/net/wireless/wl12xx/wl1271_main.c |    4 +++-
- drivers/net/wireless/wl12xx/wl1271_sdio.c |    4 +++-
- drivers/net/wireless/wl12xx/wl1271_spi.c  |    4 +++-
- 5 files changed, 16 insertions(+), 7 deletions(-)
+Op 24 sep 2010, om 22:00 heeft Luciano Coelho het volgende geschreven:
 
-diff --git a/drivers/net/wireless/wl12xx/wl1271.h b/drivers/net/wireless/wl12xx/wl1271.h
-index dd3cee6..faa5925 100644
---- a/drivers/net/wireless/wl12xx/wl1271.h
-+++ b/drivers/net/wireless/wl12xx/wl1271.h
-@@ -313,7 +313,7 @@ struct wl1271_if_operations {
- 		     bool fixed);
- 	void (*reset)(struct wl1271 *wl);
- 	void (*init)(struct wl1271 *wl);
--	void (*power)(struct wl1271 *wl, bool enable);
-+	int (*power)(struct wl1271 *wl, bool enable);
- 	struct device* (*dev)(struct wl1271 *wl);
- 	void (*enable_irq)(struct wl1271 *wl);
- 	void (*disable_irq)(struct wl1271 *wl);
-diff --git a/drivers/net/wireless/wl12xx/wl1271_io.h b/drivers/net/wireless/wl12xx/wl1271_io.h
-index bc806c7..c1f92e6 100644
---- a/drivers/net/wireless/wl12xx/wl1271_io.h
-+++ b/drivers/net/wireless/wl12xx/wl1271_io.h
-@@ -144,10 +144,13 @@ static inline void wl1271_power_off(struct wl1271 *wl)
- 	clear_bit(WL1271_FLAG_GPIO_POWER, &wl->flags);
- }
- 
--static inline void wl1271_power_on(struct wl1271 *wl)
-+static inline int wl1271_power_on(struct wl1271 *wl)
- {
--	wl->if_ops->power(wl, true);
--	set_bit(WL1271_FLAG_GPIO_POWER, &wl->flags);
-+	int ret = wl->if_ops->power(wl, true);
-+	if (ret == 0)
-+		set_bit(WL1271_FLAG_GPIO_POWER, &wl->flags);
-+
-+	return ret;
- }
- 
- 
-diff --git a/drivers/net/wireless/wl12xx/wl1271_main.c b/drivers/net/wireless/wl12xx/wl1271_main.c
-index 9d68f00..e6e0852 100644
---- a/drivers/net/wireless/wl12xx/wl1271_main.c
-+++ b/drivers/net/wireless/wl12xx/wl1271_main.c
-@@ -621,7 +621,9 @@ static int wl1271_chip_wakeup(struct wl1271 *wl)
- 	int ret = 0;
- 
- 	msleep(WL1271_PRE_POWER_ON_SLEEP);
--	wl1271_power_on(wl);
-+	ret = wl1271_power_on(wl);
-+	if (ret < 0)
-+		goto out;
- 	msleep(WL1271_POWER_ON_SLEEP);
- 	wl1271_io_reset(wl);
- 	wl1271_io_init(wl);
-diff --git a/drivers/net/wireless/wl12xx/wl1271_sdio.c b/drivers/net/wireless/wl12xx/wl1271_sdio.c
-index 7059b5c..c41293a 100644
---- a/drivers/net/wireless/wl12xx/wl1271_sdio.c
-+++ b/drivers/net/wireless/wl12xx/wl1271_sdio.c
-@@ -152,7 +152,7 @@ static void wl1271_sdio_raw_write(struct wl1271 *wl, int addr, void *buf,
- 
- }
- 
--static void wl1271_sdio_set_power(struct wl1271 *wl, bool enable)
-+static int wl1271_sdio_set_power(struct wl1271 *wl, bool enable)
- {
- 	struct sdio_func *func = wl_to_func(wl);
- 
-@@ -167,6 +167,8 @@ static void wl1271_sdio_set_power(struct wl1271 *wl, bool enable)
- 		sdio_disable_func(func);
- 		sdio_release_host(func);
- 	}
-+
-+	return 0;
- }
- 
- static struct wl1271_if_operations sdio_ops = {
-diff --git a/drivers/net/wireless/wl12xx/wl1271_spi.c b/drivers/net/wireless/wl12xx/wl1271_spi.c
-index c3fdab7..de56d8d 100644
---- a/drivers/net/wireless/wl12xx/wl1271_spi.c
-+++ b/drivers/net/wireless/wl12xx/wl1271_spi.c
-@@ -312,10 +312,12 @@ static irqreturn_t wl1271_irq(int irq, void *cookie)
- 	return IRQ_HANDLED;
- }
- 
--static void wl1271_spi_set_power(struct wl1271 *wl, bool enable)
-+static int wl1271_spi_set_power(struct wl1271 *wl, bool enable)
- {
- 	if (wl->set_power)
- 		wl->set_power(enable);
-+
-+	return 0;
- }
- 
- static struct wl1271_if_operations spi_ops = {
--- 
-1.7.0.4
+> On Fri, 2010-09-24 at 21:42 +0200, ext Koen Kooi wrote:
+>> Op 24 sep 2010, om 21:11 heeft Tony Lindgren het volgende geschreven:
+>> 
+>>> * Luciano Coelho <luciano.coelho@nokia.com> [100924 11:42]:
+>>>> On Fri, 2010-09-24 at 20:03 +0200, ext John W. Linville wrote:
+>>>>> On Thu, Sep 23, 2010 at 01:03:35PM +0300, Luciano Coelho wrote:
+>>>>>> Add board configuration for the wl1271 daughter board.  This patch is based
+>>>>>> on Ohad Ben-Cohen's patches for Zoom boards.
+>>>>>> 
+>>>>>> Cc: Ohad Ben-Cohen <ohad@wizery.com>
+>>>>>> Signed-off-by: Luciano Coelho <luciano.coelho@nokia.com>
+>>>>>> ---
+>>>>>> from v2 to v3: removed accidental change to wl1271.h
+>>>>> 
+>>>>> I presume that this should come through my tree as well (since it
+>>>>> contains the move of wl12xx.h)?
+>>>> 
+>>>> Yes, this is based on your tree.  But please hold on, because there were
+>>>> some comments (namely, the expansion board should be detected, not
+>>>> configured for wl1271 by default), which I still have to fix.  I'm
+>>>> waiting for the manufacturer of the expansion board to provide me with
+>>>> some more info for proper detection.
+>>>> 
+>>>> Also, I know that there are some other work being done in the beagle
+>>>> board file, so we may need to rethink how to sync this.
+>>>> 
+>>>> So, for now, let's skip this patch and I'll provide another one when
+>>>> these issues are addressed.
+>>> 
+>>> You could also do it based on some kernel cmdline option. Of course
+>>> detection during the runtime would be better.
+>> 
+>> That's what we're currently doing in the beagle kernels: http://gitorious.org/beagleboard-validation/linux/commit/17c1b214b918c6f9efc5579134a7ff71d51b60bf
+>> 
+>> That needs forward porting to .37 before I can submit is as RFC here :)
+> 
+> Yes! I have seen that as pointed out by Robert.  It would be nice if you
+> could port this soon(ish) so that others can start using it (ok, maybe
+> not many people, but at least me :P)
+> 
+> What would you think about having the actual probing moved from u-boot
+> to the kernel? Do you think that would make sense or are there some
+> other reasons for having it in the bootloader?
 
+It would make a lot of sense, but when we did the code the in-kernel muxing was pretty much unusable for this goal. I'd prefer to get the uboot based detection way into the kernel first before embarking on the bigger fully in-kernel stuff.
+
+Note that on beagleboard-xM we have an additional problem with the camera modules, the different sensors use the same i2c address, which means it completely falls down with the current i2c implementation. Does anyone have any hints on how to read a register over i2c before registering the i2c platform data?
+
+regards,
+
+Koen
