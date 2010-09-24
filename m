@@ -1,70 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:52144 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932088Ab0I3URK (ORCPT
+Received: from smtp.nokia.com ([192.100.105.134]:44871 "EHLO
+	mgw-mx09.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758013Ab0IXUAf (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 30 Sep 2010 16:17:10 -0400
-Subject: [PATCH] cfg80211: fix locking
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+	Fri, 24 Sep 2010 16:00:35 -0400
+Subject: Re: [PATCH v3] omap: beagle: add support for wl1271 on the board
+ file
+From: Luciano Coelho <luciano.coelho@nokia.com>
+To: ext Koen Kooi <koen@dominion.thruhere.net>
+Cc: Tony Lindgren <tony@atomide.com>,
+	"ext John W. Linville" <linville@tuxdriver.com>,
+	"linux-omap@vger.kernel.org" <linux-omap@vger.kernel.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Ido Yariv <ido@wizery.com>, Ohad Ben-Cohen <ohad@wizery.com>
+In-Reply-To: <8004B807-6120-41C0-979B-214BFB75E5CA@dominion.thruhere.net>
+References: <1285236215-21136-1-git-send-email-luciano.coelho@nokia.com>
+	 <20100924180316.GE8077@tuxdriver.com> <1285354249.9779.3.camel@powerslave>
+	 <20100924191139.GI4211@atomide.com>
+	 <8004B807-6120-41C0-979B-214BFB75E5CA@dominion.thruhere.net>
 Content-Type: text/plain; charset="UTF-8"
-Date: Thu, 30 Sep 2010 22:17:43 +0200
-Message-ID: <1285877863.5137.18.camel@jlt3.sipsolutions.net>
+Date: Fri, 24 Sep 2010 23:00:14 +0300
+Message-ID: <1285358414.9779.28.camel@powerslave>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+On Fri, 2010-09-24 at 21:42 +0200, ext Koen Kooi wrote:
+> Op 24 sep 2010, om 21:11 heeft Tony Lindgren het volgende geschreven:
+> 
+> > * Luciano Coelho <luciano.coelho@nokia.com> [100924 11:42]:
+> >> On Fri, 2010-09-24 at 20:03 +0200, ext John W. Linville wrote:
+> >>> On Thu, Sep 23, 2010 at 01:03:35PM +0300, Luciano Coelho wrote:
+> >>>> Add board configuration for the wl1271 daughter board.  This patch is based
+> >>>> on Ohad Ben-Cohen's patches for Zoom boards.
+> >>>> 
+> >>>> Cc: Ohad Ben-Cohen <ohad@wizery.com>
+> >>>> Signed-off-by: Luciano Coelho <luciano.coelho@nokia.com>
+> >>>> ---
+> >>>> from v2 to v3: removed accidental change to wl1271.h
+> >>> 
+> >>> I presume that this should come through my tree as well (since it
+> >>> contains the move of wl12xx.h)?
+> >> 
+> >> Yes, this is based on your tree.  But please hold on, because there were
+> >> some comments (namely, the expansion board should be detected, not
+> >> configured for wl1271 by default), which I still have to fix.  I'm
+> >> waiting for the manufacturer of the expansion board to provide me with
+> >> some more info for proper detection.
+> >> 
+> >> Also, I know that there are some other work being done in the beagle
+> >> board file, so we may need to rethink how to sync this.
+> >> 
+> >> So, for now, let's skip this patch and I'll provide another one when
+> >> these issues are addressed.
+> > 
+> > You could also do it based on some kernel cmdline option. Of course
+> > detection during the runtime would be better.
+> 
+> That's what we're currently doing in the beagle kernels: http://gitorious.org/beagleboard-validation/linux/commit/17c1b214b918c6f9efc5579134a7ff71d51b60bf
+> 
+> That needs forward porting to .37 before I can submit is as RFC here :)
 
-Add missing unlocking of the wiphy in set_channel,
-and don't try to unlock a non-existing wiphy in
-set_cqm.
+Yes! I have seen that as pointed out by Robert.  It would be nice if you
+could port this soon(ish) so that others can start using it (ok, maybe
+not many people, but at least me :P)
 
-Cc: stable@kernel.org [2.6.35+]
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- net/wireless/nl80211.c |   11 +++++++----
- 1 file changed, 7 insertions(+), 4 deletions(-)
+What would you think about having the actual probing moved from u-boot
+to the kernel? Do you think that would make sense or are there some
+other reasons for having it in the bootloader?
 
---- wireless-testing.orig/net/wireless/nl80211.c	2010-09-30 22:10:42.000000000 +0200
-+++ wireless-testing/net/wireless/nl80211.c	2010-09-30 22:17:10.000000000 +0200
-@@ -821,11 +821,13 @@ static int nl80211_set_channel(struct sk
- 
- 	result = get_rdev_dev_by_info_ifindex(info, &rdev, &netdev);
- 	if (result)
--		goto unlock;
-+		goto unlock_rtnl;
- 
- 	result = __nl80211_set_channel(rdev, netdev->ieee80211_ptr, info);
- 
-- unlock:
-+	dev_put(netdev);
-+	cfg80211_unlock_rdev(rdev);
-+ unlock_rtnl:
- 	rtnl_unlock();
- 
- 	return result;
-@@ -5095,7 +5097,7 @@ static int nl80211_set_cqm_rssi(struct g
- 
- 	err = get_rdev_dev_by_info_ifindex(info, &rdev, &dev);
- 	if (err)
--		goto unlock_rdev;
-+		goto unlock_rtnl;
- 
- 	wdev = dev->ieee80211_ptr;
- 
-@@ -5113,9 +5115,10 @@ static int nl80211_set_cqm_rssi(struct g
- 	err = rdev->ops->set_cqm_rssi_config(wdev->wiphy, dev,
- 					     threshold, hysteresis);
- 
--unlock_rdev:
-+ unlock_rdev:
- 	cfg80211_unlock_rdev(rdev);
- 	dev_put(dev);
-+ unlock_rtnl:
- 	rtnl_unlock();
- 
- 	return err;
 
+-- 
+Cheers,
+Luca.
 
