@@ -1,28 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:32964
-	"EHLO sunset.davemloft.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S932076Ab0I3TCl (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:56465 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752833Ab0IXVS5 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 30 Sep 2010 15:02:41 -0400
-Date: Thu, 30 Sep 2010 12:03:02 -0700 (PDT)
-Message-Id: <20100930.120302.214230306.davem@davemloft.net>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: pull request: wireless-2.6 2010-09-29
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <20100929203352.GC2516@tuxdriver.com>
-References: <20100929203352.GC2516@tuxdriver.com>
+	Fri, 24 Sep 2010 17:18:57 -0400
+Subject: Re: [wireless] wireless:  Keep phy name consistent across module
+ reloads.
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Ben Greear <greearb@candelatech.com>
+Cc: linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>
+In-Reply-To: <4C9D13AC.4080308@candelatech.com>
+References: <1285113431-25526-1-git-send-email-greearb@candelatech.com>
+	 <1285362170.11036.1.camel@jlt3.sipsolutions.net>
+	 <4C9D13AC.4080308@candelatech.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Fri, 24 Sep 2010 23:18:54 +0200
+Message-ID: <1285363135.11036.7.camel@jlt3.sipsolutions.net>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: "John W. Linville" <linville@tuxdriver.com>
-Date: Wed, 29 Sep 2010 16:33:53 -0400
+On Fri, 2010-09-24 at 14:10 -0700, Ben Greear wrote:
 
-> Here are two more fixes intended for 2.6.36.  One fixes a user after
-> free error, the other fixes a reported regression (bug 17722).  Both are
-> reasonably small and well documented in the commit logs.
+> > We cannot do this because otherwise operations you attempt to do one one
+> > PHY will race with re-creating of the same phy index. For the same
+> > reason, interface indexes aren't reused for netdevs.
+> >
+> > If this bothers you so much, you can easily write a udev rule that
+> > renames all your phys to "myphy" or whatever.
+> 
+> Sorry about that.
+> 
+> Would a similar patch be acceptable that just set the name to the first
+> available phyX, but left the index to increment monotomically as it does
+> now be OK?
 
-Pulled, thanks John.
+Actually, right now it doesn't even allow you to use a "phy%d" name,
+which is because I don't want (sysfs, debugfs) errors coming from doing
+"iw phy0 set name phy1" and then plugging in a new device ... In doing
+that, I manage to avoid having to allocate two different numbers...
+
+I suppose it'd be possible to treat this more like interfaces. Want to
+also make it per net namespace? ;-)
+
+> I'd really like to not have to deal with udev if possible!
+
+It's really not very hard, you just need a rule that reacts to adding a
+new phy, and calls "iw phy#7 set name myphy" :-)
+
+johannes
+
