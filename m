@@ -1,78 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.19.149.2]:35423 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752152Ab0IUKSQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 21 Sep 2010 06:18:16 -0400
-Received: from mail.atheros.com ([10.10.20.105])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Tue, 21 Sep 2010 03:18:09 -0700
-Date: Tue, 21 Sep 2010 15:47:57 +0530
-From: Vasanthakumar Thiagarajan <vasanth@atheros.com>
-To: Felix Fietkau <nbd@openwrt.org>
-CC: Vasanth Thiagarajan <Vasanth.Thiagarajan@Atheros.com>,
-	"linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH 2/2] ath9k: Kick start paprd calibration whenever
-	operating channel changes
-Message-ID: <20100921101757.GA4229@vasanth-laptop>
-References: <1285048487-16795-1-git-send-email-vasanth@atheros.com> <1285048487-16795-2-git-send-email-vasanth@atheros.com> <4C9883A4.60302@openwrt.org>
+Received: from mail.candelatech.com ([208.74.158.172]:60996 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756389Ab0IXNpN (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 24 Sep 2010 09:45:13 -0400
+Message-ID: <4C9CAB62.2040607@candelatech.com>
+Date: Fri, 24 Sep 2010 06:45:06 -0700
+From: Ben Greear <greearb@candelatech.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <4C9883A4.60302@openwrt.org>
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: Patch to get iw building on Fedora 8
+References: <4C98DFB6.10902@candelatech.com>	 <1285090085.12764.6.camel@jlt3.sipsolutions.net>	 <4C9BDD2C.1090806@candelatech.com> <1285320687.3699.8.camel@jlt3.sipsolutions.net>
+In-Reply-To: <1285320687.3699.8.camel@jlt3.sipsolutions.net>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Sep 21, 2010 at 03:36:28PM +0530, Felix Fietkau wrote:
-> On 2010-09-21 7:54 AM, Vasanthakumar Thiagarajan wrote:
-> > Signed-off-by: Vasanthakumar Thiagarajan <vasanth@atheros.com>
-> > ---
-> >  drivers/net/wireless/ath/ath9k/hw.h   |    1 +
-> >  drivers/net/wireless/ath/ath9k/main.c |   18 +++++++++++++++++-
-> >  2 files changed, 18 insertions(+), 1 deletions(-)
-> > 
-> > diff --git a/drivers/net/wireless/ath/ath9k/hw.h b/drivers/net/wireless/ath/ath9k/hw.h
-> > index df47f79..c1b4962 100644
-> > --- a/drivers/net/wireless/ath/ath9k/hw.h
-> > +++ b/drivers/net/wireless/ath/ath9k/hw.h
-> > @@ -645,6 +645,7 @@ struct ath_hw {
-> >  	struct ath9k_hw_capabilities caps;
-> >  	struct ath9k_channel channels[38];
-> >  	struct ath9k_channel *curchan;
-> > +	struct ath9k_channel prev_paprd_chan;
-> >  
-> >  	union {
-> >  		struct ar5416_eeprom_def def;
-> > diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
-> > index a133878..9150788 100644
-> > --- a/drivers/net/wireless/ath/ath9k/main.c
-> > +++ b/drivers/net/wireless/ath/ath9k/main.c
-> > @@ -266,6 +266,20 @@ int ath_set_channel(struct ath_softc *sc, struct ieee80211_hw *hw,
-> >  	return r;
-> >  }
-> >  
-> > +static bool is_paprd_done(struct ath_hw *ah)
-> > +{
-> > +	struct ath9k_channel *curchan, *paprd_chan;
-> > +
-> > +	curchan = ah->curchan;
-> > +	paprd_chan = &ah->prev_paprd_chan;
-> > +
-> > +	if ((paprd_chan->channel == curchan->channel) &&
-> > +	    paprd_chan->chanmode == curchan->chanmode)
-> > +		return true;
-> > +
-> > +	return false;
-> > +}
-> That seems like code duplication to me. The caldata already has the
-> channel number and the channel flags. ath9k_hw_reset() clears the entire
-> caldata whenever that changes. Because of that, ah->caldata->paprd_done
-> should have already been set to zero automatically after the reset
-> triggered by an operating channel change.
-> Is that part not working, or why did you write this patch?
-> Either way, we should not have a separate check just for paprd, it
-> belongs to the other calibrations.
+On 09/24/2010 02:31 AM, Johannes Berg wrote:
+> On Thu, 2010-09-23 at 16:05 -0700, Ben Greear wrote:
+>> I notice that you added some code to try to get this working:
+>>
+>> #ifndef _ISOC99_SOURCE
+>> #define _ISOC99_SOURCE
+>> #endif
+>>
+>>
+>> However, it still will not build for me on Fedora 8.  In case I'm doing something
+>> else strange..were you able to build it on FC8 by any chance?
+>>
+>> I can easily carry the fix in my own tree, but thought
+>> you might want to know...
+>
+> No, I don't have FC8 anywhere ... Does it build for you with -std=c99?
+> But that gives me a lot of warnings due to a libnl header file bug
+> ("extern inline").
 
-I don't want to do paprd again whenever coming back from off-channel
-(like during background scanning).
+Any problem with just changing it to 'strtod' ?
 
-Vasanth
+That compiles back at least as far as FC5.
+
+Ben
+
+>
+> johannes
+
+
+-- 
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
