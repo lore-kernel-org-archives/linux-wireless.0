@@ -1,118 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:59044 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755864Ab0INXkj (ORCPT
+Received: from mail-iw0-f174.google.com ([209.85.214.174]:45931 "EHLO
+	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755284Ab0IXVtv convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 14 Sep 2010 19:40:39 -0400
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>, stable@kernel.org,
-	Paul Stewart <pstew@google.com>,
-	Amod Bodas <amod.bodas@atheros.com>
-Subject: [PATCH v3 01/11] ath9k: fix power save race conditions
-Date: Tue, 14 Sep 2010 19:40:14 -0400
-Message-Id: <1284507624-18176-2-git-send-email-lrodriguez@atheros.com>
-In-Reply-To: <1284507624-18176-1-git-send-email-lrodriguez@atheros.com>
-References: <1284507624-18176-1-git-send-email-lrodriguez@atheros.com>
+	Fri, 24 Sep 2010 17:49:51 -0400
+Received: by iwn5 with SMTP id 5so2694953iwn.19
+        for <linux-wireless@vger.kernel.org>; Fri, 24 Sep 2010 14:49:50 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <4C9CEB3F.5090804@candelatech.com>
+References: <1285272430-9617-1-git-send-email-greearb@candelatech.com>
+	<AANLkTi=n9GDjiBxiS0cen2objz+BO9CeC-Uy5c6hVWhS@mail.gmail.com>
+	<4C9CEB3F.5090804@candelatech.com>
+Date: Sat, 25 Sep 2010 00:49:50 +0300
+Message-ID: <AANLkTi=B2-jqsempyBVM8MRud0P5zgHeN__CGJ+qjf99@mail.gmail.com>
+Subject: Re: [PATCH v2] This allows ath5k to support virtual STA and AP interfaces.
+From: Nick Kossifidis <mickflemm@gmail.com>
+To: Ben Greear <greearb@candelatech.com>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-ath9k has a race on putting the chip into network sleep and
-having registers read from hardware. The race occurs because
-although ath9k_ps_restore() locks its own callers it makes use
-of some variables which get altered in the driver at different
-code paths. The variables are the ps_enabled and ps_flags.
+2010/9/24 Ben Greear <greearb@candelatech.com>:
+> On 09/24/2010 10:46 AM, Nick Kossifidis wrote:
+>>
+>> 2010/9/23<greearb@candelatech.com>:
+>>>
+>>> From: Ben Greear<greearb@candelatech.com>
+>>>
+>>> +#define ATH5K_VIF_MAX  2048
+>>
+>> This is too much !!! 2048 interfaces with a total of 4 beacon buffers
+>> 40 rx buffers and 200 tx buffers ? Has anyone tested this ?
+>>
+>> Also think about embedded devices, we don't want to waste memory like
+>> this...
+>>
+>>> +       struct ieee80211_vif *vifs[ATH5K_VIF_MAX];
+>
+> It only costs 4 or 8 bytes per pointer as long as no one actually
+> adds the vifs.
+>
 
-This is easily reprodicible in large network environments when
-roaming with the wpa_supplicant simple bgscan. You'd get some
-0xdeadbeef read out on certain registers such as:
+If no one uses more than lets say 512 why have 1500+ pointers ?
 
-ath: timeout (100000 us) on reg 0x806c: 0xdeadbeef & 0x01f00000 != 0x00000000
-ath: RX failed to go idle in 10 ms RXSM=0xdeadbeef
+> We've tested at least 128 on an old 1Ghz VIA system, and I'd hope for more
+> on more modern hardware.  I didn't think the driver should make the decision
+> to limit un-necessarily.
+>
 
-ath: timeout (100000 us) on reg 0x7000: 0xdeadbeef & 0x00000003 != 0x00000000
-ath: Chip reset failed
+Have you tested it with multiple queues ? Bruno just added wme support
+on ath5k. Also how about rx/tx/beacon buffers ? Are they enough to
+support more vifs ? Note that we still have the "stuck queues" problem
+and putting more pressure on the card might make things worse. All I'm
+saying is that when we add a feature we have to be sure it works as
+expected, if we claim to support 2048 vifs then we must test it first
+and ensure it can work without issues.
 
-The fix is to protect the ath9k_config(hw, IEEE80211_CONF_CHANGE_PS)
-calls with a spin_lock_irqsave() which will disable contendors for
-these variables from interrupt context, timers, re-entry from mac80211
-on the same callback, and most importantly from ath9k_ps_restore()
-which is the only call which will put the device into network sleep.
+> If you still think this is too much, then tell me the biggest number
+> you wouldn't complain about :)
+>
+> Thanks,
+> Ben
+>
 
-There are quite a few threads and bug reports on these a few of them are:
+lets go for 512 and see how it goes...
 
-https://bugs.launchpad.net/ubuntu/karmic/+source/linux/+bug/407040
-http://code.google.com/p/chromium-os/issues/detail?id=5709
-http://code.google.com/p/chromium-os/issues/detail?id=5943
 
-Stable fixes apply to [2.6.32+]
 
-Cc: stable@kernel.org
-Cc: Paul Stewart <pstew@google.com>
-Cc: Amod Bodas <amod.bodas@atheros.com>
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
----
- drivers/net/wireless/ath/ath9k/main.c |    5 ++++-
- drivers/net/wireless/ath/ath9k/recv.c |    3 +++
- 2 files changed, 7 insertions(+), 1 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
-index a2f7eb2..826315d 100644
---- a/drivers/net/wireless/ath/ath9k/main.c
-+++ b/drivers/net/wireless/ath/ath9k/main.c
-@@ -1554,6 +1554,8 @@ static int ath9k_config(struct ieee80211_hw *hw, u32 changed)
- 	 * IEEE80211_CONF_CHANGE_PS is only passed by mac80211 for STA mode.
- 	 */
- 	if (changed & IEEE80211_CONF_CHANGE_PS) {
-+		unsigned long flags;
-+		spin_lock_irqsave(&sc->sc_pm_lock, flags);
- 		if (conf->flags & IEEE80211_CONF_PS) {
- 			sc->ps_flags |= PS_ENABLED;
- 			/*
-@@ -1568,7 +1570,7 @@ static int ath9k_config(struct ieee80211_hw *hw, u32 changed)
- 			sc->ps_enabled = false;
- 			sc->ps_flags &= ~(PS_ENABLED |
- 					  PS_NULLFUNC_COMPLETED);
--			ath9k_setpower(sc, ATH9K_PM_AWAKE);
-+			ath9k_hw_setpower(sc->sc_ah, ATH9K_PM_AWAKE);
- 			if (!(ah->caps.hw_caps &
- 			      ATH9K_HW_CAP_AUTOSLEEP)) {
- 				ath9k_hw_setrxabort(sc->sc_ah, 0);
-@@ -1583,6 +1585,7 @@ static int ath9k_config(struct ieee80211_hw *hw, u32 changed)
- 				}
- 			}
- 		}
-+		spin_unlock_irqrestore(&sc->sc_pm_lock, flags);
- 	}
- 
- 	if (changed & IEEE80211_CONF_CHANGE_MONITOR) {
-diff --git a/drivers/net/wireless/ath/ath9k/recv.c b/drivers/net/wireless/ath/ath9k/recv.c
-index 6fb3b45..7523f7d 100644
---- a/drivers/net/wireless/ath/ath9k/recv.c
-+++ b/drivers/net/wireless/ath/ath9k/recv.c
-@@ -1640,6 +1640,7 @@ int ath_rx_tasklet(struct ath_softc *sc, int flush, bool hp)
- 	u8 rx_status_len = ah->caps.rx_status_len;
- 	u64 tsf = 0;
- 	u32 tsf_lower = 0;
-+	unsigned long flags;
- 
- 	if (edma)
- 		dma_type = DMA_BIDIRECTIONAL;
-@@ -1748,11 +1749,13 @@ int ath_rx_tasklet(struct ath_softc *sc, int flush, bool hp)
- 			sc->rx.rxotherant = 0;
- 		}
- 
-+		spin_lock_irqsave(&sc->sc_pm_lock, flags);
- 		if (unlikely(ath9k_check_auto_sleep(sc) ||
- 			     (sc->ps_flags & (PS_WAIT_FOR_BEACON |
- 					      PS_WAIT_FOR_CAB |
- 					      PS_WAIT_FOR_PSPOLL_DATA))))
- 			ath_rx_ps(sc, skb);
-+		spin_unlock_irqrestore(&sc->sc_pm_lock, flags);
- 
- 		if (ah->caps.hw_caps & ATH9K_HW_CAP_ANT_DIV_COMB)
- 			ath_ant_comb_scan(sc, &rs);
 -- 
-1.7.0.4
-
+GPG ID: 0xD21DB2DB
+As you read this post global entropy rises. Have Fun ;-)
+Nick
