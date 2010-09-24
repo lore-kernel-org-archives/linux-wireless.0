@@ -1,113 +1,128 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gx0-f174.google.com ([209.85.161.174]:51646 "EHLO
-	mail-gx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752057Ab0ICWgW (ORCPT
+Received: from mail-qy0-f174.google.com ([209.85.216.174]:48161 "EHLO
+	mail-qy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754172Ab0IXRGk convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 3 Sep 2010 18:36:22 -0400
-Date: Fri, 3 Sep 2010 19:36:24 -0300
-From: "Gustavo F. Padovan" <padovan@profusion.mobi>
-To: Dominik Brodowski <linux@dominikbrodowski.net>
-Cc: linux-pcmcia@lists.infradead.org, netdev@vger.kernel.org,
-	linux-wireless@vger.kernel.org, linux-ide@vger.kernel.org,
-	linux-usb@vger.kernel.org, laforge@gnumonks.org,
-	linux-mtd@lists.infradead.org, linux-bluetooth@vger.kernel.org,
-	alsa-devel@alsa-project.org, linux-serial@vger.kernel.org,
-	Jiri Kosina <jkosina@suse.cz>, linux-scsi@vger.kernel.org
-Subject: Re: [PATCH 06/15] pcmcia: simplify IntType
-Message-ID: <20100903223624.GF16973@vigoh>
-References: <20100903105628.GA21255@comet.dominikbrodowski.net>
- <1283511434-21620-6-git-send-email-linux@dominikbrodowski.net>
+	Fri, 24 Sep 2010 13:06:40 -0400
+Received: by qyk36 with SMTP id 36so1578882qyk.19
+        for <linux-wireless@vger.kernel.org>; Fri, 24 Sep 2010 10:06:39 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1283511434-21620-6-git-send-email-linux@dominikbrodowski.net>
+In-Reply-To: <20100924185551.e3c3b41c.cyrille@cbiot.fr>
+References: <20100924185551.e3c3b41c.cyrille@cbiot.fr>
+From: =?ISO-8859-1?Q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>
+Date: Fri, 24 Sep 2010 19:06:17 +0200
+Message-ID: <AANLkTik5QPw6K_CFQW-5qH3PhyDAguqe51AcNaDMOUqt@mail.gmail.com>
+Subject: Re: problem with b43
+To: Cyrille <cyrille@cbiot.fr>
+Cc: b43-dev@lists.infradead.org,
+	John Linville <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-* Dominik Brodowski <linux@dominikbrodowski.net> [2010-09-03 12:57:05 +0200]:
+On Fri, Sep 24, 2010 at 6:55 PM, Cyrille <cyrille@cbiot.fr> wrote:
+> Hi
+> I've got a problem with a broadcom 4312 [12e4:4315].
+> The environment :
+> ===========================
+> uname -a
+> 2.6.35.5-libre.29.fc14.x86_64
+>
+> lspci -vnn
+> 0b:00.0 Network controller [0280]: Broadcom Corporation BCM4312 802.11b/g [14e4:4315] (rev 01)
+>        Subsystem: Dell Wireless 1395 WLAN Mini-Card [1028:000b]
+>        Flags: bus master, fast devsel, latency 0, IRQ 17
+>        Memory at fe7fc000 (64-bit, non-prefetchable) [size=16K]
+>        Capabilities: [40] Power Management version 3
+>        Capabilities: [58] Vendor Specific Information: Len=78 <?>
+>        Capabilities: [e8] MSI: Enable- Count=1/1 Maskable- 64bit+
+>        Capabilities: [d0] Express Endpoint, MSI 00
+>        Capabilities: [100] Advanced Error Reporting
+>        Capabilities: [13c] Virtual Channel
+>        Capabilities: [160] Device Serial Number 7f-78-4e-ff-ff-6d-00-23
+>        Capabilities: [16c] Power Budgeting <?>
+>        Kernel driver in use: b43-pci-bridge
+>        Kernel modules: ssb
+> ===============================
+>
+> Installation method ( http://wireless.kernel.org/en/users/Drivers/b43#fw-b43-lp ) :
+> You are using the b43 driver from linux-2.6.25 or newer
+> export FIRMWARE_INSTALL_DIR="/lib/firmware"
+> wget http://mirror2.openwrt.org/sources/broadcom-wl-4.150.10.5.tar.bz2
+> tar xjf broadcom-wl-4.150.10.5.tar.bz2
+> cd broadcom-wl-4.150.10.5/driver
+> sudo ../../b43-fwcutter-013/b43-fwcutter -w "$FIRMWARE_INSTALL_DIR" wl_apsta_mimo.o
 
-> IntType was only set to INT_MEMORY (driver pcmciamtd) or INT_MEMORY_AND_IO
-> (all other drivers). As this flags seems to relate to ioport access, make
-> it conditional to the driver having requested IO port access. There are two
-> drivers which do not request IO ports, but did set INT_MEMORY_AND_IO:
-> ray_cs and b43. For those, we consistently only set INT_MEMORY in future.
-> 
-> CC: netdev@vger.kernel.org
-> CC: linux-wireless@vger.kernel.org
-> CC: linux-ide@vger.kernel.org
-> CC: linux-usb@vger.kernel.org
-> CC: laforge@gnumonks.org
-> CC: linux-mtd@lists.infradead.org
-> CC: linux-bluetooth@vger.kernel.org
-> CC: alsa-devel@alsa-project.org
-> CC: linux-serial@vger.kernel.org
-> CC: Jiri Kosina <jkosina@suse.cz>
-> CC: linux-scsi@vger.kernel.org
-> Signed-off-by: Dominik Brodowski <linux@dominikbrodowski.net>
-> ---
->  drivers/ata/pata_pcmcia.c                        |    1 -
->  drivers/bluetooth/bluecard_cs.c                  |    1 -
->  drivers/bluetooth/bt3c_cs.c                      |    1 -
->  drivers/bluetooth/btuart_cs.c                    |    1 -
->  drivers/bluetooth/dtl1_cs.c                      |    1 -
->  drivers/char/pcmcia/cm4000_cs.c                  |    3 ---
->  drivers/char/pcmcia/cm4040_cs.c                  |    3 ---
->  drivers/char/pcmcia/ipwireless/main.c            |    1 -
->  drivers/char/pcmcia/synclink_cs.c                |    2 --
->  drivers/ide/ide-cs.c                             |    1 -
->  drivers/isdn/hardware/avm/avm_cs.c               |    1 -
->  drivers/isdn/hisax/avma1_cs.c                    |    1 -
->  drivers/isdn/hisax/elsa_cs.c                     |    1 -
->  drivers/isdn/hisax/sedlbauer_cs.c                |    1 -
->  drivers/isdn/hisax/teles_cs.c                    |    1 -
->  drivers/mtd/maps/pcmciamtd.c                     |    2 --
->  drivers/net/pcmcia/3c574_cs.c                    |    1 -
->  drivers/net/pcmcia/3c589_cs.c                    |    1 -
->  drivers/net/pcmcia/axnet_cs.c                    |    1 -
->  drivers/net/pcmcia/com20020_cs.c                 |    1 -
->  drivers/net/pcmcia/fmvj18x_cs.c                  |    1 -
->  drivers/net/pcmcia/ibmtr_cs.c                    |    1 -
->  drivers/net/pcmcia/nmclan_cs.c                   |    1 -
->  drivers/net/pcmcia/pcnet_cs.c                    |    1 -
->  drivers/net/pcmcia/smc91c92_cs.c                 |    1 -
->  drivers/net/pcmcia/xirc2ps_cs.c                  |    1 -
->  drivers/net/wireless/airo_cs.c                   |    1 -
->  drivers/net/wireless/atmel_cs.c                  |    1 -
->  drivers/net/wireless/b43/pcmcia.c                |    1 -
->  drivers/net/wireless/hostap/hostap_cs.c          |    1 -
->  drivers/net/wireless/libertas/if_cs.c            |    1 -
->  drivers/net/wireless/orinoco/orinoco_cs.c        |    1 -
->  drivers/net/wireless/orinoco/spectrum_cs.c       |    1 -
->  drivers/net/wireless/ray_cs.c                    |    1 -
->  drivers/net/wireless/wl3501_cs.c                 |    1 -
->  drivers/parport/parport_cs.c                     |    1 -
->  drivers/pcmcia/cs_internal.h                     |    1 -
->  drivers/pcmcia/pcmcia_resource.c                 |   10 +---------
->  drivers/scsi/pcmcia/aha152x_stub.c               |    1 -
->  drivers/scsi/pcmcia/fdomain_stub.c               |    1 -
->  drivers/scsi/pcmcia/nsp_cs.c                     |    1 -
->  drivers/scsi/pcmcia/qlogic_stub.c                |    1 -
->  drivers/scsi/pcmcia/sym53c500_cs.c               |    1 -
->  drivers/serial/serial_cs.c                       |    2 --
->  drivers/staging/comedi/drivers/cb_das16_cs.c     |    1 -
->  drivers/staging/comedi/drivers/das08_cs.c        |    1 -
->  drivers/staging/comedi/drivers/ni_daq_700.c      |    1 -
->  drivers/staging/comedi/drivers/ni_daq_dio24.c    |    1 -
->  drivers/staging/comedi/drivers/ni_labpc_cs.c     |    1 -
->  drivers/staging/comedi/drivers/ni_mio_cs.c       |    1 -
->  drivers/staging/comedi/drivers/quatech_daqp_cs.c |    1 -
->  drivers/staging/wlags49_h2/wl_cs.c               |    1 -
->  drivers/telephony/ixj_pcmcia.c                   |    1 -
->  drivers/usb/host/sl811_cs.c                      |    1 -
->  include/pcmcia/cs.h                              |    7 -------
->  sound/pcmcia/pdaudiocf/pdaudiocf.c               |    1 -
->  sound/pcmcia/vx/vxpocket.c                       |    1 -
->  57 files changed, 1 insertions(+), 78 deletions(-)
-> 
+You are using the firmware for G-PHYs. Yo should use v4.174 (also
+known as v4.178) for LP-PHY.
 
-For drivers/bluetooth
+>
+>
+> Seems work : ls /lib/firmware/b43-open/
+> a0g0bsinitvals5.fw   a0g1bsinitvals9.fw   b0g0bsinitvals9.fw  lp0bsinitvals15.fw  n0initvals11.fw  ucode5.fw
+> a0g0bsinitvals9.fw   a0g1initvals13.fw    b0g0initvals13.fw   lp0initvals13.fw    pcm5.fw          ucode9.fw
+> a0g0initvals5.fw     a0g1initvals5.fw     b0g0initvals5.fw    lp0initvals14.fw    ucode11.fw
+> a0g0initvals9.fw     a0g1initvals9.fw     b0g0initvals9.fw    lp0initvals15.fw    ucode13.fw
+> a0g1bsinitvals13.fw  b0g0bsinitvals13.fw  lp0bsinitvals13.fw  n0absinitvals11.fw  ucode14.fw
+> a0g1bsinitvals5.fw   b0g0bsinitvals5.fw   lp0bsinitvals14.fw  n0bsinitvals11.fw   ucode15.fw
 
-Acked-by: Gustavo F. Padovan <padovan@profusion.mobi>
+Extract to /lib/firmware/b43. /lib/firmware/b43-open is only for OpenFWWF.
+
+>
+>
+> But :
+> dmesg
+> b43-phy3 ERROR: You must go to http://wireless.kernel.org/en/users/Drivers/b43#devicefirmware and download the correct firmware for this driver version. Please carefully read all instructions on this website.
+> b43-phy4: Broadcom 4312 WLAN found (core revision 15)
+> b43-phy4 debug: Found PHY: Analog 6, Type 5, Revision 1
+> b43-phy4 debug: Found Radio: Manuf 0x17F, Version 0x2062, Revision 2
+> phy4: Selected rate control algorithm 'minstrel'
+> Registered led device: b43-phy4::tx
+> Registered led device: b43-phy4::rx
+> Registered led device: b43-phy4::radio
+> Broadcom 43xx driver loaded [ Features: PMLS, Firmware-ID: FW13 ]
+> ssb0:0: Missing Free firmware
+> b43-phy4 ERROR: Rejected non-Free firmware
+> ssb0:0: Missing Free firmware
+> b43-phy4 ERROR: Rejected non-Free firmware
+
+Compile compat-wireless to bypass the "free-only" patch in Fedora.
+
+(John, are you still maintaining the Fedora kernel's wireless part? If
+so, please kill this "freedom enforcement"!)
+
+>
+>
+> So don't work.
+> Grrrrrrrrrrrrrrrrrrrr
+> I thought nevertheless that with this kernel that was going to work.
+> No idea, I thing is due of the model [12e4:4315]. Is there anyone who can say to me if it possible to install and configure this card with a free-kernel.
+>
+> Thanx !
+>
+> Cyrille
+>
+>
+>
+> ----
+> [ cyrille@cbiot.fr | http://cbiot.fr ]
+>
+> "Et le combat cessa faute de combattants."
+> --- Le Cid (1636), IV, 3, Rodrigue - - - -
+>
+> BLAG : http://blagblagblag.org
+> Blag'em up! http://zenblagger.org
+>
+>
+>
+> _______________________________________________
+> b43-dev mailing list
+> b43-dev@lists.infradead.org
+> http://lists.infradead.org/mailman/listinfo/b43-dev
+>
+
+
 
 -- 
-Gustavo F. Padovan
-ProFUSION embedded systems - http://profusion.mobi
+Vista: [V]iruses, [I]ntruders, [S]pyware, [T]rojans and [A]dware. :-)
