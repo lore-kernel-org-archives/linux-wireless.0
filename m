@@ -1,125 +1,100 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga14.intel.com ([143.182.124.37]:58448 "EHLO mga14.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753046Ab0IJPvm (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 10 Sep 2010 11:51:42 -0400
-Subject: Re: [PATCH 04/14] iwlwifi: cancel scan when down the device
-From: "Guy, Wey-Yi" <wey-yi.w.guy@intel.com>
-To: Stanislaw Gruszka <sgruszka@redhat.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	"Chatre, Reinette" <reinette.chatre@intel.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <1284128807-11436-5-git-send-email-sgruszka@redhat.com>
-References: <1284128807-11436-1-git-send-email-sgruszka@redhat.com>
-	 <1284128807-11436-5-git-send-email-sgruszka@redhat.com>
-Content-Type: text/plain
-Date: Fri, 10 Sep 2010 08:50:54 -0700
-Message-Id: <1284133854.6054.12.camel@wwguy-ubuntu>
+Received: from he.sipsolutions.net ([78.46.109.217]:39972 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754858Ab0IXJXq (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 24 Sep 2010 05:23:46 -0400
+Message-Id: <20100924092305.443028499@sipsolutions.net>
+Date: Fri, 24 Sep 2010 11:21:05 +0200
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: John Linville <linville@tuxdriver.com>,
+	Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH 1/5] mac80211: remove prepare_for_handlers sdata argument
+References: <20100924092104.384954781@sipsolutions.net>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2010-09-10 at 07:26 -0700, Stanislaw Gruszka wrote:
-> Always cancel scan when stooping device and scan is currently pending,
-> we should newer have scan running after down device.
-> 
-> To assure we start scan cancel from restart work we have to schedule
-> abort_scan to different workqueue than priv->workqueue.
-> 
-> Patch fix not cancel scanning when restarting firmware, what is
-> one of the causes of wdev_cleanup_work warning (together with permanent
-> network connection lost) reported at
-> https://bugzilla.redhat.com/show_bug.cgi?id=593566
-> 
-> Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
-Acked-by: Wey-Yi W Guy <wey-yi.w.guy@intel.com>
-> ---
->  drivers/net/wireless/iwlwifi/iwl-agn.c      |   14 +++-----------
->  drivers/net/wireless/iwlwifi/iwl-scan.c     |    2 +-
->  drivers/net/wireless/iwlwifi/iwl3945-base.c |   16 ++++------------
->  3 files changed, 8 insertions(+), 24 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
-> index c8a2ec8..25b3540 100644
-> --- a/drivers/net/wireless/iwlwifi/iwl-agn.c
-> +++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
-> @@ -2891,8 +2891,9 @@ static void __iwl_down(struct iwl_priv *priv)
->  
->  	IWL_DEBUG_INFO(priv, DRV_NAME " is going down\n");
->  
-> -	if (!exit_pending)
-> -		set_bit(STATUS_EXIT_PENDING, &priv->status);
-> +	iwl_scan_cancel_timeout(priv, 200);
-> +
-> +	exit_pending = test_and_set_bit(STATUS_EXIT_PENDING, &priv->status);
->  
->  	/* Stop TX queues watchdog. We need to have STATUS_EXIT_PENDING bit set
->  	 * to prevent rearm timer */
-> @@ -3502,15 +3503,6 @@ static void iwl_mac_stop(struct ieee80211_hw *hw)
->  
->  	priv->is_open = 0;
->  
-> -	if (iwl_is_ready_rf(priv) || test_bit(STATUS_SCAN_HW, &priv->status)) {
-> -		/* stop mac, cancel any scan request and clear
-> -		 * RXON_FILTER_ASSOC_MSK BIT
-> -		 */
-> -		mutex_lock(&priv->mutex);
-> -		iwl_scan_cancel_timeout(priv, 100);
-> -		mutex_unlock(&priv->mutex);
-> -	}
-> -
->  	iwl_down(priv);
->  
->  	flush_workqueue(priv->workqueue);
-> diff --git a/drivers/net/wireless/iwlwifi/iwl-scan.c b/drivers/net/wireless/iwlwifi/iwl-scan.c
-> index 22bdc98..ea33849 100644
-> --- a/drivers/net/wireless/iwlwifi/iwl-scan.c
-> +++ b/drivers/net/wireless/iwlwifi/iwl-scan.c
-> @@ -71,7 +71,7 @@ int iwl_scan_cancel(struct iwl_priv *priv)
->  	if (test_bit(STATUS_SCANNING, &priv->status)) {
->  		if (!test_and_set_bit(STATUS_SCAN_ABORTING, &priv->status)) {
->  			IWL_DEBUG_SCAN(priv, "Queuing scan abort.\n");
-> -			queue_work(priv->workqueue, &priv->abort_scan);
-> +			schedule_work(&priv->abort_scan);
->  
->  		} else
->  			IWL_DEBUG_SCAN(priv, "Scan abort already in progress.\n");
-> diff --git a/drivers/net/wireless/iwlwifi/iwl3945-base.c b/drivers/net/wireless/iwlwifi/iwl3945-base.c
-> index 3b3686b..fb894d8 100644
-> --- a/drivers/net/wireless/iwlwifi/iwl3945-base.c
-> +++ b/drivers/net/wireless/iwlwifi/iwl3945-base.c
-> @@ -2568,12 +2568,13 @@ static void iwl3945_cancel_deferred_work(struct iwl_priv *priv);
->  static void __iwl3945_down(struct iwl_priv *priv)
->  {
->  	unsigned long flags;
-> -	int exit_pending = test_bit(STATUS_EXIT_PENDING, &priv->status);
-> +	int exit_pending;
->  
->  	IWL_DEBUG_INFO(priv, DRV_NAME " is going down\n");
->  
-> -	if (!exit_pending)
-> -		set_bit(STATUS_EXIT_PENDING, &priv->status);
-> +	iwl_scan_cancel_timeout(priv, 200);
-> +
-> +	exit_pending = test_and_set_bit(STATUS_EXIT_PENDING, &priv->status);
->  
->  	/* Stop TX queues watchdog. We need to have STATUS_EXIT_PENDING bit set
->  	 * to prevent rearm timer */
-> @@ -3173,15 +3174,6 @@ static void iwl3945_mac_stop(struct ieee80211_hw *hw)
->  
->  	priv->is_open = 0;
->  
-> -	if (iwl_is_ready_rf(priv)) {
-> -		/* stop mac, cancel any scan request and clear
-> -		 * RXON_FILTER_ASSOC_MSK BIT
-> -		 */
-> -		mutex_lock(&priv->mutex);
-> -		iwl_scan_cancel_timeout(priv, 100);
-> -		mutex_unlock(&priv->mutex);
-> -	}
-> -
->  	iwl3945_down(priv);
->  
->  	flush_workqueue(priv->workqueue);
+From: Johannes Berg <johannes.berg@intel.com>
+
+The first argument to prepare_for_handlers is always
+the sdata that can just be stored in rx data directly
+(and even already is, in two of four code paths.)
+
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ net/mac80211/rx.c |   16 ++++++++--------
+ 1 file changed, 8 insertions(+), 8 deletions(-)
+
+--- wireless-testing.orig/net/mac80211/rx.c	2010-09-23 21:35:11.000000000 +0200
++++ wireless-testing/net/mac80211/rx.c	2010-09-23 21:37:32.000000000 +0200
+@@ -2513,10 +2513,10 @@ void ieee80211_release_reorder_timeout(s
+ 
+ /* main receive path */
+ 
+-static int prepare_for_handlers(struct ieee80211_sub_if_data *sdata,
+-				struct ieee80211_rx_data *rx,
++static int prepare_for_handlers(struct ieee80211_rx_data *rx,
+ 				struct ieee80211_hdr *hdr)
+ {
++	struct ieee80211_sub_if_data *sdata = rx->sdata;
+ 	struct sk_buff *skb = rx->skb;
+ 	struct ieee80211_rx_status *status = IEEE80211_SKB_RXCB(skb);
+ 	u8 *bssid = ieee80211_get_bssid(hdr, skb->len, sdata->vif.type);
+@@ -2656,7 +2656,7 @@ static void __ieee80211_rx_handle_packet
+ 			rx.sdata = prev_sta->sdata;
+ 
+ 			rx.flags |= IEEE80211_RX_RA_MATCH;
+-			prepares = prepare_for_handlers(rx.sdata, &rx, hdr);
++			prepares = prepare_for_handlers(&rx, hdr);
+ 			if (!prepares)
+ 				goto next_sta;
+ 
+@@ -2690,7 +2690,7 @@ next_sta:
+ 			rx.sdata = prev_sta->sdata;
+ 
+ 			rx.flags |= IEEE80211_RX_RA_MATCH;
+-			prepares = prepare_for_handlers(rx.sdata, &rx, hdr);
++			prepares = prepare_for_handlers(&rx, hdr);
+ 			if (!prepares)
+ 				prev_sta = NULL;
+ 
+@@ -2733,15 +2733,15 @@ next_sta:
+ 			}
+ 
+ 			rx.sta = sta_info_get_bss(prev, hdr->addr2);
++			rx.sdata = prev;
+ 
+ 			rx.flags |= IEEE80211_RX_RA_MATCH;
+-			prepares = prepare_for_handlers(prev, &rx, hdr);
++			prepares = prepare_for_handlers(&rx, hdr);
+ 
+ 			if (!prepares)
+ 				goto next;
+ 
+ 			if (status->flag & RX_FLAG_MMIC_ERROR) {
+-				rx.sdata = prev;
+ 				if (rx.flags & IEEE80211_RX_RA_MATCH)
+ 					ieee80211_rx_michael_mic_report(hdr,
+ 									&rx);
+@@ -2768,15 +2768,15 @@ next:
+ 
+ 		if (prev) {
+ 			rx.sta = sta_info_get_bss(prev, hdr->addr2);
++			rx.sdata = prev;
+ 
+ 			rx.flags |= IEEE80211_RX_RA_MATCH;
+-			prepares = prepare_for_handlers(prev, &rx, hdr);
++			prepares = prepare_for_handlers(&rx, hdr);
+ 
+ 			if (!prepares)
+ 				prev = NULL;
+ 
+ 			if (prev && status->flag & RX_FLAG_MMIC_ERROR) {
+-				rx.sdata = prev;
+ 				if (rx.flags & IEEE80211_RX_RA_MATCH)
+ 					ieee80211_rx_michael_mic_report(hdr,
+ 									&rx);
+
 
