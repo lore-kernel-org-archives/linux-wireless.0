@@ -1,55 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from external1.orbit-lab.org ([128.6.192.131]:47828 "HELO
-	external1.orbit-lab.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1755816Ab0I0TDp (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:55783 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757832Ab0IXT3h (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 27 Sep 2010 15:03:45 -0400
-Received: from repository3.orbit-lab.org (repository3.orbit-lab.org [10.50.0.41])
-	by external1.orbit-lab.org (Postfix) with ESMTP id 48E54418D8
-	for <linux-wireless@vger.kernel.org>; Mon, 27 Sep 2010 15:01:34 -0400 (EDT)
-Subject: Compat-wireless release for 2010-09-27 is baked
-To: <linux-wireless@vger.kernel.org>
-Message-Id: <20100927190343.A0165404FC@repository3.orbit-lab.org>
-Date: Mon, 27 Sep 2010 15:03:43 -0400 (EDT)
-From: compat@orbit-lab.org (Compat-wireless cronjob account)
+	Fri, 24 Sep 2010 15:29:37 -0400
+Date: Fri, 24 Sep 2010 15:17:14 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Cc: greg@kroah.com, linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net
+Subject: Re: [PATCH wireless-2.6.35] use long timer for un-necessary reload
+ the firmware
+Message-ID: <20100924191713.GF8077@tuxdriver.com>
+References: <1285275864-12703-1-git-send-email-wey-yi.w.guy@intel.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1285275864-12703-1-git-send-email-wey-yi.w.guy@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
->From git://git.kernel.org/pub/scm/linux/kernel/git/mcgrof/compat-wireless-2.6
-   f3710cc..96d9e6e  master     -> origin/master
->From git://git.kernel.org/pub/scm/linux/kernel/git/mcgrof/compat-wireless-2.6
- * [new tag]         compat-wireless-2010-09-27 -> compat-wireless-2010-09-27
->From git://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next
-   0563b86..edd6839  history    -> origin/history
- + 15dadf4...35b3f2c master     -> origin/master  (forced update)
-   a850ea3..32163f4  stable     -> origin/stable
- * [new tag]         next-20100927 -> next-20100927
-cat: /var/opt/compat/compat-wireless-2.6/compat_version: No such file or directory
-cat: compat_base_tree: No such file or directory
-cat: compat_base_tree_version: No such file or directory
-cat: compat_version: No such file or directory
-cat: /var/opt/compat/compat-wireless-2.6/compat_version: No such file or directory
-scripts/Makefile.clean:17: /var/opt/compat/compat-wireless-2.6/drivers/net/wireless/hostap/Makefile: No such file or directory
-make[4]: *** No rule to make target `/var/opt/compat/compat-wireless-2.6/drivers/net/wireless/hostap/Makefile'.  Stop.
-make[3]: *** [/var/opt/compat/compat-wireless-2.6/drivers/net/wireless/hostap] Error 2
-make[2]: *** [/var/opt/compat/compat-wireless-2.6/drivers/net/wireless] Error 2
-make[1]: *** [_clean_/var/opt/compat/compat-wireless-2.6] Error 2
-make: *** [clean] Error 2
+On Thu, Sep 23, 2010 at 02:04:24PM -0700, Wey-Yi Guy wrote:
+> Different devices has different timing requirement, change the timeout
+> value for 5000 series devices to avoid un-necessary firmware reload which
+> can cause device become unstable.For 5000 series of devices, use long monitor timer to check
+> stuck tx queues.
+> 
+> It is being reported firmware got reload more
+> often than necessary, so extend the timer to avoid un-necessary reload.
+> 
+> This fixes:
+> http://article.gmane.org/gmane.linux.kernel.wireless.general/53552
+> 
+> Cc: stable@kernel.org [2.6.35]
+> Reported-by: drago01 <drago01@gmail.com>
+> Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+> ---
+> this patch is also available from wireless-2.6 branch on
+>  git://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi-2.6.git
 
-compat-wireless code metrics
+Well, something isn't right...
 
-    747606 - Total upstream lines of code being pulled
-      2153 - backport code changes
-      1902 - backport code additions
-       251 - backport code deletions
-      6242 - backport from compat module
-      8395 - total backport code
-    1.1229 - % of code consists of backport work
-      1219 - Crap changes not yet posted
-      1181 - Crap additions not yet posted
-        38 - Crap deletions not yet posted
-    0.1631 - % of crap code
+/home/linville/git/wireless-2.6
+[linville-8530p.local]:> git pull git://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi-2.6.git wireless-2.6
+>From git://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi-2.6
+ * branch            wireless-2.6 -> FETCH_HEAD
+Already up-to-date.
 
-Base tree: linux-next.git
-Base tree version: next-20100927
-compat-wireless release: compat-wireless-2010-09-27-1-g96d9e6e
+So then I try applying it directly...
+
+[linville-8530p.local]:> git am -s fixes.mbox 
+Applying: use long timer for un-necessary reload the firmware
+error: patch failed: drivers/net/wireless/iwlwifi/iwl-1000.c:257
+error: drivers/net/wireless/iwlwifi/iwl-1000.c: patch does not apply
+error: patch failed: drivers/net/wireless/iwlwifi/iwl-3945.c:2895
+error: drivers/net/wireless/iwlwifi/iwl-3945.c: patch does not apply
+error: patch failed: drivers/net/wireless/iwlwifi/iwl-4965.c:2274
+error: drivers/net/wireless/iwlwifi/iwl-4965.c: patch does not apply
+error: patch failed: drivers/net/wireless/iwlwifi/iwl-5000.c:462
+error: drivers/net/wireless/iwlwifi/iwl-5000.c: patch does not apply
+error: patch failed: drivers/net/wireless/iwlwifi/iwl-6000.c:438
+error: drivers/net/wireless/iwlwifi/iwl-6000.c: patch does not apply
+error: patch failed: drivers/net/wireless/iwlwifi/iwl-dev.h:1057
+error: drivers/net/wireless/iwlwifi/iwl-dev.h: patch does not apply
+
+??
+
+Also, please make sure your subject starts with "iwlwifi: " or whatever
+else is appropriate for the subsystem you are patching.
+
+John
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
