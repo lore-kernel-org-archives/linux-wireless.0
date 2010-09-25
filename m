@@ -1,61 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f46.google.com ([209.85.161.46]:41932 "EHLO
-	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755140Ab0IVTJo (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 22 Sep 2010 15:09:44 -0400
-Received: by fxm12 with SMTP id 12so278498fxm.19
-        for <linux-wireless@vger.kernel.org>; Wed, 22 Sep 2010 12:09:43 -0700 (PDT)
-Message-ID: <4C9A5471.2090009@gmail.com>
-Date: Wed, 22 Sep 2010 21:09:37 +0200
-From: Kshitij Kulshreshtha <kkhere.geo@gmail.com>
+Received: from snt0-omc2-s43.snt0.hotmail.com ([65.54.61.94]:63591 "EHLO
+	snt0-omc2-s43.snt0.hotmail.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754832Ab0IYAe1 convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 24 Sep 2010 20:34:27 -0400
+Message-ID: <SNT113-W182B461295E717BB27130BF1630@phx.gbl>
+From: Dale Turner <rx_guy@hotmail.com>
+To: <linux-wireless@vger.kernel.org>
+Subject: carl9170 problem
+Date: Fri, 24 Sep 2010 21:34:26 -0300
+Content-Type: text/plain; charset=US-ASCII
 MIME-Version: 1.0
-To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-CC: Hauke Mehrtens <hauke@hauke-m.de>, linux-wireless@vger.kernel.org,
-	mcgrof@infradead.org
-Subject: Re: [PATCH 3/4] compat: move pmcia backport code into compat-2.6.36.h
-References: <1284918131-32065-1-git-send-email-hauke@hauke-m.de> <1284918131-32065-3-git-send-email-hauke@hauke-m.de> <4C9A34FB.5020809@gmail.com> <AANLkTinJG=mgYE-eUmptCVkXDDpSB9YDHA0AwbYi7xfw@mail.gmail.com>
-In-Reply-To: <AANLkTinJG=mgYE-eUmptCVkXDDpSB9YDHA0AwbYi7xfw@mail.gmail.com>
-Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
+Hello everyone.
 
-As on 2010-09-22 18:59, Luis R. Rodriguez did write:
-> On Wed, Sep 22, 2010 at 9:55 AM, Kshitij Kulshreshtha
-> <kkhere.geo@gmail.com> wrote:
->> Hello,
->>
->> As on 2010-09-19 19:42, Hauke Mehrtens did write:
->>> We have all out backport headers in include/linux/compat-2.6.XX.h also the pcmcia
->>> part there.
->>
->> I'm not sure if this won't make all the compat-wireless modules depend
->> on pcmcia.ko for kernels < 2.6.36 where
->> pcmcia_access_configuation_register() is exported. Even if someone is
->> only building selected drivers like iwlwifi or ath.
-> 
-> Have you tried loading ath9k or iwlagn on compat-wireless? Did you
-> note compat doesn't get loaded? Anyway, patches welcomed to enhance
-> this if your concern is if your kernel won't build with this. We also
-> plan on dropping PCMCIA completely anyway.
+Thanks for releasing the carl9170 driver in the 
+compat-wireless package. I have been able to compile the driver, so that
+ is great. The connection seems to be a bit inconsistent. I get the 
+following quite often in /var/log/messages :
 
-Actually compat does get loaded since mac80211 needs it for noop_llseek
-on 2.6.34, however my current build is not showing the pcmcia dependency
-that I was afraid of, so please ignore this.
+kernel: ieee80211 phy9: channel change: 2472 -> 2462 failed (2)
 
-Thanks.
--- 
-Kshitij Kulshreshtha
+and/or
 
-Institut für Mathematik,
-Universität Paderborn,
-Warburger Straße 100,
-33098 Paderborn.
+kernel: ieee80211 phy9: invalid plcp cck rate (0)
 
-Büro: A3.235
+and/or
 
-Privatanschrift:
-Arnikaweg 62
-33100 Paderborn.
+kernel: ieee80211 phy9: FW: MAC RESET
+
+When
+ that happens (which can be as often as every few minutes) my reported 
+connection speed in network manager drops to 6 or 1 Mb/s. The network 
+speed is noticeably reduced (for instance download speeds drastically 
+reduce, online videos stutter, or music streaming from a different 
+computer pauses, etc).
+
+My previous adapter TP-Link TL-WN721N (ath9k_htc driver) did not behave like this.
+
+Any thoughts/solutions ??
+
+Again, many thanks for providing the driver. I cannot program (I wish I could to help) but I can report my experience.
+
+Dale
+
+ 		 	   		   		 	   		  
