@@ -1,47 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:34160 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752205Ab0INFRX (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 14 Sep 2010 01:17:23 -0400
-Subject: Re: [PATCH 2/2] mac80211: fix compilation warning
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Felipe Contreras <felipe.contreras@gmail.com>
-Cc: linux-kernel@vger.kernel.org, Jiri Kosina <jkosina@suse.cz>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	"David S. Miller" <davem@davemloft.net>,
-	Kalle Valo <kalle.valo@iki.fi>,
-	Felix Fietkau <nbd@openwrt.org>, Jouni Malinen <j@w1.fi>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-In-Reply-To: <1284289829-25425-3-git-send-email-felipe.contreras@gmail.com>
-References: <1284289829-25425-1-git-send-email-felipe.contreras@gmail.com>
-	 <1284289829-25425-3-git-send-email-felipe.contreras@gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Tue, 14 Sep 2010 07:17:12 +0200
-Message-ID: <1284441432.3704.0.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+Received: from kroah.org ([198.145.64.141]:46844 "EHLO coco.kroah.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755309Ab0IYAfC (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 24 Sep 2010 20:35:02 -0400
+Date: Fri, 24 Sep 2010 17:34:06 -0700
+From: Greg KH <greg@kroah.com>
+To: "Justin P. Mattock" <justinmattock@gmail.com>
+Cc: trivial@kernel.org, linux-kernel@vger.kernel.org,
+	linux-wireless@vger.kernel.org, linux-usb@vger.kernel.org,
+	linux-scsi@vger.kernel.org, linux-fbdev@vger.kernel.org,
+	alsa-devel@alsa-project.org, dri-devel@lists.freedesktop.org,
+	linux-ide@vger.kernel.org
+Subject: Re: [RFC 2/3 v3]update web addresses in stagging
+Message-ID: <20100925003406.GA30029@kroah.com>
+References: <1285373337-10945-1-git-send-email-justinmattock@gmail.com> <1285373337-10945-2-git-send-email-justinmattock@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1285373337-10945-2-git-send-email-justinmattock@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, 2010-09-12 at 14:10 +0300, Felipe Contreras wrote:
+On Fri, Sep 24, 2010 at 05:08:56PM -0700, Justin P. Mattock wrote:
+> The below patch, is a simple fix to a broken web address not using a period in it's
+> name. I'll leave this up to you guys if you want to use it...
+> 
+>  Signed-off-by: Justin P. Mattock <justinmattock@gmail.com>
 
->  	struct ieee80211_hdr hdr;
-> -	struct ieee80211s_hdr mesh_hdr;
->  	const u8 *encaps_data;
->  	int encaps_len, skip_header_bytes;
->  	int nh_pos, h_pos;
-> @@ -1755,7 +1754,9 @@ netdev_tx_t ieee80211_subif_start_xmit(struct sk_buff *skb,
->  		hdrlen = 30;
->  		break;
->  #ifdef CONFIG_MAC80211_MESH
-> -	case NL80211_IFTYPE_MESH_POINT:
-> +	case NL80211_IFTYPE_MESH_POINT: {
-> +		struct ieee80211s_hdr mesh_hdr;
-> +
+I'll queue it up, thanks.
 
-...
+Oh, it's "staging", not "stagging" as you have up there in the Subject:
+:)
 
-might be nicer to just add __maybe_unused.
+thanks,
 
-johannes
-
+greg k-h
