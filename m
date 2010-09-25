@@ -1,34 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 128-177-27-249.ip.openhosting.com ([128.177.27.249]:56485 "EHLO
-	jmalinen.user.openhosting.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752066Ab0IOCzt (ORCPT
+Received: from mail-px0-f174.google.com ([209.85.212.174]:55146 "EHLO
+	mail-px0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753362Ab0IYVam (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 14 Sep 2010 22:55:49 -0400
-Date: Tue, 14 Sep 2010 16:54:47 -1000
-From: Jouni Malinen <j@w1.fi>
-To: Bruno Randolf <br1@einfach.org>
-Cc: ath5k-devel@venema.h4ckr.net, me@bobcopeland.com,
-	linux-wireless@vger.kernel.org, linville@tuxdriver.com
-Subject: Re: [ath5k-devel] [PATCH 3/8] ath5k: Use common ath key management
- functions
-Message-ID: <20100915025447.GA30253@jm.kir.nu>
-References: <20100908070427.11255.17659.stgit@tt-desk>
- <20100908070443.11255.13951.stgit@tt-desk>
- <20100911172250.GE20385@hash.localnet>
- <201009131009.59765.br1@einfach.org>
+	Sat, 25 Sep 2010 17:30:42 -0400
+Message-ID: <4C9E6A09.10007@gmail.com>
+Date: Sat, 25 Sep 2010 14:30:49 -0700
+From: "Justin P. Mattock" <justinmattock@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <201009131009.59765.br1@einfach.org>
+To: Greg KH <greg@kroah.com>, trivial@kernel.org,
+	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
+	linux-usb@vger.kernel.org, linux-scsi@vger.kernel.org,
+	linux-fbdev@vger.kernel.org, alsa-devel@alsa-project.org,
+	dri-devel@lists.freedesktop.org, linux-ide@vger.kernel.org
+Subject: Re: [RFC 2/3 v3]update web addresses in stagging
+References: <1285373337-10945-1-git-send-email-justinmattock@gmail.com> <1285373337-10945-2-git-send-email-justinmattock@gmail.com> <20100925003406.GA30029@kroah.com> <4C9D47AC.6000002@gmail.com> <20100925204736.GD25677@one-eyed-alien.net>
+In-Reply-To: <20100925204736.GD25677@one-eyed-alien.net>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Sep 13, 2010 at 10:09:59AM +0900, Bruno Randolf wrote:
-> i don't know wether we can encrypt management frames in HW, so until this is 
-> sorted out, i disabled it.
+On 09/25/2010 01:47 PM, Matthew Dharm wrote:
+> On Fri, Sep 24, 2010 at 05:51:56PM -0700, Justin P. Mattock wrote:
+>> On 09/24/2010 05:34 PM, Greg KH wrote:
+>>> On Fri, Sep 24, 2010 at 05:08:56PM -0700, Justin P. Mattock wrote:
+>>>> The below patch, is a simple fix to a broken web address not using a
+>>>> period in it's
+>>>> name. I'll leave this up to you guys if you want to use it...
+>>>>
+>>>>   Signed-off-by: Justin P. Mattock<justinmattock@gmail.com>
+>>>
+>>> I'll queue it up, thanks.
+>>>
+>>> Oh, it's "staging", not "stagging" as you have up there in the Subject:
+>>> :)
+>>>
+>>> thanks,
+>>>
+>>> greg k-h
+>>>
+>>
+>> shoot... and I actually changed it from staging to stagging thinking
+>> that was correct..(duh)..
+>>
+>> Anyways alright.. I'll exclude this one if the other sets get finalized.
+>
+> One random suggestion:  Perhaps you should include a date here?  i.e. "URL
+> blah blah blah (as of Sept 2010)"
+>
+> That way, people have some idea how much they can trust that URL without
+> having to dig into the kernel history to see when it was last changed.
+>
+> Matt
+>
 
-I don't think any of the hardware supported by ath5k would be able to do
-this. IEEE 802.11w design changes in CCMP for management frames are more
-recent than the hardware designs supported by ath5k..
- 
--- 
-Jouni Malinen                                            PGP id EFC895FA
+
+well.. as it stand right now doing grep -Re "http" in all the 
+directories(minus COPYING/MAINTAINERS) gave me a little over 2000
+addresses to check(not so bad, only a few days worth of checking(finding 
+the broken address is time consuming)).. so I could go back and do this 
+for all of them except the webarchive addresses that are broken(maybe 
+put a tag on them saying use_webarchive or something).
+then there is the question of how much more bloated will the kernel get 
+with such a thing(I'm guessing not much, but then again you never know).
+
+Justin P. Mattock
