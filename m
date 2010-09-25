@@ -1,79 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iw0-f174.google.com ([209.85.214.174]:54399 "EHLO
-	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750768Ab0IFNqp (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 6 Sep 2010 09:46:45 -0400
+Received: from snt0-omc2-s5.snt0.hotmail.com ([65.55.90.80]:24418 "EHLO
+	snt0-omc2-s5.snt0.hotmail.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753969Ab0IYAdO convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 24 Sep 2010 20:33:14 -0400
+Message-ID: <SNT113-W109AE7A32F5EEB4A9F33C2F1630@phx.gbl>
+From: Dale Turner <rx_guy@hotmail.com>
+To: <linux-wireless@vger.kernel.org>
+Subject: 
+Date: Fri, 24 Sep 2010 21:33:14 -0300
+Content-Type: text/plain; charset=US-ASCII
 MIME-Version: 1.0
-In-Reply-To: <20100906120716.GE20903@n2100.arm.linux.org.uk>
-References: <1283376410-9999-1-git-send-email-ohad@wizery.com>
- <1283376410-9999-4-git-send-email-ohad@wizery.com> <AANLkTi=goLEUqM1XQ__PrGu4=Erw2utaNP4qFmSgRta2@mail.gmail.com>
- <20100906120716.GE20903@n2100.arm.linux.org.uk>
-From: Ohad Ben-Cohen <ohad@wizery.com>
-Date: Mon, 6 Sep 2010 16:46:24 +0300
-Message-ID: <AANLkTi=z-cqdwrbXo9pv9WhZkrnb7X+zpVNbJ_-VTJ16@mail.gmail.com>
-Subject: Re: [PATCH v5 3/7] wireless: wl12xx: add platform data passing support
-To: Russell King - ARM Linux <linux@arm.linux.org.uk>
-Cc: =?ISO-8859-2?Q?Micha=B3_Miros=B3aw?= <mirqus@gmail.com>,
-	linux-wireless@vger.kernel.org, linux-mmc@vger.kernel.org,
-	linux-omap@vger.kernel.org, Kalle Valo <kalle.valo@iki.fi>,
-	Nicolas Pitre <nico@fluxnic.net>,
-	Tony Lindgren <tony@atomide.com>,
-	Mark Brown <broonie@opensource.wolfsonmicro.com>,
-	Roger Quadros <roger.quadros@nokia.com>,
-	Ido Yariv <ido@wizery.com>, San Mehat <san@google.com>,
-	Chikkature Rajashekar Madhusudhan <madhu.cr@ti.com>,
-	Luciano Coelho <luciano.coelho@nokia.com>,
-	akpm@linux-foundation.org, linux-arm-kernel@lists.infradead.org
-Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2010/9/6 Russell King - ARM Linux <linux@arm.linux.org.uk>:
-> We could instead make wl12xx_get_platform_data() return a const pointer
-> to its own internal storage instead, or ERR pointers for the various
-> failure cases.
 
-Sounds good:
+Hello everyone.
 
-diff --git a/drivers/net/wireless/wl12xx/wl12xx_platform_data.c
-b/drivers/net/wireless/wl12xx/wl12xx_platform_data.c
-new file mode 100644
-index 0000000..973b110
---- /dev/null
-+++ b/drivers/net/wireless/wl12xx/wl12xx_platform_data.c
-@@ -0,0 +1,28 @@
-+#include <linux/module.h>
-+#include <linux/err.h>
-+#include <linux/wl12xx.h>
-+
-+static const struct wl12xx_platform_data *platform_data;
-+
-+int __init wl12xx_set_platform_data(const struct wl12xx_platform_data *data)
-+{
-+	if (platform_data)
-+		return -EBUSY;
-+	if (!data)
-+		return -EINVAL;
-+
-+	platform_data = kmemdup(data, sizeof(*data), GFP_KERNEL);
-+	if (!platform_data)
-+		return -ENOMEM;
-+
-+	return 0;
-+}
-+
-+const struct wl12xx_platform_data *wl12xx_get_platform_data(void)
-+{
-+	if (!platform_data)
-+		return ERR_PTR(-ENODEV);
-+
-+	return platform_data;
-+}
-+EXPORT_SYMBOL(wl12xx_get_platform_data);
+Thanks for releasing the carl9170 driver in the 
+compat-wireless package. I have been able to compile the driver, so that
+ is great. The connection seems to be a bit inconsistent. I get the 
+following quite often in /var/log/messages :
 
+kernel: ieee80211 phy9: channel change: 2472 -> 2462 failed (2)
 
-I'll wait a few days to see if there's any other comment, and then
-post v6 with this change.
+and/or
 
->
+kernel: ieee80211 phy9: invalid plcp cck rate (0)
+
+and/or 
+
+kernel: ieee80211 phy9: FW: MAC RESET
+
+When
+ that happens (which can be as often as every few minutes) my reported 
+connection speed in network manager drops to 6 or 1 Mb/s. The network 
+speed is noticeably reduced (for instance download speeds drastically 
+reduce, online videos stutter, or music streaming from a different 
+computer pauses, etc).
+
+My previous adapter TP-Link TL-WN721N (ath9k_htc driver) did not behave like this.
+
+Any thoughts/solutions ??
+
+Again, many thanks for providing the driver. I cannot program (I wish I could to help) but I can report my experience.
+
+Dale
+
+ 		 	   		   		 	   		  
