@@ -1,96 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:42166 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753361Ab0IKQGo (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 11 Sep 2010 12:06:44 -0400
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Subject: [PATCH 05/10] iwlwifi: allow configure protection mode
-Date: Sat, 11 Sep 2010 09:08:33 -0700
-Message-Id: <1284221318-28281-6-git-send-email-wey-yi.w.guy@intel.com>
-In-Reply-To: <1284221318-28281-1-git-send-email-wey-yi.w.guy@intel.com>
-References: <1284221318-28281-1-git-send-email-wey-yi.w.guy@intel.com>
+Received: from mail-fx0-f46.google.com ([209.85.161.46]:41058 "EHLO
+	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754105Ab0IYW5q (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 25 Sep 2010 18:57:46 -0400
+Received: by fxm3 with SMTP id 3so1275527fxm.19
+        for <linux-wireless@vger.kernel.org>; Sat, 25 Sep 2010 15:57:45 -0700 (PDT)
+From: Christian Lamparter <chunkeey@googlemail.com>
+To: Dale Turner <rx_guy@hotmail.com>
+Subject: Re: carl9170 problem
+Date: Sun, 26 Sep 2010 00:57:37 +0200
+Cc: linux-wireless@vger.kernel.org
+References: <SNT113-W182B461295E717BB27130BF1630@phx.gbl>
+In-Reply-To: <SNT113-W182B461295E717BB27130BF1630@phx.gbl>
+MIME-Version: 1.0
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Message-Id: <201009260057.38286.chunkeey@googlemail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+On Saturday 25 September 2010 02:34:26 Dale Turner wrote:
+> 
+> Hello everyone.
+> 
+> Thanks for releasing the carl9170 driver in the 
+> compat-wireless package.
+I recommend using wireless-testing.git over
+compat-wireless + old kernel.
 
-Even driver use rts/cts protection mode for aggregation packets by default.
-Allow the protection mode to be configure through debugfs
+> I have been able to compile the driver, so that is great.
+> The connection seems to be a bit inconsistent.
+> I get the following quite often in /var/log/messages :
 
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-debugfs.c |   40 ++++++++++++++++++++++++++++
- 1 files changed, 40 insertions(+), 0 deletions(-)
+> kernel: ieee80211 phy9: channel change: 2472 -> 2462 failed (2)
+That's a noise floor calibration error. Check if your compat-wireless
+source  includes "carl9170: reinit phy after HT settings have changed".
+Also check if there is another device active on the same (primary/
+secondary) channel like a microwave oven, DECT phone or another wifi
+network, or wifi network peer. 
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-debugfs.c b/drivers/net/wireless/iwlwifi/iwl-debugfs.c
-index 86017ed..e0b31a2 100644
---- a/drivers/net/wireless/iwlwifi/iwl-debugfs.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-debugfs.c
-@@ -1604,6 +1604,44 @@ static ssize_t iwl_dbgfs_bt_traffic_read(struct file *file,
- 	return ret;
- }
- 
-+static ssize_t iwl_dbgfs_protection_mode_read(struct file *file,
-+					char __user *user_buf,
-+					size_t count, loff_t *ppos)
-+{
-+	struct iwl_priv *priv = (struct iwl_priv *)file->private_data;
-+
-+	int pos = 0;
-+	char buf[40];
-+	const size_t bufsz = sizeof(buf);
-+
-+	pos += scnprintf(buf + pos, bufsz - pos, "use %s for aggregation\n",
-+			 (priv->cfg->use_rts_for_aggregation) ? "rts/cts" :
-+			 "cts-to-self");
-+	return simple_read_from_buffer(user_buf, count, ppos, buf, pos);
-+}
-+
-+static ssize_t iwl_dbgfs_protection_mode_write(struct file *file,
-+					const char __user *user_buf,
-+					size_t count, loff_t *ppos) {
-+
-+	struct iwl_priv *priv = file->private_data;
-+	char buf[8];
-+	int buf_size;
-+	int rts;
-+
-+	memset(buf, 0, sizeof(buf));
-+	buf_size = min(count, sizeof(buf) -  1);
-+	if (copy_from_user(buf, user_buf, buf_size))
-+		return -EFAULT;
-+	if (sscanf(buf, "%d", &rts) != 1)
-+		return -EINVAL;
-+	if (rts)
-+		priv->cfg->use_rts_for_aggregation = true;
-+	else
-+		priv->cfg->use_rts_for_aggregation = false;
-+	return count;
-+}
-+
- DEBUGFS_READ_FILE_OPS(rx_statistics);
- DEBUGFS_READ_FILE_OPS(tx_statistics);
- DEBUGFS_READ_WRITE_FILE_OPS(traffic_log);
-@@ -1629,6 +1667,7 @@ DEBUGFS_WRITE_FILE_OPS(txfifo_flush);
- DEBUGFS_READ_FILE_OPS(ucode_bt_stats);
- DEBUGFS_WRITE_FILE_OPS(monitor_period);
- DEBUGFS_READ_FILE_OPS(bt_traffic);
-+DEBUGFS_READ_WRITE_FILE_OPS(protection_mode);
- 
- /*
-  * Create the debugfs files and directories
-@@ -1689,6 +1728,7 @@ int iwl_dbgfs_register(struct iwl_priv *priv, const char *name)
- 	DEBUGFS_ADD_FILE(ucode_general_stats, dir_debug, S_IRUSR);
- 	if (priv->cfg->ops->lib->dev_txfifo_flush)
- 		DEBUGFS_ADD_FILE(txfifo_flush, dir_debug, S_IWUSR);
-+	DEBUGFS_ADD_FILE(protection_mode, dir_debug, S_IWUSR | S_IRUSR);
- 
- 	if (priv->cfg->sensitivity_calib_by_driver)
- 		DEBUGFS_ADD_FILE(sensitivity, dir_debug, S_IRUSR);
--- 
-1.7.0.4
+> kernel: ieee80211 phy9: invalid plcp cck rate (0)
+This is a known bug, the driver received a invalid stream frame
+from the hardware. This only happens a lot when the AP ignores
+the device's ampdu spacing.
+(Do you have an older draft-n AP, if so what chip?)
 
+> kernel: ieee80211 phy9: FW: MAC RESET
+The device failed to send pending data for more than 150ms(HT40) - 300ms,
+either because the medium was busy, or the AP failed to response at all
+mostly because it has crashed first.
+(check if your AP's TSF is no where near your AP's uptime)
+
+> When
+>  that happens (which can be as often as every few minutes) my reported 
+> connection speed in network manager drops to 6 or 1 Mb/s. The network 
+> speed is noticeably reduced (for instance download speeds drastically 
+> reduce, online videos stutter, or music streaming from a different 
+> computer pauses, etc).
+Network manager has a feature called "background scanning".
+The advantage is that you'll always have a up-to-date site survey.
+The disadvantage is that it needs to perform a periodically scan
+(as in every few minutes) which on some occasions result in a
+channel change failed hiccup.
+
+> 
+> My previous adapter TP-Link TL-WN721N (ath9k_htc driver) did not behave like this.
+Why did you go back to the previous generation? 
+ath9k_htc (for AR9271) is in fact the replacement for AR9170.
+
+Regards,
+	Chr
