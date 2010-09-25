@@ -1,57 +1,32 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:37671 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754085Ab0IWPDs (ORCPT
+Received: from external1.orbit-lab.org ([128.6.192.131]:37642 "HELO
+	external1.orbit-lab.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1751448Ab0IYTC0 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 23 Sep 2010 11:03:48 -0400
-Subject: Re: [PATCH] wifi-test: add simple roam test script
-From: Johannes Berg <johannes@sipsolutions.net>
-To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Cc: "Rafael J. Wysocki" <rjw@sisk.pl>,
-	"jiajia.zheng@intel.com" <jiajia.zheng@intel.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"wifi-test-devel@lists.sourceforge.net"
-	<wifi-test-devel@lists.sourceforge.net>,
-	Luis Rodriguez <Luis.Rodriguez@atheros.com>,
-	Paul Stewart <pstew@google.com>
-In-Reply-To: <1285254157.3770.169.camel@jlt3.sipsolutions.net>
-References: <1285201037-29405-1-git-send-email-lrodriguez@atheros.com>
-	 <20100923002240.GA4484@tux>
-	 <1285231958.3691.10.camel@jlt3.sipsolutions.net>
-	 <AANLkTikh+Q0AK+RyouLOQ5RN5wnKaD2TMnHR-ofqrMKJ@mail.gmail.com>
-	 <1285254157.3770.169.camel@jlt3.sipsolutions.net>
-Content-Type: text/plain; charset="UTF-8"
-Date: Thu, 23 Sep 2010 17:03:46 +0200
-Message-ID: <1285254226.3770.171.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+	Sat, 25 Sep 2010 15:02:26 -0400
+Received: from repository3.orbit-lab.org (repository3.orbit-lab.org [10.50.0.41])
+	by external1.orbit-lab.org (Postfix) with ESMTP id F0A75418D8
+	for <linux-wireless@vger.kernel.org>; Sat, 25 Sep 2010 15:00:20 -0400 (EDT)
+Subject: Compat-wireless release for 2010-09-25 is baked
+To: <linux-wireless@vger.kernel.org>
+Message-Id: <20100925190224.DC271404FC@repository3.orbit-lab.org>
+Date: Sat, 25 Sep 2010 15:02:24 -0400 (EDT)
+From: compat@orbit-lab.org (Compat-wireless cronjob account)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2010-09-23 at 17:02 +0200, Johannes Berg wrote:
-> On Thu, 2010-09-23 at 07:53 -0700, Luis R. Rodriguez wrote:
-> 
-> > >> After roaming for a good while, this is what I got, not sure
-> > >> yet what caused the NULL pointer dereference... Am I the only
-> > >> one able to reproduce this?
-> > >
-> > >> [ 3276.730081] BUG: unable to handle kernel NULL pointer dereference at 0000000000000003
-> > >> [ 3276.730148] IP: [<0000000000000003>] 0x3
-> > >
-> > > Something called a NULL pointer function pointer. Rafael recently said
-> > > "cpuidle is buggy" when a similar issue came up:
-> > > http://mid.gmane.org/201009182344.12498.rjw@sisk.pl
-> > 
-> > But that seems related to ACPI, no? On my box I never suspended, I
-> > just associated and disassociated rapidly between two peers. The only
-> > suspicion I have is its obviously right after adding the STA peer.
-> 
-> Yes, but he said suspend/resume _fixed_ it :-)
+cat: /var/opt/compat/compat-wireless-2.6/compat_version: No such file or directory
+cat: compat_base_tree: No such file or directory
+cat: compat_base_tree_version: No such file or directory
+cat: compat_version: No such file or directory
+cat: /var/opt/compat/compat-wireless-2.6/compat_version: No such file or directory
+scripts/Makefile.clean:17: /var/opt/compat/compat-wireless-2.6/drivers/net/wireless/hostap/Makefile: No such file or directory
+make[4]: *** No rule to make target `/var/opt/compat/compat-wireless-2.6/drivers/net/wireless/hostap/Makefile'.  Stop.
+make[3]: *** [/var/opt/compat/compat-wireless-2.6/drivers/net/wireless/hostap] Error 2
+make[2]: *** [/var/opt/compat/compat-wireless-2.6/drivers/net/wireless] Error 2
+make[1]: *** [_clean_/var/opt/compat/compat-wireless-2.6] Error 2
+make: *** [clean] Error 2
 
-Hm never mind, misunderstood the original report ... suspend + wait +
-resume was what was broken.
+compat-wireless code metrics
 
-But still, it's a NULL pointer call, and I can't really see how that
-would happen.
-
-johannes
-
+    747513 - Total upstream lines of code being pulled
