@@ -1,65 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.19.149.2]:61989 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752923Ab0IONEM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 15 Sep 2010 09:04:12 -0400
-Received: from mail.atheros.com ([10.10.20.105])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Wed, 15 Sep 2010 06:04:05 -0700
-Date: Wed, 15 Sep 2010 18:35:26 +0530
-From: Rajkumar Manoharan <rmanoharan@atheros.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: Rajkumar Manoharan <Rajkumar.Manoharan@Atheros.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Vasanth Thiagarajan <Vasanth.Thiagarajan@Atheros.com>
-Subject: Re: [RFC] mac80211: avoid recalc_idle in monitor mode
-Message-ID: <20100915130526.GA18627@vmraj-lnx.users.atheros.com>
-References: <1284551772-18574-1-git-send-email-rmanoharan@atheros.com>
- <1284552730.7705.0.camel@jlt3.sipsolutions.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <1284552730.7705.0.camel@jlt3.sipsolutions.net>
+Received: from bombadil.infradead.org ([18.85.46.34]:44882 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754092Ab0IYB76 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 24 Sep 2010 21:59:58 -0400
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>, stable@kernel.org,
+	Amod Bodas <amod.bodas@atheros.com>,
+	Vasanth Thiagarajan <vasanth.thiagarajan@atheros.com>
+Subject: [PATCH] mac80211: fix offchannel assumption upon association
+Date: Fri, 24 Sep 2010 21:59:57 -0400
+Message-Id: <1285379997-1544-1-git-send-email-lrodriguez@atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Sep 15, 2010 at 05:42:10PM +0530, Johannes Berg wrote:
-> On Wed, 2010-09-15 at 17:26 +0530, Rajkumar Manoharan wrote:
-> > ath9k is not receiving frames in monitor mode after the commit 34d4bc.
-> > The problem is mac80211 sets IEEE80211_CONF_IDLE in __ieee80211_recalc_idle
-> > at ieee80211_do_open. Due to this, ath9k disables the radio.
-> > 
-> > The above said commit sets SDATA_STATE_RUNNING after __ieee80211_recalc_idle.
-> > IMHO avoiding __ieee80211_recalc_idle in monitor mode looks better
-> > than moving SDATA_STATE_RUNNING set before __ieee80211_recalc_idle.
-> > 
-> > Signed-off-by: Rajkumar Manoharan <rmanoharan@atheros.com>
-> > Signed-off-by: Vasanthakumar Thiagarajan <vasanth@atheros.com>
-> > ---
-> >  net/mac80211/iface.c |    8 +++++---
-> >  1 files changed, 5 insertions(+), 3 deletions(-)
-> > 
-> > diff --git a/net/mac80211/iface.c b/net/mac80211/iface.c
-> > index c1cc200..2bec319 100644
-> > --- a/net/mac80211/iface.c
-> > +++ b/net/mac80211/iface.c
-> > @@ -310,9 +310,11 @@ static int ieee80211_do_open(struct net_device *dev, bool coming_up)
-> >  	if (sdata->flags & IEEE80211_SDATA_PROMISC)
-> >  		atomic_inc(&local->iff_promiscs);
-> >  
-> > -	mutex_lock(&local->mtx);
-> > -	hw_reconf_flags |= __ieee80211_recalc_idle(local);
-> > -	mutex_unlock(&local->mtx);
-> > +	if (sdata->vif.type != NL80211_IFTYPE_MONITOR) {
-> > +		mutex_lock(&local->mtx);
-> > +		hw_reconf_flags |= __ieee80211_recalc_idle(local);
-> > +		mutex_unlock(&local->mtx);
-> > +	}
-> 
-> Hmm, that doesn't seem right, wouldn't it be idle to start with?
-not sure whether I am missing something here. Shouldn't we be receiving frames
-in monitor mode as soon as the interface is up and running. I don't see any
-reason why should we even care about IDLE state for MONITOR mode.
-> 
-> johannes
->
+Association is dealt with as an atomic offchannel operation,
+we do this because we don't know we are associated until we
+get the associatin response from the AP. When we do get the
+associatin response though we were never clearing the offchannel
+state. This has a few implications, we told drivers we were
+still offchannel, and the first configured TX power for the
+channel does not take into account any power constraints.
+
+For ath9k this meant ANI calibration would not start upon
+association, and we'd have to wait until the first bgscan
+to be triggered. There may be other issues this resolves
+but I'm too lazy to colb the code to check.
+
+Cc: stable@kernel.org
+Cc: Amod Bodas <amod.bodas@atheros.com>
+Cc: Vasanth Thiagarajan <vasanth.thiagarajan@atheros.com>
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+---
+
+Oops, sent to the wrong people, now adding the right folks.
+
+ net/mac80211/main.c |    3 ++-
+ 1 files changed, 2 insertions(+), 1 deletions(-)
+
+diff --git a/net/mac80211/main.c b/net/mac80211/main.c
+index 7c85426..e24fa5b 100644
+--- a/net/mac80211/main.c
++++ b/net/mac80211/main.c
+@@ -110,7 +110,8 @@ int ieee80211_hw_config(struct ieee80211_local *local, u32 changed)
+ 		chan = scan_chan;
+ 		channel_type = NL80211_CHAN_NO_HT;
+ 		local->hw.conf.flags |= IEEE80211_CONF_OFFCHANNEL;
+-	} else if (local->tmp_channel) {
++	} else if (local->tmp_channel &&
++		   local->oper_channel != local->tmp_channel) {
+ 		chan = scan_chan = local->tmp_channel;
+ 		channel_type = local->tmp_channel_type;
+ 		local->hw.conf.flags |= IEEE80211_CONF_OFFCHANNEL;
+-- 
+1.7.0.4
 
