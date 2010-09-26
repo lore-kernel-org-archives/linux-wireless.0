@@ -1,84 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iw0-f174.google.com ([209.85.214.174]:34867 "EHLO
-	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750701Ab0IOJVn convert rfc822-to-8bit (ORCPT
+Received: from mail-bw0-f46.google.com ([209.85.214.46]:53794 "EHLO
+	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757758Ab0I0R7H (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 15 Sep 2010 05:21:43 -0400
-MIME-Version: 1.0
-In-Reply-To: <1283376410-9999-1-git-send-email-ohad@wizery.com>
-References: <1283376410-9999-1-git-send-email-ohad@wizery.com>
-From: Ohad Ben-Cohen <ohad@wizery.com>
-Date: Wed, 15 Sep 2010 11:21:19 +0200
-Message-ID: <AANLkTikedoL3HjohQfq2qa0TU5yMJR5p1GqyQJtQGrdb@mail.gmail.com>
-Subject: Re: [PATCH v5 0/7] native wl1271 support on ZOOM
-To: Tony Lindgren <tony@atomide.com>,
-	"John W. Linville" <linville@tuxdriver.com>
-Cc: Mark Brown <broonie@opensource.wolfsonmicro.com>,
-	linux-arm-kernel@lists.infradead.org,
-	Chikkature Rajashekar Madhusudhan <madhu.cr@ti.com>,
-	Luciano Coelho <luciano.coelho@nokia.com>,
-	akpm@linux-foundation.org, San Mehat <san@google.com>,
-	Roger Quadros <roger.quadros@nokia.com>,
-	Nicolas Pitre <nico@fluxnic.net>, Ido Yariv <ido@wizery.com>,
-	Kalle Valo <kalle.valo@iki.fi>,
-	Russell King <linux@arm.linux.org.uk>,
-	linux-wireless@vger.kernel.org, linux-mmc@vger.kernel.org,
-	linux-omap@vger.kernel.org,
-	"Wool, Vitaly" <Vitaly.Wool@sonyericsson.com>
-Content-Type: text/plain; charset=ISO-8859-1
+	Mon, 27 Sep 2010 13:59:07 -0400
+Received: by bwz11 with SMTP id 11so3540065bwz.19
+        for <linux-wireless@vger.kernel.org>; Mon, 27 Sep 2010 10:59:05 -0700 (PDT)
+Message-Id: <424b15c8c817de59402f1dfc3544f5a2cd03ce33.1285544496.git.chunkeey@googlemail.com>
+In-Reply-To: <cover.1285544496.git.chunkeey@googlemail.com>
+References: <cover.1285544496.git.chunkeey@googlemail.com>
+From: Christian Lamparter <chunkeey@googlemail.com>
+Date: Sun, 26 Sep 2010 21:40:40 +0200
+Subject: [PATCH 2/6] carl9170: angle brackets for wiki link
+To: linux-wireless@vger.kernel.org
+Cc: linville@tuxdriver.com
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Sep 1, 2010 at 11:26 PM, Ohad Ben-Cohen <ohad@wizery.com> wrote:
-> This patchset adds wl1271 support on ZOOM2/3 boards.
+"The convention seems to be angle brackets around
+URLS in Kconfig."
+ -- Finn Thain (to update web addresses in the kernel)
 
-Tony, John, let me please suggest merging this through the wireless tree.
+Signed-off-by: Christian Lamparter <chunkeey@googlemail.com>
+---
+ drivers/net/wireless/ath/carl9170/Kconfig |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-wl1271 is a moving target - it keeps changing in the wireless tree and
-merging this patchset there will allow wl1271 developers to have
-everything in a single tree (and prevent merge conflicts in
-linux-next).
+diff --git a/drivers/net/wireless/ath/carl9170/Kconfig b/drivers/net/wireless/ath/carl9170/Kconfig
+index c5d3a3f..2d1b821 100644
+--- a/drivers/net/wireless/ath/carl9170/Kconfig
++++ b/drivers/net/wireless/ath/carl9170/Kconfig
+@@ -10,7 +10,7 @@ config CARL9170
+ 	  but it needs a special firmware (carl9170-1.fw) to do that.
+ 
+ 	  The firmware can be downloaded from our wiki here:
+-	  http://wireless.kernel.org/en/users/Drivers/carl9170
++	  <http://wireless.kernel.org/en/users/Drivers/carl9170>
+ 
+ 	  If you choose to build a module, it'll be called carl9170.
+ 
+-- 
+1.7.1
 
-If that's ok with you, I will rebase this on top of wireless-testing
-and resubmit.
-
->
-> Only basic support is included; MMC power manipulation part is submitted separately as Runtime PM migration.
->
-> Changes since v4:
-> - Introduce a simple (yet safe) mechanism to pass platform-specific data to the driver, as suggested by Russell King. Currently only a single device is supported; multi-device support will be introduced only when/if required
->
-> Patches are based on 2.6.36-rc3 and tested on ZOOM3.
->
-> Thanks,
->
-> Ohad Ben-Cohen (7):
->  wireless: wl1271: make wl12xx.h common to both spi and sdio
->  wireless: wl1271: support return value for the set power func
->  wireless: wl12xx: add platform data passing support
->  wireless: wl1271: take irq info from private board data
->  wireless: wl1271: make ref_clock configurable by board
->  omap: zoom: add fixed regulator device for wlan
->  omap: zoom: add mmc3/wl1271 device support
->
->  arch/arm/mach-omap2/board-zoom-peripherals.c       |   54 ++++++++++++++++++++
->  drivers/net/wireless/Makefile                      |    2 +
->  drivers/net/wireless/wl12xx/Kconfig                |    5 ++-
->  drivers/net/wireless/wl12xx/wl1251_sdio.c          |    2 +-
->  drivers/net/wireless/wl12xx/wl1251_spi.c           |    2 +-
->  drivers/net/wireless/wl12xx/wl1271.h               |    3 +-
->  drivers/net/wireless/wl12xx/wl1271_boot.c          |    9 ++--
->  drivers/net/wireless/wl12xx/wl1271_boot.h          |    1 -
->  drivers/net/wireless/wl12xx/wl1271_io.h            |    9 ++-
->  drivers/net/wireless/wl12xx/wl1271_main.c          |    4 +-
->  drivers/net/wireless/wl12xx/wl1271_sdio.c          |   19 ++++---
->  drivers/net/wireless/wl12xx/wl1271_spi.c           |    8 ++-
->  drivers/net/wireless/wl12xx/wl12xx_platform_data.c |   31 +++++++++++
->  include/linux/spi/wl12xx.h                         |   34 ------------
->  include/linux/wl12xx.h                             |   38 ++++++++++++++
->  15 files changed, 164 insertions(+), 57 deletions(-)
->  create mode 100644 drivers/net/wireless/wl12xx/wl12xx_platform_data.c
->  delete mode 100644 include/linux/spi/wl12xx.h
->  create mode 100644 include/linux/wl12xx.h
->
->
