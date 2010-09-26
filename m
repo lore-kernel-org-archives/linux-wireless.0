@@ -1,57 +1,107 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mho-01-ewr.mailhop.org ([204.13.248.71]:63865 "EHLO
-	mho-01-ewr.mailhop.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752091Ab0IOQec (ORCPT
+Received: from mail.redfish-solutions.com ([66.232.79.143]:49317 "EHLO
+	mail.redfish-solutions.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754013Ab0IZBRL (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 15 Sep 2010 12:34:32 -0400
-Date: Wed, 15 Sep 2010 09:34:03 -0700
-From: Tony Lindgren <tony@atomide.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: Vitaly Wool <vitalywool@gmail.com>,
-	Ohad Ben-Cohen <ohad@wizery.com>,
-	Kalle Valo <kalle.valo@iki.fi>,
-	Russell King <linux@arm.linux.org.uk>,
-	Nicolas Pitre <nico@fluxnic.net>,
-	"Wool, Vitaly" <Vitaly.Wool@sonyericsson.com>,
-	linux-wireless@vger.kernel.org,
-	Mark Brown <broonie@opensource.wolfsonmicro.com>,
-	Roger Quadros <roger.quadros@nokia.com>,
-	Ido Yariv <ido@wizery.com>, San Mehat <san@google.com>,
-	Chikkature Rajashekar Madhusudhan <madhu.cr@ti.com>,
-	linux-mmc@vger.kernel.org,
-	Luciano Coelho <luciano.coelho@nokia.com>,
-	linux-omap@vger.kernel.org, akpm@linux-foundation.org,
-	linux-arm-kernel@lists.infradead.org
-Subject: Re: [PATCH v5 0/7] native wl1271 support on ZOOM
-Message-ID: <20100915163403.GT8647@atomide.com>
-References: <1283376410-9999-1-git-send-email-ohad@wizery.com>
- <AANLkTikedoL3HjohQfq2qa0TU5yMJR5p1GqyQJtQGrdb@mail.gmail.com>
- <AANLkTingdk=9Fbp9uKf6rGyAtR+b8KV4vFmYRfakkwBs@mail.gmail.com>
- <20100915132149.GA6997@tuxdriver.com>
+	Sat, 25 Sep 2010 21:17:11 -0400
+Message-ID: <4C9E9717.8090008@redfish-solutions.com>
+Date: Sat, 25 Sep 2010 18:43:03 -0600
+From: Philip Prindeville <philipp_subx@redfish-solutions.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20100915132149.GA6997@tuxdriver.com>
+To: Hauke Mehrtens <hauke@hauke-m.de>
+CC: lrodriguez@atheros.com, linux-wireless@vger.kernel.org,
+	mcgrof@infradead.org
+Subject: Re: [PATCH] compat: fix build error in init_dummy_netdev
+References: <1285413737-782-1-git-send-email-hauke@hauke-m.de>
+In-Reply-To: <1285413737-782-1-git-send-email-hauke@hauke-m.de>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-* John W. Linville <linville@tuxdriver.com> [100915 06:21]:
-> On Wed, Sep 15, 2010 at 01:08:18PM +0200, Vitaly Wool wrote:
-> > On Wed, Sep 15, 2010 at 11:21 AM, Ohad Ben-Cohen <ohad@wizery.com> wrote:
-> > > On Wed, Sep 1, 2010 at 11:26 PM, Ohad Ben-Cohen <ohad@wizery.com> wrote:
-> > >> This patchset adds wl1271 support on ZOOM2/3 boards.
-> > >
-> > > Tony, John, let me please suggest merging this through the wireless tree.
-> > >
-> > > wl1271 is a moving target - it keeps changing in the wireless tree and
-> > > merging this patchset there will allow wl1271 developers to have
-> > > everything in a single tree (and prevent merge conflicts in
-> > > linux-next).
-> > 
-> > Thanks Ohad, that's what I was about to suggest as well. :)
-> 
-> OK, that is fine with me if the omap folks agree?
+  On 9/25/10 5:22 AM, Hauke Mehrtens wrote:
+> In kernel<= 2.6.28 the member napi_list in struct net_device is only
+> availabe if CONFIG_NETPOLL is set. We should initialize it only if it
+> is available.
+>
+> This should fix the problem reported by Philip.
+>
+> This should also go into stable.
+>
+> CC: philipp_subx@redfish-solutions.com
+> Signed-off-by: Hauke Mehrtens<hauke@hauke-m.de>
+> ---
+>   compat/compat-2.6.29.c |    2 ++
+>   1 files changed, 2 insertions(+), 0 deletions(-)
+>
+> diff --git a/compat/compat-2.6.29.c b/compat/compat-2.6.29.c
+> index bc4288f..cded3cc 100644
+> --- a/compat/compat-2.6.29.c
+> +++ b/compat/compat-2.6.29.c
+> @@ -153,8 +153,10 @@ int init_dummy_netdev(struct net_device *dev)
+>   	/* initialize the ref count */
+>   	atomic_set(&dev->refcnt, 1);
+>
+> +#ifdef CONFIG_NETPOLL
+>   	/* NAPI wants this */
+>   	INIT_LIST_HEAD(&dev->napi_list);
+> +#endif
+>
+>   	/* a dummy interface is started by default */
+>   	set_bit(__LINK_STATE_PRESENT,&dev->state);
 
-Yes sounds good to me, I think there's still at least some platform_data
-conversation going on though.
+Testing...
 
-Tony
+It built.
+
+Ok, reconnected.
+
+Seeing a lot of the following (hundreds over 1 hour):
+
+Sep 25 18:39:48 pbx user.warn kernel: ------------[ cut here ]------------
+Sep 25 18:39:48 pbx user.warn kernel: WARNING: at /home/philipp/kernel2/build_i586/compat-wireless-2010-09-23/net/mac80211/util.c:287 ieee80211_wake_queue_by_reason+0x15/0x31 [mac80211]()
+Sep 25 18:39:48 pbx user.warn kernel: Modules linked in: binfmt_misc twofish twofish_common xcbc esp4 aead ah4 af_key aes_i586 aes_generic act_police cls_u32 sch_ingress sch_sfq sch_htb xt_dscp xt_CLASSIFY xt_length ipt_recent nf_nat_sip nf_conntrack_sip xt_policy
+Sep 25 18:39:48 pbx user.warn kernel: Pid: 17613, comm: sshd Tainted: P        W 2.6.27.49-astlinux #1
+Sep 25 18:39:48 pbx user.warn kernel:  [<c01153de>] warn_on_slowpath+0x40/0x63
+Sep 25 18:39:48 pbx user.warn kernel:  [<e0989878>] ieee80211_invoke_rx_handlers+0x402/0x418 [mac80211]
+Sep 25 18:39:48 pbx user.warn kernel:  [<e098a0ba>] mac80211_ieee80211_rx+0x77f/0x82d [mac80211]
+Sep 25 18:39:48 pbx user.warn kernel:  [<e09793c9>] ieee80211_tx_status+0x458/0x62b [mac80211]
+Sep 25 18:39:48 pbx user.warn kernel:  [<e08fd21d>] ath5k_rxbuf_setup+0x49/0xa8 [ath5k]
+Sep 25 18:39:48 pbx user.warn kernel:  [<e098e741>] ieee80211_wake_queue_by_reason+0x15/0x31 [mac80211]
+Sep 25 18:39:48 pbx user.warn kernel:  [<e08fe8aa>] ath5k_tasklet_tx+0x32e/0x34a [ath5k]
+Sep 25 18:39:48 pbx user.warn kernel:  [<c0118df2
+Sep 25 18:39:48 pbx user.info kernel: 211_wake_queue_by_reason+0x15/0x31 [mac80211]
+Sep 25 18:39:48 pbx user.warn kernel:  [<e08fe8aa>] ath5k_tasklet_tx+0x32e/0x34a [ath5k]
+Sep 25 18:39:48 pbx user.warn kernel:  [<c0118df2>] tasklet_action+0x3c/0x62
+Sep 25 18:39:48 pbx user.warn kernel:  [<c0118cdc>] __do_softirq+0x35/0x75
+Sep 25 18:39:48 pbx user.warn kernel:  [<c0118d3e>] do_softirq+0x22/0x26
+Sep 25 18:39:48 pbx user.warn kernel:  [<c011918c>] local_bh_enable+0x5e/0x76
+Sep 25 18:39:48 pbx user.warn kernel:  [<c02546c9>] dev_queue_xmit+0x254/0x283
+Sep 25 18:39:48 pbx user.warn kernel:  [<c026eb94>] ip_finish_output+0x1e8/0x220
+Sep 25 18:39:48 pbx user.warn kernel:  [<c026f25e>] ip_output+0x79/0x8d
+Sep 25 18:39:48 pbx user.warn kernel:  [<c026e6f7>] ip_local_out+0x15/0x17
+Sep 25 18:39:48 pbx user.warn kernel:  [<c026f4f3>] ip_queue_xmit+0x281/0x2cf
+Sep 25 18:39:48 pbx user.warn kernel:  [<c0281b93>] tcp_v4_send_check+0x7a/0xb0
+Sep 25 18:39:48 pbx user.warn kernel:  [<c027d0ec>] tcp_transmit_skb+0x584/0x5be
+Sep 25 18:39:48 pbx user.warn kernel:  [<c027e8ea>] tcp_push_one+0x84/0xa2
+Sep 25 18:39:48 pbx user.warn kernel:  [<c027533b>] tcp_sendmsg+0x6dc/0x8e0
+Sep 25 18:39:48 pbx user.warn kernel:  [<c02481d9>] sock_aio_write+0xb2/0xbb
+Sep 25 18:39:48 pbx user.warn kernel:  [<c01113aa>] pick_next_task_fair+0xba/0xc4
+Sep 25 18:39:48 pbx user.warn kernel:  [<c01501b9>] do_sync_write+0xbd/0x104
+Sep 25 18:39:48 pbx user.warn kernel:  [<c02a726e>] preempt_schedule+0x27/0x3c
+Sep 25 18:39:48 pbx user.warn kernel:  [<c01e0972>] tty_wakeup+0x40/0x44
+Sep 25 18:39:48 pbx user.warn kernel:  [<c0123c5a>] autoremove_wake_function+0x0/0x2b
+Sep 25 18:39:48 pbx user.warn kernel:  [<c01e40e4>] read_chan+0x0/0x578
+Sep 25 18:39:48 pbx user.warn kernel:  [<c01e1759>] tty_read+0x7e/0x99
+Sep 25 18:39:48 pbx user.warn kernel:  [<c01508e6>] vfs_write+0x94/0xfc
+Sep 25 18:39:48 pbx user.warn kernel:  [<c0150d0e>] sys_write+0x3c/0x63
+Sep 25 18:39:48 pbx user.warn kernel:  [<c01037e6>] syscall_call+0x7/0xb
+Sep 25 18:39:48 pbx user.warn kernel:  =======================
+Sep 25 18:39:48 pbx user.warn kernel: ---[ end trace d35f5e21a6e60fb4 ]---
+
+
+I'd previously been running 2010-07-23.
+
+
+
+
+
