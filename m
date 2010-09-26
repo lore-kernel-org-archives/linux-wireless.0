@@ -1,46 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iw0-f174.google.com ([209.85.214.174]:55146 "EHLO
-	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932176Ab0I3Urx (ORCPT
+Received: from mail-bw0-f46.google.com ([209.85.214.46]:39511 "EHLO
+	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757127Ab0I0R7G (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 30 Sep 2010 16:47:53 -0400
-Received: by iwn5 with SMTP id 5so2878122iwn.19
-        for <linux-wireless@vger.kernel.org>; Thu, 30 Sep 2010 13:47:52 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <AANLkTimrRJavN0B+nYGJwFeNM9KYa1XuQ2VrSCREb5kN@mail.gmail.com>
-References: <AANLkTimrRJavN0B+nYGJwFeNM9KYa1XuQ2VrSCREb5kN@mail.gmail.com>
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Date: Thu, 30 Sep 2010 13:47:31 -0700
-Message-ID: <AANLkTimY6uVud0VbkQXhozxWEOxq9enMfk0Nsz8kYe4e@mail.gmail.com>
-Subject: Re: [PATCH] fix for WDS in ath9k (and mac80211, and nl80211)
-To: Bill Jordan <bjordan@rajant.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org,
-	Johannes Berg <johannes@sipsolutions.net>
-Content-Type: text/plain; charset=UTF-8
+	Mon, 27 Sep 2010 13:59:06 -0400
+Received: by bwz11 with SMTP id 11so3540060bwz.19
+        for <linux-wireless@vger.kernel.org>; Mon, 27 Sep 2010 10:59:04 -0700 (PDT)
+Message-Id: <4a4af8c40fea084b9e0f469249dc316dc7836db3.1285544496.git.chunkeey@googlemail.com>
+In-Reply-To: <cover.1285544496.git.chunkeey@googlemail.com>
+References: <cover.1285544496.git.chunkeey@googlemail.com>
+From: Christian Lamparter <chunkeey@googlemail.com>
+Date: Sun, 26 Sep 2010 22:49:34 +0200
+Subject: [PATCH 4/6] carl9170: fix tx_ampdu_upload counter
+To: linux-wireless@vger.kernel.org
+Cc: linville@tuxdriver.com
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Sep 30, 2010 at 1:41 PM, Bill Jordan <bjordan@rajant.com> wrote:
-> I tried to submit this before, but I believe that version was lost to
-> the ether. Apologies
-> if this is a repeat.
->
-> I'm trying to use WDS with ath9k, and I ran into some problems. In addition to
-> enabling WDS interfaces in ath9k, I also had to patch mac80211 to
-> allow xmits and
-> recvs to pass through on WDS interfaces. The rate table was also never being
-> initialized for WDS interfaces.
->
-> I have also patched nl80211 so I have a mechanism to set the WDS peer bssid.
->
-> With these patches, I'm able to interoperate over WDS between
-> linux-wireless and MadWifi.
-> I'm running wireless-testing plus OpenWRT patches on a Cambria board with
-> an AR9160 radio.
->
-> Signed-off-by: Bill Jordan <bjordan@rajant.com>
+tx_ampdu_upload was not decreased when an a-MPDU
+frame had to be kicked out from the tx_pending
+queues.
 
-Nice can you please split these up into separate patches?
+This broke ampdu aggregation, because the scheduler
+waits until tx_ampdu_upload drops to zero, before
+making the next aggregate.
 
-  Luis
+Signed-off-by: Christian Lamparter <chunkeey@googlemail.com>
+---
+ drivers/net/wireless/ath/carl9170/main.c |   15 ++++++++++++++-
+ 1 files changed, 14 insertions(+), 1 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/carl9170/main.c b/drivers/net/wireless/ath/carl9170/main.c
+index d28b4ff..a8b0cec 100644
+--- a/drivers/net/wireless/ath/carl9170/main.c
++++ b/drivers/net/wireless/ath/carl9170/main.c
+@@ -230,8 +230,15 @@ static void carl9170_flush(struct ar9170 *ar, bool drop_queued)
+ 		for (i = 0; i < ar->hw->queues; i++) {
+ 			struct sk_buff *skb;
+ 
+-			while ((skb = skb_dequeue(&ar->tx_pending[i])))
++			while ((skb = skb_dequeue(&ar->tx_pending[i]))) {
++				struct ieee80211_tx_info *info;
++
++				info = IEEE80211_SKB_CB(skb);
++				if (info->flags & IEEE80211_TX_CTL_AMPDU)
++					atomic_dec(&ar->tx_ampdu_upload);
++
+ 				carl9170_tx_status(ar, skb, false);
++			}
+ 		}
+ 	}
+ 
+@@ -1462,6 +1469,7 @@ static void carl9170_op_sta_notify(struct ieee80211_hw *hw,
+ 			skb_queue_walk_safe(&ar->tx_pending[i], skb, tmp) {
+ 				struct _carl9170_tx_superframe *super;
+ 				struct ieee80211_hdr *hdr;
++				struct ieee80211_tx_info *info;
+ 
+ 				super = (void *) skb->data;
+ 				hdr = (void *) super->frame_data;
+@@ -1470,6 +1478,11 @@ static void carl9170_op_sta_notify(struct ieee80211_hw *hw,
+ 					continue;
+ 
+ 				__skb_unlink(skb, &ar->tx_pending[i]);
++
++				info = IEEE80211_SKB_CB(skb);
++				if (info->flags & IEEE80211_TX_CTL_AMPDU)
++					atomic_dec(&ar->tx_ampdu_upload);
++
+ 				carl9170_tx_status(ar, skb, false);
+ 			}
+ 			spin_unlock_bh(&ar->tx_pending[i].lock);
+-- 
+1.7.1
+
