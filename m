@@ -1,126 +1,169 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pw0-f46.google.com ([209.85.160.46]:38826 "EHLO
-	mail-pw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759180Ab0I0Rvs convert rfc822-to-8bit (ORCPT
+Received: from smtp.nokia.com ([192.100.122.233]:37665 "EHLO
+	mgw-mx06.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932845Ab0I0Iix (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 27 Sep 2010 13:51:48 -0400
-Received: by pwi1 with SMTP id 1so110485pwi.19
-        for <linux-wireless@vger.kernel.org>; Mon, 27 Sep 2010 10:51:47 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <20100909054958.GA9045@vasanth-laptop>
-References: <20100909054958.GA9045@vasanth-laptop>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Mon, 27 Sep 2010 10:51:26 -0700
-Message-ID: <AANLkTikWhG5XAzeL7+MbdePFbAEmHQv75_vjRm8+jsCk@mail.gmail.com>
-Subject: Re: warning at rate_control_send_low+0xd3/0x140
-To: Vasanthakumar Thiagarajan <vasanth@atheros.com>
-Cc: johannes@sipsolutions.net, linux-wireless@vger.kernel.org,
-	Paul Stewart <pstew@google.com>
-Content-Type: text/plain; charset=UTF-8
+	Mon, 27 Sep 2010 04:38:53 -0400
+Received: from esebh105.NOE.Nokia.com (esebh105.ntc.nokia.com [172.21.138.211])
+	by mgw-mx06.nokia.com (Switch-3.3.3/Switch-3.3.3) with ESMTP id o8R8clXu013190
+	for <linux-wireless@vger.kernel.org>; Mon, 27 Sep 2010 11:38:51 +0300
+From: Luciano Coelho <luciano.coelho@nokia.com>
+To: linux-wireless@vger.kernel.org
+Cc: Juuso Oikarinen <juuso.oikarinen@nokia.com>
+Subject: [PATCH 22/25] wl1271: Add hardware recovery mechanism
+Date: Mon, 27 Sep 2010 11:37:46 +0300
+Message-Id: <1285576669-8070-23-git-send-email-luciano.coelho@nokia.com>
+In-Reply-To: <1285576669-8070-1-git-send-email-luciano.coelho@nokia.com>
+References: <1285576669-8070-1-git-send-email-luciano.coelho@nokia.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Sep 8, 2010 at 10:49 PM, Vasanthakumar Thiagarajan
-<vasanth@atheros.com> wrote:
-> Hi,
->
-> I'm seeing the following warning while roaming to APs operating on
-> different bands.
->
-> [ 9033.238676] Call Trace:
-> [ 9033.238684]  [<ffffffff81064f8b>] warn_slowpath_common+0x7b/0xc0
-> [ 9033.238688]  [<ffffffff81064fe4>] warn_slowpath_null+0x14/0x20
-> [ 9033.238697]  [<ffffffffa0558233>] rate_control_send_low+0xd3/0x140 [mac80211]
-> [ 9033.238704]  [<ffffffffa059a9e8>] ath_get_rate+0x48/0x570 [ath9k]
-> [ 9033.238709]  [<ffffffff812b3a9c>] ? put_dec+0x10c/0x110
-> [ 9033.238712]  [<ffffffff812b3d8e>] ? number+0x2ee/0x320
-> [ 9033.238721]  [<ffffffffa055805e>] rate_control_get_rate+0x8e/0x190 [mac80211]
-> [ 9033.238730]  [<ffffffffa056191c>] invoke_tx_handlers+0xa4c/0x1220 [mac80211]
-> [ 9033.238735]  [<ffffffff812b6000>] ? vsnprintf+0x1d0/0x5f0
-> [ 9033.238744]  [<ffffffffa0562175>] ieee80211_tx+0x85/0x240 [mac80211]
-> [ 9033.238749]  [<ffffffff814680d0>] ? skb_release_data+0xd0/0xe0
-> [ 9033.238752]  [<ffffffff81469fa2>] ? pskb_expand_head+0x152/0x1e0
-> [ 9033.238762]  [<ffffffffa05623e0>] ieee80211_xmit+0xb0/0x1c0 [mac80211]
-> [ 9033.238765]  [<ffffffff81468210>] ? __alloc_skb+0x80/0x190
-> [ 9033.238774]  [<ffffffffa0562544>] ieee80211_tx_skb+0x54/0x70 [mac80211]
-> [ 9033.238782]  [<ffffffffa054d26d>] ieee80211_send_delba+0x11d/0x190 [mac80211]
-> [ 9033.238791]  [<ffffffffa054e779>] ___ieee80211_stop_rx_ba_session+0x119/0x140 [mac80211]
-> [ 9033.238799]  [<ffffffffa054e7f0>] __ieee80211_stop_rx_ba_session+0x50/0x70 [mac80211]
-> [ 9033.238807]  [<ffffffffa054d583>] ieee80211_sta_tear_down_BA_sessions+0x43/0x50 [mac80211]
-> [ 9033.238815]  [<ffffffffa055276b>] ieee80211_set_disassoc+0x10b/0x220 [mac80211]
-> [ 9033.238820]  [<ffffffff811520c6>] ? pollwake+0x56/0x60
-> [ 9033.238829]  [<ffffffffa0553e1d>] ieee80211_mgd_assoc+0x8d/0x360 [mac80211]
-> [ 9033.238838]  [<ffffffffa055a34f>] ieee80211_assoc+0x4f/0x80 [mac80211]
-> [ 9033.238855]  [<ffffffffa0521186>] __cfg80211_mlme_assoc+0x206/0x290 [cfg80211]
-> [ 9033.238863]  [<ffffffffa052129f>] cfg80211_mlme_assoc+0x8f/0xc0 [cfg80211]
-> [ 9033.238869]  [<ffffffffa050e0a0>] ? cfg80211_get_dev_from_ifindex+0x70/0x80 [cfg80211]
-> [ 9033.238877]  [<ffffffffa0517924>] nl80211_associate+0x224/0x240 [cfg80211]
-> [ 9033.238882]  [<ffffffff814978c6>] genl_rcv_msg+0x1e6/0x220
-> [ 9033.238886]  [<ffffffff814976e0>] ? genl_rcv_msg+0x0/0x220
-> [ 9033.238890]  [<ffffffff814965f9>] netlink_rcv_skb+0xa9/0xd0
-> [ 9033.238893]  [<ffffffff814976cc>] genl_rcv+0x2c/0x40
-> [ 9033.238896]  [<ffffffff8149625e>] netlink_unicast+0x2de/0x2f0
-> [ 9033.238900]  [<ffffffff8149704e>] netlink_sendmsg+0x1fe/0x2e0
-> [ 9033.238903]  [<ffffffff814961c9>] ? netlink_unicast+0x249/0x2f0
-> [ 9033.238908]  [<ffffffff8146121b>] sock_sendmsg+0x10b/0x140
-> [ 9033.238912]  [<ffffffff81083580>] ? autoremove_wake_function+0x0/0x40
-> [ 9033.238917]  [<ffffffff81059422>] ? default_wake_function+0x12/0x20
-> [ 9033.238922]  [<ffffffff81049f29>] ? __wake_up_common+0x59/0x90
-> [ 9033.238925]  [<ffffffff81460774>] ? move_addr_to_kernel+0x64/0x70
-> [ 9033.238929]  [<ffffffff8146b969>] ? verify_iovec+0x69/0xc0
-> [ 9033.238932]  [<ffffffff81461683>] sys_sendmsg+0x233/0x3a0
-> [ 9033.238935]  [<ffffffff810517d3>] ? __wake_up+0x53/0x70
-> [ 9033.238939]  [<ffffffff81140132>] ? vfs_write+0x132/0x1a0
-> [ 9033.238942]  [<ffffffff81140951>] ? sys_write+0x51/0x80
-> [ 9033.238947]  [<ffffffff810131f2>] system_call_fastpath+0x16/0x1b
-> [ 9033.238950] ---[ end trace 5655896580a8ccea ]---
->
-> This happens because the station tries to close its BACK negotiation
-> with the existing AP but on a channel where it got authenticated
-> with a newer AP. ieee80211_work_work() configures the station back
-> to its operating channel after the authentication with the new AP,
-> but sometimes we get assoc req before this. One (may be not good)fix
-> can be making sure if station is in operating channel before
-> cleaning up its BACK state. Not quite sure about a clean fix here.
+From: Juuso Oikarinen <juuso.oikarinen@nokia.com>
 
-I can reproduce this easily with my test-roam script [1]. The problem is this:
+There is some probability of hardware failures, which currently go largely
+undetected. Attempt to recover from these failures by shutting down the
+hardware, and requesting mac80211 to reconfigure it.
 
+Signed-off-by: Juuso Oikarinen <juuso.oikarinen@nokia.com>
+Reviewed-by: Teemu Paasikivi <ext-teemu.3.paasikivi@nokia.com>
+Signed-off-by: Luciano Coelho <luciano.coelho@nokia.com>
+---
+ drivers/net/wireless/wl12xx/wl1271.h      |    3 +++
+ drivers/net/wireless/wl12xx/wl1271_cmd.c  |    5 ++++-
+ drivers/net/wireless/wl12xx/wl1271_main.c |   28 +++++++++++++++++++++++++++-
+ drivers/net/wireless/wl12xx/wl1271_ps.c   |    3 ++-
+ 4 files changed, 36 insertions(+), 3 deletions(-)
 
--------------------------------------------------------------------------------------------------------------------
-ieee80211_tx_prepare(struct ieee80211_sub_if_data *sdata,
-                     struct ieee80211_tx_data *tx,
-                     struct sk_buff *skb)
-{
-        struct ieee80211_local *local = sdata->local;
-        struct ieee80211_hdr *hdr;
-        struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
-        int hdrlen, tid;
-        u8 *qc;
+diff --git a/drivers/net/wireless/wl12xx/wl1271.h b/drivers/net/wireless/wl12xx/wl1271.h
+index 55ec656..b5369a6 100644
+--- a/drivers/net/wireless/wl12xx/wl1271.h
++++ b/drivers/net/wireless/wl12xx/wl1271.h
+@@ -410,6 +410,9 @@ struct wl1271 {
+ 	/* The target interrupt mask */
+ 	struct work_struct irq_work;
+ 
++	/* Hardware recovery work */
++	struct work_struct recovery_work;
++
+ 	/* The mbox event mask */
+ 	u32 event_mask;
+ 
+diff --git a/drivers/net/wireless/wl12xx/wl1271_cmd.c b/drivers/net/wireless/wl12xx/wl1271_cmd.c
+index 06b14f2..170b5a8 100644
+--- a/drivers/net/wireless/wl12xx/wl1271_cmd.c
++++ b/drivers/net/wireless/wl12xx/wl1271_cmd.c
+@@ -94,6 +94,7 @@ int wl1271_cmd_send(struct wl1271 *wl, u16 id, void *buf, size_t len,
+ 	status = le16_to_cpu(cmd->status);
+ 	if (status != CMD_STATUS_SUCCESS) {
+ 		wl1271_error("command execute failure %d", status);
++		ieee80211_queue_work(wl->hw, &wl->recovery_work);
+ 		ret = -EIO;
+ 	}
+ 
+@@ -182,8 +183,10 @@ static int wl1271_cmd_wait_for_event(struct wl1271 *wl, u32 mask)
+ 	timeout = jiffies + msecs_to_jiffies(WL1271_EVENT_TIMEOUT);
+ 
+ 	do {
+-		if (time_after(jiffies, timeout))
++		if (time_after(jiffies, timeout)) {
++			ieee80211_queue_work(wl->hw, &wl->recovery_work);
+ 			return -ETIMEDOUT;
++		}
+ 
+ 		msleep(1);
+ 
+diff --git a/drivers/net/wireless/wl12xx/wl1271_main.c b/drivers/net/wireless/wl12xx/wl1271_main.c
+index 00da982..6e98c75 100644
+--- a/drivers/net/wireless/wl12xx/wl1271_main.c
++++ b/drivers/net/wireless/wl12xx/wl1271_main.c
+@@ -235,6 +235,9 @@ static struct conf_drv_settings default_conf = {
+ 	}
+ };
+ 
++static void __wl1271_op_remove_interface(struct wl1271 *wl);
++
++
+ static void wl1271_device_release(struct device *dev)
+ {
+ 
+@@ -612,6 +615,26 @@ out:
+ 	return ret;
+ }
+ 
++static void wl1271_recovery_work(struct work_struct *work)
++{
++	struct wl1271 *wl =
++		container_of(work, struct wl1271, recovery_work);
++
++	mutex_lock(&wl->mutex);
++
++	if (wl->state != WL1271_STATE_ON)
++		goto out;
++
++	wl1271_info("Hardware recovery in progress.");
++
++	/* reboot the chipset */
++	__wl1271_op_remove_interface(wl);
++	ieee80211_restart_hw(wl->hw);
++
++out:
++	mutex_unlock(&wl->mutex);
++}
++
+ static void wl1271_fw_wakeup(struct wl1271 *wl)
+ {
+ 	u32 elp_reg;
+@@ -635,6 +658,7 @@ static int wl1271_setup(struct wl1271 *wl)
+ 	INIT_WORK(&wl->irq_work, wl1271_irq_work);
+ 	INIT_WORK(&wl->tx_work, wl1271_tx_work);
+ 	INIT_WORK(&wl->scan_complete_work, wl1271_scan_complete_work);
++	INIT_WORK(&wl->recovery_work, wl1271_recovery_work);
+ 
+ 	return 0;
+ }
+@@ -793,11 +817,11 @@ out:
+ 	mutex_unlock(&wl->mutex);
+ 
+ 	cancel_work_sync(&wl->irq_work);
++	cancel_work_sync(&wl->recovery_work);
+ 
+ 	return ret;
+ }
+ 
+-
+ static int wl1271_op_tx(struct ieee80211_hw *hw, struct sk_buff *skb)
+ {
+ 	struct wl1271 *wl = hw->priv;
+@@ -1046,6 +1070,8 @@ static void wl1271_op_remove_interface(struct ieee80211_hw *hw,
+ 	WARN_ON(wl->vif != vif);
+ 	__wl1271_op_remove_interface(wl);
+ 	mutex_unlock(&wl->mutex);
++
++	cancel_work_sync(&wl->recovery_work);
+ }
+ 
+ static void wl1271_configure_filters(struct wl1271 *wl, unsigned int filters)
+diff --git a/drivers/net/wireless/wl12xx/wl1271_ps.c b/drivers/net/wireless/wl12xx/wl1271_ps.c
+index 150dc67..e3c332e 100644
+--- a/drivers/net/wireless/wl12xx/wl1271_ps.c
++++ b/drivers/net/wireless/wl12xx/wl1271_ps.c
+@@ -64,7 +64,7 @@ void wl1271_ps_elp_sleep(struct wl1271 *wl)
+ 	    test_bit(WL1271_FLAG_IDLE, &wl->flags)) {
+ 		cancel_delayed_work(&wl->elp_work);
+ 		ieee80211_queue_delayed_work(wl->hw, &wl->elp_work,
+-					msecs_to_jiffies(ELP_ENTRY_DELAY));
++					     msecs_to_jiffies(ELP_ENTRY_DELAY));
+ 	}
+ }
+ 
+@@ -99,6 +99,7 @@ int wl1271_ps_elp_wakeup(struct wl1271 *wl, bool chip_awake)
+ 			&compl, msecs_to_jiffies(WL1271_WAKEUP_TIMEOUT));
+ 		if (ret == 0) {
+ 			wl1271_error("ELP wakeup timeout!");
++			ieee80211_queue_work(wl->hw, &wl->recovery_work);
+ 			ret = -ETIMEDOUT;
+ 			goto err;
+ 		} else if (ret < 0) {
+-- 
+1.6.3.3
 
-        memset(tx, 0, sizeof(*tx));
-        tx->skb = skb;
-        tx->local = local;
-        tx->sdata = sdata;
-        tx->channel = local->hw.conf.channel;
--------------------------------------------------------------------------------------------------------------------
-
-The channel assignment towards the end is making an incorrect
-assumption about the skb's target channel. The correct assumption
-would be to understand that the peer (struct sta_info) this skb is
-targeted to is actually for a separate band / channel. I suspect what
-happens in the roam case is we roam from 2.4 GHz to 5 GHz and are
-trying to send a CCK frame to a 5 GHz peer. The easy fix would be to
-simply drop the frame if the channel for the peer is different from
-the currently operating one. This however requires adding the channel
-to the struct sta_info which seems hacking if we need this only for
-this work around purpose. A better solution, as noted by Johannes,
-would be to treat these type of frames as offchannel work, right now
-we assume they are all for the same target channel.
-
-Working on trying to come up with something for stable to repress
-these warnings, but we also need a long term solution for which I am
-picking Johannes' brain on.
-
-[1] http://bombadil.infradead.org/~mcgrof/tmp/test-roam
-
-  Luis
