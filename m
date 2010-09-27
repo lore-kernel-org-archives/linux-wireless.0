@@ -1,158 +1,158 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iw0-f174.google.com ([209.85.214.174]:53637 "EHLO
-	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751714Ab0IAXqI (ORCPT
+Received: from smtp.nokia.com ([192.100.105.134]:16882 "EHLO
+	mgw-mx09.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932818Ab0I0IiL (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 1 Sep 2010 19:46:08 -0400
-Received: by iwn5 with SMTP id 5so7180015iwn.19
-        for <linux-wireless@vger.kernel.org>; Wed, 01 Sep 2010 16:46:06 -0700 (PDT)
-MIME-Version: 1.0
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Wed, 1 Sep 2010 16:45:46 -0700
-Message-ID: <AANLkTiko4XRM=xQWHy2H5WUMbYBzRE+NfUeqS20S2D_S@mail.gmail.com>
-Subject: WARNING: at net/mac80211/tx.c:653 ieee80211_tx_h_rate_ctrl+0x460
-To: linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+	Mon, 27 Sep 2010 04:38:11 -0400
+Received: from vaebh105.NOE.Nokia.com (vaebh105.europe.nokia.com [10.160.244.31])
+	by mgw-mx09.nokia.com (Switch-3.3.3/Switch-3.3.3) with ESMTP id o8R8bE5f023973
+	for <linux-wireless@vger.kernel.org>; Mon, 27 Sep 2010 03:38:10 -0500
+From: Luciano Coelho <luciano.coelho@nokia.com>
+To: linux-wireless@vger.kernel.org
+Cc: Juuso Oikarinen <juuso.oikarinen@nokia.com>
+Subject: [PATCH 07/25] wl1271: Change supported channel order for a more optimal scan
+Date: Mon, 27 Sep 2010 11:37:31 +0300
+Message-Id: <1285576669-8070-8-git-send-email-luciano.coelho@nokia.com>
+In-Reply-To: <1285576669-8070-1-git-send-email-luciano.coelho@nokia.com>
+References: <1285576669-8070-1-git-send-email-luciano.coelho@nokia.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Just hit this
+From: Juuso Oikarinen <juuso.oikarinen@nokia.com>
 
-        /*
-         * Lets not bother rate control if we're associated and cannot
-         * talk to the sta. This should not happen.
-         */
-        if (WARN(test_bit(SCAN_SW_SCANNING, &tx->local->scanning) &&
-                 (sta_flags & WLAN_STA_ASSOC) &&
-                 !rate_usable_index_exists(sband, &tx->sta->sta),
-                 "%s: Dropped data frame as no usable bitrate found while "
-                 "scanning and associated. Target station: "
-                 "%pM on %d GHz band\n",
-                 tx->sdata->name, hdr->addr1,
-                 tx->channel->band ? 5 : 2))
-                return TX_DROP;
+The mac80211 inserts channels into a scan request in the same order the driver
+registers them. Use this fact to optimize scan by ordering the channels so
+that adjacent channels don't get scanned consecutively.
 
-Reproduced when doing a loop on a bg scan (while associated).
+Signed-off-by: Juuso Oikarinen <juuso.oikarinen@nokia.com>
+Reviewed-by: Luciano Coelho <luciano.coelho@nokia.com>
+Signed-off-by: Luciano Coelho <luciano.coelho@nokia.com>
+---
+ drivers/net/wireless/wl12xx/wl1271_main.c |   86 +++++++++++++++-------------
+ 1 files changed, 46 insertions(+), 40 deletions(-)
 
-Sep  1 16:42:26 tux kernel: [  722.406139] phy0: device no longer idle - working
-Sep  1 16:42:26 tux kernel: [  722.444648] wlan39: authenticate with
-00:24:6c:04:b8:59 (try 1)
-Sep  1 16:42:26 tux kernel: [  722.444713] wlan39: deauthenticating
-from 00:24:6c:04:b8:59 by local choice (reason=3)
-Sep  1 16:42:26 tux kernel: [  722.444736] phy0: device now idle
-Sep  1 16:42:26 tux kernel: [  722.476768] phy0: device no longer idle - working
-Sep  1 16:42:27 tux kernel: [  722.657764] wlan39: authenticate with
-00:24:6c:04:b8:51 (try 1)
-Sep  1 16:42:27 tux kernel: [  722.664863] wlan39: authenticated
-Sep  1 16:42:27 tux kernel: [  722.665011] wlan39: associate with
-00:24:6c:04:b8:51 (try 1)
-Sep  1 16:42:27 tux kernel: [  722.669223] wlan39: RX AssocResp from
-00:24:6c:04:b8:51 (capab=0x431 status=0 aid=2)
-Sep  1 16:42:27 tux kernel: [  722.669229] wlan39: associated
-Sep  1 16:42:27 tux kernel: [  722.669252] phy0: Allocated STA 00:24:6c:04:b8:51
-Sep  1 16:42:27 tux kernel: [  722.669342] phy0: Inserted STA 00:24:6c:04:b8:51
-Sep  1 16:42:27 tux kernel: [  722.814609] phy0: WMM queue=2 aci=0
-acm=0 aifs=3 cWmin=15 cWmax=1023 txop=0 uapsd=0
-Sep  1 16:42:27 tux kernel: [  722.814629] phy0: WMM queue=3 aci=1
-acm=0 aifs=7 cWmin=15 cWmax=1023 txop=0 uapsd=0
-Sep  1 16:42:27 tux kernel: [  722.814641] phy0: WMM queue=1 aci=2
-acm=0 aifs=2 cWmin=7 cWmax=15 txop=94 uapsd=0
-Sep  1 16:42:27 tux kernel: [  722.814652] phy0: WMM queue=0 aci=3
-acm=0 aifs=2 cWmin=3 cWmax=7 txop=47 uapsd=0
-Sep  1 16:42:27 tux kernel: [  722.875453] Rx A-MPDU request on tid 0 result 0
-Sep  1 16:42:27 tux kernel: [  723.471429] Open BA session requested
-for 00:24:6c:04:b8:51 tid 0
-Sep  1 16:42:27 tux kernel: [  723.471497] activated addBA response
-timer on tid 0
-Sep  1 16:42:27 tux kernel: [  723.473561] switched off addBA timer for tid 0
-Sep  1 16:42:27 tux kernel: [  723.473563] Aggregation is on for tid 0
-Sep  1 16:42:38 tux kernel: [  733.538967] phy0: release an RX reorder
-frame due to timeout on earlier frames
-Sep  1 16:42:38 tux kernel: [  733.640014] phy0: release an RX reorder
-frame due to timeout on earlier frames
-Sep  1 16:42:38 tux kernel: [  733.750159] WARNING: at
-net/mac80211/tx.c:653 ieee80211_tx_h_rate_ctrl+0x460/0x4e0
-[mac80211]()
-Sep  1 16:42:38 tux kernel: [  733.750166] Hardware name: 6460DWU
-Sep  1 16:42:38 tux kernel: [  733.750172] wlan39: Dropped data frame
-as no usable bitrate found while scanning and associated. Target
-station: 00:24:6c:04:b8:51 on 5 GHz band
-Sep  1 16:42:38 tux kernel: [  733.750178] Modules linked in: rfcomm
-sco snd_hda_codec_analog binfmt_misc bridge stp bnep ppdev l2cap
-joydev snd_hda_intel nouveau snd_hda_codec ath9k mac80211 snd_hwdep
-snd_pcm thinkpad_acpi snd_seq_midi ath9k_common snd_rawmidi ath9k_hw
-snd_seq_midi_event snd_seq ttm pcmcia drm_kms_helper snd_timer
-snd_seq_device ath drm tpm_tis snd btusb nvram tpm cfg80211 bluetooth
-tpm_bios yenta_socket i2c_algo_bit pcmcia_rsrc video psmouse
-pcmcia_core serio_raw output lp soundcore snd_page_alloc intel_agp
-parport ohci1394 ahci e1000e ieee1394 libahci
-Sep  1 16:42:38 tux kernel: [  733.750282] Pid: 2830, comm:
-kworker/u:0 Not tainted 2.6.36-rc3-wl+ #240
-Sep  1 16:42:38 tux kernel: [  733.750288] Call Trace:
-Sep  1 16:42:38 tux kernel: [  733.750305]  [<ffffffff8105fdbf>]
-warn_slowpath_common+0x7f/0xc0
-Sep  1 16:42:38 tux kernel: [  733.750313]  [<ffffffff8105feb6>]
-warn_slowpath_fmt+0x46/0x50
-Sep  1 16:42:38 tux kernel: [  733.750324]  [<ffffffff81036c99>] ?
-default_spin_lock_flags+0x9/0x10
-Sep  1 16:42:38 tux kernel: [  733.750355]  [<ffffffffa0349870>]
-ieee80211_tx_h_rate_ctrl+0x460/0x4e0 [mac80211]
-Sep  1 16:42:38 tux kernel: [  733.750387]  [<ffffffffa0349c90>]
-invoke_tx_handlers+0x100/0x140 [mac80211]
-Sep  1 16:42:38 tux kernel: [  733.750418]  [<ffffffffa0349d55>]
-ieee80211_tx+0x85/0x240 [mac80211]
-Sep  1 16:42:38 tux kernel: [  733.750428]  [<ffffffff8147c970>] ?
-skb_release_data+0xd0/0xe0
-Sep  1 16:42:38 tux kernel: [  733.750436]  [<ffffffff8147e7fd>] ?
-pskb_expand_head+0x10d/0x1a0
-Sep  1 16:42:38 tux kernel: [  733.750468]  [<ffffffffa0349fc2>]
-ieee80211_xmit+0xb2/0x1c0 [mac80211]
-Sep  1 16:42:38 tux kernel: [  733.750499]  [<ffffffffa0338050>] ?
-ieee80211_dynamic_ps_enable_work+0x0/0xb0 [mac80211]
-Sep  1 16:42:38 tux kernel: [  733.750530]  [<ffffffffa034a124>]
-ieee80211_tx_skb+0x54/0x70 [mac80211]
-Sep  1 16:42:38 tux kernel: [  733.750560]  [<ffffffffa033802b>]
-ieee80211_send_nullfunc+0x4b/0x70 [mac80211]
-Sep  1 16:42:38 tux kernel: [  733.750589]  [<ffffffffa03380fd>]
-ieee80211_dynamic_ps_enable_work+0xad/0xb0 [mac80211]
-Sep  1 16:42:38 tux kernel: [  733.750599]  [<ffffffff81079fa3>]
-process_one_work+0x123/0x440
-Sep  1 16:42:38 tux kernel: [  733.750608]  [<ffffffff8107c4d0>]
-worker_thread+0x170/0x400
-Sep  1 16:42:38 tux kernel: [  733.750617]  [<ffffffff8107c360>] ?
-worker_thread+0x0/0x400
-Sep  1 16:42:38 tux kernel: [  733.750625]  [<ffffffff810808f6>]
-kthread+0x96/0xa0
-Sep  1 16:42:38 tux kernel: [  733.750634]  [<ffffffff8100be64>]
-kernel_thread_helper+0x4/0x10
-Sep  1 16:42:38 tux kernel: [  733.750643]  [<ffffffff81080860>] ?
-kthread+0x0/0xa0
-Sep  1 16:42:38 tux kernel: [  733.750650]  [<ffffffff8100be60>] ?
-kernel_thread_helper+0x0/0x10
-Sep  1 16:42:38 tux kernel: [  733.750656] ---[ end trace 68c1772848be0f83 ]---
-Sep  1 16:42:44 tux kernel: [  740.210023] phy0: release an RX reorder
-frame due to timeout on earlier frames
-Sep  1 16:42:44 tux kernel: [  740.210028] phy0: release an RX reorder
-frame due to timeout on earlier frames
-Sep  1 16:42:44 tux kernel: [  740.210031] phy0: release an RX reorder
-frame due to timeout on earlier frames
-Sep  1 16:42:44 tux kernel: [  740.210033] phy0: release an RX reorder
-frame due to timeout on earlier frames
-Sep  1 16:42:44 tux kernel: [  740.210035] phy0: release an RX reorder
-frame due to timeout on earlier frames
-Sep  1 16:42:45 tux kernel: [  741.520015] phy0: release an RX reorder
-frame due to timeout on earlier frames
-Sep  1 16:42:45 tux kernel: [  741.520019] phy0: release an RX reorder
-frame due to timeout on earlier frames
-Sep  1 16:42:45 tux kernel: [  741.520022] phy0: release an RX reorder
-frame due to timeout on earlier frames
-Sep  1 16:42:45 tux kernel: [  741.520024] phy0: release an RX reorder
-frame due to timeout on earlier frames
-Sep  1 16:42:45 tux kernel: [  741.520026] phy0: release an RX reorder
-frame due to timeout on earlier frames
-Sep  1 16:42:52 tux kernel: [  748.040093] net_ratelimit: 10 callbacks
-suppressed
-Sep  1 16:42:52 tux kernel: [  748.040097] wlan39: detected beacon
-loss from AP - sending probe request
-Sep  1 16:42:55 tux kernel: [  751.050050] wlan39: detected beacon
-loss from AP - sending probe request
+diff --git a/drivers/net/wireless/wl12xx/wl1271_main.c b/drivers/net/wireless/wl12xx/wl1271_main.c
+index b42ee48..8ce891a 100644
+--- a/drivers/net/wireless/wl12xx/wl1271_main.c
++++ b/drivers/net/wireless/wl12xx/wl1271_main.c
+@@ -2057,21 +2057,24 @@ static struct ieee80211_rate wl1271_rates[] = {
+ 	  .hw_value_short = CONF_HW_BIT_RATE_54MBPS, },
+ };
+ 
+-/* can't be const, mac80211 writes to this */
++/*
++ * Can't be const, mac80211 writes to this. The order of the channels here
++ * is designed to improve scanning.
++ */
+ static struct ieee80211_channel wl1271_channels[] = {
+ 	{ .hw_value = 1, .center_freq = 2412, .max_power = 25 },
+-	{ .hw_value = 2, .center_freq = 2417, .max_power = 25 },
+-	{ .hw_value = 3, .center_freq = 2422, .max_power = 25 },
+-	{ .hw_value = 4, .center_freq = 2427, .max_power = 25 },
+ 	{ .hw_value = 5, .center_freq = 2432, .max_power = 25 },
+-	{ .hw_value = 6, .center_freq = 2437, .max_power = 25 },
+-	{ .hw_value = 7, .center_freq = 2442, .max_power = 25 },
+-	{ .hw_value = 8, .center_freq = 2447, .max_power = 25 },
+ 	{ .hw_value = 9, .center_freq = 2452, .max_power = 25 },
+-	{ .hw_value = 10, .center_freq = 2457, .max_power = 25 },
+-	{ .hw_value = 11, .center_freq = 2462, .max_power = 25 },
+-	{ .hw_value = 12, .center_freq = 2467, .max_power = 25 },
+ 	{ .hw_value = 13, .center_freq = 2472, .max_power = 25 },
++	{ .hw_value = 4, .center_freq = 2427, .max_power = 25 },
++	{ .hw_value = 8, .center_freq = 2447, .max_power = 25 },
++	{ .hw_value = 12, .center_freq = 2467, .max_power = 25 },
++	{ .hw_value = 3, .center_freq = 2422, .max_power = 25 },
++	{ .hw_value = 7, .center_freq = 2442, .max_power = 25 },
++	{ .hw_value = 11, .center_freq = 2462, .max_power = 25 },
++	{ .hw_value = 2, .center_freq = 2417, .max_power = 25 },
++	{ .hw_value = 6, .center_freq = 2437, .max_power = 25 },
++	{ .hw_value = 10, .center_freq = 2457, .max_power = 25 },
+ };
+ 
+ /* mapping to indexes for wl1271_rates */
+@@ -2140,49 +2143,52 @@ static struct ieee80211_rate wl1271_rates_5ghz[] = {
+ 	  .hw_value_short = CONF_HW_BIT_RATE_54MBPS, },
+ };
+ 
+-/* 5 GHz band channels for WL1273 */
++/*
++ * 5 GHz band channels for WL1273 - can't be const, mac80211 writes to this.
++ * The order of the channels here is designed to improve scanning.
++ */
+ static struct ieee80211_channel wl1271_channels_5ghz[] = {
+ 	{ .hw_value = 183, .center_freq = 4915},
+-	{ .hw_value = 184, .center_freq = 4920},
+-	{ .hw_value = 185, .center_freq = 4925},
+-	{ .hw_value = 187, .center_freq = 4935},
+ 	{ .hw_value = 188, .center_freq = 4940},
+-	{ .hw_value = 189, .center_freq = 4945},
+-	{ .hw_value = 192, .center_freq = 4960},
+-	{ .hw_value = 196, .center_freq = 4980},
+-	{ .hw_value = 7, .center_freq = 5035},
+ 	{ .hw_value = 8, .center_freq = 5040},
+-	{ .hw_value = 9, .center_freq = 5045},
+-	{ .hw_value = 11, .center_freq = 5055},
+-	{ .hw_value = 12, .center_freq = 5060},
+-	{ .hw_value = 16, .center_freq = 5080},
+ 	{ .hw_value = 34, .center_freq = 5170},
+-	{ .hw_value = 36, .center_freq = 5180},
+-	{ .hw_value = 38, .center_freq = 5190},
+-	{ .hw_value = 40, .center_freq = 5200},
+-	{ .hw_value = 42, .center_freq = 5210},
+ 	{ .hw_value = 44, .center_freq = 5220},
+-	{ .hw_value = 46, .center_freq = 5230},
+-	{ .hw_value = 48, .center_freq = 5240},
+-	{ .hw_value = 52, .center_freq = 5260},
+-	{ .hw_value = 56, .center_freq = 5280},
+ 	{ .hw_value = 60, .center_freq = 5300},
+-	{ .hw_value = 64, .center_freq = 5320},
+-	{ .hw_value = 100, .center_freq = 5500},
+-	{ .hw_value = 104, .center_freq = 5520},
+-	{ .hw_value = 108, .center_freq = 5540},
+ 	{ .hw_value = 112, .center_freq = 5560},
+-	{ .hw_value = 116, .center_freq = 5580},
+-	{ .hw_value = 120, .center_freq = 5600},
+-	{ .hw_value = 124, .center_freq = 5620},
+-	{ .hw_value = 128, .center_freq = 5640},
+ 	{ .hw_value = 132, .center_freq = 5660},
++	{ .hw_value = 157, .center_freq = 5785},
++	{ .hw_value = 184, .center_freq = 4920},
++	{ .hw_value = 189, .center_freq = 4945},
++	{ .hw_value = 9, .center_freq = 5045},
++	{ .hw_value = 36, .center_freq = 5180},
++	{ .hw_value = 46, .center_freq = 5230},
++	{ .hw_value = 64, .center_freq = 5320},
++	{ .hw_value = 116, .center_freq = 5580},
+ 	{ .hw_value = 136, .center_freq = 5680},
++	{ .hw_value = 192, .center_freq = 4960},
++	{ .hw_value = 11, .center_freq = 5055},
++	{ .hw_value = 38, .center_freq = 5190},
++	{ .hw_value = 48, .center_freq = 5240},
++	{ .hw_value = 100, .center_freq = 5500},
++	{ .hw_value = 120, .center_freq = 5600},
+ 	{ .hw_value = 140, .center_freq = 5700},
++	{ .hw_value = 185, .center_freq = 4925},
++	{ .hw_value = 196, .center_freq = 4980},
++	{ .hw_value = 12, .center_freq = 5060},
++	{ .hw_value = 40, .center_freq = 5200},
++	{ .hw_value = 52, .center_freq = 5260},
++	{ .hw_value = 104, .center_freq = 5520},
++	{ .hw_value = 124, .center_freq = 5620},
+ 	{ .hw_value = 149, .center_freq = 5745},
+-	{ .hw_value = 153, .center_freq = 5765},
+-	{ .hw_value = 157, .center_freq = 5785},
+ 	{ .hw_value = 161, .center_freq = 5805},
++	{ .hw_value = 187, .center_freq = 4935},
++	{ .hw_value = 7, .center_freq = 5035},
++	{ .hw_value = 16, .center_freq = 5080},
++	{ .hw_value = 42, .center_freq = 5210},
++	{ .hw_value = 56, .center_freq = 5280},
++	{ .hw_value = 108, .center_freq = 5540},
++	{ .hw_value = 128, .center_freq = 5640},
++	{ .hw_value = 153, .center_freq = 5765},
+ 	{ .hw_value = 165, .center_freq = 5825},
+ };
+ 
+-- 
+1.6.3.3
+
