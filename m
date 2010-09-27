@@ -1,60 +1,126 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:59055 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755869Ab0INXkj (ORCPT
+Received: from mail-pw0-f46.google.com ([209.85.160.46]:38826 "EHLO
+	mail-pw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759180Ab0I0Rvs convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 14 Sep 2010 19:40:39 -0400
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>, stable@kernel.org,
-	Paul Stewart <pstew@google.com>,
-	Amod Bodas <amod.bodas@atheros.com>
-Subject: [PATCH v3 05/11] mac80211: reset probe send counter upon connection timer reset
-Date: Tue, 14 Sep 2010 19:40:18 -0400
-Message-Id: <1284507624-18176-6-git-send-email-lrodriguez@atheros.com>
-In-Reply-To: <1284507624-18176-1-git-send-email-lrodriguez@atheros.com>
-References: <1284507624-18176-1-git-send-email-lrodriguez@atheros.com>
+	Mon, 27 Sep 2010 13:51:48 -0400
+Received: by pwi1 with SMTP id 1so110485pwi.19
+        for <linux-wireless@vger.kernel.org>; Mon, 27 Sep 2010 10:51:47 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <20100909054958.GA9045@vasanth-laptop>
+References: <20100909054958.GA9045@vasanth-laptop>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Mon, 27 Sep 2010 10:51:26 -0700
+Message-ID: <AANLkTikWhG5XAzeL7+MbdePFbAEmHQv75_vjRm8+jsCk@mail.gmail.com>
+Subject: Re: warning at rate_control_send_low+0xd3/0x140
+To: Vasanthakumar Thiagarajan <vasanth@atheros.com>
+Cc: johannes@sipsolutions.net, linux-wireless@vger.kernel.org,
+	Paul Stewart <pstew@google.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Upon beacon loss we send probe requests after 30 seconds of idle
-time and we wait for each probe response 1/2 second. We send a
-total of 3 probe requests before giving up on the AP. In the case
-that we reset the connection idle monitor we should reset the probe
-requests count to 0. Right now this won't help in any way but
-the next patch will.
+On Wed, Sep 8, 2010 at 10:49 PM, Vasanthakumar Thiagarajan
+<vasanth@atheros.com> wrote:
+> Hi,
+>
+> I'm seeing the following warning while roaming to APs operating on
+> different bands.
+>
+> [ 9033.238676] Call Trace:
+> [ 9033.238684]  [<ffffffff81064f8b>] warn_slowpath_common+0x7b/0xc0
+> [ 9033.238688]  [<ffffffff81064fe4>] warn_slowpath_null+0x14/0x20
+> [ 9033.238697]  [<ffffffffa0558233>] rate_control_send_low+0xd3/0x140 [mac80211]
+> [ 9033.238704]  [<ffffffffa059a9e8>] ath_get_rate+0x48/0x570 [ath9k]
+> [ 9033.238709]  [<ffffffff812b3a9c>] ? put_dec+0x10c/0x110
+> [ 9033.238712]  [<ffffffff812b3d8e>] ? number+0x2ee/0x320
+> [ 9033.238721]  [<ffffffffa055805e>] rate_control_get_rate+0x8e/0x190 [mac80211]
+> [ 9033.238730]  [<ffffffffa056191c>] invoke_tx_handlers+0xa4c/0x1220 [mac80211]
+> [ 9033.238735]  [<ffffffff812b6000>] ? vsnprintf+0x1d0/0x5f0
+> [ 9033.238744]  [<ffffffffa0562175>] ieee80211_tx+0x85/0x240 [mac80211]
+> [ 9033.238749]  [<ffffffff814680d0>] ? skb_release_data+0xd0/0xe0
+> [ 9033.238752]  [<ffffffff81469fa2>] ? pskb_expand_head+0x152/0x1e0
+> [ 9033.238762]  [<ffffffffa05623e0>] ieee80211_xmit+0xb0/0x1c0 [mac80211]
+> [ 9033.238765]  [<ffffffff81468210>] ? __alloc_skb+0x80/0x190
+> [ 9033.238774]  [<ffffffffa0562544>] ieee80211_tx_skb+0x54/0x70 [mac80211]
+> [ 9033.238782]  [<ffffffffa054d26d>] ieee80211_send_delba+0x11d/0x190 [mac80211]
+> [ 9033.238791]  [<ffffffffa054e779>] ___ieee80211_stop_rx_ba_session+0x119/0x140 [mac80211]
+> [ 9033.238799]  [<ffffffffa054e7f0>] __ieee80211_stop_rx_ba_session+0x50/0x70 [mac80211]
+> [ 9033.238807]  [<ffffffffa054d583>] ieee80211_sta_tear_down_BA_sessions+0x43/0x50 [mac80211]
+> [ 9033.238815]  [<ffffffffa055276b>] ieee80211_set_disassoc+0x10b/0x220 [mac80211]
+> [ 9033.238820]  [<ffffffff811520c6>] ? pollwake+0x56/0x60
+> [ 9033.238829]  [<ffffffffa0553e1d>] ieee80211_mgd_assoc+0x8d/0x360 [mac80211]
+> [ 9033.238838]  [<ffffffffa055a34f>] ieee80211_assoc+0x4f/0x80 [mac80211]
+> [ 9033.238855]  [<ffffffffa0521186>] __cfg80211_mlme_assoc+0x206/0x290 [cfg80211]
+> [ 9033.238863]  [<ffffffffa052129f>] cfg80211_mlme_assoc+0x8f/0xc0 [cfg80211]
+> [ 9033.238869]  [<ffffffffa050e0a0>] ? cfg80211_get_dev_from_ifindex+0x70/0x80 [cfg80211]
+> [ 9033.238877]  [<ffffffffa0517924>] nl80211_associate+0x224/0x240 [cfg80211]
+> [ 9033.238882]  [<ffffffff814978c6>] genl_rcv_msg+0x1e6/0x220
+> [ 9033.238886]  [<ffffffff814976e0>] ? genl_rcv_msg+0x0/0x220
+> [ 9033.238890]  [<ffffffff814965f9>] netlink_rcv_skb+0xa9/0xd0
+> [ 9033.238893]  [<ffffffff814976cc>] genl_rcv+0x2c/0x40
+> [ 9033.238896]  [<ffffffff8149625e>] netlink_unicast+0x2de/0x2f0
+> [ 9033.238900]  [<ffffffff8149704e>] netlink_sendmsg+0x1fe/0x2e0
+> [ 9033.238903]  [<ffffffff814961c9>] ? netlink_unicast+0x249/0x2f0
+> [ 9033.238908]  [<ffffffff8146121b>] sock_sendmsg+0x10b/0x140
+> [ 9033.238912]  [<ffffffff81083580>] ? autoremove_wake_function+0x0/0x40
+> [ 9033.238917]  [<ffffffff81059422>] ? default_wake_function+0x12/0x20
+> [ 9033.238922]  [<ffffffff81049f29>] ? __wake_up_common+0x59/0x90
+> [ 9033.238925]  [<ffffffff81460774>] ? move_addr_to_kernel+0x64/0x70
+> [ 9033.238929]  [<ffffffff8146b969>] ? verify_iovec+0x69/0xc0
+> [ 9033.238932]  [<ffffffff81461683>] sys_sendmsg+0x233/0x3a0
+> [ 9033.238935]  [<ffffffff810517d3>] ? __wake_up+0x53/0x70
+> [ 9033.238939]  [<ffffffff81140132>] ? vfs_write+0x132/0x1a0
+> [ 9033.238942]  [<ffffffff81140951>] ? sys_write+0x51/0x80
+> [ 9033.238947]  [<ffffffff810131f2>] system_call_fastpath+0x16/0x1b
+> [ 9033.238950] ---[ end trace 5655896580a8ccea ]---
+>
+> This happens because the station tries to close its BACK negotiation
+> with the existing AP but on a channel where it got authenticated
+> with a newer AP. ieee80211_work_work() configures the station back
+> to its operating channel after the authentication with the new AP,
+> but sometimes we get assoc req before this. One (may be not good)fix
+> can be making sure if station is in operating channel before
+> cleaning up its BACK state. Not quite sure about a clean fix here.
 
-This patch has fixes for stable kernel [2.6.35+].
+I can reproduce this easily with my test-roam script [1]. The problem is this:
 
-Cc: stable@kernel.org
-Cc: Paul Stewart <pstew@google.com>
-Cc: Amod Bodas <amod.bodas@atheros.com>
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
----
- net/mac80211/mlme.c |    4 ++++
- 1 files changed, 4 insertions(+), 0 deletions(-)
 
-diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index cfdafb7..172a397 100644
---- a/net/mac80211/mlme.c
-+++ b/net/mac80211/mlme.c
-@@ -126,11 +126,15 @@ static void mod_beacon_timer(struct ieee80211_sub_if_data *sdata)
- 
- void ieee80211_sta_reset_conn_monitor(struct ieee80211_sub_if_data *sdata)
- {
-+	struct ieee80211_if_managed *ifmgd = &sdata->u.mgd;
-+
- 	if (sdata->local->hw.flags & IEEE80211_HW_CONNECTION_MONITOR)
- 		return;
- 
- 	mod_timer(&sdata->u.mgd.conn_mon_timer,
- 		  round_jiffies_up(jiffies + IEEE80211_CONNECTION_IDLE_TIME));
-+
-+	ifmgd->probe_send_count = 0;
- }
- 
- static int ecw2cw(int ecw)
--- 
-1.7.0.4
+-------------------------------------------------------------------------------------------------------------------
+ieee80211_tx_prepare(struct ieee80211_sub_if_data *sdata,
+                     struct ieee80211_tx_data *tx,
+                     struct sk_buff *skb)
+{
+        struct ieee80211_local *local = sdata->local;
+        struct ieee80211_hdr *hdr;
+        struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
+        int hdrlen, tid;
+        u8 *qc;
 
+        memset(tx, 0, sizeof(*tx));
+        tx->skb = skb;
+        tx->local = local;
+        tx->sdata = sdata;
+        tx->channel = local->hw.conf.channel;
+-------------------------------------------------------------------------------------------------------------------
+
+The channel assignment towards the end is making an incorrect
+assumption about the skb's target channel. The correct assumption
+would be to understand that the peer (struct sta_info) this skb is
+targeted to is actually for a separate band / channel. I suspect what
+happens in the roam case is we roam from 2.4 GHz to 5 GHz and are
+trying to send a CCK frame to a 5 GHz peer. The easy fix would be to
+simply drop the frame if the channel for the peer is different from
+the currently operating one. This however requires adding the channel
+to the struct sta_info which seems hacking if we need this only for
+this work around purpose. A better solution, as noted by Johannes,
+would be to treat these type of frames as offchannel work, right now
+we assume they are all for the same target channel.
+
+Working on trying to come up with something for stable to repress
+these warnings, but we also need a long term solution for which I am
+picking Johannes' brain on.
+
+[1] http://bombadil.infradead.org/~mcgrof/tmp/test-roam
+
+  Luis
