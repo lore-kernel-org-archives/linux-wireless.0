@@ -1,59 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:59155 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752250Ab0IVQxQ (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 22 Sep 2010 12:53:16 -0400
-Message-ID: <4C9A346A.3050909@candelatech.com>
-Date: Wed, 22 Sep 2010 09:52:58 -0700
-From: Ben Greear <greearb@candelatech.com>
-MIME-Version: 1.0
-To: Johannes Stezenbach <js@sig21.net>
-CC: Andreas Schwab <schwab@linux-m68k.org>,
-	linux-wireless@vger.kernel.org
-Subject: Re: Patch to get iw building on Fedora 8
-References: <4C98DFB6.10902@candelatech.com> <m2wrqej2qk.fsf@igel.home> <4C991F25.1000102@candelatech.com> <20100921213451.GA29134@sig21.net>
-In-Reply-To: <20100921213451.GA29134@sig21.net>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Received: from smtp.nokia.com ([147.243.1.47]:35042 "EHLO mgw-sa01.nokia.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932939Ab0I0KCA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 27 Sep 2010 06:02:00 -0400
+Subject: Re: [PATCH 16/25] wl1271: Add support for hardware GEM cipher
+From: Luciano Coelho <luciano.coelho@nokia.com>
+To: "Oikarinen Juuso (Nokia-MS/Tampere)" <juuso.oikarinen@nokia.com>
+Cc: ext Johannes Berg <johannes@sipsolutions.net>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <1285581481.11177.68.camel@wimaxnb.nmp.nokia.com>
+References: <1285576669-8070-1-git-send-email-luciano.coelho@nokia.com>
+	 <1285576669-8070-17-git-send-email-luciano.coelho@nokia.com>
+	 <1285578777.4043.6.camel@jlt3.sipsolutions.net>
+	 <1285580806.11177.65.camel@wimaxnb.nmp.nokia.com>
+	 <1285580995.4043.7.camel@jlt3.sipsolutions.net>
+	 <1285581481.11177.68.camel@wimaxnb.nmp.nokia.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Mon, 27 Sep 2010 13:01:17 +0300
+Message-ID: <1285581677.5768.70.camel@chilepepper>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 09/21/2010 02:34 PM, Johannes Stezenbach wrote:
-> On Tue, Sep 21, 2010 at 02:09:57PM -0700, Ben Greear wrote:
->> On 09/21/2010 12:49 PM, Andreas Schwab wrote:
->>> Ben Greear<greearb-my8/4N5VtI7c+919tysfdA@public.gmane.org>   writes:
->>>
->>>> I need this in order to get iw to build on Fedora 8.
->>>>
-> ...
->>>> +#define  __USE_ISOC99
->>>
->>> This is wrong.  You must never define internal glibc macros.
->>
->> How about this then?
-> ...
->> -                       tmpf = strtof(argv[i],&end);
->> +                       tmpf = strtod(argv[i],&end);
-> ...
->> Seems you don't have to do anything clever to get strtod to work,
->> and I assume it should cast just fine.
->
-> I think to use C99 features like strtof() you need to either
-> add -std=c99 to CFLAGS, or #define _ISOC99_SOURCE
-> (see /usr/include/features.h).
+On Mon, 2010-09-27 at 11:58 +0200, Oikarinen Juuso (Nokia-MS/Tampere)
+wrote:
+> On Mon, 2010-09-27 at 11:49 +0200, ext Johannes Berg wrote:
+> > On Mon, 2010-09-27 at 12:46 +0300, Juuso Oikarinen wrote:
+> > 
+> > > > > +#define WL1271_CIPHER_SUITE_GEM 0x000FACFF
+> > > > 
+> > > > NACK, this is a standards-reserved value. Use the correct ID for it or
+> > > > allocate one within your own OUI if you don't want to admit what this
+> > > > really is (and by now all readers here will know anyway.)
+> > > 
+> > > Well I'm sure many or most know what this patch is about. The choice of
+> > > value was not intended to hide that.
+> > > 
+> > > You're right though, we'll need to change the OUI of the value, unless
+> > > you can point me to an official value to use.
+> > 
+> > Well, ISO/IEC JTC 1 N 9880 says you should use 00-14-72:1.
+> 
+> Heh, yes, my local expert on this just gave me the same value. Thanks.
+> 
+> One new patch coming up!
 
-It seems using strtod would be simpler all around, and might work on
-more compilers and even more ancient systems.
-
-Thanks,
-Ben
-
->
-> HTH,
-> Johannes
+Cool, thanks for fixing this quickly, Juuso.  I'll replace the current
+patch with your new one.
 
 
 -- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+Cheers,
+Luca.
 
