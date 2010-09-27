@@ -1,63 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:49087 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752420Ab0IAU3k (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 1 Sep 2010 16:29:40 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	"John W. Linville" <linville@tuxdriver.com>
-Subject: [PATCH] mac80211: only cancel software-based scans on suspend
-Date: Wed,  1 Sep 2010 16:17:28 -0400
-Message-Id: <1283372248-1043-1-git-send-email-linville@tuxdriver.com>
-In-Reply-To: <1283368226.4124.12.camel@jlt3.sipsolutions.net>
-References: <1283368226.4124.12.camel@jlt3.sipsolutions.net>
+Received: from nbd.name ([88.198.39.176]:45853 "EHLO ds10.nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750745Ab0I0TcE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 27 Sep 2010 15:32:04 -0400
+Message-ID: <4CA0F124.9040602@openwrt.org>
+Date: Mon, 27 Sep 2010 21:31:48 +0200
+From: Felix Fietkau <nbd@openwrt.org>
+MIME-Version: 1.0
+To: Ben Greear <greearb@candelatech.com>
+CC: Nick Kossifidis <mickflemm@gmail.com>,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH v2] This allows ath5k to support virtual STA and AP interfaces.
+References: <1285272430-9617-1-git-send-email-greearb@candelatech.com> <AANLkTi=n9GDjiBxiS0cen2objz+BO9CeC-Uy5c6hVWhS@mail.gmail.com> <4C9CEB3F.5090804@candelatech.com> <4C9DBD69.2070700@openwrt.org> <4CA0E91A.7090704@candelatech.com>
+In-Reply-To: <4CA0E91A.7090704@candelatech.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Otherwise the hardware scan handler could access an invalid scan request
-structure.  The driver should cancel any pending hardware scans during
-the suspend process anyway, so also add a warning if the hardware scan
-is still pending when the device resumes.
+On 2010-09-27 8:57 PM, Ben Greear wrote:
+> On 09/25/2010 02:14 AM, Felix Fietkau wrote:
+>> On 2010-09-24 8:17 PM, Ben Greear wrote:
+>>> On 09/24/2010 10:46 AM, Nick Kossifidis wrote:
+>>>> 2010/9/23<greearb@candelatech.com>:
+>>>>> From: Ben Greear<greearb@candelatech.com>
+>>>>>
+>>>>> +#define ATH5K_VIF_MAX  2048
+>>>>
+>>>> This is too much !!! 2048 interfaces with a total of 4 beacon buffers
+>>>> 40 rx buffers and 200 tx buffers ? Has anyone tested this ?
+>>>>
+>>>> Also think about embedded devices, we don't want to waste memory like this...
+>>>>
+>>>>> +       struct ieee80211_vif *vifs[ATH5K_VIF_MAX];
+>>>
+>>> It only costs 4 or 8 bytes per pointer as long as no one actually
+>>> adds the vifs.
+>>>
+>>> We've tested at least 128 on an old 1Ghz VIA system, and I'd hope for more
+>>> on more modern hardware.  I didn't think the driver should make the decision
+>>> to limit un-necessarily.
+>>>
+>>> If you still think this is too much, then tell me the biggest number
+>>> you wouldn't complain about :)
+>> Actually, looking at the code, I don't see much reason to even have this
+>> array. Most of the time the code is iterating over the list anyway, so
+>> we might as well just have a linked list here...
+>> That way we can avoid introducing bogus limitations or memory waste.
+> 
+> I tried really hard to just use the mac80211 vif list, but I cannot
+> find a sane way to lookup a vif by a particular immutable piece of information.
+> I *could* find it based on mac-addr with a linear search by abusing
+> the mac80211 iterator logic, but that seems fragile (can't macs change?)
+> as well as a poor perfomer.
+> 
+> Any other regular list based approach is going to involve linear lookups
+> as well.  See ath5k_beacon_send for the need to lookup based on
+> an index or similar.
+For ath5k_beacon_send it's much better to just store vif pointers in the
+sc->bslot array, since the number of beacon slots is much more limited
+anyway.
 
-Signed-off-by: John W. Linville <linville@tuxdriver.com>
----
- net/mac80211/ieee80211_i.h |    6 ++++++
- net/mac80211/pm.c          |    3 ++-
- 2 files changed, 8 insertions(+), 1 deletions(-)
+> I think for now, I'd like to just stay with a 512 fixed size array
+> for the vifs.  Maybe someday someone will add an index to ieee80211_vif
+> and logic to look it up by hash, but I suspect I'd have at best
+> a long slow time of trying to get that sort of change upstream.
+The changes can be simplified a lot by removing the array, I think this
+should be done before the patch gets merged. It would be much cleaner
+that way, since it also allows you to get rid of the loop looking for a
+free slot, and you no longer need to iterate over all those empty slots
+when iterating over lots of interfaces.
 
-diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
-index 16f7fb1..4e635e2 100644
---- a/net/mac80211/ieee80211_i.h
-+++ b/net/mac80211/ieee80211_i.h
-@@ -1186,6 +1186,12 @@ int __ieee80211_suspend(struct ieee80211_hw *hw);
- 
- static inline int __ieee80211_resume(struct ieee80211_hw *hw)
- {
-+	struct ieee80211_local *local = hw_to_local(hw);
-+
-+	WARN(test_bit(SCAN_HW_SCANNING, &local->scanning),
-+		"%s: resume with hardware scan still in progress\n",
-+		wiphy_name(hw->wiphy));
-+
- 	return ieee80211_reconfig(hw_to_local(hw));
- }
- #else
-diff --git a/net/mac80211/pm.c b/net/mac80211/pm.c
-index d287fde..ce671df 100644
---- a/net/mac80211/pm.c
-+++ b/net/mac80211/pm.c
-@@ -12,7 +12,8 @@ int __ieee80211_suspend(struct ieee80211_hw *hw)
- 	struct ieee80211_sub_if_data *sdata;
- 	struct sta_info *sta;
- 
--	ieee80211_scan_cancel(local);
-+	if (unlikely(test_bit(SCAN_SW_SCANNING, &local->scanning)))
-+		ieee80211_scan_cancel(local);
- 
- 	ieee80211_stop_queues_by_reason(hw,
- 			IEEE80211_QUEUE_STOP_REASON_SUSPEND);
--- 
-1.7.2.2
-
+- Felix
