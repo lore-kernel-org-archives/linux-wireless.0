@@ -1,42 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:38807 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753476Ab0INOjY (ORCPT
+Received: from mail-gx0-f174.google.com ([209.85.161.174]:62896 "EHLO
+	mail-gx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933058Ab0I0SOv (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 14 Sep 2010 10:39:24 -0400
-Subject: Re: [PATCH 07/10] mac80211: disable beacon monitor while going
- offchannel
-From: Johannes Berg <johannes@sipsolutions.net>
-To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	stable@kernel.org, Paul Stewart <pstew@google.com>,
-	Amod Bodas <amod.bodas@atheros.com>
-In-Reply-To: <AANLkTin5Dbb+0EdY4wEmbk=ZAvFbowBj5YqH4fX9hBgc@mail.gmail.com>
-References: <1284474028-3337-1-git-send-email-lrodriguez@atheros.com>
-	 <1284474577.3704.8.camel@jlt3.sipsolutions.net>
-	 <AANLkTin5Dbb+0EdY4wEmbk=ZAvFbowBj5YqH4fX9hBgc@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Tue, 14 Sep 2010 16:38:42 +0200
-Message-ID: <1284475122.3704.11.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+	Mon, 27 Sep 2010 14:14:51 -0400
+Received: by gxk9 with SMTP id 9so1595566gxk.19
+        for <linux-wireless@vger.kernel.org>; Mon, 27 Sep 2010 11:14:51 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <1285266471.3770.384.camel@jlt3.sipsolutions.net>
+References: <1285266471.3770.384.camel@jlt3.sipsolutions.net>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Mon, 27 Sep 2010 11:14:28 -0700
+Message-ID: <AANLkTi=3GraBb9hTrieCNvCB0o3PXGORkW1b7F2PceK3@mail.gmail.com>
+Subject: Re: [RFC] mac80211: fix release_reorder_timeout in scan
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: wireless <linux-wireless@vger.kernel.org>, Jouni Malinen <j@w1.fi>,
+	Christian Lamparter <chunkeey@googlemail.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2010-09-14 at 07:35 -0700, Luis R. Rodriguez wrote:
-> On Tue, Sep 14, 2010 at 7:29 AM, Johannes Berg
-> <johannes@sipsolutions.net> wrote:
-> > On Tue, 2010-09-14 at 10:20 -0400, Luis R. Rodriguez wrote:
-> >
-> >> +     del_timer_sync(&ifmgd->bcn_mon_timer);
-> >>       del_timer_sync(&sdata->u.mgd.conn_mon_timer);
-> >
-> > This is kinda inconsistent now ... and you added both these lines in
-> > your patch set :-)
-> 
-> Sorry, I do not follow, can you elaborate?
+On Thu, Sep 23, 2010 at 11:27 AM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
+> From: Johannes Berg <johannes.berg@intel.com>
+>
+> Even if the reorder timeout timer fires while
+> scanning, the frames weren't received during
+> scanning and therefore shouldn't be dropped.
 
-You use "ifmgd->", but also "sdata->u.mgd." when both should be one of
-those.
+I don't get what we are doing with these frames today, are you saying
+we pegged some of these frames into the reorder buffer when starting a
+sw scan, or that we were dropping them?
 
-johannes
-
+  Luis
