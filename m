@@ -1,51 +1,103 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:33412 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751666Ab0IOXLF (ORCPT
+Received: from smtp.nokia.com ([192.100.122.233]:37666 "EHLO
+	mgw-mx06.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932844Ab0I0Iix (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 15 Sep 2010 19:11:05 -0400
-Subject: Re: [vendor-sec] [PATCH] wireless: fix 64K kernel heap content
- leak via ioctl
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Greg KH <greg@kroah.com>
-Cc: Kees Cook <kees.cook@canonical.com>, linux-kernel@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>,
-	"David S. Miller" <davem@davemloft.net>,
-	Eric Dumazet <eric.dumazet@gmail.com>,
-	Joe Perches <joe@perches.com>, Jean Tourrilhes <jt@hpl.hp.com>,
-	Tejun Heo <tj@kernel.org>, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org
-In-Reply-To: <20100915224836.GF19835@kroah.com>
-References: <20100827210240.GC4703@outflux.net>
-	 <20100915224836.GF19835@kroah.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Thu, 16 Sep 2010 01:11:07 +0200
-Message-ID: <1284592267.3707.7.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+	Mon, 27 Sep 2010 04:38:53 -0400
+Received: from vaebh105.NOE.Nokia.com (vaebh105.europe.nokia.com [10.160.244.31])
+	by mgw-mx06.nokia.com (Switch-3.3.3/Switch-3.3.3) with ESMTP id o8R8cb9l012895
+	for <linux-wireless@vger.kernel.org>; Mon, 27 Sep 2010 11:38:51 +0300
+From: Luciano Coelho <luciano.coelho@nokia.com>
+To: linux-wireless@vger.kernel.org
+Cc: Juuso Oikarinen <juuso.oikarinen@nokia.com>
+Subject: [PATCH 16/25] wl1271: Add support for hardware GEM cipher
+Date: Mon, 27 Sep 2010 11:37:40 +0300
+Message-Id: <1285576669-8070-17-git-send-email-luciano.coelho@nokia.com>
+In-Reply-To: <1285576669-8070-1-git-send-email-luciano.coelho@nokia.com>
+References: <1285576669-8070-1-git-send-email-luciano.coelho@nokia.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2010-09-15 at 15:48 -0700, Greg KH wrote:
-> On Fri, Aug 27, 2010 at 02:02:41PM -0700, Kees Cook wrote:
-> > This problem was originally tracked down by Brad Spengler.
-> > 
-> > When calling wireless ioctls, if a driver does not correctly
-> > validate/shrink iwp->length, the resulting copy_to_user can leak up to
-> > 64K of kernel heap contents.
-> > 
-> > It seems that this is triggerable[1] in 2.6.32 at least on ath5k, but
-> > I was not able to track down how. The twisty maze of ioctl handlers
-> > stumped me. :) Other drivers I checked did not appear to have any problems,
-> > but the potential remains. I'm not sure if this patch is the right approach;
-> > it was fixed differently[2] in grsecurity.
-> > 
-> > [1] http://forums.grsecurity.net/viewtopic.php?f=3&t=2290&start=0
-> > [2] http://grsecurity.net/~spender/wireless-infoleak-fix2.patch
-> 
-> Is this fixed differently upstream in the kernel with commit id
-> 42da2f948d949efd0111309f5827bf0298bcc9a4?
+From: Juuso Oikarinen <juuso.oikarinen@nokia.com>
 
-Yes, that's the fix for this.
+This patch adds support for the hardware GEM cipher suite.
 
-johannes
+Signed-off-by: Juuso Oikarinen <juuso.oikarinen@nokia.com>
+Reviewed-by: Luciano Coelho <luciano.coelho@nokia.com>
+Signed-off-by: Luciano Coelho <luciano.coelho@nokia.com>
+---
+ drivers/net/wireless/wl12xx/wl1271.h      |    2 ++
+ drivers/net/wireless/wl12xx/wl1271_cmd.h  |    2 +-
+ drivers/net/wireless/wl12xx/wl1271_main.c |   16 ++++++++++++++++
+ 3 files changed, 19 insertions(+), 1 deletions(-)
+
+diff --git a/drivers/net/wireless/wl12xx/wl1271.h b/drivers/net/wireless/wl12xx/wl1271.h
+index 763ece8..9782bc1 100644
+--- a/drivers/net/wireless/wl12xx/wl1271.h
++++ b/drivers/net/wireless/wl12xx/wl1271.h
+@@ -117,6 +117,8 @@ enum {
+ #define WL1271_TX_SECURITY_LO16(s) ((u16)((s) & 0xffff))
+ #define WL1271_TX_SECURITY_HI32(s) ((u32)(((s) >> 16) & 0xffffffff))
+ 
++#define WL1271_CIPHER_SUITE_GEM 0x000FACFF
++
+ #define WL1271_BUSY_WORD_CNT 1
+ #define WL1271_BUSY_WORD_LEN (WL1271_BUSY_WORD_CNT * sizeof(u32))
+ 
+diff --git a/drivers/net/wireless/wl12xx/wl1271_cmd.h b/drivers/net/wireless/wl12xx/wl1271_cmd.h
+index ff8e35e..33b946b 100644
+--- a/drivers/net/wireless/wl12xx/wl1271_cmd.h
++++ b/drivers/net/wireless/wl12xx/wl1271_cmd.h
+@@ -279,7 +279,7 @@ enum wl1271_cmd_key_type {
+ 	KEY_WEP  = 1,
+ 	KEY_TKIP = 2,
+ 	KEY_AES  = 3,
+-	KEY_GEM  = 4
++	KEY_GEM  = 4,
+ };
+ 
+ /* FIXME: Add description for key-types */
+diff --git a/drivers/net/wireless/wl12xx/wl1271_main.c b/drivers/net/wireless/wl12xx/wl1271_main.c
+index f0c2532..39b5985 100644
+--- a/drivers/net/wireless/wl12xx/wl1271_main.c
++++ b/drivers/net/wireless/wl12xx/wl1271_main.c
+@@ -1528,6 +1528,11 @@ static int wl1271_op_set_key(struct ieee80211_hw *hw, enum set_key_cmd cmd,
+ 		tx_seq_32 = WL1271_TX_SECURITY_HI32(wl->tx_security_seq);
+ 		tx_seq_16 = WL1271_TX_SECURITY_LO16(wl->tx_security_seq);
+ 		break;
++	case WL1271_CIPHER_SUITE_GEM:
++		key_type = KEY_GEM;
++		tx_seq_32 = WL1271_TX_SECURITY_HI32(wl->tx_security_seq);
++		tx_seq_16 = WL1271_TX_SECURITY_LO16(wl->tx_security_seq);
++		break;
+ 	default:
+ 		wl1271_error("Unknown key algo 0x%x", key_conf->cipher);
+ 
+@@ -2382,6 +2387,14 @@ EXPORT_SYMBOL_GPL(wl1271_unregister_hw);
+ 
+ int wl1271_init_ieee80211(struct wl1271 *wl)
+ {
++	static const u32 cipher_suites[] = {
++		WLAN_CIPHER_SUITE_WEP40,
++		WLAN_CIPHER_SUITE_WEP104,
++		WLAN_CIPHER_SUITE_TKIP,
++		WLAN_CIPHER_SUITE_CCMP,
++		WL1271_CIPHER_SUITE_GEM,
++	};
++
+ 	/* The tx descriptor buffer and the TKIP space. */
+ 	wl->hw->extra_tx_headroom = WL1271_TKIP_IV_SPACE +
+ 		sizeof(struct wl1271_tx_hw_descr);
+@@ -2399,6 +2412,9 @@ int wl1271_init_ieee80211(struct wl1271 *wl)
+ 		IEEE80211_HW_CONNECTION_MONITOR |
+ 		IEEE80211_HW_SUPPORTS_CQM_RSSI;
+ 
++	wl->hw->wiphy->cipher_suites = cipher_suites;
++	wl->hw->wiphy->n_cipher_suites = ARRAY_SIZE(cipher_suites);
++
+ 	wl->hw->wiphy->interface_modes = BIT(NL80211_IFTYPE_STATION) |
+ 		BIT(NL80211_IFTYPE_ADHOC);
+ 	wl->hw->wiphy->max_scan_ssids = 1;
+-- 
+1.6.3.3
 
