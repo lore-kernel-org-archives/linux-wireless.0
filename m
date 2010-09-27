@@ -1,59 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:46157 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753229Ab0IUUT6 (ORCPT
+Received: from mail-pz0-f46.google.com ([209.85.210.46]:50447 "EHLO
+	mail-pz0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756907Ab0I0QjF (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 21 Sep 2010 16:19:58 -0400
-Message-ID: <4C99135A.3090103@candelatech.com>
-Date: Tue, 21 Sep 2010 13:19:38 -0700
-From: Ben Greear <greearb@candelatech.com>
+	Mon, 27 Sep 2010 12:39:05 -0400
+Message-ID: <4CA0C8B0.9020209@gmail.com>
+Date: Mon, 27 Sep 2010 09:39:12 -0700
+From: "Justin P. Mattock" <justinmattock@gmail.com>
 MIME-Version: 1.0
-To: Felix Fietkau <nbd@openwrt.org>
-CC: Johannes Berg <johannes@sipsolutions.net>,
-	"ath9k-devel@lists.ath9k.org" <ath9k-devel@venema.h4ckr.net>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [ath9k-devel] ath9k, multiple stations, and AMPDUs
-References: <4C9841BA.4080700@candelatech.com> <4C98848C.70005@openwrt.org>	 <4C98A022.7020106@candelatech.com> <4C98A2C4.8060108@openwrt.org>	 <4C98EAA1.7050908@candelatech.com>  <4C98F2D8.8020602@openwrt.org> <1285097307.12764.11.camel@jlt3.sipsolutions.net> <4C990859.70709@openwrt.org>
-In-Reply-To: <4C990859.70709@openwrt.org>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+To: "John W. Linville" <linville@tuxdriver.com>
+CC: trivial@kernel.org, linux-kernel@vger.kernel.org,
+	linux-wireless@vger.kernel.org, linux-usb@vger.kernel.org,
+	linux-scsi@vger.kernel.org, linux-fbdev@vger.kernel.org,
+	alsa-devel@alsa-project.org, dri-devel@lists.freedesktop.org,
+	linux-ide@vger.kernel.org,
+	"Maciej W. Rozycki" <macro@linux-mips.org>,
+	Geert Uytterhoeven <geert@linux-m68k.org>,
+	Finn Thain <fthain@telegraphics.com.au>,
+	Randy Dunlap <rdunlap@xenotime.net>,
+	Matt Turner <mattst88@gmail.com>,
+	Dimitry Torokhov <dmitry.torokhov@gmail.com>,
+	Mike Frysinger <vapier.adi@gmail.com>
+Subject: Re: [RFC v4]update broken web addresses in the kernel.
+References: <1285525875-9920-1-git-send-email-justinmattock@gmail.com> <20100927151005.GC11086@tuxdriver.com>
+In-Reply-To: <20100927151005.GC11086@tuxdriver.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 09/21/2010 12:32 PM, Felix Fietkau wrote:
-> On 2010-09-21 9:28 PM, Johannes Berg wrote:
->> On Tue, 2010-09-21 at 20:00 +0200, Felix Fietkau wrote:
->>
->>>> Could we just poke a pointer to the STA into the ath_buf structure?
->>
->>> No, that doesn't work because of RCU.
->>
->> Well, it could work, if you walk all the structures upon sta_notify and
->> remove now stale pointers (or just drop the frames or something).
-> I think it would be much better to just add the helper function that
-> checks the RA on STA lookup. Keeps things simple, especially since
-> nothing else in the tx path needs the vif.
+On 09/27/2010 08:10 AM, John W. Linville wrote:
+> On Sun, Sep 26, 2010 at 11:31:15AM -0700, Justin P. Mattock wrote:
+>> Below is an updated patch from the original fixing broken web addresses in the kernel.
+>> Thanks for all the help and info on this to everybody..
+>> Hopefully I didnt miss any of them(if so let me know, and I'll resend).
+>
+> Changing a URL for a relocated page is one thing, but removing links
+> isn't necessarily a great idea.  Even if the site is technically
+> gone, it may be possible to find information e.g through the Internet
+> Archive Wayback Machine.
+>
+>> diff --git a/drivers/net/wireless/orinoco/main.c b/drivers/net/wireless/orinoco/main.c
+>> index e8e2d0f..ba10b07 100644
+>> --- a/drivers/net/wireless/orinoco/main.c
+>> +++ b/drivers/net/wireless/orinoco/main.c
+>> @@ -17,7 +17,6 @@
+>>    *
+>>    * Portions based on wvlan_cs.c 1.0.6, Copyright Andreas Neuhaus<andy
+>>    * AT fasta.fh-dortmund.de>
+>> - *      http://www.stud.fh-dortmund.de/~andy/wvlan/
+>>    *
+>>    * The contents of this file are subject to the Mozilla Public License
+>>    * Version 1.1 (the "License"); you may not use this file except in
+>
+> http://web.archive.org/web/20070716051348/http://www.stud.fh-dortmund.de/~andy/wvlan/
+>
 
-How about this.  Seems to do the trick on my system:
+most of the urls that are not removed that are still broken work with 
+the wayback machine..(from what I remember this one would give me a 
+server error(reason for removing), but it doesn't look so).
 
+Thanks for this, I'll change that up.
 
-diff --git a/drivers/net/wireless/ath/ath9k/xmit.c b/drivers/net/wireless/ath/ath9k/xmit.c
-index 85a7323..09815a1 100644
---- a/drivers/net/wireless/ath/ath9k/xmit.c
-+++ b/drivers/net/wireless/ath/ath9k/xmit.c
-@@ -328,8 +328,7 @@ static void ath_tx_complete_aggr(struct ath_softc *sc, struct ath_txq *txq,
-
-         rcu_read_lock();
-
--       /* XXX: use ieee80211_find_sta! */
--       sta = ieee80211_find_sta_by_hw(hw, hdr->addr1);
-+       sta = tx_info->control.sta;
-         if (!sta) {
-                 rcu_read_unlock();
-
-Thanks,
-Ben
-
--- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
-
+Justin P. Mattock
