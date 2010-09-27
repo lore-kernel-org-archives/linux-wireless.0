@@ -1,74 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:41370 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753094Ab0ICOi4 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 3 Sep 2010 10:38:56 -0400
-Subject: Re: [PATCH 04/13] iwlwifi: cancel scan when down the device
-From: "Guy, Wey-Yi" <wey-yi.w.guy@intel.com>
-To: Stanislaw Gruszka <sgruszka@redhat.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	"Chatre, Reinette" <reinette.chatre@intel.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <1283515056-11523-5-git-send-email-sgruszka@redhat.com>
-References: <1283515056-11523-1-git-send-email-sgruszka@redhat.com>
-	 <1283515056-11523-5-git-send-email-sgruszka@redhat.com>
-Content-Type: text/plain
-Date: Fri, 03 Sep 2010 07:38:17 -0700
-Message-Id: <1283524697.5211.15.camel@wwguy-ubuntu>
-Mime-Version: 1.0
+Received: from mail-fx0-f46.google.com ([209.85.161.46]:33581 "EHLO
+	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751604Ab0I0Xju (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 27 Sep 2010 19:39:50 -0400
+Received: by mail-fx0-f46.google.com with SMTP id 3so2287943fxm.19
+        for <linux-wireless@vger.kernel.org>; Mon, 27 Sep 2010 16:39:50 -0700 (PDT)
+From: Christian Lamparter <chunkeey@googlemail.com>
+To: Ignacy Gawedzki <i@lri.fr>
+Subject: Re: A few questions about modifications in carl9170
+Date: Tue, 28 Sep 2010 01:39:43 +0200
+Cc: linux-wireless@vger.kernel.org
+References: <20100927132957.GA2977@qubit.lri.fr> <20100927230137.GA5702@qubit.lri.fr> <20100927232357.GA5869@qubit.lri.fr>
+In-Reply-To: <20100927232357.GA5869@qubit.lri.fr>
+MIME-Version: 1.0
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Message-Id: <201009280139.43745.chunkeey@googlemail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Gruszka,
-
-On Fri, 2010-09-03 at 04:57 -0700, Stanislaw Gruszka wrote:
-> Always cancel scan when stooping device and scan is currently pending,
-> we should newer have scan running after down device.
+On Tuesday 28 September 2010 01:23:57 Ignacy Gawedzki wrote:
+> And while writing that email, I left the card plugged in the USB socket.  In
+> the meantime, I got the following:
 > 
-> To assure we start scan cancel from restart work we have to schedule
-> abort_scan to different workqueue than priv->workqueue.
+>   usb 5-1: no command feedback received (-110).
+>   carl9170 cmd: 08 01 00 00 04 40 1d 00 00 00 00 00              .....@......
+>   usb 5-1: restart device (6)
+>   ieee80211 phy1: writing reg 0x1d4004 (val 0x0) failed (-110)
+>   usb 5-1: device restarted successfully.
 > 
-> Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
-> ---
->  drivers/net/wireless/iwlwifi/iwl-agn.c      |   14 +++-----------
->  drivers/net/wireless/iwlwifi/iwl-scan.c     |    2 +-
->  drivers/net/wireless/iwlwifi/iwl3945-base.c |   16 ++++------------
->  3 files changed, 8 insertions(+), 24 deletions(-)
+> Then when I unplugged it:
 > 
-> diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
-> index ad0e67f..0de2401 100644
-> --- a/drivers/net/wireless/iwlwifi/iwl-agn.c
-> +++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
-> @@ -2875,8 +2875,9 @@ static void __iwl_down(struct iwl_priv *priv)
->  
->  	IWL_DEBUG_INFO(priv, DRV_NAME " is going down\n");
->  
-> -	if (!exit_pending)
-> -		set_bit(STATUS_EXIT_PENDING, &priv->status);
-> +	iwl_scan_cancel_timeout(priv, 200);
-> +
-> +	exit_pending = test_and_set_bit(STATUS_EXIT_PENDING, &priv->status);
->  
->  	/* Stop TX queues watchdog. We need to have STATUS_EXIT_PENDING bit set
->  	 * to prevent rearm timer */
-> @@ -3486,15 +3487,6 @@ static void iwl_mac_stop(struct ieee80211_hw *hw)
->  
->  	priv->is_open = 0;
->  
-> -	if (iwl_is_ready_rf(priv) || test_bit(STATUS_SCAN_HW, &priv->status)) {
-> -		/* stop mac, cancel any scan request and clear
-> -		 * RXON_FILTER_ASSOC_MSK BIT
-> -		 */
-> -		mutex_lock(&priv->mutex);
-> -		iwl_scan_cancel_timeout(priv, 100);
-> -		mutex_unlock(&priv->mutex);
-> -	}
-> -
->  	iwl_down(priv);
+>   usb 5-1: USB disconnect, address 11
+> 
+> And finally upon modprobe -r carl9170:
+> 
+>   usbcore: deregistering interface driver carl9170
+> 
+> And now modprobe is stuck in D+. :/
 
-I see you remove the "mutex" here, not needed?
+yup, this should be fixed by "[PATCH] carl9170: fix hung workqueue".
+ 
+> I now wonder how that could possibly be due to my modifications in the driver
+> and mac80211 (in a nutshell: retrieve the measurement per frame from the FW
+> and collect it into a stats structure in the sta descriptor, which is later
+> retrieved from userspace through netlink).  I'll try without these and report
+> back if that still happens.
+hm, you could also add a "custom" RADIO_TAP field. This way you could use
+wireshark to monitor the round trip times for each individual frame
+(this way you could also export the frames' duration + tx vectors too)
 
-Wey
-
-
+Regards,
+	Christian
