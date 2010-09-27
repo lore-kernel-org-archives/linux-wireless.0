@@ -1,47 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f46.google.com ([209.85.161.46]:57842 "EHLO
-	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756782Ab0IRTd4 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 18 Sep 2010 15:33:56 -0400
-Received: by fxm3 with SMTP id 3so103190fxm.19
-        for <linux-wireless@vger.kernel.org>; Sat, 18 Sep 2010 12:33:55 -0700 (PDT)
-From: Christian Lamparter <chunkeey@googlemail.com>
-To: linux-wireless@vger.kernel.org
-Subject: [RFC] mac80211: clear txflags for filtered/retried frames
-Date: Sat, 18 Sep 2010 21:33:49 +0200
-Cc: Johannes Berg <johannes@sipsolutions.net>
-MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="us-ascii"
-Message-Id: <201009182133.50104.chunkeey@googlemail.com>
+Received: from mail.perches.com ([173.55.12.10]:2471 "EHLO mail.perches.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756390Ab0I0QDG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 27 Sep 2010 12:03:06 -0400
+Subject: Re: [RFC v4]update broken web addresses in the kernel.
+From: Joe Perches <joe@perches.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: "Justin P. Mattock" <justinmattock@gmail.com>, trivial@kernel.org,
+	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
+	linux-usb@vger.kernel.org, linux-scsi@vger.kernel.org,
+	linux-fbdev@vger.kernel.org, alsa-devel@alsa-project.org,
+	dri-devel@lists.freedesktop.org, linux-ide@vger.kernel.org,
+	"Maciej W. Rozycki" <macro@linux-mips.org>,
+	Geert Uytterhoeven <geert@linux-m68k.org>,
+	Finn Thain <fthain@telegraphics.com.au>,
+	Randy Dunlap <rdunlap@xenotime.net>,
+	Matt Turner <mattst88@gmail.com>,
+	Dimitry Torokhov <dmitry.torokhov@gmail.com>,
+	Mike Frysinger <vapier.adi@gmail.com>
+In-Reply-To: <20100927151005.GC11086@tuxdriver.com>
+References: <1285525875-9920-1-git-send-email-justinmattock@gmail.com>
+	 <20100927151005.GC11086@tuxdriver.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Mon, 27 Sep 2010 09:03:03 -0700
+Message-ID: <1285603383.1732.106.camel@Joe-Laptop>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch fixes stale mac80211_tx_control_flags for
-filtered / retried frames.
+On Mon, 2010-09-27 at 11:10 -0400, John W. Linville wrote:
+> On Sun, Sep 26, 2010 at 11:31:15AM -0700, Justin P. Mattock wrote:
+> > Below is an updated patch from the original fixing broken web addresses in the kernel.
+> > Thanks for all the help and info on this to everybody..
+> > Hopefully I didnt miss any of them(if so let me know, and I'll resend).
+> Changing a URL for a relocated page is one thing, but removing links
+> isn't necessarily a great idea.  Even if the site is technically
+> gone, it may be possible to find information e.g through the Internet
+> Archive Wayback Machine.
 
-Because ieee80211_handle_filtered_frame injects the skbs
-back into the tx path, they have to be stripped of old tx
-flags which might confuse the stack or driver.
----
-diff --git a/net/mac80211/status.c b/net/mac80211/status.c
-index 571b32b..17d98a2 100644
---- a/net/mac80211/status.c
-+++ b/net/mac80211/status.c
-@@ -58,6 +58,15 @@ static void ieee80211_handle_filtered_frame(struct ieee80211_local *local,
- 	info->control.vif = &sta->sdata->vif;
- 	info->flags |= IEEE80211_TX_INTFL_NEED_TXPROCESSING |
- 		       IEEE80211_TX_INTFL_RETRANSMISSION;
-+	info->flags &= ~(IEEE80211_TX_CTL_RATE_CTRL_PROBE |
-+			 IEEE80211_TX_CTL_PSPOLL_RESPONSE |
-+			 IEEE80211_TX_CTL_FIRST_FRAGMENT |
-+			 IEEE80211_TX_CTL_CLEAR_PS_FILT |
-+			 IEEE80211_TX_CTL_MORE_FRAMES |
-+			 IEEE80211_TX_CTL_AMPDU |
-+			 IEEE80211_TX_STAT_AMPDU_NO_BACK |
-+			 IEEE80211_TX_STAT_TX_FILTERED |
-+			 IEEE80211_TX_STAT_AMPDU);
- 
- 	sta->tx_filtered_count++;
- 
+Perhaps it'd be better to scrape the contents of the various
+web pages, collect them somewhere like wiki.kernel.org and
+encourage others to put new contributions in that site.
+
+
+
