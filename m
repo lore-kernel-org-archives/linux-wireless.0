@@ -1,66 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qy0-f174.google.com ([209.85.216.174]:45235 "EHLO
-	mail-qy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753283Ab0ILRgQ convert rfc822-to-8bit (ORCPT
+Received: from mail30s.wh2.ocn.ne.jp ([125.206.180.198]:27589 "HELO
+	mail30s.wh2.ocn.ne.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S932631Ab0I0DWf (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 12 Sep 2010 13:36:16 -0400
-Received: by qyk36 with SMTP id 36so1100345qyk.19
-        for <linux-wireless@vger.kernel.org>; Sun, 12 Sep 2010 10:36:15 -0700 (PDT)
+	Sun, 26 Sep 2010 23:22:35 -0400
+Received: from vs3000.wh2.ocn.ne.jp (125.206.180.163)
+	by mail30s.wh2.ocn.ne.jp (RS ver 1.0.95vs) with SMTP id 2-0205927752
+	for <linux-wireless@vger.kernel.org>; Mon, 27 Sep 2010 12:22:32 +0900 (JST)
+Subject: [PATCH 4/4] ath5k: Disable interrupts in ath5k_hw_get_tsf64
+To: linville@tuxdriver.com
+From: Bruno Randolf <br1@einfach.org>
+Cc: ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org
+Date: Mon, 27 Sep 2010 12:22:32 +0900
+Message-ID: <20100927032232.8754.25109.stgit@tt-desk>
+In-Reply-To: <20100927032211.8754.49870.stgit@tt-desk>
+References: <20100927032211.8754.49870.stgit@tt-desk>
 MIME-Version: 1.0
-In-Reply-To: <20100911164409.GA7432@broadcom.com>
-References: <20100911164409.GA7432@broadcom.com>
-From: =?ISO-8859-1?Q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>
-Date: Sun, 12 Sep 2010 19:35:55 +0200
-Message-ID: <AANLkTinoeqnU7qk=RgSiQM3=9dge_9QGL0H33qR8hNXW@mail.gmail.com>
-Subject: Re: [PATCH] Fix URLs for firmware files.
-To: Henry Ptasinski <henryp@broadcom.com>
-Cc: gregkh@suse.de, devel@linuxdriverproject.org,
-	linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, Sep 11, 2010 at 6:44 PM, Henry Ptasinski <henryp@broadcom.com> wrote:
-> From 6c45ba230e63b6ee85b9a51962e545d6d0e5698c Mon Sep 17 00:00:00 2001
-> From: Henry Ptasinski <henryp@broadcom.com>
-> Date: Sat, 11 Sep 2010 09:40:20 -0700
-> Subject: [PATCH] Fix URLs for firmware files.
->
->
-> Signed-off-by: Henry Ptasinski <henryp@broadcom.com>
-> ---
->  drivers/staging/brcm80211/README |    4 ++--
->  1 files changed, 2 insertions(+), 2 deletions(-)
->
-> diff --git a/drivers/staging/brcm80211/README b/drivers/staging/brcm80211/README
-> index 97fa01c..c3ba9bb 100644
-> --- a/drivers/staging/brcm80211/README
-> +++ b/drivers/staging/brcm80211/README
-> @@ -40,8 +40,8 @@ Firmware installation
->  Firmware is available from the Linux firmware repository at:
->
->        git://git.kernel.org/pub/scm/linux/kernel/git/dwmw2/linux-firmware.git
-> -       http://git.kernel.org/pub/scm/linux/kernel/git/dwmw2/linux-firmware.git
-> -       https://git.kernel.org/pub/scm/linux/kernel/git/dwmw2/linux-firmware.git
-> +       http://git.kernel.org/?p=linux/kernel/git/dwmw2/linux-firmware.git
-> +       https://git.kernel.org/?p=linux/kernel/git/dwmw2/linux-firmware.git
->
->  For all chips, copy brcm/bcm43xx-0-610-809-0.fw and
->  brcm/bcm43xx_hdr-0-610-809-0.fw to /lib/firmware/brcm (or wherever firmware is
-> --
-> 1.6.3.3
->
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
+The code in ath5k_hw_get_tsf64() is time critical and will return wrong results
+if we get interrupted, so disable local interrupts.
 
-Is there any chance of sharing firmware between brcm80211 and b43
-eventually? (Also, are there plans to release redistributable firmware
-for earlier PHYs, for use with b43 and/or a future version of
-brcm80211 with legacy-PHY support?)
+Signed-off-by: Bruno Randolf <br1@einfach.org>
+---
+ drivers/net/wireless/ath/ath5k/pcu.c |    6 ++++++
+ 1 files changed, 6 insertions(+), 0 deletions(-)
 
--- 
-Vista: [V]iruses, [I]ntruders, [S]pyware, [T]rojans and [A]dware. :-)
+diff --git a/drivers/net/wireless/ath/ath5k/pcu.c b/drivers/net/wireless/ath/ath5k/pcu.c
+index 604114f..095d30b 100644
+--- a/drivers/net/wireless/ath/ath5k/pcu.c
++++ b/drivers/net/wireless/ath/ath5k/pcu.c
+@@ -495,6 +495,10 @@ u64 ath5k_hw_get_tsf64(struct ath5k_hw *ah)
+ {
+ 	u32 tsf_lower, tsf_upper1, tsf_upper2;
+ 	int i;
++	unsigned long flags;
++
++	/* This code is time critical - we don't want to be interrupted here */
++	local_irq_save(flags);
+ 
+ 	/*
+ 	 * While reading TSF upper and then lower part, the clock is still
+@@ -517,6 +521,8 @@ u64 ath5k_hw_get_tsf64(struct ath5k_hw *ah)
+ 		tsf_upper1 = tsf_upper2;
+ 	}
+ 
++	local_irq_restore(flags);
++
+ 	WARN_ON( i == ATH5K_MAX_TSF_READ );
+ 
+ 	return (((u64)tsf_upper1 << 32) | tsf_lower);
+
