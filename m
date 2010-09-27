@@ -1,58 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:42851 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750695Ab0IOKQn (ORCPT
+Received: from smtp.nokia.com ([192.100.105.134]:17067 "EHLO
+	mgw-mx09.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932844Ab0I0IjP (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 15 Sep 2010 06:16:43 -0400
-Subject: Re: RFC:  mac80211/ath9k:  allow scanning single channel if other
- VIF is associated.
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Ben Greear <greearb@candelatech.com>
-Cc: Jouni Malinen <j@w1.fi>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <4C9059DC.7060009@candelatech.com>
-References: <4C8EB03D.7070808@candelatech.com>
-	 <20100915030316.GB30253@jm.kir.nu>  <4C9059DC.7060009@candelatech.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Wed, 15 Sep 2010 12:16:36 +0200
-Message-ID: <1284545796.3842.11.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+	Mon, 27 Sep 2010 04:39:15 -0400
+Received: from esebh106.NOE.Nokia.com (esebh106.ntc.nokia.com [172.21.138.213])
+	by mgw-mx09.nokia.com (Switch-3.3.3/Switch-3.3.3) with ESMTP id o8R8d5dI026506
+	for <linux-wireless@vger.kernel.org>; Mon, 27 Sep 2010 03:39:14 -0500
+Received: from localhost.localdomain (chilepepper.research.nokia.com [172.21.50.167])
+	by mgw-da02.ext.nokia.com (Switch-3.3.3/Switch-3.3.3) with ESMTP id o8R8boh2022566
+	for <linux-wireless@vger.kernel.org>; Mon, 27 Sep 2010 11:37:58 +0300
+From: Luciano Coelho <luciano.coelho@nokia.com>
+To: linux-wireless@vger.kernel.org
+Subject: [PATCH 06/25] wl1271: fix forced passive scan
+Date: Mon, 27 Sep 2010 11:37:30 +0300
+Message-Id: <1285576669-8070-7-git-send-email-luciano.coelho@nokia.com>
+In-Reply-To: <1285576669-8070-1-git-send-email-luciano.coelho@nokia.com>
+References: <1285576669-8070-1-git-send-email-luciano.coelho@nokia.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2010-09-14 at 22:30 -0700, Ben Greear wrote:
+When we get no SSIDs in the scan request, we should force a passive scan in
+all channels.  This patch adds code to force the passive scan flag to be set
+in that case.
 
-> > If I understood the change correctly, it would prevent running full
-> > scans when in associated state. That does not sound reasonable behavior
-> > and scanning should not cause an association to be lost. Did I miss
-> > something or what exactly is this trying to do?
-> 
-> That's pretty much what I'm trying to do.  We had similar code in
-> our 2.6.31 kernel with ath5k. Imagine getting 50 virtual stations
-> started with WPA and all of them trying to scan all channels at once!
+Signed-off-by: Luciano Coelho <luciano.coelho@nokia.com>
+Reviewed-by: Juuso Oikarinen <juuso.oikarinen@nokia.com>
+---
+ drivers/net/wireless/wl12xx/wl1271_scan.c |    5 ++++-
+ 1 files changed, 4 insertions(+), 1 deletions(-)
 
-They can't ... cfg80211 limits it to one scan at a time per hardware ...
-
-> I think for the multi-VIF scenario, it should scan the single associated
-> channel by default, but it would be nice to allow full scans on demand.
-
-Go change your userspace then to request only the single channel scan.
-
-> (I would very much like to work with standard wpa_supplicant, but if hacking it
-> is the only way, then I can attempt that.)
-
-Yes, I don't see how we can reasonably work around this in the kernel.
-
-> > If you want to limit scans a single channel in some special use cases,
-> > you should be able to do that in user space, too, at least for the
-> > initial scan before connection. As a future optimization, we should
-> > somehow be able to merge scan requests from multiple VIFs into a single
-> > one, i.e., share the results from a single scan to multiple VIFs..
-> 
-> Merging would be nice.  Maybe store the results in the global hardware/phy
-> structs and just return that to user-space so long as it's relatively fresh?
-
-That's what we do, unless userspace requests a new scan.
-
-johannes
+diff --git a/drivers/net/wireless/wl12xx/wl1271_scan.c b/drivers/net/wireless/wl12xx/wl1271_scan.c
+index 8ceaabe..7f42ca9 100644
+--- a/drivers/net/wireless/wl12xx/wl1271_scan.c
++++ b/drivers/net/wireless/wl12xx/wl1271_scan.c
+@@ -100,8 +100,11 @@ static int wl1271_scan_send(struct wl1271 *wl, enum ieee80211_band band,
+ 
+ 	/* We always use high priority scans */
+ 	scan_options = WL1271_SCAN_OPT_PRIORITY_HIGH;
+-	if(passive)
++
++	/* No SSIDs means that we have a forced passive scan */
++	if (passive || wl->scan.req->n_ssids == 0)
+ 		scan_options |= WL1271_SCAN_OPT_PASSIVE;
++
+ 	cmd->params.scan_options = cpu_to_le16(scan_options);
+ 
+ 	cmd->params.n_ch = wl1271_get_scan_channels(wl, wl->scan.req,
+-- 
+1.6.3.3
 
