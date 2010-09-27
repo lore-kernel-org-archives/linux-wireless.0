@@ -1,46 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:51997 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754089Ab0IJS64 (ORCPT
+Received: from mgw-sa02.ext.nokia.com ([147.243.1.48]:32635 "EHLO
+	mgw-sa02.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755783Ab0I0Oio (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 10 Sep 2010 14:58:56 -0400
-Message-ID: <4C8A7FEC.4040603@candelatech.com>
-Date: Fri, 10 Sep 2010 11:58:52 -0700
-From: Ben Greear <greearb@candelatech.com>
-MIME-Version: 1.0
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-CC: Rajkumar Manoharan <rmanoharan@atheros.com>,
+	Mon, 27 Sep 2010 10:38:44 -0400
+Subject: Re: [FIRMWARE & NVS] wl12xx: Add Firmware and NVS files to support
+ Texas Instruments WLAN driver
+From: Luciano Coelho <luciano.coelho@nokia.com>
+To: ext Shahar Levi <shahar_levi@ti.com>
+Cc: David Woodhouse <dwmw2@infradead.org>,
 	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: ath9k oops on rmmod
-References: <4C891102.40406@candelatech.com> <20100910050719.GA3959@vmraj-lnx.users.atheros.com> <AANLkTinfvgzTcZjOvzpbNm+fbwH3m-7jZgL9ktNKzh8D@mail.gmail.com>
-In-Reply-To: <AANLkTinfvgzTcZjOvzpbNm+fbwH3m-7jZgL9ktNKzh8D@mail.gmail.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+In-Reply-To: <1285596260-814-1-git-send-email-shahar_levi@ti.com>
+References: <1285596260-814-1-git-send-email-shahar_levi@ti.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Mon, 27 Sep 2010 17:38:37 +0300
+Message-ID: <1285598317.5768.111.camel@chilepepper>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 09/10/2010 11:44 AM, Luis R. Rodriguez wrote:
-> On Thu, Sep 9, 2010 at 10:07 PM, Rajkumar Manoharan
-> <rmanoharan@atheros.com>  wrote:
->> The following commit solves the issue.
->>
->> http://git.kernel.org/?p=linux/kernel/git/torvalds/linux-2.6.git;a=commit;h=8a2e8e5dec7e29c56a46ba176c664ab6a3d04118
->
-> Um, was this a stable fix?
+On Mon, 2010-09-27 at 16:04 +0200, ext Shahar Levi wrote:
+> FW & NVS Support wl127x wireless LAN driver (wl1271 & wl1273).
+> In order to use those files copy them to target FS at /lib/firmware/.
+> 
+> Signed-off-by: Shahar Levi <shahar_levi@ti.com>
+> ---
 
-It's in upstream 2.6, but not in wireless-testing.
+The NVS doesn't seem to work correctly with our latest code.  We now
+have a check to see if 5GHz is enabled and, if that's the case, enforce
+a larger NVS that contains the 5GHz calibration.
 
-Thanks,
-Ben
-
->
->    Luis
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+In this NVS, you have the general_params.dual_mode_select set to true,
+but that only works if the 5GHz calibration is available and the NVS
+should be 912 bytes in that case, instead of the legacy 800 bytes.
 
 
 -- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+Cheers,
+Luca.
 
