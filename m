@@ -1,65 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gx0-f174.google.com ([209.85.161.174]:36883 "EHLO
-	mail-gx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751776Ab0IWKC0 convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 23 Sep 2010 06:02:26 -0400
-Received: by gxk9 with SMTP id 9so478529gxk.19
-        for <linux-wireless@vger.kernel.org>; Thu, 23 Sep 2010 03:02:26 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <AANLkTin7eTsGXBb5VXsRU_4rwvFpU3-BYe+2w5352SRE@mail.gmail.com>
-References: <SNT113-W3652C8510E7AB89D2036ECF17E0@phx.gbl>
-	<AANLkTin7eTsGXBb5VXsRU_4rwvFpU3-BYe+2w5352SRE@mail.gmail.com>
-Date: Thu, 23 Sep 2010 12:02:25 +0200
-Message-ID: <AANLkTimfvN5s4qPNvRvHHZo8fZ_y1ti=ukdTRybLd7=A@mail.gmail.com>
-Subject: Re: Compiling carl9170
-From: Christophe Chapuis <chris.chapuis@gmail.com>
-To: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from smtp.nokia.com ([147.243.1.47]:36575 "EHLO mgw-sa01.nokia.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757389Ab0I0Jrb (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 27 Sep 2010 05:47:31 -0400
+Subject: Re: [PATCH 16/25] wl1271: Add support for hardware GEM cipher
+From: Juuso Oikarinen <juuso.oikarinen@nokia.com>
+To: ext Johannes Berg <johannes@sipsolutions.net>
+Cc: "Coelho Luciano (Nokia-MS/Helsinki)" <Luciano.Coelho@nokia.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <1285578777.4043.6.camel@jlt3.sipsolutions.net>
+References: <1285576669-8070-1-git-send-email-luciano.coelho@nokia.com>
+	 <1285576669-8070-17-git-send-email-luciano.coelho@nokia.com>
+	 <1285578777.4043.6.camel@jlt3.sipsolutions.net>
+Content-Type: text/plain; charset="UTF-8"
+Date: Mon, 27 Sep 2010 12:46:46 +0300
+Message-ID: <1285580806.11177.65.camel@wimaxnb.nmp.nokia.com>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Just for information, I managed to retrieve and compile
-compat-wireless from sept. 20th. I fixed manually the little typo in
-wmi.c, and then everything went well. I selected the driver "ath",
-resulting in all the "ath" drivers to be compiled, including carl9170.
+On Mon, 2010-09-27 at 11:12 +0200, ext Johannes Berg wrote:
+> On Mon, 2010-09-27 at 11:37 +0300, Luciano Coelho wrote:
+> > From: Juuso Oikarinen <juuso.oikarinen@nokia.com>
+> > 
+> > This patch adds support for the hardware GEM cipher suite.
+> > 
+> > Signed-off-by: Juuso Oikarinen <juuso.oikarinen@nokia.com>
+> > Reviewed-by: Luciano Coelho <luciano.coelho@nokia.com>
+> > Signed-off-by: Luciano Coelho <luciano.coelho@nokia.com>
+> > ---
+> >  drivers/net/wireless/wl12xx/wl1271.h      |    2 ++
+> >  drivers/net/wireless/wl12xx/wl1271_cmd.h  |    2 +-
+> >  drivers/net/wireless/wl12xx/wl1271_main.c |   16 ++++++++++++++++
+> >  3 files changed, 19 insertions(+), 1 deletions(-)
+> > 
+> > diff --git a/drivers/net/wireless/wl12xx/wl1271.h b/drivers/net/wireless/wl12xx/wl1271.h
+> > index 763ece8..9782bc1 100644
+> > --- a/drivers/net/wireless/wl12xx/wl1271.h
+> > +++ b/drivers/net/wireless/wl12xx/wl1271.h
+> > @@ -117,6 +117,8 @@ enum {
+> >  #define WL1271_TX_SECURITY_LO16(s) ((u16)((s) & 0xffff))
+> >  #define WL1271_TX_SECURITY_HI32(s) ((u32)(((s) >> 16) & 0xffffffff))
+> >  
+> > +#define WL1271_CIPHER_SUITE_GEM 0x000FACFF
+> 
+> NACK, this is a standards-reserved value. Use the correct ID for it or
+> allocate one within your own OUI if you don't want to admit what this
+> really is (and by now all readers here will know anyway.)
 
-I'm now using this driver, with his firmware, with great success. It
-uses 802.11n, seems quite stable, keeps my wifi connection alive.
+Well I'm sure many or most know what this patch is about. The choice of
+value was not intended to hide that.
 
-Bravo !
+You're right though, we'll need to change the OUI of the value, unless
+you can point me to an official value to use.
+
+-Juuso
 
 
-On Mon, Sep 20, 2010 at 9:15 AM, Christophe Chapuis
-<chris.chapuis@gmail.com> wrote:
-> Actually, the carl9170 driver has been included in compat-wireless,
-> but the compilation of compat-wireless fails since then (latest
-> successful baking was sept. 12th). I hope this will be fixed soon.
-> Having the same adapter as you, I'm also following the situation daily :)
->
-> On Mon, Sep 20, 2010 at 4:32 AM, Dale Turner <rx_guy@hotmail.com> wrote:
->>
->> Hello.
->>
->> Can someone tell me how to compile the carl9170 module
->> WITHOUT compiling a complete kernel. I just purchased a TP-Link WN821N
->> based on the capabilities of this driver, but am disappointed that I
->> currently don't have the module.
->>
->> I am familiar with the
->> compat-wireless packages as I have needed to compile the ath9k_htc
->> driver for my other adapter (TP-Link WN721N), but the carl driver does
->> not seem to be available in that package.
->>
->> Can anyone help??
->>
->> Thanks in advance.
->>
->> (Sorry about the first post without a subject)
->>
->> Dale Turner
->>                                          --
->> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
+> johannes
+> 
+> 
+
+
