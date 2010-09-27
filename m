@@ -1,119 +1,102 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([192.100.122.233]:53305 "EHLO
-	mgw-mx06.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755239Ab0IOTQG (ORCPT
+Received: from smtp.nokia.com ([192.100.105.134]:29366 "EHLO
+	mgw-mx09.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751451Ab0I0KmQ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 15 Sep 2010 15:16:06 -0400
-Subject: Re: [PATCH 01/04] wl1271: 11n Support, Add Definitions
-From: Luciano Coelho <luciano.coelho@nokia.com>
-To: ext Shahar Levi <shahar_levi@ti.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <1284575472-19888-2-git-send-email-shahar_levi@ti.com>
-References: <1284575472-19888-1-git-send-email-shahar_levi@ti.com>
-	 <1284575472-19888-2-git-send-email-shahar_levi@ti.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Wed, 15 Sep 2010 22:15:53 +0300
-Message-ID: <1284578153.1569.24.camel@powerslave>
-Mime-Version: 1.0
+	Mon, 27 Sep 2010 06:42:16 -0400
+Received: from vaebh106.NOE.Nokia.com (vaebh106.europe.nokia.com [10.160.244.32])
+	by mgw-mx09.nokia.com (Switch-3.3.3/Switch-3.3.3) with ESMTP id o8RAgEJi008348
+	for <linux-wireless@vger.kernel.org>; Mon, 27 Sep 2010 05:42:15 -0500
+From: juuso.oikarinen@nokia.com
+To: luciano.coelho@nokia.com
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCHv2] wl1271: Add support for hardware GEM cipher
+Date: Mon, 27 Sep 2010 13:42:07 +0300
+Message-Id: <1285584127-19854-1-git-send-email-juuso.oikarinen@nokia.com>
+In-Reply-To: <1285581677.5768.70.camel@chilepepper>
+References: <1285581677.5768.70.camel@chilepepper>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2010-09-15 at 20:31 +0200, ext Shahar Levi wrote:
-> Added all definitions needed for 11n support.
+From: Juuso Oikarinen <juuso.oikarinen@nokia.com>
 
-This could be a bit more descriptive...
+This patch adds support for the hardware GEM cipher suite.
 
+Signed-off-by: Juuso Oikarinen <juuso.oikarinen@nokia.com>
+Reviewed-by: Luciano Coelho <luciano.coelho@nokia.com>
+---
+ drivers/net/wireless/wl12xx/wl1271.h      |    2 ++
+ drivers/net/wireless/wl12xx/wl1271_cmd.h  |    2 +-
+ drivers/net/wireless/wl12xx/wl1271_main.c |   16 ++++++++++++++++
+ 3 files changed, 19 insertions(+), 1 deletions(-)
 
-> Signed-off-by: Shahar Levi <shahar_levi@ti.com>
-> ---
-
-
-
-> diff --git a/drivers/net/wireless/wl12xx/wl1271_acx.h b/drivers/net/wireless/wl12xx/wl1271_acx.h
-> index 4235bc5..2a8fc43 100644
-> --- a/drivers/net/wireless/wl12xx/wl1271_acx.h
-> +++ b/drivers/net/wireless/wl12xx/wl1271_acx.h
-> @@ -993,6 +993,97 @@ struct wl1271_acx_rssi_snr_avg_weights {
->  	u8 snr_data;
->  };
->  
-> +/* 11n command to the FW */
-> +/*	Name:	ACX_PEER_HT_CAP
-> +*	Desc:	Configure HT capabilities - declare the capabilities of the peer
-> +*		we are connected to.
-> +* Type:	Configuration
-> +* Access:	Write Only
-> +* Length:
-> +*/
-> +struct wl1271_acx_ht_capabilities {
-> +	struct acx_header header;
-> +
-> +	/*
-> +	* bit 0 - Allow HT Operation
-> +	* bit 1 - Allow Greenfield format in TX
-> +	* bit 2 - Allow Short GI in TX
-> +	* bit 3 - Allow L-SIG TXOP Protection in TX
-> +	* bit 4 - Allow HT Control fields in TX.
-> +	*	Note, driver will still leave space for HT control in packets
-> +	*	regardless of the value of this field. FW will be responsible to
-> +	*	drop the HT field from any frame when this Bit is set to 0.
-> +	* 5 - Allow RD initiation in TXOP. FW is allowed to initate RD.
-> +	*	Exact policy setting for this feature is TBD.
-> +	*	Note, this bit can only be set to 1 if bit 3 is set to 1.
-> +	*/
-> +	u32 ht_capabilites;
-
-This should be __le32 instead.
-
-
-> +/*  HT Capabilites Fw Bit Mask Mapping */
-> +enum acx_ht_capabilites_fw {
-> +	WL1271_ACX_FW_CAP_BIT_MASK_HT_OPERATION               =  BIT(0),
-> +	WL1271_ACX_FW_CAP_BIT_MASK_GREENFIELD_FRAME_FORMAT    =  BIT(1),
-> +	WL1271_ACX_FW_CAP_BIT_MASK_SHORT_GI_FOR_20MHZ_PACKETS =  BIT(2),
-> +	WL1271_ACX_FW_CAP_BIT_MASK_LSIG_TXOP_PROTECTION       =  BIT(3),
-> +	WL1271_ACX_FW_CAP_BIT_MASK_HT_CONTROL_FIELDS          =  BIT(4),
-> +	WL1271_ACX_FW_CAP_BIT_MASK_RD_INITIATION              =  BIT(5)
-> +};
-
-I have a slight preference to use #defines for this kind of definition,
-but we use it in both ways currently, so no need to change.
-
-It is common practice to add a , after the last value in the
-enumeration, so that if any new lines are added in the future, the
-previous one doesn't need to be changed.  So please change to this:
-
-+	WL1271_ACX_FW_CAP_BIT_MASK_RD_INITIATION              =  BIT(5),
-
-
-> diff --git a/drivers/net/wireless/wl12xx/wl1271_main.c b/drivers/net/wireless/wl12xx/wl1271_main.c
-> index af26150..ae69397 100644
-> --- a/drivers/net/wireless/wl12xx/wl1271_main.c
-> +++ b/drivers/net/wireless/wl12xx/wl1271_main.c
-> @@ -2041,6 +2041,19 @@ static const u8 wl1271_rate_to_idx_2ghz[] = {
->  	0                              /* CONF_HW_RXTX_RATE_1    */
->  };
->  
-> +/* 11n sta capabilities */
-> +#define WL12xx_HT_CAP { \
-> +	.cap = IEEE80211_HT_CAP_GRN_FLD | IEEE80211_HT_CAP_SGI_20, \
-> +	.ht_supported = true, \
-> +	.ampdu_factor = IEEE80211_HT_MAX_AMPDU_8K, \
-> +	.ampdu_density = IEEE80211_HT_MPDU_DENSITY_8, \
-> +	.mcs = { \
-> +		.rx_mask = { 0xff, 0, 0, 0, 0, 0, 0, 0, 0, 0, }, \
-> +		.rx_highest = cpu_to_le16(65), \
-> +		.tx_params = IEEE80211_HT_MCS_TX_DEFINED, \
-> +		}, \
-> +}
-
-I don't like this macro.  I'd rather have this explicitly defined
-(despite twice) in wl1271_band_2ghz and wl1271_band_5ghz.
-
-Also, it would be nice to avoid using magic numbers (ie. 65).  Is it
-possible to define a descriptive macro for instead?
-
+diff --git a/drivers/net/wireless/wl12xx/wl1271.h b/drivers/net/wireless/wl12xx/wl1271.h
+index 763ece8..22e850f 100644
+--- a/drivers/net/wireless/wl12xx/wl1271.h
++++ b/drivers/net/wireless/wl12xx/wl1271.h
+@@ -117,6 +117,8 @@ enum {
+ #define WL1271_TX_SECURITY_LO16(s) ((u16)((s) & 0xffff))
+ #define WL1271_TX_SECURITY_HI32(s) ((u32)(((s) >> 16) & 0xffffffff))
+ 
++#define WL1271_CIPHER_SUITE_GEM 0x00147201
++
+ #define WL1271_BUSY_WORD_CNT 1
+ #define WL1271_BUSY_WORD_LEN (WL1271_BUSY_WORD_CNT * sizeof(u32))
+ 
+diff --git a/drivers/net/wireless/wl12xx/wl1271_cmd.h b/drivers/net/wireless/wl12xx/wl1271_cmd.h
+index ff8e35e..33b946b 100644
+--- a/drivers/net/wireless/wl12xx/wl1271_cmd.h
++++ b/drivers/net/wireless/wl12xx/wl1271_cmd.h
+@@ -279,7 +279,7 @@ enum wl1271_cmd_key_type {
+ 	KEY_WEP  = 1,
+ 	KEY_TKIP = 2,
+ 	KEY_AES  = 3,
+-	KEY_GEM  = 4
++	KEY_GEM  = 4,
+ };
+ 
+ /* FIXME: Add description for key-types */
+diff --git a/drivers/net/wireless/wl12xx/wl1271_main.c b/drivers/net/wireless/wl12xx/wl1271_main.c
+index f0c2532..39b5985 100644
+--- a/drivers/net/wireless/wl12xx/wl1271_main.c
++++ b/drivers/net/wireless/wl12xx/wl1271_main.c
+@@ -1528,6 +1528,11 @@ static int wl1271_op_set_key(struct ieee80211_hw *hw, enum set_key_cmd cmd,
+ 		tx_seq_32 = WL1271_TX_SECURITY_HI32(wl->tx_security_seq);
+ 		tx_seq_16 = WL1271_TX_SECURITY_LO16(wl->tx_security_seq);
+ 		break;
++	case WL1271_CIPHER_SUITE_GEM:
++		key_type = KEY_GEM;
++		tx_seq_32 = WL1271_TX_SECURITY_HI32(wl->tx_security_seq);
++		tx_seq_16 = WL1271_TX_SECURITY_LO16(wl->tx_security_seq);
++		break;
+ 	default:
+ 		wl1271_error("Unknown key algo 0x%x", key_conf->cipher);
+ 
+@@ -2382,6 +2387,14 @@ EXPORT_SYMBOL_GPL(wl1271_unregister_hw);
+ 
+ int wl1271_init_ieee80211(struct wl1271 *wl)
+ {
++	static const u32 cipher_suites[] = {
++		WLAN_CIPHER_SUITE_WEP40,
++		WLAN_CIPHER_SUITE_WEP104,
++		WLAN_CIPHER_SUITE_TKIP,
++		WLAN_CIPHER_SUITE_CCMP,
++		WL1271_CIPHER_SUITE_GEM,
++	};
++
+ 	/* The tx descriptor buffer and the TKIP space. */
+ 	wl->hw->extra_tx_headroom = WL1271_TKIP_IV_SPACE +
+ 		sizeof(struct wl1271_tx_hw_descr);
+@@ -2399,6 +2412,9 @@ int wl1271_init_ieee80211(struct wl1271 *wl)
+ 		IEEE80211_HW_CONNECTION_MONITOR |
+ 		IEEE80211_HW_SUPPORTS_CQM_RSSI;
+ 
++	wl->hw->wiphy->cipher_suites = cipher_suites;
++	wl->hw->wiphy->n_cipher_suites = ARRAY_SIZE(cipher_suites);
++
+ 	wl->hw->wiphy->interface_modes = BIT(NL80211_IFTYPE_STATION) |
+ 		BIT(NL80211_IFTYPE_ADHOC);
+ 	wl->hw->wiphy->max_scan_ssids = 1;
 -- 
-Cheers,
-Luca.
+1.6.3.3
 
