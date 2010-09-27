@@ -1,40 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:49844 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753724Ab0I1Pon (ORCPT
+Received: from mail-gw0-f46.google.com ([74.125.83.46]:60972 "EHLO
+	mail-gw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755640Ab0I0TNW (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 28 Sep 2010 11:44:43 -0400
-Date: Tue, 28 Sep 2010 11:36:09 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Steve deRosier <steve@cozybit.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless@vger.kernel.org, javier@cozybit.com
-Subject: Re: [PATCH 5/9] libertas_tf: Moved firmware loading to probe in
- order to fetch MAC address
-Message-ID: <20100928153609.GJ2440@tuxdriver.com>
-References: <1283988329-44549-1-git-send-email-steve@cozybit.com>
- <1283988329-44549-6-git-send-email-steve@cozybit.com>
- <e23a1b600a18f179fa72d2cadf724d17@localhost>
- <AANLkTi=r_RdEG-2=gzV7uFNJt1Nynp3qNC-38SQkzhO2@mail.gmail.com>
- <c9d7238e26d9e276d9c9ef9792f7c7f8@localhost>
- <AANLkTi=-JhwMmQK5ivX-FpSOV5_Pc3RfoswkFLFdGoFo@mail.gmail.com>
- <20100928152457.GH2440@tuxdriver.com>
+	Mon, 27 Sep 2010 15:13:22 -0400
+Received: by gwj17 with SMTP id 17so1615580gwj.19
+        for <linux-wireless@vger.kernel.org>; Mon, 27 Sep 2010 12:13:22 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20100928152457.GH2440@tuxdriver.com>
+In-Reply-To: <1285614631.4043.29.camel@jlt3.sipsolutions.net>
+References: <1285266471.3770.384.camel@jlt3.sipsolutions.net>
+ <AANLkTi=3GraBb9hTrieCNvCB0o3PXGORkW1b7F2PceK3@mail.gmail.com>
+ <1285611630.4043.26.camel@jlt3.sipsolutions.net> <AANLkTin+1-_RA8fY8B5-omQi3kMJ3U0iw8Kdg=FC2rnP@mail.gmail.com>
+ <1285613669.4043.27.camel@jlt3.sipsolutions.net> <AANLkTimmZZiMbtA-8m69grwV_v95KcGKRQi6=-fz0JuT@mail.gmail.com>
+ <1285614371.4043.28.camel@jlt3.sipsolutions.net> <AANLkTikcqU3kMCELc9QadC0JOA2ic1=Mw+X34kOus4VL@mail.gmail.com>
+ <1285614631.4043.29.camel@jlt3.sipsolutions.net>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Mon, 27 Sep 2010 12:12:54 -0700
+Message-ID: <AANLkTimMzR2LoH0Qxqi-VH=o15vERFSTZSBbMbDGvv8Q@mail.gmail.com>
+Subject: Re: [RFC] mac80211: fix release_reorder_timeout in scan
+To: Johannes Berg <johannes@sipsolutions.net>,
+	Matt Smith <Matt.Smith@atheros.com>,
+	Srinivasa Duvvuri <Srinivasa.Duvvuri@atheros.com>
+Cc: wireless <linux-wireless@vger.kernel.org>, Jouni Malinen <j@w1.fi>,
+	Christian Lamparter <chunkeey@googlemail.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Sep 28, 2010 at 11:24:57AM -0400, John W. Linville wrote:
+On Mon, Sep 27, 2010 at 12:10 PM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
+> On Mon, 2010-09-27 at 12:09 -0700, Luis R. Rodriguez wrote:
+>> On Mon, Sep 27, 2010 at 12:06 PM, Johannes Berg
+>> <johannes@sipsolutions.net> wrote:
+>> > On Mon, 2010-09-27 at 12:03 -0700, Luis R. Rodriguez wrote:
+>> >
+>> >> > We put them into the reorder buffer, but if we get a reorder timeout
+>> >> > while scanning we'll drop the frames which isn't necessary.
+>> >>
+>> >> Ah, got it, thanks, good catch. Guess its not a terrible stable fix,
+>> >> but at least important for those who care about VoIP and such.
+>> >
+>> > You wouldn't typically use aggregation on VO traffic, I think?
+>>
+>> ath9k uses aggregation for all data traffic.
+>
+> But it can only control TX :)
 
-> > I think my mac80211 patch "mac80211: Fix dangling pointer in
-> > ieee80211_xmit" stands 100% alone and fixes a clear bug.  I don't see
-> > any need to delay that one.
-> 
-> I missed this before -- I'll take that patch on its own.
+True
 
-Actually, looks like I already did... :-)
+> Which is, of course, relevant if it's used
+> as an AP,
 
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+True
+
+> but for typical VO traffic I would argue that using
+> aggregation is a bug since it'll just increase delays & jitter.
+
+This deviates from subject a little but while at it, I am curious,
+Matt, Srini, what do you think?
+
+  Luis
