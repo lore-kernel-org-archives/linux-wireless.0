@@ -1,46 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:44553 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754311Ab0IPSar (ORCPT
+Received: from smtp.nokia.com ([192.100.122.230]:56014 "EHLO
+	mgw-mx03.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932833Ab0I0IiS (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 16 Sep 2010 14:30:47 -0400
-Subject: Re: [PATCH 2/2] mac80211: add p2p device type support
-From: Johannes Berg <johannes@sipsolutions.net>
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Cc: John Linville <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, Jouni Malinen <j@w1.fi>
-In-Reply-To: <AANLkTi=6KKLty-pg1O9EbGB3n9AviddL63X14z4a250Y@mail.gmail.com>
-References: <20100916125821.369545798@sipsolutions.net>
-	 <20100916125927.163519598@sipsolutions.net>
-	 <AANLkTi=6KKLty-pg1O9EbGB3n9AviddL63X14z4a250Y@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Thu, 16 Sep 2010 20:30:09 +0200
-Message-ID: <1284661809.3731.8.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+	Mon, 27 Sep 2010 04:38:18 -0400
+Received: from vaebh106.NOE.Nokia.com (vaebh106.europe.nokia.com [10.160.244.32])
+	by mgw-mx03.nokia.com (Switch-3.3.3/Switch-3.3.3) with ESMTP id o8R8bvwV023998
+	for <linux-wireless@vger.kernel.org>; Mon, 27 Sep 2010 11:38:15 +0300
+Received: from localhost.localdomain (chilepepper.research.nokia.com [172.21.50.167])
+	by mgw-da02.ext.nokia.com (Switch-3.3.3/Switch-3.3.3) with ESMTP id o8R8boh1022566
+	for <linux-wireless@vger.kernel.org>; Mon, 27 Sep 2010 11:37:57 +0300
+From: Luciano Coelho <luciano.coelho@nokia.com>
+To: linux-wireless@vger.kernel.org
+Subject: [PATCH 05/25] wl1271: remove useless 11a check when scanning
+Date: Mon, 27 Sep 2010 11:37:29 +0300
+Message-Id: <1285576669-8070-6-git-send-email-luciano.coelho@nokia.com>
+In-Reply-To: <1285576669-8070-1-git-send-email-luciano.coelho@nokia.com>
+References: <1285576669-8070-1-git-send-email-luciano.coelho@nokia.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2010-09-16 at 11:22 -0700, Luis R. Rodriguez wrote:
-> On Thu, Sep 16, 2010 at 5:58 AM, Johannes Berg
-> <johannes@sipsolutions.net> wrote:
-> > From: Johannes Berg <johannes.berg@intel.com>
-> >
-> > When a driver advertises p2p device support,
-> > mac80211 will handle it, but internally it will
-> > rewrite the interface type to STA/AP rather than
-> > P2P-STA/GO since otherwise a lot of paths need
-> > to be touched that are otherwise identical. A
-> > p2p boolean tells drivers whether or not a given
-> > interface will be used for p2p or not.
-> >
-> > Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-> 
-> While at it can you add a is_beaconing_iftype() or something, that
-> should reduce code and make it easier to check for these modes.
+This code was a leftover of the previous scanning mechanism.  The if is
+totally unnecessary, since both branches do the same thing.
 
-Err, it doesn't really change for drivers, since it's still AP/IBSS --
-since GO is just an AP subtype internally. And anyway, I wouldn't use it
-internally, so does it really belong into this patch?
+Signed-off-by: Luciano Coelho <luciano.coelho@nokia.com>
+Reviewed-by: Juuso Oikarinen <juuso.oikarinen@nokia.com>
+---
+ drivers/net/wireless/wl12xx/wl1271_main.c |    5 +----
+ 1 files changed, 1 insertions(+), 4 deletions(-)
 
-johannes
+diff --git a/drivers/net/wireless/wl12xx/wl1271_main.c b/drivers/net/wireless/wl12xx/wl1271_main.c
+index 02ad6c6..b42ee48 100644
+--- a/drivers/net/wireless/wl12xx/wl1271_main.c
++++ b/drivers/net/wireless/wl12xx/wl1271_main.c
+@@ -1624,10 +1624,7 @@ static int wl1271_op_hw_scan(struct ieee80211_hw *hw,
+ 	if (ret < 0)
+ 		goto out;
+ 
+-	if (wl1271_11a_enabled())
+-		ret = wl1271_scan(hw->priv, ssid, len, req);
+-	else
+-		ret = wl1271_scan(hw->priv, ssid, len, req);
++	ret = wl1271_scan(hw->priv, ssid, len, req);
+ 
+ 	wl1271_ps_elp_sleep(wl);
+ 
+-- 
+1.6.3.3
 
