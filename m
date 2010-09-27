@@ -1,34 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:38618
-	"EHLO sunset.davemloft.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1755912Ab0IUTZm (ORCPT
+Received: from p3plsmtpa01-03.prod.phx3.secureserver.net ([72.167.82.83]:60450
+	"HELO p3plsmtpa01-03.prod.phx3.secureserver.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1759864Ab0I0RQj (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 21 Sep 2010 15:25:42 -0400
-Date: Tue, 21 Sep 2010 12:26:02 -0700 (PDT)
-Message-Id: <20100921.122602.226770816.davem@davemloft.net>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: pull request: wireless-2.6 2010-09-21
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <20100921182620.GB2448@tuxdriver.com>
-References: <20100921182620.GB2448@tuxdriver.com>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+	Mon, 27 Sep 2010 13:16:39 -0400
+Message-ID: <58E3CFACA7054DC48245C67E9D4AE07B@ChuckPC>
+From: "Chuck Crisler" <ccrisler@vgocom.com>
+To: <linux-wireless@vger.kernel.org>
+Subject: memory leak in scan with 9170?
+Date: Mon, 27 Sep 2010 13:16:30 -0400
+MIME-Version: 1.0
+Content-Type: text/plain;
+	format=flowed;
+	charset="iso-8859-1";
+	reply-type=original
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: "John W. Linville" <linville@tuxdriver.com>
-Date: Tue, 21 Sep 2010 14:26:20 -0400
+I have modified my code that is using a 9170. I am really concerned about 
+roaming and so am testing that pretty hard. Yesterday I had a loop that 
+forced a DISCONNECT followed by a REASSOCIATE every 30 seconds. After 
+between 1:30 and 1:40 it failed by no longer receiving scan results. When I 
+looked into a log, the very last scan results that I received had a reduced 
+number of BSSs, down from 10-12 per scan to 4, then the next scan was zero. 
+It never recovered. All scans always failed to return any results from then 
+on and, of course, the re-associate failed. This 'feels' to me like a memory 
+leak somewhere, either in the firmware or the driver. I am running the 
+2.6.31 kernel/driver and the dual file firmware and version 0.6.10 of the 
+supplicant. At the moment I am running another test where it roams every 60 
+seconds rather than 30 seconds to see what kind of difference that makes. I 
+know that my kernel is old, but for now I don't have a choice. Does anyone 
+have any experience like this or insight into this new problem? This is an 
+embedded device that doesn't have the memory of a PC. Is there some way that 
+I could instrument something to check this?
 
-> Dave,
-> 
-> Here are two more small fixes intended for 2.6.36.  One is a one-liner
-> (kmalloc->kzalloc) that prevents a potential information leak.
-> The other is a small fix that skips firmware reloads (a workaround
-> for firmware problems) while a scan is in progress in order to avoid
-> the stack trace cited in the commit log.
-> 
-> Please let me know if there are problems!
+Thank you,
+Chuck 
 
-Pulled, thanks a lot John.
