@@ -1,89 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:27208 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754783Ab0IMMqT (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 13 Sep 2010 08:46:19 -0400
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: Johannes Berg <johannes@sipsolutions.net>,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>,
-	Reinette Chatre <reinette.chatre@intel.com>,
-	"John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org,
-	Stanislaw Gruszka <sgruszka@redhat.com>,
-	Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH 01/14] iwlwifi: remove unused conf variables
-Date: Mon, 13 Sep 2010 14:46:32 +0200
-Message-Id: <1284382005-3246-2-git-send-email-sgruszka@redhat.com>
-In-Reply-To: <1284382005-3246-1-git-send-email-sgruszka@redhat.com>
-References: <1284382005-3246-1-git-send-email-sgruszka@redhat.com>
+Received: from smtp.nokia.com ([192.100.105.134]:16932 "EHLO
+	mgw-mx09.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932858Ab0I0Iic (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 27 Sep 2010 04:38:32 -0400
+Received: from esebh105.NOE.Nokia.com (esebh105.ntc.nokia.com [172.21.138.211])
+	by mgw-mx09.nokia.com (Switch-3.3.3/Switch-3.3.3) with ESMTP id o8R8c5EY024679
+	for <linux-wireless@vger.kernel.org>; Mon, 27 Sep 2010 03:38:31 -0500
+Received: from localhost.localdomain (chilepepper.research.nokia.com [172.21.50.167])
+	by mgw-da02.ext.nokia.com (Switch-3.3.3/Switch-3.3.3) with ESMTP id o8R8bogv022566
+	for <linux-wireless@vger.kernel.org>; Mon, 27 Sep 2010 11:37:51 +0300
+From: Luciano Coelho <luciano.coelho@nokia.com>
+To: linux-wireless@vger.kernel.org
+Subject: [PATCH 01/25] wl1271: remove deprecated ACX definition
+Date: Mon, 27 Sep 2010 11:37:25 +0300
+Message-Id: <1285576669-8070-2-git-send-email-luciano.coelho@nokia.com>
+In-Reply-To: <1285576669-8070-1-git-send-email-luciano.coelho@nokia.com>
+References: <1285576669-8070-1-git-send-email-luciano.coelho@nokia.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+As of Rev. 6.1.0.0.335, the ACX_SET_SMART_REFLEX_DEBUG command is
+deprecated.  This patch removes it from the wl1271 driver (it wasn't used
+anyway).
 
-There are a number of conf variables that are
-unused, remove them.
-
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
-Acked-by: Wey-Yi W Guy <wey-yi.w.guy@intel.com>
+Signed-off-by: Luciano Coelho <luciano.coelho@nokia.com>
+Reviewed-by: Saravanan Dhanabal <ext-saravanan.dhanabal@nokia.com>
 ---
- drivers/net/wireless/iwlwifi/iwl-agn-lib.c  |    3 ---
- drivers/net/wireless/iwlwifi/iwl3945-base.c |    6 ------
- 2 files changed, 0 insertions(+), 9 deletions(-)
+ drivers/net/wireless/wl12xx/wl1271_acx.h |    1 -
+ 1 files changed, 0 insertions(+), 1 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-lib.c b/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
-index a8f2adf..51a8d7e 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
-@@ -1162,7 +1162,6 @@ void iwlagn_request_scan(struct iwl_priv *priv, struct ieee80211_vif *vif)
- 		.flags = CMD_SIZE_HUGE,
- 	};
- 	struct iwl_scan_cmd *scan;
--	struct ieee80211_conf *conf = NULL;
- 	struct iwl_rxon_context *ctx = &priv->contexts[IWL_RXON_CTX_BSS];
- 	u32 rate_flags = 0;
- 	u16 cmd_len;
-@@ -1179,8 +1178,6 @@ void iwlagn_request_scan(struct iwl_priv *priv, struct ieee80211_vif *vif)
- 	if (vif)
- 		ctx = iwl_rxon_ctx_from_vif(vif);
- 
--	conf = ieee80211_get_hw_conf(priv->hw);
--
- 	cancel_delayed_work(&priv->scan_check);
- 
- 	if (!iwl_is_ready(priv)) {
-diff --git a/drivers/net/wireless/iwlwifi/iwl3945-base.c b/drivers/net/wireless/iwlwifi/iwl3945-base.c
-index 68e624a..5b742eb 100644
---- a/drivers/net/wireless/iwlwifi/iwl3945-base.c
-+++ b/drivers/net/wireless/iwlwifi/iwl3945-base.c
-@@ -2569,12 +2569,9 @@ static void __iwl3945_down(struct iwl_priv *priv)
- {
- 	unsigned long flags;
- 	int exit_pending = test_bit(STATUS_EXIT_PENDING, &priv->status);
--	struct ieee80211_conf *conf = NULL;
- 
- 	IWL_DEBUG_INFO(priv, DRV_NAME " is going down\n");
- 
--	conf = ieee80211_get_hw_conf(priv->hw);
--
- 	if (!exit_pending)
- 		set_bit(STATUS_EXIT_PENDING, &priv->status);
- 
-@@ -2828,13 +2825,10 @@ void iwl3945_request_scan(struct iwl_priv *priv, struct ieee80211_vif *vif)
- 		.flags = CMD_SIZE_HUGE,
- 	};
- 	struct iwl3945_scan_cmd *scan;
--	struct ieee80211_conf *conf = NULL;
- 	u8 n_probes = 0;
- 	enum ieee80211_band band;
- 	bool is_active = false;
- 
--	conf = ieee80211_get_hw_conf(priv->hw);
--
- 	cancel_delayed_work(&priv->scan_check);
- 
- 	if (!iwl_is_ready(priv)) {
+diff --git a/drivers/net/wireless/wl12xx/wl1271_acx.h b/drivers/net/wireless/wl12xx/wl1271_acx.h
+index 4235bc5..5c8bb7f 100644
+--- a/drivers/net/wireless/wl12xx/wl1271_acx.h
++++ b/drivers/net/wireless/wl12xx/wl1271_acx.h
+@@ -1060,7 +1060,6 @@ enum {
+ 	ACX_PEER_HT_CAP             = 0x0057,
+ 	ACX_HT_BSS_OPERATION        = 0x0058,
+ 	ACX_COEX_ACTIVITY           = 0x0059,
+-	ACX_SET_SMART_REFLEX_DEBUG  = 0x005A,
+ 	ACX_SET_DCO_ITRIM_PARAMS    = 0x0061,
+ 	DOT11_RX_MSDU_LIFE_TIME     = 0x1004,
+ 	DOT11_CUR_TX_PWR            = 0x100D,
 -- 
-1.7.1
+1.6.3.3
 
