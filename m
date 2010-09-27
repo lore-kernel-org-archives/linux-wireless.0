@@ -1,112 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:7919 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754540Ab0IJPvP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 10 Sep 2010 11:51:15 -0400
-Subject: Re: [PATCH 03/14] iwlwifi: move scan completed flags handling
-From: "Guy, Wey-Yi" <wey-yi.w.guy@intel.com>
-To: Stanislaw Gruszka <sgruszka@redhat.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	"Chatre, Reinette" <reinette.chatre@intel.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"Berg, Johannes" <johannes.berg@intel.com>
-In-Reply-To: <1284128807-11436-4-git-send-email-sgruszka@redhat.com>
-References: <1284128807-11436-1-git-send-email-sgruszka@redhat.com>
-	 <1284128807-11436-4-git-send-email-sgruszka@redhat.com>
-Content-Type: text/plain
-Date: Fri, 10 Sep 2010 08:50:28 -0700
-Message-Id: <1284133828.6054.11.camel@wwguy-ubuntu>
-Mime-Version: 1.0
+Received: from mail-iw0-f174.google.com ([209.85.214.174]:65523 "EHLO
+	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757390Ab0I0XDS (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 27 Sep 2010 19:03:18 -0400
+Received: by iwn5 with SMTP id 5so5174672iwn.19
+        for <linux-wireless@vger.kernel.org>; Mon, 27 Sep 2010 16:03:14 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <AANLkTi=Sm_L+G9JXCuHJhzZm255EtHupkQ1YGy3wpuy3@mail.gmail.com>
+References: <58E3CFACA7054DC48245C67E9D4AE07B@ChuckPC> <AANLkTim=hHPMS9kUn11BnWDED1DeUVdJmu3u0Ajr3MPa@mail.gmail.com>
+ <F2D55DC7DDE6443EA6E69CBBE698A335@ChuckPC> <AANLkTi=Sm_L+G9JXCuHJhzZm255EtHupkQ1YGy3wpuy3@mail.gmail.com>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Mon, 27 Sep 2010 16:02:54 -0700
+Message-ID: <AANLkTim2_k9wxTMVMFgvg1bhFEj09dD_0v2EGESaVpre@mail.gmail.com>
+Subject: Re: memory leak in scan with 9170?
+To: Chuck Crisler <ccrisler@vgocom.com>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2010-09-10 at 07:26 -0700, Stanislaw Gruszka wrote:
-> From: Johannes Berg <johannes.berg@intel.com>
-> 
-> Move the scan completed flags handling so that we
-> can notify mac80211 about aborted scans with the
-> correct status. Also queue the scan_completed work
-> before the BT status update so that it won't see
-> the bits still set (unless a new scan was started
-> in which case that's fine.)
-> 
-> Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-> Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
-Acked-by: Wey-Yi W Guy <wey-yi.w.guy@intel.com>
-> ---
->  drivers/net/wireless/iwlwifi/iwl-scan.c |   30 ++++++++++++++----------------
->  1 files changed, 14 insertions(+), 16 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/iwlwifi/iwl-scan.c b/drivers/net/wireless/iwlwifi/iwl-scan.c
-> index 6bd14bc..22bdc98 100644
-> --- a/drivers/net/wireless/iwlwifi/iwl-scan.c
-> +++ b/drivers/net/wireless/iwlwifi/iwl-scan.c
-> @@ -222,21 +222,11 @@ static void iwl_rx_scan_complete_notif(struct iwl_priv *priv,
->  		       jiffies_to_msecs(elapsed_jiffies
->  					(priv->scan_start, jiffies)));
->  
-> -	/*
-> -	 * If a request to abort was given, or the scan did not succeed
-> -	 * then we reset the scan state machine and terminate,
-> -	 * re-queuing another scan if one has been requested
-> -	 */
-> -	if (test_and_clear_bit(STATUS_SCAN_ABORTING, &priv->status))
-> -		IWL_DEBUG_INFO(priv, "Aborted scan completed.\n");
-> -
-> -	IWL_DEBUG_INFO(priv, "Setting scan to off\n");
-> -
-> -	clear_bit(STATUS_SCANNING, &priv->status);
-> +	queue_work(priv->workqueue, &priv->scan_completed);
->  
->  	if (priv->iw_mode != NL80211_IFTYPE_ADHOC &&
-> -	    priv->cfg->advanced_bt_coexist && priv->bt_status !=
-> -	    scan_notif->bt_status) {
-> +	    priv->cfg->advanced_bt_coexist &&
-> +	    priv->bt_status != scan_notif->bt_status) {
->  		if (scan_notif->bt_status) {
->  			/* BT on */
->  			if (!priv->bt_ch_announce)
-> @@ -254,7 +244,6 @@ static void iwl_rx_scan_complete_notif(struct iwl_priv *priv,
->  		priv->bt_status = scan_notif->bt_status;
->  		queue_work(priv->workqueue, &priv->bt_traffic_change_work);
->  	}
-> -	queue_work(priv->workqueue, &priv->scan_completed);
->  }
->  
->  void iwl_setup_rx_scan_handlers(struct iwl_priv *priv)
-> @@ -554,7 +543,7 @@ static void iwl_bg_scan_completed(struct work_struct *work)
->  {
->  	struct iwl_priv *priv =
->  	    container_of(work, struct iwl_priv, scan_completed);
-> -	bool internal = false;
-> +	bool internal = false, aborted;
->  	struct iwl_rxon_context *ctx;
->  
->  	IWL_DEBUG_SCAN(priv, "SCAN complete scan\n");
-> @@ -562,6 +551,15 @@ static void iwl_bg_scan_completed(struct work_struct *work)
->  	cancel_delayed_work(&priv->scan_check);
->  
->  	mutex_lock(&priv->mutex);
-> +
-> +	aborted = test_and_clear_bit(STATUS_SCAN_ABORTING, &priv->status);
-> +	if (aborted)
-> +		IWL_DEBUG_INFO(priv, "Aborted scan completed.\n");
-> +
-> +	IWL_DEBUG_INFO(priv, "Setting scan to off\n");
-> +
-> +	clear_bit(STATUS_SCANNING, &priv->status);
-> +
->  	if (priv->is_internal_short_scan) {
->  		priv->is_internal_short_scan = false;
->  		IWL_DEBUG_SCAN(priv, "internal short scan completed\n");
-> @@ -569,7 +567,7 @@ static void iwl_bg_scan_completed(struct work_struct *work)
->  	} else if (priv->scan_request) {
->  		priv->scan_request = NULL;
->  		priv->scan_vif = NULL;
-> -		ieee80211_scan_completed(priv->hw, false);
-> +		ieee80211_scan_completed(priv->hw, aborted);
->  	}
->  
->  	if (test_bit(STATUS_EXIT_PENDING, &priv->status))
+On Mon, Sep 27, 2010 at 4:01 PM, Luis R. Rodriguez <mcgrof@gmail.com> wrote:
+> On Mon, Sep 27, 2010 at 3:40 PM, Chuck Crisler <ccrisler@vgocom.com> wrote:
+>> Well, (as usual) I was wrong. It isn't a memory problem. It seems that after
+>> some indeterminant time, the USB interface locks up. When we try to take it
+>> down (ifconfig wlan0 down) we get a message about outstanding urbs. By
+>> powering down the 9170 we can re-set the device and get it to re-associate
+>> and resume work. So, the problem is a USB problem. The question is if it is
+>> a module problem or a system problem. We are typically seeing this after
+>> 50-200 reassociations. If we don't reassociate, it doesn't seem to occur.
+>> Does anyone else have experience or insight into this?
+>
+> Upgrade.
 
+Let me clarify, 2.6.31 is not supported, its not listed on kernel.org
+any more as a supported kernel. You are losing valuable fixes by not
+moving away from it. If you don't have a plan to move, you need it, if
+you have policies to lock you down to old kernels, try to change it.
+
+  Luis
