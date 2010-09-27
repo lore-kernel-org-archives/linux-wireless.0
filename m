@@ -1,48 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.19.149.2]:31103 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752244Ab0IRBOh (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 17 Sep 2010 21:14:37 -0400
-Received: from mail.atheros.com ([10.10.20.105])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Fri, 17 Sep 2010 18:14:31 -0700
-From: Vipin Mehta <vmehta@atheros.com>
-To: <greg@kroah.com>
-CC: <linux-wireless@vger.kernel.org>, <vmehta@atheros.com>,
-	<devel@driverdev.osuosl.org>, <randy.dunlap@oracle.com>
-Subject: [PATCH] staging: ath6kl: Fixing a compile error
-Date: Fri, 17 Sep 2010 18:14:33 -0700
-Message-ID: <1284772473-13552-1-git-send-email-vmehta@atheros.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from he.sipsolutions.net ([78.46.109.217]:49090 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757124Ab0I0Syb (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 27 Sep 2010 14:54:31 -0400
+Subject: Re: [RFC] mac80211: fix release_reorder_timeout in scan
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Cc: wireless <linux-wireless@vger.kernel.org>, Jouni Malinen <j@w1.fi>,
+	Christian Lamparter <chunkeey@googlemail.com>
+In-Reply-To: <AANLkTin+1-_RA8fY8B5-omQi3kMJ3U0iw8Kdg=FC2rnP@mail.gmail.com>
+References: <1285266471.3770.384.camel@jlt3.sipsolutions.net>
+	 <AANLkTi=3GraBb9hTrieCNvCB0o3PXGORkW1b7F2PceK3@mail.gmail.com>
+	 <1285611630.4043.26.camel@jlt3.sipsolutions.net>
+	 <AANLkTin+1-_RA8fY8B5-omQi3kMJ3U0iw8Kdg=FC2rnP@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Mon, 27 Sep 2010 20:54:29 +0200
+Message-ID: <1285613669.4043.27.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The commit fixes a compilation error that was encountered while using
-a specific kernel configuration file. The problem was the use of some
-functions defined in <linux/semaphore.h> without including the header
-file explicitly. It was probably working before because of the
-dependency getting implicitly satisfied via some other header file.
+On Mon, 2010-09-27 at 11:49 -0700, Luis R. Rodriguez wrote:
 
-Reported-by: Randy Dunlap <randy.dunlap@oracle.com>
-Signed-off-by: Vipin Mehta <vmehta@atheros.com>
----
- .../staging/ath6kl/os/linux/include/osapi_linux.h  |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+> >> I don't get what we are doing with these frames today, are you saying
+> >> we pegged some of these frames into the reorder buffer when starting a
+> >> sw scan, or that we were dropping them?
 
-diff --git a/drivers/staging/ath6kl/os/linux/include/osapi_linux.h b/drivers/staging/ath6kl/os/linux/include/osapi_linux.h
-index ef7cc82..fce6ceb 100644
---- a/drivers/staging/ath6kl/os/linux/include/osapi_linux.h
-+++ b/drivers/staging/ath6kl/os/linux/include/osapi_linux.h
-@@ -39,7 +39,7 @@
- #include <linux/timer.h>
- #include <linux/delay.h>
- #include <linux/wait.h>
--
-+#include <linux/semaphore.h>
- #include <linux/cache.h>
- 
- #ifdef __GNUC__
--- 
-1.6.3.3
+> yeah, I was thinking about the release reorder buffer and its
+> respective timeout, I thought that's what the subject of this patch
+> was about.
+
+So I got confused by your question ...
+
+We put them into the reorder buffer, but if we get a reorder timeout
+while scanning we'll drop the frames which isn't necessary.
+
+johannes
 
