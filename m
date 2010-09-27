@@ -1,48 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([88.198.39.176]:51874 "EHLO ds10.nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753248Ab0I1Ivi (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 28 Sep 2010 04:51:38 -0400
-Message-ID: <4CA1AC8F.6000802@openwrt.org>
-Date: Tue, 28 Sep 2010 10:51:27 +0200
-From: Felix Fietkau <nbd@openwrt.org>
-MIME-Version: 1.0
-To: greearb@candelatech.com
-CC: linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 1/2] ath9k:  Check for identical channels when changing
- channels.
-References: <1285632457-27539-1-git-send-email-greearb@candelatech.com>
-In-Reply-To: <1285632457-27539-1-git-send-email-greearb@candelatech.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from he.sipsolutions.net ([78.46.109.217]:44738 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752203Ab0I0Kvn (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 27 Sep 2010 06:51:43 -0400
+Subject: Re: [PATCH] wireless:  make phy naming independent of phy index.
+From: Johannes Berg <johannes@sipsolutions.net>
+To: greearb@gmail.com
+Cc: linux-wireless@vger.kernel.org,
+	Ben Greear <greearb@candelatech.com>
+In-Reply-To: <1285478921-5891-1-git-send-email-greearb@candelatech.com>
+References: <1285478921-5891-1-git-send-email-greearb@candelatech.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Mon, 27 Sep 2010 12:51:40 +0200
+Message-ID: <1285584700.4043.13.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2010-09-28 2:07 AM, greearb@candelatech.com wrote:
+On Sat, 2010-09-25 at 22:28 -0700, greearb@gmail.com wrote:
 > From: Ben Greear <greearb@candelatech.com>
 > 
-> Don't do un-needed work.  Should be useful when scanning on
-> only the working channel.
+> The recent patch that re-used phy indexes on module reload
+> could cause races.  Instead, increment phy-index monitomically
+> for each new phy, but choose the first phy%d name that is
+> available.
 > 
-> Signed-off-by: Ben Greear <greearb@candelatech.com>
-> ---
-> :100644 100644 a133878... 4d34ba5... M	drivers/net/wireless/ath/ath9k/main.c
->  drivers/net/wireless/ath/ath9k/main.c |    5 +++++
->  1 files changed, 5 insertions(+), 0 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
-> index a133878..4d34ba5 100644
-> --- a/drivers/net/wireless/ath/ath9k/main.c
-> +++ b/drivers/net/wireless/ath/ath9k/main.c
-> @@ -1602,6 +1602,11 @@ static int ath9k_config(struct ieee80211_hw *hw, u32 changed)
->  		struct ieee80211_channel *curchan = hw->conf.channel;
->  		int pos = curchan->hw_value;
->  
-> +		/* If channels are the same, then don't actually do anything.
-> +		 */
-> +		if (sc->sc_ah->curchan == &sc->sc_ah->channels[pos])
-> +			goto skip_chan_change;
-> +
-NACK. This ignores off-channel flag changes, which are important for
-calibration.
+> Also, allow users to rename a phy to any un-used name, including
+> phy%d.
 
-- Felix
+You lost the wiphy_counter-- because you'd first removed it and now
+reverted that patch ... it'd be easier to review if you actually did a
+new patch on top of the revert.
+
+The wiphy_counter-- seems necessary to avoid potential wrapping and then
+re-using phy index 0 (yeah, you'd have to have an immense amount of phy
+registration going on ... but still)
+
+johannes
+
