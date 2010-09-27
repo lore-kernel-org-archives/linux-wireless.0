@@ -1,36 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from arroyo.ext.ti.com ([192.94.94.40]:35538 "EHLO arroyo.ext.ti.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754370Ab0IPPZC (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 16 Sep 2010 11:25:02 -0400
-From: "Levi, Shahar" <shahar_levi@ti.com>
-To: Luciano Coelho <luciano.coelho@nokia.com>,
-	"ext Luis R. Rodriguez" <mcgrof@gmail.com>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Date: Thu, 16 Sep 2010 17:24:55 +0200
-Subject: RE: [PATCH 00/04] wl1271: 11n Support, add support to 80211n spec
-Message-ID: <AC090B9732AB2B4DB7FF476E907FE6600113431B61@dnce02.ent.ti.com>
-References: <1284575472-19888-1-git-send-email-shahar_levi@ti.com>
-	 <1284577092.1569.8.camel@powerslave> <1284578740.1569.33.camel@powerslave>
-	 <AC090B9732AB2B4DB7FF476E907FE66001134316FB@dnce02.ent.ti.com>
-	 <AANLkTi=JYRN9WD5kfKJPqSX3_vANrKwTD+8yQBrvERM_@mail.gmail.com>
- <1284583225.1569.50.camel@powerslave>
-In-Reply-To: <1284583225.1569.50.camel@powerslave>
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
+Received: from he.sipsolutions.net ([78.46.109.217]:37181 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933177Ab0I0QRZ (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 27 Sep 2010 12:17:25 -0400
+Subject: Re: [PATCH 2/2] wireless: Use first phyX name available when
+ registering phy devices.
+From: Johannes Berg <johannes@sipsolutions.net>
+To: greearb@gmail.com
+Cc: linux-wireless@vger.kernel.org,
+	Ben Greear <greearb@candelatech.com>
+In-Reply-To: <1285603646-7710-2-git-send-email-greearb@candelatech.com>
+References: <1285603646-7710-1-git-send-email-greearb@candelatech.com>
+	 <1285603646-7710-2-git-send-email-greearb@candelatech.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Mon, 27 Sep 2010 18:17:23 +0200
+Message-ID: <1285604243.4043.25.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-DQoNCj4gLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCj4gRnJvbTogTHVjaWFubyBDb2VsaG8g
-W21haWx0bzpsdWNpYW5vLmNvZWxob0Bub2tpYS5jb21dDQo+IFNlbnQ6IFdlZG5lc2RheSwgU2Vw
-dGVtYmVyIDE1LCAyMDEwIDEwOjQwIFBNDQo+IFRvOiBleHQgTHVpcyBSLiBSb2RyaWd1ZXoNCj4g
-Q2M6IExldmksIFNoYWhhcjsgbGludXgtd2lyZWxlc3NAdmdlci5rZXJuZWwub3JnDQo+IFN1Ympl
-Y3Q6IFJlOiBbUEFUQ0ggMDAvMDRdIHdsMTI3MTogMTFuIFN1cHBvcnQsIGFkZCBzdXBwb3J0IHRv
-IDgwMjExbiBzcGVjDQo+IA0KPiA+DQo+ID4gTWlnaHQgYmUgZ29vZCB0byBhZGQgZGV0YWlscyBv
-ZiB3aGF0IGlzIHN1cHBvcnRlZCB0byB0aGUgd2lraSB0b28uDQo+IA0KPiBHb29kIHBvaW50ISBB
-Y3R1YWxseSB0aGUgd2lraSBpcyBxdWl0ZSBvdXRkYXRlZCBhcyBub2JvZHkgaGFzIGJlZW4NCj4g
-dGFraW5nIGNhcmUgb2YgaXQgZm9yIGEgdmVyeSBsb25nIHRpbWUuICBJZiBhbnlvbmUgd2FudHMg
-dG8gdm9sdW50ZWVyIHRvDQo+IHVwZGF0ZSBpdCwgdGhpcyBpcyB0aGUgbG9jYXRpb246DQo+IA0K
-PiBodHRwOi8vd2lyZWxlc3Mua2VybmVsLm9yZy9lbi91c2Vycy9Ecml2ZXJzL3dsMTJ4eA0KPiAN
-Cj4gLS0NCj4gQ2hlZXJzLA0KPiBMdWNhLg0KSSB3aWxsIHVwZGF0ZSB0aGUgd2lraSBuZXh0IHdl
-ZWsgb24gdGhlIG5ldyBzdXBwb3J0Lg0KUmVnYXJkcywNClNoYWhhcg0K
+On Mon, 2010-09-27 at 09:07 -0700, greearb@gmail.com wrote:
+
+> @@ -346,16 +332,36 @@ struct wiphy *wiphy_new(const struct cfg80211_ops *ops, int sizeof_priv)
+>  
+>  	if (unlikely(!wiphy_idx_valid(rdev->wiphy_idx))) {
+>  		wiphy_counter--;
+> +		goto too_many_devs;
+> +	}
+
+I believe the other path can also reduce the counter again, since it's
+another failure case? Not that I'm really worried about it though.
+
+> +	/* 64k wiphy devices is enough for anyone! */
+> +	for (i = 0; i < 0xFFFF; i++) {
+
+Come to think of it, this could be "i <= wiphy_counter", since in N
+devices, only N different names can be in use, so checking N+1 names
+will be sufficient, right?
+
+johannes
+
