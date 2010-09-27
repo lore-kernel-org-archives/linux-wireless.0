@@ -1,58 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yw0-f46.google.com ([209.85.213.46]:53959 "EHLO
-	mail-yw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752394Ab0IWMoD (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 23 Sep 2010 08:44:03 -0400
-Received: by ywh1 with SMTP id 1so527523ywh.19
-        for <linux-wireless@vger.kernel.org>; Thu, 23 Sep 2010 05:44:02 -0700 (PDT)
-Date: Thu, 23 Sep 2010 20:44:00 +0800
-From: Calwin <rrredboot998@gmail.com>
-To: linux-wireless@vger.kernel.org
-Subject: Can someone help me with B43 driver? thanks a lot 
-Message-Id: <20100923204356.97ED.1B491177@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="US-ASCII"
+Received: from ist.d-labs.de ([213.239.218.44]:40330 "EHLO mx01.d-labs.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932730Ab0I0GOC (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 27 Sep 2010 02:14:02 -0400
+Date: Mon, 27 Sep 2010 08:13:58 +0200
+From: Florian Mickler <florian@mickler.org>
+To: "Guy, Wey-Yi" <wey-yi.w.guy@intel.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"Chatre, Reinette" <reinette.chatre@intel.com>,
+	Intel Linux Wireless <ilw@linux.intel.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	"Berg, Johannes" <johannes.berg@intel.com>,
+	Zhu Yi <yi.zhu@intel.com>,
+	"Cahill, Ben M" <ben.m.cahill@intel.com>,
+	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH] iwl3945: queue the right work if the scan needs to be
+ aborted
+Message-ID: <20100927081358.07b30327@schatten.dmk.lab>
+In-Reply-To: <1285357868.12594.8.camel@wwguy-ubuntu>
+References: <1285345323-4250-1-git-send-email-florian@mickler.org>
+	<1285357868.12594.8.camel@wwguy-ubuntu>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi all friends 
-      I have AMBITG T60H906 bcm 4318 wireless card , i want to run it on
-kernel 2.6.24, after compile the kernel and related modulers ,i boot it
-up .
-      After modprobe b43 ,i can not see the default wifi interface wlan0
-,and no other wifi interface too. I found some error in dmesg ,just like
-below :
+On Fri, 24 Sep 2010 12:51:08 -0700
+"Guy, Wey-Yi" <wey-yi.w.guy@intel.com> wrote:
 
-bus type 'ssb' registered
-bus pci: add driver b43-pci-bridge
-pci: Matched Device 0000:00:01.0 with Driver b43-pci-bridge
-pci: Probing driver b43-pci-bridge with device 0000:00:01.0
-PCI: enabling device 0000:00:01.0 (0140 -> 0142)
-ssb: PCI-ID not in fallback list
-ssb: CHIPID not in nrcores fallback list
-ssb: WARNING: Invalid SPROM CRC (corrupt SPROM)
-ssb: Unsupported SPROM revision 0 detected. Will extract v1
-DEV: registering device: ID = 'ssb0:0'
-bus ssb: add device ssb0:0
-ssb: Sonics Silicon Backplane found on PCI device 0000:00:01.0
-bound device '0000:00:01.0' to driver 'b43-pci-bridge'
-pci: Bound Device 0000:00:01.0 to Driver b43-pci-bridge
+> Hi Florian,
+> 
+> Thanks for sending the patch, the scan operation in iwlwifi just being
+> modified and the changes you have no longer apply.please check the
+> latest kernel.
+> 
+> Thanks
+> Wey
+> 
 
-     of course ,i doubt perhaps i have "corrupt SPROM" on my wireless
-card , i have 2 questions about it 
-   
-   1  Is it sure that the driver included in the kernel 2.6.24 can drive
-bcm4318 ?
-   2  if 1 is true  , can  b43 driver  bring up the device and add the
-interface to system when a corrupt SPROM is present ?
-   3  how can i deal with it ? change a good wireless card or somethings
-else or someone can send me a copy of good SPROM , i can try to write it 
-with related tools in b43 ?
+Ok, I checked out
+git://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi-2.6.git
+and it definitely looks better in there. This patch shouldn't be
+necessary for that. 
 
-Any suggestions is  welcome ,Thanks  
+Do you plan on submitting this for 2.6.36 or .37?
 
-Best Regards
+I think my patch should fix the instance reported in the bug in a less
+invasive manner. 
+Only remaining question is why it did only show up now. But that's
+probably due to the workqueue changes.
 
-EricZhang<rrredboot998@gmail.com>
 
+Regards,
+Flo
