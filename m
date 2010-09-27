@@ -1,165 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([88.198.39.176]:57154 "EHLO ds10.nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756307Ab0ITLqB (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 20 Sep 2010 07:46:01 -0400
-From: Felix Fietkau <nbd@openwrt.org>
-To: linux-wireless@vger.kernel.org
-Cc: linville@tuxdriver.com, lrodriguez@atheros.com
-Subject: [PATCH 3/5] ath9k: clean up / fix aggregation session flush
-Date: Mon, 20 Sep 2010 13:45:38 +0200
-Message-Id: <1284983140-30099-3-git-send-email-nbd@openwrt.org>
-In-Reply-To: <1284983140-30099-2-git-send-email-nbd@openwrt.org>
-References: <1284983140-30099-1-git-send-email-nbd@openwrt.org>
- <1284983140-30099-2-git-send-email-nbd@openwrt.org>
+Received: from smtp.nokia.com ([192.100.122.230]:28283 "EHLO
+	mgw-mx03.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759781Ab0I0QdN (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 27 Sep 2010 12:33:13 -0400
+Subject: Re: active vs. passive scans
+From: Luciano Coelho <luciano.coelho@nokia.com>
+To: ext Johannes Berg <johannes@sipsolutions.net>
+Cc: ext Chuck Crisler <ccrisler@vgocom.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <1285600151.4043.23.camel@jlt3.sipsolutions.net>
+References: <15713CDD627C41D39E4B9725AE2B241D@ChuckPC>
+	 <1285599964.5768.120.camel@chilepepper>
+	 <1285600151.4043.23.camel@jlt3.sipsolutions.net>
+Content-Type: text/plain; charset="UTF-8"
+Date: Mon, 27 Sep 2010 19:32:58 +0300
+Message-ID: <1285605178.30315.3.camel@powerslave>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The tid aggregation cleanup is a bit fragile, as it discards failed
-subframes in some places, and retransmits them in others. This could
-block the cleanup of an existing aggregation session, if a retransmission
-for a tid is issued, yet the tid is never scheduled again because of
-the cleanup state.
+On Mon, 2010-09-27 at 17:09 +0200, ext Johannes Berg wrote:
+> On Mon, 2010-09-27 at 18:06 +0300, Luciano Coelho wrote:
+> 
+> > Usually the drivers stay for a certain period of time in each channel,
+> > and that normally doesn't change if you have active or passive scan.  So
+> > there will be no improvement in the overall scan speed.  Of course you
+> > could do some tweaks that might improve scanning performance in specific
+> > cases.
+> 
+> It's certainly different with mac80211:
+> 
+> #define IEEE80211_CHANNEL_TIME (HZ / 33)
+> #define IEEE80211_PASSIVE_CHANNEL_TIME (HZ / 8)
 
-Fix this by getting rid of as many subframes as possible, as early
-as possible, and immediately transmitting pending subframes as regular
-HT frames instead of waiting for the cleanup to complete.
+Right... Even in the wl1271 driver's hw scan we stay longer on each
+channel for passive scans.  Obviously just listening to beacons we need
+to wait more, because probe_reqs should be responded quickly.
 
-Drop all pending subframes while keeping track of the Block ACK window
-during aggregate tx completion to prevent sending out stale subframes,
-which could confuse the receiver side.
-
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
-Cc: stable@kernel.org
----
- drivers/net/wireless/ath/ath9k/xmit.c |   63 +++++++++++++-------------------
- 1 files changed, 26 insertions(+), 37 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/ath9k/xmit.c b/drivers/net/wireless/ath/ath9k/xmit.c
-index d629bfb..e53433e 100644
---- a/drivers/net/wireless/ath/ath9k/xmit.c
-+++ b/drivers/net/wireless/ath/ath9k/xmit.c
-@@ -61,6 +61,8 @@ static int ath_tx_num_badfrms(struct ath_softc *sc, struct ath_buf *bf,
- 			      struct ath_tx_status *ts, int txok);
- static void ath_tx_rc_status(struct ath_buf *bf, struct ath_tx_status *ts,
- 			     int nbad, int txok, bool update_rc);
-+static void ath_tx_update_baw(struct ath_softc *sc, struct ath_atx_tid *tid,
-+			      int seqno);
- 
- enum {
- 	MCS_HT20,
-@@ -143,18 +145,23 @@ static void ath_tx_flush_tid(struct ath_softc *sc, struct ath_atx_tid *tid)
- 	struct ath_txq *txq = &sc->tx.txq[tid->ac->qnum];
- 	struct ath_buf *bf;
- 	struct list_head bf_head;
--	INIT_LIST_HEAD(&bf_head);
-+	struct ath_tx_status ts;
- 
--	WARN_ON(!tid->paused);
-+	INIT_LIST_HEAD(&bf_head);
- 
-+	memset(&ts, 0, sizeof(ts));
- 	spin_lock_bh(&txq->axq_lock);
--	tid->paused = false;
- 
- 	while (!list_empty(&tid->buf_q)) {
- 		bf = list_first_entry(&tid->buf_q, struct ath_buf, list);
--		BUG_ON(bf_isretried(bf));
- 		list_move_tail(&bf->list, &bf_head);
--		ath_tx_send_ht_normal(sc, txq, tid, &bf_head);
-+
-+		if (bf_isretried(bf)) {
-+			ath_tx_update_baw(sc, tid, bf->bf_seqno);
-+			ath_tx_complete_buf(sc, bf, txq, &bf_head, &ts, 0, 0);
-+		} else {
-+			ath_tx_send_ht_normal(sc, txq, tid, &bf_head);
-+		}
- 	}
- 
- 	spin_unlock_bh(&txq->axq_lock);
-@@ -429,7 +436,7 @@ static void ath_tx_complete_aggr(struct ath_softc *sc, struct ath_txq *txq,
- 			list_move_tail(&bf->list, &bf_head);
- 		}
- 
--		if (!txpending) {
-+		if (!txpending || (tid->state & AGGR_CLEANUP)) {
- 			/*
- 			 * complete the acked-ones/xretried ones; update
- 			 * block-ack window
-@@ -508,15 +515,12 @@ static void ath_tx_complete_aggr(struct ath_softc *sc, struct ath_txq *txq,
- 	}
- 
- 	if (tid->state & AGGR_CLEANUP) {
-+		ath_tx_flush_tid(sc, tid);
-+
- 		if (tid->baw_head == tid->baw_tail) {
- 			tid->state &= ~AGGR_ADDBA_COMPLETE;
- 			tid->state &= ~AGGR_CLEANUP;
--
--			/* send buffered frames as singles */
--			ath_tx_flush_tid(sc, tid);
- 		}
--		rcu_read_unlock();
--		return;
- 	}
- 
- 	rcu_read_unlock();
-@@ -807,12 +811,6 @@ void ath_tx_aggr_stop(struct ath_softc *sc, struct ieee80211_sta *sta, u16 tid)
- 	struct ath_node *an = (struct ath_node *)sta->drv_priv;
- 	struct ath_atx_tid *txtid = ATH_AN_2_TID(an, tid);
- 	struct ath_txq *txq = &sc->tx.txq[txtid->ac->qnum];
--	struct ath_tx_status ts;
--	struct ath_buf *bf;
--	struct list_head bf_head;
--
--	memset(&ts, 0, sizeof(ts));
--	INIT_LIST_HEAD(&bf_head);
- 
- 	if (txtid->state & AGGR_CLEANUP)
- 		return;
-@@ -822,31 +820,22 @@ void ath_tx_aggr_stop(struct ath_softc *sc, struct ieee80211_sta *sta, u16 tid)
- 		return;
- 	}
- 
--	/* drop all software retried frames and mark this TID */
- 	spin_lock_bh(&txq->axq_lock);
- 	txtid->paused = true;
--	while (!list_empty(&txtid->buf_q)) {
--		bf = list_first_entry(&txtid->buf_q, struct ath_buf, list);
--		if (!bf_isretried(bf)) {
--			/*
--			 * NB: it's based on the assumption that
--			 * software retried frame will always stay
--			 * at the head of software queue.
--			 */
--			break;
--		}
--		list_move_tail(&bf->list, &bf_head);
--		ath_tx_update_baw(sc, txtid, bf->bf_seqno);
--		ath_tx_complete_buf(sc, bf, txq, &bf_head, &ts, 0, 0);
--	}
--	spin_unlock_bh(&txq->axq_lock);
- 
--	if (txtid->baw_head != txtid->baw_tail) {
-+	/*
-+	 * If frames are still being transmitted for this TID, they will be
-+	 * cleaned up during tx completion. To prevent race conditions, this
-+	 * TID can only be reused after all in-progress subframes have been
-+	 * completed.
-+	 */
-+	if (txtid->baw_head != txtid->baw_tail)
- 		txtid->state |= AGGR_CLEANUP;
--	} else {
-+	else
- 		txtid->state &= ~AGGR_ADDBA_COMPLETE;
--		ath_tx_flush_tid(sc, txtid);
--	}
-+	spin_unlock_bh(&txq->axq_lock);
-+
-+	ath_tx_flush_tid(sc, txtid);
- }
- 
- void ath_tx_aggr_resume(struct ath_softc *sc, struct ieee80211_sta *sta, u16 tid)
 -- 
-1.7.2.2
+Cheers,
+Luca.
 
