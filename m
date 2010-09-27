@@ -1,53 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:37891 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751893Ab0ITOos (ORCPT
+Received: from mail-iw0-f174.google.com ([209.85.214.174]:56546 "EHLO
+	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756989Ab0I0ROr (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 20 Sep 2010 10:44:48 -0400
-Date: Mon, 20 Sep 2010 10:42:39 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Ben Greear <greearb@candelatech.com>
-Cc: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	Bruno Randolf <br1@einfach.org>, linux-wireless@vger.kernel.org
-Subject: Re: wireless-testing or wireless-next
-Message-ID: <20100920144238.GB2434@tuxdriver.com>
-References: <201009171148.39953.br1@einfach.org>
- <AANLkTinYo5qgXvSnQSHpLbhhBq0VG7Kh-X3dGK8NhXcj@mail.gmail.com>
- <4C950A22.6050105@candelatech.com>
+	Mon, 27 Sep 2010 13:14:47 -0400
+Received: by iwn5 with SMTP id 5so4905322iwn.19
+        for <linux-wireless@vger.kernel.org>; Mon, 27 Sep 2010 10:14:47 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <4C950A22.6050105@candelatech.com>
+In-Reply-To: <1285584763.4043.14.camel@jlt3.sipsolutions.net>
+References: <1285379997-1544-1-git-send-email-lrodriguez@atheros.com> <1285584763.4043.14.camel@jlt3.sipsolutions.net>
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Date: Mon, 27 Sep 2010 10:14:26 -0700
+Message-ID: <AANLkTi=9iMqdpAjRDTE8BhLpa71T4BDR20BgHTucgz-e@mail.gmail.com>
+Subject: Re: [PATCH] mac80211: fix offchannel assumption upon association
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	stable@kernel.org, Amod Bodas <amod.bodas@atheros.com>,
+	Vasanth Thiagarajan <vasanth.thiagarajan@atheros.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, Sep 18, 2010 at 11:51:14AM -0700, Ben Greear wrote:
-> On 09/16/2010 08:02 PM, Luis R. Rodriguez wrote:
-> >On Thu, Sep 16, 2010 at 7:48 PM, Bruno Randolf<br1@einfach.org>  wrote:
-> >>John, Luis,
-> >>
-> >>I'm a little confused about which tree to use. I though we should base driver
-> >>development on wireless-testing, but I see that you merge patches into
-> >>wireless-next first. So should we re-base patches to wireless-next before we
-> >>send them?
-> >
-> >Rule of thumb is if its large use linux-next, wireless-testing just
-> >lets you actually boot a usable kernel.
-> 
-> I saw what looked like a nice series of patches from you four days ago
-> (power save, etc).  But, they have not been applied to wireless-testing.
-> 
-> Is there a tree that does contain these sorts of patches, or must
-> we manually apply them to our own trees if we want to try them out?
+On Mon, Sep 27, 2010 at 3:52 AM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
+> On Fri, 2010-09-24 at 21:59 -0400, Luis R. Rodriguez wrote:
+>> Association is dealt with as an atomic offchannel operation,
+>> we do this because we don't know we are associated until we
+>> get the associatin response from the AP. When we do get the
+>> associatin response though we were never clearing the offchannel
+>> state. This has a few implications, we told drivers we were
+>> still offchannel, and the first configured TX power for the
+>> channel does not take into account any power constraints.
+>>
+>> For ath9k this meant ANI calibration would not start upon
+>> association, and we'd have to wait until the first bgscan
+>> to be triggered. There may be other issues this resolves
+>> but I'm too lazy to colb the code to check.
+>
+> colb?
 
-You are just a bit unlucky in this case...
+Heh oops typo, I meant "comb".
 
-I actually did have them in wireless-testing...on my machine. :-(
-I had a little merge/push hiccup that should be resolved now --
-must have been in too much of a hurry for my day-off on Friday!
+> But anyway, looks OK to me. Need to revisit some of the off-channel
+> stuff eventually, but for now this is fine I think.
 
-Sorry for the inconvenience!
+OK thanks.
 
-John
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+  Luis
