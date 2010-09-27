@@ -1,69 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.comsound.de ([188.40.207.2]:51796 "EHLO mail.comsound.de"
+Received: from ext.lri.fr ([129.175.15.4]:37940 "EHLO ext.lri.fr"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751947Ab0IVKn3 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 22 Sep 2010 06:43:29 -0400
-Received: from localhost (localhost [127.0.0.1])
-	by mail.comsound.de (Postfix) with ESMTP id 1FBF06A279
-	for <linux-wireless@vger.kernel.org>; Wed, 22 Sep 2010 12:36:18 +0200 (CEST)
-Received: from mail.comsound.de ([127.0.0.1])
-	by localhost (mail.comsound.de [127.0.0.1]) (amavisd-new, port 10024)
-	with ESMTP id FfxyG+HNyDl0 for <linux-wireless@vger.kernel.org>;
-	Wed, 22 Sep 2010 12:36:17 +0200 (CEST)
-Received: from danmob (static.121.77.40.188.clients.your-server.de [188.40.77.121])
-	by mail.comsound.de (Postfix) with ESMTPSA id CC6836A277
-	for <linux-wireless@vger.kernel.org>; Wed, 22 Sep 2010 12:36:17 +0200 (CEST)
-Date: Wed, 22 Sep 2010 12:36:28 +0200
-From: Daniel Berger <daniel@dat-berger.de>
-To: linux-wireless@vger.kernel.org
-Subject: Manual Control about Sending ACKs
-Message-ID: <20100922123628.61921924@danmob>
-Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/Op9L4qohRllC_5zrIVVf1rS"; protocol="application/pgp-signature"
+	id S1757299Ab0I0XBk (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 27 Sep 2010 19:01:40 -0400
+Date: Tue, 28 Sep 2010 01:01:37 +0200
+From: Ignacy Gawedzki <i@lri.fr>
+To: Christian Lamparter <chunkeey@googlemail.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: A few questions about modifications in carl9170
+Message-ID: <20100927230137.GA5702@qubit.lri.fr>
+References: <20100927132957.GA2977@qubit.lri.fr>
+ <201009271737.16603.chunkeey@googlemail.com>
+ <20100927160557.GA5121@qubit.lri.fr>
+ <201009271936.22261.chunkeey@googlemail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <201009271936.22261.chunkeey@googlemail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---Sig_/Op9L4qohRllC_5zrIVVf1rS
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
+On Mon, Sep 27, 2010 at 07:36:21PM +0200, thus spake Christian Lamparter:
+> Sure, but why when you have a monotonic 40 MHz timer?
 
-Hi,
+Glad to know there is such a thing, then. =)
 
-im a Student in Germany currently working on a project concerning
-wireless security.
-For testing purposes we would like to send ACKs to packets, which
-weren't adressed to us, or suppress sending normal ACKs.
-I've looked through mac80211's code and found there much, what looks
-like the ACK-sending-action is triggered in rx.c (we're checking CRC,
-length, adressed to us, ...). But, one the other hand, tx.c states in a
-comment
-/* TODO: These control frames are not currently sent by
-* mac80211, but should they be implemented, this function
-* needs to be updated to support duration field calculation. *
-[...]
-* ACK: 0 if immediately previous directed data/mgmt had
-*    more=3D0, with more=3D1 duration in ACK frame is duration
-*    from previous frame minus time needed to transmit ACK
-*    and its SIFS
-*/
-Furthermore ath9k e.g. write parameters for configuring the sending of
-ACKs direct into hw's memory...
+> (It isn't so much what you do in the firmware, as long as you don't put
+> printk into the drivers hot-paths)
+> 
+> > > (Haven't seen the WARN before, kernel/workqueue.c code has changed a lot
+> > > and flush_cpu_workqueue is no more...)
+> > 
+> > OK, I'll stick with the latest wireless-testing then.  BTW, I noticed that the
+> > FW API is 1.8.8.2, while driver API in wireless-testing is still 1.8.8.1.
+> Actually, the firmware is already at 1.8.8.3-pre. But it shouldn't matter if
+> what API "version" you are using, as long as the firmware descriptors and
+> command interface structs are the same.
 
-Thus I deduce ACK sending is completely done in hardware.
-Is this right? Is there any possible solution to my problem of sending
-ACKs to=20
+Okay, I thought these API versions were there to be checked by the driver
+somehow for conformance.
 
---Sig_/Op9L4qohRllC_5zrIVVf1rS
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Disposition: attachment; filename=signature.asc
+> > Having some stability issues with this combination, I reverted the last few
+> > commits in the FW's git back to API 1.8.8.1.  Are these different numbers
+> > nevertheless compatible with each other?
+> "Stability issues"? Again, a "vague" and stretchy term. Do you have "Oops" -
+> reports or something like that? 
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.10 (GNU/Linux)
+Yeah, sorry for the vagueness, I promise I'll grab as much info as possible
+upon next encounter of such a thing.  As I remember it, it's mainly a matter
+of the module getting suck somehow (and attempts to unload it getting stuck as
+well) and the card not being detected upon subsequent insertions anymore.
 
-iEYEARECAAYFAkyZ3CwACgkQ+JUYmR11gaAKsACaAh664GBar1EU7k36Un8V10Ht
-6TEAoLcZr9rMz4USK3ncNc/Jd+sNXDCu
-=/MKb
------END PGP SIGNATURE-----
+I just tried the whole setup with the latest wireless-testing sources and your
+patch on the firmware.  So far, so good, the problems I had previously are not
+showing up.  I'm now just adapting your proposition to support rollover and
+conversion of the measurement to nanoseconds.
 
---Sig_/Op9L4qohRllC_5zrIVVf1rS--
+One last question about your patch.  If a frame transmission fails altogether,
+i.e. the maximum attempts have been made and no ACK has been received
+whatsoever, will the driver get a tx_status with the overall timer spent
+serving that frame anyway (read: that's what I actually want)?
+
+Great thanks for your help.
+
+Kind regards,
+
+Ignacy
+
+-- 
+/* This is not a comment */
