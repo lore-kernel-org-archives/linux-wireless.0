@@ -1,53 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:55569 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753706Ab0I2UVd (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 29 Sep 2010 16:21:33 -0400
-Message-ID: <4CA39FCA.6000806@candelatech.com>
-Date: Wed, 29 Sep 2010 13:21:30 -0700
-From: Ben Greear <greearb@candelatech.com>
+Received: from ext.lri.fr ([129.175.15.4]:55701 "EHLO ext.lri.fr"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756372Ab0I0XX6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 27 Sep 2010 19:23:58 -0400
+Date: Tue, 28 Sep 2010 01:23:57 +0200
+From: Ignacy Gawedzki <i@lri.fr>
+To: Christian Lamparter <chunkeey@googlemail.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: A few questions about modifications in carl9170
+Message-ID: <20100927232357.GA5869@qubit.lri.fr>
+References: <20100927132957.GA2977@qubit.lri.fr>
+ <201009271737.16603.chunkeey@googlemail.com>
+ <20100927160557.GA5121@qubit.lri.fr>
+ <201009271936.22261.chunkeey@googlemail.com>
+ <20100927230137.GA5702@qubit.lri.fr>
 MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] iw:  Flush stdout when printing events.
-References: <1285720244-26149-1-git-send-email-greearb@candelatech.com> <1285743567.3756.1.camel@jlt3.sipsolutions.net>
-In-Reply-To: <1285743567.3756.1.camel@jlt3.sipsolutions.net>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20100927230137.GA5702@qubit.lri.fr>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 09/28/2010 11:59 PM, Johannes Berg wrote:
-> On Tue, 2010-09-28 at 17:30 -0700, greearb@candelatech.com wrote:
->
->> -#define PARSE_BEACON_CHAN(_attr, _chan) do { \
->> -	r = parse_beacon_hint_chan(tb[_attr], \
->> -				&_chan); \
->> -	if (r) \
->> -		return NL_SKIP; \
->> -} while (0)
->> +
->> +#define PARSE_BEACON_CHAN(_attr, _chan) do {		\
->> +		r = parse_beacon_hint_chan(tb[_attr],	\
->> +					&_chan);	\
->> +		if (r) {				\
->> +			fflush(stdout);			\
->> +			return NL_SKIP;			\
->> +		}					\
->> +	} while (0)
->> +
->
-> Why does that need fflush() here? We'll eventually finish that line, no?
+On Tue, Sep 28, 2010 at 01:01:37AM +0200, thus spake Ignacy Gawedzki:
+> Yeah, sorry for the vagueness, I promise I'll grab as much info as possible
+> upon next encounter of such a thing.  As I remember it, it's mainly a matter
+> of the module getting suck somehow (and attempts to unload it getting stuck as
+> well) and the card not being detected upon subsequent insertions anymore.
 
-This returns from the print_event method, so I assume it should
-flush.  If it finishes the line, I'm not sure where.
+And while writing that email, I left the card plugged in the USB socket.  In
+the meantime, I got the following:
 
-Either way, thanks for taking the other change.
+  usb 5-1: no command feedback received (-110).
+  carl9170 cmd: 08 01 00 00 04 40 1d 00 00 00 00 00              .....@......
+  usb 5-1: restart device (6)
+  ieee80211 phy1: writing reg 0x1d4004 (val 0x0) failed (-110)
+  usb 5-1: device restarted successfully.
 
-Thanks,
-Ben
+Then when I unplugged it:
+
+  usb 5-1: USB disconnect, address 11
+
+And finally upon modprobe -r carl9170:
+
+  usbcore: deregistering interface driver carl9170
+
+And now modprobe is stuck in D+. :/
+
+I now wonder how that could possibly be due to my modifications in the driver
+and mac80211 (in a nutshell: retrieve the measurement per frame from the FW
+and collect it into a stats structure in the sta descriptor, which is later
+retrieved from userspace through netlink).  I'll try without these and report
+back if that still happens.
+
+Thanks again.
+
+Ignacy
 
 -- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
-
+:wq!
