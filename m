@@ -1,109 +1,84 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.19.149.2]:19654 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752083Ab0IPGI7 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 16 Sep 2010 02:08:59 -0400
-Received: from mail.atheros.com ([10.10.20.105])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Wed, 15 Sep 2010 23:08:53 -0700
-From: Rajkumar Manoharan <rmanoharan@atheros.com>
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>,
-	Rajkumar Manoharan <rmanoharan@atheros.com>
-Subject: [PATCH] ath9k_hw: remove warning in ath9k_hw_def_get_num_ant_config
-Date: Thu, 16 Sep 2010 11:40:06 +0530
-Message-ID: <1284617406-8285-1-git-send-email-rmanoharan@atheros.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from smtp.nokia.com ([192.100.105.134]:16937 "EHLO
+	mgw-mx09.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932863Ab0I0Iid (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 27 Sep 2010 04:38:33 -0400
+Received: from esebh105.NOE.Nokia.com (esebh105.ntc.nokia.com [172.21.138.211])
+	by mgw-mx09.nokia.com (Switch-3.3.3/Switch-3.3.3) with ESMTP id o8R8c5Ea024679
+	for <linux-wireless@vger.kernel.org>; Mon, 27 Sep 2010 03:38:33 -0500
+From: Luciano Coelho <luciano.coelho@nokia.com>
+To: linux-wireless@vger.kernel.org
+Cc: Juuso Oikarinen <juuso.oikarinen@nokia.com>
+Subject: [PATCH 15/25] wl1271: Enable 11a support always, prevent scanning for unsupporting chips
+Date: Mon, 27 Sep 2010 11:37:39 +0300
+Message-Id: <1285576669-8070-16-git-send-email-luciano.coelho@nokia.com>
+In-Reply-To: <1285576669-8070-1-git-send-email-luciano.coelho@nokia.com>
+References: <1285576669-8070-1-git-send-email-luciano.coelho@nokia.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch fixes following warning
+From: Juuso Oikarinen <juuso.oikarinen@nokia.com>
 
-drivers/net/wireless/ath/ath9k/eeprom_def.c: In function 'ath9k_hw_def_get_num_ant_config'
-drivers/net/wireless/ath/ath9k/eeprom_def.c:1425:47: warning: comparison
-			between 'enum ath9k_hal_freq_band' and 'enum ieee80211_band'
+This patch always enables 11a band towards the mac80211, but prevents scanning
+(and hence the usage of) 11a band channels if the chipset does not support it.
 
-Signed-off-by: Rajkumar Manoharan <rmanoharan@atheros.com>
+Signed-off-by: Juuso Oikarinen <juuso.oikarinen@nokia.com>
+Reviewed-by: Luciano Coelho <luciano.coelho@nokia.com>
+Signed-off-by: Luciano Coelho <luciano.coelho@nokia.com>
 ---
- drivers/net/wireless/ath/ath9k/ar9003_eeprom.c |    2 +-
- drivers/net/wireless/ath/ath9k/eeprom.h        |    3 ++-
- drivers/net/wireless/ath/ath9k/eeprom_4k.c     |    2 +-
- drivers/net/wireless/ath/ath9k/eeprom_9287.c   |    2 +-
- drivers/net/wireless/ath/ath9k/eeprom_def.c    |    4 ++--
- 5 files changed, 7 insertions(+), 6 deletions(-)
+ drivers/net/wireless/wl12xx/wl1271_init.c |   15 +++++++--------
+ drivers/net/wireless/wl12xx/wl1271_main.c |    4 +---
+ 2 files changed, 8 insertions(+), 11 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
-index 057fb69..c418235 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
-@@ -968,7 +968,7 @@ static int ath9k_hw_ar9300_get_eeprom_rev(struct ath_hw *ah)
- }
- 
- static u8 ath9k_hw_ar9300_get_num_ant_config(struct ath_hw *ah,
--					     enum ieee80211_band freq_band)
-+					     enum ath9k_hal_freq_band freq_band)
+diff --git a/drivers/net/wireless/wl12xx/wl1271_init.c b/drivers/net/wireless/wl12xx/wl1271_init.c
+index 879bae0..5614a35 100644
+--- a/drivers/net/wireless/wl12xx/wl1271_init.c
++++ b/drivers/net/wireless/wl12xx/wl1271_init.c
+@@ -53,6 +53,7 @@ static int wl1271_init_hwenc_config(struct wl1271 *wl)
+ int wl1271_init_templates_config(struct wl1271 *wl)
  {
- 	return 1;
- }
-diff --git a/drivers/net/wireless/ath/ath9k/eeprom.h b/drivers/net/wireless/ath/ath9k/eeprom.h
-index 3216b70..3030564 100644
---- a/drivers/net/wireless/ath/ath9k/eeprom.h
-+++ b/drivers/net/wireless/ath/ath9k/eeprom.h
-@@ -672,7 +672,8 @@ struct eeprom_ops {
- 	bool (*fill_eeprom)(struct ath_hw *hw);
- 	int (*get_eeprom_ver)(struct ath_hw *hw);
- 	int (*get_eeprom_rev)(struct ath_hw *hw);
--	u8 (*get_num_ant_config)(struct ath_hw *hw, enum ieee80211_band band);
-+	u8 (*get_num_ant_config)(struct ath_hw *hw,
-+				 enum ath9k_hal_freq_band band);
- 	u32 (*get_eeprom_antenna_cfg)(struct ath_hw *hw,
- 				      struct ath9k_channel *chan);
- 	void (*set_board_values)(struct ath_hw *hw, struct ath9k_channel *chan);
-diff --git a/drivers/net/wireless/ath/ath9k/eeprom_4k.c b/drivers/net/wireless/ath/ath9k/eeprom_4k.c
-index 2e1397b..ead8b0d 100644
---- a/drivers/net/wireless/ath/ath9k/eeprom_4k.c
-+++ b/drivers/net/wireless/ath/ath9k/eeprom_4k.c
-@@ -1161,7 +1161,7 @@ static u32 ath9k_hw_4k_get_eeprom_antenna_cfg(struct ath_hw *ah,
- }
+ 	int ret, i;
++	size_t size;
  
- static u8 ath9k_hw_4k_get_num_ant_config(struct ath_hw *ah,
--					 enum ieee80211_band freq_band)
-+					 enum ath9k_hal_freq_band freq_band)
- {
- 	return 1;
- }
-diff --git a/drivers/net/wireless/ath/ath9k/eeprom_9287.c b/drivers/net/wireless/ath/ath9k/eeprom_9287.c
-index dff2da7..e618651 100644
---- a/drivers/net/wireless/ath/ath9k/eeprom_9287.c
-+++ b/drivers/net/wireless/ath/ath9k/eeprom_9287.c
-@@ -1126,7 +1126,7 @@ static void ath9k_hw_ar9287_set_board_values(struct ath_hw *ah,
- }
+ 	/* send empty templates for fw memory reservation */
+ 	ret = wl1271_cmd_template_set(wl, CMD_TEMPL_CFG_PROBE_REQ_2_4, NULL,
+@@ -61,14 +62,12 @@ int wl1271_init_templates_config(struct wl1271 *wl)
+ 	if (ret < 0)
+ 		return ret;
  
- static u8 ath9k_hw_ar9287_get_num_ant_config(struct ath_hw *ah,
--					     enum ieee80211_band freq_band)
-+					     enum ath9k_hal_freq_band freq_band)
- {
- 	return 1;
- }
-diff --git a/drivers/net/wireless/ath/ath9k/eeprom_def.c b/drivers/net/wireless/ath/ath9k/eeprom_def.c
-index afa2b73..23f480d 100644
---- a/drivers/net/wireless/ath/ath9k/eeprom_def.c
-+++ b/drivers/net/wireless/ath/ath9k/eeprom_def.c
-@@ -1418,11 +1418,11 @@ static void ath9k_hw_def_set_txpower(struct ath_hw *ah,
- }
+-	if (wl->enable_11a) {
+-		size_t size = sizeof(struct wl12xx_probe_req_template);
+-		ret = wl1271_cmd_template_set(wl, CMD_TEMPL_CFG_PROBE_REQ_5,
+-					      NULL, size, 0,
+-					      WL1271_RATE_AUTOMATIC);
+-		if (ret < 0)
+-			return ret;
+-	}
++	size = sizeof(struct wl12xx_probe_req_template);
++	ret = wl1271_cmd_template_set(wl, CMD_TEMPL_CFG_PROBE_REQ_5,
++				      NULL, size, 0,
++				      WL1271_RATE_AUTOMATIC);
++	if (ret < 0)
++		return ret;
  
- static u8 ath9k_hw_def_get_num_ant_config(struct ath_hw *ah,
--					  enum ieee80211_band freq_band)
-+					  enum ath9k_hal_freq_band freq_band)
- {
- 	struct ar5416_eeprom_def *eep = &ah->eeprom.def;
- 	struct modal_eep_header *pModal =
--		&(eep->modalHeader[ATH9K_HAL_FREQ_BAND_2GHZ == freq_band]);
-+		&(eep->modalHeader[freq_band]);
- 	struct base_eep_header *pBase = &eep->baseEepHeader;
- 	u8 num_ant_config;
+ 	ret = wl1271_cmd_template_set(wl, CMD_TEMPL_NULL_DATA, NULL,
+ 				      sizeof(struct wl12xx_null_data_template),
+diff --git a/drivers/net/wireless/wl12xx/wl1271_main.c b/drivers/net/wireless/wl12xx/wl1271_main.c
+index 81f92a0..f0c2532 100644
+--- a/drivers/net/wireless/wl12xx/wl1271_main.c
++++ b/drivers/net/wireless/wl12xx/wl1271_main.c
+@@ -2403,9 +2403,7 @@ int wl1271_init_ieee80211(struct wl1271 *wl)
+ 		BIT(NL80211_IFTYPE_ADHOC);
+ 	wl->hw->wiphy->max_scan_ssids = 1;
+ 	wl->hw->wiphy->bands[IEEE80211_BAND_2GHZ] = &wl1271_band_2ghz;
+-
+-	if (wl->enable_11a)
+-		wl->hw->wiphy->bands[IEEE80211_BAND_5GHZ] = &wl1271_band_5ghz;
++	wl->hw->wiphy->bands[IEEE80211_BAND_5GHZ] = &wl1271_band_5ghz;
  
+ 	wl->hw->queues = 4;
+ 	wl->hw->max_rates = 1;
 -- 
-1.7.2.3
+1.6.3.3
 
