@@ -1,37 +1,89 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:43919 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754244Ab0I0Uof (ORCPT
+Received: from smtp.nokia.com ([192.100.105.134]:16943 "EHLO
+	mgw-mx09.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932871Ab0I0Iie (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 27 Sep 2010 16:44:35 -0400
-Date: Mon, 27 Sep 2010 16:41:38 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: greearb@candelatech.com, linux-wireless@vger.kernel.org
-Subject: wireless-next-2.6 rebased -- Re: [wireless] wireless:  Keep phy name
- consistent across module reloads.
-Message-ID: <20100927204138.GA26075@tuxdriver.com>
-References: <1285113431-25526-1-git-send-email-greearb@candelatech.com>
- <1285362170.11036.1.camel@jlt3.sipsolutions.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1285362170.11036.1.camel@jlt3.sipsolutions.net>
+	Mon, 27 Sep 2010 04:38:34 -0400
+Received: from esebh105.NOE.Nokia.com (esebh105.ntc.nokia.com [172.21.138.211])
+	by mgw-mx09.nokia.com (Switch-3.3.3/Switch-3.3.3) with ESMTP id o8R8c5Ec024679
+	for <linux-wireless@vger.kernel.org>; Mon, 27 Sep 2010 03:38:34 -0500
+From: Luciano Coelho <luciano.coelho@nokia.com>
+To: linux-wireless@vger.kernel.org
+Cc: Juuso Oikarinen <juuso.oikarinen@nokia.com>
+Subject: [PATCH 20/25] wl1271: Fix work cancelling when shutting down the driver
+Date: Mon, 27 Sep 2010 11:37:44 +0300
+Message-Id: <1285576669-8070-21-git-send-email-luciano.coelho@nokia.com>
+In-Reply-To: <1285576669-8070-1-git-send-email-luciano.coelho@nokia.com>
+References: <1285576669-8070-1-git-send-email-luciano.coelho@nokia.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Sep 24, 2010 at 11:02:50PM +0200, Johannes Berg wrote:
-> On Tue, 2010-09-21 at 16:57 -0700, greearb@candelatech.com wrote:
-> > From: Ben Greear <greearb@candelatech.com>
-> > 
-> > It adds needless pain to user-space scripts to change the name
-> > of the phy on each module reload.  Instead, find the first
-> > index.
-> 
-> Crap, I clearly missed this patch, John, please revert this.
+From: Juuso Oikarinen <juuso.oikarinen@nokia.com>
 
-Sure, np...wireless-next-2.6 has been rebased from
-9cf13668a5f8165a81349defc5f82c57a4a8279b.
+The work cancelling has had several hazards, ranging from potentially
+executing work after the driver is in OFF state, to executing work after
+the driver and relevant memory structures are already removed.
 
+Fix these.
+
+Signed-off-by: Juuso Oikarinen <juuso.oikarinen@nokia.com>
+Reviewed-by: Teemu Paasikivi <ext-teemu.3.paasikivi@nokia.com>
+Signed-off-by: Luciano Coelho <luciano.coelho@nokia.com>
+---
+ drivers/net/wireless/wl12xx/wl1271_event.c |    3 +++
+ drivers/net/wireless/wl12xx/wl1271_main.c  |    3 +++
+ drivers/net/wireless/wl12xx/wl1271_ps.c    |    3 +++
+ 3 files changed, 9 insertions(+), 0 deletions(-)
+
+diff --git a/drivers/net/wireless/wl12xx/wl1271_event.c b/drivers/net/wireless/wl12xx/wl1271_event.c
+index bced829..e6c839a 100644
+--- a/drivers/net/wireless/wl12xx/wl1271_event.c
++++ b/drivers/net/wireless/wl12xx/wl1271_event.c
+@@ -41,6 +41,9 @@ void wl1271_pspoll_work(struct work_struct *work)
+ 
+ 	mutex_lock(&wl->mutex);
+ 
++	if (unlikely(wl->state == WL1271_STATE_OFF))
++		goto out;
++
+ 	if (!test_and_clear_bit(WL1271_FLAG_PSPOLL_FAILURE, &wl->flags))
+ 		goto out;
+ 
+diff --git a/drivers/net/wireless/wl12xx/wl1271_main.c b/drivers/net/wireless/wl12xx/wl1271_main.c
+index 37f61de..2c03cb1 100644
+--- a/drivers/net/wireless/wl12xx/wl1271_main.c
++++ b/drivers/net/wireless/wl12xx/wl1271_main.c
+@@ -792,6 +792,8 @@ int wl1271_plt_stop(struct wl1271 *wl)
+ out:
+ 	mutex_unlock(&wl->mutex);
+ 
++	cancel_work_sync(&wl->irq_work);
++
+ 	return ret;
+ }
+ 
+@@ -995,6 +997,7 @@ static void wl1271_op_remove_interface(struct ieee80211_hw *hw,
+ 	cancel_work_sync(&wl->irq_work);
+ 	cancel_work_sync(&wl->tx_work);
+ 	cancel_delayed_work_sync(&wl->pspoll_work);
++	cancel_delayed_work_sync(&wl->elp_work);
+ 
+ 	mutex_lock(&wl->mutex);
+ 
+diff --git a/drivers/net/wireless/wl12xx/wl1271_ps.c b/drivers/net/wireless/wl12xx/wl1271_ps.c
+index f75668e..150dc67 100644
+--- a/drivers/net/wireless/wl12xx/wl1271_ps.c
++++ b/drivers/net/wireless/wl12xx/wl1271_ps.c
+@@ -39,6 +39,9 @@ void wl1271_elp_work(struct work_struct *work)
+ 
+ 	mutex_lock(&wl->mutex);
+ 
++	if (unlikely(wl->state == WL1271_STATE_OFF))
++		goto out;
++
+ 	if (test_bit(WL1271_FLAG_IN_ELP, &wl->flags) ||
+ 	    (!test_bit(WL1271_FLAG_PSM, &wl->flags) &&
+ 	     !test_bit(WL1271_FLAG_IDLE, &wl->flags)))
 -- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+1.6.3.3
+
