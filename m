@@ -1,32 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:42487
-	"EHLO sunset.davemloft.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1758034Ab0IXUBi (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 24 Sep 2010 16:01:38 -0400
-Date: Fri, 24 Sep 2010 13:01:58 -0700 (PDT)
-Message-Id: <20100924.130158.246527937.davem@davemloft.net>
-To: mfm@muteddisk.com
-Cc: kernel-janitors@vger.kernel.org, sjur.brandeland@stericsson.com,
-	j@w1.fi, linville@tuxdriver.com, dsd@gentoo.org,
-	kune@deine-taler.de, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 15/24] net: change to new flag variable
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <facbf79cadc81f9043e89160b7b3b8a90926aba1.1285355033.git.mfm@muteddisk.com>
-References: <efe88633e146de3e173afea14f777c41c37e5db2.1285355033.git.mfm@muteddisk.com>
-	<e0bdab5d2e8c52041c003de68ba774c3e706716c.1285355033.git.mfm@muteddisk.com>
-	<facbf79cadc81f9043e89160b7b3b8a90926aba1.1285355033.git.mfm@muteddisk.com>
+Received: from smtp.nokia.com ([147.243.1.47]:44255 "EHLO mgw-sa01.nokia.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1758362Ab0I0J6a (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 27 Sep 2010 05:58:30 -0400
+Subject: Re: [PATCH 16/25] wl1271: Add support for hardware GEM cipher
+From: Juuso Oikarinen <juuso.oikarinen@nokia.com>
+To: ext Johannes Berg <johannes@sipsolutions.net>
+Cc: "Coelho Luciano (Nokia-MS/Helsinki)" <Luciano.Coelho@nokia.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <1285580995.4043.7.camel@jlt3.sipsolutions.net>
+References: <1285576669-8070-1-git-send-email-luciano.coelho@nokia.com>
+	 <1285576669-8070-17-git-send-email-luciano.coelho@nokia.com>
+	 <1285578777.4043.6.camel@jlt3.sipsolutions.net>
+	 <1285580806.11177.65.camel@wimaxnb.nmp.nokia.com>
+	 <1285580995.4043.7.camel@jlt3.sipsolutions.net>
+Content-Type: text/plain; charset="UTF-8"
+Date: Mon, 27 Sep 2010 12:58:01 +0300
+Message-ID: <1285581481.11177.68.camel@wimaxnb.nmp.nokia.com>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: matt mooney <mfm@muteddisk.com>
-Date: Fri, 24 Sep 2010 12:17:25 -0700
-
-> Replace EXTRA_CFLAGS with ccflags-y.
+On Mon, 2010-09-27 at 11:49 +0200, ext Johannes Berg wrote:
+> On Mon, 2010-09-27 at 12:46 +0300, Juuso Oikarinen wrote:
 > 
-> Signed-off-by: matt mooney <mfm@muteddisk.com>
+> > > > +#define WL1271_CIPHER_SUITE_GEM 0x000FACFF
+> > > 
+> > > NACK, this is a standards-reserved value. Use the correct ID for it or
+> > > allocate one within your own OUI if you don't want to admit what this
+> > > really is (and by now all readers here will know anyway.)
+> > 
+> > Well I'm sure many or most know what this patch is about. The choice of
+> > value was not intended to hide that.
+> > 
+> > You're right though, we'll need to change the OUI of the value, unless
+> > you can point me to an official value to use.
+> 
+> Well, ISO/IEC JTC 1 N 9880 says you should use 00-14-72:1.
 
-Acked-by: David S. Miller <davem@davemloft.net>
+Heh, yes, my local expert on this just gave me the same value. Thanks.
+
+One new patch coming up!
+
+-Juuso
+
+> johannes
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+
