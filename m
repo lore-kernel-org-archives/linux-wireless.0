@@ -1,38 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from kroah.org ([198.145.64.141]:58876 "EHLO coco.kroah.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751342Ab0IHJFO (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 8 Sep 2010 05:05:14 -0400
-Date: Wed, 8 Sep 2010 02:05:38 -0700
-From: Greg KH <greg@kroah.com>
-To: Vipin Mehta <vmehta@atheros.com>
-Cc: linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org
-Subject: Re: [PATCH] staging: ath6kl: Replacing the symbolic link to the
-	hw.0 directory with a new directory 'hw' while retaining the
-	contents. This will help with the cases where the driver fails to
-	compile if the link was not setup properly.
-Message-ID: <20100908090538.GA21218@kroah.com>
-References: <1283905487-1471-1-git-send-email-vmehta@atheros.com>
+Received: from mail30g.wh2.ocn.ne.jp ([220.111.41.239]:35339 "HELO
+	mail30g.wh2.ocn.ne.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1757895Ab0I0DWP (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 26 Sep 2010 23:22:15 -0400
+Received: from vs3015.wh2.ocn.ne.jp (125.206.180.247)
+	by mail30g.wh2.ocn.ne.jp (RS ver 1.0.95vs) with SMTP id 5-0586537731
+	for <linux-wireless@vger.kernel.org>; Mon, 27 Sep 2010 12:22:12 +0900 (JST)
+Subject: [PATCH 0/4] ath5k: ATIM and timer fixes
+To: linville@tuxdriver.com
+From: Bruno Randolf <br1@einfach.org>
+Cc: ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org
+Date: Mon, 27 Sep 2010 12:22:11 +0900
+Message-ID: <20100927032211.8754.49870.stgit@tt-desk>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1283905487-1471-1-git-send-email-vmehta@atheros.com>
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Sep 07, 2010 at 05:24:47PM -0700, Vipin Mehta wrote:
-> Signed-off-by: Vipin Mehta <vmehta@atheros.com>
+The following series adds a check for a hardware condition which can cause
+an unwanted ATIM window configuration and some other smaller improvements for
+TSF related things.
 
-What's with the long Subject: ?
+---
 
-Anyway, this patch fails to apply, it seems you want to just delete the
-symlink, which you might need to tell git that you want to generate a
-patch that does this.  For how you do that, I don't really know, sorry.
+Bruno Randolf (4):
+      ath5k: Remove unused variable for atim window
+      ath5k: Check and fix ATIM window
+      ath5k: Increase "fudge" for beacon timers
+      ath5k: Disable interrupts in ath5k_hw_get_tsf64
 
-If you want, just send a patch that does the proper thing for the
-existing files to get everything to build correctly, and then tell me to
-remove the symlink by hand, which I can do.  That might be the easiest
-thing to do here.
 
-thanks,
+ drivers/net/wireless/ath/ath5k/ath5k.h  |    2 -
+ drivers/net/wireless/ath/ath5k/attach.c |    1
+ drivers/net/wireless/ath/ath5k/base.c   |   16 ++++-
+ drivers/net/wireless/ath/ath5k/pcu.c    |   99 +++++++++++++++++++++++++++++++
+ 4 files changed, 113 insertions(+), 5 deletions(-)
 
-greg k-h
+--
+Signature
