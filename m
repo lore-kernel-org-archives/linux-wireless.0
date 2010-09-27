@@ -1,370 +1,214 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from isilmar-3.linta.de ([188.40.101.200]:44115 "EHLO linta.de"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S932411Ab0ICK6L (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 3 Sep 2010 06:58:11 -0400
-From: Dominik Brodowski <linux@dominikbrodowski.net>
-To: <linux-pcmcia@lists.infradead.org>
-Cc: Dominik Brodowski <linux@dominikbrodowski.net>,
-	netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
-	linux-serial@vger.kernel.org, linux-scsi@vger.kernel.org
-Subject: [PATCH 05/15] pcmcia: simplify Status, ExtStatus register access
-Date: Fri,  3 Sep 2010 12:57:04 +0200
-Message-Id: <1283511434-21620-5-git-send-email-linux@dominikbrodowski.net>
-In-Reply-To: <20100903105628.GA21255@comet.dominikbrodowski.net>
-References: <20100903105628.GA21255@comet.dominikbrodowski.net>
+Received: from smtp.nokia.com ([192.100.105.134]:16935 "EHLO
+	mgw-mx09.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932861Ab0I0Iid (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 27 Sep 2010 04:38:33 -0400
+Received: from esebh105.NOE.Nokia.com (esebh105.ntc.nokia.com [172.21.138.211])
+	by mgw-mx09.nokia.com (Switch-3.3.3/Switch-3.3.3) with ESMTP id o8R8cJPc025709
+	for <linux-wireless@vger.kernel.org>; Mon, 27 Sep 2010 03:38:32 -0500
+From: Luciano Coelho <luciano.coelho@nokia.com>
+To: linux-wireless@vger.kernel.org
+Cc: Juuso Oikarinen <juuso.oikarinen@nokia.com>
+Subject: [PATCH 14/25] wl1271: Reduce rate used for last PSM entry attempt
+Date: Mon, 27 Sep 2010 11:37:38 +0300
+Message-Id: <1285576669-8070-15-git-send-email-luciano.coelho@nokia.com>
+In-Reply-To: <1285576669-8070-1-git-send-email-luciano.coelho@nokia.com>
+References: <1285576669-8070-1-git-send-email-luciano.coelho@nokia.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The Status (CISREG_CCSR) and ExtStatus (CISREG_ESR) registers were
-only accessed to enable audio output for some drivers and IRQ for
-serial_cs.c. The former also required setting config_req_t.Attributes
-to CONF_ENABLE_SPKR; the latter can be simplified to setting this
-field to CONF_ENABLE_ESR.
+From: Juuso Oikarinen <juuso.oikarinen@nokia.com>
 
-CC: netdev@vger.kernel.org
-CC: linux-wireless@vger.kernel.org
-CC: linux-serial@vger.kernel.org
-CC: linux-scsi@vger.kernel.org
-Signed-off-by: Dominik Brodowski <linux@dominikbrodowski.net>
+This patch reduces the rate of the null-func used to enter PSM on the last
+retry as precaution.
+
+Signed-off-by: Juuso Oikarinen <juuso.oikarinen@nokia.com>
+Reviewed-by: Luciano Coelho <luciano.coelho@nokia.com>
+Signed-off-by: Luciano Coelho <luciano.coelho@nokia.com>
 ---
- drivers/isdn/hisax/sedlbauer_cs.c             |    4 +--
- drivers/net/pcmcia/axnet_cs.c                 |    4 +--
- drivers/net/pcmcia/pcnet_cs.c                 |    5 +--
- drivers/net/pcmcia/smc91c92_cs.c              |    2 -
- drivers/net/pcmcia/xirc2ps_cs.c               |    5 +--
- drivers/net/wireless/airo_cs.c                |    4 +--
- drivers/net/wireless/atmel_cs.c               |    4 +--
- drivers/net/wireless/hostap/hostap_cs.c       |    4 +--
- drivers/pcmcia/cs_internal.h                  |    2 +-
- drivers/pcmcia/pcmcia_resource.c              |   28 +++++++++++++++++--------
- drivers/scsi/pcmcia/nsp_cs.c                  |    4 +--
- drivers/serial/serial_cs.c                    |   11 +++------
- drivers/staging/comedi/drivers/ni_daq_700.c   |    4 +--
- drivers/staging/comedi/drivers/ni_daq_dio24.c |    4 +--
- drivers/staging/comedi/drivers/ni_labpc_cs.c  |    4 +--
- include/pcmcia/cs.h                           |    2 +-
- 16 files changed, 38 insertions(+), 53 deletions(-)
+ drivers/net/wireless/wl12xx/wl1271_cmd.c   |    4 ++--
+ drivers/net/wireless/wl12xx/wl1271_cmd.h   |    4 +++-
+ drivers/net/wireless/wl12xx/wl1271_event.c |   17 ++++++++++++-----
+ drivers/net/wireless/wl12xx/wl1271_main.c  |    8 +++++---
+ drivers/net/wireless/wl12xx/wl1271_ps.c    |    8 +++++---
+ drivers/net/wireless/wl12xx/wl1271_ps.h    |    2 +-
+ 6 files changed, 28 insertions(+), 15 deletions(-)
 
-diff --git a/drivers/isdn/hisax/sedlbauer_cs.c b/drivers/isdn/hisax/sedlbauer_cs.c
-index ad07d61..40001ad 100644
---- a/drivers/isdn/hisax/sedlbauer_cs.c
-+++ b/drivers/isdn/hisax/sedlbauer_cs.c
-@@ -175,10 +175,8 @@ static int sedlbauer_config_check(struct pcmcia_device *p_dev,
- 		return -ENODEV;
- 
- 	/* Does this card need audio output? */
--	if (cfg->flags & CISTPL_CFTABLE_AUDIO) {
-+	if (cfg->flags & CISTPL_CFTABLE_AUDIO)
- 		p_dev->conf.Attributes |= CONF_ENABLE_SPKR;
--		p_dev->conf.Status = CCSR_AUDIO_ENA;
--	}
- 
- 	/* Use power settings for Vcc and Vpp if present */
- 	/*  Note that the CIS values need to be rescaled */
-diff --git a/drivers/net/pcmcia/axnet_cs.c b/drivers/net/pcmcia/axnet_cs.c
-index 5f05ffb..8734ed8 100644
---- a/drivers/net/pcmcia/axnet_cs.c
-+++ b/drivers/net/pcmcia/axnet_cs.c
-@@ -334,10 +334,8 @@ static int axnet_config(struct pcmcia_device *link)
-     if (!link->irq)
- 	    goto failed;
-     
--    if (resource_size(link->resource[1]) == 8) {
-+    if (resource_size(link->resource[1]) == 8)
- 	link->conf.Attributes |= CONF_ENABLE_SPKR;
--	link->conf.Status = CCSR_AUDIO_ENA;
--    }
-     
-     ret = pcmcia_request_configuration(link, &link->conf);
-     if (ret)
-diff --git a/drivers/net/pcmcia/pcnet_cs.c b/drivers/net/pcmcia/pcnet_cs.c
-index 15e80ea..1dd0dfa 100644
---- a/drivers/net/pcmcia/pcnet_cs.c
-+++ b/drivers/net/pcmcia/pcnet_cs.c
-@@ -553,10 +553,9 @@ static int pcnet_config(struct pcmcia_device *link)
-     if (!link->irq)
- 	    goto failed;
- 
--    if (resource_size(link->resource[1]) == 8) {
-+    if (resource_size(link->resource[1]) == 8)
- 	link->conf.Attributes |= CONF_ENABLE_SPKR;
--	link->conf.Status = CCSR_AUDIO_ENA;
--    }
-+
-     if ((link->manf_id == MANFID_IBM) &&
- 	(link->card_id == PRODID_IBM_HOME_AND_AWAY))
- 	link->conf.ConfigIndex |= 0x10;
-diff --git a/drivers/net/pcmcia/smc91c92_cs.c b/drivers/net/pcmcia/smc91c92_cs.c
-index 395e586..2031a27 100644
---- a/drivers/net/pcmcia/smc91c92_cs.c
-+++ b/drivers/net/pcmcia/smc91c92_cs.c
-@@ -446,7 +446,6 @@ static int mhz_mfc_config(struct pcmcia_device *link)
-     int i;
- 
-     link->conf.Attributes |= CONF_ENABLE_SPKR;
--    link->conf.Status = CCSR_AUDIO_ENA;
-     link->resource[1]->flags |= IO_DATA_PATH_WIDTH_8;
-     link->resource[1]->end = 8;
- 
-@@ -640,7 +639,6 @@ static int osi_config(struct pcmcia_device *link)
-     int i, j;
- 
-     link->conf.Attributes |= CONF_ENABLE_SPKR;
--    link->conf.Status = CCSR_AUDIO_ENA;
-     link->resource[0]->end = 64;
-     link->resource[1]->flags |= IO_DATA_PATH_WIDTH_8;
-     link->resource[1]->end = 8;
-diff --git a/drivers/net/pcmcia/xirc2ps_cs.c b/drivers/net/pcmcia/xirc2ps_cs.c
-index 4308bda..59398a6 100644
---- a/drivers/net/pcmcia/xirc2ps_cs.c
-+++ b/drivers/net/pcmcia/xirc2ps_cs.c
-@@ -812,10 +812,9 @@ xirc2ps_config(struct pcmcia_device * link)
-     if (local->modem) {
- 	int pass;
- 
--	if (do_sound) {
-+	if (do_sound)
- 	    link->conf.Attributes |= CONF_ENABLE_SPKR;
--	    link->conf.Status |= CCSR_AUDIO_ENA;
--	}
-+
- 	link->resource[1]->end = 8;
- 	link->resource[1]->flags |= IO_DATA_PATH_WIDTH_8;
- 	if (local->dingo) {
-diff --git a/drivers/net/wireless/airo_cs.c b/drivers/net/wireless/airo_cs.c
-index 488e7b4..ab60f10 100644
---- a/drivers/net/wireless/airo_cs.c
-+++ b/drivers/net/wireless/airo_cs.c
-@@ -158,10 +158,8 @@ static int airo_cs_config_check(struct pcmcia_device *p_dev,
- 		return -ENODEV;
- 
- 	/* Does this card need audio output? */
--	if (cfg->flags & CISTPL_CFTABLE_AUDIO) {
-+	if (cfg->flags & CISTPL_CFTABLE_AUDIO)
- 		p_dev->conf.Attributes |= CONF_ENABLE_SPKR;
--		p_dev->conf.Status = CCSR_AUDIO_ENA;
--	}
- 
- 	/* Use power settings for Vcc and Vpp if present */
- 	/*  Note that the CIS values need to be rescaled */
-diff --git a/drivers/net/wireless/atmel_cs.c b/drivers/net/wireless/atmel_cs.c
-index 479f508..d6d585c 100644
---- a/drivers/net/wireless/atmel_cs.c
-+++ b/drivers/net/wireless/atmel_cs.c
-@@ -175,10 +175,8 @@ static int atmel_config_check(struct pcmcia_device *p_dev,
- 		return -ENODEV;
- 
- 	/* Does this card need audio output? */
--	if (cfg->flags & CISTPL_CFTABLE_AUDIO) {
-+	if (cfg->flags & CISTPL_CFTABLE_AUDIO)
- 		p_dev->conf.Attributes |= CONF_ENABLE_SPKR;
--		p_dev->conf.Status = CCSR_AUDIO_ENA;
--	}
- 
- 	/* Use power settings for Vcc and Vpp if present */
- 	/*  Note that the CIS values need to be rescaled */
-diff --git a/drivers/net/wireless/hostap/hostap_cs.c b/drivers/net/wireless/hostap/hostap_cs.c
-index 3f35dd4..3fa285b 100644
---- a/drivers/net/wireless/hostap/hostap_cs.c
-+++ b/drivers/net/wireless/hostap/hostap_cs.c
-@@ -484,10 +484,8 @@ static int prism2_config_check(struct pcmcia_device *p_dev,
- 	       "(default 0x%02X)\n", cfg->index, dflt->index);
- 
- 	/* Does this card need audio output? */
--	if (cfg->flags & CISTPL_CFTABLE_AUDIO) {
-+	if (cfg->flags & CISTPL_CFTABLE_AUDIO)
- 		p_dev->conf.Attributes |= CONF_ENABLE_SPKR;
--		p_dev->conf.Status = CCSR_AUDIO_ENA;
--	}
- 
- 	/* Use power settings for Vcc and Vpp if present */
- 	/*  Note that the CIS values need to be rescaled */
-diff --git a/drivers/pcmcia/cs_internal.h b/drivers/pcmcia/cs_internal.h
-index 9487340..7ef464d 100644
---- a/drivers/pcmcia/cs_internal.h
-+++ b/drivers/pcmcia/cs_internal.h
-@@ -36,7 +36,7 @@ typedef struct config_t {
- 	unsigned int	Attributes;
- 	unsigned int	IntType;
- 	unsigned int	ConfigBase;
--	unsigned char	Status, Option, ExtStatus;
-+	unsigned char	Option;
- 	unsigned int	CardValues;
- 
- 	struct resource io[MAX_IO_WIN]; /* io ports */
-diff --git a/drivers/pcmcia/pcmcia_resource.c b/drivers/pcmcia/pcmcia_resource.c
-index e431567..e119663 100644
---- a/drivers/pcmcia/pcmcia_resource.c
-+++ b/drivers/pcmcia/pcmcia_resource.c
-@@ -441,6 +441,8 @@ int pcmcia_request_configuration(struct pcmcia_device *p_dev,
- 	struct pcmcia_socket *s = p_dev->socket;
- 	config_t *c;
- 	pccard_io_map iomap;
-+	unsigned char status = 0;
-+	unsigned char ext_status = 0;
- 
- 	if (!(s->state & SOCKET_PRESENT))
- 		return -ENODEV;
-@@ -476,12 +478,21 @@ int pcmcia_request_configuration(struct pcmcia_device *p_dev,
- 		s->socket.flags |= SS_ZVCARD | SS_IOCARD;
- 	if (req->Attributes & CONF_ENABLE_DMA)
- 		s->socket.flags |= SS_DMA_MODE;
--	if (req->Attributes & CONF_ENABLE_SPKR)
-+	if (req->Attributes & CONF_ENABLE_SPKR) {
- 		s->socket.flags |= SS_SPKR_ENA;
-+		status = CCSR_AUDIO_ENA;
-+		if (!(req->Present & PRESENT_STATUS))
-+			dev_warn(&p_dev->dev, "speaker requested, but "
-+					      "PRESENT_STATUS not set!\n");
-+	}
- 	if (req->Attributes & CONF_ENABLE_IRQ)
- 		s->socket.io_irq = s->pcmcia_irq;
- 	else
- 		s->socket.io_irq = 0;
-+	if (req->Attributes & CONF_ENABLE_ESR) {
-+		req->Present |= PRESENT_EXT_STATUS;
-+		ext_status = ESR_REQ_ATTN_ENA;
-+	}
- 	s->ops->set_socket(s, &s->socket);
- 	s->lock_count++;
- 
-@@ -513,14 +524,13 @@ int pcmcia_request_configuration(struct pcmcia_device *p_dev,
- 		pcmcia_write_cis_mem(s, 1, (base + CISREG_COR)>>1, 1, &c->Option);
- 		mdelay(40);
- 	}
--	if (req->Present & PRESENT_STATUS) {
--		c->Status = req->Status;
--		pcmcia_write_cis_mem(s, 1, (base + CISREG_CCSR)>>1, 1, &c->Status);
--	}
--	if (req->Present & PRESENT_EXT_STATUS) {
--		c->ExtStatus = req->ExtStatus;
--		pcmcia_write_cis_mem(s, 1, (base + CISREG_ESR)>>1, 1, &c->ExtStatus);
--	}
-+	if (req->Present & PRESENT_STATUS)
-+		pcmcia_write_cis_mem(s, 1, (base + CISREG_CCSR)>>1, 1, &status);
-+
-+	if (req->Present & PRESENT_EXT_STATUS)
-+		pcmcia_write_cis_mem(s, 1, (base + CISREG_ESR)>>1, 1,
-+					&ext_status);
-+
- 	if (req->Present & PRESENT_IOBASE_0) {
- 		u8 b = c->io[0].start & 0xff;
- 		pcmcia_write_cis_mem(s, 1, (base + CISREG_IOBASE_0)>>1, 1, &b);
-diff --git a/drivers/scsi/pcmcia/nsp_cs.c b/drivers/scsi/pcmcia/nsp_cs.c
-index e475ec5..e14fcd1 100644
---- a/drivers/scsi/pcmcia/nsp_cs.c
-+++ b/drivers/scsi/pcmcia/nsp_cs.c
-@@ -1608,10 +1608,8 @@ static int nsp_cs_config_check(struct pcmcia_device *p_dev,
- 		return -ENODEV;
- 
- 	/* Does this card need audio output? */
--	if (cfg->flags & CISTPL_CFTABLE_AUDIO) {
-+	if (cfg->flags & CISTPL_CFTABLE_AUDIO)
- 		p_dev->conf.Attributes |= CONF_ENABLE_SPKR;
--		p_dev->conf.Status = CCSR_AUDIO_ENA;
--	}
- 
- 	/* Use power settings for Vcc and Vpp if present */
- 	/*  Note that the CIS values need to be rescaled */
-diff --git a/drivers/serial/serial_cs.c b/drivers/serial/serial_cs.c
-index b851c1f..8035f1e 100644
---- a/drivers/serial/serial_cs.c
-+++ b/drivers/serial/serial_cs.c
-@@ -183,10 +183,8 @@ static void quirk_config_socket(struct pcmcia_device *link)
- {
- 	struct serial_info *info = link->priv;
- 
--	if (info->multi) {
--		link->conf.Present |= PRESENT_EXT_STATUS;
--		link->conf.ExtStatus = ESR_REQ_ATTN_ENA;
--	}
-+	if (info->multi)
-+		link->conf.Attributes |= CONF_ENABLE_ESR;
+diff --git a/drivers/net/wireless/wl12xx/wl1271_cmd.c b/drivers/net/wireless/wl12xx/wl1271_cmd.c
+index 42e7d2f..06b14f2 100644
+--- a/drivers/net/wireless/wl12xx/wl1271_cmd.c
++++ b/drivers/net/wireless/wl12xx/wl1271_cmd.c
+@@ -390,7 +390,7 @@ out:
+ 	return ret;
  }
  
- static const struct serial_quirk quirks[] = {
-@@ -336,10 +334,9 @@ static int serial_probe(struct pcmcia_device *link)
- 	link->priv = info;
+-int wl1271_cmd_ps_mode(struct wl1271 *wl, u8 ps_mode, bool send)
++int wl1271_cmd_ps_mode(struct wl1271 *wl, u8 ps_mode, u32 rates, bool send)
+ {
+ 	struct wl1271_cmd_ps_params *ps_params = NULL;
+ 	int ret = 0;
+@@ -407,7 +407,7 @@ int wl1271_cmd_ps_mode(struct wl1271 *wl, u8 ps_mode, bool send)
+ 	ps_params->send_null_data = send;
+ 	ps_params->retries = 5;
+ 	ps_params->hang_over_period = 1;
+-	ps_params->null_data_rate = cpu_to_le32(wl->basic_rate_set);
++	ps_params->null_data_rate = cpu_to_le32(rates);
  
- 	link->conf.Attributes = CONF_ENABLE_IRQ;
--	if (do_sound) {
-+	if (do_sound)
- 		link->conf.Attributes |= CONF_ENABLE_SPKR;
--		link->conf.Status = CCSR_AUDIO_ENA;
--	}
-+
- 	link->conf.IntType = INT_MEMORY_AND_IO;
+ 	ret = wl1271_cmd_send(wl, CMD_SET_PS_MODE, ps_params,
+ 			      sizeof(*ps_params), 0);
+diff --git a/drivers/net/wireless/wl12xx/wl1271_cmd.h b/drivers/net/wireless/wl12xx/wl1271_cmd.h
+index 92747ce..ff8e35e 100644
+--- a/drivers/net/wireless/wl12xx/wl1271_cmd.h
++++ b/drivers/net/wireless/wl12xx/wl1271_cmd.h
+@@ -38,7 +38,9 @@ int wl1271_cmd_test(struct wl1271 *wl, void *buf, size_t buf_len, u8 answer);
+ int wl1271_cmd_interrogate(struct wl1271 *wl, u16 id, void *buf, size_t len);
+ int wl1271_cmd_configure(struct wl1271 *wl, u16 id, void *buf, size_t len);
+ int wl1271_cmd_data_path(struct wl1271 *wl, bool enable);
+-int wl1271_cmd_ps_mode(struct wl1271 *wl, u8 ps_mode, bool send);
++int wl1271_cmd_ps_mode(struct wl1271 *wl, u8 ps_mode, u32 rates, bool send);
++int wl1271_cmd_read_memory(struct wl1271 *wl, u32 addr, void *answer,
++			   size_t len);
+ int wl1271_cmd_template_set(struct wl1271 *wl, u16 template_id,
+ 			    void *buf, size_t buf_len, int index, u32 rates);
+ int wl1271_cmd_build_null_data(struct wl1271 *wl);
+diff --git a/drivers/net/wireless/wl12xx/wl1271_event.c b/drivers/net/wireless/wl12xx/wl1271_event.c
+index 25ce2cd..bced829 100644
+--- a/drivers/net/wireless/wl12xx/wl1271_event.c
++++ b/drivers/net/wireless/wl12xx/wl1271_event.c
+@@ -52,7 +52,7 @@ void wl1271_pspoll_work(struct work_struct *work)
+ 	 * delivery failure occurred, and no-one changed state since, so
+ 	 * we should go back to powersave.
+ 	 */
+-	wl1271_ps_set_mode(wl, STATION_POWER_SAVE_MODE, true);
++	wl1271_ps_set_mode(wl, STATION_POWER_SAVE_MODE, wl->basic_rate, true);
  
- 	return serial_config(link);
-diff --git a/drivers/staging/comedi/drivers/ni_daq_700.c b/drivers/staging/comedi/drivers/ni_daq_700.c
-index cc15666..8cf56cb 100644
---- a/drivers/staging/comedi/drivers/ni_daq_700.c
-+++ b/drivers/staging/comedi/drivers/ni_daq_700.c
-@@ -550,10 +550,8 @@ static int dio700_pcmcia_config_loop(struct pcmcia_device *p_dev,
- 		return -ENODEV;
+ out:
+ 	mutex_unlock(&wl->mutex);
+@@ -70,7 +70,8 @@ static void wl1271_event_pspoll_delivery_fail(struct wl1271 *wl)
  
- 	/* Does this card need audio output? */
--	if (cfg->flags & CISTPL_CFTABLE_AUDIO) {
-+	if (cfg->flags & CISTPL_CFTABLE_AUDIO)
- 		p_dev->conf.Attributes |= CONF_ENABLE_SPKR;
--		p_dev->conf.Status = CCSR_AUDIO_ENA;
--	}
+ 	/* force active mode receive data from the AP */
+ 	if (test_bit(WL1271_FLAG_PSM, &wl->flags)) {
+-		ret = wl1271_ps_set_mode(wl, STATION_ACTIVE_MODE, true);
++		ret = wl1271_ps_set_mode(wl, STATION_ACTIVE_MODE,
++					 wl->basic_rate, true);
+ 		if (ret < 0)
+ 			return;
+ 		set_bit(WL1271_FLAG_PSPOLL_FAILURE, &wl->flags);
+@@ -91,6 +92,8 @@ static int wl1271_event_ps_report(struct wl1271 *wl,
+ 				  bool *beacon_loss)
+ {
+ 	int ret = 0;
++	u32 total_retries = wl->conf.conn.psm_entry_retries;
++	u32 rates;
  
- 	/* Do we need to allocate an interrupt? */
- 	p_dev->conf.Attributes |= CONF_ENABLE_IRQ;
-diff --git a/drivers/staging/comedi/drivers/ni_daq_dio24.c b/drivers/staging/comedi/drivers/ni_daq_dio24.c
-index 773ae20..ba69343 100644
---- a/drivers/staging/comedi/drivers/ni_daq_dio24.c
-+++ b/drivers/staging/comedi/drivers/ni_daq_dio24.c
-@@ -302,10 +302,8 @@ static int dio24_pcmcia_config_loop(struct pcmcia_device *p_dev,
- 		return -ENODEV;
+ 	wl1271_debug(DEBUG_EVENT, "ps_status: 0x%x", mbox->ps_status);
  
- 	/* Does this card need audio output? */
--	if (cfg->flags & CISTPL_CFTABLE_AUDIO) {
-+	if (cfg->flags & CISTPL_CFTABLE_AUDIO)
- 		p_dev->conf.Attributes |= CONF_ENABLE_SPKR;
--		p_dev->conf.Status = CCSR_AUDIO_ENA;
--	}
+@@ -104,10 +107,14 @@ static int wl1271_event_ps_report(struct wl1271 *wl,
+ 			break;
+ 		}
  
- 	/* Do we need to allocate an interrupt? */
- 	p_dev->conf.Attributes |= CONF_ENABLE_IRQ;
-diff --git a/drivers/staging/comedi/drivers/ni_labpc_cs.c b/drivers/staging/comedi/drivers/ni_labpc_cs.c
-index 68c4ecb..5d5f11f 100644
---- a/drivers/staging/comedi/drivers/ni_labpc_cs.c
-+++ b/drivers/staging/comedi/drivers/ni_labpc_cs.c
-@@ -281,10 +281,8 @@ static int labpc_pcmcia_config_loop(struct pcmcia_device *p_dev,
- 		return -ENODEV;
+-		if (wl->psm_entry_retry < wl->conf.conn.psm_entry_retries) {
++		if (wl->psm_entry_retry < total_retries) {
+ 			wl->psm_entry_retry++;
++			if (wl->psm_entry_retry == total_retries)
++				rates = wl->basic_rate;
++			else
++				rates = wl->basic_rate_set;
+ 			ret = wl1271_ps_set_mode(wl, STATION_POWER_SAVE_MODE,
+-						 true);
++						 rates, true);
+ 		} else {
+ 			wl1271_info("No ack to nullfunc from AP.");
+ 			wl->psm_entry_retry = 0;
+@@ -143,7 +150,7 @@ static int wl1271_event_ps_report(struct wl1271 *wl,
+ 		/* make sure the firmware goes to active mode - the frame to
+ 		   be sent next will indicate to the AP, that we are active. */
+ 		ret = wl1271_ps_set_mode(wl, STATION_ACTIVE_MODE,
+-					 false);
++					 wl->basic_rate, false);
+ 		break;
+ 	case EVENT_EXIT_POWER_SAVE_SUCCESS:
+ 	default:
+diff --git a/drivers/net/wireless/wl12xx/wl1271_main.c b/drivers/net/wireless/wl12xx/wl1271_main.c
+index 11e112f..81f92a0 100644
+--- a/drivers/net/wireless/wl12xx/wl1271_main.c
++++ b/drivers/net/wireless/wl12xx/wl1271_main.c
+@@ -1341,7 +1341,7 @@ static int wl1271_op_config(struct ieee80211_hw *hw, u32 changed)
+ 		if (test_bit(WL1271_FLAG_STA_ASSOCIATED, &wl->flags)) {
+ 			wl1271_debug(DEBUG_PSM, "psm enabled");
+ 			ret = wl1271_ps_set_mode(wl, STATION_POWER_SAVE_MODE,
+-						 true);
++						 wl->basic_rate_set, true);
+ 		}
+ 	} else if (!(conf->flags & IEEE80211_CONF_PS) &&
+ 		   test_bit(WL1271_FLAG_PSM_REQUESTED, &wl->flags)) {
+@@ -1351,7 +1351,7 @@ static int wl1271_op_config(struct ieee80211_hw *hw, u32 changed)
  
- 	/* Does this card need audio output? */
--	if (cfg->flags & CISTPL_CFTABLE_AUDIO) {
-+	if (cfg->flags & CISTPL_CFTABLE_AUDIO)
- 		p_dev->conf.Attributes |= CONF_ENABLE_SPKR;
--		p_dev->conf.Status = CCSR_AUDIO_ENA;
--	}
+ 		if (test_bit(WL1271_FLAG_PSM, &wl->flags))
+ 			ret = wl1271_ps_set_mode(wl, STATION_ACTIVE_MODE,
+-						 true);
++						 wl->basic_rate_set, true);
+ 	}
  
- 	/* Do we need to allocate an interrupt? */
- 	p_dev->conf.Attributes |= CONF_ENABLE_IRQ | CONF_ENABLE_PULSE_IRQ;
-diff --git a/include/pcmcia/cs.h b/include/pcmcia/cs.h
-index e656abe..29d693f 100644
---- a/include/pcmcia/cs.h
-+++ b/include/pcmcia/cs.h
-@@ -24,7 +24,6 @@ typedef struct config_req_t {
-     u_int	Attributes;
-     u_int	IntType;
-     u_int	ConfigBase;
--    u_char	Status, ExtStatus;
-     u_char	ConfigIndex;
-     u_int	Present;
- } config_req_t;
-@@ -34,6 +33,7 @@ typedef struct config_req_t {
- #define CONF_ENABLE_DMA		0x02
- #define CONF_ENABLE_SPKR	0x04
- #define CONF_ENABLE_PULSE_IRQ	0x08
-+#define CONF_ENABLE_ESR		0x10
- #define CONF_VALID_CLIENT	0x100
+ 	if (conf->power_level != wl->power_level) {
+@@ -1826,7 +1826,9 @@ static void wl1271_op_bss_info_changed(struct ieee80211_hw *hw,
+ 			if (test_bit(WL1271_FLAG_PSM_REQUESTED, &wl->flags) &&
+ 			    !test_bit(WL1271_FLAG_PSM, &wl->flags)) {
+ 				mode = STATION_POWER_SAVE_MODE;
+-				ret = wl1271_ps_set_mode(wl, mode, true);
++				ret = wl1271_ps_set_mode(wl, mode,
++							 wl->basic_rate_set,
++							 true);
+ 				if (ret < 0)
+ 					goto out_sleep;
+ 			}
+diff --git a/drivers/net/wireless/wl12xx/wl1271_ps.c b/drivers/net/wireless/wl12xx/wl1271_ps.c
+index 52a6095..f75668e 100644
+--- a/drivers/net/wireless/wl12xx/wl1271_ps.c
++++ b/drivers/net/wireless/wl12xx/wl1271_ps.c
+@@ -121,7 +121,7 @@ out:
+ }
  
- /* IntType field */
+ int wl1271_ps_set_mode(struct wl1271 *wl, enum wl1271_cmd_ps_mode mode,
+-		       bool send)
++		       u32 rates, bool send)
+ {
+ 	int ret;
+ 
+@@ -135,7 +135,8 @@ int wl1271_ps_set_mode(struct wl1271 *wl, enum wl1271_cmd_ps_mode mode,
+ 			return ret;
+ 		}
+ 
+-		ret = wl1271_cmd_ps_mode(wl, STATION_POWER_SAVE_MODE, send);
++		ret = wl1271_cmd_ps_mode(wl, STATION_POWER_SAVE_MODE,
++					 rates, send);
+ 		if (ret < 0)
+ 			return ret;
+ 
+@@ -158,7 +159,8 @@ int wl1271_ps_set_mode(struct wl1271 *wl, enum wl1271_cmd_ps_mode mode,
+ 		if (ret < 0)
+ 			return ret;
+ 
+-		ret = wl1271_cmd_ps_mode(wl, STATION_ACTIVE_MODE, send);
++		ret = wl1271_cmd_ps_mode(wl, STATION_ACTIVE_MODE,
++					 rates, send);
+ 		if (ret < 0)
+ 			return ret;
+ 
+diff --git a/drivers/net/wireless/wl12xx/wl1271_ps.h b/drivers/net/wireless/wl12xx/wl1271_ps.h
+index 940276f..6ba7b03 100644
+--- a/drivers/net/wireless/wl12xx/wl1271_ps.h
++++ b/drivers/net/wireless/wl12xx/wl1271_ps.h
+@@ -28,7 +28,7 @@
+ #include "wl1271_acx.h"
+ 
+ int wl1271_ps_set_mode(struct wl1271 *wl, enum wl1271_cmd_ps_mode mode,
+-		       bool send);
++		       u32 rates, bool send);
+ void wl1271_ps_elp_sleep(struct wl1271 *wl);
+ int wl1271_ps_elp_wakeup(struct wl1271 *wl, bool chip_awake);
+ void wl1271_elp_work(struct work_struct *work);
 -- 
-1.7.0.4
+1.6.3.3
 
