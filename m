@@ -1,58 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:36220 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751089Ab0I2RYK (ORCPT
+Received: from mail-fx0-f46.google.com ([209.85.161.46]:60755 "EHLO
+	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757109Ab0I0R5b (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 29 Sep 2010 13:24:10 -0400
-Subject: Re: [PATCH] mac80211: fix rate_control_send_low warnings for delbas
-From: Johannes Berg <johannes@sipsolutions.net>
-To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Cc: Vasanthakumar Thiagarajan <vasanth@atheros.com>,
-	Vasanth Thiagarajan <Vasanth.Thiagarajan@atheros.com>,
-	Jouni Malinen <j@w1.fi>,
-	"linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"stable@kernel.org" <stable@kernel.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Paul Stewart <pstew@google.com>,
-	Amod Bodas <Amod.Bodas@atheros.com>
-In-Reply-To: <AANLkTikUAchrjeMraauLaUggtq7bYZoki=kz2o8XQ2yh@mail.gmail.com>
-References: <20100928222945.GB10932@tux> <20100928230211.GA9844@jm.kir.nu>
-	 <AANLkTimGPPUW6=QYpZz7q96vt1GOd5kJ-tvYEKxZZT2B@mail.gmail.com>
-	 <20100929052006.GC18450@vasanth-laptop>
-	 <AANLkTinKkTgUUGPxY82G1B6taToKeAMOmrJ+tYvzLY52@mail.gmail.com>
-	 <20100929085657.GD18450@vasanth-laptop>
-	 <AANLkTikUAchrjeMraauLaUggtq7bYZoki=kz2o8XQ2yh@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Wed, 29 Sep 2010 19:24:03 +0200
-Message-ID: <1285781043.3756.28.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+	Mon, 27 Sep 2010 13:57:31 -0400
+Received: by fxm3 with SMTP id 3so2059012fxm.19
+        for <linux-wireless@vger.kernel.org>; Mon, 27 Sep 2010 10:57:30 -0700 (PDT)
+From: Helmut Schaa <helmut.schaa@googlemail.com>
+To: Joshua Smith <jesmith@kaon.com>
+Subject: Re: Question about starting up an AP
+Date: Mon, 27 Sep 2010 19:56:40 +0200
+Cc: linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com
+References: <DA0C92FD-F6BF-4746-9BE1-A643A0D70F7A@kaon.com> <201009251034.24993.helmut.schaa@googlemail.com> <B17955D1-62BE-4A7E-8ECD-05FA62BD80B9@kaon.com>
+In-Reply-To: <B17955D1-62BE-4A7E-8ECD-05FA62BD80B9@kaon.com>
+MIME-Version: 1.0
+Content-Type: Text/Plain;
+  charset="us-ascii"
+Message-Id: <201009271956.41041.helmut.schaa@googlemail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2010-09-29 at 10:16 -0700, Luis R. Rodriguez wrote:
+Hi,
 
-> > 2. NL80211_CMD_ASSOCIATE to newly authenticated AP from user space
-> >
-> >        - Clean up any existing BA session with an AP, if any.
-> >        Here the assumption is, ieee80211_work_work() has already
-> >        configured the device back to it's operating channel (the
-> >        old one) after the authentication is complete with the new
-> >        AP. This should have happened part of 1.
-> >        - Start the association process with the new AP.
-> 
-> No see, I believe we actually get the association response and *then*
-> we teardown the BA agreements. Let me review this some more today.
+Am Montag 27 September 2010 schrieb Joshua Smith:
+> The change to the REGISTER_BUSY_COUNT did not eliminate the issue. 
+> The device still sometimes exhibits this behavior.  (It may be exhibiting
+> it less often, but the occurrences are so random, that it's hard for me to
+> know for sure.)
 
-No, Vasanth's right, but there's a race:
+Yeah, as I said, just a shot in the dark.
 
- * we go off-channel
- * we send auth
- * we get auth
- * we notify wpa_s
- * wpa_s asks for assoc         | these aren't ordered
- * we disassoc                  | quite right but it's
- * we return from off-channel   | hard to avoid ...
- * we assoc to new AP
+> However, the other fix DID indeed eliminate the kernel crash when I tried
+> to restart hostapd, and it also fixed a crash that I experienced when I
+> tried to rmmod the rt2800pci module.  So you should definitely mainline
+> that patch.
 
-johannes
+Sure.
 
+> Now that I can retry hostapd and rmmod the modules, I have found that there
+> is apparently no software workaround for the case where the DMA busy
+> condition does not pass. 
+
+Hmm, maybe there is but we have't found it yet ;)
+
+> I have tried restarting hostapd, and I have tried rmmod'ding all the
+> associated modules and modprobing them back in.  Nothing clears the
+> condition except a reboot.
+
+Too bad.
+
+> Any other ideas of what I could do to reset the hardware?  I'd love to find
+> a "soft" fix for this, rather than having to reboot to clear the condition.
+
+Nothing obviouis at least. So, no without further debugging I don't know what's
+going on in your case. Would be interesting if others experience the same
+problem.
+
+Helmut
