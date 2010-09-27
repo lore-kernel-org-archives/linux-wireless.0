@@ -1,112 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f46.google.com ([209.85.214.46]:58384 "EHLO
-	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754667Ab0IOXb0 (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:60267 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753136Ab0I0POh (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 15 Sep 2010 19:31:26 -0400
-From: Ohad Ben-Cohen <ohad@wizery.com>
-To: <linux-wireless@vger.kernel.org>, <linux-omap@vger.kernel.org>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	Mark Brown <broonie@opensource.wolfsonmicro.com>,
-	<linux-arm-kernel@lists.infradead.org>,
-	Chikkature Rajashekar Madhusudhan <madhu.cr@ti.com>,
-	Luciano Coelho <luciano.coelho@nokia.com>,
-	San Mehat <san@google.com>,
-	Roger Quadros <roger.quadros@nokia.com>,
-	Tony Lindgren <tony@atomide.com>,
-	Nicolas Pitre <nico@fluxnic.net>, Ido Yariv <ido@wizery.com>,
-	Kalle Valo <kalle.valo@iki.fi>,
-	Russell King <linux@arm.linux.org.uk>,
-	Vitaly Wool <vitalywool@gmail.com>,
-	Ohad Ben-Cohen <ohad@wizery.com>
-Subject: [PATCH v6 6/7] omap: zoom: add fixed regulator device for wlan
-Date: Thu, 16 Sep 2010 01:32:09 +0200
-Message-Id: <1284593529-30100-1-git-send-email-ohad@wizery.com>
+	Mon, 27 Sep 2010 11:14:37 -0400
+Date: Mon, 27 Sep 2010 11:02:35 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Ben Greear <greearb@candelatech.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: rebased version of wireless-testing?
+Message-ID: <20100927150235.GB11086@tuxdriver.com>
+References: <4C9CFD86.2080207@candelatech.com>
+ <20100924200532.GH8077@tuxdriver.com>
+ <4C9D14B6.70206@candelatech.com>
+ <20100925134325.GD1948@tuxdriver.com>
+ <4C9E1C5D.4020805@candelatech.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <4C9E1C5D.4020805@candelatech.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Add a fixed regulator vmmc device to enable power control
-of the wl1271 wlan device.
+On Sat, Sep 25, 2010 at 08:59:25AM -0700, Ben Greear wrote:
+> On 09/25/2010 06:43 AM, John W. Linville wrote:
+> >On Fri, Sep 24, 2010 at 02:14:30PM -0700, Ben Greear wrote:
+> >
+> >>>You will be better-off pulling wireless-next-2.6 (and maybe
+> >>>wireless-2.6 as well).  The history there isn't always immutable
+> >>>(although I prefer it to be), but it will tend to be a lot cleaner
+> >>>than wireless-testing.
+> >>
+> >>Any chance you could push tags in wireless-next-2.6?
+> >
+> >Not sure what you mean -- are you not seeing the master-<date>  tags?
+> 
+> It didn't seem like the 2.6.36-rcX tags were there..but then again, maybe
+> I'm looking for something that doesn't exist?
 
-Signed-off-by: Ohad Ben-Cohen <ohad@wizery.com>
----
- arch/arm/mach-omap2/board-zoom-peripherals.c |   35 ++++++++++++++++++++++++++
- 1 files changed, 35 insertions(+), 0 deletions(-)
+Ah...well, they probably won't be in there until after 2.6.36 is
+released.  I generally don't pull from Linus into that tree during
+the release cycle in order to avoid surprising Dave when he pulls it.
+But if you are basing on linux-2.6 then you should already have those
+tags anyway?
 
-diff --git a/arch/arm/mach-omap2/board-zoom-peripherals.c b/arch/arm/mach-omap2/board-zoom-peripherals.c
-index 6b39849..de88635 100644
---- a/arch/arm/mach-omap2/board-zoom-peripherals.c
-+++ b/arch/arm/mach-omap2/board-zoom-peripherals.c
-@@ -16,6 +16,7 @@
- #include <linux/gpio.h>
- #include <linux/i2c/twl.h>
- #include <linux/regulator/machine.h>
-+#include <linux/regulator/fixed.h>
- 
- #include <asm/mach-types.h>
- #include <asm/mach/arch.h>
-@@ -27,6 +28,8 @@
- #include "mux.h"
- #include "hsmmc.h"
- 
-+#define OMAP_ZOOM_WLAN_PMENA_GPIO	(101)
-+
- /* Zoom2 has Qwerty keyboard*/
- static int board_keymap[] = {
- 	KEY(0, 0, KEY_E),
-@@ -106,6 +109,11 @@ static struct regulator_consumer_supply zoom_vmmc2_supply = {
- 	.supply		= "vmmc",
- };
- 
-+static struct regulator_consumer_supply zoom_vmmc3_supply = {
-+	.supply		= "vmmc",
-+	.dev_name	= "mmci-omap-hs.2",
-+};
-+
- /* VMMC1 for OMAP VDD_MMC1 (i/o) and MMC1 card */
- static struct regulator_init_data zoom_vmmc1 = {
- 	.constraints = {
-@@ -151,6 +159,32 @@ static struct regulator_init_data zoom_vsim = {
- 	.consumer_supplies      = &zoom_vsim_supply,
- };
- 
-+static struct regulator_init_data zoom_vmmc3 = {
-+	.constraints = {
-+		.valid_ops_mask	= REGULATOR_CHANGE_STATUS,
-+	},
-+	.num_consumer_supplies = 1,
-+	.consumer_supplies = &zoom_vmmc3_supply,
-+};
-+
-+static struct fixed_voltage_config zoom_vwlan = {
-+	.supply_name = "vwl1271",
-+	.microvolts = 1800000, /* 1.8V */
-+	.gpio = OMAP_ZOOM_WLAN_PMENA_GPIO,
-+	.startup_delay = 70000, /* 70msec */
-+	.enable_high = 1,
-+	.enabled_at_boot = 0,
-+	.init_data = &zoom_vmmc3,
-+};
-+
-+static struct platform_device omap_vwlan_device = {
-+	.name		= "reg-fixed-voltage",
-+	.id		= 1,
-+	.dev = {
-+		.platform_data = &zoom_vwlan,
-+	},
-+};
-+
- static struct omap2_hsmmc_info mmc[] __initdata = {
- 	{
- 		.name		= "external",
-@@ -280,6 +314,7 @@ static void enable_board_wakeup_source(void)
- void __init zoom_peripherals_init(void)
- {
- 	omap_i2c_init();
-+	platform_device_register(&omap_vwlan_device);
- 	usb_musb_init(&musb_board_data);
- 	enable_board_wakeup_source();
- }
+John
 -- 
-1.7.0.4
-
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
