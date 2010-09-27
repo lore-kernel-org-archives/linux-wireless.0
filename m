@@ -1,42 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([147.243.1.47]:28796 "EHLO mgw-sa01.nokia.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751829Ab0I2G2f (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 29 Sep 2010 02:28:35 -0400
-Subject: Re: [PATCH 0/2] wl1271: Packet aggregation optimizations
-From: Juuso Oikarinen <juuso.oikarinen@nokia.com>
-To: ext Ido Yariv <ido@wizery.com>
-Cc: "Coelho Luciano (Nokia-MS/Helsinki)" <Luciano.Coelho@nokia.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <1285686464-8668-1-git-send-email-ido@wizery.com>
-References: <1285686464-8668-1-git-send-email-ido@wizery.com>
+Received: from mgw-sa02.nokia.com ([147.243.1.48]:51380 "EHLO
+	mgw-sa02.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756157Ab0I0PGG (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 27 Sep 2010 11:06:06 -0400
+Subject: Re: active vs. passive scans
+From: Luciano Coelho <luciano.coelho@nokia.com>
+To: ext Chuck Crisler <ccrisler@vgocom.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <15713CDD627C41D39E4B9725AE2B241D@ChuckPC>
+References: <15713CDD627C41D39E4B9725AE2B241D@ChuckPC>
 Content-Type: text/plain; charset="UTF-8"
-Date: Wed, 29 Sep 2010 09:28:04 +0300
-Message-ID: <1285741684.11177.98.camel@wimaxnb.nmp.nokia.com>
+Date: Mon, 27 Sep 2010 18:06:04 +0300
+Message-ID: <1285599964.5768.120.camel@chilepepper>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2010-09-28 at 17:07 +0200, ext Ido Yariv wrote:
-> The WL1271 HW supports sending and receiving multiple packets within
-> a single transaction. This can substantially reduce CPU usage and
-> increase network throughput.
-> 
-> The following patches add support for RX and TX packet aggregation.
-> An opportunistic approach was taken - all packets that are currently
-> available for sending/receiving are aggregated and transferred
-> in a single transaction.
-> 
-> The patches were tested on a Zoom2 platform (SDIO only).
-> 
-> Ido Yariv (2):
->   wl1271: Support firmware RX packet aggregation
->   wl1271: Support firmware TX packet aggregation
-> 
+Hi Chuck,
 
-Thanks for these patches! 
+On Mon, 2010-09-27 at 16:03 +0200, ext Chuck Crisler wrote:
+> How to you get the supplicant/linux wireless to perform active scans rather 
+> than passive scans? Are active scans faster?
 
-We are testing them now.
+We do active scans by default, unless specified otherwise in the
+regulatory database.
 
--Juuso
+The main difference between active and passive scans is that in active
+scans we send broadcast probe requests on the channel and with passive
+we don't.  In passive scan we just listen to beacons.
+
+Usually the drivers stay for a certain period of time in each channel,
+and that normally doesn't change if you have active or passive scan.  So
+there will be no improvement in the overall scan speed.  Of course you
+could do some tweaks that might improve scanning performance in specific
+cases.
+
+
+-- 
+Cheers,
+Luca.
 
