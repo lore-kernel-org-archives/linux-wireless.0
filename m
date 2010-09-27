@@ -1,62 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mgw2.diku.dk ([130.225.96.92]:35493 "EHLO mgw2.diku.dk"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754454Ab0IES7j (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 5 Sep 2010 14:59:39 -0400
-From: Julia Lawall <julia@diku.dk>
-To: Reinette Chatre <reinette.chatre@intel.com>
-Cc: kernel-janitors@vger.kernel.org,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>,
-	Intel Linux Wireless <ilw@linux.intel.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: [PATCH 8/8] drivers/net/wireless/iwlwifi/iwl-agn.c: Fix return value from an unsigned function
-Date: Sun,  5 Sep 2010 21:00:26 +0200
-Message-Id: <1283713226-8429-9-git-send-email-julia@diku.dk>
-In-Reply-To: <1283713226-8429-1-git-send-email-julia@diku.dk>
-References: <1283713226-8429-1-git-send-email-julia@diku.dk>
+Received: from mail30s.wh2.ocn.ne.jp ([125.206.180.198]:48957 "HELO
+	mail30s.wh2.ocn.ne.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1758556Ab0I0BFT (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 26 Sep 2010 21:05:19 -0400
+Received: from vs3006.wh2.ocn.ne.jp (125.206.180.169)
+	by mail30s.wh2.ocn.ne.jp (RS ver 1.0.95vs) with SMTP id 3-0231029515
+	for <linux-wireless@vger.kernel.org>; Mon, 27 Sep 2010 10:05:17 +0900 (JST)
+From: Bruno Randolf <br1@einfach.org>
+To: Rajkumar Manoharan <rmanoharan@atheros.com>
+Subject: Re: [PATCH] ath9k_htc: Fix TKIP disconnect failure with HTC drivers
+Date: Mon, 27 Sep 2010 10:05:15 +0900
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
+References: <1285331330-26105-1-git-send-email-rmanoharan@atheros.com>
+In-Reply-To: <1285331330-26105-1-git-send-email-rmanoharan@atheros.com>
+MIME-Version: 1.0
+Content-Type: Text/Plain;
+  charset="iso-8859-15"
+Message-Id: <201009271005.15434.br1@einfach.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The function has an unsigned return type, but returns a negative constant
-to indicate an error condition.  Another error condition in the same
-function is indicated by returning 0, and indeed the only call to the
-function checks for 0 to detect errors, so the return of a negative value
-it converted to a return of 0.
+On Fri September 24 2010 21:28:50 Rajkumar Manoharan wrote:
+> The following commit removed splitmic. But forgot to add
+> ATH_CRYPT_CAP_MIC_COMBINED flag for HTC drivers which causes
+> TKIP to fail.
+> 
+> Author: Bruno Randolf <br1@einfach.org>
+> Date:   Wed Sep 8 16:04:54 2010 +0900
+> 
+>     ath/ath9k: Replace common->splitmic with a flag
+> 
+>     Replace common->splitmic with ATH_CRYPT_CAP_MIC_COMBINED flag.
+> 
+> Signed-off-by: Rajkumar Manoharan <rmanoharan@atheros.com>
 
-A sematic match that finds this problem is as follows:
-(http://coccinelle.lip6.fr/)
+sorry for that!
 
-// <smpl>
-@exists@
-identifier f;
-constant C;
-@@
-
- unsigned f(...)
- { <+...
-*  return -C;
- ...+> }
-// </smpl>
-
-Signed-off-by: Julia Lawall <julia@diku.dk>
-
----
- drivers/net/wireless/iwlwifi/iwl-agn.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
-index ad0e67f..86b55c2 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
-@@ -369,7 +369,7 @@ static unsigned int iwl_hw_get_beacon_cmd(struct iwl_priv *priv,
- 
- 	if (!priv->beacon_ctx) {
- 		IWL_ERR(priv, "trying to build beacon w/o beacon context!\n");
--		return -EINVAL;
-+		return 0;
- 	}
- 
- 	/* Initialize memory */
-
+bruno
