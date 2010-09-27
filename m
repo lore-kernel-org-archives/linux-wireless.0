@@ -1,58 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabe.cs.wisc.edu ([128.105.6.20]:34391 "EHLO sabe.cs.wisc.edu"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932117Ab0I3Pdy convert rfc822-to-8bit (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:38938 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753744Ab0I0Kz6 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 30 Sep 2010 11:33:54 -0400
-Received: from mail-ey0-f174.google.com (mail-ey0-f174.google.com [209.85.215.174])
-	(authenticated bits=0)
-	by sabe.cs.wisc.edu (8.14.1/8.14.1) with ESMTP id o8UFXqxW024250
-	(version=TLSv1/SSLv3 cipher=RC4-MD5 bits=128 verify=FAIL)
-	for <linux-wireless@vger.kernel.org>; Thu, 30 Sep 2010 10:33:53 -0500
-Received: by eyb6 with SMTP id 6so826947eyb.19
-        for <linux-wireless@vger.kernel.org>; Thu, 30 Sep 2010 08:33:52 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <733457.84719.qm@web56801.mail.re3.yahoo.com>
-References: <733457.84719.qm@web56801.mail.re3.yahoo.com>
-From: Michael Griepentrog <griepent@cs.wisc.edu>
-Date: Thu, 30 Sep 2010 10:33:25 -0500
-Message-ID: <AANLkTi==09DXcF-Cbon7SFUxU8WbUMx6ZL8OQP5g8=5z@mail.gmail.com>
-Subject: Re: [BUG] compat: broken driver-select always compiles ath6kl & brcm80211
-To: Walter Goldens <goldenstranger@yahoo.com>
-Cc: "Luis R. Rodriguez" <mcgrof@gmail.com>,
-	linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+	Mon, 27 Sep 2010 06:55:58 -0400
+Subject: Re: [PATCH wireless-2.6.35] use long timer for un-necessary reload
+ the firmware
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: Wey-Yi Guy <wey-yi.w.guy@intel.com>, greg@kroah.com,
+	linux-wireless@vger.kernel.org, ipw3945-devel@lists.sourceforge.net
+In-Reply-To: <20100924191713.GF8077@tuxdriver.com>
+References: <1285275864-12703-1-git-send-email-wey-yi.w.guy@intel.com>
+	 <20100924191713.GF8077@tuxdriver.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Mon, 27 Sep 2010 12:55:53 +0200
+Message-ID: <1285584953.4043.17.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-driver-select currently doesn't modify the Makefiles of drivers in
-staging, so they will always be built. You should be able to disable
-those drivers from being built by editing your kernel config to enable
-CONFIG_STAGING_EXCLUDE_BUILD and/or disabling CONFIG_STAGING.
+On Fri, 2010-09-24 at 15:17 -0400, John W. Linville wrote:
+> On Thu, Sep 23, 2010 at 02:04:24PM -0700, Wey-Yi Guy wrote:
+> > Different devices has different timing requirement, change the timeout
+> > value for 5000 series devices to avoid un-necessary firmware reload which
+> > can cause device become unstable.For 5000 series of devices, use long monitor timer to check
+> > stuck tx queues.
+> > 
+> > It is being reported firmware got reload more
+> > often than necessary, so extend the timer to avoid un-necessary reload.
+> > 
+> > This fixes:
+> > http://article.gmane.org/gmane.linux.kernel.wireless.general/53552
+> > 
+> > Cc: stable@kernel.org [2.6.35]
 
-If we want something to work within the confines of driver-select, we
-could place a Makefile in drivers/staging and apply the same policies
-that driver-select does to the drivers/net/wireless Makefile. It
-wouldn't be very useful as it would always remove the contents of the
-Makefile, but if modules in staging were built against something other
-than CONFIG_COMPAT_STAGING, it could be used to add brcm80211 to the
-list supported drivers for driver-select.
+> So then I try applying it directly...
+> 
+> [linville-8530p.local]:> git am -s fixes.mbox 
+> Applying: use long timer for un-necessary reload the firmware
+> error: patch failed: drivers/net/wireless/iwlwifi/iwl-1000.c:257
 
---
-Michael
+Actually, I believe you weren't meant to apply this, this looks like a
+backport of
 
-On Wed, Sep 29, 2010 at 8:00 AM, Walter Goldens
-<goldenstranger@yahoo.com> wrote:
-> Latest compat-wireless manifests a bug when "scripts/driver-select" is invoked. Regardless of which driver is selected (zd1211rw for example),  ath6kl and brcm80211 are always compiled along with the designated module of choice.
->
-> I tried looking in to it, but don't really have time. Perhaps someone would like to investigate.
->
-> Walter.
->
->
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
+commit 78e1e688a404573a6788abbddfe2f4631d833bca
+Author: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Date:   Fri Jul 23 13:19:39 2010 -0700
+
+    iwlwifi: long monitor timer
+
+to stable-2.6.35, since the original commit had no cc: stable tag.
+
+johannes
+
