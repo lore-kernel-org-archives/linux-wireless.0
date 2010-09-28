@@ -1,50 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:41359 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754045Ab0IURtC (ORCPT
+Received: from www.telegraphics.com.au ([204.15.192.19]:63300 "EHLO
+	mail.telegraphics.com.au" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750974Ab0I1EQD (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 21 Sep 2010 13:49:02 -0400
-Subject: Re: [mac80211] mac80211:  Support multiple VIFS per AP in debugfs.
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Ben Greear <greearb@candelatech.com>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <1285088605.12764.5.camel@jlt3.sipsolutions.net>
-References: <1285071310-11440-1-git-send-email-greearb@candelatech.com>
-	 <4C98DC5D.2000108@candelatech.com>
-	 <1285086618.12764.3.camel@jlt3.sipsolutions.net>
-	 <4C98E05B.8050609@candelatech.com>
-	 <1285088605.12764.5.camel@jlt3.sipsolutions.net>
-Content-Type: text/plain; charset="UTF-8"
-Date: Tue, 21 Sep 2010 19:49:01 +0200
-Message-ID: <1285091341.12764.7.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+	Tue, 28 Sep 2010 00:16:03 -0400
+Date: Tue, 28 Sep 2010 14:15:58 +1000 (EST)
+From: Finn Thain <fthain@telegraphics.com.au>
+To: "Justin P. Mattock" <justinmattock@gmail.com>
+cc: trivial@kernel.org, linux-kernel@vger.kernel.org,
+	linux-wireless@vger.kernel.org, linux-usb@vger.kernel.org,
+	linux-scsi@vger.kernel.org, linux-fbdev@vger.kernel.org,
+	alsa-devel@alsa-project.org, dri-devel@lists.freedesktop.org,
+	linux-ide@vger.kernel.org,
+	"Maciej W. Rozycki" <macro@linux-mips.org>,
+	Geert Uytterhoeven <geert@linux-m68k.org>,
+	Randy Dunlap <rdunlap@xenotime.net>,
+	Matt Turner <mattst88@gmail.com>,
+	Dimitry Torokhov <dmitry.torokhov@gmail.com>,
+	Mike Frysinger <vapier.adi@gmail.com>
+Subject: Re: [RFC v4]update broken web addresses in the kernel.
+In-Reply-To: <4CA15FA6.3040702@gmail.com>
+Message-ID: <alpine.OSX.2.00.1009281409040.276@localhost>
+References: <1285525875-9920-1-git-send-email-justinmattock@gmail.com> <alpine.OSX.2.00.1009271114330.275@localhost> <4CA15FA6.3040702@gmail.com>
+MIME-Version: 1.0
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2010-09-21 at 19:03 +0200, Johannes Berg wrote:
 
-> > >>> -	snprintf(mac, sizeof(mac), "%pM", sta->sta.addr);
-> > >>> +	snprintf(mac, sizeof(mac), "%pM-%s",
-> > >>> +		 sta->sta.addr, sta->sdata->name);
-> > >>>
-> > >>>    	/*
-> > >>>    	 * This might fail due to a race condition:
-> > >>
-> > >> I got to thinking:  Is there any reason to put the sta.addr in there?
-> > >>
-> > >> Maybe just use sta->sdata->name?  Seems it might be easier for
-> > >> scripts to deal with?
-> > >
-> > > APs have many STAs
-> > 
-> > So, when in STA mode, sta_info are related to local VIFs, but
-> > in AP mode, they represent the remote wireless devices, with sdata pointing
-> > to the local AP interface?
+On Mon, 27 Sep 2010, Justin P. Mattock wrote:
+
+> alright.. I'll redu this... remove the brackets, and fix up the rest..
+> one note is:
+> http://dri.freedesktop.org/wiki/Documentation
+> this address is already there..
+
+Right you are.
+
+> probably best to just leave the sourceforge
+> address and use the webarchive and/or if theirs a
+> proper address for the sourceforge dri..
+
+I didn't find a sensible address for the sourceforge stuff now that 
+indexes are turned off for /doc/.
+
+I agree, best just to leave it as is, since it is in the archive.
+
+Finn
+
 > 
-> No, there's a sta_info for each peer, which in STA mode is only the AP.
-
-maybe the stations should be moved from phy0/stations/ to
-phy0/wlan0/stations/ instead?
-
-johannes
-
+> Justin P. Mattock
+> 
+> 
