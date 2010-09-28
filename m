@@ -1,156 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail30g.wh2.ocn.ne.jp ([220.111.41.239]:42676 "HELO
-	mail30g.wh2.ocn.ne.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1753284Ab0IODsU (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:40115 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753802Ab0I1NOh (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 14 Sep 2010 23:48:20 -0400
-Received: from vs3017.wh2.ocn.ne.jp (125.206.180.250)
-	by mail30g.wh2.ocn.ne.jp (RS ver 1.0.95vs) with SMTP id 1-0779142499
-	for <linux-wireless@vger.kernel.org>; Wed, 15 Sep 2010 12:48:19 +0900 (JST)
-From: Bruno Randolf <br1@einfach.org>
-To: ath5k-devel@lists.ath5k.org
-Subject: Re: [ath5k-devel] [support] ath5k contention windows
-Date: Wed, 15 Sep 2010 12:48:30 +0900
-Cc: Jonathan Guerin <jonathan@guerin.id.au>,
-	"linux-wireless" <linux-wireless@vger.kernel.org>
-References: <AANLkTi=azJS6bn7-=Bbb--ibACaQWqv4ZGLMUpfxynm7@mail.gmail.com> <AANLkTikvdkR=w-vGL=0LHnxQSibfoFBpuhLwjJZWVCuM@mail.gmail.com> <AANLkTi=SDxw36LtH44gLB185oxARHLvE41ryLiEFdBYn@mail.gmail.com>
-In-Reply-To: <AANLkTi=SDxw36LtH44gLB185oxARHLvE41ryLiEFdBYn@mail.gmail.com>
+	Tue, 28 Sep 2010 09:14:37 -0400
+Date: Tue, 28 Sep 2010 09:09:57 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Luciano Coelho <luciano.coelho@nokia.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"John W. Linville" <liville@tuxdriver.com>
+Subject: Re: [PATCH] MAINTAINERS: Update git url for the wl1271 driver
+Message-ID: <20100928130956.GC2440@tuxdriver.com>
+References: <1285665597-31547-1-git-send-email-luciano.coelho@nokia.com>
+ <1285666039.28270.54.camel@chilepepper>
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Message-Id: <201009151248.30681.br1@einfach.org>
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1285666039.28270.54.camel@chilepepper>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed September 15 2010 12:40:36 Jonathan Guerin wrote:
-> On Tue, Sep 14, 2010 at 3:53 PM, Jonathan Guerin <jonathan@guerin.id.au> 
-wrote:
-> > Hi all,
+On Tue, Sep 28, 2010 at 12:27:19PM +0300, Luciano Coelho wrote:
+> On Tue, 2010-09-28 at 11:19 +0200, Coelho Luciano (Nokia-MS/Helsinki)
+> wrote:
+> > We are integrating wl1271 commits via a new git tree now and wl1271
+> > development should be made on top of the new tree.
 > > 
-> > I have some behaviour I'm observing with some Atheros cards we use
-> > that doesn't seem to match what the initvals of ath5k are set up to.
-> > These are the cards I used:
-> > http://www.mini-box.com/s.nl/it.A/id.387/.f
+> > Update the repository url accordingly.
 > > 
-> > I have run a saturated iPerf flow on a conducted testbed with both
-> > stations being inside RF-shielding boxes. They are set to 802.11a
-> > mode, on channel 1. I then parse the trace, looking for ACK-DATA
-> > pairs, and calculating the time difference between them. From this, I
-> > remove the TX_TIME of the DATA frame, as well as a DIFS:
+> > Cc: John W. Linville <liville@tuxdriver.com>
+> > Signed-off-by: Luciano Coelho <luciano.coelho@nokia.com>
+> > ---
+> >  MAINTAINERS |    2 +-
+> >  1 files changed, 1 insertions(+), 1 deletions(-)
 > > 
-> > ACK_TIMESTAMP + DIFS + CONTENTION_TIME + DATA_TX_TIME = DATA_TIMESTAMP
-> > 
-> > which will leave me with the CONTENTION_TIME. Dividing this time by a
-> > SLOT_TIME will give me the slot which was chosen by the hardware.
-> > 
-> > 
-> > According to the driver, in ath5k.h:
-> > 
-> > #define AR5K_TUNE_CWMIN                15
-> > 
-> > CWMIN is initialised to 15.
-> > 
-> > The actual distribution of contention slots I'm observing resembles this:
-> > 
-> > Slot Number,Count
-> > 0,1315
-> > 1,1302
-> > 2,1249
-> > 3,1291
-> > 4,1347
-> > 5,1219
-> > 6,1249
-> > 7,0
-> > 8,0
-> > 9,0
-> > <truncated>
-> > 
-> > as well as 1360 frames which came in with a negative CONTENTION_TIME.
-> > 
-> > Ignoring the fact that some frames are coming up with a negative
-> > CONTENTION_TIME (which potentially points to another problem), what is
-> > being observed here is that CW_MIN appears to start at 7, rather than
-> > the 15 which it should be.
-> > 
-> > I'm just wondering if anyone would have any idea why this is occurring?
+> > diff --git a/MAINTAINERS b/MAINTAINERS
+> > index 6cb1c75..a130d9f 100644
+> > --- a/MAINTAINERS
+> > +++ b/MAINTAINERS
+> > @@ -6321,7 +6321,7 @@ WL1271 WIRELESS DRIVER
+> >  M:	Luciano Coelho <luciano.coelho@nokia.com>
+> >  L:	linux-wireless@vger.kernel.org
+> >  W:	http://wireless.kernel.org
+> > -T:	git git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-testing.git
+> > +T:	git://git.kernel.org/pub/scm/linux/kernel/git/luca/wl12xx.git
+> >  S:	Maintained
+> >  F:	drivers/net/wireless/wl12xx/wl1271*
+> >  F:	include/linux/wl12xx.h
 > 
-> Sorry to bring the post back on topic, I'm just trying to narrow down
-> what the driver is doing with the CW_MIN and CW_MAX parameters.
-> 
-> $$ ath5k.h
-> #define AR5K_TUNE_CWMIN				15
-> #define AR5K_TUNE_CWMIN_11B			31
-> #define AR5K_TUNE_CWMIN_XR			3
-> #define AR5K_TUNE_CWMAX				1023
-> #define AR5K_TUNE_CWMAX_11B			1023
-> #define AR5K_TUNE_CWMAX_XR			7
-> 
-> $$ qcu.c
-> /*
->  * Set DFS properties for a transmit queue on DCU
->  */
-> int ath5k_hw_reset_tx_queue(struct ath5k_hw *ah, unsigned int queue)
-> {
-> <... truncated ...>
-> 	/*
-> 	 * Calculate cwmin/max by channel mode
-> 	 */
-> 	cw_min = ah->ah_cw_min = AR5K_TUNE_CWMIN;
-> 	cw_max = ah->ah_cw_max = AR5K_TUNE_CWMAX;
-> 	ah->ah_aifs = AR5K_TUNE_AIFS;
-> 	/*XR is only supported on 5212*/
-> 	if (IS_CHAN_XR(ah->ah_current_channel) &&
-> 			ah->ah_version == AR5K_AR5212) {
-> 		cw_min = ah->ah_cw_min = AR5K_TUNE_CWMIN_XR;
-> 		cw_max = ah->ah_cw_max = AR5K_TUNE_CWMAX_XR;
-> 		ah->ah_aifs = AR5K_TUNE_AIFS_XR;
-> 	/*B mode is not supported on 5210*/
-> 	} else if (IS_CHAN_B(ah->ah_current_channel) &&
-> 			ah->ah_version != AR5K_AR5210) {
-> 		cw_min = ah->ah_cw_min = AR5K_TUNE_CWMIN_11B;
-> 		cw_max = ah->ah_cw_max = AR5K_TUNE_CWMAX_11B;
-> 		ah->ah_aifs = AR5K_TUNE_AIFS_11B;
-> 	}
-> 
-> 	cw_min = 1;
-> 	while (cw_min < ah->ah_cw_min)
-> 		cw_min = (cw_min << 1) | 1;
-> 
-> 	cw_min = tq->tqi_cw_min < 0 ? (cw_min >> (-tq->tqi_cw_min)) :
-> 		((cw_min << tq->tqi_cw_min) + (1 << tq->tqi_cw_min) - 1);
-> 	cw_max = tq->tqi_cw_max < 0 ? (cw_max >> (-tq->tqi_cw_max)) :
-> 		((cw_max << tq->tqi_cw_max) + (1 << tq->tqi_cw_max) - 1);
-> <... truncated ...>
-> }
-> 
-> $$ attach.c
-> int ath5k_hw_attach(struct ath5k_softc *sc)
-> {
-> <... truncated ...>
-> 	/*
-> 	 * HW information
-> 	 */
-> 	ah->ah_radar.r_enabled = AR5K_TUNE_RADAR_ALERT;
-> 	ah->ah_turbo = false;
-> 	ah->ah_txpower.txp_tpc = AR5K_TUNE_TPC_TXPOWER;
-> 	ah->ah_imr = 0;
-> 	ah->ah_atim_window = 0;
-> 	ah->ah_aifs = AR5K_TUNE_AIFS;
-> 	ah->ah_cw_min = AR5K_TUNE_CWMIN;
-> <... truncated ...>
-> }
-> 
-> I'm trying to understand where the CW_MIN value is being set. My
-> understanding is that if the hardware is in 802.11a (non-turbo) mode,
-> it will be set to AR5K_TUNE_CWMIN, both when it is attached, and when
-> the queue is reset.
-> 
-> Is there anywhere else that this value might be overridden and explain
-> the behaviour I'm observing? I can see a few places where the queues
-> are initilised to AR5K_TXQ_USEDEFAULT - does this make the card pull
-> the value from the ah->ah_cw_min variable?
+> John, should you apply this directly or should this go via the wl12xx
+> tree?
 
-hey, yes this is completey fcked up, weird and even wrong. as i said i'll post 
-a patch to that today, soon... better to wait with your review until that.
+Either seems fine to me.
 
-bruno
+John
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
