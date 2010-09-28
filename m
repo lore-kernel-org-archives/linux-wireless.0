@@ -1,42 +1,85 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([192.100.105.134]:63828 "EHLO
-	mgw-mx09.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753720Ab0I1JUP (ORCPT
+Received: from mail-bw0-f46.google.com ([209.85.214.46]:44835 "EHLO
+	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755107Ab0I1Qgj (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 28 Sep 2010 05:20:15 -0400
-From: Luciano Coelho <luciano.coelho@nokia.com>
+	Tue, 28 Sep 2010 12:36:39 -0400
+Received: by bwz11 with SMTP id 11so4281968bwz.19
+        for <linux-wireless@vger.kernel.org>; Tue, 28 Sep 2010 09:36:37 -0700 (PDT)
+From: Christian Lamparter <chunkeey@googlemail.com>
 To: linux-wireless@vger.kernel.org
-Cc: "John W. Linville" <liville@tuxdriver.com>
-Subject: [PATCH] MAINTAINERS: Update git url for the wl1271 driver
-Date: Tue, 28 Sep 2010 12:19:57 +0300
-Message-Id: <1285665597-31547-1-git-send-email-luciano.coelho@nokia.com>
+Subject: [RFC] mac80211: fix rx monitor filter refcounters
+Date: Tue, 28 Sep 2010 18:36:24 +0200
+Cc: Johannes Berg <johannes@sipsolutions.net>
+MIME-Version: 1.0
+Content-Type: Text/Plain;
+  charset="us-ascii"
+Message-Id: <201009281836.24529.chunkeey@googlemail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-We are integrating wl1271 commits via a new git tree now and wl1271
-development should be made on top of the new tree.
+This patch fixes a refcounter & commit bug when monitor
+rx flags are changed by:
+	iw dev moni set monitor [new flags]
 
-Update the repository url accordingly.
+while interface is up.
 
-Cc: John W. Linville <liville@tuxdriver.com>
-Signed-off-by: Luciano Coelho <luciano.coelho@nokia.com>
 ---
- MAINTAINERS |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+Is there a sane way to do that?
 
-diff --git a/MAINTAINERS b/MAINTAINERS
-index 6cb1c75..a130d9f 100644
---- a/MAINTAINERS
-+++ b/MAINTAINERS
-@@ -6321,7 +6321,7 @@ WL1271 WIRELESS DRIVER
- M:	Luciano Coelho <luciano.coelho@nokia.com>
- L:	linux-wireless@vger.kernel.org
- W:	http://wireless.kernel.org
--T:	git git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-testing.git
-+T:	git://git.kernel.org/pub/scm/linux/kernel/git/luca/wl12xx.git
- S:	Maintained
- F:	drivers/net/wireless/wl12xx/wl1271*
- F:	include/linux/wl12xx.h
--- 
-1.6.3.3
-
+Introduced by: 8cc9a73914 - Jan 31 19:48:23 2008 
+"mac80211: Use monitor configuration flags"
+---
+diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
+index c981604..c156936 100644
+--- a/net/mac80211/cfg.c
++++ b/net/mac80211/cfg.c
+@@ -68,8 +68,47 @@ static int ieee80211_change_iface(struct wiphy *wiphy,
+ 		 params && params->use_4addr >= 0)
+ 		sdata->u.mgd.use_4addr = params->use_4addr;
+ 
+-	if (sdata->vif.type == NL80211_IFTYPE_MONITOR && flags)
++	if (sdata->vif.type == NL80211_IFTYPE_MONITOR && flags) {
++		struct ieee80211_local *local = sdata->local;
++		u32 changed_flags = sdata->u.mntr_flags ^ *flags;
++
+ 		sdata->u.mntr_flags = *flags;
++		if (changed_flags & MONITOR_FLAG_FCSFAIL) {
++			if (*flags & MONITOR_FLAG_FCSFAIL)
++				local->fif_fcsfail++;
++			else
++				local->fif_fcsfail--;
++		}
++		if (changed_flags & MONITOR_FLAG_PLCPFAIL) {
++			if (*flags & MONITOR_FLAG_PLCPFAIL)
++				local->fif_plcpfail++;
++			else
++				local->fif_plcpfail--;
++		}
++		if (changed_flags & MONITOR_FLAG_COOK_FRAMES) {
++			if (*flags & MONITOR_FLAG_COOK_FRAMES)
++				local->cooked_mntrs++;
++			else
++				local->cooked_mntrs--;
++		}
++		if (changed_flags & MONITOR_FLAG_OTHER_BSS) {
++			if (*flags & MONITOR_FLAG_OTHER_BSS)
++				local->fif_other_bss++;
++			else
++				local->fif_other_bss--;
++		}
++		if (changed_flags & MONITOR_FLAG_CONTROL) {
++			if (*flags & MONITOR_FLAG_CONTROL) {
++				local->fif_pspoll++;
++				local->fif_control++;
++			} else {
++				local->fif_pspoll--;
++				local->fif_control--;
++			}
++		}
++
++		ieee80211_configure_filter(local);
++	}
+ 
+ 	return 0;
+ }
