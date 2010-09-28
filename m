@@ -1,105 +1,198 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qw0-f46.google.com ([209.85.216.46]:48520 "EHLO
-	mail-qw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754480Ab0I2SVT convert rfc822-to-8bit (ORCPT
+Received: from mail.candelatech.com ([208.74.158.172]:40079 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752113Ab0I1PmE (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 29 Sep 2010 14:21:19 -0400
-Received: by qwh6 with SMTP id 6so668467qwh.19
-        for <linux-wireless@vger.kernel.org>; Wed, 29 Sep 2010 11:21:18 -0700 (PDT)
-Subject: Re: Question about starting up an AP
-Mime-Version: 1.0 (Apple Message framework v1081)
-Content-Type: text/plain; charset=windows-1252
-From: Joshua Smith <jesmith@kaon.com>
-In-Reply-To: <201009272235.42545.helmut.schaa@googlemail.com>
-Date: Wed, 29 Sep 2010 14:21:14 -0400
-Cc: linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com
-Message-Id: <C4D5DF09-82F0-48B4-9D64-6621B3C82932@kaon.com>
-References: <DA0C92FD-F6BF-4746-9BE1-A643A0D70F7A@kaon.com> <201009272143.52283.helmut.schaa@googlemail.com> <EA2A527E-E8DA-4612-B8CB-518E2C6BA7D2@kaon.com> <201009272235.42545.helmut.schaa@googlemail.com>
-To: Helmut Schaa <helmut.schaa@googlemail.com>
+	Tue, 28 Sep 2010 11:42:04 -0400
+Message-ID: <4CA20CC1.7040305@candelatech.com>
+Date: Tue, 28 Sep 2010 08:41:53 -0700
+From: Ben Greear <greearb@candelatech.com>
+MIME-Version: 1.0
+To: Bruno Randolf <br1@einfach.org>
+CC: linux-wireless@vger.kernel.org, ath5k-devel@venema.h4ckr.net
+Subject: Re: [PATCH v4] ath5k: Allow ath5k to support virtual STA and AP interfaces.
+References: <1285621588-28184-1-git-send-email-greearb@candelatech.com> <201009281901.07312.br1@einfach.org>
+In-Reply-To: <201009281901.07312.br1@einfach.org>
+Content-Type: text/plain; charset=ISO-8859-15; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-OK, I have a working system now.  It's not pretty, but it's better than where I was.
+On 09/28/2010 03:01 AM, Bruno Randolf wrote:
+> On Tue September 28 2010 06:06:28 greearb@candelatech.com wrote:
+>> From: Ben Greear<greearb@candelatech.com>
+>>
+>> Support up to 4 virtual APs and as many virtual STA interfaces
+>> as desired.
+>>
+>> This patch is ported forward from a patch that Patrick McHardy
+>> did for me against 2.6.31.
+>
+> hi ben!
+>
+> it's great to see this! :) i tested it today, but only using ping, and at it
+> seemed to work fine with two WPA and two non-encrypted access points! but
+> unfortunately, i have also seen some instablility, and problems like:
+>
+> hostapd:
+> AP-STA-DISCONNECTED 00:0e:8e:25:92:7d
+> Station 00:0e:8e:25:92:7d trying to deauthenticate, but it is not
+> authenticated.
+> handle_auth_cb: STA 00:0e:8e:25:92:7d not found
+> handle_assoc_cb: STA 00:0e:8e:25:92:7d not found
+>
+> and:
+>
+> Could not set station 00:0e:8e:25:92:7d flags for kernel driver (errno=97).
+> handle_auth_cb: STA 00:0e:8e:25:92:7d not found
 
-- Using compat-wireless-2010-09-20, with the patch "rt2x00: Fix oops caused by error path in rt2x00lib_start"
-  Compiled with:
-CONFIG_RT2X00_DEBUG=y
-CONFIG_RT2X00_LIB_DEBUGFS=y
-  and all the other DEBUGFS also set to y
+Thanks for the in-depth review!
 
-- Using a 2.6.27.8 kernel compiled with debug_fs support
+We've just started serious testing on this, so likely problems remain.
 
-When my system comes up, I try to start hostapd.  This may succeed, or it may fail because of the error:
+>> +void ath5k_update_bssid_mask(struct ath5k_softc *sc, struct ieee80211_vif
+>> *vif) +{
+>> +	struct ath_common *common = ath5k_hw_common(sc->ah);
+>> +	struct ath_vif_iter_data iter_data;
+>> +
+>> +	/*
+>> +	 * Use the hardware MAC address as reference, the hardware uses it
+>> +	 * together with the BSSID mask when matching addresses.
+>> +	 */
+>> +	iter_data.hw_macaddr = common->macaddr;
+>> +	memset(&iter_data.mask, 0xff, ETH_ALEN);
+>> +	iter_data.found_active = false;
+>> +	iter_data.need_set_hw_addr = true;
+>> +
+>> +	if (vif)
+>> +		ath_vif_iter(&iter_data, vif->addr, vif);
+>> +
+>> +	/* Get list of all active MAC addresses */
+>> +	ieee80211_iterate_active_interfaces_atomic(sc->hw, ath_vif_iter,
+>> +						&iter_data);
+>
+> maybe i misunderstand something here, but why call ath_vif_iter()? doesn't
+> ieee80211_iterate_active_interfaces_atomic() iterate over it anyways?
 
-phy0 -> rt2800_wait_wpdma_ready: Error - WPDMA TX/RX busy, aborting.
-phy0 -> rt2800pci_set_device_state: Error - Device failed to enter state 4 (-5).
+When adding an interface, it isn't running yet, so the iterate would skip
+it.  I basically copied this code directly out of ath9k virtual.c.
 
-If the error occurs, try starting hostapd one more time.  (This hardly ever works.)  If it fails again, reboot.
+>>   	/* configure operational mode */
+>>   	ath5k_hw_set_opmode(ah, sc->opmode);
+>> @@ -698,13 +760,13 @@ ath5k_txbuf_setup(struct ath5k_softc *sc, struct
+>> ath5k_buf *bf, flags |= AR5K_TXDESC_RTSENA;
+>>   		cts_rate = ieee80211_get_rts_cts_rate(sc->hw, info)->hw_value;
+>>   		duration = le16_to_cpu(ieee80211_rts_duration(sc->hw,
+>> -			sc->vif, pktlen, info));
+>> +			NULL, pktlen, info));
+>
+> hmm, this NULL means we don't handle short preamble and erp correctly. i don't
+> know if we did before, but it would be better to use the corresponding vif - i
+> think it can be found in ieee80211_tx_info *info.
 
-If we got past hostapd starting, then we need to see whether the card is deaf.  Do this by polling
-/sys/kernel/debug/ieee80211/phy0/rt2800pci/queue/queue
-for a while, to see if the RX queue counts ever get over zero.
+I just copied this from my .31 code, and it may well have been broken there.
+I'll see if I can make this better.
 
-If they do, we're good to go.
+>>   	if (WARN_ON(!vif)) {
+>> @@ -1757,11 +1823,34 @@ ath5k_beacon_update(struct ieee80211_hw *hw, struct
+>> ieee80211_vif *vif)
+>>
+>>   	ath5k_debug_dump_skb(sc, skb, "BC  ", 1);
+>>
+>> -	ath5k_txbuf_free_skb(sc, sc->bbuf);
+>> -	sc->bbuf->skb = skb;
+>> -	ret = ath5k_beacon_setup(sc, sc->bbuf);
+>> +	if (!avf->bbuf) {
+>> +		WARN_ON(list_empty(&sc->bcbuf));
+>> +		avf->bbuf = list_first_entry(&sc->bcbuf, struct ath5k_buf,
+>> +					     list);
+>> +		list_del(&avf->bbuf->list);
+>> +
+>> +		/* Assign the vap to a beacon xmit slot. */
+>> +		if (avf->opmode == NL80211_IFTYPE_AP) {
+>> +			int slot;
+>> +
+>> +			avf->bslot = 0;
+>> +			for (slot = 0; slot<  ATH_BCBUF; slot++) {
+>> +				if (!sc->bslot[slot]) {
+>> +					avf->bslot = slot;
+>> +					break;
+>> +				}
+>> +			}
+>> +			BUG_ON(sc->bslot[avf->bslot] != NULL);
+>> +			sc->bslot[avf->bslot] = vif;
+>> +			sc->nbcnvifs++;
+>> +		}
+>> +	}
+>
+> hmm, do we really have to do that here? couldn't we assign the beacon slot
+> when the interface is added?
 
-If not, kick the card this way:
+Well, it might could be done with the interface is configured UP,
+at least.  I'm not too sure why this code was written as it is.
 
-echo 1 > /sys/kernel/debug/ieee80211/phy0/reset
+>> +	if (vif)
+>> +		avf = (void *)vif->drv_priv;
+>> +	else
+>> +		return;
+>
+> i think this is part of what breaks ad-hoc beacons... we also need to assign a
+> slot in adhoc mode...
 
-Now check to see if that hit the WPDMA TX/RX busy error.  If it did, reboot.  If not, assume that restarting the card fixed the RX queue (it always seems to), and we're good to go.
+Ok..we never tested ad-hoc.  Patches welcome if you get it working
+before I get a chance to try it :)
 
-For your amusement and horror, I've pasted in the bash script below.
+>> @@ -2056,6 +2175,15 @@ ath5k_intr(int irq, void *dev_id)
+>>
+>>   	do {
+>>   		ath5k_hw_get_isr(ah,&status);		/* NB: clears IRQ too */
+>> +		{
+>> +			static unsigned int irq_counter;
+>> +			if ((++irq_counter % 10000) == 9999) {
+>> +				ATH5K_WARN(sc, "status 0x%x/0x%x  dev_id: %p"
+>> +					   "  counter: %i  irq_counter: %i\n",
+>> +					   status, sc->imask, dev_id, counter,
+>> +					   irq_counter);
+>> +			}
+>> +		}
+>
+> why did you add this code?
+>
+> i see these warnings:
+> ath5k phy0: status 0x1/0x800814b5  dev_id: c7e30d20  counter: 1000
+> irq_counter: 9999
+> ath5k phy0: status 0x1/0x800814b5  dev_id: c7e30d20  counter: 1000
+> irq_counter: 19999
+> ath5k phy0: status 0x1/0x800814b5  dev_id: c7e30d20  counter: 1000
+> irq_counter: 29999
+> ath5k phy0: status 0x1/0x800814b5  dev_id: c7e30d20  counter: 1000
+> irq_counter: 39999
 
-At this point, if I could eliminate the WPDMA TX/RX busy error, I'd be able to eliminate all the reboots, and make a more sane system.  I'm still open to any and all suggestions on how to clear that condition!
+In .31 testing, we saw cases where the system basically live-locked
+trying to endlessly handle irqs.  This code was to help detect and debug
+this..but it can be removed from the final patch.
 
--Joshua
+>>   	spinlock_t		block;		/* protects beacon */
+>>   	struct tasklet_struct	beacontq;	/* beacon intr tasklet */
+>> -	struct ath5k_buf	*bbuf;		/* beacon buffer */
+>> +	struct list_head	bcbuf;		/* beacon buffer */
+>> +	struct ieee80211_vif	*bslot[ATH_BCBUF];
+>
+> it seems a bit pointless to use a linked list to keep the beacon buffers,
+> since they are more or less statically assigned to the slots / vifs anyways.
+> couldn't we pre-assign one buffer per slot (skb would be NULL if unused, or we
+> keep track of that some other way)?
 
-…hideous bash script...
+Sounds reasonable to me...not sure why this was written as it is.
 
-  ifconfig wlan0 down
+>
+> i will continue to test and i will look at the adhoc beacon problem tomorrow.
 
-  sleep 1
-  if ! hostapd -B /etc/hostapd.conf
-  then
-    echo "Problem starting Wi-Fi hardware.  Retrying..."
-    sleep 3
-    if ! hostapd -B /etc/hostapd.conf
-    then
-      echo -e "***\n*** Unable to initialize Wi-Fi hardware\n***\n***\n*** Restarting...\n***"
-      cleanreboot
-      sleep 60
-    fi
-  fi
-  sleep 1
+I'll work on addressing your comments and will post a new version when I
+make some progress.
 
-  mount -t debugfs none /sys/kernel/debug/
-  if [ -e /sys/kernel/debug/ieee80211/phy0/rt2800pci/ ]
-  then
-    echo "Testing Wi-Fi hardware..."
-    RETRY=1
-    while [ $RETRY -lt 20 ]
-    do
-      if [ `cat /sys/kernel/debug/ieee80211/phy0/rt2800pci/queue/queue | egrep -c '^14.0.24.24.0.0.0$'` -eq 0 ]
-      then
-        break
-      fi
-      echo -n '.'
-      sleep 1
-      RETRY=$((RETRY+1))
-    done
-    if [ $RETRY -eq 20 ]
-    then
-      echo "failed.  Resetting..."
-      echo 1 > /sys/kernel/debug/ieee80211/phy0/reset
-      sleep 1
-      if [ `dmesg | tail -n 30 | grep -c "rt2800_wait_wpdma_ready"` -gt 0 ]
-      then
-        echo -e "***\n*** Unable to reset Wi-Fi hardware\n***\n***\n*** Restarting...\n***"
-        cleanreboot
-        sleep 60
-      fi
-    else
-     echo "Passed!"
-    fi
-  fi
+Thanks,
+Ben
 
+-- 
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
