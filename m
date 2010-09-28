@@ -1,44 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from lo.gmane.org ([80.91.229.12]:40801 "EHLO lo.gmane.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756151Ab0IWTkH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 23 Sep 2010 15:40:07 -0400
-Received: from list by lo.gmane.org with local (Exim 4.69)
-	(envelope-from <glkwg-linux-wireless@m.gmane.org>)
-	id 1OyreF-0006So-Rb
-	for linux-wireless@vger.kernel.org; Thu, 23 Sep 2010 21:40:04 +0200
-Received: from 88-110-211-51.dynamic.dsl.as9105.com ([88.110.211.51])
-        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Thu, 23 Sep 2010 21:40:03 +0200
-Received: from ealdwulf by 88-110-211-51.dynamic.dsl.as9105.com with local (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Thu, 23 Sep 2010 21:40:03 +0200
-To: linux-wireless@vger.kernel.org
-From: Ealdwulf Wuffinga <ealdwulf@gmail.com>
-Subject: Re: [PATCH] b43/b43legacy - Credit Broadcom with enabling the development of the drivers
-Date: Thu, 23 Sep 2010 19:33:55 +0000 (UTC)
-Message-ID: <loom.20100923T212823-934@post.gmane.org>
-References: <1284921651.24835.11.camel@i7.infradead.org> <AANLkTinoe86gtsMJMJ-jitj3yHo35FBdyiqbPKuUAe_R@mail.gmail.com> <AANLkTi=sbh-y73+VuEWQz8ni47zaeBXCBRQGUH=0j_Zr@mail.gmail.com>
-Mime-Version: 1.0
+Received: from 128-177-27-249.ip.openhosting.com ([128.177.27.249]:38038 "EHLO
+	jmalinen.user.openhosting.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752811Ab0I1XEP (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 28 Sep 2010 19:04:15 -0400
+Date: Tue, 28 Sep 2010 16:02:11 -0700
+From: Jouni Malinen <j@w1.fi>
+To: "Luis R. Rodriguez" <lrodriguez@Atheros.com>
+Cc: linville@tuxdriver.com, stable@kernel.org,
+	linux-wireless@vger.kernel.org, Paul Stewart <pstew@google.com>,
+	Amod Bodas <amod.bodas@Atheros.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Vasanthakumar Thiagarajan <vasanth@Atheros.com>
+Subject: Re: [PATCH] mac80211: fix rate_control_send_low warnings for delbas
+Message-ID: <20100928230211.GA9844@jm.kir.nu>
+References: <20100928222945.GB10932@tux>
+MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20100928222945.GB10932@tux>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Luis R. Rodriguez <mcgrof@...> writes:
+On Tue, Sep 28, 2010 at 03:29:45PM -0700, Luis R. Rodriguez wrote:
 
-> The truth of the matter is current legislation simply is out of date,
-> the change that we need is a shift in liability down to the user for
-> modified supported drivers / firmware much like a person renting a
-> golf cart can run over someone or cause a huge accident with it.
+> Added support for cfg80211/mac80211 to cleanly roam between two BSSes
+> on an ESS by allowing the station to reassociate to an old AP and
+> only when that is done drop the old association. What we forgot to
+> take into consideration is that when we disassociate with the older
+> AP we may need to transmit frames to that AP and those frames may
+> actually be intended to go under a different channel and even sometimes
+> a completely separate band than the new APs.
 
-For Europeans, the relevant EU directive is currently under review:
-http://ec.europa.eu/enterprise/sectors/rtte/public-consultation/index_en.htm
-
-The public consultation is now closed, but people may want to make a note in
-their diaries to check what the proposed update looks like when it gets 
-presented to parliament.
-
-Ealdwulf.
+which frames are you talking about here? When reassociating to a new BSS
+in an ESS, there should be no need to transmit frames to the old AP
+anymore, i.e., we are never associated with more than one BSS (when
+talking about a single vif). We could just drop any potential TX frame
+to the old AP after the moment the new AP is marked associated.
 
 
+> + * @channel: the channel this sta belongs to
+
+>  struct ieee80211_sta {
+> +	struct ieee80211_channel *channel;
+>  	u32 supp_rates[IEEE80211_NUM_BANDS];
+>  	u8 addr[ETH_ALEN];
+>  	u16 aid;
+
+> diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
+
+> @@ -1213,6 +1217,12 @@ ieee80211_tx_prepare(struct ieee80211_sub_if_data *sdata,
+>  	if (!tx->sta)
+>  		tx->sta = sta_info_get(sdata, hdr->addr1);
+>  
+> +	if (tx->sta && tx->sta->sta.channel &&
+> +	    tx->sta->sta.channel->center_freq != tx->channel->center_freq) {
+> +		I802_DEBUG_INC(local->tx_handlers_drop_wrong_channel);
+> +		return TX_DROP;
+> +	}
+
+Could this drop some off-channel frames should we happen to have a STA
+entry for the destination? I'm not sure about all implications of this,
+but I could not convince myself that this would be safe for all P2P use
+cases (e.g., frame exchange on non-operating  channel with a device that
+happens to be in group with us).
+
+ 
+-- 
+Jouni Malinen                                            PGP id EFC895FA
