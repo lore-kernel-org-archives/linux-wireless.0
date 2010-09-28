@@ -1,99 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:58922 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751114Ab0I2HKU (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:36947 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755350Ab0I3M7W (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 29 Sep 2010 03:10:20 -0400
-Subject: Re: [RFC] mac80211: fix rx monitor filter refcounters
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Christian Lamparter <chunkeey@googlemail.com>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <201009281836.24529.chunkeey@googlemail.com>
-References: <201009281836.24529.chunkeey@googlemail.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Wed, 29 Sep 2010 09:10:18 +0200
-Message-ID: <1285744218.3756.10.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+	Thu, 30 Sep 2010 08:59:22 -0400
+Date: Tue, 28 Sep 2010 15:47:42 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Mohammed Shafi Shajakhan <mshajakhan@atheros.com>
+Cc: linux-wireless@vger.kernel.org, johannes@sipsolutions.net
+Subject: Re: [PATCH v2] ath9k : Fix for displaying the channel number
+Message-ID: <20100928194742.GB5307@tuxdriver.com>
+References: <1284739766-31231-1-git-send-email-mshajakhan@atheros.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1284739766-31231-1-git-send-email-mshajakhan@atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2010-09-28 at 18:36 +0200, Christian Lamparter wrote:
-> This patch fixes a refcounter & commit bug when monitor
-> rx flags are changed by:
-> 	iw dev moni set monitor [new flags]
+On Fri, Sep 17, 2010 at 09:39:26PM +0530, Mohammed Shafi Shajakhan wrote:
+> From: Mohammed Shafi Shajakhan <mshajakhan@atheros.com>
 > 
-> while interface is up.
+> In the ath9k debugging feature 'wiphy' the current channel used by the
+> station is incorrectly displayed.This is because the channels available
+> are sequentially mapped from numbers 0 to 37.This mapping cannot be
+> changed as the channel number is also used as an index for an array of
+> structures in struct ath9k_channel channels[38] .
+>           This fix solves the above problem by calculating the channel
+> number from center frequency.
 > 
-> ---
-> Is there a sane way to do that?
+> Signed-off-by: Mohammed Shafi Shajakhan <mshajakhan@atheros.com>
 
-Is this not sane enough? Looks OK to me, even if it adds a bit of code.
+What was this patch based against?  It doesn't seem to apply anymore...
 
-> -	if (sdata->vif.type == NL80211_IFTYPE_MONITOR && flags)
-> +	if (sdata->vif.type == NL80211_IFTYPE_MONITOR && flags) {
-> +		struct ieee80211_local *local = sdata->local;
-> +		u32 changed_flags = sdata->u.mntr_flags ^ *flags;
-> +
->  		sdata->u.mntr_flags = *flags;
-> +		if (changed_flags & MONITOR_FLAG_FCSFAIL) {
-> +			if (*flags & MONITOR_FLAG_FCSFAIL)
-> +				local->fif_fcsfail++;
-> +			else
-> +				local->fif_fcsfail--;
-> +		}
-> +		if (changed_flags & MONITOR_FLAG_PLCPFAIL) {
-> +			if (*flags & MONITOR_FLAG_PLCPFAIL)
-> +				local->fif_plcpfail++;
-> +			else
-> +				local->fif_plcpfail--;
-> +		}
-> +		if (changed_flags & MONITOR_FLAG_COOK_FRAMES) {
-> +			if (*flags & MONITOR_FLAG_COOK_FRAMES)
-> +				local->cooked_mntrs++;
-> +			else
-> +				local->cooked_mntrs--;
-> +		}
-> +		if (changed_flags & MONITOR_FLAG_OTHER_BSS) {
-> +			if (*flags & MONITOR_FLAG_OTHER_BSS)
-> +				local->fif_other_bss++;
-> +			else
-> +				local->fif_other_bss--;
-> +		}
-> +		if (changed_flags & MONITOR_FLAG_CONTROL) {
-> +			if (*flags & MONITOR_FLAG_CONTROL) {
-> +				local->fif_pspoll++;
-> +				local->fif_control++;
-> +			} else {
-> +				local->fif_pspoll--;
-> +				local->fif_control--;
-> +			}
-> +		}
-
-Although, come to think of it, one could do something like this:
-
-static void adjust_flags(local, flags, offset)
-{
-#define ADJUST(_flg, _fif)	do { 		\
-	if (flags & MONITOR_FLAG_#_flg)		\
-		local->fif_#_fif += offset;	\
-	} while (0)
-
-	ADJUST(FCSFAIL, fcsfail);
-	ADJUST(PLCPFAIL, plcpfail);
-	ADJUST(CONTROL, control);
-	ADJUST(CONTROL, pspoll);
-	ADJUST(OTHER_BSS, other_bss);
-#undef ADJUST
-}
-
-and then we can have four callers of this function.
-
-Two here:
-adjust_flags(local, sdata->u.mntr_flags, -1);
-adjust_flags(local, *flags, 1)
-sdata->u.mntr_flags = *flags;
-
-and the same two in ieee80211_do_open / ieee80211_do_stop.
-
-johannes
-
+John
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
