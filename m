@@ -1,41 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-px0-f174.google.com ([209.85.212.174]:54668 "EHLO
-	mail-px0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751437Ab0ILDBr (ORCPT
+Received: from mail.candelatech.com ([208.74.158.172]:38025 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754908Ab0I1TBS (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 11 Sep 2010 23:01:47 -0400
-Received: by pxi10 with SMTP id 10so1617584pxi.19
-        for <linux-wireless@vger.kernel.org>; Sat, 11 Sep 2010 20:01:47 -0700 (PDT)
-From: Steve deRosier <steve@cozybit.com>
-To: linux-wireless@vger.kernel.org, linville@tuxdriver.com,
-	johannes@sipsolutions.net
-Cc: Steve deRosier <steve@cozybit.com>
-Subject: [PATCH] mac80211: Fix dangling pointer in ieee80211_xmit
-Date: Sat, 11 Sep 2010 20:01:31 -0700
-Message-Id: <1284260491-35051-1-git-send-email-steve@cozybit.com>
+	Tue, 28 Sep 2010 15:01:18 -0400
+Message-ID: <4CA23B7A.7020602@candelatech.com>
+Date: Tue, 28 Sep 2010 12:01:14 -0700
+From: Ben Greear <greearb@candelatech.com>
+MIME-Version: 1.0
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: RFC:  Store premable and g-mode flags in ieee80211_tx_info
+References: <4CA224FF.3030103@candelatech.com>	 <1285696089.32597.0.camel@jlt3.sipsolutions.net>	 <4CA22C34.1000107@candelatech.com> <1285699998.32597.1.camel@jlt3.sipsolutions.net>
+In-Reply-To: <1285699998.32597.1.camel@jlt3.sipsolutions.net>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-hdr pointer is left dangling after call to ieee80211_skb_resize. This
-can cause guards around mesh path selection to fail.
+On 09/28/2010 11:53 AM, Johannes Berg wrote:
+> On Tue, 2010-09-28 at 10:56 -0700, Ben Greear wrote:
+>
+>> Anyway, the reason is that the driver may not know the VIF (and
+>> vif may be deleted) when calling the ieee80211_rts_duration, so it needs to be stored
+>> in the tx_info structure.
+>
+> But the vif pointer in the tx_info structure is valid during the entire
+> tx() call, why would you need to call rts_duration during TX status?
 
-Signed-off-by: Steve deRosier <steve@cozybit.com>
----
- net/mac80211/tx.c |    1 +
- 1 files changed, 1 insertions(+), 0 deletions(-)
+Err, I guess you are right.  I was thinking it might retransmit sometime
+later, but at least ath5k doesn't appear to do this.
 
-diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
-index ccf3737..e1733dc 100644
---- a/net/mac80211/tx.c
-+++ b/net/mac80211/tx.c
-@@ -1609,6 +1609,7 @@ static void ieee80211_xmit(struct ieee80211_sub_if_data *sdata,
- 		return;
- 	}
- 
-+	hdr = (struct ieee80211_hdr *) skb->data;
- 	info->control.vif = &sdata->vif;
- 
- 	if (ieee80211_vif_is_mesh(&sdata->vif) &&
+I'll remove that part of the patch unless someone thinks of a reason
+to keep it.
+
+Thanks,
+Ben
+
+>
+> johannes
+
+
 -- 
-1.7.0
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
 
