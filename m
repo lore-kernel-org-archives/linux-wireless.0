@@ -1,65 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.perches.com ([173.55.12.10]:1346 "EHLO mail.perches.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754644Ab0IEBxH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 4 Sep 2010 21:53:07 -0400
-From: Joe Perches <joe@perches.com>
-To: Jiri Kosina <trivial@kernel.org>
-Cc: Reinette Chatre <reinette.chatre@intel.com>,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>,
-	Intel Linux Wireless <ilw@linux.intel.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: [PATCH 03/13] drivers/net/wireless/iwlwifi: Remove unnecessary casts of private_data
-Date: Sat,  4 Sep 2010 18:52:44 -0700
-Message-Id: <0edcdb63c6c57d0cf810e8c637cf7e8163b80962.1283650107.git.joe@perches.com>
-In-Reply-To: <cover.1283650107.git.joe@perches.com>
-References: <cover.1283650107.git.joe@perches.com>
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:49844 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753724Ab0I1Pon (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 28 Sep 2010 11:44:43 -0400
+Date: Tue, 28 Sep 2010 11:36:09 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Steve deRosier <steve@cozybit.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org, javier@cozybit.com
+Subject: Re: [PATCH 5/9] libertas_tf: Moved firmware loading to probe in
+ order to fetch MAC address
+Message-ID: <20100928153609.GJ2440@tuxdriver.com>
+References: <1283988329-44549-1-git-send-email-steve@cozybit.com>
+ <1283988329-44549-6-git-send-email-steve@cozybit.com>
+ <e23a1b600a18f179fa72d2cadf724d17@localhost>
+ <AANLkTi=r_RdEG-2=gzV7uFNJt1Nynp3qNC-38SQkzhO2@mail.gmail.com>
+ <c9d7238e26d9e276d9c9ef9792f7c7f8@localhost>
+ <AANLkTi=-JhwMmQK5ivX-FpSOV5_Pc3RfoswkFLFdGoFo@mail.gmail.com>
+ <20100928152457.GH2440@tuxdriver.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20100928152457.GH2440@tuxdriver.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Joe Perches <joe@perches.com>
----
- drivers/net/wireless/iwlwifi/iwl-agn-debugfs.c |    2 +-
- drivers/net/wireless/iwlwifi/iwl-debugfs.c     |    4 ++--
- 2 files changed, 3 insertions(+), 3 deletions(-)
+On Tue, Sep 28, 2010 at 11:24:57AM -0400, John W. Linville wrote:
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-debugfs.c b/drivers/net/wireless/iwlwifi/iwl-agn-debugfs.c
-index d706b8a..215d29e 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn-debugfs.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn-debugfs.c
-@@ -929,7 +929,7 @@ ssize_t iwl_ucode_bt_stats_read(struct file *file,
- 				char __user *user_buf,
- 				size_t count, loff_t *ppos)
- {
--	struct iwl_priv *priv = (struct iwl_priv *)file->private_data;
-+	struct iwl_priv *priv = file->private_data;
- 	int pos = 0;
- 	char *buf;
- 	int bufsz = (sizeof(struct statistics_bt_activity) * 24) + 200;
-diff --git a/drivers/net/wireless/iwlwifi/iwl-debugfs.c b/drivers/net/wireless/iwlwifi/iwl-debugfs.c
-index 0ee8f51..85e5ad4 100644
---- a/drivers/net/wireless/iwlwifi/iwl-debugfs.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-debugfs.c
-@@ -1528,7 +1528,7 @@ static ssize_t iwl_dbgfs_ucode_bt_stats_read(struct file *file,
- 					char __user *user_buf,
- 					size_t count, loff_t *ppos)
- {
--	struct iwl_priv *priv = (struct iwl_priv *)file->private_data;
-+	struct iwl_priv *priv = file->private_data;
- 
- 	return priv->cfg->ops->lib->debugfs_ops.bt_stats_read(file,
- 			user_buf, count, ppos);
-@@ -1566,7 +1566,7 @@ static ssize_t iwl_dbgfs_bt_traffic_read(struct file *file,
- 					char __user *user_buf,
- 					size_t count, loff_t *ppos) {
- 
--	struct iwl_priv *priv = (struct iwl_priv *)file->private_data;
-+	struct iwl_priv *priv = file->private_data;
- 	int pos = 0;
- 	char buf[200];
- 	const size_t bufsz = sizeof(buf);
+> > I think my mac80211 patch "mac80211: Fix dangling pointer in
+> > ieee80211_xmit" stands 100% alone and fixes a clear bug.  I don't see
+> > any need to delay that one.
+> 
+> I missed this before -- I'll take that patch on its own.
+
+Actually, looks like I already did... :-)
+
 -- 
-1.7.2.19.g9a302
-
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
