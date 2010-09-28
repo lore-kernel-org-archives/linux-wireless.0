@@ -1,49 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:51079 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751405Ab0ICNMH (ORCPT
+Received: from mail.candelatech.com ([208.74.158.172]:36330 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752612Ab0I1R4I (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 3 Sep 2010 09:12:07 -0400
-Subject: Re: [PATCH 0/13] iwlwifi: rewrite iwl-scan.c to avoid race
- conditions
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Stanislaw Gruszka <sgruszka@redhat.com>
-Cc: Wey-Yi Guy <wey-yi.w.guy@intel.com>,
-	Reinette Chatre <reinette.chatre@intel.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <20100903125528.GA2629@redhat.com>
-References: <1283515056-11523-1-git-send-email-sgruszka@redhat.com>
-	 <1283516518.4700.5.camel@jlt3.sipsolutions.net>
-	 <20100903125528.GA2629@redhat.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Fri, 03 Sep 2010 15:11:54 +0200
-Message-ID: <1283519514.4700.6.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+	Tue, 28 Sep 2010 13:56:08 -0400
+Message-ID: <4CA22C34.1000107@candelatech.com>
+Date: Tue, 28 Sep 2010 10:56:04 -0700
+From: Ben Greear <greearb@candelatech.com>
+MIME-Version: 1.0
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: RFC:  Store premable and g-mode flags in ieee80211_tx_info
+References: <4CA224FF.3030103@candelatech.com> <1285696089.32597.0.camel@jlt3.sipsolutions.net>
+In-Reply-To: <1285696089.32597.0.camel@jlt3.sipsolutions.net>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2010-09-03 at 14:55 +0200, Stanislaw Gruszka wrote:
-> On Fri, Sep 03, 2010 at 02:21:58PM +0200, Johannes Berg wrote:
-> > On Fri, 2010-09-03 at 13:57 +0200, Stanislaw Gruszka wrote:
-> > 
-> > [lots of patches]
-> > 
-> > Looks OK to me, apart from what I've pointed out,
-> 
-> All concerns are fixed by later patches.
+On 09/28/2010 10:48 AM, Johannes Berg wrote:
+> On Tue, 2010-09-28 at 10:25 -0700, Ben Greear wrote:
+>> This way, you don't need to pass vif to ieee80211_rts_duration.
+>
+>
+>> --- a/net/mac80211/tx.c
+>> +++ b/net/mac80211/tx.c
+>> @@ -1264,6 +1264,14 @@ ieee80211_tx_prepare(struct ieee80211_sub_if_data *sdata,
+>>           }
+>>           info->flags |= IEEE80211_TX_CTL_FIRST_FRAGMENT;
+>>
+>> +       /* Set this here so drivers don't need to reference vif
+>> +        * when calling ieee80211_rts_duration
+>> +        */
+>> +       if (sdata->vif.bss_conf.use_short_preamble)
+>> +               tx.flags |= IEEE80211_TX_SHORT_PREABLE;
+>> +       if (sdata->flags&  IEEE80211_SDATA_OPERATING_GMODE)
+>> +               tx.flags |= IEEE80211_TX_GMODE
+>
+> Don't understand -- tx.flags? Drivers don't reference that? How would a
+> driver use this?
 
-Yeah, good point.
+Sorry, it should be info->flags,
+and missing a semi-colon...I guess I forgot to compile :P
 
-> > and I hope you've
-> > tested it :-) I'm not an expert on the scanning code, to be honest.
-> 
-> I used below script on iwl3945. I plan to make some more testing, on
-> iwlagn and with different scenarios. But patches improve things, it was
-> easy to reproduce problem with script on iwl3945, with patches problem
-> seems to gone.
+Anyway, the reason is that the driver may not know the VIF (and
+vif may be deleted) when calling the ieee80211_rts_duration, so it needs to be stored
+in the tx_info structure.
 
-Nice :-) AGN testing would be great.
+Thanks,
+Ben
 
-johannes
+>
+> johannes
+
+
+-- 
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
 
