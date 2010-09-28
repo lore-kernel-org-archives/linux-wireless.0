@@ -1,147 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:34276 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755026Ab0IMMqc (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 13 Sep 2010 08:46:32 -0400
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: Johannes Berg <johannes@sipsolutions.net>,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>,
-	Reinette Chatre <reinette.chatre@intel.com>,
-	"John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org,
-	Stanislaw Gruszka <sgruszka@redhat.com>
-Subject: [PATCH 07/14] iwlwifi: rewrite scan completion
-Date: Mon, 13 Sep 2010 14:46:38 +0200
-Message-Id: <1284382005-3246-8-git-send-email-sgruszka@redhat.com>
-In-Reply-To: <1284382005-3246-1-git-send-email-sgruszka@redhat.com>
-References: <1284382005-3246-1-git-send-email-sgruszka@redhat.com>
+Received: from mail-pz0-f46.google.com ([209.85.210.46]:60563 "EHLO
+	mail-pz0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754610Ab0I1NlN (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 28 Sep 2010 09:41:13 -0400
+Message-ID: <4CA1F082.2010900@gmail.com>
+Date: Tue, 28 Sep 2010 06:41:22 -0700
+From: "Justin P. Mattock" <justinmattock@gmail.com>
+MIME-Version: 1.0
+To: Finn Thain <fthain@telegraphics.com.au>
+CC: trivial@kernel.org, linux-kernel@vger.kernel.org,
+	linux-wireless@vger.kernel.org, linux-usb@vger.kernel.org,
+	linux-scsi@vger.kernel.org, linux-fbdev@vger.kernel.org,
+	alsa-devel@alsa-project.org, dri-devel@lists.freedesktop.org,
+	linux-ide@vger.kernel.org,
+	"Maciej W. Rozycki" <macro@linux-mips.org>,
+	Geert Uytterhoeven <geert@linux-m68k.org>,
+	Randy Dunlap <rdunlap@xenotime.net>,
+	Matt Turner <mattst88@gmail.com>,
+	Dimitry Torokhov <dmitry.torokhov@gmail.com>,
+	Mike Frysinger <vapier.adi@gmail.com>
+Subject: Re: [RFC v5]update broken web addresses in the kernel.
+References: <1285647599-14719-1-git-send-email-justinmattock@gmail.com> <alpine.OSX.2.00.1009281613260.276@localhost> <4CA193B6.8020503@gmail.com> <alpine.OSX.2.00.1009281713410.276@localhost>
+In-Reply-To: <alpine.OSX.2.00.1009281713410.276@localhost>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Assure (partially) we call ieee80211_scan_completed() only once when
-scan was requested from mac80211.
+On 09/28/2010 12:35 AM, Finn Thain wrote:
+>
+> On Tue, 28 Sep 2010, Justin P. Mattock wrote:
+>
+>> o.k... I'll make the changes to the arch patch, and combine the two, and
+>> send it to jiri..
+>
+> Why?
+>
+> My advice is don't do it unless you want to waste reviewers' time.
+>
+>> as for the names and signed offs is what is below fine or do I need to
+>> change some of them?
+>
+> If you combine patch 1 and patch 2 and submit that as patch 3, you will
+> likely have to CC patch 3 to everyone to whom you sent patch 1 plus
+> everyone to whom you sent patch 2. You must also change any "acked-by" to
+> "Cc", since patch 3 is new.
+>
+> Keep the same CC list since Jiri is already on it ("trivial@kernel.org").
+>
+> Finn
+>
 
-Code path that first clear STATUS_SCANNING bit is responsible to call
-ieee80211_scan_completed(). Before the call, we check if mac80211
-really request the scan.
+alright.. so it will be two patches then..(not the best at the CC etc.. 
+thing) cool... and thanks again for reviewing this for me..(back 
+breaking work, but somebodies _gots_ to do it..)
 
-Still persist some cases when we behave wrong, that will be addressed
-in the next patches.
-
-Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
-Acked-by: Wey-Yi W Guy <wey-yi.w.guy@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-scan.c |   65 +++++++++++++++++++------------
- 1 files changed, 40 insertions(+), 25 deletions(-)
-
-diff --git a/drivers/net/wireless/iwlwifi/iwl-scan.c b/drivers/net/wireless/iwlwifi/iwl-scan.c
-index 6d02f41..e65a98d 100644
---- a/drivers/net/wireless/iwlwifi/iwl-scan.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-scan.c
-@@ -93,6 +93,19 @@ static int iwl_send_scan_abort(struct iwl_priv *priv)
- 	return ret;
- }
- 
-+static void iwl_complete_scan(struct iwl_priv *priv, bool aborted)
-+{
-+	/* check if scan was requested from mac80211 */
-+	if (priv->scan_request) {
-+		IWL_DEBUG_SCAN(priv, "Complete scan in mac80211\n");
-+		ieee80211_scan_completed(priv->hw, aborted);
-+	}
-+
-+	priv->is_internal_short_scan = false;
-+	priv->scan_vif = NULL;
-+	priv->scan_request = NULL;
-+}
-+
- static void iwl_do_scan_abort(struct iwl_priv *priv)
- {
- 	int ret;
-@@ -115,7 +128,7 @@ static void iwl_do_scan_abort(struct iwl_priv *priv)
- 		clear_bit(STATUS_SCANNING, &priv->status);
- 		clear_bit(STATUS_SCAN_HW, &priv->status);
- 		clear_bit(STATUS_SCAN_ABORTING, &priv->status);
--		ieee80211_scan_completed(priv->hw, true);
-+		iwl_complete_scan(priv, true);
- 	} else
- 		IWL_DEBUG_SCAN(priv, "Sucessfully send scan abort\n");
- }
-@@ -545,10 +558,11 @@ static void iwl_bg_scan_completed(struct work_struct *work)
- {
- 	struct iwl_priv *priv =
- 	    container_of(work, struct iwl_priv, scan_completed);
--	bool internal = false, aborted;
-+	bool aborted;
- 	struct iwl_rxon_context *ctx;
- 
--	IWL_DEBUG_SCAN(priv, "SCAN complete scan\n");
-+	IWL_DEBUG_INFO(priv, "Completed %sscan.\n",
-+		       priv->is_internal_short_scan ? "internal short " : "");
- 
- 	cancel_delayed_work(&priv->scan_check);
- 
-@@ -558,37 +572,38 @@ static void iwl_bg_scan_completed(struct work_struct *work)
- 	if (aborted)
- 		IWL_DEBUG_INFO(priv, "Aborted scan completed.\n");
- 
--	IWL_DEBUG_INFO(priv, "Setting scan to off\n");
--
--	clear_bit(STATUS_SCANNING, &priv->status);
--
--	if (priv->is_internal_short_scan) {
--		priv->is_internal_short_scan = false;
--		IWL_DEBUG_SCAN(priv, "internal short scan completed\n");
--		internal = true;
--	} else if (priv->scan_request) {
--		priv->scan_request = NULL;
--		priv->scan_vif = NULL;
--		ieee80211_scan_completed(priv->hw, aborted);
-+	if (!test_and_clear_bit(STATUS_SCANNING, &priv->status)) {
-+		IWL_DEBUG_INFO(priv, "Scan already completed.\n");
-+		goto out;
- 	}
- 
--	if (test_bit(STATUS_EXIT_PENDING, &priv->status))
--		goto out;
-+	if (priv->is_internal_short_scan && !aborted) {
-+		int err;
- 
--	if (internal && priv->scan_request) {
--		int err = iwl_scan_initiate(priv, priv->scan_vif, false,
--					priv->scan_request->channels[0]->band);
-+		/* Check if mac80211 requested scan during our internal scan */
-+		if (priv->scan_request == NULL)
-+			goto out_complete;
- 
-+		/* If so request a new scan */
-+		err = iwl_scan_initiate(priv, priv->scan_vif, false,
-+					priv->scan_request->channels[0]->band);
- 		if (err) {
- 			IWL_DEBUG_SCAN(priv,
- 				"failed to initiate pending scan: %d\n", err);
--			priv->scan_request = NULL;
--			priv->scan_vif = NULL;
--			ieee80211_scan_completed(priv->hw, true);
--		} else
--			goto out;
-+			aborted = true;
-+			goto out_complete;
-+		}
-+
-+		goto out;
- 	}
- 
-+out_complete:
-+	iwl_complete_scan(priv, aborted);
-+
-+	/* Can we still talk to firmware ? */
-+	if (!iwl_is_ready_rf(priv))
-+		goto out;
-+
- 	/* Since setting the TXPOWER may have been deferred while
- 	 * performing the scan, fire one off */
- 	iwl_set_tx_power(priv, priv->tx_power_user_lmt, true);
--- 
-1.7.1
-
+Justin P. Mattock
