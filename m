@@ -1,35 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from external1.orbit-lab.org ([128.6.192.131]:49377 "HELO
-	external1.orbit-lab.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1751960Ab0IDTCl (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 4 Sep 2010 15:02:41 -0400
-Received: from repository3.orbit-lab.org (repository3.orbit-lab.org [10.50.0.41])
-	by external1.orbit-lab.org (Postfix) with ESMTP id 555E8418D8
-	for <linux-wireless@vger.kernel.org>; Sat,  4 Sep 2010 15:01:32 -0400 (EDT)
-Subject: Compat-wireless release for 2010-09-04 is baked
-To: <linux-wireless@vger.kernel.org>
-Message-Id: <20100904190239.CFF9941134@repository3.orbit-lab.org>
-Date: Sat,  4 Sep 2010 15:02:39 -0400 (EDT)
-From: compat@orbit-lab.org (Compat-wireless cronjob account)
+Received: from mail.atheros.com ([12.19.149.2]:25449 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751368Ab0I1LAI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 28 Sep 2010 07:00:08 -0400
+Received: from mail.atheros.com ([10.10.20.108])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Tue, 28 Sep 2010 04:00:00 -0700
+Message-ID: <4CA1CAB3.4070303@atheros.com>
+Date: Tue, 28 Sep 2010 16:30:03 +0530
+From: Mohammed Shafi <mshajakhan@atheros.com>
+MIME-Version: 1.0
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [RFC] mac80211: sets basic rate set parameter for IBSS creator
+References: <1285662586-31646-1-git-send-email-mshajakhan@atheros.com>	 <1285664569.3885.7.camel@jlt3.sipsolutions.net>	 <4CA1B5F3.5090801@atheros.com> <1285670865.3885.8.camel@jlt3.sipsolutions.net>
+In-Reply-To: <1285670865.3885.8.camel@jlt3.sipsolutions.net>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Tuesday 28 September 2010 04:17 PM, Johannes Berg wrote:
+> On Tue, 2010-09-28 at 15:01 +0530, Mohammed Shafi wrote:
+>
+>    
+>>>> +	if (ifibss->basic_rates == 0)
+>>>> +		ifibss->basic_rates = ieee80211_mandatory_rates(local,
+>>>> +					local->hw.conf.channel->band);
+>>>>
+>>>>          
+>>> Shouldn't cfg80211 do this?
+>>>        
+>    
+>>                         Thank you for your suggestion,just found out ,i
+>> think  its already there to configure basic rates (if the user had not
+>> expicitly specified the basic rates in user space) in the
+>> nl80211_join_ibss(nl80211.c) , but the basic rates does not seems to get
+>> set there.I had checked its status in mac80211 in function
+>> ieee80211_ibss_join function , its still zero and I thought of calling
+>> it there itself , but the basic rate was not properly set for 2Ghz, so
+>> called it here and  I had tested it ,and everything working fine.
+>> Pleas correct me if I am wrong .
+>>      
+> Well, I still think cfg80211 should do this, and it looks like it will
+> except when you use iwconfig. So are you using iw or iwconfig? If
+> iwconfig latter, you need to fix the wext code in cfg80211, if the
+> former you need to figure out where the information gets lost.
+>
+> johannes
+>    
+Sorry , I was using iwconfig and thanks for fixing it.
 
-compat-wireless code metrics
+with regards ,
 
-    591075 - Total upstream lines of code being pulled
-      1718 - backport code changes
-      1477 - backport code additions
-       241 - backport code deletions
-      6082 - backport from compat module
-      7800 - total backport code
-    1.3196 - % of code consists of backport work
-      1218 - Crap changes not yet posted
-      1179 - Crap additions not yet posted
-        39 - Crap deletions not yet posted
-    0.2061 - % of crap code
+shafi
 
-Base tree: linux-next.git
-Base tree version: next-20100903
-compat-wireless release: compat-wireless--2010-09-02
