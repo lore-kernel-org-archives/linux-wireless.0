@@ -1,31 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.deathmatch.net ([72.66.92.28]:3716 "EHLO
-	mail.deathmatch.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753493Ab0IKRfr (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:44357 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753807Ab0I1JCw (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 11 Sep 2010 13:35:47 -0400
-Date: Sat, 11 Sep 2010 13:31:42 -0400
-From: bob@bobcopeland.com
-To: Bruno Randolf <br1@einfach.org>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	ath5k-devel@lists.ath5k.org, lrodriguez@atheros.com,
-	mickflemm@gmail.com
-Subject: Re: [PATCH 0/8] ath: Move key cache functions to ath common
-Message-ID: <20100911173142.GI20385@hash.localnet>
-References: <20100908070427.11255.17659.stgit@tt-desk>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20100908070427.11255.17659.stgit@tt-desk>
+	Tue, 28 Sep 2010 05:02:52 -0400
+Subject: Re: [RFC] mac80211: sets basic rate set parameter for IBSS creator
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Mohammed Shafi Shajakhan <mshajakhan@atheros.com>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <1285662586-31646-1-git-send-email-mshajakhan@atheros.com>
+References: <1285662586-31646-1-git-send-email-mshajakhan@atheros.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Tue, 28 Sep 2010 11:02:49 +0200
+Message-ID: <1285664569.3885.7.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Sep 08, 2010 at 04:04:28PM +0900, Bruno Randolf wrote:
-> The following series moves the key cache management functions from ath9k to
-> the common ath/key.c so we can also use them from ath5k. Both ath5k and
-> ath9k are changed to use the common key functions.
+On Tue, 2010-09-28 at 13:59 +0530, Mohammed Shafi Shajakhan wrote:
+> From: Mohammed Shafi Shajakhan <mshajakhan@atheros.com>
+> 
+> This fix sets the basic rate set parameter for IBSS creator when the
+> basic rates are not explicitly specified in the user space.
+> 
+> Signed-off-by: Mohammed Shafi Shajakhan <mshajakhan@atheros.com>
+> ---
+>  net/mac80211/ibss.c |    3 +++
+>  1 files changed, 3 insertions(+), 0 deletions(-)
+> 
+> diff --git a/net/mac80211/ibss.c b/net/mac80211/ibss.c
+> index 1a3aae5..e117155 100644
+> --- a/net/mac80211/ibss.c
+> +++ b/net/mac80211/ibss.c
+> @@ -541,6 +541,9 @@ static void ieee80211_sta_create_ibss(struct ieee80211_sub_if_data *sdata)
+>  		capability |= WLAN_CAPABILITY_PRIVACY;
+>  	else
+>  		sdata->drop_unencrypted = 0;
+> +	if (ifibss->basic_rates == 0)
+> +		ifibss->basic_rates = ieee80211_mandatory_rates(local,
+> +					local->hw.conf.channel->band);
 
-Nice, I always wanted us to do this :) ... looks good.
+Shouldn't cfg80211 do this?
 
--- 
-Bob Copeland %% www.bobcopeland.com
+johannes
 
