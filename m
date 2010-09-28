@@ -1,311 +1,364 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:37109 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753548Ab0IJTsn (ORCPT
+Received: from mail-pz0-f46.google.com ([209.85.210.46]:51175 "EHLO
+	mail-pz0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758011Ab0I1DXM (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 10 Sep 2010 15:48:43 -0400
-Message-ID: <4C8A8B96.5050409@candelatech.com>
-Date: Fri, 10 Sep 2010 12:48:38 -0700
-From: Ben Greear <greearb@candelatech.com>
+	Mon, 27 Sep 2010 23:23:12 -0400
+Message-ID: <4CA15FA6.3040702@gmail.com>
+Date: Mon, 27 Sep 2010 20:23:18 -0700
+From: "Justin P. Mattock" <justinmattock@gmail.com>
 MIME-Version: 1.0
-To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"ath9k-devel@lists.ath9k.org" <ath9k-devel@venema.h4ckr.net>
-Subject: RFC:  v2: Support multiple STA on same AP with ath9k
-Content-Type: multipart/mixed;
- boundary="------------060902050409070408060604"
+To: Finn Thain <fthain@telegraphics.com.au>
+CC: trivial@kernel.org, linux-kernel@vger.kernel.org,
+	linux-wireless@vger.kernel.org, linux-usb@vger.kernel.org,
+	linux-scsi@vger.kernel.org, linux-fbdev@vger.kernel.org,
+	alsa-devel@alsa-project.org, dri-devel@lists.freedesktop.org,
+	linux-ide@vger.kernel.org,
+	"Maciej W. Rozycki" <macro@linux-mips.org>,
+	Geert Uytterhoeven <geert@linux-m68k.org>,
+	Randy Dunlap <rdunlap@xenotime.net>,
+	Matt Turner <mattst88@gmail.com>,
+	Dimitry Torokhov <dmitry.torokhov@gmail.com>,
+	Mike Frysinger <vapier.adi@gmail.com>
+Subject: Re: [RFC v4]update broken web addresses in the kernel.
+References: <1285525875-9920-1-git-send-email-justinmattock@gmail.com> <alpine.OSX.2.00.1009271114330.275@localhost>
+In-Reply-To: <alpine.OSX.2.00.1009271114330.275@localhost>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is a multi-part message in MIME format.
---------------060902050409070408060604
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+On 09/27/2010 07:59 PM, Finn Thain wrote:
+>
+> On Sun, 26 Sep 2010, Justin P. Mattock wrote:
+>
+>> diff --git a/drivers/char/apm-emulation.c b/drivers/char/apm-emulation.c
+>> index 033e150..d7d9a78 100644
+>> --- a/drivers/char/apm-emulation.c
+>> +++ b/drivers/char/apm-emulation.c
+>> @@ -8,7 +8,7 @@
+>>    *   (APM) BIOS Interface Specification, Revision 1.2, February 1996.
+>>    *
+>>    * [This document is available from Microsoft at:
+>> - *    http://www.microsoft.com/hwdev/busbios/amp_12.htm]
+>> + *    http://www.microsoft.com/whdc/archive/amp_12.mspx]
+>>    */
+>
+>
+> Can we lose the brackets?
+>
+>
+>>   #include<linux/module.h>
+>>   #include<linux/poll.h>
+>
+>> diff --git a/drivers/firmware/Kconfig b/drivers/firmware/Kconfig
+>> index 280c9b5..b2bd5fb 100644
+>> --- a/drivers/firmware/Kconfig
+>> +++ b/drivers/firmware/Kconfig
+>> @@ -73,8 +73,8 @@ config EFI_PCDP
+>>   	  on how the driver discovers devices.
+>>
+>>   	  You must also enable the appropriate drivers (serial, VGA, etc.)
+>> -
+>> -	  See<http://www.dig64.org/specifications/DIG64_HCDPv20_042804.pdf>
+>> +	  See [DIG64_HCDPv20_042804.pdf] available from
+>
+>
+> What are the square brackets for?
+>
+>
+>> +	<http://www.dig64.org/specifications/>
+>>
+>>   config DELL_RBU
+>>   	tristate "BIOS update support for DELL systems via sysfs"
+>
+>> diff --git a/drivers/firmware/pcdp.h b/drivers/firmware/pcdp.h
+>> index ce910d6..777d928 100644
+>> --- a/drivers/firmware/pcdp.h
+>> +++ b/drivers/firmware/pcdp.h
+>> @@ -1,8 +1,8 @@
+>>   /*
+>>    * Definitions for PCDP-defined console devices
+>>    *
+>> - * v1.0a: http://www.dig64.org/specifications/DIG64_HCDPv10a_01.pdf
+>> - * v2.0:  http://www.dig64.org/specifications/DIG64_PCDPv20.pdf
+>> + * For [v1.0a: DIG64_HCDPv10a_01.pdf] [v2.0: DIG64_PCDPv20.pdf]
+>
+>
+> For DIG64_HCDPv10a_01.pdf and DIG64_PCDPv20.pdf (v10.a and v2.0 resp.),
+>
+>
+>> + * Please see<http://www.dig64.org/specifications/>
+>
+>
+> please see<http://www.dig64.org/specifications/>
+>
+>
+>>    *
+>>    * (c) Copyright 2002, 2004 Hewlett-Packard Development Company, L.P.
+>>    *	Khalid Aziz<khalid.aziz@hp.com>
+>> diff --git a/drivers/gpu/drm/README.drm b/drivers/gpu/drm/README.drm
+>> index b5b3327..bf29068 100644
+>> --- a/drivers/gpu/drm/README.drm
+>> +++ b/drivers/gpu/drm/README.drm
+>> @@ -28,7 +28,7 @@ ways:
+>>   Documentation on the DRI is available from:
+>>       http://dri.freedesktop.org/wiki/Documentation
+>>       http://sourceforge.net/project/showfiles.php?group_id=387
+>> -    http://dri.sourceforge.net/doc/
+>> +    http://dri.sourceforge.net/doc/DRIuserguide.html
+>
+>
+> http://dri.freedesktop.org/wiki/Documentation
+>
+>
+>>
+>>   For specific information about kernel-level support, see:
+>>
+>
+>> diff --git a/drivers/input/mouse/touchkit_ps2.c b/drivers/input/mouse/touchkit_ps2.c
+>> index 88121c5..e74753e 100644
+>> --- a/drivers/input/mouse/touchkit_ps2.c
+>> +++ b/drivers/input/mouse/touchkit_ps2.c
+>> @@ -22,7 +22,7 @@
+>>    * Based upon touchkitusb.c
+>>    *
+>>    * Vendor documentation is available in support section of:
+>> - * http://www.egalax.com.tw/
+>> + * http://home.eeti.com.tw/web20/drivers/Software%20Programming%20Guide_v2.0.pdf
+>
+>
+> The comment text needs to be fixed also.
+>
+>
+>>    */
+>>
+>>   #include<linux/kernel.h>
+>
+>> diff --git a/drivers/media/dvb/frontends/mt312.c b/drivers/media/dvb/frontends/mt312.c
+>> index 472907d..08023f1 100644
+>> --- a/drivers/media/dvb/frontends/mt312.c
+>> +++ b/drivers/media/dvb/frontends/mt312.c
+>> @@ -20,8 +20,9 @@
+>>       Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+>>
+>>       References:
+>> -    http://products.zarlink.com/product_profiles/MT312.htm
+>> -    http://products.zarlink.com/product_profiles/SL1935.htm
+>> +    http://www.zarlink.com/zarlink/hs/71.htm
+>> +    http://www.chipcatalog.com/Zarlink/MT312.htm
+>> +    http://www.chipcatalog.com/Zarlink/SL1935.htm
+>
+>
+> There's no need for links to chipcatalog.com. As I said in the previous
+> review, we have search engines for finding datasheets. Besides, the old
+> links are in the web archive (complete with PDFs) so there's no need to
+> remove them.
+>
+>
+>>   */
+>>
+>>   #include<linux/delay.h>
+>> diff --git a/drivers/media/dvb/frontends/mt312.h b/drivers/media/dvb/frontends/mt312.h
+>> index 29e3bb5..6d32e3f 100644
+>> --- a/drivers/media/dvb/frontends/mt312.h
+>> +++ b/drivers/media/dvb/frontends/mt312.h
+>> @@ -19,8 +19,9 @@
+>>       Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+>>
+>>       References:
+>> -    http://products.zarlink.com/product_profiles/MT312.htm
+>> -    http://products.zarlink.com/product_profiles/SL1935.htm
+>> +    http://www.zarlink.com/zarlink/hs/71.htm
+>> +    http://www.chipcatalog.com/Zarlink/MT312.htm
+>> +    http://www.chipcatalog.com/Zarlink/SL1935.htm
+>
+>
+> Same here.
+>
+>
+>>   */
+>>
+>>   #ifndef MT312_H
+>
+>> --- a/drivers/media/video/gspca/gspca.c
+>> +++ b/drivers/media/video/gspca/gspca.c
+>> @@ -2338,7 +2338,7 @@ EXPORT_SYMBOL(gspca_resume);
+>>
+>>   /* auto gain and exposure algorithm based on the knee algorithm described here:
+>>      http://ytse.tricolour.net/docs/LowLightOptimization.html
+>> -
+>> +   http://81.209.78.62:8080/docs/LowLightOptimization.html
+>
+>
+> This is in the web archive.
+>
+>
+>>      Returns 0 if no changes were made, 1 if the gain and or exposure settings
+>>      where changed. */
+>>   int gspca_auto_gain_n_exposure(struct gspca_dev *gspca_dev, int avg_lum,
+>
+>> index 701d942..142efd2 100644
+>> --- a/drivers/mtd/maps/Kconfig
+>> +++ b/drivers/mtd/maps/Kconfig
+>> @@ -256,8 +256,7 @@ config MTD_DILNETPC
+>>   	depends on X86&&  MTD_CONCAT&&  MTD_PARTITIONS&&  MTD_CFI_INTELEXT&&  BROKEN
+>>   	help
+>>   	  MTD map driver for SSV DIL/Net PC Boards "DNP" and "ADNP".
+>> -	  For details, see<http://www.ssv-embedded.de/ssv/pc104/p169.htm>
+>> - 	  and<http://www.ssv-embedded.de/ssv/pc104/p170.htm>
+>> +	  For details, see<http://www.dilnetpc.com/>
+>
+>
+> This is in the web archive. This removes information.
+>
+>
+>>
+>>   config MTD_DILNETPC_BOOTSIZE
+>>   	hex "Size of DIL/Net PC flash boot partition"
+>
+>> diff --git a/drivers/mtd/maps/dilnetpc.c b/drivers/mtd/maps/dilnetpc.c
+>> index 0713e3a..114899b 100644
+>> --- a/drivers/mtd/maps/dilnetpc.c
+>> +++ b/drivers/mtd/maps/dilnetpc.c
+>> @@ -19,8 +19,7 @@
+>>    * board: DNP/1486 and ADNP/1486. The DNP version has 2 megs of flash
+>>    * ROM (Intel 28F016S3) and 8 megs of DRAM, the ADNP version has 4 megs
+>>    * flash and 16 megs of RAM.
+>> - * For details, see http://www.ssv-embedded.de/ssv/pc104/p169.htm
+>> - * and http://www.ssv-embedded.de/ssv/pc104/p170.htm
+>> + * For details, see http://www.dilnetpc.com/
+>
+>
+> Same.
+>
+>
+>>    */
+>>
+>>   #include<linux/module.h>
+>
+>> index 49aac70..f4523cd 100644
+>> --- a/drivers/net/hamachi.c
+>> +++ b/drivers/net/hamachi.c
+>> @@ -20,9 +20,6 @@
+>>
+>>   	Support and updates available at
+>>   	http://www.scyld.com/network/hamachi.html
+>> -	[link no longer provides useful info -jgarzik]
+>> -	or
+>> -	http://www.parl.clemson.edu/~keithu/hamachi.html
+>
+>
+> Why?
+>
+>
+>>
+>>   */
+>>
+>
+>> index 6af6c83..0723c9f 100644
+>> --- a/drivers/staging/comedi/drivers/daqboard2000.c
+>> +++ b/drivers/staging/comedi/drivers/daqboard2000.c
+>> @@ -51,7 +51,7 @@ Configuration options:
+>>      for the card, and here are the findings so far.
+>>
+>>      1. A good document that describes the PCI interface chip is found at:
+>> -      http://plx.plxtech.com/download/9080/databook/9080db-106.pdf
+>> +      [9080db-106.pdf] http://www.plxtech.com/products/io/pci9080
+>
+>
+> Comments are supposed to be human readable text. Square brackets don't
+> quote filenames by any convention I'm aware of (?)
+> I'd suggest:
+>
+>        A good document that describes the PCI interface chip is 9080db-106.pdf
+>        available from http://www.plxtech.com/products/io/pci9080
+>
+>
+>>
+>>      2. The initialization done so far is:
+>>           a. program the FPGA (windows code sans a lot of error messages)
+>
+>> diff --git a/drivers/video/vga16fb.c b/drivers/video/vga16fb.c
+>> index 28ccab4..fc853a5 100644
+>> --- a/drivers/video/vga16fb.c
+>> +++ b/drivers/video/vga16fb.c
+>> @@ -2,7 +2,7 @@
+>>    * linux/drivers/video/vga16.c -- VGA 16-color framebuffer driver
+>>    *
+>>    * Copyright 1999 Ben Pfaff<pfaffben@debian.org>  and Petr Vandrovec<VANDROVE@vc.cvut.cz>
+>> - * Based on VGA info at http://www.goodnet.com/~tinara/FreeVGA/home.htm
+>> + * Based on VGA info at http://www.osdever.net/FreeVGA/home.htm
+>
+>
+> The old link is in the web archive, you needn't remove it. Add the new one
+> if you wish.
+>
+>
+>>    * Based on VESA framebuffer (c) 1998 Gerd Knorr<kraxel@goldbach.in-berlin.de>
+>>    *
+>>    * This file is subject to the terms and conditions of the GNU General
+>> diff --git a/drivers/video/vgastate.c b/drivers/video/vgastate.c
+>> index b91c466..f4043f8 100644
+>> --- a/drivers/video/vgastate.c
+>> +++ b/drivers/video/vgastate.c
+>> @@ -5,7 +5,7 @@
+>>    *
+>>    * Copyright history from vga16fb.c:
+>>    *	Copyright 1999 Ben Pfaff and Petr Vandrovec
+>> - *	Based on VGA info at http://www.goodnet.com/~tinara/FreeVGA/home.htm
+>> + *	Based on VGA info at http://www.osdever.net/FreeVGA/home.htm
+>
+>
+> Same.
+>
+>
+>>    *	Based on VESA framebuffer (c) 1998 Gerd Knorr
+>>    *
+>>    * This file is subject to the terms and conditions of the GNU General
+>> diff --git a/include/linux/ixjuser.h b/include/linux/ixjuser.h
+>> index 88b4589..39ef699 100644
+>> --- a/include/linux/ixjuser.h
+>> +++ b/include/linux/ixjuser.h
+>> @@ -25,7 +25,7 @@
+>>    *                  Mike Preston,<mpreston@quicknet.net>
+>>    *
+>>    * More information about the hardware related to this driver can be found
+>> - * at our website:    http://www.quicknet.net
+>> + * at our website:   http://blemings.org/hugh/keyspan.html
+>
+>
+> This appears to have been fat-fingered. No patch needed.
+>
+>
+>>    *
+>>    * Fixes:
+>>    *
+>
+>> diff --git a/include/video/vga.h b/include/video/vga.h
+>> index b49a512..2b8691f 100644
+>> --- a/include/video/vga.h
+>> +++ b/include/video/vga.h
+>> @@ -5,7 +5,7 @@
+>>    *
+>>    * Copyright history from vga16fb.c:
+>>    *	Copyright 1999 Ben Pfaff and Petr Vandrovec
+>> - *	Based on VGA info at http://www.goodnet.com/~tinara/FreeVGA/home.htm
+>> + *	Based on VGA info at http://www.osdever.net/FreeVGA/home.htm
+>
+>
+> See above.
+>
+> Thanks.
+>
+> Finn
+>
 
-The attached patch lets mac80111 create multiple STA on the same
-AP, and the changes to ath9k let it function properly, at least for
-un-encrypted traffic.  WPA does not work..no idea why yet.
+alright.. I'll redu this... remove the brackets, and fix up the rest..
+one note is:
+http://dri.freedesktop.org/wiki/Documentation
+this address is already there.. probably best to just leave the 
+sourceforge address and use the webarchive and/or if theirs a
+proper address for the sourceforge dri..
 
-It also consolidates some of the util.c iterator logic in
-mac80211.
+Justin P. Mattock
 
-Please let me know if this is moving in the right direction.
-
-Thanks,
-Ben
-
--- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
-
-
---------------060902050409070408060604
-Content-Type: text/plain;
- name="wt-36-vsta-ok-b.patch"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: attachment;
- filename="wt-36-vsta-ok-b.patch"
-
-diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_txrx.c b/drivers/net/wireless/ath/ath9k/htc_drv_txrx.c
-index 2a6e45a..26fb322 100644
---- a/drivers/net/wireless/ath/ath9k/htc_drv_txrx.c
-+++ b/drivers/net/wireless/ath/ath9k/htc_drv_txrx.c
-@@ -416,6 +416,7 @@ static void ath9k_htc_opmode_init(struct ath9k_htc_priv *priv)
- 
- 	/* configure bssid mask */
- 	if (ah->caps.hw_caps & ATH9K_HW_CAP_BSSIDMASK)
-+		/* NOTE:  Maybe this should be ath9k_set_bssid_mask?? */
- 		ath_hw_setbssidmask(common);
- 
- 	/* configure operational mode */
-diff --git a/drivers/net/wireless/ath/ath9k/recv.c b/drivers/net/wireless/ath/ath9k/recv.c
-index b32c8f0..4ce4029 100644
---- a/drivers/net/wireless/ath/ath9k/recv.c
-+++ b/drivers/net/wireless/ath/ath9k/recv.c
-@@ -110,7 +110,6 @@ static void ath_setdefantenna(struct ath_softc *sc, u32 antenna)
- static void ath_opmode_init(struct ath_softc *sc)
- {
- 	struct ath_hw *ah = sc->sc_ah;
--	struct ath_common *common = ath9k_hw_common(ah);
- 
- 	u32 rfilt, mfilt[2];
- 
-@@ -118,9 +117,15 @@ static void ath_opmode_init(struct ath_softc *sc)
- 	rfilt = ath_calcrxfilter(sc);
- 	ath9k_hw_setrxfilter(ah, rfilt);
- 
--	/* configure bssid mask */
--	if (ah->caps.hw_caps & ATH9K_HW_CAP_BSSIDMASK)
--		ath_hw_setbssidmask(common);
-+	/* configure bssid mask, if ah->hw is configured.
-+	 * it is NOT configured when mac80211 is calling
-+	 * ieee80211_do_open, but probably just as well since
-+	 * this STA isn't in the list yet.
-+	 */
-+	if (ah->hw) {
-+		if (ah->caps.hw_caps & ATH9K_HW_CAP_BSSIDMASK)
-+			ath9k_set_bssid_mask(ah->hw);
-+	}
- 
- 	/* configure operational mode */
- 	ath9k_hw_setopmode(ah);
-@@ -426,6 +431,7 @@ u32 ath_calcrxfilter(struct ath_softc *sc)
- #define	RX_FILTER_PRESERVE (ATH9K_RX_FILTER_PHYERR | ATH9K_RX_FILTER_PHYRADAR)
- 
- 	u32 rfilt;
-+	int avifs = ieee80211_count_sta_atomic(sc->hw);
- 
- 	rfilt = (ath9k_hw_getrxfilter(sc->sc_ah) & RX_FILTER_PRESERVE)
- 		| ATH9K_RX_FILTER_UCAST | ATH9K_RX_FILTER_BCAST
-@@ -448,7 +454,11 @@ u32 ath_calcrxfilter(struct ath_softc *sc)
- 	if (sc->rx.rxfilter & FIF_CONTROL)
- 		rfilt |= ATH9K_RX_FILTER_CONTROL;
- 
-+	/* If we have more than one active STA, then we need to
-+	 * accept more than just MYBEACON.
-+	 */
- 	if ((sc->sc_ah->opmode == NL80211_IFTYPE_STATION) &&
-+	    (avifs <= 1) &&
- 	    !(sc->rx.rxfilter & FIF_BCN_PRBRESP_PROMISC))
- 		rfilt |= ATH9K_RX_FILTER_MYBEACON;
- 	else
-@@ -463,9 +473,7 @@ u32 ath_calcrxfilter(struct ath_softc *sc)
- 	if (conf_is_ht(&sc->hw->conf))
- 		rfilt |= ATH9K_RX_FILTER_COMP_BAR;
- 
--	if (sc->sec_wiphy || (sc->rx.rxfilter & FIF_OTHER_BSS)) {
--		/* TODO: only needed if more than one BSSID is in use in
--		 * station/adhoc mode */
-+	if (sc->sec_wiphy || (avifs > 1) || (sc->rx.rxfilter & FIF_OTHER_BSS)) {
- 		/* The following may also be needed for other older chips */
- 		if (sc->sc_ah->hw_version.macVersion == AR_SREV_VERSION_9160)
- 			rfilt |= ATH9K_RX_FILTER_PROM;
-diff --git a/drivers/net/wireless/ath/ath9k/virtual.c b/drivers/net/wireless/ath/ath9k/virtual.c
-index fd20241..9c1d529 100644
---- a/drivers/net/wireless/ath/ath9k/virtual.c
-+++ b/drivers/net/wireless/ath/ath9k/virtual.c
-@@ -59,15 +59,17 @@ void ath9k_set_bssid_mask(struct ieee80211_hw *hw)
- 	} else
- 		iter_data.count = 0;
- 
--	/* Get list of all active MAC addresses */
-+	/* Get list of all MAC addresses for STA and ADHOC interfaces. */
- 	spin_lock_bh(&sc->wiphy_lock);
--	ieee80211_iterate_active_interfaces_atomic(sc->hw, ath9k_vif_iter,
--						   &iter_data);
-+	ieee80211_iterate_interfaces_helper(sc->hw, true, false,
-+					    ath9k_vif_iter,
-+					    &iter_data);
- 	for (i = 0; i < sc->num_sec_wiphy; i++) {
- 		if (sc->sec_wiphy[i] == NULL)
- 			continue;
--		ieee80211_iterate_active_interfaces_atomic(
--			sc->sec_wiphy[i]->hw, ath9k_vif_iter, &iter_data);
-+		ieee80211_iterate_interfaces_helper(
-+			sc->sec_wiphy[i]->hw, true, false,
-+			ath9k_vif_iter, &iter_data);
- 	}
- 	spin_unlock_bh(&sc->wiphy_lock);
- 
-diff --git a/include/net/mac80211.h b/include/net/mac80211.h
-index f91fc33..e87396d 100644
---- a/include/net/mac80211.h
-+++ b/include/net/mac80211.h
-@@ -2320,6 +2320,35 @@ void ieee80211_iterate_active_interfaces_atomic(struct ieee80211_hw *hw,
- 						    u8 *mac,
- 						    struct ieee80211_vif *vif),
- 						void *data);
-+/**
-+ * ieee80211_iterate_interfaces_helper - iterate interfaces
-+ *
-+ * This function iterates over the interfaces associated with a given
-+ * hardware and calls the callback for them.  If do_atomic is true,
-+ * this function requires the iterator callback function to be atomic,
-+ * if that is not desired, set do_atomic to false.
-+ * If you want only active interfaces, set active_only to true.
-+ * See also: @ieee80211_iterate_active_interfaces
-+ *           @ieee80211_iterate_active_interfaces_atomic
-+ *
-+ * Returns number of interfaces to be filtered.
-+ * @hw: the hardware struct of which the interfaces should be iterated over
-+ * @do_atomic:  Should iterator be treated as atomic or not.
-+ * @active_only:  Should we only iterate over active interfaces.
-+ * @iterator: the iterator function to call, cannot sleep
-+ * @data: first argument of the iterator function
-+ */
-+int ieee80211_iterate_interfaces_helper(struct ieee80211_hw *hw,
-+					bool do_atomic,
-+					bool active_only,
-+					void (*iterator)(void *data, u8 *mac,
-+						struct ieee80211_vif *vif),
-+					void *data);
-+
-+/** Return a count of all station-like interfaces for
-+ * this hardware.  Running/Stopped state has no affect.
-+ */
-+int ieee80211_count_sta_atomic(struct ieee80211_hw *hw);
- 
- /**
-  * ieee80211_queue_work - add work onto the mac80211 workqueue
-diff --git a/net/mac80211/sta_info.c b/net/mac80211/sta_info.c
-index 687077e..db751f1 100644
---- a/net/mac80211/sta_info.c
-+++ b/net/mac80211/sta_info.c
-@@ -440,7 +440,7 @@ int sta_info_insert_rcu(struct sta_info *sta) __acquires(RCU)
- 
- 	spin_lock_irqsave(&local->sta_lock, flags);
- 	/* check if STA exists already */
--	if (sta_info_get_bss(sdata, sta->sta.addr)) {
-+	if (sta_info_get(sdata, sta->sta.addr)) {
- 		spin_unlock_irqrestore(&local->sta_lock, flags);
- 		mutex_unlock(&local->sta_mtx);
- 		rcu_read_lock();
-diff --git a/net/mac80211/util.c b/net/mac80211/util.c
-index bd40b11..cd54c30 100644
---- a/net/mac80211/util.c
-+++ b/net/mac80211/util.c
-@@ -461,16 +461,22 @@ void ieee80211_wake_queues(struct ieee80211_hw *hw)
- }
- EXPORT_SYMBOL(ieee80211_wake_queues);
- 
--void ieee80211_iterate_active_interfaces(
-+int ieee80211_iterate_interfaces_helper(
- 	struct ieee80211_hw *hw,
-+	bool do_atomic,
-+	bool active_only,
- 	void (*iterator)(void *data, u8 *mac,
- 			 struct ieee80211_vif *vif),
- 	void *data)
- {
- 	struct ieee80211_local *local = hw_to_local(hw);
- 	struct ieee80211_sub_if_data *sdata;
-+	int cnt = 0;
- 
--	mutex_lock(&local->iflist_mtx);
-+	if (do_atomic)
-+		rcu_read_lock();
-+	else
-+		mutex_lock(&local->iflist_mtx);
- 
- 	list_for_each_entry(sdata, &local->interfaces, list) {
- 		switch (sdata->vif.type) {
-@@ -486,12 +492,30 @@ void ieee80211_iterate_active_interfaces(
- 		case NL80211_IFTYPE_MESH_POINT:
- 			break;
- 		}
--		if (ieee80211_sdata_running(sdata))
--			iterator(data, sdata->vif.addr,
--				 &sdata->vif);
-+		if (ieee80211_sdata_running(sdata) || !active_only) {
-+			cnt++;
-+			if (iterator)
-+				iterator(data, sdata->vif.addr,
-+					 &sdata->vif);
-+		}
- 	}
- 
--	mutex_unlock(&local->iflist_mtx);
-+	if (do_atomic)
-+		rcu_read_unlock();
-+	else
-+		mutex_unlock(&local->iflist_mtx);
-+	return cnt;
-+}
-+EXPORT_SYMBOL_GPL(ieee80211_iterate_interfaces_helper);
-+
-+
-+void ieee80211_iterate_active_interfaces(
-+	struct ieee80211_hw *hw,
-+	void (*iterator)(void *data, u8 *mac,
-+			 struct ieee80211_vif *vif),
-+	void *data)
-+{
-+	ieee80211_iterate_interfaces_helper(hw, false, false, iterator, data);
- }
- EXPORT_SYMBOL_GPL(ieee80211_iterate_active_interfaces);
- 
-@@ -501,33 +525,20 @@ void ieee80211_iterate_active_interfaces_atomic(
- 			 struct ieee80211_vif *vif),
- 	void *data)
- {
--	struct ieee80211_local *local = hw_to_local(hw);
--	struct ieee80211_sub_if_data *sdata;
-+	ieee80211_iterate_interfaces_helper(hw, true, false, iterator, data);
-+}
-+EXPORT_SYMBOL_GPL(ieee80211_iterate_active_interfaces_atomic);
- 
--	rcu_read_lock();
- 
--	list_for_each_entry_rcu(sdata, &local->interfaces, list) {
--		switch (sdata->vif.type) {
--		case NUM_NL80211_IFTYPES:
--		case NL80211_IFTYPE_UNSPECIFIED:
--		case NL80211_IFTYPE_MONITOR:
--		case NL80211_IFTYPE_AP_VLAN:
--			continue;
--		case NL80211_IFTYPE_AP:
--		case NL80211_IFTYPE_STATION:
--		case NL80211_IFTYPE_ADHOC:
--		case NL80211_IFTYPE_WDS:
--		case NL80211_IFTYPE_MESH_POINT:
--			break;
--		}
--		if (ieee80211_sdata_running(sdata))
--			iterator(data, sdata->vif.addr,
--				 &sdata->vif);
--	}
- 
--	rcu_read_unlock();
-+/** Return a count of all station-like interfaces for
-+ * this hardware.  Running/Stopped state has no affect.
-+ */
-+int ieee80211_count_sta_atomic(struct ieee80211_hw *hw)
-+{
-+	return ieee80211_iterate_interfaces_helper(hw, true, false, NULL, NULL);
- }
--EXPORT_SYMBOL_GPL(ieee80211_iterate_active_interfaces_atomic);
-+EXPORT_SYMBOL_GPL(ieee80211_count_sta_atomic);
- 
- /*
-  * Nothing should have been stuffed into the workqueue during
-
---------------060902050409070408060604--
