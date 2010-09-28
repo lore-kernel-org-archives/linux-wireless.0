@@ -1,33 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.19.149.2]:49213 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751727Ab0IOWDr (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 15 Sep 2010 18:03:47 -0400
-Received: from mail.atheros.com ([10.10.20.107])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Wed, 15 Sep 2010 15:03:41 -0700
-Date: Wed, 15 Sep 2010 15:03:45 -0700
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: Hauke Mehrtens <hauke@hauke-m.de>
-CC: Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"mcgrof@infradead.org" <mcgrof@infradead.org>
-Subject: Re: [PATCH 2/3] compat-wireless: make patch apply again.
-Message-ID: <20100915220345.GD1734@tux>
-References: <1284583415-11506-1-git-send-email-hauke@hauke-m.de>
- <1284583415-11506-2-git-send-email-hauke@hauke-m.de>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <1284583415-11506-2-git-send-email-hauke@hauke-m.de>
+Received: from he.sipsolutions.net ([78.46.109.217]:52562 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751185Ab0I1Ltz (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 28 Sep 2010 07:49:55 -0400
+Subject: Re: [PATCH] mac80211: Fix WMM driver queue configuration
+From: Johannes Berg <johannes@sipsolutions.net>
+To: juuso.oikarinen@nokia.com
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
+In-Reply-To: <1285673972-10502-1-git-send-email-juuso.oikarinen@nokia.com>
+References: <1285673972-10502-1-git-send-email-juuso.oikarinen@nokia.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Tue, 28 Sep 2010 13:49:49 +0200
+Message-ID: <1285674589.3885.17.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Sep 15, 2010 at 01:43:34PM -0700, Hauke Mehrtens wrote:
+On Tue, 2010-09-28 at 14:39 +0300, juuso.oikarinen@nokia.com wrote:
+> From: Juuso Oikarinen <juuso.oikarinen@nokia.com>
 > 
-> Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+> The WMM parameter configuration function (ieee80211_sta_wmm_params) only
+> configures the WMM parameters to the driver is the wmm_last_param_set
+> counter value is changed by the AP.
+> 
+> The wmm_last_param_set is initialized to -1 on association in order to ensure
+> the configuration is made to the driver at least once on association, but
+> currently this initialization is done *after* the WMM parameter configuration
+> function was called.
+> 
+> This leads to unreliability in the driver getting properly configured on first
+> association (depending on what counter value the AP happens to use.) When
+> disassociating (the wmm default parameters are configured to the driver) and
+> then reassociating, due to the above the WMM configuration is not set to the
+> driver at all.
+> 
+> On drivers without beacon filtering the problem is corrected by later beacons,
+> but on drivers with beacon filtering the WMM will remain permanently incorrectly
+> configured.
+> 
+> Fix this by moving the initialization of wmm_last_param_set to -1 before
+> ieee80211_sta_wmm_params is called on association.
 
-Thanks! Applied the first two patches, the carl9170 requires
-a bit more work to ensure we don't oops people's old kernels
-who require some extra version fixes.
+Good catch!
 
-  Luis
+Acked-by: Johannes Berg <johannes@sipsolutions.net>
+
+johannes
+
