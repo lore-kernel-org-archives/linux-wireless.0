@@ -1,34 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:38479 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751981Ab0I1HZu (ORCPT
+Received: from mail.candelatech.com ([208.74.158.172]:59866 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753222Ab0I1WXC (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 28 Sep 2010 03:25:50 -0400
-Subject: Re: [PATCH] carl9170: fix hung workqueue
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Christian Lamparter <chunkeey@googlemail.com>
-Cc: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-In-Reply-To: <201009272303.01535.chunkeey@googlemail.com>
-References: <201009272303.01535.chunkeey@googlemail.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Tue, 28 Sep 2010 09:25:47 +0200
-Message-ID: <1285658747.3885.4.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+	Tue, 28 Sep 2010 18:23:02 -0400
+Received: from [192.168.100.195] (firewall.candelatech.com [70.89.124.249])
+	(authenticated bits=0)
+	by ns3.lanforge.com (8.14.2/8.14.2) with ESMTP id o8SMN12t009728
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
+	for <linux-wireless@vger.kernel.org>; Tue, 28 Sep 2010 15:23:01 -0700
+Message-ID: <4CA26AC5.2040407@candelatech.com>
+Date: Tue, 28 Sep 2010 15:23:01 -0700
+From: Ben Greear <greearb@candelatech.com>
+MIME-Version: 1.0
+To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: ath9k and virtual APs?
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2010-09-27 at 23:03 +0200, Christian Lamparter wrote:
-> The patch "mac80211: wait for scan work complete before
-> restarting hw", broke carl9170's restart path.
-> 
-> Previously it was possible to call ieee80211_restart_hw
-> from mac80211's internal workqueue. Now though it hangs
-> because of the flush_workqueue in the procedure.
+We are able to create multiple APs on ath9k, but they don't appear to
+be fully working.
 
-I thought I asked somebody to move that. It's expected that you are
-allowed to call it -- the flush and scan cancel code there needs to be
-moved into the _work_, out of the restart_hw() function.
+Before I go start digging, is anyone aware of what needs to happen
+to get ath9k supporting multiple APs properly?
 
-johannes
+Thanks,
+Ben
+
+-- 
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
 
