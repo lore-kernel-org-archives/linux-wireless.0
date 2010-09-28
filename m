@@ -1,48 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:47921 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751907Ab0I2RDh (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 29 Sep 2010 13:03:37 -0400
-Message-ID: <4CA3715F.2080706@candelatech.com>
-Date: Wed, 29 Sep 2010 10:03:27 -0700
-From: Ben Greear <greearb@candelatech.com>
+Received: from mail.atheros.com ([12.19.149.2]:22044 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752830Ab0I1I34 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 28 Sep 2010 04:29:56 -0400
+Received: from mail.atheros.com ([10.10.20.108])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Tue, 28 Sep 2010 01:29:49 -0700
+From: Mohammed Shafi Shajakhan <mshajakhan@atheros.com>
+To: <linux-wireless@vger.kernel.org>
+CC: <johannes@sipsolutions.net>,
+	Mohammed Shafi Shajakhan <mshajakhan@atheros.com>
+Subject: [RFC] mac80211: sets basic rate set parameter for IBSS creator
+Date: Tue, 28 Sep 2010 13:59:46 +0530
+Message-ID: <1285662586-31646-1-git-send-email-mshajakhan@atheros.com>
 MIME-Version: 1.0
-To: greearb@candelatech.com
-CC: linux-wireless@vger.kernel.org
-Subject: Re: [PATCH v7] ath5k: Allow ath5k to support virtual STA and AP interfaces.
-References: <1285779730-29815-1-git-send-email-greearb@candelatech.com>
-In-Reply-To: <1285779730-29815-1-git-send-email-greearb@candelatech.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 09/29/2010 10:02 AM, greearb@candelatech.com wrote:
-> From: Ben Greear<greearb@candelatech.com>
->
-> Support up to 4 virtual APs and as many virtual STA interfaces
-> as desired.
->
-> This patch is ported forward from a patch that Patrick McHardy
-> did for me against 2.6.31.
->
-> Signed-off-by: Ben Greear<greearb@candelatech.com>
-> ---
-> v7 ->  v8:  Add Bruno Randolf's adhoc improvements.
-> v6 ->  v7:  Fix bug that assigned a beacon buffer to all vifs.
->        Tested creation of 128 stations, all passed traffic.
-> v4 ->  v6:  Use tx_info's vif instead of NULL, assign beacon
->    buffers on device creation (for AP and ADHOC).  Clean up some
->    whitespace and un-used variables.
->
->    Did NOT change the beacon buffer linked list to an array.
->    It didn't seem to offer any benefits to me.
+From: Mohammed Shafi Shajakhan <mshajakhan@atheros.com>
 
-Errr, that was v8, forgot to change the title.
+This fix sets the basic rate set parameter for IBSS creator when the
+basic rates are not explicitly specified in the user space.
 
-Ben
+Signed-off-by: Mohammed Shafi Shajakhan <mshajakhan@atheros.com>
+---
+ net/mac80211/ibss.c |    3 +++
+ 1 files changed, 3 insertions(+), 0 deletions(-)
 
+diff --git a/net/mac80211/ibss.c b/net/mac80211/ibss.c
+index 1a3aae5..e117155 100644
+--- a/net/mac80211/ibss.c
++++ b/net/mac80211/ibss.c
+@@ -541,6 +541,9 @@ static void ieee80211_sta_create_ibss(struct ieee80211_sub_if_data *sdata)
+ 		capability |= WLAN_CAPABILITY_PRIVACY;
+ 	else
+ 		sdata->drop_unencrypted = 0;
++	if (ifibss->basic_rates == 0)
++		ifibss->basic_rates = ieee80211_mandatory_rates(local,
++					local->hw.conf.channel->band);
+ 
+ 	__ieee80211_sta_join_ibss(sdata, bssid, sdata->vif.bss_conf.beacon_int,
+ 				  ifibss->channel, ifibss->basic_rates,
 -- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+1.7.0.4
 
