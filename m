@@ -1,40 +1,28 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 80-190-117-144.ip-home.de ([80.190.117.144]:40044 "EHLO
-	bu3sch.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753514Ab0IDWzn (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 4 Sep 2010 18:55:43 -0400
-Subject: [PATCH] p54spi: Add error message for eeprom failure
-From: Michael =?ISO-8859-1?Q?B=FCsch?= <mb@bu3sch.de>
-To: Christian Lamparter <chunkeey@googlemail.com>,
-	"John W. Linville" <linville@tuxdriver.com>
+Received: from mail-px0-f174.google.com ([209.85.212.174]:63853 "EHLO
+	mail-px0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757786Ab0I1Sq3 convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 28 Sep 2010 14:46:29 -0400
+Received: by pxi10 with SMTP id 10so1782173pxi.19
+        for <linux-wireless@vger.kernel.org>; Tue, 28 Sep 2010 11:46:28 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <1285699064-16491-1-git-send-email-greearb@candelatech.com>
+References: <1285699064-16491-1-git-send-email-greearb@candelatech.com>
+Date: Tue, 28 Sep 2010 14:46:27 -0400
+Message-ID: <AANLkTikrWHDoGphY+iwvCO0fqoVDJDJPwvkUMePtR87Q@mail.gmail.com>
+Subject: Re: [PATCH v5] ath5k: Allow ath5k to support virtual STA and AP interfaces.
+From: Bob Copeland <me@bobcopeland.com>
+To: greearb@candelatech.com
 Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
-Date: Sun, 05 Sep 2010 00:55:38 +0200
-Message-ID: <1283640938.3538.7.camel@maggie>
-Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This adds an error message for the eeprom request failure
-case. This way it's easier for the user to figure out
-what went wrong.
+> +               short_preamble = !!(frame_txctl->flags &
+> +                                   IEEE80211_TX_SHORT_PREABLE);
 
-Signed-off-by: Michael BÃ¼sch <mb@bu3sch.de>
+Oh, noticed this in the other patch: 'preamble' is misspelled.
 
----
- drivers/net/wireless/p54/p54spi.c |    2 ++
- 1 file changed, 2 insertions(+)
-
---- wireless-testing.orig/drivers/net/wireless/p54/p54spi.c
-+++ wireless-testing/drivers/net/wireless/p54/p54spi.c
-@@ -202,6 +202,8 @@ static int p54spi_request_eeprom(struct
- 		dev_info(&priv->spi->dev, "loading default eeprom...\n");
- 		ret = p54_parse_eeprom(dev, (void *) p54spi_eeprom,
- 				       sizeof(p54spi_eeprom));
-+#else
-+		dev_err(&priv->spi->dev, "Failed to request user eeprom\n");
- #endif /* CONFIG_P54_SPI_DEFAULT_EEPROM */
- 	} else {
- 		dev_info(&priv->spi->dev, "loading user eeprom...\n");
-
-
+-- 
+Bob Copeland %% www.bobcopeland.com
