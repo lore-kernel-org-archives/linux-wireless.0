@@ -1,47 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f46.google.com ([209.85.214.46]:47574 "EHLO
-	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759579Ab0I0R7H (ORCPT
+Received: from mgw-sa02.nokia.com ([147.243.1.48]:37497 "EHLO
+	mgw-sa02.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753802Ab0I1KMF (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 27 Sep 2010 13:59:07 -0400
-Received: by bwz11 with SMTP id 11so3540087bwz.19
-        for <linux-wireless@vger.kernel.org>; Mon, 27 Sep 2010 10:59:05 -0700 (PDT)
-Message-Id: <f656eb5cef04fed51344a7f95aa64b9958e6aecb.1285544496.git.chunkeey@googlemail.com>
-In-Reply-To: <cover.1285544496.git.chunkeey@googlemail.com>
-References: <cover.1285544496.git.chunkeey@googlemail.com>
-From: Christian Lamparter <chunkeey@googlemail.com>
-Date: Sun, 26 Sep 2010 23:06:56 +0200
-Subject: [PATCH 5/6] carl9170: fix WARN_ON triggered by Broadcom HT STAs
-To: linux-wireless@vger.kernel.org
-Cc: linville@tuxdriver.com
+	Tue, 28 Sep 2010 06:12:05 -0400
+Subject: Re: [ANN] New git tree for wl1271 integration
+From: Luciano Coelho <luciano.coelho@nokia.com>
+To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Cc: John Linville <linville@tuxdriver.com>
+In-Reply-To: <1285573698.5768.67.camel@chilepepper>
+References: <1285573698.5768.67.camel@chilepepper>
+Content-Type: text/plain; charset="UTF-8"
+Date: Tue, 28 Sep 2010 13:11:45 +0300
+Message-ID: <1285668705.28270.67.camel@chilepepper>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Broadcom's Windows driver for the 4313 advertises
-an ampdu density of 7 => 16 us. The AR9170 MAC on
-the other hand only supports densities up to 8 us.
+On Mon, 2010-09-27 at 09:48 +0200, Coelho Luciano (Nokia-MS/Helsinki)
+wrote:
+> Hi all,
+> 
+> We are changing the integration model for wl1271 patches.  As agreed
+> with John, I have created a new git tree [1] for the wl1271 driver from
+> which John will pull.
+> 
+> The reason for doing this, is that we are going to review every patch
+> and test them before integrating into wireless-next.
+> 
+> So, from now on, please send all the patches for wl1271 to me (as well
+> as to the linux-wireless mailing list, obviously) and we will review and
+> integrate them into wl12xx/master.  After testing that everything still
+> works (this part is still work in progress) and we're happy with the
+> tree, I will send a pull-request to John for integration into
+> wireless-next.  This will happen on a weekly basis.
+> 
+> Obviously, patches that spread across several drivers or other parts of
+> the stack, will be integrated by John directly into wireless-next.  I'll
+> be acking the wl1271 part of those patches and John will integrate them.
+> 
+> If you're developing wl1271 stuff, please base your patches on the
+> wl12xx/master git tree, which can be found here:
+> 
+> [1] git://git.kernel.org/pub/scm/linux/kernel/git/luca/wl12xx.git
+> 
+> If you have any questions, comments, flames or just want to drop me an
+> email for any other reason, feel free do to so. :)
 
-This patch removes the noisy WARN_ON, because
-there is nothing we can do about it.
+I had to reorganize this a bit.  I had based master on wireless-next,
+which had missing support for some boards (eg. Zoom).
 
-Signed-off-by: Christian Lamparter <chunkeey@googlemail.com>
----
- drivers/net/wireless/ath/carl9170/main.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+Now I have rebased master on top of wireless-testing and created a new
+branch called wireless-next which is, obviously based on wireless-next.
 
-diff --git a/drivers/net/wireless/ath/carl9170/main.c b/drivers/net/wireless/ath/carl9170/main.c
-index a8b0cec..84bd38e 100644
---- a/drivers/net/wireless/ath/carl9170/main.c
-+++ b/drivers/net/wireless/ath/carl9170/main.c
-@@ -1248,7 +1248,7 @@ static int carl9170_op_ampdu_action(struct ieee80211_hw *hw,
- 
- 	switch (action) {
- 	case IEEE80211_AMPDU_TX_START:
--		if (WARN_ON_ONCE(!sta_info->ht_sta))
-+		if (!sta_info->ht_sta)
- 			return -EOPNOTSUPP;
- 
- 		rcu_read_lock();
+For development, please use wl12xx/master.  The wl12xx/wireless-next
+branch is the "official" branch which will contain the patches that will
+be submitted upstream to John's tree.
+
+Sorry for the trouble, but if you have already cloned the wl12xx tree,
+you will have to reset your local branches.
+
 -- 
-1.7.1
+Cheers,
+Luca.
 
