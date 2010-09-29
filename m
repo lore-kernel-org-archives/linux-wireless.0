@@ -1,52 +1,129 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:13172 "EHLO mx1.redhat.com"
+Received: from nbd.name ([88.198.39.176]:43704 "EHLO ds10.nbd.name"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754020Ab0IJNd3 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 10 Sep 2010 09:33:29 -0400
-Date: Fri, 10 Sep 2010 15:34:03 +0200
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: Dan Carpenter <error27@gmail.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	Matthieu CASTET <castet.matthieu@free.fr>,
-	linux-wireless@vger.kernel.org, kernel-janitors@vger.kernel.org
-Subject: Re: [patch] airo: remove pointless check
-Message-ID: <20100910133401.GF2398@redhat.com>
-References: <20100910115714.GE5959@bicker>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20100910115714.GE5959@bicker>
+	id S1752505Ab0I2PPh (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 29 Sep 2010 11:15:37 -0400
+From: Felix Fietkau <nbd@openwrt.org>
+To: linux-wireless@vger.kernel.org
+Cc: linville@tuxdriver.com, lrodriguez@atheros.com
+Subject: [PATCH 2/6] ath9k_hw: keep calibrated noise floor values per channel
+Date: Wed, 29 Sep 2010 17:15:27 +0200
+Message-Id: <1285773331-73439-2-git-send-email-nbd@openwrt.org>
+In-Reply-To: <1285773331-73439-1-git-send-email-nbd@openwrt.org>
+References: <1285773331-73439-1-git-send-email-nbd@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Sep 10, 2010 at 01:57:14PM +0200, Dan Carpenter wrote:
-> It doesn't make sense to check "!ai->config.rates" here.
-> "ai->config.rates" is the address of an eight bytes array and it
-> can't ever be null here.  Also if it were NULL then trying to set:
-> 	ai->config.rates[i] = basic_rate | 0x80;
-> would cause an oops.
-> 
-> Signed-off-by: Dan Carpenter <error27@gmail.com>
-> 
-> diff --git a/drivers/net/wireless/airo.c b/drivers/net/wireless/airo.c
-> index 1d05445..d806497 100644
-> --- a/drivers/net/wireless/airo.c
-> +++ b/drivers/net/wireless/airo.c
-> @@ -3886,8 +3886,7 @@ static u16 setup_card(struct airo_info *ai, u8 *mac, int lock)
->  		}
->  		if ( basic_rate > 0 ) {
->  			for( i = 0; i < 8; i++ ) {
-> -				if ( ai->config.rates[i] == basic_rate ||
-> -				     !ai->config.rates ) {
-> +				if (ai->config.rates[i] == basic_rate) {
->  					ai->config.rates[i] = basic_rate | 0x80;
->  					break;
->  				}
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+---
+ drivers/net/wireless/ath/ath9k/calib.c |   40 ++++++++++++++++----------------
+ drivers/net/wireless/ath/ath9k/hw.c    |    2 +-
+ drivers/net/wireless/ath/ath9k/hw.h    |    2 +-
+ 3 files changed, 22 insertions(+), 22 deletions(-)
 
-I think code author wonted to do "!ai->config.rates[i], what mean "if
-rate is invalid use basic rate". 
+diff --git a/drivers/net/wireless/ath/ath9k/calib.c b/drivers/net/wireless/ath/ath9k/calib.c
+index 67ee5d7..6351e76 100644
+--- a/drivers/net/wireless/ath/ath9k/calib.c
++++ b/drivers/net/wireless/ath/ath9k/calib.c
+@@ -346,34 +346,34 @@ bool ath9k_hw_getnf(struct ath_hw *ah, struct ath9k_channel *chan)
+ 	struct ieee80211_channel *c = chan->chan;
+ 	struct ath9k_hw_cal_data *caldata = ah->caldata;
+ 
+-	if (!caldata)
+-		return false;
+-
+ 	chan->channelFlags &= (~CHANNEL_CW_INT);
+ 	if (REG_READ(ah, AR_PHY_AGC_CONTROL) & AR_PHY_AGC_CONTROL_NF) {
+ 		ath_print(common, ATH_DBG_CALIBRATE,
+ 			  "NF did not complete in calibration window\n");
+-		nf = 0;
+-		caldata->rawNoiseFloor = nf;
+ 		return false;
+-	} else {
+-		ath9k_hw_do_getnf(ah, nfarray);
+-		ath9k_hw_nf_sanitize(ah, nfarray);
+-		nf = nfarray[0];
+-		if (ath9k_hw_get_nf_thresh(ah, c->band, &nfThresh)
+-		    && nf > nfThresh) {
+-			ath_print(common, ATH_DBG_CALIBRATE,
+-				  "noise floor failed detected; "
+-				  "detected %d, threshold %d\n",
+-				  nf, nfThresh);
+-			chan->channelFlags |= CHANNEL_CW_INT;
+-		}
++	}
++
++	ath9k_hw_do_getnf(ah, nfarray);
++	ath9k_hw_nf_sanitize(ah, nfarray);
++	nf = nfarray[0];
++	if (ath9k_hw_get_nf_thresh(ah, c->band, &nfThresh)
++	    && nf > nfThresh) {
++		ath_print(common, ATH_DBG_CALIBRATE,
++			  "noise floor failed detected; "
++			  "detected %d, threshold %d\n",
++			  nf, nfThresh);
++		chan->channelFlags |= CHANNEL_CW_INT;
++	}
++
++	if (!caldata) {
++		chan->noisefloor = nf;
++		return false;
+ 	}
+ 
+ 	h = caldata->nfCalHist;
+ 	caldata->nfcal_pending = false;
+ 	ath9k_hw_update_nfcal_hist_buffer(ah, caldata, nfarray);
+-	caldata->rawNoiseFloor = h[0].privNF;
++	chan->noisefloor = h[0].privNF;
+ 	return true;
+ }
+ 
+@@ -401,10 +401,10 @@ void ath9k_init_nfcal_hist_buffer(struct ath_hw *ah,
+ 
+ s16 ath9k_hw_getchan_noise(struct ath_hw *ah, struct ath9k_channel *chan)
+ {
+-	if (!ah->caldata || !ah->caldata->rawNoiseFloor)
++	if (!ah->curchan || !ah->curchan->noisefloor)
+ 		return ath9k_hw_get_default_nf(ah, chan);
+ 
+-	return ah->caldata->rawNoiseFloor;
++	return ah->curchan->noisefloor;
+ }
+ EXPORT_SYMBOL(ath9k_hw_getchan_noise);
+ 
+diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
+index 25ed65a..1b06604 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.c
++++ b/drivers/net/wireless/ath/ath9k/hw.c
+@@ -1239,7 +1239,7 @@ int ath9k_hw_reset(struct ath_hw *ah, struct ath9k_channel *chan,
+ 	if (!ath9k_hw_setpower(ah, ATH9K_PM_AWAKE))
+ 		return -EIO;
+ 
+-	if (curchan && !ah->chip_fullsleep && ah->caldata)
++	if (curchan && !ah->chip_fullsleep)
+ 		ath9k_hw_getnf(ah, curchan);
+ 
+ 	ah->caldata = caldata;
+diff --git a/drivers/net/wireless/ath/ath9k/hw.h b/drivers/net/wireless/ath/ath9k/hw.h
+index df47f79..1b6739b 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.h
++++ b/drivers/net/wireless/ath/ath9k/hw.h
+@@ -342,7 +342,6 @@ struct ath9k_hw_cal_data {
+ 	int32_t CalValid;
+ 	int8_t iCoff;
+ 	int8_t qCoff;
+-	int16_t rawNoiseFloor;
+ 	bool paprd_done;
+ 	bool nfcal_pending;
+ 	bool nfcal_interference;
+@@ -356,6 +355,7 @@ struct ath9k_channel {
+ 	u16 channel;
+ 	u32 channelFlags;
+ 	u32 chanmode;
++	s16 noisefloor;
+ };
+ 
+ #define IS_CHAN_G(_c) ((((_c)->channelFlags & (CHANNEL_G)) == CHANNEL_G) || \
+-- 
+1.7.2.2
 
-I'm not sure if basic_rate module parameter is used by anyone. It's not
-described, seems it was created for development purpose. I think we can
-remove it ...
-
-Stanislaw
