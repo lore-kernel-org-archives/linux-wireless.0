@@ -1,93 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.19.149.2]:21839 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751561Ab0IQX0n convert rfc822-to-8bit (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:59455 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751408Ab0I2HCP (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 17 Sep 2010 19:26:43 -0400
-Received: from mail.atheros.com ([10.10.20.105])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Fri, 17 Sep 2010 16:26:36 -0700
-From: Vipin Mehta <Vipin.Mehta@Atheros.com>
-To: Greg KH <greg@kroah.com>, Randy Dunlap <randy.dunlap@oracle.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"devel@driverdev.osuosl.org" <devel@driverdev.osuosl.org>
-Date: Fri, 17 Sep 2010 16:26:41 -0700
-Subject: RE: [PATCH] staging: ath6kl: Including a header file to fix a
- compilation error
-Message-ID: <35B17FE5076C7040809188FBE7913F983F23A275AF@SC1EXMB-MBCL.global.atheros.com>
-References: <1284742495-2970-1-git-send-email-vmehta@atheros.com>
- <4C93A412.2070005@oracle.com> <20100917180056.GA20199@kroah.com>
-In-Reply-To: <20100917180056.GA20199@kroah.com>
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
+	Wed, 29 Sep 2010 03:02:15 -0400
+Subject: Re: [PATCH v3] mac80211:  Allow scanning single channel if other
+ VIF is associated.
+From: Johannes Berg <johannes@sipsolutions.net>
+To: greearb@candelatech.com
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <1285708650-21858-1-git-send-email-greearb@candelatech.com>
+References: <1285708650-21858-1-git-send-email-greearb@candelatech.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Wed, 29 Sep 2010 09:02:13 +0200
+Message-ID: <1285743733.3756.3.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Tue, 2010-09-28 at 14:17 -0700, greearb@candelatech.com wrote:
+> From: Ben Greear <greearb@candelatech.com>
 > 
-> Ok, I'll not apply this until it is all resolved.
-The error popped up due a recent commit which happened after I generated the patch below. I can regenerate the patch that takes care of these new errors as well but the following patch does fix the problem originally reported.
+> This patch aims to decrease channel switching when there is at least one
+> interface associated.  This should help multiple station interfaces co-exist
+> on the same hardware, especially in WPA mode.
+> 
+> Signed-off-by: Ben Greear <greearb@candelatech.com>
+> ---
+> 
+> v2 -> v3:  Just check can_scan_one flag and if set and there is
+>    a vif associated, select the active channel as scan-channel and
+>    let core scanning logic function as designed.
+> 
+>    This gets much of the really ugly logic changes out of the
+>    scanning core, and any optimizations to this should help
+>    general purpose scanning on a single channel as well.
 
-> 
-> > > diff --git a/drivers/staging/ath6kl/miscdrv/ar3kps/ar3kpsconfig.h
-> b/drivers/staging/ath6kl/miscdrv/ar3kps/ar3kpsconfig.h
-> > > index 4358834..4e5b7bf 100644
-> > > --- a/drivers/staging/ath6kl/miscdrv/ar3kps/ar3kpsconfig.h
-> > > +++ b/drivers/staging/ath6kl/miscdrv/ar3kps/ar3kpsconfig.h
-> > > @@ -36,15 +36,11 @@
-> > >
-> > >  #include <linux/fs.h>
-> > >  #include <linux/errno.h>
-> > > -#include <linux/string.h>
-> > >  #include <linux/signal.h>
-> > > -#include <linux/timer.h>
-> > >
-> > >
-> > >  #include <linux/ioctl.h>
-> > > -#include <linux/skbuff.h>
-> > >  #include <linux/firmware.h>
-> > > -#include <linux/wait.h>
-> 
-> Why are you removing these?
-The header files being removed are already included by a common header file osapi_linux.h. The file osapi_linux.h is included by all the source files. I saw little point in including these header files again.
+> --- a/include/linux/nl80211.h
+> +++ b/include/linux/nl80211.h
+> @@ -965,6 +965,8 @@ enum nl80211_attrs {
+>  	NL80211_ATTR_CONTROL_PORT_ETHERTYPE,
+>  	NL80211_ATTR_CONTROL_PORT_NO_ENCRYPT,
+>  
+> +	NL80211_ATTR_SCAN_ONE_IF_ASSOC,
+> +
 
+Still NACK, I don't see the need for new API for this odd case.
 
-> > > -#include <linux/semaphore.h>
-> > >  #include <linux/wireless.h>
-> > >  #ifdef ATH6K_CONFIG_CFG80211
-> > >  #include <net/cfg80211.h>
-> 
-> And these?
-> 
-> All to fix the one build error?
-No. The header files being removed are just a minor clean up that I thought can be included along with the fix as they were kind of related. I guess I could use a separate patch.
+Please don't resubmit similar patches to this, I don't want to nack them
+all the time.
 
-> > >  #include <linux/timer.h>
-> > >  #include <linux/delay.h>
-> > >  #include <linux/wait.h>
-> > > +#include <linux/semaphore.h>
-> 
-> Don't put #include in a .h file if at all possible please.
-I guess the header files can be included explicitly within the source files but it requires a bigger change to the driver. There are some header files which are included by all the source files and contain some commonly used header files. These commonly used header files will otherwise have to be included separately in each of the source files.
+johannes
 
-> 
-> > >
-> > >  #include <linux/cache.h>
-> > >
-> > > diff --git a/drivers/staging/ath6kl/os/linux/netbuf.c
-> b/drivers/staging/ath6kl/os/linux/netbuf.c
-> > > index 63fa49c..15e5d04 100644
-> > > --- a/drivers/staging/ath6kl/os/linux/netbuf.c
-> > > +++ b/drivers/staging/ath6kl/os/linux/netbuf.c
-> > > @@ -20,8 +20,6 @@
-> > >  //
-> > >  // Author(s): ="Atheros"
-> > >  //-------------------------------------------------------------------
-> -----------
-> > > -#include <linux/kernel.h>
-> > > -#include <linux/skbuff.h>
-> 
-> Why remove these?
-> 
-> Totally confused,
-> 
-> greg k-h
