@@ -1,66 +1,105 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail30g.wh2.ocn.ne.jp ([220.111.41.239]:6131 "HELO
-	mail30g.wh2.ocn.ne.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1753562Ab0IODpo (ORCPT
+Received: from mail-qw0-f46.google.com ([209.85.216.46]:48520 "EHLO
+	mail-qw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754480Ab0I2SVT convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 14 Sep 2010 23:45:44 -0400
-Received: from vs3017.wh2.ocn.ne.jp (125.206.180.250)
-	by mail30g.wh2.ocn.ne.jp (RS ver 1.0.95vs) with SMTP id 5-0767302341
-	for <linux-wireless@vger.kernel.org>; Wed, 15 Sep 2010 12:45:42 +0900 (JST)
-From: Bruno Randolf <br1@einfach.org>
-To: Jonathan Guerin <jonathan@guerin.id.au>
-Subject: Re: [ath5k-devel] [ath5k] Incorrect value for ACK_TIMEOUT
-Date: Wed, 15 Sep 2010 12:45:53 +0900
-Cc: ath5k-devel@lists.ath5k.org,
-	"linux-wireless" <linux-wireless@vger.kernel.org>,
-	Nick Kossifidis <mickflemm@gmail.com>
-References: <AANLkTim+Q773KvA7Et1s2Zf8yMx36RGS2LsoJsX1Wtt9@mail.gmail.com> <201009151216.32430.br1@einfach.org> <AANLkTiniROJatam4yA4sss3qjczT-6=jSP9QxvmDo2dq@mail.gmail.com>
-In-Reply-To: <AANLkTiniROJatam4yA4sss3qjczT-6=jSP9QxvmDo2dq@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="windows-1252"
-Message-Id: <201009151245.53194.br1@einfach.org>
+	Wed, 29 Sep 2010 14:21:19 -0400
+Received: by qwh6 with SMTP id 6so668467qwh.19
+        for <linux-wireless@vger.kernel.org>; Wed, 29 Sep 2010 11:21:18 -0700 (PDT)
+Subject: Re: Question about starting up an AP
+Mime-Version: 1.0 (Apple Message framework v1081)
+Content-Type: text/plain; charset=windows-1252
+From: Joshua Smith <jesmith@kaon.com>
+In-Reply-To: <201009272235.42545.helmut.schaa@googlemail.com>
+Date: Wed, 29 Sep 2010 14:21:14 -0400
+Cc: linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com
+Message-Id: <C4D5DF09-82F0-48B4-9D64-6621B3C82932@kaon.com>
+References: <DA0C92FD-F6BF-4746-9BE1-A643A0D70F7A@kaon.com> <201009272143.52283.helmut.schaa@googlemail.com> <EA2A527E-E8DA-4612-B8CB-518E2C6BA7D2@kaon.com> <201009272235.42545.helmut.schaa@googlemail.com>
+To: Helmut Schaa <helmut.schaa@googlemail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed September 15 2010 12:28:36 Jonathan Guerin wrote:
-> >> Should all of the init be changed to use these functions, along with
-> >> #define init values?
-> > 
-> > i think it would be best if we could remove the initvals alltoghether and
-> > use the function to set the ack timeout. but i'm not sure if we need to
-> > have them initialized to some value at the beginning. in this case can
-> > we just override them later using the function. or just update the
-> > initvals numerically (but no defines).
-> 
-> If there are no initvals, changing the mode won't init them to default
-> values, will it? Or are you saying that values should not be
-> initialised until the mode is set?
+OK, I have a working system now.  It's not pretty, but it's better than where I was.
 
-that's what i'm not sure about... but ath5k_hw_set_ack_timeout() could be 
-called from reset so it applies the changes when the mode is set. i think that 
-should be fine, but it needs to be tested -- and i think the same applies to a 
-lot of the initvals.
+- Using compat-wireless-2010-09-20, with the patch "rt2x00: Fix oops caused by error path in rt2x00lib_start"
+  Compiled with:
+CONFIG_RT2X00_DEBUG=y
+CONFIG_RT2X00_LIB_DEBUGFS=y
+  and all the other DEBUGFS also set to y
 
-> I've been a bit scared to post here until I had more information
-> rather than a generic "uhh guys, something's not working". It's been
-> causing me massive headaches with my work as I'm relying on the spec
-> for timing values, but finding that the driver is doing something
-> much, much different. I'm more than happy to post these things, but
-> I'm not a good enough programmer to just give you patches without
-> discussing the fact that I may just not be understanding what's really
-> happening.
-> Thanks for the help, it's greatly appreciated!
+- Using a 2.6.27.8 kernel compiled with debug_fs support
 
-same here :)
+When my system comes up, I try to start hostapd.  This may succeed, or it may fail because of the error:
 
-the thing is, like bob said, that we don't really know much about what the HW 
-expects in some of these registers, so unless you can prove your changes to be 
-correct - e.g. by measurements which fit the theoretical model better, or by 
-better thruput, it's hard to say if they are correct or not. 
+phy0 -> rt2800_wait_wpdma_ready: Error - WPDMA TX/RX busy, aborting.
+phy0 -> rt2800pci_set_device_state: Error - Device failed to enter state 4 (-5).
 
-so before you worry about how to make a correct patch, just go ahead and 
-change those initvals to what you believe they should be. if it improves 
-something, let's talk about how to correctly fix it.
+If the error occurs, try starting hostapd one more time.  (This hardly ever works.)  If it fails again, reboot.
 
-bruno
+If we got past hostapd starting, then we need to see whether the card is deaf.  Do this by polling
+/sys/kernel/debug/ieee80211/phy0/rt2800pci/queue/queue
+for a while, to see if the RX queue counts ever get over zero.
+
+If they do, we're good to go.
+
+If not, kick the card this way:
+
+echo 1 > /sys/kernel/debug/ieee80211/phy0/reset
+
+Now check to see if that hit the WPDMA TX/RX busy error.  If it did, reboot.  If not, assume that restarting the card fixed the RX queue (it always seems to), and we're good to go.
+
+For your amusement and horror, I've pasted in the bash script below.
+
+At this point, if I could eliminate the WPDMA TX/RX busy error, I'd be able to eliminate all the reboots, and make a more sane system.  I'm still open to any and all suggestions on how to clear that condition!
+
+-Joshua
+
+…hideous bash script...
+
+  ifconfig wlan0 down
+
+  sleep 1
+  if ! hostapd -B /etc/hostapd.conf
+  then
+    echo "Problem starting Wi-Fi hardware.  Retrying..."
+    sleep 3
+    if ! hostapd -B /etc/hostapd.conf
+    then
+      echo -e "***\n*** Unable to initialize Wi-Fi hardware\n***\n***\n*** Restarting...\n***"
+      cleanreboot
+      sleep 60
+    fi
+  fi
+  sleep 1
+
+  mount -t debugfs none /sys/kernel/debug/
+  if [ -e /sys/kernel/debug/ieee80211/phy0/rt2800pci/ ]
+  then
+    echo "Testing Wi-Fi hardware..."
+    RETRY=1
+    while [ $RETRY -lt 20 ]
+    do
+      if [ `cat /sys/kernel/debug/ieee80211/phy0/rt2800pci/queue/queue | egrep -c '^14.0.24.24.0.0.0$'` -eq 0 ]
+      then
+        break
+      fi
+      echo -n '.'
+      sleep 1
+      RETRY=$((RETRY+1))
+    done
+    if [ $RETRY -eq 20 ]
+    then
+      echo "failed.  Resetting..."
+      echo 1 > /sys/kernel/debug/ieee80211/phy0/reset
+      sleep 1
+      if [ `dmesg | tail -n 30 | grep -c "rt2800_wait_wpdma_ready"` -gt 0 ]
+      then
+        echo -e "***\n*** Unable to reset Wi-Fi hardware\n***\n***\n*** Restarting...\n***"
+        cleanreboot
+        sleep 60
+      fi
+    else
+     echo "Passed!"
+    fi
+  fi
+
