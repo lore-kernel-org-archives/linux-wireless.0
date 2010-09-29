@@ -1,121 +1,98 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:59600 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754773Ab0ISRmd (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 19 Sep 2010 13:42:33 -0400
-From: Hauke Mehrtens <hauke@hauke-m.de>
-To: lrodriguez@atheros.com
-Cc: linux-wireless@vger.kernel.org, mcgrof@infradead.org,
-	Hauke Mehrtens <hauke@hauke-m.de>,
-	Kshitij Kulshreshtha <kkhere.geo@gmail.com>
-Subject: [PATCH 3/4] compat: move pmcia backport code into compat-2.6.36.h
-Date: Sun, 19 Sep 2010 19:42:10 +0200
-Message-Id: <1284918131-32065-3-git-send-email-hauke@hauke-m.de>
-In-Reply-To: <1284918131-32065-1-git-send-email-hauke@hauke-m.de>
-References: <1284918131-32065-1-git-send-email-hauke@hauke-m.de>
+Received: from mail.candelatech.com ([208.74.158.172]:57027 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751373Ab0I2X5W (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 29 Sep 2010 19:57:22 -0400
+From: greearb@candelatech.com
+To: linux-wireless@vger.kernel.org
+Cc: Ben Greear <greearb@candelatech.com>
+Subject: [RFC 1/2] wireless:  Show sta_flags for status in /proc/net/wireless
+Date: Wed, 29 Sep 2010 16:57:16 -0700
+Message-Id: <1285804637-5400-1-git-send-email-greearb@candelatech.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-We have all out backport headers in include/linux/compat-2.6.XX.h also the pcmcia
-part there.
+From: Ben Greear <greearb@candelatech.com>
 
-CC: Kshitij Kulshreshtha <kkhere.geo@gmail.com>
-Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+User-space can then decode the flags to determine associated,
+scanning, and other states.
+
+Signed-off-by: Ben Greear <greearb@candelatech.com>
 ---
- include/linux/compat-2.6.36.h |   29 +++++++++++++++++++++++++++++
- include/pcmcia/ds.h           |   36 ------------------------------------
- 2 files changed, 29 insertions(+), 36 deletions(-)
- delete mode 100644 include/pcmcia/ds.h
+:100644 100644 e6827ee... 43d485f... M	include/linux/wireless.h
+:100644 100644 f355b8c... b807430... M	include/net/cfg80211.h
+:100644 100644 c981604... 4fded2e... M	net/mac80211/cfg.c
+:100644 100644 7e5c3a4... 504a5d6... M	net/wireless/wext-compat.c
+ include/linux/wireless.h   |    4 ++--
+ include/net/cfg80211.h     |    2 ++
+ net/mac80211/cfg.c         |    4 ++++
+ net/wireless/wext-compat.c |    2 ++
+ 4 files changed, 10 insertions(+), 2 deletions(-)
 
-diff --git a/include/linux/compat-2.6.36.h b/include/linux/compat-2.6.36.h
-index 2df34d6..1d929d7 100644
---- a/include/linux/compat-2.6.36.h
-+++ b/include/linux/compat-2.6.36.h
-@@ -6,6 +6,8 @@
- #if (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,36))
+diff --git a/include/linux/wireless.h b/include/linux/wireless.h
+index e6827ee..43d485f 100644
+--- a/include/linux/wireless.h
++++ b/include/linux/wireless.h
+@@ -898,8 +898,8 @@ struct	iw_pmkid_cand
+  */
+ struct	iw_statistics
+ {
+-	__u16		status;		/* Status
+-					 * - device dependent for now */
++	__u16		status;		/* Status: ieee80211_sta_info_flags
++					 *   plus: (1<<15):  Scanning */
  
- #include <linux/usb.h>
-+#include <pcmcia/cistpl.h>
-+#include <pcmcia/ds.h>
- 
- #define kparam_block_sysfs_write(a)
- #define kparam_unblock_sysfs_write(a)
-@@ -27,6 +29,33 @@ extern struct urb *compat_usb_get_from_anchor(struct usb_anchor *anchor);
- extern void compat_usb_scuttle_anchored_urbs(struct usb_anchor *anchor);
+ 	struct iw_quality	qual;		/* Quality of the link
+ 						 * (instant/mean/max) */
+diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+index f355b8c..b807430 100644
+--- a/include/net/cfg80211.h
++++ b/include/net/cfg80211.h
+@@ -457,6 +457,7 @@ struct rate_info {
+  * @plid: mesh peer link id
+  * @plink_state: mesh peer link state
+  * @signal: signal strength of last received packet in dBm
++ * @status: ieee80211_sta_info_flags plus:  (1<<15) Scanning.
+  * @txrate: current unicast bitrate to this station
+  * @rx_packets: packets received from this station
+  * @tx_packets: packets transmitted to this station
+@@ -474,6 +475,7 @@ struct station_info {
+ 	u16 plid;
+ 	u8 plink_state;
+ 	s8 signal;
++	u16 status;
+ 	struct rate_info txrate;
+ 	u32 rx_packets;
+ 	u32 tx_packets;
+diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
+index c981604..4fded2e 100644
+--- a/net/mac80211/cfg.c
++++ b/net/mac80211/cfg.c
+@@ -327,6 +327,10 @@ static void sta_set_sinfo(struct sta_info *sta, struct station_info *sinfo)
+ 		sinfo->plink_state = sta->plink_state;
  #endif
- 
-+/**
-+ * pcmcia_read_config_byte() - read a byte from a card configuration register
-+ *
-+ * pcmcia_read_config_byte() reads a byte from a configuration register in
-+ * attribute memory.
-+ */
-+static inline int pcmcia_read_config_byte(struct pcmcia_device *p_dev, off_t where, u8 *val)
-+{
-+        int ret;
-+        conf_reg_t reg = { 0, CS_READ, where, 0 };
-+        ret = pcmcia_access_configuration_register(p_dev, &reg);
-+        *val = reg.Value;
-+        return ret;
-+}
+ 	}
 +
-+/**
-+ * pcmcia_write_config_byte() - write a byte to a card configuration register
-+ *
-+ * pcmcia_write_config_byte() writes a byte to a configuration register in
-+ * attribute memory.
-+ */
-+static inline int pcmcia_write_config_byte(struct pcmcia_device *p_dev, off_t where, u8 val)
-+{
-+	conf_reg_t reg = { 0, CS_WRITE, where, val };
-+	return pcmcia_access_configuration_register(p_dev, &reg);
-+}
-+
- #endif /* (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,36)) */
++	sinfo->status = sta->flags;
++	if (sdata->local->scanning)
++		sinfo->status |= (1<<15);
+ }
  
- #endif /* LINUX_26_36_COMPAT_H */
-diff --git a/include/pcmcia/ds.h b/include/pcmcia/ds.h
-deleted file mode 100644
-index fc43703..0000000
---- a/include/pcmcia/ds.h
-+++ /dev/null
-@@ -1,36 +0,0 @@
--#ifndef _COMPAT_PCMCIA_DS_H
--#define _COMPAT_PCMCIA_DS_H
--#include <linux/version.h>
--
--#include_next <pcmcia/ds.h>
--
--#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,36)
--/**
-- * pcmcia_read_config_byte() - read a byte from a card configuration register
-- *
-- * pcmcia_read_config_byte() reads a byte from a configuration register in
-- * attribute memory.
-- */
--static inline int pcmcia_read_config_byte(struct pcmcia_device *p_dev, off_t where, u8 *val)
--{
--        int ret;
--        conf_reg_t reg = { 0, CS_READ, where, 0 };
--        ret = pcmcia_access_configuration_register(p_dev, &reg);
--        *val = reg.Value;
--        return ret;
--}
--
--/**
-- * pcmcia_write_config_byte() - write a byte to a card configuration register
-- *
-- * pcmcia_write_config_byte() writes a byte to a configuration register in
-- * attribute memory.
-- */
--static inline int pcmcia_write_config_byte(struct pcmcia_device *p_dev, off_t where, u8 val)
--{
--	conf_reg_t reg = { 0, CS_WRITE, where, val };
--	return pcmcia_access_configuration_register(p_dev, &reg);
--}
--#endif /* LINUX_VERSION_CODE < KERNEL_VERSION(2,6,36) */
--
--#endif
+ 
+diff --git a/net/wireless/wext-compat.c b/net/wireless/wext-compat.c
+index 7e5c3a4..504a5d6 100644
+--- a/net/wireless/wext-compat.c
++++ b/net/wireless/wext-compat.c
+@@ -1355,6 +1355,8 @@ struct iw_statistics *cfg80211_wireless_stats(struct net_device *dev)
+ 
+ 	wstats.qual.updated |= IW_QUAL_NOISE_INVALID;
+ 
++	wstats.status = sinfo.status;
++
+ 	return &wstats;
+ }
+ EXPORT_SYMBOL_GPL(cfg80211_wireless_stats);
 -- 
-1.7.0.4
+1.7.2.2
 
