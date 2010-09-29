@@ -1,428 +1,137 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:43077 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754625Ab0IPNAb (ORCPT
+Received: from mail30f.wh2.ocn.ne.jp ([220.111.41.203]:17690 "HELO
+	mail30f.wh2.ocn.ne.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1754608Ab0I2JWU (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 16 Sep 2010 09:00:31 -0400
-Message-Id: <20100916125927.163519598@sipsolutions.net>
-Date: Thu, 16 Sep 2010 14:58:23 +0200
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, Jouni Malinen <j@w1.fi>,
-	Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH 2/2] mac80211: add p2p device type support
-References: <20100916125821.369545798@sipsolutions.net>
-Mime-Version: 1.0
+	Wed, 29 Sep 2010 05:22:20 -0400
+Received: from vs3002.wh2.ocn.ne.jp (125.206.180.165)
+	by mail30f.wh2.ocn.ne.jp (RS ver 1.0.95vs) with SMTP id 4-0906822136
+	for <linux-wireless@vger.kernel.org>; Wed, 29 Sep 2010 18:22:18 +0900 (JST)
+Subject: [PATCH] ath5k: vif adhoc fixup
+To: greearb@candelatech.com
+From: Bruno Randolf <br1@einfach.org>
+Cc: linux-wireless@vger.kernel.org
+Date: Wed, 29 Sep 2010 18:22:22 +0900
+Message-ID: <20100929092221.12160.62425.stgit@tt-desk>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+hi ben!
 
-When a driver advertises p2p device support,
-mac80211 will handle it, but internally it will
-rewrite the interface type to STA/AP rather than
-P2P-STA/GO since otherwise a lot of paths need
-to be touched that are otherwise identical. A
-p2p boolean tells drivers whether or not a given
-interface will be used for p2p or not.
+i made these changes on top of your v7 patch, please tell me what you think!
+and feel free to merge the changes into your patch, if you agree with them.
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+use staggered beacons only when multiple AP interfaces are configured.
+this fixes single-interface ad-hoc mode and also reduces the impact of the vif
+changes for the more common single-interface AP setups (beacon interval and
+SWBA interrupts).
+
+btw: we can always only have one ad-hoc interface. mac80211 makes sure of that,
+because it's impossible to synchronize to more than one TSF. this is the most
+important "feature" of ad-hoc, i think: it has to (and will) adapt the TSF of
+beacons in the same IBSS. that means the local TSF can make jumps (into the
+future only).
+
+i'm not sure where that leaves us concerning one ad-hoc interface + multiple AP
+interfaces. to allow the TSF updates we would have to keep the HW opmode in
+ad-hoc though. would VAPs still work that way? also how about stations? aren't
+they supposed to adapt the TSF of their AP? as i see the HW is in AP mode if
+there is at least one AP, so that does not happen if there is an AP interface
+too. how would multiple STA sync their TSF if they are connected to different
+AP with different TSF? but maybe the TSF does not matter as much for STA as it
+does for IBSS mode... if that is the case we could allow one adhoc + multiple
+STA interfaces and drive the HW in adhoc mode.
+
+oh, another thing: ad-hoc interfaces could potentially move to another channel
+(if it is not set to a fixed channel). i quess in most cases a fixed channel
+will be used, but it wouldn't be good for the other STAs if that happens. but
+thinking about it - doesn't the same apply with multiple STA interfaces? how
+do you avoid one STA from changing to another channel?
+
+so... many questions about the coexistence of adhoc and other interfaces... and
+honestly, i don't care much about adhoc + other vif at this time. as long as
+one adhoc interface works, i'm fine.
+
+btw: i think we should cleanup the beacon code, but i might do that after your
+vif changes got merged...
+
+bruno
 ---
- drivers/net/wireless/mac80211_hwsim.c |   15 +++++++++++----
- include/net/mac80211.h                |   27 ++++++++++++++++++++++++++-
- net/mac80211/cfg.c                    |   25 ++++++++++++++++++-------
- net/mac80211/driver-ops.h             |    6 +++---
- net/mac80211/driver-trace.h           |   21 +++++++++++++--------
- net/mac80211/iface.c                  |   29 ++++++++++++++++++++++++++---
- net/mac80211/main.c                   |   15 +++++++++++++++
- net/mac80211/rx.c                     |    4 +---
- net/mac80211/util.c                   |   18 ++++--------------
- 9 files changed, 117 insertions(+), 43 deletions(-)
+ drivers/net/wireless/ath/ath5k/base.c |   30 ++++++++++++++----------------
+ 1 files changed, 14 insertions(+), 16 deletions(-)
 
---- wireless-testing.orig/net/mac80211/iface.c	2010-09-16 14:47:02.000000000 +0200
-+++ wireless-testing/net/mac80211/iface.c	2010-09-16 14:47:16.000000000 +0200
-@@ -188,6 +188,8 @@ static int ieee80211_do_open(struct net_
- 		break;
- 	case NL80211_IFTYPE_UNSPECIFIED:
- 	case NUM_NL80211_IFTYPES:
-+	case NL80211_IFTYPE_P2P_CLIENT:
-+	case NL80211_IFTYPE_P2P_GO:
- 		/* cannot happen */
- 		WARN_ON(1);
- 		break;
-@@ -843,6 +845,7 @@ static void ieee80211_setup_sdata(struct
+diff --git a/drivers/net/wireless/ath/ath5k/base.c b/drivers/net/wireless/ath/ath5k/base.c
+index 499a906..3ed9935 100644
+--- a/drivers/net/wireless/ath/ath5k/base.c
++++ b/drivers/net/wireless/ath/ath5k/base.c
+@@ -1857,9 +1857,6 @@ ath5k_beacon_send(struct ath5k_softc *sc)
+ 	struct ath5k_vif *avf;
+ 	struct ath5k_buf *bf;
+ 	struct sk_buff *skb;
+-	u64 tsf;
+-	u32 tsftu;
+-	int slot;
  
- 	/* and set some type-dependent values */
- 	sdata->vif.type = type;
-+	sdata->vif.p2p = false;
- 	sdata->dev->netdev_ops = &ieee80211_dataif_ops;
- 	sdata->wdev.iftype = type;
+ 	ATH5K_DBG_UNLIMIT(sc, ATH5K_DEBUG_BEACON, "in beacon_send\n");
  
-@@ -856,10 +859,20 @@ static void ieee80211_setup_sdata(struct
- 	INIT_WORK(&sdata->work, ieee80211_iface_work);
- 
- 	switch (type) {
-+	case NL80211_IFTYPE_P2P_GO:
-+		type = NL80211_IFTYPE_AP;
-+		sdata->vif.type = type;
-+		sdata->vif.p2p = true;
-+		/* fall through */
- 	case NL80211_IFTYPE_AP:
- 		skb_queue_head_init(&sdata->u.ap.ps_bc_buf);
- 		INIT_LIST_HEAD(&sdata->u.ap.vlans);
- 		break;
-+	case NL80211_IFTYPE_P2P_CLIENT:
-+		type = NL80211_IFTYPE_STATION;
-+		sdata->vif.type = type;
-+		sdata->vif.p2p = true;
-+		/* fall through */
- 	case NL80211_IFTYPE_STATION:
- 		ieee80211_sta_setup_sdata(sdata);
- 		break;
-@@ -893,6 +906,8 @@ static int ieee80211_runtime_change_ifty
- {
- 	struct ieee80211_local *local = sdata->local;
- 	int ret, err;
-+	enum nl80211_iftype internal_type = type;
-+	bool p2p = false;
- 
- 	ASSERT_RTNL();
- 
-@@ -925,11 +940,19 @@ static int ieee80211_runtime_change_ifty
- 		 * code isn't prepared to handle).
- 		 */
- 		break;
-+	case NL80211_IFTYPE_P2P_CLIENT:
-+		p2p = true;
-+		internal_type = NL80211_IFTYPE_STATION;
-+		break;
-+	case NL80211_IFTYPE_P2P_GO:
-+		p2p = true;
-+		internal_type = NL80211_IFTYPE_AP;
-+		break;
- 	default:
- 		return -EBUSY;
+@@ -1891,20 +1888,21 @@ ath5k_beacon_send(struct ath5k_softc *sc)
+ 		sc->bmisscount = 0;
  	}
  
--	ret = ieee80211_check_concurrent_iface(sdata, type);
-+	ret = ieee80211_check_concurrent_iface(sdata, internal_type);
- 	if (ret)
- 		return ret;
- 
-@@ -937,7 +960,7 @@ static int ieee80211_runtime_change_ifty
- 
- 	ieee80211_teardown_sdata(sdata->dev);
- 
--	ret = drv_change_interface(local, sdata, type);
-+	ret = drv_change_interface(local, sdata, internal_type, p2p);
- 	if (ret)
- 		type = sdata->vif.type;
- 
-@@ -956,7 +979,7 @@ int ieee80211_if_change_type(struct ieee
- 
- 	ASSERT_RTNL();
- 
--	if (type == sdata->vif.type)
-+	if (type == ieee80211_vif_type_p2p(&sdata->vif))
- 		return 0;
- 
- 	/* Setting ad-hoc mode on non-IBSS channel is not supported. */
---- wireless-testing.orig/net/mac80211/rx.c	2010-09-16 14:47:06.000000000 +0200
-+++ wireless-testing/net/mac80211/rx.c	2010-09-16 14:47:16.000000000 +0200
-@@ -2588,9 +2588,7 @@ static int prepare_for_handlers(struct i
- 		if (compare_ether_addr(sdata->u.wds.remote_addr, hdr->addr2))
- 			return 0;
- 		break;
--	case NL80211_IFTYPE_MONITOR:
--	case NL80211_IFTYPE_UNSPECIFIED:
--	case NUM_NL80211_IFTYPES:
-+	default:
- 		/* should never get here */
- 		WARN_ON(1);
- 		break;
---- wireless-testing.orig/net/mac80211/util.c	2010-09-16 14:47:02.000000000 +0200
-+++ wireless-testing/net/mac80211/util.c	2010-09-16 14:47:16.000000000 +0200
-@@ -474,16 +474,10 @@ void ieee80211_iterate_active_interfaces
- 
- 	list_for_each_entry(sdata, &local->interfaces, list) {
- 		switch (sdata->vif.type) {
--		case NUM_NL80211_IFTYPES:
--		case NL80211_IFTYPE_UNSPECIFIED:
- 		case NL80211_IFTYPE_MONITOR:
- 		case NL80211_IFTYPE_AP_VLAN:
- 			continue;
--		case NL80211_IFTYPE_AP:
--		case NL80211_IFTYPE_STATION:
--		case NL80211_IFTYPE_ADHOC:
--		case NL80211_IFTYPE_WDS:
--		case NL80211_IFTYPE_MESH_POINT:
-+		default:
- 			break;
- 		}
- 		if (ieee80211_sdata_running(sdata))
-@@ -508,16 +502,10 @@ void ieee80211_iterate_active_interfaces
- 
- 	list_for_each_entry_rcu(sdata, &local->interfaces, list) {
- 		switch (sdata->vif.type) {
--		case NUM_NL80211_IFTYPES:
--		case NL80211_IFTYPE_UNSPECIFIED:
- 		case NL80211_IFTYPE_MONITOR:
- 		case NL80211_IFTYPE_AP_VLAN:
- 			continue;
--		case NL80211_IFTYPE_AP:
--		case NL80211_IFTYPE_STATION:
--		case NL80211_IFTYPE_ADHOC:
--		case NL80211_IFTYPE_WDS:
--		case NL80211_IFTYPE_MESH_POINT:
-+		default:
- 			break;
- 		}
- 		if (ieee80211_sdata_running(sdata))
-@@ -1193,6 +1181,8 @@ int ieee80211_reconfig(struct ieee80211_
- 			break;
- 		case NL80211_IFTYPE_UNSPECIFIED:
- 		case NUM_NL80211_IFTYPES:
-+		case NL80211_IFTYPE_P2P_CLIENT:
-+		case NL80211_IFTYPE_P2P_GO:
- 			WARN_ON(1);
- 			break;
- 		}
---- wireless-testing.orig/net/mac80211/cfg.c	2010-09-16 14:47:06.000000000 +0200
-+++ wireless-testing/net/mac80211/cfg.c	2010-09-16 14:47:16.000000000 +0200
-@@ -1151,15 +1151,26 @@ static int ieee80211_scan(struct wiphy *
- 			  struct net_device *dev,
- 			  struct cfg80211_scan_request *req)
- {
--	struct ieee80211_sub_if_data *sdata;
-+	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
- 
--	sdata = IEEE80211_DEV_TO_SUB_IF(dev);
+-	tsf = ath5k_hw_get_tsf64(ah);
+-	tsftu = TSF_TO_TU(tsf);
+-	slot = ((tsftu % sc->bintval) * ATH_BCBUF) / sc->bintval;
+-	vif = sc->bslot[(slot + 1) % ATH_BCBUF];
 -
--	if (sdata->vif.type != NL80211_IFTYPE_STATION &&
--	    sdata->vif.type != NL80211_IFTYPE_ADHOC &&
--	    sdata->vif.type != NL80211_IFTYPE_MESH_POINT &&
--	    (sdata->vif.type != NL80211_IFTYPE_AP || sdata->u.ap.beacon))
-+	switch (ieee80211_vif_type_p2p(&sdata->vif)) {
-+	case NL80211_IFTYPE_STATION:
-+	case NL80211_IFTYPE_ADHOC:
-+	case NL80211_IFTYPE_MESH_POINT:
-+	case NL80211_IFTYPE_P2P_CLIENT:
-+		break;
-+	case NL80211_IFTYPE_P2P_GO:
-+		if (sdata->local->ops->hw_scan)
-+			break;
-+		/* FIXME: implement NoA while scanning in software */
-+		return -EOPNOTSUPP;
-+	case NL80211_IFTYPE_AP:
-+		if (sdata->u.ap.beacon)
-+			return -EOPNOTSUPP;
-+		break;
-+	default:
- 		return -EOPNOTSUPP;
-+	}
+-	ATH5K_DBG(sc, ATH5K_DEBUG_BEACON,
+-		  "tsf %llx tsftu %x intval %u slot %u vif %p\n",
+-		 (unsigned long long)tsf, tsftu, sc->bintval, slot, vif);
++	if (sc->opmode == NL80211_IFTYPE_AP && sc->num_ap_vifs > 1) {
++		u64 tsf = ath5k_hw_get_tsf64(ah);
++		u32 tsftu = TSF_TO_TU(tsf);
++		int slot = ((tsftu % sc->bintval) * ATH_BCBUF) / sc->bintval;
++		vif = sc->bslot[(slot + 1) % ATH_BCBUF];
++		ATH5K_DBG(sc, ATH5K_DEBUG_BEACON,
++			"tsf %llx tsftu %x intval %u slot %u vif %p\n",
++			(unsigned long long)tsf, tsftu, sc->bintval, slot, vif);
++	} else /* only one interface */
++		vif = sc->bslot[0];
  
- 	return ieee80211_request_scan(sdata, req);
- }
---- wireless-testing.orig/include/net/mac80211.h	2010-09-16 14:47:06.000000000 +0200
-+++ wireless-testing/include/net/mac80211.h	2010-09-16 14:47:16.000000000 +0200
-@@ -769,6 +769,8 @@ struct ieee80211_channel_switch {
-  * @bss_conf: BSS configuration for this interface, either our own
-  *	or the BSS we're associated to
-  * @addr: address of this interface
-+ * @p2p: indicates whether this AP or STA interface is a p2p
-+ *	interface, i.e. a GO or p2p-sta respectively
-  * @drv_priv: data area for driver use, will always be aligned to
-  *	sizeof(void *).
-  */
-@@ -776,6 +778,7 @@ struct ieee80211_vif {
- 	enum nl80211_iftype type;
- 	struct ieee80211_bss_conf bss_conf;
- 	u8 addr[ETH_ALEN];
-+	bool p2p;
- 	/* must be last */
- 	u8 drv_priv[0] __attribute__((__aligned__(sizeof(void *))));
- };
-@@ -1701,7 +1704,7 @@ struct ieee80211_ops {
- 			     struct ieee80211_vif *vif);
- 	int (*change_interface)(struct ieee80211_hw *hw,
- 				struct ieee80211_vif *vif,
--				enum nl80211_iftype new_type);
-+				enum nl80211_iftype new_type, bool p2p);
- 	void (*remove_interface)(struct ieee80211_hw *hw,
- 				 struct ieee80211_vif *vif);
- 	int (*config)(struct ieee80211_hw *hw, u32 changed);
-@@ -2721,4 +2724,26 @@ conf_is_ht(struct ieee80211_conf *conf)
- 	return conf->channel_type != NL80211_CHAN_NO_HT;
- }
+-	if (vif)
+-		avf = (void *)vif->drv_priv;
+-	else
++	if (!vif)
+ 		return;
  
-+static inline enum nl80211_iftype
-+ieee80211_iftype_p2p(enum nl80211_iftype type, bool p2p)
-+{
-+	if (p2p) {
-+		switch (type) {
-+		case NL80211_IFTYPE_STATION:
-+			return NL80211_IFTYPE_P2P_CLIENT;
-+		case NL80211_IFTYPE_AP:
-+			return NL80211_IFTYPE_P2P_GO;
-+		default:
-+			break;
-+		}
-+	}
-+	return type;
-+}
-+
-+static inline enum nl80211_iftype
-+ieee80211_vif_type_p2p(struct ieee80211_vif *vif)
-+{
-+	return ieee80211_iftype_p2p(vif->type, vif->p2p);
-+}
-+
- #endif /* MAC80211_H */
---- wireless-testing.orig/net/mac80211/main.c	2010-09-16 14:47:02.000000000 +0200
-+++ wireless-testing/net/mac80211/main.c	2010-09-16 14:47:16.000000000 +0200
-@@ -459,6 +459,21 @@ ieee80211_default_mgmt_stypes[NUM_NL8021
- 			BIT(IEEE80211_STYPE_DEAUTH >> 4) |
- 			BIT(IEEE80211_STYPE_ACTION >> 4),
- 	},
-+	[NL80211_IFTYPE_P2P_CLIENT] = {
-+		.tx = 0xffff,
-+		.rx = BIT(IEEE80211_STYPE_ACTION >> 4) |
-+			BIT(IEEE80211_STYPE_PROBE_REQ >> 4),
-+	},
-+	[NL80211_IFTYPE_P2P_GO] = {
-+		.tx = 0xffff,
-+		.rx = BIT(IEEE80211_STYPE_ASSOC_REQ >> 4) |
-+			BIT(IEEE80211_STYPE_REASSOC_REQ >> 4) |
-+			BIT(IEEE80211_STYPE_PROBE_REQ >> 4) |
-+			BIT(IEEE80211_STYPE_DISASSOC >> 4) |
-+			BIT(IEEE80211_STYPE_AUTH >> 4) |
-+			BIT(IEEE80211_STYPE_DEAUTH >> 4) |
-+			BIT(IEEE80211_STYPE_ACTION >> 4),
-+	},
- };
++	avf = (void *)vif->drv_priv;
+ 	bf = avf->bbuf;
+ 	if (unlikely(bf->skb == NULL || sc->opmode == NL80211_IFTYPE_STATION ||
+ 			sc->opmode == NL80211_IFTYPE_MONITOR)) {
+@@ -1964,7 +1962,7 @@ ath5k_beacon_update_timers(struct ath5k_softc *sc, u64 bc_tsf)
+ 	u64 hw_tsf;
  
- struct ieee80211_hw *ieee80211_alloc_hw(size_t priv_data_len,
---- wireless-testing.orig/net/mac80211/driver-trace.h	2010-09-16 14:47:02.000000000 +0200
-+++ wireless-testing/net/mac80211/driver-trace.h	2010-09-16 14:47:16.000000000 +0200
-@@ -25,12 +25,14 @@ static inline void trace_ ## name(proto)
- #define STA_PR_FMT	" sta:%pM"
- #define STA_PR_ARG	__entry->sta_addr
+ 	intval = sc->bintval & AR5K_BEACON_PERIOD;
+-	if (sc->opmode == NL80211_IFTYPE_AP) {
++	if (sc->opmode == NL80211_IFTYPE_AP && sc->num_ap_vifs > 1) {
+ 		intval /= ATH_BCBUF;	/* staggered multi-bss beacons */
+ 		if (intval < 15)
+ 			ATH5K_WARN(sc, "intval %u is too low, min 15\n",
+@@ -2795,7 +2793,6 @@ static int ath5k_add_interface(struct ieee80211_hw *hw,
+ 		ret = -ELNRNG;
+ 		goto end;
+ 	}
+-	sc->nvifs++;
  
--#define VIF_ENTRY	__field(enum nl80211_iftype, vif_type) __field(void *, sdata) \
-+#define VIF_ENTRY	__field(enum nl80211_iftype, vif_type) __field(void *, sdata)	\
-+			__field(bool, p2p)						\
- 			__string(vif_name, sdata->dev ? sdata->dev->name : "<nodev>")
--#define VIF_ASSIGN	__entry->vif_type = sdata->vif.type; __entry->sdata = sdata; \
-+#define VIF_ASSIGN	__entry->vif_type = sdata->vif.type; __entry->sdata = sdata;	\
-+			__entry->p2p = sdata->vif.p2p;					\
- 			__assign_str(vif_name, sdata->dev ? sdata->dev->name : "<nodev>")
--#define VIF_PR_FMT	" vif:%s(%d)"
--#define VIF_PR_ARG	__get_str(vif_name), __entry->vif_type
-+#define VIF_PR_FMT	" vif:%s(%d%s)"
-+#define VIF_PR_ARG	__get_str(vif_name), __entry->vif_type, __entry->p2p ? "/p2p" : ""
+ 	switch (vif->type) {
+ 	case NL80211_IFTYPE_AP:
+@@ -2809,6 +2806,7 @@ static int ath5k_add_interface(struct ieee80211_hw *hw,
+ 		goto end;
+ 	}
  
- /*
-  * Tracing for driver callbacks.
-@@ -139,25 +141,28 @@ TRACE_EVENT(drv_add_interface,
- TRACE_EVENT(drv_change_interface,
- 	TP_PROTO(struct ieee80211_local *local,
- 		 struct ieee80211_sub_if_data *sdata,
--		 enum nl80211_iftype type),
-+		 enum nl80211_iftype type, bool p2p),
++	sc->nvifs++;
+ 	ATH5K_DBG(sc, ATH5K_DEBUG_MODE, "add interface mode %d\n", avf->opmode);
  
--	TP_ARGS(local, sdata, type),
-+	TP_ARGS(local, sdata, type, p2p),
- 
- 	TP_STRUCT__entry(
- 		LOCAL_ENTRY
- 		VIF_ENTRY
- 		__field(u32, new_type)
-+		__field(bool, new_p2p)
- 	),
- 
- 	TP_fast_assign(
- 		LOCAL_ASSIGN;
- 		VIF_ASSIGN;
- 		__entry->new_type = type;
-+		__entry->new_p2p = p2p;
- 	),
- 
- 	TP_printk(
--		LOCAL_PR_FMT  VIF_PR_FMT " new type:%d",
--		LOCAL_PR_ARG, VIF_PR_ARG, __entry->new_type
-+		LOCAL_PR_FMT  VIF_PR_FMT " new type:%d%s",
-+		LOCAL_PR_ARG, VIF_PR_ARG, __entry->new_type,
-+		__entry->new_p2p ? "/p2p" : ""
- 	)
- );
- 
---- wireless-testing.orig/net/mac80211/driver-ops.h	2010-09-16 14:47:02.000000000 +0200
-+++ wireless-testing/net/mac80211/driver-ops.h	2010-09-16 14:47:16.000000000 +0200
-@@ -56,14 +56,14 @@ static inline int drv_add_interface(stru
- 
- static inline int drv_change_interface(struct ieee80211_local *local,
- 				       struct ieee80211_sub_if_data *sdata,
--				       enum nl80211_iftype type)
-+				       enum nl80211_iftype type, bool p2p)
- {
- 	int ret;
- 
- 	might_sleep();
- 
--	trace_drv_change_interface(local, sdata, type);
--	ret = local->ops->change_interface(&local->hw, &sdata->vif, type);
-+	trace_drv_change_interface(local, sdata, type, p2p);
-+	ret = local->ops->change_interface(&local->hw, &sdata->vif, type, p2p);
- 	trace_drv_return_int(local, ret);
- 	return ret;
- }
---- wireless-testing.orig/drivers/net/wireless/mac80211_hwsim.c	2010-09-16 14:47:02.000000000 +0200
-+++ wireless-testing/drivers/net/wireless/mac80211_hwsim.c	2010-09-16 14:47:16.000000000 +0200
-@@ -595,7 +595,8 @@ static int mac80211_hwsim_add_interface(
- 					struct ieee80211_vif *vif)
- {
- 	wiphy_debug(hw->wiphy, "%s (type=%d mac_addr=%pM)\n",
--		    __func__, vif->type, vif->addr);
-+		    __func__, ieee80211_vif_type_p2p(vif),
-+		    vif->addr);
- 	hwsim_set_magic(vif);
- 	return 0;
- }
-@@ -603,11 +604,14 @@ static int mac80211_hwsim_add_interface(
- 
- static int mac80211_hwsim_change_interface(struct ieee80211_hw *hw,
- 					   struct ieee80211_vif *vif,
--					   enum nl80211_iftype newtype)
-+					   enum nl80211_iftype newtype,
-+					   bool newp2p)
- {
-+	newtype = ieee80211_iftype_p2p(newtype, newp2p);
- 	wiphy_debug(hw->wiphy,
- 		    "%s (old type=%d, new type=%d, mac_addr=%pM)\n",
--		    __func__, vif->type, newtype, vif->addr);
-+		    __func__, ieee80211_vif_type_p2p(vif),
-+		    newtype, vif->addr);
- 	hwsim_check_magic(vif);
- 
- 	return 0;
-@@ -617,7 +621,8 @@ static void mac80211_hwsim_remove_interf
- 	struct ieee80211_hw *hw, struct ieee80211_vif *vif)
- {
- 	wiphy_debug(hw->wiphy, "%s (type=%d mac_addr=%pM)\n",
--		    __func__, vif->type, vif->addr);
-+		    __func__, ieee80211_vif_type_p2p(vif),
-+		    vif->addr);
- 	hwsim_check_magic(vif);
- 	hwsim_clear_magic(vif);
- }
-@@ -1310,6 +1315,8 @@ static int __init init_mac80211_hwsim(vo
- 		hw->wiphy->interface_modes =
- 			BIT(NL80211_IFTYPE_STATION) |
- 			BIT(NL80211_IFTYPE_AP) |
-+			BIT(NL80211_IFTYPE_P2P_CLIENT) |
-+			BIT(NL80211_IFTYPE_P2P_GO) |
- 			BIT(NL80211_IFTYPE_ADHOC) |
- 			BIT(NL80211_IFTYPE_MESH_POINT);
- 
-
+ 	/* Assign the vap/adhoc to a beacon xmit slot. */
 
