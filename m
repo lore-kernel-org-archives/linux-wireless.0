@@ -1,149 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw0-f46.google.com ([74.125.83.46]:33299 "EHLO
-	mail-gw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752399Ab0ICWf1 (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:55432 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754812Ab0I2SGi (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 3 Sep 2010 18:35:27 -0400
-Date: Fri, 3 Sep 2010 19:35:28 -0300
-From: "Gustavo F. Padovan" <padovan@profusion.mobi>
-To: Dominik Brodowski <linux@dominikbrodowski.net>
-Cc: linux-pcmcia@lists.infradead.org, netdev@vger.kernel.org,
-	linux-wireless@vger.kernel.org, linux-ide@vger.kernel.org,
-	linux-usb@vger.kernel.org, laforge@gnumonks.org,
-	linux-mtd@lists.infradead.org, linux-bluetooth@vger.kernel.org,
-	alsa-devel@alsa-project.org, linux-serial@vger.kernel.org,
-	Jiri Kosina <jkosina@suse.cz>, linux-scsi@vger.kernel.org
-Subject: Re: [PATCH 08/15] pcmcia: convert pcmcia_request_configuration to
- pcmcia_enable_device
-Message-ID: <20100903223528.GE16973@vigoh>
-References: <20100903105628.GA21255@comet.dominikbrodowski.net>
- <1283511434-21620-8-git-send-email-linux@dominikbrodowski.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1283511434-21620-8-git-send-email-linux@dominikbrodowski.net>
+	Wed, 29 Sep 2010 14:06:38 -0400
+Subject: Re: [PATCH 2/2] mac80211:  Don't go off-channel in work_work
+ unless needed.
+From: Johannes Berg <johannes@sipsolutions.net>
+To: greearb@candelatech.com
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <1285783383-20822-2-git-send-email-greearb@candelatech.com>
+References: <1285783383-20822-1-git-send-email-greearb@candelatech.com>
+	 <1285783383-20822-2-git-send-email-greearb@candelatech.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Wed, 29 Sep 2010 20:06:38 +0200
+Message-ID: <1285783598.3756.31.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-* Dominik Brodowski <linux@dominikbrodowski.net> [2010-09-03 12:57:07 +0200]:
-
-> pcmcia_enable_device() now replaces pcmcia_request_configuration().
-> Instead of config_req_t, all necessary flags are either passed as
-> a parameter to pcmcia_enable_device(), or (in rare circumstances)
-> set in struct pcmcia_device -> flags.
+On Wed, 2010-09-29 at 11:03 -0700, greearb@candelatech.com wrote:
+> From: Ben Greear <greearb@candelatech.com>
 > 
-> With the last remaining user of include/pcmcia/cs.h gone, remove
-> all references.
+> If the work to be done is on the current active channel, then
+> do not call the offchannel and return-to-channel logic.
 > 
-> CC: netdev@vger.kernel.org
-> CC: linux-wireless@vger.kernel.org
-> CC: linux-ide@vger.kernel.org
-> CC: linux-usb@vger.kernel.org
-> CC: laforge@gnumonks.org
-> CC: linux-mtd@lists.infradead.org
-> CC: linux-bluetooth@vger.kernel.org
-> CC: alsa-devel@alsa-project.org
-> CC: linux-serial@vger.kernel.org
-> CC: Jiri Kosina <jkosina@suse.cz>
-> CC: linux-scsi@vger.kernel.org
-> Signed-off-by: Dominik Brodowski <linux@dominikbrodowski.net>
+> Signed-off-by: Ben Greear <greearb@candelatech.com>
 > ---
->  Documentation/pcmcia/driver-changes.txt          |    6 ++++
->  drivers/ata/pata_pcmcia.c                        |    5 +--
->  drivers/bluetooth/bluecard_cs.c                  |    5 +--
->  drivers/bluetooth/bt3c_cs.c                      |    5 +--
->  drivers/bluetooth/btuart_cs.c                    |    5 +--
->  drivers/bluetooth/dtl1_cs.c                      |    5 +--
->  drivers/char/pcmcia/cm4000_cs.c                  |    3 +-
->  drivers/char/pcmcia/cm4040_cs.c                  |    5 +--
->  drivers/char/pcmcia/ipwireless/main.c            |    6 +--
->  drivers/char/pcmcia/ipwireless/main.h            |    1 -
->  drivers/char/pcmcia/ipwireless/tty.h             |    1 -
->  drivers/char/pcmcia/synclink_cs.c                |   10 ++----
->  drivers/ide/ide-cs.c                             |    6 ++--
->  drivers/isdn/hardware/avm/avm_cs.c               |    5 +--
->  drivers/isdn/hisax/avma1_cs.c                    |    5 +--
->  drivers/isdn/hisax/elsa_cs.c                     |    8 +----
->  drivers/isdn/hisax/sedlbauer_cs.c                |   12 ++-----
->  drivers/isdn/hisax/teles_cs.c                    |    8 ++---
->  drivers/mmc/host/sdricoh_cs.c                    |    1 -
->  drivers/mtd/maps/pcmciamtd.c                     |    6 +---
->  drivers/net/pcmcia/3c574_cs.c                    |    5 +--
->  drivers/net/pcmcia/3c589_cs.c                    |    5 +--
->  drivers/net/pcmcia/axnet_cs.c                    |   10 +++---
->  drivers/net/pcmcia/com20020_cs.c                 |    5 +--
->  drivers/net/pcmcia/fmvj18x_cs.c                  |    5 +--
->  drivers/net/pcmcia/ibmtr_cs.c                    |    5 +--
->  drivers/net/pcmcia/nmclan_cs.c                   |    5 +--
->  drivers/net/pcmcia/pcnet_cs.c                    |    8 ++--
->  drivers/net/pcmcia/smc91c92_cs.c                 |    9 ++---
->  drivers/net/pcmcia/xirc2ps_cs.c                  |   12 ++++----
->  drivers/net/wireless/airo_cs.c                   |   16 ++--------
->  drivers/net/wireless/atmel_cs.c                  |   16 ++--------
->  drivers/net/wireless/b43/pcmcia.c                |    5 +--
->  drivers/net/wireless/hostap/hostap_cs.c          |   10 ++----
->  drivers/net/wireless/libertas/if_cs.c            |   10 ++----
->  drivers/net/wireless/orinoco/orinoco_cs.c        |   12 +------
->  drivers/net/wireless/orinoco/spectrum_cs.c       |   12 +------
->  drivers/net/wireless/ray_cs.c                    |    5 +--
->  drivers/net/wireless/wl3501_cs.c                 |    5 +--
->  drivers/parport/parport_cs.c                     |    5 +--
->  drivers/pcmcia/au1000_generic.h                  |    1 -
->  drivers/pcmcia/au1000_pb1x00.c                   |    1 -
->  drivers/pcmcia/cistpl.c                          |    1 -
->  drivers/pcmcia/cs.c                              |    1 -
->  drivers/pcmcia/cs_internal.h                     |    5 ---
->  drivers/pcmcia/ds.c                              |    3 +-
->  drivers/pcmcia/i82092.c                          |    1 -
->  drivers/pcmcia/i82365.c                          |    1 -
->  drivers/pcmcia/m32r_cfc.c                        |    1 -
->  drivers/pcmcia/m32r_pcc.c                        |    1 -
->  drivers/pcmcia/m8xx_pcmcia.c                     |    1 -
->  drivers/pcmcia/pcmcia_cis.c                      |    1 -
->  drivers/pcmcia/pcmcia_resource.c                 |   33 ++++++++++----------
->  drivers/pcmcia/pd6729.c                          |    1 -
->  drivers/pcmcia/rsrc_iodyn.c                      |    1 -
->  drivers/pcmcia/rsrc_mgr.c                        |    1 -
->  drivers/pcmcia/rsrc_nonstatic.c                  |    1 -
->  drivers/pcmcia/sa1100_generic.c                  |    1 -
->  drivers/pcmcia/soc_common.h                      |    1 -
->  drivers/pcmcia/socket_sysfs.c                    |    1 -
->  drivers/pcmcia/tcic.c                            |    1 -
->  drivers/pcmcia/xxs1500_ss.c                      |    1 -
->  drivers/pcmcia/yenta_socket.c                    |    1 -
->  drivers/scsi/pcmcia/aha152x_stub.c               |    5 +--
->  drivers/scsi/pcmcia/fdomain_stub.c               |    5 +--
->  drivers/scsi/pcmcia/nsp_cs.c                     |   13 +++-----
->  drivers/scsi/pcmcia/qlogic_stub.c                |    7 ++--
->  drivers/scsi/pcmcia/sym53c500_cs.c               |    5 +--
->  drivers/serial/serial_cs.c                       |    9 ++---
->  drivers/ssb/main.c                               |    1 -
->  drivers/ssb/pcmcia.c                             |    1 -
->  drivers/ssb/scan.c                               |    1 -
->  drivers/staging/comedi/drivers/cb_das16_cs.c     |   11 ++-----
->  drivers/staging/comedi/drivers/das08_cs.c        |   17 ++---------
->  drivers/staging/comedi/drivers/ni_daq_700.c      |   19 ++---------
->  drivers/staging/comedi/drivers/ni_daq_dio24.c    |   19 ++---------
->  drivers/staging/comedi/drivers/ni_labpc_cs.c     |   20 +++---------
->  drivers/staging/comedi/drivers/ni_mio_cs.c       |    5 +--
->  drivers/staging/comedi/drivers/quatech_daqp_cs.c |   17 ++---------
->  drivers/staging/wlags49_h2/wl_cs.c               |    7 ++--
->  drivers/staging/wlags49_h2/wl_internal.h         |    1 -
->  drivers/telephony/ixj_pcmcia.c                   |    3 +-
->  drivers/usb/host/sl811_cs.c                      |    7 +---
->  include/pcmcia/cs.h                              |   35 ----------------------
->  include/pcmcia/ds.h                              |   17 +++++++----
->  include/pcmcia/ss.h                              |    1 -
->  sound/pcmcia/pdaudiocf/pdaudiocf.c               |    5 ++-
->  sound/pcmcia/pdaudiocf/pdaudiocf.h               |    1 -
->  sound/pcmcia/vx/vxpocket.c                       |    6 ++--
->  sound/pcmcia/vx/vxpocket.h                       |    1 -
->  90 files changed, 179 insertions(+), 394 deletions(-)
->  delete mode 100644 include/pcmcia/cs.h
+> :100644 100644 ae344d1... 1f2673d... M	net/mac80211/work.c
+>  net/mac80211/work.c |   28 ++++++++++++++++++++--------
+>  1 files changed, 20 insertions(+), 8 deletions(-)
+> 
+> diff --git a/net/mac80211/work.c b/net/mac80211/work.c
+> index ae344d1..1f2673d 100644
+> --- a/net/mac80211/work.c
+> +++ b/net/mac80211/work.c
+> @@ -873,6 +873,7 @@ static void ieee80211_work_work(struct work_struct *work)
+>  	LIST_HEAD(free_work);
+>  	enum work_action rma;
+>  	bool remain_off_channel = false;
+> +	bool went_off_channel = false;
 
-For drivers/bluetooth/
+Heh, this is not going to work ... the return may be done in a separate
+invocation of the function. Would have been nice to test this ;-)
 
-Acked-by: Gustavo F. Padovan <padovan@profusion.mobi>
+johannes
 
--- 
-Gustavo F. Padovan
-ProFUSION embedded systems - http://profusion.mobi
