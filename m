@@ -1,138 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:36841 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932467Ab0I3VMM (ORCPT
+Received: from mail-iw0-f174.google.com ([209.85.214.174]:48480 "EHLO
+	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754390Ab0I2RQv convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 30 Sep 2010 17:12:12 -0400
-Message-Id: <20100930211131.021309930@sipsolutions.net>
-Date: Thu, 30 Sep 2010 23:10:14 +0200
-From: Johannes Berg <johannes@sipsolutions.net>
-To: netdev@vger.kernel.org, linux-wireless@vger.kernel.org
-Cc: tgraf@suug.ch
-Subject: [RFC 1/2] genetlink: introduce pre_doit/post_doit hooks
-References: <20100930211013.472957770@sipsolutions.net>
-Mime-Version: 1.0
+	Wed, 29 Sep 2010 13:16:51 -0400
+Received: by iwn5 with SMTP id 5so1262195iwn.19
+        for <linux-wireless@vger.kernel.org>; Wed, 29 Sep 2010 10:16:51 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <20100929085657.GD18450@vasanth-laptop>
+References: <20100928222945.GB10932@tux> <20100928230211.GA9844@jm.kir.nu>
+ <AANLkTimGPPUW6=QYpZz7q96vt1GOd5kJ-tvYEKxZZT2B@mail.gmail.com>
+ <20100929052006.GC18450@vasanth-laptop> <AANLkTinKkTgUUGPxY82G1B6taToKeAMOmrJ+tYvzLY52@mail.gmail.com>
+ <20100929085657.GD18450@vasanth-laptop>
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Date: Wed, 29 Sep 2010 10:16:30 -0700
+Message-ID: <AANLkTikUAchrjeMraauLaUggtq7bYZoki=kz2o8XQ2yh@mail.gmail.com>
+Subject: Re: [PATCH] mac80211: fix rate_control_send_low warnings for delbas
+To: Vasanthakumar Thiagarajan <vasanth@atheros.com>
+Cc: Vasanth Thiagarajan <Vasanth.Thiagarajan@atheros.com>,
+	Jouni Malinen <j@w1.fi>,
+	"linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"stable@kernel.org" <stable@kernel.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Paul Stewart <pstew@google.com>,
+	Amod Bodas <Amod.Bodas@atheros.com>,
+	Johannes Berg <johannes@sipsolutions.net>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+On Wed, Sep 29, 2010 at 1:56 AM, Vasanthakumar Thiagarajan
+<vasanth@atheros.com> wrote:
+> On Wed, Sep 29, 2010 at 12:54:27PM +0530, Luis R. Rodriguez wrote:
+>> > (where we just authenticated with another AP)
+>>
+>> Not sure I get this part.
+>
+> I mean we are trying to tx frames on the channel where we got
+> newly authenticated to another AP.
 
-Each family may have some amount of boilerplate
-locking code that applies to most, or even all,
-commands.
+Ah yes, agred.
 
-This allows a family to handle such things in
-a more generic way, by allowing it to
- a) include private flags in each operation
- b) specify a pre_doit hook that is called,
-    before an operation's doit() callback and
-    may return an error directly,
- c) specify a post_doit hook that can undo
-    locking or similar things done by pre_doit,
-    and finally
- d) include two private pointers in each info
-    struct passed between all these operations
-    including doit(). (It's two because I'll
-    need two in nl80211 -- can be extended.)
+>> > just before starting association with the new AP.
+>>
+>> Right, but when we are already switched to the new channel, and the
+>> reason is that when we try to send a frame we never kept track of the
+>> peer's original channel. Now, I also see the teardown happen right
+>> before mac80211 tells us its associated to the new AP as well but it
+>> not sure what cfg80211 thinks at that point. At least the cfg80211
+>> patch's intention seemed to be to allow association to both, and
+>> tearing down the association to the other once you completed
+>> association to the other. I do see, what you describe though too --
+>> only authentication to the new AP, and right before association, we
+>> send the teardown. The problem is though that when we send the
+>> teardown we are already set on the new channel.
+>
+> Ok. From my understanding, the sequence of operations during roaming
+> are
+>
+> 1. NL80211_CMD_AUTHENTICATE to an (better) AP from user space
+>        - Change to New Ap's channel and send auth req (done by
+>          ieee80211_work_work()).
+>        - Notify auth resp to userspace (ieee80211_probe_auth_done())
+> 2. NL80211_CMD_ASSOCIATE to newly authenticated AP from user space
+>
+>        - Clean up any existing BA session with an AP, if any.
+>        Here the assumption is, ieee80211_work_work() has already
+>        configured the device back to it's operating channel (the
+>        old one) after the authentication is complete with the new
+>        AP. This should have happened part of 1.
+>        - Start the association process with the new AP.
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- include/net/genetlink.h |   18 ++++++++++++++++++
- net/netlink/genetlink.c |   14 +++++++++++++-
- 2 files changed, 31 insertions(+), 1 deletion(-)
+No see, I believe we actually get the association response and *then*
+we teardown the BA agreements. Let me review this some more today.
 
---- wireless-testing.orig/include/net/genetlink.h	2010-09-30 22:19:03.000000000 +0200
-+++ wireless-testing/include/net/genetlink.h	2010-09-30 22:34:10.000000000 +0200
-@@ -20,6 +20,9 @@ struct genl_multicast_group {
- 	u32			id;
- };
- 
-+struct genl_ops;
-+struct genl_info;
-+
- /**
-  * struct genl_family - generic netlink family
-  * @id: protocol family idenfitier
-@@ -29,6 +32,10 @@ struct genl_multicast_group {
-  * @maxattr: maximum number of attributes supported
-  * @netnsok: set to true if the family can handle network
-  *	namespaces and should be presented in all of them
-+ * @pre_doit: called before an operation's doit callback, it may
-+ *	do additional, common, filtering and return an error
-+ * @post_doit: called after an operation's doit callback, it may
-+ *	undo operations done by pre_doit, for example release locks
-  * @attrbuf: buffer to store parsed attributes
-  * @ops_list: list of all assigned operations
-  * @family_list: family list
-@@ -41,6 +48,12 @@ struct genl_family {
- 	unsigned int		version;
- 	unsigned int		maxattr;
- 	bool			netnsok;
-+	int			(*pre_doit)(struct genl_ops *ops,
-+					    struct sk_buff *skb,
-+					    struct genl_info *info);
-+	void			(*post_doit)(struct genl_ops *ops,
-+					     struct sk_buff *skb,
-+					     struct genl_info *info);
- 	struct nlattr **	attrbuf;	/* private */
- 	struct list_head	ops_list;	/* private */
- 	struct list_head	family_list;	/* private */
-@@ -55,6 +68,8 @@ struct genl_family {
-  * @genlhdr: generic netlink message header
-  * @userhdr: user specific header
-  * @attrs: netlink attributes
-+ * @_net: network namespace
-+ * @user_ptr: user pointers
-  */
- struct genl_info {
- 	u32			snd_seq;
-@@ -66,6 +81,7 @@ struct genl_info {
- #ifdef CONFIG_NET_NS
- 	struct net *		_net;
- #endif
-+	void *			user_ptr[2];
- };
- 
- static inline struct net *genl_info_net(struct genl_info *info)
-@@ -81,6 +97,7 @@ static inline void genl_info_net_set(str
- /**
-  * struct genl_ops - generic netlink operations
-  * @cmd: command identifier
-+ * @internal_flags: flags used by the family
-  * @flags: flags
-  * @policy: attribute validation policy
-  * @doit: standard command callback
-@@ -90,6 +107,7 @@ static inline void genl_info_net_set(str
-  */
- struct genl_ops {
- 	u8			cmd;
-+	u8			internal_flags;
- 	unsigned int		flags;
- 	const struct nla_policy	*policy;
- 	int		       (*doit)(struct sk_buff *skb,
---- wireless-testing.orig/net/netlink/genetlink.c	2010-09-30 22:19:56.000000000 +0200
-+++ wireless-testing/net/netlink/genetlink.c	2010-09-30 22:22:28.000000000 +0200
-@@ -547,8 +547,20 @@ static int genl_rcv_msg(struct sk_buff *
- 	info.userhdr = nlmsg_data(nlh) + GENL_HDRLEN;
- 	info.attrs = family->attrbuf;
- 	genl_info_net_set(&info, net);
-+	memset(&info.user_ptr, 0, sizeof(info.user_ptr));
- 
--	return ops->doit(skb, &info);
-+	if (family->pre_doit) {
-+		err = family->pre_doit(ops, skb, &info);
-+		if (err)
-+			return err;
-+	}
-+
-+	err = ops->doit(skb, &info);
-+
-+	if (family->post_doit)
-+		family->post_doit(ops, skb, &info);
-+
-+	return err;
- }
- 
- static void genl_rcv(struct sk_buff *skb)
-
-
+  Luis
