@@ -1,49 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wy0-f174.google.com ([74.125.82.174]:45867 "EHLO
-	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751309Ab0IRE6B (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 18 Sep 2010 00:58:01 -0400
-Received: by wyf22 with SMTP id 22so2980439wyf.19
-        for <linux-wireless@vger.kernel.org>; Fri, 17 Sep 2010 21:58:00 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <4C6422FB.8040204@lwfinger.net>
-References: <AANLkTi=1NaRKc8QrQBGwU+c_17D86_Cqu9MopR_rso0H@mail.gmail.com>
-	<AANLkTin3qXSbuWejTGJzz6cO6fycK4HqU4gn4gF1wEdp@mail.gmail.com>
-	<4C6422FB.8040204@lwfinger.net>
-Date: Fri, 17 Sep 2010 21:58:00 -0700
-Message-ID: <AANLkTikPm64cko+wricospR-Y0KNAB0JevBGQ0iLc_02@mail.gmail.com>
-Subject: Re: Hi,Linus Torvalds. There's a problem in r8192u driver in Linux
- new kernel.
-From: Paul Thomas <pthomas8589@gmail.com>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Gauss Frank <gaussfrank@gmail.com>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	linux-wireless@vger.kernel.org,
-	Greg Kroah-Hartman <gregkh@suse.de>,
-	Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>,
-	Jerry chuang <wlanfae@realtek.com>,
-	Florian Schilhabel <florian.c.schilhabel@googlemail.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from nbd.name ([88.198.39.176]:43708 "EHLO ds10.nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753317Ab0I2PPt (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 29 Sep 2010 11:15:49 -0400
+From: Felix Fietkau <nbd@openwrt.org>
+To: linux-wireless@vger.kernel.org
+Cc: linville@tuxdriver.com, lrodriguez@atheros.com
+Subject: [PATCH 3/6] ath9k: do not return default noise floor values via survey
+Date: Wed, 29 Sep 2010 17:15:28 +0200
+Message-Id: <1285773331-73439-3-git-send-email-nbd@openwrt.org>
+In-Reply-To: <1285773331-73439-2-git-send-email-nbd@openwrt.org>
+References: <1285773331-73439-1-git-send-email-nbd@openwrt.org>
+ <1285773331-73439-2-git-send-email-nbd@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> If your device is one of those that Realtek says works with this driver, and you
-> are willing to build a kernel from scratch, I will send you the URL for a git
-> tree containing it. That will have to be done privately as I'm still waiting for
-> Realtek to approve the copyright statements in the code. It is GPL'ed, so I do
-> not expect any difficulties, but their lawyers have to sign off.
->
-> Larry
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+---
+ drivers/net/wireless/ath/ath9k/main.c |    8 +++++---
+ 1 files changed, 5 insertions(+), 3 deletions(-)
 
-Larry,
+diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
+index a133878..fcba402 100644
+--- a/drivers/net/wireless/ath/ath9k/main.c
++++ b/drivers/net/wireless/ath/ath9k/main.c
+@@ -2004,15 +2004,17 @@ static int ath9k_get_survey(struct ieee80211_hw *hw, int idx,
+ 	struct ath_wiphy *aphy = hw->priv;
+ 	struct ath_softc *sc = aphy->sc;
+ 	struct ath_hw *ah = sc->sc_ah;
+-	struct ath_common *common = ath9k_hw_common(ah);
+ 	struct ieee80211_conf *conf = &hw->conf;
+ 
+ 	 if (idx != 0)
+ 		return -ENOENT;
+ 
+ 	survey->channel = conf->channel;
+-	survey->filled = SURVEY_INFO_NOISE_DBM;
+-	survey->noise = common->ani.noise_floor;
++	survey->filled = 0;
++	if (ah->curchan && ah->curchan->noisefloor) {
++		survey->filled |= SURVEY_INFO_NOISE_DBM;
++		survey->noise = ah->curchan->noisefloor;
++	}
+ 
+ 	return 0;
+ }
+-- 
+1.7.2.2
 
-I'd be interested in trying your driver version. I don't think it's in
-the main tree yet because the change I see for the rtl8192su is on
-2010-08-11, but there is a bunch of stuff from Florian from July.
-
-I'm trying to get the rtl8188su chip to work, and more specifically to
-get it to work without depending on PCI on arm.
-
-thanks,
-Paul
