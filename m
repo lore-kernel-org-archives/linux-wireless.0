@@ -1,36 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f46.google.com ([209.85.161.46]:64102 "EHLO
-	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751484Ab0IVJ6U (ORCPT
+Received: from mail.candelatech.com ([208.74.158.172]:45913 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754395Ab0I2TGE (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 22 Sep 2010 05:58:20 -0400
-Received: by fxm3 with SMTP id 3so165974fxm.19
-        for <linux-wireless@vger.kernel.org>; Wed, 22 Sep 2010 02:58:19 -0700 (PDT)
-From: Christian Lamparter <chunkeey@googlemail.com>
-To: David Miller <davem@davemloft.net>
-Subject: Re: pull request: wireless-next-2.6 2010-09-21
-Date: Wed, 22 Sep 2010 11:58:13 +0200
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
-References: <20100921201705.GC2448@tuxdriver.com> <20100921.183614.245388137.davem@davemloft.net>
-In-Reply-To: <20100921.183614.245388137.davem@davemloft.net>
-MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Message-Id: <201009221158.13806.chunkeey@googlemail.com>
+	Wed, 29 Sep 2010 15:06:04 -0400
+From: greearb@candelatech.com
+To: linux-wireless@vger.kernel.org
+Cc: Ben Greear <greearb@candelatech.com>
+Subject: [PATCH v2] mac80211:  Don't go off-channel in work_work unless needed.
+Date: Wed, 29 Sep 2010 12:05:59 -0700
+Message-Id: <1285787159-9207-1-git-send-email-greearb@candelatech.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wednesday 22 September 2010 03:36:14 David Miller wrote:
-> From: "John W. Linville" <linville@tuxdriver.com>
-> Date: Tue, 21 Sep 2010 16:17:05 -0400
-> 
-> Pulled, but I suspect the 'packed' attribute usage is wrong in
-> ath/carl9170 and can just be deleted.
+From: Ben Greear <greearb@candelatech.com>
 
-which __packed do you think can be removed?
+If the work to be done is on the current active channel, then
+do not call the offchannel and return-to-channel logic.
 
-Note:
-The overzealous use of __packed is a result of a report from Al Viro
-for ar9170usb: "arm will pad even between u8's".
- 
-http://git.kernel.org/?p=linux/kernel/git/stable/linux-2.6.30.y.git;a=commit;h=1269fa737f21b3f643e4b12d3ac9938b142a7f00
+Signed-off-by: Ben Greear <greearb@candelatech.com>
+---
+v1 -> v2:  Remove went_off_channel logic, and don't set
+   tmp_channel if we're not going offchannel.
+
+:100644 100644 ae344d1... 8a2ff479.. M	net/mac80211/work.c
+ net/mac80211/work.c |   17 +++++++++++------
+ 1 files changed, 11 insertions(+), 6 deletions(-)
+
+diff --git a/net/mac80211/work.c b/net/mac80211/work.c
+index ae344d1..8a2ff479 100644
+--- a/net/mac80211/work.c
++++ b/net/mac80211/work.c
+@@ -910,12 +910,17 @@ static void ieee80211_work_work(struct work_struct *work)
+ 			 *	 happen to be on the same channel as
+ 			 *	 the requested channel
+ 			 */
+-			ieee80211_offchannel_stop_beaconing(local);
+-			ieee80211_offchannel_stop_station(local);
+-
+-			local->tmp_channel = wk->chan;
+-			local->tmp_channel_type = wk->chan_type;
+-			ieee80211_hw_config(local, 0);
++			WARN_ON(local->scan_channel != NULL);
++			if (wk->chan != local->oper_channel ||
++			    wk->chan_type != local->_oper_channel_type) {
++				/* Only change channels if we need to */
++				ieee80211_offchannel_stop_beaconing(local);
++				ieee80211_offchannel_stop_station(local);
++
++				local->tmp_channel = wk->chan;
++				local->tmp_channel_type = wk->chan_type;
++				ieee80211_hw_config(local, 0);
++			}
+ 			started = true;
+ 			wk->timeout = jiffies;
+ 		}
+-- 
+1.7.2.2
+
