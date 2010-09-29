@@ -1,33 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iw0-f174.google.com ([209.85.214.174]:38561 "EHLO
-	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753804Ab0IRW2I (ORCPT
+Received: from 128-177-27-249.ip.openhosting.com ([128.177.27.249]:34835 "EHLO
+	jmalinen.user.openhosting.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751487Ab0I2FS1 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 18 Sep 2010 18:28:08 -0400
-Received: by iwn5 with SMTP id 5so3056120iwn.19
-        for <linux-wireless@vger.kernel.org>; Sat, 18 Sep 2010 15:28:08 -0700 (PDT)
+	Wed, 29 Sep 2010 01:18:27 -0400
+Date: Tue, 28 Sep 2010 22:18:17 -0700
+From: Jouni Malinen <j@w1.fi>
+To: Christian Lamparter <chunkeey@googlemail.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	Luis Carlos Cobo <luisca@cozybit.com>,
+	linux-wireless@vger.kernel.org, Javier Cardona <javier@cozybit.com>
+Subject: Re: [RFC v2] mac80211: fix possible null-pointer dereference
+Message-ID: <20100929051817.GA8302@jm.kir.nu>
+References: <201009210057.13297.chunkeey@googlemail.com>
+ <20100924180013.GD8077@tuxdriver.com>
+ <201009250002.21219.chunkeey@googlemail.com>
 MIME-Version: 1.0
-In-Reply-To: <1284803766-27710-1-git-send-email-helmut.schaa@googlemail.com>
-References: <1284803766-27710-1-git-send-email-helmut.schaa@googlemail.com>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Sat, 18 Sep 2010 15:27:48 -0700
-Message-ID: <AANLkTikyaJO7AmdFeth+NB++6k-PfS0eaEP7g0ExnWdy@mail.gmail.com>
-Subject: Re: [PATCH] compat-wireless: Select minstrel_ht as default rc algo
-To: Helmut Schaa <helmut.schaa@googlemail.com>
-Cc: mcgrof@kernel.org, linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <201009250002.21219.chunkeey@googlemail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, Sep 18, 2010 at 2:56 AM, Helmut Schaa
-<helmut.schaa@googlemail.com> wrote:
-> Wireless-testing is using minstrel_ht already as default rc algorithm.
-> Do the same im compat-wireless. Setting CONFIG_MAC80211_RC_DEFAULT
-> manually is needed in compat-wireless since it doesn't have the Kconfig
-> magic to automagically select minstrel_ht if it is compiled in.
->
-> Signed-off-by: Helmut Schaa <helmut.schaa@googlemail.com>
+On Sat, Sep 25, 2010 at 12:02:20AM +0200, Christian Lamparter wrote:
+> because mesh uses actions instead of AUTH/ASSOC and
+> the following code in ieee80211_rx_h_action (rx.c)
+> 
+> 1986)       if (!rx->sta && mgmt->u.action.category != WLAN_CATEGORY_PUBLIC)
+> 1987)               return RX_DROP_UNUSABLE;
+> 
+> prevents any new plinks because action.category is probably
+> WLAN_CATEGORY_MESH_PLINK, right?
 
-Thanks, applied and pushed.
+Which Category does not even exist in the latest P802.11s draft..
+Someone needs to update the mesh code to match with the latest draft at
+some point and the processing of Action frames for setup (between two
+STAs that are not associated) needs some changes (e.g., handling of the
+new Self Protect Action Category).
 
-  Luis
+-- 
+Jouni Malinen                                            PGP id EFC895FA
