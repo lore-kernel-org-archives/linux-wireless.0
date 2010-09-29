@@ -1,187 +1,193 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:57457 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753322Ab0ITRwt (ORCPT
+Received: from mail-fx0-f46.google.com ([209.85.161.46]:49238 "EHLO
+	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755018Ab0I2T5M (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 20 Sep 2010 13:52:49 -0400
-From: greearb@candelatech.com
-To: linux-wireless@vger.kernel.org
-Cc: Ben Greear <greearb@candelatech.com>
-Subject: [mac80211] mac80211:  Support receiving data frames on multiple vifs.
-Date: Mon, 20 Sep 2010 10:52:43 -0700
-Message-Id: <1285005163-4569-1-git-send-email-greearb@candelatech.com>
+	Wed, 29 Sep 2010 15:57:12 -0400
+Received: by fxm4 with SMTP id 4so232166fxm.19
+        for <linux-wireless@vger.kernel.org>; Wed, 29 Sep 2010 12:57:10 -0700 (PDT)
+From: Christian Lamparter <chunkeey@googlemail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Subject: [RFC v2] mac80211: fix rx monitor filter refcounters
+Date: Wed, 29 Sep 2010 21:57:03 +0200
+Cc: linux-wireless@vger.kernel.org
+References: <201009281836.24529.chunkeey@googlemail.com> <1285744218.3756.10.camel@jlt3.sipsolutions.net>
+In-Reply-To: <1285744218.3756.10.camel@jlt3.sipsolutions.net>
+MIME-Version: 1.0
+Content-Type: Text/Plain;
+  charset="utf-8"
+Message-Id: <201009292157.04141.chunkeey@googlemail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ben Greear <greearb@candelatech.com>
+On Wednesday 29 September 2010 09:10:18 Johannes Berg wrote:
+> On Tue, 2010-09-28 at 18:36 +0200, Christian Lamparter wrote:
+> > This patch fixes a refcounter & commit bug when monitor
+> > rx flags are changed by:
+> > 	iw dev moni set monitor [new flags]
+> > 
+> > while interface is up.
+> > 
+> > ---
+> > Is there a sane way to do that?
+> 
+> Is this not sane enough? Looks OK to me, even if it adds a bit of code.
+> 
 
-When using multiple STA interfaces on the same radio, some
-data packets need to be received on all interfaces
-(broadcast, for instance).
+It's about MONITOR_FLAG_COOK_FRAMES. This flag gives me headaches.
+I wish we could make this flag "const" and don't allow it be changed
+by iw dev wlanX set monitor. Another alternative would be to move
+the "sdata->u.mntr_flag -> fif_* processing" into
+ieee80211_configure_filter. 
 
-Remove special loop for data-only packets and just process all
-packets in the big loop that previously only handled non-data
-packets.
-
-This needs review.
-
-Signed-off-by: Ben Greear <greearb@candelatech.com>
+or: 
 ---
-:100644 100644 c036815... 63baa04... M	net/mac80211/rx.c
- net/mac80211/rx.c |  121 ++++++++++++++++++++++-------------------------------
- 1 files changed, 50 insertions(+), 71 deletions(-)
-
-diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
-index c036815..63baa04 100644
---- a/net/mac80211/rx.c
-+++ b/net/mac80211/rx.c
-@@ -2613,8 +2613,6 @@ static void __ieee80211_rx_handle_packet(struct ieee80211_hw *hw,
- 	int prepares;
- 	struct ieee80211_sub_if_data *prev = NULL;
- 	struct sk_buff *skb_new;
--	struct sta_info *sta, *tmp;
--	bool found_sta = false;
- 	int err = 0;
+diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
+index c981604..1ffe266 100644
+--- a/net/mac80211/cfg.c
++++ b/net/mac80211/cfg.c
+@@ -68,9 +68,61 @@ static int ieee80211_change_iface(struct wiphy *wiphy,
+ 		 params && params->use_4addr >= 0)
+ 		sdata->u.mgd.use_4addr = params->use_4addr;
  
- 	fc = ((struct ieee80211_hdr *)skb->data)->frame_control;
-@@ -2643,87 +2641,68 @@ static void __ieee80211_rx_handle_packet(struct ieee80211_hw *hw,
- 	ieee80211_parse_qos(&rx);
- 	ieee80211_verify_alignment(&rx);
- 
--	if (ieee80211_is_data(fc)) {
--		for_each_sta_info(local, hdr->addr2, sta, tmp) {
--			rx.sta = sta;
--			found_sta = true;
--			rx.sdata = sta->sdata;
--
--			rx.flags |= IEEE80211_RX_RA_MATCH;
--			prepares = prepare_for_handlers(rx.sdata, &rx, hdr);
--			if (prepares) {
--				if (status->flag & RX_FLAG_MMIC_ERROR) {
--					if (rx.flags & IEEE80211_RX_RA_MATCH)
--						ieee80211_rx_michael_mic_report(hdr, &rx);
--				} else
--					prev = rx.sdata;
--			}
--		}
--	}
--	if (!found_sta) {
--		list_for_each_entry_rcu(sdata, &local->interfaces, list) {
--			if (!ieee80211_sdata_running(sdata))
--				continue;
--
--			if (sdata->vif.type == NL80211_IFTYPE_MONITOR ||
--			    sdata->vif.type == NL80211_IFTYPE_AP_VLAN)
--				continue;
-+	list_for_each_entry_rcu(sdata, &local->interfaces, list) {
-+		if (!ieee80211_sdata_running(sdata))
-+			continue;
- 
--			/*
--			 * frame is destined for this interface, but if it's
--			 * not also for the previous one we handle that after
--			 * the loop to avoid copying the SKB once too much
--			 */
-+		if (sdata->vif.type == NL80211_IFTYPE_MONITOR ||
-+		    sdata->vif.type == NL80211_IFTYPE_AP_VLAN)
-+			continue;
- 
--			if (!prev) {
--				prev = sdata;
--				continue;
--			}
-+		/*
-+		 * frame is destined for this interface, but if it's
-+		 * not also for the previous one we handle that after
-+		 * the loop to avoid copying the SKB once too much
-+		 */
- 
--			rx.sta = sta_info_get_bss(prev, hdr->addr2);
-+		if (!prev) {
-+			prev = sdata;
-+			continue;
-+		}
- 
--			rx.flags |= IEEE80211_RX_RA_MATCH;
--			prepares = prepare_for_handlers(prev, &rx, hdr);
-+		rx.sta = sta_info_get_bss(prev, hdr->addr2);
-+		rx.sdata = prev;
-+		rx.flags |= IEEE80211_RX_RA_MATCH;
-+		prepares = prepare_for_handlers(prev, &rx, hdr);
- 
--			if (!prepares)
--				goto next;
-+		if (!prepares)
-+			goto next;
- 
--			if (status->flag & RX_FLAG_MMIC_ERROR) {
--				rx.sdata = prev;
--				if (rx.flags & IEEE80211_RX_RA_MATCH)
--					ieee80211_rx_michael_mic_report(hdr,
--									&rx);
--				goto next;
--			}
-+		if (status->flag & RX_FLAG_MMIC_ERROR) {
-+			rx.sdata = prev;
-+			if (rx.flags & IEEE80211_RX_RA_MATCH)
-+				ieee80211_rx_michael_mic_report(hdr, &rx);
-+			goto next;
-+		}
- 
--			/*
--			 * frame was destined for the previous interface
--			 * so invoke RX handlers for it
--			 */
-+		/*
-+		 * frame was destined for the previous interface
-+		 * so invoke RX handlers for it
-+		 */
- 
--			skb_new = skb_copy(skb, GFP_ATOMIC);
--			if (!skb_new) {
--				if (net_ratelimit())
--					wiphy_debug(local->hw.wiphy,
--						    "failed to copy multicast frame for %s\n",
--						    prev->name);
--				goto next;
--			}
--			ieee80211_invoke_rx_handlers(prev, &rx, skb_new);
--next:
--			prev = sdata;
-+		skb_new = skb_copy(skb, GFP_ATOMIC);
-+		if (!skb_new) {
-+			if (net_ratelimit())
-+				wiphy_debug(local->hw.wiphy,
-+					    "failed to copy multicast frame for %s\n",
-+					    prev->name);
-+			goto next;
- 		}
-+		ieee80211_invoke_rx_handlers(prev, &rx, skb_new);
-+next:
-+		prev = sdata;
-+	} /* for all interfaces */
- 
--		if (prev) {
--			rx.sta = sta_info_get_bss(prev, hdr->addr2);
--
--			rx.flags |= IEEE80211_RX_RA_MATCH;
--			prepares = prepare_for_handlers(prev, &rx, hdr);
-+	if (prev) {
-+		rx.sta = sta_info_get_bss(prev, hdr->addr2);
-+		rx.sdata = prev;
-+		rx.flags |= IEEE80211_RX_RA_MATCH;
-+		prepares = prepare_for_handlers(prev, &rx, hdr);
- 
--			if (!prepares)
--				prev = NULL;
--		}
-+		if (!prepares)
-+			prev = NULL;
- 	}
+-	if (sdata->vif.type == NL80211_IFTYPE_MONITOR && flags)
++	if (sdata->vif.type == NL80211_IFTYPE_MONITOR && flags) {
++		struct ieee80211_local *local = sdata->local;
++		u32 changed_flags;
++		u32 old_flags;
++		u32 hw_reconf_flags = 0;
 +
- 	if (prev)
- 		ieee80211_invoke_rx_handlers(prev, &rx, skb);
- 	else
--- 
-1.7.2.2
-
++		old_flags = sdata->u.mntr_flags;
++		changed_flags = old_flags ^ *flags;
++		if (!(old_flags & MONITOR_FLAG_COOK_FRAMES))
++			ieee80211_adjust_monitor_flags(sdata, -1);
++
++		if (changed_flags & MONITOR_FLAG_COOK_FRAMES) {
++			if (*flags & MONITOR_FLAG_COOK_FRAMES) {
++				local->cooked_mntrs++;
++				local->monitors--;
++			} else {
++				local->monitors++;
++				local->cooked_mntrs--;
++
++				changed_flags |=
++					old_flags & ~MONITOR_FLAG_COOK_FRAMES;
++			}
++
++			switch (local->monitors) {
++			case 0:
++				local->hw.conf.flags &=
++					~IEEE80211_CONF_MONITOR;
++				hw_reconf_flags |=
++					IEEE80211_CONF_CHANGE_MONITOR;
++				break;
++
++			case 1:
++				local->hw.conf.flags |=
++					IEEE80211_CONF_MONITOR;
++				hw_reconf_flags |=
++					 IEEE80211_CONF_CHANGE_MONITOR;
++				break;
++
++			default:
++				break;
++			}
++		}
++
+ 		sdata->u.mntr_flags = *flags;
+ 
++		if (!(*flags & MONITOR_FLAG_COOK_FRAMES))
++			ieee80211_adjust_monitor_flags(sdata, 1);
++
++		if (changed_flags)
++			ieee80211_configure_filter(local);
++
++		if (hw_reconf_flags)
++			ieee80211_hw_config(local, hw_reconf_flags);
++	}
++
+ 	return 0;
+ }
+ 
+diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+index 945fbf2..f6a6d78 100644
+--- a/net/mac80211/ieee80211_i.h
++++ b/net/mac80211/ieee80211_i.h
+@@ -1132,6 +1132,8 @@ void ieee80211_if_remove(struct ieee80211_sub_if_data *sdata);
+ void ieee80211_remove_interfaces(struct ieee80211_local *local);
+ u32 __ieee80211_recalc_idle(struct ieee80211_local *local);
+ void ieee80211_recalc_idle(struct ieee80211_local *local);
++void ieee80211_adjust_monitor_flags(struct ieee80211_sub_if_data *sdata,
++				    const int offset);
+ 
+ static inline bool ieee80211_sdata_running(struct ieee80211_sub_if_data *sdata)
+ {
+diff --git a/net/mac80211/iface.c b/net/mac80211/iface.c
+index 6678573..d59b0be 100644
+--- a/net/mac80211/iface.c
++++ b/net/mac80211/iface.c
+@@ -148,6 +148,26 @@ static int ieee80211_check_concurrent_iface(struct ieee80211_sub_if_data *sdata,
+ 	return 0;
+ }
+ 
++void ieee80211_adjust_monitor_flags(struct ieee80211_sub_if_data *sdata,
++				    const int offset)
++{
++	struct ieee80211_local *local = sdata->local;
++	u32 flags = sdata->u.mntr_flags;
++
++#define ADJUST(_f, _s)	do {					\
++	if (flags & MONITOR_FLAG_##_f)				\
++		local->fif_##_s += offset;				\
++	} while (0)
++
++	ADJUST(FCSFAIL, fcsfail);
++	ADJUST(PLCPFAIL, plcpfail);
++	ADJUST(CONTROL, control);
++	ADJUST(CONTROL, pspoll);
++	ADJUST(OTHER_BSS, other_bss);
++
++#undef ADJUST
++}
++
+ /*
+  * NOTE: Be very careful when changing this function, it must NOT return
+  * an error on interface type changes that have been pre-checked, so most
+@@ -240,17 +260,7 @@ static int ieee80211_do_open(struct net_device *dev, bool coming_up)
+ 			hw_reconf_flags |= IEEE80211_CONF_CHANGE_MONITOR;
+ 		}
+ 
+-		if (sdata->u.mntr_flags & MONITOR_FLAG_FCSFAIL)
+-			local->fif_fcsfail++;
+-		if (sdata->u.mntr_flags & MONITOR_FLAG_PLCPFAIL)
+-			local->fif_plcpfail++;
+-		if (sdata->u.mntr_flags & MONITOR_FLAG_CONTROL) {
+-			local->fif_control++;
+-			local->fif_pspoll++;
+-		}
+-		if (sdata->u.mntr_flags & MONITOR_FLAG_OTHER_BSS)
+-			local->fif_other_bss++;
+-
++		ieee80211_adjust_monitor_flags(sdata, 1);
+ 		ieee80211_configure_filter(local);
+ 
+ 		netif_carrier_on(dev);
+@@ -477,17 +487,7 @@ static void ieee80211_do_stop(struct ieee80211_sub_if_data *sdata,
+ 			hw_reconf_flags |= IEEE80211_CONF_CHANGE_MONITOR;
+ 		}
+ 
+-		if (sdata->u.mntr_flags & MONITOR_FLAG_FCSFAIL)
+-			local->fif_fcsfail--;
+-		if (sdata->u.mntr_flags & MONITOR_FLAG_PLCPFAIL)
+-			local->fif_plcpfail--;
+-		if (sdata->u.mntr_flags & MONITOR_FLAG_CONTROL) {
+-			local->fif_pspoll--;
+-			local->fif_control--;
+-		}
+-		if (sdata->u.mntr_flags & MONITOR_FLAG_OTHER_BSS)
+-			local->fif_other_bss--;
+-
++		ieee80211_adjust_monitor_flags(sdata, -1);
+ 		ieee80211_configure_filter(local);
+ 		break;
+ 	case NL80211_IFTYPE_MESH_POINT:
