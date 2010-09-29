@@ -1,50 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([192.100.122.230]:56014 "EHLO
-	mgw-mx03.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932833Ab0I0IiS (ORCPT
+Received: from mail.candelatech.com ([208.74.158.172]:55569 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753706Ab0I2UVd (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 27 Sep 2010 04:38:18 -0400
-Received: from vaebh106.NOE.Nokia.com (vaebh106.europe.nokia.com [10.160.244.32])
-	by mgw-mx03.nokia.com (Switch-3.3.3/Switch-3.3.3) with ESMTP id o8R8bvwV023998
-	for <linux-wireless@vger.kernel.org>; Mon, 27 Sep 2010 11:38:15 +0300
-Received: from localhost.localdomain (chilepepper.research.nokia.com [172.21.50.167])
-	by mgw-da02.ext.nokia.com (Switch-3.3.3/Switch-3.3.3) with ESMTP id o8R8boh1022566
-	for <linux-wireless@vger.kernel.org>; Mon, 27 Sep 2010 11:37:57 +0300
-From: Luciano Coelho <luciano.coelho@nokia.com>
-To: linux-wireless@vger.kernel.org
-Subject: [PATCH 05/25] wl1271: remove useless 11a check when scanning
-Date: Mon, 27 Sep 2010 11:37:29 +0300
-Message-Id: <1285576669-8070-6-git-send-email-luciano.coelho@nokia.com>
-In-Reply-To: <1285576669-8070-1-git-send-email-luciano.coelho@nokia.com>
-References: <1285576669-8070-1-git-send-email-luciano.coelho@nokia.com>
+	Wed, 29 Sep 2010 16:21:33 -0400
+Message-ID: <4CA39FCA.6000806@candelatech.com>
+Date: Wed, 29 Sep 2010 13:21:30 -0700
+From: Ben Greear <greearb@candelatech.com>
+MIME-Version: 1.0
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] iw:  Flush stdout when printing events.
+References: <1285720244-26149-1-git-send-email-greearb@candelatech.com> <1285743567.3756.1.camel@jlt3.sipsolutions.net>
+In-Reply-To: <1285743567.3756.1.camel@jlt3.sipsolutions.net>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This code was a leftover of the previous scanning mechanism.  The if is
-totally unnecessary, since both branches do the same thing.
+On 09/28/2010 11:59 PM, Johannes Berg wrote:
+> On Tue, 2010-09-28 at 17:30 -0700, greearb@candelatech.com wrote:
+>
+>> -#define PARSE_BEACON_CHAN(_attr, _chan) do { \
+>> -	r = parse_beacon_hint_chan(tb[_attr], \
+>> -				&_chan); \
+>> -	if (r) \
+>> -		return NL_SKIP; \
+>> -} while (0)
+>> +
+>> +#define PARSE_BEACON_CHAN(_attr, _chan) do {		\
+>> +		r = parse_beacon_hint_chan(tb[_attr],	\
+>> +					&_chan);	\
+>> +		if (r) {				\
+>> +			fflush(stdout);			\
+>> +			return NL_SKIP;			\
+>> +		}					\
+>> +	} while (0)
+>> +
+>
+> Why does that need fflush() here? We'll eventually finish that line, no?
 
-Signed-off-by: Luciano Coelho <luciano.coelho@nokia.com>
-Reviewed-by: Juuso Oikarinen <juuso.oikarinen@nokia.com>
----
- drivers/net/wireless/wl12xx/wl1271_main.c |    5 +----
- 1 files changed, 1 insertions(+), 4 deletions(-)
+This returns from the print_event method, so I assume it should
+flush.  If it finishes the line, I'm not sure where.
 
-diff --git a/drivers/net/wireless/wl12xx/wl1271_main.c b/drivers/net/wireless/wl12xx/wl1271_main.c
-index 02ad6c6..b42ee48 100644
---- a/drivers/net/wireless/wl12xx/wl1271_main.c
-+++ b/drivers/net/wireless/wl12xx/wl1271_main.c
-@@ -1624,10 +1624,7 @@ static int wl1271_op_hw_scan(struct ieee80211_hw *hw,
- 	if (ret < 0)
- 		goto out;
- 
--	if (wl1271_11a_enabled())
--		ret = wl1271_scan(hw->priv, ssid, len, req);
--	else
--		ret = wl1271_scan(hw->priv, ssid, len, req);
-+	ret = wl1271_scan(hw->priv, ssid, len, req);
- 
- 	wl1271_ps_elp_sleep(wl);
- 
+Either way, thanks for taking the other change.
+
+Thanks,
+Ben
+
 -- 
-1.6.3.3
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
 
