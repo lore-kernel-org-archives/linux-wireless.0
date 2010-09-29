@@ -1,44 +1,99 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from purkki.adurom.net ([80.68.90.206]:60365 "EHLO purkki.adurom.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752471Ab0INWMN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 14 Sep 2010 18:12:13 -0400
-To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	Paul Stewart <pstew@google.com>,
-	Amod Bodas <amod.bodas@atheros.com>
-Subject: Re: [PATCH 08/10] mac80211: send last 3/5 probe requests as unicast
-References: <1284474071-8404-1-git-send-email-lrodriguez@atheros.com>
-From: Kalle Valo <kvalo@adurom.com>
-Date: Wed, 15 Sep 2010 01:12:11 +0300
-In-Reply-To: <1284474071-8404-1-git-send-email-lrodriguez@atheros.com> (Luis R. Rodriguez's message of "Tue\, 14 Sep 2010 10\:21\:11 -0400")
-Message-ID: <87mxrk5610.fsf@purkki.adurom.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: from he.sipsolutions.net ([78.46.109.217]:58922 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751114Ab0I2HKU (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 29 Sep 2010 03:10:20 -0400
+Subject: Re: [RFC] mac80211: fix rx monitor filter refcounters
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Christian Lamparter <chunkeey@googlemail.com>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <201009281836.24529.chunkeey@googlemail.com>
+References: <201009281836.24529.chunkeey@googlemail.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Wed, 29 Sep 2010 09:10:18 +0200
+Message-ID: <1285744218.3756.10.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-"Luis R. Rodriguez" <lrodriguez@atheros.com> writes:
+On Tue, 2010-09-28 at 18:36 +0200, Christian Lamparter wrote:
+> This patch fixes a refcounter & commit bug when monitor
+> rx flags are changed by:
+> 	iw dev moni set monitor [new flags]
+> 
+> while interface is up.
+> 
+> ---
+> Is there a sane way to do that?
 
-> We need to do this since the beacon monitor does not
-> push back the connection monitor by design so even if we
-> are getting beacons from these type of APs our connection
-> monitor currently relies heavily on the way the probe
-> requests are received on the AP. An example of an AP
-> affected by this is the Nexus One, but this has also been
-> observed with random APs.
->
-> We can probably optimize this later by using null funcs
-> instead of probe requests.
+Is this not sane enough? Looks OK to me, even if it adds a bit of code.
 
-Beginning of this year I sent patches to use null funcs. Unfortunately
-I had to drop them due to time constraints.
+> -	if (sdata->vif.type == NL80211_IFTYPE_MONITOR && flags)
+> +	if (sdata->vif.type == NL80211_IFTYPE_MONITOR && flags) {
+> +		struct ieee80211_local *local = sdata->local;
+> +		u32 changed_flags = sdata->u.mntr_flags ^ *flags;
+> +
+>  		sdata->u.mntr_flags = *flags;
+> +		if (changed_flags & MONITOR_FLAG_FCSFAIL) {
+> +			if (*flags & MONITOR_FLAG_FCSFAIL)
+> +				local->fif_fcsfail++;
+> +			else
+> +				local->fif_fcsfail--;
+> +		}
+> +		if (changed_flags & MONITOR_FLAG_PLCPFAIL) {
+> +			if (*flags & MONITOR_FLAG_PLCPFAIL)
+> +				local->fif_plcpfail++;
+> +			else
+> +				local->fif_plcpfail--;
+> +		}
+> +		if (changed_flags & MONITOR_FLAG_COOK_FRAMES) {
+> +			if (*flags & MONITOR_FLAG_COOK_FRAMES)
+> +				local->cooked_mntrs++;
+> +			else
+> +				local->cooked_mntrs--;
+> +		}
+> +		if (changed_flags & MONITOR_FLAG_OTHER_BSS) {
+> +			if (*flags & MONITOR_FLAG_OTHER_BSS)
+> +				local->fif_other_bss++;
+> +			else
+> +				local->fif_other_bss--;
+> +		}
+> +		if (changed_flags & MONITOR_FLAG_CONTROL) {
+> +			if (*flags & MONITOR_FLAG_CONTROL) {
+> +				local->fif_pspoll++;
+> +				local->fif_control++;
+> +			} else {
+> +				local->fif_pspoll--;
+> +				local->fif_control--;
+> +			}
+> +		}
 
-Also a major power consumption imporovement from using null func
-frames is that we don't have to trigger dynamic power save timer
-during the poll. Just send the frame with PSM bit set, wait for ack
-and go immeaditely back to sleep. So instead of having radios enabled
-for example 100 ms per frame, we can do it in just 1 ms.
+Although, come to think of it, one could do something like this:
 
--- 
-Kalle Valo
+static void adjust_flags(local, flags, offset)
+{
+#define ADJUST(_flg, _fif)	do { 		\
+	if (flags & MONITOR_FLAG_#_flg)		\
+		local->fif_#_fif += offset;	\
+	} while (0)
+
+	ADJUST(FCSFAIL, fcsfail);
+	ADJUST(PLCPFAIL, plcpfail);
+	ADJUST(CONTROL, control);
+	ADJUST(CONTROL, pspoll);
+	ADJUST(OTHER_BSS, other_bss);
+#undef ADJUST
+}
+
+and then we can have four callers of this function.
+
+Two here:
+adjust_flags(local, sdata->u.mntr_flags, -1);
+adjust_flags(local, *flags, 1)
+sdata->u.mntr_flags = *flags;
+
+and the same two in ieee80211_do_open / ieee80211_do_stop.
+
+johannes
+
