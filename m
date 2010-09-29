@@ -1,54 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from lo.gmane.org ([80.91.229.12]:34126 "EHLO lo.gmane.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751258Ab0IJGzH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 10 Sep 2010 02:55:07 -0400
-Received: from list by lo.gmane.org with local (Exim 4.69)
-	(envelope-from <glkwg-linux-wireless@m.gmane.org>)
-	id 1OtxVo-0004ar-BJ
-	for linux-wireless@vger.kernel.org; Fri, 10 Sep 2010 08:55:04 +0200
-Received: from pool-96-253-143-208.sttlwa.dsl-w.verizon.net ([96.253.143.208])
-        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Fri, 10 Sep 2010 08:55:04 +0200
-Received: from yuhongbao_386 by pool-96-253-143-208.sttlwa.dsl-w.verizon.net with local (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Fri, 10 Sep 2010 08:55:04 +0200
-To: linux-wireless@vger.kernel.org
-From: Yuhong Bao <yuhongbao_386@hotmail.com>
-Subject: Re: [ANN] Full-source Broadcom wireless driver for 11n chips
-Date: Fri, 10 Sep 2010 06:49:14 +0000 (UTC)
-Message-ID: <loom.20100910T084604-390@post.gmane.org>
-References: <20100908150322.17dac9c3@nehalam> <20100908225132.GA12490@kroah.com> <4C88F8CE.5090708@broadcom.com>
-Mime-Version: 1.0
+Received: from 128-177-27-249.ip.openhosting.com ([128.177.27.249]:48135 "EHLO
+	jmalinen.user.openhosting.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751773Ab0I2Fia (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 29 Sep 2010 01:38:30 -0400
+Date: Tue, 28 Sep 2010 22:38:26 -0700
+From: Jouni Malinen <j@w1.fi>
+To: greearb@candelatech.com
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: [PATCH hostap] wpa_supplicant:  Support scanning single
+ channel.
+Message-ID: <20100929053826.GA8382@jm.kir.nu>
+References: <1285632859-2014-1-git-send-email-greearb@candelatech.com>
+MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1285632859-2014-1-git-send-email-greearb@candelatech.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Henry Ptasinski <henryp@...> writes:
+On Mon, Sep 27, 2010 at 05:14:19PM -0700, greearb@candelatech.com wrote:
+> This depends on patches recently submitted to the kernel.
+> When the can_scan_one flag is true, the kernel will not
+> scan other channels if at least one interface on this phy
+> is already associated.
 
-> 
-> Broadcom would like to announce the initial release of a fully-open
-> Linux driver for it's latest generation of 11n chipsets.  The driver,
-> while still a work in progress, is released as full source and uses the
-> native mac80211 stack.   It supports multiple current chips (BCM4313,
-> BCM43224, BCM43225) as well as providing a framework for supporting
-> additional chips in the future, including mac80211-aware embedded chips.
->    The README and TODO files included with the sources provide more
-> details about the current feature set, known issues, and plans for
-> improving the driver.
-> 
-> The driver is currently available in staging-next git tree, available at:
-> 
-> 	git://git.kernel.org/pub/scm/linux/kernel/git/gregkh/staging-next-2.6.git
-> 
-> in the drivers/staging/brcm80211 directory.
+Could you please send wpa_supplicant patches to hostap@lists.shmoo.com
+or at least cc me if you want to get this in. It is way too easy for me
+to miss the patch if it does not get in the correct mail folder..
+Though, in case of this particular change, I'm not going to be including
+it before the matching change for nl80211 goes in into
+wireless-testing.git, so a reminder at that point would be appreciated.
 
-This is limited to newer chips. Can you at least authorize redistribution of
-firmware blobs for older chips so that b43-fwcutter won't be needed anymore? I
-have such a laptop myself with one of the older chips, and I remember the pains
-of having to download it after booting from a LiveCD.
+> --- a/wpa_supplicant/config.c
+> +++ b/wpa_supplicant/config.c
+> @@ -2143,6 +2143,7 @@ struct wpa_config * wpa_config_alloc_empty(const char *ctrl_interface,
+> +	config->can_scan_one = DEFAULT_CAN_SCAN_ONE;
 
+This doesn't sound like a parameter that should be a global one in
+wpa_supplicant. Doesn't it depend on what you are doing whether it is
+acceptable to scan only a single channel? For example, in P2P Search
+scans, all the social channels must be scanned and a global override
+here does not seem to make much sense.
 
-
-
+-- 
+Jouni Malinen                                            PGP id EFC895FA
