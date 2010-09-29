@@ -1,61 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from kroah.org ([198.145.64.141]:34680 "EHLO coco.kroah.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750844Ab0IQX17 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 17 Sep 2010 19:27:59 -0400
-Date: Fri, 17 Sep 2010 16:26:43 -0700
-From: Greg KH <greg@kroah.com>
-To: Vipin Mehta <Vipin.Mehta@Atheros.com>
-Cc: Randy Dunlap <randy.dunlap@oracle.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"devel@driverdev.osuosl.org" <devel@driverdev.osuosl.org>
-Subject: Re: [PATCH] staging: ath6kl: Including a header file to fix a
- compilation error
-Message-ID: <20100917232643.GA25757@kroah.com>
-References: <1284742495-2970-1-git-send-email-vmehta@atheros.com>
- <4C93A412.2070005@oracle.com>
- <35B17FE5076C7040809188FBE7913F983F23937DAE@SC1EXMB-MBCL.global.atheros.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <35B17FE5076C7040809188FBE7913F983F23937DAE@SC1EXMB-MBCL.global.atheros.com>
+Received: from external1.orbit-lab.org ([128.6.192.131]:49759 "HELO
+	external1.orbit-lab.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1752586Ab0I2TDm (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 29 Sep 2010 15:03:42 -0400
+Received: from repository3.orbit-lab.org (repository3.orbit-lab.org [10.50.0.41])
+	by external1.orbit-lab.org (Postfix) with ESMTP id 42782418D8
+	for <linux-wireless@vger.kernel.org>; Wed, 29 Sep 2010 15:01:26 -0400 (EDT)
+Subject: Compat-wireless release for 2010-09-29 is baked
+To: <linux-wireless@vger.kernel.org>
+Message-Id: <20100929190340.F370B404FC@repository3.orbit-lab.org>
+Date: Wed, 29 Sep 2010 15:03:40 -0400 (EDT)
+From: compat@orbit-lab.org (Compat-wireless cronjob account)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Sep 17, 2010 at 04:11:57PM -0700, Vipin Mehta wrote:
-> > Hi,
-> > Thanks for the patch, but I still get these errors & warnings:
-> > 
-> > on linux-next 2010-0915:
-> > 
-> > drivers/staging/ath6kl/hif/sdio/linux_sdio/src/hif_scatter.c: In function
-> > 'SetupHIFScatterSupport':
-> > drivers/staging/ath6kl/hif/sdio/linux_sdio/src/hif_scatter.c:288: error:
-> > 'struct mmc_host' has no member named 'max_hw_segs'
-> > drivers/staging/ath6kl/hif/sdio/linux_sdio/src/hif_scatter.c:289: error:
-> > 'struct mmc_host' has no member named 'max_hw_segs'
-> > 
-> This is because of a recent change in the mmc_host structure that removes the distinction between hw and phys segments. The structure is different in the staging-next-2.6 tree which is where I usually build and test the changes. 
+>From git://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next
+   b7b3dc6..9cfd2ee  history    -> origin/history
+ + ac8f1ff...1063b82 master     -> origin/master  (forced update)
+   252a52a..0f44fbd  stable     -> origin/stable
+ * [new tag]         next-20100929 -> next-20100929
 
-Please, fix your email client to wrap lines at a sane place...
+compat-wireless code metrics
 
-> Greg, 
-> The two trees linux-next and staging-next are not in sync so what is
-> the process that is usually followed under these circumstances? I see
-> little point in using the staging-next-2.6 tree to generate and test
-> my patches since the tree eventually drains into linux-next. Should I
-> stop worrying about if the patch works for the staging-next tree and
-> just focus on that things should work with linux-next?
+    747705 - Total upstream lines of code being pulled
+      2153 - backport code changes
+      1902 - backport code additions
+       251 - backport code deletions
+      6242 - backport from compat module
+      8395 - total backport code
+    1.1228 - % of code consists of backport work
+      1219 - Crap changes not yet posted
+      1181 - Crap additions not yet posted
+        38 - Crap deletions not yet posted
+    0.1630 - % of crap code
 
-If the problem is due to another change in a different tree, send me the
-patch and I'll hold on to it until the mmc tree is merged with Linus
-(during the .37 merge window) and then I'll apply it and push it out.
-
-Until then, we can ask Stephen to hold the patch in linux-next to fix
-the build issue.
-
-But I'd still like the .h file fixup patch to be resolved and in my tree
-first, right?
-
-thanks,
-
-greg k-h
+Base tree: linux-next.git
+Base tree version: next-20100929
+compat-wireless release: compat-wireless-2010-09-27-8-gc735ecb-pc
