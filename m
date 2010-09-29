@@ -1,43 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f46.google.com ([209.85.161.46]:35544 "EHLO
-	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751831Ab0IVNsg (ORCPT
+Received: from mail.candelatech.com ([208.74.158.172]:43745 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754870Ab0I2SDJ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 22 Sep 2010 09:48:36 -0400
-Received: by fxm3 with SMTP id 3so279682fxm.19
-        for <linux-wireless@vger.kernel.org>; Wed, 22 Sep 2010 06:48:35 -0700 (PDT)
-From: Christian Lamparter <chunkeey@googlemail.com>
-To: Max Filippov <jcmvbkbc@gmail.com>
-Subject: Re: p54spi (STLC4560) with Marvel XScale CPU (kernel 2.6.25.4)
-Date: Wed, 22 Sep 2010 15:48:27 +0200
-Cc: Alex Mihaylov <minimumlaw@gmail.com>,
-	linux-wireless@vger.kernel.org
-References: <AANLkTik3_o03=m0w8XM_B-YTQrR-ibkbtTBErXfcYwGG@mail.gmail.com> <201009221458.43434.chunkeey@googlemail.com> <AANLkTimm_+4xXf-C2xVW0Q6Dex89Nt9UGKU60j0EAr2T@mail.gmail.com>
-In-Reply-To: <AANLkTimm_+4xXf-C2xVW0Q6Dex89Nt9UGKU60j0EAr2T@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Message-Id: <201009221548.28159.chunkeey@googlemail.com>
+	Wed, 29 Sep 2010 14:03:09 -0400
+From: greearb@candelatech.com
+To: linux-wireless@vger.kernel.org
+Cc: Ben Greear <greearb@candelatech.com>
+Subject: [PATCH 1/2] mac80211:  Make no-probe-response kernel messages more useful.
+Date: Wed, 29 Sep 2010 11:03:02 -0700
+Message-Id: <1285783383-20822-1-git-send-email-greearb@candelatech.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wednesday 22 September 2010 15:41:49 Max Filippov wrote:
-> > I have Toradex Colibri module ( PXA270 and PXA320 based -
-> > http://www.toradex.com/Products/Colibri_Modules ) and want connect
-> > them to Sagrad SG901-1028 module (
-> > http://www.sagrad.com/index.php?option=com_content&view=article&id=55&Itemid=66
-> > ) based on STLC450 chip.
-> >
-> > Now I add next code to plaform file (kernel 2.6.35.4):
-> ...
-> > their GPL driver looks funny. (Max, it's really worth a look)
-> ...
-> > note:
-> > 2.6.25.4 is very old and the spi subsystem (which isn't backported in cw)
-> > has changed quite a bit since then.
-> 
-> Alex, what driver is discussed? Christian, what GPL driver?
-Oh I'm sorry, I forgot to add the "irony" GPL tags.
+From: Ben Greear <greearb@candelatech.com>
 
-Anyway, take a look at the product page, there you can download
-the their driver "demo".
+Add device name and flags to give better idea of what
+exactly is happening.
+
+Signed-off-by: Ben Greear <greearb@candelatech.com>
+---
+:100644 100644 77913a1... 04f33cf... M	net/mac80211/mlme.c
+ net/mac80211/mlme.c |   14 ++++++++------
+ 1 files changed, 8 insertions(+), 6 deletions(-)
+
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+index 77913a1..04f33cf 100644
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -1863,10 +1863,11 @@ void ieee80211_sta_work(struct ieee80211_sub_if_data *sdata)
+ 
+ 		else if (ifmgd->probe_send_count < IEEE80211_MAX_PROBE_TRIES) {
+ #ifdef CONFIG_MAC80211_VERBOSE_DEBUG
+-			printk(KERN_DEBUG "No probe response from AP %pM"
+-				" after %dms, try %d\n", bssid,
++			printk(KERN_DEBUG "%s: No probe response from AP %pM"
++				" after %dms, try %d  flags: 0x%x\n",
++				sdata->dev->name, bssid,
+ 				(1000 * IEEE80211_PROBE_WAIT)/HZ,
+-				ifmgd->probe_send_count);
++				ifmgd->probe_send_count, ifmgd->flags);
+ #endif
+ 			ieee80211_mgd_probe_ap_send(sdata);
+ 		} else {
+@@ -1876,9 +1877,10 @@ void ieee80211_sta_work(struct ieee80211_sub_if_data *sdata)
+ 			 */
+ 			ifmgd->flags &= ~(IEEE80211_STA_CONNECTION_POLL |
+ 					  IEEE80211_STA_BEACON_POLL);
+-			printk(KERN_DEBUG "No probe response from AP %pM"
+-				" after %dms, disconnecting.\n",
+-				bssid, (1000 * IEEE80211_PROBE_WAIT)/HZ);
++			printk(KERN_DEBUG "%s: No probe response from AP %pM"
++			       " after %dms, disconnecting, flags: 0x%x\n",
++			       sdata->dev->name, bssid,
++			       (1000 * IEEE80211_PROBE_WAIT)/HZ, ifmgd->flags);
+ 			ieee80211_set_disassoc(sdata, true);
+ 			mutex_unlock(&ifmgd->mtx);
+ 			mutex_lock(&local->mtx);
+-- 
+1.7.2.2
+
