@@ -1,55 +1,81 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mgw-mx06.nokia.com ([192.100.122.233]:18218 "EHLO
-	mgw-mx06.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751656Ab0IWHr2 (ORCPT
+Received: from mail-iw0-f174.google.com ([209.85.214.174]:34268 "EHLO
+	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755646Ab0I2Tkp (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 23 Sep 2010 03:47:28 -0400
-Subject: Re: [PATCH] wl1271: Fix overflow in wl1271_boot_upload_nvs
-From: Luciano Coelho <luciano.coelho@nokia.com>
-To: ext Ido Yariv <ido@wizery.com>,
-	John Linville <linville@tuxdriver.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"Katila Tuomas.2 (EXT-Ixonos/Tampere)"
-	<ext-tuomas.2.katila@nokia.com>
-In-Reply-To: <1285151082.22517.8.camel@chilepepper>
-References: <1285141993-3772-1-git-send-email-ido@wizery.com>
-	 <1285151082.22517.8.camel@chilepepper>
-Content-Type: text/plain; charset="UTF-8"
-Date: Thu, 23 Sep 2010 10:46:33 +0300
-Message-ID: <1285227993.3231.19.camel@chilepepper>
-Mime-Version: 1.0
+	Wed, 29 Sep 2010 15:40:45 -0400
+MIME-Version: 1.0
+In-Reply-To: <20100924230730.GB6566@tux>
+References: <20100924230730.GB6566@tux>
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Date: Wed, 29 Sep 2010 12:40:23 -0700
+Message-ID: <AANLkTin3QqukxP8M_L9nWgkrv6bGsnGx1JFNtOY1jXtp@mail.gmail.com>
+Subject: Re: RFC: btusb firmware load help
+To: Marcel Holtmann <holtmann@linux.intel.com>,
+	Ken Steck <Ken.Steck@atheros.com>,
+	Shanmugamkamatchi Balashanmugam
+	<Shanmugamkamatchi.Balashanmugam@atheros.com>
+Cc: linux-bluetooth <linux-bluetooth@vger.kernel.org>,
+	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
+	Deepak Dhamdhere <Deepak.Dhamdhere@atheros.com>,
+	Sree Durbha <Sree.Durbha@atheros.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2010-09-22 at 12:24 +0200, Luciano Coelho wrote:
-> On Wed, 2010-09-22 at 09:53 +0200, ext Ido Yariv wrote:
-> > Due to miscalculation of nvs_len, excessive data was sent to the
-> > firmware.
-> > Fix this by first setting nvs_ptr to point to the first NVS table,
-> > and computing the total size of all NVS tables accordingly.
-> > 
-> > Signed-off-by: Ido Yariv <ido@wizery.com>
-> > ---
-> 
-> This looks reasonable, thanks!
-> 
-> But I still want to have it briefly tested before I accept it.  Our
-> tester will try it out today or tomorrow and, if everything is okay,
-> I'll ack it.
-> 
+On Fri, Sep 24, 2010 at 4:07 PM, Luis R. Rodriguez
+<lrodriguez@atheros.com> wrote:
+> Marcel, I was just poked about this thread:
+>
+> http://www.spinics.net/lists/linux-bluetooth/msg06087.html
+>
+> The hack is required because our BT hardware does not accept HCI commands
+> when the device is plugged in. If I understood your position you did not
+> want to accept the patch because our BT USB devices are violating the
+> specification by not acceping HCI commands and yet claiming to be BT
+> devices, is that right?
+>
+> This position seems perfectly reasonable, and if it is violating the
+> specification this needs to be fixed in hardware for future devices. But
+> what is done is done, and we need to support existing customers with
+> current hardware, can you provide some recommendation as to an alternative
+> approach to resolve this upstream?
 
-Okay, Tuomas has run some basic tests with this patch and didn't
-observer any degradation in RF (which would signal possible problems
-with the NVS uploading).
+Marcel some attention to this would be greatly appreciated.
 
-Thanks, Ido!
+> Without a patch like the one suggested Atheros' Bluetooth USB devices are
+> essentially not functional at all. I am in hopes we can come to some agreement
+> how to deal with a hardware quirk for now while we nag at our hardware team
+> to consider changing the way our devices work.
 
-Tested-By: Tuomas Katila <ext-tuomas.2.katila@nokia.com>
-Acked-by: Luciano Coelho <luciano.coelho@nokia.com>
+I have gotten clarifications from Ken Steck that this issue is only
+present on AR3011 chips used in the SFLASH configuration. AR3012 will
+not have this issue.
 
-John, please apply this patch, since my tree is not ready yet.
+> Someone from the Atheros BT team: can you send me the same patch to be
+> applied into compat-wireless under the linux-next-pending/ directory ?
+> That is, send me a patch which will apply onto compat-wireless.
+> This way we can actually get our hardware functional to customers while
+> we try to look for a better alternative directly upstream. You will
+> also need to document this issue on the wiki. I recommend you document
+> this here:
+>
+> http://wireless.kernel.org/en/users/Drivers/ath3k
+>
+> That is, create a new wiki page there for the driver and the things
+> needed for it. Once I get the patch into compat-wireless we can
+> refer users/customers to the compat-wireless stable releases with
+> the linux-next-pending/ patch you give to me applied.
 
--- 
-Cheers,
-Luca.
+I saw no takers on this.. so I just created the page myself.
 
+> Someone from the Atheros BT team: does the patch currently handle
+> suspend/resume?
+
+Shanmugamkamatchi has noted to me he will be sending me this patch
+soon and it also supports suspend/resume properly, however, I would
+like to resolve this upstream.
+
+Marcel, please let us know what path you recommend we take for this.
+
+  Luis
