@@ -1,140 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([88.198.39.176]:60285 "EHLO ds10.nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752875Ab0IVKfI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 22 Sep 2010 06:35:08 -0400
-From: Felix Fietkau <nbd@openwrt.org>
-To: linux-wireless@vger.kernel.org
-Cc: linville@tuxdriver.com, lrodriguez@atheros.com
-Subject: [PATCH 3/3] ath9k_hw: simplify revision checks for AR9287
-Date: Wed, 22 Sep 2010 12:34:54 +0200
-Message-Id: <1285151694-39227-3-git-send-email-nbd@openwrt.org>
-In-Reply-To: <1285151694-39227-2-git-send-email-nbd@openwrt.org>
-References: <1285151694-39227-1-git-send-email-nbd@openwrt.org>
- <1285151694-39227-2-git-send-email-nbd@openwrt.org>
+Received: from smtp.nokia.com ([192.100.122.233]:64614 "EHLO
+	mgw-mx06.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750972Ab0I2Jug (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 29 Sep 2010 05:50:36 -0400
+Subject: Re: [PATCH 0/2] wl1271: Packet aggregation optimizations
+From: Juuso Oikarinen <juuso.oikarinen@nokia.com>
+To: ext Ido Yariv <ido@wizery.com>
+Cc: "Coelho Luciano (Nokia-MS/Helsinki)" <Luciano.Coelho@nokia.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <1285741684.11177.98.camel@wimaxnb.nmp.nokia.com>
+References: <1285686464-8668-1-git-send-email-ido@wizery.com>
+	 <1285741684.11177.98.camel@wimaxnb.nmp.nokia.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Wed, 29 Sep 2010 12:50:23 +0300
+Message-ID: <1285753823.11177.113.camel@wimaxnb.nmp.nokia.com>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Since AR9287 v1.0 was never sold (and the initvals removed), its revision
-checks can be simplified similar to AR9280
+On Wed, 2010-09-29 at 08:28 +0200, ext Juuso Oikarinen wrote:
+> On Tue, 2010-09-28 at 17:07 +0200, ext Ido Yariv wrote:
+> > The WL1271 HW supports sending and receiving multiple packets within
+> > a single transaction. This can substantially reduce CPU usage and
+> > increase network throughput.
+> > 
+> > The following patches add support for RX and TX packet aggregation.
+> > An opportunistic approach was taken - all packets that are currently
+> > available for sending/receiving are aggregated and transferred
+> > in a single transaction.
+> > 
+> > The patches were tested on a Zoom2 platform (SDIO only).
+> > 
+> > Ido Yariv (2):
+> >   wl1271: Support firmware RX packet aggregation
+> >   wl1271: Support firmware TX packet aggregation
+> > 
+> 
+> Thanks for these patches! 
+> 
+> We are testing them now.
 
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
----
- drivers/net/wireless/ath/ath9k/ar5008_phy.c   |    6 +++---
- drivers/net/wireless/ath/ath9k/ar9002_calib.c |    4 ++--
- drivers/net/wireless/ath/ath9k/eeprom.h       |    2 +-
- drivers/net/wireless/ath/ath9k/hw.c           |    4 ++--
- drivers/net/wireless/ath/ath9k/reg.h          |    9 +--------
- 5 files changed, 9 insertions(+), 16 deletions(-)
+I did some desktop-testing for these patches. For SDIO, I can see some
+definite improvements in CPU usage during data transfers with these
+patches despite the added memcpy operations.
 
-diff --git a/drivers/net/wireless/ath/ath9k/ar5008_phy.c b/drivers/net/wireless/ath/ath9k/ar5008_phy.c
-index 79dfe9d..525671f 100644
---- a/drivers/net/wireless/ath/ath9k/ar5008_phy.c
-+++ b/drivers/net/wireless/ath/ath9k/ar5008_phy.c
-@@ -669,7 +669,7 @@ static void ar5008_hw_override_ini(struct ath_hw *ah,
- 		if (!AR_SREV_9271(ah))
- 			val &= ~AR_PCU_MISC_MODE2_HWWAR1;
- 
--		if (AR_SREV_9287_10_OR_LATER(ah))
-+		if (AR_SREV_9287_11_OR_LATER(ah))
- 			val = val & (~AR_PCU_MISC_MODE2_HWWAR2);
- 
- 		REG_WRITE(ah, AR_PCU_MISC_MODE2, val);
-@@ -820,11 +820,11 @@ static int ar5008_hw_process_ini(struct ath_hw *ah,
- 	REGWRITE_BUFFER_FLUSH(ah);
- 	DISABLE_REGWRITE_BUFFER(ah);
- 
--	if (AR_SREV_9280(ah) || AR_SREV_9287_10_OR_LATER(ah))
-+	if (AR_SREV_9280(ah) || AR_SREV_9287_11_OR_LATER(ah))
- 		REG_WRITE_ARRAY(&ah->iniModesRxGain, modesIndex, regWrites);
- 
- 	if (AR_SREV_9280(ah) || AR_SREV_9285_12_OR_LATER(ah) ||
--	    AR_SREV_9287_10_OR_LATER(ah))
-+	    AR_SREV_9287_11_OR_LATER(ah))
- 		REG_WRITE_ARRAY(&ah->iniModesTxGain, modesIndex, regWrites);
- 
- 	if (AR_SREV_9271_10(ah))
-diff --git a/drivers/net/wireless/ath/ath9k/ar9002_calib.c b/drivers/net/wireless/ath/ath9k/ar9002_calib.c
-index 5d08151..d7d1d55 100644
---- a/drivers/net/wireless/ath/ath9k/ar9002_calib.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9002_calib.c
-@@ -833,7 +833,7 @@ static bool ar9002_hw_init_cal(struct ath_hw *ah, struct ath9k_channel *chan)
- 			return false;
- 	} else {
- 		if (AR_SREV_9280_20_OR_LATER(ah)) {
--			if (!AR_SREV_9287_10_OR_LATER(ah))
-+			if (!AR_SREV_9287_11_OR_LATER(ah))
- 				REG_CLR_BIT(ah, AR_PHY_ADC_CTL,
- 					    AR_PHY_ADC_CTL_OFF_PWDADC);
- 			REG_SET_BIT(ah, AR_PHY_AGC_CONTROL,
-@@ -856,7 +856,7 @@ static bool ar9002_hw_init_cal(struct ath_hw *ah, struct ath9k_channel *chan)
- 		}
- 
- 		if (AR_SREV_9280_20_OR_LATER(ah)) {
--			if (!AR_SREV_9287_10_OR_LATER(ah))
-+			if (!AR_SREV_9287_11_OR_LATER(ah))
- 				REG_SET_BIT(ah, AR_PHY_ADC_CTL,
- 					    AR_PHY_ADC_CTL_OFF_PWDADC);
- 			REG_CLR_BIT(ah, AR_PHY_AGC_CONTROL,
-diff --git a/drivers/net/wireless/ath/ath9k/eeprom.h b/drivers/net/wireless/ath/ath9k/eeprom.h
-index e583421..55f2147 100644
---- a/drivers/net/wireless/ath/ath9k/eeprom.h
-+++ b/drivers/net/wireless/ath/ath9k/eeprom.h
-@@ -101,7 +101,7 @@
- #define AR5416_VER_MASK (eep->baseEepHeader.version & AR5416_EEP_VER_MINOR_MASK)
- #define OLC_FOR_AR9280_20_LATER (AR_SREV_9280_20_OR_LATER(ah) && \
- 				 ah->eep_ops->get_eeprom(ah, EEP_OL_PWRCTRL))
--#define OLC_FOR_AR9287_10_LATER (AR_SREV_9287_10_OR_LATER(ah) && \
-+#define OLC_FOR_AR9287_10_LATER (AR_SREV_9287_11_OR_LATER(ah) && \
- 				 ah->eep_ops->get_eeprom(ah, EEP_OL_PWRCTRL))
- 
- #define AR_EEPROM_RFSILENT_GPIO_SEL     0x001c
-diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
-index 1f41b45..25ed65a 100644
---- a/drivers/net/wireless/ath/ath9k/hw.c
-+++ b/drivers/net/wireless/ath/ath9k/hw.c
-@@ -1989,7 +1989,7 @@ int ath9k_hw_fill_cap_info(struct ath_hw *ah)
- 	if (AR_SREV_9300_20_OR_LATER(ah))
- 		pCap->hw_caps |= ATH9K_HW_CAP_RAC_SUPPORTED;
- 
--	if (AR_SREV_9287_10_OR_LATER(ah) || AR_SREV_9271(ah))
-+	if (AR_SREV_9287_11_OR_LATER(ah) || AR_SREV_9271(ah))
- 		pCap->hw_caps |= ATH9K_HW_CAP_SGI_20;
- 
- 	if (AR_SREV_9285(ah))
-@@ -2073,7 +2073,7 @@ u32 ath9k_hw_gpio_get(struct ath_hw *ah, u32 gpio)
- 		return MS_REG_READ(AR9300, gpio) != 0;
- 	else if (AR_SREV_9271(ah))
- 		return MS_REG_READ(AR9271, gpio) != 0;
--	else if (AR_SREV_9287_10_OR_LATER(ah))
-+	else if (AR_SREV_9287_11_OR_LATER(ah))
- 		return MS_REG_READ(AR9287, gpio) != 0;
- 	else if (AR_SREV_9285_12_OR_LATER(ah))
- 		return MS_REG_READ(AR9285, gpio) != 0;
-diff --git a/drivers/net/wireless/ath/ath9k/reg.h b/drivers/net/wireless/ath/ath9k/reg.h
-index 7ff814d..6d01e50 100644
---- a/drivers/net/wireless/ath/ath9k/reg.h
-+++ b/drivers/net/wireless/ath/ath9k/reg.h
-@@ -831,18 +831,11 @@
- 
- #define AR_SREV_9287(_ah) \
- 	(((_ah)->hw_version.macVersion == AR_SREV_VERSION_9287))
--#define AR_SREV_9287_10_OR_LATER(_ah) \
-+#define AR_SREV_9287_11_OR_LATER(_ah) \
- 	(((_ah)->hw_version.macVersion >= AR_SREV_VERSION_9287))
--#define AR_SREV_9287_10(_ah) \
--	(((_ah)->hw_version.macVersion == AR_SREV_VERSION_9287) && \
--	 ((_ah)->hw_version.macRev == AR_SREV_REVISION_9287_10))
- #define AR_SREV_9287_11(_ah) \
- 	(((_ah)->hw_version.macVersion == AR_SREV_VERSION_9287) && \
- 	 ((_ah)->hw_version.macRev == AR_SREV_REVISION_9287_11))
--#define AR_SREV_9287_11_OR_LATER(_ah) \
--	(((_ah)->hw_version.macVersion > AR_SREV_VERSION_9287) || \
--	 (((_ah)->hw_version.macVersion == AR_SREV_VERSION_9287) && \
--	  ((_ah)->hw_version.macRev >= AR_SREV_REVISION_9287_11)))
- #define AR_SREV_9287_12(_ah) \
- 	(((_ah)->hw_version.macVersion == AR_SREV_VERSION_9287) && \
- 	 ((_ah)->hw_version.macRev == AR_SREV_REVISION_9287_12))
--- 
-1.7.2.2
+However, the SPI is totally broken with these patches. I did some
+debugging and noticed, that once the SPI transfers exceed 4500 bytes or
+so, the hardware crashes.
+
+Excerpt from syslog. I repeated this several times, and each time the
+hardware went unresponsive after the larger transfer, like here:
+
+[   44.847198] TX length:
+1552                                                                                                                                       
+[   44.876983] RX length:
+272                                                                                                                                        
+[   46.265014] TX length:
+1552                                                                                                                                       
+[   46.270416] RX length:
+120                                                                                                                                        
+[   46.270629] TX length:
+3104                                                                                                                                       
+[   46.274963] RX length:
+120                                                                                                                                        
+[   46.275177] TX length:
+4656                                                                                                                                       
+[   46.285339] wl1271: ERROR SPI read busy-word
+timeout!                              
+
+-Juuso
 
