@@ -1,81 +1,84 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([192.100.105.134]:26939 "EHLO
-	mgw-mx09.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753116Ab0I1Lj6 (ORCPT
+Received: from mail.candelatech.com ([208.74.158.172]:43747 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754970Ab0I2SDM (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 28 Sep 2010 07:39:58 -0400
-From: juuso.oikarinen@nokia.com
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH] mac80211: Fix WMM driver queue configuration
-Date: Tue, 28 Sep 2010 14:39:32 +0300
-Message-Id: <1285673972-10502-1-git-send-email-juuso.oikarinen@nokia.com>
+	Wed, 29 Sep 2010 14:03:12 -0400
+From: greearb@candelatech.com
+To: linux-wireless@vger.kernel.org
+Cc: Ben Greear <greearb@candelatech.com>
+Subject: [PATCH 2/2] mac80211:  Don't go off-channel in work_work unless needed.
+Date: Wed, 29 Sep 2010 11:03:03 -0700
+Message-Id: <1285783383-20822-2-git-send-email-greearb@candelatech.com>
+In-Reply-To: <1285783383-20822-1-git-send-email-greearb@candelatech.com>
+References: <1285783383-20822-1-git-send-email-greearb@candelatech.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Juuso Oikarinen <juuso.oikarinen@nokia.com>
+From: Ben Greear <greearb@candelatech.com>
 
-The WMM parameter configuration function (ieee80211_sta_wmm_params) only
-configures the WMM parameters to the driver is the wmm_last_param_set
-counter value is changed by the AP.
+If the work to be done is on the current active channel, then
+do not call the offchannel and return-to-channel logic.
 
-The wmm_last_param_set is initialized to -1 on association in order to ensure
-the configuration is made to the driver at least once on association, but
-currently this initialization is done *after* the WMM parameter configuration
-function was called.
-
-This leads to unreliability in the driver getting properly configured on first
-association (depending on what counter value the AP happens to use.) When
-disassociating (the wmm default parameters are configured to the driver) and
-then reassociating, due to the above the WMM configuration is not set to the
-driver at all.
-
-On drivers without beacon filtering the problem is corrected by later beacons,
-but on drivers with beacon filtering the WMM will remain permanently incorrectly
-configured.
-
-Fix this by moving the initialization of wmm_last_param_set to -1 before
-ieee80211_sta_wmm_params is called on association.
-
-Signed-off-by: Juuso Oikarinen <juuso.oikarinen@nokia.com>
+Signed-off-by: Ben Greear <greearb@candelatech.com>
 ---
- net/mac80211/mlme.c |   16 ++++++++--------
- 1 files changed, 8 insertions(+), 8 deletions(-)
+:100644 100644 ae344d1... 1f2673d... M	net/mac80211/work.c
+ net/mac80211/work.c |   28 ++++++++++++++++++++--------
+ 1 files changed, 20 insertions(+), 8 deletions(-)
 
-diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index 8b733cf..77913a1 100644
---- a/net/mac80211/mlme.c
-+++ b/net/mac80211/mlme.c
-@@ -880,14 +880,6 @@ static void ieee80211_set_associated(struct ieee80211_sub_if_data *sdata,
- 	sdata->u.mgd.flags &= ~(IEEE80211_STA_CONNECTION_POLL |
- 				IEEE80211_STA_BEACON_POLL);
+diff --git a/net/mac80211/work.c b/net/mac80211/work.c
+index ae344d1..1f2673d 100644
+--- a/net/mac80211/work.c
++++ b/net/mac80211/work.c
+@@ -873,6 +873,7 @@ static void ieee80211_work_work(struct work_struct *work)
+ 	LIST_HEAD(free_work);
+ 	enum work_action rma;
+ 	bool remain_off_channel = false;
++	bool went_off_channel = false;
  
--	/*
--	 * Always handle WMM once after association regardless
--	 * of the first value the AP uses. Setting -1 here has
--	 * that effect because the AP values is an unsigned
--	 * 4-bit value.
--	 */
--	sdata->u.mgd.wmm_last_param_set = -1;
+ 	if (local->scanning)
+ 		return;
+@@ -910,12 +911,21 @@ static void ieee80211_work_work(struct work_struct *work)
+ 			 *	 happen to be on the same channel as
+ 			 *	 the requested channel
+ 			 */
+-			ieee80211_offchannel_stop_beaconing(local);
+-			ieee80211_offchannel_stop_station(local);
 -
- 	ieee80211_led_assoc(local, 1);
- 
- 	if (local->hw.flags & IEEE80211_HW_NEED_DTIM_PERIOD)
-@@ -1367,6 +1359,14 @@ static bool ieee80211_assoc_success(struct ieee80211_work *wk,
- 		return false;
- 	}
- 
-+	/*
-+	 * Always handle WMM once after association regardless
-+	 * of the first value the AP uses. Setting -1 here has
-+	 * that effect because the AP values is an unsigned
-+	 * 4-bit value.
-+	 */
-+	ifmgd->wmm_last_param_set = -1;
+-			local->tmp_channel = wk->chan;
+-			local->tmp_channel_type = wk->chan_type;
+-			ieee80211_hw_config(local, 0);
++			WARN_ON(local->scan_channel != NULL);
++			if (wk->chan != local->oper_channel ||
++			    wk->chan_type != local->_oper_channel_type) {
++				/* Only change channels if we need to */
++				ieee80211_offchannel_stop_beaconing(local);
++				ieee80211_offchannel_stop_station(local);
 +
- 	if (elems.wmm_param)
- 		ieee80211_sta_wmm_params(local, sdata, elems.wmm_param,
- 					 elems.wmm_param_len);
++				local->tmp_channel = wk->chan;
++				local->tmp_channel_type = wk->chan_type;
++				ieee80211_hw_config(local, 0);
++				went_off_channel = true;
++			} else {
++				local->tmp_channel = wk->chan;
++				local->tmp_channel_type = wk->chan_type;
++			}
+ 			started = true;
+ 			wk->timeout = jiffies;
+ 		}
+@@ -989,8 +999,10 @@ static void ieee80211_work_work(struct work_struct *work)
+ 
+ 	if (!remain_off_channel && local->tmp_channel) {
+ 		local->tmp_channel = NULL;
+-		ieee80211_hw_config(local, 0);
+-		ieee80211_offchannel_return(local, true);
++		if (went_off_channel) {
++			ieee80211_hw_config(local, 0);
++			ieee80211_offchannel_return(local, true);
++		}
+ 		/* give connection some time to breathe */
+ 		run_again(local, jiffies + HZ/2);
+ 	}
 -- 
-1.6.3.3
+1.7.2.2
 
