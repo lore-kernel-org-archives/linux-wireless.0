@@ -1,108 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pw0-f46.google.com ([209.85.160.46]:44628 "EHLO
-	mail-pw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751984Ab0IOFOm (ORCPT
+Received: from mail.candelatech.com ([208.74.158.172]:48541 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753644Ab0I2P2H (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 15 Sep 2010 01:14:42 -0400
-Received: by pwi3 with SMTP id 3so41337pwi.19
-        for <linux-wireless@vger.kernel.org>; Tue, 14 Sep 2010 22:14:42 -0700 (PDT)
-Message-ID: <4C90563D.5080108@gmail.com>
-Date: Wed, 15 Sep 2010 00:14:37 -0500
-From: =?UTF-8?B?Q2FybG9zIFNhbHZhZG9yIFDDqXJleiBTYWxnYWRv?=
-	<carlosalvatore@gmail.com>
+	Wed, 29 Sep 2010 11:28:07 -0400
+Message-ID: <4CA35AFC.8050106@candelatech.com>
+Date: Wed, 29 Sep 2010 08:27:56 -0700
+From: Ben Greear <greearb@candelatech.com>
 MIME-Version: 1.0
-To: Hauke Mehrtens <hauke@hauke-m.de>
-CC: "Luis R. Rodriguez" <mcgrof@gmail.com>,
+To: Jouni Malinen <j@w1.fi>
+CC: Johannes Berg <johannes@sipsolutions.net>,
 	linux-wireless@vger.kernel.org
-Subject: Re: compat-wireless-2.6.35-rc6 won't build
-References: <4C7D17CF.6030501@gmail.com> <AANLkTik8PLwUfLU1OouBq6uPwSvaWBokAkSHcCzx97ms@mail.gmail.com> <4C7D2DB6.2090609@gmail.com> <4C7F2477.6030006@gmail.com> <AANLkTinDXfNBBBjJYtu12vbARecc1xgYO=bA_K+Wu-h2@mail.gmail.com> <4C827584.7010203@hauke-m.de>
-In-Reply-To: <4C827584.7010203@hauke-m.de>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Subject: Re: [PATCH 2/2] mac80211:  Allow scanning single channel if other
+ VIF is associated.
+References: <1285632457-27539-1-git-send-email-greearb@candelatech.com> <1285632457-27539-2-git-send-email-greearb@candelatech.com> <1285658564.3885.1.camel@jlt3.sipsolutions.net> <4CA1F2A4.2090005@candelatech.com> <1285682224.3885.18.camel@jlt3.sipsolutions.net> <4CA206F0.40607@candelatech.com> <20100929054841.GB8382@jm.kir.nu>
+In-Reply-To: <20100929054841.GB8382@jm.kir.nu>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 09/04/2010 11:36 AM, Hauke Mehrtens wrote:
-> Am 02.09.2010 09:17, schrieb Luis R. Rodriguez:
->    
->> 2010/9/1 Carlos Salvador Pérez Salgado<carlosalvatore@gmail.com>:
->>      
->>> On 08/31/2010 11:28 AM, Carlos Salvador Pérez Salgado wrote:
->>>        
->>>> On 08/31/2010 10:32 AM, Luis R. Rodriguez wrote:
->>>>          
->>>>> 2010/8/31 Carlos Salvador Pérez Salgado<carlosalvatore@gmail.com>:
->>>>>            
->>>>>> Do you have a better idea of how can I fix that? I'll really appreciate
->>>>>> it.
->>>>>>              
->>>>> Yeah, try to compat-wireless-2.6.36-rc2 ...
->>>>>
->>>>>    Luis
->>>>>
->>>>>            
->>>> Nope... the same error...
->>>>
->>>>
->>>>   LD
->>>>   /media/disk/temp/compat-wireless-2.6.36-rc2-1/net/rfkill/built-in.o
->>>>   LD
->>>>   /media/disk/temp/compat-wireless-2.6.36-rc2-1/net/wireless/built-in.o
->>>>   CC [M]  /media/disk/temp/compat-wireless-2.6.36-rc2-1/net/wireless/core.o
->>>> /media/disk/temp/compat-wireless-2.6.36-rc2-1/net/wireless/core.c: In
->>>> function ‘cfg80211_netdev_notifier_call’:
->>>> /media/disk/temp/compat-wireless-2.6.36-rc2-1/net/wireless/core.c:705:
->>>> error: ‘struct net_device’ has no member named ‘wireless_handlers’
->>>> /media/disk/temp/compat-wireless-2.6.36-rc2-1/net/wireless/core.c:706:
->>>> error: ‘struct net_device’ has no member named ‘wireless_handlers’
->>>> make[3]: ***
->>>> [/media/disk/temp/compat-wireless-2.6.36-rc2-1/net/wireless/core.o] Error 1
->>>> make[2]: *** [/media/disk/temp/compat-wireless-2.6.36-rc2-1/net/wireless]
->>>> Error 2
->>>> make[1]: *** [_module_/media/disk/temp/compat-wireless-2.6.36-rc2-1] Error
->>>> 2
->>>> make[1]: Leaving directory `/media/disk/temp/linux-2.6.35.4'
->>>> make: *** [modules] Error 2
->>>>
->>>> That didn't help. I hope you can give me another idea.
->>>> Thanks.
->>>>          
->>> So...? What should I do?
->>>        
->> Sorry, I have not have had time to test compile against 2.6.35, but
->> when I do I will let you know.
+On 09/28/2010 10:48 PM, Jouni Malinen wrote:
+> On Tue, Sep 28, 2010 at 08:17:04AM -0700, Ben Greear wrote:
+>> On 09/28/2010 06:57 AM, Johannes Berg wrote:
+>>> You can run all networks in a single wpa_s instance, I believe, and then
+>>> it'd know about all this, right?
 >>
->>    Luis
->>      
-> Hi,
+>> But then, if you want to add an additional interface, you have to restart
+>> everything.
 >
-> I was able to reproduce the problem. In the kernel configuration
-> CONFIG_WIRELESS_EXT=n and CONFIG_CFG80211_WEXT=y are set.
-> compat-wireless uses the old wireless_handlers attribute for the wext
-> handlers interface, but this is only activated if CONFIG_WIRELESS_EXT=y
-> is set.
-> We can not use the new interface through struct wiphy that cfg80211_wext
-> normally uses. The struct is shipped by compat-wireless and changed
-> ofter with different kernel versions, so the pointers do not point to
-> the correct position when using two different versions of this strcut.
-> compat-wireless should *always* deactivates CONFIG_CFG80211_WEXT if
-> CONFIG_WIRELESS_EXT is not set. I got our compat_autoconf.h to overwirte
-> the kernels autoconf.h by add it to LINUXINCLUDE, but I have not found a
-> way how to disable CONFIG_WIRELESS_EXT in the makefile if it was set in
-> the kernel because config.mk is pared before the kernel configuration is
-> parsed. An other way would be to rename CONFIG_WIRELESS_EXT to something
-> else in compat-wireless to prevent the kernel from overwriting this value.
->
-> There will be no way to support cfg80211_wext without a kernel
-> configured with CONFIG_CFG80211_WEXT=y.
->
-> Hauke
->
->    
-After searching over the web I found this...
-http://bugs.gentoo.org/show_bug.cgi?format=multiple&id=332817 
-<http://bugs.gentoo.org/show_bug.cgi?format=multiple&id=332817>
-and now I was able to build the compat driver.
+> We would you restart everything? You can add/remove interface
+> dynamically..
 
-But... It did not solved my problem, even with the new compat drivers I 
-got fixed channel -1 on mon0 using aircrack. Is there a patch for this 
-newer versions that fixes this?
+I prefer to run one supplicant process per interface..just makes
+everything easier in my environment.
+
+>> I was thinking that maybe I could keep the logic in wpa_s, but instead of
+>> all the special casing, just locate the current associated channel for the
+>> phy in question and populate the scan-req with that single channel.
+>
+> wpa_supplicant already stores the operating channel: wpa_s->assoc_freq.
+> You can iterate over the configured interfaces and fetch the current
+> operating channel(s) using that without adding anything new to the
+> kernel. With that, you could make some wpa_supplicant scans (e.g.,
+> bgscan or scan for new networks if only a single network block is
+> enabled) restrict the list of channels to scan. Still, some other scan
+> requests (e.g., user initiated full scan or P2P Search) would need to be
+> able to specify more channels even if one of the interfaces is
+> associated.
+
+Even if wpa_supplicant can work around this in user-space, the kernel
+scanning logic for non-supplicant controlled interfaces still needs
+the kernel portion.
+
+That said, it looks like the patch is DOA as Johannes doesn't like
+it at all, so I'll quite submitting it :)
+
+> I would like to get rid of the one-channel-per-phy restriction, so I
+> don't think I would like to see new code added for that.
+
+If that ever happened, then the can_scan_one logic could simply indicate
+you want to scan only on associated channels, not all of them.  It
+would still help by not scanning on channels you have no intention
+of using because other VIFs are already associated on channels you do
+wish to use.
+
+Thanks,
+Ben
+
+
+-- 
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
