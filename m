@@ -1,75 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from comal.ext.ti.com ([198.47.26.152]:38292 "EHLO comal.ext.ti.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752374Ab0ISMX3 convert rfc822-to-8bit (ORCPT
+Received: from mail.candelatech.com ([208.74.158.172]:36392 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754635Ab0I2RpE (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 19 Sep 2010 08:23:29 -0400
-From: "Levi, Shahar" <shahar_levi@ti.com>
-To: Julian Calaby <julian.calaby@gmail.com>
-CC: Luciano Coelho <luciano.coelho@nokia.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Date: Sun, 19 Sep 2010 14:23:21 +0200
-Subject: RE: [PATCH 04/04] wl1271: 11n Support, 11n Kconfig Configurable
-Message-ID: <AC090B9732AB2B4DB7FF476E907FE6600113432125@dnce02.ent.ti.com>
-References: <1284575472-19888-1-git-send-email-shahar_levi@ti.com>
- <1284575472-19888-5-git-send-email-shahar_levi@ti.com>
- <1284578468.1569.29.camel@powerslave>
- <AANLkTimCrCH_yh5y3L8WcfNus9A2RFMCqvK7Xb82VGUL@mail.gmail.com>
- <AC090B9732AB2B4DB7FF476E907FE6600113431B85@dnce02.ent.ti.com>
- <AANLkTinPodQRk8HYDxxZ9BiKJ=-yAg8nybVqGpCqXsa2@mail.gmail.com>
- <AC090B9732AB2B4DB7FF476E907FE6600113431FC4@dnce02.ent.ti.com>
- <AANLkTin=Mk2P2ak9VAYxN4ehgPMcvKP9J7iEV55WKtx7@mail.gmail.com>
-In-Reply-To: <AANLkTin=Mk2P2ak9VAYxN4ehgPMcvKP9J7iEV55WKtx7@mail.gmail.com>
-Content-Type: text/plain; charset="us-ascii"
+	Wed, 29 Sep 2010 13:45:04 -0400
+Message-ID: <4CA37B16.2040002@candelatech.com>
+Date: Wed, 29 Sep 2010 10:44:54 -0700
+From: Ben Greear <greearb@candelatech.com>
 MIME-Version: 1.0
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: linux-wireless@vger.kernel.org
+Subject: Re: [PATCH v3] mac80211:  Allow scanning single channel if other
+ VIF is associated.
+References: <1285708650-21858-1-git-send-email-greearb@candelatech.com>	 <1285743733.3756.3.camel@jlt3.sipsolutions.net>	 <4CA35BAB.8090701@candelatech.com> <1285778901.3756.25.camel@jlt3.sipsolutions.net>
+In-Reply-To: <1285778901.3756.25.camel@jlt3.sipsolutions.net>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> -----Original Message-----
-> From: Julian Calaby [mailto:julian.calaby@gmail.com]
-> Sent: Sunday, September 19, 2010 3:19 AM
-> To: Levi, Shahar
-> Cc: Luciano Coelho; linux-wireless@vger.kernel.org
-> Subject: Re: [PATCH 04/04] wl1271: 11n Support, 11n Kconfig Configurable
-> 
-> Unless people dislike your patches, there's no danger that they won't
-> all be applied to the kernel.
-> 
-> That said, there are still circumstances when only part of a patch
-> series like your one will be applied to a kernel. One of these is when
-> a user is using git bisection to find exactly which commit caused a
-> particular bug.
-> 
-> So, let's say you upgrade your kernel from 2.6.35 to 2.6.38 and your
-> wl1271 device now won't connect to an AP running on some random
-> proprietary hardware. The simplest way to determine exactly which
-> patch caused this issue is to use git bisect to do a binary search
-> over the changes between these two kernel versions to determine the
-> exact patch that broke it. Now, let's assume that, this particular
-> piece of hardware won't connect to *anything* when 802.11n support is
-> added, so you've already excluded that from your kernel. If git bisect
-> decides to leap into the middle of your series, so that 802.11n
-> support is added before the Kconfig option is added, then 802.11n
-> support will be unconditionally enabled, and you'll see the symptoms
-> of that bug, and won't be able to quickly determine whether the bug
-> existed before the 802.11n patches or after, and git bisect might
-> wrongly assume that these patches were the cause of the bug.
-> 
-> As such, it's generally regarded as a good idea to introduce Kconfig
-> options with the code they guard.
-> 
-> Thanks,
-> 
-> --
-> 
-> Julian Calaby
-> 
-> Email: julian.calaby@gmail.com
-> Profile: http://www.google.com/profiles/julian.calaby/
-> .Plan: http://sites.google.com/site/juliancalaby/
-Hi Julian,
-You are right. I will squash 3 and 4 into one patch in v2.
-I greatly appreciate your elaboration and help to understand. 
-Thanks you,
-Shahar
+On 09/29/2010 09:48 AM, Johannes Berg wrote:
+
+>> +			       !local->scan_channel))) {
+>> +				/* Only change channels if we need to */
+>> +				ieee80211_offchannel_stop_beaconing(local);
+>> +				ieee80211_offchannel_stop_station(local);
+>> +
+>> +				local->tmp_channel = wk->chan;
+>> +				local->tmp_channel_type = wk->chan_type;
+>> +				ieee80211_hw_config(local, 0);
+>> +			}
+>>    			started = true;
+>>    			wk->timeout = jiffies;
+>
+> Also, I believe it needs matching code to not do all the return stuff
+> since we never left the channel, and I think it still needs to set
+> tmp_channel so that nothing will switch away underneath or so... not
+> quite sure.
+
+Doesn't the remain_off_channel logic later in that method
+take care of not calling the return to channel logic?
+(Assuming I set the tmp_channel and tmp_channel_type as you suggest)?
+
+Thanks,
+Ben
+
+-- 
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
 
