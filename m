@@ -1,43 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:36572 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752677Ab0IOPhR (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 15 Sep 2010 11:37:17 -0400
-Subject: Re: RFC:  mac80211/ath9k:  allow scanning single channel if other
- VIF is associated.
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Ben Greear <greearb@candelatech.com>
-Cc: Jouni Malinen <j@w1.fi>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <4C90E708.5050109@candelatech.com>
-References: <4C8EB03D.7070808@candelatech.com>
-	 <20100915030316.GB30253@jm.kir.nu>  <4C9059DC.7060009@candelatech.com>
-	 <1284545796.3842.11.camel@jlt3.sipsolutions.net>
-	 <4C90D683.7000801@candelatech.com>
-	 <1284560664.7705.3.camel@jlt3.sipsolutions.net>
-	 <4C90E708.5050109@candelatech.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Wed, 15 Sep 2010 17:37:13 +0200
-Message-ID: <1284565033.7705.5.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+Received: from nbd.name ([88.198.39.176]:57520 "EHLO ds10.nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753986Ab0I2RMK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 29 Sep 2010 13:12:10 -0400
+Message-ID: <4CA37366.3040906@openwrt.org>
+Date: Wed, 29 Sep 2010 19:12:06 +0200
+From: Felix Fietkau <nbd@openwrt.org>
+MIME-Version: 1.0
+To: Paul Stewart <pstew@google.com>
+CC: linux-wireless@vger.kernel.org, linville@tuxdriver.com,
+	lrodriguez@atheros.com
+Subject: [PATCH v2 6/6] ath9k: return survey data for all channels instead
+ of just the current one
+References: <1285773331-73439-1-git-send-email-nbd@openwrt.org>	<1285773331-73439-2-git-send-email-nbd@openwrt.org>	<1285773331-73439-3-git-send-email-nbd@openwrt.org>	<1285773331-73439-4-git-send-email-nbd@openwrt.org>	<1285773331-73439-5-git-send-email-nbd@openwrt.org>	<1285773331-73439-6-git-send-email-nbd@openwrt.org> <AANLkTim1MuVoJnOqeBQtKzTNLK=2Pf4SpMw4MiQHPeB2@mail.gmail.com>
+In-Reply-To: <AANLkTim1MuVoJnOqeBQtKzTNLK=2Pf4SpMw4MiQHPeB2@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2010-09-15 at 08:32 -0700, Ben Greear wrote:
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+---
+v2: add a missing null pointer check for 5ghz sband (thx, paul)
 
-> >> Right, but as soon as one finished, the next would start, and at least in .31,
-> >> that caused the first to un-associate, giving never-ending loop of interfaces
-> >> scanning and trying to associate.
-> >
-> > There should be a grace period maybe?
-> 
-> I don't think that really fixes anything, except make the race between
-> full scan and attempting for the first interface to associate harder to
-> hit (and that is only useful if the scan-one logic is enabled anyway).
+ drivers/net/wireless/ath/ath9k/main.c |   27 +++++++++++++++++++++------
+ 1 files changed, 21 insertions(+), 6 deletions(-)
 
-I think you just need to update ... newer kernels shouldn't be allowing
-a scan while trying to associate, I think.
-
-johannes
+diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
+index a801a08..49ea458 100644
+--- a/drivers/net/wireless/ath/ath9k/main.c
++++ b/drivers/net/wireless/ath/ath9k/main.c
+@@ -1994,16 +1994,31 @@ static int ath9k_get_survey(struct ieee80211_hw *hw, int idx,
+ 	struct ath_wiphy *aphy = hw->priv;
+ 	struct ath_softc *sc = aphy->sc;
+ 	struct ath_hw *ah = sc->sc_ah;
+-	struct ieee80211_conf *conf = &hw->conf;
++	struct ieee80211_supported_band *sband;
++	struct ath9k_channel *chan;
++
++	sband = hw->wiphy->bands[IEEE80211_BAND_2GHZ];
++	if (sband && idx >= sband->n_channels) {
++		idx -= sband->n_channels;
++		sband = NULL;
++	}
+ 
+-	 if (idx != 0)
+-		return -ENOENT;
++	if (!sband)
++		sband = hw->wiphy->bands[IEEE80211_BAND_5GHZ];
+ 
+-	survey->channel = conf->channel;
++	if (!sband || idx >= sband->n_channels)
++	    return -ENOENT;
++
++	survey->channel = &sband->channels[idx];
++	chan = &ah->channels[survey->channel->hw_value];
+ 	survey->filled = 0;
+-	if (ah->curchan && ah->curchan->noisefloor) {
++
++	if (chan == ah->curchan)
++		survey->filled |= SURVEY_INFO_IN_USE;
++
++	if (chan->noisefloor) {
+ 		survey->filled |= SURVEY_INFO_NOISE_DBM;
+-		survey->noise = ah->curchan->noisefloor;
++		survey->noise = chan->noisefloor;
+ 	}
+ 
+ 	return 0;
 
