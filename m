@@ -1,53 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f46.google.com ([209.85.214.46]:35517 "EHLO
-	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750918Ab0IICaH convert rfc822-to-8bit (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:59450 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751155Ab0I2G7a (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 8 Sep 2010 22:30:07 -0400
-Received: by bwz11 with SMTP id 11so735782bwz.19
-        for <linux-wireless@vger.kernel.org>; Wed, 08 Sep 2010 19:30:06 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1283988519-44671-1-git-send-email-steve@cozybit.com>
-References: <1283988519-44671-1-git-send-email-steve@cozybit.com>
-From: Julian Calaby <julian.calaby@gmail.com>
-Date: Thu, 9 Sep 2010 12:29:46 +1000
-Message-ID: <AANLkTimrfBjaQH3gQKJjiir24cKFoj_0rrFHdNSvbuv7@mail.gmail.com>
-Subject: Re: [PATCH] libertas_tf_usb: fix libertas_tf_usb to match structural
- changes in libertas_tf
-To: Steve deRosier <steve@cozybit.com>
-Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com,
-	johannes@sipsolutions.net, javier@cozybit.com
-Content-Type: text/plain; charset=ISO-8859-1
+	Wed, 29 Sep 2010 02:59:30 -0400
+Subject: Re: [PATCH] iw:  Flush stdout when printing events.
+From: Johannes Berg <johannes@sipsolutions.net>
+To: greearb@candelatech.com
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <1285720244-26149-1-git-send-email-greearb@candelatech.com>
+References: <1285720244-26149-1-git-send-email-greearb@candelatech.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Wed, 29 Sep 2010 08:59:27 +0200
+Message-ID: <1285743567.3756.1.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Sep 9, 2010 at 09:28, Steve deRosier <steve@cozybit.com> wrote:
-> The development of the libertas_tf_sdio driver introduced structural
-> changes in libertas_tf.  Most notably, firmware loading and starting
-> was needed in the probe stage due to the requirement that mac80211
-> have the MAC address set before the starting of mac80211 in add_card.
-> This patch fixes libertas_tf_usb to match these structural changes
-> as needed.
->
-> Signed-off-by: Steve deRosier <steve@cozybit.com>
+On Tue, 2010-09-28 at 17:30 -0700, greearb@candelatech.com wrote:
 
-I'm not sure if the usb part of this driver is still functional, but
-even if it isn't, it may be nicer (bisectability, etc.) to re-order
-your patches like so:
-1. Make the structural changes (and clean ups) in the base code and usb driver
-2. Introduce the sdio driver in a single patch, taking advantage of
-these changes.
+> -#define PARSE_BEACON_CHAN(_attr, _chan) do { \
+> -	r = parse_beacon_hint_chan(tb[_attr], \
+> -				   &_chan); \
+> -	if (r) \
+> -		return NL_SKIP; \
+> -} while (0)
+> +
+> +#define PARSE_BEACON_CHAN(_attr, _chan) do {		\
+> +		r = parse_beacon_hint_chan(tb[_attr],	\
+> +					   &_chan);	\
+> +		if (r) {				\
+> +			fflush(stdout);			\
+> +			return NL_SKIP;			\
+> +		}					\
+> +	} while (0)
+> +
 
-It will also mean that the sdio driver will be introduced to the
-kernel in a working state, rather than introduced in a partially
-working state, then fixed over several commits.
+Why does that need fflush() here? We'll eventually finish that line, no?
 
-Thanks,
+>  	struct genlmsghdr *gnlh = nlmsg_data(nlmsg_hdr(msg));
+>  	struct nlattr *tb[NL80211_ATTR_MAX + 1], *nst;
+>  	struct print_event_args *args = arg;
+> @@ -349,6 +353,7 @@ static int print_event(struct nl_msg *msg, void *arg)
+>  		break;
+>  	}
+>  
+> +	fflush(stdout);
+>  	return NL_SKIP;
+>  #undef PARSE_BEACON_CHAN
 
--- 
+This I'll apply.
 
-Julian Calaby
+> @@ -369,8 +374,8 @@ static int wait_event(struct nl_msg *msg, void *arg)
+>  	for (i = 0; i < wait->n_cmds; i++) {
+>  		if (gnlh->cmd == wait->cmds[i]) {
+>  			wait->cmd = gnlh->cmd;
+> -		if (wait->pargs)
+> -			print_event(msg, wait->pargs);
+> +			if (wait->pargs)
+> +				print_event(msg, wait->pargs);
 
-Email: julian.calaby@gmail.com
-Profile: http://www.google.com/profiles/julian.calaby/
-.Plan: http://sites.google.com/site/juliancalaby/
+And this is an unrelated patch.
+
+johannes
+
