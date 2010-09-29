@@ -1,42 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:44743 "EHLO
+Received: from he.sipsolutions.net ([78.46.109.217]:60184 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752712Ab0I0Kwr (ORCPT
+	with ESMTP id S1754590Ab0I2ISa (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 27 Sep 2010 06:52:47 -0400
-Subject: Re: [PATCH] mac80211: fix offchannel assumption upon association
+	Wed, 29 Sep 2010 04:18:30 -0400
+Subject: Re: [PATCH] mac80211: fix rate_control_send_low warnings for delbas
 From: Johannes Berg <johannes@sipsolutions.net>
 To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	stable@kernel.org, Amod Bodas <amod.bodas@atheros.com>,
-	Vasanth Thiagarajan <vasanth.thiagarajan@atheros.com>
-In-Reply-To: <1285379997-1544-1-git-send-email-lrodriguez@atheros.com>
-References: <1285379997-1544-1-git-send-email-lrodriguez@atheros.com>
+Cc: linville@tuxdriver.com, stable@kernel.org,
+	linux-wireless@vger.kernel.org, Paul Stewart <pstew@google.com>,
+	Amod Bodas <amod.bodas@atheros.com>,
+	Vasanthakumar Thiagarajan <vasanth@atheros.com>,
+	Jouni Malinen <j@w1.fi>
+In-Reply-To: <20100928222945.GB10932@tux>
+References: <20100928222945.GB10932@tux>
 Content-Type: text/plain; charset="UTF-8"
-Date: Mon, 27 Sep 2010 12:52:43 +0200
-Message-ID: <1285584763.4043.14.camel@jlt3.sipsolutions.net>
+Date: Wed, 29 Sep 2010 10:18:23 +0200
+Message-ID: <1285748303.3756.19.camel@jlt3.sipsolutions.net>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2010-09-24 at 21:59 -0400, Luis R. Rodriguez wrote:
-> Association is dealt with as an atomic offchannel operation,
-> we do this because we don't know we are associated until we
-> get the associatin response from the AP. When we do get the
-> associatin response though we were never clearing the offchannel
-> state. This has a few implications, we told drivers we were
-> still offchannel, and the first configured TX power for the
-> channel does not take into account any power constraints.
-> 
-> For ath9k this meant ANI calibration would not start upon
-> association, and we'd have to wait until the first bgscan
-> to be triggered. There may be other issues this resolves
-> but I'm too lazy to colb the code to check.
+On Tue, 2010-09-28 at 15:29 -0700, Luis R. Rodriguez wrote:
 
-colb?
+> Since we end up associated to two different APs at the same
+> time to transmit to either AP consists of an offchannel
+> operation but today we just lack the state machine to be able
+> to do this properly so for now just drop those frames.
 
-But anyway, looks OK to me. Need to revisit some of the off-channel
-stuff eventually, but for now this is fine I think.
+I really think that can be done more easily though. For one, clearly we
+already have the warning, so we don't need more infrastructure to catch
+such errors?! Also, this may end up hiding issues that we don't yet
+understand, like the nullfunc one you were talking about. The delBA one
+we now understand fully, so it makes more sense to simply suppress
+sending delBA when we are going to disassociate by way of associating
+with a new AP, no?
 
 johannes
 
