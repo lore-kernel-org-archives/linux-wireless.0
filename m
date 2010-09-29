@@ -1,62 +1,84 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:57301 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754886Ab0I1Nha (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 28 Sep 2010 09:37:30 -0400
-Message-ID: <4CA1EF94.9060508@candelatech.com>
-Date: Tue, 28 Sep 2010 06:37:24 -0700
-From: Ben Greear <greearb@candelatech.com>
-MIME-Version: 1.0
-To: Felix Fietkau <nbd@openwrt.org>
-CC: linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 1/2] ath9k:  Check for identical channels when changing
- channels.
-References: <1285632457-27539-1-git-send-email-greearb@candelatech.com> <4CA1AC8F.6000802@openwrt.org>
-In-Reply-To: <4CA1AC8F.6000802@openwrt.org>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Received: from nbd.name ([88.198.39.176]:43707 "EHLO ds10.nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753317Ab0I2PPn (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 29 Sep 2010 11:15:43 -0400
+From: Felix Fietkau <nbd@openwrt.org>
+To: linux-wireless@vger.kernel.org
+Cc: linville@tuxdriver.com, lrodriguez@atheros.com
+Subject: [PATCH 5/6] nl80211: allow drivers to indicate whether the survey data channel is in use
+Date: Wed, 29 Sep 2010 17:15:30 +0200
+Message-Id: <1285773331-73439-5-git-send-email-nbd@openwrt.org>
+In-Reply-To: <1285773331-73439-4-git-send-email-nbd@openwrt.org>
+References: <1285773331-73439-1-git-send-email-nbd@openwrt.org>
+ <1285773331-73439-2-git-send-email-nbd@openwrt.org>
+ <1285773331-73439-3-git-send-email-nbd@openwrt.org>
+ <1285773331-73439-4-git-send-email-nbd@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 09/28/2010 01:51 AM, Felix Fietkau wrote:
-> On 2010-09-28 2:07 AM, greearb@candelatech.com wrote:
->> From: Ben Greear<greearb@candelatech.com>
->>
->> Don't do un-needed work.  Should be useful when scanning on
->> only the working channel.
->>
->> Signed-off-by: Ben Greear<greearb@candelatech.com>
->> ---
->> :100644 100644 a133878... 4d34ba5... M	drivers/net/wireless/ath/ath9k/main.c
->>   drivers/net/wireless/ath/ath9k/main.c |    5 +++++
->>   1 files changed, 5 insertions(+), 0 deletions(-)
->>
->> diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
->> index a133878..4d34ba5 100644
->> --- a/drivers/net/wireless/ath/ath9k/main.c
->> +++ b/drivers/net/wireless/ath/ath9k/main.c
->> @@ -1602,6 +1602,11 @@ static int ath9k_config(struct ieee80211_hw *hw, u32 changed)
->>   		struct ieee80211_channel *curchan = hw->conf.channel;
->>   		int pos = curchan->hw_value;
->>
->> +		/* If channels are the same, then don't actually do anything.
->> +		 */
->> +		if (sc->sc_ah->curchan ==&sc->sc_ah->channels[pos])
->> +			goto skip_chan_change;
->> +
-> NACK. This ignores off-channel flag changes, which are important for
-> calibration.
+Some user space applications only want to display survey data for
+the operating channel, however there is no API to get that yet.
 
-Is it enough to just add a check to make sure no changes were made to
-the SC_OP_OFFCHANNEL flag?
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+---
+ include/linux/nl80211.h |    2 ++
+ include/net/cfg80211.h  |    2 ++
+ net/wireless/nl80211.c  |    2 ++
+ 3 files changed, 6 insertions(+), 0 deletions(-)
 
-Thanks,
-Ben
-
->
-> - Felix
-
-
+diff --git a/include/linux/nl80211.h b/include/linux/nl80211.h
+index f0518b0..edd21ae 100644
+--- a/include/linux/nl80211.h
++++ b/include/linux/nl80211.h
+@@ -1400,6 +1400,7 @@ enum nl80211_reg_rule_flags {
+  * @__NL80211_SURVEY_INFO_INVALID: attribute number 0 is reserved
+  * @NL80211_SURVEY_INFO_FREQUENCY: center frequency of channel
+  * @NL80211_SURVEY_INFO_NOISE: noise level of channel (u8, dBm)
++ * @NL80211_SURVEY_INFO_IN_USE: channel is currently being used
+  * @NL80211_SURVEY_INFO_MAX: highest survey info attribute number
+  *	currently defined
+  * @__NL80211_SURVEY_INFO_AFTER_LAST: internal use
+@@ -1408,6 +1409,7 @@ enum nl80211_survey_info {
+ 	__NL80211_SURVEY_INFO_INVALID,
+ 	NL80211_SURVEY_INFO_FREQUENCY,
+ 	NL80211_SURVEY_INFO_NOISE,
++	NL80211_SURVEY_INFO_IN_USE,
+ 
+ 	/* keep last */
+ 	__NL80211_SURVEY_INFO_AFTER_LAST,
+diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+index a0613ff..ecc0403 100644
+--- a/include/net/cfg80211.h
++++ b/include/net/cfg80211.h
+@@ -293,12 +293,14 @@ struct key_params {
+  * enum survey_info_flags - survey information flags
+  *
+  * @SURVEY_INFO_NOISE_DBM: noise (in dBm) was filled in
++ * @SURVEY_INFO_IN_USE: channel is currently being used
+  *
+  * Used by the driver to indicate which info in &struct survey_info
+  * it has filled in during the get_survey().
+  */
+ enum survey_info_flags {
+ 	SURVEY_INFO_NOISE_DBM = 1<<0,
++	SURVEY_INFO_IN_USE = 1<<1,
+ };
+ 
+ /**
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index 9c84825..0087c43 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -3489,6 +3489,8 @@ static int nl80211_send_survey(struct sk_buff *msg, u32 pid, u32 seq,
+ 	if (survey->filled & SURVEY_INFO_NOISE_DBM)
+ 		NLA_PUT_U8(msg, NL80211_SURVEY_INFO_NOISE,
+ 			    survey->noise);
++	if (survey->filled & SURVEY_INFO_IN_USE)
++		NLA_PUT_FLAG(msg, NL80211_SURVEY_INFO_IN_USE);
+ 
+ 	nla_nest_end(msg, infoattr);
+ 
 -- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+1.7.2.2
+
