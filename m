@@ -1,61 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:34639 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756380Ab0IXV0A (ORCPT
+Received: from mail-gw0-f46.google.com ([74.125.83.46]:56025 "EHLO
+	mail-gw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751089Ab0I2RLA (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 24 Sep 2010 17:26:00 -0400
-Message-ID: <4C9D1760.3040103@candelatech.com>
-Date: Fri, 24 Sep 2010 14:25:52 -0700
-From: Ben Greear <greearb@candelatech.com>
+	Wed, 29 Sep 2010 13:11:00 -0400
+Received: by gwj17 with SMTP id 17so348145gwj.19
+        for <linux-wireless@vger.kernel.org>; Wed, 29 Sep 2010 10:11:00 -0700 (PDT)
 MIME-Version: 1.0
+In-Reply-To: <1285748303.3756.19.camel@jlt3.sipsolutions.net>
+References: <20100928222945.GB10932@tux> <1285748303.3756.19.camel@jlt3.sipsolutions.net>
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Date: Wed, 29 Sep 2010 10:10:38 -0700
+Message-ID: <AANLkTi=qGb+aEz48kNKUvuhgA2RAr0pbQoENYV_DazWT@mail.gmail.com>
+Subject: Re: [PATCH] mac80211: fix rate_control_send_low warnings for delbas
 To: Johannes Berg <johannes@sipsolutions.net>
-CC: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-Subject: Re: [wireless] wireless:  Keep phy name consistent across module
- reloads.
-References: <1285113431-25526-1-git-send-email-greearb@candelatech.com>	 <1285362170.11036.1.camel@jlt3.sipsolutions.net>	 <4C9D13AC.4080308@candelatech.com> <1285363135.11036.7.camel@jlt3.sipsolutions.net>
-In-Reply-To: <1285363135.11036.7.camel@jlt3.sipsolutions.net>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Cc: linville@tuxdriver.com, stable@kernel.org,
+	linux-wireless@vger.kernel.org, Paul Stewart <pstew@google.com>,
+	Amod Bodas <amod.bodas@atheros.com>,
+	Vasanthakumar Thiagarajan <vasanth@atheros.com>,
+	Jouni Malinen <j@w1.fi>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 09/24/2010 02:18 PM, Johannes Berg wrote:
-> On Fri, 2010-09-24 at 14:10 -0700, Ben Greear wrote:
+On Wed, Sep 29, 2010 at 1:18 AM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
+> On Tue, 2010-09-28 at 15:29 -0700, Luis R. Rodriguez wrote:
 >
->>> We cannot do this because otherwise operations you attempt to do one one
->>> PHY will race with re-creating of the same phy index. For the same
->>> reason, interface indexes aren't reused for netdevs.
->>>
->>> If this bothers you so much, you can easily write a udev rule that
->>> renames all your phys to "myphy" or whatever.
->>
->> Sorry about that.
->>
->> Would a similar patch be acceptable that just set the name to the first
->> available phyX, but left the index to increment monotomically as it does
->> now be OK?
+>> Since we end up associated to two different APs at the same
+>> time to transmit to either AP consists of an offchannel
+>> operation but today we just lack the state machine to be able
+>> to do this properly so for now just drop those frames.
 >
-> Actually, right now it doesn't even allow you to use a "phy%d" name,
-> which is because I don't want (sysfs, debugfs) errors coming from doing
-> "iw phy0 set name phy1" and then plugging in a new device ... In doing
-> that, I manage to avoid having to allocate two different numbers...
+> I really think that can be done more easily though. For one, clearly we
+> already have the warning, so we don't need more infrastructure to catch
+> such errors?!
 
-I tried rename few months ago, to rename back to phy0, and it failed
-for no obvious reason..so I just assumed rename didn't work at all.
-Would you like a patch to print something in kernel logs when someone
-tries to rename to phy%d?
+This is true, I just added that to ensure I hit these when testing
+really, I can nuke the counter, but it can help if eventually believe
+we have a proper fix to allow these frames through somehow too.
 
-> I suppose it'd be possible to treat this more like interfaces. Want to
-> also make it per net namespace? ;-)
+> Also, this may end up hiding issues that we don't yet
+> understand, like the nullfunc one you were talking about.
 
-Probably best for all involved if I don't mess with namespaces right now,
-but I'll be happy to work on (or test) a patch to find the first un-used phyX name,
-if that's what you mean.
+Yeah, good point, although I am under the impression this is a similar
+situation, we probably try to send a nullfunc to notify the old AP we
+are going to go awake if we are transmitting data while roaming. But
+yeah, its not easily triggerable yet.
 
-Thanks,
-Ben
+> The delBA one
+> we now understand fully, so it makes more sense to simply suppress
+> sending delBA when we are going to disassociate by way of associating
+> with a new AP, no?
 
--- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+That's reasonable but we will still need the channel, otherwise how
+would we know its this issue?
 
+  Luis
