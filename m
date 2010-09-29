@@ -1,117 +1,104 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:36241 "EHLO mga11.intel.com"
+Received: from mga09.intel.com ([134.134.136.24]:32405 "EHLO mga09.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752242Ab0IAP6S (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 1 Sep 2010 11:58:18 -0400
-Subject: Re: [WTF, maintainers] Re: *PING* iwlagn 2.6.35: "BA scd_flow 0
- does not match txq_id 10" regression
-From: "Guy, Wey-Yi" <wey-yi.w.guy@intel.com>
-To: Andrew Lutomirski <luto@mit.edu>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"linville@tuxdriver.com" <linville@tuxdriver.com>
-In-Reply-To: <AANLkTik0ssMim0-eRS1kWD+CsE_kCS-RjEm_iEbdPy05@mail.gmail.com>
-References: <AANLkTim4_HoHwdhGqAZqcGf2oq7boktdZFW4-w5DpdDa@mail.gmail.com>
-	 <AANLkTinuYOvwNZAFgq67f4XBL4YQ+b2z4EBMcmvbMYi3@mail.gmail.com>
-	 <1281481505.20038.10.camel@wwguy-ubuntu>
-	 <AANLkTinDjp500wXXHbiOmom70Wbvs1OL6LXOfTq06A=U@mail.gmail.com>
-	 <1282762406.23359.1.camel@wwguy-huron>
-	 <AANLkTik0ssMim0-eRS1kWD+CsE_kCS-RjEm_iEbdPy05@mail.gmail.com>
-Content-Type: text/plain
-Date: Wed, 01 Sep 2010 08:57:43 -0700
-Message-Id: <1283356663.22660.27.camel@wwguy-ubuntu>
-Mime-Version: 1.0
+	id S1754467Ab0I2A4y (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 28 Sep 2010 20:56:54 -0400
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	Shanyu Zhao <shanyu.zhao@intel.com>,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Subject: [PATCH 3/5] iwlagn: set CSR register for 6050g2 devices
+Date: Tue, 28 Sep 2010 17:56:56 -0700
+Message-Id: <1285721818-10281-4-git-send-email-wey-yi.w.guy@intel.com>
+In-Reply-To: <1285721818-10281-1-git-send-email-wey-yi.w.guy@intel.com>
+References: <1285721818-10281-1-git-send-email-wey-yi.w.guy@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2010-09-01 at 08:07 -0700, Andrew Lutomirski wrote:
-> On Wed, Aug 25, 2010 at 2:53 PM, Guy, Wey-Yi <wey-yi.w.guy@intel.com> wrote:
-> > On Wed, 2010-08-25 at 11:42 -0700, Andrew Lutomirski wrote:
-> >> On Tue, Aug 10, 2010 at 7:05 PM, Guy, Wey-Yi <wey-yi.w.guy@intel.com> wrote:
-> >> > Hi Andrew,
-> >> >
-> >> > On Tue, 2010-08-10 at 14:39 -0700, Andrew Lutomirski wrote:
-> >> >> On Mon, Jul 26, 2010 at 4:02 PM, Andrew Lutomirski <luto@mit.edu> wrote:
-> >> >> > There's a regression in 2.6.35 where the connection breaks and iwlagn
-> >> >> > writes a bunch of:
-> >> >> >
-> >> >> > iwlagn 0000:03:00.0: BA scd_flow 0 does not match txq_id 10
-> >> >> >
-> >> >> > This is confirmed [1] and a patch supposedly exists.  Since this
-> >> >> > breaks at least two people's wireless and 2.6.35 is about to be
-> >> >> > released, can we see the patches?
-> >> >> >
-> >> >> > Thanks,
-> >> >> > Andy
-> >> >> >
-> >> >> > [1] http://article.gmane.org/gmane.linux.kernel.wireless.general/53552
-> >> >> >
-> >> >>
-> >> >> This regression was reported on July 21 and confirmed, supposedly with
-> >> >> a patch available, on July 24 (or maybe July 23).  On July 26 I pinged
-> >> >> the list because I'm affected as well.
-> >> >>
-> >> >> It's now August 10 and both 2.6.35 and 2.5.35.1 have been released and
-> >> >> the bug is still there.  WTF happened?  (I admit I haven't actually
-> >> >> tested 2.6.35.1 because it's still compiling, but I see nothing to
-> >> >> suggest that it's been fixed.)
-> >> >>
-> >> >
-> >> > Sorry for the delay, the problem you report is a real problem in our
-> >> > uCode; unfortunately, we still not root cause the real problem yet. The
-> >> > patch I provide previous just a hack and still waiting for our internal
-> >> > validation team to make sure it did not break the overall behaviors.
-> >> >
-> >> > I will submit the patch as soon as I got the report back from our test
-> >> > team; at the meantime, we are very active work on root cause the real
-> >> > problem. Once we have the possible solution, it will be great if you can
-> >> > help us to verify it.
-> >>
-> >> In case this helps, I just captured the bug starting with
-> >> iwlagn.debug=1 and with the following patch:
-> >>
-> >> diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-tx.c
-> >> b/drivers/net/wireless/iwlwifi/iwl-agn-tx.c
-> >> index 7d614c4..8583c42 100644
-> >> --- a/drivers/net/wireless/iwlwifi/iwl-agn-tx.c
-> >> +++ b/drivers/net/wireless/iwlwifi/iwl-agn-tx.c
-> >> @@ -1300,8 +1300,9 @@ void iwlagn_rx_reply_compressed_ba(struct iwl_priv *priv,
-> >>         tid = ba_resp->tid;
-> >>         agg = &priv->stations[sta_id].tid[tid].agg;
-> >>         if (unlikely(agg->txq_id != scd_flow)) {
-> >> -               IWL_ERR(priv, "BA scd_flow %d does not match txq_id %d\n",
-> >> -                       scd_flow, agg->txq_id);
-> >> +               IWL_ERR(priv, "BA scd_flow %d does not match txq_id %d
-> >> (sta_id = %d, tid = %d)\n",
-> >> +                       scd_flow, agg->txq_id, sta_id, tid);
-> >> +               //              iwl_force_reset(priv, IWL_FW_RESET);
-> >>                 return;
-> >>         }
-> >>
-> >>
-> >> I've attached the dmesg.  Search for 'BA'.
-> >>
-> > It is an known issue as I mention. we are working on it and sorry for
-> > the delay.
-> >
-> > please take a look at commit 735df29a0641d9d8d65117c48ee460284ffcfc05
-> >
-> > "Since it is possible happen very often and we do not want to fill the
-> > syslog, so don't enable the logging by default"
-> 
-> IMO that just makes it worse.  Now people's wireless connections will
-> break silently and no one will know if it's this bug or a different
-> one.  You could ratelimit the error, though.
-> 
-> I tried rigging the driver to force a firmware reload when this
-> triggers but that doesn't seem to work reliably.
+From: Shanyu Zhao <shanyu.zhao@intel.com>
 
-Correct, firmware reload will not fix the problem. We already have the
-fix but it is in uCode; now we are working on how to release it per
-device based.
+For 6050g2 devices driver needs to set a special bit to CSR register
+so that uCode can do things correctly in calibration routines.
 
-Wey
+Signed-off-by: Shanyu Zhao <shanyu.zhao@intel.com>
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-6000.c |   24 +++++++++++++++++++++++-
+ drivers/net/wireless/iwlwifi/iwl-csr.h  |    3 ++-
+ 2 files changed, 25 insertions(+), 2 deletions(-)
 
-
-> >
-> >
+diff --git a/drivers/net/wireless/iwlwifi/iwl-6000.c b/drivers/net/wireless/iwlwifi/iwl-6000.c
+index 8256034..83a5262 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-6000.c
++++ b/drivers/net/wireless/iwlwifi/iwl-6000.c
+@@ -91,6 +91,16 @@ static void iwl6050_additional_nic_config(struct iwl_priv *priv)
+ 				CSR_GP_DRIVER_REG_BIT_CALIB_VERSION6);
+ }
+ 
++static void iwl6050g2_additional_nic_config(struct iwl_priv *priv)
++{
++	/* Indicate calibration version to uCode. */
++	if (priv->cfg->ops->lib->eeprom_ops.calib_version(priv) >= 6)
++		iwl_set_bit(priv, CSR_GP_DRIVER_REG,
++				CSR_GP_DRIVER_REG_BIT_CALIB_VERSION6);
++	iwl_set_bit(priv, CSR_GP_DRIVER_REG,
++		    CSR_GP_DRIVER_REG_BIT_6050_1x2);
++}
++
+ /* NIC configuration for 6000 series */
+ static void iwl6000_nic_config(struct iwl_priv *priv)
+ {
+@@ -422,6 +432,10 @@ static struct iwl_nic_ops iwl6050_nic_ops = {
+ 	.additional_nic_config = &iwl6050_additional_nic_config,
+ };
+ 
++static struct iwl_nic_ops iwl6050g2_nic_ops = {
++	.additional_nic_config = &iwl6050g2_additional_nic_config,
++};
++
+ static const struct iwl_ops iwl6000_ops = {
+ 	.lib = &iwl6000_lib,
+ 	.hcmd = &iwlagn_hcmd,
+@@ -437,6 +451,14 @@ static const struct iwl_ops iwl6050_ops = {
+ 	.nic = &iwl6050_nic_ops,
+ };
+ 
++static const struct iwl_ops iwl6050g2_ops = {
++	.lib = &iwl6000_lib,
++	.hcmd = &iwlagn_hcmd,
++	.utils = &iwlagn_hcmd_utils,
++	.led = &iwlagn_led_ops,
++	.nic = &iwl6050g2_nic_ops,
++};
++
+ static const struct iwl_ops iwl6000g2b_ops = {
+ 	.lib = &iwl6000g2b_lib,
+ 	.hcmd = &iwlagn_bt_hcmd,
+@@ -958,7 +980,7 @@ struct iwl_cfg iwl6050g2_bgn_cfg = {
+ 	.ucode_api_max = IWL6050_UCODE_API_MAX,
+ 	.ucode_api_min = IWL6050_UCODE_API_MIN,
+ 	.sku = IWL_SKU_G|IWL_SKU_N,
+-	.ops = &iwl6050_ops,
++	.ops = &iwl6050g2_ops,
+ 	.eeprom_size = OTP_LOW_IMAGE_SIZE,
+ 	.eeprom_ver = EEPROM_6050G2_EEPROM_VERSION,
+ 	.eeprom_calib_ver = EEPROM_6050G2_TX_POWER_VERSION,
+diff --git a/drivers/net/wireless/iwlwifi/iwl-csr.h b/drivers/net/wireless/iwlwifi/iwl-csr.h
+index ecf98e7..2aa15ab 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-csr.h
++++ b/drivers/net/wireless/iwlwifi/iwl-csr.h
+@@ -371,7 +371,8 @@
+ #define CSR_GP_DRIVER_REG_BIT_RADIO_SKU_3x3_HYB	    (0x00000000)
+ #define CSR_GP_DRIVER_REG_BIT_RADIO_SKU_2x2_HYB	    (0x00000001)
+ #define CSR_GP_DRIVER_REG_BIT_RADIO_SKU_2x2_IPA	    (0x00000002)
+-#define CSR_GP_DRIVER_REG_BIT_CALIB_VERSION6	(0x00000004)
++#define CSR_GP_DRIVER_REG_BIT_CALIB_VERSION6	    (0x00000004)
++#define CSR_GP_DRIVER_REG_BIT_6050_1x2		    (0x00000008)
+ 
+ /* GIO Chicken Bits (PCI Express bus link power management) */
+ #define CSR_GIO_CHICKEN_BITS_REG_BIT_L1A_NO_L0S_RX  (0x00800000)
+-- 
+1.7.0.4
 
