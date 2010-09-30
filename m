@@ -1,59 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:44882 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754092Ab0IYB76 (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:58426 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754897Ab0I3HpI (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 24 Sep 2010 21:59:58 -0400
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>, stable@kernel.org,
-	Amod Bodas <amod.bodas@atheros.com>,
-	Vasanth Thiagarajan <vasanth.thiagarajan@atheros.com>
-Subject: [PATCH] mac80211: fix offchannel assumption upon association
-Date: Fri, 24 Sep 2010 21:59:57 -0400
-Message-Id: <1285379997-1544-1-git-send-email-lrodriguez@atheros.com>
+	Thu, 30 Sep 2010 03:45:08 -0400
+Subject: Re: [RFC 2/2] wireless:  Report noise to /proc/net/wireless
+From: Johannes Berg <johannes@sipsolutions.net>
+To: greearb@candelatech.com
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <1285804637-5400-2-git-send-email-greearb@candelatech.com>
+References: <1285804637-5400-1-git-send-email-greearb@candelatech.com>
+	 <1285804637-5400-2-git-send-email-greearb@candelatech.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Thu, 30 Sep 2010 09:45:38 +0200
+Message-ID: <1285832738.3639.3.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Association is dealt with as an atomic offchannel operation,
-we do this because we don't know we are associated until we
-get the associatin response from the AP. When we do get the
-associatin response though we were never clearing the offchannel
-state. This has a few implications, we told drivers we were
-still offchannel, and the first configured TX power for the
-channel does not take into account any power constraints.
+On Wed, 2010-09-29 at 16:57 -0700, greearb@candelatech.com wrote:
 
-For ath9k this meant ANI calibration would not start upon
-association, and we'd have to wait until the first bgscan
-to be triggered. There may be other issues this resolves
-but I'm too lazy to colb the code to check.
+> This adds noise reports to /proc/net/wireless again.
 
-Cc: stable@kernel.org
-Cc: Amod Bodas <amod.bodas@atheros.com>
-Cc: Vasanth Thiagarajan <vasanth.thiagarajan@atheros.com>
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
----
+Same comment applies here really...
 
-Oops, sent to the wrong people, now adding the right folks.
+> + * @noise: noise, as obtained from dump_survey of index 0.
 
- net/mac80211/main.c |    3 ++-
- 1 files changed, 2 insertions(+), 1 deletions(-)
+It's not actually obtained that way, because if it was, cfg80211 could
+just handle it by itself.
 
-diff --git a/net/mac80211/main.c b/net/mac80211/main.c
-index 7c85426..e24fa5b 100644
---- a/net/mac80211/main.c
-+++ b/net/mac80211/main.c
-@@ -110,7 +110,8 @@ int ieee80211_hw_config(struct ieee80211_local *local, u32 changed)
- 		chan = scan_chan;
- 		channel_type = NL80211_CHAN_NO_HT;
- 		local->hw.conf.flags |= IEEE80211_CONF_OFFCHANNEL;
--	} else if (local->tmp_channel) {
-+	} else if (local->tmp_channel &&
-+		   local->oper_channel != local->tmp_channel) {
- 		chan = scan_chan = local->tmp_channel;
- 		channel_type = local->tmp_channel_type;
- 		local->hw.conf.flags |= IEEE80211_CONF_OFFCHANNEL;
--- 
-1.7.0.4
+Additionally, even within mac80211 there's no guarantee that the
+dump_survey(0) callback will give you the correct channel's noise.
+
+Since you can easily obtain this information from userspace (and with
+the extension that Felix proposed you can figure out which noise belongs
+to the operating channel without really knowing the operating channel),
+I don't think we should be doing this.
+
+johannes
 
