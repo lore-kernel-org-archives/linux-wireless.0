@@ -1,194 +1,150 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ogre.sisk.pl ([217.79.144.158]:47069 "EHLO ogre.sisk.pl"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751176Ab0ILSbU convert rfc822-to-8bit (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:46366 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932114Ab0I3TCc (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 12 Sep 2010 14:31:20 -0400
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
-To: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
-Subject: 2.6.36-rc3-git5: Reported regressions from 2.6.35
-Cc: Maciej Rutecki <maciej.rutecki@gmail.com>,
-	Florian Mickler <florian@mickler.org>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	Kernel Testers List <kernel-testers@vger.kernel.org>,
-	Network Development <netdev@vger.kernel.org>,
-	Linux ACPI <linux-acpi@vger.kernel.org>,
-	Linux PM List <linux-pm@lists.linux-foundation.org>,
-	Linux SCSI List <linux-scsi@vger.kernel.org>,
-	Linux Wireless List <linux-wireless@vger.kernel.org>,
-	DRI <dri-devel@lists.freedesktop.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Message-ID: <EP3NUDNWMO.A.O0.rrRjMB@chimera>
-Date: Sun, 12 Sep 2010 20:11:34 +0200 (CEST)
+	Thu, 30 Sep 2010 15:02:32 -0400
+Subject: [PATCH] cfg80211/mac80211: allow management frame TX in AP mode
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
+Date: Thu, 30 Sep 2010 21:03:04 +0200
+Message-ID: <1285873384.5137.14.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-[NOTE:
- Florian Mickler has joined the regression tracking team.  He is going to
- browse the list periodically to close fixed regressions, add patches etc.
- So, when the listed regressions you care about are fixed, please report
- that to Florian.  If there's a working patch for a regression you care
- about, please report that to him too.]
+From: Johannes Berg <johannes.berg@intel.com>
 
-This message contains a list of some regressions from 2.6.35,
-for which there are no fixes in the mainline known to the tracking team.
-If any of them have been fixed already, please let us know.
+Enable management frame transmission and subscribing
+to management frames through nl80211 in both cfg80211
+and mac80211. Also update a few places that I forgot
+to update for P2P-client mode previously, and fix a
+small bug with non-action frames in this API.
 
-If you know of any other unresolved regressions from 2.6.35, please let us
-know either and we'll add them to the list.  Also, please let us know
-if any of the entries below are invalid.
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ net/mac80211/cfg.c     |    7 +++++-
+ net/wireless/mlme.c    |   54 +++++++++++++++++++++++++++++++++++++++----------
+ net/wireless/nl80211.c |   10 +++++++--
+ 3 files changed, 57 insertions(+), 14 deletions(-)
 
-Each entry from the list will be sent additionally in an automatic reply
-to this message with CCs to the people involved in reporting and handling
-the issue.
+--- wireless-testing.orig/net/wireless/mlme.c	2010-09-30 20:57:09.000000000 +0200
++++ wireless-testing/net/wireless/mlme.c	2010-09-30 20:57:47.000000000 +0200
+@@ -876,21 +876,53 @@ int cfg80211_mlme_mgmt_tx(struct cfg8021
+ 
+ 	if (ieee80211_is_action(mgmt->frame_control) &&
+ 	    mgmt->u.action.category != WLAN_CATEGORY_PUBLIC) {
+-		/* Verify that we are associated with the destination AP */
++		int err = 0;
++
+ 		wdev_lock(wdev);
+ 
+-		if (!wdev->current_bss ||
+-		    memcmp(wdev->current_bss->pub.bssid, mgmt->bssid,
+-			   ETH_ALEN) != 0 ||
+-		    ((wdev->iftype == NL80211_IFTYPE_STATION ||
+-		      wdev->iftype == NL80211_IFTYPE_P2P_CLIENT) &&
+-		     memcmp(wdev->current_bss->pub.bssid, mgmt->da,
+-			    ETH_ALEN) != 0)) {
+-			wdev_unlock(wdev);
+-			return -ENOTCONN;
+-		}
++		switch (wdev->iftype) {
++		case NL80211_IFTYPE_ADHOC:
++		case NL80211_IFTYPE_STATION:
++		case NL80211_IFTYPE_P2P_CLIENT:
++			if (!wdev->current_bss) {
++				err = -ENOTCONN;
++				break;
++			}
++
++			if (memcmp(wdev->current_bss->pub.bssid,
++				   mgmt->bssid, ETH_ALEN)) {
++				err = -ENOTCONN;
++				break;
++			}
+ 
++			/*
++			 * check for IBSS DA must be done by driver as
++			 * cfg80211 doesn't track the stations
++			 */
++			if (wdev->iftype == NL80211_IFTYPE_ADHOC)
++				break;
++
++			/* for station, check that DA is the AP */
++			if (memcmp(wdev->current_bss->pub.bssid,
++				   mgmt->da, ETH_ALEN)) {
++				err = -ENOTCONN;
++				break;
++			}
++			break;
++		case NL80211_IFTYPE_AP:
++		case NL80211_IFTYPE_P2P_GO:
++		case NL80211_IFTYPE_AP_VLAN:
++			if (memcmp(mgmt->bssid, dev->dev_addr, ETH_ALEN))
++				err = -EINVAL;
++			break;
++		default:
++			err = -EOPNOTSUPP;
++			break;
++		}
+ 		wdev_unlock(wdev);
++
++		if (err)
++			return err;
+ 	}
+ 
+ 	if (memcmp(mgmt->sa, dev->dev_addr, ETH_ALEN) != 0)
+--- wireless-testing.orig/net/wireless/nl80211.c	2010-09-30 20:57:09.000000000 +0200
++++ wireless-testing/net/wireless/nl80211.c	2010-09-30 20:57:47.000000000 +0200
+@@ -4899,7 +4899,10 @@ static int nl80211_register_mgmt(struct
+ 
+ 	if (dev->ieee80211_ptr->iftype != NL80211_IFTYPE_STATION &&
+ 	    dev->ieee80211_ptr->iftype != NL80211_IFTYPE_ADHOC &&
+-	    dev->ieee80211_ptr->iftype != NL80211_IFTYPE_P2P_CLIENT) {
++	    dev->ieee80211_ptr->iftype != NL80211_IFTYPE_P2P_CLIENT &&
++	    dev->ieee80211_ptr->iftype != NL80211_IFTYPE_AP &&
++	    dev->ieee80211_ptr->iftype != NL80211_IFTYPE_AP_VLAN &&
++	    dev->ieee80211_ptr->iftype != NL80211_IFTYPE_P2P_GO) {
+ 		err = -EOPNOTSUPP;
+ 		goto out;
+ 	}
+@@ -4952,7 +4955,10 @@ static int nl80211_tx_mgmt(struct sk_buf
+ 
+ 	if (dev->ieee80211_ptr->iftype != NL80211_IFTYPE_STATION &&
+ 	    dev->ieee80211_ptr->iftype != NL80211_IFTYPE_ADHOC &&
+-	    dev->ieee80211_ptr->iftype != NL80211_IFTYPE_P2P_CLIENT) {
++	    dev->ieee80211_ptr->iftype != NL80211_IFTYPE_P2P_CLIENT &&
++	    dev->ieee80211_ptr->iftype != NL80211_IFTYPE_AP &&
++	    dev->ieee80211_ptr->iftype != NL80211_IFTYPE_AP_VLAN &&
++	    dev->ieee80211_ptr->iftype != NL80211_IFTYPE_P2P_GO) {
+ 		err = -EOPNOTSUPP;
+ 		goto out;
+ 	}
+--- wireless-testing.orig/net/mac80211/cfg.c	2010-09-30 20:57:09.000000000 +0200
++++ wireless-testing/net/mac80211/cfg.c	2010-09-30 20:58:13.000000000 +0200
+@@ -1535,7 +1535,11 @@ static int ieee80211_mgmt_tx(struct wiph
+ 
+ 	switch (sdata->vif.type) {
+ 	case NL80211_IFTYPE_ADHOC:
+-		if (mgmt->u.action.category == WLAN_CATEGORY_PUBLIC)
++	case NL80211_IFTYPE_AP:
++	case NL80211_IFTYPE_AP_VLAN:
++	case NL80211_IFTYPE_P2P_GO:
++		if (!ieee80211_is_action(mgmt->frame_control) ||
++		    mgmt->u.action.category == WLAN_CATEGORY_PUBLIC)
+ 			break;
+ 		rcu_read_lock();
+ 		sta = sta_info_get(sdata, mgmt->da);
+@@ -1544,6 +1548,7 @@ static int ieee80211_mgmt_tx(struct wiph
+ 			return -ENOLINK;
+ 		break;
+ 	case NL80211_IFTYPE_STATION:
++	case NL80211_IFTYPE_P2P_CLIENT:
+ 		break;
+ 	default:
+ 		return -EOPNOTSUPP;
 
-
-Listed regressions statistics:
-
-  Date          Total  Pending  Unresolved
-  ----------------------------------------
-  2010-09-12       28       14          13
-  2010-08-30       21       16          15
-
-
-Unresolved regressions
-----------------------
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=17952
-Subject		: bdi-default hung waiting for kthread_stop to finish
-Submitter	: Jeff Layton <jlayton@redhat.com>
-Date		: 2010-09-02 18:55 (11 days old)
-Message-ID	: <20100902145509.28e4f998@tlielax.poochiereds.net>
-References	: http://marc.info/?l=linux-kernel&m=128345371904504&w=2
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=17752
-Subject		: 2.6.36-rc3: inconsistent lock state (iprune_sem, shrink_icache_memory)
-Submitter	: Stefan Richter <stefanr@s5r6.in-berlin.de>
-Date		: 2010-09-01 6:37 (12 days old)
-Message-ID	: <tkrat.ed8eda6bc8ffe64e@s5r6.in-berlin.de>
-References	: http://marc.info/?l=linux-kernel&m=128332308528119&w=2
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=17722
-Subject		: 2.6.36-rc3: WARNING: at net/mac80211/scan.c:269 ieee80211_scan_completed
-Submitter	: Thomas Meyer <thomas@m3y3r.de>
-Date		: 2010-08-31 20:14 (13 days old)
-Message-ID	: <201008312214.52473.thomas@m3y3r.de>
-References	: http://marc.info/?l=linux-kernel&m=128328580504227&w=2
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=17361
-Subject		: Watchdog detected hard LOCKUP in jbd2_journal_get_write_access
-Submitter	: Christian Casteyde <casteyde.christian@free.fr>
-Date		: 2010-08-29 19:59 (15 days old)
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=17341
-Subject		: kdump regression compared to v2.6.35
-Submitter	: CAI Qian <caiqian@redhat.com>
-Date		: 2010-08-27 12:35 (17 days old)
-Message-ID	: <2136707099.1405541282912500148.JavaMail.root@zmail06.collab.prod.int.phx2.redhat.com>
-References	: http://marc.info/?l=linux-kernel&m=128291252612135&w=2
-Handled-By	: Tejun Heo <tj@kernel.org>
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=17331
-Subject		: BUG: scheduling while atomic
-Submitter	: Sergey Senozhatsky <sergey.senozhatsky@gmail.com>
-Date		: 2010-08-27 7:59 (17 days old)
-Message-ID	: <20100827075911.GA5966@swordfish.minsk.epam.com>
-References	: http://marc.info/?l=linux-kernel&m=128289602925505&w=2
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=17321
-Subject		: i386 WARNING: at kernel/softirq.c:143 _local_bh_enable_ip+0x2f/0x7e
-Submitter	: Arno Schuring <aelschuring@hotmail.com>
-Date		: 2010-08-27 20:04 (17 days old)
-Message-ID	: <4C781A3A.4010707@hotmail.com>
-References	: http://marc.info/?l=linux-kernel&m=128294076822387&w=2
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=17311
-Subject		: 2.6.36-rc2-git4 - INFO: possible circular locking dependency detected
-Submitter	: Miles Lane <miles.lane@gmail.com>
-Date		: 2010-08-27 1:56 (17 days old)
-First-Bad-Commit: http://git.kernel.org/linus/5a652052fedbd7869572c757dd2ffc2ed420c69d
-Message-ID	: <AANLkTinHbEW36D5R9NSrGgfbOC0Hri3Tg-fA0iR92Udi@mail.gmail.com>
-References	: http://marc.info/?l=linux-kernel&m=128287422106267&w=2
-Handled-By	: Johannes Berg <johannes@sipsolutions.net>
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=17131
-Subject		: WARN with 3c905 boomerang NIC
-Submitter	: Doug Nazar <nazard.lkml@gmail.com>
-Date		: 2010-08-22 6:35 (22 days old)
-Message-ID	: <4C70C516.5020404@gmail.com>
-References	: http://marc.info/?l=linux-kernel&m=128245894300623&w=2
-Handled-By	: David Miller <davem@davemloft.net>
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=17061
-Subject		: 2.6.36-rc1 on zaurus: bluetooth regression
-Submitter	: Pavel Machek <pavel@ucw.cz>
-Date		: 2010-08-21 15:24 (23 days old)
-Message-ID	: <20100821152445.GA1536@ucw.cz>
-References	: http://marc.info/?l=linux-kernel&m=128240433828087&w=2
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=16971
-Subject		: qla4xxx compile failure on 32-bit PowerPC: missing readq and writeq
-Submitter	: Meelis Roos <mroos@linux.ee>
-Date		: 2010-08-19 21:03 (25 days old)
-Message-ID	: <alpine.SOC.1.00.1008192359310.19654@math.ut.ee>
-References	: http://marc.info/?l=linux-kernel&m=128225184900892&w=2
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=16961
-Subject		: kernel BUG at arch/x86/kvm/../../../virt/kvm/kvm_main.c:1978
-Submitter	: Sergey Senozhatsky <sergey.senozhatsky@gmail.com>
-Date		: 2010-08-19 9:54 (25 days old)
-Message-ID	: <<20100819095429.GA5201@swordfish.minsk.epam.com>>
-References	: http://marc.info/?l=linux-kernel&m=128221169606214&w=2
-Handled-By	: Avi Kivity <avi@redhat.com>
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=16951
-Subject		: hackbench regression with 2.6.36-rc1
-Submitter	: Zhang, Yanmin <yanmin_zhang@linux.intel.com>
-Date		: 2010-08-18 6:18 (26 days old)
-Message-ID	: <1282112318.21202.8.camel@ymzhang.sh.intel.com>
-References	: http://marc.info/?l=linux-kernel&m=128211235904910&w=2
-
-
-Regressions with patches
-------------------------
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=17742
-Subject		: 2.6.36-rc2-git5: Oops in snd_pcm_substream_proc_status_read()
-Submitter	: Chuck Ebbert <cebbert@redhat.com>
-Date		: 2010-09-01 8:19 (12 days old)
-Message-ID	: <20100901041924.23a8a865@katamari>
-References	: http://marc.info/?l=linux-kernel&m=128332930703451&w=2
-		  https://bugzilla.redhat.com/show_bug.cgi?id=628404
-		  https://bugzilla.redhat.com/show_bug.cgi?id=628404#c5
-Handled-By	: Takashi Iwai <tiwai@suse.de>
-Patch		: http://mailman.alsa-project.org/pipermail/alsa-devel/2010-September/031275.html
-
-
-For details, please visit the bug entries and follow the links given in
-references.
-
-As you can see, there is a Bugzilla entry for each of the listed regressions.
-There also is a Bugzilla entry used for tracking the regressions from 2.6.35,
-unresolved as well as resolved, at:
-
-http://bugzilla.kernel.org/show_bug.cgi?id=16444
-
-Please let the tracking team know if there are any Bugzilla entries that
-should be added to the list in there.
-
-Thanks!
 
