@@ -1,78 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail30f.wh2.ocn.ne.jp ([220.111.41.203]:49769 "HELO
-	mail30f.wh2.ocn.ne.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1753350Ab0IPJv1 (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:38579 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756259Ab0I3TUz (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 16 Sep 2010 05:51:27 -0400
-Received: from vs3011.wh2.ocn.ne.jp (125.206.180.239)
-	by mail30f.wh2.ocn.ne.jp (RS ver 1.0.95vs) with SMTP id 1-050582685
-	for <linux-wireless@vger.kernel.org>; Thu, 16 Sep 2010 18:51:25 +0900 (JST)
-Subject: [PATCH 6/9] ath5k: Count how many times a queue got stuck
-To: linville@tuxdriver.com
-From: Bruno Randolf <br1@einfach.org>
-Cc: ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org
-Date: Thu, 16 Sep 2010 18:51:44 +0900
-Message-ID: <20100916095144.17637.26932.stgit@tt-desk>
-In-Reply-To: <20100916095112.17637.17207.stgit@tt-desk>
-References: <20100916095112.17637.17207.stgit@tt-desk>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+	Thu, 30 Sep 2010 15:20:55 -0400
+Subject: [PATCH] cfg80211: remove spurious __KERNEL__ ifdef
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: Joe Perches <joe@perches.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
+Date: Thu, 30 Sep 2010 21:21:25 +0200
+Message-ID: <1285874485.5137.16.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Add a counter to show how many times a queue got stuck in the debugfs queue
-file.
+From: Johannes Berg <johannes.berg@intel.com>
 
-Signed-off-by: Bruno Randolf <br1@einfach.org>
+The net/cfg80211.h header file isn't exported to
+userspace, so there's no need for any kind of
+__KERNEL__ protection in it. If it was exported,
+everything else in it would need protection as
+well, not just the logging stuff ...
+
+Cc:Joe Perches <joe@perches.com>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- drivers/net/wireless/ath/ath5k/base.c  |    2 ++
- drivers/net/wireless/ath/ath5k/base.h  |    1 +
- drivers/net/wireless/ath/ath5k/debug.c |    2 ++
- 3 files changed, 5 insertions(+), 0 deletions(-)
+Might be something that slipped in elsewhere too?
 
-diff --git a/drivers/net/wireless/ath/ath5k/base.c b/drivers/net/wireless/ath/ath5k/base.c
-index d13df7a..c4f0786 100644
---- a/drivers/net/wireless/ath/ath5k/base.c
-+++ b/drivers/net/wireless/ath/ath5k/base.c
-@@ -896,6 +896,7 @@ ath5k_txq_setup(struct ath5k_softc *sc,
- 		txq->setup = true;
- 		txq->txq_len = 0;
- 		txq->txq_poll_mark = false;
-+		txq->txq_stuck = 0;
- 	}
- 	return &sc->txqs[qnum];
- }
-@@ -2197,6 +2198,7 @@ ath5k_tx_complete_poll_work(struct work_struct *work)
- 						  "TX queue stuck %d\n",
- 						  txq->qnum);
- 					needreset = true;
-+					txq->txq_stuck++;
- 					spin_unlock_bh(&txq->lock);
- 					break;
- 				} else {
-diff --git a/drivers/net/wireless/ath/ath5k/base.h b/drivers/net/wireless/ath/ath5k/base.h
-index d8e2674..7f9d0d3 100644
---- a/drivers/net/wireless/ath/ath5k/base.h
-+++ b/drivers/net/wireless/ath/ath5k/base.h
-@@ -88,6 +88,7 @@ struct ath5k_txq {
- 	bool			setup;
- 	int			txq_len; /* number of queued buffers */
- 	bool			txq_poll_mark;
-+	unsigned int		txq_stuck;	/* informational counter */
- };
+ include/net/cfg80211.h |    4 ----
+ 1 file changed, 4 deletions(-)
+
+--- wireless-testing.orig/include/net/cfg80211.h	2010-09-30 21:18:46.000000000 +0200
++++ wireless-testing/include/net/cfg80211.h	2010-09-30 21:18:51.000000000 +0200
+@@ -2551,8 +2551,6 @@ void cfg80211_cqm_rssi_notify(struct net
+ 			      enum nl80211_cqm_rssi_threshold_event rssi_event,
+ 			      gfp_t gfp);
  
- #define ATH5K_LED_MAX_NAME_LEN 31
-diff --git a/drivers/net/wireless/ath/ath5k/debug.c b/drivers/net/wireless/ath/ath5k/debug.c
-index b2c610b..6583a82 100644
---- a/drivers/net/wireless/ath/ath5k/debug.c
-+++ b/drivers/net/wireless/ath/ath5k/debug.c
-@@ -785,6 +785,8 @@ static ssize_t read_file_queue(struct file *file, char __user *user_buf,
+-#ifdef __KERNEL__
+-
+ /* Logging, debugging and troubleshooting/diagnostic helpers. */
  
- 		len += snprintf(buf+len, sizeof(buf)-len,
- 				"  len: %d bufs: %d\n", txq->txq_len, n);
-+		len += snprintf(buf+len, sizeof(buf)-len,
-+				"  stuck: %d\n", txq->txq_stuck);
- 	}
+ /* wiphy_printk helpers, similar to dev_printk */
+@@ -2599,6 +2597,4 @@ void cfg80211_cqm_rssi_notify(struct net
+ #define wiphy_WARN(wiphy, format, args...)			\
+ 	WARN(1, "wiphy: %s\n" format, wiphy_name(wiphy), ##args);
  
- 	if (len > sizeof(buf))
+-#endif
+-
+ #endif /* __NET_CFG80211_H */
+
 
