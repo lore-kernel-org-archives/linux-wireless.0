@@ -1,53 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from kroah.org ([198.145.64.141]:34816 "EHLO coco.kroah.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754303Ab0IOX2W (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 15 Sep 2010 19:28:22 -0400
-Date: Wed, 15 Sep 2010 16:28:04 -0700
-From: Greg KH <greg@kroah.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Kees Cook <kees.cook@canonical.com>, linux-kernel@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>,
-	"David S. Miller" <davem@davemloft.net>,
-	Eric Dumazet <eric.dumazet@gmail.com>,
-	Joe Perches <joe@perches.com>, Jean Tourrilhes <jt@hpl.hp.com>,
-	Tejun Heo <tj@kernel.org>, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org
-Subject: Re: [vendor-sec] [PATCH] wireless: fix 64K kernel heap content
- leak via ioctl
-Message-ID: <20100915232804.GB25877@kroah.com>
-References: <20100827210240.GC4703@outflux.net>
- <20100915224836.GF19835@kroah.com>
- <1284592267.3707.7.camel@jlt3.sipsolutions.net>
+Received: from mail-qy0-f181.google.com ([209.85.216.181]:38217 "EHLO
+	mail-qy0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752855Ab0I3V3i (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 30 Sep 2010 17:29:38 -0400
+Received: by qyk33 with SMTP id 33so2482278qyk.19
+        for <linux-wireless@vger.kernel.org>; Thu, 30 Sep 2010 14:29:37 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1284592267.3707.7.camel@jlt3.sipsolutions.net>
+Date: Thu, 30 Sep 2010 17:29:37 -0400
+Message-ID: <AANLkTi=cN7ZKa488MmXYDu_ywW95E8TcqJW4yfyKr0JR@mail.gmail.com>
+Subject: [PATCH] ath9k: Enable WDS for the ath9k
+From: Bill Jordan <bjordan@rajant.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Sep 16, 2010 at 01:11:07AM +0200, Johannes Berg wrote:
-> On Wed, 2010-09-15 at 15:48 -0700, Greg KH wrote:
-> > On Fri, Aug 27, 2010 at 02:02:41PM -0700, Kees Cook wrote:
-> > > This problem was originally tracked down by Brad Spengler.
-> > > 
-> > > When calling wireless ioctls, if a driver does not correctly
-> > > validate/shrink iwp->length, the resulting copy_to_user can leak up to
-> > > 64K of kernel heap contents.
-> > > 
-> > > It seems that this is triggerable[1] in 2.6.32 at least on ath5k, but
-> > > I was not able to track down how. The twisty maze of ioctl handlers
-> > > stumped me. :) Other drivers I checked did not appear to have any problems,
-> > > but the potential remains. I'm not sure if this patch is the right approach;
-> > > it was fixed differently[2] in grsecurity.
-> > > 
-> > > [1] http://forums.grsecurity.net/viewtopic.php?f=3&t=2290&start=0
-> > > [2] http://grsecurity.net/~spender/wireless-infoleak-fix2.patch
-> > 
-> > Is this fixed differently upstream in the kernel with commit id
-> > 42da2f948d949efd0111309f5827bf0298bcc9a4?
-> 
-> Yes, that's the fix for this.
+As requested, I'm breaking up my previous patch.
 
-Wonderful, thanks for letting me know.
+This patch enables WDS for the ath9k driver.
 
-greg k-h
+For WDS to fully work, patches to mac80211 are also needed
+(submitted separately).
+
+Signed-off-by: Bill Jordan <bjordan@rajant.com>
+---
+ drivers/net/wireless/ath/ath9k/init.c |    1 +
+ drivers/net/wireless/ath/ath9k/main.c |    3 +++
+ 2 files changed, 4 insertions(+), 0 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath9k/init.c
+b/drivers/net/wireless/ath/ath9k/init.c
+index de33938..c2792c9 100644
+--- a/drivers/net/wireless/ath/ath9k/init.c
++++ b/drivers/net/wireless/ath/ath9k/init.c
+@@ -639,6 +639,7 @@ void ath9k_set_hw_capab(struct ath_softc *sc,
+struct ieee80211_hw *hw)
+
+ 	hw->wiphy->interface_modes =
+ 		BIT(NL80211_IFTYPE_AP) |
++		BIT(NL80211_IFTYPE_WDS) |
+ 		BIT(NL80211_IFTYPE_STATION) |
+ 		BIT(NL80211_IFTYPE_ADHOC) |
+ 		BIT(NL80211_IFTYPE_MESH_POINT);
+diff --git a/drivers/net/wireless/ath/ath9k/main.c
+b/drivers/net/wireless/ath/ath9k/main.c
+index a133878..d67067f 100644
+--- a/drivers/net/wireless/ath/ath9k/main.c
++++ b/drivers/net/wireless/ath/ath9k/main.c
+@@ -1384,6 +1384,9 @@ static int ath9k_add_interface(struct ieee80211_hw *hw,
+ 	case NL80211_IFTYPE_STATION:
+ 		ic_opmode = NL80211_IFTYPE_STATION;
+ 		break;
++	case NL80211_IFTYPE_WDS:
++		ic_opmode = NL80211_IFTYPE_WDS;
++		break;
+ 	case NL80211_IFTYPE_ADHOC:
+ 	case NL80211_IFTYPE_AP:
+ 	case NL80211_IFTYPE_MESH_POINT:
+-- 
+1.7.2.3
