@@ -1,34 +1,138 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iw0-f174.google.com ([209.85.214.174]:35297 "EHLO
-	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756427Ab0ITOTc (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:36841 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932467Ab0I3VMM (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 20 Sep 2010 10:19:32 -0400
-Received: by iwn5 with SMTP id 5so4307682iwn.19
-        for <linux-wireless@vger.kernel.org>; Mon, 20 Sep 2010 07:19:31 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1284983140-30099-2-git-send-email-nbd@openwrt.org>
-References: <1284983140-30099-1-git-send-email-nbd@openwrt.org> <1284983140-30099-2-git-send-email-nbd@openwrt.org>
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Date: Mon, 20 Sep 2010 07:19:11 -0700
-Message-ID: <AANLkTinRQsy3JZ5yr_9xjPhFA3Mez5ewV1V+R1dN3yen@mail.gmail.com>
-Subject: Re: [PATCH 2/5] ath9k: fix an aggregation start related race condition
-To: Felix Fietkau <nbd@openwrt.org>
-Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com
-Content-Type: text/plain; charset=UTF-8
+	Thu, 30 Sep 2010 17:12:12 -0400
+Message-Id: <20100930211131.021309930@sipsolutions.net>
+Date: Thu, 30 Sep 2010 23:10:14 +0200
+From: Johannes Berg <johannes@sipsolutions.net>
+To: netdev@vger.kernel.org, linux-wireless@vger.kernel.org
+Cc: tgraf@suug.ch
+Subject: [RFC 1/2] genetlink: introduce pre_doit/post_doit hooks
+References: <20100930211013.472957770@sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Sep 20, 2010 at 4:45 AM, Felix Fietkau <nbd@openwrt.org> wrote:
-> A new aggregation session start can be issued by mac80211, even when the
-> cleanup of the previous session has not completed yet. Since the data structure
-> for the session is not recreated, this could corrupt the block ack window
-> and lock up the aggregation session. Fix this by delaying the new session
-> until the old one has been cleaned up.
->
-> Signed-off-by: Felix Fietkau <nbd@openwrt.org>
-> Cc: stable@kernel.org
+From: Johannes Berg <johannes.berg@intel.com>
 
-Any reason to not fix this in mac80211 instead?
+Each family may have some amount of boilerplate
+locking code that applies to most, or even all,
+commands.
 
-  Luis
+This allows a family to handle such things in
+a more generic way, by allowing it to
+ a) include private flags in each operation
+ b) specify a pre_doit hook that is called,
+    before an operation's doit() callback and
+    may return an error directly,
+ c) specify a post_doit hook that can undo
+    locking or similar things done by pre_doit,
+    and finally
+ d) include two private pointers in each info
+    struct passed between all these operations
+    including doit(). (It's two because I'll
+    need two in nl80211 -- can be extended.)
+
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ include/net/genetlink.h |   18 ++++++++++++++++++
+ net/netlink/genetlink.c |   14 +++++++++++++-
+ 2 files changed, 31 insertions(+), 1 deletion(-)
+
+--- wireless-testing.orig/include/net/genetlink.h	2010-09-30 22:19:03.000000000 +0200
++++ wireless-testing/include/net/genetlink.h	2010-09-30 22:34:10.000000000 +0200
+@@ -20,6 +20,9 @@ struct genl_multicast_group {
+ 	u32			id;
+ };
+ 
++struct genl_ops;
++struct genl_info;
++
+ /**
+  * struct genl_family - generic netlink family
+  * @id: protocol family idenfitier
+@@ -29,6 +32,10 @@ struct genl_multicast_group {
+  * @maxattr: maximum number of attributes supported
+  * @netnsok: set to true if the family can handle network
+  *	namespaces and should be presented in all of them
++ * @pre_doit: called before an operation's doit callback, it may
++ *	do additional, common, filtering and return an error
++ * @post_doit: called after an operation's doit callback, it may
++ *	undo operations done by pre_doit, for example release locks
+  * @attrbuf: buffer to store parsed attributes
+  * @ops_list: list of all assigned operations
+  * @family_list: family list
+@@ -41,6 +48,12 @@ struct genl_family {
+ 	unsigned int		version;
+ 	unsigned int		maxattr;
+ 	bool			netnsok;
++	int			(*pre_doit)(struct genl_ops *ops,
++					    struct sk_buff *skb,
++					    struct genl_info *info);
++	void			(*post_doit)(struct genl_ops *ops,
++					     struct sk_buff *skb,
++					     struct genl_info *info);
+ 	struct nlattr **	attrbuf;	/* private */
+ 	struct list_head	ops_list;	/* private */
+ 	struct list_head	family_list;	/* private */
+@@ -55,6 +68,8 @@ struct genl_family {
+  * @genlhdr: generic netlink message header
+  * @userhdr: user specific header
+  * @attrs: netlink attributes
++ * @_net: network namespace
++ * @user_ptr: user pointers
+  */
+ struct genl_info {
+ 	u32			snd_seq;
+@@ -66,6 +81,7 @@ struct genl_info {
+ #ifdef CONFIG_NET_NS
+ 	struct net *		_net;
+ #endif
++	void *			user_ptr[2];
+ };
+ 
+ static inline struct net *genl_info_net(struct genl_info *info)
+@@ -81,6 +97,7 @@ static inline void genl_info_net_set(str
+ /**
+  * struct genl_ops - generic netlink operations
+  * @cmd: command identifier
++ * @internal_flags: flags used by the family
+  * @flags: flags
+  * @policy: attribute validation policy
+  * @doit: standard command callback
+@@ -90,6 +107,7 @@ static inline void genl_info_net_set(str
+  */
+ struct genl_ops {
+ 	u8			cmd;
++	u8			internal_flags;
+ 	unsigned int		flags;
+ 	const struct nla_policy	*policy;
+ 	int		       (*doit)(struct sk_buff *skb,
+--- wireless-testing.orig/net/netlink/genetlink.c	2010-09-30 22:19:56.000000000 +0200
++++ wireless-testing/net/netlink/genetlink.c	2010-09-30 22:22:28.000000000 +0200
+@@ -547,8 +547,20 @@ static int genl_rcv_msg(struct sk_buff *
+ 	info.userhdr = nlmsg_data(nlh) + GENL_HDRLEN;
+ 	info.attrs = family->attrbuf;
+ 	genl_info_net_set(&info, net);
++	memset(&info.user_ptr, 0, sizeof(info.user_ptr));
+ 
+-	return ops->doit(skb, &info);
++	if (family->pre_doit) {
++		err = family->pre_doit(ops, skb, &info);
++		if (err)
++			return err;
++	}
++
++	err = ops->doit(skb, &info);
++
++	if (family->post_doit)
++		family->post_doit(ops, skb, &info);
++
++	return err;
+ }
+ 
+ static void genl_rcv(struct sk_buff *skb)
+
+
