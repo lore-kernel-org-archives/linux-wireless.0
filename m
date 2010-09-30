@@ -1,81 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iw0-f174.google.com ([209.85.214.174]:34268 "EHLO
-	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755646Ab0I2Tkp (ORCPT
+Received: from mail-bw0-f46.google.com ([209.85.214.46]:63627 "EHLO
+	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932232Ab0I3Qwk (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 29 Sep 2010 15:40:45 -0400
+	Thu, 30 Sep 2010 12:52:40 -0400
+Received: by bwz11 with SMTP id 11so1545112bwz.19
+        for <linux-wireless@vger.kernel.org>; Thu, 30 Sep 2010 09:52:39 -0700 (PDT)
+From: Christian Lamparter <chunkeey@googlemail.com>
+To: Bob Copeland <me@bobcopeland.com>
+Subject: Re: [RFC v2] mac80211: fix possible null-pointer dereference
+Date: Thu, 30 Sep 2010 18:52:30 +0200
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	Luis Carlos Cobo <luisca@cozybit.com>,
+	linux-wireless@vger.kernel.org,
+	Javier Cardona <javier@cozybit.com>, error27@gmail.com
+References: <201009210057.13297.chunkeey@googlemail.com> <201009250002.21219.chunkeey@googlemail.com> <AANLkTikqRuDVwhxhXkpA3c5ppzVu_HhkaEUhyr+YBUMy@mail.gmail.com>
+In-Reply-To: <AANLkTikqRuDVwhxhXkpA3c5ppzVu_HhkaEUhyr+YBUMy@mail.gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <20100924230730.GB6566@tux>
-References: <20100924230730.GB6566@tux>
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Date: Wed, 29 Sep 2010 12:40:23 -0700
-Message-ID: <AANLkTin3QqukxP8M_L9nWgkrv6bGsnGx1JFNtOY1jXtp@mail.gmail.com>
-Subject: Re: RFC: btusb firmware load help
-To: Marcel Holtmann <holtmann@linux.intel.com>,
-	Ken Steck <Ken.Steck@atheros.com>,
-	Shanmugamkamatchi Balashanmugam
-	<Shanmugamkamatchi.Balashanmugam@atheros.com>
-Cc: linux-bluetooth <linux-bluetooth@vger.kernel.org>,
-	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
-	Deepak Dhamdhere <Deepak.Dhamdhere@atheros.com>,
-	Sree Durbha <Sree.Durbha@atheros.com>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Message-Id: <201009301852.31682.chunkeey@googlemail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Sep 24, 2010 at 4:07 PM, Luis R. Rodriguez
-<lrodriguez@atheros.com> wrote:
-> Marcel, I was just poked about this thread:
->
-> http://www.spinics.net/lists/linux-bluetooth/msg06087.html
->
-> The hack is required because our BT hardware does not accept HCI commands
-> when the device is plugged in. If I understood your position you did not
-> want to accept the patch because our BT USB devices are violating the
-> specification by not acceping HCI commands and yet claiming to be BT
-> devices, is that right?
->
-> This position seems perfectly reasonable, and if it is violating the
-> specification this needs to be fixed in hardware for future devices. But
-> what is done is done, and we need to support existing customers with
-> current hardware, can you provide some recommendation as to an alternative
-> approach to resolve this upstream?
+On Thursday 30 September 2010 18:27:08 Bob Copeland wrote:
+> On Fri, Sep 24, 2010 at 6:02 PM, Christian Lamparter
+> <chunkeey@googlemail.com> wrote:
+> 
+> > hard to say, smatch must see the null dereference, when
+> > we receive an action action frame where ftype is PLINK_OPEN
+> > and the mesh_matches_local(&elems, sdata) check fail, but why
+> > doesn't it complain about the "spin_lock_bh(&sta->lock)"?
+> 
+> Smatch just does pattern matching right?
+Uhh, I guess that's a question for Dan.
 
-Marcel some attention to this would be greatly appreciated.
+The README-smatch sums it up as:
+"It's basically a state machine that tracks the flow of code."
 
-> Without a patch like the one suggested Atheros' Bluetooth USB devices are
-> essentially not functional at all. I am in hopes we can come to some agreement
-> how to deal with a hardware quirk for now while we nag at our hardware team
-> to consider changing the way our devices work.
+(I think coccicheck,  is the "pattern matching" checker, right?)
+> Maybe smatch doesn't assume you are actually using
+> the pointer in spin_lock_bh().
+> 
+> I.e. it is ok to do "&null_ptr->member", offsetof() basically
+> does that; but not "null_ptr->member".
 
-I have gotten clarifications from Ken Steck that this issue is only
-present on AR3011 chips used in the SFLASH configuration. AR3012 will
-not have this issue.
+net/mac80211/mesh_plink.c +574 mesh_rx_plink_frame(168)
+error: we previously assumed 'sta' could be null.
 
-> Someone from the Atheros BT team: can you send me the same patch to be
-> applied into compat-wireless under the linux-next-pending/ directory ?
-> That is, send me a patch which will apply onto compat-wireless.
-> This way we can actually get our hardware functional to customers while
-> we try to look for a better alternative directly upstream. You will
-> also need to document this issue on the wiki. I recommend you document
-> this here:
->
-> http://wireless.kernel.org/en/users/Drivers/ath3k
->
-> That is, create a new wiki page there for the driver and the things
-> needed for it. Once I get the patch into compat-wireless we can
-> refer users/customers to the compat-wireless stable releases with
-> the linux-next-pending/ patch you give to me applied.
+574:        switch (sta->plink_state) {
 
-I saw no takers on this.. so I just created the page myself.
+Smatch is definitely following code paths. Is there a switch
+to make it more verbose (e.g.: comment on about the conditions
+about the objected code - branch)?
 
-> Someone from the Atheros BT team: does the patch currently handle
-> suspend/resume?
-
-Shanmugamkamatchi has noted to me he will be sending me this patch
-soon and it also supports suspend/resume properly, however, I would
-like to resolve this upstream.
-
-Marcel, please let us know what path you recommend we take for this.
-
-  Luis
+Regards,
+	Chr
