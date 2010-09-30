@@ -1,86 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:46491 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751523Ab0INOTj (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:50063 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756485Ab0I3Ohg (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 14 Sep 2010 10:19:39 -0400
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>, stable@kernel.org,
-	Paul Stewart <pstew@google.com>,
-	Amod Bodas <amod.bodas@atheros.com>
-Subject: [PATCH 06/10] mac80211: make the beacon monitor available externally
-Date: Tue, 14 Sep 2010 10:19:38 -0400
-Message-Id: <1284473978-27786-1-git-send-email-lrodriguez@atheros.com>
+	Thu, 30 Sep 2010 10:37:36 -0400
+Subject: Re: [Patch 1/1] wext: fix 32/64 bit alignment issue for 'point'
+ type
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Gerrit Renker <gerrit@erg.abdn.ac.uk>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <20100930102508.GB3581@gerrit.erg.abdn.ac.uk>
+References: <20100930102508.GB3581@gerrit.erg.abdn.ac.uk>
+Content-Type: text/plain; charset="UTF-8"
+Date: Thu, 30 Sep 2010 16:38:07 +0200
+Message-ID: <1285857487.5137.2.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This will be used by other components next. The beacon
-monitor was added as of 2.6.34 so these fixes are applicable
-only to kernels >= 2.6.34.
+On Thu, 2010-09-30 at 12:25 +0200, Gerrit Renker wrote:
+> wireless: fix alignment problem
+> 
+> With the current definition, IW_EV_POINT_PK_LEN is 12 on 64-bit and 8 on 32-bit systems,
+> due to the way struct iw_event is packed (24 byte on 64-bit systems instead of 20 byte
+> on 32-bit systems). Furthermore, the iwe_stream_add_point() in include/net/iw_handler.h
+> also uses IW_EV_LCP_PK_LEN as header length. 
+> 
+> The current definition appears to be a typo (PK_LEN instead of LEN); it causes 
+> misalignment on 64 bit systems.
 
-Cc: stable@kernel.org
-Cc: Paul Stewart <pstew@google.com>
-Cc: Amod Bodas <amod.bodas@atheros.com>
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
----
- net/mac80211/ieee80211_i.h |    1 +
- net/mac80211/mlme.c        |    8 ++++----
- 2 files changed, 5 insertions(+), 4 deletions(-)
+So, correct me if I'm wrong, the only effect this change has is changing
+the second memcpy() in iwe_stream_add_point() to not copy an extra 4
+bytes that will be overwritten right away by the next memcpy()
+(presumably, unless the data is < 4, in which case the memcpy might
+actually be out of bounds).
 
-diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
-index 737fd0f..9346a6b 100644
---- a/net/mac80211/ieee80211_i.h
-+++ b/net/mac80211/ieee80211_i.h
-@@ -1041,6 +1041,7 @@ void ieee80211_sta_restart(struct ieee80211_sub_if_data *sdata);
- void ieee80211_sta_work(struct ieee80211_sub_if_data *sdata);
- void ieee80211_sta_rx_queued_mgmt(struct ieee80211_sub_if_data *sdata,
- 				  struct sk_buff *skb);
-+void ieee80211_sta_reset_beacon_monitor(struct ieee80211_sub_if_data *sdata);
- void ieee80211_sta_reset_conn_monitor(struct ieee80211_sub_if_data *sdata);
- 
- /* IBSS code */
-diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index 172a397..c2e1838 100644
---- a/net/mac80211/mlme.c
-+++ b/net/mac80211/mlme.c
-@@ -115,7 +115,7 @@ static void run_again(struct ieee80211_if_managed *ifmgd,
- 		mod_timer(&ifmgd->timer, timeout);
- }
- 
--static void mod_beacon_timer(struct ieee80211_sub_if_data *sdata)
-+void ieee80211_sta_reset_beacon_monitor(struct ieee80211_sub_if_data *sdata)
- {
- 	if (sdata->local->hw.flags & IEEE80211_HW_BEACON_FILTER)
- 		return;
-@@ -1390,7 +1390,7 @@ static bool ieee80211_assoc_success(struct ieee80211_work *wk,
- 	 * Also start the timer that will detect beacon loss.
- 	 */
- 	ieee80211_sta_rx_notify(sdata, (struct ieee80211_hdr *)mgmt);
--	mod_beacon_timer(sdata);
-+	ieee80211_sta_reset_beacon_monitor(sdata);
- 
- 	return true;
- }
-@@ -1493,7 +1493,7 @@ static void ieee80211_rx_mgmt_probe_resp(struct ieee80211_sub_if_data *sdata,
- 		 * we have or will be receiving any beacons or data, so let's
- 		 * schedule the timers again, just in case.
- 		 */
--		mod_beacon_timer(sdata);
-+		ieee80211_sta_reset_beacon_monitor(sdata);
- 
- 		mod_timer(&ifmgd->conn_mon_timer,
- 			  round_jiffies_up(jiffies +
-@@ -1619,7 +1619,7 @@ static void ieee80211_rx_mgmt_beacon(struct ieee80211_sub_if_data *sdata,
- 	 * Push the beacon loss detection into the future since
- 	 * we are processing a beacon from the AP just now.
- 	 */
--	mod_beacon_timer(sdata);
-+	ieee80211_sta_reset_beacon_monitor(sdata);
- 
- 	ncrc = crc32_be(0, (void *)&mgmt->u.beacon.beacon_int, 4);
- 	ncrc = ieee802_11_parse_elems_crc(mgmt->u.beacon.variable,
--- 
-1.7.0.4
+Where's the misalignment issue?
+
+johannes
 
