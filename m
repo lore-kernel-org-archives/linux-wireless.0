@@ -1,64 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mailout-de.gmx.net ([213.165.64.23]:38894 "HELO mail.gmx.net"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with SMTP
-	id S1754220Ab0IRNn1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 18 Sep 2010 09:43:27 -0400
-From: "Stefan Lippers-Hollmann" <s.L-H@gmx.de>
-To: "Hin-Tak Leung" <hintak.leung@gmail.com>
-Subject: Re: Realtek rtl8188 support?
-Date: Sat, 18 Sep 2010 15:43:15 +0200
-Cc: Claus Ried <claus.ried@gmail.com>, linux-wireless@vger.kernel.org
-References: <c785bba31003060945j22be2e78pfeaa1bcd39fcba2c@mail.gmail.com> <loom.20100910T132509-455@post.gmane.org> <AANLkTim4F8t2g8YGH8TKaudzAg42vzFgijcURUubVdkc@mail.gmail.com>
-In-Reply-To: <AANLkTim4F8t2g8YGH8TKaudzAg42vzFgijcURUubVdkc@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Message-Id: <201009181543.18159.s.L-H@gmx.de>
+Received: from external1.orbit-lab.org ([128.6.192.131]:45157 "HELO
+	external1.orbit-lab.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S932076Ab0I3TDr (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 30 Sep 2010 15:03:47 -0400
+Received: from repository3.orbit-lab.org (repository3.orbit-lab.org [10.50.0.41])
+	by external1.orbit-lab.org (Postfix) with ESMTP id DC632418D8
+	for <linux-wireless@vger.kernel.org>; Thu, 30 Sep 2010 15:01:27 -0400 (EDT)
+Subject: Compat-wireless release for 2010-09-30 is baked
+To: <linux-wireless@vger.kernel.org>
+Message-Id: <20100930190345.5163F404FC@repository3.orbit-lab.org>
+Date: Thu, 30 Sep 2010 15:03:45 -0400 (EDT)
+From: compat@orbit-lab.org (Compat-wireless cronjob account)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi
+>From git://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next
+   9cfd2ee..6f15991  history    -> origin/history
+ + 1063b82...0f70e3f master     -> origin/master  (forced update)
+   0f44fbd..4193d91  stable     -> origin/stable
+ * [new tag]         next-20100930 -> next-20100930
+>From git://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next
+ * [new tag]         v2.6.36-rc6 -> v2.6.36-rc6
 
-On Saturday 18 September 2010, Hin-Tak Leung wrote:
-> On Fri, Sep 10, 2010 at 12:29 PM, Claus Ried <claus.ried@gmail.com> wrote:
-[...]
-> The Realtek vendor driver has always bundled its own wpa_supplicant
-> and I have wondered what mod they have made. Are you using your distro
-> wpa_supplicant or the Realtek vendor bundled one?
+compat-wireless code metrics
 
-Talking about the staging driver in kernel 2.6.35/ 2.6.36 (rtl8192su/ 
-r8192s_usb, I didn't test rtl8712 from {linux,staging}-next yet), 
-RTL8188S [1] and RTL8191S [2] hardware works quite well for me with 
-stock wpasupplicant 0.6.10/ 0.7.3 (Debian/ unstable, no hardware 
-specific patches and using the plain wext backend and no special 
-configuration). While it takes a little to authenticate succesfully 
-(20-30 seconds), I have not experienced any problems yet.
+    747705 - Total upstream lines of code being pulled
+      2153 - backport code changes
+      1902 - backport code additions
+       251 - backport code deletions
+      6242 - backport from compat module
+      8395 - total backport code
+    1.1228 - % of code consists of backport work
+      1219 - Crap changes not yet posted
+      1181 - Crap additions not yet posted
+        38 - Crap deletions not yet posted
+    0.1630 - % of crap code
 
-Looking at the bundled wpa_supplicant-0.5.10.tar.gz (from
-rtl8192su_linux_2.6.0003.0810.2009.tar.gz shipped on the vendor's 
-driver CD) confirms that its MD5 matches the upstream wpa_supplicant 
-tarball:
-	9e7b99da67c47d81121368c6d580d069 *wpa_supplicant-0.5.10.tar.gz
-
-Regards
-	Stefan Lippers-Hollmann
-
-[1]	Longshine LCS-8131N2, 150 MBit/s
-	0bda:8171 Realtek Semiconductor Corp. RTL8188SU 802.11n WLAN Adapter
-	.
-	usb 1-3: new high speed USB device using ehci_hcd and address 6
-	usb 1-3: New USB device found, idVendor=0bda, idProduct=8171
-	usb 1-3: New USB device strings: Mfr=1, Product=2, SerialNumber=3
-	usb 1-3: Product: RTL8188S WLAN Adapter 
-	usb 1-3: Manufacturer: Manufacturer Realtek 
-	usb 1-3: SerialNumber: 00e04c000001
-
-[2]	DeLock 88530, 300 MBit/s
-	0bda:8172 Realtek Semiconductor Corp. RTL8191S WLAN Adapter
-	.
-	usb 2-6: new high speed USB device using ehci_hcd and address 2
-	usb 2-6: New USB device found, idVendor=0bda, idProduct=8172
-	usb 2-6: New USB device strings: Mfr=1, Product=2, SerialNumber=3
-	usb 2-6: Product: RTL8191S WLAN Adapter
-	usb 2-6: Manufacturer: Manufacturer Realtek
-	usb 2-6: SerialNumber: 00e04c000001
+Base tree: linux-next.git
+Base tree version: next-20100930
+compat-wireless release: compat-wireless-2010-09-27-8-gc735ecb-pc
