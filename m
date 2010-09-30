@@ -1,80 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f46.google.com ([209.85.215.46]:36123 "EHLO
-	mail-ew0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753273Ab0IHS6K (ORCPT
+Received: from smtp.nokia.com ([192.100.105.134]:55910 "EHLO
+	mgw-mx09.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750996Ab0I3KoL (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 8 Sep 2010 14:58:10 -0400
-Received: by ewy23 with SMTP id 23so343042ewy.19
-        for <linux-wireless@vger.kernel.org>; Wed, 08 Sep 2010 11:58:08 -0700 (PDT)
-From: Ivo van Doorn <ivdoorn@gmail.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Subject: [PATCH 02/06] rt2x00: Initialize AMPDU_BA_WINSIZE register
-Date: Wed, 8 Sep 2010 20:56:04 +0200
-Cc: users@rt2x00.serialmonkey.com, linux-wireless@vger.kernel.org,
-	Helmut Schaa <helmut.schaa@googlemail.com>
-References: <201009082055.38033.IvDoorn@gmail.com>
-In-Reply-To: <201009082055.38033.IvDoorn@gmail.com>
-MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Message-Id: <201009082056.05708.IvDoorn@gmail.com>
+	Thu, 30 Sep 2010 06:44:11 -0400
+Received: from esebh106.NOE.Nokia.com (esebh106.ntc.nokia.com [172.21.138.213])
+	by mgw-mx09.nokia.com (Switch-3.3.3/Switch-3.3.3) with ESMTP id o8UAhgB2030518
+	for <linux-wireless@vger.kernel.org>; Thu, 30 Sep 2010 05:44:08 -0500
+From: juuso.oikarinen@nokia.com
+To: luciano.coelho@nokia.com
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH 2/2] wl1271: Move work-init calls to hw allocation
+Date: Thu, 30 Sep 2010 13:43:28 +0300
+Message-Id: <1285843408-6726-2-git-send-email-juuso.oikarinen@nokia.com>
+In-Reply-To: <1285843408-6726-1-git-send-email-juuso.oikarinen@nokia.com>
+References: <1285843408-6726-1-git-send-email-juuso.oikarinen@nokia.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Helmut Schaa <helmut.schaa@googlemail.com>
+From: Juuso Oikarinen <juuso.oikarinen@nokia.com>
 
-Since we're not using the AMPDU_BA_WINSIZE register to force the BlockAck
-window size (we specify it in every TXWI) we should initialize it to 0.
+Due to legacy reason, dating back to when the wl1251 and wl1271 still were
+a unified driver, some work-structures are initialized on hardware startup.
 
-Signed-off-by: Helmut Schaa <helmut.schaa@googlemail.com>
-Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
+The hardware recovery code creates a scenario in which it is possible for a
+workstruct to be re-initialized while the work-function itself is running,
+which causes a kernel WARNing and a subsequent reboot.
+
+To remedy this, move the work initialization calls to the hw allocation,
+which is the logically correct place for them anyway.
+
+Signed-off-by: Juuso Oikarinen <juuso.oikarinen@nokia.com>
 ---
- drivers/net/wireless/rt2x00/rt2800.h    |   12 ++++++++++++
- drivers/net/wireless/rt2x00/rt2800lib.c |    8 ++++++++
- 2 files changed, 20 insertions(+), 0 deletions(-)
+ drivers/net/wireless/wl12xx/wl1271_main.c |    9 ++++-----
+ 1 files changed, 4 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/net/wireless/rt2x00/rt2800.h b/drivers/net/wireless/rt2x00/rt2800.h
-index 70a5cb8..2edc774 100644
---- a/drivers/net/wireless/rt2x00/rt2800.h
-+++ b/drivers/net/wireless/rt2x00/rt2800.h
-@@ -639,6 +639,18 @@
- #define LED_CFG_LED_POLAR		FIELD32(0x40000000)
+diff --git a/drivers/net/wireless/wl12xx/wl1271_main.c b/drivers/net/wireless/wl12xx/wl1271_main.c
+index 2253458..1ed9d11 100644
+--- a/drivers/net/wireless/wl12xx/wl1271_main.c
++++ b/drivers/net/wireless/wl12xx/wl1271_main.c
+@@ -667,11 +667,6 @@ static int wl1271_setup(struct wl1271 *wl)
+ 		return -ENOMEM;
+ 	}
  
- /*
-+ * AMPDU_BA_WINSIZE: Force BlockAck window size
-+ * FORCE_WINSIZE_ENABLE:
-+ *   0: Disable forcing of BlockAck window size
-+ *   1: Enable forcing of BlockAck window size, overwrites values BlockAck
-+ *      window size values in the TXWI
-+ * FORCE_WINSIZE: BlockAck window size
-+ */
-+#define AMPDU_BA_WINSIZE		0x1040
-+#define AMPDU_BA_WINSIZE_FORCE_WINSIZE_ENABLE FIELD32(0x00000020)
-+#define AMPDU_BA_WINSIZE_FORCE_WINSIZE	FIELD32(0x0000001f)
-+
-+/*
-  * XIFS_TIME_CFG: MAC timing
-  * CCKM_SIFS_TIME: unit 1us. Applied after CCK RX/TX
-  * OFDM_SIFS_TIME: unit 1us. Applied after OFDM RX/TX
-diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
-index 27a6e22..9cfb9b31 100644
---- a/drivers/net/wireless/rt2x00/rt2800lib.c
-+++ b/drivers/net/wireless/rt2x00/rt2800lib.c
-@@ -2053,6 +2053,14 @@ static int rt2800_init_registers(struct rt2x00_dev *rt2x00dev)
- 	rt2800_register_write(rt2x00dev, LG_FBK_CFG1, reg);
+-	INIT_WORK(&wl->irq_work, wl1271_irq_work);
+-	INIT_WORK(&wl->tx_work, wl1271_tx_work);
+-	INIT_WORK(&wl->recovery_work, wl1271_recovery_work);
+-	INIT_DELAYED_WORK(&wl->scan_complete_work, wl1271_scan_complete_work);
+-
+ 	return 0;
+ }
  
- 	/*
-+	 * Do not force the BA window size, we use the TXWI to set it
-+	 */
-+	rt2800_register_read(rt2x00dev, AMPDU_BA_WINSIZE, &reg);
-+	rt2x00_set_field32(&reg, AMPDU_BA_WINSIZE_FORCE_WINSIZE_ENABLE, 0);
-+	rt2x00_set_field32(&reg, AMPDU_BA_WINSIZE_FORCE_WINSIZE, 0);
-+	rt2800_register_write(rt2x00dev, AMPDU_BA_WINSIZE, reg);
-+
-+	/*
- 	 * We must clear the error counters.
- 	 * These registers are cleared on read,
- 	 * so we may pass a useless variable to store the value.
+@@ -2489,6 +2484,10 @@ struct ieee80211_hw *wl1271_alloc_hw(void)
+ 
+ 	INIT_DELAYED_WORK(&wl->elp_work, wl1271_elp_work);
+ 	INIT_DELAYED_WORK(&wl->pspoll_work, wl1271_pspoll_work);
++	INIT_WORK(&wl->irq_work, wl1271_irq_work);
++	INIT_WORK(&wl->tx_work, wl1271_tx_work);
++	INIT_WORK(&wl->recovery_work, wl1271_recovery_work);
++	INIT_DELAYED_WORK(&wl->scan_complete_work, wl1271_scan_complete_work);
+ 	wl->channel = WL1271_DEFAULT_CHANNEL;
+ 	wl->beacon_int = WL1271_DEFAULT_BEACON_INT;
+ 	wl->default_key = 0;
 -- 
-1.7.2.2
+1.6.3.3
 
