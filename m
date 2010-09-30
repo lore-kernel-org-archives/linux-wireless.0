@@ -1,75 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:59043 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755861Ab0INXkj (ORCPT
+Received: from mail-fx0-f46.google.com ([209.85.161.46]:44121 "EHLO
+	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753396Ab0I3QPm (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 14 Sep 2010 19:40:39 -0400
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Senthil Balasubramanian <senthilkumar@atheros.com>,
-	stable@kernel.org, Paul Stewart <pstew@google.com>,
-	Sameer Nanda <snanda@google.com>,
-	Gabor Juhos <juhosg@openwrt.org>,
-	Amod Bodas <amod.bodas@atheros.com>,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>
-Subject: [PATCH v3 10/11] ath9k: fix regression which prevents chip sleep after CAB data
-Date: Tue, 14 Sep 2010 19:40:23 -0400
-Message-Id: <1284507624-18176-11-git-send-email-lrodriguez@atheros.com>
-In-Reply-To: <1284507624-18176-1-git-send-email-lrodriguez@atheros.com>
-References: <1284507624-18176-1-git-send-email-lrodriguez@atheros.com>
+	Thu, 30 Sep 2010 12:15:42 -0400
+Received: by fxm4 with SMTP id 4so852876fxm.19
+        for <linux-wireless@vger.kernel.org>; Thu, 30 Sep 2010 09:15:37 -0700 (PDT)
+From: Helmut Schaa <helmut.schaa@googlemail.com>
+To: Joshua Smith <JoshuaESmith@charter.net>
+Subject: Re: Question about starting up an AP
+Date: Thu, 30 Sep 2010 18:14:47 +0200
+Cc: "linux-wireless" <linux-wireless@vger.kernel.org>,
+	users@rt2x00.serialmonkey.com, Ivo van Doorn <ivdoorn@gmail.com>
+References: <DA0C92FD-F6BF-4746-9BE1-A643A0D70F7A@kaon.com> <C4D5DF09-82F0-48B4-9D64-6621B3C82932@kaon.com> <71135D34-18F6-4909-A8AB-E7390FA73049@charter.net>
+In-Reply-To: <71135D34-18F6-4909-A8AB-E7390FA73049@charter.net>
+MIME-Version: 1.0
+Content-Type: Text/Plain;
+  charset="us-ascii"
+Message-Id: <201009301814.47318.helmut.schaa@googlemail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Senthil Balasubramanian <senthilkumar@atheros.com>
+Am Donnerstag 30 September 2010 schrieb Joshua Smith:
+> I think I have a clue about the WPDMA TX/RX busy bug.  I was having trouble
+> using the latest compat-wireless with USB dongle I have (ID AB50:2019
+> rt73usb), so I tried rolling Helmut's "oops" fix into:
+> 
+> compat-wireless-2010-07-15
+> 
+> which I have been using successfully for the last few months.  Lo and behold,
+> this version does *NOT* exhibit the TX/RX busy error.  So whatever is causing
+> that problem was introduced between 7/15/2010 and 9/20/2010.
 
-The patch:
+Thanks for the analysis Joshua! Since this is a regression I guess we
+should try to find out quickly which commit introduced it (and fix it up
+of course) ...
 
-commit 293dc5dfdbcc16cde06e40a688394cc8ab083e48
-Author: Gabor Juhos <juhosg@openwrt.org>
-Date:   Fri Jun 19 12:17:48 2009 +0200
+Helmut
 
-    ath9k: remove ath_rx_ps_back_to_sleep helper
-
-    This helper only clears the SC_OP_WAIT_FOR_{BEACON,CAB} flags.
-    Remove it and clear these flags directly in the approptiate
-    places instead.
-
-    Changes-licensed-under: ISC
-    Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
-    Signed-off-by: John W. Linville <linville@tuxdriver.com>
-
-introduced a regression which forgot to lift the beacon flag
-after we received all broadcast and multicast data. This meant
-we never went to sleep consuming about ~650mW on idle. This pretty
-much broke power save completely.
-
-This patch has fixes for stable kernels [2.6.32+].
-
-Cc: stable@kernel.org
-Cc: Paul Stewart <pstew@google.com>
-Cc: Sameer Nanda <snanda@google.com>
-Cc: Gabor Juhos <juhosg@openwrt.org>
-Cc: Amod Bodas <amod.bodas@atheros.com>
-Signed-off-by: Senthil Balasubramanian <senthilkumar@atheros.com>
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
----
- drivers/net/wireless/ath/ath9k/recv.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/ath9k/recv.c b/drivers/net/wireless/ath/ath9k/recv.c
-index efd0651..dbd4b0c 100644
---- a/drivers/net/wireless/ath/ath9k/recv.c
-+++ b/drivers/net/wireless/ath/ath9k/recv.c
-@@ -639,7 +639,7 @@ static void ath_rx_ps(struct ath_softc *sc, struct sk_buff *skb)
- 		 * No more broadcast/multicast frames to be received at this
- 		 * point.
- 		 */
--		sc->ps_flags &= ~PS_WAIT_FOR_CAB;
-+		sc->ps_flags &= ~(PS_WAIT_FOR_CAB | PS_WAIT_FOR_BEACON);
- 		ath_print(common, ATH_DBG_PS,
- 			  "All PS CAB frames received, back to sleep\n");
- 	} else if ((sc->ps_flags & PS_WAIT_FOR_PSPOLL_DATA) &&
--- 
-1.7.0.4
 
