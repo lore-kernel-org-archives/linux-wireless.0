@@ -1,56 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:59059 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755875Ab0INXkk (ORCPT
+Received: from sabe.cs.wisc.edu ([128.105.6.20]:34391 "EHLO sabe.cs.wisc.edu"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932117Ab0I3Pdy convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 14 Sep 2010 19:40:40 -0400
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>, stable@kernel.org,
-	Paul Stewart <pstew@google.com>,
-	Amod Bodas <amod.bodas@atheros.com>
-Subject: [PATCH v3 11/11] ath9k: fix regression which disabled ps on ath9k
-Date: Tue, 14 Sep 2010 19:40:24 -0400
-Message-Id: <1284507624-18176-12-git-send-email-lrodriguez@atheros.com>
-In-Reply-To: <1284507624-18176-1-git-send-email-lrodriguez@atheros.com>
-References: <1284507624-18176-1-git-send-email-lrodriguez@atheros.com>
+	Thu, 30 Sep 2010 11:33:54 -0400
+Received: from mail-ey0-f174.google.com (mail-ey0-f174.google.com [209.85.215.174])
+	(authenticated bits=0)
+	by sabe.cs.wisc.edu (8.14.1/8.14.1) with ESMTP id o8UFXqxW024250
+	(version=TLSv1/SSLv3 cipher=RC4-MD5 bits=128 verify=FAIL)
+	for <linux-wireless@vger.kernel.org>; Thu, 30 Sep 2010 10:33:53 -0500
+Received: by eyb6 with SMTP id 6so826947eyb.19
+        for <linux-wireless@vger.kernel.org>; Thu, 30 Sep 2010 08:33:52 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <733457.84719.qm@web56801.mail.re3.yahoo.com>
+References: <733457.84719.qm@web56801.mail.re3.yahoo.com>
+From: Michael Griepentrog <griepent@cs.wisc.edu>
+Date: Thu, 30 Sep 2010 10:33:25 -0500
+Message-ID: <AANLkTi==09DXcF-Cbon7SFUxU8WbUMx6ZL8OQP5g8=5z@mail.gmail.com>
+Subject: Re: [BUG] compat: broken driver-select always compiles ath6kl & brcm80211
+To: Walter Goldens <goldenstranger@yahoo.com>
+Cc: "Luis R. Rodriguez" <mcgrof@gmail.com>,
+	linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The patch titled "ath9k: Add new file init.c" shuffled some code
-around but in dong so for some reason also removed the revision
-check for disablign power save. Add this revision check again
-so we can get power save re-enabled again by default on cards
-newer than AR5416 and AR5418.
+driver-select currently doesn't modify the Makefiles of drivers in
+staging, so they will always be built. You should be able to disable
+those drivers from being built by editing your kernel config to enable
+CONFIG_STAGING_EXCLUDE_BUILD and/or disabling CONFIG_STAGING.
 
-$ git describe --contains 556242049cc3992d0ee625e9f15c4b00ea4baac8
-v2.6.34-rc1~233^2~49^2~343
+If we want something to work within the confines of driver-select, we
+could place a Makefile in drivers/staging and apply the same policies
+that driver-select does to the drivers/net/wireless Makefile. It
+wouldn't be very useful as it would always remove the contents of the
+Makefile, but if modules in staging were built against something other
+than CONFIG_COMPAT_STAGING, it could be used to add brcm80211 to the
+list supported drivers for driver-select.
 
-This patch has fixes for stable kernels [2.6.34+].
+--
+Michael
 
-Cc: stable@kernel.org
-Cc: Paul Stewart <pstew@google.com>
-Cc: Amod Bodas <amod.bodas@atheros.com>
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
----
- drivers/net/wireless/ath/ath9k/init.c |    3 ++-
- 1 files changed, 2 insertions(+), 1 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/ath9k/init.c b/drivers/net/wireless/ath/ath9k/init.c
-index 5c77a99..6e11147 100644
---- a/drivers/net/wireless/ath/ath9k/init.c
-+++ b/drivers/net/wireless/ath/ath9k/init.c
-@@ -643,7 +643,8 @@ void ath9k_set_hw_capab(struct ath_softc *sc, struct ieee80211_hw *hw)
- 		BIT(NL80211_IFTYPE_ADHOC) |
- 		BIT(NL80211_IFTYPE_MESH_POINT);
- 
--	hw->wiphy->flags &= ~WIPHY_FLAG_PS_ON_BY_DEFAULT;
-+	if (AR_SREV_5416(sc->sc_ah))
-+		hw->wiphy->flags &= ~WIPHY_FLAG_PS_ON_BY_DEFAULT;
- 
- 	hw->queues = 4;
- 	hw->max_rates = 4;
--- 
-1.7.0.4
-
+On Wed, Sep 29, 2010 at 8:00 AM, Walter Goldens
+<goldenstranger@yahoo.com> wrote:
+> Latest compat-wireless manifests a bug when "scripts/driver-select" is invoked. Regardless of which driver is selected (zd1211rw for example),  ath6kl and brcm80211 are always compiled along with the designated module of choice.
+>
+> I tried looking in to it, but don't really have time. Perhaps someone would like to investigate.
+>
+> Walter.
+>
+>
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
