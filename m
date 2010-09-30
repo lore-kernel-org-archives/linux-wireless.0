@@ -1,49 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:57337 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753236Ab0I1Nkt (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:40499 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755918Ab0I3RgZ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 28 Sep 2010 09:40:49 -0400
-Message-ID: <4CA1F05C.10705@candelatech.com>
-Date: Tue, 28 Sep 2010 06:40:44 -0700
-From: Ben Greear <greearb@candelatech.com>
-MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: Given an interface, how to tell if it's associated?
-References: <4CA12600.5070304@candelatech.com> <1285658613.3885.2.camel@jlt3.sipsolutions.net>
-In-Reply-To: <1285658613.3885.2.camel@jlt3.sipsolutions.net>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+	Thu, 30 Sep 2010 13:36:25 -0400
+Subject: Re: [ath9k-devel] Modulation schemes on ath9k
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Cc: Mike Pithouse <mike.pithouse@vegastream.com>,
+	ath9k-devel@venema.h4ckr.net,
+	linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <AANLkTinAnawV3JThYNdovcBY4HaUOH-Sydwi1JKKoz+W@mail.gmail.com>
+References: <9D3ED2EB2589B641B6CCA9F529CAA6A2F258CB@exbe12.nasstar-t1.net>
+	 <AANLkTi=aBPTYZB62Jup4=10_D2wxEgVaBormJcZb6qyT@mail.gmail.com>
+	 <9D3ED2EB2589B641B6CCA9F529CAA6A2FC5433@exbe12.nasstar-t1.net>
+	 <AANLkTinAnawV3JThYNdovcBY4HaUOH-Sydwi1JKKoz+W@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Thu, 30 Sep 2010 19:36:55 +0200
+Message-ID: <1285868215.5137.6.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 09/28/2010 12:23 AM, Johannes Berg wrote:
-> On Mon, 2010-09-27 at 16:17 -0700, Ben Greear wrote:
->> I need to iterate through all local->interfaces and
->> if they are stations, figure out if they are associated
->> or not.
->>
->> I tried checking for existence of sdata->u.mgd.associated,
->> but it is always null (I'm using non-encrypted links
->> currently, in case that matters.)
->
-> That's correct, if it's always NULL then you're not associated properly
-> I guess?
+On Thu, 2010-09-30 at 10:33 -0700, Luis R. Rodriguez wrote:
+> On Thu, Sep 30, 2010 at 10:26 AM, Mike Pithouse
+> <mike.pithouse@vegastream.com> wrote:
+> > Just the ticket - thank you.
+> >
+> > I see there's currently some 'inactive' code that will allow the same command to be used to set the MCS index.
+> >
+> > Do you know when/if this code will be available?  Alternatively, is there another method currently available to set MCS index?
+> 
+> Johannes, is this a TODO still?
 
-Well, it seemed to work and passed traffic fine, so I'm at a loss.  Perhaps
-it just wasn't associated while one of the stations was scanning.
+You can only do legacy right now, we don't have the
+nl80211/cfg80211/mac80211 infrastructure in place for it at this point.
 
-Either way, I added logic to iterate through all stas and check it's
-flags, and that seems to work (see the can_scan_one patch logic I posted).
+johannes
 
-Thanks,
-Ben
-
-
->
-> johannes
-
-
--- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
