@@ -1,66 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:1025 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755074Ab0IMMqp (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 13 Sep 2010 08:46:45 -0400
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: Johannes Berg <johannes@sipsolutions.net>,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>,
-	Reinette Chatre <reinette.chatre@intel.com>,
-	"John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org,
-	Stanislaw Gruszka <sgruszka@redhat.com>
-Subject: [PATCH 09/14] iwlwifi: assure we complete scan in scan_abort and scan_check works
-Date: Mon, 13 Sep 2010 14:46:40 +0200
-Message-Id: <1284382005-3246-10-git-send-email-sgruszka@redhat.com>
-In-Reply-To: <1284382005-3246-1-git-send-email-sgruszka@redhat.com>
-References: <1284382005-3246-1-git-send-email-sgruszka@redhat.com>
+Received: from mail-bw0-f46.google.com ([209.85.214.46]:56896 "EHLO
+	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750745Ab0I3ILH (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 30 Sep 2010 04:11:07 -0400
+Received: by bwz11 with SMTP id 11so1176761bwz.19
+        for <linux-wireless@vger.kernel.org>; Thu, 30 Sep 2010 01:11:05 -0700 (PDT)
+From: Ido Yariv <ido@wizery.com>
+To: Luciano Coelho <luciano.coelho@nokia.com>,
+	linux-wireless@vger.kernel.org
+Cc: Juuso Oikarinen <juuso.oikarinen@nokia.com>,
+	Ohad Ben-Cohen <ohad@wizery.com>, Ido Yariv <ido@wizery.com>
+Subject: [PATCH v2 0/3] wl1271: Packet aggregation optimizations
+Date: Thu, 30 Sep 2010 10:10:56 +0200
+Message-Id: <1285834259-3178-1-git-send-email-ido@wizery.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Assure we complete scan in mac80211 when we abort scanning (scan_abort
-work) or scan timeout occurs (scan_check work). Currently
-iwl_scan_cancel_timeout() procedure force scan finish in mac80211
-at the end of timeout loop, so we can use it in proper work functions.
+The WL1271 HW supports sending and receiving multiple packets within
+a single transaction. This can substantially reduce CPU usage and
+increase network throughput.
 
-Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
----
- drivers/net/wireless/iwlwifi/iwl-scan.c |   14 ++------------
- 1 files changed, 2 insertions(+), 12 deletions(-)
+The following patches add support for RX and TX packet aggregation.
+An opportunistic approach was taken - all packets that are currently
+available for sending/receiving are aggregated and transferred
+in a single transaction.
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-scan.c b/drivers/net/wireless/iwlwifi/iwl-scan.c
-index ce605e0..da037b2 100644
---- a/drivers/net/wireless/iwlwifi/iwl-scan.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-scan.c
-@@ -490,18 +490,8 @@ static void iwl_bg_scan_check(struct work_struct *data)
- 	struct iwl_priv *priv =
- 	    container_of(data, struct iwl_priv, scan_check.work);
- 
--	if (test_bit(STATUS_EXIT_PENDING, &priv->status))
--		return;
--
- 	mutex_lock(&priv->mutex);
--	if (test_bit(STATUS_SCANNING, &priv->status) &&
--	    !test_bit(STATUS_SCAN_ABORTING, &priv->status)) {
--		IWL_DEBUG_SCAN(priv, "Scan completion watchdog (%dms)\n",
--			       jiffies_to_msecs(IWL_SCAN_CHECK_WATCHDOG));
--
--		if (!test_bit(STATUS_EXIT_PENDING, &priv->status))
--			iwl_send_scan_abort(priv);
--	}
-+	iwl_scan_cancel_timeout(priv, 200);
- 	mutex_unlock(&priv->mutex);
- }
- 
-@@ -560,7 +550,7 @@ static void iwl_bg_abort_scan(struct work_struct *work)
- 	cancel_delayed_work(&priv->scan_check);
- 
- 	mutex_lock(&priv->mutex);
--	iwl_do_scan_abort(priv);
-+	iwl_scan_cancel_timeout(priv, 200);
- 	mutex_unlock(&priv->mutex);
- }
- 
--- 
-1.7.1
+On SPI platforms, tests done by Juuso Oikarinen have shown a 20% improvement
+in CPU usage.
+On SDIO platforms, some tests have shown an improvement of over 30% in CPU
+usage.
+
+Changes since v1:
+The SPI callbacks do not handle large transfers well. The first patch fixes
+this by fragmenting large transfers into smaller ones.
+
+Thanks Juuso Oikarinen for reporting the SPI issue and helping with testing
+and benchmarking these optimizations.
+
+Ido Yariv (3):
+  wl1271: Handle large SPI transfers
+  wl1271: Support firmware RX packet aggregation
+  wl1271: Support firmware TX packet aggregation
+
+ drivers/net/wireless/wl12xx/wl1271.h      |    5 +
+ drivers/net/wireless/wl12xx/wl1271_main.c |   15 +++-
+ drivers/net/wireless/wl12xx/wl1271_rx.c   |   63 ++++++++++----
+ drivers/net/wireless/wl12xx/wl1271_spi.c  |  132 ++++++++++++++++++-----------
+ drivers/net/wireless/wl12xx/wl1271_tx.c   |   99 ++++++++--------------
+ 5 files changed, 185 insertions(+), 129 deletions(-)
 
