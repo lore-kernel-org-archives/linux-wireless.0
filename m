@@ -1,38 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-vw0-f46.google.com ([209.85.212.46]:33048 "EHLO
-	mail-vw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932457Ab0JOTxc (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:49527 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932216Ab0I3Wsk (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 15 Oct 2010 15:53:32 -0400
-MIME-Version: 1.0
-In-Reply-To: <20101015192029.GA28742@kroah.com>
-References: <E9954878DD1FB34FAE5187FB88C58A35012EE46BC3@orsmsx506.amr.corp.intel.com>
- <AANLkTi=6aVHyr98avc07UtWgDkV=SdmKW2HXNfSRY3KU@mail.gmail.com> <20101015192029.GA28742@kroah.com>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Fri, 15 Oct 2010 12:53:10 -0700
-Message-ID: <AANLkTim-=W7sBrkqvRWfzaQ7FmzCXSSn57N3biDKi2WU@mail.gmail.com>
-Subject: Re: compat-wireless question
-To: Greg KH <greg@kroah.com>,
-	Senthil Balasubramanian <senthilkumar@atheros.com>
-Cc: "Guy, Wey-Yi W" <wey-yi.w.guy@intel.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	linux-kernel@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+	Thu, 30 Sep 2010 18:48:40 -0400
+Subject: Re: [RFC 1/2] genetlink: introduce pre_doit/post_doit hooks
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Julian Calaby <julian.calaby@gmail.com>
+Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
+	tgraf@suug.ch
+In-Reply-To: <1285886821.5137.29.camel@jlt3.sipsolutions.net>
+References: <20100930211013.472957770@sipsolutions.net>
+	 <20100930211131.021309930@sipsolutions.net>
+	 <AANLkTik9+zA4PPPx=q6CRM-sgOjjECJdtJTgkCG9pGAY@mail.gmail.com>
+	 <1285886690.5137.28.camel@jlt3.sipsolutions.net>
+	 <1285886821.5137.29.camel@jlt3.sipsolutions.net>
+Content-Type: text/plain; charset="UTF-8"
+Date: Fri, 01 Oct 2010 00:49:15 +0200
+Message-ID: <1285886955.5137.31.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Oct 15, 2010 at 12:20 PM, Greg KH <greg@kroah.com> wrote:
-> On Fri, Oct 15, 2010 at 12:05:00PM -0700, Luis R. Rodriguez wrote:
->> Furthermore, I realize that at times a vendor may have a patch that
->> although it did not make it into the stable release of the kernel it
->> may be important for the vendor for some customers, so because of this
->> we have the linux-next-cherry-picks/ directory.
->
-> I'd be interested in taking these patches for -stable releases, if they
-> are in Linus's tree already, so feel free to forward them on to
-> stable@kernel.org if you get them.
+On Fri, 2010-10-01 at 00:47 +0200, Johannes Berg wrote:
+> On Fri, 2010-10-01 at 00:44 +0200, Johannes Berg wrote:
+> > On Fri, 2010-10-01 at 08:41 +1000, Julian Calaby wrote:
+> > 
+> > > >  d) include two private pointers in each info
+> > > >    struct passed between all these operations
+> > > >    including doit(). (It's two because I'll
+> > > >    need two in nl80211 -- can be extended.)
+> > > 
+> > > Stupid question:
+> > > 
+> > > Why not have a priv struct rather than an arbitrary array of two pointers?
+> > 
+> > It'd have to be dynamically allocated, and the "arbitrary" array of two
+> > pointers can be on the stack.
+> 
+> Maybe I should elaborate -- a priv struct basically means just a single
+> pointer, and then I'd have to allocate something to hold two pointers in
+> nl80211 and assign it to that single pointer.
 
-Oh sweet, thanks, will do!!! We have one for sure coming up soon, will
-be sure to Cc stable for it.
+Come to think of it -- I could get away with a single pointer, since, if
+both are assigned,
 
-  Luis
+user_ptr[0] == wiphy_to_rdev(((netdev *)user_ptr[1])->ieee80211_ptr->wiphy)
+
+but that's a lot of pointy things, and some functions only have the rdev
+so it gets more complex. I think allowing two private pointers is a
+decent compromise.
+
+johannes
+
