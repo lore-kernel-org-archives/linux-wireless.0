@@ -1,37 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([147.243.1.47]:43218 "EHLO mgw-sa01.nokia.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751098Ab0IHRxD (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 8 Sep 2010 13:53:03 -0400
-Subject: Re: [PATCH v1 0/8] SDIO Runtime PM Support
-From: Luciano Coelho <luciano.coelho@nokia.com>
-To: ext Ohad Ben-Cohen <ohad@wizery.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"linux-mmc@vger.kernel.org" <linux-mmc@vger.kernel.org>,
-	"akpm@linux-foundation.org" <akpm@linux-foundation.org>,
-	San Mehat <san@google.com>,
-	"Quadros Roger (Nokia-MS/Helsinki)" <roger.quadros@nokia.com>,
-	Nicolas Pitre <nico@fluxnic.net>,
-	Gao Yunpeng <yunpeng.gao@intel.com>
-In-Reply-To: <1283858949-11073-1-git-send-email-ohad@wizery.com>
-References: <1283858949-11073-1-git-send-email-ohad@wizery.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Wed, 08 Sep 2010 10:52:24 -0700
-Message-ID: <1283968344.9120.22.camel@capsicum>
-Mime-Version: 1.0
+Received: from mail-gy0-f174.google.com ([209.85.160.174]:46154 "EHLO
+	mail-gy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753778Ab0I3Rda convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 30 Sep 2010 13:33:30 -0400
+Received: by gye5 with SMTP id 5so785990gye.19
+        for <linux-wireless@vger.kernel.org>; Thu, 30 Sep 2010 10:33:29 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <9D3ED2EB2589B641B6CCA9F529CAA6A2FC5433@exbe12.nasstar-t1.net>
+References: <9D3ED2EB2589B641B6CCA9F529CAA6A2F258CB@exbe12.nasstar-t1.net>
+ <AANLkTi=aBPTYZB62Jup4=10_D2wxEgVaBormJcZb6qyT@mail.gmail.com> <9D3ED2EB2589B641B6CCA9F529CAA6A2FC5433@exbe12.nasstar-t1.net>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Thu, 30 Sep 2010 10:33:09 -0700
+Message-ID: <AANLkTinAnawV3JThYNdovcBY4HaUOH-Sydwi1JKKoz+W@mail.gmail.com>
+Subject: Re: [ath9k-devel] Modulation schemes on ath9k
+To: Mike Pithouse <mike.pithouse@vegastream.com>,
+	Johannes Berg <johannes@sipsolutions.net>
+Cc: ath9k-devel@venema.h4ckr.net,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2010-09-07 at 13:29 +0200, ext Ohad Ben-Cohen wrote:
-> This patchset introduces runtime PM support to SDIO cards.
+On Thu, Sep 30, 2010 at 10:26 AM, Mike Pithouse
+<mike.pithouse@vegastream.com> wrote:
+> Just the ticket - thank you.
+>
+> I see there's currently some 'inactive' code that will allow the same command to be used to set the MCS index.
+>
+> Do you know when/if this code will be available?  Alternatively, is there another method currently available to set MCS index?
 
-I guess this whole patchset should be pulled via the mmc tree, since
-there are more mmc patches, if that's fine with Andrew.
+Johannes, is this a TODO still?
 
-I haven't checked the mmc patches, since I'm not very familiar with that
-area, but the wl1271 driver change is ack from me.
+  Luis
 
--- 
-Cheers,
-Luca.
-
+> Thanks, Mike.
+>
+>
+>
+> -----Original Message-----
+> From: Luis R. Rodriguez [mailto:mcgrof@gmail.com]
+> Sent: 24 September 2010 16:45
+> To: Mike Pithouse
+> Cc: ath9k-devel@venema.h4ckr.net
+> Subject: Re: [ath9k-devel] Modulation schemes on ath9k
+>
+> On Fri, Sep 24, 2010 at 7:53 AM, Mike Pithouse
+> <mike.pithouse@vegastream.com> wrote:
+>> Hi all,
+>>
+>>
+>>
+>> Is is possible to set an ath9k-based access point’s Modulation scheme using
+>> iw or similar?
+>
+> iw dev <devname> set bitrates [legacy-<2.4|5> <legacy rate in Mbps>*]
+>
+>  Luis
+>
