@@ -1,43 +1,106 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:50548 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753386Ab0JEOTo (ORCPT
+Received: from mail-qw0-f46.google.com ([209.85.216.46]:32898 "EHLO
+	mail-qw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756583Ab0I3WVQ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 5 Oct 2010 10:19:44 -0400
-Subject: [PATCH] nl80211: fix remain-on-channel documentation
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
-Date: Tue, 05 Oct 2010 16:19:42 +0200
-Message-ID: <1286288382.3641.12.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+	Thu, 30 Sep 2010 18:21:16 -0400
+Received: by qwh6 with SMTP id 6so1070343qwh.19
+        for <linux-wireless@vger.kernel.org>; Thu, 30 Sep 2010 15:21:15 -0700 (PDT)
+MIME-Version: 1.0
+Date: Thu, 30 Sep 2010 18:21:14 -0400
+Message-ID: <AANLkTimN4=OcBpdVbCiO6+_n6daBD3ss+jcbmRA0MzN2@mail.gmail.com>
+Subject: [PATCH 3/3] mac80211: fix for WDS interfaces
+From: Bill Jordan <bjordan@rajant.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	Johannes Berg <johannes@sipsolutions.net>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+Initialize the rate table for WDS interfaces, and
+add cases to allow WDS packets to pass the xmit and receive
+tests.
 
-The documentation for NL80211_CMD_REMAIN_ON_CHANNEL
-isn't accurate, an interface index is required by
-the command. Update it accordingly.
-
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Bill Jordan <bjordan@rajant.com>
 ---
- include/linux/nl80211.h |    4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+ net/mac80211/iface.c |    3 +++
+ net/mac80211/main.c  |    3 +++
+ net/mac80211/rx.c    |    1 +
+ net/mac80211/tx.c    |    3 +++
+ 4 files changed, 10 insertions(+), 0 deletions(-)
 
---- wireless-testing.orig/include/linux/nl80211.h	2010-10-05 15:00:30.000000000 +0200
-+++ wireless-testing/include/linux/nl80211.h	2010-10-05 15:00:49.000000000 +0200
-@@ -315,8 +315,8 @@
-  *	channel for the specified amount of time. This can be used to do
-  *	off-channel operations like transmit a Public Action frame and wait for
-  *	a response while being associated to an AP on another channel.
-- *	%NL80211_ATTR_WIPHY or %NL80211_ATTR_IFINDEX is used to specify which
-- *	radio is used. %NL80211_ATTR_WIPHY_FREQ is used to specify the
-+ *	%NL80211_ATTR_IFINDEX is used to specify which interface (and thus
-+ *	radio) is used. %NL80211_ATTR_WIPHY_FREQ is used to specify the
-  *	frequency for the operation and %NL80211_ATTR_WIPHY_CHANNEL_TYPE may be
-  *	optionally used to specify additional channel parameters.
-  *	%NL80211_ATTR_DURATION is used to specify the duration in milliseconds
+diff --git a/net/mac80211/iface.c b/net/mac80211/iface.c
+index 6678573..1e91984 100644
+--- a/net/mac80211/iface.c
++++ b/net/mac80211/iface.c
+@@ -24,6 +24,7 @@
+ #include "led.h"
+ #include "driver-ops.h"
+ #include "wme.h"
++#include "rate.h"
 
+ /**
+  * DOC: Interface list locking
+@@ -301,6 +302,8 @@ static int ieee80211_do_open(struct net_device
+*dev, bool coming_up)
+ 			/* STA has been freed */
+ 			goto err_del_interface;
+ 		}
++
++		rate_control_rate_init(sta);
+ 	}
 
+ 	/*
+diff --git a/net/mac80211/main.c b/net/mac80211/main.c
+index e24fa5b..4ea88dd 100644
+--- a/net/mac80211/main.c
++++ b/net/mac80211/main.c
+@@ -201,6 +201,8 @@ void ieee80211_bss_info_change_notify(struct
+ieee80211_sub_if_data *sdata,
+ 		sdata->vif.bss_conf.bssid = sdata->u.ibss.bssid;
+ 	else if (sdata->vif.type == NL80211_IFTYPE_AP)
+ 		sdata->vif.bss_conf.bssid = sdata->vif.addr;
++	else if (sdata->vif.type == NL80211_IFTYPE_WDS)
++		sdata->vif.bss_conf.bssid = NULL;
+ 	else if (ieee80211_vif_is_mesh(&sdata->vif)) {
+ 		sdata->vif.bss_conf.bssid = zero;
+ 	} else {
+@@ -211,6 +213,7 @@ void ieee80211_bss_info_change_notify(struct
+ieee80211_sub_if_data *sdata,
+ 	switch (sdata->vif.type) {
+ 	case NL80211_IFTYPE_AP:
+ 	case NL80211_IFTYPE_ADHOC:
++	case NL80211_IFTYPE_WDS:
+ 	case NL80211_IFTYPE_MESH_POINT:
+ 		break;
+ 	default:
+diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
+index 0b0e83e..b3e161f 100644
+--- a/net/mac80211/rx.c
++++ b/net/mac80211/rx.c
+@@ -819,6 +819,7 @@ ieee80211_rx_h_check(struct ieee80211_rx_data *rx)
+ 	if (unlikely((ieee80211_is_data(hdr->frame_control) ||
+ 		      ieee80211_is_pspoll(hdr->frame_control)) &&
+ 		     rx->sdata->vif.type != NL80211_IFTYPE_ADHOC &&
++		     rx->sdata->vif.type != NL80211_IFTYPE_WDS &&
+ 		     (!rx->sta || !test_sta_flags(rx->sta, WLAN_STA_ASSOC)))) {
+ 		if ((!ieee80211_has_fromds(hdr->frame_control) &&
+ 		     !ieee80211_has_tods(hdr->frame_control) &&
+diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
+index e1733dc..258fbdb 100644
+--- a/net/mac80211/tx.c
++++ b/net/mac80211/tx.c
+@@ -273,6 +273,9 @@ ieee80211_tx_h_check_assoc(struct ieee80211_tx_data *tx)
+ 		 */
+ 		return TX_DROP;
+
++	if (tx->sdata->vif.type == NL80211_IFTYPE_WDS)
++		return TX_CONTINUE;
++
+ 	if (tx->sdata->vif.type == NL80211_IFTYPE_MESH_POINT)
+ 		return TX_CONTINUE;
+
+-- 
+1.7.2.3
