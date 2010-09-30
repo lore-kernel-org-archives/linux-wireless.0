@@ -1,54 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f46.google.com ([209.85.161.46]:46469 "EHLO
-	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751794Ab0JAFnB (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:47027 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750957Ab0I3WzR (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 1 Oct 2010 01:43:01 -0400
-Received: by fxm14 with SMTP id 14so415255fxm.19
-        for <linux-wireless@vger.kernel.org>; Thu, 30 Sep 2010 22:42:58 -0700 (PDT)
-From: Helmut Schaa <helmut.schaa@googlemail.com>
-To: Joshua Smith <JoshuaESmith@charter.net>
-Subject: Re: Question about starting up an AP
-Date: Fri, 1 Oct 2010 07:42:07 +0200
-Cc: "linux-wireless" <linux-wireless@vger.kernel.org>,
-	users@rt2x00.serialmonkey.com, Ivo van Doorn <ivdoorn@gmail.com>
-References: <DA0C92FD-F6BF-4746-9BE1-A643A0D70F7A@kaon.com> <71135D34-18F6-4909-A8AB-E7390FA73049@charter.net> <201009301814.47318.helmut.schaa@googlemail.com>
-In-Reply-To: <201009301814.47318.helmut.schaa@googlemail.com>
-MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="us-ascii"
-Message-Id: <201010010742.07605.helmut.schaa@googlemail.com>
+	Thu, 30 Sep 2010 18:55:17 -0400
+Subject: Re: [RFC 1/2] genetlink: introduce pre_doit/post_doit hooks
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Julian Calaby <julian.calaby@gmail.com>
+Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
+	tgraf@suug.ch
+In-Reply-To: <AANLkTimVMGHNkK=o650qzZfvUp3mWRAG_=60etVbEBxh@mail.gmail.com>
+References: <20100930211013.472957770@sipsolutions.net>
+	 <20100930211131.021309930@sipsolutions.net>
+	 <AANLkTik9+zA4PPPx=q6CRM-sgOjjECJdtJTgkCG9pGAY@mail.gmail.com>
+	 <1285886690.5137.28.camel@jlt3.sipsolutions.net>
+	 <1285886821.5137.29.camel@jlt3.sipsolutions.net>
+	 <1285886955.5137.31.camel@jlt3.sipsolutions.net>
+	 <AANLkTimVMGHNkK=o650qzZfvUp3mWRAG_=60etVbEBxh@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Fri, 01 Oct 2010 00:55:52 +0200
+Message-ID: <1285887352.5137.34.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Joshua,
+On Fri, 2010-10-01 at 08:51 +1000, Julian Calaby wrote:
 
-Am Donnerstag 30 September 2010 schrieb Helmut Schaa:
-> Am Donnerstag 30 September 2010 schrieb Joshua Smith:
-> > I think I have a clue about the WPDMA TX/RX busy bug.  I was having trouble
-> > using the latest compat-wireless with USB dongle I have (ID AB50:2019
-> > rt73usb), so I tried rolling Helmut's "oops" fix into:
-> > 
-> > compat-wireless-2010-07-15
-> > 
-> > which I have been using successfully for the last few months.  Lo and behold,
-> > this version does *NOT* exhibit the TX/RX busy error.  So whatever is causing
-> > that problem was introduced between 7/15/2010 and 9/20/2010.
+> > Come to think of it -- I could get away with a single pointer, since, if
+> > both are assigned,
+> >
+> > user_ptr[0] == wiphy_to_rdev(((netdev *)user_ptr[1])->ieee80211_ptr->wiphy)
+> >
+> > but that's a lot of pointy things, and some functions only have the rdev
+> > so it gets more complex. I think allowing two private pointers is a
+> > decent compromise.
 > 
-> Thanks for the analysis Joshua! Since this is a regression I guess we
-> should try to find out quickly which commit introduced it (and fix it up
-> of course) ...
+> Come to think of it -- if someone wanted to have a massive structure
+> with 10 pointers and a set of random data structures, then they could
+> easily create their priv struct and assign it to user_ptr[0], hence
+> rendering my argument null and void.
 
-Unfortunately during that time a lot of rt2x00 patches went into
-wireless-testing. However, there's one suspicious commit that touches the
-relevant code: "rt2x00: Merge rt2800{pci/usb} radio enabling/disabling code
-to rt2800lib".
+Oh, well, I thought your argument was that it was arbitrary and not
+really necessary :-)
 
-This is again a shot in the dark but worth a try. Could you please revert this
-commit [1] from the newer compat-wireless tarball and try if it fixes the "DMA
-Busy" issue?
+Also, this rather cheap, it just needs a bit more stack space in a place
+that isn't typically deeply nested. So if some protocol came around and
+needed three pointers, I'd probably advocate just bumping it to three.
+At some point I might draw a line (10 is probably too much).
 
-Thanks Joshua,
-Helmut
+But you're right, of course, they can just use the first one and put
+something dynamically allocated into that, if really needed.
 
-[1] http://git.kernel.org/?p=linux/kernel/git/linville/wireless-testing.git;a=commit;h=b9a07ae9d9e09662013992088fd58ffbcb2f9a30
+johannes
+
