@@ -1,77 +1,117 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ww0-f44.google.com ([74.125.82.44]:43571 "EHLO
-	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758076Ab0IXUV0 convert rfc822-to-8bit (ORCPT
+Received: from nyc-nss1.cypresscom.net ([64.190.13.53]:44946 "EHLO
+	nyc-nss1.cypresscom.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752925Ab0I3QCE convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 24 Sep 2010 16:21:26 -0400
-Subject: Re: [PATCH v3] omap: beagle: add support for wl1271 on the board file
+	Thu, 30 Sep 2010 12:02:04 -0400
+Subject: Re: Question about starting up an AP
 Mime-Version: 1.0 (Apple Message framework v1081)
-Content-Type: text/plain; charset=us-ascii
-From: Koen Kooi <koen@dominion.thruhere.net>
-In-Reply-To: <1285358414.9779.28.camel@powerslave>
-Date: Fri, 24 Sep 2010 22:21:20 +0200
-Cc: Tony Lindgren <tony@atomide.com>,
-	"ext John W. Linville" <linville@tuxdriver.com>,
-	"linux-omap@vger.kernel.org" <linux-omap@vger.kernel.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Ido Yariv <ido@wizery.com>, Ohad Ben-Cohen <ohad@wizery.com>
-Message-Id: <35E33C53-CABC-4367-BDAF-933695A550DF@dominion.thruhere.net>
-References: <1285236215-21136-1-git-send-email-luciano.coelho@nokia.com> <20100924180316.GE8077@tuxdriver.com> <1285354249.9779.3.camel@powerslave> <20100924191139.GI4211@atomide.com> <8004B807-6120-41C0-979B-214BFB75E5CA@dominion.thruhere.net> <1285358414.9779.28.camel@powerslave>
-To: Luciano Coelho <luciano.coelho@nokia.com>
+Content-Type: text/plain; charset=windows-1252
+From: Joshua Smith <JoshuaESmith@charter.net>
+In-Reply-To: <C4D5DF09-82F0-48B4-9D64-6621B3C82932@kaon.com>
+Date: Thu, 30 Sep 2010 11:52:29 -0400
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	users@rt2x00.serialmonkey.com
+Message-Id: <71135D34-18F6-4909-A8AB-E7390FA73049@charter.net>
+References: <DA0C92FD-F6BF-4746-9BE1-A643A0D70F7A@kaon.com> <201009272143.52283.helmut.schaa@googlemail.com> <EA2A527E-E8DA-4612-B8CB-518E2C6BA7D2@kaon.com> <201009272235.42545.helmut.schaa@googlemail.com> <C4D5DF09-82F0-48B4-9D64-6621B3C82932@kaon.com>
+To: Helmut Schaa <helmut.schaa@googlemail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+I think I have a clue about the WPDMA TX/RX busy bug.  I was having trouble using the latest compat-wireless with USB dongle I have (ID AB50:2019 rt73usb), so I tried rolling Helmut's "oops" fix into:
 
-Op 24 sep 2010, om 22:00 heeft Luciano Coelho het volgende geschreven:
+compat-wireless-2010-07-15
 
-> On Fri, 2010-09-24 at 21:42 +0200, ext Koen Kooi wrote:
->> Op 24 sep 2010, om 21:11 heeft Tony Lindgren het volgende geschreven:
->> 
->>> * Luciano Coelho <luciano.coelho@nokia.com> [100924 11:42]:
->>>> On Fri, 2010-09-24 at 20:03 +0200, ext John W. Linville wrote:
->>>>> On Thu, Sep 23, 2010 at 01:03:35PM +0300, Luciano Coelho wrote:
->>>>>> Add board configuration for the wl1271 daughter board.  This patch is based
->>>>>> on Ohad Ben-Cohen's patches for Zoom boards.
->>>>>> 
->>>>>> Cc: Ohad Ben-Cohen <ohad@wizery.com>
->>>>>> Signed-off-by: Luciano Coelho <luciano.coelho@nokia.com>
->>>>>> ---
->>>>>> from v2 to v3: removed accidental change to wl1271.h
->>>>> 
->>>>> I presume that this should come through my tree as well (since it
->>>>> contains the move of wl12xx.h)?
->>>> 
->>>> Yes, this is based on your tree.  But please hold on, because there were
->>>> some comments (namely, the expansion board should be detected, not
->>>> configured for wl1271 by default), which I still have to fix.  I'm
->>>> waiting for the manufacturer of the expansion board to provide me with
->>>> some more info for proper detection.
->>>> 
->>>> Also, I know that there are some other work being done in the beagle
->>>> board file, so we may need to rethink how to sync this.
->>>> 
->>>> So, for now, let's skip this patch and I'll provide another one when
->>>> these issues are addressed.
->>> 
->>> You could also do it based on some kernel cmdline option. Of course
->>> detection during the runtime would be better.
->> 
->> That's what we're currently doing in the beagle kernels: http://gitorious.org/beagleboard-validation/linux/commit/17c1b214b918c6f9efc5579134a7ff71d51b60bf
->> 
->> That needs forward porting to .37 before I can submit is as RFC here :)
+which I have been using successfully for the last few months.  Lo and behold, this version does *NOT* exhibit the TX/RX busy error.  So whatever is causing that problem was introduced between 7/15/2010 and 9/20/2010.
+
+This leaves me très happy, since with the "oops" fix, I can restart hostapd at will, and the card never crashes.  Woo hoo!
+
+-Joshua
+
+On Sep 29, 2010, at 2:21 PM, Joshua Smith wrote:
+
+> OK, I have a working system now.  It's not pretty, but it's better than where I was.
 > 
-> Yes! I have seen that as pointed out by Robert.  It would be nice if you
-> could port this soon(ish) so that others can start using it (ok, maybe
-> not many people, but at least me :P)
+> - Using compat-wireless-2010-09-20, with the patch "rt2x00: Fix oops caused by error path in rt2x00lib_start"
+>  Compiled with:
+> CONFIG_RT2X00_DEBUG=y
+> CONFIG_RT2X00_LIB_DEBUGFS=y
+>  and all the other DEBUGFS also set to y
 > 
-> What would you think about having the actual probing moved from u-boot
-> to the kernel? Do you think that would make sense or are there some
-> other reasons for having it in the bootloader?
+> - Using a 2.6.27.8 kernel compiled with debug_fs support
+> 
+> When my system comes up, I try to start hostapd.  This may succeed, or it may fail because of the error:
+> 
+> phy0 -> rt2800_wait_wpdma_ready: Error - WPDMA TX/RX busy, aborting.
+> phy0 -> rt2800pci_set_device_state: Error - Device failed to enter state 4 (-5).
+> 
+> If the error occurs, try starting hostapd one more time.  (This hardly ever works.)  If it fails again, reboot.
+> 
+> If we got past hostapd starting, then we need to see whether the card is deaf.  Do this by polling
+> /sys/kernel/debug/ieee80211/phy0/rt2800pci/queue/queue
+> for a while, to see if the RX queue counts ever get over zero.
+> 
+> If they do, we're good to go.
+> 
+> If not, kick the card this way:
+> 
+> echo 1 > /sys/kernel/debug/ieee80211/phy0/reset
+> 
+> Now check to see if that hit the WPDMA TX/RX busy error.  If it did, reboot.  If not, assume that restarting the card fixed the RX queue (it always seems to), and we're good to go.
+> 
+> For your amusement and horror, I've pasted in the bash script below.
+> 
+> At this point, if I could eliminate the WPDMA TX/RX busy error, I'd be able to eliminate all the reboots, and make a more sane system.  I'm still open to any and all suggestions on how to clear that condition!
+> 
+> -Joshua
+> 
+> …hideous bash script...
+> 
+>  ifconfig wlan0 down
+> 
+>  sleep 1
+>  if ! hostapd -B /etc/hostapd.conf
+>  then
+>    echo "Problem starting Wi-Fi hardware.  Retrying..."
+>    sleep 3
+>    if ! hostapd -B /etc/hostapd.conf
+>    then
+>      echo -e "***\n*** Unable to initialize Wi-Fi hardware\n***\n***\n*** Restarting...\n***"
+>      cleanreboot
+>      sleep 60
+>    fi
+>  fi
+>  sleep 1
+> 
+>  mount -t debugfs none /sys/kernel/debug/
+>  if [ -e /sys/kernel/debug/ieee80211/phy0/rt2800pci/ ]
+>  then
+>    echo "Testing Wi-Fi hardware..."
+>    RETRY=1
+>    while [ $RETRY -lt 20 ]
+>    do
+>      if [ `cat /sys/kernel/debug/ieee80211/phy0/rt2800pci/queue/queue | egrep -c '^14.0.24.24.0.0.0$'` -eq 0 ]
+>      then
+>        break
+>      fi
+>      echo -n '.'
+>      sleep 1
+>      RETRY=$((RETRY+1))
+>    done
+>    if [ $RETRY -eq 20 ]
+>    then
+>      echo "failed.  Resetting..."
+>      echo 1 > /sys/kernel/debug/ieee80211/phy0/reset
+>      sleep 1
+>      if [ `dmesg | tail -n 30 | grep -c "rt2800_wait_wpdma_ready"` -gt 0 ]
+>      then
+>        echo -e "***\n*** Unable to reset Wi-Fi hardware\n***\n***\n*** Restarting...\n***"
+>        cleanreboot
+>        sleep 60
+>      fi
+>    else
+>     echo "Passed!"
+>    fi
+>  fi
+> 
 
-It would make a lot of sense, but when we did the code the in-kernel muxing was pretty much unusable for this goal. I'd prefer to get the uboot based detection way into the kernel first before embarking on the bigger fully in-kernel stuff.
-
-Note that on beagleboard-xM we have an additional problem with the camera modules, the different sensors use the same i2c address, which means it completely falls down with the current i2c implementation. Does anyone have any hints on how to read a register over i2c before registering the i2c platform data?
-
-regards,
-
-Koen
