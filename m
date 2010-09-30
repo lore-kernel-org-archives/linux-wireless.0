@@ -1,559 +1,225 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ey0-f174.google.com ([209.85.215.174]:51002 "EHLO
-	mail-ey0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750719Ab0IOJrj (ORCPT
+Received: from mail-fx0-f46.google.com ([209.85.161.46]:52920 "EHLO
+	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752549Ab0I3N2j (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 15 Sep 2010 05:47:39 -0400
-From: Andy Shevchenko <andy.shevchenko@gmail.com>
-To: linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
-	linux-kernel@vger.kernel.org
-Cc: Greg Kroah-Hartman <gregkh@suse.de>,
-	Nohee Ko <noheek@broadcom.com>,
-	Andy Shevchenko <andy.shevchenko@gmail.com>
-Subject: [PATCH 2/2] staging: brcm80211: use string native library
-Date: Wed, 15 Sep 2010 12:47:18 +0300
-Message-Id: <1284544038-5696-2-git-send-email-andy.shevchenko@gmail.com>
-In-Reply-To: <1284544038-5696-1-git-send-email-andy.shevchenko@gmail.com>
-References: <1284544038-5696-1-git-send-email-andy.shevchenko@gmail.com>
+	Thu, 30 Sep 2010 09:28:39 -0400
+Received: by mail-fx0-f46.google.com with SMTP id 4so674500fxm.19
+        for <linux-wireless@vger.kernel.org>; Thu, 30 Sep 2010 06:28:38 -0700 (PDT)
+From: Ido Yariv <ido@wizery.com>
+To: Luciano Coelho <luciano.coelho@nokia.com>,
+	linux-wireless@vger.kernel.org
+Cc: Juuso Oikarinen <juuso.oikarinen@nokia.com>,
+	Ohad Ben-Cohen <ohad@wizery.com>, Ido Yariv <ido@wizery.com>
+Subject: [PATCH v3 1/3] wl1271: Handle large SPI transfers
+Date: Thu, 30 Sep 2010 15:28:26 +0200
+Message-Id: <1285853308-24290-2-git-send-email-ido@wizery.com>
+In-Reply-To: <1285853308-24290-1-git-send-email-ido@wizery.com>
+References: <1285853308-24290-1-git-send-email-ido@wizery.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Andy Shevchenko <andy.shevchenko@gmail.com>
----
- drivers/staging/brcm80211/include/bcmutils.h |   13 --
- drivers/staging/brcm80211/phy/wlc_phy_cmn.c  |    3 +-
- drivers/staging/brcm80211/sys/wl_mac80211.c  |    4 +-
- drivers/staging/brcm80211/sys/wlc_bmac.c     |    5 +-
- drivers/staging/brcm80211/sys/wlc_mac80211.c |    3 +-
- drivers/staging/brcm80211/util/bcmsrom.c     |    3 +-
- drivers/staging/brcm80211/util/bcmutils.c    |  268 +-------------------------
- drivers/staging/brcm80211/util/bcmwifi.c     |    7 +-
- drivers/staging/brcm80211/util/hndpmu.c      |    9 +-
- 9 files changed, 23 insertions(+), 292 deletions(-)
+The HW supports up to 4095 bytes transfers via SPI. The SPI read & write
+operations do not handle larger transfers, causing the HW to stall in such
+cases.
 
-diff --git a/drivers/staging/brcm80211/include/bcmutils.h b/drivers/staging/brcm80211/include/bcmutils.h
-index f17dbb1..4aa3800 100644
---- a/drivers/staging/brcm80211/include/bcmutils.h
-+++ b/drivers/staging/brcm80211/include/bcmutils.h
-@@ -165,19 +165,6 @@ extern "C" {
- #define	PKTPRIO_UPD	0x400	/* DSCP used to update VLAN prio */
- #define	PKTPRIO_DSCP	0x800	/* DSCP prio found */
+Fix this by fragmenting large transfers into smaller chunks, and
+transferring each one separately.
+
+Signed-off-by: Ido Yariv <ido@wizery.com>
+Tested-by: Juuso Oikarinen <juuso.oikarinen@nokia.com>
+---
+ drivers/net/wireless/wl12xx/wl1271_spi.c |  140 ++++++++++++++++++------------
+ 1 files changed, 86 insertions(+), 54 deletions(-)
+
+diff --git a/drivers/net/wireless/wl12xx/wl1271_spi.c b/drivers/net/wireless/wl12xx/wl1271_spi.c
+index 75cbf36..ef80168 100644
+--- a/drivers/net/wireless/wl12xx/wl1271_spi.c
++++ b/drivers/net/wireless/wl12xx/wl1271_spi.c
+@@ -63,6 +63,11 @@
+ 		((WL1271_BUSY_WORD_LEN - 4) / sizeof(u32))
+ #define HW_ACCESS_WSPI_INIT_CMD_MASK  0
  
--/* string */
--	extern int BCMROMFN(bcm_atoi) (char *s);
--	extern ulong BCMROMFN(bcm_strtoul) (char *cp, char **endp, uint base);
--	extern char *BCMROMFN(bcmstrstr) (char *haystack, char *needle);
--	extern char *BCMROMFN(bcmstrcat) (char *dest, const char *src);
--	extern char *BCMROMFN(bcmstrncat) (char *dest, const char *src,
--					   uint size);
--	extern ulong wchar2ascii(char *abuf, ushort *wbuf, ushort wbuflen,
--				 ulong abuflen);
--	char *bcmstrtok(char **string, const char *delimiters, char *tokdelim);
--	int bcmstricmp(const char *s1, const char *s2);
--	int bcmstrnicmp(const char *s1, const char *s2, int cnt);
--
- /* ethernet address */
- 	extern char *bcm_ether_ntoa(const struct ether_addr *ea, char *buf);
- 	extern int BCMROMFN(bcm_ether_atoe) (char *p, struct ether_addr *ea);
-diff --git a/drivers/staging/brcm80211/phy/wlc_phy_cmn.c b/drivers/staging/brcm80211/phy/wlc_phy_cmn.c
-index f2e504e..18b9849 100644
---- a/drivers/staging/brcm80211/phy/wlc_phy_cmn.c
-+++ b/drivers/staging/brcm80211/phy/wlc_phy_cmn.c
-@@ -17,6 +17,7 @@
- #include <wlc_cfg.h>
- 
- #include <osl.h>
-+#include <linux/kernel.h>
- #include <bcmendian.h>
- #include <bcmnvram.h>
- #include <sbchipc.h>
-@@ -177,7 +178,7 @@ int phy_getintvar(phy_info_t *pi, const char *name)
- 	if (val == NULL)
- 		return 0;
- 
--	return bcm_strtoul(val, NULL, 0);
-+	return simple_strtoul(val, NULL, 0);
- }
- 
- void wlc_phyreg_enter(wlc_phy_t *pih)
-diff --git a/drivers/staging/brcm80211/sys/wl_mac80211.c b/drivers/staging/brcm80211/sys/wl_mac80211.c
-index 71bd463..5400360 100644
---- a/drivers/staging/brcm80211/sys/wl_mac80211.c
-+++ b/drivers/staging/brcm80211/sys/wl_mac80211.c
-@@ -1639,7 +1639,7 @@ static int __init wl_module_init(void)
- 	else {
- 		char *var = getvar(NULL, "wl_msglevel");
- 		if (var)
--			wl_msg_level = bcm_strtoul(var, NULL, 0);
-+			wl_msg_level = simple_strtoul(var, NULL, 0);
- 	}
- #ifndef WLC_HIGH_ONLY
- 	{
-@@ -1650,7 +1650,7 @@ static int __init wl_module_init(void)
- 		else {
- 			char *var = getvar(NULL, "phy_msglevel");
- 			if (var)
--				phyhal_msg_level = bcm_strtoul(var, NULL, 0);
-+				phyhal_msg_level = simple_strtoul(var, NULL, 0);
- 		}
- 	}
- #endif				/* WLC_HIGH_ONLY */
-diff --git a/drivers/staging/brcm80211/sys/wlc_bmac.c b/drivers/staging/brcm80211/sys/wlc_bmac.c
-index c22394d..eea1ffb 100644
---- a/drivers/staging/brcm80211/sys/wlc_bmac.c
-+++ b/drivers/staging/brcm80211/sys/wlc_bmac.c
-@@ -22,6 +22,7 @@
- #include <typedefs.h>
- #include <bcmdefs.h>
- #include <osl.h>
-+#include <linux/kernel.h>
- #include <proto/802.11.h>
- #include <bcmwifi.h>
- #include <bcmutils.h>
-@@ -760,12 +761,12 @@ BCMATTACHFN(wlc_bmac_attach) (wlc_info_t *wlc, uint16 vendor, uint16 device,
- 
- 		var = getvar(vars, "vendid");
- 		if (var) {
--			vendor = (uint16) bcm_strtoul(var, NULL, 0);
-+			vendor = (uint16) simple_strtoul(var, NULL, 0);
- 			WL_ERROR(("Overriding vendor id = 0x%x\n", vendor));
- 		}
- 		var = getvar(vars, "devid");
- 		if (var) {
--			uint16 devid = (uint16) bcm_strtoul(var, NULL, 0);
-+			uint16 devid = (uint16) simple_strtoul(var, NULL, 0);
- 			if (devid != 0xffff) {
- 				device = devid;
- 				WL_ERROR(("Overriding device id = 0x%x\n",
-diff --git a/drivers/staging/brcm80211/sys/wlc_mac80211.c b/drivers/staging/brcm80211/sys/wlc_mac80211.c
-index db9a7c2..1488a56 100644
---- a/drivers/staging/brcm80211/sys/wlc_mac80211.c
-+++ b/drivers/staging/brcm80211/sys/wlc_mac80211.c
-@@ -18,6 +18,7 @@
- #include <typedefs.h>
- #include <bcmdefs.h>
- #include <osl.h>
-+#include <linux/ctype.h>
- #include <bcmutils.h>
- #include <bcmwifi.h>
- #include <siutils.h>
-@@ -75,8 +76,6 @@
- #define W_REG(osh, r, v) RPC_WRITE_REG(osh, r, v)
- #endif
- 
--#include <linux/ctype.h>
--
- /*
-  * buffer length needed for wlc_format_ssid
-  * 32 SSID chars, max of 4 chars for each SSID char "\xFF", plus NULL.
-diff --git a/drivers/staging/brcm80211/util/bcmsrom.c b/drivers/staging/brcm80211/util/bcmsrom.c
-index a295ecb..2637a53 100644
---- a/drivers/staging/brcm80211/util/bcmsrom.c
-+++ b/drivers/staging/brcm80211/util/bcmsrom.c
-@@ -17,6 +17,7 @@
- #include <typedefs.h>
- #include <bcmdefs.h>
- #include <osl.h>
-+#include <linux/kernel.h>
- #include <stdarg.h>
- #include <bcmutils.h>
- #include <hndsoc.h>
-@@ -1924,7 +1925,7 @@ BCMATTACHFN(initvars_srom_pci) (si_t *sih, void *curmap, char **vars,
- 
- 		value = si_getdevpathvar(sih, "sromrev");
- 		if (value) {
--			sromrev = (uint8) bcm_strtoul(value, NULL, 0);
-+			sromrev = (uint8) simple_strtoul(value, NULL, 0);
- 			flash = TRUE;
- 			goto varscont;
- 		}
-diff --git a/drivers/staging/brcm80211/util/bcmutils.c b/drivers/staging/brcm80211/util/bcmutils.c
-index 3f521e9..cc548e0 100644
---- a/drivers/staging/brcm80211/util/bcmutils.c
-+++ b/drivers/staging/brcm80211/util/bcmutils.c
-@@ -18,6 +18,8 @@
- #include <bcmdefs.h>
- #include <stdarg.h>
- #include <osl.h>
-+#include <linux/ctype.h>
-+#include <linux/kernel.h>
- #include <bcmutils.h>
- #include <siutils.h>
- #include <bcmnvram.h>
-@@ -27,8 +29,6 @@
- #include <proto/802.1d.h>
- #include <proto/802.11.h>
- 
--#include <linux/ctype.h>
--
- #ifdef WLC_LOW
- /* nvram vars cache */
- static char *nvram_vars;
-@@ -492,271 +492,13 @@ void *BCMFASTPATH pktq_mdeq(struct pktq *pq, uint prec_bmp, int *prec_out)
- 	return p;
- }
- 
--ulong BCMROMFN(bcm_strtoul) (char *cp, char **endp, uint base)
--{
--	ulong result, last_result = 0, value;
--	bool minus;
--
--	minus = FALSE;
--
--	while (isspace(*cp))
--		cp++;
--
--	if (cp[0] == '+')
--		cp++;
--	else if (cp[0] == '-') {
--		minus = TRUE;
--		cp++;
--	}
--
--	if (base == 0) {
--		if (cp[0] == '0') {
--			if ((cp[1] == 'x') || (cp[1] == 'X')) {
--				base = 16;
--				cp = &cp[2];
--			} else {
--				base = 8;
--				cp = &cp[1];
--			}
--		} else
--			base = 10;
--	} else if (base == 16 && (cp[0] == '0')
--		   && ((cp[1] == 'x') || (cp[1] == 'X'))) {
--		cp = &cp[2];
--	}
--
--	result = 0;
--
--	while (isxdigit(*cp) &&
--	       (value =
--		isdigit(*cp) ? *cp - '0' : toupper(*cp) - 'A' + 10) <
--	       base) {
--		result = result * base + value;
--		/* Detected overflow */
--		if (result < last_result && !minus)
--			return (ulong) -1;
--		last_result = result;
--		cp++;
--	}
--
--	if (minus)
--		result = (ulong) (-(long)result);
--
--	if (endp)
--		*endp = (char *)cp;
--
--	return result;
--}
--
--int BCMROMFN(bcm_atoi) (char *s)
--{
--	return (int)bcm_strtoul(s, NULL, 10);
--}
--
--/* return pointer to location of substring 'needle' in 'haystack' */
--char *BCMROMFN(bcmstrstr) (char *haystack, char *needle)
--{
--	int len, nlen;
--	int i;
--
--	if ((haystack == NULL) || (needle == NULL))
--		return haystack;
--
--	nlen = strlen(needle);
--	len = strlen(haystack) - nlen + 1;
--
--	for (i = 0; i < len; i++)
--		if (memcmp(needle, &haystack[i], nlen) == 0)
--			return &haystack[i];
--	return NULL;
--}
--
--char *BCMROMFN(bcmstrcat) (char *dest, const char *src)
--{
--	char *p;
--
--	p = dest + strlen(dest);
--
--	while ((*p++ = *src++) != '\0')
--		;
--
--	return dest;
--}
--
--char *BCMROMFN(bcmstrncat) (char *dest, const char *src, uint size)
--{
--	char *endp;
--	char *p;
--
--	p = dest + strlen(dest);
--	endp = p + size;
--
--	while (p != endp && (*p++ = *src++) != '\0')
--		;
--
--	return dest;
--}
--
--/****************************************************************************
--* Function:   bcmstrtok
--*
--* Purpose:
--*  Tokenizes a string. This function is conceptually similiar to ANSI C strtok(),
--*  but allows strToken() to be used by different strings or callers at the same
--*  time. Each call modifies '*string' by substituting a NULL character for the
--*  first delimiter that is encountered, and updates 'string' to point to the char
--*  after the delimiter. Leading delimiters are skipped.
--*
--* Parameters:
--*  string      (mod) Ptr to string ptr, updated by token.
--*  delimiters  (in)  Set of delimiter characters.
--*  tokdelim    (out) Character that delimits the returned token. (May
--*                    be set to NULL if token delimiter is not required).
--*
--* Returns:  Pointer to the next token found. NULL when no more tokens are found.
--*****************************************************************************
--*/
--char *bcmstrtok(char **string, const char *delimiters, char *tokdelim)
--{
--	unsigned char *str;
--	unsigned long map[8];
--	int count;
--	char *nextoken;
--
--	if (tokdelim != NULL) {
--		/* Prime the token delimiter */
--		*tokdelim = '\0';
--	}
--
--	/* Clear control map */
--	for (count = 0; count < 8; count++) {
--		map[count] = 0;
--	}
--
--	/* Set bits in delimiter table */
--	do {
--		map[*delimiters >> 5] |= (1 << (*delimiters & 31));
--	} while (*delimiters++);
--
--	str = (unsigned char *)*string;
--
--	/* Find beginning of token (skip over leading delimiters). Note that
--	 * there is no token iff this loop sets str to point to the terminal
--	 * null (*str == '\0')
--	 */
--	while (((map[*str >> 5] & (1 << (*str & 31))) && *str) || (*str == ' ')) {
--		str++;
--	}
--
--	nextoken = (char *)str;
--
--	/* Find the end of the token. If it is not the end of the string,
--	 * put a null there.
--	 */
--	for (; *str; str++) {
--		if (map[*str >> 5] & (1 << (*str & 31))) {
--			if (tokdelim != NULL) {
--				*tokdelim = *str;
--			}
--
--			*str++ = '\0';
--			break;
--		}
--	}
--
--	*string = (char *)str;
--
--	/* Determine if a token has been found. */
--	if (nextoken == (char *)str) {
--		return NULL;
--	} else {
--		return nextoken;
--	}
--}
--
--#define xToLower(C) \
--	((C >= 'A' && C <= 'Z') ? (char)((int)C - (int)'A' + (int)'a') : C)
--
--/****************************************************************************
--* Function:   bcmstricmp
--*
--* Purpose:    Compare to strings case insensitively.
--*
--* Parameters: s1 (in) First string to compare.
--*             s2 (in) Second string to compare.
--*
--* Returns:    Return 0 if the two strings are equal, -1 if t1 < t2 and 1 if
--*             t1 > t2, when ignoring case sensitivity.
--*****************************************************************************
--*/
--int bcmstricmp(const char *s1, const char *s2)
--{
--	char dc, sc;
--
--	while (*s2 && *s1) {
--		dc = xToLower(*s1);
--		sc = xToLower(*s2);
--		if (dc < sc)
--			return -1;
--		if (dc > sc)
--			return 1;
--		s1++;
--		s2++;
--	}
--
--	if (*s1 && !*s2)
--		return 1;
--	if (!*s1 && *s2)
--		return -1;
--	return 0;
--}
--
--/****************************************************************************
--* Function:   bcmstrnicmp
--*
--* Purpose:    Compare to strings case insensitively, upto a max of 'cnt'
--*             characters.
--*
--* Parameters: s1  (in) First string to compare.
--*             s2  (in) Second string to compare.
--*             cnt (in) Max characters to compare.
--*
--* Returns:    Return 0 if the two strings are equal, -1 if t1 < t2 and 1 if
--*             t1 > t2, when ignoring case sensitivity.
--*****************************************************************************
--*/
--int bcmstrnicmp(const char *s1, const char *s2, int cnt)
--{
--	char dc, sc;
--
--	while (*s2 && *s1 && cnt) {
--		dc = xToLower(*s1);
--		sc = xToLower(*s2);
--		if (dc < sc)
--			return -1;
--		if (dc > sc)
--			return 1;
--		s1++;
--		s2++;
--		cnt--;
--	}
--
--	if (!cnt)
--		return 0;
--	if (*s1 && !*s2)
--		return 1;
--	if (!*s1 && *s2)
--		return -1;
--	return 0;
--}
--
- /* parse a xx:xx:xx:xx:xx:xx format ethernet address */
- int BCMROMFN(bcm_ether_atoe) (char *p, struct ether_addr *ea)
++/* HW limitation: maximum possible chunk size is 4095 bytes */
++#define WSPI_MAX_CHUNK_SIZE    4092
++
++#define WSPI_MAX_NUM_OF_CHUNKS (WL1271_AGGR_BUFFER_SIZE / WSPI_MAX_CHUNK_SIZE)
++
+ static inline struct spi_device *wl_to_spi(struct wl1271 *wl)
  {
- 	int i = 0;
+ 	return wl->if_priv;
+@@ -202,90 +207,117 @@ static int wl1271_spi_read_busy(struct wl1271 *wl)
+ static void wl1271_spi_raw_read(struct wl1271 *wl, int addr, void *buf,
+ 				size_t len, bool fixed)
+ {
+-	struct spi_transfer t[3];
++	struct spi_transfer t[2];
+ 	struct spi_message m;
+ 	u32 *busy_buf;
+ 	u32 *cmd;
++	u32 chunk_len;
  
- 	for (;;) {
--		ea->octet[i++] = (char)bcm_strtoul(p, &p, 16);
-+		ea->octet[i++] = (char)simple_strtoul(p, &p, 16);
- 		if (!*p++ || i == 6)
- 			break;
- 	}
-@@ -820,7 +562,7 @@ int getintvar(char *vars, const char *name)
- 	if (val == NULL)
- 		return 0;
+-	cmd = &wl->buffer_cmd;
+-	busy_buf = wl->buffer_busyword;
++	while (len > 0) {
++		chunk_len = min((size_t)WSPI_MAX_CHUNK_SIZE, len);
  
--	return bcm_strtoul(val, NULL, 0);
-+	return simple_strtoul(val, NULL, 0);
+-	*cmd = 0;
+-	*cmd |= WSPI_CMD_READ;
+-	*cmd |= (len << WSPI_CMD_BYTE_LENGTH_OFFSET) & WSPI_CMD_BYTE_LENGTH;
+-	*cmd |= addr & WSPI_CMD_BYTE_ADDR;
++		cmd = &wl->buffer_cmd;
++		busy_buf = wl->buffer_busyword;
+ 
+-	if (fixed)
+-		*cmd |= WSPI_CMD_FIXED;
++		*cmd = 0;
++		*cmd |= WSPI_CMD_READ;
++		*cmd |= (chunk_len << WSPI_CMD_BYTE_LENGTH_OFFSET) &
++			WSPI_CMD_BYTE_LENGTH;
++		*cmd |= addr & WSPI_CMD_BYTE_ADDR;
+ 
+-	spi_message_init(&m);
+-	memset(t, 0, sizeof(t));
++		if (fixed)
++			*cmd |= WSPI_CMD_FIXED;
+ 
+-	t[0].tx_buf = cmd;
+-	t[0].len = 4;
+-	t[0].cs_change = true;
+-	spi_message_add_tail(&t[0], &m);
++		spi_message_init(&m);
++		memset(t, 0, sizeof(t));
+ 
+-	/* Busy and non busy words read */
+-	t[1].rx_buf = busy_buf;
+-	t[1].len = WL1271_BUSY_WORD_LEN;
+-	t[1].cs_change = true;
+-	spi_message_add_tail(&t[1], &m);
++		t[0].tx_buf = cmd;
++		t[0].len = 4;
++		t[0].cs_change = true;
++		spi_message_add_tail(&t[0], &m);
+ 
+-	spi_sync(wl_to_spi(wl), &m);
++		/* Busy and non busy words read */
++		t[1].rx_buf = busy_buf;
++		t[1].len = WL1271_BUSY_WORD_LEN;
++		t[1].cs_change = true;
++		spi_message_add_tail(&t[1], &m);
+ 
+-	if (!(busy_buf[WL1271_BUSY_WORD_CNT - 1] & 0x1) &&
+-	    wl1271_spi_read_busy(wl)) {
+-		memset(buf, 0, len);
+-		return;
+-	}
++		spi_sync(wl_to_spi(wl), &m);
+ 
+-	spi_message_init(&m);
+-	memset(t, 0, sizeof(t));
++		if (!(busy_buf[WL1271_BUSY_WORD_CNT - 1] & 0x1) &&
++		    wl1271_spi_read_busy(wl)) {
++			memset(buf, 0, chunk_len);
++			return;
++		}
+ 
+-	t[0].rx_buf = buf;
+-	t[0].len = len;
+-	t[0].cs_change = true;
+-	spi_message_add_tail(&t[0], &m);
++		spi_message_init(&m);
++		memset(t, 0, sizeof(t));
+ 
+-	spi_sync(wl_to_spi(wl), &m);
++		t[0].rx_buf = buf;
++		t[0].len = chunk_len;
++		t[0].cs_change = true;
++		spi_message_add_tail(&t[0], &m);
++
++		spi_sync(wl_to_spi(wl), &m);
+ 
+-	wl1271_dump(DEBUG_SPI, "spi_read cmd -> ", cmd, sizeof(*cmd));
+-	wl1271_dump(DEBUG_SPI, "spi_read buf <- ", buf, len);
++		wl1271_dump(DEBUG_SPI, "spi_read cmd -> ", cmd, sizeof(*cmd));
++		wl1271_dump(DEBUG_SPI, "spi_read buf <- ", buf, chunk_len);
++
++		if (!fixed)
++			addr += chunk_len;
++		buf += chunk_len;
++		len -= chunk_len;
++	}
  }
  
- int getintvararray(char *vars, const char *name, uint8 index)
-@@ -836,7 +578,7 @@ int getintvararray(char *vars, const char *name, uint8 index)
+ static void wl1271_spi_raw_write(struct wl1271 *wl, int addr, void *buf,
+ 			  size_t len, bool fixed)
+ {
+-	struct spi_transfer t[2];
++	struct spi_transfer t[2 * WSPI_MAX_NUM_OF_CHUNKS];
+ 	struct spi_message m;
++	u32 commands[WSPI_MAX_NUM_OF_CHUNKS];
+ 	u32 *cmd;
++	u32 chunk_len;
++	int i;
  
- 	/* table values are always separated by "," or " " */
- 	while (*buf != '\0') {
--		val = bcm_strtoul(buf, &endp, 0);
-+		val = simple_strtoul(buf, &endp, 0);
- 		if (i == index) {
- 			return val;
- 		}
-diff --git a/drivers/staging/brcm80211/util/bcmwifi.c b/drivers/staging/brcm80211/util/bcmwifi.c
-index cb41d10..b69c12b 100644
---- a/drivers/staging/brcm80211/util/bcmwifi.c
-+++ b/drivers/staging/brcm80211/util/bcmwifi.c
-@@ -17,12 +17,11 @@
- #include <typedefs.h>
- 
- #include <osl.h>
-+#include <linux/ctype.h>
-+#include <linux/kernel.h>
- #include <bcmutils.h>
--#define strtoul(nptr, endptr, base) bcm_strtoul((nptr), (endptr), (base))
- #include <bcmwifi.h>
- 
--#include <linux/ctype.h>
+-	cmd = &wl->buffer_cmd;
 -
- /* Chanspec ASCII representation:
-  * <channel><band><bandwidth><ctl-sideband>
-  *   digit   [AB]     [N]        [UL]
-@@ -92,7 +91,7 @@ chanspec_t wf_chspec_aton(char *a)
- 	uint channel, band, bw, ctl_sb;
- 	char c;
+-	*cmd = 0;
+-	*cmd |= WSPI_CMD_WRITE;
+-	*cmd |= (len << WSPI_CMD_BYTE_LENGTH_OFFSET) & WSPI_CMD_BYTE_LENGTH;
+-	*cmd |= addr & WSPI_CMD_BYTE_ADDR;
+-
+-	if (fixed)
+-		*cmd |= WSPI_CMD_FIXED;
++	WARN_ON(len > WL1271_AGGR_BUFFER_SIZE);
  
--	channel = strtoul(a, &endp, 10);
-+	channel = simple_strtoul(a, &endp, 10);
+ 	spi_message_init(&m);
+ 	memset(t, 0, sizeof(t));
  
- 	/* check for no digits parsed */
- 	if (endp == a)
-diff --git a/drivers/staging/brcm80211/util/hndpmu.c b/drivers/staging/brcm80211/util/hndpmu.c
-index daa0198..1db1b16 100644
---- a/drivers/staging/brcm80211/util/hndpmu.c
-+++ b/drivers/staging/brcm80211/util/hndpmu.c
-@@ -17,6 +17,7 @@
- #include <typedefs.h>
- #include <bcmdefs.h>
- #include <osl.h>
-+#include <linux/kernel.h>
- #include <bcmutils.h>
- #include <siutils.h>
- #include <bcmdevs.h>
-@@ -663,13 +664,13 @@ static void si_pmu_res_masks(si_t *sih, uint32 * pmin, uint32 * pmax)
- 	val = getvar(NULL, "rmin");
- 	if (val != NULL) {
- 		PMU_MSG(("Applying rmin=%s to min_mask\n", val));
--		min_mask = (uint32) bcm_strtoul(val, NULL, 0);
-+		min_mask = (uint32) simple_strtoul(val, NULL, 0);
- 	}
- 	/* Apply nvram override to max mask */
- 	val = getvar(NULL, "rmax");
- 	if (val != NULL) {
- 		PMU_MSG(("Applying rmax=%s to max_mask\n", val));
--		max_mask = (uint32) bcm_strtoul(val, NULL, 0);
-+		max_mask = (uint32) simple_strtoul(val, NULL, 0);
- 	}
+-	t[0].tx_buf = cmd;
+-	t[0].len = sizeof(*cmd);
+-	spi_message_add_tail(&t[0], &m);
++	cmd = &commands[0];
++	i = 0;
++	while (len > 0) {
++		chunk_len = min((size_t)WSPI_MAX_CHUNK_SIZE, len);
  
- 	*pmin = min_mask;
-@@ -787,7 +788,7 @@ void BCMATTACHFN(si_pmu_res_init) (si_t *sih, osl_t *osh)
- 			 val, i));
- 		W_REG(osh, &cc->res_table_sel, (uint32) i);
- 		W_REG(osh, &cc->res_updn_timer,
--		      (uint32) bcm_strtoul(val, NULL, 0));
-+		      (uint32) simple_strtoul(val, NULL, 0));
- 	}
+-	t[1].tx_buf = buf;
+-	t[1].len = len;
+-	spi_message_add_tail(&t[1], &m);
++		*cmd = 0;
++		*cmd |= WSPI_CMD_WRITE;
++		*cmd |= (chunk_len << WSPI_CMD_BYTE_LENGTH_OFFSET) &
++			WSPI_CMD_BYTE_LENGTH;
++		*cmd |= addr & WSPI_CMD_BYTE_ADDR;
  
- 	/* Program resource dependencies table */
-@@ -838,7 +839,7 @@ void BCMATTACHFN(si_pmu_res_init) (si_t *sih, osl_t *osh)
- 			 i));
- 		W_REG(osh, &cc->res_table_sel, (uint32) i);
- 		W_REG(osh, &cc->res_dep_mask,
--		      (uint32) bcm_strtoul(val, NULL, 0));
-+		      (uint32) simple_strtoul(val, NULL, 0));
- 	}
+-	spi_sync(wl_to_spi(wl), &m);
++		if (fixed)
++			*cmd |= WSPI_CMD_FIXED;
++
++		t[i].tx_buf = cmd;
++		t[i].len = sizeof(*cmd);
++		spi_message_add_tail(&t[i++], &m);
++
++		t[i].tx_buf = buf;
++		t[i].len = chunk_len;
++		spi_message_add_tail(&t[i++], &m);
  
- 	/* Determine min/max rsrc masks */
+-	wl1271_dump(DEBUG_SPI, "spi_write cmd -> ", cmd, sizeof(*cmd));
+-	wl1271_dump(DEBUG_SPI, "spi_write buf -> ", buf, len);
++		wl1271_dump(DEBUG_SPI, "spi_write cmd -> ", cmd, sizeof(*cmd));
++		wl1271_dump(DEBUG_SPI, "spi_write buf -> ", buf, chunk_len);
++
++		if (!fixed)
++			addr += chunk_len;
++		buf += chunk_len;
++		len -= chunk_len;
++		cmd++;
++	}
++
++	spi_sync(wl_to_spi(wl), &m);
+ }
+ 
+ static irqreturn_t wl1271_irq(int irq, void *cookie)
 -- 
-1.7.2.2
+1.7.0.4
 
