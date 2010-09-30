@@ -1,66 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f46.google.com ([209.85.214.46]:35653 "EHLO
-	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752690Ab0IOX1i (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 15 Sep 2010 19:27:38 -0400
-From: Ohad Ben-Cohen <ohad@wizery.com>
-To: <linux-wireless@vger.kernel.org>, <linux-omap@vger.kernel.org>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	Mark Brown <broonie@opensource.wolfsonmicro.com>,
-	<linux-arm-kernel@lists.infradead.org>,
-	Chikkature Rajashekar Madhusudhan <madhu.cr@ti.com>,
-	Luciano Coelho <luciano.coelho@nokia.com>,
-	San Mehat <san@google.com>,
-	Roger Quadros <roger.quadros@nokia.com>,
-	Tony Lindgren <tony@atomide.com>,
-	Nicolas Pitre <nico@fluxnic.net>, Ido Yariv <ido@wizery.com>,
-	Kalle Valo <kalle.valo@iki.fi>,
-	Russell King <linux@arm.linux.org.uk>,
-	Vitaly Wool <vitalywool@gmail.com>,
-	Ohad Ben-Cohen <ohad@wizery.com>
-Subject: [PATCH v6 0/7] native wl1271 support on ZOOM
-Date: Thu, 16 Sep 2010 01:22:02 +0200
-Message-Id: <1284592929-29616-1-git-send-email-ohad@wizery.com>
+Received: from mail.atheros.com ([12.19.149.2]:61350 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754531Ab0I3JuX (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 30 Sep 2010 05:50:23 -0400
+Received: from mail.atheros.com ([10.10.20.108])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Thu, 30 Sep 2010 02:50:15 -0700
+From: Mohammed Shafi Shajakhan <mshajakhan@atheros.com>
+To: <linux-wireless@vger.kernel.org>
+CC: <mcgrof@gmail.com>, <j@w1.fi>,
+	<Senthilkumar.Balasubramanian@Atheros.com>,
+	<Vasanth.Thiagarajan@Atheros.com>, <nbd@openwrt.org>,
+	Mohammed Shafi Shajakhan <mshajakhan@atheros.com>
+Subject: [RFC] ath9k : Fix for displaying the channel number
+Date: Thu, 30 Sep 2010 15:20:08 +0530
+Message-ID: <1285840208-12456-1-git-send-email-mshajakhan@atheros.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patchset adds wl1271 support on ZOOM2/3 boards.
+From: Mohammed Shafi Shajakhan <mshajakhan@atheros.com>
 
-Only basic support is included; power manipulation is submitted separately as SDIO Runtime PM support.
+In the ath9k debugging feature 'wiphy' the current channel used by the
+station is incorrectly displayed.This is because the channels available
+are sequentially mapped from numbers 0 to 37.This mapping cannot be
+changed as the channel number is also used as an array index
+          This fix solves the above problem by calculating the channel
+number from center frequency.
 
-Changes since v5:
-- rebase to wireless-testing
-- remove 2nd copy from wl12xx_platform_data (keep the 1st one though)
+Signed-off-by: Mohammed Shafi Shajakhan <mshajakhan@atheros.com>
+---
+ drivers/net/wireless/ath/ath9k/debug.c |   15 ++++++++++-----
+ 1 files changed, 10 insertions(+), 5 deletions(-)
 
-Thanks,
-
-Ohad Ben-Cohen (7):
-  wl12xx: make wl12xx.h common to both spi and sdio
-  wl1271: propagate set_power's return value
-  wl12xx: add platform data passing support
-  wl1271: take irq info from private board data
-  wl1271: make ref_clock configurable by board
-  omap: zoom: add fixed regulator device for wlan
-  omap: zoom: add mmc3/wl1271 device support
-
- arch/arm/mach-omap2/board-zoom-peripherals.c       |   54 ++++++++++++++++++++
- drivers/net/wireless/Makefile                      |    2 +
- drivers/net/wireless/wl12xx/Kconfig                |    5 ++-
- drivers/net/wireless/wl12xx/wl1251_sdio.c          |    2 +-
- drivers/net/wireless/wl12xx/wl1251_spi.c           |    2 +-
- drivers/net/wireless/wl12xx/wl1271.h               |    3 +-
- drivers/net/wireless/wl12xx/wl1271_boot.c          |   11 +++--
- drivers/net/wireless/wl12xx/wl1271_boot.h          |    1 -
- drivers/net/wireless/wl12xx/wl1271_io.h            |    9 ++-
- drivers/net/wireless/wl12xx/wl1271_main.c          |    4 +-
- drivers/net/wireless/wl12xx/wl1271_sdio.c          |   31 +++++++-----
- drivers/net/wireless/wl12xx/wl1271_spi.c           |    8 ++-
- drivers/net/wireless/wl12xx/wl12xx_platform_data.c |   28 ++++++++++
- include/linux/spi/wl12xx.h                         |   34 ------------
- include/linux/wl12xx.h                             |   38 ++++++++++++++
- 15 files changed, 170 insertions(+), 62 deletions(-)
- create mode 100644 drivers/net/wireless/wl12xx/wl12xx_platform_data.c
- delete mode 100644 include/linux/spi/wl12xx.h
- create mode 100644 include/linux/wl12xx.h
+diff --git a/drivers/net/wireless/ath/ath9k/debug.c b/drivers/net/wireless/ath/ath9k/debug.c
+index 54aae93..13eb725 100644
+--- a/drivers/net/wireless/ath/ath9k/debug.c
++++ b/drivers/net/wireless/ath/ath9k/debug.c
+@@ -488,6 +488,8 @@ static ssize_t read_file_wiphy(struct file *file, char __user *user_buf,
+ 			       size_t count, loff_t *ppos)
+ {
+ 	struct ath_softc *sc = file->private_data;
++	struct ath_wiphy *aphy = sc->pri_wiphy;
++	struct ieee80211_channel *chan = aphy->hw->conf.channel;
+ 	char buf[512];
+ 	unsigned int len = 0;
+ 	int i;
+@@ -497,16 +499,19 @@ static ssize_t read_file_wiphy(struct file *file, char __user *user_buf,
+ 			"primary: %s (%s chan=%d ht=%d)\n",
+ 			wiphy_name(sc->pri_wiphy->hw->wiphy),
+ 			ath_wiphy_state_str(sc->pri_wiphy->state),
+-			sc->pri_wiphy->chan_idx, sc->pri_wiphy->chan_is_ht);
++			ieee80211_frequency_to_channel(chan->center_freq),
++			sc->pri_wiphy->chan_is_ht);
+ 	for (i = 0; i < sc->num_sec_wiphy; i++) {
+ 		struct ath_wiphy *aphy = sc->sec_wiphy[i];
+ 		if (aphy == NULL)
+ 			continue;
++		chan = aphy->hw->conf.channel;
+ 		len += snprintf(buf + len, sizeof(buf) - len,
+-				"secondary: %s (%s chan=%d ht=%d)\n",
+-				wiphy_name(aphy->hw->wiphy),
+-				ath_wiphy_state_str(aphy->state),
+-				aphy->chan_idx, aphy->chan_is_ht);
++			"secondary: %s (%s chan=%d ht=%d)\n",
++			wiphy_name(aphy->hw->wiphy),
++			ath_wiphy_state_str(aphy->state),
++			ieee80211_frequency_to_channel(chan->center_freq),
++			aphy->chan_is_ht);
+ 	}
+ 
+ 	put_unaligned_le32(REG_READ_D(sc->sc_ah, AR_STA_ID0), addr);
+-- 
+1.7.0.4
 
