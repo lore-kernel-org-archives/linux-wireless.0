@@ -1,99 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([192.100.105.134]:17013 "EHLO
+Received: from smtp.nokia.com ([192.100.105.134]:42944 "EHLO
 	mgw-mx09.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932875Ab0I0Ii7 (ORCPT
+	with ESMTP id S1756147Ab0I3TZJ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 27 Sep 2010 04:38:59 -0400
-Received: from esebh105.NOE.Nokia.com (esebh105.ntc.nokia.com [172.21.138.211])
-	by mgw-mx09.nokia.com (Switch-3.3.3/Switch-3.3.3) with ESMTP id o8R8cJPw025709
-	for <linux-wireless@vger.kernel.org>; Mon, 27 Sep 2010 03:38:58 -0500
+	Thu, 30 Sep 2010 15:25:09 -0400
+Subject: Re: [PATCH v3 0/3] wl1271: Packet aggregation optimizations
 From: Luciano Coelho <luciano.coelho@nokia.com>
-To: linux-wireless@vger.kernel.org
-Cc: Juuso Oikarinen <juuso.oikarinen@nokia.com>
-Subject: [PATCH 21/25] wl1271: Separate interface removal to another function
-Date: Mon, 27 Sep 2010 11:37:45 +0300
-Message-Id: <1285576669-8070-22-git-send-email-luciano.coelho@nokia.com>
-In-Reply-To: <1285576669-8070-1-git-send-email-luciano.coelho@nokia.com>
-References: <1285576669-8070-1-git-send-email-luciano.coelho@nokia.com>
+To: ext Ido Yariv <ido@wizery.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"Oikarinen Juuso (Nokia-MS/Tampere)" <juuso.oikarinen@nokia.com>,
+	Ohad Ben-Cohen <ohad@wizery.com>
+In-Reply-To: <1285853308-24290-1-git-send-email-ido@wizery.com>
+References: <1285853308-24290-1-git-send-email-ido@wizery.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Thu, 30 Sep 2010 22:24:58 +0300
+Message-ID: <1285874698.1578.9.camel@powerslave>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Juuso Oikarinen <juuso.oikarinen@nokia.com>
+On Thu, 2010-09-30 at 15:28 +0200, ext Ido Yariv wrote:
+> The WL1271 HW supports sending and receiving multiple packets within
+> a single transaction. This can substantially reduce CPU usage and
+> increase network throughput.
+> 
+> The following patches add support for RX and TX packet aggregation.
+> An opportunistic approach was taken - all packets that are currently
+> available for sending/receiving are aggregated and transferred
+> in a single transaction.
+> 
+> On SPI platforms, tests done by Juuso Oikarinen have shown a 20% improvement
+> in CPU usage.
+> On SDIO platforms, some tests have shown an improvement of over 30% in CPU
+> usage.
+> 
+> Changes since v2:
+> Fix debug output in the SPI callbacks.
+> 
+> Changes since v1:
+> The SPI callbacks do not handle large transfers well. The first patch fixes
+> this by fragmenting large transfers into smaller ones.
+> 
+> Thanks Juuso Oikarinen for reporting the SPI issue and helping with testing
+> and benchmarking these optimizations.
 
-Do this so the interface removal can be triggered from an upcoming hardware
-failure recovery mechanism.
+This looks very good.  Thanks for your work and thanks Juuso for the
+tests and verification.
 
-Signed-off-by: Juuso Oikarinen <juuso.oikarinen@nokia.com>
-Reviewed-by: Teemu Paasikivi <ext-teemu.3.paasikivi@nokia.com>
-Signed-off-by: Luciano Coelho <luciano.coelho@nokia.com>
----
- drivers/net/wireless/wl12xx/wl1271_main.c |   17 +++++++++++------
- drivers/net/wireless/wl12xx/wl1271_scan.c |    6 ++++++
- 2 files changed, 17 insertions(+), 6 deletions(-)
+I'll apply this as soon as John pulls our wl12xx tree, so we can keep it
+linear.
 
-diff --git a/drivers/net/wireless/wl12xx/wl1271_main.c b/drivers/net/wireless/wl12xx/wl1271_main.c
-index 2c03cb1..00da982 100644
---- a/drivers/net/wireless/wl12xx/wl1271_main.c
-+++ b/drivers/net/wireless/wl12xx/wl1271_main.c
-@@ -960,15 +960,10 @@ out:
- 	return ret;
- }
- 
--static void wl1271_op_remove_interface(struct ieee80211_hw *hw,
--				       struct ieee80211_vif *vif)
-+static void __wl1271_op_remove_interface(struct wl1271 *wl)
- {
--	struct wl1271 *wl = hw->priv;
- 	int i;
- 
--	cancel_work_sync(&wl->scan_complete_work);
--
--	mutex_lock(&wl->mutex);
- 	wl1271_debug(DEBUG_MAC80211, "mac80211 remove interface");
- 
- 	wl1271_info("down");
-@@ -994,6 +989,7 @@ static void wl1271_op_remove_interface(struct ieee80211_hw *hw,
- 
- 	mutex_unlock(&wl->mutex);
- 
-+	cancel_work_sync(&wl->scan_complete_work);
- 	cancel_work_sync(&wl->irq_work);
- 	cancel_work_sync(&wl->tx_work);
- 	cancel_delayed_work_sync(&wl->pspoll_work);
-@@ -1039,7 +1035,16 @@ static void wl1271_op_remove_interface(struct ieee80211_hw *hw,
- 	wl->tx_res_if = NULL;
- 	kfree(wl->target_mem_map);
- 	wl->target_mem_map = NULL;
-+}
- 
-+static void wl1271_op_remove_interface(struct ieee80211_hw *hw,
-+				       struct ieee80211_vif *vif)
-+{
-+	struct wl1271 *wl = hw->priv;
-+
-+	mutex_lock(&wl->mutex);
-+	WARN_ON(wl->vif != vif);
-+	__wl1271_op_remove_interface(wl);
- 	mutex_unlock(&wl->mutex);
- }
- 
-diff --git a/drivers/net/wireless/wl12xx/wl1271_scan.c b/drivers/net/wireless/wl12xx/wl1271_scan.c
-index 9f1da82..20caceb 100644
---- a/drivers/net/wireless/wl12xx/wl1271_scan.c
-+++ b/drivers/net/wireless/wl12xx/wl1271_scan.c
-@@ -36,6 +36,12 @@ void wl1271_scan_complete_work(struct work_struct *work)
- 	wl1271_debug(DEBUG_SCAN, "Scanning complete");
- 
- 	mutex_lock(&wl->mutex);
-+
-+	if (wl->scan.state == WL1271_SCAN_STATE_IDLE) {
-+		mutex_unlock(&wl->mutex);
-+		return;
-+	}
-+
- 	wl->scan.state = WL1271_SCAN_STATE_IDLE;
- 	kfree(wl->scan.scanned_ch);
- 	wl->scan.scanned_ch = NULL;
 -- 
-1.6.3.3
+Cheers,
+Luca.
 
