@@ -1,125 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ww0-f44.google.com ([74.125.82.44]:34976 "EHLO
-	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754173Ab0JUFrL (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 21 Oct 2010 01:47:11 -0400
-Date: Thu, 21 Oct 2010 07:46:58 +0200
-From: Dan Carpenter <error27@gmail.com>
-To: Greg Kroah-Hartman <gregkh@suse.de>
-Cc: Arnd Bergmann <arnd@arndb.de>, devel@driverdev.osuosl.org,
-	kernel-janitors@vger.kernel.org, linux-wireless@vger.kernel.org
-Subject: [patch] Staging: bcm: use get_user() to access user pointers
-Message-ID: <20101021054657.GE5985@bicker>
+Received: from dee.erg.abdn.ac.uk ([139.133.204.82]:33771 "EHLO erg.abdn.ac.uk"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1750968Ab0JAHWW (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 1 Oct 2010 03:22:22 -0400
+Message-ID: <42875.148.187.160.35.1285917725.squirrel@148.187.160.35>
+In-Reply-To: <1285857487.5137.2.camel@jlt3.sipsolutions.net>
+References: <20100930102508.GB3581@gerrit.erg.abdn.ac.uk>
+    <1285857487.5137.2.camel@jlt3.sipsolutions.net>
+Date: Fri, 1 Oct 2010 08:22:05 +0100 (BST)
+Subject: Re: [Patch 1/1] wext: fix 32/64 bit alignment issue for 'point'
+     type
+From: gerrit@erg.abdn.ac.uk
+To: "Johannes Berg" <johannes@sipsolutions.net>
+Cc: "Gerrit Renker" <gerrit@erg.abdn.ac.uk>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This fixes some places that dereference user pointers directly instead
-of using get_user().
+> On Thu, 2010-09-30 at 12:25 +0200, Gerrit Renker wrote:
+>> wireless: fix alignment problem
+>>
+>> With the current definition, IW_EV_POINT_PK_LEN is 12 on 64-bit and 8 on
+>> 32-bit systems, due to the way struct iw_event is packed (24 byte on
+>> 64-bit systems instead of 20 byte on 32-bit systems). Furthermore, the
+iwe_stream_add_point() in
+>> include/net/iw_handler.h
+>> also uses IW_EV_LCP_PK_LEN as header length.
+>>
+>> The current definition appears to be a typo (PK_LEN instead of LEN); it
+>> causes misalignment on 64 bit systems.
+>
+> So, correct me if I'm wrong, the only effect this change has is changing
+> the second memcpy() in iwe_stream_add_point() to not copy an extra 4
+> bytes that will be overwritten right away by the next memcpy()
+> (presumably, unless the data is < 4, in which case the memcpy might
+> actually be out of bounds).
+>
+Thank you for pointing this out, it seems the change is not as trivial
+as I thought.
 
-Please especially check my changes to IOCTL_BCM_GET_CURRENT_STATUS.  The
-original code modified the struct which "arg" was pointing to.  I think
-this was a bug in the original code and that we only wanted to write to
-the OutputBuffer. Also with the original code you could read as much 
-memory as you wanted so I had to put a cap on OutputLength.  The only
-value of OutputLength that makes sense is sizeof(LINK_STATE) so now if
-OutputLength is not sizeof(LINK_STATE) it returns -EINVAL.
+I noticed this problem in userspace where the 4 byte difference caused
+misalignment of point types (such as essid) on a 64 bit system.
 
-Signed-off-by: Dan Carpenter <error27@gmail.com>
----
-I don't have this hardware.  Compile tested only.
+I wonder whether the following thinking is right:
+ * the first memcpy copies 4 bytes = IW_EV_LCP_PK_LEN starting at stream
+ * the second memcpy should start where the first left off, i.e.
+     memcpy(stream +  IW_EV_LCP_PK_LEN,
+            ((char *) &iwe->u) + IW_EV_POINT_OFF,
+            IW_EV_POINT_PK_LEN - IW_EV_LCP_PK_LEN);
+   where IW_EV_POINT_PK_LEN = IW_EV_LCP_PK_LEN = 8
+ * if this were true, then
+      int lcp_len   = iwe_stream_lcp_len(info);
+   could also go.
 
-diff --git a/drivers/staging/bcm/Bcmchar.c b/drivers/staging/bcm/Bcmchar.c
-index 77fdfe2..fead9c5 100644
---- a/drivers/staging/bcm/Bcmchar.c
-+++ b/drivers/staging/bcm/Bcmchar.c
-@@ -1001,13 +1001,15 @@ static long bcm_char_ioctl(struct file *filp, UINT cmd, ULONG arg)
- 		}
- #endif
- 		case IOCTL_BE_BUCKET_SIZE:
--			Adapter->BEBucketSize = *(PULONG)arg;
--			Status = STATUS_SUCCESS;
-+			Status = 0;
-+			if (get_user(Adapter->BEBucketSize, (unsigned long __user *)arg))
-+				Status = -EFAULT;
- 			break;
- 
- 		case IOCTL_RTPS_BUCKET_SIZE:
--			Adapter->rtPSBucketSize = *(PULONG)arg;
--			Status = STATUS_SUCCESS;
-+			Status = 0;
-+			if (get_user(Adapter->rtPSBucketSize, (unsigned long __user *)arg))
-+				Status = -EFAULT;
- 			break;
- 		case IOCTL_CHIP_RESET:
- 	    {
-@@ -1028,11 +1030,15 @@ static long bcm_char_ioctl(struct file *filp, UINT cmd, ULONG arg)
- 		case IOCTL_QOS_THRESHOLD:
- 		{
- 			USHORT uiLoopIndex;
--			for(uiLoopIndex = 0 ; uiLoopIndex < NO_OF_QUEUES ; uiLoopIndex++)
--			{
--				Adapter->PackInfo[uiLoopIndex].uiThreshold = *(PULONG)arg;
-+
-+			Status = 0;
-+			for (uiLoopIndex = 0; uiLoopIndex < NO_OF_QUEUES; uiLoopIndex++) {
-+				if (get_user(Adapter->PackInfo[uiLoopIndex].uiThreshold,
-+						(unsigned long __user *)arg)) {
-+					Status = -EFAULT;
-+					break;
-+				}
- 			}
--			Status = STATUS_SUCCESS;
- 			break;
- 		}
- 
-@@ -1093,7 +1099,8 @@ static long bcm_char_ioctl(struct file *filp, UINT cmd, ULONG arg)
- 		}
- 		case IOCTL_BCM_GET_CURRENT_STATUS:
- 		{
--			LINK_STATE *plink_state = NULL;
-+			LINK_STATE plink_state;
-+
- 			/* Copy Ioctl Buffer structure */
- 			if(copy_from_user(&IoBuffer, argp, sizeof(IOCTL_BUFFER)))
- 			{
-@@ -1101,13 +1108,19 @@ static long bcm_char_ioctl(struct file *filp, UINT cmd, ULONG arg)
- 				Status = -EFAULT;
- 				break;
- 			}
--			plink_state = (LINK_STATE*)arg;
--			plink_state->bIdleMode = (UCHAR)Adapter->IdleMode;
--			plink_state->bShutdownMode = Adapter->bShutStatus;
--			plink_state->ucLinkStatus = (UCHAR)Adapter->LinkStatus;
--			if(copy_to_user(IoBuffer.OutputBuffer,
--				(PUCHAR)plink_state, (UINT)IoBuffer.OutputLength))
--			{
-+			if (IoBuffer.OutputLength != sizeof(plink_state)) {
-+				Status = -EINVAL;
-+				break;
-+			}
-+
-+			if (copy_from_user(&plink_state, (void __user *)arg, sizeof(plink_state))) {
-+				Status = -EFAULT;
-+				break;
-+			}
-+			plink_state.bIdleMode = (UCHAR)Adapter->IdleMode;
-+			plink_state.bShutdownMode = Adapter->bShutStatus;
-+			plink_state.ucLinkStatus = (UCHAR)Adapter->LinkStatus;
-+			if (copy_to_user(IoBuffer.OutputBuffer, &plink_state, IoBuffer.OutputLength)) {
- 				BCM_DEBUG_PRINT(Adapter,DBG_TYPE_PRINTK, 0, 0, "Copy_to_user Failed..\n");
- 				Status = -EFAULT;
- 				break;
-@@ -1331,7 +1344,9 @@ static long bcm_char_ioctl(struct file *filp, UINT cmd, ULONG arg)
- 						BCM_DEBUG_PRINT(Adapter,DBG_TYPE_PRINTK, 0, 0,"Copy From User space failed. status :%d", Status);
- 						return -EFAULT;
- 					}
--					uiSectorSize = *((PUINT)(IoBuffer.InputBuffer)); /* FIXME: unchecked __user access */
-+					if (get_user(uiSectorSize, (unsigned int __user *)IoBuffer.InputBuffer))
-+						return -EFAULT;
-+
- 					if((uiSectorSize < MIN_SECTOR_SIZE) || (uiSectorSize > MAX_SECTOR_SIZE))
- 					{
- 
+But I have not tested any of this. Unless it is clear, please ignore for
+the moment, I will test next week and get back.
+
