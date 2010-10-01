@@ -1,51 +1,94 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:51036 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750868Ab0JLXbv (ORCPT
+Received: from bombadil.infradead.org ([18.85.46.34]:53620 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751862Ab0JAVFW (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 12 Oct 2010 19:31:51 -0400
-Message-ID: <4CB4EFD4.6020209@candelatech.com>
-Date: Tue, 12 Oct 2010 16:31:32 -0700
-From: Ben Greear <greearb@candelatech.com>
-MIME-Version: 1.0
-To: "John W. Linville" <linville@tuxdriver.com>
-CC: Linus Torvalds <torvalds@linux-foundation.org>,
-	linux-wireless@vger.kernel.org,
-	Stephen Rothwell <sfr@canb.auug.org.au>,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] ath5k: fix build break from "ath5k: Print out opmode
- in debugfs"
-References: <20101012163519.a88f2040.sfr@canb.auug.org.au> <1286895206-3030-1-git-send-email-linville@tuxdriver.com> <AANLkTi=Rj+hmYthVcwYksSxUqFF+117FxVvdnuDCLxVY@mail.gmail.com> <20101012181804.GC2403@tuxdriver.com>
-In-Reply-To: <20101012181804.GC2403@tuxdriver.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+	Fri, 1 Oct 2010 17:05:22 -0400
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>, stable@kernel.org
+Subject: [PATCH v3 2/3] mac80211: wait until completely disassociated before new association
+Date: Fri,  1 Oct 2010 17:05:20 -0400
+Message-Id: <1285967121-16665-3-git-send-email-lrodriguez@atheros.com>
+In-Reply-To: <1285967121-16665-1-git-send-email-lrodriguez@atheros.com>
+References: <1285967121-16665-1-git-send-email-lrodriguez@atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 10/12/2010 11:18 AM, John W. Linville wrote:
-> On Tue, Oct 12, 2010 at 11:13:31AM -0700, Linus Torvalds wrote:
->> On Tue, Oct 12, 2010 at 7:53 AM, John W. Linville
->> <linville@tuxdriver.com>  wrote:
->>>
->>> Please don't make me commit such an ugly patch...
->>
->>   Why don't you just create a dummy inline ath_opmode_to_string() that
->> returns NULL in the non-debug case? The compiler will make the
->> conditionals all go away, and it will end up being "UNKNOWN" which is
->> just what you want. No?
->
-> Shhh!  Your messing-up my manipulative mind games! :-)
+When roaming we try to disassociate with our old AP prior to
+associating. The assumption though is that we will send our
+disassociation first prior to sending our association request
+to the new AP. This should in theory work given that the
+association is put in through a workqueue but to avoid any
+possible races just ensure we wait for complete disassociation
+prior to trying to associate to the new AP.
 
-Looks like this was my bug, and I lost these emails in a folder
-I don't read so often.
+In the worst case scenerio this will delay our association
+request by one iteration on the work item.
 
-If you're not happy with the fixes posted, let me know and
-I'll work on one.
+This patch has a fix for kernels >= v2.6.34
 
-Thanks,
-Ben
+Cc: stable@kernel.org
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+---
+ net/mac80211/mlme.c |    3 ++-
+ net/mac80211/work.c |   14 ++++++++++++++
+ 2 files changed, 16 insertions(+), 1 deletions(-)
 
-
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+index daab0c6..7eff124 100644
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -936,7 +936,6 @@ static void ieee80211_set_disassoc(struct ieee80211_sub_if_data *sdata,
+ 
+ 	memcpy(bssid, ifmgd->associated->bssid, ETH_ALEN);
+ 
+-	ifmgd->associated = NULL;
+ 	memset(ifmgd->bssid, 0, ETH_ALEN);
+ 
+ 	/*
+@@ -1007,6 +1006,8 @@ static void ieee80211_set_disassoc(struct ieee80211_sub_if_data *sdata,
+ 	del_timer_sync(&sdata->u.mgd.bcn_mon_timer);
+ 	del_timer_sync(&sdata->u.mgd.timer);
+ 	del_timer_sync(&sdata->u.mgd.chswitch_timer);
++
++	ifmgd->associated = NULL;
+ }
+ 
+ void ieee80211_sta_rx_notify(struct ieee80211_sub_if_data *sdata,
+diff --git a/net/mac80211/work.c b/net/mac80211/work.c
+index ae344d1..268ac1d 100644
+--- a/net/mac80211/work.c
++++ b/net/mac80211/work.c
+@@ -513,6 +513,19 @@ ieee80211_associate(struct ieee80211_work *wk)
+ {
+ 	struct ieee80211_sub_if_data *sdata = wk->sdata;
+ 	struct ieee80211_local *local = sdata->local;
++	struct ieee80211_if_managed *ifmgd = &sdata->u.mgd;
++	bool associated;
++
++	mutex_lock(&ifmgd->mtx);
++	associated = !!ifmgd->associated;
++	mutex_unlock(&ifmgd->mtx);
++
++	if (associated) {
++		printk(KERN_DEBUG "%s: delaying association with %pM as "
++		       "we are still associated",
++		       sdata->name, wk->filter_ta);
++		goto wait;
++	}
+ 
+ 	wk->assoc.tries++;
+ 	if (wk->assoc.tries > IEEE80211_ASSOC_MAX_TRIES) {
+@@ -534,6 +547,7 @@ ieee80211_associate(struct ieee80211_work *wk)
+ 	       sdata->name, wk->filter_ta, wk->assoc.tries);
+ 	ieee80211_send_assoc(sdata, wk);
+ 
++wait:
+ 	wk->timeout = jiffies + IEEE80211_ASSOC_TIMEOUT;
+ 	run_again(local, wk->timeout);
+ 
 -- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+1.7.0.4
 
