@@ -1,44 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw0-f46.google.com ([74.125.83.46]:39242 "EHLO
-	mail-gw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758335Ab0JHUlA convert rfc822-to-8bit (ORCPT
+Received: from na3sys009aog113.obsmtp.com ([74.125.149.209]:39817 "HELO
+	na3sys009aog113.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1752659Ab0JAXCF (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 8 Oct 2010 16:41:00 -0400
-Received: by gwj17 with SMTP id 17so455248gwj.19
-        for <linux-wireless@vger.kernel.org>; Fri, 08 Oct 2010 13:40:59 -0700 (PDT)
+	Fri, 1 Oct 2010 19:02:05 -0400
+From: Anand Gadiyar <gadiyar@ti.com>
+References: <1285965236-17907-1-git-send-email-gadiyar@ti.com> <AANLkTi=+dtqdZLb8rfu8NZRU5GceUL5+S3B=MeW1xF=M@mail.gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <201010082235.09355.chunkeey@googlemail.com>
-References: <201010082235.09355.chunkeey@googlemail.com>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Fri, 8 Oct 2010 13:40:39 -0700
-Message-ID: <AANLkTi=LxUqST506VGiM8RpEZXrJ6_EWVRiJHboGVv5i@mail.gmail.com>
-Subject: Re: [PATCH v2] mac80211: temporarily disable reorder release timer
-To: Christian Lamparter <chunkeey@googlemail.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Johannes Berg <johannes@sipsolutions.net>
-Content-Type: text/plain; charset=UTF-8
+In-Reply-To: <AANLkTi=+dtqdZLb8rfu8NZRU5GceUL5+S3B=MeW1xF=M@mail.gmail.com>
+Date: Sat, 2 Oct 2010 04:32:04 +0530
+Message-ID: <cf2c8b9dc6762d53dcaf522d874cb37b@mail.gmail.com>
+Subject: RE: [PATCH] omap: zoom2: fix build break when CONFIG_WL12XX_PLATFORM_DATA=n
+To: Ohad Ben-Cohen <ohad@wizery.com>
+Cc: linux-omap@vger.kernel.org, linux-wireless@vger.kernel.org,
+	Tony Lindgren <tony@atomide.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Oct 8, 2010 at 1:35 PM, Christian Lamparter
-<chunkeey@googlemail.com> wrote:
-> Several serve threading problems in the current
-> release reorder timer implementation have been
-> discovered.
+Ohad Ben-Cohen wrote:
+> On Fri, Oct 1, 2010 at 10:33 PM, Anand Gadiyar <gadiyar@ti.com> wrote:
+> > Fix this build break when CONFIG_WL12XX_PLATFORM_DATA is not set.
 >
-> A lengthy discussion - which lists some of the
-> pitfalls and possible solutions - can be found at:
->  http://marc.info/?t=128635927000001
+> A similar fix was already submitted and is pending to be merged
+> (http://permalink.gmane.org/gmane.linux.kernel.wireless.general/56595)
 >
-> But due to the complicated nature of the subject and
-> the imminent advent of a new -rc cycle, it was
-> decided to disable the feature for the time being.
+> > There are still many warnings about the function
+wl12xx_set_platform_data
+> > being unused. Haven't fixed those. Ohad, care to take a look?
 >
-> Signed-off-by: Christian Lamparter <chunkeey@googlemail.com>
+> Sure. Which warnings do you refer to (I haven't seen any) ?
+>
 
-This patch lacks documentation of the impact of this patch, while it
-may fix a lock issue, the does not address what happens when the patch
-is actually applied.
+I picked up your patch and the warnings are gone. The key difference
+was I missed marking the alternative function as an inline.
 
-  Luis
+Without that, I was seeing warnings like these:
+include/linux/wl12xx.h:42: warning: 'wl12xx_set_platform_data' defined but
+not used
+
+- Anand
