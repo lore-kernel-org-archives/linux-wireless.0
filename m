@@ -1,82 +1,81 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from slowhand.arndnet.de ([88.198.19.76]:48635 "EHLO mail.unitix.de"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S933088Ab0J1O2g (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 28 Oct 2010 10:28:36 -0400
-Message-ID: <4CC98892.7080000@arndnet.de>
-Date: Thu, 28 Oct 2010 16:28:34 +0200
-From: Arnd Hannemann <arnd@arndnet.de>
+Received: from mail-ww0-f44.google.com ([74.125.82.44]:58956 "EHLO
+	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754125Ab0JAIZ5 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 1 Oct 2010 04:25:57 -0400
+Received: by mail-ww0-f44.google.com with SMTP id 40so992504wwj.1
+        for <linux-wireless@vger.kernel.org>; Fri, 01 Oct 2010 01:25:56 -0700 (PDT)
+Date: Fri, 1 Oct 2010 10:25:32 +0200
+From: Dan Carpenter <error27@gmail.com>
+To: Christian Lamparter <chunkeey@googlemail.com>
+Cc: Bob Copeland <me@bobcopeland.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Luis Carlos Cobo <luisca@cozybit.com>,
+	linux-wireless@vger.kernel.org, Javier Cardona <javier@cozybit.com>
+Subject: Re: [RFC v2] mac80211: fix possible null-pointer dereference
+Message-ID: <20101001082531.GA2781@bicker>
+References: <201009210057.13297.chunkeey@googlemail.com> <201009250002.21219.chunkeey@googlemail.com> <AANLkTikqRuDVwhxhXkpA3c5ppzVu_HhkaEUhyr+YBUMy@mail.gmail.com> <201009301852.31682.chunkeey@googlemail.com>
 MIME-Version: 1.0
-To: Larry Finger <Larry.Finger@lwfinger.net>
-CC: "linux-mmc@vger.kernel.org" <linux-mmc@vger.kernel.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: b43 sdio: WARNING: at drivers/mmc/core/core.c:237 mmc_wait_for_cmd
-References: <4CC874F4.5050908@arndnet.de> <4CC8CAAE.3040100@lwfinger.net>
-In-Reply-To: <4CC8CAAE.3040100@lwfinger.net>
-Content-Type: text/plain; charset=ISO-8859-15
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <201009301852.31682.chunkeey@googlemail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
-
-Am 28.10.2010 02:58, schrieb Larry Finger:
-> On 10/27/2010 01:52 PM, Arnd Hannemann wrote:
->> first of all: great! b43 sdio card works with open firmware!
->>
->> However, on "rmmod b43" I get the following backtraces 
->> with current Linus git (v2.6.36-6794-g12ba8d1):
->>
->>
->> [  831.696189] b43-phy1 debug: Removing Interface type 2
->> [  831.698425] b43-phy1 debug: Wireless interface stopped
->> [  851.560519] ------------[ cut here ]------------
->> [  851.560531] WARNING: at drivers/mmc/core/core.c:237 mmc_wait_for_cmd+0x88/0x90()
->> [  851.560534] Hardware name: 20552PG
->> [  851.560536] Modules linked in: b43(-) ssb mmc_block binfmt_misc rfcomm sco bnep ppdev l2cap ipt_MASQUERADE iptable_nat nf_nat nf_conntrack_ipv4 nf_defrag_ipv4 xt_state nf_conntrack ipt_REJECT xt_tcpudp iptable_filter ip_tables x_tables bridge stp kvm_intel kvm arc4 iwlagn snd_hda_codec_conexant snd_hda_intel snd_hda_codec iwlcore snd_hwdep snd_pcm thinkpad_acpi mac80211 snd_seq_midi snd_rawmidi snd_seq_midi_event snd_seq r852 joydev snd_timer sm_common pcmcia nand snd_seq_device cfg80211 sdhci_pci btusb psmouse tpm_tis yenta_socket nand_ids lp snd pcmcia_rsrc nand_ecc bluetooth sdhci tpm pcmcia_core parport mtd snd_page_alloc serio_raw tpm_bios soundcore nvram led_class sha256_generic aes_i586 aes_generic dm_crypt i915 drm_kms_helper drm ahci intel_agp i2c_algo_bit intel_gtt e1000e libahci video agpgart output
->> [  851.560620] Pid: 2504, comm: rmmod Not tainted 2.6.36-titan0+ #1
->> [  851.560622] Call Trace:
->> [  851.560631]  [<c014a102>] warn_slowpath_common+0x72/0xa0
->> [  851.560636]  [<c04d94c8>] ? mmc_wait_for_cmd+0x88/0x90
->> [  851.560641]  [<c04d94c8>] ? mmc_wait_for_cmd+0x88/0x90
->> [  851.560645]  [<c014a152>] warn_slowpath_null+0x22/0x30
->> [  851.560649]  [<c04d94c8>] mmc_wait_for_cmd+0x88/0x90
->> [  851.560655]  [<c0401585>] ? device_release+0x25/0x80
->> [  851.560660]  [<c04df210>] mmc_io_rw_direct_host+0xa0/0x150
->> [  851.560665]  [<c04df370>] mmc_io_rw_direct+0x30/0x40
->> [  851.560669]  [<c04e06e7>] sdio_disable_func+0x37/0xa0
->> [  851.560683]  [<f8dfcb80>] b43_sdio_remove+0x30/0x50 [b43]
->> [  851.560687]  [<c04df8cc>] sdio_bus_remove+0x1c/0x60
->> [  851.560692]  [<c016d39f>] ? blocking_notifier_call_chain+0x1f/0x30
->> [  851.560697]  [<c0404991>] __device_release_driver+0x51/0xb0
->> [  851.560701]  [<c0404a7f>] driver_detach+0x8f/0xa0
->> [  851.560705]  [<c0403c83>] bus_remove_driver+0x63/0xa0
->> [  851.560709]  [<c0405039>] driver_unregister+0x49/0x80
->> [  851.560713]  [<c0405039>] ? driver_unregister+0x49/0x80
->> [  851.560718]  [<c04dfad7>] sdio_unregister_driver+0x17/0x20
->> [  851.560727]  [<f8dfcb42>] b43_sdio_exit+0x12/0x20 [b43]
->> [  851.560734]  [<f8dfe76f>] b43_exit+0x17/0x3c [b43]
->> [  851.560740]  [<c017fb8d>] sys_delete_module+0x13d/0x200
->> [  851.560747]  [<c01fd7d2>] ? do_munmap+0x212/0x300
->> [  851.560752]  [<c010311f>] sysenter_do_call+0x12/0x28
->> [  851.560757] ---[ end trace 31e14488072d2f7d ]---
->> [  851.560759] ------------[ cut here ]------------
+On Thu, Sep 30, 2010 at 06:52:30PM +0200, Christian Lamparter wrote:
+> On Thursday 30 September 2010 18:27:08 Bob Copeland wrote:
+> > On Fri, Sep 24, 2010 at 6:02 PM, Christian Lamparter
+> > <chunkeey@googlemail.com> wrote:
+> > 
+> > > hard to say, smatch must see the null dereference, when
+> > > we receive an action action frame where ftype is PLINK_OPEN
+> > > and the mesh_matches_local(&elems, sdata) check fail, but why
+> > > doesn't it complain about the "spin_lock_bh(&sta->lock)"?
+> > 
+> > Smatch just does pattern matching right?
+> Uhh, I guess that's a question for Dan.
 > 
-> I'm not an expert on the sdio interface, but I'll take a crack at this.
+> The README-smatch sums it up as:
+> "It's basically a state machine that tracks the flow of code."
 > 
-> The first WARN_ON comes because the host has not been claimed. Please try the
-> following patch so that we know if it is claimed when b43_sdio_remove() is
-> entered and ssb_unregister_bus() clears it, or it has not been claimed when the
-> routine is entered. If the latter, we will likely need to surround the
-> sdio_disable_func() calls with sdio_claim_host()...sdio_remove_host() statements.
+> (I think coccicheck,  is the "pattern matching" checker, right?)
+> > Maybe smatch doesn't assume you are actually using
+> > the pointer in spin_lock_bh().
+> > 
+> > I.e. it is ok to do "&null_ptr->member", offsetof() basically
+> > does that; but not "null_ptr->member".
+> 
 
-I get the following output from your patch when unloading b43:
+Yes.  You are right.
 
-[ 1364.620044] b43-phy1 debug: Removing Interface type 2
-[ 1364.621812] b43-phy1 debug: Wireless interface stopped
-[ 1372.440297] b43-sdio: before ssb_bus_unregister, claimed is 0
-[ 1372.440345] b43-sdio: before sdio_disable_func, claimed is 0
-[ 1372.440351] ------------[ cut here ]------------
-[ 1372.440367] WARNING: at drivers/mmc/core/core.c:237 mmc_wait_for_cmd+0x88/0x90()
+This is from check_check_deref.c which handles this as a special case
+because people quite often do:
 
-Regards
-Arnd
+	struct foo *bar = &x->y;
+
+	if (!x)
+		return;
+
+If you comment out the "if (getting_address())" check then it will
+complain.
+
+> net/mac80211/mesh_plink.c +574 mesh_rx_plink_frame(168)
+> error: we previously assumed 'sta' could be null.
+> 
+> 574:        switch (sta->plink_state) {
+> 
+> Smatch is definitely following code paths. Is there a switch
+> to make it more verbose (e.g.: comment on about the conditions
+> about the objected code - branch)?
+
+There is a --debug but I suspect it's way more verbose than what you
+want.
+
+You could also hack the net/mac80211/mesh_plink.c source file and add
+an "#include /path/to/smatch/check_debug.h" and sprinkle the code with
+calls to __smatch_cur_slist() which will make it dump all the current
+states at that point.
+
+regards,
+dan carpenter
+
