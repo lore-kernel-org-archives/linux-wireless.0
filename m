@@ -1,54 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.19.149.2]:38043 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751771Ab0JYHQL (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 25 Oct 2010 03:16:11 -0400
-Received: from mail.atheros.com ([10.10.20.107])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Mon, 25 Oct 2010 00:16:00 -0700
-From: Mohammed Shafi Shajakhan <mshajakhan@atheros.com>
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>, <lrodriguez@atheros.com>,
-	<j@w1.fi>, <Senthilkumar.Balasubramanian@Atheros.com>,
-	<Vasanth.Thiagarajan@Atheros.com>, <nbd@openwrt.org>,
-	Mohammed Shafi Shajakhan <mshajakhan@atheros.com>
-Subject: [PATCH] ath9k: Properly assign boolean types Signed-off-by: Mohammed Shafi Shajakhan <mshajakhan@atheros.com>
-Date: Mon, 25 Oct 2010 12:46:01 +0530
-Message-ID: <1287990961-2619-1-git-send-email-mshajakhan@atheros.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from external1.orbit-lab.org ([128.6.192.131]:53087 "HELO
+	external1.orbit-lab.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1751453Ab0JATDq (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 1 Oct 2010 15:03:46 -0400
+Received: from repository3.orbit-lab.org (repository3.orbit-lab.org [10.50.0.41])
+	by external1.orbit-lab.org (Postfix) with ESMTP id 006A6418D8
+	for <linux-wireless@vger.kernel.org>; Fri,  1 Oct 2010 15:01:23 -0400 (EDT)
+Subject: Compat-wireless release for 2010-10-01 is baked
+To: <linux-wireless@vger.kernel.org>
+Message-Id: <20101001190344.131E9404FC@repository3.orbit-lab.org>
+Date: Fri,  1 Oct 2010 15:03:43 -0400 (EDT)
+From: compat@orbit-lab.org (Compat-wireless cronjob account)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Mohammed Shafi Shajakhan <mshajakhan@atheros.com>
+>From git://git.kernel.org/pub/scm/linux/kernel/git/mcgrof/compat-wireless-2.6
+   c735ecb..79ba5ea  master     -> origin/master
+>From git://git.kernel.org/pub/scm/linux/kernel/git/mcgrof/compat-wireless-2.6
+ * [new tag]         compat-wireless-2010-10-01 -> compat-wireless-2010-10-01
+>From git://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next
+   6f15991..1e143a7  history    -> origin/history
+ + 0f70e3f...9a9ac53 master     -> origin/master  (forced update)
+ * [new tag]         next-20101001 -> next-20101001
 
----
- drivers/net/wireless/ath/ath9k/rc.c |    9 ++++++---
- 1 files changed, 6 insertions(+), 3 deletions(-)
+compat-wireless code metrics
 
-diff --git a/drivers/net/wireless/ath/ath9k/rc.c b/drivers/net/wireless/ath/ath9k/rc.c
-index 0cee90c..0c70839 100644
---- a/drivers/net/wireless/ath/ath9k/rc.c
-+++ b/drivers/net/wireless/ath/ath9k/rc.c
-@@ -1444,12 +1444,15 @@ static void ath_rate_init(void *priv, struct ieee80211_supported_band *sband,
- 		ath_rc_priv->neg_ht_rates.rs_nrates = j;
- 	}
- 
--	is_cw40 = sta->ht_cap.cap & IEEE80211_HT_CAP_SUP_WIDTH_20_40;
-+	is_cw40 = (sta->ht_cap.cap & IEEE80211_HT_CAP_SUP_WIDTH_20_40) ?
-+		true : false;
- 
- 	if (is_cw40)
--		is_sgi = sta->ht_cap.cap & IEEE80211_HT_CAP_SGI_40;
-+		is_sgi = (sta->ht_cap.cap & IEEE80211_HT_CAP_SGI_40) ?
-+			true : false;
- 	else if (sc->sc_ah->caps.hw_caps & ATH9K_HW_CAP_SGI_20)
--		is_sgi = sta->ht_cap.cap & IEEE80211_HT_CAP_SGI_20;
-+		is_sgi = (sta->ht_cap.cap & IEEE80211_HT_CAP_SGI_20) ?
-+			true : false
- 
- 	/* Choose rate table first */
- 
--- 
-1.7.0.4
+    747282 - Total upstream lines of code being pulled
+      2153 - backport code changes
+      1902 - backport code additions
+       251 - backport code deletions
+      6242 - backport from compat module
+      8395 - total backport code
+    1.1234 - % of code consists of backport work
+        23 - Code changes posted but not yet merged
+        11 - Code additions posted but not yet merged
+        12 - Code deletions posted but not yet merged
+    0.0031 - % of code not yet merged
+      1219 - Crap changes not yet posted
+      1181 - Crap additions not yet posted
+        38 - Crap deletions not yet posted
+    0.1631 - % of crap code
 
+Base tree: linux-next.git
+Base tree version: next-20101001
+compat-wireless release: compat-wireless-2010-10-01-5-g79ba5ea-pc
