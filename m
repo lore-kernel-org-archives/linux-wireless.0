@@ -1,232 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ogre.sisk.pl ([217.79.144.158]:54729 "EHLO ogre.sisk.pl"
+Received: from mx1.redhat.com ([209.132.183.28]:45358 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932792Ab0JQU53 convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 17 Oct 2010 16:57:29 -0400
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
-To: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
-Subject: 2.6.36-rc8-git3: Reported regressions 2.6.34 -> 2.6.35
-Cc: Maciej Rutecki <maciej.rutecki@gmail.com>,
-	Florian Mickler <florian@mickler.org>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	Kernel Testers List <kernel-testers@vger.kernel.org>,
-	Network Development <netdev@vger.kernel.org>,
-	Linux ACPI <linux-acpi@vger.kernel.org>,
-	Linux PM List <linux-pm@lists.linux-foundation.org>,
-	Linux SCSI List <linux-scsi@vger.kernel.org>,
-	Linux Wireless List <linux-wireless@vger.kernel.org>,
-	DRI <dri-devel@lists.freedesktop.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Message-ID: <1SnkuNVk0vO.A.E9E.Qx1uMB@chimera>
-Date: Sun, 17 Oct 2010 22:53:28 +0200 (CEST)
+	id S932133Ab0JAMEm (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 1 Oct 2010 08:04:42 -0400
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: Johannes Berg <johannes@sipsolutions.net>,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org,
+	Stanislaw Gruszka <sgruszka@redhat.com>
+Subject: [PATCH 6/6] Revert "iwlwifi: do not perferm force reset while doing scan"
+Date: Fri,  1 Oct 2010 14:05:32 +0200
+Message-Id: <1285934732-16087-6-git-send-email-sgruszka@redhat.com>
+In-Reply-To: <1285934732-16087-1-git-send-email-sgruszka@redhat.com>
+References: <1285934732-16087-1-git-send-email-sgruszka@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This message contains a list of some post-2.6.34 regressions introduced before
-2.6.35, for which there are no fixes in the mainline known to the tracking team.
-If any of them have been fixed already, please let us know.
+This reverts commit 7acc7c683a747689aaaaad4fce1683fc3f85e552. It was
+applied to avoid possible warning in ieee80211_restart_hw, however
+reason of the warning were races in mac80211, currently hopefully fixed.
 
-If you know of any other unresolved post-2.6.34 regressions, please let us know
-either and we'll add them to the list.  Also, please let us know if any
-of the entries below are invalid.
+Not reseting device when performing scan is bad for two reasons.
 
-Each entry from the list will be sent additionally in an automatic reply to
-this message with CCs to the people involved in reporting and handling the
-issue.
+When forcing reset from iwl_check_stuck_queue(), in case of fail,
+reset will be repeated until scan finish. But since firmware is in bad
+shape, scan only finish after scan_check work (about 7s). So we will
+delay the reset, what is not good behaviour.
 
+When forcing reset from iwl_recover_from_statistics(), we will not
+repeat the reset, so we will not perform reset at all when needed.
 
-Listed regressions statistics:
+Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-core.c |    5 -----
+ 1 files changed, 0 insertions(+), 5 deletions(-)
 
-  Date          Total  Pending  Unresolved
-  ----------------------------------------
-  2010-10-17      141       19          15
-  2010-10-10      143       23          19
-  2010-10-03      141       21          17
-  2010-09-26      139       24          21
-  2010-09-20      137       27          25
-  2010-09-12      135       26          25
-  2010-08-30      124       38          34
-  2010-08-01      100       27          23
-  2010-07-23       94       33          25
-  2010-07-09       79       45          37
-  2010-06-21       46       37          26
-  2010-06-09       15       13          10
-
-
-Unresolved regressions
-----------------------
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=20002
-Subject		: x86_64 2.6.35.* kernels and Intel Xeon X5550
-Submitter	: Marc Aurele La France <tsi@ualberta.ca>
-Date		: 2010-10-07 17:17 (11 days old)
-Message-ID	: <alpine.WNT.2.00.1010071055420.1672@cluij.ucs.ualberta.ca>
-References	: http://marc.info/?l=linux-kernel&m=128647187628706&w=2
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=19302
-Subject		: PROBLEM: kernel crash on USB-modem (Huawei E1750) hangup.
-Submitter	: O01eg <O01eg@yandex.ru>
-Date		: 2010-09-26 19:50 (22 days old)
-Message-ID	: <op.vjnn1up1yohvy1@localhost>
-References	: http://marc.info/?l=linux-kernel&m=128553111709569&w=2
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=18522
-Subject		: cdrom drive doesn't detect removal
-Submitter	: Maxim Levitsky <maximlevitsky@gmail.com>
-Date		: 2010-09-12 9:49 (36 days old)
-First-Bad-Commit: http://git.kernel.org/linus/6b4517a7913a09d3259bb1d21c9cb300f12294bd
-Message-ID	: <1284284969.2928.18.camel@maxim-laptop>
-References	: http://marc.info/?l=linux-kernel&m=128428499013930&w=2
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=17812
-Subject		: Kernel completely frozen when memory is full
-Submitter	: Mickey86 <mikael.cordon@gmail.com>
-Date		: 2010-09-05 13:09 (43 days old)
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=17261
-Subject		: Freezes on bootup
-Submitter	: Dan Dart <dandart@googlemail.com>
-Date		: 2010-08-29 09:00 (50 days old)
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=16691
-Subject		: IPW5100: iwlagn broken with 2.6.34.x to 2.6.35.2 update
-Submitter	: Can Celasun <dcelasun@gmail.com>
-Date		: 2010-08-21 08:28 (58 days old)
-References	: http://www.spinics.net/lists/linux-wireless/msg57237.html
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=16562
-Subject		: 2.6.35: cpu_idle bug report / on i7 870 cpu (x86_64)
-Submitter	: Justin Piszcz <jpiszcz@lucidpixels.com>
-Date		: 2010-08-06 22:09 (73 days old)
-Message-ID	: <alpine.DEB.2.00.1008061800530.5241@p34.internal.lan>
-References	: http://marc.info/?l=linux-kernel&m=128113260904048&w=2
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=16549
-Subject		: 2.6.35: suspicious rcu_dereference_check() usage
-Submitter	: Vladislav Bolkhovitin <vst@vlnb.net>
-Date		: 2010-08-04 10:56 (75 days old)
-Message-ID	: <4C594740.1090608@vlnb.net>
-References	: http://marc.info/?l=linux-kernel&m=128091938215177&w=2
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=16525
-Subject		: unexpected high load since 2.6.35
-Submitter	: MadLoisae@gmx.net <MadLoisae@gmx.net>
-Date		: 2010-08-02 20:53 (77 days old)
-Message-ID	: <4C573041.1070103@gmx.net>
-References	: http://marc.info/?l=linux-kernel&m=128078243726655&w=2
-		  http://lkml.org/lkml/2010/9/14/105
-		  http://lkml.org/lkml/2010/9/27/328
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=16515
-Subject		: [bisected] Radeon rv280 can't boot on kernel 2.6.35.
-Submitter	: Albert Gall <ss3vdr@gmail.com>
-Date		: 2010-08-04 16:10 (75 days old)
-First-Bad-Commit: http://git.kernel.org/linus/https://bugzilla.kernel.org/attachment.cgi?id=27350
-Handled-By	: Alex Deucher <alexdeucher@gmail.com>
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=16488
-Subject		: [i915] Framebuffer ID error after suspend/hibernate leading to X crash
-Submitter	: Milan Bouchet-Valat <nalimilan@club.fr>
-Date		: 2010-08-01 08:55 (78 days old)
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=16458
-Subject		: Bluetooth disabled after resume
-Submitter	: AttilaN <attila123456@gmail.com>
-Date		: 2010-07-25 09:33 (85 days old)
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=16380
-Subject		: Loop devices act strangely in 2.6.35
-Submitter	: Artem S. Tashkinov <t.artem@mailcity.com>
-Date		: 2010-07-13 23:21 (97 days old)
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=16265
-Subject		: Why is kslowd accumulating so much CPU time?
-Submitter	: Theodore Ts'o <tytso@mit.edu>
-Date		: 2010-06-09 18:36 (131 days old)
-First-Bad-Commit: http://git.kernel.org/linus/fbf81762e385d3d45acad057b654d56972acf58c
-Message-ID	: <E1OMQ88-0002a1-Gb@closure.thunk.org>
-References	: http://marc.info/?l=linux-kernel&m=127610857819033&w=4
-		  http://bugs.freedesktop.org/show_bug.cgi?id=29536
-Handled-By	: Chris Wilson <chris@chris-wilson.co.uk>
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=16221
-Subject		: 2.6.35-rc2-git5 -- [drm:drm_mode_getfb] *ERROR* invalid framebuffer id
-Submitter	: Miles Lane <miles.lane@gmail.com>
-Date		: 2010-06-11 20:31 (129 days old)
-Message-ID	: <AANLkTim0jVRyqkwlGOcrg_XTvUQwcBYfWJX-aRzkkrLG@mail.gmail.com>
-References	: http://marc.info/?l=linux-kernel&m=127628828119623&w=2
-
-
-Regressions with patches
-------------------------
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=17772
-Subject		: Unable to locate IOAPIC for GSI *
-Submitter	: zersaa <zersaa@gmail.com>
-Date		: 2010-09-04 21:28 (44 days old)
-Handled-By	: Eric W. Biederman <ebiederm@xmission.com>
-Patch		: https://patchwork.kernel.org/patch/104501/
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=16891
-Subject		: Kernel panic while loading intel module during boot
-Submitter	: Anisse Astier <anisse@astier.eu>
-Date		: 2010-08-24 13:19 (55 days old)
-Handled-By	: Anisse Astier <anisse@astier.eu>
-Patch		: https://bugzilla.kernel.org/attachment.cgi?id=32602
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=16312
-Subject		: WARNING: at fs/fs-writeback.c:1127 __mark_inode_dirty
-Submitter	: Zdenek Kabelac <zdenek.kabelac@gmail.com>
-Date		: 2010-06-28 9:40 (112 days old)
-Message-ID	: <AANLkTin24fr5O4_q5Xbo9Y_NKkEmtcp6Hgmr9_4qXaFz@mail.gmail.com>
-References	: http://marc.info/?l=linux-kernel&m=127771804806465&w=2
-		  http://lkml.indiana.edu/hypermail/linux/kernel/1007.3/00884.html
-Handled-By	: Jan Kara <jack@suse.cz>
-		  Jan Kara <jack@suse.cz>
-Patch		: https://bugzilla.kernel.org/attachment.cgi?id=30282
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=16228
-Subject		: BUG/boot failure on Dell Precision T3500 (pci/ahci_stop_engine)
-Submitter	: Brian Bloniarz <brian.bloniarz@gmail.com>
-Date		: 2010-06-16 17:57 (124 days old)
-Handled-By	: Bjorn Helgaas <bjorn.helgaas@hp.com>
-Patch		: https://patchwork.kernel.org/patch/189182/
-		  https://patchwork.kernel.org/patch/189232/
-		  https://patchwork.kernel.org/patch/189242/
-		  https://patchwork.kernel.org/patch/189252/
-
-
-For details, please visit the bug entries and follow the links given in
-references.
-
-As you can see, there is a Bugzilla entry for each of the listed regressions.
-There also is a Bugzilla entry used for tracking the regressions introduced
-between 2.6.34 and 2.6.35, unresolved as well as resolved, at:
-
-http://bugzilla.kernel.org/show_bug.cgi?id=16055
-
-Please let the tracking team know if there are any Bugzilla entries that
-should be added to the list in there.
-
-Thanks!
+diff --git a/drivers/net/wireless/iwlwifi/iwl-core.c b/drivers/net/wireless/iwlwifi/iwl-core.c
+index 5c56893..393f02d 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-core.c
++++ b/drivers/net/wireless/iwlwifi/iwl-core.c
+@@ -2736,11 +2736,6 @@ int iwl_force_reset(struct iwl_priv *priv, int mode, bool external)
+ 	if (test_bit(STATUS_EXIT_PENDING, &priv->status))
+ 		return -EINVAL;
+ 
+-	if (test_bit(STATUS_SCANNING, &priv->status)) {
+-		IWL_DEBUG_INFO(priv, "scan in progress.\n");
+-		return -EINVAL;
+-	}
+-
+ 	if (mode >= IWL_MAX_FORCE_RESET) {
+ 		IWL_DEBUG_INFO(priv, "invalid reset request.\n");
+ 		return -EINVAL;
+-- 
+1.7.1
 
