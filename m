@@ -1,62 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms1.broadcom.com ([216.31.210.17]:2787 "EHLO mms1.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753335Ab0JUSiB (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 21 Oct 2010 14:38:01 -0400
-Date: Thu, 21 Oct 2010 11:37:53 -0700
-From: "Henry Ptasinski" <henryp@broadcom.com>
-To: "Greg KH" <greg@kroah.com>
-cc: "Nohee Ko" <noheek@broadcom.com>,
-	"devel@linuxdriverproject.org" <devel@linuxdriverproject.org>,
-	"Brett Rudley" <brudley@broadcom.com>,
-	"grundler@google.com" <grundler@google.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"dwmw2@infradead.org" <dwmw2@infradead.org>,
-	"Henry Ptasinski" <henryp@broadcom.com>
-Subject: Re: Subject: [PATCH v2] staging: brcm80211: brcmfmac: Removed
- codeversion from firmware filenames.
-Message-ID: <20101021183753.GB25335@broadcom.com>
-References: <4CBE23F4.4020104@broadcom.com>
- <20101019233520.GA12510@kroah.com>
- <FD96C117992C584DBC47231B1EB6F5568206D859DC@SJEXCHCCR02.corp.ad.broadcom.com>
- <20101020004743.GB31965@kroah.com>
- <20101020005546.GL10832@broadcom.com> <20101020010320.GA370@kroah.com>
- <20101021171054.GB15357@broadcom.com> <20101021182648.GA6827@kroah.com>
+Received: from mail-fx0-f46.google.com ([209.85.161.46]:45973 "EHLO
+	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751093Ab0JAWwn (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 1 Oct 2010 18:52:43 -0400
+Received: by fxm14 with SMTP id 14so943433fxm.19
+        for <linux-wireless@vger.kernel.org>; Fri, 01 Oct 2010 15:52:42 -0700 (PDT)
+From: Christian Lamparter <chunkeey@googlemail.com>
+To: linux-wireless@vger.kernel.org
+Subject: Re: carl9170: wnda3100 only 54MB/s
+Date: Sat, 2 Oct 2010 00:52:34 +0200
+Cc: Saqeb Akhter <saqeb.akhter@gmail.com>
+References: <AANLkTimN3X_e4fZhUSoTs-GmQ9kmaJUrgnxAu8=W2dT_@mail.gmail.com> <201010011636.58033.chunkeey@googlemail.com> <AANLkTimZYgDLLag+uGgdojrckZ5tgySC+UeyHCfee74J@mail.gmail.com>
+In-Reply-To: <AANLkTimZYgDLLag+uGgdojrckZ5tgySC+UeyHCfee74J@mail.gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <20101021182648.GA6827@kroah.com>
-Content-Type: text/plain;
- charset=us-ascii
+Content-Type: Text/Plain;
+  charset="iso-8859-15"
+Message-Id: <201010020052.35855.chunkeey@googlemail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The basename-apiversion-codeversion construction for firmware filenames is not
-used by most other firmware files, adds complexity, and is not providing any
-value.  Rename the firmware files using just basename-apiversion.
-
-Users of the brcmfmac driver will need to update the linux-firmware package
-to get the renamed files, or manually rename their installed firmware files.
-
-Signed-off-by: Henry Ptasinski <henryp@broadcom.com>
----
- drivers/staging/brcm80211/brcmfmac/wl_cfg80211.c |    4 ++--
- 1 files changed, 2 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/staging/brcm80211/brcmfmac/wl_cfg80211.c b/drivers/staging/brcm80211/brcmfmac/wl_cfg80211.c
-index 621521b..7f00bc4 100644
---- a/drivers/staging/brcm80211/brcmfmac/wl_cfg80211.c
-+++ b/drivers/staging/brcm80211/brcmfmac/wl_cfg80211.c
-@@ -54,8 +54,8 @@ static struct wl_dev *wl_cfg80211_dev;
+On Saturday 02 October 2010 00:30:28 Saqeb Akhter wrote:
+> Below is the out put from iperf on windows (about 3x faster).
+> 
+> Not sure what to do to get better throughput...is this considered a bug or a
+> lacking feature ?
+nope, the "feature" is there... It's just not utilized 
  
- u32 wl_dbg_level = WL_DBG_ERR | WL_DBG_INFO;
- 
--#define WL_4329_FW_FILE "brcm/bcm4329-fullmac-4-218-248-5.bin"
--#define WL_4329_NVRAM_FILE "brcm/bcm4329-fullmac-4-218-248-5.txt"
-+#define WL_4329_FW_FILE "brcm/bcm4329-fullmac-4.bin"
-+#define WL_4329_NVRAM_FILE "brcm/bcm4329-fullmac-4.txt"
- 
- /*
- ** cfg80211_ops api/callback list
--- 
-1.7.1
+> -------------------------------------------------------------------------------
+> sakhter@sakhter-laptop:~$ iw dev wlan2 link
+> Connected to 30:46:9a:10:49:f7 (on wlan2)
+>     SSID: sakhter-5g
+>     freq: 5200
+>     RX: 222040 bytes (949 packets)
+>     TX: 12082 bytes (77 packets)
+>     signal: -45 dBm
+>     tx bitrate: 54.0 MBit/s
+are you sure carl9170 is actually handling the device (and not ar9170usb?).
+Also what's the chosen rate control alg? ( - dmesg - will tell you that,
+if it isn't "minstrel_ht", then post please post what "iw dev wlan2 scan"
+shows you about your AP)
 
-
+Regards,
+	Chr
+ 
