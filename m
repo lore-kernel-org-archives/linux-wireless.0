@@ -1,99 +1,109 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from slowhand.arndnet.de ([88.198.19.76]:59162 "EHLO mail.unitix.de"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1752823Ab0JaVvl (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 31 Oct 2010 17:51:41 -0400
-Message-ID: <4CCDE4EB.7060001@arndnet.de>
-Date: Sun, 31 Oct 2010 22:51:39 +0100
-From: Arnd Hannemann <arnd@arndnet.de>
+Received: from mail-wy0-f174.google.com ([74.125.82.174]:60939 "EHLO
+	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751939Ab0JAX41 convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 1 Oct 2010 19:56:27 -0400
+Received: by wyb28 with SMTP id 28so3475124wyb.19
+        for <linux-wireless@vger.kernel.org>; Fri, 01 Oct 2010 16:56:26 -0700 (PDT)
 MIME-Version: 1.0
-To: Ohad Ben-Cohen <ohad@wizery.com>
-CC: "linux-mmc@vger.kernel.org" <linux-mmc@vger.kernel.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	linux-kernel@vger.kernel.org
-Subject: Re: regression: b43-sdio: probe of mmc0:0001:1 failed with error
- -16
-References: <4CCDA454.708@arndnet.de> <AANLkTin80pwnb1DX8OdZK3Wgsq0nj==G9VM3pahsmo0U@mail.gmail.com>
-In-Reply-To: <AANLkTin80pwnb1DX8OdZK3Wgsq0nj==G9VM3pahsmo0U@mail.gmail.com>
-Content-Type: multipart/mixed;
- boundary="------------090604000406090506030406"
+In-Reply-To: <201010020052.35855.chunkeey@googlemail.com>
+References: <AANLkTimN3X_e4fZhUSoTs-GmQ9kmaJUrgnxAu8=W2dT_@mail.gmail.com>
+ <201010011636.58033.chunkeey@googlemail.com> <AANLkTimZYgDLLag+uGgdojrckZ5tgySC+UeyHCfee74J@mail.gmail.com>
+ <201010020052.35855.chunkeey@googlemail.com>
+From: Saqeb Akhter <saqeb.akhter@gmail.com>
+Date: Fri, 1 Oct 2010 19:56:06 -0400
+Message-ID: <AANLkTinfZdNCRNEmuaOot7_NadmbDN0UU5WbUX1pApYb@mail.gmail.com>
+Subject: Re: carl9170: wnda3100 only 54MB/s
+To: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is a multi-part message in MIME format.
---------------090604000406090506030406
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Yes carl9170 (from 9/23).
+-----------------------------------------------------------------------------------------------------
 
-Hi Ohad,
+Output from lshw -C network:
 
-Am 31.10.2010 20:14, schrieb Ohad Ben-Cohen:
+ *-network
+       description: Wireless interface
+       physical id: 1
+       bus info: usb@1:3
+       logical name: wlan2
+       serial: 00:22:3f:99:cd:81
+       capabilities: ethernet physical wireless
+       configuration: broadcast=yes driver=carl9170
+driverversion=2.6.32-24-generic firmware=1.8.8.3 ip=192.168.10.60
+multicast=yes wireless=IEEE 802.11abgn
 
-> On Sun, Oct 31, 2010 at 7:16 PM, Arnd Hannemann <arnd@arndnet.de> wrote:
->> b43-sdio: probe of mmc0:0001:1 failed with error -16
-> 
-> It's exactly what Daniel is experiencing with the XO-1.5.
-> 
-> In Daniel's scenario, mmc_sdio_init_card() fails because
-> mmc_send_relative_addr() returns -110.
-> 
-> Can you please check out if that's the same thing you have too ?
+----------------------------------------------------------------------------------------------
 
-No, it seems to be the pm_runtime_get_sync in sdio_bus.c::sdio_bus_probe().
+sakhter@sakhter-laptop:~$ dmesg | grep alg
+[    0.342735] alg: No test for stdrng (krng)
+[  143.665241] ieee80211 phy0: Selected rate control algorithm 'minstrel_ht'
 
-If I test with CONFIG_PM_RUNTIME=y and the attached modifications,
-then I get this as output:
+------------------------------------------------------------------------------------------------
+output iw dev wlan2 scan
 
-root@ap4evb:~# modprobe b43
-[   29.859375] cfg80211: Calling CRDA to update world regulatory domain
-[   30.226562] pm_runtime_get_sync: -16
-[   30.234375] b43-sdio: probe of mmc0:0001:1 failed with error -16
-[   30.242187] Broadcom 43xx driver loaded [ Features: LS, Firmware-ID: FW13 ]
+BSS 30:46:9a:10:49:f7 (on wlan2) -- associated
+	TSF: 90703162427 usec (1d, 01:11:43)
+	freq: 5200
+	beacon interval: 100
+	capability: ESS ShortSlotTime (0x0401)
+	signal: -53.00 dBm
+	last seen: 672 ms ago
+	SSID: sakhter-5g
+	Supported rates: 6.0* 9.0 12.0* 18.0 24.0* 36.0 48.0 54.0
+	DS Parameter set: channel 40
+	HT capabilities:
+		Capabilities: 0x1ce
+			HT20/HT40
+			SM Power Save disabled
+			RX HT40 SGI
+			TX STBC
+			RX STBC 1-stream
+			Max AMSDU length: 7935 bytes
+			No DSSS/CCK HT40
+		Maximum RX AMPDU length 65535 bytes (exponent: 0x003)
+		Minimum RX AMPDU time spacing: 1/2 usec (0x02)
+		HT RX MCS rate indexes supported: 0-15
+		HT TX MCS rate indexes are undefined
+	WPS:	 * Version: 1.0
+		 * Manufacturer: Netgear, Inc.
+		 * Model: WNDR3700
+		 * Device name: WNDR3700(Wireless AP)
+		 * Config methods: Ethernet, Label, PBC
+---------------------------------------------------------------------------------------------------
 
-If CONFIG_PM_RUNTIME is not set in .config, the problem goes away.
 
-Regards,
-Arnd
+Hopefully some of that info can help u out.
 
 
---------------090604000406090506030406
-Content-Type: text/plain;
- name="diff"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: attachment;
- filename="diff"
 
-diff --git a/drivers/mmc/core/sd_ops.c b/drivers/mmc/core/sd_ops.c
-index 797cdb5..57b6dd4 100644
---- a/drivers/mmc/core/sd_ops.c
-+++ b/drivers/mmc/core/sd_ops.c
-@@ -237,8 +237,10 @@ int mmc_send_relative_addr(struct mmc_host *host, unsigned int *rca)
- 	cmd.flags = MMC_RSP_R6 | MMC_CMD_BCR;
- 
- 	err = mmc_wait_for_cmd(host, &cmd, MMC_CMD_RETRIES);
--	if (err)
-+	if (err) {
-+		printk(KERN_INFO "%s(): %d\n", __func__, err);
- 		return err;
-+	}
- 
- 	*rca = cmd.resp[0] >> 16;
- 
-diff --git a/drivers/mmc/core/sdio_bus.c b/drivers/mmc/core/sdio_bus.c
-index 2716c7a..102c163 100644
---- a/drivers/mmc/core/sdio_bus.c
-+++ b/drivers/mmc/core/sdio_bus.c
-@@ -133,8 +133,10 @@ static int sdio_bus_probe(struct device *dev)
- 	 * pm_runtime_get_noresume() in its remove routine.
- 	 */
- 	ret = pm_runtime_get_sync(dev);
--	if (ret < 0)
-+	if (ret < 0) {
-+		printk(KERN_INFO "pm_runtime_get_sync: %d\n", ret);
- 		goto out;
-+	}
- 
- 	/* Set the default block size so the driver is sure it's something
- 	 * sensible. */
-
---------------090604000406090506030406--
+On Fri, Oct 1, 2010 at 6:52 PM, Christian Lamparter
+<chunkeey@googlemail.com> wrote:
+> On Saturday 02 October 2010 00:30:28 Saqeb Akhter wrote:
+>> Below is the out put from iperf on windows (about 3x faster).
+>>
+>> Not sure what to do to get better throughput...is this considered a bug or a
+>> lacking feature ?
+> nope, the "feature" is there... It's just not utilized
+>
+>> -------------------------------------------------------------------------------
+>> sakhter@sakhter-laptop:~$ iw dev wlan2 link
+>> Connected to 30:46:9a:10:49:f7 (on wlan2)
+>>     SSID: sakhter-5g
+>>     freq: 5200
+>>     RX: 222040 bytes (949 packets)
+>>     TX: 12082 bytes (77 packets)
+>>     signal: -45 dBm
+>>     tx bitrate: 54.0 MBit/s
+> are you sure carl9170 is actually handling the device (and not ar9170usb?).
+> Also what's the chosen rate control alg? ( - dmesg - will tell you that,
+> if it isn't "minstrel_ht", then post please post what "iw dev wlan2 scan"
+> shows you about your AP)
+>
+> Regards,
+>        Chr
+>
+>
