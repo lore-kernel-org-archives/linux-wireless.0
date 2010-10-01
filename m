@@ -1,77 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.19.149.2]:61092 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751310Ab0JSObq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 19 Oct 2010 10:31:46 -0400
-Received: from mail.atheros.com ([10.10.20.108])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Tue, 19 Oct 2010 07:31:36 -0700
-From: Senthil Balasubramanian <senthilkumar@atheros.com>
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>,
-	Senthil Balasubramanian <senthilkumar@atheros.com>,
-	<stable@kernel.org>
-Subject: [PATCH] ath9k_hw: Fix divide by zero cases in paprd.
-Date: Tue, 19 Oct 2010 20:01:41 +0530
-Message-ID: <1287498701-3114-1-git-send-email-senthilkumar@atheros.com>
+Received: from mail-fx0-f46.google.com ([209.85.161.46]:46469 "EHLO
+	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751794Ab0JAFnB (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 1 Oct 2010 01:43:01 -0400
+Received: by fxm14 with SMTP id 14so415255fxm.19
+        for <linux-wireless@vger.kernel.org>; Thu, 30 Sep 2010 22:42:58 -0700 (PDT)
+From: Helmut Schaa <helmut.schaa@googlemail.com>
+To: Joshua Smith <JoshuaESmith@charter.net>
+Subject: Re: Question about starting up an AP
+Date: Fri, 1 Oct 2010 07:42:07 +0200
+Cc: "linux-wireless" <linux-wireless@vger.kernel.org>,
+	users@rt2x00.serialmonkey.com, Ivo van Doorn <ivdoorn@gmail.com>
+References: <DA0C92FD-F6BF-4746-9BE1-A643A0D70F7A@kaon.com> <71135D34-18F6-4909-A8AB-E7390FA73049@charter.net> <201009301814.47318.helmut.schaa@googlemail.com>
+In-Reply-To: <201009301814.47318.helmut.schaa@googlemail.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: Text/Plain;
+  charset="us-ascii"
+Message-Id: <201010010742.07605.helmut.schaa@googlemail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-We are not handling all divide by zero cases in paprd.
-Add additional checks for divide by zero cases in papard.
+Hi Joshua,
 
-This patch has fixes intended for kernel 2.6.36.
+Am Donnerstag 30 September 2010 schrieb Helmut Schaa:
+> Am Donnerstag 30 September 2010 schrieb Joshua Smith:
+> > I think I have a clue about the WPDMA TX/RX busy bug.  I was having trouble
+> > using the latest compat-wireless with USB dongle I have (ID AB50:2019
+> > rt73usb), so I tried rolling Helmut's "oops" fix into:
+> > 
+> > compat-wireless-2010-07-15
+> > 
+> > which I have been using successfully for the last few months.  Lo and behold,
+> > this version does *NOT* exhibit the TX/RX busy error.  So whatever is causing
+> > that problem was introduced between 7/15/2010 and 9/20/2010.
+> 
+> Thanks for the analysis Joshua! Since this is a regression I guess we
+> should try to find out quickly which commit introduced it (and fix it up
+> of course) ...
 
-Cc: stable@kernel.org
-Signed-off-by: Senthil Balasubramanian <senthilkumar@atheros.com>
----
- drivers/net/wireless/ath/ath9k/ar9003_paprd.c |   14 +++++++++-----
- 1 files changed, 9 insertions(+), 5 deletions(-)
+Unfortunately during that time a lot of rt2x00 patches went into
+wireless-testing. However, there's one suspicious commit that touches the
+relevant code: "rt2x00: Merge rt2800{pci/usb} radio enabling/disabling code
+to rt2800lib".
 
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_paprd.c b/drivers/net/wireless/ath/ath9k/ar9003_paprd.c
-index 7c38229..716db41 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_paprd.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_paprd.c
-@@ -347,6 +347,10 @@ static bool create_pa_curve(u32 *data_L, u32 *data_U, u32 *pa_table, u16 *gain)
- 	    (((Y[6] - Y[3]) * 1 << scale_factor) +
- 	     (x_est[6] - x_est[3])) / (x_est[6] - x_est[3]);
- 
-+	/* prevent division by zero */
-+	if (G_fxp == 0)
-+		return false;
-+
- 	Y_intercept =
- 	    (G_fxp * (x_est[0] - x_est[3]) +
- 	     (1 << scale_factor)) / (1 << scale_factor) + Y[3];
-@@ -356,14 +360,12 @@ static bool create_pa_curve(u32 *data_L, u32 *data_U, u32 *pa_table, u16 *gain)
- 
- 	for (i = 0; i <= 3; i++) {
- 		y_est[i] = i * 32;
--
--		/* prevent division by zero */
--		if (G_fxp == 0)
--			return false;
--
- 		x_est[i] = ((y_est[i] * 1 << scale_factor) + G_fxp) / G_fxp;
- 	}
- 
-+	if (y_est[max_index] == 0)
-+		return false;
-+
- 	x_est_fxp1_nonlin =
- 	    x_est[max_index] - ((1 << scale_factor) * y_est[max_index] +
- 				G_fxp) / G_fxp;
-@@ -457,6 +459,8 @@ static bool create_pa_curve(u32 *data_L, u32 *data_U, u32 *pa_table, u16 *gain)
- 
- 	Q_scale_B = find_proper_scale(find_expn(abs(scale_B)), 10);
- 	scale_B = scale_B / (1 << Q_scale_B);
-+	if (scale_B == 0)
-+		return false;
- 	Q_beta = find_proper_scale(find_expn(abs(beta_raw)), 10);
- 	Q_alpha = find_proper_scale(find_expn(abs(alpha_raw)), 10);
- 	beta_raw = beta_raw / (1 << Q_beta);
--- 
-1.7.2.1
+This is again a shot in the dark but worth a try. Could you please revert this
+commit [1] from the newer compat-wireless tarball and try if it fixes the "DMA
+Busy" issue?
 
+Thanks Joshua,
+Helmut
+
+[1] http://git.kernel.org/?p=linux/kernel/git/linville/wireless-testing.git;a=commit;h=b9a07ae9d9e09662013992088fd58ffbcb2f9a30
