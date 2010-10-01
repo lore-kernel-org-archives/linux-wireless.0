@@ -1,34 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([147.243.1.47]:51957 "EHLO mgw-sa01.nokia.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753888Ab0JEMJf (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 5 Oct 2010 08:09:35 -0400
-Received: from [172.21.50.167] (chilepepper.research.nokia.com [172.21.50.167])
-	by mgw-sa01.nokia.com (Switch-3.4.3/Switch-3.4.3) with ESMTP id o95C9XxI019377
-	for <linux-wireless@vger.kernel.org>; Tue, 5 Oct 2010 15:09:33 +0300
-Subject: Re: [PATCH] wl1271: remove deprecated __attribute__ ((packed))
-From: Luciano Coelho <luciano.coelho@nokia.com>
-To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <1286280139-12378-1-git-send-email-luciano.coelho@nokia.com>
-References: <1286280139-12378-1-git-send-email-luciano.coelho@nokia.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Tue, 05 Oct 2010 15:09:20 +0300
-Message-ID: <1286280560.15401.31.camel@chilepepper>
-Mime-Version: 1.0
+Received: from mail-iw0-f174.google.com ([209.85.214.174]:60444 "EHLO
+	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750974Ab0JAVVr convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 1 Oct 2010 17:21:47 -0400
+MIME-Version: 1.0
+In-Reply-To: <1285965236-17907-1-git-send-email-gadiyar@ti.com>
+References: <1285965236-17907-1-git-send-email-gadiyar@ti.com>
+From: Ohad Ben-Cohen <ohad@wizery.com>
+Date: Fri, 1 Oct 2010 23:21:27 +0200
+Message-ID: <AANLkTi=+dtqdZLb8rfu8NZRU5GceUL5+S3B=MeW1xF=M@mail.gmail.com>
+Subject: Re: [PATCH] omap: zoom2: fix build break when CONFIG_WL12XX_PLATFORM_DATA=n
+To: Anand Gadiyar <gadiyar@ti.com>
+Cc: linux-omap@vger.kernel.org, linux-wireless@vger.kernel.org,
+	Tony Lindgren <tony@atomide.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2010-10-05 at 14:02 +0200, ext Luciano Coelho wrote:
-> One __attribute__ ((packed)) has been accidentally introduced in commit
-> be86cbea1e9c3a4dd8faedcfa327495d09fe3531.  This patch changes it to __packed.
-> 
-> Signed-off-by: Luciano Coelho <luciano.coelho@nokia.com>
-> ---
+On Fri, Oct 1, 2010 at 10:33 PM, Anand Gadiyar <gadiyar@ti.com> wrote:
+> Fix this build break when CONFIG_WL12XX_PLATFORM_DATA is not set.
 
-Applied and pushed to wl12xx/master.
+A similar fix was already submitted and is pending to be merged
+(http://permalink.gmane.org/gmane.linux.kernel.wireless.general/56595)
 
+> There are still many warnings about the function wl12xx_set_platform_data
+> being unused. Haven't fixed those. Ohad, care to take a look?
 
--- 
-Cheers,
-Luca.
+Sure. Which warnings do you refer to (I haven't seen any) ?
 
+Thanks,
+Ohad.
+
+>
+>  include/linux/wl12xx.h |    7 +++++++
+>  1 file changed, 7 insertions(+)
+>
+> Index: linux-2.6/include/linux/wl12xx.h
+> ===================================================================
+> --- linux-2.6.orig/include/linux/wl12xx.h
+> +++ linux-2.6/include/linux/wl12xx.h
+> @@ -32,7 +32,14 @@ struct wl12xx_platform_data {
+>        int board_ref_clock;
+>  };
+>
+> +#ifdef CONFIG_WL12XX_PLATFORM_DATA
+>  int wl12xx_set_platform_data(const struct wl12xx_platform_data *data);
+> +#else
+> +static int wl12xx_set_platform_data(const struct wl12xx_platform_data *data)
+> +{
+> +       return 0;
+> +}
+> +#endif
+>  const struct wl12xx_platform_data *wl12xx_get_platform_data(void);
+>
+>  #endif
+>
