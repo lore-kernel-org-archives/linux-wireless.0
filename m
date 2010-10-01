@@ -1,187 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([88.198.39.176]:50591 "EHLO ds10.nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1760352Ab0JGL7M (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 7 Oct 2010 07:59:12 -0400
-Message-ID: <4CADB60C.6040105@openwrt.org>
-Date: Thu, 07 Oct 2010 13:59:08 +0200
-From: Felix Fietkau <nbd@openwrt.org>
+Received: from mail-fx0-f46.google.com ([209.85.161.46]:41331 "EHLO
+	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756833Ab0JAOhG (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 1 Oct 2010 10:37:06 -0400
+Received: by fxm14 with SMTP id 14so612701fxm.19
+        for <linux-wireless@vger.kernel.org>; Fri, 01 Oct 2010 07:37:04 -0700 (PDT)
+From: Christian Lamparter <chunkeey@googlemail.com>
+To: Saqeb Akhter <saqeb.akhter@gmail.com>
+Subject: Re: carl9170: wnda3100 only 54MB/s
+Date: Fri, 1 Oct 2010 16:36:57 +0200
+Cc: linux-wireless@vger.kernel.org
+References: <AANLkTimN3X_e4fZhUSoTs-GmQ9kmaJUrgnxAu8=W2dT_@mail.gmail.com> <AANLkTinpJ2qzR3D6Oe1WOS60sfRergfH548EMdB2m=_P@mail.gmail.com>
+In-Reply-To: <AANLkTinpJ2qzR3D6Oe1WOS60sfRergfH548EMdB2m=_P@mail.gmail.com>
 MIME-Version: 1.0
-To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-CC: linux-wireless <linux-wireless@vger.kernel.org>
-Subject: [PATCH] compat: backport netlink changes used in the nl80211 cleanup
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Message-Id: <201010011636.58033.chunkeey@googlemail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
----
---- a/include/linux/compat-2.6.37.h
-+++ b/include/linux/compat-2.6.37.h
-@@ -45,6 +45,65 @@ static inline void skb_checksum_none_ass
- 
- #define pcmcia_enable_device(link)	pcmcia_request_configuration(link, &link->conf)
- 
-+#include <net/genetlink.h>
-+
-+struct compat_genl_info {
-+	struct genl_info *info;
-+
-+	u32 snd_seq;
-+	u32 snd_pid;
-+	struct genlmsghdr *genlhdr;
-+	struct nlattr **attrs;
-+	void *user_ptr[2];
-+};
-+#define genl_info compat_genl_info
-+
-+struct compat_genl_ops {
-+	struct genl_ops ops;
-+
-+	u8 cmd;
-+	u8 internal_flags;
-+	unsigned int flags;
-+	const struct nla_policy *policy;
-+
-+	int (*doit)(struct sk_buff *skb, struct genl_info *info);
-+	int (*dumpit)(struct sk_buff *skb, struct netlink_callback *cb);
-+	int (*done)(struct netlink_callback *cb);
-+};
-+#define genl_ops compat_genl_ops
-+
-+struct compat_genl_family {
-+	struct genl_family family;
-+
-+	struct list_head list;
-+
-+	unsigned int id, hdrsize, version, maxattr;
-+	const char *name;
-+	bool netnsok;
-+
-+	struct nlattr **attrbuf;
-+
-+	int (*pre_doit)(struct genl_ops *ops, struct sk_buff *skb,
-+			struct genl_info *info);
-+
-+	void (*post_doit)(struct genl_ops *ops, struct sk_buff *skb,
-+			  struct genl_info *info);
-+};
-+
-+#define genl_family compat_genl_family
-+
-+#define genl_register_family_with_ops compat_genl_register_family_with_ops
-+
-+int genl_register_family_with_ops(struct genl_family *family,
-+				  struct genl_ops *ops, size_t n_ops);
-+
-+#define genl_unregister_family(_family) genl_unregister_family(&(_family)->family)
-+#define genl_info_net(_info) genl_info_net((_info)->info)
-+#define genlmsg_reply(_msg, _info) genlmsg_reply(_msg, (_info)->info)
-+#define genlmsg_put(_skb, _pid, _seq, _fam, _flags, _cmd) genlmsg_put(_skb, _pid, _seq, &(_fam)->family, _flags, _cmd)
-+#define genl_register_mc_group(_fam, _grp) genl_register_mc_group(&(_fam)->family, _grp)
-+#define genl_unregister_mc_group(_fam, _grp) genl_unregister_mc_group(&(_fam)->family, _grp)
-+
- #endif /* (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,37)) */
- 
- #endif /* LINUX_26_37_COMPAT_H */
---- a/compat/compat-2.6.37.c
-+++ b/compat/compat-2.6.37.c
-@@ -42,4 +42,98 @@ EXPORT_SYMBOL_GPL(net_ns_type_operations
- 
- #endif /* LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,35)*/ 
- 
-+#undef genl_info
-+
-+static LIST_HEAD(compat_nl_fam);
-+
-+static struct genl_ops *genl_get_cmd(u8 cmd, struct genl_family *family)
-+{
-+	struct genl_ops *ops;
-+
-+	list_for_each_entry(ops, &family->family.ops_list, ops.ops_list)
-+		if (ops->cmd == cmd)
-+			return ops;
-+
-+	return NULL;
-+}
-+
-+
-+static int nl_doit_wrapper(struct sk_buff *skb, struct genl_info *info)
-+{
-+	struct compat_genl_info compat_info;
-+	struct genl_family *family;
-+	struct genl_ops *ops;
-+
-+	list_for_each_entry(family, &compat_nl_fam, list) {
-+		if (family->id == info->nlhdr->nlmsg_type)
-+			goto found;
-+	}
-+	return -ENOENT;
-+
-+found:
-+	ops = genl_get_cmd(info->genlhdr->cmd, family);
-+	if (!ops)
-+		return -ENOENT;
-+
-+	memset(&compat_info, 0, sizeof(compat_info));
-+	compat_info.info = info;
-+#define __copy(_field) compat_info._field = info->_field
-+	__copy(snd_seq);
-+	__copy(snd_pid);
-+	__copy(genlhdr);
-+	__copy(attrs);
-+#undef __copy
-+	family->pre_doit(ops, skb, &compat_info);
-+	ops->doit(skb, &compat_info);
-+	family->post_doit(ops, skb, &compat_info);
-+
-+	return 0;
-+}
-+
-+int compat_genl_register_family_with_ops(struct genl_family *family,
-+					 struct genl_ops *ops, size_t n_ops)
-+{
-+	int i, ret;
-+
-+#define __copy(_field) family->family._field = family->_field
-+	__copy(id);
-+	__copy(hdrsize);
-+	__copy(version);
-+	__copy(maxattr);
-+	strncpy(family->family.name, family->name, sizeof(family->family.name));
-+#if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,32))
-+	__copy(netnsok);
-+#endif
-+#undef __copy
-+
-+	ret = genl_register_family(&family->family);
-+	if (ret < 0)
-+		return ret;
-+
-+	family->attrbuf = family->family.attrbuf;
-+	family->id = family->family.id;
-+
-+	for (i = 0; i < n_ops; i++) {
-+#define __copy(_field) ops[i].ops._field = ops[i]._field
-+		__copy(cmd);
-+		__copy(flags);
-+		__copy(policy);
-+		__copy(dumpit);
-+		__copy(done);
-+#undef __copy
-+		ops[i].ops.doit = nl_doit_wrapper;
-+		ret = genl_register_ops(&family->family, &ops[i].ops);
-+		if (ret < 0)
-+			goto error_ops;
-+	}
-+	list_add(&family->list, &compat_nl_fam);
-+
-+	return ret;
-+
-+error_ops:
-+	genl_unregister_family(family);
-+	return ret;
-+}
-+EXPORT_SYMBOL(compat_genl_register_family_with_ops);
-+
- #endif /* LINUX_VERSION_CODE < KERNEL_VERSION(2,6,37) */
+On Friday 01 October 2010 16:22:45 Saqeb Akhter wrote:
+> Hey Guys,
+> 
+> I just got around to compiling compat-wireless on ubuntu 10.04, to
+> make use of the new carl9170 driver which is supposed to be able to
+> handle 802.11n.
+> 
+> My router is a wndr3700 running @ 5ghz on windows I'm able to get
+> pretty good speeds. But on Ubuntu it does not seem to connect faster
+> than 54MB/s, iwlist scan shows that 54Mb/s is the highest it can go.
+sure, that's a limitation of iwlist. If you want to know the current
+link speed (link speed as in "the last used tx rate", so if there's
+no traffic then the rate is low) you should be using the "iw" utility:
+
+iw dev wlanX link
+
+Regards,
+	Chr
