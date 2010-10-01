@@ -1,83 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wy0-f174.google.com ([74.125.82.174]:63520 "EHLO
-	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754142Ab0JBJfg (ORCPT
+Received: from mail30g.wh2.ocn.ne.jp ([220.111.41.239]:25220 "HELO
+	mail30g.wh2.ocn.ne.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1751899Ab0JAItJ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 2 Oct 2010 05:35:36 -0400
-Received: by mail-wy0-f174.google.com with SMTP id 28so3658520wyb.19
-        for <linux-wireless@vger.kernel.org>; Sat, 02 Oct 2010 02:35:35 -0700 (PDT)
-From: Ivo van Doorn <ivdoorn@gmail.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Subject: [PATCH 14/20] rt2x00: correctly set max_report_rates in rt61pci and rt2800
-Date: Sat, 2 Oct 2010 11:32:16 +0200
-Cc: users@rt2x00.serialmonkey.com, linux-wireless@vger.kernel.org,
-	Helmut Schaa <helmut.schaa@googlemail.com>
-References: <201010021126.18748.IvDoorn@gmail.com> <201010021131.33951.IvDoorn@gmail.com> <201010021131.56454.IvDoorn@gmail.com>
-In-Reply-To: <201010021131.56454.IvDoorn@gmail.com>
+	Fri, 1 Oct 2010 04:49:09 -0400
+Received: from vs3004.wh2.ocn.ne.jp (125.206.180.167)
+	by mail30g.wh2.ocn.ne.jp (RS ver 1.0.95vs) with SMTP id 0-089502946
+	for <linux-wireless@vger.kernel.org>; Fri,  1 Oct 2010 17:49:07 +0900 (JST)
+Subject: [PATCH v2] mac80211: Add WME information element for IBSS
+To: johannes@sipsolutions.net, linville@tuxdriver.com
+From: Bruno Randolf <br1@einfach.org>
+Cc: linux-wireless@vger.kernel.org
+Date: Fri, 01 Oct 2010 17:48:43 +0900
+Message-ID: <20101001084842.13117.16614.stgit@tt-desk>
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Message-Id: <201010021132.17888.IvDoorn@gmail.com>
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Helmut Schaa <helmut.schaa@googlemail.com>
+Enable WME QoS in IBSS mode by adding a WME information element to beacons and
+probe respones and by checking for it and marking stations as WME capable if it
+is present.
 
-rt61pci and rt2800 devices can use up to 7 different rates per tx frame.
-However, the device uses a global fallback table. Hence, the rc
-algortihm cannot specify multiple rates to try but the device is able to
-report multiple rates (based on the retry table). Specify that behavior
-by correctly setting max_report_rates and max_rates.
-
-This makes rt2x00 and minstrel play nicer together.
-
-Signed-off-by: Helmut Schaa <helmut.schaa@googlemail.com>
-Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
+Signed-off-by: Bruno Randolf <br1@einfach.org>
 ---
- drivers/net/wireless/rt2x00/rt2800lib.c |    5 +++--
- drivers/net/wireless/rt2x00/rt61pci.c   |    5 +++--
- 2 files changed, 6 insertions(+), 4 deletions(-)
+ net/mac80211/ibss.c |   24 ++++++++++++++++++++----
+ 1 files changed, 20 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
-index 99b505f..403e2ed 100644
---- a/drivers/net/wireless/rt2x00/rt2800lib.c
-+++ b/drivers/net/wireless/rt2x00/rt2800lib.c
-@@ -3188,12 +3188,13 @@ int rt2800_probe_hw_mode(struct rt2x00_dev *rt2x00dev)
- 	 * As rt2800 has a global fallback table we cannot specify
- 	 * more then one tx rate per frame but since the hw will
- 	 * try several rates (based on the fallback table) we should
--	 * still initialize max_rates to the maximum number of rates
-+	 * initialize max_report_rates to the maximum number of rates
- 	 * we are going to try. Otherwise mac80211 will truncate our
- 	 * reported tx rates and the rc algortihm will end up with
- 	 * incorrect data.
- 	 */
--	rt2x00dev->hw->max_rates = 7;
-+	rt2x00dev->hw->max_rates = 1;
-+	rt2x00dev->hw->max_report_rates = 7;
- 	rt2x00dev->hw->max_rate_tries = 1;
+diff --git a/net/mac80211/ibss.c b/net/mac80211/ibss.c
+index 1a3aae5..546693e 100644
+--- a/net/mac80211/ibss.c
++++ b/net/mac80211/ibss.c
+@@ -173,6 +173,19 @@ static void __ieee80211_sta_join_ibss(struct ieee80211_sub_if_data *sdata,
+ 		memcpy(skb_put(skb, ifibss->ie_len),
+ 		       ifibss->ie, ifibss->ie_len);
  
- 	rt2x00_eeprom_read(rt2x00dev, EEPROM_ANTENNA, &eeprom);
-diff --git a/drivers/net/wireless/rt2x00/rt61pci.c b/drivers/net/wireless/rt2x00/rt61pci.c
-index 8940070f..ac370f1 100644
---- a/drivers/net/wireless/rt2x00/rt61pci.c
-+++ b/drivers/net/wireless/rt2x00/rt61pci.c
-@@ -2630,12 +2630,13 @@ static int rt61pci_probe_hw_mode(struct rt2x00_dev *rt2x00dev)
- 	 * As rt61 has a global fallback table we cannot specify
- 	 * more then one tx rate per frame but since the hw will
- 	 * try several rates (based on the fallback table) we should
--	 * still initialize max_rates to the maximum number of rates
-+	 * initialize max_report_rates to the maximum number of rates
- 	 * we are going to try. Otherwise mac80211 will truncate our
- 	 * reported tx rates and the rc algortihm will end up with
- 	 * incorrect data.
- 	 */
--	rt2x00dev->hw->max_rates = 7;
-+	rt2x00dev->hw->max_rates = 1;
-+	rt2x00dev->hw->max_report_rates = 7;
- 	rt2x00dev->hw->max_rate_tries = 1;
++	if (local->hw.queues >= 4) {
++		pos = skb_put(skb, 9);
++		*pos++ = WLAN_EID_VENDOR_SPECIFIC;
++		*pos++ = 7; /* len */
++		*pos++ = 0x00; /* Microsoft OUI 00:50:F2 */
++		*pos++ = 0x50;
++		*pos++ = 0xf2;
++		*pos++ = 2; /* WME */
++		*pos++ = 0; /* WME info */
++		*pos++ = 1; /* WME ver */
++		*pos++ = 0; /* U-APSD no in use */
++	}
++
+ 	rcu_assign_pointer(ifibss->presp, skb);
  
- 	/*
--- 
-1.7.2.3
+ 	sdata->vif.bss_conf.beacon_int = beacon_int;
+@@ -291,12 +304,15 @@ static void ieee80211_rx_bss_info(struct ieee80211_sub_if_data *sdata,
+ #endif
+ 				rate_control_rate_init(sta);
+ 			}
+-			rcu_read_unlock();
+ 		} else {
+-			rcu_read_unlock();
+-			ieee80211_ibss_add_sta(sdata, mgmt->bssid, mgmt->sa,
+-					       supp_rates, GFP_KERNEL);
++			sta = ieee80211_ibss_add_sta(sdata, mgmt->bssid,
++					mgmt->sa, supp_rates, GFP_KERNEL);
+ 		}
++
++		if (sta && elems->wmm_info)
++			set_sta_flags(sta, WLAN_STA_WME);
++
++		rcu_read_unlock();
+ 	}
+ 
+ 	bss = ieee80211_bss_info_update(local, rx_status, mgmt, len, elems,
 
