@@ -1,41 +1,122 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yw0-f46.google.com ([209.85.213.46]:44095 "EHLO
-	mail-yw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757668Ab0JUOE3 (ORCPT
+Received: from mail.candelatech.com ([208.74.158.172]:36861 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752370Ab0JAT0f (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 21 Oct 2010 10:04:29 -0400
-Received: by ywi6 with SMTP id 6so2744683ywi.19
-        for <linux-wireless@vger.kernel.org>; Thu, 21 Oct 2010 07:04:28 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1287668824-3096-2-git-send-email-senthilkumar@atheros.com>
-References: <1287668824-3096-1-git-send-email-senthilkumar@atheros.com> <1287668824-3096-2-git-send-email-senthilkumar@atheros.com>
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Date: Thu, 21 Oct 2010 07:04:07 -0700
-Message-ID: <AANLkTi=cH3GeAa-s8iSMEs=ckRoeeF7=w1Kz4t6ABHNd@mail.gmail.com>
-Subject: Re: [PATCH v2 6/7] cfg80211: add debug print when processing a channel
-To: Senthil Balasubramanian <senthilkumar@atheros.com>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	Easwar Krishnan <easwar.krishnan@atheros.com>
-Content-Type: text/plain; charset=UTF-8
+	Fri, 1 Oct 2010 15:26:35 -0400
+From: greearb@candelatech.com
+To: linux-wireless@vger.kernel.org
+Cc: Ben Greear <greearb@candelatech.com>
+Subject: [PATCH] ath9k:  Report total tx/rx bytes and packets in debugfs.
+Date: Fri,  1 Oct 2010 12:26:30 -0700
+Message-Id: <1285961190-7065-1-git-send-email-greearb@candelatech.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Oct 21, 2010 at 6:47 AM, Senthil Balasubramanian
-<senthilkumar@atheros.com> wrote:
-> From: Luis R. Rodriguez <lrodriguez@atheros.com>
->
-> In the worst case you are seeing really odd things you want
-> more information than what is provided right now, for those
-> that insist and want debug info through CONFIG_CFG80211_REG_DEBUG
-> provide a print of when we are processing a channel and with what
-> regulatory rule.
->
-> Cc: Easwar Krishnan <easwar.krishnan@atheros.com>
-> Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
-> Signed-off-by: Senthil Balasubramanian <senthilkumar@atheros.com>
-> ---
-> v2 -- fixed compilation error if REG_DEBUG is not defined.
+From: Ben Greear <greearb@candelatech.com>
 
-Thanks !!
+Includes pkts/bytes that may have had errors, and includes
+wireless headers when counting bytes.
 
-  Luis
+Signed-off-by: Ben Greear <greearb@candelatech.com>
+---
+:100644 100644 d65a896... 62b2e97... M	drivers/net/wireless/ath/ath9k/debug.c
+:100644 100644 5d21704... 822b6f3... M	drivers/net/wireless/ath/ath9k/debug.h
+ drivers/net/wireless/ath/ath9k/debug.c |   15 +++++++++++++++
+ drivers/net/wireless/ath/ath9k/debug.h |   12 ++++++++++++
+ 2 files changed, 27 insertions(+), 0 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath9k/debug.c b/drivers/net/wireless/ath/ath9k/debug.c
+index d65a896..62b2e97 100644
+--- a/drivers/net/wireless/ath/ath9k/debug.c
++++ b/drivers/net/wireless/ath/ath9k/debug.c
+@@ -696,6 +696,8 @@ static ssize_t read_file_xmit(struct file *file, char __user *user_buf,
+ 	PR("DESC CFG Error:  ", desc_cfg_err);
+ 	PR("DATA Underrun:   ", data_underrun);
+ 	PR("DELIM Underrun:  ", delim_underrun);
++	PR("TX-Pkts-All:     ", tx_pkts_all);
++	PR("TX-Bytes-All:    ", tx_bytes_all);
+ 
+ 	if (len > size)
+ 		len = size;
+@@ -709,6 +711,9 @@ static ssize_t read_file_xmit(struct file *file, char __user *user_buf,
+ void ath_debug_stat_tx(struct ath_softc *sc, struct ath_txq *txq,
+ 		       struct ath_buf *bf, struct ath_tx_status *ts)
+ {
++	TX_STAT_INC(txq->axq_qnum, tx_pkts_all);
++	sc->debug.stats.txstats[txq->axq_qnum].tx_bytes_all += bf->bf_mpdu->len;
++
+ 	if (bf_isampdu(bf)) {
+ 		if (bf_isxretried(bf))
+ 			TX_STAT_INC(txq->axq_qnum, a_xretries);
+@@ -803,6 +808,13 @@ static ssize_t read_file_recv(struct file *file, char __user *user_buf,
+ 	PHY_ERR("HT-LENGTH", ATH9K_PHYERR_HT_LENGTH_ILLEGAL);
+ 	PHY_ERR("HT-RATE", ATH9K_PHYERR_HT_RATE_ILLEGAL);
+ 
++	len += snprintf(buf + len, size - len,
++			"%18s : %10u\n", "RX-Pkts-All",
++			sc->debug.stats.rxstats.rx_pkts_all);
++	len += snprintf(buf + len, size - len,
++			"%18s : %10u\n", "RX-Bytes-All",
++			sc->debug.stats.rxstats.rx_bytes_all);
++
+ 	if (len > size)
+ 		len = size;
+ 
+@@ -821,6 +833,9 @@ void ath_debug_stat_rx(struct ath_softc *sc, struct ath_rx_status *rs)
+ 
+ 	u32 phyerr;
+ 
++	RX_STAT_INC(rx_pkts_all);
++	sc->debug.stats.rxstats.rx_bytes_all += rs->rs_datalen;
++
+ 	if (rs->rs_status & ATH9K_RXERR_CRC)
+ 		RX_STAT_INC(crc_err);
+ 	if (rs->rs_status & ATH9K_RXERR_DECRYPT)
+diff --git a/drivers/net/wireless/ath/ath9k/debug.h b/drivers/net/wireless/ath/ath9k/debug.h
+index 5d21704..822b6f3 100644
+--- a/drivers/net/wireless/ath/ath9k/debug.h
++++ b/drivers/net/wireless/ath/ath9k/debug.h
+@@ -89,6 +89,10 @@ struct ath_rc_stats {
+ 
+ /**
+  * struct ath_tx_stats - Statistics about TX
++ * @tx_pkts_all:  No. of total frames transmitted, including ones that
++	may have had errors.
++ * @tx_bytes_all:  No. of total bytes transmitted, including ones that
++	may have had errors.
+  * @queued: Total MPDUs (non-aggr) queued
+  * @completed: Total MPDUs (non-aggr) completed
+  * @a_aggr: Total no. of aggregates queued
+@@ -107,6 +111,8 @@ struct ath_rc_stats {
+  * @delim_urn: TX delimiter underrun errors
+  */
+ struct ath_tx_stats {
++	u32 tx_pkts_all;
++	u32 tx_bytes_all;
+ 	u32 queued;
+ 	u32 completed;
+ 	u32 a_aggr;
+@@ -124,6 +130,10 @@ struct ath_tx_stats {
+ 
+ /**
+  * struct ath_rx_stats - RX Statistics
++ * @rx_pkts_all:  No. of total frames received, including ones that
++	may have had errors.
++ * @rx_bytes_all:  No. of total bytes received, including ones that
++	may have had errors.
+  * @crc_err: No. of frames with incorrect CRC value
+  * @decrypt_crc_err: No. of frames whose CRC check failed after
+ 	decryption process completed
+@@ -136,6 +146,8 @@ struct ath_tx_stats {
+  * @phy_err_stats: Individual PHY error statistics
+  */
+ struct ath_rx_stats {
++	u32 rx_pkts_all;
++	u32 rx_bytes_all;
+ 	u32 crc_err;
+ 	u32 decrypt_crc_err;
+ 	u32 phy_err;
+-- 
+1.7.2.2
+
