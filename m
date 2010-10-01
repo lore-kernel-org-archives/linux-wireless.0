@@ -1,65 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.19.149.2]:50676 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751880Ab0JGQfR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 7 Oct 2010 12:35:17 -0400
-Message-ID: <4CADF6BF.6070305@atheros.com>
-Date: Thu, 7 Oct 2010 22:05:11 +0530
-From: Bala Shanmugam <sbalashanmugam@atheros.com>
+Received: from mail-fx0-f46.google.com ([209.85.161.46]:39688 "EHLO
+	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932311Ab0JAMvc (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 1 Oct 2010 08:51:32 -0400
+Received: by fxm14 with SMTP id 14so534359fxm.19
+        for <linux-wireless@vger.kernel.org>; Fri, 01 Oct 2010 05:51:31 -0700 (PDT)
+From: Christian Lamparter <chunkeey@googlemail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Subject: Re: [PATCH] carl9170: fix hung workqueue
+Date: Fri, 1 Oct 2010 14:51:28 +0200
+Cc: linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>
+References: <201009272303.01535.chunkeey@googlemail.com> <1285658747.3885.4.camel@jlt3.sipsolutions.net>
+In-Reply-To: <1285658747.3885.4.camel@jlt3.sipsolutions.net>
 MIME-Version: 1.0
-To: Marcel Holtmann <holtmann@linux.intel.com>
-CC: Shanmugamkamatchi Balashanmugam
-	<Shanmugamkamatchi.Balashanmugam@Atheros.com>,
-	Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	linux-bluetooth <linux-bluetooth@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Deepak Dhamdhere <Deepak.Dhamdhere@Atheros.com>,
-	Sree Durbha <Sree.Durbha@Atheros.com>
-Subject: Re: RFC: btusb firmware load help
-References: <1286349552.6145.11.camel@aeonflux>	 <AANLkTimDvgFtoGLEjgWyYRrhQy6Num-rn_2WYO4Lf84b@mail.gmail.com>	 <1286380566.6145.42.camel@aeonflux> <20101006163816.GE7070@tux>	 <AANLkTik9w4_PdcEsbRHakLcxcD334_1Q8hGArxTXPCGF@mail.gmail.com>	 <20101006173949.GG7070@tux>	 <1286387660.3655.382.camel@jlt3.sipsolutions.net>	 <AANLkTikYRSQw-+Tcj4VS1qxi=OaeF9C5hjAMWVu+0M=v@mail.gmail.com>	 <AANLkTi=o4Mc72NrNoALBdS3YHeY7RMyyAJPsCy=uW3+F@mail.gmail.com>	 <1286389697.3655.401.camel@jlt3.sipsolutions.net>	 ,<20101006183340.GI7070@tux>	 <44EE5C37ADC36343B0625A05DD408C4850DAD2CA31@CHEXMB-01.global.atheros.com> <1286465072.6145.151.camel@aeonflux>
-In-Reply-To: <1286465072.6145.151.camel@aeonflux>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
+Content-Type: Text/Plain;
+  charset="utf-8"
+Message-Id: <201010011451.28418.chunkeey@googlemail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-  On 10/7/2010 8:54 PM, Marcel Holtmann wrote:
-> Hi Bala,
->
->> Thanks Johannes.  This would be better option to change PID in firmware
->> as blacklisting 3002 might create problems for 3011 chipsets.
->> Will try and let you people know.
-> The misbehaving 3002 needs to be blacklisted in btusb.c anyway. However
-> after loading the firmware to 3002 device, it should change its PID to
-> something else.
->
-> I am still trying to figure out if this is one stage firmware loading or
-> a two stage firmware loading. This is all pretty unclear and nobody has
-> answered this clearly so far.
->
-> Regards
->
-> Marcel
->
->
-Marcel,
+On Tuesday 28 September 2010 09:25:47 Johannes Berg wrote:
+> On Mon, 2010-09-27 at 23:03 +0200, Christian Lamparter wrote:
+> > The patch "mac80211: wait for scan work complete before
+> > restarting hw", broke carl9170's restart path.
+> > 
+> > Previously it was possible to call ieee80211_restart_hw
+> > from mac80211's internal workqueue. Now though it hangs
+> > because of the flush_workqueue in the procedure.
+> 
+> I thought I asked somebody to move that. It's expected that you are
+> allowed to call it -- the flush and scan cancel code there needs to be
+> moved into the _work_, out of the restart_hw() function.
+> 
+John,
 
-eeprom based 3011 chips comes up with PID 3000 giving control to DFU 
-driver [ath3k].  ath3k downloads the
-firmware changing PID to 3002.  Now btusb gets control.
-
-In sflash based devices to reduce windows suspend/resume time we had a 
-small firmware in flash which
-enables the device to get detected as Generic Bluetooth USB device with 
-PID 3002.  So control reaches btusb when device is plugged in, leaving 
-no option for us to load the actual firmware.
-
-Solution would be to blacklist 3002 in btusb, enable ath3k to get 
-control for both the devices, download the firmware and change PID to 
-3003 so that control with come to btusb.
-
-Thanks for your time.
+you can drop this patch and add Stanislaw's patch - series:
+"[PATCH 1/6] mac80211: perform scan cancel in hw reset work"
+instead.
 
 Regards,
-Bala.
+	Chr
