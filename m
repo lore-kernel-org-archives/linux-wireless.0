@@ -1,28 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([88.198.39.176]:55564 "EHLO ds10.nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752728Ab0JOH5l (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 15 Oct 2010 03:57:41 -0400
-Message-ID: <4CB80969.5040902@openwrt.org>
-Date: Fri, 15 Oct 2010 09:57:29 +0200
-From: Felix Fietkau <nbd@openwrt.org>
-MIME-Version: 1.0
-To: =?ISO-8859-15?Q?Bj=F6rn_Smedman?= <bjorn.smedman@venatech.se>
-CC: Ben Greear <greearb@candelatech.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	"John W. Linville" <linville@tuxdriver.com>,
+Received: from he.sipsolutions.net ([78.46.109.217]:60754 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751639Ab0JAQGw (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 1 Oct 2010 12:06:52 -0400
+Subject: Re: [PATCH 2/3] cfg80211: patches to allow setting the WDS peer
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Bill Jordan <bjordan@rajant.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org,
 	"Luis R. Rodriguez" <lrodriguez@atheros.com>
-Subject: Re: [PATCH] ath9k_hw: avoid division-by-zero in ani
-References: <alpine.DEB.2.00.1010150150110.20478@bigbill>
-In-Reply-To: <alpine.DEB.2.00.1010150150110.20478@bigbill>
-Content-Type: text/plain; charset=ISO-8859-15
+In-Reply-To: <1285949159.3739.37.camel@jlt3.sipsolutions.net>
+References: <1285946441-20152-1-git-send-email-bjordan@rajant.com>
+	 <1285946441-20152-3-git-send-email-bjordan@rajant.com>
+	 <1285949159.3739.37.camel@jlt3.sipsolutions.net>
+Content-Type: text/plain; charset="UTF-8"
+Date: Fri, 01 Oct 2010 18:06:52 +0200
+Message-ID: <1285949212.3739.38.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2010-10-15 2:00 AM, Björn Smedman wrote:
-> The ath9k ANI code may under some circumstances do division-by-zero. This 
-> patch detects and avoids that case.
-Should be obsolete with my patch from 3 days ago:
-[PATCH 1/3] ath9k_hw: fix division by zero in the ANI monitor code
+On Fri, 2010-10-01 at 18:05 +0200, Johannes Berg wrote:
+> On Fri, 2010-10-01 at 11:20 -0400, Bill Jordan wrote:
+> 
+> > +static int nl80211_set_wds_peer(struct sk_buff *skb, struct genl_info *info)
+> > +{
+> > +	struct cfg80211_registered_device *rdev;
+> > +	struct wireless_dev *wdev;
+> > +	struct net_device *dev;
+> > +	u8 *bssid;
+> > +	int err;
+> > +
+> > +	if (!info->attrs[NL80211_ATTR_MAC])
+> > +		return -EINVAL;
+> > +
+> > +	rtnl_lock();
+> > +
+> > +	err = get_rdev_dev_by_info_ifindex(info, &rdev, &dev);
+> > +	if (err)
+> > +		goto unlock_rtnl;
+> > +
+> > +	wdev = dev->ieee80211_ptr;
+> 
+> I think this (or maybe the mac80211 bit, but I think here makes more
+> sense) needs to check !netif_running(), otherwise you can change the
+> peer without it taking effect, or something like that? Sorry, should've
+> noted that earlier.
 
-- Felix
+cfg80211_wds_wext_siwap does this.
+
+johannes
+
