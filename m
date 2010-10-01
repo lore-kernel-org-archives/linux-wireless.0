@@ -1,36 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:39664 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751884Ab0JYI1D (ORCPT
+Received: from mail-qy0-f181.google.com ([209.85.216.181]:57279 "EHLO
+	mail-qy0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932177Ab0JAPU7 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 25 Oct 2010 04:27:03 -0400
-Subject: Re: [RFT] mac80211: fix null pointer dereference on
- ieee80211_stop_tx_ba_session()
-From: Johannes Berg <johannes@sipsolutions.net>
-To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	amod.bodas@atheros.com, pstew@google.com, stable@kernel.org
-In-Reply-To: <1287803778-10330-1-git-send-email-lrodriguez@atheros.com>
-References: <1287803778-10330-1-git-send-email-lrodriguez@atheros.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Mon, 25 Oct 2010 10:23:32 +0200
-Message-ID: <1287995012.3587.2.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+	Fri, 1 Oct 2010 11:20:59 -0400
+Received: by mail-qy0-f181.google.com with SMTP id 9so1079767qyk.19
+        for <linux-wireless@vger.kernel.org>; Fri, 01 Oct 2010 08:20:59 -0700 (PDT)
+From: Bill Jordan <bjordan@rajant.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Bill Jordan <bjordan@rajant.com>
+Subject: [PATCH 1/3] ath9k: add WDS interfaces to ath9k
+Date: Fri,  1 Oct 2010 11:20:39 -0400
+Message-Id: <1285946441-20152-2-git-send-email-bjordan@rajant.com>
+In-Reply-To: <1285946441-20152-1-git-send-email-bjordan@rajant.com>
+References: <1285946441-20152-1-git-send-email-bjordan@rajant.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2010-10-22 at 20:16 -0700, Luis R. Rodriguez wrote:
-> RCU was not being used so we could race against the free'ing of the TID.
+Enable WDS for the ath9k driver.
 
->  	spin_lock_bh(&sta->lock);
-> -	tid_tx = sta->ampdu_mlme.tid_tx[tid];
-> +	tid_tx = rcu_dereference(sta->ampdu_mlme.tid_tx[tid]);
+Signed-off-by: Bill Jordan <bjordan@rajant.com>
+---
+ drivers/net/wireless/ath/ath9k/init.c |    1 +
+ drivers/net/wireless/ath/ath9k/main.c |    3 +++
+ 2 files changed, 4 insertions(+), 0 deletions(-)
 
-As I mentioned to Luis on IRC, I believe that the spinlock is held
-across all assignments to ampdu_mlme.tid_tx, so this is definitely not
-necessary (nor really correct). If there is a place that doesn't hold
-the spinlock that may be a bug, but a cursory look suggested that all
-places hold the lock correctly.
-
-johannes
+diff --git a/drivers/net/wireless/ath/ath9k/init.c b/drivers/net/wireless/ath/ath9k/init.c
+index de33938..c2792c9 100644
+--- a/drivers/net/wireless/ath/ath9k/init.c
++++ b/drivers/net/wireless/ath/ath9k/init.c
+@@ -639,6 +639,7 @@ void ath9k_set_hw_capab(struct ath_softc *sc, struct ieee80211_hw *hw)
+ 
+ 	hw->wiphy->interface_modes =
+ 		BIT(NL80211_IFTYPE_AP) |
++		BIT(NL80211_IFTYPE_WDS) |
+ 		BIT(NL80211_IFTYPE_STATION) |
+ 		BIT(NL80211_IFTYPE_ADHOC) |
+ 		BIT(NL80211_IFTYPE_MESH_POINT);
+diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
+index a133878..d67067f 100644
+--- a/drivers/net/wireless/ath/ath9k/main.c
++++ b/drivers/net/wireless/ath/ath9k/main.c
+@@ -1384,6 +1384,9 @@ static int ath9k_add_interface(struct ieee80211_hw *hw,
+ 	case NL80211_IFTYPE_STATION:
+ 		ic_opmode = NL80211_IFTYPE_STATION;
+ 		break;
++	case NL80211_IFTYPE_WDS:
++		ic_opmode = NL80211_IFTYPE_WDS;
++		break;
+ 	case NL80211_IFTYPE_ADHOC:
+ 	case NL80211_IFTYPE_AP:
+ 	case NL80211_IFTYPE_MESH_POINT:
+-- 
+1.7.2.3
 
