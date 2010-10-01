@@ -1,41 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:40653 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755252Ab0JGUT1 (ORCPT
+Received: from mail-iw0-f174.google.com ([209.85.214.174]:58117 "EHLO
+	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753410Ab0JAUHf (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 7 Oct 2010 16:19:27 -0400
-Subject: Re: 2.6.36-rc7 warning in __cfg80211_auth_remove
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Johannes Stezenbach <js@sig21.net>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <20101007151844.GB3183@sig21.net>
-References: <20101007151844.GB3183@sig21.net>
-Content-Type: text/plain; charset="UTF-8"
-Date: Thu, 07 Oct 2010 22:19:26 +0200
-Message-ID: <1286482766.20974.39.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+	Fri, 1 Oct 2010 16:07:35 -0400
+Received: by iwn5 with SMTP id 5so4214885iwn.19
+        for <linux-wireless@vger.kernel.org>; Fri, 01 Oct 2010 13:07:35 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <AANLkTikX82sSH3eJ_dSxb0v4MHw74ns8Ak0NREH0g1Vq@mail.gmail.com>
+References: <20100928222945.GB10932@tux> <1285748303.3756.19.camel@jlt3.sipsolutions.net>
+ <AANLkTi=qGb+aEz48kNKUvuhgA2RAr0pbQoENYV_DazWT@mail.gmail.com>
+ <1285781138.3756.29.camel@jlt3.sipsolutions.net> <AANLkTikX82sSH3eJ_dSxb0v4MHw74ns8Ak0NREH0g1Vq@mail.gmail.com>
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Date: Fri, 1 Oct 2010 13:07:14 -0700
+Message-ID: <AANLkTikLkPgwpB9Tm829VHMKYu2u7VqarX+8Mj7tw-6-@mail.gmail.com>
+Subject: Re: [PATCH] mac80211: fix rate_control_send_low warnings for delbas
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linville@tuxdriver.com, stable@kernel.org,
+	linux-wireless@vger.kernel.org, Paul Stewart <pstew@google.com>,
+	Amod Bodas <amod.bodas@atheros.com>,
+	Vasanthakumar Thiagarajan <vasanth@atheros.com>,
+	Jouni Malinen <j@w1.fi>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2010-10-07 at 17:18 +0200, Johannes Stezenbach wrote:
-> Hi,
-> 
-> just got the following while testing with rt73usb on
-> kernel 2.6.36-rc7 with wpa_supplicant v0.6.10:
-> 
-> wlan0: authentication with 00:22:b0:xx:xx:xx timed out
-> ------------[ cut here ]------------
-> WARNING: at net/wireless/mlme.c:284 __cfg80211_auth_remove+0xc3/0xd0 [cfg80211]()
+On Thu, Sep 30, 2010 at 10:53 AM, Luis R. Rodriguez
+<lrodriguez@atheros.com> wrote:
+> On Wed, Sep 29, 2010 at 10:25 AM, Johannes Berg
+> <johannes@sipsolutions.net> wrote:
+>> On Wed, 2010-09-29 at 10:10 -0700, Luis R. Rodriguez wrote:
+>>
+>>> > I really think that can be done more easily though. For one, clearly we
+>>> > already have the warning, so we don't need more infrastructure to catch
+>>> > such errors?!
+>>>
+>>> This is true, I just added that to ensure I hit these when testing
+>>> really, I can nuke the counter, but it can help if eventually believe
+>>> we have a proper fix to allow these frames through somehow too.
+>>>
+>>> > Also, this may end up hiding issues that we don't yet
+>>> > understand, like the nullfunc one you were talking about.
+>>>
+>>> Yeah, good point, although I am under the impression this is a similar
+>>> situation, we probably try to send a nullfunc to notify the old AP we
+>>> are going to go awake if we are transmitting data while roaming. But
+>>> yeah, its not easily triggerable yet.
+>>>
+>>> > The delBA one
+>>> > we now understand fully, so it makes more sense to simply suppress
+>>> > sending delBA when we are going to disassociate by way of associating
+>>> > with a new AP, no?
+>>>
+>>> That's reasonable but we will still need the channel, otherwise how
+>>> would we know its this issue?
+>>
+>> Why do we care? We can just always suppress sending the delba when we
+>> get into _set_disassoc() from mgd_assoc(), no?
+>
+> Yeah, and I actually think I found another race with this code, I'm
+> going to try something a bit different now.
 
->  [<ffffffffa002d980>] __cfg80211_auth_remove+0xc3/0xd0 [cfg80211]
->  [<ffffffffa002e27c>] cfg80211_send_auth_timeout+0x93/0xaa [cfg80211]
->  [<ffffffffa004c3eb>] ieee80211_probe_auth_done+0x2a/0x97 [mac80211]
->  [<ffffffffa004e551>] ieee80211_work_work+0xecd/0xf3e [mac80211]
+OK yay, took a while but I think I found a better and proper fix for
+this. Will post next.
 
-Oh *crap*. I thought we'd fixed these :-(
-
-But then I really don't see how it might have happened. Was there
-anything in the log before this?
-
-johannes
-
+  Luis
