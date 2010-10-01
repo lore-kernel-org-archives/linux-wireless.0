@@ -1,246 +1,228 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga14.intel.com ([143.182.124.37]:1450 "EHLO mga14.intel.com"
+Received: from mx1.redhat.com ([209.132.183.28]:50651 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753736Ab0JNSEU (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 14 Oct 2010 14:04:20 -0400
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Johannes Berg <johannes.berg@intel.com>,
+	id S932394Ab0JAMES (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 1 Oct 2010 08:04:18 -0400
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: Johannes Berg <johannes@sipsolutions.net>,
 	Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Subject: [PATCH 3/9] iwlwifi: rename ibss_beacon variable
-Date: Thu, 14 Oct 2010 11:02:44 -0700
-Message-Id: <1287079370-20587-4-git-send-email-wey-yi.w.guy@intel.com>
-In-Reply-To: <1287079370-20587-1-git-send-email-wey-yi.w.guy@intel.com>
-References: <1287079370-20587-1-git-send-email-wey-yi.w.guy@intel.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org,
+	Stanislaw Gruszka <sgruszka@redhat.com>
+Subject: [PATCH 3/6] mac80211: keep lock when calling __ieee80211_scan_completed()
+Date: Fri,  1 Oct 2010 14:05:29 +0200
+Message-Id: <1285934732-16087-3-git-send-email-sgruszka@redhat.com>
+In-Reply-To: <1285934732-16087-1-git-send-email-sgruszka@redhat.com>
+References: <1285934732-16087-1-git-send-email-sgruszka@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+We are taking local->mtx inside __ieee80211_scan_completed(), but just
+before call to that function we drop the lock. Dropping/taking lock is not
+good, because can lead to hard to understand race conditions.
 
-Since we're also going to support AP (GO) mode,
-the variable isn't used for just IBSS beacons
-any more -- rename it to not mislead readers.
+Patch split scan_completed() code into two functions, first must be called
+with local->mtx taken and second without it.
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
 ---
- drivers/net/wireless/iwlwifi/iwl-agn.c      |   26 +++++++++++++-------------
- drivers/net/wireless/iwlwifi/iwl-core.c     |   16 ++++++++--------
- drivers/net/wireless/iwlwifi/iwl-dev.h      |    4 ++--
- drivers/net/wireless/iwlwifi/iwl3945-base.c |   26 +++++++++++++-------------
- 4 files changed, 36 insertions(+), 36 deletions(-)
+ net/mac80211/scan.c |   85 +++++++++++++++++++++++++++------------------------
+ 1 files changed, 45 insertions(+), 40 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
-index 6771c40..0cc090b 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
-@@ -317,15 +317,15 @@ static u32 iwl_fill_beacon_frame(struct iwl_priv *priv,
- 					  struct ieee80211_hdr *hdr,
- 					  int left)
- {
--	if (!priv->ibss_beacon)
-+	if (!priv->beacon_skb)
- 		return 0;
- 
--	if (priv->ibss_beacon->len > left)
-+	if (priv->beacon_skb->len > left)
- 		return 0;
- 
--	memcpy(hdr, priv->ibss_beacon->data, priv->ibss_beacon->len);
-+	memcpy(hdr, priv->beacon_skb->data, priv->beacon_skb->len);
- 
--	return priv->ibss_beacon->len;
-+	return priv->beacon_skb->len;
+diff --git a/net/mac80211/scan.c b/net/mac80211/scan.c
+index e9ab896..44deb05 100644
+--- a/net/mac80211/scan.c
++++ b/net/mac80211/scan.c
+@@ -250,12 +250,12 @@ static bool ieee80211_prep_hw_scan(struct ieee80211_local *local)
+ 	return true;
  }
  
- /* Parse the beacon frame to find the TIM element and set tim_idx & tim_size */
-@@ -653,10 +653,10 @@ static void iwl_bg_beacon_update(struct work_struct *work)
- 	}
- 
- 	/* new beacon skb is allocated every time; dispose previous.*/
--	if (priv->ibss_beacon)
--		dev_kfree_skb(priv->ibss_beacon);
-+	if (priv->beacon_skb)
-+		dev_kfree_skb(priv->beacon_skb);
- 
--	priv->ibss_beacon = beacon;
-+	priv->beacon_skb = beacon;
- 
- 	iwl_send_beacon_cmd(priv);
-  out:
-@@ -2993,9 +2993,9 @@ static void __iwl_down(struct iwl_priv *priv)
-  exit:
- 	memset(&priv->card_alive, 0, sizeof(struct iwl_alive_resp));
- 
--	if (priv->ibss_beacon)
--		dev_kfree_skb(priv->ibss_beacon);
--	priv->ibss_beacon = NULL;
-+	if (priv->beacon_skb)
-+		dev_kfree_skb(priv->beacon_skb);
-+	priv->beacon_skb = NULL;
- 
- 	/* clear out any free frames */
- 	iwl_clear_free_frames(priv);
-@@ -4131,7 +4131,7 @@ static int iwl_init_drv(struct iwl_priv *priv)
+-static void __ieee80211_scan_completed(struct ieee80211_hw *hw, bool aborted)
++static bool __ieee80211_scan_completed(struct ieee80211_hw *hw, bool aborted,
++				       bool was_hw_scan)
  {
- 	int ret;
+ 	struct ieee80211_local *local = hw_to_local(hw);
+-	bool was_hw_scan;
  
--	priv->ibss_beacon = NULL;
-+	priv->beacon_skb = NULL;
+-	mutex_lock(&local->mtx);
++	lockdep_assert_held(&local->mtx);
  
- 	spin_lock_init(&priv->sta_lock);
- 	spin_lock_init(&priv->hcmd_lock);
-@@ -4645,8 +4645,8 @@ static void __devexit iwl_pci_remove(struct pci_dev *pdev)
+ 	/*
+ 	 * It's ok to abort a not-yet-running scan (that
+@@ -266,17 +266,13 @@ static void __ieee80211_scan_completed(struct ieee80211_hw *hw, bool aborted)
+ 	if (WARN_ON(!local->scanning && !aborted))
+ 		aborted = true;
  
- 	iwl_free_isr_ict(priv);
+-	if (WARN_ON(!local->scan_req)) {
+-		mutex_unlock(&local->mtx);
+-		return;
+-	}
++	if (WARN_ON(!local->scan_req))
++		return false;
  
--	if (priv->ibss_beacon)
--		dev_kfree_skb(priv->ibss_beacon);
-+	if (priv->beacon_skb)
-+		dev_kfree_skb(priv->beacon_skb);
- 
- 	ieee80211_free_hw(priv->hw);
- }
-diff --git a/drivers/net/wireless/iwlwifi/iwl-core.c b/drivers/net/wireless/iwlwifi/iwl-core.c
-index 89b1827..09a4d17 100644
---- a/drivers/net/wireless/iwlwifi/iwl-core.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-core.c
-@@ -1552,10 +1552,10 @@ static void iwlcore_beacon_update(struct ieee80211_hw *hw,
- 
- 	spin_lock_irqsave(&priv->lock, flags);
- 
--	if (priv->ibss_beacon)
--		dev_kfree_skb(priv->ibss_beacon);
-+	if (priv->beacon_skb)
-+		dev_kfree_skb(priv->beacon_skb);
- 
--	priv->ibss_beacon = skb;
-+	priv->beacon_skb = skb;
- 
- 	timestamp = ((struct ieee80211_mgmt *)skb->data)->u.beacon.timestamp;
- 	priv->timestamp = le64_to_cpu(timestamp);
-@@ -1610,8 +1610,8 @@ void iwl_bss_info_changed(struct ieee80211_hw *hw,
+-	was_hw_scan = test_bit(SCAN_HW_SCANNING, &local->scanning);
+ 	if (was_hw_scan && !aborted && ieee80211_prep_hw_scan(local)) {
+ 		ieee80211_queue_delayed_work(&local->hw,
+ 					     &local->scan_work, 0);
+-		mutex_unlock(&local->mtx);
+-		return;
++		return false;
  	}
  
- 	if (changes & BSS_CHANGED_BEACON && vif->type == NL80211_IFTYPE_AP) {
--		dev_kfree_skb(priv->ibss_beacon);
--		priv->ibss_beacon = ieee80211_beacon_get(hw, vif);
-+		dev_kfree_skb(priv->beacon_skb);
-+		priv->beacon_skb = ieee80211_beacon_get(hw, vif);
- 	}
+ 	kfree(local->hw_scan_req);
+@@ -290,23 +286,25 @@ static void __ieee80211_scan_completed(struct ieee80211_hw *hw, bool aborted)
+ 	local->scanning = 0;
+ 	local->scan_channel = NULL;
  
- 	if (changes & BSS_CHANGED_BEACON_INT && vif->type == NL80211_IFTYPE_AP)
-@@ -2060,10 +2060,10 @@ void iwl_mac_reset_tsf(struct ieee80211_hw *hw)
- 	spin_lock_irqsave(&priv->lock, flags);
- 
- 	/* new association get rid of ibss beacon skb */
--	if (priv->ibss_beacon)
--		dev_kfree_skb(priv->ibss_beacon);
-+	if (priv->beacon_skb)
-+		dev_kfree_skb(priv->beacon_skb);
- 
--	priv->ibss_beacon = NULL;
-+	priv->beacon_skb = NULL;
- 
- 	priv->timestamp = 0;
- 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-dev.h b/drivers/net/wireless/iwlwifi/iwl-dev.h
-index de43e13..70e07fa 100644
---- a/drivers/net/wireless/iwlwifi/iwl-dev.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-dev.h
-@@ -1383,8 +1383,6 @@ struct iwl_priv {
- 
- 	enum nl80211_iftype iw_mode;
- 
--	struct sk_buff *ibss_beacon;
+-	/* we only have to protect scan_req and hw/sw scan */
+-	mutex_unlock(&local->mtx);
 -
- 	/* Last Rx'd beacon timestamp */
- 	u64 timestamp;
+-	ieee80211_hw_config(local, IEEE80211_CONF_CHANGE_CHANNEL);
+-	if (was_hw_scan)
+-		goto done;
+-
+-	ieee80211_configure_filter(local);
++	return true;
++}
  
-@@ -1496,8 +1494,10 @@ struct iwl_priv {
- 	struct work_struct scan_completed;
- 	struct work_struct rx_replenish;
- 	struct work_struct abort_scan;
+-	drv_sw_scan_complete(local);
++static void __ieee80211_scan_completed_finish(struct ieee80211_hw *hw,
++					      bool was_hw_scan)
++{
++	struct ieee80211_local *local = hw_to_local(hw);
+ 
+-	ieee80211_offchannel_return(local, true);
++	ieee80211_hw_config(local, IEEE80211_CONF_CHANGE_CHANNEL);
++	if (!was_hw_scan) {
++		ieee80211_configure_filter(local);
++		drv_sw_scan_complete(local);
++		ieee80211_offchannel_return(local, true);
++	}
+ 
+- done:
+ 	mutex_lock(&local->mtx);
+ 	ieee80211_recalc_idle(local);
+ 	mutex_unlock(&local->mtx);
 +
- 	struct work_struct beacon_update;
- 	struct iwl_rxon_context *beacon_ctx;
-+	struct sk_buff *beacon_skb;
+ 	ieee80211_mlme_notify_scan_completed(local);
+ 	ieee80211_ibss_notify_scan_completed(local);
+ 	ieee80211_mesh_notify_scan_completed(local);
+@@ -367,6 +365,8 @@ static int __ieee80211_start_scan(struct ieee80211_sub_if_data *sdata,
+ 	struct ieee80211_local *local = sdata->local;
+ 	int rc;
  
- 	struct work_struct tt_work;
- 	struct work_struct ct_enter;
-diff --git a/drivers/net/wireless/iwlwifi/iwl3945-base.c b/drivers/net/wireless/iwlwifi/iwl3945-base.c
-index 3ee3e55..8f8c4b7 100644
---- a/drivers/net/wireless/iwlwifi/iwl3945-base.c
-+++ b/drivers/net/wireless/iwlwifi/iwl3945-base.c
-@@ -317,15 +317,15 @@ unsigned int iwl3945_fill_beacon_frame(struct iwl_priv *priv,
- 				int left)
- {
++	lockdep_assert_held(&local->mtx);
++
+ 	if (local->scan_req)
+ 		return -EBUSY;
  
--	if (!iwl_is_associated(priv, IWL_RXON_CTX_BSS) || !priv->ibss_beacon)
-+	if (!iwl_is_associated(priv, IWL_RXON_CTX_BSS) || !priv->beacon_skb)
- 		return 0;
- 
--	if (priv->ibss_beacon->len > left)
-+	if (priv->beacon_skb->len > left)
- 		return 0;
- 
--	memcpy(hdr, priv->ibss_beacon->data, priv->ibss_beacon->len);
-+	memcpy(hdr, priv->beacon_skb->data, priv->beacon_skb->len);
- 
--	return priv->ibss_beacon->len;
-+	return priv->beacon_skb->len;
+@@ -432,7 +432,6 @@ static int __ieee80211_start_scan(struct ieee80211_sub_if_data *sdata,
+ 		local->scan_req = NULL;
+ 		local->scan_sdata = NULL;
+ 	}
+-
+ 	return rc;
  }
  
- static int iwl3945_send_beacon_cmd(struct iwl_priv *priv)
-@@ -813,10 +813,10 @@ static void iwl3945_bg_beacon_update(struct work_struct *work)
+@@ -448,8 +447,8 @@ ieee80211_scan_get_channel_time(struct ieee80211_channel *chan)
+ 	return IEEE80211_PROBE_DELAY + IEEE80211_CHANNEL_TIME;
+ }
  
- 	mutex_lock(&priv->mutex);
- 	/* new beacon skb is allocated every time; dispose previous.*/
--	if (priv->ibss_beacon)
--		dev_kfree_skb(priv->ibss_beacon);
-+	if (priv->beacon_skb)
-+		dev_kfree_skb(priv->beacon_skb);
+-static int ieee80211_scan_state_decision(struct ieee80211_local *local,
+-					 unsigned long *next_delay)
++static void ieee80211_scan_state_decision(struct ieee80211_local *local,
++					  unsigned long *next_delay)
+ {
+ 	bool associated = false;
+ 	bool tx_empty = true;
+@@ -459,12 +458,6 @@ static int ieee80211_scan_state_decision(struct ieee80211_local *local,
+ 	struct ieee80211_sub_if_data *sdata;
+ 	struct ieee80211_channel *next_chan;
  
--	priv->ibss_beacon = beacon;
-+	priv->beacon_skb = beacon;
- 	mutex_unlock(&priv->mutex);
+-	/* if no more bands/channels left, complete scan and advance to the idle state */
+-	if (local->scan_channel_idx >= local->scan_req->n_channels) {
+-		__ieee80211_scan_completed(&local->hw, false);
+-		return 1;
+-	}
+-
+ 	/*
+ 	 * check if at least one STA interface is associated,
+ 	 * check if at least one STA interface has pending tx frames
+@@ -536,7 +529,6 @@ static int ieee80211_scan_state_decision(struct ieee80211_local *local,
+ 	}
  
- 	iwl3945_send_beacon_cmd(priv);
-@@ -2642,9 +2642,9 @@ static void __iwl3945_down(struct iwl_priv *priv)
-  exit:
- 	memset(&priv->card_alive, 0, sizeof(struct iwl_alive_resp));
+ 	*next_delay = 0;
+-	return 0;
+ }
  
--	if (priv->ibss_beacon)
--		dev_kfree_skb(priv->ibss_beacon);
--	priv->ibss_beacon = NULL;
-+	if (priv->beacon_skb)
-+		dev_kfree_skb(priv->beacon_skb);
-+	priv->beacon_skb = NULL;
+ static void ieee80211_scan_state_leave_oper_channel(struct ieee80211_local *local,
+@@ -654,6 +646,7 @@ void ieee80211_scan_work(struct work_struct *work)
+ 	unsigned long next_delay = 0;
+ 	int rc = 1;
+ 	bool aborted = true;
++	bool finish, hw_scan;
  
- 	/* clear out any free frames */
- 	iwl3945_clear_free_frames(priv);
-@@ -3848,7 +3848,7 @@ static int iwl3945_init_drv(struct iwl_priv *priv)
- 	struct iwl3945_eeprom *eeprom = (struct iwl3945_eeprom *)priv->eeprom;
+ 	mutex_lock(&local->mtx);
  
- 	priv->retry_rate = 1;
--	priv->ibss_beacon = NULL;
-+	priv->beacon_skb = NULL;
+@@ -697,8 +690,12 @@ void ieee80211_scan_work(struct work_struct *work)
+ 	do {
+ 		switch (local->next_scan_state) {
+ 		case SCAN_DECISION:
+-			if (ieee80211_scan_state_decision(local, &next_delay))
+-				return;
++			/* if no more bands/channels left, complete scan */
++			if (local->scan_channel_idx >= local->scan_req->n_channels) {
++				aborted = false;
++				goto out_complete;
++			}
++			ieee80211_scan_state_decision(local, &next_delay);
+ 			break;
+ 		case SCAN_SET_CHANNEL:
+ 			ieee80211_scan_state_set_channel(local, &next_delay);
+@@ -719,9 +716,16 @@ void ieee80211_scan_work(struct work_struct *work)
+ 	return;
  
- 	spin_lock_init(&priv->sta_lock);
- 	spin_lock_init(&priv->hcmd_lock);
-@@ -4256,8 +4256,8 @@ static void __devexit iwl3945_pci_remove(struct pci_dev *pdev)
- 	iwl_free_channel_map(priv);
- 	iwlcore_free_geos(priv);
- 	kfree(priv->scan_cmd);
--	if (priv->ibss_beacon)
--		dev_kfree_skb(priv->ibss_beacon);
-+	if (priv->beacon_skb)
-+		dev_kfree_skb(priv->beacon_skb);
+ out_complete:
++	finish = false;
++	if (rc) {
++		hw_scan = test_bit(SCAN_HW_SCANNING, &local->scanning);
++		finish = __ieee80211_scan_completed(&local->hw, aborted, hw_scan);
++	}
++
+ 	mutex_unlock(&local->mtx);
+-	if (rc)
+-		__ieee80211_scan_completed(&local->hw, true);
++
++	if (finish)
++		__ieee80211_scan_completed_finish(&local->hw, hw_scan);
+ }
  
- 	ieee80211_free_hw(priv->hw);
+ int ieee80211_request_scan(struct ieee80211_sub_if_data *sdata,
+@@ -785,7 +789,7 @@ int ieee80211_request_internal_scan(struct ieee80211_sub_if_data *sdata,
+ 
+ void ieee80211_scan_cancel(struct ieee80211_local *local)
+ {
+-	bool abortscan;
++	bool finish = false;
+ 
+ 	cancel_delayed_work_sync(&local->scan_work);
+ 
+@@ -794,10 +798,11 @@ void ieee80211_scan_cancel(struct ieee80211_local *local)
+ 	 * queued -- mostly at suspend under RTNL.
+ 	 */
+ 	mutex_lock(&local->mtx);
+-	abortscan = test_bit(SCAN_SW_SCANNING, &local->scanning) ||
+-		    (!local->scanning && local->scan_req);
++	if (test_bit(SCAN_SW_SCANNING, &local->scanning) ||
++	    (!local->scanning && local->scan_req))
++		finish = __ieee80211_scan_completed(&local->hw, true, false);
+ 	mutex_unlock(&local->mtx);
+ 
+-	if (abortscan)
+-		__ieee80211_scan_completed(&local->hw, true);
++	if (finish)
++		__ieee80211_scan_completed_finish(&local->hw, false);
  }
 -- 
-1.7.0.4
+1.7.1
 
