@@ -1,55 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yw0-f46.google.com ([209.85.213.46]:63883 "EHLO
-	mail-yw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750959Ab0JVVh5 (ORCPT
+Received: from mho-02-ewr.mailhop.org ([204.13.248.72]:65051 "EHLO
+	mho-02-ewr.mailhop.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752237Ab0JAXKa (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 22 Oct 2010 17:37:57 -0400
-Received: by ywk9 with SMTP id 9so1096885ywk.19
-        for <linux-wireless@vger.kernel.org>; Fri, 22 Oct 2010 14:37:56 -0700 (PDT)
-Message-ID: <4CC2043D.2040909@lwfinger.net>
-Date: Fri, 22 Oct 2010 16:38:05 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
+	Fri, 1 Oct 2010 19:10:30 -0400
+Date: Fri, 1 Oct 2010 16:10:26 -0700
+From: Tony Lindgren <tony@atomide.com>
+To: Anand Gadiyar <gadiyar@ti.com>
+Cc: linux-omap@vger.kernel.org, linux-wireless@vger.kernel.org,
+	Ohad Ben-Cohen <ohad@wizery.com>
+Subject: Re: [PATCH] omap: zoom2/3: fix build caused by wl1271 support
+Message-ID: <20101001231026.GH3117@atomide.com>
+References: <1285965206-17777-1-git-send-email-gadiyar@ti.com>
 MIME-Version: 1.0
-To: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-CC: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>,
-	b43-dev@lists.infradead.org
-Subject: Re: [PATCH] b43: rfkill: use status register based on core revision
- not (PHY's)
-References: <1287779045-20257-1-git-send-email-zajec5@gmail.com>
-In-Reply-To: <1287779045-20257-1-git-send-email-zajec5@gmail.com>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1285965206-17777-1-git-send-email-gadiyar@ti.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 10/22/2010 03:24 PM, Rafał Miłecki wrote:
-> Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
-> ---
-> This makes my N-PHY radio at least running (no scanning results so far). The
-> same register is used by wl on this device.
-> ---
->  drivers/net/wireless/b43/rfkill.c |    2 +-
->  1 files changed, 1 insertions(+), 1 deletions(-)
+* Anand Gadiyar <gadiyar@ti.com> [101001 13:25]:
+> Patch "omap: zoom: add mmc3/wl1271 device support" in the
+> wireless tree still uses .wires in struct omap2_hsmmc_info.
+> .wires has now been replaced with .caps in patch "omap: mmc:
+> extended to pass host capabilities from board file" in the
+> OMAP tree.
 > 
-> diff --git a/drivers/net/wireless/b43/rfkill.c b/drivers/net/wireless/b43/rfkill.c
-> index 78016ae..d2734c9 100644
-> --- a/drivers/net/wireless/b43/rfkill.c
-> +++ b/drivers/net/wireless/b43/rfkill.c
-> @@ -28,7 +28,7 @@
->  /* Returns TRUE, if the radio is enabled in hardware. */
->  bool b43_is_hw_radio_enabled(struct b43_wldev *dev)
->  {
-> -	if (dev->phy.rev >= 3 || dev->phy.type == B43_PHYTYPE_LP) {
-> +	if (dev->dev->id.revision >= 3) {
->  		if (!(b43_read32(dev, B43_MMIO_RADIO_HWENABLED_HI)
->  		      & B43_MMIO_RADIO_HWENABLED_HI_MASK))
->  			return 
+> This causes linux-next as of 20101001 build to break as
+> below. Fix this.
+> 
+>   CC      arch/arm/mach-omap2/board-zoom-peripherals.o
+> arch/arm/mach-omap2/board-zoom-peripherals.c:217: error: unknown field 'wires' specified in initializer
+> make[1]: *** [arch/arm/mach-omap2/board-zoom-peripherals.o] Error 1
+> make: *** [arch/arm/mach-omap2] Error 2
 
-As that register is present only when the core revision >= 3, this change should
-not cause a regression. Perhaps this was an error in the RE from the start and
-testing the phy.rev has always been wrong.
+Can you guys please queue this via the wireless tree along with
+the other wl1271 patches?
 
-John: Just in case my analysis is wrong, keep this change out of 2.6.37. I'll
-give it some testing with G PHYs before 2.6.38 merge time.
-
-Larry
+Acked-by: Tony Lindgren <tony@atomide.com>
+ 
+> Signed-off-by: Anand Gadiyar <gadiyar@ti.com>
+> Cc: Ohad Ben-Cohen <ohad@wizery.com>
+> Cc: Tony Lindgren <tony@atomide.com>
+> ---
+>  arch/arm/mach-omap2/board-zoom-peripherals.c |    2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+> Index: linux-2.6/arch/arm/mach-omap2/board-zoom-peripherals.c
+> ===================================================================
+> --- linux-2.6.orig/arch/arm/mach-omap2/board-zoom-peripherals.c
+> +++ linux-2.6/arch/arm/mach-omap2/board-zoom-peripherals.c
+> @@ -214,7 +214,7 @@ static struct omap2_hsmmc_info mmc[] __i
+>  	{
+>  		.name		= "wl1271",
+>  		.mmc		= 3,
+> -		.wires		= 4,
+> +		.caps		= MMC_CAP_4_BIT_DATA,
+>  		.gpio_wp	= -EINVAL,
+>  		.gpio_cd	= -EINVAL,
+>  		.nonremovable	= true,
