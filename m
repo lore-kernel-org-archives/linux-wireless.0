@@ -1,39 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f46.google.com ([209.85.214.46]:61688 "EHLO
-	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752637Ab0JKBK7 (ORCPT
+Received: from external1.orbit-lab.org ([128.6.192.131]:38699 "HELO
+	external1.orbit-lab.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1754179Ab0JAVmD (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 10 Oct 2010 21:10:59 -0400
-Received: by bwz15 with SMTP id 15so1403810bwz.19
-        for <linux-wireless@vger.kernel.org>; Sun, 10 Oct 2010 18:10:58 -0700 (PDT)
-From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-To: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-Cc: b43-dev@lists.infradead.org,
-	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-Subject: [PATCH 0/3] b43: N-PHY: Channel info cleaning
-Date: Mon, 11 Oct 2010 03:11:00 +0200
-Message-Id: <1286759463-32221-1-git-send-email-zajec5@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+	Fri, 1 Oct 2010 17:42:03 -0400
+Received: from repository3.orbit-lab.org (repository3.orbit-lab.org [10.50.0.41])
+	by external1.orbit-lab.org (Postfix) with ESMTP id 9BD90418D8
+	for <linux-wireless@vger.kernel.org>; Fri,  1 Oct 2010 17:39:40 -0400 (EDT)
+Subject: Compat-wireless release for 2010-10-01 v2 with RX filter for carl9170 on -p release
+To: <linux-wireless@vger.kernel.org>
+Message-Id: <20101001214201.0122B404FC@repository3.orbit-lab.org>
+Date: Fri,  1 Oct 2010 17:42:00 -0400 (EDT)
+From: compat@orbit-lab.org (Compat-wireless cronjob account)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I didn't get any NACK for my RFC, so there we go...
 
-Two first patches contain changes I proposed in my single RFC plus one-line
-change of setting channel in (to-be-dropped) radio_chanspec.
+compat-wireless code metrics
 
-Third patch fixes logic mistake in decision about band change. By the way
-it renames one variable to self-explaining.
+    747282 - Total upstream lines of code being pulled
+      2153 - backport code changes
+      1902 - backport code additions
+       251 - backport code deletions
+      6242 - backport from compat module
+      8395 - total backport code
+    1.1234 - % of code consists of backport work
+       128 - Code changes posted but not yet merged
+        95 - Code additions posted but not yet merged
+        33 - Code deletions posted but not yet merged
+    0.0171 - % of code not yet merged
+      1219 - Crap changes not yet posted
+      1181 - Crap additions not yet posted
+        38 - Crap deletions not yet posted
+    0.1631 - % of crap code
 
-Rafał Miłecki (3):
-  b43: N-PHY: grab more info about new channel
-  b43: N-PHY: store info about current channel's type
-  b43: N-PHY: fix logic in band switching
-
- drivers/net/wireless/b43/phy_common.h |    4 +-
- drivers/net/wireless/b43/phy_n.c      |   74 +++++++++++++++++---------------
- drivers/net/wireless/b43/phy_n.h      |    1 -
- 3 files changed, 42 insertions(+), 37 deletions(-)
-
+Base tree: linux-next.git
+Base tree version: next-20101001
+compat-wireless release: compat-wireless-2010-10-01-6-g6d8961c-pc
