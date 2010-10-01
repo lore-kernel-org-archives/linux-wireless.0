@@ -1,40 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yw0-f46.google.com ([209.85.213.46]:54919 "EHLO
-	mail-yw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750731Ab0J3EGR (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 30 Oct 2010 00:06:17 -0400
-Received: by ywc21 with SMTP id 21so2042ywc.19
-        for <linux-wireless@vger.kernel.org>; Fri, 29 Oct 2010 21:06:16 -0700 (PDT)
-Message-ID: <4CCB99CB.9000400@lwfinger.net>
-Date: Fri, 29 Oct 2010 23:06:35 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-To: =?ISO-8859-1?Q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>
-CC: Walter Goldens <goldenstranger@yahoo.com>,
-	Stefan Lippers-Hollmann <s.L-H@gmx.de>,
-	wireless <linux-wireless@vger.kernel.org>
-Subject: Re: Realtek rtl8188 support?
-References: <201010292202.25486.s.L-H@gmx.de> <694082.86488.qm@web56803.mail.re3.yahoo.com> <AANLkTimnuHM3E3G=d+R4-b=1NDkdEQ9jkbQsqB9ASiEC@mail.gmail.com>
-In-Reply-To: <AANLkTimnuHM3E3G=d+R4-b=1NDkdEQ9jkbQsqB9ASiEC@mail.gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from smtp.nokia.com ([147.243.1.47]:58358 "EHLO mgw-sa01.nokia.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756669Ab0JAOmI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 1 Oct 2010 10:42:08 -0400
+Subject: Re: [PATCH v2] linux-firmware: wl12xx-Add Firmware and NVS files
+ to support Texas Instruments WLAN driver
+From: Luciano Coelho <luciano.coelho@nokia.com>
+To: ext Shahar Levi <shahar_levi@ti.com>
+Cc: David Woodhouse <dwmw2@infradead.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <1285684428.4728.1.camel@powerslave>
+References: <1285682308-20189-1-git-send-email-shahar_levi@ti.com>
+	 <1285684428.4728.1.camel@powerslave>
+Content-Type: text/plain; charset="UTF-8"
+Date: Fri, 01 Oct 2010 17:41:13 +0300
+Message-ID: <1285944073.9229.6.camel@chilepepper>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 10/29/2010 04:27 PM, Gábor Stefanik wrote:
+On Tue, 2010-09-28 at 16:33 +0200, Luciano Coelho wrote:
+> On Tue, 2010-09-28 at 15:58 +0200, ext Shahar Levi wrote:
+> > FW & NVS Support wl127x wireless LAN driver (wl1271 & wl1273).
+> > In order to use those files copy them to target FS at /lib/firmware/.
+> > 
+> > Changes from v1:
+> > - Update the wl1271-nvs.bin that support a band to the correct size (912B)
 > 
-> AFAIK we only add staging drivers that will eventually move out of
-> staging. r8712 has no chance of ever leaving staging; a completely new
-> driver needs to be written (because it isn't mac80211-based).
+> It doesn't matter much, in my opinion, but this "Changes from v1"
+> shouldn't be in the actual commit log.  If you put this kind of comment
+> after the --- (below marked with <HERE>), it is informative for whoever
+> is reading your patch email, but it won't go into git history (where
+> this information is a useless, because v1 is not there).
+> 
+> 
+> > Signed-off-by: Shahar Levi <shahar_levi@ti.com>
+> > ---
+> 
+> I'll test this patch soon and see if the NVS works now.
 
-That is correct, but it should not be too long until there is a mac80211 driver
-for that chip. I just got GPLd sources from Realtek for a mac80211-based driver
-for the RTL8192CE PCIe device. It will need only a small amount of work to make
-it ready for mainline. The critical part is that it uses the same chip as is
-used in the RTL8712 USB device.
+I have tried this firmware and this nvs on my Beagle board and they seem
+to be working fine.
 
-For those that are interested in the RTL8187SE, I'm told that they have a
-working mac80211 driver for it, but that it is not yet stable.
+Tested-by: Luciano Coelho <luciano.coelho@nokia.com>
 
-Larry
+
+-- 
+Cheers,
+Luca.
 
