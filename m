@@ -1,46 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:14873 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751873Ab0JNPza (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 14 Oct 2010 11:55:30 -0400
-Subject: Re: [PATCH 2/2] iwlwifi: one less commit_rxon while scan
-From: "Guy, Wey-Yi" <wey-yi.w.guy@intel.com>
+Received: from he.sipsolutions.net ([78.46.109.217]:53385 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751684Ab0JAQLp (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 1 Oct 2010 12:11:45 -0400
+Subject: Re: [PATCH 1/6] mac80211: perform scan cancel in hw reset work
+From: Johannes Berg <johannes@sipsolutions.net>
 To: Stanislaw Gruszka <sgruszka@redhat.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <20101014084238.GB2286@redhat.com>
-References: <1286977193-12144-1-git-send-email-sgruszka@redhat.com>
-	 <1286977193-12144-2-git-send-email-sgruszka@redhat.com>
-	 <20101014084238.GB2286@redhat.com>
-Content-Type: text/plain
-Date: Thu, 14 Oct 2010 08:54:39 -0700
-Message-Id: <1287071679.13051.10.camel@wwguy-ubuntu>
+Cc: Wey-Yi Guy <wey-yi.w.guy@intel.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <1285934732-16087-1-git-send-email-sgruszka@redhat.com>
+References: <1285934732-16087-1-git-send-email-sgruszka@redhat.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Fri, 01 Oct 2010 18:11:35 +0200
+Message-ID: <1285949495.3739.39.camel@jlt3.sipsolutions.net>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Stanislaw,
-
-On Thu, 2010-10-14 at 01:42 -0700, Stanislaw Gruszka wrote:
-> On Wed, Oct 13, 2010 at 03:39:53PM +0200, Stanislaw Gruszka wrote:
-> > Almost anywhere in the code we avoid committing rxon while performing
-> > scan, and make rxon commit when scan complete. Some current patches do
-> > not follow that rule. We have that problem at least in
-> > iwlagn_confirue_filter(), iwl_update_chain_flags() and
-> > iwl_bg_bt_full_concurrency().
+On Fri, 2010-10-01 at 14:05 +0200, Stanislaw Gruszka wrote:
+> Move ieee80211_scan_cancel() and all other related code to
+> ieee80211_restart_work() as ieee80211_restart_hw() is intended to be
+> callable from any context.
 > 
-> Any comments about iwl_update_chain_flags, iwl_bg_bt_full_concurrency ?
-> I would like to know how to deal with them, should we deffer commit_rxon
-> to scan complete, or cancel the scan. Or maybe this is no problem
-> at all, because in example committing rxon vs scan was problem of
-> older firmware?
+> Fix a bug that RTNL lock is not taken during ieee80211_cancel_scan().
 > 
+> Take local->mtx before WARN(test_bit(SCAN_HW_SCANNING, &local->scanning)
+> to prevent the race condition with __ieee80211_start_scan() described
+> here: http://marc.info/?l=linux-wireless&m=128516716810537&w=2
+> 
+> Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
 
-iwl_update_chain_flags() is used when PSP mode change,
-iwl_bg_bt_full_concurrency() is used only for BT coex and in BT full
-concurrency mode. For both case, I do not see any reason we can not
-defer to scan complete.
+This one's obvious -- the other ones I need a bit of time to review, and
+it's practically weekend here now. I'll try to get to it ASAP.
 
-Thanks
-Wey
+johannes
 
