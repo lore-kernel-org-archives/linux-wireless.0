@@ -1,43 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:49873 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754426Ab0JLPfI (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 12 Oct 2010 11:35:08 -0400
-Message-ID: <4CB48026.6090507@candelatech.com>
-Date: Tue, 12 Oct 2010 08:35:02 -0700
-From: Ben Greear <greearb@candelatech.com>
-MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: linux-wireless@vger.kernel.org
-Subject: Re: [RFC] ath5k:  Move debugfs under ieee80211/[wiphy-name]
-References: <1286824841-30822-1-git-send-email-greearb@candelatech.com> <1286870584.3753.0.camel@jlt3.sipsolutions.net>
-In-Reply-To: <1286870584.3753.0.camel@jlt3.sipsolutions.net>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Received: from comal.ext.ti.com ([198.47.26.152]:43299 "EHLO comal.ext.ti.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754449Ab0JAUeB (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 1 Oct 2010 16:34:01 -0400
+From: Anand Gadiyar <gadiyar@ti.com>
+To: linux-omap@vger.kernel.org, linux-wireless@vger.kernel.org
+Cc: Anand Gadiyar <gadiyar@ti.com>, Ohad Ben-Cohen <ohad@wizery.com>,
+	Tony Lindgren <tony@atomide.com>
+Subject: [PATCH] omap: zoom2: fix build break when CONFIG_WL12XX_PLATFORM_DATA=n
+Date: Sat,  2 Oct 2010 02:03:56 +0530
+Message-Id: <1285965236-17907-1-git-send-email-gadiyar@ti.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 10/12/2010 01:03 AM, Johannes Berg wrote:
-> On Mon, 2010-10-11 at 12:20 -0700, greearb@candelatech.com wrote:
->
->>   void
->>   ath5k_debug_init(void)
->>   {
->> -	ath5k_global_debugfs = debugfs_create_dir("ath5k", NULL);
->>   }
->
-> I didn't really intend for my patch to get merged -- at least you should
-> also remove this now useless function and its callers and prototypes.
+Fix this build break when CONFIG_WL12XX_PLATFORM_DATA is not set.
 
-I'll send an updated patch later today.
+  LD      .tmp_vmlinux1
+arch/arm/mach-omap2/built-in.o: In function `zoom_peripherals_init':
+/home/userdata/a0393673/kernels/mainline/linux-2.6/arch/arm/mach-omap2/board-zoom-peripherals.c:333: undefined reference to `wl12xx_set_platform_data'
+make: *** [.tmp_vmlinux1] Error 1
 
-Thanks,
-Ben
+Signed-off-by: Anand Gadiyar <gadiyar@ti.com>
+Cc: Ohad Ben-Cohen <ohad@wizery.com>
+Cc: Tony Lindgren <tony@atomide.com>
+---
+There are still many warnings about the function wl12xx_set_platform_data
+being unused. Haven't fixed those. Ohad, care to take a look?
 
->
-> johannes
+ include/linux/wl12xx.h |    7 +++++++
+ 1 file changed, 7 insertions(+)
 
-
--- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+Index: linux-2.6/include/linux/wl12xx.h
+===================================================================
+--- linux-2.6.orig/include/linux/wl12xx.h
++++ linux-2.6/include/linux/wl12xx.h
+@@ -32,7 +32,14 @@ struct wl12xx_platform_data {
+ 	int board_ref_clock;
+ };
+ 
++#ifdef CONFIG_WL12XX_PLATFORM_DATA
+ int wl12xx_set_platform_data(const struct wl12xx_platform_data *data);
++#else
++static int wl12xx_set_platform_data(const struct wl12xx_platform_data *data)
++{
++	return 0;
++}
++#endif
+ const struct wl12xx_platform_data *wl12xx_get_platform_data(void);
+ 
+ #endif
