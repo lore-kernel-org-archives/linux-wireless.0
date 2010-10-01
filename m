@@ -1,75 +1,90 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail30t.wh2.ocn.ne.jp ([125.206.180.136]:47080 "HELO
-	mail30t.wh2.ocn.ne.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1751024Ab0JGHGh (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:44679 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752295Ab0JAIan (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 7 Oct 2010 03:06:37 -0400
-Received: from vs3001.wh2.ocn.ne.jp (125.206.180.229)
-	by mail30t.wh2.ocn.ne.jp (RS ver 1.0.95vs) with SMTP id 3-0882765193
-	for <linux-wireless@vger.kernel.org>; Thu,  7 Oct 2010 16:06:35 +0900 (JST)
-From: Bruno Randolf <br1@einfach.org>
-To: Helmut Schaa <helmut.schaa@googlemail.com>
-Subject: Re: [PATCH 4/5] nl80211/mac80211: Add channel utilization to survey
-Date: Thu, 7 Oct 2010 16:06:36 +0900
-Cc: linville@tuxdriver.com, nbd@openwrt.org,
-	ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org,
-	adrian@freebsd.org, vasanth@atheros.com,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Jonathan Guerin <jonathan@guerin.id.au>
-References: <20101005095510.3083.46174.stgit@tt-desk> <201010071003.37599.br1@einfach.org> <AANLkTimf=f1DhP68=aHZ7WKVCN9RPBq7sh+46ExnYRVa@mail.gmail.com>
-In-Reply-To: <AANLkTimf=f1DhP68=aHZ7WKVCN9RPBq7sh+46ExnYRVa@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Message-Id: <201010071606.37134.br1@einfach.org>
+	Fri, 1 Oct 2010 04:30:43 -0400
+Subject: Re: [Patch 1/1] wext: fix 32/64 bit alignment issue for 'point'
+ type
+From: Johannes Berg <johannes@sipsolutions.net>
+To: gerrit@erg.abdn.ac.uk
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <42875.148.187.160.35.1285917725.squirrel@148.187.160.35>
+References: <20100930102508.GB3581@gerrit.erg.abdn.ac.uk>
+	 <1285857487.5137.2.camel@jlt3.sipsolutions.net>
+	 <42875.148.187.160.35.1285917725.squirrel@148.187.160.35>
+Content-Type: text/plain; charset="UTF-8"
+Date: Fri, 01 Oct 2010 10:30:39 +0200
+Message-ID: <1285921839.3739.16.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu October 7 2010 15:51:49 Helmut Schaa wrote:
-> On Thu, Oct 7, 2010 at 3:03 AM, Bruno Randolf <br1@einfach.org> wrote:
-> > On Wed October 6 2010 18:54:37 Helmut Schaa wrote:
-> >> On Tue, Oct 5, 2010 at 11:55 AM, Bruno Randolf <br1@einfach.org> wrote:
-> >> > This adds three new values to the survey results:
-> >> > 
-> >> >  * BUSY - percentage of time the channel was busy
-> >> >  * BUSY_TX - percentage of time spent transmitting frames
-> >> >  * BUSY_RX - percentage of time spent receiving frames
-> >> 
-> >> Does BUSY include BUSY_RX and BUSY_TX already? At least on
-> >> rt2800 devices we only have access to BUSY which already includes
-> >> BUSY_RX and TX.
-> > 
-> > yes, BUSY includes TX and RX.
-> > 
-> >> And what about BUSY on the secondary channel in case of 40Mhz?
-> > 
-> > i have no information about that. luis?
+On Fri, 2010-10-01 at 08:22 +0100, gerrit@erg.abdn.ac.uk wrote:
+
+> >> The current definition appears to be a typo (PK_LEN instead of LEN); it
+> >> causes misalignment on 64 bit systems.
+> >
+> > So, correct me if I'm wrong, the only effect this change has is changing
+> > the second memcpy() in iwe_stream_add_point() to not copy an extra 4
+> > bytes that will be overwritten right away by the next memcpy()
+> > (presumably, unless the data is < 4, in which case the memcpy might
+> > actually be out of bounds).
+
+> Thank you for pointing this out, it seems the change is not as trivial
+> as I thought.
+
+Well, I think the change is correct, given that without it we seem to
+copy too much in that memcpy() (which is unlikely to matter though)
+
+> I noticed this problem in userspace where the 4 byte difference caused
+> misalignment of point types (such as essid) on a 64 bit system.
+
+Ah, so userspace reading this was the issue -- yes, I can see that, and
+I checked the "canonical userspace" (wireless-tools), and it essentially
+contains this patch.
+
+> I wonder whether the following thinking is right:
+>  * the first memcpy copies 4 bytes = IW_EV_LCP_PK_LEN starting at stream
+>  * the second memcpy should start where the first left off, i.e.
+>      memcpy(stream +  IW_EV_LCP_PK_LEN,
+>             ((char *) &iwe->u) + IW_EV_POINT_OFF,
+>             IW_EV_POINT_PK_LEN - IW_EV_LCP_PK_LEN);
+>    where IW_EV_POINT_PK_LEN = IW_EV_LCP_PK_LEN = 8
+>  * if this were true, then
+>       int lcp_len   = iwe_stream_lcp_len(info);
+>    could also go.
 > 
-> At least we've got a register for that in rt2800 ;)
-> That's why I'm asking.
+> But I have not tested any of this. Unless it is clear, please ignore for
+> the moment, I will test next week and get back.
 
-which units do you have for the busy time? what about other drivers?
+I think it's a bit more complicated than that, but then this is wext, so
+it can't be easy to understand ;)
 
-in ath[59]k we have it as cycles (which is about 1/44000 of a second, 
-depending on the mode). so it counts up rather fast.
+The format should be
+ - iw_event.len (2 bytes)
+ - iw_event.cmd (2 bytes)
+ - [potentially padding, depending on alignment of union iwreq_data
+    in struct iw_event -- lcp_len accounts for this]
+ - iw_point.length (2 bytes)
+ - iw_point.flags (2 bytes)
+ - iw_point data ("extra")
 
-i have been thinking more about it and i think my current approach is flawed. 
-the idea was that we probably need to use a percentage as the least common 
-denominator between all drivers, and i wanted to leave the time period up to 
-userspace. so if userspace wants to have the percentage in the last second, it 
-would poll every second, if it wants it every 100ms it would poll every 100ms.
-that would work, if there is only one userspace process querying this in 
-regular intervals.
+As far as I can tell, the bug that you found means that we copy 4 or 8
+too many bytes when we copy in iw_point.{length,flags}, but typically it
+won't matter all that much as we neither declare it valid nor will the
+destination buffer usually be overrun by it.
 
-but what if there is a second process who does the same, or a user issues "iw 
-wlan0 survey dump", that would reduce the timespan for the other process... so 
-that is obviously flawed...
+This is the only effect on the kernel since this is the only user of
+this define that you want to change. In userspace, there are more users,
+and they might well run into issues due to the bad version of the
+constant, which is most likely why Jean corrected it in
+wireless-tools ...
 
-some absolute cumulative value would be better, so several userspace processes 
-can poll and do their own averaging or percentage calculations. 
+In any case, I consider all this software archaeology, and not really
+worth the effort unless something breaks ... nobody can properly review
+this code anyway and keep their sanity :-)
 
-but which units to use? what would be a good way of solving that?
-any ideas???
+johannes
 
-bruno
