@@ -1,54 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([192.100.105.134]:36768 "EHLO
-	mgw-mx09.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756602Ab0JFP2p (ORCPT
+Received: from mail-iw0-f174.google.com ([209.85.214.174]:38724 "EHLO
+	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751525Ab0JARUa (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 6 Oct 2010 11:28:45 -0400
-Subject: Re: [PATCH] omap: zoom2/3: fix build caused by wl1271 support
-From: Luciano Coelho <luciano.coelho@nokia.com>
-To: "ext Gadiyar, Anand" <gadiyar@ti.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	ext Tony Lindgren <tony@atomide.com>,
-	"linux-omap@vger.kernel.org" <linux-omap@vger.kernel.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Ohad Ben-Cohen <ohad@wizery.com>
-In-Reply-To: <AANLkTinHA+JS1MObanawFF8ktW6OEMGr7CnJhakUetPz@mail.gmail.com>
-References: <1285965206-17777-1-git-send-email-gadiyar@ti.com>
-	 <20101001231026.GH3117@atomide.com> <1286279588.15401.28.camel@chilepepper>
-	 <1286280426.15401.29.camel@chilepepper>
-	 <1286284790.15401.53.camel@chilepepper>
-	 <1286311187.2793.7.camel@powerslave> <20101006135221.GE2472@tuxdriver.com>
-	 <AANLkTinHA+JS1MObanawFF8ktW6OEMGr7CnJhakUetPz@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Wed, 06 Oct 2010 18:27:49 +0300
-Message-ID: <1286378869.6731.7.camel@powerslave>
-Mime-Version: 1.0
+	Fri, 1 Oct 2010 13:20:30 -0400
+Received: by iwn5 with SMTP id 5so4054950iwn.19
+        for <linux-wireless@vger.kernel.org>; Fri, 01 Oct 2010 10:20:30 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <1285949495.3739.39.camel@jlt3.sipsolutions.net>
+References: <1285934732-16087-1-git-send-email-sgruszka@redhat.com> <1285949495.3739.39.camel@jlt3.sipsolutions.net>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Fri, 1 Oct 2010 10:20:08 -0700
+Message-ID: <AANLkTintS4GU5-uYjMyY5bA1RaJL5cby1aKEpmZhSBkN@mail.gmail.com>
+Subject: Re: [PATCH 1/6] mac80211: perform scan cancel in hw reset work
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Stanislaw Gruszka <sgruszka@redhat.com>,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2010-10-06 at 16:01 +0200, ext Gadiyar, Anand wrote:
-> >> Hmmm... We got a problem here.  This patch breaks builds when we *don't*
-> >> have "omap: mmc extended to pass host capabilities from board file".  We
-> >> don't have that on wireless-next yet, so builds with zoom boards
-> >> selected are broken.
-> >>
-> >> Any ideas on how to solve this dilemma? I guess the proper way to handle
-> >> this would be to make the changes proposed in this patch when merging
-> >> instead of having a normal commit for it, wouldn't it?
-> >
-> > Just cherry-pick that change into the branch of your tree that I do
-> > _not_ pull from.  I presume that it is already available in linux-next?
-> >
-> 
-> Yup - both patches are in linux-next; that's where we noticed the build break.
+On Fri, Oct 1, 2010 at 9:11 AM, Johannes Berg <johannes@sipsolutions.net> wrote:
+> On Fri, 2010-10-01 at 14:05 +0200, Stanislaw Gruszka wrote:
+>> Move ieee80211_scan_cancel() and all other related code to
+>> ieee80211_restart_work() as ieee80211_restart_hw() is intended to be
+>> callable from any context.
+>>
+>> Fix a bug that RTNL lock is not taken during ieee80211_cancel_scan().
+>>
+>> Take local->mtx before WARN(test_bit(SCAN_HW_SCANNING, &local->scanning)
+>> to prevent the race condition with __ieee80211_start_scan() described
+>> here: http://marc.info/?l=linux-wireless&m=128516716810537&w=2
+>>
+>> Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+>
+> This one's obvious -- the other ones I need a bit of time to review, and
+> it's practically weekend here now. I'll try to get to it ASAP.
 
-Ok, I hope the patch applies cleanly in our trees.
+I'm going to suck this into linux-next-pending/ on compat-wireless for
+today's release as it may fix a deadlock with carl9170.
 
-John, don't you want to do the cherry-pick on your wireless-testing
-then? If you do it, I can "inherit" that, because I pull from it into my
-"testing" branch (wl12xx/master).  At the moment, w-t is broken too.
-
--- 
-Cheers,
-Luca.
-
+  Luis
