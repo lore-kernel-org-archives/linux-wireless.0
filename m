@@ -1,60 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.19.149.2]:14866 "EHLO mail.atheros.com"
+Received: from nbd.name ([88.198.39.176]:46370 "EHLO ds10.nbd.name"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756169Ab0JTXHU (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 20 Oct 2010 19:07:20 -0400
-Received: from mail.atheros.com ([10.10.20.105])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Wed, 20 Oct 2010 16:07:09 -0700
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	Ben Greear <greearb@candelatech.com>,
-	Kyungwan Nam <kyungwan.nam@atheros.com>
-Subject: [PATCH 6/6] ath9k: add a debug warning when we cannot stop RX
-Date: Wed, 20 Oct 2010 16:07:08 -0700
-Message-ID: <1287616028-12547-7-git-send-email-lrodriguez@atheros.com>
-In-Reply-To: <1287616028-12547-1-git-send-email-lrodriguez@atheros.com>
-References: <1287616028-12547-1-git-send-email-lrodriguez@atheros.com>
+	id S1756992Ab0JAOvY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 1 Oct 2010 10:51:24 -0400
+Message-ID: <4CA5F569.3000509@openwrt.org>
+Date: Fri, 01 Oct 2010 16:51:21 +0200
+From: Felix Fietkau <nbd@openwrt.org>
 MIME-Version: 1.0
-Content-Type: text/plain
+To: linux-wireless <linux-wireless@vger.kernel.org>
+CC: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	"John W. Linville" <linville@tuxdriver.com>
+Subject: Re: [PATCH] ath9k: fix channel flag / regd issues with multiple cards
+References: <4CA5180D.3010702@openwrt.org> <4CA51F2F.70701@openwrt.org>
+In-Reply-To: <4CA51F2F.70701@openwrt.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-We have seen several DMA races when we race against
-stopping and starting the PCU. I suspect that when
-we cannot stop the PCU we may hit some of these same
-races so warn against them for now but only when
-debugging (CONFIG_ATH_DEBUG) is enabled.
+On 2010-10-01 1:37 AM, Felix Fietkau wrote:
+> On 2010-10-01 1:06 AM, Felix Fietkau wrote:
+>> Since the regulatory code touches the channel array, it needs to be
+>> copied for each device instance. That way the original channel array
+>> can also be made const.
+>> 
+>> Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+>> Cc: stable@kernel.org [all]
+> Hmm, don't merge this one just yet. Seems that this may not be the cause
+> for the weird multi-card regd issues after all, since the code looks
+> like that part should be properly locked, even for multiple wiphys
+> sharing the same channel list.
+I got user confirmation that this patch does indeed help with this
+issue. I think we should merge this patch until we figure out why
+sharing the channel list over multiple devices causes these issues.
+Without this patch, the channel flags can get messed up in a way that
+breaks regulatory compliance.
 
-If you run into this warning and are a developer,
-please fix the cause of the warning. The potential
-here, although I cannot prove yet, is that the DMA
-engine can be confused and start writing to a buffer
-that was already DMA'd before and at least the kernel
-assumes is not being accessed by hardware anymore.
-
-Cc: Ben Greear <greearb@candelatech.com>
-Cc: Kyungwan Nam <kyungwan.nam@atheros.com>
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
----
- drivers/net/wireless/ath/ath9k/recv.c |    2 ++
- 1 files changed, 2 insertions(+), 0 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/ath9k/recv.c b/drivers/net/wireless/ath/ath9k/recv.c
-index c04a940..87fabf8 100644
---- a/drivers/net/wireless/ath/ath9k/recv.c
-+++ b/drivers/net/wireless/ath/ath9k/recv.c
-@@ -528,6 +528,8 @@ bool ath_stoprecv(struct ath_softc *sc)
- 		sc->rx.rxlink = NULL;
- 	spin_unlock_bh(&sc->rx.rxbuflock);
- 
-+	ATH_DBG_WARN(!stopped, "Could not stop RX, we could be "
-+		     "confusing the DMA engine when we start RX up\n");
- 	return stopped;
- }
- 
--- 
-1.7.0.4
-
+- Felix
