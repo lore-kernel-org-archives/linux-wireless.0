@@ -1,61 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wy0-f174.google.com ([74.125.82.174]:44874 "EHLO
-	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753708Ab0JLIyE (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:54887 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932342Ab0JAPaJ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 12 Oct 2010 04:54:04 -0400
-Received: by wye20 with SMTP id 20so1182880wye.19
-        for <linux-wireless@vger.kernel.org>; Tue, 12 Oct 2010 01:53:59 -0700 (PDT)
-From: Ido Yariv <ido@wizery.com>
-To: Luciano Coelho <luciano.coelho@nokia.com>,
-	linux-wireless@vger.kernel.org
-Cc: Ido Yariv <ido@wizery.com>
-Subject: [PATCH v2 0/4] wl1271: TX optimizations & fixes
-Date: Tue, 12 Oct 2010 10:53:49 +0200
-Message-Id: <1286873633-10080-1-git-send-email-ido@wizery.com>
+	Fri, 1 Oct 2010 11:30:09 -0400
+Received: from uucp by smtp.tuxdriver.com with local-rmail (Exim 4.63)
+	(envelope-from <linville@tuxdriver.com>)
+	id 1P1hYm-0006E5-GN
+	for linux-wireless@vger.kernel.org; Fri, 01 Oct 2010 11:30:08 -0400
+Received: from linville-8530p.local (localhost.localdomain [127.0.0.1])
+	by linville-8530p.local (8.14.4/8.14.4) with ESMTP id o91FIa54004007
+	for <linux-wireless@vger.kernel.org>; Fri, 1 Oct 2010 11:18:36 -0400
+Received: (from linville@localhost)
+	by linville-8530p.local (8.14.4/8.14.4/Submit) id o91FIavf004005
+	for linux-wireless@vger.kernel.org; Fri, 1 Oct 2010 11:18:36 -0400
+Date: Fri, 1 Oct 2010 11:18:36 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: linux-wireless@vger.kernel.org
+Subject: new stuff for 2.6.37 needs to be posted _now_
+Message-ID: <20101001151836.GC3049@tuxdriver.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The following patches fix some issues in the TX path, as well as optimize it.
+You may have noticed that Linus has released 2.6.36-rc6.  There may
+or may not be an -rc7.  So, the merge window is around the corner!
 
-The first patch fixes an issue in wl1271_tx_work. In case the aggregation
-buffer is completely filled, the content of the buffer is transferred and no
-more packets are sent. Fixed by flushing the buffer and continue aggregating
-packets.
+For those that need a reminder, the opening of the merge window is a
+_deadline_ for new features.  Once the merge window opens, only fixes
+will be accepted for 2.6.37.  In fact, any non-fix patches need to
+already be in wireless-next-2.6 when the merge window opens if you want
+them in 2.6.37.  That means you need to get them posted _now_, so they
+can be reviewed and I can find time to merge them before the deadline.
 
-The second patch solves a TX starvation issue in wl1271_irq_work. Since TX is
-handled by wl1271_tx_work, packets are transmitted after all interrupts are
-handled in wl1271_irq_work. Since these include TX completion interrupts the
-FW status might be read multiple times needlessly, which could hurt performance.
+You have been warned...this means you!
 
-The third patch is more of a cosmetic change. Instead of traversing the array
-of TX descriptors in order to find a free entry, use a bitmap for that
-purpose.
+John
 
-The last patch fixes an issue with the TX queue low watermark. The number of
-items in the TX queue is checked against the low watermark in
-wl1271_tx_complete. However, the fact that a TX completion interrupt was fired
-does not necessarily mean that there are any less skbs in the TX queue. Fixed
-by moving the handling logic to the TX work, after skbs are actually dequeued.
-
-These patches were tested on a Zoom2 platform (SDIO only). While throughput in
-RX scenarios was hardly affected, throughput in TX scenarios was significantly
-improved.
-
-Changes from v1:
-- Fix a theoretical potential deadlock in irq_work and tx_work. Instead of
-  cancelling redundant work, avoid scheduling it in the first place.
-- Check if the low watermark was reached only if skbs were really dequeued
-
-Ido Yariv (4):
-  wl1271: TX aggregation optimization
-  wl1271: Fix TX starvation
-  wl1271: Allocate TX descriptors more efficiently
-  wl1271: Fix TX queue low watermark handling
-
- drivers/net/wireless/wl12xx/wl1271.h      |    2 +
- drivers/net/wireless/wl12xx/wl1271_main.c |   20 ++++-
- drivers/net/wireless/wl12xx/wl1271_tx.c   |  114 ++++++++++++++++++----------
- drivers/net/wireless/wl12xx/wl1271_tx.h   |    1 +
- 4 files changed, 92 insertions(+), 45 deletions(-)
-
+P.S.  I have some distractions/obligations this weekend (starting
+yesterday), so my merge queue is already backed-up.  I will attempt
+to get everything in my current queue merged (assuming no contrary
+comments, NAKs, whatever).  Anything not already posted is in jeopardy
+-- if it really needs to be in, post it ASAP and let me know it's
+importance.
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
