@@ -1,56 +1,31 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:56271 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754140Ab0JDRYq (ORCPT
+Received: from mail-gw0-f46.google.com ([74.125.83.46]:39704 "EHLO
+	mail-gw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753893Ab0JARyG (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 4 Oct 2010 13:24:46 -0400
-Message-ID: <4CAA0DDB.2030702@candelatech.com>
-Date: Mon, 04 Oct 2010 10:24:43 -0700
-From: Ben Greear <greearb@candelatech.com>
+	Fri, 1 Oct 2010 13:54:06 -0400
+Received: by gwj17 with SMTP id 17so1233360gwj.19
+        for <linux-wireless@vger.kernel.org>; Fri, 01 Oct 2010 10:54:05 -0700 (PDT)
 MIME-Version: 1.0
-To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-CC: ath9k-devel@venema.h4ckr.net,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: [ath9k-devel] Ath9k in funky state after adding 130 STA interfaces.
-References: <4CA81265.8030403@candelatech.com> <20101004170732.GH2105@tux> <20101004170906.22433.qmail@stuge.se> <20101004172159.GJ2105@tux>
-In-Reply-To: <20101004172159.GJ2105@tux>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+In-Reply-To: <AANLkTi==09DXcF-Cbon7SFUxU8WbUMx6ZL8OQP5g8=5z@mail.gmail.com>
+References: <733457.84719.qm@web56801.mail.re3.yahoo.com> <AANLkTi==09DXcF-Cbon7SFUxU8WbUMx6ZL8OQP5g8=5z@mail.gmail.com>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Fri, 1 Oct 2010 10:53:44 -0700
+Message-ID: <AANLkTi=JsFKYRnErHfP_eAYbrmjsG05E3NHHsmtGr+bK@mail.gmail.com>
+Subject: Re: [BUG] compat: broken driver-select always compiles ath6kl & brcm80211
+To: Michael Griepentrog <griepent@cs.wisc.edu>
+Cc: Walter Goldens <goldenstranger@yahoo.com>,
+	linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 10/04/2010 10:21 AM, Luis R. Rodriguez wrote:
-> On Mon, Oct 04, 2010 at 10:09:06AM -0700, Peter Stuge wrote:
->> Luis R. Rodriguez wrote:
->>>> This on wireless-testing from Friday, plus a few debugfs patches
->>>> I posted recently.
->>>>
->>>> I was running two STA just fine, and then tried to add 128 more.
->>>
->>> You're serious right? I mean I'm happy your serious, but whoa, you
->>> want 130 STAs on one interface working fine?
->>
->> Come on. If it is impossible to work because of whatever limitations
->> then wouldn't it make sense for the driver to throw an error instead
->> of not throwing an error and just not working?
->
-> You're right but if you are using the ath9k virtual wiphy stuff please
-> not that code is intended to be removed, it was experimental code and
-> this is also why we don't have good documentation for it. It was just
-> a hack as a proof of concept. The real solution needs to take place on
-> cfg80211/mac80211.
+On Thu, Sep 30, 2010 at 8:33 AM, Michael Griepentrog
+<griepent@cs.wisc.edu> wrote:
+> driver-select currently doesn't modify the Makefiles of drivers in
+> staging, so they will always be built.
 
-I'm not using virtual wiphy..just one PHY and lots of STA devices
-on top of it.
+I've now disabled staging crap for every driver-select option except
+ones that want staging crap.
 
-I'd be more than happy to see the wiphy stuff dissappear, as it
-seems useless to me.  Using lots of STA and AP devices on a single
-phy is much more useful, however.
-
-Thanks,
-Ben
-
-
--- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
-
+  Luis
