@@ -1,107 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.19.149.2]:14952 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754324Ab0J1Md5 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 28 Oct 2010 08:33:57 -0400
-Received: from mail.atheros.com ([10.10.20.108])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Thu, 28 Oct 2010 05:33:45 -0700
-Message-ID: <4CC96DB0.6040708@atheros.com>
-Date: Thu, 28 Oct 2010 18:03:52 +0530
-From: Mohammed Shafi <mshajakhan@atheros.com>
-MIME-Version: 1.0
-To: Rajkumar Manoharan <rajkumarvm@live.com>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [RFC] ath9k: Fix incorrect access of rate flags in RC
-References: <1288021004-7315-1-git-send-email-mshajakhan@atheros.com> <AANLkTi=M9AR6ubFfuZb3rDLit_DvrkL14emM7OQYdmSb@mail.gmail.com>,<4CC65C42.70604@atheros.com> <COL121-W4399D19465DDBEEFA3FBA9A1440@phx.gbl>
-In-Reply-To: <COL121-W4399D19465DDBEEFA3FBA9A1440@phx.gbl>
-Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
+Received: from he.sipsolutions.net ([78.46.109.217]:60513 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756513Ab0JALtv (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 1 Oct 2010 07:49:51 -0400
+Subject: Re: wireless-testing (2.6.36-rc6):  inconsistent {IN-SOFTIRQ-W} ->
+ {SOFTIRQ-ON-W} usage.
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Ben Greear <greearb@candelatech.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	NetDev <netdev@vger.kernel.org>
+In-Reply-To: <4CA4F000.2060509@candelatech.com>
+References: <4CA4F000.2060509@candelatech.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Fri, 01 Oct 2010 13:49:49 +0200
+Message-ID: <1285933789.3739.34.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thursday 28 October 2010 05:45 PM, Rajkumar Manoharan wrote:
->    
->> looks like ,but not very sure Luis,need to consult Senthil and will tell
->> you.
->> thanks,
->> shafi
->>
->> On Monday 25 October 2010 10:06 PM, Luis R. Rodriguez wrote:
->>      
->>> On Mon, Oct 25, 2010 at 8:36 AM, Mohammed Shafi Shajakhan
->>>   wrote:
->>>
->>>        
->>>> From: Mohammed Shafi Shajakhan
->>>>
->>>> The index variable to access the rate flags should be obtained from the
->>>> inner loop counter which corresponds to rate table structure.
->>>>
->>>> Signed-off-by: Mohammed Shafi Shajakhan
->>>>
->>>>          
->>> Is this a stable fix?
->>>
->>> Luis
->>>
->>>        
-> Yes it is a stable fix. It solves the invalid rate selection when the supported basic rate
->
-> is invalid on a purticular band. This patch fixed the following warning message.
->
->
->
-> Call Trace:
->
->   [<ffffffff8104ee4a>] warn_slowpath_common+0x7a/0xb0
->
->   [<ffffffff8104ee95>] warn_slowpath_null+0x15/0x20
->
->   [<ffffffffa0583c45>] ath_get_rate+0x595/0x5b0 [ath9k]
->
->   [<ffffffff811a0636>] ? cpumask_next_and+0x36/0x50
->
->   [<ffffffffa0405186>] rate_control_get_rate+0x86/0x160 [mac80211]
->
->   [<ffffffffa040dfac>] invoke_tx_handlers+0x81c/0x12d0 [mac80211]
->
->   [<ffffffffa040eae9>] ieee80211_tx+0x89/0x2b0 [mac80211]
->
->   [<ffffffff812891bc>] ? pskb_expand_head+0x1cc/0x1f0
->
->   [<ffffffffa040edc5>] ieee80211_xmit+0xb5/0x1c0 [mac80211]
->
->   [<ffffffffa041026f>] ieee80211_tx_skb+0x4f/0x60 [mac80211]
->
->   [<ffffffffa03fe016>] ieee80211_send_nullfunc+0x46/0x60 [mac80211]
->
->   [<ffffffffa03f91d7>] ieee80211_offchannel_stop_station+0x107/0x150 [mac80211]
->
->   [<ffffffff812891bc>] ? pskb_expand_head+0x1cc/0x1f0
->
->   [<ffffffffa040edc5>] ieee80211_xmit+0xb5/0x1c0 [mac80211]
->
->   [<ffffffffa041026f>] ieee80211_tx_skb+0x4f/0x60 [mac80211]
->
->   [<ffffffffa03fe016>] ieee80211_send_nullfunc+0x46/0x60 [mac80211]
->
->   [<ffffffffa03f91d7>] ieee80211_offchannel_stop_station+0x107/0x150 [mac80211]
->
->   [<ffffffffa03f8896>] ieee80211_scan_work+0x146/0x600 [mac80211]
->
->   [<ffffffff8133a375>] ? schedule+0x2f5/0x8e0
->
->   [<ffffffffa03f8750>] ? ieee80211_scan_work+0x0/0x600 [mac80211]
->
->   [<ffffffff81064fcf>] process_one_work+0x10f/0x380
->
->   [<ffffffff81066bc2>] worker_thread+0x162/0x340
->
->   [<ffffffff81066a60>] ? worker_thread+0x0/0x340
->
-> - Rajkumar
->   		 	   		  .
->
->    
-Thanks Raj.
-shafi
+On Thu, 2010-09-30 at 13:16 -0700, Ben Greear wrote:
+> We saw this on a system that has two ath9k APs, some extra routing tables
+> and rules to use them, and a user-space 'bridge' that uses packet-sockets.
+> 
+> Aside from a few patches to help virtualize wireless devices (and none directly to ath9k),
+> this is today's wireless-testing tree.
+> 
+> =================================
+> [ INFO: inconsistent lock state ]
+> 2.6.36-rc6-wl+ #20
+> ---------------------------------
+> inconsistent {IN-SOFTIRQ-W} -> {SOFTIRQ-ON-W} usage.
+> kworker/u:0/5 [HC0[0]:SC0[0]:HE1:SE1] takes:
+>   (&(&list->lock)->rlock){+.?...}, at: [<c0741066>] packet_rcv+0x1f3/0x27a
+
+I think this is due to
+
+commit 5ed3bc7288487bd4f891f420a07319e0b538b4fe
+Author: John W. Linville <linville@tuxdriver.com>
+Date:   Thu Jun 24 14:38:30 2010 -0400
+
+    mac80211: use netif_receive_skb in ieee80211_tx_status callpath
+
+
+since
+
+/**
+ *      netif_receive_skb - process receive buffer from network
+ *      @skb: buffer to process
+ *
+ *      netif_receive_skb() is the main receive data processing function.
+ *      It always succeeds. The buffer may be dropped during processing   
+ *      for congestion control or by the protocol layers.
+ *
+ *      This function may only be called from softirq context and interrupts
+ *      should be enabled.
+
+but we don't explicitly disable BHs. I suppose we should impose the same
+on drivers calling ieee80211_tx_status().
+
+johannes
+
