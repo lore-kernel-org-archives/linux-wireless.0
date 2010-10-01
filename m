@@ -1,74 +1,83 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:51046 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756402Ab0JGVVZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 7 Oct 2010 17:21:25 -0400
-From: Hauke Mehrtens <hauke@hauke-m.de>
-To: lrodriguez@atheros.com
-Cc: linux-wireless@vger.kernel.org, mcgrof@infradead.org,
-	Hauke Mehrtens <hauke@hauke-m.de>
-Subject: [PATCH 3/3] compat-wireless: backport kfifo for rt2x00
-Date: Thu,  7 Oct 2010 23:21:09 +0200
-Message-Id: <1286486469-18904-3-git-send-email-hauke@hauke-m.de>
-In-Reply-To: <1286486469-18904-1-git-send-email-hauke@hauke-m.de>
-References: <1286486469-18904-1-git-send-email-hauke@hauke-m.de>
+Received: from shadbolt.e.decadent.org.uk ([88.96.1.126]:53413 "EHLO
+	shadbolt.e.decadent.org.uk" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751542Ab0JACwJ (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 30 Sep 2010 22:52:09 -0400
+From: Ben Hutchings <ben@decadent.org.uk>
+To: David Sanchez Herrero <david.krusty@gmail.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Cc: 598144@bugs.debian.org
+In-Reply-To: <AANLkTi=3saB8VaHfA6pFTnvTdCZVWcMLRAHfO06GvW90@mail.gmail.com>
+References: <20100926203325.8583.75263.reportbug@krusty-deb2.mundo-R.com>
+	 <1285534242.2697.575.camel@localhost>
+	 <AANLkTimMUN45nE9U+ahZQRxH2uqiaCBgRqi2wxR76gr4@mail.gmail.com>
+	 <1285636469.28504.51.camel@localhost>
+	 <AANLkTikY=z89HFg07zsiox4dvos4Vu1QXpAkCXvdm1JV@mail.gmail.com>
+	 <AANLkTi=3saB8VaHfA6pFTnvTdCZVWcMLRAHfO06GvW90@mail.gmail.com>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-kJ+JQmh7zhAheoIb17f7"
+Date: Fri, 01 Oct 2010 03:52:04 +0100
+Message-ID: <1285901524.3916.49.camel@localhost>
+Mime-Version: 1.0
+Subject: Re: Bug#598144: rt2500pci: very low transfers and link quality
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
----
- patches/19-kfifo.patch |   36 ++++++++++++++++++++++++++++--------
- 1 files changed, 28 insertions(+), 8 deletions(-)
 
-diff --git a/patches/19-kfifo.patch b/patches/19-kfifo.patch
-index 2a97ca0..1d04304 100644
---- a/patches/19-kfifo.patch
-+++ b/patches/19-kfifo.patch
-@@ -32,16 +32,36 @@ not be backported easily with defines in the compat module.
-  		lbs_pr_err("Out of memory allocating event FIFO buffer\n");
-  		goto out;
-  	}
--@@ -763,7 +769,12 @@ static void lbs_free_adapter(struct lbs_
-- 	lbs_deb_enter(LBS_DEB_MAIN);
-+--- a/drivers/net/wireless/rt2x00/rt2x00.h
-++++ b/drivers/net/wireless/rt2x00/rt2x00.h
-+@@ -896,7 +896,11 @@ struct rt2x00_dev {
-+ 	/*
-+ 	 * FIFO for storing tx status reports between isr and tasklet.
-+ 	 */
-++#if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,33))
-+ 	struct kfifo txstatus_fifo;
-++#else
-++	struct kfifo *txstatus_fifo;
-++#endif
-  
-- 	lbs_free_cmd_buffer(priv);
-+ 	/*
-+ 	 * Tasklet for processing tx status reports (rt2800pci).
-+--- a/drivers/net/wireless/rt2x00/rt2x00dev.c
-++++ b/drivers/net/wireless/rt2x00/rt2x00dev.c
-+@@ -824,10 +824,16 @@ static int rt2x00lib_probe_hw(struct rt2
-+ 		 * queues gets reported before we've got a chance to handle
-+ 		 * them) 24*4=384 tx status reports need to be cached.
-+ 		 */
- +#if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,33))
-- 	kfifo_free(&priv->event_fifo);
-+ 		status = kfifo_alloc(&rt2x00dev->txstatus_fifo, 512,
-+ 				     GFP_KERNEL);
-+ 		if (status)
-+ 			return status;
- +#else
--+	if (priv->event_fifo)
--+		kfifo_free(priv->event_fifo);
-++		rt2x00dev->txstatus_fifo = kfifo_alloc(512, GFP_KERNEL, NULL);
-++		if (IS_ERR(rt2x00dev->txstatus_fifo))
-++			return PTR_ERR(rt2x00dev->txstatus_fifo);
- +#endif
-- 	del_timer(&priv->command_timer);
-- 	del_timer(&priv->auto_deepsleep_timer);
-  
-+ 		/* tasklet for processing the tx status reports. */
-+ 		tasklet_init(&rt2x00dev->txstatus_tasklet,
--- 
-1.7.0.4
+--=-kJ+JQmh7zhAheoIb17f7
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
+On Wed, 2010-09-29 at 18:52 +0200, David Sanchez Herrero wrote:
+> Hi again,
+>=20
+> After some troubles that I could solve, I connected the interface, but
+> it's impossible to make anything because in all terminals appears one
+> message continously:
+>=20
+> cfg80211: Calling CRDA to update world regulatory domain.
+>=20
+> I can see that I lose the connection, probably because this message.
+> This happens with 2.6.36-rc5-686 kernel. Any idea about solving this
+> problem?
+
+No, but the developers on linux-wireless may be able to help.
+
+Ben.
+
+> This problem doesn't exists with 2.6.32-5-686 kernel, but with it, I
+> have again the error message that appears in my first report:
+>=20
+> phy0 -> rt2500pci_set_device_state: Error - Device failed to enter
+> state 1 (-16).
+>=20
+> In this case I don't lose the connection to the AP, but the link
+> quality and transfers speed are still low.
+
+--=20
+Ben Hutchings
+Once a job is fouled up, anything done to improve it makes it worse.
+
+--=-kJ+JQmh7zhAheoIb17f7
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.10 (GNU/Linux)
+
+iQIVAwUATKVM0+e/yOyVhhEJAQJf/hAAjTWd2JqCk1cLocobIRLFCSfmsDZmnl8b
+ItQ2d/njN+vbtaWV8vrlMI8p94z6Lxoft1jZT65M8U1iQ1Wd6Fze2pMws67Iszo4
+TiB95ssBOEU6Gqhnvvc8CjoTBBsEv+8r0hhoatbbAR0YXTsK5a8McUttEy2uauHz
+8Mblj1IvRDsAtks+llFAWKu8P3m+is3BvOH/R6eXm7eid2yhuvZblMxLc/m4brL3
+kT21TP/1+KQRFlLRmOitv0L7+div1Q/f+N1swAz0xzYV9nThhqj6wyF8kI+TuXv+
+I71OfCslW3vtPKu1cGKBJKewidgAetr361iWwflvfOwzqkj7bBoYf+tuzjYmTc/Q
+SzKo1JNKBnO30LqQ+2VCWDU0pOJxNx2Nj0gZRqpquXGInZdw92mRA/gLyHSsFwyC
+XMfqZP8pT1mM3oWaVBzvI5olGhnhNo14HcO7E+xQC/PJdLfe3Yh7xvghJzGvMznf
+96dhwi9U3p/pF8ULD7iKcxzMwRf0TMmpYYOUuNkLmK5T1/i3F4A0JwFRcMiP8pyv
+JFrT5nVFuvJWekfdqBp3Vsn/ma+EUGzKAO1votP24mi9eApKpEA7GE1ttN/2oTfW
++YDoiOxgvUqH/yyCHbEL7pxhOY/4kQLrhzew9NM6B4vkeET0kTugboozRgiQqm2H
+uKjPRzJZuak=
+=5hzZ
+-----END PGP SIGNATURE-----
+
+--=-kJ+JQmh7zhAheoIb17f7--
