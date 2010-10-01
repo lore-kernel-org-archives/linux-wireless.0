@@ -1,81 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from senator.holtmann.net ([87.106.208.187]:47116 "EHLO
-	mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753568Ab0JIIBk (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 9 Oct 2010 04:01:40 -0400
-Subject: Re: Firmware versioning best practices: ath3k-2.fw rename or
- replace ath3k-1.fw ?
-From: Marcel Holtmann <marcel@holtmann.org>
-To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Cc: Suraj Sumangala <Suraj.Sumangala@Atheros.com>,
-	David Woodhouse <dwmw2@infradead.org>,
-	linux-bluetooth <linux-bluetooth@vger.kernel.org>,
-	linux-kernel@vger.kernel.org,
-	linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <20101008170258.GJ10149@tux>
-References: <20101008170258.GJ10149@tux>
-Content-Type: text/plain; charset="UTF-8"
-Date: Sat, 09 Oct 2010 10:01:28 +0200
-Message-ID: <1286611288.6145.430.camel@aeonflux>
-Mime-Version: 1.0
+Received: from mail.atheros.com ([12.19.149.2]:32219 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754966Ab0JAJzM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 1 Oct 2010 05:55:12 -0400
+Received: from mail.atheros.com ([10.10.20.108])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Fri, 01 Oct 2010 02:55:04 -0700
+From: Mohammed Shafi Shajakhan <mshajakhan@atheros.com>
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>,
+	Mohammed Shafi Shajakhan <mshajakhan@atheros.com>
+Subject: [PATCH v3] ath9k : Fix for displaying the channel number
+Date: Fri, 1 Oct 2010 15:25:05 +0530
+Message-ID: <1285926905-16905-1-git-send-email-mshajakhan@atheros.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Luis,
+From: Mohammed Shafi Shajakhan <mshajakhan@atheros.com>
 
-> What is the difference between ath3k-2.fw and ath3k-1.fw ?
-> 
-> Won't the API change now that you are addressing the sflash
-> configuration fix? Would it not help to identify the two
-> different firmwares then?
-> 
-> David, Marcel, what are your preferences for a firmware upgrade
-> where the firmware does not change API (lets just pretend it does
-> not for a moment) ? Do we keep the same filename?
+In the ath9k debugging feature 'wiphy' the current channel used by the
+station is incorrectly displayed.This is because the channels available
+are sequentially mapped from numbers 0 to 37.This mapping cannot be
+changed as the channel number is also used as an array index
+          This fix solves the above problem by calculating the channel
+number from center frequency.
 
-that is what most companies do and that is what iwlwifi has done so far.
-Only if the API breaks a different suffix is used.
+Signed-off-by: Mohammed Shafi Shajakhan <mshajakhan@atheros.com>
+---
+ drivers/net/wireless/ath/ath9k/debug.c |   15 ++++++++++-----
+ 1 files changed, 10 insertions(+), 5 deletions(-)
 
-With Bluetooth this should be never needed at all. The reason is that
-you need to expose Bluetooth HCI. And that has generic version, support
-commands and supported features commands.
-
-We are not even using the version information for anything useful these
-days since the firmware has to identify its features and its supported
-commands with standard HCI commands. So it is pretty simple to detect
-what Bluetooth subsystem needs to do.
-
-> In this particular case I would assume our new sflash configuration
-> fix that might be being worked on might change the re-enumerated
-> USB device IDs so it seems to me a good idea to use a new filename.
-> I should note ath3k-2.fw already made it to linux-firmware.git...
-
-No it does not. The changed PID is not a breakage. It will just keep
-working. So please fix this in linux-firmware.git right away and remove
-the new firmware file.
-
-And here is something that is wrong with your process as well. Don't
-submit firmware files upstream before the upstream maintainers accepted
-your driver or patch.
-
-I know it is nice to have the firmware available quickly, but if your
-driver gets rejected for the reason we have stated in this thread, you
-have dangling firmware somewhere.
-
-> I last tried to document a thread we had over this here:
-> 
-> http://wireless.kernel.org/en/developers/Documentation/firmware-versioning
-> 
-> Does this sound sane? If so then the sflash configuration fix
-> would seem to me like it would require a new filename. Now, while
-> we're at it, how about bug fixes?
-
-If your firmware files are identical and the exposed API is identical
-(in this case Bluetooth HCI), then you do NO need a new filename.
-
-Regards
-
-Marcel
-
+diff --git a/drivers/net/wireless/ath/ath9k/debug.c b/drivers/net/wireless/ath/ath9k/debug.c
+index d65a896..7a5932a 100644
+--- a/drivers/net/wireless/ath/ath9k/debug.c
++++ b/drivers/net/wireless/ath/ath9k/debug.c
+@@ -488,6 +488,8 @@ static ssize_t read_file_wiphy(struct file *file, char __user *user_buf,
+ 			       size_t count, loff_t *ppos)
+ {
+ 	struct ath_softc *sc = file->private_data;
++	struct ath_wiphy *aphy = sc->pri_wiphy;
++	struct ieee80211_channel *chan = aphy->hw->conf.channel;
+ 	char buf[512];
+ 	unsigned int len = 0;
+ 	int i;
+@@ -498,7 +500,8 @@ static ssize_t read_file_wiphy(struct file *file, char __user *user_buf,
+ 			"primary: %s (%s chan=%d ht=%d)\n",
+ 			wiphy_name(sc->pri_wiphy->hw->wiphy),
+ 			ath_wiphy_state_str(sc->pri_wiphy->state),
+-			sc->pri_wiphy->chan_idx, sc->pri_wiphy->chan_is_ht);
++			ieee80211_frequency_to_channel(chan->center_freq),
++			aphy->chan_is_ht);
+ 
+ 	put_unaligned_le32(REG_READ_D(sc->sc_ah, AR_STA_ID0), addr);
+ 	put_unaligned_le16(REG_READ_D(sc->sc_ah, AR_STA_ID1) & 0xffff, addr + 4);
+@@ -545,11 +548,13 @@ static ssize_t read_file_wiphy(struct file *file, char __user *user_buf,
+ 		struct ath_wiphy *aphy = sc->sec_wiphy[i];
+ 		if (aphy == NULL)
+ 			continue;
++		chan = aphy->hw->conf.channel;
+ 		len += snprintf(buf + len, sizeof(buf) - len,
+-				"secondary: %s (%s chan=%d ht=%d)\n",
+-				wiphy_name(aphy->hw->wiphy),
+-				ath_wiphy_state_str(aphy->state),
+-				aphy->chan_idx, aphy->chan_is_ht);
++			"secondary: %s (%s chan=%d ht=%d)\n",
++			wiphy_name(aphy->hw->wiphy),
++			ath_wiphy_state_str(aphy->state),
++			ieee80211_frequency_to_channel(chan->center_freq),
++			aphy->chan_is_ht);
+ 	}
+ 	if (len > sizeof(buf))
+ 		len = sizeof(buf);
+-- 
+1.7.0.4
 
