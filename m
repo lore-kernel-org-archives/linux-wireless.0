@@ -1,27 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from external1.orbit-lab.org ([128.6.192.131]:49214 "HELO
-	external1.orbit-lab.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1756978Ab0JUTD1 (ORCPT
+Received: from mail-fx0-f46.google.com ([209.85.161.46]:48756 "EHLO
+	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755566Ab0JBPVq (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 21 Oct 2010 15:03:27 -0400
-Received: from repository3.orbit-lab.org (repository3.orbit-lab.org [10.50.0.41])
-	by external1.orbit-lab.org (Postfix) with ESMTP id AC965418D8
-	for <linux-wireless@vger.kernel.org>; Thu, 21 Oct 2010 15:00:12 -0400 (EDT)
-Subject: Compat-wireless release for 2010-10-21 is baked
-To: <linux-wireless@vger.kernel.org>
-Message-Id: <20101021190326.AB19640F97@repository3.orbit-lab.org>
-Date: Thu, 21 Oct 2010 15:03:26 -0400 (EDT)
-From: compat@orbit-lab.org (Compat-wireless cronjob account)
+	Sat, 2 Oct 2010 11:21:46 -0400
+Received: by fxm14 with SMTP id 14so1116942fxm.19
+        for <linux-wireless@vger.kernel.org>; Sat, 02 Oct 2010 08:21:45 -0700 (PDT)
+Subject: Re: Can 'iw' show the current tx-power?
+From: Maxim Levitsky <maximlevitsky@gmail.com>
+To: Ben Greear <greearb@candelatech.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <4CA6B6F9.8080104@candelatech.com>
+References: <4CA6B6F9.8080104@candelatech.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Sat, 02 Oct 2010 17:21:42 +0200
+Message-ID: <1286032902.11979.55.camel@maxim-laptop>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
->From git://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next
-   a9384f0..e01a05d  history    -> origin/history
- + d86cce6...a74f12c master     -> origin/master  (forced update)
-   51ea8a8..f6f94e2  stable     -> origin/stable
- * [new tag]         next-20101021 -> next-20101021
- * [new tag]         v2.6.36    -> v2.6.36
+On Fri, 2010-10-01 at 21:37 -0700, Ben Greear wrote:
+> It seems it can set it, but I don't see any command to print out
+> the current value?
+> 
+> Thanks,
+> Ben
+> 
+This is pretty much last missing feature from iw.
 
-compat-wireless code metrics
+Best regards,
+	Maxim Levitsky
 
-    740704 - Total upstream lines of code being pulled
