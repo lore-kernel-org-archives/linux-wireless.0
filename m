@@ -1,85 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 80-190-117-144.ip-home.de ([80.190.117.144]:38762 "EHLO
-	bu3sch.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757356Ab0JFPfj (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 6 Oct 2010 11:35:39 -0400
-Subject: Re: [PATCH 3/3] b43: N-PHY: don't duplicate setting channel in
- shared memory
-From: Michael =?ISO-8859-1?Q?B=FCsch?= <mb@bu3sch.de>
-To: =?UTF-8?Q?Rafa=C5=82_Mi=C5=82ecki?= <zajec5@gmail.com>
-Cc: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>,
-	b43-dev@lists.infradead.org
-In-Reply-To: <1286344208-32479-4-git-send-email-zajec5@gmail.com> (sfid-20101006_015010_704414_EB285C04)
-References: <1286344208-32479-1-git-send-email-zajec5@gmail.com>
-	 <1286344208-32479-4-git-send-email-zajec5@gmail.com>
-	 (sfid-20101006_015010_704414_EB285C04)
-Content-Type: text/plain; charset="UTF-8"
-Date: Wed, 06 Oct 2010 17:30:40 +0200
-Message-ID: <1286379040.11721.1.camel@maggie>
-Mime-Version: 1.0
+Received: from mail-fx0-f46.google.com ([209.85.161.46]:33923 "EHLO
+	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754002Ab0JBL5a (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 2 Oct 2010 07:57:30 -0400
+From: Ohad Ben-Cohen <ohad@wizery.com>
+To: <linux-mmc@vger.kernel.org>, <linux-wireless@vger.kernel.org>
+Cc: Chris Ball <cjb@laptop.org>, Nicolas Pitre <nico@fluxnic.net>,
+	Luciano Coelho <luciano.coelho@nokia.com>,
+	Ohad Ben-Cohen <ohad@wizery.com>
+Subject: [PATCH v2 06/11] sdio: enable runtime PM for SDIO cards
+Date: Sat,  2 Oct 2010 13:54:10 +0200
+Message-Id: <1286020455-28946-7-git-send-email-ohad@wizery.com>
+In-Reply-To: <1286020455-28946-1-git-send-email-ohad@wizery.com>
+References: <1286020455-28946-1-git-send-email-ohad@wizery.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2010-10-06 at 07:50 +0200, Rafał Miłecki wrote: 
-> It's already set in PHY common code.
-> 
-> Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
-> ---
->  drivers/net/wireless/b43/phy_n.c |   13 +++----------
->  1 files changed, 3 insertions(+), 10 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/b43/phy_n.c b/drivers/net/wireless/b43/phy_n.c
-> index 47c58cd..bb8cb36 100644
-> --- a/drivers/net/wireless/b43/phy_n.c
-> +++ b/drivers/net/wireless/b43/phy_n.c
-> @@ -73,8 +73,6 @@ static void b43_nphy_rf_control_override(struct b43_wldev *dev, u16 field,
->  						u16 value, u8 core, bool off);
->  static void b43_nphy_rf_control_intc_override(struct b43_wldev *dev, u8 field,
->  						u16 value, u8 core);
-> -static int b43_nphy_op_switch_channel(struct b43_wldev *dev,
-> -				      unsigned int new_channel);
->  
->  static inline bool b43_empty_chanspec(struct b43_chanspec *chanspec)
->  {
-> @@ -224,7 +222,7 @@ static void b43_radio_init2055_post(struct b43_wldev *dev)
->  	if (i)
->  		b43err(dev->wl, "radio post init timeout\n");
->  	b43_radio_mask(dev, B2055_CAL_LPOCTL, 0xFF7F);
-> -	b43_nphy_op_switch_channel(dev, dev->phy.channel);
-> +	b43_switch_channel(dev, dev->phy.channel);
->  	b43_radio_write(dev, B2055_C1_RX_BB_LPF, 0x9);
->  	b43_radio_write(dev, B2055_C2_RX_BB_LPF, 0x9);
->  	b43_radio_write(dev, B2055_C1_RX_BB_MIDACHP, 0x83);
-> @@ -3352,12 +3350,7 @@ static void b43_nphy_chanspec_setup(struct b43_wldev *dev,
->  
->  	b43_chantab_phy_upload(dev, e);
->  
-> -	tmp = chanspec.channel;
-> -	if (chanspec.b_freq == 1)
-> -		tmp |= 0x0100;
-> -	if (chanspec.b_width == 3)
-> -		tmp |= 0x0200;
-> -	b43_shm_write16(dev, B43_SHM_SHARED, 0xA0, tmp);
-> +	/* Don't follow specs, B43_SHM_SH_CHAN is set by b43_switch_channel */
+Enable runtime PM for new SDIO cards.
 
-Looks great. I dunno if a comment is really needed and whether it is
-correct, though. We _do_ follow the specs. We just do it elsewhere.
+As soon as the card will be added to the device tree, runtime PM core
+will release its power, since it doesn't have any users yet.
 
+Signed-off-by: Ohad Ben-Cohen <ohad@wizery.com>
+---
+ drivers/mmc/core/sdio.c |   13 +++++++++++++
+ 1 files changed, 13 insertions(+), 0 deletions(-)
 
-> 	if (nphy->radio_chanspec.channel == 14) {
->  		b43_nphy_classifier(dev, 2, 0);
-> @@ -3559,7 +3552,7 @@ static void b43_nphy_op_software_rfkill(struct b43_wldev *dev,
->  	} else {
->  		if (dev->phy.rev >= 3) {
->  			b43_radio_init2056(dev);
-> -			b43_nphy_op_switch_channel(dev, dev->phy.channel);
-> +			b43_switch_channel(dev, dev->phy.channel);
->  		} else {
->  			b43_radio_init2055(dev);
->  		}
-
-
+diff --git a/drivers/mmc/core/sdio.c b/drivers/mmc/core/sdio.c
+index f17e0e0..0dbd6fe 100644
+--- a/drivers/mmc/core/sdio.c
++++ b/drivers/mmc/core/sdio.c
+@@ -10,6 +10,7 @@
+  */
+ 
+ #include <linux/err.h>
++#include <linux/pm_runtime.h>
+ 
+ #include <linux/mmc/host.h>
+ #include <linux/mmc/card.h>
+@@ -708,6 +709,18 @@ int mmc_attach_sdio(struct mmc_host *host, u32 ocr)
+ 	card = host->card;
+ 
+ 	/*
++	 * Let runtime PM core know our card is active
++	 */
++	err = pm_runtime_set_active(&card->dev);
++	if (err)
++		goto remove;
++
++	/*
++	 * Enable runtime PM for this card
++	 */
++	pm_runtime_enable(&card->dev);
++
++	/*
+ 	 * The number of functions on the card is encoded inside
+ 	 * the ocr.
+ 	 */
 -- 
-Greetings Michael.
+1.7.0.4
 
