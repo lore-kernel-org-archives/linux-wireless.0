@@ -1,69 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iw0-f174.google.com ([209.85.214.174]:62832 "EHLO
-	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755303Ab0JNRSG convert rfc822-to-8bit (ORCPT
+Received: from mail-wy0-f174.google.com ([74.125.82.174]:41875 "EHLO
+	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753898Ab0JBJfY (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 14 Oct 2010 13:18:06 -0400
-Received: by iwn35 with SMTP id 35so210103iwn.19
-        for <linux-wireless@vger.kernel.org>; Thu, 14 Oct 2010 10:18:05 -0700 (PDT)
+	Sat, 2 Oct 2010 05:35:24 -0400
+Received: by wyb28 with SMTP id 28so3658555wyb.19
+        for <linux-wireless@vger.kernel.org>; Sat, 02 Oct 2010 02:35:20 -0700 (PDT)
+From: Ivo van Doorn <ivdoorn@gmail.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Subject: [PATCH 04/20] rt2x00: Fix SM PS check
+Date: Sat, 2 Oct 2010 11:28:02 +0200
+Cc: users@rt2x00.serialmonkey.com, linux-wireless@vger.kernel.org,
+	Helmut Schaa <helmut.schaa@googlemail.com>
+References: <201010021126.18748.IvDoorn@gmail.com> <201010021127.04544.IvDoorn@gmail.com> <201010021127.36277.IvDoorn@gmail.com>
+In-Reply-To: <201010021127.36277.IvDoorn@gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <1287071844.11341.5.camel@gnutoo-laptop>
-References: <4CB6BE57.8010401@gmx.net> <1287071844.11341.5.camel@gnutoo-laptop>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Thu, 14 Oct 2010 10:17:43 -0700
-Message-ID: <AANLkTikosEtFnWqRVzMBKtNsB=aqOpqQFKDOZS3+pXTE@mail.gmail.com>
-Subject: Re: Compat-wireless N900
-To: "Denis 'GNUtoo' Carikli" <GNUtoo@no-log.org>
-Cc: George <george.news@gmx.net>, linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Message-Id: <201010021128.03722.IvDoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Oct 14, 2010 at 8:57 AM, Denis 'GNUtoo' Carikli
-<GNUtoo@no-log.org> wrote:
-> On Thu, 2010-10-14 at 10:24 +0200, George wrote:
->> Hi all,
->>
->> I'm trying to use compat-wireless to upgrade my n900 wireless driver.
->> N900 is using WL1251 wireless driver and the omap1 kernel version used
->> it 2.6.28.
->>
->> The issue is that 2.6.28 does not have implemented many issues for
->> nl80211 netlink family which I wanted to test on my n900.
->>
->> I have recompiled the kernel to make cfg80211 and mac80211 modules, so I
->> can use compat-wireless. After that I have compiled compat-wireless by
->> selecting the driver family I need. All done under scratchbox.
->>
->> # scripts/driver-select wl12xx
->> # make KLIB=/lib/modules/2.6.28-myversion \
->>     KMODPATH_ARG=/lib/modules/2.6.28-myversion
->> # make  KLIB=/lib/modules/2.6.28-myversion \
->>     KMODPATH_ARG=/lib/modules/2.6.28-myversion install
->>
->> After that I have installed the new kernel and the drivers in the n900
->> and the system starts. `uname -a` reports I'm using my custom kernel.
->>
->> The problem is that the wireless modules are not working as expected and
->> I cannot get access to my wifi networks. Actually bluetooth is not
->> working as well, as far as I have tested.
->>
->> dmesg reports --> http://pastebin.com/xskKcGnE
-> At first sight it seem that you have some mismatch issues,
+From: Helmut Schaa <helmut.schaa@googlemail.com>
 
-Agreed, try:
+Fix a check for dynamic SM PS mode in the STAs HT caps. Since a
+value of 3 means "SM PS disabled" the previous check assumed in
+that case that "dynamic SM PS" was enabled and as such prefixed
+every MCS>7 frame with a unnecessary RTS/CTS exchange. Also,
+the bit shift was done in the wrong direction.
 
-for i in mac80211 cfg80211 wl1251_spi; do modprobe -l $i; done
+Signed-off-by: Helmut Schaa <helmut.schaa@googlemail.com>
+Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
+---
+ drivers/net/wireless/rt2x00/rt2x00ht.c |    7 ++++---
+ 1 files changed, 4 insertions(+), 3 deletions(-)
 
-This will show you where its picking up the modules upon load. If you
-see some disagreement with paths, that's the issue. Compat-wireless
-relies on stuffing them on your /lib/modules/$(uname -r)/updates/
-directory and in order for these modules to take precedence over the
-/lib/modules/$(uname -r)/kernel/ modules we rely on a file in
-/etc/depmod.d/ which tells depmod to prefer updates first. For example
-on an ubuntu box you get:
+diff --git a/drivers/net/wireless/rt2x00/rt2x00ht.c b/drivers/net/wireless/rt2x00/rt2x00ht.c
+index ad3c7ff..48b6ed4 100644
+--- a/drivers/net/wireless/rt2x00/rt2x00ht.c
++++ b/drivers/net/wireless/rt2x00/rt2x00ht.c
+@@ -60,9 +60,10 @@ void rt2x00ht_create_tx_descriptor(struct queue_entry *entry,
+ 		 * when using more then one tx stream (>MCS7).
+ 		 */
+ 		if (tx_info->control.sta && txdesc->mcs > 7 &&
+-		    (tx_info->control.sta->ht_cap.cap &
+-		     (WLAN_HT_CAP_SM_PS_DYNAMIC <<
+-		      IEEE80211_HT_CAP_SM_PS_SHIFT)))
++		    ((tx_info->control.sta->ht_cap.cap &
++		      IEEE80211_HT_CAP_SM_PS) >>
++		     IEEE80211_HT_CAP_SM_PS_SHIFT) ==
++		    WLAN_HT_CAP_SM_PS_DYNAMIC)
+ 			__set_bit(ENTRY_TXD_HT_MIMO_PS, &txdesc->flags);
+ 	} else {
+ 		txdesc->mcs = rt2x00_get_rate_mcs(hwrate->mcs);
+-- 
+1.7.2.3
 
-mcgrof@tux ~ $ cat /etc/depmod.d/ubuntu.conf
-search updates ubuntu built-in
-
-  Luis
