@@ -1,86 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.19.149.2]:33317 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753140Ab0JUJC5 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 21 Oct 2010 05:02:57 -0400
-Received: from mail.atheros.com ([10.10.20.107])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Thu, 21 Oct 2010 02:02:46 -0700
-Date: Thu, 21 Oct 2010 02:02:54 -0700
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: Senthilkumar Balasubramanian
-	<Senthilkumar.Balasubramanian@Atheros.com>
-CC: Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
-	"linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"johannes@sipsolutions.net" <johannes@sipsolutions.net>,
-	Easwar Krishnan <Easwar.Krishnan@Atheros.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH 6/7] cfg80211: add debug print when processing a channel
-Message-ID: <20101021090254.GC2776@tux>
-References: <1287595139-10761-1-git-send-email-lrodriguez@atheros.com>
- <1287595139-10761-7-git-send-email-lrodriguez@atheros.com>
- <20101021081828.GA1840@senthil-lnx.users.atheros.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <20101021081828.GA1840@senthil-lnx.users.atheros.com>
+Received: from mail-fx0-f46.google.com ([209.85.161.46]:48776 "EHLO
+	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754002Ab0JBL5l (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 2 Oct 2010 07:57:41 -0400
+From: Ohad Ben-Cohen <ohad@wizery.com>
+To: <linux-mmc@vger.kernel.org>, <linux-wireless@vger.kernel.org>
+Cc: Chris Ball <cjb@laptop.org>, Nicolas Pitre <nico@fluxnic.net>,
+	Luciano Coelho <luciano.coelho@nokia.com>,
+	Ohad Ben-Cohen <ohad@wizery.com>
+Subject: [PATCH v2 11/11] wl1271: sdio: add suspend/resume support
+Date: Sat,  2 Oct 2010 13:54:15 +0200
+Message-Id: <1286020455-28946-12-git-send-email-ohad@wizery.com>
+In-Reply-To: <1286020455-28946-1-git-send-email-ohad@wizery.com>
+References: <1286020455-28946-1-git-send-email-ohad@wizery.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Oct 21, 2010 at 01:18:28AM -0700, Senthilkumar Balasubramanian wrote:
-> On Wed, Oct 20, 2010 at 10:48:58PM +0530, Luis R. Rodriguez wrote:
-> > In the worst case you are seeing really odd things you want
-> > more information than what is provided right now, for those
-> > that insist and want debug info through CONFIG_CFG80211_REG_DEBUG
-> > provide a print of when we are processing a channel and with what
-> > regulatory rule.
-> > 
-> > Cc: Easwar Krishnan <easwar.krishnan@atheros.com>
-> > Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
-> > ---
-> >  net/wireless/reg.c |   40 ++++++++++++++++++++++++++++++++++++++++
-> >  1 files changed, 40 insertions(+), 0 deletions(-)
-> > 
-> > diff --git a/net/wireless/reg.c b/net/wireless/reg.c
-> > index 62396b2..f0ff146 100644
-> > --- a/net/wireless/reg.c
-> > +++ b/net/wireless/reg.c
-> > @@ -728,6 +728,42 @@ static const char *reg_initiator_name(enum nl80211_reg_initiator initiator)
-> >  	}
-> >  }
-> >  
-> > +#ifdef CONFIG_CFG80211_REG_DEBUG
-> > +
-> > +static void chan_reg_rule_print_dbg(struct ieee80211_channel *chan,
-> > +				    u32 desired_bw_khz,
-> > +				    const struct ieee80211_reg_rule *reg_rule)
-> > +{
-> > +	const struct ieee80211_power_rule *power_rule;
-> > +	const struct ieee80211_freq_range *freq_range;
-> > +	char max_antenna_gain[32];
-> > +
-> > +	power_rule = &reg_rule->power_rule;
-> > +	freq_range = &reg_rule->freq_range;
-> > +
-> > +	if (!power_rule->max_antenna_gain)
-> > +		snprintf(max_antenna_gain, 32, "N/A");
-> > +	else
-> > +		snprintf(max_antenna_gain, 32, "%d", power_rule->max_antenna_gain);
-> > +
-> > +	REG_DBG_PRINT("cfg80211: Updating information on frequency %d MHz "
-> > +		      "for %d a MHz width channel with regulatory rule:\n",
-> > +		      chan->center_freq,
-> > +		      KHZ_TO_MHZ(desired_bw_khz));
-> > +
-> > +	REG_DBG_PRINT("cfg80211: %d KHz - %d KHz @  KHz), (%s mBi, %d mBm)\n",
-> > +		      freq_range->start_freq_khz,
-> > +		      freq_range->end_freq_khz,
-> > +		      max_antenna_gain,
-> > +		      power_rule->max_eirp);
-> > +}
-> > +#else
-> > +static void reg_reg_rule_print_dbg(const struct ieee80211_reg_rule *reg_rule)
-> This will break compilation. Function name and arguments needs to be fixed here.
+Add required suspend/resume support to prevent the SDIO
+core from removing our card completely during system suspend.
 
-Good catch. I'll fix in the AM.
+Signed-off-by: Ohad Ben-Cohen <ohad@wizery.com>
+---
+ drivers/net/wireless/wl12xx/wl1271_sdio.c |   20 ++++++++++++++++++++
+ 1 files changed, 20 insertions(+), 0 deletions(-)
 
-  Luis
+diff --git a/drivers/net/wireless/wl12xx/wl1271_sdio.c b/drivers/net/wireless/wl12xx/wl1271_sdio.c
+index f7bef32..784ef34 100644
+--- a/drivers/net/wireless/wl12xx/wl1271_sdio.c
++++ b/drivers/net/wireless/wl12xx/wl1271_sdio.c
+@@ -290,11 +290,31 @@ static void __devexit wl1271_remove(struct sdio_func *func)
+ 	wl1271_free_hw(wl);
+ }
+ 
++static int wl1271_suspend(struct device *dev)
++{
++	/* Tell MMC/SDIO core it's OK to power down the card
++	 * (if it isn't already), but not to remove it completely */
++	return 0;
++}
++
++static int wl1271_resume(struct device *dev)
++{
++	return 0;
++}
++
++static const struct dev_pm_ops wl1271_sdio_pm_ops = {
++	.suspend	= wl1271_suspend,
++	.resume		= wl1271_resume,
++};
++
+ static struct sdio_driver wl1271_sdio_driver = {
+ 	.name		= "wl1271_sdio",
+ 	.id_table	= wl1271_devices,
+ 	.probe		= wl1271_probe,
+ 	.remove		= __devexit_p(wl1271_remove),
++	.drv = {
++		.pm = &wl1271_sdio_pm_ops,
++	},
+ };
+ 
+ static int __init wl1271_init(void)
+-- 
+1.7.0.4
+
