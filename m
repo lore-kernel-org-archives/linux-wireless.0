@@ -1,41 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([88.198.39.176]:46209 "EHLO ds10.nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751443Ab0JJWyx (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 10 Oct 2010 18:54:53 -0400
-Message-ID: <4CB24435.2070201@openwrt.org>
-Date: Mon, 11 Oct 2010 00:54:45 +0200
-From: Felix Fietkau <nbd@openwrt.org>
-MIME-Version: 1.0
-To: =?ISO-8859-15?Q?Bj=F6rn_Smedman?= <bjorn.smedman@venatech.se>
-CC: linville@tuxdriver.com, johannes@sipsolutions.net,
-	lrodriguez@atheros.com, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 1/3] mac80211: minstrel_ht A-MPDU fix
-References: <alpine.DEB.2.00.1010102206580.31264@bigbill>
-In-Reply-To: <alpine.DEB.2.00.1010102206580.31264@bigbill>
-Content-Type: text/plain; charset=ISO-8859-15
+Received: from mail-fx0-f46.google.com ([209.85.161.46]:48776 "EHLO
+	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754002Ab0JBL5X (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 2 Oct 2010 07:57:23 -0400
+From: Ohad Ben-Cohen <ohad@wizery.com>
+To: <linux-mmc@vger.kernel.org>, <linux-wireless@vger.kernel.org>
+Cc: Chris Ball <cjb@laptop.org>, Nicolas Pitre <nico@fluxnic.net>,
+	Luciano Coelho <luciano.coelho@nokia.com>,
+	Ohad Ben-Cohen <ohad@wizery.com>
+Subject: [PATCH v2 03/11] sdio: add power_restore support
+Date: Sat,  2 Oct 2010 13:54:07 +0200
+Message-Id: <1286020455-28946-4-git-send-email-ohad@wizery.com>
+In-Reply-To: <1286020455-28946-1-git-send-email-ohad@wizery.com>
+References: <1286020455-28946-1-git-send-email-ohad@wizery.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2010-10-10 10:14 PM, Björn Smedman wrote:
-> This patch fixes two problems with the minstrel_ht rate control
-> algorithms handling of A-MPDU frames:
-> 
-> 1. The ampdu_len field of the tx status is not always initialized for 
-> non-HT frames (and it would probably be unreasonable to require all 
-> drivers to do so). This could cause rate control statistics to be 
-> corrupted. We now trust the ampdu_len and ampdu_ack_len fields only when 
-> the frame is marked with the IEEE80211_TX_STAT_AMPDU flag.
-> 
-> 2. Successful transmission attempts where only recognized when the A-MPDU
-> subframe carrying the rate control status information was marked with the
-> IEEE80211_TX_STAT_ACK flag. If this information happed to be carried on a
-> frame that failed to be ACKed then the other subframes (which may have
-> succeeded) where not correctly registered. We now update rate control
-> statistics regardless of whether the subframe carrying the information was
-> ACKed or not.
-> 
-> Cc: <stable@kernel.org>
-> Signed-off-by: Björn Smedman <bjorn.smedman@venatech.se>
-For all 3 patches:
-Acked-by: Felix Fietkau <nbd@openwrt.org>
+Add a power_restore handler to the SDIO bus ops,
+in order to support waking up SDIO cards that
+were powered off by runtime pm.
+
+Signed-off-by: Ohad Ben-Cohen <ohad@wizery.com>
+---
+ drivers/mmc/core/sdio.c |   18 ++++++++++++++++++
+ 1 files changed, 18 insertions(+), 0 deletions(-)
+
+diff --git a/drivers/mmc/core/sdio.c b/drivers/mmc/core/sdio.c
+index 3be1571..f17e0e0 100644
+--- a/drivers/mmc/core/sdio.c
++++ b/drivers/mmc/core/sdio.c
+@@ -638,11 +638,29 @@ static int mmc_sdio_resume(struct mmc_host *host)
+ 	return err;
+ }
+ 
++static int mmc_sdio_power_restore(struct mmc_host *host)
++{
++	int ret;
++
++	BUG_ON(!host);
++	BUG_ON(!host->card);
++
++	mmc_claim_host(host);
++	ret = mmc_sdio_init_card(host, host->ocr, host->card,
++			(host->pm_flags & MMC_PM_KEEP_POWER));
++	if (!ret && host->sdio_irqs)
++		mmc_signal_sdio_irq(host);
++	mmc_release_host(host);
++
++	return ret;
++}
++
+ static const struct mmc_bus_ops mmc_sdio_ops = {
+ 	.remove = mmc_sdio_remove,
+ 	.detect = mmc_sdio_detect,
+ 	.suspend = mmc_sdio_suspend,
+ 	.resume = mmc_sdio_resume,
++	.power_restore = mmc_sdio_power_restore,
+ };
+ 
+ 
+-- 
+1.7.0.4
+
