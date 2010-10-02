@@ -1,99 +1,167 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:57626 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756705Ab0JLCKq (ORCPT
+Received: from mail-fx0-f46.google.com ([209.85.161.46]:64985 "EHLO
+	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754958Ab0JBLRP (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 11 Oct 2010 22:10:46 -0400
-Message-ID: <4CB3C3A3.5040309@candelatech.com>
-Date: Mon, 11 Oct 2010 19:10:43 -0700
-From: Ben Greear <greearb@candelatech.com>
+	Sat, 2 Oct 2010 07:17:15 -0400
+Received: by fxm14 with SMTP id 14so1064921fxm.19
+        for <linux-wireless@vger.kernel.org>; Sat, 02 Oct 2010 04:17:13 -0700 (PDT)
+From: Christian Lamparter <chunkeey@googlemail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Subject: [PATCH v2] mac80211: fix rx monitor filter refcounters
+Date: Sat, 2 Oct 2010 13:17:07 +0200
+Cc: linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>
+References: <201009281836.24529.chunkeey@googlemail.com> <201010012353.21053.chunkeey@googlemail.com> <1286009187.1646.2.camel@Nokia-N900-51-1>
+In-Reply-To: <1286009187.1646.2.camel@Nokia-N900-51-1>
 MIME-Version: 1.0
-To: Bruno Randolf <br1@einfach.org>
-CC: linux-wireless@vger.kernel.org
-Subject: Re: [PATCH v2] ath5k:  Adjust opmode when interfaces are removed.
-References: <1286564475-10105-1-git-send-email-greearb@candelatech.com> <201010121044.39093.br1@einfach.org>
-In-Reply-To: <201010121044.39093.br1@einfach.org>
-Content-Type: text/plain; charset=ISO-8859-15; format=flowed
+Content-Type: Text/Plain;
+  charset="utf-8"
+Message-Id: <201010021317.07864.chunkeey@googlemail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 10/11/2010 06:44 PM, Bruno Randolf wrote:
-> On Sat October 9 2010 04:01:15 greearb@candelatech.com wrote:
+This patch fixes an refcounting bug. Previously it
+was possible to corrupt the per-device recv. filter
+and monitor management counters when:
+	iw dev wlanX set monitor [new flags]
+was issued on an active monitor interface.
 
->> +
->> +	/* Calculate combined mode - when APs are active, operate in AP mode.
->> +	 * Otherwise use the mode of the new interface. This can currently
->> +	 * only deal with combinations of APs and STAs. Only one ad-hoc
->> +	 * interfaces is allowed above.
->
-> the comment reference to "above" does not make sense here any more.
-
-This patch is already in..but I can send a followup cleanup patch.
-
-
->
->> +	 */
->> +	if (avf->opmode == NL80211_IFTYPE_AP)
->> +		iter_data->opmode = NL80211_IFTYPE_AP;
->> +	else
->> +		if (iter_data->opmode == NL80211_IFTYPE_UNSPECIFIED)
->> +			iter_data->opmode = avf->opmode;
->>   }
->>
->> -void ath5k_update_bssid_mask(struct ath5k_softc *sc, struct ieee80211_vif
->> *vif) +static void ath_do_set_opmode(struct ath5k_softc *sc)
->> +{
->> +	struct ath5k_hw *ah = sc->ah;
->> +	ath5k_hw_set_opmode(ah, sc->opmode);
->> +	ATH5K_DBG(sc, ATH5K_DEBUG_MODE, "mode setup opmode %d (%s)\n",
->> +		  sc->opmode,
->> +		  ath_opmode_to_string(sc->opmode) ?
->> +		  ath_opmode_to_string(sc->opmode) : "UKNOWN");
->> +}
->
-> what's the point of this function? just to add the debug print?
-
-Yes.  At one point, I had it being called from several places..but now it's
-called from only one place currently, I think.  I could make it explicitly
-inline code if someone cared.
-
->> -	/* Set combined mode - when APs are configured, operate in AP mode.
->> -	 * Otherwise use the mode of the new interface. This can currently
->> -	 * only deal with combinations of APs and STAs. Only one ad-hoc
->> -	 * interfaces is allowed above.
->> -	 */
->> -	if (sc->num_ap_vifs)
->> -		sc->opmode = NL80211_IFTYPE_AP;
->> -	else
->> -		sc->opmode = vif->type;
->> -
->> -	ath5k_hw_set_opmode(ah, sc->opmode);
->> -
->
-> i think it makes sense to set the opmode here. and also do the same in
-> ath5k_remove_interface. that way we figure out the opmode when interfaces are
-> added/removed.
-
-It calls ath5k_mode_setup(sc, vif), which sets rx filter, updates bssid mask,
-and sets the opmode.
-
-
->> @@ -2905,7 +2919,7 @@ ath5k_remove_interface(struct ieee80211_hw *hw,
->>   	else if (avf->opmode == NL80211_IFTYPE_ADHOC)
->>   		sc->num_adhoc_vifs--;
->>
->> -	ath5k_update_bssid_mask(sc, NULL);
->> +	ath5k_update_bssid_mask_and_opmode(sc, NULL);
->>   	mutex_unlock(&sc->lock);
-
-And that recalculates opmode and bssid mask on removal.
-
-Or maybe I'm mis-understanding your suggestion?
-
-Thanks,
-Ben
-
-
--- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+Acked-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Christian Lamparter <chunkeey@googlemail.com>
+---
+On Saturday 02 October 2010 10:46:27 Johannes Berg wrote:
+> > +        if (test_bit(SDATA_STATE_RUNNING, &sdata->state)) {
+> 
+> There's an inline for this, I think?
+> 
+> >   static inline bool ieee80211_sdata_running(struct ieee80211_sub_if_data
+> 
+> heh, by accident it's even in your patch :)
+but what an accident!
+---
+diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
+index c981604..9e63fc2 100644
+--- a/net/mac80211/cfg.c
++++ b/net/mac80211/cfg.c
+@@ -68,8 +68,36 @@ static int ieee80211_change_iface(struct wiphy *wiphy,
+ 		 params && params->use_4addr >= 0)
+ 		sdata->u.mgd.use_4addr = params->use_4addr;
+ 
+-	if (sdata->vif.type == NL80211_IFTYPE_MONITOR && flags)
+-		sdata->u.mntr_flags = *flags;
++	if (sdata->vif.type == NL80211_IFTYPE_MONITOR && flags) {
++		struct ieee80211_local *local = sdata->local;
++
++		if (ieee80211_sdata_running(sdata)) {
++			/*
++			 * Prohibit MONITOR_FLAG_COOK_FRAMES to be
++			 * changed while the interface is up.
++			 * Else we would need to add a lot of cruft
++			 * to update everything:
++			 *	cooked_mntrs, monitor and all fif_* counters
++			 *	reconfigure hardware
++			 */
++			if ((*flags & MONITOR_FLAG_COOK_FRAMES) !=
++			    (sdata->u.mntr_flags & MONITOR_FLAG_COOK_FRAMES))
++				return -EBUSY;
++
++			ieee80211_adjust_monitor_flags(sdata, -1);
++			sdata->u.mntr_flags = *flags;
++			ieee80211_adjust_monitor_flags(sdata, 1);
++
++			ieee80211_configure_filter(local);
++		} else {
++			/*
++			 * Because the interface is down, ieee80211_do_stop
++			 * and ieee80211_do_open take care of "everything"
++			 * mentioned in the comment above.
++			 */
++			sdata->u.mntr_flags = *flags;
++		}
++	}
+ 
+ 	return 0;
+ }
+diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+index 945fbf2..f6a6d78 100644
+--- a/net/mac80211/ieee80211_i.h
++++ b/net/mac80211/ieee80211_i.h
+@@ -1132,6 +1132,8 @@ void ieee80211_if_remove(struct ieee80211_sub_if_data *sdata);
+ void ieee80211_remove_interfaces(struct ieee80211_local *local);
+ u32 __ieee80211_recalc_idle(struct ieee80211_local *local);
+ void ieee80211_recalc_idle(struct ieee80211_local *local);
++void ieee80211_adjust_monitor_flags(struct ieee80211_sub_if_data *sdata,
++				    const int offset);
+ 
+ static inline bool ieee80211_sdata_running(struct ieee80211_sub_if_data *sdata)
+ {
+diff --git a/net/mac80211/iface.c b/net/mac80211/iface.c
+index 6678573..1300e88 100644
+--- a/net/mac80211/iface.c
++++ b/net/mac80211/iface.c
+@@ -148,6 +148,26 @@ static int ieee80211_check_concurrent_iface(struct ieee80211_sub_if_data *sdata,
+ 	return 0;
+ }
+ 
++void ieee80211_adjust_monitor_flags(struct ieee80211_sub_if_data *sdata,
++				    const int offset)
++{
++	struct ieee80211_local *local = sdata->local;
++	u32 flags = sdata->u.mntr_flags;
++
++#define ADJUST(_f, _s)	do {					\
++	if (flags & MONITOR_FLAG_##_f)				\
++		local->fif_##_s += offset;			\
++	} while (0)
++
++	ADJUST(FCSFAIL, fcsfail);
++	ADJUST(PLCPFAIL, plcpfail);
++	ADJUST(CONTROL, control);
++	ADJUST(CONTROL, pspoll);
++	ADJUST(OTHER_BSS, other_bss);
++
++#undef ADJUST
++}
++
+ /*
+  * NOTE: Be very careful when changing this function, it must NOT return
+  * an error on interface type changes that have been pre-checked, so most
+@@ -240,17 +260,7 @@ static int ieee80211_do_open(struct net_device *dev, bool coming_up)
+ 			hw_reconf_flags |= IEEE80211_CONF_CHANGE_MONITOR;
+ 		}
+ 
+-		if (sdata->u.mntr_flags & MONITOR_FLAG_FCSFAIL)
+-			local->fif_fcsfail++;
+-		if (sdata->u.mntr_flags & MONITOR_FLAG_PLCPFAIL)
+-			local->fif_plcpfail++;
+-		if (sdata->u.mntr_flags & MONITOR_FLAG_CONTROL) {
+-			local->fif_control++;
+-			local->fif_pspoll++;
+-		}
+-		if (sdata->u.mntr_flags & MONITOR_FLAG_OTHER_BSS)
+-			local->fif_other_bss++;
+-
++		ieee80211_adjust_monitor_flags(sdata, 1);
+ 		ieee80211_configure_filter(local);
+ 
+ 		netif_carrier_on(dev);
+@@ -477,17 +487,7 @@ static void ieee80211_do_stop(struct ieee80211_sub_if_data *sdata,
+ 			hw_reconf_flags |= IEEE80211_CONF_CHANGE_MONITOR;
+ 		}
+ 
+-		if (sdata->u.mntr_flags & MONITOR_FLAG_FCSFAIL)
+-			local->fif_fcsfail--;
+-		if (sdata->u.mntr_flags & MONITOR_FLAG_PLCPFAIL)
+-			local->fif_plcpfail--;
+-		if (sdata->u.mntr_flags & MONITOR_FLAG_CONTROL) {
+-			local->fif_pspoll--;
+-			local->fif_control--;
+-		}
+-		if (sdata->u.mntr_flags & MONITOR_FLAG_OTHER_BSS)
+-			local->fif_other_bss--;
+-
++		ieee80211_adjust_monitor_flags(sdata, -1);
+ 		ieee80211_configure_filter(local);
+ 		break;
+ 	case NL80211_IFTYPE_MESH_POINT:
