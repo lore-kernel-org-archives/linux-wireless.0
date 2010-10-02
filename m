@@ -1,110 +1,98 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.19.149.2]:35231 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757376Ab0JUNrg (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 21 Oct 2010 09:47:36 -0400
-Received: from mail.atheros.com ([10.10.20.105])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Thu, 21 Oct 2010 06:47:26 -0700
-From: Senthil Balasubramanian <senthilkumar@atheros.com>
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	Easwar Krishnan <easwar.krishnan@atheros.com>,
-	Senthil Balasubramanian <senthilkumar@atheros.com>
-Subject: [PATCH v2 4/7] cfg80211: add debug prints for when we ignore regulatory hints
-Date: Thu, 21 Oct 2010 19:17:03 +0530
-Message-ID: <1287668824-3096-1-git-send-email-senthilkumar@atheros.com>
+Received: from mail-ew0-f46.google.com ([209.85.215.46]:44467 "EHLO
+	mail-ew0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753532Ab0JBMgn (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 2 Oct 2010 08:36:43 -0400
+Received: by ewy23 with SMTP id 23so1487130ewy.19
+        for <linux-wireless@vger.kernel.org>; Sat, 02 Oct 2010 05:36:41 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain
+Date: Sat, 2 Oct 2010 13:36:41 +0100
+Message-ID: <AANLkTin5zuxUY9ySYKrT9qD6cgV7eb7UhCjDYFzTUTeU@mail.gmail.com>
+Subject: OLPC XO-1 rfkill driver design
+From: Daniel Drake <dsd@laptop.org>
+To: johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org,
+	Andres Salomon <dilinger@queued.net>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Luis R. Rodriguez <lrodriguez@atheros.com>
+Hi,
 
-This can help with debugging issues. You will only see
-these with CONFIG_CFG80211_REG_DEBUG enabled.
+I will be working on getting an OLPC XO-1 rfkill driver upstream and
+am looking for input on the basic design of the driver.
 
-Cc: Easwar Krishnan <easwar.krishnan@atheros.com>
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
-Signed-off-by: Senthil Balasubramanian <senthilkumar@atheros.com>
----
-v2 -- brought in reg_initiator_name under reg debug to get rid of a
-warning  message.
+The XO-specific embedded controller provides a command which cuts
+power to the wlan chip (a Marvell USB8388 that is powered by the
+libertas driver), causing it to fall off the USB bus entirely, and
+another command to turn it on again.
 
- net/wireless/reg.c |   42 +++++++++++++++++++++++++++++++++++++++---
- 1 files changed, 39 insertions(+), 3 deletions(-)
+The embedded controller is obviously not hotpluggable and there can
+only ever be 1 in a system.
 
-diff --git a/net/wireless/reg.c b/net/wireless/reg.c
-index 8ab65f2..7bff1c1 100644
---- a/net/wireless/reg.c
-+++ b/net/wireless/reg.c
-@@ -711,6 +711,25 @@ int freq_reg_info(struct wiphy *wiphy,
- }
- EXPORT_SYMBOL(freq_reg_info);
+The actual rfkilling is dead simple:
 
-+#ifdef CONFIG_CFG80211_REG_DEBUG
-+static const char *reg_initiator_name(enum nl80211_reg_initiator initiator)
-+{
-+	switch (initiator) {
-+	case NL80211_REGDOM_SET_BY_CORE:
-+		return "Set by core";
-+	case NL80211_REGDOM_SET_BY_USER:
-+		return "Set by user";
-+	case NL80211_REGDOM_SET_BY_DRIVER:
-+		return "Set by driver";
-+	case NL80211_REGDOM_SET_BY_COUNTRY_IE:
-+		return "Set by country IE";
-+	default:
-+		WARN_ON(1);
-+		return "Set by bug";
-+	}
-+}
-+#endif
-+
- /*
-  * Note that right now we assume the desired channel bandwidth
-  * is always 20 MHz for each individual channel (HT40 uses 20 MHz
-@@ -821,19 +840,36 @@ static void handle_band(struct wiphy *wiphy,
- static bool ignore_reg_update(struct wiphy *wiphy,
- 			      enum nl80211_reg_initiator initiator)
- {
--	if (!last_request)
-+	if (!last_request) {
-+		REG_DBG_PRINT("cfg80211: Ignoring regulatory request %s since "
-+			      "last_request is not set\n",
-+			      reg_initiator_name(initiator));
- 		return true;
-+	}
-+
- 	if (initiator == NL80211_REGDOM_SET_BY_CORE &&
--	    wiphy->flags & WIPHY_FLAG_CUSTOM_REGULATORY)
-+	    wiphy->flags & WIPHY_FLAG_CUSTOM_REGULATORY) {
-+		REG_DBG_PRINT("cfg80211: Ignoring regulatory request %s "
-+			      "since the driver uses its own custom "
-+			      "regulatory domain ",
-+			      reg_initiator_name(initiator));
- 		return true;
-+	}
-+
- 	/*
- 	 * wiphy->regd will be set once the device has its own
- 	 * desired regulatory domain set
- 	 */
- 	if (wiphy->flags & WIPHY_FLAG_STRICT_REGULATORY && !wiphy->regd &&
- 	    initiator != NL80211_REGDOM_SET_BY_COUNTRY_IE &&
--	    !is_world_regdom(last_request->alpha2))
-+	    !is_world_regdom(last_request->alpha2)) {
-+		REG_DBG_PRINT("cfg80211: Ignoring regulatory request %s "
-+			      "since the driver requires its own regulaotry "
-+			      "domain to be set first",
-+			      reg_initiator_name(initiator));
- 		return true;
-+	}
-+
- 	return false;
- }
+static int olpc_rfkill_set_block(void *data, bool blocked)
+{
+	unsigned char cmd;
 
---
-1.7.2.1
+	if (blocked)
+		cmd = EC_WLAN_ENTER_RESET;
+	else
+		cmd = EC_WLAN_LEAVE_RESET;
 
+	return olpc_ec_cmd(cmd, NULL, 0, NULL, 0);
+}
+
+olpc_ec_cmd() is provided by already-upstream arch/x86/kernel/olpc.c
+
+My question is: what should the basic form of the rfkill driver be?
+I have three possible designs in mind:
+
+A)
+A module where the module_init logic is as follows:
+ 1. Check that we're running on OLPC XO-1 (using the functions
+provided by CONFIG_OLPC olpc.c)
+ 2. Call rfkill_alloc()
+
+or
+
+B)
+A module where module_init registers a platform driver
+arch/x86/kernel/olpc.c  calls platform_device_register() and
+platform_add_devices() on XO-1
+This causes probe to be called within the rfkill driver which calls
+rfkill_alloc()
+
+or
+
+(C)
+A module where module_init registers a platform driver, checks that
+we're running on OLPC XO-1, then calls platform_device_register() and
+platform_add_devices()
+This causes probe to be called which calls rfkill_alloc()
+
+
+(B) seems to follow closest what is described in
+Documentation/driver-model/platform.txt, but (I think) it has the
+disadvantage that it can't become a modular driver, since
+arch/x86/kernel/olpc.c would always attempt to probe the platform
+device early during boot, and the module wouldn't be available to be
+loaded til later.
+
+(C) doesn't have the same problem, but goes against the platform.txt
+documentation which says that the platform setup code should be the
+thing that registers the presence device
+
+(A) is really simple
+
+
+My instinct is to go for (A), but I can't find any other drivers that
+follow the same structure -- even though they could do. Perhaps
+there's a reason that I'm missing...
+
+Thoughts?
+
+cheers,
+Daniel
