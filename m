@@ -1,37 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 80-190-117-144.ip-home.de ([80.190.117.144]:34724 "EHLO
-	bu3sch.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753096Ab0JJMfB (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 10 Oct 2010 08:35:01 -0400
-Subject: Re: Release of Maranello firmware source code for Broadcom cards
-From: Michael =?ISO-8859-1?Q?B=FCsch?= <mb@bu3sch.de>
-To: francesco.gringoli@ing.unibs.it
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	b43-dev@lists.infradead.org, Bo Han <bohan@cs.umd.edu>
-In-Reply-To: <1DBB75B1-733F-4DFC-A541-2C2C986586A6@ing.unibs.it> (sfid-20101010_123116_260431_6CAA2A46)
-References: <2518B44B-D014-4ABA-AE31-BD75691488AB@ing.unibs.it>
-	 <1DBB75B1-733F-4DFC-A541-2C2C986586A6@ing.unibs.it>
-	 (sfid-20101010_123116_260431_6CAA2A46)
-Content-Type: text/plain; charset="UTF-8"
-Date: Sun, 10 Oct 2010 14:34:56 +0200
-Message-ID: <1286714096.16309.10.camel@maggie>
-Mime-Version: 1.0
+Received: from kroah.org ([198.145.64.141]:53907 "EHLO coco.kroah.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751164Ab0JBBLz (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 1 Oct 2010 21:11:55 -0400
+Date: Fri, 1 Oct 2010 18:10:24 -0700
+From: Greg KH <greg@kroah.com>
+To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Cc: devel@linuxdriverproject.org, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 0/1] staging: good bye otus
+Message-ID: <20101002011024.GA11429@kroah.com>
+References: <20101001231333.GA1847@tux>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20101001231333.GA1847@tux>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, 2010-10-10 at 12:19 +0200, francesco.gringoli@ing.unibs.it
-wrote: 
-> Maranello is an enhancement of the 802.11 DCF standard: it implements
-> a Partial Packet Recovery technique to retransmit only the corrupt
-> parts of failed packets. This reduces the airtime and contributes to
-> enhance the throughput. It was written starting from OpenFWWF5.2 by
-> adding a number of new features.
+On Fri, Oct 01, 2010 at 04:13:33PM -0700, Luis R. Rodriguez wrote:
+> This removes the otus drivers. This patch was based
+> on linux-next.git. The patch is likely too big for
+> linux-wireless to parse so you can download the
+> patch from this URL:
+> 
+> http://www.kernel.org/pub/linux/kernel/people/mcgrof/patches/staging/0001-staging-remove-the-Atheros-otus-vendor-driver.patch.gz
+> sha1sum: a354e487f83ab31e1d153d7fcbd27a8dc20d0ff4
+> 
+> Luis R. Rodriguez (1):
+>   staging: remove the Atheros otus vendor driver
 
-Hey, that looks really cool. :)
-So does this firmware work in AP and STA mode? I guess so, because it
-seems you need support for the nonstandard enhancement on both STA
-and AP.
+Yeah!  I'll queue this up, thanks.
 
--- 
-Greetings Michael.
-
+greg k-h
