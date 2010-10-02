@@ -1,48 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.19.149.2]:51107 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753078Ab0JYPhH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 25 Oct 2010 11:37:07 -0400
-Received: from mail.atheros.com ([10.10.20.108])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Mon, 25 Oct 2010 08:36:56 -0700
-From: Mohammed Shafi Shajakhan <mshajakhan@atheros.com>
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>, <lrodriguez@atheros.com>,
-	<j@w1.fi>, <Senthilkumar.Balasubramanian@Atheros.com>,
-	<Vasanth.Thiagarajan@Atheros.com>, <nbd@openwrt.org>,
-	Mohammed Shafi Shajakhan <mshajakhan@atheros.com>
-Subject: [RFC] ath9k: Fix incorrect access of rate flags in RC
-Date: Mon, 25 Oct 2010 21:06:44 +0530
-Message-ID: <1288021004-7315-1-git-send-email-mshajakhan@atheros.com>
+Received: from mail-ww0-f44.google.com ([74.125.82.44]:45566 "EHLO
+	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753850Ab0JBJfm (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 2 Oct 2010 05:35:42 -0400
+Received: by mail-ww0-f44.google.com with SMTP id 40so2321956wwj.1
+        for <linux-wireless@vger.kernel.org>; Sat, 02 Oct 2010 02:35:41 -0700 (PDT)
+From: Ivo van Doorn <ivdoorn@gmail.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Subject: [PATCH 17/20] rt2x00: Update comment about the AMPDU flag in the TXWI
+Date: Sat, 2 Oct 2010 11:33:42 +0200
+Cc: users@rt2x00.serialmonkey.com, linux-wireless@vger.kernel.org,
+	Helmut Schaa <helmut.schaa@googlemail.com>
+References: <201010021126.18748.IvDoorn@gmail.com> <201010021132.44146.IvDoorn@gmail.com> <201010021133.18211.IvDoorn@gmail.com>
+In-Reply-To: <201010021133.18211.IvDoorn@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Message-Id: <201010021133.43033.IvDoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Mohammed Shafi Shajakhan <mshajakhan@atheros.com>
+From: Helmut Schaa <helmut.schaa@googlemail.com>
 
-The index variable to access the rate flags should be obtained from the
-inner loop counter which corresponds to rate table structure.
+During testing with AMPDUs it turned out that the rt2800 hw will aggregate
+consecutive frames with the same RA and TID when the first frame in a
+possible aggregate has set AMPDU=1 in the TXWI. If a following frame has
+set AMPDU=0 in its TXWI it might sill end up in the aggregate of the
+previous frame. Update the comment accordingly.
 
-Signed-off-by: Mohammed Shafi Shajakhan <mshajakhan@atheros.com>
+Signed-off-by: Helmut Schaa <helmut.schaa@googlemail.com>
+Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
 ---
- drivers/net/wireless/ath/ath9k/rc.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+ drivers/net/wireless/rt2x00/rt2800.h |    8 +++++++-
+ 1 files changed, 7 insertions(+), 1 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/rc.c b/drivers/net/wireless/ath/ath9k/rc.c
-index 0cee90c..89978d7 100644
---- a/drivers/net/wireless/ath/ath9k/rc.c
-+++ b/drivers/net/wireless/ath/ath9k/rc.c
-@@ -527,7 +527,7 @@ static u8 ath_rc_setvalid_rates(struct ath_rate_priv *ath_rc_priv,
- 	for (i = 0; i < rateset->rs_nrates; i++) {
- 		for (j = 0; j < rate_table->rate_cnt; j++) {
- 			u32 phy = rate_table->info[j].phy;
--			u16 rate_flags = rate_table->info[i].rate_flags;
-+			u16 rate_flags = rate_table->info[j].rate_flags;
- 			u8 rate = rateset->rs_rates[i];
- 			u8 dot11rate = rate_table->info[j].dot11rate;
- 
+diff --git a/drivers/net/wireless/rt2x00/rt2800.h b/drivers/net/wireless/rt2x00/rt2800.h
+index 2a9f402..eb8b6ca 100644
+--- a/drivers/net/wireless/rt2x00/rt2800.h
++++ b/drivers/net/wireless/rt2x00/rt2800.h
+@@ -2003,7 +2003,13 @@ struct mac_iveiv_entry {
+  *     duplicate the frame to both channels).
+  * STBC: 1: STBC support MCS =0-7, 2,3 : RESERVED
+  * AMPDU: 1: this frame is eligible for AMPDU aggregation, the hw will
+- *        aggregate consecutive frames with the same RA and QoS TID.
++ *        aggregate consecutive frames with the same RA and QoS TID. If
++ *        a frame A with the same RA and QoS TID but AMPDU=0 is queued
++ *        directly after a frame B with AMPDU=1, frame A might still
++ *        get aggregated into the AMPDU started by frame B. So, setting
++ *        AMPDU to 0 does _not_ necessarily mean the frame is sent as
++ *        MPDU, it can still end up in an AMPDU if the previous frame
++ *        was tagged as AMPDU.
+  */
+ #define TXWI_W0_FRAG			FIELD32(0x00000001)
+ #define TXWI_W0_MIMO_PS			FIELD32(0x00000002)
 -- 
-1.7.0.4
+1.7.2.3
 
