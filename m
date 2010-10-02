@@ -1,89 +1,166 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.19.149.2]:13973 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750954Ab0JFCQB (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 5 Oct 2010 22:16:01 -0400
-Received: from mail.atheros.com ([10.10.20.105])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Tue, 05 Oct 2010 19:15:52 -0700
-Date: Tue, 5 Oct 2010 19:15:58 -0700
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: Bruno Randolf <br1@einfach.org>
-CC: "Luis R. Rodriguez" <mcgrof@gmail.com>,
-	Vasanth Thiagarajan <Vasanth.Thiagarajan@Atheros.com>,
-	"ath5k-devel@lists.ath5k.org" <ath5k-devel@lists.ath5k.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"linville@tuxdriver.com" <linville@tuxdriver.com>
-Subject: Re: [ath5k-devel] [PATCH 3/5] ath9k: Use common cycle counters
-Message-ID: <20101006021558.GB2255@tux>
-References: <20101005095510.3083.46174.stgit@tt-desk>
- <20101005095521.3083.87663.stgit@tt-desk>
- <AANLkTin5r7ig7-h9DRjwGrei9R5-CL6gW7kcBNKWP2Rs@mail.gmail.com>
- <201010061100.01949.br1@einfach.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <201010061100.01949.br1@einfach.org>
+Received: from mail-fx0-f46.google.com ([209.85.161.46]:33923 "EHLO
+	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755138Ab0JBL5W (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 2 Oct 2010 07:57:22 -0400
+From: Ohad Ben-Cohen <ohad@wizery.com>
+To: <linux-mmc@vger.kernel.org>, <linux-wireless@vger.kernel.org>
+Cc: Chris Ball <cjb@laptop.org>, Nicolas Pitre <nico@fluxnic.net>,
+	Luciano Coelho <luciano.coelho@nokia.com>,
+	Ohad Ben-Cohen <ohad@wizery.com>
+Subject: [PATCH v2 02/11] mmc: propagate power save/restore ops return value
+Date: Sat,  2 Oct 2010 13:54:06 +0200
+Message-Id: <1286020455-28946-3-git-send-email-ohad@wizery.com>
+In-Reply-To: <1286020455-28946-1-git-send-email-ohad@wizery.com>
+References: <1286020455-28946-1-git-send-email-ohad@wizery.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Oct 05, 2010 at 07:00:01PM -0700, Bruno Randolf wrote:
-> On Wed October 6 2010 10:18:07 Luis R. Rodriguez wrote:
-> > On Tue, Oct 5, 2010 at 2:55 AM, Bruno Randolf <br1@einfach.org> wrote:
-> > > Update ath9k to use the common cycle counters.
-> > > 
-> > > This also includes other changes from Felix Fietkaus "[PATCH 2/4]
-> > > ath9k_hw: merge codepaths that access the cycle counter registers".
-> > > 
-> > > Compile tested only. ath9k team please review...
-> > > 
-> > > Signed-off-by: Felix Fietkau <nbd@openwrt.org>
-> > > Signed-off-by: Bruno Randolf <br1@einfach.org>
-> > > ---
-> > >  drivers/net/wireless/ath/ath9k/ani.c        |   87
-> > > +++------------------------ drivers/net/wireless/ath/ath9k/ani.h      
-> > >  |    6 --
-> > >  drivers/net/wireless/ath/ath9k/ar5008_phy.c |    9 +--
-> > >  drivers/net/wireless/ath/ath9k/ar9003_phy.c |   18 +++---
-> > >  4 files changed, 22 insertions(+), 98 deletions(-)
-> > > 
-> > > diff --git a/drivers/net/wireless/ath/ath9k/ani.c
-> > > b/drivers/net/wireless/ath/ath9k/ani.c index 0496f96..0c0d01d 100644
-> > > --- a/drivers/net/wireless/ath/ath9k/ani.c
-> > > +++ b/drivers/net/wireless/ath/ath9k/ani.c
-> > > @@ -549,47 +549,21 @@ static u8 ath9k_hw_chan_2_clockrate_mhz(struct
-> > > ath_hw *ah)
-> > > 
-> > >  static int32_t ath9k_hw_ani_get_listen_time(struct ath_hw *ah)
-> > >  {
-> > > -       struct ar5416AniState *aniState;
-> > >        struct ath_common *common = ath9k_hw_common(ah);
-> > > -       u32 txFrameCount, rxFrameCount, cycleCount;
-> > > -       int32_t listenTime;
-> > > +       int32_t listen_time;
-> > > +       int32_t clock_rate;
-> > > 
-> > > -       txFrameCount = REG_READ(ah, AR_TFCNT);
-> > > -       rxFrameCount = REG_READ(ah, AR_RFCNT);
-> > > -       cycleCount = REG_READ(ah, AR_CCCNT);
-> > > +       ath_hw_cycle_counters_lock(common);
-> > 
-> > Note the lock call here. This is what I'd like to see avoided. Can you
-> > perhaps have the lock called within the core driver instead, that is,
-> > add the lock call for the caller of ath9k_hw_ani_get_listen_time(). In
-> > this case I see ath9k_hw_ani_get_listen_time() is static though and so
-> > is its caller but ultimately we get to ath9k_hw_ani_monitor(). What
-> > I'm saying is how about calling the
-> > ath_hw_cycle_counters_lock(common); right before
-> > ath9k_hw_ani_monitor().
-> 
-> that would hold the lock for an unnecessarily long amount of time.
+Allow power save/restore and their relevant mmc_bus_ops handlers
+exit with a return value.
 
-I see..
+Signed-off-by: Ohad Ben-Cohen <ohad@wizery.com>
+---
+ drivers/mmc/core/core.c  |   20 ++++++++++++++------
+ drivers/mmc/core/core.h  |    4 ++--
+ drivers/mmc/core/mmc.c   |    8 ++++++--
+ drivers/mmc/core/sd.c    |    8 ++++++--
+ include/linux/mmc/host.h |    4 ++--
+ 5 files changed, 30 insertions(+), 14 deletions(-)
 
-> i'm not working with ath9k, so can i leave it to you to deal with this in 
-> subsequent patches? in the mean time, if you prefer, i can omit the lock.
+diff --git a/drivers/mmc/core/core.c b/drivers/mmc/core/core.c
+index 5def192..c94565d 100644
+--- a/drivers/mmc/core/core.c
++++ b/drivers/mmc/core/core.c
+@@ -1581,37 +1581,45 @@ void mmc_stop_host(struct mmc_host *host)
+ 	mmc_power_off(host);
+ }
+ 
+-void mmc_power_save_host(struct mmc_host *host)
++int mmc_power_save_host(struct mmc_host *host)
+ {
++	int ret = 0;
++
+ 	mmc_bus_get(host);
+ 
+ 	if (!host->bus_ops || host->bus_dead || !host->bus_ops->power_restore) {
+ 		mmc_bus_put(host);
+-		return;
++		return -EINVAL;
+ 	}
+ 
+ 	if (host->bus_ops->power_save)
+-		host->bus_ops->power_save(host);
++		ret = host->bus_ops->power_save(host);
+ 
+ 	mmc_bus_put(host);
+ 
+ 	mmc_power_off(host);
++
++	return ret;
+ }
+ EXPORT_SYMBOL(mmc_power_save_host);
+ 
+-void mmc_power_restore_host(struct mmc_host *host)
++int mmc_power_restore_host(struct mmc_host *host)
+ {
++	int ret;
++
+ 	mmc_bus_get(host);
+ 
+ 	if (!host->bus_ops || host->bus_dead || !host->bus_ops->power_restore) {
+ 		mmc_bus_put(host);
+-		return;
++		return -EINVAL;
+ 	}
+ 
+ 	mmc_power_up(host);
+-	host->bus_ops->power_restore(host);
++	ret = host->bus_ops->power_restore(host);
+ 
+ 	mmc_bus_put(host);
++
++	return ret;
+ }
+ EXPORT_SYMBOL(mmc_power_restore_host);
+ 
+diff --git a/drivers/mmc/core/core.h b/drivers/mmc/core/core.h
+index 13240d1..90e0ac7 100644
+--- a/drivers/mmc/core/core.h
++++ b/drivers/mmc/core/core.h
+@@ -22,8 +22,8 @@ struct mmc_bus_ops {
+ 	void (*detect)(struct mmc_host *);
+ 	int (*suspend)(struct mmc_host *);
+ 	int (*resume)(struct mmc_host *);
+-	void (*power_save)(struct mmc_host *);
+-	void (*power_restore)(struct mmc_host *);
++	int (*power_save)(struct mmc_host *);
++	int (*power_restore)(struct mmc_host *);
+ };
+ 
+ void mmc_attach_bus(struct mmc_host *host, const struct mmc_bus_ops *ops);
+diff --git a/drivers/mmc/core/mmc.c b/drivers/mmc/core/mmc.c
+index 3ea58ce..31a8bbe 100644
+--- a/drivers/mmc/core/mmc.c
++++ b/drivers/mmc/core/mmc.c
+@@ -657,12 +657,16 @@ static int mmc_resume(struct mmc_host *host)
+ 	return err;
+ }
+ 
+-static void mmc_power_restore(struct mmc_host *host)
++static int mmc_power_restore(struct mmc_host *host)
+ {
++	int ret;
++
+ 	host->card->state &= ~MMC_STATE_HIGHSPEED;
+ 	mmc_claim_host(host);
+-	mmc_init_card(host, host->ocr, host->card);
++	ret = mmc_init_card(host, host->ocr, host->card);
+ 	mmc_release_host(host);
++
++	return ret;
+ }
+ 
+ static int mmc_sleep(struct mmc_host *host)
+diff --git a/drivers/mmc/core/sd.c b/drivers/mmc/core/sd.c
+index bc745e1..49da4df 100644
+--- a/drivers/mmc/core/sd.c
++++ b/drivers/mmc/core/sd.c
+@@ -722,12 +722,16 @@ static int mmc_sd_resume(struct mmc_host *host)
+ 	return err;
+ }
+ 
+-static void mmc_sd_power_restore(struct mmc_host *host)
++static int mmc_sd_power_restore(struct mmc_host *host)
+ {
++	int ret;
++
+ 	host->card->state &= ~MMC_STATE_HIGHSPEED;
+ 	mmc_claim_host(host);
+-	mmc_sd_init_card(host, host->ocr, host->card);
++	ret = mmc_sd_init_card(host, host->ocr, host->card);
+ 	mmc_release_host(host);
++
++	return ret;
+ }
+ 
+ static const struct mmc_bus_ops mmc_sd_ops = {
+diff --git a/include/linux/mmc/host.h b/include/linux/mmc/host.h
+index c4fb1c5..c3ffad8 100644
+--- a/include/linux/mmc/host.h
++++ b/include/linux/mmc/host.h
+@@ -249,8 +249,8 @@ static inline void *mmc_priv(struct mmc_host *host)
+ extern int mmc_suspend_host(struct mmc_host *);
+ extern int mmc_resume_host(struct mmc_host *);
+ 
+-extern void mmc_power_save_host(struct mmc_host *host);
+-extern void mmc_power_restore_host(struct mmc_host *host);
++extern int mmc_power_save_host(struct mmc_host *host);
++extern int mmc_power_restore_host(struct mmc_host *host);
+ 
+ extern void mmc_detect_change(struct mmc_host *, unsigned long delay);
+ extern void mmc_request_done(struct mmc_host *, struct mmc_request *);
+-- 
+1.7.0.4
 
-I can't think of a good alternative, so just ahead with it, if it creates a
-problem we can remove it.
-
-  Luis
