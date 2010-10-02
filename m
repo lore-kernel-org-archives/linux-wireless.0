@@ -1,60 +1,82 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms3.broadcom.com ([216.31.210.19]:1113 "EHLO MMS3.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758805Ab0JHRpa (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 8 Oct 2010 13:45:30 -0400
-From: "Brett Rudley" <brudley@broadcom.com>
-To: "Jon Masters" <jonathan@jonmasters.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-cc: "Henry Ptasinski" <henryp@broadcom.com>,
-	"Nohee Ko" <noheek@broadcom.com>,
-	"Jon Masters" <jcm@jonmasters.org>,
-	LKML <linux-kernel@vger.kernel.org>
-Date: Fri, 8 Oct 2010 10:45:14 -0700
-Subject: RE: PROBLEM: brcm80211 hangs on
- 2.6.36-0.34.rc6.git3.fc15.x86_64
-Message-ID: <7A94256FD72B884D9E7C55586C3CBCEE1381EE4B69@SJEXCHCCR01.corp.ad.broadcom.com>
-References: <20101008065810.GA1680@constitution.bos.jonmasters.org>
- <1286538243.21485.298.camel@constitution.bos.jonmasters.org>
-In-Reply-To: <1286538243.21485.298.camel@constitution.bos.jonmasters.org>
-MIME-Version: 1.0
-Content-Type: text/plain;
- charset=utf-8
+Received: from mail-fx0-f46.google.com ([209.85.161.46]:48776 "EHLO
+	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755341Ab0JBL52 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 2 Oct 2010 07:57:28 -0400
+From: Ohad Ben-Cohen <ohad@wizery.com>
+To: <linux-mmc@vger.kernel.org>, <linux-wireless@vger.kernel.org>
+Cc: Chris Ball <cjb@laptop.org>, Nicolas Pitre <nico@fluxnic.net>,
+	Luciano Coelho <luciano.coelho@nokia.com>,
+	Ohad Ben-Cohen <ohad@wizery.com>
+Subject: [PATCH v2 05/11] sdio: use the generic runtime PM handlers
+Date: Sat,  2 Oct 2010 13:54:09 +0200
+Message-Id: <1286020455-28946-6-git-send-email-ohad@wizery.com>
+In-Reply-To: <1286020455-28946-1-git-send-email-ohad@wizery.com>
+References: <1286020455-28946-1-git-send-email-ohad@wizery.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-VGhhbmtzIGZvciB0aGUgaW5wdXQuDQoNClRoZSA0MzEzIChEZXZpY2UgSUQgNDMyNykgaXMgcHJl
-dHR5IHNvbGlkIG9uIHRoZSAzMiBiaXQgc3RhZ2luZy1uZXh0IGtlcm5lbCAobG9hZHMsIHJ1bnMN
-CmZvciBkYXlzLCBubyBpc3N1ZXMsIGV0YykuDQoNCk9uIHRoZSBvdGhlciBoYW5kLCBJIGhhdmVu
-J3QgYmVlbiB1c2luZyBhbnl0aGluZyBvdGhlciB0aGFuIHRoYXQga2VybmVsIHJlY2VudGx5IHNv
-IGl0cyANCnZlcnksIHZlcnkgbGlrZWx5IHRoZXJlIGFyZSBwcm9ibGVtcyB3aXRoIG90aGVyIGtl
-cm5lbHMsIGVzcGVjaWFsbHkgNjQgYml0IHdoaWNoIEkgaGF2ZW4ndCBldmVuIA0KYXR0ZW1wdGVk
-IHlldCAoYnV0IHdpbGwgb2YgY291cnNlKS4gUGxlYXNlIGRvIHRyeSBvdXQgdGhlIDMyIGJpdCBz
-dGFnaW5nLW5leHQga2VybmVsIGFuZCBsZXQgbWUga25vdyBob3cgaXQgZ29lcy4NCg0KWWVhaCwg
-dHVybmluZyBvbiBtc2dsZXZlbCBwcm9kdWNlcyBtb3JlIChhbmQgcG9zc2libHkgKm11Y2gqIG1v
-cmUpIG91dHB1dC4gIA0KDQpMZXQgbWUga25vdyB3aGF0IHlvdSBmaW5kLA0KVGhhbmtzDQpicmV0
-dA0KDQo+IC0tLS0tT3JpZ2luYWwgTWVzc2FnZS0tLS0tDQo+IEZyb206IEpvbiBNYXN0ZXJzIFtt
-YWlsdG86am9uYXRoYW5Aam9ubWFzdGVycy5vcmddDQo+IFNlbnQ6IEZyaWRheSwgT2N0b2JlciAw
-OCwgMjAxMCA0OjQ0IEFNDQo+IFRvOiBsaW51eC13aXJlbGVzc0B2Z2VyLmtlcm5lbC5vcmcNCj4g
-Q2M6IEJyZXR0IFJ1ZGxleTsgSGVucnkgUHRhc2luc2tpOyBOb2hlZSBLbzsgSm9uIE1hc3RlcnM7
-IExLTUwNCj4gU3ViamVjdDogUmU6IFBST0JMRU06IGJyY204MDIxMSBoYW5ncyBvbiAyLjYuMzYt
-MC4zNC5yYzYuZ2l0My5mYzE1Lng4Nl82NA0KPiANCj4gT24gRnJpLCAyMDEwLTEwLTA4IGF0IDAy
-OjU4IC0wNDAwLCBKb24gTWFzdGVycyB3cm90ZToNCj4gDQo+ID4gSSB0cmllZCBidWlsZGluZyB0
-aGUgbmV3IGJyY204MDIxMSBkcml2ZXIgZnJvbSBzdGFnaW5nLW5leHQgb24gRmVkb3JhDQo+ID4g
-cmF3aGlkZSBrZXJuZWwgMi42LjM2LTAuMzQucmM2LmdpdDMuZmMxNS54ODZfNjQuIE5vdywgb2Yg
-Y291cnNlLCBpdCdzDQo+ID4gbm90IHRoZSBzdGFnaW5nLW5leHQga2VybmVsIChJJ2xsIHRyeSB0
-aGF0IG5vdyB0aGlzIGRvZXNuJ3Qgd29yaykgYnV0DQo+ID4gcGVyaGFwcyB0aGlzIHJlcG9ydCB3
-aWxsIHN0aWxsIGJlIG9mIHVzZSB0byB0aGUgQnJvYWRjb20vb3RoZXIgd2lyZWxlc3MNCj4gZm9s
-a3MuDQo+IA0KPiBJIHB1bGxlZCB0aGUgbGF0ZXN0IHN0YWdpbmctbmV4dCBvbnRvIExpbnVzJyBs
-YXRlc3QgZ2l0IHRyZWUgYW5kIHN0aWxsDQo+IGV4cGVyaWVuY2UgcHJvYmxlbXMgd2l0aCB0aGUg
-ZHJpdmVyLiBJdCBzZWVtcyB0aGF0IHRoZSBmaXJzdCBhdHRlbXB0IHRvDQo+IGFjdHVhbGx5IHRy
-YW5zbWl0IHJlc3VsdHMgaW4gdGhlIHN5c3RlbSBsb2NraW5nIGhhcmQuIE9uY2UgYWdhaW4sIEkg
-YW0NCj4gYXR0YWNoaW5nIHRoZSBvdXRwdXQgZnJvbSBydW5uaW5nIGEgbmV0Y29uc29sZSAoZHVl
-IHRvIHRoZSBib3ggSSdtIG9uLA0KPiBpdCdzIGFuIGF0dGFjaG1lbnQgdGhpcyB0aW1lLCBzb3Jy
-eSBhYm91dCB0aGF0IC0gZG9uJ3QgdHJ1c3QgZXZvbHV0aW9uKQ0KPiB3aGVyZSB0aGUgdHJhY2Ug
-aXMgYmFzaWNhbGx5IHRoZSBzYW1lIGFzIHRoZSBvcmlnaW5hbCB0cmFjZSBJIHBvc3RlZC4NCj4g
-DQo+IE5PVEU6IGluIGJvdGggY2FzZXMsIHRoZSBkcml2ZXIgaXMgbG9hZGVkIHdpdGggIm1zZ2xl
-dmVsPTIgcGh5bXNnbGV2ZWw9MiINCj4gd2hpY2ggKGFsdGhvdWdoIG5vdCBkb2N1bWVudGVkKSBz
-dWdnZXN0cyB0byBlbmFibGUgdHJhY2luZywgYW5kIGRvZXMNCj4gY2VydGFpbmx5IHlpZWxkIG1v
-cmUgZGVidWdnaW5nIG91dHB1dC4NCj4gDQo+IEpvbi4NCg0K
+Assign the generic runtime PM handlers for SDIO.
+
+These handlers invoke the relevant SDIO function drivers'
+handlers, if exist, otherwise they just return success
+(so SDIO drivers don't have to define any runtime PM handlers
+unless they need to).
+
+Runtime PM is still disabled by default, so this patch alone
+has no immediate effect.
+
+Signed-off-by: Ohad Ben-Cohen <ohad@wizery.com>
+---
+ drivers/mmc/core/sdio_bus.c |   20 ++++++++++++++++++++
+ 1 files changed, 20 insertions(+), 0 deletions(-)
+
+diff --git a/drivers/mmc/core/sdio_bus.c b/drivers/mmc/core/sdio_bus.c
+index 4a890dc..256a968 100644
+--- a/drivers/mmc/core/sdio_bus.c
++++ b/drivers/mmc/core/sdio_bus.c
+@@ -14,6 +14,7 @@
+ #include <linux/device.h>
+ #include <linux/err.h>
+ #include <linux/slab.h>
++#include <linux/pm_runtime.h>
+ 
+ #include <linux/mmc/card.h>
+ #include <linux/mmc/sdio_func.h>
+@@ -154,6 +155,24 @@ static int sdio_bus_remove(struct device *dev)
+ 	return 0;
+ }
+ 
++#ifdef CONFIG_PM_RUNTIME
++
++static const struct dev_pm_ops sdio_bus_pm_ops = {
++	SET_RUNTIME_PM_OPS(
++		pm_generic_runtime_suspend,
++		pm_generic_runtime_resume,
++		pm_generic_runtime_idle
++	)
++};
++
++#define SDIO_PM_OPS_PTR	(&sdio_bus_pm_ops)
++
++#else /* !CONFIG_PM_RUNTIME */
++
++#define SDIO_PM_OPS_PTR	NULL
++
++#endif /* !CONFIG_PM_RUNTIME */
++
+ static struct bus_type sdio_bus_type = {
+ 	.name		= "sdio",
+ 	.dev_attrs	= sdio_dev_attrs,
+@@ -161,6 +180,7 @@ static struct bus_type sdio_bus_type = {
+ 	.uevent		= sdio_bus_uevent,
+ 	.probe		= sdio_bus_probe,
+ 	.remove		= sdio_bus_remove,
++	.pm		= SDIO_PM_OPS_PTR,
+ };
+ 
+ int sdio_register_bus(void)
+-- 
+1.7.0.4
 
