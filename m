@@ -1,53 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:45753 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753527Ab0JFUaL (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 6 Oct 2010 16:30:11 -0400
-Date: Wed, 6 Oct 2010 16:21:06 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Christian Lamparter <chunkeey@googlemail.com>,
-	linux-wireless@vger.kernel.org,
-	Ben Greear <greearb@candelatech.com>,
-	Ming Lei <tom.leiming@gmail.com>
-Subject: Re: [PATCH] mac80211: hoist sta->lock from reorder release timer
-Message-ID: <20101006202106.GL2472@tuxdriver.com>
-References: <201010061200.54364.chunkeey@googlemail.com>
- <201010061220.50800.chunkeey@googlemail.com>
- <1286361705.3655.121.camel@jlt3.sipsolutions.net>
- <201010061343.23463.chunkeey@googlemail.com>
- <1286365578.3655.187.camel@jlt3.sipsolutions.net>
+Received: from nbd.name ([88.198.39.176]:53101 "EHLO ds10.nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754616Ab0JCTKv (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 3 Oct 2010 15:10:51 -0400
+Message-ID: <4CA8D53A.7090805@openwrt.org>
+Date: Sun, 03 Oct 2010 21:10:50 +0200
+From: Felix Fietkau <nbd@openwrt.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1286365578.3655.187.camel@jlt3.sipsolutions.net>
+To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+CC: linux-wireless@vger.kernel.org, linville@tuxdriver.com
+Subject: Re: [PATCH 4/4] ath9k_hw: fix regression in ANI listen time calculation
+References: <1286125639-15137-1-git-send-email-nbd@openwrt.org> <1286125639-15137-2-git-send-email-nbd@openwrt.org> <1286125639-15137-3-git-send-email-nbd@openwrt.org> <1286125639-15137-4-git-send-email-nbd@openwrt.org> <AANLkTinm6RUk1jECQYdkyA+vD=-z+c=pA+T_kduTGwMw@mail.gmail.com> <4CA8D4A3.9060403@openwrt.org>
+In-Reply-To: <4CA8D4A3.9060403@openwrt.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Oct 06, 2010 at 01:46:18PM +0200, Johannes Berg wrote:
-> On Wed, 2010-10-06 at 13:43 +0200, Christian Lamparter wrote:
-> 
-> > > Basically the thing is that until your patch, the data in the struct
-> > > didn't actually need locking because it was accessed by the RX path only
-> > > which is not concurrent.
-> > > 
-> > I see. So basically all rx handlers are affected by these rx->sta races.
-> > 
-> > John, can you please revert (or at least drop from the upcoming 2.6.37-rcX cycle):
-> > 
-> > (mac80211: fix release_reorder_timeout in scan)
-> > mac80211: fix rcu-unsafe pointer dereference
-> > mac80211: AMPDU rx reorder timeout timer
-> > (mac80211: remove unused rate function parameter)
-> > mac80211: put rx handlers into separate functions
-> 
-> I think it's probably easier to fix than to revert now? There are only a
-> handful of fields, and it seemed to me that most of them can easily be
-> moved under the reorder lock.
+On 2010-10-03 9:08 PM, Felix Fietkau wrote:
+> On 2010-10-03 7:24 PM, Luis R. Rodriguez wrote:
+>> On Sun, Oct 3, 2010 at 10:07 AM, Felix Fietkau <nbd@openwrt.org> wrote:
+>>>  wireless-testing
+>>>  commit 37e5bf6535a4d697fb9fa6f268a8354a612cbc00
+>>>  Author: Luis R. Rodriguez <lrodriguez@atheros.com>
+>>>  Date:   Sat Jun 12 00:33:40 2010 -0400
+>>>
+>>>    ath9k_hw: fix clock rate calculations for ANI
+>>>
+>>> This commit accidentally broke clock rate calculation by doubling the
+>>> calculated clock rate
+>>>
+>>> Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+>> 
+>> Thanks, are you aware of the impact, is this a stable regression fix?
+> I just checked, looks like this is a stable fix. The impact is that ANI
+> will probably pick settings with higher numbers of OFDM/CCK misdetects.
+> I'll resend with Cc: stable
+Never mind. It's not a stable fix after all, git-describe confused me ;)
 
-I would prefer a fix on top rather than a series of reverts...
-
-John
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+- Felix
