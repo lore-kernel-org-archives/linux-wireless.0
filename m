@@ -1,43 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.colab.de ([195.226.127.114]:38702 "EHLO mail.colab.de"
+Received: from nbd.name ([88.198.39.176]:53082 "EHLO ds10.nbd.name"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750857Ab0JBRyn (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 2 Oct 2010 13:54:43 -0400
-From: Jochen Friedrich <jochen@scram.de>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org, Jochen Friedrich <jochen@scram.de>
-Subject: [Patch] iw: Implement set 4addr.
-Date: Sat,  2 Oct 2010 19:40:39 +0200
-Message-Id: <1286041239-19169-1-git-send-email-jochen@scram.de>
+	id S1754616Ab0JCTIY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 3 Oct 2010 15:08:24 -0400
+Message-ID: <4CA8D4A3.9060403@openwrt.org>
+Date: Sun, 03 Oct 2010 21:08:19 +0200
+From: Felix Fietkau <nbd@openwrt.org>
+MIME-Version: 1.0
+To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+CC: linux-wireless@vger.kernel.org, linville@tuxdriver.com
+Subject: Re: [PATCH 4/4] ath9k_hw: fix regression in ANI listen time calculation
+References: <1286125639-15137-1-git-send-email-nbd@openwrt.org> <1286125639-15137-2-git-send-email-nbd@openwrt.org> <1286125639-15137-3-git-send-email-nbd@openwrt.org> <1286125639-15137-4-git-send-email-nbd@openwrt.org> <AANLkTinm6RUk1jECQYdkyA+vD=-z+c=pA+T_kduTGwMw@mail.gmail.com>
+In-Reply-To: <AANLkTinm6RUk1jECQYdkyA+vD=-z+c=pA+T_kduTGwMw@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Jochen Friedrich <jochen@scram.de>
----
- interface.c |   13 +++++++++++++
- 1 files changed, 13 insertions(+), 0 deletions(-)
+On 2010-10-03 7:24 PM, Luis R. Rodriguez wrote:
+> On Sun, Oct 3, 2010 at 10:07 AM, Felix Fietkau <nbd@openwrt.org> wrote:
+>>  wireless-testing
+>>  commit 37e5bf6535a4d697fb9fa6f268a8354a612cbc00
+>>  Author: Luis R. Rodriguez <lrodriguez@atheros.com>
+>>  Date:   Sat Jun 12 00:33:40 2010 -0400
+>>
+>>    ath9k_hw: fix clock rate calculations for ANI
+>>
+>> This commit accidentally broke clock rate calculation by doubling the
+>> calculated clock rate
+>>
+>> Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+> 
+> Thanks, are you aware of the impact, is this a stable regression fix?
+I just checked, looks like this is a stable fix. The impact is that ANI
+will probably pick settings with higher numbers of OFDM/CCK misdetects.
+I'll resend with Cc: stable
 
-diff --git a/interface.c b/interface.c
-index c092aa2..e6cca4f 100644
---- a/interface.c
-+++ b/interface.c
-@@ -365,3 +365,16 @@ COMMAND(set, type, "<type>",
- 	NL80211_CMD_SET_INTERFACE, 0, CIB_NETDEV, handle_interface_type,
- 	"Set interface type/mode.\n"
- 	IFACE_TYPES);
-+
-+static int handle_interface_4addr(struct nl80211_state *state,
-+				 struct nl_cb *cb,
-+				 struct nl_msg *msg,
-+				 int argc, char **argv)
-+{
-+	if (argc != 1)
-+		return 1;
-+	return parse_4addr_flag(argv[0], msg);
-+}
-+COMMAND(set, 4addr, "<on|off>",
-+	NL80211_CMD_SET_INTERFACE, 0, CIB_NETDEV, handle_interface_4addr,
-+	"Set interface 4addr (WDS) mode.\n");
--- 
-1.7.1
-
+- Felix
