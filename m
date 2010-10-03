@@ -1,144 +1,241 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server6.subsys.no ([85.19.71.170]:36511 "EHLO server6.subsys.no"
+Received: from ogre.sisk.pl ([217.79.144.158]:39394 "EHLO ogre.sisk.pl"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751171Ab0JYVsN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 25 Oct 2010 17:48:13 -0400
-Received: from localhost (localhost [127.0.0.1])
-	by server6.subsys.no (Postfix) with ESMTP id 4C6911BEB7
-	for <linux-wireless@vger.kernel.org>; Mon, 25 Oct 2010 23:28:45 +0200 (CEST)
-Received: from server6.subsys.no ([127.0.0.1])
-	by localhost (server6.subsys.no [127.0.0.1]) (amavisd-new, port 10024)
-	with ESMTP id eIFzJwxtZbHB for <linux-wireless@vger.kernel.org>;
-	Mon, 25 Oct 2010 23:28:44 +0200 (CEST)
-Received: from mail.iggu.org (server2.subsys.no [85.19.71.167])
-	by server6.subsys.no (Postfix) with ESMTPSA id 093FA1BEB1
-	for <linux-wireless@vger.kernel.org>; Mon, 25 Oct 2010 23:28:44 +0200 (CEST)
+	id S1751912Ab0JCVfb convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 3 Oct 2010 17:35:31 -0400
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
+To: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+Subject: 2.6.36-rc6-git2: Reported regressions 2.6.34 -> 2.6.35
+Cc: Maciej Rutecki <maciej.rutecki@gmail.com>,
+	Florian Mickler <florian@mickler.org>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	Kernel Testers List <kernel-testers@vger.kernel.org>,
+	Network Development <netdev@vger.kernel.org>,
+	Linux ACPI <linux-acpi@vger.kernel.org>,
+	Linux PM List <linux-pm@lists.linux-foundation.org>,
+	Linux SCSI List <linux-scsi@vger.kernel.org>,
+	Linux Wireless List <linux-wireless@vger.kernel.org>,
+	DRI <dri-devel@lists.freedesktop.org>
 MIME-Version: 1.0
-Content-Type: text/plain;
- charset=UTF-8
-Date: Mon, 25 Oct 2010 23:37:56 +0200
-From: =?UTF-8?Q?Robert_Gr=C3=B8nning?= <slimg@iggu.org>
-To: <linux-wireless@vger.kernel.org>
-Subject: Changes to NO (Norway) in wireless-regdb
-Message-ID: <7de8d1c9fd95f3b714597b4cd15f7a29@post.subsys.no>
+Content-Type: text/plain; charset="utf-8"
+Message-ID: <OjxVjYbf_EJ.A.ReC.pTPqMB@chimera>
+Date: Sun,  3 Oct 2010 23:36:05 +0200 (CEST)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-It seems like NO is wrong according to Norwegian rules
+This message contains a list of some post-2.6.34 regressions introduced before
+2.6.35, for which there are no fixes in the mainline known to the tracking team.
+If any of them have been fixed already, please let us know.
 
-This is how NO currently looks like in wireless-regdb-2009.11.25.tar.bz2
--------------------START-------------------
-country NO:
-        (2402 - 2482 @ 40), (N/A, 20)
-        (5170 - 5250 @ 40), (N/A, 20)
-        (5250 - 5330 @ 40), (N/A, 20), DFS
-        (5490 - 5710 @ 40), (N/A, 27), DFS
---------------------END--------------------
+If you know of any other unresolved post-2.6.34 regressions, please let us know
+either and we'll add them to the list.  Also, please let us know if any
+of the entries below are invalid.
 
-This is what the Norwegian rules say about general usage of frequencies
-for wi-fi:
-Note: The following text is a translation from a subsection of the
-following document written in Norwegian:
-http://www.lovdata.no/for/sf/sd/xd-20090602-0580.html#7
--------------------------------------START--------------------------------------
-(3) the frequency band 5150-5350 MHz is authorized for indoor data
-transfer
-including radio-based local area networks (WAS / RLAN) with a maximum
-radiated
-power of 200 mW eirp the frequency use defined in the standard EN 301 893
-If any
-other use than indoor use, the average spectral density in the frequency
-band
-5150-5350 MHz is limited to 10 mW / MHz eirp in any 1 MHz range.
+Each entry from the list will be sent additionally in an automatic reply to
+this message with CCs to the people involved in reporting and handling the
+issue.
 
-(4) the frequency band 5470-5725 MHz may be used for data transfer with
-maximum
-radiated power of 1 W eirp Maximum average spectral density shall not
-exceed
-50 mW / MHz eirp in any 1 MHz band. The radio equipment shall implement
-transmit
-power control (TPC) which provides an average attenuation of at least 3
-dB. If
-TPC is not in use, the maximum allowed radiated power and power density is
-3 dB
-lower than that following the first and second sentence. The radio
-equipment will
-use Dynamic Frequency Selection (DFS) as specified in the standard EN 301
-893
 
-(5) The frequency bands 5725-5795 MHz and 5815-5850 MHz for data transfer
-with
-maximum radiated power of 4 W eirp Maximum average spectral density shall
-not
-exceed 200 mW / MHz eirp in any 1 MHz band. The radio equipment shall
-implement
-Dynamic Frequency Selection (DFS) as specified in the standard EN 302 502
-Radio
-equipment shall transmit power control (TPC) which provides an average
-attenuation of at least 3 dB. If TPC is not in use, the maximum allowed
-radiated
-power and power density is 3 dB lower than that following the first and
-second
-sentence. On the border between Norway and neighboring power density shall
-not
-exceed -122.5 dBW / m 2 measured with a reference bandwidth of 1 MHz
-unless
-otherwise stated in the coordination agreement.
+Listed regressions statistics:
 
-(6) The frequency bands 5725-5795 and 5815-5850 MHz for point-to-point
-radio
-links with maximum radiated power of 200 W eirp Maximum permitted power
-supplied
-antenna is 1 W. The maximum average spectral density shall not exceed 10 W
-/ MHz
-eirp in any 1 MHz band. The concept of point-to-point radio links exclude
-all
-forms of point-to-multipoint, omnidirectional systems and transmitters
-send the
-same information located in the same place (sector antennas). The radio
-equipment
-shall implement Dynamic Frequency Selection (DFS) as specified in the
-standard
-EN 302 502 On the border between Norway and neighboring power density
-shall not
-exceed -122.5 dBW / m 2 measured with a reference bandwidth of 1 MHz
-unless
-otherwise stated in the coordination agreement.
---------------------------------------END---------------------------------------
+  Date          Total  Pending  Unresolved
+  ----------------------------------------
+  2010-10-03      141       21          17
+  2010-09-26      139       24          21
+  2010-09-20      137       27          25
+  2010-09-12      135       26          25
+  2010-08-30      124       38          34
+  2010-08-01      100       27          23
+  2010-07-23       94       33          25
+  2010-07-09       79       45          37
+  2010-06-21       46       37          26
+  2010-06-09       15       13          10
 
-Here is the link to google english-translated section mentioned above:
-http://translate.googleusercontent.com/translate_c?hl=no&sl=no&tl=en&u=http://www.lovdata.no/for/sf/sd/xd-20090602-0580.html&rurl=translate.google.com&usg=ALkJrhhGbQPtCjONnilyHdAgh1NwIZhFVA#7
 
-According to that documentation, NO should probably look like this
-instead:
--------------------START-------------------
-country NO:
-        (2400 - 2483.5 @ 40), (N/A, 20)
-        (5150 - 5350 @ 40), (N/A, 23)
-        (5470 - 5725 @ 40), (N/A, 27), DFS
---------------------END--------------------
+Unresolved regressions
+----------------------
 
-Question 1:
-The norwegian laws also says that if TPC is available, then the maximum
-allowed TX power
-of the 5470 -> 5725 MHz frequency range changes from 27 dBm to 30 dBm, I
-don't know how to write that in wireless-regdb.
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=19612
+Subject		: Computer fails to hibernate - problem idling SMP CPU's
+Submitter	:  <tempo444z@gmail.com>
+Date		: 2010-10-02 22:26 (2 days old)
 
-Question 2:
-The norwegian laws for the 5470 -> 5725 MHz frequency range seem to exceed
-the European restrictions in 802.11n-2009, I'm guessing that the upper 5725
-MHz frequency needs to be decreased to comply with the European
-restrictions? if so, I'm not sure what frequency it should be decreased to.
 
-Question 3:
-The norwegian documentation also mentions these radio frequencies for
-wireless data transfer:
- * 5725 -> 5795 MHz and 5815-5850 MHz: point-to-point radio links
- * 17,1 -> 17,3 GHz:
- * 57 -> 66 GHz:
-Does these belong in the wireless-regdb as well?
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=19302
+Subject		: PROBLEM: kernel crash on USB-modem (Huawei E1750) hangup.
+Submitter	: O01eg <O01eg@yandex.ru>
+Date		: 2010-09-26 19:50 (8 days old)
+Message-ID	: <op.vjnn1up1yohvy1@localhost>
+References	: http://marc.info/?l=linux-kernel&m=128553111709569&w=2
 
-I hope my limited knowlege doesn't cause anyone unreasonable much work,
-I'm really trying to get better at this.
 
--Robert Grønning (Norway)
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=18522
+Subject		: cdrom drive doesn't detect removal
+Submitter	: Maxim Levitsky <maximlevitsky@gmail.com>
+Date		: 2010-09-12 9:49 (22 days old)
+First-Bad-Commit: http://git.kernel.org/linus/6b4517a7913a09d3259bb1d21c9cb300f12294bd
+Message-ID	: <1284284969.2928.18.camel@maxim-laptop>
+References	: http://marc.info/?l=linux-kernel&m=128428499013930&w=2
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=17812
+Subject		: Kernel completely frozen when memory is full
+Submitter	: Mickey86 <mikael.cordon@gmail.com>
+Date		: 2010-09-05 13:09 (29 days old)
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=17261
+Subject		: Freezes on bootup
+Submitter	: Dan Dart <dandart@googlemail.com>
+Date		: 2010-08-29 09:00 (36 days old)
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=16891
+Subject		: Kernel panic while loading intel module during boot
+Submitter	: Anisse Astier <anisse@astier.eu>
+Date		: 2010-08-24 13:19 (41 days old)
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=16691
+Subject		: IPW5100: iwlagn broken with 2.6.34.x to 2.6.35.2 update
+Submitter	: Can Celasun <dcelasun@gmail.com>
+Date		: 2010-08-21 08:28 (44 days old)
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=16614
+Subject		: [2.6.35] usb 2.0 em28xx  kernel panic general protection fault: 0000 [#1] SMP          RIP: 0010:[<ffffffffa004fbc5>]  [<ffffffffa004fbc5>] em28xx_isoc_copy_vbi+0x62e/0x812 [em28xx]
+Submitter	: Sander Eikelenboom <linux@eikelenboom.it>
+Date		: 2010-08-10 22:12 (55 days old)
+Message-ID	: <61936849.20100811001257@eikelenboom.it>
+References	: http://marc.info/?l=linux-kernel&m=128152075830927&w=2
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=16562
+Subject		: 2.6.35: cpu_idle bug report / on i7 870 cpu (x86_64)
+Submitter	: Justin Piszcz <jpiszcz@lucidpixels.com>
+Date		: 2010-08-06 22:09 (59 days old)
+Message-ID	: <alpine.DEB.2.00.1008061800530.5241@p34.internal.lan>
+References	: http://marc.info/?l=linux-kernel&m=128113260904048&w=2
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=16549
+Subject		: 2.6.35: suspicious rcu_dereference_check() usage
+Submitter	: Vladislav Bolkhovitin <vst@vlnb.net>
+Date		: 2010-08-04 10:56 (61 days old)
+Message-ID	: <4C594740.1090608@vlnb.net>
+References	: http://marc.info/?l=linux-kernel&m=128091938215177&w=2
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=16525
+Subject		: unexpected high load since 2.6.35
+Submitter	: MadLoisae@gmx.net <MadLoisae@gmx.net>
+Date		: 2010-08-02 20:53 (63 days old)
+Message-ID	: <4C573041.1070103@gmx.net>
+References	: http://marc.info/?l=linux-kernel&m=128078243726655&w=2
+		  http://lkml.org/lkml/2010/9/14/105
+		  http://lkml.org/lkml/2010/9/27/328
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=16515
+Subject		: [bisected] Radeon rv280 can't boot on kernel 2.6.35.
+Submitter	: Albert Gall <ss3vdr@gmail.com>
+Date		: 2010-08-04 16:10 (61 days old)
+First-Bad-Commit: http://git.kernel.org/linus/https://bugzilla.kernel.org/attachment.cgi?id=27350
+Handled-By	: Alex Deucher <alexdeucher@gmail.com>
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=16488
+Subject		: [i915] Framebuffer ID error after suspend/hibernate leading to X crash
+Submitter	: Milan Bouchet-Valat <nalimilan@club.fr>
+Date		: 2010-08-01 08:55 (64 days old)
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=16458
+Subject		: Bluetooth disabled after resume
+Submitter	: AttilaN <attila123456@gmail.com>
+Date		: 2010-07-25 09:33 (71 days old)
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=16380
+Subject		: Loop devices act strangely in 2.6.35
+Submitter	: Artem S. Tashkinov <t.artem@mailcity.com>
+Date		: 2010-07-13 23:21 (83 days old)
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=16265
+Subject		: Why is kslowd accumulating so much CPU time?
+Submitter	: Theodore Ts'o <tytso@mit.edu>
+Date		: 2010-06-09 18:36 (117 days old)
+First-Bad-Commit: http://git.kernel.org/linus/fbf81762e385d3d45acad057b654d56972acf58c
+Message-ID	: <E1OMQ88-0002a1-Gb@closure.thunk.org>
+References	: http://marc.info/?l=linux-kernel&m=127610857819033&w=4
+		  http://bugs.freedesktop.org/show_bug.cgi?id=29536
+Handled-By	: Chris Wilson <chris@chris-wilson.co.uk>
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=16221
+Subject		: 2.6.35-rc2-git5 -- [drm:drm_mode_getfb] *ERROR* invalid framebuffer id
+Submitter	: Miles Lane <miles.lane@gmail.com>
+Date		: 2010-06-11 20:31 (115 days old)
+Message-ID	: <AANLkTim0jVRyqkwlGOcrg_XTvUQwcBYfWJX-aRzkkrLG@mail.gmail.com>
+References	: http://marc.info/?l=linux-kernel&m=127628828119623&w=2
+
+
+Regressions with patches
+------------------------
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=17772
+Subject		: Unable to locate IOAPIC for GSI *
+Submitter	: zersaa <zersaa@gmail.com>
+Date		: 2010-09-04 21:28 (30 days old)
+Handled-By	: Eric W. Biederman <ebiederm@xmission.com>
+Patch		: https://patchwork.kernel.org/patch/104501/
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=16462
+Subject		: unable to connect to hidden SSID AP on legal channel 13
+Submitter	: Daniel J Blueman <daniel.blueman@gmail.com>
+Date		: 2010-07-25 17:06 (71 days old)
+Handled-By	: Johannes Berg <johannes.berg@intel.com>
+Patch		: https://bugzilla.kernel.org/attachment.cgi?id=31862
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=16312
+Subject		: WARNING: at fs/fs-writeback.c:1127 __mark_inode_dirty
+Submitter	: Zdenek Kabelac <zdenek.kabelac@gmail.com>
+Date		: 2010-06-28 9:40 (98 days old)
+Message-ID	: <AANLkTin24fr5O4_q5Xbo9Y_NKkEmtcp6Hgmr9_4qXaFz@mail.gmail.com>
+References	: http://marc.info/?l=linux-kernel&m=127771804806465&w=2
+		  http://lkml.indiana.edu/hypermail/linux/kernel/1007.3/00884.html
+Handled-By	: Jan Kara <jack@suse.cz>
+		  Jan Kara <jack@suse.cz>
+Patch		: https://bugzilla.kernel.org/attachment.cgi?id=30282
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=16228
+Subject		: BUG/boot failure on Dell Precision T3500 (pci/ahci_stop_engine)
+Submitter	: Brian Bloniarz <brian.bloniarz@gmail.com>
+Date		: 2010-06-16 17:57 (110 days old)
+Handled-By	: Bjorn Helgaas <bjorn.helgaas@hp.com>
+Patch		: https://patchwork.kernel.org/patch/189182/
+		  https://patchwork.kernel.org/patch/189232/
+		  https://patchwork.kernel.org/patch/189242/
+		  https://patchwork.kernel.org/patch/189252/
+
+
+For details, please visit the bug entries and follow the links given in
+references.
+
+As you can see, there is a Bugzilla entry for each of the listed regressions.
+There also is a Bugzilla entry used for tracking the regressions introduced
+between 2.6.34 and 2.6.35, unresolved as well as resolved, at:
+
+http://bugzilla.kernel.org/show_bug.cgi?id=16055
+
+Please let the tracking team know if there are any Bugzilla entries that
+should be added to the list in there.
+
+Thanks!
+
