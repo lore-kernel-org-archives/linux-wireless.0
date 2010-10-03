@@ -1,74 +1,327 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nyc-nss1.cypresscom.net ([64.190.13.53]:47605 "EHLO
-	nyc-nss1.cypresscom.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755492Ab0JONge convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 15 Oct 2010 09:36:34 -0400
-Subject: Re: Question about starting up an AP
-Mime-Version: 1.0 (Apple Message framework v1081)
-Content-Type: text/plain; charset=us-ascii
-From: Joshua Smith <JoshuaESmith@charter.net>
-In-Reply-To: <201010151146.53640.helmut.schaa@googlemail.com>
-Date: Fri, 15 Oct 2010 09:36:34 -0400
-Cc: "linux-wireless" <linux-wireless@vger.kernel.org>,
-	users@rt2x00.serialmonkey.com, Ivo van Doorn <ivdoorn@gmail.com>
-Message-Id: <8BBEA6C6-819C-4F6D-AB76-6D4B54B414CD@charter.net>
-References: <DA0C92FD-F6BF-4746-9BE1-A643A0D70F7A@kaon.com> <201010010742.07605.helmut.schaa@googlemail.com> <B3E6C8F9-24E4-4F12-B19C-15A474E5BCFA@charter.net> <201010151146.53640.helmut.schaa@googlemail.com>
-To: Helmut Schaa <helmut.schaa@googlemail.com>
+Received: from nbd.name ([88.198.39.176]:56771 "EHLO ds10.nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754113Ab0JCRH0 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 3 Oct 2010 13:07:26 -0400
+From: Felix Fietkau <nbd@openwrt.org>
+To: linux-wireless@vger.kernel.org
+Cc: lrodriguez@atheros.com, linville@tuxdriver.com
+Subject: [PATCH 2/4] ath9k_hw: merge codepaths that access the cycle counter registers
+Date: Sun,  3 Oct 2010 19:07:17 +0200
+Message-Id: <1286125639-15137-2-git-send-email-nbd@openwrt.org>
+In-Reply-To: <1286125639-15137-1-git-send-email-nbd@openwrt.org>
+References: <1286125639-15137-1-git-send-email-nbd@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The legacy drivers don't work with iw, hostapd, etc., so I really couldn't test with those.
+The cycle counters are used by ANI to determine the amount of time that the
+radio spent not receiving or transmitting. They're also used for debugging
+purposes if the baseband watchdog on AR9003 detects a lockup.
+In the future, we want to use these counters to determine the medium utilization
+and export this information via survey. For that, we need to make sure that
+the counter is only accessed from one place, which also ensures that
+wraparounds won't occur at inconvenient points in time.
 
-On Oct 15, 2010, at 5:46 AM, Helmut Schaa wrote:
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+---
+ drivers/net/wireless/ath/ath9k/ani.c        |  119 +++++++++++----------------
+ drivers/net/wireless/ath/ath9k/ani.h        |   13 ++-
+ drivers/net/wireless/ath/ath9k/ar5008_phy.c |    9 +--
+ drivers/net/wireless/ath/ath9k/ar9003_phy.c |   14 ++--
+ drivers/net/wireless/ath/ath9k/hw.h         |    2 +
+ 5 files changed, 65 insertions(+), 92 deletions(-)
 
-> Am Donnerstag 14 Oktober 2010 schrieb Joshua Smith:
->> OK, I finally got a chance to run the test.  Before doing the revert, I
->> tried just using the current drivers, but with a ridiculously large
->> number of retries.
-> 
-> Thanks for testing.
-> 
->> Lo and behold: no error.  So I think this is the reason the old drivers
->> were working for me, not anything that happened between July and September. 
->> When I went back to the old drivers, I had made this change, and they
->> worked.  I figured it was because I was using the old drivers, but now I
->> realize it is because of this change.
->> 
->> Also, I can see the behavior pretty clearly.  Sometimes when I start up
->> hostapd, it starts right up, and sometimes it takes about a second, and then
->> starts up.  So it looks like this retry number just needs to be really,
->> really big.  (Note that with this change in the old drivers, on very rare
->> occasions, I still see the "busy, aborting" error.  So perhaps it should
->> be even bigger than 1000?)
->> 
->> Not sure how you want to proceed with this, but this is the code that makes my AP work:
->> 
->> nl compat-wireless-2010-09-20/drivers/net/wireless/rt2x00/rt2800lib.c | grep -C 10 1000/
->> 
->>   225	int rt2800_wait_wpdma_ready(struct rt2x00_dev *rt2x00dev)
->>   226	{
->>   227		unsigned int i;
->>   228		u32 reg;
->> 
->>   229		for (i = 0; i < 1000/*REGISTER_BUSY_COUNT*/; i++) {
->>   230			rt2800_register_read(rt2x00dev, WPDMA_GLO_CFG, &reg);
->>   231			if (!rt2x00_get_field32(reg, WPDMA_GLO_CFG_TX_DMA_BUSY) &&
->>   232			    !rt2x00_get_field32(reg, WPDMA_GLO_CFG_RX_DMA_BUSY))
->>   233				return 0;
->> 
->>   234			msleep(1);
->>   235		}
->> 
->>   236		ERROR(rt2x00dev, "WPDMA TX/RX busy, aborting.\n");
->>   237		return -EACCES;
-> 
-> I'll let Ivo decide on this. At least if we really want to wait more then one
-> second for DMA to be ready we should increase the msleep(1) to msleep(10) and
-> keep the maximum number of retries at 100.
-> 
-> Joshua, did you ever ran the ralink legacy driver? Because that one also waits
-> a maximum of 100ms and thus would also fail sometimes ...
-> 
-> Helmut
+diff --git a/drivers/net/wireless/ath/ath9k/ani.c b/drivers/net/wireless/ath/ath9k/ani.c
+index 0496f96..9936297 100644
+--- a/drivers/net/wireless/ath/ath9k/ani.c
++++ b/drivers/net/wireless/ath/ath9k/ani.c
+@@ -549,47 +549,15 @@ static u8 ath9k_hw_chan_2_clockrate_mhz(struct ath_hw *ah)
+ 
+ static int32_t ath9k_hw_ani_get_listen_time(struct ath_hw *ah)
+ {
+-	struct ar5416AniState *aniState;
+-	struct ath_common *common = ath9k_hw_common(ah);
+-	u32 txFrameCount, rxFrameCount, cycleCount;
+-	int32_t listenTime;
+-
+-	txFrameCount = REG_READ(ah, AR_TFCNT);
+-	rxFrameCount = REG_READ(ah, AR_RFCNT);
+-	cycleCount = REG_READ(ah, AR_CCCNT);
+-
+-	aniState = ah->curani;
+-	if (aniState->cycleCount == 0 || aniState->cycleCount > cycleCount) {
+-		listenTime = 0;
+-		ah->stats.ast_ani_lzero++;
+-		ath_print(common, ATH_DBG_ANI,
+-			  "1st call: aniState->cycleCount=%d\n",
+-			  aniState->cycleCount);
+-	} else {
+-		int32_t ccdelta = cycleCount - aniState->cycleCount;
+-		int32_t rfdelta = rxFrameCount - aniState->rxFrameCount;
+-		int32_t tfdelta = txFrameCount - aniState->txFrameCount;
+-		int32_t clock_rate;
+-
+-		/*
+-		 * convert HW counter values to ms using mode
+-		 * specifix clock rate
+-		 */
+-		clock_rate = ath9k_hw_chan_2_clockrate_mhz(ah) * 1000;;
++	int32_t listen_time;
++	int32_t clock_rate;
+ 
+-		listenTime = (ccdelta - rfdelta - tfdelta) / clock_rate;
++	ath9k_hw_update_cycle_counters(ah);
++	clock_rate = ath9k_hw_chan_2_clockrate_mhz(ah) * 1000;
++	listen_time = ah->listen_time / clock_rate;
++	ah->listen_time = 0;
+ 
+-		ath_print(common, ATH_DBG_ANI,
+-			  "cyclecount=%d, rfcount=%d, "
+-			  "tfcount=%d, listenTime=%d CLOCK_RATE=%d\n",
+-			  ccdelta, rfdelta, tfdelta, listenTime, clock_rate);
+-	}
+-
+-	aniState->cycleCount = cycleCount;
+-	aniState->txFrameCount = txFrameCount;
+-	aniState->rxFrameCount = rxFrameCount;
+-
+-	return listenTime;
++	return listen_time;
+ }
+ 
+ static void ath9k_ani_reset_old(struct ath_hw *ah, bool is_scanning)
+@@ -1041,45 +1009,52 @@ void ath9k_hw_disable_mib_counters(struct ath_hw *ah)
+ }
+ EXPORT_SYMBOL(ath9k_hw_disable_mib_counters);
+ 
+-u32 ath9k_hw_GetMibCycleCountsPct(struct ath_hw *ah,
+-				  u32 *rxc_pcnt,
+-				  u32 *rxf_pcnt,
+-				  u32 *txf_pcnt)
++void ath9k_hw_update_cycle_counters(struct ath_hw *ah)
+ {
+-	struct ath_common *common = ath9k_hw_common(ah);
+-	static u32 cycles, rx_clear, rx_frame, tx_frame;
+-	u32 good = 1;
++	struct ath_cycle_counters cc;
++	bool clear;
+ 
+-	u32 rc = REG_READ(ah, AR_RCCNT);
+-	u32 rf = REG_READ(ah, AR_RFCNT);
+-	u32 tf = REG_READ(ah, AR_TFCNT);
+-	u32 cc = REG_READ(ah, AR_CCCNT);
++	memcpy(&cc, &ah->cc, sizeof(cc));
+ 
+-	if (cycles == 0 || cycles > cc) {
+-		ath_print(common, ATH_DBG_ANI,
+-			  "cycle counter wrap. ExtBusy = 0\n");
+-		good = 0;
+-	} else {
+-		u32 cc_d = cc - cycles;
+-		u32 rc_d = rc - rx_clear;
+-		u32 rf_d = rf - rx_frame;
+-		u32 tf_d = tf - tx_frame;
+-
+-		if (cc_d != 0) {
+-			*rxc_pcnt = rc_d * 100 / cc_d;
+-			*rxf_pcnt = rf_d * 100 / cc_d;
+-			*txf_pcnt = tf_d * 100 / cc_d;
+-		} else {
+-			good = 0;
+-		}
++	/* freeze counters */
++	REG_WRITE(ah, AR_MIBC, AR_MIBC_FMC);
++
++	ah->cc.cycles = REG_READ(ah, AR_CCCNT);
++	if (ah->cc.cycles < cc.cycles) {
++		clear = true;
++		goto skip;
+ 	}
+ 
+-	cycles = cc;
+-	rx_frame = rf;
+-	rx_clear = rc;
+-	tx_frame = tf;
++	ah->cc.rx_clear = REG_READ(ah, AR_RCCNT);
++	ah->cc.rx_frame = REG_READ(ah, AR_RFCNT);
++	ah->cc.tx_frame = REG_READ(ah, AR_TFCNT);
++
++	/* prevent wraparound */
++	if (ah->cc.cycles & BIT(31))
++		clear = true;
++
++#define CC_DELTA(_field, _reg) ah->cc_delta._field += ah->cc._field - cc._field
++	CC_DELTA(cycles, AR_CCCNT);
++	CC_DELTA(rx_frame, AR_RFCNT);
++	CC_DELTA(rx_clear, AR_RCCNT);
++	CC_DELTA(tx_frame, AR_TFCNT);
++#undef CC_DELTA
++
++	ah->listen_time += (ah->cc.cycles - cc.cycles) -
++		 ((ah->cc.rx_frame - cc.rx_frame) +
++		  (ah->cc.tx_frame - cc.tx_frame));
++
++skip:
++	if (clear) {
++		REG_WRITE(ah, AR_CCCNT, 0);
++		REG_WRITE(ah, AR_RFCNT, 0);
++		REG_WRITE(ah, AR_RCCNT, 0);
++		REG_WRITE(ah, AR_TFCNT, 0);
++		memset(&ah->cc, 0, sizeof(ah->cc));
++	}
+ 
+-	return good;
++	/* unfreeze counters */
++	REG_WRITE(ah, AR_MIBC, 0);
+ }
+ 
+ /*
+diff --git a/drivers/net/wireless/ath/ath9k/ani.h b/drivers/net/wireless/ath/ath9k/ani.h
+index f4d0a4d..15f9d67 100644
+--- a/drivers/net/wireless/ath/ath9k/ani.h
++++ b/drivers/net/wireless/ath/ath9k/ani.h
+@@ -93,6 +93,13 @@ struct ath9k_mib_stats {
+ 	u32 beacons;
+ };
+ 
++struct ath_cycle_counters {
++	u32 cycles;
++	u32 rx_frame;
++	u32 rx_clear;
++	u32 tx_frame;
++};
++
+ /* INI default values for ANI registers */
+ struct ath9k_ani_default {
+ 	u16 m1ThreshLow;
+@@ -130,9 +137,6 @@ struct ar5416AniState {
+ 	int32_t rssiThrLow;
+ 	int32_t rssiThrHigh;
+ 	u32 noiseFloor;
+-	u32 txFrameCount;
+-	u32 rxFrameCount;
+-	u32 cycleCount;
+ 	u32 ofdmPhyErrCount;
+ 	u32 cckPhyErrCount;
+ 	u32 ofdmPhyErrBase;
+@@ -166,8 +170,7 @@ struct ar5416Stats {
+ 
+ void ath9k_enable_mib_counters(struct ath_hw *ah);
+ void ath9k_hw_disable_mib_counters(struct ath_hw *ah);
+-u32 ath9k_hw_GetMibCycleCountsPct(struct ath_hw *ah, u32 *rxc_pcnt,
+-				  u32 *rxf_pcnt, u32 *txf_pcnt);
++void ath9k_hw_update_cycle_counters(struct ath_hw *ah);
+ void ath9k_hw_ani_setup(struct ath_hw *ah);
+ void ath9k_hw_ani_init(struct ath_hw *ah);
+ int ath9k_hw_get_ani_channel_idx(struct ath_hw *ah,
+diff --git a/drivers/net/wireless/ath/ath9k/ar5008_phy.c b/drivers/net/wireless/ath/ath9k/ar5008_phy.c
+index 3937cfd..74b4213 100644
+--- a/drivers/net/wireless/ath/ath9k/ar5008_phy.c
++++ b/drivers/net/wireless/ath/ath9k/ar5008_phy.c
+@@ -1227,8 +1227,7 @@ static bool ar5008_hw_ani_control_old(struct ath_hw *ah,
+ 		  aniState->firstepLevel,
+ 		  aniState->listenTime);
+ 	ath_print(common, ATH_DBG_ANI,
+-		"cycleCount=%d, ofdmPhyErrCount=%d, cckPhyErrCount=%d\n\n",
+-		aniState->cycleCount,
++		"ofdmPhyErrCount=%d, cckPhyErrCount=%d\n\n",
+ 		aniState->ofdmPhyErrCount,
+ 		aniState->cckPhyErrCount);
+ 
+@@ -1480,15 +1479,13 @@ static bool ar5008_hw_ani_control_new(struct ath_hw *ah,
+ 
+ 	ath_print(common, ATH_DBG_ANI,
+ 		  "ANI parameters: SI=%d, ofdmWS=%s FS=%d "
+-		  "MRCcck=%s listenTime=%d CC=%d listen=%d "
++		  "MRCcck=%s listenTime=%d "
+ 		  "ofdmErrs=%d cckErrs=%d\n",
+ 		  aniState->spurImmunityLevel,
+ 		  !aniState->ofdmWeakSigDetectOff ? "on" : "off",
+ 		  aniState->firstepLevel,
+ 		  !aniState->mrcCCKOff ? "on" : "off",
+ 		  aniState->listenTime,
+-		  aniState->cycleCount,
+-		  aniState->listenTime,
+ 		  aniState->ofdmPhyErrCount,
+ 		  aniState->cckPhyErrCount);
+ 	return true;
+@@ -1581,8 +1578,6 @@ static void ar5008_hw_ani_cache_ini_regs(struct ath_hw *ah)
+ 	aniState->firstepLevel = ATH9K_ANI_FIRSTEP_LVL_NEW;
+ 	aniState->ofdmWeakSigDetectOff = !ATH9K_ANI_USE_OFDM_WEAK_SIG;
+ 	aniState->mrcCCKOff = true; /* not available on pre AR9003 */
+-
+-	aniState->cycleCount = 0;
+ }
+ 
+ static void ar5008_hw_set_nf_limits(struct ath_hw *ah)
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_phy.c b/drivers/net/wireless/ath/ath9k/ar9003_phy.c
+index a491854..e15574c 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_phy.c
++++ b/drivers/net/wireless/ath/ath9k/ar9003_phy.c
+@@ -1005,15 +1005,13 @@ static bool ar9003_hw_ani_control(struct ath_hw *ah,
+ 
+ 	ath_print(common, ATH_DBG_ANI,
+ 		  "ANI parameters: SI=%d, ofdmWS=%s FS=%d "
+-		  "MRCcck=%s listenTime=%d CC=%d listen=%d "
++		  "MRCcck=%s listenTime=%d "
+ 		  "ofdmErrs=%d cckErrs=%d\n",
+ 		  aniState->spurImmunityLevel,
+ 		  !aniState->ofdmWeakSigDetectOff ? "on" : "off",
+ 		  aniState->firstepLevel,
+ 		  !aniState->mrcCCKOff ? "on" : "off",
+ 		  aniState->listenTime,
+-		  aniState->cycleCount,
+-		  aniState->listenTime,
+ 		  aniState->ofdmPhyErrCount,
+ 		  aniState->cckPhyErrCount);
+ 	return true;
+@@ -1116,8 +1114,6 @@ static void ar9003_hw_ani_cache_ini_regs(struct ath_hw *ah)
+ 	aniState->firstepLevel = ATH9K_ANI_FIRSTEP_LVL_NEW;
+ 	aniState->ofdmWeakSigDetectOff = !ATH9K_ANI_USE_OFDM_WEAK_SIG;
+ 	aniState->mrcCCKOff = !ATH9K_ANI_ENABLE_MRC_CCK;
+-
+-	aniState->cycleCount = 0;
+ }
+ 
+ void ar9003_hw_attach_phy_ops(struct ath_hw *ah)
+@@ -1232,7 +1228,7 @@ void ar9003_hw_bb_watchdog_read(struct ath_hw *ah)
+ void ar9003_hw_bb_watchdog_dbg_info(struct ath_hw *ah)
+ {
+ 	struct ath_common *common = ath9k_hw_common(ah);
+-	u32 rxc_pcnt = 0, rxf_pcnt = 0, txf_pcnt = 0, status;
++	u32 status;
+ 
+ 	if (likely(!(common->debug_mask & ATH_DBG_RESET)))
+ 		return;
+@@ -1261,11 +1257,13 @@ void ar9003_hw_bb_watchdog_dbg_info(struct ath_hw *ah)
+ 		  "** BB mode: BB_gen_controls=0x%08x **\n",
+ 		  REG_READ(ah, AR_PHY_GEN_CTRL));
+ 
+-	if (ath9k_hw_GetMibCycleCountsPct(ah, &rxc_pcnt, &rxf_pcnt, &txf_pcnt))
++	ath9k_hw_update_cycle_counters(ah);
++#define PCT(_field) (ah->cc_delta._field * 100 / ah->cc_delta.cycles)
++	if (ah->cc_delta.cycles)
+ 		ath_print(common, ATH_DBG_RESET,
+ 			  "** BB busy times: rx_clear=%d%%, "
+ 			  "rx_frame=%d%%, tx_frame=%d%% **\n",
+-			  rxc_pcnt, rxf_pcnt, txf_pcnt);
++			  PCT(rx_clear), PCT(rx_frame), PCT(tx_frame));
+ 
+ 	ath_print(common, ATH_DBG_RESET,
+ 		  "==== BB update: done ====\n\n");
+diff --git a/drivers/net/wireless/ath/ath9k/hw.h b/drivers/net/wireless/ath/ath9k/hw.h
+index 246c707..87dbb85 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.h
++++ b/drivers/net/wireless/ath/ath9k/hw.h
+@@ -765,6 +765,8 @@ struct ath_hw {
+ 	int coarse_low[5];
+ 	int firpwr[5];
+ 	enum ath9k_ani_cmd ani_function;
++	struct ath_cycle_counters cc, cc_delta;
++	int32_t listen_time;
+ 
+ 	/* Bluetooth coexistance */
+ 	struct ath_btcoex_hw btcoex_hw;
+-- 
+1.7.2.2
 
