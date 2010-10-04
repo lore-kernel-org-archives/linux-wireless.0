@@ -1,42 +1,32 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ey0-f174.google.com ([209.85.215.174]:62591 "EHLO
-	mail-ey0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755362Ab0JVPne (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:53872 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752126Ab0JDTdI (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 22 Oct 2010 11:43:34 -0400
-Received: by eye27 with SMTP id 27so1166345eye.19
-        for <linux-wireless@vger.kernel.org>; Fri, 22 Oct 2010 08:43:32 -0700 (PDT)
-From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-To: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-Cc: b43-dev@lists.infradead.org,
-	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-Subject: [PATCH 1/5] b43: N-PHY: fix infinite-loop-typo
-Date: Fri, 22 Oct 2010 17:43:45 +0200
-Message-Id: <1287762229-16516-2-git-send-email-zajec5@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+	Mon, 4 Oct 2010 15:33:08 -0400
+Subject: Re: [PATCH 0/4] nl80211 cleanups
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org
+In-Reply-To: <20101004191402.183055479@sipsolutions.net>
+References: <20101004191402.183055479@sipsolutions.net>
+Content-Type: text/plain; charset="UTF-8"
+Date: Mon, 04 Oct 2010 21:33:07 +0200
+Message-ID: <1286220787.3620.58.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
----
- drivers/net/wireless/b43/phy_n.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+On Mon, 2010-10-04 at 21:14 +0200, Johannes Berg wrote:
+> This patchset adds some new hooks to generic
+> netlink and then goes on to use them to really
+> optimise a lot of locking code in nl80211.
+> 
+> It not only shrinks the code in nl80211 by     
+> almost 5K .text, but also greatly reduces the
+> likelihood of future errors.
 
-diff --git a/drivers/net/wireless/b43/phy_n.c b/drivers/net/wireless/b43/phy_n.c
-index dfec549..e0f2d12 100644
---- a/drivers/net/wireless/b43/phy_n.c
-+++ b/drivers/net/wireless/b43/phy_n.c
-@@ -2964,7 +2964,7 @@ static int b43_nphy_rev2_cal_rx_iq(struct b43_wldev *dev,
- 					(2 - i));
- 		}
- 
--		for (j = 0; i < 4; j++) {
-+		for (j = 0; j < 4; j++) {
- 			if (j < 3) {
- 				cur_lna = lna[j];
- 				cur_hpf1 = hpf1[j];
--- 
-1.7.1
+And by that, I mean locking errors.
+
+johannes
 
