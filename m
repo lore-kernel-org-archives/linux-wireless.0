@@ -1,77 +1,85 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yw0-f46.google.com ([209.85.213.46]:58800 "EHLO
-	mail-yw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753739Ab0JER4A convert rfc822-to-8bit (ORCPT
+Received: from mail.candelatech.com ([208.74.158.172]:46095 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750978Ab0JDVi3 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 5 Oct 2010 13:56:00 -0400
-Received: by ywh1 with SMTP id 1so81284ywh.19
-        for <linux-wireless@vger.kernel.org>; Tue, 05 Oct 2010 10:55:59 -0700 (PDT)
+	Mon, 4 Oct 2010 17:38:29 -0400
+Message-ID: <4CAA494B.5000500@candelatech.com>
+Date: Mon, 04 Oct 2010 14:38:19 -0700
+From: Ben Greear <greearb@candelatech.com>
 MIME-Version: 1.0
-In-Reply-To: <4CAB64AD.4080105@candelatech.com>
-References: <4CAB59B2.5050106@candelatech.com> <AANLkTikhGCTS8kJgpDzjudyBTk-rkyXY33UO7kB0+Cc-@mail.gmail.com>
- <4CAB5F3D.9060201@candelatech.com> <AANLkTimV3GrwU+9PPtirT4sCzveLY2egr3PRQhfDBET1@mail.gmail.com>
- <4CAB627F.8020804@candelatech.com> <AANLkTi=sT5QJe4V8gFGjF-nzx0uJAMLG_XG2715qrEEd@mail.gmail.com>
- <4CAB64AD.4080105@candelatech.com>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Tue, 5 Oct 2010 10:55:17 -0700
-Message-ID: <AANLkTi=3dHbB5tmQDp3Ba54-DqQydVCkNdFo1vKbfaGY@mail.gmail.com>
-Subject: Re: memory clobber in rx path, maybe related to ath9k.
-To: Ben Greear <greearb@candelatech.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+CC: Johannes Berg <johannes@sipsolutions.net>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: Crash in agg-tx.c, with ath9k and lots of STA VIFs.
+References: <4CAA2247.50402@candelatech.com> <1286218879.3620.55.camel@jlt3.sipsolutions.net> <4CAA252F.9090102@candelatech.com> <1286219405.3620.56.camel@jlt3.sipsolutions.net> <AANLkTi=Ya6RuCdVYLYi3Mk5EKSP6czOfTh7TRKqB0GPU@mail.gmail.com> <AANLkTinGaCAEqGRt_X6hsO8sQx4kKEdNqU8pfi00_1-r@mail.gmail.com>
+In-Reply-To: <AANLkTinGaCAEqGRt_X6hsO8sQx4kKEdNqU8pfi00_1-r@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Oct 5, 2010 at 10:47 AM, Ben Greear <greearb@candelatech.com> wrote:
-> On 10/05/2010 10:43 AM, Luis R. Rodriguez wrote:
->>
->> On Tue, Oct 5, 2010 at 10:38 AM, Ben Greear<greearb@candelatech.com>
->>  wrote:
->>>
->>> On 10/05/2010 10:36 AM, Luis R. Rodriguez wrote:
->>>>
->>>> On Tue, Oct 5, 2010 at 10:24 AM, Ben Greear<greearb@candelatech.com>
->>>>  wrote:
->>>>>
->>>>> On 10/05/2010 10:16 AM, Luis R. Rodriguez wrote:
+On 10/04/2010 02:13 PM, Luis R. Rodriguez wrote:
+> On Mon, Oct 4, 2010 at 2:12 PM, Luis R. Rodriguez<mcgrof@gmail.com>  wrote:
+>> On Mon, Oct 4, 2010 at 12:10 PM, Johannes Berg
+>> <johannes@sipsolutions.net>  wrote:
+>>> On Mon, 2010-10-04 at 12:04 -0700, Ben Greear wrote:
+>>>> On 10/04/2010 12:01 PM, Johannes Berg wrote:
+>>>>> On Mon, 2010-10-04 at 11:51 -0700, Ben Greear wrote:
+>>>>>> Just in case this seems familiar to anyone...
 >>>>>>
->>>>>> On Tue, Oct 5, 2010 at 10:00 AM, Ben Greear<greearb@candelatech.com>
->>>>>>  wrote:
->>>>>>>
->>>>>>> I started seeing this very soon after creating interfaces.
->>>>>>
->>>>>> Can you be more specific how one can reproduce?
+>>>>>> IP: [<f8ba74da>] ieee80211_stop_tx_ba_session+0x14/0x84 [mac80211]
 >>>>>
->>>>> Enable SLUB debugging, DEBUG_PAGEALLOC (Debug page memory allocations),
->>>>> lockdep, pre-empt.
+>>>>> Do you have debug info that'd point to a code line?
+>>>>>
+>>>>> I have never heard of this.
 >>>>
->>>> OK I just enabled PAGE_ALLOC thingy, it wasn't enabled on my kernel.
+>>>> I don't actually know how to get a line of code out of those
+>>>> hex offsets...
 >>>>
->>>>> Please try creating a bunch of stations on one ath9k phy,
->>>>
->>>> How many?
+>>>> Someone told me many years ago..but I lost that information :P
 >>>
->>> 130 is a nice round number :)
+>>> Err, I never remember either, I think Luis knows the gdb thing ... I
+>>> usually use "objdump -dS"
 >>
->> Let me get this straight. You are creating 130 STAs with ath9k using
->> iw, then running 150 instances of wpa_supplicant to connect to the
->> same AP?
+>> gdb net/mac80211/mac80211.ko
+>> l *(ieee80211_stop_tx_ba_session+0x14/0x84)
 >
-> Well, 130 instances, yes :)
+> Oops I meant:
 >
->>> I'll try with a smaller number and see if I can hit it.
->>
->> Please do, you can use the log2n approach, should take you 7 tries,
->> each by a power of 2, start at the middle of course.
->
-> Sure...will be a few minutes.
->
-> If it's any sane bug, then hopefully I can hit it with a small
-> number.
->
-> Out of curiosity, is there any particular number of STAs > 1 you guys
-> test with?
+> gdb net/mac80211/mac80211.ko
+> l *(ieee80211_stop_tx_ba_session+0x14)
 
-We don't test this :)
+Thank!
 
-  Luis
+I had to re-compile with debugging symbols, and added kgdb (hopefully
+that won't mess anything up).
+
+Reading symbols from /home/greearb/kernel/2.6/wireless-testing-dbg.p4s/net/mac80211/mac80211.ko...done.
+(gdb) l *(ieee80211_stop_tx_ba_session+0x14)
+0x54fe is in ieee80211_stop_tx_ba_session (/home/greearb/git/linux.wireless-testing/net/mac80211/agg-tx.c:595).
+590	
+591	int ieee80211_stop_tx_ba_session(struct ieee80211_sta *pubsta, u16 tid)
+592	{
+593		struct sta_info *sta = container_of(pubsta, struct sta_info, sta);
+594		struct ieee80211_sub_if_data *sdata = sta->sdata;
+595		struct ieee80211_local *local = sdata->local;
+596		struct tid_ampdu_tx *tid_tx;
+597		int ret = 0;
+598	
+599		trace_api_stop_tx_ba_session(pubsta, tid);
+
+
+I'm not sure I quite got the hang of kgdb yet, but hoping to get that working
+and reproduce with it enabled...
+
+Thanks,
+Ben
+
+>
+>     Luis
+
+
+-- 
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
+
