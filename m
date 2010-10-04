@@ -1,58 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from web56805.mail.re3.yahoo.com ([66.196.97.79]:21341 "HELO
-	web56805.mail.re3.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1757342Ab0JUGjE (ORCPT
+Received: from mail-wy0-f174.google.com ([74.125.82.174]:54739 "EHLO
+	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750931Ab0JDB2J convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 21 Oct 2010 02:39:04 -0400
-Message-ID: <772844.64707.qm@web56805.mail.re3.yahoo.com>
-Date: Wed, 20 Oct 2010 23:39:01 -0700 (PDT)
-From: Walter Goldens <goldenstranger@yahoo.com>
-Subject: [PATCH 3/4 v2] compat-wireless: update unloading scripts for bt
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Cc: linux-wireless@vger.kernel.org, linux-bluetooth@vger.kernel.org
+	Sun, 3 Oct 2010 21:28:09 -0400
+Received: by wyb28 with SMTP id 28so4478504wyb.19
+        for <linux-wireless@vger.kernel.org>; Sun, 03 Oct 2010 18:28:08 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1286045327.11979.263.camel@maxim-laptop>
+References: <4CA6B6F9.8080104@candelatech.com> <1286032902.11979.55.camel@maxim-laptop>
+ <4CA76A91.9070200@candelatech.com> <1286045327.11979.263.camel@maxim-laptop>
+From: Jonathan Guerin <jonathan@guerin.id.au>
+Date: Mon, 4 Oct 2010 11:27:47 +1000
+Message-ID: <AANLkTin0G=_JjtDytJYgwYdh=AQZs=S-518XgChA9Voo@mail.gmail.com>
+Subject: Re: Can 'iw' show the current tx-power?
+To: Maxim Levitsky <maximlevitsky@gmail.com>
+Cc: Ben Greear <greearb@candelatech.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-update unloading scripts for bt
+On Sun, Oct 3, 2010 at 4:48 AM, Maxim Levitsky <maximlevitsky@gmail.com> wrote:
+> On Sat, 2010-10-02 at 10:23 -0700, Ben Greear wrote:
+>> On 10/02/2010 08:21 AM, Maxim Levitsky wrote:
+>> > On Fri, 2010-10-01 at 21:37 -0700, Ben Greear wrote:
+>> >> It seems it can set it, but I don't see any command to print out
+>> >> the current value?
+>> >>
+>> >> Thanks,
+>> >> Ben
+>> >>
+>> > This is pretty much last missing feature from iw.
+>>
+>> Maybe that and current operating transfer rate?  I can't
+>> seem to find that anywhere other than 'iwconfig'...
+>
+> iw wlan0 link shows that.
 
-Signed-off-by: Walter Goldens <goldenstranger@yahoo.com>
----
+This does not work in adhoc mode:
 
---- a/scripts/unload.sh
-+++ b/scripts/unload.sh
-@@ -27,14 +27,16 @@ MODULES="$MODULES rtl8180 rtl8187"
- MODULES="$MODULES mwl8k mac80211_hwsim"
- MODULES="$MODULES at76c50x_usb at76_usb"
- MODULES="$MODULES rndis_wlan rndis_host cdc_ether usbnet"
--MODULES="$MODULES atl1 atl2 atl1e atl1c"
- # eeprom_93cx6 is used by rt2x00 (rt61pci, rt2500pci, rt2400pci) 
- # and Realtek drivers ( rtl8187, rtl8180)
- MODULES="$MODULES eeprom_93cx6"
- MODULES="$MODULES lib80211_crypt_ccmp lib80211_crypt_tkip lib80211_crypt_wep"
- MODULES="$MODULES mac80211 cfg80211 lib80211"
--MODULES="$MODULES hidp rfcomm bnep l2cap sco btusb bluetooth"
- MODULES="$MODULES compat"
-+# Bluetooth modules
-+MODULES="$MODULES ath3k bcm203x bluecard_cs bnep bpa10x bt3c_cs btmrvl btmrvl_sdio btsdio"
-+MODULES="$MODULES btusb btuart_cs cmtp dtl1_cs hidp hci_vhci hci_uart rfcomm sco bluetooth l2cap"
-+MODULES="$MODULES atl1 atl2 atl1e atl1c"
- echo Stoping bluetooth service..
- /etc/init.d/bluetooth stop
- /etc/init.d/bluetooth status
+# iw dev wlan0 info
+Interface wlan0
+        ifindex 4
+        type IBSS
 
---- a/scripts/btunload.sh
-+++ b/scripts/btunload.sh
-@@ -1,5 +1,6 @@
- #!/bin/bash
--MODULES="hidp rfcomm bnep l2cap sco btusb bluetooth"
-+MODULES="$MODULES ath3k bcm203x bluecard_cs bnep bpa10x bt3c_cs btmrvl btmrvl_sdio btsdio"
-+MODULES="$MODULES btusb btuart_cs cmtp dtl1_cs hidp hci_vhci hci_uart rfcomm sco bluetooth l2cap"
- echo Stoping bluetooth service..
- /etc/init.d/bluetooth stop
- /etc/init.d/bluetooth status
+# iw dev wlan0 link
+Not connected.
 
+>
+> Best regards,
+>        Maxim Levitsky
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
 
+Thanks,
 
-      
+--
+Jonathan Guerin
