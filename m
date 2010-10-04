@@ -1,74 +1,81 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f46.google.com ([209.85.214.46]:53525 "EHLO
-	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751040Ab0JPA2L (ORCPT
+Received: from mail0.scram.de ([78.47.204.202]:47018 "EHLO mail.scram.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753384Ab0JDJVF convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 15 Oct 2010 20:28:11 -0400
-Received: by bwz15 with SMTP id 15so1306393bwz.19
-        for <linux-wireless@vger.kernel.org>; Fri, 15 Oct 2010 17:28:02 -0700 (PDT)
-From: Christian Lamparter <chunkeey@googlemail.com>
-To: Julia Lawall <julia@diku.dk>
-Subject: Re: [PATCH 3/7] drivers/net/wireless/p54/eeprom.c: Return -ENOMEM on memory allocation failure
-Date: Fri, 15 Oct 2010 17:49:07 +0200
-Cc: kernel-janitors@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-References: <1287147610-8041-3-git-send-email-julia@diku.dk>
-In-Reply-To: <1287147610-8041-3-git-send-email-julia@diku.dk>
+	Mon, 4 Oct 2010 05:21:05 -0400
+Message-ID: <4CA997A3.7080409@scram.de>
+Date: Mon, 04 Oct 2010 11:00:19 +0200
+From: Jochen Friedrich <jochen@scram.de>
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-15"
-Message-Id: <201010151749.07851.chunkeey@googlemail.com>
+To: Holger Schurig <holgerschurig@gmail.com>
+CC: linux-wireless@vger.kernel.org
+Subject: Re: [Patch] iw: Implement set 4addr.
+References: <1286041239-19169-1-git-send-email-jochen@scram.de> <201010040915.58549.holgerschurig@gmail.com>
+In-Reply-To: <201010040915.58549.holgerschurig@gmail.com>
+Content-Type: text/plain; charset=US-ASCII;
+	format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Friday 15 October 2010 15:00:06 Julia Lawall wrote:
-> From: Julia Lawall <julia@diku.dk>
-> 
-> In this code, 0 is returned on memory allocation failure, even though other
-> failures return -ENOMEM or other similar values.
-> 
-> A simplified version of the semantic match that finds this problem is as
-> follows: (http://coccinelle.lip6.fr/)
-> 
-> // <smpl>
-> @@
-> expression ret;
-> expression x,e1,e2,e3;
-> @@
-> 
-> ret = 0
-> ... when != ret = e1
-> *x = \(kmalloc\|kcalloc\|kzalloc\)(...)
-> ... when != ret = e2
-> if (x == NULL) { ... when != ret = e3
->   return ret;
-> }
-> // </smpl>
-> 
-> Signed-off-by: Julia Lawall <julia@diku.dk>
-Cc: <stable@kernel.org>
-Acked-by: Christian Lamparter <chunkeey@googlemail.com>
+  Hi Holger,
 
-> ---
->  drivers/net/wireless/p54/eeprom.c |    4 +++-
->  1 file changed, 3 insertions(+), 1 deletion(-)
-> 
-> diff -u -p a/drivers/net/wireless/p54/eeprom.c b/drivers/net/wireless/p54/eeprom.c
-> --- a/drivers/net/wireless/p54/eeprom.c
-> +++ b/drivers/net/wireless/p54/eeprom.c
-> @@ -261,8 +261,10 @@ static int p54_generate_channel_lists(st
->  	list->max_entries = max_channel_num;
->  	list->channels = kzalloc(sizeof(struct p54_channel_entry) *
->  				 max_channel_num, GFP_KERNEL);
-> -	if (!list->channels)
-> +	if (!list->channels) {
-> +		ret = -ENOMEM;
->  		goto free;
-> +	}
->  
->  	for (i = 0; i < max_channel_num; i++) {
->  		if (i < priv->iq_autocal_len) {
-> 
-> 
+Am 04.10.2010 09:15, schrieb Holger Schurig:
+>> +	"Set interface 4addr (WDS) mode.\n");
+> Hi Jochen !
+>
+> Do you know if this feature can also be used to operate an Ethernet-Bridge on
+> on a WLAN client?
+>
+> I'd like to get something like this going, with eth0|wlan0 as a bridge, so
+> that any protocol/port on the "DEVICE" is reachable from the network:
+>
+> +--------+   +------------+   +----+   +---------+
+> | DEVICE +---+ eth0|wlan0 +---+ AP +---+ network |
+> +--------+   +------------+   +----+   +---------+
+>                 Linux 2.6.x
+>                 w/ mac80211
+>
+
+Yes, that's the idea behind this. I'm using an OpenWRT based WLAN router 
+and a Debian client with the configuration below.
+
+ From my tests, it looks like
+
+- b43legacy runs OK in this mode (tested on MN700).
+- ath9k has some issues with the promisc mode (if DEVICE talks to 
+another AP client, the bridge might add the DEVICE MAC address to wlan0 
+as soon as AP sends the frame originating from DEVICE to the AP client).
+- iwlagn sometimes looses the connection after a hw scan. I'm currently 
+wondering if this might be a problem of ath5k (my AP is a WGT634U) not 
+ignoring PM frames in non-4addr frame format. Unfortunately, WGT634U 
+builds are currently broken in OpenWRT, so I can't test more recent 
+ath5k versions without major efforts.
+
+Thanks,
+Jochen
+
+# This file describes the network interfaces available on your system
+# and how to activate them. For more information, see interfaces(5).
+
+# The loopback network interface
+auto lo
+iface lo inet loopback
+
+auto wlan0
+iface wlan0 inet manual
+     pre-up iw wlan0 set 4addr on
+
+auto eth0
+iface eth0 inet manual
+
+auto br0
+iface br0 inet dhcp
+     bridge_ports wlan0 eth0
+     bridge_fd 0
+     bridge_stp off
+     wpa-ssid <my ssid>
+     wpa-psk <my password>
+     wpa-bridge br0
+     wpa-iface  wlan0
+
