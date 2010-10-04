@@ -1,98 +1,323 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wy0-f174.google.com ([74.125.82.174]:41875 "EHLO
-	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754204Ab0JBJfn (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 2 Oct 2010 05:35:43 -0400
-Received: by mail-wy0-f174.google.com with SMTP id 28so3658555wyb.19
-        for <linux-wireless@vger.kernel.org>; Sat, 02 Oct 2010 02:35:43 -0700 (PDT)
-From: Ivo van Doorn <ivdoorn@gmail.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Subject: [PATCH 18/20] rt2x00: Fix oops caused by error path in rt2x00lib_start
-Date: Sat, 2 Oct 2010 11:34:05 +0200
-Cc: users@rt2x00.serialmonkey.com, linux-wireless@vger.kernel.org,
-	Helmut Schaa <helmut.schaa@googlemail.com>
-References: <201010021126.18748.IvDoorn@gmail.com> <201010021133.18211.IvDoorn@gmail.com> <201010021133.43033.IvDoorn@gmail.com>
-In-Reply-To: <201010021133.43033.IvDoorn@gmail.com>
-MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Message-Id: <201010021134.06174.IvDoorn@gmail.com>
+Received: from nbd.name ([88.198.39.176]:35393 "EHLO ds10.nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756697Ab0JDSJz (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 4 Oct 2010 14:09:55 -0400
+From: Felix Fietkau <nbd@openwrt.org>
+To: linux-wireless@vger.kernel.org
+Cc: linville@tuxdriver.com, lrodriguez@atheros.com
+Subject: [PATCH 3/5] ath9k_hw: remove code duplication in phy error counter handling
+Date: Mon,  4 Oct 2010 20:09:48 +0200
+Message-Id: <1286215790-67069-3-git-send-email-nbd@openwrt.org>
+In-Reply-To: <1286215790-67069-2-git-send-email-nbd@openwrt.org>
+References: <1286215790-67069-1-git-send-email-nbd@openwrt.org>
+ <1286215790-67069-2-git-send-email-nbd@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Helmut Schaa <helmut.schaa@googlemail.com>
+Split out the PHY error counter update from ath9k_hw_ani_monitor_*, reuse
+it in ath9k_hw_proc_mib_event (merged from ath9k_hw_proc_mib_event_old
+and ath9k_hw_proc_mib_event_new).
 
-When rt2x00lib_enable_radio fails to enable the radio, rt2x00lib_start
-will call rt2x00queue_uninitialize to uninitialize the queues. Since,
-the queues are not initialized here but already in rt2x00lib_initialize
-we shouldn't uninitialize the queues here. Otherwise, a consecutive call
-to rt2x00lib_start will oops (see below) because it assumes the queues
-are already initialized.
-
-BUG: unable to handle kernel NULL pointer dereference at 00000010
-IP: [<f8d2d901>] :rt2800pci:rt2800pci_clear_entry+0x1/0x40
-*pde = 00000000
-Oops: 0000 [#1] SMP
-Modules linked in: ... rt2800pci ...
-
-Pid: 5995, comm: hostapd Not tainted (2.6.27.8 #1)
-EIP: 0060:[<f8d2d901>] EFLAGS: 00210246 CPU: 3
-EIP is at rt2800pci_clear_entry+0x1/0x40 [rt2800pci]
-EAX: 00000000 EBX: f698863c ECX: 00200296 EDX: f8d2dee0
-ESI: f6988600 EDI: f5b6f000 EBP: 00000000 ESP: f6d75e4c
- DS: 007b ES: 007b FS: 00d8 GS: 0033 SS: 0068
-Process hostapd (pid: 5995, ti=f6d74000 task=f6ce2300 task.ti=f6d74000)
-Stack: f698863c fa00eaec 00000000 f5b6f000 00000000 f7b67000 f5b6e280 fa00c629
-      f5b6f000 00000000 fa00ca3d f7b67480 00000001 fa177d4c 01b6e890 f7b67000
-      00000000 f7b67000 00000001 00001003 00001002 c066c366 f7b67000 c0668ad0
-Call Trace:
- [<fa00eaec>] rt2x00queue_init_queues+0x5c/0x90 [rt2x00lib]
- [<fa00c629>] rt2x00lib_enable_radio+0x29/0xa0 [rt2x00lib]
- [<fa00ca3d>] rt2x00lib_start+0x5d/0xd0 [rt2x00lib]
- [<fa177d4c>] ieee80211_do_open+0x21c/0x510 [mac80211]
- [<c066c366>] dev_open+0x56/0xb0
- [<c0668ad0>] dev_set_rx_mode+0x20/0x40
- [<c066a67f>] dev_change_flags+0x7f/0x190
- [<c06b1495>] devinet_ioctl+0x515/0x690
- [<c0668d24>] __dev_get_by_name+0x74/0x90
- [<c065d3f0>] sock_ioctl+0xd0/0x240
- [<c065d320>] sock_ioctl+0x0/0x240
- [<c018179b>] vfs_ioctl+0x2b/0x90
- [<c0181a5b>] do_vfs_ioctl+0x25b/0x2a0
- [<c0181af6>] sys_ioctl+0x56/0x70
- [<c0103262>] syscall_call+0x7/0xb
- [<c0700000>] add_card+0xad0/0xba0
- =======================
-Code: 83 78 08 0e 74 14 8b 02 8b 48 04 85 c9 0f 99 c0 0f b6 c0 c3 8d b6
-      00 00 00 00 8b 02 8b 40 04 85 c0 0f 99 c0 0f b6 c0 c3 66 90 53 <8b>
-      48 10 8b 58 08 8b 40 04 83 78 08 0e 74 15 8b 11 83 c2 04 8b
-EIP: [<f8d2d901>] rt2800pci_clear_entry+0x1/0x40 [rt2800pci] SS:ESP 0068:f6d75e4c
----[ end trace cff9a5c094bb8837 ]---
-
-Reported-by: Joshua Smith <jesmith@kaon.com>
-Signed-off-by: Helmut Schaa <helmut.schaa@googlemail.com>
-Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
 ---
- drivers/net/wireless/rt2x00/rt2x00dev.c |    4 +---
- 1 files changed, 1 insertions(+), 3 deletions(-)
+ drivers/net/wireless/ath/ath9k/ani.c    |  142 +++++++------------------------
+ drivers/net/wireless/ath/ath9k/hw-ops.h |    5 -
+ drivers/net/wireless/ath/ath9k/hw.h     |    4 +-
+ drivers/net/wireless/ath/ath9k/main.c   |    2 +-
+ 4 files changed, 34 insertions(+), 119 deletions(-)
 
-diff --git a/drivers/net/wireless/rt2x00/rt2x00dev.c b/drivers/net/wireless/rt2x00/rt2x00dev.c
-index b03e6e4..6f442b0 100644
---- a/drivers/net/wireless/rt2x00/rt2x00dev.c
-+++ b/drivers/net/wireless/rt2x00/rt2x00dev.c
-@@ -933,10 +933,8 @@ int rt2x00lib_start(struct rt2x00_dev *rt2x00dev)
+diff --git a/drivers/net/wireless/ath/ath9k/ani.c b/drivers/net/wireless/ath/ath9k/ani.c
+index 6bae601..d5c9df5 100644
+--- a/drivers/net/wireless/ath/ath9k/ani.c
++++ b/drivers/net/wireless/ath/ath9k/ani.c
+@@ -661,21 +661,15 @@ static void ath9k_ani_reset_new(struct ath_hw *ah, bool is_scanning)
+ 	REGWRITE_BUFFER_FLUSH(ah);
+ }
  
- 	/* Enable the radio */
- 	retval = rt2x00lib_enable_radio(rt2x00dev);
--	if (retval) {
--		rt2x00queue_uninitialize(rt2x00dev);
-+	if (retval)
- 		return retval;
+-static void ath9k_hw_ani_monitor_old(struct ath_hw *ah,
+-				     struct ath9k_channel *chan)
++static void ath9k_hw_ani_read_counters(struct ath_hw *ah)
+ {
+-	struct ar5416AniState *aniState;
+ 	struct ath_common *common = ath9k_hw_common(ah);
+-	int32_t listenTime;
+-	u32 phyCnt1, phyCnt2;
++	struct ar5416AniState *aniState = &ah->curchan->ani;
++	u32 ofdm_base = 0;
++	u32 cck_base = 0;
+ 	u32 ofdmPhyErrCnt, cckPhyErrCnt;
+-	u32 ofdm_base = AR_PHY_COUNTMAX - ah->config.ofdm_trig_high;
+-	u32 cck_base = AR_PHY_COUNTMAX - ah->config.cck_trig_high;
+-
+-	if (!DO_ANI(ah))
+-		return;
+-
+-	aniState = &ah->curchan->ani;
++	u32 phyCnt1, phyCnt2;
++	int32_t listenTime;
+ 
+ 	listenTime = ath9k_hw_ani_get_listen_time(ah);
+ 	if (listenTime < 0) {
+@@ -684,6 +678,11 @@ static void ath9k_hw_ani_monitor_old(struct ath_hw *ah,
+ 		return;
+ 	}
+ 
++	if (!use_new_ani(ah)) {
++		ofdm_base = AR_PHY_COUNTMAX - ah->config.ofdm_trig_high;
++		cck_base = AR_PHY_COUNTMAX - ah->config.cck_trig_high;
++	}
++
+ 	aniState->listenTime += listenTime;
+ 
+ 	ath9k_hw_update_mibstats(ah, &ah->ah_mibStats);
+@@ -691,7 +690,7 @@ static void ath9k_hw_ani_monitor_old(struct ath_hw *ah,
+ 	phyCnt1 = REG_READ(ah, AR_PHY_ERR_1);
+ 	phyCnt2 = REG_READ(ah, AR_PHY_ERR_2);
+ 
+-	if (phyCnt1 < ofdm_base || phyCnt2 < cck_base) {
++	if (use_new_ani(ah) && (phyCnt1 < ofdm_base || phyCnt2 < cck_base)) {
+ 		if (phyCnt1 < ofdm_base) {
+ 			ath_print(common, ATH_DBG_ANI,
+ 				  "phyCnt1 0x%x, resetting "
+@@ -723,6 +722,19 @@ static void ath9k_hw_ani_monitor_old(struct ath_hw *ah,
+ 		cckPhyErrCnt - aniState->cckPhyErrCount;
+ 	aniState->cckPhyErrCount = cckPhyErrCnt;
+ 
++}
++
++static void ath9k_hw_ani_monitor_old(struct ath_hw *ah,
++				     struct ath9k_channel *chan)
++{
++	struct ar5416AniState *aniState;
++
++	if (!DO_ANI(ah))
++		return;
++
++	aniState = &ah->curchan->ani;
++	ath9k_hw_ani_read_counters(ah);
++
+ 	if (aniState->listenTime > 5 * ah->aniperiod) {
+ 		if (aniState->ofdmPhyErrCount <= aniState->listenTime *
+ 		    ah->config.ofdm_trig_low / 1000 &&
+@@ -749,8 +761,6 @@ static void ath9k_hw_ani_monitor_new(struct ath_hw *ah,
+ {
+ 	struct ar5416AniState *aniState;
+ 	struct ath_common *common = ath9k_hw_common(ah);
+-	int32_t listenTime;
+-	u32 ofdmPhyErrCnt, cckPhyErrCnt;
+ 	u32 ofdmPhyErrRate, cckPhyErrRate;
+ 
+ 	if (!DO_ANI(ah))
+@@ -760,35 +770,7 @@ static void ath9k_hw_ani_monitor_new(struct ath_hw *ah,
+ 	if (WARN_ON(!aniState))
+ 		return;
+ 
+-	listenTime = ath9k_hw_ani_get_listen_time(ah);
+-	if (listenTime <= 0) {
+-		ah->stats.ast_ani_lneg++;
+-		/* restart ANI period if listenTime is invalid */
+-		ath_print(common, ATH_DBG_ANI,
+-			  "listenTime=%d - on new ani monitor\n",
+-			  listenTime);
+-		ath9k_ani_restart(ah);
+-		return;
 -	}
+-
+-	aniState->listenTime += listenTime;
+-
+-	ath9k_hw_update_mibstats(ah, &ah->ah_mibStats);
+-
+-	ofdmPhyErrCnt = REG_READ(ah, AR_PHY_ERR_1);
+-	cckPhyErrCnt = REG_READ(ah, AR_PHY_ERR_2);
+-
+-	ah->stats.ast_ani_ofdmerrs +=
+-		ofdmPhyErrCnt - aniState->ofdmPhyErrCount;
+-	aniState->ofdmPhyErrCount = ofdmPhyErrCnt;
+-
+-	ah->stats.ast_ani_cckerrs +=
+-		cckPhyErrCnt - aniState->cckPhyErrCount;
+-	aniState->cckPhyErrCount = cckPhyErrCnt;
+-
+-	ath_print(common, ATH_DBG_ANI,
+-		  "Errors: OFDM=%d, CCK=%d\n",
+-		  ofdmPhyErrCnt, cckPhyErrCnt);
++	ath9k_hw_ani_read_counters(ah);
  
- 	set_bit(DEVICE_STATE_STARTED, &rt2x00dev->flags);
+ 	ofdmPhyErrRate = aniState->ofdmPhyErrCount * 1000 /
+ 			 aniState->listenTime;
+@@ -798,7 +780,8 @@ static void ath9k_hw_ani_monitor_new(struct ath_hw *ah,
+ 	ath_print(common, ATH_DBG_ANI,
+ 		  "listenTime=%d OFDM:%d errs=%d/s CCK:%d "
+ 		  "errs=%d/s ofdm_turn=%d\n",
+-		  listenTime, aniState->ofdmNoiseImmunityLevel,
++		  aniState->listenTime,
++		  aniState->ofdmNoiseImmunityLevel,
+ 		  ofdmPhyErrRate, aniState->cckNoiseImmunityLevel,
+ 		  cckPhyErrRate, aniState->ofdmsTurn);
+ 
+@@ -943,10 +926,8 @@ skip:
+  * any of the MIB counters overflow/trigger so don't assume we're
+  * here because a PHY error counter triggered.
+  */
+-static void ath9k_hw_proc_mib_event_old(struct ath_hw *ah)
++void ath9k_hw_proc_mib_event(struct ath_hw *ah)
+ {
+-	u32 ofdm_base = AR_PHY_COUNTMAX - ah->config.ofdm_trig_high;
+-	u32 cck_base = AR_PHY_COUNTMAX - ah->config.cck_trig_high;
+ 	u32 phyCnt1, phyCnt2;
+ 
+ 	/* Reset these counters regardless */
+@@ -973,72 +954,15 @@ static void ath9k_hw_proc_mib_event_old(struct ath_hw *ah)
+ 	phyCnt2 = REG_READ(ah, AR_PHY_ERR_2);
+ 	if (((phyCnt1 & AR_MIBCNT_INTRMASK) == AR_MIBCNT_INTRMASK) ||
+ 	    ((phyCnt2 & AR_MIBCNT_INTRMASK) == AR_MIBCNT_INTRMASK)) {
+-		struct ar5416AniState *aniState = &ah->curchan->ani;
+-		u32 ofdmPhyErrCnt, cckPhyErrCnt;
+-
+-		/* NB: only use ast_ani_*errs with AH_PRIVATE_DIAG */
+-		ofdmPhyErrCnt = phyCnt1 - ofdm_base;
+-		ah->stats.ast_ani_ofdmerrs +=
+-			ofdmPhyErrCnt - aniState->ofdmPhyErrCount;
+-		aniState->ofdmPhyErrCount = ofdmPhyErrCnt;
+ 
+-		cckPhyErrCnt = phyCnt2 - cck_base;
+-		ah->stats.ast_ani_cckerrs +=
+-			cckPhyErrCnt - aniState->cckPhyErrCount;
+-		aniState->cckPhyErrCount = cckPhyErrCnt;
++		if (!use_new_ani(ah))
++			ath9k_hw_ani_read_counters(ah);
+ 
+-		/*
+-		 * NB: figure out which counter triggered.  If both
+-		 * trigger we'll only deal with one as the processing
+-		 * clobbers the error counter so the trigger threshold
+-		 * check will never be true.
+-		 */
+-		if (aniState->ofdmPhyErrCount > ah->config.ofdm_trig_high)
+-			ath9k_hw_ani_ofdm_err_trigger_new(ah);
+-		if (aniState->cckPhyErrCount > ah->config.cck_trig_high)
+-			ath9k_hw_ani_cck_err_trigger_old(ah);
+ 		/* NB: always restart to insure the h/w counters are reset */
+ 		ath9k_ani_restart(ah);
+ 	}
+ }
+-
+-/*
+- * Process a MIB interrupt.  We may potentially be invoked because
+- * any of the MIB counters overflow/trigger so don't assume we're
+- * here because a PHY error counter triggered.
+- */
+-static void ath9k_hw_proc_mib_event_new(struct ath_hw *ah)
+-{
+-	u32 phyCnt1, phyCnt2;
+-
+-	/* Reset these counters regardless */
+-	REG_WRITE(ah, AR_FILT_OFDM, 0);
+-	REG_WRITE(ah, AR_FILT_CCK, 0);
+-	if (!(REG_READ(ah, AR_SLP_MIB_CTRL) & AR_SLP_MIB_PENDING))
+-		REG_WRITE(ah, AR_SLP_MIB_CTRL, AR_SLP_MIB_CLEAR);
+-
+-	/* Clear the mib counters and save them in the stats */
+-	ath9k_hw_update_mibstats(ah, &ah->ah_mibStats);
+-
+-	if (!DO_ANI(ah)) {
+-		/*
+-		 * We must always clear the interrupt cause by
+-		 * resetting the phy error regs.
+-		 */
+-		REG_WRITE(ah, AR_PHY_ERR_1, 0);
+-		REG_WRITE(ah, AR_PHY_ERR_2, 0);
+-		return;
+-	}
+-
+-	/* NB: these are not reset-on-read */
+-	phyCnt1 = REG_READ(ah, AR_PHY_ERR_1);
+-	phyCnt2 = REG_READ(ah, AR_PHY_ERR_2);
+-
+-	/* NB: always restart to insure the h/w counters are reset */
+-	if (((phyCnt1 & AR_MIBCNT_INTRMASK) == AR_MIBCNT_INTRMASK) ||
+-	    ((phyCnt2 & AR_MIBCNT_INTRMASK) == AR_MIBCNT_INTRMASK))
+-		ath9k_ani_restart(ah);
+-}
++EXPORT_SYMBOL(ath9k_hw_proc_mib_event);
+ 
+ void ath9k_hw_ani_setup(struct ath_hw *ah)
+ {
+@@ -1144,7 +1068,6 @@ void ath9k_hw_attach_ani_ops_old(struct ath_hw *ah)
+ 	priv_ops->ani_reset = ath9k_ani_reset_old;
+ 	priv_ops->ani_lower_immunity = ath9k_hw_ani_lower_immunity_old;
+ 
+-	ops->ani_proc_mib_event = ath9k_hw_proc_mib_event_old;
+ 	ops->ani_monitor = ath9k_hw_ani_monitor_old;
+ 
+ 	ath_print(ath9k_hw_common(ah), ATH_DBG_ANY, "Using ANI v1\n");
+@@ -1158,7 +1081,6 @@ void ath9k_hw_attach_ani_ops_new(struct ath_hw *ah)
+ 	priv_ops->ani_reset = ath9k_ani_reset_new;
+ 	priv_ops->ani_lower_immunity = ath9k_hw_ani_lower_immunity_new;
+ 
+-	ops->ani_proc_mib_event = ath9k_hw_proc_mib_event_new;
+ 	ops->ani_monitor = ath9k_hw_ani_monitor_new;
+ 
+ 	ath_print(ath9k_hw_common(ah), ATH_DBG_ANY, "Using ANI v2\n");
+diff --git a/drivers/net/wireless/ath/ath9k/hw-ops.h b/drivers/net/wireless/ath/ath9k/hw-ops.h
+index 9c4dd0e..f42c198 100644
+--- a/drivers/net/wireless/ath/ath9k/hw-ops.h
++++ b/drivers/net/wireless/ath/ath9k/hw-ops.h
+@@ -128,11 +128,6 @@ static inline void ath9k_hw_set11n_virtualmorefrag(struct ath_hw *ah, void *ds,
+ 	ath9k_hw_ops(ah)->set11n_virtualmorefrag(ah, ds, vmf);
+ }
+ 
+-static inline void ath9k_hw_procmibevent(struct ath_hw *ah)
+-{
+-	ath9k_hw_ops(ah)->ani_proc_mib_event(ah);
+-}
+-
+ static inline void ath9k_hw_ani_monitor(struct ath_hw *ah,
+ 					struct ath9k_channel *chan)
+ {
+diff --git a/drivers/net/wireless/ath/ath9k/hw.h b/drivers/net/wireless/ath/ath9k/hw.h
+index 5063463..a87840b 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.h
++++ b/drivers/net/wireless/ath/ath9k/hw.h
+@@ -575,8 +575,6 @@ struct ath_hw_private_ops {
+  * @config_pci_powersave:
+  * @calibrate: periodic calibration for NF, ANI, IQ, ADC gain, ADC-DC
+  *
+- * @ani_proc_mib_event: process MIB events, this would happen upon specific ANI
+- *	thresholds being reached or having overflowed.
+  * @ani_monitor: called periodically by the core driver to collect
+  *	MIB stats and adjust ANI if specific thresholds have been reached.
+  */
+@@ -620,7 +618,6 @@ struct ath_hw_ops {
+ 	void (*set11n_virtualmorefrag)(struct ath_hw *ah, void *ds,
+ 				       u32 vmf);
+ 
+-	void (*ani_proc_mib_event)(struct ath_hw *ah);
+ 	void (*ani_monitor)(struct ath_hw *ah, struct ath9k_channel *chan);
+ };
+ 
+@@ -980,6 +977,7 @@ void ar9002_hw_load_ani_reg(struct ath_hw *ah, struct ath9k_channel *chan);
+  * older families (AR5008, AR9001, AR9002) by using modparam_force_new_ani.
+  */
+ extern int modparam_force_new_ani;
++void ath9k_hw_proc_mib_event(struct ath_hw *ah);
+ void ath9k_hw_attach_ani_ops_old(struct ath_hw *ah);
+ void ath9k_hw_attach_ani_ops_new(struct ath_hw *ah);
+ 
+diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
+index 49ea458..d79f78d 100644
+--- a/drivers/net/wireless/ath/ath9k/main.c
++++ b/drivers/net/wireless/ath/ath9k/main.c
+@@ -713,7 +713,7 @@ irqreturn_t ath_isr(int irq, void *dev)
+ 		 * it will clear whatever condition caused
+ 		 * the interrupt.
+ 		 */
+-		ath9k_hw_procmibevent(ah);
++		ath9k_hw_proc_mib_event(ah);
+ 		ath9k_hw_set_interrupts(ah, ah->imask);
+ 	}
  
 -- 
-1.7.2.3
+1.7.2.2
 
