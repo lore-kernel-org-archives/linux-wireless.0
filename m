@@ -1,52 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga14.intel.com ([143.182.124.37]:61799 "EHLO mga14.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755578Ab0JYOj1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 25 Oct 2010 10:39:27 -0400
-Subject: Re: [PATCH 1/7] iwlwifi: warn when send tx power settings during
- scan
-From: "Guy, Wey-Yi" <wey-yi.w.guy@intel.com>
+Received: from he.sipsolutions.net ([78.46.109.217]:34033 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755744Ab0JDNIE (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 4 Oct 2010 09:08:04 -0400
+Subject: Re: [PATCH 2/6] mac80211: merge ieee80211_scan_work() common code
+From: Johannes Berg <johannes@sipsolutions.net>
 To: Stanislaw Gruszka <sgruszka@redhat.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <20101025083436.GB2343@redhat.com>
-References: <1287759870-5758-1-git-send-email-sgruszka@redhat.com>
-	 <1287760985.8143.0.camel@wwguy-ubuntu>  <20101025083436.GB2343@redhat.com>
-Content-Type: text/plain
-Date: Mon, 25 Oct 2010 07:38:36 -0700
-Message-Id: <1288017516.3435.7.camel@wwguy-ubuntu>
+Cc: Wey-Yi Guy <wey-yi.w.guy@intel.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <1285934732-16087-2-git-send-email-sgruszka@redhat.com>
+References: <1285934732-16087-1-git-send-email-sgruszka@redhat.com>
+	 <1285934732-16087-2-git-send-email-sgruszka@redhat.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Mon, 04 Oct 2010 15:07:51 +0200
+Message-ID: <1286197671.3620.29.camel@jlt3.sipsolutions.net>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2010-10-25 at 01:34 -0700, Stanislaw Gruszka wrote:
-> Hi Wey
-> 
-> On Fri, Oct 22, 2010 at 08:23:05AM -0700, Guy, Wey-Yi wrote:
-> > On Fri, 2010-10-22 at 08:04 -0700, Stanislaw Gruszka wrote:
-> > > +	if (WARN_ONCE(test_bit(STATUS_SCAN_HW, &priv->status),
-> > > +		      "TX Power requested while scanning!\n"))
-> > > +		return -EIO;
-> > 
-> > what reason we want to return -EIO instead of -EAGAIN?
-> 
-> I though EAGAIN should be used for file nonblock I/O, but seems
-> it can be used anywhere when resources are unavailable. If it
-> make difference, we can apply this patch instead:
-> 
-> From 7905309bfeae1a8374d3caa757d9f9383c15d700 Mon Sep 17 00:00:00 2001
-> From: Stanislaw Gruszka <sgruszka@redhat.com>
-> Date: Fri, 22 Oct 2010 13:23:41 +0200
-> Subject: [PATCH 1/7 v2] iwlwifi: warn when send tx power settings during scan
-> 
-> Add WARN_ONCE when scanning is pending. Use STATUS_SCAN_HW bit since we
-> can have scan canceled or completed but STATUS_SCANNING bit still set.
-> 
-> v1 -> v2: replace EIO to EAGAIN
-> 
-> Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+On Fri, 2010-10-01 at 14:05 +0200, Stanislaw Gruszka wrote:
 
-Acked-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-> ---
+> +out_complete:
+> +	mutex_unlock(&local->mtx);
+> +	if (rc)
+> +		__ieee80211_scan_completed(&local->hw, true);
 
+That must be aborted, not "true".
+
+Also, I just noticed that together with the other patch this gets quite
+confusing with the "if (rc)" logic. I think
+
+out_complete:
+	mutex_unlock
+	completed()
+	return;
+out:
+	mutex_unlock()
+}
+
+would ultimately be easier to understand.
+
+johannes
 
