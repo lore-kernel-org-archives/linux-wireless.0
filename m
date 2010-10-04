@@ -1,41 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:53783 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758816Ab0JZJli (ORCPT
+Received: from mx51.mymxserver.com ([188.94.250.25]:59282 "EHLO
+	mx51.mymxserver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755813Ab0JDMwa (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 26 Oct 2010 05:41:38 -0400
-Subject: Re: Question about starting up an AP
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Helmut Schaa <helmut.schaa@googlemail.com>
-Cc: Ivo van Doorn <ivdoorn@gmail.com>,
-	Joshua Smith <JoshuaESmith@charter.net>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	users@rt2x00.serialmonkey.com
-In-Reply-To: <201010261135.31232.helmut.schaa@googlemail.com>
-References: <DA0C92FD-F6BF-4746-9BE1-A643A0D70F7A@kaon.com>
-	 <B3E6C8F9-24E4-4F12-B19C-15A474E5BCFA@charter.net>
-	 <201010151146.53640.helmut.schaa@googlemail.com>
-	 <201010261135.31232.helmut.schaa@googlemail.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Tue, 26 Oct 2010 11:41:34 +0200
-Message-ID: <1288086094.3761.6.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+	Mon, 4 Oct 2010 08:52:30 -0400
+From: Holger Schurig <holgerschurig@gmail.com>
+To: Jochen Friedrich <jochen@scram.de>
+Subject: Re: [Patch] iw: Implement set 4addr.
+Date: Mon, 4 Oct 2010 15:02:14 +0200
+Cc: linux-wireless@vger.kernel.org
+References: <1286041239-19169-1-git-send-email-jochen@scram.de> <201010040915.58549.holgerschurig@gmail.com> <4CA997A3.7080409@scram.de>
+In-Reply-To: <4CA997A3.7080409@scram.de>
+MIME-Version: 1.0
+Content-Type: Text/Plain;
+  charset="us-ascii"
+Message-Id: <201010041502.14459.holgerschurig@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2010-10-26 at 11:35 +0200, Helmut Schaa wrote:
+> Yes, that's the idea behind this. I'm using an OpenWRT based WLAN router 
+> and a Debian client with the configuration below.
 
-> > I'll let Ivo decide on this. At least if we really want to wait more then one
-> > second for DMA to be ready we should increase the msleep(1) to msleep(10) and
-> > keep the maximum number of retries at 100.
+Oh, I don't have much success so far.
 
-> Ivo, do we want to add the excessive waiting (up to one second) for DMA on
-> rt2800 as it fixes Joshuas device? At the moment we're waiting 100ms.
+My setup is like this:
 
-I don't usually chime in on other drivers but is there any reason not
-to? Properly functioning devices obviously reply within 100ms, so they
-wouldn't change behaviour, hopefully broken ones that _never_ work are
-rare, and the remaining ones like Joshua's would be fixed ...
+   Linux 2.6.35.4
+   compat-wireless-2010-10-02, using
+      ath5k from this
+   iw from git with your patch
 
-johannes
+------------------------------------------
+auto lo
+iface lo inet loopback
 
+auto wlan0
+iface wlan0 inet manual
+        pre-up iw wlan0 set 4addr on
+
+auto eth0
+iface eth0 inet manual
+
+iface br0 inet static
+        address 192.168.233.197
+        netmask 255.255.255.0
+        bridge_ports eth0 wlan0
+        bridge_wait 0
+        bridge_fd 0
+        bridge_stp off
+        post-up iw wlan0 connect TEST key 0:99999
+
+I also tried it with wpa_supplicant, again from git. The last part of the 
+/etc/network/interface file looked then like this:
+
+        wpa_iface wlan0
+        wpa_bridge br0
+        wpa-conf /etc/wpa_supplicant.conf
+        wpa-driver nl80211
+
+... but in both cases, I didn't have much of success. I tried "tcpdump -i 
+wlan0 -p" (-p prevents promiscuous mode) and only saw ARP, but never an ARP 
+response.
+
+I'll investigate further :-)
+
+-- 
+Homepage: http://www.holgerschurig.de
