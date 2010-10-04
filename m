@@ -1,62 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:60058 "EHLO
+Received: from he.sipsolutions.net ([78.46.109.217]:50509 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751930Ab0JKSqO (ORCPT
+	with ESMTP id S1754622Ab0JDQl6 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 11 Oct 2010 14:46:14 -0400
-Subject: Re: [PATCH 1/2] wireless:  Support wiphy_renamed hook for drivers.
+	Mon, 4 Oct 2010 12:41:58 -0400
+Subject: Re: [PATCH v2 3/3] mac80211: move to the home channel for
+ disassociation when roaming
 From: Johannes Berg <johannes@sipsolutions.net>
-To: greearb@candelatech.com
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <1286822639.3634.84.camel@jlt3.sipsolutions.net>
-References: <1286822537-28756-1-git-send-email-greearb@candelatech.com>
-	 <1286822639.3634.84.camel@jlt3.sipsolutions.net>
+To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Cc: Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
+	"linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"stable@kernel.org" <stable@kernel.org>, Jouni Malinen <j@w1.fi>,
+	Paul Stewart <pstew@google.com>,
+	Amod Bodas <Amod.Bodas@Atheros.com>,
+	Vasanth Thiagarajan <Vasanth.Thiagarajan@Atheros.com>
+In-Reply-To: <20101004163829.GD2105@tux>
+References: <1285965233-11097-1-git-send-email-lrodriguez@atheros.com>
+	 <1285965233-11097-4-git-send-email-lrodriguez@atheros.com>
+	 <1286198152.3620.35.camel@jlt3.sipsolutions.net>
+	 <20101004163829.GD2105@tux>
 Content-Type: text/plain; charset="UTF-8"
-Date: Mon, 11 Oct 2010 20:46:11 +0200
-Message-ID: <1286822771.3634.85.camel@jlt3.sipsolutions.net>
+Date: Mon, 04 Oct 2010 18:41:56 +0200
+Message-ID: <1286210516.3620.41.camel@jlt3.sipsolutions.net>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I think you should just do this (untested):
+On Mon, 2010-10-04 at 09:38 -0700, Luis R. Rodriguez wrote:
+> On Mon, Oct 04, 2010 at 06:15:52AM -0700, Johannes Berg wrote:
+> > On Fri, 2010-10-01 at 16:33 -0400, Luis R. Rodriguez wrote:
+> > 
+> > > @@ -2203,6 +2204,14 @@ int ieee80211_mgd_assoc(struct ieee80211_sub_if_data *sdata,
+> > >  			return -EALREADY;
+> > >  		}
+> > >  
+> > > +		/*
+> > > +		 * right before this was authentication, that was on
+> > > +		 * the same the wk->chan so we need to ensure we temporarily
+> > > +		 * go back to the operating channel to send the disassocation.
+> > > +		 */
+> > > +		local->tmp_channel = NULL;
+> > > +		ieee80211_hw_config(local, 0);
+> > > +
+> > 
+> > Yikes, no, you can't do this. You don't know what has been merged with
+> > the authentication work item, etc.
+> 
+> What do you mean? Auth/Assoc will be handled separately and the
+> target channel will also be handled for each work item run, what
+> issues can arise from sending us back to the home channel towards
+> the end of this call here?
 
---- wireless-testing.orig/drivers/net/wireless/ath/ath5k/debug.c	2010-10-11 20:44:26.000000000 +0200
-+++ wireless-testing/drivers/net/wireless/ath/ath5k/debug.c	2010-10-11 20:45:26.000000000 +0200
-@@ -71,8 +71,6 @@ module_param_named(debug, ath5k_debug, u
- #include "reg.h"
- #include "ani.h"
- 
--static struct dentry *ath5k_global_debugfs;
--
- static int ath5k_debugfs_open(struct inode *inode, struct file *file)
- {
- 	file->private_data = inode->i_private;
-@@ -884,7 +882,6 @@ static const struct file_operations fops
- void
- ath5k_debug_init(void)
- {
--	ath5k_global_debugfs = debugfs_create_dir("ath5k", NULL);
- }
- 
- void
-@@ -892,8 +889,8 @@ ath5k_debug_init_device(struct ath5k_sof
- {
- 	sc->debug.level = ath5k_debug;
- 
--	sc->debug.debugfs_phydir = debugfs_create_dir(wiphy_name(sc->hw->wiphy),
--				ath5k_global_debugfs);
-+	sc->debug.debugfs_phydir = debugfs_create_dir("ath5k",
-+				sc->hw->wiphy->debugfsdir);
- 
- 	sc->debug.debugfs_debug = debugfs_create_file("debug",
- 				S_IWUSR | S_IRUSR,
-@@ -936,7 +933,6 @@ ath5k_debug_init_device(struct ath5k_sof
- void
- ath5k_debug_finish(void)
- {
--	debugfs_remove(ath5k_global_debugfs);
- }
- 
- void
+Another work item, like a remain-on-channel, might have been started on
+the same channel ("merged").
 
+johannes
 
