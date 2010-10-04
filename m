@@ -1,43 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:59974 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751047Ab0JGWyd (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 7 Oct 2010 18:54:33 -0400
-Subject: Re: [RFC v2] mac80211: fix possible null-pointer dereference
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Steve deRosier <steve@cozybit.com>
-Cc: Christian Lamparter <chunkeey@googlemail.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Luis Carlos Cobo <luisca@cozybit.com>,
-	linux-wireless@vger.kernel.org, Javier Cardona <javier@cozybit.com>
-In-Reply-To: <AANLkTinCkWGs_KMz+QBUw2J5HUVU2hK1+8kVDr_PNZwP@mail.gmail.com>
-References: <201009210057.13297.chunkeey@googlemail.com>
-	 <20100924180013.GD8077@tuxdriver.com>
-	 <201009250002.21219.chunkeey@googlemail.com>
-	 <AANLkTinCkWGs_KMz+QBUw2J5HUVU2hK1+8kVDr_PNZwP@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Fri, 08 Oct 2010 00:54:32 +0200
-Message-ID: <1286492072.20974.49.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+Received: from mail.atheros.com ([12.19.149.2]:56504 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753512Ab0JDRWA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 4 Oct 2010 13:22:00 -0400
+Received: from mail.atheros.com ([10.10.20.108])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Mon, 04 Oct 2010 10:21:52 -0700
+Date: Mon, 4 Oct 2010 10:21:59 -0700
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: <ath9k-devel@lists.ath9k.org>
+CC: linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: [ath9k-devel] Ath9k in funky state after adding 130 STA
+ interfaces.
+Message-ID: <20101004172159.GJ2105@tux>
+References: <4CA81265.8030403@candelatech.com>
+ <20101004170732.GH2105@tux>
+ <20101004170906.22433.qmail@stuge.se>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <20101004170906.22433.qmail@stuge.se>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2010-10-07 at 15:38 -0700, Steve deRosier wrote:
-
-> Javier and I reviewed the patch and it definitely fixes a potential
-> problem and is correct.  Furthermore, applied to wireless-testing
-> head, it passes all of our cases in our test bed.
+On Mon, Oct 04, 2010 at 10:09:06AM -0700, Peter Stuge wrote:
+> Luis R. Rodriguez wrote:
+> > > This on wireless-testing from Friday, plus a few debugfs patches
+> > > I posted recently.
+> > > 
+> > > I was running two STA just fine, and then tried to add 128 more.
+> > 
+> > You're serious right? I mean I'm happy your serious, but whoa, you
+> > want 130 STAs on one interface working fine?
 > 
-> I think it's good to go.
+> Come on. If it is impossible to work because of whatever limitations
+> then wouldn't it make sense for the driver to throw an error instead
+> of not throwing an error and just not working?
 
-Err, are you positive? I think the code there is correct, apart from the
-fact that it does no validation of
-mgmt->u.action.u.plink_action.action_code whatsoever which may allow all
-kinds of abuse :)
+You're right but if you are using the ath9k virtual wiphy stuff please
+not that code is intended to be removed, it was experimental code and
+this is also why we don't have good documentation for it. It was just
+a hack as a proof of concept. The real solution needs to take place on
+cfg80211/mac80211.
 
-The only action that's valid w/o having a station entry for the peer is
-PLINK_OPEN, which makes perfect sense.
-
-johannes
-
+  Luis
