@@ -1,61 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bar.sig21.net ([80.81.252.164]:54706 "EHLO bar.sig21.net"
+Received: from mail.atheros.com ([12.19.149.2]:26547 "EHLO mail.atheros.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932079Ab0JZMf4 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 26 Oct 2010 08:35:56 -0400
-Received: from p5099b351.dip0.t-ipconnect.de ([80.153.179.81] helo=zzz.local)
-	by bar.sig21.net with esmtpsa (TLS-1.0:RSA_ARCFOUR_SHA1:16)
-	(Exim 4.63)
-	(envelope-from <js@sig21.net>)
-	id 1PAikr-0003ZC-1u
-	for linux-wireless@vger.kernel.org; Tue, 26 Oct 2010 14:35:55 +0200
-Received: from js by zzz.local with local (Exim 4.72)
-	(envelope-from <js@sig21.net>)
-	id 1PAikq-0001Ce-RJ
-	for linux-wireless@vger.kernel.org; Tue, 26 Oct 2010 14:35:52 +0200
-Date: Tue, 26 Oct 2010 14:35:52 +0200
-From: Johannes Stezenbach <js@sig21.net>
-To: linux-wireless@vger.kernel.org
-Subject: Re: Compat-wireless release for 2010-10-25 is baked
-Message-ID: <20101026123552.GA4604@sig21.net>
-References: <20101025190358.AEC6840F97@repository3.orbit-lab.org>
+	id S1752734Ab0JDVDw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 4 Oct 2010 17:03:52 -0400
+Received: from mail.atheros.com ([10.10.20.108])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Mon, 04 Oct 2010 14:03:44 -0700
+Date: Mon, 4 Oct 2010 14:03:50 -0700
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
+	"linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"stable@kernel.org" <stable@kernel.org>, Jouni Malinen <j@w1.fi>,
+	Paul Stewart <pstew@google.com>,
+	Amod Bodas <Amod.Bodas@Atheros.com>,
+	Vasanth Thiagarajan <Vasanth.Thiagarajan@Atheros.com>
+Subject: Re: [PATCH v2 3/3] mac80211: move to the home channel for
+ disassociation when roaming
+Message-ID: <20101004210350.GS2105@tux>
+References: <1285965233-11097-1-git-send-email-lrodriguez@atheros.com>
+ <1285965233-11097-4-git-send-email-lrodriguez@atheros.com>
+ <1286198152.3620.35.camel@jlt3.sipsolutions.net>
+ <20101004163829.GD2105@tux>
+ <1286210516.3620.41.camel@jlt3.sipsolutions.net>
+ <20101004172333.GK2105@tux>
+ <1286217569.3620.48.camel@jlt3.sipsolutions.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20101025190358.AEC6840F97@repository3.orbit-lab.org>
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <1286217569.3620.48.camel@jlt3.sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Oct 25, 2010 at 03:03:57PM -0400, Compat-wireless cronjob account wrote:
-> From git://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next
->    d9f241e..e10b307  history    -> origin/history
->  + c8b020e...fd4f9b3 master     -> origin/master  (forced update)
->    b515316..229aebb  stable     -> origin/stable
->  * [new tag]         next-20101025 -> next-20101025
-...
-> Base tree: linux-next.git
-> Base tree version: next-20101025
-> compat-wireless release: compat-wireless-2010-10-22-pc
+On Mon, Oct 04, 2010 at 11:39:29AM -0700, Johannes Berg wrote:
+> On Mon, 2010-10-04 at 10:23 -0700, Luis R. Rodriguez wrote:
+> > On Mon, Oct 04, 2010 at 09:41:56AM -0700, Johannes Berg wrote:
+> > > On Mon, 2010-10-04 at 09:38 -0700, Luis R. Rodriguez wrote:
+> > > > On Mon, Oct 04, 2010 at 06:15:52AM -0700, Johannes Berg wrote:
+> > > > > On Fri, 2010-10-01 at 16:33 -0400, Luis R. Rodriguez wrote:
+> > > > > 
+> > > > > > @@ -2203,6 +2204,14 @@ int ieee80211_mgd_assoc(struct ieee80211_sub_if_data *sdata,
+> > > > > >  			return -EALREADY;
+> > > > > >  		}
+> > > > > >  
+> > > > > > +		/*
+> > > > > > +		 * right before this was authentication, that was on
+> > > > > > +		 * the same the wk->chan so we need to ensure we temporarily
+> > > > > > +		 * go back to the operating channel to send the disassocation.
+> > > > > > +		 */
+> > > > > > +		local->tmp_channel = NULL;
+> > > > > > +		ieee80211_hw_config(local, 0);
+> > > > > > +
+> > > > > 
+> > > > > Yikes, no, you can't do this. You don't know what has been merged with
+> > > > > the authentication work item, etc.
+> > > > 
+> > > > What do you mean? Auth/Assoc will be handled separately and the
+> > > > target channel will also be handled for each work item run, what
+> > > > issues can arise from sending us back to the home channel towards
+> > > > the end of this call here?
+> > > 
+> > > Another work item, like a remain-on-channel, might have been started on
+> > > the same channel ("merged").
+> > 
+> > But how do this break that other work from moving forward in its respective
+> > channel? The work_work loop makes sure to check if we require a channel
+> > change on the work item.
+> 
+> But we already activated that other work item.
 
-I wonder about the different tarballs in
-http://wireless.kernel.org/download/compat-wireless-2.6/
+Ah yes, I see that now, thanks..
 
-compat-wireless-2010-10-25.tar.bz2
-compat-wireless-2010-10-25-p.tar.bz2
-compat-wireless-2010-10-25-pc.tar.bz2
-
-Those -p and -pc postfixes are not explained in
-http://wireless.kernel.org/en/users/Download
-
-
-On a related note, I ran across compat-wireless-2.6.36-rc8-1-cs.tar.bz2 in
-http://www.orbit-lab.org/kernel/compat-wireless-2.6-stable/v2.6.36/
-which is not linked on
-http://wireless.kernel.org/en/users/Download/stable/#Releases
-and I wonder about the -s and -cs postfixes?
-
-
-Can someone shed a light on this?
-
-
-Thanks
-Johannes
+  Luis
