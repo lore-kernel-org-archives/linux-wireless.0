@@ -1,146 +1,378 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([88.198.39.176]:56225 "EHLO ds10.nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1759553Ab0JHUOE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 8 Oct 2010 16:14:04 -0400
-From: Felix Fietkau <nbd@openwrt.org>
-To: linux-wireless@vger.kernel.org
-Cc: linville@tuxdriver.com, lrodriguez@atheros.com, br1@einfach.org
-Subject: [PATCH 1/4] ath9k_hw: store the clock rate in common data on channel changes
-Date: Fri,  8 Oct 2010 22:13:51 +0200
-Message-Id: <1286568834-18821-1-git-send-email-nbd@openwrt.org>
+Received: from he.sipsolutions.net ([78.46.109.217]:39320 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753690Ab0JDN13 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 4 Oct 2010 09:27:29 -0400
+Subject: Re: [PATCH v2 0/3] mac80211: fix rate_control_send_low warnings
+ for delbas
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	stable@kernel.org, Jouni Malinen <j@w1.fi>,
+	Paul Stewart <pstew@google.com>,
+	Amod Bodas <amod.bodas@atheros.com>,
+	Vasanthakumar Thiagarajan <vasanth@atheros.com>
+In-Reply-To: <1285965233-11097-1-git-send-email-lrodriguez@atheros.com>
+References: <1285965233-11097-1-git-send-email-lrodriguez@atheros.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Mon, 04 Oct 2010 15:27:25 +0200
+Message-ID: <1286198845.3620.37.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
----
- drivers/net/wireless/ath/ath.h       |    2 ++
- drivers/net/wireless/ath/ath9k/ani.c |   26 ++------------------------
- drivers/net/wireless/ath/ath9k/hw.c  |   32 +++++++++++++++++++-------------
- 3 files changed, 23 insertions(+), 37 deletions(-)
+How about this instead of your patches 2 and 3?
 
-diff --git a/drivers/net/wireless/ath/ath.h b/drivers/net/wireless/ath/ath.h
-index cee0191..b36d9d7 100644
---- a/drivers/net/wireless/ath/ath.h
-+++ b/drivers/net/wireless/ath/ath.h
-@@ -145,6 +145,8 @@ struct ath_common {
- 	DECLARE_BITMAP(tkip_keymap, ATH_KEYMAX);
- 	enum ath_crypt_caps crypt_caps;
- 
-+	unsigned int clockrate;
-+
- 	struct ath_regulatory regulatory;
- 	const struct ath_ops *ops;
- 	const struct ath_bus_ops *bus_ops;
-diff --git a/drivers/net/wireless/ath/ath9k/ani.c b/drivers/net/wireless/ath/ath9k/ani.c
-index f2a907b..f2aa684 100644
---- a/drivers/net/wireless/ath/ath9k/ani.c
-+++ b/drivers/net/wireless/ath/ath9k/ani.c
-@@ -465,35 +465,13 @@ static void ath9k_hw_ani_lower_immunity(struct ath_hw *ah)
- 		ath9k_hw_set_cck_nil(ah, aniState->cckNoiseImmunityLevel - 1);
+We're disassociating from the old AP since we associate with the new AP,
+so there's not a whole lot of sense in explicitly tearing down
+aggregation sessions either, right?
+
+---
+ net/mac80211/agg-rx.c      |    8 ++++----
+ net/mac80211/agg-tx.c      |   14 +++++++++-----
+ net/mac80211/debugfs_sta.c |    3 ++-
+ net/mac80211/ht.c          |   17 ++++++++++-------
+ net/mac80211/ieee80211_i.h |   12 +++++++-----
+ net/mac80211/iface.c       |    3 ++-
+ net/mac80211/mlme.c        |   18 +++++++++---------
+ net/mac80211/pm.c          |    2 +-
+ net/mac80211/sta_info.c    |    2 +-
+ net/mac80211/sta_info.h    |    2 ++
+ net/mac80211/util.c        |    2 +-
+ 11 files changed, 48 insertions(+), 35 deletions(-)
+
+--- wireless-testing.orig/net/mac80211/agg-tx.c	2010-10-04 15:18:07.000000000 +0200
++++ wireless-testing/net/mac80211/agg-tx.c	2010-10-04 15:23:38.000000000 +0200
+@@ -145,7 +145,8 @@ static void kfree_tid_tx(struct rcu_head
  }
  
--static u8 ath9k_hw_chan_2_clockrate_mhz(struct ath_hw *ah)
--{
--	struct ath9k_channel *chan = ah->curchan;
--	struct ieee80211_conf *conf = &ath9k_hw_common(ah)->hw->conf;
--	u8 clockrate; /* in MHz */
--
--	if (!ah->curchan) /* should really check for CCK instead */
--		clockrate = ATH9K_CLOCK_RATE_CCK;
--	else if (conf->channel->band == IEEE80211_BAND_2GHZ)
--		clockrate = ATH9K_CLOCK_RATE_2GHZ_OFDM;
--	else if (IS_CHAN_A_FAST_CLOCK(ah, chan))
--		clockrate = ATH9K_CLOCK_FAST_RATE_5GHZ_OFDM;
--	else
--		clockrate = ATH9K_CLOCK_RATE_5GHZ_OFDM;
--
--	if (conf_is_ht40(conf))
--		return clockrate * 2;
--
--	return clockrate;
--}
--
- static int32_t ath9k_hw_ani_get_listen_time(struct ath_hw *ah)
+ int ___ieee80211_stop_tx_ba_session(struct sta_info *sta, u16 tid,
+-				    enum ieee80211_back_parties initiator)
++				    enum ieee80211_back_parties initiator,
++				    bool tx)
  {
-+	struct ath_common *common = ath9k_hw_common(ah);
- 	int32_t listen_time;
--	int32_t clock_rate;
+ 	struct ieee80211_local *local = sta->local;
+ 	struct tid_ampdu_tx *tid_tx = sta->ampdu_mlme.tid_tx[tid];
+@@ -183,6 +184,7 @@ int ___ieee80211_stop_tx_ba_session(stru
+ 	clear_bit(HT_AGG_STATE_OPERATIONAL, &tid_tx->state);
  
- 	ath9k_hw_update_cycle_counters(ah);
--	clock_rate = ath9k_hw_chan_2_clockrate_mhz(ah) * 1000;
--	listen_time = ah->listen_time / clock_rate;
-+	listen_time = ah->listen_time / (common->clockrate * 1000);
- 	ah->listen_time = 0;
+ 	tid_tx->stop_initiator = initiator;
++	tid_tx->tx_stop = tx;
  
- 	return listen_time;
-diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
-index 05e9935..f5d7917 100644
---- a/drivers/net/wireless/ath/ath9k/hw.c
-+++ b/drivers/net/wireless/ath/ath9k/hw.c
-@@ -88,29 +88,32 @@ static void ath9k_hw_ani_cache_ini_regs(struct ath_hw *ah)
- /* Helper Functions */
- /********************/
+ 	ret = drv_ampdu_action(local, sta->sdata,
+ 			       IEEE80211_AMPDU_TX_STOP,
+@@ -575,13 +577,14 @@ void ieee80211_start_tx_ba_cb_irqsafe(st
+ EXPORT_SYMBOL(ieee80211_start_tx_ba_cb_irqsafe);
  
--static u32 ath9k_hw_mac_clks(struct ath_hw *ah, u32 usecs)
-+static void ath9k_hw_set_clockrate(struct ath_hw *ah)
+ int __ieee80211_stop_tx_ba_session(struct sta_info *sta, u16 tid,
+-				   enum ieee80211_back_parties initiator)
++				   enum ieee80211_back_parties initiator,
++				   bool tx)
  {
- 	struct ieee80211_conf *conf = &ath9k_hw_common(ah)->hw->conf;
-+	struct ath_common *common = ath9k_hw_common(ah);
-+	unsigned int clockrate;
+ 	int ret;
  
- 	if (!ah->curchan) /* should really check for CCK instead */
--		return usecs *ATH9K_CLOCK_RATE_CCK;
--	if (conf->channel->band == IEEE80211_BAND_2GHZ)
--		return usecs *ATH9K_CLOCK_RATE_2GHZ_OFDM;
--
--	if (ah->caps.hw_caps & ATH9K_HW_CAP_FASTCLOCK)
--		return usecs * ATH9K_CLOCK_FAST_RATE_5GHZ_OFDM;
-+		clockrate = ATH9K_CLOCK_RATE_CCK;
-+	else if (conf->channel->band == IEEE80211_BAND_2GHZ)
-+		clockrate = ATH9K_CLOCK_RATE_2GHZ_OFDM;
-+	else if (ah->caps.hw_caps & ATH9K_HW_CAP_FASTCLOCK)
-+		clockrate = ATH9K_CLOCK_FAST_RATE_5GHZ_OFDM;
- 	else
--		return usecs * ATH9K_CLOCK_RATE_5GHZ_OFDM;
-+		clockrate = ATH9K_CLOCK_RATE_5GHZ_OFDM;
-+
-+	if (conf_is_ht40(conf))
-+		clockrate *= 2;
-+
-+	common->clockrate = clockrate;
- }
+ 	mutex_lock(&sta->ampdu_mlme.mtx);
  
- static u32 ath9k_hw_mac_to_clks(struct ath_hw *ah, u32 usecs)
- {
--	struct ieee80211_conf *conf = &ath9k_hw_common(ah)->hw->conf;
-+	struct ath_common *common = ath9k_hw_common(ah);
+-	ret = ___ieee80211_stop_tx_ba_session(sta, tid, initiator);
++	ret = ___ieee80211_stop_tx_ba_session(sta, tid, initiator, tx);
  
--	if (conf_is_ht40(conf))
--		return ath9k_hw_mac_clks(ah, usecs) * 2;
--	else
--		return ath9k_hw_mac_clks(ah, usecs);
-+	return usecs * common->clockrate;
- }
+ 	mutex_unlock(&sta->ampdu_mlme.mtx);
  
- bool ath9k_hw_wait(struct ath_hw *ah, u32 reg, u32 mask, u32 val, u32 timeout)
-@@ -1156,6 +1159,7 @@ static bool ath9k_hw_channel_change(struct ath_hw *ah,
- 			  "Failed to set channel\n");
- 		return false;
+@@ -670,7 +673,7 @@ void ieee80211_stop_tx_ba_cb(struct ieee
+ 		goto unlock_sta;
  	}
-+	ath9k_hw_set_clockrate(ah);
  
- 	ah->eep_ops->set_txpower(ah, chan,
- 			     ath9k_regd_get_ctl(regulatory, chan),
-@@ -1368,6 +1372,8 @@ int ath9k_hw_reset(struct ath_hw *ah, struct ath9k_channel *chan,
- 	if (r)
- 		return r;
+-	if (tid_tx->stop_initiator == WLAN_BACK_INITIATOR)
++	if (tid_tx->stop_initiator == WLAN_BACK_INITIATOR && tid_tx->tx_stop)
+ 		ieee80211_send_delba(sta->sdata, ra, tid,
+ 			WLAN_BACK_INITIATOR, WLAN_REASON_QSTA_NOT_USE);
  
-+	ath9k_hw_set_clockrate(ah);
-+
- 	ENABLE_REGWRITE_BUFFER(ah);
+@@ -770,7 +773,8 @@ void ieee80211_process_addba_resp(struct
  
- 	for (i = 0; i < AR_NUM_DCU; i++)
--- 
-1.7.2.2
+ 		sta->ampdu_mlme.addba_req_num[tid] = 0;
+ 	} else {
+-		___ieee80211_stop_tx_ba_session(sta, tid, WLAN_BACK_INITIATOR);
++		___ieee80211_stop_tx_ba_session(sta, tid, WLAN_BACK_INITIATOR,
++						true);
+ 	}
+ 
+  out:
+--- wireless-testing.orig/net/mac80211/ht.c	2010-10-04 15:17:19.000000000 +0200
++++ wireless-testing/net/mac80211/ht.c	2010-10-04 15:19:04.000000000 +0200
+@@ -101,16 +101,16 @@ void ieee80211_ht_cap_ie_to_sta_ht_cap(s
+ 		ht_cap->mcs.rx_mask[32/8] |= 1;
+ }
+ 
+-void ieee80211_sta_tear_down_BA_sessions(struct sta_info *sta)
++void ieee80211_sta_tear_down_BA_sessions(struct sta_info *sta, bool tx)
+ {
+ 	int i;
+ 
+ 	cancel_work_sync(&sta->ampdu_mlme.work);
+ 
+ 	for (i = 0; i <  STA_TID_NUM; i++) {
+-		__ieee80211_stop_tx_ba_session(sta, i, WLAN_BACK_INITIATOR);
++		__ieee80211_stop_tx_ba_session(sta, i, WLAN_BACK_INITIATOR, tx);
+ 		__ieee80211_stop_rx_ba_session(sta, i, WLAN_BACK_RECIPIENT,
+-					       WLAN_REASON_QSTA_LEAVE_QBSS);
++					       WLAN_REASON_QSTA_LEAVE_QBSS, tx);
+ 	}
+ }
+ 
+@@ -135,7 +135,7 @@ void ieee80211_ba_session_work(struct wo
+ 		if (test_and_clear_bit(tid, sta->ampdu_mlme.tid_rx_timer_expired))
+ 			___ieee80211_stop_rx_ba_session(
+ 				sta, tid, WLAN_BACK_RECIPIENT,
+-				WLAN_REASON_QSTA_TIMEOUT);
++				WLAN_REASON_QSTA_TIMEOUT, true);
+ 
+ 		tid_tx = sta->ampdu_mlme.tid_tx[tid];
+ 		if (!tid_tx)
+@@ -146,7 +146,8 @@ void ieee80211_ba_session_work(struct wo
+ 		else if (test_and_clear_bit(HT_AGG_STATE_WANT_STOP,
+ 					    &tid_tx->state))
+ 			___ieee80211_stop_tx_ba_session(sta, tid,
+-							WLAN_BACK_INITIATOR);
++							WLAN_BACK_INITIATOR,
++							true);
+ 	}
+ 	mutex_unlock(&sta->ampdu_mlme.mtx);
+ }
+@@ -214,9 +215,11 @@ void ieee80211_process_delba(struct ieee
+ #endif /* CONFIG_MAC80211_HT_DEBUG */
+ 
+ 	if (initiator == WLAN_BACK_INITIATOR)
+-		__ieee80211_stop_rx_ba_session(sta, tid, WLAN_BACK_INITIATOR, 0);
++		__ieee80211_stop_rx_ba_session(sta, tid, WLAN_BACK_INITIATOR, 0,
++					       true);
+ 	else
+-		__ieee80211_stop_tx_ba_session(sta, tid, WLAN_BACK_RECIPIENT);
++		__ieee80211_stop_tx_ba_session(sta, tid, WLAN_BACK_RECIPIENT,
++					       true);
+ }
+ 
+ int ieee80211_send_smps_action(struct ieee80211_sub_if_data *sdata,
+--- wireless-testing.orig/net/mac80211/ieee80211_i.h	2010-10-04 15:17:19.000000000 +0200
++++ wireless-testing/net/mac80211/ieee80211_i.h	2010-10-04 15:22:24.000000000 +0200
+@@ -1170,10 +1170,10 @@ int ieee80211_send_smps_action(struct ie
+ void ieee80211_request_smps_work(struct work_struct *work);
+ 
+ void ___ieee80211_stop_rx_ba_session(struct sta_info *sta, u16 tid,
+-				     u16 initiator, u16 reason);
++				     u16 initiator, u16 reason, bool stop);
+ void __ieee80211_stop_rx_ba_session(struct sta_info *sta, u16 tid,
+-				    u16 initiator, u16 reason);
+-void ieee80211_sta_tear_down_BA_sessions(struct sta_info *sta);
++				    u16 initiator, u16 reason, bool stop);
++void ieee80211_sta_tear_down_BA_sessions(struct sta_info *sta, bool tx);
+ void ieee80211_process_delba(struct ieee80211_sub_if_data *sdata,
+ 			     struct sta_info *sta,
+ 			     struct ieee80211_mgmt *mgmt, size_t len);
+@@ -1187,9 +1187,11 @@ void ieee80211_process_addba_request(str
+ 				     size_t len);
+ 
+ int __ieee80211_stop_tx_ba_session(struct sta_info *sta, u16 tid,
+-				   enum ieee80211_back_parties initiator);
++				   enum ieee80211_back_parties initiator,
++				   bool tx);
+ int ___ieee80211_stop_tx_ba_session(struct sta_info *sta, u16 tid,
+-				    enum ieee80211_back_parties initiator);
++				    enum ieee80211_back_parties initiator,
++				    bool tx);
+ void ieee80211_start_tx_ba_cb(struct ieee80211_vif *vif, u8 *ra, u16 tid);
+ void ieee80211_stop_tx_ba_cb(struct ieee80211_vif *vif, u8 *ra, u8 tid);
+ void ieee80211_ba_session_work(struct work_struct *work);
+--- wireless-testing.orig/net/mac80211/mlme.c	2010-10-04 15:16:03.000000000 +0200
++++ wireless-testing/net/mac80211/mlme.c	2010-10-04 15:17:05.000000000 +0200
+@@ -921,7 +921,7 @@ static void ieee80211_set_associated(str
+ }
+ 
+ static void ieee80211_set_disassoc(struct ieee80211_sub_if_data *sdata,
+-				   bool remove_sta)
++				   bool remove_sta, bool tx)
+ {
+ 	struct ieee80211_if_managed *ifmgd = &sdata->u.mgd;
+ 	struct ieee80211_local *local = sdata->local;
+@@ -960,7 +960,7 @@ static void ieee80211_set_disassoc(struc
+ 	sta = sta_info_get(sdata, bssid);
+ 	if (sta) {
+ 		set_sta_flags(sta, WLAN_STA_BLOCK_BA);
+-		ieee80211_sta_tear_down_BA_sessions(sta);
++		ieee80211_sta_tear_down_BA_sessions(sta, tx);
+ 	}
+ 	mutex_unlock(&local->sta_mtx);
+ 
+@@ -1124,7 +1124,7 @@ static void __ieee80211_connection_loss(
+ 
+ 	printk(KERN_DEBUG "Connection to AP %pM lost.\n", bssid);
+ 
+-	ieee80211_set_disassoc(sdata, true);
++	ieee80211_set_disassoc(sdata, true, true);
+ 	mutex_unlock(&ifmgd->mtx);
+ 
+ 	mutex_lock(&local->mtx);
+@@ -1197,7 +1197,7 @@ ieee80211_rx_mgmt_deauth(struct ieee8021
+ 	printk(KERN_DEBUG "%s: deauthenticated from %pM (Reason: %u)\n",
+ 			sdata->name, bssid, reason_code);
+ 
+-	ieee80211_set_disassoc(sdata, true);
++	ieee80211_set_disassoc(sdata, true, false);
+ 	mutex_lock(&sdata->local->mtx);
+ 	ieee80211_recalc_idle(sdata->local);
+ 	mutex_unlock(&sdata->local->mtx);
+@@ -1229,7 +1229,7 @@ ieee80211_rx_mgmt_disassoc(struct ieee80
+ 	printk(KERN_DEBUG "%s: disassociated from %pM (Reason: %u)\n",
+ 			sdata->name, mgmt->sa, reason_code);
+ 
+-	ieee80211_set_disassoc(sdata, true);
++	ieee80211_set_disassoc(sdata, true, false);
+ 	mutex_lock(&sdata->local->mtx);
+ 	ieee80211_recalc_idle(sdata->local);
+ 	mutex_unlock(&sdata->local->mtx);
+@@ -1879,7 +1879,7 @@ void ieee80211_sta_work(struct ieee80211
+ 			printk(KERN_DEBUG "No probe response from AP %pM"
+ 				" after %dms, disconnecting.\n",
+ 				bssid, (1000 * IEEE80211_PROBE_WAIT)/HZ);
+-			ieee80211_set_disassoc(sdata, true);
++			ieee80211_set_disassoc(sdata, true, true);
+ 			mutex_unlock(&ifmgd->mtx);
+ 			mutex_lock(&local->mtx);
+ 			ieee80211_recalc_idle(local);
+@@ -2203,7 +2203,7 @@ int ieee80211_mgd_assoc(struct ieee80211
+ 		}
+ 
+ 		/* Trying to reassociate - clear previous association state */
+-		ieee80211_set_disassoc(sdata, true);
++		ieee80211_set_disassoc(sdata, true, false);
+ 	}
+ 	mutex_unlock(&ifmgd->mtx);
+ 
+@@ -2315,7 +2315,7 @@ int ieee80211_mgd_deauth(struct ieee8021
+ 
+ 	memcpy(bssid, req->bss->bssid, ETH_ALEN);
+ 	if (ifmgd->associated == req->bss) {
+-		ieee80211_set_disassoc(sdata, false);
++		ieee80211_set_disassoc(sdata, false, true);
+ 		mutex_unlock(&ifmgd->mtx);
+ 		assoc_bss = true;
+ 	} else {
+@@ -2398,7 +2398,7 @@ int ieee80211_mgd_disassoc(struct ieee80
+ 	       sdata->name, req->bss->bssid, req->reason_code);
+ 
+ 	memcpy(bssid, req->bss->bssid, ETH_ALEN);
+-	ieee80211_set_disassoc(sdata, false);
++	ieee80211_set_disassoc(sdata, false, true);
+ 
+ 	mutex_unlock(&ifmgd->mtx);
+ 
+--- wireless-testing.orig/net/mac80211/pm.c	2010-10-04 15:17:18.000000000 +0200
++++ wireless-testing/net/mac80211/pm.c	2010-10-04 15:17:37.000000000 +0200
+@@ -46,7 +46,7 @@ int __ieee80211_suspend(struct ieee80211
+ 	list_for_each_entry(sta, &local->sta_list, list) {
+ 		if (hw->flags & IEEE80211_HW_AMPDU_AGGREGATION) {
+ 			set_sta_flags(sta, WLAN_STA_BLOCK_BA);
+-			ieee80211_sta_tear_down_BA_sessions(sta);
++			ieee80211_sta_tear_down_BA_sessions(sta, true);
+ 		}
+ 
+ 		if (sta->uploaded) {
+--- wireless-testing.orig/net/mac80211/sta_info.c	2010-10-04 15:17:19.000000000 +0200
++++ wireless-testing/net/mac80211/sta_info.c	2010-10-04 15:17:42.000000000 +0200
+@@ -633,7 +633,7 @@ static int __must_check __sta_info_destr
+ 	 * will be sufficient.
+ 	 */
+ 	set_sta_flags(sta, WLAN_STA_BLOCK_BA);
+-	ieee80211_sta_tear_down_BA_sessions(sta);
++	ieee80211_sta_tear_down_BA_sessions(sta, true);
+ 
+ 	spin_lock_irqsave(&local->sta_lock, flags);
+ 	ret = sta_info_hash_del(local, sta);
+--- wireless-testing.orig/net/mac80211/sta_info.h	2010-10-04 15:21:03.000000000 +0200
++++ wireless-testing/net/mac80211/sta_info.h	2010-10-04 15:24:14.000000000 +0200
+@@ -79,6 +79,7 @@ enum ieee80211_sta_info_flags {
+  * @dialog_token: dialog token for aggregation session
+  * @state: session state (see above)
+  * @stop_initiator: initiator of a session stop
++ * @tx_stop: TX DelBA frame when stopping
+  *
+  * This structure is protected by RCU and the per-station
+  * spinlock. Assignments to the array holding it must hold
+@@ -95,6 +96,7 @@ struct tid_ampdu_tx {
+ 	unsigned long state;
+ 	u8 dialog_token;
+ 	u8 stop_initiator;
++	bool tx_stop;
+ };
+ 
+ /**
+--- wireless-testing.orig/net/mac80211/util.c	2010-10-04 15:17:18.000000000 +0200
++++ wireless-testing/net/mac80211/util.c	2010-10-04 15:17:32.000000000 +0200
+@@ -1221,7 +1221,7 @@ int ieee80211_reconfig(struct ieee80211_
+ 		mutex_lock(&local->sta_mtx);
+ 
+ 		list_for_each_entry(sta, &local->sta_list, list) {
+-			ieee80211_sta_tear_down_BA_sessions(sta);
++			ieee80211_sta_tear_down_BA_sessions(sta, true);
+ 			clear_sta_flags(sta, WLAN_STA_BLOCK_BA);
+ 		}
+ 
+--- wireless-testing.orig/net/mac80211/agg-rx.c	2010-10-04 15:18:07.000000000 +0200
++++ wireless-testing/net/mac80211/agg-rx.c	2010-10-04 15:24:39.000000000 +0200
+@@ -56,7 +56,7 @@ static void ieee80211_free_tid_rx(struct
+ }
+ 
+ void ___ieee80211_stop_rx_ba_session(struct sta_info *sta, u16 tid,
+-				     u16 initiator, u16 reason)
++				     u16 initiator, u16 reason, bool tx)
+ {
+ 	struct ieee80211_local *local = sta->local;
+ 	struct tid_ampdu_rx *tid_rx;
+@@ -81,7 +81,7 @@ void ___ieee80211_stop_rx_ba_session(str
+ 				"aggregation for tid %d\n", tid);
+ 
+ 	/* check if this is a self generated aggregation halt */
+-	if (initiator == WLAN_BACK_RECIPIENT)
++	if (initiator == WLAN_BACK_RECIPIENT && tx)
+ 		ieee80211_send_delba(sta->sdata, sta->sta.addr,
+ 				     tid, 0, reason);
+ 
+@@ -92,10 +92,10 @@ void ___ieee80211_stop_rx_ba_session(str
+ }
+ 
+ void __ieee80211_stop_rx_ba_session(struct sta_info *sta, u16 tid,
+-				    u16 initiator, u16 reason)
++				    u16 initiator, u16 reason, bool tx)
+ {
+ 	mutex_lock(&sta->ampdu_mlme.mtx);
+-	___ieee80211_stop_rx_ba_session(sta, tid, initiator, reason);
++	___ieee80211_stop_rx_ba_session(sta, tid, initiator, reason, tx);
+ 	mutex_unlock(&sta->ampdu_mlme.mtx);
+ }
+ 
+--- wireless-testing.orig/net/mac80211/iface.c	2010-10-04 15:24:46.000000000 +0200
++++ wireless-testing/net/mac80211/iface.c	2010-10-04 15:24:50.000000000 +0200
+@@ -793,7 +793,8 @@ static void ieee80211_iface_work(struct
+ 
+ 				__ieee80211_stop_rx_ba_session(
+ 					sta, tid, WLAN_BACK_RECIPIENT,
+-					WLAN_REASON_QSTA_REQUIRE_SETUP);
++					WLAN_REASON_QSTA_REQUIRE_SETUP,
++					true);
+ 			}
+ 			mutex_unlock(&local->sta_mtx);
+ 		} else switch (sdata->vif.type) {
+--- wireless-testing.orig/net/mac80211/debugfs_sta.c	2010-10-04 15:25:14.000000000 +0200
++++ wireless-testing/net/mac80211/debugfs_sta.c	2010-10-04 15:25:23.000000000 +0200
+@@ -196,7 +196,8 @@ static ssize_t sta_agg_status_write(stru
+ 		else
+ 			ret = ieee80211_stop_tx_ba_session(&sta->sta, tid);
+ 	} else {
+-		__ieee80211_stop_rx_ba_session(sta, tid, WLAN_BACK_RECIPIENT, 3);
++		__ieee80211_stop_rx_ba_session(sta, tid, WLAN_BACK_RECIPIENT,
++					       3, true);
+ 		ret = 0;
+ 	}
+ 
+
 
