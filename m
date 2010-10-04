@@ -1,54 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iw0-f174.google.com ([209.85.214.174]:63894 "EHLO
-	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755211Ab0JZUwt convert rfc822-to-8bit (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:54025 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751811Ab0JDRa3 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 26 Oct 2010 16:52:49 -0400
-MIME-Version: 1.0
-In-Reply-To: <20101026204043.GA2608@sig21.net>
-References: <20101025190358.AEC6840F97@repository3.orbit-lab.org>
- <20101026123552.GA4604@sig21.net> <AANLkTimzUKj=C9PxGs1PkQy_KWu0PGKd1zv_m-ZpWaEm@mail.gmail.com>
- <20101026184123.GA1616@sig21.net> <AANLkTimHpyJho6AheQc6zos7Pmr-ECjvaL83mYDC19Yd@mail.gmail.com>
- <AANLkTi=TPCXXki3jrrFA1HiauDp0rZVtMK9fK4z8B_kv@mail.gmail.com> <20101026204043.GA2608@sig21.net>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Tue, 26 Oct 2010 13:52:26 -0700
-Message-ID: <AANLkTi=f-mx1Sqv6+PB5rmitkNnsWaQazrDfV7UNCp34@mail.gmail.com>
-Subject: Re: Compat-wireless release for 2010-10-25 is baked
-To: Johannes Stezenbach <js@sig21.net>
-Cc: Ivo Van Doorn <ivdoorn@gmail.com>, linux-wireless@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+	Mon, 4 Oct 2010 13:30:29 -0400
+Subject: Re: [PATCH v2 0/3] mac80211: fix rate_control_send_low warnings
+ for delbas
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Cc: Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
+	"linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"stable@kernel.org" <stable@kernel.org>, Jouni Malinen <j@w1.fi>,
+	Paul Stewart <pstew@google.com>,
+	Amod Bodas <Amod.Bodas@Atheros.com>,
+	Vasanth Thiagarajan <Vasanth.Thiagarajan@Atheros.com>
+In-Reply-To: <20101004172504.GL2105@tux>
+References: <1285965233-11097-1-git-send-email-lrodriguez@atheros.com>
+	 <1286198845.3620.37.camel@jlt3.sipsolutions.net>
+	 <20101004164149.GE2105@tux>
+	 <1286210566.3620.42.camel@jlt3.sipsolutions.net>
+	 <20101004172504.GL2105@tux>
+Content-Type: text/plain; charset="UTF-8"
+Date: Mon, 04 Oct 2010 19:30:26 +0200
+Message-ID: <1286213426.3620.43.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Oct 26, 2010 at 1:40 PM, Johannes Stezenbach <js@sig21.net> wrote:
-> Hi,
->
-> On Tue, Oct 26, 2010 at 09:48:12PM +0200, Ivo Van Doorn wrote:
->> For rt2x00 development you can choose between rt2x00.git and
->> wireless-testing.git,
->> the trees are usually not that far apart, since smaller patches are pushed quite
->> quickly upstream. (Also rt2x00.git is rebased frequently, while
->> wireless-testing.git rarely
->> is rebased)
->
-> Thanks for clarification.  I guess I'll start with wireless-testing,
-> that sounds a bit more newbie-friendly.  I just want to avoid
-> searching or reporting bugs which are already fixed, but your description
-> sounds like changes are pushed from rt2x00.git to wireless-testing.git
-> maybe weekly.
+On Mon, 2010-10-04 at 10:25 -0700, Luis R. Rodriguez wrote:
+> On Mon, Oct 04, 2010 at 09:42:46AM -0700, Johannes Berg wrote:
+> > On Mon, 2010-10-04 at 09:41 -0700, Luis R. Rodriguez wrote:
+> > > On Mon, Oct 04, 2010 at 06:27:25AM -0700, Johannes Berg wrote:
+> > > > How about this instead of your patches 2 and 3?
+> > > > 
+> > > > We're disassociating from the old AP since we associate with the new AP,
+> > > > so there's not a whole lot of sense in explicitly tearing down
+> > > > aggregation sessions either, right?
+> > > 
+> > > Good question, but why do we not get a warning when transmitting
+> > > the disassoc frame?
+> > 
+> > We aren't transmitting a disassoc frame!
+> 
+> OK, then the question is if we should even at least do that...
 
-Remember, wireless-testing gets stuff from wireless-next.git sucked in
-after wireless-2.6.git bits are pulled in, so really its
-wireless-next.git --> linux-next.git as the daily compat-wireless is
-based on linux-next.git. The wireless-testing.git tree just lets you
-use a stabe RC kernel with the next kernels' 802.11 bits sucked in. So
-you will get your patches merged daily on a good
-John-Linville-and-Stephen-Rothwell-ate-his-wheaties-day :)
+No, why should we? We're sending a re-assoc frame to the new AP.
 
-> I was afraid patches would be pushed to wireless-testing.git
-> only when it's time to get ready for the next merge window.
+johannes
 
-Hell no!
-
-  Luis
