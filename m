@@ -1,42 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog113.obsmtp.com ([74.125.149.209]:39817 "HELO
-	na3sys009aog113.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1752659Ab0JAXCF (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 1 Oct 2010 19:02:05 -0400
-From: Anand Gadiyar <gadiyar@ti.com>
-References: <1285965236-17907-1-git-send-email-gadiyar@ti.com> <AANLkTi=+dtqdZLb8rfu8NZRU5GceUL5+S3B=MeW1xF=M@mail.gmail.com>
+Received: from nbd.name ([88.198.39.176]:59127 "EHLO ds10.nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755227Ab0JDLgt (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 4 Oct 2010 07:36:49 -0400
+Message-ID: <4CA9BC4B.4010503@openwrt.org>
+Date: Mon, 04 Oct 2010 13:36:43 +0200
+From: Felix Fietkau <nbd@openwrt.org>
 MIME-Version: 1.0
-In-Reply-To: <AANLkTi=+dtqdZLb8rfu8NZRU5GceUL5+S3B=MeW1xF=M@mail.gmail.com>
-Date: Sat, 2 Oct 2010 04:32:04 +0530
-Message-ID: <cf2c8b9dc6762d53dcaf522d874cb37b@mail.gmail.com>
-Subject: RE: [PATCH] omap: zoom2: fix build break when CONFIG_WL12XX_PLATFORM_DATA=n
-To: Ohad Ben-Cohen <ohad@wizery.com>
-Cc: linux-omap@vger.kernel.org, linux-wireless@vger.kernel.org,
-	Tony Lindgren <tony@atomide.com>
+To: Vasanthakumar Thiagarajan <vasanth@atheros.com>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
+	"linville@tuxdriver.com" <linville@tuxdriver.com>
+Subject: Re: [PATCH 2/4] ath9k_hw: merge codepaths that access the cycle	counter
+ registers
+References: <1286125639-15137-1-git-send-email-nbd@openwrt.org> <1286125639-15137-2-git-send-email-nbd@openwrt.org> <20101004063446.GA16078@vasanth-laptop>
+In-Reply-To: <20101004063446.GA16078@vasanth-laptop>
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Ohad Ben-Cohen wrote:
-> On Fri, Oct 1, 2010 at 10:33 PM, Anand Gadiyar <gadiyar@ti.com> wrote:
-> > Fix this build break when CONFIG_WL12XX_PLATFORM_DATA is not set.
->
-> A similar fix was already submitted and is pending to be merged
-> (http://permalink.gmane.org/gmane.linux.kernel.wireless.general/56595)
->
-> > There are still many warnings about the function
-wl12xx_set_platform_data
-> > being unused. Haven't fixed those. Ohad, care to take a look?
->
-> Sure. Which warnings do you refer to (I haven't seen any) ?
->
+On 2010-10-04 8:34 AM, Vasanthakumar Thiagarajan wrote:
+>> +	/* freeze counters */
+>> +	REG_WRITE(ah, AR_MIBC, AR_MIBC_FMC);
+>> +
+>> +	ah->cc.cycles = REG_READ(ah, AR_CCCNT);
+>> +	if (ah->cc.cycles < cc.cycles) {
+>> +		clear = true;
+>> +		goto skip;
+>>  	}
+>>  
+>> -	cycles = cc;
+>> -	rx_frame = rf;
+>> -	rx_clear = rc;
+>> -	tx_frame = tf;
+>> +	ah->cc.rx_clear = REG_READ(ah, AR_RCCNT);
+>> +	ah->cc.rx_frame = REG_READ(ah, AR_RFCNT);
+>> +	ah->cc.tx_frame = REG_READ(ah, AR_TFCNT);
+>> +
+>> +	/* prevent wraparound */
+>> +	if (ah->cc.cycles & BIT(31))
+>> +		clear = true;
+> 
+> This does not look right, previous if should take care of 
+> any wrap around.
+This is not for correcting an existing wraparound. This is for making
+sure that a wraparound never occurs.
 
-I picked up your patch and the warnings are gone. The key difference
-was I missed marking the alternative function as an inline.
+>> +
+>> +#define CC_DELTA(_field, _reg) ah->cc_delta._field += ah->cc._field - cc._field
+> _reg is not used.
+> 
+>> 
+>> +skip:
+>> +	if (clear) {
+>> +		REG_WRITE(ah, AR_CCCNT, 0);
+>> +		REG_WRITE(ah, AR_RFCNT, 0);
+>> +		REG_WRITE(ah, AR_RCCNT, 0);
+>> +		REG_WRITE(ah, AR_TFCNT, 0);
+> 
+> should be able to do with single write in AR_MIBC.
+No, the clear bit in AR_MIBC does not clear these counters. I tested that.
 
-Without that, I was seeing warnings like these:
-include/linux/wl12xx.h:42: warning: 'wl12xx_set_platform_data' defined but
-not used
+>> +	/* unfreeze counters */
+>> +	REG_WRITE(ah, AR_MIBC, 0);
+> 
+> Please configure the relevant bit to unfreeze the counters.
+What do you mean?
 
-- Anand
+- Felix
