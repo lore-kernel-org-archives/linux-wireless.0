@@ -1,67 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:51016 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756963Ab0JHQsx (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 8 Oct 2010 12:48:53 -0400
-Message-ID: <4CAF4B70.9050001@candelatech.com>
-Date: Fri, 08 Oct 2010 09:48:48 -0700
-From: Ben Greear <greearb@candelatech.com>
+Received: from mail.atheros.com ([12.19.149.2]:35814 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753316Ab0JDIul (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 4 Oct 2010 04:50:41 -0400
+Received: from mail.atheros.com ([10.10.20.105])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Mon, 04 Oct 2010 01:50:32 -0700
+Date: Mon, 4 Oct 2010 14:26:18 +0530
+From: Rajkumar Manoharan <rmanoharan@atheros.com>
+To: Felix Fietkau <nbd@openwrt.org>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
+	"linville@tuxdriver.com" <linville@tuxdriver.com>
+Subject: Re: [PATCH 3/4] ath9k_hw: clean up register write buffering
+Message-ID: <20101004085608.GA5931@vmraj-lnx.users.atheros.com>
+References: <1286125639-15137-1-git-send-email-nbd@openwrt.org>
+ <1286125639-15137-2-git-send-email-nbd@openwrt.org>
+ <1286125639-15137-3-git-send-email-nbd@openwrt.org>
 MIME-Version: 1.0
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-CC: At Santos <atsan@hotmail.co.uk>,
-	ath9k <ath9k-devel@venema.h4ckr.net>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: [ath9k-devel] trying to set tx power (using txpower option)
-References: <SNT111-W333C4BA6050D535151071FFB690@phx.gbl> <SNT111-W2989DC6A52022428756E6FB500@phx.gbl> <20101008111221.5425.qmail@stuge.se> <AANLkTimAfH8ChkjwFB7e2kMbJyxaZQZMSxTcThva=jgN@mail.gmail.com> <SNT111-W21A1F92DC5DADE5968C8CCFB500@phx.gbl> <AANLkTikc9+bULkH2Fv7mEtBjbjatMW8XOXjXZVuA81hD@mail.gmail.com>
-In-Reply-To: <AANLkTikc9+bULkH2Fv7mEtBjbjatMW8XOXjXZVuA81hD@mail.gmail.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <1286125639-15137-3-git-send-email-nbd@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 10/08/2010 09:45 AM, Luis R. Rodriguez wrote:
-> On Fri, Oct 8, 2010 at 9:23 AM, At Santos<atsan@hotmail.co.uk>  wrote:
->>
->>
->>> Actually, you can set tx power with iw now:
->>>
->>> http://wireless.kernel.org/en/users/Documentation/iw#Setting_TX_power
->>>
->>> I will note you will need 2.6.36, or compat-wireless-2.6.36, otherwise
->>> you have to use iwconfig, setting txpower with nl80211 was only added
->>> as of 2.6.36.
->>>
->>> Luis
->>
->> Thanks for the response.
->>
->> I'm running with compat-wireless-2.6.36-rc3-1 and I'm finding that iw
->> doesn't work with fixed or limit:
->>
->> $ sudo iw wlan0 set txpower fixed 20
->> command failed: Operation not supported (-95)
->>
->> So it seems it's broken at the moment.
->> To where should I report the bug?
->
-> You can use bugzilla.kernel.org please report it there and we can fix
-> it. I can't look into right now though as I'm looking into another
-> issue. If someone else has cycles it would be appreciated.
+On Sun, Oct 03, 2010 at 10:37:18PM +0530, Felix Fietkau wrote:
+>  static void ath9k_regwrite_flush(void *hw_priv)
+>  {
+>         struct ath_hw *ah = (struct ath_hw *) hw_priv;
+> @@ -397,6 +388,9 @@ static void ath9k_regwrite_flush(void *hw_priv)
+>         u32 rsp_status;
+>         int r;
+> 
+> +       if (!atomic_dec_and_test(&priv->wmi->mwrite_cnt))
+> +               return;
+> +
+FMU, Assume that mwrite_cnt > 1 and a reg_read happens after a flush whose value
+depends on issued reg_write, the above check skips reg_write.
+The buffered commands only issued either mwrite_cnt reaches zero or 
+buffer reaches MAX limit.
 
-I might be able to work on this, in wireless-testing tree at least.
-
-Thanks,
-Ben
-
->
->    Luis
+> 
 > --
 > To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
 > the body of a message to majordomo@vger.kernel.org
 > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-
-
--- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
-
