@@ -1,47 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f46.google.com ([209.85.215.46]:34282 "EHLO
-	mail-ew0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755497Ab0JOOvR (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 15 Oct 2010 10:51:17 -0400
-Received: by ewy20 with SMTP id 20so974970ewy.19
-        for <linux-wireless@vger.kernel.org>; Fri, 15 Oct 2010 07:51:16 -0700 (PDT)
-Message-ID: <4CB86AD5.90205@lwfinger.net>
-Date: Fri, 15 Oct 2010 09:53:09 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
+Received: from isilmar-3.linta.de ([188.40.101.200]:44593 "EHLO linta.de"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1756879Ab0JDSpA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 4 Oct 2010 14:45:00 -0400
+Date: Mon, 4 Oct 2010 20:44:58 +0200
+From: Dominik Brodowski <linux@dominikbrodowski.net>
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Cc: "Rafael J. Wysocki" <rjw@sisk.pl>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	linux-bluetooth <linux-bluetooth@vger.kernel.org>,
+	justinmattock@gmail.com, Bob Copeland <me@bobcopeland.com>,
+	Pavel Machek <pavel@ucw.cz>
+Subject: Re: 2.6.36-rc6-git2: Reported regressions from 2.6.35
+Message-ID: <20101004184458.GA18119@isilmar-3.linta.de>
+References: <-jYMINoCtaK.A.F5.8CPqMB@chimera> <AANLkTimUdaUkpXmNt5mPkCdWmHvBbXWA6smAP4U80yc4@mail.gmail.com>
 MIME-Version: 1.0
-To: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-CC: =?UTF-8?B?R8OhYm9yIFN0ZWZhbmlr?= <netrolller.3d@gmail.com>,
-	linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>,
-	b43-dev@lists.infradead.org
-Subject: Re: [PATCH 1/3] b43: N-PHY: define channel table struct for rev3+
- devices
-References: <1287090064-14607-1-git-send-email-zajec5@gmail.com>	<AANLkTimnzeRa53g0i2ZkB4Qy_x_P3h4Z+ZwC2HdJPxFC@mail.gmail.com>	<AANLkTinnOm5rg8FKxFct1zKHZZi7k9nxEKtBYkLFktSS@mail.gmail.com>	<AANLkTim==y20jOa6SpvZogZ+0inFGvmpnN-nTKFZp2Xz@mail.gmail.com> <AANLkTimvMCRVLzNjM+vsVEyHHAV0fLF4ABeV_20CdOCa@mail.gmail.com>
-In-Reply-To: <AANLkTimvMCRVLzNjM+vsVEyHHAV0fLF4ABeV_20CdOCa@mail.gmail.com>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=iso-8859-1
+In-Reply-To: <AANLkTimUdaUkpXmNt5mPkCdWmHvBbXWA6smAP4U80yc4@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 10/15/2010 09:27 AM, RafaÅ‚ MiÅ‚ecki wrote:
-> 
-> There is "Chapter 12: Macros, Enums and RTL" in:
-> http://www.kernel.org/doc/Documentation/CodingStyle
-> 
-> Some quotes:
-> 1) "Macros with multiple statements should be enclosed in a do - while block:"
-> 2) "macros defining constants using expressions must enclose the
-> expression in parentheses"
-> 
-> Second one may sound like sth close, but it's just about expressions like:
-> #define CONSTEXP (CONSTANT | 3)
-> 
-> So there doesn't seem to be any "rule" in CodingStyle wanting us to
-> add parentheses when you suggested.
+Hey,
 
-I think that scripts/checkpatch would report any definitions that need parentheses.
+On Mon, Oct 04, 2010 at 11:35:25AM -0700, Luis R. Rodriguez wrote:
+> > Bug-Entry       : http://bugzilla.kernel.org/show_bug.cgi?id=17061
+> > Subject         : 2.6.36-rc1 on zaurus: bluetooth regression
+> > Submitter       : Pavel Machek <pavel@ucw.cz>
+> > Date            : 2010-08-21 15:24 (44 days old)
+> > Message-ID      : <20100821152445.GA1536@ucw.cz>
+> > References      : http://marc.info/?l=linux-kernel&m=128240433828087&w=2
+> 
+> I see no updates to this since August. There are boat load of PCMCIA
+> changes recently, is bisect possible here?
 
-As you have probably figured out, I'm back home. If you have spec questions ;),
-I'm ready.
+Pavel already verified the PCMCIA-bigdiff since 2.6.35 does work, so it is
+_not_ a PCMCIA issue.
 
-Larry
+http://www.mail-archive.com/linux-pcmcia@lists.infradead.org/msg03460.html
+
+Best,
+	Dominik
