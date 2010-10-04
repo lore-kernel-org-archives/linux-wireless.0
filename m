@@ -1,42 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from hiems2.ing.unibs.it ([192.167.23.204]:59830 "EHLO
-	hiems2.ing.unibs.it" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753378Ab0JHQbq convert rfc822-to-8bit (ORCPT
+Received: from mx51.mymxserver.com ([188.94.250.25]:61102 "EHLO
+	mx51.mymxserver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752186Ab0JDHGQ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 8 Oct 2010 12:31:46 -0400
-From: Francesco Gringoli <francesco.gringoli@ing.unibs.it>
-Content-Type: text/plain; charset=us-ascii
-Date: Fri, 8 Oct 2010 18:31:42 +0200
-Subject: Questions on carl9170 architecture
-To: linux-wireless <linux-wireless@vger.kernel.org>,
-	Christian Lamparter <chunkeey@googlemail.com>
-Message-Id: <3E9EF80F-15AF-4B40-AA26-C97A1E01D897@ing.unibs.it>
-Mime-Version: 1.0 (Apple Message framework v1081)
+	Mon, 4 Oct 2010 03:06:16 -0400
+From: Holger Schurig <holgerschurig@gmail.com>
+To: Jochen Friedrich <jochen@scram.de>, linux-wireless@vger.kernel.org
+Subject: Re: [Patch] iw: Implement set 4addr.
+Date: Mon, 4 Oct 2010 09:15:58 +0200
+References: <1286041239-19169-1-git-send-email-jochen@scram.de>
+In-Reply-To: <1286041239-19169-1-git-send-email-jochen@scram.de>
+MIME-Version: 1.0
+Content-Type: Text/Plain;
+  charset="us-ascii"
+Message-Id: <201010040915.58549.holgerschurig@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello Christian,
+> +	"Set interface 4addr (WDS) mode.\n");
 
-I have tried carl9170 for a while, everything is ok: what a great work! I have not noticed any problem so far, it seems almost stable.
+Hi Jochen !
 
-I'm digging into carl9170 source code to understand how it works and what one can build starting from it. There are however a few points that I didn't understand, would you mind helping me?
+Do you know if this feature can also be used to operate an Ethernet-Bridge on 
+on a WLAN client?
 
-- how are handled acknowledgments? I don't see anything that schedules ack transmission when a packet that need ack is received. Is that accomplished internally by the hw? If yes, do you know if it can be disabled and replaced with new code so that it is the firmware to control ack transmission? For instance, a number of techniques have been recently proposed to estimate the channel condition when receiving corrupted frames: it could be interesting to send back a "special-ack" when a packet is received corrupted to help the transmitter understanding how to best retransmit the packet. Obviously this should be done within a SIFS from the reception of the packet;
+I'd like to get something like this going, with eth0|wlan0 as a bridge, so 
+that any protocol/port on the "DEVICE" is reachable from the network:
 
-- to which precision is it possible to drive packet transmission? e.g., is it possible to start sending a packet a chosen interval after the previous?
++--------+   +------------+   +----+   +---------+
+| DEVICE +---+ eth0|wlan0 +---+ AP +---+ network |
++--------+   +------------+   +----+   +---------+
+               Linux 2.6.x       
+               w/ mac80211
 
-- is it possible to send packet independently of CCA, e.g., starting sending a packet even if the channel is busy?
-
-- is it possible to build a packet internally and decide to send it independently of the host?
-
-- is it possible to modify packets sent by the host before they leave the adapter?
-
-Sorry to bother you with so many questions.
-
-Kind regards,
--Francesco Gringoli
-
-
-Informativa sulla privacy: http://help.ing.unibs.it/privacy.php
-
-
+-- 
+Homepage: http://www.holgerschurig.de
