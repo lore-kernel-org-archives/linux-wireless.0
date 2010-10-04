@@ -1,50 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qw0-f46.google.com ([209.85.216.46]:53247 "EHLO
-	mail-qw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754697Ab0JTWLY convert rfc822-to-8bit (ORCPT
+Received: from mail-bw0-f46.google.com ([209.85.214.46]:45790 "EHLO
+	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755031Ab0JDSA4 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 20 Oct 2010 18:11:24 -0400
-Received: by qwa26 with SMTP id 26so2834705qwa.19
-        for <linux-wireless@vger.kernel.org>; Wed, 20 Oct 2010 15:11:23 -0700 (PDT)
+	Mon, 4 Oct 2010 14:00:56 -0400
+Received: by bwz11 with SMTP id 11so3820925bwz.19
+        for <linux-wireless@vger.kernel.org>; Mon, 04 Oct 2010 11:00:55 -0700 (PDT)
+From: Christian Lamparter <chunkeey@googlemail.com>
+To: Ben Greear <greearb@candelatech.com>
+Subject: Re: lockdep warning in ieee80211 rx path
+Date: Mon, 4 Oct 2010 20:00:44 +0200
+Cc: Ming Lei <tom.leiming@gmail.com>, linux-wireless@vger.kernel.org
+References: <AANLkTin5KfmQLYxLWdhTcO-AM0t83dVq=LFCG0UGysaw@mail.gmail.com> <201009142251.53021.chunkeey@googlemail.com> <4CAA144C.7040906@candelatech.com>
+In-Reply-To: <4CAA144C.7040906@candelatech.com>
 MIME-Version: 1.0
-In-Reply-To: <4CBF640C.4080405@broadcom.com>
-References: <AANLkTik45KLdLf5UpjPtXTNgy4Df_BupyQ3SzRr6gZgC@mail.gmail.com>
-	<AANLkTin_JcEyT21dTS=Ew868HJvZQ2FVZBGXjCZn=8O_@mail.gmail.com>
-	<4CBF640C.4080405@broadcom.com>
-Date: Thu, 21 Oct 2010 00:11:23 +0200
-Message-ID: <AANLkTinfwhjvfJU6C97SPJ8YKRqyJaCoQnAcC_uKLZa=@mail.gmail.com>
-Subject: Re: Request for free-distributable Broadcom's (G|LP)-PHY firmware
-From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-To: Henry Ptasinski <henryp@broadcom.com>
-Cc: Brett Rudley <brudley@broadcom.com>,
-	Nohee Ko <noheek@broadcom.com>,
-	Greg Kroah-Hartman <gregkh@suse.de>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	b43-dev <b43-dev@lists.infradead.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Message-Id: <201010042000.44518.chunkeey@googlemail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-W dniu 20 października 2010 23:50 użytkownik Henry Ptasinski
-<henryp@broadcom.com> napisał:
-> Sorry for the delay in responding.  We are exploring what is possible but
-> for the moment the answer is no. At present our focus is on providing the
-> best open source solution we can for 4313, 43224, 43225, 4329 and future
-> chips sets.
+On Monday 04 October 2010 19:52:12 Ben Greear wrote:
+> On 09/14/2010 01:51 PM, Christian Lamparter wrote:
+> > On Sunday 05 September 2010 11:32:26 Ming Lei wrote:
+> >> Seems the warning does not affect use of wireless,  false positive?
+> >
+> > No, it's a bug... but please read&  test the attached patch.
+> 
+> This is not yet in wireless-testing.  Should it be?
+have you heard anything from Ming Lei about this subject?
+Or have you reproduced the bug too?
 
-Thanks for answer.
+> > ---
+> > [PATCH] mac80211: hoist sta->lock from reorder release timer
+> >
+> > The patch "mac80211: AMPDU rx reorder timeout timer" clashes
+> > with "mac80211: use netif_receive_skb in ieee80211_rx callpath"
+> >
+> > The timer itself is part of the station's private struct and
+> > it gets killed whenever the station is removed. Therefore
+> > the extra sta->lock protection (that can interferes with the
+> > tx path) is not necessary.
+> >
+> > Reported-by: Ming Lei<tom.leiming@gmail.com>
+> > Signed-off-by: Christian Lamparter<chunkeey@googlemail.com>
+> > ---
+> > diff --git a/net/mac80211/agg-rx.c b/net/mac80211/agg-rx.c
+> > index 58eab9e..309ed70 100644
+> > --- a/net/mac80211/agg-rx.c
+> > +++ b/net/mac80211/agg-rx.c
+> > @@ -129,9 +129,7 @@ static void sta_rx_agg_reorder_timer_expired(unsigned long data)
+> >   			timer_to_tid[0]);
+> >
+> >   	rcu_read_lock();
+> > -	spin_lock(&sta->lock);
+> >   	ieee80211_release_reorder_timeout(sta, *ptid);
+> > -	spin_unlock(&sta->lock);
+> >   	rcu_read_unlock();
+> >   }
+> >
+> > --
 
-Please, can you make totally sure person responsible for this gets it
-totally right? I believe it's very important.
-
-The easiest step for you, which we still would appreciate is really
-trivial one. It's *not* about writing any code, *not* about releasing
-anything new. It's just about releasing in under friendly license.
-This firmware is already available, we have access to it, we use it.
-The problem is that distributions can not ship it.
-
-If you let me use simplification: all we need as first nice step is
-Broadcom to say: "You can use it".
-
--- 
-Rafał
