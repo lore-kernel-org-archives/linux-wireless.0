@@ -1,108 +1,81 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:53552 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751181Ab0JGSj5 (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:34460 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756876Ab0JDSpB (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 7 Oct 2010 14:39:57 -0400
-Message-ID: <4CAE13F6.2010003@candelatech.com>
-Date: Thu, 07 Oct 2010 11:39:50 -0700
-From: Ben Greear <greearb@candelatech.com>
-MIME-Version: 1.0
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-CC: Johannes Berg <johannes@sipsolutions.net>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: memory clobber in rx path, maybe related to ath9k.
-References: <4CAB59B2.5050106@candelatech.com> <AANLkTikhGCTS8kJgpDzjudyBTk-rkyXY33UO7kB0+Cc-@mail.gmail.com> <4CAB5F3D.9060201@candelatech.com> <AANLkTimV3GrwU+9PPtirT4sCzveLY2egr3PRQhfDBET1@mail.gmail.com> <4CAB627F.8020804@candelatech.com> <AANLkTi=sT5QJe4V8gFGjF-nzx0uJAMLG_XG2715qrEEd@mail.gmail.com> <4CAB64AD.4080105@candelatech.com> <AANLkTi=3dHbB5tmQDp3Ba54-DqQydVCkNdFo1vKbfaGY@mail.gmail.com> <4CAB6B08.4050801@candelatech.com> <4CAE0474.4090605@candelatech.com> <1286475250.20974.22.camel@jlt3.sipsolutions.net> <AANLkTinbRSnPVgbBxvVpMdnP+K--bye=Q-miHf4X44kz@mail.gmail.com>
-In-Reply-To: <AANLkTinbRSnPVgbBxvVpMdnP+K--bye=Q-miHf4X44kz@mail.gmail.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+	Mon, 4 Oct 2010 14:45:01 -0400
+Subject: Re: [PATCH v2 2/3] mac80211: wait until completely disassociated
+ before new association
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Cc: Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
+	"linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"stable@kernel.org" <stable@kernel.org>, Jouni Malinen <j@w1.fi>,
+	Paul Stewart <pstew@google.com>,
+	Amod Bodas <Amod.Bodas@Atheros.com>,
+	Vasanth Thiagarajan <Vasanth.Thiagarajan@Atheros.com>
+In-Reply-To: <20101004180458.GP2105@tux>
+References: <1285965233-11097-1-git-send-email-lrodriguez@atheros.com>
+	 <1285965233-11097-3-git-send-email-lrodriguez@atheros.com>
+	 <1286198080.3620.34.camel@jlt3.sipsolutions.net>
+	 <20101004163605.GC2105@tux>
+	 <1286210392.3620.40.camel@jlt3.sipsolutions.net>
+	 <20101004180458.GP2105@tux>
+Content-Type: text/plain; charset="UTF-8"
+Date: Mon, 04 Oct 2010 20:44:58 +0200
+Message-ID: <1286217898.3620.54.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 10/07/2010 11:29 AM, Luis R. Rodriguez wrote:
-> On Thu, Oct 7, 2010 at 11:14 AM, Johannes Berg
-> <johannes@sipsolutions.net>  wrote:
->> On Thu, 2010-10-07 at 10:33 -0700, Ben Greear wrote:
->>> In case it helps, here is a dump of where the corrupted SKB was deleted.
->>
->> I wonder, do you have a machine with a decent IOMMU? Adding IOMMU
->> debugging into the mix could help you figure out if it's a DMA problem.
->
-> Ben, how much traffic are you RX'ing on these virtual interfaces?
+On Mon, 2010-10-04 at 11:04 -0700, Luis R. Rodriguez wrote:
+> On Mon, Oct 04, 2010 at 09:39:52AM -0700, Johannes Berg wrote:
+> > On Mon, 2010-10-04 at 09:36 -0700, Luis R. Rodriguez wrote:
+> > 
+> > > > > +wait:
+> > > > >  	wk->timeout = jiffies + IEEE80211_ASSOC_TIMEOUT;
+> > > > >  	run_again(local, wk->timeout);
+> > > > 
+> > > > But you'll be staying off-channel for the wait period, so what does this
+> > > > really help?
+> > > 
+> > > I totally missed this what locks us offchannel here, I though we just re-arm
+> > > the timer, and come back offchannel at a later time. What is it that locks
+> > > us offchannel until the timer runs again?
+> > 
+> > I believe we stay off-channel as long as the work item is active, after
+> > it has been activated, no?
+> 
+> Well I don't see that, the problem here was the assumption that within a work
+> item we can try to transmit a frame for our home channel without changing it.
 
-I disabled my user-space application, and this script alone can reproduce
-the problem fairly quickly on my system.  You will need to change some
-of those first variables.  Just start it and wait a few minutes and
-watch the splats show on the console :)
+Yes, that's true, but we do try to stop most things ... we just miss
+some :-)
 
-Note that I am not generating any traffic, but the wpa_supplicants are
-doing their thing of course...
+> If that is desired we must move back to the home channel as I did, but I can
+> see how we'd need more work than what I did, we'd need to start the queues,
+> get out of PS state with the AP and then TX... unless TX already handles
+> that for us.
 
-I'm using the kernel found here:
-http://dmz2.candelatech.com/git/gitweb.cgi?p=linux.wireless-testing.ct/.git;a=summary
+We don't need to go out of PS state to just TX, but we'd need to be
+careful to TX with asleep bit. That said, we don't TX data frames then.
 
-It's latest wireless-testing with some of my own patches, and some
-I've gathered from here an there.  I doubt I'm causing this problem,
-but if you can't reproduce it with this script on your kernels,
-I can try with base wireless-testing or whatever you are using.
+> ieee80211_work_work() just iterates over all work items, and then bails out.
+> The work loop is protected against local->mtx, and if we call work_work
+> when we either add new work, purge work, or hit a timer. We *try* to prevent
+> frames from being sent on the home channel by calling
+> ieee80211_offchannel_stop_station() but notice how we only stop the queues
+> for NL80211_IFTYPE_STATION interfaces.
 
+No, we just stop the station ones differently from all the others.
 
-#!/usr/bin/perl
+> Also this seems buggy, we do not take into consideration how much offchannel
+> work we are doing in consideration against the current AP's DTIM interval as
+> we do when going offchannel for scan work. We should merge that code for
+> this offchannel work_work loop.
 
-use strict;
+True, we don't do _any_ timing here.
 
-my $iw = "./local/sbin/iw";
-my $ip = "./local/sbin/ip";
-my $wpa_s = "./local/bin/wpa_supplicant";
-my $ssid = "candela-n";
-my $key = "wpadmz123";
-
-my $phy = "phy0";
-my $max = 32;
-my $i;
-my $bmac = "00:01:02:03:04:";
-my $cmd;
-
-# Create stations
-for ($i = 0; $i<$max; $i++) {
-   runCmd("$iw phy $phy interface add sta$i type station");
-   my $mc5 = "$i";
-   if (length($mc5) == 1) {
-     $mc5 = "0$mc5"; # pad mac octet
-   }
-   my $mac = "$bmac$mc5";
-   runCmd("$ip link set sta$i address $mac");
-
-   runCmd("$iw dev sta$i set power_save off");
-}
-
-# Bring them up with WPA
-for ($i = 0; $i<$max; $i++) {
-   open(FD, ">sta$i" . "_wpa.conf") || die("Couldn't open file: $!\n");
-   print FD "
-ctrl_interface=/var/run/wpa_supplicant
-fast_reauth=1
-#can_scan_one=1
-network={
-     ssid=\"$ssid\"
-     proto=WPA
-     key_mgmt=WPA-PSK
-     psk=\"$key\"
-     pairwise=TKIP CCMP
-     group=TKIP CCMP
-}
-";
-   runCmd("$wpa_s -B -i sta$i -c sta$i" . "_wpa.conf -P sta$i" . "_wpa.pid -t -f sta$i" . "_wpa.log");
-}
-
-
-sub runCmd {
-   my $cmd = shift;
-   print "$cmd\n";
-   `$cmd`;
-}
-
-
--- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+johannes
 
