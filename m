@@ -1,56 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail30t.wh2.ocn.ne.jp ([125.206.180.136]:22052 "HELO
-	mail30t.wh2.ocn.ne.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S932799Ab0JEJ7O (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:32935 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753782Ab0JDN2z (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 5 Oct 2010 05:59:14 -0400
-Received: from vs3017.wh2.ocn.ne.jp (125.206.180.250)
-	by mail30t.wh2.ocn.ne.jp (RS ver 1.0.95vs) with SMTP id 1-0710102753
-	for <linux-wireless@vger.kernel.org>; Tue,  5 Oct 2010 18:59:13 +0900 (JST)
-From: Bruno Randolf <br1@einfach.org>
-To: Felix Fietkau <nbd@openwrt.org>
-Subject: Re: [PATCH 2/4] ath9k_hw: merge codepaths that access the
- =?iso-8859-1?q?cycle=09counter?= registers
-Date: Tue, 5 Oct 2010 18:59:14 +0900
-Cc: Vasanthakumar Thiagarajan <vasanth@atheros.com>,
-	Vasanth Thiagarajan <Vasanth.Thiagarajan@atheros.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Luis Rodriguez <Luis.Rodriguez@atheros.com>,
-	"linville@tuxdriver.com" <linville@tuxdriver.com>
-References: <1286125639-15137-1-git-send-email-nbd@openwrt.org> <20101004122432.GA25423@vasanth-laptop> <4CA9CDDC.4000302@openwrt.org>
-In-Reply-To: <4CA9CDDC.4000302@openwrt.org>
-MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Message-Id: <201010051859.14594.br1@einfach.org>
+	Mon, 4 Oct 2010 09:28:55 -0400
+Subject: Re: [Patch] iw: Implement set 4addr.
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Holger Schurig <holgerschurig@gmail.com>
+Cc: Jochen Friedrich <jochen@scram.de>, linux-wireless@vger.kernel.org
+In-Reply-To: <201010041502.14459.holgerschurig@gmail.com>
+References: <1286041239-19169-1-git-send-email-jochen@scram.de>
+	 <201010040915.58549.holgerschurig@gmail.com> <4CA997A3.7080409@scram.de>
+	 <201010041502.14459.holgerschurig@gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Mon, 04 Oct 2010 15:28:51 +0200
+Message-ID: <1286198931.3620.38.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon October 4 2010 21:51:40 Felix Fietkau wrote:
-> On 2010-10-04 2:24 PM, Vasanthakumar Thiagarajan wrote:
-> >> >> +	/* unfreeze counters */
-> >> >> +	REG_WRITE(ah, AR_MIBC, 0);
-> >> > 
-> >> > Please configure the relevant bit to unfreeze the counters.
-> >> 
-> >> What do you mean?
-> > 
-> > AR_MIBC does more than just freeze/unfreeze the counters, though I
-> > dont see any issues with setting the whole register to zero, it
-> > looks buggy. Please configure only the relevant bit to
-> > freeze/unfreeze the counters.
+On Mon, 2010-10-04 at 15:02 +0200, Holger Schurig wrote:
+> > Yes, that's the idea behind this. I'm using an OpenWRT based WLAN router 
+> > and a Debian client with the configuration below.
 > 
-> Other places in the code set it to zero as well, though sometimes
-> written in a weird way. I also checked the specs, there is no bit that's
-> supposed to be active at this point.
+> Oh, I don't have much success so far.
+> 
+> My setup is like this:
+> 
+>    Linux 2.6.35.4
+>    compat-wireless-2010-10-02, using
+>       ath5k from this
+>    iw from git with your patch
 
-hi!
+What's your AP? You need to enable the 4addr mode on the AP as well.
 
-i just sent a patch series, which moves that function to common, to be shared 
-between ath5k and ath9k. i implemented it in a rather simple way, i admit, but 
-it hope that it is sufficient anyways. the patch series should also include 
-what is left from this patch. could you please check and let me know what you 
-think? 
+johannes
 
-thanks,
-bruno
