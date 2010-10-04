@@ -1,61 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from web56803.mail.re3.yahoo.com ([66.196.97.77]:25420 "HELO
-	web56803.mail.re3.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1753625Ab0JTPMq (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:38051 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753437Ab0JDIln (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 20 Oct 2010 11:12:46 -0400
-Message-ID: <649275.57677.qm@web56803.mail.re3.yahoo.com>
-Date: Wed, 20 Oct 2010 08:12:45 -0700 (PDT)
-From: Walter Goldens <goldenstranger@yahoo.com>
-Subject: [PATCH 3/4] compat-wireless: update unloading scripts for bt
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Cc: linux-wireless@vger.kernel.org
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+	Mon, 4 Oct 2010 04:41:43 -0400
+Subject: Re: OLPC XO-1 rfkill driver design
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Daniel Drake <dsd@laptop.org>
+Cc: linux-wireless@vger.kernel.org,
+	Andres Salomon <dilinger@queued.net>
+In-Reply-To: <AANLkTin5zuxUY9ySYKrT9qD6cgV7eb7UhCjDYFzTUTeU@mail.gmail.com>
+References: <AANLkTin5zuxUY9ySYKrT9qD6cgV7eb7UhCjDYFzTUTeU@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Mon, 04 Oct 2010 10:41:40 +0200
+Message-ID: <1286181700.3620.1.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-- update unloading scripts for bt
-
-Signed-off-by: Walter Goldens <goldenstranger@yahoo.com>
----
-
---- a/scripts/unload.sh
-+++ b/scripts/unload.sh
-@@ -27,14 +27,16 @@ MODULES="$MODULES rtl8180 rtl8187"
- MODULES="$MODULES mwl8k mac80211_hwsim"
- MODULES="$MODULES at76c50x_usb at76_usb"
- MODULES="$MODULES rndis_wlan rndis_host cdc_ether usbnet"
--MODULES="$MODULES atl1 atl2 atl1e atl1c"
- # eeprom_93cx6 is used by rt2x00 (rt61pci, rt2500pci, rt2400pci) 
- # and Realtek drivers ( rtl8187, rtl8180)
- MODULES="$MODULES eeprom_93cx6"
- MODULES="$MODULES lib80211_crypt_ccmp lib80211_crypt_tkip lib80211_crypt_wep"
- MODULES="$MODULES mac80211 cfg80211 lib80211"
--MODULES="$MODULES hidp rfcomm bnep l2cap sco btusb bluetooth"
- MODULES="$MODULES compat"
-+# Bluetooth modules
-+MODULES="$MODULES ath3k bcm203x bluecard_cs bnep bpa10x bt3c_cs btmrvl btmrvl_sdio btsdio"
-+MODULES="$MODULES btusb btuart_cs cmtp dtl1_cs hidp hci_vhci hci_uart rfcomm sco bluetooth l2cap"
-+MODULES="$MODULES atl1 atl2 atl1e atl1c"
- echo Stoping bluetooth service..
- /etc/init.d/bluetooth stop
- /etc/init.d/bluetooth status
---- a/scripts/btunload.sh
-+++ b/scripts/btunload.sh
-@@ -1,5 +1,6 @@
- #!/bin/bash
--MODULES="hidp rfcomm bnep l2cap sco btusb bluetooth"
-+MODULES="$MODULES ath3k bcm203x bluecard_cs bnep bpa10x bt3c_cs btmrvl btmrvl_sdio btsdio"
-+MODULES="$MODULES btusb btuart_cs cmtp dtl1_cs hidp hci_vhci hci_uart rfcomm sco bluetooth l2cap"
- echo Stoping bluetooth service..
- /etc/init.d/bluetooth stop
- /etc/init.d/bluetooth status
+Hi Daniel,
 
 
+> A)
+> A module where the module_init logic is as follows:
 
+> B)
+> A module where module_init registers a platform driver
 
+> (C)
+> A module where module_init registers a platform driver, checks that
 
+None of these seem to allow for automatic detection that the module is
+needed? Is there maybe some platform device already that it could match?
 
+> My instinct is to go for (A), but I can't find any other drivers that
+> follow the same structure -- even though they could do. Perhaps
+> there's a reason that I'm missing...
 
-      
+I don't think there are any rfkill drivers for (pseudo-)embedded
+hardware yet, and I suspect the x86 ones all use DMI matching or
+similar?
+
+johannes
+
