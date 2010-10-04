@@ -1,215 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f46.google.com ([209.85.161.46]:50007 "EHLO
-	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754915Ab0JKPV3 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 11 Oct 2010 11:21:29 -0400
-Received: by mail-fx0-f46.google.com with SMTP id 4so482439fxm.19
-        for <linux-wireless@vger.kernel.org>; Mon, 11 Oct 2010 08:21:28 -0700 (PDT)
-From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-To: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-Cc: b43-dev@lists.infradead.org,
-	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-Subject: [PATCH 1/3] b43: N-PHY: replace N-specific radio_chanspec with common code
-Date: Mon, 11 Oct 2010 17:20:33 +0200
-Message-Id: <1286810435-10820-1-git-send-email-zajec5@gmail.com>
+Received: from mx1.redhat.com ([209.132.183.28]:57883 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755980Ab0JDPPg (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 4 Oct 2010 11:15:36 -0400
+Date: Mon, 4 Oct 2010 17:17:00 +0200
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Wey-Yi Guy <wey-yi.w.guy@intel.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 4/6] mac80211: assure we also cancel deferred scan request
+Message-ID: <20101004151659.GB16478@redhat.com>
+References: <1285934732-16087-1-git-send-email-sgruszka@redhat.com>
+ <1285934732-16087-4-git-send-email-sgruszka@redhat.com>
+ <1286197861.3620.31.camel@jlt3.sipsolutions.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1286197861.3620.31.camel@jlt3.sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
----
- drivers/net/wireless/b43/phy_common.h |    1 +
- drivers/net/wireless/b43/phy_n.c      |   55 ++++++++++++++-------------------
- drivers/net/wireless/b43/phy_n.h      |    7 +---
- 3 files changed, 26 insertions(+), 37 deletions(-)
+On Mon, Oct 04, 2010 at 03:11:01PM +0200, Johannes Berg wrote:
+> On Fri, 2010-10-01 at 14:05 +0200, Stanislaw Gruszka wrote:
+> > When cfg80211 request the scan and mac80211 perform some management work,
+> > we defer the scan request. We do not canceling such requests when calling
+> > ieee80211_scan_cancel(), because of SCAN_SW_SCANNING bit check just
+> > before the call. So fix that problem. Keeping local->mtx lock assures
+> > that the deferred scan will not become "working" HW scan.
+> 
+> But don't we also delay it becoming a working scan while we have work
+> pending? Which seems OK?
 
-diff --git a/drivers/net/wireless/b43/phy_common.h b/drivers/net/wireless/b43/phy_common.h
-index 6dcd033..0e61942 100644
---- a/drivers/net/wireless/b43/phy_common.h
-+++ b/drivers/net/wireless/b43/phy_common.h
-@@ -253,6 +253,7 @@ struct b43_phy {
- 
- 	/* Current channel */
- 	unsigned int channel;
-+	u16 channel_freq;
- 	enum nl80211_channel_type channel_type;
- 
- 	/* PHY TX errors counter. */
-diff --git a/drivers/net/wireless/b43/phy_n.c b/drivers/net/wireless/b43/phy_n.c
-index 814127e..13d7e3b 100644
---- a/drivers/net/wireless/b43/phy_n.c
-+++ b/drivers/net/wireless/b43/phy_n.c
-@@ -81,21 +81,6 @@ static inline bool b43_channel_type_is_40mhz(
- 		channel_type == NL80211_CHAN_HT40PLUS);
- }
- 
--static inline bool b43_empty_chanspec(struct b43_chanspec *chanspec)
--{
--	return !chanspec->channel && !chanspec->sideband &&
--		!chanspec->b_width && !chanspec->b_freq;
--}
--
--static inline bool b43_eq_chanspecs(struct b43_chanspec *chanspec1,
--					struct b43_chanspec *chanspec2)
--{
--	return (chanspec1->channel == chanspec2->channel &&
--		chanspec1->sideband == chanspec2->sideband &&
--		chanspec1->b_width == chanspec2->b_width &&
--		chanspec1->b_freq == chanspec2->b_freq);
--}
--
- void b43_nphy_set_rxantenna(struct b43_wldev *dev, int antenna)
- {//TODO
- }
-@@ -788,7 +773,7 @@ static void b43_nphy_spur_workaround(struct b43_wldev *dev)
- {
- 	struct b43_phy_n *nphy = dev->phy.n;
- 
--	u8 channel = nphy->radio_chanspec.channel;
-+	u8 channel = dev->phy.channel;
- 	int tone[2] = { 57, 58 };
- 	u32 noise[2] = { 0x3FF, 0x3FF };
- 
-@@ -862,9 +847,9 @@ static void b43_nphy_adjust_lna_gain_table(struct b43_wldev *dev)
- 			gain[0] = 6;
- 			gain[1] = 6;
- 		} else {
--			tmp = 40370 - 315 * nphy->radio_chanspec.channel;
-+			tmp = 40370 - 315 * dev->phy.channel;
- 			gain[0] = ((tmp >> 13) + ((tmp >> 12) & 1));
--			tmp = 23242 - 224 * nphy->radio_chanspec.channel;
-+			tmp = 23242 - 224 * dev->phy.channel;
- 			gain[1] = ((tmp >> 13) + ((tmp >> 12) & 1));
- 		}
- 	} else {
-@@ -2090,12 +2075,12 @@ static void b43_nphy_restore_rssi_cal(struct b43_wldev *dev)
- 	u16 *rssical_phy_regs = NULL;
- 
- 	if (b43_current_band(dev->wl) == IEEE80211_BAND_2GHZ) {
--		if (b43_empty_chanspec(&nphy->rssical_chanspec_2G))
-+		if (!nphy->rssical_chanspec_2G.center_freq)
- 			return;
- 		rssical_radio_regs = nphy->rssical_cache.rssical_radio_regs_2G;
- 		rssical_phy_regs = nphy->rssical_cache.rssical_phy_regs_2G;
- 	} else {
--		if (b43_empty_chanspec(&nphy->rssical_chanspec_5G))
-+		if (!nphy->rssical_chanspec_5G.center_freq)
- 			return;
- 		rssical_radio_regs = nphy->rssical_cache.rssical_radio_regs_5G;
- 		rssical_phy_regs = nphy->rssical_cache.rssical_phy_regs_5G;
-@@ -2551,7 +2536,8 @@ static void b43_nphy_save_cal(struct b43_wldev *dev)
- 		txcal_radio_regs[2] = b43_radio_read(dev, 0x8D);
- 		txcal_radio_regs[3] = b43_radio_read(dev, 0xBC);
- 	}
--	*iqcal_chanspec = nphy->radio_chanspec;
-+	iqcal_chanspec->center_freq = dev->phy.channel_freq;
-+	iqcal_chanspec->channel_type = dev->phy.channel_type;
- 	b43_ntab_write_bulk(dev, B43_NTAB16(15, 80), 8, table);
- 
- 	if (nphy->hang_avoid)
-@@ -2572,12 +2558,12 @@ static void b43_nphy_restore_cal(struct b43_wldev *dev)
- 	struct b43_phy_n_iq_comp *rxcal_coeffs = NULL;
- 
- 	if (b43_current_band(dev->wl) == IEEE80211_BAND_2GHZ) {
--		if (b43_empty_chanspec(&nphy->iqcal_chanspec_2G))
-+		if (!nphy->iqcal_chanspec_2G.center_freq)
- 			return;
- 		table = nphy->cal_cache.txcal_coeffs_2G;
- 		loft = &nphy->cal_cache.txcal_coeffs_2G[5];
- 	} else {
--		if (b43_empty_chanspec(&nphy->iqcal_chanspec_5G))
-+		if (!nphy->iqcal_chanspec_5G.center_freq)
- 			return;
- 		table = nphy->cal_cache.txcal_coeffs_5G;
- 		loft = &nphy->cal_cache.txcal_coeffs_5G[5];
-@@ -2822,7 +2808,10 @@ static int b43_nphy_cal_tx_iq_lo(struct b43_wldev *dev,
- 			b43_ntab_read_bulk(dev, B43_NTAB16(15, 96), length,
- 						nphy->txiqlocal_bestc);
- 			nphy->txiqlocal_coeffsvalid = true;
--			nphy->txiqlocal_chanspec = nphy->radio_chanspec;
-+			nphy->txiqlocal_chanspec.center_freq =
-+							dev->phy.channel_freq;
-+			nphy->txiqlocal_chanspec.channel_type =
-+							dev->phy.channel_type;
- 		} else {
- 			length = 11;
- 			if (dev->phy.rev < 3)
-@@ -2858,7 +2847,8 @@ static void b43_nphy_reapply_tx_cal_coeffs(struct b43_wldev *dev)
- 	bool equal = true;
- 
- 	if (!nphy->txiqlocal_coeffsvalid ||
--	    b43_eq_chanspecs(&nphy->txiqlocal_chanspec, &nphy->radio_chanspec))
-+	    nphy->txiqlocal_chanspec.center_freq != dev->phy.channel_freq ||
-+	    nphy->txiqlocal_chanspec.channel_type != dev->phy.channel_type)
- 		return;
- 
- 	b43_ntab_read_bulk(dev, B43_NTAB16(15, 80), 7, buffer);
-@@ -3264,11 +3254,9 @@ int b43_phy_initn(struct b43_wldev *dev)
- 	do_rssi_cal = false;
- 	if (phy->rev >= 3) {
- 		if (b43_current_band(dev->wl) == IEEE80211_BAND_2GHZ)
--			do_rssi_cal =
--				b43_empty_chanspec(&nphy->rssical_chanspec_2G);
-+			do_rssi_cal = !nphy->rssical_chanspec_2G.center_freq;
- 		else
--			do_rssi_cal =
--				b43_empty_chanspec(&nphy->rssical_chanspec_5G);
-+			do_rssi_cal = !nphy->rssical_chanspec_5G.center_freq;
- 
- 		if (do_rssi_cal)
- 			b43_nphy_rssi_cal(dev);
-@@ -3280,9 +3268,9 @@ int b43_phy_initn(struct b43_wldev *dev)
- 
- 	if (!((nphy->measure_hold & 0x6) != 0)) {
- 		if (b43_current_band(dev->wl) == IEEE80211_BAND_2GHZ)
--			do_cal = b43_empty_chanspec(&nphy->iqcal_chanspec_2G);
-+			do_cal = !nphy->iqcal_chanspec_2G.center_freq;
- 		else
--			do_cal = b43_empty_chanspec(&nphy->iqcal_chanspec_5G);
-+			do_cal = !nphy->iqcal_chanspec_5G.center_freq;
- 
- 		if (nphy->mute)
- 			do_cal = false;
-@@ -3411,7 +3399,10 @@ static int b43_nphy_set_channel(struct b43_wldev *dev,
- 			return -ESRCH;
- 	}
- 
--	nphy->radio_chanspec.channel = channel->hw_value;
-+	/* Channel is set later in common code, but we need to set it on our
-+	   own to let this function's subcalls work properly. */
-+	phy->channel = channel->hw_value;
-+	phy->channel_freq = channel->center_freq;
- 
- 	if (b43_channel_type_is_40mhz(phy->channel_type) !=
- 		b43_channel_type_is_40mhz(channel_type))
-diff --git a/drivers/net/wireless/b43/phy_n.h b/drivers/net/wireless/b43/phy_n.h
-index e7acae2..f915c83 100644
---- a/drivers/net/wireless/b43/phy_n.h
-+++ b/drivers/net/wireless/b43/phy_n.h
-@@ -927,10 +927,8 @@
- struct b43_wldev;
- 
- struct b43_chanspec {
--	u8 channel;
--	u8 sideband;
--	u8 b_width;
--	u8 b_freq;
-+	u16 center_freq;
-+	enum nl80211_channel_type channel_type;
- };
- 
- struct b43_phy_n_iq_comp {
-@@ -984,7 +982,6 @@ struct b43_phy_n {
- 	u16 papd_epsilon_offset[2];
- 	s32 preamble_override;
- 	u32 bb_mult_save;
--	struct b43_chanspec radio_chanspec;
- 
- 	bool gain_boost;
- 	bool elna_gain_config;
--- 
-1.7.1
+Yes, you have right, we cancel the scan_work before that, so transition
+will not happen.
 
+> Also what's with all the other changes here, they don't seem related to
+> this?
+
+This change
+
+        mutex_lock(&local->mtx);
+        if (test_bit(SCAN_SW_SCANNING, &local->scanning) ||
+-           (!local->scanning && local->scan_req))
++           (!test_bit(SCAN_HW_SCANNING, &local->scanning) && local->scan_req))
+                finish = __ieee80211_scan_completed(&local->hw, true, false);
+        mutex_unlock(&local->mtx);
+
+
+is for ignore local->scanning bits, in case we have some bits set up but no
+hw scanning is pending. Not sure If this fix some real problem, but
+make things safer IMHO.
+
+We have to think here about hw, sw and deferred scan. Canceling scan_work
+seems to wrong for hw_scan, but we still have to remember about sw scan and
+deferred scan ... I will try to rewrite patch to cope with all cases.
+
+Stanislaw
