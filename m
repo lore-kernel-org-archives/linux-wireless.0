@@ -1,229 +1,477 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:59929 "EHLO mga01.intel.com"
+Received: from nbd.name ([88.198.39.176]:50045 "EHLO ds10.nbd.name"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753518Ab0JGXIx (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 7 Oct 2010 19:08:53 -0400
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Shanyu Zhao <shanyu.zhao@intel.com>,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Subject: [PATCH 22/22] iwlagn: add temperature offset calib for 6000g2
-Date: Thu,  7 Oct 2010 16:08:01 -0700
-Message-Id: <1286492881-15743-23-git-send-email-wey-yi.w.guy@intel.com>
-In-Reply-To: <1286492881-15743-1-git-send-email-wey-yi.w.guy@intel.com>
-References: <1286492881-15743-1-git-send-email-wey-yi.w.guy@intel.com>
+	id S1753825Ab0JDRWt (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 4 Oct 2010 13:22:49 -0400
+Message-ID: <4CAA0D5E.1080200@openwrt.org>
+Date: Mon, 04 Oct 2010 19:22:38 +0200
+From: Felix Fietkau <nbd@openwrt.org>
+MIME-Version: 1.0
+To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+CC: Rajkumar Manoharan <rmanoharan@atheros.com>,
+	Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
+	"linville@tuxdriver.com" <linville@tuxdriver.com>
+Subject: [PATCH v2 3/4] ath9k_hw: clean up register write buffering
+References: <1286125639-15137-1-git-send-email-nbd@openwrt.org> <1286125639-15137-2-git-send-email-nbd@openwrt.org> <1286125639-15137-3-git-send-email-nbd@openwrt.org> <20101004085608.GA5931@vmraj-lnx.users.atheros.com> <4CA9C03D.9010503@openwrt.org>
+In-Reply-To: <4CA9C03D.9010503@openwrt.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Shanyu Zhao <shanyu.zhao@intel.com>
+Throughout the code, DISABLE_REGWRITE_BUFFER is always called right after
+REGWRITE_BUFFER_FLUSH. Since that's unlikely to change any time soon, that
+makes keeping those ops separate rather pointless, as it only increases
+code size and line number counts.
+Merge those two ops and also ensure that the flush is only issued after
+all codepaths are done buffering.
 
-6000g2 devices need to have temperature offset calibration. The runtime
-uCode needs to receive the calibration results just like BB and LO
-calibration. To do this, driver reads the offset value from NVM and send
-it to uCode after runtime uCode is alive.
-
-Signed-off-by: Shanyu Zhao <shanyu.zhao@intel.com>
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
 ---
- drivers/net/wireless/iwlwifi/iwl-6000.c      |   11 ++++++++++
- drivers/net/wireless/iwlwifi/iwl-agn-ucode.c |   27 ++++++++++++++++++++++++++
- drivers/net/wireless/iwlwifi/iwl-commands.h  |   10 ++++++++-
- drivers/net/wireless/iwlwifi/iwl-core.h      |    2 +
- drivers/net/wireless/iwlwifi/iwl-dev.h       |    1 +
- 5 files changed, 50 insertions(+), 1 deletions(-)
+ drivers/net/wireless/ath/ath.h                |    4 +---
+ drivers/net/wireless/ath/ath9k/ani.c          |    6 ------
+ drivers/net/wireless/ath/ath9k/ar5008_phy.c   |    9 ++-------
+ drivers/net/wireless/ath/ath9k/ar9002_calib.c |    1 -
+ drivers/net/wireless/ath/ath9k/ar9002_hw.c    |    4 ----
+ drivers/net/wireless/ath/ath9k/ar9002_phy.c   |    1 -
+ drivers/net/wireless/ath/ath9k/calib.c        |    1 -
+ drivers/net/wireless/ath/ath9k/eeprom_4k.c    |    2 --
+ drivers/net/wireless/ath/ath9k/htc_drv_init.c |   12 ++----------
+ drivers/net/wireless/ath/ath9k/hw.c           |   14 --------------
+ drivers/net/wireless/ath/ath9k/hw.h           |   10 ++--------
+ drivers/net/wireless/ath/ath9k/mac.c          |    4 ----
+ 12 files changed, 7 insertions(+), 61 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-6000.c b/drivers/net/wireless/iwlwifi/iwl-6000.c
-index a45929e..4810258 100644
---- a/drivers/net/wireless/iwlwifi/iwl-6000.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-6000.c
-@@ -204,6 +204,8 @@ static int iwl6000_hw_set_hw_params(struct iwl_priv *priv)
- 		BIT(IWL_CALIB_BASE_BAND);
- 	if (priv->cfg->need_dc_calib)
- 		priv->hw_params.calib_rt_cfg |= BIT(IWL_CALIB_CFG_DC_IDX);
-+	if (priv->cfg->need_temp_offset_calib)
-+		priv->hw_params.calib_init_cfg |= BIT(IWL_CALIB_TEMP_OFFSET);
- 
- 	priv->hw_params.beacon_time_tsf_bits = IWLAGN_EXT_BEACON_TIME_POS;
- 
-@@ -536,6 +538,7 @@ struct iwl_cfg iwl6000g2a_2agn_cfg = {
- 	.base_params = &iwl6000_base_params,
- 	.ht_params = &iwl6000_ht_params,
- 	.need_dc_calib = true,
-+	.need_temp_offset_calib = true,
+diff --git a/drivers/net/wireless/ath/ath.h b/drivers/net/wireless/ath/ath.h
+index 5894fcc..cee0191 100644
+--- a/drivers/net/wireless/ath/ath.h
++++ b/drivers/net/wireless/ath/ath.h
+@@ -102,14 +102,12 @@ enum ath_cipher {
+  * @read: Register read
+  * @write: Register write
+  * @enable_write_buffer: Enable multiple register writes
+- * @disable_write_buffer: Disable multiple register writes
+- * @write_flush: Flush buffered register writes
++ * @write_flush: flush buffered register writes and disable buffering
+  */
+ struct ath_ops {
+ 	unsigned int (*read)(void *, u32 reg_offset);
+ 	void (*write)(void *, u32 val, u32 reg_offset);
+ 	void (*enable_write_buffer)(void *);
+-	void (*disable_write_buffer)(void *);
+ 	void (*write_flush) (void *);
  };
  
- struct iwl_cfg iwl6000g2a_2abg_cfg = {
-@@ -552,6 +555,7 @@ struct iwl_cfg iwl6000g2a_2abg_cfg = {
- 	.mod_params = &iwlagn_mod_params,
- 	.base_params = &iwl6000_base_params,
- 	.need_dc_calib = true,
-+	.need_temp_offset_calib = true,
- };
+diff --git a/drivers/net/wireless/ath/ath9k/ani.c b/drivers/net/wireless/ath/ath9k/ani.c
+index 9936297..61e7a48 100644
+--- a/drivers/net/wireless/ath/ath9k/ani.c
++++ b/drivers/net/wireless/ath/ath9k/ani.c
+@@ -180,7 +180,6 @@ static void ath9k_ani_restart_old(struct ath_hw *ah)
+ 	REG_WRITE(ah, AR_PHY_ERR_MASK_2, AR_PHY_ERR_CCK_TIMING);
  
- struct iwl_cfg iwl6000g2a_2bg_cfg = {
-@@ -568,6 +572,7 @@ struct iwl_cfg iwl6000g2a_2bg_cfg = {
- 	.mod_params = &iwlagn_mod_params,
- 	.base_params = &iwl6000_base_params,
- 	.need_dc_calib = true,
-+	.need_temp_offset_calib = true,
- };
+ 	REGWRITE_BUFFER_FLUSH(ah);
+-	DISABLE_REGWRITE_BUFFER(ah);
  
- struct iwl_cfg iwl6000g2b_2agn_cfg = {
-@@ -586,6 +591,7 @@ struct iwl_cfg iwl6000g2b_2agn_cfg = {
- 	.bt_params = &iwl6000_bt_params,
- 	.ht_params = &iwl6000_ht_params,
- 	.need_dc_calib = true,
-+	.need_temp_offset_calib = true,
- 	/* Due to bluetooth, we transmit 2.4 GHz probes only on antenna A */
- 	.scan_tx_antennas[IEEE80211_BAND_2GHZ] = ANT_A,
- };
-@@ -605,6 +611,7 @@ struct iwl_cfg iwl6000g2b_2abg_cfg = {
- 	.base_params = &iwl6000_base_params,
- 	.bt_params = &iwl6000_bt_params,
- 	.need_dc_calib = true,
-+	.need_temp_offset_calib = true,
- 	/* Due to bluetooth, we transmit 2.4 GHz probes only on antenna A */
- 	.scan_tx_antennas[IEEE80211_BAND_2GHZ] = ANT_A,
- };
-@@ -625,6 +632,7 @@ struct iwl_cfg iwl6000g2b_2bgn_cfg = {
- 	.bt_params = &iwl6000_bt_params,
- 	.ht_params = &iwl6000_ht_params,
- 	.need_dc_calib = true,
-+	.need_temp_offset_calib = true,
- 	/* Due to bluetooth, we transmit 2.4 GHz probes only on antenna A */
- 	.scan_tx_antennas[IEEE80211_BAND_2GHZ] = ANT_A,
- };
-@@ -644,6 +652,7 @@ struct iwl_cfg iwl6000g2b_2bg_cfg = {
- 	.base_params = &iwl6000_base_params,
- 	.bt_params = &iwl6000_bt_params,
- 	.need_dc_calib = true,
-+	.need_temp_offset_calib = true,
- 	/* Due to bluetooth, we transmit 2.4 GHz probes only on antenna A */
- 	.scan_tx_antennas[IEEE80211_BAND_2GHZ] = ANT_A,
- };
-@@ -664,6 +673,7 @@ struct iwl_cfg iwl6000g2b_bgn_cfg = {
- 	.bt_params = &iwl6000_bt_params,
- 	.ht_params = &iwl6000_ht_params,
- 	.need_dc_calib = true,
-+	.need_temp_offset_calib = true,
- 	/* Due to bluetooth, we transmit 2.4 GHz probes only on antenna A */
- 	.scan_tx_antennas[IEEE80211_BAND_2GHZ] = ANT_A,
- };
-@@ -683,6 +693,7 @@ struct iwl_cfg iwl6000g2b_bg_cfg = {
- 	.base_params = &iwl6000_base_params,
- 	.bt_params = &iwl6000_bt_params,
- 	.need_dc_calib = true,
-+	.need_temp_offset_calib = true,
- 	/* Due to bluetooth, we transmit 2.4 GHz probes only on antenna A */
- 	.scan_tx_antennas[IEEE80211_BAND_2GHZ] = ANT_A,
- };
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-ucode.c b/drivers/net/wireless/iwlwifi/iwl-agn-ucode.c
-index 3a95379..7036211 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn-ucode.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn-ucode.c
-@@ -215,6 +215,25 @@ static int iwlagn_set_Xtal_calib(struct iwl_priv *priv)
- 			     (u8 *)&cmd, sizeof(cmd));
+ 	ath9k_hw_update_mibstats(ah, &ah->ah_mibStats);
+ 
+@@ -215,7 +214,6 @@ static void ath9k_ani_restart_new(struct ath_hw *ah)
+ 	REG_WRITE(ah, AR_PHY_ERR_MASK_2, AR_PHY_ERR_CCK_TIMING);
+ 
+ 	REGWRITE_BUFFER_FLUSH(ah);
+-	DISABLE_REGWRITE_BUFFER(ah);
+ 
+ 	ath9k_hw_update_mibstats(ah, &ah->ah_mibStats);
+ 
+@@ -643,7 +641,6 @@ static void ath9k_ani_reset_old(struct ath_hw *ah, bool is_scanning)
+ 	REG_WRITE(ah, AR_PHY_ERR_MASK_2, AR_PHY_ERR_CCK_TIMING);
+ 
+ 	REGWRITE_BUFFER_FLUSH(ah);
+-	DISABLE_REGWRITE_BUFFER(ah);
  }
  
-+static int iwlagn_set_temperature_offset_calib(struct iwl_priv *priv)
-+{
-+	struct iwl_calib_temperature_offset_cmd cmd;
-+	__le16 *offset_calib =
-+		(__le16 *)iwl_eeprom_query_addr(priv, EEPROM_5000_TEMPERATURE);
-+	cmd.hdr.op_code = IWL_PHY_CALIBRATE_TEMP_OFFSET_CMD;
-+	cmd.hdr.first_group = 0;
-+	cmd.hdr.groups_num = 1;
-+	cmd.hdr.data_valid = 1;
-+	cmd.radio_sensor_offset = le16_to_cpu(offset_calib[1]);
-+	if (!(cmd.radio_sensor_offset))
-+		cmd.radio_sensor_offset = DEFAULT_RADIO_SENSOR_OFFSET;
-+	cmd.reserved = 0;
-+	IWL_DEBUG_CALIB(priv, "Radio sensor offset: %d\n",
-+			cmd.radio_sensor_offset);
-+	return iwl_calib_set(&priv->calib_results[IWL_CALIB_TEMP_OFFSET],
-+			     (u8 *)&cmd, sizeof(cmd));
-+}
-+
- static int iwlagn_send_calib_cfg(struct iwl_priv *priv)
- {
- 	struct iwl_calib_cfg_cmd calib_cfg_cmd;
-@@ -321,6 +340,14 @@ void iwlagn_init_alive_start(struct iwl_priv *priv)
+ /*
+@@ -737,7 +734,6 @@ static void ath9k_ani_reset_new(struct ath_hw *ah, bool is_scanning)
+ 	REG_WRITE(ah, AR_PHY_ERR_MASK_2, AR_PHY_ERR_CCK_TIMING);
  
+ 	REGWRITE_BUFFER_FLUSH(ah);
+-	DISABLE_REGWRITE_BUFFER(ah);
+ }
+ 
+ static void ath9k_hw_ani_monitor_old(struct ath_hw *ah,
+@@ -991,7 +987,6 @@ void ath9k_enable_mib_counters(struct ath_hw *ah)
+ 	REG_WRITE(ah, AR_PHY_ERR_MASK_2, AR_PHY_ERR_CCK_TIMING);
+ 
+ 	REGWRITE_BUFFER_FLUSH(ah);
+-	DISABLE_REGWRITE_BUFFER(ah);
+ }
+ 
+ /* Freeze the MIB counters, get the stats and then clear them */
+@@ -1261,7 +1256,6 @@ void ath9k_hw_ani_init(struct ath_hw *ah)
+ 	REG_WRITE(ah, AR_PHY_ERR_2, ah->ani[0].cckPhyErrBase);
+ 
+ 	REGWRITE_BUFFER_FLUSH(ah);
+-	DISABLE_REGWRITE_BUFFER(ah);
+ 
+ 	ath9k_enable_mib_counters(ah);
+ 
+diff --git a/drivers/net/wireless/ath/ath9k/ar5008_phy.c b/drivers/net/wireless/ath/ath9k/ar5008_phy.c
+index 74b4213..da07f8d 100644
+--- a/drivers/net/wireless/ath/ath9k/ar5008_phy.c
++++ b/drivers/net/wireless/ath/ath9k/ar5008_phy.c
+@@ -615,14 +615,11 @@ static void ar5008_hw_init_chain_masks(struct ath_hw *ah)
+ 	rx_chainmask = ah->rxchainmask;
+ 	tx_chainmask = ah->txchainmask;
+ 
+-	ENABLE_REGWRITE_BUFFER(ah);
+ 
+ 	switch (rx_chainmask) {
+ 	case 0x5:
+-		DISABLE_REGWRITE_BUFFER(ah);
+ 		REG_SET_BIT(ah, AR_PHY_ANALOG_SWAP,
+ 			    AR_PHY_SWAP_ALT_CHAIN);
+-		ENABLE_REGWRITE_BUFFER(ah);
+ 	case 0x3:
+ 		if (ah->hw_version.macVersion == AR_SREV_REVISION_5416_10) {
+ 			REG_WRITE(ah, AR_PHY_RX_CHAINMASK, 0x7);
+@@ -632,17 +629,18 @@ static void ar5008_hw_init_chain_masks(struct ath_hw *ah)
+ 	case 0x1:
+ 	case 0x2:
+ 	case 0x7:
++		ENABLE_REGWRITE_BUFFER(ah);
+ 		REG_WRITE(ah, AR_PHY_RX_CHAINMASK, rx_chainmask);
+ 		REG_WRITE(ah, AR_PHY_CAL_CHAINMASK, rx_chainmask);
+ 		break;
+ 	default:
++		ENABLE_REGWRITE_BUFFER(ah);
+ 		break;
  	}
- 	iwlagn_send_calib_cfg(priv);
-+
-+	/**
-+	 * temperature offset calibration is only needed for runtime ucode,
-+	 * so prepare the value now.
-+	 */
-+	if (priv->cfg->need_temp_offset_calib)
-+		iwlagn_set_temperature_offset_calib(priv);
-+
- 	return;
  
- restart:
-diff --git a/drivers/net/wireless/iwlwifi/iwl-commands.h b/drivers/net/wireless/iwlwifi/iwl-commands.h
-index 74b78d8..424801a 100644
---- a/drivers/net/wireless/iwlwifi/iwl-commands.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-commands.h
-@@ -3794,7 +3794,8 @@ enum {
- 	IWL_PHY_CALIBRATE_CRYSTAL_FRQ_CMD	= 15,
- 	IWL_PHY_CALIBRATE_BASE_BAND_CMD		= 16,
- 	IWL_PHY_CALIBRATE_TX_IQ_PERD_CMD	= 17,
--	IWL_MAX_STANDARD_PHY_CALIBRATE_TBL_SIZE	= 18,
-+	IWL_PHY_CALIBRATE_TEMP_OFFSET_CMD	= 18,
-+	IWL_MAX_STANDARD_PHY_CALIBRATE_TBL_SIZE	= 19,
+ 	REG_WRITE(ah, AR_SELFGEN_MASK, tx_chainmask);
+ 
+ 	REGWRITE_BUFFER_FLUSH(ah);
+-	DISABLE_REGWRITE_BUFFER(ah);
+ 
+ 	if (tx_chainmask == 0x5) {
+ 		REG_SET_BIT(ah, AR_PHY_ANALOG_SWAP,
+@@ -728,7 +726,6 @@ static void ar5008_hw_set_channel_regs(struct ath_hw *ah,
+ 	REG_WRITE(ah, AR_CST, 0xF << AR_CST_TIMEOUT_LIMIT_S);
+ 
+ 	REGWRITE_BUFFER_FLUSH(ah);
+-	DISABLE_REGWRITE_BUFFER(ah);
+ }
+ 
+ 
+@@ -820,7 +817,6 @@ static int ar5008_hw_process_ini(struct ath_hw *ah,
+ 	}
+ 
+ 	REGWRITE_BUFFER_FLUSH(ah);
+-	DISABLE_REGWRITE_BUFFER(ah);
+ 
+ 	if (AR_SREV_9280(ah) || AR_SREV_9287_11_OR_LATER(ah))
+ 		REG_WRITE_ARRAY(&ah->iniModesRxGain, modesIndex, regWrites);
+@@ -851,7 +847,6 @@ static int ar5008_hw_process_ini(struct ath_hw *ah,
+ 	}
+ 
+ 	REGWRITE_BUFFER_FLUSH(ah);
+-	DISABLE_REGWRITE_BUFFER(ah);
+ 
+ 	if (AR_SREV_9271(ah)) {
+ 		if (ah->eep_ops->get_eeprom(ah, EEP_TXGAIN_TYPE) == 1)
+diff --git a/drivers/net/wireless/ath/ath9k/ar9002_calib.c b/drivers/net/wireless/ath/ath9k/ar9002_calib.c
+index f0525fb..15f62cd 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9002_calib.c
++++ b/drivers/net/wireless/ath/ath9k/ar9002_calib.c
+@@ -522,7 +522,6 @@ static void ar9271_hw_pa_cal(struct ath_hw *ah, bool is_reset)
+ 		REG_WRITE(ah, regList[i][0], regList[i][1]);
+ 
+ 	REGWRITE_BUFFER_FLUSH(ah);
+-	DISABLE_REGWRITE_BUFFER(ah);
+ }
+ 
+ static inline void ar9285_hw_pa_cal(struct ath_hw *ah, bool is_reset)
+diff --git a/drivers/net/wireless/ath/ath9k/ar9002_hw.c b/drivers/net/wireless/ath/ath9k/ar9002_hw.c
+index fde45082..78bdf0c 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9002_hw.c
++++ b/drivers/net/wireless/ath/ath9k/ar9002_hw.c
+@@ -371,7 +371,6 @@ static void ar9002_hw_configpcipowersave(struct ath_hw *ah,
+ 			REG_WRITE(ah, AR_PCIE_SERDES2, 0x00000000);
+ 
+ 			REGWRITE_BUFFER_FLUSH(ah);
+-			DISABLE_REGWRITE_BUFFER(ah);
+ 		}
+ 
+ 		udelay(1000);
+@@ -468,7 +467,6 @@ static int ar9002_hw_get_radiorev(struct ath_hw *ah)
+ 		REG_WRITE(ah, AR_PHY(0x20), 0x00010000);
+ 
+ 	REGWRITE_BUFFER_FLUSH(ah);
+-	DISABLE_REGWRITE_BUFFER(ah);
+ 
+ 	val = (REG_READ(ah, AR_PHY(256)) >> 24) & 0xff;
+ 	val = ((val & 0xf0) >> 4) | ((val & 0x0f) << 4);
+@@ -627,6 +625,4 @@ void ar9002_hw_load_ani_reg(struct ath_hw *ah, struct ath9k_channel *chan)
+ 	}
+ 
+ 	REGWRITE_BUFFER_FLUSH(ah);
+-	DISABLE_REGWRITE_BUFFER(ah);
+-
+ }
+diff --git a/drivers/net/wireless/ath/ath9k/ar9002_phy.c b/drivers/net/wireless/ath/ath9k/ar9002_phy.c
+index cd56c86..c00cdc6 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9002_phy.c
++++ b/drivers/net/wireless/ath/ath9k/ar9002_phy.c
+@@ -415,7 +415,6 @@ static void ar9002_hw_spur_mitigate(struct ath_hw *ah,
+ 	REG_WRITE(ah, AR_PHY_MASK2_P_61_45, tmp_mask);
+ 
+ 	REGWRITE_BUFFER_FLUSH(ah);
+-	DISABLE_REGWRITE_BUFFER(ah);
+ }
+ 
+ static void ar9002_olc_init(struct ath_hw *ah)
+diff --git a/drivers/net/wireless/ath/ath9k/calib.c b/drivers/net/wireless/ath/ath9k/calib.c
+index 6c38c72..6d50948 100644
+--- a/drivers/net/wireless/ath/ath9k/calib.c
++++ b/drivers/net/wireless/ath/ath9k/calib.c
+@@ -300,7 +300,6 @@ void ath9k_hw_loadnf(struct ath_hw *ah, struct ath9k_channel *chan)
+ 		}
+ 	}
+ 	REGWRITE_BUFFER_FLUSH(ah);
+-	DISABLE_REGWRITE_BUFFER(ah);
+ }
+ 
+ 
+diff --git a/drivers/net/wireless/ath/ath9k/eeprom_4k.c b/drivers/net/wireless/ath/ath9k/eeprom_4k.c
+index d6eed1f..2a4fca4 100644
+--- a/drivers/net/wireless/ath/ath9k/eeprom_4k.c
++++ b/drivers/net/wireless/ath/ath9k/eeprom_4k.c
+@@ -500,7 +500,6 @@ static void ath9k_hw_set_4k_power_cal_table(struct ath_hw *ah,
+ 			}
+ 
+ 			REGWRITE_BUFFER_FLUSH(ah);
+-			DISABLE_REGWRITE_BUFFER(ah);
+ 		}
+ 	}
+ 
+@@ -832,7 +831,6 @@ static void ath9k_hw_4k_set_txpower(struct ath_hw *ah,
+ 	}
+ 
+ 	REGWRITE_BUFFER_FLUSH(ah);
+-	DISABLE_REGWRITE_BUFFER(ah);
+ }
+ 
+ static void ath9k_hw_4k_set_addac(struct ath_hw *ah,
+diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_init.c b/drivers/net/wireless/ath/ath9k/htc_drv_init.c
+index b100db2..bbb54bc 100644
+--- a/drivers/net/wireless/ath/ath9k/htc_drv_init.c
++++ b/drivers/net/wireless/ath/ath9k/htc_drv_init.c
+@@ -380,15 +380,6 @@ static void ath9k_enable_regwrite_buffer(void *hw_priv)
+ 	atomic_inc(&priv->wmi->mwrite_cnt);
+ }
+ 
+-static void ath9k_disable_regwrite_buffer(void *hw_priv)
+-{
+-	struct ath_hw *ah = (struct ath_hw *) hw_priv;
+-	struct ath_common *common = ath9k_hw_common(ah);
+-	struct ath9k_htc_priv *priv = (struct ath9k_htc_priv *) common->priv;
+-
+-	atomic_dec(&priv->wmi->mwrite_cnt);
+-}
+-
+ static void ath9k_regwrite_flush(void *hw_priv)
+ {
+ 	struct ath_hw *ah = (struct ath_hw *) hw_priv;
+@@ -397,6 +388,8 @@ static void ath9k_regwrite_flush(void *hw_priv)
+ 	u32 rsp_status;
+ 	int r;
+ 
++	atomic_dec(&priv->wmi->mwrite_cnt);
++
+ 	mutex_lock(&priv->wmi->multi_write_mutex);
+ 
+ 	if (priv->wmi->multi_write_idx) {
+@@ -420,7 +413,6 @@ static const struct ath_ops ath9k_common_ops = {
+ 	.read = ath9k_regread,
+ 	.write = ath9k_regwrite,
+ 	.enable_write_buffer = ath9k_enable_regwrite_buffer,
+-	.disable_write_buffer = ath9k_disable_regwrite_buffer,
+ 	.write_flush = ath9k_regwrite_flush,
  };
  
- #define IWL_MAX_PHY_CALIBRATE_TBL_SIZE		(253)
-@@ -3864,6 +3865,13 @@ struct iwl_calib_xtal_freq_cmd {
- 	u8 pad[2];
- } __packed;
+diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
+index 1b06604..98c9765 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.c
++++ b/drivers/net/wireless/ath/ath9k/hw.c
+@@ -299,7 +299,6 @@ static void ath9k_hw_disablepcie(struct ath_hw *ah)
+ 	REG_WRITE(ah, AR_PCIE_SERDES2, 0x00000000);
  
-+#define DEFAULT_RADIO_SENSOR_OFFSET    2700
-+struct iwl_calib_temperature_offset_cmd {
-+	struct iwl_calib_hdr hdr;
-+	s16 radio_sensor_offset;
-+	s16 reserved;
-+} __packed;
-+
- /* IWL_PHY_CALIBRATE_CHAIN_NOISE_RESET_CMD */
- struct iwl_calib_chain_noise_reset_cmd {
- 	struct iwl_calib_hdr hdr;
-diff --git a/drivers/net/wireless/iwlwifi/iwl-core.h b/drivers/net/wireless/iwlwifi/iwl-core.h
-index a5e12b7..64527de 100644
---- a/drivers/net/wireless/iwlwifi/iwl-core.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-core.h
-@@ -342,6 +342,7 @@ struct iwl_ht_params {
-  * @ucode_api_min: Lowest version of uCode API supported by driver.
-  * @pa_type: used by 6000 series only to identify the type of Power Amplifier
-  * @need_dc_calib: need to perform init dc calibration
-+ * @need_temp_offset_calib: need to perform temperature offset calibration
-  * @scan_antennas: available antenna for scan operation
-  *
-  * We enable the driver to be backward compatible wrt API version. The
-@@ -386,6 +387,7 @@ struct iwl_cfg {
- 	struct iwl_bt_params *bt_params;
- 	enum iwl_pa_type pa_type;	  /* if used set to IWL_PA_SYSTEM */
- 	const bool need_dc_calib;	  /* if used set to true */
-+	const bool need_temp_offset_calib; /* if used set to true */
- 	u8 scan_rx_antennas[IEEE80211_NUM_BANDS];
- 	u8 scan_tx_antennas[IEEE80211_NUM_BANDS];
- };
-diff --git a/drivers/net/wireless/iwlwifi/iwl-dev.h b/drivers/net/wireless/iwlwifi/iwl-dev.h
-index 2c57dbd..de43e13 100644
---- a/drivers/net/wireless/iwlwifi/iwl-dev.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-dev.h
-@@ -835,6 +835,7 @@ enum iwl_calib {
- 	IWL_CALIB_TX_IQ,
- 	IWL_CALIB_TX_IQ_PERD,
- 	IWL_CALIB_BASE_BAND,
-+	IWL_CALIB_TEMP_OFFSET,
- 	IWL_CALIB_MAX
- };
+ 	REGWRITE_BUFFER_FLUSH(ah);
+-	DISABLE_REGWRITE_BUFFER(ah);
+ }
  
--- 
-1.7.0.4
+ /* This should work for all families including legacy */
+@@ -676,7 +675,6 @@ static void ath9k_hw_init_qos(struct ath_hw *ah)
+ 	REG_WRITE(ah, AR_TXOP_12_15, 0xFFFFFFFF);
+ 
+ 	REGWRITE_BUFFER_FLUSH(ah);
+-	DISABLE_REGWRITE_BUFFER(ah);
+ }
+ 
+ static void ath9k_hw_init_pll(struct ath_hw *ah,
+@@ -741,7 +739,6 @@ static void ath9k_hw_init_interrupt_masks(struct ath_hw *ah,
+ 	}
+ 
+ 	REGWRITE_BUFFER_FLUSH(ah);
+-	DISABLE_REGWRITE_BUFFER(ah);
+ 
+ 	if (AR_SREV_9300_20_OR_LATER(ah)) {
+ 		REG_WRITE(ah, AR_INTR_PRIO_ASYNC_ENABLE, 0);
+@@ -885,7 +882,6 @@ static inline void ath9k_hw_set_dma(struct ath_hw *ah)
+ 	REG_WRITE(ah, AR_TXCFG, regval | AR_TXCFG_DMASZ_128B);
+ 
+ 	REGWRITE_BUFFER_FLUSH(ah);
+-	DISABLE_REGWRITE_BUFFER(ah);
+ 
+ 	/*
+ 	 * Restore TX Trigger Level to its pre-reset value.
+@@ -933,7 +929,6 @@ static inline void ath9k_hw_set_dma(struct ath_hw *ah)
+ 	}
+ 
+ 	REGWRITE_BUFFER_FLUSH(ah);
+-	DISABLE_REGWRITE_BUFFER(ah);
+ 
+ 	if (AR_SREV_9300_20_OR_LATER(ah))
+ 		ath9k_hw_reset_txstatus_ring(ah);
+@@ -1031,7 +1026,6 @@ static bool ath9k_hw_set_reset(struct ath_hw *ah, int type)
+ 	REG_WRITE(ah, AR_RTC_RC, rst_flags);
+ 
+ 	REGWRITE_BUFFER_FLUSH(ah);
+-	DISABLE_REGWRITE_BUFFER(ah);
+ 
+ 	udelay(50);
+ 
+@@ -1070,7 +1064,6 @@ static bool ath9k_hw_set_reset_power_on(struct ath_hw *ah)
+ 	udelay(2);
+ 
+ 	REGWRITE_BUFFER_FLUSH(ah);
+-	DISABLE_REGWRITE_BUFFER(ah);
+ 
+ 	if (!AR_SREV_9300_20_OR_LATER(ah))
+ 		udelay(2);
+@@ -1374,7 +1367,6 @@ int ath9k_hw_reset(struct ath_hw *ah, struct ath9k_channel *chan,
+ 	REG_WRITE(ah, AR_RSSI_THR, INIT_RSSI_THR);
+ 
+ 	REGWRITE_BUFFER_FLUSH(ah);
+-	DISABLE_REGWRITE_BUFFER(ah);
+ 
+ 	r = ath9k_hw_rf_set_freq(ah, chan);
+ 	if (r)
+@@ -1386,7 +1378,6 @@ int ath9k_hw_reset(struct ath_hw *ah, struct ath9k_channel *chan,
+ 		REG_WRITE(ah, AR_DQCUMASK(i), 1 << i);
+ 
+ 	REGWRITE_BUFFER_FLUSH(ah);
+-	DISABLE_REGWRITE_BUFFER(ah);
+ 
+ 	ah->intr_txqs = 0;
+ 	for (i = 0; i < ah->caps.total_queues; i++)
+@@ -1434,7 +1425,6 @@ int ath9k_hw_reset(struct ath_hw *ah, struct ath9k_channel *chan,
+ 	REG_WRITE(ah, AR_CFG_LED, saveLedState | AR_CFG_SCLK_32KHZ);
+ 
+ 	REGWRITE_BUFFER_FLUSH(ah);
+-	DISABLE_REGWRITE_BUFFER(ah);
+ 
+ 	/*
+ 	 * For big endian systems turn on swapping for descriptors
+@@ -1684,7 +1674,6 @@ void ath9k_hw_beaconinit(struct ath_hw *ah, u32 next_beacon, u32 beacon_period)
+ 	REG_WRITE(ah, AR_NDP_PERIOD, TU_TO_USEC(beacon_period));
+ 
+ 	REGWRITE_BUFFER_FLUSH(ah);
+-	DISABLE_REGWRITE_BUFFER(ah);
+ 
+ 	beacon_period &= ~ATH9K_BEACON_ENA;
+ 	if (beacon_period & ATH9K_BEACON_RESET_TSF) {
+@@ -1712,7 +1701,6 @@ void ath9k_hw_set_sta_beacon_timers(struct ath_hw *ah,
+ 		  TU_TO_USEC(bs->bs_intval & ATH9K_BEACON_PERIOD));
+ 
+ 	REGWRITE_BUFFER_FLUSH(ah);
+-	DISABLE_REGWRITE_BUFFER(ah);
+ 
+ 	REG_RMW_FIELD(ah, AR_RSSI_THR,
+ 		      AR_RSSI_THR_BM_THR, bs->bs_bmissthreshold);
+@@ -1758,7 +1746,6 @@ void ath9k_hw_set_sta_beacon_timers(struct ath_hw *ah,
+ 	REG_WRITE(ah, AR_DTIM_PERIOD, TU_TO_USEC(dtimperiod));
+ 
+ 	REGWRITE_BUFFER_FLUSH(ah);
+-	DISABLE_REGWRITE_BUFFER(ah);
+ 
+ 	REG_SET_BIT(ah, AR_TIMER_MODE,
+ 		    AR_TBTT_TIMER_EN | AR_TIM_TIMER_EN |
+@@ -2176,7 +2163,6 @@ void ath9k_hw_setrxfilter(struct ath_hw *ah, u32 bits)
+ 			  REG_READ(ah, AR_RXCFG) & ~AR_RXCFG_ZLFDMA);
+ 
+ 	REGWRITE_BUFFER_FLUSH(ah);
+-	DISABLE_REGWRITE_BUFFER(ah);
+ }
+ EXPORT_SYMBOL(ath9k_hw_setrxfilter);
+ 
+diff --git a/drivers/net/wireless/ath/ath9k/hw.h b/drivers/net/wireless/ath/ath9k/hw.h
+index 87dbb85..d558c51 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.h
++++ b/drivers/net/wireless/ath/ath9k/hw.h
+@@ -70,19 +70,13 @@
+ 
+ #define ENABLE_REGWRITE_BUFFER(_ah)					\
+ 	do {								\
+-		if (AR_SREV_9271(_ah))					\
++		if (ath9k_hw_common(_ah)->ops->enable_write_buffer)	\
+ 			ath9k_hw_common(_ah)->ops->enable_write_buffer((_ah)); \
+ 	} while (0)
+ 
+-#define DISABLE_REGWRITE_BUFFER(_ah)					\
+-	do {								\
+-		if (AR_SREV_9271(_ah))					\
+-			ath9k_hw_common(_ah)->ops->disable_write_buffer((_ah)); \
+-	} while (0)
+-
+ #define REGWRITE_BUFFER_FLUSH(_ah)					\
+ 	do {								\
+-		if (AR_SREV_9271(_ah))					\
++		if (ath9k_hw_common(_ah)->ops->write_flush)		\
+ 			ath9k_hw_common(_ah)->ops->write_flush((_ah));	\
+ 	} while (0)
+ 
+diff --git a/drivers/net/wireless/ath/ath9k/mac.c b/drivers/net/wireless/ath/ath9k/mac.c
+index 3efda8a..e578459 100644
+--- a/drivers/net/wireless/ath/ath9k/mac.c
++++ b/drivers/net/wireless/ath/ath9k/mac.c
+@@ -40,7 +40,6 @@ static void ath9k_hw_set_txq_interrupts(struct ath_hw *ah,
+ 	REG_WRITE(ah, AR_IMR_S2, ah->imrs2_reg);
+ 
+ 	REGWRITE_BUFFER_FLUSH(ah);
+-	DISABLE_REGWRITE_BUFFER(ah);
+ }
+ 
+ u32 ath9k_hw_gettxbuf(struct ath_hw *ah, u32 q)
+@@ -530,7 +529,6 @@ bool ath9k_hw_resettxqueue(struct ath_hw *ah, u32 q)
+ 	}
+ 
+ 	REGWRITE_BUFFER_FLUSH(ah);
+-	DISABLE_REGWRITE_BUFFER(ah);
+ 
+ 	if (qi->tqi_qflags & TXQ_FLAG_FRAG_BURST_BACKOFF_ENABLE) {
+ 		REG_WRITE(ah, AR_DMISC(q),
+@@ -553,7 +551,6 @@ bool ath9k_hw_resettxqueue(struct ath_hw *ah, u32 q)
+ 			  | AR_D_MISC_POST_FR_BKOFF_DIS);
+ 
+ 		REGWRITE_BUFFER_FLUSH(ah);
+-		DISABLE_REGWRITE_BUFFER(ah);
+ 
+ 		/*
+ 		 * cwmin and cwmax should be 0 for beacon queue
+@@ -585,7 +582,6 @@ bool ath9k_hw_resettxqueue(struct ath_hw *ah, u32 q)
+ 			     AR_D_MISC_ARB_LOCKOUT_CNTRL_S));
+ 
+ 		REGWRITE_BUFFER_FLUSH(ah);
+-		DISABLE_REGWRITE_BUFFER(ah);
+ 
+ 		break;
+ 	case ATH9K_TX_QUEUE_PSPOLL:
 
