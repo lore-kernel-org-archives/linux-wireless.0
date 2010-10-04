@@ -1,55 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([192.100.122.230]:55178 "EHLO
-	mgw-mx03.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755234Ab0JFFgR (ORCPT
+Received: from mail.candelatech.com ([208.74.158.172]:59582 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756566Ab0JDSvw (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 6 Oct 2010 01:36:17 -0400
-Subject: RE: [PATCH 13/25] wl1271: Enable/disable 11a support based on INI
- configuration
-From: Juuso Oikarinen <juuso.oikarinen@nokia.com>
-To: "ext Gabay, Benzy" <benzyg@ti.com>
-Cc: "Coelho Luciano (Nokia-MS/Helsinki)" <Luciano.Coelho@nokia.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <676FD6AA0F002F49B89E70F0C5EFD22C135ADBA314@dlee04.ent.ti.com>
-References: <1285576669-8070-1-git-send-email-luciano.coelho@nokia.com>
-	 <1285576669-8070-14-git-send-email-luciano.coelho@nokia.com>
-	 <676FD6AA0F002F49B89E70F0C5EFD22C135ADBA314@dlee04.ent.ti.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Wed, 06 Oct 2010 08:36:00 +0300
-Message-ID: <1286343360.11177.262.camel@wimaxnb.nmp.nokia.com>
-Mime-Version: 1.0
+	Mon, 4 Oct 2010 14:51:52 -0400
+Received: from [192.168.100.195] (firewall.candelatech.com [70.89.124.249])
+	(authenticated bits=0)
+	by ns3.lanforge.com (8.14.2/8.14.2) with ESMTP id o94Ippub008335
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
+	for <linux-wireless@vger.kernel.org>; Mon, 4 Oct 2010 11:51:51 -0700
+Message-ID: <4CAA2247.50402@candelatech.com>
+Date: Mon, 04 Oct 2010 11:51:51 -0700
+From: Ben Greear <greearb@candelatech.com>
+MIME-Version: 1.0
+To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Crash in agg-tx.c, with ath9k and lots of STA VIFs.
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2010-10-06 at 07:26 +0200, ext Gabay, Benzy wrote:
-> Juuso ,
-> I thought that there is no .ini in the 1271 MAC802.11 solution. 
-> According to the code below you are deciding if it is "a" or not according to NVS file.
-> 
-> Is it a typo in your header description or did I get it wrong?
+Just in case this seems familiar to anyone...
 
-No typo, there is a configuration section inside the wl1271-nvs.bin
--file referred to as the "INI-section." That ini section configures
-general parameters (including the dual-band support) and several
-radio-parameters.
+IP: [<f8ba74da>] ieee80211_stop_tx_ba_session+0x14/0x84 [mac80211]
+*pde = 00000000
+Oops: 0000 [#1] SMP
+last sysfs file: /sys/devices/pci0000:00/0000:00:1e.0/0000:08:01.0/ieee80211/phy0/index
+Modules linked in: michael_mic aes_i586 aes_generic 8021q garp stp llc macvlan pktgen fuse nfs lockd fscache nfs_acl ]
 
-These INI-parameters are the only way for the driver to know whether
-there is 11a RF support in the hardware or not.
+Pid: 16563, comm: parse-iwconfig. Not tainted 2.6.36-rc6-wl+ #23 PDSBM/PDSBM
+EIP: 0060:[<f8ba74da>] EFLAGS: 00010282 CPU: 0
+EIP is at ieee80211_stop_tx_ba_session+0x14/0x84 [mac80211]
+EAX: 00010000 EBX: f30d5a98 ECX: 00000001 EDX: 00000000
+ESI: f30d5800 EDI: f30d5800 EBP: f5ed5ef4 ESP: f5ed5ee0
+  DS: 007b ES: 007b FS: 00d8 GS: 0033 SS: 0068
+Process parse-iwconfig. (pid: 16563, ti=f5ed4000 task=f44ee860 task.ti=f5ed4000)
+Stack:
+  00000246 00000246 00000000 f30d5800 00000000 f5ed5f08 f8ba7b28 c0a2be80
+<0> f2f11090 f5ed5f50 f5ed5f64 c043d5a8 00000000 00000002 00000000 c043d546
+<0> f5ed5f50 f5ed5f44 f30d5a44 c0a2cca8 c0a2caa8 c0a2c8a8 c0a2c6a8 f8ba7a90
+Call Trace:
+  [<f8ba7b28>] ? sta_addba_resp_timer_expired+0x98/0xb4 [mac80211]
+  [<c043d5a8>] ? run_timer_softirq+0x14f/0x1e7
+  [<c043d546>] ? run_timer_softirq+0xed/0x1e7
+  [<f8ba7a90>] ? sta_addba_resp_timer_expired+0x0/0xb4 [mac80211]
+  [<c04393f2>] ? __do_softirq+0x86/0x111
+  [<c04394b3>] ? do_softirq+0x36/0x5a
+  [<c04395ec>] ? irq_exit+0x35/0x69
+  [<c0418d1b>] ? smp_apic_timer_interrupt+0x6e/0x7c
+  [<c076459f>] ? apic_timer_interrupt+0x2f/0x40
+Code: b2 c7 8b 45 ec 8d 93 00 fe ff ff e8 46 23 01 00 58 5a 5b 5e 5f 5d c3 55 89 e5 57 56 53 89 c3 8d b8 68 fd ff ff
+EIP: [<f8ba74da>] ieee80211_stop_tx_ba_session+0x14/0x84 [mac80211] SS:ESP 0068:f5ed5ee0
+CR2: 00000000000101e0
+---[ end trace 4c1f9d6f2b4d6888 ]---
 
--Juuso
-
-> > Sent: Monday, September 27, 2010 3:38 AM
-> > 
-> > From: Juuso Oikarinen <juuso.oikarinen@nokia.com>
-> > 
-> > Instead of hardcoding 11a support, enable/disable driver support based
-> > on
-> > the dual-mode-select parameter in the nvs-file general paramters.
-> > 
-> > Signed-off-by: Juuso Oikarinen <juuso.oikarinen@nokia.com>
-> > Reviewed-by: Luciano Coelho <luciano.coelho@nokia.com>
-> > Signed-off-by: Luciano Coelho <luciano.coelho@nokia.com>
-> > ---
 
 
+-- 
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
 
