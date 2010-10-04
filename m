@@ -1,57 +1,97 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from external1.orbit-lab.org ([128.6.192.131]:37463 "HELO
-	external1.orbit-lab.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S932077Ab0JOTDk (ORCPT
+Received: from mail-bw0-f46.google.com ([209.85.214.46]:39435 "EHLO
+	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756207Ab0JDUzM (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 15 Oct 2010 15:03:40 -0400
-Received: from repository3.orbit-lab.org (repository3.orbit-lab.org [10.50.0.41])
-	by external1.orbit-lab.org (Postfix) with ESMTP id A1328418D8
-	for <linux-wireless@vger.kernel.org>; Fri, 15 Oct 2010 15:00:41 -0400 (EDT)
-Subject: Compat-wireless release for 2010-10-15 is baked
-To: <linux-wireless@vger.kernel.org>
-Message-Id: <20101015190339.77C3540E24@repository3.orbit-lab.org>
-Date: Fri, 15 Oct 2010 15:03:39 -0400 (EDT)
-From: compat@orbit-lab.org (Compat-wireless cronjob account)
+	Mon, 4 Oct 2010 16:55:12 -0400
+Received: by bwz11 with SMTP id 11so3997069bwz.19
+        for <linux-wireless@vger.kernel.org>; Mon, 04 Oct 2010 13:55:11 -0700 (PDT)
+Date: Mon, 4 Oct 2010 22:55:08 +0200 (CEST)
+From: "=?ISO-8859-15?Q?Bj=F6rn_Smedman?=" <bjorn.smedman@venatech.se>
+To: linux-wireless <linux-wireless@vger.kernel.org>,
+	ath9k-devel@lists.ath9k.org
+Subject: [RFC] ath9k: Insert wmb before linking dma descriptors
+Message-ID: <alpine.DEB.2.00.1010042059130.29449@vtdt3>
+MIME-Version: 1.0
+Content-Type: MULTIPART/MIXED; BOUNDARY="8323329-547367930-1286225710=:29449"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
->From git://git.kernel.org/pub/scm/linux/kernel/git/mcgrof/compat-wireless-2.6
-   f2e8f16..1c390e6  linux-2.6.36.y -> origin/linux-2.6.36.y
-   a19acd7..f0578ae  master     -> origin/master
- * [new tag]         compat-wireless-v2.6.36-rc8-1 -> compat-wireless-v2.6.36-rc8-1
->From git://git.kernel.org/pub/scm/linux/kernel/git/mcgrof/compat-wireless-2.6
- * [new tag]         compat-wireless-2010-10-14 -> compat-wireless-2010-10-14
->From git://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next
-   5f73e94..4bd98fd  history    -> origin/history
- + 39f2bd6...a26d875 master     -> origin/master  (forced update)
-   0acc1b2..3aa0ce8  stable     -> origin/stable
- * [new tag]         next-20101015 -> next-20101015
-cat: /var/opt/compat/compat-wireless-2.6/compat_version: No such file or directory
-cat: compat_base_tree: No such file or directory
-cat: compat_base_tree_version: No such file or directory
-cat: compat_version: No such file or directory
-cat: /var/opt/compat/compat-wireless-2.6/compat_version: No such file or directory
-scripts/Makefile.clean:17: /var/opt/compat/compat-wireless-2.6/drivers/net/wireless/hostap/Makefile: No such file or directory
-make[4]: *** No rule to make target `/var/opt/compat/compat-wireless-2.6/drivers/net/wireless/hostap/Makefile'.  Stop.
-make[3]: *** [/var/opt/compat/compat-wireless-2.6/drivers/net/wireless/hostap] Error 2
-make[2]: *** [/var/opt/compat/compat-wireless-2.6/drivers/net/wireless] Error 2
-make[1]: *** [_clean_/var/opt/compat/compat-wireless-2.6] Error 2
-make: *** [clean] Error 2
+  This message is in MIME format.  The first part should be readable text,
+  while the remaining parts are likely unreadable without MIME-aware tools.
 
-compat-wireless code metrics
+--8323329-547367930-1286225710=:29449
+Content-Type: TEXT/PLAIN; charset=ISO-8859-15
+Content-Transfer-Encoding: 8BIT
 
-    741071 - Total upstream lines of code being pulled
-      2157 - backport code changes
-      1905 - backport code additions
-       252 - backport code deletions
-      6388 - backport from compat module
-      8545 - total backport code
-    1.1531 - % of code consists of backport work
-      1535 - Crap changes not yet posted
-      1491 - Crap additions not yet posted
-        44 - Crap deletions not yet posted
-    0.2071 - % of crap code
+Hi all,
 
-Base tree: linux-next.git
-Base tree version: next-20101015
-compat-wireless release: compat-wireless-2010-10-14-1-gf0578ae-pc
+I've been looking at how ath9k does DMA and comparing with the
+recommendations in the Linux kernel documentation for the DMA API[1]. To
+me it looks like we risk setting up incorrect DMA descriptors on
+platforms that can reorder writes because all data in the descriptor may
+not be written to memory before the descriptor is linked into the DMA
+chain.
+
+The patch below attempts to remove this risk by inserting a write memory
+barrier between where we set up a descriptor and where we add it to the 
+DMA chain. My hope is that this may solve some of the harder chip lockups 
+on MIPS but more testing is required to determine if it has this effect.
+
+Any thoughts?
+
+/Björn
+
+1. http://www.mjmwired.net/kernel/Documentation/DMA-API.txt
+
+---
+diff --git a/drivers/net/wireless/ath/ath9k/beacon.c b/drivers/net/wireless/ath/ath9k/beacon.c
+index 081192e..8e43443 100644
+--- a/drivers/net/wireless/ath/ath9k/beacon.c
++++ b/drivers/net/wireless/ath/ath9k/beacon.c
+@@ -450,6 +450,8 @@ void ath_beacon_tasklet(unsigned long data)
+ 				"beacon queue %u did not stop?\n", sc->beacon.beaconq);
+ 		}
+ 
++		wmb();
++
+ 		/* NB: cabq traffic should already be queued and primed */
+ 		ath9k_hw_puttxbuf(ah, sc->beacon.beaconq, bfaddr);
+ 		ath9k_hw_txstart(ah, sc->beacon.beaconq);
+diff --git a/drivers/net/wireless/ath/ath9k/recv.c b/drivers/net/wireless/ath/ath9k/recv.c
+index 9c166f3..2cc0271 100644
+--- a/drivers/net/wireless/ath/ath9k/recv.c
++++ b/drivers/net/wireless/ath/ath9k/recv.c
+@@ -90,6 +90,8 @@ static void ath_rx_buf_link(struct ath_softc *sc, struct ath_buf *bf)
+ 			     common->rx_bufsize,
+ 			     0);
+ 
++	wmb();
++
+ 	if (sc->rx.rxlink == NULL)
+ 		ath9k_hw_putrxbuf(ah, bf->bf_daddr);
+ 	else
+@@ -500,6 +502,9 @@ int ath_startrecv(struct ath_softc *sc)
+ 		goto start_recv;
+ 
+ 	bf = list_first_entry(&sc->rx.rxbuf, struct ath_buf, list);
++
++	wmb();
++
+ 	ath9k_hw_putrxbuf(ah, bf->bf_daddr);
+ 	ath9k_hw_rxena(ah);
+ 
+diff --git a/drivers/net/wireless/ath/ath9k/xmit.c b/drivers/net/wireless/ath/ath9k/xmit.c
+index f7da6b2..4b8c428 100644
+--- a/drivers/net/wireless/ath/ath9k/xmit.c
++++ b/drivers/net/wireless/ath/ath9k/xmit.c
+@@ -1250,6 +1250,8 @@ static void ath_tx_txqaddbuf(struct ath_softc *sc, struct ath_txq *txq,
+ 	ath_print(common, ATH_DBG_QUEUE,
+ 		  "qnum: %d, txq depth: %d\n", txq->axq_qnum, txq->axq_depth);
+ 
++	wmb();
++
+ 	if (sc->sc_ah->caps.hw_caps & ATH9K_HW_CAP_EDMA) {
+ 		if (txq->axq_depth >= ATH_TXFIFO_DEPTH) {
+ 			list_splice_tail_init(head, &txq->txq_fifo_pending);
+--8323329-547367930-1286225710=:29449--
