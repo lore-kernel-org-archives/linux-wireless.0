@@ -1,44 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:38587 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755216Ab0JKT3D (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 11 Oct 2010 15:29:03 -0400
-Subject: Re: [PATCH 1/2] wireless:  Support wiphy_renamed hook for drivers.
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Ben Greear <greearb@candelatech.com>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <4CB3605D.1040509@candelatech.com>
-References: <1286822537-28756-1-git-send-email-greearb@candelatech.com>
-	 <1286822639.3634.84.camel@jlt3.sipsolutions.net>
-	 <1286822771.3634.85.camel@jlt3.sipsolutions.net>
-	 <4CB3605D.1040509@candelatech.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Mon, 11 Oct 2010 21:28:59 +0200
-Message-ID: <1286825339.3634.86.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+Received: from mail.atheros.com ([12.19.149.2]:35418 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752382Ab0JDGfG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 4 Oct 2010 02:35:06 -0400
+Received: from mail.atheros.com ([10.10.20.105])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Sun, 03 Oct 2010 23:34:58 -0700
+Date: Mon, 4 Oct 2010 12:04:46 +0530
+From: Vasanthakumar Thiagarajan <vasanth@atheros.com>
+To: Felix Fietkau <nbd@openwrt.org>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
+	"linville@tuxdriver.com" <linville@tuxdriver.com>
+Subject: Re: [PATCH 2/4] ath9k_hw: merge codepaths that access the cycle
+	counter registers
+Message-ID: <20101004063446.GA16078@vasanth-laptop>
+References: <1286125639-15137-1-git-send-email-nbd@openwrt.org> <1286125639-15137-2-git-send-email-nbd@openwrt.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <1286125639-15137-2-git-send-email-nbd@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2010-10-11 at 12:07 -0700, Ben Greear wrote:
-> On 10/11/2010 11:46 AM, Johannes Berg wrote:
-> > I think you should just do this (untested):
+> +	/* freeze counters */
+> +	REG_WRITE(ah, AR_MIBC, AR_MIBC_FMC);
+> +
+> +	ah->cc.cycles = REG_READ(ah, AR_CCCNT);
+> +	if (ah->cc.cycles < cc.cycles) {
+> +		clear = true;
+> +		goto skip;
+>  	}
+>  
+> -	cycles = cc;
+> -	rx_frame = rf;
+> -	rx_clear = rc;
+> -	tx_frame = tf;
+> +	ah->cc.rx_clear = REG_READ(ah, AR_RCCNT);
+> +	ah->cc.rx_frame = REG_READ(ah, AR_RFCNT);
+> +	ah->cc.tx_frame = REG_READ(ah, AR_TFCNT);
+> +
+> +	/* prevent wraparound */
+> +	if (ah->cc.cycles & BIT(31))
+> +		clear = true;
+
+This does not look right, previous if should take care of 
+any wrap around.
+
+> +
+> +#define CC_DELTA(_field, _reg) ah->cc_delta._field += ah->cc._field - cc._field
+_reg is not used.
+
 > 
-> >   void
-> > @@ -892,8 +889,8 @@ ath5k_debug_init_device(struct ath5k_sof
-> >   {
-> >   	sc->debug.level = ath5k_debug;
-> >
-> > -	sc->debug.debugfs_phydir = debugfs_create_dir(wiphy_name(sc->hw->wiphy),
-> > -				ath5k_global_debugfs);
-> > +	sc->debug.debugfs_phydir = debugfs_create_dir("ath5k",
-> > +				sc->hw->wiphy->debugfsdir);
-> 
-> This fails to work because sc->hw->wiphy->debugfsdir is null when this
-> method is called...
+> +skip:
+> +	if (clear) {
+> +		REG_WRITE(ah, AR_CCCNT, 0);
+> +		REG_WRITE(ah, AR_RFCNT, 0);
+> +		REG_WRITE(ah, AR_RCCNT, 0);
+> +		REG_WRITE(ah, AR_TFCNT, 0);
 
-Then it needs to be after registering with mac80211 -- shouldn't really
-change much though.
+should be able to do with single write in AR_MIBC.
 
-johannes
+> +	/* unfreeze counters */
+> +	REG_WRITE(ah, AR_MIBC, 0);
 
+Please configure the relevant bit to unfreeze the counters.
+
+Vasanth
