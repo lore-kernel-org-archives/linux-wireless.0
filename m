@@ -1,142 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wy0-f174.google.com ([74.125.82.174]:48274 "EHLO
-	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932282Ab0JLMtr (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 12 Oct 2010 08:49:47 -0400
-Received: by mail-wy0-f174.google.com with SMTP id 20so1342536wye.19
-        for <linux-wireless@vger.kernel.org>; Tue, 12 Oct 2010 05:49:47 -0700 (PDT)
-From: Ido Yariv <ido@wizery.com>
-To: Luciano Coelho <luciano.coelho@nokia.com>,
-	linux-wireless@vger.kernel.org
-Cc: Ido Yariv <ido@wizery.com>
-Subject: [PATCH v3 3/4] wl1271: Allocate TX descriptors more efficiently
-Date: Tue, 12 Oct 2010 14:49:11 +0200
-Message-Id: <1286887752-19321-4-git-send-email-ido@wizery.com>
-In-Reply-To: <1286887752-19321-1-git-send-email-ido@wizery.com>
-References: <1286887752-19321-1-git-send-email-ido@wizery.com>
+Received: from nbd.name ([88.198.39.176]:35391 "EHLO ds10.nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756482Ab0JDSJz (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 4 Oct 2010 14:09:55 -0400
+From: Felix Fietkau <nbd@openwrt.org>
+To: linux-wireless@vger.kernel.org
+Cc: linville@tuxdriver.com, lrodriguez@atheros.com
+Subject: [PATCH 1/5] ath9k_hw: add a helper function to check for the new ANI implementation
+Date: Mon,  4 Oct 2010 20:09:46 +0200
+Message-Id: <1286215790-67069-1-git-send-email-nbd@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On each TX descriptor allocation, a free entry is found by traversing the TX
-descriptors array.
-
-Improve this by holding a bitmap of all TX descriptors, and using efficient
-bit operations to search for free entries.
-
-Signed-off-by: Ido Yariv <ido@wizery.com>
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
 ---
- drivers/net/wireless/wl12xx/wl1271.h      |    1 +
- drivers/net/wireless/wl12xx/wl1271_main.c |    1 +
- drivers/net/wireless/wl12xx/wl1271_tx.c   |   38 ++++++++++++++++------------
- 3 files changed, 24 insertions(+), 16 deletions(-)
+ drivers/net/wireless/ath/ath9k/ani.c |    9 +++++++--
+ 1 files changed, 7 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/wl12xx/wl1271.h b/drivers/net/wireless/wl12xx/wl1271.h
-index 4a034a3..718e96d 100644
---- a/drivers/net/wireless/wl12xx/wl1271.h
-+++ b/drivers/net/wireless/wl12xx/wl1271.h
-@@ -398,6 +398,7 @@ struct wl1271 {
- 	struct work_struct tx_work;
+diff --git a/drivers/net/wireless/ath/ath9k/ani.c b/drivers/net/wireless/ath/ath9k/ani.c
+index a1894d2..9856a1b 100644
+--- a/drivers/net/wireless/ath/ath9k/ani.c
++++ b/drivers/net/wireless/ath/ath9k/ani.c
+@@ -109,6 +109,11 @@ static void ath9k_hw_ani_lower_immunity(struct ath_hw *ah)
+ 	ath9k_hw_private_ops(ah)->ani_lower_immunity(ah);
+ }
  
- 	/* Pending TX frames */
-+	unsigned long tx_frames_map[BITS_TO_LONGS(ACX_TX_DESCRIPTORS)];
- 	struct sk_buff *tx_frames[ACX_TX_DESCRIPTORS];
- 	int tx_frames_cnt;
- 
-diff --git a/drivers/net/wireless/wl12xx/wl1271_main.c b/drivers/net/wireless/wl12xx/wl1271_main.c
-index 18aff22..0fd4725 100644
---- a/drivers/net/wireless/wl12xx/wl1271_main.c
-+++ b/drivers/net/wireless/wl12xx/wl1271_main.c
-@@ -2532,6 +2532,7 @@ struct ieee80211_hw *wl1271_alloc_hw(void)
- 	wl->sg_enabled = true;
- 	wl->hw_pg_ver = -1;
- 
-+	memset(wl->tx_frames_map, 0, sizeof(wl->tx_frames_map));
- 	for (i = 0; i < ACX_TX_DESCRIPTORS; i++)
- 		wl->tx_frames[i] = NULL;
- 
-diff --git a/drivers/net/wireless/wl12xx/wl1271_tx.c b/drivers/net/wireless/wl12xx/wl1271_tx.c
-index cf32a77..a3a29ea 100644
---- a/drivers/net/wireless/wl12xx/wl1271_tx.c
-+++ b/drivers/net/wireless/wl12xx/wl1271_tx.c
-@@ -30,17 +30,26 @@
- #include "wl1271_ps.h"
- #include "wl1271_tx.h"
- 
--static int wl1271_tx_id(struct wl1271 *wl, struct sk_buff *skb)
-+static int wl1271_alloc_tx_id(struct wl1271 *wl, struct sk_buff *skb)
- {
--	int i;
--	for (i = 0; i < ACX_TX_DESCRIPTORS; i++)
--		if (wl->tx_frames[i] == NULL) {
--			wl->tx_frames[i] = skb;
--			wl->tx_frames_cnt++;
--			return i;
--		}
-+	int id;
-+
-+	id = find_first_zero_bit(wl->tx_frames_map, ACX_TX_DESCRIPTORS);
-+	if (id >= ACX_TX_DESCRIPTORS)
-+		return -EBUSY;
-+
-+	set_bit(id, wl->tx_frames_map);
-+	wl->tx_frames[id] = skb;
-+	wl->tx_frames_cnt++;
-+	return id;
-+}
- 
--	return -EBUSY;
-+static void wl1271_free_tx_id(struct wl1271 *wl, int id)
++static bool use_new_ani(struct ath_hw *ah)
 +{
-+	if (test_and_clear_bit(id, wl->tx_frames_map)) {
-+		wl->tx_frames[id] = NULL;
-+		wl->tx_frames_cnt--;
-+	}
- }
++	return AR_SREV_9300_20_OR_LATER(ah) || modparam_force_new_ani;
++}
++
+ int ath9k_hw_get_ani_channel_idx(struct ath_hw *ah,
+ 				 struct ath9k_channel *chan)
+ {
+@@ -1178,7 +1183,7 @@ void ath9k_hw_ani_init(struct ath_hw *ah)
  
- static int wl1271_tx_allocate(struct wl1271 *wl, struct sk_buff *skb, u32 extra,
-@@ -55,7 +64,7 @@ static int wl1271_tx_allocate(struct wl1271 *wl, struct sk_buff *skb, u32 extra,
- 		return -EAGAIN;
+ 	memset(ah->ani, 0, sizeof(ah->ani));
+ 	for (i = 0; i < ARRAY_SIZE(ah->ani); i++) {
+-		if (AR_SREV_9300_20_OR_LATER(ah) || modparam_force_new_ani) {
++		if (use_new_ani(ah)) {
+ 			ah->ani[i].ofdmTrigHigh = ATH9K_ANI_OFDM_TRIG_HIGH_NEW;
+ 			ah->ani[i].ofdmTrigLow = ATH9K_ANI_OFDM_TRIG_LOW_NEW;
  
- 	/* allocate free identifier for the packet */
--	id = wl1271_tx_id(wl, skb);
-+	id = wl1271_alloc_tx_id(wl, skb);
- 	if (id < 0)
- 		return id;
+@@ -1230,7 +1235,7 @@ void ath9k_hw_ani_init(struct ath_hw *ah)
+ 	 * since we expect some ongoing maintenance on the tables, let's sanity
+ 	 * check here default level should not modify INI setting.
+ 	 */
+-	if (AR_SREV_9300_20_OR_LATER(ah) || modparam_force_new_ani) {
++	if (use_new_ani(ah)) {
+ 		const struct ani_ofdm_level_entry *entry_ofdm;
+ 		const struct ani_cck_level_entry *entry_cck;
  
-@@ -79,8 +88,7 @@ static int wl1271_tx_allocate(struct wl1271 *wl, struct sk_buff *skb, u32 extra,
- 			     "tx_allocate: size: %d, blocks: %d, id: %d",
- 			     total_len, total_blocks, id);
- 	} else {
--		wl->tx_frames[id] = NULL;
--		wl->tx_frames_cnt--;
-+		wl1271_free_tx_id(wl, id);
- 	}
- 
- 	return ret;
-@@ -352,8 +360,7 @@ static void wl1271_tx_complete_packet(struct wl1271 *wl,
- 
- 	/* return the packet to the stack */
- 	ieee80211_tx_status(wl->hw, skb);
--	wl->tx_frames[result->id] = NULL;
--	wl->tx_frames_cnt--;
-+	wl1271_free_tx_id(wl, result->id);
- }
- 
- /* Called upon reception of a TX complete interrupt */
-@@ -422,11 +429,10 @@ void wl1271_tx_reset(struct wl1271 *wl)
- 	for (i = 0; i < ACX_TX_DESCRIPTORS; i++)
- 		if (wl->tx_frames[i] != NULL) {
- 			skb = wl->tx_frames[i];
--			wl->tx_frames[i] = NULL;
-+			wl1271_free_tx_id(wl, i);
- 			wl1271_debug(DEBUG_TX, "freeing skb 0x%p", skb);
- 			ieee80211_tx_status(wl->hw, skb);
- 		}
--	wl->tx_frames_cnt = 0;
- }
- 
- #define WL1271_TX_FLUSH_TIMEOUT 500000
 -- 
-1.7.0.4
+1.7.2.2
 
