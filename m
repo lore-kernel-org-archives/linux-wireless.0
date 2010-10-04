@@ -1,63 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:60513 "EHLO
+Received: from he.sipsolutions.net ([78.46.109.217]:59527 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756513Ab0JALtv (ORCPT
+	with ESMTP id S1755029Ab0JDSjb (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 1 Oct 2010 07:49:51 -0400
-Subject: Re: wireless-testing (2.6.36-rc6):  inconsistent {IN-SOFTIRQ-W} ->
- {SOFTIRQ-ON-W} usage.
+	Mon, 4 Oct 2010 14:39:31 -0400
+Subject: Re: [PATCH v2 3/3] mac80211: move to the home channel for
+ disassociation when roaming
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Ben Greear <greearb@candelatech.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	NetDev <netdev@vger.kernel.org>
-In-Reply-To: <4CA4F000.2060509@candelatech.com>
-References: <4CA4F000.2060509@candelatech.com>
+To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Cc: Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
+	"linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"stable@kernel.org" <stable@kernel.org>, Jouni Malinen <j@w1.fi>,
+	Paul Stewart <pstew@google.com>,
+	Amod Bodas <Amod.Bodas@Atheros.com>,
+	Vasanth Thiagarajan <Vasanth.Thiagarajan@Atheros.com>
+In-Reply-To: <20101004172333.GK2105@tux>
+References: <1285965233-11097-1-git-send-email-lrodriguez@atheros.com>
+	 <1285965233-11097-4-git-send-email-lrodriguez@atheros.com>
+	 <1286198152.3620.35.camel@jlt3.sipsolutions.net>
+	 <20101004163829.GD2105@tux>
+	 <1286210516.3620.41.camel@jlt3.sipsolutions.net>
+	 <20101004172333.GK2105@tux>
 Content-Type: text/plain; charset="UTF-8"
-Date: Fri, 01 Oct 2010 13:49:49 +0200
-Message-ID: <1285933789.3739.34.camel@jlt3.sipsolutions.net>
+Date: Mon, 04 Oct 2010 20:39:29 +0200
+Message-ID: <1286217569.3620.48.camel@jlt3.sipsolutions.net>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2010-09-30 at 13:16 -0700, Ben Greear wrote:
-> We saw this on a system that has two ath9k APs, some extra routing tables
-> and rules to use them, and a user-space 'bridge' that uses packet-sockets.
+On Mon, 2010-10-04 at 10:23 -0700, Luis R. Rodriguez wrote:
+> On Mon, Oct 04, 2010 at 09:41:56AM -0700, Johannes Berg wrote:
+> > On Mon, 2010-10-04 at 09:38 -0700, Luis R. Rodriguez wrote:
+> > > On Mon, Oct 04, 2010 at 06:15:52AM -0700, Johannes Berg wrote:
+> > > > On Fri, 2010-10-01 at 16:33 -0400, Luis R. Rodriguez wrote:
+> > > > 
+> > > > > @@ -2203,6 +2204,14 @@ int ieee80211_mgd_assoc(struct ieee80211_sub_if_data *sdata,
+> > > > >  			return -EALREADY;
+> > > > >  		}
+> > > > >  
+> > > > > +		/*
+> > > > > +		 * right before this was authentication, that was on
+> > > > > +		 * the same the wk->chan so we need to ensure we temporarily
+> > > > > +		 * go back to the operating channel to send the disassocation.
+> > > > > +		 */
+> > > > > +		local->tmp_channel = NULL;
+> > > > > +		ieee80211_hw_config(local, 0);
+> > > > > +
+> > > > 
+> > > > Yikes, no, you can't do this. You don't know what has been merged with
+> > > > the authentication work item, etc.
+> > > 
+> > > What do you mean? Auth/Assoc will be handled separately and the
+> > > target channel will also be handled for each work item run, what
+> > > issues can arise from sending us back to the home channel towards
+> > > the end of this call here?
+> > 
+> > Another work item, like a remain-on-channel, might have been started on
+> > the same channel ("merged").
 > 
-> Aside from a few patches to help virtualize wireless devices (and none directly to ath9k),
-> this is today's wireless-testing tree.
-> 
-> =================================
-> [ INFO: inconsistent lock state ]
-> 2.6.36-rc6-wl+ #20
-> ---------------------------------
-> inconsistent {IN-SOFTIRQ-W} -> {SOFTIRQ-ON-W} usage.
-> kworker/u:0/5 [HC0[0]:SC0[0]:HE1:SE1] takes:
->   (&(&list->lock)->rlock){+.?...}, at: [<c0741066>] packet_rcv+0x1f3/0x27a
+> But how do this break that other work from moving forward in its respective
+> channel? The work_work loop makes sure to check if we require a channel
+> change on the work item.
 
-I think this is due to
-
-commit 5ed3bc7288487bd4f891f420a07319e0b538b4fe
-Author: John W. Linville <linville@tuxdriver.com>
-Date:   Thu Jun 24 14:38:30 2010 -0400
-
-    mac80211: use netif_receive_skb in ieee80211_tx_status callpath
-
-
-since
-
-/**
- *      netif_receive_skb - process receive buffer from network
- *      @skb: buffer to process
- *
- *      netif_receive_skb() is the main receive data processing function.
- *      It always succeeds. The buffer may be dropped during processing   
- *      for congestion control or by the protocol layers.
- *
- *      This function may only be called from softirq context and interrupts
- *      should be enabled.
-
-but we don't explicitly disable BHs. I suppose we should impose the same
-on drivers calling ieee80211_tx_status().
+But we already activated that other work item.
 
 johannes
 
