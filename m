@@ -1,44 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:35724 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753466Ab0JNNtX (ORCPT
+Received: from mail-iw0-f174.google.com ([209.85.214.174]:34577 "EHLO
+	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932113Ab0JDP7o (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 14 Oct 2010 09:49:23 -0400
-Subject: Re: [PATCH 4/6] Add a bitrate threshold config hook in mac80211
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Paul Stewart <pstew@google.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <AANLkTi=PDnooPN9kmgHo0Sh7s3p8cMfpvbkkoAbCsF3_@mail.gmail.com>
-References: <20101013224851.D58252094C@glenhelen.mtv.corp.google.com>
-	 <1287040708.4641.10.camel@jlt3.sipsolutions.net>
-	 <AANLkTi=PDnooPN9kmgHo0Sh7s3p8cMfpvbkkoAbCsF3_@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Thu, 14 Oct 2010 15:50:03 +0200
-Message-ID: <1287064203.4641.433.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+	Mon, 4 Oct 2010 11:59:44 -0400
+Received: by iwn5 with SMTP id 5so7074125iwn.19
+        for <linux-wireless@vger.kernel.org>; Mon, 04 Oct 2010 08:59:44 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <9D3ED2EB2589B641B6CCA9F529CAA6A201018E47@exbe12.nasstar-t1.net>
+References: <9D3ED2EB2589B641B6CCA9F529CAA6A2F258CB@exbe12.nasstar-t1.net>
+ <AANLkTi=aBPTYZB62Jup4=10_D2wxEgVaBormJcZb6qyT@mail.gmail.com>
+ <9D3ED2EB2589B641B6CCA9F529CAA6A2FC5433@exbe12.nasstar-t1.net>
+ <AANLkTinAnawV3JThYNdovcBY4HaUOH-Sydwi1JKKoz+W@mail.gmail.com>
+ <1285868215.5137.6.camel@jlt3.sipsolutions.net> <9D3ED2EB2589B641B6CCA9F529CAA6A201018E47@exbe12.nasstar-t1.net>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Mon, 4 Oct 2010 08:59:23 -0700
+Message-ID: <AANLkTik7qF8=L-64hmT63KKNGCT-SvX=FObxbbkzSp2A@mail.gmail.com>
+Subject: Re: [ath9k-devel] Modulation schemes on ath9k
+To: Mike Pithouse <mike.pithouse@vegastream.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	ath9k-devel@venema.h4ckr.net,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-[list added back]
+On Mon, Oct 4, 2010 at 8:41 AM, Mike Pithouse
+<mike.pithouse@vegastream.com> wrote:
+> Hi,
+>
+> Is anyone able to confirm whether or not it's possible (by any means) to set the MCS Index for an ath9k Access Point?
 
-On Thu, 2010-10-14 at 06:42 -0700, Paul Stewart wrote:
+Please learn to bottom post:
 
-> >> +     u32 cqm_bitrate_thold;
-> >
-> > Since there's no way for drivers to utilise this, don't add it in public
-> > API.
-> 
-> I disagree here.  I don't see a reason why a other drivers would not
-> be able to take advantage of this feature, much the same as some of
-> them support rssi thresholds.  They can calculate their own last
-> transmitted bitrate and trigger cqm events using cfg80211 just as well
-> as mac80211 can.
+http://en.wikipedia.org/wiki/Posting_style#Bottom-posting
 
-No, they can't, for one they don't have access to the netdev. So at
-least mac80211 would have to provide wrappers. And there would also have
-to be capability bits so that mac80211 doesn't actually do all of this
-in software when the driver does it, avoiding double notifications and
-overhead.
+Then you already had an answer to your question but you keep on
+asking. The answer was we need API for this which is not present yet.
+If you want to hack something around you can go ahead and try using
+debugfs on ath9k.
 
-johannes
-
+  Luis
