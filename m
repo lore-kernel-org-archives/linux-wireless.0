@@ -1,71 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:57317 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753728Ab0JEDpn (ORCPT
+Received: from mail-ww0-f44.google.com ([74.125.82.44]:54264 "EHLO
+	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755686Ab0JDMcH (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 4 Oct 2010 23:45:43 -0400
-Message-ID: <4CAA9F60.9030207@candelatech.com>
-Date: Mon, 04 Oct 2010 20:45:36 -0700
-From: Ben Greear <greearb@candelatech.com>
+	Mon, 4 Oct 2010 08:32:07 -0400
+Date: Mon, 4 Oct 2010 14:31:46 +0200
+From: Dan Carpenter <error27@gmail.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: Zhu Yi <yi.zhu@intel.com>, "David S. Miller" <davem@davemloft.net>,
+	linux-wireless@vger.kernel.org, kernel-janitors@vger.kernel.org
+Subject: [patch -next] ipw2200: check for allocation failures
+Message-ID: <20101004123146.GC5692@bicker>
 MIME-Version: 1.0
-To: Bruno Randolf <br1@einfach.org>
-CC: Johannes Berg <johannes@sipsolutions.net>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: Putting APs into bridges?
-References: <4CAA0D5E.2090700@candelatech.com> <1286216969.3620.44.camel@jlt3.sipsolutions.net> <201010051243.45190.br1@einfach.org>
-In-Reply-To: <201010051243.45190.br1@einfach.org>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 10/04/2010 08:43 PM, Bruno Randolf wrote:
-> On Tue October 5 2010 03:29:29 Johannes Berg wrote:
->> On Mon, 2010-10-04 at 10:22 -0700, Ben Greear wrote:
->>> It seems he put two VAPs into a bridge device, and got an
->>> assert here (nevermind the printk, I just added that to
->>> help debug the issue).
->>>
->>> static void __ieee80211_wake_queue(struct ieee80211_hw *hw, int queue,
->>>
->>> 				   enum queue_stop_reason reason)
->>>
->>> {
->>>
->>> 	struct ieee80211_local *local = hw_to_local(hw);
->>> 	struct ieee80211_sub_if_data *sdata;
->>> 	
->>> 	trace_wake_queue(local, queue, reason);
->>> 	
->>> 	if (WARN_ON(queue>= hw->queues)) {
->>> 	
->>> 		printk(KERN_WARNING "%s:  queue: %i  hw->queues: %i\n",
->>> 		
->>> 		       sdata->name, queue, hw->queues);
->>> 		
->>> 		return;
->>> 	
->>> 	}
->>>
->>> Before I try to reproduce this, it is valid to add APs to bridge
->>> devices in the first place?
->>
->> Yes, it's valid, we catch the invalid cases in cfg80211.
->>
->> Hitting the assert there is rather strange though.
->
-> hey!
->
-> i'm seeing the same. i think it's due to a bug in ath5k concerning power save.
-> we put frames in the CAB queue, but obviously we shouldn't tell mac80211 to
-> wake this queue (number 6) since mac80211 knows nothing about it.
+If kzalloc() fails then return should return with -ENOMEM.
 
-Interesting...we couldn't reproduce it at all (two APs in a bridge worked as
-expected, as far as we could tell).
+Signed-off-by: Dan Carpenter <error27@gmail.com>
+---
+I think the first allocation should get freed by free_libipw() but I
+wasn't able to follow that code path far enough to verify...
 
-Thanks,
-Ben
-
-
--- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+diff --git a/drivers/net/wireless/ipw2x00/ipw2200.c b/drivers/net/wireless/ipw2x00/ipw2200.c
+index cb2552a..d04d760 100644
+--- a/drivers/net/wireless/ipw2x00/ipw2200.c
++++ b/drivers/net/wireless/ipw2x00/ipw2200.c
+@@ -11470,6 +11470,10 @@ static int ipw_net_init(struct net_device *dev)
+ 		bg_band->channels =
+ 			kzalloc(geo->bg_channels *
+ 				sizeof(struct ieee80211_channel), GFP_KERNEL);
++		if (!bg_band->channels) {
++			rc = -ENOMEM;
++			goto out;
++		}
+ 		/* translate geo->bg to bg_band.channels */
+ 		for (i = 0; i < geo->bg_channels; i++) {
+ 			bg_band->channels[i].band = IEEE80211_BAND_2GHZ;
+@@ -11505,6 +11509,10 @@ static int ipw_net_init(struct net_device *dev)
+ 		a_band->channels =
+ 			kzalloc(geo->a_channels *
+ 				sizeof(struct ieee80211_channel), GFP_KERNEL);
++		if (!a_band->channels) {
++			rc = -ENOMEM;
++			goto out;
++		}
+ 		/* translate geo->bg to a_band.channels */
+ 		for (i = 0; i < geo->a_channels; i++) {
+ 			a_band->channels[i].band = IEEE80211_BAND_2GHZ;
