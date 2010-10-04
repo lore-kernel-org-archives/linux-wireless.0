@@ -1,65 +1,138 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wy0-f174.google.com ([74.125.82.174]:58984 "EHLO
-	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752698Ab0JBC44 convert rfc822-to-8bit (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:47312 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932413Ab0JDTTl (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 1 Oct 2010 22:56:56 -0400
-Received: by wyb28 with SMTP id 28so3545905wyb.19
-        for <linux-wireless@vger.kernel.org>; Fri, 01 Oct 2010 19:56:55 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <201010020452.24306.chunkeey@googlemail.com>
-References: <AANLkTimN3X_e4fZhUSoTs-GmQ9kmaJUrgnxAu8=W2dT_@mail.gmail.com>
- <201010020226.08493.chunkeey@googlemail.com> <AANLkTinrbFLFN7PsVYpxGrnp0==FYVHGdbOBAXsKGWsv@mail.gmail.com>
- <201010020452.24306.chunkeey@googlemail.com>
-From: Saqeb Akhter <saqeb.akhter@gmail.com>
-Date: Fri, 1 Oct 2010 22:56:35 -0400
-Message-ID: <AANLkTin2ycTicNim+ZiwNV3pWr7AQWPp432vJVLUL1k1@mail.gmail.com>
-Subject: Re: carl9170: wnda3100 only 54MB/s
-To: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+	Mon, 4 Oct 2010 15:19:41 -0400
+Message-Id: <20101004191838.763690480@sipsolutions.net>
+Date: Mon, 04 Oct 2010 21:14:03 +0200
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org
+Subject: [PATCH 1/4] genetlink: introduce pre_doit/post_doit hooks
+References: <20101004191402.183055479@sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Nope I already noticed that 1.8.8.3 was available so to that step, I
-am getting frequent disconnects though, it might have to do with
-NetworkManager doing background scanning so going to try and it it to
-stop doing that.
+From: Johannes Berg <johannes.berg@intel.com>
 
-The NetGear driver on windows seems to ignore the WMM requirement
-looks like. Either way that's what the problem was, going to see if i
-can get this disconnect problem sorted out.
+Each family may have some amount of boilerplate
+locking code that applies to most, or even all,
+commands.
 
-On Fri, Oct 1, 2010 at 10:52 PM, Christian Lamparter
-<chunkeey@googlemail.com> wrote:
-> On Saturday 02 October 2010 04:32:04 Saqeb Akhter wrote:
->> ------------------------------------------------------------
->> Client connecting to 192.168.10.52, TCP port 5001
->> TCP window size: 16.0 KByte (default)
->> ------------------------------------------------------------
->> [  3] local 192.168.10.60 port 50647 connected with 192.168.10.52 port 5001
->> [ ID] Interval       Transfer     Bandwidth
->> [  3]  0.0-10.0 sec  98.6 MBytes  82.6 Mbits/sec
->>
->> Seems to be doing a lot better now thanks :)
-> Hm, I'm not too optimistic. After all, it took a long time to get to this
-> point and even now the driver isn't "stable" yet (hence the EXPERIMENTAL
-> flag).
->
->> I was not aware the WMM extensions were needed to get HT working.
-> ;)
->
-> I think 802.11n says somewhere, something like:
-> "An HT STA is also a QoS STA"
->
-> And QoS is enabled/setup by WMM.
->> I ended up upgrading my distro to 10.10 RC, and compiling the
->> compat-wireless u posted, and enable WMM extensions on my router.
->> Working considerably better :)
->
-> One more thing: I've updated the firmware to 1.8.8.3
-> http://wireless.kernel.org/en/users/Drivers/carl9170#Firmware_binary
-> (In case you are still using the original 1.8.8.1)
->
-> Best Regards,
->        Christian
->
+This allows a family to handle such things in
+a more generic way, by allowing it to
+ a) include private flags in each operation
+ b) specify a pre_doit hook that is called,
+    before an operation's doit() callback and
+    may return an error directly,
+ c) specify a post_doit hook that can undo
+    locking or similar things done by pre_doit,
+    and finally
+ d) include two private pointers in each info
+    struct passed between all these operations
+    including doit(). (It's two because I'll
+    need two in nl80211 -- can be extended.)
+
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ include/net/genetlink.h |   18 ++++++++++++++++++
+ net/netlink/genetlink.c |   14 +++++++++++++-
+ 2 files changed, 31 insertions(+), 1 deletion(-)
+
+--- wireless-testing.orig/include/net/genetlink.h	2010-10-04 21:13:52.000000000 +0200
++++ wireless-testing/include/net/genetlink.h	2010-10-04 21:18:16.000000000 +0200
+@@ -20,6 +20,9 @@ struct genl_multicast_group {
+ 	u32			id;
+ };
+ 
++struct genl_ops;
++struct genl_info;
++
+ /**
+  * struct genl_family - generic netlink family
+  * @id: protocol family idenfitier
+@@ -29,6 +32,10 @@ struct genl_multicast_group {
+  * @maxattr: maximum number of attributes supported
+  * @netnsok: set to true if the family can handle network
+  *	namespaces and should be presented in all of them
++ * @pre_doit: called before an operation's doit callback, it may
++ *	do additional, common, filtering and return an error
++ * @post_doit: called after an operation's doit callback, it may
++ *	undo operations done by pre_doit, for example release locks
+  * @attrbuf: buffer to store parsed attributes
+  * @ops_list: list of all assigned operations
+  * @family_list: family list
+@@ -41,6 +48,12 @@ struct genl_family {
+ 	unsigned int		version;
+ 	unsigned int		maxattr;
+ 	bool			netnsok;
++	int			(*pre_doit)(struct genl_ops *ops,
++					    struct sk_buff *skb,
++					    struct genl_info *info);
++	void			(*post_doit)(struct genl_ops *ops,
++					     struct sk_buff *skb,
++					     struct genl_info *info);
+ 	struct nlattr **	attrbuf;	/* private */
+ 	struct list_head	ops_list;	/* private */
+ 	struct list_head	family_list;	/* private */
+@@ -55,6 +68,8 @@ struct genl_family {
+  * @genlhdr: generic netlink message header
+  * @userhdr: user specific header
+  * @attrs: netlink attributes
++ * @_net: network namespace
++ * @user_ptr: user pointers
+  */
+ struct genl_info {
+ 	u32			snd_seq;
+@@ -66,6 +81,7 @@ struct genl_info {
+ #ifdef CONFIG_NET_NS
+ 	struct net *		_net;
+ #endif
++	void *			user_ptr[2];
+ };
+ 
+ static inline struct net *genl_info_net(struct genl_info *info)
+@@ -81,6 +97,7 @@ static inline void genl_info_net_set(str
+ /**
+  * struct genl_ops - generic netlink operations
+  * @cmd: command identifier
++ * @internal_flags: flags used by the family
+  * @flags: flags
+  * @policy: attribute validation policy
+  * @doit: standard command callback
+@@ -90,6 +107,7 @@ static inline void genl_info_net_set(str
+  */
+ struct genl_ops {
+ 	u8			cmd;
++	u8			internal_flags;
+ 	unsigned int		flags;
+ 	const struct nla_policy	*policy;
+ 	int		       (*doit)(struct sk_buff *skb,
+--- wireless-testing.orig/net/netlink/genetlink.c	2010-10-04 21:13:52.000000000 +0200
++++ wireless-testing/net/netlink/genetlink.c	2010-10-04 21:18:16.000000000 +0200
+@@ -547,8 +547,20 @@ static int genl_rcv_msg(struct sk_buff *
+ 	info.userhdr = nlmsg_data(nlh) + GENL_HDRLEN;
+ 	info.attrs = family->attrbuf;
+ 	genl_info_net_set(&info, net);
++	memset(&info.user_ptr, 0, sizeof(info.user_ptr));
+ 
+-	return ops->doit(skb, &info);
++	if (family->pre_doit) {
++		err = family->pre_doit(ops, skb, &info);
++		if (err)
++			return err;
++	}
++
++	err = ops->doit(skb, &info);
++
++	if (family->post_doit)
++		family->post_doit(ops, skb, &info);
++
++	return err;
+ }
+ 
+ static void genl_rcv(struct sk_buff *skb)
+
+
