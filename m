@@ -1,81 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail0.scram.de ([78.47.204.202]:47018 "EHLO mail.scram.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753384Ab0JDJVF convert rfc822-to-8bit (ORCPT
+Received: from mail-pw0-f46.google.com ([209.85.160.46]:35733 "EHLO
+	mail-pw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932667Ab0JDVHn (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 4 Oct 2010 05:21:05 -0400
-Message-ID: <4CA997A3.7080409@scram.de>
-Date: Mon, 04 Oct 2010 11:00:19 +0200
-From: Jochen Friedrich <jochen@scram.de>
+	Mon, 4 Oct 2010 17:07:43 -0400
+Received: by pwj5 with SMTP id 5so1231475pwj.19
+        for <linux-wireless@vger.kernel.org>; Mon, 04 Oct 2010 14:07:43 -0700 (PDT)
 MIME-Version: 1.0
-To: Holger Schurig <holgerschurig@gmail.com>
-CC: linux-wireless@vger.kernel.org
-Subject: Re: [Patch] iw: Implement set 4addr.
-References: <1286041239-19169-1-git-send-email-jochen@scram.de> <201010040915.58549.holgerschurig@gmail.com>
-In-Reply-To: <201010040915.58549.holgerschurig@gmail.com>
-Content-Type: text/plain; charset=US-ASCII;
-	format=flowed
+In-Reply-To: <20101004203900.GA14524@jm.kir.nu>
+References: <1285965233-11097-1-git-send-email-lrodriguez@atheros.com>
+ <1286198845.3620.37.camel@jlt3.sipsolutions.net> <20101004164149.GE2105@tux>
+ <1286210566.3620.42.camel@jlt3.sipsolutions.net> <20101004172504.GL2105@tux>
+ <1286213426.3620.43.camel@jlt3.sipsolutions.net> <20101004173507.GN2105@tux> <20101004203900.GA14524@jm.kir.nu>
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Date: Mon, 4 Oct 2010 14:07:22 -0700
+Message-ID: <AANLkTinwwvsLzovff4DKTktWuD6UdbRiEAs3g6jj-94Q@mail.gmail.com>
+Subject: Re: [PATCH v2 0/3] mac80211: fix rate_control_send_low warnings for delbas
+To: Jouni Malinen <j@w1.fi>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	Luis Rodriguez <Luis.Rodriguez@atheros.com>,
+	"linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"stable@kernel.org" <stable@kernel.org>,
+	Paul Stewart <pstew@google.com>,
+	Amod Bodas <Amod.Bodas@atheros.com>,
+	Vasanth Thiagarajan <Vasanth.Thiagarajan@atheros.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-  Hi Holger,
-
-Am 04.10.2010 09:15, schrieb Holger Schurig:
->> +	"Set interface 4addr (WDS) mode.\n");
-> Hi Jochen !
+On Mon, Oct 4, 2010 at 1:39 PM, Jouni Malinen <j@w1.fi> wrote:
+> On Mon, Oct 04, 2010 at 10:35:07AM -0700, Luis R. Rodriguez wrote:
+>> I was wondering if actively disassociating might help with a smoother
+>> transition. I was under this why we were doing this in the first place.
+>> I frankly do not know, but if it does not help then I do agree with
+>> your patch replacement.
 >
-> Do you know if this feature can also be used to operate an Ethernet-Bridge on
-> on a WLAN client?
+> In many cases, it may end up harming more than helping.. At minimum, it
+> takes some time to transmit the frame (and do the channel changes, if
+> needed). Furthermore, this makes it more difficult for centrally managed
+> networks to optimize roaming since we would be disassociating and
+> associating as a new association instead of doing proper re-association.
+> In such networks, the APs (or well, likely some sort of central manager)
+> takes care of clearing the old association when the reassociation is
+> being processed. In addition, this could potentially tunnel some frames
+> through the new AP or at least make sure that bridge tables gets
+> updated.
 >
-> I'd like to get something like this going, with eth0|wlan0 as a bridge, so
-> that any protocol/port on the "DEVICE" is reachable from the network:
->
-> +--------+   +------------+   +----+   +---------+
-> | DEVICE +---+ eth0|wlan0 +---+ AP +---+ network |
-> +--------+   +------------+   +----+   +---------+
->                 Linux 2.6.x
->                 w/ mac80211
->
 
-Yes, that's the idea behind this. I'm using an OpenWRT based WLAN router 
-and a Debian client with the configuration below.
+Jouni, just to be clear so you are fine with dropping explicitly the
+tear down of the BA agreement to the old AP?
 
- From my tests, it looks like
-
-- b43legacy runs OK in this mode (tested on MN700).
-- ath9k has some issues with the promisc mode (if DEVICE talks to 
-another AP client, the bridge might add the DEVICE MAC address to wlan0 
-as soon as AP sends the frame originating from DEVICE to the AP client).
-- iwlagn sometimes looses the connection after a hw scan. I'm currently 
-wondering if this might be a problem of ath5k (my AP is a WGT634U) not 
-ignoring PM frames in non-4addr frame format. Unfortunately, WGT634U 
-builds are currently broken in OpenWRT, so I can't test more recent 
-ath5k versions without major efforts.
-
-Thanks,
-Jochen
-
-# This file describes the network interfaces available on your system
-# and how to activate them. For more information, see interfaces(5).
-
-# The loopback network interface
-auto lo
-iface lo inet loopback
-
-auto wlan0
-iface wlan0 inet manual
-     pre-up iw wlan0 set 4addr on
-
-auto eth0
-iface eth0 inet manual
-
-auto br0
-iface br0 inet dhcp
-     bridge_ports wlan0 eth0
-     bridge_fd 0
-     bridge_stp off
-     wpa-ssid <my ssid>
-     wpa-psk <my password>
-     wpa-bridge br0
-     wpa-iface  wlan0
-
+  Luis
