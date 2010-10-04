@@ -1,39 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.19.149.2]:14851 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756083Ab0JTXHL (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 20 Oct 2010 19:07:11 -0400
-Received: from mail.atheros.com ([10.10.20.108])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Wed, 20 Oct 2010 16:07:01 -0700
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>
-Subject: [PATCH 0/6] ath9k: fix RX poison issue
-Date: Wed, 20 Oct 2010 16:07:02 -0700
-Message-ID: <1287616028-12547-1-git-send-email-lrodriguez@atheros.com>
+Received: from mail.candelatech.com ([208.74.158.172]:54882 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755022Ab0JDSHz (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 4 Oct 2010 14:07:55 -0400
+Message-ID: <4CAA17FA.3080403@candelatech.com>
+Date: Mon, 04 Oct 2010 11:07:54 -0700
+From: Ben Greear <greearb@candelatech.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+To: Christian Lamparter <chunkeey@googlemail.com>
+CC: Ming Lei <tom.leiming@gmail.com>, linux-wireless@vger.kernel.org
+Subject: Re: lockdep warning in ieee80211 rx path
+References: <AANLkTin5KfmQLYxLWdhTcO-AM0t83dVq=LFCG0UGysaw@mail.gmail.com> <201009142251.53021.chunkeey@googlemail.com> <4CAA144C.7040906@candelatech.com> <201010042000.44518.chunkeey@googlemail.com>
+In-Reply-To: <201010042000.44518.chunkeey@googlemail.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This series addresses the RX poison issue reported by Ben.
-I've split the patches up into as many atomic pieces to make
-it easier for review and understanding. Some are stable, the
-last few patches are for debugging.
+On 10/04/2010 11:00 AM, Christian Lamparter wrote:
+> On Monday 04 October 2010 19:52:12 Ben Greear wrote:
+>> On 09/14/2010 01:51 PM, Christian Lamparter wrote:
+>>> On Sunday 05 September 2010 11:32:26 Ming Lei wrote:
+>>>> Seems the warning does not affect use of wireless,  false positive?
+>>>
+>>> No, it's a bug... but please read&   test the attached patch.
+>>
+>> This is not yet in wireless-testing.  Should it be?
+> have you heard anything from Ming Lei about this subject?
+> Or have you reproduced the bug too?
 
-Luis R. Rodriguez (6):
-  ath9k: add locking for stopping RX
-  ath9k: add locking for starting the PCU on RX
-  ath9k: rename rxflushlock to pcu_lock
-  ath9k: lock reset and PCU start/stopping
-  ath: add a ATH_DBG_WARN()
-  ath9k: add a debug warning when we cannot stop RX
+See my post about   inconsistent {IN-SOFTIRQ-W} -> {SOFTIRQ-ON-W}.
 
- drivers/net/wireless/ath/ath9k/ath9k.h |    2 +-
- drivers/net/wireless/ath/ath9k/main.c  |   31 +++++++++++++++++++++++++++++--
- drivers/net/wireless/ath/ath9k/recv.c  |   17 +++++++++--------
- drivers/net/wireless/ath/debug.h       |    2 ++
- 4 files changed, 41 insertions(+), 11 deletions(-)
+I'm not sure it's the same bug, but it would appear similar at least.
+
+If your patch is probably good, I can go ahead and apply it.
+We can at least test that it doesn't obviously make things worse.
+
+Thanks,
+Ben
+
+-- 
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
 
