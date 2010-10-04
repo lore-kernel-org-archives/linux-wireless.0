@@ -1,56 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mgw-sa02.ext.nokia.com ([147.243.1.48]:21173 "EHLO
-	mgw-sa02.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751822Ab0JELxn (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 5 Oct 2010 07:53:43 -0400
-Subject: Re: [PATCH] omap: zoom2/3: fix build caused by wl1271 support
-From: Luciano Coelho <luciano.coelho@nokia.com>
-To: ext Tony Lindgren <tony@atomide.com>,
-	"John W. Linville" <liville@tuxdriver.com>
-Cc: Anand Gadiyar <gadiyar@ti.com>,
-	"linux-omap@vger.kernel.org" <linux-omap@vger.kernel.org>,
+Received: from mail.atheros.com ([12.19.149.2]:56891 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752158Ab0JDRZG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 4 Oct 2010 13:25:06 -0400
+Received: from mail.atheros.com ([10.10.20.105])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Mon, 04 Oct 2010 10:24:57 -0700
+Date: Mon, 4 Oct 2010 10:25:04 -0700
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
+	"linville@tuxdriver.com" <linville@tuxdriver.com>,
 	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Ohad Ben-Cohen <ohad@wizery.com>
-In-Reply-To: <20101001231026.GH3117@atomide.com>
-References: <1285965206-17777-1-git-send-email-gadiyar@ti.com>
-	 <20101001231026.GH3117@atomide.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Tue, 05 Oct 2010 14:53:08 +0300
-Message-ID: <1286279588.15401.28.camel@chilepepper>
-Mime-Version: 1.0
+	"stable@kernel.org" <stable@kernel.org>, Jouni Malinen <j@w1.fi>,
+	Paul Stewart <pstew@google.com>,
+	Amod Bodas <Amod.Bodas@Atheros.com>,
+	Vasanth Thiagarajan <Vasanth.Thiagarajan@Atheros.com>
+Subject: Re: [PATCH v2 0/3] mac80211: fix rate_control_send_low warnings
+ for delbas
+Message-ID: <20101004172504.GL2105@tux>
+References: <1285965233-11097-1-git-send-email-lrodriguez@atheros.com>
+ <1286198845.3620.37.camel@jlt3.sipsolutions.net>
+ <20101004164149.GE2105@tux>
+ <1286210566.3620.42.camel@jlt3.sipsolutions.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <1286210566.3620.42.camel@jlt3.sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, 2010-10-02 at 01:10 +0200, ext Tony Lindgren wrote:
-> * Anand Gadiyar <gadiyar@ti.com> [101001 13:25]:
-> > Patch "omap: zoom: add mmc3/wl1271 device support" in the
-> > wireless tree still uses .wires in struct omap2_hsmmc_info.
-> > .wires has now been replaced with .caps in patch "omap: mmc:
-> > extended to pass host capabilities from board file" in the
-> > OMAP tree.
+On Mon, Oct 04, 2010 at 09:42:46AM -0700, Johannes Berg wrote:
+> On Mon, 2010-10-04 at 09:41 -0700, Luis R. Rodriguez wrote:
+> > On Mon, Oct 04, 2010 at 06:27:25AM -0700, Johannes Berg wrote:
+> > > How about this instead of your patches 2 and 3?
+> > > 
+> > > We're disassociating from the old AP since we associate with the new AP,
+> > > so there's not a whole lot of sense in explicitly tearing down
+> > > aggregation sessions either, right?
 > > 
-> > This causes linux-next as of 20101001 build to break as
-> > below. Fix this.
-> > 
-> >   CC      arch/arm/mach-omap2/board-zoom-peripherals.o
-> > arch/arm/mach-omap2/board-zoom-peripherals.c:217: error: unknown field 'wires' specified in initializer
-> > make[1]: *** [arch/arm/mach-omap2/board-zoom-peripherals.o] Error 1
-> > make: *** [arch/arm/mach-omap2] Error 2
+> > Good question, but why do we not get a warning when transmitting
+> > the disassoc frame?
 > 
-> Can you guys please queue this via the wireless tree along with
-> the other wl1271 patches?
-> 
-> Acked-by: Tony Lindgren <tony@atomide.com>
+> We aren't transmitting a disassoc frame!
 
-I can apply this to the wl12xx tree.  I just need John's confirmation.  
+OK, then the question is if we should even at least do that...
 
-The pull request I sent to John last week is still pending.  I don't
-know if it is possible to substitute it for a newer one with more
-patches (and still try to make it to 2.6.37).  What do you think, John?
-
-
--- 
-Cheers,
-Luca.
-
+  Luis
