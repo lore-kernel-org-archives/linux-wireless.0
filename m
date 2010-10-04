@@ -1,47 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ey0-f174.google.com ([209.85.215.174]:59362 "EHLO
-	mail-ey0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752007Ab0JYTbE (ORCPT
+Received: from mail-ew0-f46.google.com ([209.85.215.46]:46850 "EHLO
+	mail-ew0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932789Ab0JDVNY (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 25 Oct 2010 15:31:04 -0400
-Received: by eye27 with SMTP id 27so4558595eye.19
-        for <linux-wireless@vger.kernel.org>; Mon, 25 Oct 2010 12:31:03 -0700 (PDT)
+	Mon, 4 Oct 2010 17:13:24 -0400
+Received: by mail-ew0-f46.google.com with SMTP id 23so2256629ewy.19
+        for <linux-wireless@vger.kernel.org>; Mon, 04 Oct 2010 14:13:24 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <AANLkTik12g6kmynbgyhPuu+B5jZ9Swv+1PhAg9EKMByw@mail.gmail.com>
-References: <AANLkTinP32=snam3Bex+OC8LL00awfjrJz4834mhOaNL@mail.gmail.com>
-	<1287995967.3587.9.camel@jlt3.sipsolutions.net>
-	<AANLkTik-SaE2ShV7H6Lv1qFQ-FM5fPuWGws6pWM+b6Go@mail.gmail.com>
-	<AANLkTik12g6kmynbgyhPuu+B5jZ9Swv+1PhAg9EKMByw@mail.gmail.com>
-Date: Mon, 25 Oct 2010 12:31:02 -0700
-Message-ID: <AANLkTi=Qs8tQyNQQik8unFd5NUf2LW2UFowMJ0yjTr0b@mail.gmail.com>
-Subject: Re: Modifying the driver iwlwifi
-From: Blaise Gassend <blaise@willowgarage.com>
-To: "Cassiano Tartari, Eng." <falecom@cassianotartari.eng.br>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+In-Reply-To: <AANLkTi=Ya6RuCdVYLYi3Mk5EKSP6czOfTh7TRKqB0GPU@mail.gmail.com>
+References: <4CAA2247.50402@candelatech.com> <1286218879.3620.55.camel@jlt3.sipsolutions.net>
+ <4CAA252F.9090102@candelatech.com> <1286219405.3620.56.camel@jlt3.sipsolutions.net>
+ <AANLkTi=Ya6RuCdVYLYi3Mk5EKSP6czOfTh7TRKqB0GPU@mail.gmail.com>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Mon, 4 Oct 2010 14:13:03 -0700
+Message-ID: <AANLkTinGaCAEqGRt_X6hsO8sQx4kKEdNqU8pfi00_1-r@mail.gmail.com>
+Subject: Re: Crash in agg-tx.c, with ath9k and lots of STA VIFs.
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Ben Greear <greearb@candelatech.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> How can I know if a AP is "compliant/certified" ? I'm such a newbie.
-
-I suspect that most of them are. If they have a WiFi logo on the box
-they should be:
-http://www.wi-fiplanet.com/tutorials/article.php/2203361/Wi-Fi-Interoperability-Compliance-Steps.htm
-
->> I had a look at the paper, and the original poster seems to have
->> exaggerated the paper's claims. They do indeed do the authentication
->> and association request before getting responses. For everything else,
->> they wait to get the response for the previous stage. The main
->> difference is that they greatly reduce the timeouts before retrying at
->> each stage. The paper is also limited to non-encrypted networks.
+On Mon, Oct 4, 2010 at 2:12 PM, Luis R. Rodriguez <mcgrof@gmail.com> wrote:
+> On Mon, Oct 4, 2010 at 12:10 PM, Johannes Berg
+> <johannes@sipsolutions.net> wrote:
+>> On Mon, 2010-10-04 at 12:04 -0700, Ben Greear wrote:
+>>> On 10/04/2010 12:01 PM, Johannes Berg wrote:
+>>> > On Mon, 2010-10-04 at 11:51 -0700, Ben Greear wrote:
+>>> >> Just in case this seems familiar to anyone...
+>>> >>
+>>> >> IP: [<f8ba74da>] ieee80211_stop_tx_ba_session+0x14/0x84 [mac80211]
+>>> >
+>>> > Do you have debug info that'd point to a code line?
+>>> >
+>>> > I have never heard of this.
+>>>
+>>> I don't actually know how to get a line of code out of those
+>>> hex offsets...
+>>>
+>>> Someone told me many years ago..but I lost that information :P
+>>
+>> Err, I never remember either, I think Luis knows the gdb thing ... I
+>> usually use "objdump -dS"
 >
-> My objetive in my current job is just that, reduce the time of authentication.
->
-> Someone has a better idea or solution to reduce the association time?
-> I need to use DHCP and could be a open network.
+> gdb net/mac80211/mac80211.ko
+> l *(ieee80211_stop_tx_ba_session+0x14/0x84)
 
-How short does it need to be for you? In my experience sub-second is
-pretty if you know the frequency, have low packet loss, and have an
-aggressive DHCP client. The methods in the paper should make it work
-even with higher packet loss.
+Oops I meant:
+
+gdb net/mac80211/mac80211.ko
+l *(ieee80211_stop_tx_ba_session+0x14)
+
+   Luis
