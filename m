@@ -1,124 +1,265 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from comal.ext.ti.com ([198.47.26.152]:32913 "EHLO comal.ext.ti.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1760503Ab0JGNEO (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 7 Oct 2010 09:04:14 -0400
-From: Shahar Levi <shahar_levi@ti.com>
-To: <linux-wireless@vger.kernel.org>
-Cc: Luciano Coelho <luciano.coelho@nokia.com>
-Subject: [PATCH 03/03] wl1271: BA Initiator support, active BA ability
-Date: Thu,  7 Oct 2010 15:06:02 +0200
-Message-Id: <1286456762-17480-4-git-send-email-shahar_levi@ti.com>
-In-Reply-To: <1286456762-17480-1-git-send-email-shahar_levi@ti.com>
-References: <1286456762-17480-1-git-send-email-shahar_levi@ti.com>
+Received: from he.sipsolutions.net ([78.46.109.217]:47318 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932413Ab0JDTTr (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 4 Oct 2010 15:19:47 -0400
+Message-Id: <20101004191839.342723640@sipsolutions.net>
+Date: Mon, 04 Oct 2010 21:14:06 +0200
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org
+Subject: [PATCH 4/4] nl80211: reduce dumping boilerplate
+References: <20101004191402.183055479@sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Add calling to BA policies after join and connect new ops.
+From: Johannes Berg <johannes.berg@intel.com>
 
-Signed-off-by: Shahar Levi <shahar_levi@ti.com>
+Consolidate boilerplate code needed for .dumpit
+calls operating on netdevs.
+
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- drivers/net/wireless/wl12xx/wl1271_acx.c  |   10 +++-------
- drivers/net/wireless/wl12xx/wl1271_main.c |   14 ++++++++++++--
- 2 files changed, 15 insertions(+), 9 deletions(-)
+ net/wireless/nl80211.c |  151 +++++++++++++++++++------------------------------
+ 1 file changed, 59 insertions(+), 92 deletions(-)
 
-diff --git a/drivers/net/wireless/wl12xx/wl1271_acx.c b/drivers/net/wireless/wl12xx/wl1271_acx.c
-index f82656e..18ac48f 100644
---- a/drivers/net/wireless/wl12xx/wl1271_acx.c
-+++ b/drivers/net/wireless/wl12xx/wl1271_acx.c
-@@ -1328,11 +1328,6 @@ int wl1271_acx_set_ba_session(struct wl1271 *wl,
- {
- 	struct wl1271_acx_ba_session_policy *acx;
- 	int ret = 0;
--	/*
--	* Note, currently this value will be set to FFFFFFFFFFFF to indicate
--	* it is relevant for all peers.
--	*/
--	u8 mac_address[ETH_ALEN] = {0xff, 0xff, 0xff, 0xff, 0xff, 0xff};
+--- wireless-testing.orig/net/wireless/nl80211.c	2010-10-01 11:14:46.000000000 +0200
++++ wireless-testing/net/wireless/nl80211.c	2010-10-01 11:27:47.000000000 +0200
+@@ -198,6 +198,47 @@ static int nl80211_get_ifidx(struct netl
+ 	return res;
+ }
  
- 	wl1271_debug(DEBUG_ACX, "acx ba session setting");
- 
-@@ -1342,14 +1337,14 @@ int wl1271_acx_set_ba_session(struct wl1271 *wl,
- 		goto out;
- 	}
- 
--	memcpy(acx->mac_address, mac_address, ETH_ALEN);
-+	memcpy(acx->mac_address, wl->bssid, ETH_ALEN);
- 	acx->tid = tid_index;
- 	acx->policy = policy;
- 	acx->win_size = BA_RECEIVER_WIN_SIZE;
- 
- 	if (ACX_BA_SESSION_INITIATOR_POLICY == id)
- 		acx->inactivity_timeout = BA_INACTIVITY_TIMEOUT;
--	else
-+	else {
- 		if (ACX_BA_SESSION_RESPONDER_POLICY == id)
- 			acx->inactivity_timeout = 0;
- 		else {
-@@ -1357,6 +1352,7 @@ int wl1271_acx_set_ba_session(struct wl1271 *wl,
- 			ret = -EINVAL;
- 			goto out;
- 		}
++static int nl80211_prepare_netdev_dump(struct sk_buff *skb,
++				       struct netlink_callback *cb,
++				       struct cfg80211_registered_device **rdev,
++				       struct net_device **dev)
++{
++	int ifidx = cb->args[0];
++	int err;
++
++	if (!ifidx)
++		ifidx = nl80211_get_ifidx(cb);
++	if (ifidx < 0)
++		return ifidx;
++
++	cb->args[0] = ifidx;
++
++	rtnl_lock();
++
++	*dev = __dev_get_by_index(sock_net(skb->sk), ifidx);
++	if (!*dev) {
++		err = -ENODEV;
++		goto out_rtnl;
 +	}
++
++	*rdev = cfg80211_get_dev_from_ifindex(sock_net(skb->sk), ifidx);
++	if (IS_ERR(dev)) {
++		err = PTR_ERR(dev);
++		goto out_rtnl;
++	}
++
++	return 0;
++ out_rtnl:
++	rtnl_unlock();
++	return err;
++}
++
++static void nl80211_finish_netdev_dump(struct cfg80211_registered_device *rdev)
++{
++	cfg80211_unlock_rdev(rdev);
++	rtnl_unlock();
++}
++
+ /* IE validation */
+ static bool is_valid_ie_attr(const struct nlattr *attr)
+ {
+@@ -1748,28 +1789,12 @@ static int nl80211_dump_station(struct s
+ 	struct cfg80211_registered_device *dev;
+ 	struct net_device *netdev;
+ 	u8 mac_addr[ETH_ALEN];
+-	int ifidx = cb->args[0];
+ 	int sta_idx = cb->args[1];
+ 	int err;
  
- 	ret = wl1271_cmd_configure(wl,
- 				   id,
-diff --git a/drivers/net/wireless/wl12xx/wl1271_main.c b/drivers/net/wireless/wl12xx/wl1271_main.c
-index 53c03e5..b4e3b02 100644
---- a/drivers/net/wireless/wl12xx/wl1271_main.c
-+++ b/drivers/net/wireless/wl12xx/wl1271_main.c
-@@ -1725,6 +1725,7 @@ static void wl1271_op_bss_info_changed(struct ieee80211_hw *hw,
- 	enum wl1271_cmd_ps_mode mode;
- 	struct wl1271 *wl = hw->priv;
- 	struct ieee80211_sta *sta = ieee80211_find_sta(vif, bss_conf->bssid);
-+	bool set_ba = false;
- 	bool do_join = false;
- 	bool set_assoc = false;
- 	int ret;
-@@ -1950,7 +1951,9 @@ static void wl1271_op_bss_info_changed(struct ieee80211_hw *hw,
- 							     true);
- 			ret = wl1271_acx_set_ht_information(wl,
- 						bss_conf->ht_operation_mode);
--			}
-+
-+			set_ba = true;
-+		}
- 		else
- 			if (changed & BSS_CHANGED_ASSOC)
- 				ret = wl1271_acx_set_ht_capabilities(wl,
-@@ -1977,6 +1980,9 @@ static void wl1271_op_bss_info_changed(struct ieee80211_hw *hw,
- 			wl1271_warning("cmd join failed %d", ret);
- 			goto out_sleep;
+-	if (!ifidx)
+-		ifidx = nl80211_get_ifidx(cb);
+-	if (ifidx < 0)
+-		return ifidx;
+-
+-	rtnl_lock();
+-
+-	netdev = __dev_get_by_index(sock_net(skb->sk), ifidx);
+-	if (!netdev) {
+-		err = -ENODEV;
+-		goto out_rtnl;
+-	}
+-
+-	dev = cfg80211_get_dev_from_ifindex(sock_net(skb->sk), ifidx);
+-	if (IS_ERR(dev)) {
+-		err = PTR_ERR(dev);
+-		goto out_rtnl;
+-	}
++	err = nl80211_prepare_netdev_dump(skb, cb, &dev, &netdev);
++	if (err)
++		return err;
+ 
+ 	if (!dev->ops->dump_station) {
+ 		err = -EOPNOTSUPP;
+@@ -1799,9 +1824,7 @@ static int nl80211_dump_station(struct s
+ 	cb->args[1] = sta_idx;
+ 	err = skb->len;
+  out_err:
+-	cfg80211_unlock_rdev(dev);
+- out_rtnl:
+-	rtnl_unlock();
++	nl80211_finish_netdev_dump(dev);
+ 
+ 	return err;
+ }
+@@ -2121,28 +2144,12 @@ static int nl80211_dump_mpath(struct sk_
+ 	struct net_device *netdev;
+ 	u8 dst[ETH_ALEN];
+ 	u8 next_hop[ETH_ALEN];
+-	int ifidx = cb->args[0];
+ 	int path_idx = cb->args[1];
+ 	int err;
+ 
+-	if (!ifidx)
+-		ifidx = nl80211_get_ifidx(cb);
+-	if (ifidx < 0)
+-		return ifidx;
+-
+-	rtnl_lock();
+-
+-	netdev = __dev_get_by_index(sock_net(skb->sk), ifidx);
+-	if (!netdev) {
+-		err = -ENODEV;
+-		goto out_rtnl;
+-	}
+-
+-	dev = cfg80211_get_dev_from_ifindex(sock_net(skb->sk), ifidx);
+-	if (IS_ERR(dev)) {
+-		err = PTR_ERR(dev);
+-		goto out_rtnl;
+-	}
++	err = nl80211_prepare_netdev_dump(skb, cb, &dev, &netdev);
++	if (err)
++		return err;
+ 
+ 	if (!dev->ops->dump_mpath) {
+ 		err = -EOPNOTSUPP;
+@@ -2176,10 +2183,7 @@ static int nl80211_dump_mpath(struct sk_
+ 	cb->args[1] = path_idx;
+ 	err = skb->len;
+  out_err:
+-	cfg80211_unlock_rdev(dev);
+- out_rtnl:
+-	rtnl_unlock();
+-
++	nl80211_finish_netdev_dump(dev);
+ 	return err;
+ }
+ 
+@@ -2986,25 +2990,12 @@ static int nl80211_dump_scan(struct sk_b
+ 	struct net_device *dev;
+ 	struct cfg80211_internal_bss *scan;
+ 	struct wireless_dev *wdev;
+-	int ifidx = cb->args[0];
+ 	int start = cb->args[1], idx = 0;
+ 	int err;
+ 
+-	if (!ifidx)
+-		ifidx = nl80211_get_ifidx(cb);
+-	if (ifidx < 0)
+-		return ifidx;
+-	cb->args[0] = ifidx;
+-
+-	dev = dev_get_by_index(sock_net(skb->sk), ifidx);
+-	if (!dev)
+-		return -ENODEV;
+-
+-	rdev = cfg80211_get_dev_from_ifindex(sock_net(skb->sk), ifidx);
+-	if (IS_ERR(rdev)) {
+-		err = PTR_ERR(rdev);
+-		goto out_put_netdev;
+-	}
++	err = nl80211_prepare_netdev_dump(skb, cb, &rdev, &dev);
++	if (err)
++		return err;
+ 
+ 	wdev = dev->ieee80211_ptr;
+ 
+@@ -3020,21 +3011,17 @@ static int nl80211_dump_scan(struct sk_b
+ 				cb->nlh->nlmsg_seq, NLM_F_MULTI,
+ 				rdev, wdev, scan) < 0) {
+ 			idx--;
+-			goto out;
++			break;
  		}
-+
-+		if (set_ba)
-+			wl1271_set_ba_policies(wl);
  	}
  
- out_sleep:
-@@ -2080,10 +2086,13 @@ int wl1271_op_ampdu_action(struct ieee80211_hw *hw,
- 		int ret;
+- out:
+ 	spin_unlock_bh(&rdev->bss_lock);
+ 	wdev_unlock(wdev);
  
- 		switch (action) {
-+		/* Falling break here on purpose until we add BA receiver support */
- 		case IEEE80211_AMPDU_RX_START:
- 		case IEEE80211_AMPDU_RX_STOP:
+ 	cb->args[1] = idx;
+-	err = skb->len;
+-	cfg80211_unlock_rdev(rdev);
+- out_put_netdev:
+-	dev_put(dev);
++	nl80211_finish_netdev_dump(rdev);
  
--		/* The BA initiator session management in FW independently */
-+		/* The BA initiator session management in FW independently.
-+		 * Falling break here on purpose for all TX APDU commands.
-+		 */
- 		case IEEE80211_AMPDU_TX_START:
- 		case IEEE80211_AMPDU_TX_STOP:
- 		case IEEE80211_AMPDU_TX_OPERATIONAL:
-@@ -2351,6 +2360,7 @@ static const struct ieee80211_ops wl1271_ops = {
- 	.conf_tx = wl1271_op_conf_tx,
- 	.get_tsf = wl1271_op_get_tsf,
- 	.get_survey = wl1271_op_get_survey,
-+	.ampdu_action = wl1271_op_ampdu_action,
- 	CFG80211_TESTMODE_CMD(wl1271_tm_cmd)
- };
+-	return err;
++	return skb->len;
+ }
  
--- 
-1.6.0.4
+ static int nl80211_send_survey(struct sk_buff *msg, u32 pid, u32 seq,
+@@ -3080,29 +3067,12 @@ static int nl80211_dump_survey(struct sk
+ 	struct survey_info survey;
+ 	struct cfg80211_registered_device *dev;
+ 	struct net_device *netdev;
+-	int ifidx = cb->args[0];
+ 	int survey_idx = cb->args[1];
+ 	int res;
+ 
+-	if (!ifidx)
+-		ifidx = nl80211_get_ifidx(cb);
+-	if (ifidx < 0)
+-		return ifidx;
+-	cb->args[0] = ifidx;
+-
+-	rtnl_lock();
+-
+-	netdev = __dev_get_by_index(sock_net(skb->sk), ifidx);
+-	if (!netdev) {
+-		res = -ENODEV;
+-		goto out_rtnl;
+-	}
+-
+-	dev = cfg80211_get_dev_from_ifindex(sock_net(skb->sk), ifidx);
+-	if (IS_ERR(dev)) {
+-		res = PTR_ERR(dev);
+-		goto out_rtnl;
+-	}
++	res = nl80211_prepare_netdev_dump(skb, cb, &dev, &netdev);
++	if (res)
++		return res;
+ 
+ 	if (!dev->ops->dump_survey) {
+ 		res = -EOPNOTSUPP;
+@@ -3130,10 +3100,7 @@ static int nl80211_dump_survey(struct sk
+ 	cb->args[1] = survey_idx;
+ 	res = skb->len;
+  out_err:
+-	cfg80211_unlock_rdev(dev);
+- out_rtnl:
+-	rtnl_unlock();
+-
++	nl80211_finish_netdev_dump(dev);
+ 	return res;
+ }
+ 
+
 
