@@ -1,88 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f46.google.com ([209.85.215.46]:41366 "EHLO
-	mail-ew0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754384Ab0JOK6T (ORCPT
+Received: from smtp.nokia.com ([192.100.122.230]:23982 "EHLO
+	mgw-mx03.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751761Ab0JEUkG (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 15 Oct 2010 06:58:19 -0400
-Received: by ewy20 with SMTP id 20so640747ewy.19
-        for <linux-wireless@vger.kernel.org>; Fri, 15 Oct 2010 03:58:17 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <AANLkTimnzeRa53g0i2ZkB4Qy_x_P3h4Z+ZwC2HdJPxFC@mail.gmail.com>
-References: <1287090064-14607-1-git-send-email-zajec5@gmail.com>
-	<AANLkTimnzeRa53g0i2ZkB4Qy_x_P3h4Z+ZwC2HdJPxFC@mail.gmail.com>
-Date: Fri, 15 Oct 2010 12:58:17 +0200
-Message-ID: <AANLkTinnOm5rg8FKxFct1zKHZZi7k9nxEKtBYkLFktSS@mail.gmail.com>
-Subject: Re: [PATCH 1/3] b43: N-PHY: define channel table struct for rev3+ devices
-From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-To: =?UTF-8?Q?G=C3=A1bor_Stefanik?= <netrolller.3d@gmail.com>
-Cc: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>,
-	b43-dev@lists.infradead.org
-Content-Type: text/plain; charset=UTF-8
+	Tue, 5 Oct 2010 16:40:06 -0400
+Subject: Re: [PATCH] omap: zoom2/3: fix build caused by wl1271 support
+From: Luciano Coelho <luciano.coelho@nokia.com>
+To: ext Tony Lindgren <tony@atomide.com>,
+	"John W. Linville" <linville@tuxdriver.com>
+Cc: Anand Gadiyar <gadiyar@ti.com>,
+	"linux-omap@vger.kernel.org" <linux-omap@vger.kernel.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Ohad Ben-Cohen <ohad@wizery.com>
+In-Reply-To: <1286284790.15401.53.camel@chilepepper>
+References: <1285965206-17777-1-git-send-email-gadiyar@ti.com>
+	 <20101001231026.GH3117@atomide.com> <1286279588.15401.28.camel@chilepepper>
+	 <1286280426.15401.29.camel@chilepepper>
+	 <1286284790.15401.53.camel@chilepepper>
+Content-Type: text/plain; charset="UTF-8"
+Date: Tue, 05 Oct 2010 23:39:47 +0300
+Message-ID: <1286311187.2793.7.camel@powerslave>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-VyBkbml1IDE1IHBhxbpkemllcm5pa2EgMjAxMCAwMDozOSB1xbx5dGtvd25payBHw6Fib3IgU3Rl
-ZmFuaWsKPG5ldHJvbGxsZXIuM2RAZ21haWwuY29tPiBuYXBpc2HFgjoKPiAyMDEwLzEwLzE0IFJh
-ZmHFgiBNacWCZWNraSA8emFqZWM1QGdtYWlsLmNvbT46Cj4+IFNpZ25lZC1vZmYtYnk6IFJhZmHF
-giBNacWCZWNraSA8emFqZWM1QGdtYWlsLmNvbT4KPj4gLS0tCj4+IMKgZHJpdmVycy9uZXQvd2ly
-ZWxlc3MvYjQzL3JhZGlvXzIwNTYuYyB8IMKgIDUxICsrKysrKysrKysrKysrKysrKysrKysrKysr
-KysrKysrKwo+PiDCoGRyaXZlcnMvbmV0L3dpcmVsZXNzL2I0My9yYWRpb18yMDU2LmggfCDCoCA0
-MCArKysrKysrKysrKysrKysrKysrKysrKystLQo+PiDCoDIgZmlsZXMgY2hhbmdlZCwgODggaW5z
-ZXJ0aW9ucygrKSwgMyBkZWxldGlvbnMoLSkKPj4KPj4gZGlmZiAtLWdpdCBhL2RyaXZlcnMvbmV0
-L3dpcmVsZXNzL2I0My9yYWRpb18yMDU2LmMgYi9kcml2ZXJzL25ldC93aXJlbGVzcy9iNDMvcmFk
-aW9fMjA1Ni5jCj4+IGluZGV4IGQ4NTYzMTkuLmY3MTBjMDEgMTAwNjQ0Cj4+IC0tLSBhL2RyaXZl
-cnMvbmV0L3dpcmVsZXNzL2I0My9yYWRpb18yMDU2LmMKPj4gKysrIGIvZHJpdmVycy9uZXQvd2ly
-ZWxlc3MvYjQzL3JhZGlvXzIwNTYuYwo+PiBAQCAtMjQsOSArMjQsNjAgQEAKPj4gwqAjaW5jbHVk
-ZSAicmFkaW9fMjA1Ni5oIgo+PiDCoCNpbmNsdWRlICJwaHlfY29tbW9uLmgiCj4+Cj4+ICsjZGVm
-aW5lIFJBRElPUkVHUzMocjAwLCByMDEsIHIwMiwgcjAzLCByMDQsIHIwNSwgcjA2LCByMDcsIHIw
-OCwgcjA5LCBcCj4+ICsgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqByMTAsIHIxMSwgcjEyLCBy
-MTMsIHIxNCwgcjE1LCByMTYsIHIxNywgcjE4LCByMTksIFwKPj4gKyDCoCDCoCDCoCDCoCDCoCDC
-oCDCoCDCoCDCoHIyMCwgcjIxLCByMjIsIHIyMywgcjI0LCByMjUsIHIyNiwgcjI3LCByMjgsIHIy
-OSwgXAo+PiArIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgcjMwLCByMzEsIHIzMiwgcjMzLCBy
-MzQsIHIzNSwgcjM2KSBcCj4+ICsgwqAgwqAgwqAgLnJhZGlvX3N5bl9wbGxfdmNvY2FsMSDCoCDC
-oCDCoCDCoCDCoD0gcjAwLCDCoFwKPj4gKyDCoCDCoCDCoCAucmFkaW9fc3luX3BsbF92Y29jYWwy
-IMKgIMKgIMKgIMKgIMKgPSByMDEsIMKgXAo+PiArIMKgIMKgIMKgIC5yYWRpb19zeW5fcGxsX3Jl
-ZmRpdiDCoCDCoCDCoCDCoCDCoCA9IHIwMiwgwqBcCj4+ICsgwqAgwqAgwqAgLnJhZGlvX3N5bl9w
-bGxfbW1kMiDCoCDCoCDCoCDCoCDCoCDCoCA9IHIwMywgwqBcCj4+ICsgwqAgwqAgwqAgLnJhZGlv
-X3N5bl9wbGxfbW1kMSDCoCDCoCDCoCDCoCDCoCDCoCA9IHIwNCwgwqBcCj4+ICsgwqAgwqAgwqAg
-LnJhZGlvX3N5bl9wbGxfbG9vcGZpbHRlcjEgwqAgwqAgwqA9IHIwNSwgwqBcCj4+ICsgwqAgwqAg
-wqAgLnJhZGlvX3N5bl9wbGxfbG9vcGZpbHRlcjIgwqAgwqAgwqA9IHIwNiwgwqBcCj4+ICsgwqAg
-wqAgwqAgLnJhZGlvX3N5bl9wbGxfbG9vcGZpbHRlcjMgwqAgwqAgwqA9IHIwNywgwqBcCj4+ICsg
-wqAgwqAgwqAgLnJhZGlvX3N5bl9wbGxfbG9vcGZpbHRlcjQgwqAgwqAgwqA9IHIwOCwgwqBcCj4+
-ICsgwqAgwqAgwqAgLnJhZGlvX3N5bl9wbGxfbG9vcGZpbHRlcjUgwqAgwqAgwqA9IHIwOSwgwqBc
-Cj4+ICsgwqAgwqAgwqAgLnJhZGlvX3N5bl9yZXNlcnZlZF9hZGRyMjcgwqAgwqAgwqA9IHIxMCwg
-wqBcCj4+ICsgwqAgwqAgwqAgLnJhZGlvX3N5bl9yZXNlcnZlZF9hZGRyMjggwqAgwqAgwqA9IHIx
-MSwgwqBcCj4+ICsgwqAgwqAgwqAgLnJhZGlvX3N5bl9yZXNlcnZlZF9hZGRyMjkgwqAgwqAgwqA9
-IHIxMiwgwqBcCj4+ICsgwqAgwqAgwqAgLnJhZGlvX3N5bl9sb2dlbl92Y29idWYxIMKgIMKgIMKg
-IMKgPSByMTMsIMKgXAo+PiArIMKgIMKgIMKgIC5yYWRpb19zeW5fbG9nZW5fbWl4ZXIyIMKgIMKg
-IMKgIMKgID0gcjE0LCDCoFwKPj4gKyDCoCDCoCDCoCAucmFkaW9fc3luX2xvZ2VuX2J1ZjMgwqAg
-wqAgwqAgwqAgwqAgPSByMTUsIMKgXAo+PiArIMKgIMKgIMKgIC5yYWRpb19zeW5fbG9nZW5fYnVm
-NCDCoCDCoCDCoCDCoCDCoCA9IHIxNiwgwqBcCj4+ICsgwqAgwqAgwqAgLnJhZGlvX3J4MF9sbmFh
-X3R1bmUgwqAgwqAgwqAgwqAgwqAgwqA9IHIxNywgwqBcCj4+ICsgwqAgwqAgwqAgLnJhZGlvX3J4
-MF9sbmFnX3R1bmUgwqAgwqAgwqAgwqAgwqAgwqA9IHIxOCwgwqBcCj4+ICsgwqAgwqAgwqAgLnJh
-ZGlvX3R4MF9pbnRwYWFfYm9vc3RfdHVuZSDCoCDCoD0gcjE5LCDCoFwKPj4gKyDCoCDCoCDCoCAu
-cmFkaW9fdHgwX2ludHBhZ19ib29zdF90dW5lIMKgIMKgPSByMjAsIMKgXAo+PiArIMKgIMKgIMKg
-IC5yYWRpb190eDBfcGFkYV9ib29zdF90dW5lIMKgIMKgIMKgPSByMjEsIMKgXAo+PiArIMKgIMKg
-IMKgIC5yYWRpb190eDBfcGFkZ19ib29zdF90dW5lIMKgIMKgIMKgPSByMjIsIMKgXAo+PiArIMKg
-IMKgIMKgIC5yYWRpb190eDBfcGdhYV9ib29zdF90dW5lIMKgIMKgIMKgPSByMjMsIMKgXAo+PiAr
-IMKgIMKgIMKgIC5yYWRpb190eDBfcGdhZ19ib29zdF90dW5lIMKgIMKgIMKgPSByMjQsIMKgXAo+
-PiArIMKgIMKgIMKgIC5yYWRpb190eDBfbWl4YV9ib29zdF90dW5lIMKgIMKgIMKgPSByMjUsIMKg
-XAo+PiArIMKgIMKgIMKgIC5yYWRpb190eDBfbWl4Z19ib29zdF90dW5lIMKgIMKgIMKgPSByMjYs
-IMKgXAo+PiArIMKgIMKgIMKgIC5yYWRpb19yeDFfbG5hYV90dW5lIMKgIMKgIMKgIMKgIMKgIMKg
-PSByMjcsIMKgXAo+PiArIMKgIMKgIMKgIC5yYWRpb19yeDFfbG5hZ190dW5lIMKgIMKgIMKgIMKg
-IMKgIMKgPSByMjgsIMKgXAo+PiArIMKgIMKgIMKgIC5yYWRpb190eDFfaW50cGFhX2Jvb3N0X3R1
-bmUgwqAgwqA9IHIyOSwgwqBcCj4+ICsgwqAgwqAgwqAgLnJhZGlvX3R4MV9pbnRwYWdfYm9vc3Rf
-dHVuZSDCoCDCoD0gcjMwLCDCoFwKPj4gKyDCoCDCoCDCoCAucmFkaW9fdHgxX3BhZGFfYm9vc3Rf
-dHVuZSDCoCDCoCDCoD0gcjMxLCDCoFwKPj4gKyDCoCDCoCDCoCAucmFkaW9fdHgxX3BhZGdfYm9v
-c3RfdHVuZSDCoCDCoCDCoD0gcjMyLCDCoFwKPj4gKyDCoCDCoCDCoCAucmFkaW9fdHgxX3BnYWFf
-Ym9vc3RfdHVuZSDCoCDCoCDCoD0gcjMzLCDCoFwKPj4gKyDCoCDCoCDCoCAucmFkaW9fdHgxX3Bn
-YWdfYm9vc3RfdHVuZSDCoCDCoCDCoD0gcjM0LCDCoFwKPj4gKyDCoCDCoCDCoCAucmFkaW9fdHgx
-X21peGFfYm9vc3RfdHVuZSDCoCDCoCDCoD0gcjM1LCDCoFwKPj4gKyDCoCDCoCDCoCAucmFkaW9f
-dHgxX21peGdfYm9vc3RfdHVuZSDCoCDCoCDCoD0gcjM2Cj4KPiBZb3UgbWlnaHQgd2FudCB0byB1
-c2UgcGFyZW50aGVzZXMgYXJvdW5kIHBhcmFtZXRlciBuYW1lczogZS5nLjoKPiAucmFkaW9fdHgx
-X21peGFfYm9vc3RfdHVuZSA9IChyMzUpLCBcCgpXZSB1c2UgdGhpcyBtYWNybyBvbmx5IGZvciBk
-ZWZpbmluZyByYWRpbyB0YWJsZXMsIG9ubHkgaW4gdGhpcyBmaWxlLgpQbHVzIHdlIGRvbid0IHVz
-ZSBhbnkgbWF0aCBvciBzdGggYXMgeW91IGNhbiBzZWUgaW4gbmV4dCBwYXRjaCAoMy8zKS4KVGhh
-dCB3YXkgaXQgd2lsbCBub3QgaGl0IHJhbmRvbSBkZXZlbG9wZXIgdXNpbmcgdGhpcyBtYWNybyBp
-biBvdGhlcgpwbGFjZSBvZiBjb2RlLgoKLS0gClJhZmHFggo=
+On Tue, 2010-10-05 at 15:19 +0200, ext Luciano Coelho wrote:
+> On Tue, 2010-10-05 at 14:07 +0200, ext Luciano Coelho wrote:
+> > On Tue, 2010-10-05 at 13:53 +0200, ext Luciano Coelho wrote:
+> > > On Sat, 2010-10-02 at 01:10 +0200, ext Tony Lindgren wrote:
+> > > > * Anand Gadiyar <gadiyar@ti.com> [101001 13:25]:
+> > > > > Patch "omap: zoom: add mmc3/wl1271 device support" in the
+> > > > > wireless tree still uses .wires in struct omap2_hsmmc_info.
+> > > > > .wires has now been replaced with .caps in patch "omap: mmc:
+> > > > > extended to pass host capabilities from board file" in the
+> > > > > OMAP tree.
+> > > > > 
+> > > > > This causes linux-next as of 20101001 build to break as
+> > > > > below. Fix this.
+> > > > > 
+> > > > >   CC      arch/arm/mach-omap2/board-zoom-peripherals.o
+> > > > > arch/arm/mach-omap2/board-zoom-peripherals.c:217: error: unknown field 'wires' specified in initializer
+> > > > > make[1]: *** [arch/arm/mach-omap2/board-zoom-peripherals.o] Error 1
+> > > > > make: *** [arch/arm/mach-omap2] Error 2
+> > > > 
+> > > > Can you guys please queue this via the wireless tree along with
+> > > > the other wl1271 patches?
+> > > > 
+> > > > Acked-by: Tony Lindgren <tony@atomide.com>
+> > > 
+> > > I can apply this to the wl12xx tree.  I just need John's confirmation.  
+> > > 
+> > > The pull request I sent to John last week is still pending.  I don't
+> > > know if it is possible to substitute it for a newer one with more
+> > > patches (and still try to make it to 2.6.37).  What do you think, John?
+> > 
+> > Damn, for some reason I had a bug in John's email in my contact book.
+> > Now sending to the correct email address.
+> 
+> Applied to the wl12xx tree.  I'll send a new replacement pull to John
+> today, including this patch.  Thanks.
+
+Hmmm... We got a problem here.  This patch breaks builds when we *don't*
+have "omap: mmc extended to pass host capabilities from board file".  We
+don't have that on wireless-next yet, so builds with zoom boards
+selected are broken.
+
+Any ideas on how to solve this dilemma? I guess the proper way to handle
+this would be to make the changes proposed in this patch when merging
+instead of having a normal commit for it, wouldn't it?
+
+
+-- 
+Cheers,
+Luca.
+
