@@ -1,61 +1,29 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wy0-f174.google.com ([74.125.82.174]:34699 "EHLO
-	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751220Ab0J3DOt (ORCPT
+Received: from mail-iw0-f174.google.com ([209.85.214.174]:42560 "EHLO
+	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755877Ab0JETLv (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 29 Oct 2010 23:14:49 -0400
-Date: Sat, 30 Oct 2010 04:15:03 +0100
-From: "Gustavo F. Padovan" <padovan@profusion.mobi>
-To: linville@tuxdriver.com
-Cc: linux-bluetooth@vger.kernel.org, linux-wireless@vger.kernel.org
-Subject: pull request: bluetooth-2.6 2010-10-30
-Message-ID: <20101030031503.GB24188@vigoh>
+	Tue, 5 Oct 2010 15:11:51 -0400
+Received: by iwn5 with SMTP id 5so8671512iwn.19
+        for <linux-wireless@vger.kernel.org>; Tue, 05 Oct 2010 12:11:50 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <362796.1111.qm@web56806.mail.re3.yahoo.com>
+References: <698964.46316.qm@web56802.mail.re3.yahoo.com> <362796.1111.qm@web56806.mail.re3.yahoo.com>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Tue, 5 Oct 2010 12:11:30 -0700
+Message-ID: <AANLkTinVNJvdqUZGYADJBDhSd5fYY=eaj0V5Ao7XiP3E@mail.gmail.com>
+Subject: Re: [PATCH] compat-wireless: introduce driver-select group for atlxx
+To: Walter Goldens <goldenstranger@yahoo.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi John,
+On Tue, Oct 5, 2010 at 10:50 AM, Walter Goldens
+<goldenstranger@yahoo.com> wrote:
+> Hi, Luis. I take it you're not applying this patch?
 
-The following batch contains some bugfixes for 2.6.37. A fix for unaligned
-access in L2CAP, a Kconfig error, and two fixes related to security of
-the Bluetooth links. There is also a one line patch from Matthew Garret,
-that enables USB autosuspend for btusb module, which shall be completely
-safe. Please pull, thanks.
+I am, sorry I just missed it, feel free to remind me anytime if I miss
+a patch. I just totally missed it.
 
-
-The following changes since commit c1758012971e0410790b2bc96a77e26d7b286593:
-
-  igb: Fix unused variable warning. (2010-10-27 19:43:55 -0700)
-
-are available in the git repository at:
-  git://git.kernel.org/pub/scm/linux/kernel/git/padovan/bluetooth-2.6.git master
-
-Gustavo F. Padovan (1):
-      Bluetooth: fix endianness conversion in L2CAP
-
-Johan Hedberg (1):
-      Bluetooth: Fix non-SSP auth request for HIGH security level sockets
-
-Luiz Augusto von Dentz (1):
-      Bluetooth: fix not setting security level when creating a rfcomm session
-
-Matthew Garrett (1):
-      Bluetooth: Enable USB autosuspend by default on btusb
-
-Randy Dunlap (1):
-      Bluetooth: fix hidp kconfig dependency warning
-
-steven miao (1):
-      bluetooth: fix unaligned access to l2cap conf data
-
- drivers/bluetooth/btusb.c   |    2 ++
- net/bluetooth/hci_event.c   |    6 ++++++
- net/bluetooth/hidp/Kconfig  |    2 +-
- net/bluetooth/l2cap.c       |    8 ++++----
- net/bluetooth/rfcomm/core.c |   13 ++++++++++---
- 5 files changed, 23 insertions(+), 8 deletions(-)
-
--- 
-Gustavo F. Padovan
-ProFUSION embedded systems - http://profusion.mobi
+  Lis
