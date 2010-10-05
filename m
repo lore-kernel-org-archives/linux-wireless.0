@@ -1,65 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.19.149.2]:14614 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751491Ab0JMFcF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 13 Oct 2010 01:32:05 -0400
-Received: from mail.atheros.com ([10.10.20.105])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Tue, 12 Oct 2010 22:31:55 -0700
-Date: Wed, 13 Oct 2010 11:01:41 +0530
-From: Vasanthakumar Thiagarajan <vasanth@atheros.com>
-To: Ben Greear <greearb@candelatech.com>
-CC: "Luis R. Rodriguez" <mcgrof@gmail.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: memory clobber in rx path, maybe related to ath9k.
-Message-ID: <20101013053141.GA15798@vasanth-laptop>
-References: <4CAE1DFB.303@candelatech.com> <1286479642.20974.32.camel@jlt3.sipsolutions.net> <AANLkTimxp703Gy_Atg8=wpFszRDR=OJCXwOUKRh-a-d7@mail.gmail.com> <AANLkTi=t-P_5c14brJohM8UgxeOknv+3syO=7W=ix6qf@mail.gmail.com> <AANLkTinC46a+nE-XOQuBCmRJwjzgh24uC7ZJ7HtbVHnT@mail.gmail.com> <4CB378CD.1080800@candelatech.com> <AANLkTim42zmDwf744BCrPwa1kT5ph57bNMyvSyOpesVv@mail.gmail.com> <4CB3D598.7050904@candelatech.com> <AANLkTimPEg3ZU8CQUXfdpGdfbmhdE9O=GNY=g9gysTo4@mail.gmail.com> <4CB4AA89.1070009@candelatech.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <4CB4AA89.1070009@candelatech.com>
+Received: from phoenix3.szarvasnet.hu ([87.101.127.16]:37019 "EHLO
+	phoenix3.szarvasnet.hu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757847Ab0JEJzN (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 5 Oct 2010 05:55:13 -0400
+From: Gabor Juhos <juhosg@openwrt.org>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org, ath9k-devel@venema.h4ckr.net,
+	Gabor Juhos <juhosg@openwrt.org>,
+	Shu Hwa Shen <shensh@zcomm.com.cn>
+Subject: [PATCH] ath9k: get correct tx gain type in ath9k_hw_4k_get_eeprom
+Date: Tue,  5 Oct 2010 11:32:17 +0200
+Message-Id: <1286271137-10861-1-git-send-email-juhosg@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Oct 13, 2010 at 12:05:53AM +0530, Ben Greear wrote:
-> On 10/11/2010 11:10 PM, Luis R. Rodriguez wrote:
-> > On Mon, Oct 11, 2010 at 8:27 PM, Ben Greear<greearb@candelatech.com>  wrote:
-> 
-> >> Another thing I was thinking about:  Maybe the queue of skbs and dma
-> >> addresses
-> >> in ath9k is getting corrupted by multiple VIFs trying to write at once?
-> >>   Maybe
-> >> some locking is needed in the xmit path?
-> >
-> > That was my second hunch. My first shot was to use spin_lock_irqsave()
-> > over the the uses of the rxbuf list and that seemed to help but I
-> > still managed to get a poison eventually. My next item to check for is
-> > of the permissibility of creating too much pressure to the point we
-> > end up looping over the rxbuf list and race against mac80211 free'ing
-> > a buffer. Will test that tomorrow if nothing else comes up creeping my
-> > priority queue.
-> 
-> This code looks weird to me.  One of the paprd branches
-> deletes the skb, the other doesn't appear to.  Neither
-> null out bf->bf_mpdu, which would appear to leave a dangling
-> pointer in at least the dev_kfree_skb_any() branch.
+The base_eep_header_4k structure contains information that the
+device supports high power tx gain table or not. However the
+ath9k_hw_4k_get_eeprom function does not return that value when
+it is called with EEP_TXGAIN_TYPE. This leads to that the tx gain
+initialization will use the init values from the original tx gain
+table even if the device inidicates that the high power table
+should be used.
 
-Single skb is (re)used for sending paprd training frames on more
-than one chains. This skb needs to be freed only when paprd fails on
-any of the chains or it succeeded on all the chains. The failure
-case is handled in ath_tx_complete_buf() and success case is in
-ath_paprd_calibrate().
-> 
-> ath_tx_complete frees it's skb in all cases, so another
-> bf->bf_mpdu dangling pointer issue.
-> 
-> Maybe at the least we should null out bf->bf_mpdu when
-> skb is consumed?
+Changes-licensed-under: ISC
+Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
+Signed-off-by: Shu Hwa Shen <shensh@zcomm.com.cn>
+---
+ drivers/net/wireless/ath/ath9k/eeprom_4k.c |   10 +++++++++-
+ 1 files changed, 9 insertions(+), 1 deletions(-)
 
-I dont see any point in NULLing out bf->bf_mpdu. bf is
-reclaimed onto a free tx buf pool as soon as it is done
-with the skb. bf_mpdu of any of the bf's is never accessed
-without any initialization (bf_ampdu = skb).
+diff --git a/drivers/net/wireless/ath/ath9k/eeprom_4k.c b/drivers/net/wireless/ath/ath9k/eeprom_4k.c
+index d6eed1f..872e75b 100644
+--- a/drivers/net/wireless/ath/ath9k/eeprom_4k.c
++++ b/drivers/net/wireless/ath/ath9k/eeprom_4k.c
+@@ -179,6 +179,9 @@ static u32 ath9k_hw_4k_get_eeprom(struct ath_hw *ah,
+ 	struct ar5416_eeprom_4k *eep = &ah->eeprom.map4k;
+ 	struct modal_eep_4k_header *pModal = &eep->modalHeader;
+ 	struct base_eep_header_4k *pBase = &eep->baseEepHeader;
++	u16 ver_minor;
++
++	ver_minor = pBase->version & AR5416_EEP_VER_MINOR_MASK;
+ 
+ 	switch (param) {
+ 	case EEP_NFTHRESH_2:
+@@ -204,7 +207,7 @@ static u32 ath9k_hw_4k_get_eeprom(struct ath_hw *ah,
+ 	case EEP_DB_2:
+ 		return pModal->db1_1;
+ 	case EEP_MINOR_REV:
+-		return pBase->version & AR5416_EEP_VER_MINOR_MASK;
++		return ver_minor;
+ 	case EEP_TX_MASK:
+ 		return pBase->txMask;
+ 	case EEP_RX_MASK:
+@@ -217,6 +220,11 @@ static u32 ath9k_hw_4k_get_eeprom(struct ath_hw *ah,
+ 		return pModal->version;
+ 	case EEP_ANT_DIV_CTL1:
+ 		return pModal->antdiv_ctl1;
++	case EEP_TXGAIN_TYPE:
++		if (ver_minor >= AR5416_EEP_MINOR_VER_19)
++			return pBase->txGainType;
++		else
++			return AR5416_EEP_TXGAIN_ORIGINAL;
+ 	default:
+ 		return 0;
+ 	}
+-- 
+1.7.2.1
 
-
-Vasanth
