@@ -1,60 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.19.149.2]:15877 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756166Ab0JOU15 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 15 Oct 2010 16:27:57 -0400
-Received: from mail.atheros.com ([10.10.20.108])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Fri, 15 Oct 2010 13:27:47 -0700
-Date: Fri, 15 Oct 2010 13:27:49 -0700
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-CC: linux-wireless <linux-wireless@vger.kernel.org>
-Subject: [PATCH] ath9k: fix sparse complaint on aphy for debugfs
-Message-ID: <20101015202749.GM30740@tux>
+Received: from mail.candelatech.com ([208.74.158.172]:38198 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750939Ab0JEQYz (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 5 Oct 2010 12:24:55 -0400
+Message-ID: <4CAB514E.2010009@candelatech.com>
+Date: Tue, 05 Oct 2010 09:24:46 -0700
+From: Ben Greear <greearb@candelatech.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: "Luis R. Rodriguez" <mcgrof@gmail.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: Crash in agg-tx.c, with ath9k and lots of STA VIFs.
+References: <4CAA2247.50402@candelatech.com>	 <1286218879.3620.55.camel@jlt3.sipsolutions.net>	 <4CAA252F.9090102@candelatech.com>	 <1286219405.3620.56.camel@jlt3.sipsolutions.net>	 <AANLkTi=Ya6RuCdVYLYi3Mk5EKSP6czOfTh7TRKqB0GPU@mail.gmail.com>	 <AANLkTinGaCAEqGRt_X6hsO8sQx4kKEdNqU8pfi00_1-r@mail.gmail.com>	 <4CAA494B.5000500@candelatech.com>  <4CAA5861.4020503@candelatech.com> <1286265366.3641.2.camel@jlt3.sipsolutions.net>
+In-Reply-To: <1286265366.3641.2.camel@jlt3.sipsolutions.net>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This fixes this sparse complaint:
+On 10/05/2010 12:56 AM, Johannes Berg wrote:
+> On Mon, 2010-10-04 at 15:42 -0700, Ben Greear wrote:
+>
+>> I did find a similar crash while debugging a kernel with just symbols
+>> compiled in (not kgdb) though:
+>
+> Doesn't seem all that similar...
+>
+>> The interesting thing to me is that the 00100104 address is the same in
+>> both crashes, though this one is in a different method.
+>
+> except for that maybe. But this is LIST_POISON1, and with seemingly
+> different lists. It may be faster to reproduce if you enable slab/slub
+> debugging.
+>
+>> Also, this is with power-save NOT disabled (I was hoping to
+>> hit some debugging code I put in for the other crash..hit this instead.)
+>>
+>> Oct  4 15:26:15 localhost kernel: BUG: unable to handle kernel paging request at 00100104
+>> Oct  4 15:26:15 localhost kernel: IP: [<fc77e038>] cfg80211_unlink_bss+0x4d/0x8d [cfg80211]
+>
+> Looks like a mac80211 bug, but you snipped the stack trace.
 
-  CHECK   drivers/net/wireless/ath/ath9k/debug.c
-drivers/net/wireless/ath/ath9k/debug.c:548:34: warning: symbol 'aphy' shadows an earlier one
-drivers/net/wireless/ath/ath9k/debug.c:491:26: originally declared here
+I'll apply your deadlock-fix patch, enable slab debugging, and have another go
+at it today.
 
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
----
- drivers/net/wireless/ath/ath9k/debug.c |   12 ++++++------
- 1 files changed, 6 insertions(+), 6 deletions(-)
+Thanks!
+Ben
 
-diff --git a/drivers/net/wireless/ath/ath9k/debug.c b/drivers/net/wireless/ath/ath9k/debug.c
-index 74a4570..778d06b 100644
---- a/drivers/net/wireless/ath/ath9k/debug.c
-+++ b/drivers/net/wireless/ath/ath9k/debug.c
-@@ -545,16 +545,16 @@ static ssize_t read_file_wiphy(struct file *file, char __user *user_buf,
- 
- 	/* Put variable-length stuff down here, and check for overflows. */
- 	for (i = 0; i < sc->num_sec_wiphy; i++) {
--		struct ath_wiphy *aphy = sc->sec_wiphy[i];
--		if (aphy == NULL)
-+		struct ath_wiphy *aphy_tmp = sc->sec_wiphy[i];
-+		if (aphy_tmp == NULL)
- 			continue;
--		chan = aphy->hw->conf.channel;
-+		chan = aphy_tmp->hw->conf.channel;
- 		len += snprintf(buf + len, sizeof(buf) - len,
- 			"secondary: %s (%s chan=%d ht=%d)\n",
--			wiphy_name(aphy->hw->wiphy),
--			ath_wiphy_state_str(aphy->state),
-+			wiphy_name(aphy_tmp->hw->wiphy),
-+			ath_wiphy_state_str(aphy_tmp->state),
- 			ieee80211_frequency_to_channel(chan->center_freq),
--			aphy->chan_is_ht);
-+						       aphy_tmp->chan_is_ht);
- 	}
- 	if (len > sizeof(buf))
- 		len = sizeof(buf);
 -- 
-1.7.0.4
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
 
