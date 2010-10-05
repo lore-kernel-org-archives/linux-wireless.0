@@ -1,39 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from external1.orbit-lab.org ([128.6.192.131]:50858 "HELO
-	external1.orbit-lab.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1751172Ab0JBTCs (ORCPT
+Received: from mail-iw0-f174.google.com ([209.85.214.174]:45171 "EHLO
+	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751856Ab0JERhA convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 2 Oct 2010 15:02:48 -0400
-Received: from repository3.orbit-lab.org (repository3.orbit-lab.org [10.50.0.41])
-	by external1.orbit-lab.org (Postfix) with ESMTP id D2FE3418D8
-	for <linux-wireless@vger.kernel.org>; Sat,  2 Oct 2010 15:00:23 -0400 (EDT)
-Subject: Compat-wireless release for 2010-10-02 is baked
-To: <linux-wireless@vger.kernel.org>
-Message-Id: <20101002190246.8723E404FC@repository3.orbit-lab.org>
-Date: Sat,  2 Oct 2010 15:02:46 -0400 (EDT)
-From: compat@orbit-lab.org (Compat-wireless cronjob account)
+	Tue, 5 Oct 2010 13:37:00 -0400
+Received: by iwn5 with SMTP id 5so8578883iwn.19
+        for <linux-wireless@vger.kernel.org>; Tue, 05 Oct 2010 10:37:00 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <4CAB5F3D.9060201@candelatech.com>
+References: <4CAB59B2.5050106@candelatech.com> <AANLkTikhGCTS8kJgpDzjudyBTk-rkyXY33UO7kB0+Cc-@mail.gmail.com>
+ <4CAB5F3D.9060201@candelatech.com>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Tue, 5 Oct 2010 10:36:38 -0700
+Message-ID: <AANLkTimV3GrwU+9PPtirT4sCzveLY2egr3PRQhfDBET1@mail.gmail.com>
+Subject: Re: memory clobber in rx path, maybe related to ath9k.
+To: Ben Greear <greearb@candelatech.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Tue, Oct 5, 2010 at 10:24 AM, Ben Greear <greearb@candelatech.com> wrote:
+> On 10/05/2010 10:16 AM, Luis R. Rodriguez wrote:
+>>
+>> On Tue, Oct 5, 2010 at 10:00 AM, Ben Greear<greearb@candelatech.com>
+>>  wrote:
+>>>
+>>> I started seeing this very soon after creating interfaces.
+>>
+>> Can you be more specific how one can reproduce?
+>
+> Enable SLUB debugging, DEBUG_PAGEALLOC (Debug page memory allocations),
+> lockdep, pre-empt.
 
-compat-wireless code metrics
+OK I just enabled PAGE_ALLOC thingy, it wasn't enabled on my kernel.
 
-    747282 - Total upstream lines of code being pulled
-      2153 - backport code changes
-      1902 - backport code additions
-       251 - backport code deletions
-      6242 - backport from compat module
-      8395 - total backport code
-    1.1234 - % of code consists of backport work
-       128 - Code changes posted but not yet merged
-        95 - Code additions posted but not yet merged
-        33 - Code deletions posted but not yet merged
-    0.0171 - % of code not yet merged
-      1219 - Crap changes not yet posted
-      1181 - Crap additions not yet posted
-        38 - Crap deletions not yet posted
-    0.1631 - % of crap code
+> Please try creating a bunch of stations on one ath9k phy,
 
-Base tree: linux-next.git
-Base tree version: next-20101001
-compat-wireless release: compat-wireless-2010-10-01-6-g6d8961c-pc
+How many?
+
+  Luis
