@@ -1,56 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from spaceboyz.net ([87.106.131.203]:43571 "EHLO spaceboyz.net"
+Received: from mail.atheros.com ([12.19.149.2]:37653 "EHLO mail.atheros.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758997Ab0JHSIA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 8 Oct 2010 14:08:00 -0400
-Date: Fri, 8 Oct 2010 19:41:28 +0200
-From: David Lamparter <equinox@diac24.net>
-To: Ben Greear <greearb@candelatech.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	ath9k <ath9k-devel@venema.h4ckr.net>
-Subject: Re: [ath9k-devel] trying to set tx power (using txpower option)
-Message-ID: <20101008174128.GC946034@jupiter.n2.diac24.net>
-References: <SNT111-W2989DC6A52022428756E6FB500@phx.gbl>
- <20101008111221.5425.qmail@stuge.se>
- <AANLkTimAfH8ChkjwFB7e2kMbJyxaZQZMSxTcThva=jgN@mail.gmail.com>
- <SNT111-W21A1F92DC5DADE5968C8CCFB500@phx.gbl>
- <AANLkTikc9+bULkH2Fv7mEtBjbjatMW8XOXjXZVuA81hD@mail.gmail.com>
- <4CAF4B70.9050001@candelatech.com>
- <20101008165232.GI10149@tux>
- <4CAF4FDA.8060908@candelatech.com>
- <1286557944.3612.5.camel@jlt3.sipsolutions.net>
- <4CAF53E2.8030306@candelatech.com>
+	id S1751800Ab0JETul convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 5 Oct 2010 15:50:41 -0400
+Received: from mail.atheros.com ([10.10.20.105])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Tue, 05 Oct 2010 12:50:32 -0700
+Date: Tue, 5 Oct 2010 12:50:39 -0700
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: "John W. Linville" <linville@tuxdriver.com>,
+	Felix Fietkau <nbd@openwrt.org>
+CC: =?iso-8859-1?Q?Bj=F6rn?= Smedman <bjorn.smedman@venatech.se>,
+	"ath9k-devel@venema.h4ckr.net" <ath9k-devel@venema.h4ckr.net>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: [ath9k-devel] [RFC] ath9k: Insert wmb before linking dma
+ descriptors
+Message-ID: <20101005195039.GD11831@tux>
+References: <alpine.DEB.2.00.1010042059130.29449@vtdt3>
+ <20101005131744.GB4074@tuxdriver.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <4CAF53E2.8030306@candelatech.com>
+Content-Type: text/plain; charset="iso-8859-1"
+In-Reply-To: <20101005131744.GB4074@tuxdriver.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Oct 08, 2010 at 10:24:50AM -0700, Ben Greear wrote:
-> On 10/08/2010 10:12 AM, Johannes Berg wrote:
-> > On Fri, 2010-10-08 at 10:07 -0700, Ben Greear wrote:
-> >
-> >> Well, the command fails because of this check (mbm is 20 in his case)
-> >> cfg.c:
-> >> 	case NL80211_TX_POWER_FIXED:
-> >> 		if (mbm<  0 || (mbm % 100))
-> >> 			return -EOPNOTSUPP;
-> >>
-> >> That mbm % 100 looks quite strange to me..any idea what that is supposed to
-> >> accomplish?
-> >
-> > There's a later division by 100 to go from mBm to dBm ... I think you
-> > want 2000, not 20.
+On Tue, Oct 05, 2010 at 06:17:44AM -0700, John W. Linville wrote:
+> On Mon, Oct 04, 2010 at 10:55:08PM +0200, Björn Smedman wrote:
+> > Hi all,
+> > 
+> > I've been looking at how ath9k does DMA and comparing with the
+> > recommendations in the Linux kernel documentation for the DMA API[1]. To
+> > me it looks like we risk setting up incorrect DMA descriptors on
+> > platforms that can reorder writes because all data in the descriptor may
+> > not be written to memory before the descriptor is linked into the DMA
+> > chain.
+> > 
+> > The patch below attempts to remove this risk by inserting a write memory
+> > barrier between where we set up a descriptor and where we add it to the 
+> > DMA chain. My hope is that this may solve some of the harder chip lockups 
+> > on MIPS but more testing is required to determine if it has this effect.
+> > 
+> > Any thoughts?
+> > 
+> > /Björn
+> > 
+> > 1. http://www.mjmwired.net/kernel/Documentation/DMA-API.txt
 > 
-> Well, it's documented in iw to be 'mBm', though I surely wouldn't have known
-> what that stood for (nothing useful shows up on google for 'mBm units').
+> I think this seems OK...?
 
-d-B-m is deci-Bel-milliWatt, so a mBm ostensibly is a
-milli-Bel-milliWatt...
+Felix is more familiar with this area so I'll let him chime with
+his ACK/NACK.
 
-(yes, the "m" really encodes "mW"...)
-
-
--David
-
+  Luis
