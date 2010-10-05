@@ -1,53 +1,141 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.19.149.2]:26112 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751846Ab0JTOAH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 20 Oct 2010 10:00:07 -0400
-Received: from mail.atheros.com ([10.10.20.107])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Wed, 20 Oct 2010 06:59:57 -0700
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>
-Subject: [PATCH 2/3] ath: make ath_hw_set_keycache_entry() static
-Date: Wed, 20 Oct 2010 06:59:37 -0700
-Message-ID: <1287583178-2963-3-git-send-email-lrodriguez@atheros.com>
-In-Reply-To: <1287583178-2963-1-git-send-email-lrodriguez@atheros.com>
-References: <1287583178-2963-1-git-send-email-lrodriguez@atheros.com>
+Received: from mail.candelatech.com ([208.74.158.172]:49547 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753728Ab0JEDjq (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 4 Oct 2010 23:39:46 -0400
+Message-ID: <4CAA9DFB.4090009@candelatech.com>
+Date: Mon, 04 Oct 2010 20:39:39 -0700
+From: Ben Greear <greearb@candelatech.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+CC: Johannes Berg <johannes@sipsolutions.net>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: Crash in agg-tx.c, with ath9k and lots of STA VIFs.
+References: <4CAA2247.50402@candelatech.com> <1286218879.3620.55.camel@jlt3.sipsolutions.net> <4CAA252F.9090102@candelatech.com> <1286219405.3620.56.camel@jlt3.sipsolutions.net> <AANLkTi=Ya6RuCdVYLYi3Mk5EKSP6czOfTh7TRKqB0GPU@mail.gmail.com> <AANLkTinGaCAEqGRt_X6hsO8sQx4kKEdNqU8pfi00_1-r@mail.gmail.com> <4CAA494B.5000500@candelatech.com> <AANLkTi=3EXnANmEP28Z2ASmqxopbe-EDypska72bL=to@mail.gmail.com>
+In-Reply-To: <AANLkTi=3EXnANmEP28Z2ASmqxopbe-EDypska72bL=to@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This fixes this sparse warning:
+On 10/04/2010 04:48 PM, Luis R. Rodriguez wrote:
+> On Mon, Oct 4, 2010 at 2:38 PM, Ben Greear<greearb@candelatech.com>  wrote:
+>> On 10/04/2010 02:13 PM, Luis R. Rodriguez wrote:
+>>>
+>>> On Mon, Oct 4, 2010 at 2:12 PM, Luis R. Rodriguez<mcgrof@gmail.com>
+>>>   wrote:
+>>>>
+>>>> On Mon, Oct 4, 2010 at 12:10 PM, Johannes Berg
+>>>> <johannes@sipsolutions.net>    wrote:
+>>>>>
+>>>>> On Mon, 2010-10-04 at 12:04 -0700, Ben Greear wrote:
+>>>>>>
+>>>>>> On 10/04/2010 12:01 PM, Johannes Berg wrote:
+>>>>>>>
+>>>>>>> On Mon, 2010-10-04 at 11:51 -0700, Ben Greear wrote:
+>>>>>>>>
+>>>>>>>> Just in case this seems familiar to anyone...
+>>>>>>>>
+>>>>>>>> IP: [<f8ba74da>] ieee80211_stop_tx_ba_session+0x14/0x84 [mac80211]
+>>>>>>>
+>>>>>>> Do you have debug info that'd point to a code line?
+>>>>>>>
+>>>>>>> I have never heard of this.
+>>>>>>
+>>>>>> I don't actually know how to get a line of code out of those
+>>>>>> hex offsets...
+>>>>>>
+>>>>>> Someone told me many years ago..but I lost that information :P
+>>>>>
+>>>>> Err, I never remember either, I think Luis knows the gdb thing ... I
+>>>>> usually use "objdump -dS"
+>>>>
+>>>> gdb net/mac80211/mac80211.ko
+>>>> l *(ieee80211_stop_tx_ba_session+0x14/0x84)
+>>>
+>>> Oops I meant:
+>>>
+>>> gdb net/mac80211/mac80211.ko
+>>> l *(ieee80211_stop_tx_ba_session+0x14)
+>>
+>> Thank!
+>>
+>> I had to re-compile with debugging symbols, and added kgdb (hopefully
+>> that won't mess anything up).
+>
+> You may want to look at using netconsole instead if you're goal is
+> just to get some oops off the box.
+>
+> CONFIG_NETCONSOLE=m
+>
+> mcgrof@tux ~/bin $ cat netconsole
+> #!/bin/bash
+> sudo dmesg -n 8
+> sudo ip addr add 192.168.4.2/24 dev eth4
+> sudo modprobe netconsole
+> netconsole="@192.168.4.2/eth4,@192.168.4.3/00:1e:37:82:48:5a"
+>
+> I'd run that script on the dev box, and on 192.168.4.3 just do `nc -l
+> -p 6666 | tee log`. To test just modprobe and rmmod ath9k.
+>
+>> Reading symbols from
+>> /home/greearb/kernel/2.6/wireless-testing-dbg.p4s/net/mac80211/mac80211.ko...done.
+>> (gdb) l *(ieee80211_stop_tx_ba_session+0x14)
+>> 0x54fe is in ieee80211_stop_tx_ba_session
+>> (/home/greearb/git/linux.wireless-testing/net/mac80211/agg-tx.c:595).
+>> 590
+>> 591     int ieee80211_stop_tx_ba_session(struct ieee80211_sta *pubsta, u16
+>> tid)
+>> 592     {
+>> 593             struct sta_info *sta = container_of(pubsta, struct sta_info,
+>> sta);
+>> 594             struct ieee80211_sub_if_data *sdata = sta->sdata;
+>> 595             struct ieee80211_local *local = sdata->local;
+>
+> What was the oops complaint? NULL pointer dereference? If sdata got
+> screwed up that would be pretty serious, the only way that could
+> happen is if somehow it managed to get removed prior to the
+> ieee80211_stop_tx_ba_session() or if there is some sort of memory
+> corruption., What steps do you follow to reproduce?
 
-  CHECK   drivers/net/wireless/ath/key.c
-drivers/net/wireless/ath/key.c:110:6: warning: symbol
-'ath_hw_set_keycache_entry' was not declared. Should it be static?
+It's dying trying to de-reference something, probably sdata, but for some reason I didn't
+think it was NULL.  (I was having trouble getting clean stack dumps
+on the serial console on top of my other issues today.)  In A probably-similar
+crash it was trying to dereference 0x00100104 (See my 3:42 email)
+in this series.
 
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
----
- drivers/net/wireless/ath/key.c |    6 +++---
- 1 files changed, 3 insertions(+), 3 deletions(-)
+I added printks to the stop_tx_ba_session method to try to figure out what was happening, but
+of course then I could no longer reproduce it, or at least it crashed in the cfg80211_unlink_bss
+first.
 
-diff --git a/drivers/net/wireless/ath/key.c b/drivers/net/wireless/ath/key.c
-index 1e9aa32..62e3dac 100644
---- a/drivers/net/wireless/ath/key.c
-+++ b/drivers/net/wireless/ath/key.c
-@@ -108,9 +108,9 @@ static bool ath_hw_keysetmac(struct ath_common *common,
- 	return true;
- }
- 
--bool ath_hw_set_keycache_entry(struct ath_common *common, u16 entry,
--				 const struct ath_keyval *k,
--				 const u8 *mac)
-+static bool ath_hw_set_keycache_entry(struct ath_common *common, u16 entry,
-+				      const struct ath_keyval *k,
-+				      const u8 *mac)
- {
- 	void *ah = common->ah;
- 	u32 key0, key1, key2, key3, key4;
+To reproduce, I have a user-space app that creates 130 or so STA devices, starts wpa_supplicant
+for each one, and then watches events with 'iw event', and reads /proc/net/wireless quite often
+(and grabs some other stats out of debugfs, etc).  It runs 'iwconfig' and parses output for
+other stats.  In short, it does a bunch of things that would be hard to reproduce with any
+simple script.  The user-space app is proprietary, though I would of course give you a free
+binary and help you set it up should you wish to use it.
+
+When I disabled power-save, it ran a lot longer, but it would still hard-hang or occasionally
+crash with stack-trace pointing to the 0x00100104 dereference.
+
+Perhaps related, with power-save disabled, after a while (maybe 10-20 minutes), the system
+would often get to a state where the ath9k no longer showed any additional transmitted packets
+in it's debugfs traffic.  The netdevices (sta1, etc), would show tx pkt counters increasing,
+and the qdiscs showed no backlog.  It was getting rx interrupts, but no tx, according to
+debugfs output.  I didn't get any chance to debug that any further.
+
+We have much better luck with ath5k in general, so I think most of these issues are
+related to ath9k and/or /n in general.  But, even so, we do see deadlocks (on rtnl_lock, it seems)
+with ath5k, and I still have some lockdep warnings to deal with in the mac80211 code,
+so it's possible the problem is more general and ath9k just triggers it much easier.
+
+Thanks,
+Ben
+
+>
+>    Luis
+
+
 -- 
-1.7.0.4
-
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
