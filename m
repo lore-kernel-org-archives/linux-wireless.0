@@ -1,176 +1,226 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:42566 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932378Ab0JOTge (ORCPT
+Received: from comal.ext.ti.com ([198.47.26.152]:35161 "EHLO comal.ext.ti.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753476Ab0JEFbA convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 15 Oct 2010 15:36:34 -0400
-Message-ID: <4CB8AD3F.50201@candelatech.com>
-Date: Fri, 15 Oct 2010 12:36:31 -0700
-From: Ben Greear <greearb@candelatech.com>
+	Tue, 5 Oct 2010 01:31:00 -0400
+From: "Gabay, Benzy" <benzyg@ti.com>
+To: Luciano Coelho <luciano.coelho@nokia.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+CC: Juuso Oikarinen <juuso.oikarinen@nokia.com>
+Date: Tue, 5 Oct 2010 00:30:31 -0500
+Subject: RE: [PATCH 24/25] wl1271: Optimize scan duration
+Message-ID: <676FD6AA0F002F49B89E70F0C5EFD22C135AD3C603@dlee04.ent.ti.com>
+References: <1285576669-8070-1-git-send-email-luciano.coelho@nokia.com>
+ <1285576669-8070-25-git-send-email-luciano.coelho@nokia.com>
+In-Reply-To: <1285576669-8070-25-git-send-email-luciano.coelho@nokia.com>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-CC: Luis Rodriguez <Luis.Rodriguez@atheros.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: memory clobber in rx path, maybe related to ath9k.
-References: <AANLkTimp_GSwwX_RnQSyN9QNe55HQ+0HZJ1yd8Xp+dWG@mail.gmail.com> <AANLkTinyVqdgPqzpyihuaPtVVqDmzj-ZbXzQ-4qdA2yH@mail.gmail.com> <4CB77EA0.1000005@candelatech.com> <AANLkTimC0+6PiqWO+LmtBV7uKCVpZueAQs6m_6kAnbq9@mail.gmail.com> <AANLkTi=1oOCcdvBHo+8WAVHv-M8tE14ntmK4M_09SWh5@mail.gmail.com> <AANLkTi=pp2Ob06YCi6GsR9rtRaDWPP95n2M72qWLdbwM@mail.gmail.com> <20101014225150.GB15740@tux> <20101014231958.GA3242@tux> <4CB79299.7000005@candelatech.com> <AANLkTinQmE6wm1pXkRL6p_3rkMvNrppmirjj3-jagMp8@mail.gmail.com> <20101014234853.GA10113@tux> <4CB886AF.3070800@candelatech.com> <AANLkTinhFj_iYjVzyfSfpUVdytfk4O9kCBnN8=Bwv0N7@mail.gmail.com>
-In-Reply-To: <AANLkTinhFj_iYjVzyfSfpUVdytfk4O9kCBnN8=Bwv0N7@mail.gmail.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 10/15/2010 11:47 AM, Luis R. Rodriguez wrote:
-> On Fri, Oct 15, 2010 at 9:51 AM, Ben Greear<greearb@candelatech.com>  wrote:
->> On 10/14/2010 04:48 PM, Luis R. Rodriguez wrote:
->>>
->>> On Thu, Oct 14, 2010 at 04:39:45PM -0700, Luis R. Rodriguez wrote:
->>>>
->>>> On Thu, Oct 14, 2010 at 4:30 PM, Ben Greear<greearb@candelatech.com>
->>>>   wrote:
->>>>>
->>>>> On 10/14/2010 04:19 PM, Luis R. Rodriguez wrote:
->>>>>>
->>>>>> Ok please try this patch, it cures it for me.
->>>>>
->>>>> Well, it got a lot further than normal, but it still
->>>>> hit the poison check after a few minutes.
->>>>>
->>>>> Current test case is my app loading 130 or so stations, each running
->>>>> wpa_supplicant.  All were created, and quite a few had associated
->>>>> when the poison check hit.
->>>>>
->>>>> So, it definitely looks like a step in the right direction, but
->>>>> not fully fixed yet.
->>>>>
->>>>> I'll do some more testing with this patch applied and using just my
->>>>> perl script to make sure the problem is reproducible outside of my
->>>>> application.
->>>>
->>>> Ok, whatever userspace does it should not corrupt to kernel, unless
->>>> its poking /dev/mem
->>>
->>> Can also try this one instead, it will prevent any other instances
->>> we would not have caught on stopping and starting RX here.
->>
->> It ran longer than before any of your locking patches (about 3 minutes), but
->> it did hit the poison check.
->>
->> Before it did, I had a bunch of OOM errors trying to allocate
->> skbs.  I have 2GB of RAM on this system, but maybe it's not tuned
->> properly, and not all of that can be used for networking on 32-bit
->> kernels....
->>
->> I have Felix's 3 ani patches from ~3 days ago applied, running 130 stations
->> in WPA mode.
->>
->> I'm going to try running fewer to dodge the OOM case,
->> but I have a few other things to take care of first.
->
-> Thanks for testing. So now I cannot reproduce the poison anymore, any
-> other ideas what I can try? Does the perl script still give you poison
-> or just with your Über proprietary application?
+Juuso,
 
-I was just writing that my script wouldn't reproduce it..but it did before I
-was done typing.  Same looking poison exception as ever.
+> 
+> From: Juuso Oikarinen <juuso.oikarinen@nokia.com>
+> 
+> Currently then dwell times for each channel in scans is set to an
+> overly
+> long value, and excessive number of probe-requests are transmitted on
+> each
+> channel (for active scans.)
+> 
+> Based on testing, comparable results can be received with smaller
+> dwell-time,
+> and, with fever probe-requests - in fact, reducing the number of probe-
+> requests
+> to 2 seems to increase the number of found results.
 
-I also notice my Trendnet AP is very un-happy with anything past around 30 STA
-devices associated, and according to it's status page..NONE of my STAs are associated,
-though things show up in /proc/net/wireless and I see auth/assoc messages in
-/var/log/messages on my STA system, so the AP may just be funky.
+I think that this does not making any sense. Less prob requests should give you back less results. As less beacons/prob responses are getting back to the station.
+I think also that office with 70 AP is not a normal environment to test and optimize numbers.
+I would suggest to re-test in a 1-6 AP environment which is making more sense for both home and enterprise environment.
 
-On my system, most of the STAs are constantly trying to associate and being
-rejected by the AP.
-
-Here is updated script, creates 130 STAs and sleeps a bit between starting supplicants.
-It assumes you have a single PHY device, and if you do, it will use it's name regardless
-of how many times you reload the driver.
-
-Please forgive the lameness in the MAC creation logic..though it does at least appear
-to work :)
-
-Thanks,
-Ben
-
-
-#!/usr/bin/perl
-
-use strict;
-
-my $iw = "./local/sbin/iw";
-my $ip = "./local/sbin/ip";
-my $wpa_s = "./local/bin/wpa_supplicant";
-my $ssid = "candela-n";
-my $key = "wpadmz123";
-
-my $phy = `cat /sys/class/ieee80211/*/name`;
-chomp($phy);
-my $max = 130;
-my $i;
-my $j = 4;
-my $k = 1;
-my $bmac = "00:01:02:03:";
-my $cmd;
-
-# Create stations
-for ($i = 0; $i<$max; $i++) {
-   runCmd("$iw phy $phy interface add sta$i type station");
-   if ($j > 99) {
-     $j = 1;
-     $k++;
-   }
-   my $mc5 = "$j";
-   if (length($mc5) == 1) {
-     $mc5 = "0$mc5"; # pad mac octet
-   }
-   my $mc4 = "$k";
-   if (length($mc4) == 1) {
-     $mc4 = "0$mc4"; # pad mac octet
-   }
-   $j++;
-
-   my $mac = "$bmac$mc4:$mc5";
-   runCmd("$ip link set sta$i address $mac");
-
-   runCmd("$iw dev sta$i set power_save off");
-}
-
-# Bring them up with WPA
-for ($i = 0; $i<$max; $i++) {
-   open(FD, ">sta$i" . "_wpa.conf") || die("Couldn't open file: $!\n");
-   print FD "
-ctrl_interface=/var/run/wpa_supplicant
-fast_reauth=1
-#can_scan_one=1
-network={
-     ssid=\"$ssid\"
-     proto=WPA
-     key_mgmt=WPA-PSK
-     psk=\"$key\"
-     pairwise=TKIP CCMP
-     group=TKIP CCMP
-}
-";
-   runCmd("$wpa_s -B -i sta$i -c sta$i" . "_wpa.conf -P sta$i" . "_wpa.pid -t -f sta$i" . "_wpa.log");
-   sleep(2);
-}
-
-
-sub runCmd {
-   my $cmd = shift;
-   print "$cmd\n";
-   `$cmd`;
-}
-
-
-
->
->    Luis
+> 
+> Configure more optimal values for per channel dwell times. Comparison
+> for the
+> different scan configurations (in my current office environment):
+> 
+> dwell-time 60000   3x probe-req == ~60 results
+>            40000   3x probe-req == ~50 results
+>            30000   3x probe-req == ~40 results
+> 
+> dwell-time 60000   2x probe-req == ~70 results
+>            40000   2x probe-req == ~60 results
+>            30000   2x probe-req == ~58 results
+> 
+> The above are results for a cumulative 3 scan run. For individual
+> scans, the
+> number of results drop slightly more.
+> 
+> Signed-off-by: Juuso Oikarinen <juuso.oikarinen@nokia.com>
+> Reviewed-by: Teemu Paasikivi <ext-teemu.3.paasikivi@nokia.com>
+> Signed-off-by: Luciano Coelho <luciano.coelho@nokia.com>
+> ---
+>  drivers/net/wireless/wl12xx/wl1271_conf.h |   39
+> +++++++++++++++++++++++++++++
+>  drivers/net/wireless/wl12xx/wl1271_main.c |    9 ++++++-
+>  drivers/net/wireless/wl12xx/wl1271_scan.c |   18 +++++++++---
+>  drivers/net/wireless/wl12xx/wl1271_scan.h |    3 --
+>  4 files changed, 60 insertions(+), 9 deletions(-)
+> 
+> diff --git a/drivers/net/wireless/wl12xx/wl1271_conf.h
+> b/drivers/net/wireless/wl12xx/wl1271_conf.h
+> index feb493e..ab716f5 100644
+> --- a/drivers/net/wireless/wl12xx/wl1271_conf.h
+> +++ b/drivers/net/wireless/wl12xx/wl1271_conf.h
+> @@ -1016,6 +1016,44 @@ struct conf_roam_trigger_settings {
+>  	u8 avg_weight_snr_data;
+>  };
+> 
+> +struct conf_scan_settings {
+> +	/*
+> +	 * The minimum time to wait on each channel for active scans
+> +	 *
+> +	 * Range: 0 - 65536 tu
+> +	 */
+> +	u16 min_dwell_time_active;
+> +
+> +	/*
+> +	 * The maximum time to wait on each channel for active scans
+> +	 *
+> +	 * Range: 0 - 65536 tu
+> +	 */
+> +	u16 max_dwell_time_active;
+> +
+> +	/*
+> +	 * The maximum time to wait on each channel for passive scans
+> +	 *
+> +	 * Range: 0 - 65536 tu
+> +	 */
+> +	u16 min_dwell_time_passive;
+> +
+> +	/*
+> +	 * The maximum time to wait on each channel for passive scans
+> +	 *
+> +	 * Range: 0 - 65536 tu
+> +	 */
+> +	u16 max_dwell_time_passive;
+> +
+> +	/*
+> +	 * Number of probe requests to transmit on each active scan
+> channel
+> +	 *
+> +	 * Range: u8
+> +	 */
+> +	u16 num_probe_reqs;
+> +
+> +};
+> +
+>  struct conf_drv_settings {
+>  	struct conf_sg_settings sg;
+>  	struct conf_rx_settings rx;
+> @@ -1024,6 +1062,7 @@ struct conf_drv_settings {
+>  	struct conf_itrim_settings itrim;
+>  	struct conf_pm_config_settings pm_config;
+>  	struct conf_roam_trigger_settings roam_trigger;
+> +	struct conf_scan_settings scan;
+>  };
+> 
+>  #endif
+> diff --git a/drivers/net/wireless/wl12xx/wl1271_main.c
+> b/drivers/net/wireless/wl12xx/wl1271_main.c
+> index 3f4e154..dcbd6f5 100644
+> --- a/drivers/net/wireless/wl12xx/wl1271_main.c
+> +++ b/drivers/net/wireless/wl12xx/wl1271_main.c
+> @@ -232,7 +232,14 @@ static struct conf_drv_settings default_conf = {
+>  		.avg_weight_rssi_data         = 10,
+>  		.avg_weight_snr_beacon        = 20,
+>  		.avg_weight_snr_data          = 10
+> -	}
+> +	},
+> +	.scan = {
+> +		.min_dwell_time_active        = 7500,
+> +		.max_dwell_time_active        = 30000,
+> +		.min_dwell_time_passive       = 30000,
+> +		.max_dwell_time_passive       = 60000,
+> +		.num_probe_reqs               = 2,
+> +	},
+>  };
+> 
+>  static void __wl1271_op_remove_interface(struct wl1271 *wl);
+> diff --git a/drivers/net/wireless/wl12xx/wl1271_scan.c
+> b/drivers/net/wireless/wl12xx/wl1271_scan.c
+> index 37f9ccb..5c76b79 100644
+> --- a/drivers/net/wireless/wl12xx/wl1271_scan.c
+> +++ b/drivers/net/wireless/wl12xx/wl1271_scan.c
+> @@ -64,6 +64,7 @@ static int wl1271_get_scan_channels(struct wl1271
+> *wl,
+>  				    struct basic_scan_channel_params *channels,
+>  				    enum ieee80211_band band, bool passive)
+>  {
+> +	struct conf_scan_settings *c = &wl->conf.scan;
+>  	int i, j;
+>  	u32 flags;
+> 
+> @@ -91,10 +92,17 @@ static int wl1271_get_scan_channels(struct wl1271
+> *wl,
+>  			wl1271_debug(DEBUG_SCAN, "beacon_found %d",
+>  				     req->channels[i]->beacon_found);
+> 
+> -			channels[j].min_duration =
+> -				cpu_to_le32(WL1271_SCAN_CHAN_MIN_DURATION);
+> -			channels[j].max_duration =
+> -				cpu_to_le32(WL1271_SCAN_CHAN_MAX_DURATION);
+> +			if (!passive) {
+> +				channels[j].min_duration =
+> +					cpu_to_le32(c->min_dwell_time_active);
+> +				channels[j].max_duration =
+> +					cpu_to_le32(c->max_dwell_time_active);
+> +			} else {
+> +				channels[j].min_duration =
+> +					cpu_to_le32(c->min_dwell_time_passive);
+> +				channels[j].max_duration =
+> +					cpu_to_le32(c->max_dwell_time_passive);
+> +			}
+>  			channels[j].early_termination = 0;
+>  			channels[j].tx_power_att = req->channels[i]-
+> >max_power;
+>  			channels[j].channel = req->channels[i]->hw_value;
+> @@ -151,7 +159,7 @@ static int wl1271_scan_send(struct wl1271 *wl, enum
+> ieee80211_band band,
+>  	cmd->params.rx_filter_options =
+>  		cpu_to_le32(CFG_RX_PRSP_EN | CFG_RX_MGMT_EN |
+> CFG_RX_BCN_EN);
+> 
+> -	cmd->params.n_probe_reqs = WL1271_SCAN_PROBE_REQS;
+> +	cmd->params.n_probe_reqs = wl->conf.scan.num_probe_reqs;
+>  	cmd->params.tx_rate = cpu_to_le32(basic_rate);
+>  	cmd->params.tid_trigger = 0;
+>  	cmd->params.scan_tag = WL1271_SCAN_DEFAULT_TAG;
+> diff --git a/drivers/net/wireless/wl12xx/wl1271_scan.h
+> b/drivers/net/wireless/wl12xx/wl1271_scan.h
+> index bb7af2a..6d57127 100644
+> --- a/drivers/net/wireless/wl12xx/wl1271_scan.h
+> +++ b/drivers/net/wireless/wl12xx/wl1271_scan.h
+> @@ -40,11 +40,8 @@ void wl1271_scan_complete_work(struct work_struct
+> *work);
+>  #define WL1271_SCAN_OPT_ACTIVE         0
+>  #define WL1271_SCAN_OPT_PASSIVE	       1
+>  #define WL1271_SCAN_OPT_PRIORITY_HIGH  4
+> -#define WL1271_SCAN_CHAN_MIN_DURATION  30000  /* TU */
+> -#define WL1271_SCAN_CHAN_MAX_DURATION  60000  /* TU */
+>  #define WL1271_SCAN_BAND_2_4_GHZ 0
+>  #define WL1271_SCAN_BAND_5_GHZ 1
+> -#define WL1271_SCAN_PROBE_REQS 3
+> 
+>  #define WL1271_SCAN_TIMEOUT    10000 /* msec */
+> 
 > --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
 
--- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
 
+Thank You
+=========
+Benzy Gabay
+OMAP-WLAN Lead
+Texas Instruments
