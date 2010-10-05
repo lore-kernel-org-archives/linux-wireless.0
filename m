@@ -1,36 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qw0-f46.google.com ([209.85.216.46]:35177 "EHLO
-	mail-qw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933540Ab0J1N55 (ORCPT
+Received: from mail30f.wh2.ocn.ne.jp ([220.111.41.203]:3163 "HELO
+	mail30f.wh2.ocn.ne.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1756080Ab0JEBZC (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 28 Oct 2010 09:57:57 -0400
-Received: by qwf7 with SMTP id 7so1171618qwf.19
-        for <linux-wireless@vger.kernel.org>; Thu, 28 Oct 2010 06:57:56 -0700 (PDT)
+	Mon, 4 Oct 2010 21:25:02 -0400
+Received: from vs3004.wh2.ocn.ne.jp (125.206.180.167)
+	by mail30f.wh2.ocn.ne.jp (RS ver 1.0.95vs) with SMTP id 2-0702871896
+	for <linux-wireless@vger.kernel.org>; Tue,  5 Oct 2010 10:25:00 +0900 (JST)
+From: Bruno Randolf <br1@einfach.org>
+To: Johannes Berg <johannes@sipsolutions.net>
+Subject: Re: [PATCH v3] mac80211: Add WME information element for IBSS
+Date: Tue, 5 Oct 2010 10:24:56 +0900
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
+References: <20101004021730.3870.14677.stgit@tt-desk> <1286191300.3620.2.camel@jlt3.sipsolutions.net>
+In-Reply-To: <1286191300.3620.2.camel@jlt3.sipsolutions.net>
 MIME-Version: 1.0
-In-Reply-To: <20101027142052.9607A9D401B@zog.reactivated.net>
-References: <20101027142052.9607A9D401B@zog.reactivated.net>
-From: Steve deRosier <steve@cozybit.com>
-Date: Thu, 28 Oct 2010 06:57:31 -0700
-Message-ID: <AANLkTi=c_B+MoZOTxJ+sW06EeBGS0U9oVq1yqdzCGZW1@mail.gmail.com>
-Subject: Re: [PATCH v2] libertas: Fix sd8686 firmware reload
-To: Daniel Drake <dsd@laptop.org>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	dcbw@redhat.com, libertas-dev@lists.infradead.org, pgf@laptop.org
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: Text/Plain;
+  charset="utf-8"
+Message-Id: <201010051024.56936.br1@einfach.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Oct 27, 2010 at 7:20 AM, Daniel Drake <dsd@laptop.org> wrote:
-> From: Paul Fox <pgf@laptop.org>
->
-> For the SD8686, we cannot rely on the scratch register to read the firmware
-> load status, because the same register is used for storing RX packet length.
-> Broaden the check to account for this.
->
-> The module can now be unloaded/reloaded successfully.
->
-> Based on the implementation from libertas_tf.
->
-> Signed-off-by: Daniel Drake <dsd@laptop.org>
+On Mon October 4 2010 20:21:40 Johannes Berg wrote:
+> On Mon, 2010-10-04 at 11:17 +0900, Bruno Randolf wrote:
+> > Enable WME QoS in IBSS mode by adding a WME information element to
+> > beacons and probe respones and by checking for it and marking stations
+> > as WME capable if it is present.
+> > 
+> > Signed-off-by: Bruno Randolf <br1@einfach.org>
+> > 
+> > ---
+> > v3: use GFP_ATOMIC and re-organize nesting of "if" statements. allthough
+> > in practice we would probaby always have the rates element i think it's
+> > more correct to code it like this.
+> 
+> You're probably right, but shouldn't that be a separate patch? It
+> doesn't relate to WME at all, afaict.
 
-Signed-off-by: Steve deRosier <steve@cozybit.com>
+it does. before we only looked at elems->supp_rates, so it was o.k. to combine 
+that check into the first if (adhoc mode && bssid matches). now we also check 
+elems->wmm_info so we should make separate cases for each. as i noted, it 
+probably does not matter much in practice, since elems->supp_rates should be 
+present in all proper beacons and probe responses.
+
+bruno
