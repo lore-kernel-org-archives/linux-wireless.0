@@ -1,86 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms2.broadcom.com ([216.31.210.18]:2877 "EHLO mms2.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752313Ab0JTCSR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 19 Oct 2010 22:18:17 -0400
-Date: Tue, 19 Oct 2010 19:18:06 -0700
-From: "Henry Ptasinski" <henryp@broadcom.com>
-To: "Greg KH" <greg@kroah.com>
-cc: "Nohee Ko" <noheek@broadcom.com>,
-	"devel@linuxdriverproject.org" <devel@linuxdriverproject.org>,
-	"Brett Rudley" <brudley@broadcom.com>,
-	"grundler@google.com" <grundler@google.com>,
-	"Henry Ptasinski" <henryp@broadcom.com>,
-	linux-wireless@vger.kernel.org, dwmw2@infradead.org
-Subject: Re: [PATCH] staging:brcm80211:brcmfmac:change firmware/config
- file name
-Message-ID: <20101020021806.GM10832@broadcom.com>
-References: <4CBE23F4.4020104@broadcom.com>
- <20101019233520.GA12510@kroah.com>
- <FD96C117992C584DBC47231B1EB6F5568206D859DC@SJEXCHCCR02.corp.ad.broadcom.com>
- <20101020004743.GB31965@kroah.com>
- <20101020005546.GL10832@broadcom.com> <20101020010320.GA370@kroah.com>
+Received: from mail-iw0-f174.google.com ([209.85.214.174]:57056 "EHLO
+	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751800Ab0JERns convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 5 Oct 2010 13:43:48 -0400
+Received: by iwn5 with SMTP id 5so8585558iwn.19
+        for <linux-wireless@vger.kernel.org>; Tue, 05 Oct 2010 10:43:48 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <20101020010320.GA370@kroah.com>
-Content-Type: text/plain;
- charset=us-ascii
+In-Reply-To: <4CAB627F.8020804@candelatech.com>
+References: <4CAB59B2.5050106@candelatech.com> <AANLkTikhGCTS8kJgpDzjudyBTk-rkyXY33UO7kB0+Cc-@mail.gmail.com>
+ <4CAB5F3D.9060201@candelatech.com> <AANLkTimV3GrwU+9PPtirT4sCzveLY2egr3PRQhfDBET1@mail.gmail.com>
+ <4CAB627F.8020804@candelatech.com>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Tue, 5 Oct 2010 10:43:27 -0700
+Message-ID: <AANLkTi=sT5QJe4V8gFGjF-nzx0uJAMLG_XG2715qrEEd@mail.gmail.com>
+Subject: Re: memory clobber in rx path, maybe related to ath9k.
+To: Ben Greear <greearb@candelatech.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-(Adding linux-wireless for input on firmware naming best practices.)
+On Tue, Oct 5, 2010 at 10:38 AM, Ben Greear <greearb@candelatech.com> wrote:
+> On 10/05/2010 10:36 AM, Luis R. Rodriguez wrote:
+>>
+>> On Tue, Oct 5, 2010 at 10:24 AM, Ben Greear<greearb@candelatech.com>
+>>  wrote:
+>>>
+>>> On 10/05/2010 10:16 AM, Luis R. Rodriguez wrote:
+>>>>
+>>>> On Tue, Oct 5, 2010 at 10:00 AM, Ben Greear<greearb@candelatech.com>
+>>>>  wrote:
+>>>>>
+>>>>> I started seeing this very soon after creating interfaces.
+>>>>
+>>>> Can you be more specific how one can reproduce?
+>>>
+>>> Enable SLUB debugging, DEBUG_PAGEALLOC (Debug page memory allocations),
+>>> lockdep, pre-empt.
+>>
+>> OK I just enabled PAGE_ALLOC thingy, it wasn't enabled on my kernel.
+>>
+>>> Please try creating a bunch of stations on one ath9k phy,
+>>
+>> How many?
+>
+> 130 is a nice round number :)
 
-On Tue, Oct 19, 2010 at 06:03:20PM -0700, Greg KH wrote:
-> On Tue, Oct 19, 2010 at 05:55:46PM -0700, Henry Ptasinski wrote:
-> > On Tue, Oct 19, 2010 at 05:47:43PM -0700, Greg KH wrote:
-> > > On Tue, Oct 19, 2010 at 04:45:26PM -0700, Nohee Ko wrote:
-> > > > >>
-> > > > Have you made the same changes in the linux-firmware source tree as
-> > > > well?  Without changing it there, this could get messy.
-> > > > <<
-> > > > 
-> > > > No not yet. But we are planning sooner or later.
-> > > 
-> > > Please do it sooner.
-> > > 
-> > > I'll wait for that to happen before committing this patch.
-> > 
-> > There's no specific changes needed in the linux-firmware repo to work with this
-> > driver change.  There is a bugfix version of the firmware that we're getting
-> > ready to send up, which is the motivation for this change, but the change
-> > will work properly with the firmware that's in the repo today.
-> 
-> How, you just renamed the file you look for in the driver, right?
-> 
-> > All this change does is replace the hard-coded full firmware filename used in
-> > the driver with the basename-apiversion construction as documented in
-> > 
-> > 	http://www.linuxwireless.org/en/developers/Documentation/firmware-versioning
-> > 
-> > plus add some info to the README to help users get the firmware properly
-> > installed.
-> > 
-> > Users will need to create the symlinks as described in the README to use these
-> > driver changes.
-> 
-> Yes, so you just broke their working setup, right?
-> 
-> So, please get linux-firmware fixed to add the proper symlinks, and then
-> I can apply the patch, and say "go upgrade your linux-firmware package",
-> which is almost acceptable.
+Let me get this straight. You are creating 130 STAs with ath9k using
+iw, then running 150 instances of wpa_supplicant to connect to the
+same AP?
 
-Ah, I didn't realize we should have the symlinks in the linux-firmware repo.
-We didn't do that for the brcm80211 driver (same instructions to create
-symlinks by hand are in the README for that driver), and nobody pointed it out
-as being an issue.
+> I'll try with a smaller number and see if I can hit it.
 
-But I note that the linux-firmware repo doesn't contain any symlinks, and I'm
-having trouble finding any other driver that's using this approach.  It looks
-like everybody is either just doing some variant of basename-apiversion, or
-hardcoding the complete firmware name (with codeversion) in theer driver.
+Please do, you can use the log2n approach, should take you 7 tries,
+each by a power of 2, start at the middle of course.
 
-Should we just punt on the codeversion portion?  Thoughts?
-
-Thanks,
-- Henry
-
-
+  Luis
