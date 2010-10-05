@@ -1,60 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nm7-vm0.bullet.mail.ukl.yahoo.com ([217.146.183.236]:21294 "HELO
-	nm7-vm0.bullet.mail.ukl.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1755605Ab0JYORi (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:37187 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755457Ab0JETnF (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 25 Oct 2010 10:17:38 -0400
-Message-ID: <4CC5900A.2050209@users.sourceforge.net>
-Date: Mon, 25 Oct 2010 15:11:22 +0100
-From: Hin-Tak Leung <htl10@users.sourceforge.net>
-MIME-Version: 1.0
-To: Larry Finger <Larry.Finger@lwfinger.net>
-CC: Serafeim Zanikolas <sez@debian.org>, herton@mandriva.com.br,
-	linville@tuxdriver.com, joe@perches.com, davem@davemloft.net,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] drivers: rtl818x: request DMA-able memory
-References: <1287952327-9924-1-git-send-email-sez@debian.org> <4CC5851D.1040204@lwfinger.net>
-In-Reply-To: <4CC5851D.1040204@lwfinger.net>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+	Tue, 5 Oct 2010 15:43:05 -0400
+Subject: Re: [PATCH v2 2/3] mac80211: wait until completely disassociated
+ before new association
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Cc: Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
+	"linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"stable@kernel.org" <stable@kernel.org>, Jouni Malinen <j@w1.fi>,
+	Paul Stewart <pstew@google.com>,
+	Amod Bodas <Amod.Bodas@Atheros.com>,
+	Vasanth Thiagarajan <Vasanth.Thiagarajan@Atheros.com>
+In-Reply-To: <20101005193623.GC11831@tux>
+References: <1285965233-11097-1-git-send-email-lrodriguez@atheros.com>
+	 <1285965233-11097-3-git-send-email-lrodriguez@atheros.com>
+	 <1286198080.3620.34.camel@jlt3.sipsolutions.net>
+	 <20101004163605.GC2105@tux>
+	 <1286210392.3620.40.camel@jlt3.sipsolutions.net>
+	 <20101004180458.GP2105@tux>
+	 <1286217898.3620.54.camel@jlt3.sipsolutions.net>
+	 <20101004205551.GR2105@tux> <1286265582.3641.6.camel@jlt3.sipsolutions.net>
+	 <20101005193623.GC11831@tux>
+Content-Type: text/plain; charset="UTF-8"
+Date: Tue, 05 Oct 2010 21:43:04 +0200
+Message-ID: <1286307784.3641.30.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Tue, 2010-10-05 at 12:36 -0700, Luis R. Rodriguez wrote:
 
-
-Larry Finger wrote:
-> On 10/24/2010 03:32 PM, Serafeim Zanikolas wrote:
->> Despite the indicated intention in comment, the kmalloc() call was not
->> explicitly requesting memory from ZONE_DMA.
->>
->> Signed-off-by: Serafeim Zanikolas <sez@debian.org>
->> ---
->>  drivers/net/wireless/rtl818x/rtl8187_dev.c |    3 ++-
->>  1 files changed, 2 insertions(+), 1 deletions(-)
->>
->> diff --git a/drivers/net/wireless/rtl818x/rtl8187_dev.c b/drivers/net/wireless/rtl818x/rtl8187_dev.c
->> index 38fa824..771794d 100644
->> --- a/drivers/net/wireless/rtl818x/rtl8187_dev.c
->> +++ b/drivers/net/wireless/rtl818x/rtl8187_dev.c
->> @@ -1343,7 +1343,8 @@ static int __devinit rtl8187_probe(struct usb_interface *intf,
->>  	priv->is_rtl8187b = (id->driver_info == DEVICE_RTL8187B);
->>  
->>  	/* allocate "DMA aware" buffer for register accesses */
->> -	priv->io_dmabuf = kmalloc(sizeof(*priv->io_dmabuf), GFP_KERNEL);
->> +	priv->io_dmabuf = kmalloc(sizeof(*priv->io_dmabuf),
->> +				  GFP_DMA | GFP_KERNEL);
->>  	if (!priv->io_dmabuf) {
->>  		err = -ENOMEM;
->>  		goto err_free_dev;
+> > Come to think of it -- some p2p stuff in the supplicant might time out
+> > if we do this,
 > 
-> ACK.
+> Its no different than the case of a DTIM 1 case when we do bgscan
+> and need to scan through some passive scan channels.
 > 
-> Larry
+> > I think we need to cut the drivers/mac80211 some more
+> > slack in the supplicant and not assume the remain-on-channel will start
+> > quickly.
+> 
+> Not sure I follow, do you mean that as per API we want to document
+> offchannel operation may loose broadcast/multicast data frames?
 
-Acked-by: Hin-Tak Leung <htl10@users.sourceforge.net>
+Never mind ... it's not really related to this issue much. (but no, I
+meant that the offchannel operation might not start quickly)
 
-I had a quick look for similiar constructs and AFAIK only the b43/b43legacy 
-drivers uses DMA buffers. Seems to be a rare practice. Is that something we 
-should or should not do?
+johannes
 
-Hin-Tak
