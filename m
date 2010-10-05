@@ -1,42 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 80-190-117-144.ip-home.de ([80.190.117.144]:54841 "EHLO
-	bu3sch.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753359Ab0JTUwi (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 20 Oct 2010 16:52:38 -0400
-Subject: Re: [PATCH] ssb: Clear RETRY_TIMEOUT in PCI Configuration for
- normal devices
-From: Michael =?ISO-8859-1?Q?B=FCsch?= <mb@bu3sch.de>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: John W Linville <linville@tuxdriver.com>,
-	b43-dev@lists.infradead.org, linux-wireless@vger.kernel.org
-In-Reply-To: <4cbf03d5.sBoVK5FZiEsbJ8xu%Larry.Finger@lwfinger.net> (sfid-20101020_165935_779270_769119B3)
-References: <4cbf03d5.sBoVK5FZiEsbJ8xu%Larry.Finger@lwfinger.net>
-	 (sfid-20101020_165935_779270_769119B3)
-Content-Type: text/plain; charset="UTF-8"
-Date: Wed, 20 Oct 2010 22:52:21 +0200
-Message-ID: <1287607941.2023.1.camel@maggie>
-Mime-Version: 1.0
+Received: from mail.candelatech.com ([208.74.158.172]:57317 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753728Ab0JEDpn (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 4 Oct 2010 23:45:43 -0400
+Message-ID: <4CAA9F60.9030207@candelatech.com>
+Date: Mon, 04 Oct 2010 20:45:36 -0700
+From: Ben Greear <greearb@candelatech.com>
+MIME-Version: 1.0
+To: Bruno Randolf <br1@einfach.org>
+CC: Johannes Berg <johannes@sipsolutions.net>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: Putting APs into bridges?
+References: <4CAA0D5E.2090700@candelatech.com> <1286216969.3620.44.camel@jlt3.sipsolutions.net> <201010051243.45190.br1@einfach.org>
+In-Reply-To: <201010051243.45190.br1@einfach.org>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2010-10-20 at 09:59 -0500, Larry Finger wrote: 
-> The previous patch of this type fixed the case where a PCI device is behind
-> an SSB->PCI bridge as found on an embedded device. This one treats the normal
-> case of a "normal" Broadcom wireless PCI core on an SSB interconnect.
+On 10/04/2010 08:43 PM, Bruno Randolf wrote:
+> On Tue October 5 2010 03:29:29 Johannes Berg wrote:
+>> On Mon, 2010-10-04 at 10:22 -0700, Ben Greear wrote:
+>>> It seems he put two VAPs into a bridge device, and got an
+>>> assert here (nevermind the printk, I just added that to
+>>> help debug the issue).
+>>>
+>>> static void __ieee80211_wake_queue(struct ieee80211_hw *hw, int queue,
+>>>
+>>> 				   enum queue_stop_reason reason)
+>>>
+>>> {
+>>>
+>>> 	struct ieee80211_local *local = hw_to_local(hw);
+>>> 	struct ieee80211_sub_if_data *sdata;
+>>> 	
+>>> 	trace_wake_queue(local, queue, reason);
+>>> 	
+>>> 	if (WARN_ON(queue>= hw->queues)) {
+>>> 	
+>>> 		printk(KERN_WARNING "%s:  queue: %i  hw->queues: %i\n",
+>>> 		
+>>> 		       sdata->name, queue, hw->queues);
+>>> 		
+>>> 		return;
+>>> 	
+>>> 	}
+>>>
+>>> Before I try to reproduce this, it is valid to add APs to bridge
+>>> devices in the first place?
+>>
+>> Yes, it's valid, we catch the invalid cases in cfg80211.
+>>
+>> Hitting the assert there is rather strange though.
+>
+> hey!
+>
+> i'm seeing the same. i think it's due to a bug in ath5k concerning power save.
+> we put frames in the CAB queue, but obviously we shouldn't tell mac80211 to
+> wake this queue (number 6) since mac80211 knows nothing about it.
 
-Note that the other patch is not needed anymore, if this is applied.
+Interesting...we couldn't reproduce it at all (two APs in a bridge worked as
+expected, as far as we could tell).
 
-Also note that this patch will also have an effect on b44 hardware.
-Do we want that?
+Thanks,
+Ben
 
-> MMIO log traces obtained using the Broadcom wl hybrid driver show that
-> the RETRY_TIMEOUT register (0x41) in PCI configuration space is cleared
-> if non-zero. Similar code found in other drivers such as ipw2100 show
-> this operation is needed to keep PCI Tx retries from interfering with
-> C3 CPU state. There are no known cases where omission of this code has
-> caused a problem, but this patch is offered just in case such a situation
-> occurs.
 
 -- 
-Greetings Michael.
-
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
