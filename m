@@ -1,78 +1,96 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ey0-f174.google.com ([209.85.215.174]:43593 "EHLO
-	mail-ey0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756840Ab0JFFuK (ORCPT
+Received: from mail-yw0-f46.google.com ([209.85.213.46]:55890 "EHLO
+	mail-yw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755821Ab0JEU3Q (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 6 Oct 2010 01:50:10 -0400
-Received: by mail-ey0-f174.google.com with SMTP id 6so2726728eyb.19
-        for <linux-wireless@vger.kernel.org>; Tue, 05 Oct 2010 22:50:10 -0700 (PDT)
-From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-To: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-Cc: b43-dev@lists.infradead.org,
-	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-Subject: [PATCH 3/3] b43: N-PHY: don't duplicate setting channel in shared memory
-Date: Wed,  6 Oct 2010 07:50:08 +0200
-Message-Id: <1286344208-32479-4-git-send-email-zajec5@gmail.com>
-In-Reply-To: <1286344208-32479-1-git-send-email-zajec5@gmail.com>
-References: <1286344208-32479-1-git-send-email-zajec5@gmail.com>
+	Tue, 5 Oct 2010 16:29:16 -0400
 MIME-Version: 1.0
+In-Reply-To: <1286308731.2588.13.camel@aeonflux>
+References: <20100924230730.GB6566@tux> <1286266981.17473.33.camel@aeonflux>
+ <20101005192814.GB11831@tux> <1286308731.2588.13.camel@aeonflux>
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Date: Tue, 5 Oct 2010 13:28:53 -0700
+Message-ID: <AANLkTimz7U52_qHaTutQDOFQde+GrWJRA0WpqY__FPgi@mail.gmail.com>
+Subject: Re: RFC: btusb firmware load help
+To: Marcel Holtmann <holtmann@linux.intel.com>
+Cc: Luis Rodriguez <Luis.Rodriguez@atheros.com>,
+	linux-bluetooth <linux-bluetooth@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Deepak Dhamdhere <Deepak.Dhamdhere@atheros.com>,
+	Sree Durbha <Sree.Durbha@atheros.com>
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-It's already set in PHY common code.
+On Tue, Oct 5, 2010 at 12:58 PM, Marcel Holtmann
+<holtmann@linux.intel.com> wrote:
+> Hi Luis,
+>
+>> > > Marcel, I was just poked about this thread:
+>> > >
+>> > > http://www.spinics.net/lists/linux-bluetooth/msg06087.html
+>> > >
+>> > > The hack is required because our BT hardware does not accept HCI commands
+>> > > when the device is plugged in. If I understood your position you did not
+>> > > want to accept the patch because our BT USB devices are violating the
+>> > > specification by not acceping HCI commands and yet claiming to be BT
+>> > > devices, is that right?
+>> >
+>> > you don't have to accept HCI commands when your device has no firmware
+>> > loaded. That is just fine. However at that point you should not claim to
+>> > be a Bluetooth H:2 device with USB Bluetooth descriptors.
+>> >
+>> > Just having different USB PIDs for without firmware and with firmware
+>> > stages would have been fine. The ancient Broadcom 203x devices even got
+>> > that part right.
+>>
+>> Ah I see.
+>>
+>> > So what about sticking with the current VID:PID for the device without
+>> > firmware and we blacklist it in btusb driver. And then the firmware
+>> > loading ensures that after reset it uses a different PID for the device
+>> > with valid HCI firmware.
+>>
+>> How would firmware be uploaded to the device if no module
+>> is claiming it?
+>
+> most likely via a separate firmware loading driver.
 
-Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
----
- drivers/net/wireless/b43/phy_n.c |   13 +++----------
- 1 files changed, 3 insertions(+), 10 deletions(-)
+Like the fwload patch ? Or something different?
 
-diff --git a/drivers/net/wireless/b43/phy_n.c b/drivers/net/wireless/b43/phy_n.c
-index 47c58cd..bb8cb36 100644
---- a/drivers/net/wireless/b43/phy_n.c
-+++ b/drivers/net/wireless/b43/phy_n.c
-@@ -73,8 +73,6 @@ static void b43_nphy_rf_control_override(struct b43_wldev *dev, u16 field,
- 						u16 value, u8 core, bool off);
- static void b43_nphy_rf_control_intc_override(struct b43_wldev *dev, u8 field,
- 						u16 value, u8 core);
--static int b43_nphy_op_switch_channel(struct b43_wldev *dev,
--				      unsigned int new_channel);
- 
- static inline bool b43_empty_chanspec(struct b43_chanspec *chanspec)
- {
-@@ -224,7 +222,7 @@ static void b43_radio_init2055_post(struct b43_wldev *dev)
- 	if (i)
- 		b43err(dev->wl, "radio post init timeout\n");
- 	b43_radio_mask(dev, B2055_CAL_LPOCTL, 0xFF7F);
--	b43_nphy_op_switch_channel(dev, dev->phy.channel);
-+	b43_switch_channel(dev, dev->phy.channel);
- 	b43_radio_write(dev, B2055_C1_RX_BB_LPF, 0x9);
- 	b43_radio_write(dev, B2055_C2_RX_BB_LPF, 0x9);
- 	b43_radio_write(dev, B2055_C1_RX_BB_MIDACHP, 0x83);
-@@ -3352,12 +3350,7 @@ static void b43_nphy_chanspec_setup(struct b43_wldev *dev,
- 
- 	b43_chantab_phy_upload(dev, e);
- 
--	tmp = chanspec.channel;
--	if (chanspec.b_freq == 1)
--		tmp |= 0x0100;
--	if (chanspec.b_width == 3)
--		tmp |= 0x0200;
--	b43_shm_write16(dev, B43_SHM_SHARED, 0xA0, tmp);
-+	/* Don't follow specs, B43_SHM_SH_CHAN is set by b43_switch_channel */
- 
- 	if (nphy->radio_chanspec.channel == 14) {
- 		b43_nphy_classifier(dev, 2, 0);
-@@ -3559,7 +3552,7 @@ static void b43_nphy_op_software_rfkill(struct b43_wldev *dev,
- 	} else {
- 		if (dev->phy.rev >= 3) {
- 			b43_radio_init2056(dev);
--			b43_nphy_op_switch_channel(dev, dev->phy.channel);
-+			b43_switch_channel(dev, dev->phy.channel);
- 		} else {
- 			b43_radio_init2055(dev);
- 		}
--- 
-1.7.1
+> Your ath3k driver is such a driver. Same as the bcm203x driver.
 
+Right -- so ath3k depends on some atheros USB device IDs, and its a
+stupid driver that just loads firmware. The problem with this new
+device is that it requires two phases. One to load some sort of
+firmware onto it to get it to read as an ath3k device, and then ath3k
+will load the right firmware to it. So the hardware device is already
+claiming a btusb vendor:device ID, we can't change that I believe. Of
+course for future devices we can, and we've addressed this and its
+been fixed.
+
+> They don't do anything than claiming that USB device, loading the firmware, and then let it reset.
+
+Right but if the SFLASH configurations hardware is already shipping
+and without firmware is claiming to be a BT USB device which matches
+the USB vendor:device ID of the btusb driver. Unfortunately it does
+not accept HCI commands which as you indicates breaks some
+specification. We can and have fixed this in future chipsets but this
+one cannot be addressed. So what do we do?
+
+> And after the reset the btusb can claim the one where the firmware has
+> been loaded and which behaves like a proper USB dongle.
+
+Right, that's what the fwload patch from our BT team does, no?
+
+> The part that I don't understand is that you have the ath3k driver doing
+> it exactly how it should be done, why now started to make nasty hacks in
+> the btusb driver.
+
+Yeah that seems to have been a shortcoming, its something you should
+expect from us moving forward. I've been told AR3012 and future
+Atheros chipsets will not have behave this way, and this issue is only
+present for the AR3011 devices with SFLASH configuration.
+
+  Luis
