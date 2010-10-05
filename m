@@ -1,35 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from lo.gmane.org ([80.91.229.12]:43018 "EHLO lo.gmane.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S933225Ab0JZSDn (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 26 Oct 2010 14:03:43 -0400
-Received: from list by lo.gmane.org with local (Exim 4.69)
-	(envelope-from <glkwg-linux-wireless@m.gmane.org>)
-	id 1PAns1-0007LN-1y
-	for linux-wireless@vger.kernel.org; Tue, 26 Oct 2010 20:03:37 +0200
-Received: from CPE0014bf4aedf8-CM00111ae2cca2.cpe.net.cable.rogers.com ([173.34.126.150])
-        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Tue, 26 Oct 2010 20:03:37 +0200
-Received: from senada by CPE0014bf4aedf8-CM00111ae2cca2.cpe.net.cable.rogers.com with local (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Tue, 26 Oct 2010 20:03:37 +0200
-To: linux-wireless@vger.kernel.org
-From: seno <senada@t-online.de>
-Subject: Re:[PATCH] rtl8187b: do not do per packet TX AGC
-Date: Tue, 26 Oct 2010 18:03:28 +0000 (UTC)
-Message-ID: <loom.20101026T200014-691@post.gmane.org>
-References: <1282974868-22237-1-git-send-email-cascardo@holoscopio.com> <4C798080.8010002@lwfinger.net> <20100830141218.GB30864@tuxdriver.com> <4C7BC4D9.1010108@lwfinger.net> <20100830152841.GB2950@barata.holoscopio.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: from mail.candelatech.com ([208.74.158.172]:45747 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755578Ab0JEVmk (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 5 Oct 2010 17:42:40 -0400
+Message-ID: <4CAB9BCD.7010501@candelatech.com>
+Date: Tue, 05 Oct 2010 14:42:37 -0700
+From: Ben Greear <greearb@candelatech.com>
+MIME-Version: 1.0
+To: Christian Lamparter <chunkeey@googlemail.com>
+CC: Ming Lei <tom.leiming@gmail.com>, linux-wireless@vger.kernel.org
+Subject: Re: lockdep warning in ieee80211 rx path
+References: <AANLkTin5KfmQLYxLWdhTcO-AM0t83dVq=LFCG0UGysaw@mail.gmail.com> <201010042000.44518.chunkeey@googlemail.com> <4CAA17FA.3080403@candelatech.com> <201010042036.12542.chunkeey@googlemail.com>
+In-Reply-To: <201010042036.12542.chunkeey@googlemail.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I tried that patch on compat-wireless-2010-10-25 (Kernel 2.6.33.7).
+On 10/04/2010 11:36 AM, Christian Lamparter wrote:
+> On Monday 04 October 2010 20:07:54 Ben Greear wrote:
+>> On 10/04/2010 11:00 AM, Christian Lamparter wrote:
+>>> On Monday 04 October 2010 19:52:12 Ben Greear wrote:
+>>>> On 09/14/2010 01:51 PM, Christian Lamparter wrote:
+>>>>> On Sunday 05 September 2010 11:32:26 Ming Lei wrote:
+>>>>>> Seems the warning does not affect use of wireless,  false positive?
+>>>>>
+>>>>> No, it's a bug... but please read&    test the attached patch.
+>>>>
+>>>> This is not yet in wireless-testing.  Should it be?
+>>> have you heard anything from Ming Lei about this subject?
+>>> Or have you reproduced the bug too?
+>>
+>> See my post about   inconsistent {IN-SOFTIRQ-W} ->  {SOFTIRQ-ON-W}.
+>>
+>> I'm not sure it's the same bug, but it would appear similar at least.
+> At first glance, your trace looks unrelated to Ming Lei's issue.
+> But we won't know for sure, unless you have a reliable way to
+> reproduce the exact circumstances.
+>
+>> If your patch is probably good, I can go ahead and apply it.
+>> We can at least test that it doesn't obviously make things worse.
+> Ok, if the patch doesn't make things worse than they are, I can
+> risk another attempt.
 
-Performance improves minimal, but thousands of errors occur in iwconfig output.
-(Tx excessive retries, Invalid misc, Missed beacon).
+We've been running your patch for a few days, and it hasn't caused
+any additional problems as far as I can tell.
 
-The router also shows lots of errors 
-(for Received (RX) / Transmitted (TX) packets)
+Thanks,
+Ben
+
+-- 
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
 
