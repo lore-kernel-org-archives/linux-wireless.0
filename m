@@ -1,81 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from shadbolt.e.decadent.org.uk ([88.96.1.126]:49727 "EHLO
-	shadbolt.e.decadent.org.uk" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1755427Ab0JFVye (ORCPT
+Received: from mail.candelatech.com ([208.74.158.172]:50809 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751591Ab0JEUgS (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 6 Oct 2010 17:54:34 -0400
-From: Ben Hutchings <ben@decadent.org.uk>
-To: Julien Cristau <jcristau@debian.org>, 599345@bugs.debian.org
-Cc: ilw@linux.intel.com, linux-wireless@vger.kernel.org
-In-Reply-To: <20101006191947.GA3036@radis.liafa.jussieu.fr>
-References: <20101006191947.GA3036@radis.liafa.jussieu.fr>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-SbZtQ1ZoJL9pfoGF61xE"
-Date: Wed, 06 Oct 2010 22:54:03 +0100
-Message-ID: <1286402043.2955.81.camel@localhost>
-Mime-Version: 1.0
-Subject: Re: Bug#599345: linux-image-2.6.32-5-amd64: iwlagn allocation
- failure
+	Tue, 5 Oct 2010 16:36:18 -0400
+Message-ID: <4CAB8C39.5090201@candelatech.com>
+Date: Tue, 05 Oct 2010 13:36:09 -0700
+From: Ben Greear <greearb@candelatech.com>
+MIME-Version: 1.0
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: John Linville <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH wireless-2.6] mac80211: delete AddBA response timer
+References: <1286307633.3641.29.camel@jlt3.sipsolutions.net> <1286309408.3641.31.camel@jlt3.sipsolutions.net>
+In-Reply-To: <1286309408.3641.31.camel@jlt3.sipsolutions.net>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On 10/05/2010 01:10 PM, Johannes Berg wrote:
+> On Tue, 2010-10-05 at 21:40 +0200, Johannes Berg wrote:
+>> From: Johannes Berg<johannes.berg@intel.com>
+>>
+>> We never delete the addBA response timer, which
+>> is typically fine, but if the station it belongs
+>> to is deleted very quickly after starting the BA
+>> session, before the peer had a chance to reply,
+>> the timer may fire after the station struct has
+>> been freed already. Therefore, we need to delete
+>> the timer in a suitable spot -- best when the
+>> session is being stopped (which will happen even
+>> then) in which case the delete will be a no-op
+>> most of the time.
+>>
+>> I've reproduced the scenario and tested the fix.
+>
+> Ok, can you add:
+>
+> This fixes the crash reported at
+> http://mid.gmane.org/4CAB6F96.6090701@candelatech.com
 
---=-SbZtQ1ZoJL9pfoGF61xE
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+I can no longer reproduce that problem, so it looks fixed
+to me.
 
-On Wed, 2010-10-06 at 21:19 +0200, Julien Cristau wrote:
-> Package: linux-2.6
-> Version: 2.6.32-23
-> Severity: normal
->=20
-> iwlagn decided 2 weeks of uptime was enough and it wanted me to reboot,
-> because it was unhappy after resume.
+The data corruption issue still exists, however...
 
-You also told me that this machine had no swap enabled, which is an
-unusual configuration and restricts the ability of the VM to defragment
-memory.  I would recommend adding a small swap file/partition.  However:
+Thanks!
+Ben
 
-> Bit of kern.log:
->=20
-> Oct  6 21:05:02 radis kernel: [378665.326381] NetworkManager: page alloca=
-tion failure. order:4, mode:0x40d0
-> Oct  6 21:05:02 radis kernel: [378665.326393] Pid: 25555, comm: NetworkMa=
-nager Not tainted 2.6.32-5-amd64 #1
-[...]
-> Oct  6 21:05:02 radis kernel: [378665.363630] iwlagn 0000:0c:00.0: kmallo=
-c for auxiliary BD structures failed
-[...]
+>
+> to the changelog?
+>
+> johannes
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
-This particular allocation is for an array which is not used for DMA and
-therefore could be stored in non-contiguous pages allocated with
-vmalloc().  But there may be some good reason not to do this.
 
-Ben.
+-- 
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
 
---=20
-Ben Hutchings
-Once a job is fouled up, anything done to improve it makes it worse.
-
---=-SbZtQ1ZoJL9pfoGF61xE
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.10 (GNU/Linux)
-
-iQIVAwUATKzv8+e/yOyVhhEJAQKXgg/9GrOgKAbBcrTcKtqTeo/7gHISsAQXQpHZ
-mOPenVbsx9/zW9WGW4z32vEchc8OHIN7TM/ddlbmQOX8jVnnD/xyrgGOdKZIjVir
-Ejxfjo4NV1PcEk/DfxUhaayhDQlh2mtxDPzsk3sxwha01lAphTxWMvOqiLns31w+
-ptnCW22XHq6NuNi27+Jizc/dF0Yq4lRqq0syQOe29hqF58PF8yVkY4ORqm2X1sh1
-Fo+128pJxmzaXMOFFNCFnC2/6HBZ3Ij2Z03ntOs2WZ33QiuTjTK4BaSMb4ZwC47a
-r5vqMJ8lRNPg0ClwGUrrW08eIHwI2zQueQV1/lJGdJWYtkNbSkXuvnyk0qkQcyZ9
-RFGocjMAYO0wTLLdbyA7CDti4Ja9rs1mH4VUXIdSJpuGMHjGOQxXdb9WCYZhIsyT
-2X9QgYTqJKpqUc9u2eZBv47LU6DcguCJxoCVNSR6B9qQ3vnXHGt4xexT4QSeHpP9
-6RFeuYArUchtgmEXnFijnT6/fmZvlhGWkNxg/yeK95GzD5iC0FKbhD2BDo6lmXpG
-ZWRlElGhxSfRuqVQ/+PdfxZYo3L2f5vacw6Ns4rH+JAqTn5DtzGYFcz2CuOcAvhd
-TJaTQG4vdQMbBsM70NaFooypQkSzjTkANAMYCFzqLlD73un1Jn8g1rRngooTLAmv
-CmhIK16PCLQ=
-=QD72
------END PGP SIGNATURE-----
-
---=-SbZtQ1ZoJL9pfoGF61xE--
