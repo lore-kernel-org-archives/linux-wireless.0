@@ -1,37 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:49497 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752923Ab0JLRab (ORCPT
+Received: from mail.candelatech.com ([208.74.158.172]:58935 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751892Ab0JERiK (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 12 Oct 2010 13:30:31 -0400
-Date: Tue, 12 Oct 2010 13:15:10 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Joe Perches <joe@perches.com>
-Cc: linux-wireless@vger.kernel.org,
-	Stephen Rothwell <sfr@canb.auug.org.au>,
-	Ben Greear <greearb@candelatech.com>,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] ath5k: fix build break from "ath5k: Print out opmode in
- debugfs"
-Message-ID: <20101012171510.GB2403@tuxdriver.com>
-References: <20101012163519.a88f2040.sfr@canb.auug.org.au>
- <1286895206-3030-1-git-send-email-linville@tuxdriver.com>
- <1286898204.1117.47.camel@Joe-Laptop>
+	Tue, 5 Oct 2010 13:38:10 -0400
+Message-ID: <4CAB627F.8020804@candelatech.com>
+Date: Tue, 05 Oct 2010 10:38:07 -0700
+From: Ben Greear <greearb@candelatech.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1286898204.1117.47.camel@Joe-Laptop>
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: memory clobber in rx path, maybe related to ath9k.
+References: <4CAB59B2.5050106@candelatech.com> <AANLkTikhGCTS8kJgpDzjudyBTk-rkyXY33UO7kB0+Cc-@mail.gmail.com> <4CAB5F3D.9060201@candelatech.com> <AANLkTimV3GrwU+9PPtirT4sCzveLY2egr3PRQhfDBET1@mail.gmail.com>
+In-Reply-To: <AANLkTimV3GrwU+9PPtirT4sCzveLY2egr3PRQhfDBET1@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Oct 12, 2010 at 08:43:24AM -0700, Joe Perches wrote:
-> On Tue, 2010-10-12 at 10:53 -0400, John W. Linville wrote:
-> > Without this and with CONFIG_ATH_DEBUG not set...
-> > ERROR: ".ath_opmode_to_string" [drivers/net/wireless/ath/ath5k/ath5k.ko] undefined!
-> 
-> Perhaps this instead?
+On 10/05/2010 10:36 AM, Luis R. Rodriguez wrote:
+> On Tue, Oct 5, 2010 at 10:24 AM, Ben Greear<greearb@candelatech.com>  wrote:
+>> On 10/05/2010 10:16 AM, Luis R. Rodriguez wrote:
+>>>
+>>> On Tue, Oct 5, 2010 at 10:00 AM, Ben Greear<greearb@candelatech.com>
+>>>   wrote:
+>>>>
+>>>> I started seeing this very soon after creating interfaces.
+>>>
+>>> Can you be more specific how one can reproduce?
+>>
+>> Enable SLUB debugging, DEBUG_PAGEALLOC (Debug page memory allocations),
+>> lockdep, pre-empt.
+>
+> OK I just enabled PAGE_ALLOC thingy, it wasn't enabled on my kernel.
+>
+>> Please try creating a bunch of stations on one ath9k phy,
+>
+> How many?
 
-Thanks, I like yours better. :-)
+130 is a nice round number :)
+
+I'll try with a smaller number and see if I can hit it.
+
+Thanks,
+Ben
+
+>
+>    Luis
+
 
 -- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
+
