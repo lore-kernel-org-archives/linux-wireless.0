@@ -1,68 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iw0-f174.google.com ([209.85.214.174]:34777 "EHLO
-	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755898Ab0JVUnL convert rfc822-to-8bit (ORCPT
+Received: from mail30t.wh2.ocn.ne.jp ([125.206.180.136]:42050 "HELO
+	mail30t.wh2.ocn.ne.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1753717Ab0JED41 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 22 Oct 2010 16:43:11 -0400
-Received: by iwn34 with SMTP id 34so1341250iwn.19
-        for <linux-wireless@vger.kernel.org>; Fri, 22 Oct 2010 13:43:10 -0700 (PDT)
+	Mon, 4 Oct 2010 23:56:27 -0400
+Received: from vs3015.wh2.ocn.ne.jp (125.206.180.247)
+	by mail30t.wh2.ocn.ne.jp (RS ver 1.0.95vs) with SMTP id 0-053746984
+	for <linux-wireless@vger.kernel.org>; Tue,  5 Oct 2010 12:56:25 +0900 (JST)
+From: Bruno Randolf <br1@einfach.org>
+To: Ben Greear <greearb@candelatech.com>
+Subject: Re: Putting APs into bridges?
+Date: Tue, 5 Oct 2010 12:56:25 +0900
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+References: <4CAA0D5E.2090700@candelatech.com> <201010051243.45190.br1@einfach.org> <4CAA9F60.9030207@candelatech.com>
+In-Reply-To: <4CAA9F60.9030207@candelatech.com>
 MIME-Version: 1.0
-In-Reply-To: <4CC1EF20.5030506@lwfinger.net>
-References: <1287762229-16516-2-git-send-email-zajec5@gmail.com>
- <1287762229-16516-4-git-send-email-zajec5@gmail.com> <AANLkTiko3JeoRcxPT7zhnGTNhmyDWqmFjeZ8ssMzCb+J@mail.gmail.com>
- <4CC1EF20.5030506@lwfinger.net>
-From: =?ISO-8859-1?Q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>
-Date: Fri, 22 Oct 2010 22:42:50 +0200
-Message-ID: <AANLkTikJkoGudGojjRKu1Z9GJeUrAqWLRZj6DnPpR4+y@mail.gmail.com>
-Subject: Re: [PATCH 3/5] b43: define known SPROM boardflags2 bits
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: b43-dev <b43-dev@lists.infradead.org>,
-	linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: Text/Plain;
+  charset="utf-8"
+Message-Id: <201010051256.25246.br1@einfach.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2010/10/22 Larry Finger <Larry.Finger@lwfinger.net>:
-> On 10/22/2010 02:41 PM, Gábor Stefanik wrote:
->> 2010/10/22 Rafał Miłecki <zajec5@gmail.com>:
->>> Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
->>> ---
->>>  drivers/net/wireless/b43/b43.h |   13 +++++++++++++
->>>  1 files changed, 13 insertions(+), 0 deletions(-)
->>>
->>> diff --git a/drivers/net/wireless/b43/b43.h b/drivers/net/wireless/b43/b43.h
->>> index 72821c4..9aad2ca 100644
->>> --- a/drivers/net/wireless/b43/b43.h
->>> +++ b/drivers/net/wireless/b43/b43.h
->>> @@ -153,6 +153,19 @@
->>>  #define B43_BFH_FEM_BT                 0x0040  /* has FEM and switch to share antenna
->>>                                                 * with bluetooth */
->>>
->>> +/* SPROM boardflags2_lo values */
->>> +#define B43_BFL2_RXBB_INT_REG_DIS      0x0001  /* external RX BB regulator present */
->>> +#define B43_BFL2_APLL_WAR              0x0002  /* alternative A-band PLL settings implemented */
->>> +#define B43_BFL2_TXPWRCTRL_EN          0x0004  /* permits enabling TX Power Control */
->>> +#define B43_BFL2_2X4_DIV               0x0008  /* 2x4 diversity switch */
->>> +#define B43_BFL2_5G_PWRGAIN            0x0010  /* supports 5G band power gain */
->>> +#define B43_BFL2_PCIEWAR_OVR           0x0020  /* overrides ASPM and Clkreq settings */
->>> +#define B43_BFL2_CAESERS_BRD           0x0040  /* is Caesers board (unused) */
->>
->> I'm almost sure this is a typo in the specs.
->>
->> Larry?
->
-> Nope - it is Cae..., not Cea.... Whatever name we use is just a placeholder as
-> that bit is never used.
+On Tue October 5 2010 12:45:36 Ben Greear wrote:
+> On 10/04/2010 08:43 PM, Bruno Randolf wrote:
+> > On Tue October 5 2010 03:29:29 Johannes Berg wrote:
+> >> On Mon, 2010-10-04 at 10:22 -0700, Ben Greear wrote:
+> >>> It seems he put two VAPs into a bridge device, and got an
+> >>> assert here (nevermind the printk, I just added that to
+> >>> help debug the issue).
+> >>> 
+> >>> static void __ieee80211_wake_queue(struct ieee80211_hw *hw, int queue,
+> >>> 
+> >>> 				   enum queue_stop_reason reason)
+> >>> 
+> >>> {
+> >>> 
+> >>> 	struct ieee80211_local *local = hw_to_local(hw);
+> >>> 	struct ieee80211_sub_if_data *sdata;
+> >>> 	
+> >>> 	trace_wake_queue(local, queue, reason);
+> >>> 	
+> >>> 	if (WARN_ON(queue>= hw->queues)) {
+> >>> 	
+> >>> 		printk(KERN_WARNING "%s:  queue: %i  hw->queues: %i\n",
+> >>> 		
+> >>> 		       sdata->name, queue, hw->queues);
+> >>> 		
+> >>> 		return;
+> >>> 	
+> >>> 	}
+> >>> 
+> >>> Before I try to reproduce this, it is valid to add APs to bridge
+> >>> devices in the first place?
+> >> 
+> >> Yes, it's valid, we catch the invalid cases in cfg80211.
+> >> 
+> >> Hitting the assert there is rather strange though.
+> > 
+> > hey!
+> > 
+> > i'm seeing the same. i think it's due to a bug in ath5k concerning power
+> > save. we put frames in the CAB queue, but obviously we shouldn't tell
+> > mac80211 to wake this queue (number 6) since mac80211 knows nothing
+> > about it.
+> 
+> Interesting...we couldn't reproduce it at all (two APs in a bridge worked
+> as expected, as far as we could tell).
 
-No, I mean the "ser" part.
+i think this has nothing to do with bridges. i can get the same problem with a 
+single AP interface. i can reproduce it by connecting 2 STA, one of which has 
+to use power-save. i'll come up with a simple patch soon.
 
->
-> Larry
->
->
-
-
-
--- 
-Vista: [V]iruses, [I]ntruders, [S]pyware, [T]rojans and [A]dware. :-)
+bruno
