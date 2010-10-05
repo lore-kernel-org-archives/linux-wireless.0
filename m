@@ -1,72 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:42373 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752858Ab0JMNhk (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 13 Oct 2010 09:37:40 -0400
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: Johannes Berg <johannes@sipsolutions.net>,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Cc: linux-wireless@vger.kernel.org,
-	Stanislaw Gruszka <sgruszka@redhat.com>
-Subject: [PATCH 2/2] iwlwifi: one less commit_rxon while scan
-Date: Wed, 13 Oct 2010 15:39:53 +0200
-Message-Id: <1286977193-12144-2-git-send-email-sgruszka@redhat.com>
-In-Reply-To: <1286977193-12144-1-git-send-email-sgruszka@redhat.com>
-References: <1286977193-12144-1-git-send-email-sgruszka@redhat.com>
+Received: from he.sipsolutions.net ([78.46.109.217]:50454 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751761Ab0JEUle (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 5 Oct 2010 16:41:34 -0400
+Subject: Re: [PATCH wireless-2.6] mac80211: delete AddBA response timer
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Ben Greear <greearb@candelatech.com>
+Cc: John Linville <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <4CAB8C39.5090201@candelatech.com>
+References: <1286307633.3641.29.camel@jlt3.sipsolutions.net>
+	 <1286309408.3641.31.camel@jlt3.sipsolutions.net>
+	 <4CAB8C39.5090201@candelatech.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Tue, 05 Oct 2010 22:41:29 +0200
+Message-ID: <1286311289.3641.34.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Almost anywhere in the code we avoid committing rxon while performing
-scan, and make rxon commit when scan complete. Some current patches do
-not follow that rule. We have that problem at least in
-iwlagn_confirue_filter(), iwl_update_chain_flags() and
-iwl_bg_bt_full_concurrency(). This patch try to resolve the first
-function, formers are much harder to resolve so left them by now.
+On Tue, 2010-10-05 at 13:36 -0700, Ben Greear wrote:
 
-Since we do not commit directly in iwl3945_configure_filter, we can
-also do the same for agn, so I just remove iwlcore_commit_rxon()
-function and add a comment. Also change comment for iwl3945.
+> >> I've reproduced the scenario and tested the fix.
 
-Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
----
- drivers/net/wireless/iwlwifi/iwl-agn.c      |    6 +++++-
- drivers/net/wireless/iwlwifi/iwl3945-base.c |    6 +++---
- 2 files changed, 8 insertions(+), 4 deletions(-)
+> > This fixes the crash reported at
+> > http://mid.gmane.org/4CAB6F96.6090701@candelatech.com
+> 
+> I can no longer reproduce that problem, so it looks fixed
+> to me.
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
-index 0881452..5a881c9 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
-@@ -3984,7 +3984,11 @@ static void iwlagn_configure_filter(struct ieee80211_hw *hw,
- 	for_each_context(priv, ctx) {
- 		ctx->staging.filter_flags &= ~filter_nand;
- 		ctx->staging.filter_flags |= filter_or;
--		iwlcore_commit_rxon(priv, ctx);
-+
-+		/*
-+		 * Not committing directly because hardware can perform a scan,
-+		 * but we'll eventually commit the filter flags change anyway.
-+		 */
- 	}
- 
- 	mutex_unlock(&priv->mutex);
-diff --git a/drivers/net/wireless/iwlwifi/iwl3945-base.c b/drivers/net/wireless/iwlwifi/iwl3945-base.c
-index 9d0f736..4ff4b2e 100644
---- a/drivers/net/wireless/iwlwifi/iwl3945-base.c
-+++ b/drivers/net/wireless/iwlwifi/iwl3945-base.c
-@@ -3407,9 +3407,9 @@ static void iwl3945_configure_filter(struct ieee80211_hw *hw,
- 	ctx->staging.filter_flags |= filter_or;
- 
- 	/*
--	 * Committing directly here breaks for some reason,
--	 * but we'll eventually commit the filter flags
--	 * change anyway.
-+	 * Not committing directly because hardware can perfrom a scan,
-+	 * but even if hw is ready, commiting here breaks for some reason,
-+	 * we'll eventually commit the filter flags change anyway.
- 	 */
- 
- 	mutex_unlock(&priv->mutex);
--- 
-1.7.1
+Yeah .. I did actually go and reproduce the crash by strategically
+adding an msleep(200) to the mac80211 code and then doing some things
+from userspace :-)
+
+> The data corruption issue still exists, however...
+
+That looks very much like an ath9k issue, it seems like it's doing DMA
+into already freed SKBs. Come to think of it, maybe that wmb() patch
+might help?:
+
+johannes
 
