@@ -1,91 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f46.google.com ([209.85.161.46]:48776 "EHLO
-	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754002Ab0JBL5g (ORCPT
+Received: from cavan.codon.org.uk ([93.93.128.6]:48781 "EHLO
+	cavan.codon.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756930Ab0JEVuQ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 2 Oct 2010 07:57:36 -0400
-From: Ohad Ben-Cohen <ohad@wizery.com>
-To: <linux-mmc@vger.kernel.org>, <linux-wireless@vger.kernel.org>
-Cc: Chris Ball <cjb@laptop.org>, Nicolas Pitre <nico@fluxnic.net>,
-	Luciano Coelho <luciano.coelho@nokia.com>,
-	Ohad Ben-Cohen <ohad@wizery.com>
-Subject: [PATCH v2 09/11] sdio: support suspend/resume while runtime suspended
-Date: Sat,  2 Oct 2010 13:54:13 +0200
-Message-Id: <1286020455-28946-10-git-send-email-ohad@wizery.com>
-In-Reply-To: <1286020455-28946-1-git-send-email-ohad@wizery.com>
-References: <1286020455-28946-1-git-send-email-ohad@wizery.com>
+	Tue, 5 Oct 2010 17:50:16 -0400
+Date: Tue, 5 Oct 2010 22:50:08 +0100
+From: Matthew Garrett <mjg59@srcf.ucam.org>
+To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Cc: Marcel Holtmann <holtmann@linux.intel.com>,
+	Luis Rodriguez <Luis.Rodriguez@atheros.com>,
+	linux-bluetooth <linux-bluetooth@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Deepak Dhamdhere <Deepak.Dhamdhere@atheros.com>,
+	Sree Durbha <Sree.Durbha@atheros.com>
+Subject: Re: RFC: btusb firmware load help
+Message-ID: <20101005215008.GA11117@srcf.ucam.org>
+References: <20100924230730.GB6566@tux> <1286266981.17473.33.camel@aeonflux> <20101005192814.GB11831@tux> <1286308731.2588.13.camel@aeonflux> <AANLkTimz7U52_qHaTutQDOFQde+GrWJRA0WpqY__FPgi@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <AANLkTimz7U52_qHaTutQDOFQde+GrWJRA0WpqY__FPgi@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Bring SDIO devices back to full power before their suspend
-handler is invoked.
+On Tue, Oct 05, 2010 at 01:28:53PM -0700, Luis R. Rodriguez wrote:
 
-Doing so ensures that SDIO suspend/resume semantics are
-maintained (drivers still get to decide whether their
-card should be removed or kept during system suspend,
-and at what power state), and that SDIO suspend/resume
-execution paths are unchanged.
+> Right -- so ath3k depends on some atheros USB device IDs, and its a
+> stupid driver that just loads firmware. The problem with this new
+> device is that it requires two phases. One to load some sort of
+> firmware onto it to get it to read as an ath3k device, and then ath3k
+> will load the right firmware to it. So the hardware device is already
+> claiming a btusb vendor:device ID, we can't change that I believe. Of
+> course for future devices we can, and we've addressed this and its
+> been fixed.
 
-This is achieved by resuming a runtime-suspended SDIO device
-in its ->prepare() PM callback (similary to the PCI subsystem).
+If the device IDs can be changed when the firmware is loaded, then 
+simply provide a driver that binds to the original IDs and uploads the 
+firmware. The original IDs can be blacklisted from btusb so it won't 
+interfere. The device will then boot the firmware, detach and reattach 
+with new IDs - btusb will then bind. Repeat for every cold reset.
 
-Since the PM core always increments the run-time usage
-counter before calling the ->prepare() callback and decrements
-it after calling the ->complete() callback, it is guaranteed
-that when the system will come out of suspend, our device's
-power state will reflect its runtime PM usage counter.
+If you can't change the IDs from firmware then an alternative would be 
+to blacklist it from btusb and provide a userspace application triggered 
+by a udev rule. Have it load the firmware and then poke 
+/sys/bus/usb/drivers/btusb/new_id .
 
-Signed-off-by: Ohad Ben-Cohen <ohad@wizery.com>
----
- drivers/mmc/core/sdio_bus.c |   29 +++++++++++++++++++++++++++++
- 1 files changed, 29 insertions(+), 0 deletions(-)
-
-diff --git a/drivers/mmc/core/sdio_bus.c b/drivers/mmc/core/sdio_bus.c
-index 3637483..2716c7a 100644
---- a/drivers/mmc/core/sdio_bus.c
-+++ b/drivers/mmc/core/sdio_bus.c
-@@ -189,12 +189,41 @@ out:
- 
- #ifdef CONFIG_PM_RUNTIME
- 
-+static int sdio_bus_pm_prepare(struct device *dev)
-+{
-+	/*
-+	 * Resume an SDIO device which was suspended at run time at this
-+	 * point, in order to allow standard SDIO suspend/resume paths
-+	 * to keep working as usual.
-+	 *
-+	 * Ultimately, the SDIO driver itself will decide (in its
-+	 * suspend handler, or lack thereof) whether the card should be
-+	 * removed or kept, and if kept, at what power state.
-+	 *
-+	 * At this point, PM core have increased our use count, so it's
-+	 * safe to directly resume the device. After system is resumed
-+	 * again, PM core will drop back its runtime PM use count, and if
-+	 * needed device will be suspended again.
-+	 *
-+	 * The end result is guaranteed to be a power state that is
-+	 * coherent with the device's runtime PM use count.
-+	 *
-+	 * The return value of pm_runtime_resume is deliberately unchecked
-+	 * since there is little point in failing system suspend if a
-+	 * device can't be resumed.
-+	 */
-+	pm_runtime_resume(dev);
-+
-+	return 0;
-+}
-+
- static const struct dev_pm_ops sdio_bus_pm_ops = {
- 	SET_RUNTIME_PM_OPS(
- 		pm_generic_runtime_suspend,
- 		pm_generic_runtime_resume,
- 		pm_generic_runtime_idle
- 	)
-+	.prepare = sdio_bus_pm_prepare,
- };
- 
- #define SDIO_PM_OPS_PTR	(&sdio_bus_pm_ops)
 -- 
-1.7.0.4
-
+Matthew Garrett | mjg59@srcf.ucam.org
