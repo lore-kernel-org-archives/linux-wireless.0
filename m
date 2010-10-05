@@ -1,64 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:51563 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753177Ab0JGXMT (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:53194 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756137Ab0JEH5u (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 7 Oct 2010 19:12:19 -0400
-From: greearb@candelatech.com
-To: linux-wireless@vger.kernel.org
-Cc: Ben Greear <greearb@candelatech.com>
-Subject: [PATCH] mac80211:  Improve mlme probe response log messages.
-Date: Thu,  7 Oct 2010 16:12:06 -0700
-Message-Id: <1286493126-18316-1-git-send-email-greearb@candelatech.com>
+	Tue, 5 Oct 2010 03:57:50 -0400
+Subject: Re: [PATCH v2 0/3] mac80211: fix rate_control_send_low warnings
+ for delbas
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Cc: Jouni Malinen <j@w1.fi>,
+	Luis Rodriguez <Luis.Rodriguez@atheros.com>,
+	"linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"stable@kernel.org" <stable@kernel.org>,
+	Paul Stewart <pstew@google.com>,
+	Amod Bodas <Amod.Bodas@atheros.com>,
+	Vasanth Thiagarajan <Vasanth.Thiagarajan@atheros.com>
+In-Reply-To: <AANLkTi=8pxhqN9p4QP3T_wmUmsHJfqOBRYDi9w_0BUkw@mail.gmail.com>
+References: <1285965233-11097-1-git-send-email-lrodriguez@atheros.com>
+	 <1286198845.3620.37.camel@jlt3.sipsolutions.net>
+	 <20101004164149.GE2105@tux>
+	 <1286210566.3620.42.camel@jlt3.sipsolutions.net>
+	 <20101004172504.GL2105@tux>
+	 <1286213426.3620.43.camel@jlt3.sipsolutions.net>
+	 <20101004173507.GN2105@tux> <20101004203900.GA14524@jm.kir.nu>
+	 <AANLkTinwwvsLzovff4DKTktWuD6UdbRiEAs3g6jj-94Q@mail.gmail.com>
+	 <20101004224754.GA16357@jm.kir.nu>
+	 <AANLkTi=8pxhqN9p4QP3T_wmUmsHJfqOBRYDi9w_0BUkw@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Tue, 05 Oct 2010 09:57:44 +0200
+Message-ID: <1286265464.3641.4.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ben Greear <greearb@candelatech.com>
+On Mon, 2010-10-04 at 16:50 -0700, Luis R. Rodriguez wrote:
+> On Mon, Oct 4, 2010 at 3:47 PM, Jouni Malinen <j@w1.fi> wrote:
+> > On Mon, Oct 04, 2010 at 02:07:22PM -0700, Luis R. Rodriguez wrote:
+> >> Jouni, just to be clear so you are fine with dropping explicitly the
+> >> tear down of the BA agreement to the old AP?
+> >
+> > If you are talking about not transmitting a frame, then yes, but
+> > obviously, we would still need to locally tear down whatever we have set
+> > up..
+> 
+> Sure.
 
-Old messages didn't mention the device in question.
+Right -- exactly what my (untested!!) patch did.
 
-Signed-off-by: Ben Greear <greearb@candelatech.com>
----
-:100644 100644 5695c94... a3a9421... M	net/mac80211/mlme.c
- net/mac80211/mlme.c |   18 +++++++++++-------
- 1 files changed, 11 insertions(+), 7 deletions(-)
+> > I think it would be a good default policy to not send any frames to the
+> > old AP after we have decided to roam to a new one. If this does not work
+> > well in some networks, I would like to here more detailed description on
+> > what exactly is happening.
+> 
+> No that's fine, I just was curious how the bridge stuff you described
+> was handled in enterprise networks, you would know better :)
 
-diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index 5695c94..a3a9421 100644
---- a/net/mac80211/mlme.c
-+++ b/net/mac80211/mlme.c
-@@ -1864,10 +1864,12 @@ void ieee80211_sta_work(struct ieee80211_sub_if_data *sdata)
- 
- 		else if (ifmgd->probe_send_count < IEEE80211_MAX_PROBE_TRIES) {
- #ifdef CONFIG_MAC80211_VERBOSE_DEBUG
--			printk(KERN_DEBUG "No probe response from AP %pM"
--				" after %dms, try %d\n", bssid,
--				(1000 * IEEE80211_PROBE_WAIT)/HZ,
--				ifmgd->probe_send_count);
-+			wiphy_debug(local->hw.wiphy,
-+				    "%s: No probe response from AP %pM"
-+				    " after %dms, try %d\n",
-+				    sdata->name,
-+				    bssid, (1000 * IEEE80211_PROBE_WAIT)/HZ,
-+				    ifmgd->probe_send_count);
- #endif
- 			ieee80211_mgd_probe_ap_send(sdata);
- 		} else {
-@@ -1877,9 +1879,11 @@ void ieee80211_sta_work(struct ieee80211_sub_if_data *sdata)
- 			 */
- 			ifmgd->flags &= ~(IEEE80211_STA_CONNECTION_POLL |
- 					  IEEE80211_STA_BEACON_POLL);
--			printk(KERN_DEBUG "No probe response from AP %pM"
--				" after %dms, disconnecting.\n",
--				bssid, (1000 * IEEE80211_PROBE_WAIT)/HZ);
-+			wiphy_debug(local->hw.wiphy,
-+				    "%s: No probe response from AP %pM"
-+				    " after %dms, disconnecting.\n",
-+				    sdata->name,
-+				    bssid, (1000 * IEEE80211_PROBE_WAIT)/HZ);
- 			ieee80211_set_disassoc(sdata, true, true);
- 			mutex_unlock(&ifmgd->mtx);
- 			mutex_lock(&local->mtx);
--- 
-1.7.2.2
+Look at net/mac80211/cfg.c - ieee80211_send_layer2_update.
+
+> OK -- so lets go with Johanne's patch instead of patch 2 and 3 as he
+> suggested :)
+
+Have you tested it?
+
+johannes
 
