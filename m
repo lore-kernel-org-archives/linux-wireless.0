@@ -1,45 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp-out.google.com ([216.239.44.51]:63124 "EHLO
-	smtp-out.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757021Ab0JUDzJ (ORCPT
+Received: from senator.holtmann.net ([87.106.208.187]:36027 "EHLO
+	mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755360Ab0JEHwk (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 20 Oct 2010 23:55:09 -0400
-From: Paul Stewart <pstew@google.com>
-Date: Wed, 20 Oct 2010 20:21:32 -0700
-Subject: [PATCH 0/2] Add CQM monitoring
-To: linux-wireless@vger.kernel.org
-Cc: johannes@sipsolutions.net
-Message-Id: <20101021035501.4AF8F209D0@glenhelen.mtv.corp.google.com>
+	Tue, 5 Oct 2010 03:52:40 -0400
+Subject: Re: [PATCH] Added firmware load patch to crap directory. This
+ patch loads firmware from btusb when device is plugged in.
+From: Marcel Holtmann <marcel@holtmann.org>
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Cc: Bala Shanmugam <sbalashanmugam@atheros.com>,
+	linux-wireless@vger.kernel.org, linux-bluetooth@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+In-Reply-To: <AANLkTinjiJ6FyoAi4aP=8pr9EwV0wpV7LtwQx-hwaOFs@mail.gmail.com>
+References: <1285931572-3592-1-git-send-email-sbalashanmugam@atheros.com>
+	 <AANLkTinjiJ6FyoAi4aP=8pr9EwV0wpV7LtwQx-hwaOFs@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Tue, 05 Oct 2010 09:52:35 +0200
+Message-ID: <1286265155.17473.25.camel@aeonflux>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is a third version of this patch -- I made some cleanups including
-not using the ifmgd->flags, since that could lead to race conditions.
+Hi Luis,
 
-Present CQM events to listeners under the following conditions:
+> > Marcel feels that Atheros sflash based BT device
+> > +doesn't follow bluetooth H:2 specification and HCI commands should be supported
+> > +in firmware if it is detected as bluetooth device. Using HCI command, firmware
+> > +should be loaded.
+> > +
+> > +In sfash based device we don't have enough memory to support HCI commands in firmware.
+> > +So load firmware from btusb when the device comes up.
+> > +
+> 
+> You should still ask the maintainer for an alternative, otherwise the
+> device unusable. Did you submit the patch first in [PATCH] form? If
+> not please submit the patch, all I saw as an RFC and no followup at
+> all.
 
-- A bitrate threshold has been configured AND
-  + This is the first transmitted rate since the threshold has been
-    (re)configured OR
-  + The current transmit rate is on the other side of the threshold from
-    the previous transmit OR
-  + The current transmit rate is lower than the threshold AND also lower
-    than the previous bitrate we have notified about.
+I think it is pretty clear how these devices should be designed when it
+comes to firmware loading. Just having different USB PIDs for firmware
+loading stage and fully functional Bluetooth device stage is not that
+hard to do. Other companies have done this.
+
+If you device claims Bluetooth USB class descriptors, then it should
+behave like that and offer HCI protocol running on it.
+
+Regards
+
+Marcel
 
 
- include/linux/nl80211.h    |   11 +++++-
- include/net/cfg80211.h     |   18 ++++++++
- net/mac80211/cfg.c         |   15 +++++++
- net/mac80211/debugfs.c     |    4 ++
- net/mac80211/ieee80211_i.h |   23 ++++++++++
- net/mac80211/mlme.c        |    9 ++++
- net/mac80211/rate.c        |   96 ++++++++++++++++++++++++++++++++++++++++++++
- net/mac80211/rate.h        |    8 ++++
- net/mac80211/status.c      |   18 ++++++++
- net/wireless/mlme.c        |   13 ++++++
- net/wireless/nl80211.c     |   86 ++++++++++++++++++++++++++++++++++++++-
- net/wireless/nl80211.h     |    6 +++
- 12 files changed, 304 insertions(+), 3 deletions(-)
-
---
-Paul
