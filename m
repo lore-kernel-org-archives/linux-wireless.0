@@ -1,77 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wy0-f174.google.com ([74.125.82.174]:63088 "EHLO
-	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757306Ab0JLROV convert rfc822-to-8bit (ORCPT
+Received: from mail.candelatech.com ([208.74.158.172]:53121 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756734Ab0JEVMi (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 12 Oct 2010 13:14:21 -0400
-Received: by wyb28 with SMTP id 28so218715wyb.19
-        for <linux-wireless@vger.kernel.org>; Tue, 12 Oct 2010 10:14:20 -0700 (PDT)
+	Tue, 5 Oct 2010 17:12:38 -0400
+Message-ID: <4CAB94C5.6050602@candelatech.com>
+Date: Tue, 05 Oct 2010 14:12:37 -0700
+From: Ben Greear <greearb@candelatech.com>
 MIME-Version: 1.0
-In-Reply-To: <201010121933.59209.br1@einfach.org>
-References: <201010121933.59209.br1@einfach.org>
-Date: Tue, 12 Oct 2010 12:14:19 -0500
-Message-ID: <AANLkTin3eFFnVS5e1uK=-jmA3iC4qqfBLWkt0KFexYDg@mail.gmail.com>
-Subject: Re: [ath5k-devel] How to profile this strange effect under high load?
-From: Qasim Javed <qasimj@gmail.com>
-To: Bruno Randolf <br1@einfach.org>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	ath5k-devel@lists.ath5k.org
-Content-Type: text/plain; charset=ISO-8859-1
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: memory clobber in rx path, maybe related to ath9k.
+References: <4CAB59B2.5050106@candelatech.com> <AANLkTikhGCTS8kJgpDzjudyBTk-rkyXY33UO7kB0+Cc-@mail.gmail.com> <4CAB5F3D.9060201@candelatech.com> <AANLkTimV3GrwU+9PPtirT4sCzveLY2egr3PRQhfDBET1@mail.gmail.com> <4CAB627F.8020804@candelatech.com> <AANLkTi=sT5QJe4V8gFGjF-nzx0uJAMLG_XG2715qrEEd@mail.gmail.com> <4CAB64AD.4080105@candelatech.com> <AANLkTi=3dHbB5tmQDp3Ba54-DqQydVCkNdFo1vKbfaGY@mail.gmail.com> <4CAB6B08.4050801@candelatech.com>
+In-Reply-To: <4CAB6B08.4050801@candelatech.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-How about using trace-cmd and kernelshark with function graph tracer
-to see what is getting called so often?
+On 10/05/2010 11:14 AM, Ben Greear wrote:
+> On 10/05/2010 10:55 AM, Luis R. Rodriguez wrote:
+>> On Tue, Oct 5, 2010 at 10:47 AM, Ben Greear<greearb@candelatech.com>
+>> wrote:
+>
+>>>> Please do, you can use the log2n approach, should take you 7 tries,
+>>>> each by a power of 2, start at the middle of course.
+>>>
+>>> Sure...will be a few minutes.
+>>>
+>>> If it's any sane bug, then hopefully I can hit it with a small
+>>> number.
+>>>
+>>> Out of curiosity, is there any particular number of STAs> 1 you guys
+>>> test with?
+>>
+>> We don't test this :)
+>
+> Heh, I sort of supposed so :)
+>
+> Anyway, I started with one, doubled each time,
+> and when I added the 4 to bring the system to
+> 8 STA, it crapped itself.
+>
+> I ran 64kbps UDP data streams on pairs of STA interfaces
+> for 5 minutes between STA increments. I didn't get a chance to
+> start any traffic for the 4 that I had just added.
+>
+> Earlier, I wasn't running any traffic at all, but of course
+> there is still noise on the network.
+>
+> Note I'm running 'iwconfig foo' and 'cat /proc/net/wireless' in
+> the background as well, and that may have something to do with
+> things.
 
--Qasim
+I tried with the wmb() patch, and the problem still exists, so
+it must be something else.
 
-On Tue, Oct 12, 2010 at 5:33 AM, Bruno Randolf <br1@einfach.org> wrote:
-> Hello!
->
-> I am trying to debug a strange effect, I am seeing on soekris net48xx boards
-> with two ath5k interfaces:
->
->  * wlan0 [phy0] configured in ad-hoc mode, A band, and it is getting a lot of
-> traffic routed thru it
->  * wlan1 [phy1] also configured in ad-hoc mode, G band, but not actively
-> sending (no IP address).
->
-> I run iperf between two PCs attached by ethernet, UDP 25Mbps and I am sure all
-> traffic is routed thru wlan0 (phy0). The load on the SENDING box gets very
-> high:
->
-> Mem: 27304K used, 99040K free, 0K shrd, 616K buff, 14128K cached
-> CPU:   0% usr   0% sys   0% nic   0% idle   0% io   5% irq  93% sirq
-> Load average: 1.73 1.01 2.23 2/38 3128
->  PID  PPID USER     STAT   VSZ %MEM %CPU COMMAND
->  2772     2 root     RW       0   0%  71% [phy1]
->  2757     2 root     SW       0   0%  11% [phy0]
->  3128   436 root     R      988   1%   8% top
->    3     2 root     SW       0   0%   5% [ksoftirqd/0]
->    5     2 root     SW       0   0%   3% [events/0]
->   56     2 root     SW       0   0%   1% [bdi-default]
->  1383     1 root     S     1824   1%   0% /usr/bin/oprofiled --session-dir=/r
->
-> ...and the interesting thing is that [phy1] - the INACTIVE interface -
-> consumes much more CPU time than [phy0] which is actually transmitting.
->
-> I have disabled ANI on wlan1, to avoid getting many MIB interrupts, but it
-> does not change much.
->
-> I have dumped frames on phy1, and all it sees are a few beacon frames.
->
-> I have tried wlan1 in managed mode - same effect. The effect is slightly less
-> in AP mode, though...
->
-> I tried oprofile, but it shows mostly tx related things.
->
-> So my question is: How can I find out, what [phy1] is so busy doing? Any ideas
-> how to profile this?
->
-> Thanks in advance,
-> bruno
-> _______________________________________________
-> ath5k-devel mailing list
-> ath5k-devel@lists.ath5k.org
-> https://lists.ath5k.org/mailman/listinfo/ath5k-devel
->
+Thanks,
+Ben
+
+-- 
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
+
