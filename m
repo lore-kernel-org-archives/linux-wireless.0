@@ -1,68 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f46.google.com ([209.85.161.46]:33923 "EHLO
-	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754002Ab0JBL5e (ORCPT
+Received: from mail-iw0-f174.google.com ([209.85.214.174]:61114 "EHLO
+	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752627Ab0JERDt (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 2 Oct 2010 07:57:34 -0400
-From: Ohad Ben-Cohen <ohad@wizery.com>
-To: <linux-mmc@vger.kernel.org>, <linux-wireless@vger.kernel.org>
-Cc: Chris Ball <cjb@laptop.org>, Nicolas Pitre <nico@fluxnic.net>,
-	Luciano Coelho <luciano.coelho@nokia.com>,
-	Ohad Ben-Cohen <ohad@wizery.com>
-Subject: [PATCH v2 08/11] sdio: ensure mmc_sdio_detect is powered
-Date: Sat,  2 Oct 2010 13:54:12 +0200
-Message-Id: <1286020455-28946-9-git-send-email-ohad@wizery.com>
-In-Reply-To: <1286020455-28946-1-git-send-email-ohad@wizery.com>
-References: <1286020455-28946-1-git-send-email-ohad@wizery.com>
+	Tue, 5 Oct 2010 13:03:49 -0400
+Received: by iwn5 with SMTP id 5so8545603iwn.19
+        for <linux-wireless@vger.kernel.org>; Tue, 05 Oct 2010 10:03:49 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <1286265464.3641.4.camel@jlt3.sipsolutions.net>
+References: <1285965233-11097-1-git-send-email-lrodriguez@atheros.com>
+ <1286198845.3620.37.camel@jlt3.sipsolutions.net> <20101004164149.GE2105@tux>
+ <1286210566.3620.42.camel@jlt3.sipsolutions.net> <20101004172504.GL2105@tux>
+ <1286213426.3620.43.camel@jlt3.sipsolutions.net> <20101004173507.GN2105@tux>
+ <20101004203900.GA14524@jm.kir.nu> <AANLkTinwwvsLzovff4DKTktWuD6UdbRiEAs3g6jj-94Q@mail.gmail.com>
+ <20101004224754.GA16357@jm.kir.nu> <AANLkTi=8pxhqN9p4QP3T_wmUmsHJfqOBRYDi9w_0BUkw@mail.gmail.com>
+ <1286265464.3641.4.camel@jlt3.sipsolutions.net>
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Date: Tue, 5 Oct 2010 10:03:28 -0700
+Message-ID: <AANLkTi=J1exnH1_4nSbQT8FzLLkKR0e590ZffzB76wV+@mail.gmail.com>
+Subject: Re: [PATCH v2 0/3] mac80211: fix rate_control_send_low warnings for delbas
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Jouni Malinen <j@w1.fi>,
+	Luis Rodriguez <Luis.Rodriguez@atheros.com>,
+	"linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"stable@kernel.org" <stable@kernel.org>,
+	Paul Stewart <pstew@google.com>,
+	Amod Bodas <Amod.Bodas@atheros.com>,
+	Vasanth Thiagarajan <Vasanth.Thiagarajan@atheros.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-To prevent an erroneous removal of the card, make sure
-the device is powered when it is mmc_sdio_detect()ed.
+On Tue, Oct 5, 2010 at 12:57 AM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
+> On Mon, 2010-10-04 at 16:50 -0700, Luis R. Rodriguez wrote:
+>> On Mon, Oct 4, 2010 at 3:47 PM, Jouni Malinen <j@w1.fi> wrote:
+>> > On Mon, Oct 04, 2010 at 02:07:22PM -0700, Luis R. Rodriguez wrote:
+>> >> Jouni, just to be clear so you are fine with dropping explicitly the
+>> >> tear down of the BA agreement to the old AP?
+>> >
+>> > If you are talking about not transmitting a frame, then yes, but
+>> > obviously, we would still need to locally tear down whatever we have set
+>> > up..
+>>
+>> Sure.
+>
+> Right -- exactly what my (untested!!) patch did.
+>
+>> > I think it would be a good default policy to not send any frames to the
+>> > old AP after we have decided to roam to a new one. If this does not work
+>> > well in some networks, I would like to here more detailed description on
+>> > what exactly is happening.
+>>
+>> No that's fine, I just was curious how the bridge stuff you described
+>> was handled in enterprise networks, you would know better :)
+>
+> Look at net/mac80211/cfg.c - ieee80211_send_layer2_update.
+>
+>> OK -- so lets go with Johanne's patch instead of patch 2 and 3 as he
+>> suggested :)
+>
+> Have you tested it?
 
-This is required since mmc_sdio_detect may be invoked
-while the device is runtime suspended (e.g., MMC core
-is rescanning when system comes out of suspend).
+Tested, it works and resolves the issue if I drop my patch 2 and 3 and
+instead use yours.
 
-Signed-off-by: Ohad Ben-Cohen <ohad@wizery.com>
----
- drivers/mmc/core/sdio.c |    9 +++++++++
- 1 files changed, 9 insertions(+), 0 deletions(-)
-
-diff --git a/drivers/mmc/core/sdio.c b/drivers/mmc/core/sdio.c
-index 85561dd..c3ad105 100644
---- a/drivers/mmc/core/sdio.c
-+++ b/drivers/mmc/core/sdio.c
-@@ -546,6 +546,11 @@ static void mmc_sdio_detect(struct mmc_host *host)
- 	BUG_ON(!host);
- 	BUG_ON(!host->card);
- 
-+	/* Make sure card is powered before detecting it */
-+	err = pm_runtime_get_sync(&host->card->dev);
-+	if (err < 0)
-+		goto out;
-+
- 	mmc_claim_host(host);
- 
- 	/*
-@@ -555,6 +560,7 @@ static void mmc_sdio_detect(struct mmc_host *host)
- 
- 	mmc_release_host(host);
- 
-+out:
- 	if (err) {
- 		mmc_sdio_remove(host);
- 
-@@ -562,6 +568,9 @@ static void mmc_sdio_detect(struct mmc_host *host)
- 		mmc_detach_bus(host);
- 		mmc_release_host(host);
- 	}
-+
-+	/* Tell PM core that we're done */
-+	pm_runtime_put(&host->card->dev);
- }
- 
- /*
--- 
-1.7.0.4
-
+  Luis
