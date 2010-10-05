@@ -1,74 +1,108 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw0-f46.google.com ([74.125.83.46]:46450 "EHLO
-	mail-gw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759948Ab0JZP70 convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 26 Oct 2010 11:59:26 -0400
+Received: from mx1.redhat.com ([209.132.183.28]:21037 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753317Ab0JEIzt (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 5 Oct 2010 04:55:49 -0400
+Date: Tue, 5 Oct 2010 10:57:17 +0200
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: Florian Mickler <florian@mickler.org>
+Cc: stable@kernel.org,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"Guy, Wey-Yi" <wey-yi.w.guy@intel.com>,
+	"Chatre, Reinette" <reinette.chatre@intel.com>,
+	Intel Linux Wireless <ilw@linux.intel.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	"Berg, Johannes" <johannes.berg@intel.com>,
+	"Cahill, Ben M" <ben.m.cahill@intel.com>,
+	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+	linux-kernel@vger.kernel.org
+Subject: Re: Fw: [PATCH] iwl3945: queue the right work if the scan needs to
+ be aborted
+Message-ID: <20101005085717.GA18012@redhat.com>
+References: <20101005084305.52a31ed4@schatten.dmk.lab>
 MIME-Version: 1.0
-In-Reply-To: <20101026123552.GA4604@sig21.net>
-References: <20101025190358.AEC6840F97@repository3.orbit-lab.org> <20101026123552.GA4604@sig21.net>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Tue, 26 Oct 2010 08:59:04 -0700
-Message-ID: <AANLkTimzUKj=C9PxGs1PkQy_KWu0PGKd1zv_m-ZpWaEm@mail.gmail.com>
-Subject: Re: Compat-wireless release for 2010-10-25 is baked
-To: Johannes Stezenbach <js@sig21.net>
-Cc: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20101005084305.52a31ed4@schatten.dmk.lab>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Oct 26, 2010 at 5:35 AM, Johannes Stezenbach <js@sig21.net> wrote:
-> On Mon, Oct 25, 2010 at 03:03:57PM -0400, Compat-wireless cronjob account wrote:
->> From git://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next
->>    d9f241e..e10b307  history    -> origin/history
->>  + c8b020e...fd4f9b3 master     -> origin/master  (forced update)
->>    b515316..229aebb  stable     -> origin/stable
->>  * [new tag]         next-20101025 -> next-20101025
-> ...
->> Base tree: linux-next.git
->> Base tree version: next-20101025
->> compat-wireless release: compat-wireless-2010-10-22-pc
->
-> I wonder about the different tarballs in
-> http://wireless.kernel.org/download/compat-wireless-2.6/
->
-> compat-wireless-2010-10-25.tar.bz2
-> compat-wireless-2010-10-25-p.tar.bz2
-> compat-wireless-2010-10-25-pc.tar.bz2
->
-> Those -p and -pc postfixes are not explained in
-> http://wireless.kernel.org/en/users/Download
+On Tue, Oct 05, 2010 at 08:43:05AM +0200, Florian Mickler wrote:
+> commit e7ee762cf074b0fd8eec483d0cef8fdbf0d04b81
+> 
+> 
+> Begin forwarded message:
+> On Fri, 2010-09-24 at 09:22 -0700, Florian Mickler wrote:
+> > iwl3945's scan_completed calls into the mac80211 stack which triggers a
+> > warn on if there is no scan outstanding.
+> > 
+> > This can be avoided by not calling scan_completed but abort_scan in
+> > iwl3945_request_scan  in the done: branch of the function which is used
+> > as an error out.
+> > 
+> > The done: branch seems to be an error-out branch, as, for example, if
+> > iwl_is_ready(priv) returns false  the done: branch is executed.
+> > 
+> > NOTE:
+> > I'm not familiar with the driver at all.
+> > I just quickly scanned as a reaction to
+> > 
+> > https://bugzilla.kernel.org/show_bug.cgi?id=17722
+> > 
+> > the users of scan_completed in the  iwl3945 driver and noted the odd
+> > discrepancy between the comment above this instance and the comment in
+> > mac80211 scan_completed function.
+> > Signed-off-by: Florian Mickler <florian@mickler.org>
+> Acked-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+> > ---
+> go into wireless-2.6 and stable only, scan fix already in
+> wireless-next-2.6
 
-Right, sorry, I haven't updated the docs to add documentation for
-them. First please read:
+> 
+> Thanks
+> Wey
+> 
+> >  drivers/net/wireless/iwlwifi/iwl-agn-lib.c  |    2 +-
+> >  drivers/net/wireless/iwlwifi/iwl3945-base.c |    2 +-
+> >  2 files changed, 2 insertions(+), 2 deletions(-)
+> > 
+> > diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-lib.c b/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
+> > index 9dd9e64..8fd00a6 100644
+> > --- a/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
+> > +++ b/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
+> > @@ -1411,7 +1411,7 @@ void iwlagn_request_scan(struct iwl_priv *priv, struct ieee80211_vif *vif)
+> >  	clear_bit(STATUS_SCAN_HW, &priv->status);
+> >  	clear_bit(STATUS_SCANNING, &priv->status);
+> >  	/* inform mac80211 scan aborted */
+> > -	queue_work(priv->workqueue, &priv->scan_completed);
+> > +	queue_work(priv->workqueue, &priv->abort_scan);
 
-http://marc.info/?l=linux-wireless&m=128716953726075&w=2
+Unfortunately this patch is not right thing to do. If you look at
+abort_scan work, it do nothing if STATUS_SCAN_ABORTING bit is not set.
+That's wrong because we have to complete scan (with abort == true).
+If STATUS_SCAN_ABORTING will be set, abort_work will send scan cancel
+commands to hardware what is wrong if scan was not started yet.
 
--s is for getting and applying pending-stable/ fixes
--n is for applying the patches linux-next-cherry-picks directory
--p is for applying the patches on the linux-next-pending directory
--s is for applying the patches on the crap directory
+What we can eventually do, except apply iwl-scan rewrite from
+wireless-testing, is something like that:
+ 
+iwlagn_request_scan(struct iwl_priv *priv, struct ieee80211_vif *vif)
 
-> On a related note, I ran across compat-wireless-2.6.36-rc8-1-cs.tar.bz2 in
-> http://www.orbit-lab.org/kernel/compat-wireless-2.6-stable/v2.6.36/
-> which is not linked on
-> http://wireless.kernel.org/en/users/Download/stable/#Releases
+  clear_bit(STATUS_SCAN_HW, &priv->status); 
+  clear_bit(STATUS_SCANNING, &priv->status); 
+  /* inform mac80211 scan aborted */ 
+  set_bit(STATUS_SCAN_ABORTING, &priv->status);
+  queue_work(priv->workqueue, &priv->scan_completed);
 
-That was sort of an RC release I made that I was waiting on feedback
-on for some extra linux-next-pending patch merged but I was still
-waiting for one test and no one got back to me yet on that. I'm just
-going to go ahead and release a new tarball today.
+ieee80211_scan_completed
+  
+  if (!internal) {
+     bool aborted = test_bit(STATUS_SCAN_ABORTING, &priv->status);
+     ieee80211_scan_completed(priv->hw, aborted);
 
-> and I wonder about the -s and -cs postfixes?
+  }
 
-This is the crap and the stable fixes propagated. I only had one crap
-patch to incorporate though so I will move that to linux-next-pending
-and we'll have at -ps release, which means one linux-next-pending
-patch will be applied and we'll also get all pending stable fixes
-merged.
+However, I do not think we should go with that to -stable (below
+2.6.36). IIRC warnings showed up in current 2.6.36-rc, because of
+some other changes in the code.
 
-> Can someone shed a light on this?
-
-Hope this helps.
-
-  Luis
+Stanislaw
