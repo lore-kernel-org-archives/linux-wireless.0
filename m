@@ -1,64 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f46.google.com ([209.85.214.46]:58122 "EHLO
-	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753832Ab0JPTAp (ORCPT
+Received: from mgw-sa02.ext.nokia.com ([147.243.1.48]:47236 "EHLO
+	mgw-sa02.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932772Ab0JEMCV (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 16 Oct 2010 15:00:45 -0400
-Received: by bwz15 with SMTP id 15so1912607bwz.19
-        for <linux-wireless@vger.kernel.org>; Sat, 16 Oct 2010 12:00:23 -0700 (PDT)
-From: Christian Lamparter <chunkeey@googlemail.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Subject: Re: [mac80211] mac80211:  Support multiple VIFS per AP in debugfs.
-Date: Sat, 16 Oct 2010 21:00:02 +0200
-Cc: greearb@gmail.com, linux-wireless@vger.kernel.org,
-	Ben Greear <greearb@candelatech.com>
-References: <1285212541-6834-1-git-send-email-greearb@candelatech.com> <1285231018.3691.8.camel@jlt3.sipsolutions.net>
-In-Reply-To: <1285231018.3691.8.camel@jlt3.sipsolutions.net>
-MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="utf-8"
-Message-Id: <201010162100.02477.chunkeey@googlemail.com>
+	Tue, 5 Oct 2010 08:02:21 -0400
+Received: from localhost.localdomain (chilepepper.research.nokia.com [172.21.50.167])
+	by mgw-sa02.nokia.com (Switch-3.4.3/Switch-3.4.3) with ESMTP id o95C2Kra019546
+	for <linux-wireless@vger.kernel.org>; Tue, 5 Oct 2010 15:02:20 +0300
+From: Luciano Coelho <luciano.coelho@nokia.com>
+To: linux-wireless@vger.kernel.org
+Subject: [PATCH] wl1271: remove deprecated __attribute__ ((packed))
+Date: Tue,  5 Oct 2010 15:02:19 +0300
+Message-Id: <1286280139-12378-1-git-send-email-luciano.coelho@nokia.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thursday 23 September 2010 10:36:58 Johannes Berg wrote:
-> On Wed, 2010-09-22 at 20:29 -0700, greearb@gmail.com wrote:
-> > From: Ben Greear <greearb@candelatech.com>
-> > 
-> > Create 'stations' sub-directory under each netdev:[vif-name]
-> > directory to hold all stations for that network device.
-> > 
-> > Signed-off-by: Ben Greear <greearb@candelatech.com>
-> 
-> Acked-by: Johannes Berg <johannes@sipsolutions.net>
+One __attribute__ ((packed)) has been accidentally introduced in commit
+be86cbea1e9c3a4dd8faedcfa327495d09fe3531.  This patch changes it to __packed.
 
-ieee80211_debugfs_key_add needs to be updated (debugfs_key.c).
-Either the "station" symlink has to go, or we need to loop up
-to which interface the sta belongs. currently it's hard-coded to
-"sprintf(buf, "../../stations/%pM", sta->sta.addr);"
-(something which no longer exists)
+Signed-off-by: Luciano Coelho <luciano.coelho@nokia.com>
+---
+ drivers/net/wireless/wl12xx/wl1271_cmd.h |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-> 
-> > ---
-> > :100644 100644 e81ef4e... ebd5b69... M	net/mac80211/debugfs.c
-> > :100644 100644 20b2998... 3e12430... M	net/mac80211/debugfs_netdev.c
-> > :100644 100644 76839d4... 6b7ff9f... M	net/mac80211/debugfs_sta.c
-> > :100644 100644 9346a6b... 3c7c230... M	net/mac80211/ieee80211_i.h
-> >  net/mac80211/debugfs.c        |    1 -
-> >  net/mac80211/debugfs_netdev.c |    3 +++
-> >  net/mac80211/debugfs_sta.c    |    2 +-
-> >  net/mac80211/ieee80211_i.h    |    2 +-
-> >  4 files changed, 5 insertions(+), 3 deletions(-)
-> > 
-> > diff --git a/net/mac80211/debugfs.c b/net/mac80211/debugfs.c
-> > index e81ef4e..ebd5b69 100644
-> > --- a/net/mac80211/debugfs.c
-> > +++ b/net/mac80211/debugfs.c
-> > @@ -368,7 +368,6 @@ void debugfs_hw_add(struct ieee80211_local *local)
-> >  	if (!phyd)
-> >  		return;
-> >  
-> > -	local->debugfs.stations = debugfs_create_dir("stations", phyd);
-> >  	local->debugfs.keys = debugfs_create_dir("keys", phyd);
-> >  
-> >  	DEBUGFS_ADD(frequency);
+diff --git a/drivers/net/wireless/wl12xx/wl1271_cmd.h b/drivers/net/wireless/wl12xx/wl1271_cmd.h
+index ed80bec..a0caf4f 100644
+--- a/drivers/net/wireless/wl12xx/wl1271_cmd.h
++++ b/drivers/net/wireless/wl12xx/wl1271_cmd.h
+@@ -454,6 +454,6 @@ struct wl1271_cmd_set_sta_state {
+ 
+ 	u8 state;
+ 	u8 padding[3];
+-} __attribute__ ((packed));
++} __packed;
+ 
+ #endif /* __WL1271_CMD_H__ */
+-- 
+1.7.0.4
+
