@@ -1,63 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iw0-f174.google.com ([209.85.214.174]:48573 "EHLO
-	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932567Ab0JFS0f convert rfc822-to-8bit (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:38335 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752926Ab0JESwt (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 6 Oct 2010 14:26:35 -0400
-MIME-Version: 1.0
-In-Reply-To: <AANLkTikYRSQw-+Tcj4VS1qxi=OaeF9C5hjAMWVu+0M=v@mail.gmail.com>
-References: <20100924230730.GB6566@tux> <1286266981.17473.33.camel@aeonflux>
- <20101005192814.GB11831@tux> <1286308731.2588.13.camel@aeonflux>
- <AANLkTimz7U52_qHaTutQDOFQde+GrWJRA0WpqY__FPgi@mail.gmail.com>
- <1286349552.6145.11.camel@aeonflux> <AANLkTimDvgFtoGLEjgWyYRrhQy6Num-rn_2WYO4Lf84b@mail.gmail.com>
- <1286380566.6145.42.camel@aeonflux> <20101006163816.GE7070@tux>
- <AANLkTik9w4_PdcEsbRHakLcxcD334_1Q8hGArxTXPCGF@mail.gmail.com>
- <20101006173949.GG7070@tux> <1286387660.3655.382.camel@jlt3.sipsolutions.net> <AANLkTikYRSQw-+Tcj4VS1qxi=OaeF9C5hjAMWVu+0M=v@mail.gmail.com>
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Date: Wed, 6 Oct 2010 11:26:14 -0700
-Message-ID: <AANLkTi=o4Mc72NrNoALBdS3YHeY7RMyyAJPsCy=uW3+F@mail.gmail.com>
-Subject: Re: RFC: btusb firmware load help
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Marcel Holtmann <holtmann@linux.intel.com>,
-	Luis Rodriguez <Luis.Rodriguez@atheros.com>,
-	linux-bluetooth <linux-bluetooth@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Deepak Dhamdhere <Deepak.Dhamdhere@atheros.com>,
-	Sree Durbha <Sree.Durbha@atheros.com>
-Content-Type: text/plain; charset=UTF-8
+	Tue, 5 Oct 2010 14:52:49 -0400
+Subject: Re: more crashing goodness with ath9k
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Ben Greear <greearb@candelatech.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <4CAB6F96.6090701@candelatech.com>
+References: <4CAB6F96.6090701@candelatech.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Tue, 05 Oct 2010 20:52:48 +0200
+Message-ID: <1286304768.3641.26.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Oct 6, 2010 at 11:22 AM, Luis R. Rodriguez
-<lrodriguez@atheros.com> wrote:
-> On Wed, Oct 6, 2010 at 10:54 AM, Johannes Berg
-> <johannes@sipsolutions.net> wrote:
->> On Wed, 2010-10-06 at 10:39 -0700, Luis R. Rodriguez wrote:
->>
->>
->>> > With sflash based AR3011 hardware, when we connect the device to USB
->>> > port it gets detected as a Bluetooth device because of firmware in
->>> > Flash (VID=0x0CF3, PID=0x3002). This triggers the Bluetooth sub
->>> > system driver (btusb.ko) directly in the host instead of ath3k
->>> > DFU driver. Therefore, there is no firmware downloaded in to the
->>> > RAM to bring up Bluetooth at this point. This is the problem
->>> > we're trying to "fix".
->>
->> So the easiest fix for this would be to
->>  a) ignore 0x0cf3,0x3002 in btusb
->>  b) add it to ath3k firmware loading
->>  c) change the ath3k firmware to load with 0x0cf3,0x3003 (or whatever
->>    else you want, as long as it's not 0x3000 and not 0x3002)
->>
->> Then the ignore in btusb won't affect ath3k after that new firmware was
->> loaded.
->
-> Good idea, I forgot about possible firmware changes :) Lets see if our
-> team can do that. Thanks for all the feedback.
+On Tue, 2010-10-05 at 11:33 -0700, Ben Greear wrote:
+> This is with 8 STA configured with WPA.
+> 
+> Memory poisoning, etc is enabled.
+> 
+> 
+> Reading symbols from /home/greearb/kernel/2.6/wireless-testing-dbg.p4s/net/mac80211/mac80211.ko...done.
+> (gdb) l *(sta_addba_resp_timer_expired+0x7c)
+> 0x5b38 is in sta_addba_resp_timer_expired (/home/greearb/git/linux.wireless-testing/arch/x86/include/asm/bitops.h:312).
 
-Deepak a proof of concept test can involve simply hex-editing the
-ath3k-1.fw and replacing 0x3002 to 0x3003, then the above patch might
-work.
+This ought to help, but I'm not sure the locking etc. is 100% correct
+yet.
 
-  Luis
+johannes
+
+---
+ net/mac80211/agg-tx.c |    3 +++
+ 1 file changed, 3 insertions(+)
+
+--- wireless-testing.orig/net/mac80211/agg-tx.c	2010-10-05 20:40:02.000000000 +0200
++++ wireless-testing/net/mac80211/agg-tx.c	2010-10-05 20:51:59.000000000 +0200
+@@ -163,6 +163,7 @@ int ___ieee80211_stop_tx_ba_session(stru
+ 		/* not even started yet! */
+ 		rcu_assign_pointer(sta->ampdu_mlme.tid_tx[tid], NULL);
+ 		spin_unlock_bh(&sta->lock);
++		del_timer_sync(&tid_tx->addba_resp_timer);
+ 		call_rcu(&tid_tx->rcu_head, kfree_tid_tx);
+ 		return 0;
+ 	}
+@@ -176,6 +177,8 @@ int ___ieee80211_stop_tx_ba_session(stru
+ 
+ 	set_bit(HT_AGG_STATE_STOPPING, &tid_tx->state);
+ 
++	del_timer_sync(&tid_tx->addba_resp_timer);
++
+ 	/*
+ 	 * After this packets are no longer handed right through
+ 	 * to the driver but are put onto tid_tx->pending instead,
+
+
