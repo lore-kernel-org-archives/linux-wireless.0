@@ -1,43 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from external1.orbit-lab.org ([128.6.192.131]:50598 "HELO
-	external1.orbit-lab.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1752299Ab0J0TDe (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:33484 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753908Ab0JETFl (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 27 Oct 2010 15:03:34 -0400
-Received: from repository3.orbit-lab.org (repository3.orbit-lab.org [10.50.0.41])
-	by external1.orbit-lab.org (Postfix) with ESMTP id B664F418D8
-	for <linux-wireless@vger.kernel.org>; Wed, 27 Oct 2010 15:00:02 -0400 (EDT)
-Subject: Compat-wireless release for 2010-10-27 is baked
-To: <linux-wireless@vger.kernel.org>
-Message-Id: <20101027190332.CF93440F97@repository3.orbit-lab.org>
-Date: Wed, 27 Oct 2010 15:03:32 -0400 (EDT)
-From: compat@orbit-lab.org (Compat-wireless cronjob account)
+	Tue, 5 Oct 2010 15:05:41 -0400
+Subject: Re: more crashing goodness with ath9k
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Ben Greear <greearb@candelatech.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <1286304768.3641.26.camel@jlt3.sipsolutions.net>
+References: <4CAB6F96.6090701@candelatech.com>
+	 <1286304768.3641.26.camel@jlt3.sipsolutions.net>
+Content-Type: text/plain; charset="UTF-8"
+Date: Tue, 05 Oct 2010 21:05:41 +0200
+Message-ID: <1286305541.3641.27.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
->From git://git.kernel.org/pub/scm/linux/kernel/git/mcgrof/compat-wireless-2.6
-   1c390e6..a3a8e67  linux-2.6.36.y -> origin/linux-2.6.36.y
-   1581591..c1539d7  master     -> origin/master
->From git://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next
-   4aac264..fe76e97  history    -> origin/history
- + 240b638...f92db8c master     -> origin/master  (forced update)
-   b20f9e5..f9ba537  stable     -> origin/stable
- * [new tag]         next-20101027 -> next-20101027
+On Tue, 2010-10-05 at 20:52 +0200, Johannes Berg wrote:
 
-compat-wireless code metrics
+> --- wireless-testing.orig/net/mac80211/agg-tx.c	2010-10-05 20:40:02.000000000 +0200
+> +++ wireless-testing/net/mac80211/agg-tx.c	2010-10-05 20:51:59.000000000 +0200
+> @@ -163,6 +163,7 @@ int ___ieee80211_stop_tx_ba_session(stru
+>  		/* not even started yet! */
+>  		rcu_assign_pointer(sta->ampdu_mlme.tid_tx[tid], NULL);
+>  		spin_unlock_bh(&sta->lock);
+> +		del_timer_sync(&tid_tx->addba_resp_timer);
+>  		call_rcu(&tid_tx->rcu_head, kfree_tid_tx);
+>  		return 0;
+>  	}
 
-    739297 - Total upstream lines of code being pulled
-      2149 - backport code changes
-      1897 - backport code additions
-       252 - backport code deletions
-      6409 - backport from compat module
-      8558 - total backport code
-    1.1576 - % of code consists of backport work
-      1534 - Crap changes not yet posted
-      1491 - Crap additions not yet posted
-        43 - Crap deletions not yet posted
-    0.2075 - % of crap code
+That one's unnecessary, if we get into this branch the timer can't have
+been started yet.
 
-Base tree: linux-next.git
-Base tree version: next-20101027
-compat-wireless release: compat-wireless-2010-10-22-1-gc1539d7-pc
+johannes
+
