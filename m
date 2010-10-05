@@ -1,42 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from isilmar-3.linta.de ([188.40.101.200]:44593 "EHLO linta.de"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1756879Ab0JDSpA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 4 Oct 2010 14:45:00 -0400
-Date: Mon, 4 Oct 2010 20:44:58 +0200
-From: Dominik Brodowski <linux@dominikbrodowski.net>
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Cc: "Rafael J. Wysocki" <rjw@sisk.pl>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	linux-bluetooth <linux-bluetooth@vger.kernel.org>,
-	justinmattock@gmail.com, Bob Copeland <me@bobcopeland.com>,
-	Pavel Machek <pavel@ucw.cz>
-Subject: Re: 2.6.36-rc6-git2: Reported regressions from 2.6.35
-Message-ID: <20101004184458.GA18119@isilmar-3.linta.de>
-References: <-jYMINoCtaK.A.F5.8CPqMB@chimera> <AANLkTimUdaUkpXmNt5mPkCdWmHvBbXWA6smAP4U80yc4@mail.gmail.com>
+Received: from mail-iw0-f174.google.com ([209.85.214.174]:51860 "EHLO
+	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756046Ab0JEWi4 convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 5 Oct 2010 18:38:56 -0400
+Received: by iwn5 with SMTP id 5so8873353iwn.19
+        for <linux-wireless@vger.kernel.org>; Tue, 05 Oct 2010 15:38:55 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-In-Reply-To: <AANLkTimUdaUkpXmNt5mPkCdWmHvBbXWA6smAP4U80yc4@mail.gmail.com>
+In-Reply-To: <20101005095531.3083.39403.stgit@tt-desk>
+References: <20101005095510.3083.46174.stgit@tt-desk> <20101005095531.3083.39403.stgit@tt-desk>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Tue, 5 Oct 2010 15:38:34 -0700
+Message-ID: <AANLkTimP=R4hsCWU+wP1aemHn1awzNQVWMa-_7OJEQLG@mail.gmail.com>
+Subject: Re: [PATCH 5/5] ath5k: Add busy ratios to survey data
+To: Bruno Randolf <br1@einfach.org>
+Cc: linville@tuxdriver.com, nbd@openwrt.org,
+	ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org,
+	adrian@freebsd.org, vasanth@atheros.com
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hey,
+On Tue, Oct 5, 2010 at 2:55 AM, Bruno Randolf <br1@einfach.org> wrote:
+> Include the channel utilization (busy, rx, tx) in the survey results.
+>
+> Signed-off-by: Bruno Randolf <br1@einfach.org>
+> ---
+>  drivers/net/wireless/ath/ath5k/base.c |   17 +++++++++++++++++
+>  1 files changed, 17 insertions(+), 0 deletions(-)
+>
+> diff --git a/drivers/net/wireless/ath/ath5k/base.c b/drivers/net/wireless/ath/ath5k/base.c
+> index c158f2e..a33d9f2 100644
+> --- a/drivers/net/wireless/ath/ath5k/base.c
+> +++ b/drivers/net/wireless/ath/ath5k/base.c
+> @@ -3008,6 +3008,7 @@ static int ath5k_get_survey(struct ieee80211_hw *hw, int idx,
+>  {
+>        struct ath5k_softc *sc = hw->priv;
+>        struct ieee80211_conf *conf = &hw->conf;
+> +       struct ath_common *common = ath5k_hw_common(sc->ah);
+>
+>         if (idx != 0)
+>                return -ENOENT;
+> @@ -3016,6 +3017,22 @@ static int ath5k_get_survey(struct ieee80211_hw *hw, int idx,
+>        survey->filled = SURVEY_INFO_NOISE_DBM;
+>        survey->noise = sc->ah->ah_noise_floor;
+>
+> +       ath_hw_cycle_counters_lock(common);
+> +       ath_hw_cycle_counters_update(common);
+> +       if (common->cc_survey.cycles > 0) {
+> +               survey->filled |= SURVEY_INFO_BUSY |
+> +                               SURVEY_INFO_BUSY_TX | SURVEY_INFO_BUSY_RX;
+> +               survey->busy = common->cc_survey.rx_busy * 255 /
+> +                                       common->cc_survey.cycles;
+> +               survey->busy_tx = common->cc_survey.tx_frame * 255 /
+> +                                       common->cc_survey.cycles;
+> +               survey->busy_rx = common->cc_survey.rx_frame * 255 /
+> +                                       common->cc_survey.cycles;
+> +       }
+> +
+> +       memset(&common->cc_survey, 0, sizeof(struct ath_cycle_counters));
+> +       ath_hw_cycle_counters_unlock(common);
+> +
 
-On Mon, Oct 04, 2010 at 11:35:25AM -0700, Luis R. Rodriguez wrote:
-> > Bug-Entry � � � : http://bugzilla.kernel.org/show_bug.cgi?id=17061
-> > Subject � � � � : 2.6.36-rc1 on zaurus: bluetooth regression
-> > Submitter � � � : Pavel Machek <pavel@ucw.cz>
-> > Date � � � � � �: 2010-08-21 15:24 (44 days old)
-> > Message-ID � � �: <20100821152445.GA1536@ucw.cz>
-> > References � � �: http://marc.info/?l=linux-kernel&m=128240433828087&w=2
-> 
-> I see no updates to this since August. There are boat load of PCMCIA
-> changes recently, is bisect possible here?
+This is all being sucked out of common, so can we just share the
+filler for the survey between ath5k and ath9k? Note we should split up
+hw code and core driver code on the ath module by file.
 
-Pavel already verified the PCMCIA-bigdiff since 2.6.35 does work, so it is
-_not_ a PCMCIA issue.
-
-http://www.mail-archive.com/linux-pcmcia@lists.infradead.org/msg03460.html
-
-Best,
-	Dominik
+  Luis
