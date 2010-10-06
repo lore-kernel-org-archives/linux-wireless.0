@@ -1,104 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qy0-f174.google.com ([209.85.216.174]:56465 "EHLO
-	mail-qy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754405Ab0JOONb convert rfc822-to-8bit (ORCPT
+Received: from mail30f.wh2.ocn.ne.jp ([220.111.41.203]:8384 "HELO
+	mail30f.wh2.ocn.ne.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1754226Ab0JFCZy (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 15 Oct 2010 10:13:31 -0400
-Received: by qyk5 with SMTP id 5so1451698qyk.19
-        for <linux-wireless@vger.kernel.org>; Fri, 15 Oct 2010 07:13:30 -0700 (PDT)
+	Tue, 5 Oct 2010 22:25:54 -0400
+Received: from vs3006.wh2.ocn.ne.jp (125.206.180.169)
+	by mail30f.wh2.ocn.ne.jp (RS ver 1.0.95vs) with SMTP id 4-0304391952
+	for <linux-wireless@vger.kernel.org>; Wed,  6 Oct 2010 11:25:53 +0900 (JST)
+From: Bruno Randolf <br1@einfach.org>
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>, vasanth@atheros.com
+Subject: Re: [PATCH 5/5] ath5k: Add busy ratios to survey data
+Date: Wed, 6 Oct 2010 11:25:54 +0900
+Cc: linville@tuxdriver.com, nbd@openwrt.org,
+	ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org
+References: <20101005095510.3083.46174.stgit@tt-desk> <20101005095531.3083.39403.stgit@tt-desk> <AANLkTimP=R4hsCWU+wP1aemHn1awzNQVWMa-_7OJEQLG@mail.gmail.com>
+In-Reply-To: <AANLkTimP=R4hsCWU+wP1aemHn1awzNQVWMa-_7OJEQLG@mail.gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <AANLkTinnOm5rg8FKxFct1zKHZZi7k9nxEKtBYkLFktSS@mail.gmail.com>
-References: <1287090064-14607-1-git-send-email-zajec5@gmail.com>
- <AANLkTimnzeRa53g0i2ZkB4Qy_x_P3h4Z+ZwC2HdJPxFC@mail.gmail.com> <AANLkTinnOm5rg8FKxFct1zKHZZi7k9nxEKtBYkLFktSS@mail.gmail.com>
-From: =?ISO-8859-1?Q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>
-Date: Fri, 15 Oct 2010 16:13:09 +0200
-Message-ID: <AANLkTim==y20jOa6SpvZogZ+0inFGvmpnN-nTKFZp2Xz@mail.gmail.com>
-Subject: Re: [PATCH 1/3] b43: N-PHY: define channel table struct for rev3+ devices
-To: =?ISO-8859-2?Q?Rafa=B3_Mi=B3ecki?= <zajec5@gmail.com>
-Cc: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>,
-	b43-dev@lists.infradead.org
-Content-Type: text/plain; charset=ISO-8859-2
+Content-Type: Text/Plain;
+  charset="utf-8"
+Message-Id: <201010061125.54247.br1@einfach.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2010/10/15 Rafa³ Mi³ecki <zajec5@gmail.com>:
-> W dniu 15 pa¼dziernika 2010 00:39 u¿ytkownik Gábor Stefanik
-> <netrolller.3d@gmail.com> napisa³:
->> 2010/10/14 Rafa³ Mi³ecki <zajec5@gmail.com>:
->>> Signed-off-by: Rafa³ Mi³ecki <zajec5@gmail.com>
->>> ---
->>>  drivers/net/wireless/b43/radio_2056.c |   51 +++++++++++++++++++++++++++++++++
->>>  drivers/net/wireless/b43/radio_2056.h |   40 ++++++++++++++++++++++++--
->>>  2 files changed, 88 insertions(+), 3 deletions(-)
->>>
->>> diff --git a/drivers/net/wireless/b43/radio_2056.c b/drivers/net/wireless/b43/radio_2056.c
->>> index d856319..f710c01 100644
->>> --- a/drivers/net/wireless/b43/radio_2056.c
->>> +++ b/drivers/net/wireless/b43/radio_2056.c
->>> @@ -24,9 +24,60 @@
->>>  #include "radio_2056.h"
->>>  #include "phy_common.h"
->>>
->>> +#define RADIOREGS3(r00, r01, r02, r03, r04, r05, r06, r07, r08, r09, \
->>> +                  r10, r11, r12, r13, r14, r15, r16, r17, r18, r19, \
->>> +                  r20, r21, r22, r23, r24, r25, r26, r27, r28, r29, \
->>> +                  r30, r31, r32, r33, r34, r35, r36) \
->>> +       .radio_syn_pll_vcocal1          = r00,  \
->>> +       .radio_syn_pll_vcocal2          = r01,  \
->>> +       .radio_syn_pll_refdiv           = r02,  \
->>> +       .radio_syn_pll_mmd2             = r03,  \
->>> +       .radio_syn_pll_mmd1             = r04,  \
->>> +       .radio_syn_pll_loopfilter1      = r05,  \
->>> +       .radio_syn_pll_loopfilter2      = r06,  \
->>> +       .radio_syn_pll_loopfilter3      = r07,  \
->>> +       .radio_syn_pll_loopfilter4      = r08,  \
->>> +       .radio_syn_pll_loopfilter5      = r09,  \
->>> +       .radio_syn_reserved_addr27      = r10,  \
->>> +       .radio_syn_reserved_addr28      = r11,  \
->>> +       .radio_syn_reserved_addr29      = r12,  \
->>> +       .radio_syn_logen_vcobuf1        = r13,  \
->>> +       .radio_syn_logen_mixer2         = r14,  \
->>> +       .radio_syn_logen_buf3           = r15,  \
->>> +       .radio_syn_logen_buf4           = r16,  \
->>> +       .radio_rx0_lnaa_tune            = r17,  \
->>> +       .radio_rx0_lnag_tune            = r18,  \
->>> +       .radio_tx0_intpaa_boost_tune    = r19,  \
->>> +       .radio_tx0_intpag_boost_tune    = r20,  \
->>> +       .radio_tx0_pada_boost_tune      = r21,  \
->>> +       .radio_tx0_padg_boost_tune      = r22,  \
->>> +       .radio_tx0_pgaa_boost_tune      = r23,  \
->>> +       .radio_tx0_pgag_boost_tune      = r24,  \
->>> +       .radio_tx0_mixa_boost_tune      = r25,  \
->>> +       .radio_tx0_mixg_boost_tune      = r26,  \
->>> +       .radio_rx1_lnaa_tune            = r27,  \
->>> +       .radio_rx1_lnag_tune            = r28,  \
->>> +       .radio_tx1_intpaa_boost_tune    = r29,  \
->>> +       .radio_tx1_intpag_boost_tune    = r30,  \
->>> +       .radio_tx1_pada_boost_tune      = r31,  \
->>> +       .radio_tx1_padg_boost_tune      = r32,  \
->>> +       .radio_tx1_pgaa_boost_tune      = r33,  \
->>> +       .radio_tx1_pgag_boost_tune      = r34,  \
->>> +       .radio_tx1_mixa_boost_tune      = r35,  \
->>> +       .radio_tx1_mixg_boost_tune      = r36
->>
->> You might want to use parentheses around parameter names: e.g.:
->> .radio_tx1_mixa_boost_tune = (r35), \
->
-> We use this macro only for defining radio tables, only in this file.
-> Plus we don't use any math or sth as you can see in next patch (3/3).
-> That way it will not hit random developer using this macro in other
-> place of code.
+On Wed October 6 2010 07:38:34 Luis R. Rodriguez wrote:
+> On Tue, Oct 5, 2010 at 2:55 AM, Bruno Randolf <br1@einfach.org> wrote:
+> > Include the channel utilization (busy, rx, tx) in the survey results.
+> > 
+> > Signed-off-by: Bruno Randolf <br1@einfach.org>
+> > ---
+> >  drivers/net/wireless/ath/ath5k/base.c |   17 +++++++++++++++++
+> >  1 files changed, 17 insertions(+), 0 deletions(-)
+> > 
+> > diff --git a/drivers/net/wireless/ath/ath5k/base.c
+> > b/drivers/net/wireless/ath/ath5k/base.c index c158f2e..a33d9f2 100644
+> > --- a/drivers/net/wireless/ath/ath5k/base.c
+> > +++ b/drivers/net/wireless/ath/ath5k/base.c
+> > @@ -3008,6 +3008,7 @@ static int ath5k_get_survey(struct ieee80211_hw
+> > *hw, int idx, {
+> >        struct ath5k_softc *sc = hw->priv;
+> >        struct ieee80211_conf *conf = &hw->conf;
+> > +       struct ath_common *common = ath5k_hw_common(sc->ah);
+> > 
+> >         if (idx != 0)
+> >                return -ENOENT;
+> > @@ -3016,6 +3017,22 @@ static int ath5k_get_survey(struct ieee80211_hw
+> > *hw, int idx, survey->filled = SURVEY_INFO_NOISE_DBM;
+> >        survey->noise = sc->ah->ah_noise_floor;
+> > 
+> > +       ath_hw_cycle_counters_lock(common);
+> > +       ath_hw_cycle_counters_update(common);
+> > +       if (common->cc_survey.cycles > 0) {
+> > +               survey->filled |= SURVEY_INFO_BUSY |
+> > +                               SURVEY_INFO_BUSY_TX |
+> > SURVEY_INFO_BUSY_RX; +               survey->busy =
+> > common->cc_survey.rx_busy * 255 / +                                    
+> >   common->cc_survey.cycles; +               survey->busy_tx =
+> > common->cc_survey.tx_frame * 255 / +                                    
+> >   common->cc_survey.cycles; +               survey->busy_rx =
+> > common->cc_survey.rx_frame * 255 / +                                    
+> >   common->cc_survey.cycles; +       }
+> > +
+> > +       memset(&common->cc_survey, 0, sizeof(struct ath_cycle_counters));
+> > +       ath_hw_cycle_counters_unlock(common);
+> > +
+> 
+> This is all being sucked out of common, so can we just share the
+> filler for the survey between ath5k and ath9k? Note we should split up
+> hw code and core driver code on the ath module by file.
 
-That's OK, but I believe that there is a coding style requirement to
-always parenthesize macro parameters. If there isn't, then it's OK.
+sure, that would be good! noise floor comes from ath5k_hw though, but that can 
+easily be moved to common. 
 
->
-> --
-> Rafa³
->
+there's so much code which could be shared between ath5k and ath9k...
 
-
-
--- 
-Vista: [V]iruses, [I]ntruders, [S]pyware, [T]rojans and [A]dware. :-)
+bruno
