@@ -1,48 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:46991 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757203Ab0JEUZl (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 5 Oct 2010 16:25:41 -0400
-Subject: Re: [PATCH v3] mac80211: Add WME information element for IBSS
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Bruno Randolf <br1@einfach.org>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
-In-Reply-To: <201010051024.56936.br1@einfach.org>
-References: <20101004021730.3870.14677.stgit@tt-desk>
-	 <1286191300.3620.2.camel@jlt3.sipsolutions.net>
-	 <201010051024.56936.br1@einfach.org>
-Content-Type: text/plain; charset="UTF-8"
-Date: Tue, 05 Oct 2010 22:25:40 +0200
-Message-ID: <1286310340.3641.32.camel@jlt3.sipsolutions.net>
+Received: from mga03.intel.com ([143.182.124.21]:22502 "EHLO mga03.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1759083Ab0JFRth (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 6 Oct 2010 13:49:37 -0400
+Subject: Re: [PATCH wireless-2.6 or stable] iwlwifi: return error when fail
+ to start scanning
+From: "Guy, Wey-Yi" <wey-yi.w.guy@intel.com>
+To: Florian Mickler <florian@mickler.org>,
+	Stanislaw Gruszka <sgruszka@redhat.com>
+Cc: "linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"stable@kernel.org" <stable@kernel.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"Chatre, Reinette" <reinette.chatre@intel.com>,
+	"ilw@linux.intel.com" <ilw@linux.intel.com>,
+	"Berg, Johannes" <johannes.berg@intel.com>,
+	"Cahill, Ben M" <ben.m.cahill@intel.com>,
+	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+In-Reply-To: <20101006194537.35e8b00e@schatten.dmk.lab>
+References: <20101005085717.GA18012@redhat.com>
+	 <1286317292-10679-1-git-send-email-florian@mickler.org>
+	 <20101006090228.GA2523@redhat.com>	<20101006160434.GB24581@redhat.com>
+	 <20101006194537.35e8b00e@schatten.dmk.lab>
+Content-Type: text/plain
+Date: Wed, 06 Oct 2010 10:48:49 -0700
+Message-Id: <1286387329.12594.21.camel@wwguy-ubuntu>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2010-10-05 at 10:24 +0900, Bruno Randolf wrote:
-> On Mon October 4 2010 20:21:40 Johannes Berg wrote:
-> > On Mon, 2010-10-04 at 11:17 +0900, Bruno Randolf wrote:
-> > > Enable WME QoS in IBSS mode by adding a WME information element to
-> > > beacons and probe respones and by checking for it and marking stations
-> > > as WME capable if it is present.
-> > > 
-> > > Signed-off-by: Bruno Randolf <br1@einfach.org>
-> > > 
-> > > ---
-> > > v3: use GFP_ATOMIC and re-organize nesting of "if" statements. allthough
-> > > in practice we would probaby always have the rates element i think it's
-> > > more correct to code it like this.
-> > 
-> > You're probably right, but shouldn't that be a separate patch? It
-> > doesn't relate to WME at all, afaict.
+On Wed, 2010-10-06 at 10:45 -0700, Florian Mickler wrote:
+> Hi Stanislaw!
 > 
-> it does. before we only looked at elems->supp_rates, so it was o.k. to combine 
-> that check into the first if (adhoc mode && bssid matches). now we also check 
-> elems->wmm_info so we should make separate cases for each. as i noted, it 
-> probably does not matter much in practice, since elems->supp_rates should be 
-> present in all proper beacons and probe responses.
+> On Wed, 6 Oct 2010 18:04:35 +0200
+> Stanislaw Gruszka <sgruszka@redhat.com> wrote:
+> 
+> > This is stable friendly backport of wireless-testing commit
+> > 3eecce527c7434dfd16517ce08b49632c8a26717 "iwlwifi: unify scan start
+> > checks". Wireless-testing version include also a lot of cleanups.
+> > 
+> > On error case in {iwl3945,iwlagn}_request_scan we queue abort_scan work,
+> > which in a fact do nothing, so we never complete the scan. Thats gives
+> > "WARNING: at net/wireless/core.c:614 wdev_cleanup_work" and stopped
+> > network connection until reload iwlwifi modules. Return of -EIO and
+> > stopping queuing any work is a fix.
+> > 
+> > Note there are still many cases when we can get: 
+> > 
+> > WARNING: at net/wireless/core.c:614 wdev_cleanup_work  
+> > WARNING: at net/mac80211/scan.c:266 ieee80211_scan_completed
+> > WARNING: at net/mac80211/scan.c:269 ieee80211_scan_complete
+> > 
+> > which are not fixed. Unfortunately does not exist single, small fix
+> > for that problems, and we probably will see some more bug reports
+> > with scan warnings. As solution we rewrite iwl-scan.c code to avoid
+> > all possible race conditions. That quite big patch set is queued
+> > for 2.6.37 .
+> > 
+> > Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
 
-Fair enough, looks fine to me.
+looks good to me
 
-johannes
+Thanks
+Wey
+
 
