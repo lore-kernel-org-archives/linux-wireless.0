@@ -1,116 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ww0-f44.google.com ([74.125.82.44]:42360 "EHLO
-	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756584Ab0JZHJk convert rfc822-to-8bit (ORCPT
+Received: from mail.candelatech.com ([208.74.158.172]:58236 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753181Ab0JFR2u (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 26 Oct 2010 03:09:40 -0400
+	Wed, 6 Oct 2010 13:28:50 -0400
+Received: from [192.168.100.195] (firewall.candelatech.com [70.89.124.249])
+	(authenticated bits=0)
+	by ns3.lanforge.com (8.14.2/8.14.2) with ESMTP id o96HSoKu014896
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
+	for <linux-wireless@vger.kernel.org>; Wed, 6 Oct 2010 10:28:50 -0700
+Message-ID: <4CACB1D1.7090900@candelatech.com>
+Date: Wed, 06 Oct 2010 10:28:49 -0700
+From: Ben Greear <greearb@candelatech.com>
 MIME-Version: 1.0
-In-Reply-To: <AANLkTim=jD-C4DwDS2=KuQnhPOyP+Cnd-hUTdaZ7Opth@mail.gmail.com>
-References: <AANLkTim=jD-C4DwDS2=KuQnhPOyP+Cnd-hUTdaZ7Opth@mail.gmail.com>
-Date: Tue, 26 Oct 2010 12:39:38 +0530
-Message-ID: <AANLkTikHTgoJyxm80MuXM9oTvCPTFAPM12zVih1RsTfy@mail.gmail.com>
-Subject: Re: ath9k crashing the kernel
-From: Jaswinder Singh <jaswinderlinux@gmail.com>
-To: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	netdev <netdev@vger.kernel.org>, ath9k-devel@lists.ath9k.org,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	shafi.wireless@gmail.com, Felix Fietkau <nbd@openwrt.org>,
-	"John W. Linville" <linville@tuxdriver.com>
-Content-Type: text/plain; charset=ISO-8859-1
+To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Crash in cfg80211_unlink_bss
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello,
+This test scenario has  72 stations on ath5k trying to connect to a cisco AP
+that supposedly only supports 63 stations.
 
-On Tue, Oct 26, 2010 at 10:36 AM, Jaswinder Singh
-<jaswinderlinux@gmail.com> wrote:
->
-> ath9k is crashing the kernel :
->
-> [   21.276554] BUG: spinlock bad magic on CPU#1, NetworkManager/1056
-> [   21.277015]  lock: f5be80a8, .magic: 00000000, .owner: <none>/-1,
-> .owner_cpu: 0
-> [   21.277015] Pid: 1056, comm: NetworkManager Not tainted 2.6.36-netbook+ #20
-> [   21.277015] Call Trace:
-> [   21.277015]  [<c14767a7>] ? printk+0xf/0x11
-> [   21.277015]  [<c117b823>] spin_bug+0x7c/0x87
-> [   21.301365]  [<c117b8bd>] do_raw_spin_lock+0x1e/0x125
-> [   21.301365]  [<c1478d0a>] ? _raw_spin_unlock_bh+0x1a/0x1c
-> [   21.301365]  [<c1478dc3>] _raw_spin_lock_irqsave+0x17/0x1c
-> [   21.318857]  [<c1288a74>] ath9k_config+0x255/0x38b
-> [   21.318857]  [<c1447bdb>] ieee80211_hw_config+0x10a/0x114
-> [   21.328034]  [<c1453545>] ieee80211_do_open+0x3de/0x4cf
-> [   21.328034]  [<c1452206>] ? ieee80211_check_concurrent_iface+0x21/0x13a
-> [   21.328034]  [<c104c470>] ? raw_notifier_call_chain+0xc/0xe
-> [   21.328034]  [<c1453691>] ieee80211_open+0x5b/0x5e
-> [   21.328034]  [<c13947cf>] __dev_open+0x80/0xa9
-> [   21.328034]  [<c13920bb>] __dev_change_flags+0xa1/0x116
-> [   21.328034]  [<c1394723>] dev_change_flags+0x13/0x3f
-> [   21.328034]  [<c139d568>] do_setlink+0x226/0x507
-> [   21.328034]  [<c139d917>] rtnl_setlink+0xce/0xd4
-> [   21.328034]  [<c11786d2>] ? copy_to_user+0x3a/0x118
-> [   21.328034]  [<c139d849>] ? rtnl_setlink+0x0/0xd4
-> [   21.328034]  [<c139df4d>] rtnetlink_rcv_msg+0x17e/0x194
-> [   21.328034]  [<c139ddcf>] ? rtnetlink_rcv_msg+0x0/0x194
-> [   21.328034]  [<c13a59c4>] netlink_rcv_skb+0x30/0x76
-> [   21.328034]  [<c139ddc8>] rtnetlink_rcv+0x1b/0x22
-> [   21.328034]  [<c13a5772>] netlink_unicast+0x1aa/0x20b
-> [   21.328034]  [<c13a5eac>] netlink_sendmsg+0x22c/0x27a
-> [   21.328034]  [<c13862b8>] sock_sendmsg+0xa5/0xbb
-> [   21.328034]  [<c13862b8>] ? sock_sendmsg+0xa5/0xbb
-> [   21.328034]  [<c138e05b>] ? verify_iovec+0x3e/0x6b
-> [   21.328034]  [<c1386ab2>] sys_sendmsg+0x149/0x196
-> [   21.328034]  [<c10826f5>] ? unlock_page+0x40/0x43
-> [   21.328034]  [<c10952d5>] ? __do_fault+0x367/0x393
-> [   21.328034]  [<c1096b8e>] ? handle_mm_fault+0x3bd/0x77a
-> [   21.328034]  [<c10b6fb3>] ? destroy_inode+0x1f/0x30
-> [   21.328034]  [<c138694e>] ? sys_recvmsg+0x2b/0x46
-> [   21.328034]  [<c1387c00>] sys_socketcall+0x146/0x18b
-> [   21.328034]  [<c1002850>] sysenter_do_call+0x12/0x26
-> [   21.344846] ADDRCONF(NETDEV_UP): wlan0: link is not ready
-> [   21.487994] atl1c 0000:03:00.0: irq 42 for MSI/MSI-X
-> [   21.543870] ADDRCONF(NETDEV_UP): eth0: link is not ready
->
->
-> Linux 2.6.36 f6f94e2ab1 is good
-> and
-> 229aebb873e2972 is bad
->
+The 72 STA were created without ssid's configured, then we re-configured all
+72 'at once' to give them the proper SSID (ifdown, ifup, iwconfig to set values).
 
-After further investigation bad commit is :
+The system crashed and rebooted.
 
-3430098ae463e31ab16926ac3eb295368a3ca5d9 is the first bad commit
-commit 3430098ae463e31ab16926ac3eb295368a3ca5d9
-Author: Felix Fietkau <nbd@openwrt.org>
-Date:   Sun Oct 10 18:21:52 2010 +0200
+Kernel is wireless-testing as of later yesterday, with a few additional
+patches mostly dealing with counters in /proc/net/wireless and some lockdep
+fixes pulled in from lkml etc.
 
-    ath9k: implement channel utilization stats for survey
+We have seen this before, but this is the first good stacktrace we got.
 
-    Results for the active channel are updated whenever a new survey dump
-    is requested, the old data is kept to allow multiple processes to
-    make their own channel utilization averages.
-    All other channels only contain the data for the last time that the
-    hardware was on the channel, i.e. the last scan result or other
-    off-channel activity.
-    Running a background scan does not clear the data for the active
-    channel.
-
-    Signed-off-by: Felix Fietkau <nbd@openwrt.org>
-    Signed-off-by: John W. Linville <linville@tuxdriver.com>
+Likely we can reproduce this if extra information is needed.
 
 
-Thanks,
---
-Jaswinder Singh.
-> I am trying to bisect it but I am getting compilation error :
->
->  LD      .tmp_vmlinux1
-> drivers/built-in.o: In function `ath_do_set_opmode':
-> /home/jaswinder/jaswinder-git/linux-2.6/drivers/net/wireless/ath/ath5k/base.c:567:
-> undefined reference to `ath_opmode_to_string'
-> /home/jaswinder/jaswinder-git/linux-2.6/drivers/net/wireless/ath/ath5k/base.c:568:
-> undefined reference to `ath_opmode_to_string'
-> make: *** [.tmp_vmlinux1] Error 1
-> [jaswinder@ linux-2.6]$
->
+------------[ cut here ]------------
+WARNING: at /home/greearb/git/linux.wireless-testing/lib/list_debug.c:48 list_del+0x24/0xab()
+Hardware name: PDSM4+
+list_del corruption, next is LIST_POISON1 (00100100)
+Modules linked in: xt_CT iptable_raw ipt_addrtype xt_DSCP xt_dscp xt_string xt_owner xt_NFQUEUE xt_multiport xt_mark xt_ipra]
+Pid: 27077, comm: kworker/u:1 Not tainted 2.6.36-rc6-wl+ #6
+Call Trace:
+  [<c04345cb>] warn_slowpath_common+0x65/0x7a
+  [<c058f3c8>] ? list_del+0x24/0xab
+  [<c0434644>] warn_slowpath_fmt+0x26/0x2a
+  [<c058f3c8>] list_del+0x24/0xab
+  [<fac52fed>] cfg80211_unlink_bss+0x4e/0x7d [cfg80211]
+  [<fb8aa464>] ieee80211_work_work+0x562/0xcfa [mac80211]
+  [<c0443cea>] ? process_one_work+0x145/0x295
+  [<c0443d34>] process_one_work+0x18f/0x295
+  [<c0443cea>] ? process_one_work+0x145/0x295
+  [<fb8a9f02>] ? ieee80211_work_work+0x0/0xcfa [mac80211]
+  [<c044535d>] worker_thread+0xf9/0x1b8
+  [<c0445264>] ? worker_thread+0x0/0x1b8
+  [<c0447ca7>] kthread+0x62/0x67
+  [<c0447c45>] ? kthread+0x0/0x67
+  [<c0403506>] kernel_thread_helper+0x6/0x1a
+---[ end trace 378943e5dc829f28 ]---
+BUG: unable to handle kernel paging request at 00200200
+IP: [<c058f3f8>] list_del+0x54/0xab
+*pde = 00000000
+Oops: 0000 [#1] SMP DEBUG_PAGEALLOC
+last sysfs file: /sys/devices/pci0000:00/0000:00:01.0/0000:01:00.2/0000:03:01.0/ieee80211/phy0/macaddress
+Modules linked in: xt_CT iptable_raw ipt_addrtype xt_DSCP xt_dscp xt_string xt_owner xt_NFQUEUE xt_multiport xt_mark xt_ipra]
+
+
+-- 
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
+
