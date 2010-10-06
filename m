@@ -1,68 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qy0-f181.google.com ([209.85.216.181]:42250 "EHLO
-	mail-qy0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756583Ab0I3WVL (ORCPT
+Received: from mail-iw0-f174.google.com ([209.85.214.174]:59561 "EHLO
+	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759782Ab0JFSpa (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 30 Sep 2010 18:21:11 -0400
-Received: by mail-qy0-f181.google.com with SMTP id 33so2539710qyk.19
-        for <linux-wireless@vger.kernel.org>; Thu, 30 Sep 2010 15:21:10 -0700 (PDT)
+	Wed, 6 Oct 2010 14:45:30 -0400
+Received: by iwn5 with SMTP id 5so10068670iwn.19
+        for <linux-wireless@vger.kernel.org>; Wed, 06 Oct 2010 11:45:29 -0700 (PDT)
 MIME-Version: 1.0
-Date: Thu, 30 Sep 2010 18:21:10 -0400
-Message-ID: <AANLkTin2cVXkQ5zmQkm1Yg39Vi3Fzoy067JLBwx+RBKj@mail.gmail.com>
-Subject: [PATCH 2/3] cfg80211: patches to allow setting the WDS peer
-From: Bill Jordan <bjordan@rajant.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	Johannes Berg <johannes@sipsolutions.net>
-Content-Type: text/plain; charset=ISO-8859-1
+In-Reply-To: <4CACA3D7.90108@candelatech.com>
+References: <4CACA3D7.90108@candelatech.com>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Wed, 6 Oct 2010 11:45:09 -0700
+Message-ID: <AANLkTimB7=odPK3qTAhFBdzaMFFGVar0kyMrb-p9SgYy@mail.gmail.com>
+Subject: Re: Any /n NICs that support APs and multiple STAs other than ath9k?
+To: Ben Greear <greearb@candelatech.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Added a nl interface to set the peer bssid of a WDS interface.
+On Wed, Oct 6, 2010 at 9:29 AM, Ben Greear <greearb@candelatech.com> wrote:
+> I would like to have a different hardware/driver combination to try
+> to tie-break whether bugs are in mac80211 or in the ath9k driver/hardware.
+>
+> I don't mind doing a bit of driver hacking so long as the basic support
+> is there (I think it's mostly the ability to set a BSSID mask and rxfilter
+> accordingly).
 
-Signed-off-by: Bill Jordan <bjordan@rajant.com>
----
- include/linux/nl80211.h |    3 ++
- net/wireless/nl80211.c  |   49 +++++++++++++++++++++++++++++++++++++++++++++++
- 2 files changed, 52 insertions(+), 0 deletions(-)
+Your best bet is to test against mac80211_hwsim, that would rule out
+any hardware. I think Jouni and Johannes have also a way to get the
+devices to talk to each other. Perhaps some documentation of that on
+the kernel Documentation/networking/mac80211_hwsim/
 
-diff --git a/include/linux/nl80211.h b/include/linux/nl80211.h
-index f0518b0..35a9681 100644
---- a/include/linux/nl80211.h
-+++ b/include/linux/nl80211.h
-@@ -387,6 +387,8 @@
-  *	of any other interfaces, and other interfaces will again take
-  *	precedence when they are used.
-  *
-+ * @NL80211_CMD_SET_WDS_PEER: Set the MAC address of the peer on a
-WDS interface.
-+ *
-  * @NL80211_CMD_MAX: highest used command number
-  * @__NL80211_CMD_AFTER_LAST: internal use
-  */
-@@ -489,6 +491,7 @@ enum nl80211_commands {
- 	NL80211_CMD_NOTIFY_CQM,
-
- 	NL80211_CMD_SET_CHANNEL,
-+	NL80211_CMD_SET_WDS_PEER,
-
- 	/* add new commands above here */
-
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index 9c84825..c401349 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -603,6 +603,7 @@ static int nl80211_send_wiphy(struct sk_buff *msg,
-u32 pid, u32 seq, int flags,
- 		NLA_PUT_U32(msg, i, NL80211_CMD_SET_WIPHY_NETNS);
- 	}
- 	CMD(set_channel, SET_CHANNEL);
-+	CMD(set_wds_peer, SET_WDS_PEER);
-
- #undef CMD
-
-@@ -831,6 +832,48 @@ static int nl80211_set_channel(struct sk_buff
-*skb, struct genl_info *info)
- 	return result;
- }
+  Luis
