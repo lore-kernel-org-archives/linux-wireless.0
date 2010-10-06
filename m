@@ -1,94 +1,83 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from web56801.mail.re3.yahoo.com ([66.196.97.75]:34632 "HELO
-	web56801.mail.re3.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1751129Ab0JTPOA convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 20 Oct 2010 11:14:00 -0400
-Message-ID: <55285.71229.qm@web56801.mail.re3.yahoo.com>
-Date: Wed, 20 Oct 2010 08:13:58 -0700 (PDT)
-From: Walter Goldens <goldenstranger@yahoo.com>
-Subject: [PATCH 4/4] compat-wireless: remove obsolete load scripts
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Cc: linux-wireless@vger.kernel.org
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:49806 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758010Ab0JFUpG (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 6 Oct 2010 16:45:06 -0400
+Date: Wed, 6 Oct 2010 16:32:40 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Felix Fietkau <nbd@openwrt.org>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Senthil Balasubramanian <senthilkumar@atheros.com>,
+	Rajkumar Manoharan <Rajkumar.Manoharan@atheros.com>,
+	Luis Rodriguez <Luis.Rodriguez@atheros.com>
+Subject: Re: [PATCH v3 3/4] ath9k_hw: clean up register write buffering
+Message-ID: <20101006203240.GM2472@tuxdriver.com>
+References: <1286125639-15137-1-git-send-email-nbd@openwrt.org>
+ <1286125639-15137-2-git-send-email-nbd@openwrt.org>
+ <1286125639-15137-3-git-send-email-nbd@openwrt.org>
+ <20101004085608.GA5931@vmraj-lnx.users.atheros.com>
+ <4CA9C03D.9010503@openwrt.org>
+ <4CAA0D5E.1080200@openwrt.org>
+ <20101005043856.GB2462@senthil-lnx.users.atheros.com>
+ <4CAAF7FE.1050105@openwrt.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <4CAAF7FE.1050105@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-- delete obsolete load scripts
+On Tue, Oct 05, 2010 at 12:03:42PM +0200, Felix Fietkau wrote:
+> Throughout the code, DISABLE_REGWRITE_BUFFER is always called right after
+> REGWRITE_BUFFER_FLUSH. Since that's unlikely to change any time soon, that
+> makes keeping those ops separate rather pointless, as it only increases
+> code size and line number counts.
+> 
+> Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+> ---
+>  drivers/net/wireless/ath/ath.h                |    4 +---
+>  drivers/net/wireless/ath/ath9k/ani.c          |    6 ------
+>  drivers/net/wireless/ath/ath9k/ar5008_phy.c   |    9 ++-------
+>  drivers/net/wireless/ath/ath9k/ar9002_calib.c |    1 -
+>  drivers/net/wireless/ath/ath9k/ar9002_hw.c    |    4 ----
+>  drivers/net/wireless/ath/ath9k/ar9002_phy.c   |    1 -
+>  drivers/net/wireless/ath/ath9k/calib.c        |    1 -
+>  drivers/net/wireless/ath/ath9k/eeprom_4k.c    |    2 --
+>  drivers/net/wireless/ath/ath9k/htc_drv_init.c |   12 ++----------
+>  drivers/net/wireless/ath/ath9k/hw.c           |   14 --------------
+>  drivers/net/wireless/ath/ath9k/hw.h           |   10 ++--------
+>  drivers/net/wireless/ath/ath9k/mac.c          |    4 ----
+>  12 files changed, 7 insertions(+), 61 deletions(-)
+> 
+> v2: removed mwrite_cnt test
+> v3: removed comment about it from description
 
-Signed-off-by: Walter Goldens <goldenstranger@yahoo.com>
----
+Several patch hunks are buggered...examples:
 
---- a/scripts/load.sh
-+++ /dev/null
-@@ -1,26 +0,0 @@
--#!/bin/bash
--MODULES="ipw2100 ipw2200 libertas_cs usb8xxx"
--MODULES="$MODULES p54pci p54usb"
--MODULES="$MODULES adm8211 zd1211rw"
--MODULES="$MODULES rtl8180 rtl8187"
--MODULES="$MODULES p54pci p54usb"
--MODULES="$MODULES iwl3945 iwlagn"
--MODULES="$MODULES ath ar9170usb"
--MODULES="$MODULES rtl8180 rtl8187"
--MODULES="$MODULES rt2400pci rt2500pci rt61pci"
--MODULES="$MODULES rt2500usb rt73usb"
--MODULES="$MODULES rndis_wlan at76_usb"
--MODULES="$MODULES mwl8k mac80211_hwsim"
--MODULES="$MODULES at76c50x_usb"
--MODULES="$MODULES bluetooth btusb l2cap sco hidp rfcomm bnep"
--for i in $MODULES; do
--    echo Loading $i...
--    modprobe $i
--done
--# For ath5k we must be sure to unload MadWifi first
--athload ath5k
--# For b43 we must make sure to unload bcm43xx first
--b43load b43
--echo Starting bluetooth service..
--/etc/init.d/bluetooth start
--/etc/init.d/bluetooth status
---- a/scripts/wlload.sh
-+++ /dev/null
-@@ -1,22 +0,0 @@
--#!/bin/bash
--MODULES="ipw2100 ipw2200 libertas_cs usb8xxx"
--MODULES="$MODULES p54pci p54usb"
--MODULES="$MODULES adm8211 zd1211rw"
--MODULES="$MODULES rtl8180 rtl8187"
--MODULES="$MODULES p54pci p54usb"
--MODULES="$MODULES iwl3945 iwlagn"
--MODULES="$MODULES ath ar9170usb"
--MODULES="$MODULES rtl8180 rtl8187"
--MODULES="$MODULES rt2400pci rt2500pci rt61pci"
--MODULES="$MODULES rt2500usb rt73usb"
--MODULES="$MODULES rndis_wlan at76_usb"
--MODULES="$MODULES mwl8k mac80211_hwsim"
--MODULES="$MODULES at76c50x_usb"
--for i in $MODULES; do
--    echo Loading $i...
--    modprobe $i
--done
--# For ath5k we must be sure to unload MadWifi first
--athload ath5k
--# For b43 we must make sure to unload bcm43xx first
--b43load b43
---- a/scripts/btload.sh
-+++ /dev/null
-@@ -1,10 +0,0 @@
--#!/bin/bash
--MODULES="bluetooth btusb l2cap sco hidp rfcomm bnep"
--for i in $MODULES; do
--    echo Loading $i...
--    modprobe $i
--done
--echo Starting bluetooth service..
--/etc/init.d/bluetooth start
--/etc/init.d/bluetooth status
--
+>  diff --git a/drivers/net/wireless/ath/ath9k/ani.c b/drivers/net/wireless/ath/ath9k/ani.c
+> index 9936297..61e7a48 100644
+> --- a/drivers/net/wireless/ath/ath9k/ani.c
+> +++ b/drivers/net/wireless/ath/ath9k/ani.c
+> @@ -180,7 +180,6 @@ static void ath9k_ani_restart_old(struct ath_hw *ah)
+>  	REG_WRITE(ah, AR_PHY_ERR_MASK_2, AR_PHY_ERR_CCK_TIMING);
+>   	REGWRITE_BUFFER_FLUSH(ah);
+> -	DISABLE_REGWRITE_BUFFER(ah);
+>   	ath9k_hw_update_mibstats(ah, &ah->ah_mibStats);
+>  @@ -215,7 +214,6 @@ static void ath9k_ani_restart_new(struct ath_hw *ah)
+>  	REG_WRITE(ah, AR_PHY_ERR_MASK_2, AR_PHY_ERR_CCK_TIMING);
+>   	REGWRITE_BUFFER_FLUSH(ah);
+> -	DISABLE_REGWRITE_BUFFER(ah);
+>   	ath9k_hw_update_mibstats(ah, &ah->ah_mibStats);
+>  @@ -643,7 +641,6 @@ static void ath9k_ani_reset_old(struct ath_hw *ah, bool is_scanning)
+>  	REG_WRITE(ah, AR_PHY_ERR_MASK_2, AR_PHY_ERR_CCK_TIMING);
+>   	REGWRITE_BUFFER_FLUSH(ah);
+> -	DISABLE_REGWRITE_BUFFER(ah);
+>  }
+>   /*
 
+I applied the v2 version, but w/ the modification to the commit log.
 
-
-
-      
+John
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
