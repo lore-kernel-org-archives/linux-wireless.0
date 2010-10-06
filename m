@@ -1,69 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:59527 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755029Ab0JDSjb (ORCPT
+Received: from mail-iw0-f174.google.com ([209.85.214.174]:59768 "EHLO
+	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753277Ab0JFX24 convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 4 Oct 2010 14:39:31 -0400
-Subject: Re: [PATCH v2 3/3] mac80211: move to the home channel for
- disassociation when roaming
-From: Johannes Berg <johannes@sipsolutions.net>
-To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Cc: Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
-	"linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"stable@kernel.org" <stable@kernel.org>, Jouni Malinen <j@w1.fi>,
-	Paul Stewart <pstew@google.com>,
-	Amod Bodas <Amod.Bodas@Atheros.com>,
-	Vasanth Thiagarajan <Vasanth.Thiagarajan@Atheros.com>
-In-Reply-To: <20101004172333.GK2105@tux>
-References: <1285965233-11097-1-git-send-email-lrodriguez@atheros.com>
-	 <1285965233-11097-4-git-send-email-lrodriguez@atheros.com>
-	 <1286198152.3620.35.camel@jlt3.sipsolutions.net>
-	 <20101004163829.GD2105@tux>
-	 <1286210516.3620.41.camel@jlt3.sipsolutions.net>
-	 <20101004172333.GK2105@tux>
-Content-Type: text/plain; charset="UTF-8"
-Date: Mon, 04 Oct 2010 20:39:29 +0200
-Message-ID: <1286217569.3620.48.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+	Wed, 6 Oct 2010 19:28:56 -0400
+Received: by iwn9 with SMTP id 9so25292iwn.19
+        for <linux-wireless@vger.kernel.org>; Wed, 06 Oct 2010 16:28:56 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <1286378593-7509-7-git-send-email-wey-yi.w.guy@intel.com>
+References: <1286378593-7509-1-git-send-email-wey-yi.w.guy@intel.com> <1286378593-7509-7-git-send-email-wey-yi.w.guy@intel.com>
+From: Julian Calaby <julian.calaby@gmail.com>
+Date: Thu, 7 Oct 2010 10:28:34 +1100
+Message-ID: <AANLkTin6wQzKn885CWxbaX2o1ERXWsu73iZVHhcuB5z1@mail.gmail.com>
+Subject: Re: [PATCH 6/6] iwlagn: define 130 series of WiFi/BT combo devices
+To: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2010-10-04 at 10:23 -0700, Luis R. Rodriguez wrote:
-> On Mon, Oct 04, 2010 at 09:41:56AM -0700, Johannes Berg wrote:
-> > On Mon, 2010-10-04 at 09:38 -0700, Luis R. Rodriguez wrote:
-> > > On Mon, Oct 04, 2010 at 06:15:52AM -0700, Johannes Berg wrote:
-> > > > On Fri, 2010-10-01 at 16:33 -0400, Luis R. Rodriguez wrote:
-> > > > 
-> > > > > @@ -2203,6 +2204,14 @@ int ieee80211_mgd_assoc(struct ieee80211_sub_if_data *sdata,
-> > > > >  			return -EALREADY;
-> > > > >  		}
-> > > > >  
-> > > > > +		/*
-> > > > > +		 * right before this was authentication, that was on
-> > > > > +		 * the same the wk->chan so we need to ensure we temporarily
-> > > > > +		 * go back to the operating channel to send the disassocation.
-> > > > > +		 */
-> > > > > +		local->tmp_channel = NULL;
-> > > > > +		ieee80211_hw_config(local, 0);
-> > > > > +
-> > > > 
-> > > > Yikes, no, you can't do this. You don't know what has been merged with
-> > > > the authentication work item, etc.
-> > > 
-> > > What do you mean? Auth/Assoc will be handled separately and the
-> > > target channel will also be handled for each work item run, what
-> > > issues can arise from sending us back to the home channel towards
-> > > the end of this call here?
-> > 
-> > Another work item, like a remain-on-channel, might have been started on
-> > the same channel ("merged").
-> 
-> But how do this break that other work from moving forward in its respective
-> channel? The work_work loop makes sure to check if we require a channel
-> change on the work item.
+On Thu, Oct 7, 2010 at 02:23, Wey-Yi Guy <wey-yi.w.guy@intel.com> wrote:
+> add new structures and defines need to identify 130 devices.
+>
+> Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+> ---
+>  drivers/net/wireless/iwlwifi/iwl-6000.c |   44 +++++++++++++++++++++++++++++++
+>  drivers/net/wireless/iwlwifi/iwl-agn.c  |   10 +++++++
+>  drivers/net/wireless/iwlwifi/iwl-agn.h  |    2 +
+>  3 files changed, 56 insertions(+), 0 deletions(-)
+>
+> diff --git a/drivers/net/wireless/iwlwifi/iwl-6000.c b/drivers/net/wireless/iwlwifi/iwl-6000.c
+> index 5866ad8..43ec898 100644
+> --- a/drivers/net/wireless/iwlwifi/iwl-6000.c
+> +++ b/drivers/net/wireless/iwlwifi/iwl-6000.c
+> @@ -75,6 +77,9 @@
+>  #define _IWL6000G2B_MODULE_FIRMWARE(api) IWL6000G2B_FW_PRE #api ".ucode"
+>  #define IWL6000G2B_MODULE_FIRMWARE(api) _IWL6000G2B_MODULE_FIRMWARE(api)
+>
+> +#define IWL130_FW_PRE "iwlwifi-130-"
+> +#define _IWL100_MODULE_FIRMWARE(api) IWL130_FW_PRE #api ".ucode"
+> +#define IWL100_MODULE_FIRMWARE(api) _IWL130_MODULE_FIRMWARE(api)
 
-But we already activated that other work item.
+I haven't looked at the rest of the file, but is this correct: you're
+defining IWL100_MODULE_FIRMWARE using the IWL1*3*0 definitions, which
+don't seem to be defined.
 
-johannes
+(I note that these definitions aren't used, but still.....)
 
+Thanks,
+
+-- 
+
+Julian Calaby
+
+Email: julian.calaby@gmail.com
+Profile: http://www.google.com/profiles/julian.calaby/
+.Plan: http://sites.google.com/site/juliancalaby/
