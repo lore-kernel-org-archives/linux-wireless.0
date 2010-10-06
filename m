@@ -1,39 +1,119 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qy0-f181.google.com ([209.85.216.181]:60146 "EHLO
-	mail-qy0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755352Ab0JKQgb convert rfc822-to-8bit (ORCPT
+Received: from senator.holtmann.net ([87.106.208.187]:48654 "EHLO
+	mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932131Ab0JFHTT (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 11 Oct 2010 12:36:31 -0400
-Received: by qyk10 with SMTP id 10so4488034qyk.19
-        for <linux-wireless@vger.kernel.org>; Mon, 11 Oct 2010 09:36:31 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <AANLkTik1JPNaDKrS8ST_Lt+iEg21-rcetVTSnYmx-qW3@mail.gmail.com>
-References: <1286810435-10820-1-git-send-email-zajec5@gmail.com>
-	<1286810435-10820-3-git-send-email-zajec5@gmail.com>
-	<AANLkTik1JPNaDKrS8ST_Lt+iEg21-rcetVTSnYmx-qW3@mail.gmail.com>
-Date: Mon, 11 Oct 2010 18:36:30 +0200
-Message-ID: <AANLkTingK+o8viDgMdV+jq7kLduda_W=cFr_n08g4V1L@mail.gmail.com>
-Subject: Re: [PATCH 3/3] b43: N-PHY: add 2055 radio regs
-From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-To: =?UTF-8?Q?G=C3=A1bor_Stefanik?= <netrolller.3d@gmail.com>
-Cc: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>,
-	b43-dev@lists.infradead.org
-Content-Type: text/plain; charset=UTF-8
+	Wed, 6 Oct 2010 03:19:19 -0400
+Subject: Re: RFC: btusb firmware load help
+From: Marcel Holtmann <holtmann@linux.intel.com>
+To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Cc: Luis Rodriguez <Luis.Rodriguez@atheros.com>,
+	linux-bluetooth <linux-bluetooth@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Deepak Dhamdhere <Deepak.Dhamdhere@atheros.com>,
+	Sree Durbha <Sree.Durbha@atheros.com>
+In-Reply-To: <AANLkTimz7U52_qHaTutQDOFQde+GrWJRA0WpqY__FPgi@mail.gmail.com>
+References: <20100924230730.GB6566@tux> <1286266981.17473.33.camel@aeonflux>
+	 <20101005192814.GB11831@tux> <1286308731.2588.13.camel@aeonflux>
+	 <AANLkTimz7U52_qHaTutQDOFQde+GrWJRA0WpqY__FPgi@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Wed, 06 Oct 2010 09:19:12 +0200
+Message-ID: <1286349552.6145.11.camel@aeonflux>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-W dniu 11 października 2010 18:24 użytkownik Gábor Stefanik
-<netrolller.3d@gmail.com> napisał:
-> Doesn't brcm80211 contain register names for B2055?
+Hi Luis,
 
-Whoops... first of all it's 2056 radio. Commit's message should be
-2056, not 2055.
+> > most likely via a separate firmware loading driver.
+> 
+> Like the fwload patch ? Or something different?
 
-Yes, I'm sure we can grab many defines from brcm80211. However before
-copying their code/defines I wanted to finish implementing what we
-have in our RE specs. Is that acceptable? Or should I use brcm80211's
-names if I already touch such places?
+something clean of course and not this hacking around, but in general
+along that.
 
--- 
-Rafał
+> > Your ath3k driver is such a driver. Same as the bcm203x driver.
+> 
+> Right -- so ath3k depends on some atheros USB device IDs, and its a
+> stupid driver that just loads firmware. The problem with this new
+> device is that it requires two phases. One to load some sort of
+> firmware onto it to get it to read as an ath3k device, and then ath3k
+> will load the right firmware to it. So the hardware device is already
+> claiming a btusb vendor:device ID, we can't change that I believe. Of
+> course for future devices we can, and we've addressed this and its
+> been fixed.
+
+So your current loading procedure is this:
+
+	1) btusb with hacked firmware loading
+	2) ath3k
+	3) btusb with HCI
+
+Who thought that this is a good idea in the first place? And more
+important that I would accept this upstream? This is even worse than I
+thought it is.
+
+Please get this craziness fixed.
+
+> > They don't do anything than claiming that USB device, loading the firmware, and then let it reset.
+> 
+> Right but if the SFLASH configurations hardware is already shipping
+> and without firmware is claiming to be a BT USB device which matches
+> the USB vendor:device ID of the btusb driver. Unfortunately it does
+> not accept HCI commands which as you indicates breaks some
+> specification. We can and have fixed this in future chipsets but this
+> one cannot be addressed. So what do we do?
+> 
+> > And after the reset the btusb can claim the one where the firmware has
+> > been loaded and which behaves like a proper USB dongle.
+> 
+> Right, that's what the fwload patch from our BT team does, no?
+
+Yes, but not inside the btusb driver. Stop hacking a generic driver with
+crazy firmware loading only because the USB Bluetooth class descriptors
+got screwed up in the first place.
+
+> > The part that I don't understand is that you have the ath3k driver doing
+> > it exactly how it should be done, why now started to make nasty hacks in
+> > the btusb driver.
+> 
+> Yeah that seems to have been a shortcoming, its something you should
+> expect from us moving forward. I've been told AR3012 and future
+> Atheros chipsets will not have behave this way, and this issue is only
+> present for the AR3011 devices with SFLASH configuration.
+
+Most likely including the flashing into ath3k firmware loading driver
+and that being called bound twice might be a good idea. However we are
+not doing the firmware loading in btusb. Then a patch to blacklist this
+broken device. And then ensure that the firmware changes the USB PIDs
+after success.
+
+And if I understand you correct, then it does this anyway right now
+already. Otherwise the ath3k driver would not bind to it.
+
+Now I am failing to understand why this was done wrong in the first
+place. Especially if the loading procedure happens as you say it
+happens.
+
+This is the example for the Broadcom 203x devices:
+
+static struct usb_device_id blacklist_table[] = {
+        /* Broadcom BCM2033 without firmware */
+        { USB_DEVICE(0x0a5c, 0x2033), .driver_info = BTUSB_IGNORE },
+
+The btusb driver clearly blacklists them. And then bcm203x can take over
+loading the firmware:
+
+static const struct usb_device_id bcm203x_table[] = {
+        /* Broadcom Blutonium (BCM2033) */
+        { USB_DEVICE(0x0a5c, 0x2033) },
+
+So there is a working example of this already in the kernel tree since
+forever.
+
+Regards
+
+Marcel
+
+
