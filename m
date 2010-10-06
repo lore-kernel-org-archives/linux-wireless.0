@@ -1,590 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qy0-f174.google.com ([209.85.216.174]:56572 "EHLO
-	mail-qy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753004Ab0JNX7A convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 14 Oct 2010 19:59:00 -0400
-Received: by qyk5 with SMTP id 5so681438qyk.19
-        for <linux-wireless@vger.kernel.org>; Thu, 14 Oct 2010 16:58:59 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1287090064-14607-2-git-send-email-zajec5@gmail.com>
-References: <1287090064-14607-1-git-send-email-zajec5@gmail.com> <1287090064-14607-2-git-send-email-zajec5@gmail.com>
-From: =?ISO-8859-1?Q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>
-Date: Fri, 15 Oct 2010 01:58:38 +0200
-Message-ID: <AANLkTimesczkO4iSrjPjAGMf+xs04bKGALumAFq7GzTQ@mail.gmail.com>
-Subject: Re: [PATCH 2/3] b43: N-PHY: define registers names for 2056 radio
-To: =?ISO-8859-2?Q?Rafa=B3_Mi=B3ecki?= <zajec5@gmail.com>
-Cc: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>,
-	b43-dev@lists.infradead.org, Henry Ptasinski <henryp@broadcom.com>,
-	Brett Rudley <brudley@broadcom.com>,
-	Nohee Ko <noheek@broadcom.com>
-Content-Type: text/plain; charset=ISO-8859-2
+Received: from mga14.intel.com ([143.182.124.37]:23083 "EHLO mga14.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751190Ab0JFQNt (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 6 Oct 2010 12:13:49 -0400
+Subject: Re: [PATCH wireless-2.6 or stable] iwlwifi: return error when fail
+ to start scanning
+From: "Guy, Wey-Yi" <wey-yi.w.guy@intel.com>
+To: Stanislaw Gruszka <sgruszka@redhat.com>
+Cc: Florian Mickler <florian@mickler.org>,
+	"linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"stable@kernel.org" <stable@kernel.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"Chatre, Reinette" <reinette.chatre@intel.com>,
+	"ilw@linux.intel.com" <ilw@linux.intel.com>,
+	"Berg, Johannes" <johannes.berg@intel.com>,
+	"Cahill, Ben M" <ben.m.cahill@intel.com>,
+	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+In-Reply-To: <20101006160434.GB24581@redhat.com>
+References: <20101005085717.GA18012@redhat.com>
+	 <1286317292-10679-1-git-send-email-florian@mickler.org>
+	 <20101006090228.GA2523@redhat.com>  <20101006160434.GB24581@redhat.com>
+Content-Type: text/plain
+Date: Wed, 06 Oct 2010 09:12:58 -0700
+Message-Id: <1286381578.12594.18.camel@wwguy-ubuntu>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2010/10/14 Rafa³ Mi³ecki <zajec5@gmail.com>:
-> Signed-off-by: Rafa³ Mi³ecki <zajec5@gmail.com>
-> Cc: Henry Ptasinski <henryp@broadcom.com>
-> Cc: Brett Rudley <brudley@broadcom.com>
-> Cc: Nohee Ko <noheek@broadcom.com>
+Hi Gruszka,
+
+On Wed, 2010-10-06 at 09:04 -0700, Stanislaw Gruszka wrote:
+> This is stable friendly backport of wireless-testing commit
+> 3eecce527c7434dfd16517ce08b49632c8a26717 "iwlwifi: unify scan start
+> checks". Wireless-testing version include also a lot of cleanups.
+> 
+> On error case in {iwl3945,iwlagn}_request_scan we queue abort_scan work,
+> which in a fact do nothing, so we never complete the scan. Thats gives
+> "WARNING: at net/wireless/core.c:614 wdev_cleanup_work" and stopped
+> network connection until reload iwlwifi modules. Return of -EIO, and
+> stopping queuing any work is a fix.
+> 
+> Note there are still many cases when we can get: 
+> 
+> WARNING: at net/wireless/core.c:614 wdev_cleanup_work  
+> WARNING: at net/mac80211/scan.c:266 ieee80211_scan_completed
+> WARNING: at net/mac80211/scan.c:269 ieee80211_scan_complete
+> 
+> which are not fixed. Unfortunately does not exist single, small fix
+> for that problems, and we probably will see some more bug reports
+> with scan warnings. As solution we rewrite iwl-scan.c code to avoid
+> all possible race conditions. That quite big patch set is queued
+> for 2.6.37 .
+> 
+> Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
 > ---
->  drivers/net/wireless/b43/radio_2056.h |  522 +++++++++++++++++++++++++++++++++
->  1 files changed, 522 insertions(+), 0 deletions(-)
->
-> diff --git a/drivers/net/wireless/b43/radio_2056.h b/drivers/net/wireless/b43/radio_2056.h
-> index 60341d7..462c9fd 100644
-> --- a/drivers/net/wireless/b43/radio_2056.h
-> +++ b/drivers/net/wireless/b43/radio_2056.h
-> @@ -4,6 +4,9 @@
->
->   Copyright (c) 2010 Rafa³ Mi³ecki <zajec5@gmail.com>
->
-> +  Some parts of the code in this file are derived from the brcm80211
-> +  driver  Copyright (c) 2010 Broadcom Corporation
-> +
->   This program is free software; you can redistribute it and/or modify
->   it under the terms of the GNU General Public License as published by
->   the Free Software Foundation; either version 2 of the License, or
-> @@ -28,6 +31,525 @@
->
->  #include "tables_nphy.h"
->
-> +#define RADIO_2056_SYN                         (0x0 << 12)
-> +#define RADIO_2056_TX0                         (0x2 << 12)
-> +#define RADIO_2056_TX1                         (0x3 << 12)
+> Patch is intended for wireless-2.6, or in case when it does not
+> make 2.6.36 release, for -stable 2.6.36.y 
+> 
 
-Please use B2056_ as the prefix. See LP-PHY.
+Is this the replacement for Mickler's patch?
 
-> +#define RADIO_2056_RX0                         (0x6 << 12)
-> +#define RADIO_2056_RX1                         (0x7 << 12)
-> +#define RADIO_2056_ALLTX                       (0xE << 12)
-> +#define RADIO_2056_ALLRX                       (0xF << 12)
-> +
-> +#define RADIO_2056_SYN_RESERVED_ADDR0          0x00
-> +#define RADIO_2056_SYN_IDCODE                  0x01
-> +#define RADIO_2056_SYN_RESERVED_ADDR2          0x02
-> +#define RADIO_2056_SYN_RESERVED_ADDR3          0x03
-> +#define RADIO_2056_SYN_RESERVED_ADDR4          0x04
-> +#define RADIO_2056_SYN_RESERVED_ADDR5          0x05
-> +#define RADIO_2056_SYN_RESERVED_ADDR6          0x06
-> +#define RADIO_2056_SYN_RESERVED_ADDR7          0x07
-> +#define RADIO_2056_SYN_COM_CTRL                        0x08
-> +#define RADIO_2056_SYN_COM_PU                  0x09
-> +#define RADIO_2056_SYN_COM_OVR                 0x0A
-> +#define RADIO_2056_SYN_COM_RESET               0x0B
-> +#define RADIO_2056_SYN_COM_RCAL                        0x0C
-> +#define RADIO_2056_SYN_COM_RC_RXLPF            0x0D
-> +#define RADIO_2056_SYN_COM_RC_TXLPF            0x0E
-> +#define RADIO_2056_SYN_COM_RC_RXHPF            0x0F
-> +#define RADIO_2056_SYN_RESERVED_ADDR16         0x10
-> +#define RADIO_2056_SYN_RESERVED_ADDR17         0x11
-> +#define RADIO_2056_SYN_RESERVED_ADDR18         0x12
-> +#define RADIO_2056_SYN_RESERVED_ADDR19         0x13
-> +#define RADIO_2056_SYN_RESERVED_ADDR20         0x14
-> +#define RADIO_2056_SYN_RESERVED_ADDR21         0x15
-> +#define RADIO_2056_SYN_RESERVED_ADDR22         0x16
-> +#define RADIO_2056_SYN_RESERVED_ADDR23         0x17
-> +#define RADIO_2056_SYN_RESERVED_ADDR24         0x18
-> +#define RADIO_2056_SYN_RESERVED_ADDR25         0x19
-> +#define RADIO_2056_SYN_RESERVED_ADDR26         0x1A
-> +#define RADIO_2056_SYN_RESERVED_ADDR27         0x1B
-> +#define RADIO_2056_SYN_RESERVED_ADDR28         0x1C
-> +#define RADIO_2056_SYN_RESERVED_ADDR29         0x1D
-> +#define RADIO_2056_SYN_RESERVED_ADDR30         0x1E
-> +#define RADIO_2056_SYN_RESERVED_ADDR31         0x1F
-> +#define RADIO_2056_SYN_GPIO_MASTER1            0x20
-> +#define RADIO_2056_SYN_GPIO_MASTER2            0x21
-> +#define RADIO_2056_SYN_TOPBIAS_MASTER          0x22
-> +#define RADIO_2056_SYN_TOPBIAS_RCAL            0x23
-> +#define RADIO_2056_SYN_AFEREG                  0x24
-> +#define RADIO_2056_SYN_TEMPPROCSENSE           0x25
-> +#define RADIO_2056_SYN_TEMPPROCSENSEIDAC       0x26
-> +#define RADIO_2056_SYN_TEMPPROCSENSERCAL       0x27
-> +#define RADIO_2056_SYN_LPO                     0x28
-> +#define RADIO_2056_SYN_VDDCAL_MASTER           0x29
-> +#define RADIO_2056_SYN_VDDCAL_IDAC             0x2A
-> +#define RADIO_2056_SYN_VDDCAL_STATUS           0x2B
-> +#define RADIO_2056_SYN_RCAL_MASTER             0x2C
-> +#define RADIO_2056_SYN_RCAL_CODE_OUT           0x2D
-> +#define RADIO_2056_SYN_RCCAL_CTRL0             0x2E
-> +#define RADIO_2056_SYN_RCCAL_CTRL1             0x2F
-> +#define RADIO_2056_SYN_RCCAL_CTRL2             0x30
-> +#define RADIO_2056_SYN_RCCAL_CTRL3             0x31
-> +#define RADIO_2056_SYN_RCCAL_CTRL4             0x32
-> +#define RADIO_2056_SYN_RCCAL_CTRL5             0x33
-> +#define RADIO_2056_SYN_RCCAL_CTRL6             0x34
-> +#define RADIO_2056_SYN_RCCAL_CTRL7             0x35
-> +#define RADIO_2056_SYN_RCCAL_CTRL8             0x36
-> +#define RADIO_2056_SYN_RCCAL_CTRL9             0x37
-> +#define RADIO_2056_SYN_RCCAL_CTRL10            0x38
-> +#define RADIO_2056_SYN_RCCAL_CTRL11            0x39
-> +#define RADIO_2056_SYN_ZCAL_SPARE1             0x3A
-> +#define RADIO_2056_SYN_ZCAL_SPARE2             0x3B
-> +#define RADIO_2056_SYN_PLL_MAST1               0x3C
-> +#define RADIO_2056_SYN_PLL_MAST2               0x3D
-> +#define RADIO_2056_SYN_PLL_MAST3               0x3E
-> +#define RADIO_2056_SYN_PLL_BIAS_RESET          0x3F
-> +#define RADIO_2056_SYN_PLL_XTAL0               0x40
-> +#define RADIO_2056_SYN_PLL_XTAL1               0x41
-> +#define RADIO_2056_SYN_PLL_XTAL3               0x42
-> +#define RADIO_2056_SYN_PLL_XTAL4               0x43
-> +#define RADIO_2056_SYN_PLL_XTAL5               0x44
-> +#define RADIO_2056_SYN_PLL_XTAL6               0x45
-> +#define RADIO_2056_SYN_PLL_REFDIV              0x46
-> +#define RADIO_2056_SYN_PLL_PFD                 0x47
-> +#define RADIO_2056_SYN_PLL_CP1                 0x48
-> +#define RADIO_2056_SYN_PLL_CP2                 0x49
-> +#define RADIO_2056_SYN_PLL_CP3                 0x4A
-> +#define RADIO_2056_SYN_PLL_LOOPFILTER1         0x4B
-> +#define RADIO_2056_SYN_PLL_LOOPFILTER2         0x4C
-> +#define RADIO_2056_SYN_PLL_LOOPFILTER3         0x4D
-> +#define RADIO_2056_SYN_PLL_LOOPFILTER4         0x4E
-> +#define RADIO_2056_SYN_PLL_LOOPFILTER5         0x4F
-> +#define RADIO_2056_SYN_PLL_MMD1                        0x50
-> +#define RADIO_2056_SYN_PLL_MMD2                        0x51
-> +#define RADIO_2056_SYN_PLL_VCO1                        0x52
-> +#define RADIO_2056_SYN_PLL_VCO2                        0x53
-> +#define RADIO_2056_SYN_PLL_MONITOR1            0x54
-> +#define RADIO_2056_SYN_PLL_MONITOR2            0x55
-> +#define RADIO_2056_SYN_PLL_VCOCAL1             0x56
-> +#define RADIO_2056_SYN_PLL_VCOCAL2             0x57
-> +#define RADIO_2056_SYN_PLL_VCOCAL4             0x58
-> +#define RADIO_2056_SYN_PLL_VCOCAL5             0x59
-> +#define RADIO_2056_SYN_PLL_VCOCAL6             0x5A
-> +#define RADIO_2056_SYN_PLL_VCOCAL7             0x5B
-> +#define RADIO_2056_SYN_PLL_VCOCAL8             0x5C
-> +#define RADIO_2056_SYN_PLL_VCOCAL9             0x5D
-> +#define RADIO_2056_SYN_PLL_VCOCAL10            0x5E
-> +#define RADIO_2056_SYN_PLL_VCOCAL11            0x5F
-> +#define RADIO_2056_SYN_PLL_VCOCAL12            0x60
-> +#define RADIO_2056_SYN_PLL_VCOCAL13            0x61
-> +#define RADIO_2056_SYN_PLL_VREG                        0x62
-> +#define RADIO_2056_SYN_PLL_STATUS1             0x63
-> +#define RADIO_2056_SYN_PLL_STATUS2             0x64
-> +#define RADIO_2056_SYN_PLL_STATUS3             0x65
-> +#define RADIO_2056_SYN_LOGEN_PU0               0x66
-> +#define RADIO_2056_SYN_LOGEN_PU1               0x67
-> +#define RADIO_2056_SYN_LOGEN_PU2               0x68
-> +#define RADIO_2056_SYN_LOGEN_PU3               0x69
-> +#define RADIO_2056_SYN_LOGEN_PU5               0x6A
-> +#define RADIO_2056_SYN_LOGEN_PU6               0x6B
-> +#define RADIO_2056_SYN_LOGEN_PU7               0x6C
-> +#define RADIO_2056_SYN_LOGEN_PU8               0x6D
-> +#define RADIO_2056_SYN_LOGEN_BIAS_RESET                0x6E
-> +#define RADIO_2056_SYN_LOGEN_RCCR1             0x6F
-> +#define RADIO_2056_SYN_LOGEN_VCOBUF1           0x70
-> +#define RADIO_2056_SYN_LOGEN_MIXER1            0x71
-> +#define RADIO_2056_SYN_LOGEN_MIXER2            0x72
-> +#define RADIO_2056_SYN_LOGEN_BUF1              0x73
-> +#define RADIO_2056_SYN_LOGENBUF2               0x74
-> +#define RADIO_2056_SYN_LOGEN_BUF3              0x75
-> +#define RADIO_2056_SYN_LOGEN_BUF4              0x76
-> +#define RADIO_2056_SYN_LOGEN_DIV1              0x77
-> +#define RADIO_2056_SYN_LOGEN_DIV2              0x78
-> +#define RADIO_2056_SYN_LOGEN_DIV3              0x79
-> +#define RADIO_2056_SYN_LOGEN_ACL1              0x7A
-> +#define RADIO_2056_SYN_LOGEN_ACL2              0x7B
-> +#define RADIO_2056_SYN_LOGEN_ACL3              0x7C
-> +#define RADIO_2056_SYN_LOGEN_ACL4              0x7D
-> +#define RADIO_2056_SYN_LOGEN_ACL5              0x7E
-> +#define RADIO_2056_SYN_LOGEN_ACL6              0x7F
-> +#define RADIO_2056_SYN_LOGEN_ACLOUT            0x80
-> +#define RADIO_2056_SYN_LOGEN_ACLCAL1           0x81
-> +#define RADIO_2056_SYN_LOGEN_ACLCAL2           0x82
-> +#define RADIO_2056_SYN_LOGEN_ACLCAL3           0x83
-> +#define RADIO_2056_SYN_CALEN                   0x84
-> +#define RADIO_2056_SYN_LOGEN_PEAKDET1          0x85
-> +#define RADIO_2056_SYN_LOGEN_CORE_ACL_OVR      0x86
-> +#define RADIO_2056_SYN_LOGEN_RX_DIFF_ACL_OVR   0x87
-> +#define RADIO_2056_SYN_LOGEN_TX_DIFF_ACL_OVR   0x88
-> +#define RADIO_2056_SYN_LOGEN_RX_CMOS_ACL_OVR   0x89
-> +#define RADIO_2056_SYN_LOGEN_TX_CMOS_ACL_OVR   0x8A
-> +#define RADIO_2056_SYN_LOGEN_VCOBUF2           0x8B
-> +#define RADIO_2056_SYN_LOGEN_MIXER3            0x8C
-> +#define RADIO_2056_SYN_LOGEN_BUF5              0x8D
-> +#define RADIO_2056_SYN_LOGEN_BUF6              0x8E
-> +#define RADIO_2056_SYN_LOGEN_CBUFRX1           0x8F
-> +#define RADIO_2056_SYN_LOGEN_CBUFRX2           0x90
-> +#define RADIO_2056_SYN_LOGEN_CBUFRX3           0x91
-> +#define RADIO_2056_SYN_LOGEN_CBUFRX4           0x92
-> +#define RADIO_2056_SYN_LOGEN_CBUFTX1           0x93
-> +#define RADIO_2056_SYN_LOGEN_CBUFTX2           0x94
-> +#define RADIO_2056_SYN_LOGEN_CBUFTX3           0x95
-> +#define RADIO_2056_SYN_LOGEN_CBUFTX4           0x96
-> +#define RADIO_2056_SYN_LOGEN_CMOSRX1           0x97
-> +#define RADIO_2056_SYN_LOGEN_CMOSRX2           0x98
-> +#define RADIO_2056_SYN_LOGEN_CMOSRX3           0x99
-> +#define RADIO_2056_SYN_LOGEN_CMOSRX4           0x9A
-> +#define RADIO_2056_SYN_LOGEN_CMOSTX1           0x9B
-> +#define RADIO_2056_SYN_LOGEN_CMOSTX2           0x9C
-> +#define RADIO_2056_SYN_LOGEN_CMOSTX3           0x9D
-> +#define RADIO_2056_SYN_LOGEN_CMOSTX4           0x9E
-> +#define RADIO_2056_SYN_LOGEN_VCOBUF2_OVRVAL    0x9F
-> +#define RADIO_2056_SYN_LOGEN_MIXER3_OVRVAL     0xA0
-> +#define RADIO_2056_SYN_LOGEN_BUF5_OVRVAL       0xA1
-> +#define RADIO_2056_SYN_LOGEN_BUF6_OVRVAL       0xA2
-> +#define RADIO_2056_SYN_LOGEN_CBUFRX1_OVRVAL    0xA3
-> +#define RADIO_2056_SYN_LOGEN_CBUFRX2_OVRVAL    0xA4
-> +#define RADIO_2056_SYN_LOGEN_CBUFRX3_OVRVAL    0xA5
-> +#define RADIO_2056_SYN_LOGEN_CBUFRX4_OVRVAL    0xA6
-> +#define RADIO_2056_SYN_LOGEN_CBUFTX1_OVRVAL    0xA7
-> +#define RADIO_2056_SYN_LOGEN_CBUFTX2_OVRVAL    0xA8
-> +#define RADIO_2056_SYN_LOGEN_CBUFTX3_OVRVAL    0xA9
-> +#define RADIO_2056_SYN_LOGEN_CBUFTX4_OVRVAL    0xAA
-> +#define RADIO_2056_SYN_LOGEN_CMOSRX1_OVRVAL    0xAB
-> +#define RADIO_2056_SYN_LOGEN_CMOSRX2_OVRVAL    0xAC
-> +#define RADIO_2056_SYN_LOGEN_CMOSRX3_OVRVAL    0xAD
-> +#define RADIO_2056_SYN_LOGEN_CMOSRX4_OVRVAL    0xAE
-> +#define RADIO_2056_SYN_LOGEN_CMOSTX1_OVRVAL    0xAF
-> +#define RADIO_2056_SYN_LOGEN_CMOSTX2_OVRVAL    0xB0
-> +#define RADIO_2056_SYN_LOGEN_CMOSTX3_OVRVAL    0xB1
-> +#define RADIO_2056_SYN_LOGEN_CMOSTX4_OVRVAL    0xB2
-> +#define RADIO_2056_SYN_LOGEN_ACL_WAITCNT       0xB3
-> +#define RADIO_2056_SYN_LOGEN_CORE_CALVALID     0xB4
-> +#define RADIO_2056_SYN_LOGEN_RX_CMOS_CALVALID  0xB5
-> +#define RADIO_2056_SYN_LOGEN_TX_CMOS_VALID     0xB6
-> +
-> +#define RADIO_2056_TX_RESERVED_ADDR0           0x00
-> +#define RADIO_2056_TX_IDCODE                   0x01
-> +#define RADIO_2056_TX_RESERVED_ADDR2           0x02
-> +#define RADIO_2056_TX_RESERVED_ADDR3           0x03
-> +#define RADIO_2056_TX_RESERVED_ADDR4           0x04
-> +#define RADIO_2056_TX_RESERVED_ADDR5           0x05
-> +#define RADIO_2056_TX_RESERVED_ADDR6           0x06
-> +#define RADIO_2056_TX_RESERVED_ADDR7           0x07
-> +#define RADIO_2056_TX_COM_CTRL                 0x08
-> +#define RADIO_2056_TX_COM_PU                   0x09
-> +#define RADIO_2056_TX_COM_OVR                  0x0A
-> +#define RADIO_2056_TX_COM_RESET                        0x0B
-> +#define RADIO_2056_TX_COM_RCAL                 0x0C
-> +#define RADIO_2056_TX_COM_RC_RXLPF             0x0D
-> +#define RADIO_2056_TX_COM_RC_TXLPF             0x0E
-> +#define RADIO_2056_TX_COM_RC_RXHPF             0x0F
-> +#define RADIO_2056_TX_RESERVED_ADDR16          0x10
-> +#define RADIO_2056_TX_RESERVED_ADDR17          0x11
-> +#define RADIO_2056_TX_RESERVED_ADDR18          0x12
-> +#define RADIO_2056_TX_RESERVED_ADDR19          0x13
-> +#define RADIO_2056_TX_RESERVED_ADDR20          0x14
-> +#define RADIO_2056_TX_RESERVED_ADDR21          0x15
-> +#define RADIO_2056_TX_RESERVED_ADDR22          0x16
-> +#define RADIO_2056_TX_RESERVED_ADDR23          0x17
-> +#define RADIO_2056_TX_RESERVED_ADDR24          0x18
-> +#define RADIO_2056_TX_RESERVED_ADDR25          0x19
-> +#define RADIO_2056_TX_RESERVED_ADDR26          0x1A
-> +#define RADIO_2056_TX_RESERVED_ADDR27          0x1B
-> +#define RADIO_2056_TX_RESERVED_ADDR28          0x1C
-> +#define RADIO_2056_TX_RESERVED_ADDR29          0x1D
-> +#define RADIO_2056_TX_RESERVED_ADDR30          0x1E
-> +#define RADIO_2056_TX_RESERVED_ADDR31          0x1F
-> +#define RADIO_2056_TX_IQCAL_GAIN_BW            0x20
-> +#define RADIO_2056_TX_LOFT_FINE_I              0x21
-> +#define RADIO_2056_TX_LOFT_FINE_Q              0x22
-> +#define RADIO_2056_TX_LOFT_COARSE_I            0x23
-> +#define RADIO_2056_TX_LOFT_COARSE_Q            0x24
-> +#define RADIO_2056_TX_TX_COM_MASTER1           0x25
-> +#define RADIO_2056_TX_TX_COM_MASTER2           0x26
-> +#define RADIO_2056_TX_RXIQCAL_TXMUX            0x27
-> +#define RADIO_2056_TX_TX_SSI_MASTER            0x28
-> +#define RADIO_2056_TX_IQCAL_VCM_HG             0x29
-> +#define RADIO_2056_TX_IQCAL_IDAC               0x2A
-> +#define RADIO_2056_TX_TSSI_VCM                 0x2B
-> +#define RADIO_2056_TX_TX_AMP_DET               0x2C
-> +#define RADIO_2056_TX_TX_SSI_MUX               0x2D
-> +#define RADIO_2056_TX_TSSIA                    0x2E
-> +#define RADIO_2056_TX_TSSIG                    0x2F
-> +#define RADIO_2056_TX_TSSI_MISC1               0x30
-> +#define RADIO_2056_TX_TSSI_MISC2               0x31
-> +#define RADIO_2056_TX_TSSI_MISC3               0x32
-> +#define RADIO_2056_TX_PA_SPARE1                        0x33
-> +#define RADIO_2056_TX_PA_SPARE2                        0x34
-> +#define RADIO_2056_TX_INTPAA_MASTER            0x35
-> +#define RADIO_2056_TX_INTPAA_GAIN              0x36
-> +#define RADIO_2056_TX_INTPAA_BOOST_TUNE                0x37
-> +#define RADIO_2056_TX_INTPAA_IAUX_STAT         0x38
-> +#define RADIO_2056_TX_INTPAA_IAUX_DYN          0x39
-> +#define RADIO_2056_TX_INTPAA_IMAIN_STAT                0x3A
-> +#define RADIO_2056_TX_INTPAA_IMAIN_DYN         0x3B
-> +#define RADIO_2056_TX_INTPAA_CASCBIAS          0x3C
-> +#define RADIO_2056_TX_INTPAA_PASLOPE           0x3D
-> +#define RADIO_2056_TX_INTPAA_PA_MISC           0x3E
-> +#define RADIO_2056_TX_INTPAG_MASTER            0x3F
-> +#define RADIO_2056_TX_INTPAG_GAIN              0x40
-> +#define RADIO_2056_TX_INTPAG_BOOST_TUNE                0x41
-> +#define RADIO_2056_TX_INTPAG_IAUX_STAT         0x42
-> +#define RADIO_2056_TX_INTPAG_IAUX_DYN          0x43
-> +#define RADIO_2056_TX_INTPAG_IMAIN_STAT                0x44
-> +#define RADIO_2056_TX_INTPAG_IMAIN_DYN         0x45
-> +#define RADIO_2056_TX_INTPAG_CASCBIAS          0x46
-> +#define RADIO_2056_TX_INTPAG_PASLOPE           0x47
-> +#define RADIO_2056_TX_INTPAG_PA_MISC           0x48
-> +#define RADIO_2056_TX_PADA_MASTER              0x49
-> +#define RADIO_2056_TX_PADA_IDAC                        0x4A
-> +#define RADIO_2056_TX_PADA_CASCBIAS            0x4B
-> +#define RADIO_2056_TX_PADA_GAIN                        0x4C
-> +#define RADIO_2056_TX_PADA_BOOST_TUNE          0x4D
-> +#define RADIO_2056_TX_PADA_SLOPE               0x4E
-> +#define RADIO_2056_TX_PADG_MASTER              0x4F
-> +#define RADIO_2056_TX_PADG_IDAC                        0x50
-> +#define RADIO_2056_TX_PADG_CASCBIAS            0x51
-> +#define RADIO_2056_TX_PADG_GAIN                        0x52
-> +#define RADIO_2056_TX_PADG_BOOST_TUNE          0x53
-> +#define RADIO_2056_TX_PADG_SLOPE               0x54
-> +#define RADIO_2056_TX_PGAA_MASTER              0x55
-> +#define RADIO_2056_TX_PGAA_IDAC                        0x56
-> +#define RADIO_2056_TX_PGAA_GAIN                        0x57
-> +#define RADIO_2056_TX_PGAA_BOOST_TUNE          0x58
-> +#define RADIO_2056_TX_PGAA_SLOPE               0x59
-> +#define RADIO_2056_TX_PGAA_MISC                        0x5A
-> +#define RADIO_2056_TX_PGAG_MASTER              0x5B
-> +#define RADIO_2056_TX_PGAG_IDAC                        0x5C
-> +#define RADIO_2056_TX_PGAG_GAIN                        0x5D
-> +#define RADIO_2056_TX_PGAG_BOOST_TUNE          0x5E
-> +#define RADIO_2056_TX_PGAG_SLOPE               0x5F
-> +#define RADIO_2056_TX_PGAG_MISC                        0x60
-> +#define RADIO_2056_TX_MIXA_MASTER              0x61
-> +#define RADIO_2056_TX_MIXA_BOOST_TUNE          0x62
-> +#define RADIO_2056_TX_MIXG                     0x63
-> +#define RADIO_2056_TX_MIXG_BOOST_TUNE          0x64
-> +#define RADIO_2056_TX_BB_GM_MASTER             0x65
-> +#define RADIO_2056_TX_GMBB_GM                  0x66
-> +#define RADIO_2056_TX_GMBB_IDAC                        0x67
-> +#define RADIO_2056_TX_TXLPF_MASTER             0x68
-> +#define RADIO_2056_TX_TXLPF_RCCAL              0x69
-> +#define RADIO_2056_TX_TXLPF_RCCAL_OFF0         0x6A
-> +#define RADIO_2056_TX_TXLPF_RCCAL_OFF1         0x6B
-> +#define RADIO_2056_TX_TXLPF_RCCAL_OFF2         0x6C
-> +#define RADIO_2056_TX_TXLPF_RCCAL_OFF3         0x6D
-> +#define RADIO_2056_TX_TXLPF_RCCAL_OFF4         0x6E
-> +#define RADIO_2056_TX_TXLPF_RCCAL_OFF5         0x6F
-> +#define RADIO_2056_TX_TXLPF_RCCAL_OFF6         0x70
-> +#define RADIO_2056_TX_TXLPF_BW                 0x71
-> +#define RADIO_2056_TX_TXLPF_GAIN               0x72
-> +#define RADIO_2056_TX_TXLPF_IDAC               0x73
-> +#define RADIO_2056_TX_TXLPF_IDAC_0             0x74
-> +#define RADIO_2056_TX_TXLPF_IDAC_1             0x75
-> +#define RADIO_2056_TX_TXLPF_IDAC_2             0x76
-> +#define RADIO_2056_TX_TXLPF_IDAC_3             0x77
-> +#define RADIO_2056_TX_TXLPF_IDAC_4             0x78
-> +#define RADIO_2056_TX_TXLPF_IDAC_5             0x79
-> +#define RADIO_2056_TX_TXLPF_IDAC_6             0x7A
-> +#define RADIO_2056_TX_TXLPF_OPAMP_IDAC         0x7B
-> +#define RADIO_2056_TX_TXLPF_MISC               0x7C
-> +#define RADIO_2056_TX_TXSPARE1                 0x7D
-> +#define RADIO_2056_TX_TXSPARE2                 0x7E
-> +#define RADIO_2056_TX_TXSPARE3                 0x7F
-> +#define RADIO_2056_TX_TXSPARE4                 0x80
-> +#define RADIO_2056_TX_TXSPARE5                 0x81
-> +#define RADIO_2056_TX_TXSPARE6                 0x82
-> +#define RADIO_2056_TX_TXSPARE7                 0x83
-> +#define RADIO_2056_TX_TXSPARE8                 0x84
-> +#define RADIO_2056_TX_TXSPARE9                 0x85
-> +#define RADIO_2056_TX_TXSPARE10                        0x86
-> +#define RADIO_2056_TX_TXSPARE11                        0x87
-> +#define RADIO_2056_TX_TXSPARE12                        0x88
-> +#define RADIO_2056_TX_TXSPARE13                        0x89
-> +#define RADIO_2056_TX_TXSPARE14                        0x8A
-> +#define RADIO_2056_TX_TXSPARE15                        0x8B
-> +#define RADIO_2056_TX_TXSPARE16                        0x8C
-> +#define RADIO_2056_TX_STATUS_INTPA_GAIN                0x8D
-> +#define RADIO_2056_TX_STATUS_PAD_GAIN          0x8E
-> +#define RADIO_2056_TX_STATUS_PGA_GAIN          0x8F
-> +#define RADIO_2056_TX_STATUS_GM_TXLPF_GAIN     0x90
-> +#define RADIO_2056_TX_STATUS_TXLPF_BW          0x91
-> +#define RADIO_2056_TX_STATUS_TXLPF_RC          0x92
-> +#define RADIO_2056_TX_GMBB_IDAC0               0x93
-> +#define RADIO_2056_TX_GMBB_IDAC1               0x94
-> +#define RADIO_2056_TX_GMBB_IDAC2               0x95
-> +#define RADIO_2056_TX_GMBB_IDAC3               0x96
-> +#define RADIO_2056_TX_GMBB_IDAC4               0x97
-> +#define RADIO_2056_TX_GMBB_IDAC5               0x98
-> +#define RADIO_2056_TX_GMBB_IDAC6               0x99
-> +#define RADIO_2056_TX_GMBB_IDAC7               0x9A
-> +
-> +#define RADIO_2056_RX_RESERVED_ADDR0           0x00
-> +#define RADIO_2056_RX_IDCODE                   0x01
-> +#define RADIO_2056_RX_RESERVED_ADDR2           0x02
-> +#define RADIO_2056_RX_RESERVED_ADDR3           0x03
-> +#define RADIO_2056_RX_RESERVED_ADDR4           0x04
-> +#define RADIO_2056_RX_RESERVED_ADDR5           0x05
-> +#define RADIO_2056_RX_RESERVED_ADDR6           0x06
-> +#define RADIO_2056_RX_RESERVED_ADDR7           0x07
-> +#define RADIO_2056_RX_COM_CTRL                 0x08
-> +#define RADIO_2056_RX_COM_PU                   0x09
-> +#define RADIO_2056_RX_COM_OVR                  0x0A
-> +#define RADIO_2056_RX_COM_RESET                        0x0B
-> +#define RADIO_2056_RX_COM_RCAL                 0x0C
-> +#define RADIO_2056_RX_COM_RC_RXLPF             0x0D
-> +#define RADIO_2056_RX_COM_RC_TXLPF             0x0E
-> +#define RADIO_2056_RX_COM_RC_RXHPF             0x0F
-> +#define RADIO_2056_RX_RESERVED_ADDR16          0x10
-> +#define RADIO_2056_RX_RESERVED_ADDR17          0x11
-> +#define RADIO_2056_RX_RESERVED_ADDR18          0x12
-> +#define RADIO_2056_RX_RESERVED_ADDR19          0x13
-> +#define RADIO_2056_RX_RESERVED_ADDR20          0x14
-> +#define RADIO_2056_RX_RESERVED_ADDR21          0x15
-> +#define RADIO_2056_RX_RESERVED_ADDR22          0x16
-> +#define RADIO_2056_RX_RESERVED_ADDR23          0x17
-> +#define RADIO_2056_RX_RESERVED_ADDR24          0x18
-> +#define RADIO_2056_RX_RESERVED_ADDR25          0x19
-> +#define RADIO_2056_RX_RESERVED_ADDR26          0x1A
-> +#define RADIO_2056_RX_RESERVED_ADDR27          0x1B
-> +#define RADIO_2056_RX_RESERVED_ADDR28          0x1C
-> +#define RADIO_2056_RX_RESERVED_ADDR29          0x1D
-> +#define RADIO_2056_RX_RESERVED_ADDR30          0x1E
-> +#define RADIO_2056_RX_RESERVED_ADDR31          0x1F
-> +#define RADIO_2056_RX_RXIQCAL_RXMUX            0x20
-> +#define RADIO_2056_RX_RSSI_PU                  0x21
-> +#define RADIO_2056_RX_RSSI_SEL                 0x22
-> +#define RADIO_2056_RX_RSSI_GAIN                        0x23
-> +#define RADIO_2056_RX_RSSI_NB_IDAC             0x24
-> +#define RADIO_2056_RX_RSSI_WB2I_IDAC_1         0x25
-> +#define RADIO_2056_RX_RSSI_WB2I_IDAC_2         0x26
-> +#define RADIO_2056_RX_RSSI_WB2Q_IDAC_1         0x27
-> +#define RADIO_2056_RX_RSSI_WB2Q_IDAC_2         0x28
-> +#define RADIO_2056_RX_RSSI_POLE                        0x29
-> +#define RADIO_2056_RX_RSSI_WB1_IDAC            0x2A
-> +#define RADIO_2056_RX_RSSI_MISC                        0x2B
-> +#define RADIO_2056_RX_LNAA_MASTER              0x2C
-> +#define RADIO_2056_RX_LNAA_TUNE                        0x2D
-> +#define RADIO_2056_RX_LNAA_GAIN                        0x2E
-> +#define RADIO_2056_RX_LNA_A_SLOPE              0x2F
-> +#define RADIO_2056_RX_BIASPOLE_LNAA1_IDAC      0x30
-> +#define RADIO_2056_RX_LNAA2_IDAC               0x31
-> +#define RADIO_2056_RX_LNA1A_MISC               0x32
-> +#define RADIO_2056_RX_LNAG_MASTER              0x33
-> +#define RADIO_2056_RX_LNAG_TUNE                        0x34
-> +#define RADIO_2056_RX_LNAG_GAIN                        0x35
-> +#define RADIO_2056_RX_LNA_G_SLOPE              0x36
-> +#define RADIO_2056_RX_BIASPOLE_LNAG1_IDAC      0x37
-> +#define RADIO_2056_RX_LNAG2_IDAC               0x38
-> +#define RADIO_2056_RX_LNA1G_MISC               0x39
-> +#define RADIO_2056_RX_MIXA_MASTER              0x3A
-> +#define RADIO_2056_RX_MIXA_VCM                 0x3B
-> +#define RADIO_2056_RX_MIXA_CTRLPTAT            0x3C
-> +#define RADIO_2056_RX_MIXA_LOB_BIAS            0x3D
-> +#define RADIO_2056_RX_MIXA_CORE_IDAC           0x3E
-> +#define RADIO_2056_RX_MIXA_CMFB_IDAC           0x3F
-> +#define RADIO_2056_RX_MIXA_BIAS_AUX            0x40
-> +#define RADIO_2056_RX_MIXA_BIAS_MAIN           0x41
-> +#define RADIO_2056_RX_MIXA_BIAS_MISC           0x42
-> +#define RADIO_2056_RX_MIXA_MAST_BIAS           0x43
-> +#define RADIO_2056_RX_MIXG_MASTER              0x44
-> +#define RADIO_2056_RX_MIXG_VCM                 0x45
-> +#define RADIO_2056_RX_MIXG_CTRLPTAT            0x46
-> +#define RADIO_2056_RX_MIXG_LOB_BIAS            0x47
-> +#define RADIO_2056_RX_MIXG_CORE_IDAC           0x48
-> +#define RADIO_2056_RX_MIXG_CMFB_IDAC           0x49
-> +#define RADIO_2056_RX_MIXG_BIAS_AUX            0x4A
-> +#define RADIO_2056_RX_MIXG_BIAS_MAIN           0x4B
-> +#define RADIO_2056_RX_MIXG_BIAS_MISC           0x4C
-> +#define RADIO_2056_RX_MIXG_MAST_BIAS           0x4D
-> +#define RADIO_2056_RX_TIA_MASTER               0x4E
-> +#define RADIO_2056_RX_TIA_IOPAMP               0x4F
-> +#define RADIO_2056_RX_TIA_QOPAMP               0x50
-> +#define RADIO_2056_RX_TIA_IMISC                        0x51
-> +#define RADIO_2056_RX_TIA_QMISC                        0x52
-> +#define RADIO_2056_RX_TIA_GAIN                 0x53
-> +#define RADIO_2056_RX_TIA_SPARE1               0x54
-> +#define RADIO_2056_RX_TIA_SPARE2               0x55
-> +#define RADIO_2056_RX_BB_LPF_MASTER            0x56
-> +#define RADIO_2056_RX_AACI_MASTER              0x57
-> +#define RADIO_2056_RX_RXLPF_IDAC               0x58
-> +#define RADIO_2056_RX_RXLPF_OPAMPBIAS_LOWQ     0x59
-> +#define RADIO_2056_RX_RXLPF_OPAMPBIAS_HIGHQ    0x5A
-> +#define RADIO_2056_RX_RXLPF_BIAS_DCCANCEL      0x5B
-> +#define RADIO_2056_RX_RXLPF_OUTVCM             0x5C
-> +#define RADIO_2056_RX_RXLPF_INVCM_BODY         0x5D
-> +#define RADIO_2056_RX_RXLPF_CC_OP              0x5E
-> +#define RADIO_2056_RX_RXLPF_GAIN               0x5F
-> +#define RADIO_2056_RX_RXLPF_Q_BW               0x60
-> +#define RADIO_2056_RX_RXLPF_HP_CORNER_BW       0x61
-> +#define RADIO_2056_RX_RXLPF_RCCAL_HPC          0x62
-> +#define RADIO_2056_RX_RXHPF_OFF0               0x63
-> +#define RADIO_2056_RX_RXHPF_OFF1               0x64
-> +#define RADIO_2056_RX_RXHPF_OFF2               0x65
-> +#define RADIO_2056_RX_RXHPF_OFF3               0x66
-> +#define RADIO_2056_RX_RXHPF_OFF4               0x67
-> +#define RADIO_2056_RX_RXHPF_OFF5               0x68
-> +#define RADIO_2056_RX_RXHPF_OFF6               0x69
-> +#define RADIO_2056_RX_RXHPF_OFF7               0x6A
-> +#define RADIO_2056_RX_RXLPF_RCCAL_LPC          0x6B
-> +#define RADIO_2056_RX_RXLPF_OFF_0              0x6C
-> +#define RADIO_2056_RX_RXLPF_OFF_1              0x6D
-> +#define RADIO_2056_RX_RXLPF_OFF_2              0x6E
-> +#define RADIO_2056_RX_RXLPF_OFF_3              0x6F
-> +#define RADIO_2056_RX_RXLPF_OFF_4              0x70
-> +#define RADIO_2056_RX_UNUSED                   0x71
-> +#define RADIO_2056_RX_VGA_MASTER               0x72
-> +#define RADIO_2056_RX_VGA_BIAS                 0x73
-> +#define RADIO_2056_RX_VGA_BIAS_DCCANCEL                0x74
-> +#define RADIO_2056_RX_VGA_GAIN                 0x75
-> +#define RADIO_2056_RX_VGA_HP_CORNER_BW         0x76
-> +#define RADIO_2056_RX_VGABUF_BIAS              0x77
-> +#define RADIO_2056_RX_VGABUF_GAIN_BW           0x78
-> +#define RADIO_2056_RX_TXFBMIX_A                        0x79
-> +#define RADIO_2056_RX_TXFBMIX_G                        0x7A
-> +#define RADIO_2056_RX_RXSPARE1                 0x7B
-> +#define RADIO_2056_RX_RXSPARE2                 0x7C
-> +#define RADIO_2056_RX_RXSPARE3                 0x7D
-> +#define RADIO_2056_RX_RXSPARE4                 0x7E
-> +#define RADIO_2056_RX_RXSPARE5                 0x7F
-> +#define RADIO_2056_RX_RXSPARE6                 0x80
-> +#define RADIO_2056_RX_RXSPARE7                 0x81
-> +#define RADIO_2056_RX_RXSPARE8                 0x82
-> +#define RADIO_2056_RX_RXSPARE9                 0x83
-> +#define RADIO_2056_RX_RXSPARE10                        0x84
-> +#define RADIO_2056_RX_RXSPARE11                        0x85
-> +#define RADIO_2056_RX_RXSPARE12                        0x86
-> +#define RADIO_2056_RX_RXSPARE13                        0x87
-> +#define RADIO_2056_RX_RXSPARE14                        0x88
-> +#define RADIO_2056_RX_RXSPARE15                        0x89
-> +#define RADIO_2056_RX_RXSPARE16                        0x8A
-> +#define RADIO_2056_RX_STATUS_LNAA_GAIN         0x8B
-> +#define RADIO_2056_RX_STATUS_LNAG_GAIN         0x8C
-> +#define RADIO_2056_RX_STATUS_MIXTIA_GAIN       0x8D
-> +#define RADIO_2056_RX_STATUS_RXLPF_GAIN                0x8E
-> +#define RADIO_2056_RX_STATUS_VGA_BUF_GAIN      0x8F
-> +#define RADIO_2056_RX_STATUS_RXLPF_Q           0x90
-> +#define RADIO_2056_RX_STATUS_RXLPF_BUF_BW      0x91
-> +#define RADIO_2056_RX_STATUS_RXLPF_VGA_HPC     0x92
-> +#define RADIO_2056_RX_STATUS_RXLPF_RC          0x93
-> +#define RADIO_2056_RX_STATUS_HPC_RC            0x94
-> +
-> +#define RADIO_2056_LNA1_A_PU                   0x01
-> +#define RADIO_2056_LNA2_A_PU                   0x02
-> +#define RADIO_2056_LNA1_G_PU                   0x01
-> +#define RADIO_2056_LNA2_G_PU                   0x02
-> +#define RADIO_2056_MIXA_PU_I                   0x01
-> +#define RADIO_2056_MIXA_PU_Q                   0x02
-> +#define RADIO_2056_MIXA_PU_GM                  0x10
-> +#define RADIO_2056_MIXG_PU_I                   0x01
-> +#define RADIO_2056_MIXG_PU_Q                   0x02
-> +#define RADIO_2056_MIXG_PU_GM                  0x10
-> +#define RADIO_2056_TIA_PU                      0x01
-> +#define RADIO_2056_BB_LPF_PU                   0x20
-> +#define RADIO_2056_W1_PU                       0x02
-> +#define RADIO_2056_W2_PU                       0x04
-> +#define RADIO_2056_NB_PU                       0x08
-> +#define RADIO_2056_RSSI_W1_SEL                 0x02
-> +#define RADIO_2056_RSSI_W2_SEL                 0x04
-> +#define RADIO_2056_RSSI_NB_SEL                 0x08
-> +#define RADIO_2056_VCM_MASK                    0x1C
-> +#define RADIO_2056_RSSI_VCM_SHIFT              0x02
-> +
->  struct b43_nphy_channeltab_entry_rev3 {
->        /* The channel frequency in MHz */
->        u16 freq;
-> --
-> 1.7.1
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
+Thanks
+Wey
 
 
 
--- 
-Vista: [V]iruses, [I]ntruders, [S]pyware, [T]rojans and [A]dware. :-)
