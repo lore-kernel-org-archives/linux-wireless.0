@@ -1,45 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([192.100.122.230]:51374 "EHLO
-	mgw-mx03.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932631Ab0JZMpu (ORCPT
+Received: from mail30g.wh2.ocn.ne.jp ([220.111.41.239]:37249 "HELO
+	mail30g.wh2.ocn.ne.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1757288Ab0JFJft (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 26 Oct 2010 08:45:50 -0400
-Received: from esebh106.NOE.Nokia.com (esebh106.ntc.nokia.com [172.21.138.213])
-	by mgw-mx03.nokia.com (Switch-3.3.3/Switch-3.3.3) with ESMTP id o9QCjmP8010740
-	for <linux-wireless@vger.kernel.org>; Tue, 26 Oct 2010 15:45:49 +0300
-Subject: Re: [PATCH 2/2] wl1271: Check interface state in op_* functions
-From: Luciano Coelho <luciano.coelho@nokia.com>
-To: "juuso.oikarinen@nokia.com" <juuso.oikarinen@nokia.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <1288092279-31272-2-git-send-email-juuso.oikarinen@nokia.com>
-References: <1288092279-31272-1-git-send-email-juuso.oikarinen@nokia.com>
-	 <1288092279-31272-2-git-send-email-juuso.oikarinen@nokia.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Tue, 26 Oct 2010 15:45:27 +0300
-Message-ID: <1288097127.27698.4.camel@chilepepper>
-Mime-Version: 1.0
+	Wed, 6 Oct 2010 05:35:49 -0400
+Received: from vs3004.wh2.ocn.ne.jp (125.206.180.167)
+	by mail30g.wh2.ocn.ne.jp (RS ver 1.0.95vs) with SMTP id 0-0214927748
+	for <linux-wireless@vger.kernel.org>; Wed,  6 Oct 2010 18:35:48 +0900 (JST)
+Subject: [PATCH] iw: print station retry counters
+To: johannes@sipsolutions.net, linville@tuxdriver.com
+From: Bruno Randolf <br1@einfach.org>
+Cc: linux-wireless@vger.kernel.org
+Date: Wed, 06 Oct 2010 18:35:50 +0900
+Message-ID: <20101006093550.8943.22555.stgit@tt-desk>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2010-10-26 at 13:24 +0200, juuso.oikarinen@nokia.com wrote:
-> From: Juuso Oikarinen <juuso.oikarinen@nokia.com>
-> 
-> Check the state of the interface on op_* function so we don't try to access
-> the hardware in when its off.
-> 
-> The mac80211 may call these in some corner cases related, for instance, to
-> the hardware recovery procedure. These accesses cause a kernel crash on at
-> least some SDIO devices, because the bus is not properly claimed in that
-> scenario.
-> 
-> Signed-off-by: Juuso Oikarinen <juuso.oikarinen@nokia.com>
-> ---
+Signed-off-by: Bruno Randolf <br1@einfach.org>
+---
+ station.c |    8 ++++++++
+ 1 files changed, 8 insertions(+), 0 deletions(-)
 
-Reviewed-by: Luciano Coelho <luciano.coelho@nokia.com>
-
-Thanks! applied to wl12xx.
-
--- 
-Cheers,
-Luca.
+diff --git a/station.c b/station.c
+index 8cf038d..7639553 100644
+--- a/station.c
++++ b/station.c
+@@ -48,6 +48,8 @@ static int print_sta_handler(struct nl_msg *msg, void *arg)
+ 		[NL80211_STA_INFO_LLID] = { .type = NLA_U16 },
+ 		[NL80211_STA_INFO_PLID] = { .type = NLA_U16 },
+ 		[NL80211_STA_INFO_PLINK_STATE] = { .type = NLA_U8 },
++		[NL80211_STA_INFO_TX_RETRIES] = { .type = NLA_U32 },
++		[NL80211_STA_INFO_TX_FAILED] = { .type = NLA_U32 },
+ 	};
+ 
+ 	static struct nla_policy rate_policy[NL80211_RATE_INFO_MAX + 1] = {
+@@ -96,6 +98,12 @@ static int print_sta_handler(struct nl_msg *msg, void *arg)
+ 	if (sinfo[NL80211_STA_INFO_TX_PACKETS])
+ 		printf("\n\ttx packets:\t%u",
+ 			nla_get_u32(sinfo[NL80211_STA_INFO_TX_PACKETS]));
++	if (sinfo[NL80211_STA_INFO_TX_RETRIES])
++		printf("\n\ttx retries:\t%u",
++			nla_get_u32(sinfo[NL80211_STA_INFO_TX_RETRIES]));
++	if (sinfo[NL80211_STA_INFO_TX_FAILED])
++		printf("\n\ttx failed:\t%u",
++			nla_get_u32(sinfo[NL80211_STA_INFO_TX_FAILED]));
+ 	if (sinfo[NL80211_STA_INFO_SIGNAL])
+ 		printf("\n\tsignal:  \t%d dBm",
+ 			(int8_t)nla_get_u8(sinfo[NL80211_STA_INFO_SIGNAL]));
 
