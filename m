@@ -1,74 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:3216 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757938Ab0JVQsV (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 22 Oct 2010 12:48:21 -0400
-Subject: Re: [PATCH 1/2] iwlwifi: fix set_tx_power vs scan
-From: Dan Williams <dcbw@redhat.com>
-To: Stanislaw Gruszka <sgruszka@redhat.com>
-Cc: "Guy, Wey-Yi" <wey-yi.w.guy@intel.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <20101022125628.GA4527@redhat.com>
-References: <1286977193-12144-1-git-send-email-sgruszka@redhat.com>
-	 <1286983100.10446.1.camel@wwguy-ubuntu> <20101014083204.GA2286@redhat.com>
-	 <20101021131348.GA5654@redhat.com>  <20101022125628.GA4527@redhat.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Fri, 22 Oct 2010 11:51:34 -0500
-Message-ID: <1287766294.19356.1.camel@dcbw.foobar.com>
-Mime-Version: 1.0
+Received: from devils.ext.ti.com ([198.47.26.153]:54191 "EHLO
+	devils.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752114Ab0JFSG3 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 6 Oct 2010 14:06:29 -0400
+From: Shahar Levi <shahar_levi@ti.com>
+To: <linux-wireless@vger.kernel.org>
+Cc: Luciano Coelho <luciano.coelho@nokia.com>
+Subject: [PATCH v2] wl1271: 11n Support, add support to 80211n spec
+Date: Wed,  6 Oct 2010 20:08:08 +0200
+Message-Id: <1286388491-28752-2-git-send-email-shahar_levi@ti.com>
+In-Reply-To: <1286388491-28752-1-git-send-email-shahar_levi@ti.com>
+References: <1286388491-28752-1-git-send-email-shahar_levi@ti.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2010-10-22 at 14:56 +0200, Stanislaw Gruszka wrote:
-> On Thu, Oct 21, 2010 at 03:13:48PM +0200, Stanislaw Gruszka wrote:
-> > On Thu, Oct 14, 2010 at 10:32:05AM +0200, Stanislaw Gruszka wrote:
-> > > > Looks good, the only thing is if priv->tx_power_user_lmt ==
-> > > > priv->tx_power_next, we don't even have to call set_tx_power, but I
-> > > > guess calling it won't hurt, so its your decision check or not.
-> > > 
-> > > I'll will call iwl_set_tx_power( ... , false); what seems to be right
-> > > thing to do.
-> > 
-> > Set tx power have to be forces. Without that I get  
-> > 
-> > iwlagn 0000:40:00.0: low ack count detected, restart firmware
-> > iwlagn 0000:40:00.0: On demand firmware reload
-> > iwlagn 0000:40:00.0: Stopping AGG while state not ON or starting
-> > iwlagn 0000:40:00.0: queue number out of range: 0, must be 10 to 19
-> > iwlagn 0000:40:00.0: Aggregation not enabled for tid 0 because load = 0
-> > iwlagn 0000:40:00.0: Aggregation not enabled for tid 0 because load = 1
-> > iwlagn 0000:40:00.0: Aggregation not enabled for tid 0 because load = 0
-> > iwlagn 0000:40:00.0: Aggregation not enabled for tid 0 because load = 0
-> > iwlagn 0000:40:00.0: iwlagn_tx_agg_start on ra = 00:23:69:35:d1:3f tid = 0
-> > iwlagn 0000:40:00.0: low ack count detected, restart firmware
-> > iwlagn 0000:40:00.0: On demand firmware reload
-> > iwlagn 0000:40:00.0: Stopping AGG while state not ON or starting
-> > iwlagn 0000:40:00.0: queue number out of range: 0, must be 10 to 19
-> > iwlagn 0000:40:00.0: iwlagn_tx_agg_start on ra = 00:23:69:35:d1:3f tid = 0
-> > iwlagn 0000:40:00.0: low ack count detected, restart firmware
-> > iwlagn 0000:40:00.0: On demand firmware reload
-> > iwlagn 0000:40:00.0: Stopping AGG while state not ON or starting
-> > iwlagn 0000:40:00.0: queue number out of range: 0, must be 10 to 19
-> > iwlagn 0000:40:00.0: Aggregation not enabled for tid 0 because load = 4
-> > iwlagn 0000:40:00.0: Aggregation not enabled for tid 0 because load = 0
-> > 
-> > on 5300 and device was unusable in general. Hence I will only comment
-> > that forcing send tx power after scan is needed.
-> 
-> Not true. I have the same problem with vanilla 2.6.36 without any of my
-> patches (further investigation show this is 2.6.34 -> 2.6.35
-> regression). Problem happens only on 5Ghz, that confused me 
-> because NetworkManager in some cases connects to 5Ghz, in others to
-> 2.4Ghz on my system.
+Series that add 80211n spec support to wl1271: scan, connection via MCS rates
+Wl12xx driver add HT support:
+· Scan includes HT IE
+· Connection to HT devices
+· HT protection
+· Traffic via MCS rates
+· A-MSDU in RX path
 
-NM doesn't yet send a list of approved frequencies down to
-wpa_supplicant for a network, which is how we'd implement "locking" a
-connection to a particular band.  So at this point, which band the
-driver uses depends on wpa_supplicant scan results and the driver
-itself.  Something I intend to fix soon; we've always had a "band"
-config option, it's just not hooked up to anything.
+Missing functionality is:
+· BA session as Initiator and Receiver
 
-Dan
- 
+Shahar Levi (3):
+  wl1271: 11n Support, Add Definitions
+  wl1271: 11n Support, ACX Commands
+  wl1271: 11n Support, functionality and configuration ability
+
+ drivers/net/wireless/wl12xx/Kconfig       |   10 +++
+ drivers/net/wireless/wl12xx/Makefile      |    1 +
+ drivers/net/wireless/wl12xx/wl1271.h      |    2 +-
+ drivers/net/wireless/wl12xx/wl1271_acx.c  |   91 +++++++++++++++++++++++++++
+ drivers/net/wireless/wl12xx/wl1271_acx.h  |   95 +++++++++++++++++++++++++++++
+ drivers/net/wireless/wl12xx/wl1271_conf.h |    4 +
+ drivers/net/wireless/wl12xx/wl1271_main.c |   78 ++++++++++++++++++-----
+ drivers/net/wireless/wl12xx/wl1271_rx.c   |    4 +
+ drivers/net/wireless/wl12xx/wl1271_tx.c   |    9 +++
+ 9 files changed, 276 insertions(+), 18 deletions(-)
 
