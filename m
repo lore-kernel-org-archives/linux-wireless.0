@@ -1,40 +1,120 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:45431 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932221Ab0JNVrf (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 14 Oct 2010 17:47:35 -0400
-Message-ID: <4CB77A70.5060900@candelatech.com>
-Date: Thu, 14 Oct 2010 14:47:28 -0700
-From: Ben Greear <greearb@candelatech.com>
-MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: "Luis R. Rodriguez" <mcgrof@gmail.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: memory clobber in rx path, maybe related to ath9k.
-References: <4CAB59B2.5050106@candelatech.com>	 <AANLkTinbRSnPVgbBxvVpMdnP+K--bye=Q-miHf4X44kz@mail.gmail.com>	 <4CAE13F6.2010003@candelatech.com>	 <AANLkTimEZ5GY7WFz-F4YyC+6MEwNn2Dki4tonp645XrS@mail.gmail.com>	 <4CAE1DFB.303@candelatech.com>	 <1286479642.20974.32.camel@jlt3.sipsolutions.net>	 <AANLkTimxp703Gy_Atg8=wpFszRDR=OJCXwOUKRh-a-d7@mail.gmail.com>	 <AANLkTi=t-P_5c14brJohM8UgxeOknv+3syO=7W=ix6qf@mail.gmail.com>	 <AANLkTinC46a+nE-XOQuBCmRJwjzgh24uC7ZJ7HtbVHnT@mail.gmail.com>	 <4CB378CD.1080800@candelatech.com>	 <AANLkTim42zmDwf744BCrPwa1kT5ph57bNMyvSyOpesVv@mail.gmail.com>	 <4CB3D598.7050904@candelatech.com>	 <AANLkTimPEg3ZU8CQUXfdpGdfbmhdE9O=GNY=g9gysTo4@mail.gmail.com>	 <4CB4AA89.1070009@candelatech.com>	 <AANLkTinpWvMtexFTYVm5rEZY=gY7qY8WxHFtVGB0o6Se@mail.gmail.com>	 <4CB5E885.7090305@candelatech.com>	 <AANLkTi=c=w8MvXZ=vqxkRgbXasacQTYXUX8o_zXoZgxC@mail.gmail.com>	 <4CB5F0D4.4020907@candelatech.com> <1287092708.26544.0.camel@jlt3.sipsolutions.net>
-In-Reply-To: <1287092708.26544.0.camel@jlt3.sipsolutions.net>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Received: from mx1.redhat.com ([209.132.183.28]:5233 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932336Ab0JFJUu (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 6 Oct 2010 05:20:50 -0400
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: Johannes Berg <johannes@sipsolutions.net>,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org,
+	Stanislaw Gruszka <sgruszka@redhat.com>
+Subject: [PATCH 1/6] mac80211: reduce number of __ieee80211_scan_completed calls
+Date: Wed,  6 Oct 2010 11:22:08 +0200
+Message-Id: <1286356933-4076-1-git-send-email-sgruszka@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 10/14/2010 02:45 PM, Johannes Berg wrote:
-> On Wed, 2010-10-13 at 10:48 -0700, Ben Greear wrote:
->
->> Here's the slub patch if you are interested in using it yourself:
->> https://patchwork.kernel.org/patch/236921/
->
-> That really really screams include/linux/stacktrace.h
+Use goto instruction to call __ieee80211_scan_completed only ones in
+ieee80211_scan_work. This is prepare for the next patch.
 
-Heh, that looks like it would have saved me a lot of pain :P
+Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+---
+ net/mac80211/scan.c |   51 +++++++++++++++++++++++++++++----------------------
+ 1 files changed, 29 insertions(+), 22 deletions(-)
 
-Ben
-
->
-> johannes
-
-
+diff --git a/net/mac80211/scan.c b/net/mac80211/scan.c
+index 57b5e66..1a115a5 100644
+--- a/net/mac80211/scan.c
++++ b/net/mac80211/scan.c
+@@ -652,27 +652,25 @@ void ieee80211_scan_work(struct work_struct *work)
+ 		container_of(work, struct ieee80211_local, scan_work.work);
+ 	struct ieee80211_sub_if_data *sdata = local->scan_sdata;
+ 	unsigned long next_delay = 0;
++	bool aborted;
+ 
+-	if (test_and_clear_bit(SCAN_COMPLETED, &local->scanning)) {
+-		bool aborted;
++	mutex_lock(&local->mtx);
+ 
++	if (test_and_clear_bit(SCAN_COMPLETED, &local->scanning)) {
+ 		aborted = test_and_clear_bit(SCAN_ABORTED, &local->scanning);
+-		__ieee80211_scan_completed(&local->hw, aborted);
+-		return;
++		goto out_complete;
+ 	}
+ 
+-	mutex_lock(&local->mtx);
+-	if (!sdata || !local->scan_req) {
+-		mutex_unlock(&local->mtx);
+-		return;
+-	}
++	if (!sdata || !local->scan_req)
++		goto out;
+ 
+ 	if (local->hw_scan_req) {
+ 		int rc = drv_hw_scan(local, sdata, local->hw_scan_req);
+-		mutex_unlock(&local->mtx);
+-		if (rc)
+-			__ieee80211_scan_completed(&local->hw, true);
+-		return;
++		if (rc) {
++			aborted = true;
++			goto out_complete;
++		} else
++			goto out;
+ 	}
+ 
+ 	if (local->scan_req && !local->scanning) {
+@@ -683,23 +681,23 @@ void ieee80211_scan_work(struct work_struct *work)
+ 		local->scan_sdata = NULL;
+ 
+ 		rc = __ieee80211_start_scan(sdata, req);
+-		mutex_unlock(&local->mtx);
+-
+-		if (rc)
+-			__ieee80211_scan_completed(&local->hw, true);
+-		return;
++		if (rc) {
++			aborted = true;
++			goto out_complete;
++		} else
++			goto out;
+ 	}
+ 
+-	mutex_unlock(&local->mtx);
+-
+ 	/*
+ 	 * Avoid re-scheduling when the sdata is going away.
+ 	 */
+ 	if (!ieee80211_sdata_running(sdata)) {
+-		__ieee80211_scan_completed(&local->hw, true);
+-		return;
++		aborted = true;
++		goto out_complete;
+ 	}
+ 
++	mutex_unlock(&local->mtx);
++
+ 	/*
+ 	 * as long as no delay is required advance immediately
+ 	 * without scheduling a new work
+@@ -726,6 +724,15 @@ void ieee80211_scan_work(struct work_struct *work)
+ 	} while (next_delay == 0);
+ 
+ 	ieee80211_queue_delayed_work(&local->hw, &local->scan_work, next_delay);
++	return;
++
++out_complete:
++	mutex_unlock(&local->mtx);
++	__ieee80211_scan_completed(&local->hw, aborted);
++	return;
++
++out:
++	mutex_unlock(&local->mtx);
+ }
+ 
+ int ieee80211_request_scan(struct ieee80211_sub_if_data *sdata,
 -- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+1.7.1
 
