@@ -1,91 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iw0-f174.google.com ([209.85.214.174]:58067 "EHLO
-	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751466Ab0JAUra convert rfc822-to-8bit (ORCPT
+Received: from mail-qy0-f181.google.com ([209.85.216.181]:40470 "EHLO
+	mail-qy0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759521Ab0JFSQD convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 1 Oct 2010 16:47:30 -0400
+	Wed, 6 Oct 2010 14:16:03 -0400
+Received: by qyk10 with SMTP id 10so4329712qyk.19
+        for <linux-wireless@vger.kernel.org>; Wed, 06 Oct 2010 11:16:01 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <1285931572-3592-1-git-send-email-sbalashanmugam@atheros.com>
-References: <1285931572-3592-1-git-send-email-sbalashanmugam@atheros.com>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Fri, 1 Oct 2010 13:47:08 -0700
-Message-ID: <AANLkTinjiJ6FyoAi4aP=8pr9EwV0wpV7LtwQx-hwaOFs@mail.gmail.com>
-Subject: Re: [PATCH] Added firmware load patch to crap directory. This patch
- loads firmware from btusb when device is plugged in.
-To: Bala Shanmugam <sbalashanmugam@atheros.com>
-Cc: linux-wireless@vger.kernel.org, marcel@holtmann.org,
-	linux-bluetooth@vger.kernel.org, linux-kernel@vger.kernel.org
+In-Reply-To: <1286388787-11342-2-git-send-email-zajec5@gmail.com>
+References: <1286388787-11342-2-git-send-email-zajec5@gmail.com>
+Date: Wed, 6 Oct 2010 20:15:59 +0200
+Message-ID: <AANLkTikD1jj-LhzEmacJy6i_WGoe51AiFxbR7vqZhX=Q@mail.gmail.com>
+Subject: Re: [RFC][PATCH] b43: N-PHY: store current channel info in PHY common
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+To: linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>
+Cc: b43-dev@lists.infradead.org,
+	=?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Oct 1, 2010 at 4:12 AM, Bala Shanmugam
-<sbalashanmugam@atheros.com> wrote:
-> Disabled staging directory compilation for bt target.
+W dniu 6 października 2010 20:13 użytkownik Rafał Miłecki
+<zajec5@gmail.com> napisał:
+> @@ -3568,8 +3572,8 @@ static void b43_nphy_op_switch_analog(struct b43_wldev *dev, bool on)
+>  static int b43_nphy_op_switch_channel(struct b43_wldev *dev,
+>                                      unsigned int new_channel)
+>  {
+> -       struct b43_phy_n *nphy = dev->phy.n;
+> -       struct b43_chanspec chanspec;
+> +       struct ieee80211_channel *channel = dev->wl->hw->conf.channel;
+> +       enum nl80211_channel_type channel_type = dev->wl->hw->conf.channel_type;
 
-Huh? This commit log message also is unrelated to the patch below,
-please separate and submit two separate patches.
+Ah, and as you can see I decided to get more raw data about new
+channel there. This is because in case on N-PHY we have to know about
+band freq (2/5 GHz) and band with (20/40 MHz) to do full channel
+setup.
 
-> Signed-off-by: Bala Shanmugam <sbalashanmugam@atheros.com>
-> ---
->  Makefile                                  |    9 +-
->  crap/0003-btusb-Add-fw-load-support.patch |  424 +++++++++++++++++++++++++++++
->  2 files changed, 428 insertions(+), 5 deletions(-)
->  create mode 100644 crap/0003-btusb-Add-fw-load-support.patch
->
-> diff --git a/Makefile b/Makefile
-> index e2c594a..4505080 100644
-> --- a/Makefile
-> +++ b/Makefile
-> @@ -31,17 +31,16 @@ obj-$(CONFIG_COMPAT_NET_USB_MODULES) += drivers/net/usb/
->
->  obj-$(CONFIG_COMPAT_NETWORK_MODULES) += drivers/net/
->  obj-$(CONFIG_COMPAT_VAR_MODULES) +=  drivers/ssb/ drivers/misc/eeprom/
-> -endif
-> -
-> -obj-$(CONFIG_COMPAT_BLUETOOTH) += net/bluetooth/
-> -obj-$(CONFIG_COMPAT_BLUETOOTH_MODULES) += drivers/bluetooth/
-> -
->
->  ifeq ($(CONFIG_STAGING_EXCLUDE_BUILD),)
->  obj-$(CONFIG_COMPAT_STAGING) += drivers/staging/ath6kl/
->  obj-$(CONFIG_COMPAT_STAGING) += drivers/staging/brcm80211/
->  endif
->
-> +endif
-> +
-> +obj-$(CONFIG_COMPAT_BLUETOOTH) += net/bluetooth/
-> +obj-$(CONFIG_COMPAT_BLUETOOTH_MODULES) += drivers/bluetooth/
->
->  else
->
-> diff --git a/crap/0003-btusb-Add-fw-load-support.patch b/crap/0003-btusb-Add-fw-load-support.patch
-> new file mode 100644
-> index 0000000..2fc1abe
-> --- /dev/null
-> +++ b/crap/0003-btusb-Add-fw-load-support.patch
-
-Actually I'd like to apply this patch to linux-next-pending/ not to
-crap/ as you *did* post the patch upstream right? It just is not
-getting applied yet for the reasons you stated.
-
-> @@ -0,0 +1,424 @@
-> +Reason for not yet publishing:
-
-This not accurate, you did publish the patch, this goes into
-linux-next-pending and you instead need a "Reason for not being merged
-yet" or for adding it to the linux-next-pending/ directory.
-
-> Marcel feels that Atheros sflash based BT device
-> +doesn't follow bluetooth H:2 specification and HCI commands should be supported
-> +in firmware if it is detected as bluetooth device. Using HCI command, firmware
-> +should be loaded.
-> +
-> +In sfash based device we don't have enough memory to support HCI commands in firmware.
-> +So load firmware from btusb when the device comes up.
-> +
-
-You should still ask the maintainer for an alternative, otherwise the
-device unusable. Did you submit the patch first in [PATCH] form? If
-not please submit the patch, all I saw as an RFC and no followup at
-all.
+-- 
+Rafał
