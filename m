@@ -1,60 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.19.149.2]:40932 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755468Ab0JSAox (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 18 Oct 2010 20:44:53 -0400
-Received: from mail.atheros.com ([10.10.20.108])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Mon, 18 Oct 2010 17:44:43 -0700
-Date: Mon, 18 Oct 2010 17:44:51 -0700
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: <linville@tuxdriver.com>, <johannes@sipsolutions.net>
-CC: <linux-wireless@vger.kernel.org>, <lrodriguez@atheros.com>
-Subject: [PATCH] cfg80211: fix regression on processing country IEs
-Message-ID: <20101019004451.GB1932@tux>
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:59405 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932089Ab0JFPpH (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 6 Oct 2010 11:45:07 -0400
+Date: Wed, 6 Oct 2010 11:30:25 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Luciano Coelho <luciano.coelho@nokia.com>
+Cc: "ext Gadiyar, Anand" <gadiyar@ti.com>,
+	ext Tony Lindgren <tony@atomide.com>,
+	"linux-omap@vger.kernel.org" <linux-omap@vger.kernel.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Ohad Ben-Cohen <ohad@wizery.com>
+Subject: Re: [PATCH] omap: zoom2/3: fix build caused by wl1271 support
+Message-ID: <20101006153025.GG2472@tuxdriver.com>
+References: <1285965206-17777-1-git-send-email-gadiyar@ti.com>
+ <20101001231026.GH3117@atomide.com>
+ <1286279588.15401.28.camel@chilepepper>
+ <1286280426.15401.29.camel@chilepepper>
+ <1286284790.15401.53.camel@chilepepper>
+ <1286311187.2793.7.camel@powerslave>
+ <20101006135221.GE2472@tuxdriver.com>
+ <AANLkTinHA+JS1MObanawFF8ktW6OEMGr7CnJhakUetPz@mail.gmail.com>
+ <1286378869.6731.7.camel@powerslave>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1286378869.6731.7.camel@powerslave>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The patch 4f366c5:
+On Wed, Oct 06, 2010 at 06:27:49PM +0300, Luciano Coelho wrote:
+> On Wed, 2010-10-06 at 16:01 +0200, ext Gadiyar, Anand wrote:
+> > >> Hmmm... We got a problem here.  This patch breaks builds when we *don't*
+> > >> have "omap: mmc extended to pass host capabilities from board file".  We
+> > >> don't have that on wireless-next yet, so builds with zoom boards
+> > >> selected are broken.
+> > >>
+> > >> Any ideas on how to solve this dilemma? I guess the proper way to handle
+> > >> this would be to make the changes proposed in this patch when merging
+> > >> instead of having a normal commit for it, wouldn't it?
+> > >
+> > > Just cherry-pick that change into the branch of your tree that I do
+> > > _not_ pull from.  I presume that it is already available in linux-next?
+> > >
+> > 
+> > Yup - both patches are in linux-next; that's where we noticed the build break.
+> 
+> Ok, I hope the patch applies cleanly in our trees.
+> 
+> John, don't you want to do the cherry-pick on your wireless-testing
+> then? If you do it, I can "inherit" that, because I pull from it into my
+> "testing" branch (wl12xx/master).  At the moment, w-t is broken too.
 
-	wireless: only use alpha2 regulatory information from country IE
+OK, that's fine -- do you have the commit ID and the tree that has it?
 
-removed some complex intersection we were always doing between the AP's
-country IE info and what we got from CRDA. When CRDA sent us back a
-regulatory domain we would do some sanity checks on that regulatory
-domain response we just got. Part of these sanity checks included
-checking that we already had performed an intersection for the
-request of NL80211_REGDOM_SET_BY_COUNTRY_IE type.
-
-This mean that cfg80211 was only processing country IEs for cases
-where we already had an intersection, but since we removed enforcing
-this this is no longer required, we should just apply the country
-IE country hint with the data received from CRDA.
-
-This patch has fixes intended for kernels >= 2.6.36.
-
-Cc: stable@kernel.org
-Reported-by: Easwar Krishnan <easwar.krishnan@atheros.com>
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
----
- net/wireless/reg.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
-
-diff --git a/net/wireless/reg.c b/net/wireless/reg.c
-index d14bbf9..4b9f891 100644
---- a/net/wireless/reg.c
-+++ b/net/wireless/reg.c
-@@ -1167,7 +1167,7 @@ static int ignore_request(struct wiphy *wiphy,
- 				return 0;
- 			return -EALREADY;
- 		}
--		return REG_INTERSECT;
-+		return 0;
- 	case NL80211_REGDOM_SET_BY_DRIVER:
- 		if (last_request->initiator == NL80211_REGDOM_SET_BY_CORE) {
- 			if (regdom_changes(pending_request->alpha2))
+John
 -- 
-1.7.0.4
-
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
