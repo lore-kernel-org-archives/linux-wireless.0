@@ -1,60 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([88.198.39.176]:38718 "EHLO ds10.nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932180Ab0JOSDj (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 15 Oct 2010 14:03:39 -0400
-From: Felix Fietkau <nbd@openwrt.org>
-To: linux-wireless@vger.kernel.org
-Cc: linville@tuxdriver.com, lrodriguez@atheros.com
-Subject: [PATCH 6/6] ath9k_hw: make ath9k_hw_gettsf32 static
-Date: Fri, 15 Oct 2010 20:03:33 +0200
-Message-Id: <1287165813-94331-6-git-send-email-nbd@openwrt.org>
-In-Reply-To: <1287165813-94331-5-git-send-email-nbd@openwrt.org>
-References: <1287165813-94331-1-git-send-email-nbd@openwrt.org>
- <1287165813-94331-2-git-send-email-nbd@openwrt.org>
- <1287165813-94331-3-git-send-email-nbd@openwrt.org>
- <1287165813-94331-4-git-send-email-nbd@openwrt.org>
- <1287165813-94331-5-git-send-email-nbd@openwrt.org>
+Received: from he.sipsolutions.net ([78.46.109.217]:58377 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759497Ab0JFRyW (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 6 Oct 2010 13:54:22 -0400
+Subject: Re: RFC: btusb firmware load help
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Cc: Marcel Holtmann <holtmann@linux.intel.com>,
+	Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
+	linux-bluetooth <linux-bluetooth@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Deepak Dhamdhere <Deepak.Dhamdhere@Atheros.com>,
+	Sree Durbha <Sree.Durbha@Atheros.com>
+In-Reply-To: <20101006173949.GG7070@tux>
+References: <20100924230730.GB6566@tux> <1286266981.17473.33.camel@aeonflux>
+	 <20101005192814.GB11831@tux> <1286308731.2588.13.camel@aeonflux>
+	 <AANLkTimz7U52_qHaTutQDOFQde+GrWJRA0WpqY__FPgi@mail.gmail.com>
+	 <1286349552.6145.11.camel@aeonflux>
+	 <AANLkTimDvgFtoGLEjgWyYRrhQy6Num-rn_2WYO4Lf84b@mail.gmail.com>
+	 <1286380566.6145.42.camel@aeonflux> <20101006163816.GE7070@tux>
+	 <AANLkTik9w4_PdcEsbRHakLcxcD334_1Q8hGArxTXPCGF@mail.gmail.com>
+	 <20101006173949.GG7070@tux>
+Content-Type: text/plain; charset="UTF-8"
+Date: Wed, 06 Oct 2010 19:54:20 +0200
+Message-ID: <1286387660.3655.382.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-It is now only used in hw.c
+On Wed, 2010-10-06 at 10:39 -0700, Luis R. Rodriguez wrote:
 
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
----
- drivers/net/wireless/ath/ath9k/hw.c |    3 +--
- drivers/net/wireless/ath/ath9k/hw.h |    1 -
- 2 files changed, 1 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
-index cc13ee1..d37a8ad 100644
---- a/drivers/net/wireless/ath/ath9k/hw.c
-+++ b/drivers/net/wireless/ath/ath9k/hw.c
-@@ -2312,11 +2312,10 @@ static u32 rightmost_index(struct ath_gen_timer_table *timer_table, u32 *mask)
- 	return timer_table->gen_timer_index[b];
- }
- 
--u32 ath9k_hw_gettsf32(struct ath_hw *ah)
-+static u32 ath9k_hw_gettsf32(struct ath_hw *ah)
- {
- 	return REG_READ(ah, AR_TSF_L32);
- }
--EXPORT_SYMBOL(ath9k_hw_gettsf32);
- 
- struct ath_gen_timer *ath_gen_timer_alloc(struct ath_hw *ah,
- 					  void (*trigger)(void *),
-diff --git a/drivers/net/wireless/ath/ath9k/hw.h b/drivers/net/wireless/ath/ath9k/hw.h
-index d032939..e68204a 100644
---- a/drivers/net/wireless/ath/ath9k/hw.h
-+++ b/drivers/net/wireless/ath/ath9k/hw.h
-@@ -892,7 +892,6 @@ void ath9k_hw_gen_timer_stop(struct ath_hw *ah, struct ath_gen_timer *timer);
- 
- void ath_gen_timer_free(struct ath_hw *ah, struct ath_gen_timer *timer);
- void ath_gen_timer_isr(struct ath_hw *hw);
--u32 ath9k_hw_gettsf32(struct ath_hw *ah);
- 
- void ath9k_hw_name(struct ath_hw *ah, char *hw_name, size_t len);
- 
--- 
-1.7.2.2
+> > With sflash based AR3011 hardware, when we connect the device to USB
+> > port it gets detected as a Bluetooth device because of firmware in
+> > Flash (VID=0x0CF3, PID=0x3002). This triggers the Bluetooth sub
+> > system driver (btusb.ko) directly in the host instead of ath3k
+> > DFU driver. Therefore, there is no firmware downloaded in to the
+> > RAM to bring up Bluetooth at this point. This is the problem
+> > we're trying to "fix".
+
+So the easiest fix for this would be to
+ a) ignore 0x0cf3,0x3002 in btusb
+ b) add it to ath3k firmware loading
+ c) change the ath3k firmware to load with 0x0cf3,0x3003 (or whatever
+    else you want, as long as it's not 0x3000 and not 0x3002)
+
+Then the ignore in btusb won't affect ath3k after that new firmware was
+loaded.
+
+johannes
 
