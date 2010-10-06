@@ -1,40 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:54959 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759582Ab0JFSVc (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:44617 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759070Ab0JFRpF (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 6 Oct 2010 14:21:32 -0400
-Subject: Re: [PATCH v2 03/03] wl1271: 11n Support, functionality and
- configuration ability
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Shahar Levi <shahar_levi@ti.com>
-Cc: linux-wireless@vger.kernel.org,
-	Luciano Coelho <luciano.coelho@nokia.com>
-In-Reply-To: <1286388491-28752-5-git-send-email-shahar_levi@ti.com>
-References: <1286388491-28752-1-git-send-email-shahar_levi@ti.com>
-	 <1286388491-28752-5-git-send-email-shahar_levi@ti.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Wed, 06 Oct 2010 20:21:27 +0200
-Message-ID: <1286389287.3655.398.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+	Wed, 6 Oct 2010 13:45:05 -0400
+Date: Wed, 6 Oct 2010 13:36:09 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Cc: linux-wireless@vger.kernel.org, ipw3945-devel@lists.sourceforge.net
+Subject: Re: [PATCH 1/6] iwlwifi: schedule to deprecate software scan support
+Message-ID: <20101006173609.GH2472@tuxdriver.com>
+References: <1286378593-7509-1-git-send-email-wey-yi.w.guy@intel.com>
+ <1286378593-7509-2-git-send-email-wey-yi.w.guy@intel.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1286378593-7509-2-git-send-email-wey-yi.w.guy@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2010-10-06 at 20:08 +0200, Shahar Levi wrote:
+On Wed, Oct 06, 2010 at 08:23:08AM -0700, Wey-Yi Guy wrote:
+> Hardware scan is the prefer method for all iwlwifi devices;
+> especially for dual-mode functions. Schedule to deprecate the
+> software scan support in kernel 2.6.40
+> 
+> Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
 
->  	/* peek into the rates configured in the STA entry */
->  	spin_lock_irqsave(&wl->wl_lock, flags);
-> -	if (sta && sta->supp_rates[conf->channel->band] != wl->sta_rate_set) {
-> +	if (sta &&
-> +	    (sta->supp_rates[conf->channel->band] !=
-> +	    (wl->sta_rate_set & HW_BG_RATES_MASK))) {
->  		wl->sta_rate_set = sta->supp_rates[conf->channel->band];
->  		set_bit(WL1271_FLAG_STA_RATES_CHANGED, &wl->flags);
->  	}
+Hmmm...perhaps you have more confidence in this than I do?
+My experience suggests that hardware scanning has been the source of
+a number of problems and having the option to turn it off has provided
+a useful workaround for any number of users.
 
-???
+Anyone else have heartburn over this one?
 
-How can non-BG rates ever show up there? Is this really an 11a change?
-
-johannes
-
+John
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
