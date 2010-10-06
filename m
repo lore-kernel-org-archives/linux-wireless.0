@@ -1,214 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([88.198.39.176]:57345 "EHLO ds10.nbd.name"
+Received: from mx1.redhat.com ([209.132.183.28]:55937 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1760471Ab0JGMrF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 7 Oct 2010 08:47:05 -0400
-Message-ID: <4CADC142.7010709@openwrt.org>
-Date: Thu, 07 Oct 2010 14:46:58 +0200
-From: Felix Fietkau <nbd@openwrt.org>
-MIME-Version: 1.0
-To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-CC: linux-wireless <linux-wireless@vger.kernel.org>
-Subject: [PATCH v2] compat: backport netlink changes used in the nl80211 cleanup
-References: <4CADB60C.6040105@openwrt.org>
-In-Reply-To: <4CADB60C.6040105@openwrt.org>
-Content-Type: text/plain; charset=ISO-8859-1
+	id S932349Ab0JFJUu (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 6 Oct 2010 05:20:50 -0400
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: Johannes Berg <johannes@sipsolutions.net>,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org,
+	Stanislaw Gruszka <sgruszka@redhat.com>
+Subject: [PATCH 6/6] Revert "iwlwifi: do not perferm force reset while doing scan"
+Date: Wed,  6 Oct 2010 11:22:13 +0200
+Message-Id: <1286356933-4076-6-git-send-email-sgruszka@redhat.com>
+In-Reply-To: <1286356933-4076-1-git-send-email-sgruszka@redhat.com>
+References: <1286356933-4076-1-git-send-email-sgruszka@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+This reverts commit 7acc7c683a747689aaaaad4fce1683fc3f85e552. It was
+applied to avoid possible warning in ieee80211_restart_hw, however
+reason of the warning were races in mac80211, currently hopefully fixed.
+
+Not reseting device when performing scan is bad for two reasons.
+
+When forcing reset from iwl_check_stuck_queue(), in case of fail,
+reset will be repeated until scan finish. But since firmware is in bad
+shape, scan only finish after scan_check work (about 7s). So we will
+delay the reset, what is not good behaviour.
+
+When forcing reset from iwl_recover_from_statistics(), we will not
+repeat the reset, so we will not perform reset at all when needed.
+
+Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
 ---
-v2:
-- fix genl_unregister_family wrapper (removes the family from the internal list)
-- fix error handling in doit ops
+ drivers/net/wireless/iwlwifi/iwl-core.c |    5 -----
+ 1 files changed, 0 insertions(+), 5 deletions(-)
 
---- a/include/linux/compat-2.6.37.h
-+++ b/include/linux/compat-2.6.37.h
-@@ -45,6 +45,68 @@ static inline void skb_checksum_none_ass
+diff --git a/drivers/net/wireless/iwlwifi/iwl-core.c b/drivers/net/wireless/iwlwifi/iwl-core.c
+index 5c56893..393f02d 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-core.c
++++ b/drivers/net/wireless/iwlwifi/iwl-core.c
+@@ -2736,11 +2736,6 @@ int iwl_force_reset(struct iwl_priv *priv, int mode, bool external)
+ 	if (test_bit(STATUS_EXIT_PENDING, &priv->status))
+ 		return -EINVAL;
  
- #define pcmcia_enable_device(link)	pcmcia_request_configuration(link, &link->conf)
- 
-+#include <net/genetlink.h>
-+
-+struct compat_genl_info {
-+	struct genl_info *info;
-+
-+	u32 snd_seq;
-+	u32 snd_pid;
-+	struct genlmsghdr *genlhdr;
-+	struct nlattr **attrs;
-+	void *user_ptr[2];
-+};
-+#define genl_info compat_genl_info
-+
-+struct compat_genl_ops {
-+	struct genl_ops ops;
-+
-+	u8 cmd;
-+	u8 internal_flags;
-+	unsigned int flags;
-+	const struct nla_policy *policy;
-+
-+	int (*doit)(struct sk_buff *skb, struct genl_info *info);
-+	int (*dumpit)(struct sk_buff *skb, struct netlink_callback *cb);
-+	int (*done)(struct netlink_callback *cb);
-+};
-+#define genl_ops compat_genl_ops
-+
-+struct compat_genl_family {
-+	struct genl_family family;
-+
-+	struct list_head list;
-+
-+	unsigned int id, hdrsize, version, maxattr;
-+	const char *name;
-+	bool netnsok;
-+
-+	struct nlattr **attrbuf;
-+
-+	int (*pre_doit)(struct genl_ops *ops, struct sk_buff *skb,
-+			struct genl_info *info);
-+
-+	void (*post_doit)(struct genl_ops *ops, struct sk_buff *skb,
-+			  struct genl_info *info);
-+};
-+
-+#define genl_family compat_genl_family
-+
-+#define genl_register_family_with_ops compat_genl_register_family_with_ops
-+
-+int genl_register_family_with_ops(struct genl_family *family,
-+				  struct genl_ops *ops, size_t n_ops);
-+
-+#define genl_unregister_family compat_genl_unregister_family
-+
-+int genl_unregister_family(struct genl_family *family);
-+
-+#define genl_info_net(_info) genl_info_net((_info)->info)
-+#define genlmsg_reply(_msg, _info) genlmsg_reply(_msg, (_info)->info)
-+#define genlmsg_put(_skb, _pid, _seq, _fam, _flags, _cmd) genlmsg_put(_skb, _pid, _seq, &(_fam)->family, _flags, _cmd)
-+#define genl_register_mc_group(_fam, _grp) genl_register_mc_group(&(_fam)->family, _grp)
-+#define genl_unregister_mc_group(_fam, _grp) genl_unregister_mc_group(&(_fam)->family, _grp)
-+
- #endif /* (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,37)) */
- 
- #endif /* LINUX_26_37_COMPAT_H */
---- a/compat/compat-2.6.37.c
-+++ b/compat/compat-2.6.37.c
-@@ -42,4 +42,114 @@ EXPORT_SYMBOL_GPL(net_ns_type_operations
- 
- #endif /* LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,35)*/ 
- 
-+#undef genl_info
-+#undef genl_unregister_family
-+
-+static LIST_HEAD(compat_nl_fam);
-+
-+static struct genl_ops *genl_get_cmd(u8 cmd, struct genl_family *family)
-+{
-+	struct genl_ops *ops;
-+
-+	list_for_each_entry(ops, &family->family.ops_list, ops.ops_list)
-+		if (ops->cmd == cmd)
-+			return ops;
-+
-+	return NULL;
-+}
-+
-+
-+static int nl_doit_wrapper(struct sk_buff *skb, struct genl_info *info)
-+{
-+	struct compat_genl_info compat_info;
-+	struct genl_family *family;
-+	struct genl_ops *ops;
-+	int err;
-+
-+	list_for_each_entry(family, &compat_nl_fam, list) {
-+		if (family->id == info->nlhdr->nlmsg_type)
-+			goto found;
-+	}
-+	return -ENOENT;
-+
-+found:
-+	ops = genl_get_cmd(info->genlhdr->cmd, family);
-+	if (!ops)
-+		return -ENOENT;
-+
-+	memset(&compat_info.user_ptr, 0, sizeof(compat_info.user_ptr));
-+	compat_info.info = info;
-+#define __copy(_field) compat_info._field = info->_field
-+	__copy(snd_seq);
-+	__copy(snd_pid);
-+	__copy(genlhdr);
-+	__copy(attrs);
-+#undef __copy
-+	if (family->pre_doit) {
-+		err = family->pre_doit(ops, skb, &compat_info);
-+		if (err)
-+			return err;
-+	}
-+
-+	err = ops->doit(skb, &compat_info);
-+
-+	if (family->post_doit)
-+		family->post_doit(ops, skb, &compat_info);
-+
-+	return err;
-+}
-+
-+int compat_genl_register_family_with_ops(struct genl_family *family,
-+					 struct genl_ops *ops, size_t n_ops)
-+{
-+	int i, ret;
-+
-+#define __copy(_field) family->family._field = family->_field
-+	__copy(id);
-+	__copy(hdrsize);
-+	__copy(version);
-+	__copy(maxattr);
-+	strncpy(family->family.name, family->name, sizeof(family->family.name));
-+#if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,32))
-+	__copy(netnsok);
-+#endif
-+#undef __copy
-+
-+	ret = genl_register_family(&family->family);
-+	if (ret < 0)
-+		return ret;
-+
-+	family->attrbuf = family->family.attrbuf;
-+	family->id = family->family.id;
-+
-+	for (i = 0; i < n_ops; i++) {
-+#define __copy(_field) ops[i].ops._field = ops[i]._field
-+		__copy(cmd);
-+		__copy(flags);
-+		__copy(policy);
-+		__copy(dumpit);
-+		__copy(done);
-+#undef __copy
-+		ops[i].ops.doit = nl_doit_wrapper;
-+		ret = genl_register_ops(&family->family, &ops[i].ops);
-+		if (ret < 0)
-+			goto error_ops;
-+	}
-+	list_add(&family->list, &compat_nl_fam);
-+
-+	return ret;
-+
-+error_ops:
-+	compat_genl_unregister_family(family);
-+	return ret;
-+}
-+EXPORT_SYMBOL(compat_genl_register_family_with_ops);
-+
-+int compat_genl_unregister_family(struct genl_family *family)
-+{
-+	list_del(&family->list);
-+	return genl_unregister_family(&family->family);
-+}
-+EXPORT_SYMBOL(compat_genl_unregister_family);
-+
- #endif /* LINUX_VERSION_CODE < KERNEL_VERSION(2,6,37) */
-
+-	if (test_bit(STATUS_SCANNING, &priv->status)) {
+-		IWL_DEBUG_INFO(priv, "scan in progress.\n");
+-		return -EINVAL;
+-	}
+-
+ 	if (mode >= IWL_MAX_FORCE_RESET) {
+ 		IWL_DEBUG_INFO(priv, "invalid reset request.\n");
+ 		return -EINVAL;
+-- 
+1.7.1
 
