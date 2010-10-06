@@ -1,107 +1,90 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pz0-f46.google.com ([209.85.210.46]:50038 "EHLO
-	mail-pz0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932150Ab0JOTFW convert rfc822-to-8bit (ORCPT
+Received: from mail-qy0-f181.google.com ([209.85.216.181]:59652 "EHLO
+	mail-qy0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759861Ab0JFTd1 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 15 Oct 2010 15:05:22 -0400
-MIME-Version: 1.0
-In-Reply-To: <E9954878DD1FB34FAE5187FB88C58A35012EE46BC3@orsmsx506.amr.corp.intel.com>
-References: <E9954878DD1FB34FAE5187FB88C58A35012EE46BC3@orsmsx506.amr.corp.intel.com>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Fri, 15 Oct 2010 12:05:00 -0700
-Message-ID: <AANLkTi=6aVHyr98avc07UtWgDkV=SdmKW2HXNfSRY3KU@mail.gmail.com>
-Subject: Re: compat-wireless question
-To: "Guy, Wey-Yi W" <wey-yi.w.guy@intel.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Greg KH <greg@kroah.com>, linux-kernel@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+	Wed, 6 Oct 2010 15:33:27 -0400
+Received: by qyk10 with SMTP id 10so4419864qyk.19
+        for <linux-wireless@vger.kernel.org>; Wed, 06 Oct 2010 12:33:26 -0700 (PDT)
+From: Bill Jordan <bjordan@rajant.com>
+To: "John W. Linville" <linville@tuxdriver.com>,
+	Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org, Bill Jordan <bjordan@rajant.com>
+Subject: [PATCH] iw: new command to set the wds peer
+Date: Wed,  6 Oct 2010 15:33:16 -0400
+Message-Id: <1286393596-24547-1-git-send-email-bjordan@rajant.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Oct 15, 2010 at 10:40 AM, Guy, Wey-Yi W <wey-yi.w.guy@intel.com> wrote:
-> Hi Luis,
->
-> Simple compat-wireless question
->
-> There are two type of compat-wireless
-> 1.       Bleeding-edge compat-wireless
-> 2.       Stable compat-wireless
->
-> If I understand correctly, bleeding-edge compat-wireless took the latest
-> from wireless-next-2.6,
+Add command to set the wds peer bssid using the newly
+implemented NL80211_CMD_SET_WDS_PEER.
 
-Bleeding edge comes from linux-next.git instead of wireless-next.git
-as we also get Ethernet driver updates that way. Ethernet drivers are
-easy to port into compat-wireless so I have already added all Atheros
-Ethernet drivers into it, feel free to send patches to Intel Ethernet
-:)
+Signed-off-by: Bill Jordan <bjordan@rajant.com>
+---
+ interface.c |   31 +++++++++++++++++++++++++++++++
+ nl80211.h   |    3 +++
+ 2 files changed, 34 insertions(+), 0 deletions(-)
 
-> is it also include wireless-2.6 which is bug fix.
+diff --git a/interface.c b/interface.c
+index a64015f..34ed4cb 100644
+--- a/interface.c
++++ b/interface.c
+@@ -383,3 +383,34 @@ static int handle_interface_4addr(struct nl80211_state *state,
+ COMMAND(set, 4addr, "<on|off>",
+ 	NL80211_CMD_SET_INTERFACE, 0, CIB_NETDEV, handle_interface_4addr,
+ 	"Set interface 4addr (WDS) mode.\n");
++
++static int handle_interface_wds_peer(struct nl80211_state *state,
++				 struct nl_cb *cb,
++				 struct nl_msg *msg,
++				 int argc, char **argv)
++{
++	enum nl80211_iftype mac_addr[ETH_ALEN];
++
++	if (argc < 1)
++		return 1;
++
++	if (mac_addr_a2n(mac_addr, argv[0])) {
++		fprintf(stderr, "invalid mac address\n");
++		return 2;
++	}
++
++	argc--;
++	argv++;
++
++	if (argc)
++		return 1;
++
++	NLA_PUT(msg, NL80211_ATTR_MAC, ETH_ALEN, mac_addr);
++
++	return 0;
++ nla_put_failure:
++	return -ENOBUFS;
++}
++COMMAND(set, peer, "<MAC address>",
++	NL80211_CMD_SET_WDS_PEER, 0, CIB_NETDEV, handle_interface_wds_peer,
++	"Set interface wds peer.\n");
+diff --git a/nl80211.h b/nl80211.h
+index f0518b0..35a9681 100644
+--- a/nl80211.h
++++ b/nl80211.h
+@@ -387,6 +387,8 @@
+  *	of any other interfaces, and other interfaces will again take
+  *	precedence when they are used.
+  *
++ * @NL80211_CMD_SET_WDS_PEER: Set the MAC address of the peer on a WDS interface.
++ *
+  * @NL80211_CMD_MAX: highest used command number
+  * @__NL80211_CMD_AFTER_LAST: internal use
+  */
+@@ -489,6 +491,7 @@ enum nl80211_commands {
+ 	NL80211_CMD_NOTIFY_CQM,
+ 
+ 	NL80211_CMD_SET_CHANNEL,
++	NL80211_CMD_SET_WDS_PEER,
+ 
+ 	/* add new commands above here */
+ 
+-- 
+1.7.2.3
 
-No, it just uses linux-next.git, but yeah linux-next.git would rebase
-on top of Linus' tree anyway so it would eventually get all of the
-respective stable fixes. Stephen would then just drag in all trees
-sequentially.
-
-> How about stable compat-wireless, it is base on stable tree, so I believe it
-> has all the bug fix for the stable kernel, am I correct?
-
-I based the stable release off of H. Peter Anvin's linux-2.6-allstable.git tree:
-
-git://git.kernel.org/pub/scm/linux/kernel/git/hpa/linux-2.6-allstable.git
-
-After Linus releases a kernel, say 2.6.36, then new extra version
-fixes, say 2.6.36.1, 2.6.36.2, etc, will not be available on Linus'
-tree, but you can instead get them from the linux-2.6-allstable.git
-tree. What is neat about that tree too is it also has the older stable
-extra version updates. So whenever a stable kernel extra version gets
-released we can make a new compat-wireless-2.6.3x.y. You can find them
-here:
-
-http://wireless.kernel.org/en/users/Download/stable/
-
-Now as of the compat-wireless-2.6.36 releases I started noticing we
-can do something better as we approach the merge window. The issue
-with the merge window is that there are some patches which are marked
-as stable on the commit log entry (Cc: stable@kernel.org) but not all
-of these will make it to Linus' next rc release as the focus for the
-RC is to fix regressions only. Right or wrong, some stable patches
-eventually make it into the first extra version release of the kernel
-but not on the stable release of the kernel. Some of these stable
-fixes are still important though so to help with testing and getting
-users/customers these fixes I've started sucking all pending stable
-fixes from linux-next.git on the compat-wireless-2.6.36 releases. I
-annotate this is done on a release by postfixing an "s" to the
-release. You can also find all the stable patches which were sucked
-out of linux-next.git by looking at the pending-stable/ directory. I
-regenerate these every new RC release of the kernel or extra version
-bump, but started this only as of the linux-2.6.36.y branch of
-compat-wireless.
-
-Furthermore, I realize that at times a vendor may have a patch that
-although it did not make it into the stable release of the kernel it
-may be important for the vendor for some customers, so because of this
-we have the linux-next-cherry-picks/ directory. This directory is for
-patches which have already been merged into linux-next.git but will
-not make it into the stable kernel release. I took this further two
-more steps too, just because sometimes a maintainer may be on
-vacation, have died, or whatever, so your patches may not get merged
-yet. In these cases you can submit patches for inclusion into the
-linux-next-pending/ directory of compat-wireless. This is for patches
-which have *at least* been posted to a public mailing list but for
-whatever reason haven't yet been merged. Then lastly we have the crap/
-directory of compat-wireless. This for patches which have not even yet
-been posted to a mailing list for whatever reason. An example may be
-that there is a known issue but yet the patches are important enough.
-
-The purpose of all these directories is to let you customize stable
-compat-wireless releases, suited for whatever purpose you have. I've
-started sucking in all linux-next.git stable fixes not yet merged for
-now, and am will soon start incorporating a linux-next-pending/ patch
-to account for the lag in getting a patch reviewed.
-
-Feel free to use these as well, I welcome patches to help your needs.
-
-Please let me know if you have any other questions.
-
-  Luis
