@@ -1,88 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yx0-f174.google.com ([209.85.213.174]:49479 "EHLO
-	mail-yx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756186Ab0JNWQx convert rfc822-to-8bit (ORCPT
+Received: from smtp.nokia.com ([192.100.105.134]:48362 "EHLO
+	mgw-mx09.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752786Ab0JFThC (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 14 Oct 2010 18:16:53 -0400
-Received: by yxm8 with SMTP id 8so67914yxm.19
-        for <linux-wireless@vger.kernel.org>; Thu, 14 Oct 2010 15:16:52 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <4CB77EA0.1000005@candelatech.com>
-References: <4CAE1DFB.303@candelatech.com> <1286479642.20974.32.camel@jlt3.sipsolutions.net>
- <AANLkTimxp703Gy_Atg8=wpFszRDR=OJCXwOUKRh-a-d7@mail.gmail.com>
- <AANLkTi=t-P_5c14brJohM8UgxeOknv+3syO=7W=ix6qf@mail.gmail.com>
- <AANLkTinC46a+nE-XOQuBCmRJwjzgh24uC7ZJ7HtbVHnT@mail.gmail.com>
- <4CB378CD.1080800@candelatech.com> <AANLkTim42zmDwf744BCrPwa1kT5ph57bNMyvSyOpesVv@mail.gmail.com>
- <4CB3D598.7050904@candelatech.com> <AANLkTimPEg3ZU8CQUXfdpGdfbmhdE9O=GNY=g9gysTo4@mail.gmail.com>
- <4CB4AA89.1070009@candelatech.com> <20101013053141.GA15798@vasanth-laptop>
- <4CB5E0A8.5020502@candelatech.com> <AANLkTimp_GSwwX_RnQSyN9QNe55HQ+0HZJ1yd8Xp+dWG@mail.gmail.com>
- <AANLkTinyVqdgPqzpyihuaPtVVqDmzj-ZbXzQ-4qdA2yH@mail.gmail.com> <4CB77EA0.1000005@candelatech.com>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Thu, 14 Oct 2010 15:16:32 -0700
-Message-ID: <AANLkTimC0+6PiqWO+LmtBV7uKCVpZueAQs6m_6kAnbq9@mail.gmail.com>
-Subject: Re: memory clobber in rx path, maybe related to ath9k.
-To: Ben Greear <greearb@candelatech.com>
-Cc: =?UTF-8?Q?Bj=C3=B6rn_Smedman?= <bjorn.smedman@venatech.se>,
-	Vasanthakumar Thiagarajan <vasanth@atheros.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+	Wed, 6 Oct 2010 15:37:02 -0400
+Subject: Re: [PATCH] omap: zoom2/3: fix build caused by wl1271 support
+From: Luciano Coelho <luciano.coelho@nokia.com>
+To: "ext John W. Linville" <linville@tuxdriver.com>
+Cc: "ext Gadiyar, Anand" <gadiyar@ti.com>,
+	ext Tony Lindgren <tony@atomide.com>,
+	"linux-omap@vger.kernel.org" <linux-omap@vger.kernel.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Ohad Ben-Cohen <ohad@wizery.com>
+In-Reply-To: <1286380518.6731.10.camel@powerslave>
+References: <1285965206-17777-1-git-send-email-gadiyar@ti.com>
+	 <20101001231026.GH3117@atomide.com> <1286279588.15401.28.camel@chilepepper>
+	 <1286280426.15401.29.camel@chilepepper>
+	 <1286284790.15401.53.camel@chilepepper>
+	 <1286311187.2793.7.camel@powerslave> <20101006135221.GE2472@tuxdriver.com>
+	 <AANLkTinHA+JS1MObanawFF8ktW6OEMGr7CnJhakUetPz@mail.gmail.com>
+	 <1286378869.6731.7.camel@powerslave>  <20101006153025.GG2472@tuxdriver.com>
+	 <1286380518.6731.10.camel@powerslave>
+Content-Type: text/plain; charset="UTF-8"
+Date: Wed, 06 Oct 2010 22:34:40 +0300
+Message-ID: <1286393680.6731.25.camel@powerslave>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2010/10/14 Ben Greear <greearb@candelatech.com>:
-> On 10/14/2010 02:52 PM, Björn Smedman wrote:
->>
->> 2010/10/13 Björn Smedman<bjorn.smedman@venatech.se>:
->>>
->>> Hi Ben,
->>>
->>> First of all keep up the good work. :)
->>>
->>> On Wed, Oct 13, 2010 at 6:39 PM, Ben Greear<greearb@candelatech.com>
->>>  wrote:
->>> [snip]
->>>>
->>>> Either way, it seems safer to null out the bf_ampdu field after
->>>> the memory is consumed..it could prevent some tricky bugs later.
->>>
->>> I think this is a good idea. But it probably wont be enough to null
->>> out bf_mpdu. You also need to look at bf_buf_addr (which if I
->>> understand correctly is the physical address the DMA engine will
->>> actually write RXed frames to) and bf_dmacontext (which seems in most
->>> cases to hold an identical address and may in fact be where the DMA
->>> engine will really write the frame).
->>
->> I took another look at the code. It turns out both bf_buf_addr and
->> bf_dmacontext are in fact meaningless to the DMA. Instead each bf
->> holds a pointer (bf_desc) to the real DMA descriptor which in turn
->> holds the address (ds_data) where the DMA will really (really this
->> time) write the frame. There is also a field to hold the virtual
->> address of the same place (ds_vdata).
->>
->> It's a little too much work for me to set up the testbed you have Ben
->> but would be interesting to see what happens if you set
->> bf->bf_desc->ds_{data,vdata} = 0 as well. No?
->
-> I'll investigate those suggestions.
->
-> But setting up a test-bed is as easy
-> as getting an ath9k NIC in a system, with a few APs around, and run the
-> script below.
->
-> You do not need any traffic generation, dhcp, etc...seems just beacons and
-> whatever
-> wpa_supplicant is doing is enough to hit the problem fast.  (Make sure
-> you are compiled to detect memory poisoning, of course).
->
-> You'll need to fix the paths to the executables most likely.
->
+On Wed, 2010-10-06 at 17:55 +0200, ext Luciano Coelho wrote:
+> On Wed, 2010-10-06 at 17:30 +0200, ext John W. Linville wrote:
+> > On Wed, Oct 06, 2010 at 06:27:49PM +0300, Luciano Coelho wrote:
+> > > On Wed, 2010-10-06 at 16:01 +0200, ext Gadiyar, Anand wrote:
+> > > > >> Hmmm... We got a problem here.  This patch breaks builds when we *don't*
+> > > > >> have "omap: mmc extended to pass host capabilities from board file".  We
+> > > > >> don't have that on wireless-next yet, so builds with zoom boards
+> > > > >> selected are broken.
+> > > > >>
+> > > > >> Any ideas on how to solve this dilemma? I guess the proper way to handle
+> > > > >> this would be to make the changes proposed in this patch when merging
+> > > > >> instead of having a normal commit for it, wouldn't it?
+> > > > >
+> > > > > Just cherry-pick that change into the branch of your tree that I do
+> > > > > _not_ pull from.  I presume that it is already available in linux-next?
+> > > > >
+> > > > 
+> > > > Yup - both patches are in linux-next; that's where we noticed the build break.
+> > > 
+> > > Ok, I hope the patch applies cleanly in our trees.
+> > > 
+> > > John, don't you want to do the cherry-pick on your wireless-testing
+> > > then? If you do it, I can "inherit" that, because I pull from it into my
+> > > "testing" branch (wl12xx/master).  At the moment, w-t is broken too.
+> > 
+> > OK, that's fine -- do you have the commit ID and the tree that has it?
+> 
+> Stephen's linux-net, commit 3a63833ec3002816a759a49ebda4e229c089114e.
+> 
+> http://git.kernel.org/?p=linux/kernel/git/next/linux-next.git;a=commit;h=3a63833ec3002816a759a49ebda4e229c089114e
 
-You don't need such complicated scripts, I've managed to reproduce now
-by creating a lot of monitor interfaces and then looping with a
-regular interface issuing a scan command over and over.  I suspect
-I'll be able to do this as well by changing channels instead of doing
-a scan. I believe the issue may be due to races in hardware on resets
-and enabling RX on an already freed buffer.
+I have cherry-picked it and merged it (there was a tiny conflict).  I've
+pushed it into my wl12xx/master branch (wl12xx is at
+git://git.kernel.org/pub/scm/linux/kernel/git/luca/wl12xx.git).
 
-  Luis
+If you want to take it from my tree (which is already merged) into
+wireless-testing, the commit is
+adca3773ed7ad185b1314432b6fbf92db7e11bc0.
+
+
+-- 
+Cheers,
+Luca.
+
