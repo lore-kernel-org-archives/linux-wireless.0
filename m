@@ -1,76 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:54104 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751695Ab0JFSEG (ORCPT
+Received: from mail30f.wh2.ocn.ne.jp ([220.111.41.203]:21474 "HELO
+	mail30f.wh2.ocn.ne.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1758561Ab0JFDak (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 6 Oct 2010 14:04:06 -0400
-Subject: Re: Crash in cfg80211_unlink_bss
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Ben Greear <greearb@candelatech.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <4CACB1D1.7090900@candelatech.com>
-References: <4CACB1D1.7090900@candelatech.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Wed, 06 Oct 2010 20:04:05 +0200
-Message-ID: <1286388245.3655.392.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+	Tue, 5 Oct 2010 23:30:40 -0400
+Received: from vs3005.wh2.ocn.ne.jp (125.206.180.233)
+	by mail30f.wh2.ocn.ne.jp (RS ver 1.0.95vs) with SMTP id 1-0644215837
+	for <linux-wireless@vger.kernel.org>; Wed,  6 Oct 2010 12:30:38 +0900 (JST)
+Subject: [PATCH] iw: add survey busy ratios
+To: johannes@sipsolutions.net, linville@tuxdriver.com
+From: Bruno Randolf <br1@einfach.org>
+Cc: linux-wireless@vger.kernel.org
+Date: Wed, 06 Oct 2010 12:30:39 +0900
+Message-ID: <20101006033039.17342.55809.stgit@tt-desk>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2010-10-06 at 10:28 -0700, Ben Greear wrote:
-> This test scenario has  72 stations on ath5k trying to connect to a cisco AP
-> that supposedly only supports 63 stations.
-> 
-> The 72 STA were created without ssid's configured, then we re-configured all
-> 72 'at once' to give them the proper SSID (ifdown, ifup, iwconfig to set values).
+Print survey busy information, if present.
 
-Eww, iwconfig ;-)
+This does not include the neccessay update to nl80211.h.
 
-> The system crashed and rebooted.
-> 
-> Kernel is wireless-testing as of later yesterday, with a few additional
-> patches mostly dealing with counters in /proc/net/wireless and some lockdep
-> fixes pulled in from lkml etc.
-> 
-> We have seen this before, but this is the first good stacktrace we got.
-> 
-> Likely we can reproduce this if extra information is needed.
+Signed-off-by: Bruno Randolf <br1@einfach.org>
 
-> list_del corruption, next is LIST_POISON1 (00100100)
-
-This one's interesting.
-
-But anyway, now that I look at it in more detail, it seems fairly
-obvious. You should be able to trigger it with two stations, but it's
-probably harder ...
-
-I need to analyse the refcounting here again and in more detail, but in
-the meantime can you try below patch?
-
-johannes
-
+--
+the iw part of the survey series, in case it gets accepted :)
 ---
- net/wireless/scan.c |   10 +++++-----
- 1 file changed, 5 insertions(+), 5 deletions(-)
+ survey.c |   15 +++++++++++++++
+ 1 files changed, 15 insertions(+), 0 deletions(-)
 
---- wireless-testing.orig/net/wireless/scan.c	2010-10-06 19:59:41.000000000 +0200
-+++ wireless-testing/net/wireless/scan.c	2010-10-06 20:01:20.000000000 +0200
-@@ -668,11 +668,11 @@ void cfg80211_unlink_bss(struct wiphy *w
- 	bss = container_of(pub, struct cfg80211_internal_bss, pub);
+diff --git a/survey.c b/survey.c
+index f9f2508..3257e9f 100644
+--- a/survey.c
++++ b/survey.c
+@@ -23,6 +23,9 @@ static int print_survey_handler(struct nl_msg *msg, void *arg)
+ 	static struct nla_policy survey_policy[NL80211_SURVEY_INFO_MAX + 1] = {
+ 		[NL80211_SURVEY_INFO_FREQUENCY] = { .type = NLA_U32 },
+ 		[NL80211_SURVEY_INFO_NOISE] = { .type = NLA_U8 },
++		[NL80211_SURVEY_INFO_BUSY] = { .type = NLA_U8 },
++		[NL80211_SURVEY_INFO_BUSY_TX] = { .type = NLA_U8 },
++		[NL80211_SURVEY_INFO_BUSY_RX] = { .type = NLA_U8 },
+ 	};
  
- 	spin_lock_bh(&dev->bss_lock);
--
--	list_del(&bss->list);
--	dev->bss_generation++;
--	rb_erase(&bss->rbn, &dev->bss_tree);
--
-+	if (!list_empty(&bss->list)) {
-+		list_del_init(&bss->list);
-+		dev->bss_generation++;
-+		rb_erase(&bss->rbn, &dev->bss_tree);
-+	}
- 	spin_unlock_bh(&dev->bss_lock);
+ 	nla_parse(tb, NL80211_ATTR_MAX, genlmsg_attrdata(gnlh, 0),
+@@ -49,6 +52,18 @@ static int print_survey_handler(struct nl_msg *msg, void *arg)
+ 	if (sinfo[NL80211_SURVEY_INFO_NOISE])
+ 		printf("\tnoise:\t\t%d dBm\n",
+ 			(int8_t)nla_get_u8(sinfo[NL80211_SURVEY_INFO_NOISE]));
++	if (sinfo[NL80211_SURVEY_INFO_BUSY])
++		printf("\tbusy:\t\t%d%%\n",
++			((int8_t)nla_get_u8(sinfo[NL80211_SURVEY_INFO_BUSY])
++			* 100) / 255);
++	if (sinfo[NL80211_SURVEY_INFO_BUSY_RX])
++		printf("\tbusy rx:\t%d%%\n",
++			((int8_t)nla_get_u8(sinfo[NL80211_SURVEY_INFO_BUSY_RX])
++			* 100) / 255);
++	if (sinfo[NL80211_SURVEY_INFO_BUSY_TX])
++		printf("\tbusy tx:\t%d%%\n",
++			((int8_t)nla_get_u8(sinfo[NL80211_SURVEY_INFO_BUSY_TX])
++			* 100) / 255);
+ 	return NL_SKIP;
+ }
  
- 	kref_put(&bss->ref, bss_release);
-
 
