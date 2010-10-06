@@ -1,68 +1,143 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:45784 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752398Ab0JFTSG (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 6 Oct 2010 15:18:06 -0400
-Subject: [PATCH] cfg80211: fix BSS double-unlinking
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Ben Greear <greearb@candelatech.com>,
-	Hun-Kyi Wynn <hkwynn@candelatech.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Wed, 06 Oct 2010 21:18:04 +0200
-Message-ID: <1286392684.3655.409.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+Received: from mga01.intel.com ([192.55.52.88]:22045 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1759175Ab0JFPXz (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 6 Oct 2010 11:23:55 -0400
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Subject: [PATCH 6/6] iwlagn: define 130 series of WiFi/BT combo devices
+Date: Wed,  6 Oct 2010 08:23:13 -0700
+Message-Id: <1286378593-7509-7-git-send-email-wey-yi.w.guy@intel.com>
+In-Reply-To: <1286378593-7509-1-git-send-email-wey-yi.w.guy@intel.com>
+References: <1286378593-7509-1-git-send-email-wey-yi.w.guy@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+add new structures and defines need to identify 130 devices.
 
-When multiple interfaces are actively trying
-to associate with the same BSS, they may both
-find that the BSS isn't there and then try to
-unlink it. This can cause errors since the
-unlinking code can't currently deal with items
-that have already been unlinked.
-
-Normally this doesn't happen as most people
-don't try to use multiple station interfaces
-that associate at the same time too.
-
-Fix this by using the list entry as a flag to
-see if the item is still on a list.
-
-Cc: stable@kernel.org
-Reported-by: Ben Greear <greearb@candelatech.com>
-Tested-by: Hun-Kyi Wynn <hkwynn@candelatech.com>
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
 ---
- net/wireless/scan.c |   12 ++++++------
- 1 file changed, 6 insertions(+), 6 deletions(-)
+ drivers/net/wireless/iwlwifi/iwl-6000.c |   44 +++++++++++++++++++++++++++++++
+ drivers/net/wireless/iwlwifi/iwl-agn.c  |   10 +++++++
+ drivers/net/wireless/iwlwifi/iwl-agn.h  |    2 +
+ 3 files changed, 56 insertions(+), 0 deletions(-)
 
---- wireless-testing.orig/net/wireless/scan.c	2010-10-06 20:41:16.000000000 +0200
-+++ wireless-testing/net/wireless/scan.c	2010-10-06 20:41:38.000000000 +0200
-@@ -650,14 +650,14 @@ void cfg80211_unlink_bss(struct wiphy *w
- 	bss = container_of(pub, struct cfg80211_internal_bss, pub);
+diff --git a/drivers/net/wireless/iwlwifi/iwl-6000.c b/drivers/net/wireless/iwlwifi/iwl-6000.c
+index 5866ad8..43ec898 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-6000.c
++++ b/drivers/net/wireless/iwlwifi/iwl-6000.c
+@@ -53,11 +53,13 @@
+ #define IWL6000_UCODE_API_MAX 4
+ #define IWL6050_UCODE_API_MAX 5
+ #define IWL6000G2_UCODE_API_MAX 5
++#define IWL130_UCODE_API_MAX 5
  
- 	spin_lock_bh(&dev->bss_lock);
-+	if (!list_empty(&bss->list)) {
-+		list_del_init(&bss->list);
-+		dev->bss_generation++;
-+		rb_erase(&bss->rbn, &dev->bss_tree);
+ /* Lowest firmware API version supported */
+ #define IWL6000_UCODE_API_MIN 4
+ #define IWL6050_UCODE_API_MIN 4
+ #define IWL6000G2_UCODE_API_MIN 4
++#define IWL130_UCODE_API_MIN 5
  
--	list_del(&bss->list);
--	dev->bss_generation++;
--	rb_erase(&bss->rbn, &dev->bss_tree);
--
-+		kref_put(&bss->ref, bss_release);
-+	}
- 	spin_unlock_bh(&dev->bss_lock);
--
--	kref_put(&bss->ref, bss_release);
- }
- EXPORT_SYMBOL(cfg80211_unlink_bss);
+ #define IWL6000_FW_PRE "iwlwifi-6000-"
+ #define _IWL6000_MODULE_FIRMWARE(api) IWL6000_FW_PRE #api ".ucode"
+@@ -75,6 +77,9 @@
+ #define _IWL6000G2B_MODULE_FIRMWARE(api) IWL6000G2B_FW_PRE #api ".ucode"
+ #define IWL6000G2B_MODULE_FIRMWARE(api) _IWL6000G2B_MODULE_FIRMWARE(api)
  
-
++#define IWL130_FW_PRE "iwlwifi-130-"
++#define _IWL100_MODULE_FIRMWARE(api) IWL130_FW_PRE #api ".ucode"
++#define IWL100_MODULE_FIRMWARE(api) _IWL130_MODULE_FIRMWARE(api)
+ 
+ static void iwl6000_set_ct_threshold(struct iwl_priv *priv)
+ {
+@@ -810,6 +815,45 @@ struct iwl_cfg iwl6000_3agn_cfg = {
+ 	.need_dc_calib = true,
+ };
+ 
++struct iwl_cfg iwl130_bgn_cfg = {
++	.name = "Intel(R) 130 Series 1x1 BGN",
++	.fw_name_pre = IWL6000G2B_FW_PRE,
++	.ucode_api_max = IWL130_UCODE_API_MAX,
++	.ucode_api_min = IWL130_UCODE_API_MIN,
++	.sku = IWL_SKU_G|IWL_SKU_N,
++	.valid_tx_ant = ANT_A,
++	.valid_rx_ant = ANT_A,
++	.eeprom_ver = EEPROM_6000G2_EEPROM_VERSION,
++	.eeprom_calib_ver = EEPROM_6000G2_TX_POWER_VERSION,
++	.ops = &iwl6000g2b_ops,
++	.mod_params = &iwlagn_mod_params,
++	.base_params = &iwl6000_base_params,
++	.bt_params = &iwl6000_bt_params,
++	.ht_params = &iwl6000_ht_params,
++	.need_dc_calib = true,
++	/* Due to bluetooth, we transmit 2.4 GHz probes only on antenna A */
++	.scan_tx_antennas[IEEE80211_BAND_2GHZ] = ANT_A,
++};
++
++struct iwl_cfg iwl130_bg_cfg = {
++	.name = "Intel(R) 130 Series 1x2 BG",
++	.fw_name_pre = IWL6000G2B_FW_PRE,
++	.ucode_api_max = IWL130_UCODE_API_MAX,
++	.ucode_api_min = IWL130_UCODE_API_MIN,
++	.sku = IWL_SKU_G,
++	.valid_tx_ant = ANT_A,
++	.valid_rx_ant = ANT_A,
++	.eeprom_ver = EEPROM_6000G2_EEPROM_VERSION,
++	.eeprom_calib_ver = EEPROM_6000G2_TX_POWER_VERSION,
++	.ops = &iwl6000g2b_ops,
++	.mod_params = &iwlagn_mod_params,
++	.base_params = &iwl6000_base_params,
++	.bt_params = &iwl6000_bt_params,
++	.need_dc_calib = true,
++	/* Due to bluetooth, we transmit 2.4 GHz probes only on antenna A */
++	.scan_tx_antennas[IEEE80211_BAND_2GHZ] = ANT_A,
++};
++
+ MODULE_FIRMWARE(IWL6000_MODULE_FIRMWARE(IWL6000_UCODE_API_MAX));
+ MODULE_FIRMWARE(IWL6050_MODULE_FIRMWARE(IWL6050_UCODE_API_MAX));
+ MODULE_FIRMWARE(IWL6000G2A_MODULE_FIRMWARE(IWL6000G2_UCODE_API_MAX));
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
+index 080121d..a6dce61 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
+@@ -4822,11 +4822,21 @@ static DEFINE_PCI_DEVICE_TABLE(iwl_hw_card_ids) = {
+ 	{IWL_PCI_DEVICE(0x0084, 0x1216, iwl1000_bg_cfg)},
+ 	{IWL_PCI_DEVICE(0x0084, 0x1316, iwl1000_bg_cfg)},
+ 
++/* 100 Series WiFi */
+ 	{IWL_PCI_DEVICE(0x08AE, 0x1005, iwl100_bgn_cfg)},
+ 	{IWL_PCI_DEVICE(0x08AF, 0x1015, iwl100_bgn_cfg)},
+ 	{IWL_PCI_DEVICE(0x08AE, 0x1025, iwl100_bgn_cfg)},
+ 	{IWL_PCI_DEVICE(0x08AE, 0x1007, iwl100_bg_cfg)},
+ 	{IWL_PCI_DEVICE(0x08AE, 0x1017, iwl100_bg_cfg)},
++
++/* 130 Series WiFi */
++	{IWL_PCI_DEVICE(0x0896, 0x5005, iwl130_bgn_cfg)},
++	{IWL_PCI_DEVICE(0x0896, 0x5007, iwl130_bg_cfg)},
++	{IWL_PCI_DEVICE(0x0897, 0x5015, iwl130_bgn_cfg)},
++	{IWL_PCI_DEVICE(0x0897, 0x5017, iwl130_bg_cfg)},
++	{IWL_PCI_DEVICE(0x0896, 0x5025, iwl130_bgn_cfg)},
++	{IWL_PCI_DEVICE(0x0896, 0x5027, iwl130_bg_cfg)},
++
+ #endif /* CONFIG_IWL5000 */
+ 
+ 	{0}
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.h b/drivers/net/wireless/iwlwifi/iwl-agn.h
+index d5dc824..eb3812a 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn.h
++++ b/drivers/net/wireless/iwlwifi/iwl-agn.h
+@@ -94,6 +94,8 @@ extern struct iwl_cfg iwl1000_bgn_cfg;
+ extern struct iwl_cfg iwl1000_bg_cfg;
+ extern struct iwl_cfg iwl100_bgn_cfg;
+ extern struct iwl_cfg iwl100_bg_cfg;
++extern struct iwl_cfg iwl130_bgn_cfg;
++extern struct iwl_cfg iwl130_bg_cfg;
+ 
+ extern struct iwl_mod_params iwlagn_mod_params;
+ extern struct iwl_hcmd_ops iwlagn_hcmd;
+-- 
+1.7.0.4
 
