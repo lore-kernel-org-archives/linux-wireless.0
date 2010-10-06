@@ -1,38 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from purkki.adurom.net ([80.68.90.206]:53850 "EHLO purkki.adurom.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752889Ab0JMGRd (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 13 Oct 2010 02:17:33 -0400
-To: Shahar Levi <shahar_levi@ti.com>
-Cc: Luciano Coelho <luciano.coelho@nokia.com>,
-	"linux-wireless\@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH v3 03/03] wl1271: 11n Support, functionality and configuration ability
-References: <1286812038-19013-1-git-send-email-shahar_levi@ti.com>
-	<1286812038-19013-4-git-send-email-shahar_levi@ti.com>
-	<1286893095.12528.75.camel@chilepepper> <4CB486D8.5080506@ti.com>
-From: Kalle Valo <kvalo@adurom.com>
-Date: Wed, 13 Oct 2010 09:17:29 +0300
-In-Reply-To: <4CB486D8.5080506@ti.com> (Shahar Levi's message of "Tue\, 12 Oct 2010 18\:03\:36 +0200")
-Message-ID: <877hhm39c6.fsf@purkki.adurom.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: from he.sipsolutions.net ([78.46.109.217]:41095 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750952Ab0JFKK3 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 6 Oct 2010 06:10:29 -0400
+Subject: Re: [PATCH] mac80211: hoist sta->lock from reorder release timer
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Christian Lamparter <chunkeey@googlemail.com>
+Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com,
+	Ben Greear <greearb@candelatech.com>,
+	Ming Lei <tom.leiming@gmail.com>
+In-Reply-To: <201010061200.54364.chunkeey@googlemail.com>
+References: <201010061200.54364.chunkeey@googlemail.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Wed, 06 Oct 2010 12:10:26 +0200
+Message-ID: <1286359826.3655.85.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Shahar,
+On Wed, 2010-10-06 at 12:00 +0200, Christian Lamparter wrote:
 
-Shahar Levi <shahar_levi@ti.com> writes:
+> The timer itself is part of the station's private struct.
+> The clean-up routine will deactivate the timer as soon as
+> the station is removed. Therefore the extra sta->lock
+> protection should not be necessary.
 
-> Thanks for the review. All below will be fix in v4.
+>  	rcu_read_lock();
+> -	spin_lock(&sta->lock);
+>  	ieee80211_release_reorder_timeout(sta, *ptid);
+> -	spin_unlock(&sta->lock);
+>  	rcu_read_unlock();
 
-Please don't top post and also trim your quotes. That makes a lot
-easier to read your emails. More info here:
+There's a comment on ieee80211_release_reorder_timeout() saying that the
+lock must be held -- which is probably not true? We don't generally hold
+that lock on the RX path...?
 
-http://idallen.com/topposting.html
+johannes
 
-People here deal with hundreds of emails per day from different
-mailing lists and it really matter how the messages are formatted. So
-please be kind to us and try to follow the etiquette. Thanks.
-
--- 
-Kalle Valo
