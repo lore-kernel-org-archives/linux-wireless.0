@@ -1,52 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 128-177-27-249.ip.openhosting.com ([128.177.27.249]:35241 "EHLO
-	jmalinen.user.openhosting.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1756727Ab0JDUjR (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:36616 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759759Ab0JFSsm (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 4 Oct 2010 16:39:17 -0400
-Date: Mon, 4 Oct 2010 23:39:00 +0300
-From: Jouni Malinen <j@w1.fi>
-To: "Luis R. Rodriguez" <lrodriguez@Atheros.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
-	"linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"stable@kernel.org" <stable@kernel.org>,
-	Paul Stewart <pstew@google.com>,
-	Amod Bodas <Amod.Bodas@Atheros.com>,
-	Vasanth Thiagarajan <Vasanth.Thiagarajan@Atheros.com>
-Subject: Re: [PATCH v2 0/3] mac80211: fix rate_control_send_low warnings
- for delbas
-Message-ID: <20101004203900.GA14524@jm.kir.nu>
-References: <1285965233-11097-1-git-send-email-lrodriguez@atheros.com>
- <1286198845.3620.37.camel@jlt3.sipsolutions.net>
- <20101004164149.GE2105@tux>
- <1286210566.3620.42.camel@jlt3.sipsolutions.net>
- <20101004172504.GL2105@tux>
- <1286213426.3620.43.camel@jlt3.sipsolutions.net>
- <20101004173507.GN2105@tux>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20101004173507.GN2105@tux>
+	Wed, 6 Oct 2010 14:48:42 -0400
+Subject: Re: Any /n NICs that support APs and multiple STAs other than
+ ath9k?
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Cc: Ben Greear <greearb@candelatech.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <AANLkTimB7=odPK3qTAhFBdzaMFFGVar0kyMrb-p9SgYy@mail.gmail.com>
+References: <4CACA3D7.90108@candelatech.com>
+	 <AANLkTimB7=odPK3qTAhFBdzaMFFGVar0kyMrb-p9SgYy@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Wed, 06 Oct 2010 20:48:40 +0200
+Message-ID: <1286390920.3655.402.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Oct 04, 2010 at 10:35:07AM -0700, Luis R. Rodriguez wrote:
-> I was wondering if actively disassociating might help with a smoother
-> transition. I was under this why we were doing this in the first place.
-> I frankly do not know, but if it does not help then I do agree with
-> your patch replacement.
+On Wed, 2010-10-06 at 11:45 -0700, Luis R. Rodriguez wrote:
 
-In many cases, it may end up harming more than helping.. At minimum, it
-takes some time to transmit the frame (and do the channel changes, if
-needed). Furthermore, this makes it more difficult for centrally managed
-networks to optimize roaming since we would be disassociating and
-associating as a new association instead of doing proper re-association.
-In such networks, the APs (or well, likely some sort of central manager)
-takes care of clearing the old association when the reassociation is
-being processed. In addition, this could potentially tunnel some frames
-through the new AP or at least make sure that bridge tables gets
-updated.
+> Your best bet is to test against mac80211_hwsim, that would rule out
+> any hardware. I think Jouni and Johannes have also a way to get the
+> devices to talk to each other. Perhaps some documentation of that on
+> the kernel Documentation/networking/mac80211_hwsim/
 
--- 
-Jouni Malinen                                            PGP id EFC895FA
+You can either use network namespaces, or you can now somehow add local
+routes (Patrick worked on that). But that's only needed if you need to
+test IP connectivity at all between the interfaces, as long as you just
+assoc etc. you don't need that.
+
+johannes
+
