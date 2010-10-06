@@ -1,68 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cantor.suse.de ([195.135.220.2]:55743 "EHLO mx1.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755809Ab0JSAqn (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 18 Oct 2010 20:46:43 -0400
-Date: Mon, 18 Oct 2010 17:30:00 -0700
-From: Greg KH <gregkh@suse.de>
-To: Rafa?? Mi??ecki <zajec5@gmail.com>
-Cc: Henry Ptasinski <henryp@broadcom.com>,
-	Brett Rudley <brudley@broadcom.com>,
-	Nohee Ko <noheek@broadcom.com>, linux-wireless@vger.kernel.org,
-	b43-dev <b43-dev@lists.infradead.org>
-Subject: Re: Request for free-distributable Broadcom's (G|LP)-PHY firmware
-Message-ID: <20101019003000.GA28348@suse.de>
-References: <AANLkTik45KLdLf5UpjPtXTNgy4Df_BupyQ3SzRr6gZgC@mail.gmail.com> <AANLkTin_JcEyT21dTS=Ew868HJvZQ2FVZBGXjCZn=8O_@mail.gmail.com>
+Received: from mail30g.wh2.ocn.ne.jp ([220.111.41.239]:34655 "HELO
+	mail30g.wh2.ocn.ne.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1758251Ab0JFCf4 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 5 Oct 2010 22:35:56 -0400
+Received: from vs3010.wh2.ocn.ne.jp (125.206.180.173)
+	by mail30g.wh2.ocn.ne.jp (RS ver 1.0.95vs) with SMTP id 0-0838592554
+	for <linux-wireless@vger.kernel.org>; Wed,  6 Oct 2010 11:35:54 +0900 (JST)
+From: Bruno Randolf <br1@einfach.org>
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>, vasanth@atheros.com
+Subject: Re: [PATCH 4/5] nl80211/mac80211: Add channel utilization to survey
+Date: Wed, 6 Oct 2010 11:35:57 +0900
+Cc: linville@tuxdriver.com, nbd@openwrt.org,
+	ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org
+References: <20101005095510.3083.46174.stgit@tt-desk> <20101005095526.3083.82322.stgit@tt-desk> <AANLkTim62JuNJMHNB=-_mTXyXVr84cqptrqnD8QgtT7F@mail.gmail.com>
+In-Reply-To: <AANLkTim62JuNJMHNB=-_mTXyXVr84cqptrqnD8QgtT7F@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <AANLkTin_JcEyT21dTS=Ew868HJvZQ2FVZBGXjCZn=8O_@mail.gmail.com>
+Content-Type: Text/Plain;
+  charset="utf-8"
+Message-Id: <201010061135.57102.br1@einfach.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Oct 19, 2010 at 02:02:06AM +0200, Rafa?? Mi??ecki wrote:
-> W dniu 9 pa??dziernika 2010 00:07 u??ytkownik Rafa?? Mi??ecki
-> <zajec5@gmail.com> napisa??:
-> > Hi Broadcom fellows!
-> >
-> > It's great that afters long years of... well, pretty horrible
-> > relations with Linux/opensource you have taken actions to change your
-> > image. I guess brcm80211 it's perfect yet, and people may like it more
-> > or less, but it's no doubt you made step in the right direction.
-> > Thanks for that!
-> >
-> > As you should know, you released driver and firmware for 802.11n
-> > devices only. I believe it was right, as these device seem to be the
-> > most nowadays and were the only ones without any open source support.
-> > For older devices: G-PHY and LP-PHY we have working b43 driver that is
-> > in relatively good shape. However... there is one thing we still miss
-> > for olders cards.
-> >
-> > Every time someone wants to use b43 it's necessary to download quite
-> > big package from openwrt, unpack it, extract firmware and install it.
-> > That simply happens because we don't have just-firmware files with
-> > nice licensing. And of course there goes my request:
-> >
-> > *Can you submit G-PHY and LP-PHY firmware to linux-firmware using some
-> > normal licensing, please?*
-> >
-> > This is of course not the best I could wish for, but is important
-> > anyway and it should be easy decision. Ideally you could release
-> > sources of firmware (plus toolchain eventualy... however, we have nice
-> > toolchain from Michael), but I guess it would need more time and
-> > decisions to make it happen. So as for now I guess we would be happy
-> > with just closed source but easy-distributable firmware. Could you
-> > release, submit it?
+On Wed October 6 2010 07:36:30 Luis R. Rodriguez wrote:
+> On Tue, Oct 5, 2010 at 2:55 AM, Bruno Randolf <br1@einfach.org> wrote:
+> > This adds three new values to the survey results:
+> > 
+> >  * BUSY - percentage of time the channel was busy
+> >  * BUSY_TX - percentage of time spent transmitting frames
+> >  * BUSY_RX - percentage of time spent receiving frames
+> > 
+> > They are defined to be a percentage of time, normalized to 255. That way
+> > they match the Channel Utilization of the BSS Load IE of 802.11-2007,
+> > chapter 7.3.2.28, in case we want to use that later.
+> > 
+> > I admit that these three values are ath[59]k centric - it's what is
+> > available there, and i don't know if other chipsets have similar
+> > information.
+> > 
+> > Signed-off-by: Bruno Randolf <br1@einfach.org>
+> > ---
+> >  include/linux/nl80211.h |   10 ++++++++++
+> >  include/net/cfg80211.h  |    6 ++++++
+> >  net/wireless/nl80211.c  |    9 +++++++++
+> >  3 files changed, 25 insertions(+), 0 deletions(-)
+> > 
+> > diff --git a/include/linux/nl80211.h b/include/linux/nl80211.h
+> > index f0518b0..2cc74a2 100644
+> > --- a/include/linux/nl80211.h
+> > +++ b/include/linux/nl80211.h
+> > @@ -1400,6 +1400,13 @@ enum nl80211_reg_rule_flags {
+> >  * @__NL80211_SURVEY_INFO_INVALID: attribute number 0 is reserved
+> >  * @NL80211_SURVEY_INFO_FREQUENCY: center frequency of channel
+> >  * @NL80211_SURVEY_INFO_NOISE: noise level of channel (u8, dBm)
+> > + * @NL80211_SURVEY_INFO_BUSY: channel busy ratio (u8, percentage of
+> > time, + *     normalized to 255 so it matches Channel Utilization of the
+> > BSS Load IE + *     of 802.11-2007 chapter 7.3.2.28)
 > 
-> Greg: I didn't receive any answer from Broadcom for any mail. Do you
-> maybe have any "working" contact with this company? :|
+> Neat, so this could be used to help with roaming it seems.. Now as you
+> noted this is defined pretty specifically on 802.11-2007 chapter
+> 7.3.2.28.
+> 
+> > + * @NL80211_SURVEY_INFO_BUSY_TX: percentage of time spent transmitting
+> > frames + *     (u8, percent 0-255, see above)
+> 
+> But here you say look above, can you be more specific how this relates
+> to 802.11-2007 chapter 7.3.2.28 ?
 
-Heh, no, Henry and the others on the cc: above are all I have.
-Hopefully they will be able to reply, or at least give us a "we are not
-the developers/people who can help out with this, but please try these
-other email addresses..."
+hmm, i guess it doesn't. i was just refering to above for the range, but 
+802.11 doesn't have separate values for TX or RX. i'd better rephrase that.
 
-Henry?
-
-thanks,
-
-greg k-h
+bruno
