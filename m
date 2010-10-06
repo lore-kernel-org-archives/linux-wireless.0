@@ -1,55 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f46.google.com ([209.85.215.46]:55658 "EHLO
-	mail-ew0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755362Ab0JVPnu (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 22 Oct 2010 11:43:50 -0400
-Received: by ewy7 with SMTP id 7so1270430ewy.19
-        for <linux-wireless@vger.kernel.org>; Fri, 22 Oct 2010 08:43:49 -0700 (PDT)
-From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-To: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-Cc: b43-dev@lists.infradead.org,
-	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-Subject: [PATCH 3/5] b43: define known SPROM boardflags2 bits
-Date: Fri, 22 Oct 2010 17:43:47 +0200
-Message-Id: <1287762229-16516-4-git-send-email-zajec5@gmail.com>
-In-Reply-To: <1287762229-16516-2-git-send-email-zajec5@gmail.com>
-References: <1287762229-16516-2-git-send-email-zajec5@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Received: from mga01.intel.com ([192.55.52.88]:11395 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756245Ab0JFPXv (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 6 Oct 2010 11:23:51 -0400
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Subject: [PATCH 0/6]  update for 2.6.37
+Date: Wed,  6 Oct 2010 08:23:07 -0700
+Message-Id: <1286378593-7509-1-git-send-email-wey-yi.w.guy@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
----
- drivers/net/wireless/b43/b43.h |   13 +++++++++++++
- 1 files changed, 13 insertions(+), 0 deletions(-)
+We add 130 device support
+We also cleanup the code to make more readable for device configuration
 
-diff --git a/drivers/net/wireless/b43/b43.h b/drivers/net/wireless/b43/b43.h
-index 72821c4..9aad2ca 100644
---- a/drivers/net/wireless/b43/b43.h
-+++ b/drivers/net/wireless/b43/b43.h
-@@ -153,6 +153,19 @@
- #define B43_BFH_FEM_BT			0x0040	/* has FEM and switch to share antenna
- 						 * with bluetooth */
- 
-+/* SPROM boardflags2_lo values */
-+#define B43_BFL2_RXBB_INT_REG_DIS	0x0001	/* external RX BB regulator present */
-+#define B43_BFL2_APLL_WAR		0x0002	/* alternative A-band PLL settings implemented */
-+#define B43_BFL2_TXPWRCTRL_EN 		0x0004	/* permits enabling TX Power Control */
-+#define B43_BFL2_2X4_DIV		0x0008	/* 2x4 diversity switch */
-+#define B43_BFL2_5G_PWRGAIN		0x0010	/* supports 5G band power gain */
-+#define B43_BFL2_PCIEWAR_OVR		0x0020	/* overrides ASPM and Clkreq settings */
-+#define B43_BFL2_CAESERS_BRD		0x0040	/* is Caesers board (unused) */
-+#define B43_BFL2_BTC3WIRE		0x0080	/* used 3-wire bluetooth coexist */
-+#define B43_BFL2_SKWRKFEM_BRD		0x0100	/* 4321mcm93 uses Skyworks FEM */
-+#define B43_BFL2_SPUR_WAR		0x0200	/* has a workaround for clock-harmonic spurs */
-+#define B43_BFL2_GPLL_WAR		0x0400	/* altenative G-band PLL settings implemented */
-+
- /* GPIO register offset, in both ChipCommon and PCI core. */
- #define B43_GPIO_CONTROL		0x6c
- 
--- 
-1.7.1
+Jay Sternberg (1):
+  iwlagn: reduce redundant parameter definitions
+
+Wey-Yi Guy (5):
+  iwlwifi: schedule to deprecate software scan support
+  iwlagn: rename iwl5000_tx_power_dbm_cmd
+  iwlwifi: remove uncorrect comments
+  iwlagn: rename iwl5000_tx_resp
+  iwlagn: define 130 series of WiFi/BT combo devices
+
+these patches are also available from wireless-next-2.6 branch on
+ git://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi-2.6.git
+
+ Documentation/feature-removal-schedule.txt     |   10 +
+ drivers/net/wireless/iwlwifi/iwl-1000.c        |  121 ++----
+ drivers/net/wireless/iwlwifi/iwl-3945.c        |   43 +-
+ drivers/net/wireless/iwlwifi/iwl-4965.c        |   47 +-
+ drivers/net/wireless/iwlwifi/iwl-5000.c        |  191 +++------
+ drivers/net/wireless/iwlwifi/iwl-6000.c        |  567 +++++++-----------------
+ drivers/net/wireless/iwlwifi/iwl-agn-calib.c   |   40 +-
+ drivers/net/wireless/iwlwifi/iwl-agn-debugfs.c |   12 +-
+ drivers/net/wireless/iwlwifi/iwl-agn-hcmd.c    |    5 +-
+ drivers/net/wireless/iwlwifi/iwl-agn-ict.c     |    2 +-
+ drivers/net/wireless/iwlwifi/iwl-agn-lib.c     |   47 ++-
+ drivers/net/wireless/iwlwifi/iwl-agn-rs.c      |   11 +-
+ drivers/net/wireless/iwlwifi/iwl-agn-rx.c      |   33 +-
+ drivers/net/wireless/iwlwifi/iwl-agn-tt.c      |    6 +-
+ drivers/net/wireless/iwlwifi/iwl-agn-tx.c      |   19 +-
+ drivers/net/wireless/iwlwifi/iwl-agn-ucode.c   |    5 +-
+ drivers/net/wireless/iwlwifi/iwl-agn.c         |   61 ++-
+ drivers/net/wireless/iwlwifi/iwl-agn.h         |    2 +
+ drivers/net/wireless/iwlwifi/iwl-commands.h    |   22 +-
+ drivers/net/wireless/iwlwifi/iwl-core.c        |   95 +++--
+ drivers/net/wireless/iwlwifi/iwl-core.h        |  129 +++---
+ drivers/net/wireless/iwlwifi/iwl-debugfs.c     |   58 ++-
+ drivers/net/wireless/iwlwifi/iwl-eeprom.c      |   12 +-
+ drivers/net/wireless/iwlwifi/iwl-led.c         |    6 +-
+ drivers/net/wireless/iwlwifi/iwl-power.c       |    4 +-
+ drivers/net/wireless/iwlwifi/iwl-scan.c        |    3 +-
+ drivers/net/wireless/iwlwifi/iwl3945-base.c    |   22 +-
+ 27 files changed, 660 insertions(+), 913 deletions(-)
 
