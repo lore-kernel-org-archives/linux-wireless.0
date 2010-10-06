@@ -1,39 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:61748 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756621Ab0JLIbp (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 12 Oct 2010 04:31:45 -0400
-From: jcm@jonmasters.org
-To: linux-wireless@vger.kernel.org
-Cc: Brett Rudley <brudley@broadcom.com>,
-	Henry Ptasinski <henryp@broadcom.com>,
-	Nohee Ko <noheek@broadcom.com>,
-	Jon Masters <jcm@jonmasters.org>,
-	LKML <linux-kernel@vger.kernel.org>
-Subject: [PATCH] [staging] brcm80211: fix radio disabled on attempt to bring up interface
-Date: Tue, 12 Oct 2010 04:29:58 -0400
-Message-Id: <1286872198-10664-1-git-send-email-jcm@jonmasters.org>
+Received: from he.sipsolutions.net ([78.46.109.217]:58217 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752398Ab0JFTTJ (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 6 Oct 2010 15:19:09 -0400
+Subject: Re: Crash in cfg80211_unlink_bss
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Ben Greear <greearb@candelatech.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Hun-Kyi Wynn <hkwynn@candelatech.com>
+In-Reply-To: <4CACCA98.7010204@candelatech.com>
+References: <4CACB1D1.7090900@candelatech.com>
+	 <1286388245.3655.392.camel@jlt3.sipsolutions.net>
+	 <4CACBB14.1090507@candelatech.com>
+	 <1286388980.3655.395.camel@jlt3.sipsolutions.net>
+	 <4CACCA98.7010204@candelatech.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Wed, 06 Oct 2010 21:19:09 +0200
+Message-ID: <1286392749.3655.411.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The brcm80211 driver does not correctly handle the case that the wireless
-radio hardware is physically disabled during interface initialization. An
-attempt is made to check whether the radio is disabled, and in the case
-that it is, a background worker is setup to monitor for the radio coming
-online, but the interface queues are incorrectly brought up anyway. The
-value BCME_RADIOOFF should be returned in wlc_up in such error case.
+On Wed, 2010-10-06 at 12:14 -0700, Ben Greear wrote:
+> On 10/06/2010 11:16 AM, Johannes Berg wrote:
+> > On Wed, 2010-10-06 at 11:08 -0700, Ben Greear wrote:
+> >
+> >>> I need to analyse the refcounting here again and in more detail, but in
+> >>> the meantime can you try below patch?
+> >>
+> >> Yes, will do so and let you know the results.
+> >
+> > Please try the new version, and let me know. I should submit this ASAP.
+> 
+> That patch seems to fix things.
+> 
+> Feel free to add:  Tested-by: Hun-Kyi Wynn <hkwynn@candelatech.com>
 
-Signed-off-by: Jon Masters <jcm@jonmasters.org>
+Thanks, I've sent out the patch.
 
-diff -urNp brcm80211_orig/sys/wlc_mac80211.c brcm80211/sys/wlc_mac80211.c
---- brcm80211_orig/sys/wlc_mac80211.c	2010-10-12 04:18:07.940125220 -0400
-+++ brcm80211/sys/wlc_mac80211.c	2010-10-12 04:19:19.814961117 -0400
-@@ -2783,7 +2783,7 @@ int BCMINITFN(wlc_up) (wlc_info_t *wlc)
- 
- 	if (wlc->pub->radio_disabled) {
- 		wlc_radio_monitor_start(wlc);
--		return 0;
-+		return BCME_RADIOOFF;
- 	}
- 
- 	/* wlc_bmac_up_prep has done wlc_corereset(). so clk is on, set it */
+johannes
+
