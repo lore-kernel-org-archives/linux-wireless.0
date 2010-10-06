@@ -1,64 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f46.google.com ([209.85.215.46]:46241 "EHLO
-	mail-ew0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932215Ab0JOSB0 convert rfc822-to-8bit (ORCPT
+Received: from mail-ey0-f174.google.com ([209.85.215.174]:43593 "EHLO
+	mail-ey0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755254Ab0JFFuE (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 15 Oct 2010 14:01:26 -0400
-Received: by ewy20 with SMTP id 20so1322413ewy.19
-        for <linux-wireless@vger.kernel.org>; Fri, 15 Oct 2010 11:01:25 -0700 (PDT)
+	Wed, 6 Oct 2010 01:50:04 -0400
+Received: by eyb6 with SMTP id 6so2726728eyb.19
+        for <linux-wireless@vger.kernel.org>; Tue, 05 Oct 2010 22:50:03 -0700 (PDT)
+From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+To: linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>
+Cc: b43-dev@lists.infradead.org,
+	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+Subject: [PATCH 0/3] b43: channel switching little cleaning
+Date: Wed,  6 Oct 2010 07:50:05 +0200
+Message-Id: <1286344208-32479-1-git-send-email-zajec5@gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <4CB7F7C7.7030804@gmx.net>
-References: <4CB6BE57.8010401@gmx.net> <1287071844.11341.5.camel@gnutoo-laptop>
- <AANLkTikosEtFnWqRVzMBKtNsB=aqOpqQFKDOZS3+pXTE@mail.gmail.com>
- <4CB74759.3030807@gmx.net> <AANLkTi=1Ar-gzRaskHGDLmkaDnr=9+oZnA=qBLCYcUAi@mail.gmail.com>
- <4CB7F7C7.7030804@gmx.net>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Fri, 15 Oct 2010 11:01:04 -0700
-Message-ID: <AANLkTi=u+mT2Xd0=0vt4uaf9hSnnkPKY+wN6DjAxME3m@mail.gmail.com>
-Subject: Re: Compat-wireless N900
-To: George <george.news@gmx.net>
-Cc: "Denis 'GNUtoo' Carikli" <GNUtoo@no-log.org>,
-	linux-wireless@vger.kernel.org
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Oct 14, 2010 at 11:42 PM, George <george.news@gmx.net> wrote:
-> On 14/10/2010 20:03, Luis R. Rodriguez wrote:
->>
->> On Thu, Oct 14, 2010 at 11:09 AM, George<george.news@gmx.net>  wrote:
->>
->>> I have tried using even insmod and the modules load perfectly but the
->>> wlan
->>> device doesn't show up.
->>
->> Then that likely means you are not loading the right module.
->>
->>> In dmesg nothing is displayed except for the cfg80211 and when I rmmod
->>> the
->>> module wl1251 (wl1251: removed or similar)
->>>
->>> I'm still wondering what the hell I have to do.
->>
->> Are you sure you have the right module?
->
-> Yes. The driver is the wl1251 family. As I said in previous posts and from
-> what some guys in the IRC channel tried to guess, it seems that the problem
-> might be in that the spi interface is specific for any device, and in the
-> n900 might be different from the one implemented in compat-wireless.
+It defines B43_SHM_SH_CHAN_40MHZ and simplifies channel switching for N-PHY.
 
-Heh, nope.
+Rafał Miłecki (3):
+  b43: N-PHY: simplify channel switching
+  b43: define B43_SHM_SH_CHAN_40MHZ
+  b43: N-PHY: don't duplicate setting channel in shared memory
 
-> I'm a bit suprised about this fact, but they know more than I.
+ drivers/net/wireless/b43/b43.h        |    3 ++-
+ drivers/net/wireless/b43/phy_common.c |    6 ++++--
+ drivers/net/wireless/b43/phy_n.c      |   32 ++++++++++----------------------
+ 3 files changed, 16 insertions(+), 25 deletions(-)
 
-Or, we had not yet accommodated yet for the fact that the wl1251
-driver was split out into its own directory from the original wl12xx/
-directory and no one ever sent a patch to fix this on compat-wireless.
-I just fixed this on today's compat-wireless, so you can try that
-around noon PST time when the new tarball will be generated. Ah but
-there are some pcmcia crap compile issues, we just have to remove
-pcmcia support, well not now, I have other stuff to do.
-
-I welcome patches if someone gets to it.
-
-  Luis
