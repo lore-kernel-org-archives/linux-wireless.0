@@ -1,49 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f46.google.com ([209.85.215.46]:35910 "EHLO
-	mail-ew0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755485Ab0JILge (ORCPT
+Received: from mail-qy0-f174.google.com ([209.85.216.174]:65347 "EHLO
+	mail-qy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932440Ab0JFPHN convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 9 Oct 2010 07:36:34 -0400
-Received: by mail-ew0-f46.google.com with SMTP id 20so23937ewy.19
-        for <linux-wireless@vger.kernel.org>; Sat, 09 Oct 2010 04:36:33 -0700 (PDT)
-From: Ivo van Doorn <ivdoorn@gmail.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Subject: [PATCH 05/06] rt2x00: Remove superfluous initialization of qidx
-Date: Sat, 9 Oct 2010 13:35:13 +0200
-Cc: linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com
-References: <201010091333.17274.IvDoorn@gmail.com> <201010091334.12741.IvDoorn@gmail.com> <201010091334.44618.IvDoorn@gmail.com>
-In-Reply-To: <201010091334.44618.IvDoorn@gmail.com>
+	Wed, 6 Oct 2010 11:07:13 -0400
+Received: by qyk29 with SMTP id 29so3238274qyk.19
+        for <linux-wireless@vger.kernel.org>; Wed, 06 Oct 2010 08:07:12 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Message-Id: <201010091335.13894.IvDoorn@gmail.com>
+In-Reply-To: <AANLkTi=1-r8XZHn9nqbbh2N=7yrsKXZbgxHNcNg+qFxo@mail.gmail.com>
+References: <AANLkTin9hFUE_RH0Zb4OuV2dU_kJs6_ap=VxEmT3e3F8@mail.gmail.com>
+	<20101006132301.GA2472@tuxdriver.com>
+	<AANLkTi=1-r8XZHn9nqbbh2N=7yrsKXZbgxHNcNg+qFxo@mail.gmail.com>
+Date: Wed, 6 Oct 2010 11:07:12 -0400
+Message-ID: <AANLkTi=buSXukPp4xeSdig6z3rvNs2G=v6s1Y794Q2JK@mail.gmail.com>
+Subject: Re: Why were patches reverted on 2010-09-21? (carl9170 and others)
+From: Christian Jaeger <chrjae@gmail.com>
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org,
+	Christian Lamparter <chunkeey@googlemail.com>
+Content-Type: text/plain; charset=windows-1252
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Helmut Schaa <helmut.schaa@googlemail.com>
+Thanks for your explantion.
 
-There is no need to initialize qidx to zero as it will ever be
-overwritten by the correct value.
+My patches on top of the stable kernel don't build (they depend a
+'cipher' member on ‘struct ieee80211_key_conf’, and I guess there may
+be more). If I want to reach my goal of trying carl9170 with a stable
+kernel, should I still proceed that route, i.e. finding the patches
+that carl* depends on, or trying to change the carl* code to not
+require them, or is there a better idea? I'd like to avoid running
+wireless-testing as is if possible (for fear of stability and security
+issues on this world-facing, supposedly stable router of mine).
 
-Signed-off-by: Helmut Schaa <helmut.schaa@googlemail.com>
-Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
----
- drivers/net/wireless/rt2x00/rt2800pci.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
-
-diff --git a/drivers/net/wireless/rt2x00/rt2800pci.c b/drivers/net/wireless/rt2x00/rt2800pci.c
-index 85a134c..cc4e17c 100644
---- a/drivers/net/wireless/rt2x00/rt2800pci.c
-+++ b/drivers/net/wireless/rt2x00/rt2800pci.c
-@@ -573,7 +573,7 @@ static void rt2800pci_kick_tx_queue(struct data_queue *queue)
- {
- 	struct rt2x00_dev *rt2x00dev = queue->rt2x00dev;
- 	struct queue_entry *entry = rt2x00queue_get_entry(queue, Q_INDEX);
--	unsigned int qidx = 0;
-+	unsigned int qidx;
- 
- 	if (queue->qid == QID_MGMT)
- 		qidx = 5;
--- 
-1.7.2.3
-
+Thanks,
+Christian.
