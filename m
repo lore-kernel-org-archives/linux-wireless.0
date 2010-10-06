@@ -1,72 +1,126 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iw0-f174.google.com ([209.85.214.174]:65448 "EHLO
-	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754198Ab0JFBS2 convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 5 Oct 2010 21:18:28 -0400
-Received: by iwn5 with SMTP id 5so9028912iwn.19
-        for <linux-wireless@vger.kernel.org>; Tue, 05 Oct 2010 18:18:27 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <20101005095521.3083.87663.stgit@tt-desk>
-References: <20101005095510.3083.46174.stgit@tt-desk> <20101005095521.3083.87663.stgit@tt-desk>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Tue, 5 Oct 2010 18:18:07 -0700
-Message-ID: <AANLkTin5r7ig7-h9DRjwGrei9R5-CL6gW7kcBNKWP2Rs@mail.gmail.com>
-Subject: Re: [PATCH 3/5] ath9k: Use common cycle counters
-To: Bruno Randolf <br1@einfach.org>
-Cc: linville@tuxdriver.com, nbd@openwrt.org,
-	ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org,
-	adrian@freebsd.org, vasanth@atheros.com
-Content-Type: text/plain; charset=UTF-8
+Received: from smtp.nokia.com ([147.243.1.47]:28830 "EHLO mgw-sa01.nokia.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753686Ab0JFF1X (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 6 Oct 2010 01:27:23 -0400
+Subject: RE: [PATCH 24/25] wl1271: Optimize scan duration
+From: Juuso Oikarinen <juuso.oikarinen@nokia.com>
+To: "ext Gabay, Benzy" <benzyg@ti.com>
+Cc: "Coelho Luciano (Nokia-MS/Helsinki)" <Luciano.Coelho@nokia.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <676FD6AA0F002F49B89E70F0C5EFD22C135ADBA311@dlee04.ent.ti.com>
+References: <1285576669-8070-1-git-send-email-luciano.coelho@nokia.com>
+	 <1285576669-8070-25-git-send-email-luciano.coelho@nokia.com>
+	 <676FD6AA0F002F49B89E70F0C5EFD22C135AD3C603@dlee04.ent.ti.com>
+	 <1286257254.11177.224.camel@wimaxnb.nmp.nokia.com>
+	 <676FD6AA0F002F49B89E70F0C5EFD22C135AD3CB17@dlee04.ent.ti.com>
+	 <1286341161.11177.254.camel@wimaxnb.nmp.nokia.com>
+	 <676FD6AA0F002F49B89E70F0C5EFD22C135ADBA311@dlee04.ent.ti.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Wed, 06 Oct 2010 08:26:54 +0300
+Message-ID: <1286342814.11177.258.camel@wimaxnb.nmp.nokia.com>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Oct 5, 2010 at 2:55 AM, Bruno Randolf <br1@einfach.org> wrote:
-> Update ath9k to use the common cycle counters.
->
-> This also includes other changes from Felix Fietkaus "[PATCH 2/4] ath9k_hw:
-> merge codepaths that access the cycle counter registers".
->
-> Compile tested only. ath9k team please review...
->
-> Signed-off-by: Felix Fietkau <nbd@openwrt.org>
-> Signed-off-by: Bruno Randolf <br1@einfach.org>
-> ---
->  drivers/net/wireless/ath/ath9k/ani.c        |   87 +++------------------------
->  drivers/net/wireless/ath/ath9k/ani.h        |    6 --
->  drivers/net/wireless/ath/ath9k/ar5008_phy.c |    9 +--
->  drivers/net/wireless/ath/ath9k/ar9003_phy.c |   18 +++---
->  4 files changed, 22 insertions(+), 98 deletions(-)
->
-> diff --git a/drivers/net/wireless/ath/ath9k/ani.c b/drivers/net/wireless/ath/ath9k/ani.c
-> index 0496f96..0c0d01d 100644
-> --- a/drivers/net/wireless/ath/ath9k/ani.c
-> +++ b/drivers/net/wireless/ath/ath9k/ani.c
-> @@ -549,47 +549,21 @@ static u8 ath9k_hw_chan_2_clockrate_mhz(struct ath_hw *ah)
->
->  static int32_t ath9k_hw_ani_get_listen_time(struct ath_hw *ah)
->  {
-> -       struct ar5416AniState *aniState;
->        struct ath_common *common = ath9k_hw_common(ah);
-> -       u32 txFrameCount, rxFrameCount, cycleCount;
-> -       int32_t listenTime;
-> +       int32_t listen_time;
-> +       int32_t clock_rate;
->
-> -       txFrameCount = REG_READ(ah, AR_TFCNT);
-> -       rxFrameCount = REG_READ(ah, AR_RFCNT);
-> -       cycleCount = REG_READ(ah, AR_CCCNT);
-> +       ath_hw_cycle_counters_lock(common);
+On Wed, 2010-10-06 at 07:21 +0200, ext Gabay, Benzy wrote:
+> Juuso,
+> 
+> 
+> > Sent: Tuesday, October 05, 2010 11:59 PM
+> > 
+> > Hi,
+> > 
+> > On Tue, 2010-10-05 at 17:42 +0200, ext Gabay, Benzy wrote:
+> > > Juuso,
+> > 
+> > > > > >
+> > > > > > From: Juuso Oikarinen <juuso.oikarinen@nokia.com>
+> > > > > >
+> > > > > > Currently then dwell times for each channel in scans is set to
+> > an
+> > > > > > overly
+> > > > > > long value, and excessive number of probe-requests are
+> > transmitted
+> > > > on
+> > > > > > each
+> > > > > > channel (for active scans.)
+> > > > > >
+> > > > > > Based on testing, comparable results can be received with
+> > smaller
+> > > > > > dwell-time,
+> > > > > > and, with fever probe-requests - in fact, reducing the number
+> > of
+> > > > probe-
+> > > > > > requests
+> > > > > > to 2 seems to increase the number of found results.
+> > > > >
+> > > > > I think that this does not making any sense. Less prob requests
+> > > > should give you back less results. As less beacons/prob responses
+> > are
+> > > > getting back to the station.
+> > > > > I think also that office with 70 AP is not a normal environment
+> > to
+> > > > test and optimize numbers.
+> > > > > I would suggest to re-test in a 1-6 AP environment which is
+> > making
+> > > > more sense for both home and enterprise environment.
+> > > >
+> > > > We have actually performed more testing than just mentioned here,
+> > in
+> > > > varied environments, and all of the testing seems to indicate that
+> > > > reducing the number of probe-reqs per channel is not reducing the
+> > > > number
+> > > > of acquired results. Instead, in some scenarios, it is increasing
+> > the
+> > > > number of acquired results.
+> > > >
+> > >
+> > > >>  I don’t know if that is conventional request: can you share the
+> > full results and setup details?
+> > 
+> > No, I don't have any formal documentation to share.
+> > 
+> > The setup details are simple enough though. The tested this on command
+> > line using a simple script that flushes existing scan results, then
+> > performs two or three scans counting the number of scan results on the
+> > last round using grep and wc.
+> > 
+> > We performed the testing in office environment and a shielded chamber,
+> > which only has selected AP's within it.
+> > 
+> > Between test rounds we modified the driver parameters related to
+> > scanning, i.e. we modified the number of probe-reqs and the dwell time
+> > on each channel.
+> > 
+> > -Juuso
+> 
+> 
+> Sounds great. Just one more: which AP brands (excluding Cisco) ?
 
-Note the lock call here. This is what I'd like to see avoided. Can you
-perhaps have the lock called within the core driver instead, that is,
-add the lock call for the caller of ath9k_hw_ani_get_listen_time(). In
-this case I see ath9k_hw_ani_get_listen_time() is static though and so
-is its caller but ultimately we get to ath9k_hw_ani_monitor(). What
-I'm saying is how about calling the
-ath_hw_cycle_counters_lock(common); right before
-ath9k_hw_ani_monitor().
+In the office environment we have a variety of brands, including D-link,
+Buffalo, Telewell, TP-link and linksys, cisco etc.
 
-> +       ath_hw_cycle_counters_update(common);
+In the shielded chamber we are using linksys wrt610n AP's.
 
-  Luis
+-Juuso
+
+> 
+> 
+> > 
+> > > > We did not see reduction in the probability of finding a specific
+> > AP in
+> > > > a few (one or two) AP environment either.
+> > > >
+> > > > The effect seems to be this way because reducing the number of
+> > > > probe-req's dramatically reduces the noise generated by probe-
+> > responses
+> > > > from AP's on neighbouring channels.
+> > > >
+> > > > -Juuso
+> > > >
+> > 
+> 
+> �{.n�+�������+%��lzwm��b�맲��r��zX��"��^�ȧ���ܨ}���Ơz�&j:+v�������zZ+��+zf���h���~����i���z��w���?����&�)ߢf
+
+
