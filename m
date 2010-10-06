@@ -1,38 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.19.149.2]:44356 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753663Ab0JVQu0 convert rfc822-to-8bit (ORCPT
+Received: from devils.ext.ti.com ([198.47.26.153]:54193 "EHLO
+	devils.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754079Ab0JFSG3 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 22 Oct 2010 12:50:26 -0400
-Received: from mail.atheros.com ([10.10.20.105])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Fri, 22 Oct 2010 09:50:16 -0700
-From: Rajkumar Manoharan <Rajkumar.Manoharan@Atheros.com>
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-CC: "johannes@sipsolutions.net" <johannes@sipsolutions.net>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Date: Fri, 22 Oct 2010 22:18:00 +0530
-Subject: RE: [RFC] mac80211: Fix ibss station got expired immediately
-Message-ID: <44EE5C37ADC36343B0625A05DD408C4850DAB4D6C4@CHEXMB-01.global.atheros.com>
-References: <1287752787-6616-1-git-send-email-rmanoharan@atheros.com>,<AANLkTi=DwO_2t_p_+aeh6bBow_NR5=xoPw4A5L8X91ye@mail.gmail.com>
-In-Reply-To: <AANLkTi=DwO_2t_p_+aeh6bBow_NR5=xoPw4A5L8X91ye@mail.gmail.com>
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
+	Wed, 6 Oct 2010 14:06:29 -0400
+From: Shahar Levi <shahar_levi@ti.com>
+To: <linux-wireless@vger.kernel.org>
+Cc: Luciano Coelho <luciano.coelho@nokia.com>
+Subject: [PATCH v2 00/03] wl1271: 11n Support, add support to 80211n spec
+Date: Wed,  6 Oct 2010 20:08:07 +0200
+Message-Id: <1286388491-28752-1-git-send-email-shahar_levi@ti.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
->On Fri, Oct 22, 2010 at 6:06 AM, Rajkumar Manoharan
-><rmanoharan@atheros.com> wrote:
->> Station addition in ieee80211_ibss_rx_queued_mgmt is not updating
->> sta->last_rx which is causing station expiry in ieee80211_ibss_work
->> path. So sta addition and deletion happens repeatedly.
->>
->> Signed-off-by: Rajkumar Manoharan <rmanoharan@atheros.com>
+Series that add 80211n spec support to wl1271: scan, connection via MCS rates
+Wl12xx driver add HT support:
+· Scan includes HT IE
+· Connection to HT devices
+· HT protection
+· Traffic via MCS rates
+· A-MSDU in RX path
 
->stable fix?
+Missing functionality is:
+· BA session as Initiator and Receiver
 
-  >Luis
-yes. while sending the patch, i'll cc'd stable.
+Shahar Levi (3):
+  wl1271: 11n Support, Add Definitions
+  wl1271: 11n Support, ACX Commands
+  wl1271: 11n Support, functionality and configuration ability
 
-Thanks,
-Rajkumar
+ drivers/net/wireless/wl12xx/Kconfig       |   10 +++
+ drivers/net/wireless/wl12xx/Makefile      |    1 +
+ drivers/net/wireless/wl12xx/wl1271.h      |    2 +-
+ drivers/net/wireless/wl12xx/wl1271_acx.c  |   91 +++++++++++++++++++++++++++
+ drivers/net/wireless/wl12xx/wl1271_acx.h  |   95 +++++++++++++++++++++++++++++
+ drivers/net/wireless/wl12xx/wl1271_conf.h |    4 +
+ drivers/net/wireless/wl12xx/wl1271_main.c |   78 ++++++++++++++++++-----
+ drivers/net/wireless/wl12xx/wl1271_rx.c   |    4 +
+ drivers/net/wireless/wl12xx/wl1271_tx.c   |    9 +++
+ 9 files changed, 276 insertions(+), 18 deletions(-)
+
