@@ -1,90 +1,81 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f46.google.com ([209.85.161.46]:56322 "EHLO
-	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751496Ab0J1WSD (ORCPT
+Received: from shadbolt.e.decadent.org.uk ([88.96.1.126]:49727 "EHLO
+	shadbolt.e.decadent.org.uk" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1755427Ab0JFVye (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 28 Oct 2010 18:18:03 -0400
-Received: by fxm16 with SMTP id 16so2436942fxm.19
-        for <linux-wireless@vger.kernel.org>; Thu, 28 Oct 2010 15:18:01 -0700 (PDT)
-From: Helmut Schaa <helmut.schaa@googlemail.com>
-To: Gertjan van Wingerde <gwingerde@gmail.com>
-Subject: Re: [regression]AP with hostapd 0.7.3 can't receive packets beyond authentication (2.6.36, rt73usb)
-Date: Fri, 29 Oct 2010 00:17:12 +0200
-Cc: Lee <lee-in-berlin@web.de>, linux-wireless@vger.kernel.org,
-	Ivo van Doorn <ivdoorn@gmail.com>
-References: <4CC0D0F6.4080507@web.de> <4CC9C9A4.2020802@web.de> <4CC9D50F.5070403@gmail.com>
-In-Reply-To: <4CC9D50F.5070403@gmail.com>
-MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="us-ascii"
-Message-Id: <201010290017.13174.helmut.schaa@googlemail.com>
+	Wed, 6 Oct 2010 17:54:34 -0400
+From: Ben Hutchings <ben@decadent.org.uk>
+To: Julien Cristau <jcristau@debian.org>, 599345@bugs.debian.org
+Cc: ilw@linux.intel.com, linux-wireless@vger.kernel.org
+In-Reply-To: <20101006191947.GA3036@radis.liafa.jussieu.fr>
+References: <20101006191947.GA3036@radis.liafa.jussieu.fr>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-SbZtQ1ZoJL9pfoGF61xE"
+Date: Wed, 06 Oct 2010 22:54:03 +0100
+Message-ID: <1286402043.2955.81.camel@localhost>
+Mime-Version: 1.0
+Subject: Re: Bug#599345: linux-image-2.6.32-5-amd64: iwlagn allocation
+ failure
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Am Donnerstag 28 Oktober 2010 schrieb Gertjan van Wingerde:
-> On 10/28/10 21:06, Lee wrote:
-> > On 28/10/10 10:23, Helmut Schaa wrote:
-> >> Am Donnerstag 28 Oktober 2010 schrieb Lee:
-> >>> On 26/10/10 07:40, Helmut Schaa wrote:
-> >>>> # tcpdump -i mon0 "ether src XX:XX:XX:XX:XX:XX"
-> >>>>
-> >>>> Do you see any frames from your specific client?
-> >>>
-> >>> Yes. I can see this:
-> >>> # tcpdump -i mon0 "ether host 00:1F:3B:79:41:6F"
-> >> [...]
-> >>> 10:10:03.013402 5.5 Mb/s 2462 MHz 11b -76dB signal antenna 1 [bit 14] Data IV: 14 Pad 20 KeyID 0
-> >>>
-> >>> However, on wlan0 I don't see anything beyond the EAPOL packets.
-> >>> Temporarily turning off WPA encryption let me successfully connect to my AP.
-> >>
-> >> Aha, could you please try if loading rt73usb with nohwcrypt=1 helps?
-> >>
-> >> Helmut
-> > 
-> > (argh, brown paper bag)
-> > 
-> > I went through the compiled kernels again, and I've screwed up at the last 
-> > commit while bisecting (Sorry, Helmut!). The first bad kernel is a commit 
-> > later:
-> > 
-> > # bad: [f1aa4c541e98afa8b770a75ccaa8504d0bff44a7] rt2x00: Write the BSSID to register when interface is added
-> > 
-> > On the good side, I tested 2.6.36 with nohwcrypt=1, and it works. Yay!
-> 
-> Hmm, the patch itself that seems to cause the badness doesn't look bad.
-> However, closer inspection shows that the intf->bssid field may be initialized incorrectly.
-> 
-> I may be a long shot, but can you check if the attached patch helps?
 
-Hmm, indeed that part of the code looks suspicious. However, setting the bssid
-and mac always worked for me on rt2800pci.
+--=-SbZtQ1ZoJL9pfoGF61xE
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-Furthermore, the removal of the & seems to not make any difference in this
-case. I've just tried the following:
+On Wed, 2010-10-06 at 21:19 +0200, Julien Cristau wrote:
+> Package: linux-2.6
+> Version: 2.6.32-23
+> Severity: normal
+>=20
+> iwlagn decided 2 weeks of uptime was enough and it wanted me to reboot,
+> because it was unhappy after resume.
 
-	#include <stdio.h>
-	int main() {
-		int x[2];
-		printf("%p %p\n", x, &x);
-	}
+You also told me that this machine had no swap enabled, which is an
+unusual configuration and restricts the ability of the VM to defragment
+memory.  I would recommend adding a small swap file/partition.  However:
 
-Output is as follows:
+> Bit of kern.log:
+>=20
+> Oct  6 21:05:02 radis kernel: [378665.326381] NetworkManager: page alloca=
+tion failure. order:4, mode:0x40d0
+> Oct  6 21:05:02 radis kernel: [378665.326393] Pid: 25555, comm: NetworkMa=
+nager Not tainted 2.6.32-5-amd64 #1
+[...]
+> Oct  6 21:05:02 radis kernel: [378665.363630] iwlagn 0000:0c:00.0: kmallo=
+c for auxiliary BD structures failed
+[...]
 
-0x7fff74cb1df0 0x7fff74cb1df0
+This particular allocation is for an array which is not used for DMA and
+therefore could be stored in non-contiguous pages allocated with
+vmalloc().  But there may be some good reason not to do this.
 
-So, x and &x are equivalent in this case and this is similar to the code in
-rt2x00mac. I'm fine with changing both memcpy's as you've suggested as it
-really looks cleaner but I doubt that this is going to fix the problem.
+Ben.
 
-In commit f1aa4c541e98afa8b770a75ccaa8504d0bff44a7 "rt2x00: Write the BSSID
-to register when interface is added" we've added the bssid passing to the
-device in AP mode to fix hw crypto on rt2800 devices in AP mode. But maybe
-the older devices behave differently and don't like getting a bssid set
-in AP mode?
+--=20
+Ben Hutchings
+Once a job is fouled up, anything done to improve it makes it worse.
 
-Lee, if you just revert the commit you've identified are you able to use
-the device in AP mode with hw crypto?
+--=-SbZtQ1ZoJL9pfoGF61xE
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
 
-Thanks,
-Helmut
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.10 (GNU/Linux)
+
+iQIVAwUATKzv8+e/yOyVhhEJAQKXgg/9GrOgKAbBcrTcKtqTeo/7gHISsAQXQpHZ
+mOPenVbsx9/zW9WGW4z32vEchc8OHIN7TM/ddlbmQOX8jVnnD/xyrgGOdKZIjVir
+Ejxfjo4NV1PcEk/DfxUhaayhDQlh2mtxDPzsk3sxwha01lAphTxWMvOqiLns31w+
+ptnCW22XHq6NuNi27+Jizc/dF0Yq4lRqq0syQOe29hqF58PF8yVkY4ORqm2X1sh1
+Fo+128pJxmzaXMOFFNCFnC2/6HBZ3Ij2Z03ntOs2WZ33QiuTjTK4BaSMb4ZwC47a
+r5vqMJ8lRNPg0ClwGUrrW08eIHwI2zQueQV1/lJGdJWYtkNbSkXuvnyk0qkQcyZ9
+RFGocjMAYO0wTLLdbyA7CDti4Ja9rs1mH4VUXIdSJpuGMHjGOQxXdb9WCYZhIsyT
+2X9QgYTqJKpqUc9u2eZBv47LU6DcguCJxoCVNSR6B9qQ3vnXHGt4xexT4QSeHpP9
+6RFeuYArUchtgmEXnFijnT6/fmZvlhGWkNxg/yeK95GzD5iC0FKbhD2BDo6lmXpG
+ZWRlElGhxSfRuqVQ/+PdfxZYo3L2f5vacw6Ns4rH+JAqTn5DtzGYFcz2CuOcAvhd
+TJaTQG4vdQMbBsM70NaFooypQkSzjTkANAMYCFzqLlD73un1Jn8g1rRngooTLAmv
+CmhIK16PCLQ=
+=QD72
+-----END PGP SIGNATURE-----
+
+--=-SbZtQ1ZoJL9pfoGF61xE--
