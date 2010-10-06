@@ -1,50 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:53188 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757814Ab0JEH4K (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 5 Oct 2010 03:56:10 -0400
-Subject: Re: Crash in agg-tx.c, with ath9k and lots of STA VIFs.
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Ben Greear <greearb@candelatech.com>
-Cc: "Luis R. Rodriguez" <mcgrof@gmail.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <4CAA5861.4020503@candelatech.com>
-References: <4CAA2247.50402@candelatech.com>
-	 <1286218879.3620.55.camel@jlt3.sipsolutions.net>
-	 <4CAA252F.9090102@candelatech.com>
-	 <1286219405.3620.56.camel@jlt3.sipsolutions.net>
-	 <AANLkTi=Ya6RuCdVYLYi3Mk5EKSP6czOfTh7TRKqB0GPU@mail.gmail.com>
-	 <AANLkTinGaCAEqGRt_X6hsO8sQx4kKEdNqU8pfi00_1-r@mail.gmail.com>
-	 <4CAA494B.5000500@candelatech.com>  <4CAA5861.4020503@candelatech.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Tue, 05 Oct 2010 09:56:06 +0200
-Message-ID: <1286265366.3641.2.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+Received: from nbd.name ([88.198.39.176]:41700 "EHLO ds10.nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750954Ab0JFCp6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 5 Oct 2010 22:45:58 -0400
+Message-ID: <4CABE2DA.5020204@openwrt.org>
+Date: Wed, 06 Oct 2010 04:45:46 +0200
+From: Felix Fietkau <nbd@openwrt.org>
+MIME-Version: 1.0
+To: Bruno Randolf <br1@einfach.org>
+CC: "Luis R. Rodriguez" <mcgrof@gmail.com>, vasanth@atheros.com,
+	linville@tuxdriver.com, ath5k-devel@lists.ath5k.org,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 5/5] ath5k: Add busy ratios to survey data
+References: <20101005095510.3083.46174.stgit@tt-desk> <20101005095531.3083.39403.stgit@tt-desk> <AANLkTimP=R4hsCWU+wP1aemHn1awzNQVWMa-_7OJEQLG@mail.gmail.com> <201010061125.54247.br1@einfach.org>
+In-Reply-To: <201010061125.54247.br1@einfach.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2010-10-04 at 15:42 -0700, Ben Greear wrote:
+On 2010-10-06 4:25 AM, Bruno Randolf wrote:
+> On Wed October 6 2010 07:38:34 Luis R. Rodriguez wrote:
 
-> I did find a similar crash while debugging a kernel with just symbols
-> compiled in (not kgdb) though:
-
-Doesn't seem all that similar...
-
-> The interesting thing to me is that the 00100104 address is the same in
-> both crashes, though this one is in a different method.
-
-except for that maybe. But this is LIST_POISON1, and with seemingly
-different lists. It may be faster to reproduce if you enable slab/slub
-debugging.
-
-> Also, this is with power-save NOT disabled (I was hoping to
-> hit some debugging code I put in for the other crash..hit this instead.)
+>> This is all being sucked out of common, so can we just share the
+>> filler for the survey between ath5k and ath9k? Note we should split up
+>> hw code and core driver code on the ath module by file.
 > 
-> Oct  4 15:26:15 localhost kernel: BUG: unable to handle kernel paging request at 00100104
-> Oct  4 15:26:15 localhost kernel: IP: [<fc77e038>] cfg80211_unlink_bss+0x4d/0x8d [cfg80211]
+> sure, that would be good! noise floor comes from ath5k_hw though, but that can 
+> easily be moved to common. 
+> 
+> there's so much code which could be shared between ath5k and ath9k...
+That would need sharing of the channel list and some per-channel data
+though - so it may need some more code reshuffling...
 
-Looks like a mac80211 bug, but you snipped the stack trace.
-
-johannes
-
+- Felix
