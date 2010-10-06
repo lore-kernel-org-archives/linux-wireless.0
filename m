@@ -1,49 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:60922 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932111Ab0JDS3c (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:49810 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758954Ab0JFUpJ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 4 Oct 2010 14:29:32 -0400
-Subject: Re: Putting APs into bridges?
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Ben Greear <greearb@candelatech.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <4CAA0D5E.2090700@candelatech.com>
-References: <4CAA0D5E.2090700@candelatech.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Mon, 04 Oct 2010 20:29:29 +0200
-Message-ID: <1286216969.3620.44.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+	Wed, 6 Oct 2010 16:45:09 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: linux-wireless@vger.kernel.org
+Cc: sgruszka@redhat.com, johannes@sipsolutions.net,
+	"John W. Linville" <linville@tuxdriver.com>
+Subject: [PATCH] mac80211: avoid uninitialized var warning in ieee80211_scan_cancel
+Date: Wed,  6 Oct 2010 16:42:23 -0400
+Message-Id: <1286397743-21687-1-git-send-email-linville@tuxdriver.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2010-10-04 at 10:22 -0700, Ben Greear wrote:
+net/mac80211/scan.c: In function ‘ieee80211_scan_cancel’:
+net/mac80211/scan.c:794: warning: ‘finish’ may be used uninitialized in this function
 
-> It seems he put two VAPs into a bridge device, and got an
-> assert here (nevermind the printk, I just added that to
-> help debug the issue).
-> 
-> static void __ieee80211_wake_queue(struct ieee80211_hw *hw, int queue,
-> 				   enum queue_stop_reason reason)
-> {
-> 	struct ieee80211_local *local = hw_to_local(hw);
-> 	struct ieee80211_sub_if_data *sdata;
-> 
-> 	trace_wake_queue(local, queue, reason);
-> 
-> 	if (WARN_ON(queue >= hw->queues)) {
-> 		printk(KERN_WARNING "%s:  queue: %i  hw->queues: %i\n",
-> 		       sdata->name, queue, hw->queues);
-> 		return;
-> 	}
-> 
-> 
-> Before I try to reproduce this, it is valid to add APs to bridge
-> devices in the first place?
+Signed-off-by: John W. Linville <linville@tuxdriver.com>
+---
+ net/mac80211/scan.c |    7 ++++---
+ 1 files changed, 4 insertions(+), 3 deletions(-)
 
-Yes, it's valid, we catch the invalid cases in cfg80211.
-
-Hitting the assert there is rather strange though.
-
-johannes
+diff --git a/net/mac80211/scan.c b/net/mac80211/scan.c
+index 80e017d..523db93 100644
+--- a/net/mac80211/scan.c
++++ b/net/mac80211/scan.c
+@@ -791,7 +791,8 @@ int ieee80211_request_internal_scan(struct ieee80211_sub_if_data *sdata,
+  */
+ void ieee80211_scan_cancel(struct ieee80211_local *local)
+ {
+-	bool abortscan, finish;
++	bool abortscan;
++	bool finish = false;
+ 
+ 	/*
+ 	 * We are only canceling software scan, or deferred scan that was not
+@@ -818,7 +819,7 @@ void ieee80211_scan_cancel(struct ieee80211_local *local)
+ 	if (abortscan) {
+ 		/* The scan is canceled, but stop work from being pending */
+ 		cancel_delayed_work_sync(&local->scan_work);
+-		if (finish)
+-			__ieee80211_scan_completed_finish(&local->hw, false);
+ 	}
++	if (finish)
++		__ieee80211_scan_completed_finish(&local->hw, false);
+ }
+-- 
+1.7.2.3
 
