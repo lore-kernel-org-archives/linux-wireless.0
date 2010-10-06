@@ -1,218 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([147.243.1.47]:22184 "EHLO mgw-sa01.nokia.com"
+Received: from mail.sdinet.de ([78.47.32.153]:53767 "EHLO mail.sdinet.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752510Ab0JELMA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 5 Oct 2010 07:12:00 -0400
-Received: from nokia.com (localhost [127.0.0.1])
-	by mgw-sa01.nokia.com (Switch-3.4.3/Switch-3.4.3) with ESMTP id o95BBwCx018677
-	for <linux-wireless@vger.kernel.org>; Tue, 5 Oct 2010 14:11:59 +0300
-From: juuso.oikarinen@nokia.com
-To: luciano.coelho@nokia.com
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCHv2] wl1271: Add extended radio parameter initialization
-Date: Tue,  5 Oct 2010 14:11:56 +0300
-Message-Id: <1286277116-22486-1-git-send-email-juuso.oikarinen@nokia.com>
+	id S1759161Ab0JFSA7 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 6 Oct 2010 14:00:59 -0400
+Date: Wed, 6 Oct 2010 19:52:06 +0200 (CEST)
+From: Sven-Haegar Koch <haegar@sdinet.de>
+To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+cc: Marcel Holtmann <holtmann@linux.intel.com>,
+	Luis Rodriguez <Luis.Rodriguez@atheros.com>,
+	linux-bluetooth <linux-bluetooth@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Deepak Dhamdhere <Deepak.Dhamdhere@atheros.com>,
+	Sree Durbha <Sree.Durbha@atheros.com>
+Subject: Re: RFC: btusb firmware load help
+In-Reply-To: <AANLkTik9w4_PdcEsbRHakLcxcD334_1Q8hGArxTXPCGF@mail.gmail.com>
+Message-ID: <alpine.DEB.2.02.1010061948470.24463@aurora.sdinet.de>
+References: <20100924230730.GB6566@tux> <1286266981.17473.33.camel@aeonflux> <20101005192814.GB11831@tux> <1286308731.2588.13.camel@aeonflux> <AANLkTimz7U52_qHaTutQDOFQde+GrWJRA0WpqY__FPgi@mail.gmail.com> <1286349552.6145.11.camel@aeonflux>
+ <AANLkTimDvgFtoGLEjgWyYRrhQy6Num-rn_2WYO4Lf84b@mail.gmail.com> <1286380566.6145.42.camel@aeonflux> <20101006163816.GE7070@tux> <AANLkTik9w4_PdcEsbRHakLcxcD334_1Q8hGArxTXPCGF@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Juuso Oikarinen <juuso.oikarinen@nokia.com>
+On Wed, 6 Oct 2010, Luis R. Rodriguez wrote:
 
-Currently a command to initialize extended radio parameter tables in the
-hardware is missing.
+> I just got this description from Sady:
+> 
+> -------------------------------------------------------------------------------------------------------------------
+> With eeprom based AR3011 hardware, normally this device gets detected
+> as a normal USB device with VID=0x0CF3, PID=0x3000.
+> Ath3k DFU driver will download the firmware in to RAM.
+> Due to firmware download in the RAM it is exposed as new device
+> with VID=0x0CF3, PID=0x3002 to host Bluetooth sub system and btusb.ko
+> driver probe routine gets called to bring up Bluetooth interface.
+> This is the normal procedure we have done so far on Linux.
+> 
+> With sflash based AR3011 hardware, when we connect the device to USB
+> port it gets detected as a Bluetooth device because of firmware in
+> Flash (VID=0x0CF3, PID=0x3002). This triggers the Bluetooth sub
+> system driver (btusb.ko) directly in the host instead of ath3k
+> DFU driver. Therefore, there is no firmware downloaded in to the
+> RAM to bring up Bluetooth at this point. This is the problem
+> we're trying to "fix".
+> -------------------------------------------------------------------------------------------------------------------
+> 
+> With the above patch we'd get ath3k to do the firmware uploading but
+> I'm afraid that we'll go into a loop here unless we can figure out a
+> way to get btusb to know the device is now ready.
 
-Add the initialization
+Modify the firmware file so that after loading the firmware it gets for 
+example VID=0x0CF3, PID=0x3003.
 
-Signed-off-by: Juuso Oikarinen <juuso.oikarinen@nokia.com>
----
-v2: change the name of the length macro for the TX power compensation table
+Blacklist VID=0x0CF3, PID=0x3002 in btusb and add it to ath3k.
 
- drivers/net/wireless/wl12xx/wl1271_cmd.c  |   33 +++++++++++++++++++++++++++++
- drivers/net/wireless/wl12xx/wl1271_cmd.h  |   24 +++++++++++++++-----
- drivers/net/wireless/wl12xx/wl1271_conf.h |   21 ++++++++++++++++++
- drivers/net/wireless/wl12xx/wl1271_init.c |    4 +++
- drivers/net/wireless/wl12xx/wl1271_main.c |   14 ++++++++++++
- 5 files changed, 90 insertions(+), 6 deletions(-)
+>From then on VID=0x0CF3, PID=0x3000 and PID=0x3002 mean "need firmware" 
+and PID=0x3003 is the operational state (like half of your PID=0x3002 
+usage is now)
 
-diff --git a/drivers/net/wireless/wl12xx/wl1271_cmd.c b/drivers/net/wireless/wl12xx/wl1271_cmd.c
-index 4a56ab0..596e333 100644
---- a/drivers/net/wireless/wl12xx/wl1271_cmd.c
-+++ b/drivers/net/wireless/wl12xx/wl1271_cmd.c
-@@ -171,6 +171,39 @@ int wl1271_cmd_radio_parms(struct wl1271 *wl)
- 	return ret;
- }
- 
-+int wl1271_cmd_ext_radio_parms(struct wl1271 *wl)
-+{
-+	struct wl1271_ext_radio_parms_cmd *ext_radio_parms;
-+	struct conf_rf_settings *rf = &wl->conf.rf;
-+	int ret;
-+
-+	if (!wl->nvs)
-+		return -ENODEV;
-+
-+	ext_radio_parms = kzalloc(sizeof(*ext_radio_parms), GFP_KERNEL);
-+	if (!ext_radio_parms)
-+		return -ENOMEM;
-+
-+	ext_radio_parms->test.id = TEST_CMD_INI_FILE_RF_EXTENDED_PARAM;
-+
-+	memcpy(ext_radio_parms->tx_per_channel_power_compensation_2,
-+	       rf->tx_per_channel_power_compensation_2,
-+	       CONF_TX_PWR_COMPENSATION_LEN_2);
-+	memcpy(ext_radio_parms->tx_per_channel_power_compensation_5,
-+	       rf->tx_per_channel_power_compensation_5,
-+	       CONF_TX_PWR_COMPENSATION_LEN_5);
-+
-+	wl1271_dump(DEBUG_CMD, "TEST_CMD_INI_FILE_EXT_RADIO_PARAM: ",
-+		    ext_radio_parms, sizeof(*ext_radio_parms));
-+
-+	ret = wl1271_cmd_test(wl, ext_radio_parms, sizeof(*ext_radio_parms), 0);
-+	if (ret < 0)
-+		wl1271_warning("TEST_CMD_INI_FILE_RF_EXTENDED_PARAM failed");
-+
-+	kfree(ext_radio_parms);
-+	return ret;
-+}
-+
- /*
-  * Poll the mailbox event field until any of the bits in the mask is set or a
-  * timeout occurs (WL1271_EVENT_TIMEOUT in msecs)
-diff --git a/drivers/net/wireless/wl12xx/wl1271_cmd.h b/drivers/net/wireless/wl12xx/wl1271_cmd.h
-index 33b946b..4e8b464 100644
---- a/drivers/net/wireless/wl12xx/wl1271_cmd.h
-+++ b/drivers/net/wireless/wl12xx/wl1271_cmd.h
-@@ -33,6 +33,7 @@ int wl1271_cmd_send(struct wl1271 *wl, u16 id, void *buf, size_t len,
- 		    size_t res_len);
- int wl1271_cmd_general_parms(struct wl1271 *wl);
- int wl1271_cmd_radio_parms(struct wl1271 *wl);
-+int wl1271_cmd_ext_radio_parms(struct wl1271 *wl);
- int wl1271_cmd_join(struct wl1271 *wl, u8 bss_type);
- int wl1271_cmd_test(struct wl1271 *wl, void *buf, size_t buf_len, u8 answer);
- int wl1271_cmd_interrogate(struct wl1271 *wl, u16 id, void *buf, size_t len);
-@@ -324,13 +325,14 @@ enum wl1271_channel_tune_bands {
- 	WL1271_CHANNEL_TUNE_BAND_4_9
- };
- 
--#define WL1271_PD_REFERENCE_POINT_BAND_B_G 0
-+#define WL1271_PD_REFERENCE_POINT_BAND_B_G  0
- 
--#define TEST_CMD_P2G_CAL                   0x02
--#define TEST_CMD_CHANNEL_TUNE              0x0d
--#define TEST_CMD_UPDATE_PD_REFERENCE_POINT 0x1d
--#define TEST_CMD_INI_FILE_RADIO_PARAM      0x19
--#define TEST_CMD_INI_FILE_GENERAL_PARAM    0x1E
-+#define TEST_CMD_P2G_CAL                    0x02
-+#define TEST_CMD_CHANNEL_TUNE               0x0d
-+#define TEST_CMD_UPDATE_PD_REFERENCE_POINT  0x1d
-+#define TEST_CMD_INI_FILE_RADIO_PARAM       0x19
-+#define TEST_CMD_INI_FILE_GENERAL_PARAM     0x1E
-+#define TEST_CMD_INI_FILE_RF_EXTENDED_PARAM 0x26
- 
- struct wl1271_general_parms_cmd {
- 	struct wl1271_cmd_header header;
-@@ -363,6 +365,16 @@ struct wl1271_radio_parms_cmd {
- 	u8 padding3[2];
- } __packed;
- 
-+struct wl1271_ext_radio_parms_cmd {
-+	struct wl1271_cmd_header header;
-+
-+	struct wl1271_cmd_test_header test;
-+
-+	u8 tx_per_channel_power_compensation_2[CONF_TX_PWR_COMPENSATION_LEN_2];
-+	u8 tx_per_channel_power_compensation_5[CONF_TX_PWR_COMPENSATION_LEN_5];
-+	u8 padding[3];
-+} __attribute__ ((packed));
-+
- struct wl1271_cmd_cal_channel_tune {
- 	struct wl1271_cmd_header header;
- 
-diff --git a/drivers/net/wireless/wl12xx/wl1271_conf.h b/drivers/net/wireless/wl12xx/wl1271_conf.h
-index 60c50d1..5f78a6c 100644
---- a/drivers/net/wireless/wl12xx/wl1271_conf.h
-+++ b/drivers/net/wireless/wl12xx/wl1271_conf.h
-@@ -1070,6 +1070,26 @@ struct conf_scan_settings {
- 
- };
- 
-+/* these are number of channels on the band divided by two, rounded up */
-+#define CONF_TX_PWR_COMPENSATION_LEN_2 7
-+#define CONF_TX_PWR_COMPENSATION_LEN_5 18
-+
-+struct conf_rf_settings {
-+	/*
-+	 * Per channel power compensation for 2.4GHz
-+	 *
-+	 * Range: s8
-+	 */
-+	u8 tx_per_channel_power_compensation_2[CONF_TX_PWR_COMPENSATION_LEN_2];
-+
-+	/*
-+	 * Per channel power compensation for 5GHz
-+	 *
-+	 * Range: s8
-+	 */
-+	u8 tx_per_channel_power_compensation_5[CONF_TX_PWR_COMPENSATION_LEN_5];
-+};
-+
- struct conf_drv_settings {
- 	struct conf_sg_settings sg;
- 	struct conf_rx_settings rx;
-@@ -1079,6 +1099,7 @@ struct conf_drv_settings {
- 	struct conf_pm_config_settings pm_config;
- 	struct conf_roam_trigger_settings roam_trigger;
- 	struct conf_scan_settings scan;
-+	struct conf_rf_settings rf;
- };
- 
- #endif
-diff --git a/drivers/net/wireless/wl12xx/wl1271_init.c b/drivers/net/wireless/wl12xx/wl1271_init.c
-index 349571f..8044bba 100644
---- a/drivers/net/wireless/wl12xx/wl1271_init.c
-+++ b/drivers/net/wireless/wl12xx/wl1271_init.c
-@@ -222,6 +222,10 @@ int wl1271_hw_init(struct wl1271 *wl)
- 	if (ret < 0)
- 		return ret;
- 
-+	ret = wl1271_cmd_ext_radio_parms(wl);
-+	if (ret < 0)
-+		return ret;
-+
- 	/* Template settings */
- 	ret = wl1271_init_templates_config(wl);
- 	if (ret < 0)
-diff --git a/drivers/net/wireless/wl12xx/wl1271_main.c b/drivers/net/wireless/wl12xx/wl1271_main.c
-index cb18f22..8d33a2b 100644
---- a/drivers/net/wireless/wl12xx/wl1271_main.c
-+++ b/drivers/net/wireless/wl12xx/wl1271_main.c
-@@ -242,6 +242,16 @@ static struct conf_drv_settings default_conf = {
- 		.max_dwell_time_passive       = 60000,
- 		.num_probe_reqs               = 2,
- 	},
-+	.rf = {
-+		.tx_per_channel_power_compensation_2 = {
-+			0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-+		},
-+		.tx_per_channel_power_compensation_5 = {
-+			0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-+			0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-+			0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-+		},
-+	},
- };
- 
- static void __wl1271_op_remove_interface(struct wl1271 *wl);
-@@ -357,6 +367,10 @@ static int wl1271_plt_init(struct wl1271 *wl)
- 	if (ret < 0)
- 		return ret;
- 
-+	ret = wl1271_cmd_ext_radio_parms(wl);
-+	if (ret < 0)
-+		return ret;
-+
- 	ret = wl1271_init_templates_config(wl);
- 	if (ret < 0)
- 		return ret;
+c'ya
+sven-haegar
+
 -- 
-1.7.0.4
-
+Three may keep a secret, if two of them are dead.
+- Ben F.
