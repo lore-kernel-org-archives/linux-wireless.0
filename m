@@ -1,69 +1,81 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw0-f46.google.com ([74.125.83.46]:55265 "EHLO
-	mail-gw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754403Ab0JLSkx convert rfc822-to-8bit (ORCPT
+Received: from mail-iw0-f174.google.com ([209.85.214.174]:55584 "EHLO
+	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933057Ab0JFTWP convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 12 Oct 2010 14:40:53 -0400
-Received: by gwj17 with SMTP id 17so1537685gwj.19
-        for <linux-wireless@vger.kernel.org>; Tue, 12 Oct 2010 11:40:52 -0700 (PDT)
+	Wed, 6 Oct 2010 15:22:15 -0400
+Received: by iwn5 with SMTP id 5so10103803iwn.19
+        for <linux-wireless@vger.kernel.org>; Wed, 06 Oct 2010 12:22:15 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <4CB4AA89.1070009@candelatech.com>
-References: <4CAB59B2.5050106@candelatech.com> <4CAB627F.8020804@candelatech.com>
- <AANLkTi=sT5QJe4V8gFGjF-nzx0uJAMLG_XG2715qrEEd@mail.gmail.com>
- <4CAB64AD.4080105@candelatech.com> <AANLkTi=3dHbB5tmQDp3Ba54-DqQydVCkNdFo1vKbfaGY@mail.gmail.com>
- <4CAB6B08.4050801@candelatech.com> <4CAE0474.4090605@candelatech.com>
- <1286475250.20974.22.camel@jlt3.sipsolutions.net> <AANLkTinbRSnPVgbBxvVpMdnP+K--bye=Q-miHf4X44kz@mail.gmail.com>
- <4CAE13F6.2010003@candelatech.com> <AANLkTimEZ5GY7WFz-F4YyC+6MEwNn2Dki4tonp645XrS@mail.gmail.com>
- <4CAE1DFB.303@candelatech.com> <1286479642.20974.32.camel@jlt3.sipsolutions.net>
- <AANLkTimxp703Gy_Atg8=wpFszRDR=OJCXwOUKRh-a-d7@mail.gmail.com>
- <AANLkTi=t-P_5c14brJohM8UgxeOknv+3syO=7W=ix6qf@mail.gmail.com>
- <AANLkTinC46a+nE-XOQuBCmRJwjzgh24uC7ZJ7HtbVHnT@mail.gmail.com>
- <4CB378CD.1080800@candelatech.com> <AANLkTim42zmDwf744BCrPwa1kT5ph57bNMyvSyOpesVv@mail.gmail.com>
- <4CB3D598.7050904@candelatech.com> <AANLkTimPEg3ZU8CQUXfdpGdfbmhdE9O=GNY=g9gysTo4@mail.gmail.com>
- <4CB4AA89.1070009@candelatech.com>
+In-Reply-To: <4CACC92E.6090309@candelatech.com>
+References: <4CACA3D7.90108@candelatech.com> <AANLkTimB7=odPK3qTAhFBdzaMFFGVar0kyMrb-p9SgYy@mail.gmail.com>
+ <4CACC4B8.7040500@candelatech.com> <AANLkTi=k50=+9oZvXbHde8ZVV-uZk4MtpywmkHzKwWyE@mail.gmail.com>
+ <4CACC92E.6090309@candelatech.com>
 From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Tue, 12 Oct 2010 11:40:14 -0700
-Message-ID: <AANLkTinpWvMtexFTYVm5rEZY=gY7qY8WxHFtVGB0o6Se@mail.gmail.com>
-Subject: Re: memory clobber in rx path, maybe related to ath9k.
+Date: Wed, 6 Oct 2010 12:21:52 -0700
+Message-ID: <AANLkTinQxOTD8_HsQQQ6cTHgrtH3DZvV0L14zivFwRzx@mail.gmail.com>
+Subject: Re: Any /n NICs that support APs and multiple STAs other than ath9k?
 To: Ben Greear <greearb@candelatech.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Oct 12, 2010 at 11:35 AM, Ben Greear <greearb@candelatech.com> wrote:
-> On 10/11/2010 11:10 PM, Luis R. Rodriguez wrote:
+On Wed, Oct 6, 2010 at 12:08 PM, Ben Greear <greearb@candelatech.com> wrote:
+> On 10/06/2010 11:58 AM, Luis R. Rodriguez wrote:
 >>
->> On Mon, Oct 11, 2010 at 8:27 PM, Ben Greear<greearb@candelatech.com>
+>> On Wed, Oct 6, 2010 at 11:49 AM, Ben Greear<greearb@candelatech.com>
 >>  wrote:
->
->>> Another thing I was thinking about:  Maybe the queue of skbs and dma
->>> addresses
->>> in ath9k is getting corrupted by multiple VIFs trying to write at once?
->>>  Maybe
->>> some locking is needed in the xmit path?
+>>>
+>>> On 10/06/2010 11:45 AM, Luis R. Rodriguez wrote:
+>>>>
+>>>> On Wed, Oct 6, 2010 at 9:29 AM, Ben Greear<greearb@candelatech.com>
+>>>>  wrote:
+>>>>>
+>>>>> I would like to have a different hardware/driver combination to try
+>>>>> to tie-break whether bugs are in mac80211 or in the ath9k
+>>>>> driver/hardware.
+>>>>>
+>>>>> I don't mind doing a bit of driver hacking so long as the basic support
+>>>>> is there (I think it's mostly the ability to set a BSSID mask and
+>>>>> rxfilter
+>>>>> accordingly).
+>>>>
+>>>> Your best bet is to test against mac80211_hwsim, that would rule out
+>>>> any hardware. I think Jouni and Johannes have also a way to get the
+>>>> devices to talk to each other. Perhaps some documentation of that on
+>>>> the kernel Documentation/networking/mac80211_hwsim/
+>>>
+>>> Ok.  I'm trying to hack slub to give me a better stack trace of where
+>>> the skb was deleted.  If that doesn't turn up anything obvious, then
+>>> I'll go read up on hwsim.
+>>>
+>>> Are you aware of any DMA issues that might cause ath9k to write into
+>>> places it should not?  Previously, I've seen a lot of errors in
+>>> the logs about ath9k not being able to stop DMA in time, but I haven't
+>>> seen those while reproducing the memory corruption.
 >>
->> That was my second hunch. My first shot was to use spin_lock_irqsave()
->> over the the uses of the rxbuf list and that seemed to help but I
->> still managed to get a poison eventually. My next item to check for is
->> of the permissibility of creating too much pressure to the point we
->> end up looping over the rxbuf list and race against mac80211 free'ing
->> a buffer. Will test that tomorrow if nothing else comes up creeping my
->> priority queue.
+>> Yeah, well there have been a few bug reports but when we asked for
+>> instructions how to reproduce we get nowhere. You are the first to
+>> actually find some reproducible instructions. Forgive me but I haven't
+>> had time yet to work on this though. Seems you have a good grasp of
+>> things though and can easily reproduce so you likely are in a better
+>> position right now to debug at the moment.
 >
-> This code looks weird to me.  One of the paprd branches
-> deletes the skb, the other doesn't appear to.  Neither
-> null out bf->bf_mpdu, which would appear to leave a dangling
-> pointer in at least the dev_kfree_skb_any() branch.
+> My understanding is that the bad DMA access could
+> corrupt things right out from under slub, and with no way for me
+> to possibly add any debugging to catch it in action.
 >
-> ath_tx_complete frees it's skb in all cases, so another
-> bf->bf_mpdu dangling pointer issue.
+> I'm quite ignorant of hardware, DMA issues, etc, so if you have any
+> ideas on how to go about verifying bad DMA writes or not, I'm
+> interested.
 >
-> Maybe at the least we should null out bf->bf_mpdu when
-> skb is consumed?
+> Otherwise, I'll basically have to check and double check to make sure
+> we don't have a normal use-after-free with the skb, and if I can't find
+> anything, just assert that it's DMA issues and pretty much give up until
+> someone that understands that stuff has an idea to try.
 
-You're reading my mind, that was what I was going to test today. Still
-doing e-mail sweep though.
+You are able to reproduce easily so we should be able to now, we'll
+get this bitch fixed.
 
- Luis
+  Luis
