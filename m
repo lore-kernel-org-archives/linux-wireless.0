@@ -1,43 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:41509 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754095Ab0JFSUO (ORCPT
+Received: from smtp.nokia.com ([192.100.122.230]:55178 "EHLO
+	mgw-mx03.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755234Ab0JFFgR (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 6 Oct 2010 14:20:14 -0400
-Message-ID: <4CACBDDA.1020308@candelatech.com>
-Date: Wed, 06 Oct 2010 11:20:10 -0700
-From: Ben Greear <greearb@candelatech.com>
-MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: Crash in cfg80211_unlink_bss
-References: <4CACB1D1.7090900@candelatech.com>	 <1286388245.3655.392.camel@jlt3.sipsolutions.net>	 <4CACBB14.1090507@candelatech.com> <1286388980.3655.395.camel@jlt3.sipsolutions.net>
-In-Reply-To: <1286388980.3655.395.camel@jlt3.sipsolutions.net>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+	Wed, 6 Oct 2010 01:36:17 -0400
+Subject: RE: [PATCH 13/25] wl1271: Enable/disable 11a support based on INI
+ configuration
+From: Juuso Oikarinen <juuso.oikarinen@nokia.com>
+To: "ext Gabay, Benzy" <benzyg@ti.com>
+Cc: "Coelho Luciano (Nokia-MS/Helsinki)" <Luciano.Coelho@nokia.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <676FD6AA0F002F49B89E70F0C5EFD22C135ADBA314@dlee04.ent.ti.com>
+References: <1285576669-8070-1-git-send-email-luciano.coelho@nokia.com>
+	 <1285576669-8070-14-git-send-email-luciano.coelho@nokia.com>
+	 <676FD6AA0F002F49B89E70F0C5EFD22C135ADBA314@dlee04.ent.ti.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Wed, 06 Oct 2010 08:36:00 +0300
+Message-ID: <1286343360.11177.262.camel@wimaxnb.nmp.nokia.com>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 10/06/2010 11:16 AM, Johannes Berg wrote:
-> On Wed, 2010-10-06 at 11:08 -0700, Ben Greear wrote:
->
->>> I need to analyse the refcounting here again and in more detail, but in
->>> the meantime can you try below patch?
->>
->> Yes, will do so and let you know the results.
->
-> Please try the new version, and let me know. I should submit this ASAP.
+On Wed, 2010-10-06 at 07:26 +0200, ext Gabay, Benzy wrote:
+> Juuso ,
+> I thought that there is no .ini in the 1271 MAC802.11 solution. 
+> According to the code below you are deciding if it is "a" or not according to NVS file.
+> 
+> Is it a typo in your header description or did I get it wrong?
 
-I have to stash my slub debug hacking and re-compile...should have it tested within 30 min
-if all goes well.
+No typo, there is a configuration section inside the wl1271-nvs.bin
+-file referred to as the "INI-section." That ini section configures
+general parameters (including the dual-band support) and several
+radio-parameters.
 
-Thanks,
-Ben
+These INI-parameters are the only way for the driver to know whether
+there is 11a RF support in the hardware or not.
 
->
-> johannes
+-Juuso
+
+> > Sent: Monday, September 27, 2010 3:38 AM
+> > 
+> > From: Juuso Oikarinen <juuso.oikarinen@nokia.com>
+> > 
+> > Instead of hardcoding 11a support, enable/disable driver support based
+> > on
+> > the dual-mode-select parameter in the nvs-file general paramters.
+> > 
+> > Signed-off-by: Juuso Oikarinen <juuso.oikarinen@nokia.com>
+> > Reviewed-by: Luciano Coelho <luciano.coelho@nokia.com>
+> > Signed-off-by: Luciano Coelho <luciano.coelho@nokia.com>
+> > ---
 
 
--- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
 
