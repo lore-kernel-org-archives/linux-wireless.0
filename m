@@ -1,83 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:26783 "EHLO mx1.redhat.com"
+Received: from mga01.intel.com ([192.55.52.88]:22045 "EHLO mga01.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755197Ab0JVPBS (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 22 Oct 2010 11:01:18 -0400
-Date: Fri, 22 Oct 2010 17:04:15 +0200
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: "Guy, Wey-Yi" <wey-yi.w.guy@intel.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH 1/2] iwlwifi: fix set_tx_power vs scan
-Message-ID: <20101022150414.GA5645@redhat.com>
-References: <1286977193-12144-1-git-send-email-sgruszka@redhat.com>
- <1286983100.10446.1.camel@wwguy-ubuntu>
- <20101014083204.GA2286@redhat.com>
- <20101021131348.GA5654@redhat.com>
- <20101022125628.GA4527@redhat.com>
- <1287758367.18168.1.camel@wwguy-ubuntu>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1287758367.18168.1.camel@wwguy-ubuntu>
+	id S1756809Ab0JFPXx (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 6 Oct 2010 11:23:53 -0400
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Subject: [PATCH 3/6] iwlagn: rename iwl5000_tx_power_dbm_cmd
+Date: Wed,  6 Oct 2010 08:23:10 -0700
+Message-Id: <1286378593-7509-4-git-send-email-wey-yi.w.guy@intel.com>
+In-Reply-To: <1286378593-7509-1-git-send-email-wey-yi.w.guy@intel.com>
+References: <1286378593-7509-1-git-send-email-wey-yi.w.guy@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello
+iwl5000_tx_power_dbm_cmd really should be iwlagn_tx_power_dbm_cmd,
+so rename it.
 
-On Fri, Oct 22, 2010 at 07:39:27AM -0700, Guy, Wey-Yi wrote:
-> > Not true. I have the same problem with vanilla 2.6.36 without any of my
-> > patches (further investigation show this is 2.6.34 -> 2.6.35
-> > regression). Problem happens only on 5Ghz, that confused me 
-> > because NetworkManager in some cases connects to 5Ghz, in others to
-> > 2.4Ghz on my system.
-> > 
-> > Since my patches do not screw up (at least not that thing :) I'm going
-> > to repost them, also further bisect this "low ack count detected" issue.
-> > 
-> 
-> the error message indicate "low ack count" received by driver. not sure
-> how it happen? is it only happen on 5GHz, or the problem on both band?
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-agn-lib.c  |    6 +++---
+ drivers/net/wireless/iwlwifi/iwl-commands.h |    8 ++++----
+ 2 files changed, 7 insertions(+), 7 deletions(-)
 
-Only on 5GHz and iwl 5300:
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-lib.c b/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
+index 29ed604..48c48f1 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
+@@ -491,7 +491,7 @@ int iwlagn_hw_valid_rtc_data_addr(u32 addr)
+ 
+ int iwlagn_send_tx_power(struct iwl_priv *priv)
+ {
+-	struct iwl5000_tx_power_dbm_cmd tx_power_cmd;
++	struct iwlagn_tx_power_dbm_cmd tx_power_cmd;
+ 	u8 tx_ant_cfg_cmd;
+ 
+ 	/* half dBm need to multiply */
+@@ -512,8 +512,8 @@ int iwlagn_send_tx_power(struct iwl_priv *priv)
+ 		 */
+ 		tx_power_cmd.global_lmt = priv->tx_power_lmt_in_half_dbm;
+ 	}
+-	tx_power_cmd.flags = IWL50_TX_POWER_NO_CLOSED;
+-	tx_power_cmd.srv_chan_lmt = IWL50_TX_POWER_AUTO;
++	tx_power_cmd.flags = IWLAGN_TX_POWER_NO_CLOSED;
++	tx_power_cmd.srv_chan_lmt = IWLAGN_TX_POWER_AUTO;
+ 
+ 	if (IWL_UCODE_API(priv->ucode_ver) == 1)
+ 		tx_ant_cfg_cmd = REPLY_TX_POWER_DBM_CMD_V1;
+diff --git a/drivers/net/wireless/iwlwifi/iwl-commands.h b/drivers/net/wireless/iwlwifi/iwl-commands.h
+index 27350ee..16dda2d 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-commands.h
++++ b/drivers/net/wireless/iwlwifi/iwl-commands.h
+@@ -420,12 +420,12 @@ struct iwl4965_tx_power_db {
+ 
+ /**
+  * Command REPLY_TX_POWER_DBM_CMD = 0x98
+- * struct iwl5000_tx_power_dbm_cmd
++ * struct iwlagn_tx_power_dbm_cmd
+  */
+-#define IWL50_TX_POWER_AUTO 0x7f
+-#define IWL50_TX_POWER_NO_CLOSED (0x1 << 6)
++#define IWLAGN_TX_POWER_AUTO 0x7f
++#define IWLAGN_TX_POWER_NO_CLOSED (0x1 << 6)
+ 
+-struct iwl5000_tx_power_dbm_cmd {
++struct iwlagn_tx_power_dbm_cmd {
+ 	s8 global_lmt; /*in half-dBm (e.g. 30 = 15 dBm) */
+ 	u8 flags;
+ 	s8 srv_chan_lmt; /*in half-dBm (e.g. 30 = 15 dBm) */
+-- 
+1.7.0.4
 
-40:00.0 Network controller [0280]: Intel Corporation Ultimate N WiFi Link 5300 [8086:4235]
-	Subsystem: Intel Corporation Device [8086:1001]
-	Physical Slot: 3
-	Control: I/O- Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr- Stepping- SERR- FastB2B- DisINTx-
-	Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast >TAbort- <TAbort- <MAbort- >SERR- <PERR- INTx-
-	Latency: 0, Cache Line Size: 64 bytes
-	Interrupt: pin A routed to IRQ 91
-	Region 0: Memory at f3100000 (64-bit, non-prefetchable) [size=8K]
-	Capabilities: [c8] Power Management version 3
-		Flags: PMEClk- DSI+ D1- D2- AuxCurrent=0mA PME(D0+,D1-,D2-,D3hot+,D3cold+)
-		Status: D0 NoSoftRst- PME-Enable- DSel=0 DScale=0 PME-
-	Capabilities: [d0] MSI: Enable+ Count=1/1 Maskable- 64bit+
-		Address: 00000000fee0f00c  Data: 4193
-	Capabilities: [e0] Express (v1) Endpoint, MSI 00
-		DevCap:	MaxPayload 128 bytes, PhantFunc 0, Latency L0s <512ns, L1 unlimited
-			ExtTag- AttnBtn- AttnInd- PwrInd- RBE+ FLReset+
-		DevCtl:	Report errors: Correctable- Non-Fatal- Fatal+ Unsupported-
-			RlxdOrd+ ExtTag- PhantFunc- AuxPwr- NoSnoop+ FLReset-
-			MaxPayload 128 bytes, MaxReadReq 128 bytes
-		DevSta:	CorrErr- UncorrErr- FatalErr- UnsuppReq- AuxPwr+ TransPend-
-		LnkCap:	Port #1, Speed 2.5GT/s, Width x1, ASPM L0s L1, Latency L0 <128ns, L1 <32us
-			ClockPM+ Surprise- LLActRep- BwNot-
-		LnkCtl:	ASPM Disabled; RCB 64 bytes Disabled- Retrain- CommClk+
-			ExtSynch- ClockPM- AutWidDis- BWInt- AutBWInt-
-		LnkSta:	Speed 2.5GT/s, Width x1, TrErr- Train- SlotClk+ DLActive- BWMgmt- ABWMgmt-
-	Capabilities: [100] Advanced Error Reporting
-		UESta:	DLP- SDES- TLP- FCP- CmpltTO- CmpltAbrt- UnxCmplt- RxOF- MalfTLP- ECRC- UnsupReq- ACSViol-
-		UEMsk:	DLP- SDES- TLP- FCP- CmpltTO- CmpltAbrt- UnxCmplt- RxOF- MalfTLP- ECRC- UnsupReq- ACSViol-
-		UESvrt:	DLP+ SDES- TLP- FCP+ CmpltTO- CmpltAbrt- UnxCmplt- RxOF+ MalfTLP+ ECRC- UnsupReq- ACSViol-
-		CESta:	RxErr- BadTLP- BadDLLP- Rollover- Timeout- NonFatalErr-
-		CEMsk:	RxErr- BadTLP- BadDLLP- Rollover- Timeout- NonFatalErr+
-		AERCap:	First Error Pointer: 00, GenCap- CGenEn- ChkCap- ChkEn-
-	Capabilities: [140] Device Serial Number 00-21-6a-ff-ff-6d-18-8e
-	Kernel driver in use: iwlagn
-	Kernel modules: iwlagn
-
-Not reproducible on 2.6.34.7 , 100% reproducible on 2.6.35.7 and 2.6.36 .
-I'm going to bisect ... or maybe there is some better way of debug
-this problem?
-
-Stanislaw
