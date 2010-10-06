@@ -1,81 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ww0-f44.google.com ([74.125.82.44]:58956 "EHLO
-	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754125Ab0JAIZ5 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 1 Oct 2010 04:25:57 -0400
-Received: by mail-ww0-f44.google.com with SMTP id 40so992504wwj.1
-        for <linux-wireless@vger.kernel.org>; Fri, 01 Oct 2010 01:25:56 -0700 (PDT)
-Date: Fri, 1 Oct 2010 10:25:32 +0200
-From: Dan Carpenter <error27@gmail.com>
-To: Christian Lamparter <chunkeey@googlemail.com>
-Cc: Bob Copeland <me@bobcopeland.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Luis Carlos Cobo <luisca@cozybit.com>,
-	linux-wireless@vger.kernel.org, Javier Cardona <javier@cozybit.com>
-Subject: Re: [RFC v2] mac80211: fix possible null-pointer dereference
-Message-ID: <20101001082531.GA2781@bicker>
-References: <201009210057.13297.chunkeey@googlemail.com> <201009250002.21219.chunkeey@googlemail.com> <AANLkTikqRuDVwhxhXkpA3c5ppzVu_HhkaEUhyr+YBUMy@mail.gmail.com> <201009301852.31682.chunkeey@googlemail.com>
+Received: from arroyo.ext.ti.com ([192.94.94.40]:49179 "EHLO arroyo.ext.ti.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1759898Ab0JFTja (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 6 Oct 2010 15:39:30 -0400
+From: "Levi, Shahar" <shahar_levi@ti.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Luciano Coelho <luciano.coelho@nokia.com>
+Date: Wed, 6 Oct 2010 21:38:59 +0200
+Subject: RE: [PATCH v2 03/03] wl1271: 11n Support, functionality and
+ configuration ability
+Message-ID: <AC090B9732AB2B4DB7FF476E907FE660011378562B@dnce02.ent.ti.com>
+References: <1286388491-28752-1-git-send-email-shahar_levi@ti.com>
+	 <1286388491-28752-5-git-send-email-shahar_levi@ti.com>
+ <1286389287.3655.398.camel@jlt3.sipsolutions.net>
+In-Reply-To: <1286389287.3655.398.camel@jlt3.sipsolutions.net>
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <201009301852.31682.chunkeey@googlemail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Sep 30, 2010 at 06:52:30PM +0200, Christian Lamparter wrote:
-> On Thursday 30 September 2010 18:27:08 Bob Copeland wrote:
-> > On Fri, Sep 24, 2010 at 6:02 PM, Christian Lamparter
-> > <chunkeey@googlemail.com> wrote:
-> > 
-> > > hard to say, smatch must see the null dereference, when
-> > > we receive an action action frame where ftype is PLINK_OPEN
-> > > and the mesh_matches_local(&elems, sdata) check fail, but why
-> > > doesn't it complain about the "spin_lock_bh(&sta->lock)"?
-> > 
-> > Smatch just does pattern matching right?
-> Uhh, I guess that's a question for Dan.
-> 
-> The README-smatch sums it up as:
-> "It's basically a state machine that tracks the flow of code."
-> 
-> (I think coccicheck,  is the "pattern matching" checker, right?)
-> > Maybe smatch doesn't assume you are actually using
-> > the pointer in spin_lock_bh().
-> > 
-> > I.e. it is ok to do "&null_ptr->member", offsetof() basically
-> > does that; but not "null_ptr->member".
-> 
-
-Yes.  You are right.
-
-This is from check_check_deref.c which handles this as a special case
-because people quite often do:
-
-	struct foo *bar = &x->y;
-
-	if (!x)
-		return;
-
-If you comment out the "if (getting_address())" check then it will
-complain.
-
-> net/mac80211/mesh_plink.c +574 mesh_rx_plink_frame(168)
-> error: we previously assumed 'sta' could be null.
-> 
-> 574:        switch (sta->plink_state) {
-> 
-> Smatch is definitely following code paths. Is there a switch
-> to make it more verbose (e.g.: comment on about the conditions
-> about the objected code - branch)?
-
-There is a --debug but I suspect it's way more verbose than what you
-want.
-
-You could also hack the net/mac80211/mesh_plink.c source file and add
-an "#include /path/to/smatch/check_debug.h" and sprinkle the code with
-calls to __smatch_cur_slist() which will make it dump all the current
-states at that point.
-
-regards,
-dan carpenter
-
+PiAtLS0tLU9yaWdpbmFsIE1lc3NhZ2UtLS0tLQ0KPiBGcm9tOiBKb2hhbm5lcyBCZXJnIFttYWls
+dG86am9oYW5uZXNAc2lwc29sdXRpb25zLm5ldF0NCj4gU2VudDogV2VkbmVzZGF5LCBPY3RvYmVy
+IDA2LCAyMDEwIDg6MjEgUE0NCj4gVG86IExldmksIFNoYWhhcg0KPiBDYzogbGludXgtd2lyZWxl
+c3NAdmdlci5rZXJuZWwub3JnOyBMdWNpYW5vIENvZWxobw0KPiBTdWJqZWN0OiBSZTogW1BBVENI
+IHYyIDAzLzAzXSB3bDEyNzE6IDExbiBTdXBwb3J0LCBmdW5jdGlvbmFsaXR5IGFuZA0KPiBjb25m
+aWd1cmF0aW9uIGFiaWxpdHkNCj4gDQo+IE9uIFdlZCwgMjAxMC0xMC0wNiBhdCAyMDowOCArMDIw
+MCwgU2hhaGFyIExldmkgd3JvdGU6DQo+IA0KPiA+ICAJLyogcGVlayBpbnRvIHRoZSByYXRlcyBj
+b25maWd1cmVkIGluIHRoZSBTVEEgZW50cnkgKi8NCj4gPiAgCXNwaW5fbG9ja19pcnFzYXZlKCZ3
+bC0+d2xfbG9jaywgZmxhZ3MpOw0KPiA+IC0JaWYgKHN0YSAmJiBzdGEtPnN1cHBfcmF0ZXNbY29u
+Zi0+Y2hhbm5lbC0+YmFuZF0gIT0gd2wtPnN0YV9yYXRlX3NldCkgew0KPiA+ICsJaWYgKHN0YSAm
+Jg0KPiA+ICsJICAgIChzdGEtPnN1cHBfcmF0ZXNbY29uZi0+Y2hhbm5lbC0+YmFuZF0gIT0NCj4g
+PiArCSAgICAod2wtPnN0YV9yYXRlX3NldCAmIEhXX0JHX1JBVEVTX01BU0spKSkgew0KPiA+ICAJ
+CXdsLT5zdGFfcmF0ZV9zZXQgPSBzdGEtPnN1cHBfcmF0ZXNbY29uZi0+Y2hhbm5lbC0+YmFuZF07
+DQo+ID4gIAkJc2V0X2JpdChXTDEyNzFfRkxBR19TVEFfUkFURVNfQ0hBTkdFRCwgJndsLT5mbGFn
+cyk7DQo+ID4gIAl9DQo+IA0KPiA/Pz8NCj4gDQo+IEhvdyBjYW4gbm9uLUJHIHJhdGVzIGV2ZXIg
+c2hvdyB1cCB0aGVyZT8gSXMgdGhpcyByZWFsbHkgYW4gMTFhIGNoYW5nZT8NCj4gDQo+IGpvaGFu
+bmVzDQoNCg0KVGhhbmtzIGZvciB0aGUgcmV2aWV3Lg0KTm9uIEJHIHJhdGVzIHNldCBpbiB0aGUg
+bmV4dCBpZjoNCisJaWYgKHN0YSAmJg0KKwkgICAgc3RhLT5odF9jYXAuaHRfc3VwcG9ydGVkICYm
+DQorCSAgICAoKHdsLT5zdGFfcmF0ZV9zZXQgPj4gSFdfSFRfUkFURVNfT0ZGU0VUKSAhPQ0KKwkg
+ICAgICBzdGEtPmh0X2NhcC5tY3MucnhfbWFza1swXSkpIHsNCisJCXdsLT5zdGFfcmF0ZV9zZXQg
+fD0NCisJCShzdGEtPmh0X2NhcC5tY3MucnhfbWFza1swXSA8PCBIV19IVF9SQVRFU19PRkZTRVQp
+Ow0KKwkJc2V0X2JpdChXTDEyNzFfRkxBR19TVEFfUkFURVNfQ0hBTkdFRCwgJndsLT5mbGFncyk7
+DQpzdGFfcmF0ZV9zZXQgYml0cyBhcmU6IGJpdHMwLTE1IEJHLCBiaXRzIDE2LTIzIE1DUy4NCkRp
+ZCB5b3UgbWVhbnQgMTFuIGNoYW5nZT8NCg0KUmVnYXJkcywNClNoYWhhcg0K
