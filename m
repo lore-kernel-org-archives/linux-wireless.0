@@ -1,95 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([88.198.39.176]:47285 "EHLO ds10.nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753002Ab0JUArf (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 20 Oct 2010 20:47:35 -0400
-From: Felix Fietkau <nbd@openwrt.org>
-To: linux-wireless@vger.kernel.org
-Cc: linville@tuxdriver.com, lrodriguez@atheros.com
-Subject: [PATCH 3/3] mac80211: minstrel_ht - reduce the overhead of rate sampling
-Date: Thu, 21 Oct 2010 02:47:25 +0200
-Message-Id: <1287622045-21795-3-git-send-email-nbd@openwrt.org>
-In-Reply-To: <1287622045-21795-2-git-send-email-nbd@openwrt.org>
-References: <1287622045-21795-1-git-send-email-nbd@openwrt.org>
- <1287622045-21795-2-git-send-email-nbd@openwrt.org>
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:37930 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758997Ab0JFPaF (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 6 Oct 2010 11:30:05 -0400
+Date: Wed, 6 Oct 2010 11:27:16 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Christian Jaeger <chrjae@gmail.com>
+Cc: "Luis R. Rodriguez" <mcgrof@gmail.com>,
+	linux-wireless@vger.kernel.org,
+	Christian Lamparter <chunkeey@googlemail.com>
+Subject: Re: Why were patches reverted on 2010-09-21? (carl9170 and others)
+Message-ID: <20101006152716.GF2472@tuxdriver.com>
+References: <AANLkTin9hFUE_RH0Zb4OuV2dU_kJs6_ap=VxEmT3e3F8@mail.gmail.com>
+ <20101006132301.GA2472@tuxdriver.com>
+ <AANLkTi=1-r8XZHn9nqbbh2N=7yrsKXZbgxHNcNg+qFxo@mail.gmail.com>
+ <AANLkTi=buSXukPp4xeSdig6z3rvNs2G=v6s1Y794Q2JK@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <AANLkTi=buSXukPp4xeSdig6z3rvNs2G=v6s1Y794Q2JK@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-- reduce the number of retransmission attempts for sample rates
-- sample lower rates less often
-- do not use RTS/CTS for sampling frames
-- increase the time between sampling attempts
+On Wed, Oct 06, 2010 at 11:07:12AM -0400, Christian Jaeger wrote:
+> Thanks for your explantion.
+> 
+> My patches on top of the stable kernel don't build (they depend a
+> 'cipher' member on ‘struct ieee80211_key_conf’, and I guess there may
+> be more). If I want to reach my goal of trying carl9170 with a stable
+> kernel, should I still proceed that route, i.e. finding the patches
+> that carl* depends on, or trying to change the carl* code to not
+> require them, or is there a better idea? I'd like to avoid running
+> wireless-testing as is if possible (for fear of stability and security
+> issues on this world-facing, supposedly stable router of mine).
 
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
----
- net/mac80211/rc80211_minstrel_ht.c |   16 ++++++++++------
- 1 files changed, 10 insertions(+), 6 deletions(-)
+You might try the compat-wireless stuff on top of whatever kernel
+you are using.
 
-diff --git a/net/mac80211/rc80211_minstrel_ht.c b/net/mac80211/rc80211_minstrel_ht.c
-index 2a18d66..2d6f025 100644
---- a/net/mac80211/rc80211_minstrel_ht.c
-+++ b/net/mac80211/rc80211_minstrel_ht.c
-@@ -407,8 +407,8 @@ minstrel_ht_tx_status(void *priv, struct ieee80211_supported_band *sband,
- 	mi->ampdu_len += info->status.ampdu_len;
- 
- 	if (!mi->sample_wait && !mi->sample_tries && mi->sample_count > 0) {
--		mi->sample_wait = 4 + 2 * MINSTREL_TRUNC(mi->avg_ampdu_len);
--		mi->sample_tries = 3;
-+		mi->sample_wait = 16 + 2 * MINSTREL_TRUNC(mi->avg_ampdu_len);
-+		mi->sample_tries = 2;
- 		mi->sample_count--;
- 	}
- 
-@@ -506,7 +506,9 @@ minstrel_ht_set_rate(struct minstrel_priv *mp, struct minstrel_ht_sta *mi,
- 	if (!mr->retry_updated)
- 		minstrel_calc_retransmit(mp, mi, index);
- 
--	if (mr->probability < MINSTREL_FRAC(20, 100))
-+	if (sample)
-+		rate->count = 1;
-+	else if (mr->probability < MINSTREL_FRAC(20, 100))
- 		rate->count = 2;
- 	else if (rtscts)
- 		rate->count = mr->retry_count_rtscts;
-@@ -562,7 +564,7 @@ minstrel_get_sample_rate(struct minstrel_priv *mp, struct minstrel_ht_sta *mi)
- 	 */
- 	if (minstrel_get_duration(sample_idx) >
- 	    minstrel_get_duration(mi->max_tp_rate)) {
--		if (mr->sample_skipped < 10)
-+		if (mr->sample_skipped < 20)
- 			goto next;
- 
- 		if (mi->sample_slow++ > 2)
-@@ -586,6 +588,7 @@ minstrel_ht_get_rate(void *priv, struct ieee80211_sta *sta, void *priv_sta,
- 	struct minstrel_ht_sta *mi = &msp->ht;
- 	struct minstrel_priv *mp = priv;
- 	int sample_idx;
-+	bool sample = false;
- 
- 	if (rate_control_send_low(sta, priv_sta, txrc))
- 		return;
-@@ -596,10 +599,11 @@ minstrel_ht_get_rate(void *priv, struct ieee80211_sta *sta, void *priv_sta,
- 	info->flags |= mi->tx_flags;
- 	sample_idx = minstrel_get_sample_rate(mp, mi);
- 	if (sample_idx >= 0) {
-+		sample = true;
- 		minstrel_ht_set_rate(mp, mi, &ar[0], sample_idx,
- 			txrc, true, false);
- 		minstrel_ht_set_rate(mp, mi, &ar[1], mi->max_tp_rate,
--			txrc, false, true);
-+			txrc, false, false);
- 		info->flags |= IEEE80211_TX_CTL_RATE_CTRL_PROBE;
- 	} else {
- 		minstrel_ht_set_rate(mp, mi, &ar[0], mi->max_tp_rate,
-@@ -607,7 +611,7 @@ minstrel_ht_get_rate(void *priv, struct ieee80211_sta *sta, void *priv_sta,
- 		minstrel_ht_set_rate(mp, mi, &ar[1], mi->max_tp_rate2,
- 			txrc, false, true);
- 	}
--	minstrel_ht_set_rate(mp, mi, &ar[2], mi->max_prob_rate, txrc, false, true);
-+	minstrel_ht_set_rate(mp, mi, &ar[2], mi->max_prob_rate, txrc, false, !sample);
- 
- 	ar[3].count = 0;
- 	ar[3].idx = -1;
+Hth!
+
+John
 -- 
-1.7.2.2
-
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
