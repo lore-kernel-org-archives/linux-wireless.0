@@ -1,102 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yw0-f46.google.com ([209.85.213.46]:47717 "EHLO
-	mail-yw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752753Ab0JMLJE (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:33882 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932998Ab0JFTPH (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 13 Oct 2010 07:09:04 -0400
-From: csanjay@mistralsolutions.com
-To: linux-omap@vger.kernel.org
-Cc: linux-wireless@vger.kernel.org,
-	Sanjay Kumar Champati <csanjay@mistralsolutions.com>
-Subject: [RFC: WL1271 DC supprot on OMAP3EVM 1/5] ARM: Supported MMC 2 features for OMAP3EVM
-Date: Wed, 13 Oct 2010 16:27:15 +0530
-Message-Id: <1286967439-705-2-git-send-email-csanjay@mistralsolutions.com>
-In-Reply-To: <1286967439-705-1-git-send-email-csanjay@mistralsolutions.com>
-References: <1286967439-705-1-git-send-email-csanjay@mistralsolutions.com>
+	Wed, 6 Oct 2010 15:15:07 -0400
+Date: Wed, 6 Oct 2010 15:03:43 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: "Guy, Wey-Yi" <wey-yi.w.guy@intel.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"ipw3945-devel@lists.sourceforge.net"
+	<ipw3945-devel@lists.sourceforge.net>
+Subject: Re: [PATCH 1/6] iwlwifi: schedule to deprecate software scan support
+Message-ID: <20101006190343.GI2472@tuxdriver.com>
+References: <1286378593-7509-1-git-send-email-wey-yi.w.guy@intel.com>
+ <1286378593-7509-2-git-send-email-wey-yi.w.guy@intel.com>
+ <20101006173609.GH2472@tuxdriver.com>
+ <1286387500.12594.24.camel@wwguy-ubuntu>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1286387500.12594.24.camel@wwguy-ubuntu>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sanjay Kumar Champati <csanjay@mistralsolutions.com>
+On Wed, Oct 06, 2010 at 10:51:40AM -0700, Guy, Wey-Yi wrote:
+> On Wed, 2010-10-06 at 10:36 -0700, John W. Linville wrote:
+> > On Wed, Oct 06, 2010 at 08:23:08AM -0700, Wey-Yi Guy wrote:
+> > > Hardware scan is the prefer method for all iwlwifi devices;
+> > > especially for dual-mode functions. Schedule to deprecate the
+> > > software scan support in kernel 2.6.40
+> > > 
+> > > Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+> > 
+> > Hmmm...perhaps you have more confidence in this than I do?
+> > My experience suggests that hardware scanning has been the source of
+> > a number of problems and having the option to turn it off has provided
+> > a useful workaround for any number of users.
+> > 
+> > Anyone else have heartburn over this one?
+> > 
+> The current HW scan implementation was improve a lot and sw scan will
+> cause problem, especially once we introduce P2P.
 
-* Modified "board-omap3evm.c" file for MMC2 support
-* Modified "mmc-twl4030.c" and "mmc-twl4030.h" file for MMC2 power support
+What support issues are caused by supporting software scanning?
 
-Signed-off-by: Sanjay Kumar Champati <csanjay@mistralsolutions.com>
----
- arch/arm/mach-omap2/board-omap3evm.c |   15 +++++++++++++++
- arch/arm/mach-omap2/mmc-twl4030.c    |    1 +
- arch/arm/mach-omap2/mmc-twl4030.h    |    2 ++
- 3 files changed, 18 insertions(+), 0 deletions(-)
+Whatever issues are caused by scanning with P2P, doesn't mac80211
+have to handle them anyway?
 
-diff --git a/arch/arm/mach-omap2/board-omap3evm.c b/arch/arm/mach-omap2/board-omap3evm.c
-index d2c8dcf..6b45b6e 100644
---- a/arch/arm/mach-omap2/board-omap3evm.c
-+++ b/arch/arm/mach-omap2/board-omap3evm.c
-@@ -611,6 +611,13 @@ static struct twl4030_hsmmc_info mmc[] = {
- 		.gpio_cd	= -EINVAL,
- 		.gpio_wp	= 63,
- 	},
-+	{
-+		.mmc            = 2,
-+		.wires          = 4,
-+		.gpio_cd        = -EINVAL,
-+		.gpio_wp        = -EINVAL,
-+		.ocr_mask	= 0x00000080,
-+	},
- 	{}	/* Terminator */
- };
- 
-@@ -741,6 +748,7 @@ static int omap3evm_twl_gpio_setup(struct device *dev,
- 	/* link regulators to MMC adapters */
- 	twl4030_vmmc1_supply.dev = mmc[0].dev;
- 	twl4030_vsim_supply.dev = mmc[0].dev;
-+	twl4030_vmmc2_supply.dev = mmc[1].dev;
- 
- 	/*
- 	 * Most GPIOs are for USB OTG.  Some are mostly sent to
-@@ -949,6 +957,7 @@ static int __init omap3_evm_i2c_init(void)
- 	 */
- 	omap3evm_twldata.vmmc1 = &vmmc1_data;
- 	omap3evm_twldata.vsim = &vsim_data;
-+	omap3evm_twldata.vmmc2 = &vmmc2_data;
- 
- 	omap_register_i2c_bus(1, 2600, omap3evm_i2c_boardinfo,
- 			ARRAY_SIZE(omap3evm_i2c_boardinfo));
-@@ -1067,6 +1076,12 @@ static struct omap_board_mux omap35x_board_mux[] __initdata = {
- 				OMAP_PIN_OFF_INPUT_PULLUP | OMAP_PIN_OFF_OUTPUT_LOW |
- 				OMAP_PIN_OFF_WAKEUPENABLE),
- #endif
-+	OMAP3_MUX(SDMMC2_CLK, OMAP_MUX_MODE0 | OMAP_PIN_INPUT_PULLUP),
-+	OMAP3_MUX(SDMMC2_CMD, OMAP_MUX_MODE0 | OMAP_PIN_INPUT_PULLUP),
-+	OMAP3_MUX(SDMMC2_DAT0, OMAP_MUX_MODE0 | OMAP_PIN_INPUT_PULLUP),
-+	OMAP3_MUX(SDMMC2_DAT1, OMAP_MUX_MODE0 | OMAP_PIN_INPUT_PULLUP),
-+	OMAP3_MUX(SDMMC2_DAT2, OMAP_MUX_MODE0 | OMAP_PIN_INPUT_PULLUP),
-+	OMAP3_MUX(SDMMC2_DAT3, OMAP_MUX_MODE0 | OMAP_PIN_INPUT_PULLUP),
- 
- 	{ .reg_offset = OMAP_MUX_TERMINATOR },
- };
-diff --git a/arch/arm/mach-omap2/mmc-twl4030.c b/arch/arm/mach-omap2/mmc-twl4030.c
-index 0c3c72d..c56f8c7 100644
---- a/arch/arm/mach-omap2/mmc-twl4030.c
-+++ b/arch/arm/mach-omap2/mmc-twl4030.c
-@@ -124,6 +124,7 @@ static int twl_mmc_late_init(struct device *dev)
- 			}
- 			hsmmc[i].vcc = reg;
- 			mmc->slots[0].ocr_mask = mmc_regulator_get_ocrmask(reg);
-+			mmc->slots[1].ocr_mask = mmc_regulator_get_ocrmask(reg);
- 
- 			/* allow an aux regulator */
- 			reg = regulator_get(dev, "vmmc_aux");
-diff --git a/arch/arm/mach-omap2/mmc-twl4030.h b/arch/arm/mach-omap2/mmc-twl4030.h
-index a47e685..88bcf46 100644
---- a/arch/arm/mach-omap2/mmc-twl4030.h
-+++ b/arch/arm/mach-omap2/mmc-twl4030.h
-@@ -34,3 +34,5 @@ static inline void twl4030_mmc_init(struct twl4030_hsmmc_info *info)
- }
- 
- #endif
-+extern struct regulator_consumer_supply twl4030_vmmc2_supply;
-+extern struct regulator_init_data vmmc2_data;
+John
 -- 
-1.6.3.3
-
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
