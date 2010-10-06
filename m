@@ -1,226 +1,150 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from comal.ext.ti.com ([198.47.26.152]:35161 "EHLO comal.ext.ti.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753476Ab0JEFbA convert rfc822-to-8bit (ORCPT
+Received: from mail-iw0-f174.google.com ([209.85.214.174]:47239 "EHLO
+	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753660Ab0JFRiI convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 5 Oct 2010 01:31:00 -0400
-From: "Gabay, Benzy" <benzyg@ti.com>
-To: Luciano Coelho <luciano.coelho@nokia.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-CC: Juuso Oikarinen <juuso.oikarinen@nokia.com>
-Date: Tue, 5 Oct 2010 00:30:31 -0500
-Subject: RE: [PATCH 24/25] wl1271: Optimize scan duration
-Message-ID: <676FD6AA0F002F49B89E70F0C5EFD22C135AD3C603@dlee04.ent.ti.com>
-References: <1285576669-8070-1-git-send-email-luciano.coelho@nokia.com>
- <1285576669-8070-25-git-send-email-luciano.coelho@nokia.com>
-In-Reply-To: <1285576669-8070-25-git-send-email-luciano.coelho@nokia.com>
-Content-Type: text/plain; charset="us-ascii"
+	Wed, 6 Oct 2010 13:38:08 -0400
 MIME-Version: 1.0
+In-Reply-To: <20101006163816.GE7070@tux>
+References: <20100924230730.GB6566@tux> <1286266981.17473.33.camel@aeonflux>
+ <20101005192814.GB11831@tux> <1286308731.2588.13.camel@aeonflux>
+ <AANLkTimz7U52_qHaTutQDOFQde+GrWJRA0WpqY__FPgi@mail.gmail.com>
+ <1286349552.6145.11.camel@aeonflux> <AANLkTimDvgFtoGLEjgWyYRrhQy6Num-rn_2WYO4Lf84b@mail.gmail.com>
+ <1286380566.6145.42.camel@aeonflux> <20101006163816.GE7070@tux>
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Date: Wed, 6 Oct 2010 10:37:46 -0700
+Message-ID: <AANLkTik9w4_PdcEsbRHakLcxcD334_1Q8hGArxTXPCGF@mail.gmail.com>
+Subject: Re: RFC: btusb firmware load help
+To: Marcel Holtmann <holtmann@linux.intel.com>
+Cc: Luis Rodriguez <Luis.Rodriguez@atheros.com>,
+	linux-bluetooth <linux-bluetooth@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Deepak Dhamdhere <Deepak.Dhamdhere@atheros.com>,
+	Sree Durbha <Sree.Durbha@atheros.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Juuso,
-
-> 
-> From: Juuso Oikarinen <juuso.oikarinen@nokia.com>
-> 
-> Currently then dwell times for each channel in scans is set to an
-> overly
-> long value, and excessive number of probe-requests are transmitted on
-> each
-> channel (for active scans.)
-> 
-> Based on testing, comparable results can be received with smaller
-> dwell-time,
-> and, with fever probe-requests - in fact, reducing the number of probe-
-> requests
-> to 2 seems to increase the number of found results.
-
-I think that this does not making any sense. Less prob requests should give you back less results. As less beacons/prob responses are getting back to the station.
-I think also that office with 70 AP is not a normal environment to test and optimize numbers.
-I would suggest to re-test in a 1-6 AP environment which is making more sense for both home and enterprise environment.
-
-> 
-> Configure more optimal values for per channel dwell times. Comparison
-> for the
-> different scan configurations (in my current office environment):
-> 
-> dwell-time 60000   3x probe-req == ~60 results
->            40000   3x probe-req == ~50 results
->            30000   3x probe-req == ~40 results
-> 
-> dwell-time 60000   2x probe-req == ~70 results
->            40000   2x probe-req == ~60 results
->            30000   2x probe-req == ~58 results
-> 
-> The above are results for a cumulative 3 scan run. For individual
-> scans, the
-> number of results drop slightly more.
-> 
-> Signed-off-by: Juuso Oikarinen <juuso.oikarinen@nokia.com>
-> Reviewed-by: Teemu Paasikivi <ext-teemu.3.paasikivi@nokia.com>
-> Signed-off-by: Luciano Coelho <luciano.coelho@nokia.com>
-> ---
->  drivers/net/wireless/wl12xx/wl1271_conf.h |   39
-> +++++++++++++++++++++++++++++
->  drivers/net/wireless/wl12xx/wl1271_main.c |    9 ++++++-
->  drivers/net/wireless/wl12xx/wl1271_scan.c |   18 +++++++++---
->  drivers/net/wireless/wl12xx/wl1271_scan.h |    3 --
->  4 files changed, 60 insertions(+), 9 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/wl12xx/wl1271_conf.h
-> b/drivers/net/wireless/wl12xx/wl1271_conf.h
-> index feb493e..ab716f5 100644
-> --- a/drivers/net/wireless/wl12xx/wl1271_conf.h
-> +++ b/drivers/net/wireless/wl12xx/wl1271_conf.h
-> @@ -1016,6 +1016,44 @@ struct conf_roam_trigger_settings {
->  	u8 avg_weight_snr_data;
->  };
-> 
-> +struct conf_scan_settings {
-> +	/*
-> +	 * The minimum time to wait on each channel for active scans
-> +	 *
-> +	 * Range: 0 - 65536 tu
-> +	 */
-> +	u16 min_dwell_time_active;
+On Wed, Oct 6, 2010 at 9:38 AM, Luis R. Rodriguez
+<lrodriguez@atheros.com> wrote:
+> On Wed, Oct 06, 2010 at 08:56:06AM -0700, Marcel Holtmann wrote:
+>> Hi Luis,
+>>
+>> > > Now I am failing to understand why this was done wrong in the first
+>> > > place. Especially if the loading procedure happens as you say it
+>> > > happens.
+>> >
+>> > You got me :) Anyone?
+>> >
+>> > > This is the example for the Broadcom 203x devices:
+>> > >
+>> > > static struct usb_device_id blacklist_table[] = {
+>> > >        /* Broadcom BCM2033 without firmware */
+>> > >        { USB_DEVICE(0x0a5c, 0x2033), .driver_info = BTUSB_IGNORE },
+>> > >
+>> > > The btusb driver clearly blacklists them. And then bcm203x can take over
+>> > > loading the firmware:
+>> > >
+>> > > static const struct usb_device_id bcm203x_table[] = {
+>> > >        /* Broadcom Blutonium (BCM2033) */
+>> > >        { USB_DEVICE(0x0a5c, 0x2033) },
+>> > >
+>> > > So there is a working example of this already in the kernel tree since
+>> > > forever.
+>> >
+>> > Nice, thanks for the pointer. Our team will review and try to address
+>> > an alternative patch.
+>> >
+>> > Now for my own sanity -- I still don't think I get this how this
+>> > BCM2033 blacklist trick works, I take it the device once plugged in
+>> > gets a generic btusb USB device vendor:device ID. The btusb driver
+>> > then picks up the the blacklist table, and searches for a
+>> > usb_match_id() on it for the given interface... What I don't get is
+>> > how there will be a match here if the USB vendor:device ID is just the
+>> > generic btusb one. Can you help me understand how this trick works?
+>>
+>> the generic Bluetooth USB class descriptors is what btusb uses. With a
+>> few expectation for devices that use VID:PID combination.
+>
+> Ahhh... got it..
+>
+>> So in general what happens if a device gets matched via the Bluetooth
+>> USB class descriptors the btusb driver will claim. We do however check
+>> against out blacklist first. If the VID:PID is listed in the blacklist
+>> we do return ENODEV. That means that the USB subsystem goes ahead and
+>> tries the next driver. In this case bcm203x driver. This will claim it,
+>> load the firmware, reset it and come back with different VID:PID values.
+>> After that the btusb can successfully claim it since it is no longer in
+>> the blacklist.
+>
+> Ah neat.
+>
+>> If I understand this all correct without having the hardware available
+>> for verifying this, then it should be like this:
+>>
+>> Just add this to blacklist_table[] in btusb.c:
+>>
+>>         /* Atheros AR3011 without firmware */
+>>         { USB_DEVICE(0x0cf3, 0x3002), .driver_info = BTUSB_IGNORE },
+>>
+>> And then we can add the firmware loading to ath3k driver to load the
+>> specific 1st stage firmware. And then ath3k can load the 2nd stage as
+>> well. After that it should become a default Bluetooth USB device and the
+>> btusb driver can take care of it.
+>
+> Got it... thanks for the clarification. So ath3k actually doesn't seem to
+> have 2-stage firmware files, ath3k-2.fw actually seems to be a new firmware
+> upgrade. The firmware already made it into linux-firmware.git tree but the
+> respective patch just never made it upstream. I am not sure of the
+> differences between these firmware but I do remember reading from Vikram
+> that no new API was changed. I asked for clarification on the firmware
+> updates and asked if it can be documented here:
+>
+> http://wireless.kernel.org/en/users/Drivers/ath3k
+>
+> If the device can live with simply getting ath3k-1.fw loaded once then
+> perhaps the change you described above is all that is needed, not sure.
+>
+> Deepak, can you please try this patch, I don't have hardware to test
+> this with.
+>
+> diff --git a/drivers/bluetooth/btusb.c b/drivers/bluetooth/btusb.c
+> index d22ce3c..a62c1b2 100644
+> --- a/drivers/bluetooth/btusb.c
+> +++ b/drivers/bluetooth/btusb.c
+> @@ -140,6 +140,9 @@ static struct usb_device_id blacklist_table[] = {
+>        /* Frontline ComProbe Bluetooth Sniffer */
+>        { USB_DEVICE(0x16d3, 0x0002), .driver_info = BTUSB_SNIFFER },
+>
+> +       /* Atheros AR3011 without firmware */
+> +       { USB_DEVICE(0x0cf3, 0x3002), .driver_info = BTUSB_IGNORE },
 > +
-> +	/*
-> +	 * The maximum time to wait on each channel for active scans
-> +	 *
-> +	 * Range: 0 - 65536 tu
-> +	 */
-> +	u16 max_dwell_time_active;
-> +
-> +	/*
-> +	 * The maximum time to wait on each channel for passive scans
-> +	 *
-> +	 * Range: 0 - 65536 tu
-> +	 */
-> +	u16 min_dwell_time_passive;
-> +
-> +	/*
-> +	 * The maximum time to wait on each channel for passive scans
-> +	 *
-> +	 * Range: 0 - 65536 tu
-> +	 */
-> +	u16 max_dwell_time_passive;
-> +
-> +	/*
-> +	 * Number of probe requests to transmit on each active scan
-> channel
-> +	 *
-> +	 * Range: u8
-> +	 */
-> +	u16 num_probe_reqs;
-> +
-> +};
-> +
->  struct conf_drv_settings {
->  	struct conf_sg_settings sg;
->  	struct conf_rx_settings rx;
-> @@ -1024,6 +1062,7 @@ struct conf_drv_settings {
->  	struct conf_itrim_settings itrim;
->  	struct conf_pm_config_settings pm_config;
->  	struct conf_roam_trigger_settings roam_trigger;
-> +	struct conf_scan_settings scan;
->  };
-> 
->  #endif
-> diff --git a/drivers/net/wireless/wl12xx/wl1271_main.c
-> b/drivers/net/wireless/wl12xx/wl1271_main.c
-> index 3f4e154..dcbd6f5 100644
-> --- a/drivers/net/wireless/wl12xx/wl1271_main.c
-> +++ b/drivers/net/wireless/wl12xx/wl1271_main.c
-> @@ -232,7 +232,14 @@ static struct conf_drv_settings default_conf = {
->  		.avg_weight_rssi_data         = 10,
->  		.avg_weight_snr_beacon        = 20,
->  		.avg_weight_snr_data          = 10
-> -	}
-> +	},
-> +	.scan = {
-> +		.min_dwell_time_active        = 7500,
-> +		.max_dwell_time_active        = 30000,
-> +		.min_dwell_time_passive       = 30000,
-> +		.max_dwell_time_passive       = 60000,
-> +		.num_probe_reqs               = 2,
-> +	},
->  };
-> 
->  static void __wl1271_op_remove_interface(struct wl1271 *wl);
-> diff --git a/drivers/net/wireless/wl12xx/wl1271_scan.c
-> b/drivers/net/wireless/wl12xx/wl1271_scan.c
-> index 37f9ccb..5c76b79 100644
-> --- a/drivers/net/wireless/wl12xx/wl1271_scan.c
-> +++ b/drivers/net/wireless/wl12xx/wl1271_scan.c
-> @@ -64,6 +64,7 @@ static int wl1271_get_scan_channels(struct wl1271
-> *wl,
->  				    struct basic_scan_channel_params *channels,
->  				    enum ieee80211_band band, bool passive)
->  {
-> +	struct conf_scan_settings *c = &wl->conf.scan;
->  	int i, j;
->  	u32 flags;
-> 
-> @@ -91,10 +92,17 @@ static int wl1271_get_scan_channels(struct wl1271
-> *wl,
->  			wl1271_debug(DEBUG_SCAN, "beacon_found %d",
->  				     req->channels[i]->beacon_found);
-> 
-> -			channels[j].min_duration =
-> -				cpu_to_le32(WL1271_SCAN_CHAN_MIN_DURATION);
-> -			channels[j].max_duration =
-> -				cpu_to_le32(WL1271_SCAN_CHAN_MAX_DURATION);
-> +			if (!passive) {
-> +				channels[j].min_duration =
-> +					cpu_to_le32(c->min_dwell_time_active);
-> +				channels[j].max_duration =
-> +					cpu_to_le32(c->max_dwell_time_active);
-> +			} else {
-> +				channels[j].min_duration =
-> +					cpu_to_le32(c->min_dwell_time_passive);
-> +				channels[j].max_duration =
-> +					cpu_to_le32(c->max_dwell_time_passive);
-> +			}
->  			channels[j].early_termination = 0;
->  			channels[j].tx_power_att = req->channels[i]-
-> >max_power;
->  			channels[j].channel = req->channels[i]->hw_value;
-> @@ -151,7 +159,7 @@ static int wl1271_scan_send(struct wl1271 *wl, enum
-> ieee80211_band band,
->  	cmd->params.rx_filter_options =
->  		cpu_to_le32(CFG_RX_PRSP_EN | CFG_RX_MGMT_EN |
-> CFG_RX_BCN_EN);
-> 
-> -	cmd->params.n_probe_reqs = WL1271_SCAN_PROBE_REQS;
-> +	cmd->params.n_probe_reqs = wl->conf.scan.num_probe_reqs;
->  	cmd->params.tx_rate = cpu_to_le32(basic_rate);
->  	cmd->params.tid_trigger = 0;
->  	cmd->params.scan_tag = WL1271_SCAN_DEFAULT_TAG;
-> diff --git a/drivers/net/wireless/wl12xx/wl1271_scan.h
-> b/drivers/net/wireless/wl12xx/wl1271_scan.h
-> index bb7af2a..6d57127 100644
-> --- a/drivers/net/wireless/wl12xx/wl1271_scan.h
-> +++ b/drivers/net/wireless/wl12xx/wl1271_scan.h
-> @@ -40,11 +40,8 @@ void wl1271_scan_complete_work(struct work_struct
-> *work);
->  #define WL1271_SCAN_OPT_ACTIVE         0
->  #define WL1271_SCAN_OPT_PASSIVE	       1
->  #define WL1271_SCAN_OPT_PRIORITY_HIGH  4
-> -#define WL1271_SCAN_CHAN_MIN_DURATION  30000  /* TU */
-> -#define WL1271_SCAN_CHAN_MAX_DURATION  60000  /* TU */
->  #define WL1271_SCAN_BAND_2_4_GHZ 0
->  #define WL1271_SCAN_BAND_5_GHZ 1
-> -#define WL1271_SCAN_PROBE_REQS 3
-> 
->  #define WL1271_SCAN_TIMEOUT    10000 /* msec */
-> 
-> --
+>        { }     /* Terminating entry */
+>  };
 
+I just got this description from Sady:
 
+-------------------------------------------------------------------------------------------------------------------
+With eeprom based AR3011 hardware, normally this device gets detected
+as a normal USB device with VID=0x0CF3, PID=0x3000.
+Ath3k DFU driver will download the firmware in to RAM.
+Due to firmware download in the RAM it is exposed as new device
+with VID=0x0CF3, PID=0x3002 to host Bluetooth sub system and btusb.ko
+driver probe routine gets called to bring up Bluetooth interface.
+This is the normal procedure we have done so far on Linux.
 
-Thank You
-=========
-Benzy Gabay
-OMAP-WLAN Lead
-Texas Instruments
+With sflash based AR3011 hardware, when we connect the device to USB
+port it gets detected as a Bluetooth device because of firmware in
+Flash (VID=0x0CF3, PID=0x3002). This triggers the Bluetooth sub
+system driver (btusb.ko) directly in the host instead of ath3k
+DFU driver. Therefore, there is no firmware downloaded in to the
+RAM to bring up Bluetooth at this point. This is the problem
+we're trying to "fix".
+-------------------------------------------------------------------------------------------------------------------
+
+With the above patch we'd get ath3k to do the firmware uploading but
+I'm afraid that we'll go into a loop here unless we can figure out a
+way to get btusb to know the device is now ready.
+
+  Luis
