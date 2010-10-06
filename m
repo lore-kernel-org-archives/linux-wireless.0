@@ -1,73 +1,81 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:50321 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754217Ab0JFKlr (ORCPT
+Received: from mail-pw0-f46.google.com ([209.85.160.46]:33481 "EHLO
+	mail-pw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758743Ab0JFQHp convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 6 Oct 2010 06:41:47 -0400
-Subject: Re: [PATCH] mac80211: hoist sta->lock from reorder release timer
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Christian Lamparter <chunkeey@googlemail.com>
-Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com,
-	Ben Greear <greearb@candelatech.com>,
-	Ming Lei <tom.leiming@gmail.com>
-In-Reply-To: <201010061220.50800.chunkeey@googlemail.com>
-References: <201010061200.54364.chunkeey@googlemail.com>
-	 <1286359826.3655.85.camel@jlt3.sipsolutions.net>
-	 <201010061220.50800.chunkeey@googlemail.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Wed, 06 Oct 2010 12:41:45 +0200
-Message-ID: <1286361705.3655.121.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+	Wed, 6 Oct 2010 12:07:45 -0400
+Received: by pwj5 with SMTP id 5so1758500pwj.19
+        for <linux-wireless@vger.kernel.org>; Wed, 06 Oct 2010 09:07:45 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <1286379040.11721.1.camel@maggie>
+References: <1286344208-32479-1-git-send-email-zajec5@gmail.com>
+	<1286344208-32479-4-git-send-email-zajec5@gmail.com>
+	<1286379040.11721.1.camel@maggie>
+Date: Wed, 6 Oct 2010 18:07:44 +0200
+Message-ID: <AANLkTinsWTCmTjYZ=SgY0-ArTOVgG50V0r9USHnuvQfb@mail.gmail.com>
+Subject: Re: [PATCH 3/3] b43: N-PHY: don't duplicate setting channel in shared memory
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+To: =?UTF-8?Q?Michael_B=C3=BCsch?= <mb@bu3sch.de>
+Cc: linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>,
+	b43-dev@lists.infradead.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2010-10-06 at 12:20 +0200, Christian Lamparter wrote:
-> On Wednesday 06 October 2010 12:10:26 Johannes Berg wrote:
-> > On Wed, 2010-10-06 at 12:00 +0200, Christian Lamparter wrote:
-> > 
-> > > The timer itself is part of the station's private struct.
-> > > The clean-up routine will deactivate the timer as soon as
-> > > the station is removed. Therefore the extra sta->lock
-> > > protection should not be necessary.
-> > 
-> > >  	rcu_read_lock();
-> > > -	spin_lock(&sta->lock);
-> > >  	ieee80211_release_reorder_timeout(sta, *ptid);
-> > > -	spin_unlock(&sta->lock);
-> > >  	rcu_read_unlock();
-> > 
-> > There's a comment on ieee80211_release_reorder_timeout() saying that the
-> > lock must be held -- which is probably not true? We don't generally hold
-> > that lock on the RX path...?
-> 
-> That comment is more or less a 1:1 copy from the comment about
-> struct tid_ampdu_rx (in sta_info.h).
+W dniu 6 października 2010 17:30 użytkownik Michael Büsch
+<mb@bu3sch.de> napisał:
+> On Wed, 2010-10-06 at 07:50 +0200, Rafał Miłecki wrote:
+>> It's already set in PHY common code.
+>>
+>> Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
+>> ---
+>>  drivers/net/wireless/b43/phy_n.c |   13 +++----------
+>>  1 files changed, 3 insertions(+), 10 deletions(-)
+>>
+>> diff --git a/drivers/net/wireless/b43/phy_n.c b/drivers/net/wireless/b43/phy_n.c
+>> index 47c58cd..bb8cb36 100644
+>> --- a/drivers/net/wireless/b43/phy_n.c
+>> +++ b/drivers/net/wireless/b43/phy_n.c
+>> @@ -73,8 +73,6 @@ static void b43_nphy_rf_control_override(struct b43_wldev *dev, u16 field,
+>>                                               u16 value, u8 core, bool off);
+>>  static void b43_nphy_rf_control_intc_override(struct b43_wldev *dev, u8 field,
+>>                                               u16 value, u8 core);
+>> -static int b43_nphy_op_switch_channel(struct b43_wldev *dev,
+>> -                                   unsigned int new_channel);
+>>
+>>  static inline bool b43_empty_chanspec(struct b43_chanspec *chanspec)
+>>  {
+>> @@ -224,7 +222,7 @@ static void b43_radio_init2055_post(struct b43_wldev *dev)
+>>       if (i)
+>>               b43err(dev->wl, "radio post init timeout\n");
+>>       b43_radio_mask(dev, B2055_CAL_LPOCTL, 0xFF7F);
+>> -     b43_nphy_op_switch_channel(dev, dev->phy.channel);
+>> +     b43_switch_channel(dev, dev->phy.channel);
+>>       b43_radio_write(dev, B2055_C1_RX_BB_LPF, 0x9);
+>>       b43_radio_write(dev, B2055_C2_RX_BB_LPF, 0x9);
+>>       b43_radio_write(dev, B2055_C1_RX_BB_MIDACHP, 0x83);
+>> @@ -3352,12 +3350,7 @@ static void b43_nphy_chanspec_setup(struct b43_wldev *dev,
+>>
+>>       b43_chantab_phy_upload(dev, e);
+>>
+>> -     tmp = chanspec.channel;
+>> -     if (chanspec.b_freq == 1)
+>> -             tmp |= 0x0100;
+>> -     if (chanspec.b_width == 3)
+>> -             tmp |= 0x0200;
+>> -     b43_shm_write16(dev, B43_SHM_SHARED, 0xA0, tmp);
+>> +     /* Don't follow specs, B43_SHM_SH_CHAN is set by b43_switch_channel */
+>
+> Looks great. I dunno if a comment is really needed and whether it is
+> correct, though. We _do_ follow the specs. We just do it elsewhere.
 
-Kinda.
+I got "Don't strictly follow specs here" earlier, but made it shorter
+to match 80 chars ;) Maybe it wasn't too good idea. Should left it
+longer or don't put at all.
 
-> > * This structure is protected by RCU and the per-station
-> > * spinlock. Assignments to the array holding it must hold
-> > * the spinlock, only the RX path can access it under RCU
-> > * lock-free.
-> 
-> thing is: we now have the reorder_lock which protects the
-> reorder buffer against "destructive access". So, is it "ok"
-> to trim the comments a bit?
+John: could you drop this comment line when applying? Or would you
+like me to resend this fixed?
 
-Well, so if this patch is OK, it would be, but looking at
-tid_agg_rx->head_seq_num and buf_size for example, they're not always
-protected by the reorder lock (though they could easily be).
-
-In fact, there are more races, like for example
-ieee80211_release_reorder_frames not being invoked with the reorder lock
-held from ieee80211_rx_h_ctrl, which could lead to issues?
-
-Basically the thing is that until your patch, the data in the struct
-didn't actually need locking because it was accessed by the RX path only
-which is not concurrent.
-
-So now we have to carefully analyse what we can do. The comment about
-the sta->lock has probably never been really correct...
-
-johannes
-
+-- 
+Rafał
