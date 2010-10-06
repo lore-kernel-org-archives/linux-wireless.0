@@ -1,54 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:60754 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751639Ab0JAQGw (ORCPT
+Received: from mail-iw0-f174.google.com ([209.85.214.174]:50368 "EHLO
+	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932795Ab0JFS2T convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 1 Oct 2010 12:06:52 -0400
-Subject: Re: [PATCH 2/3] cfg80211: patches to allow setting the WDS peer
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Bill Jordan <bjordan@rajant.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>
-In-Reply-To: <1285949159.3739.37.camel@jlt3.sipsolutions.net>
-References: <1285946441-20152-1-git-send-email-bjordan@rajant.com>
-	 <1285946441-20152-3-git-send-email-bjordan@rajant.com>
-	 <1285949159.3739.37.camel@jlt3.sipsolutions.net>
-Content-Type: text/plain; charset="UTF-8"
-Date: Fri, 01 Oct 2010 18:06:52 +0200
-Message-ID: <1285949212.3739.38.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+	Wed, 6 Oct 2010 14:28:19 -0400
+MIME-Version: 1.0
+In-Reply-To: <1286387660.3655.382.camel@jlt3.sipsolutions.net>
+References: <20100924230730.GB6566@tux> <1286266981.17473.33.camel@aeonflux>
+ <20101005192814.GB11831@tux> <1286308731.2588.13.camel@aeonflux>
+ <AANLkTimz7U52_qHaTutQDOFQde+GrWJRA0WpqY__FPgi@mail.gmail.com>
+ <1286349552.6145.11.camel@aeonflux> <AANLkTimDvgFtoGLEjgWyYRrhQy6Num-rn_2WYO4Lf84b@mail.gmail.com>
+ <1286380566.6145.42.camel@aeonflux> <20101006163816.GE7070@tux>
+ <AANLkTik9w4_PdcEsbRHakLcxcD334_1Q8hGArxTXPCGF@mail.gmail.com>
+ <20101006173949.GG7070@tux> <1286387660.3655.382.camel@jlt3.sipsolutions.net>
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Date: Wed, 6 Oct 2010 11:22:13 -0700
+Message-ID: <AANLkTikYRSQw-+Tcj4VS1qxi=OaeF9C5hjAMWVu+0M=v@mail.gmail.com>
+Subject: Re: RFC: btusb firmware load help
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Marcel Holtmann <holtmann@linux.intel.com>,
+	Luis Rodriguez <Luis.Rodriguez@atheros.com>,
+	linux-bluetooth <linux-bluetooth@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Deepak Dhamdhere <Deepak.Dhamdhere@atheros.com>,
+	Sree Durbha <Sree.Durbha@atheros.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2010-10-01 at 18:05 +0200, Johannes Berg wrote:
-> On Fri, 2010-10-01 at 11:20 -0400, Bill Jordan wrote:
-> 
-> > +static int nl80211_set_wds_peer(struct sk_buff *skb, struct genl_info *info)
-> > +{
-> > +	struct cfg80211_registered_device *rdev;
-> > +	struct wireless_dev *wdev;
-> > +	struct net_device *dev;
-> > +	u8 *bssid;
-> > +	int err;
-> > +
-> > +	if (!info->attrs[NL80211_ATTR_MAC])
-> > +		return -EINVAL;
-> > +
-> > +	rtnl_lock();
-> > +
-> > +	err = get_rdev_dev_by_info_ifindex(info, &rdev, &dev);
-> > +	if (err)
-> > +		goto unlock_rtnl;
-> > +
-> > +	wdev = dev->ieee80211_ptr;
-> 
-> I think this (or maybe the mac80211 bit, but I think here makes more
-> sense) needs to check !netif_running(), otherwise you can change the
-> peer without it taking effect, or something like that? Sorry, should've
-> noted that earlier.
+On Wed, Oct 6, 2010 at 10:54 AM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
+> On Wed, 2010-10-06 at 10:39 -0700, Luis R. Rodriguez wrote:
+>
+>
+>> > With sflash based AR3011 hardware, when we connect the device to USB
+>> > port it gets detected as a Bluetooth device because of firmware in
+>> > Flash (VID=0x0CF3, PID=0x3002). This triggers the Bluetooth sub
+>> > system driver (btusb.ko) directly in the host instead of ath3k
+>> > DFU driver. Therefore, there is no firmware downloaded in to the
+>> > RAM to bring up Bluetooth at this point. This is the problem
+>> > we're trying to "fix".
+>
+> So the easiest fix for this would be to
+>  a) ignore 0x0cf3,0x3002 in btusb
+>  b) add it to ath3k firmware loading
+>  c) change the ath3k firmware to load with 0x0cf3,0x3003 (or whatever
+>    else you want, as long as it's not 0x3000 and not 0x3002)
+>
+> Then the ignore in btusb won't affect ath3k after that new firmware was
+> loaded.
 
-cfg80211_wds_wext_siwap does this.
+Good idea, I forgot about possible firmware changes :) Lets see if our
+team can do that. Thanks for all the feedback.
 
-johannes
-
+  Luis
