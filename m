@@ -1,51 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ww0-f44.google.com ([74.125.82.44]:54264 "EHLO
-	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755686Ab0JDMcH (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:47940 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752131Ab0JGT1Y (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 4 Oct 2010 08:32:07 -0400
-Date: Mon, 4 Oct 2010 14:31:46 +0200
-From: Dan Carpenter <error27@gmail.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: Zhu Yi <yi.zhu@intel.com>, "David S. Miller" <davem@davemloft.net>,
-	linux-wireless@vger.kernel.org, kernel-janitors@vger.kernel.org
-Subject: [patch -next] ipw2200: check for allocation failures
-Message-ID: <20101004123146.GC5692@bicker>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+	Thu, 7 Oct 2010 15:27:24 -0400
+Subject: Re: memory clobber in rx path, maybe related to ath9k.
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Ben Greear <greearb@candelatech.com>
+Cc: "Luis R. Rodriguez" <mcgrof@gmail.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <4CAE1DFB.303@candelatech.com>
+References: <4CAB59B2.5050106@candelatech.com>
+	 <AANLkTikhGCTS8kJgpDzjudyBTk-rkyXY33UO7kB0+Cc-@mail.gmail.com>
+	 <4CAB5F3D.9060201@candelatech.com>
+	 <AANLkTimV3GrwU+9PPtirT4sCzveLY2egr3PRQhfDBET1@mail.gmail.com>
+	 <4CAB627F.8020804@candelatech.com>
+	 <AANLkTi=sT5QJe4V8gFGjF-nzx0uJAMLG_XG2715qrEEd@mail.gmail.com>
+	 <4CAB64AD.4080105@candelatech.com>
+	 <AANLkTi=3dHbB5tmQDp3Ba54-DqQydVCkNdFo1vKbfaGY@mail.gmail.com>
+	 <4CAB6B08.4050801@candelatech.com> <4CAE0474.4090605@candelatech.com>
+	 <1286475250.20974.22.camel@jlt3.sipsolutions.net>
+	 <AANLkTinbRSnPVgbBxvVpMdnP+K--bye=Q-miHf4X44kz@mail.gmail.com>
+	 <4CAE13F6.2010003@candelatech.com>
+	 <AANLkTimEZ5GY7WFz-F4YyC+6MEwNn2Dki4tonp645XrS@mail.gmail.com>
+	 <4CAE1DFB.303@candelatech.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Thu, 07 Oct 2010 21:27:22 +0200
+Message-ID: <1286479642.20974.32.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-If kzalloc() fails then return should return with -ENOMEM.
+On Thu, 2010-10-07 at 12:22 -0700, Ben Greear wrote:
 
-Signed-off-by: Dan Carpenter <error27@gmail.com>
----
-I think the first allocation should get freed by free_libipw() but I
-wasn't able to follow that code path far enough to verify...
+> After reboot, and re-run of the script,
+> I saw this in the logs, and shortly after,
+> the SLUB poison warning dumped to screen.
+> 
+> Maybe those DMA errors are serious?
 
-diff --git a/drivers/net/wireless/ipw2x00/ipw2200.c b/drivers/net/wireless/ipw2x00/ipw2200.c
-index cb2552a..d04d760 100644
---- a/drivers/net/wireless/ipw2x00/ipw2200.c
-+++ b/drivers/net/wireless/ipw2x00/ipw2200.c
-@@ -11470,6 +11470,10 @@ static int ipw_net_init(struct net_device *dev)
- 		bg_band->channels =
- 			kzalloc(geo->bg_channels *
- 				sizeof(struct ieee80211_channel), GFP_KERNEL);
-+		if (!bg_band->channels) {
-+			rc = -ENOMEM;
-+			goto out;
-+		}
- 		/* translate geo->bg to bg_band.channels */
- 		for (i = 0; i < geo->bg_channels; i++) {
- 			bg_band->channels[i].band = IEEE80211_BAND_2GHZ;
-@@ -11505,6 +11509,10 @@ static int ipw_net_init(struct net_device *dev)
- 		a_band->channels =
- 			kzalloc(geo->a_channels *
- 				sizeof(struct ieee80211_channel), GFP_KERNEL);
-+		if (!a_band->channels) {
-+			rc = -ENOMEM;
-+			goto out;
-+		}
- 		/* translate geo->bg to a_band.channels */
- 		for (i = 0; i < geo->a_channels; i++) {
- 			a_band->channels[i].band = IEEE80211_BAND_2GHZ;
+> ath: Failed to stop TX DMA in 100 msec after killing last frame
+> ath: Failed to stop TX DMA. Resetting hardware!
+
+That's TX DMA, it can hardly result in invalid memory writes like the
+ones you've been seeing.
+
+I'm still convinced something is wrong with ath9k RX DMA, as you've seen
+the contents of frames written to already freed memory regions. Since I
+don't know anything about ath9k, you should probably not rely on me
+though :-)
+
+johannes
+
