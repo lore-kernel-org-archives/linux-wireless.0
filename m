@@ -1,96 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qw0-f46.google.com ([209.85.216.46]:47171 "EHLO
-	mail-qw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751779Ab0JTVYr convert rfc822-to-8bit (ORCPT
+Received: from mail-iw0-f174.google.com ([209.85.214.174]:47757 "EHLO
+	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751173Ab0JGHoM (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 20 Oct 2010 17:24:47 -0400
-Received: by qwa26 with SMTP id 26so2792361qwa.19
-        for <linux-wireless@vger.kernel.org>; Wed, 20 Oct 2010 14:24:46 -0700 (PDT)
+	Thu, 7 Oct 2010 03:44:12 -0400
+Received: by iwn9 with SMTP id 9so499445iwn.19
+        for <linux-wireless@vger.kernel.org>; Thu, 07 Oct 2010 00:44:12 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <1287595139-10761-3-git-send-email-lrodriguez@atheros.com>
-References: <1287595139-10761-1-git-send-email-lrodriguez@atheros.com> <1287595139-10761-3-git-send-email-lrodriguez@atheros.com>
-From: =?ISO-8859-1?Q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>
-Date: Wed, 20 Oct 2010 23:24:25 +0200
-Message-ID: <AANLkTi=on_cq0vSubADSqYWzfdeU0ZxzMPPCpMbDQWX-@mail.gmail.com>
-Subject: Re: [PATCH 2/7] cfg80211: fix allowing country IEs for WIPHY_FLAG_STRICT_REGULATORY
-To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Cc: linville@tuxdriver.com, johannes@sipsolutions.net,
-	easwar.krishnan@atheros.com, linux-wireless@vger.kernel.org,
-	stable@kernel.org
+In-Reply-To: <201010071606.37134.br1@einfach.org>
+References: <20101005095510.3083.46174.stgit@tt-desk>
+	<201010071003.37599.br1@einfach.org>
+	<AANLkTimf=f1DhP68=aHZ7WKVCN9RPBq7sh+46ExnYRVa@mail.gmail.com>
+	<201010071606.37134.br1@einfach.org>
+Date: Thu, 7 Oct 2010 09:44:06 +0200
+Message-ID: <AANLkTin3xh4+aQvMfZH_UF3mnKZp-eYdt3+y++8mEJHb@mail.gmail.com>
+Subject: Re: [PATCH 4/5] nl80211/mac80211: Add channel utilization to survey
+From: Helmut Schaa <helmut.schaa@googlemail.com>
+To: Bruno Randolf <br1@einfach.org>
+Cc: linville@tuxdriver.com, nbd@openwrt.org,
+	ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org,
+	adrian@freebsd.org, vasanth@atheros.com,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Jonathan Guerin <jonathan@guerin.id.au>
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Oct 20, 2010 at 7:18 PM, Luis R. Rodriguez
-<lrodriguez@atheros.com> wrote:
-> We should be enabling country IE hints for WIPHY_FLAG_STRICT_REGULATORY
-> even if we haven't yet recieved regulatory domain hint for the driver
-> if it needed one. Without this Country IEs are not passed on to drivers
-> that have set WIPHY_FLAG_STRICT_REGULATORY, today this is just all
-> Atheros chipset drivers: ath5k, ath9k, ar9170, carl9170.
->
-> This was part of the original design, however it was completely
-> overlooked...
->
-> Cc: Easwar Krishnan <easwar.krishnan@atheros.com>
-> Cc: stable@kernel.org
-> Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
-> ---
->  include/net/cfg80211.h |   15 ++++++++-------
->  net/wireless/reg.c     |    1 +
->  2 files changed, 9 insertions(+), 7 deletions(-)
->
-> diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-> index 2a7936d..352ebc5 100644
-> --- a/include/net/cfg80211.h
-> +++ b/include/net/cfg80211.h
-> @@ -1321,13 +1321,14 @@ struct cfg80211_ops {
->  *     initiator is %REGDOM_SET_BY_CORE).
->  * @WIPHY_FLAG_STRICT_REGULATORY: tells us the driver for this device will
->  *     ignore regulatory domain settings until it gets its own regulatory
-> - *     domain via its regulatory_hint(). After its gets its own regulatory
-> - *     domain it will only allow further regulatory domain settings to
-> - *     further enhance compliance. For example if channel 13 and 14 are
-> - *     disabled by this regulatory domain no user regulatory domain can
-> - *     enable these channels at a later time. This can be used for devices
-> - *     which do not have calibration information gauranteed for frequencies
-> - *     or settings outside of its regulatory domain.
-> + *     domain via its regulatory_hint() unless the regulatory hint is
-> + *     from a country IE. After its gets its own regulatory domain it will
-> + *     only allow further regulatory domain settings to further enhance
-> + *     compliance. For example if channel 13 and 14 are disabled by this
-> + *     regulatory domain no user regulatory domain can enable these channels
-> + *     at a later time. This can be used for devices which do not have
-> + *     calibration information gauranteed for frequencies or settings
-Typo (guaranteed).
+On Thu, Oct 7, 2010 at 9:06 AM, Bruno Randolf <br1@einfach.org> wrote:
+> which units do you have for the busy time? what about other drivers?
+> in ath[59]k we have it as cycles (which is about 1/44000 of a second,
+> depending on the mode). so it counts up rather fast.
 
+We've got the busy time in [us] since the last read (the register is
+cleared on read).
 
-> + *     outside of its regulatory domain.
->  * @WIPHY_FLAG_DISABLE_BEACON_HINTS: enable this if your driver needs to ensure
->  *     that passive scan flags and beaconing flags may not be lifted by
->  *     cfg80211 due to regulatory beacon hints. For more information on beacon
-> diff --git a/net/wireless/reg.c b/net/wireless/reg.c
-> index b64596f..1bc8131 100644
-> --- a/net/wireless/reg.c
-> +++ b/net/wireless/reg.c
-> @@ -813,6 +813,7 @@ static bool ignore_reg_update(struct wiphy *wiphy,
->         * desired regulatory domain set
->         */
->        if (wiphy->flags & WIPHY_FLAG_STRICT_REGULATORY && !wiphy->regd &&
-> +           initiator != NL80211_REGDOM_SET_BY_COUNTRY_IE &&
->            !is_world_regdom(last_request->alpha2))
->                return true;
->        return false;
-> --
-> 1.7.0.4
+> some absolute cumulative value would be better, so several userspace processes
+> can poll and do their own averaging or percentage calculations.
 >
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
+> but which units to use? what would be a good way of solving that?
+> any ideas???
 
+That's what 802.11-2007 tells us in regard to the BSS Load element:
 
+<citation>
+((channel busy time/(dot11ChannelUtilizationBeaconIntervals *
+dot11BeaconPeriod * 1024)) * 255),
 
--- 
-Vista: [V]iruses, [I]ntruders, [S]pyware, [T]rojans and [A]dware. :-)
+where channel busy time is defined to be the number of microseconds
+during which the CS mechanism, as
+defined in 9.2.1, has indicated a channel busy indication, and the MIB
+attribute dot11ChannelUtilization-
+BeaconIntervals represents the number of consecutive beacon intervals
+during which the channel busy time
+is measured. The default value of
+dot11ChannelUtilizationBeaconIntervals is defined in Annex D.
+</citation>
+
+So, I guess it makes sense to just return the calculated channel
+utilization value (u8)
+and keep it up to date within the driver.
+
+mac80211 could pass dot11ChannelUtilizationBeaconIntervals (using the default of
+16 for now) to the drivers and the drivers would report the calculated value.
+
+Helmut
