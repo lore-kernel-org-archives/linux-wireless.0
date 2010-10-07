@@ -1,61 +1,216 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pw0-f46.google.com ([209.85.160.46]:45343 "EHLO
-	mail-pw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750885Ab0JSNwC convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 19 Oct 2010 09:52:02 -0400
-Received: by pwj4 with SMTP id 4so449579pwj.19
-        for <linux-wireless@vger.kernel.org>; Tue, 19 Oct 2010 06:52:02 -0700 (PDT)
+Received: from nbd.name ([88.198.39.176]:50766 "EHLO ds10.nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754076Ab0JGMzb (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 7 Oct 2010 08:55:31 -0400
+Message-ID: <4CADC341.40305@openwrt.org>
+Date: Thu, 07 Oct 2010 14:55:29 +0200
+From: Felix Fietkau <nbd@openwrt.org>
 MIME-Version: 1.0
-In-Reply-To: <4CBD52DE.9090804@gmx.net>
-References: <4CB6BE57.8010401@gmx.net>
-	<1287071844.11341.5.camel@gnutoo-laptop>
-	<AANLkTikosEtFnWqRVzMBKtNsB=aqOpqQFKDOZS3+pXTE@mail.gmail.com>
-	<4CB74759.3030807@gmx.net>
-	<AANLkTi=1Ar-gzRaskHGDLmkaDnr=9+oZnA=qBLCYcUAi@mail.gmail.com>
-	<4CB7F7C7.7030804@gmx.net>
-	<AANLkTi=u+mT2Xd0=0vt4uaf9hSnnkPKY+wN6DjAxME3m@mail.gmail.com>
-	<4CBABB84.1090100@gmx.net>
-	<4CBC7725.7050202@gmx.net>
-	<AANLkTincCSBfwa_Y-cy_42HfU5kP1puCbi2-dBwGkkHu@mail.gmail.com>
-	<4CBC9A51.8030309@gmx.net>
-	<1287427291.8043.2.camel@powerslave>
-	<1287428554.8043.6.camel@powerslave>
-	<4CBD52DE.9090804@gmx.net>
-Date: Tue, 19 Oct 2010 16:52:00 +0300
-Message-ID: <AANLkTi=dGSVBrdDXwJgmOjEGX+i+=P_KibiJd+NNMGfy@mail.gmail.com>
-Subject: Re: Compat-wireless N900
-From: Grazvydas Ignotas <notasas@gmail.com>
-To: George <george.news@gmx.net>
-Cc: Luciano Coelho <luciano.coelho@nokia.com>,
-	"Luis R. Rodriguez" <mcgrof@gmail.com>,
-	Bob Copeland <me@bobcopeland.com>,
-	"Denis 'GNUtoo' Carikli" <GNUtoo@no-log.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+CC: linux-wireless <linux-wireless@vger.kernel.org>
+Subject: [PATCH v3] compat: backport netlink changes used in the nl80211 cleanup
+References: <4CADB60C.6040105@openwrt.org> <4CADC142.7010709@openwrt.org>
+In-Reply-To: <4CADC142.7010709@openwrt.org>
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Oct 19, 2010 at 11:12 AM, George <george.news@gmx.net> wrote:
-> On 18/10/2010 21:02, Luciano Coelho wrote:
->>
->> On Mon, 2010-10-18 at 20:41 +0200, ext Luciano Coelho wrote:
->>>
->>> On Mon, 2010-10-18 at 21:04 +0200, ext George wrote:
->>>>
->>>> On 18/10/2010 19:21, Luis R. Rodriguez wrote:
->>>>> Does your device use SDIO or SPI?
->>>>>
->>>>>    Luis
->>>>
->>>> I have tried both and none of them have worked.
->>>
->>> On the N900 the wl1271 chip is connected via SPI.
->
-> The chip is a wl1251, isn't it? wl1271 is n capable and n900 is not.
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+---
+v2:
+- fix genl_unregister_family wrapper (removes the family from the internal list)
+- fix error handling in doit ops
+v3:
+- fix a theoretical race in family unregister
 
-I think your problem is that the driver (in
-drivers/net/wireless/wl1251/spi.c) and spi_board_info (in
-arch/arm/mach-omap2/board-rx51-peripherals.c) names don't match
-(wl1251 vs wl12xx). Probably easiest to edit .modalias in
-board-rx51-peripherals.c and rebuild the kernel.
+--- a/include/linux/compat-2.6.37.h
++++ b/include/linux/compat-2.6.37.h
+@@ -45,6 +45,68 @@ static inline void skb_checksum_none_ass
+ 
+ #define pcmcia_enable_device(link)	pcmcia_request_configuration(link, &link->conf)
+ 
++#include <net/genetlink.h>
++
++struct compat_genl_info {
++	struct genl_info *info;
++
++	u32 snd_seq;
++	u32 snd_pid;
++	struct genlmsghdr *genlhdr;
++	struct nlattr **attrs;
++	void *user_ptr[2];
++};
++#define genl_info compat_genl_info
++
++struct compat_genl_ops {
++	struct genl_ops ops;
++
++	u8 cmd;
++	u8 internal_flags;
++	unsigned int flags;
++	const struct nla_policy *policy;
++
++	int (*doit)(struct sk_buff *skb, struct genl_info *info);
++	int (*dumpit)(struct sk_buff *skb, struct netlink_callback *cb);
++	int (*done)(struct netlink_callback *cb);
++};
++#define genl_ops compat_genl_ops
++
++struct compat_genl_family {
++	struct genl_family family;
++
++	struct list_head list;
++
++	unsigned int id, hdrsize, version, maxattr;
++	const char *name;
++	bool netnsok;
++
++	struct nlattr **attrbuf;
++
++	int (*pre_doit)(struct genl_ops *ops, struct sk_buff *skb,
++			struct genl_info *info);
++
++	void (*post_doit)(struct genl_ops *ops, struct sk_buff *skb,
++			  struct genl_info *info);
++};
++
++#define genl_family compat_genl_family
++
++#define genl_register_family_with_ops compat_genl_register_family_with_ops
++
++int genl_register_family_with_ops(struct genl_family *family,
++				  struct genl_ops *ops, size_t n_ops);
++
++#define genl_unregister_family compat_genl_unregister_family
++
++int genl_unregister_family(struct genl_family *family);
++
++#define genl_info_net(_info) genl_info_net((_info)->info)
++#define genlmsg_reply(_msg, _info) genlmsg_reply(_msg, (_info)->info)
++#define genlmsg_put(_skb, _pid, _seq, _fam, _flags, _cmd) genlmsg_put(_skb, _pid, _seq, &(_fam)->family, _flags, _cmd)
++#define genl_register_mc_group(_fam, _grp) genl_register_mc_group(&(_fam)->family, _grp)
++#define genl_unregister_mc_group(_fam, _grp) genl_unregister_mc_group(&(_fam)->family, _grp)
++
+ #endif /* (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,37)) */
+ 
+ #endif /* LINUX_26_37_COMPAT_H */
+--- a/compat/compat-2.6.37.c
++++ b/compat/compat-2.6.37.c
+@@ -42,4 +42,116 @@ EXPORT_SYMBOL_GPL(net_ns_type_operations
+ 
+ #endif /* LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,35)*/ 
+ 
++#undef genl_info
++#undef genl_unregister_family
++
++static LIST_HEAD(compat_nl_fam);
++
++static struct genl_ops *genl_get_cmd(u8 cmd, struct genl_family *family)
++{
++	struct genl_ops *ops;
++
++	list_for_each_entry(ops, &family->family.ops_list, ops.ops_list)
++		if (ops->cmd == cmd)
++			return ops;
++
++	return NULL;
++}
++
++
++static int nl_doit_wrapper(struct sk_buff *skb, struct genl_info *info)
++{
++	struct compat_genl_info compat_info;
++	struct genl_family *family;
++	struct genl_ops *ops;
++	int err;
++
++	list_for_each_entry(family, &compat_nl_fam, list) {
++		if (family->id == info->nlhdr->nlmsg_type)
++			goto found;
++	}
++	return -ENOENT;
++
++found:
++	ops = genl_get_cmd(info->genlhdr->cmd, family);
++	if (!ops)
++		return -ENOENT;
++
++	memset(&compat_info.user_ptr, 0, sizeof(compat_info.user_ptr));
++	compat_info.info = info;
++#define __copy(_field) compat_info._field = info->_field
++	__copy(snd_seq);
++	__copy(snd_pid);
++	__copy(genlhdr);
++	__copy(attrs);
++#undef __copy
++	if (family->pre_doit) {
++		err = family->pre_doit(ops, skb, &compat_info);
++		if (err)
++			return err;
++	}
++
++	err = ops->doit(skb, &compat_info);
++
++	if (family->post_doit)
++		family->post_doit(ops, skb, &compat_info);
++
++	return err;
++}
++
++int compat_genl_register_family_with_ops(struct genl_family *family,
++					 struct genl_ops *ops, size_t n_ops)
++{
++	int i, ret;
++
++#define __copy(_field) family->family._field = family->_field
++	__copy(id);
++	__copy(hdrsize);
++	__copy(version);
++	__copy(maxattr);
++	strncpy(family->family.name, family->name, sizeof(family->family.name));
++#if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,32))
++	__copy(netnsok);
++#endif
++#undef __copy
++
++	ret = genl_register_family(&family->family);
++	if (ret < 0)
++		return ret;
++
++	family->attrbuf = family->family.attrbuf;
++	family->id = family->family.id;
++
++	for (i = 0; i < n_ops; i++) {
++#define __copy(_field) ops[i].ops._field = ops[i]._field
++		__copy(cmd);
++		__copy(flags);
++		__copy(policy);
++		__copy(dumpit);
++		__copy(done);
++#undef __copy
++		ops[i].ops.doit = nl_doit_wrapper;
++		ret = genl_register_ops(&family->family, &ops[i].ops);
++		if (ret < 0)
++			goto error_ops;
++	}
++	list_add(&family->list, &compat_nl_fam);
++
++	return ret;
++
++error_ops:
++	compat_genl_unregister_family(family);
++	return ret;
++}
++EXPORT_SYMBOL(compat_genl_register_family_with_ops);
++
++int compat_genl_unregister_family(struct genl_family *family)
++{
++	int err;
++	err = genl_unregister_family(&family->family);
++	list_del(&family->list);
++	return err;
++}
++EXPORT_SYMBOL(compat_genl_unregister_family);
++
+ #endif /* LINUX_VERSION_CODE < KERNEL_VERSION(2,6,37) */
