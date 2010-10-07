@@ -1,111 +1,187 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f46.google.com ([209.85.214.46]:50421 "EHLO
-	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751448Ab0JPR0h (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 16 Oct 2010 13:26:37 -0400
-Received: by bwz15 with SMTP id 15so1856587bwz.19
-        for <linux-wireless@vger.kernel.org>; Sat, 16 Oct 2010 10:26:18 -0700 (PDT)
-From: Christian Lamparter <chunkeey@googlemail.com>
-To: linux-wireless@vger.kernel.org
-Subject: [PATCH] carl9170: fix memory leak issue in async cmd macro wrappers
-Date: Sat, 16 Oct 2010 20:47:50 +0200
-Cc: "John W. Linville" <linville@tuxdriver.com>
+Received: from nbd.name ([88.198.39.176]:50591 "EHLO ds10.nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1760352Ab0JGL7M (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 7 Oct 2010 07:59:12 -0400
+Message-ID: <4CADB60C.6040105@openwrt.org>
+Date: Thu, 07 Oct 2010 13:59:08 +0200
+From: Felix Fietkau <nbd@openwrt.org>
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="us-ascii"
-Message-Id: <201010162047.50476.chunkeey@googlemail.com>
+To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+CC: linux-wireless <linux-wireless@vger.kernel.org>
+Subject: [PATCH] compat: backport netlink changes used in the nl80211 cleanup
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch continues where the previous commit:
-	"carl9170: fix async command buffer leak"
-left off.
-
-Similar to carl9170_reboot/carl9170_powersave, the
-carl9170_async_regwrite* macros would leak the
-temporary command buffer, if __carl9170_exec_cmd
-fails to upload the command to the device.
-
-Signed-off-by: Christian Lamparter <chunkeey@googlemail.com>
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
 ---
-diff --git a/drivers/net/wireless/ath/carl9170/cmd.h b/drivers/net/wireless/ath/carl9170/cmd.h
-index f78728c..568174c 100644
---- a/drivers/net/wireless/ath/carl9170/cmd.h
-+++ b/drivers/net/wireless/ath/carl9170/cmd.h
-@@ -116,8 +116,9 @@ __regwrite_out :							\
- } while (0);
+--- a/include/linux/compat-2.6.37.h
++++ b/include/linux/compat-2.6.37.h
+@@ -45,6 +45,65 @@ static inline void skb_checksum_none_ass
  
+ #define pcmcia_enable_device(link)	pcmcia_request_configuration(link, &link->conf)
  
--#define carl9170_async_get_buf()					\
-+#define carl9170_async_regwrite_get_buf()				\
- do {									\
-+	__nreg = 0;							\
- 	__cmd = carl9170_cmd_buf(__carl, CARL9170_CMD_WREG_ASYNC,	\
- 				 CARL9170_MAX_CMD_PAYLOAD_LEN);		\
- 	if (__cmd == NULL) {						\
-@@ -128,38 +129,42 @@ do {									\
- 
- #define carl9170_async_regwrite_begin(carl)				\
- do {									\
--	int __nreg = 0, __err = 0;					\
- 	struct ar9170 *__carl = carl;					\
- 	struct carl9170_cmd *__cmd;					\
--	carl9170_async_get_buf();					\
-+	unsigned int __nreg;						\
-+	int  __err = 0;							\
-+	carl9170_async_regwrite_get_buf();				\
++#include <net/genetlink.h>
 +
-+#define carl9170_async_regwrite_flush()					\
-+do {									\
-+	if (__cmd == NULL || __nreg == 0)				\
-+		break;							\
-+									\
-+	if (IS_ACCEPTING_CMD(__carl) && __nreg) {			\
-+		__cmd->hdr.len = 8 * __nreg;				\
-+		__err = __carl9170_exec_cmd(__carl, __cmd, true);	\
-+		__cmd = NULL;						\
-+		break;							\
-+	}								\
-+	goto __async_regwrite_out;					\
-+} while (0)
++struct compat_genl_info {
++	struct genl_info *info;
++
++	u32 snd_seq;
++	u32 snd_pid;
++	struct genlmsghdr *genlhdr;
++	struct nlattr **attrs;
++	void *user_ptr[2];
++};
++#define genl_info compat_genl_info
++
++struct compat_genl_ops {
++	struct genl_ops ops;
++
++	u8 cmd;
++	u8 internal_flags;
++	unsigned int flags;
++	const struct nla_policy *policy;
++
++	int (*doit)(struct sk_buff *skb, struct genl_info *info);
++	int (*dumpit)(struct sk_buff *skb, struct netlink_callback *cb);
++	int (*done)(struct netlink_callback *cb);
++};
++#define genl_ops compat_genl_ops
++
++struct compat_genl_family {
++	struct genl_family family;
++
++	struct list_head list;
++
++	unsigned int id, hdrsize, version, maxattr;
++	const char *name;
++	bool netnsok;
++
++	struct nlattr **attrbuf;
++
++	int (*pre_doit)(struct genl_ops *ops, struct sk_buff *skb,
++			struct genl_info *info);
++
++	void (*post_doit)(struct genl_ops *ops, struct sk_buff *skb,
++			  struct genl_info *info);
++};
++
++#define genl_family compat_genl_family
++
++#define genl_register_family_with_ops compat_genl_register_family_with_ops
++
++int genl_register_family_with_ops(struct genl_family *family,
++				  struct genl_ops *ops, size_t n_ops);
++
++#define genl_unregister_family(_family) genl_unregister_family(&(_family)->family)
++#define genl_info_net(_info) genl_info_net((_info)->info)
++#define genlmsg_reply(_msg, _info) genlmsg_reply(_msg, (_info)->info)
++#define genlmsg_put(_skb, _pid, _seq, _fam, _flags, _cmd) genlmsg_put(_skb, _pid, _seq, &(_fam)->family, _flags, _cmd)
++#define genl_register_mc_group(_fam, _grp) genl_register_mc_group(&(_fam)->family, _grp)
++#define genl_unregister_mc_group(_fam, _grp) genl_unregister_mc_group(&(_fam)->family, _grp)
++
+ #endif /* (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,37)) */
  
- #define carl9170_async_regwrite(r, v) do {				\
-+	if (__cmd == NULL)						\
-+		carl9170_async_regwrite_get_buf();			\
- 	__cmd->wreg.regs[__nreg].addr = cpu_to_le32(r);			\
- 	__cmd->wreg.regs[__nreg].val = cpu_to_le32(v);			\
- 	__nreg++;							\
--	if ((__nreg >= PAYLOAD_MAX/2)) {				\
--		if (IS_ACCEPTING_CMD(__carl)) {				\
--			__cmd->hdr.len = 8 * __nreg;			\
--			__err = __carl9170_exec_cmd(__carl, __cmd, true);\
--			__cmd = NULL;					\
--			carl9170_async_get_buf();			\
--		} else {						\
--			goto __async_regwrite_out;			\
--		}							\
--		__nreg = 0;						\
--		if (__err)						\
--			goto __async_regwrite_out;			\
--	}								\
-+	if ((__nreg >= PAYLOAD_MAX / 2))				\
-+		carl9170_async_regwrite_flush();			\
- } while (0)
+ #endif /* LINUX_26_37_COMPAT_H */
+--- a/compat/compat-2.6.37.c
++++ b/compat/compat-2.6.37.c
+@@ -42,4 +42,98 @@ EXPORT_SYMBOL_GPL(net_ns_type_operations
  
--#define carl9170_async_regwrite_finish()				\
-+#define carl9170_async_regwrite_finish() do {				\
- __async_regwrite_out :							\
--	if (__err == 0 && __nreg) {					\
--		__cmd->hdr.len = 8 * __nreg;				\
--		if (IS_ACCEPTING_CMD(__carl))				\
--			__err = __carl9170_exec_cmd(__carl, __cmd, true);\
--		__nreg = 0;						\
--	}
-+	if (__cmd != NULL && __err == 0)				\
-+		carl9170_async_regwrite_flush();			\
-+	kfree(__cmd);							\
-+} while (0)								\
+ #endif /* LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,35)*/ 
  
- #define carl9170_async_regwrite_result()				\
- 	__err;								\
++#undef genl_info
++
++static LIST_HEAD(compat_nl_fam);
++
++static struct genl_ops *genl_get_cmd(u8 cmd, struct genl_family *family)
++{
++	struct genl_ops *ops;
++
++	list_for_each_entry(ops, &family->family.ops_list, ops.ops_list)
++		if (ops->cmd == cmd)
++			return ops;
++
++	return NULL;
++}
++
++
++static int nl_doit_wrapper(struct sk_buff *skb, struct genl_info *info)
++{
++	struct compat_genl_info compat_info;
++	struct genl_family *family;
++	struct genl_ops *ops;
++
++	list_for_each_entry(family, &compat_nl_fam, list) {
++		if (family->id == info->nlhdr->nlmsg_type)
++			goto found;
++	}
++	return -ENOENT;
++
++found:
++	ops = genl_get_cmd(info->genlhdr->cmd, family);
++	if (!ops)
++		return -ENOENT;
++
++	memset(&compat_info, 0, sizeof(compat_info));
++	compat_info.info = info;
++#define __copy(_field) compat_info._field = info->_field
++	__copy(snd_seq);
++	__copy(snd_pid);
++	__copy(genlhdr);
++	__copy(attrs);
++#undef __copy
++	family->pre_doit(ops, skb, &compat_info);
++	ops->doit(skb, &compat_info);
++	family->post_doit(ops, skb, &compat_info);
++
++	return 0;
++}
++
++int compat_genl_register_family_with_ops(struct genl_family *family,
++					 struct genl_ops *ops, size_t n_ops)
++{
++	int i, ret;
++
++#define __copy(_field) family->family._field = family->_field
++	__copy(id);
++	__copy(hdrsize);
++	__copy(version);
++	__copy(maxattr);
++	strncpy(family->family.name, family->name, sizeof(family->family.name));
++#if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,32))
++	__copy(netnsok);
++#endif
++#undef __copy
++
++	ret = genl_register_family(&family->family);
++	if (ret < 0)
++		return ret;
++
++	family->attrbuf = family->family.attrbuf;
++	family->id = family->family.id;
++
++	for (i = 0; i < n_ops; i++) {
++#define __copy(_field) ops[i].ops._field = ops[i]._field
++		__copy(cmd);
++		__copy(flags);
++		__copy(policy);
++		__copy(dumpit);
++		__copy(done);
++#undef __copy
++		ops[i].ops.doit = nl_doit_wrapper;
++		ret = genl_register_ops(&family->family, &ops[i].ops);
++		if (ret < 0)
++			goto error_ops;
++	}
++	list_add(&family->list, &compat_nl_fam);
++
++	return ret;
++
++error_ops:
++	genl_unregister_family(family);
++	return ret;
++}
++EXPORT_SYMBOL(compat_genl_register_family_with_ops);
++
+ #endif /* LINUX_VERSION_CODE < KERNEL_VERSION(2,6,37) */
