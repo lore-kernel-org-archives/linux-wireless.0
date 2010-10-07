@@ -1,65 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ey0-f174.google.com ([209.85.215.174]:53795 "EHLO
-	mail-ey0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751944Ab0J0LjM (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 27 Oct 2010 07:39:12 -0400
-MIME-Version: 1.0
-In-Reply-To: <AANLkTikwo++xG7SXzNPwmZgU2jbdLiMr0Wi+vaxFqb7o@mail.gmail.com>
-References: <AANLkTikwo++xG7SXzNPwmZgU2jbdLiMr0Wi+vaxFqb7o@mail.gmail.com>
-Date: Wed, 27 Oct 2010 13:39:10 +0200
-Message-ID: <AANLkTi=NcpzcUv8jx5_NYxxBp8y0F2-Uh8aCCacb-ZWN@mail.gmail.com>
-Subject: Re: drivers/platform/x86: Backlight-Add-backlight-type-v2.patch
-From: Corentin Chary <corentin.chary@gmail.com>
-To: sedat.dilek@gmail.com
-Cc: LKML <linux-kernel@vger.kernel.org>,
-	platform-driver-x86@vger.kernel.org,
-	DRI <dri-devel@lists.freedesktop.org>,
-	Matthew Garrett <mjg@redhat.com>,
-	acpi4asus-user@lists.sourceforge.net,
-	=?UTF-8?Q?Michel_D=C3=A4nzer?= <michel@daenzer.net>,
-	linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+Received: from comal.ext.ti.com ([198.47.26.152]:32976 "EHLO comal.ext.ti.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1760536Ab0JGNEd (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 7 Oct 2010 09:04:33 -0400
+From: Shahar Levi <shahar_levi@ti.com>
+To: <linux-wireless@vger.kernel.org>
+Cc: Luciano Coelho <luciano.coelho@nokia.com>
+Subject: [PATCH 00/03] wl1271: BA Initiator support
+Date: Thu,  7 Oct 2010 15:05:59 +0200
+Message-Id: <1286456762-17480-1-git-send-email-shahar_levi@ti.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Oct 27, 2010 at 1:06 PM, Sedat Dilek <sedat.dilek@googlemail.com> wrote:
-> Hi,
->
-> while testing linux-next I wanted to reactivate the backlight type
-> patches laying in my build-dir.
->
-> Within 2.6.36-rcX cycle I had successfully tested the backlight type
-> patch [1] with an additional patch for radeon by Michel (posted to
-> dri-devel ML, see [2]).
->
-> The main patch needs a little refreshing.
->
-> v2: drivers/platform/x86/asus-laptop.c: Refreshed to fit linux-next
-> (next-20101027)
->
->
-> Kind Regards,
-> - Sedat -
->
-> [1] https://patchwork.kernel.org/patch/163971/
-> [2] https://patchwork.kernel.org/patch/182352/
->
+Series that add 80211n BA initiator session support wl1271 driver. BA initiator 
+session management included in FW independently.
+BA receiver session not supported in that Series.
 
-Hi,
+Dependencies:
+- BA Initiator patches have a runtime dependency on
+  commit "[PATCH v2] wl1271: 11n Support" series (patches is in linux-wireless
+  mailing list)
 
-I think rfkill has the same problem, on some platforms, the platform
-driver will add a rfkill switch, but the network (wlan/wimax/whatever)
-driver may also add one. AFAIK, the platform one is more likely to be
-able to power down the device completly.
-
-For the current patch, a common pattern seems to be : video/ -> RAW,
-platform/ -> PLATFORM. Couldn't we make some guess by checking the
-parent of the backlight instead of doing this by hand for every
-drivers ?
+Limitation:
+- For now only TID0 supported (Beast Effort).
 
 Thanks,
+Shahar
 
--- 
-Corentin Chary
-http://xf.iksaif.net
+Shahar Levi (3):
+  wl1271: BA Initiator support, Add Definitions
+  wl1271: BA Initiator support, BA functions
+  wl1271: BA Initiator support, active BA ability
+
+ drivers/net/wireless/wl12xx/wl1271_acx.c  |   51 +++++++++++++++++++++++++++
+ drivers/net/wireless/wl12xx/wl1271_acx.h  |   20 +++++++++++
+ drivers/net/wireless/wl12xx/wl1271_conf.h |    3 ++
+ drivers/net/wireless/wl12xx/wl1271_main.c |   54 ++++++++++++++++++++++++++++-
+ 4 files changed, 127 insertions(+), 1 deletions(-)
+
