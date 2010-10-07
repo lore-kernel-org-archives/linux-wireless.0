@@ -1,93 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from web56804.mail.re3.yahoo.com ([66.196.97.78]:20346 "HELO
-	web56804.mail.re3.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1757386Ab0JUGkz (ORCPT
+Received: from mail-yx0-f174.google.com ([209.85.213.174]:40567 "EHLO
+	mail-yx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751611Ab0JGSmb convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 21 Oct 2010 02:40:55 -0400
-Message-ID: <78296.80597.qm@web56804.mail.re3.yahoo.com>
-Date: Wed, 20 Oct 2010 23:40:53 -0700 (PDT)
-From: Walter Goldens <goldenstranger@yahoo.com>
-Subject: [PATCH 4/4 v2] compat-wireless: remove obsolete load scripts
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Cc: linux-wireless@vger.kernel.org, linux-bluetooth@vger.kernel.org
+	Thu, 7 Oct 2010 14:42:31 -0400
+Received: by yxp4 with SMTP id 4so63421yxp.19
+        for <linux-wireless@vger.kernel.org>; Thu, 07 Oct 2010 11:42:30 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <4CAE13F6.2010003@candelatech.com>
+References: <4CAB59B2.5050106@candelatech.com> <AANLkTikhGCTS8kJgpDzjudyBTk-rkyXY33UO7kB0+Cc-@mail.gmail.com>
+ <4CAB5F3D.9060201@candelatech.com> <AANLkTimV3GrwU+9PPtirT4sCzveLY2egr3PRQhfDBET1@mail.gmail.com>
+ <4CAB627F.8020804@candelatech.com> <AANLkTi=sT5QJe4V8gFGjF-nzx0uJAMLG_XG2715qrEEd@mail.gmail.com>
+ <4CAB64AD.4080105@candelatech.com> <AANLkTi=3dHbB5tmQDp3Ba54-DqQydVCkNdFo1vKbfaGY@mail.gmail.com>
+ <4CAB6B08.4050801@candelatech.com> <4CAE0474.4090605@candelatech.com>
+ <1286475250.20974.22.camel@jlt3.sipsolutions.net> <AANLkTinbRSnPVgbBxvVpMdnP+K--bye=Q-miHf4X44kz@mail.gmail.com>
+ <4CAE13F6.2010003@candelatech.com>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Thu, 7 Oct 2010 11:42:09 -0700
+Message-ID: <AANLkTimEZ5GY7WFz-F4YyC+6MEwNn2Dki4tonp645XrS@mail.gmail.com>
+Subject: Re: memory clobber in rx path, maybe related to ath9k.
+To: Ben Greear <greearb@candelatech.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-delete obsolete load scripts
+On Thu, Oct 7, 2010 at 11:39 AM, Ben Greear <greearb@candelatech.com> wrote:
+> On 10/07/2010 11:29 AM, Luis R. Rodriguez wrote:
+>>
+>> On Thu, Oct 7, 2010 at 11:14 AM, Johannes Berg
+>> <johannes@sipsolutions.net>  wrote:
+>>>
+>>> On Thu, 2010-10-07 at 10:33 -0700, Ben Greear wrote:
+>>>>
+>>>> In case it helps, here is a dump of where the corrupted SKB was deleted.
+>>>
+>>> I wonder, do you have a machine with a decent IOMMU? Adding IOMMU
+>>> debugging into the mix could help you figure out if it's a DMA problem.
+>>
+>> Ben, how much traffic are you RX'ing on these virtual interfaces?
+>
+> I disabled my user-space application, and this script alone can reproduce
+> the problem fairly quickly on my system.  You will need to change some
+> of those first variables.  Just start it and wait a few minutes and
+> watch the splats show on the console :)
+>
+> Note that I am not generating any traffic, but the wpa_supplicants are
+> doing their thing of course...
+>
+> I'm using the kernel found here:
+> http://dmz2.candelatech.com/git/gitweb.cgi?p=linux.wireless-testing.ct/.git;a=summary
+>
+> It's latest wireless-testing with some of my own patches, and some
+> I've gathered from here an there.  I doubt I'm causing this problem,
+> but if you can't reproduce it with this script on your kernels,
+> I can try with base wireless-testing or whatever you are using.
 
-Signed-off-by: Walter Goldens <goldenstranger@yahoo.com>
----
+I'll run this now, but can you try a vanilla wireless-testing? I hear
+the latest wireless-testing is borked so maybe try (git reset --hard
+master-2010-09-29), its what I'm on.
 
---- a/scripts/load.sh
-+++ /dev/null
-@@ -1,26 +0,0 @@
--#!/bin/bash
--MODULES="ipw2100 ipw2200 libertas_cs usb8xxx"
--MODULES="$MODULES p54pci p54usb"
--MODULES="$MODULES adm8211 zd1211rw"
--MODULES="$MODULES rtl8180 rtl8187"
--MODULES="$MODULES p54pci p54usb"
--MODULES="$MODULES iwl3945 iwlagn"
--MODULES="$MODULES ath ar9170usb"
--MODULES="$MODULES rtl8180 rtl8187"
--MODULES="$MODULES rt2400pci rt2500pci rt61pci"
--MODULES="$MODULES rt2500usb rt73usb"
--MODULES="$MODULES rndis_wlan at76_usb"
--MODULES="$MODULES mwl8k mac80211_hwsim"
--MODULES="$MODULES at76c50x_usb"
--MODULES="$MODULES bluetooth btusb l2cap sco hidp rfcomm bnep"
--for i in $MODULES; do
--	echo Loading $i...
--	modprobe $i
--done
--# For ath5k we must be sure to unload MadWifi first
--athload ath5k
--# For b43 we must make sure to unload bcm43xx first
--b43load b43
--echo Starting bluetooth service..
--/etc/init.d/bluetooth start
--/etc/init.d/bluetooth status
---- a/scripts/wlload.sh
-+++ /dev/null
-@@ -1,22 +0,0 @@
--#!/bin/bash
--MODULES="ipw2100 ipw2200 libertas_cs usb8xxx"
--MODULES="$MODULES p54pci p54usb"
--MODULES="$MODULES adm8211 zd1211rw"
--MODULES="$MODULES rtl8180 rtl8187"
--MODULES="$MODULES p54pci p54usb"
--MODULES="$MODULES iwl3945 iwlagn"
--MODULES="$MODULES ath ar9170usb"
--MODULES="$MODULES rtl8180 rtl8187"
--MODULES="$MODULES rt2400pci rt2500pci rt61pci"
--MODULES="$MODULES rt2500usb rt73usb"
--MODULES="$MODULES rndis_wlan at76_usb"
--MODULES="$MODULES mwl8k mac80211_hwsim"
--MODULES="$MODULES at76c50x_usb"
--for i in $MODULES; do
--	echo Loading $i...
--	modprobe $i
--done
--# For ath5k we must be sure to unload MadWifi first
--athload ath5k
--# For b43 we must make sure to unload bcm43xx first
--b43load b43
---- a/scripts/btload.sh
-+++ /dev/null
-@@ -1,10 +0,0 @@
--#!/bin/bash
--MODULES="bluetooth btusb l2cap sco hidp rfcomm bnep"
--for i in $MODULES; do
--	echo Loading $i...
--	modprobe $i
--done
--echo Starting bluetooth service..
--/etc/init.d/bluetooth start
--/etc/init.d/bluetooth status
--
-
-
-
-      
+  Luis
