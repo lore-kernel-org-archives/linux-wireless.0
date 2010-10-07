@@ -1,393 +1,118 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([88.198.39.176]:39025 "EHLO ds10.nbd.name"
+Received: from mga01.intel.com ([192.55.52.88]:59924 "EHLO mga01.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755445Ab0JEKDq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 5 Oct 2010 06:03:46 -0400
-Message-ID: <4CAAF7FE.1050105@openwrt.org>
-Date: Tue, 05 Oct 2010 12:03:42 +0200
-From: Felix Fietkau <nbd@openwrt.org>
-MIME-Version: 1.0
-To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-CC: Senthil Balasubramanian <senthilkumar@atheros.com>,
-	Rajkumar Manoharan <Rajkumar.Manoharan@Atheros.com>,
-	Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
-	"linville@tuxdriver.com" <linville@tuxdriver.com>
-Subject: [PATCH v3 3/4] ath9k_hw: clean up register write buffering
-References: <1286125639-15137-1-git-send-email-nbd@openwrt.org> <1286125639-15137-2-git-send-email-nbd@openwrt.org> <1286125639-15137-3-git-send-email-nbd@openwrt.org> <20101004085608.GA5931@vmraj-lnx.users.atheros.com> <4CA9C03D.9010503@openwrt.org> <4CAA0D5E.1080200@openwrt.org> <20101005043856.GB2462@senthil-lnx.users.atheros.com>
-In-Reply-To: <20101005043856.GB2462@senthil-lnx.users.atheros.com>
-Content-Type: text/plain; charset=ISO-8859-1
+	id S1753630Ab0JGXIu (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 7 Oct 2010 19:08:50 -0400
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	Johannes Berg <johannes.berg@intel.com>,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Subject: [PATCH 11/22] iwlwifi: move iwl_toggle_rx_ant to agn
+Date: Thu,  7 Oct 2010 16:07:50 -0700
+Message-Id: <1286492881-15743-12-git-send-email-wey-yi.w.guy@intel.com>
+In-Reply-To: <1286492881-15743-1-git-send-email-wey-yi.w.guy@intel.com>
+References: <1286492881-15743-1-git-send-email-wey-yi.w.guy@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Throughout the code, DISABLE_REGWRITE_BUFFER is always called right after
-REGWRITE_BUFFER_FLUSH. Since that's unlikely to change any time soon, that
-makes keeping those ops separate rather pointless, as it only increases
-code size and line number counts.
+From: Johannes Berg <johannes.berg@intel.com>
 
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+The iwl_toggle_tx_ant function is only used
+by agn code, so it can be moved into the
+agn module instead of being exported from
+the core.
+
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
 ---
- drivers/net/wireless/ath/ath.h                |    4 +---
- drivers/net/wireless/ath/ath9k/ani.c          |    6 ------
- drivers/net/wireless/ath/ath9k/ar5008_phy.c   |    9 ++-------
- drivers/net/wireless/ath/ath9k/ar9002_calib.c |    1 -
- drivers/net/wireless/ath/ath9k/ar9002_hw.c    |    4 ----
- drivers/net/wireless/ath/ath9k/ar9002_phy.c   |    1 -
- drivers/net/wireless/ath/ath9k/calib.c        |    1 -
- drivers/net/wireless/ath/ath9k/eeprom_4k.c    |    2 --
- drivers/net/wireless/ath/ath9k/htc_drv_init.c |   12 ++----------
- drivers/net/wireless/ath/ath9k/hw.c           |   14 --------------
- drivers/net/wireless/ath/ath9k/hw.h           |   10 ++--------
- drivers/net/wireless/ath/ath9k/mac.c          |    4 ----
- 12 files changed, 7 insertions(+), 61 deletions(-)
+ drivers/net/wireless/iwlwifi/iwl-agn-lib.c |   17 +++++++++++++++++
+ drivers/net/wireless/iwlwifi/iwl-agn.h     |    2 ++
+ drivers/net/wireless/iwlwifi/iwl-core.c    |   18 ------------------
+ drivers/net/wireless/iwlwifi/iwl-core.h    |    2 --
+ 4 files changed, 19 insertions(+), 20 deletions(-)
 
-v2: removed mwrite_cnt test
-v3: removed comment about it from description
-
-diff --git a/drivers/net/wireless/ath/ath.h b/drivers/net/wireless/ath/ath.h
-index 5894fcc..cee0191 100644
---- a/drivers/net/wireless/ath/ath.h
-+++ b/drivers/net/wireless/ath/ath.h
-@@ -102,14 +102,12 @@ enum ath_cipher {
-  * @read: Register read
-  * @write: Register write
-  * @enable_write_buffer: Enable multiple register writes
-- * @disable_write_buffer: Disable multiple register writes
-- * @write_flush: Flush buffered register writes
-+ * @write_flush: flush buffered register writes and disable buffering
-  */
- struct ath_ops {
- 	unsigned int (*read)(void *, u32 reg_offset);
- 	void (*write)(void *, u32 val, u32 reg_offset);
- 	void (*enable_write_buffer)(void *);
--	void (*disable_write_buffer)(void *);
- 	void (*write_flush) (void *);
- };
- diff --git a/drivers/net/wireless/ath/ath9k/ani.c b/drivers/net/wireless/ath/ath9k/ani.c
-index 9936297..61e7a48 100644
---- a/drivers/net/wireless/ath/ath9k/ani.c
-+++ b/drivers/net/wireless/ath/ath9k/ani.c
-@@ -180,7 +180,6 @@ static void ath9k_ani_restart_old(struct ath_hw *ah)
- 	REG_WRITE(ah, AR_PHY_ERR_MASK_2, AR_PHY_ERR_CCK_TIMING);
-  	REGWRITE_BUFFER_FLUSH(ah);
--	DISABLE_REGWRITE_BUFFER(ah);
-  	ath9k_hw_update_mibstats(ah, &ah->ah_mibStats);
- @@ -215,7 +214,6 @@ static void ath9k_ani_restart_new(struct ath_hw *ah)
- 	REG_WRITE(ah, AR_PHY_ERR_MASK_2, AR_PHY_ERR_CCK_TIMING);
-  	REGWRITE_BUFFER_FLUSH(ah);
--	DISABLE_REGWRITE_BUFFER(ah);
-  	ath9k_hw_update_mibstats(ah, &ah->ah_mibStats);
- @@ -643,7 +641,6 @@ static void ath9k_ani_reset_old(struct ath_hw *ah, bool is_scanning)
- 	REG_WRITE(ah, AR_PHY_ERR_MASK_2, AR_PHY_ERR_CCK_TIMING);
-  	REGWRITE_BUFFER_FLUSH(ah);
--	DISABLE_REGWRITE_BUFFER(ah);
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-lib.c b/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
+index 3eeab0a..9f1c93b 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
+@@ -2205,3 +2205,20 @@ void iwlagn_set_rxon_chain(struct iwl_priv *priv, struct iwl_rxon_context *ctx)
+ 	WARN_ON(active_rx_cnt == 0 || idle_rx_cnt == 0 ||
+ 		active_rx_cnt < idle_rx_cnt);
  }
-  /*
-@@ -737,7 +734,6 @@ static void ath9k_ani_reset_new(struct ath_hw *ah, bool is_scanning)
- 	REG_WRITE(ah, AR_PHY_ERR_MASK_2, AR_PHY_ERR_CCK_TIMING);
-  	REGWRITE_BUFFER_FLUSH(ah);
--	DISABLE_REGWRITE_BUFFER(ah);
- }
-  static void ath9k_hw_ani_monitor_old(struct ath_hw *ah,
-@@ -991,7 +987,6 @@ void ath9k_enable_mib_counters(struct ath_hw *ah)
- 	REG_WRITE(ah, AR_PHY_ERR_MASK_2, AR_PHY_ERR_CCK_TIMING);
-  	REGWRITE_BUFFER_FLUSH(ah);
--	DISABLE_REGWRITE_BUFFER(ah);
- }
-  /* Freeze the MIB counters, get the stats and then clear them */
-@@ -1261,7 +1256,6 @@ void ath9k_hw_ani_init(struct ath_hw *ah)
- 	REG_WRITE(ah, AR_PHY_ERR_2, ah->ani[0].cckPhyErrBase);
-  	REGWRITE_BUFFER_FLUSH(ah);
--	DISABLE_REGWRITE_BUFFER(ah);
-  	ath9k_enable_mib_counters(ah);
- diff --git a/drivers/net/wireless/ath/ath9k/ar5008_phy.c b/drivers/net/wireless/ath/ath9k/ar5008_phy.c
-index 74b4213..da07f8d 100644
---- a/drivers/net/wireless/ath/ath9k/ar5008_phy.c
-+++ b/drivers/net/wireless/ath/ath9k/ar5008_phy.c
-@@ -615,14 +615,11 @@ static void ar5008_hw_init_chain_masks(struct ath_hw *ah)
- 	rx_chainmask = ah->rxchainmask;
- 	tx_chainmask = ah->txchainmask;
- -	ENABLE_REGWRITE_BUFFER(ah);
-  	switch (rx_chainmask) {
- 	case 0x5:
--		DISABLE_REGWRITE_BUFFER(ah);
- 		REG_SET_BIT(ah, AR_PHY_ANALOG_SWAP,
- 			    AR_PHY_SWAP_ALT_CHAIN);
--		ENABLE_REGWRITE_BUFFER(ah);
- 	case 0x3:
- 		if (ah->hw_version.macVersion == AR_SREV_REVISION_5416_10) {
- 			REG_WRITE(ah, AR_PHY_RX_CHAINMASK, 0x7);
-@@ -632,17 +629,18 @@ static void ar5008_hw_init_chain_masks(struct ath_hw *ah)
- 	case 0x1:
- 	case 0x2:
- 	case 0x7:
-+		ENABLE_REGWRITE_BUFFER(ah);
- 		REG_WRITE(ah, AR_PHY_RX_CHAINMASK, rx_chainmask);
- 		REG_WRITE(ah, AR_PHY_CAL_CHAINMASK, rx_chainmask);
- 		break;
- 	default:
-+		ENABLE_REGWRITE_BUFFER(ah);
- 		break;
- 	}
-  	REG_WRITE(ah, AR_SELFGEN_MASK, tx_chainmask);
-  	REGWRITE_BUFFER_FLUSH(ah);
--	DISABLE_REGWRITE_BUFFER(ah);
-  	if (tx_chainmask == 0x5) {
- 		REG_SET_BIT(ah, AR_PHY_ANALOG_SWAP,
-@@ -728,7 +726,6 @@ static void ar5008_hw_set_channel_regs(struct ath_hw *ah,
- 	REG_WRITE(ah, AR_CST, 0xF << AR_CST_TIMEOUT_LIMIT_S);
-  	REGWRITE_BUFFER_FLUSH(ah);
--	DISABLE_REGWRITE_BUFFER(ah);
- }
-  @@ -820,7 +817,6 @@ static int ar5008_hw_process_ini(struct ath_hw *ah,
- 	}
-  	REGWRITE_BUFFER_FLUSH(ah);
--	DISABLE_REGWRITE_BUFFER(ah);
-  	if (AR_SREV_9280(ah) || AR_SREV_9287_11_OR_LATER(ah))
- 		REG_WRITE_ARRAY(&ah->iniModesRxGain, modesIndex, regWrites);
-@@ -851,7 +847,6 @@ static int ar5008_hw_process_ini(struct ath_hw *ah,
- 	}
-  	REGWRITE_BUFFER_FLUSH(ah);
--	DISABLE_REGWRITE_BUFFER(ah);
-  	if (AR_SREV_9271(ah)) {
- 		if (ah->eep_ops->get_eeprom(ah, EEP_TXGAIN_TYPE) == 1)
-diff --git a/drivers/net/wireless/ath/ath9k/ar9002_calib.c b/drivers/net/wireless/ath/ath9k/ar9002_calib.c
-index f0525fb..15f62cd 100644
---- a/drivers/net/wireless/ath/ath9k/ar9002_calib.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9002_calib.c
-@@ -522,7 +522,6 @@ static void ar9271_hw_pa_cal(struct ath_hw *ah, bool is_reset)
- 		REG_WRITE(ah, regList[i][0], regList[i][1]);
-  	REGWRITE_BUFFER_FLUSH(ah);
--	DISABLE_REGWRITE_BUFFER(ah);
- }
-  static inline void ar9285_hw_pa_cal(struct ath_hw *ah, bool is_reset)
-diff --git a/drivers/net/wireless/ath/ath9k/ar9002_hw.c b/drivers/net/wireless/ath/ath9k/ar9002_hw.c
-index fde45082..78bdf0c 100644
---- a/drivers/net/wireless/ath/ath9k/ar9002_hw.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9002_hw.c
-@@ -371,7 +371,6 @@ static void ar9002_hw_configpcipowersave(struct ath_hw *ah,
- 			REG_WRITE(ah, AR_PCIE_SERDES2, 0x00000000);
-  			REGWRITE_BUFFER_FLUSH(ah);
--			DISABLE_REGWRITE_BUFFER(ah);
- 		}
-  		udelay(1000);
-@@ -468,7 +467,6 @@ static int ar9002_hw_get_radiorev(struct ath_hw *ah)
- 		REG_WRITE(ah, AR_PHY(0x20), 0x00010000);
-  	REGWRITE_BUFFER_FLUSH(ah);
--	DISABLE_REGWRITE_BUFFER(ah);
-  	val = (REG_READ(ah, AR_PHY(256)) >> 24) & 0xff;
- 	val = ((val & 0xf0) >> 4) | ((val & 0x0f) << 4);
-@@ -627,6 +625,4 @@ void ar9002_hw_load_ani_reg(struct ath_hw *ah, struct ath9k_channel *chan)
- 	}
-  	REGWRITE_BUFFER_FLUSH(ah);
--	DISABLE_REGWRITE_BUFFER(ah);
--
- }
-diff --git a/drivers/net/wireless/ath/ath9k/ar9002_phy.c b/drivers/net/wireless/ath/ath9k/ar9002_phy.c
-index cd56c86..c00cdc6 100644
---- a/drivers/net/wireless/ath/ath9k/ar9002_phy.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9002_phy.c
-@@ -415,7 +415,6 @@ static void ar9002_hw_spur_mitigate(struct ath_hw *ah,
- 	REG_WRITE(ah, AR_PHY_MASK2_P_61_45, tmp_mask);
-  	REGWRITE_BUFFER_FLUSH(ah);
--	DISABLE_REGWRITE_BUFFER(ah);
- }
-  static void ar9002_olc_init(struct ath_hw *ah)
-diff --git a/drivers/net/wireless/ath/ath9k/calib.c b/drivers/net/wireless/ath/ath9k/calib.c
-index 6c38c72..6d50948 100644
---- a/drivers/net/wireless/ath/ath9k/calib.c
-+++ b/drivers/net/wireless/ath/ath9k/calib.c
-@@ -300,7 +300,6 @@ void ath9k_hw_loadnf(struct ath_hw *ah, struct ath9k_channel *chan)
- 		}
- 	}
- 	REGWRITE_BUFFER_FLUSH(ah);
--	DISABLE_REGWRITE_BUFFER(ah);
- }
-  diff --git a/drivers/net/wireless/ath/ath9k/eeprom_4k.c b/drivers/net/wireless/ath/ath9k/eeprom_4k.c
-index d6eed1f..2a4fca4 100644
---- a/drivers/net/wireless/ath/ath9k/eeprom_4k.c
-+++ b/drivers/net/wireless/ath/ath9k/eeprom_4k.c
-@@ -500,7 +500,6 @@ static void ath9k_hw_set_4k_power_cal_table(struct ath_hw *ah,
- 			}
-  			REGWRITE_BUFFER_FLUSH(ah);
--			DISABLE_REGWRITE_BUFFER(ah);
- 		}
- 	}
- @@ -832,7 +831,6 @@ static void ath9k_hw_4k_set_txpower(struct ath_hw *ah,
- 	}
-  	REGWRITE_BUFFER_FLUSH(ah);
--	DISABLE_REGWRITE_BUFFER(ah);
- }
-  static void ath9k_hw_4k_set_addac(struct ath_hw *ah,
-diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_init.c b/drivers/net/wireless/ath/ath9k/htc_drv_init.c
-index b100db2..bbb54bc 100644
---- a/drivers/net/wireless/ath/ath9k/htc_drv_init.c
-+++ b/drivers/net/wireless/ath/ath9k/htc_drv_init.c
-@@ -380,15 +380,6 @@ static void ath9k_enable_regwrite_buffer(void *hw_priv)
- 	atomic_inc(&priv->wmi->mwrite_cnt);
- }
- -static void ath9k_disable_regwrite_buffer(void *hw_priv)
--{
--	struct ath_hw *ah = (struct ath_hw *) hw_priv;
--	struct ath_common *common = ath9k_hw_common(ah);
--	struct ath9k_htc_priv *priv = (struct ath9k_htc_priv *) common->priv;
--
--	atomic_dec(&priv->wmi->mwrite_cnt);
--}
--
- static void ath9k_regwrite_flush(void *hw_priv)
- {
- 	struct ath_hw *ah = (struct ath_hw *) hw_priv;
-@@ -397,6 +388,8 @@ static void ath9k_regwrite_flush(void *hw_priv)
- 	u32 rsp_status;
- 	int r;
- +	atomic_dec(&priv->wmi->mwrite_cnt);
 +
- 	mutex_lock(&priv->wmi->multi_write_mutex);
-  	if (priv->wmi->multi_write_idx) {
-@@ -420,7 +413,6 @@ static const struct ath_ops ath9k_common_ops = {
- 	.read = ath9k_regread,
- 	.write = ath9k_regwrite,
- 	.enable_write_buffer = ath9k_enable_regwrite_buffer,
--	.disable_write_buffer = ath9k_disable_regwrite_buffer,
- 	.write_flush = ath9k_regwrite_flush,
- };
- diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
-index 1b06604..98c9765 100644
---- a/drivers/net/wireless/ath/ath9k/hw.c
-+++ b/drivers/net/wireless/ath/ath9k/hw.c
-@@ -299,7 +299,6 @@ static void ath9k_hw_disablepcie(struct ath_hw *ah)
- 	REG_WRITE(ah, AR_PCIE_SERDES2, 0x00000000);
-  	REGWRITE_BUFFER_FLUSH(ah);
--	DISABLE_REGWRITE_BUFFER(ah);
++u8 iwl_toggle_tx_ant(struct iwl_priv *priv, u8 ant, u8 valid)
++{
++	int i;
++	u8 ind = ant;
++
++	if (priv->band == IEEE80211_BAND_2GHZ &&
++	    priv->bt_traffic_load >= IWL_BT_COEX_TRAFFIC_LOAD_HIGH)
++		return 0;
++
++	for (i = 0; i < RATE_ANT_NUM - 1; i++) {
++		ind = (ind + 1) < RATE_ANT_NUM ?  ind + 1 : 0;
++		if (valid & BIT(ind))
++			return ind;
++	}
++	return ant;
++}
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.h b/drivers/net/wireless/iwlwifi/iwl-agn.h
+index d6645ec..cc7a3b5 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn.h
++++ b/drivers/net/wireless/iwlwifi/iwl-agn.h
+@@ -216,6 +216,8 @@ static inline bool iwl_is_tx_success(u32 status)
+ 	       (status == TX_STATUS_DIRECT_DONE);
  }
-  /* This should work for all families including legacy */
-@@ -676,7 +675,6 @@ static void ath9k_hw_init_qos(struct ath_hw *ah)
- 	REG_WRITE(ah, AR_TXOP_12_15, 0xFFFFFFFF);
-  	REGWRITE_BUFFER_FLUSH(ah);
--	DISABLE_REGWRITE_BUFFER(ah);
- }
-  static void ath9k_hw_init_pll(struct ath_hw *ah,
-@@ -741,7 +739,6 @@ static void ath9k_hw_init_interrupt_masks(struct ath_hw *ah,
- 	}
-  	REGWRITE_BUFFER_FLUSH(ah);
--	DISABLE_REGWRITE_BUFFER(ah);
-  	if (AR_SREV_9300_20_OR_LATER(ah)) {
- 		REG_WRITE(ah, AR_INTR_PRIO_ASYNC_ENABLE, 0);
-@@ -885,7 +882,6 @@ static inline void ath9k_hw_set_dma(struct ath_hw *ah)
- 	REG_WRITE(ah, AR_TXCFG, regval | AR_TXCFG_DMASZ_128B);
-  	REGWRITE_BUFFER_FLUSH(ah);
--	DISABLE_REGWRITE_BUFFER(ah);
-  	/*
- 	 * Restore TX Trigger Level to its pre-reset value.
-@@ -933,7 +929,6 @@ static inline void ath9k_hw_set_dma(struct ath_hw *ah)
- 	}
-  	REGWRITE_BUFFER_FLUSH(ah);
--	DISABLE_REGWRITE_BUFFER(ah);
-  	if (AR_SREV_9300_20_OR_LATER(ah))
- 		ath9k_hw_reset_txstatus_ring(ah);
-@@ -1031,7 +1026,6 @@ static bool ath9k_hw_set_reset(struct ath_hw *ah, int type)
- 	REG_WRITE(ah, AR_RTC_RC, rst_flags);
-  	REGWRITE_BUFFER_FLUSH(ah);
--	DISABLE_REGWRITE_BUFFER(ah);
-  	udelay(50);
- @@ -1070,7 +1064,6 @@ static bool ath9k_hw_set_reset_power_on(struct ath_hw *ah)
- 	udelay(2);
-  	REGWRITE_BUFFER_FLUSH(ah);
--	DISABLE_REGWRITE_BUFFER(ah);
-  	if (!AR_SREV_9300_20_OR_LATER(ah))
- 		udelay(2);
-@@ -1374,7 +1367,6 @@ int ath9k_hw_reset(struct ath_hw *ah, struct ath9k_channel *chan,
- 	REG_WRITE(ah, AR_RSSI_THR, INIT_RSSI_THR);
-  	REGWRITE_BUFFER_FLUSH(ah);
--	DISABLE_REGWRITE_BUFFER(ah);
-  	r = ath9k_hw_rf_set_freq(ah, chan);
- 	if (r)
-@@ -1386,7 +1378,6 @@ int ath9k_hw_reset(struct ath_hw *ah, struct ath9k_channel *chan,
- 		REG_WRITE(ah, AR_DQCUMASK(i), 1 << i);
-  	REGWRITE_BUFFER_FLUSH(ah);
--	DISABLE_REGWRITE_BUFFER(ah);
-  	ah->intr_txqs = 0;
- 	for (i = 0; i < ah->caps.total_queues; i++)
-@@ -1434,7 +1425,6 @@ int ath9k_hw_reset(struct ath_hw *ah, struct ath9k_channel *chan,
- 	REG_WRITE(ah, AR_CFG_LED, saveLedState | AR_CFG_SCLK_32KHZ);
-  	REGWRITE_BUFFER_FLUSH(ah);
--	DISABLE_REGWRITE_BUFFER(ah);
-  	/*
- 	 * For big endian systems turn on swapping for descriptors
-@@ -1684,7 +1674,6 @@ void ath9k_hw_beaconinit(struct ath_hw *ah, u32 next_beacon, u32 beacon_period)
- 	REG_WRITE(ah, AR_NDP_PERIOD, TU_TO_USEC(beacon_period));
-  	REGWRITE_BUFFER_FLUSH(ah);
--	DISABLE_REGWRITE_BUFFER(ah);
-  	beacon_period &= ~ATH9K_BEACON_ENA;
- 	if (beacon_period & ATH9K_BEACON_RESET_TSF) {
-@@ -1712,7 +1701,6 @@ void ath9k_hw_set_sta_beacon_timers(struct ath_hw *ah,
- 		  TU_TO_USEC(bs->bs_intval & ATH9K_BEACON_PERIOD));
-  	REGWRITE_BUFFER_FLUSH(ah);
--	DISABLE_REGWRITE_BUFFER(ah);
-  	REG_RMW_FIELD(ah, AR_RSSI_THR,
- 		      AR_RSSI_THR_BM_THR, bs->bs_bmissthreshold);
-@@ -1758,7 +1746,6 @@ void ath9k_hw_set_sta_beacon_timers(struct ath_hw *ah,
- 	REG_WRITE(ah, AR_DTIM_PERIOD, TU_TO_USEC(dtimperiod));
-  	REGWRITE_BUFFER_FLUSH(ah);
--	DISABLE_REGWRITE_BUFFER(ah);
-  	REG_SET_BIT(ah, AR_TIMER_MODE,
- 		    AR_TBTT_TIMER_EN | AR_TIM_TIMER_EN |
-@@ -2176,7 +2163,6 @@ void ath9k_hw_setrxfilter(struct ath_hw *ah, u32 bits)
- 			  REG_READ(ah, AR_RXCFG) & ~AR_RXCFG_ZLFDMA);
-  	REGWRITE_BUFFER_FLUSH(ah);
--	DISABLE_REGWRITE_BUFFER(ah);
- }
- EXPORT_SYMBOL(ath9k_hw_setrxfilter);
- diff --git a/drivers/net/wireless/ath/ath9k/hw.h b/drivers/net/wireless/ath/ath9k/hw.h
-index 87dbb85..d558c51 100644
---- a/drivers/net/wireless/ath/ath9k/hw.h
-+++ b/drivers/net/wireless/ath/ath9k/hw.h
-@@ -70,19 +70,13 @@
-  #define ENABLE_REGWRITE_BUFFER(_ah)					\
- 	do {								\
--		if (AR_SREV_9271(_ah))					\
-+		if (ath9k_hw_common(_ah)->ops->enable_write_buffer)	\
- 			ath9k_hw_common(_ah)->ops->enable_write_buffer((_ah)); \
- 	} while (0)
- -#define DISABLE_REGWRITE_BUFFER(_ah)					\
--	do {								\
--		if (AR_SREV_9271(_ah))					\
--			ath9k_hw_common(_ah)->ops->disable_write_buffer((_ah)); \
--	} while (0)
+ 
++u8 iwl_toggle_tx_ant(struct iwl_priv *priv, u8 ant_idx, u8 valid);
++
+ /* rx */
+ void iwl_rx_missed_beacon_notif(struct iwl_priv *priv,
+ 				struct iwl_rx_mem_buffer *rxb);
+diff --git a/drivers/net/wireless/iwlwifi/iwl-core.c b/drivers/net/wireless/iwlwifi/iwl-core.c
+index 2950384..88c1ed5 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-core.c
++++ b/drivers/net/wireless/iwlwifi/iwl-core.c
+@@ -72,24 +72,6 @@ MODULE_PARM_DESC(bt_coex_active, "enable wifi/bluetooth co-exist");
+ u32 iwl_debug_level;
+ EXPORT_SYMBOL(iwl_debug_level);
+ 
+-u8 iwl_toggle_tx_ant(struct iwl_priv *priv, u8 ant, u8 valid)
+-{
+-	int i;
+-	u8 ind = ant;
 -
- #define REGWRITE_BUFFER_FLUSH(_ah)					\
- 	do {								\
--		if (AR_SREV_9271(_ah))					\
-+		if (ath9k_hw_common(_ah)->ops->write_flush)		\
- 			ath9k_hw_common(_ah)->ops->write_flush((_ah));	\
- 	} while (0)
- diff --git a/drivers/net/wireless/ath/ath9k/mac.c b/drivers/net/wireless/ath/ath9k/mac.c
-index 3efda8a..e578459 100644
---- a/drivers/net/wireless/ath/ath9k/mac.c
-+++ b/drivers/net/wireless/ath/ath9k/mac.c
-@@ -40,7 +40,6 @@ static void ath9k_hw_set_txq_interrupts(struct ath_hw *ah,
- 	REG_WRITE(ah, AR_IMR_S2, ah->imrs2_reg);
-  	REGWRITE_BUFFER_FLUSH(ah);
--	DISABLE_REGWRITE_BUFFER(ah);
- }
-  u32 ath9k_hw_gettxbuf(struct ath_hw *ah, u32 q)
-@@ -530,7 +529,6 @@ bool ath9k_hw_resettxqueue(struct ath_hw *ah, u32 q)
- 	}
-  	REGWRITE_BUFFER_FLUSH(ah);
--	DISABLE_REGWRITE_BUFFER(ah);
-  	if (qi->tqi_qflags & TXQ_FLAG_FRAG_BURST_BACKOFF_ENABLE) {
- 		REG_WRITE(ah, AR_DMISC(q),
-@@ -553,7 +551,6 @@ bool ath9k_hw_resettxqueue(struct ath_hw *ah, u32 q)
- 			  | AR_D_MISC_POST_FR_BKOFF_DIS);
-  		REGWRITE_BUFFER_FLUSH(ah);
--		DISABLE_REGWRITE_BUFFER(ah);
-  		/*
- 		 * cwmin and cwmax should be 0 for beacon queue
-@@ -585,7 +582,6 @@ bool ath9k_hw_resettxqueue(struct ath_hw *ah, u32 q)
- 			     AR_D_MISC_ARB_LOCKOUT_CNTRL_S));
-  		REGWRITE_BUFFER_FLUSH(ah);
--		DISABLE_REGWRITE_BUFFER(ah);
-  		break;
- 	case ATH9K_TX_QUEUE_PSPOLL:
-
+-	if (priv->band == IEEE80211_BAND_2GHZ &&
+-	    priv->bt_traffic_load >= IWL_BT_COEX_TRAFFIC_LOAD_HIGH)
+-		return 0;
+-
+-	for (i = 0; i < RATE_ANT_NUM - 1; i++) {
+-		ind = (ind + 1) < RATE_ANT_NUM ?  ind + 1 : 0;
+-		if (valid & BIT(ind))
+-			return ind;
+-	}
+-	return ant;
+-}
+-EXPORT_SYMBOL(iwl_toggle_tx_ant);
+-
+ const u8 iwl_bcast_addr[ETH_ALEN] = { 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF };
+ EXPORT_SYMBOL(iwl_bcast_addr);
+ 
+diff --git a/drivers/net/wireless/iwlwifi/iwl-core.h b/drivers/net/wireless/iwlwifi/iwl-core.h
+index 56251de..0bc7b7a 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-core.h
++++ b/drivers/net/wireless/iwlwifi/iwl-core.h
+@@ -550,8 +550,6 @@ int iwl_set_tx_power(struct iwl_priv *priv, s8 tx_power, bool force);
+ u8 iwl_rate_get_lowest_plcp(struct iwl_priv *priv,
+ 			    struct iwl_rxon_context *ctx);
+ 
+-u8 iwl_toggle_tx_ant(struct iwl_priv *priv, u8 ant_idx, u8 valid);
+-
+ static inline u32 iwl_ant_idx_to_flags(u8 ant_idx)
+ {
+ 	return BIT(ant_idx) << RATE_MCS_ANT_POS;
+-- 
+1.7.0.4
 
