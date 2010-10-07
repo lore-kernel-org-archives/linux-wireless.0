@@ -1,59 +1,124 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.19.149.2]:52804 "EHLO mail.atheros.com"
+Received: from comal.ext.ti.com ([198.47.26.152]:32913 "EHLO comal.ext.ti.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751859Ab0JUTKP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 21 Oct 2010 15:10:15 -0400
-Received: from mail.atheros.com ([10.10.20.105])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Thu, 21 Oct 2010 12:10:05 -0700
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	Ben Greear <greearb@candelatech.com>,
-	Kyungwan Nam <kyungwan.nam@atheros.com>
-Subject: [PATCH v2 5/6] ath: add a ATH_DBG_WARN()
-Date: Thu, 21 Oct 2010 12:10:11 -0700
-Message-ID: <1287688211-9998-1-git-send-email-lrodriguez@atheros.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	id S1760503Ab0JGNEO (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 7 Oct 2010 09:04:14 -0400
+From: Shahar Levi <shahar_levi@ti.com>
+To: <linux-wireless@vger.kernel.org>
+Cc: Luciano Coelho <luciano.coelho@nokia.com>
+Subject: [PATCH 03/03] wl1271: BA Initiator support, active BA ability
+Date: Thu,  7 Oct 2010 15:06:02 +0200
+Message-Id: <1286456762-17480-4-git-send-email-shahar_levi@ti.com>
+In-Reply-To: <1286456762-17480-1-git-send-email-shahar_levi@ti.com>
+References: <1286456762-17480-1-git-send-email-shahar_levi@ti.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-To be used to throw out warnings only for developers.
-This can be used by some corner cases that developers
-already know can be hit but developers want to address
-so to avoid spewing out a warning this can only be
-enabled with CONFIG_ATH_DEBUG enabled.
+Add calling to BA policies after join and connect new ops.
 
-Cc: Ben Greear <greearb@candelatech.com>
-Cc: Kyungwan Nam <kyungwan.nam@atheros.com>
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+Signed-off-by: Shahar Levi <shahar_levi@ti.com>
 ---
+ drivers/net/wireless/wl12xx/wl1271_acx.c  |   10 +++-------
+ drivers/net/wireless/wl12xx/wl1271_main.c |   14 ++++++++++++--
+ 2 files changed, 15 insertions(+), 9 deletions(-)
 
-Fixed compile issue with CONFIG_ATH_DEBUG disabled.
-
- drivers/net/wireless/ath/debug.h |    2 ++
- 1 files changed, 2 insertions(+), 0 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/debug.h b/drivers/net/wireless/ath/debug.h
-index 64e4af2..f207007 100644
---- a/drivers/net/wireless/ath/debug.h
-+++ b/drivers/net/wireless/ath/debug.h
-@@ -70,11 +70,13 @@ enum ATH_DEBUG {
- #ifdef CONFIG_ATH_DEBUG
- void ath_print(struct ath_common *common, int dbg_mask, const char *fmt, ...)
- 	__attribute__ ((format (printf, 3, 4)));
-+#define ATH_DBG_WARN(foo, arg...) WARN(foo, arg)
- #else
- static inline void __attribute__ ((format (printf, 3, 4)))
- ath_print(struct ath_common *common, int dbg_mask, const char *fmt, ...)
+diff --git a/drivers/net/wireless/wl12xx/wl1271_acx.c b/drivers/net/wireless/wl12xx/wl1271_acx.c
+index f82656e..18ac48f 100644
+--- a/drivers/net/wireless/wl12xx/wl1271_acx.c
++++ b/drivers/net/wireless/wl12xx/wl1271_acx.c
+@@ -1328,11 +1328,6 @@ int wl1271_acx_set_ba_session(struct wl1271 *wl,
  {
- }
-+#define ATH_DBG_WARN(foo, arg)
- #endif /* CONFIG_ATH_DEBUG */
+ 	struct wl1271_acx_ba_session_policy *acx;
+ 	int ret = 0;
+-	/*
+-	* Note, currently this value will be set to FFFFFFFFFFFF to indicate
+-	* it is relevant for all peers.
+-	*/
+-	u8 mac_address[ETH_ALEN] = {0xff, 0xff, 0xff, 0xff, 0xff, 0xff};
  
- /** Returns string describing opmode, or NULL if unknown mode. */
+ 	wl1271_debug(DEBUG_ACX, "acx ba session setting");
+ 
+@@ -1342,14 +1337,14 @@ int wl1271_acx_set_ba_session(struct wl1271 *wl,
+ 		goto out;
+ 	}
+ 
+-	memcpy(acx->mac_address, mac_address, ETH_ALEN);
++	memcpy(acx->mac_address, wl->bssid, ETH_ALEN);
+ 	acx->tid = tid_index;
+ 	acx->policy = policy;
+ 	acx->win_size = BA_RECEIVER_WIN_SIZE;
+ 
+ 	if (ACX_BA_SESSION_INITIATOR_POLICY == id)
+ 		acx->inactivity_timeout = BA_INACTIVITY_TIMEOUT;
+-	else
++	else {
+ 		if (ACX_BA_SESSION_RESPONDER_POLICY == id)
+ 			acx->inactivity_timeout = 0;
+ 		else {
+@@ -1357,6 +1352,7 @@ int wl1271_acx_set_ba_session(struct wl1271 *wl,
+ 			ret = -EINVAL;
+ 			goto out;
+ 		}
++	}
+ 
+ 	ret = wl1271_cmd_configure(wl,
+ 				   id,
+diff --git a/drivers/net/wireless/wl12xx/wl1271_main.c b/drivers/net/wireless/wl12xx/wl1271_main.c
+index 53c03e5..b4e3b02 100644
+--- a/drivers/net/wireless/wl12xx/wl1271_main.c
++++ b/drivers/net/wireless/wl12xx/wl1271_main.c
+@@ -1725,6 +1725,7 @@ static void wl1271_op_bss_info_changed(struct ieee80211_hw *hw,
+ 	enum wl1271_cmd_ps_mode mode;
+ 	struct wl1271 *wl = hw->priv;
+ 	struct ieee80211_sta *sta = ieee80211_find_sta(vif, bss_conf->bssid);
++	bool set_ba = false;
+ 	bool do_join = false;
+ 	bool set_assoc = false;
+ 	int ret;
+@@ -1950,7 +1951,9 @@ static void wl1271_op_bss_info_changed(struct ieee80211_hw *hw,
+ 							     true);
+ 			ret = wl1271_acx_set_ht_information(wl,
+ 						bss_conf->ht_operation_mode);
+-			}
++
++			set_ba = true;
++		}
+ 		else
+ 			if (changed & BSS_CHANGED_ASSOC)
+ 				ret = wl1271_acx_set_ht_capabilities(wl,
+@@ -1977,6 +1980,9 @@ static void wl1271_op_bss_info_changed(struct ieee80211_hw *hw,
+ 			wl1271_warning("cmd join failed %d", ret);
+ 			goto out_sleep;
+ 		}
++
++		if (set_ba)
++			wl1271_set_ba_policies(wl);
+ 	}
+ 
+ out_sleep:
+@@ -2080,10 +2086,13 @@ int wl1271_op_ampdu_action(struct ieee80211_hw *hw,
+ 		int ret;
+ 
+ 		switch (action) {
++		/* Falling break here on purpose until we add BA receiver support */
+ 		case IEEE80211_AMPDU_RX_START:
+ 		case IEEE80211_AMPDU_RX_STOP:
+ 
+-		/* The BA initiator session management in FW independently */
++		/* The BA initiator session management in FW independently.
++		 * Falling break here on purpose for all TX APDU commands.
++		 */
+ 		case IEEE80211_AMPDU_TX_START:
+ 		case IEEE80211_AMPDU_TX_STOP:
+ 		case IEEE80211_AMPDU_TX_OPERATIONAL:
+@@ -2351,6 +2360,7 @@ static const struct ieee80211_ops wl1271_ops = {
+ 	.conf_tx = wl1271_op_conf_tx,
+ 	.get_tsf = wl1271_op_get_tsf,
+ 	.get_survey = wl1271_op_get_survey,
++	.ampdu_action = wl1271_op_ampdu_action,
+ 	CFG80211_TESTMODE_CMD(wl1271_tm_cmd)
+ };
+ 
 -- 
-1.7.1
+1.6.0.4
 
