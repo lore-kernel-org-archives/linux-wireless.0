@@ -1,114 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.19.149.2]:14858 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756089Ab0JTXHP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 20 Oct 2010 19:07:15 -0400
-Received: from mail.atheros.com ([10.10.20.108])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Wed, 20 Oct 2010 16:07:05 -0700
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>, <stable@kernel.org>,
-	Ben Greear <greearb@candelatech.com>,
-	Kyungwan Nam <kyungwan.nam@atheros.com>
-Subject: [PATCH 3/6] ath9k: rename rxflushlock to pcu_lock
-Date: Wed, 20 Oct 2010 16:07:05 -0700
-Message-ID: <1287616028-12547-4-git-send-email-lrodriguez@atheros.com>
-In-Reply-To: <1287616028-12547-1-git-send-email-lrodriguez@atheros.com>
-References: <1287616028-12547-1-git-send-email-lrodriguez@atheros.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from he.sipsolutions.net ([78.46.109.217]:52625 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751166Ab0JGR7V (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 7 Oct 2010 13:59:21 -0400
+Subject: RE: RFC: btusb firmware load help
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Marcel Holtmann <holtmann@linux.intel.com>
+Cc: Shanmugamkamatchi Balashanmugam
+	<Shanmugamkamatchi.Balashanmugam@Atheros.com>,
+	Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
+	linux-bluetooth <linux-bluetooth@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Deepak Dhamdhere <Deepak.Dhamdhere@Atheros.com>,
+	Sree Durbha <Sree.Durbha@Atheros.com>
+In-Reply-To: <1286465072.6145.151.camel@aeonflux>
+References: <1286349552.6145.11.camel@aeonflux>
+	 <AANLkTimDvgFtoGLEjgWyYRrhQy6Num-rn_2WYO4Lf84b@mail.gmail.com>
+	 <1286380566.6145.42.camel@aeonflux> <20101006163816.GE7070@tux>
+	 <AANLkTik9w4_PdcEsbRHakLcxcD334_1Q8hGArxTXPCGF@mail.gmail.com>
+	 <20101006173949.GG7070@tux>
+	 <1286387660.3655.382.camel@jlt3.sipsolutions.net>
+	 <AANLkTikYRSQw-+Tcj4VS1qxi=OaeF9C5hjAMWVu+0M=v@mail.gmail.com>
+	 <AANLkTi=o4Mc72NrNoALBdS3YHeY7RMyyAJPsCy=uW3+F@mail.gmail.com>
+	 <1286389697.3655.401.camel@jlt3.sipsolutions.net>
+	 ,<20101006183340.GI7070@tux>
+	 <44EE5C37ADC36343B0625A05DD408C4850DAD2CA31@CHEXMB-01.global.atheros.com>
+	 <1286465072.6145.151.camel@aeonflux>
+Content-Type: text/plain; charset="UTF-8"
+Date: Thu, 07 Oct 2010 19:59:19 +0200
+Message-ID: <1286474359.20974.13.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The real way to lock RX is to contend on the PCU
-and reset, this will be fixed in the next patch but for
-now just do the renames so that the next patch which changes
-the locking order is crystal clear.
+On Thu, 2010-10-07 at 17:24 +0200, Marcel Holtmann wrote:
 
-This is part of a series that will help resolve the bug:
+> I am still trying to figure out if this is one stage firmware loading or
+> a two stage firmware loading. This is all pretty unclear and nobody has
+> answered this clearly so far.
 
-https://bugzilla.kernel.org/show_bug.cgi?id=14624
+afaict, it's just one stage -- either it has sflash and you load ath3k
+firmware over it (the problematic 3002-before-loading case), or it
+doesn't have any firmware (and comes up with 3000) and you load the same
+ath3k firmware over it with a different mechanism, which currently
+announces itself as 3002 but can be changed.
 
-For more details about this issue refer to:
-
-http://marc.info/?l=linux-wireless&m=128629803703756&w=2
-
-Cc: stable@kernel.org
-Cc: Ben Greear <greearb@candelatech.com>
-Cc: Kyungwan Nam <kyungwan.nam@atheros.com>
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
----
- drivers/net/wireless/ath/ath9k/ath9k.h |    2 +-
- drivers/net/wireless/ath/ath9k/main.c  |    4 ++--
- drivers/net/wireless/ath/ath9k/recv.c  |    6 +++---
- 3 files changed, 6 insertions(+), 6 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/ath9k/ath9k.h b/drivers/net/wireless/ath/ath9k/ath9k.h
-index 0f0bc54..81fed83 100644
---- a/drivers/net/wireless/ath/ath9k/ath9k.h
-+++ b/drivers/net/wireless/ath/ath9k/ath9k.h
-@@ -309,7 +309,7 @@ struct ath_rx {
- 	u8 rxotherant;
- 	u32 *rxlink;
- 	unsigned int rxfilter;
--	spinlock_t rxflushlock;
-+	spinlock_t pcu_lock;
- 	spinlock_t rxbuflock;
- 	struct list_head rxbuf;
- 	struct ath_descdma rxdma;
-diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
-index dcd94ba..37f18ef 100644
---- a/drivers/net/wireless/ath/ath9k/main.c
-+++ b/drivers/net/wireless/ath/ath9k/main.c
-@@ -609,7 +609,7 @@ void ath9k_tasklet(unsigned long data)
- 		rxmask = (ATH9K_INT_RX | ATH9K_INT_RXEOL | ATH9K_INT_RXORN);
- 
- 	if (status & rxmask) {
--		spin_lock_bh(&sc->rx.rxflushlock);
-+		spin_lock_bh(&sc->rx.pcu_lock);
- 
- 		/* Check for high priority Rx first */
- 		if ((ah->caps.hw_caps & ATH9K_HW_CAP_EDMA) &&
-@@ -617,7 +617,7 @@ void ath9k_tasklet(unsigned long data)
- 			ath_rx_tasklet(sc, 0, true);
- 
- 		ath_rx_tasklet(sc, 0, false);
--		spin_unlock_bh(&sc->rx.rxflushlock);
-+		spin_unlock_bh(&sc->rx.pcu_lock);
- 	}
- 
- 	if (status & ATH9K_INT_TX) {
-diff --git a/drivers/net/wireless/ath/ath9k/recv.c b/drivers/net/wireless/ath/ath9k/recv.c
-index 944fb59..b099827 100644
---- a/drivers/net/wireless/ath/ath9k/recv.c
-+++ b/drivers/net/wireless/ath/ath9k/recv.c
-@@ -317,7 +317,7 @@ int ath_rx_init(struct ath_softc *sc, int nbufs)
- 	struct ath_buf *bf;
- 	int error = 0;
- 
--	spin_lock_init(&sc->rx.rxflushlock);
-+	spin_lock_init(&sc->rx.pcu_lock);
- 	sc->sc_flags &= ~SC_OP_RXFLUSH;
- 	spin_lock_init(&sc->rx.rxbuflock);
- 
-@@ -533,13 +533,13 @@ bool ath_stoprecv(struct ath_softc *sc)
- 
- void ath_flushrecv(struct ath_softc *sc)
- {
--	spin_lock_bh(&sc->rx.rxflushlock);
-+	spin_lock_bh(&sc->rx.pcu_lock);
- 	sc->sc_flags |= SC_OP_RXFLUSH;
- 	if (sc->sc_ah->caps.hw_caps & ATH9K_HW_CAP_EDMA)
- 		ath_rx_tasklet(sc, 1, true);
- 	ath_rx_tasklet(sc, 1, false);
- 	sc->sc_flags &= ~SC_OP_RXFLUSH;
--	spin_unlock_bh(&sc->rx.rxflushlock);
-+	spin_unlock_bh(&sc->rx.pcu_lock);
- }
- 
- static bool ath_beacon_dtim_pending_cab(struct sk_buff *skb)
--- 
-1.7.0.4
+johannes
 
