@@ -1,46 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mgw-sa02.ext.nokia.com ([147.243.1.48]:34293 "EHLO
-	mgw-sa02.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752447Ab0JMNCU (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 13 Oct 2010 09:02:20 -0400
-Subject: Re: [PATCH v2 2/4] wl1271: Fix TX starvation
-From: Juuso Oikarinen <juuso.oikarinen@nokia.com>
-To: ext Ido Yariv <ido@wizery.com>
-Cc: "Coelho Luciano (Nokia-MS/Helsinki)" <Luciano.Coelho@nokia.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <1286873633-10080-3-git-send-email-ido@wizery.com>
-References: <1286873633-10080-1-git-send-email-ido@wizery.com>
-	 <1286873633-10080-3-git-send-email-ido@wizery.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Tue, 12 Oct 2010 14:34:05 +0300
-Message-ID: <1286883245.11177.496.camel@wimaxnb.nmp.nokia.com>
-Mime-Version: 1.0
+Received: from mga01.intel.com ([192.55.52.88]:59931 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754100Ab0JGXIx (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 7 Oct 2010 19:08:53 -0400
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	Shanyu Zhao <shanyu.zhao@intel.com>,
+	Johannes Berg <johannes.berg@intel.com>,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Subject: [PATCH 21/22] iwlagn: fix default calibration table size
+Date: Thu,  7 Oct 2010 16:08:00 -0700
+Message-Id: <1286492881-15743-22-git-send-email-wey-yi.w.guy@intel.com>
+In-Reply-To: <1286492881-15743-1-git-send-email-wey-yi.w.guy@intel.com>
+References: <1286492881-15743-1-git-send-email-wey-yi.w.guy@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2010-10-12 at 10:53 +0200, ext Ido Yariv wrote:
-> While wl1271_irq_work handles RX directly (by calling wl1271_rx), a different
-> work is scheduled for transmitting packets. The IRQ work might handle more than
-> one interrupt during a single call, including multiple TX completion
-> interrupts. This might starve TX, since no packets are transmitted until all
-> interrupts are handled.
-> 
-> Fix this by calling the TX work function directly, instead of deferring
-> it.
-> 
-> Signed-off-by: Ido Yariv <ido@wizery.com>
-> ---
->  drivers/net/wireless/wl12xx/wl1271.h      |    1 +
->  drivers/net/wireless/wl12xx/wl1271_main.c |   19 +++++++++++++++----
->  drivers/net/wireless/wl12xx/wl1271_tx.c   |   14 ++++++++++----
->  drivers/net/wireless/wl12xx/wl1271_tx.h   |    1 +
->  4 files changed, 27 insertions(+), 8 deletions(-)
-> 
+From: Shanyu Zhao <shanyu.zhao@intel.com>
 
-Thanks for reworking this. This looks good to me now.
+iwlagn driver uses the IWL_MAX_STANDARD_PHY_CALIBRATE_TBL_SIZE
+as the chain noise reset calibration index and
+IWL_MAX_STANDARD_PHY_CALIBRATE_TBL_SIZE+1 as the chain noise gain
+calibration index, if not specified by the TLV value in the new
+firmware format.
 
-Reviewed-by: Juuso Oikarinen <juuso.oikarinen@nokia.com>
+However, this is broken if we need to add more calibrations like
+the temperature offset calibration because we increased
+IWL_MAX_STANDARD_PHY_CALIBRATE_TBL_SIZE by 1.
 
--Juuso
+To fix this issue, define IWL_DEFAULT_STANDARD_PHY_CALIBRATE_TBL_SIZE
+and use it as the calibration index instead. We still keep the
+IWL_MAX_STANDARD_PHY_CALIBRATE_TBL_SIZE as a sanity check for
+the TLV value given by ucode.
+
+Signed-off-by: Shanyu Zhao <shanyu.zhao@intel.com>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-agn.c      |    2 +-
+ drivers/net/wireless/iwlwifi/iwl-commands.h |    3 ++-
+ 2 files changed, 3 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
+index 1b682dd..c4fe3f9 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
+@@ -2062,7 +2062,7 @@ static void iwl_ucode_callback(const struct firmware *ucode_raw, void *context)
+ 	struct iwlagn_ucode_capabilities ucode_capa = {
+ 		.max_probe_length = 200,
+ 		.standard_phy_calibration_size =
+-			IWL_MAX_STANDARD_PHY_CALIBRATE_TBL_SIZE,
++			IWL_DEFAULT_STANDARD_PHY_CALIBRATE_TBL_SIZE,
+ 	};
+ 
+ 	memset(&pieces, 0, sizeof(pieces));
+diff --git a/drivers/net/wireless/iwlwifi/iwl-commands.h b/drivers/net/wireless/iwlwifi/iwl-commands.h
+index fe65256..74b78d8 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-commands.h
++++ b/drivers/net/wireless/iwlwifi/iwl-commands.h
+@@ -3784,7 +3784,8 @@ struct iwl_enhance_sensitivity_cmd {
+  */
+ 
+ /* Phy calibration command for series */
+-
++/* The default calibrate table size if not specified by firmware */
++#define IWL_DEFAULT_STANDARD_PHY_CALIBRATE_TBL_SIZE	18
+ enum {
+ 	IWL_PHY_CALIBRATE_DIFF_GAIN_CMD		= 7,
+ 	IWL_PHY_CALIBRATE_DC_CMD		= 8,
+-- 
+1.7.0.4
 
