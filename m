@@ -1,86 +1,82 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail30t.wh2.ocn.ne.jp ([125.206.180.136]:32797 "HELO
-	mail30t.wh2.ocn.ne.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1752477Ab0JLCsM (ORCPT
+Received: from mail.candelatech.com ([208.74.158.172]:36927 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750962Ab0JGRdn (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 11 Oct 2010 22:48:12 -0400
-Received: from vs3008.wh2.ocn.ne.jp (125.206.180.171)
-	by mail30t.wh2.ocn.ne.jp (RS ver 1.0.95vs) with SMTP id 3-0163061689
-	for <linux-wireless@vger.kernel.org>; Tue, 12 Oct 2010 11:48:11 +0900 (JST)
-From: Bruno Randolf <br1@einfach.org>
-To: Ben Greear <greearb@candelatech.com>
-Subject: Re: [PATCH v2] ath5k:  Adjust opmode when interfaces are removed.
-Date: Tue, 12 Oct 2010 11:48:19 +0900
-Cc: linux-wireless@vger.kernel.org
-References: <1286564475-10105-1-git-send-email-greearb@candelatech.com> <201010121044.39093.br1@einfach.org> <4CB3C3A3.5040309@candelatech.com>
-In-Reply-To: <4CB3C3A3.5040309@candelatech.com>
+	Thu, 7 Oct 2010 13:33:43 -0400
+Message-ID: <4CAE0474.4090605@candelatech.com>
+Date: Thu, 07 Oct 2010 10:33:40 -0700
+From: Ben Greear <greearb@candelatech.com>
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-15"
-Message-Id: <201010121148.19073.br1@einfach.org>
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: memory clobber in rx path, maybe related to ath9k.
+References: <4CAB59B2.5050106@candelatech.com> <AANLkTikhGCTS8kJgpDzjudyBTk-rkyXY33UO7kB0+Cc-@mail.gmail.com> <4CAB5F3D.9060201@candelatech.com> <AANLkTimV3GrwU+9PPtirT4sCzveLY2egr3PRQhfDBET1@mail.gmail.com> <4CAB627F.8020804@candelatech.com> <AANLkTi=sT5QJe4V8gFGjF-nzx0uJAMLG_XG2715qrEEd@mail.gmail.com> <4CAB64AD.4080105@candelatech.com> <AANLkTi=3dHbB5tmQDp3Ba54-DqQydVCkNdFo1vKbfaGY@mail.gmail.com> <4CAB6B08.4050801@candelatech.com>
+In-Reply-To: <4CAB6B08.4050801@candelatech.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue October 12 2010 11:10:43 Ben Greear wrote:
-> On 10/11/2010 06:44 PM, Bruno Randolf wrote:
-> > On Sat October 9 2010 04:01:15 greearb@candelatech.com wrote:
-> >> +
-> >> +	/* Calculate combined mode - when APs are active, operate in AP mode.
-> >> +	 * Otherwise use the mode of the new interface. This can currently
-> >> +	 * only deal with combinations of APs and STAs. Only one ad-hoc
-> >> +	 * interfaces is allowed above.
-> > 
-> > the comment reference to "above" does not make sense here any more.
-> 
-> This patch is already in..but I can send a followup cleanup patch.
 
-just for the comment it's probably not worth it, but...
+In case it helps, here is a dump of where the corrupted SKB was deleted.
 
-> >> ieee80211_vif *vif) +static void ath_do_set_opmode(struct ath5k_softc
-> >> *sc)
-> >> +{
-> >> +	struct ath5k_hw *ah = sc->ah;
-> >> +	ath5k_hw_set_opmode(ah, sc->opmode);
-> >> +	ATH5K_DBG(sc, ATH5K_DEBUG_MODE, "mode setup opmode %d (%s)\n",
-> >> +		  sc->opmode,
-> >> +		  ath_opmode_to_string(sc->opmode) ?
-> >> +		  ath_opmode_to_string(sc->opmode) : "UKNOWN");
-> >> +}
-> > 
-> > what's the point of this function? just to add the debug print?
-> 
-> Yes.  At one point, I had it being called from several places..but now it's
-> called from only one place currently, I think.  I could make it explicitly
-> inline code if someone cared.
+I added debugging to slub to get this information, but it looks like
+it's correct to me.
 
-i think i do care. could you please just open-code it at the one place where 
-you call this function?
 
-> > i think it makes sense to set the opmode here. and also do the same in
-> > ath5k_remove_interface. that way we figure out the opmode when interfaces
-> > are added/removed.
-> 
-> It calls ath5k_mode_setup(sc, vif), which sets rx filter, updates bssid
-> mask, and sets the opmode.
-> 
-> >> @@ -2905,7 +2919,7 @@ ath5k_remove_interface(struct ieee80211_hw *hw,
-> >> 
-> >>   	else if (avf->opmode == NL80211_IFTYPE_ADHOC)
-> >>   	
-> >>   		sc->num_adhoc_vifs--;
-> >> 
-> >> -	ath5k_update_bssid_mask(sc, NULL);
-> >> +	ath5k_update_bssid_mask_and_opmode(sc, NULL);
-> >> 
-> >>   	mutex_unlock(&sc->lock);
-> 
-> And that recalculates opmode and bssid mask on removal.
-> 
-> Or maybe I'm mis-understanding your suggestion?
+Reading symbols from /home/greearb/kernel/2.6/wireless-testing-dbg.p4s/net/mac80211/mac80211.ko...done.
+(gdb) l *(ieee80211_rx+0x74d)
+0x13751 is in ieee80211_rx (/home/greearb/git/linux.wireless-testing/include/linux/rcupdate.h:346).
+341	 *
+342	 * See rcu_read_lock() for more information.
+343	 */
+344	static inline void rcu_read_unlock(void)
+345	{
+346		rcu_read_release();
+347		__release(RCU);
+348		__rcu_read_unlock();
+349	}
+350	
+(gdb)
 
-i guess my suggestion was to solve it directly in add/remove_interface, as i 
-think that would me a more obvious place to do it, but as your patch already 
-got already merged: nevermind. your solution has advantages too.
 
-thanks,
-bruno
+# I don't really know what that second address means, but just in case it's useful,
+# I printed it out here:
+
+(gdb) l *(ieee80211_rx+0x7b4)
+0x137b8 is in ieee80211_process_measurement_req (/home/greearb/git/linux.wireless-testing/net/mac80211/spectmgmt.c:74).
+69	}
+70	
+71	void ieee80211_process_measurement_req(struct ieee80211_sub_if_data *sdata,
+72					       struct ieee80211_mgmt *mgmt,
+73					       size_t len)
+74	{
+75		/*
+76		 * Ignoring measurement request is spec violation.
+77		 * Mandatory measurements must be reported optional
+78		 * measurements might be refused or reported incapable
+
+
+INFO: Freed in skb_release_data+0x8c/0x90 age=122 cpu=1 pid=0
+         set_track+0x3c/0x89
+         __slab_free+0x17f/0x1ba
+         skb_release_data+0x8c/0x90
+         kfree+0xaf/0xdf
+         skb_release_data+0x8c/0x90
+         skb_release_data+0x8c/0x90
+         skb_release_data+0x8c/0x90
+         __kfree_skb+0x12/0x6d
+         consume_skb+0x2a/0x2c
+         ieee80211_rx+0x74d/0x7b4 [mac80211]
+         __kmalloc_track_caller+0xcd/0xf2
+         trace_hardirqs_on_caller+0xeb/0x125
+         ath_rx_send_to_mac80211+0x5a/0x60 [ath9k]
+         trace_hardirqs_on+0xb/0xd
+
+Thanks,
+Ben
+
+-- 
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
+
