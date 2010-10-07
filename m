@@ -1,67 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:53618 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750968Ab0JAVFW (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 1 Oct 2010 17:05:22 -0400
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Received: from mga01.intel.com ([192.55.52.88]:59929 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754070Ab0JGXIw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 7 Oct 2010 19:08:52 -0400
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
 To: linville@tuxdriver.com
 Cc: linux-wireless@vger.kernel.org,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>, stable@kernel.org
-Subject: [PATCH v3 1/3] mac80211: fix channel assumption for association done work
-Date: Fri,  1 Oct 2010 17:05:19 -0400
-Message-Id: <1285967121-16665-2-git-send-email-lrodriguez@atheros.com>
-In-Reply-To: <1285967121-16665-1-git-send-email-lrodriguez@atheros.com>
-References: <1285967121-16665-1-git-send-email-lrodriguez@atheros.com>
+	ipw3945-devel@lists.sourceforge.net,
+	Johannes Berg <johannes.berg@intel.com>,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Subject: [PATCH 19/22] iwlwifi: fix dual-mode scanning
+Date: Thu,  7 Oct 2010 16:07:58 -0700
+Message-Id: <1286492881-15743-20-git-send-email-wey-yi.w.guy@intel.com>
+In-Reply-To: <1286492881-15743-1-git-send-email-wey-yi.w.guy@intel.com>
+References: <1286492881-15743-1-git-send-email-wey-yi.w.guy@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Be consistent and use the wk->chan instead of the
-local->hw.conf.channel for the association done work.
-This prevents any possible races against channel changes
-while we run this work.
+From: Johannes Berg <johannes.berg@intel.com>
 
-In the case that the race did happen we would be initializing
-the bit rates for the new AP under the assumption of a wrong
-channel and in the worst case, wrong band. This could lead
-to trying to assuming we could use CCK frames on 5 GHz, for
-example.
+The recent scanning code shuffle accidentally
+moved the SCAN_HW bit setting _after_ the PAN
+parameters are modified, which means that they
+don't take the scan into account -- fix that.
 
-This patch has a fix for kernels >= v2.6.34
-
-Cc: stable@kernel.org
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
 ---
- net/mac80211/mlme.c |    6 +++---
- 1 files changed, 3 insertions(+), 3 deletions(-)
+ drivers/net/wireless/iwlwifi/iwl-agn-lib.c |    4 +++-
+ 1 files changed, 3 insertions(+), 1 deletions(-)
 
-diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index 77913a1..daab0c6 100644
---- a/net/mac80211/mlme.c
-+++ b/net/mac80211/mlme.c
-@@ -1291,7 +1291,7 @@ static bool ieee80211_assoc_success(struct ieee80211_work *wk,
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-lib.c b/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
+index 0ad0d44..c1a3898 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
+@@ -1565,13 +1565,15 @@ int iwlagn_request_scan(struct iwl_priv *priv, struct ieee80211_vif *vif)
+ 	cmd.data = scan;
+ 	scan->len = cpu_to_le16(cmd.len);
  
- 	rates = 0;
- 	basic_rates = 0;
--	sband = local->hw.wiphy->bands[local->hw.conf.channel->band];
-+	sband = local->hw.wiphy->bands[wk->chan->band];
- 
- 	for (i = 0; i < elems.supp_rates_len; i++) {
- 		int rate = (elems.supp_rates[i] & 0x7f) * 5;
-@@ -1327,11 +1327,11 @@ static bool ieee80211_assoc_success(struct ieee80211_work *wk,
- 		}
++	/* set scan bit here for PAN params */
++	set_bit(STATUS_SCAN_HW, &priv->status);
++
+ 	if (priv->cfg->ops->hcmd->set_pan_params) {
+ 		ret = priv->cfg->ops->hcmd->set_pan_params(priv);
+ 		if (ret)
+ 			return ret;
  	}
  
--	sta->sta.supp_rates[local->hw.conf.channel->band] = rates;
-+	sta->sta.supp_rates[wk->chan->band] = rates;
- 	sdata->vif.bss_conf.basic_rates = basic_rates;
- 
- 	/* cf. IEEE 802.11 9.2.12 */
--	if (local->hw.conf.channel->band == IEEE80211_BAND_2GHZ &&
-+	if (wk->chan->band == IEEE80211_BAND_2GHZ &&
- 	    have_higher_than_11mbit)
- 		sdata->flags |= IEEE80211_SDATA_OPERATING_GMODE;
- 	else
+-	set_bit(STATUS_SCAN_HW, &priv->status);
+ 	ret = iwl_send_cmd_sync(priv, &cmd);
+ 	if (ret) {
+ 		clear_bit(STATUS_SCAN_HW, &priv->status);
 -- 
 1.7.0.4
 
