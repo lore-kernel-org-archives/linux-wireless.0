@@ -1,134 +1,166 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail30s.wh2.ocn.ne.jp ([125.206.180.198]:10432 "HELO
-	mail30s.wh2.ocn.ne.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1757296Ab0JFJeL (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 6 Oct 2010 05:34:11 -0400
-Received: from vs3016.wh2.ocn.ne.jp (125.206.180.189)
-	by mail30s.wh2.ocn.ne.jp (RS ver 1.0.95vs) with SMTP id 3-0993927649
-	for <linux-wireless@vger.kernel.org>; Wed,  6 Oct 2010 18:34:09 +0900 (JST)
-Subject: [PATCH] nl80211/mac80211: Add retry and failed transmission count to
-	station info
-To: johannes@sipsolutions.net, linville@tuxdriver.com
-From: Bruno Randolf <br1@einfach.org>
-Cc: linux-wireless@vger.kernel.org
-Date: Wed, 06 Oct 2010 18:34:12 +0900
-Message-ID: <20101006093412.8830.30085.stgit@tt-desk>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Received: from mga01.intel.com ([192.55.52.88]:59924 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753751Ab0JGXIv (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 7 Oct 2010 19:08:51 -0400
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	Johannes Berg <johannes.berg@intel.com>,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Subject: [PATCH 14/22] iwlwifi: remove set_ct_kill operation
+Date: Thu,  7 Oct 2010 16:07:53 -0700
+Message-Id: <1286492881-15743-15-git-send-email-wey-yi.w.guy@intel.com>
+In-Reply-To: <1286492881-15743-1-git-send-email-wey-yi.w.guy@intel.com>
+References: <1286492881-15743-1-git-send-email-wey-yi.w.guy@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This information is already available in mac80211, we just need to export it
-via cfg80211 and nl80211.
+From: Johannes Berg <johannes.berg@intel.com>
 
-Signed-off-by: Bruno Randolf <br1@einfach.org>
+This operation is only ever called from set_hw_params,
+which is also already based on the config/ops, so that
+there's no need to have a separate set_ct_kill op and
+we can just call the right ct_threshold function.
+
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
 ---
- include/linux/nl80211.h |    4 ++++
- include/net/cfg80211.h  |    8 ++++++++
- net/mac80211/cfg.c      |    4 ++++
- net/wireless/nl80211.c  |    6 ++++++
- 4 files changed, 22 insertions(+), 0 deletions(-)
+ drivers/net/wireless/iwlwifi/iwl-1000.c |    4 +---
+ drivers/net/wireless/iwlwifi/iwl-4965.c |    5 ++---
+ drivers/net/wireless/iwlwifi/iwl-5000.c |    8 ++------
+ drivers/net/wireless/iwlwifi/iwl-6000.c |    5 +----
+ drivers/net/wireless/iwlwifi/iwl-core.h |    1 -
+ 5 files changed, 6 insertions(+), 17 deletions(-)
 
-diff --git a/include/linux/nl80211.h b/include/linux/nl80211.h
-index 3a491d5..d0d9c8e 100644
---- a/include/linux/nl80211.h
-+++ b/include/linux/nl80211.h
-@@ -1129,6 +1129,8 @@ enum nl80211_rate_info {
-  * @NL80211_STA_INFO_RX_PACKETS: total received packet (u32, from this station)
-  * @NL80211_STA_INFO_TX_PACKETS: total transmitted packets (u32, to this
-  *	station)
-+ * @NL80211_STA_INFO_TX_RETRIES: total retries (u32, to this station)
-+ * @NL80211_STA_INFO_TX_FAILED: total failed packets (u32, to this station)
-  */
- enum nl80211_sta_info {
- 	__NL80211_STA_INFO_INVALID,
-@@ -1142,6 +1144,8 @@ enum nl80211_sta_info {
- 	NL80211_STA_INFO_TX_BITRATE,
- 	NL80211_STA_INFO_RX_PACKETS,
- 	NL80211_STA_INFO_TX_PACKETS,
-+	NL80211_STA_INFO_TX_RETRIES,
-+	NL80211_STA_INFO_TX_FAILED,
+diff --git a/drivers/net/wireless/iwlwifi/iwl-1000.c b/drivers/net/wireless/iwlwifi/iwl-1000.c
+index 8c2db55..8aed9ea 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-1000.c
++++ b/drivers/net/wireless/iwlwifi/iwl-1000.c
+@@ -151,8 +151,7 @@ static int iwl1000_hw_set_hw_params(struct iwl_priv *priv)
+ 	priv->hw_params.valid_tx_ant = priv->cfg->valid_tx_ant;
+ 	priv->hw_params.valid_rx_ant = priv->cfg->valid_rx_ant;
  
- 	/* keep last */
- 	__NL80211_STA_INFO_AFTER_LAST,
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index e86c890..432bf59 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -405,6 +405,8 @@ struct station_parameters {
-  *  (tx_bitrate, tx_bitrate_flags and tx_bitrate_mcs)
-  * @STATION_INFO_RX_PACKETS: @rx_packets filled
-  * @STATION_INFO_TX_PACKETS: @tx_packets filled
-+ * @STATION_INFO_TX_RETRIES: @tx_retries filled
-+ * @STATION_INFO_TX_FAILED: @tx_failed filled
-  */
- enum station_info_flags {
- 	STATION_INFO_INACTIVE_TIME	= 1<<0,
-@@ -417,6 +419,8 @@ enum station_info_flags {
- 	STATION_INFO_TX_BITRATE		= 1<<7,
- 	STATION_INFO_RX_PACKETS		= 1<<8,
- 	STATION_INFO_TX_PACKETS		= 1<<9,
-+	STATION_INFO_TX_RETRIES		= 1<<10,
-+	STATION_INFO_TX_FAILED		= 1<<11,
+-	if (priv->cfg->ops->lib->temp_ops.set_ct_kill)
+-		priv->cfg->ops->lib->temp_ops.set_ct_kill(priv);
++	iwl1000_set_ct_threshold(priv);
+ 
+ 	/* Set initial sensitivity parameters */
+ 	/* Set initial calibration set */
+@@ -219,7 +218,6 @@ static struct iwl_lib_ops iwl1000_lib = {
+ 	.config_ap = iwl_config_ap,
+ 	.temp_ops = {
+ 		.temperature = iwlagn_temperature,
+-		.set_ct_kill = iwl1000_set_ct_threshold,
+ 	 },
+ 	.manage_ibss_station = iwlagn_manage_ibss_station,
+ 	.update_bcast_stations = iwl_update_bcast_stations,
+diff --git a/drivers/net/wireless/iwlwifi/iwl-4965.c b/drivers/net/wireless/iwlwifi/iwl-4965.c
+index 08d2dbc..c192856 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-4965.c
++++ b/drivers/net/wireless/iwlwifi/iwl-4965.c
+@@ -669,8 +669,8 @@ static int iwl4965_hw_set_hw_params(struct iwl_priv *priv)
+ 	priv->hw_params.rx_chains_num = num_of_ant(priv->cfg->valid_rx_ant);
+ 	priv->hw_params.valid_tx_ant = priv->cfg->valid_tx_ant;
+ 	priv->hw_params.valid_rx_ant = priv->cfg->valid_rx_ant;
+-	if (priv->cfg->ops->lib->temp_ops.set_ct_kill)
+-		priv->cfg->ops->lib->temp_ops.set_ct_kill(priv);
++
++	iwl4965_set_ct_threshold(priv);
+ 
+ 	priv->hw_params.sens = &iwl4965_sensitivity;
+ 	priv->hw_params.beacon_time_tsf_bits = IWLAGN_EXT_BEACON_TIME_POS;
+@@ -2292,7 +2292,6 @@ static struct iwl_lib_ops iwl4965_lib = {
+ 	.isr = iwl_isr_legacy,
+ 	.temp_ops = {
+ 		.temperature = iwl4965_temperature_calib,
+-		.set_ct_kill = iwl4965_set_ct_threshold,
+ 	},
+ 	.manage_ibss_station = iwlagn_manage_ibss_station,
+ 	.update_bcast_stations = iwl_update_bcast_stations,
+diff --git a/drivers/net/wireless/iwlwifi/iwl-5000.c b/drivers/net/wireless/iwlwifi/iwl-5000.c
+index ddbbb93..084271e 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-5000.c
++++ b/drivers/net/wireless/iwlwifi/iwl-5000.c
+@@ -195,8 +195,7 @@ static int iwl5000_hw_set_hw_params(struct iwl_priv *priv)
+ 	priv->hw_params.valid_tx_ant = priv->cfg->valid_tx_ant;
+ 	priv->hw_params.valid_rx_ant = priv->cfg->valid_rx_ant;
+ 
+-	if (priv->cfg->ops->lib->temp_ops.set_ct_kill)
+-		priv->cfg->ops->lib->temp_ops.set_ct_kill(priv);
++	iwl5000_set_ct_threshold(priv);
+ 
+ 	/* Set initial sensitivity parameters */
+ 	/* Set initial calibration set */
+@@ -242,8 +241,7 @@ static int iwl5150_hw_set_hw_params(struct iwl_priv *priv)
+ 	priv->hw_params.valid_tx_ant = priv->cfg->valid_tx_ant;
+ 	priv->hw_params.valid_rx_ant = priv->cfg->valid_rx_ant;
+ 
+-	if (priv->cfg->ops->lib->temp_ops.set_ct_kill)
+-		priv->cfg->ops->lib->temp_ops.set_ct_kill(priv);
++	iwl5150_set_ct_threshold(priv);
+ 
+ 	/* Set initial sensitivity parameters */
+ 	/* Set initial calibration set */
+@@ -394,7 +392,6 @@ static struct iwl_lib_ops iwl5000_lib = {
+ 	.config_ap = iwl_config_ap,
+ 	.temp_ops = {
+ 		.temperature = iwlagn_temperature,
+-		.set_ct_kill = iwl5000_set_ct_threshold,
+ 	 },
+ 	.manage_ibss_station = iwlagn_manage_ibss_station,
+ 	.update_bcast_stations = iwl_update_bcast_stations,
+@@ -465,7 +462,6 @@ static struct iwl_lib_ops iwl5150_lib = {
+ 	.config_ap = iwl_config_ap,
+ 	.temp_ops = {
+ 		.temperature = iwl5150_temperature,
+-		.set_ct_kill = iwl5150_set_ct_threshold,
+ 	 },
+ 	.manage_ibss_station = iwlagn_manage_ibss_station,
+ 	.update_bcast_stations = iwl_update_bcast_stations,
+diff --git a/drivers/net/wireless/iwlwifi/iwl-6000.c b/drivers/net/wireless/iwlwifi/iwl-6000.c
+index 198cd8f..84f1814 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-6000.c
++++ b/drivers/net/wireless/iwlwifi/iwl-6000.c
+@@ -192,8 +192,7 @@ static int iwl6000_hw_set_hw_params(struct iwl_priv *priv)
+ 	priv->hw_params.valid_tx_ant = priv->cfg->valid_tx_ant;
+ 	priv->hw_params.valid_rx_ant = priv->cfg->valid_rx_ant;
+ 
+-	if (priv->cfg->ops->lib->temp_ops.set_ct_kill)
+-		priv->cfg->ops->lib->temp_ops.set_ct_kill(priv);
++	iwl6000_set_ct_threshold(priv);
+ 
+ 	/* Set initial sensitivity parameters */
+ 	/* Set initial calibration set */
+@@ -334,7 +333,6 @@ static struct iwl_lib_ops iwl6000_lib = {
+ 	.config_ap = iwl_config_ap,
+ 	.temp_ops = {
+ 		.temperature = iwlagn_temperature,
+-		.set_ct_kill = iwl6000_set_ct_threshold,
+ 	 },
+ 	.manage_ibss_station = iwlagn_manage_ibss_station,
+ 	.update_bcast_stations = iwl_update_bcast_stations,
+@@ -408,7 +406,6 @@ static struct iwl_lib_ops iwl6000g2b_lib = {
+ 	.config_ap = iwl_config_ap,
+ 	.temp_ops = {
+ 		.temperature = iwlagn_temperature,
+-		.set_ct_kill = iwl6000_set_ct_threshold,
+ 	 },
+ 	.manage_ibss_station = iwlagn_manage_ibss_station,
+ 	.update_bcast_stations = iwl_update_bcast_stations,
+diff --git a/drivers/net/wireless/iwlwifi/iwl-core.h b/drivers/net/wireless/iwlwifi/iwl-core.h
+index b02db31..f3c3d85 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-core.h
++++ b/drivers/net/wireless/iwlwifi/iwl-core.h
+@@ -137,7 +137,6 @@ struct iwl_debugfs_ops {
+ 
+ struct iwl_temp_ops {
+ 	void (*temperature)(struct iwl_priv *priv);
+-	void (*set_ct_kill)(struct iwl_priv *priv);
  };
  
- /**
-@@ -466,6 +470,8 @@ struct rate_info {
-  * @txrate: current unicast bitrate to this station
-  * @rx_packets: packets received from this station
-  * @tx_packets: packets transmitted to this station
-+ * @tx_retries: cumulative retry counts
-+ * @tx_failed: number of failed transmissions (retries exceeded, no ACK)
-  * @generation: generation number for nl80211 dumps.
-  *	This number should increase every time the list of stations
-  *	changes, i.e. when a station is added or removed, so that
-@@ -483,6 +489,8 @@ struct station_info {
- 	struct rate_info txrate;
- 	u32 rx_packets;
- 	u32 tx_packets;
-+	u32 tx_retries;
-+	u32 tx_failed;
- 
- 	int generation;
- };
-diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
-index c981604..d5a06e5 100644
---- a/net/mac80211/cfg.c
-+++ b/net/mac80211/cfg.c
-@@ -285,6 +285,8 @@ static void sta_set_sinfo(struct sta_info *sta, struct station_info *sinfo)
- 			STATION_INFO_TX_BYTES |
- 			STATION_INFO_RX_PACKETS |
- 			STATION_INFO_TX_PACKETS |
-+			STATION_INFO_TX_RETRIES |
-+			STATION_INFO_TX_FAILED |
- 			STATION_INFO_TX_BITRATE;
- 
- 	sinfo->inactive_time = jiffies_to_msecs(jiffies - sta->last_rx);
-@@ -292,6 +294,8 @@ static void sta_set_sinfo(struct sta_info *sta, struct station_info *sinfo)
- 	sinfo->tx_bytes = sta->tx_bytes;
- 	sinfo->rx_packets = sta->rx_packets;
- 	sinfo->tx_packets = sta->tx_packets;
-+	sinfo->tx_retries = sta->tx_retry_count;
-+	sinfo->tx_failed = sta->tx_retry_failed;
- 
- 	if ((sta->local->hw.flags & IEEE80211_HW_SIGNAL_DBM) ||
- 	    (sta->local->hw.flags & IEEE80211_HW_SIGNAL_UNSPEC)) {
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index 26062e1..af30a03 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -1923,6 +1923,12 @@ static int nl80211_send_station(struct sk_buff *msg, u32 pid, u32 seq,
- 	if (sinfo->filled & STATION_INFO_TX_PACKETS)
- 		NLA_PUT_U32(msg, NL80211_STA_INFO_TX_PACKETS,
- 			    sinfo->tx_packets);
-+	if (sinfo->filled & STATION_INFO_TX_RETRIES)
-+		NLA_PUT_U32(msg, NL80211_STA_INFO_TX_RETRIES,
-+			    sinfo->tx_retries);
-+	if (sinfo->filled & STATION_INFO_TX_FAILED)
-+		NLA_PUT_U32(msg, NL80211_STA_INFO_TX_FAILED,
-+			    sinfo->tx_failed);
- 	nla_nest_end(msg, sinfoattr);
- 
- 	return genlmsg_end(msg, hdr);
+ struct iwl_tt_ops {
+-- 
+1.7.0.4
 
