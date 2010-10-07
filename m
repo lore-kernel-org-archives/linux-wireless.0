@@ -1,57 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:40260 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755713Ab0JNTPP (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:40653 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755252Ab0JGUT1 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 14 Oct 2010 15:15:15 -0400
-Message-ID: <4CB756B8.4000308@candelatech.com>
-Date: Thu, 14 Oct 2010 12:15:04 -0700
-From: Ben Greear <greearb@candelatech.com>
-MIME-Version: 1.0
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-CC: =?UTF-8?B?QmrDtnJuIFNtZWRtYW4=?= <bjorn.smedman@venatech.se>,
-	Vasanthakumar Thiagarajan <vasanth@atheros.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: memory clobber in rx path, maybe related to ath9k.
-References: <4CAE1DFB.303@candelatech.com> <1286479642.20974.32.camel@jlt3.sipsolutions.net> <AANLkTimxp703Gy_Atg8=wpFszRDR=OJCXwOUKRh-a-d7@mail.gmail.com> <AANLkTi=t-P_5c14brJohM8UgxeOknv+3syO=7W=ix6qf@mail.gmail.com> <AANLkTinC46a+nE-XOQuBCmRJwjzgh24uC7ZJ7HtbVHnT@mail.gmail.com> <4CB378CD.1080800@candelatech.com> <AANLkTim42zmDwf744BCrPwa1kT5ph57bNMyvSyOpesVv@mail.gmail.com> <4CB3D598.7050904@candelatech.com> <AANLkTimPEg3ZU8CQUXfdpGdfbmhdE9O=GNY=g9gysTo4@mail.gmail.com> <4CB4AA89.1070009@candelatech.com> <20101013053141.GA15798@vasanth-laptop> <4CB5E0A8.5020502@candelatech.com> <AANLkTimp_GSwwX_RnQSyN9QNe55HQ+0HZJ1yd8Xp+dWG@mail.gmail.com> <AANLkTi=b_SvDDgqbQ-Oft12bNumM7XuH6-_g7_w=koaG@mail.gmail.com>
-In-Reply-To: <AANLkTi=b_SvDDgqbQ-Oft12bNumM7XuH6-_g7_w=koaG@mail.gmail.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+	Thu, 7 Oct 2010 16:19:27 -0400
+Subject: Re: 2.6.36-rc7 warning in __cfg80211_auth_remove
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Johannes Stezenbach <js@sig21.net>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <20101007151844.GB3183@sig21.net>
+References: <20101007151844.GB3183@sig21.net>
+Content-Type: text/plain; charset="UTF-8"
+Date: Thu, 07 Oct 2010 22:19:26 +0200
+Message-ID: <1286482766.20974.39.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 10/13/2010 01:03 PM, Luis R. Rodriguez wrote:
-> 2010/10/13 Björn Smedman<bjorn.smedman@venatech.se>:
->> Hi Ben,
->>
->> First of all keep up the good work. :)
->>
->> On Wed, Oct 13, 2010 at 6:39 PM, Ben Greear<greearb@candelatech.com>  wrote:
->> [snip]
->>> Either way, it seems safer to null out the bf_ampdu field after
->>> the memory is consumed..it could prevent some tricky bugs later.
->>
->> I think this is a good idea. But it probably wont be enough to null
->> out bf_mpdu. You also need to look at bf_buf_addr (which if I
->> understand correctly is the physical address the DMA engine will
->> actually write RXed frames to) and bf_dmacontext (which seems in most
->> cases to hold an identical address and may in fact be where the DMA
->> engine will really write the frame).
->
-> See the TODO list for ath9k:
->
->    * Remove this redundancy crap: bf->bf_buf_addr = bf->bf_dmacontext;
->
-> http://wireless.kernel.org/en/users/Drivers/ath9k/todo
+On Thu, 2010-10-07 at 17:18 +0200, Johannes Stezenbach wrote:
+> Hi,
+> 
+> just got the following while testing with rt73usb on
+> kernel 2.6.36-rc7 with wpa_supplicant v0.6.10:
+> 
+> wlan0: authentication with 00:22:b0:xx:xx:xx timed out
+> ------------[ cut here ]------------
+> WARNING: at net/wireless/mlme.c:284 __cfg80211_auth_remove+0xc3/0xd0 [cfg80211]()
 
-I just posted a patch that attempts this.  It doesn't
-fix the memory clobber issue, but maybe the code is a bit cleaner/safer
-at least...
+>  [<ffffffffa002d980>] __cfg80211_auth_remove+0xc3/0xd0 [cfg80211]
+>  [<ffffffffa002e27c>] cfg80211_send_auth_timeout+0x93/0xaa [cfg80211]
+>  [<ffffffffa004c3eb>] ieee80211_probe_auth_done+0x2a/0x97 [mac80211]
+>  [<ffffffffa004e551>] ieee80211_work_work+0xecd/0xf3e [mac80211]
 
-Thanks,
-Ben
+Oh *crap*. I thought we'd fixed these :-(
 
--- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+But then I really don't see how it might have happened. Was there
+anything in the log before this?
+
+johannes
 
