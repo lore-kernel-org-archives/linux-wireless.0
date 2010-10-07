@@ -1,63 +1,92 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ey0-f174.google.com ([209.85.215.174]:43593 "EHLO
-	mail-ey0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756804Ab0JFFuI (ORCPT
+Received: from mail-iw0-f174.google.com ([209.85.214.174]:49985 "EHLO
+	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751542Ab0JGRVx convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 6 Oct 2010 01:50:08 -0400
-Received: by mail-ey0-f174.google.com with SMTP id 6so2726728eyb.19
-        for <linux-wireless@vger.kernel.org>; Tue, 05 Oct 2010 22:50:07 -0700 (PDT)
-From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-To: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-Cc: b43-dev@lists.infradead.org,
-	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-Subject: [PATCH 2/3] b43: define B43_SHM_SH_CHAN_40MHZ
-Date: Wed,  6 Oct 2010 07:50:07 +0200
-Message-Id: <1286344208-32479-3-git-send-email-zajec5@gmail.com>
-In-Reply-To: <1286344208-32479-1-git-send-email-zajec5@gmail.com>
-References: <1286344208-32479-1-git-send-email-zajec5@gmail.com>
+	Thu, 7 Oct 2010 13:21:53 -0400
+Received: by iwn9 with SMTP id 9so81338iwn.19
+        for <linux-wireless@vger.kernel.org>; Thu, 07 Oct 2010 10:21:53 -0700 (PDT)
 MIME-Version: 1.0
+In-Reply-To: <1286435892.3657.9.camel@jlt3.sipsolutions.net>
+References: <20101006185000.GJ7070@tux> <1286391301.3655.403.camel@jlt3.sipsolutions.net>
+ <20101006191215.GM7070@tux> <1286392799.3655.414.camel@jlt3.sipsolutions.net>
+ <AANLkTinOTsYKFpQkg2B7GVMF-eKykFd8LM1m8xmtXX7j@mail.gmail.com> <1286435892.3657.9.camel@jlt3.sipsolutions.net>
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Date: Thu, 7 Oct 2010 10:21:32 -0700
+Message-ID: <AANLkTi=iW1T7w-9akkR=DNnrGg3XD5nO=8pJ7V2_PiL4@mail.gmail.com>
+Subject: Re: [PATCH] mac80211: Deny new BA agreements from being started
+ during offchannel operation
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Luis Rodriguez <Luis.Rodriguez@atheros.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Srinivasa Duvvuri <Srinivasa.Duvvuri@atheros.com>,
+	Matt Smith <Matt.Smith@atheros.com>,
+	Bennyam Malavazi <Bennyam.Malavazi@atheros.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
----
- drivers/net/wireless/b43/b43.h        |    3 ++-
- drivers/net/wireless/b43/phy_common.c |    6 ++++--
- 2 files changed, 6 insertions(+), 3 deletions(-)
+On Thu, Oct 7, 2010 at 12:18 AM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
+> On Wed, 2010-10-06 at 13:48 -0700, Luis R. Rodriguez wrote:
+>> On Wed, Oct 6, 2010 at 12:19 PM, Johannes Berg
+>> <johannes@sipsolutions.net> wrote:
+>> > On Wed, 2010-10-06 at 12:12 -0700, Luis R. Rodriguez wrote:
+>> >
+>> >> Good question, will ieee80211_offchannel_ps_disable() possibly be
+>> >> called during suspend? I can imagine its possible. So how about we
+>> >> check for local->quiescing prior to lifting the flag only:
+>> >
+>> > Or suspended?
+>>
+>> If we're suspended we would be quiesced so I do not see us calling
+>> ieee80211_offchannel_ps_disable() then, but we can also just bail out
+>> if quescing or suspended on  ieee80211_offchannel_ps_disable() and
+>> friends.
+>
+> Oh, wait, yeah, while quiescing we stop the workqueue so we can't be
+> processing this, so we should be fine.
 
-diff --git a/drivers/net/wireless/b43/b43.h b/drivers/net/wireless/b43/b43.h
-index 73376ff..29302ea 100644
---- a/drivers/net/wireless/b43/b43.h
-+++ b/drivers/net/wireless/b43/b43.h
-@@ -187,7 +187,8 @@ enum {
- #define B43_SHM_SH_PHYTXNOI		0x006E	/* PHY noise directly after TX (lower 8bit only) */
- #define B43_SHM_SH_RFRXSP1		0x0072	/* RF RX SP Register 1 */
- #define B43_SHM_SH_CHAN			0x00A0	/* Current channel (low 8bit only) */
--#define  B43_SHM_SH_CHAN_5GHZ		0x0100	/* Bit set, if 5Ghz channel */
-+#define  B43_SHM_SH_CHAN_5GHZ		0x0100	/* Bit set, if 5 Ghz channel */
-+#define  B43_SHM_SH_CHAN_40MHZ		0x0200	/* Bit set, if 40 Mhz channel width */
- #define B43_SHM_SH_BCMCFIFOID		0x0108	/* Last posted cookie to the bcast/mcast FIFO */
- /* TSSI information */
- #define B43_SHM_SH_TSSI_CCK		0x0058	/* TSSI for last 4 CCK frames (32bit) */
-diff --git a/drivers/net/wireless/b43/phy_common.c b/drivers/net/wireless/b43/phy_common.c
-index 10b9e6f..44f0064 100644
---- a/drivers/net/wireless/b43/phy_common.c
-+++ b/drivers/net/wireless/b43/phy_common.c
-@@ -294,8 +294,10 @@ int b43_switch_channel(struct b43_wldev *dev, unsigned int new_channel)
- 	 */
- 	channelcookie = new_channel;
- 	if (b43_current_band(dev->wl) == IEEE80211_BAND_5GHZ)
--		channelcookie |= 0x100;
--	//FIXME set 40Mhz flag if required
-+		channelcookie |= B43_SHM_SH_CHAN_5GHZ;
-+	/* FIXME: set 40Mhz flag if required */
-+	if (0)
-+		channelcookie |= B43_SHM_SH_CHAN_40MHZ;
- 	savedcookie = b43_shm_read16(dev, B43_SHM_SHARED, B43_SHM_SH_CHAN);
- 	b43_shm_write16(dev, B43_SHM_SHARED, B43_SHM_SH_CHAN, channelcookie);
- 
--- 
-1.7.1
+Right.
 
+> We might still be off-channel
+> while suspending which is odd, and then we might lift the BA block
+> earlier than you'd want.
+
+Hehe.. unless we deny going off channel when quiescing or suspended.
+
+> But then again, come to think of it, why are you doing this anyway?
+
+The goal is to clean up a lot of stuff we forgot to cleanup for
+offchannel operation and in the end to help with multicast/broadcast
+data. This patch just addresses one of the cleanups. The timers kicked
+off when going off channel will not make sense, so best to just deny
+ADDBA when going offchannel.
+
+> I'm not convinced of the whole idea, it's all racy. I'm starting to think
+> that this patch won't help anything since we'll still be racy and start
+> BA agreements just before we block,
+
+Establishing the BA agreement is fine, we don't want to cancel
+existing BA agreements when going offchannel, we just want to prevent
+making the timers for new ADDBA requests from going stale
+unnecessarily.
+
+> _and_ if we're a station and going off-channel we'll be going into powersave
+> which means we won't actually get the addBA frame until we return.
+
+There's a race between trying to go offchannel, sending the nullfunc
+and switching channels. When the race hits the ADDBA timer will just
+go stale. If our goal is to go offchannel we should avoid the race by
+simply denying new ADDBA requests. I just noticed that we can't
+possible receive ADDBA requests when we are scanning though, since
+ieee80211_iface_work() already has a check and bail out for
+local->scanning, but note that local->scanning will not be checked
+when doing other offchannel work.
+
+So perhaps there is another way we can deal with this for the
+non-scanning offchannel work case that might also take care of not
+handling other queued up management frames when offchannel.
+
+ Luis
