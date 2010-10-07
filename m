@@ -1,97 +1,90 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f46.google.com ([209.85.214.46]:39435 "EHLO
-	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756207Ab0JDUzM (ORCPT
+Received: from mail-wy0-f174.google.com ([74.125.82.174]:62395 "EHLO
+	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752050Ab0JGHfq convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 4 Oct 2010 16:55:12 -0400
-Received: by bwz11 with SMTP id 11so3997069bwz.19
-        for <linux-wireless@vger.kernel.org>; Mon, 04 Oct 2010 13:55:11 -0700 (PDT)
-Date: Mon, 4 Oct 2010 22:55:08 +0200 (CEST)
-From: "=?ISO-8859-15?Q?Bj=F6rn_Smedman?=" <bjorn.smedman@venatech.se>
-To: linux-wireless <linux-wireless@vger.kernel.org>,
-	ath9k-devel@lists.ath9k.org
-Subject: [RFC] ath9k: Insert wmb before linking dma descriptors
-Message-ID: <alpine.DEB.2.00.1010042059130.29449@vtdt3>
+	Thu, 7 Oct 2010 03:35:46 -0400
+Received: by wyb28 with SMTP id 28so387062wyb.19
+        for <linux-wireless@vger.kernel.org>; Thu, 07 Oct 2010 00:35:44 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: MULTIPART/MIXED; BOUNDARY="8323329-547367930-1286225710=:29449"
+In-Reply-To: <201010071606.37134.br1@einfach.org>
+References: <20101005095510.3083.46174.stgit@tt-desk> <201010071003.37599.br1@einfach.org>
+ <AANLkTimf=f1DhP68=aHZ7WKVCN9RPBq7sh+46ExnYRVa@mail.gmail.com> <201010071606.37134.br1@einfach.org>
+From: Jonathan Guerin <jonathan@guerin.id.au>
+Date: Thu, 7 Oct 2010 17:35:23 +1000
+Message-ID: <AANLkTimChFrsQsW2BbM43gT5pLD8Kcg_59WUpRfhmZLT@mail.gmail.com>
+Subject: Re: [PATCH 4/5] nl80211/mac80211: Add channel utilization to survey
+To: Bruno Randolf <br1@einfach.org>
+Cc: Helmut Schaa <helmut.schaa@googlemail.com>, linville@tuxdriver.com,
+	nbd@openwrt.org, ath5k-devel@lists.ath5k.org,
+	linux-wireless@vger.kernel.org, adrian@freebsd.org,
+	vasanth@atheros.com, "Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	Johannes Berg <johannes@sipsolutions.net>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-  This message is in MIME format.  The first part should be readable text,
-  while the remaining parts are likely unreadable without MIME-aware tools.
+On Thu, Oct 7, 2010 at 5:06 PM, Bruno Randolf <br1@einfach.org> wrote:
+> On Thu October 7 2010 15:51:49 Helmut Schaa wrote:
+>> On Thu, Oct 7, 2010 at 3:03 AM, Bruno Randolf <br1@einfach.org> wrote:
+>> > On Wed October 6 2010 18:54:37 Helmut Schaa wrote:
+>> >> On Tue, Oct 5, 2010 at 11:55 AM, Bruno Randolf <br1@einfach.org> wrote:
+>> >> > This adds three new values to the survey results:
+>> >> >
+>> >> >  * BUSY - percentage of time the channel was busy
+>> >> >  * BUSY_TX - percentage of time spent transmitting frames
+>> >> >  * BUSY_RX - percentage of time spent receiving frames
+>> >>
+>> >> Does BUSY include BUSY_RX and BUSY_TX already? At least on
+>> >> rt2800 devices we only have access to BUSY which already includes
+>> >> BUSY_RX and TX.
+>> >
+>> > yes, BUSY includes TX and RX.
+>> >
+>> >> And what about BUSY on the secondary channel in case of 40Mhz?
+>> >
+>> > i have no information about that. luis?
+>>
+>> At least we've got a register for that in rt2800 ;)
+>> That's why I'm asking.
+>
+> which units do you have for the busy time? what about other drivers?
+>
+> in ath[59]k we have it as cycles (which is about 1/44000 of a second,
+> depending on the mode). so it counts up rather fast.
+>
+> i have been thinking more about it and i think my current approach is flawed.
+> the idea was that we probably need to use a percentage as the least common
+> denominator between all drivers, and i wanted to leave the time period up to
+> userspace. so if userspace wants to have the percentage in the last second, it
+> would poll every second, if it wants it every 100ms it would poll every 100ms.
+> that would work, if there is only one userspace process querying this in
+> regular intervals.
+>
+> but what if there is a second process who does the same, or a user issues "iw
+> wlan0 survey dump", that would reduce the timespan for the other process... so
+> that is obviously flawed...
+>
+> some absolute cumulative value would be better, so several userspace processes
+> can poll and do their own averaging or percentage calculations.
+>
+> but which units to use? what would be a good way of solving that?
+> any ideas???
 
---8323329-547367930-1286225710=:29449
-Content-Type: TEXT/PLAIN; charset=ISO-8859-15
-Content-Transfer-Encoding: 8BIT
+My 2c:
+I do something similar with my work. I output the amount of time in tx
+& rx, as well as the 'measurement' time, being the elapsed time since
+it was read last (all in ms). If you get a timer to go off
+periodically (either ANI doing it, or something else if ANI is
+disabled), then the user can calculate the % if required, based on the
+elapsed time. Having a unit in ms seems to make the most sense as it
+will be driver/clock agnostic, and easily match up to frame txtimes if
+you wanted to de-construct the value further.
 
-Hi all,
+>
+> bruno
+>
 
-I've been looking at how ath9k does DMA and comparing with the
-recommendations in the Linux kernel documentation for the DMA API[1]. To
-me it looks like we risk setting up incorrect DMA descriptors on
-platforms that can reorder writes because all data in the descriptor may
-not be written to memory before the descriptor is linked into the DMA
-chain.
 
-The patch below attempts to remove this risk by inserting a write memory
-barrier between where we set up a descriptor and where we add it to the 
-DMA chain. My hope is that this may solve some of the harder chip lockups 
-on MIPS but more testing is required to determine if it has this effect.
-
-Any thoughts?
-
-/Björn
-
-1. http://www.mjmwired.net/kernel/Documentation/DMA-API.txt
-
----
-diff --git a/drivers/net/wireless/ath/ath9k/beacon.c b/drivers/net/wireless/ath/ath9k/beacon.c
-index 081192e..8e43443 100644
---- a/drivers/net/wireless/ath/ath9k/beacon.c
-+++ b/drivers/net/wireless/ath/ath9k/beacon.c
-@@ -450,6 +450,8 @@ void ath_beacon_tasklet(unsigned long data)
- 				"beacon queue %u did not stop?\n", sc->beacon.beaconq);
- 		}
- 
-+		wmb();
-+
- 		/* NB: cabq traffic should already be queued and primed */
- 		ath9k_hw_puttxbuf(ah, sc->beacon.beaconq, bfaddr);
- 		ath9k_hw_txstart(ah, sc->beacon.beaconq);
-diff --git a/drivers/net/wireless/ath/ath9k/recv.c b/drivers/net/wireless/ath/ath9k/recv.c
-index 9c166f3..2cc0271 100644
---- a/drivers/net/wireless/ath/ath9k/recv.c
-+++ b/drivers/net/wireless/ath/ath9k/recv.c
-@@ -90,6 +90,8 @@ static void ath_rx_buf_link(struct ath_softc *sc, struct ath_buf *bf)
- 			     common->rx_bufsize,
- 			     0);
- 
-+	wmb();
-+
- 	if (sc->rx.rxlink == NULL)
- 		ath9k_hw_putrxbuf(ah, bf->bf_daddr);
- 	else
-@@ -500,6 +502,9 @@ int ath_startrecv(struct ath_softc *sc)
- 		goto start_recv;
- 
- 	bf = list_first_entry(&sc->rx.rxbuf, struct ath_buf, list);
-+
-+	wmb();
-+
- 	ath9k_hw_putrxbuf(ah, bf->bf_daddr);
- 	ath9k_hw_rxena(ah);
- 
-diff --git a/drivers/net/wireless/ath/ath9k/xmit.c b/drivers/net/wireless/ath/ath9k/xmit.c
-index f7da6b2..4b8c428 100644
---- a/drivers/net/wireless/ath/ath9k/xmit.c
-+++ b/drivers/net/wireless/ath/ath9k/xmit.c
-@@ -1250,6 +1250,8 @@ static void ath_tx_txqaddbuf(struct ath_softc *sc, struct ath_txq *txq,
- 	ath_print(common, ATH_DBG_QUEUE,
- 		  "qnum: %d, txq depth: %d\n", txq->axq_qnum, txq->axq_depth);
- 
-+	wmb();
-+
- 	if (sc->sc_ah->caps.hw_caps & ATH9K_HW_CAP_EDMA) {
- 		if (txq->axq_depth >= ATH_TXFIFO_DEPTH) {
- 			list_splice_tail_init(head, &txq->txq_fifo_pending);
---8323329-547367930-1286225710=:29449--
+--
+Jonathan Guerin
