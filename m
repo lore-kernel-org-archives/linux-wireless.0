@@ -1,54 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:53545 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750941Ab0JGR57 (ORCPT
+Received: from mail30s.wh2.ocn.ne.jp ([125.206.180.198]:44378 "HELO
+	mail30s.wh2.ocn.ne.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1754578Ab0JGBDi (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 7 Oct 2010 13:57:59 -0400
-Subject: Re: RFC: btusb firmware load help
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Bala Shanmugam <sbalashanmugam@atheros.com>
-Cc: Shanmugamkamatchi Balashanmugam
-	<Shanmugamkamatchi.Balashanmugam@Atheros.com>,
-	Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
-	Marcel Holtmann <holtmann@linux.intel.com>,
-	linux-bluetooth <linux-bluetooth@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Deepak Dhamdhere <Deepak.Dhamdhere@Atheros.com>,
-	Sree Durbha <Sree.Durbha@Atheros.com>
-In-Reply-To: <4CADF634.1030203@atheros.com>
-References: <1286349552.6145.11.camel@aeonflux>
-	 <AANLkTimDvgFtoGLEjgWyYRrhQy6Num-rn_2WYO4Lf84b@mail.gmail.com>
-	 <1286380566.6145.42.camel@aeonflux> <20101006163816.GE7070@tux>
-	 <AANLkTik9w4_PdcEsbRHakLcxcD334_1Q8hGArxTXPCGF@mail.gmail.com>
-	 <20101006173949.GG7070@tux>
-	 <1286387660.3655.382.camel@jlt3.sipsolutions.net>
-	 <AANLkTikYRSQw-+Tcj4VS1qxi=OaeF9C5hjAMWVu+0M=v@mail.gmail.com>
-	 <AANLkTi=o4Mc72NrNoALBdS3YHeY7RMyyAJPsCy=uW3+F@mail.gmail.com>
-	 <1286389697.3655.401.camel@jlt3.sipsolutions.net>
-	 ,<20101006183340.GI7070@tux>
-	 <44EE5C37ADC36343B0625A05DD408C4850DAD2CA31@CHEXMB-01.global.atheros.com>
-	 <1286464555.20974.3.camel@jlt3.sipsolutions.net>
-	 <4CADF634.1030203@atheros.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Thu, 07 Oct 2010 19:57:53 +0200
-Message-ID: <1286474273.20974.11.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+	Wed, 6 Oct 2010 21:03:38 -0400
+Received: from vs3004.wh2.ocn.ne.jp (125.206.180.167)
+	by mail30s.wh2.ocn.ne.jp (RS ver 1.0.95vs) with SMTP id 4-0142713414
+	for <linux-wireless@vger.kernel.org>; Thu,  7 Oct 2010 10:03:36 +0900 (JST)
+From: Bruno Randolf <br1@einfach.org>
+To: Helmut Schaa <helmut.schaa@googlemail.com>
+Subject: Re: [PATCH 4/5] nl80211/mac80211: Add channel utilization to survey
+Date: Thu, 7 Oct 2010 10:03:37 +0900
+Cc: linville@tuxdriver.com, nbd@openwrt.org,
+	ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org,
+	adrian@freebsd.org, vasanth@atheros.com,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>
+References: <20101005095510.3083.46174.stgit@tt-desk> <20101005095526.3083.82322.stgit@tt-desk> <AANLkTimpPuwDFUidUprBkLoJrpr=5tnwCcNcnHmfT_Z7@mail.gmail.com>
+In-Reply-To: <AANLkTimpPuwDFUidUprBkLoJrpr=5tnwCcNcnHmfT_Z7@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Message-Id: <201010071003.37599.br1@einfach.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2010-10-07 at 22:02 +0530, Bala Shanmugam wrote:
-
-> AR3011 when plugged-in uses PID 3000 and control goes to DFU driver [ath3k].
-> ath3k downloads the firmware to the device changing its PID to 3002.
-> Now btusb gets the control and attaches the device to bluetooth core.
+On Wed October 6 2010 18:54:37 Helmut Schaa wrote:
+> On Tue, Oct 5, 2010 at 11:55 AM, Bruno Randolf <br1@einfach.org> wrote:
+> > This adds three new values to the survey results:
+> > 
+> >  * BUSY - percentage of time the channel was busy
+> >  * BUSY_TX - percentage of time spent transmitting frames
+> >  * BUSY_RX - percentage of time spent receiving frames
 > 
-> So blacklisting 3002 in btusb will create issues for AR3011 chipsets.
-> In firmware if we change the PID from 3002 to 3003 as you suggested and 
-> blacklist 3002 in btusb we can make both devices work.
+> Does BUSY include BUSY_RX and BUSY_TX already? At least on
+> rt2800 devices we only have access to BUSY which already includes
+> BUSY_RX and TX.
 
-Yeah, that still seems like the best approach, or maybe 3004 instead of
-3003 if 3003 is already in use by a different chip, or whatever.
+yes, BUSY includes TX and RX.
+ 
+> And what about BUSY on the secondary channel in case of 40Mhz?
 
-johannes
+i have no information about that. luis?
 
+bruno
