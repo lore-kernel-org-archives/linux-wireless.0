@@ -1,67 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gx0-f174.google.com ([209.85.161.174]:47068 "EHLO
-	mail-gx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758484Ab0JZWDe convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 26 Oct 2010 18:03:34 -0400
-Received: by gxk23 with SMTP id 23so3061804gxk.19
-        for <linux-wireless@vger.kernel.org>; Tue, 26 Oct 2010 15:03:34 -0700 (PDT)
+Received: from mx1.redhat.com ([209.132.183.28]:12275 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754492Ab0JGGNt (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 7 Oct 2010 02:13:49 -0400
+Date: Thu, 7 Oct 2010 08:15:16 +0200
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org, johannes@sipsolutions.net
+Subject: Re: [PATCH] mac80211: avoid uninitialized var warning in
+ ieee80211_scan_cancel
+Message-ID: <20101007061515.GA25616@redhat.com>
+References: <1286397743-21687-1-git-send-email-linville@tuxdriver.com>
 MIME-Version: 1.0
-In-Reply-To: <4CC74F35.60009@candelatech.com>
-References: <1288082441-4882-1-git-send-email-lrodriguez@atheros.com> <4CC74F35.60009@candelatech.com>
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Date: Tue, 26 Oct 2010 15:03:12 -0700
-Message-ID: <AANLkTimDQXP-L-C9wos_7i272LFwr0aXAJ2GBjJzDDfV@mail.gmail.com>
-Subject: Re: [RFT 0/3] ath9k: more PCU locking enhancements
-To: Ben Greear <greearb@candelatech.com>
-Cc: linux-wireless@vger.kernel.org, kyungwan.nam@atheros.com
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <1286397743-21687-1-git-send-email-linville@tuxdriver.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Oct 26, 2010 at 2:59 PM, Ben Greear <greearb@candelatech.com> wrote:
-> On 10/26/2010 01:40 AM, Luis R. Rodriguez wrote:
->>
->> Here is some more PCU locking enhancements I tested today
->> while trying to resolve the WARN() that happens when we
->> try to stop RX DMA and fail. While working on that I figured
->> I'd work on the TX DMA stuff too, here's a shot at it. I
->> can no longer get TX / RX DMA rants, please test and let
->> me know if you do. I only tried some basic testing like
->> rmmoding while scannign, which typicallly produced some
->> errors. Now I don't get squat.
->>
->> Ben if you can test wit your super proprietary application
->> that'd be great.
->>
->> This also simplifies locking considerably.
->>
->> This doesn't break suspend so I'm happy. It also depends
->> on the last RX DMA fixes I had posted earlier. If you'd
->> like to get an all-in-one patch of all my patches pending
->> you can wget this file and git am it:
->>
->>
->> http://www.kernel.org/pub/linux/kernel/people/mcgrof/patches/tmp/pending-mcgrof-2010-10-26-v1.patch
->> sha1sum: 874a3cc1a57f7e26ad191cd7b5045315f94c5823
->
-> I have done some initial testing on the combined patch on top of today's
-> wireless-testing tree.  I also have the memory-barrier patch applied to
-> ath9k, as that is still not upstream.  I have no idea if it has any affect
-> or not (I'm on x86..seems that wmb() stuff was mostly for other platforms?).
->
-> So far, it is showing zero problems, certainly no memory poison issues.
->
-> The wireless-testing tree has some lockdep warning related to a mouse driver
-> that disables lockdep early, so it's possible there are lockdep issues
-> waiting.
->
-> I will let this test run for a while, but it already looks more stable
-> than before, so:
->
-> Tested-by:  Ben Greear <greearb@candelatech.com>
+On Wed, Oct 06, 2010 at 04:42:23PM -0400, John W. Linville wrote:
+> net/mac80211/scan.c: In function ‘ieee80211_scan_cancel’:
+> net/mac80211/scan.c:794: warning: ‘finish’ may be used uninitialized in this function
+> 
+> Signed-off-by: John W. Linville <linville@tuxdriver.com>
 
-Awesome! Thanks for testing. So how about the TX dma rants, do you
-still get those?
+Hi John
 
-  Luis
+What compiler are you using? I have no warning with gcc 4.4.4 from RHEL6.
+That's correct, as "finish" variable can not be uninitialized, because is used
+only when abortscan == true;
+
+> +	bool finish = false;
+>  
+>  	/*
+>  	 * We are only canceling software scan, or deferred scan that was not
+> @@ -818,7 +819,7 @@ void ieee80211_scan_cancel(struct ieee80211_local *local)
+>  	if (abortscan) {
+>  		/* The scan is canceled, but stop work from being pending */
+>  		cancel_delayed_work_sync(&local->scan_work);
+> -		if (finish)
+> -			__ieee80211_scan_completed_finish(&local->hw, false);
+>  	}
+> +	if (finish)
+> +		__ieee80211_scan_completed_finish(&local->hw, false);
+>  }
+
+I have nothing against the patch, but this seems to be compiler problem,
+not our code.
+
+Stanislaw
