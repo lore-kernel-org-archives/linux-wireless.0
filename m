@@ -1,73 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from web56803.mail.re3.yahoo.com ([66.196.97.77]:47576 "HELO
-	web56803.mail.re3.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1757014Ab0JUGhB (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:47754 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751181Ab0JGSja (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 21 Oct 2010 02:37:01 -0400
-Message-ID: <799271.37886.qm@web56803.mail.re3.yahoo.com>
-Date: Wed, 20 Oct 2010 23:36:59 -0700 (PDT)
-From: Walter Goldens <goldenstranger@yahoo.com>
-Subject: [PATCH 2/4 v2] compat-wireless: enable bluetooth via driver-select
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Cc: linux-wireless@vger.kernel.org, linux-bluetooth@vger.kernel.org
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+	Thu, 7 Oct 2010 14:39:30 -0400
+Subject: Re: [PATCH v3] compat: backport netlink changes used in the
+ nl80211 cleanup
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Felix Fietkau <nbd@openwrt.org>
+Cc: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <4CADC341.40305@openwrt.org>
+References: <4CADB60C.6040105@openwrt.org> <4CADC142.7010709@openwrt.org>
+	 <4CADC341.40305@openwrt.org>
+Content-Type: text/plain; charset="UTF-8"
+Date: Thu, 07 Oct 2010 20:39:28 +0200
+Message-ID: <1286476768.20974.29.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-reshuffle driver-select, enable "bt" group for all bluetooth modules with driver-select
+On Thu, 2010-10-07 at 14:55 +0200, Felix Fietkau wrote:
 
-Signed-off-by: Walter Goldens <goldenstranger@yahoo.com>
----
+> +#define genl_info_net(_info) genl_info_net((_info)->info)
 
---- a/scripts/driver-select
-+++ b/scripts/driver-select
-@@ -53,11 +53,6 @@ function usage {
- 		echo -e "\t${PURPLE}${i}${NORMAL}"
- 	done
- 
--	echo -e "\nSupported Ethernet drivers: < ${PURPLE}atl1 atl2 atl1e atl1c${NORMAL} >"
--	for i in $SUPPORTED_ETH_DRIVERS; do
--		echo -e "\t${PURPLE}${i}${NORMAL}"
--	done
--
- 	# These should match the switch below.
- 	echo -e "\nSupported group drivers:"
- 	echo -e "\t${CYAN}atheros${NORMAL} < ${PURPLE} ath5k ath9k carl9170 zd1211rw ${NORMAL}>"
-@@ -67,7 +62,9 @@ function usage {
- 	echo -e "\t${CYAN}rtl818x${NORMAL} < ${PURPLE} rtl8180 rtl8187 ${NORMAL}>"
- 	echo -e "\t${CYAN}wl12xx${NORMAL} < ${PURPLE} wl1251 wl1271 (SPI and SDIO)${NORMAL}>"
- 	
-+	echo -e "\nSupported group drivers: Bluetooth & Ethernet:"
- 	echo -e "\t${BLUE}atlxx${NORMAL} < ${PURPLE} atl1 atl2 atl1e atl1c ${NORMAL}>"
-+	echo -e "\t${BLUE}bt${NORMAL} < ${PURPLE} Linux bluetooth drivers ${NORMAL}>"
- 
- 	echo -e "Restoring compat-wireless:"
- 	echo -e "\t${GREEN}restore${NORMAL}: you can use this option to restore compat-wireless to the original state"
-@@ -390,7 +387,7 @@ case $1 in
- 		disable_staging
- 		disable_var_01
- 		;;
--# Ethernet drivers
-+# Ethernet and Bluetooth drivers
- 	atl1)
- 		enable_only_ethernet
- 		echo -e "obj-\$(CONFIG_ATL1) += atlx/" > $DRIVERS_NET
-@@ -412,6 +409,13 @@ case $1 in
- 		enable_only_ethernet
- 		disable_b44
- 		;;
-+	bt)
-+		select_driver 		CONFIG_BT
-+		disable_var
-+		disable_ethernet
-+		disable_staging
-+		disable_80211
-+		;;
- 	*)
- 		echo "Unsupported driver"
- 		exit
+Need this instead:
 
+#if LINUX_VERSION_CODE > KERNEL_VERSION(2,6,32)
+/* compat for even older kernels already defines this to &init_net */
+#define genl_info_net(_info) genl_info_net((_info)->info)
+#endif
 
+johannes
 
-      
