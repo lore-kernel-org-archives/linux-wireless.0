@@ -1,68 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:33446 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932215Ab0JOSBh convert rfc822-to-8bit (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:59659 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751226Ab0JGSPJ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 15 Oct 2010 14:01:37 -0400
-From: "Guy, Wey-Yi W" <wey-yi.w.guy@intel.com>
-To: Stanislaw Gruszka <sgruszka@redhat.com>
-CC: "linville@tuxdriver.com" <linville@tuxdriver.com>,
+	Thu, 7 Oct 2010 14:15:09 -0400
+Date: Thu, 7 Oct 2010 14:04:21 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: "Guy, Wey-Yi" <wey-yi.w.guy@intel.com>,
 	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
 	"ipw3945-devel@lists.sourceforge.net"
 	<ipw3945-devel@lists.sourceforge.net>
-Date: Fri, 15 Oct 2010 11:01:36 -0700
-Subject: RE: [PATCH 1/9] iwlagn: need longer tx queue stuck timer for coex
- devices
-Message-ID: <E9954878DD1FB34FAE5187FB88C58A35012EE46C3F@orsmsx506.amr.corp.intel.com>
-References: <1287079370-20587-1-git-send-email-wey-yi.w.guy@intel.com>
- <1287079370-20587-2-git-send-email-wey-yi.w.guy@intel.com>
- <20101015164447.GB4286@redhat.com>
-In-Reply-To: <20101015164447.GB4286@redhat.com>
-Content-Type: text/plain; charset="us-ascii"
+Subject: Re: [PATCH 1/6] iwlwifi: schedule to deprecate software scan support
+Message-ID: <20101007180421.GC20950@tuxdriver.com>
+References: <1286378593-7509-1-git-send-email-wey-yi.w.guy@intel.com>
+ <1286378593-7509-2-git-send-email-wey-yi.w.guy@intel.com>
+ <20101006173609.GH2472@tuxdriver.com>
+ <1286387500.12594.24.camel@wwguy-ubuntu>
+ <20101006190343.GI2472@tuxdriver.com>
+ <1286440790.3657.28.camel@jlt3.sipsolutions.net>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1286440790.3657.28.camel@jlt3.sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Stanislaw,
+On Thu, Oct 07, 2010 at 10:39:50AM +0200, Johannes Berg wrote:
+> On Wed, 2010-10-06 at 15:03 -0400, John W. Linville wrote:
+> 
+> > > The current HW scan implementation was improve a lot and sw scan will
+> > > cause problem, especially once we introduce P2P.
+> > 
+> > What support issues are caused by supporting software scanning?
+> > 
+> > Whatever issues are caused by scanning with P2P, doesn't mac80211
+> > have to handle them anyway?
+> 
+> Technically, yes, but there are some things it doesn't handle today, and
+> there are some things in mac80211's scan implementation that
+> unfortunately make our firmware somewhat unhappy. Also, when we have two
+> virtual interfaces (for p2p) the firmware can get completely confused by
+> a software scan, especially when we were operating as a p2p-GO.
+> 
+> But isn't this the wrong way around -- shouldn't you be arguing why it
+> should be kept and dig out bug reports about the HW scan implementation
+> that weren't addressed? ;-)
 
------Original Message-----
-From: Stanislaw Gruszka [mailto:sgruszka@redhat.com]
-Sent: Friday, October 15, 2010 9:45 AM
-To: Guy, Wey-Yi W
-Cc: linville@tuxdriver.com; linux-wireless@vger.kernel.org; ipw3945-devel@lists.sourceforge.net
-Subject: Re: [PATCH 1/9] iwlagn: need longer tx queue stuck timer for coex devices
+Hmmm...not so sure about that.  Alan Cox has been quoted as saying
+"a maintainer's job is to say no".
 
-Wey,
+I suppose we can argue about this again when you actually try to
+remove the option...
 
-On Thu, Oct 14, 2010 at 11:02:42AM -0700, Wey-Yi Guy wrote:
-> For BT/WiFi combo devices, need longer tx stuck queue
-> timer, so those devices won't reload firmware too often.
-
-Seeing how many tweaking queue hung monitoring we need, I started
-to think that the watchdog design is not so good. Currently we compare
-q->read_ptr with q->last_read_ptr, and if they match 3 times in a row
-during 200ms, we assume firmware hung. But maybe 200ms of no read_ptr
-activity is too small time for device. Moreover we have unlikely but
-possible situation when device is fully functional, but read_ptr will
-wrap by accident to q->last_read_ptr on every check.
-
-I think, better solution would be something like in rt2x00 or in
-net/sched/sch_generic.c (however rt2x00 is easier to understand). It is
-based on time stamp. When we get tx complete notification from hardware
-(and incise read_ptr) mark the time stamp. In watchdog, which tick
-periodically, check if queue is not empty and if current time is
-bigger than time_stamp + time_out, if it is - firmware hung. More
-smaller watchog tick give more precise hung detect (with disadvantage
-of more cpu usage).
-
-
-Me too not really like the current "monitor" approach, some thought about the design you propose.
-
-1. "time_out" is something need to be define and has the similar problem like what we have today since different devices has different behavior. For example, in WiFi/BT combo case, the queue might not move for a while if BT traffic load is high
-2. I don't really see much of "cpu usage" impact if we have a reasonable watchdog timer. But it is all relative.
-
-By saying that, I think using timestamp might give more cleaner design, but still has the similar issues.
-
-Thanks
-Wey
-
+John
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
