@@ -1,50 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:56596 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759451Ab0J1Xgz (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:47584 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751542Ab0JGKza (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 28 Oct 2010 19:36:55 -0400
-Message-ID: <4CCA0908.6000105@candelatech.com>
-Date: Thu, 28 Oct 2010 16:36:40 -0700
-From: Ben Greear <greearb@candelatech.com>
-MIME-Version: 1.0
-To: Felix Fietkau <nbd@openwrt.org>
-CC: =?ISO-8859-1?Q?Bj=F6rn_Smedman?= <bjorn.smedman@venatech.se>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	"ath9k-devel@venema.h4ckr.net" <ath9k-devel@venema.h4ckr.net>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: [ath9k-devel] [RFC] ath9k: Insert wmb before linking dma descriptors
-References: <alpine.DEB.2.00.1010042059130.29449@vtdt3>	<20101005131744.GB4074@tuxdriver.com>	<20101005195039.GD11831@tux> <AANLkTikxayNdakE-MrCQWS10nZ3ZQk1pnEcHC+sMck1p@mail.gmail.com> <4CB0890D.3050208@openwrt.org>
-In-Reply-To: <4CB0890D.3050208@openwrt.org>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+	Thu, 7 Oct 2010 06:55:30 -0400
+Subject: [PATCH] mac80211: fix sw scan locking
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Ben Greear <greearb@candelatech.com>,
+	Stanislaw Gruszka <sgruszka@redhat.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Thu, 07 Oct 2010 12:55:24 +0200
+Message-ID: <1286448924.3657.35.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 10/09/2010 08:23 AM, Felix Fietkau wrote:
-> On 2010-10-09 5:19 PM, Björn Smedman wrote:
->> On Tue, Oct 5, 2010 at 9:50 PM, Luis R. Rodriguez
->> <lrodriguez@atheros.com>  wrote:
->>> Felix is more familiar with this area so I'll let him chime with
->>> his ACK/NACK.
->>>
->>>   Luis
->>
->> So Felix, what do you think? I realize it may not be a common problem
->> on any currently popular platform, but don't you agree it is in
->> principle unsafe to write to the ds_link field of dma descriptors
->> without a guarantee that those writes will be performed in the
->> intended order?
-> Haven't had time to review this in detail yet. I'll take another look at
-> it later...
+From: Johannes Berg <johannes.berg@intel.com>
 
-Had a chance to look at it?  I've been carrying this in my
-tree and it hasn't caused any obvious problems, for what that's
-worth...
+The recent scan overhaul broke locking
+because now we can jump to code that
+attempts to unlock, while we don't have
+the mutex held. Fix this by holding the
+mutex around all the relevant code.
 
-Ben
+Reported-by: Ben Greear <greearb@candelatech.com>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ net/mac80211/scan.c |    3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
 
--- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+--- wireless-testing.orig/net/mac80211/scan.c	2010-10-07 10:50:51.000000000 +0200
++++ wireless-testing/net/mac80211/scan.c	2010-10-07 10:51:10.000000000 +0200
+@@ -682,8 +682,6 @@ void ieee80211_scan_work(struct work_str
+ 		goto out_complete;
+ 	}
+ 
+-	mutex_unlock(&local->mtx);
+-
+ 	/*
+ 	 * as long as no delay is required advance immediately
+ 	 * without scheduling a new work
+@@ -714,6 +712,7 @@ void ieee80211_scan_work(struct work_str
+ 	} while (next_delay == 0);
+ 
+ 	ieee80211_queue_delayed_work(&local->hw, &local->scan_work, next_delay);
++	mutex_unlock(&local->mtx);
+ 	return;
+ 
+ out_complete:
+
 
