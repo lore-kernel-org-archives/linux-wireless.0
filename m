@@ -1,56 +1,102 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iw0-f174.google.com ([209.85.214.174]:54325 "EHLO
-	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752271Ab0JDXuZ (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 4 Oct 2010 19:50:25 -0400
-Received: by iwn5 with SMTP id 5so7535952iwn.19
-        for <linux-wireless@vger.kernel.org>; Mon, 04 Oct 2010 16:50:24 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <20101004224754.GA16357@jm.kir.nu>
-References: <1285965233-11097-1-git-send-email-lrodriguez@atheros.com>
- <1286198845.3620.37.camel@jlt3.sipsolutions.net> <20101004164149.GE2105@tux>
- <1286210566.3620.42.camel@jlt3.sipsolutions.net> <20101004172504.GL2105@tux>
- <1286213426.3620.43.camel@jlt3.sipsolutions.net> <20101004173507.GN2105@tux>
- <20101004203900.GA14524@jm.kir.nu> <AANLkTinwwvsLzovff4DKTktWuD6UdbRiEAs3g6jj-94Q@mail.gmail.com>
- <20101004224754.GA16357@jm.kir.nu>
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Date: Mon, 4 Oct 2010 16:50:02 -0700
-Message-ID: <AANLkTi=8pxhqN9p4QP3T_wmUmsHJfqOBRYDi9w_0BUkw@mail.gmail.com>
-Subject: Re: [PATCH v2 0/3] mac80211: fix rate_control_send_low warnings for delbas
-To: Jouni Malinen <j@w1.fi>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	Luis Rodriguez <Luis.Rodriguez@atheros.com>,
-	"linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"stable@kernel.org" <stable@kernel.org>,
-	Paul Stewart <pstew@google.com>,
-	Amod Bodas <Amod.Bodas@atheros.com>,
-	Vasanth Thiagarajan <Vasanth.Thiagarajan@atheros.com>
-Content-Type: text/plain; charset=UTF-8
+Received: from mga01.intel.com ([192.55.52.88]:59924 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753518Ab0JGXIt (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 7 Oct 2010 19:08:49 -0400
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	Johannes Berg <johannes.berg@intel.com>,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Subject: [PATCH 09/22] iwlwifi: remove spurious exports
+Date: Thu,  7 Oct 2010 16:07:48 -0700
+Message-Id: <1286492881-15743-10-git-send-email-wey-yi.w.guy@intel.com>
+In-Reply-To: <1286492881-15743-1-git-send-email-wey-yi.w.guy@intel.com>
+References: <1286492881-15743-1-git-send-email-wey-yi.w.guy@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Oct 4, 2010 at 3:47 PM, Jouni Malinen <j@w1.fi> wrote:
-> On Mon, Oct 04, 2010 at 02:07:22PM -0700, Luis R. Rodriguez wrote:
->> Jouni, just to be clear so you are fine with dropping explicitly the
->> tear down of the BA agreement to the old AP?
->
-> If you are talking about not transmitting a frame, then yes, but
-> obviously, we would still need to locally tear down whatever we have set
-> up..
+From: Johannes Berg <johannes.berg@intel.com>
 
-Sure.
+A number of exports, especially related to
+thermal throttling, are unnecessary because
+the code lives in the same module that it
+is used in, so remove them.
 
-> I think it would be a good default policy to not send any frames to the
-> old AP after we have decided to roam to a new one. If this does not work
-> well in some networks, I would like to here more detailed description on
-> what exactly is happening.
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-agn-tt.c |    5 -----
+ drivers/net/wireless/iwlwifi/iwl-core.c   |    1 -
+ drivers/net/wireless/iwlwifi/iwl-scan.c   |    1 -
+ 3 files changed, 0 insertions(+), 7 deletions(-)
 
-No that's fine, I just was curious how the bridge stuff you described
-was handled in enterprise networks, you would know better :)
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-tt.c b/drivers/net/wireless/iwlwifi/iwl-agn-tt.c
+index 0c6c4d9..e3a8216 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn-tt.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn-tt.c
+@@ -571,7 +571,6 @@ void iwl_tt_enter_ct_kill(struct iwl_priv *priv)
+ 	IWL_DEBUG_POWER(priv, "Queueing critical temperature enter.\n");
+ 	queue_work(priv->workqueue, &priv->ct_enter);
+ }
+-EXPORT_SYMBOL(iwl_tt_enter_ct_kill);
+ 
+ void iwl_tt_exit_ct_kill(struct iwl_priv *priv)
+ {
+@@ -581,7 +580,6 @@ void iwl_tt_exit_ct_kill(struct iwl_priv *priv)
+ 	IWL_DEBUG_POWER(priv, "Queueing critical temperature exit.\n");
+ 	queue_work(priv->workqueue, &priv->ct_exit);
+ }
+-EXPORT_SYMBOL(iwl_tt_exit_ct_kill);
+ 
+ static void iwl_bg_tt_work(struct work_struct *work)
+ {
+@@ -608,7 +606,6 @@ void iwl_tt_handler(struct iwl_priv *priv)
+ 	IWL_DEBUG_POWER(priv, "Queueing thermal throttling work.\n");
+ 	queue_work(priv->workqueue, &priv->tt_work);
+ }
+-EXPORT_SYMBOL(iwl_tt_handler);
+ 
+ /* Thermal throttling initialization
+  * For advance thermal throttling:
+@@ -678,7 +675,6 @@ void iwl_tt_initialize(struct iwl_priv *priv)
+ 		priv->thermal_throttle.advanced_tt = false;
+ 	}
+ }
+-EXPORT_SYMBOL(iwl_tt_initialize);
+ 
+ /* cleanup thermal throttling management related memory and timer */
+ void iwl_tt_exit(struct iwl_priv *priv)
+@@ -701,4 +697,3 @@ void iwl_tt_exit(struct iwl_priv *priv)
+ 		tt->transaction = NULL;
+ 	}
+ }
+-EXPORT_SYMBOL(iwl_tt_exit);
+diff --git a/drivers/net/wireless/iwlwifi/iwl-core.c b/drivers/net/wireless/iwlwifi/iwl-core.c
+index 71f245f..eefcb2d 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-core.c
++++ b/drivers/net/wireless/iwlwifi/iwl-core.c
+@@ -2653,7 +2653,6 @@ int iwl_force_reset(struct iwl_priv *priv, int mode, bool external)
+ 	}
+ 	return 0;
+ }
+-EXPORT_SYMBOL(iwl_force_reset);
+ 
+ /**
+  * iwl_bg_monitor_recover - Timer callback to check for stuck queue and recover
+diff --git a/drivers/net/wireless/iwlwifi/iwl-scan.c b/drivers/net/wireless/iwlwifi/iwl-scan.c
+index a7e8c7f..67da312 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-scan.c
++++ b/drivers/net/wireless/iwlwifi/iwl-scan.c
+@@ -121,7 +121,6 @@ void iwl_force_scan_end(struct iwl_priv *priv)
+ 	clear_bit(STATUS_SCAN_ABORTING, &priv->status);
+ 	iwl_complete_scan(priv, true);
+ }
+-EXPORT_SYMBOL(iwl_force_scan_end);
+ 
+ static void iwl_do_scan_abort(struct iwl_priv *priv)
+ {
+-- 
+1.7.0.4
 
-OK -- so lets go with Johanne's patch instead of patch 2 and 3 as he
-suggested :)
-
-  Luis
