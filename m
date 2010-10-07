@@ -1,54 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:34493 "EHLO
+Received: from he.sipsolutions.net ([78.46.109.217]:57018 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753483Ab0JKKA6 (ORCPT
+	with ESMTP id S1751197Ab0JGTRU (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 11 Oct 2010 06:00:58 -0400
-Subject: Re: [PATCH 2/4] wl1271: Fix TX starvation
+	Thu, 7 Oct 2010 15:17:20 -0400
+Subject: Re: memory clobber in rx path, maybe related to ath9k.
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Juuso Oikarinen <juuso.oikarinen@nokia.com>
-Cc: ext Ido Yariv <ido@wizery.com>,
-	"Coelho Luciano (Nokia-MS/Helsinki)" <Luciano.Coelho@nokia.com>,
+To: Ben Greear <greearb@candelatech.com>
+Cc: "Luis R. Rodriguez" <mcgrof@gmail.com>,
 	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <1286791018.11177.484.camel@wimaxnb.nmp.nokia.com>
-References: <1286786936-20544-1-git-send-email-ido@wizery.com>
-	 <1286786936-20544-3-git-send-email-ido@wizery.com>
-	 <1286791018.11177.484.camel@wimaxnb.nmp.nokia.com>
+In-Reply-To: <4CAE1C02.7090405@candelatech.com>
+References: <4CAB59B2.5050106@candelatech.com>
+	 <AANLkTikhGCTS8kJgpDzjudyBTk-rkyXY33UO7kB0+Cc-@mail.gmail.com>
+	 <4CAB5F3D.9060201@candelatech.com>
+	 <AANLkTimV3GrwU+9PPtirT4sCzveLY2egr3PRQhfDBET1@mail.gmail.com>
+	 <4CAB627F.8020804@candelatech.com>
+	 <AANLkTi=sT5QJe4V8gFGjF-nzx0uJAMLG_XG2715qrEEd@mail.gmail.com>
+	 <4CAB64AD.4080105@candelatech.com>
+	 <AANLkTi=3dHbB5tmQDp3Ba54-DqQydVCkNdFo1vKbfaGY@mail.gmail.com>
+	 <4CAB6B08.4050801@candelatech.com> <4CAE0474.4090605@candelatech.com>
+	 <1286475250.20974.22.camel@jlt3.sipsolutions.net>
+	 <AANLkTinbRSnPVgbBxvVpMdnP+K--bye=Q-miHf4X44kz@mail.gmail.com>
+	 <4CAE13F6.2010003@candelatech.com>
+	 <AANLkTimEZ5GY7WFz-F4YyC+6MEwNn2Dki4tonp645XrS@mail.gmail.com>
+	 <4CAE1553.1070900@candelatech.com>  <4CAE1C02.7090405@candelatech.com>
 Content-Type: text/plain; charset="UTF-8"
-Date: Mon, 11 Oct 2010 12:00:56 +0200
-Message-ID: <1286791256.3634.11.camel@jlt3.sipsolutions.net>
+Date: Thu, 07 Oct 2010 21:17:17 +0200
+Message-ID: <1286479037.20974.30.camel@jlt3.sipsolutions.net>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2010-10-11 at 12:56 +0300, Juuso Oikarinen wrote:
-
-> > @@ -537,6 +533,17 @@ static void wl1271_irq_work(struct work_struct *work)
-> >  			    (wl->tx_results_count & 0xff))
-> >  				wl1271_tx_complete(wl);
-> >  
-> > +			/* Check if any tx blocks were freed */
-> > +			if ((wl->tx_blocks_available > prev_tx_blocks) &&
-> > +					!skb_queue_empty(&wl->tx_queue)) {
-> > +				/*
-> > +				 * In order to avoid starvation of the TX path,
-> > +				 * call the work function directly.
-> > +				 */
-> > +				cancel_work_sync(&wl->tx_work);
+On Thu, 2010-10-07 at 12:14 -0700, Ben Greear wrote:
+> > I'll start a compile of vanilla wireless-testing + scan fix as well.
 > 
-> Hmm, isn't this causing a theoretical potential for a dead-lock? The
-> tx_work could be waiting in mutex-lock already when cancel_work_sync is
-> called, in which case cancel_work_sync would lock forever.
+> Well, vanilla + scan patch locked pretty hard when I started the script.
 > 
-> IIRC the irq_work and tx_work currently run in the same queue, so this
-> may work with the current driver. Smells like a hazard anyway, and
-> changing the workqueues for each work could easily lead to dead locks
-> here. So at minimum I'd like to see it documented in the comment why
-> this cannot cause a deadlock.
+> I was able to get sysrq to dump the locks, but it didn't seem to complete
+> that and couldn't even dump more sysrq info after that.
+> 
+> Might be something entirely different, of course, and no idea if
+> this lock dump shows any real problem.
 
-It should still cause a lockdep warning which you may want to avoid ...
-and unless I'm looking at the wrong driver, this is in an irqs disabled
-section which is wrong as well.
+Don't see any issues in this part of the dump -- heavy contention on the
+RTNL but that was expected with your usage.
 
 johannes
 
