@@ -1,51 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([147.243.1.47]:58358 "EHLO mgw-sa01.nokia.com"
+Received: from mail.atheros.com ([12.19.149.2]:50511 "EHLO mail.atheros.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756669Ab0JAOmI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 1 Oct 2010 10:42:08 -0400
-Subject: Re: [PATCH v2] linux-firmware: wl12xx-Add Firmware and NVS files
- to support Texas Instruments WLAN driver
-From: Luciano Coelho <luciano.coelho@nokia.com>
-To: ext Shahar Levi <shahar_levi@ti.com>
-Cc: David Woodhouse <dwmw2@infradead.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <1285684428.4728.1.camel@powerslave>
-References: <1285682308-20189-1-git-send-email-shahar_levi@ti.com>
-	 <1285684428.4728.1.camel@powerslave>
-Content-Type: text/plain; charset="UTF-8"
-Date: Fri, 01 Oct 2010 17:41:13 +0300
-Message-ID: <1285944073.9229.6.camel@chilepepper>
-Mime-Version: 1.0
+	id S1750952Ab0JGQc7 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 7 Oct 2010 12:32:59 -0400
+Message-ID: <4CADF634.1030203@atheros.com>
+Date: Thu, 7 Oct 2010 22:02:52 +0530
+From: Bala Shanmugam <sbalashanmugam@atheros.com>
+MIME-Version: 1.0
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: Shanmugamkamatchi Balashanmugam
+	<Shanmugamkamatchi.Balashanmugam@Atheros.com>,
+	Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
+	Marcel Holtmann <holtmann@linux.intel.com>,
+	linux-bluetooth <linux-bluetooth@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Deepak Dhamdhere <Deepak.Dhamdhere@Atheros.com>,
+	Sree Durbha <Sree.Durbha@Atheros.com>
+Subject: Re: RFC: btusb firmware load help
+References: <1286349552.6145.11.camel@aeonflux>	 <AANLkTimDvgFtoGLEjgWyYRrhQy6Num-rn_2WYO4Lf84b@mail.gmail.com>	 <1286380566.6145.42.camel@aeonflux> <20101006163816.GE7070@tux>	 <AANLkTik9w4_PdcEsbRHakLcxcD334_1Q8hGArxTXPCGF@mail.gmail.com>	 <20101006173949.GG7070@tux>	 <1286387660.3655.382.camel@jlt3.sipsolutions.net>	 <AANLkTikYRSQw-+Tcj4VS1qxi=OaeF9C5hjAMWVu+0M=v@mail.gmail.com>	 <AANLkTi=o4Mc72NrNoALBdS3YHeY7RMyyAJPsCy=uW3+F@mail.gmail.com>	 <1286389697.3655.401.camel@jlt3.sipsolutions.net>	 ,<20101006183340.GI7070@tux>	 <44EE5C37ADC36343B0625A05DD408C4850DAD2CA31@CHEXMB-01.global.atheros.com> <1286464555.20974.3.camel@jlt3.sipsolutions.net>
+In-Reply-To: <1286464555.20974.3.camel@jlt3.sipsolutions.net>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2010-09-28 at 16:33 +0200, Luciano Coelho wrote:
-> On Tue, 2010-09-28 at 15:58 +0200, ext Shahar Levi wrote:
-> > FW & NVS Support wl127x wireless LAN driver (wl1271 & wl1273).
-> > In order to use those files copy them to target FS at /lib/firmware/.
-> > 
-> > Changes from v1:
-> > - Update the wl1271-nvs.bin that support a band to the correct size (912B)
-> 
-> It doesn't matter much, in my opinion, but this "Changes from v1"
-> shouldn't be in the actual commit log.  If you put this kind of comment
-> after the --- (below marked with <HERE>), it is informative for whoever
-> is reading your patch email, but it won't go into git history (where
-> this information is a useless, because v1 is not there).
-> 
-> 
-> > Signed-off-by: Shahar Levi <shahar_levi@ti.com>
-> > ---
-> 
-> I'll test this patch soon and see if the NVS works now.
+  On 10/7/2010 8:45 PM, Johannes Berg wrote:
+>> Thanks Johannes.  This would be better option to change PID in firmware
+>> as blacklisting 3002 might create problems for 3011 chipsets.
+> What would be the problem with 3011? Does it also use the 3002 ID, but
+> not use firmware upload???
+>
+> johannes
+>
+AR3011 when plugged-in uses PID 3000 and control goes to DFU driver [ath3k].
+ath3k downloads the firmware to the device changing its PID to 3002.
+Now btusb gets the control and attaches the device to bluetooth core.
 
-I have tried this firmware and this nvs on my Beagle board and they seem
-to be working fine.
+So blacklisting 3002 in btusb will create issues for AR3011 chipsets.
+In firmware if we change the PID from 3002 to 3003 as you suggested and 
+blacklist 3002 in btusb
+we can make both devices work.
 
-Tested-by: Luciano Coelho <luciano.coelho@nokia.com>
-
-
--- 
-Cheers,
-Luca.
-
+Regards,
+Bala.
