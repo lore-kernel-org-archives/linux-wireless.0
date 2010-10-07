@@ -1,70 +1,109 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from phoenix3.szarvasnet.hu ([87.101.127.16]:37019 "EHLO
-	phoenix3.szarvasnet.hu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757847Ab0JEJzN (ORCPT
+Received: from mail.candelatech.com ([208.74.158.172]:53020 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750992Ab0JGXjZ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 5 Oct 2010 05:55:13 -0400
-From: Gabor Juhos <juhosg@openwrt.org>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, ath9k-devel@venema.h4ckr.net,
-	Gabor Juhos <juhosg@openwrt.org>,
-	Shu Hwa Shen <shensh@zcomm.com.cn>
-Subject: [PATCH] ath9k: get correct tx gain type in ath9k_hw_4k_get_eeprom
-Date: Tue,  5 Oct 2010 11:32:17 +0200
-Message-Id: <1286271137-10861-1-git-send-email-juhosg@openwrt.org>
+	Thu, 7 Oct 2010 19:39:25 -0400
+From: greearb@candelatech.com
+To: linux-wireless@vger.kernel.org
+Cc: Ben Greear <greearb@candelatech.com>
+Subject: [PATCH v2] wireless:  Set some stats used by /proc/net/wireless (wext)
+Date: Thu,  7 Oct 2010 16:39:20 -0700
+Message-Id: <1286494760-1399-1-git-send-email-greearb@candelatech.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The base_eep_header_4k structure contains information that the
-device supports high power tx gain table or not. However the
-ath9k_hw_4k_get_eeprom function does not return that value when
-it is called with EEP_TXGAIN_TYPE. This leads to that the tx gain
-initialization will use the init values from the original tx gain
-table even if the device inidicates that the high power table
-should be used.
+From: Ben Greear <greearb@candelatech.com>
 
-Changes-licensed-under: ISC
-Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
-Signed-off-by: Shu Hwa Shen <shensh@zcomm.com.cn>
+Some stats for /proc/net/wireless (and wext in general) are not
+being set.  This patch addresses a few of those with values easily
+obtained from mac80211 core.
+
+Signed-off-by: Ben Greear <greearb@candelatech.com>
 ---
- drivers/net/wireless/ath/ath9k/eeprom_4k.c |   10 +++++++++-
- 1 files changed, 9 insertions(+), 1 deletions(-)
+v1 -> v2:  Add and use filled flags.
 
-diff --git a/drivers/net/wireless/ath/ath9k/eeprom_4k.c b/drivers/net/wireless/ath/ath9k/eeprom_4k.c
-index d6eed1f..872e75b 100644
---- a/drivers/net/wireless/ath/ath9k/eeprom_4k.c
-+++ b/drivers/net/wireless/ath/ath9k/eeprom_4k.c
-@@ -179,6 +179,9 @@ static u32 ath9k_hw_4k_get_eeprom(struct ath_hw *ah,
- 	struct ar5416_eeprom_4k *eep = &ah->eeprom.map4k;
- 	struct modal_eep_4k_header *pModal = &eep->modalHeader;
- 	struct base_eep_header_4k *pBase = &eep->baseEepHeader;
-+	u16 ver_minor;
-+
-+	ver_minor = pBase->version & AR5416_EEP_VER_MINOR_MASK;
+:100644 100644 183739c... 338248d... M	include/net/cfg80211.h
+:100644 100644 ecf9b71... 25fb351... M	net/mac80211/cfg.c
+:100644 100644 6002265... 12222ee... M	net/wireless/wext-compat.c
+ include/net/cfg80211.h     |    4 ++++
+ net/mac80211/cfg.c         |    4 +++-
+ net/wireless/wext-compat.c |    4 ++++
+ 3 files changed, 11 insertions(+), 1 deletions(-)
+
+diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+index 183739c..338248d 100644
+--- a/include/net/cfg80211.h
++++ b/include/net/cfg80211.h
+@@ -403,6 +403,7 @@ struct station_parameters {
+  * @STATION_INFO_TX_PACKETS: @tx_packets filled
+  * @STATION_INFO_TX_RETRIES: @tx_retries filled
+  * @STATION_INFO_TX_FAILED: @tx_failed filled
++ * @STATION_INFO_RX_DROP_MISC: @rx_dropped_misc filled
+  */
+ enum station_info_flags {
+ 	STATION_INFO_INACTIVE_TIME	= 1<<0,
+@@ -417,6 +418,7 @@ enum station_info_flags {
+ 	STATION_INFO_TX_PACKETS		= 1<<9,
+ 	STATION_INFO_TX_RETRIES		= 1<<10,
+ 	STATION_INFO_TX_FAILED		= 1<<11,
++	STATION_INFO_RX_DROP_MISC	= 1<<12,
+ };
  
- 	switch (param) {
- 	case EEP_NFTHRESH_2:
-@@ -204,7 +207,7 @@ static u32 ath9k_hw_4k_get_eeprom(struct ath_hw *ah,
- 	case EEP_DB_2:
- 		return pModal->db1_1;
- 	case EEP_MINOR_REV:
--		return pBase->version & AR5416_EEP_VER_MINOR_MASK;
-+		return ver_minor;
- 	case EEP_TX_MASK:
- 		return pBase->txMask;
- 	case EEP_RX_MASK:
-@@ -217,6 +220,11 @@ static u32 ath9k_hw_4k_get_eeprom(struct ath_hw *ah,
- 		return pModal->version;
- 	case EEP_ANT_DIV_CTL1:
- 		return pModal->antdiv_ctl1;
-+	case EEP_TXGAIN_TYPE:
-+		if (ver_minor >= AR5416_EEP_MINOR_VER_19)
-+			return pBase->txGainType;
-+		else
-+			return AR5416_EEP_TXGAIN_ORIGINAL;
- 	default:
- 		return 0;
+ /**
+@@ -468,6 +470,7 @@ struct rate_info {
+  * @tx_packets: packets transmitted to this station
+  * @tx_retries: cumulative retry counts
+  * @tx_failed: number of failed transmissions (retries exceeded, no ACK)
++ * @rx_dropped_misc:  Dropped for un-specified reason.
+  * @generation: generation number for nl80211 dumps.
+  *	This number should increase every time the list of stations
+  *	changes, i.e. when a station is added or removed, so that
+@@ -487,6 +490,7 @@ struct station_info {
+ 	u32 tx_packets;
+ 	u32 tx_retries;
+ 	u32 tx_failed;
++	u32 rx_dropped_misc;
+ 
+ 	int generation;
+ };
+diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
+index ecf9b71..25fb351 100644
+--- a/net/mac80211/cfg.c
++++ b/net/mac80211/cfg.c
+@@ -329,7 +329,8 @@ static void sta_set_sinfo(struct sta_info *sta, struct station_info *sinfo)
+ 			STATION_INFO_TX_PACKETS |
+ 			STATION_INFO_TX_RETRIES |
+ 			STATION_INFO_TX_FAILED |
+-			STATION_INFO_TX_BITRATE;
++			STATION_INFO_TX_BITRATE |
++			STATION_INFO_RX_DROP_MISC;
+ 
+ 	sinfo->inactive_time = jiffies_to_msecs(jiffies - sta->last_rx);
+ 	sinfo->rx_bytes = sta->rx_bytes;
+@@ -338,6 +339,7 @@ static void sta_set_sinfo(struct sta_info *sta, struct station_info *sinfo)
+ 	sinfo->tx_packets = sta->tx_packets;
+ 	sinfo->tx_retries = sta->tx_retry_count;
+ 	sinfo->tx_failed = sta->tx_retry_failed;
++	sinfo->rx_dropped_misc = sta->rx_dropped;
+ 
+ 	if ((sta->local->hw.flags & IEEE80211_HW_SIGNAL_DBM) ||
+ 	    (sta->local->hw.flags & IEEE80211_HW_SIGNAL_UNSPEC)) {
+diff --git a/net/wireless/wext-compat.c b/net/wireless/wext-compat.c
+index 6002265..12222ee 100644
+--- a/net/wireless/wext-compat.c
++++ b/net/wireless/wext-compat.c
+@@ -1366,6 +1366,10 @@ struct iw_statistics *cfg80211_wireless_stats(struct net_device *dev)
  	}
+ 
+ 	wstats.qual.updated |= IW_QUAL_NOISE_INVALID;
++	if (sinfo.filled & STATION_INFO_RX_DROP_MISC)
++		wstats.discard.misc = sinfo.rx_dropped_misc;
++	if (sinfo.filled & STATION_INFO_TX_FAILED)
++		wstats.discard.retries = sinfo.tx_failed;
+ 
+ 	return &wstats;
+ }
 -- 
-1.7.2.1
+1.7.2.2
 
