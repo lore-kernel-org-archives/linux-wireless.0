@@ -1,45 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.19.149.2]:56504 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753512Ab0JDRWA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 4 Oct 2010 13:22:00 -0400
-Received: from mail.atheros.com ([10.10.20.108])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Mon, 04 Oct 2010 10:21:52 -0700
-Date: Mon, 4 Oct 2010 10:21:59 -0700
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: <ath9k-devel@lists.ath9k.org>
-CC: linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: [ath9k-devel] Ath9k in funky state after adding 130 STA
- interfaces.
-Message-ID: <20101004172159.GJ2105@tux>
-References: <4CA81265.8030403@candelatech.com>
- <20101004170732.GH2105@tux>
- <20101004170906.22433.qmail@stuge.se>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <20101004170906.22433.qmail@stuge.se>
+Received: from he.sipsolutions.net ([78.46.109.217]:52629 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753934Ab0JGSAC (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 7 Oct 2010 14:00:02 -0400
+Subject: Re: [PATCH 2/2] mac80211: use netif_receive_skb in
+ ieee80211_tx_status callpath
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <20101007152708.GA20950@tuxdriver.com>
+References: <1277405253-23735-1-git-send-email-linville@tuxdriver.com>
+	 <1286457360.20974.1.camel@jlt3.sipsolutions.net>
+	 <1286457457.20974.2.camel@jlt3.sipsolutions.net>
+	 <20101007152708.GA20950@tuxdriver.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Thu, 07 Oct 2010 20:00:00 +0200
+Message-ID: <1286474400.20974.14.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Oct 04, 2010 at 10:09:06AM -0700, Peter Stuge wrote:
-> Luis R. Rodriguez wrote:
-> > > This on wireless-testing from Friday, plus a few debugfs patches
-> > > I posted recently.
-> > > 
-> > > I was running two STA just fine, and then tried to add 128 more.
+On Thu, 2010-10-07 at 11:27 -0400, John W. Linville wrote:
+
+> > > Alternatively, we can require drivers to call ieee80211_tx_status() with
+> > > BHs disabled, but somebody would have to go through them...
 > > 
-> > You're serious right? I mean I'm happy your serious, but whoa, you
-> > want 130 STAs on one interface working fine?
+> > For RX, we do this with ieee80211_rx_ni().
 > 
-> Come on. If it is impossible to work because of whatever limitations
-> then wouldn't it make sense for the driver to throw an error instead
-> of not throwing an error and just not working?
+> Right.  I thought I had checked all these contexts, but ath9k in
+> particular is a bit complicated to trace all the potential callpaths
+> by hand.
+> 
+> I'll revert it, and the rtl8180 patch to use napi (which also does
+> tx status in that context).
 
-You're right but if you are using the ath9k virtual wiphy stuff please
-not that code is intended to be removed, it was experimental code and
-this is also why we don't have good documentation for it. It was just
-a hack as a proof of concept. The real solution needs to take place on
-cfg80211/mac80211.
+Or you could just add _ni and use it in ath9k all the time -- disabling
+already disabled BHs will nest -- and leave it to somebody else to sort
+out there later :)
 
-  Luis
+johannes
+
