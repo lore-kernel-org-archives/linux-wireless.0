@@ -1,58 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from purkki.adurom.net ([80.68.90.206]:41676 "EHLO purkki.adurom.net"
+Received: from mail.atheros.com ([12.19.149.2]:50676 "EHLO mail.atheros.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752332Ab0JYCDZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 24 Oct 2010 22:03:25 -0400
-To: George <george.news@gmx.net>
-Cc: Grazvydas Ignotas <notasas@gmail.com>,
-	Luciano Coelho <luciano.coelho@nokia.com>,
-	"Luis R. Rodriguez" <mcgrof@gmail.com>,
-	Bob Copeland <me@bobcopeland.com>,
-	Denis 'GNUtoo' Carikli <GNUtoo@no-log.org>,
-	"linux-wireless\@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: Compat-wireless N900
-References: <4CB6BE57.8010401@gmx.net>
-	<1287071844.11341.5.camel@gnutoo-laptop>
-	<AANLkTikosEtFnWqRVzMBKtNsB=aqOpqQFKDOZS3+pXTE@mail.gmail.com>
-	<4CB74759.3030807@gmx.net>
-	<AANLkTi=1Ar-gzRaskHGDLmkaDnr=9+oZnA=qBLCYcUAi@mail.gmail.com>
-	<4CB7F7C7.7030804@gmx.net>
-	<AANLkTi=u+mT2Xd0=0vt4uaf9hSnnkPKY+wN6DjAxME3m@mail.gmail.com>
-	<4CBABB84.1090100@gmx.net> <4CBC7725.7050202@gmx.net>
-	<AANLkTincCSBfwa_Y-cy_42HfU5kP1puCbi2-dBwGkkHu@mail.gmail.com>
-	<4CBC9A51.8030309@gmx.net> <1287427291.8043.2.camel@powerslave>
-	<1287428554.8043.6.camel@powerslave> <4CBD52DE.9090804@gmx.net>
-	<AANLkTi=dGSVBrdDXwJgmOjEGX+i+=P_KibiJd+NNMGfy@mail.gmail.com>
-	<4CBDB654.6060702@gmx.net>
-	<AANLkTimyCv6U+Yjf7q0OFEYF3PHr5PfACSpbXbTi_PZe@mail.gmail.com>
-	<4CBDBEDB.3070407@gmx.net>
-	<AANLkTik3ZdZov4OTn0NnnPe_ZUaRh_w0db4bwLYVGCRR@mail.gmail.com>
-	<4CBE9C4F.7050806@gmx.net>
-From: Kalle Valo <kvalo@adurom.com>
-Date: Mon, 25 Oct 2010 05:03:19 +0300
-In-Reply-To: <4CBE9C4F.7050806@gmx.net> (George's message of "Wed\, 20 Oct 2010 09\:37\:51 +0200")
-Message-ID: <87ocaj1120.fsf@purkki.adurom.net>
+	id S1751880Ab0JGQfR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 7 Oct 2010 12:35:17 -0400
+Message-ID: <4CADF6BF.6070305@atheros.com>
+Date: Thu, 7 Oct 2010 22:05:11 +0530
+From: Bala Shanmugam <sbalashanmugam@atheros.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+To: Marcel Holtmann <holtmann@linux.intel.com>
+CC: Shanmugamkamatchi Balashanmugam
+	<Shanmugamkamatchi.Balashanmugam@Atheros.com>,
+	Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	linux-bluetooth <linux-bluetooth@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Deepak Dhamdhere <Deepak.Dhamdhere@Atheros.com>,
+	Sree Durbha <Sree.Durbha@Atheros.com>
+Subject: Re: RFC: btusb firmware load help
+References: <1286349552.6145.11.camel@aeonflux>	 <AANLkTimDvgFtoGLEjgWyYRrhQy6Num-rn_2WYO4Lf84b@mail.gmail.com>	 <1286380566.6145.42.camel@aeonflux> <20101006163816.GE7070@tux>	 <AANLkTik9w4_PdcEsbRHakLcxcD334_1Q8hGArxTXPCGF@mail.gmail.com>	 <20101006173949.GG7070@tux>	 <1286387660.3655.382.camel@jlt3.sipsolutions.net>	 <AANLkTikYRSQw-+Tcj4VS1qxi=OaeF9C5hjAMWVu+0M=v@mail.gmail.com>	 <AANLkTi=o4Mc72NrNoALBdS3YHeY7RMyyAJPsCy=uW3+F@mail.gmail.com>	 <1286389697.3655.401.camel@jlt3.sipsolutions.net>	 ,<20101006183340.GI7070@tux>	 <44EE5C37ADC36343B0625A05DD408C4850DAD2CA31@CHEXMB-01.global.atheros.com> <1286465072.6145.151.camel@aeonflux>
+In-Reply-To: <1286465072.6145.151.camel@aeonflux>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-George <george.news@gmx.net> writes:
+  On 10/7/2010 8:54 PM, Marcel Holtmann wrote:
+> Hi Bala,
+>
+>> Thanks Johannes.  This would be better option to change PID in firmware
+>> as blacklisting 3002 might create problems for 3011 chipsets.
+>> Will try and let you people know.
+> The misbehaving 3002 needs to be blacklisted in btusb.c anyway. However
+> after loading the firmware to 3002 device, it should change its PID to
+> something else.
+>
+> I am still trying to figure out if this is one stage firmware loading or
+> a two stage firmware loading. This is all pretty unclear and nobody has
+> answered this clearly so far.
+>
+> Regards
+>
+> Marcel
+>
+>
+Marcel,
 
-> It seems that it tries to do something but it is not finally done.
-> However, as you can see it seems there is no error (at least
-> reported). Could it be that spi_read buf is almost everytime reading
-> 00 00 00 00?
+eeprom based 3011 chips comes up with PID 3000 giving control to DFU 
+driver [ath3k].  ath3k downloads the
+firmware changing PID to 3002.  Now btusb gets control.
 
-If you get nothing but zeros back from the device, most likely that
-means that it's not powered up properly. 
+In sflash based devices to reduce windows suspend/resume time we had a 
+small firmware in flash which
+enables the device to get detected as Generic Bluetooth USB device with 
+PID 3002.  So control reaches btusb when device is plugged in, leaving 
+no option for us to load the actual firmware.
 
-wl1251 chip on n900 is powered up by using a gpio line. I'm worried
-that the struct wl12xx_platform_data wl1251 wireless-compat driver
-expects (defined in /include/linux/wl12xx.h) doesn't match what the
-old maemo kernel provides. Unfortunately I can't remember anymore what
-the platform data was like in maemo kernels and there's no easy way
-for me to check that right now.
+Solution would be to blacklist 3002 in btusb, enable ath3k to get 
+control for both the devices, download the firmware and change PID to 
+3003 so that control with come to btusb.
 
--- 
-Kalle Valo
+Thanks for your time.
+
+Regards,
+Bala.
