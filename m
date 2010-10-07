@@ -1,176 +1,286 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f46.google.com ([209.85.214.46]:61688 "EHLO
-	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752637Ab0JKBLE (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 10 Oct 2010 21:11:04 -0400
-Received: by mail-bw0-f46.google.com with SMTP id 15so1403810bwz.19
-        for <linux-wireless@vger.kernel.org>; Sun, 10 Oct 2010 18:11:04 -0700 (PDT)
-From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-To: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-Cc: b43-dev@lists.infradead.org,
-	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-Subject: [PATCH 1/3] b43: N-PHY: grab more info about new channel
-Date: Mon, 11 Oct 2010 03:11:01 +0200
-Message-Id: <1286759463-32221-2-git-send-email-zajec5@gmail.com>
-In-Reply-To: <1286759463-32221-1-git-send-email-zajec5@gmail.com>
-References: <1286759463-32221-1-git-send-email-zajec5@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Received: from mga01.intel.com ([192.55.52.88]:59929 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753575Ab0JGXIu (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 7 Oct 2010 19:08:50 -0400
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	Johannes Berg <johannes.berg@intel.com>,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Subject: [PATCH 10/22] iwlwifi: remove agn rates info there
+Date: Thu,  7 Oct 2010 16:07:49 -0700
+Message-Id: <1286492881-15743-11-git-send-email-wey-yi.w.guy@intel.com>
+In-Reply-To: <1286492881-15743-1-git-send-email-wey-yi.w.guy@intel.com>
+References: <1286492881-15743-1-git-send-email-wey-yi.w.guy@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
----
- drivers/net/wireless/b43/phy_n.c |   61 ++++++++++++++++++--------------------
- 1 files changed, 29 insertions(+), 32 deletions(-)
+From: Johannes Berg <johannes.berg@intel.com>
 
-diff --git a/drivers/net/wireless/b43/phy_n.c b/drivers/net/wireless/b43/phy_n.c
-index f575e75..c596b46 100644
---- a/drivers/net/wireless/b43/phy_n.c
-+++ b/drivers/net/wireless/b43/phy_n.c
-@@ -3323,9 +3323,9 @@ int b43_phy_initn(struct b43_wldev *dev)
- }
+Code and data related to agn bitrates can be
+part of the agn module rather than being in
+the core module.
+
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-3945.c   |    9 ++++
+ drivers/net/wireless/iwlwifi/iwl-3945.h   |    5 +-
+ drivers/net/wireless/iwlwifi/iwl-agn-rs.c |   68 ++++++++++++++++++++++++++++
+ drivers/net/wireless/iwlwifi/iwl-agn-rs.h |   10 ----
+ drivers/net/wireless/iwlwifi/iwl-core.c   |   70 -----------------------------
+ drivers/net/wireless/iwlwifi/iwl-core.h   |    2 -
+ 6 files changed, 80 insertions(+), 84 deletions(-)
+
+diff --git a/drivers/net/wireless/iwlwifi/iwl-3945.c b/drivers/net/wireless/iwlwifi/iwl-3945.c
+index 4b3eb78..ba3ab04 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-3945.c
++++ b/drivers/net/wireless/iwlwifi/iwl-3945.c
+@@ -87,6 +87,15 @@ const struct iwl3945_rate_info iwl3945_rates[IWL_RATE_COUNT_3945] = {
+ 	IWL_DECLARE_RATE_INFO(54, 48, INV, 48, INV, 48, INV),/* 54mbps */
+ };
  
- /* http://bcm-v4.sipsolutions.net/802.11/PHY/N/ChanspecSetup */
--static void b43_nphy_chanspec_setup(struct b43_wldev *dev,
-+static void b43_nphy_channel_setup(struct b43_wldev *dev,
- 				const struct b43_phy_n_sfo_cfg *e,
--				struct b43_chanspec chanspec)
-+				struct ieee80211_channel *new_channel)
- {
- 	struct b43_phy *phy = &dev->phy;
- 	struct b43_phy_n *nphy = dev->phy.n;
-@@ -3334,13 +3334,13 @@ static void b43_nphy_chanspec_setup(struct b43_wldev *dev,
- 	u32 tmp32;
++static inline u8 iwl3945_get_prev_ieee_rate(u8 rate_index)
++{
++	u8 rate = iwl3945_rates[rate_index].prev_ieee;
++
++	if (rate == IWL_RATE_INVALID)
++		rate = rate_index;
++	return rate;
++}
++
+ /* 1 = enable the iwl3945_disable_events() function */
+ #define IWL_EVT_DISABLE (0)
+ #define IWL_EVT_DISABLE_SIZE (1532/32)
+diff --git a/drivers/net/wireless/iwlwifi/iwl-3945.h b/drivers/net/wireless/iwlwifi/iwl-3945.h
+index 77e8e19..09391f0 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-3945.h
++++ b/drivers/net/wireless/iwlwifi/iwl-3945.h
+@@ -138,8 +138,6 @@ enum iwl3945_antenna {
+ #define	DEFAULT_SHORT_RETRY_LIMIT 7U
+ #define	DEFAULT_LONG_RETRY_LIMIT  4U
  
- 	tmp = b43_phy_read(dev, B43_NPHY_BANDCTL) & B43_NPHY_BANDCTL_5GHZ;
--	if (chanspec.b_freq == 1 && tmp == 0) {
-+	if (new_channel->band == IEEE80211_BAND_5GHZ && tmp == 0) {
- 		tmp32 = b43_read32(dev, B43_MMIO_PSM_PHY_HDR);
- 		b43_write32(dev, B43_MMIO_PSM_PHY_HDR, tmp32 | 4);
- 		b43_phy_set(dev, B43_PHY_B_BBCFG, 0xC000);
- 		b43_write32(dev, B43_MMIO_PSM_PHY_HDR, tmp32);
- 		b43_phy_set(dev, B43_NPHY_BANDCTL, B43_NPHY_BANDCTL_5GHZ);
--	} else if (chanspec.b_freq == 1) {
-+	} else if (new_channel->band == IEEE80211_BAND_5GHZ) {
- 		b43_phy_mask(dev, B43_NPHY_BANDCTL, ~B43_NPHY_BANDCTL_5GHZ);
- 		tmp32 = b43_read32(dev, B43_MMIO_PSM_PHY_HDR);
- 		b43_write32(dev, B43_MMIO_PSM_PHY_HDR, tmp32 | 4);
-@@ -3350,13 +3350,12 @@ static void b43_nphy_chanspec_setup(struct b43_wldev *dev,
- 
- 	b43_chantab_phy_upload(dev, e);
- 
+-#include "iwl-agn-rs.h"
 -
--	if (nphy->radio_chanspec.channel == 14) {
-+	if (new_channel->hw_value == 14) {
- 		b43_nphy_classifier(dev, 2, 0);
- 		b43_phy_set(dev, B43_PHY_B_TEST, 0x0800);
- 	} else {
- 		b43_nphy_classifier(dev, 2, 2);
--		if (chanspec.b_freq == 2)
-+		if (new_channel->band == IEEE80211_BAND_2GHZ)
- 			b43_phy_mask(dev, B43_PHY_B_TEST, ~0x840);
- 	}
+ #define IWL_TX_FIFO_AC0	0
+ #define IWL_TX_FIFO_AC1	1
+ #define IWL_TX_FIFO_AC2	2
+@@ -301,6 +299,9 @@ extern int iwl3945_rs_next_rate(struct iwl_priv *priv, int rate);
+ int iwl3945_request_scan(struct iwl_priv *priv, struct ieee80211_vif *vif);
+ void iwl3945_post_scan(struct iwl_priv *priv);
  
-@@ -3379,16 +3378,17 @@ static void b43_nphy_chanspec_setup(struct b43_wldev *dev,
++/* rates */
++extern const struct iwl3945_rate_info iwl3945_rates[IWL_RATE_COUNT_3945];
++
+ /* Requires full declaration of iwl_priv before including */
+ #include "iwl-io.h"
+ 
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-rs.c b/drivers/net/wireless/iwlwifi/iwl-agn-rs.c
+index 7e5cf1a..5abe2e9 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn-rs.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn-rs.c
+@@ -77,6 +77,74 @@ static const u8 ant_toggle_lookup[] = {
+ 	/*ANT_ABC  -> */ ANT_ABC,
+ };
+ 
++#define IWL_DECLARE_RATE_INFO(r, s, ip, in, rp, rn, pp, np)    \
++	[IWL_RATE_##r##M_INDEX] = { IWL_RATE_##r##M_PLCP,      \
++				    IWL_RATE_SISO_##s##M_PLCP, \
++				    IWL_RATE_MIMO2_##s##M_PLCP,\
++				    IWL_RATE_MIMO3_##s##M_PLCP,\
++				    IWL_RATE_##r##M_IEEE,      \
++				    IWL_RATE_##ip##M_INDEX,    \
++				    IWL_RATE_##in##M_INDEX,    \
++				    IWL_RATE_##rp##M_INDEX,    \
++				    IWL_RATE_##rn##M_INDEX,    \
++				    IWL_RATE_##pp##M_INDEX,    \
++				    IWL_RATE_##np##M_INDEX }
++
++/*
++ * Parameter order:
++ *   rate, ht rate, prev rate, next rate, prev tgg rate, next tgg rate
++ *
++ * If there isn't a valid next or previous rate then INV is used which
++ * maps to IWL_RATE_INVALID
++ *
++ */
++const struct iwl_rate_info iwl_rates[IWL_RATE_COUNT] = {
++	IWL_DECLARE_RATE_INFO(1, INV, INV, 2, INV, 2, INV, 2),    /*  1mbps */
++	IWL_DECLARE_RATE_INFO(2, INV, 1, 5, 1, 5, 1, 5),          /*  2mbps */
++	IWL_DECLARE_RATE_INFO(5, INV, 2, 6, 2, 11, 2, 11),        /*5.5mbps */
++	IWL_DECLARE_RATE_INFO(11, INV, 9, 12, 9, 12, 5, 18),      /* 11mbps */
++	IWL_DECLARE_RATE_INFO(6, 6, 5, 9, 5, 11, 5, 11),        /*  6mbps */
++	IWL_DECLARE_RATE_INFO(9, 6, 6, 11, 6, 11, 5, 11),       /*  9mbps */
++	IWL_DECLARE_RATE_INFO(12, 12, 11, 18, 11, 18, 11, 18),   /* 12mbps */
++	IWL_DECLARE_RATE_INFO(18, 18, 12, 24, 12, 24, 11, 24),   /* 18mbps */
++	IWL_DECLARE_RATE_INFO(24, 24, 18, 36, 18, 36, 18, 36),   /* 24mbps */
++	IWL_DECLARE_RATE_INFO(36, 36, 24, 48, 24, 48, 24, 48),   /* 36mbps */
++	IWL_DECLARE_RATE_INFO(48, 48, 36, 54, 36, 54, 36, 54),   /* 48mbps */
++	IWL_DECLARE_RATE_INFO(54, 54, 48, INV, 48, INV, 48, INV),/* 54mbps */
++	IWL_DECLARE_RATE_INFO(60, 60, 48, INV, 48, INV, 48, INV),/* 60mbps */
++	/* FIXME:RS:          ^^    should be INV (legacy) */
++};
++
++static int iwl_hwrate_to_plcp_idx(u32 rate_n_flags)
++{
++	int idx = 0;
++
++	/* HT rate format */
++	if (rate_n_flags & RATE_MCS_HT_MSK) {
++		idx = (rate_n_flags & 0xff);
++
++		if (idx >= IWL_RATE_MIMO3_6M_PLCP)
++			idx = idx - IWL_RATE_MIMO3_6M_PLCP;
++		else if (idx >= IWL_RATE_MIMO2_6M_PLCP)
++			idx = idx - IWL_RATE_MIMO2_6M_PLCP;
++
++		idx += IWL_FIRST_OFDM_RATE;
++		/* skip 9M not supported in ht*/
++		if (idx >= IWL_RATE_9M_INDEX)
++			idx += 1;
++		if ((idx >= IWL_FIRST_OFDM_RATE) && (idx <= IWL_LAST_OFDM_RATE))
++			return idx;
++
++	/* legacy rate format, search for match in table */
++	} else {
++		for (idx = 0; idx < ARRAY_SIZE(iwl_rates); idx++)
++			if (iwl_rates[idx].plcp == (rate_n_flags & 0xFF))
++				return idx;
++	}
++
++	return -1;
++}
++
+ static void rs_rate_scale_perform(struct iwl_priv *priv,
+ 				   struct sk_buff *skb,
+ 				   struct ieee80211_sta *sta,
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-rs.h b/drivers/net/wireless/iwlwifi/iwl-agn-rs.h
+index 357cdb2..75e50d3 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn-rs.h
++++ b/drivers/net/wireless/iwlwifi/iwl-agn-rs.h
+@@ -299,7 +299,6 @@ enum {
+ #define TIME_WRAP_AROUND(x, y) (((y) > (x)) ? (y) - (x) : (0-(x)) + (y))
+ 
+ extern const struct iwl_rate_info iwl_rates[IWL_RATE_COUNT];
+-extern const struct iwl3945_rate_info iwl3945_rates[IWL_RATE_COUNT_3945];
+ 
+ enum iwl_table_type {
+ 	LQ_NONE,
+@@ -453,15 +452,6 @@ static inline u8 first_antenna(u8 mask)
  }
  
- /* http://bcm-v4.sipsolutions.net/802.11/PHY/N/SetChanspec */
--static int b43_nphy_set_chanspec(struct b43_wldev *dev,
--					struct b43_chanspec chanspec)
-+static int b43_nphy_set_channel(struct b43_wldev *dev,
-+				struct ieee80211_channel *channel,
-+				enum nl80211_channel_type channel_type)
- {
-+	struct b43_phy *phy = &dev->phy;
- 	struct b43_phy_n *nphy = dev->phy.n;
  
- 	const struct b43_nphy_channeltab_entry_rev2 *tabent_r2;
- 	const struct b43_nphy_channeltab_entry_rev3 *tabent_r3;
+-static inline u8 iwl3945_get_prev_ieee_rate(u8 rate_index)
+-{
+-	u8 rate = iwl3945_rates[rate_index].prev_ieee;
+-
+-	if (rate == IWL_RATE_INVALID)
+-		rate = rate_index;
+-	return rate;
+-}
+-
+ /**
+  * iwl3945_rate_scale_init - Initialize the rate scale table based on assoc info
+  *
+diff --git a/drivers/net/wireless/iwlwifi/iwl-core.c b/drivers/net/wireless/iwlwifi/iwl-core.c
+index eefcb2d..2950384 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-core.c
++++ b/drivers/net/wireless/iwlwifi/iwl-core.c
+@@ -69,79 +69,9 @@ EXPORT_SYMBOL_GPL(bt_coex_active);
+ module_param(bt_coex_active, bool, S_IRUGO);
+ MODULE_PARM_DESC(bt_coex_active, "enable wifi/bluetooth co-exist");
  
- 	u8 tmp;
--	u8 channel = chanspec.channel;
+-#define IWL_DECLARE_RATE_INFO(r, s, ip, in, rp, rn, pp, np)    \
+-	[IWL_RATE_##r##M_INDEX] = { IWL_RATE_##r##M_PLCP,      \
+-				    IWL_RATE_SISO_##s##M_PLCP, \
+-				    IWL_RATE_MIMO2_##s##M_PLCP,\
+-				    IWL_RATE_MIMO3_##s##M_PLCP,\
+-				    IWL_RATE_##r##M_IEEE,      \
+-				    IWL_RATE_##ip##M_INDEX,    \
+-				    IWL_RATE_##in##M_INDEX,    \
+-				    IWL_RATE_##rp##M_INDEX,    \
+-				    IWL_RATE_##rn##M_INDEX,    \
+-				    IWL_RATE_##pp##M_INDEX,    \
+-				    IWL_RATE_##np##M_INDEX }
+-
+ u32 iwl_debug_level;
+ EXPORT_SYMBOL(iwl_debug_level);
  
- 	if (dev->phy.rev >= 3) {
- 		/* TODO */
-@@ -3396,36 +3396,36 @@ static int b43_nphy_set_chanspec(struct b43_wldev *dev,
- 		if (!tabent_r3)
- 			return -ESRCH;
- 	} else {
--		tabent_r2 = b43_nphy_get_chantabent_rev2(dev, channel);
-+		tabent_r2 = b43_nphy_get_chantabent_rev2(dev,
-+							channel->hw_value);
- 		if (!tabent_r2)
- 			return -ESRCH;
- 	}
- 
--	nphy->radio_chanspec = chanspec;
-+	nphy->radio_chanspec.channel = channel->hw_value;
- 
-+	/*
- 	if (chanspec.b_width != nphy->b_width)
--		; /* TODO: BMAC BW Set (chanspec.b_width) */
-+		; TODO: BMAC BW Set (chanspec.b_width)
-+	*/
- 
--	/* TODO: use defines */
--	if (chanspec.b_width == 3) {
--		if (chanspec.sideband == 2)
--			b43_phy_set(dev, B43_NPHY_RXCTL,
--					B43_NPHY_RXCTL_BSELU20);
--		else
--			b43_phy_mask(dev, B43_NPHY_RXCTL,
--					~B43_NPHY_RXCTL_BSELU20);
+-/*
+- * Parameter order:
+- *   rate, ht rate, prev rate, next rate, prev tgg rate, next tgg rate
+- *
+- * If there isn't a valid next or previous rate then INV is used which
+- * maps to IWL_RATE_INVALID
+- *
+- */
+-const struct iwl_rate_info iwl_rates[IWL_RATE_COUNT] = {
+-	IWL_DECLARE_RATE_INFO(1, INV, INV, 2, INV, 2, INV, 2),    /*  1mbps */
+-	IWL_DECLARE_RATE_INFO(2, INV, 1, 5, 1, 5, 1, 5),          /*  2mbps */
+-	IWL_DECLARE_RATE_INFO(5, INV, 2, 6, 2, 11, 2, 11),        /*5.5mbps */
+-	IWL_DECLARE_RATE_INFO(11, INV, 9, 12, 9, 12, 5, 18),      /* 11mbps */
+-	IWL_DECLARE_RATE_INFO(6, 6, 5, 9, 5, 11, 5, 11),        /*  6mbps */
+-	IWL_DECLARE_RATE_INFO(9, 6, 6, 11, 6, 11, 5, 11),       /*  9mbps */
+-	IWL_DECLARE_RATE_INFO(12, 12, 11, 18, 11, 18, 11, 18),   /* 12mbps */
+-	IWL_DECLARE_RATE_INFO(18, 18, 12, 24, 12, 24, 11, 24),   /* 18mbps */
+-	IWL_DECLARE_RATE_INFO(24, 24, 18, 36, 18, 36, 18, 36),   /* 24mbps */
+-	IWL_DECLARE_RATE_INFO(36, 36, 24, 48, 24, 48, 24, 48),   /* 36mbps */
+-	IWL_DECLARE_RATE_INFO(48, 48, 36, 54, 36, 54, 36, 54),   /* 48mbps */
+-	IWL_DECLARE_RATE_INFO(54, 54, 48, INV, 48, INV, 48, INV),/* 54mbps */
+-	IWL_DECLARE_RATE_INFO(60, 60, 48, INV, 48, INV, 48, INV),/* 60mbps */
+-	/* FIXME:RS:          ^^    should be INV (legacy) */
+-};
+-EXPORT_SYMBOL(iwl_rates);
+-
+-int iwl_hwrate_to_plcp_idx(u32 rate_n_flags)
+-{
+-	int idx = 0;
+-
+-	/* HT rate format */
+-	if (rate_n_flags & RATE_MCS_HT_MSK) {
+-		idx = (rate_n_flags & 0xff);
+-
+-		if (idx >= IWL_RATE_MIMO3_6M_PLCP)
+-			idx = idx - IWL_RATE_MIMO3_6M_PLCP;
+-		else if (idx >= IWL_RATE_MIMO2_6M_PLCP)
+-			idx = idx - IWL_RATE_MIMO2_6M_PLCP;
+-
+-		idx += IWL_FIRST_OFDM_RATE;
+-		/* skip 9M not supported in ht*/
+-		if (idx >= IWL_RATE_9M_INDEX)
+-			idx += 1;
+-		if ((idx >= IWL_FIRST_OFDM_RATE) && (idx <= IWL_LAST_OFDM_RATE))
+-			return idx;
+-
+-	/* legacy rate format, search for match in table */
+-	} else {
+-		for (idx = 0; idx < ARRAY_SIZE(iwl_rates); idx++)
+-			if (iwl_rates[idx].plcp == (rate_n_flags & 0xFF))
+-				return idx;
 -	}
-+	if (channel_type == NL80211_CHAN_HT40PLUS)
-+		b43_phy_set(dev, B43_NPHY_RXCTL,
-+				B43_NPHY_RXCTL_BSELU20);
-+	else if (channel_type == NL80211_CHAN_HT40MINUS)
-+		b43_phy_mask(dev, B43_NPHY_RXCTL,
-+				~B43_NPHY_RXCTL_BSELU20);
- 
- 	if (dev->phy.rev >= 3) {
--		tmp = (chanspec.b_freq == 1) ? 4 : 0;
-+		tmp = (channel->band == IEEE80211_BAND_5GHZ) ? 4 : 0;
- 		b43_radio_maskset(dev, 0x08, 0xFFFB, tmp);
- 		/* TODO: PHY Radio2056 Setup (dev, tabent_r3); */
--		b43_nphy_chanspec_setup(dev, &(tabent_r3->phy_regs), chanspec);
-+		b43_nphy_channel_setup(dev, &(tabent_r3->phy_regs), channel);
- 	} else {
--		tmp = (chanspec.b_freq == 1) ? 0x0020 : 0x0050;
-+		tmp = (channel->band == IEEE80211_BAND_5GHZ) ? 0x0020 : 0x0050;
- 		b43_radio_maskset(dev, B2055_MASTER1, 0xFF8F, tmp);
- 		b43_radio_2055_setup(dev, tabent_r2);
--		b43_nphy_chanspec_setup(dev, &(tabent_r2->phy_regs), chanspec);
-+		b43_nphy_channel_setup(dev, &(tabent_r2->phy_regs), channel);
- 	}
- 
- 	return 0;
-@@ -3567,8 +3567,8 @@ static void b43_nphy_op_switch_analog(struct b43_wldev *dev, bool on)
- static int b43_nphy_op_switch_channel(struct b43_wldev *dev,
- 				      unsigned int new_channel)
- {
--	struct b43_phy_n *nphy = dev->phy.n;
--	struct b43_chanspec chanspec;
-+	struct ieee80211_channel *channel = dev->wl->hw->conf.channel;
-+	enum nl80211_channel_type channel_type = dev->wl->hw->conf.channel_type;
- 
- 	if (b43_current_band(dev->wl) == IEEE80211_BAND_2GHZ) {
- 		if ((new_channel < 1) || (new_channel > 14))
-@@ -3578,10 +3578,7 @@ static int b43_nphy_op_switch_channel(struct b43_wldev *dev,
- 			return -EINVAL;
- 	}
- 
--	chanspec = nphy->radio_chanspec;
--	chanspec.channel = new_channel;
 -
--	return b43_nphy_set_chanspec(dev, chanspec);
-+	return b43_nphy_set_channel(dev, channel, channel_type);
- }
+-	return -1;
+-}
+-EXPORT_SYMBOL(iwl_hwrate_to_plcp_idx);
+-
+ u8 iwl_toggle_tx_ant(struct iwl_priv *priv, u8 ant, u8 valid)
+ {
+ 	int i;
+diff --git a/drivers/net/wireless/iwlwifi/iwl-core.h b/drivers/net/wireless/iwlwifi/iwl-core.h
+index 31ec9db..56251de 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-core.h
++++ b/drivers/net/wireless/iwlwifi/iwl-core.h
+@@ -547,8 +547,6 @@ int iwl_set_tx_power(struct iwl_priv *priv, s8 tx_power, bool force);
+  * Rate
+  ******************************************************************************/
  
- static unsigned int b43_nphy_op_get_default_chan(struct b43_wldev *dev)
+-int iwl_hwrate_to_plcp_idx(u32 rate_n_flags);
+-
+ u8 iwl_rate_get_lowest_plcp(struct iwl_priv *priv,
+ 			    struct iwl_rxon_context *ctx);
+ 
 -- 
-1.7.1
+1.7.0.4
 
