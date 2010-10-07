@@ -1,76 +1,144 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f46.google.com ([209.85.161.46]:61748 "EHLO
-	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754532Ab0JHSnG (ORCPT
+Received: from mail.candelatech.com ([208.74.158.172]:58566 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753872Ab0JGTOO (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 8 Oct 2010 14:43:06 -0400
-Received: by fxm14 with SMTP id 14so669566fxm.19
-        for <linux-wireless@vger.kernel.org>; Fri, 08 Oct 2010 11:43:02 -0700 (PDT)
-From: Christian Lamparter <chunkeey@googlemail.com>
-To: Francesco Gringoli <francesco.gringoli@ing.unibs.it>
-Subject: Re: Questions on carl9170 architecture
-Date: Fri, 8 Oct 2010 20:42:58 +0200
-Cc: "linux-wireless" <linux-wireless@vger.kernel.org>
-References: <3E9EF80F-15AF-4B40-AA26-C97A1E01D897@ing.unibs.it>
-In-Reply-To: <3E9EF80F-15AF-4B40-AA26-C97A1E01D897@ing.unibs.it>
+	Thu, 7 Oct 2010 15:14:14 -0400
+Message-ID: <4CAE1C02.7090405@candelatech.com>
+Date: Thu, 07 Oct 2010 12:14:10 -0700
+From: Ben Greear <greearb@candelatech.com>
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Message-Id: <201010082042.58974.chunkeey@googlemail.com>
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+CC: Johannes Berg <johannes@sipsolutions.net>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: memory clobber in rx path, maybe related to ath9k.
+References: <4CAB59B2.5050106@candelatech.com> <AANLkTikhGCTS8kJgpDzjudyBTk-rkyXY33UO7kB0+Cc-@mail.gmail.com> <4CAB5F3D.9060201@candelatech.com> <AANLkTimV3GrwU+9PPtirT4sCzveLY2egr3PRQhfDBET1@mail.gmail.com> <4CAB627F.8020804@candelatech.com> <AANLkTi=sT5QJe4V8gFGjF-nzx0uJAMLG_XG2715qrEEd@mail.gmail.com> <4CAB64AD.4080105@candelatech.com> <AANLkTi=3dHbB5tmQDp3Ba54-DqQydVCkNdFo1vKbfaGY@mail.gmail.com> <4CAB6B08.4050801@candelatech.com> <4CAE0474.4090605@candelatech.com> <1286475250.20974.22.camel@jlt3.sipsolutions.net> <AANLkTinbRSnPVgbBxvVpMdnP+K--bye=Q-miHf4X44kz@mail.gmail.com> <4CAE13F6.2010003@candelatech.com> <AANLkTimEZ5GY7WFz-F4YyC+6MEwNn2Dki4tonp645XrS@mail.gmail.com> <4CAE1553.1070900@candelatech.com>
+In-Reply-To: <4CAE1553.1070900@candelatech.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Friday 08 October 2010 18:31:42 Francesco Gringoli wrote:
-> Hello Christian,
-> 
-> I have tried carl9170 for a while, everything is ok: what a great work!
-> I have not noticed any problem so far, it seems almost stable.
-"almost". That's the biggest issue, the driver is "new" and all
-the bugs are hidden from sight.
+On 10/07/2010 11:45 AM, Ben Greear wrote:
+> On 10/07/2010 11:42 AM, Luis R. Rodriguez wrote:
+>> On Thu, Oct 7, 2010 at 11:39 AM, Ben Greear<greearb@candelatech.com>
+>> wrote:
+>>> On 10/07/2010 11:29 AM, Luis R. Rodriguez wrote:
+>>>>
+>>>> On Thu, Oct 7, 2010 at 11:14 AM, Johannes Berg
+>>>> <johannes@sipsolutions.net> wrote:
+>>>>>
+>>>>> On Thu, 2010-10-07 at 10:33 -0700, Ben Greear wrote:
+>>>>>>
+>>>>>> In case it helps, here is a dump of where the corrupted SKB was
+>>>>>> deleted.
+>>>>>
+>>>>> I wonder, do you have a machine with a decent IOMMU? Adding IOMMU
+>>>>> debugging into the mix could help you figure out if it's a DMA
+>>>>> problem.
+>>>>
+>>>> Ben, how much traffic are you RX'ing on these virtual interfaces?
+>>>
+>>> I disabled my user-space application, and this script alone can
+>>> reproduce
+>>> the problem fairly quickly on my system. You will need to change some
+>>> of those first variables. Just start it and wait a few minutes and
+>>> watch the splats show on the console :)
+>>>
+>>> Note that I am not generating any traffic, but the wpa_supplicants are
+>>> doing their thing of course...
+>>>
+>>> I'm using the kernel found here:
+>>> http://dmz2.candelatech.com/git/gitweb.cgi?p=linux.wireless-testing.ct/.git;a=summary
+>>>
+>>>
+>>> It's latest wireless-testing with some of my own patches, and some
+>>> I've gathered from here an there. I doubt I'm causing this problem,
+>>> but if you can't reproduce it with this script on your kernels,
+>>> I can try with base wireless-testing or whatever you are using.
+>>
+>> I'll run this now, but can you try a vanilla wireless-testing? I hear
+>> the latest wireless-testing is borked so maybe try (git reset --hard
+>> master-2010-09-29), its what I'm on.
+>
+> You are liable to hit a bunch of those crashes I've been reporting
+> before you hit the DMA thing if you don't use latest (with Johanne's scan
+> locking patch).
+>
+> I'm going to poke at IOMMU debugging and see what I find.
+>
+> I'll start a compile of vanilla wireless-testing + scan fix as well.
 
-> - how are handled acknowledgments? I don't see anything that schedules ack
-> transmission when a packet that need ack is received. Is that accomplished
-> internally by the hw?
-Yes, Atheros calls it the "Response Controller" (and it's pretty much
-hardwired into the MAC HW)
+Well, vanilla + scan patch locked pretty hard when I started the script.
 
-> If yes, do you know if it can be disabled and replaced with new code so
-> that it is the firmware to control ack transmission?
-Maybe. The normal ACKs can be disabled by zeroing 0x1c36f8.
+I was able to get sysrq to dump the locks, but it didn't seem to complete
+that and couldn't even dump more sysrq info after that.
 
-> For instance, a number of techniques have been recently proposed to estimate
-> the channel condition when receiving corrupted frames: it could be
-> interesting to send back a "special-ack" when a packet is received corrupted
-> to help the transmitter understanding how to best retransmit the packet.
-Hmm, by the time you've "generated" your special response, the peer
-already knows that the attempt has failed.
-anyway, that's OT ;)
+Might be something entirely different, of course, and no idea if
+this lock dump shows any real problem.
 
-> Obviously this should be done within a SIFS from the reception of the packet;
-That's going to be though, especially under load.
-Apparently, the HW doesn't provide real interrupts.
-Therefore everything needs to be "polled"
-(yes, that includes the USB DMA too). 
- 
-> - to which precision is it possible to drive packet transmission?
-> e.g., is it possible to start sending a packet a chosen interval after the previous?
-Sorry, but my documentation doesn't cover the topic.
-You have to ask Atheros.
+Oct  7 12:08:43 localhost kernel: SysRq : Show Locks Held
+Oct  7 12:08:43 localhost kernel:
+Oct  7 12:08:43 localhost kernel: Showing all locks held in the system:
+Oct  7 12:08:43 localhost kernel: 3 locks held by kworker/0:0/4:
+Oct  7 12:08:43 localhost kernel: #0:  (events){+.+.+.}, at: [<c0443cea>] process_one_work+0x145/0x295
+Oct  7 12:08:43 localhost kernel: #1:  ((linkwatch_work).work){+.+.+.}, at: [<c0443cea>] process_one_work+0x145/0x295
+Oct  7 12:08:43 localhost kernel: #2:  (rtnl_mutex){+.+.+.}, at: [<c06da190>] rtnl_lock+0xf/0x11
+Oct  7 12:08:43 localhost kernel: 3 locks held by kworker/u:1/38:
+Oct  7 12:08:43 localhost kernel: #0:  ((wiphy_name(local->hw.wiphy))){+.+.+.}, at: [<c0443cea>] process_one_work+0x145/0x295
+Oct  7 12:08:43 localhost kernel: #1:  ((&sta->ampdu_mlme.work)){+.+...}, at: [<c0443cea>] process_one_work+0x145/0x295
+Oct  7 12:08:43 localhost kernel: #2:  (&sta->ampdu_mlme.mtx){+.+...}, at: [<f8887180>] ieee80211_ba_session_work+0x52/0xbe [mac80211]
+Oct  7 12:08:43 localhost kernel: 1 lock held by mingetty/1584:
+Oct  7 12:08:43 localhost kernel: #0:  (&tty->atomic_read_lock){+.+...}, at: [<c05f5e91>] n_tty_read+0x1d1/0x5ed
+Oct  7 12:08:43 localhost kernel: 1 lock held by mingetty/1586:
+Oct  7 12:08:43 localhost kernel: #0:  (&tty->atomic_read_lock){+.+...}, at: [<c05f5e91>] n_tty_read+0x1d1/0x5ed
+Oct  7 12:08:43 localhost kernel: 1 lock held by mingetty/1589:
+Oct  7 12:08:43 localhost kernel: #0:  (&tty->atomic_read_lock){+.+...}, at: [<c05f5e91>] n_tty_read+0x1d1/0x5ed
+Oct  7 12:08:43 localhost kernel: 1 lock held by mingetty/1593:
+Oct  7 12:08:43 localhost kernel: #0:  (&tty->atomic_read_lock){+.+...}, at: [<c05f5e91>] n_tty_read+0x1d1/0x5ed
+Oct  7 12:08:43 localhost kernel: 1 lock held by mingetty/1596:
+Oct  7 12:08:43 localhost kernel: #0:  (&tty->atomic_read_lock){+.+...}, at: [<c05f5e91>] n_tty_read+0x1d1/0x5ed
+Oct  7 12:08:43 localhost kernel: 1 lock held by mingetty/1598:
+Oct  7 12:08:43 localhost kernel: #0:  (&tty->atomic_read_lock){+.+...}, at: [<c05f5e91>] n_tty_read+0x1d1/0x5ed
+Oct  7 12:08:43 localhost kernel: 1 lock held by bash/1683:
+Oct  7 12:08:43 localhost kernel: #0:  (&tty->atomic_read_lock){+.+...}, at: [<c05f5e91>] n_tty_read+0x1d1/0x5ed
+Oct  7 12:08:43 localhost kernel: 1 lock held by bash/1728:
+Oct  7 12:08:43 localhost kernel: #0:  (&tty->atomic_read_lock){+.+...}, at: [<c05f5e91>] n_tty_read+0x1d1/0x5ed
+Oct  7 12:08:43 localhost kernel: 1 lock held by bash/1752:
+Oct  7 12:08:43 localhost kernel: #0:  (&tty->atomic_read_lock){+.+...}, at: [<c05f5e91>] n_tty_read+0x1d1/0x5ed
+Oct  7 12:08:43 localhost kernel: 1 lock held by wpa_supplicant/2840:
+Oct  7 12:08:43 localhost kernel: #0:  (rtnl_mutex){+.+.+.}, at: [<c06da190>] rtnl_lock+0xf/0x11
+Oct  7 12:08:43 localhost kernel: 1 lock held by wpa_supplicant/2842:
+Oct  7 12:08:43 localhost kernel: #0:  (rtnl_mutex){+.+.+.}, at: [<c06da190>] rtnl_lock+0xf/0x11
+Oct  7 12:08:43 localhost kernel: 1 lock held by wpa_supplicant/2844:
+Oct  7 12:08:43 localhost kernel: #0:  (rtnl_mutex){+.+.+.}, at: [<c06da190>] rtnl_lock+0xf/0x11
+Oct  7 12:08:43 localhost kernel: 1 lock held by wpa_supplicant/2846:
+Oct  7 12:08:43 localhost kernel: #0:  (rtnl_mutex){+.+.+.}, at: [<c06da190>] rtnl_lock+0xf/0x11
+Oct  7 12:08:43 localhost kernel: 1 lock held by wpa_supplicant/2848:
+Oct  7 12:08:43 localhost kernel: #0:  (rtnl_mutex){+.+.+.}, at: [<c06da190>] rtnl_lock+0xf/0x11
+Oct  7 12:08:43 localhost kernel: 1 lock held by wpa_supplicant/2850:
+Oct  7 12:08:43 localhost kernel: #0:  (rtnl_mutex){+.+.+.}, at: [<c06da190>] rtnl_lock+0xf/0x11
+Oct  7 12:08:43 localhost kernel: 1 lock held by wpa_supplicant/2852:
+Oct  7 12:08:43 localhost kernel: #0:  (rtnl_mutex){+.+.+.}, at: [<c06da190>] rtnl_lock+0xf/0x11
+Oct  7 12:08:43 localhost kernel: 1 lock held by wpa_supplicant/2854:
+Oct  7 12:08:43 localhost kernel: #0:  (rtnl_mutex){+.+.+.}, at: [<c06da190>] rtnl_lock+0xf/0x11
+Oct  7 12:08:43 localhost kernel: 1 lock held by wpa_supplicant/2856:
+Oct  7 12:08:43 localhost kernel: #0:  (rtnl_mutex){+.+.+.}, at: [<c06da190>] rtnl_lock+0xf/0x11
+OcSysRq : Show State
+Process wpa_supplicant (pid: 2904, ti=f3946000 task=f4124a60 task.ti=f3946000)
+Stack:
+Call Trace:
+Code: 73 18 8b 75 08 01 73 14 88 4c 02 1c 5b 5e 5d c3 55 89 e5 57 56 53 8b 5d 08 6b 72 04 3c ff 84 30 70 11 00 00 8b 79 10 6b 72 04 3c <8b> 7f 50 01 bc 30
+SysRq : Show Locks Held
+Process wpa_supplicant (pid: 2904, ti=f3946000 task=f4124a60 task.ti=f3946000)
+Stack:
+Call Trace:
+Code: 73 18 8b 75 08 01 73 14 88 4c 02 1c 5b 5e 5d c3 55 89 e5 57 56 53 8b 5d 08 6b 72 04 3c ff 84 30 70 11 00 00 8b 79 10 6b 72 04 3c <8b> 7f 50 01 bc 30
 
-> - is it possible to send packet independently of CCA, e.g., starting
-> sending a packet even if the channel is busy?
-hmm, there's a CCA threshold register somewhere.
-But no details in the docs, so you might want to ask Atheros.
 
-> - is it possible to build a packet internally and decide to send
-> it independently of the host?
-kind of. Take a look at handle_bar() and wlan_send_buffered_ba().
+Thanks,
+Ben
 
-> - is it possible to modify packets sent by the host before
-> they leave the adapter?
-sure, you can probably do that. but keep in mind that device
-uses vectored-i/o and the frame data is split across 320 bytes
-chunks.
+-- 
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
 
-Regards,
-	Christian
