@@ -1,151 +1,405 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:39553 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751093Ab0J0QiC (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 27 Oct 2010 12:38:02 -0400
-Message-ID: <4CC85568.70308@candelatech.com>
-Date: Wed, 27 Oct 2010 09:38:00 -0700
-From: Ben Greear <greearb@candelatech.com>
-MIME-Version: 1.0
-To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-CC: Greg KH <greg@kroah.com>, linux-wireless@vger.kernel.org,
-	kyungwan.nam@atheros.com
-Subject: Re: [RFT 0/3] ath9k: more PCU locking enhancements
-References: <1288082441-4882-1-git-send-email-lrodriguez@atheros.com> <4CC74F35.60009@candelatech.com> <AANLkTimDQXP-L-C9wos_7i272LFwr0aXAJ2GBjJzDDfV@mail.gmail.com> <4CC75229.8000109@candelatech.com> <AANLkTi=uNzTuaq9yrG6Z0DbxF9z=JzPe=155rkvLPkD9@mail.gmail.com> <4CC8509C.3040902@candelatech.com> <AANLkTi=LAtDhi+eXQRV8ZmCa5Ctcp5jWt1Wrp1AUQD8P@mail.gmail.com>
-In-Reply-To: <AANLkTi=LAtDhi+eXQRV8ZmCa5Ctcp5jWt1Wrp1AUQD8P@mail.gmail.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Received: from mga01.intel.com ([192.55.52.88]:59924 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752653Ab0JGXIs (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 7 Oct 2010 19:08:48 -0400
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	Johannes Berg <johannes.berg@intel.com>,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Subject: [PATCH 04/22] iwlwifi: move chain settings to agn
+Date: Thu,  7 Oct 2010 16:07:43 -0700
+Message-Id: <1286492881-15743-5-git-send-email-wey-yi.w.guy@intel.com>
+In-Reply-To: <1286492881-15743-1-git-send-email-wey-yi.w.guy@intel.com>
+References: <1286492881-15743-1-git-send-email-wey-yi.w.guy@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 10/27/2010 09:26 AM, Luis R. Rodriguez wrote:
-> On Wed, Oct 27, 2010 at 9:17 AM, Ben Greear<greearb@candelatech.com>  wrote:
->> On 10/26/2010 03:17 PM, Luis R. Rodriguez wrote:
->>>
->>> On Tue, Oct 26, 2010 at 3:11 PM, Ben Greear<greearb@candelatech.com>
->>>   wrote:
->>>>
->>>> On 10/26/2010 03:03 PM, Luis R. Rodriguez wrote:
->>>>>
->>>>> On Tue, Oct 26, 2010 at 2:59 PM, Ben Greear<greearb@candelatech.com>
->>>>>   wrote:
->>>>>>
->>>>>> On 10/26/2010 01:40 AM, Luis R. Rodriguez wrote:
->>>>>>>
->>>>>>> Here is some more PCU locking enhancements I tested today
->>>>>>> while trying to resolve the WARN() that happens when we
->>>>>>> try to stop RX DMA and fail. While working on that I figured
->>>>>>> I'd work on the TX DMA stuff too, here's a shot at it. I
->>>>>>> can no longer get TX / RX DMA rants, please test and let
->>>>>>> me know if you do. I only tried some basic testing like
->>>>>>> rmmoding while scannign, which typicallly produced some
->>>>>>> errors. Now I don't get squat.
->>>>>>>
->>>>>>> Ben if you can test wit your super proprietary application
->>>>>>> that'd be great.
->>>>>>>
->>>>>>> This also simplifies locking considerably.
->>>>>>>
->>>>>>> This doesn't break suspend so I'm happy. It also depends
->>>>>>> on the last RX DMA fixes I had posted earlier. If you'd
->>>>>>> like to get an all-in-one patch of all my patches pending
->>>>>>> you can wget this file and git am it:
->>>>>>>
->>>>>>>
->>>>>>>
->>>>>>>
->>>>>>> http://www.kernel.org/pub/linux/kernel/people/mcgrof/patches/tmp/pending-mcgrof-2010-10-26-v1.patch
->>>>>>> sha1sum: 874a3cc1a57f7e26ad191cd7b5045315f94c5823
->>>>>>
->>>>>> I have done some initial testing on the combined patch on top of
->>>>>> today's
->>>>>> wireless-testing tree.  I also have the memory-barrier patch applied to
->>>>>> ath9k, as that is still not upstream.  I have no idea if it has any
->>>>>> affect
->>>>>> or not (I'm on x86..seems that wmb() stuff was mostly for other
->>>>>> platforms?).
->>>>>>
->>>>>> So far, it is showing zero problems, certainly no memory poison issues.
->>>>>>
->>>>>> The wireless-testing tree has some lockdep warning related to a mouse
->>>>>> driver
->>>>>> that disables lockdep early, so it's possible there are lockdep issues
->>>>>> waiting.
->>>>>>
->>>>>> I will let this test run for a while, but it already looks more stable
->>>>>> than before, so:
->>>>>>
->>>>>> Tested-by:  Ben Greear<greearb@candelatech.com>
->>>>>
->>>>> Awesome! Thanks for testing. So how about the TX dma rants, do you
->>>>> still get those?
->>>>
->>>> I've seen no rants at all.
->>>
->>> Fucking awesome!
->>>
->>>> I'm using my standard 130 STAs
->>>
->>> I love how now 130 STAs are "standard" for ath9k tests :)
->>
->> I dropped it down to 30 STAs so that all could associate and
->> be stable with my AP.  I set up a tcp stream running as fast as it could
->> between
->> two virtual STAs.  It ran about 9Mbps bi-directional overnight
->> with no obvious problems.
->
-> Thanks for the reports, great to hear it is working fine now.
+From: Johannes Berg <johannes.berg@intel.com>
 
-Of course, as soon as I hit send, something starts looking strange.
+The core module doesn't need to carry around
+the code for chain settings that is used for
+HT drivers (agn) only.
 
-One of the interfaces generating ~9Mbps of traffic started bouncing,
-with warnings about a class 2 frame received.  Any idea what
-that means?
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-4965.c     |    2 +-
+ drivers/net/wireless/iwlwifi/iwl-agn-hcmd.c |    4 +-
+ drivers/net/wireless/iwlwifi/iwl-agn-lib.c  |  140 ++++++++++++++++++++++++++
+ drivers/net/wireless/iwlwifi/iwl-agn.h      |    1 +
+ drivers/net/wireless/iwlwifi/iwl-core.c     |  141 ---------------------------
+ drivers/net/wireless/iwlwifi/iwl-core.h     |    1 -
+ 6 files changed, 144 insertions(+), 145 deletions(-)
 
-Not sure it's an ath9k issue though, as power-cycling the AP made
-everything start working again.  So, plz don't worry about this
-until we have a chance to test against different APs, etc.
-
-2010-10-27 08:28:06.066  sta11 (phy #0): connected to 00:14:d1:c6:d2:54
-2010-10-27 08:28:06.075  sta14 (phy #0): scan started
-2010-10-27 08:28:06.947  sta14 (phy #0): scan finished: 2412 2417 2422 2427 2432 2437 2442 2447 2452 2457 2462, ""
-2010-10-27 08:28:06.994  sta26 (phy #0): deauth 00:14:d1:c6:d2:54 -> 00:00:00:88:55:19 reason 6: Class 2 frame received from non-authenticated station
-
-
-
-2010-10-27 08:28:06.998  sta26 (phy #0): disconnected (by AP) reason: 6: Class 2 frame received from non-authenticated station
-2010-10-27 08:28:07.038  sta14 (phy #0): auth 00:14:d1:c6:d2:54 -> 00:00:00:88:55:0d status: 0: Successful
-2010-10-27 08:28:07.038  sta14: new station 00:14:d1:c6:d2:54
-2010-10-27 08:28:07.038  sta14 (phy #0): assoc 00:14:d1:c6:d2:54 -> 00:00:00:88:55:0d status: 0: Successful
-2010-10-27 08:28:07.038  sta14 (phy #0): connected to 00:14:d1:c6:d2:54
-2010-10-27 08:28:07.093  sta17 (phy #0): scan started
-2010-10-27 08:28:07.961  sta17 (phy #0): scan finished: 2412 2417 2422 2427 2432 2437 2442 2447 2452 2457 2462, ""
-2010-10-27 08:28:08.018  sta17 (phy #0): auth 00:14:d1:c6:d2:54 -> 00:00:00:88:55:10 status: 0: Successful
-2010-10-27 08:28:08.027  sta17: new station 00:14:d1:c6:d2:54
-2010-10-27 08:28:08.037  sta17 (phy #0): assoc 00:14:d1:c6:d2:54 -> 00:00:00:88:55:10 status: 0: Successful
-2010-10-27 08:28:08.038  sta17 (phy #0): connected to 00:14:d1:c6:d2:54
-2010-10-27 08:28:08.074  sta26 (phy #0): scan started
-2010-10-27 08:28:08.943  sta26 (phy #0): scan finished: 2412 2417 2422 2427 2432 2437 2442 2447 2452 2457 2462, ""
-2010-10-27 08:28:08.983  sta7 (phy #0): deauth 00:14:d1:c6:d2:54 -> 00:00:00:88:55:06 reason 0: <unknown>
-2010-10-27 08:28:08.983  sta7 (phy #0): disconnected (by AP)
-2010-10-27 08:28:09.014  sta26 (phy #0): auth 00:14:d1:c6:d2:54 -> 00:00:00:88:55:19 status: 0: Successful
-2010-10-27 08:28:09.018  sta26: new station 00:14:d1:c6:d2:54
-2010-10-27 08:28:09.028  sta26 (phy #0): assoc 00:14:d1:c6:d2:54 -> 00:00:00:88:55:19 status: 0: Successful
-2010-10-27 08:28:09.028  sta26 (phy #0): connected to 00:14:d1:c6:d2:54
-2010-10-27 08:28:09.053  sta8 (phy #0): scan started
-2010-10-27 08:28:09.913  sta8 (phy #0): scan finished: 2412 2417 2422 2427 2432 2437 2442 2447 2452 2457 2462, ""
-2010-10-27 08:28:09.957  sta23 (phy #0): deauth 00:14:d1:c6:d2:54 -> 00:00:00:88:55:16 reason 0: <unknown>
-2010-10-27 08:28:09.958  sta23 (phy #0): disconnected (by AP)
-2010-10-27 08:28:09.999  sta8 (phy #0): auth 00:14:d1:c6:d2:54 -> 00:00:00:88:55:07 status: 0: Successful
-2010-10-27 08:28:10.003  sta8: new station 00:14:d1:c6:d2:54
-2010-10-27 08:28:10.014  sta8 (phy #0): assoc 00:14:d1:c6:d2:54 -> 00:00:00:88:55:07 status: 0: Successful
-2010-10-27 08:28:10.014  sta8 (phy #0): connected to 00:14:d1:c6:d2:54
-2010-10-27 08:28:10.035  sta23 (phy #0): scan started
-
-Thanks,
-Ben
-
+diff --git a/drivers/net/wireless/iwlwifi/iwl-4965.c b/drivers/net/wireless/iwlwifi/iwl-4965.c
+index e161f5d..20626c9 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-4965.c
++++ b/drivers/net/wireless/iwlwifi/iwl-4965.c
+@@ -2217,7 +2217,7 @@ static void iwl4965_cancel_deferred_work(struct iwl_priv *priv)
+ static struct iwl_hcmd_ops iwl4965_hcmd = {
+ 	.rxon_assoc = iwl4965_send_rxon_assoc,
+ 	.commit_rxon = iwlagn_commit_rxon,
+-	.set_rxon_chain = iwl_set_rxon_chain,
++	.set_rxon_chain = iwlagn_set_rxon_chain,
+ 	.send_bt_config = iwl_send_bt_config,
+ };
+ 
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-hcmd.c b/drivers/net/wireless/iwlwifi/iwl-agn-hcmd.c
+index 634177d..ffb2f41 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn-hcmd.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn-hcmd.c
+@@ -361,7 +361,7 @@ static int iwlagn_set_pan_params(struct iwl_priv *priv)
+ struct iwl_hcmd_ops iwlagn_hcmd = {
+ 	.rxon_assoc = iwlagn_send_rxon_assoc,
+ 	.commit_rxon = iwlagn_commit_rxon,
+-	.set_rxon_chain = iwl_set_rxon_chain,
++	.set_rxon_chain = iwlagn_set_rxon_chain,
+ 	.set_tx_ant = iwlagn_send_tx_ant_config,
+ 	.send_bt_config = iwl_send_bt_config,
+ 	.set_pan_params = iwlagn_set_pan_params,
+@@ -370,7 +370,7 @@ struct iwl_hcmd_ops iwlagn_hcmd = {
+ struct iwl_hcmd_ops iwlagn_bt_hcmd = {
+ 	.rxon_assoc = iwlagn_send_rxon_assoc,
+ 	.commit_rxon = iwlagn_commit_rxon,
+-	.set_rxon_chain = iwl_set_rxon_chain,
++	.set_rxon_chain = iwlagn_set_rxon_chain,
+ 	.set_tx_ant = iwlagn_send_tx_ant_config,
+ 	.send_bt_config = iwlagn_send_advance_bt_config,
+ 	.set_pan_params = iwlagn_set_pan_params,
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-lib.c b/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
+index 3fa2c5c..0b45bce 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
+@@ -2065,3 +2065,143 @@ void iwlagn_bt_cancel_deferred_work(struct iwl_priv *priv)
+ {
+ 	cancel_work_sync(&priv->bt_traffic_change_work);
+ }
++
++static bool is_single_rx_stream(struct iwl_priv *priv)
++{
++	return priv->current_ht_config.smps == IEEE80211_SMPS_STATIC ||
++	       priv->current_ht_config.single_chain_sufficient;
++}
++
++#define IWL_NUM_RX_CHAINS_MULTIPLE	3
++#define IWL_NUM_RX_CHAINS_SINGLE	2
++#define IWL_NUM_IDLE_CHAINS_DUAL	2
++#define IWL_NUM_IDLE_CHAINS_SINGLE	1
++
++/*
++ * Determine how many receiver/antenna chains to use.
++ *
++ * More provides better reception via diversity.  Fewer saves power
++ * at the expense of throughput, but only when not in powersave to
++ * start with.
++ *
++ * MIMO (dual stream) requires at least 2, but works better with 3.
++ * This does not determine *which* chains to use, just how many.
++ */
++static int iwl_get_active_rx_chain_count(struct iwl_priv *priv)
++{
++	if (priv->cfg->bt_params &&
++	    priv->cfg->bt_params->advanced_bt_coexist &&
++	    (priv->bt_full_concurrent ||
++	     priv->bt_traffic_load >= IWL_BT_COEX_TRAFFIC_LOAD_HIGH)) {
++		/*
++		 * only use chain 'A' in bt high traffic load or
++		 * full concurrency mode
++		 */
++		return IWL_NUM_RX_CHAINS_SINGLE;
++	}
++	/* # of Rx chains to use when expecting MIMO. */
++	if (is_single_rx_stream(priv))
++		return IWL_NUM_RX_CHAINS_SINGLE;
++	else
++		return IWL_NUM_RX_CHAINS_MULTIPLE;
++}
++
++/*
++ * When we are in power saving mode, unless device support spatial
++ * multiplexing power save, use the active count for rx chain count.
++ */
++static int iwl_get_idle_rx_chain_count(struct iwl_priv *priv, int active_cnt)
++{
++	/* # Rx chains when idling, depending on SMPS mode */
++	switch (priv->current_ht_config.smps) {
++	case IEEE80211_SMPS_STATIC:
++	case IEEE80211_SMPS_DYNAMIC:
++		return IWL_NUM_IDLE_CHAINS_SINGLE;
++	case IEEE80211_SMPS_OFF:
++		return active_cnt;
++	default:
++		WARN(1, "invalid SMPS mode %d",
++		     priv->current_ht_config.smps);
++		return active_cnt;
++	}
++}
++
++/* up to 4 chains */
++static u8 iwl_count_chain_bitmap(u32 chain_bitmap)
++{
++	u8 res;
++	res = (chain_bitmap & BIT(0)) >> 0;
++	res += (chain_bitmap & BIT(1)) >> 1;
++	res += (chain_bitmap & BIT(2)) >> 2;
++	res += (chain_bitmap & BIT(3)) >> 3;
++	return res;
++}
++
++/**
++ * iwlagn_set_rxon_chain - Set up Rx chain usage in "staging" RXON image
++ *
++ * Selects how many and which Rx receivers/antennas/chains to use.
++ * This should not be used for scan command ... it puts data in wrong place.
++ */
++void iwlagn_set_rxon_chain(struct iwl_priv *priv, struct iwl_rxon_context *ctx)
++{
++	bool is_single = is_single_rx_stream(priv);
++	bool is_cam = !test_bit(STATUS_POWER_PMI, &priv->status);
++	u8 idle_rx_cnt, active_rx_cnt, valid_rx_cnt;
++	u32 active_chains;
++	u16 rx_chain;
++
++	/* Tell uCode which antennas are actually connected.
++	 * Before first association, we assume all antennas are connected.
++	 * Just after first association, iwl_chain_noise_calibration()
++	 *    checks which antennas actually *are* connected. */
++	if (priv->chain_noise_data.active_chains)
++		active_chains = priv->chain_noise_data.active_chains;
++	else
++		active_chains = priv->hw_params.valid_rx_ant;
++
++	if (priv->cfg->bt_params &&
++	    priv->cfg->bt_params->advanced_bt_coexist &&
++	    (priv->bt_full_concurrent ||
++	     priv->bt_traffic_load >= IWL_BT_COEX_TRAFFIC_LOAD_HIGH)) {
++		/*
++		 * only use chain 'A' in bt high traffic load or
++		 * full concurrency mode
++		 */
++		active_chains = first_antenna(active_chains);
++	}
++
++	rx_chain = active_chains << RXON_RX_CHAIN_VALID_POS;
++
++	/* How many receivers should we use? */
++	active_rx_cnt = iwl_get_active_rx_chain_count(priv);
++	idle_rx_cnt = iwl_get_idle_rx_chain_count(priv, active_rx_cnt);
++
++
++	/* correct rx chain count according hw settings
++	 * and chain noise calibration
++	 */
++	valid_rx_cnt = iwl_count_chain_bitmap(active_chains);
++	if (valid_rx_cnt < active_rx_cnt)
++		active_rx_cnt = valid_rx_cnt;
++
++	if (valid_rx_cnt < idle_rx_cnt)
++		idle_rx_cnt = valid_rx_cnt;
++
++	rx_chain |= active_rx_cnt << RXON_RX_CHAIN_MIMO_CNT_POS;
++	rx_chain |= idle_rx_cnt  << RXON_RX_CHAIN_CNT_POS;
++
++	ctx->staging.rx_chain = cpu_to_le16(rx_chain);
++
++	if (!is_single && (active_rx_cnt >= IWL_NUM_RX_CHAINS_SINGLE) && is_cam)
++		ctx->staging.rx_chain |= RXON_RX_CHAIN_MIMO_FORCE_MSK;
++	else
++		ctx->staging.rx_chain &= ~RXON_RX_CHAIN_MIMO_FORCE_MSK;
++
++	IWL_DEBUG_ASSOC(priv, "rx_chain=0x%X active=%d idle=%d\n",
++			ctx->staging.rx_chain,
++			active_rx_cnt, idle_rx_cnt);
++
++	WARN_ON(active_rx_cnt == 0 || idle_rx_cnt == 0 ||
++		active_rx_cnt < idle_rx_cnt);
++}
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.h b/drivers/net/wireless/iwlwifi/iwl-agn.h
+index 960fe2e..5d5cacb 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn.h
++++ b/drivers/net/wireless/iwlwifi/iwl-agn.h
+@@ -131,6 +131,7 @@ void iwl_free_tfds_in_queue(struct iwl_priv *priv,
+ 
+ /* RXON */
+ int iwlagn_commit_rxon(struct iwl_priv *priv, struct iwl_rxon_context *ctx);
++void iwlagn_set_rxon_chain(struct iwl_priv *priv, struct iwl_rxon_context *ctx);
+ 
+ /* uCode */
+ int iwlagn_load_ucode(struct iwl_priv *priv);
+diff --git a/drivers/net/wireless/iwlwifi/iwl-core.c b/drivers/net/wireless/iwlwifi/iwl-core.c
+index 516c55a..dd7c3cb 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-core.c
++++ b/drivers/net/wireless/iwlwifi/iwl-core.c
+@@ -439,12 +439,6 @@ void iwlcore_tx_cmd_protection(struct iwl_priv *priv,
+ EXPORT_SYMBOL(iwlcore_tx_cmd_protection);
+ 
+ 
+-static bool is_single_rx_stream(struct iwl_priv *priv)
+-{
+-	return priv->current_ht_config.smps == IEEE80211_SMPS_STATIC ||
+-	       priv->current_ht_config.single_chain_sufficient;
+-}
+-
+ static bool iwl_is_channel_extension(struct iwl_priv *priv,
+ 				     enum ieee80211_band band,
+ 				     u16 channel, u8 extension_chan_offset)
+@@ -834,141 +828,6 @@ void iwl_set_rxon_ht(struct iwl_priv *priv, struct iwl_ht_config *ht_conf)
+ }
+ EXPORT_SYMBOL(iwl_set_rxon_ht);
+ 
+-#define IWL_NUM_RX_CHAINS_MULTIPLE	3
+-#define IWL_NUM_RX_CHAINS_SINGLE	2
+-#define IWL_NUM_IDLE_CHAINS_DUAL	2
+-#define IWL_NUM_IDLE_CHAINS_SINGLE	1
+-
+-/*
+- * Determine how many receiver/antenna chains to use.
+- *
+- * More provides better reception via diversity.  Fewer saves power
+- * at the expense of throughput, but only when not in powersave to
+- * start with.
+- *
+- * MIMO (dual stream) requires at least 2, but works better with 3.
+- * This does not determine *which* chains to use, just how many.
+- */
+-static int iwl_get_active_rx_chain_count(struct iwl_priv *priv)
+-{
+-	if (priv->cfg->bt_params &&
+-	    priv->cfg->bt_params->advanced_bt_coexist &&
+-	    (priv->bt_full_concurrent ||
+-	     priv->bt_traffic_load >= IWL_BT_COEX_TRAFFIC_LOAD_HIGH)) {
+-		/*
+-		 * only use chain 'A' in bt high traffic load or
+-		 * full concurrency mode
+-		 */
+-		return IWL_NUM_RX_CHAINS_SINGLE;
+-	}
+-	/* # of Rx chains to use when expecting MIMO. */
+-	if (is_single_rx_stream(priv))
+-		return IWL_NUM_RX_CHAINS_SINGLE;
+-	else
+-		return IWL_NUM_RX_CHAINS_MULTIPLE;
+-}
+-
+-/*
+- * When we are in power saving mode, unless device support spatial
+- * multiplexing power save, use the active count for rx chain count.
+- */
+-static int iwl_get_idle_rx_chain_count(struct iwl_priv *priv, int active_cnt)
+-{
+-	/* # Rx chains when idling, depending on SMPS mode */
+-	switch (priv->current_ht_config.smps) {
+-	case IEEE80211_SMPS_STATIC:
+-	case IEEE80211_SMPS_DYNAMIC:
+-		return IWL_NUM_IDLE_CHAINS_SINGLE;
+-	case IEEE80211_SMPS_OFF:
+-		return active_cnt;
+-	default:
+-		WARN(1, "invalid SMPS mode %d",
+-		     priv->current_ht_config.smps);
+-		return active_cnt;
+-	}
+-}
+-
+-/* up to 4 chains */
+-static u8 iwl_count_chain_bitmap(u32 chain_bitmap)
+-{
+-	u8 res;
+-	res = (chain_bitmap & BIT(0)) >> 0;
+-	res += (chain_bitmap & BIT(1)) >> 1;
+-	res += (chain_bitmap & BIT(2)) >> 2;
+-	res += (chain_bitmap & BIT(3)) >> 3;
+-	return res;
+-}
+-
+-/**
+- * iwl_set_rxon_chain - Set up Rx chain usage in "staging" RXON image
+- *
+- * Selects how many and which Rx receivers/antennas/chains to use.
+- * This should not be used for scan command ... it puts data in wrong place.
+- */
+-void iwl_set_rxon_chain(struct iwl_priv *priv, struct iwl_rxon_context *ctx)
+-{
+-	bool is_single = is_single_rx_stream(priv);
+-	bool is_cam = !test_bit(STATUS_POWER_PMI, &priv->status);
+-	u8 idle_rx_cnt, active_rx_cnt, valid_rx_cnt;
+-	u32 active_chains;
+-	u16 rx_chain;
+-
+-	/* Tell uCode which antennas are actually connected.
+-	 * Before first association, we assume all antennas are connected.
+-	 * Just after first association, iwl_chain_noise_calibration()
+-	 *    checks which antennas actually *are* connected. */
+-	if (priv->chain_noise_data.active_chains)
+-		active_chains = priv->chain_noise_data.active_chains;
+-	else
+-		active_chains = priv->hw_params.valid_rx_ant;
+-
+-	if (priv->cfg->bt_params &&
+-	    priv->cfg->bt_params->advanced_bt_coexist &&
+-	    (priv->bt_full_concurrent ||
+-	     priv->bt_traffic_load >= IWL_BT_COEX_TRAFFIC_LOAD_HIGH)) {
+-		/*
+-		 * only use chain 'A' in bt high traffic load or
+-		 * full concurrency mode
+-		 */
+-		active_chains = first_antenna(active_chains);
+-	}
+-
+-	rx_chain = active_chains << RXON_RX_CHAIN_VALID_POS;
+-
+-	/* How many receivers should we use? */
+-	active_rx_cnt = iwl_get_active_rx_chain_count(priv);
+-	idle_rx_cnt = iwl_get_idle_rx_chain_count(priv, active_rx_cnt);
+-
+-
+-	/* correct rx chain count according hw settings
+-	 * and chain noise calibration
+-	 */
+-	valid_rx_cnt = iwl_count_chain_bitmap(active_chains);
+-	if (valid_rx_cnt < active_rx_cnt)
+-		active_rx_cnt = valid_rx_cnt;
+-
+-	if (valid_rx_cnt < idle_rx_cnt)
+-		idle_rx_cnt = valid_rx_cnt;
+-
+-	rx_chain |= active_rx_cnt << RXON_RX_CHAIN_MIMO_CNT_POS;
+-	rx_chain |= idle_rx_cnt  << RXON_RX_CHAIN_CNT_POS;
+-
+-	ctx->staging.rx_chain = cpu_to_le16(rx_chain);
+-
+-	if (!is_single && (active_rx_cnt >= IWL_NUM_RX_CHAINS_SINGLE) && is_cam)
+-		ctx->staging.rx_chain |= RXON_RX_CHAIN_MIMO_FORCE_MSK;
+-	else
+-		ctx->staging.rx_chain &= ~RXON_RX_CHAIN_MIMO_FORCE_MSK;
+-
+-	IWL_DEBUG_ASSOC(priv, "rx_chain=0x%X active=%d idle=%d\n",
+-			ctx->staging.rx_chain,
+-			active_rx_cnt, idle_rx_cnt);
+-
+-	WARN_ON(active_rx_cnt == 0 || idle_rx_cnt == 0 ||
+-		active_rx_cnt < idle_rx_cnt);
+-}
+-EXPORT_SYMBOL(iwl_set_rxon_chain);
+-
+ /* Return valid, unused, channel for a passive scan to reset the RF */
+ u8 iwl_get_single_channel_number(struct iwl_priv *priv,
+ 				 enum ieee80211_band band)
+diff --git a/drivers/net/wireless/iwlwifi/iwl-core.h b/drivers/net/wireless/iwlwifi/iwl-core.h
+index 09908f6..50a3c26 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-core.h
++++ b/drivers/net/wireless/iwlwifi/iwl-core.h
+@@ -407,7 +407,6 @@ void iwl_set_rxon_hwcrypto(struct iwl_priv *priv, struct iwl_rxon_context *ctx,
+ 			   int hw_decrypt);
+ int iwl_check_rxon_cmd(struct iwl_priv *priv, struct iwl_rxon_context *ctx);
+ int iwl_full_rxon_required(struct iwl_priv *priv, struct iwl_rxon_context *ctx);
+-void iwl_set_rxon_chain(struct iwl_priv *priv, struct iwl_rxon_context *ctx);
+ int iwl_set_rxon_channel(struct iwl_priv *priv, struct ieee80211_channel *ch,
+ 			 struct iwl_rxon_context *ctx);
+ void iwl_set_flags_for_band(struct iwl_priv *priv,
 -- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+1.7.0.4
 
