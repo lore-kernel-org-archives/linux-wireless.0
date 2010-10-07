@@ -1,72 +1,143 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f46.google.com ([209.85.214.46]:43534 "EHLO
-	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751621Ab0JLWJb (ORCPT
+Received: from smtp.nokia.com ([192.100.105.134]:26078 "EHLO
+	mgw-mx09.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751710Ab0JGSiK (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 12 Oct 2010 18:09:31 -0400
-Received: by bwz15 with SMTP id 15so2776714bwz.19
-        for <linux-wireless@vger.kernel.org>; Tue, 12 Oct 2010 15:09:29 -0700 (PDT)
-From: mike.rapoport@gmail.com
-To: Greg Kroah-Hartman <gregkh@suse.de>
-Cc: Brett Rudley <brudley@broadcom.com>,
-	Henry Ptasinski <henryp@broadcom.com>,
-	Nohee Ko <noheek@broadcom.com>, linux-wireless@vger.kernel.org,
-	Mike Rapoport <mike.rapoport@gmail.com>
-Subject: [PATCH 0/7] staging: brcm80211: linus_osl.c cleanups
-Date: Wed, 13 Oct 2010 00:09:06 +0200
-Message-Id: <cover.1286920620.git.mike.rapoport@gmail.com>
+	Thu, 7 Oct 2010 14:38:10 -0400
+Subject: Re: [PATCH v2 02/03] wl1271: 11n Support, ACX Commands
+From: Luciano Coelho <luciano.coelho@nokia.com>
+To: ext Shahar Levi <shahar_levi@ti.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <1286388491-28752-4-git-send-email-shahar_levi@ti.com>
+References: <1286388491-28752-1-git-send-email-shahar_levi@ti.com>
+	 <1286388491-28752-4-git-send-email-shahar_levi@ti.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Thu, 07 Oct 2010 21:37:56 +0300
+Message-ID: <1286476676.1662.57.camel@powerslave>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-These patches replace part of proprietary utility functions with
-public kernel versions.
+On Wed, 2010-10-06 at 20:08 +0200, ext Shahar Levi wrote:
+> Added ACX command to the FW for 11n support.
+> 
+> Signed-off-by: Shahar Levi <shahar_levi@ti.com>
+> ---
 
-The following changes since commit 0f0881b09078fe3a6bc70f05e8ba49a52b2478a2:
-  Greg Kroah-Hartman (1):                                                   
-        Staging: brcm80211: remove TRUE #define                             
+Again, mostly coding-style comments.
 
-Mike Rapoport (7):
-  staging: brcm80211: remove OSL_DELAY
-  staging: brcm80211: remove DHD_USE_STATIC_BUF
-  staging: brcm80211: remove osl_malloced()/MALLOCED()
-  staging: brcm80211: replace MALLOC() with k[zm]alloc
-  staging: brcm80211: remove unused NATIVE_{MALLOC,MFREE}
-  staging: brcm80211: replace MFREE with kfree
-  staging: brcm80211: remove unrefrenced malloced field
 
- drivers/staging/brcm80211/brcmfmac/bcmsdh.c        |   16 +-
- drivers/staging/brcm80211/brcmfmac/bcmsdh_linux.c  |   20 +-
- drivers/staging/brcm80211/brcmfmac/bcmsdh_sdmmc.c  |   27 +--
- .../brcm80211/brcmfmac/bcmsdh_sdmmc_linux.c        |    4 +-
- drivers/staging/brcm80211/brcmfmac/dhd.h           |    6 +-
- drivers/staging/brcm80211/brcmfmac/dhd_cdc.c       |   20 +--
- drivers/staging/brcm80211/brcmfmac/dhd_common.c    |   18 +-
- .../staging/brcm80211/brcmfmac/dhd_custom_gpio.c   |    2 +-
- drivers/staging/brcm80211/brcmfmac/dhd_linux.c     |   53 ++----
- drivers/staging/brcm80211/brcmfmac/dhd_sdio.c      |   98 +++------
- drivers/staging/brcm80211/include/bcmutils.h       |    2 +-
- drivers/staging/brcm80211/include/linux_osl.h      |   18 --
- drivers/staging/brcm80211/phy/wlc_phy_cmn.c        |   20 +-
- drivers/staging/brcm80211/phy/wlc_phy_lcn.c        |   87 ++++----
- drivers/staging/brcm80211/phy/wlc_phy_n.c          |   88 ++++----
- drivers/staging/brcm80211/sys/wl_mac80211.c        |   33 ++--
- drivers/staging/brcm80211/sys/wlc_alloc.c          |   57 ++---
- drivers/staging/brcm80211/sys/wlc_ampdu.c          |   12 +-
- drivers/staging/brcm80211/sys/wlc_antsel.c         |    8 +-
- drivers/staging/brcm80211/sys/wlc_bmac.c           |   32 ++--
- drivers/staging/brcm80211/sys/wlc_channel.c        |    8 +-
- drivers/staging/brcm80211/sys/wlc_event.c          |   13 +-
- drivers/staging/brcm80211/sys/wlc_mac80211.c       |   19 +-
- drivers/staging/brcm80211/sys/wlc_phy_shim.c       |    8 +-
- drivers/staging/brcm80211/util/aiutils.c           |    8 +-
- drivers/staging/brcm80211/util/bcmotp.c            |    6 +-
- drivers/staging/brcm80211/util/bcmsrom.c           |   36 ++--
- drivers/staging/brcm80211/util/hnddma.c            |   43 ++---
- drivers/staging/brcm80211/util/hndpmu.c            |   14 +-
- drivers/staging/brcm80211/util/linux_osl.c         |  228 --------------------
- drivers/staging/brcm80211/util/nicpci.c            |   15 +-
- drivers/staging/brcm80211/util/nvram/nvram_ro.c    |    9 +-
- drivers/staging/brcm80211/util/sbutils.c           |   14 +-
- drivers/staging/brcm80211/util/siutils.c           |   21 +-
- 34 files changed, 335 insertions(+), 728 deletions(-)
+> diff --git a/drivers/net/wireless/wl12xx/wl1271_acx.c b/drivers/net/wireless/wl12xx/wl1271_acx.c
+> index 6189934..cc6b7d8 100644
+> --- a/drivers/net/wireless/wl12xx/wl1271_acx.c
+> +++ b/drivers/net/wireless/wl12xx/wl1271_acx.c
+> @@ -1226,6 +1226,97 @@ out:
+>  	return ret;
+>  }
+>  
+> +int wl1271_acx_set_ht_capabilities(struct wl1271 *wl,
+> +				    struct ieee80211_sta_ht_cap *ht_cap,
+> +				    bool allow_ht_operation)
+> +{
+> +	struct wl1271_acx_ht_capabilities *acx;
+> +	/*
+> +	* Note, currently this value will be set to FFFFFFFFFFFF to indicate
+> +	* it is relevant for all peers since we only support HT in
+> +	* infrastructure mode. Later on this field will be relevant to
+> +	* IBSS/DLS operation */
+> +	u8 mac_address[ETH_ALEN] = {0xff, 0xff, 0xff, 0xff, 0xff, 0xff};
+
+I didn't realize this when reviewing patch 01/03, but you could actually
+remove the Note from the wl1271_acx.h file and leave it here.  There's
+no need to have it repeated there and here.
+
+
+> +	/* Allow HT Operation ? */
+> +	if (true == allow_ht_operation) {
+
+I know that some people like to put the constant in the left side of the
+comparison operator to avoid problems with mistyping == as =, but
+reading this in the opposite way is less intuitive (like top-posting? ;)
+and the compiler, if called with reasonable options, will warn you if
+you make that mistake.  So, summarizing, please use it like this
+instead, then you don't even risk mistyping == in the first place :P
+
+	if (allow_ht_operation) {
+
+
+> +		acx->ht_capabilites =
+> +		WL1271_ACX_FW_CAP_BIT_MASK_HT_OPERATION;
+
+Add a more indentation on the second line, it's easier to read.
+
+
+> +		acx->ht_capabilites |=
+> +		((ht_cap->cap & IEEE80211_HT_CAP_GRN_FLD) ?
+> +		WL1271_ACX_FW_CAP_BIT_MASK_GREENFIELD_FRAME_FORMAT : 0);
+> +		acx->ht_capabilites |=
+> +		((ht_cap->cap & IEEE80211_HT_CAP_SGI_20) ?
+> +		WL1271_ACX_FW_CAP_BIT_MASK_SHORT_GI_FOR_20MHZ_PACKETS : 0);
+> +		acx->ht_capabilites |=
+> +		((ht_cap->cap & IEEE80211_HT_CAP_LSIG_TXOP_PROT) ?
+> +		WL1271_ACX_FW_CAP_BIT_MASK_LSIG_TXOP_PROTECTION : 0);
+
+Same thing for all these other assignments.
+
+
+> +
+> +		/* get date from A-MPDU parameters field */
+
+"get data"
+
+
+> +		acx->ampdu_max_length = ht_cap->ampdu_factor;
+> +		acx->ampdu_min_spacing = ht_cap->ampdu_density;
+> +
+> +		memcpy(acx->mac_address, mac_address, ETH_ALEN);
+> +	}
+> +	/* HT operations are not allowed */
+> +	else
+> +		acx->ht_capabilites = 0;
+
+According to Documentation/CodingStyle, you should write the else block
+like this:
+
+if (...) {
+	...
+} else {
+	acx->ht_capabilities = 0;
+}
+
+
+> +int wl1271_acx_set_ht_information(struct wl1271 *wl,
+> +				   u16 ht_operation_mode)
+> +{
+> +	struct wl1271_acx_ht_information *acx;
+> +	int ret = 0;
+> +
+> +	wl1271_debug(DEBUG_ACX, "acx ht information setting");
+> +
+> +	acx = kzalloc(sizeof(*acx), GFP_KERNEL);
+> +	if (!acx) {
+> +		ret = -ENOMEM;
+> +		goto out;
+> +	}
+> +
+> +	acx->ht_protection =
+> +		(u8)(ht_operation_mode & IEEE80211_HT_OP_MODE_PROTECTION);
+> +	acx->rifs_mode = 0;
+> +	acx->gf_protection = 0;
+> +	acx->ht_tx_burst_limit = 0;
+> +	acx->dual_cts_protection = 0;
+> +
+> +	ret = wl1271_cmd_configure(wl,
+> +				   ACX_HT_BSS_OPERATION,
+> +				   acx,
+> +				   sizeof(*acx));
+
+Doesn't this fit in less lines?
+
+-- 
+Cheers,
+Luca.
 
