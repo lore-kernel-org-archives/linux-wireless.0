@@ -1,236 +1,246 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:63883 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1759244Ab0JFQDE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 6 Oct 2010 12:03:04 -0400
-Date: Wed, 6 Oct 2010 18:04:35 +0200
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: Florian Mickler <florian@mickler.org>
-Cc: linville@tuxdriver.com, stable@kernel.org,
-	linux-wireless@vger.kernel.org, wey-yi.w.guy@intel.com,
-	reinette.chatre@intel.com, ilw@linux.intel.com,
-	johannes.berg@intel.com, ben.m.cahill@intel.com,
-	netdev@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH wireless-2.6 or stable] iwlwifi: return error when fail to
- start scanning
-Message-ID: <20101006160434.GB24581@redhat.com>
-References: <20101005085717.GA18012@redhat.com>
- <1286317292-10679-1-git-send-email-florian@mickler.org>
- <20101006090228.GA2523@redhat.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20101006090228.GA2523@redhat.com>
+Received: from he.sipsolutions.net ([78.46.109.217]:53630 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755967Ab0JGVDR (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 7 Oct 2010 17:03:17 -0400
+Subject: Re: [PATCH] mac80211: hoist sta->lock from reorder release timer
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: Christian Lamparter <chunkeey@googlemail.com>,
+	linux-wireless@vger.kernel.org,
+	Ben Greear <greearb@candelatech.com>,
+	Ming Lei <tom.leiming@gmail.com>
+In-Reply-To: <20101006202106.GL2472@tuxdriver.com>
+References: <201010061200.54364.chunkeey@googlemail.com>
+	 <201010061220.50800.chunkeey@googlemail.com>
+	 <1286361705.3655.121.camel@jlt3.sipsolutions.net>
+	 <201010061343.23463.chunkeey@googlemail.com>
+	 <1286365578.3655.187.camel@jlt3.sipsolutions.net>
+	 <20101006202106.GL2472@tuxdriver.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Thu, 07 Oct 2010 23:03:13 +0200
+Message-ID: <1286485393.20974.40.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is stable friendly backport of wireless-testing commit
-3eecce527c7434dfd16517ce08b49632c8a26717 "iwlwifi: unify scan start
-checks". Wireless-testing version include also a lot of cleanups.
+On Wed, 2010-10-06 at 16:21 -0400, John W. Linville wrote:
 
-On error case in {iwl3945,iwlagn}_request_scan we queue abort_scan work,
-which in a fact do nothing, so we never complete the scan. Thats gives
-"WARNING: at net/wireless/core.c:614 wdev_cleanup_work" and stopped
-network connection until reload iwlwifi modules. Return of -EIO, and
-stopping queuing any work is a fix.
+> > I think it's probably easier to fix than to revert now? There are only a
+> > handful of fields, and it seemed to me that most of them can easily be
+> > moved under the reorder lock.
+> 
+> I would prefer a fix on top rather than a series of reverts...
 
-Note there are still many cases when we can get: 
+I think this should fix it. Somebody review please?
 
-WARNING: at net/wireless/core.c:614 wdev_cleanup_work  
-WARNING: at net/mac80211/scan.c:266 ieee80211_scan_completed
-WARNING: at net/mac80211/scan.c:269 ieee80211_scan_complete
+johannes
 
-which are not fixed. Unfortunately does not exist single, small fix
-for that problems, and we probably will see some more bug reports
-with scan warnings. As solution we rewrite iwl-scan.c code to avoid
-all possible race conditions. That quite big patch set is queued
-for 2.6.37 .
-
-Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
 ---
-Patch is intended for wireless-2.6, or in case when it does not
-make 2.6.36 release, for -stable 2.6.36.y 
+ net/mac80211/agg-rx.c      |    8 +++-----
+ net/mac80211/debugfs_sta.c |   29 +++++++++++++++--------------
+ net/mac80211/rx.c          |   17 +++++++++++++----
+ net/mac80211/sta_info.h    |   29 ++++++++++++++---------------
+ 4 files changed, 45 insertions(+), 38 deletions(-)
 
- drivers/net/wireless/iwlwifi/iwl-3945.h     |    2 +-
- drivers/net/wireless/iwlwifi/iwl-agn-lib.c  |   18 ++++++------------
- drivers/net/wireless/iwlwifi/iwl-agn.h      |    2 +-
- drivers/net/wireless/iwlwifi/iwl-core.h     |    2 +-
- drivers/net/wireless/iwlwifi/iwl-scan.c     |   14 +++++++++++---
- drivers/net/wireless/iwlwifi/iwl3945-base.c |   19 ++++++-------------
- 6 files changed, 26 insertions(+), 31 deletions(-)
+--- wireless-testing.orig/net/mac80211/agg-rx.c	2010-10-07 22:44:04.000000000 +0200
++++ wireless-testing/net/mac80211/agg-rx.c	2010-10-07 22:53:33.000000000 +0200
+@@ -129,9 +129,7 @@ static void sta_rx_agg_reorder_timer_exp
+ 			timer_to_tid[0]);
+ 
+ 	rcu_read_lock();
+-	spin_lock(&sta->lock);
+ 	ieee80211_release_reorder_timeout(sta, *ptid);
+-	spin_unlock(&sta->lock);
+ 	rcu_read_unlock();
+ }
+ 
+@@ -256,7 +254,7 @@ void ieee80211_process_addba_request(str
+ 	}
+ 
+ 	/* prepare A-MPDU MLME for Rx aggregation */
+-	tid_agg_rx = kmalloc(sizeof(struct tid_ampdu_rx), GFP_ATOMIC);
++	tid_agg_rx = kmalloc(sizeof(struct tid_ampdu_rx), GFP_KERNEL);
+ 	if (!tid_agg_rx) {
+ #ifdef CONFIG_MAC80211_HT_DEBUG
+ 		if (net_ratelimit())
+@@ -280,9 +278,9 @@ void ieee80211_process_addba_request(str
+ 
+ 	/* prepare reordering buffer */
+ 	tid_agg_rx->reorder_buf =
+-		kcalloc(buf_size, sizeof(struct sk_buff *), GFP_ATOMIC);
++		kcalloc(buf_size, sizeof(struct sk_buff *), GFP_KERNEL);
+ 	tid_agg_rx->reorder_time =
+-		kcalloc(buf_size, sizeof(unsigned long), GFP_ATOMIC);
++		kcalloc(buf_size, sizeof(unsigned long), GFP_KERNEL);
+ 	if (!tid_agg_rx->reorder_buf || !tid_agg_rx->reorder_time) {
+ #ifdef CONFIG_MAC80211_HT_DEBUG
+ 		if (net_ratelimit())
+--- wireless-testing.orig/net/mac80211/debugfs_sta.c	2010-10-07 22:47:41.000000000 +0200
++++ wireless-testing/net/mac80211/debugfs_sta.c	2010-10-07 22:50:03.000000000 +0200
+@@ -116,34 +116,35 @@ static ssize_t sta_agg_status_read(struc
+ 	char buf[71 + STA_TID_NUM * 40], *p = buf;
+ 	int i;
+ 	struct sta_info *sta = file->private_data;
++	struct tid_ampdu_rx *tid_rx;
++	struct tid_ampdu_tx *tid_tx;
++
++	rcu_read_lock();
+ 
+-	spin_lock_bh(&sta->lock);
+ 	p += scnprintf(p, sizeof(buf) + buf - p, "next dialog_token: %#02x\n",
+ 			sta->ampdu_mlme.dialog_token_allocator + 1);
+ 	p += scnprintf(p, sizeof(buf) + buf - p,
+ 		       "TID\t\tRX active\tDTKN\tSSN\t\tTX\tDTKN\tpending\n");
++
+ 	for (i = 0; i < STA_TID_NUM; i++) {
++		tid_rx = rcu_dereference(sta->ampdu_mlme.tid_rx[i]);
++		tid_tx = rcu_dereference(sta->ampdu_mlme.tid_tx[i]);
++
+ 		p += scnprintf(p, sizeof(buf) + buf - p, "%02d", i);
+-		p += scnprintf(p, sizeof(buf) + buf - p, "\t\t%x",
+-				!!sta->ampdu_mlme.tid_rx[i]);
++		p += scnprintf(p, sizeof(buf) + buf - p, "\t\t%x", !!tid_rx);
+ 		p += scnprintf(p, sizeof(buf) + buf - p, "\t%#.2x",
+-				sta->ampdu_mlme.tid_rx[i] ?
+-				sta->ampdu_mlme.tid_rx[i]->dialog_token : 0);
++				tid_rx ? tid_rx->dialog_token : 0);
+ 		p += scnprintf(p, sizeof(buf) + buf - p, "\t%#.3x",
+-				sta->ampdu_mlme.tid_rx[i] ?
+-				sta->ampdu_mlme.tid_rx[i]->ssn : 0);
++				tid_rx ? tid_rx->ssn : 0);
+ 
+-		p += scnprintf(p, sizeof(buf) + buf - p, "\t\t%x",
+-				!!sta->ampdu_mlme.tid_tx[i]);
++		p += scnprintf(p, sizeof(buf) + buf - p, "\t\t%x", !!tid_tx);
+ 		p += scnprintf(p, sizeof(buf) + buf - p, "\t%#.2x",
+-				sta->ampdu_mlme.tid_tx[i] ?
+-				sta->ampdu_mlme.tid_tx[i]->dialog_token : 0);
++				tid_tx ? tid_tx->dialog_token : 0);
+ 		p += scnprintf(p, sizeof(buf) + buf - p, "\t%03d",
+-				sta->ampdu_mlme.tid_tx[i] ?
+-				skb_queue_len(&sta->ampdu_mlme.tid_tx[i]->pending) : 0);
++				tid_tx ? skb_queue_len(&tid_tx->pending) : 0);
+ 		p += scnprintf(p, sizeof(buf) + buf - p, "\n");
+ 	}
+-	spin_unlock_bh(&sta->lock);
++	rcu_read_unlock();
+ 
+ 	return simple_read_from_buffer(userbuf, count, ppos, buf, p - buf);
+ }
+--- wireless-testing.orig/net/mac80211/sta_info.h	2010-10-07 22:44:16.000000000 +0200
++++ wireless-testing/net/mac80211/sta_info.h	2010-10-07 23:01:53.000000000 +0200
+@@ -81,13 +81,14 @@ enum ieee80211_sta_info_flags {
+  * @stop_initiator: initiator of a session stop
+  * @tx_stop: TX DelBA frame when stopping
+  *
+- * This structure is protected by RCU and the per-station
+- * spinlock. Assignments to the array holding it must hold
+- * the spinlock, only the TX path can access it under RCU
+- * lock-free if, and only if, the state has  the flag
+- * %HT_AGG_STATE_OPERATIONAL set. Otherwise, the TX path
+- * must also acquire the spinlock and re-check the state,
+- * see comments in the tx code touching it.
++ * This structure's lifetime is managed by RCU, assignments to
++ * the array holding it must hold the aggregation mutex.
++ *
++ * The TX path can access it under RCU lock-free if, and
++ * only if, the state has the flag %HT_AGG_STATE_OPERATIONAL
++ * set. Otherwise, the TX path must also acquire the spinlock
++ * and re-check the state, see comments in the tx code
++ * touching it.
+  */
+ struct tid_ampdu_tx {
+ 	struct rcu_head rcu_head;
+@@ -115,15 +116,13 @@ struct tid_ampdu_tx {
+  * @rcu_head: RCU head used for freeing this struct
+  * @reorder_lock: serializes access to reorder buffer, see below.
+  *
+- * This structure is protected by RCU and the per-station
+- * spinlock. Assignments to the array holding it must hold
+- * the spinlock.
++ * This structure's lifetime is managed by RCU, assignments to
++ * the array holding it must hold the aggregation mutex.
+  *
+- * The @reorder_lock is used to protect the variables and
+- * arrays such as @reorder_buf, @reorder_time, @head_seq_num,
+- * @stored_mpdu_num and @reorder_time from being corrupted by
+- * concurrent access of the RX path and the expired frame
+- * release timer.
++ * The @reorder_lock is used to protect the members of this
++ * struct, except for @timeout, @buf_size and @dialog_token,
++ * which are constant across the lifetime of the struct (the
++ * dialog token being used only for debugging).
+  */
+ struct tid_ampdu_rx {
+ 	struct rcu_head rcu_head;
+--- wireless-testing.orig/net/mac80211/rx.c	2010-10-07 22:52:03.000000000 +0200
++++ wireless-testing/net/mac80211/rx.c	2010-10-07 22:58:17.000000000 +0200
+@@ -538,6 +538,8 @@ static void ieee80211_release_reorder_fr
+ {
+ 	struct sk_buff *skb = tid_agg_rx->reorder_buf[index];
+ 
++	lockdep_assert_held(&tid_agg_rx->reorder_lock);
++
+ 	if (!skb)
+ 		goto no_frame;
+ 
+@@ -557,6 +559,8 @@ static void ieee80211_release_reorder_fr
+ {
+ 	int index;
+ 
++	lockdep_assert_held(&tid_agg_rx->reorder_lock);
++
+ 	while (seq_less(tid_agg_rx->head_seq_num, head_seq_num)) {
+ 		index = seq_sub(tid_agg_rx->head_seq_num, tid_agg_rx->ssn) %
+ 							tid_agg_rx->buf_size;
+@@ -581,6 +585,8 @@ static void ieee80211_sta_reorder_releas
+ {
+ 	int index, j;
+ 
++	lockdep_assert_held(&tid_agg_rx->reorder_lock);
++
+ 	/* release the buffer until next missing frame */
+ 	index = seq_sub(tid_agg_rx->head_seq_num, tid_agg_rx->ssn) %
+ 						tid_agg_rx->buf_size;
+@@ -659,10 +665,11 @@ static bool ieee80211_sta_manage_reorder
+ 	int index;
+ 	bool ret = true;
+ 
++	spin_lock(&tid_agg_rx->reorder_lock);
++
+ 	buf_size = tid_agg_rx->buf_size;
+ 	head_seq_num = tid_agg_rx->head_seq_num;
+ 
+-	spin_lock(&tid_agg_rx->reorder_lock);
+ 	/* frame with out of date sequence number */
+ 	if (seq_less(mpdu_seq_num, head_seq_num)) {
+ 		dev_kfree_skb(skb);
+@@ -1899,9 +1906,12 @@ ieee80211_rx_h_ctrl(struct ieee80211_rx_
+ 			mod_timer(&tid_agg_rx->session_timer,
+ 				  TU_TO_EXP_TIME(tid_agg_rx->timeout));
+ 
++		spin_lock(&tid_agg_rx->reorder_lock);
+ 		/* release stored frames up to start of BAR */
+ 		ieee80211_release_reorder_frames(hw, tid_agg_rx, start_seq_num,
+ 						 frames);
++		spin_unlock(&tid_agg_rx->reorder_lock);
++
+ 		kfree_skb(skb);
+ 		return RX_QUEUED;
+ 	}
+@@ -2493,9 +2503,8 @@ static void ieee80211_invoke_rx_handlers
+ }
+ 
+ /*
+- * This function makes calls into the RX path. Therefore the
+- * caller must hold the sta_info->lock and everything has to
+- * be under rcu_read_lock protection as well.
++ * This function makes calls into the RX path, therefore
++ * it has to be invoked under RCU read lock.
+  */
+ void ieee80211_release_reorder_timeout(struct sta_info *sta, int tid)
+ {
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-3945.h b/drivers/net/wireless/iwlwifi/iwl-3945.h
-index bb2aeeb..98509c5 100644
---- a/drivers/net/wireless/iwlwifi/iwl-3945.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-3945.h
-@@ -295,7 +295,7 @@ extern const struct iwl_channel_info *iwl3945_get_channel_info(
- extern int iwl3945_rs_next_rate(struct iwl_priv *priv, int rate);
- 
- /* scanning */
--void iwl3945_request_scan(struct iwl_priv *priv, struct ieee80211_vif *vif);
-+int iwl3945_request_scan(struct iwl_priv *priv, struct ieee80211_vif *vif);
- 
- /* Requires full declaration of iwl_priv before including */
- #include "iwl-io.h"
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-lib.c b/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
-index 8fd00a6..2be8faa 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
-@@ -1147,7 +1147,7 @@ static int iwl_get_channels_for_scan(struct iwl_priv *priv,
- 	return added;
- }
- 
--void iwlagn_request_scan(struct iwl_priv *priv, struct ieee80211_vif *vif)
-+int iwlagn_request_scan(struct iwl_priv *priv, struct ieee80211_vif *vif)
- {
- 	struct iwl_host_cmd cmd = {
- 		.id = REPLY_SCAN_CMD,
-@@ -1394,24 +1394,18 @@ void iwlagn_request_scan(struct iwl_priv *priv, struct ieee80211_vif *vif)
- 	scan->len = cpu_to_le16(cmd.len);
- 
- 	set_bit(STATUS_SCAN_HW, &priv->status);
--	if (iwl_send_cmd_sync(priv, &cmd))
-+	if (iwl_send_cmd_sync(priv, &cmd)) {
-+		clear_bit(STATUS_SCAN_HW, &priv->status);
- 		goto done;
-+	}
- 
- 	queue_delayed_work(priv->workqueue, &priv->scan_check,
- 			   IWL_SCAN_CHECK_WATCHDOG);
- 
--	return;
-+	return 0;
- 
-  done:
--	/* Cannot perform scan. Make sure we clear scanning
--	* bits from status so next scan request can be performed.
--	* If we don't clear scanning status bit here all next scan
--	* will fail
--	*/
--	clear_bit(STATUS_SCAN_HW, &priv->status);
--	clear_bit(STATUS_SCANNING, &priv->status);
--	/* inform mac80211 scan aborted */
--	queue_work(priv->workqueue, &priv->abort_scan);
-+	return -EIO;
- }
- 
- int iwlagn_manage_ibss_station(struct iwl_priv *priv,
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.h b/drivers/net/wireless/iwlwifi/iwl-agn.h
-index cc6464d..015da26 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn.h
-@@ -216,7 +216,7 @@ void iwl_reply_statistics(struct iwl_priv *priv,
- 			  struct iwl_rx_mem_buffer *rxb);
- 
- /* scan */
--void iwlagn_request_scan(struct iwl_priv *priv, struct ieee80211_vif *vif);
-+int iwlagn_request_scan(struct iwl_priv *priv, struct ieee80211_vif *vif);
- 
- /* station mgmt */
- int iwlagn_manage_ibss_station(struct iwl_priv *priv,
-diff --git a/drivers/net/wireless/iwlwifi/iwl-core.h b/drivers/net/wireless/iwlwifi/iwl-core.h
-index 5e6ee3d..110de0f 100644
---- a/drivers/net/wireless/iwlwifi/iwl-core.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-core.h
-@@ -109,7 +109,7 @@ struct iwl_hcmd_utils_ops {
- 				  __le16 fc, __le32 *tx_flags);
- 	int  (*calc_rssi)(struct iwl_priv *priv,
- 			  struct iwl_rx_phy_res *rx_resp);
--	void (*request_scan)(struct iwl_priv *priv, struct ieee80211_vif *vif);
-+	int (*request_scan)(struct iwl_priv *priv, struct ieee80211_vif *vif);
- };
- 
- struct iwl_apm_ops {
-diff --git a/drivers/net/wireless/iwlwifi/iwl-scan.c b/drivers/net/wireless/iwlwifi/iwl-scan.c
-index a4b3663..290140a 100644
---- a/drivers/net/wireless/iwlwifi/iwl-scan.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-scan.c
-@@ -298,6 +298,7 @@ EXPORT_SYMBOL(iwl_init_scan_params);
- 
- static int iwl_scan_initiate(struct iwl_priv *priv, struct ieee80211_vif *vif)
- {
-+	int ret;
- 	lockdep_assert_held(&priv->mutex);
- 
- 	IWL_DEBUG_INFO(priv, "Starting scan...\n");
-@@ -308,9 +309,11 @@ static int iwl_scan_initiate(struct iwl_priv *priv, struct ieee80211_vif *vif)
- 	if (WARN_ON(!priv->cfg->ops->utils->request_scan))
- 		return -EOPNOTSUPP;
- 
--	priv->cfg->ops->utils->request_scan(priv, vif);
-+	ret = priv->cfg->ops->utils->request_scan(priv, vif);
-+	if (ret)
-+		clear_bit(STATUS_SCANNING, &priv->status);
-+	return ret;
- 
--	return 0;
- }
- 
- int iwl_mac_hw_scan(struct ieee80211_hw *hw,
-@@ -380,6 +383,7 @@ void iwl_internal_short_hw_scan(struct iwl_priv *priv)
- 
- void iwl_bg_start_internal_scan(struct work_struct *work)
- {
-+	int ret;
- 	struct iwl_priv *priv =
- 		container_of(work, struct iwl_priv, start_internal_scan);
- 
-@@ -414,7 +418,11 @@ void iwl_bg_start_internal_scan(struct work_struct *work)
- 	if (WARN_ON(!priv->cfg->ops->utils->request_scan))
- 		goto unlock;
- 
--	priv->cfg->ops->utils->request_scan(priv, NULL);
-+	ret = priv->cfg->ops->utils->request_scan(priv, NULL);
-+	if (ret) {
-+		clear_bit(STATUS_SCANNING, &priv->status);
-+		priv->is_internal_short_scan = false;
-+	}
-  unlock:
- 	mutex_unlock(&priv->mutex);
- }
-diff --git a/drivers/net/wireless/iwlwifi/iwl3945-base.c b/drivers/net/wireless/iwlwifi/iwl3945-base.c
-index d31661c..fc82da0 100644
---- a/drivers/net/wireless/iwlwifi/iwl3945-base.c
-+++ b/drivers/net/wireless/iwlwifi/iwl3945-base.c
-@@ -2799,7 +2799,7 @@ static void iwl3945_rfkill_poll(struct work_struct *data)
- 
- }
- 
--void iwl3945_request_scan(struct iwl_priv *priv, struct ieee80211_vif *vif)
-+int iwl3945_request_scan(struct iwl_priv *priv, struct ieee80211_vif *vif)
- {
- 	struct iwl_host_cmd cmd = {
- 		.id = REPLY_SCAN_CMD,
-@@ -3000,25 +3000,18 @@ void iwl3945_request_scan(struct iwl_priv *priv, struct ieee80211_vif *vif)
- 	scan->len = cpu_to_le16(cmd.len);
- 
- 	set_bit(STATUS_SCAN_HW, &priv->status);
--	if (iwl_send_cmd_sync(priv, &cmd))
-+	if (iwl_send_cmd_sync(priv, &cmd)) {
-+		clear_bit(STATUS_SCAN_HW, &priv->status);
- 		goto done;
-+	}
- 
- 	queue_delayed_work(priv->workqueue, &priv->scan_check,
- 			   IWL_SCAN_CHECK_WATCHDOG);
- 
--	return;
-+	return 0;
- 
-  done:
--	/* can not perform scan make sure we clear scanning
--	 * bits from status so next scan request can be performed.
--	 * if we dont clear scanning status bit here all next scan
--	 * will fail
--	*/
--	clear_bit(STATUS_SCAN_HW, &priv->status);
--	clear_bit(STATUS_SCANNING, &priv->status);
--
--	/* inform mac80211 scan aborted */
--	queue_work(priv->workqueue, &priv->abort_scan);
-+	return -EIO;
- }
- 
- static void iwl3945_bg_restart(struct work_struct *data)
--- 
-1.7.1
 
