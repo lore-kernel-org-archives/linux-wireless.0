@@ -1,44 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:50454 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751761Ab0JEUle (ORCPT
+Received: from mail.candelatech.com ([208.74.158.172]:51563 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753177Ab0JGXMT (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 5 Oct 2010 16:41:34 -0400
-Subject: Re: [PATCH wireless-2.6] mac80211: delete AddBA response timer
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Ben Greear <greearb@candelatech.com>
-Cc: John Linville <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <4CAB8C39.5090201@candelatech.com>
-References: <1286307633.3641.29.camel@jlt3.sipsolutions.net>
-	 <1286309408.3641.31.camel@jlt3.sipsolutions.net>
-	 <4CAB8C39.5090201@candelatech.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Tue, 05 Oct 2010 22:41:29 +0200
-Message-ID: <1286311289.3641.34.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+	Thu, 7 Oct 2010 19:12:19 -0400
+From: greearb@candelatech.com
+To: linux-wireless@vger.kernel.org
+Cc: Ben Greear <greearb@candelatech.com>
+Subject: [PATCH] mac80211:  Improve mlme probe response log messages.
+Date: Thu,  7 Oct 2010 16:12:06 -0700
+Message-Id: <1286493126-18316-1-git-send-email-greearb@candelatech.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2010-10-05 at 13:36 -0700, Ben Greear wrote:
+From: Ben Greear <greearb@candelatech.com>
 
-> >> I've reproduced the scenario and tested the fix.
+Old messages didn't mention the device in question.
 
-> > This fixes the crash reported at
-> > http://mid.gmane.org/4CAB6F96.6090701@candelatech.com
-> 
-> I can no longer reproduce that problem, so it looks fixed
-> to me.
+Signed-off-by: Ben Greear <greearb@candelatech.com>
+---
+:100644 100644 5695c94... a3a9421... M	net/mac80211/mlme.c
+ net/mac80211/mlme.c |   18 +++++++++++-------
+ 1 files changed, 11 insertions(+), 7 deletions(-)
 
-Yeah .. I did actually go and reproduce the crash by strategically
-adding an msleep(200) to the mac80211 code and then doing some things
-from userspace :-)
-
-> The data corruption issue still exists, however...
-
-That looks very much like an ath9k issue, it seems like it's doing DMA
-into already freed SKBs. Come to think of it, maybe that wmb() patch
-might help?:
-
-johannes
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+index 5695c94..a3a9421 100644
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -1864,10 +1864,12 @@ void ieee80211_sta_work(struct ieee80211_sub_if_data *sdata)
+ 
+ 		else if (ifmgd->probe_send_count < IEEE80211_MAX_PROBE_TRIES) {
+ #ifdef CONFIG_MAC80211_VERBOSE_DEBUG
+-			printk(KERN_DEBUG "No probe response from AP %pM"
+-				" after %dms, try %d\n", bssid,
+-				(1000 * IEEE80211_PROBE_WAIT)/HZ,
+-				ifmgd->probe_send_count);
++			wiphy_debug(local->hw.wiphy,
++				    "%s: No probe response from AP %pM"
++				    " after %dms, try %d\n",
++				    sdata->name,
++				    bssid, (1000 * IEEE80211_PROBE_WAIT)/HZ,
++				    ifmgd->probe_send_count);
+ #endif
+ 			ieee80211_mgd_probe_ap_send(sdata);
+ 		} else {
+@@ -1877,9 +1879,11 @@ void ieee80211_sta_work(struct ieee80211_sub_if_data *sdata)
+ 			 */
+ 			ifmgd->flags &= ~(IEEE80211_STA_CONNECTION_POLL |
+ 					  IEEE80211_STA_BEACON_POLL);
+-			printk(KERN_DEBUG "No probe response from AP %pM"
+-				" after %dms, disconnecting.\n",
+-				bssid, (1000 * IEEE80211_PROBE_WAIT)/HZ);
++			wiphy_debug(local->hw.wiphy,
++				    "%s: No probe response from AP %pM"
++				    " after %dms, disconnecting.\n",
++				    sdata->name,
++				    bssid, (1000 * IEEE80211_PROBE_WAIT)/HZ);
+ 			ieee80211_set_disassoc(sdata, true, true);
+ 			mutex_unlock(&ifmgd->mtx);
+ 			mutex_lock(&local->mtx);
+-- 
+1.7.2.2
 
