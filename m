@@ -1,64 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:44916 "EHLO
+Received: from he.sipsolutions.net ([78.46.109.217]:56857 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759526Ab0JFSLi (ORCPT
+	with ESMTP id S1753472Ab0JGIew (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 6 Oct 2010 14:11:38 -0400
-Subject: Re: Crash in cfg80211_unlink_bss
+	Thu, 7 Oct 2010 04:34:52 -0400
+Subject: Re: Latest wireless-testing has broken scan locking.
 From: Johannes Berg <johannes@sipsolutions.net>
 To: Ben Greear <greearb@candelatech.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <1286388245.3655.392.camel@jlt3.sipsolutions.net>
-References: <4CACB1D1.7090900@candelatech.com>
-	 <1286388245.3655.392.camel@jlt3.sipsolutions.net>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Stanislaw Gruszka <sgruszka@redhat.com>
+In-Reply-To: <4CAD48DA.9010208@candelatech.com>
+References: <4CAD48DA.9010208@candelatech.com>
 Content-Type: text/plain; charset="UTF-8"
-Date: Wed, 06 Oct 2010 20:11:37 +0200
-Message-ID: <1286388697.3655.393.camel@jlt3.sipsolutions.net>
+Date: Thu, 07 Oct 2010 10:34:48 +0200
+Message-ID: <1286440488.3657.23.camel@jlt3.sipsolutions.net>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2010-10-06 at 20:04 +0200, Johannes Berg wrote:
-
-> But anyway, now that I look at it in more detail, it seems fairly
-> obvious. You should be able to trigger it with two stations, but it's
-> probably harder ...
+On Wed, 2010-10-06 at 21:13 -0700, Ben Greear wrote:
+> Unless I really screwed up a merge in a strange way, the
+> ieee80211_scan_work is broken.
 > 
-> I need to analyse the refcounting here again and in more detail, but in
-> the meantime can you try below patch?
+> It calls mutex_unlock(&local->mtx) too many times when it hits
+> this code:
+> 
+> 		case SCAN_DECISION:
+> 			/* if no more bands/channels left, complete scan */
+> 			if (local->scan_channel_idx >= local->scan_req->n_channels) {
+> 				aborted = false;
+> 				goto out_complete;
+> 			}
 
-Ok, I did that, and it's because the BSS list owns a reference, so
-this'll just crash somewhere else for you now ... Below should fix it
-completely.
+So much for trusting Stanislaw :-( I can reproduce this in hwsim.
+Stanislaw, did you ever test software scan at all?
+
+Below patch fixes this.
 
 johannes
 
 ---
- net/wireless/scan.c |   12 ++++++------
- 1 file changed, 6 insertions(+), 6 deletions(-)
+ net/mac80211/scan.c |    3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
 
---- wireless-testing.orig/net/wireless/scan.c	2010-10-06 19:59:41.000000000 +0200
-+++ wireless-testing/net/wireless/scan.c	2010-10-06 20:10:41.000000000 +0200
-@@ -668,14 +668,14 @@ void cfg80211_unlink_bss(struct wiphy *w
- 	bss = container_of(pub, struct cfg80211_internal_bss, pub);
+--- wireless-testing.orig/net/mac80211/scan.c	2010-10-07 10:27:37.000000000 +0200
++++ wireless-testing/net/mac80211/scan.c	2010-10-07 10:31:19.000000000 +0200
+@@ -693,8 +693,6 @@ void ieee80211_scan_work(struct work_str
+ 		goto out_complete;
+ 	}
  
- 	spin_lock_bh(&dev->bss_lock);
-+	if (!list_empty(&bss->list)) {
-+		list_del_init(&bss->list);
-+		dev->bss_generation++;
-+		rb_erase(&bss->rbn, &dev->bss_tree);
- 
--	list_del(&bss->list);
--	dev->bss_generation++;
--	rb_erase(&bss->rbn, &dev->bss_tree);
+-	mutex_unlock(&local->mtx);
 -
-+		kref_put(&bss->ref, bss_release);
-+	}
- 	spin_unlock_bh(&dev->bss_lock);
--
--	kref_put(&bss->ref, bss_release);
- }
- EXPORT_SYMBOL(cfg80211_unlink_bss);
+ 	/*
+ 	 * as long as no delay is required advance immediately
+ 	 * without scheduling a new work
+@@ -725,6 +723,7 @@ void ieee80211_scan_work(struct work_str
+ 	} while (next_delay == 0);
  
+ 	ieee80211_queue_delayed_work(&local->hw, &local->scan_work, next_delay);
++	mutex_unlock(&local->mtx);
+ 	return;
+ 
+ out_complete:
 
 
