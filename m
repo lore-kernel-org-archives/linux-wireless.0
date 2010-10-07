@@ -1,41 +1,313 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ogre.sisk.pl ([217.79.144.158]:52671 "EHLO ogre.sisk.pl"
+Received: from nbd.name ([88.198.39.176]:53245 "EHLO ds10.nbd.name"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754149Ab0JPTxW (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 16 Oct 2010 15:53:22 -0400
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
-To: Paul Stewart <pstew@google.com>
-Subject: Re: [PATCH] ath9k: Convert to new PCI PM framework
-Date: Sat, 16 Oct 2010 21:52:24 +0200
-Cc: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	LKML <linux-kernel@vger.kernel.org>,
-	"Linux-pm mailing list" <linux-pm@lists.linux-foundation.org>,
-	linux-wireless@vger.kernel.org, ath9k-devel@venema.h4ckr.net
-References: <201010160036.17653.rjw@sisk.pl> <AANLkTimXXERRCYEjzQbcii6XW8wbjNfN-eWigU7Wi_Lv@mail.gmail.com>
-In-Reply-To: <AANLkTimXXERRCYEjzQbcii6XW8wbjNfN-eWigU7Wi_Lv@mail.gmail.com>
+	id S1751258Ab0JGT4l (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 7 Oct 2010 15:56:41 -0400
+Message-ID: <4CAE25F6.2010707@openwrt.org>
+Date: Thu, 07 Oct 2010 21:56:38 +0200
+From: Felix Fietkau <nbd@openwrt.org>
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Message-Id: <201010162152.24344.rjw@sisk.pl>
+To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+CC: linux-wireless <linux-wireless@vger.kernel.org>
+Subject: [PATCH v4] compat: backport netlink changes used in the nl80211 cleanup
+References: <4CADB60C.6040105@openwrt.org> <4CADC142.7010709@openwrt.org> <4CADC341.40305@openwrt.org>
+In-Reply-To: <4CADC341.40305@openwrt.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Saturday, October 16, 2010, Paul Stewart wrote:
-> On Fri, Oct 15, 2010 at 3:36 PM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
-> > From: Rafael J. Wysocki <rjw@sisk.pl>
-> >
-> > The ath9k driver uses the legacy PCI power management (suspend
-> > and resume) callbacks that apparently cause intermittent problems
-> > to happen (the adapter sometimes doesn't resume correctly on my
-> > Acer Ferrari One).  Make it use the new PCI PM and let the PCI core
-> > code handle the PCI-specific details of power transitions.
-> I'm curious.  What sort of behavior did you get when the device fails
-> to resume correctly?  Every now and then I've been getting bad
-> accesses to 0x7000 every now and then -- after that any reads to PCI
-> registers return all f's.
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+---
+v2:
+- fix genl_unregister_family wrapper (removes the family from the internal list)
+- fix error handling in doit ops
+v3:
+- fix a theoretical race in family unregister
+v4:
+- remove old genl_register_family_with_ops implementation
+- fix genl_info_net redefinition
+tested on 2.6.30
 
-Yes, this sort of matches my experience.  Even the config space isn't
-really accessible after a failure to resume.
-
-Thanks,
-Rafael
+--- a/include/linux/compat-2.6.37.h
++++ b/include/linux/compat-2.6.37.h
+@@ -45,6 +45,71 @@ static inline void skb_checksum_none_ass
+ 
+ #define pcmcia_enable_device(link)	pcmcia_request_configuration(link, &link->conf)
+ 
++#include <net/genetlink.h>
++
++struct compat_genl_info {
++	struct genl_info *info;
++
++	u32 snd_seq;
++	u32 snd_pid;
++	struct genlmsghdr *genlhdr;
++	struct nlattr **attrs;
++	void *user_ptr[2];
++};
++#define genl_info compat_genl_info
++
++struct compat_genl_ops {
++	struct genl_ops ops;
++
++	u8 cmd;
++	u8 internal_flags;
++	unsigned int flags;
++	const struct nla_policy *policy;
++
++	int (*doit)(struct sk_buff *skb, struct genl_info *info);
++	int (*dumpit)(struct sk_buff *skb, struct netlink_callback *cb);
++	int (*done)(struct netlink_callback *cb);
++};
++#define genl_ops compat_genl_ops
++
++struct compat_genl_family {
++	struct genl_family family;
++
++	struct list_head list;
++
++	unsigned int id, hdrsize, version, maxattr;
++	const char *name;
++	bool netnsok;
++
++	struct nlattr **attrbuf;
++
++	int (*pre_doit)(struct genl_ops *ops, struct sk_buff *skb,
++			struct genl_info *info);
++
++	void (*post_doit)(struct genl_ops *ops, struct sk_buff *skb,
++			  struct genl_info *info);
++};
++
++#define genl_family compat_genl_family
++
++#define genl_register_family_with_ops compat_genl_register_family_with_ops
++
++int genl_register_family_with_ops(struct genl_family *family,
++				  struct genl_ops *ops, size_t n_ops);
++
++#define genl_unregister_family compat_genl_unregister_family
++
++int genl_unregister_family(struct genl_family *family);
++
++#if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,32))
++#define genl_info_net(_info) genl_info_net((_info)->info)
++#endif
++
++#define genlmsg_reply(_msg, _info) genlmsg_reply(_msg, (_info)->info)
++#define genlmsg_put(_skb, _pid, _seq, _fam, _flags, _cmd) genlmsg_put(_skb, _pid, _seq, &(_fam)->family, _flags, _cmd)
++#define genl_register_mc_group(_fam, _grp) genl_register_mc_group(&(_fam)->family, _grp)
++#define genl_unregister_mc_group(_fam, _grp) genl_unregister_mc_group(&(_fam)->family, _grp)
++
+ #endif /* (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,37)) */
+ 
+ #endif /* LINUX_26_37_COMPAT_H */
+--- a/compat/compat-2.6.37.c
++++ b/compat/compat-2.6.37.c
+@@ -42,4 +42,116 @@ EXPORT_SYMBOL_GPL(net_ns_type_operations
+ 
+ #endif /* LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,35)*/ 
+ 
++#undef genl_info
++#undef genl_unregister_family
++
++static LIST_HEAD(compat_nl_fam);
++
++static struct genl_ops *genl_get_cmd(u8 cmd, struct genl_family *family)
++{
++	struct genl_ops *ops;
++
++	list_for_each_entry(ops, &family->family.ops_list, ops.ops_list)
++		if (ops->cmd == cmd)
++			return ops;
++
++	return NULL;
++}
++
++
++static int nl_doit_wrapper(struct sk_buff *skb, struct genl_info *info)
++{
++	struct compat_genl_info compat_info;
++	struct genl_family *family;
++	struct genl_ops *ops;
++	int err;
++
++	list_for_each_entry(family, &compat_nl_fam, list) {
++		if (family->id == info->nlhdr->nlmsg_type)
++			goto found;
++	}
++	return -ENOENT;
++
++found:
++	ops = genl_get_cmd(info->genlhdr->cmd, family);
++	if (!ops)
++		return -ENOENT;
++
++	memset(&compat_info.user_ptr, 0, sizeof(compat_info.user_ptr));
++	compat_info.info = info;
++#define __copy(_field) compat_info._field = info->_field
++	__copy(snd_seq);
++	__copy(snd_pid);
++	__copy(genlhdr);
++	__copy(attrs);
++#undef __copy
++	if (family->pre_doit) {
++		err = family->pre_doit(ops, skb, &compat_info);
++		if (err)
++			return err;
++	}
++
++	err = ops->doit(skb, &compat_info);
++
++	if (family->post_doit)
++		family->post_doit(ops, skb, &compat_info);
++
++	return err;
++}
++
++int compat_genl_register_family_with_ops(struct genl_family *family,
++					 struct genl_ops *ops, size_t n_ops)
++{
++	int i, ret;
++
++#define __copy(_field) family->family._field = family->_field
++	__copy(id);
++	__copy(hdrsize);
++	__copy(version);
++	__copy(maxattr);
++	strncpy(family->family.name, family->name, sizeof(family->family.name));
++#if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,32))
++	__copy(netnsok);
++#endif
++#undef __copy
++
++	ret = genl_register_family(&family->family);
++	if (ret < 0)
++		return ret;
++
++	family->attrbuf = family->family.attrbuf;
++	family->id = family->family.id;
++
++	for (i = 0; i < n_ops; i++) {
++#define __copy(_field) ops[i].ops._field = ops[i]._field
++		__copy(cmd);
++		__copy(flags);
++		__copy(policy);
++		__copy(dumpit);
++		__copy(done);
++#undef __copy
++		ops[i].ops.doit = nl_doit_wrapper;
++		ret = genl_register_ops(&family->family, &ops[i].ops);
++		if (ret < 0)
++			goto error_ops;
++	}
++	list_add(&family->list, &compat_nl_fam);
++
++	return ret;
++
++error_ops:
++	compat_genl_unregister_family(family);
++	return ret;
++}
++EXPORT_SYMBOL(compat_genl_register_family_with_ops);
++
++int compat_genl_unregister_family(struct genl_family *family)
++{
++	int err;
++	err = genl_unregister_family(&family->family);
++	list_del(&family->list);
++	return err;
++}
++EXPORT_SYMBOL(compat_genl_unregister_family);
++
+ #endif /* LINUX_VERSION_CODE < KERNEL_VERSION(2,6,37) */
+--- a/compat/compat-2.6.31.c
++++ /dev/null
+@@ -1,64 +0,0 @@
+-/*
+- * Copyright 2007	Luis R. Rodriguez <mcgrof@winlab.rutgers.edu>
+- *
+- * This program is free software; you can redistribute it and/or modify
+- * it under the terms of the GNU General Public License version 2 as
+- * published by the Free Software Foundation.
+- *
+- * Compatibility file for Linux wireless for kernels 2.6.31.
+- */
+-
+-#include <linux/compat.h>
+-
+-#if (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,31))
+-
+-#include <linux/netdevice.h>
+-
+-/**
+- * genl_register_family_with_ops - register a generic netlink family
+- * @family: generic netlink family
+- * @ops: operations to be registered
+- * @n_ops: number of elements to register
+- *
+- * Registers the specified family and operations from the specified table.
+- * Only one family may be registered with the same family name or identifier.
+- *
+- * The family id may equal GENL_ID_GENERATE causing an unique id to
+- * be automatically generated and assigned.
+- *
+- * Either a doit or dumpit callback must be specified for every registered
+- * operation or the function will fail. Only one operation structure per
+- * command identifier may be registered.
+- *
+- * See include/net/genetlink.h for more documenation on the operations
+- * structure.
+- *
+- * This is equivalent to calling genl_register_family() followed by
+- * genl_register_ops() for every operation entry in the table taking
+- * care to unregister the family on error path.
+- *
+- * Return 0 on success or a negative error code.
+- */
+-int genl_register_family_with_ops(struct genl_family *family,
+-	struct genl_ops *ops, size_t n_ops)
+-{
+-	int err, i;
+-
+-	err = genl_register_family(family);
+-	if (err)
+-		return err;
+-
+-	for (i = 0; i < n_ops; ++i, ++ops) {
+-		err = genl_register_ops(family, ops);
+-		if (err)
+-			goto err_out;
+-	}
+-	return 0;
+-err_out:
+-	genl_unregister_family(family);
+-	return err;
+-}
+-EXPORT_SYMBOL(genl_register_family_with_ops);
+-
+-#endif /* (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,31)) */
+-
+--- a/include/linux/compat-2.6.31.h
++++ b/include/linux/compat-2.6.31.h
+@@ -114,10 +114,6 @@ static inline struct rtable *skb_rtable(
+ 	return (struct rtable *)skb_dst(skb);
+ }
+ 
+-extern int genl_register_family_with_ops(struct genl_family *family,
+-	struct genl_ops *ops, size_t n_ops);
+-
+-
+ /* Backport threaded IRQ support */
+ 
+ static inline
+--- a/compat/Makefile
++++ b/compat/Makefile
+@@ -23,7 +23,6 @@ compat-$(CONFIG_COMPAT_KERNEL_27) += com
+ compat-$(CONFIG_COMPAT_KERNEL_28) += compat-2.6.28.o
+ compat-$(CONFIG_COMPAT_KERNEL_29) += compat-2.6.29.o
+ compat-$(CONFIG_COMPAT_KERNEL_30) += compat-2.6.30.o
+-compat-$(CONFIG_COMPAT_KERNEL_31) += compat-2.6.31.o
+ compat-$(CONFIG_COMPAT_KERNEL_32) += compat-2.6.32.o
+ compat-$(CONFIG_COMPAT_KERNEL_33) += compat-2.6.33.o
+ compat-$(CONFIG_COMPAT_KERNEL_35) += compat-2.6.35.o
