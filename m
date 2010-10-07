@@ -1,134 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp-out.google.com ([216.239.44.51]:38214 "EHLO
-	smtp-out.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753561Ab0JMWsx (ORCPT
+Received: from mail-iw0-f174.google.com ([209.85.214.174]:42943 "EHLO
+	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750978Ab0JGGvu convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 13 Oct 2010 18:48:53 -0400
-Received: from kpbe12.cbf.corp.google.com (kpbe12.cbf.corp.google.com [172.25.105.76])
-	by smtp-out.google.com with ESMTP id o9DMmqK5022921
-	for <linux-wireless@vger.kernel.org>; Wed, 13 Oct 2010 15:48:53 -0700
-Received: from glenhelen.mtv.corp.google.com (glenhelen.mtv.corp.google.com [172.22.72.223])
-	by kpbe12.cbf.corp.google.com with ESMTP id o9DMmpPK020047
-	for <linux-wireless@vger.kernel.org>; Wed, 13 Oct 2010 15:48:52 -0700
-From: Paul Stewart <pstew@google.com>
-Date: Wed, 13 Oct 2010 15:13:50 -0700
-Subject: [PATCH 3/6] Add a function for evaluating rate changes for possible notification
-To: linux-wireless@vger.kernel.org
-Message-Id: <20101013224851.B8E5D20465@glenhelen.mtv.corp.google.com>
+	Thu, 7 Oct 2010 02:51:50 -0400
+Received: by iwn9 with SMTP id 9so448105iwn.19
+        for <linux-wireless@vger.kernel.org>; Wed, 06 Oct 2010 23:51:49 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <201010071003.37599.br1@einfach.org>
+References: <20101005095510.3083.46174.stgit@tt-desk>
+	<20101005095526.3083.82322.stgit@tt-desk>
+	<AANLkTimpPuwDFUidUprBkLoJrpr=5tnwCcNcnHmfT_Z7@mail.gmail.com>
+	<201010071003.37599.br1@einfach.org>
+Date: Thu, 7 Oct 2010 08:51:49 +0200
+Message-ID: <AANLkTimf=f1DhP68=aHZ7WKVCN9RPBq7sh+46ExnYRVa@mail.gmail.com>
+Subject: Re: [PATCH 4/5] nl80211/mac80211: Add channel utilization to survey
+From: Helmut Schaa <helmut.schaa@googlemail.com>
+To: Bruno Randolf <br1@einfach.org>
+Cc: linville@tuxdriver.com, nbd@openwrt.org,
+	ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org,
+	adrian@freebsd.org, vasanth@atheros.com,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Called from a work proc, this examines the last transmit rate change
-to see if it warrants an event transmission.
+On Thu, Oct 7, 2010 at 3:03 AM, Bruno Randolf <br1@einfach.org> wrote:
+> On Wed October 6 2010 18:54:37 Helmut Schaa wrote:
+>> On Tue, Oct 5, 2010 at 11:55 AM, Bruno Randolf <br1@einfach.org> wrote:
+>> > This adds three new values to the survey results:
+>> >
+>> >  * BUSY - percentage of time the channel was busy
+>> >  * BUSY_TX - percentage of time spent transmitting frames
+>> >  * BUSY_RX - percentage of time spent receiving frames
+>>
+>> Does BUSY include BUSY_RX and BUSY_TX already? At least on
+>> rt2800 devices we only have access to BUSY which already includes
+>> BUSY_RX and TX.
+>
+> yes, BUSY includes TX and RX.
+>
+>> And what about BUSY on the secondary channel in case of 40Mhz?
+>
+> i have no information about that. luis?
 
-Signed-off-by: Paul Stewart <pstew@google.com>
+At least we've got a register for that in rt2800 ;)
+That's why I'm asking.
 
----
- net/mac80211/rate.c |   74 +++++++++++++++++++++++++++++++++++++++++++++++++++
- net/mac80211/rate.h |    8 +++++
- 2 files changed, 82 insertions(+), 0 deletions(-)
-
-diff --git a/net/mac80211/rate.c b/net/mac80211/rate.c
-index 4f772de..5e39494 100644
---- a/net/mac80211/rate.c
-+++ b/net/mac80211/rate.c
-@@ -399,3 +399,77 @@ void rate_control_deinitialize(struct ieee80211_local *local)
- 	rate_control_put(ref);
- }
- 
-+u32 ieee80211_rate_calculate(struct ieee80211_local *local,
-+			     struct ieee80211_if_managed *ifmgd)
-+{
-+	u32 rate_val;
-+	u32 modulation, streams, base_rate, mcs, gi_div;
-+	struct ieee80211_tx_rate *rate_ptr = &ifmgd->last_cqm_tx_rate;
-+	struct ieee80211_supported_band *sband;
-+	static int mod_table[8] = { 1, 2, 3, 4, 6, 8, 9, 10 };
-+
-+	if (!(rate_ptr->flags & IEEE80211_TX_RC_MCS)) {
-+		sband = local->hw.wiphy->bands[local->hw.conf.channel->band];
-+		return sband->bitrates[ifmgd->last_cqm_tx_rate.idx].bitrate;
-+	}
-+
-+	mcs = rate_ptr->idx;
-+
-+	/* MCS values over 32 are not yet supported */
-+	if (mcs >= 32)
-+		return 0;
-+
-+	modulation = mcs & 7;
-+	streams = (mcs >> 3) + 1;
-+	base_rate = (rate_ptr->flags & IEEE80211_TX_RC_40_MHZ_WIDTH) ?
-+		13500000 : 6500000;
-+	gi_div = (rate_ptr->flags & IEEE80211_TX_RC_SHORT_GI) ? 9 : 10;
-+	rate_val = base_rate * mod_table[modulation] * streams / gi_div;
-+
-+	return ((rate_val + 5000) / 10000) * 100;
-+}
-+
-+void ieee80211_cqm_bitrate_notify(struct ieee80211_local *local)
-+{
-+	struct ieee80211_sub_if_data *sdata;
-+	struct ieee80211_if_managed *ifmgd;
-+	struct ieee80211_bss_conf *bss_conf;
-+	u32 bitrate, threshold;
-+	int prev_state, new_state;
-+
-+        WARN_ON(!mutex_is_locked(&local->iflist_mtx));
-+
-+        list_for_each_entry(sdata, &local->interfaces, list) {
-+                if (!netif_running(sdata->dev) ||
-+		    sdata->vif.type != NL80211_IFTYPE_STATION)
-+                        continue;
-+
-+		ifmgd = &sdata->u.mgd;
-+		bss_conf = &sdata->vif.bss_conf;
-+
-+		if (!(ifmgd->flags & IEEE80211_STA_TX_RATE_CHANGED) ||
-+		    bss_conf->cqm_bitrate_thold == 0)
-+			continue;
-+
-+		bitrate = ieee80211_rate_calculate(local, ifmgd);
-+		threshold = bss_conf->cqm_bitrate_thold;
-+		prev_state = (ifmgd->last_cqm_bitrate < threshold);
-+		new_state = (bitrate < threshold);
-+
-+		/*
-+		 * Trigger a bitrate notification if one of the following is
-+		 * true:
-+		 *   - We haven't sent one since the threshold was reconfigured
-+		 *   - We have crossed the threshold in either direction
-+		 *   - We are below threshold, and the bitrate has decreased yet
-+		 *     again.
-+		 */
-+		if (ifmgd->last_cqm_bitrate == 0 || prev_state != new_state ||
-+		    (new_state && bitrate < ifmgd->last_cqm_bitrate)) {
-+			cfg80211_cqm_bitrate_notify(sdata->dev, bitrate,
-+						    GFP_KERNEL);
-+			ifmgd->last_cqm_bitrate = bitrate;
-+		}
-+		ifmgd->flags &= ~IEEE80211_STA_TX_RATE_CHANGED;
-+	}
-+}
-diff --git a/net/mac80211/rate.h b/net/mac80211/rate.h
-index 168427b..33e4ca3 100644
---- a/net/mac80211/rate.h
-+++ b/net/mac80211/rate.h
-@@ -120,6 +120,14 @@ int ieee80211_init_rate_ctrl_alg(struct ieee80211_local *local,
- void rate_control_deinitialize(struct ieee80211_local *local);
- 
- 
-+/* Notify listeners about transmit rate changes */
-+void ieee80211_cqm_bitrate_notify(struct ieee80211_local *local);
-+
-+/* Convert rate into cfg80211-compatible struct? */
-+void ieee80211_rate_convert_cfg(struct ieee80211_local *local,
-+				struct ieee80211_if_managed *ifmgd,
-+				struct rate_info *rate);
-+
- /* Rate control algorithms */
- #ifdef CONFIG_MAC80211_RC_PID
- extern int rc80211_pid_init(void);
--- 
-1.7.1
-
+Helmut
