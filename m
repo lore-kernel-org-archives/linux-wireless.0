@@ -1,31 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:60282 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751434Ab0JYIwn (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 25 Oct 2010 04:52:43 -0400
-Subject: Re: Modifying the driver iwlwifi
-From: Johannes Berg <johannes@sipsolutions.net>
-To: "Cassiano Tartari, Eng." <falecom@cassianotartari.eng.br>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <AANLkTinP32=snam3Bex+OC8LL00awfjrJz4834mhOaNL@mail.gmail.com>
-References: <AANLkTinP32=snam3Bex+OC8LL00awfjrJz4834mhOaNL@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Mon, 25 Oct 2010 10:39:27 +0200
-Message-ID: <1287995967.3587.9.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+Received: from void.printf.net ([89.145.121.20]:42030 "EHLO void.printf.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751180Ab0JGSBN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 7 Oct 2010 14:01:13 -0400
+Date: Thu, 7 Oct 2010 19:01:07 +0100
+From: Chris Ball <cjb@laptop.org>
+To: Luciano Coelho <luciano.coelho@nokia.com>
+Cc: ext Ohad Ben-Cohen <ohad@wizery.com>, Chris Ball <cjb@laptop.org>,
+	"linux-mmc@vger.kernel.org" <linux-mmc@vger.kernel.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Nicolas Pitre <nico@fluxnic.net>
+Subject: Re: [PATCH v2 00/11] SDIO Runtime PM Support
+Message-ID: <20101007180107.GA15745@void.printf.net>
+References: <1286020455-28946-1-git-send-email-ohad@wizery.com> <1286454736.27371.37.camel@chilepepper>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1286454736.27371.37.camel@chilepepper>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2010-10-21 at 14:17 -0200, Cassiano Tartari, Eng. wrote:
-> Its basic idea is that a client doesn't wait each
-> response to go to the next step, so just do: AUTH REQ -> ASSOC REQ ->
-> DHCP DISC -> DHCP REQ -> ARP QUERY and a PING THROUGH to verify that
-> an end-to-end connection is available.
+Hi Luciano, Ohad,
 
-I'd just like to point out that for various reasons (that I invite you
-to research for yourself) there's no way this can work in encrypted
-networks, or against compliant/certified access points.
+On Thu, Oct 07, 2010 at 03:32:16PM +0300, Luciano Coelho wrote:
+> I have tested this on my beagle board with the wl1271 patches that Ohad
+> provided and it seems to be working fine.  I've also created a small
+> script to stress test the implementation a little bit and didn't see any
+> problems.
+> 
+> Tested-by: Luciano Coelho <luciano.coelho@nokia.com>
+> 
+> This is quite an important fix in the wl1271 point-of-view.  Chris, do
+> you think there is any chance that this could make it to 2.6.37?
 
-johannes
+Yes, can do -- the patchset looks good, and I've just pushed patches
+1-9 (the MMC patches) to mmc-next.  Please go ahead and submit the
+two wl1271 patches through wireless-testing whenever you're ready.
 
+Thanks!
+
+-- 
+Chris Ball   <cjb@laptop.org>   <http://printf.net/>
+One Laptop Per Child
