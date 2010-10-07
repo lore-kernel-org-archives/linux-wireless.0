@@ -1,52 +1,87 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mailout-de.gmx.net ([213.165.64.22]:37323 "HELO mail.gmx.net"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with SMTP
-	id S1755694Ab0J1VsW (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 28 Oct 2010 17:48:22 -0400
-From: "Stefan Lippers-Hollmann" <s.L-H@gmx.de>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Subject: Re: Realtek rtl8188 support?
-Date: Thu, 28 Oct 2010 23:48:13 +0200
-Cc: wireless <linux-wireless@vger.kernel.org>
-References: <c785bba31003060945j22be2e78pfeaa1bcd39fcba2c@mail.gmail.com> <201009212120.07914.s.L-H@gmx.de> <4CC9C067.9040105@lwfinger.net>
-In-Reply-To: <4CC9C067.9040105@lwfinger.net>
-MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="utf-8"
-Message-Id: <201010282348.16673.s.L-H@gmx.de>
+Received: from senator.holtmann.net ([87.106.208.187]:48292 "EHLO
+	mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751175Ab0JGQmh (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 7 Oct 2010 12:42:37 -0400
+Subject: Re: RFC: btusb firmware load help
+From: Marcel Holtmann <holtmann@linux.intel.com>
+To: Bala Shanmugam <sbalashanmugam@atheros.com>
+Cc: Shanmugamkamatchi Balashanmugam
+	<Shanmugamkamatchi.Balashanmugam@Atheros.com>,
+	Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	linux-bluetooth <linux-bluetooth@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Deepak Dhamdhere <Deepak.Dhamdhere@Atheros.com>,
+	Sree Durbha <Sree.Durbha@Atheros.com>
+In-Reply-To: <4CADF6BF.6070305@atheros.com>
+References: <1286349552.6145.11.camel@aeonflux>
+	 <AANLkTimDvgFtoGLEjgWyYRrhQy6Num-rn_2WYO4Lf84b@mail.gmail.com>
+	 <1286380566.6145.42.camel@aeonflux> <20101006163816.GE7070@tux>
+	 <AANLkTik9w4_PdcEsbRHakLcxcD334_1Q8hGArxTXPCGF@mail.gmail.com>
+	 <20101006173949.GG7070@tux>
+	 <1286387660.3655.382.camel@jlt3.sipsolutions.net>
+	 <AANLkTikYRSQw-+Tcj4VS1qxi=OaeF9C5hjAMWVu+0M=v@mail.gmail.com>
+	 <AANLkTi=o4Mc72NrNoALBdS3YHeY7RMyyAJPsCy=uW3+F@mail.gmail.com>
+	 <1286389697.3655.401.camel@jlt3.sipsolutions.net>
+	 ,<20101006183340.GI7070@tux>
+	 <44EE5C37ADC36343B0625A05DD408C4850DAD2CA31@CHEXMB-01.global.atheros.com>
+	 <1286465072.6145.151.camel@aeonflux>  <4CADF6BF.6070305@atheros.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Thu, 07 Oct 2010 18:42:21 +0200
+Message-ID: <1286469741.6145.165.camel@aeonflux>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi
+Hi Bala,
 
-On Thursday 28 October 2010, Larry Finger wrote:
-> On 09/21/2010 02:20 PM, Stefan Lippers-Hollmann wrote:
-[...]
-> As part of the inclusion of r8712u in staging, Greg KH asked for a TODO item to
-> convert the firmware to an external binary. I see this as a 2 step process: (1)
-> get the firmware binary accepted into linux-firmware, and (2) make it work with
-> the external loading mechanism. Step 1 has been completed with the following
-> commit message:
+> >> Thanks Johannes.  This would be better option to change PID in firmware
+> >> as blacklisting 3002 might create problems for 3011 chipsets.
+> >> Will try and let you people know.
+> > The misbehaving 3002 needs to be blacklisted in btusb.c anyway. However
+> > after loading the firmware to 3002 device, it should change its PID to
+> > something else.
+> >
+> > I am still trying to figure out if this is one stage firmware loading or
+> > a two stage firmware loading. This is all pretty unclear and nobody has
+> > answered this clearly so far.
+>
+> eeprom based 3011 chips comes up with PID 3000 giving control to DFU 
+> driver [ath3k].  ath3k downloads the
+> firmware changing PID to 3002.  Now btusb gets control.
 > 
-> commit c500ee5be41b7954ba9630d7e5d409a24efaf249
-> Author: Larry Finger <Larry.Finger@lwfinger.net>
-> Date:   Wed Oct 20 11:49:59 2010 -0500
+> In sflash based devices to reduce windows suspend/resume time we had a 
+> small firmware in flash which
+> enables the device to get detected as Generic Bluetooth USB device with 
+> PID 3002.  So control reaches btusb when device is plugged in, leaving 
+> no option for us to load the actual firmware.
 > 
->     Convert firmware for Realtek RTL8192SU (rtl8712u) from embedded to
->     an external file.
-> 
->     Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-> 
-> The code for step 2 is running locally. I'm waiting for the new version of
-> linux-firmware to propagate through the distros before I submit the patch. If
+> Solution would be to blacklist 3002 in btusb, enable ath3k to get 
+> control for both the devices, download the firmware and change PID to 
+> 3003 so that control with come to btusb.
 
-I assume you refer to rtl8712u.bin in your r8712u_firmware tree:
-http://git.kernel.org/?p=linux/kernel/git/lwfinger/r8712u_firmware.git;a=blob_plain;f=rtl8712u.bin
-200fd952db3cc9259b1fd05e3e51966f  *rtl8712u.bin
+so here is the thing that needs to be done.
 
-> you want to grab the new firmware package, I can send you a copy of the patch.
+a) Get a firmware for PID 3000 devices that change the firmware to some
+other PID. Since 3003 is already in use as well, using 3004 or later is
+better approach.
 
-I'd very much like to test the patch(2) needed for rtl8712, if possible.
+b) Blacklist PID 3002 in btusb.c.
+
+c) Handle special firmware loading case for PID 3002 sflash devices. If
+firmware is loaded changed to 3005 or other.
+
+And as a general note, I prefer that the PID after loading firmware is
+different if you don't happen to actually load the same firmware.
+
+So please sort out your USB PID assignment for Bluetooth in general.
+This seems to be a mess that is not thought through properly.
 
 Regards
-	Stefan Lippers-Hollmann
+
+Marcel
+
+
