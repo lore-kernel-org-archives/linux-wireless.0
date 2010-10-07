@@ -1,43 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from external1.orbit-lab.org ([128.6.192.131]:56524 "HELO
-	external1.orbit-lab.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1754609Ab0JCTEJ (ORCPT
+Received: from mail.candelatech.com ([208.74.158.172]:43671 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750982Ab0JGSpn (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 3 Oct 2010 15:04:09 -0400
-Received: from repository3.orbit-lab.org (repository3.orbit-lab.org [10.50.0.41])
-	by external1.orbit-lab.org (Postfix) with ESMTP id 323F5418D8
-	for <linux-wireless@vger.kernel.org>; Sun,  3 Oct 2010 14:59:56 -0400 (EDT)
-Subject: Compat-wireless release for 2010-10-03 is baked
-To: <linux-wireless@vger.kernel.org>
-Message-Id: <20101003190221.ADCA9404FC@repository3.orbit-lab.org>
-Date: Sun,  3 Oct 2010 15:02:21 -0400 (EDT)
-From: compat@orbit-lab.org (Compat-wireless cronjob account)
+	Thu, 7 Oct 2010 14:45:43 -0400
+Message-ID: <4CAE1553.1070900@candelatech.com>
+Date: Thu, 07 Oct 2010 11:45:39 -0700
+From: Ben Greear <greearb@candelatech.com>
+MIME-Version: 1.0
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+CC: Johannes Berg <johannes@sipsolutions.net>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: memory clobber in rx path, maybe related to ath9k.
+References: <4CAB59B2.5050106@candelatech.com> <AANLkTikhGCTS8kJgpDzjudyBTk-rkyXY33UO7kB0+Cc-@mail.gmail.com> <4CAB5F3D.9060201@candelatech.com> <AANLkTimV3GrwU+9PPtirT4sCzveLY2egr3PRQhfDBET1@mail.gmail.com> <4CAB627F.8020804@candelatech.com> <AANLkTi=sT5QJe4V8gFGjF-nzx0uJAMLG_XG2715qrEEd@mail.gmail.com> <4CAB64AD.4080105@candelatech.com> <AANLkTi=3dHbB5tmQDp3Ba54-DqQydVCkNdFo1vKbfaGY@mail.gmail.com> <4CAB6B08.4050801@candelatech.com> <4CAE0474.4090605@candelatech.com> <1286475250.20974.22.camel@jlt3.sipsolutions.net> <AANLkTinbRSnPVgbBxvVpMdnP+K--bye=Q-miHf4X44kz@mail.gmail.com> <4CAE13F6.2010003@candelatech.com> <AANLkTimEZ5GY7WFz-F4YyC+6MEwNn2Dki4tonp645XrS@mail.gmail.com>
+In-Reply-To: <AANLkTimEZ5GY7WFz-F4YyC+6MEwNn2Dki4tonp645XrS@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-fatal: Unable to look up git.kernel.org (port 9418) (Name or service not known)
+On 10/07/2010 11:42 AM, Luis R. Rodriguez wrote:
+> On Thu, Oct 7, 2010 at 11:39 AM, Ben Greear<greearb@candelatech.com>  wrote:
+>> On 10/07/2010 11:29 AM, Luis R. Rodriguez wrote:
+>>>
+>>> On Thu, Oct 7, 2010 at 11:14 AM, Johannes Berg
+>>> <johannes@sipsolutions.net>    wrote:
+>>>>
+>>>> On Thu, 2010-10-07 at 10:33 -0700, Ben Greear wrote:
+>>>>>
+>>>>> In case it helps, here is a dump of where the corrupted SKB was deleted.
+>>>>
+>>>> I wonder, do you have a machine with a decent IOMMU? Adding IOMMU
+>>>> debugging into the mix could help you figure out if it's a DMA problem.
+>>>
+>>> Ben, how much traffic are you RX'ing on these virtual interfaces?
+>>
+>> I disabled my user-space application, and this script alone can reproduce
+>> the problem fairly quickly on my system.  You will need to change some
+>> of those first variables.  Just start it and wait a few minutes and
+>> watch the splats show on the console :)
+>>
+>> Note that I am not generating any traffic, but the wpa_supplicants are
+>> doing their thing of course...
+>>
+>> I'm using the kernel found here:
+>> http://dmz2.candelatech.com/git/gitweb.cgi?p=linux.wireless-testing.ct/.git;a=summary
+>>
+>> It's latest wireless-testing with some of my own patches, and some
+>> I've gathered from here an there.  I doubt I'm causing this problem,
+>> but if you can't reproduce it with this script on your kernels,
+>> I can try with base wireless-testing or whatever you are using.
+>
+> I'll run this now, but can you try a vanilla wireless-testing? I hear
+> the latest wireless-testing is borked so maybe try (git reset --hard
+> master-2010-09-29), its what I'm on.
 
-compat-wireless code metrics
+You are liable to hit a bunch of those crashes I've been reporting
+before you hit the DMA thing if you don't use latest (with Johanne's scan
+locking patch).
 
-    747282 - Total upstream lines of code being pulled
-      2153 - backport code changes
-      1902 - backport code additions
-       251 - backport code deletions
-      6242 - backport from compat module
-      8395 - total backport code
-    1.1234 - % of code consists of backport work
-       128 - Code changes posted but not yet merged
-        95 - Code additions posted but not yet merged
-        33 - Code deletions posted but not yet merged
-    0.0171 - % of code not yet merged
-      1219 - Crap changes not yet posted
-      1181 - Crap additions not yet posted
-        38 - Crap deletions not yet posted
-    0.1631 - % of crap code
+I'm going to poke at IOMMU debugging and see what I find.
 
-Base tree: linux-next.git
-Base tree version: next-20101001
-compat-wireless release: compat-wireless-2010-10-01-6-g6d8961c-pc
-ssh: Could not resolve hostname wireless.kernel.org: Name or service not known
-rsync: connection unexpectedly closed (0 bytes received so far) [sender]
-rsync error: unexplained error (code 255) at io.c(600) [sender=3.0.6]
+I'll start a compile of vanilla wireless-testing + scan fix as well.
+
+Thanks,
+Ben
+
+>
+>    Luis
+
+
+-- 
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
+
