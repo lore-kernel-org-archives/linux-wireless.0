@@ -1,76 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gy0-f174.google.com ([209.85.160.174]:35536 "EHLO
-	mail-gy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932824Ab0JHUCj (ORCPT
+Received: from mail-fx0-f46.google.com ([209.85.161.46]:48817 "EHLO
+	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759314Ab0JHRl6 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 8 Oct 2010 16:02:39 -0400
+	Fri, 8 Oct 2010 13:41:58 -0400
+Received: by fxm14 with SMTP id 14so633672fxm.19
+        for <linux-wireless@vger.kernel.org>; Fri, 08 Oct 2010 10:41:56 -0700 (PDT)
+From: Helmut Schaa <helmut.schaa@googlemail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Subject: Re: [PATCH 4/5] nl80211/mac80211: Add channel utilization to survey
+Date: Fri, 8 Oct 2010 19:41:06 +0200
+Cc: Bruno Randolf <br1@einfach.org>, linville@tuxdriver.com,
+	nbd@openwrt.org, ath5k-devel@lists.ath5k.org,
+	linux-wireless@vger.kernel.org, adrian@freebsd.org,
+	vasanth@atheros.com, "Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	Jonathan Guerin <jonathan@guerin.id.au>
+References: <20101005095510.3083.46174.stgit@tt-desk> <AANLkTin3xh4+aQvMfZH_UF3mnKZp-eYdt3+y++8mEJHb@mail.gmail.com> <1286437954.3657.17.camel@jlt3.sipsolutions.net>
+In-Reply-To: <1286437954.3657.17.camel@jlt3.sipsolutions.net>
 MIME-Version: 1.0
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Fri, 8 Oct 2010 12:54:24 -0700
-Message-ID: <AANLkTin9AwTa8x6faFEXBbrGZa4mg3AeDfeEmmdaF9_d@mail.gmail.com>
-Subject: Roaming / offchannel enhancements for broadcast / multicast frames
-To: linux-wireless <linux-wireless@vger.kernel.org>,
-	linux-kernel@vger.kernel.org
-Cc: Matt Smith <Matt.Smith@atheros.com>,
-	Srinivasa Duvvuri <Srinivasa.Duvvuri@atheros.com>,
-	Carolyn Waller <Carolyn.Waller@atheros.com>,
-	Amod Bodas <Amod.Bodas@atheros.com>,
-	David Quan <David.Quan@atheros.com>,
-	Bennyam Malavazi <Bennyam.Malavazi@atheros.com>,
-	Cliff Holden <Cliff.Holden@atheros.com>,
-	Aeolus Yang <Aeolus.Yang@atheros.com>,
-	Kevin Hayes <kevin@atheros.com>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: Text/Plain;
+  charset="us-ascii"
+Message-Id: <201010081941.07134.helmut.schaa@googlemail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-We spoke about how to handle broadcast / multicast frames when going
-offchannel at the Wireless Summit [1]. A lot of these talks were lead
-due to a Chrome side open bug
-[2].  Chrome has dealt the critical issues by preventing doing a scan
-when we are doing DHCP but we need a resolution in the long term. At
-the summit I do not believe we made any solid conclusions but we did
-throw out a lot of ideas. After the summit a few of us at Atheros met
-and reviewed strategies to consider for doing this the best way
-possible. I'd like to summarize our latest conclusions and plan on
-addressing this and see if we can reach some consensus and priorities.
+Am Donnerstag 07 Oktober 2010 schrieb Johannes Berg:
+> On Thu, 2010-10-07 at 09:44 +0200, Helmut Schaa wrote:
+> 
+> > So, I guess it makes sense to just return the calculated channel
+> > utilization value (u8)
+> > and keep it up to date within the driver.
+> 
+> Not good, that means drivers implementing this will have to wake the CPU
+> to do calculations even if nobody cares.
 
-First, we need a force scan command API. This can be used by userspace
-when it knows it wants to roam and it can allow mac80211 to drop
-broadcast / multicast frames as there is a priority to roam / scan
-over keeping these frames. Then we can implement a deadzone event that
-userspace can pick up which will let userspace know we can RX from an
-AP but cannot TX to it. We can send this event once the connection
-monitor hits a trigger but the beacon monitor is still OK. Note how
-some hardware has its own beacon monitor so we'll also need these
-drivers to send these events to mac80211. Userspace may want to force
-a roam when this deadzone event hits. Once we have these two in place
-we can then ignore bgscan requests (when associated) unless a force
-scan command has been issued by userspace, or unless we are idle. To
-determine if we are idle we can use the existing dynamic power save
-timers.
+You're obviously right. But that would be the same if mac80211 would do
+the calculation. And if we would only calculate it when the survey is
+requested the measurement window could be very large or very small which
+both might be unwanted.
 
-Then we need to move to mac80211 the code that checks we have RX'd all
-multicast frames / broadcast frames prior to going to power save or
-going offchannel. In the worst case scenario we will have missed the
-last broadcast / multicast frame, so we can rely on the next beacon as
-an indication the AP is done with all buffered broadcast / multicast
-frames. ath9k already has code for all of this, so this just need to
-be shifted to mac80211 for drivers that do software scan. In the worst
-case scenario and unfortunately this seems to be the most common one,
-a DTIM of 1 is used and we will have to be on channel and awake every
-beacon interval. In this case we may want to optimize scan time by not
-scanning passive scan channels. I still do believe we will drop some
-broadcast / multicast frames in this case though, but avoiding a
-bgscan  when we are not-idle should cure most critical frame drops.
+This could also introduce problems related to register overflows. Since
+on rt2800 the register (32bit) is in units of [us] it would overflow after
+a bit more then one hour making the calculation flawed in that (maybe
+unusual) case.
 
-I've documented all this on our respective TODO wiki [3]. If you have
-further ideas or tweaks to this approach please chime in and feel free
-do edit the wiki as you see fit. this is a good time to invite people
-to also subscribe to the wiki for edits.
+Nevertheless I fully agree that it doesn't make sense to always calculate
+the busy time values if nobody actually needs it. But if somebody cares it
+would be nice to have it as a percentage value.
 
-  Luis
-
-[1] http://wireless.kernel.org/en/developers/Summits/SanFranciscoBayArea-2010
-[2] http://code.google.com/p/chromium-os/issues/detail?id=5713&q=ath9k&colspec=ID%20Stars%20Pri%20Area%20Type%20Status%20Summary%20Modified%20Owner%20Mstone
-[3] http://wireless.kernel.org/en/developers/todo-list
+Helmut
