@@ -1,75 +1,99 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:22045 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756809Ab0JFPXx (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 6 Oct 2010 11:23:53 -0400
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Subject: [PATCH 3/6] iwlagn: rename iwl5000_tx_power_dbm_cmd
-Date: Wed,  6 Oct 2010 08:23:10 -0700
-Message-Id: <1286378593-7509-4-git-send-email-wey-yi.w.guy@intel.com>
-In-Reply-To: <1286378593-7509-1-git-send-email-wey-yi.w.guy@intel.com>
-References: <1286378593-7509-1-git-send-email-wey-yi.w.guy@intel.com>
+Received: from mail-fx0-f46.google.com ([209.85.161.46]:59489 "EHLO
+	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932347Ab0JHQpy (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 8 Oct 2010 12:45:54 -0400
+Received: by fxm14 with SMTP id 14so593805fxm.19
+        for <linux-wireless@vger.kernel.org>; Fri, 08 Oct 2010 09:45:53 -0700 (PDT)
+From: Christian Lamparter <chunkeey@googlemail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Subject: Re: [PATCH] mac80211: hoist sta->lock from reorder release timer
+Date: Fri, 8 Oct 2010 18:42:38 +0200
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org,
+	Ben Greear <greearb@candelatech.com>,
+	Ming Lei <tom.leiming@gmail.com>
+References: <201010061200.54364.chunkeey@googlemail.com> <20101006202106.GL2472@tuxdriver.com> <1286485393.20974.40.camel@jlt3.sipsolutions.net>
+In-Reply-To: <1286485393.20974.40.camel@jlt3.sipsolutions.net>
+MIME-Version: 1.0
+Content-Type: Text/Plain;
+  charset="utf-8"
+Message-Id: <201010081842.39187.chunkeey@googlemail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-iwl5000_tx_power_dbm_cmd really should be iwlagn_tx_power_dbm_cmd,
-so rename it.
+On Thursday 07 October 2010 23:03:13 Johannes Berg wrote:
+> On Wed, 2010-10-06 at 16:21 -0400, John W. Linville wrote:
+> 
+> > > I think it's probably easier to fix than to revert now? There are only a
+> > > handful of fields, and it seemed to me that most of them can easily be
+> > > moved under the reorder lock.
+> > 
+> > I would prefer a fix on top rather than a series of reverts...
+> 
+> I think this should fix it. Somebody review please?
+> 
+> johannes
+> 
+Sure, a little bit. The code itself is fine but as you said
+the rx_handler code wasn't written for concurrent/delayed
+release timer mechanism.
 
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-agn-lib.c  |    6 +++---
- drivers/net/wireless/iwlwifi/iwl-commands.h |    8 ++++----
- 2 files changed, 7 insertions(+), 7 deletions(-)
+for example:
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-lib.c b/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
-index 29ed604..48c48f1 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
-@@ -491,7 +491,7 @@ int iwlagn_hw_valid_rtc_data_addr(u32 addr)
- 
- int iwlagn_send_tx_power(struct iwl_priv *priv)
- {
--	struct iwl5000_tx_power_dbm_cmd tx_power_cmd;
-+	struct iwlagn_tx_power_dbm_cmd tx_power_cmd;
- 	u8 tx_ant_cfg_cmd;
- 
- 	/* half dBm need to multiply */
-@@ -512,8 +512,8 @@ int iwlagn_send_tx_power(struct iwl_priv *priv)
- 		 */
- 		tx_power_cmd.global_lmt = priv->tx_power_lmt_in_half_dbm;
- 	}
--	tx_power_cmd.flags = IWL50_TX_POWER_NO_CLOSED;
--	tx_power_cmd.srv_chan_lmt = IWL50_TX_POWER_AUTO;
-+	tx_power_cmd.flags = IWLAGN_TX_POWER_NO_CLOSED;
-+	tx_power_cmd.srv_chan_lmt = IWLAGN_TX_POWER_AUTO;
- 
- 	if (IWL_UCODE_API(priv->ucode_ver) == 1)
- 		tx_ant_cfg_cmd = REPLY_TX_POWER_DBM_CMD_V1;
-diff --git a/drivers/net/wireless/iwlwifi/iwl-commands.h b/drivers/net/wireless/iwlwifi/iwl-commands.h
-index 27350ee..16dda2d 100644
---- a/drivers/net/wireless/iwlwifi/iwl-commands.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-commands.h
-@@ -420,12 +420,12 @@ struct iwl4965_tx_power_db {
- 
- /**
-  * Command REPLY_TX_POWER_DBM_CMD = 0x98
-- * struct iwl5000_tx_power_dbm_cmd
-+ * struct iwlagn_tx_power_dbm_cmd
-  */
--#define IWL50_TX_POWER_AUTO 0x7f
--#define IWL50_TX_POWER_NO_CLOSED (0x1 << 6)
-+#define IWLAGN_TX_POWER_AUTO 0x7f
-+#define IWLAGN_TX_POWER_NO_CLOSED (0x1 << 6)
- 
--struct iwl5000_tx_power_dbm_cmd {
-+struct iwlagn_tx_power_dbm_cmd {
- 	s8 global_lmt; /*in half-dBm (e.g. 30 = 15 dBm) */
- 	u8 flags;
- 	s8 srv_chan_lmt; /*in half-dBm (e.g. 30 = 15 dBm) */
--- 
-1.7.0.4
+Because we can't set IEEE80211_RX_RA_MATCH (since 
+it interferes with scanning (as explained in
+"mac80211: fix release_reorder_timeout in scan").
 
+We will experience strange results with "ieee80211_rx_h_decrypt":
+
+line: 878
+>	/*
+>	 * No point in finding a key and decrypting if the frame is neither
+>	 * addressed to us nor a multicast frame.
+>	 */
+>	if (!(status->rx_flags & IEEE80211_RX_RA_MATCH))
+>		return RX_CONTINUE;
+>
+>	/* start without a key */
+>	rx->key = NULL;
+no software decryption there - not nice but the HW probably does
+the decryption for us. - That being said, the stack should be able
+to do the software decryption "just in case".
+
+Things are a little bit better with ieee80211_rx_h_sta_process.
+It updates some statistics and takes care of sta->last_rx
+(which is currently not that important giving HT BA is only supported
+for AP/STA operation).
+
+In ieee80211_rx_h_data, there could be another potential problem:
+>	if (ieee80211_is_data(hdr->frame_control) &&
+>   	 !is_multicast_ether_addr(hdr->addr1) &&
+>		 local->hw.conf.dynamic_ps_timeout > 0 && local->ps_sdata) {
+>			mod_timer(&local->dynamic_ps_timer, jiffies +
+>			msecs_to_jiffies(local->hw.conf.dynamic_ps_timeout));
+>	}
+I reckon there could be a "hidden" problem. "jiffies" is now
+approx 100ms after the packet was received from the interface.
+(Sure, a similar issue was also present in the original
+reorder release implementation.)
+
+In order the fix this/my mess we would need to:
+ 1. move the software decryption before the reordering
+   (802.11n-spec (page 11, Figure 6-1) allows this)
+
+(Or:
+1. introduce an additional rx_flag for the reorder release case?)
+
+(2. maybe cache the original skb jiffie at some place?)
+
+(3. make a few counters atomic_t, so concurrent tasklets
+    can update the stats. Or disable the BHs while processing,
+    any rx frames (which is probably what we're going to do, right?))
+
+Regards,
+	Christian
+
+Unfortunately, I have to do some other "high priority" right now,
+so I'm short of time to do "that" now :-/.
