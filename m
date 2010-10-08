@@ -1,50 +1,92 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp-out.google.com ([216.239.44.51]:24986 "EHLO
-	smtp-out.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755241Ab0JNU5g convert rfc822-to-8bit (ORCPT
+Received: from mail-qy0-f174.google.com ([209.85.216.174]:61941 "EHLO
+	mail-qy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757976Ab0JHOhx (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 14 Oct 2010 16:57:36 -0400
-Received: from wpaz24.hot.corp.google.com (wpaz24.hot.corp.google.com [172.24.198.88])
-	by smtp-out.google.com with ESMTP id o9EKvZLK005945
-	for <linux-wireless@vger.kernel.org>; Thu, 14 Oct 2010 13:57:35 -0700
-Received: from iwn39 (iwn39.prod.google.com [10.241.68.103])
-	by wpaz24.hot.corp.google.com with ESMTP id o9EKvInH006265
-	for <linux-wireless@vger.kernel.org>; Thu, 14 Oct 2010 13:57:34 -0700
-Received: by iwn39 with SMTP id 39so28822iwn.12
-        for <linux-wireless@vger.kernel.org>; Thu, 14 Oct 2010 13:57:34 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1287089496.4641.443.camel@jlt3.sipsolutions.net>
-References: <20101013224851.9C46820418@glenhelen.mtv.corp.google.com>
-	<1287040404.4641.5.camel@jlt3.sipsolutions.net>
-	<AANLkTincG_-s4pWx+m=keMSfhzWfTQeCCGMQzHYk-WTA@mail.gmail.com>
-	<1287089496.4641.443.camel@jlt3.sipsolutions.net>
-Date: Thu, 14 Oct 2010 13:57:33 -0700
-Message-ID: <AANLkTimF4ds7y681qKx6UWUUGtuO5_5Y_kzybuMSPd89@mail.gmail.com>
-Subject: Re: [PATCH 2/6] Ad cfg80211 call for threshold notifications
-From: Paul Stewart <pstew@google.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+	Fri, 8 Oct 2010 10:37:53 -0400
+Received: by qyk1 with SMTP id 1so21524qyk.19
+        for <linux-wireless@vger.kernel.org>; Fri, 08 Oct 2010 07:37:53 -0700 (PDT)
+From: Bill Jordan <bjordan@rajant.com>
+To: "John W. Linville" <linville@tuxdriver.com>,
+	Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org, Bill Jordan <bjordan@rajant.com>
+Subject: [PATCH] iw: new command to set the wds peer
+Date: Fri,  8 Oct 2010 10:37:39 -0400
+Message-Id: <1286548659-22176-1-git-send-email-bjordan@rajant.com>
+In-Reply-To: <1286441799.3657.29.camel@jlt3.sipsolutions.net>
+References: <1286441799.3657.29.camel@jlt3.sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Oct 14, 2010 at 1:51 PM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
-> On Thu, 2010-10-14 at 13:43 -0700, Paul Stewart wrote:
->> I documented that this value in ieee80211_i.h.  Other parameters in
->> this file are left undocumented in this module (rssi_hyst, for
->> example, is documented in mac80211.h and nl80211.h (in fact, my docs
->> in nl80211.h look a little sparse -- I'll fix that up).  I don't
->> object to doing it -- I'm just trying to wrap my head around the
->> correct conventions.
->
-> Anywhere is fine I guess (nl80211.h should work) but I didn't see any
-> actual units? It would seem to be in Mbps but you're also using the
-> ".bitrate" field from a channel, which is in units of 1/2 Mbps?
+Add command to set the wds peer bssid using the newly
+implemented NL80211_CMD_SET_WDS_PEER.
 
+Signed-off-by: Bill Jordan <bjordan@rajant.com>
+---
+ interface.c |   31 +++++++++++++++++++++++++++++++
+ nl80211.h   |    3 +++
+ 2 files changed, 34 insertions(+), 0 deletions(-)
 
-I'm using units of Kbps.  I think for a u32, that gives me enough room
-to grow for a little while.  Good catch -- I'm using .bitrate wrong!
+diff --git a/interface.c b/interface.c
+index a64015f..2dd43e3 100644
+--- a/interface.c
++++ b/interface.c
+@@ -383,3 +383,34 @@ static int handle_interface_4addr(struct nl80211_state *state,
+ COMMAND(set, 4addr, "<on|off>",
+ 	NL80211_CMD_SET_INTERFACE, 0, CIB_NETDEV, handle_interface_4addr,
+ 	"Set interface 4addr (WDS) mode.\n");
++
++static int handle_interface_wds_peer(struct nl80211_state *state,
++				    struct nl_cb *cb,
++				    struct nl_msg *msg,
++				    int argc, char **argv)
++{
++	unsigned char mac_addr[ETH_ALEN];
++
++	if (argc < 1)
++		return 1;
++
++	if (mac_addr_a2n(mac_addr, argv[0])) {
++		fprintf(stderr, "invalid mac address\n");
++		return 2;
++	}
++
++	argc--;
++	argv++;
++
++	if (argc)
++		return 1;
++
++	NLA_PUT(msg, NL80211_ATTR_MAC, ETH_ALEN, mac_addr);
++
++	return 0;
++ nla_put_failure:
++	return -ENOBUFS;
++}
++COMMAND(set, peer, "<MAC address>",
++	NL80211_CMD_SET_WDS_PEER, 0, CIB_NETDEV, handle_interface_wds_peer,
++	"Set interface wds peer.\n");
+diff --git a/nl80211.h b/nl80211.h
+index f0518b0..35a9681 100644
+--- a/nl80211.h
++++ b/nl80211.h
+@@ -387,6 +387,8 @@
+  *	of any other interfaces, and other interfaces will again take
+  *	precedence when they are used.
+  *
++ * @NL80211_CMD_SET_WDS_PEER: Set the MAC address of the peer on a WDS interface.
++ *
+  * @NL80211_CMD_MAX: highest used command number
+  * @__NL80211_CMD_AFTER_LAST: internal use
+  */
+@@ -489,6 +491,7 @@ enum nl80211_commands {
+ 	NL80211_CMD_NOTIFY_CQM,
+ 
+ 	NL80211_CMD_SET_CHANNEL,
++	NL80211_CMD_SET_WDS_PEER,
+ 
+ 	/* add new commands above here */
+ 
+-- 
+1.7.2.3
 
---
-Paul
