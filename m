@@ -1,48 +1,116 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from lo.gmane.org ([80.91.229.12]:45291 "EHLO lo.gmane.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754853Ab0JHWDc (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 8 Oct 2010 18:03:32 -0400
-Received: from list by lo.gmane.org with local (Exim 4.69)
-	(envelope-from <glkwg-linux-wireless@m.gmane.org>)
-	id 1P4L2I-0005M0-Dp
-	for linux-wireless@vger.kernel.org; Sat, 09 Oct 2010 00:03:30 +0200
-Received: from p54B9EB82.dip.t-dialin.net ([84.185.235.130])
-        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Sat, 09 Oct 2010 00:03:30 +0200
-Received: from pommnitz by p54B9EB82.dip.t-dialin.net with local (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Sat, 09 Oct 2010 00:03:30 +0200
+Received: from mail.candelatech.com ([208.74.158.172]:56425 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757143Ab0JHQnf (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 8 Oct 2010 12:43:35 -0400
+From: greearb@candelatech.com
 To: linux-wireless@vger.kernel.org
-From: jpo <pommnitz@yahoo.com>
-Subject: Re: Antenna diversity in ath5k.
-Date: Fri, 8 Oct 2010 22:03:17 +0000 (UTC)
-Message-ID: <loom.20101009T000043-687@post.gmane.org>
-References: <4CAF60F0.4030506@candelatech.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Cc: Ben Greear <greearb@candelatech.com>
+Subject: [PATCH 1/2] ath5k:  Print out opmode in debugfs.
+Date: Fri,  8 Oct 2010 09:43:29 -0700
+Message-Id: <1286556210-29643-1-git-send-email-greearb@candelatech.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Ben Greear <greearb@...> writes:
+From: Ben Greear <greearb@candelatech.com>
 
-> 
-> I'd like to work on allowing users to configure antenna diversity,
-> starting with ath5k.
-> 
-> Before I start on this, I wanted to see if anyone else was
-> actively pursuing it.
-> 
-> Thanks,
-> Ben
-> 
-Bruno Randolf was/is working on this:
-http://marc.info/?t=128037600400004&r=1&w=2
-http://marc.info/?l=linux-wireless&m=127589393911645&w=2
+Helps debug multi-VIF scenarios.
 
-Regards
-  Joerg
+Signed-off-by: Ben Greear <greearb@candelatech.com>
+---
+:100644 100644 c2d549f... a342a9d... M	drivers/net/wireless/ath/ath5k/debug.c
+:100644 100644 53e77bd... a9eb787... M	drivers/net/wireless/ath/debug.c
+:100644 100644 fd3a020... a3a5a62... M	drivers/net/wireless/ath/debug.h
+ drivers/net/wireless/ath/ath5k/debug.c |   10 ++++++++++
+ drivers/net/wireless/ath/debug.c       |   29 +++++++++++++++++++++++++++++
+ drivers/net/wireless/ath/debug.h       |    3 +++
+ 3 files changed, 42 insertions(+), 0 deletions(-)
 
-
+diff --git a/drivers/net/wireless/ath/ath5k/debug.c b/drivers/net/wireless/ath/ath5k/debug.c
+index c2d549f..a342a9d 100644
+--- a/drivers/net/wireless/ath/ath5k/debug.c
++++ b/drivers/net/wireless/ath/ath5k/debug.c
+@@ -60,6 +60,7 @@
+ 
+ #include "base.h"
+ #include "debug.h"
++#include "../debug.h"
+ 
+ static unsigned int ath5k_debug;
+ module_param_named(debug, ath5k_debug, uint, 0);
+@@ -492,6 +493,7 @@ static ssize_t read_file_misc(struct file *file, char __user *user_buf,
+ 	char buf[700];
+ 	unsigned int len = 0;
+ 	u32 filt = ath5k_hw_get_rx_filter(sc->ah);
++	const char *tmp;
+ 
+ 	len += snprintf(buf+len, sizeof(buf)-len, "bssid-mask: %pM\n",
+ 			sc->bssidmask);
+@@ -524,6 +526,14 @@ static ssize_t read_file_misc(struct file *file, char __user *user_buf,
+ 	else
+ 		len += snprintf(buf+len, sizeof(buf)-len, "\n");
+ 
++	tmp = ath_opmode_to_string(sc->opmode);
++	if (tmp)
++		len += snprintf(buf+len, sizeof(buf)-len, "opmode: %s\n",
++				tmp);
++	else
++		len += snprintf(buf+len, sizeof(buf)-len,
++				"opmode: UNKNOWN-%i\n", sc->opmode);
++
+ 	if (len > sizeof(buf))
+ 		len = sizeof(buf);
+ 
+diff --git a/drivers/net/wireless/ath/debug.c b/drivers/net/wireless/ath/debug.c
+index 53e77bd..a9eb787 100644
+--- a/drivers/net/wireless/ath/debug.c
++++ b/drivers/net/wireless/ath/debug.c
+@@ -30,3 +30,32 @@ void ath_print(struct ath_common *common, int dbg_mask, const char *fmt, ...)
+ 	va_end(args);
+ }
+ EXPORT_SYMBOL(ath_print);
++
++const char *ath_opmode_to_string(enum nl80211_iftype opmode)
++{
++	switch (opmode) {
++	case NL80211_IFTYPE_UNSPECIFIED:
++		return "UNSPEC";
++	case NL80211_IFTYPE_ADHOC:
++		return "ADHOC";
++	case NL80211_IFTYPE_STATION:
++		return "STATION";
++	case NL80211_IFTYPE_AP:
++		return "AP";
++	case NL80211_IFTYPE_AP_VLAN:
++		return "AP-VLAN";
++	case NL80211_IFTYPE_WDS:
++		return "WDS";
++	case NL80211_IFTYPE_MONITOR:
++		return "MONITOR";
++	case NL80211_IFTYPE_MESH_POINT:
++		return "MESH";
++	case NL80211_IFTYPE_P2P_CLIENT:
++		return "P2P-CLIENT";
++	case NL80211_IFTYPE_P2P_GO:
++		return "P2P-GO";
++	default:
++		return NULL;
++	}
++}
++EXPORT_SYMBOL(ath_opmode_to_string);
+diff --git a/drivers/net/wireless/ath/debug.h b/drivers/net/wireless/ath/debug.h
+index fd3a020..a3a5a62 100644
+--- a/drivers/net/wireless/ath/debug.h
++++ b/drivers/net/wireless/ath/debug.h
+@@ -77,4 +77,7 @@ ath_print(struct ath_common *common, int dbg_mask, const char *fmt, ...)
+ }
+ #endif /* CONFIG_ATH_DEBUG */
+ 
++/** Returns string describing opmode, or NULL if unknown mode. */
++const char *ath_opmode_to_string(enum nl80211_iftype opmode);
++
+ #endif /* ATH_DEBUG_H */
+-- 
+1.7.2.2
 
