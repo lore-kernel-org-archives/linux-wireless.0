@@ -1,119 +1,139 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:59924 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752657Ab0JGXIs (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 7 Oct 2010 19:08:48 -0400
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Johannes Berg <johannes.berg@intel.com>,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Subject: [PATCH 01/22] iwlagn: rename iwl_commit_rxon
-Date: Thu,  7 Oct 2010 16:07:40 -0700
-Message-Id: <1286492881-15743-2-git-send-email-wey-yi.w.guy@intel.com>
-In-Reply-To: <1286492881-15743-1-git-send-email-wey-yi.w.guy@intel.com>
-References: <1286492881-15743-1-git-send-email-wey-yi.w.guy@intel.com>
+Received: from he.sipsolutions.net ([78.46.109.217]:48239 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754590Ab0JHSp1 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 8 Oct 2010 14:45:27 -0400
+Subject: Re: [PATCH] mac80211: hoist sta->lock from reorder release timer
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Christian Lamparter <chunkeey@googlemail.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org,
+	Ben Greear <greearb@candelatech.com>,
+	Ming Lei <tom.leiming@gmail.com>
+In-Reply-To: <201010082012.07007.chunkeey@googlemail.com>
+References: <201010061200.54364.chunkeey@googlemail.com>
+	 <201010081842.39187.chunkeey@googlemail.com>
+	 <1286556802.3612.4.camel@jlt3.sipsolutions.net>
+	 <201010082012.07007.chunkeey@googlemail.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Fri, 08 Oct 2010 20:45:26 +0200
+Message-ID: <1286563526.3612.33.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+On Fri, 2010-10-08 at 20:12 +0200, Christian Lamparter wrote:
 
-iwl_commit_rxon really should be named
-iwlagn_commit_rxon, so rename it.
+> But hey, wait a sec. (This one is about AP mode - It's related to
+> IEEE80211_RX_RA_MATCH, but now in a different handler)
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-4965.c     |    2 +-
- drivers/net/wireless/iwlwifi/iwl-agn-hcmd.c |    4 ++--
- drivers/net/wireless/iwlwifi/iwl-agn.c      |    4 ++--
- drivers/net/wireless/iwlwifi/iwl-agn.h      |    3 +++
- drivers/net/wireless/iwlwifi/iwl-core.h     |    1 -
- 5 files changed, 8 insertions(+), 6 deletions(-)
+Heh.
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-4965.c b/drivers/net/wireless/iwlwifi/iwl-4965.c
-index 834c2f9..09db940 100644
---- a/drivers/net/wireless/iwlwifi/iwl-4965.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-4965.c
-@@ -2216,7 +2216,7 @@ static void iwl4965_cancel_deferred_work(struct iwl_priv *priv)
- 
- static struct iwl_hcmd_ops iwl4965_hcmd = {
- 	.rxon_assoc = iwl4965_send_rxon_assoc,
--	.commit_rxon = iwl_commit_rxon,
-+	.commit_rxon = iwlagn_commit_rxon,
- 	.set_rxon_chain = iwl_set_rxon_chain,
- 	.send_bt_config = iwl_send_bt_config,
- };
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-hcmd.c b/drivers/net/wireless/iwlwifi/iwl-agn-hcmd.c
-index 9ca6c91..901452e 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn-hcmd.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn-hcmd.c
-@@ -360,7 +360,7 @@ static int iwlagn_set_pan_params(struct iwl_priv *priv)
- 
- struct iwl_hcmd_ops iwlagn_hcmd = {
- 	.rxon_assoc = iwlagn_send_rxon_assoc,
--	.commit_rxon = iwl_commit_rxon,
-+	.commit_rxon = iwlagn_commit_rxon,
- 	.set_rxon_chain = iwl_set_rxon_chain,
- 	.set_tx_ant = iwlagn_send_tx_ant_config,
- 	.send_bt_config = iwl_send_bt_config,
-@@ -369,7 +369,7 @@ struct iwl_hcmd_ops iwlagn_hcmd = {
- 
- struct iwl_hcmd_ops iwlagn_bt_hcmd = {
- 	.rxon_assoc = iwlagn_send_rxon_assoc,
--	.commit_rxon = iwl_commit_rxon,
-+	.commit_rxon = iwlagn_commit_rxon,
- 	.set_rxon_chain = iwl_set_rxon_chain,
- 	.set_tx_ant = iwlagn_send_tx_ant_config,
- 	.send_bt_config = iwlagn_send_advance_bt_config,
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
-index a6dce61..b59ce92 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
-@@ -91,14 +91,14 @@ static int iwlagn_ant_coupling;
- static bool iwlagn_bt_ch_announce = 1;
- 
- /**
-- * iwl_commit_rxon - commit staging_rxon to hardware
-+ * iwlagn_commit_rxon - commit staging_rxon to hardware
-  *
-  * The RXON command in staging_rxon is committed to the hardware and
-  * the active_rxon structure is updated with the new data.  This
-  * function correctly transitions out of the RXON_ASSOC_MSK state if
-  * a HW tune is required based on the RXON structure changes.
-  */
--int iwl_commit_rxon(struct iwl_priv *priv, struct iwl_rxon_context *ctx)
-+int iwlagn_commit_rxon(struct iwl_priv *priv, struct iwl_rxon_context *ctx)
- {
- 	/* cast away the const for active_rxon in this function */
- 	struct iwl_rxon_cmd *active_rxon = (void *)&ctx->active;
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.h b/drivers/net/wireless/iwlwifi/iwl-agn.h
-index eb3812a..2a1c83b 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn.h
-@@ -129,6 +129,9 @@ void iwlagn_txq_set_sched(struct iwl_priv *priv, u32 mask);
- void iwl_free_tfds_in_queue(struct iwl_priv *priv,
- 			    int sta_id, int tid, int freed);
- 
-+/* RXON */
-+int iwlagn_commit_rxon(struct iwl_priv *priv, struct iwl_rxon_context *ctx);
-+
- /* uCode */
- int iwlagn_load_ucode(struct iwl_priv *priv);
- void iwlagn_rx_calib_result(struct iwl_priv *priv,
-diff --git a/drivers/net/wireless/iwlwifi/iwl-core.h b/drivers/net/wireless/iwlwifi/iwl-core.h
-index 6228b1c..d6d5bb0 100644
---- a/drivers/net/wireless/iwlwifi/iwl-core.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-core.h
-@@ -432,7 +432,6 @@ void iwl_bss_info_changed(struct ieee80211_hw *hw,
- 				     struct ieee80211_vif *vif,
- 				     struct ieee80211_bss_conf *bss_conf,
- 				     u32 changes);
--int iwl_commit_rxon(struct iwl_priv *priv, struct iwl_rxon_context *ctx);
- int iwl_mac_add_interface(struct ieee80211_hw *hw,
- 			  struct ieee80211_vif *vif);
- void iwl_mac_remove_interface(struct ieee80211_hw *hw,
--- 
-1.7.0.4
+> NULLFUNCs (set/clear PM) are not reordered and they get
+> processed right away, right?
+
+Yeah, I don't think they can be in A-MPDUs. At least not in any scenario
+that actually makes sense.
+
+> So what if the reorder release triggers and ap_sta_ps_end
+> (called by ieee80211_rx_h_sta_process) accidentally resets
+> the "sleeping" flag (because some old frames with a "stale"
+> PSM bit was released after 100ms)?
+
+Yeah... that can happen.
+
+> > > Things are a little bit better with ieee80211_rx_h_sta_process.
+> > > It updates some statistics and takes care of sta->last_rx
+> > > (which is currently not that important giving HT BA is only supported
+> > > for AP/STA operation).
+> > > 
+> > > In ieee80211_rx_h_data, there could be another potential problem:
+> > > >	if (ieee80211_is_data(hdr->frame_control) &&
+> > > >   	 !is_multicast_ether_addr(hdr->addr1) &&
+> > > >		 local->hw.conf.dynamic_ps_timeout > 0 && local->ps_sdata) {
+> > > >			mod_timer(&local->dynamic_ps_timer, jiffies +
+> > > >			msecs_to_jiffies(local->hw.conf.dynamic_ps_timeout));
+> > > >	}
+> > > I reckon there could be a "hidden" problem. "jiffies" is now
+> > > approx 100ms after the packet was received from the interface.
+> > > (Sure, a similar issue was also present in the original
+> > > reorder release implementation.)
+> > 
+> > This one's more interesting. I guess we need to bypass these things
+> > somehow, maybe setting a flag if this was a "recovered" frame?
+
+> (and check the same flag for ap_sta_ps_end/ap_sta_ps_start).
+> Ok, that's doable (even for me :D)
+
+Yeah, something like that. I guess there are more things like that and
+we have to go through the RX path once -- but it shouldn't be all that
+hard.
+
+> > BHs are disabled while processing RX -- and timer is a BH itself so
+> > they're also disabled, right?
+
+> hmm, are we talking about BH or tasklets? 
+
+RX is currently always processed in a tasklet.
+
+> I read something about the
+> occurrence of simultaneous tasklets/timers on multi-core systems?
+
+You're right, it's local_bh_disable ... the local is there for a
+reason :-)
+
+> And from a point that all made sense:
+> ---
+> from kernel-hacking.DocBook:
+> 
+> "For this reason, tasklets are more often used: they are
+> dynamically-registrable (meaning you can have as many as you want),
+> and they also guarantee that any tasklet will only run on one CPU
+> at any time, although different tasklets can run simultaneously."
+
+Yeah.
+
+> and kernel-locking.DocBook:
+> "Different Tasklets/Timers:
+> If another tasklet/timer wants to share data with your tasklet or timer,
+> you will both need to use spin_lock() and spin_unlock() calls.
+> spin_lock_bh() is unnecessary here, as you are already in a tasklet, and
+> none will be run on the same CPU." <-- "same" CPU.
+
+Indeed.
+
+> So according to statements above, we need a lock for the stats
+> too. (and I was wrong about "converting" them all to atomic.)
+> 
+>  * ieee80211_rx_h_sta_process
+> 	sta->rx_packets++;
+> 	sta->rx_fragments++;
+> 	sta->rx_bytes += rx->skb->len;
+> 
+>  * ieee80211_rx_h_data:
+>    dev->stats.rx_packets++;
+>    dev->stats.rx_bytes += rx->skb->len;
+
+Yeah. It's too bad we can't just disable the tasklet while processing
+the timer -- but we can't because we might also be processing from
+another context, even process context with BHs disabled, from driver
+calls to ieee80211_rx() (without _irqsafe).
+
+So we need a lock. Question then is, which one do we use? We could use
+the sta lock (and get rid of the reorder lock again), that would allow
+processing RX frames for STA A while we're doing timeouts for STA B --
+as long as we don't also process a frame for B which would block, but
+presumably something is wrong when the timeout happens ...
+
+But then using the sta lock could be fairly expensive. It might actually
+be cheaper to simply remove the distinction between _rx() and
+_rx_irqsafe() and make it all go through the tasklet -- then we can
+simply disable the tasklet while doing the timer processing....
+
+I don't like reverting these patches, but maybe we should simply comment
+out the code that arms the timer, thereby disabling all of it, while we
+work on this?
+
+johannes
 
