@@ -1,37 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from out1.smtp.messagingengine.com ([66.111.4.25]:45842 "EHLO
-	out1.smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1758635Ab0JUPZt (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 21 Oct 2010 11:25:49 -0400
-Received: from compute1.internal (compute1.nyi.mail.srv.osa [10.202.2.41])
-	by gateway1.messagingengine.com (Postfix) with ESMTP id F035D2F6
-	for <linux-wireless@vger.kernel.org>; Thu, 21 Oct 2010 11:25:48 -0400 (EDT)
-Received: from [192.168.7.102] (64-13-95-51.mfd.clearwire-dns.net [64.13.95.51])
-	by mail.messagingengine.com (Postfix) with ESMTPSA id 581CC5E1457
-	for <linux-wireless@vger.kernel.org>; Thu, 21 Oct 2010 11:25:46 -0400 (EDT)
-Message-ID: <4CC05B77.2070706@grojguys.com>
-Date: Thu, 21 Oct 2010 08:25:43 -0700
-From: m.linuxwireless@grojguys.com
+Received: from mail.atheros.com ([12.19.149.2]:64673 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754313Ab0JHSPL (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 8 Oct 2010 14:15:11 -0400
+Received: from mail.atheros.com ([10.10.20.108])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Fri, 08 Oct 2010 11:15:02 -0700
+Date: Fri, 8 Oct 2010 11:15:08 -0700
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: Suraj Sumangala <Suraj.Sumangala@Atheros.com>
+CC: Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
+	David Woodhouse <dwmw2@infradead.org>,
+	Marcel Holtmann <marcel@holtmann.org>,
+	linux-bluetooth <linux-bluetooth@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: Firmware versioning best practices: ath3k-2.fw rename or
+ replace ath3k-1.fw ?
+Message-ID: <20101008181508.GM10149@tux>
+References: <20101008170258.GJ10149@tux>
+ <4CAF5488.3030706@Atheros.com>
 MIME-Version: 1.0
-To: linux-wireless@vger.kernel.org
-Subject: A minor correction to the compat-wireless intructions...
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <4CAF5488.3030706@Atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-  Could I suggest a minor update to the instructions at 
-http://linuxwireless.org/en/users/Download,  to avoid a bit of confusion?
+On Fri, Oct 08, 2010 at 10:27:36AM -0700, Suraj Sumangala wrote:
+> Hi Luis,
+> 
+> On 10/8/2010 10:32 PM, Luis Rodriguez wrote:
+> > Suraj,
+> >
+> > What is the difference between ath3k-2.fw and ath3k-1.fw ?
+> 
+> This is the same question for which I have been trying to get an answer.
+> The only information that I got was it fixes some critical bug and 
+> support shared antenna.
+> 
+> If ath3k-2.fw is an upgrade of ath3k-1.fw why do we need to name it 
+> differently?
 
-For whatever reason, section "9. Selecting your driver" is listed 
-_before_ the instructions to extract the compat-wireless tarball in 
-"Section 10. Building and installing"
+Sure, agreed, but what about the sflash configuration fix?
 
-(Of course, selecting a specific driver can only be done _after_ 
-extracting the tarball because ./scripts/driver-select is _in_ the tarball!)
+> > Won't the API change now that you are addressing the sflash
+> > configuration fix? Would it not help to identify the two
+> > different firmwares then?
+> >
+> > David, Marcel, what are your preferences for a firmware upgrade
+> > where the firmware does not change API (lets just pretend it does
+> > not for a moment) ? Do we keep the same filename?
+> 
+> Marcel had answered me before. It makes sense to have same file name.
+> Other ways we end up changing the driver whenever there is a firmware 
+> change.
 
-No offense or anything, but the order there seems a bit strange.  It 
-threw me off the first time, so perhaps it has others as well?
+> > I last tried to document a thread we had over this here:
+> >
+> > http://wireless.kernel.org/en/developers/Documentation/firmware-versioning
+> >
 
-On the whole though, thanks for providing the great package!
+Thanks, I've updated that link above to document bug fixing does not require
+a filename change.
 
+ Luis
