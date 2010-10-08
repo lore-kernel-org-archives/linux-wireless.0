@@ -1,70 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([88.198.39.176]:59127 "EHLO ds10.nbd.name"
+Received: from mail.sdinet.de ([78.47.32.153]:44920 "EHLO mail.sdinet.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755227Ab0JDLgt (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 4 Oct 2010 07:36:49 -0400
-Message-ID: <4CA9BC4B.4010503@openwrt.org>
-Date: Mon, 04 Oct 2010 13:36:43 +0200
-From: Felix Fietkau <nbd@openwrt.org>
-MIME-Version: 1.0
-To: Vasanthakumar Thiagarajan <vasanth@atheros.com>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	id S1752635Ab0JHWsQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 8 Oct 2010 18:48:16 -0400
+Date: Sat, 9 Oct 2010 00:47:37 +0200 (CEST)
+From: Sven-Haegar Koch <haegar@sdinet.de>
+To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+cc: Suraj Sumangala <Suraj.Sumangala@Atheros.com>,
 	Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
-	"linville@tuxdriver.com" <linville@tuxdriver.com>
-Subject: Re: [PATCH 2/4] ath9k_hw: merge codepaths that access the cycle	counter
- registers
-References: <1286125639-15137-1-git-send-email-nbd@openwrt.org> <1286125639-15137-2-git-send-email-nbd@openwrt.org> <20101004063446.GA16078@vasanth-laptop>
-In-Reply-To: <20101004063446.GA16078@vasanth-laptop>
-Content-Type: text/plain; charset=ISO-8859-1
+	David Woodhouse <dwmw2@infradead.org>,
+	Marcel Holtmann <marcel@holtmann.org>,
+	linux-bluetooth <linux-bluetooth@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: Firmware versioning best practices: ath3k-2.fw rename or replace
+ ath3k-1.fw ?
+In-Reply-To: <20101008181508.GM10149@tux>
+Message-ID: <alpine.DEB.2.02.1010090040240.19472@aurora.sdinet.de>
+References: <20101008170258.GJ10149@tux> <4CAF5488.3030706@Atheros.com> <20101008181508.GM10149@tux>
+MIME-Version: 1.0
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2010-10-04 8:34 AM, Vasanthakumar Thiagarajan wrote:
->> +	/* freeze counters */
->> +	REG_WRITE(ah, AR_MIBC, AR_MIBC_FMC);
->> +
->> +	ah->cc.cycles = REG_READ(ah, AR_CCCNT);
->> +	if (ah->cc.cycles < cc.cycles) {
->> +		clear = true;
->> +		goto skip;
->>  	}
->>  
->> -	cycles = cc;
->> -	rx_frame = rf;
->> -	rx_clear = rc;
->> -	tx_frame = tf;
->> +	ah->cc.rx_clear = REG_READ(ah, AR_RCCNT);
->> +	ah->cc.rx_frame = REG_READ(ah, AR_RFCNT);
->> +	ah->cc.tx_frame = REG_READ(ah, AR_TFCNT);
->> +
->> +	/* prevent wraparound */
->> +	if (ah->cc.cycles & BIT(31))
->> +		clear = true;
-> 
-> This does not look right, previous if should take care of 
-> any wrap around.
-This is not for correcting an existing wraparound. This is for making
-sure that a wraparound never occurs.
+On Fri, 8 Oct 2010, Luis R. Rodriguez wrote:
 
->> +
->> +#define CC_DELTA(_field, _reg) ah->cc_delta._field += ah->cc._field - cc._field
-> _reg is not used.
+> > > I last tried to document a thread we had over this here:
+> > >
+> > > http://wireless.kernel.org/en/developers/Documentation/firmware-versioning
+> > >
 > 
->> 
->> +skip:
->> +	if (clear) {
->> +		REG_WRITE(ah, AR_CCCNT, 0);
->> +		REG_WRITE(ah, AR_RFCNT, 0);
->> +		REG_WRITE(ah, AR_RCCNT, 0);
->> +		REG_WRITE(ah, AR_TFCNT, 0);
-> 
-> should be able to do with single write in AR_MIBC.
-No, the clear bit in AR_MIBC does not clear these counters. I tested that.
+> Thanks, I've updated that link above to document bug fixing does not require
+> a filename change.
 
->> +	/* unfreeze counters */
->> +	REG_WRITE(ah, AR_MIBC, 0);
-> 
-> Please configure the relevant bit to unfreeze the counters.
-What do you mean?
+I would summarize it as:
 
-- Felix
+If a new firmware version also works with an old driver, keep the filename.
+
+If a new firmware version also requires a new driver, change the name.
+
+If a new driver requires a new firmware, change the name.
+
+c'ya
+sven-haegar
+
+-- 
+Three may keep a secret, if two of them are dead.
+- Ben F.
