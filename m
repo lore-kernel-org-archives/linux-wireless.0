@@ -1,187 +1,248 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail30g.wh2.ocn.ne.jp ([220.111.41.239]:19848 "HELO
-	mail30g.wh2.ocn.ne.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1752083Ab0JMBDt (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:41008 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757443Ab0JHUPH (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 12 Oct 2010 21:03:49 -0400
-Received: from vs3011.wh2.ocn.ne.jp (125.206.180.239)
-	by mail30g.wh2.ocn.ne.jp (RS ver 1.0.95vs) with SMTP id 4-0860731826
-	for <linux-wireless@vger.kernel.org>; Wed, 13 Oct 2010 10:03:47 +0900 (JST)
-From: Bruno Randolf <br1@einfach.org>
-To: ath5k-devel@lists.ath5k.org,
-	"linux-wireless" <linux-wireless@vger.kernel.org>
-Subject: Re: [ath5k-devel] Fwd: [PATCH v2] ath5k: Move debugfs under ieee80211/[wiphy-name]
-Date: Wed, 13 Oct 2010 10:03:56 +0900
-Cc: Ben Greear <greearb@candelatech.com>
-References: <4CB4F0F2.8080104@candelatech.com>
-In-Reply-To: <4CB4F0F2.8080104@candelatech.com>
+	Fri, 8 Oct 2010 16:15:07 -0400
+Date: Fri, 8 Oct 2010 16:10:09 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: davem@davemloft.net
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: pull request: wireless-next-2.6 2010-10-08
+Message-ID: <20101008201008.GA2414@tuxdriver.com>
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Message-Id: <201010131003.56835.br1@einfach.org>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed October 13 2010 08:36:18 Ben Greear wrote:
-> Forgot to CC this list earlier.
-> 
-> Thanks,
-> Ben
-> 
-> -------- Original Message --------
-> Subject: [PATCH v2] ath5k:  Move debugfs under ieee80211/[wiphy-name]
-> Date: Tue, 12 Oct 2010 10:55:38 -0700
-> From: greearb@candelatech.com
-> To: linux-wireless@vger.kernel.org
-> CC: Ben Greear <greearb@candelatech.com>
-> 
-> From: Ben Greear <greearb@candelatech.com>
-> 
-> This automatically keeps things proper when wiphy
-> is renamed.
-> 
-> Based on patch by Johannes Berg <johannes@sipsolutions.net>
-> 
-> Signed-off-by: Ben Greear <greearb@candelatech.com>
-> ---
-> v1 -> v2:  Remove empty functions that are no longer needed.
-> 
-> :100644 100644 c9732a6... bc8581e...
-> :M	drivers/net/wireless/ath/ath5k/base.c 100644 100644 a3b2171...
-> :8f7924f... M	drivers/net/wireless/ath/ath5k/debug.c 100644 100644
-> :4f078b1... 236edbd... M	drivers/net/wireless/ath/ath5k/debug.h
-> 
->   drivers/net/wireless/ath/ath5k/base.c  |    7 +------
->   drivers/net/wireless/ath/ath5k/debug.c |   20 ++------------------
->   drivers/net/wireless/ath/ath5k/debug.h |   12 ------------
->   3 files changed, 3 insertions(+), 36 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/ath/ath5k/base.c
-> b/drivers/net/wireless/ath/ath5k/base.c index c9732a6..bc8581e 100644
-> --- a/drivers/net/wireless/ath/ath5k/base.c
-> +++ b/drivers/net/wireless/ath/ath5k/base.c
-> @@ -3543,8 +3543,6 @@ ath5k_pci_probe(struct pci_dev *pdev,
->   	sc->hw = hw;
->   	sc->pdev = pdev;
-> 
-> -	ath5k_debug_init_device(sc);
-> -
->   	/*
->   	 * Mark the device as detached to avoid processing
->   	 * interrupts until setup is complete.
-> @@ -3652,6 +3650,7 @@ ath5k_pci_probe(struct pci_dev *pdev,
->   		}
->   	}
-> 
-> +	ath5k_debug_init_device(sc);
-> 
->   	/* ready to process interrupts */
->   	__clear_bit(ATH_STAT_INVALID, sc->status);
-> @@ -3738,8 +3737,6 @@ init_ath5k_pci(void)
->   {
->   	int ret;
-> 
-> -	ath5k_debug_init();
-> -
->   	ret = pci_register_driver(&ath5k_pci_driver);
->   	if (ret) {
->   		printk(KERN_ERR "ath5k_pci: can't register pci driver\n");
-> @@ -3753,8 +3750,6 @@ static void __exit
->   exit_ath5k_pci(void)
->   {
->   	pci_unregister_driver(&ath5k_pci_driver);
-> -
-> -	ath5k_debug_finish();
->   }
-> 
->   module_init(init_ath5k_pci);
-> diff --git a/drivers/net/wireless/ath/ath5k/debug.c
-> b/drivers/net/wireless/ath/ath5k/debug.c index a3b2171..8f7924f 100644
-> --- a/drivers/net/wireless/ath/ath5k/debug.c
-> +++ b/drivers/net/wireless/ath/ath5k/debug.c
-> @@ -72,8 +72,6 @@ module_param_named(debug, ath5k_debug, uint, 0);
->   #include "reg.h"
->   #include "ani.h"
-> 
-> -static struct dentry *ath5k_global_debugfs;
-> -
->   static int ath5k_debugfs_open(struct inode *inode, struct file *file)
->   {
->   	file->private_data = inode->i_private;
-> @@ -890,21 +888,13 @@ static const struct file_operations fops_queue = {
->   };
-> 
-> 
-> -/* init */
-> -
-> -void
-> -ath5k_debug_init(void)
-> -{
-> -	ath5k_global_debugfs = debugfs_create_dir("ath5k", NULL);
-> -}
-> -
->   void
->   ath5k_debug_init_device(struct ath5k_softc *sc)
->   {
->   	sc->debug.level = ath5k_debug;
-> 
-> -	sc->debug.debugfs_phydir = debugfs_create_dir(wiphy_name(sc->hw->wiphy),
-> -				ath5k_global_debugfs);
-> +	sc->debug.debugfs_phydir = debugfs_create_dir("ath5k",
-> +				sc->hw->wiphy->debugfsdir);
-> 
->   	sc->debug.debugfs_debug = debugfs_create_file("debug",
->   				S_IWUSR | S_IRUSR,
-> @@ -945,12 +935,6 @@ ath5k_debug_init_device(struct ath5k_softc *sc)
->   }
-> 
->   void
-> -ath5k_debug_finish(void)
-> -{
-> -	debugfs_remove(ath5k_global_debugfs);
-> -}
-> -
-> -void
->   ath5k_debug_finish_device(struct ath5k_softc *sc)
->   {
->   	debugfs_remove(sc->debug.debugfs_debug);
-> diff --git a/drivers/net/wireless/ath/ath5k/debug.h
-> b/drivers/net/wireless/ath/ath5k/debug.h index 4f078b1..236edbd 100644
-> --- a/drivers/net/wireless/ath/ath5k/debug.h
-> +++ b/drivers/net/wireless/ath/ath5k/debug.h
-> @@ -138,15 +138,9 @@ enum ath5k_debug_level {
->   	} while (0)
-> 
->   void
-> -ath5k_debug_init(void);
-> -
-> -void
->   ath5k_debug_init_device(struct ath5k_softc *sc);
-> 
->   void
-> -ath5k_debug_finish(void);
-> -
-> -void
->   ath5k_debug_finish_device(struct ath5k_softc *sc);
-> 
->   void
-> @@ -174,15 +168,9 @@ ATH5K_DBG_UNLIMIT(struct ath5k_softc *sc, unsigned int
-> m, const char *fmt, ...) {}
-> 
->   static inline void
-> -ath5k_debug_init(void) {}
-> -
-> -static inline void
->   ath5k_debug_init_device(struct ath5k_softc *sc) {}
-> 
->   static inline void
-> -ath5k_debug_finish(void) {}
-> -
-> -static inline void
->   ath5k_debug_finish_device(struct ath5k_softc *sc) {}
-> 
->   static inline void
+Dave,
 
-Looks good to me.
+Another week, another huge pull request for -next...
 
-Acked-by: Bruno Randolf <br1@einfach.org>
+This offering is mostly the usual driver updates and such for ath9k,
+iwlwifi, rt2x00, wl1271, and a few others.  Also featured are a number
+of mac80211, cfg80211 and nl80211 improvements from Johannes, as well
+as some mac80211 scanning improvements from Stanislaw.  Johannes is
+also sneaking a genetlink feature through this tree, of which you
+are already aware. :-)
+
+Please let me know if there are problems!
+
+Thanks,
+
+John
+
+---
+
+The following changes since commit dd53df265b1ee7a1fbbc76bb62c3bec2383bbd44:
+
+  bonding: add Speed/Duplex information to /proc/net/bonding/bond (2010-10-06 18:43:34 -0700)
+
+are available in the git repository at:
+  git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-next-2.6.git for-davem
+
+Ben Greear (4):
+      wireless: Use first phyX name available when registering phy devices.
+      ath5k: Allow ath5k to support virtual STA and AP interfaces.
+      ath5k: Print rx/tx bytes in debugfs
+      ath9k: Report total tx/rx bytes and packets in debugfs.
+
+Ben Hutchings (1):
+      ar9170: Remove MODULE_FIRMWARE references to two-stage firmware
+
+Bill Jordan (3):
+      ath9k: add WDS interfaces to ath9k
+      cfg80211: patches to allow setting the WDS peer
+      mac80211: fix for WDS interfaces
+
+Bruno Randolf (3):
+      mac80211: Add WME information element for IBSS
+      ath5k: Don't wake internal queues
+      nl80211/mac80211: Add retry and failed transmission count to station info
+
+Christian Lamparter (3):
+      mac80211: fix rx monitor filter refcounters
+      carl9170: support firmware-based rx filter
+      p54usb: add five more USBIDs
+
+Dan Carpenter (1):
+      ipw2200: check for allocation failures
+
+Felix Fietkau (17):
+      ath9k_htc: remove use of common->ani.noise_floor
+      ath9k_hw: keep calibrated noise floor values per channel
+      ath9k: do not return default noise floor values via survey
+      ath9k: remove the noise floor value in the ani struct
+      nl80211: allow drivers to indicate whether the survey data channel is in use
+      ath9k: return survey data for all channels instead of just the current one
+      ath9k: fix channel flag / regd issues with multiple cards
+      ath9k_hw: remove some useless calibration data
+      ath9k_hw: fix regression in ANI listen time calculation
+      ath9k_hw: clean up calibration flags
+      ath9k_hw: merge codepaths that access the cycle counter registers
+      ath9k_hw: clean up register write buffering
+      ath9k_hw: add a helper function to check for the new ANI implementation
+      ath9k_hw: clean up ANI state handling
+      ath9k_hw: remove code duplication in phy error counter handling
+      ath9k_hw: remove function pointer abstraction for internal ANI ops
+      ath9k_hw: merge ath9k_hw_ani_monitor_old and ath9k_hw_ani_monitor_new
+
+Gabor Juhos (1):
+      ath9k: get correct tx gain type in ath9k_hw_4k_get_eeprom
+
+Helmut Schaa (18):
+      rt2x00: Don't overwrite beacon buffers in pairwise key setup
+      rt2x00: Split out parts of the rt2800_txdone function for easier reuse
+      rt2x00: rework tx status handling in rt2800pci
+      rt2x00: Fix SM PS check
+      rt2x00: Implement HT protection for rt2800
+      rt2x00: Don't initialize MM40 HT protection to RTS/CTS on PCI devices
+      rt2x00: Fix race between dma mapping and clearing rx entries in rt2800pci
+      rt2x00: Allow tx duplication for legacy rates in HT40 mode
+      rt2x00: Add register definition for busy time on secondary channel
+      rt2x00: add field definitions for the TBTT_SYNC_CFG register
+      rt2x00: Don't enable broad- and multicast buffering on USB devices
+      mac80211: distinct between max rates and the number of rates the hw can report
+      rt2x00: correctly set max_report_rates in rt61pci and rt2800
+      rt2x00: Enable rx aggregation in rt2800
+      rt2x00: Update comment about the AMPDU flag in the TXWI
+      rt2x00: Fix oops caused by error path in rt2x00lib_start
+      rt2x00: Improve cooperation between rt2800pci and minstrel
+      rt2x00: Work around hw aggregation oddity in rt2800
+
+Ido Yariv (3):
+      wl1271: Handle large SPI transfers
+      wl1271: Support firmware RX packet aggregation
+      wl1271: Support firmware TX packet aggregation
+
+Ivo van Doorn (2):
+      rt2x00: Add rt73usb device ID
+      rt2x00: Improve TX status entry validation
+
+Jay Sternberg (1):
+      iwlwifi: define 100 devices
+
+Johannes Berg (17):
+      cfg80211/mac80211: allow management frame TX in AP mode
+      cfg80211: remove spurious __KERNEL__ ifdef
+      cfg80211: fix locking
+      genetlink: introduce pre_doit/post_doit hooks
+      nl80211: use the new genetlink pre/post_doit hooks
+      nl80211: use generic check for netif_running
+      nl80211: reduce dumping boilerplate
+      mac80211: fix deadlock with multiple interfaces
+      nl80211: fix remain-on-channel documentation
+      mac80211: delete AddBA response timer
+      mac80211: avoid transmitting delBA to old AP
+      cfg80211/mac80211: allow per-station GTKs
+      nl80211: fix error in generic netif_running check
+      cfg80211: fix BSS double-unlinking
+      mac80211: fix sw scan locking
+      nl80211: use new genl helpers for WDS
+      cfg80211: constify WDS address
+
+John W. Linville (9):
+      Merge branch 'wireless-next-2.6' of git://git.kernel.org/.../iwlwifi/iwlwifi-2.6
+      Merge branch 'wireless-next' of git://git.kernel.org/.../luca/wl12xx
+      Merge branch 'master' of git://git.kernel.org/.../linville/wireless-2.6
+      mac80211: avoid uninitialized var warning in ieee80211_scan_cancel
+      Revert "rtl8180: use NAPI for bottom-half processing"
+      Revert "mac80211: use netif_receive_skb in ieee80211_tx_status callpath"
+      Merge branch 'master' of git://git.kernel.org/.../linville/wireless-2.6
+      Merge branch 'wireless-next-2.6' of git://git.kernel.org/.../iwlwifi/iwlwifi-2.6
+      Merge branch 'master' of git://git.kernel.org/.../linville/wireless-next-2.6 into for-davem
+
+Juuso Oikarinen (27):
+      wl1271: Implement CMD_SET_STA_STATE to indicate connection completion to FW
+      wl1271: Add trigger to net_device oper_state to change BT coex priority
+      wl1271: Fix scan race condition
+      wl1271: Change supported channel order for a more optimal scan
+      wl1271: Remove outdated FIXME's
+      wl1271: Move setting of wake-up conditions to ps.c from cmd.c
+      wl1271: Remove acx_fw_version function
+      wl1271: Release interrupt *after* releasing the driver context
+      wl1271: Remove function cmd_read_memory
+      wl1271: Enable/disable 11a support based on INI configuration
+      wl1271: Reduce rate used for last PSM entry attempt
+      wl1271: Enable 11a support always, prevent scanning for unsupporting chips
+      wl1271: Fix tid-configuration of TX frames
+      wl1271: Fix AC/TID default configuration
+      wl1271: Move scan complete invocation into work function
+      wl1271: Fix work cancelling when shutting down the driver
+      wl1271: Separate interface removal to another function
+      wl1271: Add hardware recovery mechanism
+      wl1271: Add handling for failing hardware scan command
+      wl1271: Optimize scan duration
+      wl1271: Increase connection reliability
+      wl1271: Add support for hardware GEM cipher
+      wl1271: Move work-init calls to hw allocation
+      wl1271: Indicate disconnection on hardware failure
+      wl1271: Add extended radio parameter initialization
+      mac80211: Add validity check for beacon_crc value
+      wl1271: Support FEM autodetection
+
+Luciano Coelho (5):
+      wl1271: remove deprecated ACX definition
+      wl1271: remove useless 11a check when scanning
+      wl1271: fix forced passive scan
+      MAINTAINERS: Update git url for the wl1271 driver
+      wl1271: remove deprecated __attribute__ ((packed))
+
+Luis R. Rodriguez (1):
+      mac80211: fix channel assumption for association done work
+
+Mohammed Shafi Shajakhan (1):
+      ath9k : Fix for displaying the channel number
+
+Ohad Ben-Cohen (1):
+      wl12xx: fix non-wl12xx build scenarios
+
+Rafał Miłecki (3):
+      b43: N-PHY: simplify channel switching
+      b43: define B43_SHM_SH_CHAN_40MHZ
+      b43: N-PHY: don't duplicate setting channel in shared memory
+
+Rajkumar Manoharan (1):
+      ath9k_hw: Fix hw reset failure with HTC driver
+
+Senthil Balasubramanian (2):
+      ath9k: remove unnecessary power save flags.
+      ath9k: Introduce a wrapper for power save disable.
+
+Shanyu Zhao (3):
+      iwlwifi: add iwl_nic_ops structure to iwl_ops
+      iwlagn: set CSR register for 6050g2 devices
+      iwlwifi: send DC calib config to runtime ucode
+
+Stanislaw Gruszka (8):
+      iwlwifi: change WARN_ON to IWL_WARN in iwl_mac_add_interface
+      mac80211: perform scan cancel in hw reset work
+      mac80211: reduce number of __ieee80211_scan_completed calls
+      mac80211: keep lock when calling __ieee80211_scan_completed()
+      mac80211: assure we also cancel deferred scan request
+      mac80211: do not requeue scan work when not needed
+      mac80211: compete scan to cfg80211 if deferred scan fail to start
+      Revert "iwlwifi: do not perferm force reset while doing scan"
+
+Wey-Yi Guy (9):
+      iwlagn: API v5 for 6050 series device
+      iwlwifi: schedule to deprecate software scan support
+      iwlagn: reduce redundant parameter definitions
+      iwlagn: rename iwl5000_tx_power_dbm_cmd
+      iwlwifi: remove uncorrect comments
+      iwlagn: rename iwl5000_tx_resp
+      iwlagn: define 130 series of WiFi/BT combo devices
+      iwlagn: fix module firmware name for 130 series device
+      iwlagn: add define for MODULE_FIRMWARE
+
+ext Anand Gadiyar (1):
+      omap: zoom2/3: fix build caused by wl1271 support
+
+Omnibus patch available here:
+
+	http://www.kernel.org/pub/linux/kernel/people/linville/wireless-next-2.6-2010-10-08.patch.bz2
+
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
