@@ -1,78 +1,97 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:63477 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756177Ab0JNWJi (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 14 Oct 2010 18:09:38 -0400
-Subject: Re: Licensing wlc_phy_radio.h and brcm80211 (was: [PATCH 3/3] b43:
- N-PHY: add 2055 radio regs)
-From: Dan Williams <dcbw@redhat.com>
-To: Greg KH <gregkh@suse.de>
-Cc: =?UTF-8?Q?Rafa=C5=82_Mi=C5=82ecki?= <zajec5@gmail.com>,
-	=?ISO-8859-1?Q?G=E1bor?= Stefanik <netrolller.3d@gmail.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	b43-dev <b43-dev@lists.infradead.org>,
-	linux-wireless@vger.kernel.org,
-	Henry Ptasinski <henryp@broadcom.com>,
-	Brett Rudley <brudley@broadcom.com>,
-	Nohee Ko <noheek@broadcom.com>
-In-Reply-To: <20101014171739.GA28522@suse.de>
-References: <AANLkTinQMRGkOvi4e4JMsHGV_BF_4Rf5oHCtZgQjwQ1g@mail.gmail.com>
-	 <20101014165111.GA22130@suse.de>
-	 <AANLkTin9PxzROyCQxiT5-ca4CUQK+kppS7gAibbbZ2=v@mail.gmail.com>
-	 <20101014171739.GA28522@suse.de>
-Content-Type: text/plain; charset="UTF-8"
-Date: Thu, 14 Oct 2010 17:12:40 -0500
-Message-ID: <1287094360.22636.6.camel@dcbw.foobar.com>
-Mime-Version: 1.0
+Received: from mail-bw0-f46.google.com ([209.85.214.46]:41264 "EHLO
+	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757026Ab0JHU1M (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 8 Oct 2010 16:27:12 -0400
+Received: by bwz15 with SMTP id 15so562989bwz.19
+        for <linux-wireless@vger.kernel.org>; Fri, 08 Oct 2010 13:27:11 -0700 (PDT)
+To: linux-wireless@vger.kernel.org
+Subject: [PATCH v2] mac80211: fix possible null-pointer de-reference
+Cc: Luis Carlos Cobo <luisca@cozybit.com>,
+	Javier Cardona <javier@cozybit.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	"John W. Linville" <linville@tuxdriver.com>
+From: Christian Lamparter <chunkeey@googlemail.com>
+Date: Fri, 8 Oct 2010 22:27:07 +0200
+MIME-Version: 1.0
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Message-Id: <201010082227.07800.chunkeey@googlemail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2010-10-14 at 10:17 -0700, Greg KH wrote:
-> On Thu, Oct 14, 2010 at 07:06:00PM +0200, Rafał Miłecki wrote:
-> > 2010/10/14 Greg KH <gregkh@suse.de>:
-> > > On Thu, Oct 14, 2010 at 06:40:14PM +0200, Rafał Miłecki wrote:
-> > >> W dniu 11 października 2010 18:24 użytkownik Gábor Stefanik
-> > >> <netrolller.3d@gmail.com> napisał:
-> > >> > Doesn't brcm80211 contain register names for B2055?
-> > >>
-> > >> I've checked brcm80211 and noticed defines in
-> > >> drivers/staging/brcm80211/phy/wlc_phy_radio.h.
-> > >>
-> > >> Whole brcm80211 driver is licensed as:
-> > >> MODULE_LICENSE("Dual BSD/GPL");
-> > >>
-> > >> Mentioned file contains following comments:
-> > >> +/*
-> > >> + * Copyright (c) 2010 Broadcom Corporation
-> > >> + *
-> > >> + * Permission to use, copy, modify, and/or distribute this software for any
-> > >> + * purpose with or without fee is hereby granted, provided that the above
-> > >> + * copyright notice and this permission notice appear in all copies.
-> > >>
-> > >> Our b43 driver is licensed as:
-> > >> MODULE_LICENSE("GPL");
-> > >> and I am not sure if permission above is actually GPL-compatible. The
-> > >> best option would be to add defines from wlc_phy_radio.h and include
-> > >> Broadcom's copyright. However comment above wants us to include info
-> > >> about free copying/modifying/using which is not GPL-compatible.
-> > >>
-> > >> Is there any way to solve this issue?
-> > >
-> > > I don't understand, are you just wanting to use the names in the .h file
-> > > for the registers?
-> > 
-> > Yes. I want to put lines like:
-> > #define RADIO_2056_RX0				(0x6 << 12)
-> > in my radio_2056.h
-> 
-> I don't think that bitfields are copyrightable :)
+This patch not only fixes a null-pointer de-reference
+that would be triggered by a PLINK_OPEN frame with mis-
+matching/incompatible mesh configuration, but also
+responds correctly to non-compatible PLINK_OPEN frames
+by generating a PLINK_CLOSE with the right reason code.
 
-Right.  If you're just looking to include constants then you can copy
-and paste them all over the place.  It might be nice give Broadcom a
-shout-out in the header, but pure numbers like this (command
-definitions, register values, bitfields, constants, etc) simply aren't
-copyrightable, just like you can't copyright a telephone book.
+The original bug was detected by smatch.
+( http://repo.or.cz/w/smatch.git )
 
-Dan
+net/mac80211/mesh_plink.c +574 mesh_rx_plink_frame(168)
+error: we previously assumed 'sta' could be null.
 
-
+Cc: <stable@kernel.org>
+Reviewed-and-Tested-by: Steve deRosier <steve@cozybit.com>
+Reviewed-and-Tested-by: Javier Cardona <javier@cozybit.com>
+Acked-by: Johannes Berg <johannes@sipsolutions.net>
+Signed-off-by: Christian Lamparter <chunkeey@googlemail.com>
+---
+diff --git a/net/mac80211/mesh_plink.c b/net/mac80211/mesh_plink.c
+index ea13a80..8b7efee 100644
+--- a/net/mac80211/mesh_plink.c
++++ b/net/mac80211/mesh_plink.c
+@@ -412,7 +412,7 @@ void mesh_rx_plink_frame(struct ieee80211_sub_if_data *sdata, struct ieee80211_m
+ 	enum plink_event event;
+ 	enum plink_frame_type ftype;
+ 	size_t baselen;
+-	bool deactivated;
++	bool deactivated, matches_local = true;
+ 	u8 ie_len;
+ 	u8 *baseaddr;
+ 	__le16 plid, llid, reason;
+@@ -487,6 +487,7 @@ void mesh_rx_plink_frame(struct ieee80211_sub_if_data *sdata, struct ieee80211_m
+ 	/* Now we will figure out the appropriate event... */
+ 	event = PLINK_UNDEFINED;
+ 	if (ftype != PLINK_CLOSE && (!mesh_matches_local(&elems, sdata))) {
++		matches_local = false;
+ 		switch (ftype) {
+ 		case PLINK_OPEN:
+ 			event = OPN_RJCT;
+@@ -498,7 +499,15 @@ void mesh_rx_plink_frame(struct ieee80211_sub_if_data *sdata, struct ieee80211_m
+ 			/* avoid warning */
+ 			break;
+ 		}
+-		spin_lock_bh(&sta->lock);
++	}
++
++	if (!sta && !matches_local) {
++		rcu_read_unlock();
++		reason = cpu_to_le16(MESH_CAPABILITY_POLICY_VIOLATION);
++		llid = 0;
++		mesh_plink_frame_tx(sdata, PLINK_CLOSE, mgmt->sa, llid,
++				    plid, reason);
++		return;
+ 	} else if (!sta) {
+ 		/* ftype == PLINK_OPEN */
+ 		u32 rates;
+@@ -522,7 +531,7 @@ void mesh_rx_plink_frame(struct ieee80211_sub_if_data *sdata, struct ieee80211_m
+ 		}
+ 		event = OPN_ACPT;
+ 		spin_lock_bh(&sta->lock);
+-	} else {
++	} else if (matches_local) {
+ 		spin_lock_bh(&sta->lock);
+ 		switch (ftype) {
+ 		case PLINK_OPEN:
+@@ -564,6 +573,8 @@ void mesh_rx_plink_frame(struct ieee80211_sub_if_data *sdata, struct ieee80211_m
+ 			rcu_read_unlock();
+ 			return;
+ 		}
++	} else {
++		spin_lock_bh(&sta->lock);
+ 	}
+ 
+ 	mpl_dbg("Mesh plink (peer, state, llid, plid, event): %pM %s %d %d %d\n",
