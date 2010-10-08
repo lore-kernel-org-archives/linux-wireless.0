@@ -1,49 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:57018 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751197Ab0JGTRU (ORCPT
+Received: from hiems2.ing.unibs.it ([192.167.23.204]:59830 "EHLO
+	hiems2.ing.unibs.it" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753378Ab0JHQbq convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 7 Oct 2010 15:17:20 -0400
-Subject: Re: memory clobber in rx path, maybe related to ath9k.
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Ben Greear <greearb@candelatech.com>
-Cc: "Luis R. Rodriguez" <mcgrof@gmail.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <4CAE1C02.7090405@candelatech.com>
-References: <4CAB59B2.5050106@candelatech.com>
-	 <AANLkTikhGCTS8kJgpDzjudyBTk-rkyXY33UO7kB0+Cc-@mail.gmail.com>
-	 <4CAB5F3D.9060201@candelatech.com>
-	 <AANLkTimV3GrwU+9PPtirT4sCzveLY2egr3PRQhfDBET1@mail.gmail.com>
-	 <4CAB627F.8020804@candelatech.com>
-	 <AANLkTi=sT5QJe4V8gFGjF-nzx0uJAMLG_XG2715qrEEd@mail.gmail.com>
-	 <4CAB64AD.4080105@candelatech.com>
-	 <AANLkTi=3dHbB5tmQDp3Ba54-DqQydVCkNdFo1vKbfaGY@mail.gmail.com>
-	 <4CAB6B08.4050801@candelatech.com> <4CAE0474.4090605@candelatech.com>
-	 <1286475250.20974.22.camel@jlt3.sipsolutions.net>
-	 <AANLkTinbRSnPVgbBxvVpMdnP+K--bye=Q-miHf4X44kz@mail.gmail.com>
-	 <4CAE13F6.2010003@candelatech.com>
-	 <AANLkTimEZ5GY7WFz-F4YyC+6MEwNn2Dki4tonp645XrS@mail.gmail.com>
-	 <4CAE1553.1070900@candelatech.com>  <4CAE1C02.7090405@candelatech.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Thu, 07 Oct 2010 21:17:17 +0200
-Message-ID: <1286479037.20974.30.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+	Fri, 8 Oct 2010 12:31:46 -0400
+From: Francesco Gringoli <francesco.gringoli@ing.unibs.it>
+Content-Type: text/plain; charset=us-ascii
+Date: Fri, 8 Oct 2010 18:31:42 +0200
+Subject: Questions on carl9170 architecture
+To: linux-wireless <linux-wireless@vger.kernel.org>,
+	Christian Lamparter <chunkeey@googlemail.com>
+Message-Id: <3E9EF80F-15AF-4B40-AA26-C97A1E01D897@ing.unibs.it>
+Mime-Version: 1.0 (Apple Message framework v1081)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2010-10-07 at 12:14 -0700, Ben Greear wrote:
-> > I'll start a compile of vanilla wireless-testing + scan fix as well.
-> 
-> Well, vanilla + scan patch locked pretty hard when I started the script.
-> 
-> I was able to get sysrq to dump the locks, but it didn't seem to complete
-> that and couldn't even dump more sysrq info after that.
-> 
-> Might be something entirely different, of course, and no idea if
-> this lock dump shows any real problem.
+Hello Christian,
 
-Don't see any issues in this part of the dump -- heavy contention on the
-RTNL but that was expected with your usage.
+I have tried carl9170 for a while, everything is ok: what a great work! I have not noticed any problem so far, it seems almost stable.
 
-johannes
+I'm digging into carl9170 source code to understand how it works and what one can build starting from it. There are however a few points that I didn't understand, would you mind helping me?
+
+- how are handled acknowledgments? I don't see anything that schedules ack transmission when a packet that need ack is received. Is that accomplished internally by the hw? If yes, do you know if it can be disabled and replaced with new code so that it is the firmware to control ack transmission? For instance, a number of techniques have been recently proposed to estimate the channel condition when receiving corrupted frames: it could be interesting to send back a "special-ack" when a packet is received corrupted to help the transmitter understanding how to best retransmit the packet. Obviously this should be done within a SIFS from the reception of the packet;
+
+- to which precision is it possible to drive packet transmission? e.g., is it possible to start sending a packet a chosen interval after the previous?
+
+- is it possible to send packet independently of CCA, e.g., starting sending a packet even if the channel is busy?
+
+- is it possible to build a packet internally and decide to send it independently of the host?
+
+- is it possible to modify packets sent by the host before they leave the adapter?
+
+Sorry to bother you with so many questions.
+
+Kind regards,
+-Francesco Gringoli
+
+
+Informativa sulla privacy: http://help.ing.unibs.it/privacy.php
+
 
