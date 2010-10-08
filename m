@@ -1,123 +1,403 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.19.149.2]:19140 "EHLO mail.atheros.com"
+Received: from nbd.name ([88.198.39.176]:56226 "EHLO ds10.nbd.name"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758203Ab0JZOf3 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 26 Oct 2010 10:35:29 -0400
-Received: from mail.atheros.com ([10.10.20.105])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Tue, 26 Oct 2010 07:35:18 -0700
-From: Rajkumar Manoharan <rmanoharan@atheros.com>
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>,
-	Rajkumar Manoharan <rmanoharan@atheros.com>
-Subject: [PATCH] ath9k_htc: Handle monitor mode properly for HTC devices
-Date: Tue, 26 Oct 2010 20:11:29 +0530
-Message-ID: <1288104089-18888-1-git-send-email-rmanoharan@atheros.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	id S1759452Ab0JHUOF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 8 Oct 2010 16:14:05 -0400
+From: Felix Fietkau <nbd@openwrt.org>
+To: linux-wireless@vger.kernel.org
+Cc: linville@tuxdriver.com, lrodriguez@atheros.com, br1@einfach.org
+Subject: [PATCH 3/4] ath9k_hw: move the cycle counter tracking to ath
+Date: Fri,  8 Oct 2010 22:13:53 +0200
+Message-Id: <1286568834-18821-3-git-send-email-nbd@openwrt.org>
+In-Reply-To: <1286568834-18821-2-git-send-email-nbd@openwrt.org>
+References: <1286568834-18821-1-git-send-email-nbd@openwrt.org>
+ <1286568834-18821-2-git-send-email-nbd@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-No need to inform about monitor interface changes to
-firmware. Set the HW mode to monitor type based on mac80211
-indication flag is sufficient.
+Instead of keeping track of wraparound, clear the counters on every
+access and keep separate deltas for ANI and later survey use.
+Also moves the function for calculating the 'listen time' for ANI
 
-Signed-off-by: Rajkumar Manoharan <rmanoharan@atheros.com>
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+Signed-off-by: Bruno Randolf <br1@einfach.org>
 ---
- drivers/net/wireless/ath/ath9k/htc_drv_main.c |   64 ++-----------------------
- 1 files changed, 5 insertions(+), 59 deletions(-)
+ drivers/net/wireless/ath/ath.h              |   14 ++++++
+ drivers/net/wireless/ath/ath9k/ani.c        |   64 +-------------------------
+ drivers/net/wireless/ath/ath9k/ani.h        |    8 ---
+ drivers/net/wireless/ath/ath9k/ar9003_phy.c |    7 +--
+ drivers/net/wireless/ath/ath9k/hw.h         |    2 -
+ drivers/net/wireless/ath/ath9k/main.c       |   12 +++++-
+ drivers/net/wireless/ath/ath9k/reg.h        |   11 -----
+ drivers/net/wireless/ath/hw.c               |   59 ++++++++++++++++++++++++
+ drivers/net/wireless/ath/reg.h              |   11 +++++
+ 9 files changed, 101 insertions(+), 87 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_main.c b/drivers/net/wireless/ath/ath9k/htc_drv_main.c
-index 9a3be8d..8b126cd 100644
---- a/drivers/net/wireless/ath/ath9k/htc_drv_main.c
-+++ b/drivers/net/wireless/ath/ath9k/htc_drv_main.c
-@@ -184,47 +184,6 @@ err:
- 	return ret;
+diff --git a/drivers/net/wireless/ath/ath.h b/drivers/net/wireless/ath/ath.h
+index b36d9d7..501050c 100644
+--- a/drivers/net/wireless/ath/ath.h
++++ b/drivers/net/wireless/ath/ath.h
+@@ -19,6 +19,7 @@
+ 
+ #include <linux/skbuff.h>
+ #include <linux/if_ether.h>
++#include <linux/spinlock.h>
+ #include <net/mac80211.h>
+ 
+ /*
+@@ -42,6 +43,13 @@ struct ath_ani {
+ 	struct timer_list timer;
+ };
+ 
++struct ath_cycle_counters {
++	u32 cycles;
++	u32 rx_busy;
++	u32 rx_frame;
++	u32 tx_frame;
++};
++
+ enum ath_device_state {
+ 	ATH_HW_UNAVAILABLE,
+ 	ATH_HW_INITIALIZED,
+@@ -147,6 +155,10 @@ struct ath_common {
+ 
+ 	unsigned int clockrate;
+ 
++	spinlock_t cc_lock;
++	struct ath_cycle_counters cc_ani;
++	struct ath_cycle_counters cc_survey;
++
+ 	struct ath_regulatory regulatory;
+ 	const struct ath_ops *ops;
+ 	const struct ath_bus_ops *bus_ops;
+@@ -163,5 +175,7 @@ int ath_key_config(struct ath_common *common,
+ 			  struct ieee80211_sta *sta,
+ 			  struct ieee80211_key_conf *key);
+ bool ath_hw_keyreset(struct ath_common *common, u16 entry);
++void ath_hw_cycle_counters_update(struct ath_common *common);
++int32_t ath_hw_get_listen_time(struct ath_common *common);
+ 
+ #endif /* ATH_H */
+diff --git a/drivers/net/wireless/ath/ath9k/ani.c b/drivers/net/wireless/ath/ath9k/ani.c
+index f2aa684..3aa8fb1 100644
+--- a/drivers/net/wireless/ath/ath9k/ani.c
++++ b/drivers/net/wireless/ath/ath9k/ani.c
+@@ -465,18 +465,6 @@ static void ath9k_hw_ani_lower_immunity(struct ath_hw *ah)
+ 		ath9k_hw_set_cck_nil(ah, aniState->cckNoiseImmunityLevel - 1);
  }
  
--static int ath9k_htc_add_monitor_interface(struct ath9k_htc_priv *priv)
+-static int32_t ath9k_hw_ani_get_listen_time(struct ath_hw *ah)
 -{
--	struct ath_common *common = ath9k_hw_common(priv->ah);
--	struct ath9k_htc_target_vif hvif;
--	int ret = 0;
--	u8 cmd_rsp;
+-	struct ath_common *common = ath9k_hw_common(ah);
+-	int32_t listen_time;
 -
--	if (priv->nvifs > 0)
--		return -ENOBUFS;
+-	ath9k_hw_update_cycle_counters(ah);
+-	listen_time = ah->listen_time / (common->clockrate * 1000);
+-	ah->listen_time = 0;
 -
--	memset(&hvif, 0, sizeof(struct ath9k_htc_target_vif));
--	memcpy(&hvif.myaddr, common->macaddr, ETH_ALEN);
--
--	hvif.opmode = cpu_to_be32(HTC_M_MONITOR);
--	priv->ah->opmode = NL80211_IFTYPE_MONITOR;
--	hvif.index = priv->nvifs;
--
--	WMI_CMD_BUF(WMI_VAP_CREATE_CMDID, &hvif);
--	if (ret)
--		return ret;
--
--	priv->nvifs++;
--	return 0;
+-	return listen_time;
 -}
 -
--static int ath9k_htc_remove_monitor_interface(struct ath9k_htc_priv *priv)
--{
--	struct ath_common *common = ath9k_hw_common(priv->ah);
--	struct ath9k_htc_target_vif hvif;
--	int ret = 0;
--	u8 cmd_rsp;
--
--	memset(&hvif, 0, sizeof(struct ath9k_htc_target_vif));
--	memcpy(&hvif.myaddr, common->macaddr, ETH_ALEN);
--	hvif.index = 0; /* Should do for now */
--	WMI_CMD_BUF(WMI_VAP_REMOVE_CMDID, &hvif);
--	priv->nvifs--;
--
--	return ret;
--}
--
- static int ath9k_htc_add_station(struct ath9k_htc_priv *priv,
- 				 struct ieee80211_vif *vif,
- 				 struct ieee80211_sta *sta)
-@@ -1240,16 +1199,6 @@ static void ath9k_htc_stop(struct ieee80211_hw *hw)
- 	WMI_CMD(WMI_STOP_RECV_CMDID);
- 	skb_queue_purge(&priv->tx_queue);
+ static void ath9k_ani_reset_old(struct ath_hw *ah, bool is_scanning)
+ {
+ 	struct ar5416AniState *aniState;
+@@ -655,7 +643,9 @@ static void ath9k_hw_ani_read_counters(struct ath_hw *ah)
+ 	u32 phyCnt1, phyCnt2;
+ 	int32_t listenTime;
  
--	/* Remove monitor interface here */
--	if (ah->opmode == NL80211_IFTYPE_MONITOR) {
--		if (ath9k_htc_remove_monitor_interface(priv))
--			ath_print(common, ATH_DBG_FATAL,
--				  "Unable to remove monitor interface\n");
--		else
--			ath_print(common, ATH_DBG_CONFIG,
--				  "Monitor interface removed\n");
+-	listenTime = ath9k_hw_ani_get_listen_time(ah);
++	ath_hw_cycle_counters_update(common);
++	listenTime = ath_hw_get_listen_time(common);
++
+ 	if (listenTime < 0) {
+ 		ah->stats.ast_ani_lneg++;
+ 		ath9k_ani_restart(ah);
+@@ -796,54 +786,6 @@ void ath9k_hw_disable_mib_counters(struct ath_hw *ah)
+ }
+ EXPORT_SYMBOL(ath9k_hw_disable_mib_counters);
+ 
+-void ath9k_hw_update_cycle_counters(struct ath_hw *ah)
+-{
+-	struct ath_cycle_counters cc;
+-	bool clear;
+-
+-	memcpy(&cc, &ah->cc, sizeof(cc));
+-
+-	/* freeze counters */
+-	REG_WRITE(ah, AR_MIBC, AR_MIBC_FMC);
+-
+-	ah->cc.cycles = REG_READ(ah, AR_CCCNT);
+-	if (ah->cc.cycles < cc.cycles) {
+-		clear = true;
+-		goto skip;
 -	}
 -
- 	if (ah->btcoex_hw.enabled) {
- 		ath9k_hw_btcoex_disable(ah);
- 		if (ah->btcoex_hw.scheme == ATH_BTCOEX_CFG_3WIRE)
-@@ -1421,16 +1370,13 @@ static int ath9k_htc_config(struct ieee80211_hw *hw, u32 changed)
- 		}
+-	ah->cc.rx_clear = REG_READ(ah, AR_RCCNT);
+-	ah->cc.rx_frame = REG_READ(ah, AR_RFCNT);
+-	ah->cc.tx_frame = REG_READ(ah, AR_TFCNT);
+-
+-	/* prevent wraparound */
+-	if (ah->cc.cycles & BIT(31))
+-		clear = true;
+-
+-#define CC_DELTA(_field, _reg) ah->cc_delta._field += ah->cc._field - cc._field
+-	CC_DELTA(cycles, AR_CCCNT);
+-	CC_DELTA(rx_frame, AR_RFCNT);
+-	CC_DELTA(rx_clear, AR_RCCNT);
+-	CC_DELTA(tx_frame, AR_TFCNT);
+-#undef CC_DELTA
+-
+-	ah->listen_time += (ah->cc.cycles - cc.cycles) -
+-		 ((ah->cc.rx_frame - cc.rx_frame) +
+-		  (ah->cc.tx_frame - cc.tx_frame));
+-
+-skip:
+-	if (clear) {
+-		REG_WRITE(ah, AR_CCCNT, 0);
+-		REG_WRITE(ah, AR_RFCNT, 0);
+-		REG_WRITE(ah, AR_RCCNT, 0);
+-		REG_WRITE(ah, AR_TFCNT, 0);
+-		memset(&ah->cc, 0, sizeof(ah->cc));
+-	}
+-
+-	/* unfreeze counters */
+-	REG_WRITE(ah, AR_MIBC, 0);
+-}
+-
+ /*
+  * Process a MIB interrupt.  We may potentially be invoked because
+  * any of the MIB counters overflow/trigger so don't assume we're
+diff --git a/drivers/net/wireless/ath/ath9k/ani.h b/drivers/net/wireless/ath/ath9k/ani.h
+index 98cfd81..0cd6783 100644
+--- a/drivers/net/wireless/ath/ath9k/ani.h
++++ b/drivers/net/wireless/ath/ath9k/ani.h
+@@ -93,13 +93,6 @@ struct ath9k_mib_stats {
+ 	u32 beacons;
+ };
+ 
+-struct ath_cycle_counters {
+-	u32 cycles;
+-	u32 rx_frame;
+-	u32 rx_clear;
+-	u32 tx_frame;
+-};
+-
+ /* INI default values for ANI registers */
+ struct ath9k_ani_default {
+ 	u16 m1ThreshLow;
+@@ -164,7 +157,6 @@ struct ar5416Stats {
+ 
+ void ath9k_enable_mib_counters(struct ath_hw *ah);
+ void ath9k_hw_disable_mib_counters(struct ath_hw *ah);
+-void ath9k_hw_update_cycle_counters(struct ath_hw *ah);
+ void ath9k_hw_ani_setup(struct ath_hw *ah);
+ void ath9k_hw_ani_init(struct ath_hw *ah);
+ int ath9k_hw_get_ani_channel_idx(struct ath_hw *ah,
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_phy.c b/drivers/net/wireless/ath/ath9k/ar9003_phy.c
+index efb0559..669b777 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_phy.c
++++ b/drivers/net/wireless/ath/ath9k/ar9003_phy.c
+@@ -1254,13 +1254,12 @@ void ar9003_hw_bb_watchdog_dbg_info(struct ath_hw *ah)
+ 		  "** BB mode: BB_gen_controls=0x%08x **\n",
+ 		  REG_READ(ah, AR_PHY_GEN_CTRL));
+ 
+-	ath9k_hw_update_cycle_counters(ah);
+-#define PCT(_field) (ah->cc_delta._field * 100 / ah->cc_delta.cycles)
+-	if (ah->cc_delta.cycles)
++#define PCT(_field) (common->cc_survey._field * 100 / common->cc_survey.cycles)
++	if (common->cc_survey.cycles)
+ 		ath_print(common, ATH_DBG_RESET,
+ 			  "** BB busy times: rx_clear=%d%%, "
+ 			  "rx_frame=%d%%, tx_frame=%d%% **\n",
+-			  PCT(rx_clear), PCT(rx_frame), PCT(tx_frame));
++			  PCT(rx_busy), PCT(rx_frame), PCT(tx_frame));
+ 
+ 	ath_print(common, ATH_DBG_RESET,
+ 		  "==== BB update: done ====\n\n");
+diff --git a/drivers/net/wireless/ath/ath9k/hw.h b/drivers/net/wireless/ath/ath9k/hw.h
+index 87627dd..7f696c8 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.h
++++ b/drivers/net/wireless/ath/ath9k/hw.h
+@@ -740,8 +740,6 @@ struct ath_hw {
+ 	int coarse_low[5];
+ 	int firpwr[5];
+ 	enum ath9k_ani_cmd ani_function;
+-	struct ath_cycle_counters cc, cc_delta;
+-	int32_t listen_time;
+ 
+ 	/* Bluetooth coexistance */
+ 	struct ath_btcoex_hw btcoex_hw;
+diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
+index 74c2dc8..360c6f5 100644
+--- a/drivers/net/wireless/ath/ath9k/main.c
++++ b/drivers/net/wireless/ath/ath9k/main.c
+@@ -399,6 +399,7 @@ void ath_ani_calibrate(unsigned long data)
+ 	bool aniflag = false;
+ 	unsigned int timestamp = jiffies_to_msecs(jiffies);
+ 	u32 cal_interval, short_cal_interval, long_cal_interval;
++	unsigned long flags;
+ 
+ 	if (ah->caldata && ah->caldata->nfcal_interference)
+ 		long_cal_interval = ATH_LONG_CALINTERVAL_INT;
+@@ -449,8 +450,11 @@ void ath_ani_calibrate(unsigned long data)
+ 	/* Skip all processing if there's nothing to do. */
+ 	if (longcal || shortcal || aniflag) {
+ 		/* Call ANI routine if necessary */
+-		if (aniflag)
++		if (aniflag) {
++			spin_lock_irqsave(&common->cc_lock, flags);
+ 			ath9k_hw_ani_monitor(ah, ah->curchan);
++			spin_unlock_irqrestore(&common->cc_lock, flags);
++		}
+ 
+ 		/* Perform calibration if necessary */
+ 		if (longcal || shortcal) {
+@@ -635,6 +639,7 @@ irqreturn_t ath_isr(int irq, void *dev)
+ 
+ 	struct ath_softc *sc = dev;
+ 	struct ath_hw *ah = sc->sc_ah;
++	struct ath_common *common = ath9k_hw_common(ah);
+ 	enum ath9k_int status;
+ 	bool sched = false;
+ 
+@@ -684,7 +689,12 @@ irqreturn_t ath_isr(int irq, void *dev)
+ 
+ 	if ((ah->caps.hw_caps & ATH9K_HW_CAP_EDMA) &&
+ 	    (status & ATH9K_INT_BB_WATCHDOG)) {
++
++		spin_lock(&common->cc_lock);
++		ath_hw_cycle_counters_update(common);
+ 		ar9003_hw_bb_watchdog_dbg_info(ah);
++		spin_unlock(&common->cc_lock);
++
+ 		goto chip_reset;
  	}
  
--	if (changed & IEEE80211_CONF_CHANGE_MONITOR) {
-+	if (changed & IEEE80211_CONF_CHANGE_MONITOR)
- 		if (conf->flags & IEEE80211_CONF_MONITOR) {
--			if (ath9k_htc_add_monitor_interface(priv))
--				ath_print(common, ATH_DBG_FATAL,
--					  "Failed to set monitor mode\n");
--			else
--				ath_print(common, ATH_DBG_CONFIG,
--					  "HW opmode set to Monitor mode\n");
-+			ath_print(common, ATH_DBG_CONFIG,
-+				  "HW opmode set to Monitor mode\n");
-+			priv->ah->opmode = NL80211_IFTYPE_MONITOR;
- 		}
--	}
-+
+diff --git a/drivers/net/wireless/ath/ath9k/reg.h b/drivers/net/wireless/ath/ath9k/reg.h
+index 6d01e50..0176178 100644
+--- a/drivers/net/wireless/ath/ath9k/reg.h
++++ b/drivers/net/wireless/ath/ath9k/reg.h
+@@ -107,12 +107,6 @@
+ #define AR_RXCFG_DMASZ_256B  6
+ #define AR_RXCFG_DMASZ_512B  7
  
- 	if (changed & IEEE80211_CONF_CHANGE_IDLE) {
- 		mutex_lock(&priv->htc_pm_lock);
+-#define AR_MIBC              0x0040
+-#define AR_MIBC_COW          0x00000001
+-#define AR_MIBC_FMC          0x00000002
+-#define AR_MIBC_CMC          0x00000004
+-#define AR_MIBC_MCS          0x00000008
+-
+ #define AR_TOPS              0x0044
+ #define AR_TOPS_MASK         0x0000FFFF
+ 
+@@ -1524,11 +1518,6 @@ enum {
+ #define AR_TPC_CHIRP           0x003f0000
+ #define AR_TPC_CHIRP_S         0x16
+ 
+-#define AR_TFCNT           0x80ec
+-#define AR_RFCNT           0x80f0
+-#define AR_RCCNT           0x80f4
+-#define AR_CCCNT           0x80f8
+-
+ #define AR_QUIET1          0x80fc
+ #define AR_QUIET1_NEXT_QUIET_S         0
+ #define AR_QUIET1_NEXT_QUIET_M         0x0000ffff
+diff --git a/drivers/net/wireless/ath/hw.c b/drivers/net/wireless/ath/hw.c
+index a8f81ea..183c282 100644
+--- a/drivers/net/wireless/ath/hw.c
++++ b/drivers/net/wireless/ath/hw.c
+@@ -124,3 +124,62 @@ void ath_hw_setbssidmask(struct ath_common *common)
+ 	REG_WRITE(ah, get_unaligned_le16(common->bssidmask + 4), AR_BSSMSKU);
+ }
+ EXPORT_SYMBOL(ath_hw_setbssidmask);
++
++
++/**
++ * ath_hw_cycle_counters_update - common function to update cycle counters
++ *
++ * @common: the ath_common struct for the device.
++ *
++ * This function is used to update all cycle counters in one place.
++ * It has to be called while holding common->cc_lock!
++ */
++void ath_hw_cycle_counters_update(struct ath_common *common)
++{
++	u32 cycles, busy, rx, tx;
++	void *ah = common->ah;
++
++	/* freeze */
++	REG_WRITE(ah, AR_MIBC_FMC, AR_MIBC);
++
++	/* read */
++	cycles = REG_READ(ah, AR_CCCNT);
++	busy = REG_READ(ah, AR_RCCNT);
++	rx = REG_READ(ah, AR_RFCNT);
++	tx = REG_READ(ah, AR_TFCNT);
++
++	/* clear */
++	REG_WRITE(ah, 0, AR_CCCNT);
++	REG_WRITE(ah, 0, AR_RFCNT);
++	REG_WRITE(ah, 0, AR_RCCNT);
++	REG_WRITE(ah, 0, AR_TFCNT);
++
++	/* unfreeze */
++	REG_WRITE(ah, 0, AR_MIBC);
++
++	/* update all cycle counters here */
++	common->cc_ani.cycles += cycles;
++	common->cc_ani.rx_busy += busy;
++	common->cc_ani.rx_frame += rx;
++	common->cc_ani.tx_frame += tx;
++
++	common->cc_survey.cycles += cycles;
++	common->cc_survey.rx_busy += busy;
++	common->cc_survey.rx_frame += rx;
++	common->cc_survey.tx_frame += tx;
++}
++EXPORT_SYMBOL(ath_hw_cycle_counters_update);
++
++int32_t ath_hw_get_listen_time(struct ath_common *common)
++{
++	struct ath_cycle_counters *cc = &common->cc_ani;
++	int32_t listen_time;
++
++	listen_time = (cc->cycles - cc->rx_frame - cc->tx_frame) /
++		      (common->clockrate * 1000);
++
++	memset(cc, 0, sizeof(*cc));
++
++	return listen_time;
++}
++EXPORT_SYMBOL(ath_hw_get_listen_time);
+diff --git a/drivers/net/wireless/ath/reg.h b/drivers/net/wireless/ath/reg.h
+index e798ef4..298e53f 100644
+--- a/drivers/net/wireless/ath/reg.h
++++ b/drivers/net/wireless/ath/reg.h
+@@ -17,6 +17,12 @@
+ #ifndef ATH_REGISTERS_H
+ #define ATH_REGISTERS_H
+ 
++#define AR_MIBC			0x0040
++#define AR_MIBC_COW		0x00000001
++#define AR_MIBC_FMC		0x00000002
++#define AR_MIBC_CMC		0x00000004
++#define AR_MIBC_MCS		0x00000008
++
+ /*
+  * BSSID mask registers. See ath_hw_set_bssid_mask()
+  * for detailed documentation about these registers.
+@@ -24,6 +30,11 @@
+ #define AR_BSSMSKL		0x80e0
+ #define AR_BSSMSKU		0x80e4
+ 
++#define AR_TFCNT		0x80ec
++#define AR_RFCNT		0x80f0
++#define AR_RCCNT		0x80f4
++#define AR_CCCNT		0x80f8
++
+ #define AR_KEYTABLE_0           0x8800
+ #define AR_KEYTABLE(_n)         (AR_KEYTABLE_0 + ((_n)*32))
+ #define AR_KEY_CACHE_SIZE       128
 -- 
-1.7.3.2
+1.7.2.2
 
