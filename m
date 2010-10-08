@@ -1,82 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f46.google.com ([209.85.161.46]:64702 "EHLO
-	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759242Ab0JHUfP convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 8 Oct 2010 16:35:15 -0400
-Received: by fxm14 with SMTP id 14so729853fxm.19
-        for <linux-wireless@vger.kernel.org>; Fri, 08 Oct 2010 13:35:14 -0700 (PDT)
-To: "linux-wireless" <linux-wireless@vger.kernel.org>
-Subject: [PATCH v2] mac80211: temporarily disable reorder release timer
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	Johannes Berg <johannes@sipsolutions.net>
-From: Christian Lamparter <chunkeey@googlemail.com>
-Date: Fri, 8 Oct 2010 22:35:09 +0200
+Received: from mms3.broadcom.com ([216.31.210.19]:1113 "EHLO MMS3.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1758805Ab0JHRpa (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 8 Oct 2010 13:45:30 -0400
+From: "Brett Rudley" <brudley@broadcom.com>
+To: "Jon Masters" <jonathan@jonmasters.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+cc: "Henry Ptasinski" <henryp@broadcom.com>,
+	"Nohee Ko" <noheek@broadcom.com>,
+	"Jon Masters" <jcm@jonmasters.org>,
+	LKML <linux-kernel@vger.kernel.org>
+Date: Fri, 8 Oct 2010 10:45:14 -0700
+Subject: RE: PROBLEM: brcm80211 hangs on
+ 2.6.36-0.34.rc6.git3.fc15.x86_64
+Message-ID: <7A94256FD72B884D9E7C55586C3CBCEE1381EE4B69@SJEXCHCCR01.corp.ad.broadcom.com>
+References: <20101008065810.GA1680@constitution.bos.jonmasters.org>
+ <1286538243.21485.298.camel@constitution.bos.jonmasters.org>
+In-Reply-To: <1286538243.21485.298.camel@constitution.bos.jonmasters.org>
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="utf-8"
-Message-Id: <201010082235.09355.chunkeey@googlemail.com>
+Content-Type: text/plain;
+ charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Several serve threading problems in the current
-release reorder timer implementation have been
-discovered.
+VGhhbmtzIGZvciB0aGUgaW5wdXQuDQoNClRoZSA0MzEzIChEZXZpY2UgSUQgNDMyNykgaXMgcHJl
+dHR5IHNvbGlkIG9uIHRoZSAzMiBiaXQgc3RhZ2luZy1uZXh0IGtlcm5lbCAobG9hZHMsIHJ1bnMN
+CmZvciBkYXlzLCBubyBpc3N1ZXMsIGV0YykuDQoNCk9uIHRoZSBvdGhlciBoYW5kLCBJIGhhdmVu
+J3QgYmVlbiB1c2luZyBhbnl0aGluZyBvdGhlciB0aGFuIHRoYXQga2VybmVsIHJlY2VudGx5IHNv
+IGl0cyANCnZlcnksIHZlcnkgbGlrZWx5IHRoZXJlIGFyZSBwcm9ibGVtcyB3aXRoIG90aGVyIGtl
+cm5lbHMsIGVzcGVjaWFsbHkgNjQgYml0IHdoaWNoIEkgaGF2ZW4ndCBldmVuIA0KYXR0ZW1wdGVk
+IHlldCAoYnV0IHdpbGwgb2YgY291cnNlKS4gUGxlYXNlIGRvIHRyeSBvdXQgdGhlIDMyIGJpdCBz
+dGFnaW5nLW5leHQga2VybmVsIGFuZCBsZXQgbWUga25vdyBob3cgaXQgZ29lcy4NCg0KWWVhaCwg
+dHVybmluZyBvbiBtc2dsZXZlbCBwcm9kdWNlcyBtb3JlIChhbmQgcG9zc2libHkgKm11Y2gqIG1v
+cmUpIG91dHB1dC4gIA0KDQpMZXQgbWUga25vdyB3aGF0IHlvdSBmaW5kLA0KVGhhbmtzDQpicmV0
+dA0KDQo+IC0tLS0tT3JpZ2luYWwgTWVzc2FnZS0tLS0tDQo+IEZyb206IEpvbiBNYXN0ZXJzIFtt
+YWlsdG86am9uYXRoYW5Aam9ubWFzdGVycy5vcmddDQo+IFNlbnQ6IEZyaWRheSwgT2N0b2JlciAw
+OCwgMjAxMCA0OjQ0IEFNDQo+IFRvOiBsaW51eC13aXJlbGVzc0B2Z2VyLmtlcm5lbC5vcmcNCj4g
+Q2M6IEJyZXR0IFJ1ZGxleTsgSGVucnkgUHRhc2luc2tpOyBOb2hlZSBLbzsgSm9uIE1hc3RlcnM7
+IExLTUwNCj4gU3ViamVjdDogUmU6IFBST0JMRU06IGJyY204MDIxMSBoYW5ncyBvbiAyLjYuMzYt
+MC4zNC5yYzYuZ2l0My5mYzE1Lng4Nl82NA0KPiANCj4gT24gRnJpLCAyMDEwLTEwLTA4IGF0IDAy
+OjU4IC0wNDAwLCBKb24gTWFzdGVycyB3cm90ZToNCj4gDQo+ID4gSSB0cmllZCBidWlsZGluZyB0
+aGUgbmV3IGJyY204MDIxMSBkcml2ZXIgZnJvbSBzdGFnaW5nLW5leHQgb24gRmVkb3JhDQo+ID4g
+cmF3aGlkZSBrZXJuZWwgMi42LjM2LTAuMzQucmM2LmdpdDMuZmMxNS54ODZfNjQuIE5vdywgb2Yg
+Y291cnNlLCBpdCdzDQo+ID4gbm90IHRoZSBzdGFnaW5nLW5leHQga2VybmVsIChJJ2xsIHRyeSB0
+aGF0IG5vdyB0aGlzIGRvZXNuJ3Qgd29yaykgYnV0DQo+ID4gcGVyaGFwcyB0aGlzIHJlcG9ydCB3
+aWxsIHN0aWxsIGJlIG9mIHVzZSB0byB0aGUgQnJvYWRjb20vb3RoZXIgd2lyZWxlc3MNCj4gZm9s
+a3MuDQo+IA0KPiBJIHB1bGxlZCB0aGUgbGF0ZXN0IHN0YWdpbmctbmV4dCBvbnRvIExpbnVzJyBs
+YXRlc3QgZ2l0IHRyZWUgYW5kIHN0aWxsDQo+IGV4cGVyaWVuY2UgcHJvYmxlbXMgd2l0aCB0aGUg
+ZHJpdmVyLiBJdCBzZWVtcyB0aGF0IHRoZSBmaXJzdCBhdHRlbXB0IHRvDQo+IGFjdHVhbGx5IHRy
+YW5zbWl0IHJlc3VsdHMgaW4gdGhlIHN5c3RlbSBsb2NraW5nIGhhcmQuIE9uY2UgYWdhaW4sIEkg
+YW0NCj4gYXR0YWNoaW5nIHRoZSBvdXRwdXQgZnJvbSBydW5uaW5nIGEgbmV0Y29uc29sZSAoZHVl
+IHRvIHRoZSBib3ggSSdtIG9uLA0KPiBpdCdzIGFuIGF0dGFjaG1lbnQgdGhpcyB0aW1lLCBzb3Jy
+eSBhYm91dCB0aGF0IC0gZG9uJ3QgdHJ1c3QgZXZvbHV0aW9uKQ0KPiB3aGVyZSB0aGUgdHJhY2Ug
+aXMgYmFzaWNhbGx5IHRoZSBzYW1lIGFzIHRoZSBvcmlnaW5hbCB0cmFjZSBJIHBvc3RlZC4NCj4g
+DQo+IE5PVEU6IGluIGJvdGggY2FzZXMsIHRoZSBkcml2ZXIgaXMgbG9hZGVkIHdpdGggIm1zZ2xl
+dmVsPTIgcGh5bXNnbGV2ZWw9MiINCj4gd2hpY2ggKGFsdGhvdWdoIG5vdCBkb2N1bWVudGVkKSBz
+dWdnZXN0cyB0byBlbmFibGUgdHJhY2luZywgYW5kIGRvZXMNCj4gY2VydGFpbmx5IHlpZWxkIG1v
+cmUgZGVidWdnaW5nIG91dHB1dC4NCj4gDQo+IEpvbi4NCg0K
 
-A lengthy discussion - which lists some of the
-pitfalls and possible solutions - can be found at:
- http://marc.info/?t=128635927000001
-
-But due to the complicated nature of the subject and
-the imminent advent of a new -rc cycle, it was
-decided to disable the feature for the time being.
-
-Signed-off-by: Christian Lamparter <chunkeey@googlemail.com>
----
-v1 -> v2:
-	fix compiling error
-	net/mac80211/rx.c: In function ‘ieee80211_sta_reorder_release’:
-	net/mac80211/rx.c:665: error: label at end of compound statement
----
-diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
-index b67221d..aa9b08d 100644
---- a/net/mac80211/rx.c
-+++ b/net/mac80211/rx.c
-@@ -622,6 +622,26 @@ static void ieee80211_sta_reorder_release(struct ieee80211_hw *hw,
- 							tid_agg_rx->buf_size;
- 	}
- 
-+	/*
-+	 * Disable the reorder release timer for now.
-+	 *
-+	 * The current implementation lacks a proper locking scheme
-+	 * which would protect vital statistic and debug counters
-+	 * from being updated by two different but concurrent BHs.
-+	 *
-+	 * More information about the topic is available from:
-+	 * - thread: http://marc.info/?t=128635927000001
-+	 *
-+	 * What was wrong:
-+	 * =>  http://marc.info/?l=linux-wireless&m=128636170811964
-+	 * "Basically the thing is that until your patch, the data
-+	 *  in the struct didn't actually need locking because it
-+	 *  was accessed by the RX path only which is not concurrent."
-+	 *
-+	 * List of what needs to be fixed:
-+	 * => http://marc.info/?l=linux-wireless&m=128656352920957
-+	 *
-+
- 	if (tid_agg_rx->stored_mpdu_num) {
- 		j = index = seq_sub(tid_agg_rx->head_seq_num,
- 				    tid_agg_rx->ssn) % tid_agg_rx->buf_size;
-@@ -640,6 +660,10 @@ static void ieee80211_sta_reorder_release(struct ieee80211_hw *hw,
- 	} else {
- 		del_timer(&tid_agg_rx->reorder_timer);
- 	}
-+	*/
-+
-+set_release_timer:
-+	return;
- }
- 
- /*
