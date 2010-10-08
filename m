@@ -1,55 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f46.google.com ([209.85.215.46]:46850 "EHLO
-	mail-ew0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932789Ab0JDVNY (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 4 Oct 2010 17:13:24 -0400
-Received: by mail-ew0-f46.google.com with SMTP id 23so2256629ewy.19
-        for <linux-wireless@vger.kernel.org>; Mon, 04 Oct 2010 14:13:24 -0700 (PDT)
+Received: from mail.atheros.com ([12.19.149.2]:57878 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754134Ab0JHRDB (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 8 Oct 2010 13:03:01 -0400
+Date: Fri, 8 Oct 2010 10:02:59 -0700
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: Suraj Sumangala <Suraj.Sumangala@Atheros.com>,
+	David Woodhouse <dwmw2@infradead.org>,
+	Marcel Holtmann <marcel@holtmann.org>
+CC: linux-bluetooth <linux-bluetooth@vger.kernel.org>,
+	<linux-kernel@vger.kernel.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Firmware versioning best practices: ath3k-2.fw rename or replace
+ ath3k-1.fw ?
+Message-ID: <20101008170258.GJ10149@tux>
 MIME-Version: 1.0
-In-Reply-To: <AANLkTi=Ya6RuCdVYLYi3Mk5EKSP6czOfTh7TRKqB0GPU@mail.gmail.com>
-References: <4CAA2247.50402@candelatech.com> <1286218879.3620.55.camel@jlt3.sipsolutions.net>
- <4CAA252F.9090102@candelatech.com> <1286219405.3620.56.camel@jlt3.sipsolutions.net>
- <AANLkTi=Ya6RuCdVYLYi3Mk5EKSP6czOfTh7TRKqB0GPU@mail.gmail.com>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Mon, 4 Oct 2010 14:13:03 -0700
-Message-ID: <AANLkTinGaCAEqGRt_X6hsO8sQx4kKEdNqU8pfi00_1-r@mail.gmail.com>
-Subject: Re: Crash in agg-tx.c, with ath9k and lots of STA VIFs.
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Ben Greear <greearb@candelatech.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Oct 4, 2010 at 2:12 PM, Luis R. Rodriguez <mcgrof@gmail.com> wrote:
-> On Mon, Oct 4, 2010 at 12:10 PM, Johannes Berg
-> <johannes@sipsolutions.net> wrote:
->> On Mon, 2010-10-04 at 12:04 -0700, Ben Greear wrote:
->>> On 10/04/2010 12:01 PM, Johannes Berg wrote:
->>> > On Mon, 2010-10-04 at 11:51 -0700, Ben Greear wrote:
->>> >> Just in case this seems familiar to anyone...
->>> >>
->>> >> IP: [<f8ba74da>] ieee80211_stop_tx_ba_session+0x14/0x84 [mac80211]
->>> >
->>> > Do you have debug info that'd point to a code line?
->>> >
->>> > I have never heard of this.
->>>
->>> I don't actually know how to get a line of code out of those
->>> hex offsets...
->>>
->>> Someone told me many years ago..but I lost that information :P
->>
->> Err, I never remember either, I think Luis knows the gdb thing ... I
->> usually use "objdump -dS"
->
-> gdb net/mac80211/mac80211.ko
-> l *(ieee80211_stop_tx_ba_session+0x14/0x84)
+Suraj,
 
-Oops I meant:
+What is the difference between ath3k-2.fw and ath3k-1.fw ?
 
-gdb net/mac80211/mac80211.ko
-l *(ieee80211_stop_tx_ba_session+0x14)
+Won't the API change now that you are addressing the sflash
+configuration fix? Would it not help to identify the two
+different firmwares then?
 
-   Luis
+David, Marcel, what are your preferences for a firmware upgrade
+where the firmware does not change API (lets just pretend it does
+not for a moment) ? Do we keep the same filename?
+
+In this particular case I would assume our new sflash configuration
+fix that might be being worked on might change the re-enumerated
+USB device IDs so it seems to me a good idea to use a new filename.
+I should note ath3k-2.fw already made it to linux-firmware.git...
+
+I last tried to document a thread we had over this here:
+
+http://wireless.kernel.org/en/developers/Documentation/firmware-versioning
+
+Does this sound sane? If so then the sflash configuration fix
+would seem to me like it would require a new filename. Now, while
+we're at it, how about bug fixes?
+
+Suraj -- keep these discussions public please....
+
+  Luis
