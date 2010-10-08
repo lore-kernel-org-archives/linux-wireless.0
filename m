@@ -1,127 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iw0-f174.google.com ([209.85.214.174]:52335 "EHLO
-	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756021Ab0JNVdP convert rfc822-to-8bit (ORCPT
+Received: from mail-fx0-f46.google.com ([209.85.161.46]:61748 "EHLO
+	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754532Ab0JHSnG (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 14 Oct 2010 17:33:15 -0400
-Received: by iwn35 with SMTP id 35so56891iwn.19
-        for <linux-wireless@vger.kernel.org>; Thu, 14 Oct 2010 14:33:14 -0700 (PDT)
+	Fri, 8 Oct 2010 14:43:06 -0400
+Received: by fxm14 with SMTP id 14so669566fxm.19
+        for <linux-wireless@vger.kernel.org>; Fri, 08 Oct 2010 11:43:02 -0700 (PDT)
+From: Christian Lamparter <chunkeey@googlemail.com>
+To: Francesco Gringoli <francesco.gringoli@ing.unibs.it>
+Subject: Re: Questions on carl9170 architecture
+Date: Fri, 8 Oct 2010 20:42:58 +0200
+Cc: "linux-wireless" <linux-wireless@vger.kernel.org>
+References: <3E9EF80F-15AF-4B40-AA26-C97A1E01D897@ing.unibs.it>
+In-Reply-To: <3E9EF80F-15AF-4B40-AA26-C97A1E01D897@ing.unibs.it>
 MIME-Version: 1.0
-In-Reply-To: <4CB776AF.6090504@candelatech.com>
-References: <4CAB59B2.5050106@candelatech.com> <AANLkTinbRSnPVgbBxvVpMdnP+K--bye=Q-miHf4X44kz@mail.gmail.com>
- <4CAE13F6.2010003@candelatech.com> <AANLkTimEZ5GY7WFz-F4YyC+6MEwNn2Dki4tonp645XrS@mail.gmail.com>
- <4CAE1DFB.303@candelatech.com> <1286479642.20974.32.camel@jlt3.sipsolutions.net>
- <AANLkTimxp703Gy_Atg8=wpFszRDR=OJCXwOUKRh-a-d7@mail.gmail.com>
- <AANLkTi=t-P_5c14brJohM8UgxeOknv+3syO=7W=ix6qf@mail.gmail.com>
- <AANLkTinC46a+nE-XOQuBCmRJwjzgh24uC7ZJ7HtbVHnT@mail.gmail.com>
- <4CB378CD.1080800@candelatech.com> <AANLkTim42zmDwf744BCrPwa1kT5ph57bNMyvSyOpesVv@mail.gmail.com>
- <4CB3D598.7050904@candelatech.com> <AANLkTimPEg3ZU8CQUXfdpGdfbmhdE9O=GNY=g9gysTo4@mail.gmail.com>
- <4CB4AA89.1070009@candelatech.com> <AANLkTinpWvMtexFTYVm5rEZY=gY7qY8WxHFtVGB0o6Se@mail.gmail.com>
- <4CB5E885.7090305@candelatech.com> <AANLkTi=c=w8MvXZ=vqxkRgbXasacQTYXUX8o_zXoZgxC@mail.gmail.com>
- <4CB5F0D4.4020907@candelatech.com> <AANLkTimCyHRRoh34Cfv=b+h-9SoeuJzur46WyEZ7BKT-@mail.gmail.com>
- <4CB776AF.6090504@candelatech.com>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Thu, 14 Oct 2010 14:32:51 -0700
-Message-ID: <AANLkTimCqjjuz-6zbUozsFzv2DE0K044gyvf-52V4d+7@mail.gmail.com>
-Subject: Re: memory clobber in rx path, maybe related to ath9k.
-To: Ben Greear <greearb@candelatech.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Message-Id: <201010082042.58974.chunkeey@googlemail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Oct 14, 2010 at 2:31 PM, Ben Greear <greearb@candelatech.com> wrote:
-> On 10/14/2010 02:25 PM, Luis R. Rodriguez wrote:
->>
->> On Wed, Oct 13, 2010 at 10:48 AM, Ben Greear<greearb@candelatech.com>
->>  wrote:
->>>
->>> On 10/13/2010 10:29 AM, Luis R. Rodriguez wrote:
->>>>
->>>> On Wed, Oct 13, 2010 at 10:12 AM, Ben Greear<greearb@candelatech.com>
->>>>  wrote:
->>>>>
->>>>> On 10/12/2010 11:40 AM, Luis R. Rodriguez wrote:
->>>>>>
->>>>>> On Tue, Oct 12, 2010 at 11:35 AM, Ben Greear<greearb@candelatech.com>
->>>>>>  wrote:
->>>>>>>
->>>>>>> On 10/11/2010 11:10 PM, Luis R. Rodriguez wrote:
->>>>>>>>
->>>>>>>> On Mon, Oct 11, 2010 at 8:27 PM, Ben Greear<greearb@candelatech.com>
->>>>>>>>  wrote:
->>>>>>>
->>>>>>>>> Another thing I was thinking about:  Maybe the queue of skbs and
->>>>>>>>> dma
->>>>>>>>> addresses
->>>>>>>>> in ath9k is getting corrupted by multiple VIFs trying to write at
->>>>>>>>> once?
->>>>>>>>>  Maybe
->>>>>>>>> some locking is needed in the xmit path?
->>>>>>>>
->>>>>>>> That was my second hunch. My first shot was to use
->>>>>>>> spin_lock_irqsave()
->>>>>>>> over the the uses of the rxbuf list and that seemed to help but I
->>>>>>>> still managed to get a poison eventually. My next item to check for
->>>>>>>> is
->>>>>>>> of the permissibility of creating too much pressure to the point we
->>>>>>>> end up looping over the rxbuf list and race against mac80211
->>>>>>>> free'ing
->>>>>>>> a buffer. Will test that tomorrow if nothing else comes up creeping
->>>>>>>> my
->>>>>>>> priority queue.
->>>>>>>
->>>>>>> This code looks weird to me.  One of the paprd branches
->>>>>>> deletes the skb, the other doesn't appear to.  Neither
->>>>>>> null out bf->bf_mpdu, which would appear to leave a dangling
->>>>>>> pointer in at least the dev_kfree_skb_any() branch.
->>>>>>>
->>>>>>> ath_tx_complete frees it's skb in all cases, so another
->>>>>>> bf->bf_mpdu dangling pointer issue.
->>>>>>>
->>>>>>> Maybe at the least we should null out bf->bf_mpdu when
->>>>>>> skb is consumed?
->>>>>>
->>>>>> You're reading my mind, that was what I was going to test today. Still
->>>>>> doing e-mail sweep though.
->>>>>
->>>>> At least in the xmit path, it seems cards that have EDMA support do
->>>>> things a bit different.  Out of curiosity, on the system(s), you
->>>>> reproduce
->>>>> this, are any of yours supporting EDMA?  Mine appear to not support
->>>>> EDMA.
->>>>
->>>> EDMA is used on>= AR9003 families by Atheros. And no, I am not
->>>> testing with an EDMA card, I am testing with an AR9002 family card,
->>>> the AR9280 card. I am going to disregard the TX stuff as the bug is an
->>>> RX issue :) I was able to more easily reproduce by doing an skb_copy()
->>>> and free'ing the buffer right afterwards on the ath_send_to_mac80211()
->>>> thingy, So it does appear that the poison check just happens more
->>>> often when we do an skb_copy(). One reason this is easy to reproduce
->>>> with multiple STAs is mac80211 uses skb_copy() to process each
->>>> received skb for each STA.
->>>>
->>>> In my tests so far, protecting the rxbuf list with spin_lock_irqsave()
->>>> did not help, and the wmb(); didn't either, something else is going on
->>>> here. It would be nice to hack slab to keep an entire trace of the
->>>> place the buffer was last free'd at instead of just the caller that
->>>> freed it.
->>>
->>> I instrumented slub a while back and got the backtrace.  It
->>> was always in the same place for my testing.
->>>
->>> Here's the slub patch if you are interested in using it yourself:
->>> https://patchwork.kernel.org/patch/236921/
->>
->> when compiling this patch I get:
->>
->> arch/x86/built-in.o: In function `store_stack':
->> /home/mcgrof/wireless-testing/arch/x86/kernel/dumpstack.c:259:
->> undefined reference to `store_trace'
->
-> You are compiling on 32-bit system?  I see the method in
-> the patch, but probably only for 32-bit x86...
+On Friday 08 October 2010 18:31:42 Francesco Gringoli wrote:
+> Hello Christian,
+> 
+> I have tried carl9170 for a while, everything is ok: what a great work!
+> I have not noticed any problem so far, it seems almost stable.
+"almost". That's the biggest issue, the driver is "new" and all
+the bugs are hidden from sight.
 
-Ah no I'm on 64-bit.
+> - how are handled acknowledgments? I don't see anything that schedules ack
+> transmission when a packet that need ack is received. Is that accomplished
+> internally by the hw?
+Yes, Atheros calls it the "Response Controller" (and it's pretty much
+hardwired into the MAC HW)
 
-  Luis
+> If yes, do you know if it can be disabled and replaced with new code so
+> that it is the firmware to control ack transmission?
+Maybe. The normal ACKs can be disabled by zeroing 0x1c36f8.
+
+> For instance, a number of techniques have been recently proposed to estimate
+> the channel condition when receiving corrupted frames: it could be
+> interesting to send back a "special-ack" when a packet is received corrupted
+> to help the transmitter understanding how to best retransmit the packet.
+Hmm, by the time you've "generated" your special response, the peer
+already knows that the attempt has failed.
+anyway, that's OT ;)
+
+> Obviously this should be done within a SIFS from the reception of the packet;
+That's going to be though, especially under load.
+Apparently, the HW doesn't provide real interrupts.
+Therefore everything needs to be "polled"
+(yes, that includes the USB DMA too). 
+ 
+> - to which precision is it possible to drive packet transmission?
+> e.g., is it possible to start sending a packet a chosen interval after the previous?
+Sorry, but my documentation doesn't cover the topic.
+You have to ask Atheros.
+
+> - is it possible to send packet independently of CCA, e.g., starting
+> sending a packet even if the channel is busy?
+hmm, there's a CCA threshold register somewhere.
+But no details in the docs, so you might want to ask Atheros.
+
+> - is it possible to build a packet internally and decide to send
+> it independently of the host?
+kind of. Take a look at handle_bar() and wlan_send_buffered_ba().
+
+> - is it possible to modify packets sent by the host before
+> they leave the adapter?
+sure, you can probably do that. but keep in mind that device
+uses vectored-i/o and the frame data is split across 320 bytes
+chunks.
+
+Regards,
+	Christian
