@@ -1,51 +1,31 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from comal.ext.ti.com ([198.47.26.152]:55238 "EHLO comal.ext.ti.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752362Ab0JMOGt (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 13 Oct 2010 10:06:49 -0400
-From: Shahar Levi <shahar_levi@ti.com>
-To: <linux-wireless@vger.kernel.org>
-Cc: Luciano Coelho <luciano.coelho@nokia.com>
-Subject: [PATCH v4 00/03] wl1271: 11n Support, add support to 80211n spec
-Date: Wed, 13 Oct 2010 16:09:38 +0200
-Message-Id: <1286978981-21467-1-git-send-email-shahar_levi@ti.com>
+Received: from mail.deathmatch.net ([72.66.92.28]:3914 "EHLO
+	mail.deathmatch.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754344Ab0JHSYC (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 8 Oct 2010 14:24:02 -0400
+Date: Fri, 8 Oct 2010 14:25:47 -0400
+From: Bob Copeland <me@bobcopeland.com>
+To: Ben Greear <greearb@candelatech.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 2/2] ath5k: Adjust opmode when interfaces are removed.
+Message-ID: <20101008182547.GA27479@hash.localnet>
+References: <1286556210-29643-1-git-send-email-greearb@candelatech.com> <1286556210-29643-2-git-send-email-greearb@candelatech.com> <AANLkTinXFLL25-r-LUb5vqjNkwoa68xWhN_CaD0KVE=p@mail.gmail.com> <4CAF5DB3.7070603@candelatech.com> <AANLkTi=abVBncBxEKV4oQNSSm4fS5a-qZ=a38BJRPSg_@mail.gmail.com> <4CAF607A.4090305@candelatech.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <4CAF607A.4090305@candelatech.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Series that add 80211n spec support to wl1271: scan, connection via MCS rates
-Wl12xx driver add HT support:
-- Scan includes HT IE
-- Connection to HT devices
-- HT protection
-- Traffic via MCS rates
-- A-MSDU in RX path
+On Fri, Oct 08, 2010 at 11:18:34AM -0700, Ben Greear wrote:
+> I can just always set the opmode if you prefer that.  Maybe
+> change the name of that method.
+>
+> I'll work on a patch.
 
-Missing functionality is:
-- BA session as Initiator and Receiver
+Yeah I think that would be better from a long-term maintenance standpoint.
+Thanks!
 
-Changes from v2:
-- Add logic on wl1271_op_bss_info_changed()
-- add CONFIG_WL1271_HT in tx & rx
-- Rebase to latest wl12xx git
-- Clean to Linux code style.
-
-Changes from v3:
-- Fix HW_RX_HIGHEST_RATE to 72 (old value 65)
-- In wl1271_acx_set_ht_capabilities() replace ? with if 
-- Fix some comments
-- Clean to Linux code style.
-
-Shahar Levi (3):
-  wl1271: 11n Support, Add Definitions
-  wl1271: 11n Support, ACX Commands
-  wl1271: 11n Support, functionality and configuration ability
-
- drivers/net/wireless/wl12xx/Kconfig       |   10 +++
- drivers/net/wireless/wl12xx/wl1271.h      |   11 +++-
- drivers/net/wireless/wl12xx/wl1271_acx.c  |   83 +++++++++++++++++++++++
- drivers/net/wireless/wl12xx/wl1271_acx.h  |   86 ++++++++++++++++++++++++
- drivers/net/wireless/wl12xx/wl1271_main.c |  102 ++++++++++++++++++++++++-----
- drivers/net/wireless/wl12xx/wl1271_rx.c   |    6 ++
- drivers/net/wireless/wl12xx/wl1271_tx.c   |   11 +++
- 7 files changed, 291 insertions(+), 18 deletions(-)
+-- 
+Bob Copeland %% www.bobcopeland.com
 
