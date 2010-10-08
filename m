@@ -1,65 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([147.243.1.47]:22539 "EHLO mgw-sa01.nokia.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752328Ab0JELSb (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 5 Oct 2010 07:18:31 -0400
-Subject: Re: [PATCH v3 0/3] wl1271: Packet aggregation optimizations
-From: Luciano Coelho <luciano.coelho@nokia.com>
-To: ext Ido Yariv <ido@wizery.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"Oikarinen Juuso (Nokia-MS/Tampere)" <juuso.oikarinen@nokia.com>,
-	Ohad Ben-Cohen <ohad@wizery.com>
-In-Reply-To: <1285853308-24290-1-git-send-email-ido@wizery.com>
-References: <1285853308-24290-1-git-send-email-ido@wizery.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Tue, 05 Oct 2010 14:18:06 +0300
-Message-ID: <1286277486.15401.8.camel@chilepepper>
-Mime-Version: 1.0
+Received: from mail.candelatech.com ([208.74.158.172]:44808 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759221Ab0JHRig (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 8 Oct 2010 13:38:36 -0400
+Message-ID: <4CAF5715.5010103@candelatech.com>
+Date: Fri, 08 Oct 2010 10:38:29 -0700
+From: Ben Greear <greearb@candelatech.com>
+MIME-Version: 1.0
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: "Luis R. Rodriguez" <lrodriguez@Atheros.com>,
+	"Luis R. Rodriguez" <mcgrof@gmail.com>,
+	ath9k <ath9k-devel@venema.h4ckr.net>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: [ath9k-devel] trying to set tx power (using txpower option)
+References: <SNT111-W333C4BA6050D535151071FFB690@phx.gbl>	 <SNT111-W2989DC6A52022428756E6FB500@phx.gbl>	 <20101008111221.5425.qmail@stuge.se>	 <AANLkTimAfH8ChkjwFB7e2kMbJyxaZQZMSxTcThva=jgN@mail.gmail.com>	 <SNT111-W21A1F92DC5DADE5968C8CCFB500@phx.gbl>	 <AANLkTikc9+bULkH2Fv7mEtBjbjatMW8XOXjXZVuA81hD@mail.gmail.com>	 <4CAF4B70.9050001@candelatech.com> <20101008165232.GI10149@tux>	 <4CAF4FDA.8060908@candelatech.com>	 <1286557944.3612.5.camel@jlt3.sipsolutions.net>	 <4CAF53E2.8030306@candelatech.com> <1286558903.3612.6.camel@jlt3.sipsolutions.net>
+In-Reply-To: <1286558903.3612.6.camel@jlt3.sipsolutions.net>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2010-09-30 at 15:28 +0200, ext Ido Yariv wrote:
-> The WL1271 HW supports sending and receiving multiple packets within
-> a single transaction. This can substantially reduce CPU usage and
-> increase network throughput.
-> 
-> The following patches add support for RX and TX packet aggregation.
-> An opportunistic approach was taken - all packets that are currently
-> available for sending/receiving are aggregated and transferred
-> in a single transaction.
-> 
-> On SPI platforms, tests done by Juuso Oikarinen have shown a 20% improvement
-> in CPU usage.
-> On SDIO platforms, some tests have shown an improvement of over 30% in CPU
-> usage.
-> 
-> Changes since v2:
-> Fix debug output in the SPI callbacks.
-> 
-> Changes since v1:
-> The SPI callbacks do not handle large transfers well. The first patch fixes
-> this by fragmenting large transfers into smaller ones.
-> 
-> Thanks Juuso Oikarinen for reporting the SPI issue and helping with testing
-> and benchmarking these optimizations.
-> 
-> Ido Yariv (3):
->   wl1271: Handle large SPI transfers
->   wl1271: Support firmware RX packet aggregation
->   wl1271: Support firmware TX packet aggregation
-> 
->  drivers/net/wireless/wl12xx/wl1271.h      |    5 +
->  drivers/net/wireless/wl12xx/wl1271_main.c |   15 +++-
->  drivers/net/wireless/wl12xx/wl1271_rx.c   |   63 ++++++++++----
->  drivers/net/wireless/wl12xx/wl1271_spi.c  |  140 ++++++++++++++++++-----------
->  drivers/net/wireless/wl12xx/wl1271_tx.c   |   99 ++++++++-------------
->  5 files changed, 189 insertions(+), 133 deletions(-)
-> 
+On 10/08/2010 10:28 AM, Johannes Berg wrote:
+> On Fri, 2010-10-08 at 10:24 -0700, Ben Greear wrote:
+>
+>>> There's a later division by 100 to go from mBm to dBm ... I think you
+>>> want 2000, not 20.
+>>
+>> Well, it's documented in iw to be 'mBm', though I surely wouldn't have known
+>> what that stood for (nothing useful shows up on google for 'mBm units').
+>
+> Suck. I don't even know why we did that in iw though, couldn't we have
+> used dBm floats?
 
-Thanks, applied to the wl12xx tree, master branch.
+Looks like this iw change has been out there a while.
+
+Maybe change iw:
+
+*  If value is < 100, assume it's dBm and convert for user.
+    * Warn them?
+
+*  If it's a float, convert to dBm for user.
+
+Otherwise, leave it as is.
+
+For what it's worth, 'iwconfig' works as is (using dBm units).
+
+Thanks,
+Ben
+
+>
+> johannes
 
 
 -- 
-Cheers,
-Luca.
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
 
