@@ -1,48 +1,85 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iw0-f174.google.com ([209.85.214.174]:44082 "EHLO
-	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753731Ab0JYQuI (ORCPT
+Received: from mail.candelatech.com ([208.74.158.172]:60594 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754326Ab0JHSTB (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 25 Oct 2010 12:50:08 -0400
-Received: by iwn10 with SMTP id 10so1035498iwn.19
-        for <linux-wireless@vger.kernel.org>; Mon, 25 Oct 2010 09:50:07 -0700 (PDT)
+	Fri, 8 Oct 2010 14:19:01 -0400
+Message-ID: <4CAF607A.4090305@candelatech.com>
+Date: Fri, 08 Oct 2010 11:18:34 -0700
+From: Ben Greear <greearb@candelatech.com>
 MIME-Version: 1.0
-In-Reply-To: <AANLkTimzB3deO8FK=hP9Z5H_-sJ2J7WES_B9aHFitdey@mail.gmail.com>
-References: <1287857641-7882-1-git-send-email-hauke@hauke-m.de>
- <AANLkTimv9dohuKynRW3GaMUDAOtMKhf0xwr76+wc2vCW@mail.gmail.com>
- <4CC48B84.1000506@hauke-m.de> <AANLkTimzB3deO8FK=hP9Z5H_-sJ2J7WES_B9aHFitdey@mail.gmail.com>
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Date: Mon, 25 Oct 2010 09:49:46 -0700
-Message-ID: <AANLkTinZK=aam2Kqy9B-YiqE8AaLBX37GWT7Od+xBUcy@mail.gmail.com>
-Subject: Re: [PATCH 1/3] compat: fix device_lock functions on non rt kernel
-To: Blaise Gassend <blaise@willowgarage.com>
-Cc: Hauke Mehrtens <hauke@hauke-m.de>, linux-wireless@vger.kernel.org,
-	mcgrof@infradead.org
-Content-Type: text/plain; charset=UTF-8
+To: Bob Copeland <me@bobcopeland.com>
+CC: linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 2/2] ath5k: Adjust opmode when interfaces are removed.
+References: <1286556210-29643-1-git-send-email-greearb@candelatech.com>	<1286556210-29643-2-git-send-email-greearb@candelatech.com>	<AANLkTinXFLL25-r-LUb5vqjNkwoa68xWhN_CaD0KVE=p@mail.gmail.com>	<4CAF5DB3.7070603@candelatech.com> <AANLkTi=abVBncBxEKV4oQNSSm4fS5a-qZ=a38BJRPSg_@mail.gmail.com>
+In-Reply-To: <AANLkTi=abVBncBxEKV4oQNSSm4fS5a-qZ=a38BJRPSg_@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, Oct 24, 2010 at 1:41 PM, Blaise Gassend <blaise@willowgarage.com> wrote:
-> Hi Hauke,
+On 10/08/2010 11:13 AM, Bob Copeland wrote:
+> On Fri, Oct 8, 2010 at 2:06 PM, Ben Greear<greearb@candelatech.com>  wrote:
+>> On 10/08/2010 11:03 AM, Bob Copeland wrote:
+>>>
+>>> On Fri, Oct 8, 2010 at 12:43 PM,<greearb@candelatech.com>    wrote:
+>>>>
+>>>> @@ -558,6 +577,7 @@ void ath5k_update_bssid_mask(struct ath5k_softc *sc,
+>>>> struct ieee80211_vif *vif)
+>>>>         memset(&iter_data.mask, 0xff, ETH_ALEN);
+>>>>         iter_data.found_active = false;
+>>>>         iter_data.need_set_hw_addr = true;
+>>>> +       iter_data.opmode = NL80211_IFTYPE_UNSPECIFIED;
+>>>>
+>>>>         if (vif)
+>>>>                 ath_vif_iter(&iter_data, vif->addr, vif);
+>>>> @@ -567,6 +587,11 @@ void ath5k_update_bssid_mask(struct ath5k_softc *sc,
+>>>> struct ieee80211_vif *vif)
+>>>>                                                    &iter_data);
+>>>>         memcpy(sc->bssidmask, iter_data.mask, ETH_ALEN);
+>>>>
+>>>> +       if (update_opmode&&    sc->opmode != iter_data.opmode) {
+>>>> +               sc->opmode = iter_data.opmode;
+>>>> +               ath_do_set_opmode(sc);
+>>>> +       }
+>>>> +
+>>>
+>>> Should we really couple updating bssid mask and configuring
+>>> the opmode?  Generally, I dislike adding boolean flags to
+>>> functions because it's hard to figure out from the callsite
+>>> what is happening (you have to go back to the prototype), and
+>>> it usually indicates that the abstraction is a little broken.
+>>
+>> Well, we need to do the iteration over all VIFS to figure out what to set
+>> this
+>> too.  Seems doing one iteration v/s doing two is worth the
+>> extra flag?
 >
->> in the Ubuntu 10.04 default kernel config CONFIG_PREEMPT_VOLUNTARY=y is
->> set, but it does not use the RT patches, so compat-wireless build
->> failed. If you are using a mainline kernel you can choose between
->> CONFIG_PREEMPT_NONE, CONFIG_PREEMPT_VOLUNTARY and CONFIG_PREEMPT (all
->> localed in kernel/Kconfig.preempt for a least kernel 2.6.24), so these
->> options are not indicating that the RT patches are applied. The RT patch
->> adds CONFIG_PREEMPT_RT and CONFIG_PREEMPT_DESKTOP and removes
->> CONFIG_PREEMPT, so choosing one of these options to detect that the RT
->> patch is applied is not a good idea. I do not had the time to look
->> through the hole rt patch to find a better indicator if it is applied so
->> I just removed the ones preventing compiling on normal kernels. I just
->> looked into patch-2.6.33.7-rt29.bz2 and not the other RT patches.
+> I admit I haven't looked at the context, so I'm not sure how ugly it
+> is, but you can often do this kind of thing by inverting the loop:
 >
-> OK, I see your point now. I did not realize that the mainstream
-> kernels also had those two options in them. I haven't had much luck
-> finding an config option that is always on in the RT kernels. For now
-> your fix sounds like the right tradeoff.
+> update_vif_data()
+> {
+>     for all vifs:
+>        compute new bssid&  opmode
+>
+>     update_bssid(new_bssid)
+>     update_opmode(neW_opmode)
+> }
+>
+> and call that instead (even in the single vif case).
 
-Just so we're clear, no further patch is needed ay?
+I can just always set the opmode if you prefer that.  Maybe
+change the name of that method.
 
- Luis
+I'll work on a patch.
+
+Thanks,
+Ben
+
+>
+
+
+-- 
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
+
