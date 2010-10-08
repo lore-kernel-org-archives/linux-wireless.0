@@ -1,54 +1,146 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wy0-f174.google.com ([74.125.82.174]:63520 "EHLO
-	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753973Ab0JBJfZ (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 2 Oct 2010 05:35:25 -0400
-Received: by mail-wy0-f174.google.com with SMTP id 28so3658520wyb.19
-        for <linux-wireless@vger.kernel.org>; Sat, 02 Oct 2010 02:35:25 -0700 (PDT)
-From: Ivo van Doorn <ivdoorn@gmail.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Subject: [PATCH 06/20] rt2x00: Don't initialize MM40 HT protection to RTS/CTS on PCI devices
-Date: Sat, 2 Oct 2010 11:29:08 +0200
-Cc: users@rt2x00.serialmonkey.com, linux-wireless@vger.kernel.org,
-	Helmut Schaa <helmut.schaa@googlemail.com>
-References: <201010021126.18748.IvDoorn@gmail.com> <201010021128.03722.IvDoorn@gmail.com> <201010021128.35449.IvDoorn@gmail.com>
-In-Reply-To: <201010021128.35449.IvDoorn@gmail.com>
-MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Message-Id: <201010021129.09422.IvDoorn@gmail.com>
+Received: from nbd.name ([88.198.39.176]:56225 "EHLO ds10.nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1759553Ab0JHUOE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 8 Oct 2010 16:14:04 -0400
+From: Felix Fietkau <nbd@openwrt.org>
+To: linux-wireless@vger.kernel.org
+Cc: linville@tuxdriver.com, lrodriguez@atheros.com, br1@einfach.org
+Subject: [PATCH 1/4] ath9k_hw: store the clock rate in common data on channel changes
+Date: Fri,  8 Oct 2010 22:13:51 +0200
+Message-Id: <1286568834-18821-1-git-send-email-nbd@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Helmut Schaa <helmut.schaa@googlemail.com>
-
-Since HT protection is now configurable via mac80211 we don't need this
-special case for PCI devices anymore. The HT protection config will be
-overwritten as soon as mac80211 sends us a HT operation mode. Hence,
-bring the HT MM40 protection config in sync with the other HT protection
-registers and initialize it to no protection.
-
-Signed-off-by: Helmut Schaa <helmut.schaa@googlemail.com>
-Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
 ---
- drivers/net/wireless/rt2x00/rt2800lib.c |    3 +--
- 1 files changed, 1 insertions(+), 2 deletions(-)
+ drivers/net/wireless/ath/ath.h       |    2 ++
+ drivers/net/wireless/ath/ath9k/ani.c |   26 ++------------------------
+ drivers/net/wireless/ath/ath9k/hw.c  |   32 +++++++++++++++++++-------------
+ 3 files changed, 23 insertions(+), 37 deletions(-)
 
-diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
-index 4ecacea..76b8783 100644
---- a/drivers/net/wireless/rt2x00/rt2800lib.c
-+++ b/drivers/net/wireless/rt2x00/rt2800lib.c
-@@ -2016,8 +2016,7 @@ static int rt2800_init_registers(struct rt2x00_dev *rt2x00dev)
+diff --git a/drivers/net/wireless/ath/ath.h b/drivers/net/wireless/ath/ath.h
+index cee0191..b36d9d7 100644
+--- a/drivers/net/wireless/ath/ath.h
++++ b/drivers/net/wireless/ath/ath.h
+@@ -145,6 +145,8 @@ struct ath_common {
+ 	DECLARE_BITMAP(tkip_keymap, ATH_KEYMAX);
+ 	enum ath_crypt_caps crypt_caps;
  
- 	rt2800_register_read(rt2x00dev, MM40_PROT_CFG, &reg);
- 	rt2x00_set_field32(&reg, MM40_PROT_CFG_PROTECT_RATE, 0x4084);
--	rt2x00_set_field32(&reg, MM40_PROT_CFG_PROTECT_CTRL,
--			   !rt2x00_is_usb(rt2x00dev));
-+	rt2x00_set_field32(&reg, MM40_PROT_CFG_PROTECT_CTRL, 0);
- 	rt2x00_set_field32(&reg, MM40_PROT_CFG_PROTECT_NAV, 1);
- 	rt2x00_set_field32(&reg, MM40_PROT_CFG_TX_OP_ALLOW_CCK, 1);
- 	rt2x00_set_field32(&reg, MM40_PROT_CFG_TX_OP_ALLOW_OFDM, 1);
++	unsigned int clockrate;
++
+ 	struct ath_regulatory regulatory;
+ 	const struct ath_ops *ops;
+ 	const struct ath_bus_ops *bus_ops;
+diff --git a/drivers/net/wireless/ath/ath9k/ani.c b/drivers/net/wireless/ath/ath9k/ani.c
+index f2a907b..f2aa684 100644
+--- a/drivers/net/wireless/ath/ath9k/ani.c
++++ b/drivers/net/wireless/ath/ath9k/ani.c
+@@ -465,35 +465,13 @@ static void ath9k_hw_ani_lower_immunity(struct ath_hw *ah)
+ 		ath9k_hw_set_cck_nil(ah, aniState->cckNoiseImmunityLevel - 1);
+ }
+ 
+-static u8 ath9k_hw_chan_2_clockrate_mhz(struct ath_hw *ah)
+-{
+-	struct ath9k_channel *chan = ah->curchan;
+-	struct ieee80211_conf *conf = &ath9k_hw_common(ah)->hw->conf;
+-	u8 clockrate; /* in MHz */
+-
+-	if (!ah->curchan) /* should really check for CCK instead */
+-		clockrate = ATH9K_CLOCK_RATE_CCK;
+-	else if (conf->channel->band == IEEE80211_BAND_2GHZ)
+-		clockrate = ATH9K_CLOCK_RATE_2GHZ_OFDM;
+-	else if (IS_CHAN_A_FAST_CLOCK(ah, chan))
+-		clockrate = ATH9K_CLOCK_FAST_RATE_5GHZ_OFDM;
+-	else
+-		clockrate = ATH9K_CLOCK_RATE_5GHZ_OFDM;
+-
+-	if (conf_is_ht40(conf))
+-		return clockrate * 2;
+-
+-	return clockrate;
+-}
+-
+ static int32_t ath9k_hw_ani_get_listen_time(struct ath_hw *ah)
+ {
++	struct ath_common *common = ath9k_hw_common(ah);
+ 	int32_t listen_time;
+-	int32_t clock_rate;
+ 
+ 	ath9k_hw_update_cycle_counters(ah);
+-	clock_rate = ath9k_hw_chan_2_clockrate_mhz(ah) * 1000;
+-	listen_time = ah->listen_time / clock_rate;
++	listen_time = ah->listen_time / (common->clockrate * 1000);
+ 	ah->listen_time = 0;
+ 
+ 	return listen_time;
+diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
+index 05e9935..f5d7917 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.c
++++ b/drivers/net/wireless/ath/ath9k/hw.c
+@@ -88,29 +88,32 @@ static void ath9k_hw_ani_cache_ini_regs(struct ath_hw *ah)
+ /* Helper Functions */
+ /********************/
+ 
+-static u32 ath9k_hw_mac_clks(struct ath_hw *ah, u32 usecs)
++static void ath9k_hw_set_clockrate(struct ath_hw *ah)
+ {
+ 	struct ieee80211_conf *conf = &ath9k_hw_common(ah)->hw->conf;
++	struct ath_common *common = ath9k_hw_common(ah);
++	unsigned int clockrate;
+ 
+ 	if (!ah->curchan) /* should really check for CCK instead */
+-		return usecs *ATH9K_CLOCK_RATE_CCK;
+-	if (conf->channel->band == IEEE80211_BAND_2GHZ)
+-		return usecs *ATH9K_CLOCK_RATE_2GHZ_OFDM;
+-
+-	if (ah->caps.hw_caps & ATH9K_HW_CAP_FASTCLOCK)
+-		return usecs * ATH9K_CLOCK_FAST_RATE_5GHZ_OFDM;
++		clockrate = ATH9K_CLOCK_RATE_CCK;
++	else if (conf->channel->band == IEEE80211_BAND_2GHZ)
++		clockrate = ATH9K_CLOCK_RATE_2GHZ_OFDM;
++	else if (ah->caps.hw_caps & ATH9K_HW_CAP_FASTCLOCK)
++		clockrate = ATH9K_CLOCK_FAST_RATE_5GHZ_OFDM;
+ 	else
+-		return usecs * ATH9K_CLOCK_RATE_5GHZ_OFDM;
++		clockrate = ATH9K_CLOCK_RATE_5GHZ_OFDM;
++
++	if (conf_is_ht40(conf))
++		clockrate *= 2;
++
++	common->clockrate = clockrate;
+ }
+ 
+ static u32 ath9k_hw_mac_to_clks(struct ath_hw *ah, u32 usecs)
+ {
+-	struct ieee80211_conf *conf = &ath9k_hw_common(ah)->hw->conf;
++	struct ath_common *common = ath9k_hw_common(ah);
+ 
+-	if (conf_is_ht40(conf))
+-		return ath9k_hw_mac_clks(ah, usecs) * 2;
+-	else
+-		return ath9k_hw_mac_clks(ah, usecs);
++	return usecs * common->clockrate;
+ }
+ 
+ bool ath9k_hw_wait(struct ath_hw *ah, u32 reg, u32 mask, u32 val, u32 timeout)
+@@ -1156,6 +1159,7 @@ static bool ath9k_hw_channel_change(struct ath_hw *ah,
+ 			  "Failed to set channel\n");
+ 		return false;
+ 	}
++	ath9k_hw_set_clockrate(ah);
+ 
+ 	ah->eep_ops->set_txpower(ah, chan,
+ 			     ath9k_regd_get_ctl(regulatory, chan),
+@@ -1368,6 +1372,8 @@ int ath9k_hw_reset(struct ath_hw *ah, struct ath9k_channel *chan,
+ 	if (r)
+ 		return r;
+ 
++	ath9k_hw_set_clockrate(ah);
++
+ 	ENABLE_REGWRITE_BUFFER(ah);
+ 
+ 	for (i = 0; i < AR_NUM_DCU; i++)
 -- 
-1.7.2.3
+1.7.2.2
 
