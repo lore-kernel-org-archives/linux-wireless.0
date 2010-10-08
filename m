@@ -1,40 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f46.google.com ([209.85.161.46]:41817 "EHLO
-	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756806Ab0JISqQ (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 9 Oct 2010 14:46:16 -0400
-Received: by fxm14 with SMTP id 14so1020499fxm.19
-        for <linux-wireless@vger.kernel.org>; Sat, 09 Oct 2010 11:46:15 -0700 (PDT)
-From: Helmut Schaa <helmut.schaa@googlemail.com>
-To: Felix Fietkau <nbd@openwrt.org>
-Subject: Re: [PATCH 1/3] cfg80211: add channel utilization stats to the survey command
-Date: Sat, 9 Oct 2010 20:45:26 +0200
-Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com,
-	lrodriguez@atheros.com, br1@einfach.org
-References: <1286584771-76663-1-git-send-email-nbd@openwrt.org> <201010091737.17000.helmut.schaa@googlemail.com> <4CB09937.7040001@openwrt.org>
-In-Reply-To: <4CB09937.7040001@openwrt.org>
+Received: from spaceboyz.net ([87.106.131.203]:43571 "EHLO spaceboyz.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1758997Ab0JHSIA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 8 Oct 2010 14:08:00 -0400
+Date: Fri, 8 Oct 2010 19:41:28 +0200
+From: David Lamparter <equinox@diac24.net>
+To: Ben Greear <greearb@candelatech.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	ath9k <ath9k-devel@venema.h4ckr.net>
+Subject: Re: [ath9k-devel] trying to set tx power (using txpower option)
+Message-ID: <20101008174128.GC946034@jupiter.n2.diac24.net>
+References: <SNT111-W2989DC6A52022428756E6FB500@phx.gbl>
+ <20101008111221.5425.qmail@stuge.se>
+ <AANLkTimAfH8ChkjwFB7e2kMbJyxaZQZMSxTcThva=jgN@mail.gmail.com>
+ <SNT111-W21A1F92DC5DADE5968C8CCFB500@phx.gbl>
+ <AANLkTikc9+bULkH2Fv7mEtBjbjatMW8XOXjXZVuA81hD@mail.gmail.com>
+ <4CAF4B70.9050001@candelatech.com>
+ <20101008165232.GI10149@tux>
+ <4CAF4FDA.8060908@candelatech.com>
+ <1286557944.3612.5.camel@jlt3.sipsolutions.net>
+ <4CAF53E2.8030306@candelatech.com>
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="us-ascii"
-Message-Id: <201010092045.26840.helmut.schaa@googlemail.com>
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <4CAF53E2.8030306@candelatech.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Am Samstag 09 Oktober 2010 schrieb Felix Fietkau:
-> On 2010-10-09 5:37 PM, Helmut Schaa wrote:
-> > However, if we think about the BSS load IE we might want to measure the busy
-> > times without switching the channel? But we'd like have a somewhat actual
-> > value and not an average throughout the last minute/hour or so. Any ideas how
-> > to integrate that into your approach?
-> Just grab a survey dump when starting up, then another after a
-> minute/hour, and subtract the values of the last one.
-> Right now there's still an overflow issue in the internal counters in
-> the current ath9k implementation, so the stats are off unless you poll
-> survey stats regularly. I'll send a fix for that later.
+On Fri, Oct 08, 2010 at 10:24:50AM -0700, Ben Greear wrote:
+> On 10/08/2010 10:12 AM, Johannes Berg wrote:
+> > On Fri, 2010-10-08 at 10:07 -0700, Ben Greear wrote:
+> >
+> >> Well, the command fails because of this check (mbm is 20 in his case)
+> >> cfg.c:
+> >> 	case NL80211_TX_POWER_FIXED:
+> >> 		if (mbm<  0 || (mbm % 100))
+> >> 			return -EOPNOTSUPP;
+> >>
+> >> That mbm % 100 looks quite strange to me..any idea what that is supposed to
+> >> accomplish?
+> >
+> > There's a later division by 100 to go from mBm to dBm ... I think you
+> > want 2000, not 20.
+> 
+> Well, it's documented in iw to be 'mBm', though I surely wouldn't have known
+> what that stood for (nothing useful shows up on google for 'mBm units').
 
-Thanks, looks alright to me then. I'll try to add a similar implementation
-for rt2800 once these patches go in.
+d-B-m is deci-Bel-milliWatt, so a mBm ostensibly is a
+milli-Bel-milliWatt...
 
-Helmut
+(yes, the "m" really encodes "mW"...)
+
+
+-David
 
