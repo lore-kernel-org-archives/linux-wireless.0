@@ -1,72 +1,82 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.19.149.2]:60034 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757630Ab0JHR1X (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 8 Oct 2010 13:27:23 -0400
-Message-ID: <4CAF5488.3030706@Atheros.com>
-Date: Fri, 8 Oct 2010 22:57:36 +0530
-From: Suraj Sumangala <suraj@Atheros.com>
+Received: from mail-fx0-f46.google.com ([209.85.161.46]:64702 "EHLO
+	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759242Ab0JHUfP convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 8 Oct 2010 16:35:15 -0400
+Received: by fxm14 with SMTP id 14so729853fxm.19
+        for <linux-wireless@vger.kernel.org>; Fri, 08 Oct 2010 13:35:14 -0700 (PDT)
+To: "linux-wireless" <linux-wireless@vger.kernel.org>
+Subject: [PATCH v2] mac80211: temporarily disable reorder release timer
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	Johannes Berg <johannes@sipsolutions.net>
+From: Christian Lamparter <chunkeey@googlemail.com>
+Date: Fri, 8 Oct 2010 22:35:09 +0200
 MIME-Version: 1.0
-To: Luis Rodriguez <Luis.Rodriguez@Atheros.com>
-CC: Suraj Sumangala <Suraj.Sumangala@Atheros.com>,
-	David Woodhouse <dwmw2@infradead.org>,
-	Marcel Holtmann <marcel@holtmann.org>,
-	linux-bluetooth <linux-bluetooth@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: Firmware versioning best practices: ath3k-2.fw rename or replace
- ath3k-1.fw ?
-References: <20101008170258.GJ10149@tux>
-In-Reply-To: <20101008170258.GJ10149@tux>
-Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
+Content-Type: Text/Plain;
+  charset="utf-8"
+Message-Id: <201010082235.09355.chunkeey@googlemail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Luis,
+Several serve threading problems in the current
+release reorder timer implementation have been
+discovered.
 
-On 10/8/2010 10:32 PM, Luis Rodriguez wrote:
-> Suraj,
->
-> What is the difference between ath3k-2.fw and ath3k-1.fw ?
+A lengthy discussion - which lists some of the
+pitfalls and possible solutions - can be found at:
+ http://marc.info/?t=128635927000001
 
-This is the same question for which I have been trying to get an answer.
-The only information that I got was it fixes some critical bug and 
-support shared antenna.
+But due to the complicated nature of the subject and
+the imminent advent of a new -rc cycle, it was
+decided to disable the feature for the time being.
 
-If ath3k-2.fw is an upgrade of ath3k-1.fw why do we need to name it 
-differently?
-
->
-> Won't the API change now that you are addressing the sflash
-> configuration fix? Would it not help to identify the two
-> different firmwares then?
->
-> David, Marcel, what are your preferences for a firmware upgrade
-> where the firmware does not change API (lets just pretend it does
-> not for a moment) ? Do we keep the same filename?
-
-Marcel had answered me before. It makes sense to have same file name.
-Other ways we end up changing the driver whenever there is a firmware 
-change.
-
->
-> In this particular case I would assume our new sflash configuration
-> fix that might be being worked on might change the re-enumerated
-> USB device IDs so it seems to me a good idea to use a new filename.
-> I should note ath3k-2.fw already made it to linux-firmware.git...
->
-> I last tried to document a thread we had over this here:
->
-> http://wireless.kernel.org/en/developers/Documentation/firmware-versioning
->
-> Does this sound sane? If so then the sflash configuration fix
-> would seem to me like it would require a new filename. Now, while
-> we're at it, how about bug fixes?
->
-> Suraj -- keep these discussions public please....
->
->    Luis
-
-Regards
-Suraj
-
+Signed-off-by: Christian Lamparter <chunkeey@googlemail.com>
+---
+v1 -> v2:
+	fix compiling error
+	net/mac80211/rx.c: In function ‘ieee80211_sta_reorder_release’:
+	net/mac80211/rx.c:665: error: label at end of compound statement
+---
+diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
+index b67221d..aa9b08d 100644
+--- a/net/mac80211/rx.c
++++ b/net/mac80211/rx.c
+@@ -622,6 +622,26 @@ static void ieee80211_sta_reorder_release(struct ieee80211_hw *hw,
+ 							tid_agg_rx->buf_size;
+ 	}
+ 
++	/*
++	 * Disable the reorder release timer for now.
++	 *
++	 * The current implementation lacks a proper locking scheme
++	 * which would protect vital statistic and debug counters
++	 * from being updated by two different but concurrent BHs.
++	 *
++	 * More information about the topic is available from:
++	 * - thread: http://marc.info/?t=128635927000001
++	 *
++	 * What was wrong:
++	 * =>  http://marc.info/?l=linux-wireless&m=128636170811964
++	 * "Basically the thing is that until your patch, the data
++	 *  in the struct didn't actually need locking because it
++	 *  was accessed by the RX path only which is not concurrent."
++	 *
++	 * List of what needs to be fixed:
++	 * => http://marc.info/?l=linux-wireless&m=128656352920957
++	 *
++
+ 	if (tid_agg_rx->stored_mpdu_num) {
+ 		j = index = seq_sub(tid_agg_rx->head_seq_num,
+ 				    tid_agg_rx->ssn) % tid_agg_rx->buf_size;
+@@ -640,6 +660,10 @@ static void ieee80211_sta_reorder_release(struct ieee80211_hw *hw,
+ 	} else {
+ 		del_timer(&tid_agg_rx->reorder_timer);
+ 	}
++	*/
++
++set_release_timer:
++	return;
+ }
+ 
+ /*
