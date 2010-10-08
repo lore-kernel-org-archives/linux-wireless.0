@@ -1,81 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms2.broadcom.com ([216.31.210.18]:2251 "EHLO mms2.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753944Ab0JTSEY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 20 Oct 2010 14:04:24 -0400
-Date: Wed, 20 Oct 2010 11:04:14 -0700
-From: "Henry Ptasinski (local)" <hp@broadcom.com>
-To: "Greg KH" <greg@kroah.com>
-cc: "Henry Ptasinski" <henryp@broadcom.com>,
-	"Nohee Ko" <noheek@broadcom.com>,
-	"devel@linuxdriverproject.org" <devel@linuxdriverproject.org>,
-	"Brett Rudley" <brudley@broadcom.com>,
-	"Venkat Rao" <vrao@broadcom.com>,
-	"grundler@google.com" <grundler@google.com>,
-	linux-wireless@vger.kernel.org, dwmw2@infradead.org
-Subject: Re: [PATCH] staging:brcm80211:brcmfmac:change firmware/config
- file name
-Message-ID: <20101020180414.GB12658@broadcom.com>
-References: <4CBE23F4.4020104@broadcom.com>
- <20101019233520.GA12510@kroah.com>
- <FD96C117992C584DBC47231B1EB6F5568206D859DC@SJEXCHCCR02.corp.ad.broadcom.com>
- <20101020004743.GB31965@kroah.com>
- <20101020005546.GL10832@broadcom.com> <20101020010320.GA370@kroah.com>
+Received: from mail-qy0-f174.google.com ([209.85.216.174]:47455 "EHLO
+	mail-qy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759755Ab0JHWHV convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 8 Oct 2010 18:07:21 -0400
+Received: by qyk1 with SMTP id 1so525645qyk.19
+        for <linux-wireless@vger.kernel.org>; Fri, 08 Oct 2010 15:07:21 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <20101020010320.GA370@kroah.com>
-Content-Type: text/plain;
- charset=us-ascii
+Date: Sat, 9 Oct 2010 00:07:20 +0200
+Message-ID: <AANLkTik45KLdLf5UpjPtXTNgy4Df_BupyQ3SzRr6gZgC@mail.gmail.com>
+Subject: Request for free-distributable Broadcom's (G|LP)-PHY firmware
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+To: Henry Ptasinski <henryp@broadcom.com>,
+	Brett Rudley <brudley@broadcom.com>,
+	Nohee Ko <noheek@broadcom.com>
+Cc: Greg Kroah-Hartman <gregkh@suse.de>,
+	linux-wireless@vger.kernel.org,
+	b43-dev <b43-dev@lists.infradead.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Oct 19, 2010 at 06:03:20PM -0700, Greg KH wrote:
-> On Tue, Oct 19, 2010 at 05:55:46PM -0700, Henry Ptasinski wrote:
-> > On Tue, Oct 19, 2010 at 05:47:43PM -0700, Greg KH wrote:
-> > > On Tue, Oct 19, 2010 at 04:45:26PM -0700, Nohee Ko wrote:
-> > > > >>
-> > > > Have you made the same changes in the linux-firmware source tree as
-> > > > well?  Without changing it there, this could get messy.
-> > > > <<
-> > > > 
-> > > > No not yet. But we are planning sooner or later.
-> > > 
-> > > Please do it sooner.
-> > > 
-> > > I'll wait for that to happen before committing this patch.
-> > 
-> > There's no specific changes needed in the linux-firmware repo to work with this
-> > driver change.  There is a bugfix version of the firmware that we're getting
-> > ready to send up, which is the motivation for this change, but the change
-> > will work properly with the firmware that's in the repo today.
-> 
-> How, you just renamed the file you look for in the driver, right?
-> 
-> > All this change does is replace the hard-coded full firmware filename used in
-> > the driver with the basename-apiversion construction as documented in
-> > 
-> > 	http://www.linuxwireless.org/en/developers/Documentation/firmware-versioning
-> > 
-> > plus add some info to the README to help users get the firmware properly
-> > installed.
-> > 
-> > Users will need to create the symlinks as described in the README to use these
-> > driver changes.
-> 
-> Yes, so you just broke their working setup, right?
-> 
-> So, please get linux-firmware fixed to add the proper symlinks, and then
-> I can apply the patch, and say "go upgrade your linux-firmware package",
-> which is almost acceptable.
+Hi Broadcom fellows!
 
-Ah, I didn't catch that the symlink should be in the linux-firmware repo.  We
-didn't do that for the brcm80211 driver firmware either, and nobody pointed it
-out.
+It's great that afters long years of... well, pretty horrible
+relations with Linux/opensource you have taken actions to change your
+image. I guess brcm80211 it's perfect yet, and people may like it more
+or less, but it's no doubt you made step in the right direction.
+Thanks for that!
 
-But I don't see any symlinks in the linux-firmware repo.  Is anybody else using
-the "best practices" as documented?  Or should we just punt the codeversion
-part of the filenames and the symlinks, and just use basename-apiversion?
+As you should know, you released driver and firmware for 802.11n
+devices only. I believe it was right, as these device seem to be the
+most nowadays and were the only ones without any open source support.
+For older devices: G-PHY and LP-PHY we have working b43 driver that is
+in relatively good shape. However... there is one thing we still miss
+for olders cards.
 
-Thanks,
-- Henry
+Every time someone wants to use b43 it's necessary to download quite
+big package from openwrt, unpack it, extract firmware and install it.
+That simply happens because we don't have just-firmware files with
+nice licensing. And of course there goes my request:
 
+*Can you submit G-PHY and LP-PHY firmware to linux-firmware using some
+normal licensing, please?*
 
+This is of course not the best I could wish for, but is important
+anyway and it should be easy decision. Ideally you could release
+sources of firmware (plus toolchain eventualy... however, we have nice
+toolchain from Michael), but I guess it would need more time and
+decisions to make it happen. So as for now I guess we would be happy
+with just closed source but easy-distributable firmware. Could you
+release, submit it?
+
+-- 
+Rafał
