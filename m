@@ -1,270 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp-out.google.com ([74.125.121.35]:15447 "EHLO
-	smtp-out.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755970Ab0JOQN6 (ORCPT
+Received: from mail-wy0-f174.google.com ([74.125.82.174]:50458 "EHLO
+	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751452Ab0JHXKp (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 15 Oct 2010 12:13:58 -0400
-Received: from kpbe12.cbf.corp.google.com (kpbe12.cbf.corp.google.com [172.25.105.76])
-	by smtp-out.google.com with ESMTP id o9FGDu6Y020666
-	for <linux-wireless@vger.kernel.org>; Fri, 15 Oct 2010 09:13:57 -0700
-Received: from glenhelen.mtv.corp.google.com (glenhelen.mtv.corp.google.com [172.22.72.223])
-	by kpbe12.cbf.corp.google.com with ESMTP id o9FGDsZM019483
-	for <linux-wireless@vger.kernel.org>; Fri, 15 Oct 2010 09:13:55 -0700
-From: Paul Stewart <pstew@google.com>
-Date: Fri, 15 Oct 2010 09:07:24 -0700
-Subject: [PATCH 1/2] cfg80211: Add cfg80211/nl80211 calls for bitrate threshold
-To: linux-wireless@vger.kernel.org
-In-Reply-To: <1287121902.3640.1.camel@jlt3.sipsolutions.net>
-Message-Id: <20101015161354.84EE520699@glenhelen.mtv.corp.google.com>
+	Fri, 8 Oct 2010 19:10:45 -0400
+Received: by wyb28 with SMTP id 28so1564446wyb.19
+        for <linux-wireless@vger.kernel.org>; Fri, 08 Oct 2010 16:10:43 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <1286561146.3612.14.camel@jlt3.sipsolutions.net>
+References: <SNT111-W2989DC6A52022428756E6FB500@phx.gbl> <20101008111221.5425.qmail@stuge.se>
+ <AANLkTimAfH8ChkjwFB7e2kMbJyxaZQZMSxTcThva=jgN@mail.gmail.com>
+ <SNT111-W21A1F92DC5DADE5968C8CCFB500@phx.gbl> <AANLkTikc9+bULkH2Fv7mEtBjbjatMW8XOXjXZVuA81hD@mail.gmail.com>
+ <4CAF4B70.9050001@candelatech.com> <20101008165232.GI10149@tux>
+ <4CAF4FDA.8060908@candelatech.com> <1286557944.3612.5.camel@jlt3.sipsolutions.net>
+ <4CAF53E2.8030306@candelatech.com> <20101008174128.GC946034@jupiter.n2.diac24.net>
+ <AANLkTi=oR_RfbNv4D-d_rXP4p4ykZC00bJRPnwjrhgo-@mail.gmail.com> <1286561146.3612.14.camel@jlt3.sipsolutions.net>
+From: David Willmore <davidwillmore@gmail.com>
+Date: Fri, 8 Oct 2010 19:10:23 -0400
+Message-ID: <AANLkTimmXrC9Ff4b=MPmGjnVfmuXfb8paHy7=b6psh6n@mail.gmail.com>
+Subject: Re: [ath9k-devel] trying to set tx power (using txpower option)
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: David Lamparter <equinox@diac24.net>,
+	Ben Greear <greearb@candelatech.com>,
+	ath9k <ath9k-devel@venema.h4ckr.net>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Add calls for accepting nl80211 bitrate thresholds from user space,
-and add a function calls for sending out threshold notifications.
+On Fri, Oct 8, 2010 at 2:05 PM, Johannes Berg <johannes@sipsolutions.net> wrote:
+> No, the d in dB already means it's 1/10 B, and mB is (was meant to be)
+> 1/1000 B -- so the conversion factor is 100.
 
-Signed-off-by: Paul Stewart <pstew@google.com>
----
- include/linux/nl80211.h |   12 ++++++-
- include/net/cfg80211.h  |   18 ++++++++++
- net/wireless/mlme.c     |   13 +++++++
- net/wireless/nl80211.c  |   86 +++++++++++++++++++++++++++++++++++++++++++++-
- net/wireless/nl80211.h  |    6 +++
- 5 files changed, 132 insertions(+), 3 deletions(-)
+I stand corrected!  Well said.
 
-diff --git a/include/linux/nl80211.h b/include/linux/nl80211.h
-index 0edb256..7243d26 100644
---- a/include/linux/nl80211.h
-+++ b/include/linux/nl80211.h
-@@ -1785,7 +1785,15 @@ enum nl80211_ps_state {
-  * @NL80211_ATTR_CQM_RSSI_HYST: RSSI hysteresis in dBm. This value specifies
-  *	the minimum amount the RSSI level must change after an event before a
-  *	new event may be issued (to reduce effects of RSSI oscillation).
-- * @NL80211_ATTR_CQM_RSSI_THRESHOLD_EVENT: RSSI threshold event
-+ * @NL80211_ATTR_CQM_RSSI_THRESHOLD_EVENT: RSSI threshold event.  This provides
-+ *      the current bitrate (in 1000 bits per second) at the time that a
-+ *      threshold was crossed.
-+ * @NL80211_ATTR_CQM_BITRATE_THOLD: Bitrate threshold in 1000 bits per second.
-+ *      This specifies the threshold at which an event will be sent.  Set to
-+ *      zero to disable.  Events will be sent when the threshold is crossed
-+ *      in either direction, and while under threshold, whenever the bitrate
-+ *      achieves its lowest value in the current below-threshold excursion.
-+ * @NL80211_ATTR_CQM_BITRATE_THRESHOLD_EVENT: New transmit bitrate
-  * @__NL80211_ATTR_CQM_AFTER_LAST: internal
-  * @NL80211_ATTR_CQM_MAX: highest key attribute
-  */
-@@ -1794,6 +1802,8 @@ enum nl80211_attr_cqm {
- 	NL80211_ATTR_CQM_RSSI_THOLD,
- 	NL80211_ATTR_CQM_RSSI_HYST,
- 	NL80211_ATTR_CQM_RSSI_THRESHOLD_EVENT,
-+	NL80211_ATTR_CQM_BITRATE_THOLD,
-+	NL80211_ATTR_CQM_BITRATE_THRESHOLD_EVENT,
- 
- 	/* keep last */
- 	__NL80211_ATTR_CQM_AFTER_LAST,
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index 2a7936d..e7f044e 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -1146,6 +1146,7 @@ struct cfg80211_pmksa {
-  * @set_power_mgmt: Configure WLAN power management. A timeout value of -1
-  *	allows the driver to adjust the dynamic ps timeout value.
-  * @set_cqm_rssi_config: Configure connection quality monitor RSSI threshold.
-+ * @set_cqm_bitrate_config: Config connection quality monitor bitrate threshold.
-  *
-  * @mgmt_frame_register: Notify driver that a management frame type was
-  *	registered. Note that this callback may not sleep, and cannot run
-@@ -1301,6 +1302,10 @@ struct cfg80211_ops {
- 				       struct net_device *dev,
- 				       s32 rssi_thold, u32 rssi_hyst);
- 
-+	int	(*set_cqm_bitrate_config)(struct wiphy *wiphy,
-+					  struct net_device *dev,
-+					  u32 bitrate_thold);
-+
- 	void	(*mgmt_frame_register)(struct wiphy *wiphy,
- 				       struct net_device *dev,
- 				       u16 frame_type, bool reg);
-@@ -2595,6 +2600,19 @@ void cfg80211_cqm_rssi_notify(struct net_device *dev,
- 			      enum nl80211_cqm_rssi_threshold_event rssi_event,
- 			      gfp_t gfp);
- 
-+/**
-+ * cfg80211_cqm_bitrate_notify - connection quality monitoring bitrate event
-+ * @dev: network device
-+ * @rate: the new transmit rate
-+ * @gfp: context flags
-+ *
-+ * This function is called when a the transmit bitrate changes, and
-+ * connection quality monitoring is configured to capture these events.
-+ */
-+void cfg80211_cqm_bitrate_notify(struct net_device *dev,
-+				 u32 bitrate,
-+				 gfp_t gfp);
-+
- /* Logging, debugging and troubleshooting/diagnostic helpers. */
- 
- /* wiphy_printk helpers, similar to dev_printk */
-diff --git a/net/wireless/mlme.c b/net/wireless/mlme.c
-index 26838d9..ebb4e3a 100644
---- a/net/wireless/mlme.c
-+++ b/net/wireless/mlme.c
-@@ -1028,3 +1028,16 @@ void cfg80211_cqm_rssi_notify(struct net_device *dev,
- 	nl80211_send_cqm_rssi_notify(rdev, dev, rssi_event, gfp);
- }
- EXPORT_SYMBOL(cfg80211_cqm_rssi_notify);
-+
-+void cfg80211_cqm_bitrate_notify(struct net_device *dev,
-+				 u32 bitrate,
-+				 gfp_t gfp)
-+{
-+	struct wireless_dev *wdev = dev->ieee80211_ptr;
-+	struct wiphy *wiphy = wdev->wiphy;
-+	struct cfg80211_registered_device *rdev = wiphy_to_dev(wiphy);
-+
-+	/* Indicate roaming trigger event to user space */
-+	nl80211_send_cqm_bitrate_notify(rdev, dev, bitrate, gfp);
-+}
-+EXPORT_SYMBOL(cfg80211_cqm_bitrate_notify);
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index c506241..de5f0b6 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -4325,6 +4325,8 @@ nl80211_attr_cqm_policy[NL80211_ATTR_CQM_MAX + 1] __read_mostly = {
- 	[NL80211_ATTR_CQM_RSSI_THOLD] = { .type = NLA_U32 },
- 	[NL80211_ATTR_CQM_RSSI_HYST] = { .type = NLA_U32 },
- 	[NL80211_ATTR_CQM_RSSI_THRESHOLD_EVENT] = { .type = NLA_U32 },
-+	[NL80211_ATTR_CQM_BITRATE_THOLD] = { .type = NLA_U32 },
-+	[NL80211_ATTR_CQM_BITRATE_THRESHOLD_EVENT] = { .type = NLA_U32 },
- };
- 
- static int nl80211_set_cqm_rssi(struct genl_info *info,
-@@ -4350,6 +4352,26 @@ static int nl80211_set_cqm_rssi(struct genl_info *info,
- 					      threshold, hysteresis);
- }
- 
-+static int nl80211_set_cqm_bitrate(struct genl_info *info,
-+					   u32 trigger_rate)
-+{
-+	struct cfg80211_registered_device *rdev = info->user_ptr[0];
-+	struct wireless_dev *wdev;
-+	struct net_device *dev = info->user_ptr[1];
-+
-+	wdev = dev->ieee80211_ptr;
-+
-+	if (!rdev->ops->set_cqm_bitrate_config)
-+		return -EOPNOTSUPP;
-+
-+	if (wdev->iftype != NL80211_IFTYPE_STATION &&
-+	    wdev->iftype != NL80211_IFTYPE_P2P_CLIENT)
-+		return -EOPNOTSUPP;
-+
-+	return rdev->ops->set_cqm_bitrate_config(wdev->wiphy, dev,
-+						 trigger_rate);
-+}
-+
- static int nl80211_set_cqm(struct sk_buff *skb, struct genl_info *info)
- {
- 	struct nlattr *attrs[NL80211_ATTR_CQM_MAX + 1];
-@@ -4367,6 +4389,8 @@ static int nl80211_set_cqm(struct sk_buff *skb, struct genl_info *info)
- 	if (err)
- 		goto out;
- 
-+	err = -EINVAL;
-+
- 	if (attrs[NL80211_ATTR_CQM_RSSI_THOLD] &&
- 	    attrs[NL80211_ATTR_CQM_RSSI_HYST]) {
- 		s32 threshold;
-@@ -4374,8 +4398,16 @@ static int nl80211_set_cqm(struct sk_buff *skb, struct genl_info *info)
- 		threshold = nla_get_u32(attrs[NL80211_ATTR_CQM_RSSI_THOLD]);
- 		hysteresis = nla_get_u32(attrs[NL80211_ATTR_CQM_RSSI_HYST]);
- 		err = nl80211_set_cqm_rssi(info, threshold, hysteresis);
--	} else
--		err = -EINVAL;
-+		if (err)
-+			goto out;
-+	}
-+
-+	if (attrs[NL80211_ATTR_CQM_BITRATE_THOLD]) {
-+		u32 thold = nla_get_u32(attrs[NL80211_ATTR_CQM_BITRATE_THOLD]);
-+		err = nl80211_set_cqm_bitrate(info, thold);
-+		if (err)
-+			goto out;
-+	}
- 
- out:
- 	return err;
-@@ -5651,6 +5683,56 @@ nl80211_send_cqm_rssi_notify(struct cfg80211_registered_device *rdev,
- 	nlmsg_free(msg);
- }
- 
-+void
-+nl80211_send_cqm_bitrate_notify(struct cfg80211_registered_device *rdev,
-+				struct net_device *netdev,
-+				u32 bitrate,
-+				gfp_t gfp)
-+{
-+	struct sk_buff *msg;
-+	struct nlattr *pinfoattr;
-+	void *hdr;
-+
-+	if (bitrate == 0)
-+		return;
-+
-+
-+	msg = nlmsg_new(NLMSG_GOODSIZE, gfp);
-+	if (!msg)
-+		return;
-+
-+	hdr = nl80211hdr_put(msg, 0, 0, 0, NL80211_CMD_NOTIFY_CQM);
-+	if (!hdr) {
-+		nlmsg_free(msg);
-+		return;
-+	}
-+
-+
-+	NLA_PUT_U32(msg, NL80211_ATTR_WIPHY, rdev->wiphy_idx);
-+	NLA_PUT_U32(msg, NL80211_ATTR_IFINDEX, netdev->ifindex);
-+
-+	pinfoattr = nla_nest_start(msg, NL80211_ATTR_CQM);
-+	if (!pinfoattr)
-+		goto nla_put_failure;
-+
-+	NLA_PUT_U32(msg, NL80211_ATTR_CQM_BITRATE_THRESHOLD_EVENT, bitrate);
-+
-+	nla_nest_end(msg, pinfoattr);
-+
-+	if (genlmsg_end(msg, hdr) < 0) {
-+		nlmsg_free(msg);
-+		return;
-+	}
-+
-+	genlmsg_multicast_netns(wiphy_net(&rdev->wiphy), msg, 0,
-+				nl80211_mlme_mcgrp.id, gfp);
-+	return;
-+
-+ nla_put_failure:
-+	genlmsg_cancel(msg, hdr);
-+	nlmsg_free(msg);
-+}
-+
- static int nl80211_netlink_notify(struct notifier_block * nb,
- 				  unsigned long state,
- 				  void *_notify)
-diff --git a/net/wireless/nl80211.h b/net/wireless/nl80211.h
-index 30d2f93..769fa90 100644
---- a/net/wireless/nl80211.h
-+++ b/net/wireless/nl80211.h
-@@ -88,4 +88,10 @@ nl80211_send_cqm_rssi_notify(struct cfg80211_registered_device *rdev,
- 			     enum nl80211_cqm_rssi_threshold_event rssi_event,
- 			     gfp_t gfp);
- 
-+void
-+nl80211_send_cqm_bitrate_notify(struct cfg80211_registered_device *rdev,
-+				struct net_device *netdev,
-+				u32 bitrate,
-+				gfp_t gfp);
-+
- #endif /* __NET_WIRELESS_NL80211_H */
--- 
-1.7.1
-
+Cheers,
+David
