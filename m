@@ -1,157 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga14.intel.com ([143.182.124.37]:8111 "EHLO mga14.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753146Ab0JNSET (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 14 Oct 2010 14:04:19 -0400
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Subject: [PATCH 1/9] iwlagn: need longer tx queue stuck timer for coex devices
-Date: Thu, 14 Oct 2010 11:02:42 -0700
-Message-Id: <1287079370-20587-2-git-send-email-wey-yi.w.guy@intel.com>
-In-Reply-To: <1287079370-20587-1-git-send-email-wey-yi.w.guy@intel.com>
-References: <1287079370-20587-1-git-send-email-wey-yi.w.guy@intel.com>
+Received: from he.sipsolutions.net ([78.46.109.217]:40556 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932490Ab0JHRM0 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 8 Oct 2010 13:12:26 -0400
+Subject: Re: [ath9k-devel] trying to set tx power (using txpower option)
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Ben Greear <greearb@candelatech.com>
+Cc: "Luis R. Rodriguez" <lrodriguez@Atheros.com>,
+	"Luis R. Rodriguez" <mcgrof@gmail.com>,
+	ath9k <ath9k-devel@venema.h4ckr.net>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <4CAF4FDA.8060908@candelatech.com>
+References: <SNT111-W333C4BA6050D535151071FFB690@phx.gbl>
+	 <SNT111-W2989DC6A52022428756E6FB500@phx.gbl>
+	 <20101008111221.5425.qmail@stuge.se>
+	 <AANLkTimAfH8ChkjwFB7e2kMbJyxaZQZMSxTcThva=jgN@mail.gmail.com>
+	 <SNT111-W21A1F92DC5DADE5968C8CCFB500@phx.gbl>
+	 <AANLkTikc9+bULkH2Fv7mEtBjbjatMW8XOXjXZVuA81hD@mail.gmail.com>
+	 <4CAF4B70.9050001@candelatech.com> <20101008165232.GI10149@tux>
+	 <4CAF4FDA.8060908@candelatech.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Fri, 08 Oct 2010 19:12:23 +0200
+Message-ID: <1286557944.3612.5.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-For BT/WiFi combo devices, need longer tx stuck queue
-timer, so those devices won't reload firmware too often.
+On Fri, 2010-10-08 at 10:07 -0700, Ben Greear wrote:
 
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-6000.c |   38 ++++++++++++++++++++++++------
- drivers/net/wireless/iwlwifi/iwl-core.c |   11 +++-----
- 2 files changed, 34 insertions(+), 15 deletions(-)
+> Well, the command fails because of this check (mbm is 20 in his case)
+> cfg.c:
+> 	case NL80211_TX_POWER_FIXED:
+> 		if (mbm < 0 || (mbm % 100))
+> 			return -EOPNOTSUPP;
+> 
+> That mbm % 100 looks quite strange to me..any idea what that is supposed to
+> accomplish?
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-6000.c b/drivers/net/wireless/iwlwifi/iwl-6000.c
-index 4810258..3eaea6f 100644
---- a/drivers/net/wireless/iwlwifi/iwl-6000.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-6000.c
-@@ -509,6 +509,28 @@ static struct iwl_base_params iwl6050_base_params = {
- 	.sensitivity_calib_by_driver = true,
- 	.chain_noise_calib_by_driver = true,
- };
-+static struct iwl_base_params iwl6000_coex_base_params = {
-+	.eeprom_size = OTP_LOW_IMAGE_SIZE,
-+	.num_of_queues = IWLAGN_NUM_QUEUES,
-+	.num_of_ampdu_queues = IWLAGN_NUM_AMPDU_QUEUES,
-+	.pll_cfg_val = 0,
-+	.set_l0s = true,
-+	.use_bsm = false,
-+	.max_ll_items = OTP_MAX_LL_ITEMS_6x00,
-+	.shadow_ram_support = true,
-+	.led_compensation = 51,
-+	.chain_noise_num_beacons = IWL_CAL_NUM_BEACONS,
-+	.supports_idle = true,
-+	.adv_thermal_throttle = true,
-+	.support_ct_kill_exit = true,
-+	.plcp_delta_threshold = IWL_MAX_PLCP_ERR_THRESHOLD_DEF,
-+	.chain_noise_scale = 1000,
-+	.monitor_recover_period = IWL_LONG_MONITORING_PERIOD,
-+	.max_event_log_size = 512,
-+	.ucode_tracing = true,
-+	.sensitivity_calib_by_driver = true,
-+	.chain_noise_calib_by_driver = true,
-+};
- 
- static struct iwl_ht_params iwl6000_ht_params = {
- 	.ht_greenfield_support = true,
-@@ -587,7 +609,7 @@ struct iwl_cfg iwl6000g2b_2agn_cfg = {
- 	.eeprom_calib_ver = EEPROM_6000G2_TX_POWER_VERSION,
- 	.ops = &iwl6000g2b_ops,
- 	.mod_params = &iwlagn_mod_params,
--	.base_params = &iwl6000_base_params,
-+	.base_params = &iwl6000_coex_base_params,
- 	.bt_params = &iwl6000_bt_params,
- 	.ht_params = &iwl6000_ht_params,
- 	.need_dc_calib = true,
-@@ -608,7 +630,7 @@ struct iwl_cfg iwl6000g2b_2abg_cfg = {
- 	.eeprom_calib_ver = EEPROM_6000G2_TX_POWER_VERSION,
- 	.ops = &iwl6000g2b_ops,
- 	.mod_params = &iwlagn_mod_params,
--	.base_params = &iwl6000_base_params,
-+	.base_params = &iwl6000_coex_base_params,
- 	.bt_params = &iwl6000_bt_params,
- 	.need_dc_calib = true,
- 	.need_temp_offset_calib = true,
-@@ -628,7 +650,7 @@ struct iwl_cfg iwl6000g2b_2bgn_cfg = {
- 	.eeprom_calib_ver = EEPROM_6000G2_TX_POWER_VERSION,
- 	.ops = &iwl6000g2b_ops,
- 	.mod_params = &iwlagn_mod_params,
--	.base_params = &iwl6000_base_params,
-+	.base_params = &iwl6000_coex_base_params,
- 	.bt_params = &iwl6000_bt_params,
- 	.ht_params = &iwl6000_ht_params,
- 	.need_dc_calib = true,
-@@ -649,7 +671,7 @@ struct iwl_cfg iwl6000g2b_2bg_cfg = {
- 	.eeprom_calib_ver = EEPROM_6000G2_TX_POWER_VERSION,
- 	.ops = &iwl6000g2b_ops,
- 	.mod_params = &iwlagn_mod_params,
--	.base_params = &iwl6000_base_params,
-+	.base_params = &iwl6000_coex_base_params,
- 	.bt_params = &iwl6000_bt_params,
- 	.need_dc_calib = true,
- 	.need_temp_offset_calib = true,
-@@ -669,7 +691,7 @@ struct iwl_cfg iwl6000g2b_bgn_cfg = {
- 	.eeprom_calib_ver = EEPROM_6000G2_TX_POWER_VERSION,
- 	.ops = &iwl6000g2b_ops,
- 	.mod_params = &iwlagn_mod_params,
--	.base_params = &iwl6000_base_params,
-+	.base_params = &iwl6000_coex_base_params,
- 	.bt_params = &iwl6000_bt_params,
- 	.ht_params = &iwl6000_ht_params,
- 	.need_dc_calib = true,
-@@ -690,7 +712,7 @@ struct iwl_cfg iwl6000g2b_bg_cfg = {
- 	.eeprom_calib_ver = EEPROM_6000G2_TX_POWER_VERSION,
- 	.ops = &iwl6000g2b_ops,
- 	.mod_params = &iwlagn_mod_params,
--	.base_params = &iwl6000_base_params,
-+	.base_params = &iwl6000_coex_base_params,
- 	.bt_params = &iwl6000_bt_params,
- 	.need_dc_calib = true,
- 	.need_temp_offset_calib = true,
-@@ -829,7 +851,7 @@ struct iwl_cfg iwl130_bgn_cfg = {
- 	.eeprom_calib_ver = EEPROM_6000G2_TX_POWER_VERSION,
- 	.ops = &iwl6000g2b_ops,
- 	.mod_params = &iwlagn_mod_params,
--	.base_params = &iwl6000_base_params,
-+	.base_params = &iwl6000_coex_base_params,
- 	.bt_params = &iwl6000_bt_params,
- 	.ht_params = &iwl6000_ht_params,
- 	.need_dc_calib = true,
-@@ -849,7 +871,7 @@ struct iwl_cfg iwl130_bg_cfg = {
- 	.eeprom_calib_ver = EEPROM_6000G2_TX_POWER_VERSION,
- 	.ops = &iwl6000g2b_ops,
- 	.mod_params = &iwlagn_mod_params,
--	.base_params = &iwl6000_base_params,
-+	.base_params = &iwl6000_coex_base_params,
- 	.bt_params = &iwl6000_bt_params,
- 	.need_dc_calib = true,
- 	/* Due to bluetooth, we transmit 2.4 GHz probes only on antenna A */
-diff --git a/drivers/net/wireless/iwlwifi/iwl-core.c b/drivers/net/wireless/iwlwifi/iwl-core.c
-index b3efbe0..89b1827 100644
---- a/drivers/net/wireless/iwlwifi/iwl-core.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-core.c
-@@ -2483,13 +2483,10 @@ static int iwl_check_stuck_queue(struct iwl_priv *priv, int cnt)
- 					"queue %d, not read %d time\n",
- 					q->id,
- 					q->repeat_same_read_ptr);
--			if (priv->cfg->bt_params &&
--			    !priv->cfg->bt_params->advanced_bt_coexist) {
--				mod_timer(&priv->monitor_recover,
--					jiffies + msecs_to_jiffies(
--					IWL_ONE_HUNDRED_MSECS));
--				return 1;
--			}
-+			mod_timer(&priv->monitor_recover,
-+				jiffies + msecs_to_jiffies(
-+				IWL_ONE_HUNDRED_MSECS));
-+			return 1;
- 		}
- 	} else {
- 		q->last_read_ptr = q->read_ptr;
--- 
-1.7.0.4
+There's a later division by 100 to go from mBm to dBm ... I think you
+want 2000, not 20.
+
+johannes
 
