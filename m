@@ -1,45 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f46.google.com ([209.85.215.46]:55074 "EHLO
-	mail-ew0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752872Ab0JVUXd (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 22 Oct 2010 16:23:33 -0400
-Received: by ewy7 with SMTP id 7so1720018ewy.19
-        for <linux-wireless@vger.kernel.org>; Fri, 22 Oct 2010 13:23:32 -0700 (PDT)
-From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-To: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-Cc: b43-dev@lists.infradead.org,
-	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-Subject: [PATCH] b43: rfkill: use status register based on core revision not (PHY's)
-Date: Fri, 22 Oct 2010 22:24:05 +0200
-Message-Id: <1287779045-20257-1-git-send-email-zajec5@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Received: from lo.gmane.org ([80.91.229.12]:45291 "EHLO lo.gmane.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754853Ab0JHWDc (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 8 Oct 2010 18:03:32 -0400
+Received: from list by lo.gmane.org with local (Exim 4.69)
+	(envelope-from <glkwg-linux-wireless@m.gmane.org>)
+	id 1P4L2I-0005M0-Dp
+	for linux-wireless@vger.kernel.org; Sat, 09 Oct 2010 00:03:30 +0200
+Received: from p54B9EB82.dip.t-dialin.net ([84.185.235.130])
+        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Sat, 09 Oct 2010 00:03:30 +0200
+Received: from pommnitz by p54B9EB82.dip.t-dialin.net with local (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Sat, 09 Oct 2010 00:03:30 +0200
+To: linux-wireless@vger.kernel.org
+From: jpo <pommnitz@yahoo.com>
+Subject: Re: Antenna diversity in ath5k.
+Date: Fri, 8 Oct 2010 22:03:17 +0000 (UTC)
+Message-ID: <loom.20101009T000043-687@post.gmane.org>
+References: <4CAF60F0.4030506@candelatech.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
----
-This makes my N-PHY radio at least running (no scanning results so far). The
-same register is used by wl on this device.
----
- drivers/net/wireless/b43/rfkill.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+Ben Greear <greearb@...> writes:
 
-diff --git a/drivers/net/wireless/b43/rfkill.c b/drivers/net/wireless/b43/rfkill.c
-index 78016ae..d2734c9 100644
---- a/drivers/net/wireless/b43/rfkill.c
-+++ b/drivers/net/wireless/b43/rfkill.c
-@@ -28,7 +28,7 @@
- /* Returns TRUE, if the radio is enabled in hardware. */
- bool b43_is_hw_radio_enabled(struct b43_wldev *dev)
- {
--	if (dev->phy.rev >= 3 || dev->phy.type == B43_PHYTYPE_LP) {
-+	if (dev->dev->id.revision >= 3) {
- 		if (!(b43_read32(dev, B43_MMIO_RADIO_HWENABLED_HI)
- 		      & B43_MMIO_RADIO_HWENABLED_HI_MASK))
- 			return 1;
--- 
-1.7.1
+> 
+> I'd like to work on allowing users to configure antenna diversity,
+> starting with ath5k.
+> 
+> Before I start on this, I wanted to see if anyone else was
+> actively pursuing it.
+> 
+> Thanks,
+> Ben
+> 
+Bruno Randolf was/is working on this:
+http://marc.info/?t=128037600400004&r=1&w=2
+http://marc.info/?l=linux-wireless&m=127589393911645&w=2
+
+Regards
+  Joerg
+
+
 
