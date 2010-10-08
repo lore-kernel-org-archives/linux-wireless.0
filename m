@@ -1,86 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f46.google.com ([209.85.215.46]:62576 "EHLO
-	mail-ew0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754482Ab0JKNk2 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 11 Oct 2010 09:40:28 -0400
-Received: by mail-ew0-f46.google.com with SMTP id 20so574157ewy.19
-        for <linux-wireless@vger.kernel.org>; Mon, 11 Oct 2010 06:40:27 -0700 (PDT)
-From: Ivo van Doorn <ivdoorn@gmail.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Subject: [PATCH 2/7] rt2x00: Move watchdog work to kernel work_queue
-Date: Mon, 11 Oct 2010 15:37:47 +0200
-Cc: linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com
-References: <201010111537.26584.IvDoorn@gmail.com>
-In-Reply-To: <201010111537.26584.IvDoorn@gmail.com>
-MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Message-Id: <201010111537.48587.IvDoorn@gmail.com>
+Received: from smtp.nokia.com ([147.243.1.47]:30506 "EHLO mgw-sa01.nokia.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753294Ab0JHLo4 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 8 Oct 2010 07:44:56 -0400
+Subject: Re: [PATCH v2 01/03] wl1271: 11n Support, Add Definitions
+From: Luciano Coelho <luciano.coelho@nokia.com>
+To: ext Shahar Levi <shahar_levi@ti.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <1286475613.1662.41.camel@powerslave>
+References: <1286388491-28752-1-git-send-email-shahar_levi@ti.com>
+	 <1286388491-28752-3-git-send-email-shahar_levi@ti.com>
+	 <1286475613.1662.41.camel@powerslave>
+Content-Type: text/plain; charset="UTF-8"
+Date: Fri, 08 Oct 2010 14:44:49 +0300
+Message-ID: <1286538289.21349.99.camel@chilepepper>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The watchdog function must run on a work_queue
-which is independent of any other work inside rt2x00.
+On Thu, 2010-10-07 at 20:20 +0200, ext Luciano Coelho wrote:
+> > diff --git a/drivers/net/wireless/wl12xx/wl1271_conf.h
+> b/drivers/net/wireless/wl12xx/wl1271_conf.h
+> > index 60c50d1..732e9aa 100644
+> > --- a/drivers/net/wireless/wl12xx/wl1271_conf.h
+> > +++ b/drivers/net/wireless/wl12xx/wl1271_conf.h
+> > @@ -91,6 +91,10 @@ enum {
+> >       CONF_HW_RXTX_RATE_UNSUPPORTED = 0xff
+> >  };
+> >  
+> > +#define HW_RX_HIGHEST_RATE   65
+> > +#define HW_BG_RATES_MASK     0xffff
+> > +#define HW_HT_RATES_OFFSET   16
+> 
+> We preceed all the other macros with CONF_, please do the same for
+> these.
 
-The main reasons, being that a broken work on the mac80211
-work_queue can otherwise prevent the watchdog to run (while
-in fact the watchdog could fix the issue). And on the other
-hand because the watchdog relies on the completion of the
-completion handlers for RX/TX which for the USB case, occur
-on the mac80211 workqueue.
+Actually, we use the wl1271_conf.h file only for driver configuration
+parameters.  These macros should be elsewhere, such as in the wl1271.h
+file.  And no need to put CONF_ before them in that case.
 
-This fixes some "Queue %d failed to flush" errors, which were
-caused by the watchdog function waiting on the completion
-handler which was scheduled to run right after the watchdog.
-
-Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
-Acked-by: Helmut Schaa <helmut.schaa@googlemail.com>
----
- drivers/net/wireless/rt2x00/rt2x00.h     |    5 +++++
- drivers/net/wireless/rt2x00/rt2x00link.c |    6 ++----
- 2 files changed, 7 insertions(+), 4 deletions(-)
-
-diff --git a/drivers/net/wireless/rt2x00/rt2x00.h b/drivers/net/wireless/rt2x00/rt2x00.h
-index 2322c84..94fe589 100644
---- a/drivers/net/wireless/rt2x00/rt2x00.h
-+++ b/drivers/net/wireless/rt2x00/rt2x00.h
-@@ -338,6 +338,11 @@ struct link {
- 
- 	/*
- 	 * Work structure for scheduling periodic watchdog monitoring.
-+	 * This work must be scheduled on the kernel workqueue, while
-+	 * all other work structures must be queued on the mac80211
-+	 * workqueue. This guarantees that the watchdog can schedule
-+	 * other work structures and wait for their completion in order
-+	 * to bring the device/driver back into the desired state.
- 	 */
- 	struct delayed_work watchdog_work;
- };
-diff --git a/drivers/net/wireless/rt2x00/rt2x00link.c b/drivers/net/wireless/rt2x00/rt2x00link.c
-index 46836f8..b971d87 100644
---- a/drivers/net/wireless/rt2x00/rt2x00link.c
-+++ b/drivers/net/wireless/rt2x00/rt2x00link.c
-@@ -417,8 +417,7 @@ void rt2x00link_start_watchdog(struct rt2x00_dev *rt2x00dev)
- 	    !test_bit(DRIVER_SUPPORT_WATCHDOG, &rt2x00dev->flags))
- 		return;
- 
--	ieee80211_queue_delayed_work(rt2x00dev->hw,
--				     &link->watchdog_work, WATCHDOG_INTERVAL);
-+	schedule_delayed_work(&link->watchdog_work, WATCHDOG_INTERVAL);
- }
- 
- void rt2x00link_stop_watchdog(struct rt2x00_dev *rt2x00dev)
-@@ -442,8 +441,7 @@ static void rt2x00link_watchdog(struct work_struct *work)
- 	rt2x00dev->ops->lib->watchdog(rt2x00dev);
- 
- 	if (test_bit(DEVICE_STATE_PRESENT, &rt2x00dev->flags))
--		ieee80211_queue_delayed_work(rt2x00dev->hw,
--					     &link->watchdog_work, WATCHDOG_INTERVAL);
-+		schedule_delayed_work(&link->watchdog_work, WATCHDOG_INTERVAL);
- }
- 
- void rt2x00link_register(struct rt2x00_dev *rt2x00dev)
 -- 
-1.7.2.3
+Cheers,
+Luca.
 
