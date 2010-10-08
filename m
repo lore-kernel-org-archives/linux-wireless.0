@@ -1,74 +1,193 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mailout-de.gmx.net ([213.165.64.23]:43466 "HELO mail.gmx.net"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with SMTP
-	id S1751310Ab0JSOfJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 19 Oct 2010 10:35:09 -0400
-Message-ID: <4CBDB6E1.3020209@gmx.net>
-Date: Tue, 19 Oct 2010 17:18:57 +0200
-From: George <george.news@gmx.net>
-MIME-Version: 1.0
-To: Grazvydas Ignotas <notasas@gmail.com>
-CC: Luciano Coelho <luciano.coelho@nokia.com>,
-	"Luis R. Rodriguez" <mcgrof@gmail.com>,
-	Bob Copeland <me@bobcopeland.com>,
-	Denis 'GNUtoo' Carikli <GNUtoo@no-log.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: Compat-wireless N900
-References: <4CB6BE57.8010401@gmx.net>	<1287071844.11341.5.camel@gnutoo-laptop>	<AANLkTikosEtFnWqRVzMBKtNsB=aqOpqQFKDOZS3+pXTE@mail.gmail.com>	<4CB74759.3030807@gmx.net>	<AANLkTi=1Ar-gzRaskHGDLmkaDnr=9+oZnA=qBLCYcUAi@mail.gmail.com>	<4CB7F7C7.7030804@gmx.net>	<AANLkTi=u+mT2Xd0=0vt4uaf9hSnnkPKY+wN6DjAxME3m@mail.gmail.com>	<4CBABB84.1090100@gmx.net>	<4CBC7725.7050202@gmx.net>	<AANLkTincCSBfwa_Y-cy_42HfU5kP1puCbi2-dBwGkkHu@mail.gmail.com>	<4CBC9A51.8030309@gmx.net>	<1287427291.8043.2.camel@powerslave>	<1287428554.8043.6.camel@powerslave>	<4CBD52DE.9090804@gmx.net> <AANLkTi=dGSVBrdDXwJgmOjEGX+i+=P_KibiJd+NNMGfy@mail.gmail.com> <4CBDB654.6060702@gmx.net>
-In-Reply-To: <4CBDB654.6060702@gmx.net>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Received: from smtp.nokia.com ([147.243.1.47]:17391 "EHLO mgw-sa01.nokia.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753125Ab0JHMhc (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 8 Oct 2010 08:37:32 -0400
+Subject: Re: [PATCH 02/03] wl1271: BA Initiator support, BA functions
+From: Luciano Coelho <luciano.coelho@nokia.com>
+To: ext Shahar Levi <shahar_levi@ti.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <1286456762-17480-3-git-send-email-shahar_levi@ti.com>
+References: <1286456762-17480-1-git-send-email-shahar_levi@ti.com>
+	 <1286456762-17480-3-git-send-email-shahar_levi@ti.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Fri, 08 Oct 2010 15:37:27 +0300
+Message-ID: <1286541447.21349.145.camel@chilepepper>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 19/10/2010 17:16, George wrote:
-> On 19/10/2010 15:52, Grazvydas Ignotas wrote:
->> On Tue, Oct 19, 2010 at 11:12 AM, George<george.news@gmx.net> wrote:
->>> On 18/10/2010 21:02, Luciano Coelho wrote:
->>>>
->>>> On Mon, 2010-10-18 at 20:41 +0200, ext Luciano Coelho wrote:
->>>>>
->>>>> On Mon, 2010-10-18 at 21:04 +0200, ext George wrote:
->>>>>>
->>>>>> On 18/10/2010 19:21, Luis R. Rodriguez wrote:
->>>>>>> Does your device use SDIO or SPI?
->>>>>>>
->>>>>>> Luis
->>>>>>
->>>>>> I have tried both and none of them have worked.
->>>>>
->>>>> On the N900 the wl1271 chip is connected via SPI.
->>>
->>> The chip is a wl1251, isn't it? wl1271 is n capable and n900 is not.
->>
->> I think your problem is that the driver (in
->> drivers/net/wireless/wl1251/spi.c) and spi_board_info (in
->> arch/arm/mach-omap2/board-rx51-peripherals.c) names don't match
->> (wl1251 vs wl12xx). Probably easiest to edit .modalias in
->> board-rx51-peripherals.c and rebuild the kernel.
->>
->
-> It seems getting closer ;)
->
-> After changing wl12xx for spi:wl1251 now modules are uploaded on startup.
->
-> However this is the output from lsmod | grep spi
-> spi 4352 0
-> wl1251 75840 1 spi
-> mac80211 256892 2 spi,wl1251
-> crc7 1216 1 spi
->
-> As you can see spi module is not used :( and no interface is created.
-> Still a way to go.
->
+On Thu, 2010-10-07 at 15:06 +0200, ext Shahar Levi wrote:
+> New ops support ampdu_action as initiator returns EINVAL due to
+> the fact that BA initiator session manage in the FW independently.
+> acx function set BA policies.
 
-I forgot also to mention that bluetooth in not working with new modules 
-from compat-wireless
+Please rephrase this as it is hard to understand what the patch really
+is about.
 
 
-> --
-> To unsubscribe from this list: send the line "unsubscribe
-> linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at http://vger.kernel.org/majordomo-info.html
->
+> Signed-off-by: Shahar Levi <shahar_levi@ti.com>
+> ---
+
+Some more, mostly style comments.  Having mostly style-related comments
+means that your implementation is really good and I appreciate it! It
+just need a bit of polishing and parfumerie ;)
+
+This patch can also be merged with the next one.  This doesn't add any
+real functionality and there are things added here (for example the
+mac_addr = FFFFFFFFFFFF is not used at all) that are changed in the next
+patch.  This just confuses things.
+
+
+> diff --git a/drivers/net/wireless/wl12xx/wl1271_acx.c b/drivers/net/wireless/wl12xx/wl1271_acx.c
+> index cc6b7d8..f82656e 100644
+> --- a/drivers/net/wireless/wl12xx/wl1271_acx.c
+> +++ b/drivers/net/wireless/wl12xx/wl1271_acx.c
+> @@ -1317,6 +1317,61 @@ out:
+>  	return ret;
+>  }
+>  
+> +/*
+> + * wl1271_acx_set_ba_session
+
+Remove this line.  And then the comment can be in one line.
+
+
+> + * configure BA session initiator\receiver parameters setting in the FW.
+> + */
+> +int wl1271_acx_set_ba_session(struct wl1271 *wl,
+> +							  u16 id,
+> +							  u8 tid_index,
+> +							  u8 policy)
+
+Fix the indentation and maybe it all fits in one line?
+
+
+> +{
+> +	struct wl1271_acx_ba_session_policy *acx;
+> +	int ret = 0;
+> +	/*
+> +	* Note, currently this value will be set to FFFFFFFFFFFF to indicate
+> +	* it is relevant for all peers.
+> +	*/
+> +	u8 mac_address[ETH_ALEN] = {0xff, 0xff, 0xff, 0xff, 0xff, 0xff};
+
+No need to do this here, since this code is not called and, when you
+call it (ie. in patch 03/03), you remove this FF'ing anyway. ;)
+
+
+> +	if (ACX_BA_SESSION_INITIATOR_POLICY == id)
+
+Please use natural order (ie. id == ACX_BA_SESSION_INITIATOR_POLICY).
+
+
+> +		acx->inactivity_timeout = BA_INACTIVITY_TIMEOUT;
+> +	else
+> +		if (ACX_BA_SESSION_RESPONDER_POLICY == id)
+> +			acx->inactivity_timeout = 0;
+> +		else {
+> +			wl1271_error("Incorrect acx command id=%x\n", id);
+> +			ret = -EINVAL;
+> +			goto out;
+> +		}
+
+Use this structure for the if else statements:
+
+if (...) {
+	...
+} else if (...) {
+	...
+} else {
+	...
+}
+
+Or a switch-case.
+
+
+> +
+> +	ret = wl1271_cmd_configure(wl,
+> +				   id,
+> +				   acx,
+> +				   sizeof(*acx));
+
+Fits in one line.
+
+
+> diff --git a/drivers/net/wireless/wl12xx/wl1271_acx.h b/drivers/net/wireless/wl12xx/wl1271_acx.h
+> index 6c3c7c0..f417624 100644
+> --- a/drivers/net/wireless/wl12xx/wl1271_acx.h
+> +++ b/drivers/net/wireless/wl12xx/wl1271_acx.h
+> @@ -1205,6 +1205,10 @@ int wl1271_acx_set_ht_capabilities(struct wl1271 *wl,
+>  				    bool allow_ht_operation);
+>  int wl1271_acx_set_ht_information(struct wl1271 *wl,
+>  				   u16 ht_operation_mode);
+> +int wl1271_acx_set_ba_session(struct wl1271 *wl,
+> +							  u16 id,
+> +							  u8 tid_index,
+> +							  u8 policy);
+
+Indentation.
+
+
+> diff --git a/drivers/net/wireless/wl12xx/wl1271_main.c b/drivers/net/wireless/wl12xx/wl1271_main.c
+> index af092f4..53c03e5 100644
+> --- a/drivers/net/wireless/wl12xx/wl1271_main.c
+> +++ b/drivers/net/wireless/wl12xx/wl1271_main.c
+> @@ -1128,6 +1128,22 @@ static void wl1271_configure_filters(struct wl1271 *wl, unsigned int filters)
+>  	}
+>  }
+>  
+> +/*
+> + * wl1271_set_ba_policies
+
+Same as earlier: remove this line.  And then the comment can be in one
+line.
+
+
+> + * Set the BA session policies to the FW.
+> + */
+> +static void wl1271_set_ba_policies(struct wl1271 *wl)
+> +{
+> +	u8	tid_index;
+
+No need for the TAB between u8 and tid_index.
+
+
+> @@ -2056,6 +2072,32 @@ static int wl1271_op_get_survey(struct ieee80211_hw *hw, int idx,
+>  	return 0;
+>  }
+>  
+> +int wl1271_op_ampdu_action(struct ieee80211_hw *hw,
+> +			    struct ieee80211_vif *vif,
+> +			    enum ieee80211_ampdu_mlme_action action,
+> +			    struct ieee80211_sta *sta, u16 tid, u16 *ssn)
+> +{
+> +		int ret;
+> +
+> +		switch (action) {
+> +		case IEEE80211_AMPDU_RX_START:
+> +		case IEEE80211_AMPDU_RX_STOP:
+> +
+> +		/* The BA initiator session management in FW independently */
+> +		case IEEE80211_AMPDU_TX_START:
+> +		case IEEE80211_AMPDU_TX_STOP:
+> +		case IEEE80211_AMPDU_TX_OPERATIONAL:
+> +			ret = -EINVAL;
+> +		break;
+> +
+> +		default:
+> +			wl1271_error("Incorrect ampdu action id=%x\n", action);
+> +			ret = -ENODEV;
+> +		}
+> +
+> +		return ret;
+> +}
+
+This function doesn't do anything, really.  Except for returning -EINVAL
+in TX cases.  Is it really needed?
+
+
+-- 
+Cheers,
+Luca.
 
