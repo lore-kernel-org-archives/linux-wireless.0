@@ -1,49 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cavan.codon.org.uk ([93.93.128.6]:48781 "EHLO
-	cavan.codon.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756930Ab0JEVuQ (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 5 Oct 2010 17:50:16 -0400
-Date: Tue, 5 Oct 2010 22:50:08 +0100
-From: Matthew Garrett <mjg59@srcf.ucam.org>
-To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Cc: Marcel Holtmann <holtmann@linux.intel.com>,
-	Luis Rodriguez <Luis.Rodriguez@atheros.com>,
-	linux-bluetooth <linux-bluetooth@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Deepak Dhamdhere <Deepak.Dhamdhere@atheros.com>,
-	Sree Durbha <Sree.Durbha@atheros.com>
-Subject: Re: RFC: btusb firmware load help
-Message-ID: <20101005215008.GA11117@srcf.ucam.org>
-References: <20100924230730.GB6566@tux> <1286266981.17473.33.camel@aeonflux> <20101005192814.GB11831@tux> <1286308731.2588.13.camel@aeonflux> <AANLkTimz7U52_qHaTutQDOFQde+GrWJRA0WpqY__FPgi@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <AANLkTimz7U52_qHaTutQDOFQde+GrWJRA0WpqY__FPgi@mail.gmail.com>
+Received: from smtp.nokia.com ([147.243.1.47]:22686 "EHLO mgw-sa01.nokia.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932293Ab0JHNma (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 8 Oct 2010 09:42:30 -0400
+Subject: pull-request: wl12xx 2010-10-08
+From: Luciano Coelho <luciano.coelho@nokia.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Ohad Ben-Cohen <ohad@wizery.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Fri, 08 Oct 2010 16:42:17 +0300
+Message-ID: <1286545337.21349.177.camel@chilepepper>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Oct 05, 2010 at 01:28:53PM -0700, Luis R. Rodriguez wrote:
+Hi John,
 
-> Right -- so ath3k depends on some atheros USB device IDs, and its a
-> stupid driver that just loads firmware. The problem with this new
-> device is that it requires two phases. One to load some sort of
-> firmware onto it to get it to read as an ath3k device, and then ath3k
-> will load the right firmware to it. So the hardware device is already
-> claiming a btusb vendor:device ID, we can't change that I believe. Of
-> course for future devices we can, and we've addressed this and its
-> been fixed.
+These are two patches that allow the wl1271 chip to be powered on and
+off over SDIO.  As we discussed on IRC, they depend on other changes
+which already are in the mmc-next tree.
 
-If the device IDs can be changed when the firmware is loaded, then 
-simply provide a driver that binds to the original IDs and uploads the 
-firmware. The original IDs can be blacklisted from btusb so it won't 
-interfere. The device will then boot the firmware, detach and reattach 
-with new IDs - btusb will then bind. Repeat for every cold reset.
+Please pull this to wireless-next.
 
-If you can't change the IDs from firmware then an alternative would be 
-to blacklist it from btusb and provide a userspace application triggered 
-by a udev rule. Have it load the firmware and then poke 
-/sys/bus/usb/drivers/btusb/new_id .
+The following changes since commit 15a6321d1c0f8db561932cd99e1b9897981da71f:
+  Rajkumar Manoharan (1):
+        ath9k_hw: Fix hw reset failure with HTC driver
+
+are available in the git repository at:
+
+  git://git.kernel.org/pub/scm/linux/kernel/git/luca/wl12xx.git wireless-next
+
+Ohad Ben-Cohen (2):
+      wl1271: sdio: enable runtime PM
+      wl1271: sdio: add suspend/resume support
+
+ drivers/net/wireless/wl12xx/wl1271_sdio.c |   43 +++++++++++++++++++++++++----
+ 1 files changed, 37 insertions(+), 6 deletions(-)
 
 -- 
-Matthew Garrett | mjg59@srcf.ucam.org
+Cheers,
+Luca.
+
