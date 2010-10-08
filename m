@@ -1,122 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gx0-f174.google.com ([209.85.161.174]:46556 "EHLO
-	mail-gx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754568Ab0JKQZP (ORCPT
+Received: from uhura.skim.hs-owl.de ([193.174.118.81]:47635 "EHLO
+	uhura.skim.hs-owl.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754290Ab0JHLAi convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 11 Oct 2010 12:25:15 -0400
-Received: by gxk6 with SMTP id 6so147025gxk.19
-        for <linux-wireless@vger.kernel.org>; Mon, 11 Oct 2010 09:25:14 -0700 (PDT)
+	Fri, 8 Oct 2010 07:00:38 -0400
+Message-ID: <4CAEF760.5040204@gmx.com>
+Date: Fri, 8 Oct 2010 12:50:08 +0200
+From: Bjoern Czybik <wlfw@gmx.com>
 MIME-Version: 1.0
-In-Reply-To: <1286810435-10820-3-git-send-email-zajec5@gmail.com>
-References: <1286810435-10820-1-git-send-email-zajec5@gmail.com> <1286810435-10820-3-git-send-email-zajec5@gmail.com>
-From: =?ISO-8859-1?Q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>
-Date: Mon, 11 Oct 2010 18:24:52 +0200
-Message-ID: <AANLkTik1JPNaDKrS8ST_Lt+iEg21-rcetVTSnYmx-qW3@mail.gmail.com>
-Subject: Re: [PATCH 3/3] b43: N-PHY: add 2055 radio regs
-To: =?ISO-8859-2?Q?Rafa=B3_Mi=B3ecki?= <zajec5@gmail.com>
-Cc: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>,
-	b43-dev@lists.infradead.org
-Content-Type: text/plain; charset=UTF-8
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: "Luis R. Rodriguez" <mcgrof@gmail.com>,
+	<linux-wireless@vger.kernel.org>, <hostap@lists.shmoo.com>
+Subject: Re: Vendor specific data within a beacon frame
+References: <4CAD9368.70608@gmx.com>	 <AANLkTimTLEShJ3HcBqHaU5U5nFq1UywczC=G7oiHx=as@mail.gmail.com>	 <1286475342.20974.23.camel@jlt3.sipsolutions.net>	 <AANLkTimzwhBCVKFnx1vhM4A939_kgixEpw5RLTe8JJb0@mail.gmail.com> <1286476522.20974.27.camel@jlt3.sipsolutions.net>
+In-Reply-To: <1286476522.20974.27.camel@jlt3.sipsolutions.net>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-RG9lc24ndCBicmNtODAyMTEgY29udGFpbiByZWdpc3RlciBuYW1lcyBmb3IgQjIwNTU/CgoyMDEw
-LzEwLzExIFJhZmHFgiBNacWCZWNraSA8emFqZWM1QGdtYWlsLmNvbT46Cj4gU2lnbmVkLW9mZi1i
-eTogUmFmYcWCIE1pxYJlY2tpIDx6YWplYzVAZ21haWwuY29tPgo+IC0tLQo+IEknbSBub3QgdG9v
-IGhhcHB5IHdpdGggcHJlc2VudGVkIG51bWJlcmluZyBidXQ6Cj4gMSkgV2UgY2FuIG5vdCBqdXN0
-IHVzZSByZWdpc2VyIG51bWJlciwgYmVjYXVzZSB3ZSB1c2Ugc2FtZSByZWdpc3RlcnMgZmV3IHRp
-bWVzCj4gMikgVXNpbmcganVzdCBvcmRlciBudW1iZXJpbmcgKDAwIC0gMzYpIHdvdWxkIG1ha2Ug
-cmVnaXN0ZXJzIHdyaXRpbmcgbGVzcyBjbGVhbgo+Cj4gVGhpcyB3YXkgSSBkZWNpZGVkIHRvIHVz
-ZSBib3RoOiBvcmRlciBudW1iZXJpbmcgYW5kIHJlZ2lzdGVyIG51bWJlcmluZy4KPiAtLS0KPiDC
-oGRyaXZlcnMvbmV0L3dpcmVsZXNzL2I0My90YWJsZXNfbnBoeS5jIHwgwqAgNDIgKysrKysrKysr
-KysrKysrKysrKysrKysrKysrKysrKysKPiDCoGRyaXZlcnMvbmV0L3dpcmVsZXNzL2I0My90YWJs
-ZXNfbnBoeS5oIHwgwqAgNDAgKysrKysrKysrKysrKysrKysrKysrKysrKysrKy0tCj4gwqAyIGZp
-bGVzIGNoYW5nZWQsIDc5IGluc2VydGlvbnMoKyksIDMgZGVsZXRpb25zKC0pCj4KPiBkaWZmIC0t
-Z2l0IGEvZHJpdmVycy9uZXQvd2lyZWxlc3MvYjQzL3RhYmxlc19ucGh5LmMgYi9kcml2ZXJzL25l
-dC93aXJlbGVzcy9iNDMvdGFibGVzX25waHkuYwo+IGluZGV4IGU3NGI4ZWIuLjBjZWRiOWEgMTAw
-NjQ0Cj4gLS0tIGEvZHJpdmVycy9uZXQvd2lyZWxlc3MvYjQzL3RhYmxlc19ucGh5LmMKPiArKysg
-Yi9kcml2ZXJzL25ldC93aXJlbGVzcy9iNDMvdGFibGVzX25waHkuYwo+IEBAIC0zMTcsNiArMzE3
-LDQ4IEBAIHZvaWQgYjIwNTVfdXBsb2FkX2luaXR0YWIoc3RydWN0IGI0M193bGRldiAqZGV2LAo+
-IMKgIMKgIMKgIMKgLnJhZGlvX2MyX3R4X3BnYXBhZHRuIMKgID0gcjIwLCDCoFwKPiDCoCDCoCDC
-oCDCoC5yYWRpb19jMl90eF9teGJndHJpbSDCoCA9IHIyMQo+Cj4gKyNkZWZpbmUgUkFESU9SRUdT
-MyhyMDAsIHIwMSwgcjAyLCByMDMsIHIwNCwgcjA1LCByMDYsIHIwNywgcjA4LCByMDksIFwKPiAr
-IMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgcjEwLCByMTEsIHIxMiwgcjEzLCByMTQsIHIxNSwg
-cjE2LCByMTcsIHIxOCwgcjE5LCBcCj4gKyDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoHIyMCwg
-cjIxLCByMjIsIHIyMywgcjI0LCByMjUsIHIyNiwgcjI3LCByMjgsIHIyOSwgXAo+ICsgwqAgwqAg
-wqAgwqAgwqAgwqAgwqAgwqAgwqByMzAsIHIzMSwgcjMyLCByMzMsIHIzNCwgcjM1LCByMzYpIFwK
-PiArIMKgIMKgIMKgIC5yYWRpb19yZWdfMDBfNTYgwqAgwqAgwqAgwqA9IHIwMCwgwqBcCj4gKyDC
-oCDCoCDCoCAucmFkaW9fcmVnXzAxXzU2IMKgIMKgIMKgIMKgPSByMDEsIMKgXAo+ICsgwqAgwqAg
-wqAgLnJhZGlvX3JlZ18wMl80NiDCoCDCoCDCoCDCoD0gcjAyLCDCoFwKPiArIMKgIMKgIMKgIC5y
-YWRpb19yZWdfMDNfNTEgwqAgwqAgwqAgwqA9IHIwMywgwqBcCj4gKyDCoCDCoCDCoCAucmFkaW9f
-cmVnXzA0XzUwIMKgIMKgIMKgIMKgPSByMDQsIMKgXAo+ICsgwqAgwqAgwqAgLnJhZGlvX3JlZ18w
-NV80YiDCoCDCoCDCoCDCoD0gcjA1LCDCoFwKPiArIMKgIMKgIMKgIC5yYWRpb19yZWdfMDZfNGMg
-wqAgwqAgwqAgwqA9IHIwNiwgwqBcCj4gKyDCoCDCoCDCoCAucmFkaW9fcmVnXzA3XzRkIMKgIMKg
-IMKgIMKgPSByMDcsIMKgXAo+ICsgwqAgwqAgwqAgLnJhZGlvX3JlZ18wOF80ZSDCoCDCoCDCoCDC
-oD0gcjA4LCDCoFwKPiArIMKgIMKgIMKgIC5yYWRpb19yZWdfMDlfNGYgwqAgwqAgwqAgwqA9IHIw
-OSwgwqBcCj4gKyDCoCDCoCDCoCAucmFkaW9fcmVnXzEwXzFiIMKgIMKgIMKgIMKgPSByMTAsIMKg
-XAo+ICsgwqAgwqAgwqAgLnJhZGlvX3JlZ18xMV8xYyDCoCDCoCDCoCDCoD0gcjExLCDCoFwKPiAr
-IMKgIMKgIMKgIC5yYWRpb19yZWdfMTJfMWQgwqAgwqAgwqAgwqA9IHIxMiwgwqBcCj4gKyDCoCDC
-oCDCoCAucmFkaW9fcmVnXzEzXzcwIMKgIMKgIMKgIMKgPSByMTMsIMKgXAo+ICsgwqAgwqAgwqAg
-LnJhZGlvX3JlZ18xNF83MiDCoCDCoCDCoCDCoD0gcjE0LCDCoFwKPiArIMKgIMKgIMKgIC5yYWRp
-b19yZWdfMTVfNzUgwqAgwqAgwqAgwqA9IHIxNSwgwqBcCj4gKyDCoCDCoCDCoCAucmFkaW9fcmVn
-XzE2Xzc2IMKgIMKgIMKgIMKgPSByMTYsIMKgXAo+ICsgwqAgwqAgwqAgLnJhZGlvX3JlZ18xN18y
-ZCDCoCDCoCDCoCDCoD0gcjE3LCDCoFwKPiArIMKgIMKgIMKgIC5yYWRpb19yZWdfMThfMzQgwqAg
-wqAgwqAgwqA9IHIxOCwgwqBcCj4gKyDCoCDCoCDCoCAucmFkaW9fcmVnXzE5XzM3IMKgIMKgIMKg
-IMKgPSByMTksIMKgXAo+ICsgwqAgwqAgwqAgLnJhZGlvX3JlZ18yMF80MSDCoCDCoCDCoCDCoD0g
-cjIwLCDCoFwKPiArIMKgIMKgIMKgIC5yYWRpb19yZWdfMjFfNGQgwqAgwqAgwqAgwqA9IHIyMSwg
-wqBcCj4gKyDCoCDCoCDCoCAucmFkaW9fcmVnXzIyXzUzIMKgIMKgIMKgIMKgPSByMjIsIMKgXAo+
-ICsgwqAgwqAgwqAgLnJhZGlvX3JlZ18yM181OCDCoCDCoCDCoCDCoD0gcjIzLCDCoFwKPiArIMKg
-IMKgIMKgIC5yYWRpb19yZWdfMjRfNWUgwqAgwqAgwqAgwqA9IHIyNCwgwqBcCj4gKyDCoCDCoCDC
-oCAucmFkaW9fcmVnXzI1XzYyIMKgIMKgIMKgIMKgPSByMjUsIMKgXAo+ICsgwqAgwqAgwqAgLnJh
-ZGlvX3JlZ18yNl82NCDCoCDCoCDCoCDCoD0gcjI2LCDCoFwKPiArIMKgIMKgIMKgIC5yYWRpb19y
-ZWdfMjdfMmQgwqAgwqAgwqAgwqA9IHIyNywgwqBcCj4gKyDCoCDCoCDCoCAucmFkaW9fcmVnXzI4
-XzM0IMKgIMKgIMKgIMKgPSByMjgsIMKgXAo+ICsgwqAgwqAgwqAgLnJhZGlvX3JlZ18yOV8zNyDC
-oCDCoCDCoCDCoD0gcjI5LCDCoFwKPiArIMKgIMKgIMKgIC5yYWRpb19yZWdfMzBfNDEgwqAgwqAg
-wqAgwqA9IHIzMCwgwqBcCj4gKyDCoCDCoCDCoCAucmFkaW9fcmVnXzMxXzRkIMKgIMKgIMKgIMKg
-PSByMzEsIMKgXAo+ICsgwqAgwqAgwqAgLnJhZGlvX3JlZ18zMl81MyDCoCDCoCDCoCDCoD0gcjMy
-LCDCoFwKPiArIMKgIMKgIMKgIC5yYWRpb19yZWdfMzNfNTggwqAgwqAgwqAgwqA9IHIzMywgwqBc
-Cj4gKyDCoCDCoCDCoCAucmFkaW9fcmVnXzM0XzVlIMKgIMKgIMKgIMKgPSByMzQsIMKgXAo+ICsg
-wqAgwqAgwqAgLnJhZGlvX3JlZ18zNV82MiDCoCDCoCDCoCDCoD0gcjM1LCDCoFwKPiArIMKgIMKg
-IMKgIC5yYWRpb19yZWdfMzZfNjQgwqAgwqAgwqAgwqA9IHIzNgo+ICsKPiDCoCNkZWZpbmUgUEhZ
-UkVHUyhyMCwgcjEsIHIyLCByMywgcjQsIHI1KSDCoCDCoCDCoCDCoFwKPiDCoCDCoCDCoCDCoC5w
-aHlfcmVncy5waHlfYncxYSDCoCDCoCDCoD0gcjAsIMKgIFwKPiDCoCDCoCDCoCDCoC5waHlfcmVn
-cy5waHlfYncyIMKgIMKgIMKgID0gcjEsIMKgIFwKPiBkaWZmIC0tZ2l0IGEvZHJpdmVycy9uZXQv
-d2lyZWxlc3MvYjQzL3RhYmxlc19ucGh5LmggYi9kcml2ZXJzL25ldC93aXJlbGVzcy9iNDMvdGFi
-bGVzX25waHkuaAo+IGluZGV4IDNlZWRiODYuLjA3YjJjMjIgMTAwNjQ0Cj4gLS0tIGEvZHJpdmVy
-cy9uZXQvd2lyZWxlc3MvYjQzL3RhYmxlc19ucGh5LmgKPiArKysgYi9kcml2ZXJzL25ldC93aXJl
-bGVzcy9iNDMvdGFibGVzX25waHkuaAo+IEBAIC00OCwxMiArNDgsNDYgQEAgc3RydWN0IGI0M19u
-cGh5X2NoYW5uZWx0YWJfZW50cnlfcmV2MiB7Cj4gwqB9Owo+Cj4gwqBzdHJ1Y3QgYjQzX25waHlf
-Y2hhbm5lbHRhYl9lbnRyeV9yZXYzIHsKPiAtIMKgIMKgIMKgIC8qIFRoZSBjaGFubmVsIG51bWJl
-ciAqLwo+IC0gwqAgwqAgwqAgdTggY2hhbm5lbDsKPiDCoCDCoCDCoCDCoC8qIFRoZSBjaGFubmVs
-IGZyZXF1ZW5jeSBpbiBNSHogKi8KPiDCoCDCoCDCoCDCoHUxNiBmcmVxOwo+IMKgIMKgIMKgIMKg
-LyogUmFkaW8gcmVnaXN0ZXIgdmFsdWVzIG9uIGNoYW5uZWxzd2l0Y2ggKi8KPiAtIMKgIMKgIMKg
-IC8qIFRPRE8gKi8KPiArIMKgIMKgIMKgIHU4IHJhZGlvX3JlZ18wMF81NjsKPiArIMKgIMKgIMKg
-IHU4IHJhZGlvX3JlZ18wMV81NjsKPiArIMKgIMKgIMKgIHU4IHJhZGlvX3JlZ18wMl80NjsKPiAr
-IMKgIMKgIMKgIHU4IHJhZGlvX3JlZ18wM181MTsKPiArIMKgIMKgIMKgIHU4IHJhZGlvX3JlZ18w
-NF81MDsKPiArIMKgIMKgIMKgIHU4IHJhZGlvX3JlZ18wNV80YjsKPiArIMKgIMKgIMKgIHU4IHJh
-ZGlvX3JlZ18wNl80YzsKPiArIMKgIMKgIMKgIHU4IHJhZGlvX3JlZ18wN180ZDsKPiArIMKgIMKg
-IMKgIHU4IHJhZGlvX3JlZ18wOF80ZTsKPiArIMKgIMKgIMKgIHU4IHJhZGlvX3JlZ18wOV80ZjsK
-PiArIMKgIMKgIMKgIHU4IHJhZGlvX3JlZ18xMF8xYjsKPiArIMKgIMKgIMKgIHU4IHJhZGlvX3Jl
-Z18xMV8xYzsKPiArIMKgIMKgIMKgIHU4IHJhZGlvX3JlZ18xMl8xZDsKPiArIMKgIMKgIMKgIHU4
-IHJhZGlvX3JlZ18xM183MDsKPiArIMKgIMKgIMKgIHU4IHJhZGlvX3JlZ18xNF83MjsKPiArIMKg
-IMKgIMKgIHU4IHJhZGlvX3JlZ18xNV83NTsKPiArIMKgIMKgIMKgIHU4IHJhZGlvX3JlZ18xNl83
-NjsKPiArIMKgIMKgIMKgIHU4IHJhZGlvX3JlZ18xN18yZDsKPiArIMKgIMKgIMKgIHU4IHJhZGlv
-X3JlZ18xOF8zNDsKPiArIMKgIMKgIMKgIHU4IHJhZGlvX3JlZ18xOV8zNzsKPiArIMKgIMKgIMKg
-IHU4IHJhZGlvX3JlZ18yMF80MTsKPiArIMKgIMKgIMKgIHU4IHJhZGlvX3JlZ18yMV80ZDsKPiAr
-IMKgIMKgIMKgIHU4IHJhZGlvX3JlZ18yMl81MzsKPiArIMKgIMKgIMKgIHU4IHJhZGlvX3JlZ18y
-M181ODsKPiArIMKgIMKgIMKgIHU4IHJhZGlvX3JlZ18yNF81ZTsKPiArIMKgIMKgIMKgIHU4IHJh
-ZGlvX3JlZ18yNV82MjsKPiArIMKgIMKgIMKgIHU4IHJhZGlvX3JlZ18yNl82NDsKPiArIMKgIMKg
-IMKgIHU4IHJhZGlvX3JlZ18yN18yZDsKPiArIMKgIMKgIMKgIHU4IHJhZGlvX3JlZ18yOF8zNDsK
-PiArIMKgIMKgIMKgIHU4IHJhZGlvX3JlZ18yOV8zNzsKPiArIMKgIMKgIMKgIHU4IHJhZGlvX3Jl
-Z18zMF80MTsKPiArIMKgIMKgIMKgIHU4IHJhZGlvX3JlZ18zMV80ZDsKPiArIMKgIMKgIMKgIHU4
-IHJhZGlvX3JlZ18zMl81MzsKPiArIMKgIMKgIMKgIHU4IHJhZGlvX3JlZ18zM181ODsKPiArIMKg
-IMKgIMKgIHU4IHJhZGlvX3JlZ18zNF81ZTsKPiArIMKgIMKgIMKgIHU4IHJhZGlvX3JlZ18zNV82
-MjsKPiArIMKgIMKgIMKgIHU4IHJhZGlvX3JlZ18zNl82NDsKPiDCoCDCoCDCoCDCoC8qIFBIWSBy
-ZWdpc3RlciB2YWx1ZXMgb24gY2hhbm5lbHN3aXRjaCAqLwo+IMKgIMKgIMKgIMKgc3RydWN0IGI0
-M19waHlfbl9zZm9fY2ZnIHBoeV9yZWdzOwo+IMKgfTsKPiAtLQo+IDEuNy4xCj4KPiAtLQo+IFRv
-IHVuc3Vic2NyaWJlIGZyb20gdGhpcyBsaXN0OiBzZW5kIHRoZSBsaW5lICJ1bnN1YnNjcmliZSBs
-aW51eC13aXJlbGVzcyIgaW4KPiB0aGUgYm9keSBvZiBhIG1lc3NhZ2UgdG8gbWFqb3Jkb21vQHZn
-ZXIua2VybmVsLm9yZwo+IE1vcmUgbWFqb3Jkb21vIGluZm8gYXQgwqBodHRwOi8vdmdlci5rZXJu
-ZWwub3JnL21ham9yZG9tby1pbmZvLmh0bWwKPgoKCgotLSAKVmlzdGE6IFtWXWlydXNlcywgW0ld
-bnRydWRlcnMsIFtTXXB5d2FyZSwgW1Rdcm9qYW5zIGFuZCBbQV1kd2FyZS4gOi0pCg==
+Ok, I'm sorry I didn't epress myself well.
+
+There is the struct 80211_gmt in the ieee80211_mgmt module in the 
+ieeee80211_defs.h, but there is no field for vendor specific data (of 
+course it will be set by the hostapd).
+
+ From the hostapd the function ieee802_11_set_beacon(...) calls the 
+wpa_driver_nl80211_set_beacon function in driver_nl80211.c (we are using 
+the hostapd-0.7.3).
+In wpa_driver_nl80211_set_beacon fct. the macro NLA_PUT and NLA_PUT_32 
+is used to set the header and tail of a mgmt frame.
+
+If I am right, I have to use the attribute NL80211_ATTR_IE to set 
+information elements data with %NL80211_CMD_SET_MGMT_EXTRA_IE (in 
+nl80211.h). But in the enum nl80211_commands is written:
+     NL80211_CMD_SET_MGMT_EXTRA_IE /* reserved; not used */,
+
+Does somebody knows how to fix it?
+
+Björn
+
+On 07.10.2010 20:35, Johannes Berg wrote:
+> On Thu, 2010-10-07 at 11:31 -0700, Luis R. Rodriguez wrote:
+>    
+>> On Thu, Oct 7, 2010 at 11:15 AM, Johannes Berg
+>> <johannes@sipsolutions.net>  wrote:
+>>      
+>>> On Thu, 2010-10-07 at 11:11 -0700, Luis R. Rodriguez wrote:
+>>>
+>>> Let me quote what you wrote, but just partially:
+>>>
+>>>        
+>>>> This can be done from userspace. This is from nl80211.h:
+>>>>          
+>>>        
+>>>>   *      Note: This command has been removed and it is only reserved at this
+>>>>   *      point to avoid re-using existing command number. The functionality this
+>>>>   *      command was planned for has been provided with cleaner design with the
+>>>>   *      option to specify additional IEs in NL80211_CMD_TRIGGER_SCAN,
+>>>>   *      NL80211_CMD_AUTHENTICATE, NL80211_CMD_ASSOCIATE,
+>>>>   *      NL80211_CMD_DEAUTHENTICATE, and NL80211_CMD_DISASSOCIATE.
+>>>>          
+>>> :P
+>>>        
+>> Yeah just noticed *after* I pasted it and sent it. Does hostapd use
+>> this currently?
+>>      
+> No, hostapd transmits frames via injection and the data it puts into the
+> beacon is conveyed with the beacon cmd -- it has never used this
+> command.
+>
+> Really, what the OP is looking for is the annotated hostapd
+> configuration file or the hostapd source code -- he should be able to
+> figure that out for himself.
+>
+> johannes
+>    
+
