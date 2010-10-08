@@ -1,85 +1,96 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:40349 "EHLO
+Received: from he.sipsolutions.net ([78.46.109.217]:49813 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752265Ab0JKJzv (ORCPT
+	with ESMTP id S1757234Ab0JHQxY (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 11 Oct 2010 05:55:51 -0400
-Subject: Re: [Patch 1/1] wext: fix 32/64 bit alignment issue for 'point'
- type
+	Fri, 8 Oct 2010 12:53:24 -0400
+Subject: Re: [PATCH] mac80211: hoist sta->lock from reorder release timer
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Gerrit Renker <gerrit@erg.abdn.ac.uk>
+To: Christian Lamparter <chunkeey@googlemail.com>
 Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <20101011051410.GA3977@gerrit.erg.abdn.ac.uk>
-References: <20100930102508.GB3581@gerrit.erg.abdn.ac.uk>
-	 <1285857487.5137.2.camel@jlt3.sipsolutions.net>
-	 <42875.148.187.160.35.1285917725.squirrel@148.187.160.35>
-	 <1285921839.3739.16.camel@jlt3.sipsolutions.net>
-	 <20101011051410.GA3977@gerrit.erg.abdn.ac.uk>
+	linux-wireless@vger.kernel.org,
+	Ben Greear <greearb@candelatech.com>,
+	Ming Lei <tom.leiming@gmail.com>
+In-Reply-To: <201010081842.39187.chunkeey@googlemail.com>
+References: <201010061200.54364.chunkeey@googlemail.com>
+	 <20101006202106.GL2472@tuxdriver.com>
+	 <1286485393.20974.40.camel@jlt3.sipsolutions.net>
+	 <201010081842.39187.chunkeey@googlemail.com>
 Content-Type: text/plain; charset="UTF-8"
-Date: Mon, 11 Oct 2010 11:55:47 +0200
-Message-ID: <1286790947.3634.9.camel@jlt3.sipsolutions.net>
+Date: Fri, 08 Oct 2010 18:53:22 +0200
+Message-ID: <1286556802.3612.4.camel@jlt3.sipsolutions.net>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2010-10-11 at 07:14 +0200, Gerrit Renker wrote:
+On Fri, 2010-10-08 at 18:42 +0200, Christian Lamparter wrote:
 
-> In the drawings below I have traced with an asterisk where in userspace the data is
-> read out - as far as I can see this is correct. The only worrying case is number (3).
+> Sure, a little bit. The code itself is fine but as you said
+> the rx_handler code wasn't written for concurrent/delayed
+> release timer mechanism.
 
-> 3) 64-bit compat
-> ~~~~~~~~~~~~~~~~
->  point_len = IW_EV_COMPAT_POINT_LEN = 8
->  iwe->len  = event_len = point_len + u.data.length = 8 + u.data.length
->  lcp_len   = IW_EV_COMPAT_LCP_LEN   = 4
->  2nd memcpy: IW_EV_POINT_PK_LEN - IW_EV_LCP_PK_LEN = 12 - 4 = 8
+But it should be fine now, no? What data does it still access that's not
+safe?
+
+> for example:
 > 
->  IW_EV_LCP_PK_LEN
->  <-------------->                *
->  +-------+-------+-------+-------+---------------+------- ...-+
->  | len   | cmd   |length | flags |  (empty) -> extra      ... |
->  +-------+-------+-------+-------+---------------+------- ...-+
->     2       2       2       2          4
->  
->      lcp_len
->  <-------------->                <-!! OVERLAP !!>
->  <--1st memcpy--><------- 2nd memcpy ----------->
->                                  <---- 3rd memcpy ------- ... >
->  <--------- point_len ---------->
+> Because we can't set IEEE80211_RX_RA_MATCH (since 
+> it interferes with scanning (as explained in
+> "mac80211: fix release_reorder_timeout in scan").
+
+That I don't understand.
+
+> We will experience strange results with "ieee80211_rx_h_decrypt":
 > 
-> Here it is as you point out: the second and third memcpy()'s overlap by 4 bytes,
-> which would be a problem if the length == 0 and no extra data were to be copied.
+> line: 878
+> >	/*
+> >	 * No point in finding a key and decrypting if the frame is neither
+> >	 * addressed to us nor a multicast frame.
+> >	 */
+> >	if (!(status->rx_flags & IEEE80211_RX_RA_MATCH))
 
-This, and the other two cases as well, looks correct.
+> no software decryption there - not nice but the HW probably does
+> the decryption for us. - That being said, the stack should be able
+> to do the software decryption "just in case".
 
+But note that the rx_flags are in the *status* now, which is part of the
+SKB, and no longer on the stack.
 
-> --- a/include/net/iw_handler.h
-> +++ b/include/net/iw_handler.h
-> @@ -548,9 +548,9 @@ iwe_stream_add_point(struct iw_request_info *info, char *stream, char *ends,
->         if(likely((stream + event_len) < ends)) {
->                 iwe->len = event_len;
->                 memcpy(stream, (char *) iwe, IW_EV_LCP_PK_LEN);
-> +               /* copy length and flags of iw_point */
->                 memcpy(stream + lcp_len,
-> -                      ((char *) &iwe->u) + IW_EV_POINT_OFF,
-> -                      IW_EV_POINT_PK_LEN - IW_EV_LCP_PK_LEN);
-> +                      ((char *) &iwe->u) + IW_EV_POINT_OFF, 4);
->                 memcpy(stream + point_len, extra, iwe->u.data.length);
->                 stream += event_len;
->         }
+> Things are a little bit better with ieee80211_rx_h_sta_process.
+> It updates some statistics and takes care of sta->last_rx
+> (which is currently not that important giving HT BA is only supported
+> for AP/STA operation).
+> 
+> In ieee80211_rx_h_data, there could be another potential problem:
+> >	if (ieee80211_is_data(hdr->frame_control) &&
+> >   	 !is_multicast_ether_addr(hdr->addr1) &&
+> >		 local->hw.conf.dynamic_ps_timeout > 0 && local->ps_sdata) {
+> >			mod_timer(&local->dynamic_ps_timer, jiffies +
+> >			msecs_to_jiffies(local->hw.conf.dynamic_ps_timeout));
+> >	}
+> I reckon there could be a "hidden" problem. "jiffies" is now
+> approx 100ms after the packet was received from the interface.
+> (Sure, a similar issue was also present in the original
+> reorder release implementation.)
 
-However, I don't understand this patch. Your original patch would have
-fixed this just as well, since after it
+This one's more interesting. I guess we need to bypass these things
+somehow, maybe setting a flag if this was a "recovered" frame?
 
-IW_EV_POINT_PK_LEN - IW_EV_LCP_PK_LEN
+> In order the fix this/my mess we would need to:
+>  1. move the software decryption before the reordering
+>    (802.11n-spec (page 11, Figure 6-1) allows this)
+> 
+> (Or:
+> 1. introduce an additional rx_flag for the reorder release case?)
+> 
+> (2. maybe cache the original skb jiffie at some place?)
+> 
+> (3. make a few counters atomic_t, so concurrent tasklets
+>     can update the stats. Or disable the BHs while processing,
+>     any rx frames (which is probably what we're going to do, right?))
 
-would be
-
-(IW_EV_LCP_PK_LEN + 4) - IW_EV_LCP_PK_LEN == 4
-
-and at the same time fixes the userspace problem, if anyone really wants
-to use wext in new applications that don't use iwlib still...
+BHs are disabled while processing RX -- and timer is a BH itself so
+they're also disabled, right?
 
 johannes
 
