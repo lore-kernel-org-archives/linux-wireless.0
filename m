@@ -1,41 +1,81 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-vw0-f46.google.com ([209.85.212.46]:61866 "EHLO
-	mail-vw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754852Ab0JaJrE convert rfc822-to-8bit (ORCPT
+Received: from senator.holtmann.net ([87.106.208.187]:47116 "EHLO
+	mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753568Ab0JIIBk (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 31 Oct 2010 05:47:04 -0400
-Received: by vws13 with SMTP id 13so2184134vws.19
-        for <linux-wireless@vger.kernel.org>; Sun, 31 Oct 2010 02:47:04 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <E9954878DD1FB34FAE5187FB88C58A35012BE7FC4E@orsmsx506.amr.corp.intel.com>
-References: <AANLkTim4_HoHwdhGqAZqcGf2oq7boktdZFW4-w5DpdDa@mail.gmail.com>
-	<AANLkTinuYOvwNZAFgq67f4XBL4YQ+b2z4EBMcmvbMYi3@mail.gmail.com>
-	<1281481505.20038.10.camel@wwguy-ubuntu>
-	<AANLkTinDjp500wXXHbiOmom70Wbvs1OL6LXOfTq06A=U@mail.gmail.com>
-	<1282762406.23359.1.camel@wwguy-huron>
-	<AANLkTik0ssMim0-eRS1kWD+CsE_kCS-RjEm_iEbdPy05@mail.gmail.com>
-	<1283356663.22660.27.camel@wwguy-ubuntu>
-	<loom.20101005T185120-614@post.gmane.org>
-	<E9954878DD1FB34FAE5187FB88C58A35012BE7FC4E@orsmsx506.amr.corp.intel.com>
-Date: Sun, 31 Oct 2010 10:47:03 +0100
-Message-ID: <AANLkTimrh-wn1Wbp1_9WpWSsAsnuJ3UOfBUd5pSz7h7G@mail.gmail.com>
-Subject: Re: [WTF, maintainers] Re: *PING* iwlagn 2.6.35: &quot;BA scd_flow 0
- does not match txq_id 10&quot; regression
-From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-To: "Guy, Wey-Yi W" <wey-yi.w.guy@intel.com>
-Cc: Nate Weibley <nweibley@gmail.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+	Sat, 9 Oct 2010 04:01:40 -0400
+Subject: Re: Firmware versioning best practices: ath3k-2.fw rename or
+ replace ath3k-1.fw ?
+From: Marcel Holtmann <marcel@holtmann.org>
+To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Cc: Suraj Sumangala <Suraj.Sumangala@Atheros.com>,
+	David Woodhouse <dwmw2@infradead.org>,
+	linux-bluetooth <linux-bluetooth@vger.kernel.org>,
+	linux-kernel@vger.kernel.org,
+	linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <20101008170258.GJ10149@tux>
+References: <20101008170258.GJ10149@tux>
+Content-Type: text/plain; charset="UTF-8"
+Date: Sat, 09 Oct 2010 10:01:28 +0200
+Message-ID: <1286611288.6145.430.camel@aeonflux>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2010/10/6 Guy, Wey-Yi W <wey-yi.w.guy@intel.com>:
-> Sorry for delaying, we are working on the experimental uCode available to the public which should happen very soon.
+Hi Luis,
 
-Please, help and define "very soon". My wifi card is halfly-usable for
-3 months (or more?) and "very soon" didn't happen since your mail,
-which is about 3 weeks now. I bought notebook with Intel card for your
-Linux support but I've to say it's disaster now.
+> What is the difference between ath3k-2.fw and ath3k-1.fw ?
+> 
+> Won't the API change now that you are addressing the sflash
+> configuration fix? Would it not help to identify the two
+> different firmwares then?
+> 
+> David, Marcel, what are your preferences for a firmware upgrade
+> where the firmware does not change API (lets just pretend it does
+> not for a moment) ? Do we keep the same filename?
 
--- 
-Rafał
+that is what most companies do and that is what iwlwifi has done so far.
+Only if the API breaks a different suffix is used.
+
+With Bluetooth this should be never needed at all. The reason is that
+you need to expose Bluetooth HCI. And that has generic version, support
+commands and supported features commands.
+
+We are not even using the version information for anything useful these
+days since the firmware has to identify its features and its supported
+commands with standard HCI commands. So it is pretty simple to detect
+what Bluetooth subsystem needs to do.
+
+> In this particular case I would assume our new sflash configuration
+> fix that might be being worked on might change the re-enumerated
+> USB device IDs so it seems to me a good idea to use a new filename.
+> I should note ath3k-2.fw already made it to linux-firmware.git...
+
+No it does not. The changed PID is not a breakage. It will just keep
+working. So please fix this in linux-firmware.git right away and remove
+the new firmware file.
+
+And here is something that is wrong with your process as well. Don't
+submit firmware files upstream before the upstream maintainers accepted
+your driver or patch.
+
+I know it is nice to have the firmware available quickly, but if your
+driver gets rejected for the reason we have stated in this thread, you
+have dangling firmware somewhere.
+
+> I last tried to document a thread we had over this here:
+> 
+> http://wireless.kernel.org/en/developers/Documentation/firmware-versioning
+> 
+> Does this sound sane? If so then the sflash configuration fix
+> would seem to me like it would require a new filename. Now, while
+> we're at it, how about bug fixes?
+
+If your firmware files are identical and the exposed API is identical
+(in this case Bluetooth HCI), then you do NO need a new filename.
+
+Regards
+
+Marcel
+
+
