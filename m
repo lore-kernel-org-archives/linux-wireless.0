@@ -1,42 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from kroah.org ([198.145.64.141]:50276 "EHLO coco.kroah.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754840Ab0JUSa2 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 21 Oct 2010 14:30:28 -0400
-Date: Thu, 21 Oct 2010 11:26:48 -0700
-From: Greg KH <greg@kroah.com>
-To: Henry Ptasinski <henryp@broadcom.com>
-Cc: Nohee Ko <noheek@broadcom.com>,
-	"devel@linuxdriverproject.org" <devel@linuxdriverproject.org>,
-	Brett Rudley <brudley@broadcom.com>,
-	"grundler@google.com" <grundler@google.com>,
-	linux-wireless@vger.kernel.org, dwmw2@infradead.org
-Subject: Re: Subject: [PATCH] staging: brcm80211: brcmfmac: Removed
- codeversion from firmware filenames.
-Message-ID: <20101021182648.GA6827@kroah.com>
-References: <4CBE23F4.4020104@broadcom.com>
- <20101019233520.GA12510@kroah.com>
- <FD96C117992C584DBC47231B1EB6F5568206D859DC@SJEXCHCCR02.corp.ad.broadcom.com>
- <20101020004743.GB31965@kroah.com>
- <20101020005546.GL10832@broadcom.com>
- <20101020010320.GA370@kroah.com>
- <20101021171054.GB15357@broadcom.com>
+Received: from mail-ew0-f46.google.com ([209.85.215.46]:35910 "EHLO
+	mail-ew0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755439Ab0JILgb (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 9 Oct 2010 07:36:31 -0400
+Received: by mail-ew0-f46.google.com with SMTP id 20so23937ewy.19
+        for <linux-wireless@vger.kernel.org>; Sat, 09 Oct 2010 04:36:31 -0700 (PDT)
+From: Ivo van Doorn <ivdoorn@gmail.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Subject: [PATCH 04/06] rt2x00: Use unlikely for error case in rt2x00queue_write_tx_frame
+Date: Sat, 9 Oct 2010 13:34:43 +0200
+Cc: linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com
+References: <201010091333.17274.IvDoorn@gmail.com> <201010091333.45001.IvDoorn@gmail.com> <201010091334.12741.IvDoorn@gmail.com>
+In-Reply-To: <201010091334.12741.IvDoorn@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20101021171054.GB15357@broadcom.com>
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Message-Id: <201010091334.44618.IvDoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Oct 21, 2010 at 10:10:55AM -0700, Henry Ptasinski wrote:
-> The basename-apiversion-codeversion construction for firmware filenames is not
-> used by most other firmware files, adds complexity, and is not providing any
-> value.  Rename the firmware files using just basename-apiversion.
-> 
-> Users of the brcmfmac driver will need to update the linux-firmware package
-> to get the renamed files, or manually rename their installed firmware files.
-> ---
->  drivers/staging/brcm80211/brcmfmac/wl_cfg80211.c |    4 ++--
->  1 files changed, 2 insertions(+), 2 deletions(-)
+From: Helmut Schaa <helmut.schaa@googlemail.com>
 
--ENOSIGNED-OFF-BY-LINE :(
+This is an error condition that is not supposed to happen. Hence, it is
+safe to add unlikely to this check.
+
+Signed-off-by: Helmut Schaa <helmut.schaa@googlemail.com>
+Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
+---
+ drivers/net/wireless/rt2x00/rt2x00queue.c |    3 ++-
+ 1 files changed, 2 insertions(+), 1 deletions(-)
+
+diff --git a/drivers/net/wireless/rt2x00/rt2x00queue.c b/drivers/net/wireless/rt2x00/rt2x00queue.c
+index 4436ff7..83630f1 100644
+--- a/drivers/net/wireless/rt2x00/rt2x00queue.c
++++ b/drivers/net/wireless/rt2x00/rt2x00queue.c
+@@ -489,7 +489,8 @@ int rt2x00queue_write_tx_frame(struct data_queue *queue, struct sk_buff *skb,
+ 	if (unlikely(rt2x00queue_full(queue)))
+ 		return -ENOBUFS;
+ 
+-	if (test_and_set_bit(ENTRY_OWNER_DEVICE_DATA, &entry->flags)) {
++	if (unlikely(test_and_set_bit(ENTRY_OWNER_DEVICE_DATA,
++				      &entry->flags))) {
+ 		ERROR(queue->rt2x00dev,
+ 		      "Arrived at non-free entry in the non-full queue %d.\n"
+ 		      "Please file bug report to %s.\n",
+-- 
+1.7.2.3
 
