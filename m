@@ -1,53 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:38198 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750939Ab0JEQYz (ORCPT
+Received: from mail-ew0-f46.google.com ([209.85.215.46]:35910 "EHLO
+	mail-ew0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755485Ab0JILgg (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 5 Oct 2010 12:24:55 -0400
-Message-ID: <4CAB514E.2010009@candelatech.com>
-Date: Tue, 05 Oct 2010 09:24:46 -0700
-From: Ben Greear <greearb@candelatech.com>
+	Sat, 9 Oct 2010 07:36:36 -0400
+Received: by mail-ew0-f46.google.com with SMTP id 20so23937ewy.19
+        for <linux-wireless@vger.kernel.org>; Sat, 09 Oct 2010 04:36:35 -0700 (PDT)
+From: Ivo van Doorn <ivdoorn@gmail.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Subject: [PATCH 06/06] rt2x00: Fix tx status handling in rt2800pci
+Date: Sat, 9 Oct 2010 13:35:48 +0200
+Cc: linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com
+References: <201010091333.17274.IvDoorn@gmail.com> <201010091334.44618.IvDoorn@gmail.com> <201010091335.13894.IvDoorn@gmail.com>
+In-Reply-To: <201010091335.13894.IvDoorn@gmail.com>
 MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: "Luis R. Rodriguez" <mcgrof@gmail.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: Crash in agg-tx.c, with ath9k and lots of STA VIFs.
-References: <4CAA2247.50402@candelatech.com>	 <1286218879.3620.55.camel@jlt3.sipsolutions.net>	 <4CAA252F.9090102@candelatech.com>	 <1286219405.3620.56.camel@jlt3.sipsolutions.net>	 <AANLkTi=Ya6RuCdVYLYi3Mk5EKSP6czOfTh7TRKqB0GPU@mail.gmail.com>	 <AANLkTinGaCAEqGRt_X6hsO8sQx4kKEdNqU8pfi00_1-r@mail.gmail.com>	 <4CAA494B.5000500@candelatech.com>  <4CAA5861.4020503@candelatech.com> <1286265366.3641.2.camel@jlt3.sipsolutions.net>
-In-Reply-To: <1286265366.3641.2.camel@jlt3.sipsolutions.net>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Message-Id: <201010091335.49039.IvDoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 10/05/2010 12:56 AM, Johannes Berg wrote:
-> On Mon, 2010-10-04 at 15:42 -0700, Ben Greear wrote:
->
->> I did find a similar crash while debugging a kernel with just symbols
->> compiled in (not kgdb) though:
->
-> Doesn't seem all that similar...
->
->> The interesting thing to me is that the 00100104 address is the same in
->> both crashes, though this one is in a different method.
->
-> except for that maybe. But this is LIST_POISON1, and with seemingly
-> different lists. It may be faster to reproduce if you enable slab/slub
-> debugging.
->
->> Also, this is with power-save NOT disabled (I was hoping to
->> hit some debugging code I put in for the other crash..hit this instead.)
->>
->> Oct  4 15:26:15 localhost kernel: BUG: unable to handle kernel paging request at 00100104
->> Oct  4 15:26:15 localhost kernel: IP: [<fc77e038>] cfg80211_unlink_bss+0x4d/0x8d [cfg80211]
->
-> Looks like a mac80211 bug, but you snipped the stack trace.
+From: Helmut Schaa <helmut.schaa@googlemail.com>
 
-I'll apply your deadlock-fix patch, enable slab debugging, and have another go
-at it today.
+The patches "rt2x00: Improve TX status entry validation" and "rt2x00: rework tx
+status handling in rt2800pci" together were causing problems with tx status
+processing in rt2800pci:
 
-Thanks!
-Ben
+phy1 -> rt2800pci_txdone: Warning - Got TX status for an empty queue 3, dropping
+phy1 -> rt2800pci_txdone: Warning - Got TX status for an unavailable queue 7, dropping
 
+Fix this by using the correct field definition for getting the QID out of the
+tx status report.
+
+Reported-by: Luis Correia <luis.f.correia@gmail.com>
+Signed-off-by: Helmut Schaa <helmut.schaa@googlemail.com>
+Tested-by: Luis Correia <luis.f.correia@gmail.com>
+Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
+---
+ drivers/net/wireless/rt2x00/rt2800pci.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
+
+diff --git a/drivers/net/wireless/rt2x00/rt2800pci.c b/drivers/net/wireless/rt2x00/rt2800pci.c
+index cc4e17c..b267395 100644
+--- a/drivers/net/wireless/rt2x00/rt2800pci.c
++++ b/drivers/net/wireless/rt2x00/rt2800pci.c
+@@ -676,7 +676,7 @@ static void rt2800pci_txdone(struct rt2x00_dev *rt2x00dev)
+ 			break;
+ 		}
+ 
+-		qid = rt2x00_get_field32(status, TX_STA_FIFO_PID_TYPE) - 1;
++		qid = rt2x00_get_field32(status, TX_STA_FIFO_PID_QUEUE);
+ 		if (qid >= QID_RX) {
+ 			/*
+ 			 * Unknown queue, this shouldn't happen. Just drop
 -- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+1.7.2.3
 
