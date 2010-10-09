@@ -1,74 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f46.google.com ([209.85.214.46]:51153 "EHLO
-	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751940Ab0JPGzv (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 16 Oct 2010 02:55:51 -0400
-Received: by bwz15 with SMTP id 15so1518158bwz.19
-        for <linux-wireless@vger.kernel.org>; Fri, 15 Oct 2010 23:55:33 -0700 (PDT)
-From: Christian Lamparter <chunkeey@googlemail.com>
-To: linux-wireless@vger.kernel.org
-Subject: [PATCH] carl9170: fix async command buffer leak
-Date: Sat, 16 Oct 2010 01:38:46 +0200
-Cc: "John W. Linville" <linville@tuxdriver.com>
-MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="us-ascii"
-Message-Id: <201010160138.47219.chunkeey@googlemail.com>
+Received: from nbd.name ([88.198.39.176]:40927 "EHLO ds10.nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1759925Ab0JIAjg (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 8 Oct 2010 20:39:36 -0400
+From: Felix Fietkau <nbd@openwrt.org>
+To: linux-wireless@vger.kernel.org, linville@tuxdriver.com
+Cc: lrodriguez@atheros.com, br1@einfach.org
+Subject: [PATCH 2/3] ath9k: add compile time checking for the size of the channel list
+Date: Sat,  9 Oct 2010 02:39:30 +0200
+Message-Id: <1286584771-76663-2-git-send-email-nbd@openwrt.org>
+In-Reply-To: <1286584771-76663-1-git-send-email-nbd@openwrt.org>
+References: <1286584771-76663-1-git-send-email-nbd@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-If __carl9170_exec_cmd fails to upload an asynchronous
-command to the device, the functions: carl9170_reboot
-and carl9170_powersave will leak the temporary command
-assembly buffer.
+This prevents random memory corruption if the number of channels ever gets
+changed without an update to the internal channel array size.
 
-Signed-off-by: Christian Lamparter <chunkeey@googlemail.com>
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
 ---
-diff --git a/drivers/net/wireless/ath/carl9170/usb.c b/drivers/net/wireless/ath/carl9170/usb.c
-index c7f6193..d8607f4 100644
---- a/drivers/net/wireless/ath/carl9170/usb.c
-+++ b/drivers/net/wireless/ath/carl9170/usb.c
-@@ -591,16 +591,23 @@ int __carl9170_exec_cmd(struct ar9170 *ar, struct carl9170_cmd *cmd,
- 			const bool free_buf)
+ drivers/net/wireless/ath/ath9k/hw.h   |    4 +++-
+ drivers/net/wireless/ath/ath9k/init.c |    4 ++++
+ 2 files changed, 7 insertions(+), 1 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath9k/hw.h b/drivers/net/wireless/ath/ath9k/hw.h
+index 7f696c8..6b92334 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.h
++++ b/drivers/net/wireless/ath/ath9k/hw.h
+@@ -61,6 +61,8 @@
+ 
+ #define ATH9K_RSSI_BAD			-128
+ 
++#define ATH9K_NUM_CHANNELS	38
++
+ /* Register read/write primitives */
+ #define REG_WRITE(_ah, _reg, _val) \
+ 	ath9k_hw_common(_ah)->ops->write((_ah), (_val), (_reg))
+@@ -618,7 +620,7 @@ struct ath_hw {
+ 	struct ath9k_hw_version hw_version;
+ 	struct ath9k_ops_config config;
+ 	struct ath9k_hw_capabilities caps;
+-	struct ath9k_channel channels[38];
++	struct ath9k_channel channels[ATH9K_NUM_CHANNELS];
+ 	struct ath9k_channel *curchan;
+ 
+ 	union {
+diff --git a/drivers/net/wireless/ath/ath9k/init.c b/drivers/net/wireless/ath/ath9k/init.c
+index d76003c..a4c5ed4 100644
+--- a/drivers/net/wireless/ath/ath9k/init.c
++++ b/drivers/net/wireless/ath/ath9k/init.c
+@@ -481,6 +481,10 @@ static int ath9k_init_channels_rates(struct ath_softc *sc)
  {
- 	struct urb *urb;
-+	int err = 0;
+ 	void *channels;
  
--	if (!IS_INITIALIZED(ar))
--		return -EPERM;
-+	if (!IS_INITIALIZED(ar)) {
-+		err = -EPERM;
-+		goto err_free;
-+	}
- 
--	if (WARN_ON(cmd->hdr.len > CARL9170_MAX_CMD_LEN - 4))
--		return -EINVAL;
-+	if (WARN_ON(cmd->hdr.len > CARL9170_MAX_CMD_LEN - 4)) {
-+		err = -EINVAL;
-+		goto err_free;
-+	}
- 
- 	urb = usb_alloc_urb(0, GFP_ATOMIC);
--	if (!urb)
--		return -ENOMEM;
-+	if (!urb) {
-+		err = -ENOMEM;
-+		goto err_free;
-+	}
- 
- 	usb_fill_int_urb(urb, ar->udev, usb_sndintpipe(ar->udev,
- 		AR9170_USB_EP_CMD), cmd, cmd->hdr.len + 4,
-@@ -613,6 +620,12 @@ int __carl9170_exec_cmd(struct ar9170 *ar, struct carl9170_cmd *cmd,
- 	usb_free_urb(urb);
- 
- 	return carl9170_usb_submit_cmd_urb(ar);
++	BUILD_BUG_ON(ARRAY_SIZE(ath9k_2ghz_chantable) +
++		     ARRAY_SIZE(ath9k_5ghz_chantable) !=
++		     ATH9K_NUM_CHANNELS);
 +
-+err_free:
-+	if (free_buf)
-+		kfree(cmd);
-+
-+	return err;
- }
- 
- int carl9170_exec_cmd(struct ar9170 *ar, const enum carl9170_cmd_oids cmd,
+ 	if (test_bit(ATH9K_MODE_11G, sc->sc_ah->caps.wireless_modes)) {
+ 		channels = kmemdup(ath9k_2ghz_chantable,
+ 			sizeof(ath9k_2ghz_chantable), GFP_KERNEL);
+-- 
+1.7.2.2
+
