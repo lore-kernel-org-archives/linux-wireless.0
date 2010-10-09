@@ -1,37 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:65013 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752504Ab0JGABn (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 6 Oct 2010 20:01:43 -0400
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Subject: [PATCH 2/2] iwlagn: add define for MODULE_FIRMWARE
-Date: Wed,  6 Oct 2010 17:00:55 -0700
-Message-Id: <1286409655-32679-3-git-send-email-wey-yi.w.guy@intel.com>
-In-Reply-To: <1286409655-32679-1-git-send-email-wey-yi.w.guy@intel.com>
-References: <1286409655-32679-1-git-send-email-wey-yi.w.guy@intel.com>
+Received: from mail-ew0-f46.google.com ([209.85.215.46]:35910 "EHLO
+	mail-ew0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754476Ab0JILg3 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 9 Oct 2010 07:36:29 -0400
+Received: by mail-ew0-f46.google.com with SMTP id 20so23937ewy.19
+        for <linux-wireless@vger.kernel.org>; Sat, 09 Oct 2010 04:36:28 -0700 (PDT)
+From: Ivo van Doorn <ivdoorn@gmail.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Subject: [PATCH 03/06] rt2x00: Use proper type for rxwi_w2 in rt2800_agc_to_rssi
+Date: Sat, 9 Oct 2010 13:34:11 +0200
+Cc: linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com
+References: <201010091333.17274.IvDoorn@gmail.com> <201010091333.45001.IvDoorn@gmail.com>
+In-Reply-To: <201010091333.45001.IvDoorn@gmail.com>
+MIME-Version: 1.0
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Message-Id: <201010091334.12741.IvDoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Adding MODULE_FIRMWARE define for 130 series of devices
+From: Helmut Schaa <helmut.schaa@googlemail.com>
 
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Signed-off-by: Helmut Schaa <helmut.schaa@googlemail.com>
+Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
 ---
- drivers/net/wireless/iwlwifi/iwl-6000.c |    1 +
- 1 files changed, 1 insertions(+), 0 deletions(-)
+ drivers/net/wireless/rt2x00/rt2800lib.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-6000.c b/drivers/net/wireless/iwlwifi/iwl-6000.c
-index b448b03..6261aec 100644
---- a/drivers/net/wireless/iwlwifi/iwl-6000.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-6000.c
-@@ -858,3 +858,4 @@ MODULE_FIRMWARE(IWL6000_MODULE_FIRMWARE(IWL6000_UCODE_API_MAX));
- MODULE_FIRMWARE(IWL6050_MODULE_FIRMWARE(IWL6050_UCODE_API_MAX));
- MODULE_FIRMWARE(IWL6000G2A_MODULE_FIRMWARE(IWL6000G2_UCODE_API_MAX));
- MODULE_FIRMWARE(IWL6000G2B_MODULE_FIRMWARE(IWL6000G2_UCODE_API_MAX));
-+MODULE_FIRMWARE(IWL130_MODULE_FIRMWARE(IWL130_UCODE_API_MAX));
+diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
+index 7f040b0..b9433fe 100644
+--- a/drivers/net/wireless/rt2x00/rt2800lib.c
++++ b/drivers/net/wireless/rt2x00/rt2800lib.c
+@@ -499,7 +499,7 @@ void rt2800_write_tx_data(struct queue_entry *entry,
+ }
+ EXPORT_SYMBOL_GPL(rt2800_write_tx_data);
+ 
+-static int rt2800_agc_to_rssi(struct rt2x00_dev *rt2x00dev, int rxwi_w2)
++static int rt2800_agc_to_rssi(struct rt2x00_dev *rt2x00dev, u32 rxwi_w2)
+ {
+ 	int rssi0 = rt2x00_get_field32(rxwi_w2, RXWI_W2_RSSI0);
+ 	int rssi1 = rt2x00_get_field32(rxwi_w2, RXWI_W2_RSSI1);
 -- 
-1.7.0.4
+1.7.2.3
 
