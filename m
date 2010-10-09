@@ -1,55 +1,88 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([192.100.122.230]:29970 "EHLO
-	mgw-mx03.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753830Ab0JZK27 (ORCPT
+Received: from mail-iw0-f174.google.com ([209.85.214.174]:58106 "EHLO
+	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752368Ab0JIAnd convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 26 Oct 2010 06:28:59 -0400
-Subject: Re: [PATCH] wireless/wl1271: remove redundant if-statement v2
-From: Luciano Coelho <luciano.coelho@nokia.com>
-To: ext Nicolas Kaiser <nikai@nikai.net>
-Cc: Larry Finger <Larry.Finger@lwfinger.net>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-In-Reply-To: <20101025153003.3aa7c168@absol.kitzblitz>
-References: <20101025000744.17f7086e@absol.kitzblitz>
-	 <4CC4B210.2010608@lwfinger.net>	<1288012245.21130.24.camel@chilepepper>
-	 <20101025153003.3aa7c168@absol.kitzblitz>
-Content-Type: text/plain; charset="UTF-8"
-Date: Tue, 26 Oct 2010 13:27:44 +0300
-Message-ID: <1288088864.27698.1.camel@chilepepper>
-Mime-Version: 1.0
+	Fri, 8 Oct 2010 20:43:33 -0400
+MIME-Version: 1.0
+In-Reply-To: <AANLkTika+07mD==fPioanurwD-_s8aaJFc+nb4ZZOL0J@mail.gmail.com>
+References: <AANLkTin9AwTa8x6faFEXBbrGZa4mg3AeDfeEmmdaF9_d@mail.gmail.com> <AANLkTika+07mD==fPioanurwD-_s8aaJFc+nb4ZZOL0J@mail.gmail.com>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Fri, 8 Oct 2010 17:43:12 -0700
+Message-ID: <AANLkTimBXC9P7pf+-szK3A5FoS2Sjndr8AB9JR=7V-Sr@mail.gmail.com>
+Subject: Re: Roaming / offchannel enhancements for broadcast / multicast frames
+To: Paul Stewart <pstew@google.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	linux-kernel@vger.kernel.org, Matt Smith <Matt.Smith@atheros.com>,
+	Srinivasa Duvvuri <Srinivasa.Duvvuri@atheros.com>,
+	Carolyn Waller <Carolyn.Waller@atheros.com>,
+	Amod Bodas <Amod.Bodas@atheros.com>,
+	David Quan <David.Quan@atheros.com>,
+	Bennyam Malavazi <Bennyam.Malavazi@atheros.com>,
+	Cliff Holden <Cliff.Holden@atheros.com>,
+	Aeolus Yang <Aeolus.Yang@atheros.com>,
+	Kevin Hayes <kevin@atheros.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2010-10-25 at 15:30 +0200, ext Nicolas Kaiser wrote:
-> wl1271_ps_elp_sleep() is void and cannot return a value.
-> 
-> Signed-off-by: Nicolas Kaiser <nikai@nikai.net>
-> ---
-> Sorry for the poor wording of the initial description.
-> 
->  drivers/net/wireless/wl12xx/wl1271_event.c |    2 --
->  1 files changed, 0 insertions(+), 2 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/wl12xx/wl1271_event.c b/drivers/net/wireless/wl12xx/wl1271_event.c
-> index 7b3f503..38ccef7 100644
-> --- a/drivers/net/wireless/wl12xx/wl1271_event.c
-> +++ b/drivers/net/wireless/wl12xx/wl1271_event.c
-> @@ -134,8 +134,6 @@ static int wl1271_event_ps_report(struct wl1271 *wl,
->  
->  		/* go to extremely low power mode */
->  		wl1271_ps_elp_sleep(wl);
-> -		if (ret < 0)
-> -			break;
->  		break;
->  	case EVENT_EXIT_POWER_SAVE_FAIL:
->  		wl1271_debug(DEBUG_PSM, "PSM exit failed");
+On Fri, Oct 8, 2010 at 5:08 PM, Paul Stewart <pstew@google.com> wrote:
+> On Fri, Oct 8, 2010 at 12:54 PM, Luis R. Rodriguez <mcgrof@gmail.com> wrote:
+>> We spoke about how to handle broadcast / multicast frames when going
+>> offchannel at the Wireless Summit [1]. A lot of these talks were lead
+>> due to a Chrome side open bug [2].
+>
+> Thanks for getting the ball rolling, Luis.  Technically the bug is in
+> ChromumOS ("Chrome" is a web browser).
 
-Reviewed-by: Luciano Coelho <luciano.coelho@nokia.com>
+Heh, yeah sorry.
 
-Thanks! Applied to the wl12xx tree.
+>> Userspace may want to force a roam when this deadzone event hits.
+>
+> Why not just disassociate at this point?  I'm not sure what the
+> difference is between a "dead zone" situation and a reason to
+> completely disconnect.
 
--- 
-Cheers,
-Luca.
+Not sure what is best, but one reason for considering to just roam is
+we are at least getting data while we roam. I hope we can iron out the
+best algorithm through this thread.
 
+>> Once we have these two in place we can then ignore bgscan requests
+>> (when associated) unless a force scan command has been issued by
+>> userspace, or unless we are idle.
+>
+> By "ignore" do you mean "postpone" or or "return an appropriate error
+> to userspace"?  Either of those are acceptable.  Not doing anything at
+> all wouldn't be good.
+
+Good questions. If we postpone it means we end up queuing up all these
+scan requests, unless we only let a few queue up, or just one?
+
+> There's an additional issue about what happens
+> when we are in the middle of a bgscan and new tx traffic appears.
+
+We can force going back on channel in this case I think.
+
+>> In the worst case scenario and unfortunately this seems to be the most
+>> common one, a DTIM of 1 is used and we will have to be on channel and
+>> awake every beacon interval. In this case we may want to optimize scan
+>> time by not scanning passive scan channels.
+>
+> A compromise would be to go off-channel for less than a full beacon
+> interval when doing background passive channel scans in DTIM=1
+> networks.  It's certainly better than (a) not scanning at all and (b)
+> arguably better than intentionally dropping mcast.  An 80% beacon-time
+> passive listen will get you 80% of the beacons, assuming linear
+> probability, and even more over time if you account for beacon skew
+> between networks.
+
+Sure it just also means our bgscans can take up ages, if they take up
+ages and we queue up a few of them then we can get a backlog of
+requests from userspace agents. I suppose we need to figure out this
+fine line. But yeah -- you're right, we can do scanning for less than
+a beacon interval if DTIM is 1. This can mean 1024 TUs, not sure how
+long it takes for us to do a passive scan, this likely is
+radio/chipset specific so we'd have to add those values maybe to the
+wiphy characteristics. Worth trying and seeing if its possible.
+
+  Luis
