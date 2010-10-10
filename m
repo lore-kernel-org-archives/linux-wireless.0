@@ -1,53 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-px0-f174.google.com ([209.85.212.174]:61832 "EHLO
-	mail-px0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932347Ab0JHQpt (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:59824 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932185Ab0JJKoO (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 8 Oct 2010 12:45:49 -0400
-Received: by pxi15 with SMTP id 15so214174pxi.19
-        for <linux-wireless@vger.kernel.org>; Fri, 08 Oct 2010 09:45:48 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <SNT111-W21A1F92DC5DADE5968C8CCFB500@phx.gbl>
-References: <SNT111-W333C4BA6050D535151071FFB690@phx.gbl> <SNT111-W2989DC6A52022428756E6FB500@phx.gbl>
- <20101008111221.5425.qmail@stuge.se> <AANLkTimAfH8ChkjwFB7e2kMbJyxaZQZMSxTcThva=jgN@mail.gmail.com>
- <SNT111-W21A1F92DC5DADE5968C8CCFB500@phx.gbl>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Fri, 8 Oct 2010 09:45:28 -0700
-Message-ID: <AANLkTikc9+bULkH2Fv7mEtBjbjatMW8XOXjXZVuA81hD@mail.gmail.com>
-Subject: Re: [ath9k-devel] trying to set tx power (using txpower option)
-To: At Santos <atsan@hotmail.co.uk>
-Cc: ath9k <ath9k-devel@lists.ath9k.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+	Sun, 10 Oct 2010 06:44:14 -0400
+Subject: Re: [PATCH 3/3] staging: brcm80211: fix to use "%pM" flag to print
+ MAC address
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Andy Shevchenko <andy.shevchenko@gmail.com>
+Cc: linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
+	linux-kernel@vger.kernel.org, Nohee Ko <noheek@broadcom.com>,
+	Greg Kroah-Hartman <gregkh@suse.de>
+In-Reply-To: <dc990a5f703e69ed428ac2f2479779d36ef1eb3f.1286705921.git.andy.shevchenko@gmail.com>
+References: <86dfcd5dfdee8ce5ca558634d4606922f05e96e1.1286705921.git.andy.shevchenko@gmail.com>
+	 <dc990a5f703e69ed428ac2f2479779d36ef1eb3f.1286705921.git.andy.shevchenko@gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Sun, 10 Oct 2010 12:44:10 +0200
+Message-ID: <1286707450.3547.8.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Oct 8, 2010 at 9:23 AM, At Santos <atsan@hotmail.co.uk> wrote:
->
->
->> Actually, you can set tx power with iw now:
->>
->> http://wireless.kernel.org/en/users/Documentation/iw#Setting_TX_power
->>
->> I will note you will need 2.6.36, or compat-wireless-2.6.36, otherwise
->> you have to use iwconfig, setting txpower with nl80211 was only added
->> as of 2.6.36.
->>
->> Luis
->
-> Thanks for the response.
->
-> I'm running with compat-wireless-2.6.36-rc3-1 and I'm finding that iw
-> doesn't work with fixed or limit:
->
-> $ sudo iw wlan0 set txpower fixed 20
-> command failed: Operation not supported (-95)
->
-> So it seems it's broken at the moment.
-> To where should I report the bug?
+On Sun, 2010-10-10 at 13:20 +0300, Andy Shevchenko wrote:
 
-You can use bugzilla.kernel.org please report it there and we can fix
-it. I can't look into right now though as I'm looking into another
-issue. If someone else has cycles it would be appreciated.
+>  char *bcm_ether_ntoa(const struct ether_addr *ea, char *buf)
+>  {
+> -	static const char template[] = "%02x:%02x:%02x:%02x:%02x:%02x";
+> -	snprintf(buf, 18, template,
+> -		 ea->octet[0] & 0xff, ea->octet[1] & 0xff, ea->octet[2] & 0xff,
+> -		 ea->octet[3] & 0xff, ea->octet[4] & 0xff, ea->octet[5] & 0xff);
+> +	snprintf(buf, 18, "%pM", ea->octet);
 
-  Luis
+That's a pretty strange use of snprintf -- just use sprintf if you don't
+have a real buffer length.
+
+johannes
+
