@@ -1,63 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:51455 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752687Ab0J0Syx (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 27 Oct 2010 14:54:53 -0400
-From: Hauke Mehrtens <hauke@hauke-m.de>
-To: lrodriguez@atheros.com
-Cc: linux-wireless@vger.kernel.org, mcgrof@infradead.org,
-	Hauke Mehrtens <hauke@hauke-m.de>
-Subject: [PATCH 2/2] compat-wireless: revert workqueue patch
-Date: Wed, 27 Oct 2010 20:54:35 +0200
-Message-Id: <1288205675-25061-2-git-send-email-hauke@hauke-m.de>
-In-Reply-To: <1288205675-25061-1-git-send-email-hauke@hauke-m.de>
-References: <1288205675-25061-1-git-send-email-hauke@hauke-m.de>
+Received: from mail-qw0-f46.google.com ([209.85.216.46]:43979 "EHLO
+	mail-qw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753750Ab0JJRff convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 10 Oct 2010 13:35:35 -0400
+Received: by qwf7 with SMTP id 7so1459241qwf.19
+        for <linux-wireless@vger.kernel.org>; Sun, 10 Oct 2010 10:35:34 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <E338C554-ADF5-490D-825D-E04D295664F0@ing.unibs.it>
+References: <2518B44B-D014-4ABA-AE31-BD75691488AB@ing.unibs.it>
+	<1DBB75B1-733F-4DFC-A541-2C2C986586A6@ing.unibs.it>
+	<AANLkTika70YCWU8eG5QHO+Bdf5XakEOg_b+UJdgCG4A0@mail.gmail.com>
+	<E338C554-ADF5-490D-825D-E04D295664F0@ing.unibs.it>
+Date: Sun, 10 Oct 2010 19:35:32 +0200
+Message-ID: <AANLkTimUdX1duphd=QYRz_i-TERfXbjOM1QEXaTUO13M@mail.gmail.com>
+Subject: Re: Release of Maranello firmware source code for Broadcom cards
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+To: francesco.gringoli@ing.unibs.it
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	b43-dev@lists.infradead.org, Bo Han <bohan@cs.umd.edu>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This just reverts the workqueue patch commited in
-99b88a0ecbdbc6df03527292571b2b442965814a
-        mac80211: cancel restart_work explicitly instead of depending on flush_scheduled_work()
+W dniu 10 października 2010 18:53 użytkownik
+<francesco.gringoli@ing.unibs.it> napisał:
+> On Oct 10, 2010, at 4:47 PM, Rafał Miłecki wrote:
+>
+>> 2010/10/10  <francesco.gringoli@ing.unibs.it>:
+>>> Hello there,
+>>>
+>>> we released the source code of the Maranello firmware and all the
+>>> necessary kernel patches. It was tested on Broadcom 4318/4306 pci
+>>> cards on PC architecture. Find all the necessary files browsing from
+>>>
+>>> http://www.ing.unibs.it/openfwwf
+>>>
+>>> or go directly here
+>>>
+>>> http://www.cs.umd.edu/projects/maranello
+>>>
+>>>
+>>> Maranello is an enhancement of the 802.11 DCF standard: it implements
+>>> a Partial Packet Recovery technique to retransmit only the corrupt
+>>> parts of failed packets. This reduces the airtime and contributes to
+>>> enhance the throughput. It was written starting from OpenFWWF5.2 by
+>>> adding a number of new features.
+>>>
+>> Did you just add recovery feature to OpenFWWF 5.2 or did you improve
+>> basic OpenFWWF as well?
+>>
+>> My 4318 with OpenFWWF 5.2 stops transmitting after few MB. Can
+>> Maranello contain any fix for this? I'll able to test this later next
+>> week.
+>
+> No, I don't think so. OpenFWWF5.2 does not handle correctly fifo overflow conditions. We have a testing firmware that handles them (and that works perfectly on WRT54GL): I hope we can release it soon.
 
-Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
----
- patches/36-workqueue.patch |   27 +++++++++++++++++++++++++++
- 1 files changed, 27 insertions(+), 0 deletions(-)
- create mode 100644 patches/36-workqueue.patch
+Wow, that's great! If you need more testing, I'm willing to do some.
+If you need full root access to machine with 4318 running
+wireless-testing, just mail me privately.
 
-diff --git a/patches/36-workqueue.patch b/patches/36-workqueue.patch
-new file mode 100644
-index 0000000..9bb2705
---- /dev/null
-+++ b/patches/36-workqueue.patch
-@@ -0,0 +1,27 @@
-+Backport commit 99b88a0ecbdbc6df03527292571b2b442965814a
-+
-+--- a/net/mac80211/main.c
-++++ b/net/mac80211/main.c
-+@@ -754,7 +754,11 @@ int ieee80211_register_hw(struct ieee802
-+ 		hw->queues = IEEE80211_MAX_QUEUES;
-+ 
-+ 	local->workqueue =
-++#if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,37))
-+ 		alloc_ordered_workqueue(wiphy_name(local->hw.wiphy), 0);
-++#else
-++		create_singlethread_workqueue(wiphy_name(local->hw.wiphy));
-++#endif
-+ 	if (!local->workqueue) {
-+ 		result = -ENOMEM;
-+ 		goto fail_workqueue;
-+@@ -968,6 +972,10 @@ static void __exit ieee80211_exit(void)
-+ 	rc80211_minstrel_ht_exit();
-+ 	rc80211_minstrel_exit();
-+ 
-++#if (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,37))
-++	flush_scheduled_work();
-++#endif
-++
-+ 	if (mesh_allocated)
-+ 		ieee80211s_stop();
-+ 
+Really hope you will manage to release that soon :)
+
 -- 
-1.7.1
-
+Rafał
