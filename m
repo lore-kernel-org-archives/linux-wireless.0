@@ -1,313 +1,625 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([88.198.39.176]:53245 "EHLO ds10.nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751258Ab0JGT4l (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 7 Oct 2010 15:56:41 -0400
-Message-ID: <4CAE25F6.2010707@openwrt.org>
-Date: Thu, 07 Oct 2010 21:56:38 +0200
-From: Felix Fietkau <nbd@openwrt.org>
-MIME-Version: 1.0
-To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-CC: linux-wireless <linux-wireless@vger.kernel.org>
-Subject: [PATCH v4] compat: backport netlink changes used in the nl80211 cleanup
-References: <4CADB60C.6040105@openwrt.org> <4CADC142.7010709@openwrt.org> <4CADC341.40305@openwrt.org>
-In-Reply-To: <4CADC341.40305@openwrt.org>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from emh06.mail.saunalahti.fi ([62.142.5.116]:49695 "EHLO
+	emh06.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753140Ab0JJIgb (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 10 Oct 2010 04:36:31 -0400
+From: Kalle Valo <kvalo@adurom.com>
+To: linux-wireless@vger.kernel.org
+Cc: Kalle Valo <kvalo@adurom.com>
+Subject: [PATCH 2/3] wl1251: move to it's own directory
+Date: Sun, 10 Oct 2010 11:28:32 +0300
+Message-Id: <1286699313-7774-3-git-send-email-kvalo@adurom.com>
+In-Reply-To: <1286699313-7774-1-git-send-email-kvalo@adurom.com>
+References: <1286699313-7774-1-git-send-email-kvalo@adurom.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
----
-v2:
-- fix genl_unregister_family wrapper (removes the family from the internal list)
-- fix error handling in doit ops
-v3:
-- fix a theoretical race in family unregister
-v4:
-- remove old genl_register_family_with_ops implementation
-- fix genl_info_net redefinition
-tested on 2.6.30
+wl1271 driver is under heavy development but on the other hand the older
+wl1251 driver is currently considered more as a legacy driver. To make it
+easier to develop wl1271 features move wl1251 to it's own directory,
+drivers/net/wireless/wl1251.
 
---- a/include/linux/compat-2.6.37.h
-+++ b/include/linux/compat-2.6.37.h
-@@ -45,6 +45,71 @@ static inline void skb_checksum_none_ass
+There are no functional changes, only moving of files. One regression
+is that Kconfig won't be updated automatically and user needs to enable
+wl1251 manually with an older config file.
+
+Signed-off-by: Kalle Valo <kvalo@adurom.com>
+---
+ drivers/net/wireless/Kconfig                       |    1 +
+ drivers/net/wireless/Makefile                      |    1 +
+ drivers/net/wireless/wl1251/Kconfig                |   33 +++++++++++++++++++
+ drivers/net/wireless/wl1251/Makefile               |    7 ++++
+ .../wireless/{wl12xx/wl1251_acx.c => wl1251/acx.c} |    8 ++--
+ .../wireless/{wl12xx/wl1251_acx.h => wl1251/acx.h} |    2 +-
+ .../{wl12xx/wl1251_boot.c => wl1251/boot.c}        |   12 +++---
+ .../{wl12xx/wl1251_boot.h => wl1251/boot.h}        |    0
+ .../wireless/{wl12xx/wl1251_cmd.c => wl1251/cmd.c} |   10 +++---
+ .../wireless/{wl12xx/wl1251_cmd.h => wl1251/cmd.h} |    0
+ .../{wl12xx/wl1251_debugfs.c => wl1251/debugfs.c}  |    6 ++--
+ .../{wl12xx/wl1251_debugfs.h => wl1251/debugfs.h}  |    0
+ .../{wl12xx/wl1251_event.c => wl1251/event.c}      |    8 ++--
+ .../{wl12xx/wl1251_event.h => wl1251/event.h}      |    0
+ .../{wl12xx/wl1251_init.c => wl1251/init.c}        |    8 ++--
+ .../{wl12xx/wl1251_init.h => wl1251/init.h}        |    0
+ .../wireless/{wl12xx/wl1251_io.c => wl1251/io.c}   |    4 +-
+ .../wireless/{wl12xx/wl1251_io.h => wl1251/io.h}   |    0
+ .../{wl12xx/wl1251_main.c => wl1251/main.c}        |   20 ++++++------
+ .../wireless/{wl12xx/wl1251_ps.c => wl1251/ps.c}   |    8 ++--
+ .../wireless/{wl12xx/wl1251_ps.h => wl1251/ps.h}   |    2 +-
+ .../wireless/{wl12xx/wl1251_reg.h => wl1251/reg.h} |    0
+ .../wireless/{wl12xx/wl1251_rx.c => wl1251/rx.c}   |   10 +++---
+ .../wireless/{wl12xx/wl1251_rx.h => wl1251/rx.h}   |    0
+ .../{wl12xx/wl1251_sdio.c => wl1251/sdio.c}        |    0
+ .../wireless/{wl12xx/wl1251_spi.c => wl1251/spi.c} |    4 +-
+ .../wireless/{wl12xx/wl1251_spi.h => wl1251/spi.h} |    6 ++--
+ .../wireless/{wl12xx/wl1251_tx.c => wl1251/tx.c}   |    8 ++--
+ .../wireless/{wl12xx/wl1251_tx.h => wl1251/tx.h}   |    2 +-
+ drivers/net/wireless/{wl12xx => wl1251}/wl1251.h   |    0
+ drivers/net/wireless/wl12xx/Kconfig                |   34 --------------------
+ drivers/net/wireless/wl12xx/Makefile               |    9 -----
+ 32 files changed, 101 insertions(+), 102 deletions(-)
+ create mode 100644 drivers/net/wireless/wl1251/Kconfig
+ create mode 100644 drivers/net/wireless/wl1251/Makefile
+ rename drivers/net/wireless/{wl12xx/wl1251_acx.c => wl1251/acx.c} (99%)
+ rename drivers/net/wireless/{wl12xx/wl1251_acx.h => wl1251/acx.h} (99%)
+ rename drivers/net/wireless/{wl12xx/wl1251_boot.c => wl1251/boot.c} (99%)
+ rename drivers/net/wireless/{wl12xx/wl1251_boot.h => wl1251/boot.h} (100%)
+ rename drivers/net/wireless/{wl12xx/wl1251_cmd.c => wl1251/cmd.c} (98%)
+ rename drivers/net/wireless/{wl12xx/wl1251_cmd.h => wl1251/cmd.h} (100%)
+ rename drivers/net/wireless/{wl12xx/wl1251_debugfs.c => wl1251/debugfs.c} (99%)
+ rename drivers/net/wireless/{wl12xx/wl1251_debugfs.h => wl1251/debugfs.h} (100%)
+ rename drivers/net/wireless/{wl12xx/wl1251_event.c => wl1251/event.c} (97%)
+ rename drivers/net/wireless/{wl12xx/wl1251_event.h => wl1251/event.h} (100%)
+ rename drivers/net/wireless/{wl12xx/wl1251_init.c => wl1251/init.c} (98%)
+ rename drivers/net/wireless/{wl12xx/wl1251_init.h => wl1251/init.h} (100%)
+ rename drivers/net/wireless/{wl12xx/wl1251_io.c => wl1251/io.c} (99%)
+ rename drivers/net/wireless/{wl12xx/wl1251_io.h => wl1251/io.h} (100%)
+ rename drivers/net/wireless/{wl12xx/wl1251_main.c => wl1251/main.c} (99%)
+ rename drivers/net/wireless/{wl12xx/wl1251_ps.c => wl1251/ps.c} (97%)
+ rename drivers/net/wireless/{wl12xx/wl1251_ps.h => wl1251/ps.h} (97%)
+ rename drivers/net/wireless/{wl12xx/wl1251_reg.h => wl1251/reg.h} (100%)
+ rename drivers/net/wireless/{wl12xx/wl1251_rx.c => wl1251/rx.c} (97%)
+ rename drivers/net/wireless/{wl12xx/wl1251_rx.h => wl1251/rx.h} (100%)
+ rename drivers/net/wireless/{wl12xx/wl1251_sdio.c => wl1251/sdio.c} (100%)
+ rename drivers/net/wireless/{wl12xx/wl1251_spi.c => wl1251/spi.c} (99%)
+ rename drivers/net/wireless/{wl12xx/wl1251_spi.h => wl1251/spi.h} (96%)
+ rename drivers/net/wireless/{wl12xx/wl1251_tx.c => wl1251/tx.c} (99%)
+ rename drivers/net/wireless/{wl12xx/wl1251_tx.h => wl1251/tx.h} (99%)
+ rename drivers/net/wireless/{wl12xx => wl1251}/wl1251.h (100%)
+
+diff --git a/drivers/net/wireless/Kconfig b/drivers/net/wireless/Kconfig
+index 174e344..4de4410 100644
+--- a/drivers/net/wireless/Kconfig
++++ b/drivers/net/wireless/Kconfig
+@@ -279,6 +279,7 @@ source "drivers/net/wireless/libertas/Kconfig"
+ source "drivers/net/wireless/orinoco/Kconfig"
+ source "drivers/net/wireless/p54/Kconfig"
+ source "drivers/net/wireless/rt2x00/Kconfig"
++source "drivers/net/wireless/wl1251/Kconfig"
+ source "drivers/net/wireless/wl12xx/Kconfig"
+ source "drivers/net/wireless/zd1211rw/Kconfig"
  
- #define pcmcia_enable_device(link)	pcmcia_request_configuration(link, &link->conf)
+diff --git a/drivers/net/wireless/Makefile b/drivers/net/wireless/Makefile
+index a13a602..06f8ca2 100644
+--- a/drivers/net/wireless/Makefile
++++ b/drivers/net/wireless/Makefile
+@@ -49,6 +49,7 @@ obj-$(CONFIG_ATH_COMMON)	+= ath/
  
-+#include <net/genetlink.h>
-+
-+struct compat_genl_info {
-+	struct genl_info *info;
-+
-+	u32 snd_seq;
-+	u32 snd_pid;
-+	struct genlmsghdr *genlhdr;
-+	struct nlattr **attrs;
-+	void *user_ptr[2];
-+};
-+#define genl_info compat_genl_info
-+
-+struct compat_genl_ops {
-+	struct genl_ops ops;
-+
-+	u8 cmd;
-+	u8 internal_flags;
-+	unsigned int flags;
-+	const struct nla_policy *policy;
-+
-+	int (*doit)(struct sk_buff *skb, struct genl_info *info);
-+	int (*dumpit)(struct sk_buff *skb, struct netlink_callback *cb);
-+	int (*done)(struct netlink_callback *cb);
-+};
-+#define genl_ops compat_genl_ops
-+
-+struct compat_genl_family {
-+	struct genl_family family;
-+
-+	struct list_head list;
-+
-+	unsigned int id, hdrsize, version, maxattr;
-+	const char *name;
-+	bool netnsok;
-+
-+	struct nlattr **attrbuf;
-+
-+	int (*pre_doit)(struct genl_ops *ops, struct sk_buff *skb,
-+			struct genl_info *info);
-+
-+	void (*post_doit)(struct genl_ops *ops, struct sk_buff *skb,
-+			  struct genl_info *info);
-+};
-+
-+#define genl_family compat_genl_family
-+
-+#define genl_register_family_with_ops compat_genl_register_family_with_ops
-+
-+int genl_register_family_with_ops(struct genl_family *family,
-+				  struct genl_ops *ops, size_t n_ops);
-+
-+#define genl_unregister_family compat_genl_unregister_family
-+
-+int genl_unregister_family(struct genl_family *family);
-+
-+#if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,32))
-+#define genl_info_net(_info) genl_info_net((_info)->info)
-+#endif
-+
-+#define genlmsg_reply(_msg, _info) genlmsg_reply(_msg, (_info)->info)
-+#define genlmsg_put(_skb, _pid, _seq, _fam, _flags, _cmd) genlmsg_put(_skb, _pid, _seq, &(_fam)->family, _flags, _cmd)
-+#define genl_register_mc_group(_fam, _grp) genl_register_mc_group(&(_fam)->family, _grp)
-+#define genl_unregister_mc_group(_fam, _grp) genl_unregister_mc_group(&(_fam)->family, _grp)
-+
- #endif /* (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,37)) */
+ obj-$(CONFIG_MAC80211_HWSIM)	+= mac80211_hwsim.o
  
- #endif /* LINUX_26_37_COMPAT_H */
---- a/compat/compat-2.6.37.c
-+++ b/compat/compat-2.6.37.c
-@@ -42,4 +42,116 @@ EXPORT_SYMBOL_GPL(net_ns_type_operations
++obj-$(CONFIG_WL1251)	+= wl1251/
+ obj-$(CONFIG_WL12XX)	+= wl12xx/
+ obj-$(CONFIG_WL12XX_PLATFORM_DATA)	+= wl12xx/
  
- #endif /* LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,35)*/ 
+diff --git a/drivers/net/wireless/wl1251/Kconfig b/drivers/net/wireless/wl1251/Kconfig
+new file mode 100644
+index 0000000..1fb6584
+--- /dev/null
++++ b/drivers/net/wireless/wl1251/Kconfig
+@@ -0,0 +1,33 @@
++menuconfig WL1251
++	tristate "TI wl1251 driver support"
++	depends on MAC80211 && EXPERIMENTAL && GENERIC_HARDIRQS
++	select FW_LOADER
++	select CRC7
++	---help---
++	  This will enable TI wl1251 driver support. The drivers make
++	  use of the mac80211 stack.
++
++	  If you choose to build a module, it'll be called wl1251. Say
++	  N if unsure.
++
++config WL1251_SPI
++	tristate "TI wl1251 SPI support"
++	depends on WL1251 && SPI_MASTER
++	---help---
++	  This module adds support for the SPI interface of adapters using
++	  TI wl1251 chipset.  Select this if your platform is using
++	  the SPI bus.
++
++	  If you choose to build a module, it'll be called wl1251_spi.
++	  Say N if unsure.
++
++config WL1251_SDIO
++	tristate "TI wl1251 SDIO support"
++	depends on WL1251 && MMC
++	---help---
++	  This module adds support for the SDIO interface of adapters using
++	  TI wl1251 chipset.  Select this if your platform is using
++	  the SDIO bus.
++
++	  If you choose to build a module, it'll be called
++	  wl1251_sdio. Say N if unsure.
+diff --git a/drivers/net/wireless/wl1251/Makefile b/drivers/net/wireless/wl1251/Makefile
+new file mode 100644
+index 0000000..25e9b36
+--- /dev/null
++++ b/drivers/net/wireless/wl1251/Makefile
+@@ -0,0 +1,7 @@
++wl1251-objs		= main.o event.o tx.o rx.o ps.o cmd.o \
++			  acx.o boot.o init.o debugfs.o io.o
++
++obj-$(CONFIG_WL1251)	+= wl1251.o
++obj-$(CONFIG_WL1251_SPI)	+= spi.o
++obj-$(CONFIG_WL1251_SDIO)	+= sdio.o
++
+diff --git a/drivers/net/wireless/wl12xx/wl1251_acx.c b/drivers/net/wireless/wl1251/acx.c
+similarity index 99%
+rename from drivers/net/wireless/wl12xx/wl1251_acx.c
+rename to drivers/net/wireless/wl1251/acx.c
+index 2f8a2ba..64a0214 100644
+--- a/drivers/net/wireless/wl12xx/wl1251_acx.c
++++ b/drivers/net/wireless/wl1251/acx.c
+@@ -1,13 +1,13 @@
+-#include "wl1251_acx.h"
++#include "acx.h"
  
-+#undef genl_info
-+#undef genl_unregister_family
-+
-+static LIST_HEAD(compat_nl_fam);
-+
-+static struct genl_ops *genl_get_cmd(u8 cmd, struct genl_family *family)
-+{
-+	struct genl_ops *ops;
-+
-+	list_for_each_entry(ops, &family->family.ops_list, ops.ops_list)
-+		if (ops->cmd == cmd)
-+			return ops;
-+
-+	return NULL;
-+}
-+
-+
-+static int nl_doit_wrapper(struct sk_buff *skb, struct genl_info *info)
-+{
-+	struct compat_genl_info compat_info;
-+	struct genl_family *family;
-+	struct genl_ops *ops;
-+	int err;
-+
-+	list_for_each_entry(family, &compat_nl_fam, list) {
-+		if (family->id == info->nlhdr->nlmsg_type)
-+			goto found;
-+	}
-+	return -ENOENT;
-+
-+found:
-+	ops = genl_get_cmd(info->genlhdr->cmd, family);
-+	if (!ops)
-+		return -ENOENT;
-+
-+	memset(&compat_info.user_ptr, 0, sizeof(compat_info.user_ptr));
-+	compat_info.info = info;
-+#define __copy(_field) compat_info._field = info->_field
-+	__copy(snd_seq);
-+	__copy(snd_pid);
-+	__copy(genlhdr);
-+	__copy(attrs);
-+#undef __copy
-+	if (family->pre_doit) {
-+		err = family->pre_doit(ops, skb, &compat_info);
-+		if (err)
-+			return err;
-+	}
-+
-+	err = ops->doit(skb, &compat_info);
-+
-+	if (family->post_doit)
-+		family->post_doit(ops, skb, &compat_info);
-+
-+	return err;
-+}
-+
-+int compat_genl_register_family_with_ops(struct genl_family *family,
-+					 struct genl_ops *ops, size_t n_ops)
-+{
-+	int i, ret;
-+
-+#define __copy(_field) family->family._field = family->_field
-+	__copy(id);
-+	__copy(hdrsize);
-+	__copy(version);
-+	__copy(maxattr);
-+	strncpy(family->family.name, family->name, sizeof(family->family.name));
-+#if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,32))
-+	__copy(netnsok);
-+#endif
-+#undef __copy
-+
-+	ret = genl_register_family(&family->family);
-+	if (ret < 0)
-+		return ret;
-+
-+	family->attrbuf = family->family.attrbuf;
-+	family->id = family->family.id;
-+
-+	for (i = 0; i < n_ops; i++) {
-+#define __copy(_field) ops[i].ops._field = ops[i]._field
-+		__copy(cmd);
-+		__copy(flags);
-+		__copy(policy);
-+		__copy(dumpit);
-+		__copy(done);
-+#undef __copy
-+		ops[i].ops.doit = nl_doit_wrapper;
-+		ret = genl_register_ops(&family->family, &ops[i].ops);
-+		if (ret < 0)
-+			goto error_ops;
-+	}
-+	list_add(&family->list, &compat_nl_fam);
-+
-+	return ret;
-+
-+error_ops:
-+	compat_genl_unregister_family(family);
-+	return ret;
-+}
-+EXPORT_SYMBOL(compat_genl_register_family_with_ops);
-+
-+int compat_genl_unregister_family(struct genl_family *family)
-+{
-+	int err;
-+	err = genl_unregister_family(&family->family);
-+	list_del(&family->list);
-+	return err;
-+}
-+EXPORT_SYMBOL(compat_genl_unregister_family);
-+
- #endif /* LINUX_VERSION_CODE < KERNEL_VERSION(2,6,37) */
---- a/compat/compat-2.6.31.c
-+++ /dev/null
-@@ -1,64 +0,0 @@
--/*
-- * Copyright 2007	Luis R. Rodriguez <mcgrof@winlab.rutgers.edu>
-- *
-- * This program is free software; you can redistribute it and/or modify
-- * it under the terms of the GNU General Public License version 2 as
-- * published by the Free Software Foundation.
-- *
-- * Compatibility file for Linux wireless for kernels 2.6.31.
-- */
--
--#include <linux/compat.h>
--
--#if (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,31))
--
--#include <linux/netdevice.h>
--
--/**
-- * genl_register_family_with_ops - register a generic netlink family
-- * @family: generic netlink family
-- * @ops: operations to be registered
-- * @n_ops: number of elements to register
-- *
-- * Registers the specified family and operations from the specified table.
-- * Only one family may be registered with the same family name or identifier.
-- *
-- * The family id may equal GENL_ID_GENERATE causing an unique id to
-- * be automatically generated and assigned.
-- *
-- * Either a doit or dumpit callback must be specified for every registered
-- * operation or the function will fail. Only one operation structure per
-- * command identifier may be registered.
-- *
-- * See include/net/genetlink.h for more documenation on the operations
-- * structure.
-- *
-- * This is equivalent to calling genl_register_family() followed by
-- * genl_register_ops() for every operation entry in the table taking
-- * care to unregister the family on error path.
-- *
-- * Return 0 on success or a negative error code.
-- */
--int genl_register_family_with_ops(struct genl_family *family,
--	struct genl_ops *ops, size_t n_ops)
--{
--	int err, i;
--
--	err = genl_register_family(family);
--	if (err)
--		return err;
--
--	for (i = 0; i < n_ops; ++i, ++ops) {
--		err = genl_register_ops(family, ops);
--		if (err)
--			goto err_out;
--	}
--	return 0;
--err_out:
--	genl_unregister_family(family);
--	return err;
--}
--EXPORT_SYMBOL(genl_register_family_with_ops);
--
--#endif /* (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,31)) */
--
---- a/include/linux/compat-2.6.31.h
-+++ b/include/linux/compat-2.6.31.h
-@@ -114,10 +114,6 @@ static inline struct rtable *skb_rtable(
- 	return (struct rtable *)skb_dst(skb);
- }
+ #include <linux/module.h>
+ #include <linux/slab.h>
+ #include <linux/crc7.h>
  
--extern int genl_register_family_with_ops(struct genl_family *family,
--	struct genl_ops *ops, size_t n_ops);
--
--
- /* Backport threaded IRQ support */
+ #include "wl1251.h"
+-#include "wl1251_reg.h"
+-#include "wl1251_cmd.h"
+-#include "wl1251_ps.h"
++#include "reg.h"
++#include "cmd.h"
++#include "ps.h"
  
- static inline
---- a/compat/Makefile
-+++ b/compat/Makefile
-@@ -23,7 +23,6 @@ compat-$(CONFIG_COMPAT_KERNEL_27) += com
- compat-$(CONFIG_COMPAT_KERNEL_28) += compat-2.6.28.o
- compat-$(CONFIG_COMPAT_KERNEL_29) += compat-2.6.29.o
- compat-$(CONFIG_COMPAT_KERNEL_30) += compat-2.6.30.o
--compat-$(CONFIG_COMPAT_KERNEL_31) += compat-2.6.31.o
- compat-$(CONFIG_COMPAT_KERNEL_32) += compat-2.6.32.o
- compat-$(CONFIG_COMPAT_KERNEL_33) += compat-2.6.33.o
- compat-$(CONFIG_COMPAT_KERNEL_35) += compat-2.6.35.o
+ int wl1251_acx_frame_rates(struct wl1251 *wl, u8 ctrl_rate, u8 ctrl_mod,
+ 			   u8 mgt_rate, u8 mgt_mod)
+diff --git a/drivers/net/wireless/wl12xx/wl1251_acx.h b/drivers/net/wireless/wl1251/acx.h
+similarity index 99%
+rename from drivers/net/wireless/wl12xx/wl1251_acx.h
+rename to drivers/net/wireless/wl1251/acx.h
+index c7cc5c1..e54b21a 100644
+--- a/drivers/net/wireless/wl12xx/wl1251_acx.h
++++ b/drivers/net/wireless/wl1251/acx.h
+@@ -24,7 +24,7 @@
+ #define __WL1251_ACX_H__
+ 
+ #include "wl1251.h"
+-#include "wl1251_cmd.h"
++#include "cmd.h"
+ 
+ /* Target's information element */
+ struct acx_header {
+diff --git a/drivers/net/wireless/wl12xx/wl1251_boot.c b/drivers/net/wireless/wl1251/boot.c
+similarity index 99%
+rename from drivers/net/wireless/wl12xx/wl1251_boot.c
+rename to drivers/net/wireless/wl1251/boot.c
+index 468b47b..61572df 100644
+--- a/drivers/net/wireless/wl12xx/wl1251_boot.c
++++ b/drivers/net/wireless/wl1251/boot.c
+@@ -22,12 +22,12 @@
+ #include <linux/gpio.h>
+ #include <linux/slab.h>
+ 
+-#include "wl1251_reg.h"
+-#include "wl1251_boot.h"
+-#include "wl1251_io.h"
+-#include "wl1251_spi.h"
+-#include "wl1251_event.h"
+-#include "wl1251_acx.h"
++#include "reg.h"
++#include "boot.h"
++#include "io.h"
++#include "spi.h"
++#include "event.h"
++#include "acx.h"
+ 
+ void wl1251_boot_target_enable_interrupts(struct wl1251 *wl)
+ {
+diff --git a/drivers/net/wireless/wl12xx/wl1251_boot.h b/drivers/net/wireless/wl1251/boot.h
+similarity index 100%
+rename from drivers/net/wireless/wl12xx/wl1251_boot.h
+rename to drivers/net/wireless/wl1251/boot.h
+diff --git a/drivers/net/wireless/wl12xx/wl1251_cmd.c b/drivers/net/wireless/wl1251/cmd.c
+similarity index 98%
+rename from drivers/net/wireless/wl12xx/wl1251_cmd.c
+rename to drivers/net/wireless/wl1251/cmd.c
+index 15fb68c..0ade4bd 100644
+--- a/drivers/net/wireless/wl12xx/wl1251_cmd.c
++++ b/drivers/net/wireless/wl1251/cmd.c
+@@ -1,14 +1,14 @@
+-#include "wl1251_cmd.h"
++#include "cmd.h"
+ 
+ #include <linux/module.h>
+ #include <linux/slab.h>
+ #include <linux/crc7.h>
+ 
+ #include "wl1251.h"
+-#include "wl1251_reg.h"
+-#include "wl1251_io.h"
+-#include "wl1251_ps.h"
+-#include "wl1251_acx.h"
++#include "reg.h"
++#include "io.h"
++#include "ps.h"
++#include "acx.h"
+ 
+ /**
+  * send command to firmware
+diff --git a/drivers/net/wireless/wl12xx/wl1251_cmd.h b/drivers/net/wireless/wl1251/cmd.h
+similarity index 100%
+rename from drivers/net/wireless/wl12xx/wl1251_cmd.h
+rename to drivers/net/wireless/wl1251/cmd.h
+diff --git a/drivers/net/wireless/wl12xx/wl1251_debugfs.c b/drivers/net/wireless/wl1251/debugfs.c
+similarity index 99%
+rename from drivers/net/wireless/wl12xx/wl1251_debugfs.c
+rename to drivers/net/wireless/wl1251/debugfs.c
+index 6ffe4cd..6e5caaa 100644
+--- a/drivers/net/wireless/wl12xx/wl1251_debugfs.c
++++ b/drivers/net/wireless/wl1251/debugfs.c
+@@ -19,14 +19,14 @@
+  *
+  */
+ 
+-#include "wl1251_debugfs.h"
++#include "debugfs.h"
+ 
+ #include <linux/skbuff.h>
+ #include <linux/slab.h>
+ 
+ #include "wl1251.h"
+-#include "wl1251_acx.h"
+-#include "wl1251_ps.h"
++#include "acx.h"
++#include "ps.h"
+ 
+ /* ms */
+ #define WL1251_DEBUGFS_STATS_LIFETIME 1000
+diff --git a/drivers/net/wireless/wl12xx/wl1251_debugfs.h b/drivers/net/wireless/wl1251/debugfs.h
+similarity index 100%
+rename from drivers/net/wireless/wl12xx/wl1251_debugfs.h
+rename to drivers/net/wireless/wl1251/debugfs.h
+diff --git a/drivers/net/wireless/wl12xx/wl1251_event.c b/drivers/net/wireless/wl1251/event.c
+similarity index 97%
+rename from drivers/net/wireless/wl12xx/wl1251_event.c
+rename to drivers/net/wireless/wl1251/event.c
+index 5422355..712372e 100644
+--- a/drivers/net/wireless/wl12xx/wl1251_event.c
++++ b/drivers/net/wireless/wl1251/event.c
+@@ -21,10 +21,10 @@
+  */
+ 
+ #include "wl1251.h"
+-#include "wl1251_reg.h"
+-#include "wl1251_io.h"
+-#include "wl1251_event.h"
+-#include "wl1251_ps.h"
++#include "reg.h"
++#include "io.h"
++#include "event.h"
++#include "ps.h"
+ 
+ static int wl1251_event_scan_complete(struct wl1251 *wl,
+ 				      struct event_mailbox *mbox)
+diff --git a/drivers/net/wireless/wl12xx/wl1251_event.h b/drivers/net/wireless/wl1251/event.h
+similarity index 100%
+rename from drivers/net/wireless/wl12xx/wl1251_event.h
+rename to drivers/net/wireless/wl1251/event.h
+diff --git a/drivers/net/wireless/wl12xx/wl1251_init.c b/drivers/net/wireless/wl1251/init.c
+similarity index 98%
+rename from drivers/net/wireless/wl12xx/wl1251_init.c
+rename to drivers/net/wireless/wl1251/init.c
+index c5daec0..89b43d3 100644
+--- a/drivers/net/wireless/wl12xx/wl1251_init.c
++++ b/drivers/net/wireless/wl1251/init.c
+@@ -23,11 +23,11 @@
+ #include <linux/module.h>
+ #include <linux/slab.h>
+ 
+-#include "wl1251_init.h"
++#include "init.h"
+ #include "wl12xx_80211.h"
+-#include "wl1251_acx.h"
+-#include "wl1251_cmd.h"
+-#include "wl1251_reg.h"
++#include "acx.h"
++#include "cmd.h"
++#include "reg.h"
+ 
+ int wl1251_hw_init_hwenc_config(struct wl1251 *wl)
+ {
+diff --git a/drivers/net/wireless/wl12xx/wl1251_init.h b/drivers/net/wireless/wl1251/init.h
+similarity index 100%
+rename from drivers/net/wireless/wl12xx/wl1251_init.h
+rename to drivers/net/wireless/wl1251/init.h
+diff --git a/drivers/net/wireless/wl12xx/wl1251_io.c b/drivers/net/wireless/wl1251/io.c
+similarity index 99%
+rename from drivers/net/wireless/wl12xx/wl1251_io.c
+rename to drivers/net/wireless/wl1251/io.c
+index ad6ca68..cdcadbf 100644
+--- a/drivers/net/wireless/wl12xx/wl1251_io.c
++++ b/drivers/net/wireless/wl1251/io.c
+@@ -20,8 +20,8 @@
+  */
+ 
+ #include "wl1251.h"
+-#include "wl1251_reg.h"
+-#include "wl1251_io.h"
++#include "reg.h"
++#include "io.h"
+ 
+ /* FIXME: this is static data nowadays and the table can be removed */
+ static enum wl12xx_acx_int_reg wl1251_io_reg_table[ACX_REG_TABLE_LEN] = {
+diff --git a/drivers/net/wireless/wl12xx/wl1251_io.h b/drivers/net/wireless/wl1251/io.h
+similarity index 100%
+rename from drivers/net/wireless/wl12xx/wl1251_io.h
+rename to drivers/net/wireless/wl1251/io.h
+diff --git a/drivers/net/wireless/wl12xx/wl1251_main.c b/drivers/net/wireless/wl1251/main.c
+similarity index 99%
+rename from drivers/net/wireless/wl12xx/wl1251_main.c
+rename to drivers/net/wireless/wl1251/main.c
+index faf221c..7a87625 100644
+--- a/drivers/net/wireless/wl12xx/wl1251_main.c
++++ b/drivers/net/wireless/wl1251/main.c
+@@ -31,16 +31,16 @@
+ 
+ #include "wl1251.h"
+ #include "wl12xx_80211.h"
+-#include "wl1251_reg.h"
+-#include "wl1251_io.h"
+-#include "wl1251_cmd.h"
+-#include "wl1251_event.h"
+-#include "wl1251_tx.h"
+-#include "wl1251_rx.h"
+-#include "wl1251_ps.h"
+-#include "wl1251_init.h"
+-#include "wl1251_debugfs.h"
+-#include "wl1251_boot.h"
++#include "reg.h"
++#include "io.h"
++#include "cmd.h"
++#include "event.h"
++#include "tx.h"
++#include "rx.h"
++#include "ps.h"
++#include "init.h"
++#include "debugfs.h"
++#include "boot.h"
+ 
+ void wl1251_enable_interrupts(struct wl1251 *wl)
+ {
+diff --git a/drivers/net/wireless/wl12xx/wl1251_ps.c b/drivers/net/wireless/wl1251/ps.c
+similarity index 97%
+rename from drivers/net/wireless/wl12xx/wl1251_ps.c
+rename to drivers/net/wireless/wl1251/ps.c
+index 0b997bd..5ed47c8 100644
+--- a/drivers/net/wireless/wl12xx/wl1251_ps.c
++++ b/drivers/net/wireless/wl1251/ps.c
+@@ -19,10 +19,10 @@
+  *
+  */
+ 
+-#include "wl1251_reg.h"
+-#include "wl1251_ps.h"
+-#include "wl1251_cmd.h"
+-#include "wl1251_io.h"
++#include "reg.h"
++#include "ps.h"
++#include "cmd.h"
++#include "io.h"
+ 
+ /* in ms */
+ #define WL1251_WAKEUP_TIMEOUT 100
+diff --git a/drivers/net/wireless/wl12xx/wl1251_ps.h b/drivers/net/wireless/wl1251/ps.h
+similarity index 97%
+rename from drivers/net/wireless/wl12xx/wl1251_ps.h
+rename to drivers/net/wireless/wl1251/ps.h
+index e5db81f..55c3dda 100644
+--- a/drivers/net/wireless/wl12xx/wl1251_ps.h
++++ b/drivers/net/wireless/wl1251/ps.h
+@@ -24,7 +24,7 @@
+ #define __WL1251_PS_H__
+ 
+ #include "wl1251.h"
+-#include "wl1251_acx.h"
++#include "acx.h"
+ 
+ int wl1251_ps_set_mode(struct wl1251 *wl, enum wl1251_cmd_ps_mode mode);
+ void wl1251_ps_elp_sleep(struct wl1251 *wl);
+diff --git a/drivers/net/wireless/wl12xx/wl1251_reg.h b/drivers/net/wireless/wl1251/reg.h
+similarity index 100%
+rename from drivers/net/wireless/wl12xx/wl1251_reg.h
+rename to drivers/net/wireless/wl1251/reg.h
+diff --git a/drivers/net/wireless/wl12xx/wl1251_rx.c b/drivers/net/wireless/wl1251/rx.c
+similarity index 97%
+rename from drivers/net/wireless/wl12xx/wl1251_rx.c
+rename to drivers/net/wireless/wl1251/rx.c
+index 2576459..efa5360 100644
+--- a/drivers/net/wireless/wl12xx/wl1251_rx.c
++++ b/drivers/net/wireless/wl1251/rx.c
+@@ -25,11 +25,11 @@
+ #include <net/mac80211.h>
+ 
+ #include "wl1251.h"
+-#include "wl1251_reg.h"
+-#include "wl1251_io.h"
+-#include "wl1251_rx.h"
+-#include "wl1251_cmd.h"
+-#include "wl1251_acx.h"
++#include "reg.h"
++#include "io.h"
++#include "rx.h"
++#include "cmd.h"
++#include "acx.h"
+ 
+ static void wl1251_rx_header(struct wl1251 *wl,
+ 			     struct wl1251_rx_descriptor *desc)
+diff --git a/drivers/net/wireless/wl12xx/wl1251_rx.h b/drivers/net/wireless/wl1251/rx.h
+similarity index 100%
+rename from drivers/net/wireless/wl12xx/wl1251_rx.h
+rename to drivers/net/wireless/wl1251/rx.h
+diff --git a/drivers/net/wireless/wl12xx/wl1251_sdio.c b/drivers/net/wireless/wl1251/sdio.c
+similarity index 100%
+rename from drivers/net/wireless/wl12xx/wl1251_sdio.c
+rename to drivers/net/wireless/wl1251/sdio.c
+diff --git a/drivers/net/wireless/wl12xx/wl1251_spi.c b/drivers/net/wireless/wl1251/spi.c
+similarity index 99%
+rename from drivers/net/wireless/wl12xx/wl1251_spi.c
+rename to drivers/net/wireless/wl1251/spi.c
+index 320de79..88fa8e6 100644
+--- a/drivers/net/wireless/wl12xx/wl1251_spi.c
++++ b/drivers/net/wireless/wl1251/spi.c
+@@ -27,8 +27,8 @@
+ #include <linux/wl12xx.h>
+ 
+ #include "wl1251.h"
+-#include "wl1251_reg.h"
+-#include "wl1251_spi.h"
++#include "reg.h"
++#include "spi.h"
+ 
+ static irqreturn_t wl1251_irq(int irq, void *cookie)
+ {
+diff --git a/drivers/net/wireless/wl12xx/wl1251_spi.h b/drivers/net/wireless/wl1251/spi.h
+similarity index 96%
+rename from drivers/net/wireless/wl12xx/wl1251_spi.h
+rename to drivers/net/wireless/wl1251/spi.h
+index 7dcf3cf..16d5069 100644
+--- a/drivers/net/wireless/wl12xx/wl1251_spi.h
++++ b/drivers/net/wireless/wl1251/spi.h
+@@ -23,9 +23,9 @@
+ #ifndef __WL1251_SPI_H__
+ #define __WL1251_SPI_H__
+ 
+-#include "wl1251_cmd.h"
+-#include "wl1251_acx.h"
+-#include "wl1251_reg.h"
++#include "cmd.h"
++#include "acx.h"
++#include "reg.h"
+ 
+ #define WSPI_CMD_READ                 0x40000000
+ #define WSPI_CMD_WRITE                0x00000000
+diff --git a/drivers/net/wireless/wl12xx/wl1251_tx.c b/drivers/net/wireless/wl1251/tx.c
+similarity index 99%
+rename from drivers/net/wireless/wl12xx/wl1251_tx.c
+rename to drivers/net/wireless/wl1251/tx.c
+index 388492a..554b4f9 100644
+--- a/drivers/net/wireless/wl12xx/wl1251_tx.c
++++ b/drivers/net/wireless/wl1251/tx.c
+@@ -24,10 +24,10 @@
+ #include <linux/module.h>
+ 
+ #include "wl1251.h"
+-#include "wl1251_reg.h"
+-#include "wl1251_tx.h"
+-#include "wl1251_ps.h"
+-#include "wl1251_io.h"
++#include "reg.h"
++#include "tx.h"
++#include "ps.h"
++#include "io.h"
+ 
+ static bool wl1251_tx_double_buffer_busy(struct wl1251 *wl, u32 data_out_count)
+ {
+diff --git a/drivers/net/wireless/wl12xx/wl1251_tx.h b/drivers/net/wireless/wl1251/tx.h
+similarity index 99%
+rename from drivers/net/wireless/wl12xx/wl1251_tx.h
+rename to drivers/net/wireless/wl1251/tx.h
+index 96011e7..81338d3 100644
+--- a/drivers/net/wireless/wl12xx/wl1251_tx.h
++++ b/drivers/net/wireless/wl1251/tx.h
+@@ -24,7 +24,7 @@
+ #define __WL1251_TX_H__
+ 
+ #include <linux/bitops.h>
+-#include "wl1251_acx.h"
++#include "acx.h"
+ 
+ /*
+  *
+diff --git a/drivers/net/wireless/wl12xx/wl1251.h b/drivers/net/wireless/wl1251/wl1251.h
+similarity index 100%
+rename from drivers/net/wireless/wl12xx/wl1251.h
+rename to drivers/net/wireless/wl1251/wl1251.h
+diff --git a/drivers/net/wireless/wl12xx/Kconfig b/drivers/net/wireless/wl12xx/Kconfig
+index 4a8bb25..b447559 100644
+--- a/drivers/net/wireless/wl12xx/Kconfig
++++ b/drivers/net/wireless/wl12xx/Kconfig
+@@ -5,40 +5,6 @@ menuconfig WL12XX
+ 	  This will enable TI wl12xx driver support. The drivers make
+ 	  use of the mac80211 stack.
+ 
+-config WL1251
+-	tristate "TI wl1251 support"
+-	depends on WL12XX && GENERIC_HARDIRQS
+-	select FW_LOADER
+-	select CRC7
+-	---help---
+-	  This module adds support for wireless adapters based on
+-	  TI wl1251 chipset.
+-
+-	  If you choose to build a module, it'll be called wl1251. Say
+-	  N if unsure.
+-
+-config WL1251_SPI
+-	tristate "TI wl1251 SPI support"
+-	depends on WL1251 && SPI_MASTER
+-	---help---
+-	  This module adds support for the SPI interface of adapters using
+-	  TI wl1251 chipset.  Select this if your platform is using
+-	  the SPI bus.
+-
+-	  If you choose to build a module, it'll be called wl1251_spi.
+-	  Say N if unsure.
+-
+-config WL1251_SDIO
+-	tristate "TI wl1251 SDIO support"
+-	depends on WL1251 && MMC
+-	---help---
+-	  This module adds support for the SDIO interface of adapters using
+-	  TI wl1251 chipset.  Select this if your platform is using
+-	  the SDIO bus.
+-
+-	  If you choose to build a module, it'll be called
+-	  wl1251_sdio. Say N if unsure.
+-
+ config WL1271
+ 	tristate "TI wl1271 support"
+ 	depends on WL12XX && GENERIC_HARDIRQS
+diff --git a/drivers/net/wireless/wl12xx/Makefile b/drivers/net/wireless/wl12xx/Makefile
+index 0d334d6..3a80744 100644
+--- a/drivers/net/wireless/wl12xx/Makefile
++++ b/drivers/net/wireless/wl12xx/Makefile
+@@ -1,12 +1,3 @@
+-wl1251-objs		= wl1251_main.o wl1251_event.o \
+-			  wl1251_tx.o wl1251_rx.o wl1251_ps.o wl1251_cmd.o \
+-			  wl1251_acx.o wl1251_boot.o wl1251_init.o \
+-			  wl1251_debugfs.o wl1251_io.o
+-
+-obj-$(CONFIG_WL1251)	+= wl1251.o
+-obj-$(CONFIG_WL1251_SPI)	+= wl1251_spi.o
+-obj-$(CONFIG_WL1251_SDIO)	+= wl1251_sdio.o
+-
+ wl1271-objs		= wl1271_main.o  wl1271_cmd.o wl1271_io.o \
+ 			  wl1271_event.o wl1271_tx.o  wl1271_rx.o   \
+ 			  wl1271_ps.o    wl1271_acx.o wl1271_boot.o \
+-- 
+1.7.0.4
+
