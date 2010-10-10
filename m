@@ -1,99 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([192.100.105.134]:50181 "EHLO
-	mgw-mx09.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752919Ab0JHOZA (ORCPT
+Received: from mail-ew0-f46.google.com ([209.85.215.46]:59054 "EHLO
+	mail-ew0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750724Ab0JJUFY (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 8 Oct 2010 10:25:00 -0400
-Subject: wireless-testing: Branch to be pulled into wireless-testing
-From: Luciano Coelho <luciano.coelho@nokia.com>
-To: John Linville <linville@tuxdriver.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Ohad Ben-Cohen <ohad@wizery.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Fri, 08 Oct 2010 17:24:40 +0300
-Message-ID: <1286547880.21349.191.camel@chilepepper>
-Mime-Version: 1.0
+	Sun, 10 Oct 2010 16:05:24 -0400
+Received: by ewy20 with SMTP id 20so332817ewy.19
+        for <linux-wireless@vger.kernel.org>; Sun, 10 Oct 2010 13:05:22 -0700 (PDT)
+Date: Sun, 10 Oct 2010 22:05:27 +0200 (CEST)
+From: "=?ISO-8859-15?Q?Bj=F6rn_Smedman?=" <bjorn.smedman@venatech.se>
+To: linville@tuxdriver.com, johannes@sipsolutions.net,
+	lrodriguez@atheros.com
+cc: linux-wireless@vger.kernel.org
+Subject: [PATCH 0/3] Fix rate control for A-MPDU
+Message-ID: <alpine.DEB.2.00.1010102203230.31264@bigbill>
+MIME-Version: 1.0
+Content-Type: MULTIPART/MIXED; BOUNDARY="8323329-1516192762-1286741022=:31264"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi John,
+  This message is in MIME format.  The first part should be readable text,
+  while the remaining parts are likely unreadable without MIME-aware tools.
 
-As we agreed, I have created a branch with the MMC patches that are
-needed in order to compile wl1271 properly.  They were not directly
-cherry-picked from mmc-next, but they are equivalent.  There is only one
-extra patch "wl12xx: rebase sdio macro to the version in the wl12xx
-tree", which Ohad created in order to fix a dependency on other changes
-that are in mmc-next.
+--8323329-1516192762-1286741022=:31264
+Content-Type: TEXT/PLAIN; CHARSET=ISO-8859-15
+Content-Transfer-Encoding: 8BIT
+Content-ID: <alpine.DEB.2.00.1010102205121.31264@bigbill>
 
-You can pull this branch into wireless-testing in order to avoid a build
-break that will be introduced by the 2 wl1271 patches I send for pulling
-earlier today.
+Hi all,
 
-The following changes since commit 4b8f8abb4fcb14b2a7b33a445e651dc24a2fc48c:
-  John W. Linville (1):
-        Merge branch 'master' of git://git.kernel.org/.../linville/wireless-next-2.6
+Rate control for A-MPDU is somewhat complicated, mainly because each 
+subframe has its own tx status but rate control is only relevant on a per 
+aggregate level. This patch series fixes some more obscure bugs in the 
+rate control feedback for A-MPDU frames, mainly for the case when rate 
+control feedback is carried on a frame that has failed transmission.
 
-are available in the git repository at:
+There are two underlying assumptions: (1) the ampdu_len and ampdu_ack_len 
+fields of the tx status structure must be set correctly by the driver if 
+the IEEE80211_TX_STAT_AMPDU flag is set, and (2) the value of these fields 
+must not be relied upon by rate control if the flag is not set.
 
-  git://git.kernel.org/pub/scm/linux/kernel/git/luca/wl12xx.git wireless-testing
+I've only been able to test these patches with the ath9k driver using 
+the minstrel ht rate control algorithm. I have also looked at the other 
+driver references to ampdu_len and they seem safe under the above 
+assumptions, except ath9k's built in rate control, for which I've 
+attempted a fix.
 
-Ohad Ben-Cohen (11):
-      PM / Runtime: Lenient generic runtime pm callbacks
-      mmc: sdio: fully reconfigure oldcard on resume
-      mmc: propagate power save/restore ops return value
-      sdio: add power_restore support
-      mmc: add runtime PM handlers
-      sdio: use the generic runtime PM handlers
-      sdio: enable runtime PM for SDIO cards
-      sdio: enable runtime PM for SDIO functions
-      sdio: ensure mmc_sdio_detect is powered
-      sdio: support suspend/resume while runtime suspendedThe following changes since commit 4b8f8abb4fcb14b2a7b33a445e651dc24a2fc48c:
-  John W. Linville (1):
-        Merge branch 'master' of git://git.kernel.org/.../linville/wireless-next-2.6
+Björn Smedman (3):
+ mac80211: minstrel_ht A-MPDU fix
+ ath9k: A-MPDU rate control info fix
+ ath9k: built-in rate control A-MPDU fix
 
-are available in the git repository at:
+ drivers/net/wireless/ath/ath9k/rc.c   |    6 ++++++
+ drivers/net/wireless/ath/ath9k/xmit.c |   19 +++++++++++++------
+ net/mac80211/rc80211_minstrel_ht.c    |    7 ++++---
+ 3 files changed, 23 insertions(+), 9 deletions(-)
 
-  git://git.kernel.org/pub/scm/linux/kernel/git/luca/wl12xx.git wireless-testing
-
-Ohad Ben-Cohen (11):
-      PM / Runtime: Lenient generic runtime pm callbacks
-      mmc: sdio: fully reconfigure oldcard on resume
-      mmc: propagate power save/restore ops return value
-      sdio: add power_restore support
-      mmc: add runtime PM handlers
-      sdio: use the generic runtime PM handlers
-      sdio: enable runtime PM for SDIO cards
-      sdio: enable runtime PM for SDIO functions
-      sdio: ensure mmc_sdio_detect is powered
-      sdio: support suspend/resume while runtime suspended
-      wl12xx: rebase sdio macro to the version in the wl12xx tree
-
- drivers/base/power/generic_ops.c |    4 +-
- drivers/mmc/core/bus.c           |   37 ++++++++++++++++
- drivers/mmc/core/core.c          |   20 ++++++---
- drivers/mmc/core/core.h          |    4 +-
- drivers/mmc/core/mmc.c           |    8 +++-
- drivers/mmc/core/sd.c            |    8 +++-
- drivers/mmc/core/sdio.c          |   54 ++++++++++++++++++++----
- drivers/mmc/core/sdio_bus.c      |   85 +++++++++++++++++++++++++++++++++++++-
- include/linux/mmc/host.h         |    4 +-
- 9 files changed, 197 insertions(+), 27 deletions(-)
-
-      wl12xx: rebase sdio macro to the version in the wl12xx tree
-
- drivers/base/power/generic_ops.c |    4 +-
- drivers/mmc/core/bus.c           |   37 ++++++++++++++++
- drivers/mmc/core/core.c          |   20 ++++++---
- drivers/mmc/core/core.h          |    4 +-
- drivers/mmc/core/mmc.c           |    8 +++-
- drivers/mmc/core/sd.c            |    8 +++-
- drivers/mmc/core/sdio.c          |   54 ++++++++++++++++++++----
- drivers/mmc/core/sdio_bus.c      |   85 +++++++++++++++++++++++++++++++++++++-
- include/linux/mmc/host.h         |    4 +-
- 9 files changed, 197 insertions(+), 27 deletions(-)
-
-
--- 
-Cheers,
-Luca.
-
+/Björn
+--8323329-1516192762-1286741022=:31264--
