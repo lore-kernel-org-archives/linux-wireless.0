@@ -1,68 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga03.intel.com ([143.182.124.21]:22502 "EHLO mga03.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1759083Ab0JFRth (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 6 Oct 2010 13:49:37 -0400
-Subject: Re: [PATCH wireless-2.6 or stable] iwlwifi: return error when fail
- to start scanning
-From: "Guy, Wey-Yi" <wey-yi.w.guy@intel.com>
-To: Florian Mickler <florian@mickler.org>,
-	Stanislaw Gruszka <sgruszka@redhat.com>
-Cc: "linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"stable@kernel.org" <stable@kernel.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"Chatre, Reinette" <reinette.chatre@intel.com>,
-	"ilw@linux.intel.com" <ilw@linux.intel.com>,
-	"Berg, Johannes" <johannes.berg@intel.com>,
-	"Cahill, Ben M" <ben.m.cahill@intel.com>,
-	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-In-Reply-To: <20101006194537.35e8b00e@schatten.dmk.lab>
-References: <20101005085717.GA18012@redhat.com>
-	 <1286317292-10679-1-git-send-email-florian@mickler.org>
-	 <20101006090228.GA2523@redhat.com>	<20101006160434.GB24581@redhat.com>
-	 <20101006194537.35e8b00e@schatten.dmk.lab>
-Content-Type: text/plain
-Date: Wed, 06 Oct 2010 10:48:49 -0700
-Message-Id: <1286387329.12594.21.camel@wwguy-ubuntu>
+Received: from 80-190-117-144.ip-home.de ([80.190.117.144]:45411 "EHLO
+	bu3sch.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755444Ab0JJRLR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 10 Oct 2010 13:11:17 -0400
+Subject: Re: Release of Maranello firmware source code for Broadcom cards
+From: Michael =?ISO-8859-1?Q?B=FCsch?= <mb@bu3sch.de>
+To: francesco.gringoli@ing.unibs.it
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	b43-dev@lists.infradead.org, Bo Han <bohan@cs.umd.edu>
+In-Reply-To: <335F2ADF-6921-4B5B-86C9-8DD348546B83@ing.unibs.it> (sfid-20101010_184934_490334_27D68101)
+References: <2518B44B-D014-4ABA-AE31-BD75691488AB@ing.unibs.it>
+	 <1DBB75B1-733F-4DFC-A541-2C2C986586A6@ing.unibs.it>
+	 (sfid-20101010_123116_260431_6CAA2A46) <1286714096.16309.10.camel@maggie>
+	 <335F2ADF-6921-4B5B-86C9-8DD348546B83@ing.unibs.it>
+	 (sfid-20101010_184934_490334_27D68101)
+Content-Type: text/plain; charset="UTF-8"
+Date: Sun, 10 Oct 2010 19:11:12 +0200
+Message-ID: <1286730672.16309.12.camel@maggie>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2010-10-06 at 10:45 -0700, Florian Mickler wrote:
-> Hi Stanislaw!
-> 
-> On Wed, 6 Oct 2010 18:04:35 +0200
-> Stanislaw Gruszka <sgruszka@redhat.com> wrote:
-> 
-> > This is stable friendly backport of wireless-testing commit
-> > 3eecce527c7434dfd16517ce08b49632c8a26717 "iwlwifi: unify scan start
-> > checks". Wireless-testing version include also a lot of cleanups.
-> > 
-> > On error case in {iwl3945,iwlagn}_request_scan we queue abort_scan work,
-> > which in a fact do nothing, so we never complete the scan. Thats gives
-> > "WARNING: at net/wireless/core.c:614 wdev_cleanup_work" and stopped
-> > network connection until reload iwlwifi modules. Return of -EIO and
-> > stopping queuing any work is a fix.
-> > 
-> > Note there are still many cases when we can get: 
-> > 
-> > WARNING: at net/wireless/core.c:614 wdev_cleanup_work  
-> > WARNING: at net/mac80211/scan.c:266 ieee80211_scan_completed
-> > WARNING: at net/mac80211/scan.c:269 ieee80211_scan_complete
-> > 
-> > which are not fixed. Unfortunately does not exist single, small fix
-> > for that problems, and we probably will see some more bug reports
-> > with scan warnings. As solution we rewrite iwl-scan.c code to avoid
-> > all possible race conditions. That quite big patch set is queued
-> > for 2.6.37 .
-> > 
-> > Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+On Sun, 2010-10-10 at 18:49 +0200, francesco.gringoli@ing.unibs.it
+wrote:
 
-looks good to me
+> yes, the firmware works in AP mode, it is the basic AP mode implemented
+> by OpenFWWF. And yes, both AP and STA implement partial packet recovery.
+> We tested both directions and in our testbed (and most importantly with
+> the hardware we have... unfortunately not all 4318/06 are equal :-( )
+> it was stable and we never experienced crashes.
 
-Thanks
-Wey
+So it is possible to disable the Maranello feature in that firmware
+(via SHM parameter or possibly also compiletime switch) to run it in
+standard mode?
+I think that would get the firmware base a lot more testing coverage.
 
+-- 
+Greetings Michael.
 
