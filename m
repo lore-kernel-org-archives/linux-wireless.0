@@ -1,33 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga03.intel.com ([143.182.124.21]:26418 "EHLO mga03.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753052Ab0JYOr4 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 25 Oct 2010 10:47:56 -0400
-Subject: Re: [PATCH 3/7] iwlwifi: fix set_tx_power vs scan
-From: "Guy, Wey-Yi" <wey-yi.w.guy@intel.com>
-To: Stanislaw Gruszka <sgruszka@redhat.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <1287759870-5758-3-git-send-email-sgruszka@redhat.com>
-References: <1287759870-5758-1-git-send-email-sgruszka@redhat.com>
-	 <1287759870-5758-3-git-send-email-sgruszka@redhat.com>
-Content-Type: text/plain
-Date: Mon, 25 Oct 2010 07:47:05 -0700
-Message-Id: <1288018025.3435.9.camel@wwguy-ubuntu>
-Mime-Version: 1.0
+Received: from mail-qw0-f46.google.com ([209.85.216.46]:40134 "EHLO
+	mail-qw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751306Ab0JJOrt convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 10 Oct 2010 10:47:49 -0400
+Received: by qwf7 with SMTP id 7so1414320qwf.19
+        for <linux-wireless@vger.kernel.org>; Sun, 10 Oct 2010 07:47:49 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <1DBB75B1-733F-4DFC-A541-2C2C986586A6@ing.unibs.it>
+References: <2518B44B-D014-4ABA-AE31-BD75691488AB@ing.unibs.it>
+	<1DBB75B1-733F-4DFC-A541-2C2C986586A6@ing.unibs.it>
+Date: Sun, 10 Oct 2010 16:47:49 +0200
+Message-ID: <AANLkTika70YCWU8eG5QHO+Bdf5XakEOg_b+UJdgCG4A0@mail.gmail.com>
+Subject: Re: Release of Maranello firmware source code for Broadcom cards
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+To: francesco.gringoli@ing.unibs.it
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	b43-dev@lists.infradead.org, Bo Han <bohan@cs.umd.edu>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2010-10-22 at 08:04 -0700, Stanislaw Gruszka wrote:
-> According to comment in iwl_bg_scan_completed, setting tx power should
-> be deferred during pending scan, but we are not doing this.
-> 
-> This patch change code to really defer setting tx power after scan
-> complete. Additionally refactor iwl_set_tx_power code and call
-> lib->send_tx_power() directly from iwlagn_commit_rxon.
-> 
-> Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
-Acked-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-> ---
+2010/10/10  <francesco.gringoli@ing.unibs.it>:
+> Hello there,
+>
+> we released the source code of the Maranello firmware and all the
+> necessary kernel patches. It was tested on Broadcom 4318/4306 pci
+> cards on PC architecture. Find all the necessary files browsing from
+>
+> http://www.ing.unibs.it/openfwwf
+>
+> or go directly here
+>
+> http://www.cs.umd.edu/projects/maranello
+>
+>
+> Maranello is an enhancement of the 802.11 DCF standard: it implements
+> a Partial Packet Recovery technique to retransmit only the corrupt
+> parts of failed packets. This reduces the airtime and contributes to
+> enhance the throughput. It was written starting from OpenFWWF5.2 by
+> adding a number of new features.
 
+Hey, thanks for info!
 
+Did you just add recovery feature to OpenFWWF 5.2 or did you improve
+basic OpenFWWF as well?
+
+My 4318 with OpenFWWF 5.2 stops transmitting after few MB. Can
+Maranello contain any fix for this? I'll able to test this later next
+week.
+
+-- 
+Rafał
