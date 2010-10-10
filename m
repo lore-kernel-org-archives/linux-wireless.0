@@ -1,91 +1,216 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wy0-f174.google.com ([74.125.82.174]:60310 "EHLO
-	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753434Ab0JKIti (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 11 Oct 2010 04:49:38 -0400
-Received: by wye20 with SMTP id 20so253297wye.19
-        for <linux-wireless@vger.kernel.org>; Mon, 11 Oct 2010 01:49:37 -0700 (PDT)
-From: Ido Yariv <ido@wizery.com>
-To: Luciano Coelho <luciano.coelho@nokia.com>,
-	linux-wireless@vger.kernel.org
-Cc: Ido Yariv <ido@wizery.com>
-Subject: [PATCH 1/4] wl1271: TX aggregation optimization
-Date: Mon, 11 Oct 2010 10:48:53 +0200
-Message-Id: <1286786936-20544-2-git-send-email-ido@wizery.com>
-In-Reply-To: <1286786936-20544-1-git-send-email-ido@wizery.com>
-References: <1286786936-20544-1-git-send-email-ido@wizery.com>
+Received: from comal.ext.ti.com ([198.47.26.152]:40098 "EHLO comal.ext.ti.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754304Ab0JJKK1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 10 Oct 2010 06:10:27 -0400
+Message-ID: <4CB191A3.4080004@ti.com>
+Date: Sun, 10 Oct 2010 12:12:51 +0200
+From: Shahar Levi <shahar_levi@ti.com>
+MIME-Version: 1.0
+To: Luciano Coelho <luciano.coelho@nokia.com>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH v2 01/03] wl1271: 11n Support, Add Definitions
+References: <1286388491-28752-1-git-send-email-shahar_levi@ti.com>	 <1286388491-28752-3-git-send-email-shahar_levi@ti.com> <1286475613.1662.41.camel@powerslave>
+In-Reply-To: <1286475613.1662.41.camel@powerslave>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-In case the aggregation buffer is too small to hold all available packets,
-the buffer is transferred to the FW and no more packets are aggregated.
-Although there may be enough available TX blocks, no additional packets will
-be handled by the current TX work.
+Thanks for the review.
+  all fixed on v3, one commend inline.
+Cheers,
+Shahar
 
-Fix this by flushing the aggregation buffer when it's full, and continue
-transferring packets as long as there are enough available TX blocks.
+Luciano Coelho wrote:
+> On Wed, 2010-10-06 at 20:08 +0200, ext Shahar Levi wrote:
+>> Two acx commands: ht_capabilities & ht_information, 11n sta capabilities macro.
+>>
+>> Signed-off-by: Shahar Levi <shahar_levi@ti.com>
+>> ---
+> 
+> Looks good! Some minor, mostly style-related, comments below.
+> 
+> 
+>> diff --git a/drivers/net/wireless/wl12xx/wl1271.h b/drivers/net/wireless/wl12xx/wl1271.h
+>> index 779b130..777c937 100644
+>> --- a/drivers/net/wireless/wl12xx/wl1271.h
+>> +++ b/drivers/net/wireless/wl12xx/wl1271.h
+>> @@ -427,7 +427,7 @@ struct wl1271 {
+>>  	/* Our association ID */
+>>  	u16 aid;
+>>  
+>> -	/* currently configured rate set */
+>> +	/* currently configured rate set: bits0-15 BG, bits 16-23 MCS */
+> 
+> There a space missing after "bits" and I think you could use something a
+> bit clearer, for example: 
+> 
+> 	/*
+> 	 * currently configured rate set:
+> 	 *	bits  0-15 - 802.11abg rates
+> 	 *	bits 16-23 - 802.11n   MCS index mask
+> 	*/
+> 
+> Maybe also a small comment saying that we support only 1 stream, thus
+> only 8 bits for the MCS rates (0-7)?
+> 
+> 
+>> diff --git a/drivers/net/wireless/wl12xx/wl1271_acx.h b/drivers/net/wireless/wl12xx/wl1271_acx.h
+>> index ebb341d..5cf5a0d 100644
+>> --- a/drivers/net/wireless/wl12xx/wl1271_acx.h
+>> +++ b/drivers/net/wireless/wl12xx/wl1271_acx.h
+>> @@ -964,6 +964,96 @@ struct wl1271_acx_rssi_snr_avg_weights {
+>>  	u8 snr_data;
+>>  };
+>>  
+>> +/* 11n command to the FW */
+>> +/*	Name:	ACX_PEER_HT_CAP
+>> +*	Desc:	Configure HT capabilities - declare the capabilities of the peer
+>> +*		we are connected to.
+>> +* Type:	Configuration
+>> +* Access:	Write Only
+>> +* Length:
+>> +*/
+> 
+> We don't have this style of comment elsewhere, wouldn't it be better to
+> use something more free format?
+> 
+> 
+>> +struct wl1271_acx_ht_capabilities {
+>> +	struct acx_header header;
+>> +
+>> +	/*
+>> +	* bit 0 - Allow HT Operation
+>> +	* bit 1 - Allow Greenfield format in TX
+>> +	* bit 2 - Allow Short GI in TX
+>> +	* bit 3 - Allow L-SIG TXOP Protection in TX
+>> +	* bit 4 - Allow HT Control fields in TX.
+>> +	*	Note, driver will still leave space for HT control in packets
+>> +	*	regardless of the value of this field. FW will be responsible to
+>> +	*	drop the HT field from any frame when this Bit is set to 0.
+> 
+> Please align the Note with the "Allow HT Control..." above to make it
+> clear that the note is about bit 4.
+> 
+> 
+>> +	* 5 - Allow RD initiation in TXOP. FW is allowed to initate RD.
+>> +	*	Exact policy setting for this feature is TBD.
+>> +	*	Note, this bit can only be set to 1 if bit 3 is set to 1.
+> 
+> "bit 5 -" instead of "5 -" and also align the "Exact policy..." and
+> "Note".
+> 
+> 
+>> +	/*
+>> +	* This the maximum a-mpdu length supported by the AP. The FW may not
+> 
+> Upper-case the a-mpdu to A-MPDU for consistency.
+> 
+>> +	* exceed this length when sending A-MPDUs
+>> +	*/
+>> +	u8  ampdu_max_length;
+>> +
+>> +	/*
+>> +	* This is the minimal spacing required when sending A-MPDUs to the AP
+>> +	*/
+>> +	u8 ampdu_min_spacing;
+>> +} __packed;
+>> +
+>> +/*  HT Capabilites Fw Bit Mask Mapping */
+>> +#define	WL1271_ACX_FW_CAP_BIT_MASK_HT_OPERATION			BIT(0)
+>> +#define	WL1271_ACX_FW_CAP_BIT_MASK_GREENFIELD_FRAME_FORMAT	BIT(1)
+>> +#define	WL1271_ACX_FW_CAP_BIT_MASK_SHORT_GI_FOR_20MHZ_PACKETS	BIT(2)
+>> +#define	WL1271_ACX_FW_CAP_BIT_MASK_LSIG_TXOP_PROTECTION		BIT(3)
+>> +#define	WL1271_ACX_FW_CAP_BIT_MASK_HT_CONTROL_FIELDS		BIT(4)
+>> +#define	WL1271_ACX_FW_CAP_BIT_MASK_RD_INITIATION		BIT(5)
+> 
+> No need for the TABs after the #defines.
+> 
+> 
+>> +/* Name:	ACX_HT_BSS_OPERATION
+>> + * Desc:	Configure HT capabilities - AP rules for behavior in the BSS.
+>> + * Type:	Configuration
+>> + * Access:	Write Only
+>> + * Length:
+>> + */
+> 
+> Same as my previous comment.  No directly copied comments from TI's
+> reference driver, please.
+> 
+> 
+>> +struct wl1271_acx_ht_information {
+>> +	struct acx_header header;
+>> +
+>> +	u8 rifs_mode;	/* Values: 0 - RIFS not allowed, 1 - RIFS allowed */
+> 
+> Put the comments before the value, as everywhere else.
+> 
+> 
+>> +	u8 ht_protection;	/* Values: 0 - 3 like in spec */
+> 
+> Same here.
+> 
+> 
+>> +	/*
+>> +	* Values: 0 - GF protection not required, 1 - GF protection required
+>> +	*/
+>> +	u8 gf_protection;
+> Move to wl1271_main.c, not configurable setting (HW depended).
 
-Signed-off-by: Ido Yariv <ido@wizery.com>
----
- drivers/net/wireless/wl12xx/wl1271_tx.c |   22 ++++++++++++++++++----
- 1 files changed, 18 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/net/wireless/wl12xx/wl1271_tx.c b/drivers/net/wireless/wl12xx/wl1271_tx.c
-index e3dc13c..63bc52c 100644
---- a/drivers/net/wireless/wl12xx/wl1271_tx.c
-+++ b/drivers/net/wireless/wl12xx/wl1271_tx.c
-@@ -52,7 +52,7 @@ static int wl1271_tx_allocate(struct wl1271 *wl, struct sk_buff *skb, u32 extra,
- 	int id, ret = -EBUSY;
- 
- 	if (buf_offset + total_len > WL1271_AGGR_BUFFER_SIZE)
--		return -EBUSY;
-+		return -EAGAIN;
- 
- 	/* allocate free identifier for the packet */
- 	id = wl1271_tx_id(wl, skb);
-@@ -211,6 +211,7 @@ void wl1271_tx_work(struct work_struct *work)
- 	bool woken_up = false;
- 	u32 sta_rates = 0;
- 	u32 buf_offset;
-+	bool sent_packets = false;
- 	int ret;
- 
- 	/* check if the rates supported by the AP have changed */
-@@ -245,10 +246,20 @@ void wl1271_tx_work(struct work_struct *work)
- 		}
- 
- 		ret = wl1271_prepare_tx_frame(wl, skb, buf_offset);
--		if (ret == -EBUSY) {
-+		if (ret == -EAGAIN) {
- 			/*
--			 * Either the firmware buffer is full, or the
--			 * aggregation buffer is.
-+			 * Aggregation buffer is full.
-+			 * Flush buffer and try again.
-+			 */
-+			skb_queue_head(&wl->tx_queue, skb);
-+			wl1271_write(wl, WL1271_SLV_MEM_DATA, wl->aggr_buf,
-+				buf_offset, true);
-+			sent_packets = true;
-+			buf_offset = 0;
-+			continue;
-+		} else if (ret == -EBUSY) {
-+			/*
-+			 * Firmware buffer is full.
- 			 * Queue back last skb, and stop aggregating.
- 			 */
- 			skb_queue_head(&wl->tx_queue, skb);
-@@ -265,6 +276,9 @@ out_ack:
- 	if (buf_offset) {
- 		wl1271_write(wl, WL1271_SLV_MEM_DATA, wl->aggr_buf,
- 				buf_offset, true);
-+		sent_packets = true;
-+	}
-+	if (sent_packets) {
- 		/* interrupt the firmware with the new packets */
- 		wl1271_write32(wl, WL1271_HOST_WR_ACCESS, wl->tx_packets_count);
- 	}
--- 
-1.7.0.4
+> If the comment fits in one line, don't use the extra lines with /* and
+> */.
+> 
+> 
+>> +	/*
+>> +	* Values: 0 - TX Burst limit not required, 1 - TX Burst Limit required
+>> +	*/
+>> +	u8 ht_tx_burst_limit;
+> 
+> Same here.
+> 
+> 
+>> diff --git a/drivers/net/wireless/wl12xx/wl1271_conf.h b/drivers/net/wireless/wl12xx/wl1271_conf.h
+>> index 60c50d1..732e9aa 100644
+>> --- a/drivers/net/wireless/wl12xx/wl1271_conf.h
+>> +++ b/drivers/net/wireless/wl12xx/wl1271_conf.h
+>> @@ -91,6 +91,10 @@ enum {
+>>  	CONF_HW_RXTX_RATE_UNSUPPORTED = 0xff
+>>  };
+>>  
+>> +#define HW_RX_HIGHEST_RATE	65
+
+Move to wl1271_main.c, not configurable setting (HW depended).
+
+>> +#define HW_BG_RATES_MASK	0xffff
+>> +#define HW_HT_RATES_OFFSET	16
+
+Move to wl1271.h, not configurable setting.
+
+> 
+> We preceed all the other macros with CONF_, please do the same for
+> these.
+> 
+> 
+>> diff --git a/drivers/net/wireless/wl12xx/wl1271_main.c b/drivers/net/wireless/wl12xx/wl1271_main.c
+>> index cb18f22..bef2c24 100644
+>> --- a/drivers/net/wireless/wl12xx/wl1271_main.c
+>> +++ b/drivers/net/wireless/wl12xx/wl1271_main.c
+>> @@ -2122,6 +2122,19 @@ static const u8 wl1271_rate_to_idx_2ghz[] = {
+>>  	0                              /* CONF_HW_RXTX_RATE_1    */
+>>  };
+>>  
+>> +/* 11n sta capabilities */
+> 
+> Use STA for consistency.
+> 
+> 
+>> +#define WL12xx_HT_CAP { \
+> 
+> As we discussed separately, please use WL1271_HT_CAP.  Later, when we
+> rename the driver, we can change it to WL12XX_HT_CAP together with
+> everything else.  Let's keep everything as WL1271 for now, for
+> consistency.
+> 
+> 
 
