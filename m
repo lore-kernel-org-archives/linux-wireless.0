@@ -1,31 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:47090 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751138Ab0J0FOs (ORCPT
+Received: from hiems2.ing.unibs.it ([192.167.23.204]:42385 "EHLO
+	hiems2.ing.unibs.it" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754745Ab0JJKTi (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 27 Oct 2010 01:14:48 -0400
-Subject: Re: [PATCH v2] iw: Add ibss join parameter for beacon interval
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Bruno Randolf <br1@einfach.org>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
-In-Reply-To: <20101027030756.29191.4213.stgit@localhost6.localdomain6>
-References: <20101027030756.29191.4213.stgit@localhost6.localdomain6>
-Content-Type: text/plain; charset="UTF-8"
-Date: Wed, 27 Oct 2010 07:14:43 +0200
-Message-ID: <1288156483.3803.0.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+	Sun, 10 Oct 2010 06:19:38 -0400
+Subject: Release of Maranello firmware source code for Broadcom cards
+Mime-Version: 1.0 (Apple Message framework v1081)
+Content-Type: text/plain; charset=us-ascii
+From: francesco.gringoli@ing.unibs.it
+In-Reply-To: <2518B44B-D014-4ABA-AE31-BD75691488AB@ing.unibs.it>
+Date: Sun, 10 Oct 2010 12:19:34 +0200
+Cc: b43-dev@lists.infradead.org, Bo Han <bohan@cs.umd.edu>
+Message-Id: <1DBB75B1-733F-4DFC-A541-2C2C986586A6@ing.unibs.it>
+References: <2518B44B-D014-4ABA-AE31-BD75691488AB@ing.unibs.it>
+To: linux-wireless <linux-wireless@vger.kernel.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2010-10-27 at 12:07 +0900, Bruno Randolf wrote:
+Hello there,
 
-> +	if (argc > 1 && strcmp(argv[0], "beacon-interval") == 0) {
-> +		argv++;
-> +		argc--;
-> +		bintval = strtoul(argv[0], &end, 10);
+we released the source code of the Maranello firmware and all the
+necessary kernel patches. It was tested on Broadcom 4318/4306 pci
+cards on PC architecture. Find all the necessary files browsing from
 
-error checking would be nice, this will accept "beacon-interval 50ms"
-which may not be what we want ;)
+http://www.ing.unibs.it/openfwwf
 
-johannes
+or go directly here
+
+http://www.cs.umd.edu/projects/maranello
+
+
+Maranello is an enhancement of the 802.11 DCF standard: it implements
+a Partial Packet Recovery technique to retransmit only the corrupt
+parts of failed packets. This reduces the airtime and contributes to
+enhance the throughput. It was written starting from OpenFWWF5.2 by
+adding a number of new features.
+
+Kind regards,
+-Francesco Gringoli
+
+
+
+
+Informativa sulla privacy: http://help.ing.unibs.it/privacy.php
+
 
