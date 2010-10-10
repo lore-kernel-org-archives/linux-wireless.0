@@ -1,42 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from devils.ext.ti.com ([198.47.26.153]:54193 "EHLO
-	devils.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754079Ab0JFSG3 (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:51339 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755143Ab0JJQn7 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 6 Oct 2010 14:06:29 -0400
-From: Shahar Levi <shahar_levi@ti.com>
-To: <linux-wireless@vger.kernel.org>
-Cc: Luciano Coelho <luciano.coelho@nokia.com>
-Subject: [PATCH v2 00/03] wl1271: 11n Support, add support to 80211n spec
-Date: Wed,  6 Oct 2010 20:08:07 +0200
-Message-Id: <1286388491-28752-1-git-send-email-shahar_levi@ti.com>
+	Sun, 10 Oct 2010 12:43:59 -0400
+Subject: Re: phyX enumeration conflict
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Ben Greear <greearb@candelatech.com>
+Cc: Christian Lamparter <chunkeey@googlemail.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	rainbow lum <rainbowlum@gmail.com>
+In-Reply-To: <4CB1DE18.9070400@candelatech.com>
+References: <201010082159.59262.chunkeey@googlemail.com>
+	 <1286698152.3547.4.camel@jlt3.sipsolutions.net>
+	 <1286698604.3547.7.camel@jlt3.sipsolutions.net>
+	 <4CB1DE18.9070400@candelatech.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Sun, 10 Oct 2010 18:43:55 +0200
+Message-ID: <1286729035.3547.10.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Series that add 80211n spec support to wl1271: scan, connection via MCS rates
-Wl12xx driver add HT support:
-· Scan includes HT IE
-· Connection to HT devices
-· HT protection
-· Traffic via MCS rates
-· A-MSDU in RX path
+On Sun, 2010-10-10 at 08:39 -0700, Ben Greear wrote:
 
-Missing functionality is:
-· BA session as Initiator and Receiver
+> Sorry about that.  If anyone has any example udev magic to do this sort
+> of thing, I'd like to try that out.
 
-Shahar Levi (3):
-  wl1271: 11n Support, Add Definitions
-  wl1271: 11n Support, ACX Commands
-  wl1271: 11n Support, functionality and configuration ability
+This works:
 
- drivers/net/wireless/wl12xx/Kconfig       |   10 +++
- drivers/net/wireless/wl12xx/Makefile      |    1 +
- drivers/net/wireless/wl12xx/wl1271.h      |    2 +-
- drivers/net/wireless/wl12xx/wl1271_acx.c  |   91 +++++++++++++++++++++++++++
- drivers/net/wireless/wl12xx/wl1271_acx.h  |   95 +++++++++++++++++++++++++++++
- drivers/net/wireless/wl12xx/wl1271_conf.h |    4 +
- drivers/net/wireless/wl12xx/wl1271_main.c |   78 ++++++++++++++++++-----
- drivers/net/wireless/wl12xx/wl1271_rx.c   |    4 +
- drivers/net/wireless/wl12xx/wl1271_tx.c   |    9 +++
- 9 files changed, 276 insertions(+), 18 deletions(-)
+/etc/udev/rules.d/70-phyname.rules:
+-- begin --
+ACTION!="add", GOTO="phyname_end"
+SUBSYSTEM!="ieee80211", GOTO="phyname_end"
+
+# read MAC address
+ENV{MATCHADDR}="$attr{macaddress}"
+ENV{PHYIDX}="$attr{index}"
+
+ENV{MATCHADDR}=="02:00:00:00:00:00", RUN+="/usr/sbin/iw %k set name hwsim0"
+
+LABEL="phyname_end"
+-- end --
+
+Of course, you'd probably want to do something like
+persistent-net-generator etc, but I'll leave that to somebody else.
+
+Just remember you can't actually name it "phy0".
+
+johannes
 
