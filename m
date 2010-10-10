@@ -1,82 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.19.149.2]:14855 "EHLO mail.atheros.com"
+Received: from nbd.name ([88.198.39.176]:46209 "EHLO ds10.nbd.name"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756150Ab0JTXHO (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 20 Oct 2010 19:07:14 -0400
-Received: from mail.atheros.com ([10.10.20.108])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Wed, 20 Oct 2010 16:07:04 -0700
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>, <stable@kernel.org>,
-	Ben Greear <greearb@candelatech.com>,
-	Kyungwan Nam <kyungwan.nam@atheros.com>
-Subject: [PATCH 2/6] ath9k: add locking for starting the PCU on RX
-Date: Wed, 20 Oct 2010 16:07:04 -0700
-Message-ID: <1287616028-12547-3-git-send-email-lrodriguez@atheros.com>
-In-Reply-To: <1287616028-12547-1-git-send-email-lrodriguez@atheros.com>
-References: <1287616028-12547-1-git-send-email-lrodriguez@atheros.com>
+	id S1751443Ab0JJWyx (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 10 Oct 2010 18:54:53 -0400
+Message-ID: <4CB24435.2070201@openwrt.org>
+Date: Mon, 11 Oct 2010 00:54:45 +0200
+From: Felix Fietkau <nbd@openwrt.org>
 MIME-Version: 1.0
-Content-Type: text/plain
+To: =?ISO-8859-15?Q?Bj=F6rn_Smedman?= <bjorn.smedman@venatech.se>
+CC: linville@tuxdriver.com, johannes@sipsolutions.net,
+	lrodriguez@atheros.com, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 1/3] mac80211: minstrel_ht A-MPDU fix
+References: <alpine.DEB.2.00.1010102206580.31264@bigbill>
+In-Reply-To: <alpine.DEB.2.00.1010102206580.31264@bigbill>
+Content-Type: text/plain; charset=ISO-8859-15
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-There was some locking for starting some parts of
-RX but not for starting the PCU. Include this otherwise
-we can content against stopping the PCU.
-
-This can potentially lead to races against different
-buffers on the PCU which can lead to to the DMA RX
-engine writing to buffers which are already freed.
-
-This is part of a series that will help resolve the bug:
-
-https://bugzilla.kernel.org/show_bug.cgi?id=14624
-
-For more details about this issue refer to:
-
-http://marc.info/?l=linux-wireless&m=128629803703756&w=2
-
-Cc: stable@kernel.org
-Cc: Ben Greear <greearb@candelatech.com>
-Cc: Kyungwan Nam <kyungwan.nam@atheros.com>
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
----
- drivers/net/wireless/ath/ath9k/recv.c |    7 ++++---
- 1 files changed, 4 insertions(+), 3 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/ath9k/recv.c b/drivers/net/wireless/ath/ath9k/recv.c
-index 3b19bbb..944fb59 100644
---- a/drivers/net/wireless/ath/ath9k/recv.c
-+++ b/drivers/net/wireless/ath/ath9k/recv.c
-@@ -297,11 +297,11 @@ static void ath_edma_start_recv(struct ath_softc *sc)
- 	ath_rx_addbuffer_edma(sc, ATH9K_RX_QUEUE_LP,
- 			      sc->rx.rx_edma[ATH9K_RX_QUEUE_LP].rx_fifo_hwsize);
- 
--	spin_unlock_bh(&sc->rx.rxbuflock);
--
- 	ath_opmode_init(sc);
- 
- 	ath9k_hw_startpcureceive(sc->sc_ah, (sc->sc_flags & SC_OP_OFFCHANNEL));
-+
-+	spin_unlock_bh(&sc->rx.rxbuflock);
- }
- 
- static void ath_edma_stop_recv(struct ath_softc *sc)
-@@ -504,10 +504,11 @@ int ath_startrecv(struct ath_softc *sc)
- 	ath9k_hw_rxena(ah);
- 
- start_recv:
--	spin_unlock_bh(&sc->rx.rxbuflock);
- 	ath_opmode_init(sc);
- 	ath9k_hw_startpcureceive(ah, (sc->sc_flags & SC_OP_OFFCHANNEL));
- 
-+	spin_unlock_bh(&sc->rx.rxbuflock);
-+
- 	return 0;
- }
- 
--- 
-1.7.0.4
-
+On 2010-10-10 10:14 PM, Björn Smedman wrote:
+> This patch fixes two problems with the minstrel_ht rate control
+> algorithms handling of A-MPDU frames:
+> 
+> 1. The ampdu_len field of the tx status is not always initialized for 
+> non-HT frames (and it would probably be unreasonable to require all 
+> drivers to do so). This could cause rate control statistics to be 
+> corrupted. We now trust the ampdu_len and ampdu_ack_len fields only when 
+> the frame is marked with the IEEE80211_TX_STAT_AMPDU flag.
+> 
+> 2. Successful transmission attempts where only recognized when the A-MPDU
+> subframe carrying the rate control status information was marked with the
+> IEEE80211_TX_STAT_ACK flag. If this information happed to be carried on a
+> frame that failed to be ACKed then the other subframes (which may have
+> succeeded) where not correctly registered. We now update rate control
+> statistics regardless of whether the subframe carrying the information was
+> ACKed or not.
+> 
+> Cc: <stable@kernel.org>
+> Signed-off-by: Björn Smedman <bjorn.smedman@venatech.se>
+For all 3 patches:
+Acked-by: Felix Fietkau <nbd@openwrt.org>
