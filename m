@@ -1,58 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qy0-f181.google.com ([209.85.216.181]:41398 "EHLO
-	mail-qy0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753441Ab0JLQyU convert rfc822-to-8bit (ORCPT
+Received: from hiems2.ing.unibs.it ([192.167.23.204]:38115 "EHLO
+	hiems2.ing.unibs.it" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751793Ab0JJQtZ convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 12 Oct 2010 12:54:20 -0400
-MIME-Version: 1.0
-In-Reply-To: <1286895206-3030-1-git-send-email-linville@tuxdriver.com>
-References: <20101012163519.a88f2040.sfr@canb.auug.org.au>
-	<1286895206-3030-1-git-send-email-linville@tuxdriver.com>
-Date: Tue, 12 Oct 2010 12:54:17 -0400
-Message-ID: <AANLkTikjp=dpOOfjnvg=ivkb40_dE+oRLSEkzrycwirV@mail.gmail.com>
-Subject: Re: [PATCH] ath5k: fix build break from "ath5k: Print out opmode in debugfs"
-From: Bob Copeland <me@bobcopeland.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org,
-	Stephen Rothwell <sfr@canb.auug.org.au>,
-	Ben Greear <greearb@candelatech.com>,
-	linux-kernel@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+	Sun, 10 Oct 2010 12:49:25 -0400
+Subject: Re: Release of Maranello firmware source code for Broadcom cards
+Mime-Version: 1.0 (Apple Message framework v1081)
+Content-Type: text/plain; charset=iso-8859-1
+From: francesco.gringoli@ing.unibs.it
+In-Reply-To: <1286714096.16309.10.camel@maggie>
+Date: Sun, 10 Oct 2010 18:49:25 +0200
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	b43-dev@lists.infradead.org, Bo Han <bohan@cs.umd.edu>
+Message-Id: <335F2ADF-6921-4B5B-86C9-8DD348546B83@ing.unibs.it>
+References: <2518B44B-D014-4ABA-AE31-BD75691488AB@ing.unibs.it> <1DBB75B1-733F-4DFC-A541-2C2C986586A6@ing.unibs.it> (sfid-20101010_123116_260431_6CAA2A46) <1286714096.16309.10.camel@maggie>
+To: =?iso-8859-1?Q?Michael_B=FCsch?= <mb@bu3sch.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Oct 12, 2010 at 10:53 AM, John W. Linville
-<linville@tuxdriver.com> wrote:
-> Without this and with CONFIG_ATH_DEBUG not set...
->
-> ERROR: ".ath_opmode_to_string" [drivers/net/wireless/ath/ath5k/ath5k.ko] undefined!
->
-> Signed-off-by: John W. Linville <linville@tuxdriver.com>
-> ---
-> Please don't make me commit such an ugly patch...
->
->  drivers/net/wireless/ath/ath5k/base.c  |    4 ++++
->  drivers/net/wireless/ath/ath5k/debug.c |    6 +++++-
->  2 files changed, 9 insertions(+), 1 deletions(-)
->
-> diff --git a/drivers/net/wireless/ath/ath5k/base.c b/drivers/net/wireless/ath/ath5k/base.c
-> index c9732a6..b839a6b 100644
-> --- a/drivers/net/wireless/ath/ath5k/base.c
-> +++ b/drivers/net/wireless/ath/ath5k/base.c
-> @@ -562,10 +562,14 @@ static void ath_do_set_opmode(struct ath5k_softc *sc)
->  {
->        struct ath5k_hw *ah = sc->ah;
->        ath5k_hw_set_opmode(ah, sc->opmode);
-> +#ifdef CONFIG_ATH_DEBUG
->        ATH5K_DBG(sc, ATH5K_DEBUG_MODE, "mode setup opmode %d (%s)\n",
->                  sc->opmode,
->                  ath_opmode_to_string(sc->opmode) ?
->                  ath_opmode_to_string(sc->opmode) : "UKNOWN");
+On Oct 10, 2010, at 2:34 PM, Michael Büsch wrote:
 
->From the original patch: UKNOWN?
+> On Sun, 2010-10-10 at 12:19 +0200, francesco.gringoli@ing.unibs.it
+> wrote: 
+>> Maranello is an enhancement of the 802.11 DCF standard: it implements
+>> a Partial Packet Recovery technique to retransmit only the corrupt
+>> parts of failed packets. This reduces the airtime and contributes to
+>> enhance the throughput. It was written starting from OpenFWWF5.2 by
+>> adding a number of new features.
+> 
+> Hey, that looks really cool. :)
+> So does this firmware work in AP and STA mode? I guess so, because it
+> seems you need support for the nonstandard enhancement on both STA
+> and AP.
+Hello Michael,
 
-I guess making ath_opmode_to_string always around (no-op in non-debug case)
-would also suffice.  (reads on...) ah, yes, Joe's patch does this.
+yes, the firmware works in AP mode, it is the basic AP mode implemented by OpenFWWF. And yes, both AP and STA implement partial packet recovery. We tested both directions and in our testbed (and most importantly with the hardware we have... unfortunately not all 4318/06 are equal :-( ) it was stable and we never experienced crashes.
 
--- 
-Bob Copeland %% www.bobcopeland.com
+The most interesting point are the capabilities of this really simple boards: we were really surprised of how many things they can do (and I believe guys at Broadcom never imagined).
+
+Kind regards,
+-Francesco Gringoli
+
+> 
+> -- 
+> Greetings Michael.
+> 
+
+
+
+
+Informativa sulla privacy: http://help.ing.unibs.it/privacy.php
+
+
