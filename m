@@ -1,59 +1,144 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iw0-f174.google.com ([209.85.214.174]:46177 "EHLO
-	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751769Ab0JJVot convert rfc822-to-8bit (ORCPT
+Received: from devils.ext.ti.com ([198.47.26.153]:51556 "EHLO
+	devils.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755445Ab0JJKYP (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 10 Oct 2010 17:44:49 -0400
-Received: by iwn6 with SMTP id 6so2585175iwn.19
-        for <linux-wireless@vger.kernel.org>; Sun, 10 Oct 2010 14:44:49 -0700 (PDT)
+	Sun, 10 Oct 2010 06:24:15 -0400
+Message-ID: <4CB194DC.7030206@ti.com>
+Date: Sun, 10 Oct 2010 12:26:36 +0200
+From: Shahar Levi <shahar_levi@ti.com>
 MIME-Version: 1.0
-In-Reply-To: <4CB22F79.60806@openwrt.org>
-References: <alpine.DEB.2.00.1010102245220.31264@bigbill>
-	<4CB22F79.60806@openwrt.org>
-Date: Sun, 10 Oct 2010 23:44:49 +0200
-Message-ID: <AANLkTinbaAk-=xqhuJ4bJWoLw2cF+iBTEa0S6xfxw4UP@mail.gmail.com>
-Subject: Re: [PATCH 3/3] ath9k: built-in rate control A-MPDU fix
-From: =?ISO-8859-1?Q?Bj=F6rn_Smedman?= <bjorn.smedman@venatech.se>
-To: Felix Fietkau <nbd@openwrt.org>
-Cc: linville@tuxdriver.com, johannes@sipsolutions.net,
-	lrodriguez@atheros.com, linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+To: Luciano Coelho <luciano.coelho@nokia.com>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH v2 02/03] wl1271: 11n Support, ACX Commands
+References: <1286388491-28752-1-git-send-email-shahar_levi@ti.com>	 <1286388491-28752-4-git-send-email-shahar_levi@ti.com> <1286476676.1662.57.camel@powerslave>
+In-Reply-To: <1286476676.1662.57.camel@powerslave>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2010/10/10 Felix Fietkau <nbd@openwrt.org>:
-> On 2010-10-10 10:51 PM, Björn Smedman wrote:
->> --- a/drivers/net/wireless/ath/ath9k/rc.c
->> +++ b/drivers/net/wireless/ath/ath9k/rc.c
->> @@ -1375,6 +1375,12 @@ static void ath_tx_status(void *priv, struct ieee80211_supported_band *sband,
->>       if (tx_info->flags & IEEE80211_TX_STAT_TX_FILTERED)
->>               return;
+Thanks for the review. All fixed on v3.
+Cheers,
+Shahar
+
+Luciano Coelho wrote:
+> On Wed, 2010-10-06 at 20:08 +0200, ext Shahar Levi wrote:
+>> Added ACX command to the FW for 11n support.
 >>
->> +     if (!(tx_info->flags & IEEE80211_TX_STAT_AMPDU)) {
->> +             tx_info->status.ampdu_ack_len =
->> +                     (tx_info->flags & IEEE80211_TX_STAT_ACK ? 1 : 0);
->> +             tx_info->status.ampdu_len = 1;
->> +     }
+>> Signed-off-by: Shahar Levi <shahar_levi@ti.com>
+>> ---
+> 
+> Again, mostly coding-style comments.
+> 
+> 
+>> diff --git a/drivers/net/wireless/wl12xx/wl1271_acx.c b/drivers/net/wireless/wl12xx/wl1271_acx.c
+>> index 6189934..cc6b7d8 100644
+>> --- a/drivers/net/wireless/wl12xx/wl1271_acx.c
+>> +++ b/drivers/net/wireless/wl12xx/wl1271_acx.c
+>> @@ -1226,6 +1226,97 @@ out:
+>>  	return ret;
+>>  }
+>>  
+>> +int wl1271_acx_set_ht_capabilities(struct wl1271 *wl,
+>> +				    struct ieee80211_sta_ht_cap *ht_cap,
+>> +				    bool allow_ht_operation)
+>> +{
+>> +	struct wl1271_acx_ht_capabilities *acx;
+>> +	/*
+>> +	* Note, currently this value will be set to FFFFFFFFFFFF to indicate
+>> +	* it is relevant for all peers since we only support HT in
+>> +	* infrastructure mode. Later on this field will be relevant to
+>> +	* IBSS/DLS operation */
+>> +	u8 mac_address[ETH_ALEN] = {0xff, 0xff, 0xff, 0xff, 0xff, 0xff};
+> 
+> I didn't realize this when reviewing patch 01/03, but you could actually
+> remove the Note from the wl1271_acx.h file and leave it here.  There's
+> no need to have it repeated there and here.
+> 
+> 
+>> +	/* Allow HT Operation ? */
+>> +	if (true == allow_ht_operation) {
+> 
+> I know that some people like to put the constant in the left side of the
+> comparison operator to avoid problems with mistyping == as =, but
+> reading this in the opposite way is less intuitive (like top-posting? ;)
+> and the compiler, if called with reasonable options, will warn you if
+> you make that mistake.  So, summarizing, please use it like this
+> instead, then you don't even risk mistyping == in the first place :P
+> 
+> 	if (allow_ht_operation) {
+> 
+> 
+>> +		acx->ht_capabilites =
+>> +		WL1271_ACX_FW_CAP_BIT_MASK_HT_OPERATION;
+> 
+> Add a more indentation on the second line, it's easier to read.
+> 
+> 
+>> +		acx->ht_capabilites |=
+>> +		((ht_cap->cap & IEEE80211_HT_CAP_GRN_FLD) ?
+>> +		WL1271_ACX_FW_CAP_BIT_MASK_GREENFIELD_FRAME_FORMAT : 0);
+>> +		acx->ht_capabilites |=
+>> +		((ht_cap->cap & IEEE80211_HT_CAP_SGI_20) ?
+>> +		WL1271_ACX_FW_CAP_BIT_MASK_SHORT_GI_FOR_20MHZ_PACKETS : 0);
+>> +		acx->ht_capabilites |=
+>> +		((ht_cap->cap & IEEE80211_HT_CAP_LSIG_TXOP_PROT) ?
+>> +		WL1271_ACX_FW_CAP_BIT_MASK_LSIG_TXOP_PROTECTION : 0);
+> 
+> Same thing for all these other assignments.
+> 
+> 
 >> +
-> Shouldn't mac80211 do this instead?
+>> +		/* get date from A-MPDU parameters field */
+> 
+> "get data"
+> 
+> 
+>> +		acx->ampdu_max_length = ht_cap->ampdu_factor;
+>> +		acx->ampdu_min_spacing = ht_cap->ampdu_density;
+>> +
+>> +		memcpy(acx->mac_address, mac_address, ETH_ALEN);
+>> +	}
+>> +	/* HT operations are not allowed */
+>> +	else
+>> +		acx->ht_capabilites = 0;
+> 
+> According to Documentation/CodingStyle, you should write the else block
+> like this:
+> 
+> if (...) {
+> 	...
+> } else {
+> 	acx->ht_capabilities = 0;
+> }
+> 
+> 
+>> +int wl1271_acx_set_ht_information(struct wl1271 *wl,
+>> +				   u16 ht_operation_mode)
+>> +{
+>> +	struct wl1271_acx_ht_information *acx;
+>> +	int ret = 0;
+>> +
+>> +	wl1271_debug(DEBUG_ACX, "acx ht information setting");
+>> +
+>> +	acx = kzalloc(sizeof(*acx), GFP_KERNEL);
+>> +	if (!acx) {
+>> +		ret = -ENOMEM;
+>> +		goto out;
+>> +	}
+>> +
+>> +	acx->ht_protection =
+>> +		(u8)(ht_operation_mode & IEEE80211_HT_OP_MODE_PROTECTION);
+>> +	acx->rifs_mode = 0;
+>> +	acx->gf_protection = 0;
+>> +	acx->ht_tx_burst_limit = 0;
+>> +	acx->dual_cts_protection = 0;
+>> +
+>> +	ret = wl1271_cmd_configure(wl,
+>> +				   ACX_HT_BSS_OPERATION,
+>> +				   acx,
+>> +				   sizeof(*acx));
+> 
+> Doesn't this fit in less lines?
+> 
 
-I guess you could move this into mac80211 but that would change the
-suggested contract: (1) the ampdu_len and ampdu_ack_len fields of the
-tx status structure must be set correctly by the driver if the
-IEEE80211_TX_STAT_AMPDU flag is set, and (2) the value of these fields
-must not be relied upon by rate control if the flag is not set. I
-personally think this is more clean than having rate control
-algorithms trust the value of ampdu_len and ampdu_ack_len even when
-the frame has clearly not been aggregated.
-
-If the interface was correct in principle I think I could be persuaded
-with a simple renaming of the fields, but in this case the interface
-is fundamentally broken (e.g. in the case of an aggregate in which all
-frames failed to be ACKed and are to be software retried - no rate
-control feedback is possible).
-
-For that reason I think we should push the temporary/ugly code out
-into drivers and rate control plugins and not try to "tidy up" the
-wrong solution in mac80211. But that's just my two cents of course.
-
-/Björn
