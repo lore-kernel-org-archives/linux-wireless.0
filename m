@@ -1,126 +1,259 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([147.243.1.47]:28830 "EHLO mgw-sa01.nokia.com"
+Received: from ogre.sisk.pl ([217.79.144.158]:32841 "EHLO ogre.sisk.pl"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753686Ab0JFF1X (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 6 Oct 2010 01:27:23 -0400
-Subject: RE: [PATCH 24/25] wl1271: Optimize scan duration
-From: Juuso Oikarinen <juuso.oikarinen@nokia.com>
-To: "ext Gabay, Benzy" <benzyg@ti.com>
-Cc: "Coelho Luciano (Nokia-MS/Helsinki)" <Luciano.Coelho@nokia.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <676FD6AA0F002F49B89E70F0C5EFD22C135ADBA311@dlee04.ent.ti.com>
-References: <1285576669-8070-1-git-send-email-luciano.coelho@nokia.com>
-	 <1285576669-8070-25-git-send-email-luciano.coelho@nokia.com>
-	 <676FD6AA0F002F49B89E70F0C5EFD22C135AD3C603@dlee04.ent.ti.com>
-	 <1286257254.11177.224.camel@wimaxnb.nmp.nokia.com>
-	 <676FD6AA0F002F49B89E70F0C5EFD22C135AD3CB17@dlee04.ent.ti.com>
-	 <1286341161.11177.254.camel@wimaxnb.nmp.nokia.com>
-	 <676FD6AA0F002F49B89E70F0C5EFD22C135ADBA311@dlee04.ent.ti.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Wed, 06 Oct 2010 08:26:54 +0300
-Message-ID: <1286342814.11177.258.camel@wimaxnb.nmp.nokia.com>
-Mime-Version: 1.0
+	id S1751262Ab0JJTMF convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 10 Oct 2010 15:12:05 -0400
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
+To: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+Subject: 2.6.36-rc7-git2: Reported regressions 2.6.34 -> 2.6.35
+Cc: Maciej Rutecki <maciej.rutecki@gmail.com>,
+	Florian Mickler <florian@mickler.org>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	Kernel Testers List <kernel-testers@vger.kernel.org>,
+	Network Development <netdev@vger.kernel.org>,
+	Linux ACPI <linux-acpi@vger.kernel.org>,
+	Linux PM List <linux-pm@lists.linux-foundation.org>,
+	Linux SCSI List <linux-scsi@vger.kernel.org>,
+	Linux Wireless List <linux-wireless@vger.kernel.org>,
+	DRI <dri-devel@lists.freedesktop.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Message-ID: <pyPtebg28EI.A.ZPH.NvgsMB@chimera>
+Date: Sun, 10 Oct 2010 21:10:34 +0200 (CEST)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2010-10-06 at 07:21 +0200, ext Gabay, Benzy wrote:
-> Juuso,
-> 
-> 
-> > Sent: Tuesday, October 05, 2010 11:59 PM
-> > 
-> > Hi,
-> > 
-> > On Tue, 2010-10-05 at 17:42 +0200, ext Gabay, Benzy wrote:
-> > > Juuso,
-> > 
-> > > > > >
-> > > > > > From: Juuso Oikarinen <juuso.oikarinen@nokia.com>
-> > > > > >
-> > > > > > Currently then dwell times for each channel in scans is set to
-> > an
-> > > > > > overly
-> > > > > > long value, and excessive number of probe-requests are
-> > transmitted
-> > > > on
-> > > > > > each
-> > > > > > channel (for active scans.)
-> > > > > >
-> > > > > > Based on testing, comparable results can be received with
-> > smaller
-> > > > > > dwell-time,
-> > > > > > and, with fever probe-requests - in fact, reducing the number
-> > of
-> > > > probe-
-> > > > > > requests
-> > > > > > to 2 seems to increase the number of found results.
-> > > > >
-> > > > > I think that this does not making any sense. Less prob requests
-> > > > should give you back less results. As less beacons/prob responses
-> > are
-> > > > getting back to the station.
-> > > > > I think also that office with 70 AP is not a normal environment
-> > to
-> > > > test and optimize numbers.
-> > > > > I would suggest to re-test in a 1-6 AP environment which is
-> > making
-> > > > more sense for both home and enterprise environment.
-> > > >
-> > > > We have actually performed more testing than just mentioned here,
-> > in
-> > > > varied environments, and all of the testing seems to indicate that
-> > > > reducing the number of probe-reqs per channel is not reducing the
-> > > > number
-> > > > of acquired results. Instead, in some scenarios, it is increasing
-> > the
-> > > > number of acquired results.
-> > > >
-> > >
-> > > >>  I don’t know if that is conventional request: can you share the
-> > full results and setup details?
-> > 
-> > No, I don't have any formal documentation to share.
-> > 
-> > The setup details are simple enough though. The tested this on command
-> > line using a simple script that flushes existing scan results, then
-> > performs two or three scans counting the number of scan results on the
-> > last round using grep and wc.
-> > 
-> > We performed the testing in office environment and a shielded chamber,
-> > which only has selected AP's within it.
-> > 
-> > Between test rounds we modified the driver parameters related to
-> > scanning, i.e. we modified the number of probe-reqs and the dwell time
-> > on each channel.
-> > 
-> > -Juuso
-> 
-> 
-> Sounds great. Just one more: which AP brands (excluding Cisco) ?
+This message contains a list of some post-2.6.34 regressions introduced before
+2.6.35, for which there are no fixes in the mainline known to the tracking team.
+If any of them have been fixed already, please let us know.
 
-In the office environment we have a variety of brands, including D-link,
-Buffalo, Telewell, TP-link and linksys, cisco etc.
+If you know of any other unresolved post-2.6.34 regressions, please let us know
+either and we'll add them to the list.  Also, please let us know if any
+of the entries below are invalid.
 
-In the shielded chamber we are using linksys wrt610n AP's.
+Each entry from the list will be sent additionally in an automatic reply to
+this message with CCs to the people involved in reporting and handling the
+issue.
 
--Juuso
 
-> 
-> 
-> > 
-> > > > We did not see reduction in the probability of finding a specific
-> > AP in
-> > > > a few (one or two) AP environment either.
-> > > >
-> > > > The effect seems to be this way because reducing the number of
-> > > > probe-req's dramatically reduces the noise generated by probe-
-> > responses
-> > > > from AP's on neighbouring channels.
-> > > >
-> > > > -Juuso
-> > > >
-> > 
-> 
-> �{.n�+�������+%��lzwm��b�맲��r��zX��"��^�ȧ���ܨ}���Ơz�&j:+v�������zZ+��+zf���h���~����i���z��w���?����&�)ߢf
+Listed regressions statistics:
 
+  Date          Total  Pending  Unresolved
+  ----------------------------------------
+  2010-10-10      143       23          19
+  2010-10-03      141       21          17
+  2010-09-26      139       24          21
+  2010-09-20      137       27          25
+  2010-09-12      135       26          25
+  2010-08-30      124       38          34
+  2010-08-01      100       27          23
+  2010-07-23       94       33          25
+  2010-07-09       79       45          37
+  2010-06-21       46       37          26
+  2010-06-09       15       13          10
+
+
+Unresolved regressions
+----------------------
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=20002
+Subject		: x86_64 2.6.35.* kernels and Intel Xeon X5550
+Submitter	: Marc Aurele La France <tsi@ualberta.ca>
+Date		: 2010-10-07 17:17 (4 days old)
+Message-ID	: <alpine.WNT.2.00.1010071055420.1672@cluij.ucs.ualberta.ca>
+References	: http://marc.info/?l=linux-kernel&m=128647187628706&w=2
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=19792
+Subject		: 2.6.35.6 fails to suspend (pxa2xx-mci.0)
+Submitter	: Sven Neumann <s.neumann@raumfeld.com>
+Date		: 2010-10-04 7:30 (7 days old)
+Message-ID	: <1286177435.2140.5.camel@sven>
+References	: http://marc.info/?l=linux-kernel&m=128617869729382&w=2
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=19612
+Subject		: Computer fails to hibernate - problem idling SMP CPU's
+Submitter	:  <tempo444z@gmail.com>
+Date		: 2010-10-02 22:26 (9 days old)
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=19302
+Subject		: PROBLEM: kernel crash on USB-modem (Huawei E1750) hangup.
+Submitter	: O01eg <O01eg@yandex.ru>
+Date		: 2010-09-26 19:50 (15 days old)
+Message-ID	: <op.vjnn1up1yohvy1@localhost>
+References	: http://marc.info/?l=linux-kernel&m=128553111709569&w=2
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=18522
+Subject		: cdrom drive doesn't detect removal
+Submitter	: Maxim Levitsky <maximlevitsky@gmail.com>
+Date		: 2010-09-12 9:49 (29 days old)
+First-Bad-Commit: http://git.kernel.org/linus/6b4517a7913a09d3259bb1d21c9cb300f12294bd
+Message-ID	: <1284284969.2928.18.camel@maxim-laptop>
+References	: http://marc.info/?l=linux-kernel&m=128428499013930&w=2
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=17812
+Subject		: Kernel completely frozen when memory is full
+Submitter	: Mickey86 <mikael.cordon@gmail.com>
+Date		: 2010-09-05 13:09 (36 days old)
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=17261
+Subject		: Freezes on bootup
+Submitter	: Dan Dart <dandart@googlemail.com>
+Date		: 2010-08-29 09:00 (43 days old)
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=16891
+Subject		: Kernel panic while loading intel module during boot
+Submitter	: Anisse Astier <anisse@astier.eu>
+Date		: 2010-08-24 13:19 (48 days old)
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=16691
+Subject		: IPW5100: iwlagn broken with 2.6.34.x to 2.6.35.2 update
+Submitter	: Can Celasun <dcelasun@gmail.com>
+Date		: 2010-08-21 08:28 (51 days old)
+References	: http://www.spinics.net/lists/linux-wireless/msg57237.html
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=16614
+Subject		: [2.6.35] usb 2.0 em28xx  kernel panic general protection fault: 0000 [#1] SMP          RIP: 0010:[<ffffffffa004fbc5>]  [<ffffffffa004fbc5>] em28xx_isoc_copy_vbi+0x62e/0x812 [em28xx]
+Submitter	: Sander Eikelenboom <linux@eikelenboom.it>
+Date		: 2010-08-10 22:12 (62 days old)
+Message-ID	: <61936849.20100811001257@eikelenboom.it>
+References	: http://marc.info/?l=linux-kernel&m=128152075830927&w=2
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=16562
+Subject		: 2.6.35: cpu_idle bug report / on i7 870 cpu (x86_64)
+Submitter	: Justin Piszcz <jpiszcz@lucidpixels.com>
+Date		: 2010-08-06 22:09 (66 days old)
+Message-ID	: <alpine.DEB.2.00.1008061800530.5241@p34.internal.lan>
+References	: http://marc.info/?l=linux-kernel&m=128113260904048&w=2
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=16549
+Subject		: 2.6.35: suspicious rcu_dereference_check() usage
+Submitter	: Vladislav Bolkhovitin <vst@vlnb.net>
+Date		: 2010-08-04 10:56 (68 days old)
+Message-ID	: <4C594740.1090608@vlnb.net>
+References	: http://marc.info/?l=linux-kernel&m=128091938215177&w=2
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=16525
+Subject		: unexpected high load since 2.6.35
+Submitter	: MadLoisae@gmx.net <MadLoisae@gmx.net>
+Date		: 2010-08-02 20:53 (70 days old)
+Message-ID	: <4C573041.1070103@gmx.net>
+References	: http://marc.info/?l=linux-kernel&m=128078243726655&w=2
+		  http://lkml.org/lkml/2010/9/14/105
+		  http://lkml.org/lkml/2010/9/27/328
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=16515
+Subject		: [bisected] Radeon rv280 can't boot on kernel 2.6.35.
+Submitter	: Albert Gall <ss3vdr@gmail.com>
+Date		: 2010-08-04 16:10 (68 days old)
+First-Bad-Commit: http://git.kernel.org/linus/https://bugzilla.kernel.org/attachment.cgi?id=27350
+Handled-By	: Alex Deucher <alexdeucher@gmail.com>
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=16488
+Subject		: [i915] Framebuffer ID error after suspend/hibernate leading to X crash
+Submitter	: Milan Bouchet-Valat <nalimilan@club.fr>
+Date		: 2010-08-01 08:55 (71 days old)
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=16458
+Subject		: Bluetooth disabled after resume
+Submitter	: AttilaN <attila123456@gmail.com>
+Date		: 2010-07-25 09:33 (78 days old)
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=16380
+Subject		: Loop devices act strangely in 2.6.35
+Submitter	: Artem S. Tashkinov <t.artem@mailcity.com>
+Date		: 2010-07-13 23:21 (90 days old)
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=16265
+Subject		: Why is kslowd accumulating so much CPU time?
+Submitter	: Theodore Ts'o <tytso@mit.edu>
+Date		: 2010-06-09 18:36 (124 days old)
+First-Bad-Commit: http://git.kernel.org/linus/fbf81762e385d3d45acad057b654d56972acf58c
+Message-ID	: <E1OMQ88-0002a1-Gb@closure.thunk.org>
+References	: http://marc.info/?l=linux-kernel&m=127610857819033&w=4
+		  http://bugs.freedesktop.org/show_bug.cgi?id=29536
+Handled-By	: Chris Wilson <chris@chris-wilson.co.uk>
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=16221
+Subject		: 2.6.35-rc2-git5 -- [drm:drm_mode_getfb] *ERROR* invalid framebuffer id
+Submitter	: Miles Lane <miles.lane@gmail.com>
+Date		: 2010-06-11 20:31 (122 days old)
+Message-ID	: <AANLkTim0jVRyqkwlGOcrg_XTvUQwcBYfWJX-aRzkkrLG@mail.gmail.com>
+References	: http://marc.info/?l=linux-kernel&m=127628828119623&w=2
+
+
+Regressions with patches
+------------------------
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=17772
+Subject		: Unable to locate IOAPIC for GSI *
+Submitter	: zersaa <zersaa@gmail.com>
+Date		: 2010-09-04 21:28 (37 days old)
+Handled-By	: Eric W. Biederman <ebiederm@xmission.com>
+Patch		: https://patchwork.kernel.org/patch/104501/
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=16462
+Subject		: unable to connect to hidden SSID AP on legal channel 13
+Submitter	: Daniel J Blueman <daniel.blueman@gmail.com>
+Date		: 2010-07-25 17:06 (78 days old)
+Handled-By	: Johannes Berg <johannes.berg@intel.com>
+Patch		: https://bugzilla.kernel.org/attachment.cgi?id=31862
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=16312
+Subject		: WARNING: at fs/fs-writeback.c:1127 __mark_inode_dirty
+Submitter	: Zdenek Kabelac <zdenek.kabelac@gmail.com>
+Date		: 2010-06-28 9:40 (105 days old)
+Message-ID	: <AANLkTin24fr5O4_q5Xbo9Y_NKkEmtcp6Hgmr9_4qXaFz@mail.gmail.com>
+References	: http://marc.info/?l=linux-kernel&m=127771804806465&w=2
+		  http://lkml.indiana.edu/hypermail/linux/kernel/1007.3/00884.html
+Handled-By	: Jan Kara <jack@suse.cz>
+		  Jan Kara <jack@suse.cz>
+Patch		: https://bugzilla.kernel.org/attachment.cgi?id=30282
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=16228
+Subject		: BUG/boot failure on Dell Precision T3500 (pci/ahci_stop_engine)
+Submitter	: Brian Bloniarz <brian.bloniarz@gmail.com>
+Date		: 2010-06-16 17:57 (117 days old)
+Handled-By	: Bjorn Helgaas <bjorn.helgaas@hp.com>
+Patch		: https://patchwork.kernel.org/patch/189182/
+		  https://patchwork.kernel.org/patch/189232/
+		  https://patchwork.kernel.org/patch/189242/
+		  https://patchwork.kernel.org/patch/189252/
+
+
+For details, please visit the bug entries and follow the links given in
+references.
+
+As you can see, there is a Bugzilla entry for each of the listed regressions.
+There also is a Bugzilla entry used for tracking the regressions introduced
+between 2.6.34 and 2.6.35, unresolved as well as resolved, at:
+
+http://bugzilla.kernel.org/show_bug.cgi?id=16055
+
+Please let the tracking team know if there are any Bugzilla entries that
+should be added to the list in there.
+
+Thanks!
 
