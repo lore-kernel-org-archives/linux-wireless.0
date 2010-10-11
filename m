@@ -1,214 +1,273 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:54628 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S933151Ab0JRUhF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 18 Oct 2010 16:37:05 -0400
-From: Hauke Mehrtens <hauke@hauke-m.de>
-To: lrodriguez@atheros.com
-Cc: linux-wireless@vger.kernel.org, mcgrof@infradead.org,
-	Hauke Mehrtens <hauke@hauke-m.de>
-Subject: [PATCH 1/2] compat-wireless: backport sock_recv_ts_and_drops in compat
-Date: Mon, 18 Oct 2010 22:36:54 +0200
-Message-Id: <1287434215-8883-1-git-send-email-hauke@hauke-m.de>
+Received: from mail-ew0-f46.google.com ([209.85.215.46]:49151 "EHLO
+	mail-ew0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753493Ab0JKJH5 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 11 Oct 2010 05:07:57 -0400
+From: Andy Shevchenko <andy.shevchenko@gmail.com>
+To: linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
+	linux-kernel@vger.kernel.org
+Cc: Nohee Ko <noheek@broadcom.com>,
+	Greg Kroah-Hartman <gregkh@suse.de>,
+	Andy Shevchenko <andy.shevchenko@gmail.com>
+Subject: [PATCHv2 2/2] staging: brcm80211: remove custom string library again
+Date: Mon, 11 Oct 2010 12:07:35 +0300
+Message-Id: <29a7e8fb4c59176d0a05eabc7f8a5dcbad4f704c.1286787946.git.andy.shevchenko@gmail.com>
+In-Reply-To: <9134fce655e27d36628ab508127a6d3f2d8fbfb8.1286787946.git.andy.shevchenko@gmail.com>
+References: <9134fce655e27d36628ab508127a6d3f2d8fbfb8.1286787946.git.andy.shevchenko@gmail.com>
+In-Reply-To: <9134fce655e27d36628ab508127a6d3f2d8fbfb8.1286787946.git.andy.shevchenko@gmail.com>
+References: <9134fce655e27d36628ab508127a6d3f2d8fbfb8.1286787946.git.andy.shevchenko@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+There was a clean up commit for softmac driver. Do the same for fullmac
+implementation.
 
-Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+Here:
+ - strtoul and bcm_strtoul are changed to simple_strtoul
+ - bcmstrtok -> strsep
+
+All unused functions are deleted.
+
+Signed-off-by: Andy Shevchenko <andy.shevchenko@gmail.com>
 ---
- patches/16-bluetooth.patch |   60 +++++++++++++------------------------------
- 1 files changed, 18 insertions(+), 42 deletions(-)
+ drivers/staging/brcm80211/brcmfmac/dhd_common.c  |   24 ++++----
+ drivers/staging/brcm80211/brcmfmac/wl_cfg80211.c |    4 +-
+ drivers/staging/brcm80211/include/bcmutils.h     |    1 -
+ drivers/staging/brcm80211/util/bcmutils.c        |   76 ----------------------
+ 4 files changed, 14 insertions(+), 91 deletions(-)
 
-diff --git a/patches/16-bluetooth.patch b/patches/16-bluetooth.patch
-index 8bdc530..e58ccc6 100644
---- a/patches/16-bluetooth.patch
-+++ b/patches/16-bluetooth.patch
-@@ -56,19 +56,7 @@ here still, but for now we keep this here.
-  		bt_sock_reclassify_lock(sock, proto);
-  		module_put(bt_proto[proto]->owner);
-  	}
--@@ -257,7 +265,11 @@ int bt_sock_recvmsg(struct kiocb *iocb, 
-- 	skb_reset_transport_header(skb);
-- 	err = skb_copy_datagram_iovec(skb, 0, msg->msg_iov, copied);
-- 	if (err == 0)
--+#if (LINUX_VERSION_CODE > KERNEL_VERSION(2,6,32))
-- 		sock_recv_ts_and_drops(msg, sk, skb);
--+#else
--+		sock_recv_timestamp(msg, sk, skb);
--+#endif
-- 
-- 	skb_free_datagram(sk, skb);
-- 
--@@ -336,7 +348,11 @@ int bt_sock_ioctl(struct socket *sock, u
-+@@ -445,7 +457,11 @@ int bt_sock_ioctl(struct socket *sock, u
-  		if (sk->sk_state == BT_LISTEN)
-  			return -EINVAL;
-  
-@@ -138,7 +126,7 @@ here still, but for now we keep this here.
-  
- --- a/net/bluetooth/hci_sysfs.c
- +++ b/net/bluetooth/hci_sysfs.c
--@@ -71,7 +71,11 @@ static struct attribute_group bt_link_gr
-+@@ -69,7 +69,11 @@ static struct attribute_group bt_link_gr
-  	.attrs = bt_link_attrs,
-  };
-  
-@@ -150,7 +138,7 @@ here still, but for now we keep this here.
-  	&bt_link_group,
-  	NULL
-  };
--@@ -129,7 +133,11 @@ static void del_conn(struct work_struct 
-+@@ -127,7 +131,11 @@ static void del_conn(struct work_struct 
-  		dev = device_find_child(&conn->dev, NULL, __match_tty);
-  		if (!dev)
-  			break;
-@@ -162,7 +150,7 @@ here still, but for now we keep this here.
-  		put_device(dev);
-  	}
-  
--@@ -381,7 +389,11 @@ static struct attribute_group bt_host_gr
-+@@ -377,7 +385,11 @@ static struct attribute_group bt_host_gr
-  	.attrs = bt_host_attrs,
-  };
-  
-@@ -287,7 +275,7 @@ here still, but for now we keep this here.
-  static int hidp_parse(struct hid_device *hid)
-  {
-  	struct hidp_session *session = hid->driver_data;
--@@ -815,6 +896,7 @@ fault:
-+@@ -811,6 +892,7 @@ fault:
-  
-  	return err;
-  }
-@@ -295,7 +283,7 @@ here still, but for now we keep this here.
-  
-  int hidp_add_connection(struct hidp_connadd_req *req, struct socket *ctrl_sock, struct socket *intr_sock)
-  {
--@@ -833,6 +915,39 @@ int hidp_add_connection(struct hidp_conn
-+@@ -829,6 +911,39 @@ int hidp_add_connection(struct hidp_conn
-  
-  	BT_DBG("rd_data %p rd_size %d", req->rd_data, req->rd_size);
-  
-@@ -335,7 +323,7 @@ here still, but for now we keep this here.
-  	down_write(&hidp_session_sem);
-  
-  	s = __hidp_get_session(&bt_sk(ctrl_sock->sk)->dst);
--@@ -860,6 +975,7 @@ int hidp_add_connection(struct hidp_conn
-+@@ -856,6 +971,7 @@ int hidp_add_connection(struct hidp_conn
-  	session->flags   = req->flags & (1 << HIDP_BLUETOOTH_VENDOR_ID);
-  	session->idle_to = req->idle_to;
-  
-@@ -343,7 +331,7 @@ here still, but for now we keep this here.
-  	if (req->rd_size > 0) {
-  		err = hidp_setup_hid(session, req);
-  		if (err && err != -ENODEV)
--@@ -871,6 +987,16 @@ int hidp_add_connection(struct hidp_conn
-+@@ -867,6 +983,16 @@ int hidp_add_connection(struct hidp_conn
-  		if (err < 0)
-  			goto purge;
-  	}
-@@ -360,7 +348,7 @@ here still, but for now we keep this here.
-  
-  	__hidp_link_session(session);
-  
--@@ -902,6 +1028,7 @@ unlink:
-+@@ -898,6 +1024,7 @@ unlink:
-  		session->input = NULL;
-  	}
-  
-@@ -368,7 +356,7 @@ here still, but for now we keep this here.
-  	if (session->hid) {
-  		hid_destroy_device(session->hid);
-  		session->hid = NULL;
--@@ -913,10 +1040,15 @@ unlink:
-+@@ -909,10 +1036,15 @@ unlink:
-  purge:
-  	skb_queue_purge(&session->ctrl_transmit);
-  	skb_queue_purge(&session->intr_transmit);
-@@ -384,7 +372,7 @@ here still, but for now we keep this here.
-  	input_free_device(session->input);
-  	kfree(session);
-  	return err;
--@@ -1006,6 +1138,7 @@ int hidp_get_conninfo(struct hidp_connin
-+@@ -1002,6 +1134,7 @@ int hidp_get_conninfo(struct hidp_connin
-  	return err;
-  }
-  
-@@ -392,7 +380,7 @@ here still, but for now we keep this here.
-  static const struct hid_device_id hidp_table[] = {
-  	{ HID_BLUETOOTH_DEVICE(HID_ANY_ID, HID_ANY_ID) },
-  	{ }
--@@ -1015,6 +1148,7 @@ static struct hid_driver hidp_driver = {
-+@@ -1011,6 +1144,7 @@ static struct hid_driver hidp_driver = {
-  	.name = "generic-bluetooth",
-  	.id_table = hidp_table,
-  };
-@@ -400,7 +388,7 @@ here still, but for now we keep this here.
-  
-  static int __init hidp_init(void)
-  {
--@@ -1024,11 +1158,14 @@ static int __init hidp_init(void)
-+@@ -1020,11 +1154,14 @@ static int __init hidp_init(void)
-  
-  	BT_INFO("HIDP (Human Interface Emulation) ver %s", VERSION);
-  
-@@ -415,7 +403,7 @@ here still, but for now we keep this here.
-  	if (ret)
-  		goto err_drv;
-  
--@@ -1036,13 +1173,16 @@ static int __init hidp_init(void)
-+@@ -1032,13 +1169,16 @@ static int __init hidp_init(void)
-  err_drv:
-  	hid_unregister_driver(&hidp_driver);
-  err:
-@@ -448,19 +436,7 @@ here still, but for now we keep this here.
-  {
-  	struct sock *sk;
-  
--@@ -711,7 +716,11 @@ static int rfcomm_sock_recvmsg(struct ki
-- 		copied += chunk;
-- 		size   -= chunk;
-- 
--+#if (LINUX_VERSION_CODE > KERNEL_VERSION(2,6,32))
-- 		sock_recv_ts_and_drops(msg, sk, skb);
--+#else
--+		sock_recv_timestamp(msg, sk, skb);
--+#endif
-- 
-- 		if (!(flags & MSG_PEEK)) {
-- 			atomic_sub(chunk, &sk->sk_rmem_alloc);
--@@ -774,7 +783,11 @@ static int rfcomm_sock_setsockopt_old(st
-+@@ -682,7 +687,11 @@ static int rfcomm_sock_setsockopt_old(st
-  	return err;
-  }
-  
-@@ -474,7 +450,7 @@ here still, but for now we keep this here.
-  	struct bt_security sec;
- --- a/net/bluetooth/rfcomm/tty.c
- +++ b/net/bluetooth/rfcomm/tty.c
--@@ -731,8 +731,12 @@ static int rfcomm_tty_open(struct tty_st
-+@@ -729,8 +729,12 @@ static int rfcomm_tty_open(struct tty_st
-  	remove_wait_queue(&dev->wait, &wait);
-  
-  	if (err == 0)
-@@ -487,7 +463,7 @@ here still, but for now we keep this here.
-  
-  	rfcomm_tty_copy_pending(dev);
-  
--@@ -752,7 +756,11 @@ static void rfcomm_tty_close(struct tty_
-+@@ -750,7 +754,11 @@ static void rfcomm_tty_close(struct tty_
-  
-  	if (atomic_dec_and_test(&dev->opened)) {
-  		if (dev->tty_dev->parent)
-@@ -598,7 +574,7 @@ here still, but for now we keep this here.
-  		return -EPERM;
-  
-  	sock->ops = &l2cap_sock_ops;
--@@ -2022,7 +2030,11 @@ static int l2cap_sock_setsockopt_old(str
-+@@ -2042,7 +2050,11 @@ static int l2cap_sock_setsockopt_old(str
-  	return err;
-  }
-  
+diff --git a/drivers/staging/brcm80211/brcmfmac/dhd_common.c b/drivers/staging/brcm80211/brcmfmac/dhd_common.c
+index 54b07f9..481c35d 100644
+--- a/drivers/staging/brcm80211/brcmfmac/dhd_common.c
++++ b/drivers/staging/brcm80211/brcmfmac/dhd_common.c
+@@ -15,6 +15,8 @@
+  */
+ #include <typedefs.h>
+ #include <osl.h>
++#include <linux/kernel.h>
++#include <linux/string.h>
+ #include <bcmutils.h>
+ #include <bcmendian.h>
+ #include <dngl_stats.h>
+@@ -967,8 +969,6 @@ void print_buf(void *pbuf, int len, int bytes_per_line)
+ 	printf("\n");
+ }
+ 
+-#define strtoul(nptr, endptr, base) simple_strtoul((nptr), (endptr), (base))
+-
+ /* Convert user's input in hex pattern to byte-size mask */
+ static int wl_pattern_atoh(char *src, char *dst)
+ {
+@@ -986,7 +986,7 @@ static int wl_pattern_atoh(char *src, char *dst)
+ 		char num[3];
+ 		strncpy(num, src, 2);
+ 		num[2] = '\0';
+-		dst[i] = (u8) strtoul(num, NULL, 16);
++		dst[i] = (u8) simple_strtoul(num, NULL, 16);
+ 		src += 2;
+ 	}
+ 	return i;
+@@ -1015,7 +1015,7 @@ dhd_pktfilter_offload_enable(dhd_pub_t *dhd, char *arg, int enable,
+ 	arg_org = arg_save;
+ 	memcpy(arg_save, arg, strlen(arg) + 1);
+ 
+-	argv[i] = bcmstrtok(&arg_save, " ", 0);
++	argv[i] = strsep(&arg_save, " ");
+ 
+ 	i = 0;
+ 	if (NULL == argv[i]) {
+@@ -1032,7 +1032,7 @@ dhd_pktfilter_offload_enable(dhd_pub_t *dhd, char *arg, int enable,
+ 	pkt_filterp = (wl_pkt_filter_enable_t *) (buf + str_len + 1);
+ 
+ 	/* Parse packet filter id. */
+-	enable_parm.id = htod32(strtoul(argv[i], NULL, 0));
++	enable_parm.id = htod32(simple_strtoul(argv[i], NULL, 0));
+ 
+ 	/* Parse enable/disable value. */
+ 	enable_parm.enable = htod32(enable);
+@@ -1101,9 +1101,9 @@ void dhd_pktfilter_offload_set(dhd_pub_t *dhd, char *arg)
+ 		goto fail;
+ 	}
+ 
+-	argv[i] = bcmstrtok(&arg_save, " ", 0);
++	argv[i] = strsep(&arg_save, " ");
+ 	while (argv[i++])
+-		argv[i] = bcmstrtok(&arg_save, " ", 0);
++		argv[i] = strsep(&arg_save, " ");
+ 
+ 	i = 0;
+ 	if (NULL == argv[i]) {
+@@ -1120,7 +1120,7 @@ void dhd_pktfilter_offload_set(dhd_pub_t *dhd, char *arg)
+ 	pkt_filterp = (wl_pkt_filter_t *) (buf + str_len + 1);
+ 
+ 	/* Parse packet filter id. */
+-	pkt_filter.id = htod32(strtoul(argv[i], NULL, 0));
++	pkt_filter.id = htod32(simple_strtoul(argv[i], NULL, 0));
+ 
+ 	if (NULL == argv[++i]) {
+ 		DHD_ERROR(("Polarity not provided\n"));
+@@ -1128,7 +1128,7 @@ void dhd_pktfilter_offload_set(dhd_pub_t *dhd, char *arg)
+ 	}
+ 
+ 	/* Parse filter polarity. */
+-	pkt_filter.negate_match = htod32(strtoul(argv[i], NULL, 0));
++	pkt_filter.negate_match = htod32(simple_strtoul(argv[i], NULL, 0));
+ 
+ 	if (NULL == argv[++i]) {
+ 		DHD_ERROR(("Filter type not provided\n"));
+@@ -1136,7 +1136,7 @@ void dhd_pktfilter_offload_set(dhd_pub_t *dhd, char *arg)
+ 	}
+ 
+ 	/* Parse filter type. */
+-	pkt_filter.type = htod32(strtoul(argv[i], NULL, 0));
++	pkt_filter.type = htod32(simple_strtoul(argv[i], NULL, 0));
+ 
+ 	if (NULL == argv[++i]) {
+ 		DHD_ERROR(("Offset not provided\n"));
+@@ -1144,7 +1144,7 @@ void dhd_pktfilter_offload_set(dhd_pub_t *dhd, char *arg)
+ 	}
+ 
+ 	/* Parse pattern filter offset. */
+-	pkt_filter.u.pattern.offset = htod32(strtoul(argv[i], NULL, 0));
++	pkt_filter.u.pattern.offset = htod32(simple_strtoul(argv[i], NULL, 0));
+ 
+ 	if (NULL == argv[++i]) {
+ 		DHD_ERROR(("Bitmask not provided\n"));
+@@ -1290,7 +1290,7 @@ int dhd_preinit_ioctls(dhd_pub_t *dhd)
+ 	ptr = buf;
+ 	bcm_mkiovar("ver", 0, 0, buf, sizeof(buf));
+ 	dhdcdc_query_ioctl(dhd, 0, WLC_GET_VAR, buf, sizeof(buf));
+-	bcmstrtok(&ptr, "\n", 0);
++	strsep(&ptr, "\n");
+ 	/* Print fw version info */
+ 	DHD_ERROR(("Firmware version = %s\n", buf));
+ 
+diff --git a/drivers/staging/brcm80211/brcmfmac/wl_cfg80211.c b/drivers/staging/brcm80211/brcmfmac/wl_cfg80211.c
+index c073e44..e9920e5 100644
+--- a/drivers/staging/brcm80211/brcmfmac/wl_cfg80211.c
++++ b/drivers/staging/brcm80211/brcmfmac/wl_cfg80211.c
+@@ -17,6 +17,7 @@
+ #include <typedefs.h>
+ #include <linuxver.h>
+ #include <osl.h>
++#include <linux/kernel.h>
+ 
+ #include <bcmutils.h>
+ #include <bcmendian.h>
+@@ -3588,7 +3589,6 @@ dongle_offload_out:
+ 
+ static s32 wl_pattern_atoh(s8 *src, s8 *dst)
+ {
+-#define strtoul(nptr, endptr, base) bcm_strtoul((nptr), (endptr), (base))
+ 	int i;
+ 	if (strncmp(src, "0x", 2) != 0 && strncmp(src, "0X", 2) != 0) {
+ 		WL_ERR(("Mask invalid format. Needs to start with 0x\n"));
+@@ -3603,7 +3603,7 @@ static s32 wl_pattern_atoh(s8 *src, s8 *dst)
+ 		char num[3];
+ 		strncpy(num, src, 2);
+ 		num[2] = '\0';
+-		dst[i] = (u8) strtoul(num, NULL, 16);
++		dst[i] = (u8) simple_strtoul(num, NULL, 16);
+ 		src += 2;
+ 	}
+ 	return i;
+diff --git a/drivers/staging/brcm80211/include/bcmutils.h b/drivers/staging/brcm80211/include/bcmutils.h
+index dcb0236..504ff65 100644
+--- a/drivers/staging/brcm80211/include/bcmutils.h
++++ b/drivers/staging/brcm80211/include/bcmutils.h
+@@ -162,7 +162,6 @@
+ #define	PKTPRIO_UPD	0x400	/* DSCP used to update VLAN prio */
+ #define	PKTPRIO_DSCP	0x800	/* DSCP prio found */
+ 
+-	char *bcmstrtok(char **string, const char *delimiters, char *tokdelim);
+ /* ethernet address */
+ 	extern char *bcm_ether_ntoa(const struct ether_addr *ea, char *buf);
+ 	extern int bcm_ether_atoe(char *p, struct ether_addr *ea);
+diff --git a/drivers/staging/brcm80211/util/bcmutils.c b/drivers/staging/brcm80211/util/bcmutils.c
+index 71b23b6..02d76d6 100644
+--- a/drivers/staging/brcm80211/util/bcmutils.c
++++ b/drivers/staging/brcm80211/util/bcmutils.c
+@@ -1117,79 +1117,3 @@ int bcm_bprintf(struct bcmstrbuf *b, const char *fmt, ...)
+ 	return r;
+ }
+ 
+-/****************************************************************************
+-* Function:   bcmstrtok
+-*
+-* Purpose:
+-*  Tokenizes a string. This function is conceptually similiar to ANSI C strtok(),
+-*  but allows strToken() to be used by different strings or callers at the same
+-*  time. Each call modifies '*string' by substituting a NULL character for the
+-*  first delimiter that is encountered, and updates 'string' to point to the char
+-*  after the delimiter. Leading delimiters are skipped.
+-*
+-* Parameters:
+-*  string      (mod) Ptr to string ptr, updated by token.
+-*  delimiters  (in)  Set of delimiter characters.
+-*  tokdelim    (out) Character that delimits the returned token. (May
+-*                    be set to NULL if token delimiter is not required).
+-*
+-* Returns:  Pointer to the next token found. NULL when no more tokens are found.
+-*****************************************************************************
+-*/
+-char *bcmstrtok(char **string, const char *delimiters, char *tokdelim)
+-{
+-	unsigned char *str;
+-	unsigned long map[8];
+-	int count;
+-	char *nextoken;
+-
+-	if (tokdelim != NULL) {
+-		/* Prime the token delimiter */
+-		*tokdelim = '\0';
+-	}
+-
+-	/* Clear control map */
+-	for (count = 0; count < 8; count++) {
+-		map[count] = 0;
+-	}
+-
+-	/* Set bits in delimiter table */
+-	do {
+-		map[*delimiters >> 5] |= (1 << (*delimiters & 31));
+-	} while (*delimiters++);
+-
+-	str = (unsigned char *)*string;
+-
+-	/* Find beginning of token (skip over leading delimiters). Note that
+-	 * there is no token iff this loop sets str to point to the terminal
+-	 * null (*str == '\0')
+-	 */
+-	while (((map[*str >> 5] & (1 << (*str & 31))) && *str) || (*str == ' ')) {
+-		str++;
+-	}
+-
+-	nextoken = (char *)str;
+-
+-	/* Find the end of the token. If it is not the end of the string,
+-	 * put a null there.
+-	 */
+-	for (; *str; str++) {
+-		if (map[*str >> 5] & (1 << (*str & 31))) {
+-			if (tokdelim != NULL) {
+-				*tokdelim = *str;
+-			}
+-
+-			*str++ = '\0';
+-			break;
+-		}
+-	}
+-
+-	*string = (char *)str;
+-
+-	/* Determine if a token has been found. */
+-	if (nextoken == (char *)str) {
+-		return NULL;
+-	} else {
+-		return nextoken;
+-	}
+-}
 -- 
-1.7.0.4
+1.7.2.3
 
