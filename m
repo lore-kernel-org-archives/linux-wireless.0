@@ -1,104 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ist.d-labs.de ([213.239.218.44]:52891 "EHLO mx01.d-labs.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753199Ab0JEWWu (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 5 Oct 2010 18:22:50 -0400
-From: Florian Mickler <florian@mickler.org>
-To: linville@tuxdriver.com
-Cc: stable@kernel.org, linux-wireless@vger.kernel.org,
-	wey-yi.w.guy@intel.com, reinette.chatre@intel.com,
-	ilw@linux.intel.com, johannes.berg@intel.com,
-	ben.m.cahill@intel.com, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org, sgruszka@redhat.com,
-	Florian Mickler <florian@mickler.org>
-Subject: [PATCH] iwlwifi: fix iwlwifi scanning corner cases
-Date: Wed,  6 Oct 2010 00:21:32 +0200
-Message-Id: <1286317292-10679-1-git-send-email-florian@mickler.org>
-In-Reply-To: <20101005085717.GA18012@redhat.com>
-References: <20101005085717.GA18012@redhat.com>
+Received: from he.sipsolutions.net ([78.46.109.217]:47469 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755355Ab0JKR4x (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 11 Oct 2010 13:56:53 -0400
+Subject: Re: phyX enumeration conflict
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Ben Greear <greearb@candelatech.com>
+Cc: Christian Lamparter <chunkeey@googlemail.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	rainbow lum <rainbowlum@gmail.com>
+In-Reply-To: <4CB34D87.9090100@candelatech.com>
+References: <201010082159.59262.chunkeey@googlemail.com>
+	 <1286698152.3547.4.camel@jlt3.sipsolutions.net>
+	 <1286698604.3547.7.camel@jlt3.sipsolutions.net>
+	 <4CB1DE18.9070400@candelatech.com>
+	 <1286729035.3547.10.camel@jlt3.sipsolutions.net>
+	 <4CB348B0.3050909@candelatech.com>
+	 <1286818499.3634.67.camel@jlt3.sipsolutions.net>
+	 <4CB34D87.9090100@candelatech.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Mon, 11 Oct 2010 19:56:50 +0200
+Message-ID: <1286819810.3634.77.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Stanislaw Gruszka pointed out, that commit
-"iwl3945: queue the right work if the scan needs to be aborted"
-has an awkward definition of "right". Specifically the abort_scan work
-doesn't notify the generic wireless stack that the scan was aborted.
+On Mon, 2010-10-11 at 10:46 -0700, Ben Greear wrote:
+> On 10/11/2010 10:34 AM, Johannes Berg wrote:
+> > On Mon, 2010-10-11 at 10:26 -0700, Ben Greear wrote:
+> >
+> >> However, the 'phy0' name doesn't change in
+> >> /debug/ath5k/[phy-dev]/ link, so it confuses my tools.
+> >
+> > If it used /debug/ieee80211/[phy-dev]/ then it'd be renamed
+> > automatically...
+> 
+> I need to get at specific info in the driver's debugfs dir, however.
 
-In order to get rid of the warning in bug
-https://bugzilla.kernel.org/show_bug.cgi?id=17722
-we inform ieee80211_scan_completed that we are aborting
-the scan by setting the apropriate status bit in request_scan and 
-pass it into ieee80211_scan_completed. 
+Yeah but you can change the driver to put its own stuff into that
+directory, and then it doesn't have to worry about renames (which it
+isn't told about anyway)
 
-Signed-off-by: Florian Mickler <florian@mickler.org>
----
-
-Hi John!
-
-Here is the fix that Stanislaw described. 
-(Yes, it is in a brown paper bag.)  Please wait for him to review this. 
-
-Another option would be to just revert my previous patch and live with the 
-warning until the scanning rework hit's mainline.
-
-Regards,
-Flo
-
-
-
-
- drivers/net/wireless/iwlwifi/iwl-agn-lib.c  |    4 +++-
- drivers/net/wireless/iwlwifi/iwl-scan.c     |    6 ++++--
- drivers/net/wireless/iwlwifi/iwl3945-base.c |    3 ++-
- 3 files changed, 9 insertions(+), 4 deletions(-)
-
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-lib.c b/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
-index 8fd00a6..2d26767 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
-@@ -1410,8 +1410,10 @@ void iwlagn_request_scan(struct iwl_priv *priv, struct ieee80211_vif *vif)
- 	*/
- 	clear_bit(STATUS_SCAN_HW, &priv->status);
- 	clear_bit(STATUS_SCANNING, &priv->status);
-+
- 	/* inform mac80211 scan aborted */
--	queue_work(priv->workqueue, &priv->abort_scan);
-+	set_bit(STATUS_SCAN_ABORTING, &priv->status);
-+	queue_work(priv->workqueue, &priv->scan_completed);
- }
- 
- int iwlagn_manage_ibss_station(struct iwl_priv *priv,
-diff --git a/drivers/net/wireless/iwlwifi/iwl-scan.c b/drivers/net/wireless/iwlwifi/iwl-scan.c
-index a4b3663..fedf384 100644
---- a/drivers/net/wireless/iwlwifi/iwl-scan.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-scan.c
-@@ -552,8 +552,10 @@ void iwl_bg_scan_completed(struct work_struct *work)
- 	 * into driver again into functions that will attempt to take
- 	 * mutex.
- 	 */
--	if (!internal)
--		ieee80211_scan_completed(priv->hw, false);
-+	if (!internal) {
-+		bool aborted = test_bit(STATUS_SCAN_ABORTING, &priv->status);
-+		ieee80211_scan_completed(priv->hw, aborted);
-+	}
- }
- EXPORT_SYMBOL(iwl_bg_scan_completed);
- 
-diff --git a/drivers/net/wireless/iwlwifi/iwl3945-base.c b/drivers/net/wireless/iwlwifi/iwl3945-base.c
-index d31661c..da10588 100644
---- a/drivers/net/wireless/iwlwifi/iwl3945-base.c
-+++ b/drivers/net/wireless/iwlwifi/iwl3945-base.c
-@@ -3018,7 +3018,8 @@ void iwl3945_request_scan(struct iwl_priv *priv, struct ieee80211_vif *vif)
- 	clear_bit(STATUS_SCANNING, &priv->status);
- 
- 	/* inform mac80211 scan aborted */
--	queue_work(priv->workqueue, &priv->abort_scan);
-+	set_bit(STATUS_SCAN_ABORTING, &priv->status);
-+	queue_work(priv->workqueue, &priv->scan_completed);
- }
- 
- static void iwl3945_bg_restart(struct work_struct *data)
--- 
-1.7.3
+johannes
 
