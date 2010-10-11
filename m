@@ -1,66 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gx0-f174.google.com ([209.85.161.174]:54887 "EHLO
-	mail-gx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753337Ab0JVV51 convert rfc822-to-8bit (ORCPT
+Received: from mail.candelatech.com ([208.74.158.172]:59329 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756082Ab0JKUb7 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 22 Oct 2010 17:57:27 -0400
-Received: by gxk23 with SMTP id 23so832256gxk.19
-        for <linux-wireless@vger.kernel.org>; Fri, 22 Oct 2010 14:57:26 -0700 (PDT)
+	Mon, 11 Oct 2010 16:31:59 -0400
+Received: from [192.168.100.195] (firewall.candelatech.com [70.89.124.249])
+	(authenticated bits=0)
+	by ns3.lanforge.com (8.14.2/8.14.2) with ESMTP id o9BKVw6C032404
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
+	for <linux-wireless@vger.kernel.org>; Mon, 11 Oct 2010 13:31:58 -0700
+Message-ID: <4CB3743E.9060002@candelatech.com>
+Date: Mon, 11 Oct 2010 13:31:58 -0700
+From: Ben Greear <greearb@candelatech.com>
 MIME-Version: 1.0
-In-Reply-To: <4CC2043D.2040909@lwfinger.net>
-References: <1287779045-20257-1-git-send-email-zajec5@gmail.com>
-	<4CC2043D.2040909@lwfinger.net>
-Date: Fri, 22 Oct 2010 23:57:26 +0200
-Message-ID: <AANLkTika4wVhH=rGc=qgZozgbe9j-+-zzPkb1KGWLHJC@mail.gmail.com>
-Subject: Re: [PATCH] b43: rfkill: use status register based on core revision
- not (PHY's)
-From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>,
-	b43-dev@lists.infradead.org
-Content-Type: text/plain; charset=UTF-8
+To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: lockdep warning relating to ath5k_ani_calibration
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-W dniu 22 października 2010 23:38 użytkownik Larry Finger
-<Larry.Finger@lwfinger.net> napisał:
-> On 10/22/2010 03:24 PM, Rafał Miłecki wrote:
->> Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
->> ---
->> This makes my N-PHY radio at least running (no scanning results so far). The
->> same register is used by wl on this device.
->> ---
->>  drivers/net/wireless/b43/rfkill.c |    2 +-
->>  1 files changed, 1 insertions(+), 1 deletions(-)
->>
->> diff --git a/drivers/net/wireless/b43/rfkill.c b/drivers/net/wireless/b43/rfkill.c
->> index 78016ae..d2734c9 100644
->> --- a/drivers/net/wireless/b43/rfkill.c
->> +++ b/drivers/net/wireless/b43/rfkill.c
->> @@ -28,7 +28,7 @@
->>  /* Returns TRUE, if the radio is enabled in hardware. */
->>  bool b43_is_hw_radio_enabled(struct b43_wldev *dev)
->>  {
->> -     if (dev->phy.rev >= 3 || dev->phy.type == B43_PHYTYPE_LP) {
->> +     if (dev->dev->id.revision >= 3) {
->>               if (!(b43_read32(dev, B43_MMIO_RADIO_HWENABLED_HI)
->>                     & B43_MMIO_RADIO_HWENABLED_HI_MASK))
->>                       return
->
-> As that register is present only when the core revision >= 3, this change should
-> not cause a regression. Perhaps this was an error in the RE from the start and
-> testing the phy.rev has always been wrong.
+ From today's wireless-testing tree:
 
-Do not blame RE team ;) It was described correctly since "ever", you
-can check it in history of:
-http://bcm-specs.sipsolutions.net/MMIO
+Oct 11 13:30:09 localhost kernel: INFO: trying to register non-static key.
+Oct 11 13:30:09 localhost kernel: ieee80211 wiphy0: device now idle
+Oct 11 13:30:09 localhost kernel: the code is fine but needs lockdep annotation.
+Oct 11 13:30:09 localhost kernel: turning off the locking correctness validator.
+Oct 11 13:30:09 localhost kernel: Pid: 13806, comm: nmcli Not tainted 2.6.36-rc7-wl+ #23
+Oct 11 13:30:09 localhost kernel: Call Trace:
+Oct 11 13:30:09 localhost kernel: [<c075e4a0>] ? printk+0xf/0x17
+Oct 11 13:30:09 localhost kernel: [<c045507e>] register_lock_class+0x5a/0x29e
+Oct 11 13:30:09 localhost kernel: [<c0456af9>] __lock_acquire+0xa2/0xb8c
+Oct 11 13:30:09 localhost kernel: [<c0455be6>] ? mark_lock+0x1e/0x1de
+Oct 11 13:30:09 localhost kernel: [<c045763d>] lock_acquire+0x5a/0x78
+Oct 11 13:30:09 localhost kernel: [<fc34384d>] ? ath5k_ani_calibration+0x24/0x52b [ath5k]
+Oct 11 13:30:09 localhost kernel: [<c076024d>] _raw_spin_lock_bh+0x20/0x2f
+Oct 11 13:30:09 localhost kernel: [<fc34384d>] ? ath5k_ani_calibration+0x24/0x52b [ath5k]
+Oct 11 13:30:09 localhost kernel: [<fc34384d>] ath5k_ani_calibration+0x24/0x52b [ath5k]
+Oct 11 13:30:09 localhost kernel: [<fc340c2b>] ath5k_tasklet_ani+0x18/0x22 [ath5k]
+Oct 11 13:30:09 localhost kernel: [<c0438fe1>] tasklet_action+0x73/0xc6
+Oct 11 13:30:09 localhost kernel: [<c043946f>] __do_softirq+0x86/0x111
+Oct 11 13:30:09 localhost kernel: [<c0439530>] do_softirq+0x36/0x5a
+Oct 11 13:30:09 localhost kernel: [<c0439669>] irq_exit+0x35/0x69
+Oct 11 13:30:09 localhost kernel: [<c0403fb9>] do_IRQ+0x86/0x9a
+Oct 11 13:30:09 localhost kernel: [<c04034ee>] common_interrupt+0x2e/0x40
+Oct 11 13:30:09 localhost kernel: ADDRCONF(NETDEV_UP): wlan0: link is not ready
 
-I actually suspect this may be source of self-switching-on-off-radio
-issue described in:
-"b43legacy-phy3: Radio hardware status changed to XXX" thread.
-
-I already mailed reporter to ask if he still has access to problematic card.
 
 -- 
-Rafał
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
+
