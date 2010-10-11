@@ -1,73 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from senator.holtmann.net ([87.106.208.187]:39597 "EHLO
-	mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754498Ab0JIIGx (ORCPT
+Received: from mail-ew0-f46.google.com ([209.85.215.46]:62576 "EHLO
+	mail-ew0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754612Ab0JKNke (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 9 Oct 2010 04:06:53 -0400
-Subject: Re: Firmware versioning best practices: ath3k-2.fw rename or
- replace ath3k-1.fw ?
-From: Marcel Holtmann <marcel@holtmann.org>
-To: Sven-Haegar Koch <haegar@sdinet.de>
-Cc: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	Suraj Sumangala <Suraj.Sumangala@Atheros.com>,
-	Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
-	David Woodhouse <dwmw2@infradead.org>,
-	linux-bluetooth <linux-bluetooth@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <alpine.DEB.2.02.1010090040240.19472@aurora.sdinet.de>
-References: <20101008170258.GJ10149@tux> <4CAF5488.3030706@Atheros.com>
-	 <20101008181508.GM10149@tux>
-	 <alpine.DEB.2.02.1010090040240.19472@aurora.sdinet.de>
-Content-Type: text/plain; charset="UTF-8"
-Date: Sat, 09 Oct 2010 10:06:39 +0200
-Message-ID: <1286611599.6145.435.camel@aeonflux>
-Mime-Version: 1.0
+	Mon, 11 Oct 2010 09:40:34 -0400
+Received: by mail-ew0-f46.google.com with SMTP id 20so574157ewy.19
+        for <linux-wireless@vger.kernel.org>; Mon, 11 Oct 2010 06:40:33 -0700 (PDT)
+From: Ivo van Doorn <ivdoorn@gmail.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Subject: [PATCH 4/7] rt2x00: Fix dead queue when skb allocation failed
+Date: Mon, 11 Oct 2010 15:38:26 +0200
+Cc: linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com
+References: <201010111537.26584.IvDoorn@gmail.com> <201010111537.48587.IvDoorn@gmail.com> <201010111538.08677.IvDoorn@gmail.com>
+In-Reply-To: <201010111538.08677.IvDoorn@gmail.com>
+MIME-Version: 1.0
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Message-Id: <201010111538.27633.IvDoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Sven-Haeger,
+When the RX skb allocation failed, we should recycle
+the previously allocated skbuffer. By calling return
+we would kill the RX queue completely since the
+entry would be invalidated.
 
-> > > > I last tried to document a thread we had over this here:
-> > > >
-> > > > http://wireless.kernel.org/en/developers/Documentation/firmware-versioning
-> > > >
-> > 
-> > Thanks, I've updated that link above to document bug fixing does not require
-> > a filename change.
-> 
-> I would summarize it as:
-> 
-> If a new firmware version also works with an old driver, keep the filename.
+Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
+Acked-by: Helmut Schaa <helmut.schaa@googlemail.com>
+---
+ drivers/net/wireless/rt2x00/rt2x00dev.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-correct.
-
-> If a new firmware version also requires a new driver, change the name.
-> 
-> If a new driver requires a new firmware, change the name.
-
-These two depend. The exposed API stays the same. The firmware file
-itself is the same. Just the loading procedure is different. So no need
-to change the firmware name.
-
-Let me repeat this. If the API of the firmware exposed after loading it,
-breaks or is incompatible, then you need a new name.
-
-If you have generic commands to detect features in the firmware, then
-you should never be needed to change your firmware name. So you could
-extend the API as much as you like with keeping the same name.
-
-The different firmware names are for the driver to be able to detect the
-API of the firmware. And only if that is only possible via the filename
-you should use different filenames. Otherwise don't bother and use the
-generic feature detection of the firmware itself.
-
-And for Bluetooth in specific that is HCI. So any company needed
-different firmware filenames for Bluetooth have done something really
-really wrong in their development cycles.
-
-Regards
-
-Marcel
-
+diff --git a/drivers/net/wireless/rt2x00/rt2x00dev.c b/drivers/net/wireless/rt2x00/rt2x00dev.c
+index db25209..e5e8ba3 100644
+--- a/drivers/net/wireless/rt2x00/rt2x00dev.c
++++ b/drivers/net/wireless/rt2x00/rt2x00dev.c
+@@ -491,7 +491,7 @@ void rt2x00lib_rxdone(struct queue_entry *entry)
+ 	 */
+ 	skb = rt2x00queue_alloc_rxskb(entry);
+ 	if (!skb)
+-		return;
++		goto submit_entry;
+ 
+ 	/*
+ 	 * Unmap the skb.
+-- 
+1.7.2.3
 
