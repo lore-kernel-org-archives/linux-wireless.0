@@ -1,66 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qy0-f174.google.com ([209.85.216.174]:41888 "EHLO
-	mail-qy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758805Ab0JHR4Y convert rfc822-to-8bit (ORCPT
+Received: from mail.pripojeni.net ([217.66.174.14]:45365 "EHLO
+	smtp.pripojeni.net" rhost-flags-OK-FAIL-OK-OK) by vger.kernel.org
+	with ESMTP id S1753483Ab0JKJ1p (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 8 Oct 2010 13:56:24 -0400
-Received: by qyk1 with SMTP id 1so246101qyk.19
-        for <linux-wireless@vger.kernel.org>; Fri, 08 Oct 2010 10:56:23 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1286492072.20974.49.camel@jlt3.sipsolutions.net>
-References: <201009210057.13297.chunkeey@googlemail.com> <20100924180013.GD8077@tuxdriver.com>
- <201009250002.21219.chunkeey@googlemail.com> <AANLkTinCkWGs_KMz+QBUw2J5HUVU2hK1+8kVDr_PNZwP@mail.gmail.com>
- <1286492072.20974.49.camel@jlt3.sipsolutions.net>
-From: Javier Cardona <javier@cozybit.com>
-Date: Fri, 8 Oct 2010 10:56:02 -0700
-Message-ID: <AANLkTin6nwrhcGdnGxg_gMGSrD_GBc-R51qiendF4iAc@mail.gmail.com>
-Subject: Re: [RFC v2] mac80211: fix possible null-pointer dereference
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Steve deRosier <steve@cozybit.com>,
-	Christian Lamparter <chunkeey@googlemail.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Luis Carlos Cobo <luisca@cozybit.com>,
-	linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+	Mon, 11 Oct 2010 05:27:45 -0400
+From: Jiri Slaby <jslaby@suse.cz>
+To: linville@tuxdriver.com
+Cc: johannes.berg@intel.com, linux-wireless@vger.kernel.org,
+	linux-kernel@vger.kernel.org, jirislaby@gmail.com
+Subject: [PATCH 1/1] WIRELESS: at76c50x, remove unneeded NULL check
+Date: Mon, 11 Oct 2010 11:27:32 +0200
+Message-Id: <1286789252-14031-1-git-send-email-jslaby@suse.cz>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Johannes,
+Stanse found that urb cannot be NULL in at76_rx_tasklet because it is
+dereferenced earlier, so remove the unneeded check.
 
-On Thu, Oct 7, 2010 at 3:54 PM, Johannes Berg <johannes@sipsolutions.net> wrote:
->> Javier and I reviewed the patch and it definitely fixes a potential
->> problem and is correct.  Furthermore, applied to wireless-testing
->> head, it passes all of our cases in our test bed.
->>
->> I think it's good to go.
->
-> Err, are you positive? I think the code there is correct, apart from the
-> fact that it does no validation of
-> mgmt->u.action.u.plink_action.action_code whatsoever which may allow all
-> kinds of abuse :)
->
-> The only action that's valid w/o having a station entry for the peer is
-> PLINK_OPEN, which makes perfect sense.
+Signed-off-by: Jiri Slaby <jslaby@suse.cz>
+---
+ drivers/net/wireless/at76c50x-usb.c |    3 +--
+ 1 files changed, 1 insertions(+), 2 deletions(-)
 
-We believe Christian's second patch fixes a null-pointer de-reference
-that would be triggered by a PLINK_OPEN frame with
-mismatching/incompatible mesh configuration.  Let's analyze that case:
-
-void mesh_rx_plink_frame(...)
-(...)
-sta = sta_info_get(sdata, mgmt->sa);    <-- will return null
-if (!sta && ftype != PLINK_OPEN) {       <-- false for PLINK_OPEN frames
-(...)
-if (ftype != PLINK_CLOSE && (!mesh_matches_local(&elems, sdata))) {
-<-- true for PLINK_OPEN, non-compatible mesh config
-             (...)
-             spin_lock_bh(&sta->lock);         <-- boom!
+diff --git a/drivers/net/wireless/at76c50x-usb.c b/drivers/net/wireless/at76c50x-usb.c
+index 91c5f73..1476314 100644
+--- a/drivers/net/wireless/at76c50x-usb.c
++++ b/drivers/net/wireless/at76c50x-usb.c
+@@ -1525,8 +1525,7 @@ static void at76_rx_tasklet(unsigned long param)
+ 
+ 	if (priv->device_unplugged) {
+ 		at76_dbg(DBG_DEVSTART, "device unplugged");
+-		if (urb)
+-			at76_dbg(DBG_DEVSTART, "urb status %d", urb->status);
++		at76_dbg(DBG_DEVSTART, "urb status %d", urb->status);
+ 		return;
+ 	}
+ 
+-- 
+1.7.3.1
 
 
-The patch not only solves this problem, but also responds correctly to
-non-compatible PLINK_OPEN frames by generating a PLINK_CLOSE with the
-right reason code.
-
-Cheers,
-
-Javier
