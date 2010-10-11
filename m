@@ -1,78 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail30t.wh2.ocn.ne.jp ([125.206.180.136]:22177 "HELO
-	mail30t.wh2.ocn.ne.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1757033Ab0J0GCh (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:60007 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752044Ab0JKSmp (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 27 Oct 2010 02:02:37 -0400
-Received: from vs3007.wh2.ocn.ne.jp (125.206.180.235)
-	by mail30t.wh2.ocn.ne.jp (RS ver 1.0.95vs) with SMTP id 3-0951579353
-	for <linux-wireless@vger.kernel.org>; Wed, 27 Oct 2010 15:02:35 +0900 (JST)
-Subject: [PATCH v3] iw: Add ibss join parameter for beacon interval
-To: johannes@sipsolutions.net, linville@tuxdriver.com
-From: Bruno Randolf <br1@einfach.org>
+	Mon, 11 Oct 2010 14:42:45 -0400
+Subject: Re: [PATCH] wireless:  Print wiphy name in sysfs.
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Ben Greear <greearb@candelatech.com>
 Cc: linux-wireless@vger.kernel.org
-Date: Wed, 27 Oct 2010 15:02:37 +0900
-Message-ID: <20101027060237.30291.48316.stgit@localhost6.localdomain6>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+In-Reply-To: <4CB355EA.5050902@candelatech.com>
+References: <1286818139-1746-1-git-send-email-greearb@candelatech.com>
+	 <1286819927.3634.79.camel@jlt3.sipsolutions.net>
+	 <4CB351B2.4070803@candelatech.com>
+	 <1286820600.3634.80.camel@jlt3.sipsolutions.net>
+	 <4CB355EA.5050902@candelatech.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Mon, 11 Oct 2010 20:42:45 +0200
+Message-ID: <1286822565.3634.83.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-NL80211_ATTR_BEACON_INTERVAL already exists, we just have to use it.
+On Mon, 2010-10-11 at 11:22 -0700, Ben Greear wrote:
 
-Signed-off-by: Bruno Randolf <br1@einfach.org>
+> > basename $(readlink /sys/class/net/wlan0/phy80211)
+> 
+> It looks like that could work, but it seems a lot easier to probe
+> network devices via normal manner, and then check if I can just
+> open and read /sys/class/net/[dev-name]/phy80211/name
+> 
+> I can do that easily from within a C/C++ program, where as
+> doing system calls and grabbing standard output is more of
+> a pain (and more overhead).
+> 
+> But, if you don't want to add my patch, it's not a big deal.
 
---
-v3: add minimal error checking
-v2: rename from 'bintval' to 'beacon-interval' and use correct units (TU)
----
- ibss.c |   19 ++++++++++++++++---
- 1 files changed, 16 insertions(+), 3 deletions(-)
+I don't really mind, it just didn't seem necessary. FWIW, readlink(2) is
+also a system call that your C program could use, but if you want the
+patch instead I guess that's fine.
 
-diff --git a/ibss.c b/ibss.c
-index e85ef1d..84ea7f2 100644
---- a/ibss.c
-+++ b/ibss.c
-@@ -26,6 +26,7 @@ static int join_ibss(struct nl80211_state *state,
- 	int n_rates = 0;
- 	char *value = NULL, *sptr = NULL;
- 	float rate;
-+	int bintval;
- 
- 	if (argc < 2)
- 		return 1;
-@@ -57,6 +58,17 @@ static int join_ibss(struct nl80211_state *state,
- 		}
- 	}
- 
-+	if (argc > 1 && strcmp(argv[0], "beacon-interval") == 0) {
-+		argv++;
-+		argc--;
-+		bintval = strtoul(argv[0], &end, 10);
-+		if (*end != '\0')
-+			return 1;
-+		NLA_PUT_U32(msg, NL80211_ATTR_BEACON_INTERVAL, bintval);
-+		argv++;
-+		argc--;
-+	}
-+
- 	/* basic rates */
- 	if (argc > 1 && strcmp(argv[0], "basic-rates") == 0) {
- 		argv++;
-@@ -108,11 +120,12 @@ COMMAND(ibss, leave, NULL,
- 	NL80211_CMD_LEAVE_IBSS, 0, CIB_NETDEV, leave_ibss,
- 	"Leave the current IBSS cell.");
- COMMAND(ibss, join,
--	"<SSID> <freq in MHz> [fixed-freq] [<fixed bssid>] "
--	"[basic-rates <rate in Mbps,rate2,...>] [key d:0:abcde]",
-+	"<SSID> <freq in MHz> [fixed-freq] [<fixed bssid>] [beacon-interval "
-+	"<TU>] [basic-rates <rate in Mbps,rate2,...>] [key d:0:abcde]",
- 	NL80211_CMD_JOIN_IBSS, 0, CIB_NETDEV, join_ibss,
- 	"Join the IBSS cell with the given SSID, if it doesn't exist create\n"
- 	"it on the given frequency. When fixed frequency is requested, don't\n"
- 	"join/create a cell on a different frequency. When a fixed BSSID is\n"
- 	"requested use that BSSID and do not adopt another cell's BSSID even\n"
--	"if it has higher TSF and the same SSID.");
-+	"if it has higher TSF and the same SSID. If an IBSS is created, create\n"
-+	"it with the specified basic-rates and beacon-interval (in TU).");
+johannes
 
