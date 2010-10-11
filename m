@@ -1,55 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from slowhand.arndnet.de ([88.198.19.76]:38827 "EHLO mail.unitix.de"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1754253Ab0J1PIz (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 28 Oct 2010 11:08:55 -0400
-Message-ID: <4CC99206.5090105@arndnet.de>
-Date: Thu, 28 Oct 2010 17:08:54 +0200
-From: Arnd Hannemann <arnd@arndnet.de>
+Received: from mail.candelatech.com ([208.74.158.172]:42039 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755486Ab0JKR0W (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 11 Oct 2010 13:26:22 -0400
+Message-ID: <4CB348B0.3050909@candelatech.com>
+Date: Mon, 11 Oct 2010 10:26:08 -0700
+From: Ben Greear <greearb@candelatech.com>
 MIME-Version: 1.0
-To: Larry Finger <Larry.Finger@lwfinger.net>
-CC: "linux-mmc@vger.kernel.org" <linux-mmc@vger.kernel.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: b43 sdio: WARNING: at drivers/mmc/core/core.c:237 mmc_wait_for_cmd
-References: <4CC874F4.5050908@arndnet.de> <4CC8CAAE.3040100@lwfinger.net> <4CC98892.7080000@arndnet.de> <4CC98D85.20703@lwfinger.net>
-In-Reply-To: <4CC98D85.20703@lwfinger.net>
-Content-Type: text/plain; charset=ISO-8859-15
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: Christian Lamparter <chunkeey@googlemail.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	rainbow lum <rainbowlum@gmail.com>
+Subject: Re: phyX enumeration conflict
+References: <201010082159.59262.chunkeey@googlemail.com>	 <1286698152.3547.4.camel@jlt3.sipsolutions.net>	 <1286698604.3547.7.camel@jlt3.sipsolutions.net>	 <4CB1DE18.9070400@candelatech.com> <1286729035.3547.10.camel@jlt3.sipsolutions.net>
+In-Reply-To: <1286729035.3547.10.camel@jlt3.sipsolutions.net>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+On 10/10/2010 09:43 AM, Johannes Berg wrote:
+> On Sun, 2010-10-10 at 08:39 -0700, Ben Greear wrote:
+>
+>> Sorry about that.  If anyone has any example udev magic to do this sort
+>> of thing, I'd like to try that out.
+>
+> This works:
+>
+> /etc/udev/rules.d/70-phyname.rules:
+> -- begin --
+> ACTION!="add", GOTO="phyname_end"
+> SUBSYSTEM!="ieee80211", GOTO="phyname_end"
+>
+> # read MAC address
+> ENV{MATCHADDR}="$attr{macaddress}"
+> ENV{PHYIDX}="$attr{index}"
+>
+> ENV{MATCHADDR}=="02:00:00:00:00:00", RUN+="/usr/sbin/iw %k set name hwsim0"
+>
+> LABEL="phyname_end"
+> -- end --
+>
+> Of course, you'd probably want to do something like
+> persistent-net-generator etc, but I'll leave that to somebody else.
+>
+> Just remember you can't actually name it "phy0".
 
-Am 28.10.2010 16:49, schrieb Larry Finger:
-> On 10/28/2010 09:28 AM, Arnd Hannemann wrote:
->> Hi,
-> \> [ 1364.620044] b43-phy1 debug: Removing Interface type 2
->> [ 1364.621812] b43-phy1 debug: Wireless interface stopped
->> [ 1372.440297] b43-sdio: before ssb_bus_unregister, claimed is 0
->> [ 1372.440345] b43-sdio: before sdio_disable_func, claimed is 0
->> [ 1372.440351] ------------[ cut here ]------------
->> [ 1372.440367] WARNING: at drivers/mmc/core/core.c:237 mmc_wait_for_cmd+0x88/0x90()
-> 
-> Please try the patch below. It claims the device before the sdio_disable_func(()
-> call and releases it afterwords.
- 
-> 
-> Index: wireless-testing/drivers/net/wireless/b43/sdio.c
-> ===================================================================
-> --- wireless-testing.orig/drivers/net/wireless/b43/sdio.c
-> +++ wireless-testing/drivers/net/wireless/b43/sdio.c
-> @@ -175,7 +175,9 @@ static void b43_sdio_remove(struct sdio_
->  	struct b43_sdio *sdio = sdio_get_drvdata(func);
-> 
->  	ssb_bus_unregister(&sdio->ssb);
-> +	sdio_claim_host(func);
->  	sdio_disable_func(func);
-> +	sdio_release_host(func);
->  	kfree(sdio);
->  	sdio_set_drvdata(func, NULL);
->  }
-> 
+Ok, that part is working.
 
-Thanks, that fixes the warning.
+However, the 'phy0' name doesn't change in
+/debug/ath5k/[phy-dev]/ link, so it confuses my tools.
 
-Regards
-Arnd
+I'm going to see if I can get that fixed somehow...
+
+Thanks,
+Ben
+
+>
+> johannes
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+
+-- 
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
+
