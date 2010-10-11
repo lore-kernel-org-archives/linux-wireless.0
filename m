@@ -1,45 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f46.google.com ([209.85.214.46]:41354 "EHLO
-	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1762168Ab0J2Xfm (ORCPT
+Received: from dallas.jonmasters.org ([72.29.103.172]:39508 "EHLO
+	dallas.jonmasters.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755940Ab0JKUNk (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 29 Oct 2010 19:35:42 -0400
-Received: by bwz11 with SMTP id 11so3037821bwz.19
-        for <linux-wireless@vger.kernel.org>; Fri, 29 Oct 2010 16:35:40 -0700 (PDT)
-Message-Id: <e8a175c9052597a67f431531c4a529288ef980c4.1288393804.git.chunkeey@googlemail.com>
-In-Reply-To: <cover.1288393804.git.chunkeey@googlemail.com>
-References: <cover.1288393804.git.chunkeey@googlemail.com>
-From: Christian Lamparter <chunkeey@googlemail.com>
-Date: Fri, 29 Oct 2010 23:17:38 +0200
-Subject: [PATCH 3/6] carl9170: initialize HW aMPDU parameters properly
-To: linux-wireless@vger.kernel.org
-Cc: linville@tuxdriver.com
+	Mon, 11 Oct 2010 16:13:40 -0400
+Subject: RE: PROBLEM: brcm80211 hangs on 2.6.36-0.34.rc6.git3.fc15.x86_64
+From: Jon Masters <jonathan@jonmasters.org>
+To: Brett Rudley <brudley@broadcom.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Henry Ptasinski <henryp@broadcom.com>,
+	Nohee Ko <noheek@broadcom.com>,
+	Jon Masters <jcm@jonmasters.org>,
+	LKML <linux-kernel@vger.kernel.org>
+In-Reply-To: <7A94256FD72B884D9E7C55586C3CBCEE1381EE4B69@SJEXCHCCR01.corp.ad.broadcom.com>
+References: <20101008065810.GA1680@constitution.bos.jonmasters.org>
+	 <1286538243.21485.298.camel@constitution.bos.jonmasters.org>
+	 <7A94256FD72B884D9E7C55586C3CBCEE1381EE4B69@SJEXCHCCR01.corp.ad.broadcom.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Mon, 11 Oct 2010 16:12:06 -0400
+Message-ID: <1286827927.24745.7.camel@constitution.bos.jonmasters.org>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch changes the initial aMPDU density and
-factor settings to match those of Otus.
+On Fri, 2010-10-08 at 10:45 -0700, Brett Rudley wrote:
+> Thanks for the input.
 
-Signed-off-by: Christian Lamparter <chunkeey@googlemail.com>
----
- drivers/net/wireless/ath/carl9170/mac.c |    4 ++--
- 1 files changed, 2 insertions(+), 2 deletions(-)
+No problem. I'd like to fix this as much as you would, since the STA
+driver isn't an option here. Just for kicks, I tried STA after this but
+it didn't work with the wireless extensions on my system and I much
+prefer getting the staging driver fixed. Meanwhile, I have no WiFi on my
+shiny new netbook, so I'm very keen to help get this fixed :)
 
-diff --git a/drivers/net/wireless/ath/carl9170/mac.c b/drivers/net/wireless/ath/carl9170/mac.c
-index 2305bc2..c34eeee 100644
---- a/drivers/net/wireless/ath/carl9170/mac.c
-+++ b/drivers/net/wireless/ath/carl9170/mac.c
-@@ -205,8 +205,8 @@ int carl9170_init_mac(struct ar9170 *ar)
- 	carl9170_regwrite(AR9170_MAC_REG_BACKOFF_PROTECT, 0x105);
- 
- 	/* Aggregation MAX number and timeout */
--	carl9170_regwrite(AR9170_MAC_REG_AMPDU_FACTOR, 0xa);
--	carl9170_regwrite(AR9170_MAC_REG_AMPDU_DENSITY, 0x140a00);
-+	carl9170_regwrite(AR9170_MAC_REG_AMPDU_FACTOR, 0x8000a);
-+	carl9170_regwrite(AR9170_MAC_REG_AMPDU_DENSITY, 0x140a07);
- 
- 	carl9170_regwrite(AR9170_MAC_REG_FRAMETYPE_FILTER,
- 			  AR9170_MAC_FTF_DEFAULTS);
--- 
-1.7.2.3
+> The 4313 (Device ID 4327) is pretty solid on the 32 bit staging-next
+> kernel (loads, runs for days, no issues, etc).
+
+Can you do me three favors:
+
+1). Tell me what kind of hardware you are testing on that's 32-bit?
+2). How many CPUs (threads, cores, whatever) do you have?
+3). Share your test kernel configuration?
+
+It's likely that we could have a combination of different config (I have
+every debug option turned on pretty much) and different word size and
+I'd love to have that data. I will look through the crash tonight.
+
+> On the other hand, I haven't been using anything other than that kernel
+> recently so its  very, very likely there are problems with other kernels,
+> especially 64 bit which I haven't even attempted yet (but will of course).
+
+We need data points on 64-bit kernels. Anyone else care you share?
+
+> Please do try out the 32 bit staging-next kernel and let me know how
+> it goes.
+
+Sorry. I don't have a suitable test environment with this hardware (it
+took several hours to get to the disk and swap it out the other night
+since ASUS really don't want me to do that) but I suppose I might try a
+nightly rawhide 32-bit compose on a USB stick and built the driver
+against that - hmm. That might be a nice way to test 32-bit.
+
+> Yeah, turning on msglevel produces more (and possibly *much* more)
+> output.  
+
+Yea. What about the high order bits in the phy msglevel, what are they
+intended to be doing? Could you, perhaps, give us some more useful docs
+to accompany what is in the staging tree at this point?
+
+Thanks,
+
+Jon.
+
 
