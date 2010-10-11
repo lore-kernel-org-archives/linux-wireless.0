@@ -1,287 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([88.198.39.176]:38721 "EHLO ds10.nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932269Ab0JOSDk (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 15 Oct 2010 14:03:40 -0400
-From: Felix Fietkau <nbd@openwrt.org>
-To: linux-wireless@vger.kernel.org
-Cc: linville@tuxdriver.com, lrodriguez@atheros.com
-Subject: [PATCH 3/6] ath9k_hw: optimize tx status descriptor processing
-Date: Fri, 15 Oct 2010 20:03:30 +0200
-Message-Id: <1287165813-94331-3-git-send-email-nbd@openwrt.org>
-In-Reply-To: <1287165813-94331-2-git-send-email-nbd@openwrt.org>
-References: <1287165813-94331-1-git-send-email-nbd@openwrt.org>
- <1287165813-94331-2-git-send-email-nbd@openwrt.org>
+Received: from mail-ew0-f46.google.com ([209.85.215.46]:62576 "EHLO
+	mail-ew0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754621Ab0JKNkg (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 11 Oct 2010 09:40:36 -0400
+Received: by mail-ew0-f46.google.com with SMTP id 20so574157ewy.19
+        for <linux-wireless@vger.kernel.org>; Mon, 11 Oct 2010 06:40:35 -0700 (PDT)
+From: Ivo van Doorn <ivdoorn@gmail.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Subject: [PATCH 5/7] rt2x00: Make queue_entry flags access atomic
+Date: Mon, 11 Oct 2010 15:38:45 +0200
+Cc: linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com
+References: <201010111537.26584.IvDoorn@gmail.com> <201010111538.08677.IvDoorn@gmail.com> <201010111538.27633.IvDoorn@gmail.com>
+In-Reply-To: <201010111538.27633.IvDoorn@gmail.com>
+MIME-Version: 1.0
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Message-Id: <201010111538.46136.IvDoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Disassembly shows, that at least on MIPS, the compiler generates a lot of
-memory accesses to the same location in the descriptor field parsing.
-Since it is operating on uncached memory, this can be quite expensive in
-this hot path.
-Change the code a bit to help the compiler optimize it properly, and get
-rid of some unused fields in the ath_tx_status struct.
+All access to the queue_entry->flags can be done concurrently,
+so all flags must use the atomic operators. On most locations
+this was already done, so just fix the last few non-atomic
+versions.
 
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
+Acked-by: Helmut Schaa <helmut.schaa@googlemail.com>
 ---
- drivers/net/wireless/ath/ath9k/ar9002_mac.c |   81 ++++++++++++---------------
- drivers/net/wireless/ath/ath9k/ar9003_mac.c |   69 ++++++++++++-----------
- drivers/net/wireless/ath/ath9k/mac.h        |    3 -
- 3 files changed, 72 insertions(+), 81 deletions(-)
+ drivers/net/wireless/rt2x00/rt2x00usb.c |    8 ++++----
+ 1 files changed, 4 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/ar9002_mac.c b/drivers/net/wireless/ath/ath9k/ar9002_mac.c
-index f5ed73d..3b4c52c 100644
---- a/drivers/net/wireless/ath/ath9k/ar9002_mac.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9002_mac.c
-@@ -208,77 +208,68 @@ static int ar9002_hw_proc_txdesc(struct ath_hw *ah, void *ds,
- 				 struct ath_tx_status *ts)
- {
- 	struct ar5416_desc *ads = AR5416DESC(ds);
-+	u32 status;
+diff --git a/drivers/net/wireless/rt2x00/rt2x00usb.c b/drivers/net/wireless/rt2x00/rt2x00usb.c
+index 451d637..769c534 100644
+--- a/drivers/net/wireless/rt2x00/rt2x00usb.c
++++ b/drivers/net/wireless/rt2x00/rt2x00usb.c
+@@ -208,7 +208,7 @@ static void rt2x00usb_interrupt_txdone(struct urb *urb)
+ 	struct queue_entry *entry = (struct queue_entry *)urb->context;
+ 	struct rt2x00_dev *rt2x00dev = entry->queue->rt2x00dev;
  
--	if ((ads->ds_txstatus9 & AR_TxDone) == 0)
-+	status = ACCESS_ONCE(ads->ds_txstatus9);
-+	if ((status & AR_TxDone) == 0)
- 		return -EINPROGRESS;
+-	if (!__test_and_clear_bit(ENTRY_OWNER_DEVICE_DATA, &entry->flags))
++	if (!test_and_clear_bit(ENTRY_OWNER_DEVICE_DATA, &entry->flags))
+ 		return;
  
--	ts->ts_seqnum = MS(ads->ds_txstatus9, AR_SeqNum);
- 	ts->ts_tstamp = ads->AR_SendTimestamp;
- 	ts->ts_status = 0;
- 	ts->ts_flags = 0;
+ 	/*
+@@ -220,7 +220,7 @@ static void rt2x00usb_interrupt_txdone(struct urb *urb)
+ 	 * Check if the frame was correctly uploaded
+ 	 */
+ 	if (urb->status)
+-		__set_bit(ENTRY_DATA_IO_FAILED, &entry->flags);
++		set_bit(ENTRY_DATA_IO_FAILED, &entry->flags);
  
--	if (ads->ds_txstatus1 & AR_FrmXmitOK)
-+	if (status & AR_TxOpExceeded)
-+		ts->ts_status |= ATH9K_TXERR_XTXOP;
-+	ts->tid = MS(status, AR_TxTid);
-+	ts->ts_rateindex = MS(status, AR_FinalTxIdx);
-+	ts->ts_seqnum = MS(status, AR_SeqNum);
-+
-+	status = ACCESS_ONCE(ads->ds_txstatus0);
-+	ts->ts_rssi_ctl0 = MS(status, AR_TxRSSIAnt00);
-+	ts->ts_rssi_ctl1 = MS(status, AR_TxRSSIAnt01);
-+	ts->ts_rssi_ctl2 = MS(status, AR_TxRSSIAnt02);
-+	if (status & AR_TxBaStatus) {
-+		ts->ts_flags |= ATH9K_TX_BA;
-+		ts->ba_low = ads->AR_BaBitmapLow;
-+		ts->ba_high = ads->AR_BaBitmapHigh;
-+	}
-+
-+	status = ACCESS_ONCE(ads->ds_txstatus1);
-+	if (status & AR_FrmXmitOK)
- 		ts->ts_status |= ATH9K_TX_ACKED;
--	if (ads->ds_txstatus1 & AR_ExcessiveRetries)
-+	if (status & AR_ExcessiveRetries)
- 		ts->ts_status |= ATH9K_TXERR_XRETRY;
--	if (ads->ds_txstatus1 & AR_Filtered)
-+	if (status & AR_Filtered)
- 		ts->ts_status |= ATH9K_TXERR_FILT;
--	if (ads->ds_txstatus1 & AR_FIFOUnderrun) {
-+	if (status & AR_FIFOUnderrun) {
- 		ts->ts_status |= ATH9K_TXERR_FIFO;
- 		ath9k_hw_updatetxtriglevel(ah, true);
- 	}
--	if (ads->ds_txstatus9 & AR_TxOpExceeded)
--		ts->ts_status |= ATH9K_TXERR_XTXOP;
--	if (ads->ds_txstatus1 & AR_TxTimerExpired)
-+	if (status & AR_TxTimerExpired)
- 		ts->ts_status |= ATH9K_TXERR_TIMER_EXPIRED;
--
--	if (ads->ds_txstatus1 & AR_DescCfgErr)
-+	if (status & AR_DescCfgErr)
- 		ts->ts_flags |= ATH9K_TX_DESC_CFG_ERR;
--	if (ads->ds_txstatus1 & AR_TxDataUnderrun) {
-+	if (status & AR_TxDataUnderrun) {
- 		ts->ts_flags |= ATH9K_TX_DATA_UNDERRUN;
- 		ath9k_hw_updatetxtriglevel(ah, true);
- 	}
--	if (ads->ds_txstatus1 & AR_TxDelimUnderrun) {
-+	if (status & AR_TxDelimUnderrun) {
- 		ts->ts_flags |= ATH9K_TX_DELIM_UNDERRUN;
- 		ath9k_hw_updatetxtriglevel(ah, true);
- 	}
--	if (ads->ds_txstatus0 & AR_TxBaStatus) {
--		ts->ts_flags |= ATH9K_TX_BA;
--		ts->ba_low = ads->AR_BaBitmapLow;
--		ts->ba_high = ads->AR_BaBitmapHigh;
--	}
-+	ts->ts_shortretry = MS(status, AR_RTSFailCnt);
-+	ts->ts_longretry = MS(status, AR_DataFailCnt);
-+	ts->ts_virtcol = MS(status, AR_VirtRetryCnt);
+ 	/*
+ 	 * Schedule the delayed work for reading the TX status
+@@ -407,7 +407,7 @@ static void rt2x00usb_interrupt_rxdone(struct urb *urb)
+ 	struct queue_entry *entry = (struct queue_entry *)urb->context;
+ 	struct rt2x00_dev *rt2x00dev = entry->queue->rt2x00dev;
  
--	ts->ts_rateindex = MS(ads->ds_txstatus9, AR_FinalTxIdx);
--	switch (ts->ts_rateindex) {
--	case 0:
--		ts->ts_ratecode = MS(ads->ds_ctl3, AR_XmitRate0);
--		break;
--	case 1:
--		ts->ts_ratecode = MS(ads->ds_ctl3, AR_XmitRate1);
--		break;
--	case 2:
--		ts->ts_ratecode = MS(ads->ds_ctl3, AR_XmitRate2);
--		break;
--	case 3:
--		ts->ts_ratecode = MS(ads->ds_ctl3, AR_XmitRate3);
--		break;
--	}
-+	status = ACCESS_ONCE(ads->ds_txstatus5);
-+	ts->ts_rssi = MS(status, AR_TxRSSICombined);
-+	ts->ts_rssi_ext0 = MS(status, AR_TxRSSIAnt10);
-+	ts->ts_rssi_ext1 = MS(status, AR_TxRSSIAnt11);
-+	ts->ts_rssi_ext2 = MS(status, AR_TxRSSIAnt12);
+-	if (!__test_and_clear_bit(ENTRY_OWNER_DEVICE_DATA, &entry->flags))
++	if (!test_and_clear_bit(ENTRY_OWNER_DEVICE_DATA, &entry->flags))
+ 		return;
  
--	ts->ts_rssi = MS(ads->ds_txstatus5, AR_TxRSSICombined);
--	ts->ts_rssi_ctl0 = MS(ads->ds_txstatus0, AR_TxRSSIAnt00);
--	ts->ts_rssi_ctl1 = MS(ads->ds_txstatus0, AR_TxRSSIAnt01);
--	ts->ts_rssi_ctl2 = MS(ads->ds_txstatus0, AR_TxRSSIAnt02);
--	ts->ts_rssi_ext0 = MS(ads->ds_txstatus5, AR_TxRSSIAnt10);
--	ts->ts_rssi_ext1 = MS(ads->ds_txstatus5, AR_TxRSSIAnt11);
--	ts->ts_rssi_ext2 = MS(ads->ds_txstatus5, AR_TxRSSIAnt12);
- 	ts->evm0 = ads->AR_TxEVM0;
- 	ts->evm1 = ads->AR_TxEVM1;
- 	ts->evm2 = ads->AR_TxEVM2;
--	ts->ts_shortretry = MS(ads->ds_txstatus1, AR_RTSFailCnt);
--	ts->ts_longretry = MS(ads->ds_txstatus1, AR_DataFailCnt);
--	ts->ts_virtcol = MS(ads->ds_txstatus1, AR_VirtRetryCnt);
--	ts->tid = MS(ads->ds_txstatus9, AR_TxTid);
--	ts->ts_antenna = 0;
+ 	/*
+@@ -421,7 +421,7 @@ static void rt2x00usb_interrupt_rxdone(struct urb *urb)
+ 	 * a problem.
+ 	 */
+ 	if (urb->actual_length < entry->queue->desc_size || urb->status)
+-		__set_bit(ENTRY_DATA_IO_FAILED, &entry->flags);
++		set_bit(ENTRY_DATA_IO_FAILED, &entry->flags);
  
- 	return 0;
- }
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_mac.c b/drivers/net/wireless/ath/ath9k/ar9003_mac.c
-index 3b424ca..10c812e 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_mac.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_mac.c
-@@ -237,10 +237,12 @@ static int ar9003_hw_proc_txdesc(struct ath_hw *ah, void *ds,
- 				 struct ath_tx_status *ts)
- {
- 	struct ar9003_txs *ads;
-+	u32 status;
- 
- 	ads = &ah->ts_ring[ah->ts_tail];
- 
--	if ((ads->status8 & AR_TxDone) == 0)
-+	status = ACCESS_ONCE(ads->status8);
-+	if ((status & AR_TxDone) == 0)
- 		return -EINPROGRESS;
- 
- 	ah->ts_tail = (ah->ts_tail + 1) % ah->ts_size;
-@@ -253,57 +255,58 @@ static int ar9003_hw_proc_txdesc(struct ath_hw *ah, void *ds,
- 		return -EIO;
- 	}
- 
-+	if (status & AR_TxOpExceeded)
-+		ts->ts_status |= ATH9K_TXERR_XTXOP;
-+	ts->ts_rateindex = MS(status, AR_FinalTxIdx);
-+	ts->ts_seqnum = MS(status, AR_SeqNum);
-+	ts->tid = MS(status, AR_TxTid);
-+
- 	ts->qid = MS(ads->ds_info, AR_TxQcuNum);
- 	ts->desc_id = MS(ads->status1, AR_TxDescId);
--	ts->ts_seqnum = MS(ads->status8, AR_SeqNum);
- 	ts->ts_tstamp = ads->status4;
- 	ts->ts_status = 0;
- 	ts->ts_flags  = 0;
- 
--	if (ads->status3 & AR_ExcessiveRetries)
-+	status = ACCESS_ONCE(ads->status2);
-+	ts->ts_rssi_ctl0 = MS(status, AR_TxRSSIAnt00);
-+	ts->ts_rssi_ctl1 = MS(status, AR_TxRSSIAnt01);
-+	ts->ts_rssi_ctl2 = MS(status, AR_TxRSSIAnt02);
-+	if (status & AR_TxBaStatus) {
-+		ts->ts_flags |= ATH9K_TX_BA;
-+		ts->ba_low = ads->status5;
-+		ts->ba_high = ads->status6;
-+	}
-+
-+	status = ACCESS_ONCE(ads->status3);
-+	if (status & AR_ExcessiveRetries)
- 		ts->ts_status |= ATH9K_TXERR_XRETRY;
--	if (ads->status3 & AR_Filtered)
-+	if (status & AR_Filtered)
- 		ts->ts_status |= ATH9K_TXERR_FILT;
--	if (ads->status3 & AR_FIFOUnderrun) {
-+	if (status & AR_FIFOUnderrun) {
- 		ts->ts_status |= ATH9K_TXERR_FIFO;
- 		ath9k_hw_updatetxtriglevel(ah, true);
- 	}
--	if (ads->status8 & AR_TxOpExceeded)
--		ts->ts_status |= ATH9K_TXERR_XTXOP;
--	if (ads->status3 & AR_TxTimerExpired)
-+	if (status & AR_TxTimerExpired)
- 		ts->ts_status |= ATH9K_TXERR_TIMER_EXPIRED;
--
--	if (ads->status3 & AR_DescCfgErr)
-+	if (status & AR_DescCfgErr)
- 		ts->ts_flags |= ATH9K_TX_DESC_CFG_ERR;
--	if (ads->status3 & AR_TxDataUnderrun) {
-+	if (status & AR_TxDataUnderrun) {
- 		ts->ts_flags |= ATH9K_TX_DATA_UNDERRUN;
- 		ath9k_hw_updatetxtriglevel(ah, true);
- 	}
--	if (ads->status3 & AR_TxDelimUnderrun) {
-+	if (status & AR_TxDelimUnderrun) {
- 		ts->ts_flags |= ATH9K_TX_DELIM_UNDERRUN;
- 		ath9k_hw_updatetxtriglevel(ah, true);
- 	}
--	if (ads->status2 & AR_TxBaStatus) {
--		ts->ts_flags |= ATH9K_TX_BA;
--		ts->ba_low = ads->status5;
--		ts->ba_high = ads->status6;
--	}
--
--	ts->ts_rateindex = MS(ads->status8, AR_FinalTxIdx);
--
--	ts->ts_rssi = MS(ads->status7, AR_TxRSSICombined);
--	ts->ts_rssi_ctl0 = MS(ads->status2, AR_TxRSSIAnt00);
--	ts->ts_rssi_ctl1 = MS(ads->status2, AR_TxRSSIAnt01);
--	ts->ts_rssi_ctl2 = MS(ads->status2, AR_TxRSSIAnt02);
--	ts->ts_rssi_ext0 = MS(ads->status7, AR_TxRSSIAnt10);
--	ts->ts_rssi_ext1 = MS(ads->status7, AR_TxRSSIAnt11);
--	ts->ts_rssi_ext2 = MS(ads->status7, AR_TxRSSIAnt12);
--	ts->ts_shortretry = MS(ads->status3, AR_RTSFailCnt);
--	ts->ts_longretry = MS(ads->status3, AR_DataFailCnt);
--	ts->ts_virtcol = MS(ads->status3, AR_VirtRetryCnt);
--	ts->ts_antenna = 0;
--
--	ts->tid = MS(ads->status8, AR_TxTid);
-+	ts->ts_shortretry = MS(status, AR_RTSFailCnt);
-+	ts->ts_longretry = MS(status, AR_DataFailCnt);
-+	ts->ts_virtcol = MS(status, AR_VirtRetryCnt);
-+
-+	status = ACCESS_ONCE(ads->status7);
-+	ts->ts_rssi = MS(status, AR_TxRSSICombined);
-+	ts->ts_rssi_ext0 = MS(status, AR_TxRSSIAnt10);
-+	ts->ts_rssi_ext1 = MS(status, AR_TxRSSIAnt11);
-+	ts->ts_rssi_ext2 = MS(status, AR_TxRSSIAnt12);
- 
- 	memset(ads, 0, sizeof(*ads));
- 
-diff --git a/drivers/net/wireless/ath/ath9k/mac.h b/drivers/net/wireless/ath/ath9k/mac.h
-index 538c676..fdc2507 100644
---- a/drivers/net/wireless/ath/ath9k/mac.h
-+++ b/drivers/net/wireless/ath/ath9k/mac.h
-@@ -104,13 +104,11 @@ struct ath_tx_status {
- 	u32 ts_tstamp;
- 	u16 ts_seqnum;
- 	u8 ts_status;
--	u8 ts_ratecode;
- 	u8 ts_rateindex;
- 	int8_t ts_rssi;
- 	u8 ts_shortretry;
- 	u8 ts_longretry;
- 	u8 ts_virtcol;
--	u8 ts_antenna;
- 	u8 ts_flags;
- 	int8_t ts_rssi_ctl0;
- 	int8_t ts_rssi_ctl1;
-@@ -121,7 +119,6 @@ struct ath_tx_status {
- 	u8 qid;
- 	u16 desc_id;
- 	u8 tid;
--	u8 pad[2];
- 	u32 ba_low;
- 	u32 ba_high;
- 	u32 evm0;
+ 	/*
+ 	 * Schedule the delayed work for reading the RX status
 -- 
-1.7.2.2
+1.7.2.3
 
