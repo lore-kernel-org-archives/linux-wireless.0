@@ -1,36 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:39271 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754346Ab0JGSON (ORCPT
+Received: from mail-qy0-f181.google.com ([209.85.216.181]:60146 "EHLO
+	mail-qy0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755352Ab0JKQgb convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 7 Oct 2010 14:14:13 -0400
-Subject: Re: memory clobber in rx path, maybe related to ath9k.
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Ben Greear <greearb@candelatech.com>
-Cc: "Luis R. Rodriguez" <mcgrof@gmail.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <4CAE0474.4090605@candelatech.com>
-References: <4CAB59B2.5050106@candelatech.com>
-	 <AANLkTikhGCTS8kJgpDzjudyBTk-rkyXY33UO7kB0+Cc-@mail.gmail.com>
-	 <4CAB5F3D.9060201@candelatech.com>
-	 <AANLkTimV3GrwU+9PPtirT4sCzveLY2egr3PRQhfDBET1@mail.gmail.com>
-	 <4CAB627F.8020804@candelatech.com>
-	 <AANLkTi=sT5QJe4V8gFGjF-nzx0uJAMLG_XG2715qrEEd@mail.gmail.com>
-	 <4CAB64AD.4080105@candelatech.com>
-	 <AANLkTi=3dHbB5tmQDp3Ba54-DqQydVCkNdFo1vKbfaGY@mail.gmail.com>
-	 <4CAB6B08.4050801@candelatech.com>  <4CAE0474.4090605@candelatech.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Thu, 07 Oct 2010 20:14:10 +0200
-Message-ID: <1286475250.20974.22.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+	Mon, 11 Oct 2010 12:36:31 -0400
+Received: by qyk10 with SMTP id 10so4488034qyk.19
+        for <linux-wireless@vger.kernel.org>; Mon, 11 Oct 2010 09:36:31 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <AANLkTik1JPNaDKrS8ST_Lt+iEg21-rcetVTSnYmx-qW3@mail.gmail.com>
+References: <1286810435-10820-1-git-send-email-zajec5@gmail.com>
+	<1286810435-10820-3-git-send-email-zajec5@gmail.com>
+	<AANLkTik1JPNaDKrS8ST_Lt+iEg21-rcetVTSnYmx-qW3@mail.gmail.com>
+Date: Mon, 11 Oct 2010 18:36:30 +0200
+Message-ID: <AANLkTingK+o8viDgMdV+jq7kLduda_W=cFr_n08g4V1L@mail.gmail.com>
+Subject: Re: [PATCH 3/3] b43: N-PHY: add 2055 radio regs
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+To: =?UTF-8?Q?G=C3=A1bor_Stefanik?= <netrolller.3d@gmail.com>
+Cc: linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>,
+	b43-dev@lists.infradead.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2010-10-07 at 10:33 -0700, Ben Greear wrote:
-> In case it helps, here is a dump of where the corrupted SKB was deleted.
+W dniu 11 października 2010 18:24 użytkownik Gábor Stefanik
+<netrolller.3d@gmail.com> napisał:
+> Doesn't brcm80211 contain register names for B2055?
 
-I wonder, do you have a machine with a decent IOMMU? Adding IOMMU
-debugging into the mix could help you figure out if it's a DMA problem.
+Whoops... first of all it's 2056 radio. Commit's message should be
+2056, not 2055.
 
-johannes
+Yes, I'm sure we can grab many defines from brcm80211. However before
+copying their code/defines I wanted to finish implementing what we
+have in our RE specs. Is that acceptable? Or should I use brcm80211's
+names if I already touch such places?
 
+-- 
+Rafał
