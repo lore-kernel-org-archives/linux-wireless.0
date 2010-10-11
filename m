@@ -1,40 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:35986 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752721Ab0JGI4q (ORCPT
+Received: from mail.candelatech.com ([208.74.158.172]:43193 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754227Ab0JKTHM (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 7 Oct 2010 04:56:46 -0400
-Subject: Re: [PATCH] iw: new command to set the wds peer
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Bill Jordan <bjordan@rajant.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <1286393596-24547-1-git-send-email-bjordan@rajant.com>
-References: <1286393596-24547-1-git-send-email-bjordan@rajant.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Thu, 07 Oct 2010 10:56:39 +0200
-Message-ID: <1286441799.3657.29.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+	Mon, 11 Oct 2010 15:07:12 -0400
+Message-ID: <4CB3605D.1040509@candelatech.com>
+Date: Mon, 11 Oct 2010 12:07:09 -0700
+From: Ben Greear <greearb@candelatech.com>
+MIME-Version: 1.0
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 1/2] wireless:  Support wiphy_renamed hook for drivers.
+References: <1286822537-28756-1-git-send-email-greearb@candelatech.com>	 <1286822639.3634.84.camel@jlt3.sipsolutions.net> <1286822771.3634.85.camel@jlt3.sipsolutions.net>
+In-Reply-To: <1286822771.3634.85.camel@jlt3.sipsolutions.net>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2010-10-06 at 15:33 -0400, Bill Jordan wrote:
+On 10/11/2010 11:46 AM, Johannes Berg wrote:
+> I think you should just do this (untested):
 
-> +static int handle_interface_wds_peer(struct nl80211_state *state,
-> +				 struct nl_cb *cb,
-> +				 struct nl_msg *msg,
-> +				 int argc, char **argv)
+>   void
+> @@ -892,8 +889,8 @@ ath5k_debug_init_device(struct ath5k_sof
+>   {
+>   	sc->debug.level = ath5k_debug;
+>
+> -	sc->debug.debugfs_phydir = debugfs_create_dir(wiphy_name(sc->hw->wiphy),
+> -				ath5k_global_debugfs);
+> +	sc->debug.debugfs_phydir = debugfs_create_dir("ath5k",
+> +				sc->hw->wiphy->debugfsdir);
 
-Please indent that up to just after the opening parenthesis.
+This fails to work because sc->hw->wiphy->debugfsdir is null when this
+method is called...
 
-> +	enum nl80211_iftype mac_addr[ETH_ALEN];
+Thanks,
+Ben
 
-??
-
-interface.c: In function ‘handle_interface_wds_peer’:
-interface.c:397: warning: passing argument 1 of ‘mac_addr_a2n’ from incompatible pointer type
-iw.h:119: note: expected ‘unsigned char *’ but argument is of type ‘enum nl80211_iftype *’
-
-
-johannes
+-- 
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
 
