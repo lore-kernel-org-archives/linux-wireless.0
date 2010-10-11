@@ -1,74 +1,94 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:54019 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932672Ab0JYSAL (ORCPT
+Received: from mail.candelatech.com ([208.74.158.172]:38790 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753509Ab0JKTUp (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 25 Oct 2010 14:00:11 -0400
-Date: Mon, 25 Oct 2010 13:49:58 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Lee <lee-in-berlin@web.de>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: [regression]AP with hostapd 0.7.3 can't receive packets beyond
- authentication (2.6.36, rt73usb)
-Message-ID: <20101025174957.GD2414@tuxdriver.com>
-References: <4CC0D0F6.4080507@web.de>
- <4CC33E83.4020505@web.de>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <4CC33E83.4020505@web.de>
+	Mon, 11 Oct 2010 15:20:45 -0400
+From: greearb@candelatech.com
+To: linux-wireless@vger.kernel.org
+Cc: Ben Greear <greearb@candelatech.com>
+Subject: [RFC] ath5k:  Move debugfs under ieee80211/[wiphy-name]
+Date: Mon, 11 Oct 2010 12:20:41 -0700
+Message-Id: <1286824841-30822-1-git-send-email-greearb@candelatech.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, Oct 23, 2010 at 09:58:59PM +0200, Lee wrote:
-> On 22/10/10 01:47, Lee wrote:
-> >Hi everyone,
-> >
-> >I noticed a bug (details later) in Linus' git tree, which wasn't there in
-> >2.6.35.7. So I went on to bisect the bug. 12 compiles and reboots later, I
-> >could narrow it down to this commit:
-> >
-> ># bad: [05318bc905467237d4aa68a701f6e92a2b332218] Merge branch 'master' of
-> >git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-next-2.6
-> >
-> >Unfortunately, I couldn't further bisect down wireless-next, because all three
-> >commits I picked were unworkable (bringing down an interface caused the kernel
-> >to oops, which made my test case impossible).
-> >
-> >The test case is as follows: I have eth0 and wlan0 (the interface to an
-> >rt37usb device) in a bridge lan0. I have a properly configured hostapd. When I
-> >try to connect with a client to my hostapd AP, I can successfully
-> >authenticate, but all further packets don't reach the interface of the AP.
-> >
-> >However, I can see broadcast packets *from* the AP on my client, but not the
-> >other way round (DHCP requests from client to AP). To make sure the bug was
-> >not specific to broadcast packets, I manually set an IP on my client and tried
-> >to ping the AP, but those packets didn't come through, either.
-> >
-> >Right now I'm a bit clueless on how to get to the root of this bug, so any
-> >help is appreciated.
-> >
-> >Regards,
-> >Lee
-> 
-> I checked vanilla 2.6.36, the bug is still there. Is this a known
-> bug? Does anyone care to give me some hints? Are any details needed?
+From: Ben Greear <greearb@candelatech.com>
 
-Hard to say if you can't complete the bisect.
+This automatically keeps things proper when wiphy
+is renamed.
 
-The bisect you mention is a merge from wireless-next-2.6 at 88c1f4f.
-The preceding merge from wireless-next-2.6 was from abf52f8.  It looks
-like there were a number of rt2x00 commits in between.
+Based on patch by Johannes Berg <johannes@sipsolutions.net>
 
-So, you might try a new bisect:
+Signed-off-by: Ben Greear <greearb@candelatech.com>
+---
+:100644 100644 c9732a6... 032c2ee... M	drivers/net/wireless/ath/ath5k/base.c
+:100644 100644 a342a9d... 673ab83... M	drivers/net/wireless/ath/ath5k/debug.c
+ drivers/net/wireless/ath/ath5k/base.c  |    3 +--
+ drivers/net/wireless/ath/ath5k/debug.c |    8 ++------
+ 2 files changed, 3 insertions(+), 8 deletions(-)
 
-	git bisect start 88c1f4f abf52f8
-
-If you still get commits that don't work but in an apparently unrelated
-way, you can use 'git bisect skip'.
-
-Does that help you to narrow things down?
-
-John
+diff --git a/drivers/net/wireless/ath/ath5k/base.c b/drivers/net/wireless/ath/ath5k/base.c
+index c9732a6..032c2ee 100644
+--- a/drivers/net/wireless/ath/ath5k/base.c
++++ b/drivers/net/wireless/ath/ath5k/base.c
+@@ -3543,8 +3543,6 @@ ath5k_pci_probe(struct pci_dev *pdev,
+ 	sc->hw = hw;
+ 	sc->pdev = pdev;
+ 
+-	ath5k_debug_init_device(sc);
+-
+ 	/*
+ 	 * Mark the device as detached to avoid processing
+ 	 * interrupts until setup is complete.
+@@ -3652,6 +3650,7 @@ ath5k_pci_probe(struct pci_dev *pdev,
+ 		}
+ 	}
+ 
++	ath5k_debug_init_device(sc);
+ 
+ 	/* ready to process interrupts */
+ 	__clear_bit(ATH_STAT_INVALID, sc->status);
+diff --git a/drivers/net/wireless/ath/ath5k/debug.c b/drivers/net/wireless/ath/ath5k/debug.c
+index a342a9d..673ab83 100644
+--- a/drivers/net/wireless/ath/ath5k/debug.c
++++ b/drivers/net/wireless/ath/ath5k/debug.c
+@@ -72,8 +72,6 @@ module_param_named(debug, ath5k_debug, uint, 0);
+ #include "reg.h"
+ #include "ani.h"
+ 
+-static struct dentry *ath5k_global_debugfs;
+-
+ static int ath5k_debugfs_open(struct inode *inode, struct file *file)
+ {
+ 	file->private_data = inode->i_private;
+@@ -894,7 +892,6 @@ static const struct file_operations fops_queue = {
+ void
+ ath5k_debug_init(void)
+ {
+-	ath5k_global_debugfs = debugfs_create_dir("ath5k", NULL);
+ }
+ 
+ void
+@@ -902,8 +899,8 @@ ath5k_debug_init_device(struct ath5k_softc *sc)
+ {
+ 	sc->debug.level = ath5k_debug;
+ 
+-	sc->debug.debugfs_phydir = debugfs_create_dir(wiphy_name(sc->hw->wiphy),
+-				ath5k_global_debugfs);
++	sc->debug.debugfs_phydir = debugfs_create_dir("ath5k",
++				sc->hw->wiphy->debugfsdir);
+ 
+ 	sc->debug.debugfs_debug = debugfs_create_file("debug",
+ 				S_IWUSR | S_IRUSR,
+@@ -946,7 +943,6 @@ ath5k_debug_init_device(struct ath5k_softc *sc)
+ void
+ ath5k_debug_finish(void)
+ {
+-	debugfs_remove(ath5k_global_debugfs);
+ }
+ 
+ void
 -- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+1.7.2.2
+
