@@ -1,44 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f46.google.com ([209.85.214.46]:53274 "EHLO
-	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754833Ab0J3Rqq (ORCPT
+Received: from mail.candelatech.com ([208.74.158.172]:42057 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755388Ab0JKR3E (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 30 Oct 2010 13:46:46 -0400
-Received: by bwz11 with SMTP id 11so3443377bwz.19
-        for <linux-wireless@vger.kernel.org>; Sat, 30 Oct 2010 10:46:44 -0700 (PDT)
-From: Christian Lamparter <chunkeey@googlemail.com>
+	Mon, 11 Oct 2010 13:29:04 -0400
+From: greearb@candelatech.com
 To: linux-wireless@vger.kernel.org
-Subject: [PATCH for-2.6.37] carl9170: usbid table updates
-Date: Sat, 30 Oct 2010 19:46:37 +0200
-Cc: linville@tuxdriver.com
-MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="us-ascii"
-Message-Id: <201010301946.38280.chunkeey@googlemail.com>
+Cc: Ben Greear <greearb@candelatech.com>
+Subject: [PATCH] wireless:  Print wiphy name in sysfs.
+Date: Mon, 11 Oct 2010 10:28:59 -0700
+Message-Id: <1286818139-1746-1-git-send-email-greearb@candelatech.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch includes the following updates:
- * add D-Link DWA-130 Rev D
- * Netgear has three WNDA3100 versions.
-   the original WNDA3100 is now called WNDA3100v1.
-    
-Signed-off-by: Christian Lamparter <chunkeey@googlemail.com>
+From: Ben Greear <greearb@candelatech.com>
+
+The index cannot be used to reliably reconstruct a phy
+name, so explicitly add the phy name to sysfs so that scripts
+can figure out the parent phy device for a particular
+wireless interface.
+
+Signed-off-by: Ben Greear <greearb@candelatech.com>
 ---
-diff --git a/drivers/net/wireless/ath/carl9170/usb.c b/drivers/net/wireless/ath/carl9170/usb.c
-index ddf5373..82c5f1c 100644
---- a/drivers/net/wireless/ath/carl9170/usb.c
-+++ b/drivers/net/wireless/ath/carl9170/usb.c
-@@ -82,9 +82,11 @@ static struct usb_device_id carl9170_usb_ids[] = {
- 	{ USB_DEVICE(0x07d1, 0x3c10) },
- 	/* D-Link DWA 160 A2 */
- 	{ USB_DEVICE(0x07d1, 0x3a09) },
-+	/* D-Link DWA 130 D */
-+	{ USB_DEVICE(0x07d1, 0x3a0f) },
- 	/* Netgear WNA1000 */
- 	{ USB_DEVICE(0x0846, 0x9040) },
--	/* Netgear WNDA3100 */
-+	/* Netgear WNDA3100 (v1) */
- 	{ USB_DEVICE(0x0846, 0x9010) },
- 	/* Netgear WN111 v2 */
- 	{ USB_DEVICE(0x0846, 0x9001), .driver_info = CARL9170_ONE_LED },
+:100644 100644 74a9e3c... 4294fa2... M	net/wireless/sysfs.c
+ net/wireless/sysfs.c |    9 +++++++++
+ 1 files changed, 9 insertions(+), 0 deletions(-)
+
+diff --git a/net/wireless/sysfs.c b/net/wireless/sysfs.c
+index 74a9e3c..4294fa2 100644
+--- a/net/wireless/sysfs.c
++++ b/net/wireless/sysfs.c
+@@ -35,6 +35,14 @@ SHOW_FMT(index, "%d", wiphy_idx);
+ SHOW_FMT(macaddress, "%pM", wiphy.perm_addr);
+ SHOW_FMT(address_mask, "%pM", wiphy.addr_mask);
+ 
++static ssize_t name_show(struct device *dev,
++			 struct device_attribute *attr,
++			 char *buf) {
++	struct wiphy *wiphy = &dev_to_rdev(dev)->wiphy;
++	return sprintf(buf, "%s\n", dev_name(&wiphy->dev));
++}
++
++
+ static ssize_t addresses_show(struct device *dev,
+ 			      struct device_attribute *attr,
+ 			      char *buf)
+@@ -57,6 +65,7 @@ static struct device_attribute ieee80211_dev_attrs[] = {
+ 	__ATTR_RO(macaddress),
+ 	__ATTR_RO(address_mask),
+ 	__ATTR_RO(addresses),
++	__ATTR_RO(name),
+ 	{}
+ };
+ 
+-- 
+1.7.2.2
+
