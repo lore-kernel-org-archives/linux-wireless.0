@@ -1,43 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw0-f46.google.com ([74.125.83.46]:46887 "EHLO
-	mail-gw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752012Ab0JTUds convert rfc822-to-8bit (ORCPT
+Received: from mail-qy0-f181.google.com ([209.85.216.181]:33172 "EHLO
+	mail-qy0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755324Ab0JKQ61 convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 20 Oct 2010 16:33:48 -0400
+	Mon, 11 Oct 2010 12:58:27 -0400
+Received: by qyk10 with SMTP id 10so4517542qyk.19
+        for <linux-wireless@vger.kernel.org>; Mon, 11 Oct 2010 09:58:26 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <90305.25098.qm@web56804.mail.re3.yahoo.com>
-References: <90305.25098.qm@web56804.mail.re3.yahoo.com>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Wed, 20 Oct 2010 13:33:26 -0700
-Message-ID: <AANLkTi=tFBp0J6EiYvX14Piawc5Vs3YZ4prN2bCihi=M@mail.gmail.com>
-Subject: Re: [PATCH 1/4] compat-wireless: update bluetooth in Makefile
-To: Walter Goldens <goldenstranger@yahoo.com>
+In-Reply-To: <AANLkTingK+o8viDgMdV+jq7kLduda_W=cFr_n08g4V1L@mail.gmail.com>
+References: <1286810435-10820-1-git-send-email-zajec5@gmail.com>
+ <1286810435-10820-3-git-send-email-zajec5@gmail.com> <AANLkTik1JPNaDKrS8ST_Lt+iEg21-rcetVTSnYmx-qW3@mail.gmail.com>
+ <AANLkTingK+o8viDgMdV+jq7kLduda_W=cFr_n08g4V1L@mail.gmail.com>
+From: =?ISO-8859-1?Q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>
+Date: Mon, 11 Oct 2010 18:58:05 +0200
+Message-ID: <AANLkTikiha=41jcjSCacLQXtrUcZwXz5_Ly+E6MNeb8q@mail.gmail.com>
+Subject: Re: [PATCH 3/3] b43: N-PHY: add 2055 radio regs
+To: =?ISO-8859-2?Q?Rafa=B3_Mi=B3ecki?= <zajec5@gmail.com>
 Cc: linux-wireless@vger.kernel.org,
-	linux-bluetooth <linux-bluetooth@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+	"John W. Linville" <linville@tuxdriver.com>,
+	b43-dev@lists.infradead.org
+Content-Type: text/plain; charset=ISO-8859-2
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Oct 20, 2010 at 10:58 AM, Walter Goldens
-<goldenstranger@yahoo.com> wrote:
->> Thanks Walter, I welcome these changes but I got them in
->> quoted-printable format, and was unable to save them. Can
->> you please
->> resend as plain ascii text and also include linux-bluetooth
->> as these
->> are related to that subsystem and those guys would likely
->> want to
->> review these patches as well.
->>
->> Â  Luis
+2010/10/11 Rafa³ Mi³ecki <zajec5@gmail.com>:
+> W dniu 11 pa¼dziernika 2010 18:24 u¿ytkownik Gábor Stefanik
+> <netrolller.3d@gmail.com> napisa³:
+>> Doesn't brcm80211 contain register names for B2055?
 >
-> Luis, I did send them as plain text, I don't know why this happened.
+> Whoops... first of all it's 2056 radio. Commit's message should be
+> 2056, not 2055.
+>
+> Yes, I'm sure we can grab many defines from brcm80211. However before
+> copying their code/defines I wanted to finish implementing what we
+> have in our RE specs. Is that acceptable? Or should I use brcm80211's
+> names if I already touch such places?
 
-Odd, yeah gmail garbeles them when I "show original"
+I don't know, Michael is the one to decide on this; but in general,
+it's bad practice to use magic numbers.
 
-> I didn't send these patches any differently from the previous ones. Anyway, I'm attaching them to this email with their respective number. Let me know if this works.
+>
+> --
+> Rafa³
 >
 
-Please do not send them as attachments, can you resend and cc both lists?
 
-  Luis
+
+-- 
+Vista: [V]iruses, [I]ntruders, [S]pyware, [T]rojans and [A]dware. :-)
