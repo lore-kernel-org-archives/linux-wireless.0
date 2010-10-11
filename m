@@ -1,41 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([192.100.122.230]:64907 "EHLO
-	mgw-mx03.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932894Ab0JELTB (ORCPT
+Received: from external1.orbit-lab.org ([128.6.192.131]:36987 "HELO
+	external1.orbit-lab.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1753509Ab0JKTDo (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 5 Oct 2010 07:19:01 -0400
-Received: from vaebh106.NOE.Nokia.com (vaebh106.europe.nokia.com [10.160.244.32])
-	by mgw-mx03.nokia.com (Switch-3.3.3/Switch-3.3.3) with ESMTP id o95BIcRF029763
-	for <linux-wireless@vger.kernel.org>; Tue, 5 Oct 2010 14:18:58 +0300
-Subject: Re: [PATCH 1/2] wl1271: Indicate disconnection on hardware failure
-From: Luciano Coelho <luciano.coelho@nokia.com>
-To: "juuso.oikarinen@nokia.com" <juuso.oikarinen@nokia.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <1285843408-6726-1-git-send-email-juuso.oikarinen@nokia.com>
-References: <1285843408-6726-1-git-send-email-juuso.oikarinen@nokia.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Tue, 05 Oct 2010 14:18:31 +0300
-Message-ID: <1286277511.15401.9.camel@chilepepper>
-Mime-Version: 1.0
+	Mon, 11 Oct 2010 15:03:44 -0400
+Received: from repository3.orbit-lab.org (repository3.orbit-lab.org [10.50.0.41])
+	by external1.orbit-lab.org (Postfix) with ESMTP id 1DC19418D8
+	for <linux-wireless@vger.kernel.org>; Mon, 11 Oct 2010 15:00:55 -0400 (EDT)
+Subject: Compat-wireless release for 2010-10-11 is baked
+To: <linux-wireless@vger.kernel.org>
+Message-Id: <20101011190342.27702404FC@repository3.orbit-lab.org>
+Date: Mon, 11 Oct 2010 15:03:42 -0400 (EDT)
+From: compat@orbit-lab.org (Compat-wireless cronjob account)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2010-09-30 at 12:43 +0200, juuso.oikarinen@nokia.com wrote:
-> From: Juuso Oikarinen <juuso.oikarinen@nokia.com>
-> 
-> In the event of a hardware failure, reconfiguring a live connection back
-> with the wl1271 chip does not work as expected. The chip has management
-> features which require setting up the association from scratch to work
-> correctly. To ensure this is done every time, in managed mode, when associated,
-> indicate connection loss to the mac80211 before asking to reconfigure the
-> hardware.
-> 
-> Signed-off-by: Juuso Oikarinen <juuso.oikarinen@nokia.com>
-> ---
+>From git://git.kernel.org/pub/scm/linux/kernel/git/mcgrof/compat
+   10ae528..5e389ef  master     -> origin/master
+>From git://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next
+   e8ed30b..ce3f960  history    -> origin/history
+ + e7c029d...af7f0f8 master     -> origin/master  (forced update)
+   6b0cd00..85a3318  stable     -> origin/stable
+ * [new tag]         next-20101011 -> next-20101011
 
-Thank you.  Applied the series to wl12xx/master.
+compat-wireless code metrics
 
--- 
-Cheers,
-Luca.
+    741145 - Total upstream lines of code being pulled
+      2157 - backport code changes
+      1905 - backport code additions
+       252 - backport code deletions
+      6388 - backport from compat module
+      8545 - total backport code
+    1.1529 - % of code consists of backport work
+      1219 - Crap changes not yet posted
+      1181 - Crap additions not yet posted
+        38 - Crap deletions not yet posted
+    0.1645 - % of crap code
 
+Base tree: linux-next.git
+Base tree version: next-20101011
+compat-wireless release: compat-wireless-2010-10-01-10-gb9b0a4f-pc
