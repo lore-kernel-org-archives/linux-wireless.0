@@ -1,51 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:54412 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756926Ab0JWQFY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 23 Oct 2010 12:05:24 -0400
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Don Fry <donald.h.fry@intel.com>,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Subject: [PATCH wireless-2.6] iwlwifi: quiet a noisy printk
-Date: Sat, 23 Oct 2010 09:02:50 -0700
-Message-Id: <1287849770-14477-1-git-send-email-wey-yi.w.guy@intel.com>
+Received: from he.sipsolutions.net ([78.46.109.217]:51560 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754129Ab0JKMAf (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 11 Oct 2010 08:00:35 -0400
+Subject: Re: [Patch 1/1] wext: fix 32/64 bit alignment issue for 'point'
+ type
+From: Johannes Berg <johannes@sipsolutions.net>
+To: gerrit@erg.abdn.ac.uk
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <56374.148.187.160.35.1286798194.squirrel@148.187.160.35>
+References: <20100930102508.GB3581@gerrit.erg.abdn.ac.uk>
+	 <1285857487.5137.2.camel@jlt3.sipsolutions.net>
+	 <42875.148.187.160.35.1285917725.squirrel@148.187.160.35>
+	 <1285921839.3739.16.camel@jlt3.sipsolutions.net>
+	 <20101011051410.GA3977@gerrit.erg.abdn.ac.uk>
+	 <1286790947.3634.9.camel@jlt3.sipsolutions.net>
+	 <56374.148.187.160.35.1286798194.squirrel@148.187.160.35>
+Content-Type: text/plain; charset="UTF-8"
+Date: Mon, 11 Oct 2010 14:00:32 +0200
+Message-ID: <1286798432.3634.39.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Don Fry <donald.h.fry@intel.com>
+On Mon, 2010-10-11 at 12:56 +0100, gerrit@erg.abdn.ac.uk wrote:
+> > However, I don't understand this patch. Your original patch would have
+> > fixed this just as well, since after it
+> >
+> > IW_EV_POINT_PK_LEN - IW_EV_LCP_PK_LEN
+> >
+> > would be
+> >
+> > (IW_EV_LCP_PK_LEN + 4) - IW_EV_LCP_PK_LEN == 4
+> >
+> > and at the same time fixes the userspace problem, if anyone really wants
+> > to use wext in new applications that don't use iwlib still...
+> >
+> Good catch, this is much better (I got lost in all the other constants).
+> I will check if I have not missed anything and resubmit if there are no
+> side effects.
 
-Timing issues in microcode for some devices can cause a compressed BA to
-be sent to the driver prior to returning any a-MPDU notification.
-Traces show RTS-CTS is exchanged and then the timer fires which causes an
-empty BA to be sent which acknowledges nothing.  This results in a noisy
-printk. Only print the message if the bitmap is non-zero.
+Alright, thanks. I'm pretty sure you can't have missed anything, since
+git grep for the constant shows only this single use, and iwlib ships a
+header file that already contains your correction :-)
 
-Signed-off-by:  Don Fry <donald.h.fry@intel.com>
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
----
-this patch is also available from wireless-2.6 branch on
- git://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi-2.6.git
+I'm not sure if there's a real or perceived length limit on git commit
+logs, but it might be nice to archive your discussion of the problem
+(today's, I mean) in the git log.
 
- drivers/net/wireless/iwlwifi/iwl-agn-tx.c |    3 ++-
- 1 files changed, 2 insertions(+), 1 deletions(-)
+Anyway, thanks for investigating this!
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-tx.c b/drivers/net/wireless/iwlwifi/iwl-agn-tx.c
-index 69155aa..369b210 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn-tx.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn-tx.c
-@@ -1203,7 +1203,8 @@ static int iwlagn_tx_status_reply_compressed_ba(struct iwl_priv *priv,
- 	struct ieee80211_tx_info *info;
- 
- 	if (unlikely(!agg->wait_for_ba))  {
--		IWL_ERR(priv, "Received BA when not expected\n");
-+		if (unlikely(ba_resp->bitmap))
-+			IWL_ERR(priv, "Received BA when not expected\n");
- 		return -EINVAL;
- 	}
- 
--- 
-1.7.0.4
+johannes
 
