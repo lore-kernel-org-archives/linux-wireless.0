@@ -1,62 +1,85 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.19.149.2]:19014 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750839Ab0JNWyk (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 14 Oct 2010 18:54:40 -0400
-Received: from mail.atheros.com ([10.10.20.105])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Thu, 14 Oct 2010 15:54:31 -0700
-Date: Thu, 14 Oct 2010 15:54:38 -0700
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: Ben Greear <greearb@candelatech.com>, <g@tux>
-CC: "Luis R. Rodriguez" <mcgrof@gmail.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Luis Rodriguez <Luis.Rodriguez@Atheros.com>
-Subject: Re: memory clobber in rx path, maybe related to ath9k.
-Message-ID: <20101014225438.GC15740@tux>
-References: <4CB4AA89.1070009@candelatech.com>
- <20101013053141.GA15798@vasanth-laptop>
- <4CB5E0A8.5020502@candelatech.com>
- <AANLkTimp_GSwwX_RnQSyN9QNe55HQ+0HZJ1yd8Xp+dWG@mail.gmail.com>
- <AANLkTinyVqdgPqzpyihuaPtVVqDmzj-ZbXzQ-4qdA2yH@mail.gmail.com>
- <4CB77EA0.1000005@candelatech.com>
- <AANLkTimC0+6PiqWO+LmtBV7uKCVpZueAQs6m_6kAnbq9@mail.gmail.com>
- <AANLkTi=1oOCcdvBHo+8WAVHv-M8tE14ntmK4M_09SWh5@mail.gmail.com>
- <AANLkTi=pp2Ob06YCi6GsR9rtRaDWPP95n2M72qWLdbwM@mail.gmail.com>
- <4CB787E1.9000201@candelatech.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <4CB787E1.9000201@candelatech.com>
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:44206 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932339Ab0JLPAH (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 12 Oct 2010 11:00:07 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: linux-wireless@vger.kernel.org
+Cc: Stephen Rothwell <sfr@canb.auug.org.au>,
+	Ben Greear <greearb@candelatech.com>,
+	linux-kernel@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>
+Subject: [PATCH] ath5k: fix build break from "ath5k: Print out opmode in debugfs"
+Date: Tue, 12 Oct 2010 10:53:26 -0400
+Message-Id: <1286895206-3030-1-git-send-email-linville@tuxdriver.com>
+In-Reply-To: <20101012163519.a88f2040.sfr@canb.auug.org.au>
+References: <20101012163519.a88f2040.sfr@canb.auug.org.au>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Oct 14, 2010 at 03:44:49PM -0700, Ben Greear wrote:
-> On 10/14/2010 03:35 PM, Luis R. Rodriguez wrote:
-> > On Thu, Oct 14, 2010 at 3:29 PM, Luis R. Rodriguez<mcgrof@gmail.com>  wrote:
-> >> Fun enough if I just create one monitor interface and loop quickly
-> >> over some 2 GHz channels where I know I have traffic nearby I don't
-> >> see the poison. So channel changes don't seem to do much because this
-> >> is changing channels as fast as possible from userspace. I also can
-> >> confirm that I see frames from the different channels as I move along.
-> >
-> > Even forcing a band change doesn't help trigger it with just one mon0
-> > and one regular device scanning in a loop;
-> >
-> > while true; do for i in 2412 5745 2417 5745 2422 5745 2427 5745 2432
-> > 5745 2442; do echo $i iw dev mon0 set freq $i; done; done
-> > while true; do iw dev wlan0 scan; done
-> 
-> What if you just make a bunch of skb copies in ath9k before it
-> sends them up the stack, and then delete them?  (That's basically
-> what a bunch of monitor devices would be doing, eh?)
+Without this and with CONFIG_ATH_DEBUG not set...
+
+ERROR: ".ath_opmode_to_string" [drivers/net/wireless/ath/ath5k/ath5k.ko] undefined!
+
+Signed-off-by: John W. Linville <linville@tuxdriver.com>
+---
+Please don't make me commit such an ugly patch...
+
+ drivers/net/wireless/ath/ath5k/base.c  |    4 ++++
+ drivers/net/wireless/ath/ath5k/debug.c |    6 +++++-
+ 2 files changed, 9 insertions(+), 1 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath5k/base.c b/drivers/net/wireless/ath/ath5k/base.c
+index c9732a6..b839a6b 100644
+--- a/drivers/net/wireless/ath/ath5k/base.c
++++ b/drivers/net/wireless/ath/ath5k/base.c
+@@ -562,10 +562,14 @@ static void ath_do_set_opmode(struct ath5k_softc *sc)
+ {
+ 	struct ath5k_hw *ah = sc->ah;
+ 	ath5k_hw_set_opmode(ah, sc->opmode);
++#ifdef CONFIG_ATH_DEBUG
+ 	ATH5K_DBG(sc, ATH5K_DEBUG_MODE, "mode setup opmode %d (%s)\n",
+ 		  sc->opmode,
+ 		  ath_opmode_to_string(sc->opmode) ?
+ 		  ath_opmode_to_string(sc->opmode) : "UKNOWN");
++#else
++	ATH5K_DBG(sc, ATH5K_DEBUG_MODE, "mode setup opmode %d\n", sc->opmode);
++#endif
+ }
  
-Sure, as you can see from my patch I at least do it all the time
-now on RX and TX. The TX poison never shows though so currently I'm
-more suspicious about RX. The other idea I had was to just run
-check_bytes_and_report() often around the code, but haven't tried that
-yet.
+ void ath5k_update_bssid_mask_and_opmode(struct ath5k_softc *sc,
+diff --git a/drivers/net/wireless/ath/ath5k/debug.c b/drivers/net/wireless/ath/ath5k/debug.c
+index a3b2171..329187a 100644
+--- a/drivers/net/wireless/ath/ath5k/debug.c
++++ b/drivers/net/wireless/ath/ath5k/debug.c
+@@ -493,7 +493,7 @@ static ssize_t read_file_misc(struct file *file, char __user *user_buf,
+ 	char buf[700];
+ 	unsigned int len = 0;
+ 	u32 filt = ath5k_hw_get_rx_filter(sc->ah);
+-	const char *tmp;
++	const char *tmp __maybe_unused;
+ 
+ 	len += snprintf(buf+len, sizeof(buf)-len, "bssid-mask: %pM\n",
+ 			sc->bssidmask);
+@@ -526,6 +526,7 @@ static ssize_t read_file_misc(struct file *file, char __user *user_buf,
+ 	else
+ 		len += snprintf(buf+len, sizeof(buf)-len, "\n");
+ 
++#ifdef CONFIG_ATH_DEBUG
+ 	tmp = ath_opmode_to_string(sc->opmode);
+ 	if (tmp)
+ 		len += snprintf(buf+len, sizeof(buf)-len, "opmode: %s\n",
+@@ -533,6 +534,9 @@ static ssize_t read_file_misc(struct file *file, char __user *user_buf,
+ 	else
+ 		len += snprintf(buf+len, sizeof(buf)-len,
+ 				"opmode: UNKNOWN-%i\n", sc->opmode);
++#else
++	len += snprintf(buf+len, sizeof(buf)-len, "opmode: %i\n", sc->opmode);
++#endif
+ 
+ 	if (len > sizeof(buf))
+ 		len = sizeof(buf);
+-- 
+1.7.2.3
 
-I'm also poking harware folks about some of the registers we use
-to better understand how DMA works here.
-
-  Luis
