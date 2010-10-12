@@ -1,93 +1,86 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from senator.holtmann.net ([87.106.208.187]:38582 "EHLO
-	mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932465Ab0JFP4O (ORCPT
+Received: from mail30t.wh2.ocn.ne.jp ([125.206.180.136]:32797 "HELO
+	mail30t.wh2.ocn.ne.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1752477Ab0JLCsM (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 6 Oct 2010 11:56:14 -0400
-Subject: Re: RFC: btusb firmware load help
-From: Marcel Holtmann <holtmann@linux.intel.com>
-To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Cc: Luis Rodriguez <Luis.Rodriguez@atheros.com>,
-	linux-bluetooth <linux-bluetooth@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Deepak Dhamdhere <Deepak.Dhamdhere@atheros.com>,
-	Sree Durbha <Sree.Durbha@atheros.com>
-In-Reply-To: <AANLkTimDvgFtoGLEjgWyYRrhQy6Num-rn_2WYO4Lf84b@mail.gmail.com>
-References: <20100924230730.GB6566@tux> <1286266981.17473.33.camel@aeonflux>
-	 <20101005192814.GB11831@tux> <1286308731.2588.13.camel@aeonflux>
-	 <AANLkTimz7U52_qHaTutQDOFQde+GrWJRA0WpqY__FPgi@mail.gmail.com>
-	 <1286349552.6145.11.camel@aeonflux>
-	 <AANLkTimDvgFtoGLEjgWyYRrhQy6Num-rn_2WYO4Lf84b@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Wed, 06 Oct 2010 17:56:06 +0200
-Message-ID: <1286380566.6145.42.camel@aeonflux>
-Mime-Version: 1.0
+	Mon, 11 Oct 2010 22:48:12 -0400
+Received: from vs3008.wh2.ocn.ne.jp (125.206.180.171)
+	by mail30t.wh2.ocn.ne.jp (RS ver 1.0.95vs) with SMTP id 3-0163061689
+	for <linux-wireless@vger.kernel.org>; Tue, 12 Oct 2010 11:48:11 +0900 (JST)
+From: Bruno Randolf <br1@einfach.org>
+To: Ben Greear <greearb@candelatech.com>
+Subject: Re: [PATCH v2] ath5k:  Adjust opmode when interfaces are removed.
+Date: Tue, 12 Oct 2010 11:48:19 +0900
+Cc: linux-wireless@vger.kernel.org
+References: <1286564475-10105-1-git-send-email-greearb@candelatech.com> <201010121044.39093.br1@einfach.org> <4CB3C3A3.5040309@candelatech.com>
+In-Reply-To: <4CB3C3A3.5040309@candelatech.com>
+MIME-Version: 1.0
+Content-Type: Text/Plain;
+  charset="iso-8859-15"
+Message-Id: <201010121148.19073.br1@einfach.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Luis,
-
-> > Now I am failing to understand why this was done wrong in the first
-> > place. Especially if the loading procedure happens as you say it
-> > happens.
+On Tue October 12 2010 11:10:43 Ben Greear wrote:
+> On 10/11/2010 06:44 PM, Bruno Randolf wrote:
+> > On Sat October 9 2010 04:01:15 greearb@candelatech.com wrote:
+> >> +
+> >> +	/* Calculate combined mode - when APs are active, operate in AP mode.
+> >> +	 * Otherwise use the mode of the new interface. This can currently
+> >> +	 * only deal with combinations of APs and STAs. Only one ad-hoc
+> >> +	 * interfaces is allowed above.
+> > 
+> > the comment reference to "above" does not make sense here any more.
 > 
-> You got me :) Anyone?
+> This patch is already in..but I can send a followup cleanup patch.
+
+just for the comment it's probably not worth it, but...
+
+> >> ieee80211_vif *vif) +static void ath_do_set_opmode(struct ath5k_softc
+> >> *sc)
+> >> +{
+> >> +	struct ath5k_hw *ah = sc->ah;
+> >> +	ath5k_hw_set_opmode(ah, sc->opmode);
+> >> +	ATH5K_DBG(sc, ATH5K_DEBUG_MODE, "mode setup opmode %d (%s)\n",
+> >> +		  sc->opmode,
+> >> +		  ath_opmode_to_string(sc->opmode) ?
+> >> +		  ath_opmode_to_string(sc->opmode) : "UKNOWN");
+> >> +}
+> > 
+> > what's the point of this function? just to add the debug print?
 > 
-> > This is the example for the Broadcom 203x devices:
-> >
-> > static struct usb_device_id blacklist_table[] = {
-> >        /* Broadcom BCM2033 without firmware */
-> >        { USB_DEVICE(0x0a5c, 0x2033), .driver_info = BTUSB_IGNORE },
-> >
-> > The btusb driver clearly blacklists them. And then bcm203x can take over
-> > loading the firmware:
-> >
-> > static const struct usb_device_id bcm203x_table[] = {
-> >        /* Broadcom Blutonium (BCM2033) */
-> >        { USB_DEVICE(0x0a5c, 0x2033) },
-> >
-> > So there is a working example of this already in the kernel tree since
-> > forever.
+> Yes.  At one point, I had it being called from several places..but now it's
+> called from only one place currently, I think.  I could make it explicitly
+> inline code if someone cared.
+
+i think i do care. could you please just open-code it at the one place where 
+you call this function?
+
+> > i think it makes sense to set the opmode here. and also do the same in
+> > ath5k_remove_interface. that way we figure out the opmode when interfaces
+> > are added/removed.
 > 
-> Nice, thanks for the pointer. Our team will review and try to address
-> an alternative patch.
+> It calls ath5k_mode_setup(sc, vif), which sets rx filter, updates bssid
+> mask, and sets the opmode.
 > 
-> Now for my own sanity -- I still don't think I get this how this
-> BCM2033 blacklist trick works, I take it the device once plugged in
-> gets a generic btusb USB device vendor:device ID. The btusb driver
-> then picks up the the blacklist table, and searches for a
-> usb_match_id() on it for the given interface... What I don't get is
-> how there will be a match here if the USB vendor:device ID is just the
-> generic btusb one. Can you help me understand how this trick works?
+> >> @@ -2905,7 +2919,7 @@ ath5k_remove_interface(struct ieee80211_hw *hw,
+> >> 
+> >>   	else if (avf->opmode == NL80211_IFTYPE_ADHOC)
+> >>   	
+> >>   		sc->num_adhoc_vifs--;
+> >> 
+> >> -	ath5k_update_bssid_mask(sc, NULL);
+> >> +	ath5k_update_bssid_mask_and_opmode(sc, NULL);
+> >> 
+> >>   	mutex_unlock(&sc->lock);
+> 
+> And that recalculates opmode and bssid mask on removal.
+> 
+> Or maybe I'm mis-understanding your suggestion?
 
-the generic Bluetooth USB class descriptors is what btusb uses. With a
-few expectation for devices that use VID:PID combination.
+i guess my suggestion was to solve it directly in add/remove_interface, as i 
+think that would me a more obvious place to do it, but as your patch already 
+got already merged: nevermind. your solution has advantages too.
 
-So in general what happens if a device gets matched via the Bluetooth
-USB class descriptors the btusb driver will claim. We do however check
-against out blacklist first. If the VID:PID is listed in the blacklist
-we do return ENODEV. That means that the USB subsystem goes ahead and
-tries the next driver. In this case bcm203x driver. This will claim it,
-load the firmware, reset it and come back with different VID:PID values.
-After that the btusb can successfully claim it since it is no longer in
-the blacklist.
-
-If I understand this all correct without having the hardware available
-for verifying this, then it should be like this:
-
-Just add this to blacklist_table[] in btusb.c:
-
-        /* Atheros AR3011 without firmware */
-        { USB_DEVICE(0x0cf3, 0x3002), .driver_info = BTUSB_IGNORE },
-
-And then we can add the firmware loading to ath3k driver to load the
-specific 1st stage firmware. And then ath3k can load the 2nd stage as
-well. After that it should become a default Bluetooth USB device and the
-btusb driver can take care of it.
-
-Regards
-
-Marcel
-
-
+thanks,
+bruno
