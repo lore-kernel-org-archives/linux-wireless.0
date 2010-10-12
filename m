@@ -1,92 +1,142 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fmmailgate03.web.de ([217.72.192.234]:58446 "EHLO
-	fmmailgate03.web.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758575Ab0J2VkR (ORCPT
+Received: from mail-wy0-f174.google.com ([74.125.82.174]:48274 "EHLO
+	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932282Ab0JLMtr (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 29 Oct 2010 17:40:17 -0400
-Message-ID: <4CCB3F24.1030701@web.de>
-Date: Fri, 29 Oct 2010 23:39:48 +0200
-From: Lee <lee-in-berlin@web.de>
-MIME-Version: 1.0
-To: Helmut Schaa <helmut.schaa@googlemail.com>
-CC: Gertjan van Wingerde <gwingerde@gmail.com>,
-	linux-wireless@vger.kernel.org, Ivo van Doorn <ivdoorn@gmail.com>
-Subject: Re: [regression]AP with hostapd 0.7.3 can't receive packets beyond
- authentication (2.6.36, rt73usb)
-References: <4CC0D0F6.4080507@web.de> <4CC9C9A4.2020802@web.de> <4CC9D50F.5070403@gmail.com> <201010290017.13174.helmut.schaa@googlemail.com>
-In-Reply-To: <201010290017.13174.helmut.schaa@googlemail.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+	Tue, 12 Oct 2010 08:49:47 -0400
+Received: by mail-wy0-f174.google.com with SMTP id 20so1342536wye.19
+        for <linux-wireless@vger.kernel.org>; Tue, 12 Oct 2010 05:49:47 -0700 (PDT)
+From: Ido Yariv <ido@wizery.com>
+To: Luciano Coelho <luciano.coelho@nokia.com>,
+	linux-wireless@vger.kernel.org
+Cc: Ido Yariv <ido@wizery.com>
+Subject: [PATCH v3 3/4] wl1271: Allocate TX descriptors more efficiently
+Date: Tue, 12 Oct 2010 14:49:11 +0200
+Message-Id: <1286887752-19321-4-git-send-email-ido@wizery.com>
+In-Reply-To: <1286887752-19321-1-git-send-email-ido@wizery.com>
+References: <1286887752-19321-1-git-send-email-ido@wizery.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 29/10/10 00:17, Helmut Schaa wrote:
-> Am Donnerstag 28 Oktober 2010 schrieb Gertjan van Wingerde:
->> On 10/28/10 21:06, Lee wrote:
->>> On 28/10/10 10:23, Helmut Schaa wrote:
->>>> Am Donnerstag 28 Oktober 2010 schrieb Lee:
->>>>> On 26/10/10 07:40, Helmut Schaa wrote:
->>>>>> # tcpdump -i mon0 "ether src XX:XX:XX:XX:XX:XX"
->>>>>>
->>>>>> Do you see any frames from your specific client?
->>>>>
->>>>> Yes. I can see this:
->>>>> # tcpdump -i mon0 "ether host 00:1F:3B:79:41:6F"
->>>> [...]
->>>>> 10:10:03.013402 5.5 Mb/s 2462 MHz 11b -76dB signal antenna 1 [bit 14] Data IV: 14 Pad 20 KeyID 0
->>>>>
->>>>> However, on wlan0 I don't see anything beyond the EAPOL packets.
->>>>> Temporarily turning off WPA encryption let me successfully connect to my AP.
->>>>
->>>> Aha, could you please try if loading rt73usb with nohwcrypt=1 helps?
->>>>
->>>> Helmut
->>>
->>> (argh, brown paper bag)
->>>
->>> I went through the compiled kernels again, and I've screwed up at the last
->>> commit while bisecting (Sorry, Helmut!). The first bad kernel is a commit
->>> later:
->>>
->>> # bad: [f1aa4c541e98afa8b770a75ccaa8504d0bff44a7] rt2x00: Write the BSSID to register when interface is added
->>>
->>> On the good side, I tested 2.6.36 with nohwcrypt=1, and it works. Yay!
->>
->> Hmm, the patch itself that seems to cause the badness doesn't look bad.
->> However, closer inspection shows that the intf->bssid field may be initialized incorrectly.
->>
->> I may be a long shot, but can you check if the attached patch helps?
->
-> Hmm, indeed that part of the code looks suspicious. However, setting the bssid
-> and mac always worked for me on rt2800pci.
->
-> Furthermore, the removal of the&  seems to not make any difference in this
-> case. I've just tried the following:
->
-> 	#include<stdio.h>
-> 	int main() {
-> 		int x[2];
-> 		printf("%p %p\n", x,&x);
-> 	}
->
-> Output is as follows:
->
-> 0x7fff74cb1df0 0x7fff74cb1df0
->
-> So, x and&x are equivalent in this case and this is similar to the code in
-> rt2x00mac. I'm fine with changing both memcpy's as you've suggested as it
-> really looks cleaner but I doubt that this is going to fix the problem.
->
-> In commit f1aa4c541e98afa8b770a75ccaa8504d0bff44a7 "rt2x00: Write the BSSID
-> to register when interface is added" we've added the bssid passing to the
-> device in AP mode to fix hw crypto on rt2800 devices in AP mode. But maybe
-> the older devices behave differently and don't like getting a bssid set
-> in AP mode?
->
-> Lee, if you just revert the commit you've identified are you able to use
-> the device in AP mode with hw crypto?
->
-> Thanks,
-> Helmut
+On each TX descriptor allocation, a free entry is found by traversing the TX
+descriptors array.
 
-Reverting that memcpy() to it's original parameters works for me (AP mode + hw 
-crypto).
+Improve this by holding a bitmap of all TX descriptors, and using efficient
+bit operations to search for free entries.
+
+Signed-off-by: Ido Yariv <ido@wizery.com>
+---
+ drivers/net/wireless/wl12xx/wl1271.h      |    1 +
+ drivers/net/wireless/wl12xx/wl1271_main.c |    1 +
+ drivers/net/wireless/wl12xx/wl1271_tx.c   |   38 ++++++++++++++++------------
+ 3 files changed, 24 insertions(+), 16 deletions(-)
+
+diff --git a/drivers/net/wireless/wl12xx/wl1271.h b/drivers/net/wireless/wl12xx/wl1271.h
+index 4a034a3..718e96d 100644
+--- a/drivers/net/wireless/wl12xx/wl1271.h
++++ b/drivers/net/wireless/wl12xx/wl1271.h
+@@ -398,6 +398,7 @@ struct wl1271 {
+ 	struct work_struct tx_work;
+ 
+ 	/* Pending TX frames */
++	unsigned long tx_frames_map[BITS_TO_LONGS(ACX_TX_DESCRIPTORS)];
+ 	struct sk_buff *tx_frames[ACX_TX_DESCRIPTORS];
+ 	int tx_frames_cnt;
+ 
+diff --git a/drivers/net/wireless/wl12xx/wl1271_main.c b/drivers/net/wireless/wl12xx/wl1271_main.c
+index 18aff22..0fd4725 100644
+--- a/drivers/net/wireless/wl12xx/wl1271_main.c
++++ b/drivers/net/wireless/wl12xx/wl1271_main.c
+@@ -2532,6 +2532,7 @@ struct ieee80211_hw *wl1271_alloc_hw(void)
+ 	wl->sg_enabled = true;
+ 	wl->hw_pg_ver = -1;
+ 
++	memset(wl->tx_frames_map, 0, sizeof(wl->tx_frames_map));
+ 	for (i = 0; i < ACX_TX_DESCRIPTORS; i++)
+ 		wl->tx_frames[i] = NULL;
+ 
+diff --git a/drivers/net/wireless/wl12xx/wl1271_tx.c b/drivers/net/wireless/wl12xx/wl1271_tx.c
+index cf32a77..a3a29ea 100644
+--- a/drivers/net/wireless/wl12xx/wl1271_tx.c
++++ b/drivers/net/wireless/wl12xx/wl1271_tx.c
+@@ -30,17 +30,26 @@
+ #include "wl1271_ps.h"
+ #include "wl1271_tx.h"
+ 
+-static int wl1271_tx_id(struct wl1271 *wl, struct sk_buff *skb)
++static int wl1271_alloc_tx_id(struct wl1271 *wl, struct sk_buff *skb)
+ {
+-	int i;
+-	for (i = 0; i < ACX_TX_DESCRIPTORS; i++)
+-		if (wl->tx_frames[i] == NULL) {
+-			wl->tx_frames[i] = skb;
+-			wl->tx_frames_cnt++;
+-			return i;
+-		}
++	int id;
++
++	id = find_first_zero_bit(wl->tx_frames_map, ACX_TX_DESCRIPTORS);
++	if (id >= ACX_TX_DESCRIPTORS)
++		return -EBUSY;
++
++	set_bit(id, wl->tx_frames_map);
++	wl->tx_frames[id] = skb;
++	wl->tx_frames_cnt++;
++	return id;
++}
+ 
+-	return -EBUSY;
++static void wl1271_free_tx_id(struct wl1271 *wl, int id)
++{
++	if (test_and_clear_bit(id, wl->tx_frames_map)) {
++		wl->tx_frames[id] = NULL;
++		wl->tx_frames_cnt--;
++	}
+ }
+ 
+ static int wl1271_tx_allocate(struct wl1271 *wl, struct sk_buff *skb, u32 extra,
+@@ -55,7 +64,7 @@ static int wl1271_tx_allocate(struct wl1271 *wl, struct sk_buff *skb, u32 extra,
+ 		return -EAGAIN;
+ 
+ 	/* allocate free identifier for the packet */
+-	id = wl1271_tx_id(wl, skb);
++	id = wl1271_alloc_tx_id(wl, skb);
+ 	if (id < 0)
+ 		return id;
+ 
+@@ -79,8 +88,7 @@ static int wl1271_tx_allocate(struct wl1271 *wl, struct sk_buff *skb, u32 extra,
+ 			     "tx_allocate: size: %d, blocks: %d, id: %d",
+ 			     total_len, total_blocks, id);
+ 	} else {
+-		wl->tx_frames[id] = NULL;
+-		wl->tx_frames_cnt--;
++		wl1271_free_tx_id(wl, id);
+ 	}
+ 
+ 	return ret;
+@@ -352,8 +360,7 @@ static void wl1271_tx_complete_packet(struct wl1271 *wl,
+ 
+ 	/* return the packet to the stack */
+ 	ieee80211_tx_status(wl->hw, skb);
+-	wl->tx_frames[result->id] = NULL;
+-	wl->tx_frames_cnt--;
++	wl1271_free_tx_id(wl, result->id);
+ }
+ 
+ /* Called upon reception of a TX complete interrupt */
+@@ -422,11 +429,10 @@ void wl1271_tx_reset(struct wl1271 *wl)
+ 	for (i = 0; i < ACX_TX_DESCRIPTORS; i++)
+ 		if (wl->tx_frames[i] != NULL) {
+ 			skb = wl->tx_frames[i];
+-			wl->tx_frames[i] = NULL;
++			wl1271_free_tx_id(wl, i);
+ 			wl1271_debug(DEBUG_TX, "freeing skb 0x%p", skb);
+ 			ieee80211_tx_status(wl->hw, skb);
+ 		}
+-	wl->tx_frames_cnt = 0;
+ }
+ 
+ #define WL1271_TX_FLUSH_TIMEOUT 500000
+-- 
+1.7.0.4
+
