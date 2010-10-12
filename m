@@ -1,32 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from purkki.adurom.net ([80.68.90.206]:54719 "EHLO purkki.adurom.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751107Ab0JYC2h (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 24 Oct 2010 22:28:37 -0400
-To: Grazvydas Ignotas <notasas@gmail.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] wl1251: fix module names
-References: <1287703388-31683-1-git-send-email-notasas@gmail.com>
-From: Kalle Valo <kvalo@adurom.com>
-Date: Mon, 25 Oct 2010 05:28:35 +0300
-In-Reply-To: <1287703388-31683-1-git-send-email-notasas@gmail.com> (Grazvydas Ignotas's message of "Fri\, 22 Oct 2010 02\:23\:08 +0300")
-Message-ID: <87k4l70zvw.fsf@purkki.adurom.net>
+Received: from mail-qw0-f46.google.com ([209.85.216.46]:50912 "EHLO
+	mail-qw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757382Ab0JLRPd (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 12 Oct 2010 13:15:33 -0400
+Received: by qwa26 with SMTP id 26so527311qwa.19
+        for <linux-wireless@vger.kernel.org>; Tue, 12 Oct 2010 10:15:32 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <201010121933.59209.br1@einfach.org>
+References: <201010121933.59209.br1@einfach.org>
+Date: Tue, 12 Oct 2010 13:15:29 -0400
+Message-ID: <AANLkTikSE0GBDo_++YfYD4kwS3oEHMBtWm0B96-BWEBe@mail.gmail.com>
+Subject: Re: [ath5k-devel] How to profile this strange effect under high load?
+From: Bob Copeland <me@bobcopeland.com>
+To: Bruno Randolf <br1@einfach.org>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	ath5k-devel@lists.ath5k.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Grazvydas Ignotas <notasas@gmail.com> writes:
+On Tue, Oct 12, 2010 at 6:33 AM, Bruno Randolf <br1@einfach.org> wrote:
+> So my question is: How can I find out, what [phy1] is so busy doing? Any ideas
+> how to profile this?
 
-> The wl1251 move accidently renamed wl1251_sdio and wl1251_spi
-> modules to just sdio and spi. Restore proper module names.
+/proc/interrupts shows lots of interrupts on phy1 line?  Is it shared irq?
 
-Thank you for fixing my breakage.
+What options did you try with oprofile?
 
-> Signed-off-by: Grazvydas Ignotas <notasas@gmail.com>
+You can try perf -- as long as you limit the functions you profile it should
+have about the same overhead as oprofile.  But then you should get about the
+same results with either; I just find perf to be a little better these days.
 
-Acked-by: Kalle Valo <kvalo@adurom.com>
+One thing I know of is that all the linear interpolation we do for setting
+the power curves is pretty heavy cpu-wise and we do it on every reset.  There's
+some low-hanging fruit there like precomputing the reciprocal of some
+scaling factors instead of some divisions...
 
 -- 
-Kalle Valo
+Bob Copeland %% www.bobcopeland.com
