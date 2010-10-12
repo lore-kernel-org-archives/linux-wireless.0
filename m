@@ -1,42 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga14.intel.com ([143.182.124.37]:1450 "EHLO mga14.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754610Ab0JNSEU (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 14 Oct 2010 14:04:20 -0400
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Subject: [PATCH 5/9] iwlagn: 6050 ops should be used;
-Date: Thu, 14 Oct 2010 11:02:46 -0700
-Message-Id: <1287079370-20587-6-git-send-email-wey-yi.w.guy@intel.com>
-In-Reply-To: <1287079370-20587-1-git-send-email-wey-yi.w.guy@intel.com>
-References: <1287079370-20587-1-git-send-email-wey-yi.w.guy@intel.com>
+Received: from mail-bw0-f46.google.com ([209.85.214.46]:43534 "EHLO
+	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751757Ab0JLWKu (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 12 Oct 2010 18:10:50 -0400
+Received: by mail-bw0-f46.google.com with SMTP id 15so2776714bwz.19
+        for <linux-wireless@vger.kernel.org>; Tue, 12 Oct 2010 15:10:49 -0700 (PDT)
+From: mike.rapoport@gmail.com
+To: Greg Kroah-Hartman <gregkh@suse.de>
+Cc: Brett Rudley <brudley@broadcom.com>,
+	Henry Ptasinski <henryp@broadcom.com>,
+	Nohee Ko <noheek@broadcom.com>, linux-wireless@vger.kernel.org,
+	Mike Rapoport <mike.rapoport@gmail.com>
+Subject: [PATCH 7/7] staging: brcm80211: remove unrefrenced malloced field
+Date: Wed, 13 Oct 2010 00:09:13 +0200
+Message-Id: <e72c12b598351305a816ee08eeea2dbb3c731f1e.1286920620.git.mike.rapoport@gmail.com>
+In-Reply-To: <cover.1286920620.git.mike.rapoport@gmail.com>
+References: <cover.1286920620.git.mike.rapoport@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-For 6050 series of devices, 6050 ops should be used;
-One of the 6050 config still use 6000 ops, fix it.
+from 'struct osl_info' structure
 
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Signed-off-by: Mike Rapoport <mike.rapoport@gmail.com>
 ---
- drivers/net/wireless/iwlwifi/iwl-6000.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+ drivers/staging/brcm80211/util/linux_osl.c |    2 --
+ 1 files changed, 0 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-6000.c b/drivers/net/wireless/iwlwifi/iwl-6000.c
-index 3eaea6f..11e6532 100644
---- a/drivers/net/wireless/iwlwifi/iwl-6000.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-6000.c
-@@ -780,7 +780,7 @@ struct iwl_cfg iwl6050_2agn_cfg = {
- 	.sku = IWL_SKU_A|IWL_SKU_G|IWL_SKU_N,
- 	.valid_tx_ant = ANT_AB,
- 	.valid_rx_ant = ANT_AB,
--	.ops = &iwl6000_ops,
-+	.ops = &iwl6050_ops,
- 	.eeprom_ver = EEPROM_6050_EEPROM_VERSION,
- 	.eeprom_calib_ver = EEPROM_6050_TX_POWER_VERSION,
- 	.mod_params = &iwlagn_mod_params,
+diff --git a/drivers/staging/brcm80211/util/linux_osl.c b/drivers/staging/brcm80211/util/linux_osl.c
+index 876d72f..d86afba 100644
+--- a/drivers/staging/brcm80211/util/linux_osl.c
++++ b/drivers/staging/brcm80211/util/linux_osl.c
+@@ -37,7 +37,6 @@ struct osl_info {
+ 	osl_pubinfo_t pub;
+ 	uint magic;
+ 	void *pdev;
+-	uint malloced;
+ 	uint failed;
+ 	uint bustype;
+ };
+@@ -128,7 +127,6 @@ osl_t *osl_attach(void *pdev, uint bustype, bool pkttag)
+ #endif /* BRCM_FULLMAC */
+ 
+ 	osh->magic = OS_HANDLE_MAGIC;
+-	osh->malloced = 0;
+ 	osh->failed = 0;
+ 	osh->pdev = pdev;
+ 	osh->pub.pkttag = pkttag;
 -- 
-1.7.0.4
+1.6.4.4
 
