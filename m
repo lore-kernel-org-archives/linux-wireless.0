@@ -1,90 +1,114 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.19.149.2]:33329 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755609Ab0JUJEJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 21 Oct 2010 05:04:09 -0400
-Received: from mail.atheros.com ([10.10.20.108])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Thu, 21 Oct 2010 02:03:59 -0700
-Date: Thu, 21 Oct 2010 02:04:07 -0700
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: Luis Rodriguez <Luis.Rodriguez@Atheros.com>
-CC: Senthilkumar Balasubramanian
-	<Senthilkumar.Balasubramanian@Atheros.com>,
-	"linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"johannes@sipsolutions.net" <johannes@sipsolutions.net>,
-	Easwar Krishnan <Easwar.Krishnan@Atheros.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH 6/7] cfg80211: add debug print when processing a channel
-Message-ID: <20101021090407.GE2776@tux>
-References: <1287595139-10761-1-git-send-email-lrodriguez@atheros.com>
- <1287595139-10761-7-git-send-email-lrodriguez@atheros.com>
- <20101021081828.GA1840@senthil-lnx.users.atheros.com>
- <20101021090254.GC2776@tux>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <20101021090254.GC2776@tux>
+Received: from mail-ww0-f44.google.com ([74.125.82.44]:42471 "EHLO
+	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932282Ab0JLMtu (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 12 Oct 2010 08:49:50 -0400
+Received: by mail-ww0-f44.google.com with SMTP id 40so4973564wwj.1
+        for <linux-wireless@vger.kernel.org>; Tue, 12 Oct 2010 05:49:49 -0700 (PDT)
+From: Ido Yariv <ido@wizery.com>
+To: Luciano Coelho <luciano.coelho@nokia.com>,
+	linux-wireless@vger.kernel.org
+Cc: Ido Yariv <ido@wizery.com>
+Subject: [PATCH v3 4/4] wl1271: Fix TX queue low watermark handling
+Date: Tue, 12 Oct 2010 14:49:12 +0200
+Message-Id: <1286887752-19321-5-git-send-email-ido@wizery.com>
+In-Reply-To: <1286887752-19321-1-git-send-email-ido@wizery.com>
+References: <1286887752-19321-1-git-send-email-ido@wizery.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Oct 21, 2010 at 02:02:54AM -0700, Luis Rodriguez wrote:
-> On Thu, Oct 21, 2010 at 01:18:28AM -0700, Senthilkumar Balasubramanian wrote:
-> > On Wed, Oct 20, 2010 at 10:48:58PM +0530, Luis R. Rodriguez wrote:
-> > > In the worst case you are seeing really odd things you want
-> > > more information than what is provided right now, for those
-> > > that insist and want debug info through CONFIG_CFG80211_REG_DEBUG
-> > > provide a print of when we are processing a channel and with what
-> > > regulatory rule.
-> > > 
-> > > Cc: Easwar Krishnan <easwar.krishnan@atheros.com>
-> > > Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
-> > > ---
-> > >  net/wireless/reg.c |   40 ++++++++++++++++++++++++++++++++++++++++
-> > >  1 files changed, 40 insertions(+), 0 deletions(-)
-> > > 
-> > > diff --git a/net/wireless/reg.c b/net/wireless/reg.c
-> > > index 62396b2..f0ff146 100644
-> > > --- a/net/wireless/reg.c
-> > > +++ b/net/wireless/reg.c
-> > > @@ -728,6 +728,42 @@ static const char *reg_initiator_name(enum nl80211_reg_initiator initiator)
-> > >  	}
-> > >  }
-> > >  
-> > > +#ifdef CONFIG_CFG80211_REG_DEBUG
-> > > +
-> > > +static void chan_reg_rule_print_dbg(struct ieee80211_channel *chan,
-> > > +				    u32 desired_bw_khz,
-> > > +				    const struct ieee80211_reg_rule *reg_rule)
-> > > +{
-> > > +	const struct ieee80211_power_rule *power_rule;
-> > > +	const struct ieee80211_freq_range *freq_range;
-> > > +	char max_antenna_gain[32];
-> > > +
-> > > +	power_rule = &reg_rule->power_rule;
-> > > +	freq_range = &reg_rule->freq_range;
-> > > +
-> > > +	if (!power_rule->max_antenna_gain)
-> > > +		snprintf(max_antenna_gain, 32, "N/A");
-> > > +	else
-> > > +		snprintf(max_antenna_gain, 32, "%d", power_rule->max_antenna_gain);
-> > > +
-> > > +	REG_DBG_PRINT("cfg80211: Updating information on frequency %d MHz "
-> > > +		      "for %d a MHz width channel with regulatory rule:\n",
-> > > +		      chan->center_freq,
-> > > +		      KHZ_TO_MHZ(desired_bw_khz));
-> > > +
-> > > +	REG_DBG_PRINT("cfg80211: %d KHz - %d KHz @  KHz), (%s mBi, %d mBm)\n",
-> > > +		      freq_range->start_freq_khz,
-> > > +		      freq_range->end_freq_khz,
-> > > +		      max_antenna_gain,
-> > > +		      power_rule->max_eirp);
-> > > +}
-> > > +#else
-> > > +static void reg_reg_rule_print_dbg(const struct ieee80211_reg_rule *reg_rule)
-> > This will break compilation. Function name and arguments needs to be fixed here.
-> 
-> Good catch. I'll fix in the AM.
+The number of entries in the TX queue is compared to the low watermark
+value each time TX completion interrupts are handled.
+However, the fact that a TX completion arrived does not necessarily mean
+there are any less skbs in the TX queue.
 
-BTW , feel free to fix my patches and resend :)
+In addition, a TX completion interrupt does not necessarily mean that there
+are any new available TX blocks. Thus, queuing TX work when the low
+watermark is reached might not be needed.
 
-  Luis
+Fix this by moving the low watermark handling to the TX work function,
+and avoid queuing TX work in this case.
+
+Signed-off-by: Ido Yariv <ido@wizery.com>
+---
+ drivers/net/wireless/wl12xx/wl1271_tx.c |   35 +++++++++++++++++++-----------
+ 1 files changed, 22 insertions(+), 13 deletions(-)
+
+diff --git a/drivers/net/wireless/wl12xx/wl1271_tx.c b/drivers/net/wireless/wl12xx/wl1271_tx.c
+index a3a29ea..4b8218f 100644
+--- a/drivers/net/wireless/wl12xx/wl1271_tx.c
++++ b/drivers/net/wireless/wl12xx/wl1271_tx.c
+@@ -212,6 +212,20 @@ u32 wl1271_tx_enabled_rates_get(struct wl1271 *wl, u32 rate_set)
+ 	return enabled_rates;
+ }
+ 
++static void handle_tx_low_watermark(struct wl1271 *wl)
++{
++	unsigned long flags;
++
++	if (test_bit(WL1271_FLAG_TX_QUEUE_STOPPED, &wl->flags) &&
++	    skb_queue_len(&wl->tx_queue) <= WL1271_TX_QUEUE_LOW_WATERMARK) {
++		/* firmware buffer has space, restart queues */
++		spin_lock_irqsave(&wl->wl_lock, flags);
++		ieee80211_wake_queues(wl->hw);
++		clear_bit(WL1271_FLAG_TX_QUEUE_STOPPED, &wl->flags);
++		spin_unlock_irqrestore(&wl->wl_lock, flags);
++	}
++}
++
+ void wl1271_tx_work_locked(struct wl1271 *wl)
+ {
+ 	struct sk_buff *skb;
+@@ -225,6 +239,7 @@ void wl1271_tx_work_locked(struct wl1271 *wl)
+ 	if (unlikely(test_and_clear_bit(WL1271_FLAG_STA_RATES_CHANGED,
+ 					&wl->flags))) {
+ 		unsigned long flags;
++
+ 		spin_lock_irqsave(&wl->wl_lock, flags);
+ 		sta_rates = wl->sta_rate_set;
+ 		spin_unlock_irqrestore(&wl->wl_lock, flags);
+@@ -285,6 +300,7 @@ out_ack:
+ 	if (sent_packets) {
+ 		/* interrupt the firmware with the new packets */
+ 		wl1271_write32(wl, WL1271_HOST_WR_ACCESS, wl->tx_packets_count);
++		handle_tx_low_watermark(wl);
+ 	}
+ 
+ out:
+@@ -399,19 +415,6 @@ void wl1271_tx_complete(struct wl1271 *wl)
+ 
+ 		wl->tx_results_count++;
+ 	}
+-
+-	if (test_bit(WL1271_FLAG_TX_QUEUE_STOPPED, &wl->flags) &&
+-	    skb_queue_len(&wl->tx_queue) <= WL1271_TX_QUEUE_LOW_WATERMARK) {
+-		unsigned long flags;
+-
+-		/* firmware buffer has space, restart queues */
+-		wl1271_debug(DEBUG_TX, "tx_complete: waking queues");
+-		spin_lock_irqsave(&wl->wl_lock, flags);
+-		ieee80211_wake_queues(wl->hw);
+-		clear_bit(WL1271_FLAG_TX_QUEUE_STOPPED, &wl->flags);
+-		spin_unlock_irqrestore(&wl->wl_lock, flags);
+-		ieee80211_queue_work(wl->hw, &wl->tx_work);
+-	}
+ }
+ 
+ /* caller must hold wl->mutex */
+@@ -426,6 +429,12 @@ void wl1271_tx_reset(struct wl1271 *wl)
+ 		ieee80211_tx_status(wl->hw, skb);
+ 	}
+ 
++	/*
++	 * Make sure the driver is at a consistent state, in case this
++	 * function is called from a context other than interface removal.
++	 */
++	handle_tx_low_watermark(wl);
++
+ 	for (i = 0; i < ACX_TX_DESCRIPTORS; i++)
+ 		if (wl->tx_frames[i] != NULL) {
+ 			skb = wl->tx_frames[i];
+-- 
+1.7.0.4
+
