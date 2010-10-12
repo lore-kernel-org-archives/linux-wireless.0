@@ -1,43 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:42503 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755816Ab0JOFwt (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 15 Oct 2010 01:52:49 -0400
-Subject: Re: [PATCH 2/2] mac80211: Add support for CQM tx bitrate monitoring
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Paul Stewart <pstew@google.com>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <AANLkTinyc56O-xeYEMSD+B=yWNnd_Ch-NUrPv5uGQyr1@mail.gmail.com>
-References: <20101014224326.9E9912005F@glenhelen.mtv.corp.google.com>
-	 <AANLkTinyc56O-xeYEMSD+B=yWNnd_Ch-NUrPv5uGQyr1@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Fri, 15 Oct 2010 07:53:30 +0200
-Message-ID: <1287122010.3640.2.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+Received: from mga01.intel.com ([192.55.52.88]:9253 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932713Ab0JLPzK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 12 Oct 2010 11:55:10 -0400
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Subject: [PATCH 0/3] update for 2.6.37
+Date: Tue, 12 Oct 2010 08:53:52 -0700
+Message-Id: <1286898835-31812-1-git-send-email-wey-yi.w.guy@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2010-10-14 at 22:21 -0700, Paul Stewart wrote:
-> On Thu, Oct 14, 2010 at 2:40 PM, Paul Stewart <pstew@google.com> wrote:
-> > +       if (mcs_rate_table_cache[mcs] == 0) {
-> > +               modulation = mcs & 7;
-> > +               streams = (mcs >> 3) + 1;
-> > +               base_rate = (rate_ptr->flags & IEEE80211_TX_RC_40_MHZ_WIDTH) ?
-> > +                 13500000 : 6500000;
-> > +               gi_div = (rate_ptr->flags & IEEE80211_TX_RC_SHORT_GI) ? 9 : 10;
-> > +               rate_val = base_rate * mod_table[modulation] * streams / gi_div;
-> > +               mcs_rate_table_cache[mcs] = (rate_val + 5000) / 10000;
-> > +       }
-> > +
-> > +       return  mcs_rate_table_cache[mcs] * 100;
-> > +}
-> 
-> Um, that doesn't work right.  The cache needs to be 4 times as big to
-> account for account from 40MHZ and SHORT_GI.  I'll send a revised
-> version of this tomorrow.
+3945 was broken because accidentally removed the
+num_of_queues parameter for 3945, restore the 
+necessary num_of_queues param.
 
-Can't you just precalculate it anyway? Like at compile time?
+BT coex was broken by runtime DC calibration,
+fix by change the initialization sequence. 
 
-johannes
+Johannes Berg (1):
+  iwl3945: fix queue allocation
+
+Wey-Yi Guy (2):
+  iiwlagn: always download priority table
+  iwlagn: prio_tbl need to download before calibration
+
+these patches are also available from wireless-next-2.6 branch on
+ git://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi-2.6.git
+
+ drivers/net/wireless/iwlwifi/iwl-3945.c |    1 +
+ drivers/net/wireless/iwlwifi/iwl-agn.c  |   10 +++++-----
+ 2 files changed, 6 insertions(+), 5 deletions(-)
 
