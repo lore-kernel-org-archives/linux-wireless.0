@@ -1,110 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f46.google.com ([209.85.214.46]:34499 "EHLO
-	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1762163Ab0J2Xfl (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 29 Oct 2010 19:35:41 -0400
-Received: by bwz11 with SMTP id 11so3037812bwz.19
-        for <linux-wireless@vger.kernel.org>; Fri, 29 Oct 2010 16:35:40 -0700 (PDT)
-Message-Id: <8ce627c3355d74c9431812dad5fcf8327d6534b5.1288393804.git.chunkeey@googlemail.com>
-In-Reply-To: <cover.1288393804.git.chunkeey@googlemail.com>
-References: <cover.1288393804.git.chunkeey@googlemail.com>
-From: Christian Lamparter <chunkeey@googlemail.com>
-Date: Fri, 29 Oct 2010 23:41:16 +0200
-Subject: [PATCH 5/6] carl9170: stop stale uplink BA sessions
-To: linux-wireless@vger.kernel.org
-Cc: linville@tuxdriver.com
+Received: from mga01.intel.com ([192.55.52.88]:26624 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932750Ab0JLPzL (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 12 Oct 2010 11:55:11 -0400
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	Johannes Berg <johannes.berg@intel.com>,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Subject: [PATCH 3/3] iwl3945: fix queue allocation
+Date: Tue, 12 Oct 2010 08:53:55 -0700
+Message-Id: <1286898835-31812-4-git-send-email-wey-yi.w.guy@intel.com>
+In-Reply-To: <1286898835-31812-1-git-send-email-wey-yi.w.guy@intel.com>
+References: <1286898835-31812-1-git-send-email-wey-yi.w.guy@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch fixes a possible lengthy stall if the device
-is operating as an experimental 11n AP and an STA
-[during heavy txrx action] suddenly signalized to go
-off-channel (old NetworkManager), or (sleep - which is
-unlikely, because then it wouldn't be *active* at all!?).
+From: Johannes Berg <johannes.berg@intel.com>
 
-Because the driver has to manage the BA Window, the
-sudden PSM transition can leave active uplink BA
-sessions to the STA in a bad state and a proper
-cleanup is needed.
+commit 6f98613258b966ffe0e6def18129b386514d10e0
+Author: Jay Sternberg <jay.e.sternberg@intel.com>
+Date:   Sat Sep 18 09:07:04 2010 -0700
 
-Signed-off-by: Christian Lamparter <chunkeey@googlemail.com>
+    iwlagn: reduce redundant parameter definitions
+
+broke 3945 because Jay accidentally removed the
+num_of_queues parameter for 3945, so that we now
+attempt to allocate a zero-sized queue array,
+which leads to SLUB returning ZERO_SIZE_PTR (0x10)
+which we then try to dereference thus crashing the
+system. Restore the necessary num_of_queues param.
+
+This fixes
+http://bugzilla.intellinuxwireless.org/show_bug.cgi?id=2254
+
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
 ---
- drivers/net/wireless/ath/carl9170/tx.c |   54 ++++++++++++++++++++++++++++++++
- 1 files changed, 54 insertions(+), 0 deletions(-)
+ drivers/net/wireless/iwlwifi/iwl-3945.c |    1 +
+ 1 files changed, 1 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/carl9170/tx.c b/drivers/net/wireless/ath/carl9170/tx.c
-index b575c86..b27969c 100644
---- a/drivers/net/wireless/ath/carl9170/tx.c
-+++ b/drivers/net/wireless/ath/carl9170/tx.c
-@@ -524,6 +524,59 @@ next:
- 	}
- }
+diff --git a/drivers/net/wireless/iwlwifi/iwl-3945.c b/drivers/net/wireless/iwlwifi/iwl-3945.c
+index 7d74ae5..176e525 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-3945.c
++++ b/drivers/net/wireless/iwlwifi/iwl-3945.c
+@@ -2753,6 +2753,7 @@ static const struct iwl_ops iwl3945_ops = {
  
-+static void carl9170_tx_ampdu_timeout(struct ar9170 *ar)
-+{
-+	struct carl9170_sta_tid *iter;
-+	struct sk_buff *skb;
-+	struct ieee80211_tx_info *txinfo;
-+	struct carl9170_tx_info *arinfo;
-+	struct _carl9170_tx_superframe *super;
-+	struct ieee80211_sta *sta;
-+	struct ieee80211_vif *vif;
-+	struct ieee80211_hdr *hdr;
-+	unsigned int vif_id;
-+
-+	rcu_read_lock();
-+	list_for_each_entry_rcu(iter, &ar->tx_ampdu_list, list) {
-+		if (iter->state < CARL9170_TID_STATE_IDLE)
-+			continue;
-+
-+		spin_lock_bh(&iter->lock);
-+		skb = skb_peek(&iter->queue);
-+		if (!skb)
-+			goto unlock;
-+
-+		txinfo = IEEE80211_SKB_CB(skb);
-+		arinfo = (void *)txinfo->rate_driver_data;
-+		if (time_is_after_jiffies(arinfo->timeout +
-+		    msecs_to_jiffies(CARL9170_QUEUE_TIMEOUT)))
-+			goto unlock;
-+
-+		super = (void *) skb->data;
-+		hdr = (void *) super->frame_data;
-+
-+		vif_id = (super->s.misc & CARL9170_TX_SUPER_MISC_VIF_ID) >>
-+			 CARL9170_TX_SUPER_MISC_VIF_ID_S;
-+
-+		if (WARN_ON(vif_id >= AR9170_MAX_VIRTUAL_MAC))
-+			goto unlock;
-+
-+		vif = rcu_dereference(ar->vif_priv[vif_id].vif);
-+		if (WARN_ON(!vif))
-+			goto unlock;
-+
-+		sta = ieee80211_find_sta(vif, hdr->addr1);
-+		if (WARN_ON(!sta))
-+			goto unlock;
-+
-+		ieee80211_stop_tx_ba_session(sta, iter->tid);
-+unlock:
-+		spin_unlock_bh(&iter->lock);
-+
-+	}
-+	rcu_read_unlock();
-+}
-+
- void carl9170_tx_janitor(struct work_struct *work)
- {
- 	struct ar9170 *ar = container_of(work, struct ar9170,
-@@ -534,6 +587,7 @@ void carl9170_tx_janitor(struct work_struct *work)
- 	ar->tx_janitor_last_run = jiffies;
- 
- 	carl9170_check_queue_stop_timeout(ar);
-+	carl9170_tx_ampdu_timeout(ar);
- 
- 	if (!atomic_read(&ar->tx_total_queued))
- 		return;
+ static struct iwl_base_params iwl3945_base_params = {
+ 	.eeprom_size = IWL3945_EEPROM_IMG_SIZE,
++	.num_of_queues = IWL39_NUM_QUEUES,
+ 	.pll_cfg_val = CSR39_ANA_PLL_CFG_VAL,
+ 	.set_l0s = false,
+ 	.use_bsm = true,
 -- 
-1.7.2.3
+1.7.0.4
 
