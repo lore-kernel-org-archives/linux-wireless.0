@@ -1,81 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([192.100.122.230]:53891 "EHLO
-	mgw-mx03.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754758Ab0JKN4Q (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 11 Oct 2010 09:56:16 -0400
-Subject: Re: [PATCH v2 03/03] wl1271: 11n Support, functionality and
- configuration ability
-From: Luciano Coelho <luciano.coelho@nokia.com>
-To: ext Shahar Levi <shahar_levi@ti.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <4CB1DAC8.6050609@ti.com>
-References: <1286388491-28752-1-git-send-email-shahar_levi@ti.com>
-	 <1286388491-28752-5-git-send-email-shahar_levi@ti.com>
-	 <1286528736.21349.42.camel@chilepepper>  <4CB1DAC8.6050609@ti.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Mon, 11 Oct 2010 16:55:56 +0300
-Message-ID: <1286805356.24158.3.camel@chilepepper>
-Mime-Version: 1.0
+Received: from nbd.name ([88.198.39.176]:40831 "EHLO ds10.nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932516Ab0JLOIJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 12 Oct 2010 10:08:09 -0400
+From: Felix Fietkau <nbd@openwrt.org>
+To: linux-wireless@vger.kernel.org
+Cc: linville@tuxdriver.com, lrodriguez@atheros.com
+Subject: [PATCH 2/3] ath9k_hw: fix PHY counter overflow handling in ANI v1
+Date: Tue, 12 Oct 2010 16:08:02 +0200
+Message-Id: <1286892483-71182-2-git-send-email-nbd@openwrt.org>
+In-Reply-To: <1286892483-71182-1-git-send-email-nbd@openwrt.org>
+References: <1286892483-71182-1-git-send-email-nbd@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, 2010-10-10 at 17:24 +0200, ext Shahar Levi wrote:
-> >>  static const u8 *wl1271_band_rate_to_idx[] = {
-> >> diff --git a/drivers/net/wireless/wl12xx/wl1271_rx.c
-> b/drivers/net/wireless/wl12xx/wl1271_rx.c
-> >> index 94da5dd..109a470 100644
-> >> --- a/drivers/net/wireless/wl12xx/wl1271_rx.c
-> >> +++ b/drivers/net/wireless/wl12xx/wl1271_rx.c
-> >> @@ -53,6 +53,10 @@ static void wl1271_rx_status(struct wl1271 *wl,
-> >>      status->band = wl->band;
-> >>      status->rate_idx = wl1271_rate_to_idx(wl, desc->rate);
-> >>  
-> >> +    /* 11n support */
-> >> +    if (desc->rate <= CONF_HW_RXTX_RATE_MCS0)
-> >> +            status->flag |= RX_FLAG_HT;
-> >> +
-> >>      status->signal = desc->rssi;
-> > 
-> > Should this be #ifdef'ed also?
-> 
-> No, in case of HT not supported the HW will not set MCS rate.
+PHY counter overflows need to be checked for the old ANI version,
+because of its use of interrupt based counter overflow reports when
+the counters exceed the configured thresholds.
 
-True, but if you don't have the ifdef you're adding unnecessary code in
-the RX data path.
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+---
+ drivers/net/wireless/ath/ath9k/ani.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-
-> >> diff --git a/drivers/net/wireless/wl12xx/wl1271_tx.c
-> b/drivers/net/wireless/wl12xx/wl1271_tx.c
-> >> index 1b8295c..af54fef 100644
-> >> --- a/drivers/net/wireless/wl12xx/wl1271_tx.c
-> >> +++ b/drivers/net/wireless/wl12xx/wl1271_tx.c
-> >> @@ -236,6 +236,15 @@ u32 wl1271_tx_enabled_rates_get(struct wl1271
-> *wl, u32 rate_set)
-> >>              rate_set >>= 1;
-> >>      }
-> >>  
-> >> +    /* MCS rates indication are on bits 16 - 23 */
-> >> +    rate_set >>= HW_HT_RATES_OFFSET - band->n_bitrates;
-> >> +
-> >> +    for (bit = 0; bit < 8; bit++) {
-> >> +            if (rate_set & 0x1)
-> >> +                    enabled_rates |= (CONF_HW_BIT_RATE_MCS_0 <<
-> bit);
-> >> +            rate_set >>= 1;
-> >> +    }
-> >> +
-> > 
-> > And this? #ifdef here as well, maybe? 
-> 
-> No, in case of HT not supported MCS bit in rate_set will not be set.
-
-Same here, this loop will add more CPU cycles in the TX data path
-unnecessarily.
-
-
-
+diff --git a/drivers/net/wireless/ath/ath9k/ani.c b/drivers/net/wireless/ath/ath9k/ani.c
+index 9297f57..63ccb39 100644
+--- a/drivers/net/wireless/ath/ath9k/ani.c
++++ b/drivers/net/wireless/ath/ath9k/ani.c
+@@ -664,7 +664,7 @@ static bool ath9k_hw_ani_read_counters(struct ath_hw *ah)
+ 	phyCnt1 = REG_READ(ah, AR_PHY_ERR_1);
+ 	phyCnt2 = REG_READ(ah, AR_PHY_ERR_2);
+ 
+-	if (use_new_ani(ah) && (phyCnt1 < ofdm_base || phyCnt2 < cck_base)) {
++	if (!use_new_ani(ah) && (phyCnt1 < ofdm_base || phyCnt2 < cck_base)) {
+ 		if (phyCnt1 < ofdm_base) {
+ 			ath_print(common, ATH_DBG_ANI,
+ 				  "phyCnt1 0x%x, resetting "
 -- 
-Cheers,
-Luca.
+1.7.2.2
 
