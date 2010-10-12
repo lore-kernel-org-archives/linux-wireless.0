@@ -1,37 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([88.198.39.176]:49877 "EHLO ds10.nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754310Ab0JPNKP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 16 Oct 2010 09:10:15 -0400
-Message-ID: <4CB9A433.5050007@openwrt.org>
-Date: Sat, 16 Oct 2010 15:10:11 +0200
-From: Felix Fietkau <nbd@openwrt.org>
-MIME-Version: 1.0
-To: Rajkumar Manoharan <rmanoharan@atheros.com>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"linville@tuxdriver.com" <linville@tuxdriver.com>,
-	Luis Rodriguez <Luis.Rodriguez@Atheros.com>
-Subject: Re: [PATCH 1/6] ath9k_hw: optimize interrupt mask changes
-References: <1287165813-94331-1-git-send-email-nbd@openwrt.org> <20101016115041.GA4028@vmraj-lnx.users.atheros.com>
-In-Reply-To: <20101016115041.GA4028@vmraj-lnx.users.atheros.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from dallas.jonmasters.org ([72.29.103.172]:38926 "EHLO
+	dallas.jonmasters.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752121Ab0JLCXm (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 11 Oct 2010 22:23:42 -0400
+Subject: RE: PROBLEM: brcm80211 hangs on 2.6.36-0.34.rc6.git3.fc15.x86_64
+From: Jon Masters <jonathan@jonmasters.org>
+To: Brett Rudley <brudley@broadcom.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Henry Ptasinski <henryp@broadcom.com>,
+	Nohee Ko <noheek@broadcom.com>,
+	Jon Masters <jcm@jonmasters.org>,
+	LKML <linux-kernel@vger.kernel.org>
+In-Reply-To: <7A94256FD72B884D9E7C55586C3CBCEE1382807E23@SJEXCHCCR01.corp.ad.broadcom.com>
+References: <20101008065810.GA1680@constitution.bos.jonmasters.org>
+	 <1286538243.21485.298.camel@constitution.bos.jonmasters.org>
+	 <7A94256FD72B884D9E7C55586C3CBCEE1381EE4B69@SJEXCHCCR01.corp.ad.broadcom.com>
+	 <1286827927.24745.7.camel@constitution.bos.jonmasters.org>
+	 <7A94256FD72B884D9E7C55586C3CBCEE1382807E23@SJEXCHCCR01.corp.ad.broadcom.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Mon, 11 Oct 2010 22:22:10 -0400
+Message-ID: <1286850130.30797.2.camel@constitution.bos.jonmasters.org>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2010-10-16 1:51 PM, Rajkumar Manoharan wrote:
-> On Fri, Oct 15, 2010 at 11:33:28PM +0530, Felix Fietkau wrote:
->> @@ -751,8 +751,8 @@ chip_reset:
->>  	ath_debug_stat_interrupt(sc, status);
->>  
->>  	if (sched) {
->> -		/* turn off every interrupt except SWBA */
->> -		ath9k_hw_set_interrupts(ah, (ah->imask & ATH9K_INT_SWBA));
->> +		/* turn off every interrupt */
->> +		ath9k_hw_disable_interrupts(ah);
-> 
-> won't it affect beacon generation?
-No, because the original code did not leave SWBA interrupts enabled
-either, as it was masking out ATH9K_INT_GLOBAL. So far I haven't seen
-issues with beacons under high load, even on slow embedded hardware.
+On Mon, 2010-10-11 at 14:01 -0700, Brett Rudley wrote:
 
-- Felix
+> > Yea. What about the high order bits in the phy msglevel, what are they
+> > intended to be doing? 
+> 
+> Nothing special, wl_msg_level is a standard bitmap, each bit enables printfs
+> for a particular feature. There is no special meaning attached to the
+> location an individual bit within the word.
+
+Good to know, I had interpreted it as having a different meaning.
+
+> Yeah, it would be less confusing if they were redefined to be more compact,
+> I'll fix that up.
+
+No biggie. Thanks.
+
+Jon.
+
+
