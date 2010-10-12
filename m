@@ -1,139 +1,112 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:48239 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754590Ab0JHSp1 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 8 Oct 2010 14:45:27 -0400
-Subject: Re: [PATCH] mac80211: hoist sta->lock from reorder release timer
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Christian Lamparter <chunkeey@googlemail.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org,
-	Ben Greear <greearb@candelatech.com>,
-	Ming Lei <tom.leiming@gmail.com>
-In-Reply-To: <201010082012.07007.chunkeey@googlemail.com>
-References: <201010061200.54364.chunkeey@googlemail.com>
-	 <201010081842.39187.chunkeey@googlemail.com>
-	 <1286556802.3612.4.camel@jlt3.sipsolutions.net>
-	 <201010082012.07007.chunkeey@googlemail.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Fri, 08 Oct 2010 20:45:26 +0200
-Message-ID: <1286563526.3612.33.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+Received: from arroyo.ext.ti.com ([192.94.94.40]:38504 "EHLO arroyo.ext.ti.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757267Ab0JLOfp (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 12 Oct 2010 10:35:45 -0400
+Message-ID: <4CB472E6.60808@ti.com>
+Date: Tue, 12 Oct 2010 16:38:30 +0200
+From: Shahar Levi <shahar_levi@ti.com>
+MIME-Version: 1.0
+To: Luciano Coelho <luciano.coelho@nokia.com>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH 01/03] wl1271: BA Initiator support, Add Definitions
+References: <1286456762-17480-1-git-send-email-shahar_levi@ti.com>	 <1286456762-17480-2-git-send-email-shahar_levi@ti.com> <1286538676.21349.106.camel@chilepepper>
+In-Reply-To: <1286538676.21349.106.camel@chilepepper>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2010-10-08 at 20:12 +0200, Christian Lamparter wrote:
+Thanks for the review.
+All will be fix on v2.
+Two comments inline.
+regards,
+Shahar
 
-> But hey, wait a sec. (This one is about AP mode - It's related to
-> IEEE80211_RX_RA_MATCH, but now in a different handler)
-
-Heh.
-
-> NULLFUNCs (set/clear PM) are not reordered and they get
-> processed right away, right?
-
-Yeah, I don't think they can be in A-MPDUs. At least not in any scenario
-that actually makes sense.
-
-> So what if the reorder release triggers and ap_sta_ps_end
-> (called by ieee80211_rx_h_sta_process) accidentally resets
-> the "sleeping" flag (because some old frames with a "stale"
-> PSM bit was released after 100ms)?
-
-Yeah... that can happen.
-
-> > > Things are a little bit better with ieee80211_rx_h_sta_process.
-> > > It updates some statistics and takes care of sta->last_rx
-> > > (which is currently not that important giving HT BA is only supported
-> > > for AP/STA operation).
-> > > 
-> > > In ieee80211_rx_h_data, there could be another potential problem:
-> > > >	if (ieee80211_is_data(hdr->frame_control) &&
-> > > >   	 !is_multicast_ether_addr(hdr->addr1) &&
-> > > >		 local->hw.conf.dynamic_ps_timeout > 0 && local->ps_sdata) {
-> > > >			mod_timer(&local->dynamic_ps_timer, jiffies +
-> > > >			msecs_to_jiffies(local->hw.conf.dynamic_ps_timeout));
-> > > >	}
-> > > I reckon there could be a "hidden" problem. "jiffies" is now
-> > > approx 100ms after the packet was received from the interface.
-> > > (Sure, a similar issue was also present in the original
-> > > reorder release implementation.)
-> > 
-> > This one's more interesting. I guess we need to bypass these things
-> > somehow, maybe setting a flag if this was a "recovered" frame?
-
-> (and check the same flag for ap_sta_ps_end/ap_sta_ps_start).
-> Ok, that's doable (even for me :D)
-
-Yeah, something like that. I guess there are more things like that and
-we have to go through the RX path once -- but it shouldn't be all that
-hard.
-
-> > BHs are disabled while processing RX -- and timer is a BH itself so
-> > they're also disabled, right?
-
-> hmm, are we talking about BH or tasklets? 
-
-RX is currently always processed in a tasklet.
-
-> I read something about the
-> occurrence of simultaneous tasklets/timers on multi-core systems?
-
-You're right, it's local_bh_disable ... the local is there for a
-reason :-)
-
-> And from a point that all made sense:
-> ---
-> from kernel-hacking.DocBook:
+Luciano Coelho wrote:
+> On Thu, 2010-10-07 at 15:06 +0200, ext Shahar Levi wrote:
+>> New acx cmd wl1271_acx_ba_session_policy to set BA policy to the FW.
+>> Macros to use with BA setting.
+>>
+>> Signed-off-by: Shahar Levi <shahar_levi@ti.com>
+>> ---
 > 
-> "For this reason, tasklets are more often used: they are
-> dynamically-registrable (meaning you can have as many as you want),
-> and they also guarantee that any tasklet will only run on one CPU
-> at any time, although different tasklets can run simultaneously."
-
-Yeah.
-
-> and kernel-locking.DocBook:
-> "Different Tasklets/Timers:
-> If another tasklet/timer wants to share data with your tasklet or timer,
-> you will both need to use spin_lock() and spin_unlock() calls.
-> spin_lock_bh() is unnecessary here, as you are already in a tasklet, and
-> none will be run on the same CPU." <-- "same" CPU.
-
-Indeed.
-
-> So according to statements above, we need a lock for the stats
-> too. (and I was wrong about "converting" them all to atomic.)
+> You can merge this patch with the next patch, no need to make the
+> changes first in the header files and then in the c files, since they go
+> very much hand in hand.
 > 
->  * ieee80211_rx_h_sta_process
-> 	sta->rx_packets++;
-> 	sta->rx_fragments++;
-> 	sta->rx_bytes += rx->skb->len;
 > 
->  * ieee80211_rx_h_data:
->    dev->stats.rx_packets++;
->    dev->stats.rx_bytes += rx->skb->len;
+>>  drivers/net/wireless/wl12xx/wl1271_acx.h  |   16 ++++++++++++++++
+>>  drivers/net/wireless/wl12xx/wl1271_conf.h |    3 +++
+>>  2 files changed, 19 insertions(+), 0 deletions(-)
+>>
+>> diff --git a/drivers/net/wireless/wl12xx/wl1271_acx.h b/drivers/net/wireless/wl12xx/wl1271_acx.h
+>> index b8da1bc..6c3c7c0 100644
+>> --- a/drivers/net/wireless/wl12xx/wl1271_acx.h
+>> +++ b/drivers/net/wireless/wl12xx/wl1271_acx.h
+>> @@ -1055,6 +1055,22 @@ struct wl1271_acx_ht_information {
+>>  	u8 padding[3];
+>>  } __packed;
+>>  
+>> +/*
+>> + * BA sessen interface structure
+>> + */
+> 
+> BA session.  Actually you can get rid of this comment, as it is obvious
+> from the name of the structure that this is about BA sessions.
+> 
+>> +struct wl1271_acx_ba_session_policy {
+>> +	struct acx_header header;
+>> +	/* Mac address of: SA as receiver / RA as initiator */
+>> +	u8 mac_address[ETH_ALEN];
+> 
+> Is this really SA for receiver and RA for initiator? Not SA and DA? Or
+> TA and RA?
+yes, as initiator it is the receiver address, as receiver it is source 
+address. I change the comment to:
+Mac address of the peer: SA as receiver / RA as initiator
 
-Yeah. It's too bad we can't just disable the tasklet while processing
-the timer -- but we can't because we might also be processing from
-another context, even process context with BHs disabled, from driver
-calls to ieee80211_rx() (without _irqsafe).
+> 
+> 
+>> +	u8 tid;			/* TID */
+> 
+> Comment here is unnecessary.
+> 
+>> +	u8 policy;		/* Enable / Disable */
+> 
+> Could we change policy to enable here? Then the comment can go away too,
+> because the name of the element will be clear enough already.
+> 
+> 
+>> +	u16 win_size;		/* windows size in num of packet */
+> 
+> "number of packets"
+> 
+> 
+>> +	u16 inactivity_timeout;	/* as initiator inactivity timeout
+>> +				 * in time units(TU) of 1024us.
+>> +				 * as receiver reserved
+>> +				 */
+> 
+> The comment style is wrong.
+> 
+> 
+>> diff --git a/drivers/net/wireless/wl12xx/wl1271_conf.h b/drivers/net/wireless/wl12xx/wl1271_conf.h
+>> index b3e608e..63a0a9a 100644
+>> --- a/drivers/net/wireless/wl12xx/wl1271_conf.h
+>> +++ b/drivers/net/wireless/wl12xx/wl1271_conf.h
+>> @@ -94,6 +94,9 @@ enum {
+>>  #define HW_BG_RATES_MASK	0xffff
+>>  #define HW_HT_RATES_OFFSET	16
+>>  
+>> +#define BA_RECEIVER_WIN_SIZE 8
+move to wl1271_acx.h, not configurable.
 
-So we need a lock. Question then is, which one do we use? We could use
-the sta lock (and get rid of the reorder lock again), that would allow
-processing RX frames for STA A while we're doing timeouts for STA B --
-as long as we don't also process a frame for B which would block, but
-presumably something is wrong when the timeout happens ...
-
-But then using the sta lock could be fairly expensive. It might actually
-be cheaper to simply remove the distinction between _rx() and
-_rx_irqsafe() and make it all go through the tasklet -- then we can
-simply disable the tasklet while doing the timer processing....
-
-I don't like reverting these patches, but maybe we should simply comment
-out the code that arms the timer, thereby disabling all of it, while we
-work on this?
-
-johannes
+>> +#define BA_INACTIVITY_TIMEOUT 10000
+> 
+> This should be added as a real configuration, like the other stuff in
+> the wl1271_conf.h file, which is then used in wl1271_main.c
+> default_conf.  Please define a struct conf_ba with win_size and
+> inactivity_timeout elements and set the actual values in the main file.
+> 
+> 
 
