@@ -1,252 +1,1224 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:51348 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755017Ab0JNWrS (ORCPT
+Received: from mail-bw0-f46.google.com ([209.85.214.46]:43534 "EHLO
+	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751638Ab0JLWJt (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 14 Oct 2010 18:47:18 -0400
-Message-ID: <4CB78870.8040207@candelatech.com>
-Date: Thu, 14 Oct 2010 15:47:12 -0700
-From: Ben Greear <greearb@candelatech.com>
-MIME-Version: 1.0
-To: =?ISO-8859-1?Q?Bj=F6rn_Smedman?= <bjorn.smedman@venatech.se>
-CC: Vasanthakumar Thiagarajan <vasanth@atheros.com>,
-	"Luis R. Rodriguez" <mcgrof@gmail.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: memory clobber in rx path, maybe related to ath9k.
-References: <4CAE1DFB.303@candelatech.com>	<1286479642.20974.32.camel@jlt3.sipsolutions.net>	<AANLkTimxp703Gy_Atg8=wpFszRDR=OJCXwOUKRh-a-d7@mail.gmail.com>	<AANLkTi=t-P_5c14brJohM8UgxeOknv+3syO=7W=ix6qf@mail.gmail.com>	<AANLkTinC46a+nE-XOQuBCmRJwjzgh24uC7ZJ7HtbVHnT@mail.gmail.com>	<4CB378CD.1080800@candelatech.com>	<AANLkTim42zmDwf744BCrPwa1kT5ph57bNMyvSyOpesVv@mail.gmail.com>	<4CB3D598.7050904@candelatech.com>	<AANLkTimPEg3ZU8CQUXfdpGdfbmhdE9O=GNY=g9gysTo4@mail.gmail.com>	<4CB4AA89.1070009@candelatech.com>	<20101013053141.GA15798@vasanth-laptop>	<4CB5E0A8.5020502@candelatech.com>	<AANLkTimp_GSwwX_RnQSyN9QNe55HQ+0HZJ1yd8Xp+dWG@mail.gmail.com> <AANLkTinyVqdgPqzpyihuaPtVVqDmzj-ZbXzQ-4qdA2yH@mail.gmail.com>
-In-Reply-To: <AANLkTinyVqdgPqzpyihuaPtVVqDmzj-ZbXzQ-4qdA2yH@mail.gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+	Tue, 12 Oct 2010 18:09:49 -0400
+Received: by mail-bw0-f46.google.com with SMTP id 15so2776714bwz.19
+        for <linux-wireless@vger.kernel.org>; Tue, 12 Oct 2010 15:09:43 -0700 (PDT)
+From: mike.rapoport@gmail.com
+To: Greg Kroah-Hartman <gregkh@suse.de>
+Cc: Brett Rudley <brudley@broadcom.com>,
+	Henry Ptasinski <henryp@broadcom.com>,
+	Nohee Ko <noheek@broadcom.com>, linux-wireless@vger.kernel.org,
+	Mike Rapoport <mike.rapoport@gmail.com>
+Subject: [PATCH 1/7] staging: brcm80211: remove OSL_DELAY
+Date: Wed, 13 Oct 2010 00:09:07 +0200
+Message-Id: <960c6d9e49ce143b429d1b77d7b356f949f4353e.1286920620.git.mike.rapoport@gmail.com>
+In-Reply-To: <cover.1286920620.git.mike.rapoport@gmail.com>
+References: <cover.1286920620.git.mike.rapoport@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 10/14/2010 02:52 PM, Björn Smedman wrote:
-> 2010/10/13 Björn Smedman<bjorn.smedman@venatech.se>:
->> Hi Ben,
->>
->> First of all keep up the good work. :)
->>
->> On Wed, Oct 13, 2010 at 6:39 PM, Ben Greear<greearb@candelatech.com>  wrote:
->> [snip]
->>> Either way, it seems safer to null out the bf_ampdu field after
->>> the memory is consumed..it could prevent some tricky bugs later.
->>
->> I think this is a good idea. But it probably wont be enough to null
->> out bf_mpdu. You also need to look at bf_buf_addr (which if I
->> understand correctly is the physical address the DMA engine will
->> actually write RXed frames to) and bf_dmacontext (which seems in most
->> cases to hold an identical address and may in fact be where the DMA
->> engine will really write the frame).
->
-> I took another look at the code. It turns out both bf_buf_addr and
-> bf_dmacontext are in fact meaningless to the DMA. Instead each bf
-> holds a pointer (bf_desc) to the real DMA descriptor which in turn
-> holds the address (ds_data) where the DMA will really (really this
-> time) write the frame. There is also a field to hold the virtual
-> address of the same place (ds_vdata).
->
-> It's a little too much work for me to set up the testbed you have Ben
-> but would be interesting to see what happens if you set
-> bf->bf_desc->ds_{data,vdata} = 0 as well. No?
+and use udelay and mdelay instead
 
-I tried the patch below, and it didn't seem to help.  Might even
-have hurt..as it died on divide-by-zero error:
+Signed-off-by: Mike Rapoport <mike.rapoport@gmail.com>
+---
+ drivers/staging/brcm80211/brcmfmac/bcmsdh.c        |    4 +-
+ drivers/staging/brcm80211/brcmfmac/dhd.h           |    2 +-
+ .../staging/brcm80211/brcmfmac/dhd_custom_gpio.c   |    2 +-
+ drivers/staging/brcm80211/brcmfmac/dhd_linux.c     |    2 +-
+ drivers/staging/brcm80211/brcmfmac/dhd_sdio.c      |    2 +-
+ drivers/staging/brcm80211/include/bcmutils.h       |    2 +-
+ drivers/staging/brcm80211/include/linux_osl.h      |    3 -
+ drivers/staging/brcm80211/phy/wlc_phy_cmn.c        |    8 +-
+ drivers/staging/brcm80211/phy/wlc_phy_lcn.c        |   64 ++++++++--------
+ drivers/staging/brcm80211/phy/wlc_phy_n.c          |   76 ++++++++++----------
+ drivers/staging/brcm80211/sys/wlc_ampdu.c          |    2 +-
+ drivers/staging/brcm80211/sys/wlc_bmac.c           |   30 ++++----
+ drivers/staging/brcm80211/util/aiutils.c           |    8 +-
+ drivers/staging/brcm80211/util/bcmotp.c            |    2 +-
+ drivers/staging/brcm80211/util/hnddma.c            |    8 +-
+ drivers/staging/brcm80211/util/hndpmu.c            |   14 ++--
+ drivers/staging/brcm80211/util/linux_osl.c         |   11 ---
+ drivers/staging/brcm80211/util/nicpci.c            |    6 +-
+ drivers/staging/brcm80211/util/sbutils.c           |   14 ++--
+ drivers/staging/brcm80211/util/siutils.c           |   12 ++--
+ 20 files changed, 129 insertions(+), 143 deletions(-)
 
-Call Trace:
-  [<c075e490>] ? printk+0xf/0x17
-  [<c075e37e>] panic+0x50/0x153
-  [<c07619db>] oops_end+0x92/0xa1
-  [<c04051cc>] die+0x53/0x59
-  [<c07612a3>] do_trap+0x89/0xa2
-  [<c0403b12>] ? do_divide_error+0x0/0x78
-  [<c0403b80>] do_divide_error+0x6e/0x78
-  [<faef811e>] ? ath9k_hw_ani_monitor+0x37/0x40e [ath9k_hw]
-  [<fb1f77d9>] ? ath9k_ioread32+0x25/0x5b [ath9k]
-  [<c045553a>] ? trace_hardirqs_off+0xb/0xd
-  [<c0581210>] ? trace_hardirqs_off_thunk+0xc/0x10
-  [<c076103f>] error_code+0x5f/0x70
-  [<c0403b12>] ? do_divide_error+0x0/0x78
-  [<faef811e>] ? ath9k_hw_ani_monitor+0x37/0x40e [ath9k_hw]
-  [<fb1fa783>] ath_ani_calibrate+0x143/0x20b [ath9k]
-  [<c043d58f>] run_timer_softirq+0x14f/0x1e7
-
-That might be an existing bug, however...
-
-Thanks,
-Ben
-
-diff --git a/drivers/net/wireless/ath/ath9k/ath9k.h b/drivers/net/wireless/ath/ath9k/ath9k.h
-index 0c917e5..8fba13d 100644
---- a/drivers/net/wireless/ath/ath9k/ath9k.h
-+++ b/drivers/net/wireless/ath/ath9k/ath9k.h
-@@ -737,4 +737,6 @@ bool ath_mac80211_start_queue(struct ath_softc *sc, u16 skb_queue);
-  void ath_start_rfkill_poll(struct ath_softc *sc);
-  extern void ath9k_rfkill_poll_state(struct ieee80211_hw *hw);
-
-+void ath_clear_dma_ptrs(struct ath_buf *bf);
-+
-  #endif /* ATH9K_H */
-diff --git a/drivers/net/wireless/ath/ath9k/beacon.c b/drivers/net/wireless/ath/ath9k/beacon.c
-index 97d471f..cc406f9 100644
---- a/drivers/net/wireless/ath/ath9k/beacon.c
-+++ b/drivers/net/wireless/ath/ath9k/beacon.c
-@@ -139,7 +139,7 @@ static struct ath_buf *ath_beacon_generate(struct ieee80211_hw *hw,
-                 dma_unmap_single(sc->dev, bf->bf_buf_addr,
-                                  skb->len, DMA_TO_DEVICE);
-                 dev_kfree_skb_any(skb);
--               bf->bf_buf_addr = 0;
-+               ath_clear_dma_ptrs(bf);
-         }
-
-         /* Get a new beacon from mac80211 */
-@@ -167,8 +167,7 @@ static struct ath_buf *ath_beacon_generate(struct ieee80211_hw *hw,
-                                          skb->len, DMA_TO_DEVICE);
-         if (unlikely(dma_mapping_error(sc->dev, bf->bf_buf_addr))) {
-                 dev_kfree_skb_any(skb);
--               bf->bf_mpdu = NULL;
--               bf->bf_buf_addr = 0;
-+               ath_clear_dma_ptrs(bf);
-                 ath_print(common, ATH_DBG_FATAL,
-                           "dma_mapping_error on beaconing\n");
-                 return NULL;
-@@ -256,8 +255,7 @@ int ath_beacon_alloc(struct ath_wiphy *aphy, struct ieee80211_vif *vif)
-                 dma_unmap_single(sc->dev, bf->bf_buf_addr,
-                                  skb->len, DMA_TO_DEVICE);
-                 dev_kfree_skb_any(skb);
--               bf->bf_mpdu = NULL;
--               bf->bf_buf_addr = 0;
-+               ath_clear_dma_ptrs(bf);
-         }
-
-         /* NB: the beacon data buffer must be 32-bit aligned. */
-@@ -302,8 +300,7 @@ int ath_beacon_alloc(struct ath_wiphy *aphy, struct ieee80211_vif *vif)
-                                          skb->len, DMA_TO_DEVICE);
-         if (unlikely(dma_mapping_error(sc->dev, bf->bf_buf_addr))) {
-                 dev_kfree_skb_any(skb);
--               bf->bf_mpdu = NULL;
--               bf->bf_buf_addr = 0;
-+               ath_clear_dma_ptrs(bf);
-                 ath_print(common, ATH_DBG_FATAL,
-                           "dma_mapping_error on beacon alloc\n");
-                 return -ENOMEM;
-@@ -329,8 +326,7 @@ void ath_beacon_return(struct ath_softc *sc, struct ath_vif *avp)
-                         dma_unmap_single(sc->dev, bf->bf_buf_addr,
-                                          skb->len, DMA_TO_DEVICE);
-                         dev_kfree_skb_any(skb);
--                       bf->bf_mpdu = NULL;
--                       bf->bf_buf_addr = 0;
-+                       ath_clear_dma_ptrs(bf);
-                 }
-                 list_add_tail(&bf->list, &sc->beacon.bbuf);
-
-diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
-index bcd3892..1722a21 100644
---- a/drivers/net/wireless/ath/ath9k/main.c
-+++ b/drivers/net/wireless/ath/ath9k/main.c
-@@ -213,6 +213,17 @@ static void ath_update_survey_stats(struct ath_softc *sc)
-         ath_update_survey_nf(sc, pos);
-  }
-
-+void ath_clear_dma_ptrs(struct ath_buf *bf)
-+{
-+       struct ath_desc *ds = bf->bf_desc;
-+       bf->bf_buf_addr = 0;
-+       bf->bf_mpdu = NULL;
-+       if (ds) {
-+               ds->ds_data = 0;
-+               ds->ds_vdata = NULL;
-+       }
-+}
-+
-  /*
-   * Set/change channels.  If the channel is really being changed, it's done
-   * by reseting the chip.  To accomplish this we must first cleanup any pending
-diff --git a/drivers/net/wireless/ath/ath9k/recv.c b/drivers/net/wireless/ath/ath9k/recv.c
-index fd778d2..5afb46f 100644
---- a/drivers/net/wireless/ath/ath9k/recv.c
-+++ b/drivers/net/wireless/ath/ath9k/recv.c
-@@ -269,8 +269,7 @@ static int ath_rx_edma_init(struct ath_softc *sc, int nbufs)
-                 if (unlikely(dma_mapping_error(sc->dev,
-                                                 bf->bf_buf_addr))) {
-                                 dev_kfree_skb_any(skb);
--                               bf->bf_mpdu = NULL;
--                               bf->bf_buf_addr = 0;
-+                               ath_clear_dma_ptrs(bf);
-                                 ath_print(common, ATH_DBG_FATAL,
-                                         "dma_mapping_error() on RX init\n");
-                                 error = -ENOMEM;
-@@ -360,8 +359,7 @@ int ath_rx_init(struct ath_softc *sc, int nbufs)
-                         if (unlikely(dma_mapping_error(sc->dev,
-                                                         bf->bf_buf_addr))) {
-                                 dev_kfree_skb_any(skb);
--                               bf->bf_mpdu = NULL;
--                               bf->bf_buf_addr = 0;
-+                               ath_clear_dma_ptrs(bf);
-                                 ath_print(common, ATH_DBG_FATAL,
-                                           "dma_mapping_error() on RX init\n");
-                                 error = -ENOMEM;
-@@ -396,8 +394,7 @@ void ath_rx_cleanup(struct ath_softc *sc)
-                                                 common->rx_bufsize,
-                                                 DMA_FROM_DEVICE);
-                                 dev_kfree_skb(skb);
--                               bf->bf_buf_addr = 0;
--                               bf->bf_mpdu = NULL;
-+                               ath_clear_dma_ptrs(bf);
-                         }
-                 }
-
-@@ -1741,8 +1738,7 @@ int ath_rx_tasklet(struct ath_softc *sc, int flush, bool hp)
-                 if (unlikely(dma_mapping_error(sc->dev,
-                           bf->bf_buf_addr))) {
-                         dev_kfree_skb_any(requeue_skb);
--                       bf->bf_mpdu = NULL;
--                       bf->bf_buf_addr = 0;
-+                       ath_clear_dma_ptrs(bf);
-                         ath_print(common, ATH_DBG_FATAL,
-                                   "dma_mapping_error() on RX\n");
-                         ath_rx_send_to_mac80211(hw, sc, skb, rxs);
-diff --git a/drivers/net/wireless/ath/ath9k/xmit.c b/drivers/net/wireless/ath/ath9k/xmit.c
-index a5e5f27..e86f59c 100644
---- a/drivers/net/wireless/ath/ath9k/xmit.c
-+++ b/drivers/net/wireless/ath/ath9k/xmit.c
-@@ -1644,8 +1644,7 @@ static int ath_tx_setup_buffer(struct ieee80211_hw *hw, struct ath_buf *bf,
-         bf->bf_buf_addr = dma_map_single(sc->dev, skb->data,
-                                          skb->len, DMA_TO_DEVICE);
-         if (unlikely(dma_mapping_error(sc->dev, bf->bf_buf_addr))) {
--               bf->bf_mpdu = NULL;
--               bf->bf_buf_addr = 0;
-+               ath_clear_dma_ptrs(bf);
-                 ath_print(ath9k_hw_common(sc->sc_ah), ATH_DBG_FATAL,
-                           "dma_mapping_error() on TX\n");
-                 return -ENOMEM;
-@@ -1915,7 +1914,6 @@ static void ath_tx_complete_buf(struct ath_softc *sc, struct ath_buf *bf,
-         }
-
-         dma_unmap_single(sc->dev, bf->bf_buf_addr, skb->len, DMA_TO_DEVICE);
--       bf->bf_buf_addr = 0;
-
-         if (bf->bf_state.bfs_paprd) {
-                 if (time_after(jiffies,
-@@ -1931,7 +1929,7 @@ static void ath_tx_complete_buf(struct ath_softc *sc, struct ath_buf *bf,
-         /* At this point, skb (bf->bf_mpdu) is consumed...make sure we don't
-          * accidentally reference it later.
-          */
--       bf->bf_mpdu = NULL;
-+       ath_clear_dma_ptrs(bf);
-
-         /*
-          * Return the list of ath_buf of this mpdu to free queue
-
-
->
-> /Björn
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-
-
+diff --git a/drivers/staging/brcm80211/brcmfmac/bcmsdh.c b/drivers/staging/brcm80211/brcmfmac/bcmsdh.c
+index 87b2585..42f1878 100644
+--- a/drivers/staging/brcm80211/brcmfmac/bcmsdh.c
++++ b/drivers/staging/brcm80211/brcmfmac/bcmsdh.c
+@@ -198,7 +198,7 @@ u8 bcmsdh_cfg_read(void *sdh, uint fnc_num, u32 addr, int *err)
+ #ifdef SDIOH_API_ACCESS_RETRY_LIMIT
+ 	do {
+ 		if (retry)	/* wait for 1 ms till bus get settled down */
+-			OSL_DELAY(1000);
++			udelay(1000);
+ #endif
+ 		status =
+ 		    sdioh_cfg_read(bcmsdh->sdioh, fnc_num, addr,
+@@ -233,7 +233,7 @@ bcmsdh_cfg_write(void *sdh, uint fnc_num, u32 addr, u8 data, int *err)
+ #ifdef SDIOH_API_ACCESS_RETRY_LIMIT
+ 	do {
+ 		if (retry)	/* wait for 1 ms till bus get settled down */
+-			OSL_DELAY(1000);
++			udelay(1000);
+ #endif
+ 		status =
+ 		    sdioh_cfg_write(bcmsdh->sdioh, fnc_num, addr,
+diff --git a/drivers/staging/brcm80211/brcmfmac/dhd.h b/drivers/staging/brcm80211/brcmfmac/dhd.h
+index 6d0c0dd..8ec3ebd 100644
+--- a/drivers/staging/brcm80211/brcmfmac/dhd.h
++++ b/drivers/staging/brcm80211/brcmfmac/dhd.h
+@@ -188,7 +188,7 @@ typedef struct dhd_pub {
+ #define SPINWAIT_SLEEP(a, exp, us)  do { \
+ 		uint countdown = (us) + 9; \
+ 		while ((exp) && (countdown >= 10)) { \
+-			OSL_DELAY(10);  \
++			udelay(10);  \
+ 			countdown -= 10;  \
+ 		} \
+ 	} while (0)
+diff --git a/drivers/staging/brcm80211/brcmfmac/dhd_custom_gpio.c b/drivers/staging/brcm80211/brcmfmac/dhd_custom_gpio.c
+index 5a86f92..b200ee7 100644
+--- a/drivers/staging/brcm80211/brcmfmac/dhd_custom_gpio.c
++++ b/drivers/staging/brcm80211/brcmfmac/dhd_custom_gpio.c
+@@ -132,7 +132,7 @@ void dhd_customer_gpio_wlan_ctrl(int onoff)
+ 		bcm_wlan_power_on(1);
+ #endif				/* CUSTOMER_HW */
+ 		/* Lets customer power to get stable */
+-		OSL_DELAY(200);
++		udelay(200);
+ 		break;
+ 	}
+ }
+diff --git a/drivers/staging/brcm80211/brcmfmac/dhd_linux.c b/drivers/staging/brcm80211/brcmfmac/dhd_linux.c
+index 5c8224f..717e586 100644
+--- a/drivers/staging/brcm80211/brcmfmac/dhd_linux.c
++++ b/drivers/staging/brcm80211/brcmfmac/dhd_linux.c
+@@ -614,7 +614,7 @@ int dhd_timeout_expired(dhd_timeout_t *tmo)
+ 	tmo->elapsed += tmo->increment;
+ 
+ 	if (tmo->increment < tmo->tick) {
+-		OSL_DELAY(tmo->increment);
++		udelay(tmo->increment);
+ 		tmo->increment *= 2;
+ 		if (tmo->increment > tmo->tick)
+ 			tmo->increment = tmo->tick;
+diff --git a/drivers/staging/brcm80211/brcmfmac/dhd_sdio.c b/drivers/staging/brcm80211/brcmfmac/dhd_sdio.c
+index 40157a1..363db37 100644
+--- a/drivers/staging/brcm80211/brcmfmac/dhd_sdio.c
++++ b/drivers/staging/brcm80211/brcmfmac/dhd_sdio.c
+@@ -5271,7 +5271,7 @@ dhdsdio_probe_attach(struct dhd_bus *bus, osl_t *osh, void *sdh, void *regsva,
+ 		/* Now request ALP be put on the bus */
+ 		bcmsdh_cfg_write(sdh, SDIO_FUNC_1, SBSDIO_FUNC1_CHIPCLKCSR,
+ 				 DHD_INIT_CLKCTL2, &err);
+-		OSL_DELAY(65);
++		udelay(65);
+ 
+ 		for (fn = 0; fn <= numfn; fn++) {
+ 			cis[fn] = MALLOC(osh, SBSDIO_CIS_SIZE_LIMIT);
+diff --git a/drivers/staging/brcm80211/include/bcmutils.h b/drivers/staging/brcm80211/include/bcmutils.h
+index 5edb50d..4bff60e 100644
+--- a/drivers/staging/brcm80211/include/bcmutils.h
++++ b/drivers/staging/brcm80211/include/bcmutils.h
+@@ -42,7 +42,7 @@
+ #define SPINWAIT(exp, us) { \
+ 	uint countdown = (us) + 9; \
+ 	while ((exp) && (countdown >= 10)) {\
+-		OSL_DELAY(10); \
++		udelay(10); \
+ 		countdown -= 10; \
+ 	} \
+ }
+diff --git a/drivers/staging/brcm80211/include/linux_osl.h b/drivers/staging/brcm80211/include/linux_osl.h
+index a8ccc74..12c9c32 100644
+--- a/drivers/staging/brcm80211/include/linux_osl.h
++++ b/drivers/staging/brcm80211/include/linux_osl.h
+@@ -49,9 +49,6 @@ extern void osl_assert(char *exp, char *file, int line);
+ #endif				/* __GNUC__ */
+ #endif				/* defined(BCMDBG_ASSERT) */
+ 
+-#define	OSL_DELAY(usec)		osl_delay(usec)
+-extern void osl_delay(uint usec);
+-
+ /* PCI configuration space access macros */
+ #define	OSL_PCI_READ_CONFIG(osh, offset, size) \
+ 	osl_pci_read_config((osh), (offset), (size))
+diff --git a/drivers/staging/brcm80211/phy/wlc_phy_cmn.c b/drivers/staging/brcm80211/phy/wlc_phy_cmn.c
+index 2a8dada..5da1597 100644
+--- a/drivers/staging/brcm80211/phy/wlc_phy_cmn.c
++++ b/drivers/staging/brcm80211/phy/wlc_phy_cmn.c
+@@ -201,7 +201,7 @@ void wlc_radioreg_enter(wlc_phy_t *pih)
+ 	phy_info_t *pi = (phy_info_t *) pih;
+ 	wlapi_bmac_mctrl(pi->sh->physhim, MCTL_LOCK_RADIO, MCTL_LOCK_RADIO);
+ 
+-	OSL_DELAY(10);
++	udelay(10);
+ }
+ 
+ void wlc_radioreg_exit(wlc_phy_t *pih)
+@@ -1316,20 +1316,20 @@ void wlc_phy_do_dummy_tx(phy_info_t *pi, bool ofdm, bool pa_on)
+ 
+ 	while ((i++ < count)
+ 	       && (R_REG(pi->sh->osh, &regs->txe_status) & (1 << 7))) {
+-		OSL_DELAY(10);
++		udelay(10);
+ 	}
+ 
+ 	i = 0;
+ 
+ 	while ((i++ < 10)
+ 	       && ((R_REG(pi->sh->osh, &regs->txe_status) & (1 << 10)) == 0)) {
+-		OSL_DELAY(10);
++		udelay(10);
+ 	}
+ 
+ 	i = 0;
+ 
+ 	while ((i++ < 10) && ((R_REG(pi->sh->osh, &regs->ifsstat) & (1 << 8)))) {
+-		OSL_DELAY(10);
++		udelay(10);
+ 	}
+ 	if (!pa_on) {
+ 		if (ISNPHY(pi))
+diff --git a/drivers/staging/brcm80211/phy/wlc_phy_lcn.c b/drivers/staging/brcm80211/phy/wlc_phy_lcn.c
+index 3d0e875..40b081c 100644
+--- a/drivers/staging/brcm80211/phy/wlc_phy_lcn.c
++++ b/drivers/staging/brcm80211/phy/wlc_phy_lcn.c
+@@ -1226,7 +1226,7 @@ void wlc_phy_chanspec_set_lcnphy(phy_info_t *pi, chanspec_t chanspec)
+ 
+ 	if (!NORADIO_ENAB(pi->pubpi)) {
+ 		wlc_lcnphy_radio_2064_channel_tune_4313(pi, channel);
+-		OSL_DELAY(1000);
++		udelay(1000);
+ 	}
+ 
+ 	wlc_lcnphy_toggle_afe_pwdn(pi);
+@@ -1832,7 +1832,7 @@ static bool wlc_lcnphy_iqcal_wait(phy_info_t *pi)
+ 	uint delay_count = 0;
+ 
+ 	while (wlc_lcnphy_iqcal_active(pi)) {
+-		OSL_DELAY(100);
++		udelay(100);
+ 		delay_count++;
+ 
+ 		if (delay_count > (10 * 500))
+@@ -1985,7 +1985,7 @@ wlc_lcnphy_tx_iqlo_cal(phy_info_t *pi,
+ 	if (pi->phy_tx_tone_freq) {
+ 
+ 		wlc_lcnphy_stop_tx_tone(pi);
+-		OSL_DELAY(5);
++		udelay(5);
+ 		wlc_lcnphy_start_tx_tone(pi, 3750, 88, 1);
+ 	} else {
+ 		wlc_lcnphy_start_tx_tone(pi, 3750, 88, 1);
+@@ -2159,7 +2159,7 @@ static void wlc_lcnphy_vbat_temp_sense_setup(phy_info_t *pi, u8 mode)
+ 	s8 index;
+ 	int i;
+ 	phy_info_lcnphy_t *pi_lcn = pi->u.pi_lcnphy;
+-	OSL_DELAY(999);
++	udelay(999);
+ 
+ 	save_reg007 = (u8) read_radio_reg(pi, RADIO_2064_REG007);
+ 	save_reg0FF = (u8) read_radio_reg(pi, RADIO_2064_REG0FF);
+@@ -2269,7 +2269,7 @@ static void wlc_lcnphy_vbat_temp_sense_setup(phy_info_t *pi, u8 mode)
+ 
+ 	wlc_phy_do_dummy_tx(pi, true, OFF);
+ 	if (!tempsense_done(pi))
+-		OSL_DELAY(10);
++		udelay(10);
+ 
+ 	write_radio_reg(pi, RADIO_2064_REG007, (u16) save_reg007);
+ 	write_radio_reg(pi, RADIO_2064_REG0FF, (u16) save_reg0FF);
+@@ -2284,7 +2284,7 @@ static void wlc_lcnphy_vbat_temp_sense_setup(phy_info_t *pi, u8 mode)
+ 	write_radio_reg(pi, 0x4a4, save_txpwrCtrlEn);
+ 	if (!suspend)
+ 		wlapi_enable_mac(pi->sh->physhim);
+-	OSL_DELAY(999);
++	udelay(999);
+ }
+ 
+ void WLBANDINITFN(wlc_lcnphy_tx_pwr_ctrl_init) (wlc_phy_t *ppi)
+@@ -3008,7 +3008,7 @@ s16 wlc_lcnphy_tempsense_new(phy_info_t *pi, bool mode)
+ 
+ 		mod_phy_reg(pi, 0x448, (0x1 << 14), (1) << 14);
+ 
+-		OSL_DELAY(100);
++		udelay(100);
+ 		mod_phy_reg(pi, 0x448, (0x1 << 14), (0) << 14);
+ 
+ 		if (!suspend)
+@@ -3069,7 +3069,7 @@ u16 wlc_lcnphy_tempsense(phy_info_t *pi, bool mode)
+ 
+ 		mod_phy_reg(pi, 0x448, (0x1 << 14), (1) << 14);
+ 
+-		OSL_DELAY(100);
++		udelay(100);
+ 		mod_phy_reg(pi, 0x448, (0x1 << 14), (0) << 14);
+ 
+ 		if (!suspend)
+@@ -3165,7 +3165,7 @@ wlc_lcnphy_rx_iq_est(phy_info_t *pi,
+ 			result = FALSE;
+ 			goto cleanup;
+ 		}
+-		OSL_DELAY(100);
++		udelay(100);
+ 		wait_count++;
+ 	}
+ 
+@@ -3392,7 +3392,7 @@ wlc_lcnphy_rx_iq_cal(phy_info_t *pi, const lcnphy_rx_iqcomp_t *iqcomp,
+ 							       0, 0, 2, 2,
+ 							       (u16)
+ 							       tia_gain, 1, 0);
+-			OSL_DELAY(500);
++			udelay(500);
+ 
+ 			received_power =
+ 			    wlc_lcnphy_measure_digital_power(pi, 2000);
+@@ -3740,7 +3740,7 @@ void WLBANDINITFN(wlc_phy_init_lcnphy) (phy_info_t *pi)
+ 
+ 	mod_phy_reg(pi, 0x448, (0x1 << 14), (1) << 14);
+ 
+-	OSL_DELAY(100);
++	udelay(100);
+ 	mod_phy_reg(pi, 0x448, (0x1 << 14), (0) << 14);
+ 
+ 	wlc_lcnphy_set_tx_pwr_ctrl(pi, LCNPHY_TX_PWR_CTRL_HW);
+@@ -3778,7 +3778,7 @@ wlc_lcnphy_tx_iqlo_loopback(phy_info_t *pi, u16 *values_to_save)
+ 
+ 	or_radio_reg(pi, RADIO_2064_REG036, 0x01);
+ 	or_radio_reg(pi, RADIO_2064_REG11A, 0x18);
+-	OSL_DELAY(20);
++	udelay(20);
+ 
+ 	if (LCNREV_IS(pi->pubpi.phy_rev, 2)) {
+ 		if (CHSPEC_IS5G(pi->radio_chanspec))
+@@ -3792,7 +3792,7 @@ wlc_lcnphy_tx_iqlo_loopback(phy_info_t *pi, u16 *values_to_save)
+ 			or_radio_reg(pi, RADIO_2064_REG03A, 0x3);
+ 	}
+ 
+-	OSL_DELAY(20);
++	udelay(20);
+ 
+ 	write_radio_reg(pi, RADIO_2064_REG025, 0xF);
+ 	if (LCNREV_IS(pi->pubpi.phy_rev, 2)) {
+@@ -3807,31 +3807,31 @@ wlc_lcnphy_tx_iqlo_loopback(phy_info_t *pi, u16 *values_to_save)
+ 			mod_radio_reg(pi, RADIO_2064_REG028, 0x1e, 0x6 << 1);
+ 	}
+ 
+-	OSL_DELAY(20);
++	udelay(20);
+ 
+ 	write_radio_reg(pi, RADIO_2064_REG005, 0x8);
+ 	or_radio_reg(pi, RADIO_2064_REG112, 0x80);
+-	OSL_DELAY(20);
++	udelay(20);
+ 
+ 	or_radio_reg(pi, RADIO_2064_REG0FF, 0x10);
+ 	or_radio_reg(pi, RADIO_2064_REG11F, 0x44);
+-	OSL_DELAY(20);
++	udelay(20);
+ 
+ 	or_radio_reg(pi, RADIO_2064_REG00B, 0x7);
+ 	or_radio_reg(pi, RADIO_2064_REG113, 0x10);
+-	OSL_DELAY(20);
++	udelay(20);
+ 
+ 	write_radio_reg(pi, RADIO_2064_REG007, 0x1);
+-	OSL_DELAY(20);
++	udelay(20);
+ 
+ 	vmid = 0x2A6;
+ 	mod_radio_reg(pi, RADIO_2064_REG0FC, 0x3 << 0, (vmid >> 8) & 0x3);
+ 	write_radio_reg(pi, RADIO_2064_REG0FD, (vmid & 0xff));
+ 	or_radio_reg(pi, RADIO_2064_REG11F, 0x44);
+-	OSL_DELAY(20);
++	udelay(20);
+ 
+ 	or_radio_reg(pi, RADIO_2064_REG0FF, 0x10);
+-	OSL_DELAY(20);
++	udelay(20);
+ 	write_radio_reg(pi, RADIO_2064_REG012, 0x02);
+ 	or_radio_reg(pi, RADIO_2064_REG112, 0x06);
+ 	write_radio_reg(pi, RADIO_2064_REG036, 0x11);
+@@ -3860,7 +3860,7 @@ wlc_lcnphy_samp_cap(phy_info_t *pi, int clip_detect_algo, u16 thresh,
+ 
+ 	W_REG(pi->sh->osh, &pi->regs->smpl_clct_strptr, 0x7E00);
+ 	W_REG(pi->sh->osh, &pi->regs->smpl_clct_stpptr, 0x8000);
+-	OSL_DELAY(20);
++	udelay(20);
+ 	curval2 = R_REG(pi->sh->osh, &pi->regs->psm_phy_hdr_param);
+ 	W_REG(pi->sh->osh, &pi->regs->psm_phy_hdr_param, curval2 | 0x30);
+ 
+@@ -3882,7 +3882,7 @@ wlc_lcnphy_samp_cap(phy_info_t *pi, int clip_detect_algo, u16 thresh,
+ 	stpptr = R_REG(pi->sh->osh, &pi->regs->smpl_clct_stpptr);
+ 	curptr = R_REG(pi->sh->osh, &pi->regs->smpl_clct_curptr);
+ 	do {
+-		OSL_DELAY(10);
++		udelay(10);
+ 		curptr = R_REG(pi->sh->osh, &pi->regs->smpl_clct_curptr);
+ 		timer++;
+ 	} while ((curptr != stpptr) && (timer < 500));
+@@ -4057,7 +4057,7 @@ wlc_lcnphy_a1(phy_info_t *pi, int cal_type, int num_levels, int step_size_lg2)
+ 	or_phy_reg(pi, 0x6db, 0x3);
+ 
+ 	wlc_lcnphy_tx_iqlo_loopback(pi, phy_c32);
+-	OSL_DELAY(500);
++	udelay(500);
+ 	phy_c28 = read_phy_reg(pi, 0x938);
+ 	phy_c29 = read_phy_reg(pi, 0x4d7);
+ 	phy_c30 = read_phy_reg(pi, 0x4d8);
+@@ -4098,7 +4098,7 @@ wlc_lcnphy_a1(phy_info_t *pi, int cal_type, int num_levels, int step_size_lg2)
+ 			phy_c16 = phy_c3.im - 256;
+ 	}
+ 	wlc_lcnphy_set_cc(pi, cal_type, phy_c15, phy_c16);
+-	OSL_DELAY(20);
++	udelay(20);
+ 	for (phy_c8 = 0; phy_c7 != 0 && phy_c8 < num_levels; phy_c8++) {
+ 		phy_c23 = 1;
+ 		phy_c22 = 0;
+@@ -4125,7 +4125,7 @@ wlc_lcnphy_a1(phy_info_t *pi, int cal_type, int num_levels, int step_size_lg2)
+ 		while (1) {
+ 			write_radio_reg(pi, RADIO_2064_REG026,
+ 					(phy_c5 & 0x7) | ((phy_c5 & 0x7) << 4));
+-			OSL_DELAY(50);
++			udelay(50);
+ 			phy_c22 = 0;
+ 			ptr[130] = 0;
+ 			wlc_lcnphy_samp_cap(pi, 1, phy_c9, &ptr[0], 2);
+@@ -4163,7 +4163,7 @@ wlc_lcnphy_a1(phy_info_t *pi, int cal_type, int num_levels, int step_size_lg2)
+ 					phy_c12 = phy_c10;
+ 				wlc_lcnphy_set_cc(pi, cal_type, phy_c11,
+ 						  phy_c12);
+-				OSL_DELAY(20);
++				udelay(20);
+ 				wlc_lcnphy_samp_cap(pi, 0, 0, ptr, 2);
+ 
+ 				phy_c18 = 0;
+@@ -4199,7 +4199,7 @@ wlc_lcnphy_a1(phy_info_t *pi, int cal_type, int num_levels, int step_size_lg2)
+ 		phy_c16 = phy_c14;
+ 		phy_c7 = phy_c7 >> 1;
+ 		wlc_lcnphy_set_cc(pi, cal_type, phy_c15, phy_c16);
+-		OSL_DELAY(20);
++		udelay(20);
+ 	}
+ 	goto cleanup;
+  cleanup:
+@@ -4681,7 +4681,7 @@ static void wlc_lcnphy_rcal(phy_info_t *pi)
+ 	or_radio_reg(pi, RADIO_2064_REG057, 0x01);
+ 
+ 	or_radio_reg(pi, RADIO_2064_REG05B, 0x02);
+-	OSL_DELAY(5000);
++	mdelay(5);
+ 	SPINWAIT(!wlc_radio_2064_rcal_done(pi), 10 * 1000 * 1000);
+ 
+ 	if (wlc_radio_2064_rcal_done(pi)) {
+@@ -4846,11 +4846,11 @@ void wlc_2064_vco_cal(phy_info_t *pi)
+ 	mod_radio_reg(pi, RADIO_2064_REG057, 1 << 3, 1 << 3);
+ 	calnrst = (u8) read_radio_reg(pi, RADIO_2064_REG056) & 0xf8;
+ 	write_radio_reg(pi, RADIO_2064_REG056, calnrst);
+-	OSL_DELAY(1);
++	udelay(1);
+ 	write_radio_reg(pi, RADIO_2064_REG056, calnrst | 0x03);
+-	OSL_DELAY(1);
++	udelay(1);
+ 	write_radio_reg(pi, RADIO_2064_REG056, calnrst | 0x07);
+-	OSL_DELAY(300);
++	udelay(300);
+ 	mod_radio_reg(pi, RADIO_2064_REG057, 1 << 3, 0);
+ }
+ 
+@@ -5008,7 +5008,7 @@ wlc_lcnphy_radio_2064_channel_tune_4313(phy_info_t *pi, u8 channel)
+ 	write_radio_reg(pi, RADIO_2064_REG03D, 0x3);
+ 
+ 	mod_radio_reg(pi, RADIO_2064_REG044, 0x0c, 0x0c);
+-	OSL_DELAY(1);
++	udelay(1);
+ 
+ 	wlc_2064_vco_cal(pi);
+ 
+diff --git a/drivers/staging/brcm80211/phy/wlc_phy_n.c b/drivers/staging/brcm80211/phy/wlc_phy_n.c
+index c870a4a..dd856c4 100644
+--- a/drivers/staging/brcm80211/phy/wlc_phy_n.c
++++ b/drivers/staging/brcm80211/phy/wlc_phy_n.c
+@@ -14967,7 +14967,7 @@ static void wlc_phy_resetcca_nphy(phy_info_t *pi)
+ 
+ 	val = read_phy_reg(pi, 0x01);
+ 	write_phy_reg(pi, 0x01, val | BBCFG_RESETCCA);
+-	OSL_DELAY(1);
++	udelay(1);
+ 	write_phy_reg(pi, 0x01, val & (~BBCFG_RESETCCA));
+ 
+ 	wlapi_bmac_phyclk_fgc(pi->sh->physhim, OFF);
+@@ -17409,7 +17409,7 @@ static void wlc_phy_radio_postinit_2055(phy_info_t *pi)
+ 
+ 	or_radio_reg(pi, RADIO_2055_CAL_MISC, RADIO_2055_RRCAL_RST_N);
+ 
+-	OSL_DELAY(1000);
++	udelay(1000);
+ 
+ 	or_radio_reg(pi, RADIO_2055_CAL_MISC, RADIO_2055_RRCAL_START);
+ 
+@@ -17446,7 +17446,7 @@ static void wlc_phy_radio_postinit_2055(phy_info_t *pi)
+ 			     RADIO_2055_GAINBST_DISABLE);
+ 	}
+ 
+-	OSL_DELAY(2);
++	udelay(2);
+ }
+ 
+ static void wlc_phy_radio_preinit_205x(phy_info_t *pi)
+@@ -17530,7 +17530,7 @@ static void wlc_phy_radio_postinit_2056(phy_info_t *pi)
+ 
+ 	mod_radio_reg(pi, RADIO_2056_SYN_COM_PU, 0x2, 0x2);
+ 	mod_radio_reg(pi, RADIO_2056_SYN_COM_RESET, 0x2, 0x2);
+-	OSL_DELAY(1000);
++	udelay(1000);
+ 	mod_radio_reg(pi, RADIO_2056_SYN_COM_RESET, 0x2, 0x0);
+ 
+ 	if ((pi->sh->boardflags2 & BFL2_LEGACY)
+@@ -17606,7 +17606,7 @@ static void wlc_phy_radio_postinit_2057(phy_info_t *pi)
+ 
+ 	mod_radio_reg(pi, RADIO_2057_RFPLL_MISC_CAL_RESETN, 0x78, 0x78);
+ 	mod_radio_reg(pi, RADIO_2057_XTAL_CONFIG2, 0x80, 0x80);
+-	OSL_DELAY(2000);
++	mdelay(2);
+ 	mod_radio_reg(pi, RADIO_2057_RFPLL_MISC_CAL_RESETN, 0x78, 0x0);
+ 	mod_radio_reg(pi, RADIO_2057_XTAL_CONFIG2, 0x80, 0x0);
+ 
+@@ -17868,7 +17868,7 @@ wlc_phy_chanspec_radio2055_setup(phy_info_t *pi, chan_info_nphy_2055_t *ci)
+ 	write_radio_reg(pi, RADIO_2055_CORE2_TX_MX_BGTRIM,
+ 			ci->RF_core2_tx_mx_bgtrim);
+ 
+-	OSL_DELAY(50);
++	udelay(50);
+ 
+ 	write_radio_reg(pi, RADIO_2055_VCO_CAL10, 0x05);
+ 	write_radio_reg(pi, RADIO_2055_VCO_CAL10, 0x45);
+@@ -17877,7 +17877,7 @@ wlc_phy_chanspec_radio2055_setup(phy_info_t *pi, chan_info_nphy_2055_t *ci)
+ 
+ 	write_radio_reg(pi, RADIO_2055_VCO_CAL10, 0x65);
+ 
+-	OSL_DELAY(300);
++	udelay(300);
+ }
+ 
+ static void
+@@ -18217,7 +18217,7 @@ wlc_phy_chanspec_radio2056_setup(phy_info_t *pi,
+ 		}
+ 	}
+ 
+-	OSL_DELAY(50);
++	udelay(50);
+ 
+ 	wlc_phy_radio205x_vcocal_nphy(pi);
+ }
+@@ -18238,7 +18238,7 @@ void wlc_phy_radio205x_vcocal_nphy(phy_info_t *pi)
+ 		write_radio_reg(pi, RADIO_2056_SYN_PLL_MAST3, 0x39);
+ 	}
+ 
+-	OSL_DELAY(300);
++	udelay(300);
+ }
+ 
+ #define MAX_205x_RCAL_WAITLOOPS 10000
+@@ -18254,7 +18254,7 @@ static u16 wlc_phy_radio205x_rcal(phy_info_t *pi)
+ 
+ 			and_phy_reg(pi, 0x342, ~(0x1 << 1));
+ 
+-			OSL_DELAY(10);
++			udelay(10);
+ 
+ 			mod_radio_reg(pi, RADIO_2057_IQTEST_SEL_PU, 0x1, 0x1);
+ 			mod_radio_reg(pi, RADIO_2057v7_IQTEST_SEL_PU2, 0x2,
+@@ -18262,7 +18262,7 @@ static u16 wlc_phy_radio205x_rcal(phy_info_t *pi)
+ 		}
+ 		mod_radio_reg(pi, RADIO_2057_RCAL_CONFIG, 0x1, 0x1);
+ 
+-		OSL_DELAY(10);
++		udelay(10);
+ 
+ 		mod_radio_reg(pi, RADIO_2057_RCAL_CONFIG, 0x3, 0x3);
+ 
+@@ -18271,7 +18271,7 @@ static u16 wlc_phy_radio205x_rcal(phy_info_t *pi)
+ 			if (rcal_reg & 0x1) {
+ 				break;
+ 			}
+-			OSL_DELAY(100);
++			udelay(100);
+ 		}
+ 
+ 		ASSERT(i < MAX_205x_RCAL_WAITLOOPS);
+@@ -18304,11 +18304,11 @@ static u16 wlc_phy_radio205x_rcal(phy_info_t *pi)
+ 				   RADIO_2056_SYN_PLL_MAST2 | RADIO_2056_SYN);
+ 		write_radio_reg(pi, RADIO_2056_SYN_PLL_MAST2 | RADIO_2056_SYN,
+ 				savereg | 0x7);
+-		OSL_DELAY(10);
++		udelay(10);
+ 
+ 		write_radio_reg(pi, RADIO_2056_SYN_RCAL_MASTER | RADIO_2056_SYN,
+ 				0x1);
+-		OSL_DELAY(10);
++		udelay(10);
+ 
+ 		write_radio_reg(pi, RADIO_2056_SYN_RCAL_MASTER | RADIO_2056_SYN,
+ 				0x9);
+@@ -18320,7 +18320,7 @@ static u16 wlc_phy_radio205x_rcal(phy_info_t *pi)
+ 			if (rcal_reg & 0x80) {
+ 				break;
+ 			}
+-			OSL_DELAY(100);
++			udelay(100);
+ 		}
+ 
+ 		ASSERT(i < MAX_205x_RCAL_WAITLOOPS);
+@@ -18535,7 +18535,7 @@ wlc_phy_chanspec_radio2057_setup(phy_info_t *pi,
+ 		}
+ 	}
+ 
+-	OSL_DELAY(50);
++	udelay(50);
+ 
+ 	wlc_phy_radio205x_vcocal_nphy(pi);
+ }
+@@ -18567,7 +18567,7 @@ static u16 wlc_phy_radio2057_rccal(phy_info_t *pi)
+ 		if (rccal_valid & 0x2) {
+ 			break;
+ 		}
+-		OSL_DELAY(500);
++		udelay(500);
+ 	}
+ 
+ 	ASSERT(rccal_valid & 0x2);
+@@ -18591,7 +18591,7 @@ static u16 wlc_phy_radio2057_rccal(phy_info_t *pi)
+ 		if (rccal_valid & 0x2) {
+ 			break;
+ 		}
+-		OSL_DELAY(500);
++		udelay(500);
+ 	}
+ 
+ 	ASSERT(rccal_valid & 0x2);
+@@ -18616,7 +18616,7 @@ static u16 wlc_phy_radio2057_rccal(phy_info_t *pi)
+ 		if (rccal_valid & 0x2) {
+ 			break;
+ 		}
+-		OSL_DELAY(500);
++		udelay(500);
+ 	}
+ 
+ 	ASSERT(rccal_valid & 0x2);
+@@ -20273,7 +20273,7 @@ wlc_phy_rfctrl_override_nphy(phy_info_t *pi, u16 field, u16 value,
+ 
+ 		or_phy_reg(pi, 0xec, (0x1 << 0));
+ 		or_phy_reg(pi, 0x78, (0x1 << 0));
+-		OSL_DELAY(1);
++		udelay(1);
+ 		and_phy_reg(pi, 0xec, ~(0x1 << 0));
+ 	}
+ }
+@@ -20801,7 +20801,7 @@ void wlc_phy_rssisel_nphy(phy_info_t *pi, u8 core_code, u8 rssi_type)
+ 			mod_phy_reg(pi, 0xec, rfctrlovr_mask, rfctrlovr_val);
+ 
+ 			mod_phy_reg(pi, 0x78, (0x1 << 0), (startseq << 0));
+-			OSL_DELAY(20);
++			udelay(20);
+ 
+ 			mod_phy_reg(pi, 0xec, (0x1 << 0), 0);
+ 		}
+@@ -20983,7 +20983,7 @@ s16 wlc_phy_tempsense_nphy(phy_info_t *pi)
+ 		mod_phy_reg(pi, 0xa7, (0x1 << 2), (0x1 << 2));
+ 		mod_phy_reg(pi, 0x8f, (0x1 << 2), (0x1 << 2));
+ 		mod_phy_reg(pi, 0xa5, (0x1 << 2), (0x1 << 2));
+-		OSL_DELAY(5);
++		udelay(5);
+ 		mod_phy_reg(pi, 0xa6, (0x1 << 2), 0);
+ 		mod_phy_reg(pi, 0xa7, (0x1 << 2), 0);
+ 		mod_phy_reg(pi, 0xa6, (0x1 << 3), 0);
+@@ -21002,13 +21002,13 @@ s16 wlc_phy_tempsense_nphy(phy_info_t *pi)
+ 		wlc_phy_table_write_nphy(pi, NPHY_TBL_ID_AFECTRL, 1, 0x0E, 16,
+ 					 &auxADC_Av);
+ 
+-		OSL_DELAY(3);
++		udelay(3);
+ 
+ 		wlc_phy_poll_rssi_nphy(pi, NPHY_RSSI_SEL_IQ, radio_temp, 1);
+ 		write_radio_reg(pi, RADIO_2057_TEMPSENSE_CONFIG,
+ 				tempsense_Rcal | 0x03);
+ 
+-		OSL_DELAY(5);
++		udelay(5);
+ 		wlc_phy_poll_rssi_nphy(pi, NPHY_RSSI_SEL_IQ, radio_temp2, 1);
+ 
+ 		auxADC_Av = 0x7;
+@@ -21031,13 +21031,13 @@ s16 wlc_phy_tempsense_nphy(phy_info_t *pi)
+ 		wlc_phy_table_write_nphy(pi, NPHY_TBL_ID_AFECTRL, 1, 0x0E, 16,
+ 					 &auxADC_Av);
+ 
+-		OSL_DELAY(3);
++		udelay(3);
+ 
+ 		wlc_phy_poll_rssi_nphy(pi, NPHY_RSSI_SEL_IQ, radio_temp2, 1);
+ 		write_radio_reg(pi, RADIO_2057_TEMPSENSE_CONFIG,
+ 				tempsense_Rcal | 0x01);
+ 
+-		OSL_DELAY(5);
++		udelay(5);
+ 		wlc_phy_poll_rssi_nphy(pi, NPHY_RSSI_SEL_IQ, radio_temp, 1);
+ 
+ 		write_radio_reg(pi, RADIO_2057_TEMPSENSE_CONFIG,
+@@ -23714,7 +23714,7 @@ wlc_phy_cal_txgainctrl_nphy(phy_info_t *pi, s32 dBm_targetpower, bool debug)
+ 			wlc_phy_table_write_nphy(pi, 15, 1, 87, 16, &curr_m0m1);
+ 			wlc_phy_table_write_nphy(pi, 15, 1, 95, 16, &curr_m0m1);
+ 
+-			OSL_DELAY(50);
++			udelay(50);
+ 
+ 			wlc_phy_est_tonepwr_nphy(pi, qdBm_power,
+ 						 NPHY_CAL_TSSISAMPS);
+@@ -23765,7 +23765,7 @@ wlc_phy_cal_txgainctrl_nphy(phy_info_t *pi, s32 dBm_targetpower, bool debug)
+ 			wlc_phy_table_write_nphy(pi, 15, 1, 87, 16, &dbg_m0m1);
+ 			wlc_phy_table_write_nphy(pi, 15, 1, 95, 16, &dbg_m0m1);
+ 
+-			OSL_DELAY(100);
++			udelay(100);
+ 
+ 			wlc_phy_est_tonepwr_nphy(pi, qdBm_power,
+ 						 NPHY_CAL_TSSISAMPS);
+@@ -23773,7 +23773,7 @@ wlc_phy_cal_txgainctrl_nphy(phy_info_t *pi, s32 dBm_targetpower, bool debug)
+ 			wlc_phy_table_read_nphy(pi, 7, 1, (0x110 + core), 16,
+ 						&radio_gain);
+ 
+-			OSL_DELAY(4000000);
++			mdelay(4000);
+ 			pi->nphy_bb_mult_save = 0;
+ 			wlc_phy_stopplayback_nphy(pi);
+ 		}
+@@ -25657,7 +25657,7 @@ wlc_phy_rc_sweep_nphy(phy_info_t *pi, u8 core_idx, u8 loopback_type)
+ 
+ 			wlc_phy_tx_tone_nphy(pi, ref_tone, NPHY_RXCAL_TONEAMP,
+ 					     0, 1, FALSE);
+-			OSL_DELAY(2);
++			udelay(2);
+ 
+ 			wlc_phy_rx_iq_est_nphy(pi, est, num_samps, 32, 0);
+ 
+@@ -25675,7 +25675,7 @@ wlc_phy_rc_sweep_nphy(phy_info_t *pi, u8 core_idx, u8 loopback_type)
+ 
+ 			wlc_phy_tx_tone_nphy(pi, target_bw, NPHY_RXCAL_TONEAMP,
+ 					     0, 1, FALSE);
+-			OSL_DELAY(2);
++			udelay(2);
+ 		}
+ 
+ 		wlc_phy_rx_iq_est_nphy(pi, est, num_samps, 32, 0);
+@@ -25761,7 +25761,7 @@ wlc_phy_rc_sweep_nphy(phy_info_t *pi, u8 core_idx, u8 loopback_type)
+ 	return best_rccal_val - 0x80;
+ }
+ 
+-#define WAIT_FOR_SCOPE	4000000
++#define WAIT_FOR_SCOPE	4000
+ static int
+ wlc_phy_cal_rxiq_nphy_rev3(phy_info_t *pi, nphy_txgains_t target_gain,
+ 			   u8 cal_type, bool debug)
+@@ -25821,7 +25821,7 @@ wlc_phy_cal_rxiq_nphy_rev3(phy_info_t *pi, nphy_txgains_t target_gain,
+ 					     FALSE);
+ 
+ 			if (debug)
+-				OSL_DELAY(WAIT_FOR_SCOPE);
++				mdelay(WAIT_FOR_SCOPE);
+ 
+ 			wlc_phy_calc_rx_iq_comp_nphy(pi, rx_core + 1);
+ 			wlc_phy_stopplayback_nphy(pi);
+@@ -26022,7 +26022,7 @@ wlc_phy_cal_rxiq_nphy_rev2(phy_info_t *pi, nphy_txgains_t target_gain,
+ 		for (gain_pass = 0; gain_pass < 4; gain_pass++) {
+ 
+ 			if (debug)
+-				OSL_DELAY(WAIT_FOR_SCOPE);
++				mdelay(WAIT_FOR_SCOPE);
+ 
+ 			if (gain_pass < 3) {
+ 				curr_lna = lna_vals[gain_pass];
+@@ -28219,7 +28219,7 @@ void wlc_phy_txpower_recalc_target_nphy(phy_info_t *pi)
+ 	if (D11REV_IS(pi->sh->corerev, 11) || D11REV_IS(pi->sh->corerev, 12)) {
+ 		wlapi_bmac_mctrl(pi->sh->physhim, MCTL_PHYLOCK, MCTL_PHYLOCK);
+ 		(void)R_REG(pi->sh->osh, &pi->regs->maccontrol);
+-		OSL_DELAY(1);
++		udelay(1);
+ 	}
+ 
+ 	wlc_phy_txpwrctrl_enable_nphy(pi, tx_pwr_ctrl_state);
+@@ -28434,7 +28434,7 @@ static void wlc_phy_txpwrctrl_idle_tssi_nphy(phy_info_t *pi)
+ 
+ 	wlc_phy_tx_tone_nphy(pi, 4000, 0, 0, 0, FALSE);
+ 
+-	OSL_DELAY(20);
++	udelay(20);
+ 	int_val =
+ 	    wlc_phy_poll_rssi_nphy(pi, (u8) NPHY_RSSI_SEL_TSSI_2G, rssi_buf,
+ 				   1);
+@@ -28490,7 +28490,7 @@ static void wlc_phy_txpwrctrl_pwr_setup_nphy(phy_info_t *pi)
+ 	if (D11REV_IS(pi->sh->corerev, 11) || D11REV_IS(pi->sh->corerev, 12)) {
+ 		wlapi_bmac_mctrl(pi->sh->physhim, MCTL_PHYLOCK, MCTL_PHYLOCK);
+ 		(void)R_REG(pi->sh->osh, &pi->regs->maccontrol);
+-		OSL_DELAY(1);
++		udelay(1);
+ 	}
+ 
+ 	if (pi->phyhang_avoid)
+@@ -28647,7 +28647,7 @@ static void wlc_phy_txpwrctrl_pwr_setup_nphy(phy_info_t *pi)
+ 	if (D11REV_IS(pi->sh->corerev, 11) || D11REV_IS(pi->sh->corerev, 12)) {
+ 		wlapi_bmac_mctrl(pi->sh->physhim, MCTL_PHYLOCK, MCTL_PHYLOCK);
+ 		(void)R_REG(pi->sh->osh, &pi->regs->maccontrol);
+-		OSL_DELAY(1);
++		udelay(1);
+ 	}
+ 
+ 	if (NREV_GE(pi->pubpi.phy_rev, 7)) {
+diff --git a/drivers/staging/brcm80211/sys/wlc_ampdu.c b/drivers/staging/brcm80211/sys/wlc_ampdu.c
+index 796848f..0987e51 100644
+--- a/drivers/staging/brcm80211/sys/wlc_ampdu.c
++++ b/drivers/staging/brcm80211/sys/wlc_ampdu.c
+@@ -939,7 +939,7 @@ wlc_ampdu_dotxstatus(ampdu_info_t *ampdu, struct scb *scb, void *p,
+ 		while (((s1 =
+ 			 R_REG(wlc->osh,
+ 			       &wlc->regs->frmtxstatus)) & TXS_V) == 0) {
+-			OSL_DELAY(1);
++			udelay(1);
+ 			status_delay++;
+ 			if (status_delay > 10) {
+ 				ASSERT(status_delay <= 10);
+diff --git a/drivers/staging/brcm80211/sys/wlc_bmac.c b/drivers/staging/brcm80211/sys/wlc_bmac.c
+index 335c8db..afbbfad 100644
+--- a/drivers/staging/brcm80211/sys/wlc_bmac.c
++++ b/drivers/staging/brcm80211/sys/wlc_bmac.c
+@@ -1324,10 +1324,10 @@ int wlc_bmac_down_finish(wlc_hw_info_t *wlc_hw)
+ void wlc_bmac_wait_for_wake(wlc_hw_info_t *wlc_hw)
+ {
+ 	if (D11REV_IS(wlc_hw->corerev, 4))	/* no slowclock */
+-		OSL_DELAY(5);
++		udelay(5);
+ 	else {
+ 		/* delay before first read of ucode state */
+-		OSL_DELAY(40);
++		udelay(40);
+ 
+ 		/* wait until ucode is no longer asleep */
+ 		SPINWAIT((wlc_bmac_read_shm(wlc_hw, M_UCODE_DBGST) ==
+@@ -1373,7 +1373,7 @@ static void wlc_clkctl_clk(wlc_hw_info_t *wlc_hw, uint mode)
+ 				OR_REG(wlc_hw->osh, &wlc_hw->regs->clk_ctl_st,
+ 				       CCS_FORCEHT);
+ 
+-				OSL_DELAY(64);
++				udelay(64);
+ 
+ 				SPINWAIT(((R_REG
+ 					   (wlc_hw->osh,
+@@ -1981,16 +1981,16 @@ void wlc_bmac_core_phy_clk(wlc_hw_info_t *wlc_hw, bool clk)
+ 
+ 		si_core_cflags(wlc_hw->sih, (SICF_PRST | SICF_FGC | SICF_GMODE),
+ 			       (SICF_PRST | SICF_FGC));
+-		OSL_DELAY(1);
++		udelay(1);
+ 		si_core_cflags(wlc_hw->sih, (SICF_PRST | SICF_FGC), SICF_PRST);
+-		OSL_DELAY(1);
++		udelay(1);
+ 
+ 	} else {		/* take phy out of reset */
+ 
+ 		si_core_cflags(wlc_hw->sih, (SICF_PRST | SICF_FGC), SICF_FGC);
+-		OSL_DELAY(1);
++		udelay(1);
+ 		si_core_cflags(wlc_hw->sih, (SICF_FGC), 0);
+-		OSL_DELAY(1);
++		udelay(1);
+ 
+ 	}
+ }
+@@ -2002,16 +2002,16 @@ void wlc_bmac_core_phypll_reset(wlc_hw_info_t *wlc_hw)
+ 
+ 	si_corereg(wlc_hw->sih, SI_CC_IDX,
+ 		   offsetof(chipcregs_t, chipcontrol_addr), ~0, 0);
+-	OSL_DELAY(1);
++	udelay(1);
+ 	si_corereg(wlc_hw->sih, SI_CC_IDX,
+ 		   offsetof(chipcregs_t, chipcontrol_data), 0x4, 0);
+-	OSL_DELAY(1);
++	udelay(1);
+ 	si_corereg(wlc_hw->sih, SI_CC_IDX,
+ 		   offsetof(chipcregs_t, chipcontrol_data), 0x4, 4);
+-	OSL_DELAY(1);
++	udelay(1);
+ 	si_corereg(wlc_hw->sih, SI_CC_IDX,
+ 		   offsetof(chipcregs_t, chipcontrol_data), 0x4, 0);
+-	OSL_DELAY(1);
++	udelay(1);
+ }
+ 
+ /* light way to turn on phy clock without reset for NPHY only
+@@ -2057,7 +2057,7 @@ void wlc_bmac_phy_reset(wlc_hw_info_t *wlc_hw)
+ 		/* Set the PHY bandwidth */
+ 		si_core_cflags(wlc_hw->sih, SICF_BWMASK, phy_bw_clkbits);
+ 
+-		OSL_DELAY(1);
++		udelay(1);
+ 
+ 		/* Perform a soft reset of the PHY PLL */
+ 		wlc_bmac_core_phypll_reset(wlc_hw);
+@@ -2073,7 +2073,7 @@ void wlc_bmac_phy_reset(wlc_hw_info_t *wlc_hw)
+ 			       (SICF_PRST | SICF_PCLKE | phy_bw_clkbits));
+ 	}
+ 
+-	OSL_DELAY(2);
++	udelay(2);
+ 	wlc_bmac_core_phy_clk(wlc_hw, ON);
+ 
+ 	if (pih)
+@@ -2312,7 +2312,7 @@ static bool wlc_dma_rxreset(wlc_hw_info_t *wlc_hw, uint fifo)
+ 
+ 		if (!rxidle && (rcv_frm_cnt != 0))
+ 			WL_ERROR(("wl%d: %s: rxdma[%d] not idle && rcv_frm_cnt(%d) not zero\n", wlc_hw->unit, __func__, fifo, rcv_frm_cnt));
+-		OSL_DELAY(2000);
++		mdelay(2);
+ 	}
+ 
+ 	return dma_rxreset(di);
+@@ -3005,7 +3005,7 @@ u32 wlc_intrsoff(wlc_info_t *wlc)
+ 
+ 	W_REG(wlc_hw->osh, &wlc_hw->regs->macintmask, 0);
+ 	(void)R_REG(wlc_hw->osh, &wlc_hw->regs->macintmask);	/* sync readback */
+-	OSL_DELAY(1);		/* ensure int line is no longer driven */
++	udelay(1);		/* ensure int line is no longer driven */
+ 	wlc->macintmask = 0;
+ 
+ 	/* return previous macintmask; resolve race between us and our isr */
+diff --git a/drivers/staging/brcm80211/util/aiutils.c b/drivers/staging/brcm80211/util/aiutils.c
+index 92573ab..1b47274 100644
+--- a/drivers/staging/brcm80211/util/aiutils.c
++++ b/drivers/staging/brcm80211/util/aiutils.c
+@@ -591,10 +591,10 @@ void ai_core_disable(si_t *sih, u32 bits)
+ 
+ 	W_REG(sii->osh, &ai->ioctrl, bits);
+ 	dummy = R_REG(sii->osh, &ai->ioctrl);
+-	OSL_DELAY(10);
++	udelay(10);
+ 
+ 	W_REG(sii->osh, &ai->resetctrl, AIRC_RESET);
+-	OSL_DELAY(1);
++	udelay(1);
+ }
+ 
+ /* reset and re-enable a core
+@@ -623,11 +623,11 @@ void ai_core_reset(si_t *sih, u32 bits, u32 resetbits)
+ 	W_REG(sii->osh, &ai->ioctrl, (bits | SICF_FGC | SICF_CLOCK_EN));
+ 	dummy = R_REG(sii->osh, &ai->ioctrl);
+ 	W_REG(sii->osh, &ai->resetctrl, 0);
+-	OSL_DELAY(1);
++	udelay(1);
+ 
+ 	W_REG(sii->osh, &ai->ioctrl, (bits | SICF_CLOCK_EN));
+ 	dummy = R_REG(sii->osh, &ai->ioctrl);
+-	OSL_DELAY(1);
++	udelay(1);
+ }
+ 
+ void ai_core_cflags_wo(si_t *sih, u32 mask, u32 val)
+diff --git a/drivers/staging/brcm80211/util/bcmotp.c b/drivers/staging/brcm80211/util/bcmotp.c
+index fedebe2..30ad224 100644
+--- a/drivers/staging/brcm80211/util/bcmotp.c
++++ b/drivers/staging/brcm80211/util/bcmotp.c
+@@ -695,7 +695,7 @@ static void *hndotp_init(si_t *sih)
+ 			    (clkdiv & ~CLKD_OTP) | (otpdiv << CLKD_OTP_SHIFT);
+ 			W_REG(osh, &cc->clkdiv, clkdiv);
+ 		}
+-		OSL_DELAY(10);
++		udelay(10);
+ 
+ 		ret = (void *)oi;
+ 	}
+diff --git a/drivers/staging/brcm80211/util/hnddma.c b/drivers/staging/brcm80211/util/hnddma.c
+index 66c5609..4276f24 100644
+--- a/drivers/staging/brcm80211/util/hnddma.c
++++ b/drivers/staging/brcm80211/util/hnddma.c
+@@ -1004,7 +1004,7 @@ static void *BCMFASTPATH _dma_rx(dma_info_t *di)
+ #if defined(__mips__)
+ 	if (!len) {
+ 		while (!(len = *(u16 *) OSL_UNCACHED(PKTDATA(head))))
+-			OSL_DELAY(1);
++			udelay(1);
+ 
+ 		*(u16 *) PKTDATA(head) = htol16((u16) len);
+ 	}
+@@ -1599,7 +1599,7 @@ static bool dma32_txreset(dma_info_t *di)
+ 		  XS_XS_DISABLED), 10000);
+ 
+ 	/* wait for the last transaction to complete */
+-	OSL_DELAY(300);
++	udelay(300);
+ 
+ 	return status == XS_XS_DISABLED;
+ }
+@@ -1649,7 +1649,7 @@ static bool dma32_txsuspendedidle(dma_info_t *di)
+ 	if ((R_REG(di->osh, &di->d32txregs->status) & XS_XS_MASK) != XS_XS_IDLE)
+ 		return 0;
+ 
+-	OSL_DELAY(2);
++	udelay(2);
+ 	return ((R_REG(di->osh, &di->d32txregs->status) & XS_XS_MASK) ==
+ 		XS_XS_IDLE);
+ }
+@@ -2162,7 +2162,7 @@ static bool dma64_txreset(dma_info_t *di)
+ 		  != D64_XS0_XS_DISABLED), 10000);
+ 
+ 	/* wait for the last transaction to complete */
+-	OSL_DELAY(300);
++	udelay(300);
+ 
+ 	return status == D64_XS0_XS_DISABLED;
+ }
+diff --git a/drivers/staging/brcm80211/util/hndpmu.c b/drivers/staging/brcm80211/util/hndpmu.c
+index cd71b74..819a1cf 100644
+--- a/drivers/staging/brcm80211/util/hndpmu.c
++++ b/drivers/staging/brcm80211/util/hndpmu.c
+@@ -863,7 +863,7 @@ void si_pmu_res_init(si_t *sih, osl_t *osh)
+ 	}
+ 
+ 	/* Add some delay; allow resources to come up and settle. */
+-	OSL_DELAY(2000);
++	mdelay(2);
+ 
+ 	/* Return to original core */
+ 	si_setcoreidx(sih, origidx);
+@@ -1295,13 +1295,13 @@ static void si_pmu1_pllinit0(si_t *sih, osl_t *osh, chipcregs_t *cc, u32 xtal)
+ 		AND_REG(osh, &cc->max_res_mask,
+ 			~(PMURES_BIT(RES4319_HT_AVAIL)));
+ 
+-		OSL_DELAY(100);
++		udelay(100);
+ 		AND_REG(osh, &cc->min_res_mask,
+ 			~(PMURES_BIT(RES4319_BBPLL_PWRSW_PU)));
+ 		AND_REG(osh, &cc->max_res_mask,
+ 			~(PMURES_BIT(RES4319_BBPLL_PWRSW_PU)));
+ 
+-		OSL_DELAY(100);
++		udelay(100);
+ 		SPINWAIT(R_REG(osh, &cc->clk_ctl_st) & CCS_HTAVAIL,
+ 			 PMU_MAX_TRANSITION_DLY);
+ 		ASSERT(!(R_REG(osh, &cc->clk_ctl_st) & CCS_HTAVAIL));
+@@ -1317,7 +1317,7 @@ static void si_pmu1_pllinit0(si_t *sih, osl_t *osh, chipcregs_t *cc, u32 xtal)
+ 		AND_REG(osh, &cc->max_res_mask,
+ 			~(PMURES_BIT(RES4336_HT_AVAIL) |
+ 			  PMURES_BIT(RES4336_MACPHY_CLKAVAIL)));
+-		OSL_DELAY(100);
++		udelay(100);
+ 		SPINWAIT(R_REG(osh, &cc->clk_ctl_st) & CCS_HTAVAIL,
+ 			 PMU_MAX_TRANSITION_DLY);
+ 		ASSERT(!(R_REG(osh, &cc->clk_ctl_st) & CCS_HTAVAIL));
+@@ -1330,7 +1330,7 @@ static void si_pmu1_pllinit0(si_t *sih, osl_t *osh, chipcregs_t *cc, u32 xtal)
+ 		AND_REG(osh, &cc->max_res_mask,
+ 			~(PMURES_BIT(RES4330_HT_AVAIL) |
+ 			  PMURES_BIT(RES4330_MACPHY_CLKAVAIL)));
+-		OSL_DELAY(100);
++		udelay(100);
+ 		SPINWAIT(R_REG(osh, &cc->clk_ctl_st) & CCS_HTAVAIL,
+ 			 PMU_MAX_TRANSITION_DLY);
+ 		ASSERT(!(R_REG(osh, &cc->clk_ctl_st) & CCS_HTAVAIL));
+@@ -1854,7 +1854,7 @@ u32 si_pmu_ilp_clock(si_t *sih, osl_t *osh)
+ 		chipcregs_t *cc = si_setcoreidx(sih, SI_CC_IDX);
+ 		ASSERT(cc != NULL);
+ 		start = R_REG(osh, &cc->pmutimer);
+-		OSL_DELAY(ILP_CALC_DUR * 1000);
++		mdelay(ILP_CALC_DUR);
+ 		end = R_REG(osh, &cc->pmutimer);
+ 		delta = end - start;
+ 		ilpcycles_per_sec = delta * (1000 / ILP_CALC_DUR);
+@@ -2642,7 +2642,7 @@ u32 si_pmu_measure_alpclk(si_t *sih, osl_t *osh)
+ 		      1U << PMU_XTALFREQ_REG_MEASURE_SHIFT);
+ 
+ 		/* Delay for well over 4 ILP clocks */
+-		OSL_DELAY(1000);
++		udelay(1000);
+ 
+ 		/* Read the latched number of ALP ticks per 4 ILP ticks */
+ 		ilp_ctr =
+diff --git a/drivers/staging/brcm80211/util/linux_osl.c b/drivers/staging/brcm80211/util/linux_osl.c
+index a139232..f16731a 100644
+--- a/drivers/staging/brcm80211/util/linux_osl.c
++++ b/drivers/staging/brcm80211/util/linux_osl.c
+@@ -591,17 +591,6 @@ void osl_assert(char *exp, char *file, int line)
+ }
+ #endif				/* defined(BCMDBG_ASSERT) */
+ 
+-void osl_delay(uint usec)
+-{
+-	uint d;
+-
+-	while (usec > 0) {
+-		d = min(usec, (uint)1000);
+-		udelay(d);
+-		usec -= d;
+-	}
+-}
+-
+ #if defined(BCMSDIO) && !defined(BRCM_FULLMAC)
+ u8 osl_readb(osl_t *osh, volatile u8 *r)
+ {
+diff --git a/drivers/staging/brcm80211/util/nicpci.c b/drivers/staging/brcm80211/util/nicpci.c
+index 6a9d9d6..cc031bd 100644
+--- a/drivers/staging/brcm80211/util/nicpci.c
++++ b/drivers/staging/brcm80211/util/nicpci.c
+@@ -103,7 +103,7 @@ static bool pcicore_pmecap(pcicore_info_t *pi);
+ 	} while (0)
+ 
+ /* delay needed between the mdio control/ mdiodata register data access */
+-#define PR28829_DELAY() OSL_DELAY(10)
++#define PR28829_DELAY() udelay(10)
+ 
+ /* Initialize the PCI core. It's caller's responsibility to make sure that this is done
+  * only once
+@@ -281,7 +281,7 @@ static bool pcie_mdiosetblock(pcicore_info_t *pi, uint blk)
+ 		    MDIOCTL_ACCESS_DONE) {
+ 			break;
+ 		}
+-		OSL_DELAY(1000);
++		udelay(1000);
+ 		i++;
+ 	}
+ 
+@@ -342,7 +342,7 @@ pcie_mdioop(pcicore_info_t *pi, uint physmedia, uint regaddr, bool write,
+ 			W_REG(pi->osh, (&pcieregs->mdiocontrol), 0);
+ 			return 0;
+ 		}
+-		OSL_DELAY(1000);
++		udelay(1000);
+ 		i++;
+ 	}
+ 
+diff --git a/drivers/staging/brcm80211/util/sbutils.c b/drivers/staging/brcm80211/util/sbutils.c
+index 06a1437..66fd89e 100644
+--- a/drivers/staging/brcm80211/util/sbutils.c
++++ b/drivers/staging/brcm80211/util/sbutils.c
+@@ -477,7 +477,7 @@ void sb_core_disable(si_t *sih, u32 bits)
+ 	   (preserve core-specific bits) */
+ 	OR_SBREG(sii, &sb->sbtmstatelow, SBTML_REJ);
+ 	dummy = R_SBREG(sii, &sb->sbtmstatelow);
+-	OSL_DELAY(1);
++	udelay(1);
+ 	SPINWAIT((R_SBREG(sii, &sb->sbtmstatehigh) & SBTMH_BUSY), 100000);
+ 	if (R_SBREG(sii, &sb->sbtmstatehigh) & SBTMH_BUSY)
+ 		SI_ERROR(("%s: target state still busy\n", __func__));
+@@ -485,7 +485,7 @@ void sb_core_disable(si_t *sih, u32 bits)
+ 	if (R_SBREG(sii, &sb->sbidlow) & SBIDL_INIT) {
+ 		OR_SBREG(sii, &sb->sbimstate, SBIM_RJ);
+ 		dummy = R_SBREG(sii, &sb->sbimstate);
+-		OSL_DELAY(1);
++		udelay(1);
+ 		SPINWAIT((R_SBREG(sii, &sb->sbimstate) & SBIM_BY), 100000);
+ 	}
+ 
+@@ -494,7 +494,7 @@ void sb_core_disable(si_t *sih, u32 bits)
+ 		(((bits | SICF_FGC | SICF_CLOCK_EN) << SBTML_SICF_SHIFT) |
+ 		 SBTML_REJ | SBTML_RESET));
+ 	dummy = R_SBREG(sii, &sb->sbtmstatelow);
+-	OSL_DELAY(10);
++	udelay(10);
+ 
+ 	/* don't forget to clear the initiator reject bit */
+ 	if (R_SBREG(sii, &sb->sbidlow) & SBIDL_INIT)
+@@ -504,7 +504,7 @@ disable:
+ 	/* leave reset and reject asserted */
+ 	W_SBREG(sii, &sb->sbtmstatelow,
+ 		((bits << SBTML_SICF_SHIFT) | SBTML_REJ | SBTML_RESET));
+-	OSL_DELAY(1);
++	udelay(1);
+ }
+ 
+ /* reset and re-enable a core
+@@ -538,7 +538,7 @@ void sb_core_reset(si_t *sih, u32 bits, u32 resetbits)
+ 		(((bits | resetbits | SICF_FGC | SICF_CLOCK_EN) <<
+ 		  SBTML_SICF_SHIFT) | SBTML_RESET));
+ 	dummy = R_SBREG(sii, &sb->sbtmstatelow);
+-	OSL_DELAY(1);
++	udelay(1);
+ 
+ 	if (R_SBREG(sii, &sb->sbtmstatehigh) & SBTMH_SERR)
+ 		W_SBREG(sii, &sb->sbtmstatehigh, 0);
+@@ -552,13 +552,13 @@ void sb_core_reset(si_t *sih, u32 bits, u32 resetbits)
+ 		((bits | resetbits | SICF_FGC | SICF_CLOCK_EN) <<
+ 		 SBTML_SICF_SHIFT));
+ 	dummy = R_SBREG(sii, &sb->sbtmstatelow);
+-	OSL_DELAY(1);
++	udelay(1);
+ 
+ 	/* leave clock enabled */
+ 	W_SBREG(sii, &sb->sbtmstatelow,
+ 		((bits | SICF_CLOCK_EN) << SBTML_SICF_SHIFT));
+ 	dummy = R_SBREG(sii, &sb->sbtmstatelow);
+-	OSL_DELAY(1);
++	udelay(1);
+ }
+ 
+ u32 sb_base(u32 admatch)
+diff --git a/drivers/staging/brcm80211/util/siutils.c b/drivers/staging/brcm80211/util/siutils.c
+index 5b945f2..dc1dd39 100644
+--- a/drivers/staging/brcm80211/util/siutils.c
++++ b/drivers/staging/brcm80211/util/siutils.c
+@@ -152,7 +152,7 @@ static bool si_buscore_prep(si_info_t *sii, uint bustype, uint devid,
+ 				bcmsdh_cfg_write(sdh, SDIO_FUNC_1,
+ 						 SBSDIO_FUNC1_CHIPCLKCSR,
+ 						 clkset, &err);
+-				OSL_DELAY(65);
++				udelay(65);
+ 			}
+ 		}
+ 
+@@ -607,7 +607,7 @@ static si_info_t *si_doattach(si_info_t *sii, uint devid, osl_t *osh,
+ 			W_REG(osh, &cc->clkdiv, clkdiv);
+ 			SI_ERROR(("%s: set clkdiv to %x\n", __func__, clkdiv));
+ 		}
+-		OSL_DELAY(10);
++		udelay(10);
+ 	}
+ 
+ 	/* Init nvram from flash if it exists */
+@@ -1308,7 +1308,7 @@ int si_clkctl_xtal(si_t *sih, uint what, bool on)
+ 						     sizeof(u32), out);
+ 				OSL_PCI_WRITE_CONFIG(sii->osh, PCI_GPIO_OUTEN,
+ 						     sizeof(u32), outen);
+-				OSL_DELAY(XTAL_ON_DELAY);
++				udelay(XTAL_ON_DELAY);
+ 			}
+ 
+ 			/* turn pll on */
+@@ -1316,7 +1316,7 @@ int si_clkctl_xtal(si_t *sih, uint what, bool on)
+ 				out &= ~PCI_CFG_GPIO_PLL;
+ 				OSL_PCI_WRITE_CONFIG(sii->osh, PCI_GPIO_OUT,
+ 						     sizeof(u32), out);
+-				OSL_DELAY(2000);
++				mdelay(2);
+ 			}
+ 		} else {
+ 			if (what & XTAL)
+@@ -1416,7 +1416,7 @@ static bool _si_clkctl_cc(si_info_t *sii, uint mode)
+ 				  == 0), PMU_MAX_TRANSITION_DLY);
+ 			ASSERT(R_REG(sii->osh, &cc->clk_ctl_st) & htavail);
+ 		} else {
+-			OSL_DELAY(PLL_DELAY);
++			udelay(PLL_DELAY);
+ 		}
+ 		break;
+ 
+@@ -2019,6 +2019,6 @@ void si_otp_power(si_t *sih, bool on)
+ {
+ 	if (PMUCTL_ENAB(sih))
+ 		si_pmu_otp_power(sih, si_osh(sih), on);
+-	OSL_DELAY(1000);
++	udelay(1000);
+ }
+ 
 -- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+1.6.4.4
 
