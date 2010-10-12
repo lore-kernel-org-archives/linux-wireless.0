@@ -1,97 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp-out.google.com ([216.239.44.51]:38220 "EHLO
-	smtp-out.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753628Ab0JMWsy (ORCPT
+Received: from mail-bw0-f46.google.com ([209.85.214.46]:43534 "EHLO
+	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751621Ab0JLWJb (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 13 Oct 2010 18:48:54 -0400
-Received: from hpaq6.eem.corp.google.com (hpaq6.eem.corp.google.com [172.25.149.6])
-	by smtp-out.google.com with ESMTP id o9DMmrag030357
-	for <linux-wireless@vger.kernel.org>; Wed, 13 Oct 2010 15:48:53 -0700
-Received: from glenhelen.mtv.corp.google.com (glenhelen.mtv.corp.google.com [172.22.72.223])
-	by hpaq6.eem.corp.google.com with ESMTP id o9DMmqnk025364
-	for <linux-wireless@vger.kernel.org>; Wed, 13 Oct 2010 15:48:52 -0700
-From: Paul Stewart <pstew@google.com>
-Date: Wed, 13 Oct 2010 15:10:17 -0700
-Subject: [PATCH 2/6] Ad cfg80211 call for threshold notifications
-To: linux-wireless@vger.kernel.org
-Message-Id: <20101013224851.9C46820418@glenhelen.mtv.corp.google.com>
+	Tue, 12 Oct 2010 18:09:31 -0400
+Received: by bwz15 with SMTP id 15so2776714bwz.19
+        for <linux-wireless@vger.kernel.org>; Tue, 12 Oct 2010 15:09:29 -0700 (PDT)
+From: mike.rapoport@gmail.com
+To: Greg Kroah-Hartman <gregkh@suse.de>
+Cc: Brett Rudley <brudley@broadcom.com>,
+	Henry Ptasinski <henryp@broadcom.com>,
+	Nohee Ko <noheek@broadcom.com>, linux-wireless@vger.kernel.org,
+	Mike Rapoport <mike.rapoport@gmail.com>
+Subject: [PATCH 0/7] staging: brcm80211: linus_osl.c cleanups
+Date: Wed, 13 Oct 2010 00:09:06 +0200
+Message-Id: <cover.1286920620.git.mike.rapoport@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Similar to its rssi counterpart, provide a cfg80211 call for sending
-bitrate change updates.
+These patches replace part of proprietary utility functions with
+public kernel versions.
 
-Signed-off-by: Paul Stewart <pstew@google.com>
+The following changes since commit 0f0881b09078fe3a6bc70f05e8ba49a52b2478a2:
+  Greg Kroah-Hartman (1):                                                   
+        Staging: brcm80211: remove TRUE #define                             
 
----
- include/net/cfg80211.h |   18 ++++++++++++++++++
- net/wireless/mlme.c    |   13 +++++++++++++
- 2 files changed, 31 insertions(+), 0 deletions(-)
+Mike Rapoport (7):
+  staging: brcm80211: remove OSL_DELAY
+  staging: brcm80211: remove DHD_USE_STATIC_BUF
+  staging: brcm80211: remove osl_malloced()/MALLOCED()
+  staging: brcm80211: replace MALLOC() with k[zm]alloc
+  staging: brcm80211: remove unused NATIVE_{MALLOC,MFREE}
+  staging: brcm80211: replace MFREE with kfree
+  staging: brcm80211: remove unrefrenced malloced field
 
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index 2a7936d..e7f044e 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -1146,6 +1146,7 @@ struct cfg80211_pmksa {
-  * @set_power_mgmt: Configure WLAN power management. A timeout value of -1
-  *	allows the driver to adjust the dynamic ps timeout value.
-  * @set_cqm_rssi_config: Configure connection quality monitor RSSI threshold.
-+ * @set_cqm_bitrate_config: Config connection quality monitor bitrate threshold.
-  *
-  * @mgmt_frame_register: Notify driver that a management frame type was
-  *	registered. Note that this callback may not sleep, and cannot run
-@@ -1301,6 +1302,10 @@ struct cfg80211_ops {
- 				       struct net_device *dev,
- 				       s32 rssi_thold, u32 rssi_hyst);
- 
-+	int	(*set_cqm_bitrate_config)(struct wiphy *wiphy,
-+					  struct net_device *dev,
-+					  u32 bitrate_thold);
-+
- 	void	(*mgmt_frame_register)(struct wiphy *wiphy,
- 				       struct net_device *dev,
- 				       u16 frame_type, bool reg);
-@@ -2595,6 +2600,19 @@ void cfg80211_cqm_rssi_notify(struct net_device *dev,
- 			      enum nl80211_cqm_rssi_threshold_event rssi_event,
- 			      gfp_t gfp);
- 
-+/**
-+ * cfg80211_cqm_bitrate_notify - connection quality monitoring bitrate event
-+ * @dev: network device
-+ * @rate: the new transmit rate
-+ * @gfp: context flags
-+ *
-+ * This function is called when a the transmit bitrate changes, and
-+ * connection quality monitoring is configured to capture these events.
-+ */
-+void cfg80211_cqm_bitrate_notify(struct net_device *dev,
-+				 u32 bitrate,
-+				 gfp_t gfp);
-+
- /* Logging, debugging and troubleshooting/diagnostic helpers. */
- 
- /* wiphy_printk helpers, similar to dev_printk */
-diff --git a/net/wireless/mlme.c b/net/wireless/mlme.c
-index 26838d9..ebb4e3a 100644
---- a/net/wireless/mlme.c
-+++ b/net/wireless/mlme.c
-@@ -1028,3 +1028,16 @@ void cfg80211_cqm_rssi_notify(struct net_device *dev,
- 	nl80211_send_cqm_rssi_notify(rdev, dev, rssi_event, gfp);
- }
- EXPORT_SYMBOL(cfg80211_cqm_rssi_notify);
-+
-+void cfg80211_cqm_bitrate_notify(struct net_device *dev,
-+				 u32 bitrate,
-+				 gfp_t gfp)
-+{
-+	struct wireless_dev *wdev = dev->ieee80211_ptr;
-+	struct wiphy *wiphy = wdev->wiphy;
-+	struct cfg80211_registered_device *rdev = wiphy_to_dev(wiphy);
-+
-+	/* Indicate roaming trigger event to user space */
-+	nl80211_send_cqm_bitrate_notify(rdev, dev, bitrate, gfp);
-+}
-+EXPORT_SYMBOL(cfg80211_cqm_bitrate_notify);
--- 
-1.7.1
+ drivers/staging/brcm80211/brcmfmac/bcmsdh.c        |   16 +-
+ drivers/staging/brcm80211/brcmfmac/bcmsdh_linux.c  |   20 +-
+ drivers/staging/brcm80211/brcmfmac/bcmsdh_sdmmc.c  |   27 +--
+ .../brcm80211/brcmfmac/bcmsdh_sdmmc_linux.c        |    4 +-
+ drivers/staging/brcm80211/brcmfmac/dhd.h           |    6 +-
+ drivers/staging/brcm80211/brcmfmac/dhd_cdc.c       |   20 +--
+ drivers/staging/brcm80211/brcmfmac/dhd_common.c    |   18 +-
+ .../staging/brcm80211/brcmfmac/dhd_custom_gpio.c   |    2 +-
+ drivers/staging/brcm80211/brcmfmac/dhd_linux.c     |   53 ++----
+ drivers/staging/brcm80211/brcmfmac/dhd_sdio.c      |   98 +++------
+ drivers/staging/brcm80211/include/bcmutils.h       |    2 +-
+ drivers/staging/brcm80211/include/linux_osl.h      |   18 --
+ drivers/staging/brcm80211/phy/wlc_phy_cmn.c        |   20 +-
+ drivers/staging/brcm80211/phy/wlc_phy_lcn.c        |   87 ++++----
+ drivers/staging/brcm80211/phy/wlc_phy_n.c          |   88 ++++----
+ drivers/staging/brcm80211/sys/wl_mac80211.c        |   33 ++--
+ drivers/staging/brcm80211/sys/wlc_alloc.c          |   57 ++---
+ drivers/staging/brcm80211/sys/wlc_ampdu.c          |   12 +-
+ drivers/staging/brcm80211/sys/wlc_antsel.c         |    8 +-
+ drivers/staging/brcm80211/sys/wlc_bmac.c           |   32 ++--
+ drivers/staging/brcm80211/sys/wlc_channel.c        |    8 +-
+ drivers/staging/brcm80211/sys/wlc_event.c          |   13 +-
+ drivers/staging/brcm80211/sys/wlc_mac80211.c       |   19 +-
+ drivers/staging/brcm80211/sys/wlc_phy_shim.c       |    8 +-
+ drivers/staging/brcm80211/util/aiutils.c           |    8 +-
+ drivers/staging/brcm80211/util/bcmotp.c            |    6 +-
+ drivers/staging/brcm80211/util/bcmsrom.c           |   36 ++--
+ drivers/staging/brcm80211/util/hnddma.c            |   43 ++---
+ drivers/staging/brcm80211/util/hndpmu.c            |   14 +-
+ drivers/staging/brcm80211/util/linux_osl.c         |  228 --------------------
+ drivers/staging/brcm80211/util/nicpci.c            |   15 +-
+ drivers/staging/brcm80211/util/nvram/nvram_ro.c    |    9 +-
+ drivers/staging/brcm80211/util/sbutils.c           |   14 +-
+ drivers/staging/brcm80211/util/siutils.c           |   21 +-
+ 34 files changed, 335 insertions(+), 728 deletions(-)
 
