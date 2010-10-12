@@ -1,23 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from col0-omc2-s16.col0.hotmail.com ([65.55.34.90]:22189 "EHLO
-	col0-omc2-s16.col0.hotmail.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751975Ab0JEQuL convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 5 Oct 2010 12:50:11 -0400
-Message-ID: <COL121-W2324D5108D65D0725CD464A16D0@phx.gbl>
-From: Raj V M <rajkumarvm@live.com>
-To: <linux-wireless@vger.kernel.org>
-Subject: Default WMM parameter for beacon queue
-Date: Tue, 5 Oct 2010 22:14:00 +0530
-Content-Type: text/plain; charset=US-ASCII
+Received: from mail-qy0-f181.google.com ([209.85.216.181]:41398 "EHLO
+	mail-qy0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753441Ab0JLQyU convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 12 Oct 2010 12:54:20 -0400
 MIME-Version: 1.0
+In-Reply-To: <1286895206-3030-1-git-send-email-linville@tuxdriver.com>
+References: <20101012163519.a88f2040.sfr@canb.auug.org.au>
+	<1286895206-3030-1-git-send-email-linville@tuxdriver.com>
+Date: Tue, 12 Oct 2010 12:54:17 -0400
+Message-ID: <AANLkTikjp=dpOOfjnvg=ivkb40_dE+oRLSEkzrycwirV@mail.gmail.com>
+Subject: Re: [PATCH] ath5k: fix build break from "ath5k: Print out opmode in debugfs"
+From: Bob Copeland <me@bobcopeland.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org,
+	Stephen Rothwell <sfr@canb.auug.org.au>,
+	Ben Greear <greearb@candelatech.com>,
+	linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Tue, Oct 12, 2010 at 10:53 AM, John W. Linville
+<linville@tuxdriver.com> wrote:
+> Without this and with CONFIG_ATH_DEBUG not set...
+>
+> ERROR: ".ath_opmode_to_string" [drivers/net/wireless/ath/ath5k/ath5k.ko] undefined!
+>
+> Signed-off-by: John W. Linville <linville@tuxdriver.com>
+> ---
+> Please don't make me commit such an ugly patch...
+>
+>  drivers/net/wireless/ath/ath5k/base.c  |    4 ++++
+>  drivers/net/wireless/ath/ath5k/debug.c |    6 +++++-
+>  2 files changed, 9 insertions(+), 1 deletions(-)
+>
+> diff --git a/drivers/net/wireless/ath/ath5k/base.c b/drivers/net/wireless/ath/ath5k/base.c
+> index c9732a6..b839a6b 100644
+> --- a/drivers/net/wireless/ath/ath5k/base.c
+> +++ b/drivers/net/wireless/ath/ath5k/base.c
+> @@ -562,10 +562,14 @@ static void ath_do_set_opmode(struct ath5k_softc *sc)
+>  {
+>        struct ath5k_hw *ah = sc->ah;
+>        ath5k_hw_set_opmode(ah, sc->opmode);
+> +#ifdef CONFIG_ATH_DEBUG
+>        ATH5K_DBG(sc, ATH5K_DEBUG_MODE, "mode setup opmode %d (%s)\n",
+>                  sc->opmode,
+>                  ath_opmode_to_string(sc->opmode) ?
+>                  ath_opmode_to_string(sc->opmode) : "UKNOWN");
 
-Hi,
+>From the original patch: UKNOWN?
 
-What is the default WMM parameter (aifs, cwmin & cwmax) for beacon and CAB queue? and where to find. Please help
+I guess making ath_opmode_to_string always around (no-op in non-debug case)
+would also suffice.  (reads on...) ah, yes, Joe's patch does this.
 
-- VMRaj
- 		 	   		  
+-- 
+Bob Copeland %% www.bobcopeland.com
