@@ -1,35 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:41276 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753580Ab0JNHRr (ORCPT
+Received: from dallas.jonmasters.org ([72.29.103.172]:40177 "EHLO
+	dallas.jonmasters.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932349Ab0JLTTX (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 14 Oct 2010 03:17:47 -0400
-Subject: Re: [PATCH 4/6] Add a bitrate threshold config hook in mac80211
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Paul Stewart <pstew@google.com>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <20101013224851.D58252094C@glenhelen.mtv.corp.google.com>
-References: <20101013224851.D58252094C@glenhelen.mtv.corp.google.com>
+	Tue, 12 Oct 2010 15:19:23 -0400
+Subject: RE: [PATCH] [staging] brcm80211: fix radio disabled on attempt to
+ bring up interface
+From: Jon Masters <jonathan@jonmasters.org>
+To: Brett Rudley <brudley@broadcom.com>
+Cc: "jcm@jonmasters.org" <jcm@jonmasters.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Henry Ptasinski <henryp@broadcom.com>,
+	Nohee Ko <noheek@broadcom.com>,
+	LKML <linux-kernel@vger.kernel.org>
+In-Reply-To: <7A94256FD72B884D9E7C55586C3CBCEE1382808041@SJEXCHCCR01.corp.ad.broadcom.com>
+References: <1286872198-10664-1-git-send-email-jcm@jonmasters.org>
+	 <7A94256FD72B884D9E7C55586C3CBCEE1382808041@SJEXCHCCR01.corp.ad.broadcom.com>
 Content-Type: text/plain; charset="UTF-8"
-Date: Thu, 14 Oct 2010 09:18:28 +0200
-Message-ID: <1287040708.4641.10.camel@jlt3.sipsolutions.net>
+Date: Tue, 12 Oct 2010 15:17:39 -0400
+Message-ID: <1286911059.20957.5.camel@constitution.bos.jonmasters.org>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2010-10-13 at 15:17 -0700, Paul Stewart wrote:
-> Add a hook in mac80211 to accept bitrate threshold configuration
-> calls from nl80211.  This assigns a couple new variables in the
-> bss and ifmgd structs.
+On Tue, 2010-10-12 at 11:34 -0700, Brett Rudley wrote:
 
-> @@ -247,6 +249,7 @@ struct ieee80211_bss_conf {
->  	u16 ht_operation_mode;
->  	s32 cqm_rssi_thold;
->  	u32 cqm_rssi_hyst;
-> +	u32 cqm_bitrate_thold;
+> > The brcm80211 driver does not correctly handle the case that the wireless
+> > radio hardware is physically disabled during interface initialization. An
+> > attempt is made to check whether the radio is disabled, and in the case
+> > that it is, a background worker is setup to monitor for the radio coming
+> > online, but the interface queues are incorrectly brought up anyway. The
+> > value BCME_RADIOOFF should be returned in wlc_up in such error case.
 
-Since there's no way for drivers to utilise this, don't add it in public
-API.
+> Signed-off-by: Brett Rudley <brudley@broadcom.com>
 
-johannes
+Thanks. The patch actually didn't use full paths to the staging tree
+(was relative to the driver directory) because it was crazy late and my
+brain was tired by the time I found the problem. You'll sort it out.
+
+Anyway. So rfkill works with soft block/unblock, but doesn't seem to
+correctly report the state of the physical button on this laptop. I
+don't think that's your domain (as I said, I freely admit that I need to
+find some time, sometime, to understand how rfkill is supposed to work).
+What I do think is your domain is the fact that suspend/resume with this
+driver isn't working. The system does suspend, and it does resume, but
+the driver gets itself in a twist and never talks to the outside world
+again - just keeps logging an error. I'll send you some debug info
+tonight or in the next few days so we can get that fixed up too.
+
+Can I ask, also, do you plan on cleaning up the WLC HIGH/LOW stuff or
+adding some comments to the code so that people realize this is for
+PCI/USB dongle stuff? I spent some time going through the code trying to
+figure out what the WL_LOCK/UNLOCK stuff was about and why it was
+missing in the case of a PCI device :) It seems like this driver is
+partly based on generic code used in other drivers, and that's fine, but
+I suspect some of it will need more cleanup before it is merged.
+
+Jon.
+
 
