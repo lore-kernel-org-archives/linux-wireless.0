@@ -1,80 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:6952 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755197Ab0JVPBe (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 22 Oct 2010 11:01:34 -0400
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless@vger.kernel.org,
-	Stanislaw Gruszka <sgruszka@redhat.com>
-Subject: [PATCH 1/7] iwlwifi: warn when send tx power settings during scan
-Date: Fri, 22 Oct 2010 17:04:24 +0200
-Message-Id: <1287759870-5758-1-git-send-email-sgruszka@redhat.com>
+Received: from mail.candelatech.com ([208.74.158.172]:45322 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756027Ab0JLCCy (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 11 Oct 2010 22:02:54 -0400
+Message-ID: <4CB3C1C5.1070107@candelatech.com>
+Date: Mon, 11 Oct 2010 19:02:45 -0700
+From: Ben Greear <greearb@candelatech.com>
+MIME-Version: 1.0
+To: Bruno Randolf <br1@einfach.org>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: Antenna diversity in ath5k.
+References: <4CAF60F0.4030506@candelatech.com> <201010121051.55691.br1@einfach.org>
+In-Reply-To: <201010121051.55691.br1@einfach.org>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Add WARN_ONCE when scanning is pending. Use STATUS_SCAN_HW bit since we
-can have scan canceled or completed but STATUS_SCANNING bit still set.
+On 10/11/2010 06:51 PM, Bruno Randolf wrote:
+> On Sat October 9 2010 03:20:32 Ben Greear wrote:
+>>   this, I wanted to see if anyone else was
+>> actively pursuing it.
+>
+> someone pointed you to my patches. i have been using them since month locally
+> and i think the are fine as a general API, but there has been some reluctance
+> to get them merged. i still don't really get why. i will fix the one remaining
+> issue i know of (don't allow antenna setting when if up) rebase them and
+> bother luis again, soon... :) if you have any feedback or ideas for
+> improvement, please let me know.
 
-Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
----
- drivers/net/wireless/iwlwifi/iwl-3945.c    |    4 ++++
- drivers/net/wireless/iwlwifi/iwl-4965.c    |   10 +++-------
- drivers/net/wireless/iwlwifi/iwl-agn-lib.c |    4 ++++
- 3 files changed, 11 insertions(+), 7 deletions(-)
+I'm afraid I took the easy way and just used debugfs to read/set the values.
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-3945.c b/drivers/net/wireless/iwlwifi/iwl-3945.c
-index 176e525..93db6a0 100644
---- a/drivers/net/wireless/iwlwifi/iwl-3945.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-3945.c
-@@ -1451,6 +1451,10 @@ static int iwl3945_send_tx_power(struct iwl_priv *priv)
- 	};
- 	u16 chan;
- 
-+	if (WARN_ONCE(test_bit(STATUS_SCAN_HW, &priv->status),
-+		      "TX Power requested while scanning!\n"))
-+		return -EIO;
-+
- 	chan = le16_to_cpu(priv->contexts[IWL_RXON_CTX_BSS].active.channel);
- 
- 	txpower.band = (priv->band == IEEE80211_BAND_5GHZ) ? 0 : 1;
-diff --git a/drivers/net/wireless/iwlwifi/iwl-4965.c b/drivers/net/wireless/iwlwifi/iwl-4965.c
-index b207e3e..924f335 100644
---- a/drivers/net/wireless/iwlwifi/iwl-4965.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-4965.c
-@@ -1377,13 +1377,9 @@ static int iwl4965_send_tx_power(struct iwl_priv *priv)
- 	u8 ctrl_chan_high = 0;
- 	struct iwl_rxon_context *ctx = &priv->contexts[IWL_RXON_CTX_BSS];
- 
--	if (test_bit(STATUS_SCANNING, &priv->status)) {
--		/* If this gets hit a lot, switch it to a BUG() and catch
--		 * the stack trace to find out who is calling this during
--		 * a scan. */
--		IWL_WARN(priv, "TX Power requested while scanning!\n");
--		return -EAGAIN;
--	}
-+	if (WARN_ONCE(test_bit(STATUS_SCAN_HW, &priv->status),
-+		      "TX Power requested while scanning!\n"))
-+		return -EIO;
- 
- 	band = priv->band == IEEE80211_BAND_2GHZ;
- 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-lib.c b/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
-index b555edd..5d76a5b 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
-@@ -496,6 +496,10 @@ int iwlagn_send_tx_power(struct iwl_priv *priv)
- 	struct iwlagn_tx_power_dbm_cmd tx_power_cmd;
- 	u8 tx_ant_cfg_cmd;
- 
-+	if (WARN_ONCE(test_bit(STATUS_SCAN_HW, &priv->status),
-+		      "TX Power requested while scanning!\n"))
-+		return -EIO;
-+
- 	/* half dBm need to multiply */
- 	tx_power_cmd.global_lmt = (s8)(2 * priv->tx_power_user_lmt);
- 
+We haven't done any actual testing of this feature with traffic, but setting/reading
+the values seems to work fine.
+
+Thanks,
+Ben
+
+>
+> bruno
+
+
 -- 
-1.7.1
-
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
