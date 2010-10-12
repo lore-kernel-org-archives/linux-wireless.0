@@ -1,62 +1,147 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f46.google.com ([209.85.214.46]:46721 "EHLO
-	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751085Ab0JYSgn (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 25 Oct 2010 14:36:43 -0400
-Message-ID: <4CC5CE47.2020607@lwfinger.net>
-Date: Mon, 25 Oct 2010 13:36:55 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-To: Arnd Hannemann <arnd@arndnet.de>
-CC: "David S. Miller" <davem@davemloft.net>, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
-	Eric Dumazet <eric.dumazet@gmail.com>
-Subject: Re: [PATCH] net: b43legacy: fix compile error
-References: <1288017690-31248-1-git-send-email-arnd@arndnet.de> <4CC5A301.1080606@lwfinger.net> <4CC5CBC4.7060308@arndnet.de>
-In-Reply-To: <4CC5CBC4.7060308@arndnet.de>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from smtp.nokia.com ([147.243.1.47]:46419 "EHLO mgw-sa01.nokia.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932529Ab0JLOSV (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 12 Oct 2010 10:18:21 -0400
+Subject: Re: [PATCH v3 03/03] wl1271: 11n Support, functionality and
+ configuration ability
+From: Luciano Coelho <luciano.coelho@nokia.com>
+To: ext Shahar Levi <shahar_levi@ti.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <1286812038-19013-4-git-send-email-shahar_levi@ti.com>
+References: <1286812038-19013-1-git-send-email-shahar_levi@ti.com>
+	 <1286812038-19013-4-git-send-email-shahar_levi@ti.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Tue, 12 Oct 2010 17:18:15 +0300
+Message-ID: <1286893095.12528.75.camel@chilepepper>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 10/25/2010 01:26 PM, Arnd Hannemann wrote:
-> Am 25.10.2010 17:32, schrieb Larry Finger:
->> On 10/25/2010 09:41 AM, Arnd Hannemann wrote:
->>> On todays linus tree the following compile error happened to me:
->>>
->>>   CC [M]  drivers/net/wireless/b43legacy/xmit.o
->>> In file included from include/net/dst.h:11,
->>>                  from drivers/net/wireless/b43legacy/xmit.c:31:
->>> include/net/dst_ops.h:28: error: expected ':', ',', ';', '}' or '__attribute__' before '____cacheline_aligned_in_smp'
->>> include/net/dst_ops.h: In function 'dst_entries_get_fast':
->>> include/net/dst_ops.h:33: error: 'struct dst_ops' has no member named 'pcpuc_entries'
->>> include/net/dst_ops.h: In function 'dst_entries_get_slow':
->>> include/net/dst_ops.h:41: error: 'struct dst_ops' has no member named 'pcpuc_entries'
->>> include/net/dst_ops.h: In function 'dst_entries_add':
->>> include/net/dst_ops.h:49: error: 'struct dst_ops' has no member named 'pcpuc_entries'
->>> include/net/dst_ops.h: In function 'dst_entries_init':
->>> include/net/dst_ops.h:55: error: 'struct dst_ops' has no member named 'pcpuc_entries'
->>> include/net/dst_ops.h: In function 'dst_entries_destroy':
->>> include/net/dst_ops.h:60: error: 'struct dst_ops' has no member named 'pcpuc_entries'
->>> make[4]: *** [drivers/net/wireless/b43legacy/xmit.o] Error 1
->>> make[3]: *** [drivers/net/wireless/b43legacy] Error 2
->>> make[2]: *** [drivers/net/wireless] Error 2
->>> make[1]: *** [drivers/net] Error 2
->>> make: *** [drivers] Error 2
->>>
->>> This patch fixes this issue by adding "linux/cache.h" as an include to
->>> "include/net/dst_ops.h".
->>
->> Strange. Compiling b43legacy from the linux-2.6.git tree (git describe is
->> v2.6.36-4464-g229aebb) works fine on x86_64. I wonder what is different.
+On Mon, 2010-10-11 at 17:47 +0200, ext Shahar Levi wrote:
+> Add 11n ability in scan, connection and using MCS rates.
+> The configuration is temporary due to the code incomplete and
+> still in testing process. That plans to be remove in the future.
 > 
-> Exactly the same git describe here.
-> Maybe your arch includes cache.h already, in my case its a compile for ARM (shmobile).
+> Signed-off-by: Shahar Levi <shahar_levi@ti.com>
+> ---
 
-That probably makes the difference. Using Eric's fix that removes the #include
-<linux/dst.h> should be better. Does it work for you?
+...
 
-There are probably a lot more of the system includes that may not be needed. If
-I send you a patch removing them, could you test?
+> @@ -1709,6 +1721,7 @@ static void wl1271_op_bss_info_changed(struct ieee80211_hw *hw,
+>  {
+>  	enum wl1271_cmd_ps_mode mode;
+>  	struct wl1271 *wl = hw->priv;
+> +	struct ieee80211_sta *sta = ieee80211_find_sta(vif, bss_conf->bssid);
+>  	bool do_join = false;
+>  	bool set_assoc = false;
+>  	int ret;
+> @@ -1927,6 +1940,45 @@ static void wl1271_op_bss_info_changed(struct ieee80211_hw *hw,
+>  		}
+>  	}
+>  
+> +	if (sta) {
+> +		/*
+> +		 * Takes care of: New association with HT enable,
+> +		 *                HT information change in beacon.
+> +		 */
+> +		if ((changed & BSS_CHANGED_HT) &&
+> +		    (bss_conf->channel_type != NL80211_CHAN_NO_HT)) {
 
-Larry
+You could move the if (sta) into the same if, as I proposed before:
+
+	if (sta && changed & BSS_CHANGED_HT) &&
+	    (bss_conf->channel_type != NL80211_CHAN_NO_HT)) {
+
+
+
+> +			ret = wl1271_acx_set_ht_capabilities(wl,
+> +					&sta->ht_cap,
+> +					true);
+
+...then you don't need to break this line so much...
+
+
+> +			if (ret < 0) {
+> +				wl1271_warning("Set ht cap true failed %d",
+> +						ret);
+
+...nor this...
+
+> +				goto out_sleep;
+> +			}
+> +
+> +			ret = wl1271_acx_set_ht_information(wl,
+> +					bss_conf->ht_operation_mode);
+> +			if (ret < 0) {
+> +				wl1271_warning("Set ht information failed %d",
+> +						ret);
+
+...nor this...
+
+
+> +		/*
+> +		 * Takes care of: New association without HT,
+> +		 *                Disassociate.
+> +		 */
+
+Disassociation.
+
+
+> +		else if (changed & BSS_CHANGED_ASSOC) {
+
+Same in this block about the if (sta) thingy:
+
+	if (sta && changed & BSS_CHANGED_ASSOC) {
+
+
+> @@ -2107,14 +2158,14 @@ static struct ieee80211_channel wl1271_channels[] = {
+>  /* mapping to indexes for wl1271_rates */
+>  static const u8 wl1271_rate_to_idx_2ghz[] = {
+>  	/* MCS rates are used only with 11n */
+> -	CONF_HW_RXTX_RATE_UNSUPPORTED, /* CONF_HW_RXTX_RATE_MCS7 */
+> -	CONF_HW_RXTX_RATE_UNSUPPORTED, /* CONF_HW_RXTX_RATE_MCS6 */
+> -	CONF_HW_RXTX_RATE_UNSUPPORTED, /* CONF_HW_RXTX_RATE_MCS5 */
+> -	CONF_HW_RXTX_RATE_UNSUPPORTED, /* CONF_HW_RXTX_RATE_MCS4 */
+> -	CONF_HW_RXTX_RATE_UNSUPPORTED, /* CONF_HW_RXTX_RATE_MCS3 */
+> -	CONF_HW_RXTX_RATE_UNSUPPORTED, /* CONF_HW_RXTX_RATE_MCS2 */
+> -	CONF_HW_RXTX_RATE_UNSUPPORTED, /* CONF_HW_RXTX_RATE_MCS1 */
+> -	CONF_HW_RXTX_RATE_UNSUPPORTED, /* CONF_HW_RXTX_RATE_MCS0 */
+> +	7,                            /* CONF_HW_RXTX_RATE_MCS7 */
+> +	6,                            /* CONF_HW_RXTX_RATE_MCS6 */
+> +	5,                            /* CONF_HW_RXTX_RATE_MCS5 */
+> +	4,                            /* CONF_HW_RXTX_RATE_MCS4 */
+> +	3,                            /* CONF_HW_RXTX_RATE_MCS3 */
+> +	2,                            /* CONF_HW_RXTX_RATE_MCS2 */
+> +	1,                            /* CONF_HW_RXTX_RATE_MCS1 */
+> +	0,                            /* CONF_HW_RXTX_RATE_MCS0 */
+>  
+>  	11,                            /* CONF_HW_RXTX_RATE_54   */
+>  	10,                            /* CONF_HW_RXTX_RATE_48   */
+> @@ -2137,6 +2188,7 @@ static const u8 wl1271_rate_to_idx_2ghz[] = {
+>  /* 11n STA capabilities */
+>  #define HW_RX_HIGHEST_RATE	65
+>  
+> +#ifdef CONFIG_WL1271_HT
+>  #define WL1271_HT_CAP { \
+>  	.cap = IEEE80211_HT_CAP_GRN_FLD | IEEE80211_HT_CAP_SGI_20, \
+>  	.ht_supported = true, \
+> @@ -2148,6 +2200,11 @@ static const u8 wl1271_rate_to_idx_2ghz[] = {
+>  		.tx_params = IEEE80211_HT_MCS_TX_DEFINED, \
+>  		}, \
+>  }
+> +#else
+> +#define WL1271_HT_CAP { \
+> +	.ht_supported = false, \
+> +}
+> +#endif
+
+Would be nicer to have the ifdefs already when you create this macro
+(ie. patch 01/03), but you don't have the CONFIG flag at that point
+yet... but well, never mind.  No need to change it.
+
+
+-- 
+Cheers,
+Luca.
+
