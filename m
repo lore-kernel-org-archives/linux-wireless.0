@@ -1,45 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from comal.ext.ti.com ([198.47.26.152]:45515 "EHLO comal.ext.ti.com"
+Received: from nbd.name ([88.198.39.176]:40830 "EHLO ds10.nbd.name"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754501Ab0JKPom (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 11 Oct 2010 11:44:42 -0400
-From: Shahar Levi <shahar_levi@ti.com>
-To: <linux-wireless@vger.kernel.org>
-Cc: Luciano Coelho <luciano.coelho@nokia.com>
-Subject: [PATCH v3 00/03] wl1271: 11n Support, add support to 80211n spec
-Date: Mon, 11 Oct 2010 17:47:15 +0200
-Message-Id: <1286812038-19013-1-git-send-email-shahar_levi@ti.com>
+	id S932529Ab0JLOIJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 12 Oct 2010 10:08:09 -0400
+From: Felix Fietkau <nbd@openwrt.org>
+To: linux-wireless@vger.kernel.org
+Cc: linville@tuxdriver.com, lrodriguez@atheros.com
+Subject: [PATCH 3/3] ath9k: add missing locking around ath9k_hw_proc_mib_event
+Date: Tue, 12 Oct 2010 16:08:03 +0200
+Message-Id: <1286892483-71182-3-git-send-email-nbd@openwrt.org>
+In-Reply-To: <1286892483-71182-2-git-send-email-nbd@openwrt.org>
+References: <1286892483-71182-1-git-send-email-nbd@openwrt.org>
+ <1286892483-71182-2-git-send-email-nbd@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Series that add 80211n spec support to wl1271: scan, connection via MCS rates
-Wl12xx driver add HT support:
-- Scan includes HT IE
-- Connection to HT devices
-- HT protection
-- Traffic via MCS rates
-- A-MSDU in RX path
+ath9k_hw_proc_mib_event updates the cycle counters, so it common->cc_lock
+must be acquired.
 
-Missing functionality is:
-- BA session as Initiator and Receiver
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+---
+ drivers/net/wireless/ath/ath9k/main.c |    2 ++
+ 1 files changed, 2 insertions(+), 0 deletions(-)
 
-Changes from v2:
-- Add logic on wl1271_op_bss_info_changed()
-- add CONFIG_WL1271_HT in tx & rx
-- Rebase to latest wl12xx git
-- Clean to Linux code style. 
-
-Shahar Levi (3):
-  wl1271: 11n Support, Add Definitions
-  wl1271: 11n Support, ACX Commands
-  wl1271: 11n Support, functionality and configuration ability
-
- drivers/net/wireless/wl12xx/Kconfig       |   10 +++
- drivers/net/wireless/wl12xx/wl1271.h      |   11 +++-
- drivers/net/wireless/wl12xx/wl1271_acx.c  |   85 ++++++++++++++++++++++
- drivers/net/wireless/wl12xx/wl1271_acx.h  |   88 +++++++++++++++++++++++
- drivers/net/wireless/wl12xx/wl1271_main.c |  108 ++++++++++++++++++++++++-----
- drivers/net/wireless/wl12xx/wl1271_rx.c   |    6 ++
- drivers/net/wireless/wl12xx/wl1271_tx.c   |   11 +++
- 7 files changed, 301 insertions(+), 18 deletions(-)
+diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
+index 8656491..fa9be51 100644
+--- a/drivers/net/wireless/ath/ath9k/main.c
++++ b/drivers/net/wireless/ath/ath9k/main.c
+@@ -762,7 +762,9 @@ irqreturn_t ath_isr(int irq, void *dev)
+ 		 * it will clear whatever condition caused
+ 		 * the interrupt.
+ 		 */
++		spin_lock(&common->cc_lock);
+ 		ath9k_hw_proc_mib_event(ah);
++		spin_unlock(&common->cc_lock);
+ 		ath9k_hw_set_interrupts(ah, ah->imask);
+ 	}
+ 
+-- 
+1.7.2.2
 
