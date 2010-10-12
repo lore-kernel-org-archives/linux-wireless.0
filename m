@@ -1,74 +1,116 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms3.broadcom.com ([216.31.210.19]:2256 "EHLO MMS3.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751720Ab0JTVuW convert rfc822-to-8bit (ORCPT
+Received: from mail.candelatech.com ([208.74.158.172]:33043 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754868Ab0JLTvn (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 20 Oct 2010 17:50:22 -0400
-Message-ID: <4CBF640C.4080405@broadcom.com>
-Date: Wed, 20 Oct 2010 14:50:04 -0700
-From: "Henry Ptasinski" <henryp@broadcom.com>
+	Tue, 12 Oct 2010 15:51:43 -0400
+Message-ID: <4CB4BC47.7000907@candelatech.com>
+Date: Tue, 12 Oct 2010 12:51:35 -0700
+From: Ben Greear <greearb@candelatech.com>
 MIME-Version: 1.0
-To: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-cc: "Brett Rudley" <brudley@broadcom.com>,
-	"Nohee Ko" <noheek@broadcom.com>,
-	"Greg Kroah-Hartman" <gregkh@suse.de>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	b43-dev <b43-dev@lists.infradead.org>,
-	"Henry Ptasinski" <henryp@broadcom.com>
-Subject: Re: Request for free-distributable Broadcom's (G|LP)-PHY
- firmware
-References: <AANLkTik45KLdLf5UpjPtXTNgy4Df_BupyQ3SzRr6gZgC@mail.gmail.com>
- <AANLkTin_JcEyT21dTS=Ew868HJvZQ2FVZBGXjCZn=8O_@mail.gmail.com>
-In-Reply-To: <AANLkTin_JcEyT21dTS=Ew868HJvZQ2FVZBGXjCZn=8O_@mail.gmail.com>
-Content-Type: text/plain;
- charset=utf-8;
- format=flowed
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+CC: Johannes Berg <johannes@sipsolutions.net>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: memory clobber in rx path, maybe related to ath9k.
+References: <4CAB59B2.5050106@candelatech.com> <AANLkTi=3dHbB5tmQDp3Ba54-DqQydVCkNdFo1vKbfaGY@mail.gmail.com> <4CAB6B08.4050801@candelatech.com> <4CAE0474.4090605@candelatech.com> <1286475250.20974.22.camel@jlt3.sipsolutions.net> <AANLkTinbRSnPVgbBxvVpMdnP+K--bye=Q-miHf4X44kz@mail.gmail.com> <4CAE13F6.2010003@candelatech.com> <AANLkTimEZ5GY7WFz-F4YyC+6MEwNn2Dki4tonp645XrS@mail.gmail.com> <4CAE1DFB.303@candelatech.com> <1286479642.20974.32.camel@jlt3.sipsolutions.net> <AANLkTimxp703Gy_Atg8=wpFszRDR=OJCXwOUKRh-a-d7@mail.gmail.com> <AANLkTi=t-P_5c14brJohM8UgxeOknv+3syO=7W=ix6qf@mail.gmail.com> <AANLkTinC46a+nE-XOQuBCmRJwjzgh24uC7ZJ7HtbVHnT@mail.gmail.com> <4CB378CD.1080800@candelatech.com> <AANLkTim42zmDwf744BCrPwa1kT5ph57bNMyvSyOpesVv@mail.gmail.com> <4CB3D598.7050904@candelatech.com> <AANLkTimPEg3ZU8CQUXfdpGdfbmhdE9O=GNY=g9gysTo4@mail.gmail.com> <4CB4AA89.1070009@candelatech.com> <AANLkTinpWvMtexFTYVm5rEZY=gY7qY8WxHFtVGB0o6Se@mail.gmail.com> <4CB4AC61.207@candelatech.com>
+In-Reply-To: <4CB4AC61.207@candelatech.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 10/18/2010 05:02 PM, Rafał Miłecki wrote:
-> W dniu 9 października 2010 00:07 użytkownik Rafał Miłecki
-> <zajec5@gmail.com>  napisał:
->> Hi Broadcom fellows!
+On 10/12/2010 11:43 AM, Ben Greear wrote:
+> On 10/12/2010 11:40 AM, Luis R. Rodriguez wrote:
+>> On Tue, Oct 12, 2010 at 11:35 AM, Ben Greear<greearb@candelatech.com>
+>> wrote:
+
+>>> This code looks weird to me. One of the paprd branches
+>>> deletes the skb, the other doesn't appear to. Neither
+>>> null out bf->bf_mpdu, which would appear to leave a dangling
+>>> pointer in at least the dev_kfree_skb_any() branch.
+>>>
+>>> ath_tx_complete frees it's skb in all cases, so another
+>>> bf->bf_mpdu dangling pointer issue.
+>>>
+>>> Maybe at the least we should null out bf->bf_mpdu when
+>>> skb is consumed?
 >>
->> It's great that afters long years of... well, pretty horrible
->> relations with Linux/opensource you have taken actions to change your
->> image. I guess brcm80211 it's perfect yet, and people may like it more
->> or less, but it's no doubt you made step in the right direction.
->> Thanks for that!
->>
->> As you should know, you released driver and firmware for 802.11n
->> devices only. I believe it was right, as these device seem to be the
->> most nowadays and were the only ones without any open source support.
->> For older devices: G-PHY and LP-PHY we have working b43 driver that is
->> in relatively good shape. However... there is one thing we still miss
->> for olders cards.
->>
->> Every time someone wants to use b43 it's necessary to download quite
->> big package from openwrt, unpack it, extract firmware and install it.
->> That simply happens because we don't have just-firmware files with
->> nice licensing. And of course there goes my request:
->>
->> *Can you submit G-PHY and LP-PHY firmware to linux-firmware using some
->> normal licensing, please?*
->>
->> This is of course not the best I could wish for, but is important
->> anyway and it should be easy decision. Ideally you could release
->> sources of firmware (plus toolchain eventualy... however, we have nice
->> toolchain from Michael), but I guess it would need more time and
->> decisions to make it happen. So as for now I guess we would be happy
->> with just closed source but easy-distributable firmware. Could you
->> release, submit it?
+>> You're reading my mind, that was what I was going to test today. Still
+>> doing e-mail sweep though.
 >
-> Greg: I didn't receive any answer from Broadcom for any mail. Do you
-> maybe have any "working" contact with this company? :|
+> I'm trying to put together a patch now..but the paprd branch makes
+> no sense at all.
 >
+> Shouldn't it also free the skb in the complete(&sc->paprd_complete) branch?
+> I don't see anything that uses the skb, and nothing that frees it.
+>
+> if (bf->bf_state.bfs_paprd) {
+> if (time_after(jiffies,
+> bf->bf_state.bfs_paprd_timestamp +
+> msecs_to_jiffies(ATH_PAPRD_TIMEOUT)))
+> dev_kfree_skb_any(skb);
+> else
+> complete(&sc->paprd_complete);
 
-Sorry for the delay in responding.  We are exploring what is possible 
-but for the moment the answer is no. At present our focus is on 
-providing the best open source solution we can for 4313, 43224, 43225, 
-4329 and future chips sets.
+I tried this patch, but the memory poision warnings continue.
+Might still be a useful patch though...
 
-- Henry
+[greearb@build-32 mac80211]$ git diff
+diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
+index 8656491..f43a004 100644
+--- a/drivers/net/wireless/ath/ath9k/main.c
++++ b/drivers/net/wireless/ath/ath9k/main.c
+@@ -398,7 +398,7 @@ void ath_paprd_calibrate(struct work_struct *work)
+                                   "Timeout waiting for paprd training on "
+                                   "TX chain %d\n",
+                                   chain);
+-                       goto fail_paprd;
++                       break;
+                 }
 
+                 if (!ar9003_paprd_is_done(ah))
+@@ -416,7 +416,6 @@ void ath_paprd_calibrate(struct work_struct *work)
+                 ath_paprd_activate(sc);
+         }
+
+-fail_paprd:
+         ath9k_ps_restore(sc);
+  }
+
+diff --git a/drivers/net/wireless/ath/ath9k/xmit.c b/drivers/net/wireless/ath/ath9k/xmit.c
+index 942be55..d39b4b5 100644
+--- a/drivers/net/wireless/ath/ath9k/xmit.c
++++ b/drivers/net/wireless/ath/ath9k/xmit.c
+@@ -1919,17 +1919,17 @@ static void ath_tx_complete_buf(struct ath_softc *sc, struct ath_buf *bf,
+         dma_unmap_single(sc->dev, bf->bf_dmacontext, skb->len, DMA_TO_DEVICE);
+
+         if (bf->bf_state.bfs_paprd) {
+-               if (time_after(jiffies,
+-                              bf->bf_state.bfs_paprd_timestamp +
+-                              msecs_to_jiffies(ATH_PAPRD_TIMEOUT)))
+-                       dev_kfree_skb_any(skb);
+-               else
+-                       complete(&sc->paprd_complete);
++               /* ath_paprd_calibrate owns the skb. */
++               complete(&sc->paprd_complete);
+         } else {
+-               ath_tx_complete(sc, skb, bf->aphy, tx_flags);
++               /* stat_tx must be called first, it references skb. */
+                 ath_debug_stat_tx(sc, txq, bf, ts);
++               ath_tx_complete(sc, skb, bf->aphy, tx_flags);
+         }
+
++       /* At this point, skb is consumed one way or another */
++       bf->bf_mpdu = NULL;
++
+         /*
+          * Return the list of ath_buf of this mpdu to free queue
+          */
+
+
+Thanks,
+Ben
+
+-- 
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
 
