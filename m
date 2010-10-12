@@ -1,36 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.19.149.2]:17821 "EHLO mail.atheros.com"
+Received: from mms1.broadcom.com ([216.31.210.17]:4103 "EHLO mms1.broadcom.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753795Ab0JPLpJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 16 Oct 2010 07:45:09 -0400
-Received: from mail.atheros.com ([10.10.20.105])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Sat, 16 Oct 2010 04:44:59 -0700
-Date: Sat, 16 Oct 2010 17:21:02 +0530
-From: Rajkumar Manoharan <rmanoharan@atheros.com>
-To: Felix Fietkau <nbd@openwrt.org>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"linville@tuxdriver.com" <linville@tuxdriver.com>,
-	Luis Rodriguez <Luis.Rodriguez@Atheros.com>
-Subject: Re: [PATCH 1/6] ath9k_hw: optimize interrupt mask changes
-Message-ID: <20101016115041.GA4028@vmraj-lnx.users.atheros.com>
-References: <1287165813-94331-1-git-send-email-nbd@openwrt.org>
+	id S1750808Ab0JLVY3 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 12 Oct 2010 17:24:29 -0400
+Date: Tue, 12 Oct 2010 14:17:26 -0700
+From: "Henry Ptasinski" <henryp@broadcom.com>
+To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+cc: "Suraj Sumangala" <Suraj.Sumangala@Atheros.com>,
+	"Luis Rodriguez" <Luis.Rodriguez@Atheros.com>,
+	"David Woodhouse" <dwmw2@infradead.org>,
+	"Marcel Holtmann" <marcel@holtmann.org>,
+	linux-bluetooth <linux-bluetooth@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	"Henry Ptasinski" <henryp@broadcom.com>
+Subject: Re: Firmware versioning best practices: ath3k-2.fw rename or
+ replace ath3k-1.fw ?
+Message-ID: <20101012211726.GE2678@broadcom.com>
+References: <20101008170258.GJ10149@tux> <4CAF5488.3030706@Atheros.com>
+ <20101008181508.GM10149@tux>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <1287165813-94331-1-git-send-email-nbd@openwrt.org>
+In-Reply-To: <20101008181508.GM10149@tux>
+Content-Type: text/plain;
+ charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Oct 15, 2010 at 11:33:28PM +0530, Felix Fietkau wrote:
-> @@ -751,8 +751,8 @@ chip_reset:
->  	ath_debug_stat_interrupt(sc, status);
->  
->  	if (sched) {
-> -		/* turn off every interrupt except SWBA */
-> -		ath9k_hw_set_interrupts(ah, (ah->imask & ATH9K_INT_SWBA));
-> +		/* turn off every interrupt */
-> +		ath9k_hw_disable_interrupts(ah);
+On Fri, Oct 08, 2010 at 11:15:08AM -0700, Luis R. Rodriguez wrote:
+> On Fri, Oct 08, 2010 at 10:27:36AM -0700, Suraj Sumangala wrote:
+> > Marcel had answered me before. It makes sense to have same file name.
+> > Other ways we end up changing the driver whenever there is a firmware 
+> > change.
+> 
+> > > I last tried to document a thread we had over this here:
+> > >
+> > > http://wireless.kernel.org/en/developers/Documentation/firmware-versioning
+> > >
+> 
+> Thanks, I've updated that link above to document bug fixing does not require
+> a filename change.
 
-won't it affect beacon generation?
+I don't really understand why you would not want to change the code revision
+part of the filename.  
 
-- Rajkumar
+I totally agree that you don't want to change the driver every time the
+firmware gets a bug fix, but wasn't that the whole point of splitting the name
+into API and code revisions portions, and symlinking the file to one that just
+has the API version?
+
+What's the issue with using the process as originally documented?
+
+- Henry
+
+
