@@ -1,54 +1,103 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from external1.orbit-lab.org ([128.6.192.131]:48811 "HELO
-	external1.orbit-lab.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1751830Ab0JSTDy (ORCPT
+Received: from mail-wy0-f174.google.com ([74.125.82.174]:48274 "EHLO
+	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932169Ab0JLMtX (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 19 Oct 2010 15:03:54 -0400
-Received: from repository3.orbit-lab.org (repository3.orbit-lab.org [10.50.0.41])
-	by external1.orbit-lab.org (Postfix) with ESMTP id 10A90418D8
-	for <linux-wireless@vger.kernel.org>; Tue, 19 Oct 2010 15:00:44 -0400 (EDT)
-Subject: Compat-wireless release for 2010-10-19 is baked
-To: <linux-wireless@vger.kernel.org>
-Message-Id: <20101019190352.97DE840F97@repository3.orbit-lab.org>
-Date: Tue, 19 Oct 2010 15:03:52 -0400 (EDT)
-From: compat@orbit-lab.org (Compat-wireless cronjob account)
+	Tue, 12 Oct 2010 08:49:23 -0400
+Received: by mail-wy0-f174.google.com with SMTP id 20so1342536wye.19
+        for <linux-wireless@vger.kernel.org>; Tue, 12 Oct 2010 05:49:23 -0700 (PDT)
+From: Ido Yariv <ido@wizery.com>
+To: Luciano Coelho <luciano.coelho@nokia.com>,
+	linux-wireless@vger.kernel.org
+Cc: Ido Yariv <ido@wizery.com>
+Subject: [PATCH v3 1/4] wl1271: TX aggregation optimization
+Date: Tue, 12 Oct 2010 14:49:09 +0200
+Message-Id: <1286887752-19321-2-git-send-email-ido@wizery.com>
+In-Reply-To: <1286887752-19321-1-git-send-email-ido@wizery.com>
+References: <1286887752-19321-1-git-send-email-ido@wizery.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
->From git://git.kernel.org/pub/scm/linux/kernel/git/mcgrof/compat-wireless-2.6
-   cf69aba..ab01eca  master     -> origin/master
->From git://git.kernel.org/pub/scm/linux/kernel/git/mcgrof/compat
-   5e389ef..cd70b7a  master     -> origin/master
->From git://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next
-   ab7e63a..976c093  history    -> origin/history
- + c2e82bb...abe626b master     -> origin/master  (forced update)
- * [new tag]         next-20101019 -> next-20101019
-cat: /var/opt/compat/compat-wireless-2.6/compat_version: No such file or directory
-cat: compat_base_tree: No such file or directory
-cat: compat_base_tree_version: No such file or directory
-cat: compat_version: No such file or directory
-cat: /var/opt/compat/compat-wireless-2.6/compat_version: No such file or directory
-scripts/Makefile.clean:17: /var/opt/compat/compat-wireless-2.6/drivers/net/wireless/hostap/Makefile: No such file or directory
-make[4]: *** No rule to make target `/var/opt/compat/compat-wireless-2.6/drivers/net/wireless/hostap/Makefile'.  Stop.
-make[3]: *** [/var/opt/compat/compat-wireless-2.6/drivers/net/wireless/hostap] Error 2
-make[2]: *** [/var/opt/compat/compat-wireless-2.6/drivers/net/wireless] Error 2
-make[1]: *** [_clean_/var/opt/compat/compat-wireless-2.6] Error 2
-make: *** [clean] Error 2
+In case the aggregation buffer is too small to hold all available packets,
+the buffer is transferred to the FW and no more packets are aggregated.
+Although there may be enough available TX blocks, no additional packets will
+be handled by the current TX work.
 
-compat-wireless code metrics
+Fix this by flushing the aggregation buffer when it's full, and continue
+transferring packets as long as there are enough available TX blocks.
 
-    740505 - Total upstream lines of code being pulled
-      2149 - backport code changes
-      1897 - backport code additions
-       252 - backport code deletions
-      6390 - backport from compat module
-      8539 - total backport code
-    1.1531 - % of code consists of backport work
-      1535 - Crap changes not yet posted
-      1491 - Crap additions not yet posted
-        44 - Crap deletions not yet posted
-    0.2073 - % of crap code
+Signed-off-by: Ido Yariv <ido@wizery.com>
+---
+ drivers/net/wireless/wl12xx/wl1271_tx.c |   27 +++++++++++++++++++--------
+ 1 files changed, 19 insertions(+), 8 deletions(-)
 
-Base tree: linux-next.git
-Base tree version: next-20101019
-compat-wireless release: compat-wireless-2010-10-14-7-gab01eca-pc
+diff --git a/drivers/net/wireless/wl12xx/wl1271_tx.c b/drivers/net/wireless/wl12xx/wl1271_tx.c
+index e3dc13c..b13b373 100644
+--- a/drivers/net/wireless/wl12xx/wl1271_tx.c
++++ b/drivers/net/wireless/wl12xx/wl1271_tx.c
+@@ -52,7 +52,7 @@ static int wl1271_tx_allocate(struct wl1271 *wl, struct sk_buff *skb, u32 extra,
+ 	int id, ret = -EBUSY;
+ 
+ 	if (buf_offset + total_len > WL1271_AGGR_BUFFER_SIZE)
+-		return -EBUSY;
++		return -EAGAIN;
+ 
+ 	/* allocate free identifier for the packet */
+ 	id = wl1271_tx_id(wl, skb);
+@@ -210,7 +210,8 @@ void wl1271_tx_work(struct work_struct *work)
+ 	struct sk_buff *skb;
+ 	bool woken_up = false;
+ 	u32 sta_rates = 0;
+-	u32 buf_offset;
++	u32 buf_offset = 0;
++	bool sent_packets = false;
+ 	int ret;
+ 
+ 	/* check if the rates supported by the AP have changed */
+@@ -233,9 +234,6 @@ void wl1271_tx_work(struct work_struct *work)
+ 		wl1271_acx_rate_policies(wl);
+ 	}
+ 
+-	/* Prepare the transfer buffer, by aggregating all
+-	 * available packets */
+-	buf_offset = 0;
+ 	while ((skb = skb_dequeue(&wl->tx_queue))) {
+ 		if (!woken_up) {
+ 			ret = wl1271_ps_elp_wakeup(wl, false);
+@@ -245,10 +243,20 @@ void wl1271_tx_work(struct work_struct *work)
+ 		}
+ 
+ 		ret = wl1271_prepare_tx_frame(wl, skb, buf_offset);
+-		if (ret == -EBUSY) {
++		if (ret == -EAGAIN) {
+ 			/*
+-			 * Either the firmware buffer is full, or the
+-			 * aggregation buffer is.
++			 * Aggregation buffer is full.
++			 * Flush buffer and try again.
++			 */
++			skb_queue_head(&wl->tx_queue, skb);
++			wl1271_write(wl, WL1271_SLV_MEM_DATA, wl->aggr_buf,
++				buf_offset, true);
++			sent_packets = true;
++			buf_offset = 0;
++			continue;
++		} else if (ret == -EBUSY) {
++			/*
++			 * Firmware buffer is full.
+ 			 * Queue back last skb, and stop aggregating.
+ 			 */
+ 			skb_queue_head(&wl->tx_queue, skb);
+@@ -265,6 +273,9 @@ out_ack:
+ 	if (buf_offset) {
+ 		wl1271_write(wl, WL1271_SLV_MEM_DATA, wl->aggr_buf,
+ 				buf_offset, true);
++		sent_packets = true;
++	}
++	if (sent_packets) {
+ 		/* interrupt the firmware with the new packets */
+ 		wl1271_write32(wl, WL1271_HOST_WR_ACCESS, wl->tx_packets_count);
+ 	}
+-- 
+1.7.0.4
+
