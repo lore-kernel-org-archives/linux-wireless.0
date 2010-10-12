@@ -1,34 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([88.198.39.176]:34648 "EHLO ds10.nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751078Ab0JTN7g (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 20 Oct 2010 09:59:36 -0400
-Message-ID: <4CBEF5C0.7070008@openwrt.org>
-Date: Wed, 20 Oct 2010 15:59:28 +0200
-From: Felix Fietkau <nbd@openwrt.org>
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:40940 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752922Ab0JLSaH (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 12 Oct 2010 14:30:07 -0400
+Date: Tue, 12 Oct 2010 14:18:04 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: linux-wireless@vger.kernel.org,
+	Stephen Rothwell <sfr@canb.auug.org.au>,
+	Ben Greear <greearb@candelatech.com>,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] ath5k: fix build break from "ath5k: Print out opmode in
+ debugfs"
+Message-ID: <20101012181804.GC2403@tuxdriver.com>
+References: <20101012163519.a88f2040.sfr@canb.auug.org.au>
+ <1286895206-3030-1-git-send-email-linville@tuxdriver.com>
+ <AANLkTi=Rj+hmYthVcwYksSxUqFF+117FxVvdnuDCLxVY@mail.gmail.com>
 MIME-Version: 1.0
-To: linux-wireless <linux-wireless@vger.kernel.org>
-CC: "John W. Linville" <linville@tuxdriver.com>,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>
-Subject: [PATCH] ath9k: fix crash in ath_update_survey_stats
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=iso-8859-1
+In-Reply-To: <AANLkTi=Rj+hmYthVcwYksSxUqFF+117FxVvdnuDCLxVY@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-If ah->curchan is uninitialized, the channel index is bogus, which leads
-to invalid memory access when the cycle counters are updated.
+On Tue, Oct 12, 2010 at 11:13:31AM -0700, Linus Torvalds wrote:
+> On Tue, Oct 12, 2010 at 7:53 AM, John W. Linville
+> <linville@tuxdriver.com> wrote:
+> >
+> > Please don't make me commit such an ugly patch...
+> 
+>  Why don't you just create a dummy inline ath_opmode_to_string() that
+> returns NULL in the non-debug case? The compiler will make the
+> conditionals all go away, and it will end up being "UNKNOWN" which is
+> just what you want. No?
 
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
----
---- a/drivers/net/wireless/ath/ath9k/main.c
-+++ b/drivers/net/wireless/ath/ath9k/main.c
-@@ -183,6 +183,9 @@ static void ath_update_survey_stats(stru
- 	struct ath_cycle_counters *cc = &common->cc_survey;
- 	unsigned int div = common->clockrate * 1000;
- 
-+	if (!ah->curchan)
-+		return;
-+
- 	if (ah->power_mode == ATH9K_PM_AWAKE)
- 		ath_hw_cycle_counters_update(common);
- 
+Shhh!  Your messing-up my manipulative mind games! :-)
+
+John
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
