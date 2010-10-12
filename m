@@ -1,40 +1,103 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from comal.ext.ti.com ([198.47.26.152]:32976 "EHLO comal.ext.ti.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1760536Ab0JGNEd (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 7 Oct 2010 09:04:33 -0400
-From: Shahar Levi <shahar_levi@ti.com>
-To: <linux-wireless@vger.kernel.org>
-Cc: Luciano Coelho <luciano.coelho@nokia.com>
-Subject: [PATCH 00/03] wl1271: BA Initiator support
-Date: Thu,  7 Oct 2010 15:05:59 +0200
-Message-Id: <1286456762-17480-1-git-send-email-shahar_levi@ti.com>
+Received: from mail-wy0-f174.google.com ([74.125.82.174]:60909 "EHLO
+	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756888Ab0JLIyG (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 12 Oct 2010 04:54:06 -0400
+Received: by wye20 with SMTP id 20so1182931wye.19
+        for <linux-wireless@vger.kernel.org>; Tue, 12 Oct 2010 01:54:04 -0700 (PDT)
+From: Ido Yariv <ido@wizery.com>
+To: Luciano Coelho <luciano.coelho@nokia.com>,
+	linux-wireless@vger.kernel.org
+Cc: Ido Yariv <ido@wizery.com>
+Subject: [PATCH v2 1/4] wl1271: TX aggregation optimization
+Date: Tue, 12 Oct 2010 10:53:50 +0200
+Message-Id: <1286873633-10080-2-git-send-email-ido@wizery.com>
+In-Reply-To: <1286873633-10080-1-git-send-email-ido@wizery.com>
+References: <1286873633-10080-1-git-send-email-ido@wizery.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Series that add 80211n BA initiator session support wl1271 driver. BA initiator 
-session management included in FW independently.
-BA receiver session not supported in that Series.
+In case the aggregation buffer is too small to hold all available packets,
+the buffer is transferred to the FW and no more packets are aggregated.
+Although there may be enough available TX blocks, no additional packets will
+be handled by the current TX work.
 
-Dependencies:
-- BA Initiator patches have a runtime dependency on
-  commit "[PATCH v2] wl1271: 11n Support" series (patches is in linux-wireless
-  mailing list)
+Fix this by flushing the aggregation buffer when it's full, and continue
+transferring packets as long as there are enough available TX blocks.
 
-Limitation:
-- For now only TID0 supported (Beast Effort).
+Signed-off-by: Ido Yariv <ido@wizery.com>
+---
+ drivers/net/wireless/wl12xx/wl1271_tx.c |   27 +++++++++++++++++++--------
+ 1 files changed, 19 insertions(+), 8 deletions(-)
 
-Thanks,
-Shahar
-
-Shahar Levi (3):
-  wl1271: BA Initiator support, Add Definitions
-  wl1271: BA Initiator support, BA functions
-  wl1271: BA Initiator support, active BA ability
-
- drivers/net/wireless/wl12xx/wl1271_acx.c  |   51 +++++++++++++++++++++++++++
- drivers/net/wireless/wl12xx/wl1271_acx.h  |   20 +++++++++++
- drivers/net/wireless/wl12xx/wl1271_conf.h |    3 ++
- drivers/net/wireless/wl12xx/wl1271_main.c |   54 ++++++++++++++++++++++++++++-
- 4 files changed, 127 insertions(+), 1 deletions(-)
+diff --git a/drivers/net/wireless/wl12xx/wl1271_tx.c b/drivers/net/wireless/wl12xx/wl1271_tx.c
+index e3dc13c..b13b373 100644
+--- a/drivers/net/wireless/wl12xx/wl1271_tx.c
++++ b/drivers/net/wireless/wl12xx/wl1271_tx.c
+@@ -52,7 +52,7 @@ static int wl1271_tx_allocate(struct wl1271 *wl, struct sk_buff *skb, u32 extra,
+ 	int id, ret = -EBUSY;
+ 
+ 	if (buf_offset + total_len > WL1271_AGGR_BUFFER_SIZE)
+-		return -EBUSY;
++		return -EAGAIN;
+ 
+ 	/* allocate free identifier for the packet */
+ 	id = wl1271_tx_id(wl, skb);
+@@ -210,7 +210,8 @@ void wl1271_tx_work(struct work_struct *work)
+ 	struct sk_buff *skb;
+ 	bool woken_up = false;
+ 	u32 sta_rates = 0;
+-	u32 buf_offset;
++	u32 buf_offset = 0;
++	bool sent_packets = false;
+ 	int ret;
+ 
+ 	/* check if the rates supported by the AP have changed */
+@@ -233,9 +234,6 @@ void wl1271_tx_work(struct work_struct *work)
+ 		wl1271_acx_rate_policies(wl);
+ 	}
+ 
+-	/* Prepare the transfer buffer, by aggregating all
+-	 * available packets */
+-	buf_offset = 0;
+ 	while ((skb = skb_dequeue(&wl->tx_queue))) {
+ 		if (!woken_up) {
+ 			ret = wl1271_ps_elp_wakeup(wl, false);
+@@ -245,10 +243,20 @@ void wl1271_tx_work(struct work_struct *work)
+ 		}
+ 
+ 		ret = wl1271_prepare_tx_frame(wl, skb, buf_offset);
+-		if (ret == -EBUSY) {
++		if (ret == -EAGAIN) {
+ 			/*
+-			 * Either the firmware buffer is full, or the
+-			 * aggregation buffer is.
++			 * Aggregation buffer is full.
++			 * Flush buffer and try again.
++			 */
++			skb_queue_head(&wl->tx_queue, skb);
++			wl1271_write(wl, WL1271_SLV_MEM_DATA, wl->aggr_buf,
++				buf_offset, true);
++			sent_packets = true;
++			buf_offset = 0;
++			continue;
++		} else if (ret == -EBUSY) {
++			/*
++			 * Firmware buffer is full.
+ 			 * Queue back last skb, and stop aggregating.
+ 			 */
+ 			skb_queue_head(&wl->tx_queue, skb);
+@@ -265,6 +273,9 @@ out_ack:
+ 	if (buf_offset) {
+ 		wl1271_write(wl, WL1271_SLV_MEM_DATA, wl->aggr_buf,
+ 				buf_offset, true);
++		sent_packets = true;
++	}
++	if (sent_packets) {
+ 		/* interrupt the firmware with the new packets */
+ 		wl1271_write32(wl, WL1271_HOST_WR_ACCESS, wl->tx_packets_count);
+ 	}
+-- 
+1.7.0.4
 
