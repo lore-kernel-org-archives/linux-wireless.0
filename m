@@ -1,128 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qw0-f46.google.com ([209.85.216.46]:51030 "EHLO
-	mail-qw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932652Ab0JAPVC (ORCPT
+Received: from mail-wy0-f174.google.com ([74.125.82.174]:44874 "EHLO
+	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753708Ab0JLIyE (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 1 Oct 2010 11:21:02 -0400
-Received: by qwh6 with SMTP id 6so1551148qwh.19
-        for <linux-wireless@vger.kernel.org>; Fri, 01 Oct 2010 08:21:01 -0700 (PDT)
-From: Bill Jordan <bjordan@rajant.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Bill Jordan <bjordan@rajant.com>
-Subject: [PATCH 2/3] cfg80211: patches to allow setting the WDS peer
-Date: Fri,  1 Oct 2010 11:20:40 -0400
-Message-Id: <1285946441-20152-3-git-send-email-bjordan@rajant.com>
-In-Reply-To: <1285946441-20152-1-git-send-email-bjordan@rajant.com>
-References: <1285946441-20152-1-git-send-email-bjordan@rajant.com>
+	Tue, 12 Oct 2010 04:54:04 -0400
+Received: by wye20 with SMTP id 20so1182880wye.19
+        for <linux-wireless@vger.kernel.org>; Tue, 12 Oct 2010 01:53:59 -0700 (PDT)
+From: Ido Yariv <ido@wizery.com>
+To: Luciano Coelho <luciano.coelho@nokia.com>,
+	linux-wireless@vger.kernel.org
+Cc: Ido Yariv <ido@wizery.com>
+Subject: [PATCH v2 0/4] wl1271: TX optimizations & fixes
+Date: Tue, 12 Oct 2010 10:53:49 +0200
+Message-Id: <1286873633-10080-1-git-send-email-ido@wizery.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Added a nl interface to set the peer bssid of a WDS interface.
+The following patches fix some issues in the TX path, as well as optimize it.
 
-Signed-off-by: Bill Jordan <bjordan@rajant.com>
----
- include/linux/nl80211.h |    3 ++
- net/wireless/nl80211.c  |   49 +++++++++++++++++++++++++++++++++++++++++++++++
- 2 files changed, 52 insertions(+), 0 deletions(-)
+The first patch fixes an issue in wl1271_tx_work. In case the aggregation
+buffer is completely filled, the content of the buffer is transferred and no
+more packets are sent. Fixed by flushing the buffer and continue aggregating
+packets.
 
-diff --git a/include/linux/nl80211.h b/include/linux/nl80211.h
-index f0518b0..35a9681 100644
---- a/include/linux/nl80211.h
-+++ b/include/linux/nl80211.h
-@@ -387,6 +387,8 @@
-  *	of any other interfaces, and other interfaces will again take
-  *	precedence when they are used.
-  *
-+ * @NL80211_CMD_SET_WDS_PEER: Set the MAC address of the peer on a WDS interface.
-+ *
-  * @NL80211_CMD_MAX: highest used command number
-  * @__NL80211_CMD_AFTER_LAST: internal use
-  */
-@@ -489,6 +491,7 @@ enum nl80211_commands {
- 	NL80211_CMD_NOTIFY_CQM,
- 
- 	NL80211_CMD_SET_CHANNEL,
-+	NL80211_CMD_SET_WDS_PEER,
- 
- 	/* add new commands above here */
- 
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index 9c84825..c401349 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -603,6 +603,7 @@ static int nl80211_send_wiphy(struct sk_buff *msg, u32 pid, u32 seq, int flags,
- 		NLA_PUT_U32(msg, i, NL80211_CMD_SET_WIPHY_NETNS);
- 	}
- 	CMD(set_channel, SET_CHANNEL);
-+	CMD(set_wds_peer, SET_WDS_PEER);
- 
- #undef CMD
- 
-@@ -831,6 +832,48 @@ static int nl80211_set_channel(struct sk_buff *skb, struct genl_info *info)
- 	return result;
- }
- 
-+static int nl80211_set_wds_peer(struct sk_buff *skb, struct genl_info *info)
-+{
-+	struct cfg80211_registered_device *rdev;
-+	struct wireless_dev *wdev;
-+	struct net_device *dev;
-+	u8 *bssid;
-+	int err;
-+
-+	if (!info->attrs[NL80211_ATTR_MAC])
-+		return -EINVAL;
-+
-+	rtnl_lock();
-+
-+	err = get_rdev_dev_by_info_ifindex(info, &rdev, &dev);
-+	if (err)
-+		goto unlock_rtnl;
-+
-+	wdev = dev->ieee80211_ptr;
-+
-+	if (!rdev->ops->set_wds_peer) {
-+		err = -EOPNOTSUPP;
-+		goto out;
-+	}
-+
-+	if (wdev->iftype != NL80211_IFTYPE_WDS) {
-+		err = -EOPNOTSUPP;
-+		goto out;
-+	}
-+
-+	bssid = nla_data(info->attrs[NL80211_ATTR_MAC]);
-+	err = rdev->ops->set_wds_peer(wdev->wiphy, dev, bssid);
-+
-+out:
-+	cfg80211_unlock_rdev(rdev);
-+	dev_put(dev);
-+unlock_rtnl:
-+	rtnl_unlock();
-+
-+	return err;
-+}
-+
-+
- static int nl80211_set_wiphy(struct sk_buff *skb, struct genl_info *info)
- {
- 	struct cfg80211_registered_device *rdev;
-@@ -5462,6 +5505,12 @@ static struct genl_ops nl80211_ops[] = {
- 		.policy = nl80211_policy,
- 		.flags = GENL_ADMIN_PERM,
- 	},
-+	{
-+		.cmd = NL80211_CMD_SET_WDS_PEER,
-+		.doit = nl80211_set_wds_peer,
-+		.policy = nl80211_policy,
-+		.flags = GENL_ADMIN_PERM,
-+	},
- };
- 
- static struct genl_multicast_group nl80211_mlme_mcgrp = {
--- 
-1.7.2.3
+The second patch solves a TX starvation issue in wl1271_irq_work. Since TX is
+handled by wl1271_tx_work, packets are transmitted after all interrupts are
+handled in wl1271_irq_work. Since these include TX completion interrupts the
+FW status might be read multiple times needlessly, which could hurt performance.
+
+The third patch is more of a cosmetic change. Instead of traversing the array
+of TX descriptors in order to find a free entry, use a bitmap for that
+purpose.
+
+The last patch fixes an issue with the TX queue low watermark. The number of
+items in the TX queue is checked against the low watermark in
+wl1271_tx_complete. However, the fact that a TX completion interrupt was fired
+does not necessarily mean that there are any less skbs in the TX queue. Fixed
+by moving the handling logic to the TX work, after skbs are actually dequeued.
+
+These patches were tested on a Zoom2 platform (SDIO only). While throughput in
+RX scenarios was hardly affected, throughput in TX scenarios was significantly
+improved.
+
+Changes from v1:
+- Fix a theoretical potential deadlock in irq_work and tx_work. Instead of
+  cancelling redundant work, avoid scheduling it in the first place.
+- Check if the low watermark was reached only if skbs were really dequeued
+
+Ido Yariv (4):
+  wl1271: TX aggregation optimization
+  wl1271: Fix TX starvation
+  wl1271: Allocate TX descriptors more efficiently
+  wl1271: Fix TX queue low watermark handling
+
+ drivers/net/wireless/wl12xx/wl1271.h      |    2 +
+ drivers/net/wireless/wl12xx/wl1271_main.c |   20 ++++-
+ drivers/net/wireless/wl12xx/wl1271_tx.c   |  114 ++++++++++++++++++----------
+ drivers/net/wireless/wl12xx/wl1271_tx.h   |    1 +
+ 4 files changed, 92 insertions(+), 45 deletions(-)
 
