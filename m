@@ -1,31 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iw0-f174.google.com ([209.85.214.174]:50970 "EHLO
-	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932613Ab0JQUX6 (ORCPT
+Received: from mail-fx0-f46.google.com ([209.85.161.46]:40886 "EHLO
+	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757066Ab0JLIsg convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 17 Oct 2010 16:23:58 -0400
-Received: by iwn35 with SMTP id 35so282174iwn.19
-        for <linux-wireless@vger.kernel.org>; Sun, 17 Oct 2010 13:23:57 -0700 (PDT)
+	Tue, 12 Oct 2010 04:48:36 -0400
+Received: by fxm4 with SMTP id 4so892429fxm.19
+        for <linux-wireless@vger.kernel.org>; Tue, 12 Oct 2010 01:48:35 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <983671.73519.qm@web56801.mail.re3.yahoo.com>
-References: <756358.10174.qm@web56802.mail.re3.yahoo.com> <983671.73519.qm@web56801.mail.re3.yahoo.com>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Sun, 17 Oct 2010 13:23:36 -0700
-Message-ID: <AANLkTikPevTiG5Zo2=n1=Zh7jjzKaapYGnaqFw39zTGJ@mail.gmail.com>
-Subject: Re: [PATCH] compat-wireless: update Makefile modules
-To: Walter Goldens <goldenstranger@yahoo.com>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+Date: Tue, 12 Oct 2010 10:42:46 +0200
+Message-ID: <AANLkTinAu+v5c99RqfV+rxH5c4zr1HTdRAkek1L-UpzF@mail.gmail.com>
+Subject: Chromium Wifi test ?
+From: Jim Harvey <jmhrv3@gmail.com>
+To: linux-wireless <linux-wireless@vger.kernel.org>
+Cc: Paul Stewart <pstew@google.com>,
+	Sam Leffler <sleffler@chromium.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, Oct 17, 2010 at 10:42 AM, Walter Goldens
-<goldenstranger@yahoo.com> wrote:
-> update "modprobe -l X" list in Makefile
->
->
-> Signed-off-by: Walter Goldens <goldenstranger@yahoo.com>
+Hello,
 
-Applied both patches, thanks.
+An Automated WiFi Testing facility was presented at the last wireless
+summit by the chromium folks:
 
-  Luis
+http://wireless.kernel.org/en/developers/Summits/SanFranciscoBayArea-2010
+
+I can see that it is built on top of autotest, but I can't seem to
+find the actual wifi tests.. can you please send a link to it ?
+
+It sounds interesting.
+
+Can you please tell what is the latest status ?
+
+Btw, why wasn't the wifi-test project re-used ? does it have any
+conceptual gap ?
+
+Thank you,
+~jmhrv
