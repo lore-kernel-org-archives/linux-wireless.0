@@ -1,66 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from web56804.mail.re3.yahoo.com ([66.196.97.78]:22885 "HELO
-	web56804.mail.re3.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1755791Ab0JRNoI (ORCPT
+Received: from mgw-sa02.ext.nokia.com ([147.243.1.48]:49150 "EHLO
+	mgw-sa02.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932231Ab0JLL5a (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 18 Oct 2010 09:44:08 -0400
-Message-ID: <507036.8029.qm@web56804.mail.re3.yahoo.com>
-Date: Mon, 18 Oct 2010 06:44:06 -0700 (PDT)
-From: Walter Goldens <goldenstranger@yahoo.com>
-Subject: [PATCH] compat-wireless: enable uninstall for staging & atlxx
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Cc: linux-wireless@vger.kernel.org
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+	Tue, 12 Oct 2010 07:57:30 -0400
+Subject: Re: [PATCH v2 3/4] wl1271: Allocate TX descriptors more efficiently
+From: Juuso Oikarinen <juuso.oikarinen@nokia.com>
+To: ext Ido Yariv <ido@wizery.com>
+Cc: "Coelho Luciano (Nokia-MS/Helsinki)" <Luciano.Coelho@nokia.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <1286873633-10080-4-git-send-email-ido@wizery.com>
+References: <1286873633-10080-1-git-send-email-ido@wizery.com>
+	 <1286873633-10080-4-git-send-email-ido@wizery.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Tue, 12 Oct 2010 14:57:06 +0300
+Message-ID: <1286884626.11177.512.camel@wimaxnb.nmp.nokia.com>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-- enable 'make uninstall' for staging - brcm80211, ath6kl and ethernet atlxx 
-- add atlxx to 'modprobe -l' list
+On Tue, 2010-10-12 at 10:53 +0200, ext Ido Yariv wrote:
+> On each TX descriptor allocation, a free entry is found by traversing the TX
+> descriptors array.
+> 
+> Improve this by holding a bitmap of all TX descriptors, and using efficient
+> bit operations to search for free entries.
+> The bitmap is 32 bits long, assuming that the maximum number of
+> descriptors (ACX_TX_DESCRIPTORS) will never exceed 32.
+> 
+> Signed-off-by: Ido Yariv <ido@wizery.com>
+> ---
+>  drivers/net/wireless/wl12xx/wl1271.h      |    1 +
+>  drivers/net/wireless/wl12xx/wl1271_main.c |    1 +
+>  drivers/net/wireless/wl12xx/wl1271_tx.c   |   38 ++++++++++++++++------------
+>  3 files changed, 24 insertions(+), 16 deletions(-)
+> 
 
-Signed-off-by: Walter Goldens <goldenstranger@yahoo.com>
----
+I doubt this will have any performance impact, but indeed it is a bit
+cleaner this way.
 
---- a/Makefile
-+++ b/Makefile
-@@ -255,6 +255,13 @@ install-scripts:
- 	@$(MODPROBE) -l wl1271
- 	@$(MODPROBE) -l zd1211rw
- 	@echo
-+	@echo "Currently detected ethernet subsystem modules:"
-+	@echo
-+	@$(MODPROBE) -l atl1
-+	@$(MODPROBE) -l atl2
-+	@$(MODPROBE) -l atl1e
-+	@$(MODPROBE) -l atl1c
-+	@echo
- 	@echo "Currently detected bluetooth subsystem modules:"
- 	@echo
- 	@$(MODPROBE) -l sco
-@@ -284,6 +291,8 @@ uninstall:
- 	@rm -rf $(KLIB)/$(KMODDIR)/drivers/ssb/
- 	@rm -rf $(KLIB)/$(KMODDIR)/drivers/net/usb/
- 	@rm -rf $(KLIB)/$(KMODDIR)/drivers/net/wireless/
-+	@rm -rf $(KLIB)/$(KMODDIR)/drivers/staging/
-+	@rm -rf $(KLIB)/$(KMODDIR)/drivers/net/atl*
- 	@# Lets only remove the stuff we are sure we are providing
- 	@# on the misc directory.
- 	@rm -f $(KLIB)/$(KMODDIR)/drivers/misc/eeprom/eeprom_93cx6.ko*
-@@ -362,6 +371,13 @@ uninstall:
- 	@$(MODPROBE) -l wl1271
- 	@$(MODPROBE) -l zd1211rw
- 	@echo
-+	@echo "Your old ethernet subsystem modules are left intact:"
-+	@echo
-+	@$(MODPROBE) -l atl1
-+	@$(MODPROBE) -l atl2
-+	@$(MODPROBE) -l atl1e
-+	@$(MODPROBE) -l atl1c
-+	@echo
- 	@echo "Your old bluetooth subsystem modules were left intact:"
- 	@echo
- 	@$(MODPROBE) -l sco
+Reviewed-by: Juuso Oikarinen <juuso.oikarinen@nokia.com>
 
+-Juuso
 
-
-      
