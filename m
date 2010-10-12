@@ -1,32 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gx0-f174.google.com ([209.85.161.174]:58432 "EHLO
-	mail-gx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753312Ab0JTRar (ORCPT
+Received: from smtp.nokia.com ([192.100.105.134]:32360 "EHLO
+	mgw-mx09.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751661Ab0JMNCM (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 20 Oct 2010 13:30:47 -0400
-MIME-Version: 1.0
-In-Reply-To: <990909.12705.qm@web56802.mail.re3.yahoo.com>
-References: <990909.12705.qm@web56802.mail.re3.yahoo.com>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Wed, 20 Oct 2010 10:30:26 -0700
-Message-ID: <AANLkTi=zQFrNgBxa=hfpG863EhpOnNU4cGQcj8rnb2xM@mail.gmail.com>
-Subject: Re: [PATCH 1/4] compat-wireless: update bluetooth in Makefile
-To: Walter Goldens <goldenstranger@yahoo.com>
-Cc: linux-wireless@vger.kernel.org,
-	linux-bluetooth <linux-bluetooth@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+	Wed, 13 Oct 2010 09:02:12 -0400
+Subject: Re: [PATCH v2 1/4] wl1271: TX aggregation optimization
+From: Juuso Oikarinen <juuso.oikarinen@nokia.com>
+To: ext Ido Yariv <ido@wizery.com>
+Cc: "Coelho Luciano (Nokia-MS/Helsinki)" <Luciano.Coelho@nokia.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <1286873633-10080-2-git-send-email-ido@wizery.com>
+References: <1286873633-10080-1-git-send-email-ido@wizery.com>
+	 <1286873633-10080-2-git-send-email-ido@wizery.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Tue, 12 Oct 2010 14:10:35 +0300
+Message-ID: <1286881835.11177.493.camel@wimaxnb.nmp.nokia.com>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Oct 20, 2010 at 8:11 AM, Walter Goldens
-<goldenstranger@yahoo.com> wrote:
-> - update bluetooth in Makefile
->
+On Tue, 2010-10-12 at 10:53 +0200, ext Ido Yariv wrote:
+> In case the aggregation buffer is too small to hold all available packets,
+> the buffer is transferred to the FW and no more packets are aggregated.
+> Although there may be enough available TX blocks, no additional packets will
+> be handled by the current TX work.
+> 
+> Fix this by flushing the aggregation buffer when it's full, and continue
+> transferring packets as long as there are enough available TX blocks.
+> 
+> Signed-off-by: Ido Yariv <ido@wizery.com>
+> ---
+>  drivers/net/wireless/wl12xx/wl1271_tx.c |   27 +++++++++++++++++++--------
+>  1 files changed, 19 insertions(+), 8 deletions(-)
+> 
 
-Thanks Walter, I welcome these changes but I got them in
-quoted-printable format, and was unable to save them. Can you please
-resend as plain ascii text and also include linux-bluetooth as these
-are related to that subsystem and those guys would likely want to
-review these patches as well.
+Reviewed-by: Juuso Oikarinen <juuso.oikarinen@nokia.com>
 
-  Luis
+-Juuso
+
