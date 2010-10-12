@@ -1,110 +1,146 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:50024 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752554Ab0JGTWi (ORCPT
+Received: from mail30f.wh2.ocn.ne.jp ([220.111.41.203]:38775 "HELO
+	mail30f.wh2.ocn.ne.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1756450Ab0JLCRj (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 7 Oct 2010 15:22:38 -0400
-Message-ID: <4CAE1DFB.303@candelatech.com>
-Date: Thu, 07 Oct 2010 12:22:35 -0700
-From: Ben Greear <greearb@candelatech.com>
+	Mon, 11 Oct 2010 22:17:39 -0400
+Received: from vs3009.wh2.ocn.ne.jp (125.206.180.237)
+	by mail30f.wh2.ocn.ne.jp (RS ver 1.0.95vs) with SMTP id 0-0910929856
+	for <linux-wireless@vger.kernel.org>; Tue, 12 Oct 2010 11:17:37 +0900 (JST)
+From: Bruno Randolf <br1@einfach.org>
+To: "kivuli" <taofeiid@gmail.com>
+Subject: Re: add delays in pcu.c and qcu.c of ath5k when creating mesh-network on routerstation pro with ar71xx board and atheros 5213A
+Date: Tue, 12 Oct 2010 11:17:45 +0900
+Cc: "linux-wireless" <linux-wireless@vger.kernel.org>
+References: <201010090959043021161@gmail.com>
+In-Reply-To: <201010090959043021161@gmail.com>
 MIME-Version: 1.0
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-CC: Johannes Berg <johannes@sipsolutions.net>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: memory clobber in rx path, maybe related to ath9k.
-References: <4CAB59B2.5050106@candelatech.com> <AANLkTikhGCTS8kJgpDzjudyBTk-rkyXY33UO7kB0+Cc-@mail.gmail.com> <4CAB5F3D.9060201@candelatech.com> <AANLkTimV3GrwU+9PPtirT4sCzveLY2egr3PRQhfDBET1@mail.gmail.com> <4CAB627F.8020804@candelatech.com> <AANLkTi=sT5QJe4V8gFGjF-nzx0uJAMLG_XG2715qrEEd@mail.gmail.com> <4CAB64AD.4080105@candelatech.com> <AANLkTi=3dHbB5tmQDp3Ba54-DqQydVCkNdFo1vKbfaGY@mail.gmail.com> <4CAB6B08.4050801@candelatech.com> <4CAE0474.4090605@candelatech.com> <1286475250.20974.22.camel@jlt3.sipsolutions.net> <AANLkTinbRSnPVgbBxvVpMdnP+K--bye=Q-miHf4X44kz@mail.gmail.com> <4CAE13F6.2010003@candelatech.com> <AANLkTimEZ5GY7WFz-F4YyC+6MEwNn2Dki4tonp645XrS@mail.gmail.com>
-In-Reply-To: <AANLkTimEZ5GY7WFz-F4YyC+6MEwNn2Dki4tonp645XrS@mail.gmail.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Message-Id: <201010121117.45101.br1@einfach.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 10/07/2010 11:42 AM, Luis R. Rodriguez wrote:
-> On Thu, Oct 7, 2010 at 11:39 AM, Ben Greear<greearb@candelatech.com>  wrote:
->> On 10/07/2010 11:29 AM, Luis R. Rodriguez wrote:
->>>
->>> On Thu, Oct 7, 2010 at 11:14 AM, Johannes Berg
->>> <johannes@sipsolutions.net>    wrote:
->>>>
->>>> On Thu, 2010-10-07 at 10:33 -0700, Ben Greear wrote:
->>>>>
->>>>> In case it helps, here is a dump of where the corrupted SKB was deleted.
->>>>
->>>> I wonder, do you have a machine with a decent IOMMU? Adding IOMMU
->>>> debugging into the mix could help you figure out if it's a DMA problem.
->>>
->>> Ben, how much traffic are you RX'ing on these virtual interfaces?
->>
->> I disabled my user-space application, and this script alone can reproduce
->> the problem fairly quickly on my system.  You will need to change some
->> of those first variables.  Just start it and wait a few minutes and
->> watch the splats show on the console :)
->>
->> Note that I am not generating any traffic, but the wpa_supplicants are
->> doing their thing of course...
->>
->> I'm using the kernel found here:
->> http://dmz2.candelatech.com/git/gitweb.cgi?p=linux.wireless-testing.ct/.git;a=summary
->>
->> It's latest wireless-testing with some of my own patches, and some
->> I've gathered from here an there.  I doubt I'm causing this problem,
->> but if you can't reproduce it with this script on your kernels,
->> I can try with base wireless-testing or whatever you are using.
+On Sat October 9 2010 10:59:08 kivuli wrote:
+> Hello,
+> I'm trying to create mesh-network on routerstation pro with ar71xx and
+> atheros 5213A,using openwrt backfire and ath5k. After "iw dev wlan0
+> interface add mesh type mp mesh_id mymesh","ifconfig mesh up" paralyse the
+> all network orders, I can see "ifconfig" "iwconfig" are dead with "ps",and
+> I cannot kill them. I look up errors in "dmesg", It says the last
+> functions is ath5k_hw_init_beacon() .I add some mdelay(1) between
+> "ath5k_hw_reg_write(ah, 0, AR5K_TIMER0);" and "ath5k_hw_reg_write(ah,
+> next_beacon, AR5K_TIMER0);", "ath5k_hw_reg_write(ah, timer3,
+> AR5K_TIMER3);" and  "if (interval &
+> AR5K_BEACON_RESET_TSF)","ath5k_hw_reg_write(ah, AR5K_ISR_BMISS,
+> AR5K_PISR);" and "AR5K_REG_DISABLE_BITS(ah, AR5K_STA_ID1,
+> AR5K_STA_ID1_PWR_SV);"   in it tentatively and compile it againthen tried
+> again, and then add "mdelay(10);" between 
+> "AR5K_QUEUE_DFS_LOCAL_IFS(queue));" and "AR5K_REG_ENABLE_BITS(ah,
+> AR5K_QUEUE_MISC(queue),AR5K_QCU_MISC_DCU_EARLY);" in
+> "ath5k_hw_reset_tx_queue()" in qcu.c .Finally the mesh-network is OK! I'm
+> not sure what is exactly wrong with ath5k,is this a bug? or did I do
+> something wrong? Here is the patch I used:
+> 
+> diff -ruN a/config.mk b/config.mk
+> --- a/config.mk	2010-03-17 21:42:58.000000000 +0000
+> +++ b/config.mk	2010-09-24 13:31:30.000000000 +0000
+> @@ -1,5 +1,8 @@
+>  export
+> 
+> +# add by zheng
+> +# CONFIG_ATH5K_DEBUG=y
+> +
+>  ## NOTE
+>  ## Make sure to have each variable declaration start
+>  ## in the first column, no whitespace allowed.
+> diff -ruN a/drivers/net/wireless/ath/ath5k/pcu.c
+> b/drivers/net/wireless/ath/ath5k/pcu.c ---
+> a/drivers/net/wireless/ath/ath5k/pcu.c	2010-03-26 18:25:50.000000000 
++0000
+> +++ b/drivers/net/wireless/ath/ath5k/pcu.c	2010-09-29 21:21:03.915143556
+> +0000 @@ -25,6 +25,7 @@
+>  \*********************************/
+> 
+>  #include <asm/unaligned.h>
+> +#include <linux/delay.h>
+> 
+>  #include "ath5k.h"
+>  #include "reg.h"
+> @@ -618,11 +619,15 @@
+>  	    ah->ah_sc->opmode == NL80211_IFTYPE_MESH_POINT)
+>  		ath5k_hw_reg_write(ah, 0, AR5K_TIMER0);
+> 
+> +	mdelay(1);
+> +
+>  	ath5k_hw_reg_write(ah, next_beacon, AR5K_TIMER0);
+>  	ath5k_hw_reg_write(ah, timer1, AR5K_TIMER1);
+>  	ath5k_hw_reg_write(ah, timer2, AR5K_TIMER2);
+>  	ath5k_hw_reg_write(ah, timer3, AR5K_TIMER3);
+> 
+> +	mdelay(1);
+> +
+>  	/* Force a TSF reset if requested and enable beacons */
+>  	if (interval & AR5K_BEACON_RESET_TSF)
+>  		ath5k_hw_reset_tsf(ah);
+> @@ -641,6 +646,8 @@
+>  	else
+>  		ath5k_hw_reg_write(ah, AR5K_ISR_BMISS, AR5K_PISR);
+> 
+> +	mdelay(1);
+> +
+>  	/* TODO: Set enchanced sleep registers on AR5212
+>  	 * based on vif->bss_conf params, until then
+>  	 * disable power save reporting.*/
+> diff -ruN a/drivers/net/wireless/ath/ath5k/qcu.c
+> b/drivers/net/wireless/ath/ath5k/qcu.c ---
+> a/drivers/net/wireless/ath/ath5k/qcu.c	2010-03-26 18:25:50.000000000 
++0000
+> +++ b/drivers/net/wireless/ath/ath5k/qcu.c	2010-09-29 21:19:04.863143555
+> +0000 @@ -24,6 +24,7 @@
+>  #include "reg.h"
+>  #include "debug.h"
+>  #include "base.h"
+> +#include <linux/delay.h> /* add by zheng */
+> 
+>  /*
+>   * Get properties for a transmit queue
+> @@ -331,6 +332,8 @@
+>  				AR5K_DCU_LCL_IFS_AIFS),
+>  			AR5K_QUEUE_DFS_LOCAL_IFS(queue));
+> 
+> +		mdelay(10);
+> +
+>  		/*
+>  		 * Set misc registers
+>  		 */
 >
-> I'll run this now, but can you try a vanilla wireless-testing? I hear
-> the latest wireless-testing is borked so maybe try (git reset --hard
-> master-2010-09-29), its what I'm on.
 
-After reboot, and re-run of the script,
-I saw this in the logs, and shortly after,
-the SLUB poison warning dumped to screen.
+hello!
 
-Maybe those DMA errors are serious?
+i haven't used mesh mode myself, so i cannot comment on that further. but 
+adding random delays does not seem to be the right solution.
 
-Also, I enabled CONFIG_DMA_API_DEBUG, but saw no
-indication it detected any problems.
+can you try to see if this patch helps?:
 
+diff --git a/drivers/net/wireless/ath/ath5k/pcu.c 
+b/drivers/net/wireless/ath/ath5k/pcu.c
+index 095d30b..6dc01d6 100644
+--- a/drivers/net/wireless/ath/ath5k/pcu.c
++++ b/drivers/net/wireless/ath/ath5k/pcu.c
+@@ -615,8 +615,9 @@ void ath5k_hw_init_beacon(struct ath5k_hw *ah, u32 
+next_beacon, u32 
+        if (ah->ah_sc->opmode == NL80211_IFTYPE_AP ||
+            ah->ah_sc->opmode == NL80211_IFTYPE_MESH_POINT)                             
+                ath5k_hw_reg_write(ah, 0, AR5K_TIMER0);                                 
++       else                                                                            
++               ath5k_hw_reg_write(ah, next_beacon, AR5K_TIMER0);                       
+                                                                                        
+-       ath5k_hw_reg_write(ah, next_beacon, AR5K_TIMER0);                               
+        ath5k_hw_reg_write(ah, timer1, AR5K_TIMER1);                                    
+        ath5k_hw_reg_write(ah, timer2, AR5K_TIMER2);                                    
+        ath5k_hw_reg_write(ah, timer3, AR5K_TIMER3); 
 
-DDRCONF(NETDEV_UP): sta29: link is not ready
-ADDRCONF(NETDEV_UP): sta30: link is not ready
-ADDRCONF(NETDEV_UP): sta31: link is not ready
-sta0: authenticate with 00:14:d1:c6:d2:54 (try 1)
-sta0: authenticated
-ieee80211 phy0: device now idle
-ieee80211 phy0: device no longer idle - working
-sta0: associate with 00:14:d1:c6:d2:54 (try 1)
-sta18: authenticate with 00:14:d1:c6:d2:54 (try 1)
-sta0: associate with 00:14:d1:c6:d2:54 (try 2)
-sta18: authenticate with 00:14:d1:c6:d2:54 (try 2)
-sta0: associate with 00:14:d1:c6:d2:54 (try 3)
-sta18: authenticate with 00:14:d1:c6:d2:54 (try 3)
-sta0: association with 00:14:d1:c6:d2:54 timed out
-sta18: authentication with 00:14:d1:c6:d2:54 timed out
+please cc: ath5k-devel mailing list.
 
-
-ath: Failed to stop TX DMA in 100 msec after killing last frame
-ath: Failed to stop TX DMA. Resetting hardware!
-
-
-ieee80211 phy0: device now idle
-ieee80211 phy0: device no longer idle - scanning
-ieee80211 phy0: device now idle
-ieee80211 phy0: device no longer idle - working
-sta1: authenticate with 00:14:d1:c6:d2:54 (try 1)
-sta1: authenticated
-sta1: associate with 00:14:d1:c6:d2:54 (try 1)
-sta1: RX AssocResp from 00:14:d1:c6:d2:54 (capab=0x431 status=0 aid=18)
-sta1: associated
-ieee80211 phy0: Allocated STA 00:14:d1:c6:d2:54
-ieee80211 phy0: Inserted STA 00:14:d1:c6:d2:54
-ieee80211 phy0: WMM queue=2 aci=0 acm=0 aifs=3 cWmin=15 cWmax=1023 txop=0 uapsd=0
-ieee80211 phy0: WMM queue=3 aci=1 acm=0 aifs=7 cWmin=15 cWmax=1023 txop=0 uapsd=0
-ieee80211 phy0: WMM queue=1 aci=2 acm=0 aifs=2 cWmin=7 cWmax=15 txop=94 uapsd=0
-ieee80211 phy0: WMM queue=0 aci=3 acm=0 aifs=2 cWmin=3 cWmax=7 txop=47 uapsd=0
-
-Thanks,
-Ben
-
--- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
-
+bruno
