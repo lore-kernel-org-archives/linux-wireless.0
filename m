@@ -1,39 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f46.google.com ([209.85.161.46]:37878 "EHLO
-	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933149Ab0J1IYP (ORCPT
+Received: from mail.candelatech.com ([208.74.158.172]:49944 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754337Ab0JLD10 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 28 Oct 2010 04:24:15 -0400
-Received: by fxm16 with SMTP id 16so1664640fxm.19
-        for <linux-wireless@vger.kernel.org>; Thu, 28 Oct 2010 01:24:14 -0700 (PDT)
-From: Helmut Schaa <helmut.schaa@googlemail.com>
-To: Lee <lee-in-berlin@web.de>
-Subject: Re: [regression]AP with hostapd 0.7.3 can't receive packets beyond authentication (2.6.36, rt73usb)
-Date: Thu, 28 Oct 2010 10:23:26 +0200
-Cc: linux-wireless@vger.kernel.org
-References: <4CC0D0F6.4080507@web.de> <201010260740.47692.helmut.schaa@googlemail.com> <4CC93148.7090308@web.de>
-In-Reply-To: <4CC93148.7090308@web.de>
+	Mon, 11 Oct 2010 23:27:26 -0400
+Message-ID: <4CB3D598.7050904@candelatech.com>
+Date: Mon, 11 Oct 2010 20:27:20 -0700
+From: Ben Greear <greearb@candelatech.com>
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="us-ascii"
-Message-Id: <201010281023.26957.helmut.schaa@googlemail.com>
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+CC: Johannes Berg <johannes@sipsolutions.net>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: memory clobber in rx path, maybe related to ath9k.
+References: <4CAB59B2.5050106@candelatech.com> <4CAB5F3D.9060201@candelatech.com> <AANLkTimV3GrwU+9PPtirT4sCzveLY2egr3PRQhfDBET1@mail.gmail.com> <4CAB627F.8020804@candelatech.com> <AANLkTi=sT5QJe4V8gFGjF-nzx0uJAMLG_XG2715qrEEd@mail.gmail.com> <4CAB64AD.4080105@candelatech.com> <AANLkTi=3dHbB5tmQDp3Ba54-DqQydVCkNdFo1vKbfaGY@mail.gmail.com> <4CAB6B08.4050801@candelatech.com> <4CAE0474.4090605@candelatech.com> <1286475250.20974.22.camel@jlt3.sipsolutions.net> <AANLkTinbRSnPVgbBxvVpMdnP+K--bye=Q-miHf4X44kz@mail.gmail.com> <4CAE13F6.2010003@candelatech.com> <AANLkTimEZ5GY7WFz-F4YyC+6MEwNn2Dki4tonp645XrS@mail.gmail.com> <4CAE1DFB.303@candelatech.com> <1286479642.20974.32.camel@jlt3.sipsolutions.net> <AANLkTimxp703Gy_Atg8=wpFszRDR=OJCXwOUKRh-a-d7@mail.gmail.com> <AANLkTi=t-P_5c14brJohM8UgxeOknv+3syO=7W=ix6qf@mail.gmail.com> <AANLkTinC46a+nE-XOQuBCmRJwjzgh24uC7ZJ7HtbVHnT@mail.gmail.com> <4CB378CD.1080800@candelatech.com> <AANLkTim42zmDwf744BCrPwa1kT5ph57bNMyvSyOpesVv@mail.gmail.com>
+In-Reply-To: <AANLkTim42zmDwf744BCrPwa1kT5ph57bNMyvSyOpesVv@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Am Donnerstag 28 Oktober 2010 schrieb Lee:
-> On 26/10/10 07:40, Helmut Schaa wrote:
-> > # tcpdump -i mon0 "ether src XX:XX:XX:XX:XX:XX"
-> > 
-> > Do you see any frames from your specific client?
-> 
-> Yes. I can see this:
-> # tcpdump -i mon0 "ether host 00:1F:3B:79:41:6F"
-[...]
-> 10:10:03.013402 5.5 Mb/s 2462 MHz 11b -76dB signal antenna 1 [bit 14] Data IV: 14 Pad 20 KeyID 0
-> 
-> However, on wlan0 I don't see anything beyond the EAPOL packets.
-> Temporarily turning off WPA encryption let me successfully connect to my AP.
+On 10/11/2010 06:03 PM, Luis R. Rodriguez wrote:
+> On Mon, Oct 11, 2010 at 1:51 PM, Ben Greear<greearb@candelatech.com>  wrote:
+>> On 10/07/2010 02:59 PM, Luis R. Rodriguez wrote:
+>>>
+>>> On Thu, Oct 7, 2010 at 2:36 PM, Luis R. Rodriguez<mcgrof@gmail.com>
+>>>   wrote:
+>>
+>>>>> But other than this I got nothing. I left the box sit there for about
+>>>>> 1 hour and came back and it was still going with no issues. Mind you,
+>>>>> I can't ping but that seems like another issue.
+>>>>>
+>>>>> You can find my logs here:
+>>>>>
+>>>>>
+>>>>> http://www.kernel.org/pub/linux/kernel/people/mcgrof/logs/2010/10-07-stress-sta-01/
+>>>>
+>>>> Doh, I did not have CONFIG_SLUB_DEBUG_ON=y so building now with that.
+>>>
+>>> Yay I can reproduce now. I'll be back, going to dig now.
+>>
+>> Any luck tracking this down?
+>
+> No, today for example I just finished reading e-mail and its already
+> 6pm PST... But Friday I did get do do a lot of work and testing on
+> this. The only pattern I see so far is that skb_copy() is used on the
+> poison all the time. I am not sure if its because skb_copy() happens
+> to run the poison check or what. I'll work on this tomorrow.
 
-Aha, could you please try if loading rt73usb with nohwcrypt=1 helps?
+I know how that goes.
 
-Helmut
+Do you happen to have any magic tools that could be instrumented to show
+when DMA was happening in the chip, and to see if it somehow happens to dma
+to something after it is supposedly un-mapped?
+
+Another thing I was thinking about:  Maybe the queue of skbs and dma addresses
+in ath9k is getting corrupted by multiple VIFs trying to write at once?  Maybe
+some locking is needed in the xmit path?
+
+Thanks,
+Ben
+
+-- 
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
