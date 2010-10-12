@@ -1,44 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mgw-sa02.ext.nokia.com ([147.243.1.48]:45265 "EHLO
-	mgw-sa02.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754368Ab0JDKpg (ORCPT
+Received: from mail-wy0-f174.google.com ([74.125.82.174]:48274 "EHLO
+	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932169Ab0JLMtW (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 4 Oct 2010 06:45:36 -0400
-Received: from nokia.com (localhost [127.0.0.1])
-	by mgw-sa02.nokia.com (Switch-3.4.3/Switch-3.4.3) with ESMTP id o94AjZuW032192
-	for <linux-wireless@vger.kernel.org>; Mon, 4 Oct 2010 13:45:35 +0300
-Subject: Re: [PATCH 1/2] wl1271: Indicate disconnection on hardware failure
-From: Luciano Coelho <luciano.coelho@nokia.com>
-To: "juuso.oikarinen@nokia.com" <juuso.oikarinen@nokia.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <1285843408-6726-1-git-send-email-juuso.oikarinen@nokia.com>
-References: <1285843408-6726-1-git-send-email-juuso.oikarinen@nokia.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Mon, 04 Oct 2010 13:45:11 +0300
-Message-ID: <1286189111.27112.11.camel@chilepepper>
-Mime-Version: 1.0
+	Tue, 12 Oct 2010 08:49:22 -0400
+Received: by wye20 with SMTP id 20so1342536wye.19
+        for <linux-wireless@vger.kernel.org>; Tue, 12 Oct 2010 05:49:21 -0700 (PDT)
+From: Ido Yariv <ido@wizery.com>
+To: Luciano Coelho <luciano.coelho@nokia.com>,
+	linux-wireless@vger.kernel.org
+Cc: Ido Yariv <ido@wizery.com>
+Subject: [PATCH v3 0/4] wl1271: TX optimizations & fixes
+Date: Tue, 12 Oct 2010 14:49:08 +0200
+Message-Id: <1286887752-19321-1-git-send-email-ido@wizery.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2010-09-30 at 12:43 +0200, juuso.oikarinen@nokia.com wrote:
-> From: Juuso Oikarinen <juuso.oikarinen@nokia.com>
-> 
-> In the event of a hardware failure, reconfiguring a live connection back
-> with the wl1271 chip does not work as expected. The chip has management
-> features which require setting up the association from scratch to work
-> correctly. To ensure this is done every time, in managed mode, when associated,
-> indicate connection loss to the mac80211 before asking to reconfigure the
-> hardware.
-> 
-> Signed-off-by: Juuso Oikarinen <juuso.oikarinen@nokia.com>
-> ---
+The following patches fix some issues in the TX path, as well as optimize it.
 
-Reviewed-by: Luciano Coelho <luciano.coelho@nokia.com>
+The first patch fixes an issue in wl1271_tx_work. In case the aggregation
+buffer is completely filled, the content of the buffer is transferred and no
+more packets are sent. Fixed by flushing the buffer and continue aggregating
+packets.
 
-I'll apply this to wl12xx soon.
+The second patch solves a TX starvation issue in wl1271_irq_work. Since TX is
+handled by wl1271_tx_work, packets are transmitted after all interrupts are
+handled in wl1271_irq_work. Since these include TX completion interrupts the
+FW status might be read multiple times needlessly, which could hurt performance.
 
+The third patch is more of a cosmetic change. Instead of traversing the array
+of TX descriptors in order to find a free entry, use a bitmap for that
+purpose.
 
--- 
-Cheers,
-Luca.
+The last patch fixes an issue with the TX queue low watermark. The number of
+items in the TX queue is checked against the low watermark in
+wl1271_tx_complete. However, the fact that a TX completion interrupt was fired
+does not necessarily mean that there are any less skbs in the TX queue. Fixed
+by moving the handling logic to the TX work, after skbs are actually dequeued.
+
+These patches were tested on a Zoom2 platform (SDIO only). While throughput in
+RX scenarios was hardly affected, throughput in TX scenarios was significantly
+improved.
+
+Changes from v2:
+- Remove the restriction on the maximum number of TX descriptors being 32
+Changes from v1:
+- Fix a theoretical potential deadlock in irq_work and tx_work. Instead of
+  cancelling redundant work, avoid scheduling it in the first place.
+- Check if the low watermark was reached only if skbs were really dequeued
+
+Ido Yariv (4):
+  wl1271: TX aggregation optimization
+  wl1271: Fix TX starvation
+  wl1271: Allocate TX descriptors more efficiently
+  wl1271: Fix TX queue low watermark handling
+
+ drivers/net/wireless/wl12xx/wl1271.h      |    2 +
+ drivers/net/wireless/wl12xx/wl1271_main.c |   20 ++++-
+ drivers/net/wireless/wl12xx/wl1271_tx.c   |  114 ++++++++++++++++++----------
+ drivers/net/wireless/wl12xx/wl1271_tx.h   |    1 +
+ 4 files changed, 92 insertions(+), 45 deletions(-)
 
