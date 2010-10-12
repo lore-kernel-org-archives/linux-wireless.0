@@ -1,75 +1,99 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:15579 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755015Ab0JVOkS (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 22 Oct 2010 10:40:18 -0400
-Subject: Re: [PATCH 1/2] iwlwifi: fix set_tx_power vs scan
-From: "Guy, Wey-Yi" <wey-yi.w.guy@intel.com>
-To: Stanislaw Gruszka <sgruszka@redhat.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <20101022125628.GA4527@redhat.com>
-References: <1286977193-12144-1-git-send-email-sgruszka@redhat.com>
-	 <1286983100.10446.1.camel@wwguy-ubuntu> <20101014083204.GA2286@redhat.com>
-	 <20101021131348.GA5654@redhat.com>  <20101022125628.GA4527@redhat.com>
-Content-Type: text/plain
-Date: Fri, 22 Oct 2010 07:39:27 -0700
-Message-Id: <1287758367.18168.1.camel@wwguy-ubuntu>
-Mime-Version: 1.0
+Received: from mail.candelatech.com ([208.74.158.172]:57626 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756705Ab0JLCKq (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 11 Oct 2010 22:10:46 -0400
+Message-ID: <4CB3C3A3.5040309@candelatech.com>
+Date: Mon, 11 Oct 2010 19:10:43 -0700
+From: Ben Greear <greearb@candelatech.com>
+MIME-Version: 1.0
+To: Bruno Randolf <br1@einfach.org>
+CC: linux-wireless@vger.kernel.org
+Subject: Re: [PATCH v2] ath5k:  Adjust opmode when interfaces are removed.
+References: <1286564475-10105-1-git-send-email-greearb@candelatech.com> <201010121044.39093.br1@einfach.org>
+In-Reply-To: <201010121044.39093.br1@einfach.org>
+Content-Type: text/plain; charset=ISO-8859-15; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Stanislaw,
+On 10/11/2010 06:44 PM, Bruno Randolf wrote:
+> On Sat October 9 2010 04:01:15 greearb@candelatech.com wrote:
 
-On Fri, 2010-10-22 at 05:56 -0700, Stanislaw Gruszka wrote:
-> On Thu, Oct 21, 2010 at 03:13:48PM +0200, Stanislaw Gruszka wrote:
-> > On Thu, Oct 14, 2010 at 10:32:05AM +0200, Stanislaw Gruszka wrote:
-> > > > Looks good, the only thing is if priv->tx_power_user_lmt ==
-> > > > priv->tx_power_next, we don't even have to call set_tx_power, but I
-> > > > guess calling it won't hurt, so its your decision check or not.
-> > > 
-> > > I'll will call iwl_set_tx_power( ... , false); what seems to be right
-> > > thing to do.
-> > 
-> > Set tx power have to be forces. Without that I get  
-> > 
-> > iwlagn 0000:40:00.0: low ack count detected, restart firmware
-> > iwlagn 0000:40:00.0: On demand firmware reload
-> > iwlagn 0000:40:00.0: Stopping AGG while state not ON or starting
-> > iwlagn 0000:40:00.0: queue number out of range: 0, must be 10 to 19
-> > iwlagn 0000:40:00.0: Aggregation not enabled for tid 0 because load = 0
-> > iwlagn 0000:40:00.0: Aggregation not enabled for tid 0 because load = 1
-> > iwlagn 0000:40:00.0: Aggregation not enabled for tid 0 because load = 0
-> > iwlagn 0000:40:00.0: Aggregation not enabled for tid 0 because load = 0
-> > iwlagn 0000:40:00.0: iwlagn_tx_agg_start on ra = 00:23:69:35:d1:3f tid = 0
-> > iwlagn 0000:40:00.0: low ack count detected, restart firmware
-> > iwlagn 0000:40:00.0: On demand firmware reload
-> > iwlagn 0000:40:00.0: Stopping AGG while state not ON or starting
-> > iwlagn 0000:40:00.0: queue number out of range: 0, must be 10 to 19
-> > iwlagn 0000:40:00.0: iwlagn_tx_agg_start on ra = 00:23:69:35:d1:3f tid = 0
-> > iwlagn 0000:40:00.0: low ack count detected, restart firmware
-> > iwlagn 0000:40:00.0: On demand firmware reload
-> > iwlagn 0000:40:00.0: Stopping AGG while state not ON or starting
-> > iwlagn 0000:40:00.0: queue number out of range: 0, must be 10 to 19
-> > iwlagn 0000:40:00.0: Aggregation not enabled for tid 0 because load = 4
-> > iwlagn 0000:40:00.0: Aggregation not enabled for tid 0 because load = 0
-> > 
-> > on 5300 and device was unusable in general. Hence I will only comment
-> > that forcing send tx power after scan is needed.
-> 
-> Not true. I have the same problem with vanilla 2.6.36 without any of my
-> patches (further investigation show this is 2.6.34 -> 2.6.35
-> regression). Problem happens only on 5Ghz, that confused me 
-> because NetworkManager in some cases connects to 5Ghz, in others to
-> 2.4Ghz on my system.
-> 
-> Since my patches do not screw up (at least not that thing :) I'm going
-> to repost them, also further bisect this "low ack count detected" issue.
-> 
+>> +
+>> +	/* Calculate combined mode - when APs are active, operate in AP mode.
+>> +	 * Otherwise use the mode of the new interface. This can currently
+>> +	 * only deal with combinations of APs and STAs. Only one ad-hoc
+>> +	 * interfaces is allowed above.
+>
+> the comment reference to "above" does not make sense here any more.
 
-the error message indicate "low ack count" received by driver. not sure
-how it happen? is it only happen on 5GHz, or the problem on both band?
+This patch is already in..but I can send a followup cleanup patch.
 
-Thanks
-Wey
 
+>
+>> +	 */
+>> +	if (avf->opmode == NL80211_IFTYPE_AP)
+>> +		iter_data->opmode = NL80211_IFTYPE_AP;
+>> +	else
+>> +		if (iter_data->opmode == NL80211_IFTYPE_UNSPECIFIED)
+>> +			iter_data->opmode = avf->opmode;
+>>   }
+>>
+>> -void ath5k_update_bssid_mask(struct ath5k_softc *sc, struct ieee80211_vif
+>> *vif) +static void ath_do_set_opmode(struct ath5k_softc *sc)
+>> +{
+>> +	struct ath5k_hw *ah = sc->ah;
+>> +	ath5k_hw_set_opmode(ah, sc->opmode);
+>> +	ATH5K_DBG(sc, ATH5K_DEBUG_MODE, "mode setup opmode %d (%s)\n",
+>> +		  sc->opmode,
+>> +		  ath_opmode_to_string(sc->opmode) ?
+>> +		  ath_opmode_to_string(sc->opmode) : "UKNOWN");
+>> +}
+>
+> what's the point of this function? just to add the debug print?
+
+Yes.  At one point, I had it being called from several places..but now it's
+called from only one place currently, I think.  I could make it explicitly
+inline code if someone cared.
+
+>> -	/* Set combined mode - when APs are configured, operate in AP mode.
+>> -	 * Otherwise use the mode of the new interface. This can currently
+>> -	 * only deal with combinations of APs and STAs. Only one ad-hoc
+>> -	 * interfaces is allowed above.
+>> -	 */
+>> -	if (sc->num_ap_vifs)
+>> -		sc->opmode = NL80211_IFTYPE_AP;
+>> -	else
+>> -		sc->opmode = vif->type;
+>> -
+>> -	ath5k_hw_set_opmode(ah, sc->opmode);
+>> -
+>
+> i think it makes sense to set the opmode here. and also do the same in
+> ath5k_remove_interface. that way we figure out the opmode when interfaces are
+> added/removed.
+
+It calls ath5k_mode_setup(sc, vif), which sets rx filter, updates bssid mask,
+and sets the opmode.
+
+
+>> @@ -2905,7 +2919,7 @@ ath5k_remove_interface(struct ieee80211_hw *hw,
+>>   	else if (avf->opmode == NL80211_IFTYPE_ADHOC)
+>>   		sc->num_adhoc_vifs--;
+>>
+>> -	ath5k_update_bssid_mask(sc, NULL);
+>> +	ath5k_update_bssid_mask_and_opmode(sc, NULL);
+>>   	mutex_unlock(&sc->lock);
+
+And that recalculates opmode and bssid mask on removal.
+
+Or maybe I'm mis-understanding your suggestion?
+
+Thanks,
+Ben
+
+
+-- 
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
