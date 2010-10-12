@@ -1,94 +1,26 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bear.ext.ti.com ([192.94.94.41]:49475 "EHLO bear.ext.ti.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755307Ab0JFFuT (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 6 Oct 2010 01:50:19 -0400
-From: "Gabay, Benzy" <benzyg@ti.com>
-To: Juuso Oikarinen <juuso.oikarinen@nokia.com>
-CC: "Coelho Luciano (Nokia-MS/Helsinki)" <Luciano.Coelho@nokia.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Date: Wed, 6 Oct 2010 00:50:14 -0500
-Subject: RE: [PATCH 24/25] wl1271: Optimize scan duration
-Message-ID: <676FD6AA0F002F49B89E70F0C5EFD22C135ADBA323@dlee04.ent.ti.com>
-References: <1285576669-8070-1-git-send-email-luciano.coelho@nokia.com>
-	 <1285576669-8070-25-git-send-email-luciano.coelho@nokia.com>
-	 <676FD6AA0F002F49B89E70F0C5EFD22C135AD3C603@dlee04.ent.ti.com>
-	 <1286257254.11177.224.camel@wimaxnb.nmp.nokia.com>
-	 <676FD6AA0F002F49B89E70F0C5EFD22C135AD3CB17@dlee04.ent.ti.com>
-	 <1286341161.11177.254.camel@wimaxnb.nmp.nokia.com>
-	 <676FD6AA0F002F49B89E70F0C5EFD22C135ADBA311@dlee04.ent.ti.com>
- <1286342814.11177.258.camel@wimaxnb.nmp.nokia.com>
-In-Reply-To: <1286342814.11177.258.camel@wimaxnb.nmp.nokia.com>
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
+Received: from external1.orbit-lab.org ([128.6.192.131]:42532 "HELO
+	external1.orbit-lab.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1753402Ab0JLTDU (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 12 Oct 2010 15:03:20 -0400
+Received: from repository3.orbit-lab.org (repository3.orbit-lab.org [10.50.0.41])
+	by external1.orbit-lab.org (Postfix) with ESMTP id ED2F7418D8
+	for <linux-wireless@vger.kernel.org>; Tue, 12 Oct 2010 15:00:28 -0400 (EDT)
+Subject: Compat-wireless release for 2010-10-12 is baked
+To: <linux-wireless@vger.kernel.org>
+Message-Id: <20101012190318.A906F404FC@repository3.orbit-lab.org>
+Date: Tue, 12 Oct 2010 15:03:18 -0400 (EDT)
+From: compat@orbit-lab.org (Compat-wireless cronjob account)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-SnV1c28sDQoNCj4gU2VudDogV2VkbmVzZGF5LCBPY3RvYmVyIDA2LCAyMDEwIDEyOjI3IEFNDQo+
-IA0KPiBPbiBXZWQsIDIwMTAtMTAtMDYgYXQgMDc6MjEgKzAyMDAsIGV4dCBHYWJheSwgQmVuenkg
-d3JvdGU6DQo+ID4gSnV1c28sDQo+ID4NCj4gPg0KPiA+ID4gU2VudDogVHVlc2RheSwgT2N0b2Jl
-ciAwNSwgMjAxMCAxMTo1OSBQTQ0KPiA+ID4NCj4gPiA+IEhpLA0KPiA+ID4NCj4gPiA+IE9uIFR1
-ZSwgMjAxMC0xMC0wNSBhdCAxNzo0MiArMDIwMCwgZXh0IEdhYmF5LCBCZW56eSB3cm90ZToNCj4g
-PiA+ID4gSnV1c28sDQo+ID4gPg0KPiA+ID4gPiA+ID4gPg0KPiA+ID4gPiA+ID4gPiBGcm9tOiBK
-dXVzbyBPaWthcmluZW4gPGp1dXNvLm9pa2FyaW5lbkBub2tpYS5jb20+DQo+ID4gPiA+ID4gPiA+
-DQo+ID4gPiA+ID4gPiA+IEN1cnJlbnRseSB0aGVuIGR3ZWxsIHRpbWVzIGZvciBlYWNoIGNoYW5u
-ZWwgaW4gc2NhbnMgaXMgc2V0DQo+IHRvDQo+ID4gPiBhbg0KPiA+ID4gPiA+ID4gPiBvdmVybHkN
-Cj4gPiA+ID4gPiA+ID4gbG9uZyB2YWx1ZSwgYW5kIGV4Y2Vzc2l2ZSBudW1iZXIgb2YgcHJvYmUt
-cmVxdWVzdHMgYXJlDQo+ID4gPiB0cmFuc21pdHRlZA0KPiA+ID4gPiA+IG9uDQo+ID4gPiA+ID4g
-PiA+IGVhY2gNCj4gPiA+ID4gPiA+ID4gY2hhbm5lbCAoZm9yIGFjdGl2ZSBzY2Fucy4pDQo+ID4g
-PiA+ID4gPiA+DQo+ID4gPiA+ID4gPiA+IEJhc2VkIG9uIHRlc3RpbmcsIGNvbXBhcmFibGUgcmVz
-dWx0cyBjYW4gYmUgcmVjZWl2ZWQgd2l0aA0KPiA+ID4gc21hbGxlcg0KPiA+ID4gPiA+ID4gPiBk
-d2VsbC10aW1lLA0KPiA+ID4gPiA+ID4gPiBhbmQsIHdpdGggZmV2ZXIgcHJvYmUtcmVxdWVzdHMg
-LSBpbiBmYWN0LCByZWR1Y2luZyB0aGUNCj4gbnVtYmVyDQo+ID4gPiBvZg0KPiA+ID4gPiA+IHBy
-b2JlLQ0KPiA+ID4gPiA+ID4gPiByZXF1ZXN0cw0KPiA+ID4gPiA+ID4gPiB0byAyIHNlZW1zIHRv
-IGluY3JlYXNlIHRoZSBudW1iZXIgb2YgZm91bmQgcmVzdWx0cy4NCj4gPiA+ID4gPiA+DQo+ID4g
-PiA+ID4gPiBJIHRoaW5rIHRoYXQgdGhpcyBkb2VzIG5vdCBtYWtpbmcgYW55IHNlbnNlLiBMZXNz
-IHByb2INCj4gcmVxdWVzdHMNCj4gPiA+ID4gPiBzaG91bGQgZ2l2ZSB5b3UgYmFjayBsZXNzIHJl
-c3VsdHMuIEFzIGxlc3MgYmVhY29ucy9wcm9iDQo+IHJlc3BvbnNlcw0KPiA+ID4gYXJlDQo+ID4g
-PiA+ID4gZ2V0dGluZyBiYWNrIHRvIHRoZSBzdGF0aW9uLg0KPiA+ID4gPiA+ID4gSSB0aGluayBh
-bHNvIHRoYXQgb2ZmaWNlIHdpdGggNzAgQVAgaXMgbm90IGEgbm9ybWFsDQo+IGVudmlyb25tZW50
-DQo+ID4gPiB0bw0KPiA+ID4gPiA+IHRlc3QgYW5kIG9wdGltaXplIG51bWJlcnMuDQo+ID4gPiA+
-ID4gPiBJIHdvdWxkIHN1Z2dlc3QgdG8gcmUtdGVzdCBpbiBhIDEtNiBBUCBlbnZpcm9ubWVudCB3
-aGljaCBpcw0KPiA+ID4gbWFraW5nDQo+ID4gPiA+ID4gbW9yZSBzZW5zZSBmb3IgYm90aCBob21l
-IGFuZCBlbnRlcnByaXNlIGVudmlyb25tZW50Lg0KPiA+ID4gPiA+DQo+ID4gPiA+ID4gV2UgaGF2
-ZSBhY3R1YWxseSBwZXJmb3JtZWQgbW9yZSB0ZXN0aW5nIHRoYW4ganVzdCBtZW50aW9uZWQNCj4g
-aGVyZSwNCj4gPiA+IGluDQo+ID4gPiA+ID4gdmFyaWVkIGVudmlyb25tZW50cywgYW5kIGFsbCBv
-ZiB0aGUgdGVzdGluZyBzZWVtcyB0byBpbmRpY2F0ZQ0KPiB0aGF0DQo+ID4gPiA+ID4gcmVkdWNp
-bmcgdGhlIG51bWJlciBvZiBwcm9iZS1yZXFzIHBlciBjaGFubmVsIGlzIG5vdCByZWR1Y2luZw0K
-PiB0aGUNCj4gPiA+ID4gPiBudW1iZXINCj4gPiA+ID4gPiBvZiBhY3F1aXJlZCByZXN1bHRzLiBJ
-bnN0ZWFkLCBpbiBzb21lIHNjZW5hcmlvcywgaXQgaXMNCj4gaW5jcmVhc2luZw0KPiA+ID4gdGhl
-DQo+ID4gPiA+ID4gbnVtYmVyIG9mIGFjcXVpcmVkIHJlc3VsdHMuDQo+ID4gPiA+ID4NCj4gPiA+
-ID4NCj4gPiA+ID4gPj4gIEkgZG9u4oCZdCBrbm93IGlmIHRoYXQgaXMgY29udmVudGlvbmFsIHJl
-cXVlc3Q6IGNhbiB5b3Ugc2hhcmUNCj4gdGhlDQo+ID4gPiBmdWxsIHJlc3VsdHMgYW5kIHNldHVw
-IGRldGFpbHM/DQo+ID4gPg0KPiA+ID4gTm8sIEkgZG9uJ3QgaGF2ZSBhbnkgZm9ybWFsIGRvY3Vt
-ZW50YXRpb24gdG8gc2hhcmUuDQo+ID4gPg0KPiA+ID4gVGhlIHNldHVwIGRldGFpbHMgYXJlIHNp
-bXBsZSBlbm91Z2ggdGhvdWdoLiBUaGUgdGVzdGVkIHRoaXMgb24NCj4gY29tbWFuZA0KPiA+ID4g
-bGluZSB1c2luZyBhIHNpbXBsZSBzY3JpcHQgdGhhdCBmbHVzaGVzIGV4aXN0aW5nIHNjYW4gcmVz
-dWx0cywgdGhlbg0KPiA+ID4gcGVyZm9ybXMgdHdvIG9yIHRocmVlIHNjYW5zIGNvdW50aW5nIHRo
-ZSBudW1iZXIgb2Ygc2NhbiByZXN1bHRzIG9uDQo+IHRoZQ0KPiA+ID4gbGFzdCByb3VuZCB1c2lu
-ZyBncmVwIGFuZCB3Yy4NCj4gPiA+DQo+ID4gPiBXZSBwZXJmb3JtZWQgdGhlIHRlc3RpbmcgaW4g
-b2ZmaWNlIGVudmlyb25tZW50IGFuZCBhIHNoaWVsZGVkDQo+IGNoYW1iZXIsDQo+ID4gPiB3aGlj
-aCBvbmx5IGhhcyBzZWxlY3RlZCBBUCdzIHdpdGhpbiBpdC4NCj4gPiA+DQo+ID4gPiBCZXR3ZWVu
-IHRlc3Qgcm91bmRzIHdlIG1vZGlmaWVkIHRoZSBkcml2ZXIgcGFyYW1ldGVycyByZWxhdGVkIHRv
-DQo+ID4gPiBzY2FubmluZywgaS5lLiB3ZSBtb2RpZmllZCB0aGUgbnVtYmVyIG9mIHByb2JlLXJl
-cXMgYW5kIHRoZSBkd2VsbA0KPiB0aW1lDQo+ID4gPiBvbiBlYWNoIGNoYW5uZWwuDQo+ID4gPg0K
-PiA+ID4gLUp1dXNvDQo+ID4NCj4gPg0KPiA+IFNvdW5kcyBncmVhdC4gSnVzdCBvbmUgbW9yZTog
-d2hpY2ggQVAgYnJhbmRzIChleGNsdWRpbmcgQ2lzY28pID8NCj4gDQo+IEluIHRoZSBvZmZpY2Ug
-ZW52aXJvbm1lbnQgd2UgaGF2ZSBhIHZhcmlldHkgb2YgYnJhbmRzLCBpbmNsdWRpbmcgRC0NCj4g
-bGluaywNCj4gQnVmZmFsbywgVGVsZXdlbGwsIFRQLWxpbmsgYW5kIGxpbmtzeXMsIGNpc2NvIGV0
-Yy4NCj4gDQo+IEluIHRoZSBzaGllbGRlZCBjaGFtYmVyIHdlIGFyZSB1c2luZyBsaW5rc3lzIHdy
-dDYxMG4gQVAncy4NCj4gDQo+IC1KdXVzbw0KPiANCg0KDQpQZXJmZWN0Lg0KDQpJZiBzdGlsbCBu
-ZWVkZWQsIEkgQUNLIHRoaXMgY2hhbmdlLg0KDQpCZW56eSBHYWJheQ0KDQoNCg0KDQo+ID4NCj4g
-Pg0KPiA+ID4NCj4gPiA+ID4gPiBXZSBkaWQgbm90IHNlZSByZWR1Y3Rpb24gaW4gdGhlIHByb2Jh
-YmlsaXR5IG9mIGZpbmRpbmcgYQ0KPiBzcGVjaWZpYw0KPiA+ID4gQVAgaW4NCj4gPiA+ID4gPiBh
-IGZldyAob25lIG9yIHR3bykgQVAgZW52aXJvbm1lbnQgZWl0aGVyLg0KPiA+ID4gPiA+DQo+ID4g
-PiA+ID4gVGhlIGVmZmVjdCBzZWVtcyB0byBiZSB0aGlzIHdheSBiZWNhdXNlIHJlZHVjaW5nIHRo
-ZSBudW1iZXIgb2YNCj4gPiA+ID4gPiBwcm9iZS1yZXEncyBkcmFtYXRpY2FsbHkgcmVkdWNlcyB0
-aGUgbm9pc2UgZ2VuZXJhdGVkIGJ5IHByb2JlLQ0KPiA+ID4gcmVzcG9uc2VzDQo+ID4gPiA+ID4g
-ZnJvbSBBUCdzIG9uIG5laWdoYm91cmluZyBjaGFubmVscy4NCj4gPiA+ID4gPg0KPiA+ID4gPiA+
-IC1KdXVzbw0KPiA+ID4gPiA+DQo+ID4gPg0KPiA+DQo+ID4NCj4gBO+/vXsubu+/vSvvv73vv73v
-v73vv73vv73vv73vv70rJe+/ve+/vWx6d23vv73vv71i77+966ey77+977+9cu+/ve+/vXpY77+9
-77+9HCLvv73vv71e77+9yKfvv70X77+977+93Kh977+977+977+9xqB677+9Jmo6K3bvv73vv73v
-v70N77+977+977+977+9eloNCj4gK++/ve+/vSt6Zu+/ve+/ve+/vWjvv73vv73vv71+77+977+9
-77+977+9ae+/ve+/ve+/vXrvv70e77+9d++/ve+/ve+/vT/vv73vv73vv73vv70m77+9Kd+iG2YN
-Cj4gDQoNCg==
+>From git://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next
+   ce3f960..52c2826  history    -> origin/history
+ + af7f0f8...a5e5b8f master     -> origin/master  (forced update)
+   85a3318..29979aa  stable     -> origin/stable
+ * [new tag]         next-20101012 -> next-20101012
+
+compat-wireless code metrics
+
+    731304 - Total upstream lines of code being pulled
