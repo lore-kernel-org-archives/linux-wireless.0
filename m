@@ -1,94 +1,82 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:38790 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753509Ab0JKTUp (ORCPT
+Received: from dallas.jonmasters.org ([72.29.103.172]:47744 "EHLO
+	dallas.jonmasters.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757080Ab0JLIFQ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 11 Oct 2010 15:20:45 -0400
-From: greearb@candelatech.com
+	Tue, 12 Oct 2010 04:05:16 -0400
+Subject: Re: PROBLEM: brcm80211 hangs on 2.6.36-0.34.rc6.git3.fc15.x86_64
+From: Jon Masters <jonathan@jonmasters.org>
 To: linux-wireless@vger.kernel.org
-Cc: Ben Greear <greearb@candelatech.com>
-Subject: [RFC] ath5k:  Move debugfs under ieee80211/[wiphy-name]
-Date: Mon, 11 Oct 2010 12:20:41 -0700
-Message-Id: <1286824841-30822-1-git-send-email-greearb@candelatech.com>
+Cc: Brett Rudley <brudley@broadcom.com>,
+	Henry Ptasinski <henryp@broadcom.com>,
+	Nohee Ko <noheek@broadcom.com>,
+	Jon Masters <jcm@jonmasters.org>,
+	LKML <linux-kernel@vger.kernel.org>
+In-Reply-To: <1286869659.8574.10.camel@constitution.bos.jonmasters.org>
+References: <20101008065810.GA1680@constitution.bos.jonmasters.org>
+	 <1286538243.21485.298.camel@constitution.bos.jonmasters.org>
+	 <1286869659.8574.10.camel@constitution.bos.jonmasters.org>
+Content-Type: text/plain; charset="UTF-8"
+Date: Tue, 12 Oct 2010 04:03:43 -0400
+Message-ID: <1286870623.9228.2.camel@constitution.bos.jonmasters.org>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ben Greear <greearb@candelatech.com>
+On Tue, 2010-10-12 at 03:47 -0400, Jon Masters wrote:
+> On Fri, 2010-10-08 at 07:44 -0400, Jon Masters wrote:
+> > On Fri, 2010-10-08 at 02:58 -0400, Jon Masters wrote:
+> > 
+> > > I tried building the new brcm80211 driver from staging-next on Fedora rawhide
+> > > kernel 2.6.36-0.34.rc6.git3.fc15.x86_64. Now, of course, it's not the
+> > > staging-next kernel (I'll try that now this doesn't work) but perhaps this
+> > > report will still be of use to the Broadcom/other wireless folks.
+> > 
+> > I pulled the latest staging-next onto Linus' latest git tree and still
+> > experience problems with the driver. It seems that the first attempt to
+> > actually transmit results in the system locking hard. Once again, I am
+> > attaching the output from running a netconsole (due to the box I'm on,
+> > it's an attachment this time, sorry about that - don't trust evolution)
+> > where the trace is basically the same as the original trace I posted.
+> > 
+> > NOTE: in both cases, the driver is loaded with "msglevel=2
+> > phymsglevel=2" which (although not documented) suggests to enable
+> > tracing, and does certainly yield more debugging output.
+> 
+> The problem may be that the driver doesn't correctly handle its logic in
+> wl_up in the case that the call to wlc_up doesn't result in the value of
+> wl->pub->up being TRUE. This can happen, for example if radio_disabled
+> is true, but I'm sure there are other problems, too. This result is not
+> properly checked in wl_up, so we can get a situation where we will later
+> try to call the ops->tx function with wl down. You also don't check
+> wl_up return codes in general, for example in wlc_radio_enable.
 
-This automatically keeps things proper when wiphy
-is renamed.
+You need to change the following lines in wlc_up:
 
-Based on patch by Johannes Berg <johannes@sipsolutions.net>
+        if (wlc->pub->radio_disabled) {
+                wlc_radio_monitor_start(wlc);
+                return 0;
+        }
 
-Signed-off-by: Ben Greear <greearb@candelatech.com>
----
-:100644 100644 c9732a6... 032c2ee... M	drivers/net/wireless/ath/ath5k/base.c
-:100644 100644 a342a9d... 673ab83... M	drivers/net/wireless/ath/ath5k/debug.c
- drivers/net/wireless/ath/ath5k/base.c  |    3 +--
- drivers/net/wireless/ath/ath5k/debug.c |    8 ++------
- 2 files changed, 3 insertions(+), 8 deletions(-)
+This should be returning BCME_RADIOOFF. That's a start. Now the driver
+doesn't explode and does what you intended with the background worker
+looking to see if the radio gets turned on. At least no hard hang.
 
-diff --git a/drivers/net/wireless/ath/ath5k/base.c b/drivers/net/wireless/ath/ath5k/base.c
-index c9732a6..032c2ee 100644
---- a/drivers/net/wireless/ath/ath5k/base.c
-+++ b/drivers/net/wireless/ath/ath5k/base.c
-@@ -3543,8 +3543,6 @@ ath5k_pci_probe(struct pci_dev *pdev,
- 	sc->hw = hw;
- 	sc->pdev = pdev;
- 
--	ath5k_debug_init_device(sc);
--
- 	/*
- 	 * Mark the device as detached to avoid processing
- 	 * interrupts until setup is complete.
-@@ -3652,6 +3650,7 @@ ath5k_pci_probe(struct pci_dev *pdev,
- 		}
- 	}
- 
-+	ath5k_debug_init_device(sc);
- 
- 	/* ready to process interrupts */
- 	__clear_bit(ATH_STAT_INVALID, sc->status);
-diff --git a/drivers/net/wireless/ath/ath5k/debug.c b/drivers/net/wireless/ath/ath5k/debug.c
-index a342a9d..673ab83 100644
---- a/drivers/net/wireless/ath/ath5k/debug.c
-+++ b/drivers/net/wireless/ath/ath5k/debug.c
-@@ -72,8 +72,6 @@ module_param_named(debug, ath5k_debug, uint, 0);
- #include "reg.h"
- #include "ani.h"
- 
--static struct dentry *ath5k_global_debugfs;
--
- static int ath5k_debugfs_open(struct inode *inode, struct file *file)
- {
- 	file->private_data = inode->i_private;
-@@ -894,7 +892,6 @@ static const struct file_operations fops_queue = {
- void
- ath5k_debug_init(void)
- {
--	ath5k_global_debugfs = debugfs_create_dir("ath5k", NULL);
- }
- 
- void
-@@ -902,8 +899,8 @@ ath5k_debug_init_device(struct ath5k_softc *sc)
- {
- 	sc->debug.level = ath5k_debug;
- 
--	sc->debug.debugfs_phydir = debugfs_create_dir(wiphy_name(sc->hw->wiphy),
--				ath5k_global_debugfs);
-+	sc->debug.debugfs_phydir = debugfs_create_dir("ath5k",
-+				sc->hw->wiphy->debugfsdir);
- 
- 	sc->debug.debugfs_debug = debugfs_create_file("debug",
- 				S_IWUSR | S_IRUSR,
-@@ -946,7 +943,6 @@ ath5k_debug_init_device(struct ath5k_softc *sc)
- void
- ath5k_debug_finish(void)
- {
--	debugfs_remove(ath5k_global_debugfs);
- }
- 
- void
--- 
-1.7.2.2
+> This might all be related to the rfkill and other soft switch stuff I'm
+> not really super up to date on. This laptop doesn't have a hardware
+> switch that I'm aware of, but I assume the state is somehow recorded in
+> software (by the BIOS?) and perhaps this is how rfkill is supposed to
+> work (I'll go look this up). Anyway, if I can figure out how to get the
+> radio to work and hack up the driver to start with the device down,
+> perhaps it'll not try to transmit and not fall over :)
+
+Looks like you don't do rfkill. I'm not sure what I'm supposed to do to
+turn the radio on on the ASUS EeePC 1015PEM but I will poke at a few
+things. If you have advice, it would be welcome.
+
+Let me know if you need a patch for the above, and I'll send it along
+with anything else I think of - perhaps some more error handling :)
+
+Jon.
+
 
