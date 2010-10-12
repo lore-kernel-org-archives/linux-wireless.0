@@ -1,46 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:36958 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753161Ab0JBIpl (ORCPT
+Received: from mail-bw0-f46.google.com ([209.85.214.46]:57585 "EHLO
+	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757038Ab0JLInv convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 2 Oct 2010 04:45:41 -0400
-From: Johannes Berg <johannes@sipsolutions.net>
-Reply-To: Johannes Berg <johannes@sipsolutions.net>
-To: Christian Lamparter <chunkeey@googlemail.com>,
-	linux-wireless@vger.kernel.org
-Cc: "John W. Linville" <linville@tuxdriver.com>
-Subject: Re: [PATCH] mac80211: fix rx monitor filter refcounters
-References: <201009281836.24529.chunkeey@googlemail.com>
-	 <201009292157.04141.chunkeey@googlemail.com>
-	 <1285790439.3756.35.camel@jlt3.sipsolutions.net>
-	  <201010012353.21053.chunkeey@googlemail.com>
-In-Reply-To: <201010012353.21053.chunkeey@googlemail.com>
-Content-Type: text/plain; charset=utf-8
-Date: Sat, 02 Oct 2010 10:46:27 +0200
-Message-Id: <1286009187.1646.2.camel@Nokia-N900-51-1>
-Mime-Version: 1.0
+	Tue, 12 Oct 2010 04:43:51 -0400
+Received: by bwz15 with SMTP id 15so2241978bwz.19
+        for <linux-wireless@vger.kernel.org>; Tue, 12 Oct 2010 01:43:50 -0700 (PDT)
+MIME-Version: 1.0
+Date: Tue, 12 Oct 2010 10:43:47 +0200
+Message-ID: <AANLkTi=kL7Y42Z0GLL9MUYQ2yXjBSh8sky0r-5_FZ1BA@mail.gmail.com>
+Subject: Chromium Wifi test ?
+From: Jim Harvey <jmhrv3@gmail.com>
+To: linux-wireless <linux-wireless@vger.kernel.org>
+Cc: Paul Stewart <pstew@google.com>,
+	Sam Leffler <sleffler@chromium.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> > I'm fine with not allowing the cook flag to change,
-> > seems like a pretty special case anyway. Or, we can
-> > allow it to change, but only while the interface is
-> > down, right?
-> jup, works:
-> 
-> command failed: Function not implemented (-38), or should
-> we use a different error code like -EBUSY/-EOPNOTSUPP?
+Hello,
 
-I think typically I'd use ebusy, and I think it'd be more descriptive here?
+An�Automated�WiFi�Testing facility was presented at the last wireless
+summit by the chromium folks:
 
-> +        if (test_bit(SDATA_STATE_RUNNING, &sdata->state)) {
+http://wireless.kernel.org/en/developers/Summits/SanFranciscoBayArea-2010
 
-There's an inline for this, I think?
+I can see that it is built on top of autotest, but I can't seem to
+find the actual wifi tests.. can you please send a link to it ?
 
->   static inline bool ieee80211_sdata_running(struct ieee80211_sub_if_data
+It sounds interesting.
 
-heh, by accident it's even in your patch :)
+Can you please tell what is the latest status ?
 
-ACK with those two changes.
+Btw, why wasn't the wifi-test project re-used ? does it have any
+conceptual gap ?
 
-Johannes
+Thank you,
+~jmhrv
