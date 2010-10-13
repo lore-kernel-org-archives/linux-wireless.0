@@ -1,58 +1,97 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wy0-f174.google.com ([74.125.82.174]:41875 "EHLO
-	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753898Ab0JBJfY (ORCPT
+Received: from smtp-out.google.com ([216.239.44.51]:38220 "EHLO
+	smtp-out.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753628Ab0JMWsy (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 2 Oct 2010 05:35:24 -0400
-Received: by wyb28 with SMTP id 28so3658555wyb.19
-        for <linux-wireless@vger.kernel.org>; Sat, 02 Oct 2010 02:35:20 -0700 (PDT)
-From: Ivo van Doorn <ivdoorn@gmail.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Subject: [PATCH 04/20] rt2x00: Fix SM PS check
-Date: Sat, 2 Oct 2010 11:28:02 +0200
-Cc: users@rt2x00.serialmonkey.com, linux-wireless@vger.kernel.org,
-	Helmut Schaa <helmut.schaa@googlemail.com>
-References: <201010021126.18748.IvDoorn@gmail.com> <201010021127.04544.IvDoorn@gmail.com> <201010021127.36277.IvDoorn@gmail.com>
-In-Reply-To: <201010021127.36277.IvDoorn@gmail.com>
-MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Message-Id: <201010021128.03722.IvDoorn@gmail.com>
+	Wed, 13 Oct 2010 18:48:54 -0400
+Received: from hpaq6.eem.corp.google.com (hpaq6.eem.corp.google.com [172.25.149.6])
+	by smtp-out.google.com with ESMTP id o9DMmrag030357
+	for <linux-wireless@vger.kernel.org>; Wed, 13 Oct 2010 15:48:53 -0700
+Received: from glenhelen.mtv.corp.google.com (glenhelen.mtv.corp.google.com [172.22.72.223])
+	by hpaq6.eem.corp.google.com with ESMTP id o9DMmqnk025364
+	for <linux-wireless@vger.kernel.org>; Wed, 13 Oct 2010 15:48:52 -0700
+From: Paul Stewart <pstew@google.com>
+Date: Wed, 13 Oct 2010 15:10:17 -0700
+Subject: [PATCH 2/6] Ad cfg80211 call for threshold notifications
+To: linux-wireless@vger.kernel.org
+Message-Id: <20101013224851.9C46820418@glenhelen.mtv.corp.google.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Helmut Schaa <helmut.schaa@googlemail.com>
+Similar to its rssi counterpart, provide a cfg80211 call for sending
+bitrate change updates.
 
-Fix a check for dynamic SM PS mode in the STAs HT caps. Since a
-value of 3 means "SM PS disabled" the previous check assumed in
-that case that "dynamic SM PS" was enabled and as such prefixed
-every MCS>7 frame with a unnecessary RTS/CTS exchange. Also,
-the bit shift was done in the wrong direction.
+Signed-off-by: Paul Stewart <pstew@google.com>
 
-Signed-off-by: Helmut Schaa <helmut.schaa@googlemail.com>
-Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
 ---
- drivers/net/wireless/rt2x00/rt2x00ht.c |    7 ++++---
- 1 files changed, 4 insertions(+), 3 deletions(-)
+ include/net/cfg80211.h |   18 ++++++++++++++++++
+ net/wireless/mlme.c    |   13 +++++++++++++
+ 2 files changed, 31 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/net/wireless/rt2x00/rt2x00ht.c b/drivers/net/wireless/rt2x00/rt2x00ht.c
-index ad3c7ff..48b6ed4 100644
---- a/drivers/net/wireless/rt2x00/rt2x00ht.c
-+++ b/drivers/net/wireless/rt2x00/rt2x00ht.c
-@@ -60,9 +60,10 @@ void rt2x00ht_create_tx_descriptor(struct queue_entry *entry,
- 		 * when using more then one tx stream (>MCS7).
- 		 */
- 		if (tx_info->control.sta && txdesc->mcs > 7 &&
--		    (tx_info->control.sta->ht_cap.cap &
--		     (WLAN_HT_CAP_SM_PS_DYNAMIC <<
--		      IEEE80211_HT_CAP_SM_PS_SHIFT)))
-+		    ((tx_info->control.sta->ht_cap.cap &
-+		      IEEE80211_HT_CAP_SM_PS) >>
-+		     IEEE80211_HT_CAP_SM_PS_SHIFT) ==
-+		    WLAN_HT_CAP_SM_PS_DYNAMIC)
- 			__set_bit(ENTRY_TXD_HT_MIMO_PS, &txdesc->flags);
- 	} else {
- 		txdesc->mcs = rt2x00_get_rate_mcs(hwrate->mcs);
+diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+index 2a7936d..e7f044e 100644
+--- a/include/net/cfg80211.h
++++ b/include/net/cfg80211.h
+@@ -1146,6 +1146,7 @@ struct cfg80211_pmksa {
+  * @set_power_mgmt: Configure WLAN power management. A timeout value of -1
+  *	allows the driver to adjust the dynamic ps timeout value.
+  * @set_cqm_rssi_config: Configure connection quality monitor RSSI threshold.
++ * @set_cqm_bitrate_config: Config connection quality monitor bitrate threshold.
+  *
+  * @mgmt_frame_register: Notify driver that a management frame type was
+  *	registered. Note that this callback may not sleep, and cannot run
+@@ -1301,6 +1302,10 @@ struct cfg80211_ops {
+ 				       struct net_device *dev,
+ 				       s32 rssi_thold, u32 rssi_hyst);
+ 
++	int	(*set_cqm_bitrate_config)(struct wiphy *wiphy,
++					  struct net_device *dev,
++					  u32 bitrate_thold);
++
+ 	void	(*mgmt_frame_register)(struct wiphy *wiphy,
+ 				       struct net_device *dev,
+ 				       u16 frame_type, bool reg);
+@@ -2595,6 +2600,19 @@ void cfg80211_cqm_rssi_notify(struct net_device *dev,
+ 			      enum nl80211_cqm_rssi_threshold_event rssi_event,
+ 			      gfp_t gfp);
+ 
++/**
++ * cfg80211_cqm_bitrate_notify - connection quality monitoring bitrate event
++ * @dev: network device
++ * @rate: the new transmit rate
++ * @gfp: context flags
++ *
++ * This function is called when a the transmit bitrate changes, and
++ * connection quality monitoring is configured to capture these events.
++ */
++void cfg80211_cqm_bitrate_notify(struct net_device *dev,
++				 u32 bitrate,
++				 gfp_t gfp);
++
+ /* Logging, debugging and troubleshooting/diagnostic helpers. */
+ 
+ /* wiphy_printk helpers, similar to dev_printk */
+diff --git a/net/wireless/mlme.c b/net/wireless/mlme.c
+index 26838d9..ebb4e3a 100644
+--- a/net/wireless/mlme.c
++++ b/net/wireless/mlme.c
+@@ -1028,3 +1028,16 @@ void cfg80211_cqm_rssi_notify(struct net_device *dev,
+ 	nl80211_send_cqm_rssi_notify(rdev, dev, rssi_event, gfp);
+ }
+ EXPORT_SYMBOL(cfg80211_cqm_rssi_notify);
++
++void cfg80211_cqm_bitrate_notify(struct net_device *dev,
++				 u32 bitrate,
++				 gfp_t gfp)
++{
++	struct wireless_dev *wdev = dev->ieee80211_ptr;
++	struct wiphy *wiphy = wdev->wiphy;
++	struct cfg80211_registered_device *rdev = wiphy_to_dev(wiphy);
++
++	/* Indicate roaming trigger event to user space */
++	nl80211_send_cqm_bitrate_notify(rdev, dev, bitrate, gfp);
++}
++EXPORT_SYMBOL(cfg80211_cqm_bitrate_notify);
 -- 
-1.7.2.3
+1.7.1
 
