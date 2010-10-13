@@ -1,45 +1,266 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:50545 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1760126Ab0JGHvT (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 7 Oct 2010 03:51:19 -0400
-Subject: Re: Bug#599345: linux-image-2.6.32-5-amd64: iwlagn allocation
- failure
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Ben Hutchings <ben@decadent.org.uk>
-Cc: Julien Cristau <jcristau@debian.org>, 599345@bugs.debian.org,
-	ilw@linux.intel.com, linux-wireless@vger.kernel.org
-In-Reply-To: <1286402043.2955.81.camel@localhost>
-References: <20101006191947.GA3036@radis.liafa.jussieu.fr>
-	 <1286402043.2955.81.camel@localhost>
-Content-Type: text/plain; charset="UTF-8"
-Date: Thu, 07 Oct 2010 09:51:10 +0200
-Message-ID: <1286437870.3657.16.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+Received: from nbd.name ([88.198.39.176]:43812 "EHLO ds10.nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753200Ab0JMOnn (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 13 Oct 2010 10:43:43 -0400
+From: Felix Fietkau <nbd@openwrt.org>
+To: linux-wireless@vger.kernel.org
+Cc: linville@tuxdriver.com, lrodriguez@atheros.com
+Subject: [PATCH 3/3] ath9k_hw: remove enum wireless_mode and its users
+Date: Wed, 13 Oct 2010 16:43:28 +0200
+Message-Id: <1286981008-85124-3-git-send-email-nbd@openwrt.org>
+In-Reply-To: <1286981008-85124-2-git-send-email-nbd@openwrt.org>
+References: <1286981008-85124-1-git-send-email-nbd@openwrt.org>
+ <1286981008-85124-2-git-send-email-nbd@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2010-10-06 at 22:54 +0100, Ben Hutchings wrote:
-> On Wed, 2010-10-06 at 21:19 +0200, Julien Cristau wrote:
-> > Package: linux-2.6
-> > Version: 2.6.32-23
+The wireless mode bitfield was only used to detect 2.4 and 5 GHz support,
+which can be simplified by using ATH9K_HW_CAP_* capabilities.
 
-> > Oct  6 21:05:02 radis kernel: [378665.326381] NetworkManager: page allocation failure. order:4, mode:0x40d0
-> > Oct  6 21:05:02 radis kernel: [378665.326393] Pid: 25555, comm: NetworkManager Not tainted 2.6.32-5-amd64 #1
-> [...]
-> > Oct  6 21:05:02 radis kernel: [378665.363630] iwlagn 0000:0c:00.0: kmalloc for auxiliary BD structures failed
-> [...]
-> 
-> This particular allocation is for an array which is not used for DMA and
-> therefore could be stored in non-contiguous pages allocated with
-> vmalloc().  But there may be some good reason not to do this.
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+---
+ drivers/net/wireless/ath/ath9k/htc_drv_init.c |   12 ++++----
+ drivers/net/wireless/ath/ath9k/hw.c           |   34 +++----------------------
+ drivers/net/wireless/ath/ath9k/hw.h           |   15 +---------
+ drivers/net/wireless/ath/ath9k/init.c         |   12 ++++----
+ drivers/net/wireless/ath/ath9k/rc.c           |   33 +++---------------------
+ 5 files changed, 22 insertions(+), 84 deletions(-)
 
-I have, however much more recently than that kernel, cleaned this up in
-commit ff0d91c3eea6e25b47258349b455671f98f1b0cd -- this particular
-allocation is now 2048 or 4096 bytes depending on the architecture (32
-vs 64 bit pointers). If you want to backport this, there are two or
-three more commits right before it that would probably be required.
-
-johannes
+diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_init.c b/drivers/net/wireless/ath/ath9k/htc_drv_init.c
+index bbb54bc..3d7b97f 100644
+--- a/drivers/net/wireless/ath/ath9k/htc_drv_init.c
++++ b/drivers/net/wireless/ath/ath9k/htc_drv_init.c
+@@ -566,7 +566,7 @@ static void ath9k_init_crypto(struct ath9k_htc_priv *priv)
+ 
+ static void ath9k_init_channels_rates(struct ath9k_htc_priv *priv)
+ {
+-	if (test_bit(ATH9K_MODE_11G, priv->ah->caps.wireless_modes)) {
++	if (priv->ah->caps.hw_caps & ATH9K_HW_CAP_2GHZ) {
+ 		priv->sbands[IEEE80211_BAND_2GHZ].channels =
+ 			ath9k_2ghz_channels;
+ 		priv->sbands[IEEE80211_BAND_2GHZ].band = IEEE80211_BAND_2GHZ;
+@@ -577,7 +577,7 @@ static void ath9k_init_channels_rates(struct ath9k_htc_priv *priv)
+ 			ARRAY_SIZE(ath9k_legacy_rates);
+ 	}
+ 
+-	if (test_bit(ATH9K_MODE_11A, priv->ah->caps.wireless_modes)) {
++	if (priv->ah->caps.hw_caps & ATH9K_HW_CAP_5GHZ) {
+ 		priv->sbands[IEEE80211_BAND_5GHZ].channels = ath9k_5ghz_channels;
+ 		priv->sbands[IEEE80211_BAND_5GHZ].band = IEEE80211_BAND_5GHZ;
+ 		priv->sbands[IEEE80211_BAND_5GHZ].n_channels =
+@@ -740,18 +740,18 @@ static void ath9k_set_hw_capab(struct ath9k_htc_priv *priv,
+ 	hw->extra_tx_headroom = sizeof(struct tx_frame_hdr) +
+ 		sizeof(struct htc_frame_hdr) + 4;
+ 
+-	if (test_bit(ATH9K_MODE_11G, priv->ah->caps.wireless_modes))
++	if (priv->ah->caps.hw_caps & ATH9K_HW_CAP_2GHZ)
+ 		hw->wiphy->bands[IEEE80211_BAND_2GHZ] =
+ 			&priv->sbands[IEEE80211_BAND_2GHZ];
+-	if (test_bit(ATH9K_MODE_11A, priv->ah->caps.wireless_modes))
++	if (priv->ah->caps.hw_caps & ATH9K_HW_CAP_5GHZ)
+ 		hw->wiphy->bands[IEEE80211_BAND_5GHZ] =
+ 			&priv->sbands[IEEE80211_BAND_5GHZ];
+ 
+ 	if (priv->ah->caps.hw_caps & ATH9K_HW_CAP_HT) {
+-		if (test_bit(ATH9K_MODE_11G, priv->ah->caps.wireless_modes))
++		if (priv->ah->caps.hw_caps & ATH9K_HW_CAP_2GHZ)
+ 			setup_ht_cap(priv,
+ 				     &priv->sbands[IEEE80211_BAND_2GHZ].ht_cap);
+-		if (test_bit(ATH9K_MODE_11A, priv->ah->caps.wireless_modes))
++		if (priv->ah->caps.hw_caps & ATH9K_HW_CAP_5GHZ)
+ 			setup_ht_cap(priv,
+ 				     &priv->sbands[IEEE80211_BAND_5GHZ].ht_cap);
+ 	}
+diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
+index f5d7917..cc13ee1 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.c
++++ b/drivers/net/wireless/ath/ath9k/hw.c
+@@ -1800,37 +1800,11 @@ int ath9k_hw_fill_cap_info(struct ath_hw *ah)
+ 		return -EINVAL;
+ 	}
+ 
+-	bitmap_zero(pCap->wireless_modes, ATH9K_MODE_MAX);
+-
+-	if (eeval & AR5416_OPFLAGS_11A) {
+-		set_bit(ATH9K_MODE_11A, pCap->wireless_modes);
+-		if (ah->config.ht_enable) {
+-			if (!(eeval & AR5416_OPFLAGS_N_5G_HT20))
+-				set_bit(ATH9K_MODE_11NA_HT20,
+-					pCap->wireless_modes);
+-			if (!(eeval & AR5416_OPFLAGS_N_5G_HT40)) {
+-				set_bit(ATH9K_MODE_11NA_HT40PLUS,
+-					pCap->wireless_modes);
+-				set_bit(ATH9K_MODE_11NA_HT40MINUS,
+-					pCap->wireless_modes);
+-			}
+-		}
+-	}
++	if (eeval & AR5416_OPFLAGS_11A)
++		pCap->hw_caps |= ATH9K_HW_CAP_5GHZ;
+ 
+-	if (eeval & AR5416_OPFLAGS_11G) {
+-		set_bit(ATH9K_MODE_11G, pCap->wireless_modes);
+-		if (ah->config.ht_enable) {
+-			if (!(eeval & AR5416_OPFLAGS_N_2G_HT20))
+-				set_bit(ATH9K_MODE_11NG_HT20,
+-					pCap->wireless_modes);
+-			if (!(eeval & AR5416_OPFLAGS_N_2G_HT40)) {
+-				set_bit(ATH9K_MODE_11NG_HT40PLUS,
+-					pCap->wireless_modes);
+-				set_bit(ATH9K_MODE_11NG_HT40MINUS,
+-					pCap->wireless_modes);
+-			}
+-		}
+-	}
++	if (eeval & AR5416_OPFLAGS_11G)
++		pCap->hw_caps |= ATH9K_HW_CAP_2GHZ;
+ 
+ 	pCap->tx_chainmask = ah->eep_ops->get_eeprom(ah, EEP_TX_MASK);
+ 	/*
+diff --git a/drivers/net/wireless/ath/ath9k/hw.h b/drivers/net/wireless/ath/ath9k/hw.h
+index 6b92334..d032939 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.h
++++ b/drivers/net/wireless/ath/ath9k/hw.h
+@@ -164,18 +164,6 @@ enum ath_ini_subsys {
+ 	ATH_INI_NUM_SPLIT,
+ };
+ 
+-enum wireless_mode {
+-	ATH9K_MODE_11A = 0,
+-	ATH9K_MODE_11G,
+-	ATH9K_MODE_11NA_HT20,
+-	ATH9K_MODE_11NG_HT20,
+-	ATH9K_MODE_11NA_HT40PLUS,
+-	ATH9K_MODE_11NA_HT40MINUS,
+-	ATH9K_MODE_11NG_HT40PLUS,
+-	ATH9K_MODE_11NG_HT40MINUS,
+-	ATH9K_MODE_MAX,
+-};
+-
+ enum ath9k_hw_caps {
+ 	ATH9K_HW_CAP_HT                         = BIT(0),
+ 	ATH9K_HW_CAP_RFSILENT                   = BIT(1),
+@@ -190,11 +178,12 @@ enum ath9k_hw_caps {
+ 	ATH9K_HW_CAP_SGI_20			= BIT(10),
+ 	ATH9K_HW_CAP_PAPRD			= BIT(11),
+ 	ATH9K_HW_CAP_ANT_DIV_COMB		= BIT(12),
++	ATH9K_HW_CAP_2GHZ			= BIT(13),
++	ATH9K_HW_CAP_5GHZ			= BIT(14),
+ };
+ 
+ struct ath9k_hw_capabilities {
+ 	u32 hw_caps; /* ATH9K_HW_CAP_* from ath9k_hw_caps */
+-	DECLARE_BITMAP(wireless_modes, ATH9K_MODE_MAX); /* ATH9K_MODE_* */
+ 	u16 total_queues;
+ 	u16 keycache_size;
+ 	u16 low_5ghz_chan, high_5ghz_chan;
+diff --git a/drivers/net/wireless/ath/ath9k/init.c b/drivers/net/wireless/ath/ath9k/init.c
+index a4c5ed4..bc6c4df 100644
+--- a/drivers/net/wireless/ath/ath9k/init.c
++++ b/drivers/net/wireless/ath/ath9k/init.c
+@@ -485,7 +485,7 @@ static int ath9k_init_channels_rates(struct ath_softc *sc)
+ 		     ARRAY_SIZE(ath9k_5ghz_chantable) !=
+ 		     ATH9K_NUM_CHANNELS);
+ 
+-	if (test_bit(ATH9K_MODE_11G, sc->sc_ah->caps.wireless_modes)) {
++	if (sc->sc_ah->caps.hw_caps & ATH9K_HW_CAP_2GHZ) {
+ 		channels = kmemdup(ath9k_2ghz_chantable,
+ 			sizeof(ath9k_2ghz_chantable), GFP_KERNEL);
+ 		if (!channels)
+@@ -500,7 +500,7 @@ static int ath9k_init_channels_rates(struct ath_softc *sc)
+ 			ARRAY_SIZE(ath9k_legacy_rates);
+ 	}
+ 
+-	if (test_bit(ATH9K_MODE_11A, sc->sc_ah->caps.wireless_modes)) {
++	if (sc->sc_ah->caps.hw_caps & ATH9K_HW_CAP_5GHZ) {
+ 		channels = kmemdup(ath9k_5ghz_chantable,
+ 			sizeof(ath9k_5ghz_chantable), GFP_KERNEL);
+ 		if (!channels) {
+@@ -681,17 +681,17 @@ void ath9k_set_hw_capab(struct ath_softc *sc, struct ieee80211_hw *hw)
+ 	hw->rate_control_algorithm = "ath9k_rate_control";
+ #endif
+ 
+-	if (test_bit(ATH9K_MODE_11G, sc->sc_ah->caps.wireless_modes))
++	if (sc->sc_ah->caps.hw_caps & ATH9K_HW_CAP_2GHZ)
+ 		hw->wiphy->bands[IEEE80211_BAND_2GHZ] =
+ 			&sc->sbands[IEEE80211_BAND_2GHZ];
+-	if (test_bit(ATH9K_MODE_11A, sc->sc_ah->caps.wireless_modes))
++	if (sc->sc_ah->caps.hw_caps & ATH9K_HW_CAP_5GHZ)
+ 		hw->wiphy->bands[IEEE80211_BAND_5GHZ] =
+ 			&sc->sbands[IEEE80211_BAND_5GHZ];
+ 
+ 	if (sc->sc_ah->caps.hw_caps & ATH9K_HW_CAP_HT) {
+-		if (test_bit(ATH9K_MODE_11G, sc->sc_ah->caps.wireless_modes))
++		if (sc->sc_ah->caps.hw_caps & ATH9K_HW_CAP_2GHZ)
+ 			setup_ht_cap(sc, &sc->sbands[IEEE80211_BAND_2GHZ].ht_cap);
+-		if (test_bit(ATH9K_MODE_11A, sc->sc_ah->caps.wireless_modes))
++		if (sc->sc_ah->caps.hw_caps & ATH9K_HW_CAP_5GHZ)
+ 			setup_ht_cap(sc, &sc->sbands[IEEE80211_BAND_5GHZ].ht_cap);
+ 	}
+ 
+diff --git a/drivers/net/wireless/ath/ath9k/rc.c b/drivers/net/wireless/ath/ath9k/rc.c
+index f436784..9fde587 100644
+--- a/drivers/net/wireless/ath/ath9k/rc.c
++++ b/drivers/net/wireless/ath/ath9k/rc.c
+@@ -378,17 +378,6 @@ static const struct ath_rate_table ar5416_11g_ratetable = {
+ 	0,   /* Phy rates allowed initially */
+ };
+ 
+-static const struct ath_rate_table *hw_rate_table[ATH9K_MODE_MAX] = {
+-	[ATH9K_MODE_11A] = &ar5416_11a_ratetable,
+-	[ATH9K_MODE_11G] = &ar5416_11g_ratetable,
+-	[ATH9K_MODE_11NA_HT20] = &ar5416_11na_ratetable,
+-	[ATH9K_MODE_11NG_HT20] = &ar5416_11ng_ratetable,
+-	[ATH9K_MODE_11NA_HT40PLUS] = &ar5416_11na_ratetable,
+-	[ATH9K_MODE_11NA_HT40MINUS] = &ar5416_11na_ratetable,
+-	[ATH9K_MODE_11NG_HT40PLUS] = &ar5416_11ng_ratetable,
+-	[ATH9K_MODE_11NG_HT40MINUS] = &ar5416_11ng_ratetable,
+-};
+-
+ static int ath_rc_get_rateindex(const struct ath_rate_table *rate_table,
+ 				struct ieee80211_tx_rate *rate);
+ 
+@@ -1203,35 +1192,21 @@ struct ath_rate_table *ath_choose_rate_table(struct ath_softc *sc,
+ 					     bool is_ht,
+ 					     bool is_cw_40)
+ {
+-	int mode = 0;
+ 	struct ath_common *common = ath9k_hw_common(sc->sc_ah);
+ 
+ 	switch(band) {
+ 	case IEEE80211_BAND_2GHZ:
+-		mode = ATH9K_MODE_11G;
+ 		if (is_ht)
+-			mode = ATH9K_MODE_11NG_HT20;
+-		if (is_cw_40)
+-			mode = ATH9K_MODE_11NG_HT40PLUS;
+-		break;
++			return &ar5416_11ng_ratetable;
++		return &ar5416_11g_ratetable;
+ 	case IEEE80211_BAND_5GHZ:
+-		mode = ATH9K_MODE_11A;
+ 		if (is_ht)
+-			mode = ATH9K_MODE_11NA_HT20;
+-		if (is_cw_40)
+-			mode = ATH9K_MODE_11NA_HT40PLUS;
+-		break;
++			return &ar5416_11na_ratetable;
++		return &ar5416_11a_ratetable;
+ 	default:
+ 		ath_print(common, ATH_DBG_CONFIG, "Invalid band\n");
+ 		return NULL;
+ 	}
+-
+-	BUG_ON(mode >= ATH9K_MODE_MAX);
+-
+-	ath_print(common, ATH_DBG_CONFIG,
+-		  "Choosing rate table for mode: %d\n", mode);
+-
+-	return hw_rate_table[mode];
+ }
+ 
+ static void ath_rc_init(struct ath_softc *sc,
+-- 
+1.7.2.2
 
