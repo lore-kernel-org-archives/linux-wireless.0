@@ -1,123 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:31183 "EHLO mga11.intel.com"
+Received: from mx1.redhat.com ([209.132.183.28]:42373 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932077Ab0JOTRw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 15 Oct 2010 15:17:52 -0400
-Subject: Re: compat-wireless question
-From: "Guy, Wey-Yi" <wey-yi.w.guy@intel.com>
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Greg KH <greg@kroah.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-In-Reply-To: <AANLkTi=6aVHyr98avc07UtWgDkV=SdmKW2HXNfSRY3KU@mail.gmail.com>
-References: <E9954878DD1FB34FAE5187FB88C58A35012EE46BC3@orsmsx506.amr.corp.intel.com>
-	 <AANLkTi=6aVHyr98avc07UtWgDkV=SdmKW2HXNfSRY3KU@mail.gmail.com>
-Content-Type: text/plain
-Date: Fri, 15 Oct 2010 12:16:48 -0700
-Message-Id: <1287170208.13051.34.camel@wwguy-ubuntu>
-Mime-Version: 1.0
+	id S1752858Ab0JMNhk (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 13 Oct 2010 09:37:40 -0400
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: Johannes Berg <johannes@sipsolutions.net>,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Cc: linux-wireless@vger.kernel.org,
+	Stanislaw Gruszka <sgruszka@redhat.com>
+Subject: [PATCH 2/2] iwlwifi: one less commit_rxon while scan
+Date: Wed, 13 Oct 2010 15:39:53 +0200
+Message-Id: <1286977193-12144-2-git-send-email-sgruszka@redhat.com>
+In-Reply-To: <1286977193-12144-1-git-send-email-sgruszka@redhat.com>
+References: <1286977193-12144-1-git-send-email-sgruszka@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Luis,
+Almost anywhere in the code we avoid committing rxon while performing
+scan, and make rxon commit when scan complete. Some current patches do
+not follow that rule. We have that problem at least in
+iwlagn_confirue_filter(), iwl_update_chain_flags() and
+iwl_bg_bt_full_concurrency(). This patch try to resolve the first
+function, formers are much harder to resolve so left them by now.
 
-On Fri, 2010-10-15 at 12:05 -0700, Luis R. Rodriguez wrote:
-> On Fri, Oct 15, 2010 at 10:40 AM, Guy, Wey-Yi W <wey-yi.w.guy@intel.com> wrote:
-> > Hi Luis,
-> >
-> > Simple compat-wireless question
-> >
-> > There are two type of compat-wireless
-> > 1.       Bleeding-edge compat-wireless
-> > 2.       Stable compat-wireless
-> >
-> > If I understand correctly, bleeding-edge compat-wireless took the latest
-> > from wireless-next-2.6,
-> 
-> Bleeding edge comes from linux-next.git instead of wireless-next.git
-> as we also get Ethernet driver updates that way. Ethernet drivers are
-> easy to port into compat-wireless so I have already added all Atheros
-> Ethernet drivers into it, feel free to send patches to Intel Ethernet
-> :)
-> 
-> > is it also include wireless-2.6 which is bug fix.
-> 
-> No, it just uses linux-next.git, but yeah linux-next.git would rebase
-> on top of Linus' tree anyway so it would eventually get all of the
-> respective stable fixes. Stephen would then just drag in all trees
-> sequentially.
-> 
-> > How about stable compat-wireless, it is base on stable tree, so I believe it
-> > has all the bug fix for the stable kernel, am I correct?
-> 
-> I based the stable release off of H. Peter Anvin's linux-2.6-allstable.git tree:
-> 
-> git://git.kernel.org/pub/scm/linux/kernel/git/hpa/linux-2.6-allstable.git
-> 
-> After Linus releases a kernel, say 2.6.36, then new extra version
-> fixes, say 2.6.36.1, 2.6.36.2, etc, will not be available on Linus'
-> tree, but you can instead get them from the linux-2.6-allstable.git
-> tree. What is neat about that tree too is it also has the older stable
-> extra version updates. So whenever a stable kernel extra version gets
-> released we can make a new compat-wireless-2.6.3x.y. You can find them
-> here:
-> 
-> http://wireless.kernel.org/en/users/Download/stable/
-> 
-> Now as of the compat-wireless-2.6.36 releases I started noticing we
-> can do something better as we approach the merge window. The issue
-> with the merge window is that there are some patches which are marked
-> as stable on the commit log entry (Cc: stable@kernel.org) but not all
-> of these will make it to Linus' next rc release as the focus for the
-> RC is to fix regressions only. Right or wrong, some stable patches
-> eventually make it into the first extra version release of the kernel
-> but not on the stable release of the kernel. Some of these stable
-> fixes are still important though so to help with testing and getting
-> users/customers these fixes I've started sucking all pending stable
-> fixes from linux-next.git on the compat-wireless-2.6.36 releases. I
-> annotate this is done on a release by postfixing an "s" to the
-> release. You can also find all the stable patches which were sucked
-> out of linux-next.git by looking at the pending-stable/ directory. I
-> regenerate these every new RC release of the kernel or extra version
-> bump, but started this only as of the linux-2.6.36.y branch of
-> compat-wireless.
-> 
-> Furthermore, I realize that at times a vendor may have a patch that
-> although it did not make it into the stable release of the kernel it
-> may be important for the vendor for some customers, so because of this
-> we have the linux-next-cherry-picks/ directory. This directory is for
-> patches which have already been merged into linux-next.git but will
-> not make it into the stable kernel release. I took this further two
-> more steps too, just because sometimes a maintainer may be on
-> vacation, have died, or whatever, so your patches may not get merged
-> yet. In these cases you can submit patches for inclusion into the
-> linux-next-pending/ directory of compat-wireless. This is for patches
-> which have *at least* been posted to a public mailing list but for
-> whatever reason haven't yet been merged. Then lastly we have the crap/
-> directory of compat-wireless. This for patches which have not even yet
-> been posted to a mailing list for whatever reason. An example may be
-> that there is a known issue but yet the patches are important enough.
-> 
-> The purpose of all these directories is to let you customize stable
-> compat-wireless releases, suited for whatever purpose you have. I've
-> started sucking in all linux-next.git stable fixes not yet merged for
-> now, and am will soon start incorporating a linux-next-pending/ patch
-> to account for the lag in getting a patch reviewed.
-> 
-> Feel free to use these as well, I welcome patches to help your needs.
-> 
-> Please let me know if you have any other questions.
-> 
->  
-Thank you very much for the clear explanation, this is exactly what I
-looking for.
+Since we do not commit directly in iwl3945_configure_filter, we can
+also do the same for agn, so I just remove iwlcore_commit_rxon()
+function and add a comment. Also change comment for iwl3945.
 
-the linux-next-cherry-pick/ directory especially interesting to me since
-we need to deliver the latest new features to our customer. I will give
-a try and might have more questions.
+Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-agn.c      |    6 +++++-
+ drivers/net/wireless/iwlwifi/iwl3945-base.c |    6 +++---
+ 2 files changed, 8 insertions(+), 4 deletions(-)
 
-Wey
-
-
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
+index 0881452..5a881c9 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
+@@ -3984,7 +3984,11 @@ static void iwlagn_configure_filter(struct ieee80211_hw *hw,
+ 	for_each_context(priv, ctx) {
+ 		ctx->staging.filter_flags &= ~filter_nand;
+ 		ctx->staging.filter_flags |= filter_or;
+-		iwlcore_commit_rxon(priv, ctx);
++
++		/*
++		 * Not committing directly because hardware can perform a scan,
++		 * but we'll eventually commit the filter flags change anyway.
++		 */
+ 	}
  
+ 	mutex_unlock(&priv->mutex);
+diff --git a/drivers/net/wireless/iwlwifi/iwl3945-base.c b/drivers/net/wireless/iwlwifi/iwl3945-base.c
+index 9d0f736..4ff4b2e 100644
+--- a/drivers/net/wireless/iwlwifi/iwl3945-base.c
++++ b/drivers/net/wireless/iwlwifi/iwl3945-base.c
+@@ -3407,9 +3407,9 @@ static void iwl3945_configure_filter(struct ieee80211_hw *hw,
+ 	ctx->staging.filter_flags |= filter_or;
+ 
+ 	/*
+-	 * Committing directly here breaks for some reason,
+-	 * but we'll eventually commit the filter flags
+-	 * change anyway.
++	 * Not committing directly because hardware can perfrom a scan,
++	 * but even if hw is ready, commiting here breaks for some reason,
++	 * we'll eventually commit the filter flags change anyway.
+ 	 */
+ 
+ 	mutex_unlock(&priv->mutex);
+-- 
+1.7.1
 
