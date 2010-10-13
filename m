@@ -1,42 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.pripojeni.net ([217.66.174.14]:45365 "EHLO
-	smtp.pripojeni.net" rhost-flags-OK-FAIL-OK-OK) by vger.kernel.org
-	with ESMTP id S1753483Ab0JKJ1p (ORCPT
+Received: from mail-yw0-f46.google.com ([209.85.213.46]:45829 "EHLO
+	mail-yw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752097Ab0JMRm7 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 11 Oct 2010 05:27:45 -0400
-From: Jiri Slaby <jslaby@suse.cz>
-To: linville@tuxdriver.com
-Cc: johannes.berg@intel.com, linux-wireless@vger.kernel.org,
-	linux-kernel@vger.kernel.org, jirislaby@gmail.com
-Subject: [PATCH 1/1] WIRELESS: at76c50x, remove unneeded NULL check
-Date: Mon, 11 Oct 2010 11:27:32 +0200
-Message-Id: <1286789252-14031-1-git-send-email-jslaby@suse.cz>
+	Wed, 13 Oct 2010 13:42:59 -0400
+MIME-Version: 1.0
+In-Reply-To: <1286964370.3316.6.camel@aeonflux>
+References: <20101008170258.GJ10149@tux> <4CAF5488.3030706@Atheros.com>
+ <20101008181508.GM10149@tux> <20101012211726.GE2678@broadcom.com> <1286964370.3316.6.camel@aeonflux>
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Date: Wed, 13 Oct 2010 10:42:38 -0700
+Message-ID: <AANLkTimAeoS2Vi7GhKSTrghqaOQ=XKSzjcou15dn+YDR@mail.gmail.com>
+Subject: Re: Firmware versioning best practices: ath3k-2.fw rename or replace
+ ath3k-1.fw ?
+To: Marcel Holtmann <marcel@holtmann.org>
+Cc: Henry Ptasinski <henryp@broadcom.com>,
+	Suraj Sumangala <Suraj.Sumangala@atheros.com>,
+	Luis Rodriguez <Luis.Rodriguez@atheros.com>,
+	David Woodhouse <dwmw2@infradead.org>,
+	linux-bluetooth <linux-bluetooth@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Stanse found that urb cannot be NULL in at76_rx_tasklet because it is
-dereferenced earlier, so remove the unneeded check.
+On Wed, Oct 13, 2010 at 3:06 AM, Marcel Holtmann <marcel@holtmann.org> wrote:
+> Hi Henry,
+>
+>> > > Marcel had answered me before. It makes sense to have same file name.
+>> > > Other ways we end up changing the driver whenever there is a firmware
+>> > > change.
+>> >
+>> > > > I last tried to document a thread we had over this here:
+>> > > >
+>> > > > http://wireless.kernel.org/en/developers/Documentation/firmware-versioning
+>> > > >
+>> >
+>> > Thanks, I've updated that link above to document bug fixing does not require
+>> > a filename change.
+>>
+>> I don't really understand why you would not want to change the code revision
+>> part of the filename.
+>>
+>> I totally agree that you don't want to change the driver every time the
+>> firmware gets a bug fix, but wasn't that the whole point of splitting the name
+>> into API and code revisions portions, and symlinking the file to one that just
+>> has the API version?
+>>
+>> What's the issue with using the process as originally documented?
+>
+> as I stated before, for Bluetooth this makes no sense. You don't need
+> API version numbers since the API is a STANDARD. It is called HCI. So
+> please don't use API version numbers in the firmware files.
+>
+> I will reject firmware file versions for upstream drivers.
 
-Signed-off-by: Jiri Slaby <jslaby@suse.cz>
----
- drivers/net/wireless/at76c50x-usb.c |    3 +--
- 1 files changed, 1 insertions(+), 2 deletions(-)
+Does the HCI standard ever get improved upon? If so, how do devices
+never get firmware updates that would allow them to use some newer HCI
+APIs?
 
-diff --git a/drivers/net/wireless/at76c50x-usb.c b/drivers/net/wireless/at76c50x-usb.c
-index 91c5f73..1476314 100644
---- a/drivers/net/wireless/at76c50x-usb.c
-+++ b/drivers/net/wireless/at76c50x-usb.c
-@@ -1525,8 +1525,7 @@ static void at76_rx_tasklet(unsigned long param)
- 
- 	if (priv->device_unplugged) {
- 		at76_dbg(DBG_DEVSTART, "device unplugged");
--		if (urb)
--			at76_dbg(DBG_DEVSTART, "urb status %d", urb->status);
-+		at76_dbg(DBG_DEVSTART, "urb status %d", urb->status);
- 		return;
- 	}
- 
--- 
-1.7.3.1
+I've updated the documentation above for 802.11 and Bluetooth with the
+above, please feel free to further extend it as you see fit.
 
-
+  Luis
