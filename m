@@ -1,74 +1,398 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mailout-de.gmx.net ([213.165.64.22]:45699 "HELO mail.gmx.net"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with SMTP
-	id S1754575Ab0JQISD (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 17 Oct 2010 04:18:03 -0400
-Message-ID: <4CBABB84.1090100@gmx.net>
-Date: Sun, 17 Oct 2010 11:01:56 +0200
-From: George <george.news@gmx.net>
-MIME-Version: 1.0
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-CC: Denis 'GNUtoo' Carikli <GNUtoo@no-log.org>,
-	linux-wireless@vger.kernel.org
-Subject: Re: Compat-wireless N900
-References: <4CB6BE57.8010401@gmx.net> <1287071844.11341.5.camel@gnutoo-laptop> <AANLkTikosEtFnWqRVzMBKtNsB=aqOpqQFKDOZS3+pXTE@mail.gmail.com> <4CB74759.3030807@gmx.net> <AANLkTi=1Ar-gzRaskHGDLmkaDnr=9+oZnA=qBLCYcUAi@mail.gmail.com> <4CB7F7C7.7030804@gmx.net> <AANLkTi=u+mT2Xd0=0vt4uaf9hSnnkPKY+wN6DjAxME3m@mail.gmail.com>
-In-Reply-To: <AANLkTi=u+mT2Xd0=0vt4uaf9hSnnkPKY+wN6DjAxME3m@mail.gmail.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Received: from nbd.name ([88.198.39.176]:43810 "EHLO ds10.nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752867Ab0JMOne (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 13 Oct 2010 10:43:34 -0400
+From: Felix Fietkau <nbd@openwrt.org>
+To: linux-wireless@vger.kernel.org
+Cc: linville@tuxdriver.com, lrodriguez@atheros.com
+Subject: [PATCH 1/3] ath9k: make rate control debugfs stats per station
+Date: Wed, 13 Oct 2010 16:43:26 +0200
+Message-Id: <1286981008-85124-1-git-send-email-nbd@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 15/10/2010 20:01, Luis R. Rodriguez wrote:
-> On Thu, Oct 14, 2010 at 11:42 PM, George<george.news@gmx.net>  wrote:
->> On 14/10/2010 20:03, Luis R. Rodriguez wrote:
->>>
->>> On Thu, Oct 14, 2010 at 11:09 AM, George<george.news@gmx.net>    wrote:
->>>
->>>> I have tried using even insmod and the modules load perfectly but the
->>>> wlan
->>>> device doesn't show up.
->>>
->>> Then that likely means you are not loading the right module.
->>>
->>>> In dmesg nothing is displayed except for the cfg80211 and when I rmmod
->>>> the
->>>> module wl1251 (wl1251: removed or similar)
->>>>
->>>> I'm still wondering what the hell I have to do.
->>>
->>> Are you sure you have the right module?
->>
->> Yes. The driver is the wl1251 family. As I said in previous posts and from
->> what some guys in the IRC channel tried to guess, it seems that the problem
->> might be in that the spi interface is specific for any device, and in the
->> n900 might be different from the one implemented in compat-wireless.
->
-> Heh, nope.
->
->> I'm a bit suprised about this fact, but they know more than I.
->
-> Or, we had not yet accommodated yet for the fact that the wl1251
-> driver was split out into its own directory from the original wl12xx/
-> directory and no one ever sent a patch to fix this on compat-wireless.
-> I just fixed this on today's compat-wireless, so you can try that
-> around noon PST time when the new tarball will be generated. Ah but
-> there are some pcmcia crap compile issues, we just have to remove
-> pcmcia support, well not now, I have other stuff to do.
+Move them to the same debugfs file that the other rc modules use.
 
-Thanks for that. Tomorrow at work I will try to test it out and get back 
-to you if something happens ;)
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+---
+ drivers/net/wireless/ath/ath9k/debug.c |   93 --------------------------
+ drivers/net/wireless/ath/ath9k/debug.h |   21 ------
+ drivers/net/wireless/ath/ath9k/rc.c    |  115 +++++++++++++++++++++++++++++++-
+ drivers/net/wireless/ath/ath9k/rc.h    |   11 +++
+ 4 files changed, 124 insertions(+), 116 deletions(-)
 
-> I welcome patches if someone gets to it.
-
-I'm sorry but my knowdledge of the system is from a higher level of 
-abstraction. Otherwise I will be soooo please of helping you out.
-
-Again. Thanks.
-Jorge
-
->    Luis
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
+diff --git a/drivers/net/wireless/ath/ath9k/debug.c b/drivers/net/wireless/ath/ath9k/debug.c
+index 74a4570..7f764e3 100644
+--- a/drivers/net/wireless/ath/ath9k/debug.c
++++ b/drivers/net/wireless/ath/ath9k/debug.c
+@@ -378,95 +378,6 @@ static const struct file_operations fops_interrupt = {
+ 	.owner = THIS_MODULE
+ };
+ 
+-void ath_debug_stat_rc(struct ath_softc *sc, int final_rate)
+-{
+-	struct ath_rc_stats *stats;
+-
+-	stats = &sc->debug.stats.rcstats[final_rate];
+-	stats->success++;
+-}
+-
+-void ath_debug_stat_retries(struct ath_softc *sc, int rix,
+-			    int xretries, int retries, u8 per)
+-{
+-	struct ath_rc_stats *stats = &sc->debug.stats.rcstats[rix];
+-
+-	stats->xretries += xretries;
+-	stats->retries += retries;
+-	stats->per = per;
+-}
+-
+-static ssize_t read_file_rcstat(struct file *file, char __user *user_buf,
+-				size_t count, loff_t *ppos)
+-{
+-	struct ath_softc *sc = file->private_data;
+-	char *buf;
+-	unsigned int len = 0, max;
+-	int i = 0;
+-	ssize_t retval;
+-
+-	if (sc->cur_rate_table == NULL)
+-		return 0;
+-
+-	max = 80 + sc->cur_rate_table->rate_cnt * 1024 + 1;
+-	buf = kmalloc(max, GFP_KERNEL);
+-	if (buf == NULL)
+-		return -ENOMEM;
+-
+-	len += sprintf(buf, "%6s %6s %6s "
+-		       "%10s %10s %10s %10s\n",
+-		       "HT", "MCS", "Rate",
+-		       "Success", "Retries", "XRetries", "PER");
+-
+-	for (i = 0; i < sc->cur_rate_table->rate_cnt; i++) {
+-		u32 ratekbps = sc->cur_rate_table->info[i].ratekbps;
+-		struct ath_rc_stats *stats = &sc->debug.stats.rcstats[i];
+-		char mcs[5];
+-		char htmode[5];
+-		int used_mcs = 0, used_htmode = 0;
+-
+-		if (WLAN_RC_PHY_HT(sc->cur_rate_table->info[i].phy)) {
+-			used_mcs = snprintf(mcs, 5, "%d",
+-				sc->cur_rate_table->info[i].ratecode);
+-
+-			if (WLAN_RC_PHY_40(sc->cur_rate_table->info[i].phy))
+-				used_htmode = snprintf(htmode, 5, "HT40");
+-			else if (WLAN_RC_PHY_20(sc->cur_rate_table->info[i].phy))
+-				used_htmode = snprintf(htmode, 5, "HT20");
+-			else
+-				used_htmode = snprintf(htmode, 5, "????");
+-		}
+-
+-		mcs[used_mcs] = '\0';
+-		htmode[used_htmode] = '\0';
+-
+-		len += snprintf(buf + len, max - len,
+-			"%6s %6s %3u.%d: "
+-			"%10u %10u %10u %10u\n",
+-			htmode,
+-			mcs,
+-			ratekbps / 1000,
+-			(ratekbps % 1000) / 100,
+-			stats->success,
+-			stats->retries,
+-			stats->xretries,
+-			stats->per);
+-	}
+-
+-	if (len > max)
+-		len = max;
+-
+-	retval = simple_read_from_buffer(user_buf, count, ppos, buf, len);
+-	kfree(buf);
+-	return retval;
+-}
+-
+-static const struct file_operations fops_rcstat = {
+-	.read = read_file_rcstat,
+-	.open = ath9k_debugfs_open,
+-	.owner = THIS_MODULE
+-};
+-
+ static const char * ath_wiphy_state_str(enum ath_wiphy_state state)
+ {
+ 	switch (state) {
+@@ -977,10 +888,6 @@ int ath9k_init_debug(struct ath_hw *ah)
+ 			sc, &fops_interrupt))
+ 		goto err;
+ 
+-	if (!debugfs_create_file("rcstat", S_IRUSR, sc->debug.debugfs_phy,
+-			sc, &fops_rcstat))
+-		goto err;
+-
+ 	if (!debugfs_create_file("wiphy", S_IRUSR | S_IWUSR,
+ 			sc->debug.debugfs_phy, sc, &fops_wiphy))
+ 		goto err;
+diff --git a/drivers/net/wireless/ath/ath9k/debug.h b/drivers/net/wireless/ath/ath9k/debug.h
+index 822b6f3..bb08232 100644
+--- a/drivers/net/wireless/ath/ath9k/debug.h
++++ b/drivers/net/wireless/ath/ath9k/debug.h
+@@ -80,13 +80,6 @@ struct ath_interrupt_stats {
+ 	u32 bb_watchdog;
+ };
+ 
+-struct ath_rc_stats {
+-	u32 success;
+-	u32 retries;
+-	u32 xretries;
+-	u8 per;
+-};
+-
+ /**
+  * struct ath_tx_stats - Statistics about TX
+  * @tx_pkts_all:  No. of total frames transmitted, including ones that
+@@ -160,7 +153,6 @@ struct ath_rx_stats {
+ 
+ struct ath_stats {
+ 	struct ath_interrupt_stats istats;
+-	struct ath_rc_stats rcstats[RATE_TABLE_SIZE];
+ 	struct ath_tx_stats txstats[ATH9K_NUM_TX_QUEUES];
+ 	struct ath_rx_stats rxstats;
+ };
+@@ -177,12 +169,9 @@ void ath9k_exit_debug(struct ath_hw *ah);
+ int ath9k_debug_create_root(void);
+ void ath9k_debug_remove_root(void);
+ void ath_debug_stat_interrupt(struct ath_softc *sc, enum ath9k_int status);
+-void ath_debug_stat_rc(struct ath_softc *sc, int final_rate);
+ void ath_debug_stat_tx(struct ath_softc *sc, struct ath_txq *txq,
+ 		       struct ath_buf *bf, struct ath_tx_status *ts);
+ void ath_debug_stat_rx(struct ath_softc *sc, struct ath_rx_status *rs);
+-void ath_debug_stat_retries(struct ath_softc *sc, int rix,
+-			    int xretries, int retries, u8 per);
+ 
+ #else
+ 
+@@ -209,11 +198,6 @@ static inline void ath_debug_stat_interrupt(struct ath_softc *sc,
+ {
+ }
+ 
+-static inline void ath_debug_stat_rc(struct ath_softc *sc,
+-				     int final_rate)
+-{
+-}
+-
+ static inline void ath_debug_stat_tx(struct ath_softc *sc,
+ 				     struct ath_txq *txq,
+ 				     struct ath_buf *bf,
+@@ -226,11 +210,6 @@ static inline void ath_debug_stat_rx(struct ath_softc *sc,
+ {
+ }
+ 
+-static inline void ath_debug_stat_retries(struct ath_softc *sc, int rix,
+-					  int xretries, int retries, u8 per)
+-{
+-}
+-
+ #endif /* CONFIG_ATH9K_DEBUGFS */
+ 
+ #endif /* DEBUG_H */
+diff --git a/drivers/net/wireless/ath/ath9k/rc.c b/drivers/net/wireless/ath/ath9k/rc.c
+index 13f9e88..38a31e9 100644
+--- a/drivers/net/wireless/ath/ath9k/rc.c
++++ b/drivers/net/wireless/ath/ath9k/rc.c
+@@ -1026,6 +1026,16 @@ static bool ath_rc_update_per(struct ath_softc *sc,
+ 	return state_change;
+ }
+ 
++static void ath_debug_stat_retries(struct ath_rate_priv *rc, int rix,
++				   int xretries, int retries, u8 per)
++{
++	struct ath_rc_stats *stats = &rc->rcstats[rix];
++
++	stats->xretries += xretries;
++	stats->retries += retries;
++	stats->per = per;
++}
++
+ /* Update PER, RSSI and whatever else that the code thinks it is doing.
+    If you can make sense of all this, you really need to go out more. */
+ 
+@@ -1098,7 +1108,7 @@ static void ath_rc_update_ht(struct ath_softc *sc,
+ 		ath_rc_priv->per_down_time = now_msec;
+ 	}
+ 
+-	ath_debug_stat_retries(sc, tx_rate, xretries, retries,
++	ath_debug_stat_retries(ath_rc_priv, tx_rate, xretries, retries,
+ 			       ath_rc_priv->per[tx_rate]);
+ 
+ }
+@@ -1294,6 +1304,7 @@ static void ath_rc_init(struct ath_softc *sc,
+ 	ath_rc_sort_validrates(rate_table, ath_rc_priv);
+ 	ath_rc_priv->rate_max_phy = ath_rc_priv->valid_rate_index[k-4];
+ 	sc->cur_rate_table = rate_table;
++	ath_rc_priv->rate_table = rate_table;
+ 
+ 	ath_print(common, ATH_DBG_CONFIG,
+ 		  "RC Initialized with capabilities: 0x%x\n",
+@@ -1340,6 +1351,15 @@ static bool ath_tx_aggr_check(struct ath_softc *sc, struct ath_node *an,
+ /* mac80211 Rate Control callbacks */
+ /***********************************/
+ 
++static void ath_debug_stat_rc(struct ath_rate_priv *rc, int final_rate)
++{
++	struct ath_rc_stats *stats;
++
++	stats = &rc->rcstats[final_rate];
++	stats->success++;
++}
++
++
+ static void ath_tx_status(void *priv, struct ieee80211_supported_band *sband,
+ 			  struct ieee80211_sta *sta, void *priv_sta,
+ 			  struct sk_buff *skb)
+@@ -1419,7 +1439,7 @@ static void ath_tx_status(void *priv, struct ieee80211_supported_band *sband,
+ 		}
+ 	}
+ 
+-	ath_debug_stat_rc(sc, ath_rc_get_rateindex(sc->cur_rate_table,
++	ath_debug_stat_rc(ath_rc_priv, ath_rc_get_rateindex(sc->cur_rate_table,
+ 		&tx_info->status.rates[final_ts_idx]));
+ }
+ 
+@@ -1521,6 +1541,94 @@ static void ath_rate_update(void *priv, struct ieee80211_supported_band *sband,
+ 	}
+ }
+ 
++#ifdef CONFIG_ATH9K_DEBUGFS
++
++static int ath9k_debugfs_open(struct inode *inode, struct file *file)
++{
++	file->private_data = inode->i_private;
++	return 0;
++}
++
++static ssize_t read_file_rcstat(struct file *file, char __user *user_buf,
++				size_t count, loff_t *ppos)
++{
++	struct ath_rate_priv *rc = file->private_data;
++	char *buf;
++	unsigned int len = 0, max;
++	int i = 0;
++	ssize_t retval;
++
++	if (rc->rate_table == NULL)
++		return 0;
++
++	max = 80 + rc->rate_table->rate_cnt * 1024 + 1;
++	buf = kmalloc(max, GFP_KERNEL);
++	if (buf == NULL)
++		return -ENOMEM;
++
++	len += sprintf(buf, "%6s %6s %6s "
++		       "%10s %10s %10s %10s\n",
++		       "HT", "MCS", "Rate",
++		       "Success", "Retries", "XRetries", "PER");
++
++	for (i = 0; i < rc->rate_table->rate_cnt; i++) {
++		u32 ratekbps = rc->rate_table->info[i].ratekbps;
++		struct ath_rc_stats *stats = &rc->rcstats[i];
++		char mcs[5];
++		char htmode[5];
++		int used_mcs = 0, used_htmode = 0;
++
++		if (WLAN_RC_PHY_HT(rc->rate_table->info[i].phy)) {
++			used_mcs = snprintf(mcs, 5, "%d",
++				rc->rate_table->info[i].ratecode);
++
++			if (WLAN_RC_PHY_40(rc->rate_table->info[i].phy))
++				used_htmode = snprintf(htmode, 5, "HT40");
++			else if (WLAN_RC_PHY_20(rc->rate_table->info[i].phy))
++				used_htmode = snprintf(htmode, 5, "HT20");
++			else
++				used_htmode = snprintf(htmode, 5, "????");
++		}
++
++		mcs[used_mcs] = '\0';
++		htmode[used_htmode] = '\0';
++
++		len += snprintf(buf + len, max - len,
++			"%6s %6s %3u.%d: "
++			"%10u %10u %10u %10u\n",
++			htmode,
++			mcs,
++			ratekbps / 1000,
++			(ratekbps % 1000) / 100,
++			stats->success,
++			stats->retries,
++			stats->xretries,
++			stats->per);
++	}
++
++	if (len > max)
++		len = max;
++
++	retval = simple_read_from_buffer(user_buf, count, ppos, buf, len);
++	kfree(buf);
++	return retval;
++}
++
++static const struct file_operations fops_rcstat = {
++	.read = read_file_rcstat,
++	.open = ath9k_debugfs_open,
++	.owner = THIS_MODULE
++};
++
++static void ath_rate_add_sta_debugfs(void *priv, void *priv_sta,
++				     struct dentry *dir)
++{
++	struct ath_rate_priv *rc = priv_sta;
++	debugfs_create_file("rc_stats", S_IRUGO, dir, rc, &fops_rcstat);
++}
++
++#endif /* CONFIG_ATH9K_DEBUGFS */
++
+ static void *ath_rate_alloc(struct ieee80211_hw *hw, struct dentry *debugfsdir)
+ {
+ 	struct ath_wiphy *aphy = hw->priv;
+@@ -1567,6 +1675,9 @@ static struct rate_control_ops ath_rate_ops = {
+ 	.free = ath_rate_free,
+ 	.alloc_sta = ath_rate_alloc_sta,
+ 	.free_sta = ath_rate_free_sta,
++#ifdef CONFIG_ATH9K_DEBUGFS
++	.add_sta_debugfs = ath_rate_add_sta_debugfs,
++#endif
+ };
+ 
+ int ath_rate_control_register(void)
+diff --git a/drivers/net/wireless/ath/ath9k/rc.h b/drivers/net/wireless/ath/ath9k/rc.h
+index 268072f..7b19ec8 100644
+--- a/drivers/net/wireless/ath/ath9k/rc.h
++++ b/drivers/net/wireless/ath/ath9k/rc.h
+@@ -175,6 +175,13 @@ struct ath_rateset {
+ 	u8 rs_rates[ATH_RATE_MAX];
+ };
+ 
++struct ath_rc_stats {
++	u32 success;
++	u32 retries;
++	u32 xretries;
++	u8 per;
++};
++
+ /**
+  * struct ath_rate_priv - Rate Control priv data
+  * @state: RC state
+@@ -211,6 +218,10 @@ struct ath_rate_priv {
+ 	struct ath_rateset neg_rates;
+ 	struct ath_rateset neg_ht_rates;
+ 	struct ath_rate_softc *asc;
++	const struct ath_rate_table *rate_table;
++
++	struct dentry *debugfs_rcstats;
++	struct ath_rc_stats rcstats[RATE_TABLE_SIZE];
+ };
+ 
+ #define ATH_TX_INFO_FRAME_TYPE_INTERNAL	(1 << 0)
+-- 
+1.7.2.2
 
