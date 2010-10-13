@@ -1,216 +1,149 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([88.198.39.176]:50766 "EHLO ds10.nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754076Ab0JGMzb (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 7 Oct 2010 08:55:31 -0400
-Message-ID: <4CADC341.40305@openwrt.org>
-Date: Thu, 07 Oct 2010 14:55:29 +0200
-From: Felix Fietkau <nbd@openwrt.org>
-MIME-Version: 1.0
-To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-CC: linux-wireless <linux-wireless@vger.kernel.org>
-Subject: [PATCH v3] compat: backport netlink changes used in the nl80211 cleanup
-References: <4CADB60C.6040105@openwrt.org> <4CADC142.7010709@openwrt.org>
-In-Reply-To: <4CADC142.7010709@openwrt.org>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from he.sipsolutions.net ([78.46.109.217]:52546 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752134Ab0JMKHh (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 13 Oct 2010 06:07:37 -0400
+Message-Id: <20101013100658.046233239@sipsolutions.net>
+Date: Wed, 13 Oct 2010 12:06:24 +0200
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org,
+	Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH 2/2] mac80211: add probe request filter flag
+References: <20101013100622.939014559@sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
----
-v2:
-- fix genl_unregister_family wrapper (removes the family from the internal list)
-- fix error handling in doit ops
-v3:
-- fix a theoretical race in family unregister
+From: Johannes Berg <johannes.berg@intel.com>
 
---- a/include/linux/compat-2.6.37.h
-+++ b/include/linux/compat-2.6.37.h
-@@ -45,6 +45,68 @@ static inline void skb_checksum_none_ass
+Using the frame registration notification, we
+can see when probe requests are requested and
+notify the low-level driver via filtering. The
+flag is also set in AP and IBSS modes.
+
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ include/net/mac80211.h     |    9 ++++++---
+ net/mac80211/cfg.c         |   18 ++++++++++++++++++
+ net/mac80211/ieee80211_i.h |    4 +++-
+ net/mac80211/iface.c       |    9 ++++++++-
+ net/mac80211/main.c        |    3 +++
+ 5 files changed, 38 insertions(+), 5 deletions(-)
+
+--- wireless-testing.orig/include/net/mac80211.h	2010-10-13 11:35:49.000000000 +0200
++++ wireless-testing/include/net/mac80211.h	2010-10-13 11:36:27.000000000 +0200
+@@ -1478,12 +1478,14 @@ ieee80211_get_alt_retry_rate(const struc
+  *	honour this flag if possible.
+  *
+  * @FIF_CONTROL: pass control frames (except for PS Poll), if PROMISC_IN_BSS
+- *  is not set then only those addressed to this station.
++ * 	is not set then only those addressed to this station.
+  *
+  * @FIF_OTHER_BSS: pass frames destined to other BSSes
+  *
+- * @FIF_PSPOLL: pass PS Poll frames, if PROMISC_IN_BSS  is not set then only
+- *  those addressed to this station.
++ * @FIF_PSPOLL: pass PS Poll frames, if PROMISC_IN_BSS is not set then only
++ * 	those addressed to this station.
++ *
++ * @FIF_PROBE_REQ: pass probe request frames
+  */
+ enum ieee80211_filter_flags {
+ 	FIF_PROMISC_IN_BSS	= 1<<0,
+@@ -1494,6 +1496,7 @@ enum ieee80211_filter_flags {
+ 	FIF_CONTROL		= 1<<5,
+ 	FIF_OTHER_BSS		= 1<<6,
+ 	FIF_PSPOLL		= 1<<7,
++	FIF_PROBE_REQ		= 1<<8,
+ };
  
- #define pcmcia_enable_device(link)	pcmcia_request_configuration(link, &link->conf)
+ /**
+--- wireless-testing.orig/net/mac80211/main.c	2010-10-13 11:35:49.000000000 +0200
++++ wireless-testing/net/mac80211/main.c	2010-10-13 11:36:27.000000000 +0200
+@@ -54,6 +54,9 @@ void ieee80211_configure_filter(struct i
+ 	if (local->monitors || local->scanning)
+ 		new_flags |= FIF_BCN_PRBRESP_PROMISC;
  
-+#include <net/genetlink.h>
++	if (local->fif_probe_req || local->probe_req_reg)
++		new_flags |= FIF_PROBE_REQ;
 +
-+struct compat_genl_info {
-+	struct genl_info *info;
-+
-+	u32 snd_seq;
-+	u32 snd_pid;
-+	struct genlmsghdr *genlhdr;
-+	struct nlattr **attrs;
-+	void *user_ptr[2];
-+};
-+#define genl_info compat_genl_info
-+
-+struct compat_genl_ops {
-+	struct genl_ops ops;
-+
-+	u8 cmd;
-+	u8 internal_flags;
-+	unsigned int flags;
-+	const struct nla_policy *policy;
-+
-+	int (*doit)(struct sk_buff *skb, struct genl_info *info);
-+	int (*dumpit)(struct sk_buff *skb, struct netlink_callback *cb);
-+	int (*done)(struct netlink_callback *cb);
-+};
-+#define genl_ops compat_genl_ops
-+
-+struct compat_genl_family {
-+	struct genl_family family;
-+
-+	struct list_head list;
-+
-+	unsigned int id, hdrsize, version, maxattr;
-+	const char *name;
-+	bool netnsok;
-+
-+	struct nlattr **attrbuf;
-+
-+	int (*pre_doit)(struct genl_ops *ops, struct sk_buff *skb,
-+			struct genl_info *info);
-+
-+	void (*post_doit)(struct genl_ops *ops, struct sk_buff *skb,
-+			  struct genl_info *info);
-+};
-+
-+#define genl_family compat_genl_family
-+
-+#define genl_register_family_with_ops compat_genl_register_family_with_ops
-+
-+int genl_register_family_with_ops(struct genl_family *family,
-+				  struct genl_ops *ops, size_t n_ops);
-+
-+#define genl_unregister_family compat_genl_unregister_family
-+
-+int genl_unregister_family(struct genl_family *family);
-+
-+#define genl_info_net(_info) genl_info_net((_info)->info)
-+#define genlmsg_reply(_msg, _info) genlmsg_reply(_msg, (_info)->info)
-+#define genlmsg_put(_skb, _pid, _seq, _fam, _flags, _cmd) genlmsg_put(_skb, _pid, _seq, &(_fam)->family, _flags, _cmd)
-+#define genl_register_mc_group(_fam, _grp) genl_register_mc_group(&(_fam)->family, _grp)
-+#define genl_unregister_mc_group(_fam, _grp) genl_unregister_mc_group(&(_fam)->family, _grp)
-+
- #endif /* (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,37)) */
+ 	if (local->fif_fcsfail)
+ 		new_flags |= FIF_FCSFAIL;
  
- #endif /* LINUX_26_37_COMPAT_H */
---- a/compat/compat-2.6.37.c
-+++ b/compat/compat-2.6.37.c
-@@ -42,4 +42,116 @@ EXPORT_SYMBOL_GPL(net_ns_type_operations
+--- wireless-testing.orig/net/mac80211/cfg.c	2010-10-13 11:35:49.000000000 +0200
++++ wireless-testing/net/mac80211/cfg.c	2010-10-13 11:42:05.000000000 +0200
+@@ -1604,6 +1604,23 @@ static int ieee80211_mgmt_tx(struct wiph
+ 	return 0;
+ }
  
- #endif /* LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,35)*/ 
- 
-+#undef genl_info
-+#undef genl_unregister_family
-+
-+static LIST_HEAD(compat_nl_fam);
-+
-+static struct genl_ops *genl_get_cmd(u8 cmd, struct genl_family *family)
++static void ieee80211_mgmt_frame_register(struct wiphy *wiphy,
++					  struct net_device *dev,
++					  u16 frame_type, bool reg)
 +{
-+	struct genl_ops *ops;
++	struct ieee80211_local *local = wiphy_priv(wiphy);
 +
-+	list_for_each_entry(ops, &family->family.ops_list, ops.ops_list)
-+		if (ops->cmd == cmd)
-+			return ops;
++	if (frame_type != (IEEE80211_FTYPE_MGMT | IEEE80211_STYPE_PROBE_REQ))
++		return;
 +
-+	return NULL;
++	if (reg)
++		local->probe_req_reg++;
++	else
++		local->probe_req_reg--;
++
++	ieee80211_queue_work(&local->hw, &local->reconfig_filter);
 +}
 +
-+
-+static int nl_doit_wrapper(struct sk_buff *skb, struct genl_info *info)
-+{
-+	struct compat_genl_info compat_info;
-+	struct genl_family *family;
-+	struct genl_ops *ops;
-+	int err;
-+
-+	list_for_each_entry(family, &compat_nl_fam, list) {
-+		if (family->id == info->nlhdr->nlmsg_type)
-+			goto found;
+ struct cfg80211_ops mac80211_config_ops = {
+ 	.add_virtual_intf = ieee80211_add_iface,
+ 	.del_virtual_intf = ieee80211_del_iface,
+@@ -1655,4 +1672,5 @@ struct cfg80211_ops mac80211_config_ops
+ 	.cancel_remain_on_channel = ieee80211_cancel_remain_on_channel,
+ 	.mgmt_tx = ieee80211_mgmt_tx,
+ 	.set_cqm_rssi_config = ieee80211_set_cqm_rssi_config,
++	.mgmt_frame_register = ieee80211_mgmt_frame_register,
+ };
+--- wireless-testing.orig/net/mac80211/ieee80211_i.h	2010-10-13 11:35:49.000000000 +0200
++++ wireless-testing/net/mac80211/ieee80211_i.h	2010-10-13 11:36:27.000000000 +0200
+@@ -707,7 +707,9 @@ struct ieee80211_local {
+ 	int open_count;
+ 	int monitors, cooked_mntrs;
+ 	/* number of interfaces with corresponding FIF_ flags */
+-	int fif_fcsfail, fif_plcpfail, fif_control, fif_other_bss, fif_pspoll;
++	int fif_fcsfail, fif_plcpfail, fif_control, fif_other_bss, fif_pspoll,
++	    fif_probe_req;
++	int probe_req_reg;
+ 	unsigned int filter_flags; /* FIF_* */
+ 
+ 	bool wiphy_ciphers_allocated;
+--- wireless-testing.orig/net/mac80211/iface.c	2010-10-13 11:35:49.000000000 +0200
++++ wireless-testing/net/mac80211/iface.c	2010-10-13 11:36:27.000000000 +0200
+@@ -280,8 +280,11 @@ static int ieee80211_do_open(struct net_
+ 			ieee80211_start_mesh(sdata);
+ 		} else if (sdata->vif.type == NL80211_IFTYPE_AP) {
+ 			local->fif_pspoll++;
++			local->fif_probe_req++;
+ 
+ 			ieee80211_configure_filter(local);
++		} else if (sdata->vif.type == NL80211_IFTYPE_ADHOC) {
++			local->fif_probe_req++;
+ 		}
+ 
+ 		changed |= ieee80211_reset_erp_info(sdata);
+@@ -428,8 +431,12 @@ static void ieee80211_do_stop(struct iee
+ 	if (sdata->flags & IEEE80211_SDATA_PROMISC)
+ 		atomic_dec(&local->iff_promiscs);
+ 
+-	if (sdata->vif.type == NL80211_IFTYPE_AP)
++	if (sdata->vif.type == NL80211_IFTYPE_AP) {
+ 		local->fif_pspoll--;
++		local->fif_probe_req--;
++	} else if (sdata->vif.type == NL80211_IFTYPE_ADHOC) {
++		local->fif_probe_req--;
 +	}
-+	return -ENOENT;
-+
-+found:
-+	ops = genl_get_cmd(info->genlhdr->cmd, family);
-+	if (!ops)
-+		return -ENOENT;
-+
-+	memset(&compat_info.user_ptr, 0, sizeof(compat_info.user_ptr));
-+	compat_info.info = info;
-+#define __copy(_field) compat_info._field = info->_field
-+	__copy(snd_seq);
-+	__copy(snd_pid);
-+	__copy(genlhdr);
-+	__copy(attrs);
-+#undef __copy
-+	if (family->pre_doit) {
-+		err = family->pre_doit(ops, skb, &compat_info);
-+		if (err)
-+			return err;
-+	}
-+
-+	err = ops->doit(skb, &compat_info);
-+
-+	if (family->post_doit)
-+		family->post_doit(ops, skb, &compat_info);
-+
-+	return err;
-+}
-+
-+int compat_genl_register_family_with_ops(struct genl_family *family,
-+					 struct genl_ops *ops, size_t n_ops)
-+{
-+	int i, ret;
-+
-+#define __copy(_field) family->family._field = family->_field
-+	__copy(id);
-+	__copy(hdrsize);
-+	__copy(version);
-+	__copy(maxattr);
-+	strncpy(family->family.name, family->name, sizeof(family->family.name));
-+#if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,32))
-+	__copy(netnsok);
-+#endif
-+#undef __copy
-+
-+	ret = genl_register_family(&family->family);
-+	if (ret < 0)
-+		return ret;
-+
-+	family->attrbuf = family->family.attrbuf;
-+	family->id = family->family.id;
-+
-+	for (i = 0; i < n_ops; i++) {
-+#define __copy(_field) ops[i].ops._field = ops[i]._field
-+		__copy(cmd);
-+		__copy(flags);
-+		__copy(policy);
-+		__copy(dumpit);
-+		__copy(done);
-+#undef __copy
-+		ops[i].ops.doit = nl_doit_wrapper;
-+		ret = genl_register_ops(&family->family, &ops[i].ops);
-+		if (ret < 0)
-+			goto error_ops;
-+	}
-+	list_add(&family->list, &compat_nl_fam);
-+
-+	return ret;
-+
-+error_ops:
-+	compat_genl_unregister_family(family);
-+	return ret;
-+}
-+EXPORT_SYMBOL(compat_genl_register_family_with_ops);
-+
-+int compat_genl_unregister_family(struct genl_family *family)
-+{
-+	int err;
-+	err = genl_unregister_family(&family->family);
-+	list_del(&family->list);
-+	return err;
-+}
-+EXPORT_SYMBOL(compat_genl_unregister_family);
-+
- #endif /* LINUX_VERSION_CODE < KERNEL_VERSION(2,6,37) */
+ 
+ 	netif_addr_lock_bh(sdata->dev);
+ 	spin_lock_bh(&local->filter_lock);
+
+
