@@ -1,45 +1,109 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:53127 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932087Ab0J0UAR (ORCPT
+Received: from mail-gw0-f46.google.com ([74.125.83.46]:44229 "EHLO
+	mail-gw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753149Ab0JMLJJ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 27 Oct 2010 16:00:17 -0400
-Date: Wed, 27 Oct 2010 15:54:27 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Daniel Drake <dsd@laptop.org>
-Cc: linux-wireless@vger.kernel.org, dcbw@redhat.com,
-	libertas-dev@lists.infradead.org, pgf@laptop.org
-Subject: Re: [PATCH v2] libertas: Fix sd8686 firmware reload
-Message-ID: <20101027195427.GB2410@tuxdriver.com>
-References: <20101027142052.9607A9D401B@zog.reactivated.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <20101027142052.9607A9D401B@zog.reactivated.net>
+	Wed, 13 Oct 2010 07:09:09 -0400
+From: csanjay@mistralsolutions.com
+To: linux-omap@vger.kernel.org
+Cc: linux-wireless@vger.kernel.org,
+	Sanjay Kumar Champati <csanjay@mistralsolutions.com>
+Subject: [RFC: WL1271 DC supprot on OMAP3EVM 2/5] ARM: Supported for Standard SDIO driver on OMAP3EVM for WL1271 DC
+Date: Wed, 13 Oct 2010 16:27:16 +0530
+Message-Id: <1286967439-705-3-git-send-email-csanjay@mistralsolutions.com>
+In-Reply-To: <1286967439-705-1-git-send-email-csanjay@mistralsolutions.com>
+References: <1286967439-705-1-git-send-email-csanjay@mistralsolutions.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Oct 27, 2010 at 03:20:52PM +0100, Daniel Drake wrote:
-> From: Paul Fox <pgf@laptop.org>
-> 
-> For the SD8686, we cannot rely on the scratch register to read the firmware
-> load status, because the same register is used for storing RX packet length.
-> Broaden the check to account for this.
-> 
-> The module can now be unloaded/reloaded successfully.
-> 
-> Based on the implementation from libertas_tf.
-> 
-> Signed-off-by: Daniel Drake <dsd@laptop.org>
+From: Sanjay Kumar Champati <csanjay@mistralsolutions.com>
 
-  CC [M]  drivers/net/wireless/libertas/if_sdio.o
-drivers/net/wireless/libertas/if_sdio.c: In function ‘if_sdio_prog_firmware’:
-drivers/net/wireless/libertas/if_sdio.c:718: error: ‘IF_SDIO_MODEL_8686’ undeclared (first use in this function)
-drivers/net/wireless/libertas/if_sdio.c:718: error: (Each undeclared identifier is reported only once
-drivers/net/wireless/libertas/if_sdio.c:718: error: for each function it appears in.)
+* Apply MMC2 support patch before apply this patch
+* Modified the "Kconfig" and "board-omap3evm.c" files to support
+  standard SDIO driver for WL1271 DC
 
-What tree has this definition?
+Signed-off-by: Sanjay Kumar Champati <csanjay@mistralsolutions.com>
+---
+ arch/arm/mach-omap2/board-omap3evm.c |   13 ++++++++++++-
+ drivers/mmc/core/sdio_ops.c          |    7 ++++++-
+ drivers/net/wireless/Kconfig         |   11 +++++++++++
+ 3 files changed, 29 insertions(+), 2 deletions(-)
 
-John
+diff --git a/arch/arm/mach-omap2/board-omap3evm.c b/arch/arm/mach-omap2/board-omap3evm.c
+index 6b45b6e..06fab2e 100644
+--- a/arch/arm/mach-omap2/board-omap3evm.c
++++ b/arch/arm/mach-omap2/board-omap3evm.c
+@@ -79,6 +79,10 @@
+ #define OMAP3EVM_ETHR_ID_REV	0x50
+ #define OMAP3EVM_ETHR_GPIO_IRQ	176
+ #define OMAP3EVM_SMSC911X_CS	5
++#ifdef CONFIG_WL1271_WLAN
++#define OMAP3EVM_WLAN_EN	150
++#define OMAP3EVM_WLAN_IRQ	149
++#endif
+ 
+ extern struct regulator_consumer_supply twl4030_vmmc1_supply;
+ extern struct regulator_consumer_supply twl4030_vsim_supply;
+@@ -749,7 +753,14 @@ static int omap3evm_twl_gpio_setup(struct device *dev,
+ 	twl4030_vmmc1_supply.dev = mmc[0].dev;
+ 	twl4030_vsim_supply.dev = mmc[0].dev;
+ 	twl4030_vmmc2_supply.dev = mmc[1].dev;
+-
++#ifdef CONFIG_WL1271_WLAN
++	omap_mux_init_gpio(OMAP3EVM_WLAN_EN, OMAP_PIN_OUTPUT);
++	if (gpio_request(OMAP3EVM_WLAN_EN, "WLAN_ENABLE"))
++		printk(KERN_ERR "Fail to get WLAN Enable GPIO\n");
++	gpio_direction_output(OMAP3EVM_WLAN_EN, 1);
++	mdelay(100);
++	omap_mux_init_gpio(OMAP3EVM_WLAN_IRQ, OMAP_PIN_INPUT);
++#endif
+ 	/*
+ 	 * Most GPIOs are for USB OTG.  Some are mostly sent to
+ 	 * the P2 connector; notably LEDA for the LCD backlight.
+diff --git a/drivers/mmc/core/sdio_ops.c b/drivers/mmc/core/sdio_ops.c
+index 4eb7825..4213ee0 100644
+--- a/drivers/mmc/core/sdio_ops.c
++++ b/drivers/mmc/core/sdio_ops.c
+@@ -114,6 +114,9 @@ int mmc_io_rw_direct(struct mmc_card *card, int write, unsigned fn,
+ 
+ 	return 0;
+ }
++#ifdef CONFIG_WL1271_WLAN
++EXPORT_SYMBOL(mmc_io_rw_direct);
++#endif
+ 
+ int mmc_io_rw_extended(struct mmc_card *card, int write, unsigned fn,
+ 	unsigned addr, int incr_addr, u8 *buf, unsigned blocks, unsigned blksz)
+@@ -181,4 +184,6 @@ int mmc_io_rw_extended(struct mmc_card *card, int write, unsigned fn,
+ 
+ 	return 0;
+ }
+-
++#ifdef CONFIG_WL1271_WLAN
++EXPORT_SYMBOL(mmc_io_rw_extended);
++#endif
+diff --git a/drivers/net/wireless/Kconfig b/drivers/net/wireless/Kconfig
+index 56dd665..dc319b7 100644
+--- a/drivers/net/wireless/Kconfig
++++ b/drivers/net/wireless/Kconfig
+@@ -31,6 +31,17 @@ config PCMCIA_RAYCS
+ 	  To compile this driver as a module, choose M here: the module will be
+ 	  called ray_cs.  If unsure, say N.
+ 
++config WL1271_WLAN
++	tristate "WL1271 TI's SDIO based wireless card"
++	select WIRELESS_EXT
++	select CRYPTO
++	select WEXT_SPY
++	select WEXT_PRIV
++	---help---
++	This driver support both the standard Linux Wireless Extensions
++	and TI's proprietary API, so both the Linux Wireless Tools and this
++	module support 2.4 GHz 802.11 b/g/n standrd.
++
+ config LIBERTAS_THINFIRM
+ 	tristate "Marvell 8xxx Libertas WLAN driver support with thin firmware"
+ 	depends on MAC80211
 -- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+1.6.3.3
+
