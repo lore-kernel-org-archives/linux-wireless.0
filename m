@@ -1,33 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ey0-f174.google.com ([209.85.215.174]:43593 "EHLO
-	mail-ey0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755254Ab0JFFuE (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 6 Oct 2010 01:50:04 -0400
-Received: by eyb6 with SMTP id 6so2726728eyb.19
-        for <linux-wireless@vger.kernel.org>; Tue, 05 Oct 2010 22:50:03 -0700 (PDT)
-From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-To: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-Cc: b43-dev@lists.infradead.org,
-	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-Subject: [PATCH 0/3] b43: channel switching little cleaning
-Date: Wed,  6 Oct 2010 07:50:05 +0200
-Message-Id: <1286344208-32479-1-git-send-email-zajec5@gmail.com>
+Received: from purkki.adurom.net ([80.68.90.206]:53850 "EHLO purkki.adurom.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752889Ab0JMGRd (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 13 Oct 2010 02:17:33 -0400
+To: Shahar Levi <shahar_levi@ti.com>
+Cc: Luciano Coelho <luciano.coelho@nokia.com>,
+	"linux-wireless\@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH v3 03/03] wl1271: 11n Support, functionality and configuration ability
+References: <1286812038-19013-1-git-send-email-shahar_levi@ti.com>
+	<1286812038-19013-4-git-send-email-shahar_levi@ti.com>
+	<1286893095.12528.75.camel@chilepepper> <4CB486D8.5080506@ti.com>
+From: Kalle Valo <kvalo@adurom.com>
+Date: Wed, 13 Oct 2010 09:17:29 +0300
+In-Reply-To: <4CB486D8.5080506@ti.com> (Shahar Levi's message of "Tue\, 12 Oct 2010 18\:03\:36 +0200")
+Message-ID: <877hhm39c6.fsf@purkki.adurom.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-It defines B43_SHM_SH_CHAN_40MHZ and simplifies channel switching for N-PHY.
+Hi Shahar,
 
-Rafał Miłecki (3):
-  b43: N-PHY: simplify channel switching
-  b43: define B43_SHM_SH_CHAN_40MHZ
-  b43: N-PHY: don't duplicate setting channel in shared memory
+Shahar Levi <shahar_levi@ti.com> writes:
 
- drivers/net/wireless/b43/b43.h        |    3 ++-
- drivers/net/wireless/b43/phy_common.c |    6 ++++--
- drivers/net/wireless/b43/phy_n.c      |   32 ++++++++++----------------------
- 3 files changed, 16 insertions(+), 25 deletions(-)
+> Thanks for the review. All below will be fix in v4.
 
+Please don't top post and also trim your quotes. That makes a lot
+easier to read your emails. More info here:
+
+http://idallen.com/topposting.html
+
+People here deal with hundreds of emails per day from different
+mailing lists and it really matter how the messages are formatted. So
+please be kind to us and try to follow the etiquette. Thanks.
+
+-- 
+Kalle Valo
