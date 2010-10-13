@@ -1,33 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:56580 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932390Ab0J2Lfj (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 29 Oct 2010 07:35:39 -0400
-Subject: Re: [RFC PATCH 0/2] mac80211: Possibility for driver to get AP
- probereq template
-From: Johannes Berg <johannes@sipsolutions.net>
-To: juuso.oikarinen@nokia.com
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <1288351673-12224-1-git-send-email-juuso.oikarinen@nokia.com>
-References: <1288351673-12224-1-git-send-email-juuso.oikarinen@nokia.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Fri, 29 Oct 2010 13:35:36 +0200
-Message-ID: <1288352136.3826.28.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+Received: from mail.atheros.com ([12.19.149.2]:15051 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752930Ab0JMGnP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 13 Oct 2010 02:43:15 -0400
+Received: from mail.atheros.com ([10.10.20.108])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Tue, 12 Oct 2010 23:43:05 -0700
+Date: Wed, 13 Oct 2010 12:13:08 +0530
+From: Senthil Balasubramanian <senthilkumar@atheros.com>
+To: Rajkumar Manoharan <rmanoharan@atheros.com>
+CC: Felix Fietkau <nbd@openwrt.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"linville@tuxdriver.com" <linville@tuxdriver.com>,
+	Luis Rodriguez <Luis.Rodriguez@Atheros.com>
+Subject: Re: [PATCH 3/3] ath9k: add missing locking around
+ ath9k_hw_proc_mib_event
+Message-ID: <20101013064308.GA2878@senthil-lnx.users.atheros.com>
+References: <1286892483-71182-1-git-send-email-nbd@openwrt.org>
+ <1286892483-71182-2-git-send-email-nbd@openwrt.org>
+ <1286892483-71182-3-git-send-email-nbd@openwrt.org>
+ <20101013052030.GA9021@vmraj-lnx.users.atheros.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <20101013052030.GA9021@vmraj-lnx.users.atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2010-10-29 at 14:27 +0300, juuso.oikarinen@nokia.com wrote:
-> From: Juuso Oikarinen <juuso.oikarinen@nokia.com>
+On Wed, Oct 13, 2010 at 10:50:31AM +0530, Rajkumar Manoharan wrote:
+> On Tue, Oct 12, 2010 at 07:38:03PM +0530, Felix Fietkau wrote:
+> > +		spin_lock(&common->cc_lock);
+> >  		ath9k_hw_proc_mib_event(ah);
+> > +		spin_unlock(&common->cc_lock);
+> >  		ath9k_hw_set_interrupts(ah, ah->imask);
+> >  	}
+> >
+> shouldn't we lock ath9k_ani_reset which also restarts ani?
+Remember syncrhonizing ath9k_ani_reset() with spin_lock requires careful
+review as ath9k_htc uses mutex lock somewhere in the ani reset path.
 > 
-> The wl1271 has hardware connection monitoring, i.e. the hardware chipset 
-> internally handles periodic null-funcs and probe-req transmitting in case of
-> non-acked periodic null-func or beacon loss.
-
-I'm wondering why it wants to do probe-req instead of nullfunc? I mean,
-we're trying to make mac80211 use nullfunc+ACK instead of probereq
-+proberesp ...
-
-johannes
-
+> - Rajkumar
+> > -- 
+> > 1.7.2.2
+> > 
+> > --
+> > To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> > the body of a message to majordomo@vger.kernel.org
+> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
