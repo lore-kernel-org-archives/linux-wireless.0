@@ -1,49 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f46.google.com ([209.85.161.46]:55292 "EHLO
-	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757681Ab0JHUt0 (ORCPT
+Received: from external1.orbit-lab.org ([128.6.192.131]:56581 "HELO
+	external1.orbit-lab.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1751119Ab0JMTDW (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 8 Oct 2010 16:49:26 -0400
-Received: by fxm14 with SMTP id 14so736806fxm.19
-        for <linux-wireless@vger.kernel.org>; Fri, 08 Oct 2010 13:49:25 -0700 (PDT)
-From: Christian Lamparter <chunkeey@googlemail.com>
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Subject: Re: [PATCH v2] mac80211: temporarily disable reorder release timer
-Date: Fri, 8 Oct 2010 22:49:20 +0200
-Cc: "linux-wireless" <linux-wireless@vger.kernel.org>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Johannes Berg <johannes@sipsolutions.net>
-References: <201010082235.09355.chunkeey@googlemail.com> <AANLkTi=LxUqST506VGiM8RpEZXrJ6_EWVRiJHboGVv5i@mail.gmail.com>
-In-Reply-To: <AANLkTi=LxUqST506VGiM8RpEZXrJ6_EWVRiJHboGVv5i@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="utf-8"
-Message-Id: <201010082249.20545.chunkeey@googlemail.com>
+	Wed, 13 Oct 2010 15:03:22 -0400
+Received: from repository3.orbit-lab.org (repository3.orbit-lab.org [10.50.0.41])
+	by external1.orbit-lab.org (Postfix) with ESMTP id B4633418D8
+	for <linux-wireless@vger.kernel.org>; Wed, 13 Oct 2010 15:00:28 -0400 (EDT)
+Subject: Compat-wireless release for 2010-10-13 is baked
+To: <linux-wireless@vger.kernel.org>
+Message-Id: <20101013190321.2E6E140E24@repository3.orbit-lab.org>
+Date: Wed, 13 Oct 2010 15:03:21 -0400 (EDT)
+From: compat@orbit-lab.org (Compat-wireless cronjob account)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Friday 08 October 2010 22:40:39 Luis R. Rodriguez wrote:
-> On Fri, Oct 8, 2010 at 1:35 PM, Christian Lamparter
-> <chunkeey@googlemail.com> wrote:
-> > Several serve threading problems in the current
-> > release reorder timer implementation have been
-> > discovered.
-> >
-> > A lengthy discussion - which lists some of the
-> > pitfalls and possible solutions - can be found at:
-> >  http://marc.info/?t=128635927000001
-> >
-> > But due to the complicated nature of the subject and
-> > the imminent advent of a new -rc cycle, it was
-> > decided to disable the feature for the time being.
-> >
-> > Signed-off-by: Christian Lamparter <chunkeey@googlemail.com>
-> 
-> This patch lacks documentation of the impact of this patch, while it
-> may fix a lock issue, the does not address what happens when the patch
-> is actually applied.
-? It just disables the timer. The actual reorder code
-is left untouched, everything is the same as in Linus'
-2.6.36-rcX tree.
+>From git://git.kernel.org/pub/scm/linux/kernel/git/mcgrof/compat-wireless-2.6
+   b9b0a4f..a19acd7  master     -> origin/master
+>From git://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next
+   52c2826..b5f8437  history    -> origin/history
+ + a5e5b8f...9df3b39 master     -> origin/master  (forced update)
+   29979aa..0acc1b2  stable     -> origin/stable
+ * [new tag]         next-20101013 -> next-20101013
+cat: /var/opt/compat/compat-wireless-2.6/compat_version: No such file or directory
+cat: compat_base_tree: No such file or directory
+cat: compat_base_tree_version: No such file or directory
+cat: compat_version: No such file or directory
+cat: /var/opt/compat/compat-wireless-2.6/compat_version: No such file or directory
+scripts/Makefile.clean:17: /var/opt/compat/compat-wireless-2.6/drivers/net/wireless/hostap/Makefile: No such file or directory
+make[4]: *** No rule to make target `/var/opt/compat/compat-wireless-2.6/drivers/net/wireless/hostap/Makefile'.  Stop.
+make[3]: *** [/var/opt/compat/compat-wireless-2.6/drivers/net/wireless/hostap] Error 2
+make[2]: *** [/var/opt/compat/compat-wireless-2.6/drivers/net/wireless] Error 2
+make[1]: *** [_clean_/var/opt/compat/compat-wireless-2.6] Error 2
+make: *** [clean] Error 2
 
-Or what impact are you talking about?
+compat-wireless code metrics
+
+    731194 - Total upstream lines of code being pulled
