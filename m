@@ -1,65 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail30g.wh2.ocn.ne.jp ([220.111.41.239]:37238 "HELO
-	mail30g.wh2.ocn.ne.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1753728Ab0JEDnr (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:41537 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751585Ab0JMRXY (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 4 Oct 2010 23:43:47 -0400
-Received: from vs3006.wh2.ocn.ne.jp (125.206.180.169)
-	by mail30g.wh2.ocn.ne.jp (RS ver 1.0.95vs) with SMTP id 2-093520224
-	for <linux-wireless@vger.kernel.org>; Tue,  5 Oct 2010 12:43:45 +0900 (JST)
-From: Bruno Randolf <br1@einfach.org>
-To: Johannes Berg <johannes@sipsolutions.net>
-Subject: Re: Putting APs into bridges?
-Date: Tue, 5 Oct 2010 12:43:45 +0900
-Cc: Ben Greear <greearb@candelatech.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-References: <4CAA0D5E.2090700@candelatech.com> <1286216969.3620.44.camel@jlt3.sipsolutions.net>
-In-Reply-To: <1286216969.3620.44.camel@jlt3.sipsolutions.net>
-MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="utf-8"
-Message-Id: <201010051243.45190.br1@einfach.org>
+	Wed, 13 Oct 2010 13:23:24 -0400
+Subject: [PATCH] mac80211: fix SMPS request
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
+Date: Wed, 13 Oct 2010 19:23:21 +0200
+Message-ID: <1286990601.3640.60.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue October 5 2010 03:29:29 Johannes Berg wrote:
-> On Mon, 2010-10-04 at 10:22 -0700, Ben Greear wrote:
-> > It seems he put two VAPs into a bridge device, and got an
-> > assert here (nevermind the printk, I just added that to
-> > help debug the issue).
-> > 
-> > static void __ieee80211_wake_queue(struct ieee80211_hw *hw, int queue,
-> > 
-> > 				   enum queue_stop_reason reason)
-> > 
-> > {
-> > 
-> > 	struct ieee80211_local *local = hw_to_local(hw);
-> > 	struct ieee80211_sub_if_data *sdata;
-> > 	
-> > 	trace_wake_queue(local, queue, reason);
-> > 	
-> > 	if (WARN_ON(queue >= hw->queues)) {
-> > 	
-> > 		printk(KERN_WARNING "%s:  queue: %i  hw->queues: %i\n",
-> > 		
-> > 		       sdata->name, queue, hw->queues);
-> > 		
-> > 		return;
-> > 	
-> > 	}
-> > 
-> > Before I try to reproduce this, it is valid to add APs to bridge
-> > devices in the first place?
-> 
-> Yes, it's valid, we catch the invalid cases in cfg80211.
-> 
-> Hitting the assert there is rather strange though.
+From: Johannes Berg <johannes.berg@intel.com>
 
-hey!
+It looks like I submitted a different patch
+than I tested, because clearly the code in
+mac80211 is missing actually propagating the
+requested SMPS mode. Fix that!
 
-i'm seeing the same. i think it's due to a bug in ath5k concerning power save. 
-we put frames in the CAB queue, but obviously we shouldn't tell mac80211 to 
-wake this queue (number 6) since mac80211 knows nothing about it.
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ net/mac80211/ht.c |    2 ++
+ 1 file changed, 2 insertions(+)
 
-bruno
+--- wireless-testing.orig/net/mac80211/ht.c	2010-10-13 19:19:33.000000000 +0200
++++ wireless-testing/net/mac80211/ht.c	2010-10-13 19:19:41.000000000 +0200
+@@ -291,6 +291,8 @@ void ieee80211_request_smps(struct ieee8
+ 	if (WARN_ON(smps_mode == IEEE80211_SMPS_OFF))
+ 		smps_mode = IEEE80211_SMPS_AUTOMATIC;
+ 
++	sdata->u.mgd.driver_smps_mode = smps_mode;
++
+ 	ieee80211_queue_work(&sdata->local->hw,
+ 			     &sdata->u.mgd.request_smps_work);
+ }
+
+
