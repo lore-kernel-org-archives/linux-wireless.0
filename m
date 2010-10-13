@@ -1,45 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:35728 "EHLO
+Received: from he.sipsolutions.net ([78.46.109.217]:53092 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753888Ab0JNNuW (ORCPT
+	with ESMTP id S1753793Ab0JMLcO (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 14 Oct 2010 09:50:22 -0400
-Subject: Re: [PATCH 3/6] Add a function for evaluating rate changes for
- possible notification
+	Wed, 13 Oct 2010 07:32:14 -0400
+Subject: Re: [RFC: WL1271 DC supprot on OMAP3EVM 2/5] ARM: Supported for
+ Standard SDIO driver on OMAP3EVM for WL1271 DC
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Paul Stewart <pstew@google.com>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <20101013224851.B8E5D20465@glenhelen.mtv.corp.google.com>
-References: <20101013224851.B8E5D20465@glenhelen.mtv.corp.google.com>
+To: csanjay@mistralsolutions.com
+Cc: linux-omap@vger.kernel.org, linux-wireless@vger.kernel.org
+In-Reply-To: <1286967439-705-3-git-send-email-csanjay@mistralsolutions.com>
+References: <1286967439-705-1-git-send-email-csanjay@mistralsolutions.com>
+	 <1286967439-705-3-git-send-email-csanjay@mistralsolutions.com>
 Content-Type: text/plain; charset="UTF-8"
-Date: Thu, 14 Oct 2010 15:51:05 +0200
-Message-ID: <1287064265.4641.435.camel@jlt3.sipsolutions.net>
+Date: Wed, 13 Oct 2010 13:32:01 +0200
+Message-ID: <1286969521.3640.53.camel@jlt3.sipsolutions.net>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2010-10-13 at 15:13 -0700, Paul Stewart wrote:
-> Called from a work proc, this examines the last transmit rate change
-> to see if it warrants an event transmission.
+On Wed, 2010-10-13 at 16:27 +0530, csanjay@mistralsolutions.com wrote:
 
-> +        list_for_each_entry(sdata, &local->interfaces, list) {
-> +                if (!netif_running(sdata->dev) ||
+> +config WL1271_WLAN
+> +	tristate "WL1271 TI's SDIO based wireless card"
+> +	select WIRELESS_EXT
+> +	select CRYPTO
+> +	select WEXT_SPY
+> +	select WEXT_PRIV
+> +	---help---
+> +	This driver support both the standard Linux Wireless Extensions
+> +	and TI's proprietary API, so both the Linux Wireless Tools and this
+> +	module support 2.4 GHz 802.11 b/g/n standrd.
 
-ieee80211_sdata_running
-
-> +		if (!(ifmgd->flags & IEEE80211_STA_TX_RATE_CHANGED) ||
-> +		    bss_conf->cqm_bitrate_thold == 0)
-> +			continue;
-
-why would this work item even be running with a threshold of zero?
-
-Again, this won't compile without the next patch.
-
-However, I think all of this is really expensive. For many devices,
-you'll effectively be triggering an evaluation of the bitrate for every
-packet. This will work well with minstrel, since it properly uses and
-advertises the "best throughput" rate, but not necessarily with other
-algorithms.
+Err, no? For once, you aren't actually adding a driver, and secondly,
+you don't get to add drivers that need WIRELESS_EXT or any of the other
+wext crap outside staging.
 
 johannes
 
