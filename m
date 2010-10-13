@@ -1,36 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([88.198.39.176]:53519 "EHLO ds10.nbd.name"
+Received: from mail.atheros.com ([12.19.149.2]:14474 "EHLO mail.atheros.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755710Ab0JaOb7 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 31 Oct 2010 10:31:59 -0400
-Message-ID: <4CCD7DDA.3050806@openwrt.org>
-Date: Sun, 31 Oct 2010 15:31:54 +0100
-From: Felix Fietkau <nbd@openwrt.org>
+	id S1751396Ab0JMFOn (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 13 Oct 2010 01:14:43 -0400
+Received: from mail.atheros.com ([10.10.20.105])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Tue, 12 Oct 2010 22:14:34 -0700
+Date: Wed, 13 Oct 2010 10:50:31 +0530
+From: Rajkumar Manoharan <rmanoharan@atheros.com>
+To: Felix Fietkau <nbd@openwrt.org>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"linville@tuxdriver.com" <linville@tuxdriver.com>,
+	Luis Rodriguez <Luis.Rodriguez@Atheros.com>
+Subject: Re: [PATCH 3/3] ath9k: add missing locking around
+ ath9k_hw_proc_mib_event
+Message-ID: <20101013052030.GA9021@vmraj-lnx.users.atheros.com>
+References: <1286892483-71182-1-git-send-email-nbd@openwrt.org>
+ <1286892483-71182-2-git-send-email-nbd@openwrt.org>
+ <1286892483-71182-3-git-send-email-nbd@openwrt.org>
 MIME-Version: 1.0
-To: linux-wireless <linux-wireless@vger.kernel.org>
-CC: "John W. Linville" <linville@tuxdriver.com>,
-	Johannes Berg <johannes@sipsolutions.net>
-Subject: [PATCH] cfg80211: fix a crash in dev lookup on dump commands
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <1286892483-71182-3-git-send-email-nbd@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-IS_ERR and PTR_ERR were called with the wrong pointer, leading to a
-crash when cfg80211_get_dev_from_ifindex fails.
+On Tue, Oct 12, 2010 at 07:38:03PM +0530, Felix Fietkau wrote:
+> +		spin_lock(&common->cc_lock);
+>  		ath9k_hw_proc_mib_event(ah);
+> +		spin_unlock(&common->cc_lock);
+>  		ath9k_hw_set_interrupts(ah, ah->imask);
+>  	}
+>
+shouldn't we lock ath9k_ani_reset which also restarts ani?
 
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
----
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -224,8 +224,8 @@ static int nl80211_prepare_netdev_dump(s
- 	}
- 
- 	*rdev = cfg80211_get_dev_from_ifindex(sock_net(skb->sk), ifidx);
--	if (IS_ERR(dev)) {
--		err = PTR_ERR(dev);
-+	if (IS_ERR(*rdev)) {
-+		err = PTR_ERR(*rdev);
- 		goto out_rtnl;
- 	}
- 
-
+- Rajkumar
+> -- 
+> 1.7.2.2
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
