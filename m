@@ -1,485 +1,174 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.19.149.2]:34440 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755846Ab0JALND (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 1 Oct 2010 07:13:03 -0400
-From: Bala Shanmugam <sbalashanmugam@atheros.com>
+Received: from devils.ext.ti.com ([198.47.26.153]:58118 "EHLO
+	devils.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751961Ab0JMOGs (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 13 Oct 2010 10:06:48 -0400
+From: Shahar Levi <shahar_levi@ti.com>
 To: <linux-wireless@vger.kernel.org>
-CC: <marcel@holtmann.org>, <linux-bluetooth@vger.kernel.org>,
-	<linux-kernel@vger.kernel.org>,
-	Bala Shanmugam <sbalashanmugam@atheros.com>
-Subject: [PATCH] Added firmware load patch to crap directory. This patch loads firmware from btusb when device is plugged in.
-Date: Fri, 1 Oct 2010 16:42:52 +0530
-Message-ID: <1285931572-3592-1-git-send-email-sbalashanmugam@atheros.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Cc: Luciano Coelho <luciano.coelho@nokia.com>
+Subject: [PATCH v4 01/03] wl1271: 11n Support, Add Definitions
+Date: Wed, 13 Oct 2010 16:09:39 +0200
+Message-Id: <1286978981-21467-2-git-send-email-shahar_levi@ti.com>
+In-Reply-To: <1286978981-21467-1-git-send-email-shahar_levi@ti.com>
+References: <1286978981-21467-1-git-send-email-shahar_levi@ti.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Disabled staging directory compilation for bt target.
-Signed-off-by: Bala Shanmugam <sbalashanmugam@atheros.com>
----
- Makefile                                  |    9 +-
- crap/0003-btusb-Add-fw-load-support.patch |  424 +++++++++++++++++++++++++++++
- 2 files changed, 428 insertions(+), 5 deletions(-)
- create mode 100644 crap/0003-btusb-Add-fw-load-support.patch
+Two acx commands: ht_capabilities & ht_information, 11n sta capabilities macro.
 
-diff --git a/Makefile b/Makefile
-index e2c594a..4505080 100644
---- a/Makefile
-+++ b/Makefile
-@@ -31,17 +31,16 @@ obj-$(CONFIG_COMPAT_NET_USB_MODULES) += drivers/net/usb/
+Signed-off-by: Shahar Levi <shahar_levi@ti.com>
+---
+ drivers/net/wireless/wl12xx/wl1271.h      |   11 ++++-
+ drivers/net/wireless/wl12xx/wl1271_acx.h  |   81 +++++++++++++++++++++++++++++
+ drivers/net/wireless/wl12xx/wl1271_main.c |   15 +++++
+ 3 files changed, 106 insertions(+), 1 deletions(-)
+
+diff --git a/drivers/net/wireless/wl12xx/wl1271.h b/drivers/net/wireless/wl12xx/wl1271.h
+index 8a4cd76..45a2583 100644
+--- a/drivers/net/wireless/wl12xx/wl1271.h
++++ b/drivers/net/wireless/wl12xx/wl1271.h
+@@ -432,7 +432,12 @@ struct wl1271 {
+ 	/* Our association ID */
+ 	u16 aid;
  
- obj-$(CONFIG_COMPAT_NETWORK_MODULES) += drivers/net/
- obj-$(CONFIG_COMPAT_VAR_MODULES) +=  drivers/ssb/ drivers/misc/eeprom/
--endif
--
--obj-$(CONFIG_COMPAT_BLUETOOTH) += net/bluetooth/
--obj-$(CONFIG_COMPAT_BLUETOOTH_MODULES) += drivers/bluetooth/
--
+-	/* currently configured rate set */
++	/*
++	 * currently configured rate set:
++	 *	bits  0-15 - 802.11abg rates
++	 *	bits 16-23 - 802.11n   MCS index mask
++	 * support only 1 stream, thus only 8 bits for the MCS rates (0-7).
++	 */
+ 	u32 sta_rate_set;
+ 	u32 basic_rate_set;
+ 	u32 basic_rate;
+@@ -509,4 +514,8 @@ int wl1271_plt_stop(struct wl1271 *wl);
+ #define WL1271_PRE_POWER_ON_SLEEP 20 /* in miliseconds */
+ #define WL1271_POWER_ON_SLEEP 200 /* in miliseconds */
  
- ifeq ($(CONFIG_STAGING_EXCLUDE_BUILD),)
- obj-$(CONFIG_COMPAT_STAGING) += drivers/staging/ath6kl/
- obj-$(CONFIG_COMPAT_STAGING) += drivers/staging/brcm80211/
- endif
++/* Macros to handle wl1271.sta_rate_set */
++#define HW_BG_RATES_MASK	0xffff
++#define HW_HT_RATES_OFFSET	16
++
+ #endif
+diff --git a/drivers/net/wireless/wl12xx/wl1271_acx.h b/drivers/net/wireless/wl12xx/wl1271_acx.h
+index ebb341d..72597a2 100644
+--- a/drivers/net/wireless/wl12xx/wl1271_acx.h
++++ b/drivers/net/wireless/wl12xx/wl1271_acx.h
+@@ -964,6 +964,87 @@ struct wl1271_acx_rssi_snr_avg_weights {
+ 	u8 snr_data;
+ };
  
-+endif
++/*
++ * ACX_PEER_HT_CAP
++ * Configure HT capabilities - declare the capabilities of the peer
++ * we are connected to.
++ */
++struct wl1271_acx_ht_capabilities {
++	struct acx_header header;
 +
-+obj-$(CONFIG_COMPAT_BLUETOOTH) += net/bluetooth/
-+obj-$(CONFIG_COMPAT_BLUETOOTH_MODULES) += drivers/bluetooth/
++	/*
++	 * bit 0 - Allow HT Operation
++	 * bit 1 - Allow Greenfield format in TX
++	 * bit 2 - Allow Short GI in TX
++	 * bit 3 - Allow L-SIG TXOP Protection in TX
++	 * bit 4 - Allow HT Control fields in TX.
++	 *         Note, driver will still leave space for HT control in packets
++	 *         regardless of the value of this field. FW will be responsible
++	 *         to drop the HT field from any frame when this Bit set to 0.
++	 * bit 5 - Allow RD initiation in TXOP. FW is allowed to initate RD.
++	 *         Exact policy setting for this feature is TBD.
++	 *         Note, this bit can only be set to 1 if bit 3 is set to 1.
++	 */
++	__le32 ht_capabilites;
++
++	/*
++	 * Indicates to which peer these capabilities apply.
++	 * For infrastructure use ff:ff:ff:ff:ff:ff that indicates relevance
++	 * for all peers.
++	 * Only valid for IBSS/DLS operation.
++	 */
++	u8 mac_address[ETH_ALEN];
++
++	/*
++	 * This the maximum A-MPDU length supported by the AP. The FW may not
++	 * exceed this length when sending A-MPDUs
++	 */
++	u8 ampdu_max_length;
++
++	/* This is the minimal spacing required when sending A-MPDUs to the AP*/
++	u8 ampdu_min_spacing;
++} __packed;
++
++/* HT Capabilites Fw Bit Mask Mapping */
++#define WL1271_ACX_FW_CAP_HT_OPERATION                 BIT(0)
++#define WL1271_ACX_FW_CAP_GREENFIELD_FRAME_FORMAT      BIT(1)
++#define WL1271_ACX_FW_CAP_SHORT_GI_FOR_20MHZ_PACKETS   BIT(2)
++#define WL1271_ACX_FW_CAP_LSIG_TXOP_PROTECTION         BIT(3)
++#define WL1271_ACX_FW_CAP_HT_CONTROL_FIELDS            BIT(4)
++#define WL1271_ACX_FW_CAP_RD_INITIATION                BIT(5)
++
++
++/*
++ * ACX_HT_BSS_OPERATION
++ * Configure HT capabilities - AP rules for behavior in the BSS.
++ */
++struct wl1271_acx_ht_information {
++	struct acx_header header;
++
++	/* Values: 0 - RIFS not allowed, 1 - RIFS allowed */
++	u8 rifs_mode;
++
++	/* Values: 0 - 3 like in spec */
++	u8 ht_protection;
++
++	/* Values: 0 - GF protection not required, 1 - GF protection required */
++	u8 gf_protection;
++
++	/*Values: 0 - TX Burst limit not required, 1 - TX Burst Limit required*/
++	u8 ht_tx_burst_limit;
++
++	/*
++	 * Values: 0 - Dual CTS protection not required,
++	 *         1 - Dual CTS Protection required
++	 * Note: When this value is set to 1 FW will protect all TXOP with RTS
++	 * frame and will not use CTS-to-self regardless of the value of the
++	 * ACX_CTS_PROTECTION information element
++	 */
++	u8 dual_cts_protection;
++
++	u8 padding[3];
++} __packed;
++
+ struct wl1271_acx_fw_tsf_information {
+ 	struct acx_header header;
  
- else
+diff --git a/drivers/net/wireless/wl12xx/wl1271_main.c b/drivers/net/wireless/wl12xx/wl1271_main.c
+index 48a4b99..a585815 100644
+--- a/drivers/net/wireless/wl12xx/wl1271_main.c
++++ b/drivers/net/wireless/wl12xx/wl1271_main.c
+@@ -2134,6 +2134,21 @@ static const u8 wl1271_rate_to_idx_2ghz[] = {
+ 	0                              /* CONF_HW_RXTX_RATE_1    */
+ };
  
-diff --git a/crap/0003-btusb-Add-fw-load-support.patch b/crap/0003-btusb-Add-fw-load-support.patch
-new file mode 100644
-index 0000000..2fc1abe
---- /dev/null
-+++ b/crap/0003-btusb-Add-fw-load-support.patch
-@@ -0,0 +1,424 @@
-+Reason for not yet publishing: Marcel feels that Atheros sflash based BT device
-+doesn't follow bluetooth H:2 specification and HCI commands should be supported
-+in firmware if it is detected as bluetooth device. Using HCI command, firmware
-+should be loaded.
++/* 11n STA capabilities */
++#define HW_RX_HIGHEST_RATE	72
 +
-+In sfash based device we don't have enough memory to support HCI commands in firmware.
-+So load firmware from btusb when the device comes up.
++#define WL1271_HT_CAP { \
++	.cap = IEEE80211_HT_CAP_GRN_FLD | IEEE80211_HT_CAP_SGI_20, \
++	.ht_supported = true, \
++	.ampdu_factor = IEEE80211_HT_MAX_AMPDU_8K, \
++	.ampdu_density = IEEE80211_HT_MPDU_DENSITY_8, \
++	.mcs = { \
++		.rx_mask = { 0xff, 0, 0, 0, 0, 0, 0, 0, 0, 0, }, \
++		.rx_highest = cpu_to_le16(HW_RX_HIGHEST_RATE), \
++		.tx_params = IEEE80211_HT_MCS_TX_DEFINED, \
++		}, \
++}
 +
-+From 4ac276c14578b380d0c6a27658eeaa364efe6432 Mon Sep 17 00:00:00 2001
-+From: Bala Shanmugam <sbalashanmugam@atheros.com>
-+Date: Fri, 1 Oct 2010 15:18:02 +0530
-+Subject: [PATCH] Added support to load firmware to target RAM from btusb transport driver.
-+ Each BT device vendor can add their product ID, firmware file, load and unload function
-+ to btusb_fwcbs array. When the device is inserted btusb will call appropriate
-+ firmware load function.  This support will significantly reduce cost of
-+ BT chip because of RAM based firmware.
-+ Signed-off-by: Bala Shanmugam <sbalashanmugam@atheros.com>
-+
-+---
-+ drivers/bluetooth/Makefile |    1 +
-+ drivers/bluetooth/btusb.c  |   67 +++++++++++++++
-+ drivers/bluetooth/fwload.c |  199 ++++++++++++++++++++++++++++++++++++++++++++
-+ drivers/bluetooth/fwload.h |   39 +++++++++
-+ 4 files changed, 306 insertions(+), 0 deletions(-)
-+ create mode 100644 drivers/bluetooth/fwload.c
-+ create mode 100644 drivers/bluetooth/fwload.h
-+
-+diff --git a/drivers/bluetooth/Makefile b/drivers/bluetooth/Makefile
-+index 71bdf13..5a55cbb 100644
-+--- a/drivers/bluetooth/Makefile
-++++ b/drivers/bluetooth/Makefile
-+@@ -13,6 +13,7 @@ obj-$(CONFIG_BT_HCIBLUECARD)	+= bluecard_cs.o
-+ obj-$(CONFIG_BT_HCIBTUART)	+= btuart_cs.o
-+
-+ obj-$(CONFIG_BT_HCIBTUSB)	+= btusb.o
-++obj-$(CONFIG_BT_HCIBTUSB)	+= fwload.o
-+ obj-$(CONFIG_BT_HCIBTSDIO)	+= btsdio.o
-+
-+ obj-$(CONFIG_BT_ATH3K)		+= ath3k.o
-+diff --git a/drivers/bluetooth/btusb.c b/drivers/bluetooth/btusb.c
-+index d22ce3c..13e0fb8 100644
-+--- a/drivers/bluetooth/btusb.c
-++++ b/drivers/bluetooth/btusb.c
-+@@ -34,6 +34,7 @@
-+
-+ #include <net/bluetooth/bluetooth.h>
-+ #include <net/bluetooth/hci_core.h>
-++#include "fwload.h"
-+
-+ #define VERSION "0.6"
-+
-+@@ -55,6 +56,26 @@ static struct usb_driver btusb_driver;
-+ #define BTUSB_BROKEN_ISOC	0x20
-+ #define BTUSB_WRONG_SCO_MTU	0x40
-+
-++static struct usb_device_id ath_table[] = {
-++	/* Atheros AR3011 */
-++	{ USB_DEVICE(0x0CF3, 0x3002) },
-++	{ USB_DEVICE(0x13D3, 0x3304) },
-++	{ }	/* Terminating entry */
-++};
-++
-++/* Add firmware file, load and unload function
-++ * to download the firmware to target RAM
-++ */
-++static struct fw_cb_config btusb_fwcbs[] = {
-++	{
-++		.fwfile = "ath3k-1.fw",
-++		.usb_id_table = ath_table,
-++		.fwload = ath_fw_load,
-++		.fwunload = ath_fw_unload
-++	},
-++	{}
-++};
-++
-+ static struct usb_device_id btusb_table[] = {
-+ 	/* Generic Bluetooth USB device */
-+ 	{ USB_DEVICE_INFO(0xe0, 0x01, 0x01) },
-+@@ -863,6 +884,7 @@ static int btusb_probe(struct usb_interface *intf,
-+ 	struct btusb_data *data;
-+ 	struct hci_dev *hdev;
-+ 	int i, err;
-++	const struct usb_device_id *match;
-+
-+ 	BT_DBG("intf %p id %p", intf, id);
-+
-+@@ -922,6 +944,19 @@ static int btusb_probe(struct usb_interface *intf,
-+ 	data->udev = interface_to_usbdev(intf);
-+ 	data->intf = intf;
-+
-++	for (i = 0; btusb_fwcbs[i].fwfile; i++) {
-++		match = usb_match_id(intf, btusb_fwcbs[i].usb_id_table);
-++		if (match) {
-++			if (btusb_fwcbs[i].fwload) {
-++				btusb_fwcbs[i].data =
-++					btusb_fwcbs[i].fwload(intf,
-++						btusb_fwcbs[i].fwfile,
-++						&btusb_fwcbs[i].bsuspend);
-++			}
-++			break;
-++		}
-++	}
-++
-+ 	spin_lock_init(&data->lock);
-+
-+ 	INIT_WORK(&data->work, btusb_work);
-+@@ -1030,12 +1065,26 @@ static void btusb_disconnect(struct usb_interface *intf)
-+ {
-+ 	struct btusb_data *data = usb_get_intfdata(intf);
-+ 	struct hci_dev *hdev;
-++	const struct usb_device_id *match;
-++	int i;
-+
-+ 	BT_DBG("intf %p", intf);
-+
-+ 	if (!data)
-+ 		return;
-+
-++	for (i = 0; btusb_fwcbs[i].fwfile; i++) {
-++		match = usb_match_id(intf, btusb_fwcbs[i].usb_id_table);
-++		if (match) {
-++			if (btusb_fwcbs[i].fwunload) {
-++				btusb_fwcbs[i].fwunload(btusb_fwcbs[i].data,
-++						btusb_fwcbs[i].bsuspend);
-++				btusb_fwcbs[i].data = NULL;
-++			}
-++			break;
-++		}
-++	}
-++
-+ 	hdev = data->hdev;
-+
-+ 	__hci_dev_hold(hdev);
-+@@ -1061,12 +1110,22 @@ static void btusb_disconnect(struct usb_interface *intf)
-+ static int btusb_suspend(struct usb_interface *intf, pm_message_t message)
-+ {
-+ 	struct btusb_data *data = usb_get_intfdata(intf);
-++	const struct usb_device_id *match;
-++	int i;
-+
-+ 	BT_DBG("intf %p", intf);
-+
-+ 	if (data->suspend_count++)
-+ 		return 0;
-+
-++	for (i = 0; btusb_fwcbs[i].fwfile; i++) {
-++		match = usb_match_id(intf, btusb_fwcbs[i].usb_id_table);
-++		if (match) {
-++			btusb_fwcbs[i].bsuspend = 1;
-++			break;
-++		}
-++	}
-++
-+ 	spin_lock_irq(&data->txlock);
-+ 	if (!((message.event & PM_EVENT_AUTO) && data->tx_in_flight)) {
-+ 		set_bit(BTUSB_SUSPENDING, &data->flags);
-+@@ -1179,6 +1238,14 @@ static int __init btusb_init(void)
-+
-+ static void __exit btusb_exit(void)
-+ {
-++	int i;
-++	for (i = 0; btusb_fwcbs[i].fwfile; i++) {
-++		if (btusb_fwcbs[i].fwunload && btusb_fwcbs[i].data) {
-++			btusb_fwcbs[i].fwunload(btusb_fwcbs[i].data,
-++					btusb_fwcbs[i].bsuspend);
-++			btusb_fwcbs[i].data = NULL;
-++		}
-++	}
-+ 	usb_deregister(&btusb_driver);
-+ }
-+
-+diff --git a/drivers/bluetooth/fwload.c b/drivers/bluetooth/fwload.c
-+new file mode 100644
-+index 0000000..a9a586a
-+--- /dev/null
-++++ b/drivers/bluetooth/fwload.c
-+@@ -0,0 +1,199 @@
-++/*
-++ *
-++ *  Generic Bluetooth USB DFU driver to download firmware to target RAM
-++ *
-++ *  Copyright (c) 2009-2010 Atheros Communications Inc.
-++ *
-++ *  This program is free software; you can redistribute it and/or modify
-++ *  it under the terms of the GNU General Public License as published by
-++ *  the Free Software Foundation; either version 2 of the License, or
-++ *  (at your option) any later version.
-++ *
-++ *  This program is distributed in the hope that it will be useful,
-++ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
-++ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-++ *  GNU General Public License for more details.
-++ *
-++ *  You should have received a copy of the GNU General Public License
-++ *  along with this program; if not, write to the Free Software
-++ *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
-++ *
-++ */
-++
-++#include <linux/module.h>
-++#include <linux/kernel.h>
-++#include <linux/init.h>
-++#include <linux/slab.h>
-++#include <linux/types.h>
-++#include <linux/device.h>
-++#include <linux/firmware.h>
-++#include <linux/usb.h>
-++#include <net/bluetooth/bluetooth.h>
-++
-++#define USB_REQ_DFU_DNLOAD	1
-++#define USB_REQ_GET_STATE	5
-++#define USB_FIRMWARE_RAM_MODE 11
-++#define USB_FIRMWARE_FLASH_MODE 12
-++#define BULK_SIZE		4096
-++#define VERSION "1.0"
-++
-++struct firmware_data {
-++	struct usb_device *udev;
-++	u8 *fw_data;
-++	u32 fw_size;
-++	u32 fw_sent;
-++};
-++
-++static int load_firmware(struct firmware_data *data,
-++				unsigned char *firmware,
-++				int count)
-++{
-++	u8 *send_buf;
-++	int err, pipe, len, size, sent = 0;
-++	char ucFirmware = 0;
-++
-++	BT_DBG("ath3k %p udev %p", data, data->udev);
-++
-++	if ((usb_control_msg(data->udev, usb_rcvctrlpipe(data->udev, 0),
-++				USB_REQ_GET_STATE,
-++				USB_TYPE_VENDOR | USB_DIR_IN, 0, 0,
-++				&ucFirmware, 1, USB_CTRL_SET_TIMEOUT)) < 0) {
-++		BT_ERR("Can't change to loading configuration err");
-++		return -EBUSY;
-++	}
-++
-++	if (ucFirmware == USB_FIRMWARE_RAM_MODE) {
-++		/* RAM based firmware is available in the target.
-++		 * No need to load the firmware to RAM */
-++		BT_DBG("RAM based firmware is available");
-++		return 0;
-++	}
-++
-++	pipe = usb_sndctrlpipe(data->udev, 0);
-++	if ((usb_control_msg(data->udev, pipe,
-++				USB_REQ_DFU_DNLOAD,
-++				USB_TYPE_VENDOR, 0, 0,
-++				firmware, 20, USB_CTRL_SET_TIMEOUT)) < 0) {
-++		BT_ERR("Can't change to loading configuration err");
-++		return -EBUSY;
-++	}
-++	sent += 20;
-++	count -= 20;
-++
-++	send_buf = kmalloc(BULK_SIZE, GFP_ATOMIC);
-++	if (!send_buf) {
-++		BT_ERR("Can't allocate memory chunk for firmware");
-++		return -ENOMEM;
-++	}
-++
-++	while (count) {
-++		size = min_t(uint, count, BULK_SIZE);
-++		pipe = usb_sndbulkpipe(data->udev, 0x02);
-++		memcpy(send_buf, firmware + sent, size);
-++
-++		err = usb_bulk_msg(data->udev, pipe, send_buf, size,
-++					&len, 3000);
-++
-++		if (err || (len != size)) {
-++			BT_ERR("Error in firmware loading err = %d,"
-++				"len = %d, size = %d", err, len, size);
-++			goto error;
-++		}
-++
-++		sent  += size;
-++		count -= size;
-++	}
-++
-++	kfree(send_buf);
-++	return 0;
-++
-++error:
-++	kfree(send_buf);
-++	return err;
-++}
-++
-++void *ath_fw_load(struct usb_interface *intf,
-++			const char *fwfile, bool *suspend)
-++{
-++	const struct firmware *firmware;
-++	struct usb_device *udev = interface_to_usbdev(intf);
-++	static struct firmware_data *data;
-++	int size;
-++
-++	BT_DBG("\nintf %p suspend %d\n", intf, *suspend);
-++
-++	if (*suspend) {
-++		load_firmware(data, data->fw_data, data->fw_size);
-++		*suspend = 0;
-++		return data;
-++	}
-++
-++	if (intf->cur_altsetting->desc.bInterfaceNumber != 0)
-++		return NULL;
-++
-++	data = kzalloc(sizeof(*data), GFP_KERNEL);
-++	if (!data)
-++		return NULL;
-++	data->udev = udev;
-++
-++	if (request_firmware(&firmware, fwfile, &udev->dev) < 0) {
-++		kfree(data);
-++		return NULL;
-++	}
-++
-++	size = max_t(uint, firmware->size, 4096);
-++	data->fw_data = kmalloc(size, GFP_KERNEL);
-++	if (!data->fw_data) {
-++		release_firmware(firmware);
-++		kfree(data);
-++		return NULL;
-++	}
-++
-++	memcpy(data->fw_data, firmware->data, firmware->size);
-++	data->fw_size = firmware->size;
-++	data->fw_sent = 0;
-++	release_firmware(firmware);
-++
-++	if (load_firmware(data, data->fw_data, data->fw_size)) {
-++		kfree(data->fw_data);
-++		kfree(data);
-++		return NULL;
-++	}
-++	return data;
-++}
-++EXPORT_SYMBOL(ath_fw_load);
-++
-++void ath_fw_unload(void *pdata, bool bsuspend)
-++{
-++	struct firmware_data *data = (struct firmware_data *)pdata;
-++
-++	if (data == NULL)
-++		return;
-++
-++	/* do not free the data on suspend as we will
-++	 * use it on resume */
-++	if (!bsuspend) {
-++		kfree(data->fw_data);
-++		kfree(data);
-++	}
-++}
-++EXPORT_SYMBOL(ath_fw_unload);
-++
-++static int __init fwload_init(void)
-++{
-++	BT_INFO("Firmware load driver init. Version:%s", VERSION);
-++	return 0;
-++}
-++
-++static void __exit fwload_deinit(void)
-++{
-++	BT_INFO("Firmware load driver deinit");
-++}
-++
-++module_init(fwload_init);
-++module_exit(fwload_deinit);
-++
-++MODULE_AUTHOR("Atheros Communications");
-++MODULE_DESCRIPTION("Firmware load driver");
-++MODULE_VERSION(VERSION);
-++MODULE_LICENSE("GPL");
-+diff --git a/drivers/bluetooth/fwload.h b/drivers/bluetooth/fwload.h
-+new file mode 100644
-+index 0000000..5c1136a
-+--- /dev/null
-++++ b/drivers/bluetooth/fwload.h
-+@@ -0,0 +1,39 @@
-++/*
-++ *
-++ *  Generic Bluetooth USB DFU driver to download firmware to target RAM
-++ *
-++ *  Copyright (c) 2009-2010 Atheros Communications Inc.
-++ *
-++ *  This program is free software; you can redistribute it and/or modify
-++ *  it under the terms of the GNU General Public License as published by
-++ *  the Free Software Foundation; either version 2 of the License, or
-++ *  (at your option) any later version.
-++ *
-++ *  This program is distributed in the hope that it will be useful,
-++ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
-++ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-++ *  GNU General Public License for more details.
-++ *
-++ *  You should have received a copy of the GNU General Public License
-++ *  along with this program; if not, write to the Free Software
-++ *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
-++ *
-++ */
-++#ifndef _FWLOAD_H_
-++#define _FWLOAD_H_
-++
-++/* callbacks to load firmware to BT device RAM
-++ * when it is inserted */
-++struct fw_cb_config {
-++	const char *fwfile;
-++	void * (*fwload)(struct usb_interface *intf, const char *fwfile,
-++			 bool *bsuspend);
-++	void (*fwunload)(void *, bool);
-++	const struct usb_device_id *usb_id_table;
-++	void *data;
-++	bool bsuspend;
-++};
-++void *ath_fw_load(struct usb_interface *intf, const char *, bool *);
-++void ath_fw_unload(void *pdata, bool bsuspend);
-++
-++#endif /* _FWLOAD_H_ */
-+--
-+1.6.3.3
-+
+ /* can't be const, mac80211 writes to this */
+ static struct ieee80211_supported_band wl1271_band_2ghz = {
+ 	.channels = wl1271_channels,
 -- 
-1.6.3.3
+1.6.0.4
 
