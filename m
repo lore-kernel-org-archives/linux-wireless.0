@@ -1,64 +1,134 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from hera.kernel.org ([140.211.167.34]:57275 "EHLO hera.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755350Ab0JOPff (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 15 Oct 2010 11:35:35 -0400
-Message-ID: <4CB874C0.8090003@kernel.org>
-Date: Fri, 15 Oct 2010 17:35:28 +0200
-From: Tejun Heo <tj@kernel.org>
-MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>,
-	Linux Wireless List <linux-wireless@vger.kernel.org>,
-	lkml <linux-kernel@vger.kernel.org>
-Subject: [PATCH v2.6.36-rc7] mac80211: cancel restart_work explicitly instead
- of depending on flush_scheduled_work()
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from smtp-out.google.com ([216.239.44.51]:38214 "EHLO
+	smtp-out.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753561Ab0JMWsx (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 13 Oct 2010 18:48:53 -0400
+Received: from kpbe12.cbf.corp.google.com (kpbe12.cbf.corp.google.com [172.25.105.76])
+	by smtp-out.google.com with ESMTP id o9DMmqK5022921
+	for <linux-wireless@vger.kernel.org>; Wed, 13 Oct 2010 15:48:53 -0700
+Received: from glenhelen.mtv.corp.google.com (glenhelen.mtv.corp.google.com [172.22.72.223])
+	by kpbe12.cbf.corp.google.com with ESMTP id o9DMmpPK020047
+	for <linux-wireless@vger.kernel.org>; Wed, 13 Oct 2010 15:48:52 -0700
+From: Paul Stewart <pstew@google.com>
+Date: Wed, 13 Oct 2010 15:13:50 -0700
+Subject: [PATCH 3/6] Add a function for evaluating rate changes for possible notification
+To: linux-wireless@vger.kernel.org
+Message-Id: <20101013224851.B8E5D20465@glenhelen.mtv.corp.google.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-iee80211_hw->restart_work is the only work which uses the system
-workqueue.  Instead of calling flush_scheduled_work() during
-iee80211_exit(), cancel the work during unregistration.
+Called from a work proc, this examines the last transmit rate change
+to see if it warrants an event transmission.
 
-This is to prepare for the deprecation and removal of
-flush_scheduled_work().
+Signed-off-by: Paul Stewart <pstew@google.com>
 
-Signed-off-by: Tejun Heo <tj@kernel.org>
 ---
- net/mac80211/main.c |    9 ++-------
- 1 file changed, 2 insertions(+), 7 deletions(-)
+ net/mac80211/rate.c |   74 +++++++++++++++++++++++++++++++++++++++++++++++++++
+ net/mac80211/rate.h |    8 +++++
+ 2 files changed, 82 insertions(+), 0 deletions(-)
 
-Index: work/net/mac80211/main.c
-===================================================================
---- work.orig/net/mac80211/main.c
-+++ work/net/mac80211/main.c
-@@ -606,7 +606,7 @@ int ieee80211_register_hw(struct ieee802
- 		hw->queues = IEEE80211_MAX_QUEUES;
-
- 	local->workqueue =
--		create_singlethread_workqueue(wiphy_name(local->hw.wiphy));
-+		alloc_ordered_workqueue(wiphy_name(local->hw.wiphy), 0);
- 	if (!local->workqueue) {
- 		result = -ENOMEM;
- 		goto fail_workqueue;
-@@ -739,6 +739,7 @@ void ieee80211_unregister_hw(struct ieee
- 	del_timer_sync(&local->work_timer);
-
- 	cancel_work_sync(&local->reconfig_filter);
-+	cancel_work_sync(&local->restart_work);
-
- 	ieee80211_clear_tx_pending(local);
- 	sta_info_stop(local);
-@@ -812,12 +813,6 @@ static void __exit ieee80211_exit(void)
- 	rc80211_minstrel_ht_exit();
- 	rc80211_minstrel_exit();
-
--	/*
--	 * For key todo, it'll be empty by now but the work
--	 * might still be scheduled.
--	 */
--	flush_scheduled_work();
--
- 	if (mesh_allocated)
- 		ieee80211s_stop();
+diff --git a/net/mac80211/rate.c b/net/mac80211/rate.c
+index 4f772de..5e39494 100644
+--- a/net/mac80211/rate.c
++++ b/net/mac80211/rate.c
+@@ -399,3 +399,77 @@ void rate_control_deinitialize(struct ieee80211_local *local)
+ 	rate_control_put(ref);
+ }
+ 
++u32 ieee80211_rate_calculate(struct ieee80211_local *local,
++			     struct ieee80211_if_managed *ifmgd)
++{
++	u32 rate_val;
++	u32 modulation, streams, base_rate, mcs, gi_div;
++	struct ieee80211_tx_rate *rate_ptr = &ifmgd->last_cqm_tx_rate;
++	struct ieee80211_supported_band *sband;
++	static int mod_table[8] = { 1, 2, 3, 4, 6, 8, 9, 10 };
++
++	if (!(rate_ptr->flags & IEEE80211_TX_RC_MCS)) {
++		sband = local->hw.wiphy->bands[local->hw.conf.channel->band];
++		return sband->bitrates[ifmgd->last_cqm_tx_rate.idx].bitrate;
++	}
++
++	mcs = rate_ptr->idx;
++
++	/* MCS values over 32 are not yet supported */
++	if (mcs >= 32)
++		return 0;
++
++	modulation = mcs & 7;
++	streams = (mcs >> 3) + 1;
++	base_rate = (rate_ptr->flags & IEEE80211_TX_RC_40_MHZ_WIDTH) ?
++		13500000 : 6500000;
++	gi_div = (rate_ptr->flags & IEEE80211_TX_RC_SHORT_GI) ? 9 : 10;
++	rate_val = base_rate * mod_table[modulation] * streams / gi_div;
++
++	return ((rate_val + 5000) / 10000) * 100;
++}
++
++void ieee80211_cqm_bitrate_notify(struct ieee80211_local *local)
++{
++	struct ieee80211_sub_if_data *sdata;
++	struct ieee80211_if_managed *ifmgd;
++	struct ieee80211_bss_conf *bss_conf;
++	u32 bitrate, threshold;
++	int prev_state, new_state;
++
++        WARN_ON(!mutex_is_locked(&local->iflist_mtx));
++
++        list_for_each_entry(sdata, &local->interfaces, list) {
++                if (!netif_running(sdata->dev) ||
++		    sdata->vif.type != NL80211_IFTYPE_STATION)
++                        continue;
++
++		ifmgd = &sdata->u.mgd;
++		bss_conf = &sdata->vif.bss_conf;
++
++		if (!(ifmgd->flags & IEEE80211_STA_TX_RATE_CHANGED) ||
++		    bss_conf->cqm_bitrate_thold == 0)
++			continue;
++
++		bitrate = ieee80211_rate_calculate(local, ifmgd);
++		threshold = bss_conf->cqm_bitrate_thold;
++		prev_state = (ifmgd->last_cqm_bitrate < threshold);
++		new_state = (bitrate < threshold);
++
++		/*
++		 * Trigger a bitrate notification if one of the following is
++		 * true:
++		 *   - We haven't sent one since the threshold was reconfigured
++		 *   - We have crossed the threshold in either direction
++		 *   - We are below threshold, and the bitrate has decreased yet
++		 *     again.
++		 */
++		if (ifmgd->last_cqm_bitrate == 0 || prev_state != new_state ||
++		    (new_state && bitrate < ifmgd->last_cqm_bitrate)) {
++			cfg80211_cqm_bitrate_notify(sdata->dev, bitrate,
++						    GFP_KERNEL);
++			ifmgd->last_cqm_bitrate = bitrate;
++		}
++		ifmgd->flags &= ~IEEE80211_STA_TX_RATE_CHANGED;
++	}
++}
+diff --git a/net/mac80211/rate.h b/net/mac80211/rate.h
+index 168427b..33e4ca3 100644
+--- a/net/mac80211/rate.h
++++ b/net/mac80211/rate.h
+@@ -120,6 +120,14 @@ int ieee80211_init_rate_ctrl_alg(struct ieee80211_local *local,
+ void rate_control_deinitialize(struct ieee80211_local *local);
+ 
+ 
++/* Notify listeners about transmit rate changes */
++void ieee80211_cqm_bitrate_notify(struct ieee80211_local *local);
++
++/* Convert rate into cfg80211-compatible struct? */
++void ieee80211_rate_convert_cfg(struct ieee80211_local *local,
++				struct ieee80211_if_managed *ifmgd,
++				struct rate_info *rate);
++
+ /* Rate control algorithms */
+ #ifdef CONFIG_MAC80211_RC_PID
+ extern int rc80211_pid_init(void);
+-- 
+1.7.1
 
