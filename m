@@ -1,38 +1,137 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([88.198.39.176]:46370 "EHLO ds10.nbd.name"
+Received: from arroyo.ext.ti.com ([192.94.94.40]:43163 "EHLO arroyo.ext.ti.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756992Ab0JAOvY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 1 Oct 2010 10:51:24 -0400
-Message-ID: <4CA5F569.3000509@openwrt.org>
-Date: Fri, 01 Oct 2010 16:51:21 +0200
-From: Felix Fietkau <nbd@openwrt.org>
-MIME-Version: 1.0
-To: linux-wireless <linux-wireless@vger.kernel.org>
-CC: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	"John W. Linville" <linville@tuxdriver.com>
-Subject: Re: [PATCH] ath9k: fix channel flag / regd issues with multiple cards
-References: <4CA5180D.3010702@openwrt.org> <4CA51F2F.70701@openwrt.org>
-In-Reply-To: <4CA51F2F.70701@openwrt.org>
-Content-Type: text/plain; charset=ISO-8859-1
+	id S1752717Ab0JMOGt (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 13 Oct 2010 10:06:49 -0400
+From: Shahar Levi <shahar_levi@ti.com>
+To: <linux-wireless@vger.kernel.org>
+Cc: Luciano Coelho <luciano.coelho@nokia.com>
+Subject: [PATCH v4 02/03] wl1271: 11n Support, ACX Commands
+Date: Wed, 13 Oct 2010 16:09:40 +0200
+Message-Id: <1286978981-21467-3-git-send-email-shahar_levi@ti.com>
+In-Reply-To: <1286978981-21467-1-git-send-email-shahar_levi@ti.com>
+References: <1286978981-21467-1-git-send-email-shahar_levi@ti.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2010-10-01 1:37 AM, Felix Fietkau wrote:
-> On 2010-10-01 1:06 AM, Felix Fietkau wrote:
->> Since the regulatory code touches the channel array, it needs to be
->> copied for each device instance. That way the original channel array
->> can also be made const.
->> 
->> Signed-off-by: Felix Fietkau <nbd@openwrt.org>
->> Cc: stable@kernel.org [all]
-> Hmm, don't merge this one just yet. Seems that this may not be the cause
-> for the weird multi-card regd issues after all, since the code looks
-> like that part should be properly locked, even for multiple wiphys
-> sharing the same channel list.
-I got user confirmation that this patch does indeed help with this
-issue. I think we should merge this patch until we figure out why
-sharing the channel list over multiple devices causes these issues.
-Without this patch, the channel flags can get messed up in a way that
-breaks regulatory compliance.
+Added ACX command to the FW for 11n support.
 
-- Felix
+Signed-off-by: Shahar Levi <shahar_levi@ti.com>
+---
+ drivers/net/wireless/wl12xx/wl1271_acx.c |   83 ++++++++++++++++++++++++++++++
+ drivers/net/wireless/wl12xx/wl1271_acx.h |    5 ++
+ 2 files changed, 88 insertions(+), 0 deletions(-)
+
+diff --git a/drivers/net/wireless/wl12xx/wl1271_acx.c b/drivers/net/wireless/wl12xx/wl1271_acx.c
+index 6189934..7bea322 100644
+--- a/drivers/net/wireless/wl12xx/wl1271_acx.c
++++ b/drivers/net/wireless/wl12xx/wl1271_acx.c
+@@ -1226,6 +1226,89 @@ out:
+ 	return ret;
+ }
+ 
++int wl1271_acx_set_ht_capabilities(struct wl1271 *wl,
++				    struct ieee80211_sta_ht_cap *ht_cap,
++				    bool allow_ht_operation)
++{
++	struct wl1271_acx_ht_capabilities *acx;
++	u8 mac_address[ETH_ALEN] = {0xff, 0xff, 0xff, 0xff, 0xff, 0xff};
++	int ret = 0;
++
++	wl1271_debug(DEBUG_ACX, "acx ht capabilities setting");
++
++	acx = kzalloc(sizeof(*acx), GFP_KERNEL);
++	if (!acx) {
++		ret = -ENOMEM;
++		goto out;
++	}
++
++	/* Allow HT Operation ? */
++	if (allow_ht_operation) {
++		acx->ht_capabilites =
++			WL1271_ACX_FW_CAP_HT_OPERATION;
++		if (ht_cap->cap & IEEE80211_HT_CAP_GRN_FLD)
++			acx->ht_capabilites |=
++				WL1271_ACX_FW_CAP_GREENFIELD_FRAME_FORMAT;
++		if (ht_cap->cap & IEEE80211_HT_CAP_SGI_20)
++			acx->ht_capabilites |=
++				WL1271_ACX_FW_CAP_SHORT_GI_FOR_20MHZ_PACKETS;
++		if (ht_cap->cap & IEEE80211_HT_CAP_LSIG_TXOP_PROT)
++			acx->ht_capabilites |=
++				WL1271_ACX_FW_CAP_LSIG_TXOP_PROTECTION;
++
++		/* get data from A-MPDU parameters field */
++		acx->ampdu_max_length = ht_cap->ampdu_factor;
++		acx->ampdu_min_spacing = ht_cap->ampdu_density;
++
++		memcpy(acx->mac_address, mac_address, ETH_ALEN);
++	} else { /* HT operations are not allowed */
++		acx->ht_capabilites = 0;
++	}
++
++	ret = wl1271_cmd_configure(wl, ACX_PEER_HT_CAP, acx, sizeof(*acx));
++	if (ret < 0) {
++		wl1271_warning("acx ht capabilities setting failed: %d", ret);
++		goto out;
++	}
++
++out:
++	kfree(acx);
++	return ret;
++}
++
++int wl1271_acx_set_ht_information(struct wl1271 *wl,
++				   u16 ht_operation_mode)
++{
++	struct wl1271_acx_ht_information *acx;
++	int ret = 0;
++
++	wl1271_debug(DEBUG_ACX, "acx ht information setting");
++
++	acx = kzalloc(sizeof(*acx), GFP_KERNEL);
++	if (!acx) {
++		ret = -ENOMEM;
++		goto out;
++	}
++
++	acx->ht_protection =
++		(u8)(ht_operation_mode & IEEE80211_HT_OP_MODE_PROTECTION);
++	acx->rifs_mode = 0;
++	acx->gf_protection = 0;
++	acx->ht_tx_burst_limit = 0;
++	acx->dual_cts_protection = 0;
++
++	ret = wl1271_cmd_configure(wl, ACX_HT_BSS_OPERATION, acx, sizeof(*acx));
++
++	if (ret < 0) {
++		wl1271_warning("acx ht information setting failed: %d", ret);
++		goto out;
++	}
++
++out:
++	kfree(acx);
++	return ret;
++}
++
+ int wl1271_acx_tsf_info(struct wl1271 *wl, u64 *mactime)
+ {
+ 	struct wl1271_acx_fw_tsf_information *tsf_info;
+diff --git a/drivers/net/wireless/wl12xx/wl1271_acx.h b/drivers/net/wireless/wl12xx/wl1271_acx.h
+index 72597a2..35b0ccf 100644
+--- a/drivers/net/wireless/wl12xx/wl1271_acx.h
++++ b/drivers/net/wireless/wl12xx/wl1271_acx.h
+@@ -1174,6 +1174,11 @@ int wl1271_acx_keep_alive_config(struct wl1271 *wl, u8 index, u8 tpl_valid);
+ int wl1271_acx_rssi_snr_trigger(struct wl1271 *wl, bool enable,
+ 				s16 thold, u8 hyst);
+ int wl1271_acx_rssi_snr_avg_weights(struct wl1271 *wl);
++int wl1271_acx_set_ht_capabilities(struct wl1271 *wl,
++				    struct ieee80211_sta_ht_cap *ht_cap,
++				    bool allow_ht_operation);
++int wl1271_acx_set_ht_information(struct wl1271 *wl,
++				   u16 ht_operation_mode);
+ int wl1271_acx_tsf_info(struct wl1271 *wl, u64 *mactime);
+ 
+ #endif /* __WL1271_ACX_H__ */
+-- 
+1.6.0.4
+
