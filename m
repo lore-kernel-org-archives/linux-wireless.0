@@ -1,120 +1,142 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:5233 "EHLO mx1.redhat.com"
+Received: from arroyo.ext.ti.com ([192.94.94.40]:60556 "EHLO arroyo.ext.ti.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932336Ab0JFJUu (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 6 Oct 2010 05:20:50 -0400
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: Johannes Berg <johannes@sipsolutions.net>,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org,
-	Stanislaw Gruszka <sgruszka@redhat.com>
-Subject: [PATCH 1/6] mac80211: reduce number of __ieee80211_scan_completed calls
-Date: Wed,  6 Oct 2010 11:22:08 +0200
-Message-Id: <1286356933-4076-1-git-send-email-sgruszka@redhat.com>
+	id S1753470Ab0JMLSC convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 13 Oct 2010 07:18:02 -0400
+From: "Varadarajan, Charulatha" <charu@ti.com>
+To: "csanjay@mistralsolutions.com" <csanjay@mistralsolutions.com>,
+	"linux-omap@vger.kernel.org" <linux-omap@vger.kernel.org>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Date: Wed, 13 Oct 2010 16:47:57 +0530
+Subject: RE: [RFC: WL1271 DC supprot on OMAP3EVM 2/5] ARM: Supported for
+ Standard SDIO driver on OMAP3EVM for WL1271 DC
+Message-ID: <EAF47CD23C76F840A9E7FCE10091EFAB030D099B3D@dbde02.ent.ti.com>
+References: <1286967439-705-1-git-send-email-csanjay@mistralsolutions.com>
+ <1286967439-705-3-git-send-email-csanjay@mistralsolutions.com>
+In-Reply-To: <1286967439-705-3-git-send-email-csanjay@mistralsolutions.com>
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Use goto instruction to call __ieee80211_scan_completed only ones in
-ieee80211_scan_work. This is prepare for the next patch.
+ 
 
-Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
----
- net/mac80211/scan.c |   51 +++++++++++++++++++++++++++++----------------------
- 1 files changed, 29 insertions(+), 22 deletions(-)
+> -----Original Message-----
+> From: linux-omap-owner@vger.kernel.org 
+> [mailto:linux-omap-owner@vger.kernel.org] On Behalf Of 
+> csanjay@mistralsolutions.com
+> Sent: Wednesday, October 13, 2010 4:27 PM
+> To: linux-omap@vger.kernel.org
+> Cc: linux-wireless@vger.kernel.org; Sanjay Kumar Champati
+> Subject: [RFC: WL1271 DC supprot on OMAP3EVM 2/5] ARM: 
+> Supported for Standard SDIO driver on OMAP3EVM for WL1271 DC
+> 
+> From: Sanjay Kumar Champati <csanjay@mistralsolutions.com>
+> 
+> * Apply MMC2 support patch before apply this patch
+> * Modified the "Kconfig" and "board-omap3evm.c" files to support
+>   standard SDIO driver for WL1271 DC
+> 
+> Signed-off-by: Sanjay Kumar Champati <csanjay@mistralsolutions.com>
+> ---
+>  arch/arm/mach-omap2/board-omap3evm.c |   13 ++++++++++++-
+>  drivers/mmc/core/sdio_ops.c          |    7 ++++++-
+>  drivers/net/wireless/Kconfig         |   11 +++++++++++
+>  3 files changed, 29 insertions(+), 2 deletions(-)
+> 
+> diff --git a/arch/arm/mach-omap2/board-omap3evm.c 
+> b/arch/arm/mach-omap2/board-omap3evm.c
+> index 6b45b6e..06fab2e 100644
+> --- a/arch/arm/mach-omap2/board-omap3evm.c
+> +++ b/arch/arm/mach-omap2/board-omap3evm.c
+> @@ -79,6 +79,10 @@
+>  #define OMAP3EVM_ETHR_ID_REV	0x50
+>  #define OMAP3EVM_ETHR_GPIO_IRQ	176
+>  #define OMAP3EVM_SMSC911X_CS	5
+> +#ifdef CONFIG_WL1271_WLAN
+> +#define OMAP3EVM_WLAN_EN	150
+> +#define OMAP3EVM_WLAN_IRQ	149
+> +#endif
+>  
+>  extern struct regulator_consumer_supply twl4030_vmmc1_supply;
+>  extern struct regulator_consumer_supply twl4030_vsim_supply;
+> @@ -749,7 +753,14 @@ static int 
+> omap3evm_twl_gpio_setup(struct device *dev,
+>  	twl4030_vmmc1_supply.dev = mmc[0].dev;
+>  	twl4030_vsim_supply.dev = mmc[0].dev;
+>  	twl4030_vmmc2_supply.dev = mmc[1].dev;
+> -
+> +#ifdef CONFIG_WL1271_WLAN
+> +	omap_mux_init_gpio(OMAP3EVM_WLAN_EN, OMAP_PIN_OUTPUT);
 
-diff --git a/net/mac80211/scan.c b/net/mac80211/scan.c
-index 57b5e66..1a115a5 100644
---- a/net/mac80211/scan.c
-+++ b/net/mac80211/scan.c
-@@ -652,27 +652,25 @@ void ieee80211_scan_work(struct work_struct *work)
- 		container_of(work, struct ieee80211_local, scan_work.work);
- 	struct ieee80211_sub_if_data *sdata = local->scan_sdata;
- 	unsigned long next_delay = 0;
-+	bool aborted;
- 
--	if (test_and_clear_bit(SCAN_COMPLETED, &local->scanning)) {
--		bool aborted;
-+	mutex_lock(&local->mtx);
- 
-+	if (test_and_clear_bit(SCAN_COMPLETED, &local->scanning)) {
- 		aborted = test_and_clear_bit(SCAN_ABORTED, &local->scanning);
--		__ieee80211_scan_completed(&local->hw, aborted);
--		return;
-+		goto out_complete;
- 	}
- 
--	mutex_lock(&local->mtx);
--	if (!sdata || !local->scan_req) {
--		mutex_unlock(&local->mtx);
--		return;
--	}
-+	if (!sdata || !local->scan_req)
-+		goto out;
- 
- 	if (local->hw_scan_req) {
- 		int rc = drv_hw_scan(local, sdata, local->hw_scan_req);
--		mutex_unlock(&local->mtx);
--		if (rc)
--			__ieee80211_scan_completed(&local->hw, true);
--		return;
-+		if (rc) {
-+			aborted = true;
-+			goto out_complete;
-+		} else
-+			goto out;
- 	}
- 
- 	if (local->scan_req && !local->scanning) {
-@@ -683,23 +681,23 @@ void ieee80211_scan_work(struct work_struct *work)
- 		local->scan_sdata = NULL;
- 
- 		rc = __ieee80211_start_scan(sdata, req);
--		mutex_unlock(&local->mtx);
--
--		if (rc)
--			__ieee80211_scan_completed(&local->hw, true);
--		return;
-+		if (rc) {
-+			aborted = true;
-+			goto out_complete;
-+		} else
-+			goto out;
- 	}
- 
--	mutex_unlock(&local->mtx);
--
- 	/*
- 	 * Avoid re-scheduling when the sdata is going away.
- 	 */
- 	if (!ieee80211_sdata_running(sdata)) {
--		__ieee80211_scan_completed(&local->hw, true);
--		return;
-+		aborted = true;
-+		goto out_complete;
- 	}
- 
-+	mutex_unlock(&local->mtx);
-+
- 	/*
- 	 * as long as no delay is required advance immediately
- 	 * without scheduling a new work
-@@ -726,6 +724,15 @@ void ieee80211_scan_work(struct work_struct *work)
- 	} while (next_delay == 0);
- 
- 	ieee80211_queue_delayed_work(&local->hw, &local->scan_work, next_delay);
-+	return;
-+
-+out_complete:
-+	mutex_unlock(&local->mtx);
-+	__ieee80211_scan_completed(&local->hw, aborted);
-+	return;
-+
-+out:
-+	mutex_unlock(&local->mtx);
- }
- 
- int ieee80211_request_scan(struct ieee80211_sub_if_data *sdata,
--- 
-1.7.1
+Check for return value
 
+> +	if (gpio_request(OMAP3EVM_WLAN_EN, "WLAN_ENABLE"))
+> +		printk(KERN_ERR "Fail to get WLAN Enable GPIO\n");
+> +	gpio_direction_output(OMAP3EVM_WLAN_EN, 1);
+> +	mdelay(100);
+
+You may add a comment to mention why this needs to be 100.
+
+> +	omap_mux_init_gpio(OMAP3EVM_WLAN_IRQ, OMAP_PIN_INPUT);
+
+Check for return value
+
+> +#endif
+>  	/*
+>  	 * Most GPIOs are for USB OTG.  Some are mostly sent to
+>  	 * the P2 connector; notably LEDA for the LCD backlight.
+> diff --git a/drivers/mmc/core/sdio_ops.c b/drivers/mmc/core/sdio_ops.c
+> index 4eb7825..4213ee0 100644
+> --- a/drivers/mmc/core/sdio_ops.c
+> +++ b/drivers/mmc/core/sdio_ops.c
+> @@ -114,6 +114,9 @@ int mmc_io_rw_direct(struct mmc_card 
+> *card, int write, unsigned fn,
+>  
+>  	return 0;
+>  }
+> +#ifdef CONFIG_WL1271_WLAN
+> +EXPORT_SYMBOL(mmc_io_rw_direct);
+> +#endif
+>  
+>  int mmc_io_rw_extended(struct mmc_card *card, int write, unsigned fn,
+>  	unsigned addr, int incr_addr, u8 *buf, unsigned blocks, 
+> unsigned blksz)
+> @@ -181,4 +184,6 @@ int mmc_io_rw_extended(struct mmc_card 
+> *card, int write, unsigned fn,
+>  
+>  	return 0;
+>  }
+> -
+> +#ifdef CONFIG_WL1271_WLAN
+> +EXPORT_SYMBOL(mmc_io_rw_extended);
+> +#endif
+> diff --git a/drivers/net/wireless/Kconfig 
+> b/drivers/net/wireless/Kconfig
+> index 56dd665..dc319b7 100644
+> --- a/drivers/net/wireless/Kconfig
+> +++ b/drivers/net/wireless/Kconfig
+> @@ -31,6 +31,17 @@ config PCMCIA_RAYCS
+>  	  To compile this driver as a module, choose M here: 
+> the module will be
+>  	  called ray_cs.  If unsure, say N.
+>  
+> +config WL1271_WLAN
+> +	tristate "WL1271 TI's SDIO based wireless card"
+> +	select WIRELESS_EXT
+> +	select CRYPTO
+> +	select WEXT_SPY
+> +	select WEXT_PRIV
+> +	---help---
+> +	This driver support both the standard Linux Wireless Extensions
+> +	and TI's proprietary API, so both the Linux Wireless 
+> Tools and this
+> +	module support 2.4 GHz 802.11 b/g/n standrd.
+> +
+>  config LIBERTAS_THINFIRM
+>  	tristate "Marvell 8xxx Libertas WLAN driver support 
+> with thin firmware"
+>  	depends on MAC80211
+> -- 
+> 1.6.3.3
