@@ -1,52 +1,94 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from senator.holtmann.net ([87.106.208.187]:44605 "EHLO
-	mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755460Ab0JEIXG (ORCPT
+Received: from coloquinte.cristau.org ([91.121.16.100]:49091 "EHLO
+	coloquinte.cristau.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753333Ab0JMPZW (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 5 Oct 2010 04:23:06 -0400
-Subject: Re: RFC: btusb firmware load help
-From: Marcel Holtmann <holtmann@linux.intel.com>
-To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Cc: linux-bluetooth <linux-bluetooth@vger.kernel.org>,
-	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
-	Deepak Dhamdhere <Deepak.Dhamdhere@Atheros.com>,
-	Sree Durbha <Sree.Durbha@Atheros.com>
-In-Reply-To: <20100924230730.GB6566@tux>
-References: <20100924230730.GB6566@tux>
-Content-Type: text/plain; charset="UTF-8"
-Date: Tue, 05 Oct 2010 10:23:01 +0200
-Message-ID: <1286266981.17473.33.camel@aeonflux>
-Mime-Version: 1.0
+	Wed, 13 Oct 2010 11:25:22 -0400
+Date: Wed, 13 Oct 2010 17:17:16 +0200
+From: Julien Cristau <jcristau@debian.org>
+To: Ben Hutchings <ben@decadent.org.uk>
+Cc: Johannes Berg <johannes@sipsolutions.net>, 599345@bugs.debian.org,
+	ilw@linux.intel.com, linux-wireless@vger.kernel.org
+Subject: Re: Bug#599345: linux-image-2.6.32-5-amd64: iwlagn allocation
+ failure
+Message-ID: <20101013151716.GA3167@radis.liafa.jussieu.fr>
+References: <20101006191947.GA3036@radis.liafa.jussieu.fr>
+ <1286402043.2955.81.camel@localhost>
+ <1286437870.3657.16.camel@jlt3.sipsolutions.net>
+ <1286737393.2955.225.camel@localhost>
+MIME-Version: 1.0
+Content-Type: multipart/signed; micalg=pgp-sha256;
+	protocol="application/pgp-signature"; boundary="oyUTqETQ0mS9luUI"
+In-Reply-To: <1286737393.2955.225.camel@localhost>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Luis,
 
-> Marcel, I was just poked about this thread:
-> 
-> http://www.spinics.net/lists/linux-bluetooth/msg06087.html
-> 
-> The hack is required because our BT hardware does not accept HCI commands
-> when the device is plugged in. If I understood your position you did not
-> want to accept the patch because our BT USB devices are violating the
-> specification by not acceping HCI commands and yet claiming to be BT
-> devices, is that right?
+--oyUTqETQ0mS9luUI
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-you don't have to accept HCI commands when your device has no firmware
-loaded. That is just fine. However at that point you should not claim to
-be a Bluetooth H:2 device with USB Bluetooth descriptors.
+On Sun, Oct 10, 2010 at 20:03:13 +0100, Ben Hutchings wrote:
 
-Just having different USB PIDs for without firmware and with firmware
-stages would have been fine. The ancient Broadcom 203x devices even got
-that part right.
+> On Thu, 2010-10-07 at 09:51 +0200, Johannes Berg wrote:
+> > On Wed, 2010-10-06 at 22:54 +0100, Ben Hutchings wrote:
+> > > On Wed, 2010-10-06 at 21:19 +0200, Julien Cristau wrote:
+> > > > Package: linux-2.6
+> > > > Version: 2.6.32-23
+> >=20
+> > > > Oct  6 21:05:02 radis kernel: [378665.326381] NetworkManager: page =
+allocation failure. order:4, mode:0x40d0
+> > > > Oct  6 21:05:02 radis kernel: [378665.326393] Pid: 25555, comm: Net=
+workManager Not tainted 2.6.32-5-amd64 #1
+> > > [...]
+> > > > Oct  6 21:05:02 radis kernel: [378665.363630] iwlagn 0000:0c:00.0: =
+kmalloc for auxiliary BD structures failed
+> > > [...]
+> > >=20
+> > > This particular allocation is for an array which is not used for DMA =
+and
+> > > therefore could be stored in non-contiguous pages allocated with
+> > > vmalloc().  But there may be some good reason not to do this.
+> >=20
+> > I have, however much more recently than that kernel, cleaned this up in
+> > commit ff0d91c3eea6e25b47258349b455671f98f1b0cd -- this particular
+> > allocation is now 2048 or 4096 bytes depending on the architecture (32
+> > vs 64 bit pointers). If you want to backport this, there are two or
+> > three more commits right before it that would probably be required.
+>=20
+> It seems like we can get away with a much smaller change though.
+> Julien, could you test this patch?
+>=20
+Getting lots of those in dmesg:
+iwlagn 0000:0c:00.0: Too many chunks: 2
 
-So what about sticking with the current VID:PID for the device without
-firmware and we blacklist it in btusb driver. And then the firmware
-loading ensures that after reset it uses a different PID for the device
-with valid HCI firmware.
+Doesn't seem to prevent the network from working though.
 
-Regards
+Cheers,
+Julien
 
-Marcel
+--oyUTqETQ0mS9luUI
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Digital signature
+Content-Disposition: inline
 
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.10 (GNU/Linux)
 
+iQIcBAEBCAAGBQJMtc14AAoJEDEBgAUJBeQMa6YQAJ1GXDFZLx67AsfJtxzaQlnH
+HksEJywXeTmLTvhZ2NMDoyK1wj5uyeoX/1lbjM475g9JKEYXSOV2mgPzC74YJBzc
+6vtTZ1S54SUqFXkJioT0zywKju61RQ965xcWhslLlpQUKZ9EuY7freDIrdy2FlOS
+Dt/SQVrwojtlPdvabDwQOMNo3vkdTLZY22W5twlVNMuH7gy3qOfs7KwzQhHzRBgm
+cpqZNGeAvl2jOE3Y2OB6p6uj5Jddii0nY0Niq1ik7yFY2RcnQ9dnzgErx/4gL27m
+sJUw8hzz/5drYoExQNLI1OYaAcrBu4ATWm2t8ZYXVzMbphqbD/n+qxSKlSFX0dZ7
+zoTvbK1wiqt2pxW2jrQ18T0/X3iWygbDz2XjJoge9S6iv2tx1kV8/aL3ikg+maye
+zH2Vg+xDnoKGCBB760AfheaGkGhgKxLmb6vuT0O933jtO4tP0ZnhlQ+M0XGBoJes
+4iVeSCF/JutrjDTRL6qUBNGA/Iq9/puLhTZqND+99Ez4Oiw8ygFaMobPGG88OEIz
+yR+MU3YvsmpdSix+OtGyqlPH7qaxV9bCoji2kFgAV2V/fUdi+JBJzDUXoRytSJSi
+a7woTW11oMHSpycsh+VcxR5ZFrddo0dpOKQvHilvbvRPOLwy+btcEffGjYx+lQC9
+0HefbVrQ5sdAiWCHaMut
+=whp/
+-----END PGP SIGNATURE-----
+
+--oyUTqETQ0mS9luUI--
