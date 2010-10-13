@@ -1,45 +1,194 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:11627 "EHLO mga01.intel.com"
+Received: from nbd.name ([88.198.39.176]:43811 "EHLO ds10.nbd.name"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750982Ab0JUQ7a (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 21 Oct 2010 12:59:30 -0400
-Subject: Re: Modifying the driver iwlwifi
-From: "Guy, Wey-Yi" <wey-yi.w.guy@intel.com>
-To: "Cassiano Tartari, Eng." <falecom@cassianotartari.eng.br>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <AANLkTinP32=snam3Bex+OC8LL00awfjrJz4834mhOaNL@mail.gmail.com>
-References: <AANLkTinP32=snam3Bex+OC8LL00awfjrJz4834mhOaNL@mail.gmail.com>
-Content-Type: text/plain
-Date: Thu, 21 Oct 2010 09:58:35 -0700
-Message-Id: <1287680315.4759.4.camel@wwguy-ubuntu>
-Mime-Version: 1.0
+	id S1752753Ab0JMOne (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 13 Oct 2010 10:43:34 -0400
+From: Felix Fietkau <nbd@openwrt.org>
+To: linux-wireless@vger.kernel.org
+Cc: linville@tuxdriver.com, lrodriguez@atheros.com
+Subject: [PATCH 2/3] ath9k: remove sc->cur_rate_table and sc->cur_rate_mode
+Date: Wed, 13 Oct 2010 16:43:27 +0200
+Message-Id: <1286981008-85124-2-git-send-email-nbd@openwrt.org>
+In-Reply-To: <1286981008-85124-1-git-send-email-nbd@openwrt.org>
+References: <1286981008-85124-1-git-send-email-nbd@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Cassiano,
+Set the rate table in the rc module properly based on band and
+HT capabilities instead, which was already partially done, but
+not for every mode.
 
-On Thu, 2010-10-21 at 09:17 -0700, Cassiano Tartari, Eng. wrote:
-> Hi,
-> 
->   I'm a masters student of Automation and Systems Engineering at
-> Federal University of Santa Catarina in Brazil. I'd like to know if it
-> is possible to modify the implementation of iwlwifi because I need to
-> decrease the time of association between the client and the AP. I'd
-> like to implement something in the same way like I read in an article,
-> project QuickWifi. Its basic idea is that a client doesn't wait each
-> response to go to the next step, so just do: AUTH REQ -> ASSOC REQ ->
-> DHCP DISC -> DHCP REQ -> ARP QUERY and a PING THROUGH to verify that
-> an end-to-end connection is available.
-> 
->     I need this to my work, it will be used for the communication
-> between a moving vehicle and a fixed point on the street.
-> 
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+---
+ drivers/net/wireless/ath/ath9k/ath9k.h |    2 -
+ drivers/net/wireless/ath/ath9k/main.c  |   35 --------------------------------
+ drivers/net/wireless/ath/ath9k/rc.c    |   24 +++++++--------------
+ 3 files changed, 8 insertions(+), 53 deletions(-)
 
-It is an open source project, so please feel free to make the
-modifications; but please do follow the upstream process and submit the
-patch to either "internal-wifi-devel@linux.intel.com" mailing list or
-"linux-wireless@vger.kernel.org" mailing list for review
-
-Thanks
-Wey
+diff --git a/drivers/net/wireless/ath/ath9k/ath9k.h b/drivers/net/wireless/ath/ath9k/ath9k.h
+index 4e81fe3..e435c1d 100644
+--- a/drivers/net/wireless/ath/ath9k/ath9k.h
++++ b/drivers/net/wireless/ath/ath9k/ath9k.h
+@@ -623,8 +623,6 @@ struct ath_softc {
+ 	struct ath_rx rx;
+ 	struct ath_tx tx;
+ 	struct ath_beacon beacon;
+-	const struct ath_rate_table *cur_rate_table;
+-	enum wireless_mode cur_rate_mode;
+ 	struct ieee80211_supported_band sbands[IEEE80211_NUM_BANDS];
+ 
+ 	struct ath_led radio_led;
+diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
+index fa9be51..533ed8e 100644
+--- a/drivers/net/wireless/ath/ath9k/main.c
++++ b/drivers/net/wireless/ath/ath9k/main.c
+@@ -18,36 +18,6 @@
+ #include "ath9k.h"
+ #include "btcoex.h"
+ 
+-static void ath_cache_conf_rate(struct ath_softc *sc,
+-				struct ieee80211_conf *conf)
+-{
+-	switch (conf->channel->band) {
+-	case IEEE80211_BAND_2GHZ:
+-		if (conf_is_ht20(conf))
+-			sc->cur_rate_mode = ATH9K_MODE_11NG_HT20;
+-		else if (conf_is_ht40_minus(conf))
+-			sc->cur_rate_mode = ATH9K_MODE_11NG_HT40MINUS;
+-		else if (conf_is_ht40_plus(conf))
+-			sc->cur_rate_mode = ATH9K_MODE_11NG_HT40PLUS;
+-		else
+-			sc->cur_rate_mode = ATH9K_MODE_11G;
+-		break;
+-	case IEEE80211_BAND_5GHZ:
+-		if (conf_is_ht20(conf))
+-			sc->cur_rate_mode = ATH9K_MODE_11NA_HT20;
+-		else if (conf_is_ht40_minus(conf))
+-			sc->cur_rate_mode = ATH9K_MODE_11NA_HT40MINUS;
+-		else if (conf_is_ht40_plus(conf))
+-			sc->cur_rate_mode = ATH9K_MODE_11NA_HT40PLUS;
+-		else
+-			sc->cur_rate_mode = ATH9K_MODE_11A;
+-		break;
+-	default:
+-		BUG_ON(1);
+-		break;
+-	}
+-}
+-
+ static void ath_update_txpow(struct ath_softc *sc)
+ {
+ 	struct ath_hw *ah = sc->sc_ah;
+@@ -289,7 +259,6 @@ int ath_set_channel(struct ath_softc *sc, struct ieee80211_hw *hw,
+ 		goto ps_restore;
+ 	}
+ 
+-	ath_cache_conf_rate(sc, &hw->conf);
+ 	ath_update_txpow(sc);
+ 	ath9k_hw_set_interrupts(ah, ah->imask);
+ 
+@@ -996,8 +965,6 @@ int ath_reset(struct ath_softc *sc, bool retry_tx)
+ 	 * that changes the channel so update any state that
+ 	 * might change as a result.
+ 	 */
+-	ath_cache_conf_rate(sc, &hw->conf);
+-
+ 	ath_update_txpow(sc);
+ 
+ 	if ((sc->sc_flags & SC_OP_BEACONS) || !(sc->sc_flags & (SC_OP_OFFCHANNEL)))
+@@ -1204,8 +1171,6 @@ static int ath9k_start(struct ieee80211_hw *hw)
+ 	if (ah->caps.hw_caps & ATH9K_HW_CAP_HT)
+ 		ah->imask |= ATH9K_INT_CST;
+ 
+-	ath_cache_conf_rate(sc, &hw->conf);
+-
+ 	sc->sc_flags &= ~SC_OP_INVALID;
+ 
+ 	/* Disable BMISS interrupt when we're not associated */
+diff --git a/drivers/net/wireless/ath/ath9k/rc.c b/drivers/net/wireless/ath/ath9k/rc.c
+index 38a31e9..f436784 100644
+--- a/drivers/net/wireless/ath/ath9k/rc.c
++++ b/drivers/net/wireless/ath/ath9k/rc.c
+@@ -791,7 +791,7 @@ static void ath_get_rate(void *priv, struct ieee80211_sta *sta, void *priv_sta,
+ 	 */
+ 	try_per_rate = 4;
+ 
+-	rate_table = sc->cur_rate_table;
++	rate_table = ath_rc_priv->rate_table;
+ 	rix = ath_rc_get_highest_rix(sc, ath_rc_priv, rate_table, &is_probe);
+ 
+ 	/*
+@@ -1048,7 +1048,7 @@ static void ath_rc_update_ht(struct ath_softc *sc,
+ 	int rate;
+ 	u8 last_per;
+ 	bool state_change = false;
+-	const struct ath_rate_table *rate_table = sc->cur_rate_table;
++	const struct ath_rate_table *rate_table = ath_rc_priv->rate_table;
+ 	int size = ath_rc_priv->rate_table_size;
+ 
+ 	if ((tx_rate < 0) || (tx_rate > rate_table->rate_cnt))
+@@ -1150,7 +1150,7 @@ static void ath_rc_tx_status(struct ath_softc *sc,
+ 	u8 flags;
+ 	u32 i = 0, rix;
+ 
+-	rate_table = sc->cur_rate_table;
++	rate_table = ath_rc_priv->rate_table;
+ 
+ 	/*
+ 	 * If the first rate is not the final index, there
+@@ -1231,7 +1231,6 @@ struct ath_rate_table *ath_choose_rate_table(struct ath_softc *sc,
+ 	ath_print(common, ATH_DBG_CONFIG,
+ 		  "Choosing rate table for mode: %d\n", mode);
+ 
+-	sc->cur_rate_mode = mode;
+ 	return hw_rate_table[mode];
+ }
+ 
+@@ -1303,7 +1302,6 @@ static void ath_rc_init(struct ath_softc *sc,
+ 	ath_rc_priv->max_valid_rate = k;
+ 	ath_rc_sort_validrates(rate_table, ath_rc_priv);
+ 	ath_rc_priv->rate_max_phy = ath_rc_priv->valid_rate_index[k-4];
+-	sc->cur_rate_table = rate_table;
+ 	ath_rc_priv->rate_table = rate_table;
+ 
+ 	ath_print(common, ATH_DBG_CONFIG,
+@@ -1439,8 +1437,9 @@ static void ath_tx_status(void *priv, struct ieee80211_supported_band *sband,
+ 		}
+ 	}
+ 
+-	ath_debug_stat_rc(ath_rc_priv, ath_rc_get_rateindex(sc->cur_rate_table,
+-		&tx_info->status.rates[final_ts_idx]));
++	ath_debug_stat_rc(ath_rc_priv,
++		ath_rc_get_rateindex(ath_rc_priv->rate_table,
++			&tx_info->status.rates[final_ts_idx]));
+ }
+ 
+ static void ath_rate_init(void *priv, struct ieee80211_supported_band *sband,
+@@ -1480,14 +1479,8 @@ static void ath_rate_init(void *priv, struct ieee80211_supported_band *sband,
+ 
+ 	/* Choose rate table first */
+ 
+-	if ((sc->sc_ah->opmode == NL80211_IFTYPE_STATION) ||
+-	    (sc->sc_ah->opmode == NL80211_IFTYPE_MESH_POINT) ||
+-	    (sc->sc_ah->opmode == NL80211_IFTYPE_ADHOC)) {
+-		rate_table = ath_choose_rate_table(sc, sband->band,
+-		                      sta->ht_cap.ht_supported, is_cw40);
+-	} else {
+-		rate_table = hw_rate_table[sc->cur_rate_mode];
+-	}
++	rate_table = ath_choose_rate_table(sc, sband->band,
++	                      sta->ht_cap.ht_supported, is_cw40);
+ 
+ 	ath_rc_priv->ht_cap = ath_rc_build_ht_caps(sc, sta, is_cw40, is_sgi);
+ 	ath_rc_init(sc, priv_sta, sband, sta, rate_table);
+@@ -1536,7 +1529,6 @@ static void ath_rate_update(void *priv, struct ieee80211_supported_band *sband,
+ 			ath_print(ath9k_hw_common(sc->sc_ah), ATH_DBG_CONFIG,
+ 				  "Operating HT Bandwidth changed to: %d\n",
+ 				  sc->hw->conf.channel_type);
+-			sc->cur_rate_table = hw_rate_table[sc->cur_rate_mode];
+ 		}
+ 	}
+ }
+-- 
+1.7.2.2
 
