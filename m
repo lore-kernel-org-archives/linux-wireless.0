@@ -1,142 +1,182 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from arroyo.ext.ti.com ([192.94.94.40]:60556 "EHLO arroyo.ext.ti.com"
+Received: from mx1.redhat.com ([209.132.183.28]:42478 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753470Ab0JMLSC convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 13 Oct 2010 07:18:02 -0400
-From: "Varadarajan, Charulatha" <charu@ti.com>
-To: "csanjay@mistralsolutions.com" <csanjay@mistralsolutions.com>,
-	"linux-omap@vger.kernel.org" <linux-omap@vger.kernel.org>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Date: Wed, 13 Oct 2010 16:47:57 +0530
-Subject: RE: [RFC: WL1271 DC supprot on OMAP3EVM 2/5] ARM: Supported for
- Standard SDIO driver on OMAP3EVM for WL1271 DC
-Message-ID: <EAF47CD23C76F840A9E7FCE10091EFAB030D099B3D@dbde02.ent.ti.com>
-References: <1286967439-705-1-git-send-email-csanjay@mistralsolutions.com>
- <1286967439-705-3-git-send-email-csanjay@mistralsolutions.com>
-In-Reply-To: <1286967439-705-3-git-send-email-csanjay@mistralsolutions.com>
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
+	id S1751193Ab0JMNhi (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 13 Oct 2010 09:37:38 -0400
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: Johannes Berg <johannes@sipsolutions.net>,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Cc: linux-wireless@vger.kernel.org,
+	Stanislaw Gruszka <sgruszka@redhat.com>
+Subject: [PATCH 1/2] iwlwifi: fix set_tx_power vs scan
+Date: Wed, 13 Oct 2010 15:39:52 +0200
+Message-Id: <1286977193-12144-1-git-send-email-sgruszka@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+In scan code completion send set TX power command again, as according
+to comment it can be deferred during scan. Currently this comment is
+only partially true - on 4965 device iwl4965_send_tx_power will fail
+when scanning, but the new tx power value is lost. On other device
+we do not defer setting tx power.
+
+This patch change code to:
+- save newly requested tx power value
+- defer sending command to firmware when scanning on all devices
+- add WARN_ONCE in all *_send_tx_power methods
+- on 5xxx and 6xxx change to send command synchronously, to not
+  start other commands when setting tx is pending, like we do for older
+  devices
+
+Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-3945.c     |    4 ++++
+ drivers/net/wireless/iwlwifi/iwl-4965.c     |    8 ++------
+ drivers/net/wireless/iwlwifi/iwl-agn-lib.c  |    9 ++++++---
+ drivers/net/wireless/iwlwifi/iwl-agn.c      |    1 +
+ drivers/net/wireless/iwlwifi/iwl-core.c     |    8 ++++++++
+ drivers/net/wireless/iwlwifi/iwl-dev.h      |    1 +
+ drivers/net/wireless/iwlwifi/iwl-scan.c     |    2 +-
+ drivers/net/wireless/iwlwifi/iwl3945-base.c |    1 +
+ 8 files changed, 24 insertions(+), 10 deletions(-)
+
+diff --git a/drivers/net/wireless/iwlwifi/iwl-3945.c b/drivers/net/wireless/iwlwifi/iwl-3945.c
+index 176e525..6fd79f2 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-3945.c
++++ b/drivers/net/wireless/iwlwifi/iwl-3945.c
+@@ -1451,6 +1451,10 @@ static int iwl3945_send_tx_power(struct iwl_priv *priv)
+ 	};
+ 	u16 chan;
  
++	if (WARN_ONCE(test_bit(STATUS_SCANNING, &priv->status),
++		      "TX Power requested while scanning!\n"))
++		return -EAGAIN;
++
+ 	chan = le16_to_cpu(priv->contexts[IWL_RXON_CTX_BSS].active.channel);
+ 
+ 	txpower.band = (priv->band == IEEE80211_BAND_5GHZ) ? 0 : 1;
+diff --git a/drivers/net/wireless/iwlwifi/iwl-4965.c b/drivers/net/wireless/iwlwifi/iwl-4965.c
+index b207e3e..93e1696 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-4965.c
++++ b/drivers/net/wireless/iwlwifi/iwl-4965.c
+@@ -1377,13 +1377,9 @@ static int iwl4965_send_tx_power(struct iwl_priv *priv)
+ 	u8 ctrl_chan_high = 0;
+ 	struct iwl_rxon_context *ctx = &priv->contexts[IWL_RXON_CTX_BSS];
+ 
+-	if (test_bit(STATUS_SCANNING, &priv->status)) {
+-		/* If this gets hit a lot, switch it to a BUG() and catch
+-		 * the stack trace to find out who is calling this during
+-		 * a scan. */
+-		IWL_WARN(priv, "TX Power requested while scanning!\n");
++	if (WARN_ONCE(test_bit(STATUS_SCANNING, &priv->status),
++		      "TX Power requested while scanning!\n"))
+ 		return -EAGAIN;
+-	}
+ 
+ 	band = priv->band == IEEE80211_BAND_2GHZ;
+ 
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-lib.c b/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
+index c1a3898..b717ac0 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
+@@ -496,6 +496,10 @@ int iwlagn_send_tx_power(struct iwl_priv *priv)
+ 	struct iwlagn_tx_power_dbm_cmd tx_power_cmd;
+ 	u8 tx_ant_cfg_cmd;
+ 
++	if (WARN_ONCE(test_bit(STATUS_SCANNING, &priv->status),
++		      "TX Power requested while scanning!\n"))
++		return -EAGAIN;
++
+ 	/* half dBm need to multiply */
+ 	tx_power_cmd.global_lmt = (s8)(2 * priv->tx_power_user_lmt);
+ 
+@@ -522,9 +526,8 @@ int iwlagn_send_tx_power(struct iwl_priv *priv)
+ 	else
+ 		tx_ant_cfg_cmd = REPLY_TX_POWER_DBM_CMD;
+ 
+-	return  iwl_send_cmd_pdu_async(priv, tx_ant_cfg_cmd,
+-				       sizeof(tx_power_cmd), &tx_power_cmd,
+-				       NULL);
++	return iwl_send_cmd_pdu(priv, tx_ant_cfg_cmd, sizeof(tx_power_cmd),
++				&tx_power_cmd);
+ }
+ 
+ void iwlagn_temperature(struct iwl_priv *priv)
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
+index 6771c40..0881452 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
+@@ -4179,6 +4179,7 @@ static int iwl_init_drv(struct iwl_priv *priv)
+ 	 * this value will get overwritten by channel max power avg
+ 	 * from eeprom */
+ 	priv->tx_power_user_lmt = IWLAGN_TX_POWER_TARGET_POWER_MIN;
++	priv->tx_power_next = IWLAGN_TX_POWER_TARGET_POWER_MIN;
+ 
+ 	ret = iwl_init_channel_map(priv);
+ 	if (ret) {
+diff --git a/drivers/net/wireless/iwlwifi/iwl-core.c b/drivers/net/wireless/iwlwifi/iwl-core.c
+index b3efbe0..2a5d57f 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-core.c
++++ b/drivers/net/wireless/iwlwifi/iwl-core.c
+@@ -1211,6 +1211,8 @@ int iwl_set_tx_power(struct iwl_priv *priv, s8 tx_power, bool force)
+ 	int ret = 0;
+ 	s8 prev_tx_power = priv->tx_power_user_lmt;
+ 
++	lockdep_assert_held(&priv->mutex);
++
+ 	if (tx_power < IWLAGN_TX_POWER_TARGET_POWER_MIN) {
+ 		IWL_WARN(priv,
+ 			 "Requested user TXPOWER %d below lower limit %d.\n",
+@@ -1226,6 +1228,12 @@ int iwl_set_tx_power(struct iwl_priv *priv, s8 tx_power, bool force)
+ 		return -EINVAL;
+ 	}
+ 
++	if (test_bit(STATUS_SCANNING, &priv->status)) {
++		priv->tx_power_next = tx_power;
++		IWL_DEBUG_INFO(priv, "Deferring tx power set while scanning\n");
++		return 0;
++	}
++
+ 	if (priv->tx_power_user_lmt != tx_power)
+ 		force = true;
+ 
+diff --git a/drivers/net/wireless/iwlwifi/iwl-dev.h b/drivers/net/wireless/iwlwifi/iwl-dev.h
+index de43e13..4c09d21 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-dev.h
++++ b/drivers/net/wireless/iwlwifi/iwl-dev.h
+@@ -1517,6 +1517,7 @@ struct iwl_priv {
+ 	s8 tx_power_user_lmt;
+ 	s8 tx_power_device_lmt;
+ 	s8 tx_power_lmt_in_half_dbm; /* max tx power in half-dBm format */
++	s8 tx_power_next;
+ 
+ 
+ #ifdef CONFIG_IWLWIFI_DEBUG
+diff --git a/drivers/net/wireless/iwlwifi/iwl-scan.c b/drivers/net/wireless/iwlwifi/iwl-scan.c
+index 67da312..1424267 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-scan.c
++++ b/drivers/net/wireless/iwlwifi/iwl-scan.c
+@@ -605,7 +605,7 @@ out_settings:
+ 
+ 	/* Since setting the TXPOWER may have been deferred while
+ 	 * performing the scan, fire one off */
+-	iwl_set_tx_power(priv, priv->tx_power_user_lmt, true);
++	iwl_set_tx_power(priv, priv->tx_power_next, true);
+ 
+ 	priv->cfg->ops->utils->post_scan(priv);
+ 
+diff --git a/drivers/net/wireless/iwlwifi/iwl3945-base.c b/drivers/net/wireless/iwlwifi/iwl3945-base.c
+index 980c609..9d0f736 100644
+--- a/drivers/net/wireless/iwlwifi/iwl3945-base.c
++++ b/drivers/net/wireless/iwlwifi/iwl3945-base.c
+@@ -3866,6 +3866,7 @@ static int iwl3945_init_drv(struct iwl_priv *priv)
+ 	priv->missed_beacon_threshold = IWL_MISSED_BEACON_THRESHOLD_DEF;
+ 
+ 	priv->tx_power_user_lmt = IWL_DEFAULT_TX_POWER;
++	priv->tx_power_next = IWL_DEFAULT_TX_POWER;
+ 
+ 	if (eeprom->version < EEPROM_3945_EEPROM_VERSION) {
+ 		IWL_WARN(priv, "Unsupported EEPROM version: 0x%04X\n",
+-- 
+1.7.1
 
-> -----Original Message-----
-> From: linux-omap-owner@vger.kernel.org 
-> [mailto:linux-omap-owner@vger.kernel.org] On Behalf Of 
-> csanjay@mistralsolutions.com
-> Sent: Wednesday, October 13, 2010 4:27 PM
-> To: linux-omap@vger.kernel.org
-> Cc: linux-wireless@vger.kernel.org; Sanjay Kumar Champati
-> Subject: [RFC: WL1271 DC supprot on OMAP3EVM 2/5] ARM: 
-> Supported for Standard SDIO driver on OMAP3EVM for WL1271 DC
-> 
-> From: Sanjay Kumar Champati <csanjay@mistralsolutions.com>
-> 
-> * Apply MMC2 support patch before apply this patch
-> * Modified the "Kconfig" and "board-omap3evm.c" files to support
->   standard SDIO driver for WL1271 DC
-> 
-> Signed-off-by: Sanjay Kumar Champati <csanjay@mistralsolutions.com>
-> ---
->  arch/arm/mach-omap2/board-omap3evm.c |   13 ++++++++++++-
->  drivers/mmc/core/sdio_ops.c          |    7 ++++++-
->  drivers/net/wireless/Kconfig         |   11 +++++++++++
->  3 files changed, 29 insertions(+), 2 deletions(-)
-> 
-> diff --git a/arch/arm/mach-omap2/board-omap3evm.c 
-> b/arch/arm/mach-omap2/board-omap3evm.c
-> index 6b45b6e..06fab2e 100644
-> --- a/arch/arm/mach-omap2/board-omap3evm.c
-> +++ b/arch/arm/mach-omap2/board-omap3evm.c
-> @@ -79,6 +79,10 @@
->  #define OMAP3EVM_ETHR_ID_REV	0x50
->  #define OMAP3EVM_ETHR_GPIO_IRQ	176
->  #define OMAP3EVM_SMSC911X_CS	5
-> +#ifdef CONFIG_WL1271_WLAN
-> +#define OMAP3EVM_WLAN_EN	150
-> +#define OMAP3EVM_WLAN_IRQ	149
-> +#endif
->  
->  extern struct regulator_consumer_supply twl4030_vmmc1_supply;
->  extern struct regulator_consumer_supply twl4030_vsim_supply;
-> @@ -749,7 +753,14 @@ static int 
-> omap3evm_twl_gpio_setup(struct device *dev,
->  	twl4030_vmmc1_supply.dev = mmc[0].dev;
->  	twl4030_vsim_supply.dev = mmc[0].dev;
->  	twl4030_vmmc2_supply.dev = mmc[1].dev;
-> -
-> +#ifdef CONFIG_WL1271_WLAN
-> +	omap_mux_init_gpio(OMAP3EVM_WLAN_EN, OMAP_PIN_OUTPUT);
-
-Check for return value
-
-> +	if (gpio_request(OMAP3EVM_WLAN_EN, "WLAN_ENABLE"))
-> +		printk(KERN_ERR "Fail to get WLAN Enable GPIO\n");
-> +	gpio_direction_output(OMAP3EVM_WLAN_EN, 1);
-> +	mdelay(100);
-
-You may add a comment to mention why this needs to be 100.
-
-> +	omap_mux_init_gpio(OMAP3EVM_WLAN_IRQ, OMAP_PIN_INPUT);
-
-Check for return value
-
-> +#endif
->  	/*
->  	 * Most GPIOs are for USB OTG.  Some are mostly sent to
->  	 * the P2 connector; notably LEDA for the LCD backlight.
-> diff --git a/drivers/mmc/core/sdio_ops.c b/drivers/mmc/core/sdio_ops.c
-> index 4eb7825..4213ee0 100644
-> --- a/drivers/mmc/core/sdio_ops.c
-> +++ b/drivers/mmc/core/sdio_ops.c
-> @@ -114,6 +114,9 @@ int mmc_io_rw_direct(struct mmc_card 
-> *card, int write, unsigned fn,
->  
->  	return 0;
->  }
-> +#ifdef CONFIG_WL1271_WLAN
-> +EXPORT_SYMBOL(mmc_io_rw_direct);
-> +#endif
->  
->  int mmc_io_rw_extended(struct mmc_card *card, int write, unsigned fn,
->  	unsigned addr, int incr_addr, u8 *buf, unsigned blocks, 
-> unsigned blksz)
-> @@ -181,4 +184,6 @@ int mmc_io_rw_extended(struct mmc_card 
-> *card, int write, unsigned fn,
->  
->  	return 0;
->  }
-> -
-> +#ifdef CONFIG_WL1271_WLAN
-> +EXPORT_SYMBOL(mmc_io_rw_extended);
-> +#endif
-> diff --git a/drivers/net/wireless/Kconfig 
-> b/drivers/net/wireless/Kconfig
-> index 56dd665..dc319b7 100644
-> --- a/drivers/net/wireless/Kconfig
-> +++ b/drivers/net/wireless/Kconfig
-> @@ -31,6 +31,17 @@ config PCMCIA_RAYCS
->  	  To compile this driver as a module, choose M here: 
-> the module will be
->  	  called ray_cs.  If unsure, say N.
->  
-> +config WL1271_WLAN
-> +	tristate "WL1271 TI's SDIO based wireless card"
-> +	select WIRELESS_EXT
-> +	select CRYPTO
-> +	select WEXT_SPY
-> +	select WEXT_PRIV
-> +	---help---
-> +	This driver support both the standard Linux Wireless Extensions
-> +	and TI's proprietary API, so both the Linux Wireless 
-> Tools and this
-> +	module support 2.4 GHz 802.11 b/g/n standrd.
-> +
->  config LIBERTAS_THINFIRM
->  	tristate "Marvell 8xxx Libertas WLAN driver support 
-> with thin firmware"
->  	depends on MAC80211
-> -- 
-> 1.6.3.3
