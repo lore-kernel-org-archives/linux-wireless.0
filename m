@@ -1,144 +1,290 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from web56802.mail.re3.yahoo.com ([66.196.97.76]:39387 "HELO
-	web56802.mail.re3.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1750762Ab0JBQzw (ORCPT
+Received: from mail-yx0-f174.google.com ([209.85.213.174]:53672 "EHLO
+	mail-yx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753104Ab0JMLDT (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 2 Oct 2010 12:55:52 -0400
-Message-ID: <698964.46316.qm@web56802.mail.re3.yahoo.com>
-Date: Sat, 2 Oct 2010 09:55:51 -0700 (PDT)
-From: Walter Goldens <goldenstranger@yahoo.com>
-Subject: [PATCH] compat-wireless: introduce driver-select group for atlxx
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <1284325760-929-1-git-send-email-hauke@hauke-m.de>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+	Wed, 13 Oct 2010 07:03:19 -0400
+From: csanjay@mistralsolutions.com
+To: linux-omap@vger.kernel.org
+Cc: linux-wireless@vger.kernel.org,
+	Sanjay Kumar Champati <csanjay@mistralsolutions.com>
+Subject: [WL1271 DC supprot on OMAP3EVM 4/5] ARM: Added ALSA audio support for WL1271 DC over the PCM interface (OMAP37XX)
+Date: Wed, 13 Oct 2010 16:21:16 +0530
+Message-Id: <1286967077-20071-5-git-send-email-csanjay@mistralsolutions.com>
+In-Reply-To: <1286967077-20071-1-git-send-email-csanjay@mistralsolutions.com>
+References: <1286967077-20071-1-git-send-email-csanjay@mistralsolutions.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-In this patch:
-- fixed a description typo
-- changed yellow to purple color in bash as it hurts the eye/hard to read in white background (gnome)
-- placed "atl1 atl2 atl1e atl1c" on one line to preserve user space and visibility, this is after all a _wireless_ compat
-- introduced "atlxx" group for atlx(x) Ethernet devices in "BLUE" for distinguishability
-- sorted all module groups together
+From: Sanjay Kumar Champati <csanjay@mistralsolutions.com>
 
-Signed-off-by: Walter Goldens <goldenstranger@yahoo.com>
+* Add "wl1271bt.c" & "wl1271bt.h" in the PS kernel to support PCM interface for OMAP37XX
+* Modified "Makefile" file to compile "wl1271bt.c" & "wl1271bt.h" files
+* Modified "omap3evm.c" file to support Audio codec for WL1271 DC
+
+Signed-off-by: Sanjay Kumar Champati <csanjay@mistralsolutions.com>
 ---
+ sound/soc/omap/Kconfig    |    6 +++
+ sound/soc/omap/Makefile   |    2 +
+ sound/soc/omap/omap3evm.c |   81 +++++++++++++++++++++++++++++++++++++++++++-
+ sound/soc/omap/wl1271bt.c |   59 ++++++++++++++++++++++++++++++++
+ sound/soc/omap/wl1271bt.h |   16 +++++++++
+ 5 files changed, 162 insertions(+), 2 deletions(-)
+ create mode 100644 sound/soc/omap/wl1271bt.c
+ create mode 100644 sound/soc/omap/wl1271bt.h
 
---- a/scripts/driver-select
-+++ b/scripts/driver-select
-@@ -1,7 +1,7 @@
- #!/bin/bash
- # Copyright 2009        Luis R. Rodriguez <mcgrof@gmail.com>
- #
--# This this to select your compat-wireless driver and
-+# This script allows you to select your compat-wireless driver and
- # reduce compilation time.
+diff --git a/sound/soc/omap/Kconfig b/sound/soc/omap/Kconfig
+index 61952aa..68054c2 100644
+--- a/sound/soc/omap/Kconfig
++++ b/sound/soc/omap/Kconfig
+@@ -116,3 +116,9 @@ config SND_OMAP_SOC_IGEP0020
+ 	select SND_SOC_TWL4030
+ 	help
+ 	  Say Y if you want to add support for Soc audio on IGEP v2 board.
++
++config SND_OMAP_SOC_WL1271BT
++	tristate "WL1271 Bluetooth Codec support"
++	default n
++	help
++	Say Y if you want to add support for WL1271 on OMAP3EVM board.
+diff --git a/sound/soc/omap/Makefile b/sound/soc/omap/Makefile
+index 19283e5..684b8f2 100644
+--- a/sound/soc/omap/Makefile
++++ b/sound/soc/omap/Makefile
+@@ -18,6 +18,7 @@ snd-soc-omap3pandora-objs := omap3pandora.o
+ snd-soc-omap3beagle-objs := omap3beagle.o
+ snd-soc-zoom2-objs := zoom2.o
+ snd-soc-igep0020-objs := igep0020.o
++snd-soc-wl1271bt-objs := wl1271bt.o
  
- DRIVERS_MAKEFILE="drivers/net/wireless/Makefile"
-@@ -42,7 +42,7 @@ fi
+ obj-$(CONFIG_SND_OMAP_SOC_N810) += snd-soc-n810.o
+ obj-$(CONFIG_SND_OMAP_SOC_AMS_DELTA) += snd-soc-ams-delta.o
+@@ -31,3 +32,4 @@ obj-$(CONFIG_SND_OMAP_SOC_OMAP3_PANDORA) += snd-soc-omap3pandora.o
+ obj-$(CONFIG_SND_OMAP_SOC_OMAP3_BEAGLE) += snd-soc-omap3beagle.o
+ obj-$(CONFIG_SND_OMAP_SOC_ZOOM2) += snd-soc-zoom2.o
+ obj-$(CONFIG_SND_OMAP_SOC_IGEP0020) += snd-soc-igep0020.o
++obj-$(CONFIG_SND_OMAP_SOC_WL1271BT) += snd-soc-wl1271bt.o
+diff --git a/sound/soc/omap/omap3evm.c b/sound/soc/omap/omap3evm.c
+index dfcb344..6731ad3 100644
+--- a/sound/soc/omap/omap3evm.c
++++ b/sound/soc/omap/omap3evm.c
+@@ -32,6 +32,10 @@
+ #include "omap-mcbsp.h"
+ #include "omap-pcm.h"
+ #include "../codecs/twl4030.h"
++#if defined(CONFIG_SND_OMAP_SOC_WL1271BT)
++#include <plat/control.h>
++#include "wl1271bt.h"
++#endif
  
- # b43 needs some more work for driver-select, the SSB stuff, plus
- # what if you update b44 but not b43? It will bust.
--SUPPORTED_ETH_DRIVERS="atl1 atl2 atl1e atl1c"
-+SUPPORTED_ETH_DRIVERS=""
+ static int omap3evm_hw_params(struct snd_pcm_substream *substream,
+ 	struct snd_pcm_hw_params *params)
+@@ -72,11 +76,58 @@ static int omap3evm_hw_params(struct snd_pcm_substream *substream,
+ 	return 0;
+ }
  
- function usage {
- 	echo -e "${GREEN}Usage${NORMAL}: ${CYAN}$0${NORMAL} [ ${PURPLE}<driver-name>${NORMAL} | ${PURPLE}<driver-group-name>${NORMAL} | ${GREEN}restore${NORMAL} ]"
-@@ -53,7 +53,7 @@ function usage {
- 		echo -e "\t${PURPLE}${i}${NORMAL}"
- 	done
++#if defined(CONFIG_SND_OMAP_SOC_WL1271BT)
++static int omap3evm_wl1271bt_pcm_hw_params(struct snd_pcm_substream *substream,
++					struct snd_pcm_hw_params *params)
++{
++	struct snd_soc_pcm_runtime *rtd = substream->private_data;
++	struct snd_soc_dai *cpu_dai = rtd->dai->cpu_dai;
++	int ret;
++
++	/* Set cpu DAI configuration for WL1271 Bluetooth codec */
++	ret = snd_soc_dai_set_fmt(cpu_dai,
++				SND_SOC_DAIFMT_DSP_B |
++				SND_SOC_DAIFMT_NB_NF |
++				SND_SOC_DAIFMT_CBM_CFM);
++	if (ret < 0) {
++		printk(KERN_ERR "Can't set cpu DAI configuration for " \
++						"WL1271 Bluetooth codec \n");
++		return ret;
++	}
++
++	return 0;
++}
++
++static struct snd_soc_ops omap3evm_wl1271bt_pcm_ops = {
++       .hw_params = omap3evm_wl1271bt_pcm_hw_params,
++};
++#endif
++
+ static struct snd_soc_ops omap3evm_ops = {
++
+ 	.hw_params = omap3evm_hw_params,
+ };
  
--	echo -e "\nSupported Ethernet drivers:"
-+	echo -e "\nSupported Ethernet drivers: < ${PURPLE}atl1 atl2 atl1e atl1c${NORMAL} >"
- 	for i in $SUPPORTED_ETH_DRIVERS; do
- 		echo -e "\t${PURPLE}${i}${NORMAL}"
- 	done
-@@ -66,6 +66,8 @@ function usage {
- 	echo -e "\t${CYAN}iwlwifi${NORMAL} < ${PURPLE} iwl3945 iwlagn ${NORMAL}>"
- 	echo -e "\t${CYAN}rtl818x${NORMAL} < ${PURPLE} rtl8180 rtl8187 ${NORMAL}>"
- 	echo -e "\t${CYAN}wl12xx${NORMAL} < ${PURPLE} wl1251 (SPI and SDIO) wl1271 ${NORMAL}>"
-+	
-+	echo -e "\t${BLUE}atlxx${NORMAL} < ${PURPLE} atl1 atl2 atl1e atl1c ${NORMAL}>"
+ /* Digital audio interface glue - connects codec <--> CPU */
++#if defined(CONFIG_SND_OMAP_SOC_WL1271BT)
++static struct snd_soc_dai_link omap3evm_dai[] = {
++	{
++		.name = "TWL4030",
++		.stream_name = "TWL4030",
++		.cpu_dai = &omap_mcbsp_dai[0],
++		.codec_dai = &twl4030_dai[TWL4030_DAI_HIFI],
++		.ops = &omap3evm_ops,
++	},
++	/* Connects WL1271 Bluetooth codec <--> CPU */
++	{
++		.name = "WL1271BTPCM",
++		.stream_name = "WL1271 BT PCM",
++		.cpu_dai = &omap_mcbsp_dai[1],
++		.codec_dai = &wl1271bt_dai,
++		.ops = &omap3evm_wl1271bt_pcm_ops,
++	},
++};
++#else
+ static struct snd_soc_dai_link omap3evm_dai = {
+ 	.name 		= "TWL4030",
+ 	.stream_name 	= "TWL4030",
+@@ -84,13 +135,18 @@ static struct snd_soc_dai_link omap3evm_dai = {
+ 	.codec_dai 	= &twl4030_dai[TWL4030_DAI_HIFI],
+ 	.ops 		= &omap3evm_ops,
+ };
+-
++#endif
+ /* Audio machine driver */
+ static struct snd_soc_card snd_soc_omap3evm = {
+ 	.name = "omap3evm",
+ 	.platform = &omap_soc_platform,
++#if defined(CONFIG_SND_OMAP_SOC_WL1271BT)
++	.dai_link = &omap3evm_dai[0],
++	.num_links = ARRAY_SIZE(omap3evm_dai),
++#else
+ 	.dai_link = &omap3evm_dai,
+ 	.num_links = 1,
++#endif
+ };
  
- 	echo -e "Restoring compat-wireless:"
- 	echo -e "\t${GREEN}restore${NORMAL}: you can use this option to restore compat-wireless to the original state"
-@@ -265,7 +267,7 @@ fi
+ /* twl4030 setup */
+@@ -111,7 +167,10 @@ static struct platform_device *omap3evm_snd_device;
+ static int __init omap3evm_soc_init(void)
+ {
+ 	int ret;
+-
++#if defined(CONFIG_SND_OMAP_SOC_WL1271BT)
++	u16 reg;
++	u32 val;
++#endif
+ 	if (!machine_is_omap3evm()) {
+ 		pr_err("Not OMAP3 EVM!\n");
+ 		return -ENODEV;
+@@ -124,9 +183,27 @@ static int __init omap3evm_soc_init(void)
+ 		return -ENOMEM;
+ 	}
  
- if [[ ! -f built-in.o ]]; then
- 	if [[ "$1" != "restore" ]]; then
--		echo -e "${YELLOW}Processing new driver-select request...${NORMAL}"
-+		echo -e "${PURPLE}Processing new driver-select request...${NORMAL}"
- 	fi
- fi
++#if defined(CONFIG_SND_OMAP_SOC_WL1271BT)
++/*
++ * Set DEVCONF0 register to connect
++ * MCBSP1_CLKR -> MCBSP1_CLKX & MCBSP1_FSR -> MCBSP1_FSX
++ */
++	reg = OMAP2_CONTROL_DEVCONF0;
++	val = omap_ctrl_readl(reg);
++	val = val | 0x18;
++	omap_ctrl_writel(val, reg);
++#endif
++
+ 	platform_set_drvdata(omap3evm_snd_device, &omap3evm_snd_devdata);
+ 	omap3evm_snd_devdata.dev = &omap3evm_snd_device->dev;
++#if defined(CONFIG_SND_OMAP_SOC_WL1271BT)
++	/* McBSP2 */
++	*(unsigned int *)omap3evm_dai[0].cpu_dai->private_data = 1;
++	/* McBSP1 */
++	*(unsigned int *)omap3evm_dai[1].cpu_dai->private_data = 0;
++#else
+ 	*(unsigned int *)omap3evm_dai.cpu_dai->private_data = 1;
++#endif
  
-@@ -279,9 +281,9 @@ fi
- # we'll be trying to leave drivers on Makefiles which are not
- # already there from a previous run.
- if [ -f built-in.o ]; then
--	echo -e "${YELLOW}Old build found, going to clean this up first...${NORMAL}"
-+	echo -e "${PURPLE}Old build found, going to clean this up first...${NORMAL}"
- 	make clean
--	echo -e "${YELLOW}Restoring Makefiles...${NORMAL}"
-+	echo -e "${PURPLE}Restoring Makefiles...${NORMAL}"
- 	./$0 restore
- fi
- 
-@@ -289,6 +291,7 @@ case $1 in
- 	restore)
- 		restore_compat
- 		;;
-+# Group drivers
- 	atheros)
- 		select_drivers		CONFIG_ATH_COMMON \
- 					CONFIG_ZD1211RW
-@@ -316,6 +319,12 @@ case $1 in
- 		disable_staging
- 		disable_var_01
- 		;;
-+	rtl818x)
-+		select_drivers		CONFIG_RTL8180 CONFIG_RTL8187
-+		disable_staging
-+		disable_var_02
-+		;;
-+# Singular modules
- 	ath5k)
- 		disable_staging
- 		disable_bt_usb_ethernet_var
-@@ -353,11 +362,6 @@ case $1 in
- 		disable_ath6kl
- 		select_driver		CONFIG_NOTHING
- 		;;
--	rtl818x)
--		select_drivers		CONFIG_RTL8180 CONFIG_RTL8187
--		disable_staging
--		disable_var_02
--		;;
- 	zd1211rw)
- 		select_driver		CONFIG_ZD1211RW
- 		disable_staging
-@@ -375,6 +379,7 @@ case $1 in
- 		disable_staging
- 		disable_var_02
- 		;;
-+# Ethernet drivers
- 	atl1)
- 		enable_only_ethernet
- 		echo -e "obj-\$(CONFIG_ATL1) += atlx/" > $DRIVERS_NET
-@@ -391,6 +396,11 @@ case $1 in
- 		enable_only_ethernet
- 		echo -e "obj-\$(CONFIG_ATL1C) += atl1c/" > $DRIVERS_NET
- 		;;
-+	atlxx)
-+		select_drivers		CONFIG_ATL1 CONFIG_ATL2 CONFIG_ATL1E CONFIG_ATL1C
-+		enable_only_ethernet
-+		disable_b44
-+		;;
- 	*)
- 		echo "Unsupported driver"
- 		exit
+ 	ret = platform_device_add(omap3evm_snd_device);
+ 	if (ret)
+diff --git a/sound/soc/omap/wl1271bt.c b/sound/soc/omap/wl1271bt.c
+new file mode 100644
+index 0000000..b41895b
+--- /dev/null
++++ b/sound/soc/omap/wl1271bt.c
+@@ -0,0 +1,59 @@
++/*
++ * wl1271bt.c  --  ALSA SoC WL1271 Bluetooth codec driver for omap3evm board
++ *
++ * Author: Sinoj M. Issac, <sinoj at mistralsolutions.com>
++ *
++ * Based on sound/soc/codecs/twl4030.c by Steve Sakoman
++ *
++ * This file provides stub codec that can be used on OMAP3530 evm to
++ * send/receive voice samples to/from WL1271 Bluetooth chip over PCM interface.
++ * The Bluetoothchip codec interface is configured by HCI commands. ALSA is
++ * configured and aligned to the codec interface.
++ *
++ * This program is free software; you can redistribute it and/or modify
++ * it under the terms of the GNU General Public License version 2 as
++ * published by the Free Software Foundation.
++ */
++
++#include <linux/module.h>
++#include <linux/moduleparam.h>
++#include <sound/soc.h>
++#include <sound/pcm.h>
++
++/*
++ * Since WL1271 PCM interface is intended for Voice,
++ * Support sampling rate 8K only
++ */
++#define WL1271BT_RATES		SNDRV_PCM_RATE_8000
++#define WL1271BT_FORMATS	SNDRV_PCM_FMTBIT_S16_LE
++
++struct snd_soc_dai wl1271bt_dai = {
++	.name = "wl1271bt",
++	.playback = {
++		.stream_name = "Playback",
++		.channels_min = 1,
++		.channels_max = 2,
++		.rates = WL1271BT_RATES,
++		.formats = WL1271BT_FORMATS,},
++	.capture = {
++		.stream_name = "Capture",
++		.channels_min = 1,
++		.channels_max = 2,
++		.rates = WL1271BT_RATES,
++		.formats = WL1271BT_FORMATS,},
++};
++
++static int __init wl1271bt_modinit(void)
++{
++	/* Register number of DAIs (wl1271bt_dai) with the ASoC core */
++	return snd_soc_register_dais(&wl1271bt_dai, 1);
++}
++
++static void __exit wl1271bt_modexit(void)
++{
++	/* Unregister number of DAIs (wl1271bt_dai) from the ASoC core */
++	snd_soc_unregister_dais(&wl1271bt_dai, 1);
++}
++
++module_init(wl1271bt_modinit);
++module_exit(wl1271bt_modexit);
+diff --git a/sound/soc/omap/wl1271bt.h b/sound/soc/omap/wl1271bt.h
+new file mode 100644
+index 0000000..769f9a9
+--- /dev/null
++++ b/sound/soc/omap/wl1271bt.h
+@@ -0,0 +1,16 @@
++/*
++ * wl1271bt.h  --  ALSA SoC WL1271 Bluetooth codec driver header
++ *
++ * Author: Sinoj M. Issac, <sinoj at mistralsolutions.com>
++ *
++ * This program is free software; you can redistribute it and/or modify
++ * it under the terms of the GNU General Public License version 2 as
++ * published by the Free Software Foundation.
++ */
++
++#ifndef WL1271BT_H
++#define WL1271BT_H
++
++extern struct snd_soc_dai wl1271bt_dai;
++
++#endif /* WL1271BT_H */
+-- 
+1.6.3.3
 
-
-
-      
