@@ -1,174 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from devils.ext.ti.com ([198.47.26.153]:58118 "EHLO
-	devils.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751961Ab0JMOGs (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:35724 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753466Ab0JNNtX (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 13 Oct 2010 10:06:48 -0400
-From: Shahar Levi <shahar_levi@ti.com>
-To: <linux-wireless@vger.kernel.org>
-Cc: Luciano Coelho <luciano.coelho@nokia.com>
-Subject: [PATCH v4 01/03] wl1271: 11n Support, Add Definitions
-Date: Wed, 13 Oct 2010 16:09:39 +0200
-Message-Id: <1286978981-21467-2-git-send-email-shahar_levi@ti.com>
-In-Reply-To: <1286978981-21467-1-git-send-email-shahar_levi@ti.com>
-References: <1286978981-21467-1-git-send-email-shahar_levi@ti.com>
+	Thu, 14 Oct 2010 09:49:23 -0400
+Subject: Re: [PATCH 4/6] Add a bitrate threshold config hook in mac80211
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Paul Stewart <pstew@google.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <AANLkTi=PDnooPN9kmgHo0Sh7s3p8cMfpvbkkoAbCsF3_@mail.gmail.com>
+References: <20101013224851.D58252094C@glenhelen.mtv.corp.google.com>
+	 <1287040708.4641.10.camel@jlt3.sipsolutions.net>
+	 <AANLkTi=PDnooPN9kmgHo0Sh7s3p8cMfpvbkkoAbCsF3_@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Thu, 14 Oct 2010 15:50:03 +0200
+Message-ID: <1287064203.4641.433.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Two acx commands: ht_capabilities & ht_information, 11n sta capabilities macro.
+[list added back]
 
-Signed-off-by: Shahar Levi <shahar_levi@ti.com>
----
- drivers/net/wireless/wl12xx/wl1271.h      |   11 ++++-
- drivers/net/wireless/wl12xx/wl1271_acx.h  |   81 +++++++++++++++++++++++++++++
- drivers/net/wireless/wl12xx/wl1271_main.c |   15 +++++
- 3 files changed, 106 insertions(+), 1 deletions(-)
+On Thu, 2010-10-14 at 06:42 -0700, Paul Stewart wrote:
 
-diff --git a/drivers/net/wireless/wl12xx/wl1271.h b/drivers/net/wireless/wl12xx/wl1271.h
-index 8a4cd76..45a2583 100644
---- a/drivers/net/wireless/wl12xx/wl1271.h
-+++ b/drivers/net/wireless/wl12xx/wl1271.h
-@@ -432,7 +432,12 @@ struct wl1271 {
- 	/* Our association ID */
- 	u16 aid;
- 
--	/* currently configured rate set */
-+	/*
-+	 * currently configured rate set:
-+	 *	bits  0-15 - 802.11abg rates
-+	 *	bits 16-23 - 802.11n   MCS index mask
-+	 * support only 1 stream, thus only 8 bits for the MCS rates (0-7).
-+	 */
- 	u32 sta_rate_set;
- 	u32 basic_rate_set;
- 	u32 basic_rate;
-@@ -509,4 +514,8 @@ int wl1271_plt_stop(struct wl1271 *wl);
- #define WL1271_PRE_POWER_ON_SLEEP 20 /* in miliseconds */
- #define WL1271_POWER_ON_SLEEP 200 /* in miliseconds */
- 
-+/* Macros to handle wl1271.sta_rate_set */
-+#define HW_BG_RATES_MASK	0xffff
-+#define HW_HT_RATES_OFFSET	16
-+
- #endif
-diff --git a/drivers/net/wireless/wl12xx/wl1271_acx.h b/drivers/net/wireless/wl12xx/wl1271_acx.h
-index ebb341d..72597a2 100644
---- a/drivers/net/wireless/wl12xx/wl1271_acx.h
-+++ b/drivers/net/wireless/wl12xx/wl1271_acx.h
-@@ -964,6 +964,87 @@ struct wl1271_acx_rssi_snr_avg_weights {
- 	u8 snr_data;
- };
- 
-+/*
-+ * ACX_PEER_HT_CAP
-+ * Configure HT capabilities - declare the capabilities of the peer
-+ * we are connected to.
-+ */
-+struct wl1271_acx_ht_capabilities {
-+	struct acx_header header;
-+
-+	/*
-+	 * bit 0 - Allow HT Operation
-+	 * bit 1 - Allow Greenfield format in TX
-+	 * bit 2 - Allow Short GI in TX
-+	 * bit 3 - Allow L-SIG TXOP Protection in TX
-+	 * bit 4 - Allow HT Control fields in TX.
-+	 *         Note, driver will still leave space for HT control in packets
-+	 *         regardless of the value of this field. FW will be responsible
-+	 *         to drop the HT field from any frame when this Bit set to 0.
-+	 * bit 5 - Allow RD initiation in TXOP. FW is allowed to initate RD.
-+	 *         Exact policy setting for this feature is TBD.
-+	 *         Note, this bit can only be set to 1 if bit 3 is set to 1.
-+	 */
-+	__le32 ht_capabilites;
-+
-+	/*
-+	 * Indicates to which peer these capabilities apply.
-+	 * For infrastructure use ff:ff:ff:ff:ff:ff that indicates relevance
-+	 * for all peers.
-+	 * Only valid for IBSS/DLS operation.
-+	 */
-+	u8 mac_address[ETH_ALEN];
-+
-+	/*
-+	 * This the maximum A-MPDU length supported by the AP. The FW may not
-+	 * exceed this length when sending A-MPDUs
-+	 */
-+	u8 ampdu_max_length;
-+
-+	/* This is the minimal spacing required when sending A-MPDUs to the AP*/
-+	u8 ampdu_min_spacing;
-+} __packed;
-+
-+/* HT Capabilites Fw Bit Mask Mapping */
-+#define WL1271_ACX_FW_CAP_HT_OPERATION                 BIT(0)
-+#define WL1271_ACX_FW_CAP_GREENFIELD_FRAME_FORMAT      BIT(1)
-+#define WL1271_ACX_FW_CAP_SHORT_GI_FOR_20MHZ_PACKETS   BIT(2)
-+#define WL1271_ACX_FW_CAP_LSIG_TXOP_PROTECTION         BIT(3)
-+#define WL1271_ACX_FW_CAP_HT_CONTROL_FIELDS            BIT(4)
-+#define WL1271_ACX_FW_CAP_RD_INITIATION                BIT(5)
-+
-+
-+/*
-+ * ACX_HT_BSS_OPERATION
-+ * Configure HT capabilities - AP rules for behavior in the BSS.
-+ */
-+struct wl1271_acx_ht_information {
-+	struct acx_header header;
-+
-+	/* Values: 0 - RIFS not allowed, 1 - RIFS allowed */
-+	u8 rifs_mode;
-+
-+	/* Values: 0 - 3 like in spec */
-+	u8 ht_protection;
-+
-+	/* Values: 0 - GF protection not required, 1 - GF protection required */
-+	u8 gf_protection;
-+
-+	/*Values: 0 - TX Burst limit not required, 1 - TX Burst Limit required*/
-+	u8 ht_tx_burst_limit;
-+
-+	/*
-+	 * Values: 0 - Dual CTS protection not required,
-+	 *         1 - Dual CTS Protection required
-+	 * Note: When this value is set to 1 FW will protect all TXOP with RTS
-+	 * frame and will not use CTS-to-self regardless of the value of the
-+	 * ACX_CTS_PROTECTION information element
-+	 */
-+	u8 dual_cts_protection;
-+
-+	u8 padding[3];
-+} __packed;
-+
- struct wl1271_acx_fw_tsf_information {
- 	struct acx_header header;
- 
-diff --git a/drivers/net/wireless/wl12xx/wl1271_main.c b/drivers/net/wireless/wl12xx/wl1271_main.c
-index 48a4b99..a585815 100644
---- a/drivers/net/wireless/wl12xx/wl1271_main.c
-+++ b/drivers/net/wireless/wl12xx/wl1271_main.c
-@@ -2134,6 +2134,21 @@ static const u8 wl1271_rate_to_idx_2ghz[] = {
- 	0                              /* CONF_HW_RXTX_RATE_1    */
- };
- 
-+/* 11n STA capabilities */
-+#define HW_RX_HIGHEST_RATE	72
-+
-+#define WL1271_HT_CAP { \
-+	.cap = IEEE80211_HT_CAP_GRN_FLD | IEEE80211_HT_CAP_SGI_20, \
-+	.ht_supported = true, \
-+	.ampdu_factor = IEEE80211_HT_MAX_AMPDU_8K, \
-+	.ampdu_density = IEEE80211_HT_MPDU_DENSITY_8, \
-+	.mcs = { \
-+		.rx_mask = { 0xff, 0, 0, 0, 0, 0, 0, 0, 0, 0, }, \
-+		.rx_highest = cpu_to_le16(HW_RX_HIGHEST_RATE), \
-+		.tx_params = IEEE80211_HT_MCS_TX_DEFINED, \
-+		}, \
-+}
-+
- /* can't be const, mac80211 writes to this */
- static struct ieee80211_supported_band wl1271_band_2ghz = {
- 	.channels = wl1271_channels,
--- 
-1.6.0.4
+> >> +     u32 cqm_bitrate_thold;
+> >
+> > Since there's no way for drivers to utilise this, don't add it in public
+> > API.
+> 
+> I disagree here.  I don't see a reason why a other drivers would not
+> be able to take advantage of this feature, much the same as some of
+> them support rssi thresholds.  They can calculate their own last
+> transmitted bitrate and trigger cqm events using cfg80211 just as well
+> as mac80211 can.
+
+No, they can't, for one they don't have access to the netdev. So at
+least mac80211 would have to provide wrappers. And there would also have
+to be capability bits so that mac80211 doesn't actually do all of this
+in software when the driver does it, avoiding double notifications and
+overhead.
+
+johannes
 
