@@ -1,76 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([147.243.1.47]:63003 "EHLO mgw-sa01.nokia.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1759043Ab0JGHQ5 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 7 Oct 2010 03:16:57 -0400
-Received: from nokia.com (localhost [127.0.0.1])
-	by mgw-sa01.nokia.com (Switch-3.4.3/Switch-3.4.3) with ESMTP id o977Gt9F003653
-	for <linux-wireless@vger.kernel.org>; Thu, 7 Oct 2010 10:16:55 +0300
-From: juuso.oikarinen@nokia.com
-To: luciano.coelho@nokia.com
+Received: from he.sipsolutions.net ([78.46.109.217]:39644 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755320Ab0JNUuw (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 14 Oct 2010 16:50:52 -0400
+Subject: Re: [PATCH 2/6] Ad cfg80211 call for threshold notifications
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Paul Stewart <pstew@google.com>
 Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH] wl1271: Support FEM autodetection
-Date: Thu,  7 Oct 2010 10:16:42 +0300
-Message-Id: <1286435802-8152-1-git-send-email-juuso.oikarinen@nokia.com>
+In-Reply-To: <AANLkTincG_-s4pWx+m=keMSfhzWfTQeCCGMQzHYk-WTA@mail.gmail.com>
+References: <20101013224851.9C46820418@glenhelen.mtv.corp.google.com>
+	 <1287040404.4641.5.camel@jlt3.sipsolutions.net>
+	 <AANLkTincG_-s4pWx+m=keMSfhzWfTQeCCGMQzHYk-WTA@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Thu, 14 Oct 2010 22:51:36 +0200
+Message-ID: <1287089496.4641.443.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Juuso Oikarinen <juuso.oikarinen@nokia.com>
+On Thu, 2010-10-14 at 13:43 -0700, Paul Stewart wrote:
+> I documented that this value in ieee80211_i.h.  Other parameters in
+> this file are left undocumented in this module (rssi_hyst, for
+> example, is documented in mac80211.h and nl80211.h (in fact, my docs
+> in nl80211.h look a little sparse -- I'll fix that up).  I don't
+> object to doing it -- I'm just trying to wrap my head around the
+> correct conventions.
 
-In the NVS/INI-parameters for the driver/firmware there is the FEM
-(front end module) selection option, which may configure the hardware FEM
-via autodetection or manual selection. So far, there has been support for
-manual selection only.
+Anywhere is fine I guess (nl80211.h should work) but I didn't see any
+actual units? It would seem to be in Mbps but you're also using the
+".bitrate" field from a channel, which is in units of 1/2 Mbps?
 
-Add support for FEM autodetection.
-
-Signed-off-by: Juuso Oikarinen <juuso.oikarinen@nokia.com>
----
- drivers/net/wireless/wl12xx/wl1271_cmd.c |   21 +++++++++++++++++----
- 1 files changed, 17 insertions(+), 4 deletions(-)
-
-diff --git a/drivers/net/wireless/wl12xx/wl1271_cmd.c b/drivers/net/wireless/wl12xx/wl1271_cmd.c
-index 596e333..5d3e848 100644
---- a/drivers/net/wireless/wl12xx/wl1271_cmd.c
-+++ b/drivers/net/wireless/wl12xx/wl1271_cmd.c
-@@ -108,6 +108,8 @@ out:
- int wl1271_cmd_general_parms(struct wl1271 *wl)
- {
- 	struct wl1271_general_parms_cmd *gen_parms;
-+	struct wl1271_ini_general_params *gp = &wl->nvs->general_params;
-+	bool answer = false;
- 	int ret;
- 
- 	if (!wl->nvs)
-@@ -119,13 +121,24 @@ int wl1271_cmd_general_parms(struct wl1271 *wl)
- 
- 	gen_parms->test.id = TEST_CMD_INI_FILE_GENERAL_PARAM;
- 
--	memcpy(&gen_parms->general_params, &wl->nvs->general_params,
--	       sizeof(struct wl1271_ini_general_params));
-+	memcpy(&gen_parms->general_params, gp, sizeof(*gp));
- 
--	ret = wl1271_cmd_test(wl, gen_parms, sizeof(*gen_parms), 0);
--	if (ret < 0)
-+	if (gp->tx_bip_fem_auto_detect)
-+		answer = true;
-+
-+	ret = wl1271_cmd_test(wl, gen_parms, sizeof(*gen_parms), answer);
-+	if (ret < 0) {
- 		wl1271_warning("CMD_INI_FILE_GENERAL_PARAM failed");
-+		goto out;
-+	}
-+
-+	gp->tx_bip_fem_manufacturer =
-+		gen_parms->general_params.tx_bip_fem_manufacturer;
- 
-+	wl1271_debug(DEBUG_CMD, "FEM autodetect: %s, manufacturer: %d\n",
-+		     answer ? "auto" : "manual", gp->tx_bip_fem_manufacturer);
-+
-+out:
- 	kfree(gen_parms);
- 	return ret;
- }
--- 
-1.7.0.4
+johannes
 
