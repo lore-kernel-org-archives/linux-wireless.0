@@ -1,53 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:19536 "EHLO mx1.redhat.com"
+Received: from mail.atheros.com ([12.19.149.2]:19014 "EHLO mail.atheros.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751140Ab0JFJpf (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 6 Oct 2010 05:45:35 -0400
-Date: Wed, 6 Oct 2010 11:02:35 +0200
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: Florian Mickler <florian@mickler.org>
-Cc: linville@tuxdriver.com, stable@kernel.org,
-	linux-wireless@vger.kernel.org, wey-yi.w.guy@intel.com,
-	reinette.chatre@intel.com, ilw@linux.intel.com,
-	johannes.berg@intel.com, ben.m.cahill@intel.com,
-	netdev@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] iwlwifi: fix iwlwifi scanning corner cases
-Message-ID: <20101006090228.GA2523@redhat.com>
-References: <20101005085717.GA18012@redhat.com>
- <1286317292-10679-1-git-send-email-florian@mickler.org>
+	id S1750839Ab0JNWyk (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 14 Oct 2010 18:54:40 -0400
+Received: from mail.atheros.com ([10.10.20.105])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Thu, 14 Oct 2010 15:54:31 -0700
+Date: Thu, 14 Oct 2010 15:54:38 -0700
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: Ben Greear <greearb@candelatech.com>, <g@tux>
+CC: "Luis R. Rodriguez" <mcgrof@gmail.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Luis Rodriguez <Luis.Rodriguez@Atheros.com>
+Subject: Re: memory clobber in rx path, maybe related to ath9k.
+Message-ID: <20101014225438.GC15740@tux>
+References: <4CB4AA89.1070009@candelatech.com>
+ <20101013053141.GA15798@vasanth-laptop>
+ <4CB5E0A8.5020502@candelatech.com>
+ <AANLkTimp_GSwwX_RnQSyN9QNe55HQ+0HZJ1yd8Xp+dWG@mail.gmail.com>
+ <AANLkTinyVqdgPqzpyihuaPtVVqDmzj-ZbXzQ-4qdA2yH@mail.gmail.com>
+ <4CB77EA0.1000005@candelatech.com>
+ <AANLkTimC0+6PiqWO+LmtBV7uKCVpZueAQs6m_6kAnbq9@mail.gmail.com>
+ <AANLkTi=1oOCcdvBHo+8WAVHv-M8tE14ntmK4M_09SWh5@mail.gmail.com>
+ <AANLkTi=pp2Ob06YCi6GsR9rtRaDWPP95n2M72qWLdbwM@mail.gmail.com>
+ <4CB787E1.9000201@candelatech.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1286317292-10679-1-git-send-email-florian@mickler.org>
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <4CB787E1.9000201@candelatech.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Florian
+On Thu, Oct 14, 2010 at 03:44:49PM -0700, Ben Greear wrote:
+> On 10/14/2010 03:35 PM, Luis R. Rodriguez wrote:
+> > On Thu, Oct 14, 2010 at 3:29 PM, Luis R. Rodriguez<mcgrof@gmail.com>  wrote:
+> >> Fun enough if I just create one monitor interface and loop quickly
+> >> over some 2 GHz channels where I know I have traffic nearby I don't
+> >> see the poison. So channel changes don't seem to do much because this
+> >> is changing channels as fast as possible from userspace. I also can
+> >> confirm that I see frames from the different channels as I move along.
+> >
+> > Even forcing a band change doesn't help trigger it with just one mon0
+> > and one regular device scanning in a loop;
+> >
+> > while true; do for i in 2412 5745 2417 5745 2422 5745 2427 5745 2432
+> > 5745 2442; do echo $i iw dev mon0 set freq $i; done; done
+> > while true; do iw dev wlan0 scan; done
+> 
+> What if you just make a bunch of skb copies in ath9k before it
+> sends them up the stack, and then delete them?  (That's basically
+> what a bunch of monitor devices would be doing, eh?)
+ 
+Sure, as you can see from my patch I at least do it all the time
+now on RX and TX. The TX poison never shows though so currently I'm
+more suspicious about RX. The other idea I had was to just run
+check_bytes_and_report() often around the code, but haven't tried that
+yet.
 
-On Wed, Oct 06, 2010 at 12:21:32AM +0200, Florian Mickler wrote:
-> Stanislaw Gruszka pointed out, that commit
-> "iwl3945: queue the right work if the scan needs to be aborted"
-> has an awkward definition of "right". Specifically the abort_scan work
-> doesn't notify the generic wireless stack that the scan was aborted.
-> 
-> In order to get rid of the warning in bug
-> https://bugzilla.kernel.org/show_bug.cgi?id=17722
-> we inform ieee80211_scan_completed that we are aborting
-> the scan by setting the apropriate status bit in request_scan and 
-> pass it into ieee80211_scan_completed. 
-> 
-> Signed-off-by: Florian Mickler <florian@mickler.org>
-> ---
-> 
-> Hi John!
-> 
-> Here is the fix that Stanislaw described. 
-> (Yes, it is in a brown paper bag.)  Please wait for him to review this. 
-> 
-> Another option would be to just revert my previous patch and live with the 
-> warning until the scanning rework hit's mainline.
+I'm also poking harware folks about some of the registers we use
+to better understand how DMA works here.
 
-This patch is not so bad, but better would be just return value from 
-{iwlagn,iwl3945}_request_scan instead of queuing anything. I will
-prepare patch(s) today or tomorrow.
-
-Stanislaw
+  Luis
