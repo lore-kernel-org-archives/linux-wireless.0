@@ -1,13 +1,13 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iw0-f174.google.com ([209.85.214.174]:51310 "EHLO
+Received: from mail-iw0-f174.google.com ([209.85.214.174]:61902 "EHLO
 	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933490Ab0JRWly convert rfc822-to-8bit (ORCPT
+	with ESMTP id S1755198Ab0JNTRw convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 18 Oct 2010 18:41:54 -0400
-Received: by iwn7 with SMTP id 7so59405iwn.19
-        for <linux-wireless@vger.kernel.org>; Mon, 18 Oct 2010 15:41:53 -0700 (PDT)
+	Thu, 14 Oct 2010 15:17:52 -0400
+Received: by iwn35 with SMTP id 35so328243iwn.19
+        for <linux-wireless@vger.kernel.org>; Thu, 14 Oct 2010 12:17:52 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <AANLkTim=GkK=e5bj8GXHG7r0BXcitaZ-gvSfZVmpsLzE@mail.gmail.com>
+In-Reply-To: <4CB756B8.4000308@candelatech.com>
 References: <4CAE1DFB.303@candelatech.com> <1286479642.20974.32.camel@jlt3.sipsolutions.net>
  <AANLkTimxp703Gy_Atg8=wpFszRDR=OJCXwOUKRh-a-d7@mail.gmail.com>
  <AANLkTi=t-P_5c14brJohM8UgxeOknv+3syO=7W=ix6qf@mail.gmail.com>
@@ -16,86 +16,53 @@ References: <4CAE1DFB.303@candelatech.com> <1286479642.20974.32.camel@jlt3.sipso
  <4CB3D598.7050904@candelatech.com> <AANLkTimPEg3ZU8CQUXfdpGdfbmhdE9O=GNY=g9gysTo4@mail.gmail.com>
  <4CB4AA89.1070009@candelatech.com> <20101013053141.GA15798@vasanth-laptop>
  <4CB5E0A8.5020502@candelatech.com> <AANLkTimp_GSwwX_RnQSyN9QNe55HQ+0HZJ1yd8Xp+dWG@mail.gmail.com>
- <AANLkTinyVqdgPqzpyihuaPtVVqDmzj-ZbXzQ-4qdA2yH@mail.gmail.com>
- <4CB78870.8040207@candelatech.com> <AANLkTimqX5E33eTPYiei4GcCYocbs8-zceCARG+5t98B@mail.gmail.com>
- <AANLkTinMp8dJ3TM=-Mw3pyFiYTYoTmBBqSro3rsrgwXH@mail.gmail.com>
- <AANLkTim5HGs3XFT40UJcHMrF8VuyO_XxMWPVuj7Rb4y9@mail.gmail.com> <AANLkTim=GkK=e5bj8GXHG7r0BXcitaZ-gvSfZVmpsLzE@mail.gmail.com>
+ <AANLkTi=b_SvDDgqbQ-Oft12bNumM7XuH6-_g7_w=koaG@mail.gmail.com> <4CB756B8.4000308@candelatech.com>
 From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Mon, 18 Oct 2010 15:41:33 -0700
-Message-ID: <AANLkTi=ten5-kbUOGYGbnqNff4RJ=WWEC6_CaH1Psy0V@mail.gmail.com>
+Date: Thu, 14 Oct 2010 12:17:30 -0700
+Message-ID: <AANLkTikex2zUcsRhRDFsVNPv-ygeogHjD5p8AzqoFsYD@mail.gmail.com>
 Subject: Re: memory clobber in rx path, maybe related to ath9k.
-To: =?UTF-8?Q?Bj=C3=B6rn_Smedman?= <bjorn.smedman@venatech.se>
-Cc: Ben Greear <greearb@candelatech.com>,
+To: Ben Greear <greearb@candelatech.com>
+Cc: =?UTF-8?Q?Bj=C3=B6rn_Smedman?= <bjorn.smedman@venatech.se>,
+	Vasanthakumar Thiagarajan <vasanth@atheros.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
 	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2010/10/18 Björn Smedman <bjorn.smedman@venatech.se>:
-> 2010/10/18 Luis R. Rodriguez <mcgrof@gmail.com>:
->> 2010/10/18 Björn Smedman <bjorn.smedman@venatech.se>:
->>> 2010/10/15 Björn Smedman <bjorn.smedman@venatech.se>
->>>>
->>>> 2010/10/15 Ben Greear <greearb@candelatech.com>:
->>>> > I tried the patch below, and it didn't seem to help.  Might even
->>>> > have hurt..as it died on divide-by-zero error:
->>>>
->>>> Hmm, looks like the ani code got a zero listen time from the hw...
->>>> That just might mean that the DMA actually hits one of these
->>>> descriptors. :)
->>>
->>> Am I the only one worried about this? Leaving a DMA descriptor
->>> pointing at memory which has been passed on to somebody else... To me
->>> that's like pointing a loaded gun at someone (and it seems this
->>> particular gun can go off a little haphazardly).
->>>
->>> Luis, given how hard it seems to be to get that locking and skb
->>> shoveling right, are you sure you want to keep pointing that DMA
->>> engine on innocent people's data?
+On Thu, Oct 14, 2010 at 12:15 PM, Ben Greear <greearb@candelatech.com> wrote:
+> On 10/13/2010 01:03 PM, Luis R. Rodriguez wrote:
 >>
->> This is why this issue is of high priority to me. I no longer get the
->> poison nor does Ben, the RX poison issue is resolved as far as I can
->> tell, I just need to split up the patches into easily reviewable
->> chunks and get them upstream.
+>> 2010/10/13 Björn Smedman<bjorn.smedman@venatech.se>:
+>>>
+>>> Hi Ben,
+>>>
+>>> First of all keep up the good work. :)
+>>>
+>>> On Wed, Oct 13, 2010 at 6:39 PM, Ben Greear<greearb@candelatech.com>
+>>>  wrote:
+>>> [snip]
+>>>>
+>>>> Either way, it seems safer to null out the bf_ampdu field after
+>>>> the memory is consumed..it could prevent some tricky bugs later.
+>>>
+>>> I think this is a good idea. But it probably wont be enough to null
+>>> out bf_mpdu. You also need to look at bf_buf_addr (which if I
+>>> understand correctly is the physical address the DMA engine will
+>>> actually write RXed frames to) and bf_dmacontext (which seems in most
+>>> cases to hold an identical address and may in fact be where the DMA
+>>> engine will really write the frame).
+>>
+>> See the TODO list for ath9k:
+>>
+>>   * Remove this redundancy crap: bf->bf_buf_addr = bf->bf_dmacontext;
+>>
+>> http://wireless.kernel.org/en/users/Drivers/ath9k/todo
 >
-> The locking issue you found looks like it could cause those
-> overwritten poisons (as well as some weird problems I've seen in AP
-> mode with lots of monitor interfaces). It's really great to see that
-> problem go.
+> I just posted a patch that attempts this.  It doesn't
+> fix the memory clobber issue, but maybe the code is a bit cleaner/safer
+> at least...
 
-:)
-
-> All I'm saying is that this stuff is difficult and the
-> next time we get it wrong we should try to avoid overwriting arbitrary
-> kernel memory with our RXed frames (or TXing something sensitive).
-
-Patches welcomed.
-
-> Will the DMA engine stop when it sees a zero ds_data? In that case I
-> suggest we never keep an address there that we do not want to RX to or
-> TX from.
-
-We will always have an skb available to DMA for RX, its part of the
-design on RX on ath9k. We simply do drop the frame we just got DMA'd
-if we cannot allocate a new skb from the kernel. So we should always
-be able to DMA over and over and over. The issue here was due to a
-race on stopping and starting the PCU, it got confused on which buffer
-to write to.
-
-> Also, is there some way to verify that we are not corrupting memory
-> with the DMA? I mean the poison check is great
-
-I'm only aware of the poison checks.
-
-> but if I understand
-> correctly it cannot detect if we overwrite active memory (i.e. before
-> it is freed and marked with the poison).
-
-Right, the best you can do is to understand the code. Detecting bogus
-writes from hardware to are hard to detect on already used memory
-given that you'd need to ensure you understand what a writer to that
-area of memory will do.
-
-Anyway if you find actual issues instead of pure speculation please let us know.
+Easier to read at least, thanks.
 
   Luis
