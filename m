@@ -1,51 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:60258 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752095Ab0JKSuX (ORCPT
+Received: from mail-ew0-f46.google.com ([209.85.215.46]:61643 "EHLO
+	mail-ew0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753129Ab0JNRGD convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 11 Oct 2010 14:50:23 -0400
-Message-ID: <4CB35C6C.4060606@candelatech.com>
-Date: Mon, 11 Oct 2010 11:50:20 -0700
-From: Ben Greear <greearb@candelatech.com>
+	Thu, 14 Oct 2010 13:06:03 -0400
+Received: by ewy20 with SMTP id 20so3641808ewy.19
+        for <linux-wireless@vger.kernel.org>; Thu, 14 Oct 2010 10:06:02 -0700 (PDT)
 MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] wireless:  Print wiphy name in sysfs.
-References: <1286818139-1746-1-git-send-email-greearb@candelatech.com>	 <1286819927.3634.79.camel@jlt3.sipsolutions.net>	 <4CB351B2.4070803@candelatech.com>	 <1286820600.3634.80.camel@jlt3.sipsolutions.net>	 <4CB355EA.5050902@candelatech.com> <1286822565.3634.83.camel@jlt3.sipsolutions.net>
-In-Reply-To: <1286822565.3634.83.camel@jlt3.sipsolutions.net>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+In-Reply-To: <20101014165111.GA22130@suse.de>
+References: <AANLkTinQMRGkOvi4e4JMsHGV_BF_4Rf5oHCtZgQjwQ1g@mail.gmail.com>
+	<20101014165111.GA22130@suse.de>
+Date: Thu, 14 Oct 2010 19:06:00 +0200
+Message-ID: <AANLkTin9PxzROyCQxiT5-ca4CUQK+kppS7gAibbbZ2=v@mail.gmail.com>
+Subject: Re: Licensing wlc_phy_radio.h and brcm80211 (was: [PATCH 3/3] b43:
+ N-PHY: add 2055 radio regs)
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+To: Greg KH <gregkh@suse.de>
+Cc: =?UTF-8?Q?G=C3=A1bor_Stefanik?= <netrolller.3d@gmail.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	b43-dev <b43-dev@lists.infradead.org>,
+	linux-wireless@vger.kernel.org,
+	Henry Ptasinski <henryp@broadcom.com>,
+	Brett Rudley <brudley@broadcom.com>,
+	Nohee Ko <noheek@broadcom.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 10/11/2010 11:42 AM, Johannes Berg wrote:
-> On Mon, 2010-10-11 at 11:22 -0700, Ben Greear wrote:
+2010/10/14 Greg KH <gregkh@suse.de>:
+> On Thu, Oct 14, 2010 at 06:40:14PM +0200, Rafał Miłecki wrote:
+>> W dniu 11 października 2010 18:24 użytkownik Gábor Stefanik
+>> <netrolller.3d@gmail.com> napisał:
+>> > Doesn't brcm80211 contain register names for B2055?
+>>
+>> I've checked brcm80211 and noticed defines in
+>> drivers/staging/brcm80211/phy/wlc_phy_radio.h.
+>>
+>> Whole brcm80211 driver is licensed as:
+>> MODULE_LICENSE("Dual BSD/GPL");
+>>
+>> Mentioned file contains following comments:
+>> +/*
+>> + * Copyright (c) 2010 Broadcom Corporation
+>> + *
+>> + * Permission to use, copy, modify, and/or distribute this software for any
+>> + * purpose with or without fee is hereby granted, provided that the above
+>> + * copyright notice and this permission notice appear in all copies.
+>>
+>> Our b43 driver is licensed as:
+>> MODULE_LICENSE("GPL");
+>> and I am not sure if permission above is actually GPL-compatible. The
+>> best option would be to add defines from wlc_phy_radio.h and include
+>> Broadcom's copyright. However comment above wants us to include info
+>> about free copying/modifying/using which is not GPL-compatible.
+>>
+>> Is there any way to solve this issue?
 >
->>> basename $(readlink /sys/class/net/wlan0/phy80211)
->>
->> It looks like that could work, but it seems a lot easier to probe
->> network devices via normal manner, and then check if I can just
->> open and read /sys/class/net/[dev-name]/phy80211/name
->>
->> I can do that easily from within a C/C++ program, where as
->> doing system calls and grabbing standard output is more of
->> a pain (and more overhead).
->>
->> But, if you don't want to add my patch, it's not a big deal.
->
-> I don't really mind, it just didn't seem necessary. FWIW, readlink(2) is
-> also a system call that your C program could use, but if you want the
-> patch instead I guess that's fine.
+> I don't understand, are you just wanting to use the names in the .h file
+> for the registers?
 
-I think it offers a bit of use at a small cost, but certainly
-it's not a critical improvement.
+Yes. I want to put lines like:
+#define RADIO_2056_RX0				(0x6 << 12)
+in my radio_2056.h
 
-If the maintainer picks it up, I'll happily use it..if not,
-I can carry it in my own tree or use readdir or something.
 
-Thanks,
-Ben
+> If so, why?  You don't want to support the same devices in the b43
+> driver that the brcm80211 driver does, do you?
+
+I do. I see many advantages of that plus most of the code is already
+here coming from RE.
+
+Finishing N-PHY support in b43 does not need much work plus:
+1) We support SSB devices
+2) We support older (LP/G-phy) devices
+3) We share infrastructure (easier to maintain)
+4) We probably could support modes like AP
 
 -- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
-
+Rafał
