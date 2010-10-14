@@ -1,39 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f46.google.com ([209.85.214.46]:57585 "EHLO
-	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757038Ab0JLInv convert rfc822-to-8bit (ORCPT
+Received: from mail-iw0-f174.google.com ([209.85.214.174]:55334 "EHLO
+	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755198Ab0JNTRI convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 12 Oct 2010 04:43:51 -0400
-Received: by bwz15 with SMTP id 15so2241978bwz.19
-        for <linux-wireless@vger.kernel.org>; Tue, 12 Oct 2010 01:43:50 -0700 (PDT)
+	Thu, 14 Oct 2010 15:17:08 -0400
+Received: by iwn35 with SMTP id 35so327421iwn.19
+        for <linux-wireless@vger.kernel.org>; Thu, 14 Oct 2010 12:17:07 -0700 (PDT)
 MIME-Version: 1.0
-Date: Tue, 12 Oct 2010 10:43:47 +0200
-Message-ID: <AANLkTi=kL7Y42Z0GLL9MUYQ2yXjBSh8sky0r-5_FZ1BA@mail.gmail.com>
-Subject: Chromium Wifi test ?
-From: Jim Harvey <jmhrv3@gmail.com>
-To: linux-wireless <linux-wireless@vger.kernel.org>
-Cc: Paul Stewart <pstew@google.com>,
-	Sam Leffler <sleffler@chromium.org>
-Content-Type: text/plain; charset=ISO-8859-1
+In-Reply-To: <1287083601-1293-1-git-send-email-greearb@candelatech.com>
+References: <1287083601-1293-1-git-send-email-greearb@candelatech.com>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Thu, 14 Oct 2010 12:16:47 -0700
+Message-ID: <AANLkTim5HNbOc5a7M--5f-A+PR3wPRmVGwbPm+QMSfz=@mail.gmail.com>
+Subject: Re: [ath9k-devel] [PATCH] ath9k: Remove bf_dmacontext, null out stale pointers.
+To: greearb@candelatech.com
+Cc: linux-wireless@vger.kernel.org, ath9k-devel@venema.h4ckr.net
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello,
+On Thu, Oct 14, 2010 at 12:13 PM,  <greearb@candelatech.com> wrote:
+> From: Ben Greear <greearb@candelatech.com>
+>
+> The bf_dmacontext seems to be totally useless and duplicated
+> by bf_buf_addr. Â Remove it entirely, use bf_buf_addr in its
+> place.
+>
+> Also null out bf_buf_addr and bf_mpdu pointers when resources
+> they are pointing to are no longer owned by the buffer object.
 
-An Automated WiFi Testing facility was presented at the last wireless
-summit by the chromium folks:
+Please split these two changes up into two separate patches.
 
-http://wireless.kernel.org/en/developers/Summits/SanFranciscoBayArea-2010
-
-I can see that it is built on top of autotest, but I can't seem to
-find the actual wifi tests.. can you please send a link to it ?
-
-It sounds interesting.
-
-Can you please tell what is the latest status ?
-
-Btw, why wasn't the wifi-test project re-used ? does it have any
-conceptual gap ?
-
-Thank you,
-~jmhrv
+  Luis
