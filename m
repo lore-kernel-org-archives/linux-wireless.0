@@ -1,109 +1,221 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gy0-f174.google.com ([209.85.160.174]:39358 "EHLO
-	mail-gy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753104Ab0JMLDG (ORCPT
+Received: from mail-ew0-f46.google.com ([209.85.215.46]:46337 "EHLO
+	mail-ew0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755105Ab0JNTQu (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 13 Oct 2010 07:03:06 -0400
-From: csanjay@mistralsolutions.com
-To: linux-omap@vger.kernel.org
-Cc: linux-wireless@vger.kernel.org,
-	Sanjay Kumar Champati <csanjay@mistralsolutions.com>
-Subject: [WL1271 DC supprot on OMAP3EVM 2/5] ARM: Supported for Standard SDIO driver on OMAP3EVM for WL1271 DC
-Date: Wed, 13 Oct 2010 16:21:14 +0530
-Message-Id: <1286967077-20071-3-git-send-email-csanjay@mistralsolutions.com>
-In-Reply-To: <1286967077-20071-1-git-send-email-csanjay@mistralsolutions.com>
-References: <1286967077-20071-1-git-send-email-csanjay@mistralsolutions.com>
+	Thu, 14 Oct 2010 15:16:50 -0400
+Received: by ewy20 with SMTP id 20so3850088ewy.19
+        for <linux-wireless@vger.kernel.org>; Thu, 14 Oct 2010 12:16:49 -0700 (PDT)
+From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+To: linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>
+Cc: b43-dev@lists.infradead.org,
+	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+Subject: [PATCH 4/4 v2] b43: N-PHY: put 2056-radio's specific code in separated file
+Date: Thu, 14 Oct 2010 21:16:33 +0200
+Message-Id: <1287083793-12320-5-git-send-email-zajec5@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sanjay Kumar Champati <csanjay@mistralsolutions.com>
-
-* Apply MMC2 support patch before apply this patch
-* Modified the "Kconfig" and "board-omap3evm.c" files to support
-  standard SDIO driver for WL1271 DC
-
-Signed-off-by: Sanjay Kumar Champati <csanjay@mistralsolutions.com>
+Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
 ---
- arch/arm/mach-omap2/board-omap3evm.c |   13 ++++++++++++-
- drivers/mmc/core/sdio_ops.c          |    7 ++++++-
- drivers/net/wireless/Kconfig         |   11 +++++++++++
- 3 files changed, 29 insertions(+), 2 deletions(-)
+V2: Update comments:
+1) We just split tables into separated: PHY and radio
+2) Remove Michael from Copyrights of radio_2056.c (it came from copy & paste)
+---
+ drivers/net/wireless/b43/Makefile      |    1 +
+ drivers/net/wireless/b43/phy_n.c       |    1 +
+ drivers/net/wireless/b43/radio_2056.c  |   43 ++++++++++++++++++++++++++++++++
+ drivers/net/wireless/b43/radio_2056.h  |   42 +++++++++++++++++++++++++++++++
+ drivers/net/wireless/b43/tables_nphy.c |   20 +--------------
+ drivers/net/wireless/b43/tables_nphy.h |   11 --------
+ 6 files changed, 88 insertions(+), 30 deletions(-)
+ create mode 100644 drivers/net/wireless/b43/radio_2056.c
+ create mode 100644 drivers/net/wireless/b43/radio_2056.h
 
-diff --git a/arch/arm/mach-omap2/board-omap3evm.c b/arch/arm/mach-omap2/board-omap3evm.c
-index 6b45b6e..06fab2e 100644
---- a/arch/arm/mach-omap2/board-omap3evm.c
-+++ b/arch/arm/mach-omap2/board-omap3evm.c
-@@ -79,6 +79,10 @@
- #define OMAP3EVM_ETHR_ID_REV	0x50
- #define OMAP3EVM_ETHR_GPIO_IRQ	176
- #define OMAP3EVM_SMSC911X_CS	5
-+#ifdef CONFIG_WL1271_WLAN
-+#define OMAP3EVM_WLAN_EN	150
-+#define OMAP3EVM_WLAN_IRQ	149
-+#endif
+diff --git a/drivers/net/wireless/b43/Makefile b/drivers/net/wireless/b43/Makefile
+index 0398c7c..69d4af0 100644
+--- a/drivers/net/wireless/b43/Makefile
++++ b/drivers/net/wireless/b43/Makefile
+@@ -2,6 +2,7 @@ b43-y				+= main.o
+ b43-y				+= tables.o
+ b43-$(CONFIG_B43_NPHY)		+= tables_nphy.o
+ b43-$(CONFIG_B43_NPHY)		+= radio_2055.o
++b43-$(CONFIG_B43_NPHY)		+= radio_2056.o
+ b43-y				+= phy_common.o
+ b43-y				+= phy_g.o
+ b43-y				+= phy_a.o
+diff --git a/drivers/net/wireless/b43/phy_n.c b/drivers/net/wireless/b43/phy_n.c
+index 45fa2bb..dfec549 100644
+--- a/drivers/net/wireless/b43/phy_n.c
++++ b/drivers/net/wireless/b43/phy_n.c
+@@ -30,6 +30,7 @@
+ #include "phy_n.h"
+ #include "tables_nphy.h"
+ #include "radio_2055.h"
++#include "radio_2056.h"
+ #include "main.h"
  
- extern struct regulator_consumer_supply twl4030_vmmc1_supply;
- extern struct regulator_consumer_supply twl4030_vsim_supply;
-@@ -749,7 +753,14 @@ static int omap3evm_twl_gpio_setup(struct device *dev,
- 	twl4030_vmmc1_supply.dev = mmc[0].dev;
- 	twl4030_vsim_supply.dev = mmc[0].dev;
- 	twl4030_vmmc2_supply.dev = mmc[1].dev;
--
-+#ifdef CONFIG_WL1271_WLAN
-+	omap_mux_init_gpio(OMAP3EVM_WLAN_EN, OMAP_PIN_OUTPUT);
-+	if (gpio_request(OMAP3EVM_WLAN_EN, "WLAN_ENABLE"))
-+		printk(KERN_ERR "Fail to get WLAN Enable GPIO\n");
-+	gpio_direction_output(OMAP3EVM_WLAN_EN, 1);
-+	mdelay(100);
-+	omap_mux_init_gpio(OMAP3EVM_WLAN_IRQ, OMAP_PIN_INPUT);
-+#endif
- 	/*
- 	 * Most GPIOs are for USB OTG.  Some are mostly sent to
- 	 * the P2 connector; notably LEDA for the LCD backlight.
-diff --git a/drivers/mmc/core/sdio_ops.c b/drivers/mmc/core/sdio_ops.c
-index 4eb7825..4213ee0 100644
---- a/drivers/mmc/core/sdio_ops.c
-+++ b/drivers/mmc/core/sdio_ops.c
-@@ -114,6 +114,9 @@ int mmc_io_rw_direct(struct mmc_card *card, int write, unsigned fn,
- 
- 	return 0;
- }
-+#ifdef CONFIG_WL1271_WLAN
-+EXPORT_SYMBOL(mmc_io_rw_direct);
-+#endif
- 
- int mmc_io_rw_extended(struct mmc_card *card, int write, unsigned fn,
- 	unsigned addr, int incr_addr, u8 *buf, unsigned blocks, unsigned blksz)
-@@ -181,4 +184,6 @@ int mmc_io_rw_extended(struct mmc_card *card, int write, unsigned fn,
- 
- 	return 0;
- }
--
-+#ifdef CONFIG_WL1271_WLAN
-+EXPORT_SYMBOL(mmc_io_rw_extended);
-+#endif
-diff --git a/drivers/net/wireless/Kconfig b/drivers/net/wireless/Kconfig
-index 56dd665..dc319b7 100644
---- a/drivers/net/wireless/Kconfig
-+++ b/drivers/net/wireless/Kconfig
-@@ -31,6 +31,17 @@ config PCMCIA_RAYCS
- 	  To compile this driver as a module, choose M here: the module will be
- 	  called ray_cs.  If unsure, say N.
- 
-+config WL1271_WLAN
-+	tristate "WL1271 TI's SDIO based wireless card"
-+	select WIRELESS_EXT
-+	select CRYPTO
-+	select WEXT_SPY
-+	select WEXT_PRIV
-+	---help---
-+	This driver support both the standard Linux Wireless Extensions
-+	and TI's proprietary API, so both the Linux Wireless Tools and this
-+	module support 2.4 GHz 802.11 b/g/n standrd.
+ struct nphy_txgains {
+diff --git a/drivers/net/wireless/b43/radio_2056.c b/drivers/net/wireless/b43/radio_2056.c
+new file mode 100644
+index 0000000..d856319
+--- /dev/null
++++ b/drivers/net/wireless/b43/radio_2056.c
+@@ -0,0 +1,43 @@
++/*
 +
- config LIBERTAS_THINFIRM
- 	tristate "Marvell 8xxx Libertas WLAN driver support with thin firmware"
- 	depends on MAC80211
++  Broadcom B43 wireless driver
++  IEEE 802.11n 2056 radio device data tables
++
++  This program is free software; you can redistribute it and/or modify
++  it under the terms of the GNU General Public License as published by
++  the Free Software Foundation; either version 2 of the License, or
++  (at your option) any later version.
++
++  This program is distributed in the hope that it will be useful,
++  but WITHOUT ANY WARRANTY; without even the implied warranty of
++  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++  GNU General Public License for more details.
++
++  You should have received a copy of the GNU General Public License
++  along with this program; see the file COPYING.  If not, write to
++  the Free Software Foundation, Inc., 51 Franklin Steet, Fifth Floor,
++  Boston, MA 02110-1301, USA.
++
++*/
++
++#include "b43.h"
++#include "radio_2056.h"
++#include "phy_common.h"
++
++static const struct b43_nphy_channeltab_entry_rev3 b43_nphy_channeltab_rev3[] = {
++};
++
++const struct b43_nphy_channeltab_entry_rev3 *
++b43_nphy_get_chantabent_rev3(struct b43_wldev *dev, u16 freq)
++{
++	const struct b43_nphy_channeltab_entry_rev3 *e;
++	unsigned int i;
++
++	for (i = 0; i < ARRAY_SIZE(b43_nphy_channeltab_rev3); i++) {
++		e = &(b43_nphy_channeltab_rev3[i]);
++		if (e->freq == freq)
++			return e;
++	}
++
++	return NULL;
++}
+diff --git a/drivers/net/wireless/b43/radio_2056.h b/drivers/net/wireless/b43/radio_2056.h
+new file mode 100644
+index 0000000..fda6daf
+--- /dev/null
++++ b/drivers/net/wireless/b43/radio_2056.h
+@@ -0,0 +1,42 @@
++/*
++
++  Broadcom B43 wireless driver
++
++  Copyright (c) 2010 Rafał Miłecki <zajec5@gmail.com>
++
++  This program is free software; you can redistribute it and/or modify
++  it under the terms of the GNU General Public License as published by
++  the Free Software Foundation; either version 2 of the License, or
++  (at your option) any later version.
++
++  This program is distributed in the hope that it will be useful,
++  but WITHOUT ANY WARRANTY; without even the implied warranty of
++  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++  GNU General Public License for more details.
++
++  You should have received a copy of the GNU General Public License
++  along with this program; see the file COPYING.  If not, write to
++  the Free Software Foundation, Inc., 51 Franklin Steet, Fifth Floor,
++  Boston, MA 02110-1301, USA.
++
++*/
++
++#ifndef B43_RADIO_2056_H_
++#define B43_RADIO_2056_H_
++
++#include <linux/types.h>
++
++#include "tables_nphy.h"
++
++struct b43_nphy_channeltab_entry_rev3 {
++	/* The channel number */
++	u8 channel;
++	/* The channel frequency in MHz */
++	u16 freq;
++	/* Radio register values on channelswitch */
++	/* TODO */
++	/* PHY register values on channelswitch */
++	struct b43_phy_n_sfo_cfg phy_regs;
++};
++
++#endif /* B43_RADIO_2056_H_ */
+diff --git a/drivers/net/wireless/b43/tables_nphy.c b/drivers/net/wireless/b43/tables_nphy.c
+index cff7bd3..d60db07 100644
+--- a/drivers/net/wireless/b43/tables_nphy.c
++++ b/drivers/net/wireless/b43/tables_nphy.c
+@@ -1,7 +1,7 @@
+ /*
+ 
+   Broadcom B43 wireless driver
+-  IEEE 802.11n PHY and radio device data tables
++  IEEE 802.11n PHY data tables
+ 
+   Copyright (c) 2008 Michael Buesch <mb@bu3sch.de>
+ 
+@@ -27,24 +27,6 @@
+ #include "phy_common.h"
+ #include "phy_n.h"
+ 
+-static const struct b43_nphy_channeltab_entry_rev3 b43_nphy_channeltab_rev3[] = {
+-};
+-
+-const struct b43_nphy_channeltab_entry_rev3 *
+-b43_nphy_get_chantabent_rev3(struct b43_wldev *dev, u16 freq)
+-{
+-	const struct b43_nphy_channeltab_entry_rev3 *e;
+-	unsigned int i;
+-
+-	for (i = 0; i < ARRAY_SIZE(b43_nphy_channeltab_rev3); i++) {
+-		e = &(b43_nphy_channeltab_rev3[i]);
+-		if (e->freq == freq)
+-			return e;
+-	}
+-
+-	return NULL;
+-}
+-
+ static const u8 b43_ntab_adjustpower0[] = {
+ 	0x00, 0x00, 0x00, 0x00, 0x01, 0x01, 0x01, 0x01,
+ 	0x02, 0x02, 0x02, 0x02, 0x03, 0x03, 0x03, 0x03,
+diff --git a/drivers/net/wireless/b43/tables_nphy.h b/drivers/net/wireless/b43/tables_nphy.h
+index cb06d39..4ec593b 100644
+--- a/drivers/net/wireless/b43/tables_nphy.h
++++ b/drivers/net/wireless/b43/tables_nphy.h
+@@ -12,17 +12,6 @@ struct b43_phy_n_sfo_cfg {
+ 	u16 phy_bw6;
+ };
+ 
+-struct b43_nphy_channeltab_entry_rev3 {
+-	/* The channel number */
+-	u8 channel;
+-	/* The channel frequency in MHz */
+-	u16 freq;
+-	/* Radio register values on channelswitch */
+-	/* TODO */
+-	/* PHY register values on channelswitch */
+-	struct b43_phy_n_sfo_cfg phy_regs;
+-};
+-
+ struct b43_wldev;
+ 
+ struct nphy_txiqcal_ladder {
 -- 
-1.6.3.3
+1.7.1
 
