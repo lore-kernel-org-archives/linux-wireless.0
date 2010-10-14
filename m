@@ -1,132 +1,126 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f46.google.com ([209.85.215.46]:62576 "EHLO
-	mail-ew0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754482Ab0JKNkb (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 11 Oct 2010 09:40:31 -0400
-Received: by mail-ew0-f46.google.com with SMTP id 20so574157ewy.19
-        for <linux-wireless@vger.kernel.org>; Mon, 11 Oct 2010 06:40:31 -0700 (PDT)
-From: Ivo van Doorn <ivdoorn@gmail.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Subject: [PATCH 3/7] rt2x00: Validate MCS on RX path
-Date: Mon, 11 Oct 2010 15:38:07 +0200
-Cc: linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com
-References: <201010111537.26584.IvDoorn@gmail.com> <201010111537.48587.IvDoorn@gmail.com>
-In-Reply-To: <201010111537.48587.IvDoorn@gmail.com>
-MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Message-Id: <201010111538.08677.IvDoorn@gmail.com>
+Received: from mga14.intel.com ([143.182.124.37]:8111 "EHLO mga14.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754223Ab0JNSEU (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 14 Oct 2010 14:04:20 -0400
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	Johannes Berg <johannes.berg@intel.com>,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Subject: [PATCH 4/9] iwlwifi: clean up some beacon handling
+Date: Thu, 14 Oct 2010 11:02:45 -0700
+Message-Id: <1287079370-20587-5-git-send-email-wey-yi.w.guy@intel.com>
+In-Reply-To: <1287079370-20587-1-git-send-email-wey-yi.w.guy@intel.com>
+References: <1287079370-20587-1-git-send-email-wey-yi.w.guy@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Similar to the PLCP signal and bitrates values,
-we should validate the MCS value from the RX descriptor
-before sending it to mac80211.
+From: Johannes Berg <johannes.berg@intel.com>
 
-Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
-Acked-by: Helmut Schaa <helmut.schaa@googlemail.com>
+There's no need to check for NULL before
+calling dev_kfree_skb() since it is valid
+to call it on NULL -- it becomes a no-op.
+
+There's also no need to initialise the
+beacon_skb variable to NULL just after
+the memory it is in has been kzalloc'ed.
+
+Some minor whitespace cleanups, and a
+lock assertion in a function that needs
+the mutex (to access the beacon_skb var)
+complete the patch.
+
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
 ---
- drivers/net/wireless/rt2x00/rt2x00dev.c |   74 ++++++++++++++++---------------
- 1 files changed, 38 insertions(+), 36 deletions(-)
+ drivers/net/wireless/iwlwifi/iwl-agn.c |   25 +++++++++++--------------
+ 1 files changed, 11 insertions(+), 14 deletions(-)
 
-diff --git a/drivers/net/wireless/rt2x00/rt2x00dev.c b/drivers/net/wireless/rt2x00/rt2x00dev.c
-index 9b745fa..db25209 100644
---- a/drivers/net/wireless/rt2x00/rt2x00dev.c
-+++ b/drivers/net/wireless/rt2x00/rt2x00dev.c
-@@ -432,36 +432,44 @@ static int rt2x00lib_rxdone_read_signal(struct rt2x00_dev *rt2x00dev,
- 	struct ieee80211_supported_band *sband;
- 	const struct rt2x00_rate *rate;
- 	unsigned int i;
--	int signal;
--	int type;
-+	int signal = rxdesc->signal;
-+	int type = (rxdesc->dev_flags & RXDONE_SIGNAL_MASK);
- 
--	/*
--	 * For non-HT rates the MCS value needs to contain the
--	 * actually used rate modulation (CCK or OFDM).
--	 */
--	if (rxdesc->dev_flags & RXDONE_SIGNAL_MCS)
--		signal = RATE_MCS(rxdesc->rate_mode, rxdesc->signal);
--	else
--		signal = rxdesc->signal;
--
--	type = (rxdesc->dev_flags & RXDONE_SIGNAL_MASK);
--
--	sband = &rt2x00dev->bands[rt2x00dev->curr_band];
--	for (i = 0; i < sband->n_bitrates; i++) {
--		rate = rt2x00_get_rate(sband->bitrates[i].hw_value);
--
--		if (((type == RXDONE_SIGNAL_PLCP) &&
--		     (rate->plcp == signal)) ||
--		    ((type == RXDONE_SIGNAL_BITRATE) &&
--		      (rate->bitrate == signal)) ||
--		    ((type == RXDONE_SIGNAL_MCS) &&
--		      (rate->mcs == signal))) {
--			return i;
-+	switch (rxdesc->rate_mode) {
-+	case RATE_MODE_CCK:
-+	case RATE_MODE_OFDM:
-+		/*
-+		 * For non-HT rates the MCS value needs to contain the
-+		 * actually used rate modulation (CCK or OFDM).
-+		 */
-+		if (rxdesc->dev_flags & RXDONE_SIGNAL_MCS)
-+			signal = RATE_MCS(rxdesc->rate_mode, signal);
-+
-+		sband = &rt2x00dev->bands[rt2x00dev->curr_band];
-+		for (i = 0; i < sband->n_bitrates; i++) {
-+			rate = rt2x00_get_rate(sband->bitrates[i].hw_value);
-+			if (((type == RXDONE_SIGNAL_PLCP) &&
-+			     (rate->plcp == signal)) ||
-+			    ((type == RXDONE_SIGNAL_BITRATE) &&
-+			      (rate->bitrate == signal)) ||
-+			    ((type == RXDONE_SIGNAL_MCS) &&
-+			      (rate->mcs == signal))) {
-+				return i;
-+			}
- 		}
-+		break;
-+	case RATE_MODE_HT_MIX:
-+	case RATE_MODE_HT_GREENFIELD:
-+		if (signal >= 0 && signal <= 76)
-+			return signal;
-+		break;
-+	default:
-+		break;
- 	}
- 
- 	WARNING(rt2x00dev, "Frame received with unrecognized signal, "
--		"signal=0x%.4x, type=%d.\n", signal, type);
-+		"mode=0x%.4x, signal=0x%.4x, type=%d.\n",
-+		rxdesc->rate_mode, signal, type);
- 	return 0;
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
+index 0cc090b..7079efb 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
+@@ -314,9 +314,11 @@ static void iwl_free_frame(struct iwl_priv *priv, struct iwl_frame *frame)
  }
  
-@@ -523,18 +531,12 @@ void rt2x00lib_rxdone(struct queue_entry *entry)
- 	skb_trim(entry->skb, rxdesc.size);
+ static u32 iwl_fill_beacon_frame(struct iwl_priv *priv,
+-					  struct ieee80211_hdr *hdr,
+-					  int left)
++				 struct ieee80211_hdr *hdr,
++				 int left)
+ {
++	lockdep_assert_held(&priv->mutex);
++
+ 	if (!priv->beacon_skb)
+ 		return 0;
  
- 	/*
--	 * Check if the frame was received using HT. In that case,
--	 * the rate is the MCS index and should be passed to mac80211
--	 * directly. Otherwise we need to translate the signal to
--	 * the correct bitrate index.
-+	 * Translate the signal to the correct bitrate index.
- 	 */
--	if (rxdesc.rate_mode == RATE_MODE_CCK ||
--	    rxdesc.rate_mode == RATE_MODE_OFDM) {
--		rate_idx = rt2x00lib_rxdone_read_signal(rt2x00dev, &rxdesc);
--	} else {
-+	rate_idx = rt2x00lib_rxdone_read_signal(rt2x00dev, &rxdesc);
-+	if (rxdesc.rate_mode == RATE_MODE_HT_MIX ||
-+	    rxdesc.rate_mode == RATE_MODE_HT_GREENFIELD)
- 		rxdesc.flags |= RX_FLAG_HT;
--		rate_idx = rxdesc.signal;
--	}
+@@ -330,8 +332,8 @@ static u32 iwl_fill_beacon_frame(struct iwl_priv *priv,
  
- 	/*
- 	 * Update extra components
+ /* Parse the beacon frame to find the TIM element and set tim_idx & tim_size */
+ static void iwl_set_beacon_tim(struct iwl_priv *priv,
+-		struct iwl_tx_beacon_cmd *tx_beacon_cmd,
+-		u8 *beacon, u32 frame_size)
++			       struct iwl_tx_beacon_cmd *tx_beacon_cmd,
++			       u8 *beacon, u32 frame_size)
+ {
+ 	u16 tim_idx;
+ 	struct ieee80211_mgmt *mgmt = (struct ieee80211_mgmt *)beacon;
+@@ -393,7 +395,7 @@ static unsigned int iwl_hw_get_beacon_cmd(struct iwl_priv *priv,
+ 
+ 	/* Set up TX beacon command fields */
+ 	iwl_set_beacon_tim(priv, tx_beacon_cmd, (u8 *)tx_beacon_cmd->frame,
+-			frame_size);
++			   frame_size);
+ 
+ 	/* Set up packet rate and flags */
+ 	rate = iwl_rate_get_lowest_plcp(priv, priv->beacon_ctx);
+@@ -648,13 +650,12 @@ static void iwl_bg_beacon_update(struct work_struct *work)
+ 	/* Pull updated AP beacon from mac80211. will fail if not in AP mode */
+ 	beacon = ieee80211_beacon_get(priv->hw, priv->beacon_ctx->vif);
+ 	if (!beacon) {
+-		IWL_ERR(priv, "update beacon failed\n");
++		IWL_ERR(priv, "update beacon failed -- keeping old\n");
+ 		goto out;
+ 	}
+ 
+ 	/* new beacon skb is allocated every time; dispose previous.*/
+-	if (priv->beacon_skb)
+-		dev_kfree_skb(priv->beacon_skb);
++	dev_kfree_skb(priv->beacon_skb);
+ 
+ 	priv->beacon_skb = beacon;
+ 
+@@ -2993,8 +2994,7 @@ static void __iwl_down(struct iwl_priv *priv)
+  exit:
+ 	memset(&priv->card_alive, 0, sizeof(struct iwl_alive_resp));
+ 
+-	if (priv->beacon_skb)
+-		dev_kfree_skb(priv->beacon_skb);
++	dev_kfree_skb(priv->beacon_skb);
+ 	priv->beacon_skb = NULL;
+ 
+ 	/* clear out any free frames */
+@@ -4131,8 +4131,6 @@ static int iwl_init_drv(struct iwl_priv *priv)
+ {
+ 	int ret;
+ 
+-	priv->beacon_skb = NULL;
+-
+ 	spin_lock_init(&priv->sta_lock);
+ 	spin_lock_init(&priv->hcmd_lock);
+ 
+@@ -4645,8 +4643,7 @@ static void __devexit iwl_pci_remove(struct pci_dev *pdev)
+ 
+ 	iwl_free_isr_ict(priv);
+ 
+-	if (priv->beacon_skb)
+-		dev_kfree_skb(priv->beacon_skb);
++	dev_kfree_skb(priv->beacon_skb);
+ 
+ 	ieee80211_free_hw(priv->hw);
+ }
 -- 
-1.7.2.3
+1.7.0.4
 
