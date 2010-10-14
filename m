@@ -1,55 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from lo.gmane.org ([80.91.229.12]:46665 "EHLO lo.gmane.org"
+Received: from mail.atheros.com ([12.19.149.2]:25466 "EHLO mail.atheros.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1759127Ab0J1XV7 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 28 Oct 2010 19:21:59 -0400
-Received: from list by lo.gmane.org with local (Exim 4.69)
-	(envelope-from <glkwg-linux-wireless@m.gmane.org>)
-	id 1PBbnB-0004J3-98
-	for linux-wireless@vger.kernel.org; Fri, 29 Oct 2010 01:21:57 +0200
-Received: from CPE0014bf4aedf8-CM00111ae2cca2.cpe.net.cable.rogers.com ([173.34.126.150])
-        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Fri, 29 Oct 2010 01:21:57 +0200
-Received: from senada by CPE0014bf4aedf8-CM00111ae2cca2.cpe.net.cable.rogers.com with local (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Fri, 29 Oct 2010 01:21:57 +0200
-To: linux-wireless@vger.kernel.org
-From: seno <senada@t-online.de>
-Subject: Re: [PATCH] rtl8187b: do not do per packet TX AGC
-Date: Thu, 28 Oct 2010 23:21:47 +0000 (UTC)
-Message-ID: <loom.20101029T010426-834@post.gmane.org>
-References: <1282974868-22237-1-git-send-email-cascardo@holoscopio.com> <4C798080.8010002@lwfinger.net> <20100830141218.GB30864@tuxdriver.com> <4C7BC4D9.1010108@lwfinger.net> <20100830152841.GB2950@barata.holoscopio.com> <loom.20101026T200014-691@post.gmane.org> <4CC71CFF.8050004@lwfinger.net> <20101026185341.GA4608@barata.holoscopio.com> <20101028191305.2960c83b@gotham.conectiva>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+	id S1754399Ab0JNFOg (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 14 Oct 2010 01:14:36 -0400
+Received: from mail.atheros.com ([10.10.20.105])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Wed, 13 Oct 2010 22:14:26 -0700
+From: Rajkumar Manoharan <rmanoharan@atheros.com>
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>,
+	Rajkumar Manoharan <rmanoharan@atheros.com>
+Subject: [PATCH] ath9k_htc: set probe request rx filter
+Date: Thu, 14 Oct 2010 10:50:26 +0530
+Message-ID: <1287033626-4233-1-git-send-email-rmanoharan@atheros.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Herton Ronaldo Krzesinski <herton@...> writes:
+This patch enables to receive probe request frames on p2p
+client mode.
 
-> The excessive retries etc. should be another issue. The patch from Thadeu
-> really improves the driver.
+Signed-off-by: Rajkumar Manoharan <rmanoharan@atheros.com>
+---
+ drivers/net/wireless/ath/ath9k/htc_drv_main.c |    1 +
+ drivers/net/wireless/ath/ath9k/htc_drv_txrx.c |    3 +--
+ 2 files changed, 2 insertions(+), 2 deletions(-)
 
-Well, I tried once more today, maybe I'm doing something wrong?
-
-- I run "./scripts/driver-select rtl818x" in compat-wireless-2010-10-28
-- then "patch -p1 rtl8187_dev.c rtl8187b-do-not-do-per-packet-TX-AGC.patch"
-- then "make"
-- then "sudo make install"
-- then reboot
-
-"dmesg |grep compat" gives "Compat-wireless backport release: compat-
-wireless-2010-10-22-5-g69fdc09" so the new module is used.
-
-On speedtest.net, max speed is ~ 1mbit (on 10 mbit cable internet @10 meters 
-distance)
-The router reports an improved "Signal Quality", but iwconfig now shows:
-
-"Rx invalid nwid:0  Rx invalid crypt:0  Rx invalid frag:0"
-"Tx excessive retries:2589  Invalid misc:17686   Missed beacon:0"
-
-Herton: If I make something wrong, can you please post your rtl8187.ko.gz 
-(Mandriva 2010.1 / 2.6.33.7-desktop-2mnb x86_64)?
-
-Thank you.
+diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_main.c b/drivers/net/wireless/ath/ath9k/htc_drv_main.c
+index f12591f..55c8086 100644
+--- a/drivers/net/wireless/ath/ath9k/htc_drv_main.c
++++ b/drivers/net/wireless/ath/ath9k/htc_drv_main.c
+@@ -1454,6 +1454,7 @@ out:
+ 	FIF_PSPOLL |				\
+ 	FIF_OTHER_BSS |				\
+ 	FIF_BCN_PRBRESP_PROMISC |		\
++	FIF_PROBE_REQ |				\
+ 	FIF_FCSFAIL)
+ 
+ static void ath9k_htc_configure_filter(struct ieee80211_hw *hw,
+diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_txrx.c b/drivers/net/wireless/ath/ath9k/htc_drv_txrx.c
+index c99600a..3d19b5b 100644
+--- a/drivers/net/wireless/ath/ath9k/htc_drv_txrx.c
++++ b/drivers/net/wireless/ath/ath9k/htc_drv_txrx.c
+@@ -369,8 +369,7 @@ u32 ath9k_htc_calcrxfilter(struct ath9k_htc_priv *priv)
+ 		| ATH9K_RX_FILTER_UCAST | ATH9K_RX_FILTER_BCAST
+ 		| ATH9K_RX_FILTER_MCAST;
+ 
+-	/* If not a STA, enable processing of Probe Requests */
+-	if (ah->opmode != NL80211_IFTYPE_STATION)
++	if (priv->rxfilter & FIF_PROBE_REQ)
+ 		rfilt |= ATH9K_RX_FILTER_PROBEREQ;
+ 
+ 	/*
+-- 
+1.7.3.1
 
