@@ -1,59 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.19.149.2]:47259 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750836Ab0JGPW7 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 7 Oct 2010 11:22:59 -0400
-Received: from mail.atheros.com ([10.10.20.105])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Thu, 07 Oct 2010 08:22:51 -0700
-From: Rajkumar Manoharan <rmanoharan@atheros.com>
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>,
-	Rajkumar Manoharan <rmanoharan@atheros.com>
-Subject: [PATCH] ath9k_hw: Fix hw reset failure with HTC driver
-Date: Thu, 7 Oct 2010 20:58:39 +0530
-Message-ID: <1286465319-6285-1-git-send-email-rmanoharan@atheros.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from he.sipsolutions.net ([78.46.109.217]:45529 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750893Ab0JNHLi (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 14 Oct 2010 03:11:38 -0400
+Subject: Re: [PATCH 1/6] Add nl80211 calls for bitrate threshold
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Paul Stewart <pstew@google.com>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <20101013224851.658E120478@glenhelen.mtv.corp.google.com>
+References: <20101013224851.658E120478@glenhelen.mtv.corp.google.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Thu, 14 Oct 2010 09:12:19 +0200
+Message-ID: <1287040339.4641.4.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The following commit removed DISABLE_REGWRITE_BUFFER ops. The unnecessary
-REGWRITE_BUFFER_FLUSH was not removed properly which is causing failure on
-hw reset.
+On Wed, 2010-10-13 at 15:06 -0700, Paul Stewart wrote:
 
-Author: Felix Fietkau <nbd@openwrt.org>
-Date:   Tue Oct 5 12:03:42 2010 +0200
+> +static int nl80211_set_cqm_bitrate(struct genl_info *info,
+> +					   u32 trigger_rate)
+> +{
+> +	struct cfg80211_registered_device *rdev;
+> +	struct wireless_dev *wdev;
+> +	struct net_device *dev;
+> +	int err;
+> +
+> +	rtnl_lock();
+> +
+> +	err = get_rdev_dev_by_info_ifindex(info, &rdev, &dev);
+> +	if (err)
+> +		goto unlock_rdev;
 
-    ath9k_hw: clean up register write buffering
+Err, what kernel is this against? It's going to deadlock in
+wireless-next...
 
-Signed-off-by: Rajkumar Manoharan <rmanoharan@atheros.com>
----
- drivers/net/wireless/ath/ath9k/mac.c |    4 ----
- 1 files changed, 0 insertions(+), 4 deletions(-)
+> +	err = rdev->ops->set_cqm_bitrate_config(wdev->wiphy, dev, trigger_rate);
 
-diff --git a/drivers/net/wireless/ath/ath9k/mac.c b/drivers/net/wireless/ath/ath9k/mac.c
-index e578459..8c13479 100644
---- a/drivers/net/wireless/ath/ath9k/mac.c
-+++ b/drivers/net/wireless/ath/ath9k/mac.c
-@@ -491,8 +491,6 @@ bool ath9k_hw_resettxqueue(struct ath_hw *ah, u32 q)
- 	REG_WRITE(ah, AR_DMISC(q),
- 		  AR_D_MISC_CW_BKOFF_EN | AR_D_MISC_FRAG_WAIT_EN | 0x2);
- 
--	REGWRITE_BUFFER_FLUSH(ah);
--
- 	if (qi->tqi_cbrPeriod) {
- 		REG_WRITE(ah, AR_QCBRCFG(q),
- 			  SM(qi->tqi_cbrPeriod, AR_Q_CBRCFG_INTERVAL) |
-@@ -508,8 +506,6 @@ bool ath9k_hw_resettxqueue(struct ath_hw *ah, u32 q)
- 			  AR_Q_RDYTIMECFG_EN);
- 	}
- 
--	REGWRITE_BUFFER_FLUSH(ah);
--
- 	REG_WRITE(ah, AR_DCHNTIME(q),
- 		  SM(qi->tqi_burstTime, AR_D_CHNTIME_DUR) |
- 		  (qi->tqi_burstTime ? AR_D_CHNTIME_EN : 0));
--- 
-1.7.3.1
+This won't compile after just the first patch -- merge 1 and 2.
+
+johannes
 
