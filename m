@@ -1,44 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bar.sig21.net ([80.81.252.164]:59537 "EHLO bar.sig21.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754539Ab0JZUkr (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 26 Oct 2010 16:40:47 -0400
-Date: Tue, 26 Oct 2010 22:40:43 +0200
-From: Johannes Stezenbach <js@sig21.net>
-To: Ivo Van Doorn <ivdoorn@gmail.com>
-Cc: "Luis R. Rodriguez" <mcgrof@gmail.com>,
-	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: Compat-wireless release for 2010-10-25 is baked
-Message-ID: <20101026204043.GA2608@sig21.net>
-References: <20101025190358.AEC6840F97@repository3.orbit-lab.org>
- <20101026123552.GA4604@sig21.net>
- <AANLkTimzUKj=C9PxGs1PkQy_KWu0PGKd1zv_m-ZpWaEm@mail.gmail.com>
- <20101026184123.GA1616@sig21.net>
- <AANLkTimHpyJho6AheQc6zos7Pmr-ECjvaL83mYDC19Yd@mail.gmail.com>
- <AANLkTi=TPCXXki3jrrFA1HiauDp0rZVtMK9fK4z8B_kv@mail.gmail.com>
+Received: from mail-gx0-f174.google.com ([209.85.161.174]:60047 "EHLO
+	mail-gx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755862Ab0JNSTW convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 14 Oct 2010 14:19:22 -0400
+Received: by gxk6 with SMTP id 6so1639927gxk.19
+        for <linux-wireless@vger.kernel.org>; Thu, 14 Oct 2010 11:19:22 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <AANLkTi=TPCXXki3jrrFA1HiauDp0rZVtMK9fK4z8B_kv@mail.gmail.com>
+In-Reply-To: <20101014181446.GC2427@tuxdriver.com>
+References: <AANLkTinQMRGkOvi4e4JMsHGV_BF_4Rf5oHCtZgQjwQ1g@mail.gmail.com>
+ <20101014165111.GA22130@suse.de> <AANLkTin9PxzROyCQxiT5-ca4CUQK+kppS7gAibbbZ2=v@mail.gmail.com>
+ <20101014171739.GA28522@suse.de> <AANLkTimz7xKtz15tVyytxgJ3mQJUNk-=ja-4cJBWJUV8@mail.gmail.com>
+ <20101014181446.GC2427@tuxdriver.com>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Thu, 14 Oct 2010 11:18:59 -0700
+Message-ID: <AANLkTinf_uZMhYk-AVBRyprOp=AW0GEkqVEzfYsiFmXa@mail.gmail.com>
+Subject: Re: Licensing wlc_phy_radio.h and brcm80211 (was: [PATCH 3/3] b43:
+ N-PHY: add 2055 radio regs)
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
+	Greg KH <gregkh@suse.de>,
+	=?UTF-8?Q?G=C3=A1bor_Stefanik?= <netrolller.3d@gmail.com>,
+	b43-dev <b43-dev@lists.infradead.org>,
+	linux-wireless@vger.kernel.org,
+	Henry Ptasinski <henryp@broadcom.com>,
+	Brett Rudley <brudley@broadcom.com>,
+	Nohee Ko <noheek@broadcom.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+On Thu, Oct 14, 2010 at 11:14 AM, John W. Linville
+<linville@tuxdriver.com> wrote:
+> On Thu, Oct 14, 2010 at 07:38:49PM +0200, Rafał Miłecki wrote:
+>> 2010/10/14 Greg KH <gregkh@suse.de>:
+>
+>> > I don't think that bitfields are copyrightable :)
+>>
+>> What about rest of the code? brcm80211 seems to support even newer
+>> devices we don't even try to support in b43 yet.
+>>
+>> Can I treat code as pure-GPL and do not care about that
+>> maybe-not-GPL-compatible statement in header?
+>
+> IANAL, but I think you should include the copyright statment with a
+> comment like "some portions covered by the following" at the top of
+> the files including such code.  Beyond that, I think you are fine
+> including it under GPL terms (which are merely more restrictive,
+> neither less restrictive nor incompatible).
 
-On Tue, Oct 26, 2010 at 09:48:12PM +0200, Ivo Van Doorn wrote:
-> For rt2x00 development you can choose between rt2x00.git and
-> wireless-testing.git,
-> the trees are usually not that far apart, since smaller patches are pushed quite
-> quickly upstream. (Also rt2x00.git is rebased frequently, while
-> wireless-testing.git rarely
-> is rebased)
+Agreed, for an example of where this was done check the ar9170 driver,
+Johannes took ISC licensed code from Otus and GPL'd it. You really can
+only GPL the code if you are making copyrightable changes to it though
+so best is if you leave the header as-is with the existing license
+unless you are making tons of changes. For further details you can
+refer to these guidelines:
 
-Thanks for clarification.  I guess I'll start with wireless-testing,
-that sounds a bit more newbie-friendly.  I just want to avoid
-searching or reporting bugs which are already fixed, but your description
-sounds like changes are pushed from rt2x00.git to wireless-testing.git
-maybe weekly.  I was afraid patches would be pushed to wireless-testing.git
-only when it's time to get ready for the next merge window.
+http://www.softwarefreedom.org/resources/2007/gpl-non-gpl-collaboration.html
 
-
-Thanks,
-Johannes
+  Luis
