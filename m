@@ -1,65 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.19.149.2]:32366 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751431Ab0JRGHn (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 18 Oct 2010 02:07:43 -0400
-Received: from mail.atheros.com ([10.10.20.108])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Sun, 17 Oct 2010 23:07:33 -0700
-From: Mohammed Shafi Shajakhan <mshajakhan@atheros.com>
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>, <lrodriguez@atheros.com>,
-	<j@w1.fi>, <Senthilkumar.Balasubramanian@Atheros.com>,
-	<Vasanth.Thiagarajan@Atheros.com>, <nbd@openwrt.org>,
-	Mohammed Shafi Shajakhan <mshajakhan@atheros.com>
-Subject: [PATCH] ath9k: Remove the median function in rate control
-Date: Mon, 18 Oct 2010 11:37:17 +0530
-Message-ID: <1287382037-5104-1-git-send-email-mshajakhan@atheros.com>
+Received: from mail.candelatech.com ([208.74.158.172]:37940 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754411Ab0JNXvv (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 14 Oct 2010 19:51:51 -0400
+Message-ID: <4CB79795.3040301@candelatech.com>
+Date: Thu, 14 Oct 2010 16:51:49 -0700
+From: Ben Greear <greearb@candelatech.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+CC: Luis Rodriguez <Luis.Rodriguez@atheros.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: memory clobber in rx path, maybe related to ath9k.
+References: <4CB4AA89.1070009@candelatech.com> <20101013053141.GA15798@vasanth-laptop> <4CB5E0A8.5020502@candelatech.com> <AANLkTimp_GSwwX_RnQSyN9QNe55HQ+0HZJ1yd8Xp+dWG@mail.gmail.com> <AANLkTinyVqdgPqzpyihuaPtVVqDmzj-ZbXzQ-4qdA2yH@mail.gmail.com> <4CB77EA0.1000005@candelatech.com> <AANLkTimC0+6PiqWO+LmtBV7uKCVpZueAQs6m_6kAnbq9@mail.gmail.com> <AANLkTi=1oOCcdvBHo+8WAVHv-M8tE14ntmK4M_09SWh5@mail.gmail.com> <AANLkTi=pp2Ob06YCi6GsR9rtRaDWPP95n2M72qWLdbwM@mail.gmail.com> <20101014225150.GB15740@tux> <20101014231958.GA3242@tux> <4CB79299.7000005@candelatech.com> <AANLkTinQmE6wm1pXkRL6p_3rkMvNrppmirjj3-jagMp8@mail.gmail.com>
+In-Reply-To: <AANLkTinQmE6wm1pXkRL6p_3rkMvNrppmirjj3-jagMp8@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Mohammed Shafi Shajakhan <mshajakhan@atheros.com>
+On 10/14/2010 04:39 PM, Luis R. Rodriguez wrote:
+> On Thu, Oct 14, 2010 at 4:30 PM, Ben Greear<greearb@candelatech.com>  wrote:
+>> On 10/14/2010 04:19 PM, Luis R. Rodriguez wrote:
+>>>
+>>> Ok please try this patch, it cures it for me.
+>>
+>> Well, it got a lot further than normal, but it still
+>> hit the poison check after a few minutes.
+>>
+>> Current test case is my app loading 130 or so stations, each running
+>> wpa_supplicant.  All were created, and quite a few had associated
+>> when the poison check hit.
+>>
+>> So, it definitely looks like a step in the right direction, but
+>> not fully fixed yet.
+>>
+>> I'll do some more testing with this patch applied and using just my
+>> perl script to make sure the problem is reproducible outside of my
+>> application.
+>
+> Ok, whatever userspace does it should not corrupt to kernel, unless
+> its poking /dev/mem
 
-With the current rate control selection method the median function is
-nowhere used, so remove it.
+Sure, but it's nice to have a simpler test case.
 
-Signed-off-by: Mohammed Shafi Shajakhan <mshajakhan@atheros.com>
----
- drivers/net/wireless/ath/ath9k/rc.c |   19 -------------------
- 1 files changed, 0 insertions(+), 19 deletions(-)
+I ran my script with 32 stations for maybe 20 minutes...seemed to be doing
+OK as far as stability goes..then it crashed in the divide-by-zero ani thing.
 
-diff --git a/drivers/net/wireless/ath/ath9k/rc.c b/drivers/net/wireless/ath/ath9k/rc.c
-index abebf24..c0c6e6f 100644
---- a/drivers/net/wireless/ath/ath9k/rc.c
-+++ b/drivers/net/wireless/ath/ath9k/rc.c
-@@ -392,25 +392,6 @@ static const struct ath_rate_table *hw_rate_table[ATH9K_MODE_MAX] = {
- static int ath_rc_get_rateindex(const struct ath_rate_table *rate_table,
- 				struct ieee80211_tx_rate *rate);
- 
--static inline int8_t median(int8_t a, int8_t b, int8_t c)
--{
--	if (a >= b) {
--		if (b >= c)
--			return b;
--		else if (a > c)
--			return c;
--		else
--			return a;
--	} else {
--		if (a >= c)
--			return a;
--		else if (b >= c)
--			return c;
--		else
--			return b;
--	}
--}
--
- static void ath_rc_sort_validrates(const struct ath_rate_table *rate_table,
- 				   struct ath_rate_priv *ath_rc_priv)
- {
+I have to run home now, but I'll try my script with more interfaces
+and/or some traffic mix, etc, to see if I can get another reasonable way
+to reproduce this w/out my big binary application.
+
+I can also work on the divide-by-zero bug if no one beats me to it.
+
+Thanks,
+Ben
+
+>
+>    Luis
+
+
 -- 
-1.7.0.4
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
 
