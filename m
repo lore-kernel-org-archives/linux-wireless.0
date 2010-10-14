@@ -1,196 +1,157 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:9209 "EHLO mx1.redhat.com"
+Received: from mga14.intel.com ([143.182.124.37]:8111 "EHLO mga14.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756037Ab0JVPBl (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 22 Oct 2010 11:01:41 -0400
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless@vger.kernel.org,
-	Stanislaw Gruszka <sgruszka@redhat.com>
-Subject: [PATCH 3/7] iwlwifi: fix set_tx_power vs scan
-Date: Fri, 22 Oct 2010 17:04:26 +0200
-Message-Id: <1287759870-5758-3-git-send-email-sgruszka@redhat.com>
-In-Reply-To: <1287759870-5758-1-git-send-email-sgruszka@redhat.com>
-References: <1287759870-5758-1-git-send-email-sgruszka@redhat.com>
+	id S1753146Ab0JNSET (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 14 Oct 2010 14:04:19 -0400
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Subject: [PATCH 1/9] iwlagn: need longer tx queue stuck timer for coex devices
+Date: Thu, 14 Oct 2010 11:02:42 -0700
+Message-Id: <1287079370-20587-2-git-send-email-wey-yi.w.guy@intel.com>
+In-Reply-To: <1287079370-20587-1-git-send-email-wey-yi.w.guy@intel.com>
+References: <1287079370-20587-1-git-send-email-wey-yi.w.guy@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-According to comment in iwl_bg_scan_completed, setting tx power should
-be deferred during pending scan, but we are not doing this.
+For BT/WiFi combo devices, need longer tx stuck queue
+timer, so those devices won't reload firmware too often.
 
-This patch change code to really defer setting tx power after scan
-complete. Additionally refactor iwl_set_tx_power code and call
-lib->send_tx_power() directly from iwlagn_commit_rxon.
-
-Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
 ---
- drivers/net/wireless/iwlwifi/iwl-agn.c      |   10 ++---
- drivers/net/wireless/iwlwifi/iwl-core.c     |   54 +++++++++++++++------------
- drivers/net/wireless/iwlwifi/iwl-dev.h      |    1 +
- drivers/net/wireless/iwlwifi/iwl-scan.c     |   10 +++--
- drivers/net/wireless/iwlwifi/iwl3945-base.c |    1 +
- 5 files changed, 42 insertions(+), 34 deletions(-)
+ drivers/net/wireless/iwlwifi/iwl-6000.c |   38 ++++++++++++++++++++++++------
+ drivers/net/wireless/iwlwifi/iwl-core.c |   11 +++-----
+ 2 files changed, 34 insertions(+), 15 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
-index c2636a7..d3435c4 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
-@@ -245,13 +245,10 @@ int iwlagn_commit_rxon(struct iwl_priv *priv, struct iwl_rxon_context *ctx)
+diff --git a/drivers/net/wireless/iwlwifi/iwl-6000.c b/drivers/net/wireless/iwlwifi/iwl-6000.c
+index 4810258..3eaea6f 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-6000.c
++++ b/drivers/net/wireless/iwlwifi/iwl-6000.c
+@@ -509,6 +509,28 @@ static struct iwl_base_params iwl6050_base_params = {
+ 	.sensitivity_calib_by_driver = true,
+ 	.chain_noise_calib_by_driver = true,
+ };
++static struct iwl_base_params iwl6000_coex_base_params = {
++	.eeprom_size = OTP_LOW_IMAGE_SIZE,
++	.num_of_queues = IWLAGN_NUM_QUEUES,
++	.num_of_ampdu_queues = IWLAGN_NUM_AMPDU_QUEUES,
++	.pll_cfg_val = 0,
++	.set_l0s = true,
++	.use_bsm = false,
++	.max_ll_items = OTP_MAX_LL_ITEMS_6x00,
++	.shadow_ram_support = true,
++	.led_compensation = 51,
++	.chain_noise_num_beacons = IWL_CAL_NUM_BEACONS,
++	.supports_idle = true,
++	.adv_thermal_throttle = true,
++	.support_ct_kill_exit = true,
++	.plcp_delta_threshold = IWL_MAX_PLCP_ERR_THRESHOLD_DEF,
++	.chain_noise_scale = 1000,
++	.monitor_recover_period = IWL_LONG_MONITORING_PERIOD,
++	.max_event_log_size = 512,
++	.ucode_tracing = true,
++	.sensitivity_calib_by_driver = true,
++	.chain_noise_calib_by_driver = true,
++};
  
- 	/* If we issue a new RXON command which required a tune then we must
- 	 * send a new TXPOWER command or we won't be able to Tx any frames */
--	ret = iwl_set_tx_power(priv, priv->tx_power_user_lmt, true);
--	if (ret) {
-+	ret = priv->cfg->ops->lib->send_tx_power(priv);
-+	if (ret)
- 		IWL_ERR(priv, "Error sending TX power (%d)\n", ret);
--		return ret;
--	}
--
--	return 0;
-+	return ret;
- }
- 
- void iwl_update_chain_flags(struct iwl_priv *priv)
-@@ -4179,6 +4176,7 @@ static int iwl_init_drv(struct iwl_priv *priv)
- 	 * this value will get overwritten by channel max power avg
- 	 * from eeprom */
- 	priv->tx_power_user_lmt = IWLAGN_TX_POWER_TARGET_POWER_MIN;
-+	priv->tx_power_next = IWLAGN_TX_POWER_TARGET_POWER_MIN;
- 
- 	ret = iwl_init_channel_map(priv);
- 	if (ret) {
+ static struct iwl_ht_params iwl6000_ht_params = {
+ 	.ht_greenfield_support = true,
+@@ -587,7 +609,7 @@ struct iwl_cfg iwl6000g2b_2agn_cfg = {
+ 	.eeprom_calib_ver = EEPROM_6000G2_TX_POWER_VERSION,
+ 	.ops = &iwl6000g2b_ops,
+ 	.mod_params = &iwlagn_mod_params,
+-	.base_params = &iwl6000_base_params,
++	.base_params = &iwl6000_coex_base_params,
+ 	.bt_params = &iwl6000_bt_params,
+ 	.ht_params = &iwl6000_ht_params,
+ 	.need_dc_calib = true,
+@@ -608,7 +630,7 @@ struct iwl_cfg iwl6000g2b_2abg_cfg = {
+ 	.eeprom_calib_ver = EEPROM_6000G2_TX_POWER_VERSION,
+ 	.ops = &iwl6000g2b_ops,
+ 	.mod_params = &iwlagn_mod_params,
+-	.base_params = &iwl6000_base_params,
++	.base_params = &iwl6000_coex_base_params,
+ 	.bt_params = &iwl6000_bt_params,
+ 	.need_dc_calib = true,
+ 	.need_temp_offset_calib = true,
+@@ -628,7 +650,7 @@ struct iwl_cfg iwl6000g2b_2bgn_cfg = {
+ 	.eeprom_calib_ver = EEPROM_6000G2_TX_POWER_VERSION,
+ 	.ops = &iwl6000g2b_ops,
+ 	.mod_params = &iwlagn_mod_params,
+-	.base_params = &iwl6000_base_params,
++	.base_params = &iwl6000_coex_base_params,
+ 	.bt_params = &iwl6000_bt_params,
+ 	.ht_params = &iwl6000_ht_params,
+ 	.need_dc_calib = true,
+@@ -649,7 +671,7 @@ struct iwl_cfg iwl6000g2b_2bg_cfg = {
+ 	.eeprom_calib_ver = EEPROM_6000G2_TX_POWER_VERSION,
+ 	.ops = &iwl6000g2b_ops,
+ 	.mod_params = &iwlagn_mod_params,
+-	.base_params = &iwl6000_base_params,
++	.base_params = &iwl6000_coex_base_params,
+ 	.bt_params = &iwl6000_bt_params,
+ 	.need_dc_calib = true,
+ 	.need_temp_offset_calib = true,
+@@ -669,7 +691,7 @@ struct iwl_cfg iwl6000g2b_bgn_cfg = {
+ 	.eeprom_calib_ver = EEPROM_6000G2_TX_POWER_VERSION,
+ 	.ops = &iwl6000g2b_ops,
+ 	.mod_params = &iwlagn_mod_params,
+-	.base_params = &iwl6000_base_params,
++	.base_params = &iwl6000_coex_base_params,
+ 	.bt_params = &iwl6000_bt_params,
+ 	.ht_params = &iwl6000_ht_params,
+ 	.need_dc_calib = true,
+@@ -690,7 +712,7 @@ struct iwl_cfg iwl6000g2b_bg_cfg = {
+ 	.eeprom_calib_ver = EEPROM_6000G2_TX_POWER_VERSION,
+ 	.ops = &iwl6000g2b_ops,
+ 	.mod_params = &iwlagn_mod_params,
+-	.base_params = &iwl6000_base_params,
++	.base_params = &iwl6000_coex_base_params,
+ 	.bt_params = &iwl6000_bt_params,
+ 	.need_dc_calib = true,
+ 	.need_temp_offset_calib = true,
+@@ -829,7 +851,7 @@ struct iwl_cfg iwl130_bgn_cfg = {
+ 	.eeprom_calib_ver = EEPROM_6000G2_TX_POWER_VERSION,
+ 	.ops = &iwl6000g2b_ops,
+ 	.mod_params = &iwlagn_mod_params,
+-	.base_params = &iwl6000_base_params,
++	.base_params = &iwl6000_coex_base_params,
+ 	.bt_params = &iwl6000_bt_params,
+ 	.ht_params = &iwl6000_ht_params,
+ 	.need_dc_calib = true,
+@@ -849,7 +871,7 @@ struct iwl_cfg iwl130_bg_cfg = {
+ 	.eeprom_calib_ver = EEPROM_6000G2_TX_POWER_VERSION,
+ 	.ops = &iwl6000g2b_ops,
+ 	.mod_params = &iwlagn_mod_params,
+-	.base_params = &iwl6000_base_params,
++	.base_params = &iwl6000_coex_base_params,
+ 	.bt_params = &iwl6000_bt_params,
+ 	.need_dc_calib = true,
+ 	/* Due to bluetooth, we transmit 2.4 GHz probes only on antenna A */
 diff --git a/drivers/net/wireless/iwlwifi/iwl-core.c b/drivers/net/wireless/iwlwifi/iwl-core.c
-index 25fb391..8bbd152 100644
+index b3efbe0..89b1827 100644
 --- a/drivers/net/wireless/iwlwifi/iwl-core.c
 +++ b/drivers/net/wireless/iwlwifi/iwl-core.c
-@@ -1206,8 +1206,16 @@ EXPORT_SYMBOL(iwl_apm_init);
- 
- int iwl_set_tx_power(struct iwl_priv *priv, s8 tx_power, bool force)
- {
--	int ret = 0;
--	s8 prev_tx_power = priv->tx_power_user_lmt;
-+	int ret;
-+	s8 prev_tx_power;
-+
-+	lockdep_assert_held(&priv->mutex);
-+
-+	if (priv->tx_power_user_lmt == tx_power && !force)
-+		return 0;
-+
-+	if (!priv->cfg->ops->lib->send_tx_power)
-+		return -EOPNOTSUPP;
- 
- 	if (tx_power < IWLAGN_TX_POWER_TARGET_POWER_MIN) {
- 		IWL_WARN(priv,
-@@ -1224,30 +1232,26 @@ int iwl_set_tx_power(struct iwl_priv *priv, s8 tx_power, bool force)
- 		return -EINVAL;
- 	}
- 
--	if (priv->tx_power_user_lmt != tx_power)
--		force = true;
-+	if (!iwl_is_ready_rf(priv))
-+		return -EIO;
- 
--	/* if nic is not up don't send command */
--	if (iwl_is_ready_rf(priv)) {
--		priv->tx_power_user_lmt = tx_power;
--		if (force && priv->cfg->ops->lib->send_tx_power)
--			ret = priv->cfg->ops->lib->send_tx_power(priv);
--		else if (!priv->cfg->ops->lib->send_tx_power)
--			ret = -EOPNOTSUPP;
--		/*
--		 * if fail to set tx_power, restore the orig. tx power
--		 */
--		if (ret)
--			priv->tx_power_user_lmt = prev_tx_power;
-+	/* scan complete use tx_power_next, need to be updated */
-+	priv->tx_power_next = tx_power;
-+	if (test_bit(STATUS_SCANNING, &priv->status) && !force) {
-+		IWL_DEBUG_INFO(priv, "Deferring tx power set while scanning\n");
-+		return 0;
- 	}
- 
--	/*
--	 * Even this is an async host command, the command
--	 * will always report success from uCode
--	 * So once driver can placing the command into the queue
--	 * successfully, driver can use priv->tx_power_user_lmt
--	 * to reflect the current tx power
--	 */
-+	prev_tx_power = priv->tx_power_user_lmt;
-+	priv->tx_power_user_lmt = tx_power;
-+
-+	ret = priv->cfg->ops->lib->send_tx_power(priv);
-+
-+	/* if fail to set tx_power, restore the orig. tx power */
-+	if (ret) {
-+		priv->tx_power_user_lmt = prev_tx_power;
-+		priv->tx_power_next = prev_tx_power;
-+	}
- 	return ret;
- }
- EXPORT_SYMBOL(iwl_set_tx_power);
-@@ -2016,7 +2020,9 @@ int iwl_mac_config(struct ieee80211_hw *hw, u32 changed)
- 		IWL_DEBUG_MAC80211(priv, "TX Power old=%d new=%d\n",
- 			priv->tx_power_user_lmt, conf->power_level);
- 
--		iwl_set_tx_power(priv, conf->power_level, false);
-+		ret = iwl_set_tx_power(priv, conf->power_level, false);
-+		if (ret)
-+			IWL_ERR(priv, "Error sending TX power (%d)\n", ret);
- 	}
- 
- 	if (!iwl_is_ready(priv)) {
-diff --git a/drivers/net/wireless/iwlwifi/iwl-dev.h b/drivers/net/wireless/iwlwifi/iwl-dev.h
-index 70e07fa..cd6daed 100644
---- a/drivers/net/wireless/iwlwifi/iwl-dev.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-dev.h
-@@ -1517,6 +1517,7 @@ struct iwl_priv {
- 	s8 tx_power_user_lmt;
- 	s8 tx_power_device_lmt;
- 	s8 tx_power_lmt_in_half_dbm; /* max tx power in half-dBm format */
-+	s8 tx_power_next;
- 
- 
- #ifdef CONFIG_IWLWIFI_DEBUG
-diff --git a/drivers/net/wireless/iwlwifi/iwl-scan.c b/drivers/net/wireless/iwlwifi/iwl-scan.c
-index 67da312..d63e30e 100644
---- a/drivers/net/wireless/iwlwifi/iwl-scan.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-scan.c
-@@ -603,13 +603,15 @@ out_settings:
- 	if (!iwl_is_ready_rf(priv))
- 		goto out;
- 
--	/* Since setting the TXPOWER may have been deferred while
--	 * performing the scan, fire one off */
--	iwl_set_tx_power(priv, priv->tx_power_user_lmt, true);
-+	/*
-+	 * We do not commit power settings while scan is pending,
-+	 * do it now if the settings changed.
-+	 */
-+	iwl_set_tx_power(priv, priv->tx_power_next, false);
- 
- 	priv->cfg->ops->utils->post_scan(priv);
- 
-- out:
-+out:
- 	mutex_unlock(&priv->mutex);
- }
- 
-diff --git a/drivers/net/wireless/iwlwifi/iwl3945-base.c b/drivers/net/wireless/iwlwifi/iwl3945-base.c
-index 8f8c4b7..a754291 100644
---- a/drivers/net/wireless/iwlwifi/iwl3945-base.c
-+++ b/drivers/net/wireless/iwlwifi/iwl3945-base.c
-@@ -3866,6 +3866,7 @@ static int iwl3945_init_drv(struct iwl_priv *priv)
- 	priv->missed_beacon_threshold = IWL_MISSED_BEACON_THRESHOLD_DEF;
- 
- 	priv->tx_power_user_lmt = IWL_DEFAULT_TX_POWER;
-+	priv->tx_power_next = IWL_DEFAULT_TX_POWER;
- 
- 	if (eeprom->version < EEPROM_3945_EEPROM_VERSION) {
- 		IWL_WARN(priv, "Unsupported EEPROM version: 0x%04X\n",
+@@ -2483,13 +2483,10 @@ static int iwl_check_stuck_queue(struct iwl_priv *priv, int cnt)
+ 					"queue %d, not read %d time\n",
+ 					q->id,
+ 					q->repeat_same_read_ptr);
+-			if (priv->cfg->bt_params &&
+-			    !priv->cfg->bt_params->advanced_bt_coexist) {
+-				mod_timer(&priv->monitor_recover,
+-					jiffies + msecs_to_jiffies(
+-					IWL_ONE_HUNDRED_MSECS));
+-				return 1;
+-			}
++			mod_timer(&priv->monitor_recover,
++				jiffies + msecs_to_jiffies(
++				IWL_ONE_HUNDRED_MSECS));
++			return 1;
+ 		}
+ 	} else {
+ 		q->last_read_ptr = q->read_ptr;
 -- 
-1.7.1
+1.7.0.4
 
