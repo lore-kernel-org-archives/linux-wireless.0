@@ -1,57 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iw0-f174.google.com ([209.85.214.174]:50368 "EHLO
-	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932795Ab0JFS2T convert rfc822-to-8bit (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:46324 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932109Ab0JNVo0 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 6 Oct 2010 14:28:19 -0400
-MIME-Version: 1.0
-In-Reply-To: <1286387660.3655.382.camel@jlt3.sipsolutions.net>
-References: <20100924230730.GB6566@tux> <1286266981.17473.33.camel@aeonflux>
- <20101005192814.GB11831@tux> <1286308731.2588.13.camel@aeonflux>
- <AANLkTimz7U52_qHaTutQDOFQde+GrWJRA0WpqY__FPgi@mail.gmail.com>
- <1286349552.6145.11.camel@aeonflux> <AANLkTimDvgFtoGLEjgWyYRrhQy6Num-rn_2WYO4Lf84b@mail.gmail.com>
- <1286380566.6145.42.camel@aeonflux> <20101006163816.GE7070@tux>
- <AANLkTik9w4_PdcEsbRHakLcxcD334_1Q8hGArxTXPCGF@mail.gmail.com>
- <20101006173949.GG7070@tux> <1286387660.3655.382.camel@jlt3.sipsolutions.net>
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Date: Wed, 6 Oct 2010 11:22:13 -0700
-Message-ID: <AANLkTikYRSQw-+Tcj4VS1qxi=OaeF9C5hjAMWVu+0M=v@mail.gmail.com>
-Subject: Re: RFC: btusb firmware load help
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Marcel Holtmann <holtmann@linux.intel.com>,
-	Luis Rodriguez <Luis.Rodriguez@atheros.com>,
-	linux-bluetooth <linux-bluetooth@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Deepak Dhamdhere <Deepak.Dhamdhere@atheros.com>,
-	Sree Durbha <Sree.Durbha@atheros.com>
-Content-Type: text/plain; charset=UTF-8
+	Thu, 14 Oct 2010 17:44:26 -0400
+Subject: Re: memory clobber in rx path, maybe related to ath9k.
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Ben Greear <greearb@candelatech.com>
+Cc: "Luis R. Rodriguez" <mcgrof@gmail.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <4CB5F0D4.4020907@candelatech.com>
+References: <4CAB59B2.5050106@candelatech.com>
+	 <4CAB6B08.4050801@candelatech.com> <4CAE0474.4090605@candelatech.com>
+	 <1286475250.20974.22.camel@jlt3.sipsolutions.net>
+	 <AANLkTinbRSnPVgbBxvVpMdnP+K--bye=Q-miHf4X44kz@mail.gmail.com>
+	 <4CAE13F6.2010003@candelatech.com>
+	 <AANLkTimEZ5GY7WFz-F4YyC+6MEwNn2Dki4tonp645XrS@mail.gmail.com>
+	 <4CAE1DFB.303@candelatech.com>
+	 <1286479642.20974.32.camel@jlt3.sipsolutions.net>
+	 <AANLkTimxp703Gy_Atg8=wpFszRDR=OJCXwOUKRh-a-d7@mail.gmail.com>
+	 <AANLkTi=t-P_5c14brJohM8UgxeOknv+3syO=7W=ix6qf@mail.gmail.com>
+	 <AANLkTinC46a+nE-XOQuBCmRJwjzgh24uC7ZJ7HtbVHnT@mail.gmail.com>
+	 <4CB378CD.1080800@candelatech.com>
+	 <AANLkTim42zmDwf744BCrPwa1kT5ph57bNMyvSyOpesVv@mail.gmail.com>
+	 <4CB3D598.7050904@candelatech.com>
+	 <AANLkTimPEg3ZU8CQUXfdpGdfbmhdE9O=GNY=g9gysTo4@mail.gmail.com>
+	 <4CB4AA89.1070009@candelatech.com>
+	 <AANLkTinpWvMtexFTYVm5rEZY=gY7qY8WxHFtVGB0o6Se@mail.gmail.com>
+	 <4CB5E885.7090305@candelatech.com>
+	 <AANLkTi=c=w8MvXZ=vqxkRgbXasacQTYXUX8o_zXoZgxC@mail.gmail.com>
+	 <4CB5F0D4.4020907@candelatech.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Thu, 14 Oct 2010 23:45:08 +0200
+Message-ID: <1287092708.26544.0.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Oct 6, 2010 at 10:54 AM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
-> On Wed, 2010-10-06 at 10:39 -0700, Luis R. Rodriguez wrote:
->
->
->> > With sflash based AR3011 hardware, when we connect the device to USB
->> > port it gets detected as a Bluetooth device because of firmware in
->> > Flash (VID=0x0CF3, PID=0x3002). This triggers the Bluetooth sub
->> > system driver (btusb.ko) directly in the host instead of ath3k
->> > DFU driver. Therefore, there is no firmware downloaded in to the
->> > RAM to bring up Bluetooth at this point. This is the problem
->> > we're trying to "fix".
->
-> So the easiest fix for this would be to
->  a) ignore 0x0cf3,0x3002 in btusb
->  b) add it to ath3k firmware loading
->  c) change the ath3k firmware to load with 0x0cf3,0x3003 (or whatever
->    else you want, as long as it's not 0x3000 and not 0x3002)
->
-> Then the ignore in btusb won't affect ath3k after that new firmware was
-> loaded.
+On Wed, 2010-10-13 at 10:48 -0700, Ben Greear wrote:
 
-Good idea, I forgot about possible firmware changes :) Lets see if our
-team can do that. Thanks for all the feedback.
+> Here's the slub patch if you are interested in using it yourself:
+> https://patchwork.kernel.org/patch/236921/
 
-  Luis
+That really really screams include/linux/stacktrace.h
+
+johannes
+
