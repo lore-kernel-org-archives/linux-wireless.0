@@ -1,141 +1,235 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:49547 "EHLO
+Received: from mail.candelatech.com ([208.74.158.172]:40248 "EHLO
 	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753728Ab0JEDjq (ORCPT
+	with ESMTP id S1754808Ab0JNTNn (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 4 Oct 2010 23:39:46 -0400
-Message-ID: <4CAA9DFB.4090009@candelatech.com>
-Date: Mon, 04 Oct 2010 20:39:39 -0700
-From: Ben Greear <greearb@candelatech.com>
-MIME-Version: 1.0
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-CC: Johannes Berg <johannes@sipsolutions.net>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: Crash in agg-tx.c, with ath9k and lots of STA VIFs.
-References: <4CAA2247.50402@candelatech.com> <1286218879.3620.55.camel@jlt3.sipsolutions.net> <4CAA252F.9090102@candelatech.com> <1286219405.3620.56.camel@jlt3.sipsolutions.net> <AANLkTi=Ya6RuCdVYLYi3Mk5EKSP6czOfTh7TRKqB0GPU@mail.gmail.com> <AANLkTinGaCAEqGRt_X6hsO8sQx4kKEdNqU8pfi00_1-r@mail.gmail.com> <4CAA494B.5000500@candelatech.com> <AANLkTi=3EXnANmEP28Z2ASmqxopbe-EDypska72bL=to@mail.gmail.com>
-In-Reply-To: <AANLkTi=3EXnANmEP28Z2ASmqxopbe-EDypska72bL=to@mail.gmail.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+	Thu, 14 Oct 2010 15:13:43 -0400
+From: greearb@candelatech.com
+To: linux-wireless@vger.kernel.org, ath9k-devel@venema.h4ckr.net
+Cc: Ben Greear <greearb@candelatech.com>
+Subject: [PATCH] ath9k:  Remove bf_dmacontext, null out stale pointers.
+Date: Thu, 14 Oct 2010 12:13:21 -0700
+Message-Id: <1287083601-1293-1-git-send-email-greearb@candelatech.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 10/04/2010 04:48 PM, Luis R. Rodriguez wrote:
-> On Mon, Oct 4, 2010 at 2:38 PM, Ben Greear<greearb@candelatech.com>  wrote:
->> On 10/04/2010 02:13 PM, Luis R. Rodriguez wrote:
->>>
->>> On Mon, Oct 4, 2010 at 2:12 PM, Luis R. Rodriguez<mcgrof@gmail.com>
->>>   wrote:
->>>>
->>>> On Mon, Oct 4, 2010 at 12:10 PM, Johannes Berg
->>>> <johannes@sipsolutions.net>    wrote:
->>>>>
->>>>> On Mon, 2010-10-04 at 12:04 -0700, Ben Greear wrote:
->>>>>>
->>>>>> On 10/04/2010 12:01 PM, Johannes Berg wrote:
->>>>>>>
->>>>>>> On Mon, 2010-10-04 at 11:51 -0700, Ben Greear wrote:
->>>>>>>>
->>>>>>>> Just in case this seems familiar to anyone...
->>>>>>>>
->>>>>>>> IP: [<f8ba74da>] ieee80211_stop_tx_ba_session+0x14/0x84 [mac80211]
->>>>>>>
->>>>>>> Do you have debug info that'd point to a code line?
->>>>>>>
->>>>>>> I have never heard of this.
->>>>>>
->>>>>> I don't actually know how to get a line of code out of those
->>>>>> hex offsets...
->>>>>>
->>>>>> Someone told me many years ago..but I lost that information :P
->>>>>
->>>>> Err, I never remember either, I think Luis knows the gdb thing ... I
->>>>> usually use "objdump -dS"
->>>>
->>>> gdb net/mac80211/mac80211.ko
->>>> l *(ieee80211_stop_tx_ba_session+0x14/0x84)
->>>
->>> Oops I meant:
->>>
->>> gdb net/mac80211/mac80211.ko
->>> l *(ieee80211_stop_tx_ba_session+0x14)
->>
->> Thank!
->>
->> I had to re-compile with debugging symbols, and added kgdb (hopefully
->> that won't mess anything up).
->
-> You may want to look at using netconsole instead if you're goal is
-> just to get some oops off the box.
->
-> CONFIG_NETCONSOLE=m
->
-> mcgrof@tux ~/bin $ cat netconsole
-> #!/bin/bash
-> sudo dmesg -n 8
-> sudo ip addr add 192.168.4.2/24 dev eth4
-> sudo modprobe netconsole
-> netconsole="@192.168.4.2/eth4,@192.168.4.3/00:1e:37:82:48:5a"
->
-> I'd run that script on the dev box, and on 192.168.4.3 just do `nc -l
-> -p 6666 | tee log`. To test just modprobe and rmmod ath9k.
->
->> Reading symbols from
->> /home/greearb/kernel/2.6/wireless-testing-dbg.p4s/net/mac80211/mac80211.ko...done.
->> (gdb) l *(ieee80211_stop_tx_ba_session+0x14)
->> 0x54fe is in ieee80211_stop_tx_ba_session
->> (/home/greearb/git/linux.wireless-testing/net/mac80211/agg-tx.c:595).
->> 590
->> 591     int ieee80211_stop_tx_ba_session(struct ieee80211_sta *pubsta, u16
->> tid)
->> 592     {
->> 593             struct sta_info *sta = container_of(pubsta, struct sta_info,
->> sta);
->> 594             struct ieee80211_sub_if_data *sdata = sta->sdata;
->> 595             struct ieee80211_local *local = sdata->local;
->
-> What was the oops complaint? NULL pointer dereference? If sdata got
-> screwed up that would be pretty serious, the only way that could
-> happen is if somehow it managed to get removed prior to the
-> ieee80211_stop_tx_ba_session() or if there is some sort of memory
-> corruption., What steps do you follow to reproduce?
+From: Ben Greear <greearb@candelatech.com>
 
-It's dying trying to de-reference something, probably sdata, but for some reason I didn't
-think it was NULL.  (I was having trouble getting clean stack dumps
-on the serial console on top of my other issues today.)  In A probably-similar
-crash it was trying to dereference 0x00100104 (See my 3:42 email)
-in this series.
+The bf_dmacontext seems to be totally useless and duplicated
+by bf_buf_addr.  Remove it entirely, use bf_buf_addr in its
+place.
 
-I added printks to the stop_tx_ba_session method to try to figure out what was happening, but
-of course then I could no longer reproduce it, or at least it crashed in the cfg80211_unlink_bss
-first.
+Also null out bf_buf_addr and bf_mpdu pointers when resources
+they are pointing to are no longer owned by the buffer object.
 
-To reproduce, I have a user-space app that creates 130 or so STA devices, starts wpa_supplicant
-for each one, and then watches events with 'iw event', and reads /proc/net/wireless quite often
-(and grabs some other stats out of debugfs, etc).  It runs 'iwconfig' and parses output for
-other stats.  In short, it does a bunch of things that would be hard to reproduce with any
-simple script.  The user-space app is proprietary, though I would of course give you a free
-binary and help you set it up should you wish to use it.
+Signed-off-by: Ben Greear <greearb@candelatech.com>
+---
+:100644 100644 4e81fe3... 0c917e5... M	drivers/net/wireless/ath/ath9k/ath9k.h
+:100644 100644 8e43443... 97d471f... M	drivers/net/wireless/ath/ath9k/beacon.c
+:100644 100644 714d9a8... fd778d2... M	drivers/net/wireless/ath/ath9k/recv.c
+:100644 100644 6d41d47... a5e5f27... M	drivers/net/wireless/ath/ath9k/xmit.c
+ drivers/net/wireless/ath/ath9k/ath9k.h  |    3 +--
+ drivers/net/wireless/ath/ath9k/beacon.c |   21 ++++++++++++---------
+ drivers/net/wireless/ath/ath9k/recv.c   |    7 +++++--
+ drivers/net/wireless/ath/ath9k/xmit.c   |   17 ++++++++++-------
+ 4 files changed, 28 insertions(+), 20 deletions(-)
 
-When I disabled power-save, it ran a lot longer, but it would still hard-hang or occasionally
-crash with stack-trace pointing to the 0x00100104 dereference.
-
-Perhaps related, with power-save disabled, after a while (maybe 10-20 minutes), the system
-would often get to a state where the ath9k no longer showed any additional transmitted packets
-in it's debugfs traffic.  The netdevices (sta1, etc), would show tx pkt counters increasing,
-and the qdiscs showed no backlog.  It was getting rx interrupts, but no tx, according to
-debugfs output.  I didn't get any chance to debug that any further.
-
-We have much better luck with ath5k in general, so I think most of these issues are
-related to ath9k and/or /n in general.  But, even so, we do see deadlocks (on rtnl_lock, it seems)
-with ath5k, and I still have some lockdep warnings to deal with in the mac80211 code,
-so it's possible the problem is more general and ath9k just triggers it much easier.
-
-Thanks,
-Ben
-
->
->    Luis
-
-
+diff --git a/drivers/net/wireless/ath/ath9k/ath9k.h b/drivers/net/wireless/ath/ath9k/ath9k.h
+index 4e81fe3..0c917e5 100644
+--- a/drivers/net/wireless/ath/ath9k/ath9k.h
++++ b/drivers/net/wireless/ath/ath9k/ath9k.h
+@@ -239,12 +239,11 @@ struct ath_buf {
+ 	struct sk_buff *bf_mpdu;	/* enclosing frame structure */
+ 	void *bf_desc;			/* virtual addr of desc */
+ 	dma_addr_t bf_daddr;		/* physical addr of desc */
+-	dma_addr_t bf_buf_addr;		/* physical addr of data buffer */
++	dma_addr_t bf_buf_addr;	/* physical addr of data buffer, for DMA */
+ 	bool bf_stale;
+ 	bool bf_tx_aborted;
+ 	u16 bf_flags;
+ 	struct ath_buf_state bf_state;
+-	dma_addr_t bf_dmacontext;
+ 	struct ath_wiphy *aphy;
+ };
+ 
+diff --git a/drivers/net/wireless/ath/ath9k/beacon.c b/drivers/net/wireless/ath/ath9k/beacon.c
+index 8e43443..97d471f 100644
+--- a/drivers/net/wireless/ath/ath9k/beacon.c
++++ b/drivers/net/wireless/ath/ath9k/beacon.c
+@@ -136,9 +136,10 @@ static struct ath_buf *ath_beacon_generate(struct ieee80211_hw *hw,
+ 	bf = avp->av_bcbuf;
+ 	skb = bf->bf_mpdu;
+ 	if (skb) {
+-		dma_unmap_single(sc->dev, bf->bf_dmacontext,
++		dma_unmap_single(sc->dev, bf->bf_buf_addr,
+ 				 skb->len, DMA_TO_DEVICE);
+ 		dev_kfree_skb_any(skb);
++		bf->bf_buf_addr = 0;
+ 	}
+ 
+ 	/* Get a new beacon from mac80211 */
+@@ -162,12 +163,12 @@ static struct ath_buf *ath_beacon_generate(struct ieee80211_hw *hw,
+ 		hdr->seq_ctrl |= cpu_to_le16(sc->tx.seq_no);
+ 	}
+ 
+-	bf->bf_buf_addr = bf->bf_dmacontext =
+-		dma_map_single(sc->dev, skb->data,
+-			       skb->len, DMA_TO_DEVICE);
++	bf->bf_buf_addr = dma_map_single(sc->dev, skb->data,
++					 skb->len, DMA_TO_DEVICE);
+ 	if (unlikely(dma_mapping_error(sc->dev, bf->bf_buf_addr))) {
+ 		dev_kfree_skb_any(skb);
+ 		bf->bf_mpdu = NULL;
++		bf->bf_buf_addr = 0;
+ 		ath_print(common, ATH_DBG_FATAL,
+ 			  "dma_mapping_error on beaconing\n");
+ 		return NULL;
+@@ -252,10 +253,11 @@ int ath_beacon_alloc(struct ath_wiphy *aphy, struct ieee80211_vif *vif)
+ 	bf = avp->av_bcbuf;
+ 	if (bf->bf_mpdu != NULL) {
+ 		skb = bf->bf_mpdu;
+-		dma_unmap_single(sc->dev, bf->bf_dmacontext,
++		dma_unmap_single(sc->dev, bf->bf_buf_addr,
+ 				 skb->len, DMA_TO_DEVICE);
+ 		dev_kfree_skb_any(skb);
+ 		bf->bf_mpdu = NULL;
++		bf->bf_buf_addr = 0;
+ 	}
+ 
+ 	/* NB: the beacon data buffer must be 32-bit aligned. */
+@@ -296,12 +298,12 @@ int ath_beacon_alloc(struct ath_wiphy *aphy, struct ieee80211_vif *vif)
+ 		avp->tsf_adjust = cpu_to_le64(0);
+ 
+ 	bf->bf_mpdu = skb;
+-	bf->bf_buf_addr = bf->bf_dmacontext =
+-		dma_map_single(sc->dev, skb->data,
+-			       skb->len, DMA_TO_DEVICE);
++	bf->bf_buf_addr = dma_map_single(sc->dev, skb->data,
++					 skb->len, DMA_TO_DEVICE);
+ 	if (unlikely(dma_mapping_error(sc->dev, bf->bf_buf_addr))) {
+ 		dev_kfree_skb_any(skb);
+ 		bf->bf_mpdu = NULL;
++		bf->bf_buf_addr = 0;
+ 		ath_print(common, ATH_DBG_FATAL,
+ 			  "dma_mapping_error on beacon alloc\n");
+ 		return -ENOMEM;
+@@ -324,10 +326,11 @@ void ath_beacon_return(struct ath_softc *sc, struct ath_vif *avp)
+ 		bf = avp->av_bcbuf;
+ 		if (bf->bf_mpdu != NULL) {
+ 			struct sk_buff *skb = bf->bf_mpdu;
+-			dma_unmap_single(sc->dev, bf->bf_dmacontext,
++			dma_unmap_single(sc->dev, bf->bf_buf_addr,
+ 					 skb->len, DMA_TO_DEVICE);
+ 			dev_kfree_skb_any(skb);
+ 			bf->bf_mpdu = NULL;
++			bf->bf_buf_addr = 0;
+ 		}
+ 		list_add_tail(&bf->list, &sc->beacon.bbuf);
+ 
+diff --git a/drivers/net/wireless/ath/ath9k/recv.c b/drivers/net/wireless/ath/ath9k/recv.c
+index 714d9a8..fd778d2 100644
+--- a/drivers/net/wireless/ath/ath9k/recv.c
++++ b/drivers/net/wireless/ath/ath9k/recv.c
+@@ -270,6 +270,7 @@ static int ath_rx_edma_init(struct ath_softc *sc, int nbufs)
+ 						bf->bf_buf_addr))) {
+ 				dev_kfree_skb_any(skb);
+ 				bf->bf_mpdu = NULL;
++				bf->bf_buf_addr = 0;
+ 				ath_print(common, ATH_DBG_FATAL,
+ 					"dma_mapping_error() on RX init\n");
+ 				error = -ENOMEM;
+@@ -360,12 +361,12 @@ int ath_rx_init(struct ath_softc *sc, int nbufs)
+ 							bf->bf_buf_addr))) {
+ 				dev_kfree_skb_any(skb);
+ 				bf->bf_mpdu = NULL;
++				bf->bf_buf_addr = 0;
+ 				ath_print(common, ATH_DBG_FATAL,
+ 					  "dma_mapping_error() on RX init\n");
+ 				error = -ENOMEM;
+ 				goto err;
+ 			}
+-			bf->bf_dmacontext = bf->bf_buf_addr;
+ 		}
+ 		sc->rx.rxlink = NULL;
+ 	}
+@@ -395,6 +396,8 @@ void ath_rx_cleanup(struct ath_softc *sc)
+ 						common->rx_bufsize,
+ 						DMA_FROM_DEVICE);
+ 				dev_kfree_skb(skb);
++				bf->bf_buf_addr = 0;
++				bf->bf_mpdu = NULL;
+ 			}
+ 		}
+ 
+@@ -1739,12 +1742,12 @@ int ath_rx_tasklet(struct ath_softc *sc, int flush, bool hp)
+ 			  bf->bf_buf_addr))) {
+ 			dev_kfree_skb_any(requeue_skb);
+ 			bf->bf_mpdu = NULL;
++			bf->bf_buf_addr = 0;
+ 			ath_print(common, ATH_DBG_FATAL,
+ 				  "dma_mapping_error() on RX\n");
+ 			ath_rx_send_to_mac80211(hw, sc, skb, rxs);
+ 			break;
+ 		}
+-		bf->bf_dmacontext = bf->bf_buf_addr;
+ 
+ 		/*
+ 		 * change the default rx antenna if rx diversity chooses the
+diff --git a/drivers/net/wireless/ath/ath9k/xmit.c b/drivers/net/wireless/ath/ath9k/xmit.c
+index 6d41d47..a5e5f27 100644
+--- a/drivers/net/wireless/ath/ath9k/xmit.c
++++ b/drivers/net/wireless/ath/ath9k/xmit.c
+@@ -294,7 +294,6 @@ static struct ath_buf* ath_clone_txbuf(struct ath_softc *sc, struct ath_buf *bf)
+ 	tbf->bf_buf_addr = bf->bf_buf_addr;
+ 	memcpy(tbf->bf_desc, bf->bf_desc, sc->sc_ah->caps.tx_desc_len);
+ 	tbf->bf_state = bf->bf_state;
+-	tbf->bf_dmacontext = bf->bf_dmacontext;
+ 
+ 	return tbf;
+ }
+@@ -1642,17 +1641,16 @@ static int ath_tx_setup_buffer(struct ieee80211_hw *hw, struct ath_buf *bf,
+ 
+ 	bf->bf_mpdu = skb;
+ 
+-	bf->bf_dmacontext = dma_map_single(sc->dev, skb->data,
+-					   skb->len, DMA_TO_DEVICE);
+-	if (unlikely(dma_mapping_error(sc->dev, bf->bf_dmacontext))) {
++	bf->bf_buf_addr = dma_map_single(sc->dev, skb->data,
++					 skb->len, DMA_TO_DEVICE);
++	if (unlikely(dma_mapping_error(sc->dev, bf->bf_buf_addr))) {
+ 		bf->bf_mpdu = NULL;
++		bf->bf_buf_addr = 0;
+ 		ath_print(ath9k_hw_common(sc->sc_ah), ATH_DBG_FATAL,
+ 			  "dma_mapping_error() on TX\n");
+ 		return -ENOMEM;
+ 	}
+ 
+-	bf->bf_buf_addr = bf->bf_dmacontext;
+-
+ 	bf->bf_tx_aborted = false;
+ 
+ 	return 0;
+@@ -1916,7 +1914,8 @@ static void ath_tx_complete_buf(struct ath_softc *sc, struct ath_buf *bf,
+ 			tx_flags |= ATH_TX_XRETRY;
+ 	}
+ 
+-	dma_unmap_single(sc->dev, bf->bf_dmacontext, skb->len, DMA_TO_DEVICE);
++	dma_unmap_single(sc->dev, bf->bf_buf_addr, skb->len, DMA_TO_DEVICE);
++	bf->bf_buf_addr = 0;
+ 
+ 	if (bf->bf_state.bfs_paprd) {
+ 		if (time_after(jiffies,
+@@ -1929,6 +1928,10 @@ static void ath_tx_complete_buf(struct ath_softc *sc, struct ath_buf *bf,
+ 		ath_debug_stat_tx(sc, txq, bf, ts);
+ 		ath_tx_complete(sc, skb, bf->aphy, tx_flags);
+ 	}
++	/* At this point, skb (bf->bf_mpdu) is consumed...make sure we don't
++	 * accidentally reference it later.
++	 */
++	bf->bf_mpdu = NULL;
+ 
+ 	/*
+ 	 * Return the list of ath_buf of this mpdu to free queue
 -- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+1.7.2.2
+
