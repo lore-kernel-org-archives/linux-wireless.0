@@ -1,146 +1,96 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iw0-f174.google.com ([209.85.214.174]:60047 "EHLO
+Received: from mail-iw0-f174.google.com ([209.85.214.174]:58250 "EHLO
 	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751440Ab0JJUid convert rfc822-to-8bit (ORCPT
+	with ESMTP id S1753060Ab0JNW3X convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 10 Oct 2010 16:38:33 -0400
-Received: by iwn6 with SMTP id 6so2544833iwn.19
-        for <linux-wireless@vger.kernel.org>; Sun, 10 Oct 2010 13:38:33 -0700 (PDT)
+	Thu, 14 Oct 2010 18:29:23 -0400
+Received: by iwn35 with SMTP id 35so110555iwn.19
+        for <linux-wireless@vger.kernel.org>; Thu, 14 Oct 2010 15:29:23 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <alpine.DEB.2.00.1010102214330.31264@bigbill>
-References: <alpine.DEB.2.00.1010102214330.31264@bigbill>
-Date: Sun, 10 Oct 2010 22:38:32 +0200
-Message-ID: <AANLkTikDKeeMH=YftjF8o2Ew3cvSQeRBhq_UsqCTYYqR@mail.gmail.com>
-Subject: Re: ath9k: A-MPDU rate control info fix
-From: =?ISO-8859-1?Q?Bj=F6rn_Smedman?= <bjorn.smedman@venatech.se>
-To: linville@tuxdriver.com, johannes@sipsolutions.net,
-	lrodriguez@atheros.com
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+In-Reply-To: <AANLkTimC0+6PiqWO+LmtBV7uKCVpZueAQs6m_6kAnbq9@mail.gmail.com>
+References: <4CAE1DFB.303@candelatech.com> <1286479642.20974.32.camel@jlt3.sipsolutions.net>
+ <AANLkTimxp703Gy_Atg8=wpFszRDR=OJCXwOUKRh-a-d7@mail.gmail.com>
+ <AANLkTi=t-P_5c14brJohM8UgxeOknv+3syO=7W=ix6qf@mail.gmail.com>
+ <AANLkTinC46a+nE-XOQuBCmRJwjzgh24uC7ZJ7HtbVHnT@mail.gmail.com>
+ <4CB378CD.1080800@candelatech.com> <AANLkTim42zmDwf744BCrPwa1kT5ph57bNMyvSyOpesVv@mail.gmail.com>
+ <4CB3D598.7050904@candelatech.com> <AANLkTimPEg3ZU8CQUXfdpGdfbmhdE9O=GNY=g9gysTo4@mail.gmail.com>
+ <4CB4AA89.1070009@candelatech.com> <20101013053141.GA15798@vasanth-laptop>
+ <4CB5E0A8.5020502@candelatech.com> <AANLkTimp_GSwwX_RnQSyN9QNe55HQ+0HZJ1yd8Xp+dWG@mail.gmail.com>
+ <AANLkTinyVqdgPqzpyihuaPtVVqDmzj-ZbXzQ-4qdA2yH@mail.gmail.com>
+ <4CB77EA0.1000005@candelatech.com> <AANLkTimC0+6PiqWO+LmtBV7uKCVpZueAQs6m_6kAnbq9@mail.gmail.com>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Thu, 14 Oct 2010 15:29:02 -0700
+Message-ID: <AANLkTi=1oOCcdvBHo+8WAVHv-M8tE14ntmK4M_09SWh5@mail.gmail.com>
+Subject: Re: memory clobber in rx path, maybe related to ath9k.
+To: Ben Greear <greearb@candelatech.com>
+Cc: =?UTF-8?Q?Bj=C3=B6rn_Smedman?= <bjorn.smedman@venatech.se>,
+	Vasanthakumar Thiagarajan <vasanth@atheros.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Oops, sorry about that subject. Let me try that again. ;)
+On Thu, Oct 14, 2010 at 3:16 PM, Luis R. Rodriguez <mcgrof@gmail.com> wrote:
+> 2010/10/14 Ben Greear <greearb@candelatech.com>:
+>> On 10/14/2010 02:52 PM, BjÃ¶rn Smedman wrote:
+>>>
+>>> 2010/10/13 BjÃ¶rn Smedman<bjorn.smedman@venatech.se>:
+>>>>
+>>>> Hi Ben,
+>>>>
+>>>> First of all keep up the good work. :)
+>>>>
+>>>> On Wed, Oct 13, 2010 at 6:39 PM, Ben Greear<greearb@candelatech.com>
+>>>> Â wrote:
+>>>> [snip]
+>>>>>
+>>>>> Either way, it seems safer to null out the bf_ampdu field after
+>>>>> the memory is consumed..it could prevent some tricky bugs later.
+>>>>
+>>>> I think this is a good idea. But it probably wont be enough to null
+>>>> out bf_mpdu. You also need to look at bf_buf_addr (which if I
+>>>> understand correctly is the physical address the DMA engine will
+>>>> actually write RXed frames to) and bf_dmacontext (which seems in most
+>>>> cases to hold an identical address and may in fact be where the DMA
+>>>> engine will really write the frame).
+>>>
+>>> I took another look at the code. It turns out both bf_buf_addr and
+>>> bf_dmacontext are in fact meaningless to the DMA. Instead each bf
+>>> holds a pointer (bf_desc) to the real DMA descriptor which in turn
+>>> holds the address (ds_data) where the DMA will really (really this
+>>> time) write the frame. There is also a field to hold the virtual
+>>> address of the same place (ds_vdata).
+>>>
+>>> It's a little too much work for me to set up the testbed you have Ben
+>>> but would be interesting to see what happens if you set
+>>> bf->bf_desc->ds_{data,vdata} = 0 as well. No?
+>>
+>> I'll investigate those suggestions.
+>>
+>> But setting up a test-bed is as easy
+>> as getting an ath9k NIC in a system, with a few APs around, and run the
+>> script below.
+>>
+>> You do not need any traffic generation, dhcp, etc...seems just beacons and
+>> whatever
+>> wpa_supplicant is doing is enough to hit the problem fast. Â (Make sure
+>> you are compiled to detect memory poisoning, of course).
+>>
+>> You'll need to fix the paths to the executables most likely.
+>>
+>
+> You don't need such complicated scripts, I've managed to reproduce now
+> by creating a lot of monitor interfaces and then looping with a
+> regular interface issuing a scan command over and over. Â I suspect
+> I'll be able to do this as well by changing channels instead of doing
+> a scan. I believe the issue may be due to races in hardware on resets
+> and enabling RX on an already freed buffer.
 
-/Björn
+Fun enough if I just create one monitor interface and loop quickly
+over some 2 GHz channels where I know I have traffic nearby I don't
+see the poison. So channel changes don't seem to do much because this
+is changing channels as fast as possible from userspace. I also can
+confirm that I see frames from the different channels as I move along.
 
-2010/10/10 Björn Smedman <bjorn.smedman@venatech.se>:
-> This patch fixes the following problems with the rate control feedback
-> generated by ath9k for A-MPDU frames:
->
-> 1. Rate control feedback is carried on the first frame of an aggregate
-> that is either ACKed, or has execeeded the software retry count and is
-> considered failed. However, ath9k would incorrectly assume the aggregate
-> had the length 1 if one of these conditions did not apply to the first
-> frame of the aggregate, but instead a later frame. This fix therefor
-> copies the bf_length field of the buffer in the same manner as the rates
-> field of the tx status.
->
-> 2. Sometimes the ampdu_len and ampdu_ack_len fields of the tx status was
-> left uninitialized even though the IEEE80211_TX_STAT_AMPDU flag was set.
-> This is now avoid by setting flag and fields in the same place.
->
-> 3. Eventhough a frame has been selected for aggregation by mac80211 and
-> marked with the IEEE80211_TX_CTL_AMPDU flag it can sometimes happen that
-> ath9k transmits the frame without aggregation. In these cases the
-> ampdu_ack_len field could be incorrectly computed because the nbad
-> parameter to ath_tx_rc_status was incorrect.
->
-> Cc: <stable@kernel.org>
-> Signed-off-by: Björn Smedman <bjorn.smedman@venatech.se>
-> ---
-> diff --git a/drivers/net/wireless/ath/ath9k/xmit.c b/drivers/net/wireless/ath/ath9k/xmit.c
-> index aa44777..9a11099 100644
-> --- a/drivers/net/wireless/ath/ath9k/xmit.c
-> +++ b/drivers/net/wireless/ath/ath9k/xmit.c
-> @@ -317,6 +317,7 @@ static void ath_tx_complete_aggr(struct ath_softc *sc, struct ath_txq *txq,
->        int isaggr, txfail, txpending, sendbar = 0, needreset = 0, nbad = 0;
->        bool rc_update = true;
->        struct ieee80211_tx_rate rates[4];
-> +       int nframes;
->
->        skb = bf->bf_mpdu;
->        hdr = (struct ieee80211_hdr *)skb->data;
-> @@ -325,6 +326,7 @@ static void ath_tx_complete_aggr(struct ath_softc *sc, struct ath_txq *txq,
->        hw = bf->aphy->hw;
->
->        memcpy(rates, tx_info->control.rates, sizeof(rates));
-> +       nframes = bf->bf_nframes;
->
->        rcu_read_lock();
->
-> @@ -341,7 +343,7 @@ static void ath_tx_complete_aggr(struct ath_softc *sc, struct ath_txq *txq,
->                            !bf->bf_stale || bf_next != NULL)
->                                list_move_tail(&bf->list, &bf_head);
->
-> -                       ath_tx_rc_status(bf, ts, 0, 0, false);
-> +                       ath_tx_rc_status(bf, ts, 1, 0, false);
->                        ath_tx_complete_buf(sc, bf, txq, &bf_head, ts,
->                                0, 0);
->
-> @@ -446,6 +448,7 @@ static void ath_tx_complete_aggr(struct ath_softc *sc, struct ath_txq *txq,
->
->                        if (rc_update && (acked_cnt == 1 || txfail_cnt == 1)) {
->                                memcpy(tx_info->control.rates, rates, sizeof(rates));
-> +                               bf->bf_nframes = nframes;
->                                ath_tx_rc_status(bf, ts, nbad, txok, true);
->                                rc_update = false;
->                        } else {
-> @@ -1979,9 +1982,15 @@ static void ath_tx_rc_status(struct ath_buf *bf, struct ath_tx_status *ts,
->
->        if (ts->ts_status & ATH9K_TXERR_FILT)
->                tx_info->flags |= IEEE80211_TX_STAT_TX_FILTERED;
-> -       if ((tx_info->flags & IEEE80211_TX_CTL_AMPDU) && update_rc)
-> +       if ((tx_info->flags & IEEE80211_TX_CTL_AMPDU) && update_rc) {
->                tx_info->flags |= IEEE80211_TX_STAT_AMPDU;
->
-> +               BUG_ON(nbad > bf->bf_nframes);
-> +
-> +               tx_info->status.ampdu_len = bf->bf_nframes;
-> +               tx_info->status.ampdu_ack_len = bf->bf_nframes - nbad;
-> +       }
-> +
->        if ((ts->ts_status & ATH9K_TXERR_FILT) == 0 &&
->            (bf->bf_flags & ATH9K_TXDESC_NOACK) == 0 && update_rc) {
->                if (ieee80211_is_data(hdr->frame_control)) {
-> @@ -1991,8 +2000,6 @@ static void ath_tx_rc_status(struct ath_buf *bf, struct ath_tx_status *ts,
->                        if ((ts->ts_status & ATH9K_TXERR_XRETRY) ||
->                            (ts->ts_status & ATH9K_TXERR_FIFO))
->                                tx_info->pad[0] |= ATH_TX_INFO_XRETRY;
-> -                       tx_info->status.ampdu_len = bf->bf_nframes;
-> -                       tx_info->status.ampdu_ack_len = bf->bf_nframes - nbad;
->                }
->        }
->
-> @@ -2102,7 +2109,7 @@ static void ath_tx_processq(struct ath_softc *sc, struct ath_txq *txq)
->                         */
->                        if (ts.ts_status & ATH9K_TXERR_XRETRY)
->                                bf->bf_state.bf_type |= BUF_XRETRY;
-> -                       ath_tx_rc_status(bf, &ts, 0, txok, true);
-> +                       ath_tx_rc_status(bf, &ts, txok ? 0 : 1, txok, true);
->                }
->
->                if (bf_isampdu(bf))
-> @@ -2220,7 +2227,7 @@ void ath_tx_edma_tasklet(struct ath_softc *sc)
->                if (!bf_isampdu(bf)) {
->                        if (txs.ts_status & ATH9K_TXERR_XRETRY)
->                                bf->bf_state.bf_type |= BUF_XRETRY;
-> -                       ath_tx_rc_status(bf, &txs, 0, txok, true);
-> +                       ath_tx_rc_status(bf, &txs, txok ? 0 : 1, txok, true);
->                }
->
->                if (bf_isampdu(bf))
->
-
-
-
--- 
-Venatech AB
-Ideon Innovation
-Ole Römers väg 12
-SE-22370 LUND
-Sweden
-
-+46 (0) 46 286 86 20
-info@venatech.se
-http://www.venatech.se
+  Luis
