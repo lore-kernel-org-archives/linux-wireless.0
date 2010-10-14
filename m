@@ -1,40 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-vw0-f46.google.com ([209.85.212.46]:49067 "EHLO
-	mail-vw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755088Ab0JaJiG convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 31 Oct 2010 05:38:06 -0400
-Received: by vws13 with SMTP id 13so2175673vws.19
-        for <linux-wireless@vger.kernel.org>; Sun, 31 Oct 2010 02:38:05 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <4CCCE31A.5030608@lwfinger.net>
-References: <4CCCE31A.5030608@lwfinger.net>
-Date: Sun, 31 Oct 2010 10:38:03 +0100
-Message-ID: <AANLkTin_dPPk8XBKWjEbuHmQJg3zok5bUcrrn99qV6dn@mail.gmail.com>
-Subject: Re: Deauthentication for reason 6 using Intel 5300 in 2.6.34
-From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: wireless <linux-wireless@vger.kernel.org>,
-	"Guy, Wey-Yi W" <wey-yi.w.guy@intel.com>,
-	"Zheng, Jiajia" <jiajia.zheng@intel.com>,
-	ipw3945-devel@lists.sourceforge.net
-Content-Type: text/plain; charset=UTF-8
+Received: from mga14.intel.com ([143.182.124.37]:1450 "EHLO mga14.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754610Ab0JNSEU (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 14 Oct 2010 14:04:20 -0400
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Subject: [PATCH 5/9] iwlagn: 6050 ops should be used;
+Date: Thu, 14 Oct 2010 11:02:46 -0700
+Message-Id: <1287079370-20587-6-git-send-email-wey-yi.w.guy@intel.com>
+In-Reply-To: <1287079370-20587-1-git-send-email-wey-yi.w.guy@intel.com>
+References: <1287079370-20587-1-git-send-email-wey-yi.w.guy@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2010/10/31 Larry Finger <Larry.Finger@lwfinger.net>:
-> A user on the openSUSE forum reports that the connection drops frequently when
-> using 802.11n on a 5300 with a 2.6.34 kernel. It is deauthenticated for reason
-> 6. He was able to stabilize the connection by disabling N mode. I think he used
-> "options iwlagn 11n_disable=1 11n_disable50=1".
->
-> Is this a known problem? Would the situation be improved by using
-> compat-wireless? If so, is "bleeding-edge" needed?
+For 6050 series of devices, 6050 ops should be used;
+One of the 6050 config still use 6000 ops, fix it.
 
-It's fu* known problem. Intel doesn't seem to care about users, they
-have fixed firmware but didn't decide to release it for 2 months.
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-6000.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-http://bugzilla.intellinuxwireless.org/show_bug.cgi?id=2214#c19
-
+diff --git a/drivers/net/wireless/iwlwifi/iwl-6000.c b/drivers/net/wireless/iwlwifi/iwl-6000.c
+index 3eaea6f..11e6532 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-6000.c
++++ b/drivers/net/wireless/iwlwifi/iwl-6000.c
+@@ -780,7 +780,7 @@ struct iwl_cfg iwl6050_2agn_cfg = {
+ 	.sku = IWL_SKU_A|IWL_SKU_G|IWL_SKU_N,
+ 	.valid_tx_ant = ANT_AB,
+ 	.valid_rx_ant = ANT_AB,
+-	.ops = &iwl6000_ops,
++	.ops = &iwl6050_ops,
+ 	.eeprom_ver = EEPROM_6050_EEPROM_VERSION,
+ 	.eeprom_calib_ver = EEPROM_6050_TX_POWER_VERSION,
+ 	.mod_params = &iwlagn_mod_params,
 -- 
-Rafał
+1.7.0.4
+
