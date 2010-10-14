@@ -1,34 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f46.google.com ([209.85.214.46]:56429 "EHLO
-	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932370Ab0JXK1J (ORCPT
+Received: from smtp-out.google.com ([216.239.44.51]:14331 "EHLO
+	smtp-out.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755925Ab0JNUnx convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 24 Oct 2010 06:27:09 -0400
-Received: by bwz11 with SMTP id 11so1637380bwz.19
-        for <linux-wireless@vger.kernel.org>; Sun, 24 Oct 2010 03:27:07 -0700 (PDT)
-From: Christian Lamparter <chunkeey@googlemail.com>
-To: linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] carl9170: fix typos
-Date: Sun, 24 Oct 2010 12:27:01 +0200
-Cc: Hauke Mehrtens <hauke@hauke-m.de>, linville@tuxdriver.com
-References: <1287856292-27905-1-git-send-email-hauke@hauke-m.de>
-In-Reply-To: <1287856292-27905-1-git-send-email-hauke@hauke-m.de>
+	Thu, 14 Oct 2010 16:43:53 -0400
+Received: from wpaz17.hot.corp.google.com (wpaz17.hot.corp.google.com [172.24.198.81])
+	by smtp-out.google.com with ESMTP id o9EKhqUF013289
+	for <linux-wireless@vger.kernel.org>; Thu, 14 Oct 2010 13:43:52 -0700
+Received: from iwn10 (iwn10.prod.google.com [10.241.68.74])
+	by wpaz17.hot.corp.google.com with ESMTP id o9EKhjdZ027813
+	for <linux-wireless@vger.kernel.org>; Thu, 14 Oct 2010 13:43:51 -0700
+Received: by iwn10 with SMTP id 10so7458iwn.31
+        for <linux-wireless@vger.kernel.org>; Thu, 14 Oct 2010 13:43:50 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-15"
-Message-Id: <201010241227.01373.chunkeey@googlemail.com>
+In-Reply-To: <1287040404.4641.5.camel@jlt3.sipsolutions.net>
+References: <20101013224851.9C46820418@glenhelen.mtv.corp.google.com>
+	<1287040404.4641.5.camel@jlt3.sipsolutions.net>
+Date: Thu, 14 Oct 2010 13:43:50 -0700
+Message-ID: <AANLkTincG_-s4pWx+m=keMSfhzWfTQeCCGMQzHYk-WTA@mail.gmail.com>
+Subject: Re: [PATCH 2/6] Ad cfg80211 call for threshold notifications
+From: Paul Stewart <pstew@google.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Saturday 23 October 2010 19:51:32 Hauke Mehrtens wrote:
-> Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
-> ---
->  drivers/net/wireless/ath/carl9170/carl9170.h |    2 +-
->  drivers/net/wireless/ath/carl9170/main.c     |    2 +-
->  2 files changed, 2 insertions(+), 2 deletions(-)
-> 
-I'm surprised that only two typos were found?
-There ought to be more...
+I documented that this value in ieee80211_i.h.  Other parameters in
+this file are left undocumented in this module (rssi_hyst, for
+example, is documented in mac80211.h and nl80211.h (in fact, my docs
+in nl80211.h look a little sparse -- I'll fix that up).  I don't
+object to doing it -- I'm just trying to wrap my head around the
+correct conventions.
 
-But anyway, sure there's nothing wrong with your patch here.
-Acked-by: Christian Lamparter <chunkeey@googlemail.com>
+--
+Paul
+
+On Thu, Oct 14, 2010 at 12:13 AM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
+> On Wed, 2010-10-13 at 15:10 -0700, Paul Stewart wrote:
+>> Similar to its rssi counterpart, provide a cfg80211 call for sending
+>> bitrate change updates.
+>>
+>
+>> +     int     (*set_cqm_bitrate_config)(struct wiphy *wiphy,
+>> +                                       struct net_device *dev,
+>> +                                       u32 bitrate_thold);
+>> +
+>
+> Need to document units here ... Also, when you start looking at that,
+> things get really awkward HT -- you don't really want to have to
+> determine the bitrate for HT packets for every single one, I think.
+>
+> johannes
+>
+>
