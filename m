@@ -1,47 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:47469 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755355Ab0JKR4x (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 11 Oct 2010 13:56:53 -0400
-Subject: Re: phyX enumeration conflict
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Ben Greear <greearb@candelatech.com>
-Cc: Christian Lamparter <chunkeey@googlemail.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
+Received: from 80-190-117-144.ip-home.de ([80.190.117.144]:44372 "EHLO
+	bu3sch.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752588Ab0JNRYa (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 14 Oct 2010 13:24:30 -0400
+Subject: Re: Licensing wlc_phy_radio.h and brcm80211 (was: [PATCH 3/3] b43:
+ N-PHY: add 2055 radio regs)
+From: Michael =?ISO-8859-1?Q?B=FCsch?= <mb@bu3sch.de>
+To: Greg KH <gregkh@suse.de>
+Cc: =?UTF-8?Q?Rafa=C5=82_Mi=C5=82ecki?= <zajec5@gmail.com>,
+	=?ISO-8859-1?Q?G=E1bor?= Stefanik <netrolller.3d@gmail.com>,
 	"John W. Linville" <linville@tuxdriver.com>,
-	rainbow lum <rainbowlum@gmail.com>
-In-Reply-To: <4CB34D87.9090100@candelatech.com>
-References: <201010082159.59262.chunkeey@googlemail.com>
-	 <1286698152.3547.4.camel@jlt3.sipsolutions.net>
-	 <1286698604.3547.7.camel@jlt3.sipsolutions.net>
-	 <4CB1DE18.9070400@candelatech.com>
-	 <1286729035.3547.10.camel@jlt3.sipsolutions.net>
-	 <4CB348B0.3050909@candelatech.com>
-	 <1286818499.3634.67.camel@jlt3.sipsolutions.net>
-	 <4CB34D87.9090100@candelatech.com>
+	b43-dev <b43-dev@lists.infradead.org>,
+	linux-wireless@vger.kernel.org,
+	Henry Ptasinski <henryp@broadcom.com>,
+	Brett Rudley <brudley@broadcom.com>,
+	Nohee Ko <noheek@broadcom.com>
+In-Reply-To: <20101014171739.GA28522@suse.de> (sfid-20101014_191829_132773_43868632)
+References: <AANLkTinQMRGkOvi4e4JMsHGV_BF_4Rf5oHCtZgQjwQ1g@mail.gmail.com>
+	 <20101014165111.GA22130@suse.de>
+	 <AANLkTin9PxzROyCQxiT5-ca4CUQK+kppS7gAibbbZ2=v@mail.gmail.com>
+	 <20101014171739.GA28522@suse.de> (sfid-20101014_191829_132773_43868632)
 Content-Type: text/plain; charset="UTF-8"
-Date: Mon, 11 Oct 2010 19:56:50 +0200
-Message-ID: <1286819810.3634.77.camel@jlt3.sipsolutions.net>
+Date: Thu, 14 Oct 2010 19:24:17 +0200
+Message-ID: <1287077057.20394.19.camel@maggie>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2010-10-11 at 10:46 -0700, Ben Greear wrote:
-> On 10/11/2010 10:34 AM, Johannes Berg wrote:
-> > On Mon, 2010-10-11 at 10:26 -0700, Ben Greear wrote:
-> >
-> >> However, the 'phy0' name doesn't change in
-> >> /debug/ath5k/[phy-dev]/ link, so it confuses my tools.
-> >
-> > If it used /debug/ieee80211/[phy-dev]/ then it'd be renamed
-> > automatically...
+On Thu, 2010-10-14 at 10:17 -0700, Greg KH wrote: 
+> > Finishing N-PHY support in b43 does not need much work plus:
+> > 1) We support SSB devices
+> > 2) We support older (LP/G-phy) devices
+> > 3) We share infrastructure (easier to maintain)
+> > 4) We probably could support modes like AP
 > 
-> I need to get at specific info in the driver's debugfs dir, however.
+> If that would be a simpler task than trying to clean up the brcm80211
+> driver, that seems quite reasonable.
 
-Yeah but you can change the driver to put its own stuff into that
-directory, and then it doesn't have to worry about renames (which it
-isn't told about anyway)
+That's really an unrelated topic. b43 and brcm80211 support different
+kinds of devices whereas both devices may share certain sub-devices.
+Like the radio device (b2056) in this case.
 
-johannes
+So it's not just a matter of "cleaning up" brcm80211. That doesn't give
+us support for old SSB based N-PHY devices, because brcm80211 does not
+support them at all.
+
+-- 
+Greetings Michael.
 
