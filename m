@@ -1,151 +1,252 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([88.198.39.176]:58172 "EHLO ds10.nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752197Ab0JTAJw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 19 Oct 2010 20:09:52 -0400
-From: Felix Fietkau <nbd@openwrt.org>
-To: linux-wireless@vger.kernel.org
-Cc: linville@tuxdriver.com, lrodriguez@atheros.com
-Subject: [PATCH 3/3] ath9k: initialize per-channel tx power limits instead of hardcoding them
-Date: Wed, 20 Oct 2010 02:09:46 +0200
-Message-Id: <1287533386-68715-3-git-send-email-nbd@openwrt.org>
-In-Reply-To: <1287533386-68715-2-git-send-email-nbd@openwrt.org>
-References: <1287533386-68715-1-git-send-email-nbd@openwrt.org>
- <1287533386-68715-2-git-send-email-nbd@openwrt.org>
+Received: from mail.candelatech.com ([208.74.158.172]:51348 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755017Ab0JNWrS (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 14 Oct 2010 18:47:18 -0400
+Message-ID: <4CB78870.8040207@candelatech.com>
+Date: Thu, 14 Oct 2010 15:47:12 -0700
+From: Ben Greear <greearb@candelatech.com>
+MIME-Version: 1.0
+To: =?ISO-8859-1?Q?Bj=F6rn_Smedman?= <bjorn.smedman@venatech.se>
+CC: Vasanthakumar Thiagarajan <vasanth@atheros.com>,
+	"Luis R. Rodriguez" <mcgrof@gmail.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: memory clobber in rx path, maybe related to ath9k.
+References: <4CAE1DFB.303@candelatech.com>	<1286479642.20974.32.camel@jlt3.sipsolutions.net>	<AANLkTimxp703Gy_Atg8=wpFszRDR=OJCXwOUKRh-a-d7@mail.gmail.com>	<AANLkTi=t-P_5c14brJohM8UgxeOknv+3syO=7W=ix6qf@mail.gmail.com>	<AANLkTinC46a+nE-XOQuBCmRJwjzgh24uC7ZJ7HtbVHnT@mail.gmail.com>	<4CB378CD.1080800@candelatech.com>	<AANLkTim42zmDwf744BCrPwa1kT5ph57bNMyvSyOpesVv@mail.gmail.com>	<4CB3D598.7050904@candelatech.com>	<AANLkTimPEg3ZU8CQUXfdpGdfbmhdE9O=GNY=g9gysTo4@mail.gmail.com>	<4CB4AA89.1070009@candelatech.com>	<20101013053141.GA15798@vasanth-laptop>	<4CB5E0A8.5020502@candelatech.com>	<AANLkTimp_GSwwX_RnQSyN9QNe55HQ+0HZJ1yd8Xp+dWG@mail.gmail.com> <AANLkTinyVqdgPqzpyihuaPtVVqDmzj-ZbXzQ-4qdA2yH@mail.gmail.com>
+In-Reply-To: <AANLkTinyVqdgPqzpyihuaPtVVqDmzj-ZbXzQ-4qdA2yH@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
----
- drivers/net/wireless/ath/ath9k/common.c       |   15 ++++-------
- drivers/net/wireless/ath/ath9k/common.h       |    5 ++-
- drivers/net/wireless/ath/ath9k/htc_drv_main.c |    4 ++-
- drivers/net/wireless/ath/ath9k/init.c         |   33 +++++++++++++++++++++++++
- 4 files changed, 45 insertions(+), 12 deletions(-)
+On 10/14/2010 02:52 PM, Björn Smedman wrote:
+> 2010/10/13 Björn Smedman<bjorn.smedman@venatech.se>:
+>> Hi Ben,
+>>
+>> First of all keep up the good work. :)
+>>
+>> On Wed, Oct 13, 2010 at 6:39 PM, Ben Greear<greearb@candelatech.com>  wrote:
+>> [snip]
+>>> Either way, it seems safer to null out the bf_ampdu field after
+>>> the memory is consumed..it could prevent some tricky bugs later.
+>>
+>> I think this is a good idea. But it probably wont be enough to null
+>> out bf_mpdu. You also need to look at bf_buf_addr (which if I
+>> understand correctly is the physical address the DMA engine will
+>> actually write RXed frames to) and bf_dmacontext (which seems in most
+>> cases to hold an identical address and may in fact be where the DMA
+>> engine will really write the frame).
+>
+> I took another look at the code. It turns out both bf_buf_addr and
+> bf_dmacontext are in fact meaningless to the DMA. Instead each bf
+> holds a pointer (bf_desc) to the real DMA descriptor which in turn
+> holds the address (ds_data) where the DMA will really (really this
+> time) write the frame. There is also a field to hold the virtual
+> address of the same place (ds_vdata).
+>
+> It's a little too much work for me to set up the testbed you have Ben
+> but would be interesting to see what happens if you set
+> bf->bf_desc->ds_{data,vdata} = 0 as well. No?
 
-diff --git a/drivers/net/wireless/ath/ath9k/common.c b/drivers/net/wireless/ath/ath9k/common.c
-index f43a2d9..48b07c3 100644
---- a/drivers/net/wireless/ath/ath9k/common.c
-+++ b/drivers/net/wireless/ath/ath9k/common.c
-@@ -107,12 +107,10 @@ static u32 ath9k_get_extchanmode(struct ieee80211_channel *chan,
- /*
-  * Update internal channel flags.
-  */
--void ath9k_cmn_update_ichannel(struct ieee80211_hw *hw,
--			       struct ath9k_channel *ichan)
-+void ath9k_cmn_update_ichannel(struct ath9k_channel *ichan,
-+			       struct ieee80211_channel *chan,
-+			       enum nl80211_channel_type channel_type)
- {
--	struct ieee80211_channel *chan = hw->conf.channel;
--	struct ieee80211_conf *conf = &hw->conf;
--
- 	ichan->channel = chan->center_freq;
- 	ichan->chan = chan;
- 
-@@ -124,9 +122,8 @@ void ath9k_cmn_update_ichannel(struct ieee80211_hw *hw,
- 		ichan->channelFlags = CHANNEL_5GHZ | CHANNEL_OFDM;
- 	}
- 
--	if (conf_is_ht(conf))
--		ichan->chanmode = ath9k_get_extchanmode(chan,
--							conf->channel_type);
-+	if (channel_type != NL80211_CHAN_NO_HT)
-+		ichan->chanmode = ath9k_get_extchanmode(chan, channel_type);
- }
- EXPORT_SYMBOL(ath9k_cmn_update_ichannel);
- 
-@@ -142,7 +139,7 @@ struct ath9k_channel *ath9k_cmn_get_curchannel(struct ieee80211_hw *hw,
- 
- 	chan_idx = curchan->hw_value;
- 	channel = &ah->channels[chan_idx];
--	ath9k_cmn_update_ichannel(hw, channel);
-+	ath9k_cmn_update_ichannel(channel, curchan, hw->conf.channel_type);
- 
- 	return channel;
- }
-diff --git a/drivers/net/wireless/ath/ath9k/common.h b/drivers/net/wireless/ath/ath9k/common.h
-index fea3b33..c76c75a 100644
---- a/drivers/net/wireless/ath/ath9k/common.h
-+++ b/drivers/net/wireless/ath/ath9k/common.h
-@@ -62,8 +62,9 @@ enum ath_stomp_type {
- 
- int ath9k_cmn_padpos(__le16 frame_control);
- int ath9k_cmn_get_hw_crypto_keytype(struct sk_buff *skb);
--void ath9k_cmn_update_ichannel(struct ieee80211_hw *hw,
--			       struct ath9k_channel *ichan);
-+void ath9k_cmn_update_ichannel(struct ath9k_channel *ichan,
-+			       struct ieee80211_channel *chan,
-+			       enum nl80211_channel_type channel_type);
- struct ath9k_channel *ath9k_cmn_get_curchannel(struct ieee80211_hw *hw,
- 					       struct ath_hw *ah);
- int ath9k_cmn_count_streams(unsigned int chainmask, int max);
-diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_main.c b/drivers/net/wireless/ath/ath9k/htc_drv_main.c
-index 1e5323e..1773bdb 100644
---- a/drivers/net/wireless/ath/ath9k/htc_drv_main.c
-+++ b/drivers/net/wireless/ath/ath9k/htc_drv_main.c
-@@ -1397,7 +1397,9 @@ static int ath9k_htc_config(struct ieee80211_hw *hw, u32 changed)
- 		ath_print(common, ATH_DBG_CONFIG, "Set channel: %d MHz\n",
- 			  curchan->center_freq);
- 
--		ath9k_cmn_update_ichannel(hw, &priv->ah->channels[pos]);
-+		ath9k_cmn_update_ichannel(&priv->ah->channels[pos],
-+					  hw->conf.channel,
-+					  hw->conf.channel_type);
- 
- 		if (ath9k_htc_set_channel(priv, hw, &priv->ah->channels[pos]) < 0) {
- 			ath_print(common, ATH_DBG_FATAL,
-diff --git a/drivers/net/wireless/ath/ath9k/init.c b/drivers/net/wireless/ath/ath9k/init.c
-index 12f4fd7..1b72720 100644
---- a/drivers/net/wireless/ath/ath9k/init.c
-+++ b/drivers/net/wireless/ath/ath9k/init.c
-@@ -642,6 +642,37 @@ err_hw:
- 	return ret;
- }
- 
-+static void ath9k_init_band_txpower(struct ath_softc *sc, int band)
-+{
-+	struct ieee80211_supported_band *sband;
-+	struct ieee80211_channel *chan;
-+	struct ath_hw *ah = sc->sc_ah;
-+	struct ath_regulatory *reg = ath9k_hw_regulatory(ah);
-+	int i;
+I tried the patch below, and it didn't seem to help.  Might even
+have hurt..as it died on divide-by-zero error:
+
+Call Trace:
+  [<c075e490>] ? printk+0xf/0x17
+  [<c075e37e>] panic+0x50/0x153
+  [<c07619db>] oops_end+0x92/0xa1
+  [<c04051cc>] die+0x53/0x59
+  [<c07612a3>] do_trap+0x89/0xa2
+  [<c0403b12>] ? do_divide_error+0x0/0x78
+  [<c0403b80>] do_divide_error+0x6e/0x78
+  [<faef811e>] ? ath9k_hw_ani_monitor+0x37/0x40e [ath9k_hw]
+  [<fb1f77d9>] ? ath9k_ioread32+0x25/0x5b [ath9k]
+  [<c045553a>] ? trace_hardirqs_off+0xb/0xd
+  [<c0581210>] ? trace_hardirqs_off_thunk+0xc/0x10
+  [<c076103f>] error_code+0x5f/0x70
+  [<c0403b12>] ? do_divide_error+0x0/0x78
+  [<faef811e>] ? ath9k_hw_ani_monitor+0x37/0x40e [ath9k_hw]
+  [<fb1fa783>] ath_ani_calibrate+0x143/0x20b [ath9k]
+  [<c043d58f>] run_timer_softirq+0x14f/0x1e7
+
+That might be an existing bug, however...
+
+Thanks,
+Ben
+
+diff --git a/drivers/net/wireless/ath/ath9k/ath9k.h b/drivers/net/wireless/ath/ath9k/ath9k.h
+index 0c917e5..8fba13d 100644
+--- a/drivers/net/wireless/ath/ath9k/ath9k.h
++++ b/drivers/net/wireless/ath/ath9k/ath9k.h
+@@ -737,4 +737,6 @@ bool ath_mac80211_start_queue(struct ath_softc *sc, u16 skb_queue);
+  void ath_start_rfkill_poll(struct ath_softc *sc);
+  extern void ath9k_rfkill_poll_state(struct ieee80211_hw *hw);
+
++void ath_clear_dma_ptrs(struct ath_buf *bf);
 +
-+	sband = &sc->sbands[band];
-+	for (i = 0; i < sband->n_channels; i++) {
-+		chan = &sband->channels[i];
-+		ah->curchan = &ah->channels[chan->hw_value];
-+		ath9k_cmn_update_ichannel(ah->curchan, chan, NL80211_CHAN_HT20);
-+		ath9k_hw_set_txpowerlimit(ah, MAX_RATE_POWER, true);
-+		chan->max_power = reg->max_power_level / 2;
-+	}
+  #endif /* ATH9K_H */
+diff --git a/drivers/net/wireless/ath/ath9k/beacon.c b/drivers/net/wireless/ath/ath9k/beacon.c
+index 97d471f..cc406f9 100644
+--- a/drivers/net/wireless/ath/ath9k/beacon.c
++++ b/drivers/net/wireless/ath/ath9k/beacon.c
+@@ -139,7 +139,7 @@ static struct ath_buf *ath_beacon_generate(struct ieee80211_hw *hw,
+                 dma_unmap_single(sc->dev, bf->bf_buf_addr,
+                                  skb->len, DMA_TO_DEVICE);
+                 dev_kfree_skb_any(skb);
+-               bf->bf_buf_addr = 0;
++               ath_clear_dma_ptrs(bf);
+         }
+
+         /* Get a new beacon from mac80211 */
+@@ -167,8 +167,7 @@ static struct ath_buf *ath_beacon_generate(struct ieee80211_hw *hw,
+                                          skb->len, DMA_TO_DEVICE);
+         if (unlikely(dma_mapping_error(sc->dev, bf->bf_buf_addr))) {
+                 dev_kfree_skb_any(skb);
+-               bf->bf_mpdu = NULL;
+-               bf->bf_buf_addr = 0;
++               ath_clear_dma_ptrs(bf);
+                 ath_print(common, ATH_DBG_FATAL,
+                           "dma_mapping_error on beaconing\n");
+                 return NULL;
+@@ -256,8 +255,7 @@ int ath_beacon_alloc(struct ath_wiphy *aphy, struct ieee80211_vif *vif)
+                 dma_unmap_single(sc->dev, bf->bf_buf_addr,
+                                  skb->len, DMA_TO_DEVICE);
+                 dev_kfree_skb_any(skb);
+-               bf->bf_mpdu = NULL;
+-               bf->bf_buf_addr = 0;
++               ath_clear_dma_ptrs(bf);
+         }
+
+         /* NB: the beacon data buffer must be 32-bit aligned. */
+@@ -302,8 +300,7 @@ int ath_beacon_alloc(struct ath_wiphy *aphy, struct ieee80211_vif *vif)
+                                          skb->len, DMA_TO_DEVICE);
+         if (unlikely(dma_mapping_error(sc->dev, bf->bf_buf_addr))) {
+                 dev_kfree_skb_any(skb);
+-               bf->bf_mpdu = NULL;
+-               bf->bf_buf_addr = 0;
++               ath_clear_dma_ptrs(bf);
+                 ath_print(common, ATH_DBG_FATAL,
+                           "dma_mapping_error on beacon alloc\n");
+                 return -ENOMEM;
+@@ -329,8 +326,7 @@ void ath_beacon_return(struct ath_softc *sc, struct ath_vif *avp)
+                         dma_unmap_single(sc->dev, bf->bf_buf_addr,
+                                          skb->len, DMA_TO_DEVICE);
+                         dev_kfree_skb_any(skb);
+-                       bf->bf_mpdu = NULL;
+-                       bf->bf_buf_addr = 0;
++                       ath_clear_dma_ptrs(bf);
+                 }
+                 list_add_tail(&bf->list, &sc->beacon.bbuf);
+
+diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
+index bcd3892..1722a21 100644
+--- a/drivers/net/wireless/ath/ath9k/main.c
++++ b/drivers/net/wireless/ath/ath9k/main.c
+@@ -213,6 +213,17 @@ static void ath_update_survey_stats(struct ath_softc *sc)
+         ath_update_survey_nf(sc, pos);
+  }
+
++void ath_clear_dma_ptrs(struct ath_buf *bf)
++{
++       struct ath_desc *ds = bf->bf_desc;
++       bf->bf_buf_addr = 0;
++       bf->bf_mpdu = NULL;
++       if (ds) {
++               ds->ds_data = 0;
++               ds->ds_vdata = NULL;
++       }
 +}
 +
-+static void ath9k_init_txpower_limits(struct ath_softc *sc)
-+{
-+	struct ath_hw *ah = sc->sc_ah;
-+	struct ath9k_channel *curchan = ah->curchan;
-+
-+	if (ah->caps.hw_caps & ATH9K_HW_CAP_2GHZ)
-+		ath9k_init_band_txpower(sc, IEEE80211_BAND_2GHZ);
-+	if (ah->caps.hw_caps & ATH9K_HW_CAP_5GHZ)
-+		ath9k_init_band_txpower(sc, IEEE80211_BAND_5GHZ);
-+
-+	ah->curchan = curchan;
-+}
-+
- void ath9k_set_hw_capab(struct ath_softc *sc, struct ieee80211_hw *hw)
- {
- 	struct ath_common *common = ath9k_hw_common(sc->sc_ah);
-@@ -736,6 +767,8 @@ int ath9k_init_device(u16 devid, struct ath_softc *sc, u16 subsysid,
- 	if (error != 0)
- 		goto error_rx;
- 
-+	ath9k_init_txpower_limits(sc);
-+
- 	/* Register with mac80211 */
- 	error = ieee80211_register_hw(hw);
- 	if (error)
+  /*
+   * Set/change channels.  If the channel is really being changed, it's done
+   * by reseting the chip.  To accomplish this we must first cleanup any pending
+diff --git a/drivers/net/wireless/ath/ath9k/recv.c b/drivers/net/wireless/ath/ath9k/recv.c
+index fd778d2..5afb46f 100644
+--- a/drivers/net/wireless/ath/ath9k/recv.c
++++ b/drivers/net/wireless/ath/ath9k/recv.c
+@@ -269,8 +269,7 @@ static int ath_rx_edma_init(struct ath_softc *sc, int nbufs)
+                 if (unlikely(dma_mapping_error(sc->dev,
+                                                 bf->bf_buf_addr))) {
+                                 dev_kfree_skb_any(skb);
+-                               bf->bf_mpdu = NULL;
+-                               bf->bf_buf_addr = 0;
++                               ath_clear_dma_ptrs(bf);
+                                 ath_print(common, ATH_DBG_FATAL,
+                                         "dma_mapping_error() on RX init\n");
+                                 error = -ENOMEM;
+@@ -360,8 +359,7 @@ int ath_rx_init(struct ath_softc *sc, int nbufs)
+                         if (unlikely(dma_mapping_error(sc->dev,
+                                                         bf->bf_buf_addr))) {
+                                 dev_kfree_skb_any(skb);
+-                               bf->bf_mpdu = NULL;
+-                               bf->bf_buf_addr = 0;
++                               ath_clear_dma_ptrs(bf);
+                                 ath_print(common, ATH_DBG_FATAL,
+                                           "dma_mapping_error() on RX init\n");
+                                 error = -ENOMEM;
+@@ -396,8 +394,7 @@ void ath_rx_cleanup(struct ath_softc *sc)
+                                                 common->rx_bufsize,
+                                                 DMA_FROM_DEVICE);
+                                 dev_kfree_skb(skb);
+-                               bf->bf_buf_addr = 0;
+-                               bf->bf_mpdu = NULL;
++                               ath_clear_dma_ptrs(bf);
+                         }
+                 }
+
+@@ -1741,8 +1738,7 @@ int ath_rx_tasklet(struct ath_softc *sc, int flush, bool hp)
+                 if (unlikely(dma_mapping_error(sc->dev,
+                           bf->bf_buf_addr))) {
+                         dev_kfree_skb_any(requeue_skb);
+-                       bf->bf_mpdu = NULL;
+-                       bf->bf_buf_addr = 0;
++                       ath_clear_dma_ptrs(bf);
+                         ath_print(common, ATH_DBG_FATAL,
+                                   "dma_mapping_error() on RX\n");
+                         ath_rx_send_to_mac80211(hw, sc, skb, rxs);
+diff --git a/drivers/net/wireless/ath/ath9k/xmit.c b/drivers/net/wireless/ath/ath9k/xmit.c
+index a5e5f27..e86f59c 100644
+--- a/drivers/net/wireless/ath/ath9k/xmit.c
++++ b/drivers/net/wireless/ath/ath9k/xmit.c
+@@ -1644,8 +1644,7 @@ static int ath_tx_setup_buffer(struct ieee80211_hw *hw, struct ath_buf *bf,
+         bf->bf_buf_addr = dma_map_single(sc->dev, skb->data,
+                                          skb->len, DMA_TO_DEVICE);
+         if (unlikely(dma_mapping_error(sc->dev, bf->bf_buf_addr))) {
+-               bf->bf_mpdu = NULL;
+-               bf->bf_buf_addr = 0;
++               ath_clear_dma_ptrs(bf);
+                 ath_print(ath9k_hw_common(sc->sc_ah), ATH_DBG_FATAL,
+                           "dma_mapping_error() on TX\n");
+                 return -ENOMEM;
+@@ -1915,7 +1914,6 @@ static void ath_tx_complete_buf(struct ath_softc *sc, struct ath_buf *bf,
+         }
+
+         dma_unmap_single(sc->dev, bf->bf_buf_addr, skb->len, DMA_TO_DEVICE);
+-       bf->bf_buf_addr = 0;
+
+         if (bf->bf_state.bfs_paprd) {
+                 if (time_after(jiffies,
+@@ -1931,7 +1929,7 @@ static void ath_tx_complete_buf(struct ath_softc *sc, struct ath_buf *bf,
+         /* At this point, skb (bf->bf_mpdu) is consumed...make sure we don't
+          * accidentally reference it later.
+          */
+-       bf->bf_mpdu = NULL;
++       ath_clear_dma_ptrs(bf);
+
+         /*
+          * Return the list of ath_buf of this mpdu to free queue
+
+
+>
+> /Björn
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+
 -- 
-1.7.2.2
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
 
