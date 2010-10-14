@@ -1,120 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.sysgo.com ([195.145.229.155]:39745 "EHLO mail.sysgo.com"
+Received: from mail.atheros.com ([12.19.149.2]:25913 "EHLO mail.atheros.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751561Ab0JZKyr (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 26 Oct 2010 06:54:47 -0400
-Date: Tue, 26 Oct 2010 12:48:11 +0200
-From: Pavel Machek <pma@sysgo.com>
-To: kernel list <linux-kernel@vger.kernel.org>,
-	chunkeey@googlemail.com, linux-wireless@vger.kernel.org
-Subject: carl9170 disconnects under load
-Message-ID: <20101026104811.GA11357@pma.sysgo.com>
+	id S1754647Ab0JNFhk (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 14 Oct 2010 01:37:40 -0400
+Received: from mail.atheros.com ([10.10.20.105])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Wed, 13 Oct 2010 22:37:30 -0700
+Date: Thu, 14 Oct 2010 11:07:17 +0530
+From: Vasanthakumar Thiagarajan <vasanth@atheros.com>
+To: Ben Greear <greearb@candelatech.com>
+CC: Vasanth Thiagarajan <Vasanth.Thiagarajan@Atheros.com>,
+	"Luis R. Rodriguez" <mcgrof@gmail.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: memory clobber in rx path, maybe related to ath9k.
+Message-ID: <20101014053717.GB21903@vasanth-laptop>
+References: <AANLkTimxp703Gy_Atg8=wpFszRDR=OJCXwOUKRh-a-d7@mail.gmail.com> <AANLkTi=t-P_5c14brJohM8UgxeOknv+3syO=7W=ix6qf@mail.gmail.com> <AANLkTinC46a+nE-XOQuBCmRJwjzgh24uC7ZJ7HtbVHnT@mail.gmail.com> <4CB378CD.1080800@candelatech.com> <AANLkTim42zmDwf744BCrPwa1kT5ph57bNMyvSyOpesVv@mail.gmail.com> <4CB3D598.7050904@candelatech.com> <AANLkTimPEg3ZU8CQUXfdpGdfbmhdE9O=GNY=g9gysTo4@mail.gmail.com> <4CB4AA89.1070009@candelatech.com> <20101013053141.GA15798@vasanth-laptop> <4CB5E0A8.5020502@candelatech.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <4CB5E0A8.5020502@candelatech.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi!
+> >
+> > I dont see any point in NULLing out bf->bf_mpdu. bf is
+> > reclaimed onto a free tx buf pool as soon as it is done
+> > with the skb. bf_mpdu of any of the bf's is never accessed
+> > without any initialization (bf_ampdu = skb).
+> 
+> The code can use skb after its deleted currently, because
+> ath_debug_stat_tx(sc, txq, bf, ts); references the bf_ampdu
+> object (I think I added that reference lately..so it's really
+> a bug that I caused).  At the least, we should move the ath_debug_stat_tx
+> logic before the ath_tx_complete() call.
 
-I'm testing driver from -wireless testing, cca 2.6.26-rc7.
+Yes, this is a serious issue irrespective of initializing bf_mpdu to
+NULL.
 
-It seems to work (up to 802.11n speeds -- I've seen iwconfig claiming
-121 MB/sec), but disconnects rather quickly when under load:
+> 
+> As for the paprd path, it looks racy to me:  What if the paprd timer
+> expires while the ath_tx_complete_buf logic is running?
 
-telnet 192.168.1.3 chargen > /dev/null
+That is the goal here, if we timed out on paprd training
+, ath_tx_complete_buf() has to free the skb. At least I dont
+see any race here, can you elaborate on your finding?, remember
+ath_tx_complete_buf() is in tasklet context.
 
-The machine is powerpc mpc5200b board, with OHCI driver -- it is not
-capable of USB2.0 speeds.
-
-Any ideas?
-								Pavel
-
-wlan0: RX AssocResp from 00:23:f8:5d:76:93 (capab=0xc21 status=0
-aid=1)
-wlan0: associated
-ieee80211 phy2: Allocated STA 00:23:f8:5d:76:93
-ieee80211 phy2: Inserted STA 00:23:f8:5d:76:93
-ieee80211 phy2: WMM queue=2 aci=0 acm=0 aifs=3 cWmin=15 cWmax=1023
-txop=0 uapsd=0
-ieee80211 phy2: WMM queue=3 aci=1 acm=0 aifs=7 cWmin=15 cWmax=1023
-txop=0 uapsd=0
-ieee80211 phy2: WMM queue=1 aci=2 acm=0 aifs=2 cWmin=7 cWmax=15
-txop=94 uapsd=0
-ieee80211 phy2: WMM queue=0 aci=3 acm=0 aifs=2 cWmin=3 cWmax=7 txop=47
-uapsd=0
-Open BA session requested for 00:23:f8:5d:76:93 tid 0
-activated addBA response timer on tid 0
-switched off addBA timer for tid 0
-Aggregation is on for tid 0
-Rx A-MPDU request on tid 0 result 0
-ieee80211 phy2: release an RX reorder frame due to timeout on earlier
-frames
-ieee80211 phy2: release an RX reorder frame due to timeout on earlier
-frames
-ieee80211 phy2: release an RX reorder frame due to timeout on earlier
-frames
-ieee80211 phy2: release an RX reorder frame due to timeout on earlier
-frames
-ieee80211 phy2: release an RX reorder frame due to timeout on earlier
-frames
-ieee80211 phy2: release an RX reorder frame due to timeout on earlier
-frames
-ieee80211 phy2: release an RX reorder frame due to timeout on earlier
-frames
-ieee80211 phy2: release an RX reorder frame due to timeout on earlier
-frames
-ieee80211 phy2: release an RX reorder frame due to timeout on earlier
-frames
-ieee80211 phy2: release an RX reorder frame due to timeout on earlier
-frames
-net_ratelimit: 79 callbacks suppressed
-ieee80211 phy2: release an RX reorder frame due to timeout on earlier
-frames
-ieee80211 phy2: release an RX reorder frame due to timeout on earlier
-frames
-ieee80211 phy2: release an RX reorder frame due to timeout on earlier
-frames
-ieee80211 phy2: release an RX reorder frame due to timeout on earlier
-frames
-ieee80211 phy2: release an RX reorder frame due to timeout on earlier
-frames
-ieee80211 phy2: release an RX reorder frame due to timeout on earlier
-frames
-ieee80211 phy2: release an RX reorder frame due to timeout on earlier
-frames
-ieee80211 phy2: release an RX reorder frame due to timeout on earlier
-frames
-ieee80211 phy2: release an RX reorder frame due to timeout on earlier
-frames
-ieee80211 phy2: release an RX reorder frame due to timeout on earlier
-frames
-net_ratelimit: 58 callbacks suppressed
-ieee80211 phy2: release an RX reorder frame due to timeout on earlier
-frames
-ieee80211 phy2: release an RX reorder frame due to timeout on earlier
-frames
-ieee80211 phy2: release an RX reorder frame due to timeout on earlier
-frames
-ieee80211 phy2: release an RX reorder frame due to timeout on earlier
-frames
-ieee80211 phy2: release an RX reorder frame due to timeout on earlier
-frames
-ieee80211 phy2: release an RX reorder frame due to timeout on earlier
-frames
-ieee80211 phy2: release an RX reorder frame due to timeout on earlier
-frames
-ieee80211 phy2: release an RX reorder frame due to timeout on earlier
-frames
-ieee80211 phy2: release an RX reorder frame due to timeout on earlier
-frames
-ieee80211 phy2: release an RX reorder frame due to timeout on earlier
-frames
-usb 1-1: USB disconnect, address 6
-Tx BA session stop requested for 00:23:f8:5d:76:93 tid 0
-Rx BA session stop requested for 00:23:f8:5d:76:93 tid 0
-wlan0: deauthenticating from 00:23:f8:5d:76:93 by local choice
-(reason=3)
-Tx BA session stop requested for 00:23:f8:5d:76:93 tid 0
-ieee80211 phy2: Removed STA 00:23:f8:5d:76:93
-ieee80211 phy2: Destroyed STA 00:23:f8:5d:76:93
-ieee80211 phy2: device now idle
+Vasanth
