@@ -1,66 +1,267 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qw0-f46.google.com ([209.85.216.46]:43979 "EHLO
-	mail-qw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753750Ab0JJRff convert rfc822-to-8bit (ORCPT
+Received: from smtp-out.google.com ([216.239.44.51]:28136 "EHLO
+	smtp-out.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754010Ab0JNWn3 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 10 Oct 2010 13:35:35 -0400
-Received: by qwf7 with SMTP id 7so1459241qwf.19
-        for <linux-wireless@vger.kernel.org>; Sun, 10 Oct 2010 10:35:34 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <E338C554-ADF5-490D-825D-E04D295664F0@ing.unibs.it>
-References: <2518B44B-D014-4ABA-AE31-BD75691488AB@ing.unibs.it>
-	<1DBB75B1-733F-4DFC-A541-2C2C986586A6@ing.unibs.it>
-	<AANLkTika70YCWU8eG5QHO+Bdf5XakEOg_b+UJdgCG4A0@mail.gmail.com>
-	<E338C554-ADF5-490D-825D-E04D295664F0@ing.unibs.it>
-Date: Sun, 10 Oct 2010 19:35:32 +0200
-Message-ID: <AANLkTimUdX1duphd=QYRz_i-TERfXbjOM1QEXaTUO13M@mail.gmail.com>
-Subject: Re: Release of Maranello firmware source code for Broadcom cards
-From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-To: francesco.gringoli@ing.unibs.it
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	b43-dev@lists.infradead.org, Bo Han <bohan@cs.umd.edu>
-Content-Type: text/plain; charset=UTF-8
+	Thu, 14 Oct 2010 18:43:29 -0400
+Received: from hpaq3.eem.corp.google.com (hpaq3.eem.corp.google.com [172.25.149.3])
+	by smtp-out.google.com with ESMTP id o9EMhSJL022611
+	for <linux-wireless@vger.kernel.org>; Thu, 14 Oct 2010 15:43:28 -0700
+Received: from glenhelen.mtv.corp.google.com (glenhelen.mtv.corp.google.com [172.22.72.223])
+	by hpaq3.eem.corp.google.com with ESMTP id o9EMhQkh032168
+	for <linux-wireless@vger.kernel.org>; Thu, 14 Oct 2010 15:43:27 -0700
+From: Paul Stewart <pstew@google.com>
+Date: Thu, 14 Oct 2010 14:35:14 -0700
+Subject: [PATCH 1/2] cfg80211: Add cfg80211/nl80211 calls for bitrate threshold
+To: linux-wireless@vger.kernel.org
+Message-Id: <20101014224326.8B175203B2@glenhelen.mtv.corp.google.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-W dniu 10 października 2010 18:53 użytkownik
-<francesco.gringoli@ing.unibs.it> napisał:
-> On Oct 10, 2010, at 4:47 PM, Rafał Miłecki wrote:
->
->> 2010/10/10  <francesco.gringoli@ing.unibs.it>:
->>> Hello there,
->>>
->>> we released the source code of the Maranello firmware and all the
->>> necessary kernel patches. It was tested on Broadcom 4318/4306 pci
->>> cards on PC architecture. Find all the necessary files browsing from
->>>
->>> http://www.ing.unibs.it/openfwwf
->>>
->>> or go directly here
->>>
->>> http://www.cs.umd.edu/projects/maranello
->>>
->>>
->>> Maranello is an enhancement of the 802.11 DCF standard: it implements
->>> a Partial Packet Recovery technique to retransmit only the corrupt
->>> parts of failed packets. This reduces the airtime and contributes to
->>> enhance the throughput. It was written starting from OpenFWWF5.2 by
->>> adding a number of new features.
->>>
->> Did you just add recovery feature to OpenFWWF 5.2 or did you improve
->> basic OpenFWWF as well?
->>
->> My 4318 with OpenFWWF 5.2 stops transmitting after few MB. Can
->> Maranello contain any fix for this? I'll able to test this later next
->> week.
->
-> No, I don't think so. OpenFWWF5.2 does not handle correctly fifo overflow conditions. We have a testing firmware that handles them (and that works perfectly on WRT54GL): I hope we can release it soon.
+Add calls for accepting nl80211 bitrate thresholds from user space,
+and add a function calls for sending out threshold notifications.
 
-Wow, that's great! If you need more testing, I'm willing to do some.
-If you need full root access to machine with 4318 running
-wireless-testing, just mail me privately.
+Signed-off-by: Paul Stewart <pstew@google.com>
+---
+ include/linux/nl80211.h |   10 +++++-
+ include/net/cfg80211.h  |   18 ++++++++++
+ net/wireless/mlme.c     |   13 +++++++
+ net/wireless/nl80211.c  |   86 +++++++++++++++++++++++++++++++++++++++++++++-
+ net/wireless/nl80211.h  |    6 +++
+ 5 files changed, 130 insertions(+), 3 deletions(-)
 
-Really hope you will manage to release that soon :)
-
+diff --git a/include/linux/nl80211.h b/include/linux/nl80211.h
+index 0edb256..9cd12b6 100644
+--- a/include/linux/nl80211.h
++++ b/include/linux/nl80211.h
+@@ -1785,7 +1785,13 @@ enum nl80211_ps_state {
+  * @NL80211_ATTR_CQM_RSSI_HYST: RSSI hysteresis in dBm. This value specifies
+  *	the minimum amount the RSSI level must change after an event before a
+  *	new event may be issued (to reduce effects of RSSI oscillation).
+- * @NL80211_ATTR_CQM_RSSI_THRESHOLD_EVENT: RSSI threshold event
++ * @NL80211_ATTR_CQM_RSSI_THRESHOLD_EVENT: RSSI threshold event.  This provides
++ *      the current bitrate (in 1000 bits per second) at the time that a
++ *      threshold was crossed.
++ * @NL80211_ATTR_CQM_BITRATE_THOLD: Bitrate threshold in 1000 bits per second.
++ *      This specifies the threshold at which an event will be sent.  Set to
++ *      zero to disable.
++ * @NL80211_ATTR_CQM_BITRATE_THRESHOLD_EVENT: New transmit bitrate
+  * @__NL80211_ATTR_CQM_AFTER_LAST: internal
+  * @NL80211_ATTR_CQM_MAX: highest key attribute
+  */
+@@ -1794,6 +1800,8 @@ enum nl80211_attr_cqm {
+ 	NL80211_ATTR_CQM_RSSI_THOLD,
+ 	NL80211_ATTR_CQM_RSSI_HYST,
+ 	NL80211_ATTR_CQM_RSSI_THRESHOLD_EVENT,
++	NL80211_ATTR_CQM_BITRATE_THOLD,
++	NL80211_ATTR_CQM_BITRATE_THRESHOLD_EVENT,
+ 
+ 	/* keep last */
+ 	__NL80211_ATTR_CQM_AFTER_LAST,
+diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+index 2a7936d..e7f044e 100644
+--- a/include/net/cfg80211.h
++++ b/include/net/cfg80211.h
+@@ -1146,6 +1146,7 @@ struct cfg80211_pmksa {
+  * @set_power_mgmt: Configure WLAN power management. A timeout value of -1
+  *	allows the driver to adjust the dynamic ps timeout value.
+  * @set_cqm_rssi_config: Configure connection quality monitor RSSI threshold.
++ * @set_cqm_bitrate_config: Config connection quality monitor bitrate threshold.
+  *
+  * @mgmt_frame_register: Notify driver that a management frame type was
+  *	registered. Note that this callback may not sleep, and cannot run
+@@ -1301,6 +1302,10 @@ struct cfg80211_ops {
+ 				       struct net_device *dev,
+ 				       s32 rssi_thold, u32 rssi_hyst);
+ 
++	int	(*set_cqm_bitrate_config)(struct wiphy *wiphy,
++					  struct net_device *dev,
++					  u32 bitrate_thold);
++
+ 	void	(*mgmt_frame_register)(struct wiphy *wiphy,
+ 				       struct net_device *dev,
+ 				       u16 frame_type, bool reg);
+@@ -2595,6 +2600,19 @@ void cfg80211_cqm_rssi_notify(struct net_device *dev,
+ 			      enum nl80211_cqm_rssi_threshold_event rssi_event,
+ 			      gfp_t gfp);
+ 
++/**
++ * cfg80211_cqm_bitrate_notify - connection quality monitoring bitrate event
++ * @dev: network device
++ * @rate: the new transmit rate
++ * @gfp: context flags
++ *
++ * This function is called when a the transmit bitrate changes, and
++ * connection quality monitoring is configured to capture these events.
++ */
++void cfg80211_cqm_bitrate_notify(struct net_device *dev,
++				 u32 bitrate,
++				 gfp_t gfp);
++
+ /* Logging, debugging and troubleshooting/diagnostic helpers. */
+ 
+ /* wiphy_printk helpers, similar to dev_printk */
+diff --git a/net/wireless/mlme.c b/net/wireless/mlme.c
+index 26838d9..ebb4e3a 100644
+--- a/net/wireless/mlme.c
++++ b/net/wireless/mlme.c
+@@ -1028,3 +1028,16 @@ void cfg80211_cqm_rssi_notify(struct net_device *dev,
+ 	nl80211_send_cqm_rssi_notify(rdev, dev, rssi_event, gfp);
+ }
+ EXPORT_SYMBOL(cfg80211_cqm_rssi_notify);
++
++void cfg80211_cqm_bitrate_notify(struct net_device *dev,
++				 u32 bitrate,
++				 gfp_t gfp)
++{
++	struct wireless_dev *wdev = dev->ieee80211_ptr;
++	struct wiphy *wiphy = wdev->wiphy;
++	struct cfg80211_registered_device *rdev = wiphy_to_dev(wiphy);
++
++	/* Indicate roaming trigger event to user space */
++	nl80211_send_cqm_bitrate_notify(rdev, dev, bitrate, gfp);
++}
++EXPORT_SYMBOL(cfg80211_cqm_bitrate_notify);
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index c506241..de5f0b6 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -4325,6 +4325,8 @@ nl80211_attr_cqm_policy[NL80211_ATTR_CQM_MAX + 1] __read_mostly = {
+ 	[NL80211_ATTR_CQM_RSSI_THOLD] = { .type = NLA_U32 },
+ 	[NL80211_ATTR_CQM_RSSI_HYST] = { .type = NLA_U32 },
+ 	[NL80211_ATTR_CQM_RSSI_THRESHOLD_EVENT] = { .type = NLA_U32 },
++	[NL80211_ATTR_CQM_BITRATE_THOLD] = { .type = NLA_U32 },
++	[NL80211_ATTR_CQM_BITRATE_THRESHOLD_EVENT] = { .type = NLA_U32 },
+ };
+ 
+ static int nl80211_set_cqm_rssi(struct genl_info *info,
+@@ -4350,6 +4352,26 @@ static int nl80211_set_cqm_rssi(struct genl_info *info,
+ 					      threshold, hysteresis);
+ }
+ 
++static int nl80211_set_cqm_bitrate(struct genl_info *info,
++					   u32 trigger_rate)
++{
++	struct cfg80211_registered_device *rdev = info->user_ptr[0];
++	struct wireless_dev *wdev;
++	struct net_device *dev = info->user_ptr[1];
++
++	wdev = dev->ieee80211_ptr;
++
++	if (!rdev->ops->set_cqm_bitrate_config)
++		return -EOPNOTSUPP;
++
++	if (wdev->iftype != NL80211_IFTYPE_STATION &&
++	    wdev->iftype != NL80211_IFTYPE_P2P_CLIENT)
++		return -EOPNOTSUPP;
++
++	return rdev->ops->set_cqm_bitrate_config(wdev->wiphy, dev,
++						 trigger_rate);
++}
++
+ static int nl80211_set_cqm(struct sk_buff *skb, struct genl_info *info)
+ {
+ 	struct nlattr *attrs[NL80211_ATTR_CQM_MAX + 1];
+@@ -4367,6 +4389,8 @@ static int nl80211_set_cqm(struct sk_buff *skb, struct genl_info *info)
+ 	if (err)
+ 		goto out;
+ 
++	err = -EINVAL;
++
+ 	if (attrs[NL80211_ATTR_CQM_RSSI_THOLD] &&
+ 	    attrs[NL80211_ATTR_CQM_RSSI_HYST]) {
+ 		s32 threshold;
+@@ -4374,8 +4398,16 @@ static int nl80211_set_cqm(struct sk_buff *skb, struct genl_info *info)
+ 		threshold = nla_get_u32(attrs[NL80211_ATTR_CQM_RSSI_THOLD]);
+ 		hysteresis = nla_get_u32(attrs[NL80211_ATTR_CQM_RSSI_HYST]);
+ 		err = nl80211_set_cqm_rssi(info, threshold, hysteresis);
+-	} else
+-		err = -EINVAL;
++		if (err)
++			goto out;
++	}
++
++	if (attrs[NL80211_ATTR_CQM_BITRATE_THOLD]) {
++		u32 thold = nla_get_u32(attrs[NL80211_ATTR_CQM_BITRATE_THOLD]);
++		err = nl80211_set_cqm_bitrate(info, thold);
++		if (err)
++			goto out;
++	}
+ 
+ out:
+ 	return err;
+@@ -5651,6 +5683,56 @@ nl80211_send_cqm_rssi_notify(struct cfg80211_registered_device *rdev,
+ 	nlmsg_free(msg);
+ }
+ 
++void
++nl80211_send_cqm_bitrate_notify(struct cfg80211_registered_device *rdev,
++				struct net_device *netdev,
++				u32 bitrate,
++				gfp_t gfp)
++{
++	struct sk_buff *msg;
++	struct nlattr *pinfoattr;
++	void *hdr;
++
++	if (bitrate == 0)
++		return;
++
++
++	msg = nlmsg_new(NLMSG_GOODSIZE, gfp);
++	if (!msg)
++		return;
++
++	hdr = nl80211hdr_put(msg, 0, 0, 0, NL80211_CMD_NOTIFY_CQM);
++	if (!hdr) {
++		nlmsg_free(msg);
++		return;
++	}
++
++
++	NLA_PUT_U32(msg, NL80211_ATTR_WIPHY, rdev->wiphy_idx);
++	NLA_PUT_U32(msg, NL80211_ATTR_IFINDEX, netdev->ifindex);
++
++	pinfoattr = nla_nest_start(msg, NL80211_ATTR_CQM);
++	if (!pinfoattr)
++		goto nla_put_failure;
++
++	NLA_PUT_U32(msg, NL80211_ATTR_CQM_BITRATE_THRESHOLD_EVENT, bitrate);
++
++	nla_nest_end(msg, pinfoattr);
++
++	if (genlmsg_end(msg, hdr) < 0) {
++		nlmsg_free(msg);
++		return;
++	}
++
++	genlmsg_multicast_netns(wiphy_net(&rdev->wiphy), msg, 0,
++				nl80211_mlme_mcgrp.id, gfp);
++	return;
++
++ nla_put_failure:
++	genlmsg_cancel(msg, hdr);
++	nlmsg_free(msg);
++}
++
+ static int nl80211_netlink_notify(struct notifier_block * nb,
+ 				  unsigned long state,
+ 				  void *_notify)
+diff --git a/net/wireless/nl80211.h b/net/wireless/nl80211.h
+index 30d2f93..769fa90 100644
+--- a/net/wireless/nl80211.h
++++ b/net/wireless/nl80211.h
+@@ -88,4 +88,10 @@ nl80211_send_cqm_rssi_notify(struct cfg80211_registered_device *rdev,
+ 			     enum nl80211_cqm_rssi_threshold_event rssi_event,
+ 			     gfp_t gfp);
+ 
++void
++nl80211_send_cqm_bitrate_notify(struct cfg80211_registered_device *rdev,
++				struct net_device *netdev,
++				u32 bitrate,
++				gfp_t gfp);
++
+ #endif /* __NET_WIRELESS_NL80211_H */
 -- 
-Rafał
+1.7.1
+
