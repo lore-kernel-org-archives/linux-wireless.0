@@ -1,46 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:44679 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751838Ab0JVEvY (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 22 Oct 2010 00:51:24 -0400
-Message-ID: <4CC11840.4060709@candelatech.com>
-Date: Thu, 21 Oct 2010 21:51:12 -0700
-From: Ben Greear <greearb@candelatech.com>
-MIME-Version: 1.0
-To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-CC: Bruno Randolf <br1@einfach.org>, linville@tuxdriver.com,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 0/6] ath9k: fix RX poison issue
-References: <1287616028-12547-1-git-send-email-lrodriguez@atheros.com> <4CC07CA9.4040808@candelatech.com> <201010220930.01071.br1@einfach.org> <AANLkTi=wTsFnVZ=GGck_ArP6ubT_dOB41ut13od7biwT@mail.gmail.com>
-In-Reply-To: <AANLkTi=wTsFnVZ=GGck_ArP6ubT_dOB41ut13od7biwT@mail.gmail.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Received: from mga01.intel.com ([192.55.52.88]:14873 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751873Ab0JNPza (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 14 Oct 2010 11:55:30 -0400
+Subject: Re: [PATCH 2/2] iwlwifi: one less commit_rxon while scan
+From: "Guy, Wey-Yi" <wey-yi.w.guy@intel.com>
+To: Stanislaw Gruszka <sgruszka@redhat.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <20101014084238.GB2286@redhat.com>
+References: <1286977193-12144-1-git-send-email-sgruszka@redhat.com>
+	 <1286977193-12144-2-git-send-email-sgruszka@redhat.com>
+	 <20101014084238.GB2286@redhat.com>
+Content-Type: text/plain
+Date: Thu, 14 Oct 2010 08:54:39 -0700
+Message-Id: <1287071679.13051.10.camel@wwguy-ubuntu>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 10/21/2010 05:32 PM, Luis R. Rodriguez wrote:
-> On Thu, Oct 21, 2010 at 5:30 PM, Bruno Randolf<br1@einfach.org>  wrote:
->> On Fri October 22 2010 02:47:21 Ben Greear wrote:
->>> I tested this code when it was combined into a single patch.
->>> There were still some issues, but I have no reason to believe
->>> this patch set caused them.  This patch set significantly
->>> improved stability in my testing with 130+ STA interfaces.
->>
->> one question: do you see similar issues with ath5k? i remember one bug is
->> filed with a rx poision issue.
->
-> Hardware is similar so the I'd do the same locking.
+Hi Stanislaw,
 
-We did similar testing with ath5k, and did not see any obvious
-problems.  But, maybe we were just getting lucky.
+On Thu, 2010-10-14 at 01:42 -0700, Stanislaw Gruszka wrote:
+> On Wed, Oct 13, 2010 at 03:39:53PM +0200, Stanislaw Gruszka wrote:
+> > Almost anywhere in the code we avoid committing rxon while performing
+> > scan, and make rxon commit when scan complete. Some current patches do
+> > not follow that rule. We have that problem at least in
+> > iwlagn_confirue_filter(), iwl_update_chain_flags() and
+> > iwl_bg_bt_full_concurrency().
+> 
+> Any comments about iwl_update_chain_flags, iwl_bg_bt_full_concurrency ?
+> I would like to know how to deal with them, should we deffer commit_rxon
+> to scan complete, or cancel the scan. Or maybe this is no problem
+> at all, because in example committing rxon vs scan was problem of
+> older firmware?
+> 
 
-Thanks,
-Ben
+iwl_update_chain_flags() is used when PSP mode change,
+iwl_bg_bt_full_concurrency() is used only for BT coex and in BT full
+concurrency mode. For both case, I do not see any reason we can not
+defer to scan complete.
 
->
->    Luis
+Thanks
+Wey
 
-
--- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
