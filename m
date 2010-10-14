@@ -1,68 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([88.198.39.176]:36814 "EHLO ds10.nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757743Ab0JWPpl (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 23 Oct 2010 11:45:41 -0400
-Message-ID: <4CC30322.2080902@openwrt.org>
-Date: Sat, 23 Oct 2010 17:45:38 +0200
-From: Felix Fietkau <nbd@openwrt.org>
+Received: from smtp-out.google.com ([216.239.44.51]:55877 "EHLO
+	smtp-out.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754949Ab0JNOYn convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 14 Oct 2010 10:24:43 -0400
+Received: from wpaz37.hot.corp.google.com (wpaz37.hot.corp.google.com [172.24.198.101])
+	by smtp-out.google.com with ESMTP id o9EEOglb031871
+	for <linux-wireless@vger.kernel.org>; Thu, 14 Oct 2010 07:24:42 -0700
+Received: from gyh3 (gyh3.prod.google.com [10.243.50.195])
+	by wpaz37.hot.corp.google.com with ESMTP id o9EEOC0O012329
+	for <linux-wireless@vger.kernel.org>; Thu, 14 Oct 2010 07:24:41 -0700
+Received: by gyh3 with SMTP id 3so2285597gyh.35
+        for <linux-wireless@vger.kernel.org>; Thu, 14 Oct 2010 07:24:41 -0700 (PDT)
 MIME-Version: 1.0
-To: linux-wireless <linux-wireless@vger.kernel.org>
-CC: "John W. Linville" <linville@tuxdriver.com>,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>
-Subject: [PATCH] ath9k: resume aggregation immediately after a hardware reset
+In-Reply-To: <1287064265.4641.435.camel@jlt3.sipsolutions.net>
+References: <20101013224851.B8E5D20465@glenhelen.mtv.corp.google.com>
+	<1287064265.4641.435.camel@jlt3.sipsolutions.net>
+Date: Thu, 14 Oct 2010 07:24:40 -0700
+Message-ID: <AANLkTinq=B13gPd3obqAkBDQv4Ufz5Upp2UPVw9bpED2@mail.gmail.com>
+Subject: Re: [PATCH 3/6] Add a function for evaluating rate changes for
+ possible notification
+From: Paul Stewart <pstew@google.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Since aggregation is usually triggered by tx completion, a hardware
-reset (because of beacon stuck, tx hang or baseband hang) can
-significantly delay the transmission of the next AMPDU (until the next
-tx completion event).
-Fix this by rescheduling aggregation after such a reset.
+On Thu, Oct 14, 2010 at 6:51 AM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
+> On Wed, 2010-10-13 at 15:13 -0700, Paul Stewart wrote:
+>> Called from a work proc, this examines the last transmit rate change
+>> to see if it warrants an event transmission.
+>
+>> +        list_for_each_entry(sdata, &local->interfaces, list) {
+>> +                if (!netif_running(sdata->dev) ||
+>
+> ieee80211_sdata_running
+>
+>> +             if (!(ifmgd->flags & IEEE80211_STA_TX_RATE_CHANGED) ||
+>> +                 bss_conf->cqm_bitrate_thold == 0)
+>> +                     continue;
+>
+> why would this work item even be running with a threshold of zero?
 
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
-Cc: stable@kernel.org
----
---- a/drivers/net/wireless/ath/ath9k/main.c
-+++ b/drivers/net/wireless/ath/ath9k/main.c
-@@ -587,7 +587,7 @@ void ath_hw_check(struct work_struct *wo
- 
- 		msleep(1);
- 	}
--	ath_reset(sc, false);
-+	ath_reset(sc, true);
- 
- out:
- 	ath9k_ps_restore(sc);
-@@ -605,7 +605,7 @@ void ath9k_tasklet(unsigned long data)
- 	ath9k_ps_wakeup(sc);
- 
- 	if (status & ATH9K_INT_FATAL) {
--		ath_reset(sc, false);
-+		ath_reset(sc, true);
- 		ath9k_ps_restore(sc);
- 		return;
- 	}
---- a/drivers/net/wireless/ath/ath9k/xmit.c
-+++ b/drivers/net/wireless/ath/ath9k/xmit.c
-@@ -2163,7 +2163,7 @@ static void ath_tx_complete_poll_work(st
- 		ath_print(ath9k_hw_common(sc->sc_ah), ATH_DBG_RESET,
- 			  "tx hung, resetting the chip\n");
- 		ath9k_ps_wakeup(sc);
--		ath_reset(sc, false);
-+		ath_reset(sc, true);
- 		ath9k_ps_restore(sc);
- 	}
- 
---- a/drivers/net/wireless/ath/ath9k/beacon.c
-+++ b/drivers/net/wireless/ath/ath9k/beacon.c
-@@ -370,7 +370,7 @@ void ath_beacon_tasklet(unsigned long da
- 			ath_print(common, ATH_DBG_BSTUCK,
- 				  "beacon is officially stuck\n");
- 			sc->sc_flags |= SC_OP_TSF_RESET;
--			ath_reset(sc, false);
-+			ath_reset(sc, true);
- 		}
- 
- 		return;
+This would be in the case where the userspace reset the threshold back
+to zero (no longer interested in bitrate change events) but a work
+task was already scheduled it's a small window and I can remove that
+conditional if it suits.
+
+> Again, this won't compile without the next patch.
+
+I'll fix.
+
+> However, I think all of this is really expensive. For many devices,
+> you'll effectively be triggering an evaluation of the bitrate for every
+> packet. This will work well with minstrel, since it properly uses and
+> advertises the "best throughput" rate, but not necessarily with other
+> algorithms.
+
+I could throttle-down the execution rate of this work proc to a
+minimum periodicity, at the expense of timely information.  Is this
+along the lines of what you'd like done?
+
+--
+Paul
