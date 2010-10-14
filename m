@@ -1,49 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f46.google.com ([209.85.215.46]:62576 "EHLO
-	mail-ew0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754612Ab0JKNke (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:52789 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754805Ab0JNObr (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 11 Oct 2010 09:40:34 -0400
-Received: by mail-ew0-f46.google.com with SMTP id 20so574157ewy.19
-        for <linux-wireless@vger.kernel.org>; Mon, 11 Oct 2010 06:40:33 -0700 (PDT)
-From: Ivo van Doorn <ivdoorn@gmail.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Subject: [PATCH 4/7] rt2x00: Fix dead queue when skb allocation failed
-Date: Mon, 11 Oct 2010 15:38:26 +0200
-Cc: linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com
-References: <201010111537.26584.IvDoorn@gmail.com> <201010111537.48587.IvDoorn@gmail.com> <201010111538.08677.IvDoorn@gmail.com>
-In-Reply-To: <201010111538.08677.IvDoorn@gmail.com>
-MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Message-Id: <201010111538.27633.IvDoorn@gmail.com>
+	Thu, 14 Oct 2010 10:31:47 -0400
+Subject: Re: [PATCH 3/6] Add a function for evaluating rate changes for
+ possible notification
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Paul Stewart <pstew@google.com>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <AANLkTinq=B13gPd3obqAkBDQv4Ufz5Upp2UPVw9bpED2@mail.gmail.com>
+References: <20101013224851.B8E5D20465@glenhelen.mtv.corp.google.com>
+	 <1287064265.4641.435.camel@jlt3.sipsolutions.net>
+	 <AANLkTinq=B13gPd3obqAkBDQv4Ufz5Upp2UPVw9bpED2@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Thu, 14 Oct 2010 16:32:30 +0200
+Message-ID: <1287066750.4641.439.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-When the RX skb allocation failed, we should recycle
-the previously allocated skbuffer. By calling return
-we would kill the RX queue completely since the
-entry would be invalidated.
+On Thu, 2010-10-14 at 07:24 -0700, Paul Stewart wrote:
 
-Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
-Acked-by: Helmut Schaa <helmut.schaa@googlemail.com>
----
- drivers/net/wireless/rt2x00/rt2x00dev.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+> >> +             if (!(ifmgd->flags & IEEE80211_STA_TX_RATE_CHANGED) ||
+> >> +                 bss_conf->cqm_bitrate_thold == 0)
+> >> +                     continue;
+> >
+> > why would this work item even be running with a threshold of zero?
+> 
+> This would be in the case where the userspace reset the threshold back
+> to zero (no longer interested in bitrate change events) but a work
+> task was already scheduled it's a small window and I can remove that
+> conditional if it suits.
 
-diff --git a/drivers/net/wireless/rt2x00/rt2x00dev.c b/drivers/net/wireless/rt2x00/rt2x00dev.c
-index db25209..e5e8ba3 100644
---- a/drivers/net/wireless/rt2x00/rt2x00dev.c
-+++ b/drivers/net/wireless/rt2x00/rt2x00dev.c
-@@ -491,7 +491,7 @@ void rt2x00lib_rxdone(struct queue_entry *entry)
- 	 */
- 	skb = rt2x00queue_alloc_rxskb(entry);
- 	if (!skb)
--		return;
-+		goto submit_entry;
- 
- 	/*
- 	 * Unmap the skb.
--- 
-1.7.2.3
+Makes sense, I was just wondering. Maybe just add a comment?
+
+> > However, I think all of this is really expensive. For many devices,
+> > you'll effectively be triggering an evaluation of the bitrate for every
+> > packet. This will work well with minstrel, since it properly uses and
+> > advertises the "best throughput" rate, but not necessarily with other
+> > algorithms.
+> 
+> I could throttle-down the execution rate of this work proc to a
+> minimum periodicity, at the expense of timely information.  Is this
+> along the lines of what you'd like done?
+
+If I'd had a good idea I probably would've mentioned it. I guess that
+would work, but I don't really know. I'm just worried that there is a
+lot of calculation going on all the time, like all those divisions.
+Those are _really_ expensive on embedded systems.
+
+I wonder if "rate" is really the best interface for this. Since it's a
+threshold event, does it matter? Maybe there should instead be events
+for MCS changes and legacy rate changes so we can avoid all those
+calculations?
+
+johannes
 
