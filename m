@@ -1,80 +1,118 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f46.google.com ([209.85.215.46]:61643 "EHLO
-	mail-ew0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753129Ab0JNRGD convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 14 Oct 2010 13:06:03 -0400
-Received: by ewy20 with SMTP id 20so3641808ewy.19
-        for <linux-wireless@vger.kernel.org>; Thu, 14 Oct 2010 10:06:02 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <20101014165111.GA22130@suse.de>
-References: <AANLkTinQMRGkOvi4e4JMsHGV_BF_4Rf5oHCtZgQjwQ1g@mail.gmail.com>
-	<20101014165111.GA22130@suse.de>
-Date: Thu, 14 Oct 2010 19:06:00 +0200
-Message-ID: <AANLkTin9PxzROyCQxiT5-ca4CUQK+kppS7gAibbbZ2=v@mail.gmail.com>
-Subject: Re: Licensing wlc_phy_radio.h and brcm80211 (was: [PATCH 3/3] b43:
- N-PHY: add 2055 radio regs)
-From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-To: Greg KH <gregkh@suse.de>
-Cc: =?UTF-8?Q?G=C3=A1bor_Stefanik?= <netrolller.3d@gmail.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	b43-dev <b43-dev@lists.infradead.org>,
-	linux-wireless@vger.kernel.org,
-	Henry Ptasinski <henryp@broadcom.com>,
-	Brett Rudley <brudley@broadcom.com>,
-	Nohee Ko <noheek@broadcom.com>
-Content-Type: text/plain; charset=UTF-8
+Received: from mx1.redhat.com ([209.132.183.28]:21859 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754680Ab0JNPzn (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 14 Oct 2010 11:55:43 -0400
+Subject: Re: [PATCH] libertas: Fix sd8686 firmware reload
+From: Dan Williams <dcbw@redhat.com>
+To: Daniel Drake <dsd@laptop.org>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	libertas-dev@lists.infradead.org, pgf@laptop.org, steve@cozybit.com
+In-Reply-To: <20101013191402.7C6ED9D401B@zog.reactivated.net>
+References: <20101013191402.7C6ED9D401B@zog.reactivated.net>
+Content-Type: text/plain; charset="UTF-8"
+Date: Thu, 14 Oct 2010 10:58:56 -0500
+Message-ID: <1287071936.7921.35.camel@dcbw.foobar.com>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2010/10/14 Greg KH <gregkh@suse.de>:
-> On Thu, Oct 14, 2010 at 06:40:14PM +0200, Rafał Miłecki wrote:
->> W dniu 11 października 2010 18:24 użytkownik Gábor Stefanik
->> <netrolller.3d@gmail.com> napisał:
->> > Doesn't brcm80211 contain register names for B2055?
->>
->> I've checked brcm80211 and noticed defines in
->> drivers/staging/brcm80211/phy/wlc_phy_radio.h.
->>
->> Whole brcm80211 driver is licensed as:
->> MODULE_LICENSE("Dual BSD/GPL");
->>
->> Mentioned file contains following comments:
->> +/*
->> + * Copyright (c) 2010 Broadcom Corporation
->> + *
->> + * Permission to use, copy, modify, and/or distribute this software for any
->> + * purpose with or without fee is hereby granted, provided that the above
->> + * copyright notice and this permission notice appear in all copies.
->>
->> Our b43 driver is licensed as:
->> MODULE_LICENSE("GPL");
->> and I am not sure if permission above is actually GPL-compatible. The
->> best option would be to add defines from wlc_phy_radio.h and include
->> Broadcom's copyright. However comment above wants us to include info
->> about free copying/modifying/using which is not GPL-compatible.
->>
->> Is there any way to solve this issue?
->
-> I don't understand, are you just wanting to use the names in the .h file
-> for the registers?
+On Wed, 2010-10-13 at 20:14 +0100, Daniel Drake wrote:
+> From: Paul Fox <pgf@laptop.org>
+> 
+> For the SD8686, we cannot rely on the scratch register to read the firmware
+> load status, because the same register is used for storing RX packet length.
+> Broaden the check to account for this.
+> 
+> The module can now be unloaded/reloaded successfully.
+> 
+> Based on the implementation from libertas_tf.
+> 
+> Signed-off-by: Daniel Drake <dsd@laptop.org>
 
-Yes. I want to put lines like:
-#define RADIO_2056_RX0				(0x6 << 12)
-in my radio_2056.h
+Acked-by: Dan Williams <dcbw@redhat.com>
+
+> ---
+>  drivers/net/wireless/libertas/if_sdio.c |   32 ++++++++++++++++++++++++++++--
+>  1 files changed, 29 insertions(+), 3 deletions(-)
+> 
+> diff --git a/drivers/net/wireless/libertas/if_sdio.c b/drivers/net/wireless/libertas/if_sdio.c
+> index 87b6349..d2e5193 100644
+> --- a/drivers/net/wireless/libertas/if_sdio.c
+> +++ b/drivers/net/wireless/libertas/if_sdio.c
+> @@ -704,28 +704,54 @@ static int if_sdio_prog_firmware(struct if_sdio_card *card)
+>  
+>  	lbs_deb_enter(LBS_DEB_SDIO);
+>  
+> +	/*
+> +	 * Disable interrupts
+> +	 */
+> +	sdio_claim_host(card->func);
+> +	sdio_writeb(card->func, 0x00, IF_SDIO_H_INT_MASK, &ret);
+> +	sdio_release_host(card->func);
+> +
+>  	sdio_claim_host(card->func);
+>  	scratch = if_sdio_read_scratch(card, &ret);
+>  	sdio_release_host(card->func);
+>  
+> +	lbs_deb_sdio("firmware status = %#x\n", scratch);
+> +	lbs_deb_sdio("scratch ret = %d\n", ret);
+> +
+>  	if (ret)
+>  		goto out;
+>  
+> -	lbs_deb_sdio("firmware status = %#x\n", scratch);
+>  
+> +	/*
+> +	 * The manual clearly describes that FEDC is the right code to use
+> +	 * to detect firmware presence, but for SD8686 it is not that simple.
+> +	 * Scratch is also used to store the RX packet length, so we lose
+> +	 * the FEDC value early on. So we use a non-zero check in order
+> +	 * to validate firmware presence.
+> +	 * Additionally, the SD8686 in the Gumstix always has the high scratch
+> +	 * bit set, even when the firmware is not loaded. So we have to
+> +	 * exclude that from the test.
+> +	 */
+>  	if (scratch == IF_SDIO_FIRMWARE_OK) {
+>  		lbs_deb_sdio("firmware already loaded\n");
+>  		goto success;
+> +	} else if ((card->model == IF_SDIO_MODEL_8686) && (scratch & 0x7fff)) {
+> +		lbs_deb_sdio("firmware may be running\n");
+> +		goto success;
+>  	}
+>  
+>  	ret = if_sdio_prog_helper(card);
+>  	if (ret)
+>  		goto out;
+>  
+> +	lbs_deb_sdio("Helper firmware loaded\n");
+> +
+>  	ret = if_sdio_prog_real(card);
+>  	if (ret)
+>  		goto out;
+>  
+> +	lbs_deb_sdio("Firmware loaded\n");
+> +
+>  success:
+>  	sdio_claim_host(card->func);
+>  	sdio_set_block_size(card->func, IF_SDIO_BLOCK_SIZE);
+> @@ -1083,8 +1109,6 @@ static int if_sdio_probe(struct sdio_func *func,
+>  	priv->exit_deep_sleep = if_sdio_exit_deep_sleep;
+>  	priv->reset_deep_sleep_wakeup = if_sdio_reset_deep_sleep_wakeup;
+>  
+> -	priv->fw_ready = 1;
+> -
+>  	sdio_claim_host(func);
+>  
+>  	/*
+> @@ -1105,6 +1129,8 @@ static int if_sdio_probe(struct sdio_func *func,
+>  	if (ret)
+>  		goto reclaim;
+>  
+> +	priv->fw_ready = 1;
+> +
+>  	/*
+>  	 * FUNC_INIT is required for SD8688 WLAN/BT multiple functions
+>  	 */
 
 
-> If so, why?  You don't want to support the same devices in the b43
-> driver that the brcm80211 driver does, do you?
-
-I do. I see many advantages of that plus most of the code is already
-here coming from RE.
-
-Finishing N-PHY support in b43 does not need much work plus:
-1) We support SSB devices
-2) We support older (LP/G-phy) devices
-3) We share infrastructure (easier to maintain)
-4) We probably could support modes like AP
-
--- 
-Rafał
