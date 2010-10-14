@@ -1,45 +1,82 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iw0-f174.google.com ([209.85.214.174]:38724 "EHLO
-	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751525Ab0JARUa (ORCPT
+Received: from mail.candelatech.com ([208.74.158.172]:55809 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753183Ab0JNXai (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 1 Oct 2010 13:20:30 -0400
-Received: by iwn5 with SMTP id 5so4054950iwn.19
-        for <linux-wireless@vger.kernel.org>; Fri, 01 Oct 2010 10:20:30 -0700 (PDT)
+	Thu, 14 Oct 2010 19:30:38 -0400
+Message-ID: <4CB79299.7000005@candelatech.com>
+Date: Thu, 14 Oct 2010 16:30:33 -0700
+From: Ben Greear <greearb@candelatech.com>
 MIME-Version: 1.0
-In-Reply-To: <1285949495.3739.39.camel@jlt3.sipsolutions.net>
-References: <1285934732-16087-1-git-send-email-sgruszka@redhat.com> <1285949495.3739.39.camel@jlt3.sipsolutions.net>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Fri, 1 Oct 2010 10:20:08 -0700
-Message-ID: <AANLkTintS4GU5-uYjMyY5bA1RaJL5cby1aKEpmZhSBkN@mail.gmail.com>
-Subject: Re: [PATCH 1/6] mac80211: perform scan cancel in hw reset work
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Stanislaw Gruszka <sgruszka@redhat.com>,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+To: "Luis R. Rodriguez" <lrodriguez@Atheros.com>
+CC: Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
+	"Luis R. Rodriguez" <mcgrof@gmail.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: memory clobber in rx path, maybe related to ath9k.
+References: <4CB4AA89.1070009@candelatech.com> <20101013053141.GA15798@vasanth-laptop> <4CB5E0A8.5020502@candelatech.com> <AANLkTimp_GSwwX_RnQSyN9QNe55HQ+0HZJ1yd8Xp+dWG@mail.gmail.com> <AANLkTinyVqdgPqzpyihuaPtVVqDmzj-ZbXzQ-4qdA2yH@mail.gmail.com> <4CB77EA0.1000005@candelatech.com> <AANLkTimC0+6PiqWO+LmtBV7uKCVpZueAQs6m_6kAnbq9@mail.gmail.com> <AANLkTi=1oOCcdvBHo+8WAVHv-M8tE14ntmK4M_09SWh5@mail.gmail.com> <AANLkTi=pp2Ob06YCi6GsR9rtRaDWPP95n2M72qWLdbwM@mail.gmail.com> <20101014225150.GB15740@tux> <20101014231958.GA3242@tux>
+In-Reply-To: <20101014231958.GA3242@tux>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Oct 1, 2010 at 9:11 AM, Johannes Berg <johannes@sipsolutions.net> wrote:
-> On Fri, 2010-10-01 at 14:05 +0200, Stanislaw Gruszka wrote:
->> Move ieee80211_scan_cancel() and all other related code to
->> ieee80211_restart_work() as ieee80211_restart_hw() is intended to be
->> callable from any context.
->>
->> Fix a bug that RTNL lock is not taken during ieee80211_cancel_scan().
->>
->> Take local->mtx before WARN(test_bit(SCAN_HW_SCANNING, &local->scanning)
->> to prevent the race condition with __ieee80211_start_scan() described
->> here: http://marc.info/?l=linux-wireless&m=128516716810537&w=2
->>
->> Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+On 10/14/2010 04:19 PM, Luis R. Rodriguez wrote:
+> Ok please try this patch, it cures it for me.
+
+Well, it got a lot further than normal, but it still
+hit the poison check after a few minutes.
+
+Current test case is my app loading 130 or so stations, each running
+wpa_supplicant.  All were created, and quite a few had associated
+when the poison check hit.
+
+So, it definitely looks like a step in the right direction, but
+not fully fixed yet.
+
+I'll do some more testing with this patch applied and using just my
+perl script to make sure the problem is reproducible outside of my
+application.
+
+Thanks,
+Ben
+
+
 >
-> This one's obvious -- the other ones I need a bit of time to review, and
-> it's practically weekend here now. I'll try to get to it ASAP.
+>    Luis
+>
+> diff --git a/drivers/net/wireless/ath/ath9k/recv.c b/drivers/net/wireless/ath/ath9k/recv.c
+> index fe73fc5..e581b1f 100644
+> --- a/drivers/net/wireless/ath/ath9k/recv.c
+> +++ b/drivers/net/wireless/ath/ath9k/recv.c
+> @@ -306,10 +306,8 @@ static void ath_edma_start_recv(struct ath_softc *sc)
+>
+>   static void ath_edma_stop_recv(struct ath_softc *sc)
+>   {
+> -	spin_lock_bh(&sc->rx.rxbuflock);
+>   	ath_rx_remove_buffer(sc, ATH9K_RX_QUEUE_HP);
+>   	ath_rx_remove_buffer(sc, ATH9K_RX_QUEUE_LP);
+> -	spin_unlock_bh(&sc->rx.rxbuflock);
+>   }
+>
+>   int ath_rx_init(struct ath_softc *sc, int nbufs)
+> @@ -518,6 +516,7 @@ bool ath_stoprecv(struct ath_softc *sc)
+>   	struct ath_hw *ah = sc->sc_ah;
+>   	bool stopped;
+>
+> +	spin_lock_bh(&sc->rx.rxbuflock);
+>   	ath9k_hw_stoppcurecv(ah);
+>   	ath9k_hw_setrxfilter(ah, 0);
+>   	stopped = ath9k_hw_stopdmarecv(ah);
+> @@ -526,6 +525,7 @@ bool ath_stoprecv(struct ath_softc *sc)
+>   		ath_edma_stop_recv(sc);
+>   	else
+>   		sc->rx.rxlink = NULL;
+> +	spin_unlock_bh(&sc->rx.rxbuflock);
+>
+>   	return stopped;
+>   }
 
-I'm going to suck this into linux-next-pending/ on compat-wireless for
-today's release as it may fix a deadlock with carl9170.
 
-  Luis
+-- 
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
+
