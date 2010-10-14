@@ -1,76 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f46.google.com ([209.85.215.46]:62576 "EHLO
-	mail-ew0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754621Ab0JKNkg (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 11 Oct 2010 09:40:36 -0400
-Received: by mail-ew0-f46.google.com with SMTP id 20so574157ewy.19
-        for <linux-wireless@vger.kernel.org>; Mon, 11 Oct 2010 06:40:35 -0700 (PDT)
-From: Ivo van Doorn <ivdoorn@gmail.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Subject: [PATCH 5/7] rt2x00: Make queue_entry flags access atomic
-Date: Mon, 11 Oct 2010 15:38:45 +0200
-Cc: linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com
-References: <201010111537.26584.IvDoorn@gmail.com> <201010111538.08677.IvDoorn@gmail.com> <201010111538.27633.IvDoorn@gmail.com>
-In-Reply-To: <201010111538.27633.IvDoorn@gmail.com>
+Received: from mail.atheros.com ([12.19.149.2]:21263 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755581Ab0JNXUC (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 14 Oct 2010 19:20:02 -0400
+Received: from mail.atheros.com ([10.10.20.108])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Thu, 14 Oct 2010 16:19:52 -0700
+Date: Thu, 14 Oct 2010 16:19:58 -0700
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: Luis Rodriguez <Luis.Rodriguez@Atheros.com>
+CC: "Luis R. Rodriguez" <mcgrof@gmail.com>,
+	Ben Greear <greearb@candelatech.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: memory clobber in rx path, maybe related to ath9k.
+Message-ID: <20101014231958.GA3242@tux>
+References: <4CB4AA89.1070009@candelatech.com>
+ <20101013053141.GA15798@vasanth-laptop>
+ <4CB5E0A8.5020502@candelatech.com>
+ <AANLkTimp_GSwwX_RnQSyN9QNe55HQ+0HZJ1yd8Xp+dWG@mail.gmail.com>
+ <AANLkTinyVqdgPqzpyihuaPtVVqDmzj-ZbXzQ-4qdA2yH@mail.gmail.com>
+ <4CB77EA0.1000005@candelatech.com>
+ <AANLkTimC0+6PiqWO+LmtBV7uKCVpZueAQs6m_6kAnbq9@mail.gmail.com>
+ <AANLkTi=1oOCcdvBHo+8WAVHv-M8tE14ntmK4M_09SWh5@mail.gmail.com>
+ <AANLkTi=pp2Ob06YCi6GsR9rtRaDWPP95n2M72qWLdbwM@mail.gmail.com>
+ <20101014225150.GB15740@tux>
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Message-Id: <201010111538.46136.IvDoorn@gmail.com>
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <20101014225150.GB15740@tux>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-All access to the queue_entry->flags can be done concurrently,
-so all flags must use the atomic operators. On most locations
-this was already done, so just fix the last few non-atomic
-versions.
+Ok please try this patch, it cures it for me.
 
-Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
-Acked-by: Helmut Schaa <helmut.schaa@googlemail.com>
----
- drivers/net/wireless/rt2x00/rt2x00usb.c |    8 ++++----
- 1 files changed, 4 insertions(+), 4 deletions(-)
+  Luis
 
-diff --git a/drivers/net/wireless/rt2x00/rt2x00usb.c b/drivers/net/wireless/rt2x00/rt2x00usb.c
-index 451d637..769c534 100644
---- a/drivers/net/wireless/rt2x00/rt2x00usb.c
-+++ b/drivers/net/wireless/rt2x00/rt2x00usb.c
-@@ -208,7 +208,7 @@ static void rt2x00usb_interrupt_txdone(struct urb *urb)
- 	struct queue_entry *entry = (struct queue_entry *)urb->context;
- 	struct rt2x00_dev *rt2x00dev = entry->queue->rt2x00dev;
+diff --git a/drivers/net/wireless/ath/ath9k/recv.c b/drivers/net/wireless/ath/ath9k/recv.c
+index fe73fc5..e581b1f 100644
+--- a/drivers/net/wireless/ath/ath9k/recv.c
++++ b/drivers/net/wireless/ath/ath9k/recv.c
+@@ -306,10 +306,8 @@ static void ath_edma_start_recv(struct ath_softc *sc)
  
--	if (!__test_and_clear_bit(ENTRY_OWNER_DEVICE_DATA, &entry->flags))
-+	if (!test_and_clear_bit(ENTRY_OWNER_DEVICE_DATA, &entry->flags))
- 		return;
+ static void ath_edma_stop_recv(struct ath_softc *sc)
+ {
+-	spin_lock_bh(&sc->rx.rxbuflock);
+ 	ath_rx_remove_buffer(sc, ATH9K_RX_QUEUE_HP);
+ 	ath_rx_remove_buffer(sc, ATH9K_RX_QUEUE_LP);
+-	spin_unlock_bh(&sc->rx.rxbuflock);
+ }
  
- 	/*
-@@ -220,7 +220,7 @@ static void rt2x00usb_interrupt_txdone(struct urb *urb)
- 	 * Check if the frame was correctly uploaded
- 	 */
- 	if (urb->status)
--		__set_bit(ENTRY_DATA_IO_FAILED, &entry->flags);
-+		set_bit(ENTRY_DATA_IO_FAILED, &entry->flags);
+ int ath_rx_init(struct ath_softc *sc, int nbufs)
+@@ -518,6 +516,7 @@ bool ath_stoprecv(struct ath_softc *sc)
+ 	struct ath_hw *ah = sc->sc_ah;
+ 	bool stopped;
  
- 	/*
- 	 * Schedule the delayed work for reading the TX status
-@@ -407,7 +407,7 @@ static void rt2x00usb_interrupt_rxdone(struct urb *urb)
- 	struct queue_entry *entry = (struct queue_entry *)urb->context;
- 	struct rt2x00_dev *rt2x00dev = entry->queue->rt2x00dev;
++	spin_lock_bh(&sc->rx.rxbuflock);
+ 	ath9k_hw_stoppcurecv(ah);
+ 	ath9k_hw_setrxfilter(ah, 0);
+ 	stopped = ath9k_hw_stopdmarecv(ah);
+@@ -526,6 +525,7 @@ bool ath_stoprecv(struct ath_softc *sc)
+ 		ath_edma_stop_recv(sc);
+ 	else
+ 		sc->rx.rxlink = NULL;
++	spin_unlock_bh(&sc->rx.rxbuflock);
  
--	if (!__test_and_clear_bit(ENTRY_OWNER_DEVICE_DATA, &entry->flags))
-+	if (!test_and_clear_bit(ENTRY_OWNER_DEVICE_DATA, &entry->flags))
- 		return;
- 
- 	/*
-@@ -421,7 +421,7 @@ static void rt2x00usb_interrupt_rxdone(struct urb *urb)
- 	 * a problem.
- 	 */
- 	if (urb->actual_length < entry->queue->desc_size || urb->status)
--		__set_bit(ENTRY_DATA_IO_FAILED, &entry->flags);
-+		set_bit(ENTRY_DATA_IO_FAILED, &entry->flags);
- 
- 	/*
- 	 * Schedule the delayed work for reading the RX status
--- 
-1.7.2.3
-
+ 	return stopped;
+ }
