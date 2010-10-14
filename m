@@ -1,59 +1,116 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from hiems2.ing.unibs.it ([192.167.23.204]:38368 "EHLO
-	hiems2.ing.unibs.it" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754641Ab0JJQxU convert rfc822-to-8bit (ORCPT
+Received: from mail.atheros.com ([12.19.149.2]:24106 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753888Ab0JNXsz convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 10 Oct 2010 12:53:20 -0400
-Subject: Re: Release of Maranello firmware source code for Broadcom cards
-Mime-Version: 1.0 (Apple Message framework v1081)
-Content-Type: text/plain; charset=utf-8
-From: francesco.gringoli@ing.unibs.it
-In-Reply-To: <AANLkTika70YCWU8eG5QHO+Bdf5XakEOg_b+UJdgCG4A0@mail.gmail.com>
-Date: Sun, 10 Oct 2010 18:53:19 +0200
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	b43-dev@lists.infradead.org, Bo Han <bohan@cs.umd.edu>
-Message-Id: <E338C554-ADF5-490D-825D-E04D295664F0@ing.unibs.it>
-References: <2518B44B-D014-4ABA-AE31-BD75691488AB@ing.unibs.it> <1DBB75B1-733F-4DFC-A541-2C2C986586A6@ing.unibs.it> <AANLkTika70YCWU8eG5QHO+Bdf5XakEOg_b+UJdgCG4A0@mail.gmail.com>
-To: =?utf-8?Q?Rafa=C5=82_Mi=C5=82ecki?= <zajec5@gmail.com>
+	Thu, 14 Oct 2010 19:48:55 -0400
+Received: from mail.atheros.com ([10.10.20.105])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Thu, 14 Oct 2010 16:48:46 -0700
+Date: Thu, 14 Oct 2010 16:48:53 -0700
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: Ben Greear <greearb@candelatech.com>
+CC: Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: memory clobber in rx path, maybe related to ath9k.
+Message-ID: <20101014234853.GA10113@tux>
+References: <AANLkTimp_GSwwX_RnQSyN9QNe55HQ+0HZJ1yd8Xp+dWG@mail.gmail.com>
+ <AANLkTinyVqdgPqzpyihuaPtVVqDmzj-ZbXzQ-4qdA2yH@mail.gmail.com>
+ <4CB77EA0.1000005@candelatech.com>
+ <AANLkTimC0+6PiqWO+LmtBV7uKCVpZueAQs6m_6kAnbq9@mail.gmail.com>
+ <AANLkTi=1oOCcdvBHo+8WAVHv-M8tE14ntmK4M_09SWh5@mail.gmail.com>
+ <AANLkTi=pp2Ob06YCi6GsR9rtRaDWPP95n2M72qWLdbwM@mail.gmail.com>
+ <20101014225150.GB15740@tux>
+ <20101014231958.GA3242@tux>
+ <4CB79299.7000005@candelatech.com>
+ <AANLkTinQmE6wm1pXkRL6p_3rkMvNrppmirjj3-jagMp8@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="iso-8859-1"
+In-Reply-To: <AANLkTinQmE6wm1pXkRL6p_3rkMvNrppmirjj3-jagMp8@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Oct 10, 2010, at 4:47 PM, Rafał Miłecki wrote:
-
-> 2010/10/10  <francesco.gringoli@ing.unibs.it>:
->> Hello there,
->> 
->> we released the source code of the Maranello firmware and all the
->> necessary kernel patches. It was tested on Broadcom 4318/4306 pci
->> cards on PC architecture. Find all the necessary files browsing from
->> 
->> http://www.ing.unibs.it/openfwwf
->> 
->> or go directly here
->> 
->> http://www.cs.umd.edu/projects/maranello
->> 
->> 
->> Maranello is an enhancement of the 802.11 DCF standard: it implements
->> a Partial Packet Recovery technique to retransmit only the corrupt
->> parts of failed packets. This reduces the airtime and contributes to
->> enhance the throughput. It was written starting from OpenFWWF5.2 by
->> adding a number of new features.
+On Thu, Oct 14, 2010 at 04:39:45PM -0700, Luis R. Rodriguez wrote:
+> On Thu, Oct 14, 2010 at 4:30 PM, Ben Greear <greearb@candelatech.com> wrote:
+> > On 10/14/2010 04:19 PM, Luis R. Rodriguez wrote:
+> >>
+> >> Ok please try this patch, it cures it for me.
+> >
+> > Well, it got a lot further than normal, but it still
+> > hit the poison check after a few minutes.
+> >
+> > Current test case is my app loading 130 or so stations, each running
+> > wpa_supplicant. �All were created, and quite a few had associated
+> > when the poison check hit.
+> >
+> > So, it definitely looks like a step in the right direction, but
+> > not fully fixed yet.
+> >
+> > I'll do some more testing with this patch applied and using just my
+> > perl script to make sure the problem is reproducible outside of my
+> > application.
 > 
-> Hey, thanks for info!
-> 
-> Did you just add recovery feature to OpenFWWF 5.2 or did you improve
-> basic OpenFWWF as well?
-> 
-> My 4318 with OpenFWWF 5.2 stops transmitting after few MB. Can
-> Maranello contain any fix for this? I'll able to test this later next
-> week.
-No, I don't think so. OpenFWWF5.2 does not handle correctly fifo overflow conditions. We have a testing firmware that handles them (and that works perfectly on WRT54GL): I hope we can release it soon.
+> Ok, whatever userspace does it should not corrupt to kernel, unless
+> its poking /dev/mem
 
-Kind regards,
--Francesco Gringoli
+Can also try this one instead, it will prevent any other instances
+we would not have caught on stopping and starting RX here.
 
-
-Informativa sulla privacy: http://help.ing.unibs.it/privacy.php
-
-
+diff --git a/drivers/net/wireless/ath/ath9k/recv.c b/drivers/net/wireless/ath/ath9k/recv.c
+index fe73fc5..db677c4 100644
+--- a/drivers/net/wireless/ath/ath9k/recv.c
++++ b/drivers/net/wireless/ath/ath9k/recv.c
+@@ -306,10 +306,8 @@ static void ath_edma_start_recv(struct ath_softc *sc)
+ 
+ static void ath_edma_stop_recv(struct ath_softc *sc)
+ {
+-	spin_lock_bh(&sc->rx.rxbuflock);
+ 	ath_rx_remove_buffer(sc, ATH9K_RX_QUEUE_HP);
+ 	ath_rx_remove_buffer(sc, ATH9K_RX_QUEUE_LP);
+-	spin_unlock_bh(&sc->rx.rxbuflock);
+ }
+ 
+ int ath_rx_init(struct ath_softc *sc, int nbufs)
+@@ -482,13 +480,14 @@ int ath_startrecv(struct ath_softc *sc)
+ {
+ 	struct ath_hw *ah = sc->sc_ah;
+ 	struct ath_buf *bf, *tbf;
++	unsigned long flags;
+ 
+ 	if (ah->caps.hw_caps & ATH9K_HW_CAP_EDMA) {
+ 		ath_edma_start_recv(sc);
+ 		return 0;
+ 	}
+ 
+-	spin_lock_bh(&sc->rx.rxbuflock);
++	spin_lock_irqsave(&sc->rx.rxbuflock, flags);
+ 	if (list_empty(&sc->rx.rxbuf))
+ 		goto start_recv;
+ 
+@@ -506,7 +505,7 @@ int ath_startrecv(struct ath_softc *sc)
+ 	ath9k_hw_rxena(ah);
+ 
+ start_recv:
+-	spin_unlock_bh(&sc->rx.rxbuflock);
++	spin_unlock_irqrestore(&sc->rx.rxbuflock, flags);
+ 	ath_opmode_init(sc);
+ 	ath9k_hw_startpcureceive(ah, (sc->sc_flags & SC_OP_OFFCHANNEL));
+ 
+@@ -517,7 +516,9 @@ bool ath_stoprecv(struct ath_softc *sc)
+ {
+ 	struct ath_hw *ah = sc->sc_ah;
+ 	bool stopped;
++	unsigned long flags;
+ 
++	spin_lock_irqsave(&sc->rx.rxbuflock, flags);
+ 	ath9k_hw_stoppcurecv(ah);
+ 	ath9k_hw_setrxfilter(ah, 0);
+ 	stopped = ath9k_hw_stopdmarecv(ah);
+@@ -526,6 +527,7 @@ bool ath_stoprecv(struct ath_softc *sc)
+ 		ath_edma_stop_recv(sc);
+ 	else
+ 		sc->rx.rxlink = NULL;
++	spin_unlock_irqrestore(&sc->rx.rxbuflock, flags);
+ 
+ 	return stopped;
+ }
