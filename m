@@ -1,91 +1,126 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:60327 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756013Ab0JOQBK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 15 Oct 2010 12:01:10 -0400
-Subject: Re: [PATCH 2/2] iwlwifi: one less commit_rxon while scan
-From: "Guy, Wey-Yi" <wey-yi.w.guy@intel.com>
-To: Stanislaw Gruszka <sgruszka@redhat.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <20101015145129.GA4046@redhat.com>
-References: <1286977193-12144-1-git-send-email-sgruszka@redhat.com>
-	 <1286977193-12144-2-git-send-email-sgruszka@redhat.com>
-	 <20101014084238.GB2286@redhat.com> <1287071679.13051.10.camel@wwguy-ubuntu>
-	 <20101015145129.GA4046@redhat.com>
-Content-Type: text/plain
-Date: Fri, 15 Oct 2010 09:00:19 -0700
-Message-Id: <1287158419.13051.26.camel@wwguy-ubuntu>
-Mime-Version: 1.0
+Received: from smtp.nokia.com ([192.100.122.233]:41462 "EHLO
+	mgw-mx06.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754464Ab0JNFrL (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 14 Oct 2010 01:47:11 -0400
+Received: from esebh106.NOE.Nokia.com (esebh106.ntc.nokia.com [172.21.138.213])
+	by mgw-mx06.nokia.com (Switch-3.3.3/Switch-3.3.3) with ESMTP id o9E5kk2x008232
+	for <linux-wireless@vger.kernel.org>; Thu, 14 Oct 2010 08:47:07 +0300
+From: Teemu Paasikivi <ext-teemu.3.paasikivi@nokia.com>
+To: luciano.coelho@nokia.com
+Cc: linux-wireless@vger.kernel.org,
+	Teemu Paasikivi <ext-teemu.3.paasikivi@nokia.com>
+Subject: [PATCH] wl1271: Fix warning about unsupported RX rate
+Date: Thu, 14 Oct 2010 08:46:30 +0300
+Message-Id: <1287035190-26392-1-git-send-email-ext-teemu.3.paasikivi@nokia.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Stanislaw,
+While scanning, it is possible that beacon and probe response frames are
+received on other band than configured to the driver. In rx status
+handling this has caused "Unsupported RX rate from HW" warnings. This
+patch changes the wl1271_rate_to_index function to take the band of the
+received frame as a parameter instead of using value configuret to
+wl->band.
 
-On Fri, 2010-10-15 at 07:51 -0700, Stanislaw Gruszka wrote:
-> Hello
-> 
-> On Thu, Oct 14, 2010 at 08:54:39AM -0700, Guy, Wey-Yi wrote:
-> > > Any comments about iwl_update_chain_flags, iwl_bg_bt_full_concurrency ?
-> > > I would like to know how to deal with them, should we deffer commit_rxon
-> > > to scan complete, or cancel the scan. Or maybe this is no problem
-> > > at all, because in example committing rxon vs scan was problem of
-> > > older firmware?
-> > > 
-> > 
-> > iwl_update_chain_flags() is used when PSP mode change,
-> > iwl_bg_bt_full_concurrency() is used only for BT coex and in BT full
-> > concurrency mode. For both case, I do not see any reason we can not
-> > defer to scan complete.
-> 
-> I think deferring could be a bit hard for iwl_update_chain_flags, since
-> according to the comments we need perform commit_rxon in order regarding
-> other commands sending to the device.
-> 
-> Looking more closely at this:
-> 
-> * iwl_update_chain_flags is called from:
-> 
-> 1) iwl_chain_noise_calibration
-> 2) iwlagn_bt_traffic_change_work 
-> 3) iwl_power_update_mode
-> 
-> Ad 1) iwl_chain_noise_calibration:
-> 
-> Called only from iwl_bg_run_time_calib_work, we check STATUS_SCANNING
-> there.
+Signed-off-by: Teemu Paasikivi <ext-teemu.3.paasikivi@nokia.com>
+---
+ drivers/net/wireless/wl12xx/wl1271_main.c |    6 +++---
+ drivers/net/wireless/wl12xx/wl1271_rx.c   |   10 +++++++++-
+ drivers/net/wireless/wl12xx/wl1271_rx.h   |    2 +-
+ drivers/net/wireless/wl12xx/wl1271_tx.c   |    2 +-
+ drivers/net/wireless/wl12xx/wl1271_tx.h   |    2 +-
+ 5 files changed, 15 insertions(+), 7 deletions(-)
 
-This should only call once when we first associate, and we check
-STATUS_SCANNING, justlike you mention, should be ok
-
-> 
-> Ad 2) iwlagn_bt_traffic_change_work 
-> 
-> Queued as work from iwl_rx_scan_complete_notif, since scan_completed
-> work is queued first we, should not have pending scan, as long as new
-> scan request do not income in the maintime. Adding STATUS_SCANNING 
-> check and return is probably what we need to prevent that corner case.
-> 
-Agree
-
-> Ad 3) iwl_power_update_mode
-> 
-> Called from many places. In some of them we for sure not perform scanning,
-> because we do the check or scan cancel before, or this is alive start.
-> Fixing remaining calls and add WARNING in iwl_power_update_mode in is
-> what I plan to do.
-> 
-> * iwl_bg_bt_full_concurrency is queued from rs_bt_update_lq. 
-> 
-> I think we can check if scanning is pending and schedule that work for
-> late time, or set additional bit that we need to change full_concurrency,
-> and based on that bit do bg_bt_full_concurrency from scan_completed.
-> 
-
-overall, I agree with your plan, for both iwl_bg_bt_full_concurrency and
-iwlagn_bt_traffic_change_work can be delay to scan complete.
-
-Thanks
-Wey
-
+diff --git a/drivers/net/wireless/wl12xx/wl1271_main.c b/drivers/net/wireless/wl12xx/wl1271_main.c
+index a99ad40..8d350cd 100644
+--- a/drivers/net/wireless/wl12xx/wl1271_main.c
++++ b/drivers/net/wireless/wl12xx/wl1271_main.c
+@@ -2269,18 +2269,18 @@ static const struct ieee80211_ops wl1271_ops = {
+ };
+ 
+ 
+-u8 wl1271_rate_to_idx(struct wl1271 *wl, int rate)
++u8 wl1271_rate_to_idx(int rate, enum ieee80211_band band)
+ {
+ 	u8 idx;
+ 
+-	BUG_ON(wl->band >= sizeof(wl1271_band_rate_to_idx)/sizeof(u8 *));
++	BUG_ON(band >= sizeof(wl1271_band_rate_to_idx)/sizeof(u8 *));
+ 
+ 	if (unlikely(rate >= CONF_HW_RXTX_RATE_MAX)) {
+ 		wl1271_error("Illegal RX rate from HW: %d", rate);
+ 		return 0;
+ 	}
+ 
+-	idx = wl1271_band_rate_to_idx[wl->band][rate];
++	idx = wl1271_band_rate_to_idx[band][rate];
+ 	if (unlikely(idx == CONF_HW_RXTX_RATE_UNSUPPORTED)) {
+ 		wl1271_error("Unsupported RX rate from HW: %d", rate);
+ 		return 0;
+diff --git a/drivers/net/wireless/wl12xx/wl1271_rx.c b/drivers/net/wireless/wl12xx/wl1271_rx.c
+index 0478f29..64ce6ae 100644
+--- a/drivers/net/wireless/wl12xx/wl1271_rx.c
++++ b/drivers/net/wireless/wl12xx/wl1271_rx.c
+@@ -46,10 +46,18 @@ static void wl1271_rx_status(struct wl1271 *wl,
+ 			     struct ieee80211_rx_status *status,
+ 			     u8 beacon)
+ {
++	enum ieee80211_band desc_band;
++
+ 	memset(status, 0, sizeof(struct ieee80211_rx_status));
+ 
+ 	status->band = wl->band;
+-	status->rate_idx = wl1271_rate_to_idx(wl, desc->rate);
++
++	if ((desc->flags & WL1271_RX_DESC_BAND_MASK) == WL1271_RX_DESC_BAND_BG)
++		desc_band = IEEE80211_BAND_2GHZ;
++	else
++		desc_band = IEEE80211_BAND_5GHZ;
++
++	status->rate_idx = wl1271_rate_to_idx(desc->rate, desc_band);
+ 
+ 	status->signal = desc->rssi;
+ 
+diff --git a/drivers/net/wireless/wl12xx/wl1271_rx.h b/drivers/net/wireless/wl12xx/wl1271_rx.h
+index b89be47..3968d37 100644
+--- a/drivers/net/wireless/wl12xx/wl1271_rx.h
++++ b/drivers/net/wireless/wl12xx/wl1271_rx.h
+@@ -116,6 +116,6 @@ struct wl1271_rx_descriptor {
+ } __attribute__ ((packed));
+ 
+ void wl1271_rx(struct wl1271 *wl, struct wl1271_fw_status *status);
+-u8 wl1271_rate_to_idx(struct wl1271 *wl, int rate);
++u8 wl1271_rate_to_idx(int rate, enum ieee80211_band band);
+ 
+ #endif
+diff --git a/drivers/net/wireless/wl12xx/wl1271_tx.c b/drivers/net/wireless/wl12xx/wl1271_tx.c
+index e3dc13c..c97ba31 100644
+--- a/drivers/net/wireless/wl12xx/wl1271_tx.c
++++ b/drivers/net/wireless/wl12xx/wl1271_tx.c
+@@ -298,7 +298,7 @@ static void wl1271_tx_complete_packet(struct wl1271 *wl,
+ 	if (result->status == TX_SUCCESS) {
+ 		if (!(info->flags & IEEE80211_TX_CTL_NO_ACK))
+ 			info->flags |= IEEE80211_TX_STAT_ACK;
+-		rate = wl1271_rate_to_idx(wl, result->rate_class_index);
++		rate = wl1271_rate_to_idx(result->rate_class_index, wl->band);
+ 		retries = result->ack_failures;
+ 	} else if (result->status == TX_RETRY_EXCEEDED) {
+ 		wl->stats.excessive_retries++;
+diff --git a/drivers/net/wireless/wl12xx/wl1271_tx.h b/drivers/net/wireless/wl12xx/wl1271_tx.h
+index 8979085..a952022 100644
+--- a/drivers/net/wireless/wl12xx/wl1271_tx.h
++++ b/drivers/net/wireless/wl12xx/wl1271_tx.h
+@@ -143,7 +143,7 @@ void wl1271_tx_work(struct work_struct *work);
+ void wl1271_tx_complete(struct wl1271 *wl);
+ void wl1271_tx_reset(struct wl1271 *wl);
+ void wl1271_tx_flush(struct wl1271 *wl);
+-u8 wl1271_rate_to_idx(struct wl1271 *wl, int rate);
++u8 wl1271_rate_to_idx(int rate, enum ieee80211_band band);
+ u32 wl1271_tx_enabled_rates_get(struct wl1271 *wl, u32 rate_set);
+ 
+ #endif
+-- 
+1.7.1
 
