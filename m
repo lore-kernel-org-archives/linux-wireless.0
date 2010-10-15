@@ -1,35 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from external1.orbit-lab.org ([128.6.192.131]:56491 "HELO
-	external1.orbit-lab.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1753832Ab0JPTCv (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:42503 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755816Ab0JOFwt (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 16 Oct 2010 15:02:51 -0400
-Received: from repository3.orbit-lab.org (repository3.orbit-lab.org [10.50.0.41])
-	by external1.orbit-lab.org (Postfix) with ESMTP id F2AD4418D8
-	for <linux-wireless@vger.kernel.org>; Sat, 16 Oct 2010 14:59:49 -0400 (EDT)
-Subject: Compat-wireless release for 2010-10-16 is baked
-To: <linux-wireless@vger.kernel.org>
-Message-Id: <20101016190250.7A1D740E24@repository3.orbit-lab.org>
-Date: Sat, 16 Oct 2010 15:02:50 -0400 (EDT)
-From: compat@orbit-lab.org (Compat-wireless cronjob account)
+	Fri, 15 Oct 2010 01:52:49 -0400
+Subject: Re: [PATCH 2/2] mac80211: Add support for CQM tx bitrate monitoring
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Paul Stewart <pstew@google.com>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <AANLkTinyc56O-xeYEMSD+B=yWNnd_Ch-NUrPv5uGQyr1@mail.gmail.com>
+References: <20101014224326.9E9912005F@glenhelen.mtv.corp.google.com>
+	 <AANLkTinyc56O-xeYEMSD+B=yWNnd_Ch-NUrPv5uGQyr1@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Fri, 15 Oct 2010 07:53:30 +0200
+Message-ID: <1287122010.3640.2.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Thu, 2010-10-14 at 22:21 -0700, Paul Stewart wrote:
+> On Thu, Oct 14, 2010 at 2:40 PM, Paul Stewart <pstew@google.com> wrote:
+> > +       if (mcs_rate_table_cache[mcs] == 0) {
+> > +               modulation = mcs & 7;
+> > +               streams = (mcs >> 3) + 1;
+> > +               base_rate = (rate_ptr->flags & IEEE80211_TX_RC_40_MHZ_WIDTH) ?
+> > +                 13500000 : 6500000;
+> > +               gi_div = (rate_ptr->flags & IEEE80211_TX_RC_SHORT_GI) ? 9 : 10;
+> > +               rate_val = base_rate * mod_table[modulation] * streams / gi_div;
+> > +               mcs_rate_table_cache[mcs] = (rate_val + 5000) / 10000;
+> > +       }
+> > +
+> > +       return  mcs_rate_table_cache[mcs] * 100;
+> > +}
+> 
+> Um, that doesn't work right.  The cache needs to be 4 times as big to
+> account for account from 40MHZ and SHORT_GI.  I'll send a revised
+> version of this tomorrow.
 
-compat-wireless code metrics
+Can't you just precalculate it anyway? Like at compile time?
 
-    741071 - Total upstream lines of code being pulled
-      2157 - backport code changes
-      1905 - backport code additions
-       252 - backport code deletions
-      6388 - backport from compat module
-      8545 - total backport code
-    1.1531 - % of code consists of backport work
-      1535 - Crap changes not yet posted
-      1491 - Crap additions not yet posted
-        44 - Crap deletions not yet posted
-    0.2071 - % of crap code
+johannes
 
-Base tree: linux-next.git
-Base tree version: next-20101015
-compat-wireless release: compat-wireless-2010-10-14-1-gf0578ae-pc
