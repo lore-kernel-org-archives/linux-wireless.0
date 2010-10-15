@@ -1,54 +1,92 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:47584 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751542Ab0JGKza (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 7 Oct 2010 06:55:30 -0400
-Subject: [PATCH] mac80211: fix sw scan locking
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Ben Greear <greearb@candelatech.com>,
-	Stanislaw Gruszka <sgruszka@redhat.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Thu, 07 Oct 2010 12:55:24 +0200
-Message-ID: <1286448924.3657.35.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+Received: from nbd.name ([88.198.39.176]:38720 "EHLO ds10.nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932279Ab0JOSDk (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 15 Oct 2010 14:03:40 -0400
+From: Felix Fietkau <nbd@openwrt.org>
+To: linux-wireless@vger.kernel.org
+Cc: linville@tuxdriver.com, lrodriguez@atheros.com
+Subject: [PATCH 2/6] ath9k_hw: small optimization in ar9002_hw_get_isr
+Date: Fri, 15 Oct 2010 20:03:29 +0200
+Message-Id: <1287165813-94331-2-git-send-email-nbd@openwrt.org>
+In-Reply-To: <1287165813-94331-1-git-send-email-nbd@openwrt.org>
+References: <1287165813-94331-1-git-send-email-nbd@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+ah->config.rx_intr_mitigation does not need to be checked before checking
+the rx interrupt mask for AR_ISR_RXMINTR or AR_ISR_RXINTM, as those
+interrupts will be masked out if rx interrupt mitigation is disabled.
 
-The recent scan overhaul broke locking
-because now we can jump to code that
-attempts to unlock, while we don't have
-the mutex held. Fix this by holding the
-mutex around all the relevant code.
+Avoid reading AR_ISR_S5_S twice by reordering the code to be more concise.
 
-Reported-by: Ben Greear <greearb@candelatech.com>
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
 ---
- net/mac80211/scan.c |    3 +--
- 1 file changed, 1 insertion(+), 2 deletions(-)
+ drivers/net/wireless/ath/ath9k/ar9002_mac.c |   32 +++++++++-----------------
+ 1 files changed, 11 insertions(+), 21 deletions(-)
 
---- wireless-testing.orig/net/mac80211/scan.c	2010-10-07 10:50:51.000000000 +0200
-+++ wireless-testing/net/mac80211/scan.c	2010-10-07 10:51:10.000000000 +0200
-@@ -682,8 +682,6 @@ void ieee80211_scan_work(struct work_str
- 		goto out_complete;
+diff --git a/drivers/net/wireless/ath/ath9k/ar9002_mac.c b/drivers/net/wireless/ath/ath9k/ar9002_mac.c
+index 50dda39..f5ed73d 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9002_mac.c
++++ b/drivers/net/wireless/ath/ath9k/ar9002_mac.c
+@@ -90,13 +90,10 @@ static bool ar9002_hw_get_isr(struct ath_hw *ah, enum ath9k_int *masked)
+ 
+ 		*masked = isr & ATH9K_INT_COMMON;
+ 
+-		if (ah->config.rx_intr_mitigation) {
+-			if (isr & (AR_ISR_RXMINTR | AR_ISR_RXINTM))
+-				*masked |= ATH9K_INT_RX;
+-		}
+-
+-		if (isr & (AR_ISR_RXOK | AR_ISR_RXERR))
++		if (isr & (AR_ISR_RXMINTR | AR_ISR_RXINTM |
++			   AR_ISR_RXOK | AR_ISR_RXERR))
+ 			*masked |= ATH9K_INT_RX;
++
+ 		if (isr &
+ 		    (AR_ISR_TXOK | AR_ISR_TXDESC | AR_ISR_TXERR |
+ 		     AR_ISR_TXEOL)) {
+@@ -118,14 +115,6 @@ static bool ar9002_hw_get_isr(struct ath_hw *ah, enum ath9k_int *masked)
+ 				  "receive FIFO overrun interrupt\n");
+ 		}
+ 
+-		if (!AR_SREV_9100(ah)) {
+-			if (!(pCap->hw_caps & ATH9K_HW_CAP_AUTOSLEEP)) {
+-				u32 isr5 = REG_READ(ah, AR_ISR_S5_S);
+-				if (isr5 & AR_ISR_S5_TIM_TIMER)
+-					*masked |= ATH9K_INT_TIM_TIMER;
+-			}
+-		}
+-
+ 		*masked |= mask2;
  	}
  
--	mutex_unlock(&local->mtx);
--
- 	/*
- 	 * as long as no delay is required advance immediately
- 	 * without scheduling a new work
-@@ -714,6 +712,7 @@ void ieee80211_scan_work(struct work_str
- 	} while (next_delay == 0);
+@@ -136,17 +125,18 @@ static bool ar9002_hw_get_isr(struct ath_hw *ah, enum ath9k_int *masked)
+ 		u32 s5_s;
  
- 	ieee80211_queue_delayed_work(&local->hw, &local->scan_work, next_delay);
-+	mutex_unlock(&local->mtx);
- 	return;
+ 		s5_s = REG_READ(ah, AR_ISR_S5_S);
+-		if (isr & AR_ISR_GENTMR) {
+-			ah->intr_gen_timer_trigger =
++		ah->intr_gen_timer_trigger =
+ 				MS(s5_s, AR_ISR_S5_GENTIMER_TRIG);
  
- out_complete:
-
+-			ah->intr_gen_timer_thresh =
+-				MS(s5_s, AR_ISR_S5_GENTIMER_THRESH);
++		ah->intr_gen_timer_thresh =
++			MS(s5_s, AR_ISR_S5_GENTIMER_THRESH);
+ 
+-			if (ah->intr_gen_timer_trigger)
+-				*masked |= ATH9K_INT_GENTIMER;
++		if (ah->intr_gen_timer_trigger)
++			*masked |= ATH9K_INT_GENTIMER;
+ 
+-		}
++		if ((s5_s & AR_ISR_S5_TIM_TIMER) &&
++		    !(pCap->hw_caps & ATH9K_HW_CAP_AUTOSLEEP))
++			*masked |= ATH9K_INT_TIM_TIMER;
+ 	}
+ 
+ 	if (sync_cause) {
+-- 
+1.7.2.2
 
