@@ -1,103 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:35415 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753278Ab0JAUdz (ORCPT
+Received: from mail-bw0-f46.google.com ([209.85.214.46]:59024 "EHLO
+	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754461Ab0JOKLB (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 1 Oct 2010 16:33:55 -0400
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>, stable@kernel.org,
-	Jouni Malinen <j@w1.fi>, Paul Stewart <pstew@google.com>,
-	Amod Bodas <amod.bodas@atheros.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Vasanthakumar Thiagarajan <vasanth@atheros.com>
-Subject: [PATCH v2 2/3] mac80211: wait until completely disassociated before new association
-Date: Fri,  1 Oct 2010 16:33:52 -0400
-Message-Id: <1285965233-11097-3-git-send-email-lrodriguez@atheros.com>
-In-Reply-To: <1285965233-11097-1-git-send-email-lrodriguez@atheros.com>
-References: <1285965233-11097-1-git-send-email-lrodriguez@atheros.com>
+	Fri, 15 Oct 2010 06:11:01 -0400
+Received: by mail-bw0-f46.google.com with SMTP id 15so819562bwz.19
+        for <linux-wireless@vger.kernel.org>; Fri, 15 Oct 2010 03:11:00 -0700 (PDT)
+From: Helmut Schaa <helmut.schaa@googlemail.com>
+To: Joshua Smith <JoshuaESmith@charter.net>
+Subject: Re: Question about starting up an AP
+Date: Fri, 15 Oct 2010 11:46:53 +0200
+Cc: "linux-wireless" <linux-wireless@vger.kernel.org>,
+	users@rt2x00.serialmonkey.com, Ivo van Doorn <ivdoorn@gmail.com>
+References: <DA0C92FD-F6BF-4746-9BE1-A643A0D70F7A@kaon.com> <201010010742.07605.helmut.schaa@googlemail.com> <B3E6C8F9-24E4-4F12-B19C-15A474E5BCFA@charter.net>
+In-Reply-To: <B3E6C8F9-24E4-4F12-B19C-15A474E5BCFA@charter.net>
+MIME-Version: 1.0
+Content-Type: Text/Plain;
+  charset="us-ascii"
+Message-Id: <201010151146.53640.helmut.schaa@googlemail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-When roaming we try to disassociate with our old AP prior to
-associating. The assumption though is that we will send our
-disassociation first prior to sending our association request
-to the new AP. This should in theory work given that the
-association is put in through a workqueue but to avoid any
-possible races just ensure we wait for complete disassociation
-prior to trying to associate to the new AP.
+Am Donnerstag 14 Oktober 2010 schrieb Joshua Smith:
+> OK, I finally got a chance to run the test.  Before doing the revert, I
+> tried just using the current drivers, but with a ridiculously large
+> number of retries.
 
-In the worst case scenerio this will delay our association
-request by one iteration on the work item.
+Thanks for testing.
 
-This patch has a fix for kernels >= v2.6.34
+> Lo and behold: no error.  So I think this is the reason the old drivers
+> were working for me, not anything that happened between July and September. 
+> When I went back to the old drivers, I had made this change, and they
+> worked.  I figured it was because I was using the old drivers, but now I
+> realize it is because of this change.
+> 
+> Also, I can see the behavior pretty clearly.  Sometimes when I start up
+> hostapd, it starts right up, and sometimes it takes about a second, and then
+> starts up.  So it looks like this retry number just needs to be really,
+> really big.  (Note that with this change in the old drivers, on very rare
+> occasions, I still see the "busy, aborting" error.  So perhaps it should
+> be even bigger than 1000?)
+> 
+> Not sure how you want to proceed with this, but this is the code that makes my AP work:
+> 
+>  nl compat-wireless-2010-09-20/drivers/net/wireless/rt2x00/rt2800lib.c | grep -C 10 1000/
+> 
+>    225	int rt2800_wait_wpdma_ready(struct rt2x00_dev *rt2x00dev)
+>    226	{
+>    227		unsigned int i;
+>    228		u32 reg;
+>        
+>    229		for (i = 0; i < 1000/*REGISTER_BUSY_COUNT*/; i++) {
+>    230			rt2800_register_read(rt2x00dev, WPDMA_GLO_CFG, &reg);
+>    231			if (!rt2x00_get_field32(reg, WPDMA_GLO_CFG_TX_DMA_BUSY) &&
+>    232			    !rt2x00_get_field32(reg, WPDMA_GLO_CFG_RX_DMA_BUSY))
+>    233				return 0;
+>        
+>    234			msleep(1);
+>    235		}
+>        
+>    236		ERROR(rt2x00dev, "WPDMA TX/RX busy, aborting.\n");
+>    237		return -EACCES;
 
-Cc: stable@kernel.org
-Cc: Jouni Malinen <j@w1.fi>
-Cc: Paul Stewart <pstew@google.com>
-Cc: Amod Bodas <amod.bodas@atheros.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>
-Cc: Vasanthakumar Thiagarajan <vasanth@atheros.com>
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
----
- net/mac80211/mlme.c |    3 ++-
- net/mac80211/work.c |   14 ++++++++++++++
- 2 files changed, 16 insertions(+), 1 deletions(-)
+I'll let Ivo decide on this. At least if we really want to wait more then one
+second for DMA to be ready we should increase the msleep(1) to msleep(10) and
+keep the maximum number of retries at 100.
 
-diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index daab0c6..7eff124 100644
---- a/net/mac80211/mlme.c
-+++ b/net/mac80211/mlme.c
-@@ -936,7 +936,6 @@ static void ieee80211_set_disassoc(struct ieee80211_sub_if_data *sdata,
- 
- 	memcpy(bssid, ifmgd->associated->bssid, ETH_ALEN);
- 
--	ifmgd->associated = NULL;
- 	memset(ifmgd->bssid, 0, ETH_ALEN);
- 
- 	/*
-@@ -1007,6 +1006,8 @@ static void ieee80211_set_disassoc(struct ieee80211_sub_if_data *sdata,
- 	del_timer_sync(&sdata->u.mgd.bcn_mon_timer);
- 	del_timer_sync(&sdata->u.mgd.timer);
- 	del_timer_sync(&sdata->u.mgd.chswitch_timer);
-+
-+	ifmgd->associated = NULL;
- }
- 
- void ieee80211_sta_rx_notify(struct ieee80211_sub_if_data *sdata,
-diff --git a/net/mac80211/work.c b/net/mac80211/work.c
-index ae344d1..268ac1d 100644
---- a/net/mac80211/work.c
-+++ b/net/mac80211/work.c
-@@ -513,6 +513,19 @@ ieee80211_associate(struct ieee80211_work *wk)
- {
- 	struct ieee80211_sub_if_data *sdata = wk->sdata;
- 	struct ieee80211_local *local = sdata->local;
-+	struct ieee80211_if_managed *ifmgd = &sdata->u.mgd;
-+	bool associated;
-+
-+	mutex_lock(&ifmgd->mtx);
-+	associated = !!ifmgd->associated;
-+	mutex_unlock(&ifmgd->mtx);
-+
-+	if (associated) {
-+		printk(KERN_DEBUG "%s: delaying association with %pM as "
-+		       "we are still associated",
-+		       sdata->name, wk->filter_ta);
-+		goto wait;
-+	}
- 
- 	wk->assoc.tries++;
- 	if (wk->assoc.tries > IEEE80211_ASSOC_MAX_TRIES) {
-@@ -534,6 +547,7 @@ ieee80211_associate(struct ieee80211_work *wk)
- 	       sdata->name, wk->filter_ta, wk->assoc.tries);
- 	ieee80211_send_assoc(sdata, wk);
- 
-+wait:
- 	wk->timeout = jiffies + IEEE80211_ASSOC_TIMEOUT;
- 	run_again(local, wk->timeout);
- 
--- 
-1.7.0.4
+Joshua, did you ever ran the ralink legacy driver? Because that one also waits
+a maximum of 100ms and thus would also fail sometimes ...
 
+Helmut
