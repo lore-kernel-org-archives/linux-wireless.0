@@ -1,129 +1,93 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ist.d-labs.de ([213.239.218.44]:45940 "EHLO mx01.d-labs.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932620Ab0JEKMp (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 5 Oct 2010 06:12:45 -0400
-Date: Tue, 5 Oct 2010 12:12:42 +0200
-From: Florian Mickler <florian@mickler.org>
-To: Stanislaw Gruszka <sgruszka@redhat.com>
-Cc: stable@kernel.org,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"Guy, Wey-Yi" <wey-yi.w.guy@intel.com>,
-	"Chatre, Reinette" <reinette.chatre@intel.com>,
-	Intel Linux Wireless <ilw@linux.intel.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	"Berg, Johannes" <johannes.berg@intel.com>,
-	"Cahill, Ben M" <ben.m.cahill@intel.com>,
-	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] iwl3945: queue the right work if the scan needs to be
- aborted
-Message-ID: <20101005121242.79cdafc2@schatten.dmk.lab>
-In-Reply-To: <20101005085717.GA18012@redhat.com>
-References: <20101005084305.52a31ed4@schatten.dmk.lab>
-	<20101005085717.GA18012@redhat.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Received: from mail.candelatech.com ([208.74.158.172]:47136 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751175Ab0JOXmQ (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 15 Oct 2010 19:42:16 -0400
+Message-ID: <4CB8E6D7.602@candelatech.com>
+Date: Fri, 15 Oct 2010 16:42:15 -0700
+From: Ben Greear <greearb@candelatech.com>
+MIME-Version: 1.0
+To: "Luis R. Rodriguez" <lrodriguez@Atheros.com>
+CC: Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: memory clobber in rx path, maybe related to ath9k.
+References: <20101014231958.GA3242@tux> <4CB79299.7000005@candelatech.com> <AANLkTinQmE6wm1pXkRL6p_3rkMvNrppmirjj3-jagMp8@mail.gmail.com> <20101014234853.GA10113@tux> <4CB886AF.3070800@candelatech.com> <AANLkTinhFj_iYjVzyfSfpUVdytfk4O9kCBnN8=Bwv0N7@mail.gmail.com> <4CB8AD3F.50201@candelatech.com> <20101015210720.GA2007@tux> <20101015232140.GA1796@tux> <4CB8E4DE.9070706@candelatech.com> <20101015233814.GA1866@tux>
+In-Reply-To: <20101015233814.GA1866@tux>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 5 Oct 2010 10:57:17 +0200
-Stanislaw Gruszka <sgruszka@redhat.com> wrote:
+On 10/15/2010 04:38 PM, Luis R. Rodriguez wrote:
+> On Fri, Oct 15, 2010 at 04:33:50PM -0700, Ben Greear wrote:
+>> On 10/15/2010 04:21 PM, Luis R. Rodriguez wrote:
+>>> Ben, please give this patch a shot. I addresses three races on the PCU:
+>>>
+>>>     * When we were stopping the CPU for non-EDMA cards we never locked against
+>>>       anything starting the PCU again
+>>>
+>>>     * ath9k_hw_startpcureceive() was being called without locking
+>>>
+>>>     * Although we lock on the rxbuf lock for contention against starting/stopping
+>>>       the PCU, we also need to lock on the driver in locations where we start/stop
+>>>       the PCU within the same location otherwise we end up in inconsistant states
+>>>       and the hardware may end up proessing an incorrect buffer for DMA. To
+>>>       protect against this we use a new PCU lock on the main part of the driver to
+>>>       ensure each start/stop/reset operation is done atomically.
+>>>
+>>> And fixes one issue as a side effect:
+>>>
+>>>     * No more packet loss on ping flood when you have one STA associated :)
+>>>
+>>> The only issue I see with this is I eventually run out of memory and my box
+>>> becomes useless, unless I am mistaking that for some other issue.
+>>>
+>>> Please give this a shot and if it cures your woes I'll split it up into
+>>> 3 separate patches, or maybe just two, one for the first two and one for
+>>> the last issue.
+>>
+>> Sounds good, but this lockdep splat happens almost immediately upon starting
+>> my app:
+>>
+>> =======================================================
+>> [ INFO: possible circular locking dependency detected ]
+>> 2.6.36-rc8-wl+ #32
+>> -------------------------------------------------------
+>> swapper/0 is trying to acquire lock:
+>>    (&(&sc->rx.pcu_lock)->rlock){+.-...}, at: [<fa16e5c7>] ath9k_tasklet+0x7e/0x140 [ath9k]
+>>
+>> but task is already holding lock:
+>>    (&(&sc->rx.rxflushlock)->rlock){+.-...}, at: [<fa16e5b9>] ath9k_tasklet+0x70/0x140 [ath9k]
+>>
+>> which lock already depends on the new lock.
+>>
+>>
+>> the existing dependency chain (in reverse order) is:
+>>
+>> ->  #1 (&(&sc->rx.rxflushlock)->rlock){+.-...}:
+>>          [<c0457639>] lock_acquire+0x5a/0x78
+>>          [<c075f6ed>] _raw_spin_lock_bh+0x20/0x2f
+>>          [<fa170513>] ath_flushrecv+0x14/0x61 [ath9k]
+>
+> Ah we just need to nuke the flush lock, one second. Also remove my
+> skb_copy() otherwise you will really run out of memory quickly,
+> unless you really want to test with it :)
 
-> On Tue, Oct 05, 2010 at 08:43:05AM +0200, Florian Mickler wrote:
-> > commit e7ee762cf074b0fd8eec483d0cef8fdbf0d04b81
-> > 
-> > 
-> > Begin forwarded message:
-> > On Fri, 2010-09-24 at 09:22 -0700, Florian Mickler wrote:
-> > > iwl3945's scan_completed calls into the mac80211 stack which triggers a
-> > > warn on if there is no scan outstanding.
-> > > 
-> > > This can be avoided by not calling scan_completed but abort_scan in
-> > > iwl3945_request_scan  in the done: branch of the function which is used
-> > > as an error out.
-> > > 
-> > > The done: branch seems to be an error-out branch, as, for example, if
-> > > iwl_is_ready(priv) returns false  the done: branch is executed.
-> > > 
-> > > NOTE:
-> > > I'm not familiar with the driver at all.
-> > > I just quickly scanned as a reaction to
-> > > 
-> > > https://bugzilla.kernel.org/show_bug.cgi?id=17722
-> > > 
-> > > the users of scan_completed in the  iwl3945 driver and noted the odd
-> > > discrepancy between the comment above this instance and the comment in
-> > > mac80211 scan_completed function.
-> > > Signed-off-by: Florian Mickler <florian@mickler.org>
-> > Acked-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-> > > ---
-> > go into wireless-2.6 and stable only, scan fix already in
-> > wireless-next-2.6
-> 
-> > 
-> > Thanks
-> > Wey
-> > 
-> > >  drivers/net/wireless/iwlwifi/iwl-agn-lib.c  |    2 +-
-> > >  drivers/net/wireless/iwlwifi/iwl3945-base.c |    2 +-
-> > >  2 files changed, 2 insertions(+), 2 deletions(-)
-> > > 
-> > > diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-lib.c b/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
-> > > index 9dd9e64..8fd00a6 100644
-> > > --- a/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
-> > > +++ b/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
-> > > @@ -1411,7 +1411,7 @@ void iwlagn_request_scan(struct iwl_priv *priv, struct ieee80211_vif *vif)
-> > >  	clear_bit(STATUS_SCAN_HW, &priv->status);
-> > >  	clear_bit(STATUS_SCANNING, &priv->status);
-> > >  	/* inform mac80211 scan aborted */
-> > > -	queue_work(priv->workqueue, &priv->scan_completed);
-> > > +	queue_work(priv->workqueue, &priv->abort_scan);
-> 
-> Unfortunately this patch is not right thing to do. If you look at
-> abort_scan work, it do nothing if STATUS_SCAN_ABORTING bit is not set.
-> That's wrong because we have to complete scan (with abort == true).
-> If STATUS_SCAN_ABORTING will be set, abort_work will send scan cancel
-> commands to hardware what is wrong if scan was not started yet.
-> 
-> What we can eventually do, except apply iwl-scan rewrite from
-> wireless-testing, is something like that:
->  
-> iwlagn_request_scan(struct iwl_priv *priv, struct ieee80211_vif *vif)
-> 
->   clear_bit(STATUS_SCAN_HW, &priv->status); 
->   clear_bit(STATUS_SCANNING, &priv->status); 
->   /* inform mac80211 scan aborted */ 
->   set_bit(STATUS_SCAN_ABORTING, &priv->status);
->   queue_work(priv->workqueue, &priv->scan_completed);
-> 
-> ieee80211_scan_completed
->   
->   if (!internal) {
->      bool aborted = test_bit(STATUS_SCAN_ABORTING, &priv->status);
->      ieee80211_scan_completed(priv->hw, aborted);
-> 
->   }
-> 
-> However, I do not think we should go with that to -stable (below
-> 2.6.36). IIRC warnings showed up in current 2.6.36-rc, because of
-> some other changes in the code.
-> 
-> Stanislaw
+Since you free the pkt, it shouldn't really consume, eh?
 
-Thx for looking at this. I suspect you know the code better than I do.. what is about the
-first jump to :done in iwlagn_request_scan()
+Seems like we should be able to handle an extra 5 skbs floating
+around the system..
 
-         if (!iwl_is_ready(priv)) {
-                 IWL_WARN(priv, "request scan called when driver not ready.\n");
-                 goto done;
-         }
+I'll try your new patch now...
 
-Does abort_scan need to do anything in that case? 
-I can't see where we set up the hardware for scanning in that case.
-(I've gone through the codepath coming from the mac80211 hw_scan) 
+Thanks,
+Ben
 
-Regards,
-Flo
+>
+>    Luis
 
+
+-- 
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
 
