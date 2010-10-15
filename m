@@ -1,45 +1,112 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail30f.wh2.ocn.ne.jp ([220.111.41.203]:37145 "HELO
-	mail30f.wh2.ocn.ne.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1756124Ab0JFCuv (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 5 Oct 2010 22:50:51 -0400
-Received: from vs3017.wh2.ocn.ne.jp (125.206.180.250)
-	by mail30f.wh2.ocn.ne.jp (RS ver 1.0.95vs) with SMTP id 2-0456603450
-	for <linux-wireless@vger.kernel.org>; Wed,  6 Oct 2010 11:50:50 +0900 (JST)
-From: Bruno Randolf <br1@einfach.org>
-To: Felix Fietkau <nbd@openwrt.org>
-Subject: Re: [PATCH 5/5] ath5k: Add busy ratios to survey data
-Date: Wed, 6 Oct 2010 11:50:52 +0900
-Cc: "Luis R. Rodriguez" <mcgrof@gmail.com>, vasanth@atheros.com,
-	linville@tuxdriver.com, ath5k-devel@lists.ath5k.org,
-	linux-wireless@vger.kernel.org
-References: <20101005095510.3083.46174.stgit@tt-desk> <201010061125.54247.br1@einfach.org> <4CABE2DA.5020204@openwrt.org>
-In-Reply-To: <4CABE2DA.5020204@openwrt.org>
+Received: from ogre.sisk.pl ([217.79.144.158]:50872 "EHLO ogre.sisk.pl"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751448Ab0JOWh3 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 15 Oct 2010 18:37:29 -0400
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
+To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Subject: [PATCH] ath9k: Convert to new PCI PM framework
+Date: Sat, 16 Oct 2010 00:36:17 +0200
+Cc: LKML <linux-kernel@vger.kernel.org>,
+	"Linux-pm mailing list" <linux-pm@lists.linux-foundation.org>,
+	linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org
 MIME-Version: 1.0
 Content-Type: Text/Plain;
   charset="utf-8"
-Message-Id: <201010061150.52352.br1@einfach.org>
+Message-Id: <201010160036.17653.rjw@sisk.pl>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed October 6 2010 11:45:46 Felix Fietkau wrote:
-> On 2010-10-06 4:25 AM, Bruno Randolf wrote:
-> > On Wed October 6 2010 07:38:34 Luis R. Rodriguez wrote:
-> >> This is all being sucked out of common, so can we just share the
-> >> filler for the survey between ath5k and ath9k? Note we should split up
-> >> hw code and core driver code on the ath module by file.
-> > 
-> > sure, that would be good! noise floor comes from ath5k_hw though, but
-> > that can easily be moved to common.
-> > 
-> > there's so much code which could be shared between ath5k and ath9k...
-> 
-> That would need sharing of the channel list and some per-channel data
-> though - so it may need some more code reshuffling...
+From: Rafael J. Wysocki <rjw@sisk.pl>
 
-also - we would need a common way to get ath_common from ieee80211_hw, which 
-works for both ath5k and ath9k. right now each has it's own structures. so... 
-i'd say: later...
+The ath9k driver uses the legacy PCI power management (suspend
+and resume) callbacks that apparently cause intermittent problems
+to happen (the adapter sometimes doesn't resume correctly on my
+Acer Ferrari One).  Make it use the new PCI PM and let the PCI core
+code handle the PCI-specific details of power transitions.
 
-bruno
+Signed-off-by: Rafael J. Wysocki <rjw@sisk.pl>
+---
+ drivers/net/wireless/ath/ath9k/pci.c |   40 +++++++++++++++++++----------------
+ 1 file changed, 22 insertions(+), 18 deletions(-)
+
+Index: linux-2.6/drivers/net/wireless/ath/ath9k/pci.c
+===================================================================
+--- linux-2.6.orig/drivers/net/wireless/ath/ath9k/pci.c
++++ linux-2.6/drivers/net/wireless/ath/ath9k/pci.c
+@@ -247,34 +247,25 @@ static void ath_pci_remove(struct pci_de
+ 
+ #ifdef CONFIG_PM
+ 
+-static int ath_pci_suspend(struct pci_dev *pdev, pm_message_t state)
++static int ath_pci_suspend(struct device *device)
+ {
++	struct pci_dev *pdev = to_pci_dev(device);
+ 	struct ieee80211_hw *hw = pci_get_drvdata(pdev);
+ 	struct ath_wiphy *aphy = hw->priv;
+ 	struct ath_softc *sc = aphy->sc;
+ 
+ 	ath9k_hw_set_gpio(sc->sc_ah, sc->sc_ah->led_pin, 1);
+ 
+-	pci_save_state(pdev);
+-	pci_disable_device(pdev);
+-	pci_set_power_state(pdev, PCI_D3hot);
+-
+ 	return 0;
+ }
+ 
+-static int ath_pci_resume(struct pci_dev *pdev)
++static int ath_pci_resume(struct device *device)
+ {
++	struct pci_dev *pdev = to_pci_dev(device);
+ 	struct ieee80211_hw *hw = pci_get_drvdata(pdev);
+ 	struct ath_wiphy *aphy = hw->priv;
+ 	struct ath_softc *sc = aphy->sc;
+ 	u32 val;
+-	int err;
+-
+-	pci_restore_state(pdev);
+-
+-	err = pci_enable_device(pdev);
+-	if (err)
+-		return err;
+ 
+ 	/*
+ 	 * Suspend/Resume resets the PCI configuration space, so we have to
+@@ -293,7 +284,23 @@ static int ath_pci_resume(struct pci_dev
+ 	return 0;
+ }
+ 
+-#endif /* CONFIG_PM */
++static const struct dev_pm_ops ath9k_pm_ops = {
++	.suspend = ath_pci_suspend,
++	.resume = ath_pci_resume,
++	.freeze = ath_pci_suspend,
++	.thaw = ath_pci_resume,
++	.poweroff = ath_pci_suspend,
++	.restore = ath_pci_resume,
++};
++
++#define ATH9K_PM_OPS	(&ath9k_pm_ops)
++
++#else /* !CONFIG_PM */
++
++#define ATH9K_PM_OPS	NULL
++
++#endif /* !CONFIG_PM */
++
+ 
+ MODULE_DEVICE_TABLE(pci, ath_pci_id_table);
+ 
+@@ -302,10 +309,7 @@ static struct pci_driver ath_pci_driver 
+ 	.id_table   = ath_pci_id_table,
+ 	.probe      = ath_pci_probe,
+ 	.remove     = ath_pci_remove,
+-#ifdef CONFIG_PM
+-	.suspend    = ath_pci_suspend,
+-	.resume     = ath_pci_resume,
+-#endif /* CONFIG_PM */
++	.driver.pm  = ATH9K_PM_OPS,
+ };
+ 
+ int ath_pci_init(void)
