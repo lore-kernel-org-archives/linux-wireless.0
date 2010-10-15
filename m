@@ -1,77 +1,98 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ww0-f44.google.com ([74.125.82.44]:38663 "EHLO
-	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751434Ab0JBD2e (ORCPT
+Received: from mail.candelatech.com ([208.74.158.172]:39907 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750779Ab0JOVkV (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 1 Oct 2010 23:28:34 -0400
-Received: by wwj40 with SMTP id 40so2159847wwj.1
-        for <linux-wireless@vger.kernel.org>; Fri, 01 Oct 2010 20:28:33 -0700 (PDT)
+	Fri, 15 Oct 2010 17:40:21 -0400
+Message-ID: <4CB8CA37.2050509@candelatech.com>
+Date: Fri, 15 Oct 2010 14:40:07 -0700
+From: Ben Greear <greearb@candelatech.com>
 MIME-Version: 1.0
-In-Reply-To: <201010020519.29042.chunkeey@googlemail.com>
-References: <AANLkTimN3X_e4fZhUSoTs-GmQ9kmaJUrgnxAu8=W2dT_@mail.gmail.com>
- <201010020452.24306.chunkeey@googlemail.com> <AANLkTin2ycTicNim+ZiwNV3pWr7AQWPp432vJVLUL1k1@mail.gmail.com>
- <201010020519.29042.chunkeey@googlemail.com>
-From: Saqeb Akhter <saqeb.akhter@gmail.com>
-Date: Fri, 1 Oct 2010 23:28:13 -0400
-Message-ID: <AANLkTimmSaQsBdTLAjZT2_8sQ9V7r4OvAzGATr+bmOxG@mail.gmail.com>
-Subject: Re: carl9170: wnda3100 only 54MB/s
-To: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+To: Felix Fietkau <nbd@openwrt.org>
+CC: linux-wireless@vger.kernel.org, linville@tuxdriver.com,
+	lrodriguez@atheros.com, br1@einfach.org
+Subject: Re: [PATCH 3/4] ath9k_hw: move the cycle counter tracking to ath
+References: <1286568834-18821-1-git-send-email-nbd@openwrt.org> <1286568834-18821-2-git-send-email-nbd@openwrt.org> <1286568834-18821-3-git-send-email-nbd@openwrt.org>
+In-Reply-To: <1286568834-18821-3-git-send-email-nbd@openwrt.org>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Yeah, doesn't look like its NetworkManager from what I can tell. I
-don't notice any scanning going on, etc.
+On 10/08/2010 01:13 PM, Felix Fietkau wrote:
+> Instead of keeping track of wraparound, clear the counters on every
+> access and keep separate deltas for ANI and later survey use.
+> Also moves the function for calculating the 'listen time' for ANI
 
-Thanks for all the help. I guess the code for the channel changes just
-isn't fast enough ?
-
-This is what I get in dmesg:
-
-[  174.026110] wlan1: associated
-[  207.799194] wlan1: deauthenticated from 30:46:9a:10:49:f7 (Reason: 7)
-[  208.065258] cfg80211: All devices are disconnected, going to
-restore regulatory settings
-[  208.065265] cfg80211: Restoring regulatory settings
-[  208.065269] cfg80211: Calling CRDA to update world regulatory domain
-[  208.070474] cfg80211: World regulatory domain updated:
-[  208.070478]     (start_freq - end_freq @ bandwidth),
-(max_antenna_gain, max_eirp)
-[  208.070482]     (2402000 KHz - 2472000 KHz @ 40000 KHz), (300 mBi, 2000 mBm)
-[  208.070486]     (2457000 KHz - 2482000 KHz @ 20000 KHz), (300 mBi, 2000 mBm)
-[  208.070489]     (2474000 KHz - 2494000 KHz @ 20000 KHz), (300 mBi, 2000 mBm)
-[  208.070492]     (5170000 KHz - 5250000 KHz @ 40000 KHz), (300 mBi, 2000 mBm)
-[  208.070495]     (5735000 KHz - 5835000 KHz @ 40000 KHz), (300 mBi, 2000 mBm)
-[  213.390525] wlan1: authenticate with 30:46:9a:10:49:f7 (try 1)
-
-
-
-
-
-On Fri, Oct 1, 2010 at 11:19 PM, Christian Lamparter
-<chunkeey@googlemail.com> wrote:
-> On Saturday 02 October 2010 04:56:35 Saqeb Akhter wrote:
->> Nope I already noticed that 1.8.8.3 was available so to that step, I
->> am getting frequent disconnects though, it might have to do with
->> NetworkManager doing background scanning so going to try and it it to
->> stop doing that.
-> Channel changes (especially with HT) are more expensive with AR9170
-> than AR9271 which features "fastcc" (fast channel change).
+> @@ -147,6 +155,10 @@ struct ath_common {
 >
->> The NetGear driver on windows seems to ignore the WMM requirement
->> looks like.
-> You can actually peek into the Windows' driver logic.
-> The code is available under drivers/staging/otus/(80211core)
-> AFAIK, it only checks if the HT IEs are all present.
+>   	unsigned int clockrate;
 >
->> Either way that's what the problem was, going to see if i
->> can get this disconnect problem sorted out.
-> I thought "the new" NetworkManager is more intelligent and
-> doesn't schedule scans while the device is actively
-> transmitting/receiving data. Anyway, NetworkManager is
-> "just" a manager for wpa_supplicant and wpa_supp works
-> well enough.
->
-> bye.
->
->
+> +	spinlock_t cc_lock;
+> +	struct ath_cycle_counters cc_ani;
+> +	struct ath_cycle_counters cc_survey;
+
+I don't see where cc_lock is ever initialized properly.  I think
+that is what is causing this lockdep splat:
+
+INFO: trying to register non-static key.
+the code is fine but needs lockdep annotation.
+turning off the locking correctness validator.
+Pid: 2240, comm: ip Not tainted 2.6.36-rc8-wl+ #32
+Call Trace:
+  [<c075d940>] ? printk+0xf/0x17
+  [<c045507a>] register_lock_class+0x5a/0x29e
+  [<c0455be2>] ? mark_lock+0x1e/0x1de
+  [<c0456af5>] __lock_acquire+0xa2/0xb8c
+  [<c0455be2>] ? mark_lock+0x1e/0x1de
+  [<c0457639>] lock_acquire+0x5a/0x78
+  [<f8c5115b>] ? ath9k_config+0x274/0x3d8 [ath9k]
+  [<c075f602>] _raw_spin_lock_irqsave+0x2f/0x3f
+  [<f8c5115b>] ? ath9k_config+0x274/0x3d8 [ath9k]
+  [<f8c5115b>] ath9k_config+0x274/0x3d8 [ath9k]
+  [<f8c0ba2e>] ieee80211_hw_config+0x11b/0x125 [mac80211]
+  [<f8c17edf>] ieee80211_do_open+0x3c5/0x466 [mac80211]
+  [<f8c171d6>] ? ieee80211_check_concurrent_iface+0x21/0x13a [mac80211]
+  [<f8c17fdb>] ieee80211_open+0x5b/0x5e [mac80211]
+  [<c06ce76b>] __dev_open+0x80/0xae
+  [<c06cc99b>] __dev_change_flags+0xa0/0x115
+  [<c06ce6bf>] dev_change_flags+0x13/0x3f
+  [<c06d7e78>] do_setlink+0x23a/0x51b
+  [<c0455037>] ? register_lock_class+0x17/0x29e
+  [<c06d847c>] rtnl_newlink+0x269/0x431
+  [<c06d8291>] ? rtnl_newlink+0x7e/0x431
+  [<c0455be2>] ? mark_lock+0x1e/0x1de
+  [<c0455de9>] ? mark_held_locks+0x47/0x5f
+  [<c075ebcf>] ? __mutex_lock_common+0x2bb/0x2d6
+  [<c0456045>] ? trace_hardirqs_on_caller+0x104/0x125
+  [<c075ebe0>] ? __mutex_lock_common+0x2cc/0x2d6
+  [<c06d8213>] ? rtnl_newlink+0x0/0x431
+  [<c06d79e2>] rtnetlink_rcv_msg+0x182/0x198
+  [<c06d7860>] ? rtnetlink_rcv_msg+0x0/0x198
+  [<c06e503c>] netlink_rcv_skb+0x30/0x77
+  [<c06d7859>] rtnetlink_rcv+0x1b/0x22
+  [<c06e4e77>] netlink_unicast+0xbe/0x119
+  [<c06e5a15>] netlink_sendmsg+0x234/0x24c
+  [<c06bf93a>] __sock_sendmsg+0x51/0x5a
+  [<c06bfba4>] sock_sendmsg+0x93/0xa7
+  [<c04968cf>] ? might_fault+0x47/0x81
+  [<c0496904>] ? might_fault+0x7c/0x81
+  [<c06c7904>] ? copy_from_user+0x8/0xa
+  [<c06c7c2d>] ? verify_iovec+0x3e/0x6d
+  [<c06bfd8c>] sys_sendmsg+0x149/0x193
+  [<c0455037>] ? register_lock_class+0x17/0x29e
+  [<c0455be2>] ? mark_lock+0x1e/0x1de
+  [<c0498d7a>] ? __do_fault+0x1fc/0x3a5
+  [<c048690a>] ? unlock_page+0x40/0x43
+  [<c0498ef7>] ? __do_fault+0x379/0x3a5
+  [<c04576dd>] ? lock_release_non_nested+0x86/0x1d8
+  [<c04968cf>] ? might_fault+0x47/0x81
+  [<c04968cf>] ? might_fault+0x47/0x81
+  [<c06c148b>] sys_socketcall+0x15e/0x1a5
+  [<c0402f1c>] sysenter_do_call+0x12/0x38
+ADDRCONF(NETDEV_UP): wlan0: link is not ready
+ieee80211 phy0: device no longer idle - scanning
+
+-- 
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
+
