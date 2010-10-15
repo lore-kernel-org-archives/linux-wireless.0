@@ -1,259 +1,270 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ogre.sisk.pl ([217.79.144.158]:32841 "EHLO ogre.sisk.pl"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751262Ab0JJTMF convert rfc822-to-8bit (ORCPT
+Received: from smtp-out.google.com ([74.125.121.35]:15447 "EHLO
+	smtp-out.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755970Ab0JOQN6 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 10 Oct 2010 15:12:05 -0400
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
-To: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
-Subject: 2.6.36-rc7-git2: Reported regressions 2.6.34 -> 2.6.35
-Cc: Maciej Rutecki <maciej.rutecki@gmail.com>,
-	Florian Mickler <florian@mickler.org>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	Kernel Testers List <kernel-testers@vger.kernel.org>,
-	Network Development <netdev@vger.kernel.org>,
-	Linux ACPI <linux-acpi@vger.kernel.org>,
-	Linux PM List <linux-pm@lists.linux-foundation.org>,
-	Linux SCSI List <linux-scsi@vger.kernel.org>,
-	Linux Wireless List <linux-wireless@vger.kernel.org>,
-	DRI <dri-devel@lists.freedesktop.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Message-ID: <pyPtebg28EI.A.ZPH.NvgsMB@chimera>
-Date: Sun, 10 Oct 2010 21:10:34 +0200 (CEST)
+	Fri, 15 Oct 2010 12:13:58 -0400
+Received: from kpbe12.cbf.corp.google.com (kpbe12.cbf.corp.google.com [172.25.105.76])
+	by smtp-out.google.com with ESMTP id o9FGDu6Y020666
+	for <linux-wireless@vger.kernel.org>; Fri, 15 Oct 2010 09:13:57 -0700
+Received: from glenhelen.mtv.corp.google.com (glenhelen.mtv.corp.google.com [172.22.72.223])
+	by kpbe12.cbf.corp.google.com with ESMTP id o9FGDsZM019483
+	for <linux-wireless@vger.kernel.org>; Fri, 15 Oct 2010 09:13:55 -0700
+From: Paul Stewart <pstew@google.com>
+Date: Fri, 15 Oct 2010 09:07:24 -0700
+Subject: [PATCH 1/2] cfg80211: Add cfg80211/nl80211 calls for bitrate threshold
+To: linux-wireless@vger.kernel.org
+In-Reply-To: <1287121902.3640.1.camel@jlt3.sipsolutions.net>
+Message-Id: <20101015161354.84EE520699@glenhelen.mtv.corp.google.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This message contains a list of some post-2.6.34 regressions introduced before
-2.6.35, for which there are no fixes in the mainline known to the tracking team.
-If any of them have been fixed already, please let us know.
+Add calls for accepting nl80211 bitrate thresholds from user space,
+and add a function calls for sending out threshold notifications.
 
-If you know of any other unresolved post-2.6.34 regressions, please let us know
-either and we'll add them to the list.  Also, please let us know if any
-of the entries below are invalid.
+Signed-off-by: Paul Stewart <pstew@google.com>
+---
+ include/linux/nl80211.h |   12 ++++++-
+ include/net/cfg80211.h  |   18 ++++++++++
+ net/wireless/mlme.c     |   13 +++++++
+ net/wireless/nl80211.c  |   86 +++++++++++++++++++++++++++++++++++++++++++++-
+ net/wireless/nl80211.h  |    6 +++
+ 5 files changed, 132 insertions(+), 3 deletions(-)
 
-Each entry from the list will be sent additionally in an automatic reply to
-this message with CCs to the people involved in reporting and handling the
-issue.
-
-
-Listed regressions statistics:
-
-  Date          Total  Pending  Unresolved
-  ----------------------------------------
-  2010-10-10      143       23          19
-  2010-10-03      141       21          17
-  2010-09-26      139       24          21
-  2010-09-20      137       27          25
-  2010-09-12      135       26          25
-  2010-08-30      124       38          34
-  2010-08-01      100       27          23
-  2010-07-23       94       33          25
-  2010-07-09       79       45          37
-  2010-06-21       46       37          26
-  2010-06-09       15       13          10
-
-
-Unresolved regressions
-----------------------
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=20002
-Subject		: x86_64 2.6.35.* kernels and Intel Xeon X5550
-Submitter	: Marc Aurele La France <tsi@ualberta.ca>
-Date		: 2010-10-07 17:17 (4 days old)
-Message-ID	: <alpine.WNT.2.00.1010071055420.1672@cluij.ucs.ualberta.ca>
-References	: http://marc.info/?l=linux-kernel&m=128647187628706&w=2
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=19792
-Subject		: 2.6.35.6 fails to suspend (pxa2xx-mci.0)
-Submitter	: Sven Neumann <s.neumann@raumfeld.com>
-Date		: 2010-10-04 7:30 (7 days old)
-Message-ID	: <1286177435.2140.5.camel@sven>
-References	: http://marc.info/?l=linux-kernel&m=128617869729382&w=2
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=19612
-Subject		: Computer fails to hibernate - problem idling SMP CPU's
-Submitter	:  <tempo444z@gmail.com>
-Date		: 2010-10-02 22:26 (9 days old)
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=19302
-Subject		: PROBLEM: kernel crash on USB-modem (Huawei E1750) hangup.
-Submitter	: O01eg <O01eg@yandex.ru>
-Date		: 2010-09-26 19:50 (15 days old)
-Message-ID	: <op.vjnn1up1yohvy1@localhost>
-References	: http://marc.info/?l=linux-kernel&m=128553111709569&w=2
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=18522
-Subject		: cdrom drive doesn't detect removal
-Submitter	: Maxim Levitsky <maximlevitsky@gmail.com>
-Date		: 2010-09-12 9:49 (29 days old)
-First-Bad-Commit: http://git.kernel.org/linus/6b4517a7913a09d3259bb1d21c9cb300f12294bd
-Message-ID	: <1284284969.2928.18.camel@maxim-laptop>
-References	: http://marc.info/?l=linux-kernel&m=128428499013930&w=2
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=17812
-Subject		: Kernel completely frozen when memory is full
-Submitter	: Mickey86 <mikael.cordon@gmail.com>
-Date		: 2010-09-05 13:09 (36 days old)
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=17261
-Subject		: Freezes on bootup
-Submitter	: Dan Dart <dandart@googlemail.com>
-Date		: 2010-08-29 09:00 (43 days old)
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=16891
-Subject		: Kernel panic while loading intel module during boot
-Submitter	: Anisse Astier <anisse@astier.eu>
-Date		: 2010-08-24 13:19 (48 days old)
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=16691
-Subject		: IPW5100: iwlagn broken with 2.6.34.x to 2.6.35.2 update
-Submitter	: Can Celasun <dcelasun@gmail.com>
-Date		: 2010-08-21 08:28 (51 days old)
-References	: http://www.spinics.net/lists/linux-wireless/msg57237.html
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=16614
-Subject		: [2.6.35] usb 2.0 em28xx  kernel panic general protection fault: 0000 [#1] SMP          RIP: 0010:[<ffffffffa004fbc5>]  [<ffffffffa004fbc5>] em28xx_isoc_copy_vbi+0x62e/0x812 [em28xx]
-Submitter	: Sander Eikelenboom <linux@eikelenboom.it>
-Date		: 2010-08-10 22:12 (62 days old)
-Message-ID	: <61936849.20100811001257@eikelenboom.it>
-References	: http://marc.info/?l=linux-kernel&m=128152075830927&w=2
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=16562
-Subject		: 2.6.35: cpu_idle bug report / on i7 870 cpu (x86_64)
-Submitter	: Justin Piszcz <jpiszcz@lucidpixels.com>
-Date		: 2010-08-06 22:09 (66 days old)
-Message-ID	: <alpine.DEB.2.00.1008061800530.5241@p34.internal.lan>
-References	: http://marc.info/?l=linux-kernel&m=128113260904048&w=2
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=16549
-Subject		: 2.6.35: suspicious rcu_dereference_check() usage
-Submitter	: Vladislav Bolkhovitin <vst@vlnb.net>
-Date		: 2010-08-04 10:56 (68 days old)
-Message-ID	: <4C594740.1090608@vlnb.net>
-References	: http://marc.info/?l=linux-kernel&m=128091938215177&w=2
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=16525
-Subject		: unexpected high load since 2.6.35
-Submitter	: MadLoisae@gmx.net <MadLoisae@gmx.net>
-Date		: 2010-08-02 20:53 (70 days old)
-Message-ID	: <4C573041.1070103@gmx.net>
-References	: http://marc.info/?l=linux-kernel&m=128078243726655&w=2
-		  http://lkml.org/lkml/2010/9/14/105
-		  http://lkml.org/lkml/2010/9/27/328
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=16515
-Subject		: [bisected] Radeon rv280 can't boot on kernel 2.6.35.
-Submitter	: Albert Gall <ss3vdr@gmail.com>
-Date		: 2010-08-04 16:10 (68 days old)
-First-Bad-Commit: http://git.kernel.org/linus/https://bugzilla.kernel.org/attachment.cgi?id=27350
-Handled-By	: Alex Deucher <alexdeucher@gmail.com>
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=16488
-Subject		: [i915] Framebuffer ID error after suspend/hibernate leading to X crash
-Submitter	: Milan Bouchet-Valat <nalimilan@club.fr>
-Date		: 2010-08-01 08:55 (71 days old)
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=16458
-Subject		: Bluetooth disabled after resume
-Submitter	: AttilaN <attila123456@gmail.com>
-Date		: 2010-07-25 09:33 (78 days old)
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=16380
-Subject		: Loop devices act strangely in 2.6.35
-Submitter	: Artem S. Tashkinov <t.artem@mailcity.com>
-Date		: 2010-07-13 23:21 (90 days old)
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=16265
-Subject		: Why is kslowd accumulating so much CPU time?
-Submitter	: Theodore Ts'o <tytso@mit.edu>
-Date		: 2010-06-09 18:36 (124 days old)
-First-Bad-Commit: http://git.kernel.org/linus/fbf81762e385d3d45acad057b654d56972acf58c
-Message-ID	: <E1OMQ88-0002a1-Gb@closure.thunk.org>
-References	: http://marc.info/?l=linux-kernel&m=127610857819033&w=4
-		  http://bugs.freedesktop.org/show_bug.cgi?id=29536
-Handled-By	: Chris Wilson <chris@chris-wilson.co.uk>
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=16221
-Subject		: 2.6.35-rc2-git5 -- [drm:drm_mode_getfb] *ERROR* invalid framebuffer id
-Submitter	: Miles Lane <miles.lane@gmail.com>
-Date		: 2010-06-11 20:31 (122 days old)
-Message-ID	: <AANLkTim0jVRyqkwlGOcrg_XTvUQwcBYfWJX-aRzkkrLG@mail.gmail.com>
-References	: http://marc.info/?l=linux-kernel&m=127628828119623&w=2
-
-
-Regressions with patches
-------------------------
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=17772
-Subject		: Unable to locate IOAPIC for GSI *
-Submitter	: zersaa <zersaa@gmail.com>
-Date		: 2010-09-04 21:28 (37 days old)
-Handled-By	: Eric W. Biederman <ebiederm@xmission.com>
-Patch		: https://patchwork.kernel.org/patch/104501/
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=16462
-Subject		: unable to connect to hidden SSID AP on legal channel 13
-Submitter	: Daniel J Blueman <daniel.blueman@gmail.com>
-Date		: 2010-07-25 17:06 (78 days old)
-Handled-By	: Johannes Berg <johannes.berg@intel.com>
-Patch		: https://bugzilla.kernel.org/attachment.cgi?id=31862
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=16312
-Subject		: WARNING: at fs/fs-writeback.c:1127 __mark_inode_dirty
-Submitter	: Zdenek Kabelac <zdenek.kabelac@gmail.com>
-Date		: 2010-06-28 9:40 (105 days old)
-Message-ID	: <AANLkTin24fr5O4_q5Xbo9Y_NKkEmtcp6Hgmr9_4qXaFz@mail.gmail.com>
-References	: http://marc.info/?l=linux-kernel&m=127771804806465&w=2
-		  http://lkml.indiana.edu/hypermail/linux/kernel/1007.3/00884.html
-Handled-By	: Jan Kara <jack@suse.cz>
-		  Jan Kara <jack@suse.cz>
-Patch		: https://bugzilla.kernel.org/attachment.cgi?id=30282
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=16228
-Subject		: BUG/boot failure on Dell Precision T3500 (pci/ahci_stop_engine)
-Submitter	: Brian Bloniarz <brian.bloniarz@gmail.com>
-Date		: 2010-06-16 17:57 (117 days old)
-Handled-By	: Bjorn Helgaas <bjorn.helgaas@hp.com>
-Patch		: https://patchwork.kernel.org/patch/189182/
-		  https://patchwork.kernel.org/patch/189232/
-		  https://patchwork.kernel.org/patch/189242/
-		  https://patchwork.kernel.org/patch/189252/
-
-
-For details, please visit the bug entries and follow the links given in
-references.
-
-As you can see, there is a Bugzilla entry for each of the listed regressions.
-There also is a Bugzilla entry used for tracking the regressions introduced
-between 2.6.34 and 2.6.35, unresolved as well as resolved, at:
-
-http://bugzilla.kernel.org/show_bug.cgi?id=16055
-
-Please let the tracking team know if there are any Bugzilla entries that
-should be added to the list in there.
-
-Thanks!
+diff --git a/include/linux/nl80211.h b/include/linux/nl80211.h
+index 0edb256..7243d26 100644
+--- a/include/linux/nl80211.h
++++ b/include/linux/nl80211.h
+@@ -1785,7 +1785,15 @@ enum nl80211_ps_state {
+  * @NL80211_ATTR_CQM_RSSI_HYST: RSSI hysteresis in dBm. This value specifies
+  *	the minimum amount the RSSI level must change after an event before a
+  *	new event may be issued (to reduce effects of RSSI oscillation).
+- * @NL80211_ATTR_CQM_RSSI_THRESHOLD_EVENT: RSSI threshold event
++ * @NL80211_ATTR_CQM_RSSI_THRESHOLD_EVENT: RSSI threshold event.  This provides
++ *      the current bitrate (in 1000 bits per second) at the time that a
++ *      threshold was crossed.
++ * @NL80211_ATTR_CQM_BITRATE_THOLD: Bitrate threshold in 1000 bits per second.
++ *      This specifies the threshold at which an event will be sent.  Set to
++ *      zero to disable.  Events will be sent when the threshold is crossed
++ *      in either direction, and while under threshold, whenever the bitrate
++ *      achieves its lowest value in the current below-threshold excursion.
++ * @NL80211_ATTR_CQM_BITRATE_THRESHOLD_EVENT: New transmit bitrate
+  * @__NL80211_ATTR_CQM_AFTER_LAST: internal
+  * @NL80211_ATTR_CQM_MAX: highest key attribute
+  */
+@@ -1794,6 +1802,8 @@ enum nl80211_attr_cqm {
+ 	NL80211_ATTR_CQM_RSSI_THOLD,
+ 	NL80211_ATTR_CQM_RSSI_HYST,
+ 	NL80211_ATTR_CQM_RSSI_THRESHOLD_EVENT,
++	NL80211_ATTR_CQM_BITRATE_THOLD,
++	NL80211_ATTR_CQM_BITRATE_THRESHOLD_EVENT,
+ 
+ 	/* keep last */
+ 	__NL80211_ATTR_CQM_AFTER_LAST,
+diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+index 2a7936d..e7f044e 100644
+--- a/include/net/cfg80211.h
++++ b/include/net/cfg80211.h
+@@ -1146,6 +1146,7 @@ struct cfg80211_pmksa {
+  * @set_power_mgmt: Configure WLAN power management. A timeout value of -1
+  *	allows the driver to adjust the dynamic ps timeout value.
+  * @set_cqm_rssi_config: Configure connection quality monitor RSSI threshold.
++ * @set_cqm_bitrate_config: Config connection quality monitor bitrate threshold.
+  *
+  * @mgmt_frame_register: Notify driver that a management frame type was
+  *	registered. Note that this callback may not sleep, and cannot run
+@@ -1301,6 +1302,10 @@ struct cfg80211_ops {
+ 				       struct net_device *dev,
+ 				       s32 rssi_thold, u32 rssi_hyst);
+ 
++	int	(*set_cqm_bitrate_config)(struct wiphy *wiphy,
++					  struct net_device *dev,
++					  u32 bitrate_thold);
++
+ 	void	(*mgmt_frame_register)(struct wiphy *wiphy,
+ 				       struct net_device *dev,
+ 				       u16 frame_type, bool reg);
+@@ -2595,6 +2600,19 @@ void cfg80211_cqm_rssi_notify(struct net_device *dev,
+ 			      enum nl80211_cqm_rssi_threshold_event rssi_event,
+ 			      gfp_t gfp);
+ 
++/**
++ * cfg80211_cqm_bitrate_notify - connection quality monitoring bitrate event
++ * @dev: network device
++ * @rate: the new transmit rate
++ * @gfp: context flags
++ *
++ * This function is called when a the transmit bitrate changes, and
++ * connection quality monitoring is configured to capture these events.
++ */
++void cfg80211_cqm_bitrate_notify(struct net_device *dev,
++				 u32 bitrate,
++				 gfp_t gfp);
++
+ /* Logging, debugging and troubleshooting/diagnostic helpers. */
+ 
+ /* wiphy_printk helpers, similar to dev_printk */
+diff --git a/net/wireless/mlme.c b/net/wireless/mlme.c
+index 26838d9..ebb4e3a 100644
+--- a/net/wireless/mlme.c
++++ b/net/wireless/mlme.c
+@@ -1028,3 +1028,16 @@ void cfg80211_cqm_rssi_notify(struct net_device *dev,
+ 	nl80211_send_cqm_rssi_notify(rdev, dev, rssi_event, gfp);
+ }
+ EXPORT_SYMBOL(cfg80211_cqm_rssi_notify);
++
++void cfg80211_cqm_bitrate_notify(struct net_device *dev,
++				 u32 bitrate,
++				 gfp_t gfp)
++{
++	struct wireless_dev *wdev = dev->ieee80211_ptr;
++	struct wiphy *wiphy = wdev->wiphy;
++	struct cfg80211_registered_device *rdev = wiphy_to_dev(wiphy);
++
++	/* Indicate roaming trigger event to user space */
++	nl80211_send_cqm_bitrate_notify(rdev, dev, bitrate, gfp);
++}
++EXPORT_SYMBOL(cfg80211_cqm_bitrate_notify);
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index c506241..de5f0b6 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -4325,6 +4325,8 @@ nl80211_attr_cqm_policy[NL80211_ATTR_CQM_MAX + 1] __read_mostly = {
+ 	[NL80211_ATTR_CQM_RSSI_THOLD] = { .type = NLA_U32 },
+ 	[NL80211_ATTR_CQM_RSSI_HYST] = { .type = NLA_U32 },
+ 	[NL80211_ATTR_CQM_RSSI_THRESHOLD_EVENT] = { .type = NLA_U32 },
++	[NL80211_ATTR_CQM_BITRATE_THOLD] = { .type = NLA_U32 },
++	[NL80211_ATTR_CQM_BITRATE_THRESHOLD_EVENT] = { .type = NLA_U32 },
+ };
+ 
+ static int nl80211_set_cqm_rssi(struct genl_info *info,
+@@ -4350,6 +4352,26 @@ static int nl80211_set_cqm_rssi(struct genl_info *info,
+ 					      threshold, hysteresis);
+ }
+ 
++static int nl80211_set_cqm_bitrate(struct genl_info *info,
++					   u32 trigger_rate)
++{
++	struct cfg80211_registered_device *rdev = info->user_ptr[0];
++	struct wireless_dev *wdev;
++	struct net_device *dev = info->user_ptr[1];
++
++	wdev = dev->ieee80211_ptr;
++
++	if (!rdev->ops->set_cqm_bitrate_config)
++		return -EOPNOTSUPP;
++
++	if (wdev->iftype != NL80211_IFTYPE_STATION &&
++	    wdev->iftype != NL80211_IFTYPE_P2P_CLIENT)
++		return -EOPNOTSUPP;
++
++	return rdev->ops->set_cqm_bitrate_config(wdev->wiphy, dev,
++						 trigger_rate);
++}
++
+ static int nl80211_set_cqm(struct sk_buff *skb, struct genl_info *info)
+ {
+ 	struct nlattr *attrs[NL80211_ATTR_CQM_MAX + 1];
+@@ -4367,6 +4389,8 @@ static int nl80211_set_cqm(struct sk_buff *skb, struct genl_info *info)
+ 	if (err)
+ 		goto out;
+ 
++	err = -EINVAL;
++
+ 	if (attrs[NL80211_ATTR_CQM_RSSI_THOLD] &&
+ 	    attrs[NL80211_ATTR_CQM_RSSI_HYST]) {
+ 		s32 threshold;
+@@ -4374,8 +4398,16 @@ static int nl80211_set_cqm(struct sk_buff *skb, struct genl_info *info)
+ 		threshold = nla_get_u32(attrs[NL80211_ATTR_CQM_RSSI_THOLD]);
+ 		hysteresis = nla_get_u32(attrs[NL80211_ATTR_CQM_RSSI_HYST]);
+ 		err = nl80211_set_cqm_rssi(info, threshold, hysteresis);
+-	} else
+-		err = -EINVAL;
++		if (err)
++			goto out;
++	}
++
++	if (attrs[NL80211_ATTR_CQM_BITRATE_THOLD]) {
++		u32 thold = nla_get_u32(attrs[NL80211_ATTR_CQM_BITRATE_THOLD]);
++		err = nl80211_set_cqm_bitrate(info, thold);
++		if (err)
++			goto out;
++	}
+ 
+ out:
+ 	return err;
+@@ -5651,6 +5683,56 @@ nl80211_send_cqm_rssi_notify(struct cfg80211_registered_device *rdev,
+ 	nlmsg_free(msg);
+ }
+ 
++void
++nl80211_send_cqm_bitrate_notify(struct cfg80211_registered_device *rdev,
++				struct net_device *netdev,
++				u32 bitrate,
++				gfp_t gfp)
++{
++	struct sk_buff *msg;
++	struct nlattr *pinfoattr;
++	void *hdr;
++
++	if (bitrate == 0)
++		return;
++
++
++	msg = nlmsg_new(NLMSG_GOODSIZE, gfp);
++	if (!msg)
++		return;
++
++	hdr = nl80211hdr_put(msg, 0, 0, 0, NL80211_CMD_NOTIFY_CQM);
++	if (!hdr) {
++		nlmsg_free(msg);
++		return;
++	}
++
++
++	NLA_PUT_U32(msg, NL80211_ATTR_WIPHY, rdev->wiphy_idx);
++	NLA_PUT_U32(msg, NL80211_ATTR_IFINDEX, netdev->ifindex);
++
++	pinfoattr = nla_nest_start(msg, NL80211_ATTR_CQM);
++	if (!pinfoattr)
++		goto nla_put_failure;
++
++	NLA_PUT_U32(msg, NL80211_ATTR_CQM_BITRATE_THRESHOLD_EVENT, bitrate);
++
++	nla_nest_end(msg, pinfoattr);
++
++	if (genlmsg_end(msg, hdr) < 0) {
++		nlmsg_free(msg);
++		return;
++	}
++
++	genlmsg_multicast_netns(wiphy_net(&rdev->wiphy), msg, 0,
++				nl80211_mlme_mcgrp.id, gfp);
++	return;
++
++ nla_put_failure:
++	genlmsg_cancel(msg, hdr);
++	nlmsg_free(msg);
++}
++
+ static int nl80211_netlink_notify(struct notifier_block * nb,
+ 				  unsigned long state,
+ 				  void *_notify)
+diff --git a/net/wireless/nl80211.h b/net/wireless/nl80211.h
+index 30d2f93..769fa90 100644
+--- a/net/wireless/nl80211.h
++++ b/net/wireless/nl80211.h
+@@ -88,4 +88,10 @@ nl80211_send_cqm_rssi_notify(struct cfg80211_registered_device *rdev,
+ 			     enum nl80211_cqm_rssi_threshold_event rssi_event,
+ 			     gfp_t gfp);
+ 
++void
++nl80211_send_cqm_bitrate_notify(struct cfg80211_registered_device *rdev,
++				struct net_device *netdev,
++				u32 bitrate,
++				gfp_t gfp);
++
+ #endif /* __NET_WIRELESS_NL80211_H */
+-- 
+1.7.1
 
