@@ -1,48 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([192.100.105.134]:18305 "EHLO
-	mgw-mx09.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751285Ab0JYMhK (ORCPT
+Received: from mail-iw0-f174.google.com ([209.85.214.174]:39619 "EHLO
+	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752901Ab0JOIqG convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 25 Oct 2010 08:37:10 -0400
-Received: from vaebh105.NOE.Nokia.com (vaebh105.europe.nokia.com [10.160.244.31])
-	by mgw-mx09.nokia.com (Switch-3.3.3/Switch-3.3.3) with ESMTP id o9PCauqN006906
-	for <linux-wireless@vger.kernel.org>; Mon, 25 Oct 2010 07:37:09 -0500
-Subject: Re: [PATCH] wl1271: Fix RX path stall
-From: Tuomas Katila <ext-tuomas.2.katila@nokia.com>
-To: "ext juuso.oikarinen@nokia.com" <juuso.oikarinen@nokia.com>
-Cc: "Coelho Luciano (Nokia-MS/Helsinki)" <Luciano.Coelho@nokia.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <1287998669-27209-1-git-send-email-juuso.oikarinen@nokia.com>
-References: <1287998669-27209-1-git-send-email-juuso.oikarinen@nokia.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Mon, 25 Oct 2010 15:31:05 +0300
-Message-ID: <1288009865.17497.347.camel@tukatila-desktop>
-Mime-Version: 1.0
+	Fri, 15 Oct 2010 04:46:06 -0400
+Received: by iwn35 with SMTP id 35so664933iwn.19
+        for <linux-wireless@vger.kernel.org>; Fri, 15 Oct 2010 01:46:05 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <4CB80969.5040902@openwrt.org>
+References: <alpine.DEB.2.00.1010150150110.20478@bigbill>
+	<4CB80969.5040902@openwrt.org>
+Date: Fri, 15 Oct 2010 10:46:04 +0200
+Message-ID: <AANLkTinLBZXTFN2khn=c4_mCed1WVKO30978fUs0th88@mail.gmail.com>
+Subject: Re: [PATCH] ath9k_hw: avoid division-by-zero in ani
+From: =?ISO-8859-1?Q?Bj=F6rn_Smedman?= <bjorn.smedman@venatech.se>
+To: Felix Fietkau <nbd@openwrt.org>
+Cc: Ben Greear <greearb@candelatech.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2010-10-25 at 11:24 +0200, ext juuso.oikarinen@nokia.com wrote:
-> From: Juuso Oikarinen <juuso.oikarinen@nokia.com>
-> 
-> The wl1271_rx function loops through packets in an aggregated buffer. Each
-> packet in the buffer is handled by a call to wl1271_rx_handle_data, which will
-> fail if skb memory allocation fails or production mode is enabled. These
-> failures currently prevent the rx counters to be incremented, thus causing the
-> rx loop to run forever.
-> 
-> Fix this by ignoring error codes reported wl1271_rx_handle_data function.
-> This essentially means that frames will be dropped in production mode, which
-> is the intetion, and frames will be dropped if memory allocation fails, which
-> is a decent way to recover from that situation.
-> 
-> Signed-off-by: Juuso Oikarinen <juuso.oikarinen@nokia.com>
-> ---
+2010/10/15 Felix Fietkau <nbd@openwrt.org>:
+> On 2010-10-15 2:00 AM, Björn Smedman wrote:
+>> The ath9k ANI code may under some circumstances do division-by-zero. This
+>> patch detects and avoids that case.
+> Should be obsolete with my patch from 3 days ago:
+> [PATCH 1/3] ath9k_hw: fix division by zero in the ANI monitor code
 
-Tested-by: Tuomas Katila <ext-tuomas.2.katila@nokia.com>
+Yes it is. Thanks for catching and sorry for the wasted bandwidth.
 
-I tested this with production mode in the scenario where it was
-previously failing, and it is not getting stuck anymore.
-
--Tuomas
-
-
+/Björn
