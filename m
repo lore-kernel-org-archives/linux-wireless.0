@@ -1,85 +1,123 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:44206 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932339Ab0JLPAH (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 12 Oct 2010 11:00:07 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: linux-wireless@vger.kernel.org
-Cc: Stephen Rothwell <sfr@canb.auug.org.au>,
-	Ben Greear <greearb@candelatech.com>,
-	linux-kernel@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-Subject: [PATCH] ath5k: fix build break from "ath5k: Print out opmode in debugfs"
-Date: Tue, 12 Oct 2010 10:53:26 -0400
-Message-Id: <1286895206-3030-1-git-send-email-linville@tuxdriver.com>
-In-Reply-To: <20101012163519.a88f2040.sfr@canb.auug.org.au>
-References: <20101012163519.a88f2040.sfr@canb.auug.org.au>
+Received: from mga11.intel.com ([192.55.52.93]:31183 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932077Ab0JOTRw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 15 Oct 2010 15:17:52 -0400
+Subject: Re: compat-wireless question
+From: "Guy, Wey-Yi" <wey-yi.w.guy@intel.com>
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Greg KH <greg@kroah.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+In-Reply-To: <AANLkTi=6aVHyr98avc07UtWgDkV=SdmKW2HXNfSRY3KU@mail.gmail.com>
+References: <E9954878DD1FB34FAE5187FB88C58A35012EE46BC3@orsmsx506.amr.corp.intel.com>
+	 <AANLkTi=6aVHyr98avc07UtWgDkV=SdmKW2HXNfSRY3KU@mail.gmail.com>
+Content-Type: text/plain
+Date: Fri, 15 Oct 2010 12:16:48 -0700
+Message-Id: <1287170208.13051.34.camel@wwguy-ubuntu>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Without this and with CONFIG_ATH_DEBUG not set...
+Hi Luis,
 
-ERROR: ".ath_opmode_to_string" [drivers/net/wireless/ath/ath5k/ath5k.ko] undefined!
+On Fri, 2010-10-15 at 12:05 -0700, Luis R. Rodriguez wrote:
+> On Fri, Oct 15, 2010 at 10:40 AM, Guy, Wey-Yi W <wey-yi.w.guy@intel.com> wrote:
+> > Hi Luis,
+> >
+> > Simple compat-wireless question
+> >
+> > There are two type of compat-wireless
+> > 1.       Bleeding-edge compat-wireless
+> > 2.       Stable compat-wireless
+> >
+> > If I understand correctly, bleeding-edge compat-wireless took the latest
+> > from wireless-next-2.6,
+> 
+> Bleeding edge comes from linux-next.git instead of wireless-next.git
+> as we also get Ethernet driver updates that way. Ethernet drivers are
+> easy to port into compat-wireless so I have already added all Atheros
+> Ethernet drivers into it, feel free to send patches to Intel Ethernet
+> :)
+> 
+> > is it also include wireless-2.6 which is bug fix.
+> 
+> No, it just uses linux-next.git, but yeah linux-next.git would rebase
+> on top of Linus' tree anyway so it would eventually get all of the
+> respective stable fixes. Stephen would then just drag in all trees
+> sequentially.
+> 
+> > How about stable compat-wireless, it is base on stable tree, so I believe it
+> > has all the bug fix for the stable kernel, am I correct?
+> 
+> I based the stable release off of H. Peter Anvin's linux-2.6-allstable.git tree:
+> 
+> git://git.kernel.org/pub/scm/linux/kernel/git/hpa/linux-2.6-allstable.git
+> 
+> After Linus releases a kernel, say 2.6.36, then new extra version
+> fixes, say 2.6.36.1, 2.6.36.2, etc, will not be available on Linus'
+> tree, but you can instead get them from the linux-2.6-allstable.git
+> tree. What is neat about that tree too is it also has the older stable
+> extra version updates. So whenever a stable kernel extra version gets
+> released we can make a new compat-wireless-2.6.3x.y. You can find them
+> here:
+> 
+> http://wireless.kernel.org/en/users/Download/stable/
+> 
+> Now as of the compat-wireless-2.6.36 releases I started noticing we
+> can do something better as we approach the merge window. The issue
+> with the merge window is that there are some patches which are marked
+> as stable on the commit log entry (Cc: stable@kernel.org) but not all
+> of these will make it to Linus' next rc release as the focus for the
+> RC is to fix regressions only. Right or wrong, some stable patches
+> eventually make it into the first extra version release of the kernel
+> but not on the stable release of the kernel. Some of these stable
+> fixes are still important though so to help with testing and getting
+> users/customers these fixes I've started sucking all pending stable
+> fixes from linux-next.git on the compat-wireless-2.6.36 releases. I
+> annotate this is done on a release by postfixing an "s" to the
+> release. You can also find all the stable patches which were sucked
+> out of linux-next.git by looking at the pending-stable/ directory. I
+> regenerate these every new RC release of the kernel or extra version
+> bump, but started this only as of the linux-2.6.36.y branch of
+> compat-wireless.
+> 
+> Furthermore, I realize that at times a vendor may have a patch that
+> although it did not make it into the stable release of the kernel it
+> may be important for the vendor for some customers, so because of this
+> we have the linux-next-cherry-picks/ directory. This directory is for
+> patches which have already been merged into linux-next.git but will
+> not make it into the stable kernel release. I took this further two
+> more steps too, just because sometimes a maintainer may be on
+> vacation, have died, or whatever, so your patches may not get merged
+> yet. In these cases you can submit patches for inclusion into the
+> linux-next-pending/ directory of compat-wireless. This is for patches
+> which have *at least* been posted to a public mailing list but for
+> whatever reason haven't yet been merged. Then lastly we have the crap/
+> directory of compat-wireless. This for patches which have not even yet
+> been posted to a mailing list for whatever reason. An example may be
+> that there is a known issue but yet the patches are important enough.
+> 
+> The purpose of all these directories is to let you customize stable
+> compat-wireless releases, suited for whatever purpose you have. I've
+> started sucking in all linux-next.git stable fixes not yet merged for
+> now, and am will soon start incorporating a linux-next-pending/ patch
+> to account for the lag in getting a patch reviewed.
+> 
+> Feel free to use these as well, I welcome patches to help your needs.
+> 
+> Please let me know if you have any other questions.
+> 
+>  
+Thank you very much for the clear explanation, this is exactly what I
+looking for.
 
-Signed-off-by: John W. Linville <linville@tuxdriver.com>
----
-Please don't make me commit such an ugly patch...
+the linux-next-cherry-pick/ directory especially interesting to me since
+we need to deliver the latest new features to our customer. I will give
+a try and might have more questions.
 
- drivers/net/wireless/ath/ath5k/base.c  |    4 ++++
- drivers/net/wireless/ath/ath5k/debug.c |    6 +++++-
- 2 files changed, 9 insertions(+), 1 deletions(-)
+Wey
 
-diff --git a/drivers/net/wireless/ath/ath5k/base.c b/drivers/net/wireless/ath/ath5k/base.c
-index c9732a6..b839a6b 100644
---- a/drivers/net/wireless/ath/ath5k/base.c
-+++ b/drivers/net/wireless/ath/ath5k/base.c
-@@ -562,10 +562,14 @@ static void ath_do_set_opmode(struct ath5k_softc *sc)
- {
- 	struct ath5k_hw *ah = sc->ah;
- 	ath5k_hw_set_opmode(ah, sc->opmode);
-+#ifdef CONFIG_ATH_DEBUG
- 	ATH5K_DBG(sc, ATH5K_DEBUG_MODE, "mode setup opmode %d (%s)\n",
- 		  sc->opmode,
- 		  ath_opmode_to_string(sc->opmode) ?
- 		  ath_opmode_to_string(sc->opmode) : "UKNOWN");
-+#else
-+	ATH5K_DBG(sc, ATH5K_DEBUG_MODE, "mode setup opmode %d\n", sc->opmode);
-+#endif
- }
+
  
- void ath5k_update_bssid_mask_and_opmode(struct ath5k_softc *sc,
-diff --git a/drivers/net/wireless/ath/ath5k/debug.c b/drivers/net/wireless/ath/ath5k/debug.c
-index a3b2171..329187a 100644
---- a/drivers/net/wireless/ath/ath5k/debug.c
-+++ b/drivers/net/wireless/ath/ath5k/debug.c
-@@ -493,7 +493,7 @@ static ssize_t read_file_misc(struct file *file, char __user *user_buf,
- 	char buf[700];
- 	unsigned int len = 0;
- 	u32 filt = ath5k_hw_get_rx_filter(sc->ah);
--	const char *tmp;
-+	const char *tmp __maybe_unused;
- 
- 	len += snprintf(buf+len, sizeof(buf)-len, "bssid-mask: %pM\n",
- 			sc->bssidmask);
-@@ -526,6 +526,7 @@ static ssize_t read_file_misc(struct file *file, char __user *user_buf,
- 	else
- 		len += snprintf(buf+len, sizeof(buf)-len, "\n");
- 
-+#ifdef CONFIG_ATH_DEBUG
- 	tmp = ath_opmode_to_string(sc->opmode);
- 	if (tmp)
- 		len += snprintf(buf+len, sizeof(buf)-len, "opmode: %s\n",
-@@ -533,6 +534,9 @@ static ssize_t read_file_misc(struct file *file, char __user *user_buf,
- 	else
- 		len += snprintf(buf+len, sizeof(buf)-len,
- 				"opmode: UNKNOWN-%i\n", sc->opmode);
-+#else
-+	len += snprintf(buf+len, sizeof(buf)-len, "opmode: %i\n", sc->opmode);
-+#endif
- 
- 	if (len > sizeof(buf))
- 		len = sizeof(buf);
--- 
-1.7.2.3
 
