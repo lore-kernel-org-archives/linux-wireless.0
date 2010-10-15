@@ -1,38 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:40258 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756774Ab0I3WjD (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 30 Sep 2010 18:39:03 -0400
-Subject: Re: [RFC 0/2] generic netlink doit generalisation
-From: Johannes Berg <johannes@sipsolutions.net>
-To: netdev@vger.kernel.org
-Cc: linux-wireless@vger.kernel.org, tgraf@suug.ch
-In-Reply-To: <20100930211013.472957770@sipsolutions.net>
-References: <20100930211013.472957770@sipsolutions.net>
-Content-Type: text/plain; charset="UTF-8"
-Date: Fri, 01 Oct 2010 00:39:38 +0200
-Message-ID: <1285886378.5137.27.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+Received: from hera.kernel.org ([140.211.167.34]:37959 "EHLO hera.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755941Ab0JOQjm (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 15 Oct 2010 12:39:42 -0400
+Message-ID: <4CB883C9.6050104@kernel.org>
+Date: Fri, 15 Oct 2010 18:39:37 +0200
+From: Tejun Heo <tj@kernel.org>
+MIME-Version: 1.0
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: Linux Wireless List <linux-wireless@vger.kernel.org>,
+	lkml <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH v2.6.36-rc7] mac80211: cancel restart_work explicitly
+ instead of depending on flush_scheduled_work()
+References: <4CB874C0.8090003@kernel.org> <1287159715.1870.11.camel@Nokia-N900-51-1>
+In-Reply-To: <1287159715.1870.11.camel@Nokia-N900-51-1>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2010-09-30 at 23:10 +0200, Johannes Berg wrote:
-> nl80211 does a lot of boilerplate work
-> for each generic netlink doit() operation,
-> this is an attempt to reduce it.
+Hello,
 
-Here are the completed versions of the nl80211 cleanups:
+On 10/15/2010 06:21 PM, Johannes Berg wrote:
+>> -        create_singlethread_workqueue(wiphy_name(local->hw.wiphy));
+>> +        alloc_ordered_workqueue(wiphy_name(local->hw.wiphy), 0);
+> 
+> no description for this change?
 
-http://johannes.sipsolutions.net/patches/kernel/all/LATEST/NNN-nl80211-use-pre-post.patch
-http://johannes.sipsolutions.net/patches/kernel/all/LATEST/NNN-nl80211-generic-running.patch
+Oops, right.  create_*workqueue() interfaces are being replaced by
+alloc_*workqueue().  It's part of the workqueue interface update.
 
-The combined diffstat of these two is
+>> -    /*
+>> -     * For key todo, it'll be empty by now but the work
+>> -     * might still be scheduled.
+>> -     */
+>> -    flush_scheduled_work();
+> 
+> oops, todo work no longer exists...
+> 
+> Anyway, ACK.
 
- net/wireless/nl80211.c | 1756 +++++++++++++++----------------------------------
- 1 file changed, 541 insertions(+), 1215 deletions(-)
+Are you going to route this through wireless tree?  Shall I repost
+with update patch description?
 
-and they reduce code size by >4k on my x86_64 compile.
+Thank you.
 
-johannes
-
+-- 
+tejun
