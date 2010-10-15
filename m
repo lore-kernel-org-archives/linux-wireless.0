@@ -1,37 +1,28 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iw0-f174.google.com ([209.85.214.174]:33784 "EHLO
-	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752953Ab0JGSaP (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 7 Oct 2010 14:30:15 -0400
-Received: by iwn9 with SMTP id 9so147626iwn.19
-        for <linux-wireless@vger.kernel.org>; Thu, 07 Oct 2010 11:30:15 -0700 (PDT)
+Received: from nbd.name ([88.198.39.176]:55564 "EHLO ds10.nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752728Ab0JOH5l (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 15 Oct 2010 03:57:41 -0400
+Message-ID: <4CB80969.5040902@openwrt.org>
+Date: Fri, 15 Oct 2010 09:57:29 +0200
+From: Felix Fietkau <nbd@openwrt.org>
 MIME-Version: 1.0
-In-Reply-To: <1286475250.20974.22.camel@jlt3.sipsolutions.net>
-References: <4CAB59B2.5050106@candelatech.com> <AANLkTikhGCTS8kJgpDzjudyBTk-rkyXY33UO7kB0+Cc-@mail.gmail.com>
- <4CAB5F3D.9060201@candelatech.com> <AANLkTimV3GrwU+9PPtirT4sCzveLY2egr3PRQhfDBET1@mail.gmail.com>
- <4CAB627F.8020804@candelatech.com> <AANLkTi=sT5QJe4V8gFGjF-nzx0uJAMLG_XG2715qrEEd@mail.gmail.com>
- <4CAB64AD.4080105@candelatech.com> <AANLkTi=3dHbB5tmQDp3Ba54-DqQydVCkNdFo1vKbfaGY@mail.gmail.com>
- <4CAB6B08.4050801@candelatech.com> <4CAE0474.4090605@candelatech.com> <1286475250.20974.22.camel@jlt3.sipsolutions.net>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Thu, 7 Oct 2010 11:29:53 -0700
-Message-ID: <AANLkTinbRSnPVgbBxvVpMdnP+K--bye=Q-miHf4X44kz@mail.gmail.com>
-Subject: Re: memory clobber in rx path, maybe related to ath9k.
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Ben Greear <greearb@candelatech.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+To: =?ISO-8859-15?Q?Bj=F6rn_Smedman?= <bjorn.smedman@venatech.se>
+CC: Ben Greear <greearb@candelatech.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>
+Subject: Re: [PATCH] ath9k_hw: avoid division-by-zero in ani
+References: <alpine.DEB.2.00.1010150150110.20478@bigbill>
+In-Reply-To: <alpine.DEB.2.00.1010150150110.20478@bigbill>
+Content-Type: text/plain; charset=ISO-8859-15
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Oct 7, 2010 at 11:14 AM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
-> On Thu, 2010-10-07 at 10:33 -0700, Ben Greear wrote:
->> In case it helps, here is a dump of where the corrupted SKB was deleted.
->
-> I wonder, do you have a machine with a decent IOMMU? Adding IOMMU
-> debugging into the mix could help you figure out if it's a DMA problem.
+On 2010-10-15 2:00 AM, Björn Smedman wrote:
+> The ath9k ANI code may under some circumstances do division-by-zero. This 
+> patch detects and avoids that case.
+Should be obsolete with my patch from 3 days ago:
+[PATCH 1/3] ath9k_hw: fix division by zero in the ANI monitor code
 
-Ben, how much traffic are you RX'ing on these virtual interfaces?
-
-  Luis
+- Felix
