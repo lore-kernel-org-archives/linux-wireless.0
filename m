@@ -1,55 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.19.149.2]:37653 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751800Ab0JETul convert rfc822-to-8bit (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:42806 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756579Ab0JOTaP (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 5 Oct 2010 15:50:41 -0400
-Received: from mail.atheros.com ([10.10.20.105])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Tue, 05 Oct 2010 12:50:32 -0700
-Date: Tue, 5 Oct 2010 12:50:39 -0700
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: "John W. Linville" <linville@tuxdriver.com>,
-	Felix Fietkau <nbd@openwrt.org>
-CC: =?iso-8859-1?Q?Bj=F6rn?= Smedman <bjorn.smedman@venatech.se>,
-	"ath9k-devel@venema.h4ckr.net" <ath9k-devel@venema.h4ckr.net>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: [ath9k-devel] [RFC] ath9k: Insert wmb before linking dma
- descriptors
-Message-ID: <20101005195039.GD11831@tux>
-References: <alpine.DEB.2.00.1010042059130.29449@vtdt3>
- <20101005131744.GB4074@tuxdriver.com>
+	Fri, 15 Oct 2010 15:30:15 -0400
+Date: Fri, 15 Oct 2010 15:26:46 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Christian Lamparter <chunkeey@googlemail.com>
+Cc: Tejun Heo <tj@kernel.org>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Linux Wireless List <linux-wireless@vger.kernel.org>,
+	lkml <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH v2.6.36-rc7] mac80211: cancel restart_work explicitly
+ instead of depending on flush_scheduled_work()
+Message-ID: <20101015192645.GA2438@tuxdriver.com>
+References: <4CB874C0.8090003@kernel.org>
+ <1287159715.1870.11.camel@Nokia-N900-51-1>
+ <4CB883C9.6050104@kernel.org>
+ <201010151858.45000.chunkeey@googlemail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="iso-8859-1"
-In-Reply-To: <20101005131744.GB4074@tuxdriver.com>
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <201010151858.45000.chunkeey@googlemail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Oct 05, 2010 at 06:17:44AM -0700, John W. Linville wrote:
-> On Mon, Oct 04, 2010 at 10:55:08PM +0200, Björn Smedman wrote:
-> > Hi all,
-> > 
-> > I've been looking at how ath9k does DMA and comparing with the
-> > recommendations in the Linux kernel documentation for the DMA API[1]. To
-> > me it looks like we risk setting up incorrect DMA descriptors on
-> > platforms that can reorder writes because all data in the descriptor may
-> > not be written to memory before the descriptor is linked into the DMA
-> > chain.
-> > 
-> > The patch below attempts to remove this risk by inserting a write memory
-> > barrier between where we set up a descriptor and where we add it to the 
-> > DMA chain. My hope is that this may solve some of the harder chip lockups 
-> > on MIPS but more testing is required to determine if it has this effect.
-> > 
-> > Any thoughts?
-> > 
-> > /Björn
-> > 
-> > 1. http://www.mjmwired.net/kernel/Documentation/DMA-API.txt
+On Fri, Oct 15, 2010 at 06:58:44PM +0200, Christian Lamparter wrote:
+> On Friday 15 October 2010 18:39:37 Tejun Heo wrote:
+> > Hello,
 > 
-> I think this seems OK...?
+> > >> -    /*
+> > >> -     * For key todo, it'll be empty by now but the work
+> > >> -     * might still be scheduled.
+> > >> -     */
+> > >> -    flush_scheduled_work();
+> > > 
+> > > oops, todo work no longer exists...
+> > > 
+> > > Anyway, ACK.
+> > 
+> > Are you going to route this through wireless tree?  Shall I repost
+> > with update patch description?
+> 
+> wireless-testing/wireless-next has already such a patch:
+> "mac80211: cancel restart_work in ieee80211_unregister_hw" (2010-08-25)
+> 
+> <http://git.kernel.org/?p=linux/kernel/git/linville/wireless-next-2.6.git;a=commit;h=258086a48b766d12a500f98834654ffa927ca475>
+> 
+> John, can you please push to 2.6.36-rc8?
+> (I know, I am _late_, but I didn't know about any potential problem
+> in the mainline?)
 
-Felix is more familiar with this area so I'll let him chime with
-his ACK/NACK.
+I don't see how either patch would merit inclusion in 2.6.36 at this point.
 
-  Luis
+John
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
