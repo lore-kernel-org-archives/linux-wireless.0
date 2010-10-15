@@ -1,59 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.19.149.2]:57927 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756067Ab0JDRfJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 4 Oct 2010 13:35:09 -0400
-Received: from mail.atheros.com ([10.10.20.105])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Mon, 04 Oct 2010 10:35:00 -0700
-Date: Mon, 4 Oct 2010 10:35:07 -0700
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
-	"linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"stable@kernel.org" <stable@kernel.org>, Jouni Malinen <j@w1.fi>,
-	Paul Stewart <pstew@google.com>,
-	Amod Bodas <Amod.Bodas@Atheros.com>,
-	Vasanth Thiagarajan <Vasanth.Thiagarajan@Atheros.com>
-Subject: Re: [PATCH v2 0/3] mac80211: fix rate_control_send_low warnings
- for delbas
-Message-ID: <20101004173507.GN2105@tux>
-References: <1285965233-11097-1-git-send-email-lrodriguez@atheros.com>
- <1286198845.3620.37.camel@jlt3.sipsolutions.net>
- <20101004164149.GE2105@tux>
- <1286210566.3620.42.camel@jlt3.sipsolutions.net>
- <20101004172504.GL2105@tux>
- <1286213426.3620.43.camel@jlt3.sipsolutions.net>
+Received: from mail-qy0-f181.google.com ([209.85.216.181]:60335 "EHLO
+	mail-qy0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755296Ab0JOOQL convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 15 Oct 2010 10:16:11 -0400
+Received: by qyk2 with SMTP id 2so871712qyk.19
+        for <linux-wireless@vger.kernel.org>; Fri, 15 Oct 2010 07:16:10 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <1286213426.3620.43.camel@jlt3.sipsolutions.net>
+In-Reply-To: <AANLkTik0FZQOyePhY1KDAVFiD5YQ9bF4M5A5p8SGUYAy@mail.gmail.com>
+References: <1287090064-14607-1-git-send-email-zajec5@gmail.com>
+ <1287090064-14607-2-git-send-email-zajec5@gmail.com> <AANLkTimesczkO4iSrjPjAGMf+xs04bKGALumAFq7GzTQ@mail.gmail.com>
+ <AANLkTik0FZQOyePhY1KDAVFiD5YQ9bF4M5A5p8SGUYAy@mail.gmail.com>
+From: =?ISO-8859-1?Q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>
+Date: Fri, 15 Oct 2010 16:15:49 +0200
+Message-ID: <AANLkTi=okr9poWxa1V-zDQj5f64fqFRuQWBgpzvRmVsw@mail.gmail.com>
+Subject: Re: [PATCH 2/3] b43: N-PHY: define registers names for 2056 radio
+To: =?ISO-8859-2?Q?Rafa=B3_Mi=B3ecki?= <zajec5@gmail.com>
+Cc: linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>,
+	b43-dev@lists.infradead.org, Henry Ptasinski <henryp@broadcom.com>,
+	Brett Rudley <brudley@broadcom.com>,
+	Nohee Ko <noheek@broadcom.com>
+Content-Type: text/plain; charset=ISO-8859-2
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Oct 04, 2010 at 10:30:26AM -0700, Johannes Berg wrote:
-> On Mon, 2010-10-04 at 10:25 -0700, Luis R. Rodriguez wrote:
-> > On Mon, Oct 04, 2010 at 09:42:46AM -0700, Johannes Berg wrote:
-> > > On Mon, 2010-10-04 at 09:41 -0700, Luis R. Rodriguez wrote:
-> > > > On Mon, Oct 04, 2010 at 06:27:25AM -0700, Johannes Berg wrote:
-> > > > > How about this instead of your patches 2 and 3?
-> > > > > 
-> > > > > We're disassociating from the old AP since we associate with the new AP,
-> > > > > so there's not a whole lot of sense in explicitly tearing down
-> > > > > aggregation sessions either, right?
-> > > > 
-> > > > Good question, but why do we not get a warning when transmitting
-> > > > the disassoc frame?
-> > > 
-> > > We aren't transmitting a disassoc frame!
-> > 
-> > OK, then the question is if we should even at least do that...
-> 
-> No, why should we? We're sending a re-assoc frame to the new AP.
+2010/10/15 Rafa³ Mi³ecki <zajec5@gmail.com>:
+> W dniu 15 pa¼dziernika 2010 01:58 u¿ytkownik Gábor Stefanik
+> <netrolller.3d@gmail.com> napisa³:
+>> 2010/10/14 Rafa³ Mi³ecki <zajec5@gmail.com>:
+>>> Signed-off-by: Rafa³ Mi³ecki <zajec5@gmail.com>
+>>> Cc: Henry Ptasinski <henryp@broadcom.com>
+>>> Cc: Brett Rudley <brudley@broadcom.com>
+>>> Cc: Nohee Ko <noheek@broadcom.com>
+>>> ---
+>>>  drivers/net/wireless/b43/radio_2056.h |  522 +++++++++++++++++++++++++++++++++
+>>>  1 files changed, 522 insertions(+), 0 deletions(-)
+>>>
+>>> diff --git a/drivers/net/wireless/b43/radio_2056.h b/drivers/net/wireless/b43/radio_2056.h
+>>> index 60341d7..462c9fd 100644
+>>> --- a/drivers/net/wireless/b43/radio_2056.h
+>>> +++ b/drivers/net/wireless/b43/radio_2056.h
+>>> @@ -4,6 +4,9 @@
+>>>
+>>>   Copyright (c) 2010 Rafa³ Mi³ecki <zajec5@gmail.com>
+>>>
+>>> +  Some parts of the code in this file are derived from the brcm80211
+>>> +  driver  Copyright (c) 2010 Broadcom Corporation
+>>> +
+>>>   This program is free software; you can redistribute it and/or modify
+>>>   it under the terms of the GNU General Public License as published by
+>>>   the Free Software Foundation; either version 2 of the License, or
+>>> @@ -28,6 +31,525 @@
+>>>
+>>>  #include "tables_nphy.h"
+>>>
+>>> +#define RADIO_2056_SYN                         (0x0 << 12)
+>>> +#define RADIO_2056_TX0                         (0x2 << 12)
+>>> +#define RADIO_2056_TX1                         (0x3 << 12)
+>>
+>> Please use B2056_ as the prefix. See LP-PHY.
+>
+> What does it mean? This "B" prefix?
 
-I was wondering if actively disassociating might help with a smoother
-transition. I was under this why we were doing this in the first place.
-I frankly do not know, but if it does not help then I do agree with
-your patch replacement.
+AFAIK it is a contraction for BCM. (The actual radio is called
+BCM2056.) However, LP-PHY already uses B2062_ and B2063_ as its radio
+register prefixes, so it is a good idea to follow the convention here,
+too.
 
-  Luis
+>
+> --
+> Rafa³
+>
+
+
+
+-- 
+Vista: [V]iruses, [I]ntruders, [S]pyware, [T]rojans and [A]dware. :-)
