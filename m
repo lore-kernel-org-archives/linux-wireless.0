@@ -1,323 +1,452 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([88.198.39.176]:35393 "EHLO ds10.nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756697Ab0JDSJz (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 4 Oct 2010 14:09:55 -0400
-From: Felix Fietkau <nbd@openwrt.org>
-To: linux-wireless@vger.kernel.org
-Cc: linville@tuxdriver.com, lrodriguez@atheros.com
-Subject: [PATCH 3/5] ath9k_hw: remove code duplication in phy error counter handling
-Date: Mon,  4 Oct 2010 20:09:48 +0200
-Message-Id: <1286215790-67069-3-git-send-email-nbd@openwrt.org>
-In-Reply-To: <1286215790-67069-2-git-send-email-nbd@openwrt.org>
-References: <1286215790-67069-1-git-send-email-nbd@openwrt.org>
- <1286215790-67069-2-git-send-email-nbd@openwrt.org>
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:33820 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932269Ab0JOUpK (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 15 Oct 2010 16:45:10 -0400
+Date: Fri, 15 Oct 2010 16:40:50 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: davem@davemloft.net
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Subject: pull request: wireless-next-2.6 2010-10-15
+Message-ID: <20101015204048.GC2438@tuxdriver.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Split out the PHY error counter update from ath9k_hw_ani_monitor_*, reuse
-it in ath9k_hw_proc_mib_event (merged from ath9k_hw_proc_mib_event_old
-and ath9k_hw_proc_mib_event_new).
+Dave,
 
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+Here is the latest batch of updates intended for 2.6.37.  As usual,
+it is primarily a bunch of driver updates and fixes to code already
+in -next.  This also includes a batch of Bluetooth updates courtesy
+of Gustavo Padovan.  There is also the movement of the wl1251 driver
+out of the wl12xx directory.  This is a prelude to the expansion of
+the wl1271 code to cover some new hardware, all of which is actually
+largely unrelated to wl1251.
+
+Please let me know if there are problems!
+
+Thanks,
+
+John
+
 ---
- drivers/net/wireless/ath/ath9k/ani.c    |  142 +++++++------------------------
- drivers/net/wireless/ath/ath9k/hw-ops.h |    5 -
- drivers/net/wireless/ath/ath9k/hw.h     |    4 +-
- drivers/net/wireless/ath/ath9k/main.c   |    2 +-
- 4 files changed, 34 insertions(+), 119 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/ani.c b/drivers/net/wireless/ath/ath9k/ani.c
-index 6bae601..d5c9df5 100644
---- a/drivers/net/wireless/ath/ath9k/ani.c
-+++ b/drivers/net/wireless/ath/ath9k/ani.c
-@@ -661,21 +661,15 @@ static void ath9k_ani_reset_new(struct ath_hw *ah, bool is_scanning)
- 	REGWRITE_BUFFER_FLUSH(ah);
- }
- 
--static void ath9k_hw_ani_monitor_old(struct ath_hw *ah,
--				     struct ath9k_channel *chan)
-+static void ath9k_hw_ani_read_counters(struct ath_hw *ah)
- {
--	struct ar5416AniState *aniState;
- 	struct ath_common *common = ath9k_hw_common(ah);
--	int32_t listenTime;
--	u32 phyCnt1, phyCnt2;
-+	struct ar5416AniState *aniState = &ah->curchan->ani;
-+	u32 ofdm_base = 0;
-+	u32 cck_base = 0;
- 	u32 ofdmPhyErrCnt, cckPhyErrCnt;
--	u32 ofdm_base = AR_PHY_COUNTMAX - ah->config.ofdm_trig_high;
--	u32 cck_base = AR_PHY_COUNTMAX - ah->config.cck_trig_high;
--
--	if (!DO_ANI(ah))
--		return;
--
--	aniState = &ah->curchan->ani;
-+	u32 phyCnt1, phyCnt2;
-+	int32_t listenTime;
- 
- 	listenTime = ath9k_hw_ani_get_listen_time(ah);
- 	if (listenTime < 0) {
-@@ -684,6 +678,11 @@ static void ath9k_hw_ani_monitor_old(struct ath_hw *ah,
- 		return;
- 	}
- 
-+	if (!use_new_ani(ah)) {
-+		ofdm_base = AR_PHY_COUNTMAX - ah->config.ofdm_trig_high;
-+		cck_base = AR_PHY_COUNTMAX - ah->config.cck_trig_high;
-+	}
-+
- 	aniState->listenTime += listenTime;
- 
- 	ath9k_hw_update_mibstats(ah, &ah->ah_mibStats);
-@@ -691,7 +690,7 @@ static void ath9k_hw_ani_monitor_old(struct ath_hw *ah,
- 	phyCnt1 = REG_READ(ah, AR_PHY_ERR_1);
- 	phyCnt2 = REG_READ(ah, AR_PHY_ERR_2);
- 
--	if (phyCnt1 < ofdm_base || phyCnt2 < cck_base) {
-+	if (use_new_ani(ah) && (phyCnt1 < ofdm_base || phyCnt2 < cck_base)) {
- 		if (phyCnt1 < ofdm_base) {
- 			ath_print(common, ATH_DBG_ANI,
- 				  "phyCnt1 0x%x, resetting "
-@@ -723,6 +722,19 @@ static void ath9k_hw_ani_monitor_old(struct ath_hw *ah,
- 		cckPhyErrCnt - aniState->cckPhyErrCount;
- 	aniState->cckPhyErrCount = cckPhyErrCnt;
- 
-+}
-+
-+static void ath9k_hw_ani_monitor_old(struct ath_hw *ah,
-+				     struct ath9k_channel *chan)
-+{
-+	struct ar5416AniState *aniState;
-+
-+	if (!DO_ANI(ah))
-+		return;
-+
-+	aniState = &ah->curchan->ani;
-+	ath9k_hw_ani_read_counters(ah);
-+
- 	if (aniState->listenTime > 5 * ah->aniperiod) {
- 		if (aniState->ofdmPhyErrCount <= aniState->listenTime *
- 		    ah->config.ofdm_trig_low / 1000 &&
-@@ -749,8 +761,6 @@ static void ath9k_hw_ani_monitor_new(struct ath_hw *ah,
- {
- 	struct ar5416AniState *aniState;
- 	struct ath_common *common = ath9k_hw_common(ah);
--	int32_t listenTime;
--	u32 ofdmPhyErrCnt, cckPhyErrCnt;
- 	u32 ofdmPhyErrRate, cckPhyErrRate;
- 
- 	if (!DO_ANI(ah))
-@@ -760,35 +770,7 @@ static void ath9k_hw_ani_monitor_new(struct ath_hw *ah,
- 	if (WARN_ON(!aniState))
- 		return;
- 
--	listenTime = ath9k_hw_ani_get_listen_time(ah);
--	if (listenTime <= 0) {
--		ah->stats.ast_ani_lneg++;
--		/* restart ANI period if listenTime is invalid */
--		ath_print(common, ATH_DBG_ANI,
--			  "listenTime=%d - on new ani monitor\n",
--			  listenTime);
--		ath9k_ani_restart(ah);
--		return;
--	}
--
--	aniState->listenTime += listenTime;
--
--	ath9k_hw_update_mibstats(ah, &ah->ah_mibStats);
--
--	ofdmPhyErrCnt = REG_READ(ah, AR_PHY_ERR_1);
--	cckPhyErrCnt = REG_READ(ah, AR_PHY_ERR_2);
--
--	ah->stats.ast_ani_ofdmerrs +=
--		ofdmPhyErrCnt - aniState->ofdmPhyErrCount;
--	aniState->ofdmPhyErrCount = ofdmPhyErrCnt;
--
--	ah->stats.ast_ani_cckerrs +=
--		cckPhyErrCnt - aniState->cckPhyErrCount;
--	aniState->cckPhyErrCount = cckPhyErrCnt;
--
--	ath_print(common, ATH_DBG_ANI,
--		  "Errors: OFDM=%d, CCK=%d\n",
--		  ofdmPhyErrCnt, cckPhyErrCnt);
-+	ath9k_hw_ani_read_counters(ah);
- 
- 	ofdmPhyErrRate = aniState->ofdmPhyErrCount * 1000 /
- 			 aniState->listenTime;
-@@ -798,7 +780,8 @@ static void ath9k_hw_ani_monitor_new(struct ath_hw *ah,
- 	ath_print(common, ATH_DBG_ANI,
- 		  "listenTime=%d OFDM:%d errs=%d/s CCK:%d "
- 		  "errs=%d/s ofdm_turn=%d\n",
--		  listenTime, aniState->ofdmNoiseImmunityLevel,
-+		  aniState->listenTime,
-+		  aniState->ofdmNoiseImmunityLevel,
- 		  ofdmPhyErrRate, aniState->cckNoiseImmunityLevel,
- 		  cckPhyErrRate, aniState->ofdmsTurn);
- 
-@@ -943,10 +926,8 @@ skip:
-  * any of the MIB counters overflow/trigger so don't assume we're
-  * here because a PHY error counter triggered.
-  */
--static void ath9k_hw_proc_mib_event_old(struct ath_hw *ah)
-+void ath9k_hw_proc_mib_event(struct ath_hw *ah)
- {
--	u32 ofdm_base = AR_PHY_COUNTMAX - ah->config.ofdm_trig_high;
--	u32 cck_base = AR_PHY_COUNTMAX - ah->config.cck_trig_high;
- 	u32 phyCnt1, phyCnt2;
- 
- 	/* Reset these counters regardless */
-@@ -973,72 +954,15 @@ static void ath9k_hw_proc_mib_event_old(struct ath_hw *ah)
- 	phyCnt2 = REG_READ(ah, AR_PHY_ERR_2);
- 	if (((phyCnt1 & AR_MIBCNT_INTRMASK) == AR_MIBCNT_INTRMASK) ||
- 	    ((phyCnt2 & AR_MIBCNT_INTRMASK) == AR_MIBCNT_INTRMASK)) {
--		struct ar5416AniState *aniState = &ah->curchan->ani;
--		u32 ofdmPhyErrCnt, cckPhyErrCnt;
--
--		/* NB: only use ast_ani_*errs with AH_PRIVATE_DIAG */
--		ofdmPhyErrCnt = phyCnt1 - ofdm_base;
--		ah->stats.ast_ani_ofdmerrs +=
--			ofdmPhyErrCnt - aniState->ofdmPhyErrCount;
--		aniState->ofdmPhyErrCount = ofdmPhyErrCnt;
- 
--		cckPhyErrCnt = phyCnt2 - cck_base;
--		ah->stats.ast_ani_cckerrs +=
--			cckPhyErrCnt - aniState->cckPhyErrCount;
--		aniState->cckPhyErrCount = cckPhyErrCnt;
-+		if (!use_new_ani(ah))
-+			ath9k_hw_ani_read_counters(ah);
- 
--		/*
--		 * NB: figure out which counter triggered.  If both
--		 * trigger we'll only deal with one as the processing
--		 * clobbers the error counter so the trigger threshold
--		 * check will never be true.
--		 */
--		if (aniState->ofdmPhyErrCount > ah->config.ofdm_trig_high)
--			ath9k_hw_ani_ofdm_err_trigger_new(ah);
--		if (aniState->cckPhyErrCount > ah->config.cck_trig_high)
--			ath9k_hw_ani_cck_err_trigger_old(ah);
- 		/* NB: always restart to insure the h/w counters are reset */
- 		ath9k_ani_restart(ah);
- 	}
- }
--
--/*
-- * Process a MIB interrupt.  We may potentially be invoked because
-- * any of the MIB counters overflow/trigger so don't assume we're
-- * here because a PHY error counter triggered.
-- */
--static void ath9k_hw_proc_mib_event_new(struct ath_hw *ah)
--{
--	u32 phyCnt1, phyCnt2;
--
--	/* Reset these counters regardless */
--	REG_WRITE(ah, AR_FILT_OFDM, 0);
--	REG_WRITE(ah, AR_FILT_CCK, 0);
--	if (!(REG_READ(ah, AR_SLP_MIB_CTRL) & AR_SLP_MIB_PENDING))
--		REG_WRITE(ah, AR_SLP_MIB_CTRL, AR_SLP_MIB_CLEAR);
--
--	/* Clear the mib counters and save them in the stats */
--	ath9k_hw_update_mibstats(ah, &ah->ah_mibStats);
--
--	if (!DO_ANI(ah)) {
--		/*
--		 * We must always clear the interrupt cause by
--		 * resetting the phy error regs.
--		 */
--		REG_WRITE(ah, AR_PHY_ERR_1, 0);
--		REG_WRITE(ah, AR_PHY_ERR_2, 0);
--		return;
--	}
--
--	/* NB: these are not reset-on-read */
--	phyCnt1 = REG_READ(ah, AR_PHY_ERR_1);
--	phyCnt2 = REG_READ(ah, AR_PHY_ERR_2);
--
--	/* NB: always restart to insure the h/w counters are reset */
--	if (((phyCnt1 & AR_MIBCNT_INTRMASK) == AR_MIBCNT_INTRMASK) ||
--	    ((phyCnt2 & AR_MIBCNT_INTRMASK) == AR_MIBCNT_INTRMASK))
--		ath9k_ani_restart(ah);
--}
-+EXPORT_SYMBOL(ath9k_hw_proc_mib_event);
- 
- void ath9k_hw_ani_setup(struct ath_hw *ah)
- {
-@@ -1144,7 +1068,6 @@ void ath9k_hw_attach_ani_ops_old(struct ath_hw *ah)
- 	priv_ops->ani_reset = ath9k_ani_reset_old;
- 	priv_ops->ani_lower_immunity = ath9k_hw_ani_lower_immunity_old;
- 
--	ops->ani_proc_mib_event = ath9k_hw_proc_mib_event_old;
- 	ops->ani_monitor = ath9k_hw_ani_monitor_old;
- 
- 	ath_print(ath9k_hw_common(ah), ATH_DBG_ANY, "Using ANI v1\n");
-@@ -1158,7 +1081,6 @@ void ath9k_hw_attach_ani_ops_new(struct ath_hw *ah)
- 	priv_ops->ani_reset = ath9k_ani_reset_new;
- 	priv_ops->ani_lower_immunity = ath9k_hw_ani_lower_immunity_new;
- 
--	ops->ani_proc_mib_event = ath9k_hw_proc_mib_event_new;
- 	ops->ani_monitor = ath9k_hw_ani_monitor_new;
- 
- 	ath_print(ath9k_hw_common(ah), ATH_DBG_ANY, "Using ANI v2\n");
-diff --git a/drivers/net/wireless/ath/ath9k/hw-ops.h b/drivers/net/wireless/ath/ath9k/hw-ops.h
-index 9c4dd0e..f42c198 100644
---- a/drivers/net/wireless/ath/ath9k/hw-ops.h
-+++ b/drivers/net/wireless/ath/ath9k/hw-ops.h
-@@ -128,11 +128,6 @@ static inline void ath9k_hw_set11n_virtualmorefrag(struct ath_hw *ah, void *ds,
- 	ath9k_hw_ops(ah)->set11n_virtualmorefrag(ah, ds, vmf);
- }
- 
--static inline void ath9k_hw_procmibevent(struct ath_hw *ah)
--{
--	ath9k_hw_ops(ah)->ani_proc_mib_event(ah);
--}
--
- static inline void ath9k_hw_ani_monitor(struct ath_hw *ah,
- 					struct ath9k_channel *chan)
- {
-diff --git a/drivers/net/wireless/ath/ath9k/hw.h b/drivers/net/wireless/ath/ath9k/hw.h
-index 5063463..a87840b 100644
---- a/drivers/net/wireless/ath/ath9k/hw.h
-+++ b/drivers/net/wireless/ath/ath9k/hw.h
-@@ -575,8 +575,6 @@ struct ath_hw_private_ops {
-  * @config_pci_powersave:
-  * @calibrate: periodic calibration for NF, ANI, IQ, ADC gain, ADC-DC
-  *
-- * @ani_proc_mib_event: process MIB events, this would happen upon specific ANI
-- *	thresholds being reached or having overflowed.
-  * @ani_monitor: called periodically by the core driver to collect
-  *	MIB stats and adjust ANI if specific thresholds have been reached.
-  */
-@@ -620,7 +618,6 @@ struct ath_hw_ops {
- 	void (*set11n_virtualmorefrag)(struct ath_hw *ah, void *ds,
- 				       u32 vmf);
- 
--	void (*ani_proc_mib_event)(struct ath_hw *ah);
- 	void (*ani_monitor)(struct ath_hw *ah, struct ath9k_channel *chan);
- };
- 
-@@ -980,6 +977,7 @@ void ar9002_hw_load_ani_reg(struct ath_hw *ah, struct ath9k_channel *chan);
-  * older families (AR5008, AR9001, AR9002) by using modparam_force_new_ani.
-  */
- extern int modparam_force_new_ani;
-+void ath9k_hw_proc_mib_event(struct ath_hw *ah);
- void ath9k_hw_attach_ani_ops_old(struct ath_hw *ah);
- void ath9k_hw_attach_ani_ops_new(struct ath_hw *ah);
- 
-diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
-index 49ea458..d79f78d 100644
---- a/drivers/net/wireless/ath/ath9k/main.c
-+++ b/drivers/net/wireless/ath/ath9k/main.c
-@@ -713,7 +713,7 @@ irqreturn_t ath_isr(int irq, void *dev)
- 		 * it will clear whatever condition caused
- 		 * the interrupt.
- 		 */
--		ath9k_hw_procmibevent(ah);
-+		ath9k_hw_proc_mib_event(ah);
- 		ath9k_hw_set_interrupts(ah, ah->imask);
- 	}
- 
+The following changes since commit 7662ff46b7b3678162ce125903115e4ab0607a2d:
+
+  ixgbe: DCB: remove DCB check config (2010-10-15 09:27:38 -0700)
+
+are available in the git repository at:
+  git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-next-2.6.git for-davem
+
+Andrei Emeltchenko (4):
+      Bluetooth: remove extra newline from debug output
+      Bluetooth: check L2CAP length in first ACL fragment
+      Bluetooth: check for l2cap header in start fragment
+      Bluetooth: clean up rfcomm code
+
+Ben Greear (9):
+      mac80211: Improve mlme probe response log messages.
+      wireless: Set some stats used by /proc/net/wireless (wext)
+      ath5k: Print out opmode in debugfs.
+      ath5k: Adjust opmode when interfaces are removed.
+      wireless: Print wiphy name in sysfs.
+      ath5k: Move debugfs under ieee80211/[wiphy-name]
+      ath9k: Fix potential use-after-free.
+      ath9k: Remove bf_dmacontext.
+      ath9k: Null out references to stale pointers.
+
+Björn Smedman (3):
+      mac80211: minstrel_ht A-MPDU fix
+      ath9k: A-MPDU rate control info fix
+      ath9k: built-in rate control A-MPDU fix
+
+Christian Lamparter (5):
+      mac80211: fix possible null-pointer de-reference
+      mac80211: temporarily disable reorder release timer
+      carl9170: common error path for bad frames
+      carl9170: remove stale rx error path
+      carl9170: A-MPDU frame type filter
+
+David Vrabel (2):
+      Bluetooth: HCI devices are either BR/EDR or AMP radios
+      Bluetooth: Support SDIO devices that are AMP controllers
+
+Felix Fietkau (14):
+      ath9k_hw: store the clock rate in common data on channel changes
+      ath5k: store the clock rate in common data on channel changes
+      ath9k_hw: move the cycle counter tracking to ath
+      ath5k: use the common cycle counter / listen time implementation
+      cfg80211: add channel utilization stats to the survey command
+      ath9k: add compile time checking for the size of the channel list
+      ath9k: implement channel utilization stats for survey
+      ath9k: do not track cycle counter updates in powersave mode
+      ath9k_hw: fix division by zero in the ANI monitor code
+      ath9k_hw: fix PHY counter overflow handling in ANI v1
+      ath9k: add missing locking around ath9k_hw_proc_mib_event
+      ath9k: make rate control debugfs stats per station
+      ath9k: remove sc->cur_rate_table and sc->cur_rate_mode
+      ath9k_hw: remove enum wireless_mode and its users
+
+Gerrit Renker (1):
+      wext: fix alignment problem in serializing 'struct iw_point'
+
+Gustavo F. Padovan (4):
+      Bluetooth: remove unused variable from cmtp
+      Bluetooth: make batostr() print in the right order
+      Bluetooth: Use the proper error value from bt_skb_send_alloc()
+      Bluetooth: update MAINTAINERS for Bluetooth subsys
+
+Haijun Liu (1):
+      Bluetooth: Update conf_state before send config_req out
+
+Helmut Schaa (6):
+      rt2x00: Shortcut link state updates when not operating as STA
+      rt2x00: Optimize unmapping of skbs
+      rt2x00: Use proper type for rxwi_w2 in rt2800_agc_to_rssi
+      rt2x00: Use unlikely for error case in rt2x00queue_write_tx_frame
+      rt2x00: Remove superfluous initialization of qidx
+      rt2x00: Fix tx status handling in rt2800pci
+
+Ivo van Doorn (7):
+      rt2x00: Simplify Queue function arguments
+      rt2x00: Move watchdog work to kernel work_queue
+      rt2x00: Validate MCS on RX path
+      rt2x00: Fix dead queue when skb allocation failed
+      rt2x00: Make queue_entry flags access atomic
+      rt2x00: Don't perform watchdog checks on empty queue
+      rt2x00: Fix URB error handling
+
+Jiri Slaby (1):
+      WIRELESS: at76c50x, remove unneeded NULL check
+
+Joe Perches (1):
+      ath5k: fix build break from "ath5k: Print out opmode in debugfs"
+
+Johan Hedberg (1):
+      Bluetooth: Don't clear the blacklist when closing the HCI device
+
+Johannes Berg (32):
+      iwlagn: rename iwl_commit_rxon
+      iwlwifi: introduce post_scan hook
+      iwl3945: use iwl3945_commit_rxon
+      iwlwifi: move chain settings to agn
+      iwlwifi: rename iwl_mac_beacon_update
+      iwlwifi: remove verify_signature eeprom operation
+      iwlwifi: move agn specific station code there
+      iwlwifi: move tx fail code to agn
+      iwlwifi: remove spurious exports
+      iwlwifi: remove agn rates info there
+      iwlwifi: move iwl_toggle_rx_ant to agn
+      iwlwifi: move iwl_dump_csr to agn
+      iwlwifi: move iwl_dump_fh to agn
+      iwlwifi: remove set_ct_kill operation
+      iwlwifi: remove set_pwr_src operation
+      iwlwifi: remove apm_ops.stop
+      iwlwifi: clean up declarations
+      iwlwifi: remove iwl_check_bits
+      iwlwifi: fix dual-mode scanning
+      Revert "wireless: Use first phyX name available when registering phy devices."
+      mac80211: don't kmalloc 16 bytes
+      iwl3945: fix queue allocation
+      cfg80211: notify drivers about frame registrations
+      mac80211: add probe request filter flag
+      mac80211: fix SMPS request
+      iwlwifi: allow probe-after-rx on 2.4 GHz
+      iwlwifi: rename ibss_beacon variable
+      iwlwifi: clean up some beacon handling
+      iwlwifi: rewrite RXON checks
+      iwlwifi: blink LED in IBSS mode
+      iwlagn: check beacon frame size
+      radiotap: fix vendor namespace parsing
+
+John W. Linville (4):
+      Merge branch 'wireless-next' of git://git.kernel.org/.../luca/wl12xx
+      Merge branch 'wireless-next-2.6' of git://git.kernel.org/.../iwlwifi/iwlwifi-2.6
+      Merge branch 'master' of git://git.kernel.org/.../padovan/bluetooth-next-2.6 into for-davem
+      Merge branch 'master' of git://git.kernel.org/.../linville/wireless-next-2.6 into for-davem
+
+Jouni Malinen (1):
+      ath9k: Set RX filter for Probe Request based on filter flag
+
+Julia Lawall (1):
+      drivers/net/wireless/p54/eeprom.c: Return -ENOMEM on memory allocation failure
+
+Kalle Valo (3):
+      wl1251: create a copy of wl12xx_80211.h for wl1251
+      wl1251: move to it's own directory
+      wl1251: update the new location to the maintainers file
+
+Karl Beldan (1):
+      Bluetooth: hci_uart: Fix typo in stats for sco tx
+
+Luis R. Rodriguez (1):
+      ath9k_hw: remove AR9003 2.0 support
+
+Mat Martineau (4):
+      Bluetooth: Validate PSM values in calls to connect() and bind()
+      Bluetooth: Add common code for stream-oriented recvmsg()
+      Bluetooth: Use common SOCK_STREAM receive code in RFCOMM
+      Bluetooth: Use a stream-oriented recvmsg with SOCK_STREAM L2CAP sockets.
+
+Mohammed Shafi Shajakhan (1):
+      ath9k: Fix documentation in rate control
+
+Nobuhiro Iwamatsu (2):
+      Bluetooth: Add support Bluetooth controller of MacbookPro 6,2
+      Bluetooth: Add support Bluetooth controller of MacbookPro 7,1
+
+Ohad Ben-Cohen (2):
+      wl1271: sdio: enable runtime PM
+      wl1271: sdio: add suspend/resume support
+
+Paul Fox (1):
+      libertas: Communicate USB transfer errors
+
+Rafał Miłecki (8):
+      b43: N-PHY: grab more info about new channel
+      b43: N-PHY: store info about current channel's type
+      b43: N-PHY: fix logic in band switching
+      b43: N-PHY: prepare for rev3+ channel tables
+      b43: N-PHY: replace N-specific radio_chanspec with common code
+      b43: N-PHY: fix typo: read table when caching IQ LO calibration (do not write)
+      b43: N-PHY: put radio-specific code in separated file
+      b43: N-PHY: put 2056-radio's specific code in separated file
+
+Rajkumar Manoharan (1):
+      ath9k_htc: set probe request rx filter
+
+Shanyu Zhao (2):
+      iwlagn: fix default calibration table size
+      iwlagn: add temperature offset calib for 6000g2
+
+Steve deRosier (1):
+      mac80211: Update mesh constants to approved IEEE ANA values
+
+Wey-Yi Guy (6):
+      iwlagn: no version check for experimental uCode
+      iiwlagn: always download priority table
+      iwlagn: prio_tbl need to download before calibration
+      iwlgn: need longer tx queue stuck timer for coex devices
+      iwlagn: 6050 ops should be used;
+      iwlwifi: move agn only eeprom functions to separate file
+
+Yuri Kululin (1):
+      Bluetooth: Fix RFCOMM RPN negotiation
+
+ MAINTAINERS                                        |    8 +-
+ drivers/bluetooth/btmrvl_main.c                    |    4 +-
+ drivers/bluetooth/btsdio.c                         |    8 +
+ drivers/bluetooth/btusb.c                          |    6 +
+ drivers/bluetooth/hci_ldisc.c                      |    2 +-
+ drivers/net/wireless/Kconfig                       |    1 +
+ drivers/net/wireless/Makefile                      |    1 +
+ drivers/net/wireless/at76c50x-usb.c                |    3 +-
+ drivers/net/wireless/ath/ath.h                     |   16 +
+ drivers/net/wireless/ath/ath5k/ani.c               |   41 +-
+ drivers/net/wireless/ath/ath5k/ani.h               |    5 +-
+ drivers/net/wireless/ath/ath5k/ath5k.h             |    2 +-
+ drivers/net/wireless/ath/ath5k/base.c              |   71 +-
+ drivers/net/wireless/ath/ath5k/debug.c             |   49 +-
+ drivers/net/wireless/ath/ath5k/debug.h             |   12 -
+ drivers/net/wireless/ath/ath5k/pcu.c               |   13 +-
+ drivers/net/wireless/ath/ath5k/phy.c               |    1 +
+ drivers/net/wireless/ath/ath9k/ani.c               |  101 +-
+ drivers/net/wireless/ath/ath9k/ani.h               |    8 -
+ .../net/wireless/ath/ath9k/ar9003_2p0_initvals.h   | 1784 --------------------
+ drivers/net/wireless/ath/ath9k/ar9003_hw.c         |  162 +--
+ drivers/net/wireless/ath/ath9k/ar9003_phy.c        |    7 +-
+ drivers/net/wireless/ath/ath9k/ath9k.h             |    7 +-
+ drivers/net/wireless/ath/ath9k/beacon.c            |   21 +-
+ drivers/net/wireless/ath/ath9k/debug.c             |   93 -
+ drivers/net/wireless/ath/ath9k/debug.h             |   21 -
+ drivers/net/wireless/ath/ath9k/htc_drv_init.c      |   12 +-
+ drivers/net/wireless/ath/ath9k/htc_drv_main.c      |    1 +
+ drivers/net/wireless/ath/ath9k/htc_drv_txrx.c      |    3 +-
+ drivers/net/wireless/ath/ath9k/hw.c                |   66 +-
+ drivers/net/wireless/ath/ath9k/hw.h                |   21 +-
+ drivers/net/wireless/ath/ath9k/init.c              |   16 +-
+ drivers/net/wireless/ath/ath9k/main.c              |  179 ++-
+ drivers/net/wireless/ath/ath9k/rc.c                |  184 ++-
+ drivers/net/wireless/ath/ath9k/rc.h                |   26 +-
+ drivers/net/wireless/ath/ath9k/recv.c              |   10 +-
+ drivers/net/wireless/ath/ath9k/reg.h               |   14 -
+ drivers/net/wireless/ath/ath9k/xmit.c              |   38 +-
+ drivers/net/wireless/ath/carl9170/rx.c             |   89 +-
+ drivers/net/wireless/ath/carl9170/wlan.h           |   14 +-
+ drivers/net/wireless/ath/debug.c                   |   29 +
+ drivers/net/wireless/ath/debug.h                   |   10 +
+ drivers/net/wireless/ath/hw.c                      |   59 +
+ drivers/net/wireless/ath/reg.h                     |   11 +
+ drivers/net/wireless/b43/Makefile                  |    2 +
+ drivers/net/wireless/b43/phy_common.h              |    5 +-
+ drivers/net/wireless/b43/phy_n.c                   |  128 +-
+ drivers/net/wireless/b43/phy_n.h                   |  218 +---
+ drivers/net/wireless/b43/radio_2055.c              | 1332 +++++++++++++++
+ drivers/net/wireless/b43/radio_2055.h              |  254 +++
+ drivers/net/wireless/b43/radio_2056.c              |   43 +
+ drivers/net/wireless/b43/radio_2056.h              |   42 +
+ drivers/net/wireless/b43/tables_nphy.c             | 1311 +--------------
+ drivers/net/wireless/b43/tables_nphy.h             |   59 +-
+ drivers/net/wireless/iwlwifi/Makefile              |    2 +-
+ drivers/net/wireless/iwlwifi/iwl-1000.c            |    7 +-
+ drivers/net/wireless/iwlwifi/iwl-3945.c            |   76 +-
+ drivers/net/wireless/iwlwifi/iwl-3945.h            |    9 +-
+ drivers/net/wireless/iwlwifi/iwl-4965.c            |   27 +-
+ drivers/net/wireless/iwlwifi/iwl-5000.c            |   14 +-
+ drivers/net/wireless/iwlwifi/iwl-6000.c            |   62 +-
+ drivers/net/wireless/iwlwifi/iwl-agn-calib.c       |    2 +-
+ .../iwlwifi/{iwl-calib.h => iwl-agn-calib.h}       |    4 +
+ drivers/net/wireless/iwlwifi/iwl-agn-eeprom.c      |  454 +++++
+ drivers/net/wireless/iwlwifi/iwl-agn-hcmd.c        |    9 +-
+ drivers/net/wireless/iwlwifi/iwl-agn-lib.c         |  372 ++++-
+ drivers/net/wireless/iwlwifi/iwl-agn-rs.c          |   69 +
+ drivers/net/wireless/iwlwifi/iwl-agn-rs.h          |   10 -
+ drivers/net/wireless/iwlwifi/iwl-agn-rx.c          |    2 +-
+ drivers/net/wireless/iwlwifi/iwl-agn-sta.c         |  716 ++++++++
+ drivers/net/wireless/iwlwifi/iwl-agn-tt.c          |    5 -
+ drivers/net/wireless/iwlwifi/iwl-agn-tx.c          |   40 +
+ drivers/net/wireless/iwlwifi/iwl-agn-ucode.c       |   28 +
+ drivers/net/wireless/iwlwifi/iwl-agn.c             |  106 +-
+ drivers/net/wireless/iwlwifi/iwl-agn.h             |   71 +
+ drivers/net/wireless/iwlwifi/iwl-commands.h        |   13 +-
+ drivers/net/wireless/iwlwifi/iwl-core.c            |  531 +-----
+ drivers/net/wireless/iwlwifi/iwl-core.h            |   49 +-
+ drivers/net/wireless/iwlwifi/iwl-debugfs.c         |    1 -
+ drivers/net/wireless/iwlwifi/iwl-dev.h             |   16 +-
+ drivers/net/wireless/iwlwifi/iwl-eeprom.c          |  381 +----
+ drivers/net/wireless/iwlwifi/iwl-eeprom.h          |    8 +-
+ drivers/net/wireless/iwlwifi/iwl-helpers.h         |    5 -
+ drivers/net/wireless/iwlwifi/iwl-rx.c              |    1 -
+ drivers/net/wireless/iwlwifi/iwl-scan.c            |   12 +-
+ drivers/net/wireless/iwlwifi/iwl-sta.c             |  725 +--------
+ drivers/net/wireless/iwlwifi/iwl-sta.h             |   35 +-
+ drivers/net/wireless/iwlwifi/iwl-tx.c              |   38 -
+ drivers/net/wireless/iwlwifi/iwl3945-base.c        |   97 +-
+ drivers/net/wireless/libertas/if_usb.c             |    4 +-
+ drivers/net/wireless/p54/eeprom.c                  |    4 +-
+ drivers/net/wireless/rt2x00/rt2400pci.c            |    2 +-
+ drivers/net/wireless/rt2x00/rt2500pci.c            |    2 +-
+ drivers/net/wireless/rt2x00/rt2800lib.c            |    2 +-
+ drivers/net/wireless/rt2x00/rt2800pci.c            |    4 +-
+ drivers/net/wireless/rt2x00/rt2x00.h               |   18 +-
+ drivers/net/wireless/rt2x00/rt2x00dev.c            |   87 +-
+ drivers/net/wireless/rt2x00/rt2x00lib.h            |   11 +-
+ drivers/net/wireless/rt2x00/rt2x00link.c           |   12 +-
+ drivers/net/wireless/rt2x00/rt2x00pci.c            |    2 +-
+ drivers/net/wireless/rt2x00/rt2x00queue.c          |   56 +-
+ drivers/net/wireless/rt2x00/rt2x00usb.c            |   54 +-
+ drivers/net/wireless/wl1251/Kconfig                |   33 +
+ drivers/net/wireless/wl1251/Makefile               |    6 +
+ .../wireless/{wl12xx/wl1251_acx.c => wl1251/acx.c} |    8 +-
+ .../wireless/{wl12xx/wl1251_acx.h => wl1251/acx.h} |    2 +-
+ .../{wl12xx/wl1251_boot.c => wl1251/boot.c}        |   12 +-
+ .../{wl12xx/wl1251_boot.h => wl1251/boot.h}        |    0
+ .../wireless/{wl12xx/wl1251_cmd.c => wl1251/cmd.c} |   10 +-
+ .../wireless/{wl12xx/wl1251_cmd.h => wl1251/cmd.h} |    0
+ .../{wl12xx/wl1251_debugfs.c => wl1251/debugfs.c}  |    6 +-
+ .../{wl12xx/wl1251_debugfs.h => wl1251/debugfs.h}  |    0
+ .../{wl12xx/wl1251_event.c => wl1251/event.c}      |    8 +-
+ .../{wl12xx/wl1251_event.h => wl1251/event.h}      |    0
+ .../{wl12xx/wl1251_init.c => wl1251/init.c}        |    8 +-
+ .../{wl12xx/wl1251_init.h => wl1251/init.h}        |    0
+ .../wireless/{wl12xx/wl1251_io.c => wl1251/io.c}   |    4 +-
+ .../wireless/{wl12xx/wl1251_io.h => wl1251/io.h}   |    0
+ .../{wl12xx/wl1251_main.c => wl1251/main.c}        |   20 +-
+ .../wireless/{wl12xx/wl1251_ps.c => wl1251/ps.c}   |    8 +-
+ .../wireless/{wl12xx/wl1251_ps.h => wl1251/ps.h}   |    2 +-
+ .../wireless/{wl12xx/wl1251_reg.h => wl1251/reg.h} |    0
+ .../wireless/{wl12xx/wl1251_rx.c => wl1251/rx.c}   |   10 +-
+ .../wireless/{wl12xx/wl1251_rx.h => wl1251/rx.h}   |    0
+ .../{wl12xx/wl1251_sdio.c => wl1251/sdio.c}        |    0
+ .../wireless/{wl12xx/wl1251_spi.c => wl1251/spi.c} |    4 +-
+ .../wireless/{wl12xx/wl1251_spi.h => wl1251/spi.h} |    6 +-
+ .../wireless/{wl12xx/wl1251_tx.c => wl1251/tx.c}   |    8 +-
+ .../wireless/{wl12xx/wl1251_tx.h => wl1251/tx.h}   |    2 +-
+ drivers/net/wireless/{wl12xx => wl1251}/wl1251.h   |    0
+ drivers/net/wireless/wl1251/wl12xx_80211.h         |  156 ++
+ drivers/net/wireless/wl12xx/Kconfig                |   34 -
+ drivers/net/wireless/wl12xx/Makefile               |    9 -
+ drivers/net/wireless/wl12xx/wl1271_sdio.c          |   43 +-
+ include/linux/ieee80211.h                          |   71 +-
+ include/linux/mmc/sdio_ids.h                       |    1 +
+ include/linux/nl80211.h                            |   15 +
+ include/linux/wireless.h                           |    2 +-
+ include/net/bluetooth/bluetooth.h                  |    2 +
+ include/net/bluetooth/hci.h                        |    2 +-
+ include/net/bluetooth/rfcomm.h                     |    5 -
+ include/net/cfg80211.h                             |   31 +
+ include/net/mac80211.h                             |    9 +-
+ net/bluetooth/af_bluetooth.c                       |  109 ++
+ net/bluetooth/cmtp/core.c                          |    6 +-
+ net/bluetooth/hci_core.c                           |    1 -
+ net/bluetooth/hci_sysfs.c                          |   21 +-
+ net/bluetooth/hidp/core.c                          |    8 +-
+ net/bluetooth/l2cap.c                              |   56 +-
+ net/bluetooth/lib.c                                |    4 +-
+ net/bluetooth/rfcomm/core.c                        |   39 +-
+ net/bluetooth/rfcomm/sock.c                        |  104 +--
+ net/bluetooth/rfcomm/tty.c                         |    4 +-
+ net/mac80211/cfg.c                                 |   22 +-
+ net/mac80211/ht.c                                  |    2 +
+ net/mac80211/ieee80211_i.h                         |    4 +-
+ net/mac80211/iface.c                               |    9 +-
+ net/mac80211/main.c                                |    3 +
+ net/mac80211/mesh_plink.c                          |   17 +-
+ net/mac80211/mlme.c                                |   18 +-
+ net/mac80211/rc80211_minstrel_ht.c                 |    7 +-
+ net/mac80211/rx.c                                  |   24 +
+ net/mac80211/wep.c                                 |    8 +-
+ net/wireless/core.c                                |   54 +-
+ net/wireless/mlme.c                                |   23 +-
+ net/wireless/nl80211.c                             |   15 +
+ net/wireless/radiotap.c                            |   58 +-
+ net/wireless/sysfs.c                               |    9 +
+ net/wireless/wext-compat.c                         |    4 +
+ 169 files changed, 5491 insertions(+), 6553 deletions(-)
+ delete mode 100644 drivers/net/wireless/ath/ath9k/ar9003_2p0_initvals.h
+ create mode 100644 drivers/net/wireless/b43/radio_2055.c
+ create mode 100644 drivers/net/wireless/b43/radio_2055.h
+ create mode 100644 drivers/net/wireless/b43/radio_2056.c
+ create mode 100644 drivers/net/wireless/b43/radio_2056.h
+ rename drivers/net/wireless/iwlwifi/{iwl-calib.h => iwl-agn-calib.h} (95%)
+ create mode 100644 drivers/net/wireless/iwlwifi/iwl-agn-eeprom.c
+ create mode 100644 drivers/net/wireless/iwlwifi/iwl-agn-sta.c
+ create mode 100644 drivers/net/wireless/wl1251/Kconfig
+ create mode 100644 drivers/net/wireless/wl1251/Makefile
+ rename drivers/net/wireless/{wl12xx/wl1251_acx.c => wl1251/acx.c} (99%)
+ rename drivers/net/wireless/{wl12xx/wl1251_acx.h => wl1251/acx.h} (99%)
+ rename drivers/net/wireless/{wl12xx/wl1251_boot.c => wl1251/boot.c} (99%)
+ rename drivers/net/wireless/{wl12xx/wl1251_boot.h => wl1251/boot.h} (100%)
+ rename drivers/net/wireless/{wl12xx/wl1251_cmd.c => wl1251/cmd.c} (98%)
+ rename drivers/net/wireless/{wl12xx/wl1251_cmd.h => wl1251/cmd.h} (100%)
+ rename drivers/net/wireless/{wl12xx/wl1251_debugfs.c => wl1251/debugfs.c} (99%)
+ rename drivers/net/wireless/{wl12xx/wl1251_debugfs.h => wl1251/debugfs.h} (100%)
+ rename drivers/net/wireless/{wl12xx/wl1251_event.c => wl1251/event.c} (97%)
+ rename drivers/net/wireless/{wl12xx/wl1251_event.h => wl1251/event.h} (100%)
+ rename drivers/net/wireless/{wl12xx/wl1251_init.c => wl1251/init.c} (98%)
+ rename drivers/net/wireless/{wl12xx/wl1251_init.h => wl1251/init.h} (100%)
+ rename drivers/net/wireless/{wl12xx/wl1251_io.c => wl1251/io.c} (99%)
+ rename drivers/net/wireless/{wl12xx/wl1251_io.h => wl1251/io.h} (100%)
+ rename drivers/net/wireless/{wl12xx/wl1251_main.c => wl1251/main.c} (99%)
+ rename drivers/net/wireless/{wl12xx/wl1251_ps.c => wl1251/ps.c} (97%)
+ rename drivers/net/wireless/{wl12xx/wl1251_ps.h => wl1251/ps.h} (97%)
+ rename drivers/net/wireless/{wl12xx/wl1251_reg.h => wl1251/reg.h} (100%)
+ rename drivers/net/wireless/{wl12xx/wl1251_rx.c => wl1251/rx.c} (97%)
+ rename drivers/net/wireless/{wl12xx/wl1251_rx.h => wl1251/rx.h} (100%)
+ rename drivers/net/wireless/{wl12xx/wl1251_sdio.c => wl1251/sdio.c} (100%)
+ rename drivers/net/wireless/{wl12xx/wl1251_spi.c => wl1251/spi.c} (99%)
+ rename drivers/net/wireless/{wl12xx/wl1251_spi.h => wl1251/spi.h} (96%)
+ rename drivers/net/wireless/{wl12xx/wl1251_tx.c => wl1251/tx.c} (99%)
+ rename drivers/net/wireless/{wl12xx/wl1251_tx.h => wl1251/tx.h} (99%)
+ rename drivers/net/wireless/{wl12xx => wl1251}/wl1251.h (100%)
+ create mode 100644 drivers/net/wireless/wl1251/wl12xx_80211.h
+
+Omnibus patch is available here:
+
+	http://www.kernel.org/pub/linux/kernel/people/linville/wireless-next-2.6-2010-10-15.patch.bz2
+
 -- 
-1.7.2.2
-
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
