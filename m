@@ -1,79 +1,202 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qy0-f181.google.com ([209.85.216.181]:60335 "EHLO
-	mail-qy0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755296Ab0JOOQL convert rfc822-to-8bit (ORCPT
+Received: from mail.candelatech.com ([208.74.158.172]:58288 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750826Ab0JOVaU (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 15 Oct 2010 10:16:11 -0400
-Received: by qyk2 with SMTP id 2so871712qyk.19
-        for <linux-wireless@vger.kernel.org>; Fri, 15 Oct 2010 07:16:10 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <AANLkTik0FZQOyePhY1KDAVFiD5YQ9bF4M5A5p8SGUYAy@mail.gmail.com>
-References: <1287090064-14607-1-git-send-email-zajec5@gmail.com>
- <1287090064-14607-2-git-send-email-zajec5@gmail.com> <AANLkTimesczkO4iSrjPjAGMf+xs04bKGALumAFq7GzTQ@mail.gmail.com>
- <AANLkTik0FZQOyePhY1KDAVFiD5YQ9bF4M5A5p8SGUYAy@mail.gmail.com>
-From: =?ISO-8859-1?Q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>
-Date: Fri, 15 Oct 2010 16:15:49 +0200
-Message-ID: <AANLkTi=okr9poWxa1V-zDQj5f64fqFRuQWBgpzvRmVsw@mail.gmail.com>
-Subject: Re: [PATCH 2/3] b43: N-PHY: define registers names for 2056 radio
-To: =?ISO-8859-2?Q?Rafa=B3_Mi=B3ecki?= <zajec5@gmail.com>
-Cc: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>,
-	b43-dev@lists.infradead.org, Henry Ptasinski <henryp@broadcom.com>,
-	Brett Rudley <brudley@broadcom.com>,
-	Nohee Ko <noheek@broadcom.com>
-Content-Type: text/plain; charset=ISO-8859-2
+	Fri, 15 Oct 2010 17:30:20 -0400
+From: greearb@candelatech.com
+To: linux-wireless@vger.kernel.org, ath9k-devel@venema.h4ckr.net
+Cc: Ben Greear <greearb@candelatech.com>
+Subject: [PATCH] ath9k:  Clear DMA addresses when buffers are freed.
+Date: Fri, 15 Oct 2010 14:29:59 -0700
+Message-Id: <1287178199-7506-1-git-send-email-greearb@candelatech.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2010/10/15 Rafa³ Mi³ecki <zajec5@gmail.com>:
-> W dniu 15 pa¼dziernika 2010 01:58 u¿ytkownik Gábor Stefanik
-> <netrolller.3d@gmail.com> napisa³:
->> 2010/10/14 Rafa³ Mi³ecki <zajec5@gmail.com>:
->>> Signed-off-by: Rafa³ Mi³ecki <zajec5@gmail.com>
->>> Cc: Henry Ptasinski <henryp@broadcom.com>
->>> Cc: Brett Rudley <brudley@broadcom.com>
->>> Cc: Nohee Ko <noheek@broadcom.com>
->>> ---
->>>  drivers/net/wireless/b43/radio_2056.h |  522 +++++++++++++++++++++++++++++++++
->>>  1 files changed, 522 insertions(+), 0 deletions(-)
->>>
->>> diff --git a/drivers/net/wireless/b43/radio_2056.h b/drivers/net/wireless/b43/radio_2056.h
->>> index 60341d7..462c9fd 100644
->>> --- a/drivers/net/wireless/b43/radio_2056.h
->>> +++ b/drivers/net/wireless/b43/radio_2056.h
->>> @@ -4,6 +4,9 @@
->>>
->>>   Copyright (c) 2010 Rafa³ Mi³ecki <zajec5@gmail.com>
->>>
->>> +  Some parts of the code in this file are derived from the brcm80211
->>> +  driver  Copyright (c) 2010 Broadcom Corporation
->>> +
->>>   This program is free software; you can redistribute it and/or modify
->>>   it under the terms of the GNU General Public License as published by
->>>   the Free Software Foundation; either version 2 of the License, or
->>> @@ -28,6 +31,525 @@
->>>
->>>  #include "tables_nphy.h"
->>>
->>> +#define RADIO_2056_SYN                         (0x0 << 12)
->>> +#define RADIO_2056_TX0                         (0x2 << 12)
->>> +#define RADIO_2056_TX1                         (0x3 << 12)
->>
->> Please use B2056_ as the prefix. See LP-PHY.
->
-> What does it mean? This "B" prefix?
+From: Ben Greear <greearb@candelatech.com>
 
-AFAIK it is a contraction for BCM. (The actual radio is called
-BCM2056.) However, LP-PHY already uses B2062_ and B2063_ as its radio
-register prefixes, so it is a good idea to follow the convention here,
-too.
+Previous patches cleared the pointer to the SKB, but did not
+clear the DMA addresses.  This patch moves the clear logic into
+a method and makes sure that the DMA addresses are cleared as well.
 
->
-> --
-> Rafa³
->
+This does not obviously fix any bug, but may make it harder to
+cause bugs in the future.
 
+Signed-off-by: Ben Greear <greearb@candelatech.com>
+---
+:100644 100644 0c917e5... 8fba13d... M	drivers/net/wireless/ath/ath9k/ath9k.h
+:100644 100644 97d471f... cc406f9... M	drivers/net/wireless/ath/ath9k/beacon.c
+:100644 100644 62294da... 1560280... M	drivers/net/wireless/ath/ath9k/main.c
+:100644 100644 fd778d2... 5afb46f... M	drivers/net/wireless/ath/ath9k/recv.c
+:100644 100644 a5e5f27... e86f59c... M	drivers/net/wireless/ath/ath9k/xmit.c
+ drivers/net/wireless/ath/ath9k/ath9k.h  |    2 ++
+ drivers/net/wireless/ath/ath9k/beacon.c |   14 +++++---------
+ drivers/net/wireless/ath/ath9k/main.c   |   11 +++++++++++
+ drivers/net/wireless/ath/ath9k/recv.c   |   12 ++++--------
+ drivers/net/wireless/ath/ath9k/xmit.c   |    6 ++----
+ 5 files changed, 24 insertions(+), 21 deletions(-)
 
-
+diff --git a/drivers/net/wireless/ath/ath9k/ath9k.h b/drivers/net/wireless/ath/ath9k/ath9k.h
+index 0c917e5..8fba13d 100644
+--- a/drivers/net/wireless/ath/ath9k/ath9k.h
++++ b/drivers/net/wireless/ath/ath9k/ath9k.h
+@@ -737,4 +737,6 @@ bool ath_mac80211_start_queue(struct ath_softc *sc, u16 skb_queue);
+ void ath_start_rfkill_poll(struct ath_softc *sc);
+ extern void ath9k_rfkill_poll_state(struct ieee80211_hw *hw);
+ 
++void ath_clear_dma_ptrs(struct ath_buf *bf);
++
+ #endif /* ATH9K_H */
+diff --git a/drivers/net/wireless/ath/ath9k/beacon.c b/drivers/net/wireless/ath/ath9k/beacon.c
+index 97d471f..cc406f9 100644
+--- a/drivers/net/wireless/ath/ath9k/beacon.c
++++ b/drivers/net/wireless/ath/ath9k/beacon.c
+@@ -139,7 +139,7 @@ static struct ath_buf *ath_beacon_generate(struct ieee80211_hw *hw,
+ 		dma_unmap_single(sc->dev, bf->bf_buf_addr,
+ 				 skb->len, DMA_TO_DEVICE);
+ 		dev_kfree_skb_any(skb);
+-		bf->bf_buf_addr = 0;
++		ath_clear_dma_ptrs(bf);
+ 	}
+ 
+ 	/* Get a new beacon from mac80211 */
+@@ -167,8 +167,7 @@ static struct ath_buf *ath_beacon_generate(struct ieee80211_hw *hw,
+ 					 skb->len, DMA_TO_DEVICE);
+ 	if (unlikely(dma_mapping_error(sc->dev, bf->bf_buf_addr))) {
+ 		dev_kfree_skb_any(skb);
+-		bf->bf_mpdu = NULL;
+-		bf->bf_buf_addr = 0;
++		ath_clear_dma_ptrs(bf);
+ 		ath_print(common, ATH_DBG_FATAL,
+ 			  "dma_mapping_error on beaconing\n");
+ 		return NULL;
+@@ -256,8 +255,7 @@ int ath_beacon_alloc(struct ath_wiphy *aphy, struct ieee80211_vif *vif)
+ 		dma_unmap_single(sc->dev, bf->bf_buf_addr,
+ 				 skb->len, DMA_TO_DEVICE);
+ 		dev_kfree_skb_any(skb);
+-		bf->bf_mpdu = NULL;
+-		bf->bf_buf_addr = 0;
++		ath_clear_dma_ptrs(bf);
+ 	}
+ 
+ 	/* NB: the beacon data buffer must be 32-bit aligned. */
+@@ -302,8 +300,7 @@ int ath_beacon_alloc(struct ath_wiphy *aphy, struct ieee80211_vif *vif)
+ 					 skb->len, DMA_TO_DEVICE);
+ 	if (unlikely(dma_mapping_error(sc->dev, bf->bf_buf_addr))) {
+ 		dev_kfree_skb_any(skb);
+-		bf->bf_mpdu = NULL;
+-		bf->bf_buf_addr = 0;
++		ath_clear_dma_ptrs(bf);
+ 		ath_print(common, ATH_DBG_FATAL,
+ 			  "dma_mapping_error on beacon alloc\n");
+ 		return -ENOMEM;
+@@ -329,8 +326,7 @@ void ath_beacon_return(struct ath_softc *sc, struct ath_vif *avp)
+ 			dma_unmap_single(sc->dev, bf->bf_buf_addr,
+ 					 skb->len, DMA_TO_DEVICE);
+ 			dev_kfree_skb_any(skb);
+-			bf->bf_mpdu = NULL;
+-			bf->bf_buf_addr = 0;
++			ath_clear_dma_ptrs(bf);
+ 		}
+ 		list_add_tail(&bf->list, &sc->beacon.bbuf);
+ 
+diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
+index 62294da..1560280 100644
+--- a/drivers/net/wireless/ath/ath9k/main.c
++++ b/drivers/net/wireless/ath/ath9k/main.c
+@@ -213,6 +213,17 @@ static void ath_update_survey_stats(struct ath_softc *sc)
+ 	ath_update_survey_nf(sc, pos);
+ }
+ 
++void ath_clear_dma_ptrs(struct ath_buf *bf)
++{
++	struct ath_desc *ds = bf->bf_desc;
++	bf->bf_buf_addr = 0;
++	bf->bf_mpdu = NULL;
++	if (ds) {
++		ds->ds_data = 0;
++		ds->ds_vdata = NULL;
++	}
++}
++
+ /*
+  * Set/change channels.  If the channel is really being changed, it's done
+  * by reseting the chip.  To accomplish this we must first cleanup any pending
+diff --git a/drivers/net/wireless/ath/ath9k/recv.c b/drivers/net/wireless/ath/ath9k/recv.c
+index fd778d2..5afb46f 100644
+--- a/drivers/net/wireless/ath/ath9k/recv.c
++++ b/drivers/net/wireless/ath/ath9k/recv.c
+@@ -269,8 +269,7 @@ static int ath_rx_edma_init(struct ath_softc *sc, int nbufs)
+ 		if (unlikely(dma_mapping_error(sc->dev,
+ 						bf->bf_buf_addr))) {
+ 				dev_kfree_skb_any(skb);
+-				bf->bf_mpdu = NULL;
+-				bf->bf_buf_addr = 0;
++				ath_clear_dma_ptrs(bf);
+ 				ath_print(common, ATH_DBG_FATAL,
+ 					"dma_mapping_error() on RX init\n");
+ 				error = -ENOMEM;
+@@ -360,8 +359,7 @@ int ath_rx_init(struct ath_softc *sc, int nbufs)
+ 			if (unlikely(dma_mapping_error(sc->dev,
+ 							bf->bf_buf_addr))) {
+ 				dev_kfree_skb_any(skb);
+-				bf->bf_mpdu = NULL;
+-				bf->bf_buf_addr = 0;
++				ath_clear_dma_ptrs(bf);
+ 				ath_print(common, ATH_DBG_FATAL,
+ 					  "dma_mapping_error() on RX init\n");
+ 				error = -ENOMEM;
+@@ -396,8 +394,7 @@ void ath_rx_cleanup(struct ath_softc *sc)
+ 						common->rx_bufsize,
+ 						DMA_FROM_DEVICE);
+ 				dev_kfree_skb(skb);
+-				bf->bf_buf_addr = 0;
+-				bf->bf_mpdu = NULL;
++				ath_clear_dma_ptrs(bf);
+ 			}
+ 		}
+ 
+@@ -1741,8 +1738,7 @@ int ath_rx_tasklet(struct ath_softc *sc, int flush, bool hp)
+ 		if (unlikely(dma_mapping_error(sc->dev,
+ 			  bf->bf_buf_addr))) {
+ 			dev_kfree_skb_any(requeue_skb);
+-			bf->bf_mpdu = NULL;
+-			bf->bf_buf_addr = 0;
++			ath_clear_dma_ptrs(bf);
+ 			ath_print(common, ATH_DBG_FATAL,
+ 				  "dma_mapping_error() on RX\n");
+ 			ath_rx_send_to_mac80211(hw, sc, skb, rxs);
+diff --git a/drivers/net/wireless/ath/ath9k/xmit.c b/drivers/net/wireless/ath/ath9k/xmit.c
+index a5e5f27..e86f59c 100644
+--- a/drivers/net/wireless/ath/ath9k/xmit.c
++++ b/drivers/net/wireless/ath/ath9k/xmit.c
+@@ -1644,8 +1644,7 @@ static int ath_tx_setup_buffer(struct ieee80211_hw *hw, struct ath_buf *bf,
+ 	bf->bf_buf_addr = dma_map_single(sc->dev, skb->data,
+ 					 skb->len, DMA_TO_DEVICE);
+ 	if (unlikely(dma_mapping_error(sc->dev, bf->bf_buf_addr))) {
+-		bf->bf_mpdu = NULL;
+-		bf->bf_buf_addr = 0;
++		ath_clear_dma_ptrs(bf);
+ 		ath_print(ath9k_hw_common(sc->sc_ah), ATH_DBG_FATAL,
+ 			  "dma_mapping_error() on TX\n");
+ 		return -ENOMEM;
+@@ -1915,7 +1914,6 @@ static void ath_tx_complete_buf(struct ath_softc *sc, struct ath_buf *bf,
+ 	}
+ 
+ 	dma_unmap_single(sc->dev, bf->bf_buf_addr, skb->len, DMA_TO_DEVICE);
+-	bf->bf_buf_addr = 0;
+ 
+ 	if (bf->bf_state.bfs_paprd) {
+ 		if (time_after(jiffies,
+@@ -1931,7 +1929,7 @@ static void ath_tx_complete_buf(struct ath_softc *sc, struct ath_buf *bf,
+ 	/* At this point, skb (bf->bf_mpdu) is consumed...make sure we don't
+ 	 * accidentally reference it later.
+ 	 */
+-	bf->bf_mpdu = NULL;
++	ath_clear_dma_ptrs(bf);
+ 
+ 	/*
+ 	 * Return the list of ath_buf of this mpdu to free queue
 -- 
-Vista: [V]iruses, [I]ntruders, [S]pyware, [T]rojans and [A]dware. :-)
+1.7.2.2
+
