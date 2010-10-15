@@ -1,75 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail30t.wh2.ocn.ne.jp ([125.206.180.136]:42050 "HELO
-	mail30t.wh2.ocn.ne.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1753717Ab0JED41 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 4 Oct 2010 23:56:27 -0400
-Received: from vs3015.wh2.ocn.ne.jp (125.206.180.247)
-	by mail30t.wh2.ocn.ne.jp (RS ver 1.0.95vs) with SMTP id 0-053746984
-	for <linux-wireless@vger.kernel.org>; Tue,  5 Oct 2010 12:56:25 +0900 (JST)
-From: Bruno Randolf <br1@einfach.org>
-To: Ben Greear <greearb@candelatech.com>
-Subject: Re: Putting APs into bridges?
-Date: Tue, 5 Oct 2010 12:56:25 +0900
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-References: <4CAA0D5E.2090700@candelatech.com> <201010051243.45190.br1@einfach.org> <4CAA9F60.9030207@candelatech.com>
-In-Reply-To: <4CAA9F60.9030207@candelatech.com>
+Received: from hera.kernel.org ([140.211.167.34]:57275 "EHLO hera.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755350Ab0JOPff (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 15 Oct 2010 11:35:35 -0400
+Message-ID: <4CB874C0.8090003@kernel.org>
+Date: Fri, 15 Oct 2010 17:35:28 +0200
+From: Tejun Heo <tj@kernel.org>
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="utf-8"
-Message-Id: <201010051256.25246.br1@einfach.org>
+To: Johannes Berg <johannes@sipsolutions.net>,
+	Linux Wireless List <linux-wireless@vger.kernel.org>,
+	lkml <linux-kernel@vger.kernel.org>
+Subject: [PATCH v2.6.36-rc7] mac80211: cancel restart_work explicitly instead
+ of depending on flush_scheduled_work()
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue October 5 2010 12:45:36 Ben Greear wrote:
-> On 10/04/2010 08:43 PM, Bruno Randolf wrote:
-> > On Tue October 5 2010 03:29:29 Johannes Berg wrote:
-> >> On Mon, 2010-10-04 at 10:22 -0700, Ben Greear wrote:
-> >>> It seems he put two VAPs into a bridge device, and got an
-> >>> assert here (nevermind the printk, I just added that to
-> >>> help debug the issue).
-> >>> 
-> >>> static void __ieee80211_wake_queue(struct ieee80211_hw *hw, int queue,
-> >>> 
-> >>> 				   enum queue_stop_reason reason)
-> >>> 
-> >>> {
-> >>> 
-> >>> 	struct ieee80211_local *local = hw_to_local(hw);
-> >>> 	struct ieee80211_sub_if_data *sdata;
-> >>> 	
-> >>> 	trace_wake_queue(local, queue, reason);
-> >>> 	
-> >>> 	if (WARN_ON(queue>= hw->queues)) {
-> >>> 	
-> >>> 		printk(KERN_WARNING "%s:  queue: %i  hw->queues: %i\n",
-> >>> 		
-> >>> 		       sdata->name, queue, hw->queues);
-> >>> 		
-> >>> 		return;
-> >>> 	
-> >>> 	}
-> >>> 
-> >>> Before I try to reproduce this, it is valid to add APs to bridge
-> >>> devices in the first place?
-> >> 
-> >> Yes, it's valid, we catch the invalid cases in cfg80211.
-> >> 
-> >> Hitting the assert there is rather strange though.
-> > 
-> > hey!
-> > 
-> > i'm seeing the same. i think it's due to a bug in ath5k concerning power
-> > save. we put frames in the CAB queue, but obviously we shouldn't tell
-> > mac80211 to wake this queue (number 6) since mac80211 knows nothing
-> > about it.
-> 
-> Interesting...we couldn't reproduce it at all (two APs in a bridge worked
-> as expected, as far as we could tell).
+iee80211_hw->restart_work is the only work which uses the system
+workqueue.  Instead of calling flush_scheduled_work() during
+iee80211_exit(), cancel the work during unregistration.
 
-i think this has nothing to do with bridges. i can get the same problem with a 
-single AP interface. i can reproduce it by connecting 2 STA, one of which has 
-to use power-save. i'll come up with a simple patch soon.
+This is to prepare for the deprecation and removal of
+flush_scheduled_work().
 
-bruno
+Signed-off-by: Tejun Heo <tj@kernel.org>
+---
+ net/mac80211/main.c |    9 ++-------
+ 1 file changed, 2 insertions(+), 7 deletions(-)
+
+Index: work/net/mac80211/main.c
+===================================================================
+--- work.orig/net/mac80211/main.c
++++ work/net/mac80211/main.c
+@@ -606,7 +606,7 @@ int ieee80211_register_hw(struct ieee802
+ 		hw->queues = IEEE80211_MAX_QUEUES;
+
+ 	local->workqueue =
+-		create_singlethread_workqueue(wiphy_name(local->hw.wiphy));
++		alloc_ordered_workqueue(wiphy_name(local->hw.wiphy), 0);
+ 	if (!local->workqueue) {
+ 		result = -ENOMEM;
+ 		goto fail_workqueue;
+@@ -739,6 +739,7 @@ void ieee80211_unregister_hw(struct ieee
+ 	del_timer_sync(&local->work_timer);
+
+ 	cancel_work_sync(&local->reconfig_filter);
++	cancel_work_sync(&local->restart_work);
+
+ 	ieee80211_clear_tx_pending(local);
+ 	sta_info_stop(local);
+@@ -812,12 +813,6 @@ static void __exit ieee80211_exit(void)
+ 	rc80211_minstrel_ht_exit();
+ 	rc80211_minstrel_exit();
+
+-	/*
+-	 * For key todo, it'll be empty by now but the work
+-	 * might still be scheduled.
+-	 */
+-	flush_scheduled_work();
+-
+ 	if (mesh_allocated)
+ 		ieee80211s_stop();
+
