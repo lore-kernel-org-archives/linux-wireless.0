@@ -1,58 +1,107 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp204.alice.it ([82.57.200.100]:57044 "EHLO smtp204.alice.it"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752341Ab0JNQDH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 14 Oct 2010 12:03:07 -0400
-Subject: Re: Compat-wireless N900
-From: Denis 'GNUtoo' Carikli <GNUtoo@no-log.org>
-To: George <george.news@gmx.net>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <4CB6BE57.8010401@gmx.net>
-References: <4CB6BE57.8010401@gmx.net>
-Content-Type: text/plain; charset="UTF-8"
-Date: Thu, 14 Oct 2010 17:57:24 +0200
-Message-ID: <1287071844.11341.5.camel@gnutoo-laptop>
-Mime-Version: 1.0
+Received: from mail-pz0-f46.google.com ([209.85.210.46]:50038 "EHLO
+	mail-pz0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932150Ab0JOTFW convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 15 Oct 2010 15:05:22 -0400
+MIME-Version: 1.0
+In-Reply-To: <E9954878DD1FB34FAE5187FB88C58A35012EE46BC3@orsmsx506.amr.corp.intel.com>
+References: <E9954878DD1FB34FAE5187FB88C58A35012EE46BC3@orsmsx506.amr.corp.intel.com>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Fri, 15 Oct 2010 12:05:00 -0700
+Message-ID: <AANLkTi=6aVHyr98avc07UtWgDkV=SdmKW2HXNfSRY3KU@mail.gmail.com>
+Subject: Re: compat-wireless question
+To: "Guy, Wey-Yi W" <wey-yi.w.guy@intel.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Greg KH <greg@kroah.com>, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2010-10-14 at 10:24 +0200, George wrote:
-> Hi all,
-> 
-> I'm trying to use compat-wireless to upgrade my n900 wireless driver. 
-> N900 is using WL1251 wireless driver and the omap1 kernel version used 
-> it 2.6.28.
-> 
-> The issue is that 2.6.28 does not have implemented many issues for 
-> nl80211 netlink family which I wanted to test on my n900.
-> 
-> I have recompiled the kernel to make cfg80211 and mac80211 modules, so I 
-> can use compat-wireless. After that I have compiled compat-wireless by 
-> selecting the driver family I need. All done under scratchbox.
-> 
-> # scripts/driver-select wl12xx
-> # make KLIB=/lib/modules/2.6.28-myversion \
->     KMODPATH_ARG=/lib/modules/2.6.28-myversion
-> # make  KLIB=/lib/modules/2.6.28-myversion \
->     KMODPATH_ARG=/lib/modules/2.6.28-myversion install
-> 
-> After that I have installed the new kernel and the drivers in the n900 
-> and the system starts. `uname -a` reports I'm using my custom kernel.
-> 
-> The problem is that the wireless modules are not working as expected and 
-> I cannot get access to my wifi networks. Actually bluetooth is not 
-> working as well, as far as I have tested.
-> 
-> dmesg reports --> http://pastebin.com/xskKcGnE
-At first sight it seem that you have some mismatch issues,
-Try to compile the maemo 2.6.28 kenrel without the wireless modules or
-replace the wireless modules by the compat-wireless ones.
-(normally the compat-wireless modules should take the precedence but as
-it seem here, it didn't work)
+On Fri, Oct 15, 2010 at 10:40 AM, Guy, Wey-Yi W <wey-yi.w.guy@intel.com> wrote:
+> Hi Luis,
+>
+> Simple compat-wireless question
+>
+> There are two type of compat-wireless
+> 1.       Bleeding-edge compat-wireless
+> 2.       Stable compat-wireless
+>
+> If I understand correctly, bleeding-edge compat-wireless took the latest
+> from wireless-next-2.6,
 
-by the way, are you aware of the meego 2.6.35 kernel, it might not be
-complete yet, but may solve some of your problems.
+Bleeding edge comes from linux-next.git instead of wireless-next.git
+as we also get Ethernet driver updates that way. Ethernet drivers are
+easy to port into compat-wireless so I have already added all Atheros
+Ethernet drivers into it, feel free to send patches to Intel Ethernet
+:)
 
-Denis.
+> is it also include wireless-2.6 which is bug fix.
 
+No, it just uses linux-next.git, but yeah linux-next.git would rebase
+on top of Linus' tree anyway so it would eventually get all of the
+respective stable fixes. Stephen would then just drag in all trees
+sequentially.
 
+> How about stable compat-wireless, it is base on stable tree, so I believe it
+> has all the bug fix for the stable kernel, am I correct?
+
+I based the stable release off of H. Peter Anvin's linux-2.6-allstable.git tree:
+
+git://git.kernel.org/pub/scm/linux/kernel/git/hpa/linux-2.6-allstable.git
+
+After Linus releases a kernel, say 2.6.36, then new extra version
+fixes, say 2.6.36.1, 2.6.36.2, etc, will not be available on Linus'
+tree, but you can instead get them from the linux-2.6-allstable.git
+tree. What is neat about that tree too is it also has the older stable
+extra version updates. So whenever a stable kernel extra version gets
+released we can make a new compat-wireless-2.6.3x.y. You can find them
+here:
+
+http://wireless.kernel.org/en/users/Download/stable/
+
+Now as of the compat-wireless-2.6.36 releases I started noticing we
+can do something better as we approach the merge window. The issue
+with the merge window is that there are some patches which are marked
+as stable on the commit log entry (Cc: stable@kernel.org) but not all
+of these will make it to Linus' next rc release as the focus for the
+RC is to fix regressions only. Right or wrong, some stable patches
+eventually make it into the first extra version release of the kernel
+but not on the stable release of the kernel. Some of these stable
+fixes are still important though so to help with testing and getting
+users/customers these fixes I've started sucking all pending stable
+fixes from linux-next.git on the compat-wireless-2.6.36 releases. I
+annotate this is done on a release by postfixing an "s" to the
+release. You can also find all the stable patches which were sucked
+out of linux-next.git by looking at the pending-stable/ directory. I
+regenerate these every new RC release of the kernel or extra version
+bump, but started this only as of the linux-2.6.36.y branch of
+compat-wireless.
+
+Furthermore, I realize that at times a vendor may have a patch that
+although it did not make it into the stable release of the kernel it
+may be important for the vendor for some customers, so because of this
+we have the linux-next-cherry-picks/ directory. This directory is for
+patches which have already been merged into linux-next.git but will
+not make it into the stable kernel release. I took this further two
+more steps too, just because sometimes a maintainer may be on
+vacation, have died, or whatever, so your patches may not get merged
+yet. In these cases you can submit patches for inclusion into the
+linux-next-pending/ directory of compat-wireless. This is for patches
+which have *at least* been posted to a public mailing list but for
+whatever reason haven't yet been merged. Then lastly we have the crap/
+directory of compat-wireless. This for patches which have not even yet
+been posted to a mailing list for whatever reason. An example may be
+that there is a known issue but yet the patches are important enough.
+
+The purpose of all these directories is to let you customize stable
+compat-wireless releases, suited for whatever purpose you have. I've
+started sucking in all linux-next.git stable fixes not yet merged for
+now, and am will soon start incorporating a linux-next-pending/ patch
+to account for the lag in getting a patch reviewed.
+
+Feel free to use these as well, I welcome patches to help your needs.
+
+Please let me know if you have any other questions.
+
+  Luis
