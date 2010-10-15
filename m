@@ -1,391 +1,128 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:51032 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756348Ab0JGVVW (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 7 Oct 2010 17:21:22 -0400
-From: Hauke Mehrtens <hauke@hauke-m.de>
-To: lrodriguez@atheros.com
-Cc: linux-wireless@vger.kernel.org, mcgrof@infradead.org,
-	Hauke Mehrtens <hauke@hauke-m.de>
-Subject: [PATCH 1/3] compat-wireless: remove already applied patches
-Date: Thu,  7 Oct 2010 23:21:07 +0200
-Message-Id: <1286486469-18904-1-git-send-email-hauke@hauke-m.de>
+Received: from mail.atheros.com ([12.19.149.2]:19950 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932458Ab0JOVHW (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 15 Oct 2010 17:07:22 -0400
+Received: from mail.atheros.com ([10.10.20.108])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Fri, 15 Oct 2010 14:07:13 -0700
+Date: Fri, 15 Oct 2010 14:07:20 -0700
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: Ben Greear <greearb@candelatech.com>
+CC: Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: memory clobber in rx path, maybe related to ath9k.
+Message-ID: <20101015210720.GA2007@tux>
+References: <AANLkTi=1oOCcdvBHo+8WAVHv-M8tE14ntmK4M_09SWh5@mail.gmail.com>
+ <AANLkTi=pp2Ob06YCi6GsR9rtRaDWPP95n2M72qWLdbwM@mail.gmail.com>
+ <20101014225150.GB15740@tux>
+ <20101014231958.GA3242@tux>
+ <4CB79299.7000005@candelatech.com>
+ <AANLkTinQmE6wm1pXkRL6p_3rkMvNrppmirjj3-jagMp8@mail.gmail.com>
+ <20101014234853.GA10113@tux>
+ <4CB886AF.3070800@candelatech.com>
+ <AANLkTinhFj_iYjVzyfSfpUVdytfk4O9kCBnN8=Bwv0N7@mail.gmail.com>
+ <4CB8AD3F.50201@candelatech.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <4CB8AD3F.50201@candelatech.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Fri, Oct 15, 2010 at 12:36:31PM -0700, Ben Greear wrote:
+> I was just writing that my script wouldn't reproduce it..but it did before I
+> was done typing.  Same looking poison exception as ever.
 
-Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
----
- ...0211-perform-scan-cancel-in-hw-reset-work.patch |   72 -----
- ...carl9170-support-firmware-based-rx-filter.patch |  280 --------------------
- 2 files changed, 0 insertions(+), 352 deletions(-)
- delete mode 100644 linux-next-pending/0001-mac80211-perform-scan-cancel-in-hw-reset-work.patch
- delete mode 100644 linux-next-pending/0002-carl9170-support-firmware-based-rx-filter.patch
+OK I was able to reproduce with the latest patch.
 
-diff --git a/linux-next-pending/0001-mac80211-perform-scan-cancel-in-hw-reset-work.patch b/linux-next-pending/0001-mac80211-perform-scan-cancel-in-hw-reset-work.patch
-deleted file mode 100644
-index d606cbc..0000000
---- a/linux-next-pending/0001-mac80211-perform-scan-cancel-in-hw-reset-work.patch
-+++ /dev/null
-@@ -1,72 +0,0 @@
--
--Reason for adding to linux-next-pending/ : 
--
--On Fri, Oct 01, 2010 at 05:47:53AM -0700, Christian Lamparter wrote:
--> Currently, everyone is waiting for:
--> "[PATCH 1/6] mac80211: perform scan cancel in hw reset work"
--> (hopefully, it fixes the dreaded ieee80211_hw_restart deadlock.)
--
--We need this for testing purposes for carl9170 which may
--get done this weekend.
--
--From 6b2daf7ad7067f3acc90f046700383a2c3ffad19 Mon Sep 17 00:00:00 2001
--From: Stanislaw Gruszka <sgruszka@redhat.com>
--Date: Fri, 1 Oct 2010 14:05:27 +0200
--Subject: [PATCH] mac80211: perform scan cancel in hw reset work
--
--Move ieee80211_scan_cancel() and all other related code to
--ieee80211_restart_work() as ieee80211_restart_hw() is intended to be
--callable from any context.
--
--Fix a bug that RTNL lock is not taken during ieee80211_cancel_scan().
--
--Take local->mtx before WARN(test_bit(SCAN_HW_SCANNING, &local->scanning)
--to prevent the race condition with __ieee80211_start_scan() described
--here: http://marc.info/?l=linux-wireless&m=128516716810537&w=2
--
--Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
-----
-- net/mac80211/main.c |   19 ++++++++++---------
-- 1 files changed, 10 insertions(+), 9 deletions(-)
--
--diff --git a/net/mac80211/main.c b/net/mac80211/main.c
--index db341a9..ba332ef 100644
----- a/net/mac80211/main.c
--+++ b/net/mac80211/main.c
--@@ -295,7 +295,17 @@ static void ieee80211_restart_work(struct work_struct *work)
-- 	struct ieee80211_local *local =
-- 		container_of(work, struct ieee80211_local, restart_work);
-- 
--+	/* wait for scan work complete */
--+	flush_workqueue(local->workqueue);
--+
--+	mutex_lock(&local->mtx);
--+	WARN(test_bit(SCAN_HW_SCANNING, &local->scanning),
--+		"%s called with hardware scan in progress\n", __func__);
--+	mutex_unlock(&local->mtx);
--+
-- 	rtnl_lock();
--+	if (unlikely(test_bit(SCAN_SW_SCANNING, &local->scanning)))
--+		ieee80211_scan_cancel(local);
-- 	ieee80211_reconfig(local);
-- 	rtnl_unlock();
-- }
--@@ -306,15 +316,6 @@ void ieee80211_restart_hw(struct ieee80211_hw *hw)
-- 
-- 	trace_api_restart_hw(local);
-- 
---	/* wait for scan work complete */
---	flush_workqueue(local->workqueue);
---
---	WARN(test_bit(SCAN_HW_SCANNING, &local->scanning),
---		"%s called with hardware scan in progress\n", __func__);
---
---	if (unlikely(test_bit(SCAN_SW_SCANNING, &local->scanning)))
---		ieee80211_scan_cancel(local);
---
-- 	/* use this reason, ieee80211_reconfig will unblock it */
-- 	ieee80211_stop_queues_by_reason(hw,
-- 		IEEE80211_QUEUE_STOP_REASON_SUSPEND);
---- 
--1.7.0.4
--
-diff --git a/linux-next-pending/0002-carl9170-support-firmware-based-rx-filter.patch b/linux-next-pending/0002-carl9170-support-firmware-based-rx-filter.patch
-deleted file mode 100644
-index 4c829e8..0000000
---- a/linux-next-pending/0002-carl9170-support-firmware-based-rx-filter.patch
-+++ /dev/null
-@@ -1,280 +0,0 @@
--
--Reason for it not being merged upstream yet: backlog.
--Since this will help with load and memory we want this for
--final testing and evaluation of the driver.
--
--From 8f56ba52913d4260fd7148a5919d913561e62cbd Mon Sep 17 00:00:00 2001
--From: Christian Lamparter <chunkeey@googlemail.com>
--Date: Tue, 28 Sep 2010 23:00:59 +0200
--Subject: [PATCH] carl9170: support firmware-based rx filter
--
--The hardware rx-filter was essentially disabled, because
--of a serve, yet unidentifiable problem with iwlagn.
--Due to these circumstances the driver and mac80211 were
--left with the job of filtering.
--
--This is very unfortunate and has proven to be expensive
--in terms of latency, memory and load.
--
--Therefore the new 1.8.8.3 firmware introduces a flexible
--filtering infrastructure which allows the driver to
--offload some of the checks (FCS & PLCP crc check,
--RA match, control frame filter, etc...) whenever possible.
--
--Note:
--This patch also includes all changes to the
--shared headers files since the inclusion.
--
--Signed-off-by: Christian Lamparter <chunkeey@googlemail.com>
-----
-- drivers/net/wireless/ath/carl9170/carl9170.h |    2 +
-- drivers/net/wireless/ath/carl9170/cmd.h      |   10 ++++++++
-- drivers/net/wireless/ath/carl9170/fw.c       |    7 ++++++
-- drivers/net/wireless/ath/carl9170/fwcmd.h    |   16 +++++++++++++
-- drivers/net/wireless/ath/carl9170/fwdesc.h   |    6 ++++-
-- drivers/net/wireless/ath/carl9170/hw.h       |    3 ++
-- drivers/net/wireless/ath/carl9170/main.c     |   30 ++++++++++++++++++++++++-
-- drivers/net/wireless/ath/carl9170/phy.h      |    5 +---
-- drivers/net/wireless/ath/carl9170/version.h  |    6 ++--
-- 9 files changed, 75 insertions(+), 10 deletions(-)
--
--diff --git a/drivers/net/wireless/ath/carl9170/carl9170.h b/drivers/net/wireless/ath/carl9170/carl9170.h
--index 20f2a77..6cf0c9e 100644
----- a/drivers/net/wireless/ath/carl9170/carl9170.h
--+++ b/drivers/net/wireless/ath/carl9170/carl9170.h
--@@ -279,6 +279,7 @@ struct ar9170 {
-- 		unsigned int beacon_max_len;
-- 		bool rx_stream;
-- 		bool tx_stream;
--+		bool rx_filter;
-- 		unsigned int mem_blocks;
-- 		unsigned int mem_block_size;
-- 		unsigned int rx_size;
--@@ -314,6 +315,7 @@ struct ar9170 {
-- 	u64 cur_mc_hash;
-- 	u32 cur_filter;
-- 	unsigned int filter_state;
--+	unsigned int rx_filter_caps;
-- 	bool sniffer_enabled;
-- 
-- 	/* MAC */
--diff --git a/drivers/net/wireless/ath/carl9170/cmd.h b/drivers/net/wireless/ath/carl9170/cmd.h
--index 0fc83d2..f78728c 100644
----- a/drivers/net/wireless/ath/carl9170/cmd.h
--+++ b/drivers/net/wireless/ath/carl9170/cmd.h
--@@ -59,6 +59,16 @@ static inline int carl9170_flush_cab(struct ar9170 *ar,
-- 	return carl9170_bcn_ctrl(ar, vif_id, CARL9170_BCN_CTRL_DRAIN, 0, 0);
-- }
-- 
--+static inline int carl9170_rx_filter(struct ar9170 *ar,
--+				     const unsigned int _rx_filter)
--+{
--+	__le32 rx_filter = cpu_to_le32(_rx_filter);
--+
--+	return carl9170_exec_cmd(ar, CARL9170_CMD_RX_FILTER,
--+				sizeof(rx_filter), (u8 *)&rx_filter,
--+				0, NULL);
--+}
--+
-- struct carl9170_cmd *carl9170_cmd_buf(struct ar9170 *ar,
-- 	const enum carl9170_cmd_oids cmd, const unsigned int len);
-- 
--diff --git a/drivers/net/wireless/ath/carl9170/fw.c b/drivers/net/wireless/ath/carl9170/fw.c
--index 3661546..ae6c006 100644
----- a/drivers/net/wireless/ath/carl9170/fw.c
--+++ b/drivers/net/wireless/ath/carl9170/fw.c
--@@ -257,6 +257,13 @@ static int carl9170_fw(struct ar9170 *ar, const __u8 *data, size_t len)
-- 	if (SUPP(CARL9170FW_USB_UP_STREAM))
-- 		ar->fw.rx_stream = true;
-- 
--+	if (SUPP(CARL9170FW_RX_FILTER)) {
--+		ar->fw.rx_filter = true;
--+		ar->rx_filter_caps = FIF_FCSFAIL | FIF_PLCPFAIL |
--+			FIF_CONTROL | FIF_PSPOLL | FIF_OTHER_BSS |
--+			FIF_PROMISC_IN_BSS;
--+	}
--+
-- 	ar->fw.vif_num = otus_desc->vif_num;
-- 	ar->fw.cmd_bufs = otus_desc->cmd_bufs;
-- 	ar->fw.address = le32_to_cpu(otus_desc->fw_address);
--diff --git a/drivers/net/wireless/ath/carl9170/fwcmd.h b/drivers/net/wireless/ath/carl9170/fwcmd.h
--index d4a4e1d..d552166 100644
----- a/drivers/net/wireless/ath/carl9170/fwcmd.h
--+++ b/drivers/net/wireless/ath/carl9170/fwcmd.h
--@@ -53,6 +53,7 @@ enum carl9170_cmd_oids {
-- 	CARL9170_CMD_REBOOT		= 0x04,
-- 	CARL9170_CMD_BCN_CTRL		= 0x05,
-- 	CARL9170_CMD_READ_TSF		= 0x06,
--+	CARL9170_CMD_RX_FILTER		= 0x07,
-- 
-- 	/* CAM */
-- 	CARL9170_CMD_EKEY		= 0x10,
--@@ -153,6 +154,20 @@ struct carl9170_psm {
-- } __packed;
-- #define CARL9170_PSM_SIZE		4
-- 
--+struct carl9170_rx_filter_cmd {
--+	__le32		rx_filter;
--+} __packed;
--+#define CARL9170_RX_FILTER_CMD_SIZE	4
--+
--+#define CARL9170_RX_FILTER_BAD		0x01
--+#define CARL9170_RX_FILTER_OTHER_RA	0x02
--+#define CARL9170_RX_FILTER_DECRY_FAIL	0x04
--+#define CARL9170_RX_FILTER_CTL_OTHER	0x08
--+#define CARL9170_RX_FILTER_CTL_PSPOLL	0x10
--+#define CARL9170_RX_FILTER_CTL_BACKR	0x20
--+#define CARL9170_RX_FILTER_MGMT		0x40
--+#define CARL9170_RX_FILTER_DATA		0x80
--+
-- struct carl9170_bcn_ctrl_cmd {
-- 	__le32		vif_id;
-- 	__le32		mode;
--@@ -188,6 +203,7 @@ struct carl9170_cmd {
-- 		struct carl9170_rf_init		rf_init;
-- 		struct carl9170_psm		psm;
-- 		struct carl9170_bcn_ctrl_cmd	bcn_ctrl;
--+		struct carl9170_rx_filter_cmd	rx_filter;
-- 		u8 data[CARL9170_MAX_CMD_PAYLOAD_LEN];
-- 	} __packed;
-- } __packed;
--diff --git a/drivers/net/wireless/ath/carl9170/fwdesc.h b/drivers/net/wireless/ath/carl9170/fwdesc.h
--index 7cd8117..71f3821 100644
----- a/drivers/net/wireless/ath/carl9170/fwdesc.h
--+++ b/drivers/net/wireless/ath/carl9170/fwdesc.h
--@@ -66,6 +66,9 @@ enum carl9170fw_feature_list {
-- 	/* Firmware PSM support | CARL9170_CMD_PSM */
-- 	CARL9170FW_PSM,
-- 
--+	/* Firmware RX filter | CARL9170_CMD_RX_FILTER */
--+	CARL9170FW_RX_FILTER,
--+
-- 	/* KEEP LAST */
-- 	__CARL9170FW_FEATURE_NUM
-- };
--@@ -142,7 +145,7 @@ struct carl9170fw_fix_desc {
-- 	(sizeof(struct carl9170fw_fix_desc))
-- 
-- #define CARL9170FW_DBG_DESC_MIN_VER			1
---#define CARL9170FW_DBG_DESC_CUR_VER			2
--+#define CARL9170FW_DBG_DESC_CUR_VER			3
-- struct carl9170fw_dbg_desc {
-- 	struct carl9170fw_desc_head head;
-- 
--@@ -150,6 +153,7 @@ struct carl9170fw_dbg_desc {
-- 	__le32 counter_addr;
-- 	__le32 rx_total_addr;
-- 	__le32 rx_overrun_addr;
--+	__le32 rx_filter;
-- 
-- 	/* Put your debugging definitions here */
-- } __packed;
--diff --git a/drivers/net/wireless/ath/carl9170/hw.h b/drivers/net/wireless/ath/carl9170/hw.h
--index b1292ac..2f471b3 100644
----- a/drivers/net/wireless/ath/carl9170/hw.h
--+++ b/drivers/net/wireless/ath/carl9170/hw.h
--@@ -731,6 +731,9 @@ struct ar9170_stream {
-- #define SET_VAL(reg, value, newvalue)					\
-- 	(value = ((value) & ~reg) | (((newvalue) << reg##_S) & reg))
-- 
--+#define SET_CONSTVAL(reg, newvalue)					\
--+	(((newvalue) << reg##_S) & reg)
--+
-- #define MOD_VAL(reg, value, newvalue)					\
-- 	(((value) & ~reg) | (((newvalue) << reg##_S) & reg))
-- #endif	/* __CARL9170_SHARED_HW_H */
--diff --git a/drivers/net/wireless/ath/carl9170/main.c b/drivers/net/wireless/ath/carl9170/main.c
--index 84bd38e..3cc99f3 100644
----- a/drivers/net/wireless/ath/carl9170/main.c
--+++ b/drivers/net/wireless/ath/carl9170/main.c
--@@ -380,6 +380,13 @@ static int carl9170_op_start(struct ieee80211_hw *hw)
-- 	if (err)
-- 		goto out;
-- 
--+	if (ar->fw.rx_filter) {
--+		err = carl9170_rx_filter(ar, CARL9170_RX_FILTER_OTHER_RA |
--+			CARL9170_RX_FILTER_CTL_OTHER | CARL9170_RX_FILTER_BAD);
--+		if (err)
--+			goto out;
--+	}
--+
-- 	err = carl9170_write_reg(ar, AR9170_MAC_REG_DMA_TRIGGER,
-- 				 AR9170_DMA_TRIGGER_RXQ);
-- 	if (err)
--@@ -840,8 +847,7 @@ static void carl9170_op_configure_filter(struct ieee80211_hw *hw,
-- 	struct ar9170 *ar = hw->priv;
-- 
-- 	/* mask supported flags */
---	*new_flags &= FIF_ALLMULTI | FIF_FCSFAIL | FIF_PLCPFAIL |
---		      FIF_OTHER_BSS | FIF_PROMISC_IN_BSS;
--+	*new_flags &= FIF_ALLMULTI | ar->rx_filter_caps;
-- 
-- 	if (!IS_ACCEPTING_CMD(ar))
-- 		return;
--@@ -867,6 +873,26 @@ static void carl9170_op_configure_filter(struct ieee80211_hw *hw,
-- 		WARN_ON(carl9170_set_operating_mode(ar));
-- 	}
-- 
--+	if (ar->fw.rx_filter && changed_flags & ar->rx_filter_caps) {
--+		u32 rx_filter = 0;
--+
--+		if (!(*new_flags & (FIF_FCSFAIL | FIF_PLCPFAIL)))
--+			rx_filter |= CARL9170_RX_FILTER_BAD;
--+
--+		if (!(*new_flags & FIF_CONTROL))
--+			rx_filter |= CARL9170_RX_FILTER_CTL_OTHER;
--+
--+		if (!(*new_flags & FIF_PSPOLL))
--+			rx_filter |= CARL9170_RX_FILTER_CTL_PSPOLL;
--+
--+		if (!(*new_flags & (FIF_OTHER_BSS | FIF_PROMISC_IN_BSS))) {
--+			rx_filter |= CARL9170_RX_FILTER_OTHER_RA;
--+			rx_filter |= CARL9170_RX_FILTER_DECRY_FAIL;
--+		}
--+
--+		WARN_ON(carl9170_rx_filter(ar, rx_filter));
--+	}
--+
-- 	mutex_unlock(&ar->mutex);
-- }
-- 
--diff --git a/drivers/net/wireless/ath/carl9170/phy.h b/drivers/net/wireless/ath/carl9170/phy.h
--index 53c18d3..02c34eb 100644
----- a/drivers/net/wireless/ath/carl9170/phy.h
--+++ b/drivers/net/wireless/ath/carl9170/phy.h
--@@ -423,8 +423,8 @@
-- #define		AR9170_PHY_CCK_DETECT_BB_ENABLE_ANT_FAST_DIV	0x2000
-- #define		AR9170_PHY_CCK_DETECT_BB_ENABLE_ANT_FAST_DIV_S	13
-- 
---#define	AR9170_PHY_REG_GAIN_2GHZ_CHAIN_2	(AR9170_PHY_REG_BASE + 0x2a0c)
-- #define	AR9170_PHY_REG_GAIN_2GHZ		(AR9170_PHY_REG_BASE + 0x0a0c)
--+#define	AR9170_PHY_REG_GAIN_2GHZ_CHAIN_2	(AR9170_PHY_REG_BASE + 0x2a0c)
-- #define		AR9170_PHY_GAIN_2GHZ_RXTX_MARGIN	0x00fc0000
-- #define		AR9170_PHY_GAIN_2GHZ_RXTX_MARGIN_S	18
-- #define		AR9170_PHY_GAIN_2GHZ_BSW_MARGIN		0x00003c00
--@@ -561,7 +561,4 @@
-- #define		AR9170_PHY_CH2_EXT_MINCCA_PWR		0xff800000
-- #define		AR9170_PHY_CH2_EXT_MINCCA_PWR_S		23
-- 
---#define	REDUCE_CHAIN_0 0x00000050
---#define	REDUCE_CHAIN_1 0x00000051
---
-- #endif	/* __CARL9170_SHARED_PHY_H */
--diff --git a/drivers/net/wireless/ath/carl9170/version.h b/drivers/net/wireless/ath/carl9170/version.h
--index 0e917f8..ff53f07 100644
----- a/drivers/net/wireless/ath/carl9170/version.h
--+++ b/drivers/net/wireless/ath/carl9170/version.h
--@@ -1,7 +1,7 @@
-- #ifndef __CARL9170_SHARED_VERSION_H
-- #define __CARL9170_SHARED_VERSION_H
-- #define CARL9170FW_VERSION_YEAR 10
---#define CARL9170FW_VERSION_MONTH 8
---#define CARL9170FW_VERSION_DAY 30
---#define CARL9170FW_VERSION_GIT "1.8.8.1"
--+#define CARL9170FW_VERSION_MONTH 9
--+#define CARL9170FW_VERSION_DAY 28
--+#define CARL9170FW_VERSION_GIT "1.8.8.3"
-- #endif /* __CARL9170_SHARED_VERSION_H */
---- 
--1.7.0.4
--
--- 
-1.7.0.4
+> I also notice my Trendnet AP is very un-happy with anything past around 30 STA
+> devices associated, and according to it's status page..NONE of my STAs are associated,
+> though things show up in /proc/net/wireless and I see auth/assoc messages in
+> /var/log/messages on my STA system, so the AP may just be funky.
 
+Well we are stress testing the hell out of the AP too!
+
+> On my system, most of the STAs are constantly trying to associate and being
+> rejected by the AP.
+> 
+> Here is updated script, creates 130 STAs and sleeps a bit between starting supplicants.
+> It assumes you have a single PHY device, and if you do, it will use it's name regardless
+> of how many times you reload the driver.
+> 
+> Please forgive the lameness in the MAC creation logic..though it does at least appear
+> to work :)
+
+I'm now using this patch to force pressure:
+
+diff --git a/drivers/net/wireless/ath/ath9k/recv.c b/drivers/net/wireless/ath/ath9k/recv.c
+index db677c4..2834c41 100644
+--- a/drivers/net/wireless/ath/ath9k/recv.c
++++ b/drivers/net/wireless/ath/ath9k/recv.c
+@@ -665,6 +665,13 @@ static void ath_rx_send_to_mac80211(struct ieee80211_hw *hw,
+ 				    struct ieee80211_rx_status *rxs)
+ {
+ 	struct ieee80211_hdr *hdr;
++	struct sk_buff *tmp_skb;
++	unsigned int i;
++
++	for (i=0; i < 5; i++) {
++		tmp_skb = skb_copy(skb, GFP_ATOMIC);
++		dev_kfree_skb_any(tmp_skb);
++	}
+ 
+ 	hdr = (struct ieee80211_hdr *)skb->data;
+ 
+
+And this script, slightly simplified mac address configuration.
+
+#!/usr/bin/perl
+
+use strict;
+
+my $iw = "/usr/sbin/iw";
+my $ip = "/sbin/ip";
+my $wpa_s = "/usr/local/sbin/wpa_supplicant";
+my $ssid = "tesla-2g-bcm";
+my $key = "stuff";
+
+my $phy = "phy0";
+my $max = 130;
+my $i;
+my $bmac = "00:01:02:03:04";
+my $cmd;
+
+# Create stations
+for ($i = 0; $i<$max; $i++) {
+	runCmd("$iw phy $phy interface add sta$i type station");
+	my $mc5 = sprintf("%02x", $i);
+	my $mac = "$bmac:$mc5";
+	runCmd("$ip link set sta$i address $mac");
+	runCmd("$iw dev sta$i set power_save off");
+}
+
+# Bring them up with WPA
+for ($i = 0; $i<$max; $i++) {
+	open(FD, ">sta$i" . "_wpa.conf") || die("Couldn't open file: $!\n");
+	print FD "
+ctrl_interface=/var/run/wpa_supplicant
+fast_reauth=1
+#can_scan_one=1
+network={
+   ssid=\"$ssid\"
+   proto=RSN
+   key_mgmt=WPA-PSK
+   psk=\"$key\"
+   pairwise=CCMP
+   group=CCMP
+}
+";
+	runCmd("$wpa_s -B -i sta$i -c sta$i" . "_wpa.conf -P sta$i" . "_wpa.pid -t ");
+	sleep(2);
+}
+
+
+sub runCmd {
+	my $cmd = shift;
+	print "$cmd\n";
+	`$cmd`;
+}
