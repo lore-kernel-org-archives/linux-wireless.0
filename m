@@ -1,72 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from liberdade2.minaslivre.org ([74.50.53.203]:41585 "EHLO
-	liberdade.minaslivre.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758043Ab0J1WBU (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 28 Oct 2010 18:01:20 -0400
-From: Thadeu Lima de Souza Cascardo <cascardo@holoscopio.com>
-To: linux-wireless@vger.kernel.org
-Cc: Thadeu Lima de Souza Cascardo <cascardo@holoscopio.com>,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	Rogerio Luz Coelho <rogluz.news@gmail.com>,
-	Herton Ronaldo Krzesinski <herton@mandriva.com.br>,
-	Hin-Tak Leung <hintak.leung@gmail.com>,
-	seno <senada@t-online.de>
-Subject: [PATCH] rtl8187b: do not do per packet TX AGC
-Date: Thu, 28 Oct 2010 20:01:00 -0200
-Message-Id: <1288303260-6149-1-git-send-email-cascardo@holoscopio.com>
-In-Reply-To: <20101028191305.2960c83b@gotham.conectiva>
-References: <20101028191305.2960c83b@gotham.conectiva>
+Received: from mx1.redhat.com ([209.132.183.28]:50027 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756306Ab0JOQmd (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 15 Oct 2010 12:42:33 -0400
+Date: Fri, 15 Oct 2010 18:44:48 +0200
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net
+Subject: Re: [PATCH 1/9] iwlagn: need longer tx queue stuck timer for coex
+ devices
+Message-ID: <20101015164447.GB4286@redhat.com>
+References: <1287079370-20587-1-git-send-email-wey-yi.w.guy@intel.com>
+ <1287079370-20587-2-git-send-email-wey-yi.w.guy@intel.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1287079370-20587-2-git-send-email-wey-yi.w.guy@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Clearing the per packet TX AGC for the RTL8187B device appears to
-increase its overall TX power. This allows the device to associate and a
-connection to be established using APs a little further away.
+Wey,
 
-This is in accordance to what is done for RTL8187L devices and also what
-Realtek drivers do.
+On Thu, Oct 14, 2010 at 11:02:42AM -0700, Wey-Yi Guy wrote:
+> For BT/WiFi combo devices, need longer tx stuck queue
+> timer, so those devices won't reload firmware too often.
 
-Tested-by: Thadeu Lima de Souza Cascardo <cascardo@holoscopio.com>
-Signed-off-by: Thadeu Lima de Souza Cascardo <cascardo@holoscopio.com>
-Cc: linux-wireless@vger.kernel.org
-Cc: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Rogerio Luz Coelho <rogluz.news@gmail.com>
-Cc: Herton Ronaldo Krzesinski <herton@mandriva.com.br>
-Cc: Hin-Tak Leung <hintak.leung@gmail.com>
-Cc: seno <senada@t-online.de>
----
- drivers/net/wireless/rtl818x/rtl8187_dev.c |   10 ++++++----
- 1 files changed, 6 insertions(+), 4 deletions(-)
+Seeing how many tweaking queue hung monitoring we need, I started
+to think that the watchdog design is not so good. Currently we compare 
+q->read_ptr with q->last_read_ptr, and if they match 3 times in a row
+during 200ms, we assume firmware hung. But maybe 200ms of no read_ptr
+activity is too small time for device. Moreover we have unlikely but
+possible situation when device is fully functional, but read_ptr will
+wrap by accident to q->last_read_ptr on every check.
 
-diff --git a/drivers/net/wireless/rtl818x/rtl8187_dev.c b/drivers/net/wireless/rtl818x/rtl8187_dev.c
-index 38fa824..6e26149 100644
---- a/drivers/net/wireless/rtl818x/rtl8187_dev.c
-+++ b/drivers/net/wireless/rtl818x/rtl8187_dev.c
-@@ -775,10 +775,6 @@ static int rtl8187b_init_hw(struct ieee80211_hw *dev)
- 	reg = rtl818x_ioread8(priv, &priv->map->CW_CONF);
- 	reg |= RTL818X_CW_CONF_PERPACKET_RETRY_SHIFT;
- 	rtl818x_iowrite8(priv, &priv->map->CW_CONF, reg);
--	reg = rtl818x_ioread8(priv, &priv->map->TX_AGC_CTL);
--	reg |= RTL818X_TX_AGC_CTL_PERPACKET_GAIN_SHIFT |
--	       RTL818X_TX_AGC_CTL_PERPACKET_ANTSEL_SHIFT;
--	rtl818x_iowrite8(priv, &priv->map->TX_AGC_CTL, reg);
- 
- 	rtl818x_iowrite16_idx(priv, (__le16 *)0xFFE0, 0x0FFF, 1);
- 
-@@ -929,6 +925,12 @@ static int rtl8187_start(struct ieee80211_hw *dev)
- 		priv->rx_conf = reg;
- 		rtl818x_iowrite32(priv, &priv->map->RX_CONF, reg);
- 
-+		reg = rtl818x_ioread8(priv, &priv->map->TX_AGC_CTL);
-+		reg &= ~RTL818X_TX_AGC_CTL_PERPACKET_GAIN_SHIFT;
-+		reg &= ~RTL818X_TX_AGC_CTL_PERPACKET_ANTSEL_SHIFT;
-+		reg &= ~RTL818X_TX_AGC_CTL_FEEDBACK_ANT;
-+		rtl818x_iowrite8(priv, &priv->map->TX_AGC_CTL, reg);
-+
- 		rtl818x_iowrite32(priv, &priv->map->TX_CONF,
- 				  RTL818X_TX_CONF_HW_SEQNUM |
- 				  RTL818X_TX_CONF_DISREQQSIZE |
--- 
-1.7.1
+I think, better solution would be something like in rt2x00 or in 
+net/sched/sch_generic.c (however rt2x00 is easier to understand). It is
+based on time stamp. When we get tx complete notification from hardware
+(and incise read_ptr) mark the time stamp. In watchdog, which tick
+periodically, check if queue is not empty and if current time is
+bigger than time_stamp + time_out, if it is - firmware hung. More
+smaller watchog tick give more precise hung detect (with disadvantage
+of more cpu usage).
 
+Stanislaw
