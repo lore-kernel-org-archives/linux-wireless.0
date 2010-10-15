@@ -1,98 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f46.google.com ([209.85.215.46]:44467 "EHLO
+Received: from mail-ew0-f46.google.com ([209.85.215.46]:34282 "EHLO
 	mail-ew0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753532Ab0JBMgn (ORCPT
+	with ESMTP id S1755497Ab0JOOvR (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 2 Oct 2010 08:36:43 -0400
-Received: by ewy23 with SMTP id 23so1487130ewy.19
-        for <linux-wireless@vger.kernel.org>; Sat, 02 Oct 2010 05:36:41 -0700 (PDT)
+	Fri, 15 Oct 2010 10:51:17 -0400
+Received: by ewy20 with SMTP id 20so974970ewy.19
+        for <linux-wireless@vger.kernel.org>; Fri, 15 Oct 2010 07:51:16 -0700 (PDT)
+Message-ID: <4CB86AD5.90205@lwfinger.net>
+Date: Fri, 15 Oct 2010 09:53:09 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-Date: Sat, 2 Oct 2010 13:36:41 +0100
-Message-ID: <AANLkTin5zuxUY9ySYKrT9qD6cgV7eb7UhCjDYFzTUTeU@mail.gmail.com>
-Subject: OLPC XO-1 rfkill driver design
-From: Daniel Drake <dsd@laptop.org>
-To: johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org,
-	Andres Salomon <dilinger@queued.net>
-Content-Type: text/plain; charset=ISO-8859-1
+To: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+CC: =?UTF-8?B?R8OhYm9yIFN0ZWZhbmlr?= <netrolller.3d@gmail.com>,
+	linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>,
+	b43-dev@lists.infradead.org
+Subject: Re: [PATCH 1/3] b43: N-PHY: define channel table struct for rev3+
+ devices
+References: <1287090064-14607-1-git-send-email-zajec5@gmail.com>	<AANLkTimnzeRa53g0i2ZkB4Qy_x_P3h4Z+ZwC2HdJPxFC@mail.gmail.com>	<AANLkTinnOm5rg8FKxFct1zKHZZi7k9nxEKtBYkLFktSS@mail.gmail.com>	<AANLkTim==y20jOa6SpvZogZ+0inFGvmpnN-nTKFZp2Xz@mail.gmail.com> <AANLkTimvMCRVLzNjM+vsVEyHHAV0fLF4ABeV_20CdOCa@mail.gmail.com>
+In-Reply-To: <AANLkTimvMCRVLzNjM+vsVEyHHAV0fLF4ABeV_20CdOCa@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+On 10/15/2010 09:27 AM, Rafał Miłecki wrote:
+> 
+> There is "Chapter 12: Macros, Enums and RTL" in:
+> http://www.kernel.org/doc/Documentation/CodingStyle
+> 
+> Some quotes:
+> 1) "Macros with multiple statements should be enclosed in a do - while block:"
+> 2) "macros defining constants using expressions must enclose the
+> expression in parentheses"
+> 
+> Second one may sound like sth close, but it's just about expressions like:
+> #define CONSTEXP (CONSTANT | 3)
+> 
+> So there doesn't seem to be any "rule" in CodingStyle wanting us to
+> add parentheses when you suggested.
 
-I will be working on getting an OLPC XO-1 rfkill driver upstream and
-am looking for input on the basic design of the driver.
+I think that scripts/checkpatch would report any definitions that need parentheses.
 
-The XO-specific embedded controller provides a command which cuts
-power to the wlan chip (a Marvell USB8388 that is powered by the
-libertas driver), causing it to fall off the USB bus entirely, and
-another command to turn it on again.
+As you have probably figured out, I'm back home. If you have spec questions ;),
+I'm ready.
 
-The embedded controller is obviously not hotpluggable and there can
-only ever be 1 in a system.
-
-The actual rfkilling is dead simple:
-
-static int olpc_rfkill_set_block(void *data, bool blocked)
-{
-	unsigned char cmd;
-
-	if (blocked)
-		cmd = EC_WLAN_ENTER_RESET;
-	else
-		cmd = EC_WLAN_LEAVE_RESET;
-
-	return olpc_ec_cmd(cmd, NULL, 0, NULL, 0);
-}
-
-olpc_ec_cmd() is provided by already-upstream arch/x86/kernel/olpc.c
-
-My question is: what should the basic form of the rfkill driver be?
-I have three possible designs in mind:
-
-A)
-A module where the module_init logic is as follows:
- 1. Check that we're running on OLPC XO-1 (using the functions
-provided by CONFIG_OLPC olpc.c)
- 2. Call rfkill_alloc()
-
-or
-
-B)
-A module where module_init registers a platform driver
-arch/x86/kernel/olpc.c  calls platform_device_register() and
-platform_add_devices() on XO-1
-This causes probe to be called within the rfkill driver which calls
-rfkill_alloc()
-
-or
-
-(C)
-A module where module_init registers a platform driver, checks that
-we're running on OLPC XO-1, then calls platform_device_register() and
-platform_add_devices()
-This causes probe to be called which calls rfkill_alloc()
-
-
-(B) seems to follow closest what is described in
-Documentation/driver-model/platform.txt, but (I think) it has the
-disadvantage that it can't become a modular driver, since
-arch/x86/kernel/olpc.c would always attempt to probe the platform
-device early during boot, and the module wouldn't be available to be
-loaded til later.
-
-(C) doesn't have the same problem, but goes against the platform.txt
-documentation which says that the platform setup code should be the
-thing that registers the presence device
-
-(A) is really simple
-
-
-My instinct is to go for (A), but I can't find any other drivers that
-follow the same structure -- even though they could do. Perhaps
-there's a reason that I'm missing...
-
-Thoughts?
-
-cheers,
-Daniel
+Larry
