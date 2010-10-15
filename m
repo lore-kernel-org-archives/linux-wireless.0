@@ -1,97 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f46.google.com ([209.85.214.46]:41264 "EHLO
-	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757026Ab0JHU1M (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 8 Oct 2010 16:27:12 -0400
-Received: by bwz15 with SMTP id 15so562989bwz.19
-        for <linux-wireless@vger.kernel.org>; Fri, 08 Oct 2010 13:27:11 -0700 (PDT)
-To: linux-wireless@vger.kernel.org
-Subject: [PATCH v2] mac80211: fix possible null-pointer de-reference
-Cc: Luis Carlos Cobo <luisca@cozybit.com>,
-	Javier Cardona <javier@cozybit.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	"John W. Linville" <linville@tuxdriver.com>
-From: Christian Lamparter <chunkeey@googlemail.com>
-Date: Fri, 8 Oct 2010 22:27:07 +0200
+Received: from mail.atheros.com ([12.19.149.2]:15877 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756166Ab0JOU15 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 15 Oct 2010 16:27:57 -0400
+Received: from mail.atheros.com ([10.10.20.108])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Fri, 15 Oct 2010 13:27:47 -0700
+Date: Fri, 15 Oct 2010 13:27:49 -0700
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+CC: linux-wireless <linux-wireless@vger.kernel.org>
+Subject: [PATCH] ath9k: fix sparse complaint on aphy for debugfs
+Message-ID: <20101015202749.GM30740@tux>
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Message-Id: <201010082227.07800.chunkeey@googlemail.com>
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch not only fixes a null-pointer de-reference
-that would be triggered by a PLINK_OPEN frame with mis-
-matching/incompatible mesh configuration, but also
-responds correctly to non-compatible PLINK_OPEN frames
-by generating a PLINK_CLOSE with the right reason code.
+This fixes this sparse complaint:
 
-The original bug was detected by smatch.
-( http://repo.or.cz/w/smatch.git )
+  CHECK   drivers/net/wireless/ath/ath9k/debug.c
+drivers/net/wireless/ath/ath9k/debug.c:548:34: warning: symbol 'aphy' shadows an earlier one
+drivers/net/wireless/ath/ath9k/debug.c:491:26: originally declared here
 
-net/mac80211/mesh_plink.c +574 mesh_rx_plink_frame(168)
-error: we previously assumed 'sta' could be null.
-
-Cc: <stable@kernel.org>
-Reviewed-and-Tested-by: Steve deRosier <steve@cozybit.com>
-Reviewed-and-Tested-by: Javier Cardona <javier@cozybit.com>
-Acked-by: Johannes Berg <johannes@sipsolutions.net>
-Signed-off-by: Christian Lamparter <chunkeey@googlemail.com>
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
 ---
-diff --git a/net/mac80211/mesh_plink.c b/net/mac80211/mesh_plink.c
-index ea13a80..8b7efee 100644
---- a/net/mac80211/mesh_plink.c
-+++ b/net/mac80211/mesh_plink.c
-@@ -412,7 +412,7 @@ void mesh_rx_plink_frame(struct ieee80211_sub_if_data *sdata, struct ieee80211_m
- 	enum plink_event event;
- 	enum plink_frame_type ftype;
- 	size_t baselen;
--	bool deactivated;
-+	bool deactivated, matches_local = true;
- 	u8 ie_len;
- 	u8 *baseaddr;
- 	__le16 plid, llid, reason;
-@@ -487,6 +487,7 @@ void mesh_rx_plink_frame(struct ieee80211_sub_if_data *sdata, struct ieee80211_m
- 	/* Now we will figure out the appropriate event... */
- 	event = PLINK_UNDEFINED;
- 	if (ftype != PLINK_CLOSE && (!mesh_matches_local(&elems, sdata))) {
-+		matches_local = false;
- 		switch (ftype) {
- 		case PLINK_OPEN:
- 			event = OPN_RJCT;
-@@ -498,7 +499,15 @@ void mesh_rx_plink_frame(struct ieee80211_sub_if_data *sdata, struct ieee80211_m
- 			/* avoid warning */
- 			break;
- 		}
--		spin_lock_bh(&sta->lock);
-+	}
-+
-+	if (!sta && !matches_local) {
-+		rcu_read_unlock();
-+		reason = cpu_to_le16(MESH_CAPABILITY_POLICY_VIOLATION);
-+		llid = 0;
-+		mesh_plink_frame_tx(sdata, PLINK_CLOSE, mgmt->sa, llid,
-+				    plid, reason);
-+		return;
- 	} else if (!sta) {
- 		/* ftype == PLINK_OPEN */
- 		u32 rates;
-@@ -522,7 +531,7 @@ void mesh_rx_plink_frame(struct ieee80211_sub_if_data *sdata, struct ieee80211_m
- 		}
- 		event = OPN_ACPT;
- 		spin_lock_bh(&sta->lock);
--	} else {
-+	} else if (matches_local) {
- 		spin_lock_bh(&sta->lock);
- 		switch (ftype) {
- 		case PLINK_OPEN:
-@@ -564,6 +573,8 @@ void mesh_rx_plink_frame(struct ieee80211_sub_if_data *sdata, struct ieee80211_m
- 			rcu_read_unlock();
- 			return;
- 		}
-+	} else {
-+		spin_lock_bh(&sta->lock);
- 	}
+ drivers/net/wireless/ath/ath9k/debug.c |   12 ++++++------
+ 1 files changed, 6 insertions(+), 6 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath9k/debug.c b/drivers/net/wireless/ath/ath9k/debug.c
+index 74a4570..778d06b 100644
+--- a/drivers/net/wireless/ath/ath9k/debug.c
++++ b/drivers/net/wireless/ath/ath9k/debug.c
+@@ -545,16 +545,16 @@ static ssize_t read_file_wiphy(struct file *file, char __user *user_buf,
  
- 	mpl_dbg("Mesh plink (peer, state, llid, plid, event): %pM %s %d %d %d\n",
+ 	/* Put variable-length stuff down here, and check for overflows. */
+ 	for (i = 0; i < sc->num_sec_wiphy; i++) {
+-		struct ath_wiphy *aphy = sc->sec_wiphy[i];
+-		if (aphy == NULL)
++		struct ath_wiphy *aphy_tmp = sc->sec_wiphy[i];
++		if (aphy_tmp == NULL)
+ 			continue;
+-		chan = aphy->hw->conf.channel;
++		chan = aphy_tmp->hw->conf.channel;
+ 		len += snprintf(buf + len, sizeof(buf) - len,
+ 			"secondary: %s (%s chan=%d ht=%d)\n",
+-			wiphy_name(aphy->hw->wiphy),
+-			ath_wiphy_state_str(aphy->state),
++			wiphy_name(aphy_tmp->hw->wiphy),
++			ath_wiphy_state_str(aphy_tmp->state),
+ 			ieee80211_frequency_to_channel(chan->center_freq),
+-			aphy->chan_is_ht);
++						       aphy_tmp->chan_is_ht);
+ 	}
+ 	if (len > sizeof(buf))
+ 		len = sizeof(buf);
+-- 
+1.7.0.4
+
