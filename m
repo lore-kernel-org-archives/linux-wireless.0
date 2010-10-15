@@ -1,52 +1,88 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f46.google.com ([209.85.214.46]:43534 "EHLO
-	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751757Ab0JLWKu (ORCPT
+Received: from mail-ew0-f46.google.com ([209.85.215.46]:41366 "EHLO
+	mail-ew0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754384Ab0JOK6T (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 12 Oct 2010 18:10:50 -0400
-Received: by mail-bw0-f46.google.com with SMTP id 15so2776714bwz.19
-        for <linux-wireless@vger.kernel.org>; Tue, 12 Oct 2010 15:10:49 -0700 (PDT)
-From: mike.rapoport@gmail.com
-To: Greg Kroah-Hartman <gregkh@suse.de>
-Cc: Brett Rudley <brudley@broadcom.com>,
-	Henry Ptasinski <henryp@broadcom.com>,
-	Nohee Ko <noheek@broadcom.com>, linux-wireless@vger.kernel.org,
-	Mike Rapoport <mike.rapoport@gmail.com>
-Subject: [PATCH 7/7] staging: brcm80211: remove unrefrenced malloced field
-Date: Wed, 13 Oct 2010 00:09:13 +0200
-Message-Id: <e72c12b598351305a816ee08eeea2dbb3c731f1e.1286920620.git.mike.rapoport@gmail.com>
-In-Reply-To: <cover.1286920620.git.mike.rapoport@gmail.com>
-References: <cover.1286920620.git.mike.rapoport@gmail.com>
+	Fri, 15 Oct 2010 06:58:19 -0400
+Received: by ewy20 with SMTP id 20so640747ewy.19
+        for <linux-wireless@vger.kernel.org>; Fri, 15 Oct 2010 03:58:17 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <AANLkTimnzeRa53g0i2ZkB4Qy_x_P3h4Z+ZwC2HdJPxFC@mail.gmail.com>
+References: <1287090064-14607-1-git-send-email-zajec5@gmail.com>
+	<AANLkTimnzeRa53g0i2ZkB4Qy_x_P3h4Z+ZwC2HdJPxFC@mail.gmail.com>
+Date: Fri, 15 Oct 2010 12:58:17 +0200
+Message-ID: <AANLkTinnOm5rg8FKxFct1zKHZZi7k9nxEKtBYkLFktSS@mail.gmail.com>
+Subject: Re: [PATCH 1/3] b43: N-PHY: define channel table struct for rev3+ devices
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+To: =?UTF-8?Q?G=C3=A1bor_Stefanik?= <netrolller.3d@gmail.com>
+Cc: linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>,
+	b43-dev@lists.infradead.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-from 'struct osl_info' structure
-
-Signed-off-by: Mike Rapoport <mike.rapoport@gmail.com>
----
- drivers/staging/brcm80211/util/linux_osl.c |    2 --
- 1 files changed, 0 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/staging/brcm80211/util/linux_osl.c b/drivers/staging/brcm80211/util/linux_osl.c
-index 876d72f..d86afba 100644
---- a/drivers/staging/brcm80211/util/linux_osl.c
-+++ b/drivers/staging/brcm80211/util/linux_osl.c
-@@ -37,7 +37,6 @@ struct osl_info {
- 	osl_pubinfo_t pub;
- 	uint magic;
- 	void *pdev;
--	uint malloced;
- 	uint failed;
- 	uint bustype;
- };
-@@ -128,7 +127,6 @@ osl_t *osl_attach(void *pdev, uint bustype, bool pkttag)
- #endif /* BRCM_FULLMAC */
- 
- 	osh->magic = OS_HANDLE_MAGIC;
--	osh->malloced = 0;
- 	osh->failed = 0;
- 	osh->pdev = pdev;
- 	osh->pub.pkttag = pkttag;
--- 
-1.6.4.4
-
+VyBkbml1IDE1IHBhxbpkemllcm5pa2EgMjAxMCAwMDozOSB1xbx5dGtvd25payBHw6Fib3IgU3Rl
+ZmFuaWsKPG5ldHJvbGxsZXIuM2RAZ21haWwuY29tPiBuYXBpc2HFgjoKPiAyMDEwLzEwLzE0IFJh
+ZmHFgiBNacWCZWNraSA8emFqZWM1QGdtYWlsLmNvbT46Cj4+IFNpZ25lZC1vZmYtYnk6IFJhZmHF
+giBNacWCZWNraSA8emFqZWM1QGdtYWlsLmNvbT4KPj4gLS0tCj4+IMKgZHJpdmVycy9uZXQvd2ly
+ZWxlc3MvYjQzL3JhZGlvXzIwNTYuYyB8IMKgIDUxICsrKysrKysrKysrKysrKysrKysrKysrKysr
+KysrKysrKwo+PiDCoGRyaXZlcnMvbmV0L3dpcmVsZXNzL2I0My9yYWRpb18yMDU2LmggfCDCoCA0
+MCArKysrKysrKysrKysrKysrKysrKysrKystLQo+PiDCoDIgZmlsZXMgY2hhbmdlZCwgODggaW5z
+ZXJ0aW9ucygrKSwgMyBkZWxldGlvbnMoLSkKPj4KPj4gZGlmZiAtLWdpdCBhL2RyaXZlcnMvbmV0
+L3dpcmVsZXNzL2I0My9yYWRpb18yMDU2LmMgYi9kcml2ZXJzL25ldC93aXJlbGVzcy9iNDMvcmFk
+aW9fMjA1Ni5jCj4+IGluZGV4IGQ4NTYzMTkuLmY3MTBjMDEgMTAwNjQ0Cj4+IC0tLSBhL2RyaXZl
+cnMvbmV0L3dpcmVsZXNzL2I0My9yYWRpb18yMDU2LmMKPj4gKysrIGIvZHJpdmVycy9uZXQvd2ly
+ZWxlc3MvYjQzL3JhZGlvXzIwNTYuYwo+PiBAQCAtMjQsOSArMjQsNjAgQEAKPj4gwqAjaW5jbHVk
+ZSAicmFkaW9fMjA1Ni5oIgo+PiDCoCNpbmNsdWRlICJwaHlfY29tbW9uLmgiCj4+Cj4+ICsjZGVm
+aW5lIFJBRElPUkVHUzMocjAwLCByMDEsIHIwMiwgcjAzLCByMDQsIHIwNSwgcjA2LCByMDcsIHIw
+OCwgcjA5LCBcCj4+ICsgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqByMTAsIHIxMSwgcjEyLCBy
+MTMsIHIxNCwgcjE1LCByMTYsIHIxNywgcjE4LCByMTksIFwKPj4gKyDCoCDCoCDCoCDCoCDCoCDC
+oCDCoCDCoCDCoHIyMCwgcjIxLCByMjIsIHIyMywgcjI0LCByMjUsIHIyNiwgcjI3LCByMjgsIHIy
+OSwgXAo+PiArIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgcjMwLCByMzEsIHIzMiwgcjMzLCBy
+MzQsIHIzNSwgcjM2KSBcCj4+ICsgwqAgwqAgwqAgLnJhZGlvX3N5bl9wbGxfdmNvY2FsMSDCoCDC
+oCDCoCDCoCDCoD0gcjAwLCDCoFwKPj4gKyDCoCDCoCDCoCAucmFkaW9fc3luX3BsbF92Y29jYWwy
+IMKgIMKgIMKgIMKgIMKgPSByMDEsIMKgXAo+PiArIMKgIMKgIMKgIC5yYWRpb19zeW5fcGxsX3Jl
+ZmRpdiDCoCDCoCDCoCDCoCDCoCA9IHIwMiwgwqBcCj4+ICsgwqAgwqAgwqAgLnJhZGlvX3N5bl9w
+bGxfbW1kMiDCoCDCoCDCoCDCoCDCoCDCoCA9IHIwMywgwqBcCj4+ICsgwqAgwqAgwqAgLnJhZGlv
+X3N5bl9wbGxfbW1kMSDCoCDCoCDCoCDCoCDCoCDCoCA9IHIwNCwgwqBcCj4+ICsgwqAgwqAgwqAg
+LnJhZGlvX3N5bl9wbGxfbG9vcGZpbHRlcjEgwqAgwqAgwqA9IHIwNSwgwqBcCj4+ICsgwqAgwqAg
+wqAgLnJhZGlvX3N5bl9wbGxfbG9vcGZpbHRlcjIgwqAgwqAgwqA9IHIwNiwgwqBcCj4+ICsgwqAg
+wqAgwqAgLnJhZGlvX3N5bl9wbGxfbG9vcGZpbHRlcjMgwqAgwqAgwqA9IHIwNywgwqBcCj4+ICsg
+wqAgwqAgwqAgLnJhZGlvX3N5bl9wbGxfbG9vcGZpbHRlcjQgwqAgwqAgwqA9IHIwOCwgwqBcCj4+
+ICsgwqAgwqAgwqAgLnJhZGlvX3N5bl9wbGxfbG9vcGZpbHRlcjUgwqAgwqAgwqA9IHIwOSwgwqBc
+Cj4+ICsgwqAgwqAgwqAgLnJhZGlvX3N5bl9yZXNlcnZlZF9hZGRyMjcgwqAgwqAgwqA9IHIxMCwg
+wqBcCj4+ICsgwqAgwqAgwqAgLnJhZGlvX3N5bl9yZXNlcnZlZF9hZGRyMjggwqAgwqAgwqA9IHIx
+MSwgwqBcCj4+ICsgwqAgwqAgwqAgLnJhZGlvX3N5bl9yZXNlcnZlZF9hZGRyMjkgwqAgwqAgwqA9
+IHIxMiwgwqBcCj4+ICsgwqAgwqAgwqAgLnJhZGlvX3N5bl9sb2dlbl92Y29idWYxIMKgIMKgIMKg
+IMKgPSByMTMsIMKgXAo+PiArIMKgIMKgIMKgIC5yYWRpb19zeW5fbG9nZW5fbWl4ZXIyIMKgIMKg
+IMKgIMKgID0gcjE0LCDCoFwKPj4gKyDCoCDCoCDCoCAucmFkaW9fc3luX2xvZ2VuX2J1ZjMgwqAg
+wqAgwqAgwqAgwqAgPSByMTUsIMKgXAo+PiArIMKgIMKgIMKgIC5yYWRpb19zeW5fbG9nZW5fYnVm
+NCDCoCDCoCDCoCDCoCDCoCA9IHIxNiwgwqBcCj4+ICsgwqAgwqAgwqAgLnJhZGlvX3J4MF9sbmFh
+X3R1bmUgwqAgwqAgwqAgwqAgwqAgwqA9IHIxNywgwqBcCj4+ICsgwqAgwqAgwqAgLnJhZGlvX3J4
+MF9sbmFnX3R1bmUgwqAgwqAgwqAgwqAgwqAgwqA9IHIxOCwgwqBcCj4+ICsgwqAgwqAgwqAgLnJh
+ZGlvX3R4MF9pbnRwYWFfYm9vc3RfdHVuZSDCoCDCoD0gcjE5LCDCoFwKPj4gKyDCoCDCoCDCoCAu
+cmFkaW9fdHgwX2ludHBhZ19ib29zdF90dW5lIMKgIMKgPSByMjAsIMKgXAo+PiArIMKgIMKgIMKg
+IC5yYWRpb190eDBfcGFkYV9ib29zdF90dW5lIMKgIMKgIMKgPSByMjEsIMKgXAo+PiArIMKgIMKg
+IMKgIC5yYWRpb190eDBfcGFkZ19ib29zdF90dW5lIMKgIMKgIMKgPSByMjIsIMKgXAo+PiArIMKg
+IMKgIMKgIC5yYWRpb190eDBfcGdhYV9ib29zdF90dW5lIMKgIMKgIMKgPSByMjMsIMKgXAo+PiAr
+IMKgIMKgIMKgIC5yYWRpb190eDBfcGdhZ19ib29zdF90dW5lIMKgIMKgIMKgPSByMjQsIMKgXAo+
+PiArIMKgIMKgIMKgIC5yYWRpb190eDBfbWl4YV9ib29zdF90dW5lIMKgIMKgIMKgPSByMjUsIMKg
+XAo+PiArIMKgIMKgIMKgIC5yYWRpb190eDBfbWl4Z19ib29zdF90dW5lIMKgIMKgIMKgPSByMjYs
+IMKgXAo+PiArIMKgIMKgIMKgIC5yYWRpb19yeDFfbG5hYV90dW5lIMKgIMKgIMKgIMKgIMKgIMKg
+PSByMjcsIMKgXAo+PiArIMKgIMKgIMKgIC5yYWRpb19yeDFfbG5hZ190dW5lIMKgIMKgIMKgIMKg
+IMKgIMKgPSByMjgsIMKgXAo+PiArIMKgIMKgIMKgIC5yYWRpb190eDFfaW50cGFhX2Jvb3N0X3R1
+bmUgwqAgwqA9IHIyOSwgwqBcCj4+ICsgwqAgwqAgwqAgLnJhZGlvX3R4MV9pbnRwYWdfYm9vc3Rf
+dHVuZSDCoCDCoD0gcjMwLCDCoFwKPj4gKyDCoCDCoCDCoCAucmFkaW9fdHgxX3BhZGFfYm9vc3Rf
+dHVuZSDCoCDCoCDCoD0gcjMxLCDCoFwKPj4gKyDCoCDCoCDCoCAucmFkaW9fdHgxX3BhZGdfYm9v
+c3RfdHVuZSDCoCDCoCDCoD0gcjMyLCDCoFwKPj4gKyDCoCDCoCDCoCAucmFkaW9fdHgxX3BnYWFf
+Ym9vc3RfdHVuZSDCoCDCoCDCoD0gcjMzLCDCoFwKPj4gKyDCoCDCoCDCoCAucmFkaW9fdHgxX3Bn
+YWdfYm9vc3RfdHVuZSDCoCDCoCDCoD0gcjM0LCDCoFwKPj4gKyDCoCDCoCDCoCAucmFkaW9fdHgx
+X21peGFfYm9vc3RfdHVuZSDCoCDCoCDCoD0gcjM1LCDCoFwKPj4gKyDCoCDCoCDCoCAucmFkaW9f
+dHgxX21peGdfYm9vc3RfdHVuZSDCoCDCoCDCoD0gcjM2Cj4KPiBZb3UgbWlnaHQgd2FudCB0byB1
+c2UgcGFyZW50aGVzZXMgYXJvdW5kIHBhcmFtZXRlciBuYW1lczogZS5nLjoKPiAucmFkaW9fdHgx
+X21peGFfYm9vc3RfdHVuZSA9IChyMzUpLCBcCgpXZSB1c2UgdGhpcyBtYWNybyBvbmx5IGZvciBk
+ZWZpbmluZyByYWRpbyB0YWJsZXMsIG9ubHkgaW4gdGhpcyBmaWxlLgpQbHVzIHdlIGRvbid0IHVz
+ZSBhbnkgbWF0aCBvciBzdGggYXMgeW91IGNhbiBzZWUgaW4gbmV4dCBwYXRjaCAoMy8zKS4KVGhh
+dCB3YXkgaXQgd2lsbCBub3QgaGl0IHJhbmRvbSBkZXZlbG9wZXIgdXNpbmcgdGhpcyBtYWNybyBp
+biBvdGhlcgpwbGFjZSBvZiBjb2RlLgoKLS0gClJhZmHFggo=
