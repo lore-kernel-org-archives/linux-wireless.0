@@ -1,74 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ey0-f174.google.com ([209.85.215.174]:44882 "EHLO
-	mail-ey0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753175Ab0JVFaS convert rfc822-to-8bit (ORCPT
+Received: from mail-bw0-f46.google.com ([209.85.214.46]:60744 "EHLO
+	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752663Ab0JPDrQ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 22 Oct 2010 01:30:18 -0400
-Received: by eye27 with SMTP id 27so491849eye.19
-        for <linux-wireless@vger.kernel.org>; Thu, 21 Oct 2010 22:30:16 -0700 (PDT)
+	Fri, 15 Oct 2010 23:47:16 -0400
+Received: by bwz15 with SMTP id 15so1430365bwz.19
+        for <linux-wireless@vger.kernel.org>; Fri, 15 Oct 2010 20:47:15 -0700 (PDT)
+From: Christian Lamparter <chunkeey@googlemail.com>
+To: Blaise Gassend <blaise@willowgarage.com>
+Subject: Re: General protection fault in ieee80211_stop_tx_ba_sessions
+Date: Sat, 16 Oct 2010 00:37:06 +0200
+Cc: linux-wireless@vger.kernel.org
+References: <AANLkTimqNvJ=93NA_s_p3Ype9pYey2+YS0zO0r9TZKd=@mail.gmail.com>
+In-Reply-To: <AANLkTimqNvJ=93NA_s_p3Ype9pYey2+YS0zO0r9TZKd=@mail.gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <AANLkTik83ddeZtR-joexNSq2P_QW+V+TBTUq0AHpxLoj@mail.gmail.com>
-References: <AANLkTik83ddeZtR-joexNSq2P_QW+V+TBTUq0AHpxLoj@mail.gmail.com>
-Date: Thu, 21 Oct 2010 22:30:16 -0700
-Message-ID: <AANLkTi=da3fZE=1RepeGZTOAA1GiWE8j8rQxnNFUo4r1@mail.gmail.com>
-Subject: Re: Compat wireless breaks on kernels prior to 2.6.34 with the RT
- PREEMPT patch
-From: Blaise Gassend <blaise@willowgarage.com>
-To: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Message-Id: <201010160037.06949.chunkeey@googlemail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Replacing #ifdef XXX with the following might work:
-#if defined(CONFIG_NONE) || defined(CONFIG_PREEMPT_RT) ||
-defined(CONFIG_PREEMPT_VOLUNTARY) || defined(CONFIG_PREEMPT_DESKTOP)
+On Saturday 16 October 2010 00:20:19 Blaise Gassend wrote:
+> I have been getting a general protection fault in
+> ieee80211_stop_tx_ba_sessions. This mostly seems to happen within a
+> few tens of seconds of bringing the interface up.
+> 
+> I am pasting a backtrace and system information below below. What
+> other information would be useful to help track this down?
+>
+> Kernel:
+> Linux version 2.6.32-24-generic (buildd@crested) (gcc version 4.4.3
+> (Ubuntu 4.4.3-4ubuntu5) ) #42-Ubuntu SMP Fri Aug 20 14:21:58 UTC 2010
+> 
+> Wireless:
+> compat-wireless-2010-10-04
+please update, because it looks like your problem could be fixed by:
+"mac80211: delete AddBA response timer" (2010-10-05)
+http://www.spinics.net/lists/linux-wireless/msg56886.html
 
-On Thu, Oct 21, 2010 at 8:13 PM, Blaise Gassend <blaise@willowgarage.com> wrote:
-> Hi,
->
-> Compat wireless seems to not work with the RT PREEMPT patch for
-> kernels prior to 2.6.34 because struct device does not contain sem. I
-> would love to submit a patch like the one below, but I do not know how
-> to detect that the RT PREEMPT patch has been applied. Does anybody
-> happen to know?
->
-> Thanks,
-> Blaise
->
-> --- compat-wireless-2010-10-09/include/linux/compat-2.6.34.h
-> 2010-10-21 19:26:34.172694358 -0700
-> +++ compat-wireless-2010-10-09-original/include/linux/compat-2.6.34.h
->  2010-10-21 19:23:10.494696161 -0700
-> @@ -139,32 +139,20 @@
->  #endif
->  /* source: include/linux/netdevice.h */
->
->  static inline void device_lock(struct device *dev)
->  {
-> -#ifdef XXX
-> -        mutex_lock(&dev->parent->mutex);
-> -#else
->        down(&dev->sem);
-> -#endif
->  }
->
->  static inline int device_trylock(struct device *dev)
->  {
-> -#ifdef XXX
-> -        return mutex_trylock(&dev->mutex);
-> -#else
->        return down_trylock(&dev->sem);
-> -#endif
->  }
->
->  static inline void device_unlock(struct device *dev)
->  {
-> -#ifdef XXX
-> -        mutex_unlock(&dev->mutex);
-> -#else
->        up(&dev->sem);
-> -#endif
->  }
->
->  #if defined(CONFIG_PCMCIA) || defined(CONFIG_PCMCIA_MODULE)
->
+> Backtrace (Keeps spewing for a really long time, I can provide more if
+> necessary):
+> general protection fault: 0000 [#1] SMP
+> RIP: 0010:[<xyz>]  [<xyz>] ieee80211_stop_tx_ba_session+0x35/0xd0 [mac80211]
+> Process swapper (pid: 0, threadinfo ffff88013392e000,
+> Call Trace:
+>  <IRQ>
+>  [<81019e69>] ? sched_clock+0x9/0x10
+>  [<a0120a40>] ? sta_addba_resp_timer_expired+0x0/0x50 [mac80211] <<<
+>  [<a0120a87>] ? sta_addba_resp_timer_expired+0x47/0x50 [mac80211]
+>  [<8107776b>] ? run_timer_softirq+0x19b/0x340
+>  [<812b92bd>] ? rb_insert_color+0x9d/0x160
+>  [<8108f723>] ? ktime_get+0x63/0xe0
