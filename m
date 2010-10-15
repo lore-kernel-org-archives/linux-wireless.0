@@ -1,47 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 80-190-117-144.ip-home.de ([80.190.117.144]:38263 "EHLO
-	bu3sch.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752628Ab0J1PL1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 28 Oct 2010 11:11:27 -0400
-Subject: Re: b43 sdio: WARNING: at drivers/mmc/core/core.c:237
- mmc_wait_for_cmd
-From: Michael =?ISO-8859-1?Q?B=FCsch?= <mb@bu3sch.de>
-To: Arnd Hannemann <arnd@arndnet.de>
-Cc: Larry Finger <Larry.Finger@lwfinger.net>,
-	"linux-mmc@vger.kernel.org" <linux-mmc@vger.kernel.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <4CC99206.5090105@arndnet.de> (sfid-20101028_170910_533098_04D99458)
-References: <4CC874F4.5050908@arndnet.de> <4CC8CAAE.3040100@lwfinger.net>
-	 <4CC98892.7080000@arndnet.de> <4CC98D85.20703@lwfinger.net>
-	 <4CC99206.5090105@arndnet.de> (sfid-20101028_170910_533098_04D99458)
-Content-Type: text/plain; charset="UTF-8"
-Date: Thu, 28 Oct 2010 17:11:18 +0200
-Message-ID: <1288278678.29188.71.camel@maggie>
-Mime-Version: 1.0
+Received: from nbd.name ([88.198.39.176]:38719 "EHLO ds10.nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932271Ab0JOSDj (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 15 Oct 2010 14:03:39 -0400
+From: Felix Fietkau <nbd@openwrt.org>
+To: linux-wireless@vger.kernel.org
+Cc: linville@tuxdriver.com, lrodriguez@atheros.com
+Subject: [PATCH 5/6] ath9k: remove a redundant call to ath9k_hw_gettsf32
+Date: Fri, 15 Oct 2010 20:03:32 +0200
+Message-Id: <1287165813-94331-5-git-send-email-nbd@openwrt.org>
+In-Reply-To: <1287165813-94331-4-git-send-email-nbd@openwrt.org>
+References: <1287165813-94331-1-git-send-email-nbd@openwrt.org>
+ <1287165813-94331-2-git-send-email-nbd@openwrt.org>
+ <1287165813-94331-3-git-send-email-nbd@openwrt.org>
+ <1287165813-94331-4-git-send-email-nbd@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2010-10-28 at 17:08 +0200, Arnd Hannemann wrote: 
-> > Index: wireless-testing/drivers/net/wireless/b43/sdio.c
-> > ===================================================================
-> > --- wireless-testing.orig/drivers/net/wireless/b43/sdio.c
-> > +++ wireless-testing/drivers/net/wireless/b43/sdio.c
-> > @@ -175,7 +175,9 @@ static void b43_sdio_remove(struct sdio_
-> >  	struct b43_sdio *sdio = sdio_get_drvdata(func);
-> > 
-> >  	ssb_bus_unregister(&sdio->ssb);
-> > +	sdio_claim_host(func);
-> >  	sdio_disable_func(func);
-> > +	sdio_release_host(func);
-> >  	kfree(sdio);
-> >  	sdio_set_drvdata(func, NULL);
-> >  }
-> > 
-> 
-> Thanks, that fixes the warning.
+When the timer_next argument to ath9k_gen_timer_start is behind the tsf value,
+tsf + timer_period is used, which is what ath_btcoex_period_timer was setting
+it to.
 
-I'm OK with that patch.
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+---
+ drivers/net/wireless/ath/ath9k/gpio.c |    6 ++----
+ 1 files changed, 2 insertions(+), 4 deletions(-)
 
+diff --git a/drivers/net/wireless/ath/ath9k/gpio.c b/drivers/net/wireless/ath/ath9k/gpio.c
+index db9c6fe..6a1a482 100644
+--- a/drivers/net/wireless/ath/ath9k/gpio.c
++++ b/drivers/net/wireless/ath/ath9k/gpio.c
+@@ -310,10 +310,8 @@ static void ath_btcoex_period_timer(unsigned long data)
+ 
+ 		timer_period = is_btscan ? btcoex->btscan_no_stomp :
+ 					   btcoex->btcoex_no_stomp;
+-		ath9k_gen_timer_start(ah,
+-				      btcoex->no_stomp_timer,
+-				      (ath9k_hw_gettsf32(ah) +
+-				       timer_period), timer_period * 10);
++		ath9k_gen_timer_start(ah, btcoex->no_stomp_timer, 0,
++				      timer_period * 10);
+ 		btcoex->hw_timer_enabled = true;
+ 	}
+ 
 -- 
-Greetings Michael.
+1.7.2.2
 
