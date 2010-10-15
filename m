@@ -1,155 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.perches.com ([173.55.12.10]:3817 "EHLO mail.perches.com"
+Received: from hera.kernel.org ([140.211.167.34]:41906 "EHLO hera.kernel.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752674Ab0J3VJw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 30 Oct 2010 17:09:52 -0400
-From: Joe Perches <joe@perches.com>
-To: Jiri Kosina <trivial@kernel.org>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
+	id S1756242Ab0JOTdf (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 15 Oct 2010 15:33:35 -0400
+Message-ID: <4CB8AC80.7090802@kernel.org>
+Date: Fri, 15 Oct 2010 21:33:20 +0200
+From: Tejun Heo <tj@kernel.org>
+MIME-Version: 1.0
+To: "John W. Linville" <linville@tuxdriver.com>
+CC: Christian Lamparter <chunkeey@googlemail.com>,
 	Johannes Berg <johannes@sipsolutions.net>,
-	"David S. Miller" <davem@davemloft.net>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: [PATCH 37/39] net/mac80211: Update WARN uses
-Date: Sat, 30 Oct 2010 14:08:54 -0700
-Message-Id: <de75963e04701e309b86dfee54c36e11873048c2.1288471898.git.joe@perches.com>
-In-Reply-To: <cover.1288471897.git.joe@perches.com>
-References: <cover.1288471897.git.joe@perches.com>
+	Linux Wireless List <linux-wireless@vger.kernel.org>,
+	lkml <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH v2.6.36-rc7] mac80211: cancel restart_work explicitly
+ instead of depending on flush_scheduled_work()
+References: <4CB874C0.8090003@kernel.org> <1287159715.1870.11.camel@Nokia-N900-51-1> <4CB883C9.6050104@kernel.org> <201010151858.45000.chunkeey@googlemail.com> <20101015192645.GA2438@tuxdriver.com>
+In-Reply-To: <20101015192645.GA2438@tuxdriver.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Coalesce long formats.
-Add missing newlines.
+Hello,
 
-Signed-off-by: Joe Perches <joe@perches.com>
----
- net/mac80211/agg-tx.c |    5 +++--
- net/mac80211/iface.c  |    4 ++--
- net/mac80211/mlme.c   |    2 +-
- net/mac80211/rx.c     |    4 +---
- net/mac80211/tx.c     |    4 +---
- net/mac80211/util.c   |    4 +---
- net/mac80211/work.c   |    4 ++--
- 7 files changed, 11 insertions(+), 16 deletions(-)
+On 10/15/2010 09:26 PM, John W. Linville wrote:
+>> wireless-testing/wireless-next has already such a patch:
+>> "mac80211: cancel restart_work in ieee80211_unregister_hw" (2010-08-25)
+>>
+>> <http://git.kernel.org/?p=linux/kernel/git/linville/wireless-next-2.6.git;a=commit;h=258086a48b766d12a500f98834654ffa927ca475>
+>>
+>> John, can you please push to 2.6.36-rc8?
+>> (I know, I am _late_, but I didn't know about any potential problem
+>> in the mainline?)
+> 
+> I don't see how either patch would merit inclusion in 2.6.36 at this point.
 
-diff --git a/net/mac80211/agg-tx.c b/net/mac80211/agg-tx.c
-index d4679b2..9f2c3f6 100644
---- a/net/mac80211/agg-tx.c
-+++ b/net/mac80211/agg-tx.c
-@@ -454,8 +454,9 @@ ieee80211_agg_splice_packets(struct ieee80211_local *local,
- 
- 	ieee80211_stop_queue_agg(local, tid);
- 
--	if (WARN(!tid_tx, "TID %d gone but expected when splicing aggregates"
--			  " from the pending queue\n", tid))
-+	if (WARN(!tid_tx,
-+		 "TID %d gone but expected when splicing aggregates from the pending queue\n",
-+		 tid))
- 		return;
- 
- 	if (!skb_queue_empty(&tid_tx->pending)) {
-diff --git a/net/mac80211/iface.c b/net/mac80211/iface.c
-index f9163b1..328e637 100644
---- a/net/mac80211/iface.c
-+++ b/net/mac80211/iface.c
-@@ -820,7 +820,7 @@ static void ieee80211_iface_work(struct work_struct *work)
- 			ieee80211_mesh_rx_queued_mgmt(sdata, skb);
- 			break;
- 		default:
--			WARN(1, "frame for unexpected interface type");
-+			WARN(1, "frame for unexpected interface type\n");
- 			break;
- 		}
- 
-@@ -979,7 +979,7 @@ static int ieee80211_runtime_change_iftype(struct ieee80211_sub_if_data *sdata,
- 	ieee80211_setup_sdata(sdata, type);
- 
- 	err = ieee80211_do_open(sdata->dev, false);
--	WARN(err, "type change: do_open returned %d", err);
-+	WARN(err, "type change: do_open returned %d\n", err);
- 
- 	return ret;
- }
-diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index a3a9421..22f054a 100644
---- a/net/mac80211/mlme.c
-+++ b/net/mac80211/mlme.c
-@@ -1780,7 +1780,7 @@ void ieee80211_sta_rx_queued_mgmt(struct ieee80211_sub_if_data *sdata,
- 			cfg80211_send_disassoc(sdata->dev, (u8 *)mgmt, skb->len);
- 			break;
- 		default:
--			WARN(1, "unexpected: %d", rma);
-+			WARN(1, "unexpected: %d\n", rma);
- 		}
- 		return;
- 	}
-diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
-index 902b03e..7775375 100644
---- a/net/mac80211/rx.c
-+++ b/net/mac80211/rx.c
-@@ -2840,9 +2840,7 @@ void ieee80211_rx(struct ieee80211_hw *hw, struct sk_buff *skb)
- 			 */
- 			if (WARN((status->rate_idx < 0 ||
- 				 status->rate_idx > 76),
--				 "Rate marked as an HT rate but passed "
--				 "status->rate_idx is not "
--				 "an MCS index [0-76]: %d (0x%02x)\n",
-+				 "Rate marked as an HT rate but passed status->rate_idx is not an MCS index [0-76]: %d (0x%02x)\n",
- 				 status->rate_idx,
- 				 status->rate_idx))
- 				goto drop;
-diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
-index 96c5943..a511d69 100644
---- a/net/mac80211/tx.c
-+++ b/net/mac80211/tx.c
-@@ -649,9 +649,7 @@ ieee80211_tx_h_rate_ctrl(struct ieee80211_tx_data *tx)
- 	if (WARN(test_bit(SCAN_SW_SCANNING, &tx->local->scanning) &&
- 		 (sta_flags & WLAN_STA_ASSOC) &&
- 		 !rate_usable_index_exists(sband, &tx->sta->sta),
--		 "%s: Dropped data frame as no usable bitrate found while "
--		 "scanning and associated. Target station: "
--		 "%pM on %d GHz band\n",
-+		 "%s: Dropped data frame as no usable bitrate found while scanning and associated. Target station: %pM on %d GHz band\n",
- 		 tx->sdata->name, hdr->addr1,
- 		 tx->channel->band ? 5 : 2))
- 		return TX_DROP;
-diff --git a/net/mac80211/util.c b/net/mac80211/util.c
-index 0b6fc92..2a14723 100644
---- a/net/mac80211/util.c
-+++ b/net/mac80211/util.c
-@@ -1120,9 +1120,7 @@ int ieee80211_reconfig(struct ieee80211_local *local)
- 		 */
- 		res = drv_start(local);
- 		if (res) {
--			WARN(local->suspended, "Hardware became unavailable "
--			     "upon resume. This could be a software issue "
--			     "prior to suspend or a hardware issue.\n");
-+			WARN(local->suspended, "Hardware became unavailable upon resume. This could be a software issue prior to suspend or a hardware issue.\n");
- 			return res;
- 		}
- 
-diff --git a/net/mac80211/work.c b/net/mac80211/work.c
-index ae344d1..8583206 100644
---- a/net/mac80211/work.c
-+++ b/net/mac80211/work.c
-@@ -830,7 +830,7 @@ static void ieee80211_work_rx_queued_mgmt(struct ieee80211_local *local,
- 		list_del_rcu(&wk->list);
- 		break;
- 	default:
--		WARN(1, "unexpected: %d", rma);
-+		WARN(1, "unexpected: %d\n", rma);
- 	}
- 
- 	mutex_unlock(&local->mtx);
-@@ -973,7 +973,7 @@ static void ieee80211_work_work(struct work_struct *work)
- 			list_add(&wk->list, &free_work);
- 			break;
- 		default:
--			WARN(1, "unexpected: %d", rma);
-+			WARN(1, "unexpected: %d\n", rma);
- 		}
- 	}
- 
+My patch definitely was aimed for 2.6.37-rc1 or later.  I'm not sure
+whether the cancel_work_sync() is a bug fix or not but if it hasn't
+actually triggered yet, I guess leaving it as-is isn't too bad at this
+point.
+
+Thanks.
+
 -- 
-1.7.3.1.g432b3.dirty
-
+tejun
