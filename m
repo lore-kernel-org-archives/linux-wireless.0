@@ -1,58 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gx0-f174.google.com ([209.85.161.174]:54309 "EHLO
-	mail-gx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753439Ab0JRRbk convert rfc822-to-8bit (ORCPT
+Received: from mail-ew0-f46.google.com ([209.85.215.46]:50107 "EHLO
+	mail-ew0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754798Ab0JOLBi convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 18 Oct 2010 13:31:40 -0400
-Received: by gxk21 with SMTP id 21so157304gxk.19
-        for <linux-wireless@vger.kernel.org>; Mon, 18 Oct 2010 10:31:40 -0700 (PDT)
+	Fri, 15 Oct 2010 07:01:38 -0400
+Received: by ewy20 with SMTP id 20so643449ewy.19
+        for <linux-wireless@vger.kernel.org>; Fri, 15 Oct 2010 04:01:37 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <AANLkTinMp8dJ3TM=-Mw3pyFiYTYoTmBBqSro3rsrgwXH@mail.gmail.com>
-References: <4CAE1DFB.303@candelatech.com> <1286479642.20974.32.camel@jlt3.sipsolutions.net>
- <AANLkTimxp703Gy_Atg8=wpFszRDR=OJCXwOUKRh-a-d7@mail.gmail.com>
- <AANLkTi=t-P_5c14brJohM8UgxeOknv+3syO=7W=ix6qf@mail.gmail.com>
- <AANLkTinC46a+nE-XOQuBCmRJwjzgh24uC7ZJ7HtbVHnT@mail.gmail.com>
- <4CB378CD.1080800@candelatech.com> <AANLkTim42zmDwf744BCrPwa1kT5ph57bNMyvSyOpesVv@mail.gmail.com>
- <4CB3D598.7050904@candelatech.com> <AANLkTimPEg3ZU8CQUXfdpGdfbmhdE9O=GNY=g9gysTo4@mail.gmail.com>
- <4CB4AA89.1070009@candelatech.com> <20101013053141.GA15798@vasanth-laptop>
- <4CB5E0A8.5020502@candelatech.com> <AANLkTimp_GSwwX_RnQSyN9QNe55HQ+0HZJ1yd8Xp+dWG@mail.gmail.com>
- <AANLkTinyVqdgPqzpyihuaPtVVqDmzj-ZbXzQ-4qdA2yH@mail.gmail.com>
- <4CB78870.8040207@candelatech.com> <AANLkTimqX5E33eTPYiei4GcCYocbs8-zceCARG+5t98B@mail.gmail.com>
- <AANLkTinMp8dJ3TM=-Mw3pyFiYTYoTmBBqSro3rsrgwXH@mail.gmail.com>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Mon, 18 Oct 2010 10:24:30 -0700
-Message-ID: <AANLkTim5HGs3XFT40UJcHMrF8VuyO_XxMWPVuj7Rb4y9@mail.gmail.com>
-Subject: Re: memory clobber in rx path, maybe related to ath9k.
-To: =?UTF-8?Q?Bj=C3=B6rn_Smedman?= <bjorn.smedman@venatech.se>
-Cc: Ben Greear <greearb@candelatech.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <AANLkTi=YPcjudD5u0oLOmCj_PQqSKWCdPab45uLCiD76@mail.gmail.com>
+References: <1287090064-14607-1-git-send-email-zajec5@gmail.com>
+	<1287090064-14607-2-git-send-email-zajec5@gmail.com>
+	<AANLkTi=YPcjudD5u0oLOmCj_PQqSKWCdPab45uLCiD76@mail.gmail.com>
+Date: Fri, 15 Oct 2010 13:01:36 +0200
+Message-ID: <AANLkTinaeO-6M9DbvW2ZHJHyrBhRK+Gdu+4++0jFLqQA@mail.gmail.com>
+Subject: Re: [PATCH 2/3] b43: N-PHY: define registers names for 2056 radio
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Cc: linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>,
+	b43-dev@lists.infradead.org, Henry Ptasinski <henryp@broadcom.com>,
+	Brett Rudley <brudley@broadcom.com>,
+	Nohee Ko <noheek@broadcom.com>
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2010/10/18 Björn Smedman <bjorn.smedman@venatech.se>:
-> 2010/10/15 Björn Smedman <bjorn.smedman@venatech.se>
+W dniu 14 października 2010 23:23 użytkownik Luis R. Rodriguez
+<mcgrof@gmail.com> napisał:
+> 2010/10/14 Rafał Miłecki <zajec5@gmail.com>:
+>> Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
+>> Cc: Henry Ptasinski <henryp@broadcom.com>
+>> Cc: Brett Rudley <brudley@broadcom.com>
+>> Cc: Nohee Ko <noheek@broadcom.com>
+>> ---
+>>  drivers/net/wireless/b43/radio_2056.h |  522 +++++++++++++++++++++++++++++++++
+>>  1 files changed, 522 insertions(+), 0 deletions(-)
 >>
->> 2010/10/15 Ben Greear <greearb@candelatech.com>:
->> > I tried the patch below, and it didn't seem to help.  Might even
->> > have hurt..as it died on divide-by-zero error:
+>> diff --git a/drivers/net/wireless/b43/radio_2056.h b/drivers/net/wireless/b43/radio_2056.h
+>> index 60341d7..462c9fd 100644
+>> --- a/drivers/net/wireless/b43/radio_2056.h
+>> +++ b/drivers/net/wireless/b43/radio_2056.h
+>> @@ -4,6 +4,9 @@
 >>
->> Hmm, looks like the ani code got a zero listen time from the hw...
->> That just might mean that the DMA actually hits one of these
->> descriptors. :)
+>>   Copyright (c) 2010 Rafał Miłecki <zajec5@gmail.com>
+>>
+>> +  Some parts of the code in this file are derived from the brcm80211
+>> +  driver  Copyright (c) 2010 Broadcom Corporation
+>> +
 >
-> Am I the only one worried about this? Leaving a DMA descriptor
-> pointing at memory which has been passed on to somebody else... To me
-> that's like pointing a loaded gun at someone (and it seems this
-> particular gun can go off a little haphazardly).
->
-> Luis, given how hard it seems to be to get that locking and skb
-> shoveling right, are you sure you want to keep pointing that DMA
-> engine on innocent people's data?
+> You forgot to include their full license here.
 
-This is why this issue is of high priority to me. I no longer get the
-poison nor does Ben, the RX poison issue is resolved as far as I can
-tell, I just need to split up the patches into easily reviewable
-chunks and get them upstream.
+As discussed in another topic, I didn't add any copyrightable data
+here. "Just numbers". I added info about source of defines as some
+kind of over-kindness ;)
 
-  Luis
+-- 
+Rafał
