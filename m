@@ -1,45 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:50027 "EHLO mx1.redhat.com"
+Received: from hera.kernel.org ([140.211.167.34]:56682 "EHLO hera.kernel.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756306Ab0JOQmd (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 15 Oct 2010 12:42:33 -0400
-Date: Fri, 15 Oct 2010 18:44:48 +0200
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net
-Subject: Re: [PATCH 1/9] iwlagn: need longer tx queue stuck timer for coex
- devices
-Message-ID: <20101015164447.GB4286@redhat.com>
-References: <1287079370-20587-1-git-send-email-wey-yi.w.guy@intel.com>
- <1287079370-20587-2-git-send-email-wey-yi.w.guy@intel.com>
+	id S1756629Ab0JOUHT (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 15 Oct 2010 16:07:19 -0400
+Message-ID: <4CB8B462.2080108@kernel.org>
+Date: Fri, 15 Oct 2010 22:06:58 +0200
+From: Tejun Heo <tj@kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1287079370-20587-2-git-send-email-wey-yi.w.guy@intel.com>
+To: Christian Lamparter <chunkeey@googlemail.com>
+CC: "John W. Linville" <linville@tuxdriver.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Linux Wireless List <linux-wireless@vger.kernel.org>,
+	lkml <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH v2.6.36-rc7] mac80211: cancel restart_work explicitly
+ instead of depending on flush_scheduled_work()
+References: <4CB874C0.8090003@kernel.org> <20101015192645.GA2438@tuxdriver.com> <4CB8AC80.7090802@kernel.org> <201010152207.31553.chunkeey@googlemail.com>
+In-Reply-To: <201010152207.31553.chunkeey@googlemail.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Wey,
+Hello,
 
-On Thu, Oct 14, 2010 at 11:02:42AM -0700, Wey-Yi Guy wrote:
-> For BT/WiFi combo devices, need longer tx stuck queue
-> timer, so those devices won't reload firmware too often.
+On 10/15/2010 10:07 PM, Christian Lamparter wrote:
+> Oh, so the "[PATCH v2.6.36-rc7]" in the patch subject was just "misleading" me.
 
-Seeing how many tweaking queue hung monitoring we need, I started
-to think that the watchdog design is not so good. Currently we compare 
-q->read_ptr with q->last_read_ptr, and if they match 3 times in a row
-during 200ms, we assume firmware hung. But maybe 200ms of no read_ptr
-activity is too small time for device. Moreover we have unlikely but
-possible situation when device is fully functional, but read_ptr will
-wrap by accident to q->last_read_ptr on every check.
+Ah, sorry about that.  I usually tag them with the version tag the
+patch was generated against, not the target version.  Now that I think
+about it, it could definitely be confusing.  I'll try to be clearer.
 
-I think, better solution would be something like in rt2x00 or in 
-net/sched/sch_generic.c (however rt2x00 is easier to understand). It is
-based on time stamp. When we get tx complete notification from hardware
-(and incise read_ptr) mark the time stamp. In watchdog, which tick
-periodically, check if queue is not empty and if current time is
-bigger than time_stamp + time_out, if it is - firmware hung. More
-smaller watchog tick give more precise hung detect (with disadvantage
-of more cpu usage).
+Thanks.
 
-Stanislaw
+-- 
+tejun
