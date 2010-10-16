@@ -1,48 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:46324 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932109Ab0JNVo0 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 14 Oct 2010 17:44:26 -0400
-Subject: Re: memory clobber in rx path, maybe related to ath9k.
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Ben Greear <greearb@candelatech.com>
-Cc: "Luis R. Rodriguez" <mcgrof@gmail.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <4CB5F0D4.4020907@candelatech.com>
-References: <4CAB59B2.5050106@candelatech.com>
-	 <4CAB6B08.4050801@candelatech.com> <4CAE0474.4090605@candelatech.com>
-	 <1286475250.20974.22.camel@jlt3.sipsolutions.net>
-	 <AANLkTinbRSnPVgbBxvVpMdnP+K--bye=Q-miHf4X44kz@mail.gmail.com>
-	 <4CAE13F6.2010003@candelatech.com>
-	 <AANLkTimEZ5GY7WFz-F4YyC+6MEwNn2Dki4tonp645XrS@mail.gmail.com>
-	 <4CAE1DFB.303@candelatech.com>
-	 <1286479642.20974.32.camel@jlt3.sipsolutions.net>
-	 <AANLkTimxp703Gy_Atg8=wpFszRDR=OJCXwOUKRh-a-d7@mail.gmail.com>
-	 <AANLkTi=t-P_5c14brJohM8UgxeOknv+3syO=7W=ix6qf@mail.gmail.com>
-	 <AANLkTinC46a+nE-XOQuBCmRJwjzgh24uC7ZJ7HtbVHnT@mail.gmail.com>
-	 <4CB378CD.1080800@candelatech.com>
-	 <AANLkTim42zmDwf744BCrPwa1kT5ph57bNMyvSyOpesVv@mail.gmail.com>
-	 <4CB3D598.7050904@candelatech.com>
-	 <AANLkTimPEg3ZU8CQUXfdpGdfbmhdE9O=GNY=g9gysTo4@mail.gmail.com>
-	 <4CB4AA89.1070009@candelatech.com>
-	 <AANLkTinpWvMtexFTYVm5rEZY=gY7qY8WxHFtVGB0o6Se@mail.gmail.com>
-	 <4CB5E885.7090305@candelatech.com>
-	 <AANLkTi=c=w8MvXZ=vqxkRgbXasacQTYXUX8o_zXoZgxC@mail.gmail.com>
-	 <4CB5F0D4.4020907@candelatech.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Thu, 14 Oct 2010 23:45:08 +0200
-Message-ID: <1287092708.26544.0.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+Received: from ogre.sisk.pl ([217.79.144.158]:52671 "EHLO ogre.sisk.pl"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754149Ab0JPTxW (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 16 Oct 2010 15:53:22 -0400
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
+To: Paul Stewart <pstew@google.com>
+Subject: Re: [PATCH] ath9k: Convert to new PCI PM framework
+Date: Sat, 16 Oct 2010 21:52:24 +0200
+Cc: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	LKML <linux-kernel@vger.kernel.org>,
+	"Linux-pm mailing list" <linux-pm@lists.linux-foundation.org>,
+	linux-wireless@vger.kernel.org, ath9k-devel@venema.h4ckr.net
+References: <201010160036.17653.rjw@sisk.pl> <AANLkTimXXERRCYEjzQbcii6XW8wbjNfN-eWigU7Wi_Lv@mail.gmail.com>
+In-Reply-To: <AANLkTimXXERRCYEjzQbcii6XW8wbjNfN-eWigU7Wi_Lv@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Message-Id: <201010162152.24344.rjw@sisk.pl>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2010-10-13 at 10:48 -0700, Ben Greear wrote:
+On Saturday, October 16, 2010, Paul Stewart wrote:
+> On Fri, Oct 15, 2010 at 3:36 PM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
+> > From: Rafael J. Wysocki <rjw@sisk.pl>
+> >
+> > The ath9k driver uses the legacy PCI power management (suspend
+> > and resume) callbacks that apparently cause intermittent problems
+> > to happen (the adapter sometimes doesn't resume correctly on my
+> > Acer Ferrari One).  Make it use the new PCI PM and let the PCI core
+> > code handle the PCI-specific details of power transitions.
+> I'm curious.  What sort of behavior did you get when the device fails
+> to resume correctly?  Every now and then I've been getting bad
+> accesses to 0x7000 every now and then -- after that any reads to PCI
+> registers return all f's.
 
-> Here's the slub patch if you are interested in using it yourself:
-> https://patchwork.kernel.org/patch/236921/
+Yes, this sort of matches my experience.  Even the config space isn't
+really accessible after a failure to resume.
 
-That really really screams include/linux/stacktrace.h
-
-johannes
-
+Thanks,
+Rafael
