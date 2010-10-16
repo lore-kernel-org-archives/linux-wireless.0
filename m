@@ -1,33 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from lo.gmane.org ([80.91.229.12]:60870 "EHLO lo.gmane.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751466Ab0JAUaF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 1 Oct 2010 16:30:05 -0400
-Received: from list by lo.gmane.org with local (Exim 4.69)
-	(envelope-from <glkwg-linux-wireless@m.gmane.org>)
-	id 1P1mF1-00020e-Td
-	for linux-wireless@vger.kernel.org; Fri, 01 Oct 2010 22:30:03 +0200
-Received: from 188.93.190.223 ([188.93.190.223])
-        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Fri, 01 Oct 2010 22:30:03 +0200
-Received: from sorngard by 188.93.190.223 with local (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Fri, 01 Oct 2010 22:30:03 +0200
+Received: from mail-bw0-f46.google.com ([209.85.214.46]:51153 "EHLO
+	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751223Ab0JPPJa (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 16 Oct 2010 11:09:30 -0400
+Received: by bwz15 with SMTP id 15so1769979bwz.19
+        for <linux-wireless@vger.kernel.org>; Sat, 16 Oct 2010 08:09:06 -0700 (PDT)
+From: Christian Lamparter <chunkeey@googlemail.com>
 To: linux-wireless@vger.kernel.org
-From: Eddy Sorngard <sorngard@online.no>
-Subject: Bug in p54usb (master mode)?
-Date: Fri, 1 Oct 2010 19:32:33 +0000 (UTC)
-Message-ID: <loom.20101001T212648-19@post.gmane.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Subject: [PATCH 2.6.36] mac80211: don't sanitize invalid rates
+Date: Sat, 16 Oct 2010 18:49:15 +0200
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Jouni Malinen <j@w1.fi>
+MIME-Version: 1.0
+Content-Type: Text/Plain;
+  charset="us-ascii"
+Message-Id: <201010161849.15787.chunkeey@googlemail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I have succeded in using the driver p54usb (device DWL-g120) + hostapd in 
-master mode connected to an usb2 port. However when I connect the device to an 
-usb1 port, it is not transmitting in master mode. No errors reported in dmesg 
-or syslog, and the LEDs are dark. In ad-hoc or managed mode this problem does 
-not exist. Is this due to a bug in the driver? I am using kernel 2.6.35.2, but 
-I had the same problem in 2.6.31.
+I found this bug while poking around with a pure-gn AP.
 
+Commit:
+cfg80211/mac80211: Use more generic bitrate mask for rate control
+
+Added some sanity checks to ensure that each tx rate index
+is included in the configured mask and it would change any
+rate indexes if it wasn't.
+
+But, the current implementation doesn't take into account
+that the invalid rate index "-1" has a special meaning
+(= no further attempts) and it should not be "changed".
+
+Signed-off-by: Christian Lamparter <chunkeey@googlemail.com>
+---
+diff --git a/net/mac80211/rate.c b/net/mac80211/rate.c
+index 4f772de..50a1200 100644
+--- a/net/mac80211/rate.c
++++ b/net/mac80211/rate.c
+@@ -328,6 +328,9 @@ void rate_control_get_rate(struct ieee80211_sub_if_data *sdata,
+ 		 * if needed.
+ 		 */
+ 		for (i = 0; i < IEEE80211_TX_MAX_RATES; i++) {
++			/* Skip invalid rates */
++			if (info->control.rates[i].idx < 0)
++				break;
+ 			/* Rate masking supports only legacy rates for now */
+ 			if (info->control.rates[i].flags & IEEE80211_TX_RC_MCS)
+ 				continue;
