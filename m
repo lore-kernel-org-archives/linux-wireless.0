@@ -1,55 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp-out.google.com ([216.239.44.51]:59684 "EHLO
-	smtp-out.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752335Ab0JNP7b (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 14 Oct 2010 11:59:31 -0400
-Received: from kpbe12.cbf.corp.google.com (kpbe12.cbf.corp.google.com [172.25.105.76])
-	by smtp-out.google.com with ESMTP id o9EFxUtR008434
-	for <linux-wireless@vger.kernel.org>; Thu, 14 Oct 2010 08:59:30 -0700
-Received: from iwn37 (iwn37.prod.google.com [10.241.68.101])
-	by kpbe12.cbf.corp.google.com with ESMTP id o9EFxTXw018266
-	for <linux-wireless@vger.kernel.org>; Thu, 14 Oct 2010 08:59:29 -0700
-Received: by iwn37 with SMTP id 37so7591956iwn.15
-        for <linux-wireless@vger.kernel.org>; Thu, 14 Oct 2010 08:59:29 -0700 (PDT)
+Received: from nbd.name ([88.198.39.176]:49877 "EHLO ds10.nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754310Ab0JPNKP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 16 Oct 2010 09:10:15 -0400
+Message-ID: <4CB9A433.5050007@openwrt.org>
+Date: Sat, 16 Oct 2010 15:10:11 +0200
+From: Felix Fietkau <nbd@openwrt.org>
 MIME-Version: 1.0
-In-Reply-To: <1287067869.4641.440.camel@jlt3.sipsolutions.net>
-References: <20101013224851.B8E5D20465@glenhelen.mtv.corp.google.com>
-	<1287064265.4641.435.camel@jlt3.sipsolutions.net>
-	<AANLkTinq=B13gPd3obqAkBDQv4Ufz5Upp2UPVw9bpED2@mail.gmail.com>
-	<1287066750.4641.439.camel@jlt3.sipsolutions.net>
-	<1287067869.4641.440.camel@jlt3.sipsolutions.net>
-Date: Thu, 14 Oct 2010 08:59:28 -0700
-Message-ID: <AANLkTi=pYVQyLuya534tymCbYW7UXd3=9G87knnQ6prW@mail.gmail.com>
-Subject: Re: [PATCH 3/6] Add a function for evaluating rate changes for
- possible notification
-From: Paul Stewart <pstew@google.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org
+To: Rajkumar Manoharan <rmanoharan@atheros.com>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"linville@tuxdriver.com" <linville@tuxdriver.com>,
+	Luis Rodriguez <Luis.Rodriguez@Atheros.com>
+Subject: Re: [PATCH 1/6] ath9k_hw: optimize interrupt mask changes
+References: <1287165813-94331-1-git-send-email-nbd@openwrt.org> <20101016115041.GA4028@vmraj-lnx.users.atheros.com>
+In-Reply-To: <20101016115041.GA4028@vmraj-lnx.users.atheros.com>
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Oct 14, 2010 at 7:51 AM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
-> On Thu, 2010-10-14 at 16:32 +0200, Johannes Berg wrote:
->
->> I wonder if "rate" is really the best interface for this. Since it's a
->> threshold event, does it matter? Maybe there should instead be events
->> for MCS changes and legacy rate changes so we can avoid all those
->> calculations?
->
-> In fact, since you'd only care about changes across a threshold etc, not
-> the absolute rate, you might be able to build the system without ever
-> doing the expensive rate calculation from MCS.
+On 2010-10-16 1:51 PM, Rajkumar Manoharan wrote:
+> On Fri, Oct 15, 2010 at 11:33:28PM +0530, Felix Fietkau wrote:
+>> @@ -751,8 +751,8 @@ chip_reset:
+>>  	ath_debug_stat_interrupt(sc, status);
+>>  
+>>  	if (sched) {
+>> -		/* turn off every interrupt except SWBA */
+>> -		ath9k_hw_set_interrupts(ah, (ah->imask & ATH9K_INT_SWBA));
+>> +		/* turn off every interrupt */
+>> +		ath9k_hw_disable_interrupts(ah);
+> 
+> won't it affect beacon generation?
+No, because the original code did not leave SWBA interrupts enabled
+either, as it was masking out ATH9K_INT_GLOBAL. So far I haven't seen
+issues with beacons under high load, even on slow embedded hardware.
 
-What if I change the calculate() so that it does a cached table
-lookup?  Since MCS numbers aren't linear or monotonic with regard to
-bitrate, those numbers can't be compared directly to set thresholds.
-I think it'd be a mistake to push it to userspace to interpret MCS and
-alert on every MCS change since that would just tradeoff calculation
-expense for nl80211 socket traffic, since without an understanding of
-the MCS ranking, it'd would not be possible to set thresholds.
-
---
-Paul
+- Felix
