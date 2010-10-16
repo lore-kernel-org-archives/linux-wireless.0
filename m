@@ -1,63 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from web56803.mail.re3.yahoo.com ([66.196.97.77]:35821 "HELO
-	web56803.mail.re3.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1752525Ab0J1JOT (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 28 Oct 2010 05:14:19 -0400
-Message-ID: <728838.98715.qm@web56803.mail.re3.yahoo.com>
-Date: Thu, 28 Oct 2010 02:14:18 -0700 (PDT)
-From: Walter Goldens <goldenstranger@yahoo.com>
-Subject: [PATCH 2/2] compat-wireless: fix update-initramfs script
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Cc: linux-wireless@vger.kernel.org
+Received: from ogre.sisk.pl ([217.79.144.158]:52692 "EHLO ogre.sisk.pl"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754079Ab0JPUDx (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 16 Oct 2010 16:03:53 -0400
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
+To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Subject: Re: [PATCH] ath9k: Convert to new PCI PM framework
+Date: Sat, 16 Oct 2010 22:02:52 +0200
+Cc: LKML <linux-kernel@vger.kernel.org>,
+	"Linux-pm mailing list" <linux-pm@lists.linux-foundation.org>,
+	linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org
+References: <201010160036.17653.rjw@sisk.pl> <AANLkTimdatos1psRnp_Es=q8iOe9aQE_aVARLpm18efb@mail.gmail.com>
+In-Reply-To: <AANLkTimdatos1psRnp_Es=q8iOe9aQE_aVARLpm18efb@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: Text/Plain;
+  charset="utf-8"
+Message-Id: <201010162202.52766.rjw@sisk.pl>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-There are traces of a widespread error logs from installing
-compat-wireless pertaining to update-initramfs, as google would
-suggest. Ubuntu 10.10, for example complains of excessive:
-"FATAL: Could not load /lib/modules/2.6.31-wl/modules.dep: No such file or directory"
-Other distributions/kernels: "Cannot find /lib/modules/2.6.31-wl"
+On Saturday, October 16, 2010, Luis R. Rodriguez wrote:
+> On Fri, Oct 15, 2010 at 3:36 PM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
+> > From: Rafael J. Wysocki <rjw@sisk.pl>
+> >
+> > The ath9k driver uses the legacy PCI power management (suspend
+> > and resume) callbacks that apparently cause intermittent problems
+> > to happen (the adapter sometimes doesn't resume correctly on my
+> > Acer Ferrari One).  Make it use the new PCI PM and let the PCI core
+> > code handle the PCI-specific details of power transitions.
+> >
+> > Signed-off-by: Rafael J. Wysocki <rjw@sisk.pl>
+> 
+> Do you know when these hooks were added?
 
-* Fix kernel version detection
-* Fix updating of initramfs. Instead of generating new initramfs image,
-simply update the existing one. This makes update-grub redundant, which
-is good thing, considering it messes with people's grub.cfg settings
-every time compat-wireless is installed. At some point replacing this
-script in Makefile with "@update-initramfs -u" will probably be best.
- 
+Well, which ones?  If you're asking about the new framework, it's been there
+since 2.6.29 and is a recommended way of implementing PM hooks now.
 
-Signed-off-by: Walter Goldens <goldenstranger@yahoo.com>
----
+Please have a look at Documentation/power/pci.txt. :-)
 
---- a/scripts/update-initramfs
-+++ b/scripts/update-initramfs
-@@ -10,16 +10,18 @@
- 
- LSB_RED_ID=$(/usr/bin/lsb_release -i -s)
- 
--KLIB=/lib/modules/2.6.31-wl/build
-+KLIB=/lib/modules/$(uname -r)/build
- ver=$(echo $KLIB | awk -F "/lib/modules/" '{print $2}' | awk -F"/" '{print $1}')
- dir=/boot/
- 
- case $LSB_RED_ID in
- "Ubuntu")
- 	echo "Updating Ubuntu's initramfs for $ver under $dir ..."
--	mkinitramfs -o $dir/initrd.img-$ver $ver
--	echo "Will now run update-grub to ensure grub will find the new initramfs ..."
--	update-grub
-+#	mkinitramfs -o $dir/initrd.img-$ver $ver
-+	update-initramfs -u
-+	echo "update complete"
-+#	echo "Will now run update-grub to ensure grub will find the new initramfs ..."
-+#	update-grub
- 	;;
- *)
- 	echo "Warning:"
+> If it fixes an issue should this go for stable?
 
+I'm not 100% sure it fixes everything yet, although I hasn't been able to
+reproduce the problem with it applied, so far.
 
+So, I don't think it's -stable material at this point.  However, it should be
+done anyway at one point, so it very well can be done right now, given that I
+have the hardware to test it. :-)
 
-      
+Thanks,
+Rafael
