@@ -1,75 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:43671 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750982Ab0JGSpn (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 7 Oct 2010 14:45:43 -0400
-Message-ID: <4CAE1553.1070900@candelatech.com>
-Date: Thu, 07 Oct 2010 11:45:39 -0700
-From: Ben Greear <greearb@candelatech.com>
+Received: from mail.atheros.com ([12.19.149.2]:17821 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753795Ab0JPLpJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 16 Oct 2010 07:45:09 -0400
+Received: from mail.atheros.com ([10.10.20.105])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Sat, 16 Oct 2010 04:44:59 -0700
+Date: Sat, 16 Oct 2010 17:21:02 +0530
+From: Rajkumar Manoharan <rmanoharan@atheros.com>
+To: Felix Fietkau <nbd@openwrt.org>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"linville@tuxdriver.com" <linville@tuxdriver.com>,
+	Luis Rodriguez <Luis.Rodriguez@Atheros.com>
+Subject: Re: [PATCH 1/6] ath9k_hw: optimize interrupt mask changes
+Message-ID: <20101016115041.GA4028@vmraj-lnx.users.atheros.com>
+References: <1287165813-94331-1-git-send-email-nbd@openwrt.org>
 MIME-Version: 1.0
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-CC: Johannes Berg <johannes@sipsolutions.net>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: memory clobber in rx path, maybe related to ath9k.
-References: <4CAB59B2.5050106@candelatech.com> <AANLkTikhGCTS8kJgpDzjudyBTk-rkyXY33UO7kB0+Cc-@mail.gmail.com> <4CAB5F3D.9060201@candelatech.com> <AANLkTimV3GrwU+9PPtirT4sCzveLY2egr3PRQhfDBET1@mail.gmail.com> <4CAB627F.8020804@candelatech.com> <AANLkTi=sT5QJe4V8gFGjF-nzx0uJAMLG_XG2715qrEEd@mail.gmail.com> <4CAB64AD.4080105@candelatech.com> <AANLkTi=3dHbB5tmQDp3Ba54-DqQydVCkNdFo1vKbfaGY@mail.gmail.com> <4CAB6B08.4050801@candelatech.com> <4CAE0474.4090605@candelatech.com> <1286475250.20974.22.camel@jlt3.sipsolutions.net> <AANLkTinbRSnPVgbBxvVpMdnP+K--bye=Q-miHf4X44kz@mail.gmail.com> <4CAE13F6.2010003@candelatech.com> <AANLkTimEZ5GY7WFz-F4YyC+6MEwNn2Dki4tonp645XrS@mail.gmail.com>
-In-Reply-To: <AANLkTimEZ5GY7WFz-F4YyC+6MEwNn2Dki4tonp645XrS@mail.gmail.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <1287165813-94331-1-git-send-email-nbd@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 10/07/2010 11:42 AM, Luis R. Rodriguez wrote:
-> On Thu, Oct 7, 2010 at 11:39 AM, Ben Greear<greearb@candelatech.com>  wrote:
->> On 10/07/2010 11:29 AM, Luis R. Rodriguez wrote:
->>>
->>> On Thu, Oct 7, 2010 at 11:14 AM, Johannes Berg
->>> <johannes@sipsolutions.net>    wrote:
->>>>
->>>> On Thu, 2010-10-07 at 10:33 -0700, Ben Greear wrote:
->>>>>
->>>>> In case it helps, here is a dump of where the corrupted SKB was deleted.
->>>>
->>>> I wonder, do you have a machine with a decent IOMMU? Adding IOMMU
->>>> debugging into the mix could help you figure out if it's a DMA problem.
->>>
->>> Ben, how much traffic are you RX'ing on these virtual interfaces?
->>
->> I disabled my user-space application, and this script alone can reproduce
->> the problem fairly quickly on my system.  You will need to change some
->> of those first variables.  Just start it and wait a few minutes and
->> watch the splats show on the console :)
->>
->> Note that I am not generating any traffic, but the wpa_supplicants are
->> doing their thing of course...
->>
->> I'm using the kernel found here:
->> http://dmz2.candelatech.com/git/gitweb.cgi?p=linux.wireless-testing.ct/.git;a=summary
->>
->> It's latest wireless-testing with some of my own patches, and some
->> I've gathered from here an there.  I doubt I'm causing this problem,
->> but if you can't reproduce it with this script on your kernels,
->> I can try with base wireless-testing or whatever you are using.
->
-> I'll run this now, but can you try a vanilla wireless-testing? I hear
-> the latest wireless-testing is borked so maybe try (git reset --hard
-> master-2010-09-29), its what I'm on.
+On Fri, Oct 15, 2010 at 11:33:28PM +0530, Felix Fietkau wrote:
+> @@ -751,8 +751,8 @@ chip_reset:
+>  	ath_debug_stat_interrupt(sc, status);
+>  
+>  	if (sched) {
+> -		/* turn off every interrupt except SWBA */
+> -		ath9k_hw_set_interrupts(ah, (ah->imask & ATH9K_INT_SWBA));
+> +		/* turn off every interrupt */
+> +		ath9k_hw_disable_interrupts(ah);
 
-You are liable to hit a bunch of those crashes I've been reporting
-before you hit the DMA thing if you don't use latest (with Johanne's scan
-locking patch).
+won't it affect beacon generation?
 
-I'm going to poke at IOMMU debugging and see what I find.
-
-I'll start a compile of vanilla wireless-testing + scan fix as well.
-
-Thanks,
-Ben
-
->
->    Luis
-
-
--- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
-
+- Rajkumar
