@@ -1,41 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yx0-f174.google.com ([209.85.213.174]:38023 "EHLO
-	mail-yx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932477Ab0J0Vm2 convert rfc822-to-8bit (ORCPT
+Received: from external1.orbit-lab.org ([128.6.192.131]:40746 "HELO
+	external1.orbit-lab.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S932631Ab0JQTCq (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 27 Oct 2010 17:42:28 -0400
-MIME-Version: 1.0
-In-Reply-To: <1C13481E-69E7-4779-B472-42DD49619A89@mac.com>
-References: <1C13481E-69E7-4779-B472-42DD49619A89@mac.com>
-From: Ohad Ben-Cohen <ohad@wizery.com>
-Date: Wed, 27 Oct 2010 23:42:07 +0200
-Message-ID: <AANLkTinzDFs5ve=aK-n=+_cxj2p3kyuZ9Dos8Td1tYT2@mail.gmail.com>
-Subject: Re: wl12xx board_ref_clock
-To: Elvis Dowson <elvis.dowson@mac.com>
-Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+	Sun, 17 Oct 2010 15:02:46 -0400
+Received: from repository3.orbit-lab.org (repository3.orbit-lab.org [10.50.0.41])
+	by external1.orbit-lab.org (Postfix) with ESMTP id 22C95418D8
+	for <linux-wireless@vger.kernel.org>; Sun, 17 Oct 2010 14:59:42 -0400 (EDT)
+Subject: Compat-wireless release for 2010-10-17 is baked
+To: <linux-wireless@vger.kernel.org>
+Message-Id: <20101017190245.55A3640E24@repository3.orbit-lab.org>
+Date: Sun, 17 Oct 2010 15:02:45 -0400 (EDT)
+From: compat@orbit-lab.org (Compat-wireless cronjob account)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Elvis,
 
-On Wed, Oct 27, 2010 at 7:59 PM, Elvis Dowson <elvis.dowson@mac.com> wrote:
->                  To which device does board_ref_clock refer to?
+compat-wireless code metrics
 
-An external clock hardwired to your device. You should ask the vendor
-of your board which one is it.
+    741071 - Total upstream lines of code being pulled
+      2157 - backport code changes
+      1905 - backport code additions
+       252 - backport code deletions
+      6388 - backport from compat module
+      8545 - total backport code
+    1.1531 - % of code consists of backport work
+      1535 - Crap changes not yet posted
+      1491 - Crap additions not yet posted
+        44 - Crap deletions not yet posted
+    0.2071 - % of crap code
 
-> On my board, the SDIO CLK line from the MMC2 controller is connected to the LSR TiWi wlan module.
-
-This has nothing to do with the SDIO clk.
-
-> What is the impact of not specifying a board_ref_clock?
-
-Bad timing issues. Expect bad WLAN behavior (but not poof of smoke).
-
-PS - please don't CC LKML on these issues. for wl1271 questions,
-please CC linux-wireless
-
-Thanks,
-Ohad.
+Base tree: linux-next.git
+Base tree version: next-20101015
+compat-wireless release: compat-wireless-2010-10-14-1-gf0578ae-pc
