@@ -1,46 +1,147 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:45751 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752260Ab0JFUaK (ORCPT
+Received: from web56801.mail.re3.yahoo.com ([66.196.97.75]:46073 "HELO
+	web56801.mail.re3.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1757380Ab0JQRmN (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 6 Oct 2010 16:30:10 -0400
-Date: Wed, 6 Oct 2010 16:18:51 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: =?utf-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-Cc: Michael =?iso-8859-1?Q?B=FCsch?= <mb@bu3sch.de>,
-	linux-wireless@vger.kernel.org, b43-dev@lists.infradead.org
-Subject: Re: [PATCH 3/3] b43: N-PHY: don't duplicate setting channel in
- shared memory
-Message-ID: <20101006201850.GK2472@tuxdriver.com>
-References: <1286344208-32479-1-git-send-email-zajec5@gmail.com>
- <1286344208-32479-4-git-send-email-zajec5@gmail.com>
- <1286379040.11721.1.camel@maggie>
- <AANLkTinsWTCmTjYZ=SgY0-ArTOVgG50V0r9USHnuvQfb@mail.gmail.com>
+	Sun, 17 Oct 2010 13:42:13 -0400
+Message-ID: <983671.73519.qm@web56801.mail.re3.yahoo.com>
+Date: Sun, 17 Oct 2010 10:42:12 -0700 (PDT)
+From: Walter Goldens <goldenstranger@yahoo.com>
+Subject: [PATCH] compat-wireless: update Makefile modules
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <756358.10174.qm@web56802.mail.re3.yahoo.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <AANLkTinsWTCmTjYZ=SgY0-ArTOVgG50V0r9USHnuvQfb@mail.gmail.com>
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Oct 06, 2010 at 06:07:44PM +0200, Rafał Miłecki wrote:
-> W dniu 6 października 2010 17:30 użytkownik Michael Büsch
-> <mb@bu3sch.de> napisał:
-> > On Wed, 2010-10-06 at 07:50 +0200, Rafał Miłecki wrote:
+update "modprobe -l X" list in Makefile
 
-> >> +     /* Don't follow specs, B43_SHM_SH_CHAN is set by b43_switch_channel */
-> >
-> > Looks great. I dunno if a comment is really needed and whether it is
-> > correct, though. We _do_ follow the specs. We just do it elsewhere.
-> 
-> I got "Don't strictly follow specs here" earlier, but made it shorter
-> to match 80 chars ;) Maybe it wasn't too good idea. Should left it
-> longer or don't put at all.
-> 
-> John: could you drop this comment line when applying? Or would you
-> like me to resend this fixed?
 
-Got it...
+Signed-off-by: Walter Goldens <goldenstranger@yahoo.com>
+---
 
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+--- a/Makefile
++++ b/Makefile
+@@ -194,10 +194,14 @@ install-scripts:
+ 	@$(MODPROBE) -l at76c50x-usb
+ 	@$(MODPROBE) -l ath
+ 	@$(MODPROBE) -l ath5k
++	@$(MODPROBE) -l ath6kl
+ 	@$(MODPROBE) -l ath9k
++	@$(MODPROBE) -l ath9k_htc
+ 	@$(MODPROBE) -l b43
+ 	@$(MODPROBE) -l b43legacy
+ 	@$(MODPROBE) -l b44
++	@$(MODPROBE) -l carl9170
++	@$(MODPROBE) -l brcm80211
+ 	@$(MODPROBE) -l cdc_ether
+ 	@$(MODPROBE) -l eeprom_93cx6
+ 	@$(MODPROBE) -l ipw2100
+@@ -205,6 +209,7 @@ install-scripts:
+ 	@$(MODPROBE) -l iwl3945
+ 	@$(MODPROBE) -l iwlagn
+ 	@$(MODPROBE) -l iwlcore
++	@$(MODPROBE) -l iwmc3200wifi
+ 	@$(MODPROBE) -l lib80211_crypt_ccmp
+ 	@$(MODPROBE) -l lib80211_crypt_tkip
+ 	@$(MODPROBE) -l lib80211_crypt_wep
+@@ -217,6 +222,13 @@ install-scripts:
+ 	@$(MODPROBE) -l libipw
+ 	@$(MODPROBE) -l mac80211_hwsim
+ 	@$(MODPROBE) -l mwl8k
++	@$(MODPROBE) -l orinoco_cs
++	@$(MODPROBE) -l orinoco_nortel
++	@$(MODPROBE) -l orinoco_pci
++	@$(MODPROBE) -l orinoco_plx
++	@$(MODPROBE) -l orinoco_tld
++	@$(MODPROBE) -l orinoco_usb
++	@$(MODPROBE) -l orinoco
+ 	@$(MODPROBE) -l p54common
+ 	@$(MODPROBE) -l p54pci
+ 	@$(MODPROBE) -l p54spi
+@@ -226,6 +238,8 @@ install-scripts:
+ 	@$(MODPROBE) -l rt2400pci
+ 	@$(MODPROBE) -l rt2500pci
+ 	@$(MODPROBE) -l rt2500usb
++	@$(MODPROBE) -l rt2800pci
++	@$(MODPROBE) -l rt2800usb
+ 	@$(MODPROBE) -l rt2x00lib
+ 	@$(MODPROBE) -l rt2x00pci
+ 	@$(MODPROBE) -l rt2x00usb
+@@ -233,9 +247,12 @@ install-scripts:
+ 	@$(MODPROBE) -l rt73usb
+ 	@$(MODPROBE) -l rtl8180
+ 	@$(MODPROBE) -l rtl8187
++	@$(MODPROBE) -l spectrum_cs
+ 	@$(MODPROBE) -l ssb
+ 	@$(MODPROBE) -l usb8xxx
+ 	@$(MODPROBE) -l usbnet
++	@$(MODPROBE) -l wl1251
++	@$(MODPROBE) -l wl1271
+ 	@$(MODPROBE) -l zd1211rw
+ 	@echo
+ 	@echo "Currently detected bluetooth subsystem modules:"
+@@ -284,10 +301,14 @@ uninstall:
+ 	@$(MODPROBE) -l at76c50x-usb
+ 	@$(MODPROBE) -l ath
+ 	@$(MODPROBE) -l ath5k
++	@$(MODPROBE) -l ath6kl
+ 	@$(MODPROBE) -l ath9k
++	@$(MODPROBE) -l ath9k_htc
+ 	@$(MODPROBE) -l b43
+ 	@$(MODPROBE) -l b43legacy
+ 	@$(MODPROBE) -l b44
++	@$(MODPROBE) -l carl9170
++	@$(MODPROBE) -l brcm80211
+ 	@$(MODPROBE) -l cdc_ether
+ 	@$(MODPROBE) -l eeprom_93cx6
+ 	@$(MODPROBE) -l ipw2100
+@@ -295,6 +316,7 @@ uninstall:
+ 	@$(MODPROBE) -l iwl3945
+ 	@$(MODPROBE) -l iwlagn
+ 	@$(MODPROBE) -l iwlcore
++	@$(MODPROBE) -l iwmc3200wifi
+ 	@$(MODPROBE) -l lib80211_crypt_ccmp
+ 	@$(MODPROBE) -l lib80211_crypt_tkip
+ 	@$(MODPROBE) -l lib80211_crypt_wep
+@@ -307,6 +329,13 @@ uninstall:
+ 	@$(MODPROBE) -l libipw
+ 	@$(MODPROBE) -l mac80211_hwsim
+ 	@$(MODPROBE) -l mwl8k
++	@$(MODPROBE) -l orinoco_cs
++	@$(MODPROBE) -l orinoco_nortel
++	@$(MODPROBE) -l orinoco_pci
++	@$(MODPROBE) -l orinoco_plx
++	@$(MODPROBE) -l orinoco_tld
++	@$(MODPROBE) -l orinoco_usb
++	@$(MODPROBE) -l orinoco
+ 	@$(MODPROBE) -l p54common
+ 	@$(MODPROBE) -l p54pci
+ 	@$(MODPROBE) -l p54spi
+@@ -316,6 +345,8 @@ uninstall:
+ 	@$(MODPROBE) -l rt2400pci
+ 	@$(MODPROBE) -l rt2500pci
+ 	@$(MODPROBE) -l rt2500usb
++	@$(MODPROBE) -l rt2800pci
++	@$(MODPROBE) -l rt2800usb
+ 	@$(MODPROBE) -l rt2x00lib
+ 	@$(MODPROBE) -l rt2x00pci
+ 	@$(MODPROBE) -l rt2x00usb
+@@ -323,9 +354,12 @@ uninstall:
+ 	@$(MODPROBE) -l rt73usb
+ 	@$(MODPROBE) -l rtl8180
+ 	@$(MODPROBE) -l rtl8187
++	@$(MODPROBE) -l spectrum_cs
+ 	@$(MODPROBE) -l ssb
+ 	@$(MODPROBE) -l usb8xxx
+ 	@$(MODPROBE) -l usbnet
++	@$(MODPROBE) -l wl1251
++	@$(MODPROBE) -l wl1271
+ 	@$(MODPROBE) -l zd1211rw
+ 	@echo
+ 	@echo "Your old bluetooth subsystem modules were left intact:"
+
+
+      
