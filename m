@@ -1,83 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from shadbolt.e.decadent.org.uk ([88.96.1.126]:53413 "EHLO
-	shadbolt.e.decadent.org.uk" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751542Ab0JACwJ (ORCPT
+Received: from mgw-sa02.ext.nokia.com ([147.243.1.48]:53136 "EHLO
+	mgw-sa02.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755135Ab0JRNvo (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 30 Sep 2010 22:52:09 -0400
-From: Ben Hutchings <ben@decadent.org.uk>
-To: David Sanchez Herrero <david.krusty@gmail.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Cc: 598144@bugs.debian.org
-In-Reply-To: <AANLkTi=3saB8VaHfA6pFTnvTdCZVWcMLRAHfO06GvW90@mail.gmail.com>
-References: <20100926203325.8583.75263.reportbug@krusty-deb2.mundo-R.com>
-	 <1285534242.2697.575.camel@localhost>
-	 <AANLkTimMUN45nE9U+ahZQRxH2uqiaCBgRqi2wxR76gr4@mail.gmail.com>
-	 <1285636469.28504.51.camel@localhost>
-	 <AANLkTikY=z89HFg07zsiox4dvos4Vu1QXpAkCXvdm1JV@mail.gmail.com>
-	 <AANLkTi=3saB8VaHfA6pFTnvTdCZVWcMLRAHfO06GvW90@mail.gmail.com>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-kJ+JQmh7zhAheoIb17f7"
-Date: Fri, 01 Oct 2010 03:52:04 +0100
-Message-ID: <1285901524.3916.49.camel@localhost>
+	Mon, 18 Oct 2010 09:51:44 -0400
+Subject: Re: [PATCH v3 0/4] wl1271: TX optimizations & fixes
+From: Luciano Coelho <luciano.coelho@nokia.com>
+To: ext Ido Yariv <ido@wizery.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <1286887752-19321-1-git-send-email-ido@wizery.com>
+References: <1286887752-19321-1-git-send-email-ido@wizery.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Mon, 18 Oct 2010 16:51:42 +0300
+Message-ID: <1287409902.20107.58.camel@chilepepper>
 Mime-Version: 1.0
-Subject: Re: Bug#598144: rt2500pci: very low transfers and link quality
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Tue, 2010-10-12 at 14:49 +0200, ext Ido Yariv wrote:
+> The following patches fix some issues in the TX path, as well as optimize it.
+> 
+> The first patch fixes an issue in wl1271_tx_work. In case the aggregation
+> buffer is completely filled, the content of the buffer is transferred and no
+> more packets are sent. Fixed by flushing the buffer and continue aggregating
+> packets.
+> 
+> The second patch solves a TX starvation issue in wl1271_irq_work. Since TX is
+> handled by wl1271_tx_work, packets are transmitted after all interrupts are
+> handled in wl1271_irq_work. Since these include TX completion interrupts the
+> FW status might be read multiple times needlessly, which could hurt performance.
+> 
+> The third patch is more of a cosmetic change. Instead of traversing the array
+> of TX descriptors in order to find a free entry, use a bitmap for that
+> purpose.
+> 
+> The last patch fixes an issue with the TX queue low watermark. The number of
+> items in the TX queue is checked against the low watermark in
+> wl1271_tx_complete. However, the fact that a TX completion interrupt was fired
+> does not necessarily mean that there are any less skbs in the TX queue. Fixed
+> by moving the handling logic to the TX work, after skbs are actually dequeued.
+> 
+> These patches were tested on a Zoom2 platform (SDIO only). While throughput in
+> RX scenarios was hardly affected, throughput in TX scenarios was significantly
+> improved.
+> 
+> Changes from v2:
+> - Remove the restriction on the maximum number of TX descriptors being 32
+> Changes from v1:
+> - Fix a theoretical potential deadlock in irq_work and tx_work. Instead of
+>   cancelling redundant work, avoid scheduling it in the first place.
+> - Check if the low watermark was reached only if skbs were really dequeued
+> 
+> Ido Yariv (4):
+>   wl1271: TX aggregation optimization
+>   wl1271: Fix TX starvation
+>   wl1271: Allocate TX descriptors more efficiently
+>   wl1271: Fix TX queue low watermark handling
 
---=-kJ+JQmh7zhAheoIb17f7
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Applied the series.  Thank you!
 
-On Wed, 2010-09-29 at 18:52 +0200, David Sanchez Herrero wrote:
-> Hi again,
->=20
-> After some troubles that I could solve, I connected the interface, but
-> it's impossible to make anything because in all terminals appears one
-> message continously:
->=20
-> cfg80211: Calling CRDA to update world regulatory domain.
->=20
-> I can see that I lose the connection, probably because this message.
-> This happens with 2.6.36-rc5-686 kernel. Any idea about solving this
-> problem?
 
-No, but the developers on linux-wireless may be able to help.
+-- 
+Cheers,
+Luca.
 
-Ben.
-
-> This problem doesn't exists with 2.6.32-5-686 kernel, but with it, I
-> have again the error message that appears in my first report:
->=20
-> phy0 -> rt2500pci_set_device_state: Error - Device failed to enter
-> state 1 (-16).
->=20
-> In this case I don't lose the connection to the AP, but the link
-> quality and transfers speed are still low.
-
---=20
-Ben Hutchings
-Once a job is fouled up, anything done to improve it makes it worse.
-
---=-kJ+JQmh7zhAheoIb17f7
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.10 (GNU/Linux)
-
-iQIVAwUATKVM0+e/yOyVhhEJAQJf/hAAjTWd2JqCk1cLocobIRLFCSfmsDZmnl8b
-ItQ2d/njN+vbtaWV8vrlMI8p94z6Lxoft1jZT65M8U1iQ1Wd6Fze2pMws67Iszo4
-TiB95ssBOEU6Gqhnvvc8CjoTBBsEv+8r0hhoatbbAR0YXTsK5a8McUttEy2uauHz
-8Mblj1IvRDsAtks+llFAWKu8P3m+is3BvOH/R6eXm7eid2yhuvZblMxLc/m4brL3
-kT21TP/1+KQRFlLRmOitv0L7+div1Q/f+N1swAz0xzYV9nThhqj6wyF8kI+TuXv+
-I71OfCslW3vtPKu1cGKBJKewidgAetr361iWwflvfOwzqkj7bBoYf+tuzjYmTc/Q
-SzKo1JNKBnO30LqQ+2VCWDU0pOJxNx2Nj0gZRqpquXGInZdw92mRA/gLyHSsFwyC
-XMfqZP8pT1mM3oWaVBzvI5olGhnhNo14HcO7E+xQC/PJdLfe3Yh7xvghJzGvMznf
-96dhwi9U3p/pF8ULD7iKcxzMwRf0TMmpYYOUuNkLmK5T1/i3F4A0JwFRcMiP8pyv
-JFrT5nVFuvJWekfdqBp3Vsn/ma+EUGzKAO1votP24mi9eApKpEA7GE1ttN/2oTfW
-+YDoiOxgvUqH/yyCHbEL7pxhOY/4kQLrhzew9NM6B4vkeET0kTugboozRgiQqm2H
-uKjPRzJZuak=
-=5hzZ
------END PGP SIGNATURE-----
-
---=-kJ+JQmh7zhAheoIb17f7--
