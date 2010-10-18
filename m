@@ -1,155 +1,113 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:37247 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757623Ab0JYUPN (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 25 Oct 2010 16:15:13 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: linux-wireless@vger.kernel.org
-Cc: "Rafael J. Wysocki" <rjw@sisk.pl>, wey-yi.w.guy@intel.com,
-	"John W. Linville" <linville@tuxdriver.com>
-Subject: [RFC] iwlwifi: Convert to new PCI PM framework
-Date: Mon, 25 Oct 2010 16:12:37 -0400
-Message-Id: <1288037557-5197-1-git-send-email-linville@tuxdriver.com>
+Received: from mailout-de.gmx.net ([213.165.64.22]:43348 "HELO mail.gmx.net"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with SMTP
+	id S1750848Ab0JRSU5 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 18 Oct 2010 14:20:57 -0400
+Message-ID: <4CBC9A51.8030309@gmx.net>
+Date: Mon, 18 Oct 2010 21:04:49 +0200
+From: George <george.news@gmx.net>
+MIME-Version: 1.0
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+CC: Bob Copeland <me@bobcopeland.com>,
+	Luciano Coelho <luciano.coelho@nokia.com>,
+	Denis 'GNUtoo' Carikli <GNUtoo@no-log.org>,
+	linux-wireless@vger.kernel.org
+Subject: Re: Compat-wireless N900
+References: <4CB6BE57.8010401@gmx.net> <1287071844.11341.5.camel@gnutoo-laptop> <AANLkTikosEtFnWqRVzMBKtNsB=aqOpqQFKDOZS3+pXTE@mail.gmail.com> <4CB74759.3030807@gmx.net> <AANLkTi=1Ar-gzRaskHGDLmkaDnr=9+oZnA=qBLCYcUAi@mail.gmail.com> <4CB7F7C7.7030804@gmx.net> <AANLkTi=u+mT2Xd0=0vt4uaf9hSnnkPKY+wN6DjAxME3m@mail.gmail.com> <4CBABB84.1090100@gmx.net> <4CBC7725.7050202@gmx.net> <AANLkTincCSBfwa_Y-cy_42HfU5kP1puCbi2-dBwGkkHu@mail.gmail.com>
+In-Reply-To: <AANLkTincCSBfwa_Y-cy_42HfU5kP1puCbi2-dBwGkkHu@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Use the new PCI PM and let the PCI core code handle the PCI-specific
-details of power transitions.
+On 18/10/2010 19:21, Luis R. Rodriguez wrote:
+> On Mon, Oct 18, 2010 at 9:34 AM, George<george.news@gmx.net>  wrote:
+>> On 17/10/2010 11:01, George wrote:
+>>>
+>>> On 15/10/2010 20:01, Luis R. Rodriguez wrote:
+>>>>
+>>>> On Thu, Oct 14, 2010 at 11:42 PM, George<george.news@gmx.net>
+>>>> wrote:
+>>>>>
+>>>>> On 14/10/2010 20:03, Luis R. Rodriguez wrote:
+>>>>>>
+>>>>>> On Thu, Oct 14, 2010 at 11:09 AM, George<george.news@gmx.net>
+>>>>>> wrote:
+>>>>>>
+>>>>>>> I have tried using even insmod and the modules load perfectly
+>>>>>>> but the wlan device doesn't show up.
+>>>>>>
+>>>>>> Then that likely means you are not loading the right module.
+>>>>>>
+>>>>>>> In dmesg nothing is displayed except for the cfg80211 and
+>>>>>>> when I rmmod the module wl1251 (wl1251: removed or similar)
+>>>>>>>
+>>>>>>> I'm still wondering what the hell I have to do.
+>>>>>>
+>>>>>> Are you sure you have the right module?
+>>>>>
+>>>>> Yes. The driver is the wl1251 family. As I said in previous posts
+>>>>> and from what some guys in the IRC channel tried to guess, it
+>>>>> seems that the problem might be in that the spi interface is
+>>>>> specific for any device, and in the n900 might be different from
+>>>>> the one implemented in compat-wireless.
+>>>>
+>>>> Heh, nope.
+>>>>
+>>>>> I'm a bit suprised about this fact, but they know more than I.
+>>>>
+>>>> Or, we had not yet accommodated yet for the fact that the wl1251
+>>>> driver was split out into its own directory from the original
+>>>> wl12xx/ directory and no one ever sent a patch to fix this on
+>>>> compat-wireless. I just fixed this on today's compat-wireless, so
+>>>> you can try that around noon PST time when the new tarball will be
+>>>> generated. Ah but there are some pcmcia crap compile issues, we
+>>>> just have to remove pcmcia support, well not now, I have other
+>>>> stuff to do.
+>>
+>> I have downloaded compat-wireless-2010-10-17.tar.bz2 and have compiled the
+>> code with no problem. I have seen the changes you've made creating modules
+>> wl1251, spi and sdio.
+>>
+>> I have run modprobe spi to upload the modules (also tried sdio) and no way.
+>> dmesg doesn't include any message. Below is the one after unloading the
+>> modules and uploading them again:
+>> rmmod spi wl1251 mac80211 cfg80211 compat_firmware_class
+>> modprobe spi
+>>
+>>>>
+>> wl1251: unloaded
+>> cfg80211: Calling CRDA to update world regulatory domain
+>>>>
+>>
+>> Below is the output for lsmod. As you can see modules are up and running,
+>> but when I execute ifconfig -a no wlan0 device shows up.
+>>
+>> Nokia-N900:~# lsmod | grep spi
+>> spi                     4352  0
+>> wl1251                 75840  1 spi
+>> mac80211              212984  2 spi,wl1251
+>> crc7                    1216  1 spi
+>> Nokia-N900:~# lsmod | grep compat
+>> compat_firmware_class     8896  1 wl1251
+>> compat                 10496  2 mac80211,cfg80211
+>> v4l1_compat            12100  1 videodev
+>> compat_ioctl32           832  1 fmtx_si4713
+>> Nokia-N900:~# lsmod | grep wl12
+>> wl1251                 75840  1 spi
+>> compat_firmware_class     8896  1 wl1251
+>> mac80211              212984  2 spi,wl1251
+>> cfg80211              148904  2 wl1251,mac80211
+>>
+>> Any help on that? Sorry but I'm somehow desesperate and don't know what to
+>> do. Actually I'm thinking on not using compat-wireless and nl80211 and get
+>> back to wireless-extensions.
+>
+> Does your device use SDIO or SPI?
+>
+>    Luis
 
-Based on similarly titled ath9k patch posted by Rafael J. Wysocki.
+I have tried both and none of them have worked.
 
-Cc: "Rafael J. Wysocki" <rjw@sisk.pl>
-Signed-off-by: John W. Linville <linville@tuxdriver.com>
----
-Compile-tested only...do the iwl_pci_resume changes look right?
+Jorge
 
- drivers/net/wireless/iwlwifi/iwl-agn.c      |    5 +----
- drivers/net/wireless/iwlwifi/iwl-core.c     |   26 ++++++++++++++------------
- drivers/net/wireless/iwlwifi/iwl-core.h     |   14 +++++++++++---
- drivers/net/wireless/iwlwifi/iwl3945-base.c |    5 +----
- 4 files changed, 27 insertions(+), 23 deletions(-)
-
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
-index c2636a7..513bb31 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
-@@ -4836,10 +4836,7 @@ static struct pci_driver iwl_driver = {
- 	.id_table = iwl_hw_card_ids,
- 	.probe = iwl_pci_probe,
- 	.remove = __devexit_p(iwl_pci_remove),
--#ifdef CONFIG_PM
--	.suspend = iwl_pci_suspend,
--	.resume = iwl_pci_resume,
--#endif
-+	.driver.pm = IWL_PM_OPS,
- };
- 
- static int __init iwl_init(void)
-diff --git a/drivers/net/wireless/iwlwifi/iwl-core.c b/drivers/net/wireless/iwlwifi/iwl-core.c
-index 25fb391..eb39b43 100644
---- a/drivers/net/wireless/iwlwifi/iwl-core.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-core.c
-@@ -2584,8 +2584,9 @@ EXPORT_SYMBOL(iwl_add_beacon_time);
- 
- #ifdef CONFIG_PM
- 
--int iwl_pci_suspend(struct pci_dev *pdev, pm_message_t state)
-+int iwl_pci_suspend(struct device *device)
- {
-+	struct pci_dev *pdev = to_pci_dev(device);
- 	struct iwl_priv *priv = pci_get_drvdata(pdev);
- 
- 	/*
-@@ -2597,18 +2598,14 @@ int iwl_pci_suspend(struct pci_dev *pdev, pm_message_t state)
- 	 */
- 	iwl_apm_stop(priv);
- 
--	pci_save_state(pdev);
--	pci_disable_device(pdev);
--	pci_set_power_state(pdev, PCI_D3hot);
--
- 	return 0;
- }
- EXPORT_SYMBOL(iwl_pci_suspend);
- 
--int iwl_pci_resume(struct pci_dev *pdev)
-+int iwl_pci_resume(struct device *device)
- {
-+	struct pci_dev *pdev = to_pci_dev(device);
- 	struct iwl_priv *priv = pci_get_drvdata(pdev);
--	int ret;
- 	bool hw_rfkill = false;
- 
- 	/*
-@@ -2617,11 +2614,6 @@ int iwl_pci_resume(struct pci_dev *pdev)
- 	 */
- 	pci_write_config_byte(pdev, PCI_CFG_RETRY_TIMEOUT, 0x00);
- 
--	pci_set_power_state(pdev, PCI_D0);
--	ret = pci_enable_device(pdev);
--	if (ret)
--		return ret;
--	pci_restore_state(pdev);
- 	iwl_enable_interrupts(priv);
- 
- 	if (!(iwl_read32(priv, CSR_GP_CNTRL) &
-@@ -2639,4 +2631,14 @@ int iwl_pci_resume(struct pci_dev *pdev)
- }
- EXPORT_SYMBOL(iwl_pci_resume);
- 
-+const struct dev_pm_ops iwl_pm_ops = {
-+	.suspend = iwl_pci_suspend,
-+	.resume = iwl_pci_resume,
-+	.freeze = iwl_pci_suspend,
-+	.thaw = iwl_pci_resume,
-+	.poweroff = iwl_pci_suspend,
-+	.restore = iwl_pci_resume,
-+};
-+EXPORT_SYMBOL(iwl_pm_ops);
-+
- #endif /* CONFIG_PM */
-diff --git a/drivers/net/wireless/iwlwifi/iwl-core.h b/drivers/net/wireless/iwlwifi/iwl-core.h
-index 64527de..b17de82 100644
---- a/drivers/net/wireless/iwlwifi/iwl-core.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-core.h
-@@ -615,9 +615,17 @@ __le32 iwl_add_beacon_time(struct iwl_priv *priv, u32 base,
- 			   u32 addon, u32 beacon_interval);
- 
- #ifdef CONFIG_PM
--int iwl_pci_suspend(struct pci_dev *pdev, pm_message_t state);
--int iwl_pci_resume(struct pci_dev *pdev);
--#endif /* CONFIG_PM */
-+int iwl_pci_suspend(struct device *device);
-+int iwl_pci_resume(struct device *device);
-+extern const struct dev_pm_ops iwl_pm_ops;
-+
-+#define IWL_PM_OPS	(&iwl_pm_ops)
-+
-+#else /* !CONFIG_PM */
-+
-+#define IWL_PM_OPS	NULL
-+
-+#endif /* !CONFIG_PM */
- 
- /*****************************************************
- *  Error Handling Debugging
-diff --git a/drivers/net/wireless/iwlwifi/iwl3945-base.c b/drivers/net/wireless/iwlwifi/iwl3945-base.c
-index 8f8c4b7..895690f 100644
---- a/drivers/net/wireless/iwlwifi/iwl3945-base.c
-+++ b/drivers/net/wireless/iwlwifi/iwl3945-base.c
-@@ -4274,10 +4274,7 @@ static struct pci_driver iwl3945_driver = {
- 	.id_table = iwl3945_hw_card_ids,
- 	.probe = iwl3945_pci_probe,
- 	.remove = __devexit_p(iwl3945_pci_remove),
--#ifdef CONFIG_PM
--	.suspend = iwl_pci_suspend,
--	.resume = iwl_pci_resume,
--#endif
-+	.driver.pm = IWL_PM_OPS,
- };
- 
- static int __init iwl3945_init(void)
--- 
-1.7.2.3
 
