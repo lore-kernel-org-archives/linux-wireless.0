@@ -1,143 +1,84 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([192.100.105.134]:26078 "EHLO
-	mgw-mx09.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751710Ab0JGSiK (ORCPT
+Received: from mail30f.wh2.ocn.ne.jp ([220.111.41.203]:4785 "HELO
+	mail30f.wh2.ocn.ne.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1751263Ab0JRC5N (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 7 Oct 2010 14:38:10 -0400
-Subject: Re: [PATCH v2 02/03] wl1271: 11n Support, ACX Commands
-From: Luciano Coelho <luciano.coelho@nokia.com>
-To: ext Shahar Levi <shahar_levi@ti.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <1286388491-28752-4-git-send-email-shahar_levi@ti.com>
-References: <1286388491-28752-1-git-send-email-shahar_levi@ti.com>
-	 <1286388491-28752-4-git-send-email-shahar_levi@ti.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Thu, 07 Oct 2010 21:37:56 +0300
-Message-ID: <1286476676.1662.57.camel@powerslave>
-Mime-Version: 1.0
+	Sun, 17 Oct 2010 22:57:13 -0400
+Received: from vs3004.wh2.ocn.ne.jp (125.206.180.167)
+	by mail30f.wh2.ocn.ne.jp (RS ver 1.0.95vs) with SMTP id 3-082928629
+	for <linux-wireless@vger.kernel.org>; Mon, 18 Oct 2010 11:57:11 +0900 (JST)
+From: Bruno Randolf <br1@einfach.org>
+To: greearb@candelatech.com
+Subject: Re: [ath5k-devel] [PATCH] ath5k: Properly initialize ath_common->cc_lock.
+Date: Mon, 18 Oct 2010 11:57:09 +0900
+Cc: ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org
+References: <1287183092-3220-1-git-send-email-greearb@candelatech.com>
+In-Reply-To: <1287183092-3220-1-git-send-email-greearb@candelatech.com>
+MIME-Version: 1.0
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Message-Id: <201010181157.10005.br1@einfach.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2010-10-06 at 20:08 +0200, ext Shahar Levi wrote:
-> Added ACX command to the FW for 11n support.
+On Sat October 16 2010 07:51:32 greearb@candelatech.com wrote:
+> From: Ben Greear <greearb@candelatech.com>
 > 
-> Signed-off-by: Shahar Levi <shahar_levi@ti.com>
+> Otherwise, lockdep splats, at the least:
+> 
+> INFO: trying to register non-static key.
+> the code is fine but needs lockdep annotation.
+> turning off the locking correctness validator.
+> Pid: 0, comm: swapper Not tainted 2.6.36-rc8-wl+ #32
+> Call Trace:
+>  [<c075d940>] ? printk+0xf/0x17
+>  [<c045507a>] register_lock_class+0x5a/0x29e
+>  [<c0456af5>] __lock_acquire+0xa2/0xb8c
+>  [<c0455be2>] ? mark_lock+0x1e/0x1de
+>  [<c041a540>] ? acpi_get_override_irq+0x85/0x8c
+>  [<c0455536>] ? trace_hardirqs_off+0xb/0xd
+>  [<c0457639>] lock_acquire+0x5a/0x78
+>  [<f8126835>] ? ath5k_ani_calibration+0x24/0x52b [ath5k]
+>  [<c075f6ed>] _raw_spin_lock_bh+0x20/0x2f
+>  [<f8126835>] ? ath5k_ani_calibration+0x24/0x52b [ath5k]
+>  [<f8126835>] ath5k_ani_calibration+0x24/0x52b [ath5k]
+>  [<c0438f99>] ? tasklet_action+0x3b/0xc6
+>  [<f8123c2b>] ath5k_tasklet_ani+0x18/0x22 [ath5k]
+>  [<c0438fd1>] tasklet_action+0x73/0xc6
+>  [<c043945f>] __do_softirq+0x86/0x111
+>  [<c0439520>] do_softirq+0x36/0x5a
+>  [<c0439659>] irq_exit+0x35/0x69
+>  [<c0403fb9>] do_IRQ+0x86/0x9a
+>  [<c04034ee>] common_interrupt+0x2e/0x40
+>  [<c045007b>] ? do_adjtimex+0x223/0x55e
+>  [<c0408245>] ? mwait_idle+0x5c/0x6c
+>  [<c040227f>] cpu_idle+0x4e/0x6b
+>  [<c074b6e9>] rest_init+0x8d/0x92
+>  [<c09758ea>] start_kernel+0x320/0x325
+>  [<c09750d0>] i386_start_kernel+0xd0/0xd7
+> 
+> Signed-off-by: Ben Greear <greearb@candelatech.com>
 > ---
+> 
+> :100644 100644 f1ae75d... 8251946...
+> :M	drivers/net/wireless/ath/ath5k/base.c
+> 
+>  drivers/net/wireless/ath/ath5k/base.c |    1 +
+>  1 files changed, 1 insertions(+), 0 deletions(-)
+> 
+> diff --git a/drivers/net/wireless/ath/ath5k/base.c
+> b/drivers/net/wireless/ath/ath5k/base.c index f1ae75d..8251946 100644
+> --- a/drivers/net/wireless/ath/ath5k/base.c
+> +++ b/drivers/net/wireless/ath/ath5k/base.c
+> @@ -3580,6 +3580,7 @@ ath5k_pci_probe(struct pci_dev *pdev,
+>  	common->ah = sc->ah;
+>  	common->hw = hw;
+>  	common->cachelsz = csz << 2; /* convert to bytes */
+> +	spin_lock_init(&common->cc_lock);
+> 
+>  	/* Initialize device */
+>  	ret = ath5k_hw_attach(sc);
 
-Again, mostly coding-style comments.
+Yep, we forgot that. Thank you!
 
-
-> diff --git a/drivers/net/wireless/wl12xx/wl1271_acx.c b/drivers/net/wireless/wl12xx/wl1271_acx.c
-> index 6189934..cc6b7d8 100644
-> --- a/drivers/net/wireless/wl12xx/wl1271_acx.c
-> +++ b/drivers/net/wireless/wl12xx/wl1271_acx.c
-> @@ -1226,6 +1226,97 @@ out:
->  	return ret;
->  }
->  
-> +int wl1271_acx_set_ht_capabilities(struct wl1271 *wl,
-> +				    struct ieee80211_sta_ht_cap *ht_cap,
-> +				    bool allow_ht_operation)
-> +{
-> +	struct wl1271_acx_ht_capabilities *acx;
-> +	/*
-> +	* Note, currently this value will be set to FFFFFFFFFFFF to indicate
-> +	* it is relevant for all peers since we only support HT in
-> +	* infrastructure mode. Later on this field will be relevant to
-> +	* IBSS/DLS operation */
-> +	u8 mac_address[ETH_ALEN] = {0xff, 0xff, 0xff, 0xff, 0xff, 0xff};
-
-I didn't realize this when reviewing patch 01/03, but you could actually
-remove the Note from the wl1271_acx.h file and leave it here.  There's
-no need to have it repeated there and here.
-
-
-> +	/* Allow HT Operation ? */
-> +	if (true == allow_ht_operation) {
-
-I know that some people like to put the constant in the left side of the
-comparison operator to avoid problems with mistyping == as =, but
-reading this in the opposite way is less intuitive (like top-posting? ;)
-and the compiler, if called with reasonable options, will warn you if
-you make that mistake.  So, summarizing, please use it like this
-instead, then you don't even risk mistyping == in the first place :P
-
-	if (allow_ht_operation) {
-
-
-> +		acx->ht_capabilites =
-> +		WL1271_ACX_FW_CAP_BIT_MASK_HT_OPERATION;
-
-Add a more indentation on the second line, it's easier to read.
-
-
-> +		acx->ht_capabilites |=
-> +		((ht_cap->cap & IEEE80211_HT_CAP_GRN_FLD) ?
-> +		WL1271_ACX_FW_CAP_BIT_MASK_GREENFIELD_FRAME_FORMAT : 0);
-> +		acx->ht_capabilites |=
-> +		((ht_cap->cap & IEEE80211_HT_CAP_SGI_20) ?
-> +		WL1271_ACX_FW_CAP_BIT_MASK_SHORT_GI_FOR_20MHZ_PACKETS : 0);
-> +		acx->ht_capabilites |=
-> +		((ht_cap->cap & IEEE80211_HT_CAP_LSIG_TXOP_PROT) ?
-> +		WL1271_ACX_FW_CAP_BIT_MASK_LSIG_TXOP_PROTECTION : 0);
-
-Same thing for all these other assignments.
-
-
-> +
-> +		/* get date from A-MPDU parameters field */
-
-"get data"
-
-
-> +		acx->ampdu_max_length = ht_cap->ampdu_factor;
-> +		acx->ampdu_min_spacing = ht_cap->ampdu_density;
-> +
-> +		memcpy(acx->mac_address, mac_address, ETH_ALEN);
-> +	}
-> +	/* HT operations are not allowed */
-> +	else
-> +		acx->ht_capabilites = 0;
-
-According to Documentation/CodingStyle, you should write the else block
-like this:
-
-if (...) {
-	...
-} else {
-	acx->ht_capabilities = 0;
-}
-
-
-> +int wl1271_acx_set_ht_information(struct wl1271 *wl,
-> +				   u16 ht_operation_mode)
-> +{
-> +	struct wl1271_acx_ht_information *acx;
-> +	int ret = 0;
-> +
-> +	wl1271_debug(DEBUG_ACX, "acx ht information setting");
-> +
-> +	acx = kzalloc(sizeof(*acx), GFP_KERNEL);
-> +	if (!acx) {
-> +		ret = -ENOMEM;
-> +		goto out;
-> +	}
-> +
-> +	acx->ht_protection =
-> +		(u8)(ht_operation_mode & IEEE80211_HT_OP_MODE_PROTECTION);
-> +	acx->rifs_mode = 0;
-> +	acx->gf_protection = 0;
-> +	acx->ht_tx_burst_limit = 0;
-> +	acx->dual_cts_protection = 0;
-> +
-> +	ret = wl1271_cmd_configure(wl,
-> +				   ACX_HT_BSS_OPERATION,
-> +				   acx,
-> +				   sizeof(*acx));
-
-Doesn't this fit in less lines?
-
--- 
-Cheers,
-Luca.
-
+Acked-by: Bruno Randolf <br1@einfach.org>
