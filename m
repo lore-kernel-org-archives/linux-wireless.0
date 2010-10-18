@@ -1,71 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ey0-f174.google.com ([209.85.215.174]:62591 "EHLO
-	mail-ey0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755362Ab0JVPnh (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 22 Oct 2010 11:43:37 -0400
-Received: by mail-ey0-f174.google.com with SMTP id 27so1166345eye.19
-        for <linux-wireless@vger.kernel.org>; Fri, 22 Oct 2010 08:43:36 -0700 (PDT)
-From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-To: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-Cc: b43-dev@lists.infradead.org,
-	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-Subject: [PATCH 2/5] b43: N-PHY: fix 2055 radio init
-Date: Fri, 22 Oct 2010 17:43:46 +0200
-Message-Id: <1287762229-16516-3-git-send-email-zajec5@gmail.com>
-In-Reply-To: <1287762229-16516-2-git-send-email-zajec5@gmail.com>
-References: <1287762229-16516-2-git-send-email-zajec5@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Received: from mga02.intel.com ([134.134.136.20]:13326 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755995Ab0JRORh (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 18 Oct 2010 10:17:37 -0400
+Subject: Re: [PATCH 1/9] iwlagn: need longer tx queue stuck timer for coex
+ devices
+From: "Guy, Wey-Yi" <wey-yi.w.guy@intel.com>
+To: Stanislaw Gruszka <sgruszka@redhat.com>
+Cc: "linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"ipw3945-devel@lists.sourceforge.net"
+	<ipw3945-devel@lists.sourceforge.net>
+In-Reply-To: <20101018121250.GA4005@redhat.com>
+References: <1287079370-20587-1-git-send-email-wey-yi.w.guy@intel.com>
+	 <1287079370-20587-2-git-send-email-wey-yi.w.guy@intel.com>
+	 <20101015164447.GB4286@redhat.com>
+	 <E9954878DD1FB34FAE5187FB88C58A35012EE46C3F@orsmsx506.amr.corp.intel.com>
+	 <20101018121250.GA4005@redhat.com>
+Content-Type: text/plain
+Date: Mon, 18 Oct 2010 07:16:47 -0700
+Message-Id: <1287411407.13051.39.camel@wwguy-ubuntu>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
----
- drivers/net/wireless/b43/radio_2055.c |    8 +++++---
- 1 files changed, 5 insertions(+), 3 deletions(-)
+Hi Stanislaw,
 
-diff --git a/drivers/net/wireless/b43/radio_2055.c b/drivers/net/wireless/b43/radio_2055.c
-index 1b53165..0d67715 100644
---- a/drivers/net/wireless/b43/radio_2055.c
-+++ b/drivers/net/wireless/b43/radio_2055.c
-@@ -244,7 +244,7 @@ static const struct b2055_inittab_entry b2055_inittab [] = {
-   [0xCB]			= { .ghz5 = 0x0000, .ghz2 = 0x0000, NOUPLOAD, },
-   [0xCC]			= { .ghz5 = 0x0000, .ghz2 = 0x0000, NOUPLOAD, },
-   [B2055_C1_LNA_GAINBST]	= { .ghz5 = 0x0000, .ghz2 = 0x0000, NOUPLOAD, },
--  [0xCE]			= { .ghz5 = 0x0000, .ghz2 = 0x0000, NOUPLOAD, },
-+  [0xCE]			= { .ghz5 = 0x0006, .ghz2 = 0x0006, NOUPLOAD, },
-   [0xCF]			= { .ghz5 = 0x0000, .ghz2 = 0x0000, NOUPLOAD, },
-   [0xD0]			= { .ghz5 = 0x0000, .ghz2 = 0x0000, NOUPLOAD, },
-   [0xD1]			= { .ghz5 = 0x0018, .ghz2 = 0x0018, NOUPLOAD, },
-@@ -256,7 +256,7 @@ static const struct b2055_inittab_entry b2055_inittab [] = {
-   [0xD7]			= { .ghz5 = 0x0000, .ghz2 = 0x0000, NOUPLOAD, },
-   [0xD8]			= { .ghz5 = 0x0000, .ghz2 = 0x0000, NOUPLOAD, },
-   [B2055_C2_LNA_GAINBST]	= { .ghz5 = 0x0000, .ghz2 = 0x0000, NOUPLOAD, },
--  [0xDA]			= { .ghz5 = 0x0000, .ghz2 = 0x0000, NOUPLOAD, },
-+  [0xDA]			= { .ghz5 = 0x0006, .ghz2 = 0x0006, NOUPLOAD, },
-   [0xDB]			= { .ghz5 = 0x0000, .ghz2 = 0x0000, NOUPLOAD, },
-   [0xDC]			= { .ghz5 = 0x0000, .ghz2 = 0x0000, NOUPLOAD, },
-   [0xDD]			= { .ghz5 = 0x0018, .ghz2 = 0x0018, NOUPLOAD, },
-@@ -1299,7 +1299,7 @@ void b2055_upload_inittab(struct b43_wldev *dev,
- 			  bool ghz5, bool ignore_uploadflag)
- {
- 	const struct b2055_inittab_entry *e;
--	unsigned int i;
-+	unsigned int i, writes = 0;
- 	u16 value;
- 
- 	for (i = 0; i < ARRAY_SIZE(b2055_inittab); i++) {
-@@ -1312,6 +1312,8 @@ void b2055_upload_inittab(struct b43_wldev *dev,
- 			else
- 				value = e->ghz2;
- 			b43_radio_write16(dev, i, value);
-+			if (++writes % 4 == 0)
-+				b43_read32(dev, B43_MMIO_MACCTL); /* flush */
- 		}
- 	}
- }
--- 
-1.7.1
+On Mon, 2010-10-18 at 05:12 -0700, Stanislaw Gruszka wrote:
+> Hi Wey
+> 
+> > activity is too small time for device. Moreover we have unlikely but
+> > possible situation when device is fully functional, but read_ptr will
+> > wrap by accident to q->last_read_ptr on every check.
+> > 
+> > I think, better solution would be something like in rt2x00 or in
+> > net/sched/sch_generic.c (however rt2x00 is easier to understand). It is
+> > based on time stamp. When we get tx complete notification from hardware
+> > (and incise read_ptr) mark the time stamp. In watchdog, which tick
+> > periodically, check if queue is not empty and if current time is
+> > bigger than time_stamp + time_out, if it is - firmware hung. More
+> > smaller watchog tick give more precise hung detect (with disadvantage
+> > of more cpu usage).
+> > 
+> > 
+> > Me too not really like the current "monitor" approach, some thought about the design you propose.
+> > 
+> > 1. "time_out" is something need to be define and has the similar problem like what we have today since different devices has different behavior. For example, in WiFi/BT combo case, the queue might not move for a while if BT traffic load is high
+> 
+> Sure.
+> 
+> However new watchdog could be more precise. Currently if hung will
+> happen just after watchdog tick we are detecting it in time about 2
+> ticks i.e. 10s, or when happen just before the tick we detect the hang
+> in 1 tick i.e. 5s, what gives 100% inaccuracy. New design can be much
+> more precise.
+> 
+> > 2. I don't really see much of "cpu usage" impact if we have a reasonable watchdog timer. But it is all relative.
+> 
+> Ohh, I was talking about cpu usage in new design I described.
+> 
+> > 
+> > By saying that, I think using timestamp might give more cleaner design, but still has the similar issues.
+> 
+> Ok, if Intel have no plan to change the monitor recovery and have nothing
+> against my watchdog approach, I'm going to cook some patches.
+
+Pleas do so and please do let us review it. I am very happy having you
+looking at the iwlwifi driver and give great improvement.
+
+Thank you very much
+Wey
 
