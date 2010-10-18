@@ -1,36 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from kroah.org ([198.145.64.141]:36236 "EHLO coco.kroah.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756095Ab0JJMzK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 10 Oct 2010 08:55:10 -0400
-Date: Sun, 10 Oct 2010 05:41:59 -0700
-From: Greg KH <greg@kroah.com>
-To: Andy Shevchenko <andy.shevchenko@gmail.com>
-Cc: linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
-	linux-kernel@vger.kernel.org, Nohee Ko <noheek@broadcom.com>,
-	Greg Kroah-Hartman <gregkh@suse.de>
-Subject: Re: [PATCH 1/3] staging: brcm80211: clean up custom ctype library
-	again
-Message-ID: <20101010124159.GA21776@kroah.com>
-References: <86dfcd5dfdee8ce5ca558634d4606922f05e96e1.1286705921.git.andy.shevchenko@gmail.com>
+Received: from mail-gx0-f174.google.com ([209.85.161.174]:40277 "EHLO
+	mail-gx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750806Ab0JRVCw (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 18 Oct 2010 17:02:52 -0400
+Date: Mon, 18 Oct 2010 17:02:09 -0200
+From: "Gustavo F. Padovan" <padovan@profusion.mobi>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: marcel@holtmann.org, linux-wireless@vger.kernel.org,
+	linux-bluetooth@vger.kernel.org, davem@davemloft.net
+Subject: Re: pull request: bluetooth-2.6 2010-10-18
+Message-ID: <20101018190208.GA3080@vigoh>
+References: <20101018055540.GA13511@vigoh>
+ <20101018200830.GA2443@tuxdriver.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <86dfcd5dfdee8ce5ca558634d4606922f05e96e1.1286705921.git.andy.shevchenko@gmail.com>
+In-Reply-To: <20101018200830.GA2443@tuxdriver.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, Oct 10, 2010 at 01:20:11PM +0300, Andy Shevchenko wrote:
-> The similar cleanup was done before for softmac implementation.  But the
-> fullmac driver brings this back. Remove it again.
+* John W. Linville <linville@tuxdriver.com> [2010-10-18 16:08:31 -0400]:
+
+> On Mon, Oct 18, 2010 at 03:55:40AM -0200, Gustavo F. Padovan wrote:
+> > Hi John,
+> > 
+> > Not sure if we still have time for a last minute fix, but here goes a
+> > fix for a NULL dereference in L2CAP layer for 2.6.36-rc8. Please also let
+> > me know if this is the right way to handle such last minute fix. Maybe you
+> > should want this directly through Dave. 
+> > 
+> > Thanks.
 > 
-> Signed-off-by: Andy Shevchenko <andy.shevchenko@gmail.com>
-> ---
->  drivers/staging/brcm80211/brcmfmac/bcmutils.c |   56 ++----------------------
+> The fix seems fine to me.  Given the short schedule, it might be best
+> to skip the middleman and have Dave pull directly from you?
+> 
+> Dave, be forewarned that Gustavo has based his tree off 2.6.36-rc8 --
+> dunno if you are ready to pull that into net-2.6 or not.
 
-This file is now gone from the tree, as of yesterday.  Care to resync on
-the next linux-next tree on Monday and verify if any of these patches
-are even needed anymore?
+If you guys think that rebase against Linus' tree could be a problem, I
+can start to base bluetooth-2.6 against net-2.6 for the next pull
+requests.
 
-thanks,
-
-greg k-h
+-- 
+Gustavo F. Padovan
+ProFUSION embedded systems - http://profusion.mobi
