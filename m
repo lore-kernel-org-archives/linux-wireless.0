@@ -1,221 +1,171 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:59931 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753681Ab0JGXIu (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 7 Oct 2010 19:08:50 -0400
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Johannes Berg <johannes.berg@intel.com>,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Subject: [PATCH 12/22] iwlwifi: move iwl_dump_csr to agn
-Date: Thu,  7 Oct 2010 16:07:51 -0700
-Message-Id: <1286492881-15743-13-git-send-email-wey-yi.w.guy@intel.com>
-In-Reply-To: <1286492881-15743-1-git-send-email-wey-yi.w.guy@intel.com>
-References: <1286492881-15743-1-git-send-email-wey-yi.w.guy@intel.com>
+Received: from mail-iw0-f174.google.com ([209.85.214.174]:58918 "EHLO
+	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932385Ab0JRWrJ convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 18 Oct 2010 18:47:09 -0400
+Received: by iwn7 with SMTP id 7so64473iwn.19
+        for <linux-wireless@vger.kernel.org>; Mon, 18 Oct 2010 15:47:08 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <4CBB5218.60302@candelatech.com>
+References: <20101014231958.GA3242@tux> <4CB79299.7000005@candelatech.com>
+ <AANLkTinQmE6wm1pXkRL6p_3rkMvNrppmirjj3-jagMp8@mail.gmail.com>
+ <20101014234853.GA10113@tux> <4CB886AF.3070800@candelatech.com>
+ <AANLkTinhFj_iYjVzyfSfpUVdytfk4O9kCBnN8=Bwv0N7@mail.gmail.com>
+ <4CB8AD3F.50201@candelatech.com> <20101015210720.GA2007@tux>
+ <20101015232140.GA1796@tux> <4CB8E4DE.9070706@candelatech.com>
+ <20101015233814.GA1866@tux> <4CB8E6D7.602@candelatech.com>
+ <AANLkTi=tJZ0L1JoE=VPzJVEx1nnB0Td2E9V45RkFAPC8@mail.gmail.com> <4CBB5218.60302@candelatech.com>
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Date: Mon, 18 Oct 2010 15:46:48 -0700
+Message-ID: <AANLkTimATNwgTv5gp_5P3g7vezdQ0zjifGFNvWvLiVRv@mail.gmail.com>
+Subject: Re: memory clobber in rx path, maybe related to ath9k.
+To: Ben Greear <greearb@candelatech.com>
+Cc: Luis Rodriguez <Luis.Rodriguez@atheros.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+On Sun, Oct 17, 2010 at 12:44 PM, Ben Greear <greearb@candelatech.com> wrote:
+> I had a chance to try your latest patch on a different machine and AP.  This
+> time,
+> I was using 130 or so stations, but no encryption (no supplicant).
+>
+> I saw these exceptions below.  The warn-on hits the !stopped check in
+> ath_stoprecv.
+>
+> The system didn't crash, but all of the STAs soon dis-associated because of
+> "inactivity".
+> I haven't checked if that is some issue with my AP or what..
+>
+>
+> bool ath_stoprecv(struct ath_softc *sc)
+> {
+>        struct ath_hw *ah = sc->sc_ah;
+>        bool stopped;
+>
+>        spin_lock_bh(&sc->rx.rxbuflock);
+>        ath9k_hw_stoppcurecv(ah);
+>        ath9k_hw_setrxfilter(ah, 0);
+>        stopped = ath9k_hw_stopdmarecv(ah);
+>
+>        if (sc->sc_ah->caps.hw_caps & ATH9K_HW_CAP_EDMA)
+>                ath_edma_stop_recv(sc);
+>        else
+>                sc->rx.rxlink = NULL;
+>        spin_unlock_bh(&sc->rx.rxbuflock);
+>
+>        WARN_ON(!stopped);
+>        return stopped;
+> }
+>
+>
+> ADDRCONF(NETDEV_UP): sta130: link is not ready
+> sta90: no IPv6 routers present
+> ath: DMA failed to stop in 10 ms AR_CR=0x00000024 AR_DIAG_SW=0x40000020
 
-The iwl_dump_csr function is only used
-within the agn module, so it can be
-moved there instead of being exported
-by the core.
+We should find out what happened here.
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-agn-lib.c |   69 +++++++++++++++++++++++++++
- drivers/net/wireless/iwlwifi/iwl-agn.h     |    1 +
- drivers/net/wireless/iwlwifi/iwl-core.c    |   71 ----------------------------
- drivers/net/wireless/iwlwifi/iwl-core.h    |    1 -
- 4 files changed, 70 insertions(+), 72 deletions(-)
+> ------------[ cut here ]------------
+> WARNING: at
+> /home/greearb/git/linux.wireless-testing/drivers/net/wireless/ath/ath9k/recv.c:532
+> ath_stoprecv+0x80/0x87 [ath9k]()
+> Hardware name: 945GM
+> Modules linked in: 8021q garp stp llc michael_mic macvlan pktgen iscsi_tcp
+> libiscsi_tcp libiscsi scsi_transport_iscsi nfs lockd fscache nfs_acl
+> auth_rpcgss sunrpc p4_clockmod ipv6 uinput arc4 ecb ath9k snd_intel8x0
+> mac80211 snd_ac97_codec ac97_bus snd_seq snd_seq_device ath9k_common snd_pcm
+> ath9k_hw ath snd_timer microcode pcspkr cfg80211 i2c_i801 snd soundcore
+> snd_page_alloc serio_raw e1000e iTCO_wdt iTCO_vendor_support yenta_socket
+> floppy i915 drm_kms_helper drm i2c_algo_bit i2c_core video output [last
+> unloaded: ipt_addrtype]
+> Pid: 5, comm: kworker/u:0 Tainted: G        W   2.6.36-rc8-wl+ #12
+> Call Trace:
+>  [<c0434647>] warn_slowpath_common+0x65/0x7a
+>  [<f9450e38>] ? ath_stoprecv+0x80/0x87 [ath9k]
+>  [<c043466b>] warn_slowpath_null+0xf/0x13
+>  [<f9450e38>] ath_stoprecv+0x80/0x87 [ath9k]
+>  [<f944f580>] ath_set_channel+0x99/0x1ff [ath9k]
+>  [<f94502b2>] ath9k_config+0x305/0x3d8 [ath9k]
+>  [<f9246a2e>] ieee80211_hw_config+0x11b/0x125 [mac80211]
+>  [<f924aa51>] ieee80211_scan_work+0x29e/0x3ed [mac80211]
+>  [<c0443d72>] ? process_one_work+0x145/0x295
+>  [<c0443dbc>] process_one_work+0x18f/0x295
+>  [<c0443d72>] ? process_one_work+0x145/0x295
+>  [<f924a7b3>] ? ieee80211_scan_work+0x0/0x3ed [mac80211]
+>  [<c04453e5>] worker_thread+0xf9/0x1b8
+>  [<c04452ec>] ? worker_thread+0x0/0x1b8
+>  [<c0447d2f>] kthread+0x62/0x67
+>  [<c0447ccd>] ? kthread+0x0/0x67
+>  [<c0403506>] kernel_thread_helper+0x6/0x1a
+> ---[ end trace bc53fa727ee2ae42 ]---
+> ath: DMA failed to stop in 10 ms AR_CR=0x00000024 AR_DIAG_SW=0x42000020
+> ath: DMA failed to stop in 10 ms AR_CR=0x00000024 AR_DIAG_SW=0x40000020
+> ------------[ cut here ]------------
+> WARNING: at
+> /home/greearb/git/linux.wireless-testing/drivers/net/wireless/ath/ath9k/recv.c:532
+> ath_stoprecv+0x80/0x87 [ath9k]()
+> Hardware name: 945GM
+> Modules linked in: 8021q garp stp llc michael_mic macvlan pktgen iscsi_tcp
+> libiscsi_tcp libiscsi scsi_transport_iscsi nfs lockd fscache nfs_acl
+> auth_rpcgss sunrpc p4_clockmod ipv6 uinput arc4 ecb ath9k snd_intel8x0
+> mac80211 snd_ac97_codec ac97_bus snd_seq snd_seq_device ath9k_common snd_pcm
+> ath9k_hw ath snd_timer microcode pcspkr cfg80211 i2c_i801 snd soundcore
+> snd_page_alloc serio_raw e1000e iTCO_wdt iTCO_vendor_support yenta_socket
+> floppy i915 drm_kms_helper drm i2c_algo_bit i2c_core video output [last
+> unloaded: ipt_addrtype]
+> Pid: 41, comm: kworker/u:2 Tainted: G        W   2.6.36-rc8-wl+ #12
+> Call Trace:
+>  [<c0434647>] warn_slowpath_common+0x65/0x7a
+>  [<f9450e38>] ? ath_stoprecv+0x80/0x87 [ath9k]
+>  [<c043466b>] warn_slowpath_null+0xf/0x13
+>  [<f9450e38>] ath_stoprecv+0x80/0x87 [ath9k]
+>  [<f944f580>] ath_set_channel+0x99/0x1ff [ath9k]
+>  [<f94502b2>] ath9k_config+0x305/0x3d8 [ath9k]
+>  [<f9246a2e>] ieee80211_hw_config+0x11b/0x125 [mac80211]
+>  [<f924aa51>] ieee80211_scan_work+0x29e/0x3ed [mac80211]
+>  [<c0443d72>] ? process_one_work+0x145/0x295
+>  [<c0443dbc>] process_one_work+0x18f/0x295
+>  [<c0443d72>] ? process_one_work+0x145/0x295
+>  [<f924a7b3>] ? ieee80211_scan_work+0x0/0x3ed [mac80211]
+>  [<c04453e5>] worker_thread+0xf9/0x1b8
+>  [<c04452ec>] ? worker_thread+0x0/0x1b8
+>  [<c0447d2f>] kthread+0x62/0x67
+>  [<c0447ccd>] ? kthread+0x0/0x67
+>  [<c0403506>] kernel_thread_helper+0x6/0x1a
+> ---[ end trace bc53fa727ee2ae43 ]---
+> ath: DMA failed to stop in 10 ms AR_CR=0x00000024 AR_DIAG_SW=0x42000020
+> sta126: direct probe to 00:18:e7:cb:ad:6e (try 1)
+> sta130: direct probe to 00:18:e7:cb:ad:6e (try 1)
+> sta91: no IPv6 routers present
+> sta126: direct probe to 00:18:e7:cb:ad:6e (try 2)
+> sta130: direct probe to 00:18:e7:cb:ad:6e (try 2)
+> sta126: direct probe to 00:18:e7:cb:ad:6e (try 3)
+> sta130: direct probe to 00:18:e7:cb:ad:6e (try 3)
+> sta126: direct probe to 00:18:e7:cb:ad:6e timed out
+> sta130: direct probe to 00:18:e7:cb:ad:6e timed out
+> sta92: no IPv6 routers present
+> ...
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-lib.c b/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
-index 9f1c93b..de91ff6 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
-@@ -2222,3 +2222,72 @@ u8 iwl_toggle_tx_ant(struct iwl_priv *priv, u8 ant, u8 valid)
- 	}
- 	return ant;
- }
-+
-+static const char *get_csr_string(int cmd)
-+{
-+	switch (cmd) {
-+	IWL_CMD(CSR_HW_IF_CONFIG_REG);
-+	IWL_CMD(CSR_INT_COALESCING);
-+	IWL_CMD(CSR_INT);
-+	IWL_CMD(CSR_INT_MASK);
-+	IWL_CMD(CSR_FH_INT_STATUS);
-+	IWL_CMD(CSR_GPIO_IN);
-+	IWL_CMD(CSR_RESET);
-+	IWL_CMD(CSR_GP_CNTRL);
-+	IWL_CMD(CSR_HW_REV);
-+	IWL_CMD(CSR_EEPROM_REG);
-+	IWL_CMD(CSR_EEPROM_GP);
-+	IWL_CMD(CSR_OTP_GP_REG);
-+	IWL_CMD(CSR_GIO_REG);
-+	IWL_CMD(CSR_GP_UCODE_REG);
-+	IWL_CMD(CSR_GP_DRIVER_REG);
-+	IWL_CMD(CSR_UCODE_DRV_GP1);
-+	IWL_CMD(CSR_UCODE_DRV_GP2);
-+	IWL_CMD(CSR_LED_REG);
-+	IWL_CMD(CSR_DRAM_INT_TBL_REG);
-+	IWL_CMD(CSR_GIO_CHICKEN_BITS);
-+	IWL_CMD(CSR_ANA_PLL_CFG);
-+	IWL_CMD(CSR_HW_REV_WA_REG);
-+	IWL_CMD(CSR_DBG_HPET_MEM_REG);
-+	default:
-+		return "UNKNOWN";
-+	}
-+}
-+
-+void iwl_dump_csr(struct iwl_priv *priv)
-+{
-+	int i;
-+	u32 csr_tbl[] = {
-+		CSR_HW_IF_CONFIG_REG,
-+		CSR_INT_COALESCING,
-+		CSR_INT,
-+		CSR_INT_MASK,
-+		CSR_FH_INT_STATUS,
-+		CSR_GPIO_IN,
-+		CSR_RESET,
-+		CSR_GP_CNTRL,
-+		CSR_HW_REV,
-+		CSR_EEPROM_REG,
-+		CSR_EEPROM_GP,
-+		CSR_OTP_GP_REG,
-+		CSR_GIO_REG,
-+		CSR_GP_UCODE_REG,
-+		CSR_GP_DRIVER_REG,
-+		CSR_UCODE_DRV_GP1,
-+		CSR_UCODE_DRV_GP2,
-+		CSR_LED_REG,
-+		CSR_DRAM_INT_TBL_REG,
-+		CSR_GIO_CHICKEN_BITS,
-+		CSR_ANA_PLL_CFG,
-+		CSR_HW_REV_WA_REG,
-+		CSR_DBG_HPET_MEM_REG
-+	};
-+	IWL_ERR(priv, "CSR values:\n");
-+	IWL_ERR(priv, "(2nd byte of CSR_INT_COALESCING is "
-+		"CSR_INT_PERIODIC_REG)\n");
-+	for (i = 0; i <  ARRAY_SIZE(csr_tbl); i++) {
-+		IWL_ERR(priv, "  %25s: 0X%08x\n",
-+			get_csr_string(csr_tbl[i]),
-+			iwl_read32(priv, csr_tbl[i]));
-+	}
-+}
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.h b/drivers/net/wireless/iwlwifi/iwl-agn.h
-index cc7a3b5..5458e63 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn.h
-@@ -162,6 +162,7 @@ int iwlagn_hw_nic_init(struct iwl_priv *priv);
- int iwlagn_wait_tx_queue_empty(struct iwl_priv *priv);
- int iwlagn_txfifo_flush(struct iwl_priv *priv, u16 flush_control);
- void iwlagn_dev_txfifo_flush(struct iwl_priv *priv, u16 flush_control);
-+void iwl_dump_csr(struct iwl_priv *priv);
- 
- /* rx */
- void iwlagn_rx_queue_restock(struct iwl_priv *priv);
-diff --git a/drivers/net/wireless/iwlwifi/iwl-core.c b/drivers/net/wireless/iwlwifi/iwl-core.c
-index 88c1ed5..c0d531c 100644
---- a/drivers/net/wireless/iwlwifi/iwl-core.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-core.c
-@@ -2351,77 +2351,6 @@ void iwl_update_stats(struct iwl_priv *priv, bool is_tx, __le16 fc, u16 len)
- EXPORT_SYMBOL(iwl_update_stats);
- #endif
- 
--static const char *get_csr_string(int cmd)
--{
--	switch (cmd) {
--		IWL_CMD(CSR_HW_IF_CONFIG_REG);
--		IWL_CMD(CSR_INT_COALESCING);
--		IWL_CMD(CSR_INT);
--		IWL_CMD(CSR_INT_MASK);
--		IWL_CMD(CSR_FH_INT_STATUS);
--		IWL_CMD(CSR_GPIO_IN);
--		IWL_CMD(CSR_RESET);
--		IWL_CMD(CSR_GP_CNTRL);
--		IWL_CMD(CSR_HW_REV);
--		IWL_CMD(CSR_EEPROM_REG);
--		IWL_CMD(CSR_EEPROM_GP);
--		IWL_CMD(CSR_OTP_GP_REG);
--		IWL_CMD(CSR_GIO_REG);
--		IWL_CMD(CSR_GP_UCODE_REG);
--		IWL_CMD(CSR_GP_DRIVER_REG);
--		IWL_CMD(CSR_UCODE_DRV_GP1);
--		IWL_CMD(CSR_UCODE_DRV_GP2);
--		IWL_CMD(CSR_LED_REG);
--		IWL_CMD(CSR_DRAM_INT_TBL_REG);
--		IWL_CMD(CSR_GIO_CHICKEN_BITS);
--		IWL_CMD(CSR_ANA_PLL_CFG);
--		IWL_CMD(CSR_HW_REV_WA_REG);
--		IWL_CMD(CSR_DBG_HPET_MEM_REG);
--	default:
--		return "UNKNOWN";
--
--	}
--}
--
--void iwl_dump_csr(struct iwl_priv *priv)
--{
--	int i;
--	u32 csr_tbl[] = {
--		CSR_HW_IF_CONFIG_REG,
--		CSR_INT_COALESCING,
--		CSR_INT,
--		CSR_INT_MASK,
--		CSR_FH_INT_STATUS,
--		CSR_GPIO_IN,
--		CSR_RESET,
--		CSR_GP_CNTRL,
--		CSR_HW_REV,
--		CSR_EEPROM_REG,
--		CSR_EEPROM_GP,
--		CSR_OTP_GP_REG,
--		CSR_GIO_REG,
--		CSR_GP_UCODE_REG,
--		CSR_GP_DRIVER_REG,
--		CSR_UCODE_DRV_GP1,
--		CSR_UCODE_DRV_GP2,
--		CSR_LED_REG,
--		CSR_DRAM_INT_TBL_REG,
--		CSR_GIO_CHICKEN_BITS,
--		CSR_ANA_PLL_CFG,
--		CSR_HW_REV_WA_REG,
--		CSR_DBG_HPET_MEM_REG
--	};
--	IWL_ERR(priv, "CSR values:\n");
--	IWL_ERR(priv, "(2nd byte of CSR_INT_COALESCING is "
--		"CSR_INT_PERIODIC_REG)\n");
--	for (i = 0; i <  ARRAY_SIZE(csr_tbl); i++) {
--		IWL_ERR(priv, "  %25s: 0X%08x\n",
--			get_csr_string(csr_tbl[i]),
--			iwl_read32(priv, csr_tbl[i]));
--	}
--}
--EXPORT_SYMBOL(iwl_dump_csr);
--
- static const char *get_fh_string(int cmd)
- {
- 	switch (cmd) {
-diff --git a/drivers/net/wireless/iwlwifi/iwl-core.h b/drivers/net/wireless/iwlwifi/iwl-core.h
-index 0bc7b7a..7e99b7d 100644
---- a/drivers/net/wireless/iwlwifi/iwl-core.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-core.h
-@@ -659,7 +659,6 @@ int iwl_pci_resume(struct pci_dev *pdev);
- void iwl_dump_nic_error_log(struct iwl_priv *priv);
- int iwl_dump_nic_event_log(struct iwl_priv *priv,
- 			   bool full_log, char **buf, bool display);
--void iwl_dump_csr(struct iwl_priv *priv);
- int iwl_dump_fh(struct iwl_priv *priv, char **buf, bool display);
- #ifdef CONFIG_IWLWIFI_DEBUG
- void iwl_print_rx_config_cmd(struct iwl_priv *priv,
--- 
-1.7.0.4
+So I put the warning there for debugging purposes. The reason I put it
+is we have no gaurantee we've told hardware to stop writing to that
+area of memory so if we then race and start RX I think we can likely
+run into a situation where we may not know which buffer hardware will
+be writing to next.
 
+I think we should add the warning on the next kernel development cycle
+and address all of its causes, if hardware cannot be stopped I believe
+we run the potential to also run into this same poison issue.
+
+The RX poison issue is resolved then but the other issues are separate
+issues which need to be debugged further. For example the stop TX dma
+issue might be resolved by also preventing to start TX and stop TX
+atomically. Something like what I did could likely also be done for
+TX.
+
+When I get some time (I have other uber higher priority issues now as
+usual) I'll break this patch into a 3 or 2 patches and submit
+upstream.
+
+  Luis
