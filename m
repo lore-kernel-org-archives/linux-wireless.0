@@ -1,37 +1,101 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ey0-f174.google.com ([209.85.215.174]:42299 "EHLO
-	mail-ey0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755353Ab0JVUZO convert rfc822-to-8bit (ORCPT
+Received: from mail-iw0-f174.google.com ([209.85.214.174]:51310 "EHLO
+	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933490Ab0JRWly convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 22 Oct 2010 16:25:14 -0400
-Received: by eye27 with SMTP id 27so1617471eye.19
-        for <linux-wireless@vger.kernel.org>; Fri, 22 Oct 2010 13:25:13 -0700 (PDT)
+	Mon, 18 Oct 2010 18:41:54 -0400
+Received: by iwn7 with SMTP id 7so59405iwn.19
+        for <linux-wireless@vger.kernel.org>; Mon, 18 Oct 2010 15:41:53 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <1287779045-20257-1-git-send-email-zajec5@gmail.com>
-References: <1287779045-20257-1-git-send-email-zajec5@gmail.com>
-Date: Fri, 22 Oct 2010 22:25:13 +0200
-Message-ID: <AANLkTikQa0EtMPbzVrvHeg7ZgcXCyZnk1Ff=PvOXg+9S@mail.gmail.com>
-Subject: Re: [PATCH] b43: rfkill: use status register based on core revision
- not (PHY's)
-From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-To: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-Cc: b43-dev@lists.infradead.org,
-	=?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+In-Reply-To: <AANLkTim=GkK=e5bj8GXHG7r0BXcitaZ-gvSfZVmpsLzE@mail.gmail.com>
+References: <4CAE1DFB.303@candelatech.com> <1286479642.20974.32.camel@jlt3.sipsolutions.net>
+ <AANLkTimxp703Gy_Atg8=wpFszRDR=OJCXwOUKRh-a-d7@mail.gmail.com>
+ <AANLkTi=t-P_5c14brJohM8UgxeOknv+3syO=7W=ix6qf@mail.gmail.com>
+ <AANLkTinC46a+nE-XOQuBCmRJwjzgh24uC7ZJ7HtbVHnT@mail.gmail.com>
+ <4CB378CD.1080800@candelatech.com> <AANLkTim42zmDwf744BCrPwa1kT5ph57bNMyvSyOpesVv@mail.gmail.com>
+ <4CB3D598.7050904@candelatech.com> <AANLkTimPEg3ZU8CQUXfdpGdfbmhdE9O=GNY=g9gysTo4@mail.gmail.com>
+ <4CB4AA89.1070009@candelatech.com> <20101013053141.GA15798@vasanth-laptop>
+ <4CB5E0A8.5020502@candelatech.com> <AANLkTimp_GSwwX_RnQSyN9QNe55HQ+0HZJ1yd8Xp+dWG@mail.gmail.com>
+ <AANLkTinyVqdgPqzpyihuaPtVVqDmzj-ZbXzQ-4qdA2yH@mail.gmail.com>
+ <4CB78870.8040207@candelatech.com> <AANLkTimqX5E33eTPYiei4GcCYocbs8-zceCARG+5t98B@mail.gmail.com>
+ <AANLkTinMp8dJ3TM=-Mw3pyFiYTYoTmBBqSro3rsrgwXH@mail.gmail.com>
+ <AANLkTim5HGs3XFT40UJcHMrF8VuyO_XxMWPVuj7Rb4y9@mail.gmail.com> <AANLkTim=GkK=e5bj8GXHG7r0BXcitaZ-gvSfZVmpsLzE@mail.gmail.com>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Mon, 18 Oct 2010 15:41:33 -0700
+Message-ID: <AANLkTi=ten5-kbUOGYGbnqNff4RJ=WWEC6_CaH1Psy0V@mail.gmail.com>
+Subject: Re: memory clobber in rx path, maybe related to ath9k.
+To: =?UTF-8?Q?Bj=C3=B6rn_Smedman?= <bjorn.smedman@venatech.se>
+Cc: Ben Greear <greearb@candelatech.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-W dniu 22 października 2010 22:24 użytkownik Rafał Miłecki
-<zajec5@gmail.com> napisał:
-> Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
-> ---
-> This makes my N-PHY radio at least running (no scanning results so far). The
-> same register is used by wl on this device.
+2010/10/18 Björn Smedman <bjorn.smedman@venatech.se>:
+> 2010/10/18 Luis R. Rodriguez <mcgrof@gmail.com>:
+>> 2010/10/18 Björn Smedman <bjorn.smedman@venatech.se>:
+>>> 2010/10/15 Björn Smedman <bjorn.smedman@venatech.se>
+>>>>
+>>>> 2010/10/15 Ben Greear <greearb@candelatech.com>:
+>>>> > I tried the patch below, and it didn't seem to help.  Might even
+>>>> > have hurt..as it died on divide-by-zero error:
+>>>>
+>>>> Hmm, looks like the ani code got a zero listen time from the hw...
+>>>> That just might mean that the DMA actually hits one of these
+>>>> descriptors. :)
+>>>
+>>> Am I the only one worried about this? Leaving a DMA descriptor
+>>> pointing at memory which has been passed on to somebody else... To me
+>>> that's like pointing a loaded gun at someone (and it seems this
+>>> particular gun can go off a little haphazardly).
+>>>
+>>> Luis, given how hard it seems to be to get that locking and skb
+>>> shoveling right, are you sure you want to keep pointing that DMA
+>>> engine on innocent people's data?
+>>
+>> This is why this issue is of high priority to me. I no longer get the
+>> poison nor does Ben, the RX poison issue is resolved as far as I can
+>> tell, I just need to split up the patches into easily reviewable
+>> chunks and get them upstream.
+>
+> The locking issue you found looks like it could cause those
+> overwritten poisons (as well as some weird problems I've seen in AP
+> mode with lots of monitor interfaces). It's really great to see that
+> problem go.
 
-John, if you care you can move left opening brace in subject to look
-as following:
-(not PHY's)
+:)
 
--- 
-Rafał
+> All I'm saying is that this stuff is difficult and the
+> next time we get it wrong we should try to avoid overwriting arbitrary
+> kernel memory with our RXed frames (or TXing something sensitive).
+
+Patches welcomed.
+
+> Will the DMA engine stop when it sees a zero ds_data? In that case I
+> suggest we never keep an address there that we do not want to RX to or
+> TX from.
+
+We will always have an skb available to DMA for RX, its part of the
+design on RX on ath9k. We simply do drop the frame we just got DMA'd
+if we cannot allocate a new skb from the kernel. So we should always
+be able to DMA over and over and over. The issue here was due to a
+race on stopping and starting the PCU, it got confused on which buffer
+to write to.
+
+> Also, is there some way to verify that we are not corrupting memory
+> with the DMA? I mean the poison check is great
+
+I'm only aware of the poison checks.
+
+> but if I understand
+> correctly it cannot detect if we overwrite active memory (i.e. before
+> it is freed and marked with the poison).
+
+Right, the best you can do is to understand the code. Detecting bogus
+writes from hardware to are hard to detect on already used memory
+given that you'd need to ensure you understand what a writer to that
+area of memory will do.
+
+Anyway if you find actual issues instead of pure speculation please let us know.
+
+  Luis
