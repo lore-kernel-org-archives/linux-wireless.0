@@ -1,54 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from queueout02-winn.ispmail.ntl.com ([81.103.221.56]:51710 "EHLO
-	queueout02-winn.ispmail.ntl.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1755733Ab0JaOxJ (ORCPT
+Received: from mgw-sa02.ext.nokia.com ([147.243.1.48]:17590 "EHLO
+	mgw-sa02.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756117Ab0JRTDG (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 31 Oct 2010 10:53:09 -0400
-From: Daniel Drake <dsd@laptop.org>
-To: linville@tuxdriver.com
-Cc: dcbw@redhat.com
-Cc: linux-wireless@vger.kernel.org
-Cc: libertas-dev@lists.infradead.org
-Cc: akarwar@marvell.com
-Subject: [PATCH] libertas: don't block usb8388 suspend if no wakeup conditions are set
-Message-Id: <20101031134012.F21FF9D401B@zog.reactivated.net>
-Date: Sun, 31 Oct 2010 13:40:12 +0000 (GMT)
+	Mon, 18 Oct 2010 15:03:06 -0400
+Subject: Re: Compat-wireless N900
+From: Luciano Coelho <luciano.coelho@nokia.com>
+To: ext George <george.news@gmx.net>
+Cc: "Luis R. Rodriguez" <mcgrof@gmail.com>,
+	Bob Copeland <me@bobcopeland.com>,
+	"Denis 'GNUtoo' Carikli" <GNUtoo@no-log.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <1287427291.8043.2.camel@powerslave>
+References: <4CB6BE57.8010401@gmx.net>
+	 <1287071844.11341.5.camel@gnutoo-laptop>
+	 <AANLkTikosEtFnWqRVzMBKtNsB=aqOpqQFKDOZS3+pXTE@mail.gmail.com>
+	 <4CB74759.3030807@gmx.net>
+	 <AANLkTi=1Ar-gzRaskHGDLmkaDnr=9+oZnA=qBLCYcUAi@mail.gmail.com>
+	 <4CB7F7C7.7030804@gmx.net>
+	 <AANLkTi=u+mT2Xd0=0vt4uaf9hSnnkPKY+wN6DjAxME3m@mail.gmail.com>
+	 <4CBABB84.1090100@gmx.net> <4CBC7725.7050202@gmx.net>
+	 <AANLkTincCSBfwa_Y-cy_42HfU5kP1puCbi2-dBwGkkHu@mail.gmail.com>
+	 <4CBC9A51.8030309@gmx.net>  <1287427291.8043.2.camel@powerslave>
+Content-Type: text/plain; charset="UTF-8"
+Date: Mon, 18 Oct 2010 22:02:34 +0300
+Message-ID: <1287428554.8043.6.camel@powerslave>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This hunk added by commit 66fceb69b72f seems erroneous. We don't want to
-prevent suspend of the whole system if no wakeup params are set.
+On Mon, 2010-10-18 at 20:41 +0200, ext Luciano Coelho wrote:
+> On Mon, 2010-10-18 at 21:04 +0200, ext George wrote:
+> > On 18/10/2010 19:21, Luis R. Rodriguez wrote:
+> > >> Any help on that? Sorry but I'm somehow desesperate and don't know what to
+> > >> do. Actually I'm thinking on not using compat-wireless and nl80211 and get
+> > >> back to wireless-extensions.
+> 
+> Getting back to wireless-extensions would certainly be a very desperate
+> measure! :P
+> 
+> 
+> > > Does your device use SDIO or SPI?
+> > >
+> > >    Luis
+> > 
+> > I have tried both and none of them have worked.
+> 
+> On the N900 the wl1271 chip is connected via SPI.
+> 
+> I'll re-read this thread more carefully to see if I can spot anything
+> that could help you.
 
-In the case of the usb8388 we do want to keep the card powered up even
-if there are no wakeup params. This is because it will continue acting
-as a mesh node.
+First thing that came to my mind after re-reading the thread... Does the
+wl1251 driver work *without* compat-wireless? Where did you get the
+kernel that you have compiled?
 
-If the mesh is disabled, it would indeed make more sense to power down
-the card during suspend, as the equivalent hunk does for the SD interface.
-But that's a separate task; for now just restore the previous behaviour.
+My initial guess is that the SPI is not configured correctly so the
+probe function is never called in the wl1251_spi module and thus the
+interface is never created...
 
-Signed-off-by: Daniel Drake <dsd@laptop.org>
----
- drivers/net/wireless/libertas/if_usb.c |    6 ------
- 1 files changed, 0 insertions(+), 6 deletions(-)
 
-diff --git a/drivers/net/wireless/libertas/if_usb.c b/drivers/net/wireless/libertas/if_usb.c
-index efaf850..35931cf 100644
---- a/drivers/net/wireless/libertas/if_usb.c
-+++ b/drivers/net/wireless/libertas/if_usb.c
-@@ -1090,12 +1090,6 @@ static int if_usb_suspend(struct usb_interface *intf, pm_message_t message)
- 	if (priv->psstate != PS_STATE_FULL_POWER)
- 		return -1;
- 
--	if (priv->wol_criteria == EHS_REMOVE_WAKEUP) {
--		lbs_pr_info("Suspend attempt without "
--						"configuring wake params!\n");
--		return -ENOSYS;
--	}
--
- 	ret = lbs_suspend(priv);
- 	if (ret)
- 		goto out;
 -- 
-1.7.2.3
+Cheers,
+Luca.
 
