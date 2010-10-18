@@ -1,57 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from senator.holtmann.net ([87.106.208.187]:56736 "EHLO
-	mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757413Ab0JEHtq (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 5 Oct 2010 03:49:46 -0400
-Subject: Re: [PATCH] Added firmware load patch to crap directory.
-From: Marcel Holtmann <marcel@holtmann.org>
-To: Bala Shanmugam <sbalashanmugam@atheros.com>
-Cc: linux-wireless@vger.kernel.org, linux-bluetooth@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-In-Reply-To: <1286118002-2354-1-git-send-email-sbalashanmugam@atheros.com>
-References: <1286118002-2354-1-git-send-email-sbalashanmugam@atheros.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Tue, 05 Oct 2010 09:46:43 +0200
-Message-ID: <1286264803.17473.21.camel@aeonflux>
-Mime-Version: 1.0
+Received: from nbd.name ([88.198.39.176]:34385 "EHLO ds10.nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751144Ab0JRBwY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 17 Oct 2010 21:52:24 -0400
+Message-ID: <4CBBA850.1070503@openwrt.org>
+Date: Mon, 18 Oct 2010 03:52:16 +0200
+From: Felix Fietkau <nbd@openwrt.org>
+MIME-Version: 1.0
+To: Bruno Randolf <br1@einfach.org>
+CC: linux-wireless@vger.kernel.org, linville@tuxdriver.com,
+	lrodriguez@atheros.com
+Subject: Re: [PATCH 4/6] ath9k: optimize/fix ANI RSSI processing
+References: <1287165813-94331-1-git-send-email-nbd@openwrt.org> <1287165813-94331-3-git-send-email-nbd@openwrt.org> <1287165813-94331-4-git-send-email-nbd@openwrt.org> <201010181024.55475.br1@einfach.org>
+In-Reply-To: <201010181024.55475.br1@einfach.org>
+Content-Type: text/plain; charset=ISO-8859-15
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Bala,
-
-> This patch in crap directory enables btusb to load firmware 
-> to device RAM when it is plugged in.
->  Signed-off-by: Bala Shanmugam <sbalashanmugam@atheros.com>
-> ---
->  crap/0003-btusb-Add-fw-load-support.patch |  424 +++++++++++++++++++++++++++++
->  1 files changed, 424 insertions(+), 0 deletions(-)
->  create mode 100644 crap/0003-btusb-Add-fw-load-support.patch
+On 2010-10-18 3:24 AM, Bruno Randolf wrote:
+> On Sat October 16 2010 03:03:31 Felix Fietkau wrote:
+>> ANI needs the RSSI average only in station mode, and only for tracking
+>> the signal strength of beacons of the AP that it is connected to.
+>> Adjust the code to track on the beacon RSSI, and store the average of that
+>> in the ath_wiphy struct.
+>> With these changes, we can get rid of this extra station lookup in the
+>> rx path, which saves precious CPU cycles.
 > 
-> diff --git a/crap/0003-btusb-Add-fw-load-support.patch b/crap/0003-btusb-Add-fw-load-support.patch
-> new file mode 100644
-> index 0000000..6642d6b
-> --- /dev/null
-> +++ b/crap/0003-btusb-Add-fw-load-support.patch
-> @@ -0,0 +1,424 @@
-> +Reason for not yet publishing: Marcel feels that Atheros sflash based BT device
-> +doesn't follow bluetooth H:2 specification and HCI commands should be supported
-> +in firmware if it is detected as bluetooth device. Using HCI command, firmware
-> +should be loaded.
-> +
-> +In sflash based device there is not enough memory to support HCI commands in firmware.
-> +So load firmware from btusb when the device comes up.
+> wouldn't it make sense to have per-station RSSI in IBSS mode?
+ath9k ANI can't deal with per-STA RSSI, and it's not something that the
+driver should normally keep track of, as it's easier to do that in mac80211.
 
-and why are you just not fixing this properly. You can have a custom
-firmware loader with a different product ID. Load the firmware and then
-on reset it brings it up with proper Bluetooth USB class identifiers.
-
-Nothing demands that the firmware loading happens via HCI. You can
-invent your own protocol easily. See bcm203x firmware loader driver that
-has been around since the beginning of Bluetooth.
-
-Regards
-
-Marcel
-
-
+- Felix
