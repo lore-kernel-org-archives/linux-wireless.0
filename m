@@ -1,67 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:53194 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756137Ab0JEH5u (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 5 Oct 2010 03:57:50 -0400
-Subject: Re: [PATCH v2 0/3] mac80211: fix rate_control_send_low warnings
- for delbas
-From: Johannes Berg <johannes@sipsolutions.net>
-To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Cc: Jouni Malinen <j@w1.fi>,
-	Luis Rodriguez <Luis.Rodriguez@atheros.com>,
-	"linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"stable@kernel.org" <stable@kernel.org>,
-	Paul Stewart <pstew@google.com>,
-	Amod Bodas <Amod.Bodas@atheros.com>,
-	Vasanth Thiagarajan <Vasanth.Thiagarajan@atheros.com>
-In-Reply-To: <AANLkTi=8pxhqN9p4QP3T_wmUmsHJfqOBRYDi9w_0BUkw@mail.gmail.com>
-References: <1285965233-11097-1-git-send-email-lrodriguez@atheros.com>
-	 <1286198845.3620.37.camel@jlt3.sipsolutions.net>
-	 <20101004164149.GE2105@tux>
-	 <1286210566.3620.42.camel@jlt3.sipsolutions.net>
-	 <20101004172504.GL2105@tux>
-	 <1286213426.3620.43.camel@jlt3.sipsolutions.net>
-	 <20101004173507.GN2105@tux> <20101004203900.GA14524@jm.kir.nu>
-	 <AANLkTinwwvsLzovff4DKTktWuD6UdbRiEAs3g6jj-94Q@mail.gmail.com>
-	 <20101004224754.GA16357@jm.kir.nu>
-	 <AANLkTi=8pxhqN9p4QP3T_wmUmsHJfqOBRYDi9w_0BUkw@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Tue, 05 Oct 2010 09:57:44 +0200
-Message-ID: <1286265464.3641.4.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+Received: from server19320154104.serverpool.info ([193.201.54.104]:54605 "EHLO
+	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S933151Ab0JRUgq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 18 Oct 2010 16:36:46 -0400
+From: Hauke Mehrtens <hauke@hauke-m.de>
+To: lrodriguez@atheros.com
+Cc: linux-wireless@vger.kernel.org, mcgrof@infradead.org,
+	Hauke Mehrtens <hauke@hauke-m.de>
+Subject: [PATCH] compat: backport sock_recv_ts_and_drops
+Date: Mon, 18 Oct 2010 22:36:35 +0200
+Message-Id: <1287434195-8833-1-git-send-email-hauke@hauke-m.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2010-10-04 at 16:50 -0700, Luis R. Rodriguez wrote:
-> On Mon, Oct 4, 2010 at 3:47 PM, Jouni Malinen <j@w1.fi> wrote:
-> > On Mon, Oct 04, 2010 at 02:07:22PM -0700, Luis R. Rodriguez wrote:
-> >> Jouni, just to be clear so you are fine with dropping explicitly the
-> >> tear down of the BA agreement to the old AP?
-> >
-> > If you are talking about not transmitting a frame, then yes, but
-> > obviously, we would still need to locally tear down whatever we have set
-> > up..
-> 
-> Sure.
+This is needed for bluetooth
 
-Right -- exactly what my (untested!!) patch did.
+Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+---
+ include/linux/compat-2.6.33.h |    2 ++
+ 1 files changed, 2 insertions(+), 0 deletions(-)
 
-> > I think it would be a good default policy to not send any frames to the
-> > old AP after we have decided to roam to a new one. If this does not work
-> > well in some networks, I would like to here more detailed description on
-> > what exactly is happening.
-> 
-> No that's fine, I just was curious how the bridge stuff you described
-> was handled in enterprise networks, you would know better :)
-
-Look at net/mac80211/cfg.c - ieee80211_send_layer2_update.
-
-> OK -- so lets go with Johanne's patch instead of patch 2 and 3 as he
-> suggested :)
-
-Have you tested it?
-
-johannes
+diff --git a/include/linux/compat-2.6.33.h b/include/linux/compat-2.6.33.h
+index 6a7cd3e..c2dbc1b 100644
+--- a/include/linux/compat-2.6.33.h
++++ b/include/linux/compat-2.6.33.h
+@@ -145,6 +145,8 @@ static inline void compat_kfifo_free(struct kfifo **fifo) {
+ 	     prefetch(pos->member.next), &pos->member != (head);	\
+ 	     pos = list_entry_rcu(pos->member.next, typeof(*pos), member))
+ 
++#define sock_recv_ts_and_drops(msg, sk, skb) sock_recv_timestamp(msg, sk, skb)
++
+ #endif /* (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,33)) */
+ 
+ #endif /* LINUX_26_33_COMPAT_H */
+-- 
+1.7.0.4
 
