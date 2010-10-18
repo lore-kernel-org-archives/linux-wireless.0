@@ -1,51 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.19.149.2]:26116 "EHLO mail.atheros.com"
+Received: from mail.atheros.com ([12.19.149.2]:32366 "EHLO mail.atheros.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751846Ab0JTOBr (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 20 Oct 2010 10:01:47 -0400
-Received: from mail.atheros.com ([10.10.20.107])
+	id S1751431Ab0JRGHn (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 18 Oct 2010 02:07:43 -0400
+Received: from mail.atheros.com ([10.10.20.108])
 	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Wed, 20 Oct 2010 07:01:37 -0700
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+	for <linux-wireless@vger.kernel.org>; Sun, 17 Oct 2010 23:07:33 -0700
+From: Mohammed Shafi Shajakhan <mshajakhan@atheros.com>
 To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>
-Subject: [PATCH 3/3] ath5k: make ath5k_update_bssid_mask_and_opmode() static
-Date: Wed, 20 Oct 2010 06:59:38 -0700
-Message-ID: <1287583178-2963-4-git-send-email-lrodriguez@atheros.com>
-In-Reply-To: <1287583178-2963-1-git-send-email-lrodriguez@atheros.com>
-References: <1287583178-2963-1-git-send-email-lrodriguez@atheros.com>
+CC: <linux-wireless@vger.kernel.org>, <lrodriguez@atheros.com>,
+	<j@w1.fi>, <Senthilkumar.Balasubramanian@Atheros.com>,
+	<Vasanth.Thiagarajan@Atheros.com>, <nbd@openwrt.org>,
+	Mohammed Shafi Shajakhan <mshajakhan@atheros.com>
+Subject: [PATCH] ath9k: Remove the median function in rate control
+Date: Mon, 18 Oct 2010 11:37:17 +0530
+Message-ID: <1287382037-5104-1-git-send-email-mshajakhan@atheros.com>
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This fixes this sparse warning:
+From: Mohammed Shafi Shajakhan <mshajakhan@atheros.com>
 
-  CHECK   drivers/net/wireless/ath/ath5k/base.c
-drivers/net/wireless/ath/ath5k/base.c:569:6: warning: symbol
-'ath5k_update_bssid_mask_and_opmode' was not declared. Should it be static?
+With the current rate control selection method the median function is
+nowhere used, so remove it.
 
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+Signed-off-by: Mohammed Shafi Shajakhan <mshajakhan@atheros.com>
 ---
- drivers/net/wireless/ath/ath5k/base.c |    4 ++--
- 1 files changed, 2 insertions(+), 2 deletions(-)
+ drivers/net/wireless/ath/ath9k/rc.c |   19 -------------------
+ 1 files changed, 0 insertions(+), 19 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath5k/base.c b/drivers/net/wireless/ath/ath5k/base.c
-index 8251946..aeb258a 100644
---- a/drivers/net/wireless/ath/ath5k/base.c
-+++ b/drivers/net/wireless/ath/ath5k/base.c
-@@ -566,8 +566,8 @@ static void ath_do_set_opmode(struct ath5k_softc *sc)
- 		  sc->opmode, ath_opmode_to_string(sc->opmode));
- }
+diff --git a/drivers/net/wireless/ath/ath9k/rc.c b/drivers/net/wireless/ath/ath9k/rc.c
+index abebf24..c0c6e6f 100644
+--- a/drivers/net/wireless/ath/ath9k/rc.c
++++ b/drivers/net/wireless/ath/ath9k/rc.c
+@@ -392,25 +392,6 @@ static const struct ath_rate_table *hw_rate_table[ATH9K_MODE_MAX] = {
+ static int ath_rc_get_rateindex(const struct ath_rate_table *rate_table,
+ 				struct ieee80211_tx_rate *rate);
  
--void ath5k_update_bssid_mask_and_opmode(struct ath5k_softc *sc,
--					struct ieee80211_vif *vif)
-+static void ath5k_update_bssid_mask_and_opmode(struct ath5k_softc *sc,
-+					       struct ieee80211_vif *vif)
+-static inline int8_t median(int8_t a, int8_t b, int8_t c)
+-{
+-	if (a >= b) {
+-		if (b >= c)
+-			return b;
+-		else if (a > c)
+-			return c;
+-		else
+-			return a;
+-	} else {
+-		if (a >= c)
+-			return a;
+-		else if (b >= c)
+-			return c;
+-		else
+-			return b;
+-	}
+-}
+-
+ static void ath_rc_sort_validrates(const struct ath_rate_table *rate_table,
+ 				   struct ath_rate_priv *ath_rc_priv)
  {
- 	struct ath_common *common = ath5k_hw_common(sc->ah);
- 	struct ath_vif_iter_data iter_data;
 -- 
 1.7.0.4
 
