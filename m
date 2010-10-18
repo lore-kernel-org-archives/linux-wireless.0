@@ -1,156 +1,112 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wy0-f174.google.com ([74.125.82.174]:61051 "EHLO
-	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756936Ab0JLIyG (ORCPT
+Received: from mail-gy0-f174.google.com ([209.85.160.174]:40442 "EHLO
+	mail-gy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751762Ab0JRRVk convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 12 Oct 2010 04:54:06 -0400
-Received: by wye20 with SMTP id 20so1182930wye.19
-        for <linux-wireless@vger.kernel.org>; Tue, 12 Oct 2010 01:54:04 -0700 (PDT)
-From: Ido Yariv <ido@wizery.com>
-To: Luciano Coelho <luciano.coelho@nokia.com>,
+	Mon, 18 Oct 2010 13:21:40 -0400
+Received: by gyg13 with SMTP id 13so571543gyg.19
+        for <linux-wireless@vger.kernel.org>; Mon, 18 Oct 2010 10:21:40 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <4CBC7725.7050202@gmx.net>
+References: <4CB6BE57.8010401@gmx.net> <1287071844.11341.5.camel@gnutoo-laptop>
+ <AANLkTikosEtFnWqRVzMBKtNsB=aqOpqQFKDOZS3+pXTE@mail.gmail.com>
+ <4CB74759.3030807@gmx.net> <AANLkTi=1Ar-gzRaskHGDLmkaDnr=9+oZnA=qBLCYcUAi@mail.gmail.com>
+ <4CB7F7C7.7030804@gmx.net> <AANLkTi=u+mT2Xd0=0vt4uaf9hSnnkPKY+wN6DjAxME3m@mail.gmail.com>
+ <4CBABB84.1090100@gmx.net> <4CBC7725.7050202@gmx.net>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Mon, 18 Oct 2010 10:21:05 -0700
+Message-ID: <AANLkTincCSBfwa_Y-cy_42HfU5kP1puCbi2-dBwGkkHu@mail.gmail.com>
+Subject: Re: Compat-wireless N900
+To: George <george.news@gmx.net>, Bob Copeland <me@bobcopeland.com>,
+	Luciano Coelho <luciano.coelho@nokia.com>
+Cc: "Denis 'GNUtoo' Carikli" <GNUtoo@no-log.org>,
 	linux-wireless@vger.kernel.org
-Cc: Ido Yariv <ido@wizery.com>
-Subject: [PATCH v2 2/4] wl1271: Fix TX starvation
-Date: Tue, 12 Oct 2010 10:53:51 +0200
-Message-Id: <1286873633-10080-3-git-send-email-ido@wizery.com>
-In-Reply-To: <1286873633-10080-1-git-send-email-ido@wizery.com>
-References: <1286873633-10080-1-git-send-email-ido@wizery.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-While wl1271_irq_work handles RX directly (by calling wl1271_rx), a different
-work is scheduled for transmitting packets. The IRQ work might handle more than
-one interrupt during a single call, including multiple TX completion
-interrupts. This might starve TX, since no packets are transmitted until all
-interrupts are handled.
+On Mon, Oct 18, 2010 at 9:34 AM, George <george.news@gmx.net> wrote:
+> On 17/10/2010 11:01, George wrote:
+>>
+>> On 15/10/2010 20:01, Luis R. Rodriguez wrote:
+>>>
+>>> On Thu, Oct 14, 2010 at 11:42 PM, George<george.news@gmx.net>
+>>> wrote:
+>>>>
+>>>> On 14/10/2010 20:03, Luis R. Rodriguez wrote:
+>>>>>
+>>>>> On Thu, Oct 14, 2010 at 11:09 AM, George<george.news@gmx.net>
+>>>>> wrote:
+>>>>>
+>>>>>> I have tried using even insmod and the modules load perfectly
+>>>>>> but the wlan device doesn't show up.
+>>>>>
+>>>>> Then that likely means you are not loading the right module.
+>>>>>
+>>>>>> In dmesg nothing is displayed except for the cfg80211 and
+>>>>>> when I rmmod the module wl1251 (wl1251: removed or similar)
+>>>>>>
+>>>>>> I'm still wondering what the hell I have to do.
+>>>>>
+>>>>> Are you sure you have the right module?
+>>>>
+>>>> Yes. The driver is the wl1251 family. As I said in previous posts
+>>>> and from what some guys in the IRC channel tried to guess, it
+>>>> seems that the problem might be in that the spi interface is
+>>>> specific for any device, and in the n900 might be different from
+>>>> the one implemented in compat-wireless.
+>>>
+>>> Heh, nope.
+>>>
+>>>> I'm a bit suprised about this fact, but they know more than I.
+>>>
+>>> Or, we had not yet accommodated yet for the fact that the wl1251
+>>> driver was split out into its own directory from the original
+>>> wl12xx/ directory and no one ever sent a patch to fix this on
+>>> compat-wireless. I just fixed this on today's compat-wireless, so
+>>> you can try that around noon PST time when the new tarball will be
+>>> generated. Ah but there are some pcmcia crap compile issues, we
+>>> just have to remove pcmcia support, well not now, I have other
+>>> stuff to do.
+>
+> I have downloaded compat-wireless-2010-10-17.tar.bz2 and have compiled the
+> code with no problem. I have seen the changes you've made creating modules
+> wl1251, spi and sdio.
+>
+> I have run modprobe spi to upload the modules (also tried sdio) and no way.
+> dmesg doesn't include any message. Below is the one after unloading the
+> modules and uploading them again:
+> rmmod spi wl1251 mac80211 cfg80211 compat_firmware_class
+> modprobe spi
+>
+>>>
+> wl1251: unloaded
+> cfg80211: Calling CRDA to update world regulatory domain
+>>>
+>
+> Below is the output for lsmod. As you can see modules are up and running,
+> but when I execute ifconfig -a no wlan0 device shows up.
+>
+> Nokia-N900:~# lsmod | grep spi
+> spi                     4352  0
+> wl1251                 75840  1 spi
+> mac80211              212984  2 spi,wl1251
+> crc7                    1216  1 spi
+> Nokia-N900:~# lsmod | grep compat
+> compat_firmware_class     8896  1 wl1251
+> compat                 10496  2 mac80211,cfg80211
+> v4l1_compat            12100  1 videodev
+> compat_ioctl32           832  1 fmtx_si4713
+> Nokia-N900:~# lsmod | grep wl12
+> wl1251                 75840  1 spi
+> compat_firmware_class     8896  1 wl1251
+> mac80211              212984  2 spi,wl1251
+> cfg80211              148904  2 wl1251,mac80211
+>
+> Any help on that? Sorry but I'm somehow desesperate and don't know what to
+> do. Actually I'm thinking on not using compat-wireless and nl80211 and get
+> back to wireless-extensions.
 
-Fix this by calling the TX work function directly, instead of deferring
-it.
+Does your device use SDIO or SPI?
 
-Signed-off-by: Ido Yariv <ido@wizery.com>
----
- drivers/net/wireless/wl12xx/wl1271.h      |    1 +
- drivers/net/wireless/wl12xx/wl1271_main.c |   19 +++++++++++++++----
- drivers/net/wireless/wl12xx/wl1271_tx.c   |   14 ++++++++++----
- drivers/net/wireless/wl12xx/wl1271_tx.h   |    1 +
- 4 files changed, 27 insertions(+), 8 deletions(-)
-
-diff --git a/drivers/net/wireless/wl12xx/wl1271.h b/drivers/net/wireless/wl12xx/wl1271.h
-index 8a4cd76..4a034a3 100644
---- a/drivers/net/wireless/wl12xx/wl1271.h
-+++ b/drivers/net/wireless/wl12xx/wl1271.h
-@@ -351,6 +351,7 @@ struct wl1271 {
- #define WL1271_FLAG_IDLE_REQUESTED    (11)
- #define WL1271_FLAG_PSPOLL_FAILURE    (12)
- #define WL1271_FLAG_STA_STATE_SENT    (13)
-+#define WL1271_FLAG_FW_TX_BUSY        (14)
- 	unsigned long flags;
- 
- 	struct wl1271_partition_set part;
-diff --git a/drivers/net/wireless/wl12xx/wl1271_main.c b/drivers/net/wireless/wl12xx/wl1271_main.c
-index 48a4b99..18aff22 100644
---- a/drivers/net/wireless/wl12xx/wl1271_main.c
-+++ b/drivers/net/wireless/wl12xx/wl1271_main.c
-@@ -481,9 +481,9 @@ static void wl1271_fw_status(struct wl1271 *wl,
- 		total += cnt;
- 	}
- 
--	/* if more blocks are available now, schedule some tx work */
--	if (total && !skb_queue_empty(&wl->tx_queue))
--		ieee80211_queue_work(wl->hw, &wl->tx_work);
-+	/* if more blocks are available now, tx work can be scheduled */
-+	if (total)
-+		clear_bit(WL1271_FLAG_FW_TX_BUSY, &wl->flags);
- 
- 	/* update the host-chipset time offset */
- 	getnstimeofday(&ts);
-@@ -537,6 +537,16 @@ static void wl1271_irq_work(struct work_struct *work)
- 			    (wl->tx_results_count & 0xff))
- 				wl1271_tx_complete(wl);
- 
-+			/* Check if any tx blocks were freed */
-+			if (!test_bit(WL1271_FLAG_FW_TX_BUSY, &wl->flags) &&
-+					!skb_queue_empty(&wl->tx_queue)) {
-+				/*
-+				 * In order to avoid starvation of the TX path,
-+				 * call the work function directly.
-+				 */
-+				wl1271_tx_work_locked(wl);
-+			}
-+
- 			wl1271_rx(wl, wl->fw_status);
- 		}
- 
-@@ -867,7 +877,8 @@ static int wl1271_op_tx(struct ieee80211_hw *hw, struct sk_buff *skb)
- 	 * before that, the tx_work will not be initialized!
- 	 */
- 
--	ieee80211_queue_work(wl->hw, &wl->tx_work);
-+	if (!test_bit(WL1271_FLAG_FW_TX_BUSY, &wl->flags))
-+		ieee80211_queue_work(wl->hw, &wl->tx_work);
- 
- 	/*
- 	 * The workqueue is slow to process the tx_queue and we need stop
-diff --git a/drivers/net/wireless/wl12xx/wl1271_tx.c b/drivers/net/wireless/wl12xx/wl1271_tx.c
-index b13b373..cf32a77 100644
---- a/drivers/net/wireless/wl12xx/wl1271_tx.c
-+++ b/drivers/net/wireless/wl12xx/wl1271_tx.c
-@@ -204,9 +204,8 @@ u32 wl1271_tx_enabled_rates_get(struct wl1271 *wl, u32 rate_set)
- 	return enabled_rates;
- }
- 
--void wl1271_tx_work(struct work_struct *work)
-+void wl1271_tx_work_locked(struct wl1271 *wl)
- {
--	struct wl1271 *wl = container_of(work, struct wl1271, tx_work);
- 	struct sk_buff *skb;
- 	bool woken_up = false;
- 	u32 sta_rates = 0;
-@@ -223,8 +222,6 @@ void wl1271_tx_work(struct work_struct *work)
- 		spin_unlock_irqrestore(&wl->wl_lock, flags);
- 	}
- 
--	mutex_lock(&wl->mutex);
--
- 	if (unlikely(wl->state == WL1271_STATE_OFF))
- 		goto out;
- 
-@@ -260,6 +257,8 @@ void wl1271_tx_work(struct work_struct *work)
- 			 * Queue back last skb, and stop aggregating.
- 			 */
- 			skb_queue_head(&wl->tx_queue, skb);
-+			/* No work left, avoid scheduling redundant tx work */
-+			set_bit(WL1271_FLAG_FW_TX_BUSY, &wl->flags);
- 			goto out_ack;
- 		} else if (ret < 0) {
- 			dev_kfree_skb(skb);
-@@ -283,7 +282,14 @@ out_ack:
- out:
- 	if (woken_up)
- 		wl1271_ps_elp_sleep(wl);
-+}
- 
-+void wl1271_tx_work(struct work_struct *work)
-+{
-+	struct wl1271 *wl = container_of(work, struct wl1271, tx_work);
-+
-+	mutex_lock(&wl->mutex);
-+	wl1271_tx_work_locked(wl);
- 	mutex_unlock(&wl->mutex);
- }
- 
-diff --git a/drivers/net/wireless/wl12xx/wl1271_tx.h b/drivers/net/wireless/wl12xx/wl1271_tx.h
-index d12a129..f1c9065 100644
---- a/drivers/net/wireless/wl12xx/wl1271_tx.h
-+++ b/drivers/net/wireless/wl12xx/wl1271_tx.h
-@@ -140,6 +140,7 @@ static inline int wl1271_tx_get_queue(int queue)
- }
- 
- void wl1271_tx_work(struct work_struct *work);
-+void wl1271_tx_work_locked(struct wl1271 *wl);
- void wl1271_tx_complete(struct wl1271 *wl);
- void wl1271_tx_reset(struct wl1271 *wl);
- void wl1271_tx_flush(struct wl1271 *wl);
--- 
-1.7.0.4
-
+  Luis
