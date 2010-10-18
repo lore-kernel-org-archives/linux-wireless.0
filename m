@@ -1,49 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw0-f46.google.com ([74.125.83.46]:40525 "EHLO
-	mail-gw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933376Ab0J1Ot2 (ORCPT
+Received: from mgw-sa02.nokia.com ([147.243.1.48]:31856 "EHLO
+	mgw-sa02.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755086Ab0JRObd (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 28 Oct 2010 10:49:28 -0400
-Message-ID: <4CC98D85.20703@lwfinger.net>
-Date: Thu, 28 Oct 2010 09:49:41 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-To: Arnd Hannemann <arnd@arndnet.de>
-CC: "linux-mmc@vger.kernel.org" <linux-mmc@vger.kernel.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: b43 sdio: WARNING: at drivers/mmc/core/core.c:237 mmc_wait_for_cmd
-References: <4CC874F4.5050908@arndnet.de> <4CC8CAAE.3040100@lwfinger.net> <4CC98892.7080000@arndnet.de>
-In-Reply-To: <4CC98892.7080000@arndnet.de>
-Content-Type: text/plain; charset=ISO-8859-15
+	Mon, 18 Oct 2010 10:31:33 -0400
+Received: from nokia.com (localhost [127.0.0.1])
+	by mgw-sa02.nokia.com (Switch-3.4.3/Switch-3.4.3) with ESMTP id o9IEVV39021723
+	for <linux-wireless@vger.kernel.org>; Mon, 18 Oct 2010 17:31:31 +0300
+Subject: Re: [PATCH v2] wl1271: Fix warning about unsupported RX rate
+From: Luciano Coelho <luciano.coelho@nokia.com>
+To: Teemu Paasikivi <ext-teemu.3.paasikivi@nokia.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <1287046804-19356-1-git-send-email-ext-teemu.3.paasikivi@nokia.com>
+References: <1287046804-19356-1-git-send-email-ext-teemu.3.paasikivi@nokia.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Mon, 18 Oct 2010 17:31:29 +0300
+Message-ID: <1287412289.20107.66.camel@chilepepper>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 10/28/2010 09:28 AM, Arnd Hannemann wrote:
-> Hi,
-\> [ 1364.620044] b43-phy1 debug: Removing Interface type 2
-> [ 1364.621812] b43-phy1 debug: Wireless interface stopped
-> [ 1372.440297] b43-sdio: before ssb_bus_unregister, claimed is 0
-> [ 1372.440345] b43-sdio: before sdio_disable_func, claimed is 0
-> [ 1372.440351] ------------[ cut here ]------------
-> [ 1372.440367] WARNING: at drivers/mmc/core/core.c:237 mmc_wait_for_cmd+0x88/0x90()
+On Thu, 2010-10-14 at 11:00 +0200, Teemu Paasikivi wrote:
+> While scanning, it is possible that beacon and probe response frames are
+> received on other band than configured to the driver. In rx status
+> handling this has caused "Unsupported RX rate from HW" warnings. This
+> patch changes the wl1271_rate_to_index function to take the band of the
+> received frame as a parameter instead of using value configuret to
+> wl->band.
+> 
+> Signed-off-by: Teemu Paasikivi <ext-teemu.3.paasikivi@nokia.com>
+> ---
 
-Please try the patch below. It claims the device before the sdio_disable_func(()
-call and releases it afterwords.
-
-Larry
+Applied, thanks!
 
 
-Index: wireless-testing/drivers/net/wireless/b43/sdio.c
-===================================================================
---- wireless-testing.orig/drivers/net/wireless/b43/sdio.c
-+++ wireless-testing/drivers/net/wireless/b43/sdio.c
-@@ -175,7 +175,9 @@ static void b43_sdio_remove(struct sdio_
- 	struct b43_sdio *sdio = sdio_get_drvdata(func);
+-- 
+Cheers,
+Luca.
 
- 	ssb_bus_unregister(&sdio->ssb);
-+	sdio_claim_host(func);
- 	sdio_disable_func(func);
-+	sdio_release_host(func);
- 	kfree(sdio);
- 	sdio_set_drvdata(func, NULL);
- }
