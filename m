@@ -1,161 +1,202 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ogre.sisk.pl ([217.79.144.158]:51896 "EHLO ogre.sisk.pl"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757831Ab0JYXE5 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 25 Oct 2010 19:04:57 -0400
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
-To: "John W. Linville" <linville@tuxdriver.com>
-Subject: Re: [RFC] iwlwifi: Convert to new PCI PM framework
-Date: Tue, 26 Oct 2010 01:04:09 +0200
-Cc: linux-wireless@vger.kernel.org, wey-yi.w.guy@intel.com
-References: <1288037557-5197-1-git-send-email-linville@tuxdriver.com>
-In-Reply-To: <1288037557-5197-1-git-send-email-linville@tuxdriver.com>
+Received: from mail30f.wh2.ocn.ne.jp ([220.111.41.203]:10703 "HELO
+	mail30f.wh2.ocn.ne.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1750801Ab0JRBZA (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 17 Oct 2010 21:25:00 -0400
+Received: from vs3016.wh2.ocn.ne.jp (125.206.180.189)
+	by mail30f.wh2.ocn.ne.jp (RS ver 1.0.95vs) with SMTP id 1-0995525095
+	for <linux-wireless@vger.kernel.org>; Mon, 18 Oct 2010 10:24:58 +0900 (JST)
+From: Bruno Randolf <br1@einfach.org>
+To: Felix Fietkau <nbd@openwrt.org>
+Subject: Re: [PATCH 4/6] ath9k: optimize/fix ANI RSSI processing
+Date: Mon, 18 Oct 2010 10:24:55 +0900
+Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com,
+	lrodriguez@atheros.com
+References: <1287165813-94331-1-git-send-email-nbd@openwrt.org> <1287165813-94331-3-git-send-email-nbd@openwrt.org> <1287165813-94331-4-git-send-email-nbd@openwrt.org>
+In-Reply-To: <1287165813-94331-4-git-send-email-nbd@openwrt.org>
 MIME-Version: 1.0
 Content-Type: Text/Plain;
-  charset="iso-8859-2"
-Message-Id: <201010260104.09844.rjw@sisk.pl>
+  charset="iso-8859-15"
+Message-Id: <201010181024.55475.br1@einfach.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Monday, October 25, 2010, John W. Linville wrote:
-> Use the new PCI PM and let the PCI core code handle the PCI-specific
-> details of power transitions.
-> 
-> Based on similarly titled ath9k patch posted by Rafael J. Wysocki.
-> 
-> Cc: "Rafael J. Wysocki" <rjw@sisk.pl>
-> Signed-off-by: John W. Linville <linville@tuxdriver.com>
+On Sat October 16 2010 03:03:31 Felix Fietkau wrote:
+> ANI needs the RSSI average only in station mode, and only for tracking
+> the signal strength of beacons of the AP that it is connected to.
+> Adjust the code to track on the beacon RSSI, and store the average of that
+> in the ath_wiphy struct.
+> With these changes, we can get rid of this extra station lookup in the
+> rx path, which saves precious CPU cycles.
 
-Acked-by: Rafael J. Wysocki <rjw@sisk.pl>
+wouldn't it make sense to have per-station RSSI in IBSS mode?
 
+bruno
+
+> Signed-off-by: Felix Fietkau <nbd@openwrt.org>
 > ---
-> Compile-tested only...do the iwl_pci_resume changes look right?
+>  drivers/net/wireless/ath/ath9k/ath9k.h   |    2 +-
+>  drivers/net/wireless/ath/ath9k/init.c    |    2 +
+>  drivers/net/wireless/ath/ath9k/main.c    |    6 +++-
+>  drivers/net/wireless/ath/ath9k/recv.c    |   38
+> +++++++++-------------------- drivers/net/wireless/ath/ath9k/virtual.c |  
+>  1 +
+>  5 files changed, 20 insertions(+), 29 deletions(-)
 > 
->  drivers/net/wireless/iwlwifi/iwl-agn.c      |    5 +----
->  drivers/net/wireless/iwlwifi/iwl-core.c     |   26 ++++++++++++++------------
->  drivers/net/wireless/iwlwifi/iwl-core.h     |   14 +++++++++++---
->  drivers/net/wireless/iwlwifi/iwl3945-base.c |    5 +----
->  4 files changed, 27 insertions(+), 23 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
-> index c2636a7..513bb31 100644
-> --- a/drivers/net/wireless/iwlwifi/iwl-agn.c
-> +++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
-> @@ -4836,10 +4836,7 @@ static struct pci_driver iwl_driver = {
->  	.id_table = iwl_hw_card_ids,
->  	.probe = iwl_pci_probe,
->  	.remove = __devexit_p(iwl_pci_remove),
-> -#ifdef CONFIG_PM
-> -	.suspend = iwl_pci_suspend,
-> -	.resume = iwl_pci_resume,
-> -#endif
-> +	.driver.pm = IWL_PM_OPS,
+> diff --git a/drivers/net/wireless/ath/ath9k/ath9k.h
+> b/drivers/net/wireless/ath/ath9k/ath9k.h index e435c1d..8f5d4c4 100644
+> --- a/drivers/net/wireless/ath/ath9k/ath9k.h
+> +++ b/drivers/net/wireless/ath/ath9k/ath9k.h
+> @@ -271,7 +271,6 @@ struct ath_node {
+>  	struct ath_atx_ac ac[WME_NUM_AC];
+>  	u16 maxampdu;
+>  	u8 mpdudensity;
+> -	int last_rssi;
 >  };
->  
->  static int __init iwl_init(void)
-> diff --git a/drivers/net/wireless/iwlwifi/iwl-core.c b/drivers/net/wireless/iwlwifi/iwl-core.c
-> index 25fb391..eb39b43 100644
-> --- a/drivers/net/wireless/iwlwifi/iwl-core.c
-> +++ b/drivers/net/wireless/iwlwifi/iwl-core.c
-> @@ -2584,8 +2584,9 @@ EXPORT_SYMBOL(iwl_add_beacon_time);
->  
->  #ifdef CONFIG_PM
->  
-> -int iwl_pci_suspend(struct pci_dev *pdev, pm_message_t state)
-> +int iwl_pci_suspend(struct device *device)
+> 
+>  #define AGGR_CLEANUP         BIT(1)
+> @@ -663,6 +662,7 @@ struct ath_wiphy {
+>  	bool idle;
+>  	int chan_idx;
+>  	int chan_is_ht;
+> +	int last_rssi;
+>  };
+> 
+>  void ath9k_tasklet(unsigned long data);
+> diff --git a/drivers/net/wireless/ath/ath9k/init.c
+> b/drivers/net/wireless/ath/ath9k/init.c index bc6c4df..5ebe53d 100644
+> --- a/drivers/net/wireless/ath/ath9k/init.c
+> +++ b/drivers/net/wireless/ath/ath9k/init.c
+> @@ -702,6 +702,7 @@ int ath9k_init_device(u16 devid, struct ath_softc *sc,
+> u16 subsysid, const struct ath_bus_ops *bus_ops)
 >  {
-> +	struct pci_dev *pdev = to_pci_dev(device);
->  	struct iwl_priv *priv = pci_get_drvdata(pdev);
->  
->  	/*
-> @@ -2597,18 +2598,14 @@ int iwl_pci_suspend(struct pci_dev *pdev, pm_message_t state)
->  	 */
->  	iwl_apm_stop(priv);
->  
-> -	pci_save_state(pdev);
-> -	pci_disable_device(pdev);
-> -	pci_set_power_state(pdev, PCI_D3hot);
+>  	struct ieee80211_hw *hw = sc->hw;
+> +	struct ath_wiphy *aphy = hw->priv;
+>  	struct ath_common *common;
+>  	struct ath_hw *ah;
+>  	int error = 0;
+> @@ -751,6 +752,7 @@ int ath9k_init_device(u16 devid, struct ath_softc *sc,
+> u16 subsysid, INIT_WORK(&sc->chan_work, ath9k_wiphy_chan_work);
+>  	INIT_DELAYED_WORK(&sc->wiphy_work, ath9k_wiphy_work);
+>  	sc->wiphy_scheduler_int = msecs_to_jiffies(500);
+> +	aphy->last_rssi = ATH_RSSI_DUMMY_MARKER;
+> 
+>  	ath_init_leds(sc);
+>  	ath_start_rfkill_poll(sc);
+> diff --git a/drivers/net/wireless/ath/ath9k/main.c
+> b/drivers/net/wireless/ath/ath9k/main.c index 029c6d2..e70dc383 100644
+> --- a/drivers/net/wireless/ath/ath9k/main.c
+> +++ b/drivers/net/wireless/ath/ath9k/main.c
+> @@ -535,7 +535,6 @@ static void ath_node_attach(struct ath_softc *sc,
+> struct ieee80211_sta *sta) an->maxampdu = 1 <<
+> (IEEE80211_HT_MAX_AMPDU_FACTOR +
+>  				     sta->ht_cap.ampdu_factor);
+>  		an->mpdudensity = parse_mpdudensity(sta->ht_cap.ampdu_density);
+> -		an->last_rssi = ATH_RSSI_DUMMY_MARKER;
+>  	}
+>  }
+> 
+> @@ -804,9 +803,11 @@ static u32 ath_get_extchanmode(struct ath_softc *sc,
+>  }
+> 
+>  static void ath9k_bss_assoc_info(struct ath_softc *sc,
+> +				 struct ieee80211_hw *hw,
+>  				 struct ieee80211_vif *vif,
+>  				 struct ieee80211_bss_conf *bss_conf)
+>  {
+> +	struct ath_wiphy *aphy = hw->priv;
+>  	struct ath_hw *ah = sc->sc_ah;
+>  	struct ath_common *common = ath9k_hw_common(ah);
+> 
+> @@ -830,6 +831,7 @@ static void ath9k_bss_assoc_info(struct ath_softc *sc,
+>  		ath_beacon_config(sc, vif);
+> 
+>  		/* Reset rssi stats */
+> +		aphy->last_rssi = ATH_RSSI_DUMMY_MARKER;
+>  		sc->sc_ah->stats.avgbrssi = ATH_RSSI_DUMMY_MARKER;
+> 
+>  		sc->sc_flags |= SC_OP_ANI_RUN;
+> @@ -1951,7 +1953,7 @@ static void ath9k_bss_info_changed(struct
+> ieee80211_hw *hw, if (changed & BSS_CHANGED_ASSOC) {
+>  		ath_print(common, ATH_DBG_CONFIG, "BSS Changed ASSOC %d\n",
+>  			bss_conf->assoc);
+> -		ath9k_bss_assoc_info(sc, vif, bss_conf);
+> +		ath9k_bss_assoc_info(sc, hw, vif, bss_conf);
+>  	}
+> 
+>  	mutex_unlock(&sc->mutex);
+> diff --git a/drivers/net/wireless/ath/ath9k/recv.c
+> b/drivers/net/wireless/ath/ath9k/recv.c index 7c90eaf..925b327 100644
+> --- a/drivers/net/wireless/ath/ath9k/recv.c
+> +++ b/drivers/net/wireless/ath/ath9k/recv.c
+> @@ -960,36 +960,23 @@ static void ath9k_process_rssi(struct ath_common
+> *common, struct ieee80211_hdr *hdr,
+>  			       struct ath_rx_status *rx_stats)
+>  {
+> +	struct ath_wiphy *aphy = hw->priv;
+>  	struct ath_hw *ah = common->ah;
+> -	struct ieee80211_sta *sta;
+> -	struct ath_node *an;
+> -	int last_rssi = ATH_RSSI_DUMMY_MARKER;
+> +	int last_rssi;
+>  	__le16 fc;
+> 
+> +	if (ah->opmode != NL80211_IFTYPE_STATION)
+> +		return;
+> +
+>  	fc = hdr->frame_control;
+> +	if (!ieee80211_is_beacon(fc) ||
+> +	    compare_ether_addr(hdr->addr3, common->curbssid))
+> +		return;
+> 
+> -	rcu_read_lock();
+> -	/*
+> -	 * XXX: use ieee80211_find_sta! This requires quite a bit of work
+> -	 * under the current ath9k virtual wiphy implementation as we have
+> -	 * no way of tying a vif to wiphy. Typically vifs are attached to
+> -	 * at least one sdata of a wiphy on mac80211 but with ath9k virtual
+> -	 * wiphy you'd have to iterate over every wiphy and each sdata.
+> -	 */
+> -	if (is_multicast_ether_addr(hdr->addr1))
+> -		sta = ieee80211_find_sta_by_ifaddr(hw, hdr->addr2, NULL);
+> -	else
+> -		sta = ieee80211_find_sta_by_ifaddr(hw, hdr->addr2, hdr->addr1);
 > -
->  	return 0;
->  }
->  EXPORT_SYMBOL(iwl_pci_suspend);
->  
-> -int iwl_pci_resume(struct pci_dev *pdev)
-> +int iwl_pci_resume(struct device *device)
->  {
-> +	struct pci_dev *pdev = to_pci_dev(device);
->  	struct iwl_priv *priv = pci_get_drvdata(pdev);
-> -	int ret;
->  	bool hw_rfkill = false;
->  
->  	/*
-> @@ -2617,11 +2614,6 @@ int iwl_pci_resume(struct pci_dev *pdev)
->  	 */
->  	pci_write_config_byte(pdev, PCI_CFG_RETRY_TIMEOUT, 0x00);
->  
-> -	pci_set_power_state(pdev, PCI_D0);
-> -	ret = pci_enable_device(pdev);
-> -	if (ret)
-> -		return ret;
-> -	pci_restore_state(pdev);
->  	iwl_enable_interrupts(priv);
->  
->  	if (!(iwl_read32(priv, CSR_GP_CNTRL) &
-> @@ -2639,4 +2631,14 @@ int iwl_pci_resume(struct pci_dev *pdev)
->  }
->  EXPORT_SYMBOL(iwl_pci_resume);
->  
-> +const struct dev_pm_ops iwl_pm_ops = {
-> +	.suspend = iwl_pci_suspend,
-> +	.resume = iwl_pci_resume,
-> +	.freeze = iwl_pci_suspend,
-> +	.thaw = iwl_pci_resume,
-> +	.poweroff = iwl_pci_suspend,
-> +	.restore = iwl_pci_resume,
-> +};
-> +EXPORT_SYMBOL(iwl_pm_ops);
-> +
->  #endif /* CONFIG_PM */
-> diff --git a/drivers/net/wireless/iwlwifi/iwl-core.h b/drivers/net/wireless/iwlwifi/iwl-core.h
-> index 64527de..b17de82 100644
-> --- a/drivers/net/wireless/iwlwifi/iwl-core.h
-> +++ b/drivers/net/wireless/iwlwifi/iwl-core.h
-> @@ -615,9 +615,17 @@ __le32 iwl_add_beacon_time(struct iwl_priv *priv, u32 base,
->  			   u32 addon, u32 beacon_interval);
->  
->  #ifdef CONFIG_PM
-> -int iwl_pci_suspend(struct pci_dev *pdev, pm_message_t state);
-> -int iwl_pci_resume(struct pci_dev *pdev);
-> -#endif /* CONFIG_PM */
-> +int iwl_pci_suspend(struct device *device);
-> +int iwl_pci_resume(struct device *device);
-> +extern const struct dev_pm_ops iwl_pm_ops;
-> +
-> +#define IWL_PM_OPS	(&iwl_pm_ops)
-> +
-> +#else /* !CONFIG_PM */
-> +
-> +#define IWL_PM_OPS	NULL
-> +
-> +#endif /* !CONFIG_PM */
->  
->  /*****************************************************
->  *  Error Handling Debugging
-> diff --git a/drivers/net/wireless/iwlwifi/iwl3945-base.c b/drivers/net/wireless/iwlwifi/iwl3945-base.c
-> index 8f8c4b7..895690f 100644
-> --- a/drivers/net/wireless/iwlwifi/iwl3945-base.c
-> +++ b/drivers/net/wireless/iwlwifi/iwl3945-base.c
-> @@ -4274,10 +4274,7 @@ static struct pci_driver iwl3945_driver = {
->  	.id_table = iwl3945_hw_card_ids,
->  	.probe = iwl3945_pci_probe,
->  	.remove = __devexit_p(iwl3945_pci_remove),
-> -#ifdef CONFIG_PM
-> -	.suspend = iwl_pci_suspend,
-> -	.resume = iwl_pci_resume,
-> -#endif
-> +	.driver.pm = IWL_PM_OPS,
->  };
->  
->  static int __init iwl3945_init(void)
+> -	if (sta) {
+> -		an = (struct ath_node *) sta->drv_priv;
+> -		if (rx_stats->rs_rssi != ATH9K_RSSI_BAD &&
+> -		   !rx_stats->rs_moreaggr)
+> -			ATH_RSSI_LPF(an->last_rssi, rx_stats->rs_rssi);
+> -		last_rssi = an->last_rssi;
+> -	}
+> -	rcu_read_unlock();
+> +	if (rx_stats->rs_rssi != ATH9K_RSSI_BAD && !rx_stats->rs_moreaggr)
+> +		ATH_RSSI_LPF(aphy->last_rssi, rx_stats->rs_rssi);
 > 
-
+> +	last_rssi = aphy->last_rssi;
+>  	if (likely(last_rssi != ATH_RSSI_DUMMY_MARKER))
+>  		rx_stats->rs_rssi = ATH_EP_RND(last_rssi,
+>  					      ATH_RSSI_EP_MULTIPLIER);
+> @@ -997,8 +984,7 @@ static void ath9k_process_rssi(struct ath_common
+> *common, rx_stats->rs_rssi = 0;
+> 
+>  	/* Update Beacon RSSI, this is used by ANI. */
+> -	if (ieee80211_is_beacon(fc))
+> -		ah->stats.avgbrssi = rx_stats->rs_rssi;
+> +	ah->stats.avgbrssi = rx_stats->rs_rssi;
+>  }
+> 
+>  /*
+> diff --git a/drivers/net/wireless/ath/ath9k/virtual.c
+> b/drivers/net/wireless/ath/ath9k/virtual.c index ec7cf5e..cb6c48b 100644
+> --- a/drivers/net/wireless/ath/ath9k/virtual.c
+> +++ b/drivers/net/wireless/ath/ath9k/virtual.c
+> @@ -107,6 +107,7 @@ int ath9k_wiphy_add(struct ath_softc *sc)
+>  	aphy->sc = sc;
+>  	aphy->hw = hw;
+>  	sc->sec_wiphy[i] = aphy;
+> +	aphy->last_rssi = ATH_RSSI_DUMMY_MARKER;
+>  	spin_unlock_bh(&sc->wiphy_lock);
+> 
+>  	memcpy(addr, common->macaddr, ETH_ALEN);
