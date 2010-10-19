@@ -1,64 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:1029 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750876Ab0JRMKd (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 18 Oct 2010 08:10:33 -0400
-Date: Mon, 18 Oct 2010 14:12:51 +0200
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: "Guy, Wey-Yi W" <wey-yi.w.guy@intel.com>
-Cc: "linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"ipw3945-devel@lists.sourceforge.net"
-	<ipw3945-devel@lists.sourceforge.net>
-Subject: Re: [PATCH 1/9] iwlagn: need longer tx queue stuck timer for coex
- devices
-Message-ID: <20101018121250.GA4005@redhat.com>
-References: <1287079370-20587-1-git-send-email-wey-yi.w.guy@intel.com>
- <1287079370-20587-2-git-send-email-wey-yi.w.guy@intel.com>
- <20101015164447.GB4286@redhat.com>
- <E9954878DD1FB34FAE5187FB88C58A35012EE46C3F@orsmsx506.amr.corp.intel.com>
+Received: from mailout-de.gmx.net ([213.165.64.23]:43466 "HELO mail.gmx.net"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with SMTP
+	id S1751310Ab0JSOfJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 19 Oct 2010 10:35:09 -0400
+Message-ID: <4CBDB6E1.3020209@gmx.net>
+Date: Tue, 19 Oct 2010 17:18:57 +0200
+From: George <george.news@gmx.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <E9954878DD1FB34FAE5187FB88C58A35012EE46C3F@orsmsx506.amr.corp.intel.com>
+To: Grazvydas Ignotas <notasas@gmail.com>
+CC: Luciano Coelho <luciano.coelho@nokia.com>,
+	"Luis R. Rodriguez" <mcgrof@gmail.com>,
+	Bob Copeland <me@bobcopeland.com>,
+	Denis 'GNUtoo' Carikli <GNUtoo@no-log.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: Compat-wireless N900
+References: <4CB6BE57.8010401@gmx.net>	<1287071844.11341.5.camel@gnutoo-laptop>	<AANLkTikosEtFnWqRVzMBKtNsB=aqOpqQFKDOZS3+pXTE@mail.gmail.com>	<4CB74759.3030807@gmx.net>	<AANLkTi=1Ar-gzRaskHGDLmkaDnr=9+oZnA=qBLCYcUAi@mail.gmail.com>	<4CB7F7C7.7030804@gmx.net>	<AANLkTi=u+mT2Xd0=0vt4uaf9hSnnkPKY+wN6DjAxME3m@mail.gmail.com>	<4CBABB84.1090100@gmx.net>	<4CBC7725.7050202@gmx.net>	<AANLkTincCSBfwa_Y-cy_42HfU5kP1puCbi2-dBwGkkHu@mail.gmail.com>	<4CBC9A51.8030309@gmx.net>	<1287427291.8043.2.camel@powerslave>	<1287428554.8043.6.camel@powerslave>	<4CBD52DE.9090804@gmx.net> <AANLkTi=dGSVBrdDXwJgmOjEGX+i+=P_KibiJd+NNMGfy@mail.gmail.com> <4CBDB654.6060702@gmx.net>
+In-Reply-To: <4CBDB654.6060702@gmx.net>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Wey
+On 19/10/2010 17:16, George wrote:
+> On 19/10/2010 15:52, Grazvydas Ignotas wrote:
+>> On Tue, Oct 19, 2010 at 11:12 AM, George<george.news@gmx.net> wrote:
+>>> On 18/10/2010 21:02, Luciano Coelho wrote:
+>>>>
+>>>> On Mon, 2010-10-18 at 20:41 +0200, ext Luciano Coelho wrote:
+>>>>>
+>>>>> On Mon, 2010-10-18 at 21:04 +0200, ext George wrote:
+>>>>>>
+>>>>>> On 18/10/2010 19:21, Luis R. Rodriguez wrote:
+>>>>>>> Does your device use SDIO or SPI?
+>>>>>>>
+>>>>>>> Luis
+>>>>>>
+>>>>>> I have tried both and none of them have worked.
+>>>>>
+>>>>> On the N900 the wl1271 chip is connected via SPI.
+>>>
+>>> The chip is a wl1251, isn't it? wl1271 is n capable and n900 is not.
+>>
+>> I think your problem is that the driver (in
+>> drivers/net/wireless/wl1251/spi.c) and spi_board_info (in
+>> arch/arm/mach-omap2/board-rx51-peripherals.c) names don't match
+>> (wl1251 vs wl12xx). Probably easiest to edit .modalias in
+>> board-rx51-peripherals.c and rebuild the kernel.
+>>
+>
+> It seems getting closer ;)
+>
+> After changing wl12xx for spi:wl1251 now modules are uploaded on startup.
+>
+> However this is the output from lsmod | grep spi
+> spi 4352 0
+> wl1251 75840 1 spi
+> mac80211 256892 2 spi,wl1251
+> crc7 1216 1 spi
+>
+> As you can see spi module is not used :( and no interface is created.
+> Still a way to go.
+>
 
-> activity is too small time for device. Moreover we have unlikely but
-> possible situation when device is fully functional, but read_ptr will
-> wrap by accident to q->last_read_ptr on every check.
-> 
-> I think, better solution would be something like in rt2x00 or in
-> net/sched/sch_generic.c (however rt2x00 is easier to understand). It is
-> based on time stamp. When we get tx complete notification from hardware
-> (and incise read_ptr) mark the time stamp. In watchdog, which tick
-> periodically, check if queue is not empty and if current time is
-> bigger than time_stamp + time_out, if it is - firmware hung. More
-> smaller watchog tick give more precise hung detect (with disadvantage
-> of more cpu usage).
-> 
-> 
-> Me too not really like the current "monitor" approach, some thought about the design you propose.
-> 
-> 1. "time_out" is something need to be define and has the similar problem like what we have today since different devices has different behavior. For example, in WiFi/BT combo case, the queue might not move for a while if BT traffic load is high
+I forgot also to mention that bluetooth in not working with new modules 
+from compat-wireless
 
-Sure.
 
-However new watchdog could be more precise. Currently if hung will
-happen just after watchdog tick we are detecting it in time about 2
-ticks i.e. 10s, or when happen just before the tick we detect the hang
-in 1 tick i.e. 5s, what gives 100% inaccuracy. New design can be much
-more precise.
+> --
+> To unsubscribe from this list: send the line "unsubscribe
+> linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at http://vger.kernel.org/majordomo-info.html
+>
 
-> 2. I don't really see much of "cpu usage" impact if we have a reasonable watchdog timer. But it is all relative.
-
-Ohh, I was talking about cpu usage in new design I described.
-
-> 
-> By saying that, I think using timestamp might give more cleaner design, but still has the similar issues.
-
-Ok, if Intel have no plan to change the monitor recovery and have nothing
-against my watchdog approach, I'm going to cook some patches.
-
-Stanislaw
