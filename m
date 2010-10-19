@@ -1,45 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iw0-f174.google.com ([209.85.214.174]:57826 "EHLO
-	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754119Ab0JVQw1 convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 22 Oct 2010 12:52:27 -0400
-Received: by iwn34 with SMTP id 34so1142097iwn.19
-        for <linux-wireless@vger.kernel.org>; Fri, 22 Oct 2010 09:52:27 -0700 (PDT)
+Received: from mailout-de.gmx.net ([213.165.64.22]:52282 "HELO mail.gmx.net"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with SMTP
+	id S1752562Ab0JSOct (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 19 Oct 2010 10:32:49 -0400
+Message-ID: <4CBDB654.6060702@gmx.net>
+Date: Tue, 19 Oct 2010 17:16:36 +0200
+From: George <george.news@gmx.net>
 MIME-Version: 1.0
-In-Reply-To: <44EE5C37ADC36343B0625A05DD408C4850DAB4D6C4@CHEXMB-01.global.atheros.com>
-References: <1287752787-6616-1-git-send-email-rmanoharan@atheros.com>
- <AANLkTi=DwO_2t_p_+aeh6bBow_NR5=xoPw4A5L8X91ye@mail.gmail.com> <44EE5C37ADC36343B0625A05DD408C4850DAB4D6C4@CHEXMB-01.global.atheros.com>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Fri, 22 Oct 2010 09:52:06 -0700
-Message-ID: <AANLkTi=FV91Gj0iGT1X3oZF9rmLAKFNwzy=ReqcdRGeL@mail.gmail.com>
-Subject: Re: [RFC] mac80211: Fix ibss station got expired immediately
-To: Rajkumar Manoharan <Rajkumar.Manoharan@atheros.com>
-Cc: "johannes@sipsolutions.net" <johannes@sipsolutions.net>,
+To: Grazvydas Ignotas <notasas@gmail.com>
+CC: Luciano Coelho <luciano.coelho@nokia.com>,
+	"Luis R. Rodriguez" <mcgrof@gmail.com>,
+	Bob Copeland <me@bobcopeland.com>,
+	Denis 'GNUtoo' Carikli <GNUtoo@no-log.org>,
 	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Subject: Re: Compat-wireless N900
+References: <4CB6BE57.8010401@gmx.net>	<1287071844.11341.5.camel@gnutoo-laptop>	<AANLkTikosEtFnWqRVzMBKtNsB=aqOpqQFKDOZS3+pXTE@mail.gmail.com>	<4CB74759.3030807@gmx.net>	<AANLkTi=1Ar-gzRaskHGDLmkaDnr=9+oZnA=qBLCYcUAi@mail.gmail.com>	<4CB7F7C7.7030804@gmx.net>	<AANLkTi=u+mT2Xd0=0vt4uaf9hSnnkPKY+wN6DjAxME3m@mail.gmail.com>	<4CBABB84.1090100@gmx.net>	<4CBC7725.7050202@gmx.net>	<AANLkTincCSBfwa_Y-cy_42HfU5kP1puCbi2-dBwGkkHu@mail.gmail.com>	<4CBC9A51.8030309@gmx.net>	<1287427291.8043.2.camel@powerslave>	<1287428554.8043.6.camel@powerslave>	<4CBD52DE.9090804@gmx.net> <AANLkTi=dGSVBrdDXwJgmOjEGX+i+=P_KibiJd+NNMGfy@mail.gmail.com>
+In-Reply-To: <AANLkTi=dGSVBrdDXwJgmOjEGX+i+=P_KibiJd+NNMGfy@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Oct 22, 2010 at 9:48 AM, Rajkumar Manoharan
-<Rajkumar.Manoharan@atheros.com> wrote:
->>On Fri, Oct 22, 2010 at 6:06 AM, Rajkumar Manoharan
->><rmanoharan@atheros.com> wrote:
->>> Station addition in ieee80211_ibss_rx_queued_mgmt is not updating
->>> sta->last_rx which is causing station expiry in ieee80211_ibss_work
->>> path. So sta addition and deletion happens repeatedly.
+On 19/10/2010 15:52, Grazvydas Ignotas wrote:
+> On Tue, Oct 19, 2010 at 11:12 AM, George<george.news@gmx.net>  wrote:
+>> On 18/10/2010 21:02, Luciano Coelho wrote:
 >>>
->>> Signed-off-by: Rajkumar Manoharan <rmanoharan@atheros.com>
+>>> On Mon, 2010-10-18 at 20:41 +0200, ext Luciano Coelho wrote:
+>>>>
+>>>> On Mon, 2010-10-18 at 21:04 +0200, ext George wrote:
+>>>>>
+>>>>> On 18/10/2010 19:21, Luis R. Rodriguez wrote:
+>>>>>> Does your device use SDIO or SPI?
+>>>>>>
+>>>>>>     Luis
+>>>>>
+>>>>> I have tried both and none of them have worked.
+>>>>
+>>>> On the N900 the wl1271 chip is connected via SPI.
+>>
+>> The chip is a wl1251, isn't it? wl1271 is n capable and n900 is not.
 >
->>stable fix?
+> I think your problem is that the driver (in
+> drivers/net/wireless/wl1251/spi.c) and spi_board_info (in
+> arch/arm/mach-omap2/board-rx51-peripherals.c) names don't match
+> (wl1251 vs wl12xx). Probably easiest to edit .modalias in
+> board-rx51-peripherals.c and rebuild the kernel.
 >
->  >Luis
-> yes. while sending the patch, i'll cc'd stable.
 
-To get a fix propagated to stable you must add a
+It seems getting closer ;)
 
-Cc: stable@kernel.org
+After changing wl12xx for spi:wl1251 now modules are uploaded on startup.
 
-to your commit log right before your Signed-off-by.
+However this is the output from lsmod | grep spi
+spi                     4352  0
+wl1251                 75840  1 spi
+mac80211              256892  2 spi,wl1251
+crc7                    1216  1 spi
 
-  Luis
+As you can see spi module is not used :( and no interface is created. 
+Still a way to go.
+
+
