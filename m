@@ -1,56 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f46.google.com ([209.85.215.46]:55658 "EHLO
-	mail-ew0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932096Ab0JVPn6 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 22 Oct 2010 11:43:58 -0400
-Received: by mail-ew0-f46.google.com with SMTP id 7so1270430ewy.19
-        for <linux-wireless@vger.kernel.org>; Fri, 22 Oct 2010 08:43:58 -0700 (PDT)
-From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-To: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-Cc: b43-dev@lists.infradead.org,
-	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-Subject: [PATCH 5/5] b43: N-PHY: improve 2055 radio initialization
-Date: Fri, 22 Oct 2010 17:43:49 +0200
-Message-Id: <1287762229-16516-6-git-send-email-zajec5@gmail.com>
-In-Reply-To: <1287762229-16516-2-git-send-email-zajec5@gmail.com>
-References: <1287762229-16516-2-git-send-email-zajec5@gmail.com>
+Received: from web56803.mail.re3.yahoo.com ([66.196.97.77]:27602 "HELO
+	web56803.mail.re3.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1758611Ab0JSNfD convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 19 Oct 2010 09:35:03 -0400
+Message-ID: <782419.6815.qm@web56803.mail.re3.yahoo.com>
+Date: Tue, 19 Oct 2010 06:35:01 -0700 (PDT)
+From: Walter Goldens <goldenstranger@yahoo.com>
+Subject: Re: [PATCH] Do not compile staging directory for bt target. Signed-off-by: Bala Shanmugam <sbalashanmugam@atheros.com>
+To: Bala Shanmugam <sbalashanmugam@atheros.com>,
+	"Luis R. Rodriguez" <mcgrof@gmail.com>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <AANLkTimoMhytXWm9qh21VGX5B6EoE6JwWyMu1t-ivno9@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=iso-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-1) Upload 5 GHz values when needed.
-2) Do not upload all values on first init. Follow wl.
 
-Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
----
- drivers/net/wireless/b43/phy_n.c |   11 +++++++----
- 1 files changed, 7 insertions(+), 4 deletions(-)
+> Applied, you may want a
 
-diff --git a/drivers/net/wireless/b43/phy_n.c b/drivers/net/wireless/b43/phy_n.c
-index c22dbfb..6facb8a 100644
---- a/drivers/net/wireless/b43/phy_n.c
-+++ b/drivers/net/wireless/b43/phy_n.c
-@@ -241,10 +241,13 @@ static void b43_radio_init2055_post(struct b43_wldev *dev)
- static void b43_radio_init2055(struct b43_wldev *dev)
- {
- 	b43_radio_init2055_pre(dev);
--	if (b43_status(dev) < B43_STAT_INITIALIZED)
--		b2055_upload_inittab(dev, 0, 1);
--	else
--		b2055_upload_inittab(dev, 0/*FIXME on 5ghz band*/, 0);
-+	if (b43_status(dev) < B43_STAT_INITIALIZED) {
-+		/* Follow wl, not specs. Do not force uploading all regs */
-+		b2055_upload_inittab(dev, 0, 0);
-+	} else {
-+		bool ghz5 = b43_current_band(dev->wl) == IEEE80211_BAND_5GHZ;
-+		b2055_upload_inittab(dev, ghz5, 0);
-+	}
- 	b43_radio_init2055_post(dev);
- }
- 
--- 
-1.7.1
+> 
+> � Luis
+I was just about to submit exactly the same patch :)
 
+BTW,  I was thinking, perhaps we could merge bt and ethernet drivers in one line, by two separate groups via driver-select. For example:
+Replace current: 
+"Supported Ethernet drivers: < atl1 atl2 atl1e atl1c >"
+with
+"Supported Ethernet & Bluetooth drivers: < bt | eth (atlxx) >
+
+or something like that. This will notify users they can actually install bt drivers /if they don't read documentation/.
+
+Its a little weird that, atlxx are provided via driver-select and bt from 'make bt'. I believe they should be "on the same page"
+
+I would also suggest we drop the load.sh and wlload.sh scripts. I can't think of a reason why a sane person would opt for such iffy, redundant and probably malignant way to load their respective driver.
+
+There was something else, but I can't remember now ;)
+
+Walter.
+
+
+      
