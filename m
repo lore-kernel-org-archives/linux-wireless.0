@@ -1,90 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qy0-f181.google.com ([209.85.216.181]:59652 "EHLO
-	mail-qy0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759861Ab0JFTd1 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 6 Oct 2010 15:33:27 -0400
-Received: by qyk10 with SMTP id 10so4419864qyk.19
-        for <linux-wireless@vger.kernel.org>; Wed, 06 Oct 2010 12:33:26 -0700 (PDT)
-From: Bill Jordan <bjordan@rajant.com>
-To: "John W. Linville" <linville@tuxdriver.com>,
-	Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org, Bill Jordan <bjordan@rajant.com>
-Subject: [PATCH] iw: new command to set the wds peer
-Date: Wed,  6 Oct 2010 15:33:16 -0400
-Message-Id: <1286393596-24547-1-git-send-email-bjordan@rajant.com>
+Received: from mail.atheros.com ([12.19.149.2]:40932 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755468Ab0JSAox (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 18 Oct 2010 20:44:53 -0400
+Received: from mail.atheros.com ([10.10.20.108])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Mon, 18 Oct 2010 17:44:43 -0700
+Date: Mon, 18 Oct 2010 17:44:51 -0700
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: <linville@tuxdriver.com>, <johannes@sipsolutions.net>
+CC: <linux-wireless@vger.kernel.org>, <lrodriguez@atheros.com>
+Subject: [PATCH] cfg80211: fix regression on processing country IEs
+Message-ID: <20101019004451.GB1932@tux>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Add command to set the wds peer bssid using the newly
-implemented NL80211_CMD_SET_WDS_PEER.
+The patch 4f366c5:
 
-Signed-off-by: Bill Jordan <bjordan@rajant.com>
+	wireless: only use alpha2 regulatory information from country IE
+
+removed some complex intersection we were always doing between the AP's
+country IE info and what we got from CRDA. When CRDA sent us back a
+regulatory domain we would do some sanity checks on that regulatory
+domain response we just got. Part of these sanity checks included
+checking that we already had performed an intersection for the
+request of NL80211_REGDOM_SET_BY_COUNTRY_IE type.
+
+This mean that cfg80211 was only processing country IEs for cases
+where we already had an intersection, but since we removed enforcing
+this this is no longer required, we should just apply the country
+IE country hint with the data received from CRDA.
+
+This patch has fixes intended for kernels >= 2.6.36.
+
+Cc: stable@kernel.org
+Reported-by: Easwar Krishnan <easwar.krishnan@atheros.com>
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
 ---
- interface.c |   31 +++++++++++++++++++++++++++++++
- nl80211.h   |    3 +++
- 2 files changed, 34 insertions(+), 0 deletions(-)
+ net/wireless/reg.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-diff --git a/interface.c b/interface.c
-index a64015f..34ed4cb 100644
---- a/interface.c
-+++ b/interface.c
-@@ -383,3 +383,34 @@ static int handle_interface_4addr(struct nl80211_state *state,
- COMMAND(set, 4addr, "<on|off>",
- 	NL80211_CMD_SET_INTERFACE, 0, CIB_NETDEV, handle_interface_4addr,
- 	"Set interface 4addr (WDS) mode.\n");
-+
-+static int handle_interface_wds_peer(struct nl80211_state *state,
-+				 struct nl_cb *cb,
-+				 struct nl_msg *msg,
-+				 int argc, char **argv)
-+{
-+	enum nl80211_iftype mac_addr[ETH_ALEN];
-+
-+	if (argc < 1)
-+		return 1;
-+
-+	if (mac_addr_a2n(mac_addr, argv[0])) {
-+		fprintf(stderr, "invalid mac address\n");
-+		return 2;
-+	}
-+
-+	argc--;
-+	argv++;
-+
-+	if (argc)
-+		return 1;
-+
-+	NLA_PUT(msg, NL80211_ATTR_MAC, ETH_ALEN, mac_addr);
-+
-+	return 0;
-+ nla_put_failure:
-+	return -ENOBUFS;
-+}
-+COMMAND(set, peer, "<MAC address>",
-+	NL80211_CMD_SET_WDS_PEER, 0, CIB_NETDEV, handle_interface_wds_peer,
-+	"Set interface wds peer.\n");
-diff --git a/nl80211.h b/nl80211.h
-index f0518b0..35a9681 100644
---- a/nl80211.h
-+++ b/nl80211.h
-@@ -387,6 +387,8 @@
-  *	of any other interfaces, and other interfaces will again take
-  *	precedence when they are used.
-  *
-+ * @NL80211_CMD_SET_WDS_PEER: Set the MAC address of the peer on a WDS interface.
-+ *
-  * @NL80211_CMD_MAX: highest used command number
-  * @__NL80211_CMD_AFTER_LAST: internal use
-  */
-@@ -489,6 +491,7 @@ enum nl80211_commands {
- 	NL80211_CMD_NOTIFY_CQM,
- 
- 	NL80211_CMD_SET_CHANNEL,
-+	NL80211_CMD_SET_WDS_PEER,
- 
- 	/* add new commands above here */
- 
+diff --git a/net/wireless/reg.c b/net/wireless/reg.c
+index d14bbf9..4b9f891 100644
+--- a/net/wireless/reg.c
++++ b/net/wireless/reg.c
+@@ -1167,7 +1167,7 @@ static int ignore_request(struct wiphy *wiphy,
+ 				return 0;
+ 			return -EALREADY;
+ 		}
+-		return REG_INTERSECT;
++		return 0;
+ 	case NL80211_REGDOM_SET_BY_DRIVER:
+ 		if (last_request->initiator == NL80211_REGDOM_SET_BY_CORE) {
+ 			if (regdom_changes(pending_request->alpha2))
 -- 
-1.7.2.3
+1.7.0.4
 
