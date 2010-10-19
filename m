@@ -1,56 +1,110 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 128-177-27-249.ip.openhosting.com ([128.177.27.249]:53749 "EHLO
-	jmalinen.user.openhosting.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751896Ab0JMPYo (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 13 Oct 2010 11:24:44 -0400
-Date: Wed, 13 Oct 2010 17:29:31 +0300
-From: Jouni Malinen <jouni.malinen@atheros.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH] ath9k: Set RX filter for Probe Request based on filter flag
-Message-ID: <20101013142931.GA7003@jm.kir.nu>
+Received: from mailout-de.gmx.net ([213.165.64.23]:50427 "HELO mail.gmx.net"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with SMTP
+	id S1751209Ab0JSH2W (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 19 Oct 2010 03:28:22 -0400
+Message-ID: <4CBD52DE.9090804@gmx.net>
+Date: Tue, 19 Oct 2010 10:12:14 +0200
+From: George <george.news@gmx.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+To: Luciano Coelho <luciano.coelho@nokia.com>
+CC: "Luis R. Rodriguez" <mcgrof@gmail.com>,
+	Bob Copeland <me@bobcopeland.com>,
+	Denis 'GNUtoo' Carikli <GNUtoo@no-log.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: Compat-wireless N900
+References: <4CB6BE57.8010401@gmx.net>	 <1287071844.11341.5.camel@gnutoo-laptop>	 <AANLkTikosEtFnWqRVzMBKtNsB=aqOpqQFKDOZS3+pXTE@mail.gmail.com>	 <4CB74759.3030807@gmx.net>	 <AANLkTi=1Ar-gzRaskHGDLmkaDnr=9+oZnA=qBLCYcUAi@mail.gmail.com>	 <4CB7F7C7.7030804@gmx.net>	 <AANLkTi=u+mT2Xd0=0vt4uaf9hSnnkPKY+wN6DjAxME3m@mail.gmail.com>	 <4CBABB84.1090100@gmx.net> <4CBC7725.7050202@gmx.net>	 <AANLkTincCSBfwa_Y-cy_42HfU5kP1puCbi2-dBwGkkHu@mail.gmail.com>	 <4CBC9A51.8030309@gmx.net>  <1287427291.8043.2.camel@powerslave> <1287428554.8043.6.camel@powerslave>
+In-Reply-To: <1287428554.8043.6.camel@powerslave>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This allows mac80211 to enable receiving of Probe Request frames in
-station mode which is needed for P2P.
+On 18/10/2010 21:02, Luciano Coelho wrote:
+> On Mon, 2010-10-18 at 20:41 +0200, ext Luciano Coelho wrote:
+>> On Mon, 2010-10-18 at 21:04 +0200, ext George wrote:
+>>> On 18/10/2010 19:21, Luis R. Rodriguez wrote:
+>>>>> Any help on that? Sorry but I'm somehow desesperate and don't know what to
+>>>>> do. Actually I'm thinking on not using compat-wireless and nl80211 and get
+>>>>> back to wireless-extensions.
+>>
+>> Getting back to wireless-extensions would certainly be a very desperate
+>> measure! :P
 
-Signed-off-by: Jouni Malinen <jouni.malinen@atheros.com>
+I guess it is, evenmore when nl80211 is the present ;) But I'm running 
+out of time and getting desperate ;)
 
----
- drivers/net/wireless/ath/ath9k/main.c |    1 +
- drivers/net/wireless/ath/ath9k/recv.c |    3 +--
- 2 files changed, 2 insertions(+), 2 deletions(-)
+>>
+>>>> Does your device use SDIO or SPI?
+>>>>
+>>>>     Luis
+>>>
+>>> I have tried both and none of them have worked.
+>>
+>> On the N900 the wl1271 chip is connected via SPI.
 
-This depends on the "mac80211: add probe request filter flag" from
-Johannes.
+The chip is a wl1251, isn't it? wl1271 is n capable and n900 is not.
+
+>> I'll re-read this thread more carefully to see if I can spot anything
+>> that could help you.
+>
+> First thing that came to my mind after re-reading the thread... Does the
+> wl1251 driver work *without* compat-wireless?
+
+I don't now how to test the driver without compat-wireless. If you can 
+explain it I will try. Do I have just to copy driver code on 
+compat-wireless directly into my kernel source directory? I don't think 
+that would work and probably complain, but I can try if this is the way.
+
+> Where did you get the
+> kernel that you have compiled?
+
+The kernel is the official one for n900, kernel-2.6.28 (uname -a returns 
+2.6.28-omap1). I got it using scratchbox and downloading it with:
+
+sb# apt-get source kernel
+
+Then I have compiled it using:
+
+sb# make EXTRAVERSION=-mine rx51_defconfig
+sb# make EXTRAVERSION=-mine menuconfig
+sb# make EXTRAVERSION=-mine bzImage modules
+sb# make EXTRAVERSION=-mine modules_install
+
+After that I have compiled on scratchbox compat-wireless package:
+
+sb# cd compat-wireless-2010-10-17
+sb# scripts/driver-select wl12xx
+sb# make KLIB=/lib/modules/2.6.28-mine 
+KMODPATH_ARG=/lib/modules/2.6.28-mine
+sb# make KLIB=/lib/modules/2.6.28-mine 
+KMODPATH_ARG=/lib/modules/2.6.28-mine install
+
+Then move the new set of modules to my n900
+
+n900# mkdir -p /lib/modules/2.6.28-mine
+
+# cd /lib/modules/2.6.28-mine
+# scp -r updates/ kernel/ modules.* 
+root@192.168.2.15:/lib/modules/2.6.28-mine
+
+And then boot with the new kernel image
+
+ubuntu$ sudo flasher-3.5 -l -b -k 
+PATH_TO_KERNEL/kernel-2.6.28/arch/arm/boot/zImage
 
 
---- wireless-testing.orig/drivers/net/wireless/ath/ath9k/recv.c	2010-10-13 06:39:30.000000000 -0700
-+++ wireless-testing/drivers/net/wireless/ath/ath9k/recv.c	2010-10-13 06:46:42.000000000 -0700
-@@ -430,8 +430,7 @@ u32 ath_calcrxfilter(struct ath_softc *s
- 		| ATH9K_RX_FILTER_UCAST | ATH9K_RX_FILTER_BCAST
- 		| ATH9K_RX_FILTER_MCAST;
- 
--	/* If not a STA, enable processing of Probe Requests */
--	if (sc->sc_ah->opmode != NL80211_IFTYPE_STATION)
-+	if (sc->rx.rxfilter & FIF_PROBE_REQ)
- 		rfilt |= ATH9K_RX_FILTER_PROBEREQ;
- 
- 	/*
---- wireless-testing.orig/drivers/net/wireless/ath/ath9k/main.c	2010-10-13 06:42:25.000000000 -0700
-+++ wireless-testing/drivers/net/wireless/ath/ath9k/main.c	2010-10-13 07:24:45.000000000 -0700
-@@ -1739,6 +1739,7 @@ skip_chan_change:
- 	FIF_PSPOLL |				\
- 	FIF_OTHER_BSS |				\
- 	FIF_BCN_PRBRESP_PROMISC |		\
-+	FIF_PROBE_REQ |				\
- 	FIF_FCSFAIL)
- 
- /* FIXME: sc->sc_full_reset ? */
+> My initial guess is that the SPI is not configured correctly so the
+> probe function is never called in the wl1251_spi module and thus the
+> interface is never created...
 
--- 
-Jouni Malinen                                            PGP id EFC895FA
+I'm attaching a link to my .config file to check if you consider I have 
+to activate any other stuff.
+
+http://pastebin.com/sCnHzp3V
+
+I would like to thank you all for the tremendous effort you are doing 
+helping me out on this issue.
+
+BR
+Jorge
+
