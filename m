@@ -1,49 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f46.google.com ([209.85.214.46]:38291 "EHLO
-	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755029Ab0JDSgV (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 4 Oct 2010 14:36:21 -0400
-Received: by bwz11 with SMTP id 11so3856705bwz.19
-        for <linux-wireless@vger.kernel.org>; Mon, 04 Oct 2010 11:36:20 -0700 (PDT)
-From: Christian Lamparter <chunkeey@googlemail.com>
-To: Ben Greear <greearb@candelatech.com>
-Subject: Re: lockdep warning in ieee80211 rx path
-Date: Mon, 4 Oct 2010 20:36:12 +0200
-Cc: Ming Lei <tom.leiming@gmail.com>, linux-wireless@vger.kernel.org
-References: <AANLkTin5KfmQLYxLWdhTcO-AM0t83dVq=LFCG0UGysaw@mail.gmail.com> <201010042000.44518.chunkeey@googlemail.com> <4CAA17FA.3080403@candelatech.com>
-In-Reply-To: <4CAA17FA.3080403@candelatech.com>
-MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Message-Id: <201010042036.12542.chunkeey@googlemail.com>
+Received: from nbd.name ([88.198.39.176]:58171 "EHLO ds10.nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752141Ab0JTAJw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 19 Oct 2010 20:09:52 -0400
+From: Felix Fietkau <nbd@openwrt.org>
+To: linux-wireless@vger.kernel.org
+Cc: linville@tuxdriver.com, lrodriguez@atheros.com
+Subject: [PATCH 1/3] ath9k_hw: initialize regulatory->max_power_level in set_txpower for AR9003
+Date: Wed, 20 Oct 2010 02:09:44 +0200
+Message-Id: <1287533386-68715-1-git-send-email-nbd@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Monday 04 October 2010 20:07:54 Ben Greear wrote:
-> On 10/04/2010 11:00 AM, Christian Lamparter wrote:
-> > On Monday 04 October 2010 19:52:12 Ben Greear wrote:
-> >> On 09/14/2010 01:51 PM, Christian Lamparter wrote:
-> >>> On Sunday 05 September 2010 11:32:26 Ming Lei wrote:
-> >>>> Seems the warning does not affect use of wireless,  false positive?
-> >>>
-> >>> No, it's a bug... but please read&   test the attached patch.
-> >>
-> >> This is not yet in wireless-testing.  Should it be?
-> > have you heard anything from Ming Lei about this subject?
-> > Or have you reproduced the bug too?
-> 
-> See my post about   inconsistent {IN-SOFTIRQ-W} -> {SOFTIRQ-ON-W}.
-> 
-> I'm not sure it's the same bug, but it would appear similar at least.
-At first glance, your trace looks unrelated to Ming Lei's issue.
-But we won't know for sure, unless you have a reliable way to
-reproduce the exact circumstances.
- 
-> If your patch is probably good, I can go ahead and apply it.
-> We can at least test that it doesn't obviously make things worse.
-Ok, if the patch doesn't make things worse than they are, I can
-risk another attempt.
+The same is done for the older chip families as well.
 
-Best regards,
-	Chr
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+---
+ drivers/net/wireless/ath/ath9k/ar9003_eeprom.c |    2 ++
+ 1 files changed, 2 insertions(+), 0 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
+index c418235..92cfef2 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
++++ b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
+@@ -2133,6 +2133,7 @@ static void ath9k_hw_ar9300_set_txpower(struct ath_hw *ah,
+ 					u8 twiceMaxRegulatoryPower,
+ 					u8 powerLimit)
+ {
++	struct ath_regulatory *regulatory = ath9k_hw_regulatory(ah);
+ 	struct ath_common *common = ath9k_hw_common(ah);
+ 	u8 targetPowerValT2[ar9300RateSize];
+ 	unsigned int i = 0;
+@@ -2180,6 +2181,7 @@ static void ath9k_hw_ar9300_set_txpower(struct ath_hw *ah,
+ 		i = ALL_TARGET_HT20_0_8_16; /* ht20 */
+ 
+ 	ah->txpower_limit = targetPowerValT2[i];
++	regulatory->max_power_level = ratesArray[i];
+ 
+ 	ar9003_hw_calibration_apply(ah, chan->channel);
+ }
+-- 
+1.7.2.2
+
