@@ -1,44 +1,81 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from devils.ext.ti.com ([198.47.26.153]:54191 "EHLO
-	devils.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752114Ab0JFSG3 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 6 Oct 2010 14:06:29 -0400
-From: Shahar Levi <shahar_levi@ti.com>
-To: <linux-wireless@vger.kernel.org>
-Cc: Luciano Coelho <luciano.coelho@nokia.com>
-Subject: [PATCH v2] wl1271: 11n Support, add support to 80211n spec
-Date: Wed,  6 Oct 2010 20:08:08 +0200
-Message-Id: <1286388491-28752-2-git-send-email-shahar_levi@ti.com>
-In-Reply-To: <1286388491-28752-1-git-send-email-shahar_levi@ti.com>
-References: <1286388491-28752-1-git-send-email-shahar_levi@ti.com>
+Received: from mms2.broadcom.com ([216.31.210.18]:2251 "EHLO mms2.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753944Ab0JTSEY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 20 Oct 2010 14:04:24 -0400
+Date: Wed, 20 Oct 2010 11:04:14 -0700
+From: "Henry Ptasinski (local)" <hp@broadcom.com>
+To: "Greg KH" <greg@kroah.com>
+cc: "Henry Ptasinski" <henryp@broadcom.com>,
+	"Nohee Ko" <noheek@broadcom.com>,
+	"devel@linuxdriverproject.org" <devel@linuxdriverproject.org>,
+	"Brett Rudley" <brudley@broadcom.com>,
+	"Venkat Rao" <vrao@broadcom.com>,
+	"grundler@google.com" <grundler@google.com>,
+	linux-wireless@vger.kernel.org, dwmw2@infradead.org
+Subject: Re: [PATCH] staging:brcm80211:brcmfmac:change firmware/config
+ file name
+Message-ID: <20101020180414.GB12658@broadcom.com>
+References: <4CBE23F4.4020104@broadcom.com>
+ <20101019233520.GA12510@kroah.com>
+ <FD96C117992C584DBC47231B1EB6F5568206D859DC@SJEXCHCCR02.corp.ad.broadcom.com>
+ <20101020004743.GB31965@kroah.com>
+ <20101020005546.GL10832@broadcom.com> <20101020010320.GA370@kroah.com>
+MIME-Version: 1.0
+In-Reply-To: <20101020010320.GA370@kroah.com>
+Content-Type: text/plain;
+ charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Series that add 80211n spec support to wl1271: scan, connection via MCS rates
-Wl12xx driver add HT support:
-· Scan includes HT IE
-· Connection to HT devices
-· HT protection
-· Traffic via MCS rates
-· A-MSDU in RX path
+On Tue, Oct 19, 2010 at 06:03:20PM -0700, Greg KH wrote:
+> On Tue, Oct 19, 2010 at 05:55:46PM -0700, Henry Ptasinski wrote:
+> > On Tue, Oct 19, 2010 at 05:47:43PM -0700, Greg KH wrote:
+> > > On Tue, Oct 19, 2010 at 04:45:26PM -0700, Nohee Ko wrote:
+> > > > >>
+> > > > Have you made the same changes in the linux-firmware source tree as
+> > > > well?  Without changing it there, this could get messy.
+> > > > <<
+> > > > 
+> > > > No not yet. But we are planning sooner or later.
+> > > 
+> > > Please do it sooner.
+> > > 
+> > > I'll wait for that to happen before committing this patch.
+> > 
+> > There's no specific changes needed in the linux-firmware repo to work with this
+> > driver change.  There is a bugfix version of the firmware that we're getting
+> > ready to send up, which is the motivation for this change, but the change
+> > will work properly with the firmware that's in the repo today.
+> 
+> How, you just renamed the file you look for in the driver, right?
+> 
+> > All this change does is replace the hard-coded full firmware filename used in
+> > the driver with the basename-apiversion construction as documented in
+> > 
+> > 	http://www.linuxwireless.org/en/developers/Documentation/firmware-versioning
+> > 
+> > plus add some info to the README to help users get the firmware properly
+> > installed.
+> > 
+> > Users will need to create the symlinks as described in the README to use these
+> > driver changes.
+> 
+> Yes, so you just broke their working setup, right?
+> 
+> So, please get linux-firmware fixed to add the proper symlinks, and then
+> I can apply the patch, and say "go upgrade your linux-firmware package",
+> which is almost acceptable.
 
-Missing functionality is:
-· BA session as Initiator and Receiver
+Ah, I didn't catch that the symlink should be in the linux-firmware repo.  We
+didn't do that for the brcm80211 driver firmware either, and nobody pointed it
+out.
 
-Shahar Levi (3):
-  wl1271: 11n Support, Add Definitions
-  wl1271: 11n Support, ACX Commands
-  wl1271: 11n Support, functionality and configuration ability
+But I don't see any symlinks in the linux-firmware repo.  Is anybody else using
+the "best practices" as documented?  Or should we just punt the codeversion
+part of the filenames and the symlinks, and just use basename-apiversion?
 
- drivers/net/wireless/wl12xx/Kconfig       |   10 +++
- drivers/net/wireless/wl12xx/Makefile      |    1 +
- drivers/net/wireless/wl12xx/wl1271.h      |    2 +-
- drivers/net/wireless/wl12xx/wl1271_acx.c  |   91 +++++++++++++++++++++++++++
- drivers/net/wireless/wl12xx/wl1271_acx.h  |   95 +++++++++++++++++++++++++++++
- drivers/net/wireless/wl12xx/wl1271_conf.h |    4 +
- drivers/net/wireless/wl12xx/wl1271_main.c |   78 ++++++++++++++++++-----
- drivers/net/wireless/wl12xx/wl1271_rx.c   |    4 +
- drivers/net/wireless/wl12xx/wl1271_tx.c   |    9 +++
- 9 files changed, 276 insertions(+), 18 deletions(-)
+Thanks,
+- Henry
+
 
