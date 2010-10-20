@@ -1,58 +1,201 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f46.google.com ([209.85.215.46]:50107 "EHLO
-	mail-ew0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754798Ab0JOLBi convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 15 Oct 2010 07:01:38 -0400
-Received: by ewy20 with SMTP id 20so643449ewy.19
-        for <linux-wireless@vger.kernel.org>; Fri, 15 Oct 2010 04:01:37 -0700 (PDT)
+Received: from mail.atheros.com ([12.19.149.2]:14861 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756169Ab0JTXHR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 20 Oct 2010 19:07:17 -0400
+Received: from mail.atheros.com ([10.10.20.105])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Wed, 20 Oct 2010 16:07:07 -0700
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>, <stable@kernel.org>,
+	Ben Greear <greearb@candelatech.com>,
+	Kyungwan Nam <kyungwan.nam@atheros.com>
+Subject: [PATCH 4/6] ath9k: lock reset and PCU start/stopping
+Date: Wed, 20 Oct 2010 16:07:06 -0700
+Message-ID: <1287616028-12547-5-git-send-email-lrodriguez@atheros.com>
+In-Reply-To: <1287616028-12547-1-git-send-email-lrodriguez@atheros.com>
+References: <1287616028-12547-1-git-send-email-lrodriguez@atheros.com>
 MIME-Version: 1.0
-In-Reply-To: <AANLkTi=YPcjudD5u0oLOmCj_PQqSKWCdPab45uLCiD76@mail.gmail.com>
-References: <1287090064-14607-1-git-send-email-zajec5@gmail.com>
-	<1287090064-14607-2-git-send-email-zajec5@gmail.com>
-	<AANLkTi=YPcjudD5u0oLOmCj_PQqSKWCdPab45uLCiD76@mail.gmail.com>
-Date: Fri, 15 Oct 2010 13:01:36 +0200
-Message-ID: <AANLkTinaeO-6M9DbvW2ZHJHyrBhRK+Gdu+4++0jFLqQA@mail.gmail.com>
-Subject: Re: [PATCH 2/3] b43: N-PHY: define registers names for 2056 radio
-From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Cc: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>,
-	b43-dev@lists.infradead.org, Henry Ptasinski <henryp@broadcom.com>,
-	Brett Rudley <brudley@broadcom.com>,
-	Nohee Ko <noheek@broadcom.com>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-W dniu 14 października 2010 23:23 użytkownik Luis R. Rodriguez
-<mcgrof@gmail.com> napisał:
-> 2010/10/14 Rafał Miłecki <zajec5@gmail.com>:
->> Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
->> Cc: Henry Ptasinski <henryp@broadcom.com>
->> Cc: Brett Rudley <brudley@broadcom.com>
->> Cc: Nohee Ko <noheek@broadcom.com>
->> ---
->>  drivers/net/wireless/b43/radio_2056.h |  522 +++++++++++++++++++++++++++++++++
->>  1 files changed, 522 insertions(+), 0 deletions(-)
->>
->> diff --git a/drivers/net/wireless/b43/radio_2056.h b/drivers/net/wireless/b43/radio_2056.h
->> index 60341d7..462c9fd 100644
->> --- a/drivers/net/wireless/b43/radio_2056.h
->> +++ b/drivers/net/wireless/b43/radio_2056.h
->> @@ -4,6 +4,9 @@
->>
->>   Copyright (c) 2010 Rafał Miłecki <zajec5@gmail.com>
->>
->> +  Some parts of the code in this file are derived from the brcm80211
->> +  driver  Copyright (c) 2010 Broadcom Corporation
->> +
->
-> You forgot to include their full license here.
+Apart from locking the start and stop PCU we need
+to ensure we also content starting and stopping the PCU
+between hardware resets.
 
-As discussed in another topic, I didn't add any copyrightable data
-here. "Just numbers". I added info about source of defines as some
-kind of over-kindness ;)
+This is part of a series that will help resolve the bug:
 
+https://bugzilla.kernel.org/show_bug.cgi?id=14624
+
+For more details about this issue refer to:
+
+http://marc.info/?l=linux-wireless&m=128629803703756&w=2
+
+Cc: stable@kernel.org
+Cc: Ben Greear <greearb@candelatech.com>
+Cc: Kyungwan Nam <kyungwan.nam@atheros.com>
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+---
+ drivers/net/wireless/ath/ath9k/main.c |   27 +++++++++++++++++++++++++++
+ drivers/net/wireless/ath/ath9k/recv.c |    2 --
+ 2 files changed, 27 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
+index 37f18ef..dac11eb 100644
+--- a/drivers/net/wireless/ath/ath9k/main.c
++++ b/drivers/net/wireless/ath/ath9k/main.c
+@@ -238,6 +238,9 @@ int ath_set_channel(struct ath_softc *sc, struct ieee80211_hw *hw,
+ 	 */
+ 	ath9k_hw_disable_interrupts(ah);
+ 	ath_drain_all_txq(sc, false);
++
++	spin_lock_bh(&sc->rx.pcu_lock);
++
+ 	stopped = ath_stoprecv(sc);
+ 
+ 	/* XXX: do not flush receive queue here. We don't want
+@@ -265,6 +268,7 @@ int ath_set_channel(struct ath_softc *sc, struct ieee80211_hw *hw,
+ 			  "reset status %d\n",
+ 			  channel->center_freq, r);
+ 		spin_unlock_bh(&sc->sc_resetlock);
++		spin_unlock_bh(&sc->rx.pcu_lock);
+ 		goto ps_restore;
+ 	}
+ 	spin_unlock_bh(&sc->sc_resetlock);
+@@ -273,9 +277,12 @@ int ath_set_channel(struct ath_softc *sc, struct ieee80211_hw *hw,
+ 		ath_print(common, ATH_DBG_FATAL,
+ 			  "Unable to restart recv logic\n");
+ 		r = -EIO;
++		spin_unlock_bh(&sc->rx.pcu_lock);
+ 		goto ps_restore;
+ 	}
+ 
++	spin_unlock_bh(&sc->rx.pcu_lock);
++
+ 	ath_update_txpow(sc);
+ 	ath9k_hw_set_interrupts(ah, ah->imask);
+ 
+@@ -875,6 +882,7 @@ void ath_radio_enable(struct ath_softc *sc, struct ieee80211_hw *hw)
+ 	if (!ah->curchan)
+ 		ah->curchan = ath_get_curchannel(sc, sc->hw);
+ 
++	spin_lock_bh(&sc->rx.pcu_lock);
+ 	spin_lock_bh(&sc->sc_resetlock);
+ 	r = ath9k_hw_reset(ah, ah->curchan, ah->caldata, false);
+ 	if (r) {
+@@ -889,8 +897,10 @@ void ath_radio_enable(struct ath_softc *sc, struct ieee80211_hw *hw)
+ 	if (ath_startrecv(sc) != 0) {
+ 		ath_print(common, ATH_DBG_FATAL,
+ 			  "Unable to restart recv logic\n");
++		spin_unlock_bh(&sc->rx.pcu_lock);
+ 		return;
+ 	}
++	spin_unlock_bh(&sc->rx.pcu_lock);
+ 
+ 	if (sc->sc_flags & SC_OP_BEACONS)
+ 		ath_beacon_config(sc, NULL);	/* restart beacons */
+@@ -929,6 +939,9 @@ void ath_radio_disable(struct ath_softc *sc, struct ieee80211_hw *hw)
+ 	ath9k_hw_disable_interrupts(ah);
+ 
+ 	ath_drain_all_txq(sc, false);	/* clear pending tx frames */
++
++	spin_lock_bh(&sc->rx.pcu_lock);
++
+ 	ath_stoprecv(sc);		/* turn off frame recv */
+ 	ath_flushrecv(sc);		/* flush recv queue */
+ 
+@@ -946,6 +959,9 @@ void ath_radio_disable(struct ath_softc *sc, struct ieee80211_hw *hw)
+ 	spin_unlock_bh(&sc->sc_resetlock);
+ 
+ 	ath9k_hw_phy_disable(ah);
++
++	spin_unlock_bh(&sc->rx.pcu_lock);
++
+ 	ath9k_hw_configpcipowersave(ah, 1, 1);
+ 	ath9k_ps_restore(sc);
+ 	ath9k_setpower(sc, ATH9K_PM_FULL_SLEEP);
+@@ -965,6 +981,9 @@ int ath_reset(struct ath_softc *sc, bool retry_tx)
+ 
+ 	ath9k_hw_disable_interrupts(ah);
+ 	ath_drain_all_txq(sc, retry_tx);
++
++	spin_lock_bh(&sc->rx.pcu_lock);
++
+ 	ath_stoprecv(sc);
+ 	ath_flushrecv(sc);
+ 
+@@ -979,6 +998,8 @@ int ath_reset(struct ath_softc *sc, bool retry_tx)
+ 		ath_print(common, ATH_DBG_FATAL,
+ 			  "Unable to start recv logic\n");
+ 
++	spin_unlock_bh(&sc->rx.pcu_lock);
++
+ 	/*
+ 	 * We may be doing a reset in response to a request
+ 	 * that changes the channel so update any state that
+@@ -1141,6 +1162,7 @@ static int ath9k_start(struct ieee80211_hw *hw)
+ 	 * be followed by initialization of the appropriate bits
+ 	 * and then setup of the interrupt mask.
+ 	 */
++	spin_lock_bh(&sc->rx.pcu_lock);
+ 	spin_lock_bh(&sc->sc_resetlock);
+ 	r = ath9k_hw_reset(ah, init_channel, ah->caldata, false);
+ 	if (r) {
+@@ -1149,6 +1171,7 @@ static int ath9k_start(struct ieee80211_hw *hw)
+ 			  "(freq %u MHz)\n", r,
+ 			  curchan->center_freq);
+ 		spin_unlock_bh(&sc->sc_resetlock);
++		spin_unlock_bh(&sc->rx.pcu_lock);
+ 		goto mutex_unlock;
+ 	}
+ 	spin_unlock_bh(&sc->sc_resetlock);
+@@ -1170,8 +1193,10 @@ static int ath9k_start(struct ieee80211_hw *hw)
+ 		ath_print(common, ATH_DBG_FATAL,
+ 			  "Unable to start recv logic\n");
+ 		r = -EIO;
++		spin_unlock_bh(&sc->rx.pcu_lock);
+ 		goto mutex_unlock;
+ 	}
++	spin_unlock_bh(&sc->rx.pcu_lock);
+ 
+ 	/* Setup our intr mask. */
+ 	ah->imask = ATH9K_INT_TX | ATH9K_INT_RXEOL |
+@@ -1370,12 +1395,14 @@ static void ath9k_stop(struct ieee80211_hw *hw)
+ 	 * before setting the invalid flag. */
+ 	ath9k_hw_disable_interrupts(ah);
+ 
++	spin_lock_bh(&sc->rx.pcu_lock);
+ 	if (!(sc->sc_flags & SC_OP_INVALID)) {
+ 		ath_drain_all_txq(sc, false);
+ 		ath_stoprecv(sc);
+ 		ath9k_hw_phy_disable(ah);
+ 	} else
+ 		sc->rx.rxlink = NULL;
++	spin_unlock_bh(&sc->rx.pcu_lock);
+ 
+ 	/* disable HAL and put h/w to sleep */
+ 	ath9k_hw_disable(ah);
+diff --git a/drivers/net/wireless/ath/ath9k/recv.c b/drivers/net/wireless/ath/ath9k/recv.c
+index b099827..c04a940 100644
+--- a/drivers/net/wireless/ath/ath9k/recv.c
++++ b/drivers/net/wireless/ath/ath9k/recv.c
+@@ -533,13 +533,11 @@ bool ath_stoprecv(struct ath_softc *sc)
+ 
+ void ath_flushrecv(struct ath_softc *sc)
+ {
+-	spin_lock_bh(&sc->rx.pcu_lock);
+ 	sc->sc_flags |= SC_OP_RXFLUSH;
+ 	if (sc->sc_ah->caps.hw_caps & ATH9K_HW_CAP_EDMA)
+ 		ath_rx_tasklet(sc, 1, true);
+ 	ath_rx_tasklet(sc, 1, false);
+ 	sc->sc_flags &= ~SC_OP_RXFLUSH;
+-	spin_unlock_bh(&sc->rx.pcu_lock);
+ }
+ 
+ static bool ath_beacon_dtim_pending_cab(struct sk_buff *skb)
 -- 
-Rafał
+1.7.0.4
+
