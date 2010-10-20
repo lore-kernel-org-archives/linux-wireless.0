@@ -1,46 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from arroyo.ext.ti.com ([192.94.94.40]:49179 "EHLO arroyo.ext.ti.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1759898Ab0JFTja (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 6 Oct 2010 15:39:30 -0400
-From: "Levi, Shahar" <shahar_levi@ti.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Luciano Coelho <luciano.coelho@nokia.com>
-Date: Wed, 6 Oct 2010 21:38:59 +0200
-Subject: RE: [PATCH v2 03/03] wl1271: 11n Support, functionality and
- configuration ability
-Message-ID: <AC090B9732AB2B4DB7FF476E907FE660011378562B@dnce02.ent.ti.com>
-References: <1286388491-28752-1-git-send-email-shahar_levi@ti.com>
-	 <1286388491-28752-5-git-send-email-shahar_levi@ti.com>
- <1286389287.3655.398.camel@jlt3.sipsolutions.net>
-In-Reply-To: <1286389287.3655.398.camel@jlt3.sipsolutions.net>
-Content-Type: text/plain; charset="utf-8"
+Received: from mail-ew0-f46.google.com ([209.85.215.46]:45569 "EHLO
+	mail-ew0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751731Ab0JTLtM convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 20 Oct 2010 07:49:12 -0400
+Received: by ewy20 with SMTP id 20so4473547ewy.19
+        for <linux-wireless@vger.kernel.org>; Wed, 20 Oct 2010 04:49:11 -0700 (PDT)
 MIME-Version: 1.0
+In-Reply-To: <20101020021806.GM10832@broadcom.com>
+References: <4CBE23F4.4020104@broadcom.com>
+	<20101019233520.GA12510@kroah.com>
+	<FD96C117992C584DBC47231B1EB6F5568206D859DC@SJEXCHCCR02.corp.ad.broadcom.com>
+	<20101020004743.GB31965@kroah.com>
+	<20101020005546.GL10832@broadcom.com>
+	<20101020010320.GA370@kroah.com>
+	<20101020021806.GM10832@broadcom.com>
+Date: Wed, 20 Oct 2010 13:49:11 +0200
+Message-ID: <AANLkTi=+h9KV=Q+cGB8XR8-ET35kOUJLKrheZqXxyYtD@mail.gmail.com>
+Subject: Re: [PATCH] staging:brcm80211:brcmfmac:change firmware/config file name
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+To: Henry Ptasinski <henryp@broadcom.com>
+Cc: Greg KH <greg@kroah.com>, Nohee Ko <noheek@broadcom.com>,
+	"devel@linuxdriverproject.org" <devel@linuxdriverproject.org>,
+	Brett Rudley <brudley@broadcom.com>,
+	"grundler@google.com" <grundler@google.com>,
+	linux-wireless@vger.kernel.org, dwmw2@infradead.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-PiAtLS0tLU9yaWdpbmFsIE1lc3NhZ2UtLS0tLQ0KPiBGcm9tOiBKb2hhbm5lcyBCZXJnIFttYWls
-dG86am9oYW5uZXNAc2lwc29sdXRpb25zLm5ldF0NCj4gU2VudDogV2VkbmVzZGF5LCBPY3RvYmVy
-IDA2LCAyMDEwIDg6MjEgUE0NCj4gVG86IExldmksIFNoYWhhcg0KPiBDYzogbGludXgtd2lyZWxl
-c3NAdmdlci5rZXJuZWwub3JnOyBMdWNpYW5vIENvZWxobw0KPiBTdWJqZWN0OiBSZTogW1BBVENI
-IHYyIDAzLzAzXSB3bDEyNzE6IDExbiBTdXBwb3J0LCBmdW5jdGlvbmFsaXR5IGFuZA0KPiBjb25m
-aWd1cmF0aW9uIGFiaWxpdHkNCj4gDQo+IE9uIFdlZCwgMjAxMC0xMC0wNiBhdCAyMDowOCArMDIw
-MCwgU2hhaGFyIExldmkgd3JvdGU6DQo+IA0KPiA+ICAJLyogcGVlayBpbnRvIHRoZSByYXRlcyBj
-b25maWd1cmVkIGluIHRoZSBTVEEgZW50cnkgKi8NCj4gPiAgCXNwaW5fbG9ja19pcnFzYXZlKCZ3
-bC0+d2xfbG9jaywgZmxhZ3MpOw0KPiA+IC0JaWYgKHN0YSAmJiBzdGEtPnN1cHBfcmF0ZXNbY29u
-Zi0+Y2hhbm5lbC0+YmFuZF0gIT0gd2wtPnN0YV9yYXRlX3NldCkgew0KPiA+ICsJaWYgKHN0YSAm
-Jg0KPiA+ICsJICAgIChzdGEtPnN1cHBfcmF0ZXNbY29uZi0+Y2hhbm5lbC0+YmFuZF0gIT0NCj4g
-PiArCSAgICAod2wtPnN0YV9yYXRlX3NldCAmIEhXX0JHX1JBVEVTX01BU0spKSkgew0KPiA+ICAJ
-CXdsLT5zdGFfcmF0ZV9zZXQgPSBzdGEtPnN1cHBfcmF0ZXNbY29uZi0+Y2hhbm5lbC0+YmFuZF07
-DQo+ID4gIAkJc2V0X2JpdChXTDEyNzFfRkxBR19TVEFfUkFURVNfQ0hBTkdFRCwgJndsLT5mbGFn
-cyk7DQo+ID4gIAl9DQo+IA0KPiA/Pz8NCj4gDQo+IEhvdyBjYW4gbm9uLUJHIHJhdGVzIGV2ZXIg
-c2hvdyB1cCB0aGVyZT8gSXMgdGhpcyByZWFsbHkgYW4gMTFhIGNoYW5nZT8NCj4gDQo+IGpvaGFu
-bmVzDQoNCg0KVGhhbmtzIGZvciB0aGUgcmV2aWV3Lg0KTm9uIEJHIHJhdGVzIHNldCBpbiB0aGUg
-bmV4dCBpZjoNCisJaWYgKHN0YSAmJg0KKwkgICAgc3RhLT5odF9jYXAuaHRfc3VwcG9ydGVkICYm
-DQorCSAgICAoKHdsLT5zdGFfcmF0ZV9zZXQgPj4gSFdfSFRfUkFURVNfT0ZGU0VUKSAhPQ0KKwkg
-ICAgICBzdGEtPmh0X2NhcC5tY3MucnhfbWFza1swXSkpIHsNCisJCXdsLT5zdGFfcmF0ZV9zZXQg
-fD0NCisJCShzdGEtPmh0X2NhcC5tY3MucnhfbWFza1swXSA8PCBIV19IVF9SQVRFU19PRkZTRVQp
-Ow0KKwkJc2V0X2JpdChXTDEyNzFfRkxBR19TVEFfUkFURVNfQ0hBTkdFRCwgJndsLT5mbGFncyk7
-DQpzdGFfcmF0ZV9zZXQgYml0cyBhcmU6IGJpdHMwLTE1IEJHLCBiaXRzIDE2LTIzIE1DUy4NCkRp
-ZCB5b3UgbWVhbnQgMTFuIGNoYW5nZT8NCg0KUmVnYXJkcywNClNoYWhhcg0K
+Henry: do I need to put some specific word in thread's name to have
+you read my message? You seem to be active here but ignoring my other
+questions/request.
+
+Sorry others for interrupting here, but I do not see other way of
+getting in touch with Henry.
+
+-- 
+Rafał
