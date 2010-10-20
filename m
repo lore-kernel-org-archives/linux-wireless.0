@@ -1,108 +1,82 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:58320 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753050Ab0JGTAF (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 7 Oct 2010 15:00:05 -0400
-Date: Thu, 7 Oct 2010 14:58:59 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: davem@davemloft.net
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: pull request: wireless-2.6 2010-10-07
-Message-ID: <20101007185859.GD20950@tuxdriver.com>
+Received: from mail.atheros.com ([12.19.149.2]:14855 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756150Ab0JTXHO (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 20 Oct 2010 19:07:14 -0400
+Received: from mail.atheros.com ([10.10.20.108])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Wed, 20 Oct 2010 16:07:04 -0700
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>, <stable@kernel.org>,
+	Ben Greear <greearb@candelatech.com>,
+	Kyungwan Nam <kyungwan.nam@atheros.com>
+Subject: [PATCH 2/6] ath9k: add locking for starting the PCU on RX
+Date: Wed, 20 Oct 2010 16:07:04 -0700
+Message-ID: <1287616028-12547-3-git-send-email-lrodriguez@atheros.com>
+In-Reply-To: <1287616028-12547-1-git-send-email-lrodriguez@atheros.com>
+References: <1287616028-12547-1-git-send-email-lrodriguez@atheros.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Dave,
+There was some locking for starting some parts of
+RX but not for starting the PCU. Include this otherwise
+we can content against stopping the PCU.
 
-Here are a few more more-or-less-one-liner fixes intended for 2.6.36.
-The one from Felix fixes a regression introduced in the 2.6.36 cycle.
-The one from Johannes fixes a crash reported by Ben Greear (as
-documented in the changelog).  The one from me reverts and earlier patch
-from me that can result in stuff in dmesg from not calling
-netif_receive_skb in the proper context.
+This can potentially lead to races against different
+buffers on the PCU which can lead to to the DMA RX
+engine writing to buffers which are already freed.
 
-Please let me know if there are problems!
+This is part of a series that will help resolve the bug:
 
-Thanks,
+https://bugzilla.kernel.org/show_bug.cgi?id=14624
 
-John
+For more details about this issue refer to:
 
+http://marc.info/?l=linux-wireless&m=128629803703756&w=2
+
+Cc: stable@kernel.org
+Cc: Ben Greear <greearb@candelatech.com>
+Cc: Kyungwan Nam <kyungwan.nam@atheros.com>
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
 ---
+ drivers/net/wireless/ath/ath9k/recv.c |    7 ++++---
+ 1 files changed, 4 insertions(+), 3 deletions(-)
 
-The following changes since commit fb3dbece264a50ab4373f3af0bbbd9175d3ad4d7:
-
-  Merge branch 'master' of git://git.kernel.org/pub/scm/linux/kernel/git/padovan/bluetooth-2.6 (2010-10-07 00:59:39 -0700)
-
-are available in the git repository at:
-
-  git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-2.6.git master
-
-Felix Fietkau (1):
-      ath9k_hw: fix regression in ANI listen time calculation
-
-Johannes Berg (1):
-      mac80211: delete AddBA response timer
-
-John W. Linville (1):
-      Revert "mac80211: use netif_receive_skb in ieee80211_tx_status callpath"
-
- drivers/net/wireless/ath/ath9k/ani.c |    2 +-
- net/mac80211/agg-tx.c                |    2 ++
- net/mac80211/status.c                |    4 ++--
- 3 files changed, 5 insertions(+), 3 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/ath9k/ani.c b/drivers/net/wireless/ath/ath9k/ani.c
-index cc648b6..a3d95cc 100644
---- a/drivers/net/wireless/ath/ath9k/ani.c
-+++ b/drivers/net/wireless/ath/ath9k/ani.c
-@@ -543,7 +543,7 @@ static u8 ath9k_hw_chan_2_clockrate_mhz(struct ath_hw *ah)
- 	if (conf_is_ht40(conf))
- 		return clockrate * 2;
+diff --git a/drivers/net/wireless/ath/ath9k/recv.c b/drivers/net/wireless/ath/ath9k/recv.c
+index 3b19bbb..944fb59 100644
+--- a/drivers/net/wireless/ath/ath9k/recv.c
++++ b/drivers/net/wireless/ath/ath9k/recv.c
+@@ -297,11 +297,11 @@ static void ath_edma_start_recv(struct ath_softc *sc)
+ 	ath_rx_addbuffer_edma(sc, ATH9K_RX_QUEUE_LP,
+ 			      sc->rx.rx_edma[ATH9K_RX_QUEUE_LP].rx_fifo_hwsize);
  
--	return clockrate * 2;
-+	return clockrate;
+-	spin_unlock_bh(&sc->rx.rxbuflock);
+-
+ 	ath_opmode_init(sc);
+ 
+ 	ath9k_hw_startpcureceive(sc->sc_ah, (sc->sc_flags & SC_OP_OFFCHANNEL));
++
++	spin_unlock_bh(&sc->rx.rxbuflock);
  }
  
- static int32_t ath9k_hw_ani_get_listen_time(struct ath_hw *ah)
-diff --git a/net/mac80211/agg-tx.c b/net/mac80211/agg-tx.c
-index c893f23..8f23401 100644
---- a/net/mac80211/agg-tx.c
-+++ b/net/mac80211/agg-tx.c
-@@ -175,6 +175,8 @@ int ___ieee80211_stop_tx_ba_session(struct sta_info *sta, u16 tid,
+ static void ath_edma_stop_recv(struct ath_softc *sc)
+@@ -504,10 +504,11 @@ int ath_startrecv(struct ath_softc *sc)
+ 	ath9k_hw_rxena(ah);
  
- 	set_bit(HT_AGG_STATE_STOPPING, &tid_tx->state);
+ start_recv:
+-	spin_unlock_bh(&sc->rx.rxbuflock);
+ 	ath_opmode_init(sc);
+ 	ath9k_hw_startpcureceive(ah, (sc->sc_flags & SC_OP_OFFCHANNEL));
  
-+	del_timer_sync(&tid_tx->addba_resp_timer);
++	spin_unlock_bh(&sc->rx.rxbuflock);
 +
- 	/*
- 	 * After this packets are no longer handed right through
- 	 * to the driver but are put onto tid_tx->pending instead,
-diff --git a/net/mac80211/status.c b/net/mac80211/status.c
-index 10caec5..34da679 100644
---- a/net/mac80211/status.c
-+++ b/net/mac80211/status.c
-@@ -377,7 +377,7 @@ void ieee80211_tx_status(struct ieee80211_hw *hw, struct sk_buff *skb)
- 				skb2 = skb_clone(skb, GFP_ATOMIC);
- 				if (skb2) {
- 					skb2->dev = prev_dev;
--					netif_receive_skb(skb2);
-+					netif_rx(skb2);
- 				}
- 			}
+ 	return 0;
+ }
  
-@@ -386,7 +386,7 @@ void ieee80211_tx_status(struct ieee80211_hw *hw, struct sk_buff *skb)
- 	}
- 	if (prev_dev) {
- 		skb->dev = prev_dev;
--		netif_receive_skb(skb);
-+		netif_rx(skb);
- 		skb = NULL;
- 	}
- 	rcu_read_unlock();
 -- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+1.7.0.4
+
