@@ -1,114 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pz0-f46.google.com ([209.85.210.46]:61167 "EHLO
-	mail-pz0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932243Ab0JDS51 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 4 Oct 2010 14:57:27 -0400
-Message-ID: <4CAA2397.9050400@gmail.com>
-Date: Mon, 04 Oct 2010 11:57:27 -0700
-From: "Justin P. Mattock" <justinmattock@gmail.com>
+Received: from mail.atheros.com ([12.19.149.2]:33436 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753663Ab0JTRTG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 20 Oct 2010 13:19:06 -0400
+Received: from mail.atheros.com ([10.10.20.108])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Wed, 20 Oct 2010 10:18:56 -0700
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: <linville@tuxdriver.com>, <johannes@sipsolutions.net>
+CC: <easwar.krishnan@atheros.com>, <linux-wireless@vger.kernel.org>,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>, <stable@kernel.org>
+Subject: [PATCH 2/7] cfg80211: fix allowing country IEs for WIPHY_FLAG_STRICT_REGULATORY
+Date: Wed, 20 Oct 2010 10:18:54 -0700
+Message-ID: <1287595139-10761-3-git-send-email-lrodriguez@atheros.com>
+In-Reply-To: <1287595139-10761-1-git-send-email-lrodriguez@atheros.com>
+References: <1287595139-10761-1-git-send-email-lrodriguez@atheros.com>
 MIME-Version: 1.0
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-CC: "Rafael J. Wysocki" <rjw@sisk.pl>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	linux-bluetooth <linux-bluetooth@vger.kernel.org>,
-	Bob Copeland <me@bobcopeland.com>, Pavel Machek <pavel@ucw.cz>,
-	linux@brodo.de
-Subject: Re: 2.6.36-rc6-git2: Reported regressions from 2.6.35
-References: <-jYMINoCtaK.A.F5.8CPqMB@chimera> <AANLkTimUdaUkpXmNt5mPkCdWmHvBbXWA6smAP4U80yc4@mail.gmail.com>
-In-Reply-To: <AANLkTimUdaUkpXmNt5mPkCdWmHvBbXWA6smAP4U80yc4@mail.gmail.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 10/04/2010 11:35 AM, Luis R. Rodriguez wrote:
-> Below are the 802.11 and Bluetooth ones:
->
-> On Sun, Oct 3, 2010 at 2:15 PM, Rafael J. Wysocki<rjw@sisk.pl>  wrote:
->> Unresolved regressions
->> ----------------------
->
->> Bug-Entry       : http://bugzilla.kernel.org/show_bug.cgi?id=19392
->> Subject         : WARNING: at drivers/net/wireless/ath/ath5k/base.c:3475 ath5k_bss_info_changed+0x44/0x168 [ath5k]()
->> Submitter       : Justin Mattock<justinmattock@gmail.com>
->> Date            : 2010-09-28 22:30 (6 days old)
->> Message-ID      :<AANLkTim5WCGKPvEkOkO_YnMF9pg8mvLfQoFBNUFpfa_k@mail.gmail.com>
->> References      : http://marc.info/?l=linux-kernel&m=128571307018635&w=2
->
-> WTF -- this ended up in a bisect pointing to some PCMCIA patch! Justin:
->
->    * does this happen with wireless-testing.git ?
+We should be enabling country IE hints for WIPHY_FLAG_STRICT_REGULATORY
+even if we haven't yet recieved regulatory domain hint for the driver
+if it needed one. Without this Country IEs are not passed on to drivers
+that have set WIPHY_FLAG_STRICT_REGULATORY, today this is just all
+Atheros chipset drivers: ath5k, ath9k, ar9170, carl9170.
 
-no this is the current Linus tree(have not tried any other tree).
-as for the unresolved regression, this just was filed a few days ago..
+This was part of the original design, however it was completely
+overlooked...
 
->    * Did you do the bisect on the entire kernel? What git tree are you
-> using to bisect?
->
+Cc: Easwar Krishnan <easwar.krishnan@atheros.com>
+Cc: stable@kernel.org
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+---
+ include/net/cfg80211.h |   15 ++++++++-------
+ net/wireless/reg.c     |    1 +
+ 2 files changed, 9 insertions(+), 7 deletions(-)
 
-the bisect had to be between 2.6.34 and 2.6.32 due to pcmcia breaking 
-after 2.6.34(there is a bug report for that, but got resolved)
+diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+index 2a7936d..352ebc5 100644
+--- a/include/net/cfg80211.h
++++ b/include/net/cfg80211.h
+@@ -1321,13 +1321,14 @@ struct cfg80211_ops {
+  * 	initiator is %REGDOM_SET_BY_CORE).
+  * @WIPHY_FLAG_STRICT_REGULATORY: tells us the driver for this device will
+  *	ignore regulatory domain settings until it gets its own regulatory
+- *	domain via its regulatory_hint(). After its gets its own regulatory
+- *	domain it will only allow further regulatory domain settings to
+- *	further enhance compliance. For example if channel 13 and 14 are
+- *	disabled by this regulatory domain no user regulatory domain can
+- *	enable these channels at a later time. This can be used for devices
+- *	which do not have calibration information gauranteed for frequencies
+- *	or settings outside of its regulatory domain.
++ *	domain via its regulatory_hint() unless the regulatory hint is
++ *	from a country IE. After its gets its own regulatory domain it will
++ *	only allow further regulatory domain settings to further enhance
++ *	compliance. For example if channel 13 and 14 are disabled by this
++ *	regulatory domain no user regulatory domain can enable these channels
++ *	at a later time. This can be used for devices which do not have
++ *	calibration information gauranteed for frequencies or settings
++ *	outside of its regulatory domain.
+  * @WIPHY_FLAG_DISABLE_BEACON_HINTS: enable this if your driver needs to ensure
+  *	that passive scan flags and beaconing flags may not be lifted by
+  *	cfg80211 due to regulatory beacon hints. For more information on beacon
+diff --git a/net/wireless/reg.c b/net/wireless/reg.c
+index b64596f..1bc8131 100644
+--- a/net/wireless/reg.c
++++ b/net/wireless/reg.c
+@@ -813,6 +813,7 @@ static bool ignore_reg_update(struct wiphy *wiphy,
+ 	 * desired regulatory domain set
+ 	 */
+ 	if (wiphy->flags & WIPHY_FLAG_STRICT_REGULATORY && !wiphy->regd &&
++	    initiator != NL80211_REGDOM_SET_BY_COUNTRY_IE &&
+ 	    !is_world_regdom(last_request->alpha2))
+ 		return true;
+ 	return false;
+-- 
+1.7.0.4
 
-> Did you simply bring up the interface and then suspsend? Did you not
-> add a new interface in between this? ath5k's add_interace has:
->
->          if (sc->vif) {
->                  ret = 0;
->                  goto end;
->          }
->
-> But why does it just allow this to go through without complaining if
-> multiple vifs are not supported?
->
->
-
-the system is opensuse 11.2, I just simply start the machine boot up,
-after nm connects I open a terminal then suspend in the terminal, upon 
-wakeup this message appears.
-
->>
->> Bug-Entry       : http://bugzilla.kernel.org/show_bug.cgi?id=17061
->> Subject         : 2.6.36-rc1 on zaurus: bluetooth regression
->> Submitter       : Pavel Machek<pavel@ucw.cz>
->> Date            : 2010-08-21 15:24 (44 days old)
->> Message-ID      :<20100821152445.GA1536@ucw.cz>
->> References      : http://marc.info/?l=linux-kernel&m=128240433828087&w=2
->
-> I see no updates to this since August. There are boat load of PCMCIA
-> changes recently, is bisect possible here?
->
->
-
-yeah the first pcmcia bug I hit with this machine was back in may/june 
-ended up doing a bisect for that(which was painful due to a slow 
-machine)which ended up getting fixed.(never thought to check s2ram after 
-that)
-
-as for bluetooth the only issue I have with that is for my other 
-machines which is hitting this: http://lkml.org/lkml/2010/9/1/61
-(but have not had a chance to follow through due to doing the update 
-broken web addresses in the kernel)
-
->> Regressions with patches
->> ------------------------
->
->
->> Bug-Entry       : http://bugzilla.kernel.org/show_bug.cgi?id=17722
->> Subject         : 2.6.36-rc3: WARNING: at net/mac80211/scan.c:269 ieee80211_scan_completed
->> Submitter       : Thomas Meyer<thomas@m3y3r.de>
->> Date            : 2010-08-31 20:14 (34 days old)
->> Message-ID      :<201008312214.52473.thomas@m3y3r.de>
->> References      : http://marc.info/?l=linux-kernel&m=128328580504227&w=2
->>                   http://www.spinics.net/lists/netdev/msg140769.html
->> Handled-By      : Florian Mickler<florian@mickler.org>
->> Patch           : https://bugzilla.kernel.org/attachment.cgi?id=31671
->
-> This seems fixed.
->
->    Luis
->
-
-alright if this is with the latest wireless tree, then I can throw that 
-in to verify that it is indeed fixed..
-
-Justin P. Mattock
