@@ -1,70 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f46.google.com ([209.85.214.46]:51670 "EHLO
-	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751664Ab0J3Lbo (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 30 Oct 2010 07:31:44 -0400
-Received: by bwz11 with SMTP id 11so3264690bwz.19
-        for <linux-wireless@vger.kernel.org>; Sat, 30 Oct 2010 04:31:43 -0700 (PDT)
-From: Christian Lamparter <chunkeey@googlemail.com>
-To: benjmeier@bluewin.ch
-Subject: Re: USB Setup failed (-32)
-Date: Sat, 30 Oct 2010 13:31:36 +0200
-Cc: linux-wireless@vger.kernel.org
-References: <13216803.15461288428531150.JavaMail.webmail@bluewin.ch>
-In-Reply-To: <13216803.15461288428531150.JavaMail.webmail@bluewin.ch>
-MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="utf-8"
-Message-Id: <201010301331.36591.chunkeey@googlemail.com>
+Received: from 80-190-117-144.ip-home.de ([80.190.117.144]:54841 "EHLO
+	bu3sch.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753359Ab0JTUwi (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 20 Oct 2010 16:52:38 -0400
+Subject: Re: [PATCH] ssb: Clear RETRY_TIMEOUT in PCI Configuration for
+ normal devices
+From: Michael =?ISO-8859-1?Q?B=FCsch?= <mb@bu3sch.de>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: John W Linville <linville@tuxdriver.com>,
+	b43-dev@lists.infradead.org, linux-wireless@vger.kernel.org
+In-Reply-To: <4cbf03d5.sBoVK5FZiEsbJ8xu%Larry.Finger@lwfinger.net> (sfid-20101020_165935_779270_769119B3)
+References: <4cbf03d5.sBoVK5FZiEsbJ8xu%Larry.Finger@lwfinger.net>
+	 (sfid-20101020_165935_779270_769119B3)
+Content-Type: text/plain; charset="UTF-8"
+Date: Wed, 20 Oct 2010 22:52:21 +0200
+Message-ID: <1287607941.2023.1.camel@maggie>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Saturday 30 October 2010 10:48:51 benjmeier@bluewin.ch wrote:
-> Hello,
-> 
-> I have a Olimex SAM9-L9260-Board (http://www.olimex.com/dev/sam9-L9260.html), which has an ARM-Processor.
-Odd looking thing. The specs says its "USB 2.0", but it does
-not support HIGH SPEED, just the USB 1.x FAST SPEED.
+On Wed, 2010-10-20 at 09:59 -0500, Larry Finger wrote: 
+> The previous patch of this type fixed the case where a PCI device is behind
+> an SSB->PCI bridge as found on an embedded device. This one treats the normal
+> case of a "normal" Broadcom wireless PCI core on an SSB interconnect.
 
-> I used many devices on this hardware, mostly over usb
-> (UMTS-Modems, Sticks...). Everything worked. I saw that
-> i can use the ar9170usb-driver for wireless, so i bought
-> a Netgear WN111v2 (http://linuxwireless.org/en/users/Drivers/ar9170).
-Actually, AR9170 is nearly EOL, if you're planning to get new gear
-then you should stick to ath_htc compatible device.
-currently there are lots of cheap AR9271 chips, but in the future
-we can except more powerful AR701x/AR9018 solutions too.
+Note that the other patch is not needed anymore, if this is applied.
 
-> usb 1-1.3: new full speed USB device using at91_ohci and address 3
-again, "ohci" and "full speed", whereas on your PC it's more like:
-usb x-y: new high speed USB device using ehci_hcd and address z
+Also note that this patch will also have an effect on b44 hardware.
+Do we want that?
 
-> usb 1-1.3: firmware: requesting ar9170.fw
-> usb 1-1.3: USB setup failed (-32).
-> 
-> I searched everywhere the errormessage with the errorcode -32, but i didnt find 
-> a meaning.
-well, -32 is -EPIPE and Documentation/usb/error-codes.txt tells you
-that you either hit:
+> MMIO log traces obtained using the Broadcom wl hybrid driver show that
+> the RETRY_TIMEOUT register (0x41) in PCI configuration space is cleared
+> if non-zero. Similar code found in other drivers such as ipw2100 show
+> this operation is needed to keep PCI Tx retries from interfering with
+> C3 CPU state. There are no known cases where omission of this code has
+> caused a problem, but this patch is offered just in case such a situation
+> occurs.
 
--EPIPE          The pipe type specified in the URB doesn't match the
-                endpoint's actual type.
-or:
+-- 
+Greetings Michael.
 
--EPIPE (**)             Endpoint stalled.  For non-control endpoints,
-                        reset this status with usb_clear_halt().
-
-(**) This is also one of several codes that different kinds of host
-controller use to indicate a transfer has failed because of device
-disconnect.  In the interval before the hub driver starts disconnect
-processing, devices may receive such fault reports for every request.
-
-my "money" is on the first, because back in March Valentin Longchamp
-fixed a problem which closely matches your issue, see:
-"setup correct int pipe type in ar9170_usb_exec_cmd"
-(Note, this patch went also to -stable), so the question you
-should ask yourself: "Is my kernel really up to date?"
-
-Best regards,
-	Christian
