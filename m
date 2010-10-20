@@ -1,45 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([147.243.1.47]:30506 "EHLO mgw-sa01.nokia.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753294Ab0JHLo4 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 8 Oct 2010 07:44:56 -0400
-Subject: Re: [PATCH v2 01/03] wl1271: 11n Support, Add Definitions
-From: Luciano Coelho <luciano.coelho@nokia.com>
-To: ext Shahar Levi <shahar_levi@ti.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <1286475613.1662.41.camel@powerslave>
-References: <1286388491-28752-1-git-send-email-shahar_levi@ti.com>
-	 <1286388491-28752-3-git-send-email-shahar_levi@ti.com>
-	 <1286475613.1662.41.camel@powerslave>
-Content-Type: text/plain; charset="UTF-8"
-Date: Fri, 08 Oct 2010 14:44:49 +0300
-Message-ID: <1286538289.21349.99.camel@chilepepper>
-Mime-Version: 1.0
+Received: from mailout-de.gmx.net ([213.165.64.23]:42039 "HELO mail.gmx.net"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with SMTP
+	id S1751858Ab0JTLkz (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 20 Oct 2010 07:40:55 -0400
+Message-ID: <4CBEDF8A.8080508@gmx.net>
+Date: Wed, 20 Oct 2010 14:24:42 +0200
+From: George <george.news@gmx.net>
+MIME-Version: 1.0
+To: Grazvydas Ignotas <notasas@gmail.com>
+CC: Luciano Coelho <luciano.coelho@nokia.com>,
+	"Luis R. Rodriguez" <mcgrof@gmail.com>,
+	Bob Copeland <me@bobcopeland.com>,
+	Denis 'GNUtoo' Carikli <GNUtoo@no-log.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: Compat-wireless N900
+References: <4CB6BE57.8010401@gmx.net>	<1287071844.11341.5.camel@gnutoo-laptop>	<AANLkTikosEtFnWqRVzMBKtNsB=aqOpqQFKDOZS3+pXTE@mail.gmail.com>	<4CB74759.3030807@gmx.net>	<AANLkTi=1Ar-gzRaskHGDLmkaDnr=9+oZnA=qBLCYcUAi@mail.gmail.com>	<4CB7F7C7.7030804@gmx.net>	<AANLkTi=u+mT2Xd0=0vt4uaf9hSnnkPKY+wN6DjAxME3m@mail.gmail.com>	<4CBABB84.1090100@gmx.net>	<4CBC7725.7050202@gmx.net>	<AANLkTincCSBfwa_Y-cy_42HfU5kP1puCbi2-dBwGkkHu@mail.gmail.com>	<4CBC9A51.8030309@gmx.net>	<1287427291.8043.2.camel@powerslave>	<1287428554.8043.6.camel@powerslave>	<4CBD52DE.9090804@gmx.net>	<AANLkTi=dGSVBrdDXwJgmOjEGX+i+=P_KibiJd+NNMGfy@mail.gmail.com>	<4CBDB654.6060702@gmx.net>	<AANLkTimyCv6U+Yjf7q0OFEYF3PHr5PfACSpbXbTi_PZe@mail.gmail.com>	<4CBDBEDB.3070407@gmx.net>	<AANLkTik3ZdZov4OTn0NnnPe_ZUaRh_w0db4bwLYVGCRR@mail.gmail.com>	<4CBE9C4F.7050806@gmx.net> <AANLkTi=iSnEM4L9PxWUigw6_HSCLjGC=L38PgwuoML_8@mail.gmail.com>
+In-Reply-To: <AANLkTi=iSnEM4L9PxWUigw6_HSCLjGC=L38PgwuoML_8@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2010-10-07 at 20:20 +0200, ext Luciano Coelho wrote:
-> > diff --git a/drivers/net/wireless/wl12xx/wl1271_conf.h
-> b/drivers/net/wireless/wl12xx/wl1271_conf.h
-> > index 60c50d1..732e9aa 100644
-> > --- a/drivers/net/wireless/wl12xx/wl1271_conf.h
-> > +++ b/drivers/net/wireless/wl12xx/wl1271_conf.h
-> > @@ -91,6 +91,10 @@ enum {
-> >       CONF_HW_RXTX_RATE_UNSUPPORTED = 0xff
-> >  };
-> >  
-> > +#define HW_RX_HIGHEST_RATE   65
-> > +#define HW_BG_RATES_MASK     0xffff
-> > +#define HW_HT_RATES_OFFSET   16
-> 
-> We preceed all the other macros with CONF_, please do the same for
-> these.
+On 20/10/2010 10:44, Grazvydas Ignotas wrote:
+> On Wed, Oct 20, 2010 at 10:37 AM, George<george.news@gmx.net>  wrote:
+>> On 19/10/2010 17:18, Grazvydas Ignotas wrote:
+>>>>
+>>>> I have also set the debug ALL mode to see if I get something that can
+>>>> help
+>>>> you out on finding the problem.
+>>>>
+>>>> When uploading only wl1251 nothing appears in dmesg. But when uploading
+>>>> module spi, I got the following info: http://pastebin.com/ysdTSDnB
+>>>
+>>> You need both wl1251 and spi. This is normal output, you should get
+>>> wlan0 interface at this point.
+>>> --
+>>
+>> Yes, that is what I was expecting from the begining but although phy0 should
+>> appear in /sys/class/ieee80211, this directory is empty :(
+>
+> Hm, maybe try enabling CONFIG_MAC80211_DEBUG* stuff in config.mk in
+> compat_wireless.
+> --
 
-Actually, we use the wl1271_conf.h file only for driver configuration
-parameters.  These macros should be elsewhere, such as in the wl1271.h
-file.  And no need to put CONF_ before them in that case.
+I have done that and no extra messages appear besides the former ones :(
 
--- 
-Cheers,
-Luca.
+Any other idea :(
+
+I have look at compat-2.6.28.c and in the comments it says that is for 
+kernel 2.6.28. However it is not compiled as in the #ifdef it is said to 
+be < 2.6.28. Is it right? I guess yes, but just for curiosity.
+
+No other idea :(
+
 
