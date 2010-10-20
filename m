@@ -1,61 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from dallas.jonmasters.org ([72.29.103.172]:40177 "EHLO
-	dallas.jonmasters.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932349Ab0JLTTX (ORCPT
+Received: from mail-qw0-f46.google.com ([209.85.216.46]:59922 "EHLO
+	mail-qw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752048Ab0JTIoy (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 12 Oct 2010 15:19:23 -0400
-Subject: RE: [PATCH] [staging] brcm80211: fix radio disabled on attempt to
- bring up interface
-From: Jon Masters <jonathan@jonmasters.org>
-To: Brett Rudley <brudley@broadcom.com>
-Cc: "jcm@jonmasters.org" <jcm@jonmasters.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Henry Ptasinski <henryp@broadcom.com>,
-	Nohee Ko <noheek@broadcom.com>,
-	LKML <linux-kernel@vger.kernel.org>
-In-Reply-To: <7A94256FD72B884D9E7C55586C3CBCEE1382808041@SJEXCHCCR01.corp.ad.broadcom.com>
-References: <1286872198-10664-1-git-send-email-jcm@jonmasters.org>
-	 <7A94256FD72B884D9E7C55586C3CBCEE1382808041@SJEXCHCCR01.corp.ad.broadcom.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Tue, 12 Oct 2010 15:17:39 -0400
-Message-ID: <1286911059.20957.5.camel@constitution.bos.jonmasters.org>
-Mime-Version: 1.0
+	Wed, 20 Oct 2010 04:44:54 -0400
+Received: by qwa26 with SMTP id 26so2103860qwa.19
+        for <linux-wireless@vger.kernel.org>; Wed, 20 Oct 2010 01:44:53 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <4CBE9C4F.7050806@gmx.net>
+References: <4CB6BE57.8010401@gmx.net>
+	<1287071844.11341.5.camel@gnutoo-laptop>
+	<AANLkTikosEtFnWqRVzMBKtNsB=aqOpqQFKDOZS3+pXTE@mail.gmail.com>
+	<4CB74759.3030807@gmx.net>
+	<AANLkTi=1Ar-gzRaskHGDLmkaDnr=9+oZnA=qBLCYcUAi@mail.gmail.com>
+	<4CB7F7C7.7030804@gmx.net>
+	<AANLkTi=u+mT2Xd0=0vt4uaf9hSnnkPKY+wN6DjAxME3m@mail.gmail.com>
+	<4CBABB84.1090100@gmx.net>
+	<4CBC7725.7050202@gmx.net>
+	<AANLkTincCSBfwa_Y-cy_42HfU5kP1puCbi2-dBwGkkHu@mail.gmail.com>
+	<4CBC9A51.8030309@gmx.net>
+	<1287427291.8043.2.camel@powerslave>
+	<1287428554.8043.6.camel@powerslave>
+	<4CBD52DE.9090804@gmx.net>
+	<AANLkTi=dGSVBrdDXwJgmOjEGX+i+=P_KibiJd+NNMGfy@mail.gmail.com>
+	<4CBDB654.6060702@gmx.net>
+	<AANLkTimyCv6U+Yjf7q0OFEYF3PHr5PfACSpbXbTi_PZe@mail.gmail.com>
+	<4CBDBEDB.3070407@gmx.net>
+	<AANLkTik3ZdZov4OTn0NnnPe_ZUaRh_w0db4bwLYVGCRR@mail.gmail.com>
+	<4CBE9C4F.7050806@gmx.net>
+Date: Wed, 20 Oct 2010 11:44:52 +0300
+Message-ID: <AANLkTi=iSnEM4L9PxWUigw6_HSCLjGC=L38PgwuoML_8@mail.gmail.com>
+Subject: Re: Compat-wireless N900
+From: Grazvydas Ignotas <notasas@gmail.com>
+To: George <george.news@gmx.net>
+Cc: Luciano Coelho <luciano.coelho@nokia.com>,
+	"Luis R. Rodriguez" <mcgrof@gmail.com>,
+	Bob Copeland <me@bobcopeland.com>,
+	"Denis 'GNUtoo' Carikli" <GNUtoo@no-log.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2010-10-12 at 11:34 -0700, Brett Rudley wrote:
+On Wed, Oct 20, 2010 at 10:37 AM, George <george.news@gmx.net> wrote:
+> On 19/10/2010 17:18, Grazvydas Ignotas wrote:
+>>>
+>>> I have also set the debug ALL mode to see if I get something that can
+>>> help
+>>> you out on finding the problem.
+>>>
+>>> When uploading only wl1251 nothing appears in dmesg. But when uploading
+>>> module spi, I got the following info: http://pastebin.com/ysdTSDnB
+>>
+>> You need both wl1251 and spi. This is normal output, you should get
+>> wlan0 interface at this point.
+>> --
+>
+> Yes, that is what I was expecting from the begining but although phy0 should
+> appear in /sys/class/ieee80211, this directory is empty :(
 
-> > The brcm80211 driver does not correctly handle the case that the wireless
-> > radio hardware is physically disabled during interface initialization. An
-> > attempt is made to check whether the radio is disabled, and in the case
-> > that it is, a background worker is setup to monitor for the radio coming
-> > online, but the interface queues are incorrectly brought up anyway. The
-> > value BCME_RADIOOFF should be returned in wlc_up in such error case.
-
-> Signed-off-by: Brett Rudley <brudley@broadcom.com>
-
-Thanks. The patch actually didn't use full paths to the staging tree
-(was relative to the driver directory) because it was crazy late and my
-brain was tired by the time I found the problem. You'll sort it out.
-
-Anyway. So rfkill works with soft block/unblock, but doesn't seem to
-correctly report the state of the physical button on this laptop. I
-don't think that's your domain (as I said, I freely admit that I need to
-find some time, sometime, to understand how rfkill is supposed to work).
-What I do think is your domain is the fact that suspend/resume with this
-driver isn't working. The system does suspend, and it does resume, but
-the driver gets itself in a twist and never talks to the outside world
-again - just keeps logging an error. I'll send you some debug info
-tonight or in the next few days so we can get that fixed up too.
-
-Can I ask, also, do you plan on cleaning up the WLC HIGH/LOW stuff or
-adding some comments to the code so that people realize this is for
-PCI/USB dongle stuff? I spent some time going through the code trying to
-figure out what the WL_LOCK/UNLOCK stuff was about and why it was
-missing in the case of a PCI device :) It seems like this driver is
-partly based on generic code used in other drivers, and that's fine, but
-I suspect some of it will need more cleanup before it is merged.
-
-Jon.
-
-
+Hm, maybe try enabling CONFIG_MAC80211_DEBUG* stuff in config.mk in
+compat_wireless.
