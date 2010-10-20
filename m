@@ -1,112 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ogre.sisk.pl ([217.79.144.158]:50872 "EHLO ogre.sisk.pl"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751448Ab0JOWh3 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 15 Oct 2010 18:37:29 -0400
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
-To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Subject: [PATCH] ath9k: Convert to new PCI PM framework
-Date: Sat, 16 Oct 2010 00:36:17 +0200
-Cc: LKML <linux-kernel@vger.kernel.org>,
-	"Linux-pm mailing list" <linux-pm@lists.linux-foundation.org>,
-	linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org
+Received: from web56803.mail.re3.yahoo.com ([66.196.97.77]:25420 "HELO
+	web56803.mail.re3.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1753625Ab0JTPMq (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 20 Oct 2010 11:12:46 -0400
+Message-ID: <649275.57677.qm@web56803.mail.re3.yahoo.com>
+Date: Wed, 20 Oct 2010 08:12:45 -0700 (PDT)
+From: Walter Goldens <goldenstranger@yahoo.com>
+Subject: [PATCH 3/4] compat-wireless: update unloading scripts for bt
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Cc: linux-wireless@vger.kernel.org
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="utf-8"
-Message-Id: <201010160036.17653.rjw@sisk.pl>
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Rafael J. Wysocki <rjw@sisk.pl>
+- update unloading scripts for bt
 
-The ath9k driver uses the legacy PCI power management (suspend
-and resume) callbacks that apparently cause intermittent problems
-to happen (the adapter sometimes doesn't resume correctly on my
-Acer Ferrari One).  Make it use the new PCI PM and let the PCI core
-code handle the PCI-specific details of power transitions.
-
-Signed-off-by: Rafael J. Wysocki <rjw@sisk.pl>
+Signed-off-by: Walter Goldens <goldenstranger@yahoo.com>
 ---
- drivers/net/wireless/ath/ath9k/pci.c |   40 +++++++++++++++++++----------------
- 1 file changed, 22 insertions(+), 18 deletions(-)
 
-Index: linux-2.6/drivers/net/wireless/ath/ath9k/pci.c
-===================================================================
---- linux-2.6.orig/drivers/net/wireless/ath/ath9k/pci.c
-+++ linux-2.6/drivers/net/wireless/ath/ath9k/pci.c
-@@ -247,34 +247,25 @@ static void ath_pci_remove(struct pci_de
- 
- #ifdef CONFIG_PM
- 
--static int ath_pci_suspend(struct pci_dev *pdev, pm_message_t state)
-+static int ath_pci_suspend(struct device *device)
- {
-+	struct pci_dev *pdev = to_pci_dev(device);
- 	struct ieee80211_hw *hw = pci_get_drvdata(pdev);
- 	struct ath_wiphy *aphy = hw->priv;
- 	struct ath_softc *sc = aphy->sc;
- 
- 	ath9k_hw_set_gpio(sc->sc_ah, sc->sc_ah->led_pin, 1);
- 
--	pci_save_state(pdev);
--	pci_disable_device(pdev);
--	pci_set_power_state(pdev, PCI_D3hot);
--
- 	return 0;
- }
- 
--static int ath_pci_resume(struct pci_dev *pdev)
-+static int ath_pci_resume(struct device *device)
- {
-+	struct pci_dev *pdev = to_pci_dev(device);
- 	struct ieee80211_hw *hw = pci_get_drvdata(pdev);
- 	struct ath_wiphy *aphy = hw->priv;
- 	struct ath_softc *sc = aphy->sc;
- 	u32 val;
--	int err;
--
--	pci_restore_state(pdev);
--
--	err = pci_enable_device(pdev);
--	if (err)
--		return err;
- 
- 	/*
- 	 * Suspend/Resume resets the PCI configuration space, so we have to
-@@ -293,7 +284,23 @@ static int ath_pci_resume(struct pci_dev
- 	return 0;
- }
- 
--#endif /* CONFIG_PM */
-+static const struct dev_pm_ops ath9k_pm_ops = {
-+	.suspend = ath_pci_suspend,
-+	.resume = ath_pci_resume,
-+	.freeze = ath_pci_suspend,
-+	.thaw = ath_pci_resume,
-+	.poweroff = ath_pci_suspend,
-+	.restore = ath_pci_resume,
-+};
-+
-+#define ATH9K_PM_OPS	(&ath9k_pm_ops)
-+
-+#else /* !CONFIG_PM */
-+
-+#define ATH9K_PM_OPS	NULL
-+
-+#endif /* !CONFIG_PM */
-+
- 
- MODULE_DEVICE_TABLE(pci, ath_pci_id_table);
- 
-@@ -302,10 +309,7 @@ static struct pci_driver ath_pci_driver 
- 	.id_table   = ath_pci_id_table,
- 	.probe      = ath_pci_probe,
- 	.remove     = ath_pci_remove,
--#ifdef CONFIG_PM
--	.suspend    = ath_pci_suspend,
--	.resume     = ath_pci_resume,
--#endif /* CONFIG_PM */
-+	.driver.pm  = ATH9K_PM_OPS,
- };
- 
- int ath_pci_init(void)
+--- a/scripts/unload.sh
++++ b/scripts/unload.sh
+@@ -27,14 +27,16 @@ MODULES="$MODULES rtl8180 rtl8187"
+ MODULES="$MODULES mwl8k mac80211_hwsim"
+ MODULES="$MODULES at76c50x_usb at76_usb"
+ MODULES="$MODULES rndis_wlan rndis_host cdc_ether usbnet"
+-MODULES="$MODULES atl1 atl2 atl1e atl1c"
+ # eeprom_93cx6 is used by rt2x00 (rt61pci, rt2500pci, rt2400pci) 
+ # and Realtek drivers ( rtl8187, rtl8180)
+ MODULES="$MODULES eeprom_93cx6"
+ MODULES="$MODULES lib80211_crypt_ccmp lib80211_crypt_tkip lib80211_crypt_wep"
+ MODULES="$MODULES mac80211 cfg80211 lib80211"
+-MODULES="$MODULES hidp rfcomm bnep l2cap sco btusb bluetooth"
+ MODULES="$MODULES compat"
++# Bluetooth modules
++MODULES="$MODULES ath3k bcm203x bluecard_cs bnep bpa10x bt3c_cs btmrvl btmrvl_sdio btsdio"
++MODULES="$MODULES btusb btuart_cs cmtp dtl1_cs hidp hci_vhci hci_uart rfcomm sco bluetooth l2cap"
++MODULES="$MODULES atl1 atl2 atl1e atl1c"
+ echo Stoping bluetooth service..
+ /etc/init.d/bluetooth stop
+ /etc/init.d/bluetooth status
+--- a/scripts/btunload.sh
++++ b/scripts/btunload.sh
+@@ -1,5 +1,6 @@
+ #!/bin/bash
+-MODULES="hidp rfcomm bnep l2cap sco btusb bluetooth"
++MODULES="$MODULES ath3k bcm203x bluecard_cs bnep bpa10x bt3c_cs btmrvl btmrvl_sdio btsdio"
++MODULES="$MODULES btusb btuart_cs cmtp dtl1_cs hidp hci_vhci hci_uart rfcomm sco bluetooth l2cap"
+ echo Stoping bluetooth service..
+ /etc/init.d/bluetooth stop
+ /etc/init.d/bluetooth status
+
+
+
+
+
+
+
+      
