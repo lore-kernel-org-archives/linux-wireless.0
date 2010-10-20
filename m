@@ -1,51 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from comal.ext.ti.com ([198.47.26.152]:43299 "EHLO comal.ext.ti.com"
+Received: from mail.atheros.com ([12.19.149.2]:33431 "EHLO mail.atheros.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754449Ab0JAUeB (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 1 Oct 2010 16:34:01 -0400
-From: Anand Gadiyar <gadiyar@ti.com>
-To: linux-omap@vger.kernel.org, linux-wireless@vger.kernel.org
-Cc: Anand Gadiyar <gadiyar@ti.com>, Ohad Ben-Cohen <ohad@wizery.com>,
-	Tony Lindgren <tony@atomide.com>
-Subject: [PATCH] omap: zoom2: fix build break when CONFIG_WL12XX_PLATFORM_DATA=n
-Date: Sat,  2 Oct 2010 02:03:56 +0530
-Message-Id: <1285965236-17907-1-git-send-email-gadiyar@ti.com>
+	id S1753253Ab0JTRTE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 20 Oct 2010 13:19:04 -0400
+Received: from mail.atheros.com ([10.10.20.108])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Wed, 20 Oct 2010 10:18:54 -0700
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: <linville@tuxdriver.com>, <johannes@sipsolutions.net>
+CC: <easwar.krishnan@atheros.com>, <linux-wireless@vger.kernel.org>,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>
+Subject: [PATCH 0/7] cfg80211: few regulatory fixes and debugging enhancements
+Date: Wed, 20 Oct 2010 10:18:52 -0700
+Message-ID: <1287595139-10761-1-git-send-email-lrodriguez@atheros.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Fix this build break when CONFIG_WL12XX_PLATFORM_DATA is not set.
+Easwar reported some odd issues with ath9k regarding regulatory
+while during the 2.6.36-rc cycles. Unfortunately I was only able
+to address the issues for these reported issues until now as I had
+other higher priority items on my plate. It turns out that some of
+these issues are pretty serious, mostly the one that does not apply
+regulatory updates for disabling a band when that is the intention.
 
-  LD      .tmp_vmlinux1
-arch/arm/mach-omap2/built-in.o: In function `zoom_peripherals_init':
-/home/userdata/a0393673/kernels/mainline/linux-2.6/arch/arm/mach-omap2/board-zoom-peripherals.c:333: undefined reference to `wl12xx_set_platform_data'
-make: *** [.tmp_vmlinux1] Error 1
+These issues were simply overlooked but they are part of the design,
+so we target a few of these fixes to stable. The new debugging stuff
+is left only for the development series on the next kernel.
 
-Signed-off-by: Anand Gadiyar <gadiyar@ti.com>
-Cc: Ohad Ben-Cohen <ohad@wizery.com>
-Cc: Tony Lindgren <tony@atomide.com>
----
-There are still many warnings about the function wl12xx_set_platform_data
-being unused. Haven't fixed those. Ohad, care to take a look?
+There is one world regulatory domain update we are considering now
+for the Atheros cards, but we haven't yet decided on this. I'll send
+the patch if we agree on it next. Thanks to Easwar for his reports
+and work on this.
 
- include/linux/wl12xx.h |    7 +++++++
- 1 file changed, 7 insertions(+)
+Luis R. Rodriguez (7):
+  cfg80211: pass the reg hint initiator to helpers
+  cfg80211: fix allowing country IEs for WIPHY_FLAG_STRICT_REGULATORY
+  cfg80211: fix disabling channels based on hints
+  cfg80211: add debug prints for when we ignore regulatory hints
+  cfg80211: add debug print when disabling a channel on a custom regd
+  cfg80211: add debug print when processing a channel
+  cfg80211: prefix REG_DBG_PRINT() with cfg80211
 
-Index: linux-2.6/include/linux/wl12xx.h
-===================================================================
---- linux-2.6.orig/include/linux/wl12xx.h
-+++ linux-2.6/include/linux/wl12xx.h
-@@ -32,7 +32,14 @@ struct wl12xx_platform_data {
- 	int board_ref_clock;
- };
- 
-+#ifdef CONFIG_WL12XX_PLATFORM_DATA
- int wl12xx_set_platform_data(const struct wl12xx_platform_data *data);
-+#else
-+static int wl12xx_set_platform_data(const struct wl12xx_platform_data *data)
-+{
-+	return 0;
-+}
-+#endif
- const struct wl12xx_platform_data *wl12xx_get_platform_data(void);
- 
- #endif
+ include/linux/nl80211.h |    6 ++-
+ include/net/cfg80211.h  |   15 +++---
+ net/wireless/reg.c      |  133 +++++++++++++++++++++++++++++++++++++++++------
+ 3 files changed, 130 insertions(+), 24 deletions(-)
+
