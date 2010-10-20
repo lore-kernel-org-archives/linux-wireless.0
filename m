@@ -1,93 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp-out.google.com ([74.125.121.35]:59772 "EHLO
-	smtp-out.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756601Ab0JKW2R (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 11 Oct 2010 18:28:17 -0400
-Received: from kpbe19.cbf.corp.google.com (kpbe19.cbf.corp.google.com [172.25.105.83])
-	by smtp-out.google.com with ESMTP id o9BMSFOD004023
-	for <linux-wireless@vger.kernel.org>; Mon, 11 Oct 2010 15:28:15 -0700
-Received: from iwn8 (iwn8.prod.google.com [10.241.68.72])
-	by kpbe19.cbf.corp.google.com with ESMTP id o9BMSE3i018938
-	for <linux-wireless@vger.kernel.org>; Mon, 11 Oct 2010 15:28:14 -0700
-Received: by iwn8 with SMTP id 8so6287931iwn.41
-        for <linux-wireless@vger.kernel.org>; Mon, 11 Oct 2010 15:28:14 -0700 (PDT)
+Received: from mail.atheros.com ([12.19.149.2]:33449 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754587Ab0JTRTK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 20 Oct 2010 13:19:10 -0400
+Received: from mail.atheros.com ([10.10.20.105])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Wed, 20 Oct 2010 10:19:00 -0700
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: <linville@tuxdriver.com>, <johannes@sipsolutions.net>
+CC: <easwar.krishnan@atheros.com>, <linux-wireless@vger.kernel.org>,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>
+Subject: [PATCH 5/7] cfg80211: add debug print when disabling a channel on a custom regd
+Date: Wed, 20 Oct 2010 10:18:57 -0700
+Message-ID: <1287595139-10761-6-git-send-email-lrodriguez@atheros.com>
+In-Reply-To: <1287595139-10761-1-git-send-email-lrodriguez@atheros.com>
+References: <1287595139-10761-1-git-send-email-lrodriguez@atheros.com>
 MIME-Version: 1.0
-In-Reply-To: <1286628801.3530.98.camel@jlt3.sipsolutions.net>
-References: <AANLkTin9AwTa8x6faFEXBbrGZa4mg3AeDfeEmmdaF9_d@mail.gmail.com>
-	<AANLkTika+07mD==fPioanurwD-_s8aaJFc+nb4ZZOL0J@mail.gmail.com>
-	<1286628801.3530.98.camel@jlt3.sipsolutions.net>
-Date: Mon, 11 Oct 2010 15:28:13 -0700
-Message-ID: <AANLkTin_nraU0Ma2N4OMejCX4DW+nyXFU3uGXM-dH_XP@mail.gmail.com>
-Subject: Re: Roaming / offchannel enhancements for broadcast / multicast frames
-From: Paul Stewart <pstew@google.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: "Luis R. Rodriguez" <mcgrof@gmail.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	linux-kernel@vger.kernel.org, Matt Smith <Matt.Smith@atheros.com>,
-	Srinivasa Duvvuri <Srinivasa.Duvvuri@atheros.com>,
-	Carolyn Waller <Carolyn.Waller@atheros.com>,
-	Amod Bodas <Amod.Bodas@atheros.com>,
-	David Quan <David.Quan@atheros.com>,
-	Bennyam Malavazi <Bennyam.Malavazi@atheros.com>,
-	Cliff Holden <Cliff.Holden@atheros.com>,
-	Aeolus Yang <Aeolus.Yang@atheros.com>,
-	Kevin Hayes <kevin@atheros.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-[Whoops.  I didn't reply-all here and only sent to Johannes]
+Cc: Easwar Krishnan <easwar.krishnan@atheros.com>
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+---
+ net/wireless/reg.c |    5 +++++
+ 1 files changed, 5 insertions(+), 0 deletions(-)
 
-On Sat, Oct 9, 2010 at 5:53 AM, Johannes Berg <johannes@sipsolutions.net> wrote:
-> And in any case, there's no way to achieve perfect multicast reliability
-> _anyway_, so I don't see why you're even trying? Can somebody actually
-> come up with a problem statement? All I've seen so far is DHCP, but for
-> just that, what's wrong with doing what you already do now?
+diff --git a/net/wireless/reg.c b/net/wireless/reg.c
+index 950f689..62396b2 100644
+--- a/net/wireless/reg.c
++++ b/net/wireless/reg.c
+@@ -1123,6 +1123,11 @@ static void handle_channel_custom(struct wiphy *wiphy,
+ 			       regd);
+ 
+ 	if (r) {
++		REG_DBG_PRINT("cfg80211: Disabling freq %d MHz as custom "
++			      "regd has no rule that fits a %d MHz "
++			      "wide channel\n",
++			      chan->center_freq,
++			      KHZ_TO_MHZ(desired_bw_khz));
+ 		chan->flags = IEEE80211_CHAN_DISABLED;
+ 		return;
+ 	}
+-- 
+1.7.0.4
 
-I think this brings up a fairly fundamental difference in outlook
-here, but I think it is completely resolvable.  The argument "this is
-an unreliable medium / class of traffic -- why spend any extra effort
-on receiving it" doesn't personally wash with me.  I think the term
-used for traffic of this sort is "best effort".  Especially in the
-situation where the background scan was triggered just for
-informational purposes ("what other channels does this ESS exist on?
-I may want to look there first when things start getting nasty on this
-channel"), I see no reason to either hurry the scan or knowingly
-interrupt any form of traffic (no matter how low on the totem pole
-they may appear to be).
-
-I spent a lot of effort in an an earlier life in supporting multicast
-and writing various multicast protocols, and I have to admit that
-being in position to have to defend "best effort" as such is a little
-distressing. :-)  There are tons of different uses for multicast, and
-while the use cases all have to consider a situation where frames are
-lost on the medium, there is always a cost to their loss.  In many
-situations it might be better from the standpoint of ultimate channel
-utilization to have received all multicast ("best effort") than to
-have left it all on the floor.  As I said above, there are classes of
-background scan where loss of fidelity in the scan is much more
-tolerable.
-
-Even in the 80% passive scan case, I consider a passive-only scan
-channel with an AP with a beacon interval synchronized such that we
-will never hear from it unless we choose not to listen to our "home"
-beacon to be marginalized enough that I'd prefer to never see it while
-I'm successfully connected to a separate AP.
-
-I propose to resolve this difference in outlook by proposing another
-flag (orthogonal to passive/active) which describes whether the scan
-should be "seamless", which is to say "prioritize all traffic on the
-home channel above scanning".  This could include the TX enhancements
-(abort/postpone scan immediately if transmit traffic appears) as well
-as receiving all multicast traffic regardless of the possible
-detriment to the efficacy of the scan.
-
-This may be paired with one additional feature -- progressive return
-of scan results.  Since the scan may take a while (in some senses it
-already does).  It would be nice to get nl80211 messages with each BSS
-as it is acquired, much in the same way as wpa_supplicant now does in
-its new DBus API.
-
---
-Paul
