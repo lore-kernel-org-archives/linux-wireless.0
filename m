@@ -1,93 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:47136 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751175Ab0JOXmQ (ORCPT
+Received: from mail-iw0-f174.google.com ([209.85.214.174]:49014 "EHLO
+	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755753Ab0JTWVM convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 15 Oct 2010 19:42:16 -0400
-Message-ID: <4CB8E6D7.602@candelatech.com>
-Date: Fri, 15 Oct 2010 16:42:15 -0700
-From: Ben Greear <greearb@candelatech.com>
+	Wed, 20 Oct 2010 18:21:12 -0400
+Received: by iwn7 with SMTP id 7so2756747iwn.19
+        for <linux-wireless@vger.kernel.org>; Wed, 20 Oct 2010 15:21:11 -0700 (PDT)
 MIME-Version: 1.0
-To: "Luis R. Rodriguez" <lrodriguez@Atheros.com>
-CC: Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: memory clobber in rx path, maybe related to ath9k.
-References: <20101014231958.GA3242@tux> <4CB79299.7000005@candelatech.com> <AANLkTinQmE6wm1pXkRL6p_3rkMvNrppmirjj3-jagMp8@mail.gmail.com> <20101014234853.GA10113@tux> <4CB886AF.3070800@candelatech.com> <AANLkTinhFj_iYjVzyfSfpUVdytfk4O9kCBnN8=Bwv0N7@mail.gmail.com> <4CB8AD3F.50201@candelatech.com> <20101015210720.GA2007@tux> <20101015232140.GA1796@tux> <4CB8E4DE.9070706@candelatech.com> <20101015233814.GA1866@tux>
-In-Reply-To: <20101015233814.GA1866@tux>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+In-Reply-To: <AANLkTinfwhjvfJU6C97SPJ8YKRqyJaCoQnAcC_uKLZa=@mail.gmail.com>
+References: <AANLkTik45KLdLf5UpjPtXTNgy4Df_BupyQ3SzRr6gZgC@mail.gmail.com>
+ <AANLkTin_JcEyT21dTS=Ew868HJvZQ2FVZBGXjCZn=8O_@mail.gmail.com>
+ <4CBF640C.4080405@broadcom.com> <AANLkTinfwhjvfJU6C97SPJ8YKRqyJaCoQnAcC_uKLZa=@mail.gmail.com>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Wed, 20 Oct 2010 15:13:30 -0700
+Message-ID: <AANLkTi=_bOJ0VcmRCKU2pGvz7mW+WPymLWAUwrU9p8J9@mail.gmail.com>
+Subject: Re: Request for free-distributable Broadcom's (G|LP)-PHY firmware
+To: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+Cc: Henry Ptasinski <henryp@broadcom.com>,
+	Brett Rudley <brudley@broadcom.com>,
+	Nohee Ko <noheek@broadcom.com>,
+	Greg Kroah-Hartman <gregkh@suse.de>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	b43-dev <b43-dev@lists.infradead.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 10/15/2010 04:38 PM, Luis R. Rodriguez wrote:
-> On Fri, Oct 15, 2010 at 04:33:50PM -0700, Ben Greear wrote:
->> On 10/15/2010 04:21 PM, Luis R. Rodriguez wrote:
->>> Ben, please give this patch a shot. I addresses three races on the PCU:
->>>
->>>     * When we were stopping the CPU for non-EDMA cards we never locked against
->>>       anything starting the PCU again
->>>
->>>     * ath9k_hw_startpcureceive() was being called without locking
->>>
->>>     * Although we lock on the rxbuf lock for contention against starting/stopping
->>>       the PCU, we also need to lock on the driver in locations where we start/stop
->>>       the PCU within the same location otherwise we end up in inconsistant states
->>>       and the hardware may end up proessing an incorrect buffer for DMA. To
->>>       protect against this we use a new PCU lock on the main part of the driver to
->>>       ensure each start/stop/reset operation is done atomically.
->>>
->>> And fixes one issue as a side effect:
->>>
->>>     * No more packet loss on ping flood when you have one STA associated :)
->>>
->>> The only issue I see with this is I eventually run out of memory and my box
->>> becomes useless, unless I am mistaking that for some other issue.
->>>
->>> Please give this a shot and if it cures your woes I'll split it up into
->>> 3 separate patches, or maybe just two, one for the first two and one for
->>> the last issue.
->>
->> Sounds good, but this lockdep splat happens almost immediately upon starting
->> my app:
->>
->> =======================================================
->> [ INFO: possible circular locking dependency detected ]
->> 2.6.36-rc8-wl+ #32
->> -------------------------------------------------------
->> swapper/0 is trying to acquire lock:
->>    (&(&sc->rx.pcu_lock)->rlock){+.-...}, at: [<fa16e5c7>] ath9k_tasklet+0x7e/0x140 [ath9k]
->>
->> but task is already holding lock:
->>    (&(&sc->rx.rxflushlock)->rlock){+.-...}, at: [<fa16e5b9>] ath9k_tasklet+0x70/0x140 [ath9k]
->>
->> which lock already depends on the new lock.
->>
->>
->> the existing dependency chain (in reverse order) is:
->>
->> ->  #1 (&(&sc->rx.rxflushlock)->rlock){+.-...}:
->>          [<c0457639>] lock_acquire+0x5a/0x78
->>          [<c075f6ed>] _raw_spin_lock_bh+0x20/0x2f
->>          [<fa170513>] ath_flushrecv+0x14/0x61 [ath9k]
+2010/10/20 Rafał Miłecki <zajec5@gmail.com>:
+> W dniu 20 października 2010 23:50 użytkownik Henry Ptasinski
+> <henryp@broadcom.com> napisał:
+>> Sorry for the delay in responding.  We are exploring what is possible but
+>> for the moment the answer is no. At present our focus is on providing the
+>> best open source solution we can for 4313, 43224, 43225, 4329 and future
+>> chips sets.
 >
-> Ah we just need to nuke the flush lock, one second. Also remove my
-> skb_copy() otherwise you will really run out of memory quickly,
-> unless you really want to test with it :)
-
-Since you free the pkt, it shouldn't really consume, eh?
-
-Seems like we should be able to handle an extra 5 skbs floating
-around the system..
-
-I'll try your new patch now...
-
-Thanks,
-Ben
-
+> Thanks for answer.
 >
->    Luis
+> Please, can you make totally sure person responsible for this gets it
+> totally right? I believe it's very important.
+>
+> The easiest step for you, which we still would appreciate is really
+> trivial one. It's *not* about writing any code, *not* about releasing
+> anything new. It's just about releasing in under friendly license.
+> This firmware is already available, we have access to it, we use it.
+> The problem is that distributions can not ship it.
+>
+> If you let me use simplification: all we need as first nice step is
+> Broadcom to say: "You can use it".
 
+I should note not providing a redistributable firmware is actually
+creating more motivation to keep working on open reversed engineered
+firmware which may make take the devices out of compliance. Ultimately
+this firmware is what is going to be used by users of the Linux kernel
+if Broadcom does not provide any alternatives, as there is no option.
 
--- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+Please pass this message along :)
 
+ Luis
