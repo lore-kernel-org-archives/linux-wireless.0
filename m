@@ -1,56 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw0-f46.google.com ([74.125.83.46]:43052 "EHLO
-	mail-gw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751751Ab0JVLXr convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 22 Oct 2010 07:23:47 -0400
-Received: by gwj21 with SMTP id 21so958437gwj.19
-        for <linux-wireless@vger.kernel.org>; Fri, 22 Oct 2010 04:23:47 -0700 (PDT)
+Received: from mailout-de.gmx.net ([213.165.64.23]:37336 "HELO mail.gmx.net"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with SMTP
+	id S932161Ab0JTGx6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 20 Oct 2010 02:53:58 -0400
+Message-ID: <4CBE9C4F.7050806@gmx.net>
+Date: Wed, 20 Oct 2010 09:37:51 +0200
+From: George <george.news@gmx.net>
 MIME-Version: 1.0
-Date: Fri, 22 Oct 2010 13:23:45 +0200
-Message-ID: <AANLkTin5xkWBGqkNiZR3Uiys52g4t9UpRaX1LrjxrG99@mail.gmail.com>
-Subject: b43/SSB: SPROM revision problem
-From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-To: b43-dev <b43-dev@lists.infradead.org>,
-	linux-wireless@vger.kernel.org,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	Michael Buesch <mb@bu3sch.de>
-Content-Type: text/plain; charset=UTF-8
+To: Grazvydas Ignotas <notasas@gmail.com>
+CC: Luciano Coelho <luciano.coelho@nokia.com>,
+	"Luis R. Rodriguez" <mcgrof@gmail.com>,
+	Bob Copeland <me@bobcopeland.com>,
+	Denis 'GNUtoo' Carikli <GNUtoo@no-log.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: Compat-wireless N900
+References: <4CB6BE57.8010401@gmx.net>	<1287071844.11341.5.camel@gnutoo-laptop>	<AANLkTikosEtFnWqRVzMBKtNsB=aqOpqQFKDOZS3+pXTE@mail.gmail.com>	<4CB74759.3030807@gmx.net>	<AANLkTi=1Ar-gzRaskHGDLmkaDnr=9+oZnA=qBLCYcUAi@mail.gmail.com>	<4CB7F7C7.7030804@gmx.net>	<AANLkTi=u+mT2Xd0=0vt4uaf9hSnnkPKY+wN6DjAxME3m@mail.gmail.com>	<4CBABB84.1090100@gmx.net>	<4CBC7725.7050202@gmx.net>	<AANLkTincCSBfwa_Y-cy_42HfU5kP1puCbi2-dBwGkkHu@mail.gmail.com>	<4CBC9A51.8030309@gmx.net>	<1287427291.8043.2.camel@powerslave>	<1287428554.8043.6.camel@powerslave>	<4CBD52DE.9090804@gmx.net>	<AANLkTi=dGSVBrdDXwJgmOjEGX+i+=P_KibiJd+NNMGfy@mail.gmail.com>	<4CBDB654.6060702@gmx.net>	<AANLkTimyCv6U+Yjf7q0OFEYF3PHr5PfACSpbXbTi_PZe@mail.gmail.com>	<4CBDBEDB.3070407@gmx.net> <AANLkTik3ZdZov4OTn0NnnPe_ZUaRh_w0db4bwLYVGCRR@mail.gmail.com>
+In-Reply-To: <AANLkTik3ZdZov4OTn0NnnPe_ZUaRh_w0db4bwLYVGCRR@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I've problem with initializing N radio (2055) on my Broadcom card.
+On 19/10/2010 17:18, Grazvydas Ignotas wrote:
+>> I have also set the debug ALL mode to see if I get something that can help
+>> you out on finding the problem.
+>>
+>> When uploading only wl1251 nothing appears in dmesg. But when uploading
+>> module spi, I got the following info: http://pastebin.com/ysdTSDnB
+>
+> You need both wl1251 and spi. This is normal output, you should get
+> wlan0 interface at this point.
+> --
 
-In case of my card simple workaround [1] for radio initialization is
-needed. If I do not use workaround radio simply does not start. I
-dumped MMIO operations of "wl" and it uses workaround for my card as
-well.
+Yes, that is what I was expecting from the begining but although phy0 
+should appear in /sys/class/ieee80211, this directory is empty :(
 
-The problem is that workaround condition is SPROM-based. It looks like this:
-if (sprom->revision < 4)
-	workaround = (some_specific_card);
-else
-	workaround = ((sprom->boardflags_hi & B43_BFH_NOPA) == 0);
+It seems that it tries to do something but it is not finally done. 
+However, as you can see it seems there is no error (at least reported). 
+Could it be that spi_read buf is almost everytime reading 00 00 00 00?
 
-So now goes the tricky part. My SSB has following SPROM:
-[ 6208.080097] ssb: SPROM offset is 0x1000
-[ 6208.089815] ssb: SPROM revision 5 detected.
+Another issue is that I have to manually upload the spi module as by 
+default it only uploads wl1251 but not the spi. But this is not a big deal.
 
-However in drivers/ssb/pci.c there are some translations, including
-one for my card. My SPROM revision gets translated to 4. The result
-is:
-sprom->revision: 4
-sprom->boardflags_hi: 0x1
+Again, thank you all for the help... You are almost there (I cannot say 
+we as I've been only following your advices).
 
-With that revision and boardflags workaround is not used and my radio
-does not init. There are two possibilities:
-1) Specs are wrong
-2) We do SPROM translation incorrectly
-
-Any hints about that?
-
-
-[1] http://bcm-v4.sipsolutions.net/802.11/Radio/2055/Init#Post_Init
-
--- 
-Rafał
+TA
