@@ -1,44 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:49579 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755942Ab0JKRq6 (ORCPT
+Received: from hrndva-omtalb.mail.rr.com ([71.74.56.125]:38602 "EHLO
+	hrndva-omtalb.mail.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753028Ab0JTO7Z (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 11 Oct 2010 13:46:58 -0400
-Message-ID: <4CB34D87.9090100@candelatech.com>
-Date: Mon, 11 Oct 2010 10:46:47 -0700
-From: Ben Greear <greearb@candelatech.com>
+	Wed, 20 Oct 2010 10:59:25 -0400
+Date: Wed, 20 Oct 2010 09:59:33 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: John W Linville <linville@tuxdriver.com>,
+	Michael Buesch <mb@bu3sch.de>
+Cc: b43-dev@lists.infradead.org, linux-wireless@vger.kernel.org
+Subject: [PATCH] ssb: Clear RETRY_TIMEOUT in PCI Configuration for normal
+ devices
+Message-ID: <4cbf03d5.sBoVK5FZiEsbJ8xu%Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: Christian Lamparter <chunkeey@googlemail.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	rainbow lum <rainbowlum@gmail.com>
-Subject: Re: phyX enumeration conflict
-References: <201010082159.59262.chunkeey@googlemail.com>	 <1286698152.3547.4.camel@jlt3.sipsolutions.net>	 <1286698604.3547.7.camel@jlt3.sipsolutions.net>	 <4CB1DE18.9070400@candelatech.com>	 <1286729035.3547.10.camel@jlt3.sipsolutions.net>	 <4CB348B0.3050909@candelatech.com> <1286818499.3634.67.camel@jlt3.sipsolutions.net>
-In-Reply-To: <1286818499.3634.67.camel@jlt3.sipsolutions.net>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 10/11/2010 10:34 AM, Johannes Berg wrote:
-> On Mon, 2010-10-11 at 10:26 -0700, Ben Greear wrote:
->
->> However, the 'phy0' name doesn't change in
->> /debug/ath5k/[phy-dev]/ link, so it confuses my tools.
->
-> If it used /debug/ieee80211/[phy-dev]/ then it'd be renamed
-> automatically...
+The previous patch of this type fixed the case where a PCI device is behind
+an SSB->PCI bridge as found on an embedded device. This one treats the normal
+case of a "normal" Broadcom wireless PCI core on an SSB interconnect.
 
-I need to get at specific info in the driver's debugfs dir, however.
+MMIO log traces obtained using the Broadcom wl hybrid driver show that
+the RETRY_TIMEOUT register (0x41) in PCI configuration space is cleared
+if non-zero. Similar code found in other drivers such as ipw2100 show
+this operation is needed to keep PCI Tx retries from interfering with
+C3 CPU state. There are no known cases where omission of this code has
+caused a problem, but this patch is offered just in case such a situation
+occurs.
 
-Thanks,
-Ben
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+---
 
->
-> johannes
+John,
 
+No particular urgency for this patch.
 
--- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+Larry
+---
 
+Index: wireless-testing/drivers/ssb/pcihost_wrapper.c
+===================================================================
+--- wireless-testing.orig/drivers/ssb/pcihost_wrapper.c
++++ wireless-testing/drivers/ssb/pcihost_wrapper.c
+@@ -59,6 +59,7 @@ static int ssb_pcihost_probe(struct pci_
+ 	struct ssb_bus *ssb;
+ 	int err = -ENOMEM;
+ 	const char *name;
++	u32 val;
+ 
+ 	ssb = kzalloc(sizeof(*ssb), GFP_KERNEL);
+ 	if (!ssb)
+@@ -74,6 +75,12 @@ static int ssb_pcihost_probe(struct pci_
+ 		goto err_pci_disable;
+ 	pci_set_master(dev);
+ 
++	/* Disable the RETRY_TIMEOUT register (0x41) to keep
++	 * PCI Tx retries from interfering with C3 CPU state */
++	pci_read_config_dword(dev, 0x40, &val);
++	if ((val & 0x0000ff00) != 0)
++		pci_write_config_dword(dev, 0x40, val & 0xffff00ff);
++
+ 	err = ssb_bus_pcibus_register(ssb, dev);
+ 	if (err)
+ 		goto err_pci_release_regions;
