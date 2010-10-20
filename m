@@ -1,37 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.19.149.2]:31313 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753379Ab0JZRUo convert rfc822-to-8bit (ORCPT
+Received: from mgw-sa02.nokia.com ([147.243.1.48]:62085 "EHLO
+	mgw-sa02.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751646Ab0JTNLv (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 26 Oct 2010 13:20:44 -0400
-Received: from mail.atheros.com ([10.10.20.105])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Tue, 26 Oct 2010 10:20:33 -0700
-From: Rajkumar Manoharan <Rajkumar.Manoharan@Atheros.com>
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-CC: "linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Date: Tue, 26 Oct 2010 22:46:00 +0530
-Subject: RE: [PATCH] ath9k_htc: Set proper firmware offset for AR7010 devices
-Message-ID: <44EE5C37ADC36343B0625A05DD408C4850DAB4D6C7@CHEXMB-01.global.atheros.com>
-References: <1288104164-18940-1-git-send-email-rmanoharan@atheros.com>,<AANLkTin+TtPKtOgWd2+BZyYLpP4Jagv4u68CALjBNc7G@mail.gmail.com>
-In-Reply-To: <AANLkTin+TtPKtOgWd2+BZyYLpP4Jagv4u68CALjBNc7G@mail.gmail.com>
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
+	Wed, 20 Oct 2010 09:11:51 -0400
+Received: from nokia.com (localhost [127.0.0.1])
+	by mgw-sa02.nokia.com (Switch-3.4.3/Switch-3.4.3) with ESMTP id o9KDBnoT016324
+	for <linux-wireless@vger.kernel.org>; Wed, 20 Oct 2010 16:11:49 +0300
+Subject: Re: [PATCH] wl1271: exit ELP mode when setting enabled rates in tx
+From: Tuomas Katila <ext-tuomas.2.katila@nokia.com>
+To: "ext luciano.coelho@nokia.com" <luciano.coelho@nokia.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <1287577300-9240-1-git-send-email-luciano.coelho@nokia.com>
+References: <1287577300-9240-1-git-send-email-luciano.coelho@nokia.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Wed, 20 Oct 2010 16:06:02 +0300
+Message-ID: <1287579962.17497.330.camel@tukatila-desktop>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
->On Tue, Oct 26, 2010 at 7:42 AM, Rajkumar Manoharan
-><rmanoharan@atheros.com> wrote:
->> This patch handles the firmware loading properly for
-> >AR7010 HTC devices.
+On Wed, 2010-10-20 at 14:21 +0200, ext luciano.coelho@nokia.com wrote:
+> From: Luciano Coelho <luciano.coelho@nokia.com>
+> 
+> This bug was being triggered by a call to acx_rate_policies in tx_work
+> without calling ps_elp_wakeup first.  If we have full PSM enabled, this
+> happens rather often, immediately after association.
+> 
+> Reported-by: Tuomas Katila <ext-tuomas.2.katila@nokia.com>
+> Signed-off-by: Luciano Coelho <luciano.coelho@nokia.com>
+> ---
 
->This description is vague, you could have said instead that it treats
->0x9018 as a AR7010.
->
-> Luis
+Tested-by: Tuomas Katila <ext-tuomas.2.katila@nokia.com>
 
-0x9018 was already treated as AR7010 devices. But it is missed in firmware offset
-selection. I'll resend the patch. Thanks for pointing out Luis :)
+I couldn't reproduce the error after tens of tries.
 
-- Rajkumar
+-Tuomas
+
+
