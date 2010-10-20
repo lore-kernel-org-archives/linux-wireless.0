@@ -1,104 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([192.100.122.230]:39255 "EHLO
-	mgw-mx03.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932384Ab0JZLYr (ORCPT
+Received: from mail-qw0-f46.google.com ([209.85.216.46]:53247 "EHLO
+	mail-qw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754697Ab0JTWLY convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 26 Oct 2010 07:24:47 -0400
-Received: from vaebh106.NOE.Nokia.com (vaebh106.europe.nokia.com [10.160.244.32])
-	by mgw-mx03.nokia.com (Switch-3.3.3/Switch-3.3.3) with ESMTP id o9QBOcbn012445
-	for <linux-wireless@vger.kernel.org>; Tue, 26 Oct 2010 14:24:44 +0300
-From: juuso.oikarinen@nokia.com
-To: luciano.coelho@nokia.com
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH 1/2] wl1271: Fix scan failure detection
-Date: Tue, 26 Oct 2010 14:24:38 +0300
-Message-Id: <1288092279-31272-1-git-send-email-juuso.oikarinen@nokia.com>
+	Wed, 20 Oct 2010 18:11:24 -0400
+Received: by qwa26 with SMTP id 26so2834705qwa.19
+        for <linux-wireless@vger.kernel.org>; Wed, 20 Oct 2010 15:11:23 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <4CBF640C.4080405@broadcom.com>
+References: <AANLkTik45KLdLf5UpjPtXTNgy4Df_BupyQ3SzRr6gZgC@mail.gmail.com>
+	<AANLkTin_JcEyT21dTS=Ew868HJvZQ2FVZBGXjCZn=8O_@mail.gmail.com>
+	<4CBF640C.4080405@broadcom.com>
+Date: Thu, 21 Oct 2010 00:11:23 +0200
+Message-ID: <AANLkTinfwhjvfJU6C97SPJ8YKRqyJaCoQnAcC_uKLZa=@mail.gmail.com>
+Subject: Re: Request for free-distributable Broadcom's (G|LP)-PHY firmware
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+To: Henry Ptasinski <henryp@broadcom.com>
+Cc: Brett Rudley <brudley@broadcom.com>,
+	Nohee Ko <noheek@broadcom.com>,
+	Greg Kroah-Hartman <gregkh@suse.de>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	b43-dev <b43-dev@lists.infradead.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Juuso Oikarinen <juuso.oikarinen@nokia.com>
+W dniu 20 października 2010 23:50 użytkownik Henry Ptasinski
+<henryp@broadcom.com> napisał:
+> Sorry for the delay in responding.  We are exploring what is possible but
+> for the moment the answer is no. At present our focus is on providing the
+> best open source solution we can for 4313, 43224, 43225, 4329 and future
+> chips sets.
 
-In scan_complete_work, because the mutex is released before accessing the
-scan->failed flag, it is possible for unfounded hardware recovery rounds
-to be executed.
+Thanks for answer.
 
-Fix this.
+Please, can you make totally sure person responsible for this gets it
+totally right? I believe it's very important.
 
-Signed-off-by: Juuso Oikarinen <juuso.oikarinen@nokia.com>
----
- drivers/net/wireless/wl12xx/wl1271_main.c |   17 ++++++++++++++---
- drivers/net/wireless/wl12xx/wl1271_scan.c |    5 +++--
- 2 files changed, 17 insertions(+), 5 deletions(-)
+The easiest step for you, which we still would appreciate is really
+trivial one. It's *not* about writing any code, *not* about releasing
+anything new. It's just about releasing in under friendly license.
+This firmware is already available, we have access to it, we use it.
+The problem is that distributions can not ship it.
 
-diff --git a/drivers/net/wireless/wl12xx/wl1271_main.c b/drivers/net/wireless/wl12xx/wl1271_main.c
-index 63036b5..20027f4 100644
---- a/drivers/net/wireless/wl12xx/wl1271_main.c
-+++ b/drivers/net/wireless/wl12xx/wl1271_main.c
-@@ -1056,6 +1056,7 @@ static void __wl1271_op_remove_interface(struct wl1271 *wl)
- 		wl->scan.state = WL1271_SCAN_STATE_IDLE;
- 		kfree(wl->scan.scanned_ch);
- 		wl->scan.scanned_ch = NULL;
-+		wl->scan.req = NULL;
- 		ieee80211_scan_completed(wl->hw, true);
- 	}
- 
-@@ -1676,6 +1677,16 @@ static int wl1271_op_hw_scan(struct ieee80211_hw *hw,
- 
- 	mutex_lock(&wl->mutex);
- 
-+	if (wl->state == WL1271_STATE_OFF) {
-+		/*
-+		 * We cannot return -EBUSY here because mac80211 will expect
-+		 * a call to ieee80211_scan_completed if we do - in this case
-+		 * there won't be any call.
-+		 */
-+		ret = -EAGAIN;
-+		goto out;
-+	}
-+
- 	ret = wl1271_ps_elp_wakeup(wl, false);
- 	if (ret < 0)
- 		goto out;
-@@ -2093,14 +2104,14 @@ static int wl1271_op_get_survey(struct ieee80211_hw *hw, int idx,
- {
- 	struct wl1271 *wl = hw->priv;
- 	struct ieee80211_conf *conf = &hw->conf;
-- 
-+
- 	if (idx != 0)
- 		return -ENOENT;
-- 
-+
- 	survey->channel = conf->channel;
- 	survey->filled = SURVEY_INFO_NOISE_DBM;
- 	survey->noise = wl->noise;
-- 
-+
- 	return 0;
- }
- 
-diff --git a/drivers/net/wireless/wl12xx/wl1271_scan.c b/drivers/net/wireless/wl12xx/wl1271_scan.c
-index 909bb47..e0661a5 100644
---- a/drivers/net/wireless/wl12xx/wl1271_scan.c
-+++ b/drivers/net/wireless/wl12xx/wl1271_scan.c
-@@ -48,14 +48,15 @@ void wl1271_scan_complete_work(struct work_struct *work)
- 	wl->scan.state = WL1271_SCAN_STATE_IDLE;
- 	kfree(wl->scan.scanned_ch);
- 	wl->scan.scanned_ch = NULL;
--	mutex_unlock(&wl->mutex);
--
-+	wl->scan.req = NULL;
- 	ieee80211_scan_completed(wl->hw, false);
- 
- 	if (wl->scan.failed) {
- 		wl1271_info("Scan completed due to error.");
- 		ieee80211_queue_work(wl->hw, &wl->recovery_work);
- 	}
-+	mutex_unlock(&wl->mutex);
-+
- }
- 
- 
+If you let me use simplification: all we need as first nice step is
+Broadcom to say: "You can use it".
+
 -- 
-1.7.0.4
-
+Rafał
