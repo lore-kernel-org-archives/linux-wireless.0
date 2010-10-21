@@ -1,87 +1,112 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qw0-f46.google.com ([209.85.216.46]:37217 "EHLO
-	mail-qw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753217Ab0JECGj convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 4 Oct 2010 22:06:39 -0400
-Received: by qwh6 with SMTP id 6so3475763qwh.19
-        for <linux-wireless@vger.kernel.org>; Mon, 04 Oct 2010 19:06:39 -0700 (PDT)
+Received: from mail.atheros.com ([12.19.149.2]:33083 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752859Ab0JUISd (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 21 Oct 2010 04:18:33 -0400
+Received: from mail.atheros.com ([10.10.20.108])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Thu, 21 Oct 2010 01:18:22 -0700
+Date: Thu, 21 Oct 2010 13:48:28 +0530
+From: Senthil Balasubramanian <senthilkumar@atheros.com>
+To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+CC: "linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"johannes@sipsolutions.net" <johannes@sipsolutions.net>,
+	Easwar Krishnan <Easwar.Krishnan@Atheros.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Luis Rodriguez <Luis.Rodriguez@Atheros.com>
+Subject: Re: [PATCH 6/7] cfg80211: add debug print when processing a channel
+Message-ID: <20101021081828.GA1840@senthil-lnx.users.atheros.com>
+References: <1287595139-10761-1-git-send-email-lrodriguez@atheros.com>
+ <1287595139-10761-7-git-send-email-lrodriguez@atheros.com>
 MIME-Version: 1.0
-Date: Tue, 5 Oct 2010 04:06:38 +0200
-Message-ID: <AANLkTinke34B5w8yqzyJRR66vOnGVmP6Vm_KYQrVv5JP@mail.gmail.com>
-Subject: Channels vs. frequencies: 2.4 GHz, 4.9 GHz, 5.0 GHz
-From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-To: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <1287595139-10761-7-git-send-email-lrodriguez@atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I hack on b43 a little and I try to understand wireless channels.
-There are few things that seems magic to me, could I get help here?
-
-***
-
-First some info I grabbed from specifications:
-
-20 MHz and 5 GHz:	17.3.8.3	start + 5 x channel [0, ..., 200]	[start =
-dot11RegulatoryClassesRequired ? (500 * dot11ChannelStartingFactor) :
-5000]
-20 MHz and 2.4 GHz	18.4.6		[standard 1-14 channels table?]
-40 MHz and 5 GHz:	20.3.15.2	start + 5 x channel [0, ..., 200]	[start =
-dot11RegulatoryClassesRequired ? (500 * dot11ChannelStartingFactor) :
-5000]
-40 MHz and 2.4 GHz:	20.3.15.1	 2407 + 5 x channel [1, ..., 13]
-
-This shows channels like 1, 5, 8 (some random numbers) can be actually
-from any: 2.4 GHz or 5 GHz. Wikipedia [1] seems to agree with this as
-it contains for example channel 9 with freq 5045.
-
-However checking util.c::ieee80211_channel_to_frequency it looks we
-assume channels lower/equal 14 are always 2.4 GHz. Something weird can
-also be found in specs:
-
-17.3.8.3.2 Channel numbering
-This definition provides a unique numbering system for all channels
-with 5 MHz between center
-frequencies, as well as the flexibility to define channelization sets
-for all current and future regulatory
-domains.
-
-So... how does it really work? Are channels uniq? Is our
-channel<->freq translation bad/OK?
-
-***
-
-Are there some forbidden channels at specific ranges in 5 GHz?
-
-Wikipedia starts 5 GHz channels from 7, doesn't mention 0 - 6. Same
-for 17 - 34. Starting with 34 Wikipedia skips odd channels, but only
-until 149.
-Checking for 5 GHz channels Broadcom can work with [2] I don't see
-anything between 0 and 31. Then it goes every even number until 145.
-
-***
-
-802.11j... this is disaster (I know it's Japanese-only). Wikipedia
-shows channels 183 - 196 as 4.9 GHz. However according to
-specifications channels between 0 and 200 can be 5 GHz! Similar thing
-is visible in Broadcom's specs: 182 is last channel in 5 GHz (5910
-MHz) and starting with 184 we go down to 4.9 GHz (4920 MHz for 184).
-Any explaination, please? :|
-
-***
-
-Channels above 200?! According to specifications range of 5 GHz
-channels is 0-200. Wikipedia agrees with that, however Broadcom's code
-seems to support channels up to 228 (5140 MHz!).The crazy part for me
-is Broadcom treat's channel 216 as 5080 MHz, while Wikipedia uses 16
-for 5080 MHz. Of course there is no "16" channel in Broadcom's specs
-:|
-
-***
-
-[1] http://en.wikipedia.org/wiki/List_of_WLAN_channels
-[2] http://bcm-v4.sipsolutions.net/802.11/Radio/2056/ChannelTable
-
--- 
-Rafał
+On Wed, Oct 20, 2010 at 10:48:58PM +0530, Luis R. Rodriguez wrote:
+> In the worst case you are seeing really odd things you want
+> more information than what is provided right now, for those
+> that insist and want debug info through CONFIG_CFG80211_REG_DEBUG
+> provide a print of when we are processing a channel and with what
+> regulatory rule.
+> 
+> Cc: Easwar Krishnan <easwar.krishnan@atheros.com>
+> Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+> ---
+>  net/wireless/reg.c |   40 ++++++++++++++++++++++++++++++++++++++++
+>  1 files changed, 40 insertions(+), 0 deletions(-)
+> 
+> diff --git a/net/wireless/reg.c b/net/wireless/reg.c
+> index 62396b2..f0ff146 100644
+> --- a/net/wireless/reg.c
+> +++ b/net/wireless/reg.c
+> @@ -728,6 +728,42 @@ static const char *reg_initiator_name(enum nl80211_reg_initiator initiator)
+>  	}
+>  }
+>  
+> +#ifdef CONFIG_CFG80211_REG_DEBUG
+> +
+> +static void chan_reg_rule_print_dbg(struct ieee80211_channel *chan,
+> +				    u32 desired_bw_khz,
+> +				    const struct ieee80211_reg_rule *reg_rule)
+> +{
+> +	const struct ieee80211_power_rule *power_rule;
+> +	const struct ieee80211_freq_range *freq_range;
+> +	char max_antenna_gain[32];
+> +
+> +	power_rule = &reg_rule->power_rule;
+> +	freq_range = &reg_rule->freq_range;
+> +
+> +	if (!power_rule->max_antenna_gain)
+> +		snprintf(max_antenna_gain, 32, "N/A");
+> +	else
+> +		snprintf(max_antenna_gain, 32, "%d", power_rule->max_antenna_gain);
+> +
+> +	REG_DBG_PRINT("cfg80211: Updating information on frequency %d MHz "
+> +		      "for %d a MHz width channel with regulatory rule:\n",
+> +		      chan->center_freq,
+> +		      KHZ_TO_MHZ(desired_bw_khz));
+> +
+> +	REG_DBG_PRINT("cfg80211: %d KHz - %d KHz @  KHz), (%s mBi, %d mBm)\n",
+> +		      freq_range->start_freq_khz,
+> +		      freq_range->end_freq_khz,
+> +		      max_antenna_gain,
+> +		      power_rule->max_eirp);
+> +}
+> +#else
+> +static void reg_reg_rule_print_dbg(const struct ieee80211_reg_rule *reg_rule)
+This will break compilation. Function name and arguments needs to be fixed here.
+> +{
+> +	return;
+> +}
+> +#endif
+> +
+>  /*
+>   * Note that right now we assume the desired channel bandwidth
+>   * is always 20 MHz for each individual channel (HT40 uses 20 MHz
+> @@ -788,6 +824,8 @@ static void handle_channel(struct wiphy *wiphy,
+>  		return;
+>  	}
+>  
+> +	chan_reg_rule_print_dbg(chan, desired_bw_khz, reg_rule);
+> +
+>  	power_rule = &reg_rule->power_rule;
+>  	freq_range = &reg_rule->freq_range;
+>  
+> @@ -1132,6 +1170,8 @@ static void handle_channel_custom(struct wiphy *wiphy,
+>  		return;
+>  	}
+>  
+> +	chan_reg_rule_print_dbg(chan, desired_bw_khz, reg_rule);
+> +
+>  	power_rule = &reg_rule->power_rule;
+>  	freq_range = &reg_rule->freq_range;
+>  
+> -- 
+> 1.7.0.4
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
