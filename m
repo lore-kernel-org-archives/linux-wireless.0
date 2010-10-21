@@ -1,54 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:58935 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751892Ab0JERiK (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 5 Oct 2010 13:38:10 -0400
-Message-ID: <4CAB627F.8020804@candelatech.com>
-Date: Tue, 05 Oct 2010 10:38:07 -0700
-From: Ben Greear <greearb@candelatech.com>
-MIME-Version: 1.0
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: memory clobber in rx path, maybe related to ath9k.
-References: <4CAB59B2.5050106@candelatech.com> <AANLkTikhGCTS8kJgpDzjudyBTk-rkyXY33UO7kB0+Cc-@mail.gmail.com> <4CAB5F3D.9060201@candelatech.com> <AANLkTimV3GrwU+9PPtirT4sCzveLY2egr3PRQhfDBET1@mail.gmail.com>
-In-Reply-To: <AANLkTimV3GrwU+9PPtirT4sCzveLY2egr3PRQhfDBET1@mail.gmail.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Received: from mx1.redhat.com ([209.132.183.28]:64718 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751092Ab0JUPS2 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 21 Oct 2010 11:18:28 -0400
+Subject: Re: Request for free-distributable Broadcom's (G|LP)-PHY firmware
+From: Dan Williams <dcbw@redhat.com>
+To: =?UTF-8?Q?Rafa=C5=82_Mi=C5=82ecki?= <zajec5@gmail.com>
+Cc: Henry Ptasinski <henryp@broadcom.com>,
+	Brett Rudley <brudley@broadcom.com>,
+	Nohee Ko <noheek@broadcom.com>,
+	Greg Kroah-Hartman <gregkh@suse.de>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	b43-dev <b43-dev@lists.infradead.org>
+In-Reply-To: <AANLkTinfwhjvfJU6C97SPJ8YKRqyJaCoQnAcC_uKLZa=@mail.gmail.com>
+References: <AANLkTik45KLdLf5UpjPtXTNgy4Df_BupyQ3SzRr6gZgC@mail.gmail.com>
+	 <AANLkTin_JcEyT21dTS=Ew868HJvZQ2FVZBGXjCZn=8O_@mail.gmail.com>
+	 <4CBF640C.4080405@broadcom.com>
+	 <AANLkTinfwhjvfJU6C97SPJ8YKRqyJaCoQnAcC_uKLZa=@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Thu, 21 Oct 2010 10:21:57 -0500
+Message-ID: <1287674517.2383.7.camel@dcbw.foobar.com>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 10/05/2010 10:36 AM, Luis R. Rodriguez wrote:
-> On Tue, Oct 5, 2010 at 10:24 AM, Ben Greear<greearb@candelatech.com>  wrote:
->> On 10/05/2010 10:16 AM, Luis R. Rodriguez wrote:
->>>
->>> On Tue, Oct 5, 2010 at 10:00 AM, Ben Greear<greearb@candelatech.com>
->>>   wrote:
->>>>
->>>> I started seeing this very soon after creating interfaces.
->>>
->>> Can you be more specific how one can reproduce?
->>
->> Enable SLUB debugging, DEBUG_PAGEALLOC (Debug page memory allocations),
->> lockdep, pre-empt.
->
-> OK I just enabled PAGE_ALLOC thingy, it wasn't enabled on my kernel.
->
->> Please try creating a bunch of stations on one ath9k phy,
->
-> How many?
+On Thu, 2010-10-21 at 00:11 +0200, Rafał Miłecki wrote:
+> W dniu 20 października 2010 23:50 użytkownik Henry Ptasinski
+> <henryp@broadcom.com> napisał:
+> > Sorry for the delay in responding.  We are exploring what is possible but
+> > for the moment the answer is no. At present our focus is on providing the
+> > best open source solution we can for 4313, 43224, 43225, 4329 and future
+> > chips sets.
+> 
+> Thanks for answer.
+> 
+> Please, can you make totally sure person responsible for this gets it
+> totally right? I believe it's very important.
+> 
+> The easiest step for you, which we still would appreciate is really
+> trivial one. It's *not* about writing any code, *not* about releasing
+> anything new. It's just about releasing in under friendly license.
+> This firmware is already available, we have access to it, we use it.
+> The problem is that distributions can not ship it.
+> 
+> If you let me use simplification: all we need as first nice step is
+> Broadcom to say: "You can use it".
 
-130 is a nice round number :)
+That's not enough to allow Fedora to ship it.  We'd need a clear license
+from Broadcom (ex the existing Intel or Marvell firmware licenses)
+before Fedora could feel comfortable about shipping it legally in all
+jurisdictions.
 
-I'll try with a smaller number and see if I can hit it.
+http://git.kernel.org/?p=linux/kernel/git/dwmw2/linux-firmware.git;a=blob;f=LICENCE.mwl8k;h=3224e1bbfba8ccd1d980f57eb88378f20bb2d146;hb=HEAD
+http://git.kernel.org/?p=linux/kernel/git/dwmw2/linux-firmware.git;a=blob;f=LICENCE.libertas;h=1fd8766c26a170b50605455ae6f54b607baa12cf;hb=HEAD
 
-Thanks,
-Ben
+There's an existing Broadcom license in linux-firmware.git, and it *may*
+be OK, but it's really, really long and given that other major companies
+adopted the "shorter is better" approach, it's hard to believe that all
+the existing Broadcom license text is actually needed.
 
->
->    Luis
+Dan
 
-
--- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
 
