@@ -1,372 +1,989 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f46.google.com ([209.85.215.46]:32768 "EHLO
-	mail-ew0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754602Ab0JKN6s (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 11 Oct 2010 09:58:48 -0400
-From: Andy Shevchenko <andy.shevchenko@gmail.com>
-To: linux-kernel@vger.kernel.org
-Cc: Andy Shevchenko <andy.shevchenko@gmail.com>,
-	Nohee Ko <noheek@broadcom.com>,
-	Greg Kroah-Hartman <gregkh@suse.de>,
-	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org
-Subject: [PATCH] staging: brcm80211: remove useless bcm_ether_ntoa()
-Date: Mon, 11 Oct 2010 16:58:33 +0300
-Message-Id: <1286805513-27097-1-git-send-email-andy.shevchenko@gmail.com>
+Received: from isilmar-3.linta.de ([188.40.101.200]:51943 "EHLO linta.de"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1757630Ab0JUPjx (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 21 Oct 2010 11:39:53 -0400
+From: Dominik Brodowski <linux@dominikbrodowski.net>
+To: <linux-pcmcia@lists.infradead.org>
+Cc: Dominik Brodowski <linux@dominikbrodowski.net>,
+	netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
+	linux-ide@vger.kernel.org, linux-usb@vger.kernel.org,
+	laforge@gnumonks.org, linux-mtd@lists.infradead.org,
+	alsa-devel@alsa-project.org, linux-serial@vger.kernel.org,
+	Jiri Kosina <jkosina@suse.cz>, linux-scsi@vger.kernel.org
+Subject: [PATCH 07/22] pcmcia: move config_{base,index,regs} to struct pcmcia_device
+Date: Thu, 21 Oct 2010 17:35:23 +0200
+Message-Id: <1287675338-12588-7-git-send-email-linux@dominikbrodowski.net>
+In-Reply-To: <20101021153450.GA12405@comet.dominikbrodowski.net>
+References: <20101021153450.GA12405@comet.dominikbrodowski.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Since we have '%pM' modifier in the kernel's *printf() we don't need to
-convert address to the string beforehand.
+Several drivers prefer to explicitly set config_{base,index,regs},
+formerly known as ConfigBase, ConfigIndex and Present. Instead of
+passing these values inside config_req_t, store it in struct
+pcmcia_device.
 
-Signed-off-by: Andy Shevchenko <andy.shevchenko@gmail.com>
-Cc: Nohee Ko <noheek@broadcom.com>
-Cc: Greg Kroah-Hartman <gregkh@suse.de>
-Cc: linux-wireless@vger.kernel.org
-Cc: devel@driverdev.osuosl.org
+CC: netdev@vger.kernel.org
+CC: linux-wireless@vger.kernel.org
+CC: linux-ide@vger.kernel.org
+CC: linux-usb@vger.kernel.org
+CC: laforge@gnumonks.org
+CC: linux-mtd@lists.infradead.org
+CC: alsa-devel@alsa-project.org
+CC: linux-serial@vger.kernel.org
+CC: Jiri Kosina <jkosina@suse.cz>
+CC: linux-scsi@vger.kernel.org
+Acked-by: Gustavo F. Padovan <padovan@profusion.mobi> (for drivers/bluetooth)
+Tested-by: Wolfram Sang <w.sang@pengutronix.de>
+Signed-off-by: Dominik Brodowski <linux@dominikbrodowski.net>
 ---
- drivers/staging/brcm80211/brcmfmac/dhd_common.c  |   15 ++---------
- drivers/staging/brcm80211/brcmfmac/wl_cfg80211.c |   27 +++++----------------
- drivers/staging/brcm80211/brcmfmac/wl_iw.c       |   21 ++++++----------
- drivers/staging/brcm80211/brcmfmac/wl_iw.h       |    3 --
- drivers/staging/brcm80211/include/bcmutils.h     |    2 -
- drivers/staging/brcm80211/sys/wl_mac80211.c      |    7 +----
- drivers/staging/brcm80211/sys/wlc_mac80211.c     |    7 ++---
- drivers/staging/brcm80211/util/bcmsrom.c         |   16 ++++---------
- drivers/staging/brcm80211/util/bcmutils.c        |    6 -----
- 9 files changed, 28 insertions(+), 76 deletions(-)
+ drivers/bluetooth/bluecard_cs.c                  |    2 +-
+ drivers/char/pcmcia/ipwireless/main.c            |    2 +-
+ drivers/char/pcmcia/synclink_cs.c                |    6 ++--
+ drivers/ide/ide-cs.c                             |    3 +-
+ drivers/isdn/hardware/avm/avm_cs.c               |    4 +-
+ drivers/isdn/hisax/avma1_cs.c                    |    4 +-
+ drivers/isdn/hisax/elsa_cs.c                     |    2 +-
+ drivers/isdn/hisax/sedlbauer_cs.c                |    2 +-
+ drivers/isdn/hisax/teles_cs.c                    |    2 +-
+ drivers/mtd/maps/pcmciamtd.c                     |    2 +-
+ drivers/net/pcmcia/3c574_cs.c                    |    2 +-
+ drivers/net/pcmcia/3c589_cs.c                    |    2 +-
+ drivers/net/pcmcia/axnet_cs.c                    |    6 ++--
+ drivers/net/pcmcia/fmvj18x_cs.c                  |   22 ++++++------
+ drivers/net/pcmcia/ibmtr_cs.c                    |    4 +-
+ drivers/net/pcmcia/nmclan_cs.c                   |    4 +-
+ drivers/net/pcmcia/pcnet_cs.c                    |    6 ++--
+ drivers/net/pcmcia/smc91c92_cs.c                 |   10 +++---
+ drivers/net/pcmcia/xirc2ps_cs.c                  |    2 +-
+ drivers/net/wireless/airo_cs.c                   |    2 +-
+ drivers/net/wireless/hostap/hostap_cs.c          |    2 +-
+ drivers/net/wireless/ray_cs.c                    |    2 +-
+ drivers/net/wireless/wl3501_cs.c                 |    2 +-
+ drivers/parport/parport_cs.c                     |    2 +-
+ drivers/pcmcia/cs_internal.h                     |    3 --
+ drivers/pcmcia/ds.c                              |    8 ++--
+ drivers/pcmcia/pcmcia_cis.c                      |    2 +-
+ drivers/pcmcia/pcmcia_resource.c                 |   38 +++++++++++-----------
+ drivers/scsi/pcmcia/aha152x_stub.c               |    2 +-
+ drivers/scsi/pcmcia/fdomain_stub.c               |    2 +-
+ drivers/scsi/pcmcia/nsp_cs.c                     |    2 +-
+ drivers/scsi/pcmcia/qlogic_stub.c                |    2 +-
+ drivers/serial/serial_cs.c                       |    6 ++--
+ drivers/staging/comedi/drivers/cb_das16_cs.c     |    2 +-
+ drivers/staging/comedi/drivers/das08_cs.c        |    2 +-
+ drivers/staging/comedi/drivers/ni_daq_700.c      |    2 +-
+ drivers/staging/comedi/drivers/ni_daq_dio24.c    |    2 +-
+ drivers/staging/comedi/drivers/ni_labpc_cs.c     |    2 +-
+ drivers/staging/comedi/drivers/quatech_daqp_cs.c |    2 +-
+ drivers/staging/wlags49_h2/wl_cs.c               |    4 +-
+ drivers/usb/host/sl811_cs.c                      |    2 +-
+ include/pcmcia/cs.h                              |   15 --------
+ include/pcmcia/ds.h                              |   14 ++++++++
+ sound/pcmcia/pdaudiocf/pdaudiocf.c               |    6 ++--
+ sound/pcmcia/vx/vxpocket.c                       |    4 +-
+ 45 files changed, 107 insertions(+), 112 deletions(-)
 
-diff --git a/drivers/staging/brcm80211/brcmfmac/dhd_common.c b/drivers/staging/brcm80211/brcmfmac/dhd_common.c
-index 481c35d..79ded63 100644
---- a/drivers/staging/brcm80211/brcmfmac/dhd_common.c
-+++ b/drivers/staging/brcm80211/brcmfmac/dhd_common.c
-@@ -143,8 +143,6 @@ void dhd_common_init(void)
+diff --git a/drivers/bluetooth/bluecard_cs.c b/drivers/bluetooth/bluecard_cs.c
+index 4cb2dfe..08f4818 100644
+--- a/drivers/bluetooth/bluecard_cs.c
++++ b/drivers/bluetooth/bluecard_cs.c
+@@ -885,7 +885,7 @@ static int bluecard_config(struct pcmcia_device *link)
+ 	bluecard_info_t *info = link->priv;
+ 	int i, n;
  
- static int dhd_dump(dhd_pub_t *dhdp, char *buf, int buflen)
- {
--	char eabuf[ETHER_ADDR_STR_LEN];
+-	link->conf.ConfigIndex = 0x20;
++	link->config_index = 0x20;
+ 
+ 	link->resource[0]->flags |= IO_DATA_PATH_WIDTH_8;
+ 	link->resource[0]->end = 64;
+diff --git a/drivers/char/pcmcia/ipwireless/main.c b/drivers/char/pcmcia/ipwireless/main.c
+index 0f0be4d..05c4e68 100644
+--- a/drivers/char/pcmcia/ipwireless/main.c
++++ b/drivers/char/pcmcia/ipwireless/main.c
+@@ -92,7 +92,7 @@ static int ipwireless_probe(struct pcmcia_device *p_dev,
+ 
+ 	/* 0x40 causes it to generate level mode interrupts. */
+ 	/* 0x04 enables IREQ pin. */
+-	p_dev->conf.ConfigIndex = cfg->index | 0x44;
++	p_dev->config_index = cfg->index | 0x44;
+ 	p_dev->io_lines = 16;
+ 	ret = pcmcia_request_io(p_dev);
+ 	if (ret)
+diff --git a/drivers/char/pcmcia/synclink_cs.c b/drivers/char/pcmcia/synclink_cs.c
+index ba7ccf5..535aa08 100644
+--- a/drivers/char/pcmcia/synclink_cs.c
++++ b/drivers/char/pcmcia/synclink_cs.c
+@@ -594,8 +594,8 @@ static int mgslpc_config(struct pcmcia_device *link)
+ 	    goto failed;
+ 
+     link->conf.Attributes = CONF_ENABLE_IRQ;
+-    link->conf.ConfigIndex = 8;
+-    link->conf.Present = PRESENT_OPTION;
++    link->config_index = 8;
++    link->config_regs = PRESENT_OPTION;
+ 
+     ret = pcmcia_request_irq(link, mgslpc_isr);
+     if (ret)
+@@ -608,7 +608,7 @@ static int mgslpc_config(struct pcmcia_device *link)
+     info->irq_level = link->irq;
+ 
+     dev_info(&link->dev, "index 0x%02x:",
+-	    link->conf.ConfigIndex);
++	    link->config_index);
+     if (link->conf.Attributes & CONF_ENABLE_IRQ)
+ 	    printk(", irq %d", link->irq);
+     if (link->resource[0])
+diff --git a/drivers/ide/ide-cs.c b/drivers/ide/ide-cs.c
+index cf7cb49..07e3787 100644
+--- a/drivers/ide/ide-cs.c
++++ b/drivers/ide/ide-cs.c
+@@ -227,8 +227,7 @@ static int pcmcia_check_one_config(struct pcmcia_device *pdev,
+ 	if ((cfg->io.nwin > 0) || (dflt->io.nwin > 0)) {
+ 		cistpl_io_t *io = (cfg->io.nwin) ? &cfg->io : &dflt->io;
+ 		pdev->io_lines = io->flags & CISTPL_IO_LINES_MASK;
 -
- 	struct bcmstrbuf b;
- 	struct bcmstrbuf *strbuf = &b;
+-		pdev->conf.ConfigIndex = cfg->index;
++		pdev->config_index = cfg->index;
+ 		pdev->resource[0]->start = io->win[0].base;
+ 		if (!(io->flags & CISTPL_IO_16BIT)) {
+ 			pdev->resource[0]->flags &= ~IO_DATA_PATH_WIDTH;
+diff --git a/drivers/isdn/hardware/avm/avm_cs.c b/drivers/isdn/hardware/avm/avm_cs.c
+index 938ca41..2d8bbbf 100644
+--- a/drivers/isdn/hardware/avm/avm_cs.c
++++ b/drivers/isdn/hardware/avm/avm_cs.c
+@@ -80,8 +80,8 @@ static int avmcs_probe(struct pcmcia_device *p_dev)
  
-@@ -157,9 +155,8 @@ static int dhd_dump(dhd_pub_t *dhdp, char *buf, int buflen)
- 		    dhdp->up, dhdp->txoff, dhdp->busstate);
- 	bcm_bprintf(strbuf, "pub.hdrlen %d pub.maxctl %d pub.rxsz %d\n",
- 		    dhdp->hdrlen, dhdp->maxctl, dhdp->rxsz);
--	bcm_bprintf(strbuf, "pub.iswl %d pub.drv_version %ld pub.mac %s\n",
--		    dhdp->iswl, dhdp->drv_version, bcm_ether_ntoa(&dhdp->mac,
--								  eabuf));
-+	bcm_bprintf(strbuf, "pub.iswl %d pub.drv_version %ld pub.mac %pM\n",
-+		    dhdp->iswl, dhdp->drv_version, &dhdp->mac);
- 	bcm_bprintf(strbuf, "pub.bcmerror %d tickcnt %d\n", dhdp->bcmerror,
- 		    dhdp->tickcnt);
+     /* General socket configuration */
+     p_dev->conf.Attributes = CONF_ENABLE_IRQ;
+-    p_dev->conf.ConfigIndex = 1;
+-    p_dev->conf.Present = PRESENT_OPTION;
++    p_dev->config_index = 1;
++    p_dev->config_regs = PRESENT_OPTION;
  
-@@ -600,13 +597,7 @@ static void wl_show_host_event(wl_event_msg_t *event, void *event_data)
- 	auth_type = ntoh32(event->auth_type);
- 	datalen = ntoh32(event->datalen);
- 	/* debug dump of event messages */
--	sprintf(eabuf, "%02x:%02x:%02x:%02x:%02x:%02x",
--		(unsigned char) event->addr.octet[0] & 0xff,
--		(unsigned char) event->addr.octet[1] & 0xff,
--		(unsigned char) event->addr.octet[2] & 0xff,
--		(unsigned char) event->addr.octet[3] & 0xff,
--		(unsigned char) event->addr.octet[4] & 0xff,
--		(unsigned char) event->addr.octet[5] & 0xff);
-+	sprintf(eabuf, "%pM", event->addr.octet);
+     return avmcs_config(p_dev);
+ } /* avmcs_attach */
+diff --git a/drivers/isdn/hisax/avma1_cs.c b/drivers/isdn/hisax/avma1_cs.c
+index 7d5ff20..e25f6c7 100644
+--- a/drivers/isdn/hisax/avma1_cs.c
++++ b/drivers/isdn/hisax/avma1_cs.c
+@@ -85,8 +85,8 @@ static int __devinit avma1cs_probe(struct pcmcia_device *p_dev)
  
- 	event_name = "UNKNOWN";
- 	for (i = 0; i < ARRAY_SIZE(event_names); i++) {
-diff --git a/drivers/staging/brcm80211/brcmfmac/wl_cfg80211.c b/drivers/staging/brcm80211/brcmfmac/wl_cfg80211.c
-index e9920e5..139c20e 100644
---- a/drivers/staging/brcm80211/brcmfmac/wl_cfg80211.c
-+++ b/drivers/staging/brcm80211/brcmfmac/wl_cfg80211.c
-@@ -2006,16 +2006,12 @@ static __used s32
- wl_update_pmklist(struct net_device *dev, struct wl_pmk_list *pmk_list,
- 		  s32 err)
- {
--	s8 eabuf[ETHER_ADDR_STR_LEN];
- 	int i, j;
+     /* General socket configuration */
+     p_dev->conf.Attributes = CONF_ENABLE_IRQ;
+-    p_dev->conf.ConfigIndex = 1;
+-    p_dev->conf.Present = PRESENT_OPTION;
++    p_dev->config_index = 1;
++    p_dev->config_regs = PRESENT_OPTION;
  
--	memset(eabuf, 0, ETHER_ADDR_STR_LEN);
--
- 	WL_DBG(("No of elements %d\n", pmk_list->pmkids.npmkid));
- 	for (i = 0; i < pmk_list->pmkids.npmkid; i++) {
--		WL_DBG(("PMKID[%d]: %s =\n", i,
--			bcm_ether_ntoa(&pmk_list->pmkids.pmkid[i].BSSID,
--				       eabuf)));
-+		WL_DBG(("PMKID[%d]: %pM =\n", i,
-+			&pmk_list->pmkids.pmkid[i].BSSID));
- 		for (j = 0; j < WPA2_PMKID_LEN; j++) {
- 			WL_DBG(("%02x\n", pmk_list->pmkids.pmkid[i].PMKID[j]));
- 		}
-@@ -2033,12 +2029,10 @@ wl_cfg80211_set_pmksa(struct wiphy *wiphy, struct net_device *dev,
- 		      struct cfg80211_pmksa *pmksa)
- {
- 	struct wl_priv *wl = wiphy_to_wl(wiphy);
--	s8 eabuf[ETHER_ADDR_STR_LEN];
- 	s32 err = 0;
- 	int i;
+     return avma1cs_config(p_dev);
+ } /* avma1cs_attach */
+diff --git a/drivers/isdn/hisax/elsa_cs.c b/drivers/isdn/hisax/elsa_cs.c
+index df360c8..f276e84 100644
+--- a/drivers/isdn/hisax/elsa_cs.c
++++ b/drivers/isdn/hisax/elsa_cs.c
+@@ -211,7 +211,7 @@ static int __devinit elsa_cs_config(struct pcmcia_device *link)
  
- 	CHECK_SYS_UP();
--	memset(eabuf, 0, ETHER_ADDR_STR_LEN);
- 	for (i = 0; i < wl->pmk_list->pmkids.npmkid; i++)
- 		if (!memcmp(pmksa->bssid, &wl->pmk_list->pmkids.pmkid[i].BSSID,
- 			    ETHER_ADDR_LEN))
-@@ -2053,10 +2047,8 @@ wl_cfg80211_set_pmksa(struct wiphy *wiphy, struct net_device *dev,
- 	} else {
- 		err = -EINVAL;
- 	}
--	WL_DBG(("set_pmksa,IW_PMKSA_ADD - PMKID: %s =\n",
--		bcm_ether_ntoa(&wl->pmk_list->pmkids.
--			       pmkid[wl->pmk_list->pmkids.npmkid].BSSID,
--			       eabuf)));
-+	WL_DBG(("set_pmksa,IW_PMKSA_ADD - PMKID: %pM =\n",
-+		&wl->pmk_list->pmkids.pmkid[wl->pmk_list->pmkids.npmkid].BSSID));
- 	for (i = 0; i < WPA2_PMKID_LEN; i++) {
- 		WL_DBG(("%02x\n",
- 			wl->pmk_list->pmkids.pmkid[wl->pmk_list->pmkids.npmkid].
-@@ -2073,18 +2065,16 @@ wl_cfg80211_del_pmksa(struct wiphy *wiphy, struct net_device *dev,
- 		      struct cfg80211_pmksa *pmksa)
- {
- 	struct wl_priv *wl = wiphy_to_wl(wiphy);
--	s8 eabuf[ETHER_ADDR_STR_LEN];
- 	struct _pmkid_list pmkid;
- 	s32 err = 0;
- 	int i;
+     /* Finally, report what we've done */
+     dev_info(&link->dev, "index 0x%02x: ",
+-	    link->conf.ConfigIndex);
++	    link->config_index);
+     if (link->conf.Attributes & CONF_ENABLE_IRQ)
+ 	printk(", irq %d", link->irq);
+     if (link->resource[0])
+diff --git a/drivers/isdn/hisax/sedlbauer_cs.c b/drivers/isdn/hisax/sedlbauer_cs.c
+index 169061f..43d0a4e 100644
+--- a/drivers/isdn/hisax/sedlbauer_cs.c
++++ b/drivers/isdn/hisax/sedlbauer_cs.c
+@@ -253,7 +253,7 @@ static int __devinit sedlbauer_config(struct pcmcia_device *link)
  
- 	CHECK_SYS_UP();
--	memset(eabuf, 0, ETHER_ADDR_STR_LEN);
- 	memcpy(&pmkid.pmkid[0].BSSID, pmksa->bssid, ETHER_ADDR_LEN);
- 	memcpy(&pmkid.pmkid[0].PMKID, pmksa->pmkid, WPA2_PMKID_LEN);
+     /* Finally, report what we've done */
+     dev_info(&link->dev, "index 0x%02x:",
+-	   link->conf.ConfigIndex);
++	   link->config_index);
+     if (link->vpp)
+ 	printk(", Vpp %d.%d", link->vpp/10, link->vpp%10);
+     if (link->conf.Attributes & CONF_ENABLE_IRQ)
+diff --git a/drivers/isdn/hisax/teles_cs.c b/drivers/isdn/hisax/teles_cs.c
+index 46e72a1..614afc6 100644
+--- a/drivers/isdn/hisax/teles_cs.c
++++ b/drivers/isdn/hisax/teles_cs.c
+@@ -191,7 +191,7 @@ static int __devinit teles_cs_config(struct pcmcia_device *link)
  
--	WL_DBG(("del_pmksa,IW_PMKSA_REMOVE - PMKID: %s =\n",
--		bcm_ether_ntoa(&pmkid.pmkid[0].BSSID, eabuf)));
-+	WL_DBG(("del_pmksa,IW_PMKSA_REMOVE - PMKID: %pM =\n",
-+		&pmkid.pmkid[0].BSSID));
- 	for (i = 0; i < WPA2_PMKID_LEN; i++) {
- 		WL_DBG(("%02x\n", pmkid.pmkid[0].PMKID[i]));
- 	}
-@@ -2585,10 +2575,7 @@ static s32 wl_update_bss_info(struct wl_priv *wl)
- 		if (unlikely(err))
- 			goto update_bss_info_out;
- 	} else {
--		WL_DBG(("Found the AP in the list - "
--			"BSSID %02x:%02x:%02x:%02x:%02x:%02x\n",
--			bss->bssid[0], bss->bssid[1], bss->bssid[2],
--			bss->bssid[3], bss->bssid[4], bss->bssid[5]));
-+		WL_DBG(("Found the AP in the list - BSSID %pM\n", bss->bssid));
- 		cfg80211_put_bss(bss);
+     /* Finally, report what we've done */
+     dev_info(&link->dev, "index 0x%02x:",
+-	    link->conf.ConfigIndex);
++	    link->config_index);
+     if (link->conf.Attributes & CONF_ENABLE_IRQ)
+ 	    printk(", irq %d", link->irq);
+     if (link->resource[0])
+diff --git a/drivers/mtd/maps/pcmciamtd.c b/drivers/mtd/maps/pcmciamtd.c
+index 663b48b..99c7257 100644
+--- a/drivers/mtd/maps/pcmciamtd.c
++++ b/drivers/mtd/maps/pcmciamtd.c
+@@ -575,7 +575,7 @@ static int pcmciamtd_config(struct pcmcia_device *link)
+ 		link->vpp = 0;
  	}
  
-diff --git a/drivers/staging/brcm80211/brcmfmac/wl_iw.c b/drivers/staging/brcm80211/brcmfmac/wl_iw.c
-index 8343f7e..632c29e 100644
---- a/drivers/staging/brcm80211/brcmfmac/wl_iw.c
-+++ b/drivers/staging/brcm80211/brcmfmac/wl_iw.c
-@@ -800,9 +800,8 @@ wl_iw_set_wap(struct net_device *dev,
+-	link->conf.ConfigIndex = 0;
++	link->config_index = 0;
+ 	DEBUG(2, "Setting Configuration");
+ 	ret = pcmcia_request_configuration(link, &link->conf);
+ 	if (ret != 0) {
+diff --git a/drivers/net/pcmcia/3c574_cs.c b/drivers/net/pcmcia/3c574_cs.c
+index 41ecb27..4b670b3 100644
+--- a/drivers/net/pcmcia/3c574_cs.c
++++ b/drivers/net/pcmcia/3c574_cs.c
+@@ -281,7 +281,7 @@ static int tc574_probe(struct pcmcia_device *link)
+ 	link->resource[0]->end = 32;
+ 	link->resource[0]->flags |= IO_DATA_PATH_WIDTH_16;
+ 	link->conf.Attributes = CONF_ENABLE_IRQ;
+-	link->conf.ConfigIndex = 1;
++	link->config_index = 1;
+ 
+ 	dev->netdev_ops = &el3_netdev_ops;
+ 	SET_ETHTOOL_OPS(dev, &netdev_ethtool_ops);
+diff --git a/drivers/net/pcmcia/3c589_cs.c b/drivers/net/pcmcia/3c589_cs.c
+index 6888672..6549e2c 100644
+--- a/drivers/net/pcmcia/3c589_cs.c
++++ b/drivers/net/pcmcia/3c589_cs.c
+@@ -217,7 +217,7 @@ static int tc589_probe(struct pcmcia_device *link)
+     link->resource[0]->flags |= IO_DATA_PATH_WIDTH_16;
+ 
+     link->conf.Attributes = CONF_ENABLE_IRQ;
+-    link->conf.ConfigIndex = 1;
++    link->config_index = 1;
+ 
+     dev->netdev_ops = &el3_netdev_ops;
+     dev->watchdog_timeo = TX_TIMEOUT;
+diff --git a/drivers/net/pcmcia/axnet_cs.c b/drivers/net/pcmcia/axnet_cs.c
+index 4d4928a..2c273ce 100644
+--- a/drivers/net/pcmcia/axnet_cs.c
++++ b/drivers/net/pcmcia/axnet_cs.c
+@@ -230,7 +230,7 @@ static int get_prom(struct pcmcia_device *link)
+     };
+ 
+     /* Not much of a test, but the alternatives are messy */
+-    if (link->conf.ConfigBase != 0x03c0)
++    if (link->config_base != 0x03c0)
+ 	return 0;
+ 
+     axnet_reset_8390(dev);
+@@ -297,7 +297,7 @@ static int axnet_configcheck(struct pcmcia_device *p_dev,
+ 	if (cfg->index == 0 || cfg->io.nwin == 0)
+ 		return -ENODEV;
+ 
+-	p_dev->conf.ConfigIndex = 0x05;
++	p_dev->config_index = 0x05;
+ 	/* For multifunction cards, by convention, we configure the
+ 	   network function with window 0, and serial with window 1 */
+ 	if (io->nwin > 1) {
+@@ -325,7 +325,7 @@ static int axnet_config(struct pcmcia_device *link)
+     dev_dbg(&link->dev, "axnet_config(0x%p)\n", link);
+ 
+     /* don't trust the CIS on this; Linksys got it wrong */
+-    link->conf.Present = 0x63;
++    link->config_regs = 0x63;
+     ret = pcmcia_loop_config(link, axnet_configcheck, NULL);
+     if (ret != 0)
+ 	goto failed;
+diff --git a/drivers/net/pcmcia/fmvj18x_cs.c b/drivers/net/pcmcia/fmvj18x_cs.c
+index caf2b2e..23f5333 100644
+--- a/drivers/net/pcmcia/fmvj18x_cs.c
++++ b/drivers/net/pcmcia/fmvj18x_cs.c
+@@ -312,7 +312,7 @@ static int ungermann_try_io_port(struct pcmcia_device *link)
+ 	ret = pcmcia_request_io(link);
+ 	if (ret == 0) {
+ 	    /* calculate ConfigIndex value */
+-	    link->conf.ConfigIndex = 
++	    link->config_index =
+ 		((link->resource[0]->start & 0x0f0) >> 3) | 0x22;
+ 	    return ret;
  	}
- 
- 	if (g_ssid.SSID_len) {
--		WL_TRACE(("%s: join SSID=%s BSSID=" MACSTR " ch=%d\n",
--			  __func__, g_ssid.SSID,
--			  MAC2STR((u8 *) awrq->sa_data),
-+		WL_TRACE(("%s: join SSID=%s BSSID=%pM ch=%d\n",
-+			  __func__, g_ssid.SSID, awrq->sa_data,
- 			  g_wl_iw_params.target_channel));
+@@ -361,28 +361,28 @@ static int fmvj18x_config(struct pcmcia_device *link)
+ 		link->card_id == PRODID_TDK_NP9610 ||
+ 		link->card_id == PRODID_TDK_MN3200) {
+ 		/* MultiFunction Card */
+-		link->conf.ConfigBase = 0x800;
+-		link->conf.ConfigIndex = 0x47;
++		link->config_base = 0x800;
++		link->config_index = 0x47;
+ 		link->resource[1]->end = 8;
+ 	    }
+ 	    break;
+ 	case MANFID_NEC:
+ 	    cardtype = NEC; /* MultiFunction Card */
+-	    link->conf.ConfigBase = 0x800;
+-	    link->conf.ConfigIndex = 0x47;
++	    link->config_base = 0x800;
++	    link->config_index = 0x47;
+ 	    link->resource[1]->end = 8;
+ 	    break;
+ 	case MANFID_KME:
+ 	    cardtype = KME; /* MultiFunction Card */
+-	    link->conf.ConfigBase = 0x800;
+-	    link->conf.ConfigIndex = 0x47;
++	    link->config_base = 0x800;
++	    link->config_index = 0x47;
+ 	    link->resource[1]->end = 8;
+ 	    break;
+ 	case MANFID_CONTEC:
+ 	    cardtype = CONTEC;
+ 	    break;
+ 	case MANFID_FUJITSU:
+-	    if (link->conf.ConfigBase == 0x0fe0)
++	    if (link->config_base == 0x0fe0)
+ 		cardtype = MBH10302;
+ 	    else if (link->card_id == PRODID_FUJITSU_MBH10302) 
+                 /* RATOC REX-5588/9822/4886's PRODID are 0004(=MBH10302),
+@@ -402,10 +402,10 @@ static int fmvj18x_config(struct pcmcia_device *link)
+ 	case MANFID_FUJITSU:
+ 	    if (link->card_id == PRODID_FUJITSU_MBH10304) {
+ 		cardtype = XXX10304;    /* MBH10304 with buggy CIS */
+-	        link->conf.ConfigIndex = 0x20;
++		link->config_index = 0x20;
+ 	    } else {
+ 		cardtype = MBH10302;    /* NextCom NC5310, etc. */
+-		link->conf.ConfigIndex = 1;
++		link->config_index = 1;
+ 	    }
+ 	    break;
+ 	case MANFID_UNGERMANN:
+@@ -413,7 +413,7 @@ static int fmvj18x_config(struct pcmcia_device *link)
+ 	    break;
+ 	default:
+ 	    cardtype = MBH10302;
+-	    link->conf.ConfigIndex = 1;
++	    link->config_index = 1;
  	}
+     }
  
-@@ -2638,14 +2637,12 @@ wl_iw_set_pmksa(struct net_device *dev,
- 	struct iw_pmksa *iwpmksa;
- 	uint i;
- 	int ret = 0;
--	char eabuf[ETHER_ADDR_STR_LEN];
+diff --git a/drivers/net/pcmcia/ibmtr_cs.c b/drivers/net/pcmcia/ibmtr_cs.c
+index 1327f08..feedeeb 100644
+--- a/drivers/net/pcmcia/ibmtr_cs.c
++++ b/drivers/net/pcmcia/ibmtr_cs.c
+@@ -153,7 +153,7 @@ static int __devinit ibmtr_attach(struct pcmcia_device *link)
+     link->resource[0]->flags |= IO_DATA_PATH_WIDTH_8;
+     link->resource[0]->end = 4;
+     link->conf.Attributes = CONF_ENABLE_IRQ;
+-    link->conf.Present = PRESENT_OPTION;
++    link->config_regs = PRESENT_OPTION;
  
- 	WL_WSEC(("%s: SIOCSIWPMKSA\n", dev->name));
+     info->dev = dev;
  
- 	CHECK_EXTRA_FOR_NULL(extra);
+@@ -212,8 +212,8 @@ static int __devinit ibmtr_config(struct pcmcia_device *link)
  
- 	iwpmksa = (struct iw_pmksa *)extra;
--	bzero((char *)eabuf, ETHER_ADDR_STR_LEN);
+     dev_dbg(&link->dev, "ibmtr_config\n");
  
- 	if (iwpmksa->cmd == IW_PMKSA_FLUSH) {
- 		WL_WSEC(("wl_iw_set_pmksa - IW_PMKSA_FLUSH\n"));
-@@ -2663,8 +2660,8 @@ wl_iw_set_pmksa(struct net_device *dev,
- 			bcopy(&iwpmksa->pmkid[0], &pmkidptr->pmkid[0].PMKID,
- 			      WPA2_PMKID_LEN);
+-    link->conf.ConfigIndex = 0x61;
+     link->io_lines = 16;
++    link->config_index = 0x61;
  
--			WL_WSEC(("wl_iw_set_pmksa:IW_PMKSA_REMOVE:PMKID: %s = ",
--			bcm_ether_ntoa(&pmkidptr->pmkid[0].BSSID, eabuf)));
-+			WL_WSEC(("wl_iw_set_pmksa:IW_PMKSA_REMOVE:PMKID: "
-+				"%pM = ", &pmkidptr->pmkid[0].BSSID));
- 			for (j = 0; j < WPA2_PMKID_LEN; j++)
- 				WL_WSEC(("%02x ", pmkidptr->pmkid[0].PMKID[j]));
- 			WL_WSEC(("\n"));
-@@ -2713,9 +2710,8 @@ wl_iw_set_pmksa(struct net_device *dev,
- 			uint j;
- 			uint k;
- 			k = pmkid_list.pmkids.npmkid;
--			WL_WSEC(("wl_iw_set_pmksa,IW_PMKSA_ADD - PMKID: %s = ",
--				 bcm_ether_ntoa(&pmkid_list.pmkids.pmkid[k].
--						BSSID, eabuf)));
-+			WL_WSEC(("wl_iw_set_pmksa,IW_PMKSA_ADD - PMKID: %pM = ",
-+				&pmkid_list.pmkids.pmkid[k].BSSID));
- 			for (j = 0; j < WPA2_PMKID_LEN; j++)
- 				WL_WSEC(("%02x ",
- 					 pmkid_list.pmkids.pmkid[k].PMKID[j]));
-@@ -2726,9 +2722,8 @@ wl_iw_set_pmksa(struct net_device *dev,
- 		 pmkid_list.pmkids.npmkid));
- 	for (i = 0; i < pmkid_list.pmkids.npmkid; i++) {
- 		uint j;
--		WL_WSEC(("PMKID[%d]: %s = ", i,
--			 bcm_ether_ntoa(&pmkid_list.pmkids.pmkid[i].BSSID,
--					eabuf)));
-+		WL_WSEC(("PMKID[%d]: %pM = ", i,
-+			&pmkid_list.pmkids.pmkid[i].BSSID));
- 		for (j = 0; j < WPA2_PMKID_LEN; j++)
- 			WL_WSEC(("%02x ", pmkid_list.pmkids.pmkid[i].PMKID[j]));
- 		WL_WSEC(("\n"));
-diff --git a/drivers/staging/brcm80211/brcmfmac/wl_iw.h b/drivers/staging/brcm80211/brcmfmac/wl_iw.h
-index d15abc0..e8e9144 100644
---- a/drivers/staging/brcm80211/brcmfmac/wl_iw.h
-+++ b/drivers/staging/brcm80211/brcmfmac/wl_iw.h
-@@ -42,9 +42,6 @@
- #define PNOENABLE_SET_CMD			"PNOFORCE"
- #define PNODEBUG_SET_CMD			"PNODEBUG"
+     /* Determine if this is PRIMARY or ALTERNATE. */
  
--#define MAC2STR(a) (a)[0], (a)[1], (a)[2], (a)[3], (a)[4], (a)[5]
--#define MACSTR "%02x:%02x:%02x:%02x:%02x:%02x"
--
- typedef struct wl_iw_extra_params {
- 	int target_channel;
- } wl_iw_extra_params_t;
-diff --git a/drivers/staging/brcm80211/include/bcmutils.h b/drivers/staging/brcm80211/include/bcmutils.h
-index 504ff65..5844d36 100644
---- a/drivers/staging/brcm80211/include/bcmutils.h
-+++ b/drivers/staging/brcm80211/include/bcmutils.h
-@@ -163,7 +163,6 @@
- #define	PKTPRIO_DSCP	0x800	/* DSCP prio found */
+diff --git a/drivers/net/pcmcia/nmclan_cs.c b/drivers/net/pcmcia/nmclan_cs.c
+index 90d1728..98c4a69 100644
+--- a/drivers/net/pcmcia/nmclan_cs.c
++++ b/drivers/net/pcmcia/nmclan_cs.c
+@@ -461,8 +461,8 @@ static int nmclan_probe(struct pcmcia_device *link)
+     link->resource[0]->end = 32;
+     link->resource[0]->flags |= IO_DATA_PATH_WIDTH_AUTO;
+     link->conf.Attributes = CONF_ENABLE_IRQ;
+-    link->conf.ConfigIndex = 1;
+-    link->conf.Present = PRESENT_OPTION;
++    link->config_index = 1;
++    link->config_regs = PRESENT_OPTION;
  
- /* ethernet address */
--	extern char *bcm_ether_ntoa(const struct ether_addr *ea, char *buf);
- 	extern int bcm_ether_atoe(char *p, struct ether_addr *ea);
+     lp->tx_free_frames=AM2150_MAX_TX_FRAMES;
  
- /* ip address */
-@@ -427,7 +426,6 @@
- /* Check that bcm_tlv_t fits into the given buflen */
- #define bcm_valid_tlv(elt, buflen) ((buflen) >= 2 && (int)(buflen) >= (int)(2 + (elt)->len))
+diff --git a/drivers/net/pcmcia/pcnet_cs.c b/drivers/net/pcmcia/pcnet_cs.c
+index 6913576..68c4675 100644
+--- a/drivers/net/pcmcia/pcnet_cs.c
++++ b/drivers/net/pcmcia/pcnet_cs.c
+@@ -420,7 +420,7 @@ static hw_info_t *get_ax88190(struct pcmcia_device *link)
+     int i, j;
  
--/* buffer length for ethernet address from bcm_ether_ntoa() */
- #define ETHER_ADDR_STR_LEN	18	/* 18-bytes of Ethernet address buffer length */
+     /* Not much of a test, but the alternatives are messy */
+-    if (link->conf.ConfigBase != 0x03c0)
++    if (link->config_base != 0x03c0)
+ 	return NULL;
  
- /* crypto utility function */
-diff --git a/drivers/staging/brcm80211/sys/wl_mac80211.c b/drivers/staging/brcm80211/sys/wl_mac80211.c
-index 0e32209..8aec7f1 100644
---- a/drivers/staging/brcm80211/sys/wl_mac80211.c
-+++ b/drivers/staging/brcm80211/sys/wl_mac80211.c
-@@ -484,11 +484,8 @@ wl_ops_bss_info_changed(struct ieee80211_hw *hw,
- 		/* Beacon interval changed */
- 	}
- 	if (changed & BSS_CHANGED_BSSID) {
--		/* char eabuf[ETHER_ADDR_STR_LEN]; */
--		WL_NONE(("new BSSID:\taid %d  bss:%s\n",
--			 info->aid,
--			 bcm_ether_ntoa((struct ether_addr *)info->bssid,
--					eabuf)));
-+		WL_NONE(("new BSSID:\taid %d  bss:%pM\n", info->aid,
-+			info->bssid));
- 		/* BSSID changed, for whatever reason (IBSS and managed mode) */
- 		/* FIXME: need to store bssid in bsscfg */
- 		wlc_set_addrmatch(wl->wlc, RCM_BSSID_OFFSET,
-diff --git a/drivers/staging/brcm80211/sys/wlc_mac80211.c b/drivers/staging/brcm80211/sys/wlc_mac80211.c
-index badc33d..d3c76df 100644
---- a/drivers/staging/brcm80211/sys/wlc_mac80211.c
-+++ b/drivers/staging/brcm80211/sys/wlc_mac80211.c
-@@ -7215,9 +7215,6 @@ void BCMFASTPATH wlc_recv(wlc_info_t *wlc, void *p)
- 	u16 fc;
- 	uint len;
- 	bool is_amsdu;
--#ifdef BCMDBG
--	char eabuf[ETHER_ADDR_STR_LEN];
--#endif
+     outb_p(0x01, ioaddr + EN0_DCFG);	/* Set word-wide access. */
+@@ -564,7 +564,7 @@ static hw_info_t *pcnet_try_config(struct pcmcia_device *link,
  
- 	WL_TRACE(("wl%d: wlc_recv\n", wlc->pub->unit));
+ 	if ((link->manf_id == MANFID_IBM) &&
+ 	    (link->card_id == PRODID_IBM_HOME_AND_AWAY))
+-		link->conf.ConfigIndex |= 0x10;
++		link->config_index |= 0x10;
  
-@@ -7271,7 +7268,9 @@ void BCMFASTPATH wlc_recv(wlc_info_t *wlc, void *p)
- 		/* CTS and ACK CTL frames are w/o a2 */
- 		if (FC_TYPE(fc) == FC_TYPE_DATA || FC_TYPE(fc) == FC_TYPE_MNG) {
- 			if ((ETHER_ISNULLADDR(&h->a2) || ETHER_ISMULTI(&h->a2))) {
--				WL_ERROR(("wl%d: %s: dropping a frame with invalid" " src mac address, a2: %s\n", wlc->pub->unit, __func__, bcm_ether_ntoa(&h->a2, eabuf)));
-+				WL_ERROR(("wl%d: %s: dropping a frame with "
-+					"invalid src mac address, a2: %pM\n",
-+					wlc->pub->unit, __func__, &h->a2));
- 				WLCNTINCR(wlc->pub->_cnt->rxbadsrcmac);
- 				goto toss;
- 			}
-diff --git a/drivers/staging/brcm80211/util/bcmsrom.c b/drivers/staging/brcm80211/util/bcmsrom.c
-index 1c02c92..f5212a0 100644
---- a/drivers/staging/brcm80211/util/bcmsrom.c
-+++ b/drivers/staging/brcm80211/util/bcmsrom.c
-@@ -504,10 +504,8 @@ int srom_parsecis(osl_t *osh, u8 *pcis[], uint ciscnt, char **vars, uint *count)
- 					    && !(ETHER_ISMULTI(&cis[i + 2]))) {
- 						ASSERT(cis[i + 1] ==
- 						       ETHER_ADDR_LEN);
--						bcm_ether_ntoa(
--							(struct ether_addr *)
--							       &cis[i + 2],
--							       eabuf);
-+						snprintf(eabuf, sizeof(eabuf),
-+							"%pM", &cis[i + 2]);
+ 	ret = pcmcia_request_configuration(link, &link->conf);
+ 	if (ret)
+@@ -581,7 +581,7 @@ static hw_info_t *pcnet_try_config(struct pcmcia_device *link,
+ 	} else
+ 		dev->if_port = 0;
  
- 						/* set boardnum if HNBU_BOARDNUM not seen yet */
- 						if (boardnum == -1)
-@@ -976,10 +974,8 @@ int srom_parsecis(osl_t *osh, u8 *pcis[], uint ciscnt, char **vars, uint *count)
- 				case HNBU_MACADDR:
- 					if (!(ETHER_ISNULLADDR(&cis[i + 1])) &&
- 					    !(ETHER_ISMULTI(&cis[i + 1]))) {
--						bcm_ether_ntoa(
--							(struct ether_addr *)
--							       &cis[i + 1],
--							       eabuf);
-+						snprintf(eabuf, sizeof(eabuf),
-+							"%pM", &cis[i + 1]);
+-	if ((link->conf.ConfigBase == 0x03c0) &&
++	if ((link->config_base == 0x03c0) &&
+ 	    (link->manf_id == 0x149) && (link->card_id == 0xc1ab)) {
+ 		dev_info(&link->dev,
+ 			"this is an AX88190 card - use axnet_cs instead.\n");
+diff --git a/drivers/net/pcmcia/smc91c92_cs.c b/drivers/net/pcmcia/smc91c92_cs.c
+index 2c2a878..59f5034 100644
+--- a/drivers/net/pcmcia/smc91c92_cs.c
++++ b/drivers/net/pcmcia/smc91c92_cs.c
+@@ -411,9 +411,9 @@ static int mhz_3288_power(struct pcmcia_device *link)
+     mdelay(200);
  
- 						/* set boardnum if HNBU_BOARDNUM not seen yet */
- 						if (boardnum == -1)
-@@ -1728,7 +1724,6 @@ static void _initvars_srom_pci(u8 sromrev, u16 *srom, uint off, varbuf_t *b)
- 			continue;
+     /* Now read and write the COR... */
+-    tmp = readb(smc->base + link->conf.ConfigBase + CISREG_COR);
++    tmp = readb(smc->base + link->config_base + CISREG_COR);
+     udelay(5);
+-    writeb(tmp, smc->base + link->conf.ConfigBase + CISREG_COR);
++    writeb(tmp, smc->base + link->config_base + CISREG_COR);
  
- 		if (flags & SRFL_ETHADDR) {
--			char eabuf[ETHER_ADDR_STR_LEN];
- 			struct ether_addr ea;
- 
- 			ea.octet[0] = (srom[srv->off - off] >> 8) & 0xff;
-@@ -1737,9 +1732,8 @@ static void _initvars_srom_pci(u8 sromrev, u16 *srom, uint off, varbuf_t *b)
- 			ea.octet[3] = srom[srv->off + 1 - off] & 0xff;
- 			ea.octet[4] = (srom[srv->off + 2 - off] >> 8) & 0xff;
- 			ea.octet[5] = srom[srv->off + 2 - off] & 0xff;
--			bcm_ether_ntoa(&ea, eabuf);
- 
--			varbuf_append(b, "%s=%s", name, eabuf);
-+			varbuf_append(b, "%s=%pM", name, ea.octet);
- 		} else {
- 			ASSERT(mask_valid(srv->mask));
- 			ASSERT(mask_width(srv->mask));
-diff --git a/drivers/staging/brcm80211/util/bcmutils.c b/drivers/staging/brcm80211/util/bcmutils.c
-index 02d76d6..c4c0136 100644
---- a/drivers/staging/brcm80211/util/bcmutils.c
-+++ b/drivers/staging/brcm80211/util/bcmutils.c
-@@ -358,12 +358,6 @@ int bcm_ether_atoe(char *p, struct ether_addr *ea)
- 	return i == 6;
+     return 0;
  }
+@@ -464,7 +464,7 @@ static int mhz_mfc_config(struct pcmcia_device *link)
  
--char *bcm_ether_ntoa(const struct ether_addr *ea, char *buf)
--{
--	snprintf(buf, 18, "%pM", ea->octet);
--	return buf;
--}
+     smc->base = ioremap(link->resource[2]->start,
+ 		    resource_size(link->resource[2]));
+-    offset = (smc->manfid == MANFID_MOTOROLA) ? link->conf.ConfigBase : 0;
++    offset = (smc->manfid == MANFID_MOTOROLA) ? link->config_base : 0;
+     i = pcmcia_map_mem_page(link, link->resource[2], offset);
+     if ((i == 0) &&
+ 	(smc->manfid == MANFID_MEGAHERTZ) &&
+@@ -643,8 +643,8 @@ static int osi_config(struct pcmcia_device *link)
+     link->resource[1]->end = 8;
+ 
+     /* Enable Hard Decode, LAN, Modem */
+-    link->conf.ConfigIndex = 0x23;
+     link->io_lines = 16;
++    link->config_index = 0x23;
+ 
+     for (i = j = 0; j < 4; j++) {
+ 	link->resource[1]->start = com[j];
+@@ -654,7 +654,7 @@ static int osi_config(struct pcmcia_device *link)
+     }
+     if (i != 0) {
+ 	/* Fallback: turn off hard decode */
+-	link->conf.ConfigIndex = 0x03;
++	link->config_index = 0x03;
+ 	link->resource[1]->end = 0;
+ 	i = pcmcia_request_io(link);
+     }
+diff --git a/drivers/net/pcmcia/xirc2ps_cs.c b/drivers/net/pcmcia/xirc2ps_cs.c
+index 1776f49..1c8ebf2 100644
+--- a/drivers/net/pcmcia/xirc2ps_cs.c
++++ b/drivers/net/pcmcia/xirc2ps_cs.c
+@@ -530,7 +530,7 @@ xirc2ps_probe(struct pcmcia_device *link)
+ 
+     /* General socket configuration */
+     link->conf.Attributes = CONF_ENABLE_IRQ;
+-    link->conf.ConfigIndex = 1;
++    link->config_index = 1;
+ 
+     /* Fill in card specific entries */
+     dev->netdev_ops = &netdev_ops;
+diff --git a/drivers/net/wireless/airo_cs.c b/drivers/net/wireless/airo_cs.c
+index ccb2fdd..40f9ed7 100644
+--- a/drivers/net/wireless/airo_cs.c
++++ b/drivers/net/wireless/airo_cs.c
+@@ -240,7 +240,7 @@ static int airo_config(struct pcmcia_device *link)
+ 
+ 	/* Finally, report what we've done */
+ 	dev_info(&link->dev, "index 0x%02x: ",
+-	       link->conf.ConfigIndex);
++	       link->config_index);
+ 	if (link->vpp)
+ 		printk(", Vpp %d.%d", link->vpp/10, link->vpp%10);
+ 	printk(", irq %d", link->irq);
+diff --git a/drivers/net/wireless/hostap/hostap_cs.c b/drivers/net/wireless/hostap/hostap_cs.c
+index 0fe6f82..5704d3f 100644
+--- a/drivers/net/wireless/hostap/hostap_cs.c
++++ b/drivers/net/wireless/hostap/hostap_cs.c
+@@ -601,7 +601,7 @@ static int prism2_config(struct pcmcia_device *link)
+ 
+ 	/* Finally, report what we've done */
+ 	printk(KERN_INFO "%s: index 0x%02x: ",
+-	       dev_info, link->conf.ConfigIndex);
++	       dev_info, link->config_index);
+ 	if (link->vpp)
+ 		printk(", Vpp %d.%d", link->vpp / 10,
+ 		       link->vpp % 10);
+diff --git a/drivers/net/wireless/ray_cs.c b/drivers/net/wireless/ray_cs.c
+index 30cfd88..7fb66cc 100644
+--- a/drivers/net/wireless/ray_cs.c
++++ b/drivers/net/wireless/ray_cs.c
+@@ -319,7 +319,7 @@ static int ray_probe(struct pcmcia_device *p_dev)
+ 
+ 	/* General socket configuration */
+ 	p_dev->conf.Attributes = CONF_ENABLE_IRQ;
+-	p_dev->conf.ConfigIndex = 1;
++	p_dev->config_index = 1;
+ 
+ 	p_dev->priv = dev;
+ 
+diff --git a/drivers/net/wireless/wl3501_cs.c b/drivers/net/wireless/wl3501_cs.c
+index 92a9ad5..3947cf8 100644
+--- a/drivers/net/wireless/wl3501_cs.c
++++ b/drivers/net/wireless/wl3501_cs.c
+@@ -1889,7 +1889,7 @@ static int wl3501_probe(struct pcmcia_device *p_dev)
+ 
+ 	/* General socket configuration */
+ 	p_dev->conf.Attributes	= CONF_ENABLE_IRQ;
+-	p_dev->conf.ConfigIndex	= 1;
++	p_dev->config_index	= 1;
+ 
+ 	dev = alloc_etherdev(sizeof(struct wl3501_card));
+ 	if (!dev)
+diff --git a/drivers/parport/parport_cs.c b/drivers/parport/parport_cs.c
+index afd946e..8faf634 100644
+--- a/drivers/parport/parport_cs.c
++++ b/drivers/parport/parport_cs.c
+@@ -144,7 +144,7 @@ static int parport_config_check(struct pcmcia_device *p_dev,
+ 		cistpl_io_t *io = (cfg->io.nwin) ? &cfg->io : &dflt->io;
+ 		p_dev->io_lines = io->flags & CISTPL_IO_LINES_MASK;
+ 		if (epp_mode)
+-			p_dev->conf.ConfigIndex |= FORCE_EPP_MODE;
++			p_dev->config_index |= FORCE_EPP_MODE;
+ 		p_dev->resource[0]->start = io->win[0].base;
+ 		p_dev->resource[0]->end = io->win[0].len;
+ 		if (io->nwin == 2) {
+diff --git a/drivers/pcmcia/cs_internal.h b/drivers/pcmcia/cs_internal.h
+index a0c5adb..42eef43 100644
+--- a/drivers/pcmcia/cs_internal.h
++++ b/drivers/pcmcia/cs_internal.h
+@@ -34,9 +34,6 @@ typedef struct config_t {
+ 	struct kref	ref;
+ 	unsigned int	state;
+ 	unsigned int	Attributes;
+-	unsigned int	ConfigBase;
+-	unsigned char	Option;
+-	unsigned int	CardValues;
+ 
+ 	struct resource io[MAX_IO_WIN]; /* io ports */
+ 	struct resource mem[MAX_WIN];   /* mem areas */
+diff --git a/drivers/pcmcia/ds.c b/drivers/pcmcia/ds.c
+index 55570d9..00db600 100644
+--- a/drivers/pcmcia/ds.c
++++ b/drivers/pcmcia/ds.c
+@@ -276,13 +276,13 @@ static int pcmcia_device_probe(struct device *dev)
+ 	ret = pccard_read_tuple(p_dev->socket, p_dev->func, CISTPL_CONFIG,
+ 				&cis_config);
+ 	if (!ret) {
+-		p_dev->conf.ConfigBase = cis_config.base;
+-		p_dev->conf.Present = cis_config.rmask[0];
++		p_dev->config_base = cis_config.base;
++		p_dev->config_regs = cis_config.rmask[0];
+ 	} else {
+ 		dev_printk(KERN_INFO, dev,
+ 			   "pcmcia: could not parse base and rmask0 of CIS\n");
+-		p_dev->conf.ConfigBase = 0;
+-		p_dev->conf.Present = 0;
++		p_dev->config_base = 0;
++		p_dev->config_regs = 0;
+ 	}
+ 
+ 	ret = p_drv->probe(p_dev);
+diff --git a/drivers/pcmcia/pcmcia_cis.c b/drivers/pcmcia/pcmcia_cis.c
+index 0ac54da..ac47cc4 100644
+--- a/drivers/pcmcia/pcmcia_cis.c
++++ b/drivers/pcmcia/pcmcia_cis.c
+@@ -151,7 +151,7 @@ static int pcmcia_do_loop_config(tuple_t *tuple, cisparse_t *parse, void *priv)
+ 	struct pcmcia_cfg_mem *cfg_mem = priv;
+ 
+ 	/* default values */
+-	cfg_mem->p_dev->conf.ConfigIndex = cfg->index;
++	cfg_mem->p_dev->config_index = cfg->index;
+ 	if (cfg->flags & CISTPL_CFTABLE_DEFAULT)
+ 		cfg_mem->dflt = *cfg;
+ 
+diff --git a/drivers/pcmcia/pcmcia_resource.c b/drivers/pcmcia/pcmcia_resource.c
+index 6210e1c..a1fb0dc 100644
+--- a/drivers/pcmcia/pcmcia_resource.c
++++ b/drivers/pcmcia/pcmcia_resource.c
+@@ -168,7 +168,7 @@ static int pcmcia_access_config(struct pcmcia_device *p_dev,
+ 		return -EACCES;
+ 	}
+ 
+-	addr = (c->ConfigBase + where) >> 1;
++	addr = (p_dev->config_base + where) >> 1;
+ 
+ 	ret = accessf(s, 1, addr, 1, val);
+ 
+@@ -443,6 +443,7 @@ int pcmcia_request_configuration(struct pcmcia_device *p_dev,
+ 	pccard_io_map iomap;
+ 	unsigned char status = 0;
+ 	unsigned char ext_status = 0;
++	unsigned char option = 0;
+ 
+ 	if (!(s->state & SOCKET_PRESENT))
+ 		return -ENODEV;
+@@ -473,7 +474,7 @@ int pcmcia_request_configuration(struct pcmcia_device *p_dev,
+ 	if (req->Attributes & CONF_ENABLE_SPKR) {
+ 		s->socket.flags |= SS_SPKR_ENA;
+ 		status = CCSR_AUDIO_ENA;
+-		if (!(req->Present & PRESENT_STATUS))
++		if (!(p_dev->config_regs & PRESENT_STATUS))
+ 			dev_warn(&p_dev->dev, "speaker requested, but "
+ 					      "PRESENT_STATUS not set!\n");
+ 	}
+@@ -482,54 +483,53 @@ int pcmcia_request_configuration(struct pcmcia_device *p_dev,
+ 	else
+ 		s->socket.io_irq = 0;
+ 	if (req->Attributes & CONF_ENABLE_ESR) {
+-		req->Present |= PRESENT_EXT_STATUS;
++		p_dev->config_regs |= PRESENT_EXT_STATUS;
+ 		ext_status = ESR_REQ_ATTN_ENA;
+ 	}
+ 	s->ops->set_socket(s, &s->socket);
+ 	s->lock_count++;
+ 
+ 	/* Set up CIS configuration registers */
+-	base = c->ConfigBase = req->ConfigBase;
+-	c->CardValues = req->Present;
+-	if (req->Present & PRESENT_COPY) {
++	base = p_dev->config_base;
++	if (p_dev->config_regs & PRESENT_COPY) {
+ 		u16 tmp = 0;
+ 		dev_dbg(&p_dev->dev, "clearing CISREG_SCR\n");
+ 		pcmcia_write_cis_mem(s, 1, (base + CISREG_SCR)>>1, 1, &tmp);
+ 	}
+-	if (req->Present & PRESENT_PIN_REPLACE) {
++	if (p_dev->config_regs & PRESENT_PIN_REPLACE) {
+ 		u16 tmp = 0;
+ 		dev_dbg(&p_dev->dev, "clearing CISREG_PRR\n");
+ 		pcmcia_write_cis_mem(s, 1, (base + CISREG_PRR)>>1, 1, &tmp);
+ 	}
+-	if (req->Present & PRESENT_OPTION) {
++	if (p_dev->config_regs & PRESENT_OPTION) {
+ 		if (s->functions == 1) {
+-			c->Option = req->ConfigIndex & COR_CONFIG_MASK;
++			option = p_dev->config_index & COR_CONFIG_MASK;
+ 		} else {
+-			c->Option = req->ConfigIndex & COR_MFC_CONFIG_MASK;
+-			c->Option |= COR_FUNC_ENA|COR_IREQ_ENA;
+-			if (req->Present & PRESENT_IOBASE_0)
+-				c->Option |= COR_ADDR_DECODE;
++			option = p_dev->config_index & COR_MFC_CONFIG_MASK;
++			option |= COR_FUNC_ENA|COR_IREQ_ENA;
++			if (p_dev->config_regs & PRESENT_IOBASE_0)
++				option |= COR_ADDR_DECODE;
+ 		}
+ 		if ((req->Attributes & CONF_ENABLE_IRQ) &&
+ 			!(req->Attributes & CONF_ENABLE_PULSE_IRQ))
+-			c->Option |= COR_LEVEL_REQ;
+-		pcmcia_write_cis_mem(s, 1, (base + CISREG_COR)>>1, 1, &c->Option);
++			option |= COR_LEVEL_REQ;
++		pcmcia_write_cis_mem(s, 1, (base + CISREG_COR)>>1, 1, &option);
+ 		mdelay(40);
+ 	}
+-	if (req->Present & PRESENT_STATUS)
++	if (p_dev->config_regs & PRESENT_STATUS)
+ 		pcmcia_write_cis_mem(s, 1, (base + CISREG_CCSR)>>1, 1, &status);
+ 
+-	if (req->Present & PRESENT_EXT_STATUS)
++	if (p_dev->config_regs & PRESENT_EXT_STATUS)
+ 		pcmcia_write_cis_mem(s, 1, (base + CISREG_ESR)>>1, 1,
+ 					&ext_status);
+ 
+-	if (req->Present & PRESENT_IOBASE_0) {
++	if (p_dev->config_regs & PRESENT_IOBASE_0) {
+ 		u8 b = c->io[0].start & 0xff;
+ 		pcmcia_write_cis_mem(s, 1, (base + CISREG_IOBASE_0)>>1, 1, &b);
+ 		b = (c->io[0].start >> 8) & 0xff;
+ 		pcmcia_write_cis_mem(s, 1, (base + CISREG_IOBASE_1)>>1, 1, &b);
+ 	}
+-	if (req->Present & PRESENT_IOSIZE) {
++	if (p_dev->config_regs & PRESENT_IOSIZE) {
+ 		u8 b = resource_size(&c->io[0]) + resource_size(&c->io[1]) - 1;
+ 		pcmcia_write_cis_mem(s, 1, (base + CISREG_IOSIZE)>>1, 1, &b);
+ 	}
+diff --git a/drivers/scsi/pcmcia/aha152x_stub.c b/drivers/scsi/pcmcia/aha152x_stub.c
+index 3c0046e..c368249 100644
+--- a/drivers/scsi/pcmcia/aha152x_stub.c
++++ b/drivers/scsi/pcmcia/aha152x_stub.c
+@@ -103,7 +103,7 @@ static int aha152x_probe(struct pcmcia_device *link)
+     link->resource[0]->end = 0x20;
+     link->resource[0]->flags |= IO_DATA_PATH_WIDTH_AUTO;
+     link->conf.Attributes = CONF_ENABLE_IRQ;
+-    link->conf.Present = PRESENT_OPTION;
++    link->config_regs = PRESENT_OPTION;
+ 
+     return aha152x_config_cs(link);
+ } /* aha152x_attach */
+diff --git a/drivers/scsi/pcmcia/fdomain_stub.c b/drivers/scsi/pcmcia/fdomain_stub.c
+index 8ff7603..bb909e1 100644
+--- a/drivers/scsi/pcmcia/fdomain_stub.c
++++ b/drivers/scsi/pcmcia/fdomain_stub.c
+@@ -86,7 +86,7 @@ static int fdomain_probe(struct pcmcia_device *link)
+ 	link->resource[0]->end = 0x10;
+ 	link->resource[0]->flags |= IO_DATA_PATH_WIDTH_AUTO;
+ 	link->conf.Attributes = CONF_ENABLE_IRQ;
+-	link->conf.Present = PRESENT_OPTION;
++	link->config_regs = PRESENT_OPTION;
+ 
+ 	return fdomain_config(link);
+ } /* fdomain_attach */
+diff --git a/drivers/scsi/pcmcia/nsp_cs.c b/drivers/scsi/pcmcia/nsp_cs.c
+index c0cf2df..a5648e9 100644
+--- a/drivers/scsi/pcmcia/nsp_cs.c
++++ b/drivers/scsi/pcmcia/nsp_cs.c
+@@ -1745,7 +1745,7 @@ static int nsp_cs_config(struct pcmcia_device *link)
+ 
+ 	/* Finally, report what we've done */
+ 	printk(KERN_INFO "nsp_cs: index 0x%02x: ",
+-	       link->conf.ConfigIndex);
++	       link->config_index);
+ 	if (link->vpp) {
+ 		printk(", Vpp %d.%d", link->vpp/10, link->vpp%10);
+ 	}
+diff --git a/drivers/scsi/pcmcia/qlogic_stub.c b/drivers/scsi/pcmcia/qlogic_stub.c
+index 77f46a2..5e2cbe0 100644
+--- a/drivers/scsi/pcmcia/qlogic_stub.c
++++ b/drivers/scsi/pcmcia/qlogic_stub.c
+@@ -159,7 +159,7 @@ static int qlogic_probe(struct pcmcia_device *link)
+ 	link->resource[0]->end = 16;
+ 	link->resource[0]->flags |= IO_DATA_PATH_WIDTH_AUTO;
+ 	link->conf.Attributes = CONF_ENABLE_IRQ;
+-	link->conf.Present = PRESENT_OPTION;
++	link->config_regs = PRESENT_OPTION;
+ 
+ 	return qlogic_config(link);
+ }				/* qlogic_attach */
+diff --git a/drivers/serial/serial_cs.c b/drivers/serial/serial_cs.c
+index 38baede..ee19f2d 100644
+--- a/drivers/serial/serial_cs.c
++++ b/drivers/serial/serial_cs.c
+@@ -495,7 +495,7 @@ static int simple_config(struct pcmcia_device *link)
+ 
+ found_port:
+ 	if (info->multi && (info->manfid == MANFID_3COM))
+-		link->conf.ConfigIndex &= ~(0x08);
++		link->config_index &= ~(0x08);
+ 
+ 	/*
+ 	 * Apply any configuration quirks.
+@@ -591,8 +591,8 @@ static int multi_config(struct pcmcia_device *link)
+ 				info->prodid == PRODID_POSSIO_GCC)) {
+ 		int err;
+ 
+-		if (link->conf.ConfigIndex == 1 ||
+-		    link->conf.ConfigIndex == 3) {
++		if (link->config_index == 1 ||
++		    link->config_index == 3) {
+ 			err = setup_serial(link, info, base2,
+ 					link->irq);
+ 			base2 = link->resource[0]->start;;
+diff --git a/drivers/staging/comedi/drivers/cb_das16_cs.c b/drivers/staging/comedi/drivers/cb_das16_cs.c
+index 11271b6..034cbfc 100644
+--- a/drivers/staging/comedi/drivers/cb_das16_cs.c
++++ b/drivers/staging/comedi/drivers/cb_das16_cs.c
+@@ -772,7 +772,7 @@ static void das16cs_pcmcia_config(struct pcmcia_device *link)
+ 		goto failed;
+ 
+ 	/* Finally, report what we've done */
+-	dev_info(&link->dev, "index 0x%02x", link->conf.ConfigIndex);
++	dev_info(&link->dev, "index 0x%02x", link->config_index);
+ 	if (link->conf.Attributes & CONF_ENABLE_IRQ)
+ 		printk(", irq %u", link->irq);
+ 	if (link->resource[0])
+diff --git a/drivers/staging/comedi/drivers/das08_cs.c b/drivers/staging/comedi/drivers/das08_cs.c
+index 319aad4..e37ea79 100644
+--- a/drivers/staging/comedi/drivers/das08_cs.c
++++ b/drivers/staging/comedi/drivers/das08_cs.c
+@@ -268,7 +268,7 @@ static void das08_pcmcia_config(struct pcmcia_device *link)
+ 		goto failed;
+ 
+ 	/* Finally, report what we've done */
+-	dev_info(&link->dev, "index 0x%02x", link->conf.ConfigIndex);
++	dev_info(&link->dev, "index 0x%02x", link->config_index);
+ 	if (link->conf.Attributes & CONF_ENABLE_IRQ)
+ 		printk(", irq %u", link->irq);
+ 	if (link->resource[0])
+diff --git a/drivers/staging/comedi/drivers/ni_daq_700.c b/drivers/staging/comedi/drivers/ni_daq_700.c
+index d269bbd..8107e40 100644
+--- a/drivers/staging/comedi/drivers/ni_daq_700.c
++++ b/drivers/staging/comedi/drivers/ni_daq_700.c
+@@ -607,7 +607,7 @@ static void dio700_config(struct pcmcia_device *link)
+ 		goto failed;
+ 
+ 	/* Finally, report what we've done */
+-	dev_info(&link->dev, "index 0x%02x", link->conf.ConfigIndex);
++	dev_info(&link->dev, "index 0x%02x", link->config_index);
+ 	if (link->conf.Attributes & CONF_ENABLE_IRQ)
+ 		printk(", irq %d", link->irq);
+ 	if (link->resource[0])
+diff --git a/drivers/staging/comedi/drivers/ni_daq_dio24.c b/drivers/staging/comedi/drivers/ni_daq_dio24.c
+index fcaa829..4f9daa3 100644
+--- a/drivers/staging/comedi/drivers/ni_daq_dio24.c
++++ b/drivers/staging/comedi/drivers/ni_daq_dio24.c
+@@ -358,7 +358,7 @@ static void dio24_config(struct pcmcia_device *link)
+ 		goto failed;
+ 
+ 	/* Finally, report what we've done */
+-	dev_info(&link->dev, "index 0x%02x", link->conf.ConfigIndex);
++	dev_info(&link->dev, "index 0x%02x", link->config_index);
+ 	if (link->conf.Attributes & CONF_ENABLE_IRQ)
+ 		printk(", irq %d", link->irq);
+ 	if (link->resource[0])
+diff --git a/drivers/staging/comedi/drivers/ni_labpc_cs.c b/drivers/staging/comedi/drivers/ni_labpc_cs.c
+index a936c11..2e27a30 100644
+--- a/drivers/staging/comedi/drivers/ni_labpc_cs.c
++++ b/drivers/staging/comedi/drivers/ni_labpc_cs.c
+@@ -336,7 +336,7 @@ static void labpc_config(struct pcmcia_device *link)
+ 		goto failed;
+ 
+ 	/* Finally, report what we've done */
+-	dev_info(&link->dev, "index 0x%02x", link->conf.ConfigIndex);
++	dev_info(&link->dev, "index 0x%02x", link->config_index);
+ 	if (link->conf.Attributes & CONF_ENABLE_IRQ)
+ 		printk(", irq %d", link->irq);
+ 	if (link->resource[0])
+diff --git a/drivers/staging/comedi/drivers/quatech_daqp_cs.c b/drivers/staging/comedi/drivers/quatech_daqp_cs.c
+index cd818fb..a2a32de 100644
+--- a/drivers/staging/comedi/drivers/quatech_daqp_cs.c
++++ b/drivers/staging/comedi/drivers/quatech_daqp_cs.c
+@@ -1137,7 +1137,7 @@ static void daqp_cs_config(struct pcmcia_device *link)
+ 		goto failed;
+ 
+ 	/* Finally, report what we've done */
+-	dev_info(&link->dev, "index 0x%02x", link->conf.ConfigIndex);
++	dev_info(&link->dev, "index 0x%02x", link->config_index);
+ 	if (link->conf.Attributes & CONF_ENABLE_IRQ)
+ 		printk(", irq %u", link->irq);
+ 	if (link->resource[0])
+diff --git a/drivers/staging/wlags49_h2/wl_cs.c b/drivers/staging/wlags49_h2/wl_cs.c
+index b2efff6..778800f 100644
+--- a/drivers/staging/wlags49_h2/wl_cs.c
++++ b/drivers/staging/wlags49_h2/wl_cs.c
+@@ -148,8 +148,8 @@ static int wl_adapter_attach(struct pcmcia_device *link)
+ 	link->resource[0]->end  = HCF_NUM_IO_PORTS;
+ 	link->resource[0]->flags= IO_DATA_PATH_WIDTH_16;
+ 	link->conf.Attributes   = CONF_ENABLE_IRQ;
+-	link->conf.ConfigIndex  = 5;
+-	link->conf.Present      = PRESENT_OPTION;
++	link->config_index      = 5;
++	link->config_regs       = PRESENT_OPTION;
+ 
+ 	link->priv = dev;
+ 	lp = wl_priv(dev);
+diff --git a/drivers/usb/host/sl811_cs.c b/drivers/usb/host/sl811_cs.c
+index 78bad51..5904053 100644
+--- a/drivers/usb/host/sl811_cs.c
++++ b/drivers/usb/host/sl811_cs.c
+@@ -200,7 +200,7 @@ static int sl811_cs_config(struct pcmcia_device *link)
+ 		goto failed;
+ 
+ 	dev_info(&link->dev, "index 0x%02x: ",
+-		link->conf.ConfigIndex);
++		link->config_index);
+ 	if (link->vpp)
+ 		printk(", Vpp %d.%d", link->vpp/10, link->vpp%10);
+ 	printk(", irq %d", link->irq);
+diff --git a/include/pcmcia/cs.h b/include/pcmcia/cs.h
+index 674edbc..47b6092 100644
+--- a/include/pcmcia/cs.h
++++ b/include/pcmcia/cs.h
+@@ -22,9 +22,6 @@
+ /* For RequestConfiguration */
+ typedef struct config_req_t {
+     u_int	Attributes;
+-    u_int	ConfigBase;
+-    u_char	ConfigIndex;
+-    u_int	Present;
+ } config_req_t;
+ 
+ /* Attributes for RequestConfiguration */
+@@ -35,16 +32,4 @@ typedef struct config_req_t {
+ #define CONF_ENABLE_ESR		0x10
+ #define CONF_VALID_CLIENT	0x100
+ 
+-/* Configuration registers present */
+-#define PRESENT_OPTION		0x001
+-#define PRESENT_STATUS		0x002
+-#define PRESENT_PIN_REPLACE	0x004
+-#define PRESENT_COPY		0x008
+-#define PRESENT_EXT_STATUS	0x010
+-#define PRESENT_IOBASE_0	0x020
+-#define PRESENT_IOBASE_1	0x040
+-#define PRESENT_IOBASE_2	0x080
+-#define PRESENT_IOBASE_3	0x100
+-#define PRESENT_IOSIZE		0x200
 -
- /*
-  * Search the name=value vars for a specific one and return its value.
-  * Returns NULL if not found.
+ #endif /* _LINUX_CS_H */
+diff --git a/include/pcmcia/ds.h b/include/pcmcia/ds.h
+index 6137fbc..bc28f96 100644
+--- a/include/pcmcia/ds.h
++++ b/include/pcmcia/ds.h
+@@ -97,6 +97,9 @@ struct pcmcia_device {
+ 	unsigned int		vpp;
+ 
+ 	unsigned int		io_lines; /* number of I/O lines */
++	unsigned int		config_base;
++	unsigned int		config_index;
++	unsigned int		config_regs;	/* PRESENT_ flags below */
+ 
+ 	/* Is the device suspended? */
+ 	u16			suspended:1;
+@@ -250,6 +253,17 @@ static inline int pcmcia_io_cfg_data_width(unsigned int flags)
+ 					0x0c -> 2
+ 					0x10 -> 3 */
+ 
++/* config_reg{ister}s present for this PCMCIA device */
++#define PRESENT_OPTION		0x001
++#define PRESENT_STATUS		0x002
++#define PRESENT_PIN_REPLACE	0x004
++#define PRESENT_COPY		0x008
++#define PRESENT_EXT_STATUS	0x010
++#define PRESENT_IOBASE_0	0x020
++#define PRESENT_IOBASE_1	0x040
++#define PRESENT_IOBASE_2	0x080
++#define PRESENT_IOBASE_3	0x100
++#define PRESENT_IOSIZE		0x200
+ 
+ #endif /* __KERNEL__ */
+ 
+diff --git a/sound/pcmcia/pdaudiocf/pdaudiocf.c b/sound/pcmcia/pdaudiocf/pdaudiocf.c
+index 2e1282d..4df07fc 100644
+--- a/sound/pcmcia/pdaudiocf/pdaudiocf.c
++++ b/sound/pcmcia/pdaudiocf/pdaudiocf.c
+@@ -143,8 +143,8 @@ static int snd_pdacf_probe(struct pcmcia_device *link)
+ 	link->resource[0]->end = 16;
+ 
+ 	link->conf.Attributes = CONF_ENABLE_IRQ | CONF_ENABLE_PULSE_IRQ;
+-	link->conf.ConfigIndex = 1;
+-	link->conf.Present = PRESENT_OPTION;
++	link->config_index = 1;
++	link->config_regs = PRESENT_OPTION;
+ 
+ 	return pdacf_config(link);
+ }
+@@ -216,7 +216,7 @@ static int pdacf_config(struct pcmcia_device *link)
+ 	int ret;
+ 
+ 	snd_printdd(KERN_DEBUG "pdacf_config called\n");
+-	link->conf.ConfigIndex = 0x5;
++	link->config_index = 0x5;
+ 
+ 	ret = pcmcia_request_io(link);
+ 	if (ret)
+diff --git a/sound/pcmcia/vx/vxpocket.c b/sound/pcmcia/vx/vxpocket.c
+index a48b3ee..16186ad 100644
+--- a/sound/pcmcia/vx/vxpocket.c
++++ b/sound/pcmcia/vx/vxpocket.c
+@@ -163,8 +163,8 @@ static int snd_vxpocket_new(struct snd_card *card, int ibl,
+ 	link->resource[0]->end = 16;
+ 
+ 	link->conf.Attributes = CONF_ENABLE_IRQ;
+-	link->conf.ConfigIndex = 1;
+-	link->conf.Present = PRESENT_OPTION;
++	link->config_index = 1;
++	link->config_regs = PRESENT_OPTION;
+ 
+ 	*chip_ret = vxp;
+ 	return 0;
 -- 
-1.7.2.3
+1.7.0.4
 
