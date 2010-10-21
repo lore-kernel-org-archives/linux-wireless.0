@@ -1,248 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ist.d-labs.de ([213.239.218.44]:40423 "EHLO mx01.d-labs.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1759070Ab0JFRpk (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 6 Oct 2010 13:45:40 -0400
-Date: Wed, 6 Oct 2010 19:45:37 +0200
-From: Florian Mickler <florian@mickler.org>
-To: Stanislaw Gruszka <sgruszka@redhat.com>
-Cc: linville@tuxdriver.com, stable@kernel.org,
-	linux-wireless@vger.kernel.org, wey-yi.w.guy@intel.com,
-	reinette.chatre@intel.com, ilw@linux.intel.com,
-	johannes.berg@intel.com, ben.m.cahill@intel.com,
-	netdev@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH wireless-2.6 or stable] iwlwifi: return error when fail
- to start scanning
-Message-ID: <20101006194537.35e8b00e@schatten.dmk.lab>
-In-Reply-To: <20101006160434.GB24581@redhat.com>
-References: <20101005085717.GA18012@redhat.com>
-	<1286317292-10679-1-git-send-email-florian@mickler.org>
-	<20101006090228.GA2523@redhat.com>
-	<20101006160434.GB24581@redhat.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Received: from fmmailgate03.web.de ([217.72.192.234]:55366 "EHLO
+	fmmailgate03.web.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753165Ab0JUXrF (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 21 Oct 2010 19:47:05 -0400
+Received: from smtp05.web.de  ( [172.20.4.166])
+	by fmmailgate03.web.de (Postfix) with ESMTP id 8FC151684AD14
+	for <linux-wireless@vger.kernel.org>; Fri, 22 Oct 2010 01:47:03 +0200 (CEST)
+Received: from [77.12.214.88] (helo=[10.48.0.23])
+	by smtp05.web.de with asmtp (TLSv1:AES256-SHA:256)
+	(WEB.DE 4.110 #24)
+	id 1P94qd-0007J4-00
+	for linux-wireless@vger.kernel.org; Fri, 22 Oct 2010 01:47:03 +0200
+Message-ID: <4CC0D0F6.4080507@web.de>
+Date: Fri, 22 Oct 2010 01:47:02 +0200
+From: Lee <lee-in-berlin@web.de>
+MIME-Version: 1.0
+To: linux-wireless@vger.kernel.org
+Subject: [regression]AP with hostapd 0.7.3 can't receive packets beyond authentication
+ (2.6.36-, rt73usb)
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Stanislaw!
+Hi everyone,
 
-On Wed, 6 Oct 2010 18:04:35 +0200
-Stanislaw Gruszka <sgruszka@redhat.com> wrote:
+I noticed a bug (details later) in Linus' git tree, which wasn't there in 
+2.6.35.7. So I went on to bisect the bug. 12 compiles and reboots later, I 
+could narrow it down to this commit:
 
-> This is stable friendly backport of wireless-testing commit
-> 3eecce527c7434dfd16517ce08b49632c8a26717 "iwlwifi: unify scan start
-> checks". Wireless-testing version include also a lot of cleanups.
-> 
-> On error case in {iwl3945,iwlagn}_request_scan we queue abort_scan work,
-> which in a fact do nothing, so we never complete the scan. Thats gives
-> "WARNING: at net/wireless/core.c:614 wdev_cleanup_work" and stopped
-> network connection until reload iwlwifi modules. Return of -EIO, and
-> stopping queuing any work is a fix.
-> 
-> Note there are still many cases when we can get: 
-> 
-> WARNING: at net/wireless/core.c:614 wdev_cleanup_work  
-> WARNING: at net/mac80211/scan.c:266 ieee80211_scan_completed
-> WARNING: at net/mac80211/scan.c:269 ieee80211_scan_complete
-> 
-> which are not fixed. Unfortunately does not exist single, small fix
-> for that problems, and we probably will see some more bug reports
-> with scan warnings. As solution we rewrite iwl-scan.c code to avoid
-> all possible race conditions. That quite big patch set is queued
-> for 2.6.37 .
-> 
-> Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
-> ---
+# bad: [05318bc905467237d4aa68a701f6e92a2b332218] Merge branch 'master' of 
+git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-next-2.6
 
-Not that it matters much, but I've looked through it and couldn't find
-anything wrong with it.
+Unfortunately, I couldn't further bisect down wireless-next, because all three 
+commits I picked were unworkable (bringing down an interface caused the kernel 
+to oops, which made my test case impossible).
 
- Reviewed-by: Florian Mickler <florian@mickler.org>
+The test case is as follows: I have eth0 and wlan0 (the interface to an 
+rt37usb device) in a bridge lan0. I have a properly configured hostapd. When I 
+try to connect with a client to my hostapd AP, I can successfully 
+authenticate, but all further packets don't reach the interface of the AP.
+
+However, I can see broadcast packets *from* the AP on my client, but not the 
+other way round (DHCP requests from client to AP). To make sure the bug was 
+not specific to broadcast packets, I manually set an IP on my client and tried 
+to ping the AP, but those packets didn't come through, either.
+
+Right now I'm a bit clueless on how to get to the root of this bug, so any 
+help is appreciated.
 
 Regards,
-Flo
-
-> Patch is intended for wireless-2.6, or in case when it does not
-> make 2.6.36 release, for -stable 2.6.36.y 
-> 
->  drivers/net/wireless/iwlwifi/iwl-3945.h     |    2 +-
->  drivers/net/wireless/iwlwifi/iwl-agn-lib.c  |   18 ++++++------------
->  drivers/net/wireless/iwlwifi/iwl-agn.h      |    2 +-
->  drivers/net/wireless/iwlwifi/iwl-core.h     |    2 +-
->  drivers/net/wireless/iwlwifi/iwl-scan.c     |   14 +++++++++++---
->  drivers/net/wireless/iwlwifi/iwl3945-base.c |   19 ++++++-------------
->  6 files changed, 26 insertions(+), 31 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/iwlwifi/iwl-3945.h b/drivers/net/wireless/iwlwifi/iwl-3945.h
-> index bb2aeeb..98509c5 100644
-> --- a/drivers/net/wireless/iwlwifi/iwl-3945.h
-> +++ b/drivers/net/wireless/iwlwifi/iwl-3945.h
-> @@ -295,7 +295,7 @@ extern const struct iwl_channel_info *iwl3945_get_channel_info(
->  extern int iwl3945_rs_next_rate(struct iwl_priv *priv, int rate);
->  
->  /* scanning */
-> -void iwl3945_request_scan(struct iwl_priv *priv, struct ieee80211_vif *vif);
-> +int iwl3945_request_scan(struct iwl_priv *priv, struct ieee80211_vif *vif);
->  
->  /* Requires full declaration of iwl_priv before including */
->  #include "iwl-io.h"
-> diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-lib.c b/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
-> index 8fd00a6..2be8faa 100644
-> --- a/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
-> +++ b/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
-> @@ -1147,7 +1147,7 @@ static int iwl_get_channels_for_scan(struct iwl_priv *priv,
->  	return added;
->  }
->  
-> -void iwlagn_request_scan(struct iwl_priv *priv, struct ieee80211_vif *vif)
-> +int iwlagn_request_scan(struct iwl_priv *priv, struct ieee80211_vif *vif)
->  {
->  	struct iwl_host_cmd cmd = {
->  		.id = REPLY_SCAN_CMD,
-> @@ -1394,24 +1394,18 @@ void iwlagn_request_scan(struct iwl_priv *priv, struct ieee80211_vif *vif)
->  	scan->len = cpu_to_le16(cmd.len);
->  
->  	set_bit(STATUS_SCAN_HW, &priv->status);
-> -	if (iwl_send_cmd_sync(priv, &cmd))
-> +	if (iwl_send_cmd_sync(priv, &cmd)) {
-> +		clear_bit(STATUS_SCAN_HW, &priv->status);
->  		goto done;
-> +	}
->  
->  	queue_delayed_work(priv->workqueue, &priv->scan_check,
->  			   IWL_SCAN_CHECK_WATCHDOG);
->  
-> -	return;
-> +	return 0;
->  
->   done:
-> -	/* Cannot perform scan. Make sure we clear scanning
-> -	* bits from status so next scan request can be performed.
-> -	* If we don't clear scanning status bit here all next scan
-> -	* will fail
-> -	*/
-> -	clear_bit(STATUS_SCAN_HW, &priv->status);
-> -	clear_bit(STATUS_SCANNING, &priv->status);
-> -	/* inform mac80211 scan aborted */
-> -	queue_work(priv->workqueue, &priv->abort_scan);
-> +	return -EIO;
->  }
->  
->  int iwlagn_manage_ibss_station(struct iwl_priv *priv,
-> diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.h b/drivers/net/wireless/iwlwifi/iwl-agn.h
-> index cc6464d..015da26 100644
-> --- a/drivers/net/wireless/iwlwifi/iwl-agn.h
-> +++ b/drivers/net/wireless/iwlwifi/iwl-agn.h
-> @@ -216,7 +216,7 @@ void iwl_reply_statistics(struct iwl_priv *priv,
->  			  struct iwl_rx_mem_buffer *rxb);
->  
->  /* scan */
-> -void iwlagn_request_scan(struct iwl_priv *priv, struct ieee80211_vif *vif);
-> +int iwlagn_request_scan(struct iwl_priv *priv, struct ieee80211_vif *vif);
->  
->  /* station mgmt */
->  int iwlagn_manage_ibss_station(struct iwl_priv *priv,
-> diff --git a/drivers/net/wireless/iwlwifi/iwl-core.h b/drivers/net/wireless/iwlwifi/iwl-core.h
-> index 5e6ee3d..110de0f 100644
-> --- a/drivers/net/wireless/iwlwifi/iwl-core.h
-> +++ b/drivers/net/wireless/iwlwifi/iwl-core.h
-> @@ -109,7 +109,7 @@ struct iwl_hcmd_utils_ops {
->  				  __le16 fc, __le32 *tx_flags);
->  	int  (*calc_rssi)(struct iwl_priv *priv,
->  			  struct iwl_rx_phy_res *rx_resp);
-> -	void (*request_scan)(struct iwl_priv *priv, struct ieee80211_vif *vif);
-> +	int (*request_scan)(struct iwl_priv *priv, struct ieee80211_vif *vif);
->  };
->  
->  struct iwl_apm_ops {
-> diff --git a/drivers/net/wireless/iwlwifi/iwl-scan.c b/drivers/net/wireless/iwlwifi/iwl-scan.c
-> index a4b3663..290140a 100644
-> --- a/drivers/net/wireless/iwlwifi/iwl-scan.c
-> +++ b/drivers/net/wireless/iwlwifi/iwl-scan.c
-> @@ -298,6 +298,7 @@ EXPORT_SYMBOL(iwl_init_scan_params);
->  
->  static int iwl_scan_initiate(struct iwl_priv *priv, struct ieee80211_vif *vif)
->  {
-> +	int ret;
->  	lockdep_assert_held(&priv->mutex);
->  
->  	IWL_DEBUG_INFO(priv, "Starting scan...\n");
-> @@ -308,9 +309,11 @@ static int iwl_scan_initiate(struct iwl_priv *priv, struct ieee80211_vif *vif)
->  	if (WARN_ON(!priv->cfg->ops->utils->request_scan))
->  		return -EOPNOTSUPP;
->  
-> -	priv->cfg->ops->utils->request_scan(priv, vif);
-> +	ret = priv->cfg->ops->utils->request_scan(priv, vif);
-> +	if (ret)
-> +		clear_bit(STATUS_SCANNING, &priv->status);
-> +	return ret;
->  
-> -	return 0;
->  }
->  
->  int iwl_mac_hw_scan(struct ieee80211_hw *hw,
-> @@ -380,6 +383,7 @@ void iwl_internal_short_hw_scan(struct iwl_priv *priv)
->  
->  void iwl_bg_start_internal_scan(struct work_struct *work)
->  {
-> +	int ret;
->  	struct iwl_priv *priv =
->  		container_of(work, struct iwl_priv, start_internal_scan);
->  
-> @@ -414,7 +418,11 @@ void iwl_bg_start_internal_scan(struct work_struct *work)
->  	if (WARN_ON(!priv->cfg->ops->utils->request_scan))
->  		goto unlock;
->  
-> -	priv->cfg->ops->utils->request_scan(priv, NULL);
-> +	ret = priv->cfg->ops->utils->request_scan(priv, NULL);
-> +	if (ret) {
-> +		clear_bit(STATUS_SCANNING, &priv->status);
-> +		priv->is_internal_short_scan = false;
-> +	}
->   unlock:
->  	mutex_unlock(&priv->mutex);
->  }
-> diff --git a/drivers/net/wireless/iwlwifi/iwl3945-base.c b/drivers/net/wireless/iwlwifi/iwl3945-base.c
-> index d31661c..fc82da0 100644
-> --- a/drivers/net/wireless/iwlwifi/iwl3945-base.c
-> +++ b/drivers/net/wireless/iwlwifi/iwl3945-base.c
-> @@ -2799,7 +2799,7 @@ static void iwl3945_rfkill_poll(struct work_struct *data)
->  
->  }
->  
-> -void iwl3945_request_scan(struct iwl_priv *priv, struct ieee80211_vif *vif)
-> +int iwl3945_request_scan(struct iwl_priv *priv, struct ieee80211_vif *vif)
->  {
->  	struct iwl_host_cmd cmd = {
->  		.id = REPLY_SCAN_CMD,
-> @@ -3000,25 +3000,18 @@ void iwl3945_request_scan(struct iwl_priv *priv, struct ieee80211_vif *vif)
->  	scan->len = cpu_to_le16(cmd.len);
->  
->  	set_bit(STATUS_SCAN_HW, &priv->status);
-> -	if (iwl_send_cmd_sync(priv, &cmd))
-> +	if (iwl_send_cmd_sync(priv, &cmd)) {
-> +		clear_bit(STATUS_SCAN_HW, &priv->status);
->  		goto done;
-> +	}
->  
->  	queue_delayed_work(priv->workqueue, &priv->scan_check,
->  			   IWL_SCAN_CHECK_WATCHDOG);
->  
-> -	return;
-> +	return 0;
->  
->   done:
-> -	/* can not perform scan make sure we clear scanning
-> -	 * bits from status so next scan request can be performed.
-> -	 * if we dont clear scanning status bit here all next scan
-> -	 * will fail
-> -	*/
-> -	clear_bit(STATUS_SCAN_HW, &priv->status);
-> -	clear_bit(STATUS_SCANNING, &priv->status);
-> -
-> -	/* inform mac80211 scan aborted */
-> -	queue_work(priv->workqueue, &priv->abort_scan);
-> +	return -EIO;
->  }
->  
->  static void iwl3945_bg_restart(struct work_struct *data)
+Lee
