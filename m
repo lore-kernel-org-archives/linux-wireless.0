@@ -1,281 +1,309 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.19.149.2]:64204 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755093Ab0JZIky (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 26 Oct 2010 04:40:54 -0400
-Received: from mail.atheros.com ([10.10.20.108])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Tue, 26 Oct 2010 01:40:43 -0700
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: <linux-wireless@vger.kernel.org>
-CC: <greearb@candelatech.com>, <kyungwan.nam@atheros.com>,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>
-Subject: [RFT 3/3] ath9k: content DMA start / stop through the PCU lock
-Date: Tue, 26 Oct 2010 01:40:41 -0700
-Message-ID: <1288082441-4882-4-git-send-email-lrodriguez@atheros.com>
-In-Reply-To: <1288082441-4882-1-git-send-email-lrodriguez@atheros.com>
-References: <1288082441-4882-1-git-send-email-lrodriguez@atheros.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from smtp-out.google.com ([74.125.121.35]:17526 "EHLO
+	smtp-out.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757021Ab0JUDzL (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 20 Oct 2010 23:55:11 -0400
+From: Paul Stewart <pstew@google.com>
+Date: Wed, 20 Oct 2010 20:49:21 -0700
+Subject: [PATCH 2/2] mac80211: Add support for CQM tx bitrate monitoring
+To: linux-wireless@vger.kernel.org
+Cc: johannes@sipsolutions.net
+Message-Id: <20101021035501.77DBF20423@glenhelen.mtv.corp.google.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This helps align resets / RX enable & disable / TX stop / start.
-Locking around the PCU is important to ensure the hardware doesn't
-get stale data when working with DMA'able data.
+Add state, work proc and debugging parameters for monitoring
+transmit-rate changes.
 
-Cc: Ben Greear <greearb@candelatech.com>
-Cc: Kyungwan Nam <kyungwan.nam@atheros.com>
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+Signed-off-by: Paul Stewart <pstew@google.com>
 ---
- drivers/net/wireless/ath/ath9k/main.c |   52 ++++++++++++++++----------------
- drivers/net/wireless/ath/ath9k/xmit.c |    4 +-
- 2 files changed, 28 insertions(+), 28 deletions(-)
+ net/mac80211/cfg.c         |   15 +++++++
+ net/mac80211/debugfs.c     |    4 ++
+ net/mac80211/ieee80211_i.h |   23 ++++++++++
+ net/mac80211/mlme.c        |    9 ++++
+ net/mac80211/rate.c        |   96 ++++++++++++++++++++++++++++++++++++++++++++
+ net/mac80211/rate.h        |    8 ++++
+ net/mac80211/status.c      |   18 ++++++++
+ 7 files changed, 173 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
-index 4196336..f494bb2 100644
---- a/drivers/net/wireless/ath/ath9k/main.c
-+++ b/drivers/net/wireless/ath/ath9k/main.c
-@@ -230,6 +230,8 @@ int ath_set_channel(struct ath_softc *sc, struct ieee80211_hw *hw,
- 
- 	ath9k_ps_wakeup(sc);
- 
-+	spin_lock_bh(&sc->sc_pcu_lock);
-+
- 	/*
- 	 * This is only performed if the channel settings have
- 	 * actually changed.
-@@ -242,8 +244,6 @@ int ath_set_channel(struct ath_softc *sc, struct ieee80211_hw *hw,
- 	ath9k_hw_set_interrupts(ah, 0);
- 	ath_drain_all_txq(sc, false);
- 
--	spin_lock_bh(&sc->sc_pcu_lock);
--
- 	stopped = ath_stoprecv(sc);
- 
- 	/* XXX: do not flush receive queue here. We don't want
-@@ -268,7 +268,6 @@ int ath_set_channel(struct ath_softc *sc, struct ieee80211_hw *hw,
- 			  "Unable to reset channel (%u MHz), "
- 			  "reset status %d\n",
- 			  channel->center_freq, r);
--		spin_unlock_bh(&sc->sc_pcu_lock);
- 		goto ps_restore;
- 	}
- 
-@@ -276,12 +275,9 @@ int ath_set_channel(struct ath_softc *sc, struct ieee80211_hw *hw,
- 		ath_print(common, ATH_DBG_FATAL,
- 			  "Unable to restart recv logic\n");
- 		r = -EIO;
--		spin_unlock_bh(&sc->sc_pcu_lock);
- 		goto ps_restore;
- 	}
- 
--	spin_unlock_bh(&sc->sc_pcu_lock);
--
- 	ath_update_txpow(sc);
- 	ath9k_hw_set_interrupts(ah, ah->imask);
- 
-@@ -292,6 +288,8 @@ int ath_set_channel(struct ath_softc *sc, struct ieee80211_hw *hw,
- 	}
- 
-  ps_restore:
-+	spin_unlock_bh(&sc->sc_pcu_lock);
-+
- 	ath9k_ps_restore(sc);
- 	return r;
- }
-@@ -606,6 +604,8 @@ void ath9k_tasklet(unsigned long data)
- 		return;
- 	}
- 
-+	spin_lock_bh(&sc->sc_pcu_lock);
-+
- 	if (!ath9k_hw_check_alive(ah))
- 		ieee80211_queue_work(sc->hw, &sc->hw_check_work);
- 
-@@ -616,15 +616,12 @@ void ath9k_tasklet(unsigned long data)
- 		rxmask = (ATH9K_INT_RX | ATH9K_INT_RXEOL | ATH9K_INT_RXORN);
- 
- 	if (status & rxmask) {
--		spin_lock_bh(&sc->sc_pcu_lock);
--
- 		/* Check for high priority Rx first */
- 		if ((ah->caps.hw_caps & ATH9K_HW_CAP_EDMA) &&
- 		    (status & ATH9K_INT_RXHP))
- 			ath_rx_tasklet(sc, 0, true);
- 
- 		ath_rx_tasklet(sc, 0, false);
--		spin_unlock_bh(&sc->sc_pcu_lock);
- 	}
- 
- 	if (status & ATH9K_INT_TX) {
-@@ -650,6 +647,8 @@ void ath9k_tasklet(unsigned long data)
- 
- 	/* re-enable hardware interrupt */
- 	ath9k_hw_set_interrupts(ah, ah->imask);
-+
-+	spin_unlock_bh(&sc->sc_pcu_lock);
- 	ath9k_ps_restore(sc);
- }
- 
-@@ -874,12 +873,13 @@ void ath_radio_enable(struct ath_softc *sc, struct ieee80211_hw *hw)
- 	int r;
- 
- 	ath9k_ps_wakeup(sc);
-+	spin_lock_bh(&sc->sc_pcu_lock);
-+
- 	ath9k_hw_configpcipowersave(ah, 0, 0);
- 
- 	if (!ah->curchan)
- 		ah->curchan = ath_get_curchannel(sc, sc->hw);
- 
--	spin_lock_bh(&sc->sc_pcu_lock);
- 	r = ath9k_hw_reset(ah, ah->curchan, ah->caldata, false);
- 	if (r) {
- 		ath_print(common, ATH_DBG_FATAL,
-@@ -895,8 +895,6 @@ void ath_radio_enable(struct ath_softc *sc, struct ieee80211_hw *hw)
- 		spin_unlock_bh(&sc->sc_pcu_lock);
- 		return;
- 	}
--	spin_unlock_bh(&sc->sc_pcu_lock);
--
- 	if (sc->sc_flags & SC_OP_BEACONS)
- 		ath_beacon_config(sc, NULL);	/* restart beacons */
- 
-@@ -909,6 +907,8 @@ void ath_radio_enable(struct ath_softc *sc, struct ieee80211_hw *hw)
- 	ath9k_hw_set_gpio(ah, ah->led_pin, 0);
- 
- 	ieee80211_wake_queues(hw);
-+	spin_unlock_bh(&sc->sc_pcu_lock);
-+
- 	ath9k_ps_restore(sc);
- }
- 
-@@ -919,6 +919,8 @@ void ath_radio_disable(struct ath_softc *sc, struct ieee80211_hw *hw)
- 	int r;
- 
- 	ath9k_ps_wakeup(sc);
-+	spin_lock_bh(&sc->sc_pcu_lock);
-+
- 	ieee80211_stop_queues(hw);
- 
- 	/*
-@@ -935,8 +937,6 @@ void ath_radio_disable(struct ath_softc *sc, struct ieee80211_hw *hw)
- 
- 	ath_drain_all_txq(sc, false);	/* clear pending tx frames */
- 
--	spin_lock_bh(&sc->sc_pcu_lock);
--
- 	ath_stoprecv(sc);		/* turn off frame recv */
- 	ath_flushrecv(sc);		/* flush recv queue */
- 
-@@ -953,10 +953,11 @@ void ath_radio_disable(struct ath_softc *sc, struct ieee80211_hw *hw)
- 
- 	ath9k_hw_phy_disable(ah);
- 
--	spin_unlock_bh(&sc->sc_pcu_lock);
--
- 	ath9k_hw_configpcipowersave(ah, 1, 1);
-+
-+	spin_unlock_bh(&sc->sc_pcu_lock);
- 	ath9k_ps_restore(sc);
-+
- 	ath9k_setpower(sc, ATH9K_PM_FULL_SLEEP);
- }
- 
-@@ -970,13 +971,13 @@ int ath_reset(struct ath_softc *sc, bool retry_tx)
- 	/* Stop ANI */
- 	del_timer_sync(&common->ani.timer);
- 
-+	spin_lock_bh(&sc->sc_pcu_lock);
-+
- 	ieee80211_stop_queues(hw);
- 
- 	ath9k_hw_set_interrupts(ah, 0);
- 	ath_drain_all_txq(sc, retry_tx);
- 
--	spin_lock_bh(&sc->sc_pcu_lock);
--
- 	ath_stoprecv(sc);
- 	ath_flushrecv(sc);
- 
-@@ -989,8 +990,6 @@ int ath_reset(struct ath_softc *sc, bool retry_tx)
- 		ath_print(common, ATH_DBG_FATAL,
- 			  "Unable to start recv logic\n");
- 
--	spin_unlock_bh(&sc->sc_pcu_lock);
--
- 	/*
- 	 * We may be doing a reset in response to a request
- 	 * that changes the channel so update any state that
-@@ -1015,6 +1014,7 @@ int ath_reset(struct ath_softc *sc, bool retry_tx)
- 	}
- 
- 	ieee80211_wake_queues(hw);
-+	spin_unlock_bh(&sc->sc_pcu_lock);
- 
- 	/* Start ANI */
- 	ath_start_ani(common);
-@@ -1379,25 +1379,25 @@ static void ath9k_stop(struct ieee80211_hw *hw)
- 			ath9k_btcoex_timer_pause(sc);
- 	}
- 
-+	spin_lock_bh(&sc->sc_pcu_lock);
-+
- 	/* make sure h/w will not generate any interrupt
- 	 * before setting the invalid flag. */
- 	ath9k_hw_set_interrupts(ah, 0);
- 
- 	if (!(sc->sc_flags & SC_OP_INVALID)) {
- 		ath_drain_all_txq(sc, false);
--		spin_lock_bh(&sc->sc_pcu_lock);
- 		ath_stoprecv(sc);
- 		ath9k_hw_phy_disable(ah);
--		spin_unlock_bh(&sc->sc_pcu_lock);
--	} else {
--		spin_lock_bh(&sc->sc_pcu_lock);
-+	} else
- 		sc->rx.rxlink = NULL;
--		spin_unlock_bh(&sc->sc_pcu_lock);
--	}
- 
- 	/* disable HAL and put h/w to sleep */
- 	ath9k_hw_disable(ah);
- 	ath9k_hw_configpcipowersave(ah, 1, 1);
-+
-+	spin_unlock_bh(&sc->sc_pcu_lock);
-+
- 	ath9k_ps_restore(sc);
- 
- 	/* Finally, put the chip in FULL SLEEP mode */
-diff --git a/drivers/net/wireless/ath/ath9k/xmit.c b/drivers/net/wireless/ath/ath9k/xmit.c
-index 81f63e52..e1383e5 100644
---- a/drivers/net/wireless/ath/ath9k/xmit.c
-+++ b/drivers/net/wireless/ath/ath9k/xmit.c
-@@ -1148,13 +1148,11 @@ void ath_drain_all_txq(struct ath_softc *sc, bool retry_tx)
- 		ath_print(common, ATH_DBG_FATAL,
- 			  "Failed to stop TX DMA. Resetting hardware!\n");
- 
--		spin_lock_bh(&sc->sc_pcu_lock);
- 		r = ath9k_hw_reset(ah, sc->sc_ah->curchan, ah->caldata, false);
- 		if (r)
- 			ath_print(common, ATH_DBG_FATAL,
- 				  "Unable to reset hardware; reset status %d\n",
- 				  r);
--		spin_unlock_bh(&sc->sc_pcu_lock);
- 	}
- 
- 	for (i = 0; i < ATH9K_NUM_TX_QUEUES; i++) {
-@@ -1780,7 +1778,9 @@ int ath_tx_start(struct ieee80211_hw *hw, struct sk_buff *skb,
- 	}
- 	spin_unlock_bh(&txq->axq_lock);
- 
-+	//spin_lock_bh(&sc->sc_pcu_lock);
- 	ath_tx_start_dma(sc, bf, txctl);
-+	//spin_unlock_bh(&sc->sc_pcu_lock);
- 
+diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
+index 18bd0e5..560a9f9 100644
+--- a/net/mac80211/cfg.c
++++ b/net/mac80211/cfg.c
+@@ -1498,6 +1498,20 @@ static int ieee80211_set_cqm_rssi_config(struct wiphy *wiphy,
  	return 0;
  }
+ 
++static int ieee80211_set_cqm_bitrate_config(struct wiphy *wiphy,
++					    struct net_device *dev,
++					    u32 bitrate_thold)
++{
++	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
++
++	sdata->u.mgd.cqm_bitrate_thold = bitrate_thold;
++	sdata->u.mgd.last_cqm_bitrate = 0;
++	memset(&sdata->u.mgd.last_cqm_tx_rate, 0,
++	       sizeof(sdata->u.mgd.last_cqm_tx_rate));
++
++	return 0;
++}
++
+ static int ieee80211_set_bitrate_mask(struct wiphy *wiphy,
+ 				      struct net_device *dev,
+ 				      const u8 *addr,
+@@ -1672,5 +1686,6 @@ struct cfg80211_ops mac80211_config_ops = {
+ 	.cancel_remain_on_channel = ieee80211_cancel_remain_on_channel,
+ 	.mgmt_tx = ieee80211_mgmt_tx,
+ 	.set_cqm_rssi_config = ieee80211_set_cqm_rssi_config,
++	.set_cqm_bitrate_config = ieee80211_set_cqm_bitrate_config,
+ 	.mgmt_frame_register = ieee80211_mgmt_frame_register,
+ };
+diff --git a/net/mac80211/debugfs.c b/net/mac80211/debugfs.c
+index ebd5b69..8d021eb 100644
+--- a/net/mac80211/debugfs.c
++++ b/net/mac80211/debugfs.c
+@@ -438,6 +438,10 @@ void debugfs_hw_add(struct ieee80211_local *local)
+ 		local->rx_handlers_fragments);
+ 	DEBUGFS_STATS_ADD(tx_status_drop,
+ 		local->tx_status_drop);
++	DEBUGFS_STATS_ADD(tx_cqm_calculate_count,
++		local->tx_cqm_calculate_count);
++	DEBUGFS_STATS_ADD(tx_cqm_notify_count,
++		local->tx_cqm_notify_count);
+ #endif
+ 	DEBUGFS_DEVSTATS_ADD(dot11ACKFailureCount);
+ 	DEBUGFS_DEVSTATS_ADD(dot11RTSFailureCount);
+diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+index b80c386..170ecce 100644
+--- a/net/mac80211/ieee80211_i.h
++++ b/net/mac80211/ieee80211_i.h
+@@ -348,9 +348,11 @@ struct ieee80211_if_managed {
+ 	struct work_struct monitor_work;
+ 	struct work_struct chswitch_work;
+ 	struct work_struct beacon_connection_loss_work;
++	struct work_struct bitrate_notify_work;
+ 
+ 	unsigned long probe_timeout;
+ 	int probe_send_count;
++	bool tx_bitrate_changed;
+ 
+ 	struct mutex mtx;
+ 	struct cfg80211_bss *associated;
+@@ -406,6 +408,25 @@ struct ieee80211_if_managed {
+ 	 * generated for the current association.
+ 	 */
+ 	int last_cqm_event_signal;
++
++
++	/*
++	 * Connection quality monitor bitrate threshold, a zero value
++	 * implies disabled
++	 */
++	u32 cqm_bitrate_thold;
++
++	/*
++	 * Last bitrate value sent as an event to signal quality listeners.
++	 * This is a u32 in units of 1000 bits per second.
++	 */
++	u32 last_cqm_bitrate;
++
++	/*
++	 * Previous transmit rate.  Used to detect whether the transmit rate
++	 * for the previous packet is different from the one before it.
++	 */
++	struct ieee80211_tx_rate last_cqm_tx_rate;
+ };
+ 
+ struct ieee80211_if_ibss {
+@@ -868,6 +889,8 @@ struct ieee80211_local {
+ 	unsigned int rx_expand_skb_head2;
+ 	unsigned int rx_handlers_fragments;
+ 	unsigned int tx_status_drop;
++	unsigned int tx_cqm_calculate_count;
++	unsigned int tx_cqm_notify_count;
+ #define I802_DEBUG_INC(c) (c)++
+ #else /* CONFIG_MAC80211_DEBUG_COUNTERS */
+ #define I802_DEBUG_INC(c) do { } while (0)
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+index a3a9421..6260343 100644
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -1176,6 +1176,14 @@ void ieee80211_connection_loss(struct ieee80211_vif *vif)
+ }
+ EXPORT_SYMBOL(ieee80211_connection_loss);
+ 
++static void ieee80211_rate_notify_work(struct work_struct *work)
++{
++	struct ieee80211_sub_if_data *sdata =
++		container_of(work, struct ieee80211_sub_if_data,
++			     u.mgd.bitrate_notify_work);
++
++	ieee80211_cqm_bitrate_notify(sdata);
++}
+ 
+ static enum rx_mgmt_action __must_check
+ ieee80211_rx_mgmt_deauth(struct ieee80211_sub_if_data *sdata,
+@@ -2002,6 +2010,7 @@ void ieee80211_sta_setup_sdata(struct ieee80211_sub_if_data *sdata)
+ 	INIT_WORK(&ifmgd->beacon_connection_loss_work,
+ 		  ieee80211_beacon_connection_loss_work);
+ 	INIT_WORK(&ifmgd->request_smps_work, ieee80211_request_smps_work);
++        INIT_WORK(&ifmgd->bitrate_notify_work, ieee80211_rate_notify_work);
+ 	setup_timer(&ifmgd->timer, ieee80211_sta_timer,
+ 		    (unsigned long) sdata);
+ 	setup_timer(&ifmgd->bcn_mon_timer, ieee80211_sta_bcn_mon_timer,
+diff --git a/net/mac80211/rate.c b/net/mac80211/rate.c
+index 50a1200..14f0bfb 100644
+--- a/net/mac80211/rate.c
++++ b/net/mac80211/rate.c
+@@ -402,3 +402,99 @@ void rate_control_deinitialize(struct ieee80211_local *local)
+ 	rate_control_put(ref);
+ }
+ 
++u32 ieee80211_rate_calculate(struct ieee80211_local *local,
++			     struct ieee80211_if_managed *ifmgd)
++{
++	u32 mcs, rate_h;
++	struct ieee80211_tx_rate *rate_ptr = &ifmgd->last_cqm_tx_rate;
++	struct ieee80211_supported_band *sband;
++        static const u16 mcs_rate_table[128] = {
++		/* 20 MHz Channel width, SHORT_GI off, MCS 0-31 */
++		65,   130,  195,  260,  390,  520,  585,  650,
++		130,  260,  390,  520,  780, 1040, 1170, 1300,
++		195,  390,  585,  780, 1170, 1560, 1755, 1950,
++		260,  520,  780, 1040, 1560, 2080, 2340, 2600,
++		/* 40 MHz Channel width, SHORT_GI off, MCS 0-31 */
++		135,  270,  405,  540,  810, 1080, 1215, 1350,
++		270,  540,  810, 1080, 1620, 2160, 2430, 2700,
++		405,  810, 1215, 1620, 2430, 3240, 3645, 4050,
++		540, 1080, 1620, 2160, 3240, 4320, 4860, 5400,
++		/* 20 MHz Channel width, SHORT_GI on, MCS 0-31 */
++		72,   144,  217,  289,  433,  578,  650,  722,
++		144,  289,  433,  578,  867, 1156, 1300, 1444,
++		217,  433,  650,  867, 1300, 1733, 1950, 2167,
++		289,  578,  867, 1156, 1733, 2311, 2600, 2889,
++		/* 40 MHz Channel width, SHORT_GI on, MCS 0-31 */
++		150,  300,  450,  600,  900, 1200, 1350, 1500,
++		300,  600,  900, 1200, 1800, 2400, 2700, 3000,
++		450,  900, 1350, 1800, 2700, 3600, 4050, 4500,
++		600, 1200, 1800, 2400, 3600, 4800, 5400, 6000
++	};
++
++	if (!(rate_ptr->flags & IEEE80211_TX_RC_MCS)) {
++		sband = local->hw.wiphy->bands[local->hw.conf.channel->band];
++		rate_h = sband->bitrates[rate_ptr->idx].bitrate;
++	} else {
++		mcs = rate_ptr->idx;
++
++		/* MCS values over 32 are not yet supported */
++		if (mcs >= 32)
++			return 0;
++
++		if (rate_ptr->flags & IEEE80211_TX_RC_40_MHZ_WIDTH)
++			mcs |= 1 << 5;
++
++		if (rate_ptr->flags & IEEE80211_TX_RC_SHORT_GI)
++			mcs |= 1 << 6;
++
++		rate_h = mcs_rate_table[mcs];
++	}
++
++	return rate_h * 100;
++}
++
++void ieee80211_cqm_bitrate_notify(struct ieee80211_sub_if_data *sdata)
++{
++	struct ieee80211_if_managed *ifmgd = &sdata->u.mgd;
++	u32 bitrate, threshold;
++	int prev_rate_below_threshold, cur_rate_below_threshold;
++
++	if (!netif_running(sdata->dev) ||
++	    sdata->vif.type != NL80211_IFTYPE_STATION)
++		return;
++	
++	/*
++	 * Skip sending a notification if a the state was cleared
++	 * after the workproc was scheduled (e.g, if userspace
++	 * canceled CQM monitoring)
++	 */
++	if (!ifmgd->tx_bitrate_changed || ifmgd->cqm_bitrate_thold == 0)
++		return;
++
++	ifmgd->tx_bitrate_changed = false;
++
++	I802_DEBUG_INC(sdata->local->tx_cqm_calculate_count);
++
++	bitrate = ieee80211_rate_calculate(sdata->local, ifmgd);
++
++	threshold = ifmgd->cqm_bitrate_thold;
++	prev_rate_below_threshold = (ifmgd->last_cqm_bitrate < threshold);
++	cur_rate_below_threshold = (bitrate < threshold);
++
++	/*
++	 * Trigger a bitrate notification if one of the following is
++	 * true:
++	 *   - We haven't sent one since the threshold was reconfigured
++	 *   - We have crossed the threshold in either direction
++	 *   - We are below threshold, and the bitrate has decreased yet
++	 *     again.
++	 */
++	if (ifmgd->last_cqm_bitrate == 0 ||
++	    prev_rate_below_threshold != cur_rate_below_threshold ||
++	    (cur_rate_below_threshold && bitrate < ifmgd->last_cqm_bitrate)) {
++		cfg80211_cqm_bitrate_notify(sdata->dev, bitrate,
++					    GFP_KERNEL);
++		ifmgd->last_cqm_bitrate = bitrate;
++		I802_DEBUG_INC(sdata->local->tx_cqm_notify_count);
++	}
++}
+diff --git a/net/mac80211/rate.h b/net/mac80211/rate.h
+index 168427b..875c99f 100644
+--- a/net/mac80211/rate.h
++++ b/net/mac80211/rate.h
+@@ -120,6 +120,14 @@ int ieee80211_init_rate_ctrl_alg(struct ieee80211_local *local,
+ void rate_control_deinitialize(struct ieee80211_local *local);
+ 
+ 
++/* Notify listeners about transmit rate changes */
++void ieee80211_cqm_bitrate_notify(struct ieee80211_sub_if_data *sdata);
++
++/* Convert rate into cfg80211-compatible struct? */
++void ieee80211_rate_convert_cfg(struct ieee80211_local *local,
++				struct ieee80211_if_managed *ifmgd,
++				struct rate_info *rate);
++
+ /* Rate control algorithms */
+ #ifdef CONFIG_MAC80211_RC_PID
+ extern int rc80211_pid_init(void);
+diff --git a/net/mac80211/status.c b/net/mac80211/status.c
+index 3153c19..564aa2e 100644
+--- a/net/mac80211/status.c
++++ b/net/mac80211/status.c
+@@ -154,6 +154,24 @@ static void ieee80211_frame_acked(struct sta_info *sta, struct sk_buff *skb)
+ 		}
+ 
+ 		ieee80211_queue_work(&local->hw, &local->recalc_smps);
++	} else if (ieee80211_is_data(mgmt->frame_control) &&
++		   sdata->vif.type == NL80211_IFTYPE_STATION) {
++		struct ieee80211_if_managed *ifmgd;
++		ifmgd = &sta->sdata->u.mgd;
++		if (ifmgd->cqm_bitrate_thold != 0 &&
++		    (ifmgd->last_cqm_tx_rate.idx != sta->last_tx_rate.idx ||
++		     (ifmgd->last_cqm_tx_rate.flags &
++		      (IEEE80211_TX_RC_MCS | IEEE80211_TX_RC_40_MHZ_WIDTH |
++		       IEEE80211_TX_RC_SHORT_GI)) !=
++		     (sta->last_tx_rate.flags &
++		      (IEEE80211_TX_RC_MCS | IEEE80211_TX_RC_40_MHZ_WIDTH |
++		       IEEE80211_TX_RC_SHORT_GI)) ||
++		     sdata->u.mgd.last_cqm_bitrate == 0)) {
++			ifmgd->last_cqm_tx_rate = sta->last_tx_rate;
++			ifmgd->tx_bitrate_changed = true;
++			ieee80211_queue_work(&local->hw,
++					     &ifmgd->bitrate_notify_work);
++		}
+ 	}
+ }
+ 
 -- 
-1.7.3.2.90.gd4c43
+1.7.1
 
