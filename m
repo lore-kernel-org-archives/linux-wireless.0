@@ -1,120 +1,391 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wy0-f174.google.com ([74.125.82.174]:57758 "EHLO
-	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1760568Ab0J1WJv (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 28 Oct 2010 18:09:51 -0400
-Received: by wyf28 with SMTP id 28so2446241wyf.19
-        for <linux-wireless@vger.kernel.org>; Thu, 28 Oct 2010 15:09:50 -0700 (PDT)
-Message-ID: <4CC9F4BE.7070500@lwfinger.net>
-Date: Thu, 28 Oct 2010 17:10:06 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-To: Stefan Lippers-Hollmann <s.L-H@gmx.de>
-CC: wireless <linux-wireless@vger.kernel.org>
-Subject: Re: Realtek rtl8188 support?
-References: <c785bba31003060945j22be2e78pfeaa1bcd39fcba2c@mail.gmail.com> <201009212120.07914.s.L-H@gmx.de> <4CC9C067.9040105@lwfinger.net> <201010282348.16673.s.L-H@gmx.de>
-In-Reply-To: <201010282348.16673.s.L-H@gmx.de>
-Content-Type: multipart/mixed;
- boundary="------------040307030906090806060208"
+Received: from isilmar-3.linta.de ([188.40.101.200]:51931 "EHLO linta.de"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1750916Ab0JUPju (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 21 Oct 2010 11:39:50 -0400
+From: Dominik Brodowski <linux@dominikbrodowski.net>
+To: <linux-pcmcia@lists.infradead.org>
+Cc: Dominik Brodowski <linux@dominikbrodowski.net>,
+	netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
+	linux-scsi@vger.kernel.org, linux-usb@vger.kernel.org
+Subject: [PATCH 12/22] pcmcia: remove the "Finally, report what we've done" message
+Date: Thu, 21 Oct 2010 17:35:28 +0200
+Message-Id: <1287675338-12588-12-git-send-email-linux@dominikbrodowski.net>
+In-Reply-To: <20101021153450.GA12405@comet.dominikbrodowski.net>
+References: <20101021153450.GA12405@comet.dominikbrodowski.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is a multi-part message in MIME format.
---------------040307030906090806060208
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Remove this unnecessary message -- this info is either available
+in sysfs or by enabling dynamic debug from the PCMCIA core.
 
-On 10/28/2010 04:48 PM, Stefan Lippers-Hollmann wrote:
-> 
-> I assume you refer to rtl8712u.bin in your r8712u_firmware tree:
-> http://git.kernel.org/?p=linux/kernel/git/lwfinger/r8712u_firmware.git;a=blob_plain;f=rtl8712u.bin
-> 200fd952db3cc9259b1fd05e3e51966f  *rtl8712u.bin
-> 
->> you want to grab the new firmware package, I can send you a copy of the patch.
-> 
-> I'd very much like to test the patch(2) needed for rtl8712, if possible.
-
-Attached is the patch. You should place rtl8712u.bin in
-/lib/modules/rtl8712u/rtl8712u.bin.
-
-Larry
-
---------------040307030906090806060208
-Content-Type: text/x-patch;
- name="0001-staging-r8712u-Switch-driver-to-use-external-firmwar.patch"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: attachment;
- filename*0="0001-staging-r8712u-Switch-driver-to-use-external-firmwar.pa";
- filename*1="tch"
-
->From 2559d624a3bfc47e6ba9d1cf5157c5c7b1cbf80e Mon Sep 17 00:00:00 2001
-From: Larry Finger <Larry.Finger@lwfinger.net>
-Date: Tue, 26 Oct 2010 10:59:11 -0500
-Subject: [PATCH 1/2] staging: r8712u: Switch driver to use external firmware from linux-firmware
-
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+CC: netdev@vger.kernel.org
+CC: linux-wireless@vger.kernel.org
+CC: linux-scsi@vger.kernel.org
+CC: linux-usb@vger.kernel.org
+Tested-by: Wolfram Sang <w.sang@pengutronix.de>
+Signed-off-by: Dominik Brodowski <linux@dominikbrodowski.net>
 ---
- drivers/staging/rtl8712/TODO       |    2 --
- drivers/staging/rtl8712/hal_init.c |   22 +++++++++++++++++-----
- 2 files changed, 17 insertions(+), 7 deletions(-)
+ drivers/char/pcmcia/synclink_cs.c                |    7 -------
+ drivers/isdn/hisax/avma1_cs.c                    |    3 ---
+ drivers/isdn/hisax/elsa_cs.c                     |   10 ----------
+ drivers/isdn/hisax/sedlbauer_cs.c                |   12 ------------
+ drivers/isdn/hisax/teles_cs.c                    |   10 ----------
+ drivers/net/wireless/airo_cs.c                   |   11 -----------
+ drivers/net/wireless/hostap/hostap_cs.c          |   15 +--------------
+ drivers/pcmcia/ds.c                              |    7 +++++++
+ drivers/scsi/pcmcia/nsp_cs.c                     |   15 ---------------
+ drivers/staging/comedi/drivers/cb_das16_cs.c     |    9 ---------
+ drivers/staging/comedi/drivers/das08_cs.c        |    9 ---------
+ drivers/staging/comedi/drivers/ni_daq_700.c      |    9 ---------
+ drivers/staging/comedi/drivers/ni_daq_dio24.c    |    9 ---------
+ drivers/staging/comedi/drivers/ni_labpc_cs.c     |    9 ---------
+ drivers/staging/comedi/drivers/quatech_daqp_cs.c |    9 ---------
+ drivers/usb/host/sl811_cs.c                      |    8 --------
+ 16 files changed, 8 insertions(+), 144 deletions(-)
 
-diff --git a/drivers/staging/rtl8712/TODO b/drivers/staging/rtl8712/TODO
-index 5c88821..ed22b0b 100644
---- a/drivers/staging/rtl8712/TODO
-+++ b/drivers/staging/rtl8712/TODO
-@@ -4,8 +4,6 @@ TODO:
- - switch to use MAC80211
- - checkpatch.pl fixes - only a few remain
- - sparse fixes
--- switch from large inline firmware file to use the firmware interface
--  and add the file to the linux-firmware package.
+diff --git a/drivers/char/pcmcia/synclink_cs.c b/drivers/char/pcmcia/synclink_cs.c
+index a343b8f..7c71913 100644
+--- a/drivers/char/pcmcia/synclink_cs.c
++++ b/drivers/char/pcmcia/synclink_cs.c
+@@ -592,13 +592,6 @@ static int mgslpc_config(struct pcmcia_device *link)
  
- Please send any patches to Greg Kroah-Hartman <greg@kroah.com>,
- Larry Finger <Larry.Finger@lwfinger.net> and
-diff --git a/drivers/staging/rtl8712/hal_init.c b/drivers/staging/rtl8712/hal_init.c
-index 32088a6..014fbbc 100644
---- a/drivers/staging/rtl8712/hal_init.c
-+++ b/drivers/staging/rtl8712/hal_init.c
-@@ -31,7 +31,6 @@
- #include "osdep_service.h"
- #include "drv_types.h"
- #include "rtl871x_byteorder.h"
--#include "farray.h"
- #include "usb_osintf.h"
+     info->io_base = link->resource[0]->start;
+     info->irq_level = link->irq;
+-
+-    dev_info(&link->dev, "index 0x%02x:",
+-	    link->config_index);
+-    printk(", irq %d", link->irq);
+-    if (link->resource[0])
+-	    printk(", io %pR", link->resource[0]);
+-    printk("\n");
+     return 0;
  
- #define FWBUFF_ALIGN_SZ 512
-@@ -40,11 +39,24 @@
- static u32 rtl871x_open_fw(struct _adapter *padapter, void **pphfwfile_hdl,
- 		    const u8 **ppmappedfw)
- {
--	u32 len;
-+	int rc;
-+	const char firmware_file[] = "rtl8712u/rtl8712u.bin";
-+	const struct firmware **praw = (const struct firmware **)
-+				       (pphfwfile_hdl);
-+	struct dvobj_priv *pdvobjpriv = (struct dvobj_priv *)
-+					(&padapter->dvobjpriv);
-+	struct usb_device *pusbdev = pdvobjpriv->pusbdev;
+ failed:
+diff --git a/drivers/isdn/hisax/avma1_cs.c b/drivers/isdn/hisax/avma1_cs.c
+index cb09f0c..47590e0 100644
+--- a/drivers/isdn/hisax/avma1_cs.c
++++ b/drivers/isdn/hisax/avma1_cs.c
+@@ -162,9 +162,6 @@ static int __devinit avma1cs_config(struct pcmcia_device *link)
+ 	return -ENODEV;
+     }
  
--	*ppmappedfw = f_array;
--	len = sizeof(f_array);
--	return len;
-+	printk(KERN_INFO "r8712u: Loading firmware from \"%s\"\n",
-+	       firmware_file);
-+	rc = request_firmware(praw, firmware_file, &pusbdev->dev);
-+	if (rc < 0) {
-+		printk(KERN_ERR "r8712u: Unable to load firmware\n");
-+		printk(KERN_ERR "r8712u: Install latest linux-firmware\n");
-+		return 0;
-+	}
-+	*ppmappedfw = (u8 *)((*praw)->data);
-+	return (*praw)->size;
- }
+-    printk(KERN_NOTICE "avma1_cs: checking at i/o %#x, irq %d\n",
+-		(unsigned int) link->resource[0]->start, link->irq);
+-
+     icard.para[0] = link->irq;
+     icard.para[1] = link->resource[0]->start;
+     icard.protocol = isdnprot;
+diff --git a/drivers/isdn/hisax/elsa_cs.c b/drivers/isdn/hisax/elsa_cs.c
+index f203a52..b37b9f0 100644
+--- a/drivers/isdn/hisax/elsa_cs.c
++++ b/drivers/isdn/hisax/elsa_cs.c
+@@ -196,16 +196,6 @@ static int __devinit elsa_cs_config(struct pcmcia_device *link)
+     if (i != 0)
+ 	goto failed;
  
- static void fill_fwpriv(struct _adapter *padapter, struct fw_priv *pfwpriv)
+-    /* Finally, report what we've done */
+-    dev_info(&link->dev, "index 0x%02x: ",
+-	    link->config_index);
+-    printk(", irq %d", link->irq);
+-    if (link->resource[0])
+-	printk(" & %pR", link->resource[0]);
+-    if (link->resource[1])
+-	printk(" & %pR", link->resource[1]);
+-    printk("\n");
+-
+     icard.para[0] = link->irq;
+     icard.para[1] = link->resource[0]->start;
+     icard.protocol = protocol;
+diff --git a/drivers/isdn/hisax/sedlbauer_cs.c b/drivers/isdn/hisax/sedlbauer_cs.c
+index a88c88f..ff17dba 100644
+--- a/drivers/isdn/hisax/sedlbauer_cs.c
++++ b/drivers/isdn/hisax/sedlbauer_cs.c
+@@ -205,18 +205,6 @@ static int __devinit sedlbauer_config(struct pcmcia_device *link)
+     if (ret)
+ 	    goto failed;
+ 
+-    /* Finally, report what we've done */
+-    dev_info(&link->dev, "index 0x%02x:",
+-	   link->config_index);
+-    if (link->vpp)
+-	printk(", Vpp %d.%d", link->vpp/10, link->vpp%10);
+-    printk(", irq %d", link->irq);
+-    if (link->resource[0])
+-	printk(" & %pR", link->resource[0]);
+-    if (link->resource[1])
+-	printk(" & %pR", link->resource[1]);
+-    printk("\n");
+-
+     icard.para[0] = link->irq;
+     icard.para[1] = link->resource[0]->start;
+     icard.protocol = protocol;
+diff --git a/drivers/isdn/hisax/teles_cs.c b/drivers/isdn/hisax/teles_cs.c
+index 05a5631..13ba9ab 100644
+--- a/drivers/isdn/hisax/teles_cs.c
++++ b/drivers/isdn/hisax/teles_cs.c
+@@ -183,16 +183,6 @@ static int __devinit teles_cs_config(struct pcmcia_device *link)
+     if (i != 0)
+       goto cs_failed;
+ 
+-    /* Finally, report what we've done */
+-    dev_info(&link->dev, "index 0x%02x:",
+-	    link->config_index);
+-    printk(", irq %d", link->irq);
+-    if (link->resource[0])
+-	printk(" & %pR", link->resource[0]);
+-    if (link->resource[1])
+-	printk(" & %pR", link->resource[1]);
+-    printk("\n");
+-
+     icard.para[0] = link->irq;
+     icard.para[1] = link->resource[0]->start;
+     icard.protocol = protocol;
+diff --git a/drivers/net/wireless/airo_cs.c b/drivers/net/wireless/airo_cs.c
+index 77682f2..4067bf1 100644
+--- a/drivers/net/wireless/airo_cs.c
++++ b/drivers/net/wireless/airo_cs.c
+@@ -193,17 +193,6 @@ static int airo_config(struct pcmcia_device *link)
+ 	if (!((local_info_t *)link->priv)->eth_dev)
+ 		goto failed;
+ 
+-	/* Finally, report what we've done */
+-	dev_info(&link->dev, "index 0x%02x: ",
+-	       link->config_index);
+-	if (link->vpp)
+-		printk(", Vpp %d.%d", link->vpp/10, link->vpp%10);
+-	printk(", irq %d", link->irq);
+-	if (link->resource[0])
+-		printk(" & %pR", link->resource[0]);
+-	if (link->resource[1])
+-		printk(" & %pR", link->resource[1]);
+-	printk("\n");
+ 	return 0;
+ 
+  failed:
+diff --git a/drivers/net/wireless/hostap/hostap_cs.c b/drivers/net/wireless/hostap/hostap_cs.c
+index e57b201..d6ff0c7 100644
+--- a/drivers/net/wireless/hostap/hostap_cs.c
++++ b/drivers/net/wireless/hostap/hostap_cs.c
+@@ -544,19 +544,6 @@ static int prism2_config(struct pcmcia_device *link)
+ 
+ 	spin_unlock_irqrestore(&local->irq_init_lock, flags);
+ 
+-	/* Finally, report what we've done */
+-	printk(KERN_INFO "%s: index 0x%02x: ",
+-	       dev_info, link->config_index);
+-	if (link->vpp)
+-		printk(", Vpp %d.%d", link->vpp / 10,
+-		       link->vpp % 10);
+-	printk(", irq %d", link->irq);
+-	if (link->resource[0])
+-		printk(" & %pR", link->resource[0]);
+-	if (link->resource[1])
+-		printk(" & %pR", link->resource[1]);
+-	printk("\n");
+-
+ 	local->shutdown = 0;
+ 
+ 	sandisk_enable_wireless(dev);
+@@ -568,7 +555,7 @@ static int prism2_config(struct pcmcia_device *link)
+ 	return ret;
+ 
+  failed_unlock:
+-	 spin_unlock_irqrestore(&local->irq_init_lock, flags);
++	spin_unlock_irqrestore(&local->irq_init_lock, flags);
+  failed:
+ 	kfree(hw_priv);
+ 	prism2_release((u_long)link);
+diff --git a/drivers/pcmcia/ds.c b/drivers/pcmcia/ds.c
+index dd43bd3..912c740 100644
+--- a/drivers/pcmcia/ds.c
++++ b/drivers/pcmcia/ds.c
+@@ -277,6 +277,8 @@ static int pcmcia_device_probe(struct device *dev)
+ 	if (!ret) {
+ 		p_dev->config_base = cis_config.base;
+ 		p_dev->config_regs = cis_config.rmask[0];
++		dev_dbg(dev, "base %x, regs %x", p_dev->config_base,
++			p_dev->config_regs);
+ 	} else {
+ 		dev_printk(KERN_INFO, dev,
+ 			   "pcmcia: could not parse base and rmask0 of CIS\n");
+@@ -290,6 +292,11 @@ static int pcmcia_device_probe(struct device *dev)
+ 			   p_drv->drv.name, ret);
+ 		goto put_module;
+ 	}
++	dev_dbg(dev, "%s bound: Vpp %d.%d, idx %x, IRQ %d", p_drv->drv.name,
++		p_dev->vpp/10, p_dev->vpp%10, p_dev->config_index, p_dev->irq);
++	dev_dbg(dev, "resources: ioport %pR %pR iomem %pR %pR %pR",
++		p_dev->resource[0], p_dev->resource[1], p_dev->resource[2],
++		p_dev->resource[3], p_dev->resource[4]);
+ 
+ 	mutex_lock(&s->ops_mutex);
+ 	if ((s->pcmcia_pfc) &&
+diff --git a/drivers/scsi/pcmcia/nsp_cs.c b/drivers/scsi/pcmcia/nsp_cs.c
+index 3b90ad9..2b4a1a8 100644
+--- a/drivers/scsi/pcmcia/nsp_cs.c
++++ b/drivers/scsi/pcmcia/nsp_cs.c
+@@ -1687,21 +1687,6 @@ static int nsp_cs_config(struct pcmcia_device *link)
+ 
+ 	info->host = host;
+ 
+-	/* Finally, report what we've done */
+-	printk(KERN_INFO "nsp_cs: index 0x%02x: ",
+-	       link->config_index);
+-	if (link->vpp) {
+-		printk(", Vpp %d.%d", link->vpp/10, link->vpp%10);
+-	}
+-	printk(", irq %d", link->irq);
+-	if (link->resource[0])
+-		printk(", io %pR", link->resource[0]);
+-	if (link->resource[1])
+-		printk(" & %pR", link->resource[1]);
+-	if (link->resource[2])
+-		printk(", mem %pR", link->resource[2]);
+-	printk("\n");
+-
+ 	return 0;
+ 
+  cs_failed:
+diff --git a/drivers/staging/comedi/drivers/cb_das16_cs.c b/drivers/staging/comedi/drivers/cb_das16_cs.c
+index c43c689..0c4b27c 100644
+--- a/drivers/staging/comedi/drivers/cb_das16_cs.c
++++ b/drivers/staging/comedi/drivers/cb_das16_cs.c
+@@ -745,15 +745,6 @@ static void das16cs_pcmcia_config(struct pcmcia_device *link)
+ 	if (ret)
+ 		goto failed;
+ 
+-	/* Finally, report what we've done */
+-	dev_info(&link->dev, "index 0x%02x", link->config_index);
+-	printk(", irq %u", link->irq);
+-	if (link->resource[0])
+-		printk(", io %pR", link->resource[0]);
+-	if (link->resource[1])
+-		printk(", io %pR", link->resource[1]);
+-	printk("\n");
+-
+ 	return;
+ 
+ failed:
+diff --git a/drivers/staging/comedi/drivers/das08_cs.c b/drivers/staging/comedi/drivers/das08_cs.c
+index d395909..6d89325 100644
+--- a/drivers/staging/comedi/drivers/das08_cs.c
++++ b/drivers/staging/comedi/drivers/das08_cs.c
+@@ -235,15 +235,6 @@ static void das08_pcmcia_config(struct pcmcia_device *link)
+ 	if (ret)
+ 		goto failed;
+ 
+-	/* Finally, report what we've done */
+-	dev_info(&link->dev, "index 0x%02x", link->config_index);
+-	printk(", irq %u", link->irq);
+-	if (link->resource[0])
+-		printk(", io %pR", link->resource[0]);
+-	if (link->resource[1])
+-		printk(" & %pR", link->resource[1]);
+-	printk("\n");
+-
+ 	return;
+ 
+ failed:
+diff --git a/drivers/staging/comedi/drivers/ni_daq_700.c b/drivers/staging/comedi/drivers/ni_daq_700.c
+index 7129b0c..5244125 100644
+--- a/drivers/staging/comedi/drivers/ni_daq_700.c
++++ b/drivers/staging/comedi/drivers/ni_daq_700.c
+@@ -568,15 +568,6 @@ static void dio700_config(struct pcmcia_device *link)
+ 	if (ret != 0)
+ 		goto failed;
+ 
+-	/* Finally, report what we've done */
+-	dev_info(&link->dev, "index 0x%02x", link->config_index);
+-	printk(", irq %d", link->irq);
+-	if (link->resource[0])
+-		printk(", io %pR", link->resource[0]);
+-	if (link->resource[1])
+-		printk(" & %pR", link->resource[1]);
+-	printk("\n");
+-
+ 	return;
+ 
+ failed:
+diff --git a/drivers/staging/comedi/drivers/ni_daq_dio24.c b/drivers/staging/comedi/drivers/ni_daq_dio24.c
+index 4defdda..54dda4a 100644
+--- a/drivers/staging/comedi/drivers/ni_daq_dio24.c
++++ b/drivers/staging/comedi/drivers/ni_daq_dio24.c
+@@ -319,15 +319,6 @@ static void dio24_config(struct pcmcia_device *link)
+ 	if (ret)
+ 		goto failed;
+ 
+-	/* Finally, report what we've done */
+-	dev_info(&link->dev, "index 0x%02x", link->config_index);
+-	printk(", irq %d", link->irq);
+-	if (link->resource[0])
+-		printk(" & %pR", link->resource[0]);
+-	if (link->resource[1])
+-		printk(" & %pR", link->resource[1]);
+-	printk("\n");
+-
+ 	return;
+ 
+ failed:
+diff --git a/drivers/staging/comedi/drivers/ni_labpc_cs.c b/drivers/staging/comedi/drivers/ni_labpc_cs.c
+index 5123b31..22119f2 100644
+--- a/drivers/staging/comedi/drivers/ni_labpc_cs.c
++++ b/drivers/staging/comedi/drivers/ni_labpc_cs.c
+@@ -297,15 +297,6 @@ static void labpc_config(struct pcmcia_device *link)
+ 	if (ret)
+ 		goto failed;
+ 
+-	/* Finally, report what we've done */
+-	dev_info(&link->dev, "index 0x%02x", link->config_index);
+-	printk(", irq %d", link->irq);
+-	if (link->resource[0])
+-		printk(" & %pR", link->resource[0]);
+-	if (link->resource[1])
+-		printk(" & %pR", link->resource[1]);
+-	printk("\n");
+-
+ 	return;
+ 
+ failed:
+diff --git a/drivers/staging/comedi/drivers/quatech_daqp_cs.c b/drivers/staging/comedi/drivers/quatech_daqp_cs.c
+index afd283d..de37ff7 100644
+--- a/drivers/staging/comedi/drivers/quatech_daqp_cs.c
++++ b/drivers/staging/comedi/drivers/quatech_daqp_cs.c
+@@ -1103,15 +1103,6 @@ static void daqp_cs_config(struct pcmcia_device *link)
+ 	if (ret)
+ 		goto failed;
+ 
+-	/* Finally, report what we've done */
+-	dev_info(&link->dev, "index 0x%02x", link->config_index);
+-	printk(", irq %u", link->irq);
+-	if (link->resource[0])
+-		printk(" & %pR", link->resource[0]);
+-	if (link->resource[1])
+-		printk(" & %pR", link->resource[1]);
+-	printk("\n");
+-
+ 	return;
+ 
+ failed:
+diff --git a/drivers/usb/host/sl811_cs.c b/drivers/usb/host/sl811_cs.c
+index 81d7eea..9ce95cd 100644
+--- a/drivers/usb/host/sl811_cs.c
++++ b/drivers/usb/host/sl811_cs.c
+@@ -164,14 +164,6 @@ static int sl811_cs_config(struct pcmcia_device *link)
+ 	if (ret)
+ 		goto failed;
+ 
+-	dev_info(&link->dev, "index 0x%02x: ",
+-		link->config_index);
+-	if (link->vpp)
+-		printk(", Vpp %d.%d", link->vpp/10, link->vpp%10);
+-	printk(", irq %d", link->irq);
+-	printk(", io %pR", link->resource[0]);
+-	printk("\n");
+-
+ 	if (sl811_hc_init(parent, link->resource[0]->start, link->irq)
+ 			< 0) {
+ failed:
 -- 
-1.7.1
+1.7.0.4
 
-
---------------040307030906090806060208--
