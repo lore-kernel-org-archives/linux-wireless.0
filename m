@@ -1,109 +1,95 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:59929 "EHLO mga01.intel.com"
+Received: from nbd.name ([88.198.39.176]:47285 "EHLO ds10.nbd.name"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753048Ab0JGXIt (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 7 Oct 2010 19:08:49 -0400
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Johannes Berg <johannes.berg@intel.com>,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Subject: [PATCH 05/22] iwlwifi: rename iwl_mac_beacon_update
-Date: Thu,  7 Oct 2010 16:07:44 -0700
-Message-Id: <1286492881-15743-6-git-send-email-wey-yi.w.guy@intel.com>
-In-Reply-To: <1286492881-15743-1-git-send-email-wey-yi.w.guy@intel.com>
-References: <1286492881-15743-1-git-send-email-wey-yi.w.guy@intel.com>
+	id S1753002Ab0JUArf (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 20 Oct 2010 20:47:35 -0400
+From: Felix Fietkau <nbd@openwrt.org>
+To: linux-wireless@vger.kernel.org
+Cc: linville@tuxdriver.com, lrodriguez@atheros.com
+Subject: [PATCH 3/3] mac80211: minstrel_ht - reduce the overhead of rate sampling
+Date: Thu, 21 Oct 2010 02:47:25 +0200
+Message-Id: <1287622045-21795-3-git-send-email-nbd@openwrt.org>
+In-Reply-To: <1287622045-21795-2-git-send-email-nbd@openwrt.org>
+References: <1287622045-21795-1-git-send-email-nbd@openwrt.org>
+ <1287622045-21795-2-git-send-email-nbd@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+- reduce the number of retransmission attempts for sample rates
+- sample lower rates less often
+- do not use RTS/CTS for sampling frames
+- increase the time between sampling attempts
 
-Rename iwl_mac_beacon_update to iwlcore_beacon_update
-and make the calling convention a bit different. The
-old name with _mac_ indicated that it was a mac80211
-callback, but that's no longer true.
-
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
 ---
- drivers/net/wireless/iwlwifi/iwl-core.c |   35 +++++++++++++++----------------
- 1 files changed, 17 insertions(+), 18 deletions(-)
+ net/mac80211/rc80211_minstrel_ht.c |   16 ++++++++++------
+ 1 files changed, 10 insertions(+), 6 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-core.c b/drivers/net/wireless/iwlwifi/iwl-core.c
-index dd7c3cb..71f245f 100644
---- a/drivers/net/wireless/iwlwifi/iwl-core.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-core.c
-@@ -1617,25 +1617,25 @@ static inline void iwl_set_no_assoc(struct iwl_priv *priv,
- 	iwlcore_commit_rxon(priv, ctx);
- }
+diff --git a/net/mac80211/rc80211_minstrel_ht.c b/net/mac80211/rc80211_minstrel_ht.c
+index 2a18d66..2d6f025 100644
+--- a/net/mac80211/rc80211_minstrel_ht.c
++++ b/net/mac80211/rc80211_minstrel_ht.c
+@@ -407,8 +407,8 @@ minstrel_ht_tx_status(void *priv, struct ieee80211_supported_band *sband,
+ 	mi->ampdu_len += info->status.ampdu_len;
  
--static int iwl_mac_beacon_update(struct ieee80211_hw *hw, struct sk_buff *skb)
-+static void iwlcore_beacon_update(struct ieee80211_hw *hw,
-+				  struct ieee80211_vif *vif)
- {
- 	struct iwl_priv *priv = hw->priv;
- 	unsigned long flags;
- 	__le64 timestamp;
-+	struct sk_buff *skb = ieee80211_beacon_get(hw, vif);
- 
--	IWL_DEBUG_MAC80211(priv, "enter\n");
-+	if (!skb)
-+		return;
-+
-+	IWL_DEBUG_ASSOC(priv, "enter\n");
- 
- 	lockdep_assert_held(&priv->mutex);
- 
- 	if (!priv->beacon_ctx) {
- 		IWL_ERR(priv, "update beacon but no beacon context!\n");
- 		dev_kfree_skb(skb);
--		return -EINVAL;
--	}
--
--	if (!iwl_is_ready_rf(priv)) {
--		IWL_DEBUG_MAC80211(priv, "leave - RF not ready\n");
--		return -EIO;
-+		return;
+ 	if (!mi->sample_wait && !mi->sample_tries && mi->sample_count > 0) {
+-		mi->sample_wait = 4 + 2 * MINSTREL_TRUNC(mi->avg_ampdu_len);
+-		mi->sample_tries = 3;
++		mi->sample_wait = 16 + 2 * MINSTREL_TRUNC(mi->avg_ampdu_len);
++		mi->sample_tries = 2;
+ 		mi->sample_count--;
  	}
  
- 	spin_lock_irqsave(&priv->lock, flags);
-@@ -1648,12 +1648,16 @@ static int iwl_mac_beacon_update(struct ieee80211_hw *hw, struct sk_buff *skb)
- 	timestamp = ((struct ieee80211_mgmt *)skb->data)->u.beacon.timestamp;
- 	priv->timestamp = le64_to_cpu(timestamp);
+@@ -506,7 +506,9 @@ minstrel_ht_set_rate(struct minstrel_priv *mp, struct minstrel_ht_sta *mi,
+ 	if (!mr->retry_updated)
+ 		minstrel_calc_retransmit(mp, mi, index);
  
--	IWL_DEBUG_MAC80211(priv, "leave\n");
-+	IWL_DEBUG_ASSOC(priv, "leave\n");
-+
- 	spin_unlock_irqrestore(&priv->lock, flags);
- 
--	priv->cfg->ops->lib->post_associate(priv, priv->beacon_ctx->vif);
-+	if (!iwl_is_ready_rf(priv)) {
-+		IWL_DEBUG_MAC80211(priv, "leave - RF not ready\n");
-+		return;
-+	}
- 
--	return 0;
-+	priv->cfg->ops->lib->post_associate(priv, priv->beacon_ctx->vif);
- }
- 
- void iwl_bss_info_changed(struct ieee80211_hw *hw,
-@@ -1735,13 +1739,8 @@ void iwl_bss_info_changed(struct ieee80211_hw *hw,
- 	 * mac80211 decides to do both changes at once because
- 	 * it will invoke post_associate.
+-	if (mr->probability < MINSTREL_FRAC(20, 100))
++	if (sample)
++		rate->count = 1;
++	else if (mr->probability < MINSTREL_FRAC(20, 100))
+ 		rate->count = 2;
+ 	else if (rtscts)
+ 		rate->count = mr->retry_count_rtscts;
+@@ -562,7 +564,7 @@ minstrel_get_sample_rate(struct minstrel_priv *mp, struct minstrel_ht_sta *mi)
  	 */
--	if (vif->type == NL80211_IFTYPE_ADHOC &&
--	    changes & BSS_CHANGED_BEACON) {
--		struct sk_buff *beacon = ieee80211_beacon_get(hw, vif);
--
--		if (beacon)
--			iwl_mac_beacon_update(hw, beacon);
--	}
-+	if (vif->type == NL80211_IFTYPE_ADHOC && changes & BSS_CHANGED_BEACON)
-+		iwlcore_beacon_update(hw, vif);
+ 	if (minstrel_get_duration(sample_idx) >
+ 	    minstrel_get_duration(mi->max_tp_rate)) {
+-		if (mr->sample_skipped < 10)
++		if (mr->sample_skipped < 20)
+ 			goto next;
  
- 	if (changes & BSS_CHANGED_ERP_PREAMBLE) {
- 		IWL_DEBUG_MAC80211(priv, "ERP_PREAMBLE %d\n",
+ 		if (mi->sample_slow++ > 2)
+@@ -586,6 +588,7 @@ minstrel_ht_get_rate(void *priv, struct ieee80211_sta *sta, void *priv_sta,
+ 	struct minstrel_ht_sta *mi = &msp->ht;
+ 	struct minstrel_priv *mp = priv;
+ 	int sample_idx;
++	bool sample = false;
+ 
+ 	if (rate_control_send_low(sta, priv_sta, txrc))
+ 		return;
+@@ -596,10 +599,11 @@ minstrel_ht_get_rate(void *priv, struct ieee80211_sta *sta, void *priv_sta,
+ 	info->flags |= mi->tx_flags;
+ 	sample_idx = minstrel_get_sample_rate(mp, mi);
+ 	if (sample_idx >= 0) {
++		sample = true;
+ 		minstrel_ht_set_rate(mp, mi, &ar[0], sample_idx,
+ 			txrc, true, false);
+ 		minstrel_ht_set_rate(mp, mi, &ar[1], mi->max_tp_rate,
+-			txrc, false, true);
++			txrc, false, false);
+ 		info->flags |= IEEE80211_TX_CTL_RATE_CTRL_PROBE;
+ 	} else {
+ 		minstrel_ht_set_rate(mp, mi, &ar[0], mi->max_tp_rate,
+@@ -607,7 +611,7 @@ minstrel_ht_get_rate(void *priv, struct ieee80211_sta *sta, void *priv_sta,
+ 		minstrel_ht_set_rate(mp, mi, &ar[1], mi->max_tp_rate2,
+ 			txrc, false, true);
+ 	}
+-	minstrel_ht_set_rate(mp, mi, &ar[2], mi->max_prob_rate, txrc, false, true);
++	minstrel_ht_set_rate(mp, mi, &ar[2], mi->max_prob_rate, txrc, false, !sample);
+ 
+ 	ar[3].count = 0;
+ 	ar[3].idx = -1;
 -- 
-1.7.0.4
+1.7.2.2
 
