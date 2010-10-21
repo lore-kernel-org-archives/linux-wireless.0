@@ -1,31 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:32884
-	"EHLO sunset.davemloft.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1750982Ab0JTJAA (ORCPT
+Received: from mail-iw0-f174.google.com ([209.85.214.174]:62671 "EHLO
+	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753384Ab0JUTO1 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 20 Oct 2010 05:00:00 -0400
-Date: Wed, 20 Oct 2010 02:00:22 -0700 (PDT)
-Message-Id: <20101020.020022.104065509.davem@davemloft.net>
+	Thu, 21 Oct 2010 15:14:27 -0400
+Received: by iwn34 with SMTP id 34so75210iwn.19
+        for <linux-wireless@vger.kernel.org>; Thu, 21 Oct 2010 12:14:27 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <1287616028-12547-6-git-send-email-lrodriguez@atheros.com>
+References: <1287616028-12547-1-git-send-email-lrodriguez@atheros.com> <1287616028-12547-6-git-send-email-lrodriguez@atheros.com>
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Date: Thu, 21 Oct 2010 12:14:06 -0700
+Message-ID: <AANLkTikMXV0AXgiNPGkJiNoEEgcdV8wbgHMQcH0ou-VW@mail.gmail.com>
+Subject: Re: [PATCH 5/6] ath: add a ATH_DBG_WARN()
 To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: Re: pull request: wireless-next-2.6 2010-10-15
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <20101015204048.GC2438@tuxdriver.com>
-References: <20101015204048.GC2438@tuxdriver.com>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+Cc: linux-wireless@vger.kernel.org,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	Ben Greear <greearb@candelatech.com>,
+	Kyungwan Nam <kyungwan.nam@atheros.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: "John W. Linville" <linville@tuxdriver.com>
-Date: Fri, 15 Oct 2010 16:40:50 -0400
+On Wed, Oct 20, 2010 at 4:07 PM, Luis R. Rodriguez
+<lrodriguez@atheros.com> wrote:
+> To be used to throw out warnings only for developers.
+> This can be used by some corner cases that developers
+> already know can be hit but developers want to address
+> so to avoid spewing out a warning this can only be
+> enabled with CONFIG_ATH_DEBUG enabled.
+>
+> Cc: Ben Greear <greearb@candelatech.com>
+> Cc: Kyungwan Nam <kyungwan.nam@atheros.com>
+> Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
 
-> Here is the latest batch of updates intended for 2.6.37.  As usual,
-> it is primarily a bunch of driver updates and fixes to code already
-> in -next.  This also includes a batch of Bluetooth updates courtesy
-> of Gustavo Padovan.  There is also the movement of the wl1251 driver
-> out of the wl12xx directory.  This is a prelude to the expansion of
-> the wl1271 code to cover some new hardware, all of which is actually
-> largely unrelated to wl1251.
+Sorry, please use my v2.
 
-Pulled, thanks John.
+  Luis
