@@ -1,41 +1,200 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from emh05.mail.saunalahti.fi ([62.142.5.111]:54649 "EHLO
-	emh05.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752987Ab0JJIhT (ORCPT
+Received: from web56808.mail.re3.yahoo.com ([66.196.97.82]:37662 "HELO
+	web56808.mail.re3.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1755878Ab0JUGdM (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 10 Oct 2010 04:37:19 -0400
-From: Kalle Valo <kvalo@adurom.com>
-To: linux-wireless@vger.kernel.org
-Cc: Kalle Valo <kvalo@adurom.com>
-Subject: [PATCH 3/3] wl1251: update the new location to the maintainers file
-Date: Sun, 10 Oct 2010 11:28:33 +0300
-Message-Id: <1286699313-7774-4-git-send-email-kvalo@adurom.com>
-In-Reply-To: <1286699313-7774-1-git-send-email-kvalo@adurom.com>
-References: <1286699313-7774-1-git-send-email-kvalo@adurom.com>
+	Thu, 21 Oct 2010 02:33:12 -0400
+Message-ID: <481433.72209.qm@web56808.mail.re3.yahoo.com>
+Date: Wed, 20 Oct 2010 23:33:11 -0700 (PDT)
+From: Walter Goldens <goldenstranger@yahoo.com>
+Subject: [PATCH 1/4 v2] compat-wireless: update bluetooth in Makefile
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Cc: linux-wireless@vger.kernel.org,
+	linux-bluetooth <linux-bluetooth@vger.kernel.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-wl1251 is grown up now and can have its own room^H^H^H^Hdirectory.
+update bluetooth in Makefile
 
-Signed-off-by: Kalle Valo <kvalo@adurom.com>
+Signed-off-by: Walter Goldens <goldenstranger@yahoo.com>
 ---
- MAINTAINERS |    3 +--
- 1 files changed, 1 insertions(+), 2 deletions(-)
 
-diff --git a/MAINTAINERS b/MAINTAINERS
-index 2f22257..6431d2f 100644
---- a/MAINTAINERS
-+++ b/MAINTAINERS
-@@ -6425,8 +6425,7 @@ L:	linux-wireless@vger.kernel.org
- W:	http://wireless.kernel.org
- T:	git git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-testing.git
- S:	Maintained
--F:	drivers/net/wireless/wl12xx/*
--X:	drivers/net/wireless/wl12xx/wl1271*
-+F:	drivers/net/wireless/wl1251/*
+--- a/Makefile
++++ b/Makefile
+@@ -93,19 +93,32 @@ bt-install-modules: bt
+ 	@echo
+ 	@echo "Currently detected bluetooth subsystem modules:"
+ 	@echo
+-	@$(MODPROBE) -l sco
+-	@$(MODPROBE) -l l2cap
+-	@$(MODPROBE) -l hidp
+-	@$(MODPROBE) -l rfcomm
++	@$(MODPROBE) -l ath3k       
++	@$(MODPROBE) -l bcm203x
++	@$(MODPROBE) -l bluecard_cs
++	@$(MODPROBE) -l bluetooth
+ 	@$(MODPROBE) -l bnep
++	@$(MODPROBE) -l bpa10x
++	@$(MODPROBE) -l bt3c_cs
++	@$(MODPROBE) -l btmrvl
++	@$(MODPROBE) -l btmrvl_sdio
++	@$(MODPROBE) -l btsdio
+ 	@$(MODPROBE) -l btusb
+-	@$(MODPROBE) -l bluetooth
++	@$(MODPROBE) -l btuart_cs
++	@$(MODPROBE) -l	cmtp
++	@$(MODPROBE) -l	dtl1_cs
++	@$(MODPROBE) -l hidp
++	@$(MODPROBE) -l	hci_vhci
++	@$(MODPROBE) -l	hci_uart
++	@$(MODPROBE) -l l2cap
++	@$(MODPROBE) -l rfcomm
++	@$(MODPROBE) -l sco
+ 	@echo
+ 	@echo Now run:
+ 	@echo
+ 	@echo sudo make btunload:
+ 	@echo
+-	@echo And the load the needed bluetooth modules. If unsure reboot.
++	@echo And then load the needed bluetooth modules. If unsure reboot.
+ 	@echo
  
- WL1271 WIRELESS DRIVER
- M:	Luciano Coelho <luciano.coelho@nokia.com>
--- 
-1.7.0.4
+ btuninstall:
+@@ -118,14 +131,26 @@ btuninstall:
+ 	@echo
+ 	@echo "Your old bluetooth subsystem modules were left intact:"
+ 	@echo
+-	@$(MODPROBE) -l sco
+-	@$(MODPROBE) -l l2cap
+-	@$(MODPROBE) -l hidp
+-	@$(MODPROBE) -l rfcomm
++	@$(MODPROBE) -l ath3k       
++	@$(MODPROBE) -l bcm203x
++	@$(MODPROBE) -l bluecard_cs
++	@$(MODPROBE) -l bluetooth
+ 	@$(MODPROBE) -l bnep
++	@$(MODPROBE) -l bpa10x
++	@$(MODPROBE) -l bt3c_cs
++	@$(MODPROBE) -l btmrvl
++	@$(MODPROBE) -l btmrvl_sdio
++	@$(MODPROBE) -l btsdio
+ 	@$(MODPROBE) -l btusb
+-	@$(MODPROBE) -l bluetooth
+-	@
++	@$(MODPROBE) -l btuart_cs
++	@$(MODPROBE) -l	cmtp
++	@$(MODPROBE) -l	dtl1_cs
++	@$(MODPROBE) -l hidp
++	@$(MODPROBE) -l	hci_vhci
++	@$(MODPROBE) -l	hci_uart
++	@$(MODPROBE) -l l2cap
++	@$(MODPROBE) -l rfcomm
++	@$(MODPROBE) -l sco
+ 	@echo
+ 
+ btclean:
+@@ -263,22 +288,35 @@ install-scripts:
+ 	@echo
+ 	@echo "Currently detected bluetooth subsystem modules:"
+ 	@echo
+-	@$(MODPROBE) -l sco
+-	@$(MODPROBE) -l l2cap
+-	@$(MODPROBE) -l hidp
+-	@$(MODPROBE) -l rfcomm
++	@$(MODPROBE) -l ath3k           
++	@$(MODPROBE) -l bcm203x
++	@$(MODPROBE) -l bluecard_cs
++	@$(MODPROBE) -l bluetooth
+ 	@$(MODPROBE) -l bnep
++	@$(MODPROBE) -l bpa10x
++	@$(MODPROBE) -l bt3c_cs
++	@$(MODPROBE) -l btmrvl
++	@$(MODPROBE) -l btmrvl_sdio
++	@$(MODPROBE) -l btsdio
+ 	@$(MODPROBE) -l btusb
+-	@$(MODPROBE) -l bluetooth
++	@$(MODPROBE) -l btuart_cs
++	@$(MODPROBE) -l	cmtp
++	@$(MODPROBE) -l	dtl1_cs
++	@$(MODPROBE) -l hidp
++	@$(MODPROBE) -l	hci_vhci
++	@$(MODPROBE) -l	hci_uart
++	@$(MODPROBE) -l l2cap
++	@$(MODPROBE) -l rfcomm
++	@$(MODPROBE) -l sco
+ 	@echo 
+ 	@echo Now run:
+ 	@echo 
+-	@echo sudo make unload to unload both wireless and bluetooth modules
++	@echo sudo make unload to unload all: wireless, bluetooth and ethernet modules
+ 	@echo sudo make wlunload to unload wireless modules
+ 	@echo sudo make btunload to unload bluetooth modules
+ 	@echo
+-	@echo And then load the wireless or bluetooth module you need. If unsure reboot.
+-	@echo Alternatively use "sudo make load/wlload/btload" to load modules
++	@echo Run sudo modprobe 'driver-name' to load your desired driver. 
++	@echo If unsure reboot.
+ 	@echo
+ 
+ uninstall:
+@@ -379,13 +417,26 @@ uninstall:
+ 	@echo
+ 	@echo "Your old bluetooth subsystem modules were left intact:"
+ 	@echo
+-	@$(MODPROBE) -l sco
+-	@$(MODPROBE) -l l2cap
+-	@$(MODPROBE) -l hidp
+-	@$(MODPROBE) -l rfcomm
++	@$(MODPROBE) -l ath3k           
++	@$(MODPROBE) -l bcm203x
++	@$(MODPROBE) -l bluecard_cs
++	@$(MODPROBE) -l bluetooth
+ 	@$(MODPROBE) -l bnep
++	@$(MODPROBE) -l bpa10x
++	@$(MODPROBE) -l bt3c_cs
++	@$(MODPROBE) -l btmrvl
++	@$(MODPROBE) -l btmrvl_sdio
++	@$(MODPROBE) -l btsdio
+ 	@$(MODPROBE) -l btusb
+-	@$(MODPROBE) -l bluetooth
++	@$(MODPROBE) -l btuart_cs
++	@$(MODPROBE) -l	cmtp
++	@$(MODPROBE) -l	dtl1_cs
++	@$(MODPROBE) -l hidp
++	@$(MODPROBE) -l	hci_vhci
++	@$(MODPROBE) -l	hci_uart
++	@$(MODPROBE) -l l2cap
++	@$(MODPROBE) -l rfcomm
++	@$(MODPROBE) -l sco
+ 	@
+ 	@echo 
+ 
+@@ -397,22 +448,14 @@ clean:
+ unload:
+ 	@./scripts/unload.sh
+ 
+-load: unload
+-	@./scripts/load.sh
+-
+ btunload:
+ 	@./scripts/btunload.sh
+ 
+-btload: btunload
+-	@./scripts/btload.sh
+-
+ wlunload:
+ 	@./scripts/wlunload.sh
+ 
+-wlload: wlunload
+-	@./scripts/wlload.sh
+ 
+-.PHONY: all clean install uninstall unload load btunload btload wlunload wlload modules bt
++.PHONY: all clean install uninstall unload btunload wlunload modules bt
+ 
+ endif
 
+
+
+      
