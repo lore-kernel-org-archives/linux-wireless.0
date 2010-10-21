@@ -1,63 +1,126 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qw0-f46.google.com ([209.85.216.46]:59922 "EHLO
-	mail-qw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752048Ab0JTIoy (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 20 Oct 2010 04:44:54 -0400
-Received: by qwa26 with SMTP id 26so2103860qwa.19
-        for <linux-wireless@vger.kernel.org>; Wed, 20 Oct 2010 01:44:53 -0700 (PDT)
+Received: from mail.atheros.com ([12.19.149.2]:32114 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752240Ab0JUGDj (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 21 Oct 2010 02:03:39 -0400
+Received: from mail.atheros.com ([10.10.20.105])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Wed, 20 Oct 2010 23:03:28 -0700
+Date: Thu, 21 Oct 2010 11:33:35 +0530
+From: Senthil Balasubramanian <senthilkumar@atheros.com>
+To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+CC: "linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"Luis Rodriguez" <Luis.Rodriguez@Atheros.com>,
+	"stable@kernel.org" <stable@kernel.org>,
+	Ben Greear <greearb@candelatech.com>,
+	Kyungwan Nam <Kyungwan.Nam@Atheros.com>
+Subject: Re: [PATCH 3/6] ath9k: rename rxflushlock to pcu_lock
+Message-ID: <20101021060335.GB6948@senthil-lnx.users.atheros.com>
+References: <1287616028-12547-1-git-send-email-lrodriguez@atheros.com>
+ <1287616028-12547-4-git-send-email-lrodriguez@atheros.com>
 MIME-Version: 1.0
-In-Reply-To: <4CBE9C4F.7050806@gmx.net>
-References: <4CB6BE57.8010401@gmx.net>
-	<1287071844.11341.5.camel@gnutoo-laptop>
-	<AANLkTikosEtFnWqRVzMBKtNsB=aqOpqQFKDOZS3+pXTE@mail.gmail.com>
-	<4CB74759.3030807@gmx.net>
-	<AANLkTi=1Ar-gzRaskHGDLmkaDnr=9+oZnA=qBLCYcUAi@mail.gmail.com>
-	<4CB7F7C7.7030804@gmx.net>
-	<AANLkTi=u+mT2Xd0=0vt4uaf9hSnnkPKY+wN6DjAxME3m@mail.gmail.com>
-	<4CBABB84.1090100@gmx.net>
-	<4CBC7725.7050202@gmx.net>
-	<AANLkTincCSBfwa_Y-cy_42HfU5kP1puCbi2-dBwGkkHu@mail.gmail.com>
-	<4CBC9A51.8030309@gmx.net>
-	<1287427291.8043.2.camel@powerslave>
-	<1287428554.8043.6.camel@powerslave>
-	<4CBD52DE.9090804@gmx.net>
-	<AANLkTi=dGSVBrdDXwJgmOjEGX+i+=P_KibiJd+NNMGfy@mail.gmail.com>
-	<4CBDB654.6060702@gmx.net>
-	<AANLkTimyCv6U+Yjf7q0OFEYF3PHr5PfACSpbXbTi_PZe@mail.gmail.com>
-	<4CBDBEDB.3070407@gmx.net>
-	<AANLkTik3ZdZov4OTn0NnnPe_ZUaRh_w0db4bwLYVGCRR@mail.gmail.com>
-	<4CBE9C4F.7050806@gmx.net>
-Date: Wed, 20 Oct 2010 11:44:52 +0300
-Message-ID: <AANLkTi=iSnEM4L9PxWUigw6_HSCLjGC=L38PgwuoML_8@mail.gmail.com>
-Subject: Re: Compat-wireless N900
-From: Grazvydas Ignotas <notasas@gmail.com>
-To: George <george.news@gmx.net>
-Cc: Luciano Coelho <luciano.coelho@nokia.com>,
-	"Luis R. Rodriguez" <mcgrof@gmail.com>,
-	Bob Copeland <me@bobcopeland.com>,
-	"Denis 'GNUtoo' Carikli" <GNUtoo@no-log.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <1287616028-12547-4-git-send-email-lrodriguez@atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Oct 20, 2010 at 10:37 AM, George <george.news@gmx.net> wrote:
-> On 19/10/2010 17:18, Grazvydas Ignotas wrote:
->>>
->>> I have also set the debug ALL mode to see if I get something that can
->>> help
->>> you out on finding the problem.
->>>
->>> When uploading only wl1251 nothing appears in dmesg. But when uploading
->>> module spi, I got the following info: http://pastebin.com/ysdTSDnB
->>
->> You need both wl1251 and spi. This is normal output, you should get
->> wlan0 interface at this point.
->> --
->
-> Yes, that is what I was expecting from the begining but although phy0 should
-> appear in /sys/class/ieee80211, this directory is empty :(
-
-Hm, maybe try enabling CONFIG_MAC80211_DEBUG* stuff in config.mk in
-compat_wireless.
+On Thu, Oct 21, 2010 at 04:37:05AM +0530, Luis R. Rodriguez wrote:
+> The real way to lock RX is to contend on the PCU
+> and reset, this will be fixed in the next patch but for
+> now just do the renames so that the next patch which changes
+> the locking order is crystal clear.
+> 
+> This is part of a series that will help resolve the bug:
+> 
+> https://bugzilla.kernel.org/show_bug.cgi?id=14624
+> 
+> For more details about this issue refer to:
+> 
+> http://marc.info/?l=linux-wireless&m=128629803703756&w=2
+> 
+> Cc: stable@kernel.org
+> Cc: Ben Greear <greearb@candelatech.com>
+> Cc: Kyungwan Nam <kyungwan.nam@atheros.com>
+> Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+> ---
+>  drivers/net/wireless/ath/ath9k/ath9k.h |    2 +-
+>  drivers/net/wireless/ath/ath9k/main.c  |    4 ++--
+>  drivers/net/wireless/ath/ath9k/recv.c  |    6 +++---
+>  3 files changed, 6 insertions(+), 6 deletions(-)
+> 
+> diff --git a/drivers/net/wireless/ath/ath9k/ath9k.h b/drivers/net/wireless/ath/ath9k/ath9k.h
+> index 0f0bc54..81fed83 100644
+> --- a/drivers/net/wireless/ath/ath9k/ath9k.h
+> +++ b/drivers/net/wireless/ath/ath9k/ath9k.h
+> @@ -309,7 +309,7 @@ struct ath_rx {
+>  	u8 rxotherant;
+>  	u32 *rxlink;
+>  	unsigned int rxfilter;
+> -	spinlock_t rxflushlock;
+> +	spinlock_t pcu_lock;
+>  	spinlock_t rxbuflock;
+>  	struct list_head rxbuf;
+>  	struct ath_descdma rxdma;
+> diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
+> index dcd94ba..37f18ef 100644
+> --- a/drivers/net/wireless/ath/ath9k/main.c
+> +++ b/drivers/net/wireless/ath/ath9k/main.c
+> @@ -609,7 +609,7 @@ void ath9k_tasklet(unsigned long data)
+>  		rxmask = (ATH9K_INT_RX | ATH9K_INT_RXEOL | ATH9K_INT_RXORN);
+>  
+>  	if (status & rxmask) {
+> -		spin_lock_bh(&sc->rx.rxflushlock);
+> +		spin_lock_bh(&sc->rx.pcu_lock);
+no need to disable bh as you are already in tasklet. I understand that the
+existing code itself was doing this and I thought of fixing that anyway.
+Can you plese fix this as well with this patch?
+>  
+>  		/* Check for high priority Rx first */
+>  		if ((ah->caps.hw_caps & ATH9K_HW_CAP_EDMA) &&
+> @@ -617,7 +617,7 @@ void ath9k_tasklet(unsigned long data)
+>  			ath_rx_tasklet(sc, 0, true);
+>  
+>  		ath_rx_tasklet(sc, 0, false);
+> -		spin_unlock_bh(&sc->rx.rxflushlock);
+> +		spin_unlock_bh(&sc->rx.pcu_lock);
+here also. spin_lock() is sufficient.
+>  	}
+>  
+>  	if (status & ATH9K_INT_TX) {
+> diff --git a/drivers/net/wireless/ath/ath9k/recv.c b/drivers/net/wireless/ath/ath9k/recv.c
+> index 944fb59..b099827 100644
+> --- a/drivers/net/wireless/ath/ath9k/recv.c
+> +++ b/drivers/net/wireless/ath/ath9k/recv.c
+> @@ -317,7 +317,7 @@ int ath_rx_init(struct ath_softc *sc, int nbufs)
+>  	struct ath_buf *bf;
+>  	int error = 0;
+>  
+> -	spin_lock_init(&sc->rx.rxflushlock);
+> +	spin_lock_init(&sc->rx.pcu_lock);
+>  	sc->sc_flags &= ~SC_OP_RXFLUSH;
+>  	spin_lock_init(&sc->rx.rxbuflock);
+>  
+> @@ -533,13 +533,13 @@ bool ath_stoprecv(struct ath_softc *sc)
+>  
+>  void ath_flushrecv(struct ath_softc *sc)
+>  {
+> -	spin_lock_bh(&sc->rx.rxflushlock);
+> +	spin_lock_bh(&sc->rx.pcu_lock);
+>  	sc->sc_flags |= SC_OP_RXFLUSH;
+>  	if (sc->sc_ah->caps.hw_caps & ATH9K_HW_CAP_EDMA)
+>  		ath_rx_tasklet(sc, 1, true);
+>  	ath_rx_tasklet(sc, 1, false);
+>  	sc->sc_flags &= ~SC_OP_RXFLUSH;
+> -	spin_unlock_bh(&sc->rx.rxflushlock);
+> +	spin_unlock_bh(&sc->rx.pcu_lock);
+>  }
+>  
+>  static bool ath_beacon_dtim_pending_cab(struct sk_buff *skb)
+> -- 
+> 1.7.0.4
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
