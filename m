@@ -1,77 +1,130 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from dee.erg.abdn.ac.uk ([139.133.204.82]:43299 "EHLO erg.abdn.ac.uk"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1751654Ab0JLFIG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 12 Oct 2010 01:08:06 -0400
-Date: Tue, 12 Oct 2010 07:07:42 +0200
-From: Gerrit Renker <gerrit@erg.abdn.ac.uk>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-Subject: [Patch v2 1/1] wext: fix alignment problem in serializing 'struct
-	iw_point'
-Message-ID: <20101012050742.GA6376@gerrit.erg.abdn.ac.uk>
-References: <20100930102508.GB3581@gerrit.erg.abdn.ac.uk> <1285857487.5137.2.camel@jlt3.sipsolutions.net> <42875.148.187.160.35.1285917725.squirrel@148.187.160.35> <1285921839.3739.16.camel@jlt3.sipsolutions.net> <20101011051410.GA3977@gerrit.erg.abdn.ac.uk> <1286790947.3634.9.camel@jlt3.sipsolutions.net> <56374.148.187.160.35.1286798194.squirrel@148.187.160.35> <1286798432.3634.39.camel@jlt3.sipsolutions.net>
-MIME-Version: 1.0
+Received: from lo.gmane.org ([80.91.229.12]:57912 "EHLO lo.gmane.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750881Ab0JUQAI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 21 Oct 2010 12:00:08 -0400
+Received: from list by lo.gmane.org with local (Exim 4.69)
+	(envelope-from <glkwg-linux-wireless@m.gmane.org>)
+	id 1P8xYj-00047d-BU
+	for linux-wireless@vger.kernel.org; Thu, 21 Oct 2010 18:00:06 +0200
+Received: from user130.3eti.com ([65.220.88.130])
+        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Thu, 21 Oct 2010 18:00:05 +0200
+Received: from clin by user130.3eti.com with local (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Thu, 21 Oct 2010 18:00:05 +0200
+To: linux-wireless@vger.kernel.org
+From: Chaoxing <clin@3eti.com>
+Subject: Help: Guidance on "AP/VLAN" mode
+Date: Thu, 21 Oct 2010 15:54:30 +0000 (UTC)
+Message-ID: <loom.20101021T172706-705@post.gmane.org>
+Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1286798432.3634.39.camel@jlt3.sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-wext: fix alignment problem in serializing 'struct iw_point'
+1. Can any one here help me understand what mac80211 "AP/VLAN" mode is and how
+it's used? I googled and could not find a good document on this. 
 
-This fixes a typo in the definition of the serialized length of struct iw_point:
- a) wireless.h is exported to userspace, the typo causes IW_EV_POINT_PK_LEN
-    to be 12 on 64-bit, and 8 on 32-bit systems (causing misalignment);
- b) in compat-64 mode iwe_stream_add_point() memcpys overlap (see below).
+2. If it's meant for VLAN interface for multiple-SSID, how is the VLAN ID
+configured?
 
-The second case in  in compat-64 mode looks like (variable names are as in
-include/net/iw_handler.h:iwe_stream_add_point()):
+3. In my AP with proprietary driver, there's multiple-SSID over the same BSSID.
+(Meaning they share the same MAC address.) Each SSID is mapped to one VLAN.
+Broadcasting SSID is disabled.
+On receiving packet from clients, AP adds VLAN tag per SSID client associates.
+On transmitting packet to clients, AP remove VLAN tag.
+Is it possible to achieve the above functionality through existing open source
+software(mac80211, iw, hostapd, radio driver, etc)?
 
- point_len = IW_EV_COMPAT_POINT_LEN = 8
- lcp_len   = IW_EV_COMPAT_LCP_LEN   = 4
- 2nd memcpy: IW_EV_POINT_PK_LEN - IW_EV_LCP_PK_LEN = 12 - 4 = 8
+Thanks in advance.
 
- IW_EV_LCP_PK_LEN
- <-------------->                *---> 'extra' data area
- +-------+-------+-------+-------+---------------+------- ...-+
- | len   | cmd   |length | flags |  (empty) -> extra      ... |
- +-------+-------+-------+-------+---------------+------- ...-+
-    2       2       2       2          4
- 
-     lcp_len
- <-------------->                <-!! OVERLAP !!>
- <--1st memcpy--><------- 2nd memcpy ----------->
-                                 <---- 3rd memcpy ------- ... >
- <--------- point_len ---------->
 
-This case could cause overrun whenever iw_point.length < 4. 
-The other two cases are -
- * 32-bit systems: IW_EV_POINT_PK_LEN - IW_EV_LCP_PK_LEN =  8 - 4 = 4,
-   the second memcpy copies exactly the 4 required bytes;
- * 64-bit systems: IW_EV_POINT_PK_LEN - IW_EV_LCP_PK_LEN = 12 - 4 = 8,
-   the second memcpy copies a superfluous (but non overlapping) 4 bytes.
+The following is my experiment on AP/VLAN interface.
 
-The patch changes IW_EV_POINT_PK_LEN to be 8, so that in all 3 cases always only
-the requested iw_point.{length,flags} (both __u16) are copied, avoiding overrrun
-(compat-64) and superfluous copy (64-bit). In addition, the userspace header is
-sanitized (in agreement with version 30 of the wireless tools).
 
-Many thanks to Johannes Berg for help and review with this patch.
-    
-Signed-off-by: Gerrit Renker <gerrit@erg.abdn.ac.uk>
----
- include/linux/wireless.h |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-	
---- a/include/linux/wireless.h
-+++ b/include/linux/wireless.h
-@@ -1157,6 +1157,6 @@ struct __compat_iw_event {
- #define IW_EV_PARAM_PK_LEN	(IW_EV_LCP_PK_LEN + sizeof(struct iw_param))
- #define IW_EV_ADDR_PK_LEN	(IW_EV_LCP_PK_LEN + sizeof(struct sockaddr))
- #define IW_EV_QUAL_PK_LEN	(IW_EV_LCP_PK_LEN + sizeof(struct iw_quality))
--#define IW_EV_POINT_PK_LEN	(IW_EV_LCP_LEN + 4)
-+#define IW_EV_POINT_PK_LEN	(IW_EV_LCP_PK_LEN + 4)
- 
- #endif	/* _LINUX_WIRELESS_H */
+On "iw list" command, my system shows that it supports AP/VLAN type interface
+
+=========iw list screen shot, (part) begin ============================
+
+        Supported interface modes:
+                 * IBSS
+                 * managed
+                 * AP
+                 * AP/VLAN
+                 * monitor
+                 * mesh point
+========iw list screen shot, (part) end =========================
+
+And it does allow me to add such kind of interface by command "iw phy phy0
+interface add vlan2 type __ap_vlan"
+
+===========================screen shot begin =============================
+root@mini-dell:~/hostapd-conf# iw phy phy0 interface add vlan2 type __ap_vlan
+root@mini-dell:~/hostapd-conf# iw vlan2 info
+Interface vlan2
+        ifindex 10
+        type AP/VLAN
+root@mini-dell:~/hostapd-conf# iwconfig vlan2
+vlan2     IEEE 802.11abgn  Mode:Secondary  Tx-Power=17 dBm
+          Retry  long limit:7   RTS thr:off   Fragment thr:off
+          Power Management:off
+===========================screen shot ends =============================
+
+Now, how do I use this vlan interface "vlan2"? I tried to run hostapd over vlan2
+interface with no success. Here is my hostapd.conf and screenshot.
+
+
+===========================screen shot begin =============================
+root@mini-dell:~/hostapd-conf# hostapd -dd hostapd.conf
+Configuration file: hostapd.conf
+ctrl_interface_group=0
+nl80211: Register Action command failed: ret=-95 (Operation not supported)
+nl80211: Register Action match - hexdump(len=1): 06
+nl80211: Failed to register Action frame processing - ignore for now
+nl80211: Add own interface ifindex 10
+nl80211: Failed to set interface 10 to mode 3: -95 (Operation not supported)
+nl80211: Failed to set interface 10 to mode 3: -95 (Operation not supported)
+Could not set interface vlan2 flags: Link has been severed
+nl80211: Interface mode change to 3 from 0 failed
+nl80211: Failed to set interface vlan2 into AP mode
+nl80211 driver initialization failed.
+rmdir[ctrl_interface]: No such file or directory
+ELOOP: remaining socket: sock=4 eloop_data=0x80a7870 user_data=0x80a94f8
+handler=0x8072070
+ELOOP: remaining socket: sock=6 eloop_data=0x80aaf38 user_data=(nil)
+handler=0x807ab20
+root@mini-dell:~/hostapd-conf#
+===========================screen shot ends =============================
+
+
+------------------hostapd.conf begin ------------------
+interface=vlan2
+#bridge=brg0
+driver=nl80211
+logger_syslog=-1
+logger_syslog_level=0
+logger_stdout=-1
+logger_stdout_level=0
+dump_file=/tmp/hostapd.dump
+ctrl_interface=/var/run/hostapd
+ctrl_interface_group=0
+
+##### IEEE 802.11 related configuration #######################################
+ssid=bypass
+country_code=US
+ieee80211d=1
+hw_mode=a
+channel=36
+beacon_int=100
+dtim_period=2
+max_num_sta=255
+rts_threshold=2347
+fragm_threshold=2346
+macaddr_acl=0
+auth_algs=1
+ignore_broadcast_ssid=0
+------------------hostapd.conf end------------------
+
 
