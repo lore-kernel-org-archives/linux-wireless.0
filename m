@@ -1,47 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from lo.gmane.org ([80.91.229.12]:47073 "EHLO lo.gmane.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S933070Ab0J2Wbb (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 29 Oct 2010 18:31:31 -0400
-Received: from list by lo.gmane.org with local (Exim 4.69)
-	(envelope-from <glkwg-linux-wireless@m.gmane.org>)
-	id 1PBxTo-0001YL-D0
-	for linux-wireless@vger.kernel.org; Sat, 30 Oct 2010 00:31:24 +0200
-Received: from CPE0014bf4aedf8-CM00111ae2cca2.cpe.net.cable.rogers.com ([173.34.126.150])
-        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Sat, 30 Oct 2010 00:31:24 +0200
-Received: from senada by CPE0014bf4aedf8-CM00111ae2cca2.cpe.net.cable.rogers.com with local (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Sat, 30 Oct 2010 00:31:24 +0200
-To: linux-wireless@vger.kernel.org
-From: seno <senada@t-online.de>
-Subject: Re: [PATCH] rtl8187b: do not do per packet TX AGC
-Date: Fri, 29 Oct 2010 22:31:14 +0000 (UTC)
-Message-ID: <loom.20101030T001241-932@post.gmane.org>
-References: <1282974868-22237-1-git-send-email-cascardo@holoscopio.com> <4C798080.8010002@lwfinger.net> <20100830141218.GB30864@tuxdriver.com> <4C7BC4D9.1010108@lwfinger.net> <20100830152841.GB2950@barata.holoscopio.com> <loom.20101026T200014-691@post.gmane.org> <4CC71CFF.8050004@lwfinger.net> <20101026185341.GA4608@barata.holoscopio.com> <20101028191305.2960c83b@gotham.conectiva> <loom.20101029T010426-834@post.gmane.org> <20101029135449.GB3768@barata.holoscopio.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: from mail-bw0-f46.google.com ([209.85.214.46]:46048 "EHLO
+	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757741Ab0JUMDa (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 21 Oct 2010 08:03:30 -0400
+Received: by bwz18 with SMTP id 18so217433bwz.19
+        for <linux-wireless@vger.kernel.org>; Thu, 21 Oct 2010 05:03:28 -0700 (PDT)
+From: Helmut Schaa <helmut.schaa@googlemail.com>
+To: Paul Stewart <pstew@google.com>
+Subject: Re: [PATCH 2/2] mac80211: Add support for CQM tx bitrate monitoring
+Date: Thu, 21 Oct 2010 14:02:43 +0200
+Cc: linux-wireless@vger.kernel.org, johannes@sipsolutions.net
+References: <20101021035501.77DBF20423@glenhelen.mtv.corp.google.com>
+In-Reply-To: <20101021035501.77DBF20423@glenhelen.mtv.corp.google.com>
+MIME-Version: 1.0
+Content-Type: Text/Plain;
+  charset="us-ascii"
+Message-Id: <201010211402.43857.helmut.schaa@googlemail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Thadeu Lima de Souza Cascardo <cascardo@...> writes:
+Am Donnerstag 21 Oktober 2010 schrieb Paul Stewart:
+> Add state, work proc and debugging parameters for monitoring
+> transmit-rate changes.
+> 
+> Signed-off-by: Paul Stewart <pstew@google.com>
+> ---
 
-> Perhaps, the problem is related to using compat-wireless. Have you tried
-> using the module without the patch, using this same compat-wireless
-> version in the same linux version you are using?
+[...]
 
-Cascardo, you were right :-) Your patch did not cause the problem.
-I get those errors also with an unpatched compat-wireless-2010-10-25 driver.
+> diff --git a/net/mac80211/status.c b/net/mac80211/status.c
+> index 3153c19..564aa2e 100644
+> --- a/net/mac80211/status.c
+> +++ b/net/mac80211/status.c
+> @@ -154,6 +154,24 @@ static void ieee80211_frame_acked(struct sta_info *sta, struct sk_buff *skb)
+>  		}
+>  
+>  		ieee80211_queue_work(&local->hw, &local->recalc_smps);
+> +	} else if (ieee80211_is_data(mgmt->frame_control) &&
+> +		   sdata->vif.type == NL80211_IFTYPE_STATION) {
+> +		struct ieee80211_if_managed *ifmgd;
+> +		ifmgd = &sta->sdata->u.mgd;
+> +		if (ifmgd->cqm_bitrate_thold != 0 &&
+> +		    (ifmgd->last_cqm_tx_rate.idx != sta->last_tx_rate.idx ||
+> +		     (ifmgd->last_cqm_tx_rate.flags &
+> +		      (IEEE80211_TX_RC_MCS | IEEE80211_TX_RC_40_MHZ_WIDTH |
+> +		       IEEE80211_TX_RC_SHORT_GI)) !=
+> +		     (sta->last_tx_rate.flags &
+> +		      (IEEE80211_TX_RC_MCS | IEEE80211_TX_RC_40_MHZ_WIDTH |
+> +		       IEEE80211_TX_RC_SHORT_GI)) ||
+> +		     sdata->u.mgd.last_cqm_bitrate == 0)) {
+> +			ifmgd->last_cqm_tx_rate = sta->last_tx_rate;
+> +			ifmgd->tx_bitrate_changed = true;
+> +			ieee80211_queue_work(&local->hw,
+> +					     &ifmgd->bitrate_notify_work);
+> +		}
+>  	}
+>  }
 
-With a patched compat-wireless-2.6.33.6 there occur no errors.
+Not sure but wouldn't that trigger a lot of unnecessary processing when a rate
+gets probed by the rc algortihm? You might want to filter out probe frames
+based on IEEE80211_TX_CTL_RATE_CTRL_PROBE as otherwise you could end up with
+sending a huge number of events to userspace ...
 
-The router reports a better signal quality compared to the unpatched module, but 
-I can not really recognize a better throughput - usually still max 1 mbit @ 10 
-meters.
-
-I noticed that the connection is fast for a short time after booting (10 mbit @ 
-10 meters), but a few seconds after the download on speedtest.net started 
-(meaning the network gets under load), speed drops to 1 mbit and never recovers 
-to faster speed again; somehow like an "unrecoverable fallback mechanism"...?
-
+Helmut
