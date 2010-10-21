@@ -1,32 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iw0-f174.google.com ([209.85.214.174]:50173 "EHLO
-	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753381Ab0JVNPH (ORCPT
+Received: from mail.candelatech.com ([208.74.158.172]:36206 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752564Ab0JURre (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 22 Oct 2010 09:15:07 -0400
-Received: by iwn34 with SMTP id 34so920759iwn.19
-        for <linux-wireless@vger.kernel.org>; Fri, 22 Oct 2010 06:15:06 -0700 (PDT)
+	Thu, 21 Oct 2010 13:47:34 -0400
+Message-ID: <4CC07CA9.4040808@candelatech.com>
+Date: Thu, 21 Oct 2010 10:47:21 -0700
+From: Ben Greear <greearb@candelatech.com>
 MIME-Version: 1.0
-In-Reply-To: <1287752787-6616-1-git-send-email-rmanoharan@atheros.com>
-References: <1287752787-6616-1-git-send-email-rmanoharan@atheros.com>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Fri, 22 Oct 2010 06:14:44 -0700
-Message-ID: <AANLkTi=DwO_2t_p_+aeh6bBow_NR5=xoPw4A5L8X91ye@mail.gmail.com>
-Subject: Re: [RFC] mac80211: Fix ibss station got expired immediately
-To: Rajkumar Manoharan <rmanoharan@atheros.com>
-Cc: johannes@sipsolutions.net, linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+CC: linville@tuxdriver.com, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 0/6] ath9k: fix RX poison issue
+References: <1287616028-12547-1-git-send-email-lrodriguez@atheros.com>
+In-Reply-To: <1287616028-12547-1-git-send-email-lrodriguez@atheros.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Oct 22, 2010 at 6:06 AM, Rajkumar Manoharan
-<rmanoharan@atheros.com> wrote:
-> Station addition in ieee80211_ibss_rx_queued_mgmt is not updating
-> sta->last_rx which is causing station expiry in ieee80211_ibss_work
-> path. So sta addition and deletion happens repeatedly.
+On 10/20/2010 04:07 PM, Luis R. Rodriguez wrote:
+> This series addresses the RX poison issue reported by Ben.
+> I've split the patches up into as many atomic pieces to make
+> it easier for review and understanding. Some are stable, the
+> last few patches are for debugging.
 >
-> Signed-off-by: Rajkumar Manoharan <rmanoharan@atheros.com>
+> Luis R. Rodriguez (6):
+>    ath9k: add locking for stopping RX
+>    ath9k: add locking for starting the PCU on RX
+>    ath9k: rename rxflushlock to pcu_lock
+>    ath9k: lock reset and PCU start/stopping
+>    ath: add a ATH_DBG_WARN()
+>    ath9k: add a debug warning when we cannot stop RX
+>
+>   drivers/net/wireless/ath/ath9k/ath9k.h |    2 +-
+>   drivers/net/wireless/ath/ath9k/main.c  |   31 +++++++++++++++++++++++++++++--
+>   drivers/net/wireless/ath/ath9k/recv.c  |   17 +++++++++--------
+>   drivers/net/wireless/ath/debug.h       |    2 ++
+>   4 files changed, 41 insertions(+), 11 deletions(-)
 
-stable fix?
+I tested this code when it was combined into a single patch.
+There were still some issues, but I have no reason to believe
+this patch set caused them.  This patch set significantly
+improved stability in my testing with 130+ STA interfaces.
 
-  Luis
+So:
+
+Tested-by: Ben Greear <greearb@candelatech.com>
+
+
+-- 
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
+
