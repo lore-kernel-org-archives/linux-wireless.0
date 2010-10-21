@@ -1,45 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mgw-sa02.ext.nokia.com ([147.243.1.48]:49150 "EHLO
-	mgw-sa02.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932231Ab0JLL5a (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:60293 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756077Ab0JUSAZ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 12 Oct 2010 07:57:30 -0400
-Subject: Re: [PATCH v2 3/4] wl1271: Allocate TX descriptors more efficiently
-From: Juuso Oikarinen <juuso.oikarinen@nokia.com>
-To: ext Ido Yariv <ido@wizery.com>
-Cc: "Coelho Luciano (Nokia-MS/Helsinki)" <Luciano.Coelho@nokia.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <1286873633-10080-4-git-send-email-ido@wizery.com>
-References: <1286873633-10080-1-git-send-email-ido@wizery.com>
-	 <1286873633-10080-4-git-send-email-ido@wizery.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Tue, 12 Oct 2010 14:57:06 +0300
-Message-ID: <1286884626.11177.512.camel@wimaxnb.nmp.nokia.com>
-Mime-Version: 1.0
+	Thu, 21 Oct 2010 14:00:25 -0400
+Received: from uucp by smtp.tuxdriver.com with local-rmail (Exim 4.63)
+	(envelope-from <linville@tuxdriver.com>)
+	id 1P8zQv-0006Tz-HC
+	for linux-wireless@vger.kernel.org; Thu, 21 Oct 2010 14:00:09 -0400
+Received: from linville-8530p.local (localhost.localdomain [127.0.0.1])
+	by linville-8530p.local (8.14.4/8.14.4) with ESMTP id o9LHvhTj009103
+	for <linux-wireless@vger.kernel.org>; Thu, 21 Oct 2010 13:57:45 -0400
+Received: (from linville@localhost)
+	by linville-8530p.local (8.14.4/8.14.4/Submit) id o9LHvgIP009074
+	for linux-wireless@vger.kernel.org; Thu, 21 Oct 2010 13:57:42 -0400
+Date: Thu, 21 Oct 2010 13:57:42 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: linux-wireless@vger.kernel.org
+Subject: wireless GIT state...
+Message-ID: <20101021175741.GC6430@tuxdriver.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2010-10-12 at 10:53 +0200, ext Ido Yariv wrote:
-> On each TX descriptor allocation, a free entry is found by traversing the TX
-> descriptors array.
-> 
-> Improve this by holding a bitmap of all TX descriptors, and using efficient
-> bit operations to search for free entries.
-> The bitmap is 32 bits long, assuming that the maximum number of
-> descriptors (ACX_TX_DESCRIPTORS) will never exceed 32.
-> 
-> Signed-off-by: Ido Yariv <ido@wizery.com>
-> ---
->  drivers/net/wireless/wl12xx/wl1271.h      |    1 +
->  drivers/net/wireless/wl12xx/wl1271_main.c |    1 +
->  drivers/net/wireless/wl12xx/wl1271_tx.c   |   38 ++++++++++++++++------------
->  3 files changed, 24 insertions(+), 16 deletions(-)
-> 
+Hopefully you saw davem's similarly titled post...
 
-I doubt this will have any performance impact, but indeed it is a bit
-cleaner this way.
+I don't see much in the -next patches I've had in wireless-testing
+over the last few days that is a big deal for 2.6.37.  Those that do
+seem important are fixes that can still go anyway.
 
-Reviewed-by: Juuso Oikarinen <juuso.oikarinen@nokia.com>
+Stephen usually asks not to have anything in the trees during the
+merge window that isn't intended for Linus.  So I'm going to reset
+wireless-next-2.6 back to where it was for the last pull done by davem.
+I will also remove those patches from wireless-testing just to avoid
+being out of sync -- the fixes will be back soon, and the others will
+be back after the close of the merge window.  I will be merging the
+fixes and sending them to davem during the window -- feel free to
+identify anything you think I might miss.
 
--Juuso
+Also, as I have mentioned previously, I intend to start rebasing
+wireless-testing after each merge window.  As it stands today, the
+history is too much of a mess to be useful for bisection anyway.  I
+hope everyone can handle a once-per-release rebase of wireless-testing.
 
+John
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
