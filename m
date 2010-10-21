@@ -1,69 +1,108 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iw0-f174.google.com ([209.85.214.174]:61114 "EHLO
-	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752627Ab0JERDt (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 5 Oct 2010 13:03:49 -0400
-Received: by iwn5 with SMTP id 5so8545603iwn.19
-        for <linux-wireless@vger.kernel.org>; Tue, 05 Oct 2010 10:03:49 -0700 (PDT)
+Received: from mail.atheros.com ([12.19.149.2]:35232 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757376Ab0JUNrk (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 21 Oct 2010 09:47:40 -0400
+Received: from mail.atheros.com ([10.10.20.105])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Thu, 21 Oct 2010 06:47:30 -0700
+From: Senthil Balasubramanian <senthilkumar@atheros.com>
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	Easwar Krishnan <easwar.krishnan@atheros.com>,
+	Senthil Balasubramanian <senthilkumar@atheros.com>
+Subject: [PATCH v2 6/7] cfg80211: add debug print when processing a channel
+Date: Thu, 21 Oct 2010 19:17:04 +0530
+Message-ID: <1287668824-3096-2-git-send-email-senthilkumar@atheros.com>
+In-Reply-To: <1287668824-3096-1-git-send-email-senthilkumar@atheros.com>
+References: <1287668824-3096-1-git-send-email-senthilkumar@atheros.com>
 MIME-Version: 1.0
-In-Reply-To: <1286265464.3641.4.camel@jlt3.sipsolutions.net>
-References: <1285965233-11097-1-git-send-email-lrodriguez@atheros.com>
- <1286198845.3620.37.camel@jlt3.sipsolutions.net> <20101004164149.GE2105@tux>
- <1286210566.3620.42.camel@jlt3.sipsolutions.net> <20101004172504.GL2105@tux>
- <1286213426.3620.43.camel@jlt3.sipsolutions.net> <20101004173507.GN2105@tux>
- <20101004203900.GA14524@jm.kir.nu> <AANLkTinwwvsLzovff4DKTktWuD6UdbRiEAs3g6jj-94Q@mail.gmail.com>
- <20101004224754.GA16357@jm.kir.nu> <AANLkTi=8pxhqN9p4QP3T_wmUmsHJfqOBRYDi9w_0BUkw@mail.gmail.com>
- <1286265464.3641.4.camel@jlt3.sipsolutions.net>
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Date: Tue, 5 Oct 2010 10:03:28 -0700
-Message-ID: <AANLkTi=J1exnH1_4nSbQT8FzLLkKR0e590ZffzB76wV+@mail.gmail.com>
-Subject: Re: [PATCH v2 0/3] mac80211: fix rate_control_send_low warnings for delbas
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Jouni Malinen <j@w1.fi>,
-	Luis Rodriguez <Luis.Rodriguez@atheros.com>,
-	"linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"stable@kernel.org" <stable@kernel.org>,
-	Paul Stewart <pstew@google.com>,
-	Amod Bodas <Amod.Bodas@atheros.com>,
-	Vasanth Thiagarajan <Vasanth.Thiagarajan@atheros.com>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Oct 5, 2010 at 12:57 AM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
-> On Mon, 2010-10-04 at 16:50 -0700, Luis R. Rodriguez wrote:
->> On Mon, Oct 4, 2010 at 3:47 PM, Jouni Malinen <j@w1.fi> wrote:
->> > On Mon, Oct 04, 2010 at 02:07:22PM -0700, Luis R. Rodriguez wrote:
->> >> Jouni, just to be clear so you are fine with dropping explicitly the
->> >> tear down of the BA agreement to the old AP?
->> >
->> > If you are talking about not transmitting a frame, then yes, but
->> > obviously, we would still need to locally tear down whatever we have set
->> > up..
->>
->> Sure.
->
-> Right -- exactly what my (untested!!) patch did.
->
->> > I think it would be a good default policy to not send any frames to the
->> > old AP after we have decided to roam to a new one. If this does not work
->> > well in some networks, I would like to here more detailed description on
->> > what exactly is happening.
->>
->> No that's fine, I just was curious how the bridge stuff you described
->> was handled in enterprise networks, you would know better :)
->
-> Look at net/mac80211/cfg.c - ieee80211_send_layer2_update.
->
->> OK -- so lets go with Johanne's patch instead of patch 2 and 3 as he
->> suggested :)
->
-> Have you tested it?
+From: Luis R. Rodriguez <lrodriguez@atheros.com>
 
-Tested, it works and resolves the issue if I drop my patch 2 and 3 and
-instead use yours.
+In the worst case you are seeing really odd things you want
+more information than what is provided right now, for those
+that insist and want debug info through CONFIG_CFG80211_REG_DEBUG
+provide a print of when we are processing a channel and with what
+regulatory rule.
 
-  Luis
+Cc: Easwar Krishnan <easwar.krishnan@atheros.com>
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+Signed-off-by: Senthil Balasubramanian <senthilkumar@atheros.com>
+---
+v2 -- fixed compilation error if REG_DEBUG is not defined.
+
+ net/wireless/reg.c |   39 +++++++++++++++++++++++++++++++++++++++
+ 1 files changed, 39 insertions(+), 0 deletions(-)
+
+diff --git a/net/wireless/reg.c b/net/wireless/reg.c
+index 6e7a9d8..5556c5f 100644
+--- a/net/wireless/reg.c
++++ b/net/wireless/reg.c
+@@ -728,6 +728,41 @@ static const char *reg_initiator_name(enum nl80211_reg_initiator initiator)
+ 		return "Set by bug";
+ 	}
+ }
++
++static void chan_reg_rule_print_dbg(struct ieee80211_channel *chan,
++				    u32 desired_bw_khz,
++				    const struct ieee80211_reg_rule *reg_rule)
++{
++	const struct ieee80211_power_rule *power_rule;
++	const struct ieee80211_freq_range *freq_range;
++	char max_antenna_gain[32];
++
++	power_rule = &reg_rule->power_rule;
++	freq_range = &reg_rule->freq_range;
++
++	if (!power_rule->max_antenna_gain)
++		snprintf(max_antenna_gain, 32, "N/A");
++	else
++		snprintf(max_antenna_gain, 32, "%d", power_rule->max_antenna_gain);
++
++	REG_DBG_PRINT("cfg80211: Updating information on frequency %d MHz "
++		      "for %d a MHz width channel with regulatory rule:\n",
++		      chan->center_freq,
++		      KHZ_TO_MHZ(desired_bw_khz));
++
++	REG_DBG_PRINT("cfg80211: %d KHz - %d KHz @  KHz), (%s mBi, %d mBm)\n",
++		      freq_range->start_freq_khz,
++		      freq_range->end_freq_khz,
++		      max_antenna_gain,
++		      power_rule->max_eirp);
++}
++#else
++static void chan_reg_rule_print_dbg(struct ieee80211_channel *chan,
++				    u32 desired_bw_khz,
++				    const struct ieee80211_reg_rule *reg_rule)
++{
++	return;
++}
+ #endif
+
+ /*
+@@ -790,6 +825,8 @@ static void handle_channel(struct wiphy *wiphy,
+ 		return;
+ 	}
+
++	chan_reg_rule_print_dbg(chan, desired_bw_khz, reg_rule);
++
+ 	power_rule = &reg_rule->power_rule;
+ 	freq_range = &reg_rule->freq_range;
+
+@@ -1134,6 +1171,8 @@ static void handle_channel_custom(struct wiphy *wiphy,
+ 		return;
+ 	}
+
++	chan_reg_rule_print_dbg(chan, desired_bw_khz, reg_rule);
++
+ 	power_rule = &reg_rule->power_rule;
+ 	freq_range = &reg_rule->freq_range;
+
+--
+1.7.2.1
+
