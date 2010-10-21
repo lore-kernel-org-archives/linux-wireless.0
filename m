@@ -1,44 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f46.google.com ([209.85.214.46]:43534 "EHLO
-	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751757Ab0JLWKR (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 12 Oct 2010 18:10:17 -0400
-Received: by mail-bw0-f46.google.com with SMTP id 15so2776714bwz.19
-        for <linux-wireless@vger.kernel.org>; Tue, 12 Oct 2010 15:10:16 -0700 (PDT)
-From: mike.rapoport@gmail.com
-To: Greg Kroah-Hartman <gregkh@suse.de>
-Cc: Brett Rudley <brudley@broadcom.com>,
-	Henry Ptasinski <henryp@broadcom.com>,
-	Nohee Ko <noheek@broadcom.com>, linux-wireless@vger.kernel.org,
-	Mike Rapoport <mike.rapoport@gmail.com>
-Subject: [PATCH 5/7] staging: brcm80211: remove unused NATIVE_{MALLOC,MFREE}
-Date: Wed, 13 Oct 2010 00:09:11 +0200
-Message-Id: <eadf0342fcea3d78c02458744c3203b63f716c62.1286920620.git.mike.rapoport@gmail.com>
-In-Reply-To: <cover.1286920620.git.mike.rapoport@gmail.com>
-References: <cover.1286920620.git.mike.rapoport@gmail.com>
+Received: from mail.atheros.com ([12.19.149.2]:52804 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751859Ab0JUTKP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 21 Oct 2010 15:10:15 -0400
+Received: from mail.atheros.com ([10.10.20.105])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Thu, 21 Oct 2010 12:10:05 -0700
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	Ben Greear <greearb@candelatech.com>,
+	Kyungwan Nam <kyungwan.nam@atheros.com>
+Subject: [PATCH v2 5/6] ath: add a ATH_DBG_WARN()
+Date: Thu, 21 Oct 2010 12:10:11 -0700
+Message-ID: <1287688211-9998-1-git-send-email-lrodriguez@atheros.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Mike Rapoport <mike.rapoport@gmail.com>
----
- drivers/staging/brcm80211/include/linux_osl.h |    3 ---
- 1 files changed, 0 insertions(+), 3 deletions(-)
+To be used to throw out warnings only for developers.
+This can be used by some corner cases that developers
+already know can be hit but developers want to address
+so to avoid spewing out a warning this can only be
+enabled with CONFIG_ATH_DEBUG enabled.
 
-diff --git a/drivers/staging/brcm80211/include/linux_osl.h b/drivers/staging/brcm80211/include/linux_osl.h
-index 69f0e84..0e00188 100644
---- a/drivers/staging/brcm80211/include/linux_osl.h
-+++ b/drivers/staging/brcm80211/include/linux_osl.h
-@@ -97,9 +97,6 @@ typedef struct {
- #define MFREE(osh, addr, size)	osl_mfree((osh), (addr), (size))
- extern void osl_mfree(osl_t *osh, void *addr, uint size);
+Cc: Ben Greear <greearb@candelatech.com>
+Cc: Kyungwan Nam <kyungwan.nam@atheros.com>
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+---
+
+Fixed compile issue with CONFIG_ATH_DEBUG disabled.
+
+ drivers/net/wireless/ath/debug.h |    2 ++
+ 1 files changed, 2 insertions(+), 0 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/debug.h b/drivers/net/wireless/ath/debug.h
+index 64e4af2..f207007 100644
+--- a/drivers/net/wireless/ath/debug.h
++++ b/drivers/net/wireless/ath/debug.h
+@@ -70,11 +70,13 @@ enum ATH_DEBUG {
+ #ifdef CONFIG_ATH_DEBUG
+ void ath_print(struct ath_common *common, int dbg_mask, const char *fmt, ...)
+ 	__attribute__ ((format (printf, 3, 4)));
++#define ATH_DBG_WARN(foo, arg...) WARN(foo, arg)
+ #else
+ static inline void __attribute__ ((format (printf, 3, 4)))
+ ath_print(struct ath_common *common, int dbg_mask, const char *fmt, ...)
+ {
+ }
++#define ATH_DBG_WARN(foo, arg)
+ #endif /* CONFIG_ATH_DEBUG */
  
--#define NATIVE_MALLOC(osh, size)	kmalloc(size, GFP_ATOMIC)
--#define NATIVE_MFREE(osh, addr, size)	kfree(addr)
--
- #define	DMA_CONSISTENT_ALIGN	osl_dma_consistent_align()
- extern uint osl_dma_consistent_align(void);
- extern void *osl_dma_alloc_consistent(osl_t *osh, uint size, u16 align,
+ /** Returns string describing opmode, or NULL if unknown mode. */
 -- 
-1.6.4.4
+1.7.1
 
