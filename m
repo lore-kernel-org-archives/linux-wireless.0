@@ -1,53 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:38745 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751430Ab0JGSfX (ORCPT
+Received: from mail-iw0-f174.google.com ([209.85.214.174]:56790 "EHLO
+	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756881Ab0JUORR convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 7 Oct 2010 14:35:23 -0400
-Subject: Re: Vendor specific data within a beacon frame
-From: Johannes Berg <johannes@sipsolutions.net>
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Cc: Bjoern Czybik <wlfw@gmx.com>, linux-wireless@vger.kernel.org
-In-Reply-To: <AANLkTimzwhBCVKFnx1vhM4A939_kgixEpw5RLTe8JJb0@mail.gmail.com>
-References: <4CAD9368.70608@gmx.com>
-	 <AANLkTimTLEShJ3HcBqHaU5U5nFq1UywczC=G7oiHx=as@mail.gmail.com>
-	 <1286475342.20974.23.camel@jlt3.sipsolutions.net>
-	 <AANLkTimzwhBCVKFnx1vhM4A939_kgixEpw5RLTe8JJb0@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Thu, 07 Oct 2010 20:35:22 +0200
-Message-ID: <1286476522.20974.27.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+	Thu, 21 Oct 2010 10:17:17 -0400
+Received: by iwn7 with SMTP id 7so3701379iwn.19
+        for <linux-wireless@vger.kernel.org>; Thu, 21 Oct 2010 07:17:17 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <1287668824-3096-1-git-send-email-senthilkumar@atheros.com>
+References: <1287668824-3096-1-git-send-email-senthilkumar@atheros.com>
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Date: Thu, 21 Oct 2010 07:16:56 -0700
+Message-ID: <AANLkTim0RfV8V4r2Je7DcqXgyWnNSPT4DrGYe8KO0Gi_@mail.gmail.com>
+Subject: Re: [PATCH v2 4/7] cfg80211: add debug prints for when we ignore
+ regulatory hints
+To: Senthil Balasubramanian <senthilkumar@atheros.com>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	Easwar Krishnan <easwar.krishnan@atheros.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2010-10-07 at 11:31 -0700, Luis R. Rodriguez wrote:
-> On Thu, Oct 7, 2010 at 11:15 AM, Johannes Berg
-> <johannes@sipsolutions.net> wrote:
-> > On Thu, 2010-10-07 at 11:11 -0700, Luis R. Rodriguez wrote:
-> >
-> > Let me quote what you wrote, but just partially:
-> >
-> >> This can be done from userspace. This is from nl80211.h:
-> >
-> >>  *      Note: This command has been removed and it is only reserved at this
-> >>  *      point to avoid re-using existing command number. The functionality this
-> >>  *      command was planned for has been provided with cleaner design with the
-> >>  *      option to specify additional IEs in NL80211_CMD_TRIGGER_SCAN,
-> >>  *      NL80211_CMD_AUTHENTICATE, NL80211_CMD_ASSOCIATE,
-> >>  *      NL80211_CMD_DEAUTHENTICATE, and NL80211_CMD_DISASSOCIATE.
-> >
-> > :P
-> 
-> Yeah just noticed *after* I pasted it and sent it. Does hostapd use
-> this currently?
+On Thu, Oct 21, 2010 at 6:47 AM, Senthil Balasubramanian
+<senthilkumar@atheros.com> wrote:
+> From: Luis R. Rodriguez <lrodriguez@atheros.com>
+>
+> This can help with debugging issues. You will only see
+> these with CONFIG_CFG80211_REG_DEBUG enabled.
+>
+> Cc: Easwar Krishnan <easwar.krishnan@atheros.com>
+> Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+> Signed-off-by: Senthil Balasubramanian <senthilkumar@atheros.com>
+> ---
+> v2 -- brought in reg_initiator_name under reg debug to get rid of a
+> warning  message.
 
-No, hostapd transmits frames via injection and the data it puts into the
-beacon is conveyed with the beacon cmd -- it has never used this
-command.
+Thanks!!
 
-Really, what the OP is looking for is the annotated hostapd
-configuration file or the hostapd source code -- he should be able to
-figure that out for himself.
-
-johannes
-
+  Luis
