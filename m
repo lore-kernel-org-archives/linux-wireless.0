@@ -1,82 +1,86 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f46.google.com ([209.85.215.46]:37822 "EHLO
-	mail-ew0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755022Ab0JDSfs convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 4 Oct 2010 14:35:48 -0400
+Received: from mail.atheros.com ([12.19.149.2]:33317 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753140Ab0JUJC5 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 21 Oct 2010 05:02:57 -0400
+Received: from mail.atheros.com ([10.10.20.107])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Thu, 21 Oct 2010 02:02:46 -0700
+Date: Thu, 21 Oct 2010 02:02:54 -0700
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: Senthilkumar Balasubramanian
+	<Senthilkumar.Balasubramanian@Atheros.com>
+CC: Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
+	"linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"johannes@sipsolutions.net" <johannes@sipsolutions.net>,
+	Easwar Krishnan <Easwar.Krishnan@Atheros.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH 6/7] cfg80211: add debug print when processing a channel
+Message-ID: <20101021090254.GC2776@tux>
+References: <1287595139-10761-1-git-send-email-lrodriguez@atheros.com>
+ <1287595139-10761-7-git-send-email-lrodriguez@atheros.com>
+ <20101021081828.GA1840@senthil-lnx.users.atheros.com>
 MIME-Version: 1.0
-In-Reply-To: <-jYMINoCtaK.A.F5.8CPqMB@chimera>
-References: <-jYMINoCtaK.A.F5.8CPqMB@chimera>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Mon, 4 Oct 2010 11:35:25 -0700
-Message-ID: <AANLkTimUdaUkpXmNt5mPkCdWmHvBbXWA6smAP4U80yc4@mail.gmail.com>
-Subject: Re: 2.6.36-rc6-git2: Reported regressions from 2.6.35
-To: "Rafael J. Wysocki" <rjw@sisk.pl>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	linux-bluetooth <linux-bluetooth@vger.kernel.org>
-Cc: justinmattock@gmail.com, Bob Copeland <me@bobcopeland.com>,
-	Pavel Machek <pavel@ucw.cz>, linux@brodo.de
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <20101021081828.GA1840@senthil-lnx.users.atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Below are the 802.11 and Bluetooth ones:
+On Thu, Oct 21, 2010 at 01:18:28AM -0700, Senthilkumar Balasubramanian wrote:
+> On Wed, Oct 20, 2010 at 10:48:58PM +0530, Luis R. Rodriguez wrote:
+> > In the worst case you are seeing really odd things you want
+> > more information than what is provided right now, for those
+> > that insist and want debug info through CONFIG_CFG80211_REG_DEBUG
+> > provide a print of when we are processing a channel and with what
+> > regulatory rule.
+> > 
+> > Cc: Easwar Krishnan <easwar.krishnan@atheros.com>
+> > Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+> > ---
+> >  net/wireless/reg.c |   40 ++++++++++++++++++++++++++++++++++++++++
+> >  1 files changed, 40 insertions(+), 0 deletions(-)
+> > 
+> > diff --git a/net/wireless/reg.c b/net/wireless/reg.c
+> > index 62396b2..f0ff146 100644
+> > --- a/net/wireless/reg.c
+> > +++ b/net/wireless/reg.c
+> > @@ -728,6 +728,42 @@ static const char *reg_initiator_name(enum nl80211_reg_initiator initiator)
+> >  	}
+> >  }
+> >  
+> > +#ifdef CONFIG_CFG80211_REG_DEBUG
+> > +
+> > +static void chan_reg_rule_print_dbg(struct ieee80211_channel *chan,
+> > +				    u32 desired_bw_khz,
+> > +				    const struct ieee80211_reg_rule *reg_rule)
+> > +{
+> > +	const struct ieee80211_power_rule *power_rule;
+> > +	const struct ieee80211_freq_range *freq_range;
+> > +	char max_antenna_gain[32];
+> > +
+> > +	power_rule = &reg_rule->power_rule;
+> > +	freq_range = &reg_rule->freq_range;
+> > +
+> > +	if (!power_rule->max_antenna_gain)
+> > +		snprintf(max_antenna_gain, 32, "N/A");
+> > +	else
+> > +		snprintf(max_antenna_gain, 32, "%d", power_rule->max_antenna_gain);
+> > +
+> > +	REG_DBG_PRINT("cfg80211: Updating information on frequency %d MHz "
+> > +		      "for %d a MHz width channel with regulatory rule:\n",
+> > +		      chan->center_freq,
+> > +		      KHZ_TO_MHZ(desired_bw_khz));
+> > +
+> > +	REG_DBG_PRINT("cfg80211: %d KHz - %d KHz @  KHz), (%s mBi, %d mBm)\n",
+> > +		      freq_range->start_freq_khz,
+> > +		      freq_range->end_freq_khz,
+> > +		      max_antenna_gain,
+> > +		      power_rule->max_eirp);
+> > +}
+> > +#else
+> > +static void reg_reg_rule_print_dbg(const struct ieee80211_reg_rule *reg_rule)
+> This will break compilation. Function name and arguments needs to be fixed here.
 
-On Sun, Oct 3, 2010 at 2:15 PM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
-> Unresolved regressions
-> ----------------------
-
-> Bug-Entry       : http://bugzilla.kernel.org/show_bug.cgi?id=19392
-> Subject         : WARNING: at drivers/net/wireless/ath/ath5k/base.c:3475 ath5k_bss_info_changed+0x44/0x168 [ath5k]()
-> Submitter       : Justin Mattock <justinmattock@gmail.com>
-> Date            : 2010-09-28 22:30 (6 days old)
-> Message-ID      : <AANLkTim5WCGKPvEkOkO_YnMF9pg8mvLfQoFBNUFpfa_k@mail.gmail.com>
-> References      : http://marc.info/?l=linux-kernel&m=128571307018635&w=2
-
-WTF -- this ended up in a bisect pointing to some PCMCIA patch! Justin:
-
-  * does this happen with wireless-testing.git ?
-  * Did you do the bisect on the entire kernel? What git tree are you
-using to bisect?
-
-Did you simply bring up the interface and then suspsend? Did you not
-add a new interface in between this? ath5k's add_interace has:
-
-        if (sc->vif) {
-                ret = 0;
-                goto end;
-        }
-
-But why does it just allow this to go through without complaining if
-multiple vifs are not supported?
-
-
->
-> Bug-Entry       : http://bugzilla.kernel.org/show_bug.cgi?id=17061
-> Subject         : 2.6.36-rc1 on zaurus: bluetooth regression
-> Submitter       : Pavel Machek <pavel@ucw.cz>
-> Date            : 2010-08-21 15:24 (44 days old)
-> Message-ID      : <20100821152445.GA1536@ucw.cz>
-> References      : http://marc.info/?l=linux-kernel&m=128240433828087&w=2
-
-I see no updates to this since August. There are boat load of PCMCIA
-changes recently, is bisect possible here?
-
-
-> Regressions with patches
-> ------------------------
-
-
-> Bug-Entry       : http://bugzilla.kernel.org/show_bug.cgi?id=17722
-> Subject         : 2.6.36-rc3: WARNING: at net/mac80211/scan.c:269 ieee80211_scan_completed
-> Submitter       : Thomas Meyer <thomas@m3y3r.de>
-> Date            : 2010-08-31 20:14 (34 days old)
-> Message-ID      : <201008312214.52473.thomas@m3y3r.de>
-> References      : http://marc.info/?l=linux-kernel&m=128328580504227&w=2
->                  http://www.spinics.net/lists/netdev/msg140769.html
-> Handled-By      : Florian Mickler <florian@mickler.org>
-> Patch           : https://bugzilla.kernel.org/attachment.cgi?id=31671
-
-This seems fixed.
+Good catch. I'll fix in the AM.
 
   Luis
