@@ -1,96 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:49813 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757234Ab0JHQxY (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 8 Oct 2010 12:53:24 -0400
-Subject: Re: [PATCH] mac80211: hoist sta->lock from reorder release timer
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Christian Lamparter <chunkeey@googlemail.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org,
-	Ben Greear <greearb@candelatech.com>,
-	Ming Lei <tom.leiming@gmail.com>
-In-Reply-To: <201010081842.39187.chunkeey@googlemail.com>
-References: <201010061200.54364.chunkeey@googlemail.com>
-	 <20101006202106.GL2472@tuxdriver.com>
-	 <1286485393.20974.40.camel@jlt3.sipsolutions.net>
-	 <201010081842.39187.chunkeey@googlemail.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Fri, 08 Oct 2010 18:53:22 +0200
-Message-ID: <1286556802.3612.4.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+Received: from mx1.redhat.com ([209.132.183.28]:50955 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756475Ab0JUNLK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 21 Oct 2010 09:11:10 -0400
+Date: Thu, 21 Oct 2010 15:13:49 +0200
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: "Guy, Wey-Yi" <wey-yi.w.guy@intel.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH 1/2] iwlwifi: fix set_tx_power vs scan
+Message-ID: <20101021131348.GA5654@redhat.com>
+References: <1286977193-12144-1-git-send-email-sgruszka@redhat.com>
+ <1286983100.10446.1.camel@wwguy-ubuntu>
+ <20101014083204.GA2286@redhat.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20101014083204.GA2286@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2010-10-08 at 18:42 +0200, Christian Lamparter wrote:
-
-> Sure, a little bit. The code itself is fine but as you said
-> the rx_handler code wasn't written for concurrent/delayed
-> release timer mechanism.
-
-But it should be fine now, no? What data does it still access that's not
-safe?
-
-> for example:
+On Thu, Oct 14, 2010 at 10:32:05AM +0200, Stanislaw Gruszka wrote:
+> > Looks good, the only thing is if priv->tx_power_user_lmt ==
+> > priv->tx_power_next, we don't even have to call set_tx_power, but I
+> > guess calling it won't hurt, so its your decision check or not.
 > 
-> Because we can't set IEEE80211_RX_RA_MATCH (since 
-> it interferes with scanning (as explained in
-> "mac80211: fix release_reorder_timeout in scan").
+> I'll will call iwl_set_tx_power( ... , false); what seems to be right
+> thing to do.
 
-That I don't understand.
+Set tx power have to be forces. Without that I get  
 
-> We will experience strange results with "ieee80211_rx_h_decrypt":
-> 
-> line: 878
-> >	/*
-> >	 * No point in finding a key and decrypting if the frame is neither
-> >	 * addressed to us nor a multicast frame.
-> >	 */
-> >	if (!(status->rx_flags & IEEE80211_RX_RA_MATCH))
+iwlagn 0000:40:00.0: low ack count detected, restart firmware
+iwlagn 0000:40:00.0: On demand firmware reload
+iwlagn 0000:40:00.0: Stopping AGG while state not ON or starting
+iwlagn 0000:40:00.0: queue number out of range: 0, must be 10 to 19
+iwlagn 0000:40:00.0: Aggregation not enabled for tid 0 because load = 0
+iwlagn 0000:40:00.0: Aggregation not enabled for tid 0 because load = 1
+iwlagn 0000:40:00.0: Aggregation not enabled for tid 0 because load = 0
+iwlagn 0000:40:00.0: Aggregation not enabled for tid 0 because load = 0
+iwlagn 0000:40:00.0: iwlagn_tx_agg_start on ra = 00:23:69:35:d1:3f tid = 0
+iwlagn 0000:40:00.0: low ack count detected, restart firmware
+iwlagn 0000:40:00.0: On demand firmware reload
+iwlagn 0000:40:00.0: Stopping AGG while state not ON or starting
+iwlagn 0000:40:00.0: queue number out of range: 0, must be 10 to 19
+iwlagn 0000:40:00.0: iwlagn_tx_agg_start on ra = 00:23:69:35:d1:3f tid = 0
+iwlagn 0000:40:00.0: low ack count detected, restart firmware
+iwlagn 0000:40:00.0: On demand firmware reload
+iwlagn 0000:40:00.0: Stopping AGG while state not ON or starting
+iwlagn 0000:40:00.0: queue number out of range: 0, must be 10 to 19
+iwlagn 0000:40:00.0: Aggregation not enabled for tid 0 because load = 4
+iwlagn 0000:40:00.0: Aggregation not enabled for tid 0 because load = 0
 
-> no software decryption there - not nice but the HW probably does
-> the decryption for us. - That being said, the stack should be able
-> to do the software decryption "just in case".
+on 5300 and device was unusable in general. Hence I will only comment
+that forcing send tx power after scan is needed.
 
-But note that the rx_flags are in the *status* now, which is part of the
-SKB, and no longer on the stack.
-
-> Things are a little bit better with ieee80211_rx_h_sta_process.
-> It updates some statistics and takes care of sta->last_rx
-> (which is currently not that important giving HT BA is only supported
-> for AP/STA operation).
-> 
-> In ieee80211_rx_h_data, there could be another potential problem:
-> >	if (ieee80211_is_data(hdr->frame_control) &&
-> >   	 !is_multicast_ether_addr(hdr->addr1) &&
-> >		 local->hw.conf.dynamic_ps_timeout > 0 && local->ps_sdata) {
-> >			mod_timer(&local->dynamic_ps_timer, jiffies +
-> >			msecs_to_jiffies(local->hw.conf.dynamic_ps_timeout));
-> >	}
-> I reckon there could be a "hidden" problem. "jiffies" is now
-> approx 100ms after the packet was received from the interface.
-> (Sure, a similar issue was also present in the original
-> reorder release implementation.)
-
-This one's more interesting. I guess we need to bypass these things
-somehow, maybe setting a flag if this was a "recovered" frame?
-
-> In order the fix this/my mess we would need to:
->  1. move the software decryption before the reordering
->    (802.11n-spec (page 11, Figure 6-1) allows this)
-> 
-> (Or:
-> 1. introduce an additional rx_flag for the reorder release case?)
-> 
-> (2. maybe cache the original skb jiffie at some place?)
-> 
-> (3. make a few counters atomic_t, so concurrent tasklets
->     can update the stats. Or disable the BHs while processing,
->     any rx frames (which is probably what we're going to do, right?))
-
-BHs are disabled while processing RX -- and timer is a BH itself so
-they're also disabled, right?
-
-johannes
-
+Stanislaw
