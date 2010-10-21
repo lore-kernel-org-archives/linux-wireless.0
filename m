@@ -1,86 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.19.149.2]:33566 "EHLO mail.atheros.com"
+Received: from mms2.broadcom.com ([216.31.210.18]:2033 "EHLO mms2.broadcom.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750826Ab0JOXiR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 15 Oct 2010 19:38:17 -0400
-Received: from mail.atheros.com ([10.10.20.105])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Fri, 15 Oct 2010 16:38:07 -0700
-Date: Fri, 15 Oct 2010 16:38:14 -0700
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: Ben Greear <greearb@candelatech.com>
-CC: Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: memory clobber in rx path, maybe related to ath9k.
-Message-ID: <20101015233814.GA1866@tux>
-References: <20101014231958.GA3242@tux>
- <4CB79299.7000005@candelatech.com>
- <AANLkTinQmE6wm1pXkRL6p_3rkMvNrppmirjj3-jagMp8@mail.gmail.com>
- <20101014234853.GA10113@tux>
- <4CB886AF.3070800@candelatech.com>
- <AANLkTinhFj_iYjVzyfSfpUVdytfk4O9kCBnN8=Bwv0N7@mail.gmail.com>
- <4CB8AD3F.50201@candelatech.com>
- <20101015210720.GA2007@tux>
- <20101015232140.GA1796@tux>
- <4CB8E4DE.9070706@candelatech.com>
+	id S1752966Ab0JURLH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 21 Oct 2010 13:11:07 -0400
+Date: Thu, 21 Oct 2010 10:10:55 -0700
+From: "Henry Ptasinski" <henryp@broadcom.com>
+To: "Greg KH" <greg@kroah.com>
+cc: "Nohee Ko" <noheek@broadcom.com>,
+	"devel@linuxdriverproject.org" <devel@linuxdriverproject.org>,
+	"Brett Rudley" <brudley@broadcom.com>,
+	"grundler@google.com" <grundler@google.com>,
+	linux-wireless@vger.kernel.org, dwmw2@infradead.org
+Subject: Subject: [PATCH] staging: brcm80211: brcmfmac: Removed
+ codeversion from firmware filenames.
+Message-ID: <20101021171054.GB15357@broadcom.com>
+References: <4CBE23F4.4020104@broadcom.com>
+ <20101019233520.GA12510@kroah.com>
+ <FD96C117992C584DBC47231B1EB6F5568206D859DC@SJEXCHCCR02.corp.ad.broadcom.com>
+ <20101020004743.GB31965@kroah.com>
+ <20101020005546.GL10832@broadcom.com> <20101020010320.GA370@kroah.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <4CB8E4DE.9070706@candelatech.com>
+In-Reply-To: <20101020010320.GA370@kroah.com>
+Content-Type: text/plain;
+ charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Oct 15, 2010 at 04:33:50PM -0700, Ben Greear wrote:
-> On 10/15/2010 04:21 PM, Luis R. Rodriguez wrote:
-> > Ben, please give this patch a shot. I addresses three races on the PCU:
-> >
-> >    * When we were stopping the CPU for non-EDMA cards we never locked against
-> >      anything starting the PCU again
-> >
-> >    * ath9k_hw_startpcureceive() was being called without locking
-> >
-> >    * Although we lock on the rxbuf lock for contention against starting/stopping
-> >      the PCU, we also need to lock on the driver in locations where we start/stop
-> >      the PCU within the same location otherwise we end up in inconsistant states
-> >      and the hardware may end up proessing an incorrect buffer for DMA. To
-> >      protect against this we use a new PCU lock on the main part of the driver to
-> >      ensure each start/stop/reset operation is done atomically.
-> >
-> > And fixes one issue as a side effect:
-> >
-> >    * No more packet loss on ping flood when you have one STA associated :)
-> >
-> > The only issue I see with this is I eventually run out of memory and my box
-> > becomes useless, unless I am mistaking that for some other issue.
-> >
-> > Please give this a shot and if it cures your woes I'll split it up into
-> > 3 separate patches, or maybe just two, one for the first two and one for
-> > the last issue.
-> 
-> Sounds good, but this lockdep splat happens almost immediately upon starting
-> my app:
-> 
-> =======================================================
-> [ INFO: possible circular locking dependency detected ]
-> 2.6.36-rc8-wl+ #32
-> -------------------------------------------------------
-> swapper/0 is trying to acquire lock:
->   (&(&sc->rx.pcu_lock)->rlock){+.-...}, at: [<fa16e5c7>] ath9k_tasklet+0x7e/0x140 [ath9k]
-> 
-> but task is already holding lock:
->   (&(&sc->rx.rxflushlock)->rlock){+.-...}, at: [<fa16e5b9>] ath9k_tasklet+0x70/0x140 [ath9k]
-> 
-> which lock already depends on the new lock.
-> 
-> 
-> the existing dependency chain (in reverse order) is:
-> 
-> -> #1 (&(&sc->rx.rxflushlock)->rlock){+.-...}:
->         [<c0457639>] lock_acquire+0x5a/0x78
->         [<c075f6ed>] _raw_spin_lock_bh+0x20/0x2f
->         [<fa170513>] ath_flushrecv+0x14/0x61 [ath9k]
+The basename-apiversion-codeversion construction for firmware filenames is not
+used by most other firmware files, adds complexity, and is not providing any
+value.  Rename the firmware files using just basename-apiversion.
 
-Ah we just need to nuke the flush lock, one second. Also remove my
-skb_copy() otherwise you will really run out of memory quickly,
-unless you really want to test with it :)
+Users of the brcmfmac driver will need to update the linux-firmware package
+to get the renamed files, or manually rename their installed firmware files.
+---
+ drivers/staging/brcm80211/brcmfmac/wl_cfg80211.c |    4 ++--
+ 1 files changed, 2 insertions(+), 2 deletions(-)
 
-  Luis
+diff --git a/drivers/staging/brcm80211/brcmfmac/wl_cfg80211.c b/drivers/staging/brcm80211/brcmfmac/wl_cfg80211.c
+index 621521b..7f00bc4 100644
+--- a/drivers/staging/brcm80211/brcmfmac/wl_cfg80211.c
++++ b/drivers/staging/brcm80211/brcmfmac/wl_cfg80211.c
+@@ -54,8 +54,8 @@ static struct wl_dev *wl_cfg80211_dev;
+ 
+ u32 wl_dbg_level = WL_DBG_ERR | WL_DBG_INFO;
+ 
+-#define WL_4329_FW_FILE "brcm/bcm4329-fullmac-4-218-248-5.bin"
+-#define WL_4329_NVRAM_FILE "brcm/bcm4329-fullmac-4-218-248-5.txt"
++#define WL_4329_FW_FILE "brcm/bcm4329-fullmac-4.bin"
++#define WL_4329_NVRAM_FILE "brcm/bcm4329-fullmac-4.txt"
+ 
+ /*
+ ** cfg80211_ops api/callback list
+-- 
+1.7.1
+
+
