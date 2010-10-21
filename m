@@ -1,40 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from external1.orbit-lab.org ([128.6.192.131]:44913 "HELO
-	external1.orbit-lab.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1759406Ab0JYTEA (ORCPT
+Received: from web56803.mail.re3.yahoo.com ([66.196.97.77]:47576 "HELO
+	web56803.mail.re3.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1757014Ab0JUGhB (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 25 Oct 2010 15:04:00 -0400
-Received: from repository3.orbit-lab.org (repository3.orbit-lab.org [10.50.0.41])
-	by external1.orbit-lab.org (Postfix) with ESMTP id 0A50E418D8
-	for <linux-wireless@vger.kernel.org>; Mon, 25 Oct 2010 15:00:34 -0400 (EDT)
-Subject: Compat-wireless release for 2010-10-25 is baked
-To: <linux-wireless@vger.kernel.org>
-Message-Id: <20101025190358.AEC6840F97@repository3.orbit-lab.org>
-Date: Mon, 25 Oct 2010 15:03:57 -0400 (EDT)
-From: compat@orbit-lab.org (Compat-wireless cronjob account)
+	Thu, 21 Oct 2010 02:37:01 -0400
+Message-ID: <799271.37886.qm@web56803.mail.re3.yahoo.com>
+Date: Wed, 20 Oct 2010 23:36:59 -0700 (PDT)
+From: Walter Goldens <goldenstranger@yahoo.com>
+Subject: [PATCH 2/4 v2] compat-wireless: enable bluetooth via driver-select
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Cc: linux-wireless@vger.kernel.org, linux-bluetooth@vger.kernel.org
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
->From git://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next
-   d9f241e..e10b307  history    -> origin/history
- + c8b020e...fd4f9b3 master     -> origin/master  (forced update)
-   b515316..229aebb  stable     -> origin/stable
- * [new tag]         next-20101025 -> next-20101025
+reshuffle driver-select, enable "bt" group for all bluetooth modules with driver-select
 
-compat-wireless code metrics
+Signed-off-by: Walter Goldens <goldenstranger@yahoo.com>
+---
 
-    739186 - Total upstream lines of code being pulled
-      2149 - backport code changes
-      1897 - backport code additions
-       252 - backport code deletions
-      6409 - backport from compat module
-      8558 - total backport code
-    1.1578 - % of code consists of backport work
-      1534 - Crap changes not yet posted
-      1491 - Crap additions not yet posted
-        43 - Crap deletions not yet posted
-    0.2075 - % of crap code
+--- a/scripts/driver-select
++++ b/scripts/driver-select
+@@ -53,11 +53,6 @@ function usage {
+ 		echo -e "\t${PURPLE}${i}${NORMAL}"
+ 	done
+ 
+-	echo -e "\nSupported Ethernet drivers: < ${PURPLE}atl1 atl2 atl1e atl1c${NORMAL} >"
+-	for i in $SUPPORTED_ETH_DRIVERS; do
+-		echo -e "\t${PURPLE}${i}${NORMAL}"
+-	done
+-
+ 	# These should match the switch below.
+ 	echo -e "\nSupported group drivers:"
+ 	echo -e "\t${CYAN}atheros${NORMAL} < ${PURPLE} ath5k ath9k carl9170 zd1211rw ${NORMAL}>"
+@@ -67,7 +62,9 @@ function usage {
+ 	echo -e "\t${CYAN}rtl818x${NORMAL} < ${PURPLE} rtl8180 rtl8187 ${NORMAL}>"
+ 	echo -e "\t${CYAN}wl12xx${NORMAL} < ${PURPLE} wl1251 wl1271 (SPI and SDIO)${NORMAL}>"
+ 	
++	echo -e "\nSupported group drivers: Bluetooth & Ethernet:"
+ 	echo -e "\t${BLUE}atlxx${NORMAL} < ${PURPLE} atl1 atl2 atl1e atl1c ${NORMAL}>"
++	echo -e "\t${BLUE}bt${NORMAL} < ${PURPLE} Linux bluetooth drivers ${NORMAL}>"
+ 
+ 	echo -e "Restoring compat-wireless:"
+ 	echo -e "\t${GREEN}restore${NORMAL}: you can use this option to restore compat-wireless to the original state"
+@@ -390,7 +387,7 @@ case $1 in
+ 		disable_staging
+ 		disable_var_01
+ 		;;
+-# Ethernet drivers
++# Ethernet and Bluetooth drivers
+ 	atl1)
+ 		enable_only_ethernet
+ 		echo -e "obj-\$(CONFIG_ATL1) += atlx/" > $DRIVERS_NET
+@@ -412,6 +409,13 @@ case $1 in
+ 		enable_only_ethernet
+ 		disable_b44
+ 		;;
++	bt)
++		select_driver 		CONFIG_BT
++		disable_var
++		disable_ethernet
++		disable_staging
++		disable_80211
++		;;
+ 	*)
+ 		echo "Unsupported driver"
+ 		exit
 
-Base tree: linux-next.git
-Base tree version: next-20101025
-compat-wireless release: compat-wireless-2010-10-22-pc
+
+
+      
