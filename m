@@ -1,55 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iw0-f174.google.com ([209.85.214.174]:52329 "EHLO
-	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753008Ab0JMUDc convert rfc822-to-8bit (ORCPT
+Received: from mail-ew0-f46.google.com ([209.85.215.46]:38506 "EHLO
+	mail-ew0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754593Ab0JUR2Z convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 13 Oct 2010 16:03:32 -0400
-Received: by iwn42 with SMTP id 42so7498iwn.19
-        for <linux-wireless@vger.kernel.org>; Wed, 13 Oct 2010 13:03:31 -0700 (PDT)
+	Thu, 21 Oct 2010 13:28:25 -0400
+Received: by ewy7 with SMTP id 7so413774ewy.19
+        for <linux-wireless@vger.kernel.org>; Thu, 21 Oct 2010 10:28:24 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <AANLkTimp_GSwwX_RnQSyN9QNe55HQ+0HZJ1yd8Xp+dWG@mail.gmail.com>
-References: <4CAE1DFB.303@candelatech.com> <1286479642.20974.32.camel@jlt3.sipsolutions.net>
- <AANLkTimxp703Gy_Atg8=wpFszRDR=OJCXwOUKRh-a-d7@mail.gmail.com>
- <AANLkTi=t-P_5c14brJohM8UgxeOknv+3syO=7W=ix6qf@mail.gmail.com>
- <AANLkTinC46a+nE-XOQuBCmRJwjzgh24uC7ZJ7HtbVHnT@mail.gmail.com>
- <4CB378CD.1080800@candelatech.com> <AANLkTim42zmDwf744BCrPwa1kT5ph57bNMyvSyOpesVv@mail.gmail.com>
- <4CB3D598.7050904@candelatech.com> <AANLkTimPEg3ZU8CQUXfdpGdfbmhdE9O=GNY=g9gysTo4@mail.gmail.com>
- <4CB4AA89.1070009@candelatech.com> <20101013053141.GA15798@vasanth-laptop>
- <4CB5E0A8.5020502@candelatech.com> <AANLkTimp_GSwwX_RnQSyN9QNe55HQ+0HZJ1yd8Xp+dWG@mail.gmail.com>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Wed, 13 Oct 2010 13:03:10 -0700
-Message-ID: <AANLkTi=b_SvDDgqbQ-Oft12bNumM7XuH6-_g7_w=koaG@mail.gmail.com>
-Subject: Re: memory clobber in rx path, maybe related to ath9k.
-To: =?UTF-8?Q?Bj=C3=B6rn_Smedman?= <bjorn.smedman@venatech.se>
-Cc: Ben Greear <greearb@candelatech.com>,
-	Vasanthakumar Thiagarajan <vasanth@atheros.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+In-Reply-To: <1287680315.4759.4.camel@wwguy-ubuntu>
+References: <AANLkTinP32=snam3Bex+OC8LL00awfjrJz4834mhOaNL@mail.gmail.com> <1287680315.4759.4.camel@wwguy-ubuntu>
+From: "Cassiano Tartari, Eng." <falecom@cassianotartari.eng.br>
+Date: Thu, 21 Oct 2010 15:28:03 -0200
+Message-ID: <AANLkTinDTJAwOf3ZqsT22SPQBV7m6MrWO59KzSWr2FBH@mail.gmail.com>
+Subject: Re: Modifying the driver iwlwifi
+To: "Guy, Wey-Yi" <wey-yi.w.guy@intel.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2010/10/13 Bj√∂rn Smedman <bjorn.smedman@venatech.se>:
-> Hi Ben,
+Thanks for the quick reply,
+
+   Could you give me something to start? I saw a lot of files in
+"compat-wireless-2010-10-20/drivers/net/wireless/iwlwifi" is it ?
+
+-
+Cassiano Valle Tartari
+Computer Engineer
+
+Tel: +55.48.84474818
+Email: falecom@cassianotartari.eng.br
+Site: http://www.cassianotartari.eng.br
+
+
+On Thu, Oct 21, 2010 at 2:58 PM, Guy, Wey-Yi <wey-yi.w.guy@intel.com> wrote:
 >
-> First of all keep up the good work. :)
+> Hi Cassiano,
 >
-> On Wed, Oct 13, 2010 at 6:39 PM, Ben Greear <greearb@candelatech.com> wrote:
-> [snip]
->> Either way, it seems safer to null out the bf_ampdu field after
->> the memory is consumed..it could prevent some tricky bugs later.
+> On Thu, 2010-10-21 at 09:17 -0700, Cassiano Tartari, Eng. wrote:
+> > Hi,
+> >
+> > † I'm a masters student of Automation and Systems Engineering at
+> > Federal University of Santa Catarina in Brazil. I'd like to know if it
+> > is possible to modify the implementation of iwlwifi because I need to
+> > decrease the time of association between the client and the AP. I'd
+> > like to implement something in the same way like I read in an article,
+> > project QuickWifi. Its basic idea is that a client doesn't wait each
+> > response to go to the next step, so just do: AUTH REQ -> ASSOC REQ ->
+> > DHCP DISC -> DHCP REQ -> ARP QUERY and a PING THROUGH to verify that
+> > an end-to-end connection is available.
+> >
+> > † † I need this to my work, it will be used for the communication
+> > between a moving vehicle and a fixed point on the street.
+> >
 >
-> I think this is a good idea. But it probably wont be enough to null
-> out bf_mpdu. You also need to look at bf_buf_addr (which if I
-> understand correctly is the physical address the DMA engine will
-> actually write RXed frames to) and bf_dmacontext (which seems in most
-> cases to hold an identical address and may in fact be where the DMA
-> engine will really write the frame).
-
-See the TODO list for ath9k:
-
-  * Remove this redundancy crap: bf->bf_buf_addr = bf->bf_dmacontext;
-
-http://wireless.kernel.org/en/users/Drivers/ath9k/todo
-
-  Luis
+> It is an open source project, so please feel free to make the
+> modifications; but please do follow the upstream process and submit the
+> patch to either "internal-wifi-devel@linux.intel.com" mailing list or
+> "linux-wireless@vger.kernel.org" mailing list for review
+>
+> Thanks
+> Wey
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at †http://vger.kernel.org/majordomo-info.html
