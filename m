@@ -1,99 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw0-f46.google.com ([74.125.83.46]:44229 "EHLO
-	mail-gw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753515Ab0JMLJ2 (ORCPT
+Received: from mail-ew0-f46.google.com ([209.85.215.46]:55074 "EHLO
+	mail-ew0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752872Ab0JVUXd (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 13 Oct 2010 07:09:28 -0400
-From: csanjay@mistralsolutions.com
-To: linux-omap@vger.kernel.org
-Cc: linux-wireless@vger.kernel.org,
-	Sanjay Kumar Champati <csanjay@mistralsolutions.com>
-Subject: [RFC: WL1271 DC supprot on OMAP3EVM 5/5] Supported BT and WLAN configuration for WL1271 over the OMAP37XX
-Date: Wed, 13 Oct 2010 16:27:19 +0530
-Message-Id: <1286967439-705-6-git-send-email-csanjay@mistralsolutions.com>
-In-Reply-To: <1286967439-705-1-git-send-email-csanjay@mistralsolutions.com>
-References: <1286967439-705-1-git-send-email-csanjay@mistralsolutions.com>
+	Fri, 22 Oct 2010 16:23:33 -0400
+Received: by ewy7 with SMTP id 7so1720018ewy.19
+        for <linux-wireless@vger.kernel.org>; Fri, 22 Oct 2010 13:23:32 -0700 (PDT)
+From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+To: linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>
+Cc: b43-dev@lists.infradead.org,
+	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+Subject: [PATCH] b43: rfkill: use status register based on core revision not (PHY's)
+Date: Fri, 22 Oct 2010 22:24:05 +0200
+Message-Id: <1287779045-20257-1-git-send-email-zajec5@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sanjay Kumar Champati <csanjay@mistralsolutions.com>
-
-* Modified the "omap3_evm_defconfig" file to support WLAN and BT configuration for WL1271
-
-Signed-off-by: Sanjay Kumar Champati <csanjay@mistralsolutions.com>
+Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
 ---
- arch/arm/configs/omap3_evm_defconfig |   27 ++++++++++++++++++++++++---
- 1 files changed, 24 insertions(+), 3 deletions(-)
+This makes my N-PHY radio at least running (no scanning results so far). The
+same register is used by wl on this device.
+---
+ drivers/net/wireless/b43/rfkill.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-diff --git a/arch/arm/configs/omap3_evm_defconfig b/arch/arm/configs/omap3_evm_defconfig
-index a18b22e..676cd99 100644
---- a/arch/arm/configs/omap3_evm_defconfig
-+++ b/arch/arm/configs/omap3_evm_defconfig
-@@ -1,7 +1,7 @@
- #
- # Automatically generated make config: don't edit
- # Linux kernel version: 2.6.32
--# Tue Jan  5 13:03:54 2010
-+# Sun Oct 10 05:00:18 2010
- #
- CONFIG_ARM=y
- CONFIG_SYS_SUPPORTS_APM_EMULATION=y
-@@ -492,10 +492,29 @@ CONFIG_DEFAULT_TCP_CONG="cubic"
- # CONFIG_HAMRADIO is not set
- # CONFIG_CAN is not set
- # CONFIG_IRDA is not set
--# CONFIG_BT is not set
-+CONFIG_BT=y
-+CONFIG_BT_L2CAP=y
-+CONFIG_BT_SCO=y
-+CONFIG_BT_RFCOMM=y
-+CONFIG_BT_RFCOMM_TTY=y
-+
-+#
-+# Bluetooth device drivers
-+#
-+CONFIG_BT_HCIUART=y
-+CONFIG_BT_HCIUART_H4=y
-+CONFIG_BT_HCIUART_BCSP=y
-+CONFIG_BT_HCIUART_LL=y
-+CONFIG_BT_WL1271=y
- # CONFIG_AF_RXRPC is not set
- CONFIG_WIRELESS=y
-+CONFIG_WIRELESS_EXT=y
-+CONFIG_WEXT_CORE=y
-+CONFIG_WEXT_PROC=y
-+CONFIG_WEXT_SPY=y
-+CONFIG_WEXT_PRIV=y
- # CONFIG_CFG80211 is not set
-+CONFIG_WIRELESS_EXT_SYSFS=y
- # CONFIG_LIB80211 is not set
- 
- #
-@@ -740,6 +759,7 @@ CONFIG_SMSC911X=y
- # CONFIG_NETDEV_1000 is not set
- # CONFIG_NETDEV_10000 is not set
- CONFIG_WLAN=y
-+CONFIG_WL1271_WLAN=y
- # CONFIG_USB_ZD1201 is not set
- # CONFIG_HOSTAP is not set
- 
-@@ -1302,6 +1322,7 @@ CONFIG_SND_SOC=y
- CONFIG_SND_OMAP_SOC=y
- CONFIG_SND_OMAP_SOC_MCBSP=y
- CONFIG_SND_OMAP_SOC_OMAP3EVM=y
-+CONFIG_SND_OMAP_SOC_WL1271BT=y
- CONFIG_SND_SOC_I2C_AND_SPI=y
- # CONFIG_SND_SOC_ALL_CODECS is not set
- CONFIG_SND_SOC_TWL4030=y
-@@ -2004,7 +2025,7 @@ CONFIG_CRYPTO_HW=y
- CONFIG_BITREVERSE=y
- CONFIG_GENERIC_FIND_LAST_BIT=y
- CONFIG_CRC_CCITT=y
--# CONFIG_CRC16 is not set
-+CONFIG_CRC16=y
- # CONFIG_CRC_T10DIF is not set
- # CONFIG_CRC_ITU_T is not set
- CONFIG_CRC32=y
+diff --git a/drivers/net/wireless/b43/rfkill.c b/drivers/net/wireless/b43/rfkill.c
+index 78016ae..d2734c9 100644
+--- a/drivers/net/wireless/b43/rfkill.c
++++ b/drivers/net/wireless/b43/rfkill.c
+@@ -28,7 +28,7 @@
+ /* Returns TRUE, if the radio is enabled in hardware. */
+ bool b43_is_hw_radio_enabled(struct b43_wldev *dev)
+ {
+-	if (dev->phy.rev >= 3 || dev->phy.type == B43_PHYTYPE_LP) {
++	if (dev->dev->id.revision >= 3) {
+ 		if (!(b43_read32(dev, B43_MMIO_RADIO_HWENABLED_HI)
+ 		      & B43_MMIO_RADIO_HWENABLED_HI_MASK))
+ 			return 1;
 -- 
-1.6.3.3
+1.7.1
 
