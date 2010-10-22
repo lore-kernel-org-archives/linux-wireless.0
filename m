@@ -1,45 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:51160 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754982Ab0JDNPz (ORCPT
+Received: from mail.atheros.com ([12.19.149.2]:51246 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932156Ab0JVRu1 convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 4 Oct 2010 09:15:55 -0400
-Subject: Re: [PATCH v2 3/3] mac80211: move to the home channel for
- disassociation when roaming
-From: Johannes Berg <johannes@sipsolutions.net>
-To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	stable@kernel.org, Jouni Malinen <j@w1.fi>,
-	Paul Stewart <pstew@google.com>,
-	Amod Bodas <amod.bodas@atheros.com>,
-	Vasanthakumar Thiagarajan <vasanth@atheros.com>
-In-Reply-To: <1285965233-11097-4-git-send-email-lrodriguez@atheros.com>
-References: <1285965233-11097-1-git-send-email-lrodriguez@atheros.com>
-	 <1285965233-11097-4-git-send-email-lrodriguez@atheros.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Mon, 04 Oct 2010 15:15:52 +0200
-Message-ID: <1286198152.3620.35.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+	Fri, 22 Oct 2010 13:50:27 -0400
+Received: from mail.atheros.com ([10.10.20.105])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Fri, 22 Oct 2010 10:50:17 -0700
+From: Rajkumar Manoharan <Rajkumar.Manoharan@Atheros.com>
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+CC: "johannes@sipsolutions.net" <johannes@sipsolutions.net>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Date: Fri, 22 Oct 2010 23:18:52 +0530
+Subject: RE: [RFC] mac80211: Fix ibss station got expired immediately
+Message-ID: <44EE5C37ADC36343B0625A05DD408C4850DAB4D6C5@CHEXMB-01.global.atheros.com>
+References: <1287752787-6616-1-git-send-email-rmanoharan@atheros.com>
+ <AANLkTi=DwO_2t_p_+aeh6bBow_NR5=xoPw4A5L8X91ye@mail.gmail.com>
+ <44EE5C37ADC36343B0625A05DD408C4850DAB4D6C4@CHEXMB-01.global.atheros.com>,<AANLkTi=FV91Gj0iGT1X3oZF9rmLAKFNwzy=ReqcdRGeL@mail.gmail.com>
+In-Reply-To: <AANLkTi=FV91Gj0iGT1X3oZF9rmLAKFNwzy=ReqcdRGeL@mail.gmail.com>
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2010-10-01 at 16:33 -0400, Luis R. Rodriguez wrote:
+>On Fri, Oct 22, 2010 at 9:48 AM, Rajkumar Manoharan
+><Rajkumar.Manoharan@atheros.com> wrote:
+>>>On Fri, Oct 22, 2010 at 6:06 AM, Rajkumar Manoharan
+>>><rmanoharan@atheros.com> wrote:
+>>>> Station addition in ieee80211_ibss_rx_queued_mgmt is not updating
+>>>> sta->last_rx which is causing station expiry in ieee80211_ibss_work
+>>>> path. So sta addition and deletion happens repeatedly.
+>>>>
+>>>> Signed-off-by: Rajkumar Manoharan <rmanoharan@atheros.com>
+>>
+>>>stable fix?
+>>
+>>>Luis
+> >yes. while sending the patch, i'll cc'd stable.
+>
+>To get a fix propagated to stable you must adda
+>
+>Cc: stable@kernel.org
+>
+>to your commit log right before your Signed-off-by.
+>Luis
 
-> @@ -2203,6 +2204,14 @@ int ieee80211_mgd_assoc(struct ieee80211_sub_if_data *sdata,
->  			return -EALREADY;
->  		}
->  
-> +		/*
-> +		 * right before this was authentication, that was on
-> +		 * the same the wk->chan so we need to ensure we temporarily
-> +		 * go back to the operating channel to send the disassocation.
-> +		 */
-> +		local->tmp_channel = NULL;
-> +		ieee80211_hw_config(local, 0);
-> +
+Yep. thats what i meant ;)
 
-Yikes, no, you can't do this. You don't know what has been merged with
-the authentication work item, etc.
-
-johannes
-
+- Rajkumar
