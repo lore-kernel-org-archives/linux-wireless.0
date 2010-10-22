@@ -1,71 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:34469 "EHLO
+Received: from mail.candelatech.com ([208.74.158.172]:44679 "EHLO
 	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751509Ab0JOWvk (ORCPT
+	with ESMTP id S1751838Ab0JVEvY (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 15 Oct 2010 18:51:40 -0400
-From: greearb@candelatech.com
-To: linux-wireless@vger.kernel.org, ath5k-devel@venema.h4ckr.net
-Cc: Ben Greear <greearb@candelatech.com>
-Subject: [PATCH] ath5k:  Properly initialize ath_common->cc_lock.
-Date: Fri, 15 Oct 2010 15:51:32 -0700
-Message-Id: <1287183092-3220-1-git-send-email-greearb@candelatech.com>
+	Fri, 22 Oct 2010 00:51:24 -0400
+Message-ID: <4CC11840.4060709@candelatech.com>
+Date: Thu, 21 Oct 2010 21:51:12 -0700
+From: Ben Greear <greearb@candelatech.com>
+MIME-Version: 1.0
+To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+CC: Bruno Randolf <br1@einfach.org>, linville@tuxdriver.com,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 0/6] ath9k: fix RX poison issue
+References: <1287616028-12547-1-git-send-email-lrodriguez@atheros.com> <4CC07CA9.4040808@candelatech.com> <201010220930.01071.br1@einfach.org> <AANLkTi=wTsFnVZ=GGck_ArP6ubT_dOB41ut13od7biwT@mail.gmail.com>
+In-Reply-To: <AANLkTi=wTsFnVZ=GGck_ArP6ubT_dOB41ut13od7biwT@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ben Greear <greearb@candelatech.com>
+On 10/21/2010 05:32 PM, Luis R. Rodriguez wrote:
+> On Thu, Oct 21, 2010 at 5:30 PM, Bruno Randolf<br1@einfach.org>  wrote:
+>> On Fri October 22 2010 02:47:21 Ben Greear wrote:
+>>> I tested this code when it was combined into a single patch.
+>>> There were still some issues, but I have no reason to believe
+>>> this patch set caused them.  This patch set significantly
+>>> improved stability in my testing with 130+ STA interfaces.
+>>
+>> one question: do you see similar issues with ath5k? i remember one bug is
+>> filed with a rx poision issue.
+>
+> Hardware is similar so the I'd do the same locking.
 
-Otherwise, lockdep splats, at the least:
+We did similar testing with ath5k, and did not see any obvious
+problems.  But, maybe we were just getting lucky.
 
-INFO: trying to register non-static key.
-the code is fine but needs lockdep annotation.
-turning off the locking correctness validator.
-Pid: 0, comm: swapper Not tainted 2.6.36-rc8-wl+ #32
-Call Trace:
- [<c075d940>] ? printk+0xf/0x17
- [<c045507a>] register_lock_class+0x5a/0x29e
- [<c0456af5>] __lock_acquire+0xa2/0xb8c
- [<c0455be2>] ? mark_lock+0x1e/0x1de
- [<c041a540>] ? acpi_get_override_irq+0x85/0x8c
- [<c0455536>] ? trace_hardirqs_off+0xb/0xd
- [<c0457639>] lock_acquire+0x5a/0x78
- [<f8126835>] ? ath5k_ani_calibration+0x24/0x52b [ath5k]
- [<c075f6ed>] _raw_spin_lock_bh+0x20/0x2f
- [<f8126835>] ? ath5k_ani_calibration+0x24/0x52b [ath5k]
- [<f8126835>] ath5k_ani_calibration+0x24/0x52b [ath5k]
- [<c0438f99>] ? tasklet_action+0x3b/0xc6
- [<f8123c2b>] ath5k_tasklet_ani+0x18/0x22 [ath5k]
- [<c0438fd1>] tasklet_action+0x73/0xc6
- [<c043945f>] __do_softirq+0x86/0x111
- [<c0439520>] do_softirq+0x36/0x5a
- [<c0439659>] irq_exit+0x35/0x69
- [<c0403fb9>] do_IRQ+0x86/0x9a
- [<c04034ee>] common_interrupt+0x2e/0x40
- [<c045007b>] ? do_adjtimex+0x223/0x55e
- [<c0408245>] ? mwait_idle+0x5c/0x6c
- [<c040227f>] cpu_idle+0x4e/0x6b
- [<c074b6e9>] rest_init+0x8d/0x92
- [<c09758ea>] start_kernel+0x320/0x325
- [<c09750d0>] i386_start_kernel+0xd0/0xd7
+Thanks,
+Ben
 
-Signed-off-by: Ben Greear <greearb@candelatech.com>
----
-:100644 100644 f1ae75d... 8251946... M	drivers/net/wireless/ath/ath5k/base.c
- drivers/net/wireless/ath/ath5k/base.c |    1 +
- 1 files changed, 1 insertions(+), 0 deletions(-)
+>
+>    Luis
 
-diff --git a/drivers/net/wireless/ath/ath5k/base.c b/drivers/net/wireless/ath/ath5k/base.c
-index f1ae75d..8251946 100644
---- a/drivers/net/wireless/ath/ath5k/base.c
-+++ b/drivers/net/wireless/ath/ath5k/base.c
-@@ -3580,6 +3580,7 @@ ath5k_pci_probe(struct pci_dev *pdev,
- 	common->ah = sc->ah;
- 	common->hw = hw;
- 	common->cachelsz = csz << 2; /* convert to bytes */
-+	spin_lock_init(&common->cc_lock);
- 
- 	/* Initialize device */
- 	ret = ath5k_hw_attach(sc);
+
 -- 
-1.7.2.2
-
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
