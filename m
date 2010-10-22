@@ -1,55 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:47027 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750957Ab0I3WzR (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 30 Sep 2010 18:55:17 -0400
-Subject: Re: [RFC 1/2] genetlink: introduce pre_doit/post_doit hooks
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Julian Calaby <julian.calaby@gmail.com>
-Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
-	tgraf@suug.ch
-In-Reply-To: <AANLkTimVMGHNkK=o650qzZfvUp3mWRAG_=60etVbEBxh@mail.gmail.com>
-References: <20100930211013.472957770@sipsolutions.net>
-	 <20100930211131.021309930@sipsolutions.net>
-	 <AANLkTik9+zA4PPPx=q6CRM-sgOjjECJdtJTgkCG9pGAY@mail.gmail.com>
-	 <1285886690.5137.28.camel@jlt3.sipsolutions.net>
-	 <1285886821.5137.29.camel@jlt3.sipsolutions.net>
-	 <1285886955.5137.31.camel@jlt3.sipsolutions.net>
-	 <AANLkTimVMGHNkK=o650qzZfvUp3mWRAG_=60etVbEBxh@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Fri, 01 Oct 2010 00:55:52 +0200
-Message-ID: <1285887352.5137.34.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+Received: from mx1.redhat.com ([209.132.183.28]:49701 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756270Ab0JVPCA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 22 Oct 2010 11:02:00 -0400
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org,
+	Stanislaw Gruszka <sgruszka@redhat.com>
+Subject: [PATCH 4/7] iwlwifi: avoid commit rxon during scan in iwlagn_configure_filter
+Date: Fri, 22 Oct 2010 17:04:27 +0200
+Message-Id: <1287759870-5758-4-git-send-email-sgruszka@redhat.com>
+In-Reply-To: <1287759870-5758-1-git-send-email-sgruszka@redhat.com>
+References: <1287759870-5758-1-git-send-email-sgruszka@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2010-10-01 at 08:51 +1000, Julian Calaby wrote:
+Almost anywhere in the code we avoid committing rxon while performing
+scan, and make rxon commit when scan complete. However in some places
+in the code we do not follow that rule. This patch fix that problem in
+iwlagn_configure_filter().
 
-> > Come to think of it -- I could get away with a single pointer, since, if
-> > both are assigned,
-> >
-> > user_ptr[0] == wiphy_to_rdev(((netdev *)user_ptr[1])->ieee80211_ptr->wiphy)
-> >
-> > but that's a lot of pointy things, and some functions only have the rdev
-> > so it gets more complex. I think allowing two private pointers is a
-> > decent compromise.
-> 
-> Come to think of it -- if someone wanted to have a massive structure
-> with 10 pointers and a set of random data structures, then they could
-> easily create their priv struct and assign it to user_ptr[0], hence
-> rendering my argument null and void.
+Since we do not commit directly in iwl3945_configure_filter, we can
+also do the same for agn, so I just remove iwlcore_commit_rxon()
+function and add a comment. Also change comment for iwl3945.
 
-Oh, well, I thought your argument was that it was arbitrary and not
-really necessary :-)
+Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-agn.c      |    6 +++++-
+ drivers/net/wireless/iwlwifi/iwl3945-base.c |    6 +++---
+ 2 files changed, 8 insertions(+), 4 deletions(-)
 
-Also, this rather cheap, it just needs a bit more stack space in a place
-that isn't typically deeply nested. So if some protocol came around and
-needed three pointers, I'd probably advocate just bumping it to three.
-At some point I might draw a line (10 is probably too much).
-
-But you're right, of course, they can just use the first one and put
-something dynamically allocated into that, if really needed.
-
-johannes
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
+index d3435c4..0ba8083 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
+@@ -3983,7 +3983,11 @@ static void iwlagn_configure_filter(struct ieee80211_hw *hw,
+ 	for_each_context(priv, ctx) {
+ 		ctx->staging.filter_flags &= ~filter_nand;
+ 		ctx->staging.filter_flags |= filter_or;
+-		iwlcore_commit_rxon(priv, ctx);
++
++		/*
++		 * Not committing directly because hardware can perform a scan,
++		 * but we'll eventually commit the filter flags change anyway.
++		 */
+ 	}
+ 
+ 	mutex_unlock(&priv->mutex);
+diff --git a/drivers/net/wireless/iwlwifi/iwl3945-base.c b/drivers/net/wireless/iwlwifi/iwl3945-base.c
+index a754291..25f77e4 100644
+--- a/drivers/net/wireless/iwlwifi/iwl3945-base.c
++++ b/drivers/net/wireless/iwlwifi/iwl3945-base.c
+@@ -3407,9 +3407,9 @@ static void iwl3945_configure_filter(struct ieee80211_hw *hw,
+ 	ctx->staging.filter_flags |= filter_or;
+ 
+ 	/*
+-	 * Committing directly here breaks for some reason,
+-	 * but we'll eventually commit the filter flags
+-	 * change anyway.
++	 * Not committing directly because hardware can perform a scan,
++	 * but even if hw is ready, committing here breaks for some reason,
++	 * we'll eventually commit the filter flags change anyway.
+ 	 */
+ 
+ 	mutex_unlock(&priv->mutex);
+-- 
+1.7.1
 
