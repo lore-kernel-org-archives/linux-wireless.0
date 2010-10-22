@@ -1,50 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f46.google.com ([209.85.161.46]:49555 "EHLO
-	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932103Ab0JOQ6J (ORCPT
+Received: from mail-iw0-f174.google.com ([209.85.214.174]:38404 "EHLO
+	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755374Ab0JVQEj (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 15 Oct 2010 12:58:09 -0400
-From: Christian Lamparter <chunkeey@googlemail.com>
-To: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH v2.6.36-rc7] mac80211: cancel restart_work explicitly instead of depending on flush_scheduled_work()
-Date: Fri, 15 Oct 2010 18:58:44 +0200
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	Linux Wireless List <linux-wireless@vger.kernel.org>,
-	lkml <linux-kernel@vger.kernel.org>,
-	"John W. Linville" <linville@tuxdriver.com>
-References: <4CB874C0.8090003@kernel.org> <1287159715.1870.11.camel@Nokia-N900-51-1> <4CB883C9.6050104@kernel.org>
-In-Reply-To: <4CB883C9.6050104@kernel.org>
+	Fri, 22 Oct 2010 12:04:39 -0400
+Received: by iwn34 with SMTP id 34so1102164iwn.19
+        for <linux-wireless@vger.kernel.org>; Fri, 22 Oct 2010 09:04:39 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="utf-8"
-Message-Id: <201010151858.45000.chunkeey@googlemail.com>
+In-Reply-To: <AANLkTi=XU_wmmYfV+dd5yU=ZwjWsm-usxcLY71qCUY_o@mail.gmail.com>
+References: <AANLkTimqQqo2F+UD7j0OUXn_YF3EvkO5z6Njdo-=dhnY@mail.gmail.com>
+ <AANLkTik_Uj9adCUyOoMyx7t44AReK6yxcv_YLT_+Jm1U@mail.gmail.com> <AANLkTi=XU_wmmYfV+dd5yU=ZwjWsm-usxcLY71qCUY_o@mail.gmail.com>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Fri, 22 Oct 2010 09:04:18 -0700
+Message-ID: <AANLkTin+aKsPw5A+J_1FpDMYd76HgG7k+1E7GtL1eZ_X@mail.gmail.com>
+Subject: Re: [PATCH] compat: Fixes missing sem member in struct device for RT
+ PREEMPT prior to 2.6.34
+To: Blaise Gassend <blaise@willowgarage.com>
+Cc: "Luis R. Rodriguez" <mcgrof@kernel.org>,
+	linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Friday 15 October 2010 18:39:37 Tejun Heo wrote:
-> Hello,
+On Fri, Oct 22, 2010 at 8:58 AM, Blaise Gassend <blaise@willowgarage.com> wrote:
+> That was a diff against the master branch of
+> git://git.kernel.org/pub/scm/linux/kernel/git/mcgrof/compat.git that I
+> cloned last night. I produced the patch with git diff. What should I
+> have diffed against?
 
-> >> -    /*
-> >> -     * For key todo, it'll be empty by now but the work
-> >> -     * might still be scheduled.
-> >> -     */
-> >> -    flush_scheduled_work();
-> > 
-> > oops, todo work no longer exists...
-> > 
-> > Anyway, ACK.
-> 
-> Are you going to route this through wireless tree?  Shall I repost
-> with update patch description?
+That's fine, for some reason it did not apply, but anyway I applied it
+manually, thanks!!!
 
-wireless-testing/wireless-next has already such a patch:
-"mac80211: cancel restart_work in ieee80211_unregister_hw" (2010-08-25)
-
-<http://git.kernel.org/?p=linux/kernel/git/linville/wireless-next-2.6.git;a=commit;h=258086a48b766d12a500f98834654ffa927ca475>
-
-John, can you please push to 2.6.36-rc8?
-(I know, I am _late_, but I didn't know about any potential problem
-in the mainline?)
-
-Best regards,
-	Chr
+  Luis
