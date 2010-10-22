@@ -1,40 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f46.google.com ([209.85.161.46]:41331 "EHLO
-	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756833Ab0JAOhG (ORCPT
+Received: from mail-gx0-f174.google.com ([209.85.161.174]:58107 "EHLO
+	mail-gx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752599Ab0JVAcg convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 1 Oct 2010 10:37:06 -0400
-Received: by fxm14 with SMTP id 14so612701fxm.19
-        for <linux-wireless@vger.kernel.org>; Fri, 01 Oct 2010 07:37:04 -0700 (PDT)
-From: Christian Lamparter <chunkeey@googlemail.com>
-To: Saqeb Akhter <saqeb.akhter@gmail.com>
-Subject: Re: carl9170: wnda3100 only 54MB/s
-Date: Fri, 1 Oct 2010 16:36:57 +0200
-Cc: linux-wireless@vger.kernel.org
-References: <AANLkTimN3X_e4fZhUSoTs-GmQ9kmaJUrgnxAu8=W2dT_@mail.gmail.com> <AANLkTinpJ2qzR3D6Oe1WOS60sfRergfH548EMdB2m=_P@mail.gmail.com>
-In-Reply-To: <AANLkTinpJ2qzR3D6Oe1WOS60sfRergfH548EMdB2m=_P@mail.gmail.com>
+	Thu, 21 Oct 2010 20:32:36 -0400
+Received: by gxk3 with SMTP id 3so142436gxk.19
+        for <linux-wireless@vger.kernel.org>; Thu, 21 Oct 2010 17:32:36 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Message-Id: <201010011636.58033.chunkeey@googlemail.com>
+In-Reply-To: <201010220930.01071.br1@einfach.org>
+References: <1287616028-12547-1-git-send-email-lrodriguez@atheros.com>
+ <4CC07CA9.4040808@candelatech.com> <201010220930.01071.br1@einfach.org>
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Date: Thu, 21 Oct 2010 17:32:15 -0700
+Message-ID: <AANLkTi=wTsFnVZ=GGck_ArP6ubT_dOB41ut13od7biwT@mail.gmail.com>
+Subject: Re: [PATCH 0/6] ath9k: fix RX poison issue
+To: Bruno Randolf <br1@einfach.org>
+Cc: Ben Greear <greearb@candelatech.com>, linville@tuxdriver.com,
+	linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Friday 01 October 2010 16:22:45 Saqeb Akhter wrote:
-> Hey Guys,
-> 
-> I just got around to compiling compat-wireless on ubuntu 10.04, to
-> make use of the new carl9170 driver which is supposed to be able to
-> handle 802.11n.
-> 
-> My router is a wndr3700 running @ 5ghz on windows I'm able to get
-> pretty good speeds. But on Ubuntu it does not seem to connect faster
-> than 54MB/s, iwlist scan shows that 54Mb/s is the highest it can go.
-sure, that's a limitation of iwlist. If you want to know the current
-link speed (link speed as in "the last used tx rate", so if there's
-no traffic then the rate is low) you should be using the "iw" utility:
+On Thu, Oct 21, 2010 at 5:30 PM, Bruno Randolf <br1@einfach.org> wrote:
+> On Fri October 22 2010 02:47:21 Ben Greear wrote:
+>> I tested this code when it was combined into a single patch.
+>> There were still some issues, but I have no reason to believe
+>> this patch set caused them.  This patch set significantly
+>> improved stability in my testing with 130+ STA interfaces.
+>
+> one question: do you see similar issues with ath5k? i remember one bug is
+> filed with a rx poision issue.
 
-iw dev wlanX link
+Hardware is similar so the I'd do the same locking.
 
-Regards,
-	Chr
+  Luis
