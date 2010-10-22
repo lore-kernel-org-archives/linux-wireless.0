@@ -1,57 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:55937 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932349Ab0JFJUu (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 6 Oct 2010 05:20:50 -0400
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: Johannes Berg <johannes@sipsolutions.net>,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org,
-	Stanislaw Gruszka <sgruszka@redhat.com>
-Subject: [PATCH 6/6] Revert "iwlwifi: do not perferm force reset while doing scan"
-Date: Wed,  6 Oct 2010 11:22:13 +0200
-Message-Id: <1286356933-4076-6-git-send-email-sgruszka@redhat.com>
-In-Reply-To: <1286356933-4076-1-git-send-email-sgruszka@redhat.com>
-References: <1286356933-4076-1-git-send-email-sgruszka@redhat.com>
+Received: from mail-ew0-f46.google.com ([209.85.215.46]:48409 "EHLO
+	mail-ew0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757525Ab0JVP6I convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 22 Oct 2010 11:58:08 -0400
+Received: by ewy7 with SMTP id 7so1294101ewy.19
+        for <linux-wireless@vger.kernel.org>; Fri, 22 Oct 2010 08:58:07 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <AANLkTik_Uj9adCUyOoMyx7t44AReK6yxcv_YLT_+Jm1U@mail.gmail.com>
+References: <AANLkTimqQqo2F+UD7j0OUXn_YF3EvkO5z6Njdo-=dhnY@mail.gmail.com>
+	<AANLkTik_Uj9adCUyOoMyx7t44AReK6yxcv_YLT_+Jm1U@mail.gmail.com>
+Date: Fri, 22 Oct 2010 08:58:06 -0700
+Message-ID: <AANLkTi=XU_wmmYfV+dd5yU=ZwjWsm-usxcLY71qCUY_o@mail.gmail.com>
+Subject: Re: [PATCH] compat: Fixes missing sem member in struct device for RT
+ PREEMPT prior to 2.6.34
+From: Blaise Gassend <blaise@willowgarage.com>
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Cc: "Luis R. Rodriguez" <mcgrof@kernel.org>,
+	linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This reverts commit 7acc7c683a747689aaaaad4fce1683fc3f85e552. It was
-applied to avoid possible warning in ieee80211_restart_hw, however
-reason of the warning were races in mac80211, currently hopefully fixed.
+That was a diff against the master branch of
+git://git.kernel.org/pub/scm/linux/kernel/git/mcgrof/compat.git that I
+cloned last night. I produced the patch with git diff. What should I
+have diffed against?
 
-Not reseting device when performing scan is bad for two reasons.
+Blaise
 
-When forcing reset from iwl_check_stuck_queue(), in case of fail,
-reset will be repeated until scan finish. But since firmware is in bad
-shape, scan only finish after scan_check work (about 7s). So we will
-delay the reset, what is not good behaviour.
-
-When forcing reset from iwl_recover_from_statistics(), we will not
-repeat the reset, so we will not perform reset at all when needed.
-
-Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
----
- drivers/net/wireless/iwlwifi/iwl-core.c |    5 -----
- 1 files changed, 0 insertions(+), 5 deletions(-)
-
-diff --git a/drivers/net/wireless/iwlwifi/iwl-core.c b/drivers/net/wireless/iwlwifi/iwl-core.c
-index 5c56893..393f02d 100644
---- a/drivers/net/wireless/iwlwifi/iwl-core.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-core.c
-@@ -2736,11 +2736,6 @@ int iwl_force_reset(struct iwl_priv *priv, int mode, bool external)
- 	if (test_bit(STATUS_EXIT_PENDING, &priv->status))
- 		return -EINVAL;
- 
--	if (test_bit(STATUS_SCANNING, &priv->status)) {
--		IWL_DEBUG_INFO(priv, "scan in progress.\n");
--		return -EINVAL;
--	}
--
- 	if (mode >= IWL_MAX_FORCE_RESET) {
- 		IWL_DEBUG_INFO(priv, "invalid reset request.\n");
- 		return -EINVAL;
--- 
-1.7.1
-
+On Fri, Oct 22, 2010 at 2:36 AM, Luis R. Rodriguez <mcgrof@gmail.com> wrote:
+> On Thu, Oct 21, 2010 at 10:51 PM, Blaise Gassend
+> <blaise@willowgarage.com> wrote:
+>> The RT PREEMPT patch eliminates the sem member in struct device
+>> breaking device_lock, device_unlock and device_trylock in kernels
+>> prior to 2.6.34. The attached patch replaces the use of sem by a use
+>> of mutex.
+>>
+>> Signed-off-by: Blaise Gassend <blaise@willowgarage.com>
+>
+> Alright, nice, thanks! Patch applied and I also propagated it to the
+> linux-2.6.36.y branch so that we can get this fix for the
+> compat-wireless-2.6.36 release as well. I should note your patch did
+> not apply as the offsets were way off but I did just read the patch
+> and merged it manually. What version of compat were you using?
+>
+>  Luis
+>
