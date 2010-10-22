@@ -1,144 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from devils.ext.ti.com ([198.47.26.153]:51556 "EHLO
-	devils.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755445Ab0JJKYP (ORCPT
+Received: from mail-ew0-f46.google.com ([209.85.215.46]:55658 "EHLO
+	mail-ew0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932096Ab0JVPn6 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 10 Oct 2010 06:24:15 -0400
-Message-ID: <4CB194DC.7030206@ti.com>
-Date: Sun, 10 Oct 2010 12:26:36 +0200
-From: Shahar Levi <shahar_levi@ti.com>
+	Fri, 22 Oct 2010 11:43:58 -0400
+Received: by mail-ew0-f46.google.com with SMTP id 7so1270430ewy.19
+        for <linux-wireless@vger.kernel.org>; Fri, 22 Oct 2010 08:43:58 -0700 (PDT)
+From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+To: linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>
+Cc: b43-dev@lists.infradead.org,
+	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+Subject: [PATCH 5/5] b43: N-PHY: improve 2055 radio initialization
+Date: Fri, 22 Oct 2010 17:43:49 +0200
+Message-Id: <1287762229-16516-6-git-send-email-zajec5@gmail.com>
+In-Reply-To: <1287762229-16516-2-git-send-email-zajec5@gmail.com>
+References: <1287762229-16516-2-git-send-email-zajec5@gmail.com>
 MIME-Version: 1.0
-To: Luciano Coelho <luciano.coelho@nokia.com>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH v2 02/03] wl1271: 11n Support, ACX Commands
-References: <1286388491-28752-1-git-send-email-shahar_levi@ti.com>	 <1286388491-28752-4-git-send-email-shahar_levi@ti.com> <1286476676.1662.57.camel@powerslave>
-In-Reply-To: <1286476676.1662.57.camel@powerslave>
-Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Thanks for the review. All fixed on v3.
-Cheers,
-Shahar
+1) Upload 5 GHz values when needed.
+2) Do not upload all values on first init. Follow wl.
 
-Luciano Coelho wrote:
-> On Wed, 2010-10-06 at 20:08 +0200, ext Shahar Levi wrote:
->> Added ACX command to the FW for 11n support.
->>
->> Signed-off-by: Shahar Levi <shahar_levi@ti.com>
->> ---
-> 
-> Again, mostly coding-style comments.
-> 
-> 
->> diff --git a/drivers/net/wireless/wl12xx/wl1271_acx.c b/drivers/net/wireless/wl12xx/wl1271_acx.c
->> index 6189934..cc6b7d8 100644
->> --- a/drivers/net/wireless/wl12xx/wl1271_acx.c
->> +++ b/drivers/net/wireless/wl12xx/wl1271_acx.c
->> @@ -1226,6 +1226,97 @@ out:
->>  	return ret;
->>  }
->>  
->> +int wl1271_acx_set_ht_capabilities(struct wl1271 *wl,
->> +				    struct ieee80211_sta_ht_cap *ht_cap,
->> +				    bool allow_ht_operation)
->> +{
->> +	struct wl1271_acx_ht_capabilities *acx;
->> +	/*
->> +	* Note, currently this value will be set to FFFFFFFFFFFF to indicate
->> +	* it is relevant for all peers since we only support HT in
->> +	* infrastructure mode. Later on this field will be relevant to
->> +	* IBSS/DLS operation */
->> +	u8 mac_address[ETH_ALEN] = {0xff, 0xff, 0xff, 0xff, 0xff, 0xff};
-> 
-> I didn't realize this when reviewing patch 01/03, but you could actually
-> remove the Note from the wl1271_acx.h file and leave it here.  There's
-> no need to have it repeated there and here.
-> 
-> 
->> +	/* Allow HT Operation ? */
->> +	if (true == allow_ht_operation) {
-> 
-> I know that some people like to put the constant in the left side of the
-> comparison operator to avoid problems with mistyping == as =, but
-> reading this in the opposite way is less intuitive (like top-posting? ;)
-> and the compiler, if called with reasonable options, will warn you if
-> you make that mistake.  So, summarizing, please use it like this
-> instead, then you don't even risk mistyping == in the first place :P
-> 
-> 	if (allow_ht_operation) {
-> 
-> 
->> +		acx->ht_capabilites =
->> +		WL1271_ACX_FW_CAP_BIT_MASK_HT_OPERATION;
-> 
-> Add a more indentation on the second line, it's easier to read.
-> 
-> 
->> +		acx->ht_capabilites |=
->> +		((ht_cap->cap & IEEE80211_HT_CAP_GRN_FLD) ?
->> +		WL1271_ACX_FW_CAP_BIT_MASK_GREENFIELD_FRAME_FORMAT : 0);
->> +		acx->ht_capabilites |=
->> +		((ht_cap->cap & IEEE80211_HT_CAP_SGI_20) ?
->> +		WL1271_ACX_FW_CAP_BIT_MASK_SHORT_GI_FOR_20MHZ_PACKETS : 0);
->> +		acx->ht_capabilites |=
->> +		((ht_cap->cap & IEEE80211_HT_CAP_LSIG_TXOP_PROT) ?
->> +		WL1271_ACX_FW_CAP_BIT_MASK_LSIG_TXOP_PROTECTION : 0);
-> 
-> Same thing for all these other assignments.
-> 
-> 
->> +
->> +		/* get date from A-MPDU parameters field */
-> 
-> "get data"
-> 
-> 
->> +		acx->ampdu_max_length = ht_cap->ampdu_factor;
->> +		acx->ampdu_min_spacing = ht_cap->ampdu_density;
->> +
->> +		memcpy(acx->mac_address, mac_address, ETH_ALEN);
->> +	}
->> +	/* HT operations are not allowed */
->> +	else
->> +		acx->ht_capabilites = 0;
-> 
-> According to Documentation/CodingStyle, you should write the else block
-> like this:
-> 
-> if (...) {
-> 	...
-> } else {
-> 	acx->ht_capabilities = 0;
-> }
-> 
-> 
->> +int wl1271_acx_set_ht_information(struct wl1271 *wl,
->> +				   u16 ht_operation_mode)
->> +{
->> +	struct wl1271_acx_ht_information *acx;
->> +	int ret = 0;
->> +
->> +	wl1271_debug(DEBUG_ACX, "acx ht information setting");
->> +
->> +	acx = kzalloc(sizeof(*acx), GFP_KERNEL);
->> +	if (!acx) {
->> +		ret = -ENOMEM;
->> +		goto out;
->> +	}
->> +
->> +	acx->ht_protection =
->> +		(u8)(ht_operation_mode & IEEE80211_HT_OP_MODE_PROTECTION);
->> +	acx->rifs_mode = 0;
->> +	acx->gf_protection = 0;
->> +	acx->ht_tx_burst_limit = 0;
->> +	acx->dual_cts_protection = 0;
->> +
->> +	ret = wl1271_cmd_configure(wl,
->> +				   ACX_HT_BSS_OPERATION,
->> +				   acx,
->> +				   sizeof(*acx));
-> 
-> Doesn't this fit in less lines?
-> 
+Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
+---
+ drivers/net/wireless/b43/phy_n.c |   11 +++++++----
+ 1 files changed, 7 insertions(+), 4 deletions(-)
+
+diff --git a/drivers/net/wireless/b43/phy_n.c b/drivers/net/wireless/b43/phy_n.c
+index c22dbfb..6facb8a 100644
+--- a/drivers/net/wireless/b43/phy_n.c
++++ b/drivers/net/wireless/b43/phy_n.c
+@@ -241,10 +241,13 @@ static void b43_radio_init2055_post(struct b43_wldev *dev)
+ static void b43_radio_init2055(struct b43_wldev *dev)
+ {
+ 	b43_radio_init2055_pre(dev);
+-	if (b43_status(dev) < B43_STAT_INITIALIZED)
+-		b2055_upload_inittab(dev, 0, 1);
+-	else
+-		b2055_upload_inittab(dev, 0/*FIXME on 5ghz band*/, 0);
++	if (b43_status(dev) < B43_STAT_INITIALIZED) {
++		/* Follow wl, not specs. Do not force uploading all regs */
++		b2055_upload_inittab(dev, 0, 0);
++	} else {
++		bool ghz5 = b43_current_band(dev->wl) == IEEE80211_BAND_5GHZ;
++		b2055_upload_inittab(dev, ghz5, 0);
++	}
+ 	b43_radio_init2055_post(dev);
+ }
+ 
+-- 
+1.7.1
 
