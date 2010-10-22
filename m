@@ -1,50 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f46.google.com ([209.85.215.46]:35910 "EHLO
-	mail-ew0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755439Ab0JILgb (ORCPT
+Received: from mail-yx0-f174.google.com ([209.85.213.174]:58241 "EHLO
+	mail-yx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753614Ab0JVTlz convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 9 Oct 2010 07:36:31 -0400
-Received: by mail-ew0-f46.google.com with SMTP id 20so23937ewy.19
-        for <linux-wireless@vger.kernel.org>; Sat, 09 Oct 2010 04:36:31 -0700 (PDT)
-From: Ivo van Doorn <ivdoorn@gmail.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Subject: [PATCH 04/06] rt2x00: Use unlikely for error case in rt2x00queue_write_tx_frame
-Date: Sat, 9 Oct 2010 13:34:43 +0200
-Cc: linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com
-References: <201010091333.17274.IvDoorn@gmail.com> <201010091333.45001.IvDoorn@gmail.com> <201010091334.12741.IvDoorn@gmail.com>
-In-Reply-To: <201010091334.12741.IvDoorn@gmail.com>
+	Fri, 22 Oct 2010 15:41:55 -0400
+Received: by yxn35 with SMTP id 35so964562yxn.19
+        for <linux-wireless@vger.kernel.org>; Fri, 22 Oct 2010 12:41:55 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Message-Id: <201010091334.44618.IvDoorn@gmail.com>
+In-Reply-To: <1287762229-16516-4-git-send-email-zajec5@gmail.com>
+References: <1287762229-16516-2-git-send-email-zajec5@gmail.com> <1287762229-16516-4-git-send-email-zajec5@gmail.com>
+From: =?ISO-8859-1?Q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>
+Date: Fri, 22 Oct 2010 21:41:34 +0200
+Message-ID: <AANLkTiko3JeoRcxPT7zhnGTNhmyDWqmFjeZ8ssMzCb+J@mail.gmail.com>
+Subject: Re: [PATCH 3/5] b43: define known SPROM boardflags2 bits
+To: b43-dev <b43-dev@lists.infradead.org>,
+	Larry Finger <Larry.Finger@lwfinger.net>
+Cc: linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Helmut Schaa <helmut.schaa@googlemail.com>
+2010/10/22 Rafał Miłecki <zajec5@gmail.com>:
+> Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
+> ---
+>  drivers/net/wireless/b43/b43.h |   13 +++++++++++++
+>  1 files changed, 13 insertions(+), 0 deletions(-)
+>
+> diff --git a/drivers/net/wireless/b43/b43.h b/drivers/net/wireless/b43/b43.h
+> index 72821c4..9aad2ca 100644
+> --- a/drivers/net/wireless/b43/b43.h
+> +++ b/drivers/net/wireless/b43/b43.h
+> @@ -153,6 +153,19 @@
+>  #define B43_BFH_FEM_BT                 0x0040  /* has FEM and switch to share antenna
+>                                                 * with bluetooth */
+>
+> +/* SPROM boardflags2_lo values */
+> +#define B43_BFL2_RXBB_INT_REG_DIS      0x0001  /* external RX BB regulator present */
+> +#define B43_BFL2_APLL_WAR              0x0002  /* alternative A-band PLL settings implemented */
+> +#define B43_BFL2_TXPWRCTRL_EN          0x0004  /* permits enabling TX Power Control */
+> +#define B43_BFL2_2X4_DIV               0x0008  /* 2x4 diversity switch */
+> +#define B43_BFL2_5G_PWRGAIN            0x0010  /* supports 5G band power gain */
+> +#define B43_BFL2_PCIEWAR_OVR           0x0020  /* overrides ASPM and Clkreq settings */
+> +#define B43_BFL2_CAESERS_BRD           0x0040  /* is Caesers board (unused) */
 
-This is an error condition that is not supposed to happen. Hence, it is
-safe to add unlikely to this check.
+I'm almost sure this is a typo in the specs.
 
-Signed-off-by: Helmut Schaa <helmut.schaa@googlemail.com>
-Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
----
- drivers/net/wireless/rt2x00/rt2x00queue.c |    3 ++-
- 1 files changed, 2 insertions(+), 1 deletions(-)
+Larry?
 
-diff --git a/drivers/net/wireless/rt2x00/rt2x00queue.c b/drivers/net/wireless/rt2x00/rt2x00queue.c
-index 4436ff7..83630f1 100644
---- a/drivers/net/wireless/rt2x00/rt2x00queue.c
-+++ b/drivers/net/wireless/rt2x00/rt2x00queue.c
-@@ -489,7 +489,8 @@ int rt2x00queue_write_tx_frame(struct data_queue *queue, struct sk_buff *skb,
- 	if (unlikely(rt2x00queue_full(queue)))
- 		return -ENOBUFS;
- 
--	if (test_and_set_bit(ENTRY_OWNER_DEVICE_DATA, &entry->flags)) {
-+	if (unlikely(test_and_set_bit(ENTRY_OWNER_DEVICE_DATA,
-+				      &entry->flags))) {
- 		ERROR(queue->rt2x00dev,
- 		      "Arrived at non-free entry in the non-full queue %d.\n"
- 		      "Please file bug report to %s.\n",
+> +#define B43_BFL2_BTC3WIRE              0x0080  /* used 3-wire bluetooth coexist */
+> +#define B43_BFL2_SKWRKFEM_BRD          0x0100  /* 4321mcm93 uses Skyworks FEM */
+> +#define B43_BFL2_SPUR_WAR              0x0200  /* has a workaround for clock-harmonic spurs */
+> +#define B43_BFL2_GPLL_WAR              0x0400  /* altenative G-band PLL settings implemented */
+> +
+>  /* GPIO register offset, in both ChipCommon and PCI core. */
+>  #define B43_GPIO_CONTROL               0x6c
+>
+> --
+> 1.7.1
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
+
+
+
 -- 
-1.7.2.3
-
+Vista: [V]iruses, [I]ntruders, [S]pyware, [T]rojans and [A]dware. :-)
