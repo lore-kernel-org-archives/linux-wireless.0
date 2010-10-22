@@ -1,45 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:38661 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932576Ab0JFTOk (ORCPT
+Received: from 128-177-27-249.ip.openhosting.com ([128.177.27.249]:48860 "EHLO
+	jmalinen.user.openhosting.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1755015Ab0JVP16 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 6 Oct 2010 15:14:40 -0400
-Message-ID: <4CACCA98.7010204@candelatech.com>
-Date: Wed, 06 Oct 2010 12:14:32 -0700
-From: Ben Greear <greearb@candelatech.com>
+	Fri, 22 Oct 2010 11:27:58 -0400
+Date: Fri, 22 Oct 2010 18:27:53 +0300
+From: Jouni Malinen <j@w1.fi>
+To: Chaoxing <clin@3eti.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: Help: Guidance on "AP/VLAN" mode
+Message-ID: <20101022152753.GA4853@jm.kir.nu>
+References: <loom.20101021T172706-705@post.gmane.org>
 MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Hun-Kyi Wynn <hkwynn@candelatech.com>
-Subject: Re: Crash in cfg80211_unlink_bss
-References: <4CACB1D1.7090900@candelatech.com>	 <1286388245.3655.392.camel@jlt3.sipsolutions.net>	 <4CACBB14.1090507@candelatech.com> <1286388980.3655.395.camel@jlt3.sipsolutions.net>
-In-Reply-To: <1286388980.3655.395.camel@jlt3.sipsolutions.net>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <loom.20101021T172706-705@post.gmane.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 10/06/2010 11:16 AM, Johannes Berg wrote:
-> On Wed, 2010-10-06 at 11:08 -0700, Ben Greear wrote:
->
->>> I need to analyse the refcounting here again and in more detail, but in
->>> the meantime can you try below patch?
->>
->> Yes, will do so and let you know the results.
->
-> Please try the new version, and let me know. I should submit this ASAP.
+On Thu, Oct 21, 2010 at 03:54:30PM +0000, Chaoxing wrote:
+> 1. Can any one here help me understand what mac80211 "AP/VLAN" mode is and how
+> it's used? I googled and could not find a good document on this. 
 
-That patch seems to fix things.
+See dynamic-VLAN configuration in hostapd.conf.
 
-Feel free to add:  Tested-by: Hun-Kyi Wynn <hkwynn@candelatech.com>
+> 2. If it's meant for VLAN interface for multiple-SSID, how is the VLAN ID
+> configured?
 
-Thanks,
-Ben
+In theory, it could be used with multiple-SSID (i.e., mapping from SSID
+to VLAN), but there is no support for that in hostapd. The main use for
+this AP/VLAN interface is to get VLAN ID from a RADIUS server (or for
+more limited testing, from a local text file based on the station MAC
+address).
 
->
-> johannes
+> 3. In my AP with proprietary driver, there's multiple-SSID over the same BSSID.
+> (Meaning they share the same MAC address.) Each SSID is mapped to one VLAN.
+> Broadcasting SSID is disabled.
+> On receiving packet from clients, AP adds VLAN tag per SSID client associates.
+> On transmitting packet to clients, AP remove VLAN tag.
+> Is it possible to achieve the above functionality through existing open source
+> software(mac80211, iw, hostapd, radio driver, etc)?
 
+You can do similar setup with RADIUS-based VLAN ID allocation. Though,
+mac80211 will leave the VLAN tagging or other upper layer configuration
+to other parts of the networking stack (VLAN, bridge, IP routing).
+hostapd can set that up for the bridge and WLAN interfaces and if
+desired, you can then bind those to tagged ethernet interface.
+
+Since we support multi-BSSID configuration (which is superior to
+multi-SSID for most cases), I haven't seen enough justification to work
+with multi-SSID functionality. Do you have a use case that would need it
+or would the RADIUS-based VLAN ID allocation or multi-BSSID support
+address your needs?
 
 -- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
-
+Jouni Malinen                                            PGP id EFC895FA
