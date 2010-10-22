@@ -1,44 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from external1.orbit-lab.org ([128.6.192.131]:34951 "HELO
-	external1.orbit-lab.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S932243Ab0JDTEd (ORCPT
+Received: from smtp.nokia.com ([192.100.105.134]:31005 "EHLO
+	mgw-mx09.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753697Ab0JVHtc (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 4 Oct 2010 15:04:33 -0400
-Received: from repository3.orbit-lab.org (repository3.orbit-lab.org [10.50.0.41])
-	by external1.orbit-lab.org (Postfix) with ESMTP id 0440D418D8
-	for <linux-wireless@vger.kernel.org>; Mon,  4 Oct 2010 15:02:01 -0400 (EDT)
-Subject: Compat-wireless release for 2010-10-04 is baked
-To: <linux-wireless@vger.kernel.org>
-Message-Id: <20101004190429.2D9B6404FC@repository3.orbit-lab.org>
-Date: Mon,  4 Oct 2010 15:04:28 -0400 (EDT)
-From: compat@orbit-lab.org (Compat-wireless cronjob account)
+	Fri, 22 Oct 2010 03:49:32 -0400
+Received: from esebh106.NOE.Nokia.com (esebh106.ntc.nokia.com [172.21.138.213])
+	by mgw-mx09.nokia.com (Switch-3.3.3/Switch-3.3.3) with ESMTP id o9M7meqF009976
+	for <linux-wireless@vger.kernel.org>; Fri, 22 Oct 2010 02:49:31 -0500
+Subject: Re: [PATCH v2] wl1271: Fix warning about unsupported RX rate
+From: Teemu Paasikivi <ext-teemu.3.paasikivi@nokia.com>
+To: Luciano Coelho <luciano.coelho@nokia.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <1287414729.20107.68.camel@chilepepper>
+References: <1287046804-19356-1-git-send-email-ext-teemu.3.paasikivi@nokia.com>
+	 <1287412289.20107.66.camel@chilepepper>
+	 <1287414729.20107.68.camel@chilepepper>
+Content-Type: text/plain
+Date: Fri, 22 Oct 2010 10:49:06 +0300
+Message-Id: <1287733746.2905.19.camel@paavo-desktop>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
->From git://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next
-   1e143a7..c3f4ec6  history    -> origin/history
- + 9a9ac53...8aba27d master     -> origin/master  (forced update)
-   4193d91..c6ea21e  stable     -> origin/stable
- * [new tag]         next-20101004 -> next-20101004
+On Mon, 2010-10-18 at 18:12 +0300, Luciano Coelho wrote:
+> On Mon, 2010-10-18 at 16:31 +0200, ext Luciano Coelho wrote:
+> > On Thu, 2010-10-14 at 11:00 +0200, Teemu Paasikivi wrote:
+> > > While scanning, it is possible that beacon and probe response frames are
+> > > received on other band than configured to the driver. In rx status
+> > > handling this has caused "Unsupported RX rate from HW" warnings. This
+> > > patch changes the wl1271_rate_to_index function to take the band of the
+> > > received frame as a parameter instead of using value configuret to
+> > > wl->band.
+> > > 
+> > > Signed-off-by: Teemu Paasikivi <ext-teemu.3.paasikivi@nokia.com>
+> > > ---
+> > 
+> > Applied, thanks!
+> 
+> Hmmm... I'm now getting loads of these:
+> 
+> [  465.265594] wl1271: ERROR Unsupported RX rate from HW: 15
+> 
+> ...when scanning with my beagle board.  I have also included the 11n
+> patches by Shahar and Ido's "optimizations and fixes".
+> 
+> Teemu, I had to merge your patch on top of Ido's and Shahar's patches.
+> Can you check your patch in the wl12xx/master tree and confirm that it
+> is okay? To me it looks good, but you never know ;)
+> 
+> 
 
-compat-wireless code metrics
+Ok, I checked this with a beagle board and it looks like that it's
+caused by the firmware marking some packets received during scanning as
+being received from 5 GHz band. After some testing I have pinpointed the
+problem being caused by the firmware nvs file used. It's just annoying
+that those errors are being emitted when scanning. I suppose that the
+message could be changed from "ERROR" to "WARNING".
 
-    747282 - Total upstream lines of code being pulled
-      2153 - backport code changes
-      1902 - backport code additions
-       251 - backport code deletions
-      6242 - backport from compat module
-      8395 - total backport code
-    1.1234 - % of code consists of backport work
-       128 - Code changes posted but not yet merged
-        95 - Code additions posted but not yet merged
-        33 - Code deletions posted but not yet merged
-    0.0171 - % of code not yet merged
-      1219 - Crap changes not yet posted
-      1181 - Crap additions not yet posted
-        38 - Crap deletions not yet posted
-    0.1631 - % of crap code
 
-Base tree: linux-next.git
-Base tree version: next-20101004
-compat-wireless release: compat-wireless-2010-10-01-6-g6d8961c-pc
+Br,
+
+Teemu
+
+
