@@ -1,54 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from slowhand.arndnet.de ([88.198.19.76]:51906 "EHLO mail.unitix.de"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1756219Ab0JaRfU (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 31 Oct 2010 13:35:20 -0400
-Message-ID: <4CCDA8D6.7030905@arndnet.de>
-Date: Sun, 31 Oct 2010 18:35:18 +0100
-From: Arnd Hannemann <arnd@arndnet.de>
+Received: from mail-yx0-f174.google.com ([209.85.213.174]:33384 "EHLO
+	mail-yx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750910Ab0JVWbV (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 22 Oct 2010 18:31:21 -0400
+Received: by yxn35 with SMTP id 35so1083401yxn.19
+        for <linux-wireless@vger.kernel.org>; Fri, 22 Oct 2010 15:31:20 -0700 (PDT)
+Message-ID: <4CC210C3.7010602@lwfinger.net>
+Date: Fri, 22 Oct 2010 17:31:31 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-To: Ohad Ben-Cohen <ohad@wizery.com>,
-	"linux-mmc@vger.kernel.org" <linux-mmc@vger.kernel.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	linux-kernel@vger.kernel.org
-Subject: Re: regression: b43-sdio: probe of mmc0:0001:1 failed with error
- -16
-References: <4CCDA454.708@arndnet.de>
-In-Reply-To: <4CCDA454.708@arndnet.de>
-Content-Type: text/plain; charset=ISO-8859-15
+To: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+CC: linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>,
+	b43-dev@lists.infradead.org
+Subject: Re: [PATCH] b43: rfkill: use status register based on core revision
+ not (PHY's)
+References: <1287779045-20257-1-git-send-email-zajec5@gmail.com>	<4CC2043D.2040909@lwfinger.net> <AANLkTika4wVhH=rGc=qgZozgbe9j-+-zzPkb1KGWLHJC@mail.gmail.com>
+In-Reply-To: <AANLkTika4wVhH=rGc=qgZozgbe9j-+-zzPkb1KGWLHJC@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On 10/22/2010 04:57 PM, Rafał Miłecki wrote:
+> W dniu 22 października 2010 23:38 użytkownik Larry Finger
+> <Larry.Finger@lwfinger.net> napisał:
+>> On 10/22/2010 03:24 PM, Rafał Miłecki wrote:
+>>
+>> As that register is present only when the core revision >= 3, this change should
+>> not cause a regression. Perhaps this was an error in the RE from the start and
+>> testing the phy.rev has always been wrong.
+> 
+> Do not blame RE team ;) It was described correctly since "ever", you
+> can check it in history of:
+> http://bcm-specs.sipsolutions.net/MMIO
+> 
+> I actually suspect this may be source of self-switching-on-off-radio
+> issue described in:
+> "b43legacy-phy3: Radio hardware status changed to XXX" thread.
+> 
+> I already mailed reporter to ask if he still has access to problematic card.
 
-Am 31.10.2010 18:16, schrieb Arnd Hannemann:
+I have two cards that use b43legacy, but their physical format (PCI and Cardbus)
+do not include an RFKILL switch, thus I have never tested this code with b43legacy.
 
-> on todays Linus' git (v2.6.36-9871-g3985c7c) b43 sdio stopped working.
-> It was working on (v2.6.36-6794-g12ba8d1).
-> 
-> b43-sdio: probe of mmc0:0001:1 failed with error -16
-> 
-> The error seems to originate from the following code in drivers/mmc/core/sdio_bus.c:sdio_bus_probe()
-> 
-> 135         ret = pm_runtime_get_sync(dev);
-> 136         if (ret < 0)
-> 137                 goto out;
-> 
-> so I suspect this has something to do with the following commit: 
-> 
-> commit 40bba0c1ca83a370f749c8bc9afda71cf79ebd91
-> Author: Ohad Ben-Cohen <ohad@wizery.com>
-> Date:   Sat Oct 2 13:54:11 2010 +0200
-> 
->     mmc: sdio: enable runtime PM for SDIO functions
-> 
-> However, simply reverting 40bba0c1ca83a370f749c8bc9afda71cf79ebd91 does not work because then
-> modprobe hangs.
-> 
-> Tested on AP4EVB (arm) with tmio_mmc. Any ideas?
+Larry
 
-FYI:
 
-disabling CONFIG_PM_RUNTIME in my config seems to fix the issue for me.
 
-Best regards,
-Arnd
