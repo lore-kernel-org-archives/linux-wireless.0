@@ -1,43 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:55811 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758002Ab0JWSOR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 23 Oct 2010 14:14:17 -0400
-From: Hauke Mehrtens <hauke@hauke-m.de>
-To: lrodriguez@atheros.com
-Cc: linux-wireless@vger.kernel.org, mcgrof@infradead.org,
-	Hauke Mehrtens <hauke@hauke-m.de>,
-	Blaise Gassend <blaise@willowgarage.com>
-Subject: [PATCH 2/3] compat: lock correct mutex in device_lock
-Date: Sat, 23 Oct 2010 20:14:00 +0200
-Message-Id: <1287857641-7882-2-git-send-email-hauke@hauke-m.de>
-In-Reply-To: <1287857641-7882-1-git-send-email-hauke@hauke-m.de>
-References: <1287857641-7882-1-git-send-email-hauke@hauke-m.de>
+Received: from mx1.redhat.com ([209.132.183.28]:6952 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755197Ab0JVPBe (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 22 Oct 2010 11:01:34 -0400
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org,
+	Stanislaw Gruszka <sgruszka@redhat.com>
+Subject: [PATCH 1/7] iwlwifi: warn when send tx power settings during scan
+Date: Fri, 22 Oct 2010 17:04:24 +0200
+Message-Id: <1287759870-5758-1-git-send-email-sgruszka@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This seams to be an error as all the other functions are working on the
-other struct.
+Add WARN_ONCE when scanning is pending. Use STATUS_SCAN_HW bit since we
+can have scan canceled or completed but STATUS_SCANNING bit still set.
 
-CC: Blaise Gassend <blaise@willowgarage.com>
-Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
 ---
- include/linux/compat-2.6.34.h |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+ drivers/net/wireless/iwlwifi/iwl-3945.c    |    4 ++++
+ drivers/net/wireless/iwlwifi/iwl-4965.c    |   10 +++-------
+ drivers/net/wireless/iwlwifi/iwl-agn-lib.c |    4 ++++
+ 3 files changed, 11 insertions(+), 7 deletions(-)
 
-diff --git a/include/linux/compat-2.6.34.h b/include/linux/compat-2.6.34.h
-index f710d08..763abca 100644
---- a/include/linux/compat-2.6.34.h
-+++ b/include/linux/compat-2.6.34.h
-@@ -143,7 +143,7 @@ do {								\
- static inline void device_lock(struct device *dev)
- {
- #if defined(CONFIG_PREEMPT_RT) || defined(CONFIG_PREEMPT_DESKTOP)
--        mutex_lock(&dev->parent->mutex);
-+        mutex_lock(&dev->mutex);
- #else
- 	down(&dev->sem);
- #endif
+diff --git a/drivers/net/wireless/iwlwifi/iwl-3945.c b/drivers/net/wireless/iwlwifi/iwl-3945.c
+index 176e525..93db6a0 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-3945.c
++++ b/drivers/net/wireless/iwlwifi/iwl-3945.c
+@@ -1451,6 +1451,10 @@ static int iwl3945_send_tx_power(struct iwl_priv *priv)
+ 	};
+ 	u16 chan;
+ 
++	if (WARN_ONCE(test_bit(STATUS_SCAN_HW, &priv->status),
++		      "TX Power requested while scanning!\n"))
++		return -EIO;
++
+ 	chan = le16_to_cpu(priv->contexts[IWL_RXON_CTX_BSS].active.channel);
+ 
+ 	txpower.band = (priv->band == IEEE80211_BAND_5GHZ) ? 0 : 1;
+diff --git a/drivers/net/wireless/iwlwifi/iwl-4965.c b/drivers/net/wireless/iwlwifi/iwl-4965.c
+index b207e3e..924f335 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-4965.c
++++ b/drivers/net/wireless/iwlwifi/iwl-4965.c
+@@ -1377,13 +1377,9 @@ static int iwl4965_send_tx_power(struct iwl_priv *priv)
+ 	u8 ctrl_chan_high = 0;
+ 	struct iwl_rxon_context *ctx = &priv->contexts[IWL_RXON_CTX_BSS];
+ 
+-	if (test_bit(STATUS_SCANNING, &priv->status)) {
+-		/* If this gets hit a lot, switch it to a BUG() and catch
+-		 * the stack trace to find out who is calling this during
+-		 * a scan. */
+-		IWL_WARN(priv, "TX Power requested while scanning!\n");
+-		return -EAGAIN;
+-	}
++	if (WARN_ONCE(test_bit(STATUS_SCAN_HW, &priv->status),
++		      "TX Power requested while scanning!\n"))
++		return -EIO;
+ 
+ 	band = priv->band == IEEE80211_BAND_2GHZ;
+ 
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-lib.c b/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
+index b555edd..5d76a5b 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
+@@ -496,6 +496,10 @@ int iwlagn_send_tx_power(struct iwl_priv *priv)
+ 	struct iwlagn_tx_power_dbm_cmd tx_power_cmd;
+ 	u8 tx_ant_cfg_cmd;
+ 
++	if (WARN_ONCE(test_bit(STATUS_SCAN_HW, &priv->status),
++		      "TX Power requested while scanning!\n"))
++		return -EIO;
++
+ 	/* half dBm need to multiply */
+ 	tx_power_cmd.global_lmt = (s8)(2 * priv->tx_power_user_lmt);
+ 
 -- 
-1.7.0.4
+1.7.1
 
