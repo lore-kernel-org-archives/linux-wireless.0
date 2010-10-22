@@ -1,110 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iw0-f174.google.com ([209.85.214.174]:52490 "EHLO
+Received: from mail-iw0-f174.google.com ([209.85.214.174]:34777 "EHLO
 	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752527Ab0JZWSB convert rfc822-to-8bit (ORCPT
+	with ESMTP id S1755898Ab0JVUnL convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 26 Oct 2010 18:18:01 -0400
-Received: by iwn10 with SMTP id 10so2674266iwn.19
-        for <linux-wireless@vger.kernel.org>; Tue, 26 Oct 2010 15:18:01 -0700 (PDT)
+	Fri, 22 Oct 2010 16:43:11 -0400
+Received: by iwn34 with SMTP id 34so1341250iwn.19
+        for <linux-wireless@vger.kernel.org>; Fri, 22 Oct 2010 13:43:10 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <4CC75229.8000109@candelatech.com>
-References: <1288082441-4882-1-git-send-email-lrodriguez@atheros.com>
- <4CC74F35.60009@candelatech.com> <AANLkTimDQXP-L-C9wos_7i272LFwr0aXAJ2GBjJzDDfV@mail.gmail.com>
- <4CC75229.8000109@candelatech.com>
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Date: Tue, 26 Oct 2010 15:17:38 -0700
-Message-ID: <AANLkTi=uNzTuaq9yrG6Z0DbxF9z=JzPe=155rkvLPkD9@mail.gmail.com>
-Subject: Re: [RFT 0/3] ath9k: more PCU locking enhancements
-To: Ben Greear <greearb@candelatech.com>
-Cc: linux-wireless@vger.kernel.org, kyungwan.nam@atheros.com
+In-Reply-To: <4CC1EF20.5030506@lwfinger.net>
+References: <1287762229-16516-2-git-send-email-zajec5@gmail.com>
+ <1287762229-16516-4-git-send-email-zajec5@gmail.com> <AANLkTiko3JeoRcxPT7zhnGTNhmyDWqmFjeZ8ssMzCb+J@mail.gmail.com>
+ <4CC1EF20.5030506@lwfinger.net>
+From: =?ISO-8859-1?Q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>
+Date: Fri, 22 Oct 2010 22:42:50 +0200
+Message-ID: <AANLkTikJkoGudGojjRKu1Z9GJeUrAqWLRZj6DnPpR4+y@mail.gmail.com>
+Subject: Re: [PATCH 3/5] b43: define known SPROM boardflags2 bits
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: b43-dev <b43-dev@lists.infradead.org>,
+	linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Oct 26, 2010 at 3:11 PM, Ben Greear <greearb@candelatech.com> wrote:
-> On 10/26/2010 03:03 PM, Luis R. Rodriguez wrote:
+2010/10/22 Larry Finger <Larry.Finger@lwfinger.net>:
+> On 10/22/2010 02:41 PM, Gábor Stefanik wrote:
+>> 2010/10/22 Rafał Miłecki <zajec5@gmail.com>:
+>>> Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
+>>> ---
+>>>  drivers/net/wireless/b43/b43.h |   13 +++++++++++++
+>>>  1 files changed, 13 insertions(+), 0 deletions(-)
+>>>
+>>> diff --git a/drivers/net/wireless/b43/b43.h b/drivers/net/wireless/b43/b43.h
+>>> index 72821c4..9aad2ca 100644
+>>> --- a/drivers/net/wireless/b43/b43.h
+>>> +++ b/drivers/net/wireless/b43/b43.h
+>>> @@ -153,6 +153,19 @@
+>>>  #define B43_BFH_FEM_BT                 0x0040  /* has FEM and switch to share antenna
+>>>                                                 * with bluetooth */
+>>>
+>>> +/* SPROM boardflags2_lo values */
+>>> +#define B43_BFL2_RXBB_INT_REG_DIS      0x0001  /* external RX BB regulator present */
+>>> +#define B43_BFL2_APLL_WAR              0x0002  /* alternative A-band PLL settings implemented */
+>>> +#define B43_BFL2_TXPWRCTRL_EN          0x0004  /* permits enabling TX Power Control */
+>>> +#define B43_BFL2_2X4_DIV               0x0008  /* 2x4 diversity switch */
+>>> +#define B43_BFL2_5G_PWRGAIN            0x0010  /* supports 5G band power gain */
+>>> +#define B43_BFL2_PCIEWAR_OVR           0x0020  /* overrides ASPM and Clkreq settings */
+>>> +#define B43_BFL2_CAESERS_BRD           0x0040  /* is Caesers board (unused) */
 >>
->> On Tue, Oct 26, 2010 at 2:59 PM, Ben Greear<greearb@candelatech.com>
->>  wrote:
->>>
->>> On 10/26/2010 01:40 AM, Luis R. Rodriguez wrote:
->>>>
->>>> Here is some more PCU locking enhancements I tested today
->>>> while trying to resolve the WARN() that happens when we
->>>> try to stop RX DMA and fail. While working on that I figured
->>>> I'd work on the TX DMA stuff too, here's a shot at it. I
->>>> can no longer get TX / RX DMA rants, please test and let
->>>> me know if you do. I only tried some basic testing like
->>>> rmmoding while scannign, which typicallly produced some
->>>> errors. Now I don't get squat.
->>>>
->>>> Ben if you can test wit your super proprietary application
->>>> that'd be great.
->>>>
->>>> This also simplifies locking considerably.
->>>>
->>>> This doesn't break suspend so I'm happy. It also depends
->>>> on the last RX DMA fixes I had posted earlier. If you'd
->>>> like to get an all-in-one patch of all my patches pending
->>>> you can wget this file and git am it:
->>>>
->>>>
->>>>
->>>> http://www.kernel.org/pub/linux/kernel/people/mcgrof/patches/tmp/pending-mcgrof-2010-10-26-v1.patch
->>>> sha1sum: 874a3cc1a57f7e26ad191cd7b5045315f94c5823
->>>
->>> I have done some initial testing on the combined patch on top of today's
->>> wireless-testing tree.  I also have the memory-barrier patch applied to
->>> ath9k, as that is still not upstream.  I have no idea if it has any
->>> affect
->>> or not (I'm on x86..seems that wmb() stuff was mostly for other
->>> platforms?).
->>>
->>> So far, it is showing zero problems, certainly no memory poison issues.
->>>
->>> The wireless-testing tree has some lockdep warning related to a mouse
->>> driver
->>> that disables lockdep early, so it's possible there are lockdep issues
->>> waiting.
->>>
->>> I will let this test run for a while, but it already looks more stable
->>> than before, so:
->>>
->>> Tested-by:  Ben Greear<greearb@candelatech.com>
+>> I'm almost sure this is a typo in the specs.
 >>
->> Awesome! Thanks for testing. So how about the TX dma rants, do you
->> still get those?
+>> Larry?
 >
-> I've seen no rants at all.
+> Nope - it is Cae..., not Cea.... Whatever name we use is just a placeholder as
+> that bit is never used.
 
-Fucking awesome!
+No, I mean the "ser" part.
 
-> I'm using my standard 130 STAs
+>
+> Larry
+>
+>
 
-I love how now 130 STAs are "standard" for ath9k tests :)
 
-> trying to associate with an AP that will only
-> take around 30 associations at a time..leads to 100 or so supplications
-> constantly
-> trying to scan and associate, and I've never seen this test run more than
-> about
-> 10 minutes without poison warnings and/or lockups.  I used to be happy when
-> it got that far :)
 
-:)
-
-> We'll do some more interesting tests with APs + STAs, as well as throughput
-> tests, etc
-> as soon as we get time.  (Basically, hoping for same support that we pushed
-> into ath5k
-> recently).
-
-Nice!
-
-> If you are aware of any existing/expected issues with multiple APs + STAs,
-> please let me know.
-
-This was my last hunch on issues. Thanks a lot of testing and please
-let us know if you run into any other issues.
-
-  Luis
+-- 
+Vista: [V]iruses, [I]ntruders, [S]pyware, [T]rojans and [A]dware. :-)
