@@ -1,171 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:55435 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754491Ab0JNTph (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 14 Oct 2010 15:45:37 -0400
-From: greearb@candelatech.com
-To: linux-wireless@vger.kernel.org, ath9k-devel@venema.h4ckr.net
-Cc: Ben Greear <greearb@candelatech.com>
-Subject: [PATCH 1/2] ath9k:  Remove bf_dmacontext.
-Date: Thu, 14 Oct 2010 12:45:29 -0700
-Message-Id: <1287085530-7262-1-git-send-email-greearb@candelatech.com>
+Received: from mx1.redhat.com ([209.132.183.28]:3216 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757938Ab0JVQsV (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 22 Oct 2010 12:48:21 -0400
+Subject: Re: [PATCH 1/2] iwlwifi: fix set_tx_power vs scan
+From: Dan Williams <dcbw@redhat.com>
+To: Stanislaw Gruszka <sgruszka@redhat.com>
+Cc: "Guy, Wey-Yi" <wey-yi.w.guy@intel.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <20101022125628.GA4527@redhat.com>
+References: <1286977193-12144-1-git-send-email-sgruszka@redhat.com>
+	 <1286983100.10446.1.camel@wwguy-ubuntu> <20101014083204.GA2286@redhat.com>
+	 <20101021131348.GA5654@redhat.com>  <20101022125628.GA4527@redhat.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Fri, 22 Oct 2010 11:51:34 -0500
+Message-ID: <1287766294.19356.1.camel@dcbw.foobar.com>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ben Greear <greearb@candelatech.com>
+On Fri, 2010-10-22 at 14:56 +0200, Stanislaw Gruszka wrote:
+> On Thu, Oct 21, 2010 at 03:13:48PM +0200, Stanislaw Gruszka wrote:
+> > On Thu, Oct 14, 2010 at 10:32:05AM +0200, Stanislaw Gruszka wrote:
+> > > > Looks good, the only thing is if priv->tx_power_user_lmt ==
+> > > > priv->tx_power_next, we don't even have to call set_tx_power, but I
+> > > > guess calling it won't hurt, so its your decision check or not.
+> > > 
+> > > I'll will call iwl_set_tx_power( ... , false); what seems to be right
+> > > thing to do.
+> > 
+> > Set tx power have to be forces. Without that I get  
+> > 
+> > iwlagn 0000:40:00.0: low ack count detected, restart firmware
+> > iwlagn 0000:40:00.0: On demand firmware reload
+> > iwlagn 0000:40:00.0: Stopping AGG while state not ON or starting
+> > iwlagn 0000:40:00.0: queue number out of range: 0, must be 10 to 19
+> > iwlagn 0000:40:00.0: Aggregation not enabled for tid 0 because load = 0
+> > iwlagn 0000:40:00.0: Aggregation not enabled for tid 0 because load = 1
+> > iwlagn 0000:40:00.0: Aggregation not enabled for tid 0 because load = 0
+> > iwlagn 0000:40:00.0: Aggregation not enabled for tid 0 because load = 0
+> > iwlagn 0000:40:00.0: iwlagn_tx_agg_start on ra = 00:23:69:35:d1:3f tid = 0
+> > iwlagn 0000:40:00.0: low ack count detected, restart firmware
+> > iwlagn 0000:40:00.0: On demand firmware reload
+> > iwlagn 0000:40:00.0: Stopping AGG while state not ON or starting
+> > iwlagn 0000:40:00.0: queue number out of range: 0, must be 10 to 19
+> > iwlagn 0000:40:00.0: iwlagn_tx_agg_start on ra = 00:23:69:35:d1:3f tid = 0
+> > iwlagn 0000:40:00.0: low ack count detected, restart firmware
+> > iwlagn 0000:40:00.0: On demand firmware reload
+> > iwlagn 0000:40:00.0: Stopping AGG while state not ON or starting
+> > iwlagn 0000:40:00.0: queue number out of range: 0, must be 10 to 19
+> > iwlagn 0000:40:00.0: Aggregation not enabled for tid 0 because load = 4
+> > iwlagn 0000:40:00.0: Aggregation not enabled for tid 0 because load = 0
+> > 
+> > on 5300 and device was unusable in general. Hence I will only comment
+> > that forcing send tx power after scan is needed.
+> 
+> Not true. I have the same problem with vanilla 2.6.36 without any of my
+> patches (further investigation show this is 2.6.34 -> 2.6.35
+> regression). Problem happens only on 5Ghz, that confused me 
+> because NetworkManager in some cases connects to 5Ghz, in others to
+> 2.4Ghz on my system.
 
-The bf_dmacontext seems to be totally useless and duplicated
-by bf_buf_addr.  Remove it entirely, use bf_buf_addr in its
-place.
+NM doesn't yet send a list of approved frequencies down to
+wpa_supplicant for a network, which is how we'd implement "locking" a
+connection to a particular band.  So at this point, which band the
+driver uses depends on wpa_supplicant scan results and the driver
+itself.  Something I intend to fix soon; we've always had a "band"
+config option, it's just not hooked up to anything.
 
-Signed-off-by: Ben Greear <greearb@candelatech.com>
----
-:100644 100644 4e81fe3... 0c917e5... M	drivers/net/wireless/ath/ath9k/ath9k.h
-:100644 100644 8e43443... df6a9fa... M	drivers/net/wireless/ath/ath9k/beacon.c
-:100644 100644 714d9a8... cd748ab... M	drivers/net/wireless/ath/ath9k/recv.c
-:100644 100644 6d41d47... e1ce8cc... M	drivers/net/wireless/ath/ath9k/xmit.c
- drivers/net/wireless/ath/ath9k/ath9k.h  |    3 +--
- drivers/net/wireless/ath/ath9k/beacon.c |   16 +++++++---------
- drivers/net/wireless/ath/ath9k/recv.c   |    2 --
- drivers/net/wireless/ath/ath9k/xmit.c   |   11 ++++-------
- 4 files changed, 12 insertions(+), 20 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/ath9k/ath9k.h b/drivers/net/wireless/ath/ath9k/ath9k.h
-index 4e81fe3..0c917e5 100644
---- a/drivers/net/wireless/ath/ath9k/ath9k.h
-+++ b/drivers/net/wireless/ath/ath9k/ath9k.h
-@@ -239,12 +239,11 @@ struct ath_buf {
- 	struct sk_buff *bf_mpdu;	/* enclosing frame structure */
- 	void *bf_desc;			/* virtual addr of desc */
- 	dma_addr_t bf_daddr;		/* physical addr of desc */
--	dma_addr_t bf_buf_addr;		/* physical addr of data buffer */
-+	dma_addr_t bf_buf_addr;	/* physical addr of data buffer, for DMA */
- 	bool bf_stale;
- 	bool bf_tx_aborted;
- 	u16 bf_flags;
- 	struct ath_buf_state bf_state;
--	dma_addr_t bf_dmacontext;
- 	struct ath_wiphy *aphy;
- };
+Dan
  
-diff --git a/drivers/net/wireless/ath/ath9k/beacon.c b/drivers/net/wireless/ath/ath9k/beacon.c
-index 8e43443..df6a9fa 100644
---- a/drivers/net/wireless/ath/ath9k/beacon.c
-+++ b/drivers/net/wireless/ath/ath9k/beacon.c
-@@ -136,7 +136,7 @@ static struct ath_buf *ath_beacon_generate(struct ieee80211_hw *hw,
- 	bf = avp->av_bcbuf;
- 	skb = bf->bf_mpdu;
- 	if (skb) {
--		dma_unmap_single(sc->dev, bf->bf_dmacontext,
-+		dma_unmap_single(sc->dev, bf->bf_buf_addr,
- 				 skb->len, DMA_TO_DEVICE);
- 		dev_kfree_skb_any(skb);
- 	}
-@@ -162,9 +162,8 @@ static struct ath_buf *ath_beacon_generate(struct ieee80211_hw *hw,
- 		hdr->seq_ctrl |= cpu_to_le16(sc->tx.seq_no);
- 	}
- 
--	bf->bf_buf_addr = bf->bf_dmacontext =
--		dma_map_single(sc->dev, skb->data,
--			       skb->len, DMA_TO_DEVICE);
-+	bf->bf_buf_addr = dma_map_single(sc->dev, skb->data,
-+					 skb->len, DMA_TO_DEVICE);
- 	if (unlikely(dma_mapping_error(sc->dev, bf->bf_buf_addr))) {
- 		dev_kfree_skb_any(skb);
- 		bf->bf_mpdu = NULL;
-@@ -252,7 +251,7 @@ int ath_beacon_alloc(struct ath_wiphy *aphy, struct ieee80211_vif *vif)
- 	bf = avp->av_bcbuf;
- 	if (bf->bf_mpdu != NULL) {
- 		skb = bf->bf_mpdu;
--		dma_unmap_single(sc->dev, bf->bf_dmacontext,
-+		dma_unmap_single(sc->dev, bf->bf_buf_addr,
- 				 skb->len, DMA_TO_DEVICE);
- 		dev_kfree_skb_any(skb);
- 		bf->bf_mpdu = NULL;
-@@ -296,9 +295,8 @@ int ath_beacon_alloc(struct ath_wiphy *aphy, struct ieee80211_vif *vif)
- 		avp->tsf_adjust = cpu_to_le64(0);
- 
- 	bf->bf_mpdu = skb;
--	bf->bf_buf_addr = bf->bf_dmacontext =
--		dma_map_single(sc->dev, skb->data,
--			       skb->len, DMA_TO_DEVICE);
-+	bf->bf_buf_addr = dma_map_single(sc->dev, skb->data,
-+					 skb->len, DMA_TO_DEVICE);
- 	if (unlikely(dma_mapping_error(sc->dev, bf->bf_buf_addr))) {
- 		dev_kfree_skb_any(skb);
- 		bf->bf_mpdu = NULL;
-@@ -324,7 +322,7 @@ void ath_beacon_return(struct ath_softc *sc, struct ath_vif *avp)
- 		bf = avp->av_bcbuf;
- 		if (bf->bf_mpdu != NULL) {
- 			struct sk_buff *skb = bf->bf_mpdu;
--			dma_unmap_single(sc->dev, bf->bf_dmacontext,
-+			dma_unmap_single(sc->dev, bf->bf_buf_addr,
- 					 skb->len, DMA_TO_DEVICE);
- 			dev_kfree_skb_any(skb);
- 			bf->bf_mpdu = NULL;
-diff --git a/drivers/net/wireless/ath/ath9k/recv.c b/drivers/net/wireless/ath/ath9k/recv.c
-index 714d9a8..cd748ab 100644
---- a/drivers/net/wireless/ath/ath9k/recv.c
-+++ b/drivers/net/wireless/ath/ath9k/recv.c
-@@ -365,7 +365,6 @@ int ath_rx_init(struct ath_softc *sc, int nbufs)
- 				error = -ENOMEM;
- 				goto err;
- 			}
--			bf->bf_dmacontext = bf->bf_buf_addr;
- 		}
- 		sc->rx.rxlink = NULL;
- 	}
-@@ -1744,7 +1743,6 @@ int ath_rx_tasklet(struct ath_softc *sc, int flush, bool hp)
- 			ath_rx_send_to_mac80211(hw, sc, skb, rxs);
- 			break;
- 		}
--		bf->bf_dmacontext = bf->bf_buf_addr;
- 
- 		/*
- 		 * change the default rx antenna if rx diversity chooses the
-diff --git a/drivers/net/wireless/ath/ath9k/xmit.c b/drivers/net/wireless/ath/ath9k/xmit.c
-index 6d41d47..e1ce8cc 100644
---- a/drivers/net/wireless/ath/ath9k/xmit.c
-+++ b/drivers/net/wireless/ath/ath9k/xmit.c
-@@ -294,7 +294,6 @@ static struct ath_buf* ath_clone_txbuf(struct ath_softc *sc, struct ath_buf *bf)
- 	tbf->bf_buf_addr = bf->bf_buf_addr;
- 	memcpy(tbf->bf_desc, bf->bf_desc, sc->sc_ah->caps.tx_desc_len);
- 	tbf->bf_state = bf->bf_state;
--	tbf->bf_dmacontext = bf->bf_dmacontext;
- 
- 	return tbf;
- }
-@@ -1642,17 +1641,15 @@ static int ath_tx_setup_buffer(struct ieee80211_hw *hw, struct ath_buf *bf,
- 
- 	bf->bf_mpdu = skb;
- 
--	bf->bf_dmacontext = dma_map_single(sc->dev, skb->data,
--					   skb->len, DMA_TO_DEVICE);
--	if (unlikely(dma_mapping_error(sc->dev, bf->bf_dmacontext))) {
-+	bf->bf_buf_addr = dma_map_single(sc->dev, skb->data,
-+					 skb->len, DMA_TO_DEVICE);
-+	if (unlikely(dma_mapping_error(sc->dev, bf->bf_buf_addr))) {
- 		bf->bf_mpdu = NULL;
- 		ath_print(ath9k_hw_common(sc->sc_ah), ATH_DBG_FATAL,
- 			  "dma_mapping_error() on TX\n");
- 		return -ENOMEM;
- 	}
- 
--	bf->bf_buf_addr = bf->bf_dmacontext;
--
- 	bf->bf_tx_aborted = false;
- 
- 	return 0;
-@@ -1916,7 +1913,7 @@ static void ath_tx_complete_buf(struct ath_softc *sc, struct ath_buf *bf,
- 			tx_flags |= ATH_TX_XRETRY;
- 	}
- 
--	dma_unmap_single(sc->dev, bf->bf_dmacontext, skb->len, DMA_TO_DEVICE);
-+	dma_unmap_single(sc->dev, bf->bf_buf_addr, skb->len, DMA_TO_DEVICE);
- 
- 	if (bf->bf_state.bfs_paprd) {
- 		if (time_after(jiffies,
--- 
-1.7.2.2
 
