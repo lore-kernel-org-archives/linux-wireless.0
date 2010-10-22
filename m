@@ -1,49 +1,81 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-vw0-f46.google.com ([209.85.212.46]:32800 "EHLO
-	mail-vw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755116Ab0JaPDw (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 31 Oct 2010 11:03:52 -0400
-Received: by vws13 with SMTP id 13so2468163vws.19
-        for <linux-wireless@vger.kernel.org>; Sun, 31 Oct 2010 08:03:51 -0700 (PDT)
-Message-ID: <4CCD856E.9010006@lwfinger.net>
-Date: Sun, 31 Oct 2010 10:04:14 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-To: Walter Goldens <goldenstranger@yahoo.com>
-CC: =?ISO-8859-1?Q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Stefan Lippers-Hollmann <s.L-H@gmx.de>,
-	wireless <linux-wireless@vger.kernel.org>
-Subject: Re: Realtek rtl8188 support?
-References: <699923.49894.qm@web56805.mail.re3.yahoo.com>
-In-Reply-To: <699923.49894.qm@web56805.mail.re3.yahoo.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from mx1.redhat.com ([209.132.183.28]:63015 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756897Ab0JVPBo (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 22 Oct 2010 11:01:44 -0400
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org,
+	Stanislaw Gruszka <sgruszka@redhat.com>
+Subject: [PATCH 7/7] iwlwifi: avoid commit rxon during scan in iwl_set_no_assoc
+Date: Fri, 22 Oct 2010 17:04:30 +0200
+Message-Id: <1287759870-5758-7-git-send-email-sgruszka@redhat.com>
+In-Reply-To: <1287759870-5758-1-git-send-email-sgruszka@redhat.com>
+References: <1287759870-5758-1-git-send-email-sgruszka@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 10/31/2010 06:30 AM, Walter Goldens wrote:
->> Perhaps not, but I want to have one that works before
->> removing the staging driver.
->>
->> I think Realtek is serious. After the r8712u driver was
->> ready for inclusion in
->> staging, I sent them a copy of my revisions to their code.
->> Obviously, they
->> studied it. When I received the new code for a
->> mac80211-based driver for the
->> RTL8192CE driver, it was pretty clean and the sort of
->> changes that were needed
->> for the 8712 had already been done. After only a few hours
->> work, the sparse and
->> checkpatch warnings and errors were fixed. As far as I can
->> tell, this code is
-> 
->   By "this code" you mean the code for the PCI chips or the USB ones? This topic here mostly touches on the USB cards, which is why I'm asking. And does that mean you'll include the driver once you've tested the cards?
+Currently we are canceling scan when changing BSSID. Behave the same
+when changing association and beacon enablement, to avoid committing
+rxon during scan in iwl_set_no_assoc().
 
-I mean the PCIe devices. I plan to submit that driver in time to make the 2.6.38
-merge. Realtek has not yet sent me the code for the USB devices, but as the chip
-and core code is common, it should not be far behind.
+Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-core.c |   26 ++++++++++++++------------
+ 1 files changed, 14 insertions(+), 12 deletions(-)
 
-Larry
+diff --git a/drivers/net/wireless/iwlwifi/iwl-core.c b/drivers/net/wireless/iwlwifi/iwl-core.c
+index 8bbd152..87c1800 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-core.c
++++ b/drivers/net/wireless/iwlwifi/iwl-core.c
+@@ -1590,6 +1590,19 @@ void iwl_bss_info_changed(struct ieee80211_hw *hw,
+ 
+ 	mutex_lock(&priv->mutex);
+ 
++	if (changes & (BSS_CHANGED_BSSID | BSS_CHANGED_ASSOC |
++		       BSS_CHANGED_BEACON_ENABLED)) {
++		/*
++		 * If there is currently a HW scan going on in the
++		 * background then we need to cancel it else the RXON
++		 * below in post_associate or set_no_assoc can fail.
++		 */
++		if (iwl_scan_cancel_timeout(priv, 200)) {
++			IWL_WARN(priv, "Can not cancel scan\n");
++			goto out;
++		}
++	}
++
+ 	if (changes & BSS_CHANGED_QOS) {
+ 		unsigned long flags;
+ 
+@@ -1622,18 +1635,6 @@ void iwl_bss_info_changed(struct ieee80211_hw *hw,
+ 	if (changes & BSS_CHANGED_BSSID) {
+ 		IWL_DEBUG_MAC80211(priv, "BSSID %pM\n", bss_conf->bssid);
+ 
+-		/*
+-		 * If there is currently a HW scan going on in the
+-		 * background then we need to cancel it else the RXON
+-		 * below/in post_associate will fail.
+-		 */
+-		if (iwl_scan_cancel_timeout(priv, 100)) {
+-			IWL_WARN(priv, "Aborted scan still in progress after 100ms\n");
+-			IWL_DEBUG_MAC80211(priv, "leaving - scan abort failed.\n");
+-			mutex_unlock(&priv->mutex);
+-			return;
+-		}
+-
+ 		/* mac80211 only sets assoc when in STATION mode */
+ 		if (vif->type == NL80211_IFTYPE_ADHOC || bss_conf->assoc) {
+ 			memcpy(ctx->staging.bssid_addr,
+@@ -1752,6 +1753,7 @@ void iwl_bss_info_changed(struct ieee80211_hw *hw,
+ 			IWL_ERR(priv, "failed to update PAN params\n");
+ 	}
+ 
++out:
+ 	mutex_unlock(&priv->mutex);
+ 
+ 	IWL_DEBUG_MAC80211(priv, "leave\n");
+-- 
+1.7.1
 
