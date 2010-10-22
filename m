@@ -1,171 +1,82 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:52252 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752563Ab0JAQV6 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 1 Oct 2010 12:21:58 -0400
-Date: Fri, 1 Oct 2010 12:18:19 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: davem@davemloft.net
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: pull request: wireless-next-2.6 2010-10-01
-Message-ID: <20101001161819.GD3049@tuxdriver.com>
-MIME-Version: 1.0
+Received: from lo.gmane.org ([80.91.229.12]:36643 "EHLO lo.gmane.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753533Ab0JVLqN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 22 Oct 2010 07:46:13 -0400
+Received: from list by lo.gmane.org with local (Exim 4.69)
+	(envelope-from <glkwg-linux-wireless@m.gmane.org>)
+	id 1P9G4X-0000hu-Sa
+	for linux-wireless@vger.kernel.org; Fri, 22 Oct 2010 13:46:10 +0200
+Received: from proxyext.iabg.de ([proxyext.iabg.de])
+        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Fri, 22 Oct 2010 13:46:09 +0200
+Received: from pommnitz by proxyext.iabg.de with local (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Fri, 22 Oct 2010 13:46:09 +0200
+To: linux-wireless@vger.kernel.org
+From: jpo234 <pommnitz@yahoo.com>
+Subject: Re: Help: Guidance on &quot;AP/VLAN&quot; mode
+Date: Fri, 22 Oct 2010 11:45:58 +0000 (UTC)
+Message-ID: <loom.20101022T132016-729@post.gmane.org>
+References: <loom.20101021T172706-705@post.gmane.org>
+Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Dave,
+Chaoxing <clin@...> writes:
+> 
+> 1. Can any one here help me understand what mac80211 "AP/VLAN" mode is and how
+> it's used? I googled and could not find a good document on this. 
 
-Here is the latest round of wireless LAN updates intended for 2.6.37.
-Included are some ath5k bits from Bruno Randolf, some carl9170 updates
-from Christian Lamparter, some mac80211 updates from Johannes Berg,
-some work for supporting multiple VIFs on one device from Ben Greear,
-and a smattering of other bits.
+I think it's not what you think it is. My understanding is, that this is a
+special AP mode that allows one to bridge traffic through the AP *AND* the
+client. For this to work the 802.11 frames have to carry 4 addresses instead
+of the normal 3. 
 
-Please let me know if there are problems!
+> 2. If it's meant for VLAN interface for multiple-SSID, how is the VLAN ID
+> configured?
 
-Thanks,
+I think it's not, see above.
+> 
+> 3. In my AP with proprietary driver, there's multiple-SSID over the same BSSID.
+> (Meaning they share the same MAC address.) Each SSID is mapped to one VLAN.
+> Broadcasting SSID is disabled.
+> On receiving packet from clients, AP adds VLAN tag per SSID client associates.
+> On transmitting packet to clients, AP remove VLAN tag.
+> Is it possible to achieve the above functionality through existing open source
+> software(mac80211, iw, hostapd, radio driver, etc)?
 
-John
+I have not done this, but since nobody else replied I'll explain what I think
+you have to do:
 
----
+Lets say you have two VLANs, tagged with 5 and 6.
 
-The following changes since commit 94d57c4cfaa43e29ca5fa5ff874048cfc67276f5:
+1) create two VAP interfaces with iw:
+   iw phy phy0 interface add vap5 type managed
+   iw phy phy0 interface add vap6 type managed
+   (I think managed is ok, hostapd will change this to ap)
+2) run hostapd on each of the VAP interfaces, use different SSIDs
+3) create VLAN interfaces on top of your VLAN trunk interface (e.g. where you
+   get the tagged frames). Use either vconfig or ip to do this.
+   vconfig add eth0 5
+   vconfig add eth0 6
+   this will create the VLAN interfaces eth0.5 and eth0.6
+4) create bridges to connect the AP interfaces with the VLANs
+   brctl addbr "br5"
+   brctl addbr "br6"
+5) connect the APs with the corresponding VLANs
+   brctl addif br5 eth0.5
+   brctl addif br5 vap5
+   brctl addif br6 eth0.6
+   brctl addif br6 vap6
 
-  enic: Update MAINTAINERS (2010-10-01 00:36:53 -0700)
+   Now the *untagged* traffic from VLAN 5 should be bridged to vap5 and from
+   VLAN 6 to vap6.
 
-are available in the git repository at:
-  git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-next-2.6.git for-davem
+Once again, this is untested! This is just how I think this could be done.
 
-Ben Greear (4):
-      ath5k: Add bssid mask and rxfilter to debugfs.
-      mac80211: Support multiple VIFS per AP in debugfs.
-      mac80211/ath9k: Support AMPDU with multiple VIFs.
-      mac80211: Support receiving data frames on multiple vifs.
+Regards
+  Joerg
 
-Bruno Randolf (5):
-      ath5k: Remove unused variable for atim window
-      ath5k: Check and fix ATIM window
-      ath5k: Increase "fudge" for beacon timers
-      ath5k: Disable interrupts in ath5k_hw_get_tsf64
-      ath5k: Fix bitmasks and typos for PCU Diagnostic register
-
-Christian Lamparter (8):
-      mac80211: clear txflags for ps-filtered frames
-      carl9170: remove non-standard ba session teardown
-      carl9170: angle brackets for wiki link
-      carl9170: remove lost-frame workaround
-      carl9170: fix tx_ampdu_upload counter
-      carl9170: fix WARN_ON triggered by Broadcom HT STAs
-      carl9170: revamp carl9170_tx_prepare
-      carl9170: interrupt urbs must not set URB_ZERO_PACKET
-
-Dan Carpenter (1):
-      airo: remove "basic_rate" module option
-
-Felix Fietkau (3):
-      ath9k_hw: simplify revision checks for AR9280
-      ath9k_hw: simplify revision checks for AR9285
-      ath9k_hw: simplify revision checks for AR9287
-
-Florian Mickler (1):
-      iwl3945: queue the right work if the scan needs to be aborted
-
-Ido Yariv (1):
-      wl1271: Fix overflow in wl1271_boot_upload_nvs
-
-Johannes Berg (7):
-      mac80211: fix use-after-free
-      mac80211: remove prepare_for_handlers sdata argument
-      mac80211: consolidate packet processing
-      mac80211: clean up rx handling wrt. found_sta
-      mac80211: fix release_reorder_timeout in scan
-      mac80211: move packet flags into packet
-      cfg80211: always set IBSS basic rates
-
-John W. Linville (5):
-      Merge branch 'master' of git://git.kernel.org/.../linville/wireless-2.6
-      Revert "mac80211: fix use-after-free"
-      wl12xx: fix separate-object-folder builds
-      Merge branch 'master' of git://git.kernel.org/.../linville/wireless-2.6
-      Merge branch 'master' of git://git.kernel.org/.../linville/wireless-next-2.6 into for-davem
-
-Jouni Malinen (2):
-      mac80211: Filter ProbeReq SuppRates based on TX rate mask
-      mac80211: Add DS Parameter Set into Probe Request on 2.4 GHz
-
-Juuso Oikarinen (1):
-      mac80211: Fix WMM driver queue configuration
-
-Luis R. Rodriguez (1):
-      mac80211: fix offchannel assumption upon association
-
-Rajkumar Manoharan (2):
-      ath9k_htc: Fix beacon distribution in IBSS mode
-      ath9k_htc: Fix TKIP disconnect failure with HTC drivers
-
-Teemu Paasikivi (1):
-      nl80211: Fix exit from nl80211_set_power_save
-
-Vasanthakumar Thiagarajan (1):
-      ath9k: Fix tx struck state with paprd
-
- drivers/net/wireless/Makefile                   |    3 +-
- drivers/net/wireless/airo.c                     |   11 -
- drivers/net/wireless/ath/ath5k/ath5k.h          |    2 +-
- drivers/net/wireless/ath/ath5k/attach.c         |    1 -
- drivers/net/wireless/ath/ath5k/base.c           |   16 +-
- drivers/net/wireless/ath/ath5k/debug.c          |   58 +++++
- drivers/net/wireless/ath/ath5k/debug.h          |    1 +
- drivers/net/wireless/ath/ath5k/dma.c            |    4 +-
- drivers/net/wireless/ath/ath5k/pcu.c            |   99 ++++++++-
- drivers/net/wireless/ath/ath5k/phy.c            |    4 +-
- drivers/net/wireless/ath/ath5k/reg.h            |   29 +--
- drivers/net/wireless/ath/ath9k/ar5008_phy.c     |   22 +-
- drivers/net/wireless/ath/ath9k/ar9002_calib.c   |   21 +--
- drivers/net/wireless/ath/ath9k/ar9002_hw.c      |    2 +-
- drivers/net/wireless/ath/ath9k/eeprom.h         |    2 +-
- drivers/net/wireless/ath/ath9k/eeprom_4k.c      |   10 +-
- drivers/net/wireless/ath/ath9k/eeprom_9287.c    |    6 +-
- drivers/net/wireless/ath/ath9k/eeprom_def.c     |   18 +-
- drivers/net/wireless/ath/ath9k/htc_drv_beacon.c |    9 +-
- drivers/net/wireless/ath/ath9k/htc_drv_init.c   |    3 +
- drivers/net/wireless/ath/ath9k/hw.c             |   27 +-
- drivers/net/wireless/ath/ath9k/init.c           |    2 +-
- drivers/net/wireless/ath/ath9k/main.c           |    6 +-
- drivers/net/wireless/ath/ath9k/recv.c           |   10 +-
- drivers/net/wireless/ath/ath9k/reg.h            |   34 +---
- drivers/net/wireless/ath/ath9k/xmit.c           |    3 +-
- drivers/net/wireless/ath/carl9170/Kconfig       |    2 +-
- drivers/net/wireless/ath/carl9170/carl9170.h    |    1 -
- drivers/net/wireless/ath/carl9170/debug.c       |    4 -
- drivers/net/wireless/ath/carl9170/main.c        |   20 ++-
- drivers/net/wireless/ath/carl9170/tx.c          |  192 ++++++---------
- drivers/net/wireless/ath/carl9170/usb.c         |    2 -
- drivers/net/wireless/wl12xx/Makefile            |    3 +
- drivers/net/wireless/wl12xx/wl1271_boot.c       |   17 +-
- include/net/mac80211.h                          |   47 +++--
- net/mac80211/debugfs.c                          |    1 -
- net/mac80211/debugfs_netdev.c                   |    3 +
- net/mac80211/debugfs_sta.c                      |    2 +-
- net/mac80211/ieee80211_i.h                      |   43 +++-
- net/mac80211/main.c                             |    3 +-
- net/mac80211/mlme.c                             |   16 +-
- net/mac80211/rx.c                               |  291 ++++++++++++-----------
- net/mac80211/scan.c                             |    3 +-
- net/mac80211/sta_info.c                         |   15 +-
- net/mac80211/status.c                           |    1 +
- net/mac80211/util.c                             |   47 +++-
- net/mac80211/wpa.c                              |    2 +-
- net/wireless/ibss.c                             |   19 ++
- net/wireless/nl80211.c                          |   20 +--
- 49 files changed, 671 insertions(+), 486 deletions(-)
-
-Omnibus patch available here:
-
-	http://www.kernel.org/pub/linux/kernel/people/linville/wireless-next-2.6-2010-10-01.patch.bz2
-
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
