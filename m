@@ -1,52 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:37609 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753029Ab0JJPjV (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 10 Oct 2010 11:39:21 -0400
-Message-ID: <4CB1DE18.9070400@candelatech.com>
-Date: Sun, 10 Oct 2010 08:39:04 -0700
-From: Ben Greear <greearb@candelatech.com>
-MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: Christian Lamparter <chunkeey@googlemail.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	rainbow lum <rainbowlum@gmail.com>
-Subject: Re: phyX enumeration conflict
-References: <201010082159.59262.chunkeey@googlemail.com>	 <1286698152.3547.4.camel@jlt3.sipsolutions.net> <1286698604.3547.7.camel@jlt3.sipsolutions.net>
-In-Reply-To: <1286698604.3547.7.camel@jlt3.sipsolutions.net>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Received: from mga09.intel.com ([134.134.136.24]:15579 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755015Ab0JVOkS (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 22 Oct 2010 10:40:18 -0400
+Subject: Re: [PATCH 1/2] iwlwifi: fix set_tx_power vs scan
+From: "Guy, Wey-Yi" <wey-yi.w.guy@intel.com>
+To: Stanislaw Gruszka <sgruszka@redhat.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <20101022125628.GA4527@redhat.com>
+References: <1286977193-12144-1-git-send-email-sgruszka@redhat.com>
+	 <1286983100.10446.1.camel@wwguy-ubuntu> <20101014083204.GA2286@redhat.com>
+	 <20101021131348.GA5654@redhat.com>  <20101022125628.GA4527@redhat.com>
+Content-Type: text/plain
+Date: Fri, 22 Oct 2010 07:39:27 -0700
+Message-Id: <1287758367.18168.1.camel@wwguy-ubuntu>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 10/10/2010 01:16 AM, Johannes Berg wrote:
-> On Sun, 2010-10-10 at 10:09 +0200, Johannes Berg wrote:
->
->> The commit failed to take into account that allocated wireless devices
->> (wiphys) are not added into the device list upon allocation, but only
->> when they are registered. Therefore, it opened up a race between
->> allocating and registering a name, so that if two processes allocate and
->> register concurrently ("alloc, alloc, register, register" rather than
->> "alloc, register, alloc, register") the code will attempt to use the
->> same name twice.
->
-> And as for the actual feature, as far as I'm concerned the discussion
-> ends here because we otherwise need to use something as complex as idr.
-> A udev rule can't break the kernel and works just as well, even if
-> you'll have to use a different namespace, i.e. not "phy%d" -- use say
-> "wiphy%d" instead.
+Hi Stanislaw,
 
-Sorry about that.  If anyone has any example udev magic to do this sort
-of thing, I'd like to try that out.
+On Fri, 2010-10-22 at 05:56 -0700, Stanislaw Gruszka wrote:
+> On Thu, Oct 21, 2010 at 03:13:48PM +0200, Stanislaw Gruszka wrote:
+> > On Thu, Oct 14, 2010 at 10:32:05AM +0200, Stanislaw Gruszka wrote:
+> > > > Looks good, the only thing is if priv->tx_power_user_lmt ==
+> > > > priv->tx_power_next, we don't even have to call set_tx_power, but I
+> > > > guess calling it won't hurt, so its your decision check or not.
+> > > 
+> > > I'll will call iwl_set_tx_power( ... , false); what seems to be right
+> > > thing to do.
+> > 
+> > Set tx power have to be forces. Without that I get  
+> > 
+> > iwlagn 0000:40:00.0: low ack count detected, restart firmware
+> > iwlagn 0000:40:00.0: On demand firmware reload
+> > iwlagn 0000:40:00.0: Stopping AGG while state not ON or starting
+> > iwlagn 0000:40:00.0: queue number out of range: 0, must be 10 to 19
+> > iwlagn 0000:40:00.0: Aggregation not enabled for tid 0 because load = 0
+> > iwlagn 0000:40:00.0: Aggregation not enabled for tid 0 because load = 1
+> > iwlagn 0000:40:00.0: Aggregation not enabled for tid 0 because load = 0
+> > iwlagn 0000:40:00.0: Aggregation not enabled for tid 0 because load = 0
+> > iwlagn 0000:40:00.0: iwlagn_tx_agg_start on ra = 00:23:69:35:d1:3f tid = 0
+> > iwlagn 0000:40:00.0: low ack count detected, restart firmware
+> > iwlagn 0000:40:00.0: On demand firmware reload
+> > iwlagn 0000:40:00.0: Stopping AGG while state not ON or starting
+> > iwlagn 0000:40:00.0: queue number out of range: 0, must be 10 to 19
+> > iwlagn 0000:40:00.0: iwlagn_tx_agg_start on ra = 00:23:69:35:d1:3f tid = 0
+> > iwlagn 0000:40:00.0: low ack count detected, restart firmware
+> > iwlagn 0000:40:00.0: On demand firmware reload
+> > iwlagn 0000:40:00.0: Stopping AGG while state not ON or starting
+> > iwlagn 0000:40:00.0: queue number out of range: 0, must be 10 to 19
+> > iwlagn 0000:40:00.0: Aggregation not enabled for tid 0 because load = 4
+> > iwlagn 0000:40:00.0: Aggregation not enabled for tid 0 because load = 0
+> > 
+> > on 5300 and device was unusable in general. Hence I will only comment
+> > that forcing send tx power after scan is needed.
+> 
+> Not true. I have the same problem with vanilla 2.6.36 without any of my
+> patches (further investigation show this is 2.6.34 -> 2.6.35
+> regression). Problem happens only on 5Ghz, that confused me 
+> because NetworkManager in some cases connects to 5Ghz, in others to
+> 2.4Ghz on my system.
+> 
+> Since my patches do not screw up (at least not that thing :) I'm going
+> to repost them, also further bisect this "low ack count detected" issue.
+> 
 
-Thanks,
-Ben
+the error message indicate "low ack count" received by driver. not sure
+how it happen? is it only happen on 5GHz, or the problem on both band?
 
->
-> johannes
+Thanks
+Wey
 
-
--- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
