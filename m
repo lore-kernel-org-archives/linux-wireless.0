@@ -1,76 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f46.google.com ([209.85.214.46]:44480 "EHLO
-	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753636Ab0JBA0Q (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 1 Oct 2010 20:26:16 -0400
-Received: by bwz11 with SMTP id 11so2573222bwz.19
-        for <linux-wireless@vger.kernel.org>; Fri, 01 Oct 2010 17:26:15 -0700 (PDT)
-From: Christian Lamparter <chunkeey@googlemail.com>
-To: Saqeb Akhter <saqeb.akhter@gmail.com>
-Subject: Re: carl9170: wnda3100 only 54MB/s
-Date: Sat, 2 Oct 2010 02:26:06 +0200
-Cc: linux-wireless@vger.kernel.org
-References: <AANLkTimN3X_e4fZhUSoTs-GmQ9kmaJUrgnxAu8=W2dT_@mail.gmail.com> <201010020052.35855.chunkeey@googlemail.com> <AANLkTinfZdNCRNEmuaOot7_NadmbDN0UU5WbUX1pApYb@mail.gmail.com>
-In-Reply-To: <AANLkTinfZdNCRNEmuaOot7_NadmbDN0UU5WbUX1pApYb@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Message-Id: <201010020226.08493.chunkeey@googlemail.com>
+Received: from server19320154104.serverpool.info ([193.201.54.104]:55801 "EHLO
+	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756357Ab0JWSOP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 23 Oct 2010 14:14:15 -0400
+From: Hauke Mehrtens <hauke@hauke-m.de>
+To: lrodriguez@atheros.com
+Cc: linux-wireless@vger.kernel.org, mcgrof@infradead.org,
+	Hauke Mehrtens <hauke@hauke-m.de>,
+	Blaise Gassend <blaise@willowgarage.com>
+Subject: [PATCH 1/3] compat: fix device_lock functions on non rt kernel
+Date: Sat, 23 Oct 2010 20:13:59 +0200
+Message-Id: <1287857641-7882-1-git-send-email-hauke@hauke-m.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Saturday 02 October 2010 01:56:06 Saqeb Akhter wrote:
-> Yes carl9170 (from 9/23).
-wow, that's old. Luis posted a "special" compat-wireless release
-for carl9170:
+CONFIG_NONE and CONFIG_PREEMPT_VOLUNTARY are not added by the last RT
+patch. I have not found any references to CONFIG_NONE, probably
+CONFIG_PREEMPT_NONE was meant, but that is also wrong like
+CONFIG_PREEMPT_VOLUNTARY. These two options are also in the normal kernel
+config system without the rt patch.
 
-"See Announcement: Re: Compat-wireless release for 2010-10-01 v2 with RX filter for carl9170 on -p release"
-http://www.orbit-lab.org/kernel/compat-wireless-2.6/2010/10/compat-wireless-2010-10-01-p.tar.bz2
+This patch only checks for KConfig options added by the rt patch, but a
+rt-patch user could also select PREEMPT_NONE or PREEMPT_VOLUNTARY, and
+compat-wireless will not build. I do not think this will hapen often, so leave
+it like this.
 
+This patch fixes build with all non rt-kernels.
+
+CC: Blaise Gassend <blaise@willowgarage.com>
+Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
 ---
-> output iw dev wlan2 scan
-> 
-> BSS 30:46:9a:10:49:f7 (on wlan2) -- associated
-> 	TSF: 90703162427 usec (1d, 01:11:43)
-> 	freq: 5200
-> 	beacon interval: 100
-> 	capability: ESS ShortSlotTime (0x0401)
-> 	signal: -53.00 dBm
-> 	last seen: 672 ms ago
-> 	SSID: sakhter-5g
-> 	Supported rates: 6.0* 9.0 12.0* 18.0 24.0* 36.0 48.0 54.0
-> 	DS Parameter set: channel 40
-> 	HT capabilities:
-> 		Capabilities: 0x1ce
-> 			HT20/HT40
-> 			SM Power Save disabled
-> 			RX HT40 SGI
-> 			TX STBC
-> 			RX STBC 1-stream
-> 			Max AMSDU length: 7935 bytes
-> 			No DSSS/CCK HT40
-> 		Maximum RX AMPDU length 65535 bytes (exponent: 0x003)
-> 		Minimum RX AMPDU time spacing: 1/2 usec (0x02)
-> 		HT RX MCS rate indexes supported: 0-15
+ include/linux/compat-2.6.34.h |    9 +++------
+ 1 files changed, 3 insertions(+), 6 deletions(-)
 
-> 		HT TX MCS rate indexes are undefined
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-Now that's interesting, apparently Netgear's AP can't send HT (802.11n) frames!
+diff --git a/include/linux/compat-2.6.34.h b/include/linux/compat-2.6.34.h
+index 1cfd6e5..f710d08 100644
+--- a/include/linux/compat-2.6.34.h
++++ b/include/linux/compat-2.6.34.h
+@@ -142,8 +142,7 @@ do {								\
+ 
+ static inline void device_lock(struct device *dev)
+ {
+-#if defined(CONFIG_NONE) || defined(CONFIG_PREEMPT_RT) || \
+-    defined(CONFIG_PREEMPT_VOLUNTARY) || defined(CONFIG_PREEMPT_DESKTOP)
++#if defined(CONFIG_PREEMPT_RT) || defined(CONFIG_PREEMPT_DESKTOP)
+         mutex_lock(&dev->parent->mutex);
+ #else
+ 	down(&dev->sem);
+@@ -152,8 +151,7 @@ static inline void device_lock(struct device *dev)
+ 
+ static inline int device_trylock(struct device *dev)
+ {
+-#if defined(CONFIG_NONE) || defined(CONFIG_PREEMPT_RT) || \
+-    defined(CONFIG_PREEMPT_VOLUNTARY) || defined(CONFIG_PREEMPT_DESKTOP)
++#if defined(CONFIG_PREEMPT_RT) || defined(CONFIG_PREEMPT_DESKTOP)
+ 	return mutex_trylock(&dev->mutex);
+ #else
+ 	return down_trylock(&dev->sem);
+@@ -162,8 +160,7 @@ static inline int device_trylock(struct device *dev)
+ 
+ static inline void device_unlock(struct device *dev)
+ {
+-#if defined(CONFIG_NONE) || defined(CONFIG_PREEMPT_RT) || \
+-    defined(CONFIG_PREEMPT_VOLUNTARY) || defined(CONFIG_PREEMPT_DESKTOP)
++#if defined(CONFIG_PREEMPT_RT) || defined(CONFIG_PREEMPT_DESKTOP)
+         mutex_unlock(&dev->mutex);
+ #else
+ 	up(&dev->sem);
+-- 
+1.7.0.4
 
-But that's not your problem, it's the missing WMM extension.
-
-Your AP should (additionally) display:
-        WMM:     * Parameter version 1
-                 * BE: CW 15-1023, AIFSN 3
-                 * BK: CW 15-1023, AIFSN 7
-                 * VI: CW 7-15, AIFSN 2, TXOP 3008 usec
-                 * VO: CW 3-7, AIFSN 2, TXOP 1504 usec
-
-
-But since it doesn't, mac80211 does not enable ht.
-
-Maybe a new firmware for the router would fix the issue?
-
-Regards,
-	Chr
