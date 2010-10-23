@@ -1,36 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gx0-f174.google.com ([209.85.161.174]:58107 "EHLO
-	mail-gx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752599Ab0JVAcg convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 21 Oct 2010 20:32:36 -0400
-Received: by gxk3 with SMTP id 3so142436gxk.19
-        for <linux-wireless@vger.kernel.org>; Thu, 21 Oct 2010 17:32:36 -0700 (PDT)
+Received: from mail.atheros.com ([12.19.149.2]:35873 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751345Ab0JWFYC (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 23 Oct 2010 01:24:02 -0400
+Received: from mail.atheros.com ([10.10.20.105])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Fri, 22 Oct 2010 22:23:51 -0700
+From: Rajkumar Manoharan <rmanoharan@atheros.com>
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>, <johannes@sipsolutions.net>,
+	<mcgrof@gmail.com>, Rajkumar Manoharan <rmanoharan@atheros.com>,
+	<stable@kernel.org>
+Subject: [PATCH] mac80211: Fix ibss station got expired immediately
+Date: Sat, 23 Oct 2010 10:59:57 +0530
+Message-ID: <1287811797-4313-1-git-send-email-rmanoharan@atheros.com>
 MIME-Version: 1.0
-In-Reply-To: <201010220930.01071.br1@einfach.org>
-References: <1287616028-12547-1-git-send-email-lrodriguez@atheros.com>
- <4CC07CA9.4040808@candelatech.com> <201010220930.01071.br1@einfach.org>
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Date: Thu, 21 Oct 2010 17:32:15 -0700
-Message-ID: <AANLkTi=wTsFnVZ=GGck_ArP6ubT_dOB41ut13od7biwT@mail.gmail.com>
-Subject: Re: [PATCH 0/6] ath9k: fix RX poison issue
-To: Bruno Randolf <br1@einfach.org>
-Cc: Ben Greear <greearb@candelatech.com>, linville@tuxdriver.com,
-	linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Oct 21, 2010 at 5:30 PM, Bruno Randolf <br1@einfach.org> wrote:
-> On Fri October 22 2010 02:47:21 Ben Greear wrote:
->> I tested this code when it was combined into a single patch.
->> There were still some issues, but I have no reason to believe
->> this patch set caused them.  This patch set significantly
->> improved stability in my testing with 130+ STA interfaces.
->
-> one question: do you see similar issues with ath5k? i remember one bug is
-> filed with a rx poision issue.
+Station addition in ieee80211_ibss_rx_queued_mgmt is not updating
+sta->last_rx which is causing station expiry in ieee80211_ibss_work
+path. So sta addition and deletion happens repeatedly.
 
-Hardware is similar so the I'd do the same locking.
+CC: stable@kernel.org
+Signed-off-by: Rajkumar Manoharan <rmanoharan@atheros.com>
+---
+ net/mac80211/ibss.c |    1 +
+ 1 files changed, 1 insertions(+), 0 deletions(-)
 
-  Luis
+diff --git a/net/mac80211/ibss.c b/net/mac80211/ibss.c
+index ff60c02..239c483 100644
+--- a/net/mac80211/ibss.c
++++ b/net/mac80211/ibss.c
+@@ -456,6 +456,7 @@ struct sta_info *ieee80211_ibss_add_sta(struct ieee80211_sub_if_data *sdata,
+ 	if (!sta)
+ 		return NULL;
+ 
++	sta->last_rx = jiffies;
+ 	set_sta_flags(sta, WLAN_STA_AUTHORIZED);
+ 
+ 	/* make sure mandatory rates are always added */
+-- 
+1.7.3.1
+
