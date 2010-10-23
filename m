@@ -1,215 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wy0-f174.google.com ([74.125.82.174]:60314 "EHLO
-	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751988Ab0JMMB7 convert rfc822-to-8bit (ORCPT
+Received: from fmmailgate01.web.de ([217.72.192.221]:47034 "EHLO
+	fmmailgate01.web.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758464Ab0JWT7J (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 13 Oct 2010 08:01:59 -0400
+	Sat, 23 Oct 2010 15:59:09 -0400
+Received: from smtp03.web.de  ( [172.20.0.65])
+	by fmmailgate01.web.de (Postfix) with ESMTP id 975C9170007D0
+	for <linux-wireless@vger.kernel.org>; Sat, 23 Oct 2010 21:59:07 +0200 (CEST)
+Received: from [217.186.43.131] (helo=[192.168.178.24])
+	by smtp03.web.de with asmtp (TLSv1:AES256-SHA:256)
+	(WEB.DE 4.110 #24)
+	id 1P9kF9-0007x3-00
+	for linux-wireless@vger.kernel.org; Sat, 23 Oct 2010 21:59:07 +0200
+Message-ID: <4CC33E83.4020505@web.de>
+Date: Sat, 23 Oct 2010 21:58:59 +0200
+From: Lee <lee-in-berlin@web.de>
 MIME-Version: 1.0
-In-Reply-To: <1286967077-20071-4-git-send-email-csanjay@mistralsolutions.com>
-References: <1286967077-20071-1-git-send-email-csanjay@mistralsolutions.com>
-	<1286967077-20071-4-git-send-email-csanjay@mistralsolutions.com>
-Date: Wed, 13 Oct 2010 17:31:58 +0530
-Message-ID: <AANLkTimbxR=WkL1SJ+0uOm4cvZVoXtu37XWrTTwR-QNN@mail.gmail.com>
-Subject: Re: [WL1271 DC supprot on OMAP3EVM 3/5] ARM: Supported for BT enable
- on OMAP3EVM for WL1271 DC
-From: Govindraj <govindraj.ti@gmail.com>
-To: csanjay@mistralsolutions.com
-Cc: linux-omap@vger.kernel.org, linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+To: linux-wireless@vger.kernel.org
+Subject: Re: [regression]AP with hostapd 0.7.3 can't receive packets beyond
+ authentication (2.6.36, rt73usb)
+References: <4CC0D0F6.4080507@web.de>
+In-Reply-To: <4CC0D0F6.4080507@web.de>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Oct 13, 2010 at 4:21 PM,  <csanjay@mistralsolutions.com> wrote:
-> From: Sanjay Kumar Champati <csanjay@mistralsolutions.com>
+On 22/10/10 01:47, Lee wrote:
+> Hi everyone,
 >
-> * Midified "tty_io.c" and "Kconfig" files to suuport BT enable for WL1271
+> I noticed a bug (details later) in Linus' git tree, which wasn't there in
+> 2.6.35.7. So I went on to bisect the bug. 12 compiles and reboots later, I
+> could narrow it down to this commit:
 >
-> Signed-off-by: Sanjay Kumar Champati <csanjay@mistralsolutions.com>
-> ---
->  drivers/bluetooth/Kconfig |    7 +++
->  drivers/char/tty_io.c     |  110 +++++++++++++++++++++++++++++++++++++++++++++
->  2 files changed, 117 insertions(+), 0 deletions(-)
+> # bad: [05318bc905467237d4aa68a701f6e92a2b332218] Merge branch 'master' of
+> git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-next-2.6
 >
-> diff --git a/drivers/bluetooth/Kconfig b/drivers/bluetooth/Kconfig
-> index 652367a..2ed159c 100644
-> --- a/drivers/bluetooth/Kconfig
-> +++ b/drivers/bluetooth/Kconfig
-> @@ -195,5 +195,12 @@ config BT_MRVL_SDIO
->          Say Y here to compile support for Marvell BT-over-SDIO driver
->          into the kernel or say M to compile it as module.
+> Unfortunately, I couldn't further bisect down wireless-next, because all three
+> commits I picked were unworkable (bringing down an interface caused the kernel
+> to oops, which made my test case impossible).
 >
-> +config BT_WL1271
-> +       bool "WL1271 Bluetooth driver support"
-> +       depends on BT_HCIUART
-> +       help
-> +       The core driver to support WL1271 Bluetooth devices.
-> +       Say Y here to compile WL1271 Bluetooth driver into the kernel.
-> +
->  endmenu
+> The test case is as follows: I have eth0 and wlan0 (the interface to an
+> rt37usb device) in a bridge lan0. I have a properly configured hostapd. When I
+> try to connect with a client to my hostapd AP, I can successfully
+> authenticate, but all further packets don't reach the interface of the AP.
 >
-> diff --git a/drivers/char/tty_io.c b/drivers/char/tty_io.c
-> index f15df40..a3ae352 100644
-> --- a/drivers/char/tty_io.c
-> +++ b/drivers/char/tty_io.c
-> @@ -107,6 +107,17 @@
->  #include <linux/kmod.h>
->  #include <linux/nsproxy.h>
+> However, I can see broadcast packets *from* the AP on my client, but not the
+> other way round (DHCP requests from client to AP). To make sure the bug was
+> not specific to broadcast packets, I manually set an IP on my client and tried
+> to ping the AP, but those packets didn't come through, either.
 >
-> +#ifdef CONFIG_BT_WL1271
-> +/*
-> + *     WL1271: To control T2 gpios on OMAP3 EVM
-> + */
-> +#include "linux/i2c/twl.h"
-> +
-> +/*
-> + *     WL1271: To set BT_EN of TI's WL1271 Bluetooth chip
-> + */
-> +#define TIOSETWL1271POWER 0x6000
-> +#endif
->  #undef TTY_DEBUG_HANGUP
+> Right now I'm a bit clueless on how to get to the root of this bug, so any
+> help is appreciated.
 >
->  #define TTY_PARANOIA_CHECK 1
-> @@ -154,6 +165,95 @@ static void release_tty(struct tty_struct *tty, int idx);
->  static void __proc_set_tty(struct task_struct *tsk, struct tty_struct *tty);
->  static void proc_set_tty(struct task_struct *tsk, struct tty_struct *tty);
->
-> +#ifdef CONFIG_BT_WL1271
-> +/*
-> + *     WL1271: Power enable sequence
-> + */
-> +static int bt_init_power(void)
-> +{
-> +       int ret = 0;
-> +       u8 reg_value = 0;
-> +
-> +       /* Wl1271 Daughter card BT_EN is connected to T2-GPIO.13 */
-> +       /* Enable GPIO */
-> +       ret = twl_i2c_read_u8(TWL4030_MODULE_GPIO,
-> +                               &reg_value, REG_GPIO_CTRL);
-> +       if (ret != 0)
-> +               goto err;
-> +       /* T2-GPIO.13 -> output */
-> +       ret = twl_i2c_read_u8(TWL4030_MODULE_GPIO,
-> +                               &reg_value, REG_GPIODATADIR2);
-> +       if (ret != 0)
-> +               goto err;
-> +       reg_value |= 0x20;
-> +       ret = twl_i2c_write_u8(TWL4030_MODULE_GPIO,
-> +                               reg_value, REG_GPIODATADIR2);
-> +       if (ret != 0)
-> +               goto err;
-> +       /* T2-GPIO.13 -> LOW */
-> +       ret = twl_i2c_read_u8(TWL4030_MODULE_GPIO,
-> +                               &reg_value, REG_GPIODATAOUT2);
-> +       if (ret != 0)
-> +               goto err;
-> +       reg_value &= ~(0x20);
-> +       ret = twl_i2c_write_u8(TWL4030_MODULE_GPIO,
-> +                               reg_value, REG_GPIODATAOUT2);
-> +       if (ret != 0)
-> +               goto err;
-> +
-> +       mdelay(50);
-> +       /* T2-GPIO.13 -> HIGH */
-> +       reg_value |= (0x20);
-> +       ret = twl_i2c_write_u8(TWL4030_MODULE_GPIO,
-> +                               reg_value, REG_GPIODATAOUT2);
-> +       if (ret != 0)
-> +               goto err;
-> +
-> +       mdelay(50);
-> +       /* T2-GPIO.13 -> LOW */
-> +       reg_value &= ~(0x20);
-> +       ret = twl_i2c_write_u8(TWL4030_MODULE_GPIO,
-> +                               reg_value, REG_GPIODATAOUT2);
-> +       if (ret != 0)
-> +               goto err;
-> +       printk(KERN_INFO "WL1271: BT_EN GPIO initialized\n");
-> +err:
-> +       return ret;
-> +} /* End of init_bt_power() */
-> +
-> +/*
-> + *     WL1271: Set Bluetooth Enable
-> + */
-> +static int tty_setbt_power(int __user *p)
-> +{
-> +       int power;
-> +       int err = 0;
-> +       u8 reg_value = 0;
-> +
-> +       if (get_user(power, p))
-> +               return -EFAULT;
-> +
-> +       printk(KERN_INFO "Set BT_EN of WL1271\n");
-> +       /* Power settings argument should either be 1 or 0 */
-> +       power = power ? 1 : 0;
-> +
-> +       if (power)
-> +               reg_value |= (0x20);
-> +       else
-> +               reg_value &= ~(0x20);
-> +
-> +       err = twl_i2c_write_u8(TWL4030_MODULE_GPIO,
-> +                               reg_value, REG_GPIODATAOUT2);
-> +       if (err != 0) {
-> +               printk(KERN_DEBUG "WL1271: Set BT_EN failed %d %d\n",
-> +                                                       err, power);
-> +       return err;
-> +       }
-> +       printk(KERN_INFO "WL1271: Powering %s\n", power ? "on" : "off");
-> +       return 0;
-> +} /* End of set_bt_power() */
-> +#endif
-> +
->  /**
->  *     alloc_tty_struct        -       allocate a tty object
->  *
-> @@ -2571,6 +2671,11 @@ long tty_ioctl(struct file *file, unsigned int cmd, unsigned long arg)
->        case TIOCMBIC:
->        case TIOCMBIS:
->                return tty_tiocmset(tty, file, cmd, p);
-> +#ifdef CONFIG_BT_WL1271
-> +       /* Control BT_EN pin of Bluetooth-WL1271 */
-> +       case TIOSETWL1271POWER:
-> +               return tty_setbt_power(p);
-> +#endif
->        case TCFLSH:
->                switch (arg) {
->                case TCIFLUSH:
-> @@ -3142,6 +3247,11 @@ static int __init tty_init(void)
->  #ifdef CONFIG_VT
->        vty_init(&console_fops);
->  #endif
-> +
-> +#ifdef CONFIG_BT_WL1271
-> +       /* Initialize Bluetooth- WL1271chip connected to UART */
-> +       bt_init_power();
-> +#endif
->        return 0;
->  }
->  module_init(tty_init);
-> --
-> 1.6.3.3
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-omap" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
+> Regards,
+> Lee
 
-Cannot pollute tty_io.c with omap-evm platform specific things
-
-tty_io.c is a file part of generic tty-layer stack we cannot have
-any platform specific things there.
-
-bt_init_power
-tty_setbt_power
-
-All are one time configuration don't see why it needs
-to be done with ioctl interface.
-Can be done in board file itself.
-
----
-Regards,
-Govindraj.R
+I checked vanilla 2.6.36, the bug is still there. Is this a known bug? Does 
+anyone care to give me some hints? Are any details needed?
