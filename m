@@ -1,48 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from hera.kernel.org ([140.211.167.34]:37959 "EHLO hera.kernel.org"
+Received: from mga14.intel.com ([143.182.124.37]:15024 "EHLO mga14.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755941Ab0JOQjm (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 15 Oct 2010 12:39:42 -0400
-Message-ID: <4CB883C9.6050104@kernel.org>
-Date: Fri, 15 Oct 2010 18:39:37 +0200
-From: Tejun Heo <tj@kernel.org>
-MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: Linux Wireless List <linux-wireless@vger.kernel.org>,
-	lkml <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH v2.6.36-rc7] mac80211: cancel restart_work explicitly
- instead of depending on flush_scheduled_work()
-References: <4CB874C0.8090003@kernel.org> <1287159715.1870.11.camel@Nokia-N900-51-1>
-In-Reply-To: <1287159715.1870.11.camel@Nokia-N900-51-1>
-Content-Type: text/plain; charset=UTF-8
+	id S1757924Ab0JWQSM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 23 Oct 2010 12:18:12 -0400
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Subject: [PATCH 6/8] iwlagn: turn dynamic smps on while BT is on
+Date: Sat, 23 Oct 2010 09:15:44 -0700
+Message-Id: <1287850546-23500-7-git-send-email-wey-yi.w.guy@intel.com>
+In-Reply-To: <1287850546-23500-1-git-send-email-wey-yi.w.guy@intel.com>
+References: <1287850546-23500-1-git-send-email-wey-yi.w.guy@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello,
+While BT is on and doing iscan and/or pscan, BT is in listen
+mode which will impact WiFi throughput, we need to
+enable dynamic smps in order to improve the rx throughput.
 
-On 10/15/2010 06:21 PM, Johannes Berg wrote:
->> -        create_singlethread_workqueue(wiphy_name(local->hw.wiphy));
->> +        alloc_ordered_workqueue(wiphy_name(local->hw.wiphy), 0);
-> 
-> no description for this change?
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-agn-lib.c |    5 ++++-
+ 1 files changed, 4 insertions(+), 1 deletions(-)
 
-Oops, right.  create_*workqueue() interfaces are being replaced by
-alloc_*workqueue().  It's part of the workqueue interface update.
-
->> -    /*
->> -     * For key todo, it'll be empty by now but the work
->> -     * might still be scheduled.
->> -     */
->> -    flush_scheduled_work();
-> 
-> oops, todo work no longer exists...
-> 
-> Anyway, ACK.
-
-Are you going to route this through wireless tree?  Shall I repost
-with update patch description?
-
-Thank you.
-
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-lib.c b/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
+index b555edd..931af54 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
+@@ -1889,7 +1889,10 @@ static void iwlagn_bt_traffic_change_work(struct work_struct *work)
+ 
+ 	switch (priv->bt_traffic_load) {
+ 	case IWL_BT_COEX_TRAFFIC_LOAD_NONE:
+-		smps_request = IEEE80211_SMPS_AUTOMATIC;
++		if (priv->bt_status)
++			smps_request = IEEE80211_SMPS_DYNAMIC;
++		else
++			smps_request = IEEE80211_SMPS_AUTOMATIC;
+ 		break;
+ 	case IWL_BT_COEX_TRAFFIC_LOAD_LOW:
+ 		smps_request = IEEE80211_SMPS_DYNAMIC;
 -- 
-tejun
+1.7.0.4
+
