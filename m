@@ -1,40 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:34709 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751617Ab0JYJJd (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 25 Oct 2010 05:09:33 -0400
-Subject: Re: Complexity of Adding 5/10 MHz Channel Support
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Galen <galenz@zinkconsulting.com>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <1A7DEBB8-6337-4551-9F21-14C20E13B86B@zinkconsulting.com>
-References: <1A7DEBB8-6337-4551-9F21-14C20E13B86B@zinkconsulting.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Mon, 25 Oct 2010 10:46:19 +0200
-Message-ID: <1287996379.3587.11.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+Received: from mga14.intel.com ([143.182.124.37]:49685 "EHLO mga14.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756926Ab0JWQSI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 23 Oct 2010 12:18:08 -0400
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Subject: [PATCH 0/8]  update for 2.6.38
+Date: Sat, 23 Oct 2010 09:15:38 -0700
+Message-Id: <1287850546-23500-1-git-send-email-wey-yi.w.guy@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2010-10-15 at 15:30 -0700, Galen wrote:
-> Can anybody give me an idea the extent and complexity of adding
-> support for 5/10 MHz channels in mac80211?
-> 
-> Several different radios (including those supported by ath5k and
-> ath9k) have the hardware capability to operate at 5 MHz. Obviously,
-> support in those drivers is a separate issue, but it is my
-> understanding that mac80211 must first support 5/10 MHz channels.
+We make number of changes to prepare upcoming P2P supports
+We also turn on dynamic smps to improve WiFi rx throughput
+for WiFi/BT coex case.
+We also change the new 130 series devices to using 6000g2b uCode
 
-Since we already have channel types, I've always suggested to add 5/10
-as such. The complexity comes from the fact that some channel types are
-incompatible, and we currently do not have to handle that -- a regular
-scan for example will cover all current channel types, but with 5/10 MHz
-you need to do special scans etc.
+Johannes Berg (5):
+  iwlwifi: make mac80211 ops a device config
+  iwlagn: don't resent RXON timing
+  iwlagn: new RXON processing for modern devices
+  iwlwifi: fix IBSS beaconing
+  iwlwifi: implement switching iftype while up
 
-Also, you need to start in cfg80211, not mac80211, and make everything
-from auth/assoc/connect/ibss-join etc. aware of channel types as well as
-center freq.
+Wey-Yi Guy (3):
+  iwlagn: turn dynamic smps on while BT is on
+  iwlwifi: add new devices to Kconfig
+  iwlagn: use 6000g2b uCode for 130 series devices
 
-johannes
+these patches are also available from wireless-next-2.6 branch on
+ git://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi-2.6.git
+
+ drivers/net/wireless/iwlwifi/Kconfig        |    3 +
+ drivers/net/wireless/iwlwifi/Makefile       |    3 +
+ drivers/net/wireless/iwlwifi/iwl-1000.c     |    5 +-
+ drivers/net/wireless/iwlwifi/iwl-3945.c     |   11 +-
+ drivers/net/wireless/iwlwifi/iwl-3945.h     |    8 +-
+ drivers/net/wireless/iwlwifi/iwl-4965.c     |  318 +++++++++++++-
+ drivers/net/wireless/iwlwifi/iwl-5000.c     |   10 +-
+ drivers/net/wireless/iwlwifi/iwl-6000.c     |   27 +-
+ drivers/net/wireless/iwlwifi/iwl-agn-lib.c  |    5 +-
+ drivers/net/wireless/iwlwifi/iwl-agn-rxon.c |  587 +++++++++++++++++++++++
+ drivers/net/wireless/iwlwifi/iwl-agn.c      |  409 ++--------------
+ drivers/net/wireless/iwlwifi/iwl-agn.h      |   36 ++
+ drivers/net/wireless/iwlwifi/iwl-core.c     |  673 +++++----------------------
+ drivers/net/wireless/iwlwifi/iwl-core.h     |   37 +-
+ drivers/net/wireless/iwlwifi/iwl-dev.h      |    2 +
+ drivers/net/wireless/iwlwifi/iwl-led.c      |    2 +
+ drivers/net/wireless/iwlwifi/iwl-legacy.c   |  560 ++++++++++++++++++++++
+ drivers/net/wireless/iwlwifi/iwl-legacy.h   |   74 +++
+ drivers/net/wireless/iwlwifi/iwl3945-base.c |   35 +-
+ 19 files changed, 1805 insertions(+), 1000 deletions(-)
+ create mode 100644 drivers/net/wireless/iwlwifi/iwl-agn-rxon.c
+ create mode 100644 drivers/net/wireless/iwlwifi/iwl-legacy.c
+ create mode 100644 drivers/net/wireless/iwlwifi/iwl-legacy.h
 
