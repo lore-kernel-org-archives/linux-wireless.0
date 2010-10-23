@@ -1,207 +1,319 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga03.intel.com ([143.182.124.21]:49417 "EHLO mga03.intel.com"
+Received: from mga14.intel.com ([143.182.124.37]:49685 "EHLO mga14.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755068Ab0JVPfE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 22 Oct 2010 11:35:04 -0400
-Subject: Re: [PATCH 6/7] iwlwifi: defer update power mode while scan
-From: "Guy, Wey-Yi" <wey-yi.w.guy@intel.com>
-To: Stanislaw Gruszka <sgruszka@redhat.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <1287759870-5758-6-git-send-email-sgruszka@redhat.com>
-References: <1287759870-5758-1-git-send-email-sgruszka@redhat.com>
-	 <1287759870-5758-6-git-send-email-sgruszka@redhat.com>
-Content-Type: text/plain
-Date: Fri, 22 Oct 2010 08:33:57 -0700
-Message-Id: <1287761637.8143.3.camel@wwguy-ubuntu>
-Mime-Version: 1.0
+	id S1757921Ab0JWQSM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 23 Oct 2010 12:18:12 -0400
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	Johannes Berg <johannes.berg@intel.com>,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Subject: [PATCH 5/8] iwlwifi: implement switching iftype while up
+Date: Sat, 23 Oct 2010 09:15:43 -0700
+Message-Id: <1287850546-23500-6-git-send-email-wey-yi.w.guy@intel.com>
+In-Reply-To: <1287850546-23500-1-git-send-email-wey-yi.w.guy@intel.com>
+References: <1287850546-23500-1-git-send-email-wey-yi.w.guy@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Stanislaw,
+From: Johannes Berg <johannes.berg@intel.com>
 
-On Fri, 2010-10-22 at 08:04 -0700, Stanislaw Gruszka wrote:
-> Do not set power mode when scanning, and defer that when scan finish.
-> We still set power mode in force case i.e. when device is overheated.
-> 
-> Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
-> ---
->  drivers/net/wireless/iwlwifi/iwl-power.c |   95 +++++++++++++++++++-----------
->  drivers/net/wireless/iwlwifi/iwl-power.h |    3 +
->  drivers/net/wireless/iwlwifi/iwl-scan.c  |    1 +
->  3 files changed, 64 insertions(+), 35 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/iwlwifi/iwl-power.c b/drivers/net/wireless/iwlwifi/iwl-power.c
-> index 49d7788..b7abd86 100644
-> --- a/drivers/net/wireless/iwlwifi/iwl-power.c
-> +++ b/drivers/net/wireless/iwlwifi/iwl-power.c
-> @@ -263,70 +263,95 @@ static int iwl_set_power(struct iwl_priv *priv, struct iwl_powertable_cmd *cmd)
->  				sizeof(struct iwl_powertable_cmd), cmd);
->  }
->  
-> -/* priv->mutex must be held */
-> -int iwl_power_update_mode(struct iwl_priv *priv, bool force)
-> +static void iwl_power_build_cmd(struct iwl_priv *priv,
-> +				struct iwl_powertable_cmd *cmd)
->  {
-> -	int ret = 0;
->  	bool enabled = priv->hw->conf.flags & IEEE80211_CONF_PS;
-> -	bool update_chains;
-> -	struct iwl_powertable_cmd cmd;
->  	int dtimper;
->  
-> -	/* Don't update the RX chain when chain noise calibration is running */
-> -	update_chains = priv->chain_noise_data.state == IWL_CHAIN_NOISE_DONE ||
-> -			priv->chain_noise_data.state == IWL_CHAIN_NOISE_ALIVE;
-> -
->  	dtimper = priv->hw->conf.ps_dtim_period ?: 1;
->  
->  	if (priv->cfg->base_params->broken_powersave)
-> -		iwl_power_sleep_cam_cmd(priv, &cmd);
-> +		iwl_power_sleep_cam_cmd(priv, cmd);
-Is this right?
+Implement switching the interface while an
+interface is up in iwlwifi. Interfaces have
+to stay on the context they were created on.
 
->  	else if (priv->cfg->base_params->supports_idle &&
->  		 priv->hw->conf.flags & IEEE80211_CONF_IDLE)
-> -		iwl_static_sleep_cmd(priv, &cmd, IWL_POWER_INDEX_5, 20);
-> +		iwl_static_sleep_cmd(priv, cmd, IWL_POWER_INDEX_5, 20);
->  	else if (priv->cfg->ops->lib->tt_ops.lower_power_detection &&
->  		 priv->cfg->ops->lib->tt_ops.tt_power_mode &&
->  		 priv->cfg->ops->lib->tt_ops.lower_power_detection(priv)) {
->  		/* in thermal throttling low power state */
-> -		iwl_static_sleep_cmd(priv, &cmd,
-> +		iwl_static_sleep_cmd(priv, cmd,
-Same here and more
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-4965.c     |    1 +
+ drivers/net/wireless/iwlwifi/iwl-agn.c      |    1 +
+ drivers/net/wireless/iwlwifi/iwl-core.c     |  168 ++++++++++++++++++++-------
+ drivers/net/wireless/iwlwifi/iwl-core.h     |    3 +
+ drivers/net/wireless/iwlwifi/iwl3945-base.c |    1 +
+ 5 files changed, 130 insertions(+), 44 deletions(-)
 
-
->  		    priv->cfg->ops->lib->tt_ops.tt_power_mode(priv), dtimper);
->  	} else if (!enabled)
-> -		iwl_power_sleep_cam_cmd(priv, &cmd);
-> +		iwl_power_sleep_cam_cmd(priv, cmd);
-
->  	else if (priv->power_data.debug_sleep_level_override >= 0)
-> -		iwl_static_sleep_cmd(priv, &cmd,
-> +		iwl_static_sleep_cmd(priv, cmd,
->  				     priv->power_data.debug_sleep_level_override,
->  				     dtimper);
->  	else if (no_sleep_autoadjust)
-> -		iwl_static_sleep_cmd(priv, &cmd, IWL_POWER_INDEX_1, dtimper);
-> +		iwl_static_sleep_cmd(priv, cmd, IWL_POWER_INDEX_1, dtimper);
->  	else
-> -		iwl_power_fill_sleep_cmd(priv, &cmd,
-> +		iwl_power_fill_sleep_cmd(priv, cmd,
->  					 priv->hw->conf.dynamic_ps_timeout,
->  					 priv->hw->conf.max_sleep_period);
-> +}
-> +
-> +int iwl_power_set_mode(struct iwl_priv *priv, struct iwl_powertable_cmd *cmd,
-> +		       bool force)
-> +{
-> +	int ret;
-> +	bool update_chains;
-> +
-> +	lockdep_assert_held(&priv->mutex);
-> +
-> +	/* Don't update the RX chain when chain noise calibration is running */
-> +	update_chains = priv->chain_noise_data.state == IWL_CHAIN_NOISE_DONE ||
-> +			priv->chain_noise_data.state == IWL_CHAIN_NOISE_ALIVE;
-> +
-> +	if (!memcmp(&priv->power_data.sleep_cmd, cmd, sizeof(*cmd)) && !force)
-> +		return 0;
-> +
-> +	if (!iwl_is_ready_rf(priv))
-> +		return -EIO;
-> +
-> +	/* scan complete use sleep_power_next, need to be updated */
-> +	memcpy(&priv->power_data.sleep_cmd_next, cmd, sizeof(*cmd));
-> +	if (test_bit(STATUS_SCANNING, &priv->status) && !force) {
-> +		IWL_DEBUG_INFO(priv, "Defer power set mode while scanning\n");
-> +		return 0;
-> +	}
-> +
-> +	if (cmd->flags & IWL_POWER_DRIVER_ALLOW_SLEEP_MSK)
-> +		set_bit(STATUS_POWER_PMI, &priv->status);
->  
-> -	if (iwl_is_ready_rf(priv) &&
-> -	    (memcmp(&priv->power_data.sleep_cmd, &cmd, sizeof(cmd)) || force)) {
-> -		if (cmd.flags & IWL_POWER_DRIVER_ALLOW_SLEEP_MSK)
-> -			set_bit(STATUS_POWER_PMI, &priv->status);
-> -
-> -		ret = iwl_set_power(priv, &cmd);
-> -		if (!ret) {
-> -			if (!(cmd.flags & IWL_POWER_DRIVER_ALLOW_SLEEP_MSK))
-> -				clear_bit(STATUS_POWER_PMI, &priv->status);
-> -
-> -			if (priv->cfg->ops->lib->update_chain_flags &&
-> -			    update_chains)
-> -				priv->cfg->ops->lib->update_chain_flags(priv);
-> -			else if (priv->cfg->ops->lib->update_chain_flags)
-> -				IWL_DEBUG_POWER(priv,
-> +	ret = iwl_set_power(priv, cmd);
-> +	if (!ret) {
-> +		if (!(cmd->flags & IWL_POWER_DRIVER_ALLOW_SLEEP_MSK))
-> +			clear_bit(STATUS_POWER_PMI, &priv->status);
-> +
-> +		if (priv->cfg->ops->lib->update_chain_flags && update_chains)
-> +			priv->cfg->ops->lib->update_chain_flags(priv);
-> +		else if (priv->cfg->ops->lib->update_chain_flags)
-> +			IWL_DEBUG_POWER(priv,
->  					"Cannot update the power, chain noise "
->  					"calibration running: %d\n",
->  					priv->chain_noise_data.state);
-> -			memcpy(&priv->power_data.sleep_cmd, &cmd, sizeof(cmd));
-> -		} else
-> -			IWL_ERR(priv, "set power fail, ret = %d", ret);
-> -	}
-> +
-> +		memcpy(&priv->power_data.sleep_cmd, cmd, sizeof(*cmd));
-> +	} else
-> +		IWL_ERR(priv, "set power fail, ret = %d", ret);
->  
->  	return ret;
->  }
-> +EXPORT_SYMBOL(iwl_power_set_mode);
-> +
-> +int iwl_power_update_mode(struct iwl_priv *priv, bool force)
-> +{
-> +	struct iwl_powertable_cmd cmd;
-> +
-> +	iwl_power_build_cmd(priv, &cmd);
-> +	return iwl_power_set_mode(priv, &cmd, force);
-> +}
->  EXPORT_SYMBOL(iwl_power_update_mode);
->  
->  /* initialize to default */
-> diff --git a/drivers/net/wireless/iwlwifi/iwl-power.h b/drivers/net/wireless/iwlwifi/iwl-power.h
-> index df81565..fe01203 100644
-> --- a/drivers/net/wireless/iwlwifi/iwl-power.h
-> +++ b/drivers/net/wireless/iwlwifi/iwl-power.h
-> @@ -41,10 +41,13 @@ enum iwl_power_level {
->  
->  struct iwl_power_mgr {
->  	struct iwl_powertable_cmd sleep_cmd;
-> +	struct iwl_powertable_cmd sleep_cmd_next;
->  	int debug_sleep_level_override;
->  	bool pci_pm;
->  };
->  
-> +int iwl_power_set_mode(struct iwl_priv *priv, struct iwl_powertable_cmd *cmd,
-> +		       bool force);
->  int iwl_power_update_mode(struct iwl_priv *priv, bool force);
->  void iwl_power_initialize(struct iwl_priv *priv);
->  
-> diff --git a/drivers/net/wireless/iwlwifi/iwl-scan.c b/drivers/net/wireless/iwlwifi/iwl-scan.c
-> index d63e30e..e1aa0e1 100644
-> --- a/drivers/net/wireless/iwlwifi/iwl-scan.c
-> +++ b/drivers/net/wireless/iwlwifi/iwl-scan.c
-> @@ -607,6 +607,7 @@ out_settings:
->  	 * We do not commit power settings while scan is pending,
->  	 * do it now if the settings changed.
->  	 */
-> +	iwl_power_set_mode(priv, &priv->power_data.sleep_cmd_next, false);
->  	iwl_set_tx_power(priv, priv->tx_power_next, false);
->  
->  	priv->cfg->ops->utils->post_scan(priv);
-
-Wey
+diff --git a/drivers/net/wireless/iwlwifi/iwl-4965.c b/drivers/net/wireless/iwlwifi/iwl-4965.c
+index 6e80ab5..6a3c0ce 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-4965.c
++++ b/drivers/net/wireless/iwlwifi/iwl-4965.c
+@@ -2593,6 +2593,7 @@ struct ieee80211_ops iwl4965_hw_ops = {
+ 	.stop = iwlagn_mac_stop,
+ 	.add_interface = iwl_mac_add_interface,
+ 	.remove_interface = iwl_mac_remove_interface,
++	.change_interface = iwl_mac_change_interface,
+ 	.config = iwl_legacy_mac_config,
+ 	.configure_filter = iwlagn_configure_filter,
+ 	.set_key = iwlagn_mac_set_key,
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
+index 4afad96..6a82b20 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
+@@ -3904,6 +3904,7 @@ struct ieee80211_ops iwlagn_hw_ops = {
+ 	.stop = iwlagn_mac_stop,
+ 	.add_interface = iwl_mac_add_interface,
+ 	.remove_interface = iwl_mac_remove_interface,
++	.change_interface = iwl_mac_change_interface,
+ 	.config = iwlagn_mac_config,
+ 	.configure_filter = iwlagn_configure_filter,
+ 	.set_key = iwlagn_mac_set_key,
+diff --git a/drivers/net/wireless/iwlwifi/iwl-core.c b/drivers/net/wireless/iwlwifi/iwl-core.c
+index 84a9514..9809c57 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-core.c
++++ b/drivers/net/wireless/iwlwifi/iwl-core.c
+@@ -1423,10 +1423,8 @@ int iwl_mac_tx_last_beacon(struct ieee80211_hw *hw)
+ }
+ EXPORT_SYMBOL_GPL(iwl_mac_tx_last_beacon);
+ 
+-static int iwl_set_mode(struct iwl_priv *priv, struct ieee80211_vif *vif)
++static int iwl_set_mode(struct iwl_priv *priv, struct iwl_rxon_context *ctx)
+ {
+-	struct iwl_rxon_context *ctx = iwl_rxon_ctx_from_vif(vif);
+-
+ 	iwl_connection_init_rx_config(priv, ctx);
+ 
+ 	if (priv->cfg->ops->hcmd->set_rxon_chain)
+@@ -1435,12 +1433,49 @@ static int iwl_set_mode(struct iwl_priv *priv, struct ieee80211_vif *vif)
+ 	return iwlcore_commit_rxon(priv, ctx);
+ }
+ 
++static int iwl_setup_interface(struct iwl_priv *priv,
++			       struct iwl_rxon_context *ctx)
++{
++	struct ieee80211_vif *vif = ctx->vif;
++	int err;
++
++	lockdep_assert_held(&priv->mutex);
++
++	/*
++	 * This variable will be correct only when there's just
++	 * a single context, but all code using it is for hardware
++	 * that supports only one context.
++	 */
++	priv->iw_mode = vif->type;
++
++	ctx->is_active = true;
++
++	err = iwl_set_mode(priv, ctx);
++	if (err) {
++		if (!ctx->always_active)
++			ctx->is_active = false;
++		return err;
++	}
++
++	if (priv->cfg->bt_params && priv->cfg->bt_params->advanced_bt_coexist &&
++	    vif->type == NL80211_IFTYPE_ADHOC) {
++		/*
++		 * pretend to have high BT traffic as long as we
++		 * are operating in IBSS mode, as this will cause
++		 * the rate scaling etc. to behave as intended.
++		 */
++		priv->bt_traffic_load = IWL_BT_COEX_TRAFFIC_LOAD_HIGH;
++	}
++
++	return 0;
++}
++
+ int iwl_mac_add_interface(struct ieee80211_hw *hw, struct ieee80211_vif *vif)
+ {
+ 	struct iwl_priv *priv = hw->priv;
+ 	struct iwl_vif_priv *vif_priv = (void *)vif->drv_priv;
+ 	struct iwl_rxon_context *tmp, *ctx = NULL;
+-	int err = 0;
++	int err;
+ 
+ 	IWL_DEBUG_MAC80211(priv, "enter: type %d, addr %pM\n",
+ 			   vif->type, vif->addr);
+@@ -1482,36 +1517,11 @@ int iwl_mac_add_interface(struct ieee80211_hw *hw, struct ieee80211_vif *vif)
+ 
+ 	vif_priv->ctx = ctx;
+ 	ctx->vif = vif;
+-	/*
+-	 * This variable will be correct only when there's just
+-	 * a single context, but all code using it is for hardware
+-	 * that supports only one context.
+-	 */
+-	priv->iw_mode = vif->type;
+-
+-	ctx->is_active = true;
+-
+-	err = iwl_set_mode(priv, vif);
+-	if (err) {
+-		if (!ctx->always_active)
+-			ctx->is_active = false;
+-		goto out_err;
+-	}
+-
+-	if (priv->cfg->bt_params &&
+-	    priv->cfg->bt_params->advanced_bt_coexist &&
+-	    vif->type == NL80211_IFTYPE_ADHOC) {
+-		/*
+-		 * pretend to have high BT traffic as long as we
+-		 * are operating in IBSS mode, as this will cause
+-		 * the rate scaling etc. to behave as intended.
+-		 */
+-		priv->bt_traffic_load = IWL_BT_COEX_TRAFFIC_LOAD_HIGH;
+-	}
+ 
+-	goto out;
++	err = iwl_setup_interface(priv, ctx);
++	if (!err)
++		goto out;
+ 
+- out_err:
+ 	ctx->vif = NULL;
+ 	priv->iw_mode = NL80211_IFTYPE_STATION;
+  out:
+@@ -1522,27 +1532,24 @@ int iwl_mac_add_interface(struct ieee80211_hw *hw, struct ieee80211_vif *vif)
+ }
+ EXPORT_SYMBOL(iwl_mac_add_interface);
+ 
+-void iwl_mac_remove_interface(struct ieee80211_hw *hw,
+-			      struct ieee80211_vif *vif)
++static void iwl_teardown_interface(struct iwl_priv *priv,
++				   struct ieee80211_vif *vif,
++				   bool mode_change)
+ {
+-	struct iwl_priv *priv = hw->priv;
+ 	struct iwl_rxon_context *ctx = iwl_rxon_ctx_from_vif(vif);
+ 
+-	IWL_DEBUG_MAC80211(priv, "enter\n");
+-
+-	mutex_lock(&priv->mutex);
+-
+-	WARN_ON(ctx->vif != vif);
+-	ctx->vif = NULL;
++	lockdep_assert_held(&priv->mutex);
+ 
+ 	if (priv->scan_vif == vif) {
+ 		iwl_scan_cancel_timeout(priv, 200);
+ 		iwl_force_scan_end(priv);
+ 	}
+-	iwl_set_mode(priv, vif);
+ 
+-	if (!ctx->always_active)
+-		ctx->is_active = false;
++	if (!mode_change) {
++		iwl_set_mode(priv, ctx);
++		if (!ctx->always_active)
++			ctx->is_active = false;
++	}
+ 
+ 	/*
+ 	 * When removing the IBSS interface, overwrite the
+@@ -1553,6 +1560,22 @@ void iwl_mac_remove_interface(struct ieee80211_hw *hw,
+ 	 */
+ 	if (vif->type == NL80211_IFTYPE_ADHOC)
+ 		priv->bt_traffic_load = priv->notif_bt_traffic_load;
++}
++
++void iwl_mac_remove_interface(struct ieee80211_hw *hw,
++			      struct ieee80211_vif *vif)
++{
++	struct iwl_priv *priv = hw->priv;
++	struct iwl_rxon_context *ctx = iwl_rxon_ctx_from_vif(vif);
++
++	IWL_DEBUG_MAC80211(priv, "enter\n");
++
++	mutex_lock(&priv->mutex);
++
++	WARN_ON(ctx->vif != vif);
++	ctx->vif = NULL;
++
++	iwl_teardown_interface(priv, vif, false);
+ 
+ 	memset(priv->bssid, 0, ETH_ALEN);
+ 	mutex_unlock(&priv->mutex);
+@@ -1904,6 +1927,63 @@ int iwl_force_reset(struct iwl_priv *priv, int mode, bool external)
+ 	return 0;
+ }
+ 
++int iwl_mac_change_interface(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
++			     enum nl80211_iftype newtype, bool newp2p)
++{
++	struct iwl_priv *priv = hw->priv;
++	struct iwl_rxon_context *ctx = iwl_rxon_ctx_from_vif(vif);
++	struct iwl_rxon_context *tmp;
++	u32 interface_modes;
++	int err;
++
++	newtype = ieee80211_iftype_p2p(newtype, newp2p);
++
++	mutex_lock(&priv->mutex);
++
++	interface_modes = ctx->interface_modes | ctx->exclusive_interface_modes;
++
++	if (!(interface_modes & BIT(newtype))) {
++		err = -EBUSY;
++		goto out;
++	}
++
++	if (ctx->exclusive_interface_modes & BIT(newtype)) {
++		for_each_context(priv, tmp) {
++			if (ctx == tmp)
++				continue;
++
++			if (!tmp->vif)
++				continue;
++
++			/*
++			 * The current mode switch would be exclusive, but
++			 * another context is active ... refuse the switch.
++			 */
++			err = -EBUSY;
++			goto out;
++		}
++	}
++
++	/* success */
++	iwl_teardown_interface(priv, vif, true);
++	vif->type = newtype;
++	err = iwl_setup_interface(priv, ctx);
++	WARN_ON(err);
++	/*
++	 * We've switched internally, but submitting to the
++	 * device may have failed for some reason. Mask this
++	 * error, because otherwise mac80211 will not switch
++	 * (and set the interface type back) and we'll be
++	 * out of sync with it.
++	 */
++	err = 0;
++
++ out:
++	mutex_unlock(&priv->mutex);
++	return err;
++}
++EXPORT_SYMBOL(iwl_mac_change_interface);
++
+ /**
+  * iwl_bg_monitor_recover - Timer callback to check for stuck queue and recover
+  *
+diff --git a/drivers/net/wireless/iwlwifi/iwl-core.h b/drivers/net/wireless/iwlwifi/iwl-core.h
+index 3a8b481..39ea13c 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-core.h
++++ b/drivers/net/wireless/iwlwifi/iwl-core.h
+@@ -432,6 +432,9 @@ int iwl_mac_add_interface(struct ieee80211_hw *hw,
+ 			  struct ieee80211_vif *vif);
+ void iwl_mac_remove_interface(struct ieee80211_hw *hw,
+ 			      struct ieee80211_vif *vif);
++int iwl_mac_change_interface(struct ieee80211_hw *hw,
++			     struct ieee80211_vif *vif,
++			     enum nl80211_iftype newtype, bool newp2p);
+ int iwl_alloc_txq_mem(struct iwl_priv *priv);
+ void iwl_free_txq_mem(struct iwl_priv *priv);
+ void iwlcore_tx_cmd_protection(struct iwl_priv *priv,
+diff --git a/drivers/net/wireless/iwlwifi/iwl3945-base.c b/drivers/net/wireless/iwlwifi/iwl3945-base.c
+index 8a37b25..193247a 100644
+--- a/drivers/net/wireless/iwlwifi/iwl3945-base.c
++++ b/drivers/net/wireless/iwlwifi/iwl3945-base.c
+@@ -3832,6 +3832,7 @@ struct ieee80211_ops iwl3945_hw_ops = {
+ 	.stop = iwl3945_mac_stop,
+ 	.add_interface = iwl_mac_add_interface,
+ 	.remove_interface = iwl_mac_remove_interface,
++	.change_interface = iwl_mac_change_interface,
+ 	.config = iwl_legacy_mac_config,
+ 	.configure_filter = iwl3945_configure_filter,
+ 	.set_key = iwl3945_mac_set_key,
+-- 
+1.7.0.4
 
