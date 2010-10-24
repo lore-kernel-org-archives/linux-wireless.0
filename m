@@ -1,65 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f46.google.com ([209.85.161.46]:48776 "EHLO
-	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754002Ab0JBL5X (ORCPT
+Received: from webhosting01.bon.m2soft.com ([195.38.20.32]:45122 "EHLO
+	webhosting01.bon.m2soft.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S933047Ab0JXWKQ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 2 Oct 2010 07:57:23 -0400
-From: Ohad Ben-Cohen <ohad@wizery.com>
-To: <linux-mmc@vger.kernel.org>, <linux-wireless@vger.kernel.org>
-Cc: Chris Ball <cjb@laptop.org>, Nicolas Pitre <nico@fluxnic.net>,
-	Luciano Coelho <luciano.coelho@nokia.com>,
-	Ohad Ben-Cohen <ohad@wizery.com>
-Subject: [PATCH v2 03/11] sdio: add power_restore support
-Date: Sat,  2 Oct 2010 13:54:07 +0200
-Message-Id: <1286020455-28946-4-git-send-email-ohad@wizery.com>
-In-Reply-To: <1286020455-28946-1-git-send-email-ohad@wizery.com>
-References: <1286020455-28946-1-git-send-email-ohad@wizery.com>
+	Sun, 24 Oct 2010 18:10:16 -0400
+Date: Mon, 25 Oct 2010 00:07:44 +0200
+From: Nicolas Kaiser <nikai@nikai.net>
+To: Luciano Coelho <luciano.coelho@nokia.com>
+Cc: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: [PATCH] wireless/wl1271: remove redundant if-statement
+Message-ID: <20101025000744.17f7086e@absol.kitzblitz>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Add a power_restore handler to the SDIO bus ops,
-in order to support waking up SDIO cards that
-were powered off by runtime pm.
+Apparently the return value of wl1271_ps_elp_sleep never gets
+checked anyway.
 
-Signed-off-by: Ohad Ben-Cohen <ohad@wizery.com>
+Signed-off-by: Nicolas Kaiser <nikai@nikai.net>
 ---
- drivers/mmc/core/sdio.c |   18 ++++++++++++++++++
- 1 files changed, 18 insertions(+), 0 deletions(-)
+ drivers/net/wireless/wl12xx/wl1271_event.c |    2 --
+ 1 files changed, 0 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/mmc/core/sdio.c b/drivers/mmc/core/sdio.c
-index 3be1571..f17e0e0 100644
---- a/drivers/mmc/core/sdio.c
-+++ b/drivers/mmc/core/sdio.c
-@@ -638,11 +638,29 @@ static int mmc_sdio_resume(struct mmc_host *host)
- 	return err;
- }
+diff --git a/drivers/net/wireless/wl12xx/wl1271_event.c b/drivers/net/wireless/wl12xx/wl1271_event.c
+index 7b3f503..38ccef7 100644
+--- a/drivers/net/wireless/wl12xx/wl1271_event.c
++++ b/drivers/net/wireless/wl12xx/wl1271_event.c
+@@ -134,8 +134,6 @@ static int wl1271_event_ps_report(struct wl1271 *wl,
  
-+static int mmc_sdio_power_restore(struct mmc_host *host)
-+{
-+	int ret;
-+
-+	BUG_ON(!host);
-+	BUG_ON(!host->card);
-+
-+	mmc_claim_host(host);
-+	ret = mmc_sdio_init_card(host, host->ocr, host->card,
-+			(host->pm_flags & MMC_PM_KEEP_POWER));
-+	if (!ret && host->sdio_irqs)
-+		mmc_signal_sdio_irq(host);
-+	mmc_release_host(host);
-+
-+	return ret;
-+}
-+
- static const struct mmc_bus_ops mmc_sdio_ops = {
- 	.remove = mmc_sdio_remove,
- 	.detect = mmc_sdio_detect,
- 	.suspend = mmc_sdio_suspend,
- 	.resume = mmc_sdio_resume,
-+	.power_restore = mmc_sdio_power_restore,
- };
- 
- 
+ 		/* go to extremely low power mode */
+ 		wl1271_ps_elp_sleep(wl);
+-		if (ret < 0)
+-			break;
+ 		break;
+ 	case EVENT_EXIT_POWER_SAVE_FAIL:
+ 		wl1271_debug(DEBUG_PSM, "PSM exit failed");
 -- 
-1.7.0.4
-
+1.7.2.2
