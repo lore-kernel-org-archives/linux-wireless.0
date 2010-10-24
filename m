@@ -1,64 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from web56802.mail.re3.yahoo.com ([66.196.97.76]:35186 "HELO
-	web56802.mail.re3.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1754300Ab0JPNUE (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 16 Oct 2010 09:20:04 -0400
-Message-ID: <756358.10174.qm@web56802.mail.re3.yahoo.com>
-Date: Sat, 16 Oct 2010 06:20:02 -0700 (PDT)
-From: Walter Goldens <goldenstranger@yahoo.com>
-Subject: [PATCH] compat-wireless: unload modules list updated
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Cc: linux-wireless@vger.kernel.org
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: from igloo.linux.gr ([62.1.205.36]:58654 "EHLO igloo.linux.gr"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932438Ab0JXUqT (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 24 Oct 2010 16:46:19 -0400
+From: Serafeim Zanikolas <sez@debian.org>
+To: herton@mandriva.com.br, htl10@users.sourceforge.net,
+	Larry.Finger@lwfinger.net, linville@tuxdriver.com, joe@perches.com,
+	davem@davemloft.net, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc: Serafeim Zanikolas <sez@debian.org>
+Subject: [PATCH] drivers: rtl818x: request DMA-able memory
+Date: Sun, 24 Oct 2010 22:32:07 +0200
+Message-Id: <1287952327-9924-1-git-send-email-sez@debian.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Added: wl1251, wl1271, iwmc3200wifi, b44 and
-the whole orinoco family to wl/unload.sh scripts.
+Despite the indicated intention in comment, the kmalloc() call was not
+explicitly requesting memory from ZONE_DMA.
 
-
-Signed-off-by: Walter Goldens <goldenstranger@yahoo.com>
+Signed-off-by: Serafeim Zanikolas <sez@debian.org>
 ---
+ drivers/net/wireless/rtl818x/rtl8187_dev.c |    3 ++-
+ 1 files changed, 2 insertions(+), 1 deletions(-)
 
---- a/scripts/wlunload.sh
-+++ b/scripts/wlunload.sh
-@@ -8,10 +8,13 @@ OLD_MODULES="$OLD_MODULES ieee80211softm
- OLD_MODULES="$OLD_MODULES bcm43xx rndis_wext iwl4965"
- MODULES="$OLD_MODULES"
- MODULES="$MODULES ipw2100 ipw2200 libipw"
-+MODULES="$MODULES wl1251 wl1271 iwmc3200wifi"
- MODULES="$MODULES libertas_cs usb8xxx libertas libertas_sdio libertas_spi"
- MODULES="$MODULES libertas_tf libertas_tf_usb"
--MODULES="$MODULES adm8211 zd1211rw orinoco"
--MODULES="$MODULES b43 b43legacy brcm80211 ssb"
-+MODULES="$MODULES adm8211 zd1211rw"
-+MODULES="$MODULES orinoco_cs orinoco_nortel orinoco_pci orinoco_plx"
-+MODULES="$MODULES orinoco_tld orinoco_usb spectrum_cs orinoco"
-+MODULES="$MODULES b43 b44 b43legacy brcm80211 ssb"
- MODULES="$MODULES iwl3945 iwlagn iwlcore"
- MODULES="$MODULES ath9k ath9k_htc ath9k_common ath9k_hw "
- MODULES="$MODULES ath5k ath ath6kl ar9170usb carl9170"
---- a/scripts/unload.sh
-+++ b/scripts/unload.sh
-@@ -8,10 +8,13 @@ OLD_MODULES="$OLD_MODULES ieee80211softm
- OLD_MODULES="$OLD_MODULES bcm43xx rndis_wext iwl4965"
- MODULES="$OLD_MODULES"
- MODULES="$MODULES ipw2100 ipw2200 libipw"
-+MODULES="$MODULES wl1251 wl1271 iwmc3200wifi"
- MODULES="$MODULES libertas_cs usb8xxx libertas libertas_sdio libertas_spi"
- MODULES="$MODULES libertas_tf libertas_tf_usb"
--MODULES="$MODULES adm8211 zd1211rw orinoco"
--MODULES="$MODULES b43 b43legacy brcm80211 ssb"
-+MODULES="$MODULES adm8211 zd1211rw"
-+MODULES="$MODULES orinoco_cs orinoco_nortel orinoco_pci orinoco_plx"
-+MODULES="$MODULES orinoco_tld orinoco_usb spectrum_cs orinoco"
-+MODULES="$MODULES b43 b44 b43legacy brcm80211 ssb"
- MODULES="$MODULES iwl3945 iwlagn iwlcore"
- MODULES="$MODULES ath9k ath9k_htc ath9k_common ath9k_hw "
- MODULES="$MODULES ath5k ath ath6kl ar9170usb carl9170"
+diff --git a/drivers/net/wireless/rtl818x/rtl8187_dev.c b/drivers/net/wireless/rtl818x/rtl8187_dev.c
+index 38fa824..771794d 100644
+--- a/drivers/net/wireless/rtl818x/rtl8187_dev.c
++++ b/drivers/net/wireless/rtl818x/rtl8187_dev.c
+@@ -1343,7 +1343,8 @@ static int __devinit rtl8187_probe(struct usb_interface *intf,
+ 	priv->is_rtl8187b = (id->driver_info == DEVICE_RTL8187B);
+ 
+ 	/* allocate "DMA aware" buffer for register accesses */
+-	priv->io_dmabuf = kmalloc(sizeof(*priv->io_dmabuf), GFP_KERNEL);
++	priv->io_dmabuf = kmalloc(sizeof(*priv->io_dmabuf),
++				  GFP_DMA | GFP_KERNEL);
+ 	if (!priv->io_dmabuf) {
+ 		err = -ENOMEM;
+ 		goto err_free_dev;
+-- 
+1.7.1
 
-
-
-      
