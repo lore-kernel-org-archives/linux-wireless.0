@@ -1,55 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms1.broadcom.com ([216.31.210.17]:4103 "EHLO mms1.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750808Ab0JLVY3 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 12 Oct 2010 17:24:29 -0400
-Date: Tue, 12 Oct 2010 14:17:26 -0700
-From: "Henry Ptasinski" <henryp@broadcom.com>
-To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-cc: "Suraj Sumangala" <Suraj.Sumangala@Atheros.com>,
-	"Luis Rodriguez" <Luis.Rodriguez@Atheros.com>,
-	"David Woodhouse" <dwmw2@infradead.org>,
-	"Marcel Holtmann" <marcel@holtmann.org>,
-	linux-bluetooth <linux-bluetooth@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	"Henry Ptasinski" <henryp@broadcom.com>
-Subject: Re: Firmware versioning best practices: ath3k-2.fw rename or
- replace ath3k-1.fw ?
-Message-ID: <20101012211726.GE2678@broadcom.com>
-References: <20101008170258.GJ10149@tux> <4CAF5488.3030706@Atheros.com>
- <20101008181508.GM10149@tux>
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:48305 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755891Ab0JYOaN (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 25 Oct 2010 10:30:13 -0400
+Date: Mon, 25 Oct 2010 10:22:32 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Hin-Tak Leung <htl10@users.sourceforge.net>
+Cc: Larry Finger <Larry.Finger@lwfinger.net>,
+	Serafeim Zanikolas <sez@debian.org>, herton@mandriva.com.br,
+	joe@perches.com, davem@davemloft.net,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] drivers: rtl818x: request DMA-able memory
+Message-ID: <20101025142232.GC2414@tuxdriver.com>
+References: <1287952327-9924-1-git-send-email-sez@debian.org>
+ <4CC5851D.1040204@lwfinger.net>
+ <4CC5900A.2050209@users.sourceforge.net>
 MIME-Version: 1.0
-In-Reply-To: <20101008181508.GM10149@tux>
-Content-Type: text/plain;
- charset=us-ascii
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <4CC5900A.2050209@users.sourceforge.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Oct 08, 2010 at 11:15:08AM -0700, Luis R. Rodriguez wrote:
-> On Fri, Oct 08, 2010 at 10:27:36AM -0700, Suraj Sumangala wrote:
-> > Marcel had answered me before. It makes sense to have same file name.
-> > Other ways we end up changing the driver whenever there is a firmware 
-> > change.
+On Mon, Oct 25, 2010 at 03:11:22PM +0100, Hin-Tak Leung wrote:
 > 
-> > > I last tried to document a thread we had over this here:
-> > >
-> > > http://wireless.kernel.org/en/developers/Documentation/firmware-versioning
-> > >
 > 
-> Thanks, I've updated that link above to document bug fixing does not require
-> a filename change.
+> Larry Finger wrote:
+> >On 10/24/2010 03:32 PM, Serafeim Zanikolas wrote:
+> >>Despite the indicated intention in comment, the kmalloc() call was not
+> >>explicitly requesting memory from ZONE_DMA.
+> >>
+> >>Signed-off-by: Serafeim Zanikolas <sez@debian.org>
+> >>---
+> >> drivers/net/wireless/rtl818x/rtl8187_dev.c |    3 ++-
+> >> 1 files changed, 2 insertions(+), 1 deletions(-)
+> >>
+> >>diff --git a/drivers/net/wireless/rtl818x/rtl8187_dev.c b/drivers/net/wireless/rtl818x/rtl8187_dev.c
+> >>index 38fa824..771794d 100644
+> >>--- a/drivers/net/wireless/rtl818x/rtl8187_dev.c
+> >>+++ b/drivers/net/wireless/rtl818x/rtl8187_dev.c
+> >>@@ -1343,7 +1343,8 @@ static int __devinit rtl8187_probe(struct usb_interface *intf,
+> >> 	priv->is_rtl8187b = (id->driver_info == DEVICE_RTL8187B);
+> >> 	/* allocate "DMA aware" buffer for register accesses */
+> >>-	priv->io_dmabuf = kmalloc(sizeof(*priv->io_dmabuf), GFP_KERNEL);
+> >>+	priv->io_dmabuf = kmalloc(sizeof(*priv->io_dmabuf),
+> >>+				  GFP_DMA | GFP_KERNEL);
+> >> 	if (!priv->io_dmabuf) {
+> >> 		err = -ENOMEM;
+> >> 		goto err_free_dev;
+> >
+> >ACK.
+> >
+> >Larry
+> 
+> Acked-by: Hin-Tak Leung <htl10@users.sourceforge.net>
+> 
+> I had a quick look for similiar constructs and AFAIK only the
+> b43/b43legacy drivers uses DMA buffers. Seems to be a rare practice.
+> Is that something we should or should not do?
 
-I don't really understand why you would not want to change the code revision
-part of the filename.  
+It doesn't mean what you think it means.  It is a relic of the past,
+used to indicate memory below 16MB so that ISA devices could do DMA.
 
-I totally agree that you don't want to change the driver every time the
-firmware gets a bug fix, but wasn't that the whole point of splitting the name
-into API and code revisions portions, and symlinking the file to one that just
-has the API version?
-
-What's the issue with using the process as originally documented?
-
-- Henry
-
-
+John
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
