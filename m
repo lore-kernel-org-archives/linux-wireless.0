@@ -1,93 +1,119 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f46.google.com ([209.85.215.46]:52830 "EHLO
-	mail-ew0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755599Ab0JNRix convert rfc822-to-8bit (ORCPT
+Received: from mail-bw0-f46.google.com ([209.85.214.46]:52089 "EHLO
+	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751542Ab0JYSLf (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 14 Oct 2010 13:38:53 -0400
-Received: by ewy20 with SMTP id 20so3699892ewy.19
-        for <linux-wireless@vger.kernel.org>; Thu, 14 Oct 2010 10:38:52 -0700 (PDT)
+	Mon, 25 Oct 2010 14:11:35 -0400
+Message-ID: <4CC5C863.9070801@lwfinger.net>
+Date: Mon, 25 Oct 2010 13:11:47 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-In-Reply-To: <20101014171739.GA28522@suse.de>
-References: <AANLkTinQMRGkOvi4e4JMsHGV_BF_4Rf5oHCtZgQjwQ1g@mail.gmail.com>
-	<20101014165111.GA22130@suse.de>
-	<AANLkTin9PxzROyCQxiT5-ca4CUQK+kppS7gAibbbZ2=v@mail.gmail.com>
-	<20101014171739.GA28522@suse.de>
-Date: Thu, 14 Oct 2010 19:38:49 +0200
-Message-ID: <AANLkTimz7xKtz15tVyytxgJ3mQJUNk-=ja-4cJBWJUV8@mail.gmail.com>
-Subject: Re: Licensing wlc_phy_radio.h and brcm80211 (was: [PATCH 3/3] b43:
- N-PHY: add 2055 radio regs)
-From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-To: Greg KH <gregkh@suse.de>
-Cc: =?UTF-8?Q?G=C3=A1bor_Stefanik?= <netrolller.3d@gmail.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	b43-dev <b43-dev@lists.infradead.org>,
-	linux-wireless@vger.kernel.org,
-	Henry Ptasinski <henryp@broadcom.com>,
-	Brett Rudley <brudley@broadcom.com>,
-	Nohee Ko <noheek@broadcom.com>
+To: Eric Dumazet <eric.dumazet@gmail.com>
+CC: Arnd Hannemann <arnd@arndnet.de>,
+	"David S. Miller" <davem@davemloft.net>, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] net: b43legacy: fix compile error
+References: <1288017690-31248-1-git-send-email-arnd@arndnet.de>	 <4CC5A301.1080606@lwfinger.net> <1288021905.2826.142.camel@edumazet-laptop>
+In-Reply-To: <1288021905.2826.142.camel@edumazet-laptop>
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2010/10/14 Greg KH <gregkh@suse.de>:
-> On Thu, Oct 14, 2010 at 07:06:00PM +0200, Rafał Miłecki wrote:
->> 2010/10/14 Greg KH <gregkh@suse.de>:
->> > On Thu, Oct 14, 2010 at 06:40:14PM +0200, Rafał Miłecki wrote:
->> >> W dniu 11 października 2010 18:24 użytkownik Gábor Stefanik
->> >> <netrolller.3d@gmail.com> napisał:
->> >> > Doesn't brcm80211 contain register names for B2055?
->> >>
->> >> I've checked brcm80211 and noticed defines in
->> >> drivers/staging/brcm80211/phy/wlc_phy_radio.h.
->> >>
->> >> Whole brcm80211 driver is licensed as:
->> >> MODULE_LICENSE("Dual BSD/GPL");
->> >>
->> >> Mentioned file contains following comments:
->> >> +/*
->> >> + * Copyright (c) 2010 Broadcom Corporation
->> >> + *
->> >> + * Permission to use, copy, modify, and/or distribute this software for any
->> >> + * purpose with or without fee is hereby granted, provided that the above
->> >> + * copyright notice and this permission notice appear in all copies.
->> >>
->> >> Our b43 driver is licensed as:
->> >> MODULE_LICENSE("GPL");
->> >> and I am not sure if permission above is actually GPL-compatible. The
->> >> best option would be to add defines from wlc_phy_radio.h and include
->> >> Broadcom's copyright. However comment above wants us to include info
->> >> about free copying/modifying/using which is not GPL-compatible.
->> >>
->> >> Is there any way to solve this issue?
->> >
->> > I don't understand, are you just wanting to use the names in the .h file
->> > for the registers?
+On 10/25/2010 10:51 AM, Eric Dumazet wrote:
+> Le lundi 25 octobre 2010 à 10:32 -0500, Larry Finger a écrit :
+>> On 10/25/2010 09:41 AM, Arnd Hannemann wrote:
+>>> On todays linus tree the following compile error happened to me:
+>>>
+>>>   CC [M]  drivers/net/wireless/b43legacy/xmit.o
+>>> In file included from include/net/dst.h:11,
+>>>                  from drivers/net/wireless/b43legacy/xmit.c:31:
+>>> include/net/dst_ops.h:28: error: expected ':', ',', ';', '}' or '__attribute__' before '____cacheline_aligned_in_smp'
+>>> include/net/dst_ops.h: In function 'dst_entries_get_fast':
+>>> include/net/dst_ops.h:33: error: 'struct dst_ops' has no member named 'pcpuc_entries'
+>>> include/net/dst_ops.h: In function 'dst_entries_get_slow':
+>>> include/net/dst_ops.h:41: error: 'struct dst_ops' has no member named 'pcpuc_entries'
+>>> include/net/dst_ops.h: In function 'dst_entries_add':
+>>> include/net/dst_ops.h:49: error: 'struct dst_ops' has no member named 'pcpuc_entries'
+>>> include/net/dst_ops.h: In function 'dst_entries_init':
+>>> include/net/dst_ops.h:55: error: 'struct dst_ops' has no member named 'pcpuc_entries'
+>>> include/net/dst_ops.h: In function 'dst_entries_destroy':
+>>> include/net/dst_ops.h:60: error: 'struct dst_ops' has no member named 'pcpuc_entries'
+>>> make[4]: *** [drivers/net/wireless/b43legacy/xmit.o] Error 1
+>>> make[3]: *** [drivers/net/wireless/b43legacy] Error 2
+>>> make[2]: *** [drivers/net/wireless] Error 2
+>>> make[1]: *** [drivers/net] Error 2
+>>> make: *** [drivers] Error 2
+>>>
+>>> This patch fixes this issue by adding "linux/cache.h" as an include to
+>>> "include/net/dst_ops.h".
 >>
->> Yes. I want to put lines like:
->> #define RADIO_2056_RX0                                (0x6 << 12)
->> in my radio_2056.h
->
-> I don't think that bitfields are copyrightable :)
+>> Strange. Compiling b43legacy from the linux-2.6.git tree (git describe is
+>> v2.6.36-4464-g229aebb) works fine on x86_64. I wonder what is different.
+> 
+> Well, x86_64 must include cache.h, this is probably why I missed it in
+> my build tests.
+> 
+> I wonder also why #include <net/dst.h> is needed at all in this
+> driver...
+> 
+> diff --git a/drivers/net/wireless/b43legacy/xmit.c
+> b/drivers/net/wireless/b43legacy/xmit.c
+> index 7d177d9..a261aec 100644
+> --- a/drivers/net/wireless/b43legacy/xmit.c
+> +++ b/drivers/net/wireless/b43legacy/xmit.c
+> @@ -28,8 +28,6 @@
+>  
+>  */
+>  
+> -#include <net/dst.h>
+> -
+>  #include "xmit.h"
+>  #include "phy.h"
+>  #include "dma.h"
 
-What about rest of the code? brcm80211 seems to support even newer
-devices we don't even try to support in b43 yet.
+I have no idea why that header was included - likely historical in the
+transformation from bcm43xx to b43legacy. For completeness, there are 2 more
+places to change:
 
-Can I treat code as pure-GPL and do not care about that
-maybe-not-GPL-compatible statement in header?
+Index: linux-2.6/drivers/net/wireless/b43legacy/dma.c
+===================================================================
+--- linux-2.6.orig/drivers/net/wireless/b43legacy/dma.c
++++ linux-2.6/drivers/net/wireless/b43legacy/dma.c
+@@ -38,7 +38,6 @@
+ #include <linux/delay.h>
+ #include <linux/skbuff.h>
+ #include <linux/slab.h>
+-#include <net/dst.h>
 
+ /* 32bit DMA ops. */
+ static
+Index: linux-2.6/drivers/net/wireless/b43legacy/main.c
+===================================================================
+--- linux-2.6.orig/drivers/net/wireless/b43legacy/main.c
++++ linux-2.6/drivers/net/wireless/b43legacy/main.c
+@@ -41,7 +41,6 @@
+ #include <linux/skbuff.h>
+ #include <linux/dma-mapping.h>
+ #include <linux/slab.h>
+-#include <net/dst.h>
+ #include <asm/unaligned.h>
 
->> > If so, why?  You don't want to support the same devices in the b43
->> > driver that the brcm80211 driver does, do you?
->>
->> I do. I see many advantages of that plus most of the code is already
->> here coming from RE.
->
-> "RE"?
+ #include "b43legacy.h"
+Index: linux-2.6/drivers/net/wireless/b43legacy/xmit.c
+===================================================================
+--- linux-2.6.orig/drivers/net/wireless/b43legacy/xmit.c
++++ linux-2.6/drivers/net/wireless/b43legacy/xmit.c
+@@ -28,8 +28,6 @@
 
-Reverse-engineering. (Almost?) whole b43 was written using
-clean-room-reverse-engineering. Code is based on specs from
-http://bcm-v4.sipsolutions.net/ .
+ */
 
+-#include <net/dst.h>
+-
+ #include "xmit.h"
+ #include "phy.h"
+ #include "dma.h"
 
--- 
-Rafał
+Will you push the complete patch to Linus or DaveM?
+
+Larry
+
