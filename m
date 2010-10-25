@@ -1,201 +1,32 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from web56802.mail.re3.yahoo.com ([66.196.97.76]:28127 "HELO
-	web56802.mail.re3.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1750811Ab0JTPLM convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 20 Oct 2010 11:11:12 -0400
-Message-ID: <990909.12705.qm@web56802.mail.re3.yahoo.com>
-Date: Wed, 20 Oct 2010 08:11:10 -0700 (PDT)
-From: Walter Goldens <goldenstranger@yahoo.com>
-Subject: [PATCH 1/4] compat-wireless: update bluetooth in Makefile
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Cc: linux-wireless@vger.kernel.org
-MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
+Received: from mga11.intel.com ([192.55.52.93]:29816 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754127Ab0JYOsa (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 25 Oct 2010 10:48:30 -0400
+Subject: Re: [PATCH 5/7] iwlwifi: avoid commit rxon during scan in
+ iwlagn_bt_traffic_change_work
+From: "Guy, Wey-Yi" <wey-yi.w.guy@intel.com>
+To: Stanislaw Gruszka <sgruszka@redhat.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <1287759870-5758-5-git-send-email-sgruszka@redhat.com>
+References: <1287759870-5758-1-git-send-email-sgruszka@redhat.com>
+	 <1287759870-5758-5-git-send-email-sgruszka@redhat.com>
+Content-Type: text/plain
+Date: Mon, 25 Oct 2010 07:47:40 -0700
+Message-Id: <1288018060.3435.11.camel@wwguy-ubuntu>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-- update bluetooth in Makefile
-
-Signed-off-by: Walter Goldens <goldenstranger@yahoo.com>
----
-
---- a/Makefile
-+++ b/Makefile
-@@ -93,19 +93,32 @@ bt-install-modules: bt
-     @echo
-     @echo "Currently detected bluetooth subsystem modules:"
-     @echo
--    @$(MODPROBE) -l sco
--    @$(MODPROBE) -l l2cap
--    @$(MODPROBE) -l hidp
--    @$(MODPROBE) -l rfcomm
-+    @$(MODPROBE) -l ath3k       
-+    @$(MODPROBE) -l bcm203x
-+    @$(MODPROBE) -l bluecard_cs
-+    @$(MODPROBE) -l bluetooth
-     @$(MODPROBE) -l bnep
-+    @$(MODPROBE) -l bpa10x
-+    @$(MODPROBE) -l bt3c_cs
-+    @$(MODPROBE) -l btmrvl
-+    @$(MODPROBE) -l btmrvl_sdio
-+    @$(MODPROBE) -l btsdio
-     @$(MODPROBE) -l btusb
--    @$(MODPROBE) -l bluetooth
-+    @$(MODPROBE) -l btuart_cs
-+    @$(MODPROBE) -l    cmtp
-+    @$(MODPROBE) -l    dtl1_cs
-+    @$(MODPROBE) -l hidp
-+    @$(MODPROBE) -l    hci_vhci
-+    @$(MODPROBE) -l    hci_uart
-+    @$(MODPROBE) -l l2cap
-+    @$(MODPROBE) -l rfcomm
-+    @$(MODPROBE) -l sco
-     @echo
-     @echo Now run:
-     @echo
-     @echo sudo make btunload:
-     @echo
--    @echo And the load the needed bluetooth modules. If unsure reboot.
-+    @echo And then load the needed bluetooth modules. If unsure reboot.
-     @echo
- 
- btuninstall:
-@@ -118,14 +131,26 @@ btuninstall:
-     @echo
-     @echo "Your old bluetooth subsystem modules were left intact:"
-     @echo
--    @$(MODPROBE) -l sco
--    @$(MODPROBE) -l l2cap
--    @$(MODPROBE) -l hidp
--    @$(MODPROBE) -l rfcomm
-+    @$(MODPROBE) -l ath3k       
-+    @$(MODPROBE) -l bcm203x
-+    @$(MODPROBE) -l bluecard_cs
-+    @$(MODPROBE) -l bluetooth
-     @$(MODPROBE) -l bnep
-+    @$(MODPROBE) -l bpa10x
-+    @$(MODPROBE) -l bt3c_cs
-+    @$(MODPROBE) -l btmrvl
-+    @$(MODPROBE) -l btmrvl_sdio
-+    @$(MODPROBE) -l btsdio
-     @$(MODPROBE) -l btusb
--    @$(MODPROBE) -l bluetooth
--    @
-+    @$(MODPROBE) -l btuart_cs
-+    @$(MODPROBE) -l    cmtp
-+    @$(MODPROBE) -l    dtl1_cs
-+    @$(MODPROBE) -l hidp
-+    @$(MODPROBE) -l    hci_vhci
-+    @$(MODPROBE) -l    hci_uart
-+    @$(MODPROBE) -l l2cap
-+    @$(MODPROBE) -l rfcomm
-+    @$(MODPROBE) -l sco
-     @echo
- 
- btclean:
-@@ -263,22 +288,35 @@ install-scripts:
-     @echo
-     @echo "Currently detected bluetooth subsystem modules:"
-     @echo
--    @$(MODPROBE) -l sco
--    @$(MODPROBE) -l l2cap
--    @$(MODPROBE) -l hidp
--    @$(MODPROBE) -l rfcomm
-+    @$(MODPROBE) -l ath3k           
-+    @$(MODPROBE) -l bcm203x
-+    @$(MODPROBE) -l bluecard_cs
-+    @$(MODPROBE) -l bluetooth
-     @$(MODPROBE) -l bnep
-+    @$(MODPROBE) -l bpa10x
-+    @$(MODPROBE) -l bt3c_cs
-+    @$(MODPROBE) -l btmrvl
-+    @$(MODPROBE) -l btmrvl_sdio
-+    @$(MODPROBE) -l btsdio
-     @$(MODPROBE) -l btusb
--    @$(MODPROBE) -l bluetooth
-+    @$(MODPROBE) -l btuart_cs
-+    @$(MODPROBE) -l    cmtp
-+    @$(MODPROBE) -l    dtl1_cs
-+    @$(MODPROBE) -l hidp
-+    @$(MODPROBE) -l    hci_vhci
-+    @$(MODPROBE) -l    hci_uart
-+    @$(MODPROBE) -l l2cap
-+    @$(MODPROBE) -l rfcomm
-+    @$(MODPROBE) -l sco
-     @echo 
-     @echo Now run:
-     @echo 
--    @echo sudo make unload to unload both wireless and bluetooth modules
-+    @echo sudo make unload to unload all: wireless, bluetooth and ethernet modules
-     @echo sudo make wlunload to unload wireless modules
-     @echo sudo make btunload to unload bluetooth modules
-     @echo
--    @echo And then load the wireless or bluetooth module you need. If unsure reboot.
--    @echo Alternatively use "sudo make load/wlload/btload" to load modules
-+    @echo Run sudo modprobe 'driver-name' to load your desired driver. 
-+    @echo If unsure reboot.
-     @echo
- 
- uninstall:
-@@ -379,13 +417,26 @@ uninstall:
-     @echo
-     @echo "Your old bluetooth subsystem modules were left intact:"
-     @echo
--    @$(MODPROBE) -l sco
--    @$(MODPROBE) -l l2cap
--    @$(MODPROBE) -l hidp
--    @$(MODPROBE) -l rfcomm
-+    @$(MODPROBE) -l ath3k           
-+    @$(MODPROBE) -l bcm203x
-+    @$(MODPROBE) -l bluecard_cs
-+    @$(MODPROBE) -l bluetooth
-     @$(MODPROBE) -l bnep
-+    @$(MODPROBE) -l bpa10x
-+    @$(MODPROBE) -l bt3c_cs
-+    @$(MODPROBE) -l btmrvl
-+    @$(MODPROBE) -l btmrvl_sdio
-+    @$(MODPROBE) -l btsdio
-     @$(MODPROBE) -l btusb
--    @$(MODPROBE) -l bluetooth
-+    @$(MODPROBE) -l btuart_cs
-+    @$(MODPROBE) -l    cmtp
-+    @$(MODPROBE) -l    dtl1_cs
-+    @$(MODPROBE) -l hidp
-+    @$(MODPROBE) -l    hci_vhci
-+    @$(MODPROBE) -l    hci_uart
-+    @$(MODPROBE) -l l2cap
-+    @$(MODPROBE) -l rfcomm
-+    @$(MODPROBE) -l sco
-     @
-     @echo 
- 
-@@ -397,22 +448,14 @@ clean:
- unload:
-     @./scripts/unload.sh
- 
--load: unload
--    @./scripts/load.sh
--
- btunload:
-     @./scripts/btunload.sh
- 
--btload: btunload
--    @./scripts/btload.sh
--
- wlunload:
-     @./scripts/wlunload.sh
- 
--wlload: wlunload
--    @./scripts/wlload.sh
- 
--.PHONY: all clean install uninstall unload load btunload btload wlunload wlload modules bt
-+.PHONY: all clean install uninstall unload btunload wlunload modules bt
- 
- endif
+On Fri, 2010-10-22 at 08:04 -0700, Stanislaw Gruszka wrote:
+> Avoid sending commands to firmware (including commit_rxon) when scan
+> is pending and we are calling iwlagn_bt_traffic_change_work simultaneously.
+> 
+> Also comment some innocent race conditions.
+> 
+> Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+Acked-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+> ---
 
 
-
-
-
-      
