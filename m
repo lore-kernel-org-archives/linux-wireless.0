@@ -1,126 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.19.149.2]:32114 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752240Ab0JUGDj (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 21 Oct 2010 02:03:39 -0400
-Received: from mail.atheros.com ([10.10.20.105])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Wed, 20 Oct 2010 23:03:28 -0700
-Date: Thu, 21 Oct 2010 11:33:35 +0530
-From: Senthil Balasubramanian <senthilkumar@atheros.com>
-To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-CC: "linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"Luis Rodriguez" <Luis.Rodriguez@Atheros.com>,
-	"stable@kernel.org" <stable@kernel.org>,
-	Ben Greear <greearb@candelatech.com>,
-	Kyungwan Nam <Kyungwan.Nam@Atheros.com>
-Subject: Re: [PATCH 3/6] ath9k: rename rxflushlock to pcu_lock
-Message-ID: <20101021060335.GB6948@senthil-lnx.users.atheros.com>
-References: <1287616028-12547-1-git-send-email-lrodriguez@atheros.com>
- <1287616028-12547-4-git-send-email-lrodriguez@atheros.com>
+Received: from mail-iw0-f174.google.com ([209.85.214.174]:62997 "EHLO
+	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753472Ab0JYMjQ (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 25 Oct 2010 08:39:16 -0400
+Received: by iwn10 with SMTP id 10so773185iwn.19
+        for <linux-wireless@vger.kernel.org>; Mon, 25 Oct 2010 05:39:16 -0700 (PDT)
+Message-ID: <4CC57A82.7030300@lwfinger.net>
+Date: Mon, 25 Oct 2010 07:39:30 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <1287616028-12547-4-git-send-email-lrodriguez@atheros.com>
+To: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+CC: linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>,
+	b43-dev@lists.infradead.org
+Subject: Re: [PATCH] b43: rfkill: use status register based on core revision
+ not (PHY's)
+References: <1287779045-20257-1-git-send-email-zajec5@gmail.com>
+In-Reply-To: <1287779045-20257-1-git-send-email-zajec5@gmail.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Oct 21, 2010 at 04:37:05AM +0530, Luis R. Rodriguez wrote:
-> The real way to lock RX is to contend on the PCU
-> and reset, this will be fixed in the next patch but for
-> now just do the renames so that the next patch which changes
-> the locking order is crystal clear.
-> 
-> This is part of a series that will help resolve the bug:
-> 
-> https://bugzilla.kernel.org/show_bug.cgi?id=14624
-> 
-> For more details about this issue refer to:
-> 
-> http://marc.info/?l=linux-wireless&m=128629803703756&w=2
-> 
-> Cc: stable@kernel.org
-> Cc: Ben Greear <greearb@candelatech.com>
-> Cc: Kyungwan Nam <kyungwan.nam@atheros.com>
-> Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+On 10/22/2010 03:24 PM, Rafał Miłecki wrote:
+> Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
 > ---
->  drivers/net/wireless/ath/ath9k/ath9k.h |    2 +-
->  drivers/net/wireless/ath/ath9k/main.c  |    4 ++--
->  drivers/net/wireless/ath/ath9k/recv.c  |    6 +++---
->  3 files changed, 6 insertions(+), 6 deletions(-)
+> This makes my N-PHY radio at least running (no scanning results so far). The
+> same register is used by wl on this device.
+> ---
+>  drivers/net/wireless/b43/rfkill.c |    2 +-
+>  1 files changed, 1 insertions(+), 1 deletions(-)
 > 
-> diff --git a/drivers/net/wireless/ath/ath9k/ath9k.h b/drivers/net/wireless/ath/ath9k/ath9k.h
-> index 0f0bc54..81fed83 100644
-> --- a/drivers/net/wireless/ath/ath9k/ath9k.h
-> +++ b/drivers/net/wireless/ath/ath9k/ath9k.h
-> @@ -309,7 +309,7 @@ struct ath_rx {
->  	u8 rxotherant;
->  	u32 *rxlink;
->  	unsigned int rxfilter;
-> -	spinlock_t rxflushlock;
-> +	spinlock_t pcu_lock;
->  	spinlock_t rxbuflock;
->  	struct list_head rxbuf;
->  	struct ath_descdma rxdma;
-> diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
-> index dcd94ba..37f18ef 100644
-> --- a/drivers/net/wireless/ath/ath9k/main.c
-> +++ b/drivers/net/wireless/ath/ath9k/main.c
-> @@ -609,7 +609,7 @@ void ath9k_tasklet(unsigned long data)
->  		rxmask = (ATH9K_INT_RX | ATH9K_INT_RXEOL | ATH9K_INT_RXORN);
->  
->  	if (status & rxmask) {
-> -		spin_lock_bh(&sc->rx.rxflushlock);
-> +		spin_lock_bh(&sc->rx.pcu_lock);
-no need to disable bh as you are already in tasklet. I understand that the
-existing code itself was doing this and I thought of fixing that anyway.
-Can you plese fix this as well with this patch?
->  
->  		/* Check for high priority Rx first */
->  		if ((ah->caps.hw_caps & ATH9K_HW_CAP_EDMA) &&
-> @@ -617,7 +617,7 @@ void ath9k_tasklet(unsigned long data)
->  			ath_rx_tasklet(sc, 0, true);
->  
->  		ath_rx_tasklet(sc, 0, false);
-> -		spin_unlock_bh(&sc->rx.rxflushlock);
-> +		spin_unlock_bh(&sc->rx.pcu_lock);
-here also. spin_lock() is sufficient.
->  	}
->  
->  	if (status & ATH9K_INT_TX) {
-> diff --git a/drivers/net/wireless/ath/ath9k/recv.c b/drivers/net/wireless/ath/ath9k/recv.c
-> index 944fb59..b099827 100644
-> --- a/drivers/net/wireless/ath/ath9k/recv.c
-> +++ b/drivers/net/wireless/ath/ath9k/recv.c
-> @@ -317,7 +317,7 @@ int ath_rx_init(struct ath_softc *sc, int nbufs)
->  	struct ath_buf *bf;
->  	int error = 0;
->  
-> -	spin_lock_init(&sc->rx.rxflushlock);
-> +	spin_lock_init(&sc->rx.pcu_lock);
->  	sc->sc_flags &= ~SC_OP_RXFLUSH;
->  	spin_lock_init(&sc->rx.rxbuflock);
->  
-> @@ -533,13 +533,13 @@ bool ath_stoprecv(struct ath_softc *sc)
->  
->  void ath_flushrecv(struct ath_softc *sc)
+> diff --git a/drivers/net/wireless/b43/rfkill.c b/drivers/net/wireless/b43/rfkill.c
+> index 78016ae..d2734c9 100644
+> --- a/drivers/net/wireless/b43/rfkill.c
+> +++ b/drivers/net/wireless/b43/rfkill.c
+> @@ -28,7 +28,7 @@
+>  /* Returns TRUE, if the radio is enabled in hardware. */
+>  bool b43_is_hw_radio_enabled(struct b43_wldev *dev)
 >  {
-> -	spin_lock_bh(&sc->rx.rxflushlock);
-> +	spin_lock_bh(&sc->rx.pcu_lock);
->  	sc->sc_flags |= SC_OP_RXFLUSH;
->  	if (sc->sc_ah->caps.hw_caps & ATH9K_HW_CAP_EDMA)
->  		ath_rx_tasklet(sc, 1, true);
->  	ath_rx_tasklet(sc, 1, false);
->  	sc->sc_flags &= ~SC_OP_RXFLUSH;
-> -	spin_unlock_bh(&sc->rx.rxflushlock);
-> +	spin_unlock_bh(&sc->rx.pcu_lock);
->  }
->  
->  static bool ath_beacon_dtim_pending_cab(struct sk_buff *skb)
-> -- 
-> 1.7.0.4
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> -	if (dev->phy.rev >= 3 || dev->phy.type == B43_PHYTYPE_LP) {
+> +	if (dev->dev->id.revision >= 3) {
+>  		if (!(b43_read32(dev, B43_MMIO_RADIO_HWENABLED_HI)
+>  		      & B43_MMIO_RADIO_HWENABLED_HI_MASK))
+>  			return 1;
+
+Over the weekend, I was able to test this patch using all my b43 hardware. There
+were no problems.
+
+Despite having no problems, I still NACK the patch for the reason that b43 only
+applies to devices with id.revision >= 5, thus the revised "if" will always be
+true. The patch should be rewritten as only b43legacy needs to test the 802.11
+core revision.
+
+Larry
