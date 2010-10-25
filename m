@@ -1,62 +1,151 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mailout-de.gmx.net ([213.165.64.22]:52282 "HELO mail.gmx.net"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with SMTP
-	id S1752562Ab0JSOct (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 19 Oct 2010 10:32:49 -0400
-Message-ID: <4CBDB654.6060702@gmx.net>
-Date: Tue, 19 Oct 2010 17:16:36 +0200
-From: George <george.news@gmx.net>
+Received: from mail-yw0-f46.google.com ([209.85.213.46]:37392 "EHLO
+	mail-yw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757923Ab0JYWzV convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 25 Oct 2010 18:55:21 -0400
+Received: by ywk9 with SMTP id 9so2529283ywk.19
+        for <linux-wireless@vger.kernel.org>; Mon, 25 Oct 2010 15:55:20 -0700 (PDT)
 MIME-Version: 1.0
-To: Grazvydas Ignotas <notasas@gmail.com>
-CC: Luciano Coelho <luciano.coelho@nokia.com>,
-	"Luis R. Rodriguez" <mcgrof@gmail.com>,
-	Bob Copeland <me@bobcopeland.com>,
-	Denis 'GNUtoo' Carikli <GNUtoo@no-log.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: Compat-wireless N900
-References: <4CB6BE57.8010401@gmx.net>	<1287071844.11341.5.camel@gnutoo-laptop>	<AANLkTikosEtFnWqRVzMBKtNsB=aqOpqQFKDOZS3+pXTE@mail.gmail.com>	<4CB74759.3030807@gmx.net>	<AANLkTi=1Ar-gzRaskHGDLmkaDnr=9+oZnA=qBLCYcUAi@mail.gmail.com>	<4CB7F7C7.7030804@gmx.net>	<AANLkTi=u+mT2Xd0=0vt4uaf9hSnnkPKY+wN6DjAxME3m@mail.gmail.com>	<4CBABB84.1090100@gmx.net>	<4CBC7725.7050202@gmx.net>	<AANLkTincCSBfwa_Y-cy_42HfU5kP1puCbi2-dBwGkkHu@mail.gmail.com>	<4CBC9A51.8030309@gmx.net>	<1287427291.8043.2.camel@powerslave>	<1287428554.8043.6.camel@powerslave>	<4CBD52DE.9090804@gmx.net> <AANLkTi=dGSVBrdDXwJgmOjEGX+i+=P_KibiJd+NNMGfy@mail.gmail.com>
-In-Reply-To: <AANLkTi=dGSVBrdDXwJgmOjEGX+i+=P_KibiJd+NNMGfy@mail.gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+In-Reply-To: <7de8d1c9fd95f3b714597b4cd15f7a29@post.subsys.no>
+References: <7de8d1c9fd95f3b714597b4cd15f7a29@post.subsys.no>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Mon, 25 Oct 2010 15:55:00 -0700
+Message-ID: <AANLkTim9g63UYZaxow8SO7EZLihCbiukQyTqSbL6XkX=@mail.gmail.com>
+Subject: Re: Changes to NO (Norway) in wireless-regdb
+To: =?UTF-8?Q?Robert_Gr=C3=B8nning?= <slimg@iggu.org>,
+	Michael Green <Michael.Green@atheros.com>
+Cc: linux-wireless@vger.kernel.org, wireless-regdb@lists.infradead.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 19/10/2010 15:52, Grazvydas Ignotas wrote:
-> On Tue, Oct 19, 2010 at 11:12 AM, George<george.news@gmx.net>  wrote:
->> On 18/10/2010 21:02, Luciano Coelho wrote:
->>>
->>> On Mon, 2010-10-18 at 20:41 +0200, ext Luciano Coelho wrote:
->>>>
->>>> On Mon, 2010-10-18 at 21:04 +0200, ext George wrote:
->>>>>
->>>>> On 18/10/2010 19:21, Luis R. Rodriguez wrote:
->>>>>> Does your device use SDIO or SPI?
->>>>>>
->>>>>>     Luis
->>>>>
->>>>> I have tried both and none of them have worked.
->>>>
->>>> On the N900 the wl1271 chip is connected via SPI.
->>
->> The chip is a wl1251, isn't it? wl1271 is n capable and n900 is not.
+Adding Michael and the wireless-regdb list. Please use that list for
+further reviews.
+
+ Luis
+
+On Mon, Oct 25, 2010 at 2:37 PM, Robert Grønning <slimg@iggu.org> wrote:
+> It seems like NO is wrong according to Norwegian rules
 >
-> I think your problem is that the driver (in
-> drivers/net/wireless/wl1251/spi.c) and spi_board_info (in
-> arch/arm/mach-omap2/board-rx51-peripherals.c) names don't match
-> (wl1251 vs wl12xx). Probably easiest to edit .modalias in
-> board-rx51-peripherals.c and rebuild the kernel.
+> This is how NO currently looks like in wireless-regdb-2009.11.25.tar.bz2
+> -------------------START-------------------
+> country NO:
+>        (2402 - 2482 @ 40), (N/A, 20)
+>        (5170 - 5250 @ 40), (N/A, 20)
+>        (5250 - 5330 @ 40), (N/A, 20), DFS
+>        (5490 - 5710 @ 40), (N/A, 27), DFS
+> --------------------END--------------------
 >
-
-It seems getting closer ;)
-
-After changing wl12xx for spi:wl1251 now modules are uploaded on startup.
-
-However this is the output from lsmod | grep spi
-spi                     4352  0
-wl1251                 75840  1 spi
-mac80211              256892  2 spi,wl1251
-crc7                    1216  1 spi
-
-As you can see spi module is not used :( and no interface is created. 
-Still a way to go.
-
-
+> This is what the Norwegian rules say about general usage of frequencies
+> for wi-fi:
+> Note: The following text is a translation from a subsection of the
+> following document written in Norwegian:
+> http://www.lovdata.no/for/sf/sd/xd-20090602-0580.html#7
+> -------------------------------------START--------------------------------------
+> (3) the frequency band 5150-5350 MHz is authorized for indoor data
+> transfer
+> including radio-based local area networks (WAS / RLAN) with a maximum
+> radiated
+> power of 200 mW eirp the frequency use defined in the standard EN 301 893
+> If any
+> other use than indoor use, the average spectral density in the frequency
+> band
+> 5150-5350 MHz is limited to 10 mW / MHz eirp in any 1 MHz range.
+>
+> (4) the frequency band 5470-5725 MHz may be used for data transfer with
+> maximum
+> radiated power of 1 W eirp Maximum average spectral density shall not
+> exceed
+> 50 mW / MHz eirp in any 1 MHz band. The radio equipment shall implement
+> transmit
+> power control (TPC) which provides an average attenuation of at least 3
+> dB. If
+> TPC is not in use, the maximum allowed radiated power and power density is
+> 3 dB
+> lower than that following the first and second sentence. The radio
+> equipment will
+> use Dynamic Frequency Selection (DFS) as specified in the standard EN 301
+> 893
+>
+> (5) The frequency bands 5725-5795 MHz and 5815-5850 MHz for data transfer
+> with
+> maximum radiated power of 4 W eirp Maximum average spectral density shall
+> not
+> exceed 200 mW / MHz eirp in any 1 MHz band. The radio equipment shall
+> implement
+> Dynamic Frequency Selection (DFS) as specified in the standard EN 302 502
+> Radio
+> equipment shall transmit power control (TPC) which provides an average
+> attenuation of at least 3 dB. If TPC is not in use, the maximum allowed
+> radiated
+> power and power density is 3 dB lower than that following the first and
+> second
+> sentence. On the border between Norway and neighboring power density shall
+> not
+> exceed -122.5 dBW / m 2 measured with a reference bandwidth of 1 MHz
+> unless
+> otherwise stated in the coordination agreement.
+>
+> (6) The frequency bands 5725-5795 and 5815-5850 MHz for point-to-point
+> radio
+> links with maximum radiated power of 200 W eirp Maximum permitted power
+> supplied
+> antenna is 1 W. The maximum average spectral density shall not exceed 10 W
+> / MHz
+> eirp in any 1 MHz band. The concept of point-to-point radio links exclude
+> all
+> forms of point-to-multipoint, omnidirectional systems and transmitters
+> send the
+> same information located in the same place (sector antennas). The radio
+> equipment
+> shall implement Dynamic Frequency Selection (DFS) as specified in the
+> standard
+> EN 302 502 On the border between Norway and neighboring power density
+> shall not
+> exceed -122.5 dBW / m 2 measured with a reference bandwidth of 1 MHz
+> unless
+> otherwise stated in the coordination agreement.
+> --------------------------------------END---------------------------------------
+>
+> Here is the link to google english-translated section mentioned above:
+> http://translate.googleusercontent.com/translate_c?hl=no&sl=no&tl=en&u=http://www.lovdata.no/for/sf/sd/xd-20090602-0580.html&rurl=translate.google.com&usg=ALkJrhhGbQPtCjONnilyHdAgh1NwIZhFVA#7
+>
+> According to that documentation, NO should probably look like this
+> instead:
+> -------------------START-------------------
+> country NO:
+>        (2400 - 2483.5 @ 40), (N/A, 20)
+>        (5150 - 5350 @ 40), (N/A, 23)
+>        (5470 - 5725 @ 40), (N/A, 27), DFS
+> --------------------END--------------------
+>
+> Question 1:
+> The norwegian laws also says that if TPC is available, then the maximum
+> allowed TX power
+> of the 5470 -> 5725 MHz frequency range changes from 27 dBm to 30 dBm, I
+> don't know how to write that in wireless-regdb.
+>
+> Question 2:
+> The norwegian laws for the 5470 -> 5725 MHz frequency range seem to exceed
+> the European restrictions in 802.11n-2009, I'm guessing that the upper 5725
+> MHz frequency needs to be decreased to comply with the European
+> restrictions? if so, I'm not sure what frequency it should be decreased to.
+>
+> Question 3:
+> The norwegian documentation also mentions these radio frequencies for
+> wireless data transfer:
+>  * 5725 -> 5795 MHz and 5815-5850 MHz: point-to-point radio links
+>  * 17,1 -> 17,3 GHz:
+>  * 57 -> 66 GHz:
+> Does these belong in the wireless-regdb as well?
+>
+> I hope my limited knowlege doesn't cause anyone unreasonable much work,
+> I'm really trying to get better at this.
+>
+> -Robert Grønning (Norway)
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
