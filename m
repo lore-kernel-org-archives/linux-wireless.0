@@ -1,66 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mgw-sa02.ext.nokia.com ([147.243.1.48]:17590 "EHLO
-	mgw-sa02.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756117Ab0JRTDG (ORCPT
+Received: from nm7-vm0.bullet.mail.ukl.yahoo.com ([217.146.183.236]:21294 "HELO
+	nm7-vm0.bullet.mail.ukl.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1755605Ab0JYORi (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 18 Oct 2010 15:03:06 -0400
-Subject: Re: Compat-wireless N900
-From: Luciano Coelho <luciano.coelho@nokia.com>
-To: ext George <george.news@gmx.net>
-Cc: "Luis R. Rodriguez" <mcgrof@gmail.com>,
-	Bob Copeland <me@bobcopeland.com>,
-	"Denis 'GNUtoo' Carikli" <GNUtoo@no-log.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <1287427291.8043.2.camel@powerslave>
-References: <4CB6BE57.8010401@gmx.net>
-	 <1287071844.11341.5.camel@gnutoo-laptop>
-	 <AANLkTikosEtFnWqRVzMBKtNsB=aqOpqQFKDOZS3+pXTE@mail.gmail.com>
-	 <4CB74759.3030807@gmx.net>
-	 <AANLkTi=1Ar-gzRaskHGDLmkaDnr=9+oZnA=qBLCYcUAi@mail.gmail.com>
-	 <4CB7F7C7.7030804@gmx.net>
-	 <AANLkTi=u+mT2Xd0=0vt4uaf9hSnnkPKY+wN6DjAxME3m@mail.gmail.com>
-	 <4CBABB84.1090100@gmx.net> <4CBC7725.7050202@gmx.net>
-	 <AANLkTincCSBfwa_Y-cy_42HfU5kP1puCbi2-dBwGkkHu@mail.gmail.com>
-	 <4CBC9A51.8030309@gmx.net>  <1287427291.8043.2.camel@powerslave>
-Content-Type: text/plain; charset="UTF-8"
-Date: Mon, 18 Oct 2010 22:02:34 +0300
-Message-ID: <1287428554.8043.6.camel@powerslave>
-Mime-Version: 1.0
+	Mon, 25 Oct 2010 10:17:38 -0400
+Message-ID: <4CC5900A.2050209@users.sourceforge.net>
+Date: Mon, 25 Oct 2010 15:11:22 +0100
+From: Hin-Tak Leung <htl10@users.sourceforge.net>
+MIME-Version: 1.0
+To: Larry Finger <Larry.Finger@lwfinger.net>
+CC: Serafeim Zanikolas <sez@debian.org>, herton@mandriva.com.br,
+	linville@tuxdriver.com, joe@perches.com, davem@davemloft.net,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] drivers: rtl818x: request DMA-able memory
+References: <1287952327-9924-1-git-send-email-sez@debian.org> <4CC5851D.1040204@lwfinger.net>
+In-Reply-To: <4CC5851D.1040204@lwfinger.net>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2010-10-18 at 20:41 +0200, ext Luciano Coelho wrote:
-> On Mon, 2010-10-18 at 21:04 +0200, ext George wrote:
-> > On 18/10/2010 19:21, Luis R. Rodriguez wrote:
-> > >> Any help on that? Sorry but I'm somehow desesperate and don't know what to
-> > >> do. Actually I'm thinking on not using compat-wireless and nl80211 and get
-> > >> back to wireless-extensions.
-> 
-> Getting back to wireless-extensions would certainly be a very desperate
-> measure! :P
-> 
-> 
-> > > Does your device use SDIO or SPI?
-> > >
-> > >    Luis
-> > 
-> > I have tried both and none of them have worked.
-> 
-> On the N900 the wl1271 chip is connected via SPI.
-> 
-> I'll re-read this thread more carefully to see if I can spot anything
-> that could help you.
-
-First thing that came to my mind after re-reading the thread... Does the
-wl1251 driver work *without* compat-wireless? Where did you get the
-kernel that you have compiled?
-
-My initial guess is that the SPI is not configured correctly so the
-probe function is never called in the wl1251_spi module and thus the
-interface is never created...
 
 
--- 
-Cheers,
-Luca.
+Larry Finger wrote:
+> On 10/24/2010 03:32 PM, Serafeim Zanikolas wrote:
+>> Despite the indicated intention in comment, the kmalloc() call was not
+>> explicitly requesting memory from ZONE_DMA.
+>>
+>> Signed-off-by: Serafeim Zanikolas <sez@debian.org>
+>> ---
+>>  drivers/net/wireless/rtl818x/rtl8187_dev.c |    3 ++-
+>>  1 files changed, 2 insertions(+), 1 deletions(-)
+>>
+>> diff --git a/drivers/net/wireless/rtl818x/rtl8187_dev.c b/drivers/net/wireless/rtl818x/rtl8187_dev.c
+>> index 38fa824..771794d 100644
+>> --- a/drivers/net/wireless/rtl818x/rtl8187_dev.c
+>> +++ b/drivers/net/wireless/rtl818x/rtl8187_dev.c
+>> @@ -1343,7 +1343,8 @@ static int __devinit rtl8187_probe(struct usb_interface *intf,
+>>  	priv->is_rtl8187b = (id->driver_info == DEVICE_RTL8187B);
+>>  
+>>  	/* allocate "DMA aware" buffer for register accesses */
+>> -	priv->io_dmabuf = kmalloc(sizeof(*priv->io_dmabuf), GFP_KERNEL);
+>> +	priv->io_dmabuf = kmalloc(sizeof(*priv->io_dmabuf),
+>> +				  GFP_DMA | GFP_KERNEL);
+>>  	if (!priv->io_dmabuf) {
+>>  		err = -ENOMEM;
+>>  		goto err_free_dev;
+> 
+> ACK.
+> 
+> Larry
 
+Acked-by: Hin-Tak Leung <htl10@users.sourceforge.net>
+
+I had a quick look for similiar constructs and AFAIK only the b43/b43legacy 
+drivers uses DMA buffers. Seems to be a rare practice. Is that something we 
+should or should not do?
+
+Hin-Tak
