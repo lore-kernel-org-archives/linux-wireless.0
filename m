@@ -1,80 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:53022 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759833Ab0JFTIc (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:54019 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932672Ab0JYSAL (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 6 Oct 2010 15:08:32 -0400
-Message-ID: <4CACC92E.6090309@candelatech.com>
-Date: Wed, 06 Oct 2010 12:08:30 -0700
-From: Ben Greear <greearb@candelatech.com>
+	Mon, 25 Oct 2010 14:00:11 -0400
+Date: Mon, 25 Oct 2010 13:49:58 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Lee <lee-in-berlin@web.de>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: [regression]AP with hostapd 0.7.3 can't receive packets beyond
+ authentication (2.6.36, rt73usb)
+Message-ID: <20101025174957.GD2414@tuxdriver.com>
+References: <4CC0D0F6.4080507@web.de>
+ <4CC33E83.4020505@web.de>
 MIME-Version: 1.0
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: Any /n NICs that support APs and multiple STAs other than ath9k?
-References: <4CACA3D7.90108@candelatech.com> <AANLkTimB7=odPK3qTAhFBdzaMFFGVar0kyMrb-p9SgYy@mail.gmail.com> <4CACC4B8.7040500@candelatech.com> <AANLkTi=k50=+9oZvXbHde8ZVV-uZk4MtpywmkHzKwWyE@mail.gmail.com>
-In-Reply-To: <AANLkTi=k50=+9oZvXbHde8ZVV-uZk4MtpywmkHzKwWyE@mail.gmail.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <4CC33E83.4020505@web.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 10/06/2010 11:58 AM, Luis R. Rodriguez wrote:
-> On Wed, Oct 6, 2010 at 11:49 AM, Ben Greear<greearb@candelatech.com>  wrote:
->> On 10/06/2010 11:45 AM, Luis R. Rodriguez wrote:
->>>
->>> On Wed, Oct 6, 2010 at 9:29 AM, Ben Greear<greearb@candelatech.com>
->>>   wrote:
->>>>
->>>> I would like to have a different hardware/driver combination to try
->>>> to tie-break whether bugs are in mac80211 or in the ath9k
->>>> driver/hardware.
->>>>
->>>> I don't mind doing a bit of driver hacking so long as the basic support
->>>> is there (I think it's mostly the ability to set a BSSID mask and
->>>> rxfilter
->>>> accordingly).
->>>
->>> Your best bet is to test against mac80211_hwsim, that would rule out
->>> any hardware. I think Jouni and Johannes have also a way to get the
->>> devices to talk to each other. Perhaps some documentation of that on
->>> the kernel Documentation/networking/mac80211_hwsim/
->>
->> Ok.  I'm trying to hack slub to give me a better stack trace of where
->> the skb was deleted.  If that doesn't turn up anything obvious, then
->> I'll go read up on hwsim.
->>
->> Are you aware of any DMA issues that might cause ath9k to write into
->> places it should not?  Previously, I've seen a lot of errors in
->> the logs about ath9k not being able to stop DMA in time, but I haven't
->> seen those while reproducing the memory corruption.
->
-> Yeah, well there have been a few bug reports but when we asked for
-> instructions how to reproduce we get nowhere. You are the first to
-> actually find some reproducible instructions. Forgive me but I haven't
-> had time yet to work on this though. Seems you have a good grasp of
-> things though and can easily reproduce so you likely are in a better
-> position right now to debug at the moment.
+On Sat, Oct 23, 2010 at 09:58:59PM +0200, Lee wrote:
+> On 22/10/10 01:47, Lee wrote:
+> >Hi everyone,
+> >
+> >I noticed a bug (details later) in Linus' git tree, which wasn't there in
+> >2.6.35.7. So I went on to bisect the bug. 12 compiles and reboots later, I
+> >could narrow it down to this commit:
+> >
+> ># bad: [05318bc905467237d4aa68a701f6e92a2b332218] Merge branch 'master' of
+> >git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-next-2.6
+> >
+> >Unfortunately, I couldn't further bisect down wireless-next, because all three
+> >commits I picked were unworkable (bringing down an interface caused the kernel
+> >to oops, which made my test case impossible).
+> >
+> >The test case is as follows: I have eth0 and wlan0 (the interface to an
+> >rt37usb device) in a bridge lan0. I have a properly configured hostapd. When I
+> >try to connect with a client to my hostapd AP, I can successfully
+> >authenticate, but all further packets don't reach the interface of the AP.
+> >
+> >However, I can see broadcast packets *from* the AP on my client, but not the
+> >other way round (DHCP requests from client to AP). To make sure the bug was
+> >not specific to broadcast packets, I manually set an IP on my client and tried
+> >to ping the AP, but those packets didn't come through, either.
+> >
+> >Right now I'm a bit clueless on how to get to the root of this bug, so any
+> >help is appreciated.
+> >
+> >Regards,
+> >Lee
+> 
+> I checked vanilla 2.6.36, the bug is still there. Is this a known
+> bug? Does anyone care to give me some hints? Are any details needed?
 
-My understanding is that the bad DMA access could
-corrupt things right out from under slub, and with no way for me
-to possibly add any debugging to catch it in action.
+Hard to say if you can't complete the bisect.
 
-I'm quite ignorant of hardware, DMA issues, etc, so if you have any
-ideas on how to go about verifying bad DMA writes or not, I'm
-interested.
+The bisect you mention is a merge from wireless-next-2.6 at 88c1f4f.
+The preceding merge from wireless-next-2.6 was from abf52f8.  It looks
+like there were a number of rt2x00 commits in between.
 
-Otherwise, I'll basically have to check and double check to make sure
-we don't have a normal use-after-free with the skb, and if I can't find
-anything, just assert that it's DMA issues and pretty much give up until
-someone that understands that stuff has an idea to try.
+So, you might try a new bisect:
 
-Thanks,
-Ben
+	git bisect start 88c1f4f abf52f8
 
->
->    Luis
+If you still get commits that don't work but in an apparently unrelated
+way, you can use 'git bisect skip'.
 
+Does that help you to narrow things down?
 
+John
 -- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
-
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
