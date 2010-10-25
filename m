@@ -1,50 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:12275 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754492Ab0JGGNt (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 7 Oct 2010 02:13:49 -0400
-Date: Thu, 7 Oct 2010 08:15:16 +0200
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, johannes@sipsolutions.net
-Subject: Re: [PATCH] mac80211: avoid uninitialized var warning in
- ieee80211_scan_cancel
-Message-ID: <20101007061515.GA25616@redhat.com>
-References: <1286397743-21687-1-git-send-email-linville@tuxdriver.com>
+Received: from mail-bw0-f46.google.com ([209.85.214.46]:46721 "EHLO
+	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751085Ab0JYSgn (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 25 Oct 2010 14:36:43 -0400
+Message-ID: <4CC5CE47.2020607@lwfinger.net>
+Date: Mon, 25 Oct 2010 13:36:55 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <1286397743-21687-1-git-send-email-linville@tuxdriver.com>
+To: Arnd Hannemann <arnd@arndnet.de>
+CC: "David S. Miller" <davem@davemloft.net>, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
+	Eric Dumazet <eric.dumazet@gmail.com>
+Subject: Re: [PATCH] net: b43legacy: fix compile error
+References: <1288017690-31248-1-git-send-email-arnd@arndnet.de> <4CC5A301.1080606@lwfinger.net> <4CC5CBC4.7060308@arndnet.de>
+In-Reply-To: <4CC5CBC4.7060308@arndnet.de>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Oct 06, 2010 at 04:42:23PM -0400, John W. Linville wrote:
-> net/mac80211/scan.c: In function ‘ieee80211_scan_cancel’:
-> net/mac80211/scan.c:794: warning: ‘finish’ may be used uninitialized in this function
+On 10/25/2010 01:26 PM, Arnd Hannemann wrote:
+> Am 25.10.2010 17:32, schrieb Larry Finger:
+>> On 10/25/2010 09:41 AM, Arnd Hannemann wrote:
+>>> On todays linus tree the following compile error happened to me:
+>>>
+>>>   CC [M]  drivers/net/wireless/b43legacy/xmit.o
+>>> In file included from include/net/dst.h:11,
+>>>                  from drivers/net/wireless/b43legacy/xmit.c:31:
+>>> include/net/dst_ops.h:28: error: expected ':', ',', ';', '}' or '__attribute__' before '____cacheline_aligned_in_smp'
+>>> include/net/dst_ops.h: In function 'dst_entries_get_fast':
+>>> include/net/dst_ops.h:33: error: 'struct dst_ops' has no member named 'pcpuc_entries'
+>>> include/net/dst_ops.h: In function 'dst_entries_get_slow':
+>>> include/net/dst_ops.h:41: error: 'struct dst_ops' has no member named 'pcpuc_entries'
+>>> include/net/dst_ops.h: In function 'dst_entries_add':
+>>> include/net/dst_ops.h:49: error: 'struct dst_ops' has no member named 'pcpuc_entries'
+>>> include/net/dst_ops.h: In function 'dst_entries_init':
+>>> include/net/dst_ops.h:55: error: 'struct dst_ops' has no member named 'pcpuc_entries'
+>>> include/net/dst_ops.h: In function 'dst_entries_destroy':
+>>> include/net/dst_ops.h:60: error: 'struct dst_ops' has no member named 'pcpuc_entries'
+>>> make[4]: *** [drivers/net/wireless/b43legacy/xmit.o] Error 1
+>>> make[3]: *** [drivers/net/wireless/b43legacy] Error 2
+>>> make[2]: *** [drivers/net/wireless] Error 2
+>>> make[1]: *** [drivers/net] Error 2
+>>> make: *** [drivers] Error 2
+>>>
+>>> This patch fixes this issue by adding "linux/cache.h" as an include to
+>>> "include/net/dst_ops.h".
+>>
+>> Strange. Compiling b43legacy from the linux-2.6.git tree (git describe is
+>> v2.6.36-4464-g229aebb) works fine on x86_64. I wonder what is different.
 > 
-> Signed-off-by: John W. Linville <linville@tuxdriver.com>
+> Exactly the same git describe here.
+> Maybe your arch includes cache.h already, in my case its a compile for ARM (shmobile).
 
-Hi John
+That probably makes the difference. Using Eric's fix that removes the #include
+<linux/dst.h> should be better. Does it work for you?
 
-What compiler are you using? I have no warning with gcc 4.4.4 from RHEL6.
-That's correct, as "finish" variable can not be uninitialized, because is used
-only when abortscan == true;
+There are probably a lot more of the system includes that may not be needed. If
+I send you a patch removing them, could you test?
 
-> +	bool finish = false;
->  
->  	/*
->  	 * We are only canceling software scan, or deferred scan that was not
-> @@ -818,7 +819,7 @@ void ieee80211_scan_cancel(struct ieee80211_local *local)
->  	if (abortscan) {
->  		/* The scan is canceled, but stop work from being pending */
->  		cancel_delayed_work_sync(&local->scan_work);
-> -		if (finish)
-> -			__ieee80211_scan_completed_finish(&local->hw, false);
->  	}
-> +	if (finish)
-> +		__ieee80211_scan_completed_finish(&local->hw, false);
->  }
-
-I have nothing against the patch, but this seems to be compiler problem,
-not our code.
-
-Stanislaw
+Larry
