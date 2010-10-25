@@ -1,31 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yw0-f46.google.com ([209.85.213.46]:56129 "EHLO
-	mail-yw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751989Ab0JRSGU (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:48303 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754591Ab0JYOaK (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 18 Oct 2010 14:06:20 -0400
-Received: by ywi6 with SMTP id 6so597089ywi.19
-        for <linux-wireless@vger.kernel.org>; Mon, 18 Oct 2010 11:06:20 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <507036.8029.qm@web56804.mail.re3.yahoo.com>
-References: <507036.8029.qm@web56804.mail.re3.yahoo.com>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Mon, 18 Oct 2010 11:05:59 -0700
-Message-ID: <AANLkTinNMBV=UUV3VOgPE+oFCKTG3aaDW2cpnC0cXgX5@mail.gmail.com>
-Subject: Re: [PATCH] compat-wireless: enable uninstall for staging & atlxx
-To: Walter Goldens <goldenstranger@yahoo.com>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+	Mon, 25 Oct 2010 10:30:10 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: linux-wireless@vger.kernel.org
+Cc: b43-dev@lists.infradead.org,
+	"John W. Linville" <linville@tuxdriver.com>
+Subject: [PATCH] b43: remove extraneous code in free_ringmemory
+Date: Mon, 25 Oct 2010 10:24:09 -0400
+Message-Id: <1288016649-4334-1-git-send-email-linville@tuxdriver.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Oct 18, 2010 at 6:44 AM, Walter Goldens
-<goldenstranger@yahoo.com> wrote:
-> - enable 'make uninstall' for staging - brcm80211, ath6kl and ethernet atlxx
-> - add atlxx to 'modprobe -l' list
->
-> Signed-off-by: Walter Goldens <goldenstranger@yahoo.com>
+This code seems to have been cut-n-pasted from alloc_ringmemory?
+Anyway, it is useless.
 
-applied and pushed, thanks!
+Signed-off-by: John W. Linville <linville@tuxdriver.com>
+---
+ drivers/net/wireless/b43/dma.c |    5 -----
+ 1 files changed, 0 insertions(+), 5 deletions(-)
 
-  Luis
+diff --git a/drivers/net/wireless/b43/dma.c b/drivers/net/wireless/b43/dma.c
+index 10d0aaf..3d5566e 100644
+--- a/drivers/net/wireless/b43/dma.c
++++ b/drivers/net/wireless/b43/dma.c
+@@ -415,11 +415,6 @@ static int alloc_ringmemory(struct b43_dmaring *ring)
+ 
+ static void free_ringmemory(struct b43_dmaring *ring)
+ {
+-	gfp_t flags = GFP_KERNEL;
+-
+-	if (ring->type == B43_DMA_64BIT)
+-		flags |= GFP_DMA;
+-
+ 	dma_free_coherent(ring->dev->dev->dma_dev, B43_DMA_RINGMEMSIZE,
+ 			  ring->descbase, ring->dmabase);
+ }
+-- 
+1.7.2.3
+
