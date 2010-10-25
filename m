@@ -1,56 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ww0-f44.google.com ([74.125.82.44]:41445 "EHLO
-	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757088Ab0JVUHz (ORCPT
+Received: from smtp.nokia.com ([192.100.122.233]:33262 "EHLO
+	mgw-mx06.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751610Ab0JYJZF (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 22 Oct 2010 16:07:55 -0400
-Received: by wwe15 with SMTP id 15so1285987wwe.1
-        for <linux-wireless@vger.kernel.org>; Fri, 22 Oct 2010 13:07:54 -0700 (PDT)
-Message-ID: <4CC1EF20.5030506@lwfinger.net>
-Date: Fri, 22 Oct 2010 15:08:00 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-To: =?UTF-8?B?R8OhYm9yIFN0ZWZhbmlr?= <netrolller.3d@gmail.com>
-CC: b43-dev <b43-dev@lists.infradead.org>,
-	linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-Subject: Re: [PATCH 3/5] b43: define known SPROM boardflags2 bits
-References: <1287762229-16516-2-git-send-email-zajec5@gmail.com> <1287762229-16516-4-git-send-email-zajec5@gmail.com> <AANLkTiko3JeoRcxPT7zhnGTNhmyDWqmFjeZ8ssMzCb+J@mail.gmail.com>
-In-Reply-To: <AANLkTiko3JeoRcxPT7zhnGTNhmyDWqmFjeZ8ssMzCb+J@mail.gmail.com>
-Content-Type: text/plain; charset=UTF-8
+	Mon, 25 Oct 2010 05:25:05 -0400
+Received: from vaebh106.NOE.Nokia.com (vaebh106.europe.nokia.com [10.160.244.32])
+	by mgw-mx06.nokia.com (Switch-3.3.3/Switch-3.3.3) with ESMTP id o9P9OvYm001113
+	for <linux-wireless@vger.kernel.org>; Mon, 25 Oct 2010 12:25:02 +0300
+From: juuso.oikarinen@nokia.com
+To: luciano.coelho@nokia.com
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH] wl1271: Fix RX path stall
+Date: Mon, 25 Oct 2010 12:24:29 +0300
+Message-Id: <1287998669-27209-1-git-send-email-juuso.oikarinen@nokia.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 10/22/2010 02:41 PM, Gábor Stefanik wrote:
-> 2010/10/22 Rafał Miłecki <zajec5@gmail.com>:
->> Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
->> ---
->>  drivers/net/wireless/b43/b43.h |   13 +++++++++++++
->>  1 files changed, 13 insertions(+), 0 deletions(-)
->>
->> diff --git a/drivers/net/wireless/b43/b43.h b/drivers/net/wireless/b43/b43.h
->> index 72821c4..9aad2ca 100644
->> --- a/drivers/net/wireless/b43/b43.h
->> +++ b/drivers/net/wireless/b43/b43.h
->> @@ -153,6 +153,19 @@
->>  #define B43_BFH_FEM_BT                 0x0040  /* has FEM and switch to share antenna
->>                                                 * with bluetooth */
->>
->> +/* SPROM boardflags2_lo values */
->> +#define B43_BFL2_RXBB_INT_REG_DIS      0x0001  /* external RX BB regulator present */
->> +#define B43_BFL2_APLL_WAR              0x0002  /* alternative A-band PLL settings implemented */
->> +#define B43_BFL2_TXPWRCTRL_EN          0x0004  /* permits enabling TX Power Control */
->> +#define B43_BFL2_2X4_DIV               0x0008  /* 2x4 diversity switch */
->> +#define B43_BFL2_5G_PWRGAIN            0x0010  /* supports 5G band power gain */
->> +#define B43_BFL2_PCIEWAR_OVR           0x0020  /* overrides ASPM and Clkreq settings */
->> +#define B43_BFL2_CAESERS_BRD           0x0040  /* is Caesers board (unused) */
-> 
-> I'm almost sure this is a typo in the specs.
-> 
-> Larry?
+From: Juuso Oikarinen <juuso.oikarinen@nokia.com>
 
-Nope - it is Cae..., not Cea.... Whatever name we use is just a placeholder as
-that bit is never used.
+The wl1271_rx function loops through packets in an aggregated buffer. Each
+packet in the buffer is handled by a call to wl1271_rx_handle_data, which will
+fail if skb memory allocation fails or production mode is enabled. These
+failures currently prevent the rx counters to be incremented, thus causing the
+rx loop to run forever.
 
-Larry
+Fix this by ignoring error codes reported wl1271_rx_handle_data function.
+This essentially means that frames will be dropped in production mode, which
+is the intetion, and frames will be dropped if memory allocation fails, which
+is a decent way to recover from that situation.
+
+Signed-off-by: Juuso Oikarinen <juuso.oikarinen@nokia.com>
+---
+ drivers/net/wireless/wl12xx/wl1271_rx.c |   12 ++++++++----
+ 1 files changed, 8 insertions(+), 4 deletions(-)
+
+diff --git a/drivers/net/wireless/wl12xx/wl1271_rx.c b/drivers/net/wireless/wl12xx/wl1271_rx.c
+index 35448e7..cacfee5 100644
+--- a/drivers/net/wireless/wl12xx/wl1271_rx.c
++++ b/drivers/net/wireless/wl12xx/wl1271_rx.c
+@@ -184,10 +184,14 @@ void wl1271_rx(struct wl1271 *wl, struct wl1271_fw_status *status)
+ 		while (pkt_offset < buf_size) {
+ 			pkt_length = wl1271_rx_get_buf_size(status,
+ 					drv_rx_counter);
+-			if (wl1271_rx_handle_data(wl,
+-					wl->aggr_buf + pkt_offset,
+-					pkt_length) < 0)
+-				break;
++			/*
++			 * the handle data call can only fail in memory-outage
++			 * conditions, in that case the received frame will just
++			 * be dropped.
++			 */
++			wl1271_rx_handle_data(wl,
++					      wl->aggr_buf + pkt_offset,
++					      pkt_length);
+ 			wl->rx_counter++;
+ 			drv_rx_counter++;
+ 			drv_rx_counter &= NUM_RX_PKT_DESC_MOD_MASK;
+-- 
+1.7.0.4
 
