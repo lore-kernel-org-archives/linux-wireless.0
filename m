@@ -1,63 +1,161 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ww0-f44.google.com ([74.125.82.44]:34075 "EHLO
-	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759189Ab0JYRiq convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 25 Oct 2010 13:38:46 -0400
-Received: by wwe15 with SMTP id 15so3734034wwe.1
-        for <linux-wireless@vger.kernel.org>; Mon, 25 Oct 2010 10:38:45 -0700 (PDT)
+Received: from ogre.sisk.pl ([217.79.144.158]:51896 "EHLO ogre.sisk.pl"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757831Ab0JYXE5 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 25 Oct 2010 19:04:57 -0400
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
+To: "John W. Linville" <linville@tuxdriver.com>
+Subject: Re: [RFC] iwlwifi: Convert to new PCI PM framework
+Date: Tue, 26 Oct 2010 01:04:09 +0200
+Cc: linux-wireless@vger.kernel.org, wey-yi.w.guy@intel.com
+References: <1288037557-5197-1-git-send-email-linville@tuxdriver.com>
+In-Reply-To: <1288037557-5197-1-git-send-email-linville@tuxdriver.com>
 MIME-Version: 1.0
-In-Reply-To: <AANLkTik-SaE2ShV7H6Lv1qFQ-FM5fPuWGws6pWM+b6Go@mail.gmail.com>
-References: <AANLkTinP32=snam3Bex+OC8LL00awfjrJz4834mhOaNL@mail.gmail.com>
- <1287995967.3587.9.camel@jlt3.sipsolutions.net> <AANLkTik-SaE2ShV7H6Lv1qFQ-FM5fPuWGws6pWM+b6Go@mail.gmail.com>
-From: "Cassiano Tartari, Eng." <falecom@cassianotartari.eng.br>
-Date: Mon, 25 Oct 2010 15:38:24 -0200
-Message-ID: <AANLkTik12g6kmynbgyhPuu+B5jZ9Swv+1PhAg9EKMByw@mail.gmail.com>
-Subject: Re: Modifying the driver iwlwifi
-To: Blaise Gassend <blaise@willowgarage.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: Text/Plain;
+  charset="iso-8859-2"
+Message-Id: <201010260104.09844.rjw@sisk.pl>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Oct 25, 2010 at 2:27 PM, Blaise Gassend <blaise@willowgarage.com> wrote:
-> On Mon, Oct 25, 2010 at 1:39 AM, Johannes Berg
-> <johannes@sipsolutions.net> wrote:
->> On Thu, 2010-10-21 at 14:17 -0200, Cassiano Tartari, Eng. wrote:
->>> Its basic idea is that a client doesn't wait each
->>> response to go to the next step, so just do: AUTH REQ -> ASSOC REQ ->
->>> DHCP DISC -> DHCP REQ -> ARP QUERY and a PING THROUGH to verify that
->>> an end-to-end connection is available.
->>
->> I'd just like to point out that for various reasons (that I invite you
->> to research for yourself) there's no way this can work in encrypted
->> networks, or against compliant/certified access points.
+On Monday, October 25, 2010, John W. Linville wrote:
+> Use the new PCI PM and let the PCI core code handle the PCI-specific
+> details of power transitions.
+> 
+> Based on similarly titled ath9k patch posted by Rafael J. Wysocki.
+> 
+> Cc: "Rafael J. Wysocki" <rjw@sisk.pl>
+> Signed-off-by: John W. Linville <linville@tuxdriver.com>
 
-In my work, I could use a open network.
+Acked-by: Rafael J. Wysocki <rjw@sisk.pl>
 
-How can I know if a AP is "compliant/certified" ? I'm such a newbie.
+> ---
+> Compile-tested only...do the iwl_pci_resume changes look right?
+> 
+>  drivers/net/wireless/iwlwifi/iwl-agn.c      |    5 +----
+>  drivers/net/wireless/iwlwifi/iwl-core.c     |   26 ++++++++++++++------------
+>  drivers/net/wireless/iwlwifi/iwl-core.h     |   14 +++++++++++---
+>  drivers/net/wireless/iwlwifi/iwl3945-base.c |    5 +----
+>  4 files changed, 27 insertions(+), 23 deletions(-)
+> 
+> diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
+> index c2636a7..513bb31 100644
+> --- a/drivers/net/wireless/iwlwifi/iwl-agn.c
+> +++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
+> @@ -4836,10 +4836,7 @@ static struct pci_driver iwl_driver = {
+>  	.id_table = iwl_hw_card_ids,
+>  	.probe = iwl_pci_probe,
+>  	.remove = __devexit_p(iwl_pci_remove),
+> -#ifdef CONFIG_PM
+> -	.suspend = iwl_pci_suspend,
+> -	.resume = iwl_pci_resume,
+> -#endif
+> +	.driver.pm = IWL_PM_OPS,
+>  };
+>  
+>  static int __init iwl_init(void)
+> diff --git a/drivers/net/wireless/iwlwifi/iwl-core.c b/drivers/net/wireless/iwlwifi/iwl-core.c
+> index 25fb391..eb39b43 100644
+> --- a/drivers/net/wireless/iwlwifi/iwl-core.c
+> +++ b/drivers/net/wireless/iwlwifi/iwl-core.c
+> @@ -2584,8 +2584,9 @@ EXPORT_SYMBOL(iwl_add_beacon_time);
+>  
+>  #ifdef CONFIG_PM
+>  
+> -int iwl_pci_suspend(struct pci_dev *pdev, pm_message_t state)
+> +int iwl_pci_suspend(struct device *device)
+>  {
+> +	struct pci_dev *pdev = to_pci_dev(device);
+>  	struct iwl_priv *priv = pci_get_drvdata(pdev);
+>  
+>  	/*
+> @@ -2597,18 +2598,14 @@ int iwl_pci_suspend(struct pci_dev *pdev, pm_message_t state)
+>  	 */
+>  	iwl_apm_stop(priv);
+>  
+> -	pci_save_state(pdev);
+> -	pci_disable_device(pdev);
+> -	pci_set_power_state(pdev, PCI_D3hot);
+> -
+>  	return 0;
+>  }
+>  EXPORT_SYMBOL(iwl_pci_suspend);
+>  
+> -int iwl_pci_resume(struct pci_dev *pdev)
+> +int iwl_pci_resume(struct device *device)
+>  {
+> +	struct pci_dev *pdev = to_pci_dev(device);
+>  	struct iwl_priv *priv = pci_get_drvdata(pdev);
+> -	int ret;
+>  	bool hw_rfkill = false;
+>  
+>  	/*
+> @@ -2617,11 +2614,6 @@ int iwl_pci_resume(struct pci_dev *pdev)
+>  	 */
+>  	pci_write_config_byte(pdev, PCI_CFG_RETRY_TIMEOUT, 0x00);
+>  
+> -	pci_set_power_state(pdev, PCI_D0);
+> -	ret = pci_enable_device(pdev);
+> -	if (ret)
+> -		return ret;
+> -	pci_restore_state(pdev);
+>  	iwl_enable_interrupts(priv);
+>  
+>  	if (!(iwl_read32(priv, CSR_GP_CNTRL) &
+> @@ -2639,4 +2631,14 @@ int iwl_pci_resume(struct pci_dev *pdev)
+>  }
+>  EXPORT_SYMBOL(iwl_pci_resume);
+>  
+> +const struct dev_pm_ops iwl_pm_ops = {
+> +	.suspend = iwl_pci_suspend,
+> +	.resume = iwl_pci_resume,
+> +	.freeze = iwl_pci_suspend,
+> +	.thaw = iwl_pci_resume,
+> +	.poweroff = iwl_pci_suspend,
+> +	.restore = iwl_pci_resume,
+> +};
+> +EXPORT_SYMBOL(iwl_pm_ops);
+> +
+>  #endif /* CONFIG_PM */
+> diff --git a/drivers/net/wireless/iwlwifi/iwl-core.h b/drivers/net/wireless/iwlwifi/iwl-core.h
+> index 64527de..b17de82 100644
+> --- a/drivers/net/wireless/iwlwifi/iwl-core.h
+> +++ b/drivers/net/wireless/iwlwifi/iwl-core.h
+> @@ -615,9 +615,17 @@ __le32 iwl_add_beacon_time(struct iwl_priv *priv, u32 base,
+>  			   u32 addon, u32 beacon_interval);
+>  
+>  #ifdef CONFIG_PM
+> -int iwl_pci_suspend(struct pci_dev *pdev, pm_message_t state);
+> -int iwl_pci_resume(struct pci_dev *pdev);
+> -#endif /* CONFIG_PM */
+> +int iwl_pci_suspend(struct device *device);
+> +int iwl_pci_resume(struct device *device);
+> +extern const struct dev_pm_ops iwl_pm_ops;
+> +
+> +#define IWL_PM_OPS	(&iwl_pm_ops)
+> +
+> +#else /* !CONFIG_PM */
+> +
+> +#define IWL_PM_OPS	NULL
+> +
+> +#endif /* !CONFIG_PM */
+>  
+>  /*****************************************************
+>  *  Error Handling Debugging
+> diff --git a/drivers/net/wireless/iwlwifi/iwl3945-base.c b/drivers/net/wireless/iwlwifi/iwl3945-base.c
+> index 8f8c4b7..895690f 100644
+> --- a/drivers/net/wireless/iwlwifi/iwl3945-base.c
+> +++ b/drivers/net/wireless/iwlwifi/iwl3945-base.c
+> @@ -4274,10 +4274,7 @@ static struct pci_driver iwl3945_driver = {
+>  	.id_table = iwl3945_hw_card_ids,
+>  	.probe = iwl3945_pci_probe,
+>  	.remove = __devexit_p(iwl3945_pci_remove),
+> -#ifdef CONFIG_PM
+> -	.suspend = iwl_pci_suspend,
+> -	.resume = iwl_pci_resume,
+> -#endif
+> +	.driver.pm = IWL_PM_OPS,
+>  };
+>  
+>  static int __init iwl3945_init(void)
+> 
 
-I read in the manual of the AP: The DWL-2100AP is also interoperable
-with other 802.11g and 802.11b
-standards-compliant devices.
-
-
->
-> I had a look at the paper, and the original poster seems to have
-> exaggerated the paper's claims. They do indeed do the authentication
-> and association request before getting responses. For everything else,
-> they wait to get the response for the previous stage. The main
-> difference is that they greatly reduce the timeouts before retrying at
-> each stage. The paper is also limited to non-encrypted networks.
-
-My objetive in my current job is just that, reduce the time of authentication.
-
-Someone has a better idea or solution to reduce the association time?
-I need to use DHCP and could be a open network.
-
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
