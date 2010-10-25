@@ -1,44 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.19.149.2]:52217 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754622Ab0JDQlv (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 4 Oct 2010 12:41:51 -0400
-Received: from mail.atheros.com ([10.10.20.108])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Mon, 04 Oct 2010 09:41:42 -0700
-Date: Mon, 4 Oct 2010 09:41:49 -0700
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
-	"linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"stable@kernel.org" <stable@kernel.org>, Jouni Malinen <j@w1.fi>,
-	Paul Stewart <pstew@google.com>,
-	Amod Bodas <Amod.Bodas@Atheros.com>,
-	Vasanth Thiagarajan <Vasanth.Thiagarajan@Atheros.com>
-Subject: Re: [PATCH v2 0/3] mac80211: fix rate_control_send_low warnings
- for delbas
-Message-ID: <20101004164149.GE2105@tux>
-References: <1285965233-11097-1-git-send-email-lrodriguez@atheros.com>
- <1286198845.3620.37.camel@jlt3.sipsolutions.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <1286198845.3620.37.camel@jlt3.sipsolutions.net>
+Received: from he.sipsolutions.net ([78.46.109.217]:34709 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751617Ab0JYJJd (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 25 Oct 2010 05:09:33 -0400
+Subject: Re: Complexity of Adding 5/10 MHz Channel Support
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Galen <galenz@zinkconsulting.com>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <1A7DEBB8-6337-4551-9F21-14C20E13B86B@zinkconsulting.com>
+References: <1A7DEBB8-6337-4551-9F21-14C20E13B86B@zinkconsulting.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Mon, 25 Oct 2010 10:46:19 +0200
+Message-ID: <1287996379.3587.11.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Oct 04, 2010 at 06:27:25AM -0700, Johannes Berg wrote:
-> How about this instead of your patches 2 and 3?
+On Fri, 2010-10-15 at 15:30 -0700, Galen wrote:
+> Can anybody give me an idea the extent and complexity of adding
+> support for 5/10 MHz channels in mac80211?
 > 
-> We're disassociating from the old AP since we associate with the new AP,
-> so there's not a whole lot of sense in explicitly tearing down
-> aggregation sessions either, right?
+> Several different radios (including those supported by ath5k and
+> ath9k) have the hardware capability to operate at 5 MHz. Obviously,
+> support in those drivers is a separate issue, but it is my
+> understanding that mac80211 must first support 5/10 MHz channels.
 
-Good question, but why do we not get a warning when transmitting
-the disassoc frame? The race is hit when we are on the wrong
-channel, are you sure we are not sending a disassoc on a wrong
-channel? I would expect a smoother transition if we actually
-disassoc fromt the old AP in the ESS and I am not sure if we
-do that right now.
+Since we already have channel types, I've always suggested to add 5/10
+as such. The complexity comes from the fact that some channel types are
+incompatible, and we currently do not have to handle that -- a regular
+scan for example will cover all current channel types, but with 5/10 MHz
+you need to do special scans etc.
 
-  Luis
+Also, you need to start in cfg80211, not mac80211, and make everything
+from auth/assoc/connect/ibss-join etc. aware of channel types as well as
+center freq.
+
+johannes
+
