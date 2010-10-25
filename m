@@ -1,84 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail30f.wh2.ocn.ne.jp ([220.111.41.203]:4785 "HELO
-	mail30f.wh2.ocn.ne.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1751263Ab0JRC5N (ORCPT
+Received: from mail-bw0-f46.google.com ([209.85.214.46]:50898 "EHLO
+	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751414Ab0JYNYf (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 17 Oct 2010 22:57:13 -0400
-Received: from vs3004.wh2.ocn.ne.jp (125.206.180.167)
-	by mail30f.wh2.ocn.ne.jp (RS ver 1.0.95vs) with SMTP id 3-082928629
-	for <linux-wireless@vger.kernel.org>; Mon, 18 Oct 2010 11:57:11 +0900 (JST)
-From: Bruno Randolf <br1@einfach.org>
-To: greearb@candelatech.com
-Subject: Re: [ath5k-devel] [PATCH] ath5k: Properly initialize ath_common->cc_lock.
-Date: Mon, 18 Oct 2010 11:57:09 +0900
-Cc: ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org
-References: <1287183092-3220-1-git-send-email-greearb@candelatech.com>
-In-Reply-To: <1287183092-3220-1-git-send-email-greearb@candelatech.com>
+	Mon, 25 Oct 2010 09:24:35 -0400
+Message-ID: <4CC5851D.1040204@lwfinger.net>
+Date: Mon, 25 Oct 2010 08:24:45 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Message-Id: <201010181157.10005.br1@einfach.org>
+To: Serafeim Zanikolas <sez@debian.org>
+CC: herton@mandriva.com.br, htl10@users.sourceforge.net,
+	linville@tuxdriver.com, joe@perches.com, davem@davemloft.net,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] drivers: rtl818x: request DMA-able memory
+References: <1287952327-9924-1-git-send-email-sez@debian.org>
+In-Reply-To: <1287952327-9924-1-git-send-email-sez@debian.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat October 16 2010 07:51:32 greearb@candelatech.com wrote:
-> From: Ben Greear <greearb@candelatech.com>
+On 10/24/2010 03:32 PM, Serafeim Zanikolas wrote:
+> Despite the indicated intention in comment, the kmalloc() call was not
+> explicitly requesting memory from ZONE_DMA.
 > 
-> Otherwise, lockdep splats, at the least:
-> 
-> INFO: trying to register non-static key.
-> the code is fine but needs lockdep annotation.
-> turning off the locking correctness validator.
-> Pid: 0, comm: swapper Not tainted 2.6.36-rc8-wl+ #32
-> Call Trace:
->  [<c075d940>] ? printk+0xf/0x17
->  [<c045507a>] register_lock_class+0x5a/0x29e
->  [<c0456af5>] __lock_acquire+0xa2/0xb8c
->  [<c0455be2>] ? mark_lock+0x1e/0x1de
->  [<c041a540>] ? acpi_get_override_irq+0x85/0x8c
->  [<c0455536>] ? trace_hardirqs_off+0xb/0xd
->  [<c0457639>] lock_acquire+0x5a/0x78
->  [<f8126835>] ? ath5k_ani_calibration+0x24/0x52b [ath5k]
->  [<c075f6ed>] _raw_spin_lock_bh+0x20/0x2f
->  [<f8126835>] ? ath5k_ani_calibration+0x24/0x52b [ath5k]
->  [<f8126835>] ath5k_ani_calibration+0x24/0x52b [ath5k]
->  [<c0438f99>] ? tasklet_action+0x3b/0xc6
->  [<f8123c2b>] ath5k_tasklet_ani+0x18/0x22 [ath5k]
->  [<c0438fd1>] tasklet_action+0x73/0xc6
->  [<c043945f>] __do_softirq+0x86/0x111
->  [<c0439520>] do_softirq+0x36/0x5a
->  [<c0439659>] irq_exit+0x35/0x69
->  [<c0403fb9>] do_IRQ+0x86/0x9a
->  [<c04034ee>] common_interrupt+0x2e/0x40
->  [<c045007b>] ? do_adjtimex+0x223/0x55e
->  [<c0408245>] ? mwait_idle+0x5c/0x6c
->  [<c040227f>] cpu_idle+0x4e/0x6b
->  [<c074b6e9>] rest_init+0x8d/0x92
->  [<c09758ea>] start_kernel+0x320/0x325
->  [<c09750d0>] i386_start_kernel+0xd0/0xd7
-> 
-> Signed-off-by: Ben Greear <greearb@candelatech.com>
+> Signed-off-by: Serafeim Zanikolas <sez@debian.org>
 > ---
+>  drivers/net/wireless/rtl818x/rtl8187_dev.c |    3 ++-
+>  1 files changed, 2 insertions(+), 1 deletions(-)
 > 
-> :100644 100644 f1ae75d... 8251946...
-> :M	drivers/net/wireless/ath/ath5k/base.c
-> 
->  drivers/net/wireless/ath/ath5k/base.c |    1 +
->  1 files changed, 1 insertions(+), 0 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/ath/ath5k/base.c
-> b/drivers/net/wireless/ath/ath5k/base.c index f1ae75d..8251946 100644
-> --- a/drivers/net/wireless/ath/ath5k/base.c
-> +++ b/drivers/net/wireless/ath/ath5k/base.c
-> @@ -3580,6 +3580,7 @@ ath5k_pci_probe(struct pci_dev *pdev,
->  	common->ah = sc->ah;
->  	common->hw = hw;
->  	common->cachelsz = csz << 2; /* convert to bytes */
-> +	spin_lock_init(&common->cc_lock);
-> 
->  	/* Initialize device */
->  	ret = ath5k_hw_attach(sc);
+> diff --git a/drivers/net/wireless/rtl818x/rtl8187_dev.c b/drivers/net/wireless/rtl818x/rtl8187_dev.c
+> index 38fa824..771794d 100644
+> --- a/drivers/net/wireless/rtl818x/rtl8187_dev.c
+> +++ b/drivers/net/wireless/rtl818x/rtl8187_dev.c
+> @@ -1343,7 +1343,8 @@ static int __devinit rtl8187_probe(struct usb_interface *intf,
+>  	priv->is_rtl8187b = (id->driver_info == DEVICE_RTL8187B);
+>  
+>  	/* allocate "DMA aware" buffer for register accesses */
+> -	priv->io_dmabuf = kmalloc(sizeof(*priv->io_dmabuf), GFP_KERNEL);
+> +	priv->io_dmabuf = kmalloc(sizeof(*priv->io_dmabuf),
+> +				  GFP_DMA | GFP_KERNEL);
+>  	if (!priv->io_dmabuf) {
+>  		err = -ENOMEM;
+>  		goto err_free_dev;
 
-Yep, we forgot that. Thank you!
+ACK.
 
-Acked-by: Bruno Randolf <br1@einfach.org>
+Larry
+
