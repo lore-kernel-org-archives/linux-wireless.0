@@ -1,58 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f46.google.com ([209.85.214.46]:61688 "EHLO
-	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752697Ab0JKBLL (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 10 Oct 2010 21:11:11 -0400
-Received: by mail-bw0-f46.google.com with SMTP id 15so1403810bwz.19
-        for <linux-wireless@vger.kernel.org>; Sun, 10 Oct 2010 18:11:10 -0700 (PDT)
-From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-To: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-Cc: b43-dev@lists.infradead.org,
-	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-Subject: [PATCH 3/3] b43: N-PHY: fix logic in band switching
-Date: Mon, 11 Oct 2010 03:11:03 +0200
-Message-Id: <1286759463-32221-4-git-send-email-zajec5@gmail.com>
-In-Reply-To: <1286759463-32221-1-git-send-email-zajec5@gmail.com>
-References: <1286759463-32221-1-git-send-email-zajec5@gmail.com>
+Received: from igloo.linux.gr ([62.1.205.36]:54184 "EHLO igloo.linux.gr"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751518Ab0JYRr5 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 25 Oct 2010 13:47:57 -0400
+Date: Mon, 25 Oct 2010 19:44:20 +0200
+From: Serafeim Zanikolas <sez@debian.org>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: Hin-Tak Leung <htl10@users.sourceforge.net>,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	herton@mandriva.com.br, joe@perches.com, davem@davemloft.net,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] drivers: rtl818x: request DMA-able memory
+Message-ID: <20101025174420.GA3425@mobee>
+References: <1287952327-9924-1-git-send-email-sez@debian.org>
+ <4CC5851D.1040204@lwfinger.net>
+ <4CC5900A.2050209@users.sourceforge.net>
+ <20101025142232.GC2414@tuxdriver.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20101025142232.GC2414@tuxdriver.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
----
- drivers/net/wireless/b43/phy_n.c |    9 +++++----
- 1 files changed, 5 insertions(+), 4 deletions(-)
+On Mon, Oct 25, 2010 at 10:22:32AM -0400, John W. Linville wrote:
+> On Mon, Oct 25, 2010 at 03:11:22PM +0100, Hin-Tak Leung wrote:
+> > 
+> > 
+> > Larry Finger wrote:
+> > >On 10/24/2010 03:32 PM, Serafeim Zanikolas wrote:
+> > >>Despite the indicated intention in comment, the kmalloc() call was not
+> > >>explicitly requesting memory from ZONE_DMA.
+> > >>
+> > >>Signed-off-by: Serafeim Zanikolas <sez@debian.org>
+> > >>---
+> > >> drivers/net/wireless/rtl818x/rtl8187_dev.c |    3 ++-
+> > >> 1 files changed, 2 insertions(+), 1 deletions(-)
+> > >>
+> > >>diff --git a/drivers/net/wireless/rtl818x/rtl8187_dev.c b/drivers/net/wireless/rtl818x/rtl8187_dev.c
+> > >>index 38fa824..771794d 100644
+> > >>--- a/drivers/net/wireless/rtl818x/rtl8187_dev.c
+> > >>+++ b/drivers/net/wireless/rtl818x/rtl8187_dev.c
+> > >>@@ -1343,7 +1343,8 @@ static int __devinit rtl8187_probe(struct usb_interface *intf,
+> > >> 	priv->is_rtl8187b = (id->driver_info == DEVICE_RTL8187B);
+> > >> 	/* allocate "DMA aware" buffer for register accesses */
+> > >>-	priv->io_dmabuf = kmalloc(sizeof(*priv->io_dmabuf), GFP_KERNEL);
+> > >>+	priv->io_dmabuf = kmalloc(sizeof(*priv->io_dmabuf),
+> > >>+				  GFP_DMA | GFP_KERNEL);
+> > >> 	if (!priv->io_dmabuf) {
+> > >> 		err = -ENOMEM;
+> > >> 		goto err_free_dev;
+> > >
+> > >ACK.
+> > >
+> > >Larry
+> > 
+> > Acked-by: Hin-Tak Leung <htl10@users.sourceforge.net>
+> > 
+> > I had a quick look for similiar constructs and AFAIK only the
+> > b43/b43legacy drivers uses DMA buffers. Seems to be a rare practice.
+> > Is that something we should or should not do?
+> 
+> It doesn't mean what you think it means.  It is a relic of the past,
+> used to indicate memory below 16MB so that ISA devices could do DMA.
 
-diff --git a/drivers/net/wireless/b43/phy_n.c b/drivers/net/wireless/b43/phy_n.c
-index 88a4411..21cfd42 100644
---- a/drivers/net/wireless/b43/phy_n.c
-+++ b/drivers/net/wireless/b43/phy_n.c
-@@ -3337,17 +3337,18 @@ static void b43_nphy_channel_setup(struct b43_wldev *dev,
- 	struct b43_phy *phy = &dev->phy;
- 	struct b43_phy_n *nphy = dev->phy.n;
- 
--	u16 tmp;
-+	u16 old_band_5ghz;
- 	u32 tmp32;
- 
--	tmp = b43_phy_read(dev, B43_NPHY_BANDCTL) & B43_NPHY_BANDCTL_5GHZ;
--	if (new_channel->band == IEEE80211_BAND_5GHZ && tmp == 0) {
-+	old_band_5ghz =
-+		b43_phy_read(dev, B43_NPHY_BANDCTL) & B43_NPHY_BANDCTL_5GHZ;
-+	if (new_channel->band == IEEE80211_BAND_5GHZ && !old_band_5ghz) {
- 		tmp32 = b43_read32(dev, B43_MMIO_PSM_PHY_HDR);
- 		b43_write32(dev, B43_MMIO_PSM_PHY_HDR, tmp32 | 4);
- 		b43_phy_set(dev, B43_PHY_B_BBCFG, 0xC000);
- 		b43_write32(dev, B43_MMIO_PSM_PHY_HDR, tmp32);
- 		b43_phy_set(dev, B43_NPHY_BANDCTL, B43_NPHY_BANDCTL_5GHZ);
--	} else if (new_channel->band == IEEE80211_BAND_5GHZ) {
-+	} else if (new_channel->band == IEEE80211_BAND_2GHZ && old_band_5ghz) {
- 		b43_phy_mask(dev, B43_NPHY_BANDCTL, ~B43_NPHY_BANDCTL_5GHZ);
- 		tmp32 = b43_read32(dev, B43_MMIO_PSM_PHY_HDR);
- 		b43_write32(dev, B43_MMIO_PSM_PHY_HDR, tmp32 | 4);
--- 
-1.7.1
+Right. Sorry for the noise.
 
+-S
