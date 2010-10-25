@@ -1,246 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:53630 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755967Ab0JGVDR (ORCPT
+Received: from mail-ww0-f44.google.com ([74.125.82.44]:34075 "EHLO
+	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759189Ab0JYRiq convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 7 Oct 2010 17:03:17 -0400
-Subject: Re: [PATCH] mac80211: hoist sta->lock from reorder release timer
-From: Johannes Berg <johannes@sipsolutions.net>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: Christian Lamparter <chunkeey@googlemail.com>,
-	linux-wireless@vger.kernel.org,
-	Ben Greear <greearb@candelatech.com>,
-	Ming Lei <tom.leiming@gmail.com>
-In-Reply-To: <20101006202106.GL2472@tuxdriver.com>
-References: <201010061200.54364.chunkeey@googlemail.com>
-	 <201010061220.50800.chunkeey@googlemail.com>
-	 <1286361705.3655.121.camel@jlt3.sipsolutions.net>
-	 <201010061343.23463.chunkeey@googlemail.com>
-	 <1286365578.3655.187.camel@jlt3.sipsolutions.net>
-	 <20101006202106.GL2472@tuxdriver.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Thu, 07 Oct 2010 23:03:13 +0200
-Message-ID: <1286485393.20974.40.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+	Mon, 25 Oct 2010 13:38:46 -0400
+Received: by wwe15 with SMTP id 15so3734034wwe.1
+        for <linux-wireless@vger.kernel.org>; Mon, 25 Oct 2010 10:38:45 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <AANLkTik-SaE2ShV7H6Lv1qFQ-FM5fPuWGws6pWM+b6Go@mail.gmail.com>
+References: <AANLkTinP32=snam3Bex+OC8LL00awfjrJz4834mhOaNL@mail.gmail.com>
+ <1287995967.3587.9.camel@jlt3.sipsolutions.net> <AANLkTik-SaE2ShV7H6Lv1qFQ-FM5fPuWGws6pWM+b6Go@mail.gmail.com>
+From: "Cassiano Tartari, Eng." <falecom@cassianotartari.eng.br>
+Date: Mon, 25 Oct 2010 15:38:24 -0200
+Message-ID: <AANLkTik12g6kmynbgyhPuu+B5jZ9Swv+1PhAg9EKMByw@mail.gmail.com>
+Subject: Re: Modifying the driver iwlwifi
+To: Blaise Gassend <blaise@willowgarage.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2010-10-06 at 16:21 -0400, John W. Linville wrote:
+On Mon, Oct 25, 2010 at 2:27 PM, Blaise Gassend <blaise@willowgarage.com> wrote:
+> On Mon, Oct 25, 2010 at 1:39 AM, Johannes Berg
+> <johannes@sipsolutions.net> wrote:
+>> On Thu, 2010-10-21 at 14:17 -0200, Cassiano Tartari, Eng. wrote:
+>>> Its basic idea is that a client doesn't wait each
+>>> response to go to the next step, so just do: AUTH REQ -> ASSOC REQ ->
+>>> DHCP DISC -> DHCP REQ -> ARP QUERY and a PING THROUGH to verify that
+>>> an end-to-end connection is available.
+>>
+>> I'd just like to point out that for various reasons (that I invite you
+>> to research for yourself) there's no way this can work in encrypted
+>> networks, or against compliant/certified access points.
 
-> > I think it's probably easier to fix than to revert now? There are only a
-> > handful of fields, and it seemed to me that most of them can easily be
-> > moved under the reorder lock.
-> 
-> I would prefer a fix on top rather than a series of reverts...
+In my work, I could use a open network.
 
-I think this should fix it. Somebody review please?
+How can I know if a AP is "compliant/certified" ? I'm such a newbie.
 
-johannes
-
----
- net/mac80211/agg-rx.c      |    8 +++-----
- net/mac80211/debugfs_sta.c |   29 +++++++++++++++--------------
- net/mac80211/rx.c          |   17 +++++++++++++----
- net/mac80211/sta_info.h    |   29 ++++++++++++++---------------
- 4 files changed, 45 insertions(+), 38 deletions(-)
-
---- wireless-testing.orig/net/mac80211/agg-rx.c	2010-10-07 22:44:04.000000000 +0200
-+++ wireless-testing/net/mac80211/agg-rx.c	2010-10-07 22:53:33.000000000 +0200
-@@ -129,9 +129,7 @@ static void sta_rx_agg_reorder_timer_exp
- 			timer_to_tid[0]);
- 
- 	rcu_read_lock();
--	spin_lock(&sta->lock);
- 	ieee80211_release_reorder_timeout(sta, *ptid);
--	spin_unlock(&sta->lock);
- 	rcu_read_unlock();
- }
- 
-@@ -256,7 +254,7 @@ void ieee80211_process_addba_request(str
- 	}
- 
- 	/* prepare A-MPDU MLME for Rx aggregation */
--	tid_agg_rx = kmalloc(sizeof(struct tid_ampdu_rx), GFP_ATOMIC);
-+	tid_agg_rx = kmalloc(sizeof(struct tid_ampdu_rx), GFP_KERNEL);
- 	if (!tid_agg_rx) {
- #ifdef CONFIG_MAC80211_HT_DEBUG
- 		if (net_ratelimit())
-@@ -280,9 +278,9 @@ void ieee80211_process_addba_request(str
- 
- 	/* prepare reordering buffer */
- 	tid_agg_rx->reorder_buf =
--		kcalloc(buf_size, sizeof(struct sk_buff *), GFP_ATOMIC);
-+		kcalloc(buf_size, sizeof(struct sk_buff *), GFP_KERNEL);
- 	tid_agg_rx->reorder_time =
--		kcalloc(buf_size, sizeof(unsigned long), GFP_ATOMIC);
-+		kcalloc(buf_size, sizeof(unsigned long), GFP_KERNEL);
- 	if (!tid_agg_rx->reorder_buf || !tid_agg_rx->reorder_time) {
- #ifdef CONFIG_MAC80211_HT_DEBUG
- 		if (net_ratelimit())
---- wireless-testing.orig/net/mac80211/debugfs_sta.c	2010-10-07 22:47:41.000000000 +0200
-+++ wireless-testing/net/mac80211/debugfs_sta.c	2010-10-07 22:50:03.000000000 +0200
-@@ -116,34 +116,35 @@ static ssize_t sta_agg_status_read(struc
- 	char buf[71 + STA_TID_NUM * 40], *p = buf;
- 	int i;
- 	struct sta_info *sta = file->private_data;
-+	struct tid_ampdu_rx *tid_rx;
-+	struct tid_ampdu_tx *tid_tx;
-+
-+	rcu_read_lock();
- 
--	spin_lock_bh(&sta->lock);
- 	p += scnprintf(p, sizeof(buf) + buf - p, "next dialog_token: %#02x\n",
- 			sta->ampdu_mlme.dialog_token_allocator + 1);
- 	p += scnprintf(p, sizeof(buf) + buf - p,
- 		       "TID\t\tRX active\tDTKN\tSSN\t\tTX\tDTKN\tpending\n");
-+
- 	for (i = 0; i < STA_TID_NUM; i++) {
-+		tid_rx = rcu_dereference(sta->ampdu_mlme.tid_rx[i]);
-+		tid_tx = rcu_dereference(sta->ampdu_mlme.tid_tx[i]);
-+
- 		p += scnprintf(p, sizeof(buf) + buf - p, "%02d", i);
--		p += scnprintf(p, sizeof(buf) + buf - p, "\t\t%x",
--				!!sta->ampdu_mlme.tid_rx[i]);
-+		p += scnprintf(p, sizeof(buf) + buf - p, "\t\t%x", !!tid_rx);
- 		p += scnprintf(p, sizeof(buf) + buf - p, "\t%#.2x",
--				sta->ampdu_mlme.tid_rx[i] ?
--				sta->ampdu_mlme.tid_rx[i]->dialog_token : 0);
-+				tid_rx ? tid_rx->dialog_token : 0);
- 		p += scnprintf(p, sizeof(buf) + buf - p, "\t%#.3x",
--				sta->ampdu_mlme.tid_rx[i] ?
--				sta->ampdu_mlme.tid_rx[i]->ssn : 0);
-+				tid_rx ? tid_rx->ssn : 0);
- 
--		p += scnprintf(p, sizeof(buf) + buf - p, "\t\t%x",
--				!!sta->ampdu_mlme.tid_tx[i]);
-+		p += scnprintf(p, sizeof(buf) + buf - p, "\t\t%x", !!tid_tx);
- 		p += scnprintf(p, sizeof(buf) + buf - p, "\t%#.2x",
--				sta->ampdu_mlme.tid_tx[i] ?
--				sta->ampdu_mlme.tid_tx[i]->dialog_token : 0);
-+				tid_tx ? tid_tx->dialog_token : 0);
- 		p += scnprintf(p, sizeof(buf) + buf - p, "\t%03d",
--				sta->ampdu_mlme.tid_tx[i] ?
--				skb_queue_len(&sta->ampdu_mlme.tid_tx[i]->pending) : 0);
-+				tid_tx ? skb_queue_len(&tid_tx->pending) : 0);
- 		p += scnprintf(p, sizeof(buf) + buf - p, "\n");
- 	}
--	spin_unlock_bh(&sta->lock);
-+	rcu_read_unlock();
- 
- 	return simple_read_from_buffer(userbuf, count, ppos, buf, p - buf);
- }
---- wireless-testing.orig/net/mac80211/sta_info.h	2010-10-07 22:44:16.000000000 +0200
-+++ wireless-testing/net/mac80211/sta_info.h	2010-10-07 23:01:53.000000000 +0200
-@@ -81,13 +81,14 @@ enum ieee80211_sta_info_flags {
-  * @stop_initiator: initiator of a session stop
-  * @tx_stop: TX DelBA frame when stopping
-  *
-- * This structure is protected by RCU and the per-station
-- * spinlock. Assignments to the array holding it must hold
-- * the spinlock, only the TX path can access it under RCU
-- * lock-free if, and only if, the state has  the flag
-- * %HT_AGG_STATE_OPERATIONAL set. Otherwise, the TX path
-- * must also acquire the spinlock and re-check the state,
-- * see comments in the tx code touching it.
-+ * This structure's lifetime is managed by RCU, assignments to
-+ * the array holding it must hold the aggregation mutex.
-+ *
-+ * The TX path can access it under RCU lock-free if, and
-+ * only if, the state has the flag %HT_AGG_STATE_OPERATIONAL
-+ * set. Otherwise, the TX path must also acquire the spinlock
-+ * and re-check the state, see comments in the tx code
-+ * touching it.
-  */
- struct tid_ampdu_tx {
- 	struct rcu_head rcu_head;
-@@ -115,15 +116,13 @@ struct tid_ampdu_tx {
-  * @rcu_head: RCU head used for freeing this struct
-  * @reorder_lock: serializes access to reorder buffer, see below.
-  *
-- * This structure is protected by RCU and the per-station
-- * spinlock. Assignments to the array holding it must hold
-- * the spinlock.
-+ * This structure's lifetime is managed by RCU, assignments to
-+ * the array holding it must hold the aggregation mutex.
-  *
-- * The @reorder_lock is used to protect the variables and
-- * arrays such as @reorder_buf, @reorder_time, @head_seq_num,
-- * @stored_mpdu_num and @reorder_time from being corrupted by
-- * concurrent access of the RX path and the expired frame
-- * release timer.
-+ * The @reorder_lock is used to protect the members of this
-+ * struct, except for @timeout, @buf_size and @dialog_token,
-+ * which are constant across the lifetime of the struct (the
-+ * dialog token being used only for debugging).
-  */
- struct tid_ampdu_rx {
- 	struct rcu_head rcu_head;
---- wireless-testing.orig/net/mac80211/rx.c	2010-10-07 22:52:03.000000000 +0200
-+++ wireless-testing/net/mac80211/rx.c	2010-10-07 22:58:17.000000000 +0200
-@@ -538,6 +538,8 @@ static void ieee80211_release_reorder_fr
- {
- 	struct sk_buff *skb = tid_agg_rx->reorder_buf[index];
- 
-+	lockdep_assert_held(&tid_agg_rx->reorder_lock);
-+
- 	if (!skb)
- 		goto no_frame;
- 
-@@ -557,6 +559,8 @@ static void ieee80211_release_reorder_fr
- {
- 	int index;
- 
-+	lockdep_assert_held(&tid_agg_rx->reorder_lock);
-+
- 	while (seq_less(tid_agg_rx->head_seq_num, head_seq_num)) {
- 		index = seq_sub(tid_agg_rx->head_seq_num, tid_agg_rx->ssn) %
- 							tid_agg_rx->buf_size;
-@@ -581,6 +585,8 @@ static void ieee80211_sta_reorder_releas
- {
- 	int index, j;
- 
-+	lockdep_assert_held(&tid_agg_rx->reorder_lock);
-+
- 	/* release the buffer until next missing frame */
- 	index = seq_sub(tid_agg_rx->head_seq_num, tid_agg_rx->ssn) %
- 						tid_agg_rx->buf_size;
-@@ -659,10 +665,11 @@ static bool ieee80211_sta_manage_reorder
- 	int index;
- 	bool ret = true;
- 
-+	spin_lock(&tid_agg_rx->reorder_lock);
-+
- 	buf_size = tid_agg_rx->buf_size;
- 	head_seq_num = tid_agg_rx->head_seq_num;
- 
--	spin_lock(&tid_agg_rx->reorder_lock);
- 	/* frame with out of date sequence number */
- 	if (seq_less(mpdu_seq_num, head_seq_num)) {
- 		dev_kfree_skb(skb);
-@@ -1899,9 +1906,12 @@ ieee80211_rx_h_ctrl(struct ieee80211_rx_
- 			mod_timer(&tid_agg_rx->session_timer,
- 				  TU_TO_EXP_TIME(tid_agg_rx->timeout));
- 
-+		spin_lock(&tid_agg_rx->reorder_lock);
- 		/* release stored frames up to start of BAR */
- 		ieee80211_release_reorder_frames(hw, tid_agg_rx, start_seq_num,
- 						 frames);
-+		spin_unlock(&tid_agg_rx->reorder_lock);
-+
- 		kfree_skb(skb);
- 		return RX_QUEUED;
- 	}
-@@ -2493,9 +2503,8 @@ static void ieee80211_invoke_rx_handlers
- }
- 
- /*
-- * This function makes calls into the RX path. Therefore the
-- * caller must hold the sta_info->lock and everything has to
-- * be under rcu_read_lock protection as well.
-+ * This function makes calls into the RX path, therefore
-+ * it has to be invoked under RCU read lock.
-  */
- void ieee80211_release_reorder_timeout(struct sta_info *sta, int tid)
- {
+I read in the manual of the AP: The DWL-2100AP is also interoperable
+with other 802.11g and 802.11b
+standards-compliant devices.
 
 
+>
+> I had a look at the paper, and the original poster seems to have
+> exaggerated the paper's claims. They do indeed do the authentication
+> and association request before getting responses. For everything else,
+> they wait to get the response for the previous stage. The main
+> difference is that they greatly reduce the timeouts before retrying at
+> each stage. The paper is also limited to non-encrypted networks.
+
+My objetive in my current job is just that, reduce the time of authentication.
+
+Someone has a better idea or solution to reduce the association time?
+I need to use DHCP and could be a open network.
+
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
