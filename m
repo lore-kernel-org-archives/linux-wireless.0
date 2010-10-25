@@ -1,50 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([192.100.122.233]:54487 "EHLO
-	mgw-mx06.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754118Ab0JMMiD (ORCPT
+Received: from smtp.nokia.com ([192.100.105.134]:18305 "EHLO
+	mgw-mx09.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751285Ab0JYMhK (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 13 Oct 2010 08:38:03 -0400
-Subject: Re: [RFC: WL1271 DC supprot on OMAP3EVM 0/5]
-From: Luciano Coelho <luciano.coelho@nokia.com>
-To: "ext csanjay@mistralsolutions.com" <csanjay@mistralsolutions.com>
-Cc: "linux-omap@vger.kernel.org" <linux-omap@vger.kernel.org>,
+	Mon, 25 Oct 2010 08:37:10 -0400
+Received: from vaebh105.NOE.Nokia.com (vaebh105.europe.nokia.com [10.160.244.31])
+	by mgw-mx09.nokia.com (Switch-3.3.3/Switch-3.3.3) with ESMTP id o9PCauqN006906
+	for <linux-wireless@vger.kernel.org>; Mon, 25 Oct 2010 07:37:09 -0500
+Subject: Re: [PATCH] wl1271: Fix RX path stall
+From: Tuomas Katila <ext-tuomas.2.katila@nokia.com>
+To: "ext juuso.oikarinen@nokia.com" <juuso.oikarinen@nokia.com>
+Cc: "Coelho Luciano (Nokia-MS/Helsinki)" <Luciano.Coelho@nokia.com>,
 	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <1286967439-705-1-git-send-email-csanjay@mistralsolutions.com>
-References: <1286967439-705-1-git-send-email-csanjay@mistralsolutions.com>
+In-Reply-To: <1287998669-27209-1-git-send-email-juuso.oikarinen@nokia.com>
+References: <1287998669-27209-1-git-send-email-juuso.oikarinen@nokia.com>
 Content-Type: text/plain; charset="UTF-8"
-Date: Wed, 13 Oct 2010 15:37:54 +0300
-Message-ID: <1286973475.18871.27.camel@chilepepper>
+Date: Mon, 25 Oct 2010 15:31:05 +0300
+Message-ID: <1288009865.17497.347.camel@tukatila-desktop>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Sanjay,
-
-On Wed, 2010-10-13 at 12:57 +0200, ext csanjay@mistralsolutions.com
-wrote:
-> From: Sanjay Kumar Champati <csanjay@mistralsolutions.com>
+On Mon, 2010-10-25 at 11:24 +0200, ext juuso.oikarinen@nokia.com wrote:
+> From: Juuso Oikarinen <juuso.oikarinen@nokia.com>
 > 
+> The wl1271_rx function loops through packets in an aggregated buffer. Each
+> packet in the buffer is handled by a call to wl1271_rx_handle_data, which will
+> fail if skb memory allocation fails or production mode is enabled. These
+> failures currently prevent the rx counters to be incremented, thus causing the
+> rx loop to run forever.
 > 
-> Sanjay Kumar Champati (5):
->   ARM: Supported MMC 2 features for OMAP3EVM
->   ARM: Supported for Standard SDIO driver on OMAP3EVM for WL1271 DC
->   ARM: Supported for BT enable on OMAP3EVM for WL1271 DC
->   ARM: Added ALSA audio support for WL1271 DC over the PCM interface
->     (OMAP37XX)
->   Supported BT and WLAN configuration for WL1271 over the OMAP37XX
+> Fix this by ignoring error codes reported wl1271_rx_handle_data function.
+> This essentially means that frames will be dropped in production mode, which
+> is the intetion, and frames will be dropped if memory allocation fails, which
+> is a decent way to recover from that situation.
+> 
+> Signed-off-by: Juuso Oikarinen <juuso.oikarinen@nokia.com>
+> ---
 
-Nobody (or at least most of us) don't even understand what exactly the
-purpose of your patchset it.  Can you try to explain what you're trying
-to achieve?
+Tested-by: Tuomas Katila <ext-tuomas.2.katila@nokia.com>
 
-Also, you should clean things up, put platform-specific things where
-they belong etc.  You really must review your implementation from an
-architectural point of view.  If you have questions, ask here first.  In
-most cases a patch describes things better than a thousand words, but it
-is certainly not the case here. ;)
+I tested this with production mode in the scenario where it was
+previously failing, and it is not getting stuck anymore.
 
+-Tuomas
 
--- 
-Cheers,
-Luca.
 
