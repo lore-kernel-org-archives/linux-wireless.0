@@ -1,46 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp-out.google.com ([216.239.44.51]:58482 "EHLO
-	smtp-out.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755044Ab0JOFVx convert rfc822-to-8bit (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:56857 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751101Ab0JYNp3 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 15 Oct 2010 01:21:53 -0400
-Received: from kpbe16.cbf.corp.google.com (kpbe16.cbf.corp.google.com [172.25.105.80])
-	by smtp-out.google.com with ESMTP id o9F5LqjS028065
-	for <linux-wireless@vger.kernel.org>; Thu, 14 Oct 2010 22:21:52 -0700
-Received: from iwn37 (iwn37.prod.google.com [10.241.68.101])
-	by kpbe16.cbf.corp.google.com with ESMTP id o9F5LhBp013624
-	for <linux-wireless@vger.kernel.org>; Thu, 14 Oct 2010 22:21:51 -0700
-Received: by iwn37 with SMTP id 37so589483iwn.15
-        for <linux-wireless@vger.kernel.org>; Thu, 14 Oct 2010 22:21:51 -0700 (PDT)
+	Mon, 25 Oct 2010 09:45:29 -0400
+Date: Mon, 25 Oct 2010 09:35:56 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Serafeim Zanikolas <sez@debian.org>
+Cc: herton@mandriva.com.br, htl10@users.sourceforge.net,
+	Larry.Finger@lwfinger.net, joe@perches.com, davem@davemloft.net,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] drivers: rtl818x: request DMA-able memory
+Message-ID: <20101025133555.GB2414@tuxdriver.com>
+References: <1287952327-9924-1-git-send-email-sez@debian.org>
 MIME-Version: 1.0
-In-Reply-To: <20101014224326.9E9912005F@glenhelen.mtv.corp.google.com>
-References: <20101014224326.9E9912005F@glenhelen.mtv.corp.google.com>
-Date: Thu, 14 Oct 2010 22:21:50 -0700
-Message-ID: <AANLkTinyc56O-xeYEMSD+B=yWNnd_Ch-NUrPv5uGQyr1@mail.gmail.com>
-Subject: Re: [PATCH 2/2] mac80211: Add support for CQM tx bitrate monitoring
-From: Paul Stewart <pstew@google.com>
-To: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1287952327-9924-1-git-send-email-sez@debian.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Oct 14, 2010 at 2:40 PM, Paul Stewart <pstew@google.com> wrote:
-> +       if (mcs_rate_table_cache[mcs] == 0) {
-> +               modulation = mcs & 7;
-> +               streams = (mcs >> 3) + 1;
-> +               base_rate = (rate_ptr->flags & IEEE80211_TX_RC_40_MHZ_WIDTH) ?
-> +                 13500000 : 6500000;
-> +               gi_div = (rate_ptr->flags & IEEE80211_TX_RC_SHORT_GI) ? 9 : 10;
-> +               rate_val = base_rate * mod_table[modulation] * streams / gi_div;
-> +               mcs_rate_table_cache[mcs] = (rate_val + 5000) / 10000;
-> +       }
-> +
-> +       return  mcs_rate_table_cache[mcs] * 100;
-> +}
+On Sun, Oct 24, 2010 at 10:32:07PM +0200, Serafeim Zanikolas wrote:
+> Despite the indicated intention in comment, the kmalloc() call was not
+> explicitly requesting memory from ZONE_DMA.
+> 
+> Signed-off-by: Serafeim Zanikolas <sez@debian.org>
+> ---
+>  drivers/net/wireless/rtl818x/rtl8187_dev.c |    3 ++-
+>  1 files changed, 2 insertions(+), 1 deletions(-)
+> 
+> diff --git a/drivers/net/wireless/rtl818x/rtl8187_dev.c b/drivers/net/wireless/rtl818x/rtl8187_dev.c
+> index 38fa824..771794d 100644
+> --- a/drivers/net/wireless/rtl818x/rtl8187_dev.c
+> +++ b/drivers/net/wireless/rtl818x/rtl8187_dev.c
+> @@ -1343,7 +1343,8 @@ static int __devinit rtl8187_probe(struct usb_interface *intf,
+>  	priv->is_rtl8187b = (id->driver_info == DEVICE_RTL8187B);
+>  
+>  	/* allocate "DMA aware" buffer for register accesses */
+> -	priv->io_dmabuf = kmalloc(sizeof(*priv->io_dmabuf), GFP_KERNEL);
+> +	priv->io_dmabuf = kmalloc(sizeof(*priv->io_dmabuf),
+> +				  GFP_DMA | GFP_KERNEL);
+>  	if (!priv->io_dmabuf) {
+>  		err = -ENOMEM;
+>  		goto err_free_dev;
 
-Um, that doesn't work right.  The cache needs to be 4 times as big to
-account for account from 40MHZ and SHORT_GI.  I'll send a revised
-version of this tomorrow.
+Are you sure about this?  Are there USB controllers out there with
+the ISA 16MB limitation for DMA?
 
---
-Paul
+John
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
