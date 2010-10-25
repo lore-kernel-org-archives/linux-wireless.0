@@ -1,129 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.19.149.2]:22144 "EHLO mail.atheros.com"
+Received: from mail.atheros.com ([12.19.149.2]:38043 "EHLO mail.atheros.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753935Ab0JAUvH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 1 Oct 2010 16:51:07 -0400
+	id S1751771Ab0JYHQL (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 25 Oct 2010 03:16:11 -0400
 Received: from mail.atheros.com ([10.10.20.107])
 	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Fri, 01 Oct 2010 13:50:58 -0700
-Date: Fri, 1 Oct 2010 13:50:59 -0700
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: "linville@tuxdriver.com" <linville@tuxdriver.com>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
-	"stable@kernel.org" <stable@kernel.org>, Jouni Malinen <j@w1.fi>,
-	Paul Stewart <pstew@google.com>,
-	Amod Bodas <Amod.Bodas@Atheros.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Vasanth Thiagarajan <Vasanth.Thiagarajan@Atheros.com>
-Subject: Re: [PATCH v2 0/3] mac80211: fix rate_control_send_low warnings
- for delbas
-Message-ID: <20101001205059.GA10343@tux>
-References: <1285965233-11097-1-git-send-email-lrodriguez@atheros.com>
+	for <linux-wireless@vger.kernel.org>; Mon, 25 Oct 2010 00:16:00 -0700
+From: Mohammed Shafi Shajakhan <mshajakhan@atheros.com>
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>, <lrodriguez@atheros.com>,
+	<j@w1.fi>, <Senthilkumar.Balasubramanian@Atheros.com>,
+	<Vasanth.Thiagarajan@Atheros.com>, <nbd@openwrt.org>,
+	Mohammed Shafi Shajakhan <mshajakhan@atheros.com>
+Subject: [PATCH] ath9k: Properly assign boolean types Signed-off-by: Mohammed Shafi Shajakhan <mshajakhan@atheros.com>
+Date: Mon, 25 Oct 2010 12:46:01 +0530
+Message-ID: <1287990961-2619-1-git-send-email-mshajakhan@atheros.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <1285965233-11097-1-git-send-email-lrodriguez@atheros.com>
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Oct 01, 2010 at 01:33:50PM -0700, Luis R. Rodriguez wrote:
-> The following two patches:
-> 
-> 9c87ba6 - mac80211: Fix reassociation processing (within ESS roaming)
-> e1dd33f - cfg80211: Allow reassociation in associated state
-> 
-> $ git describe --contains 9c87ba6
-> v2.6.34-rc2~48^2~77^2~6
-> $ git describe --contains 9c87ba6
-> v2.6.34-rc2~48^2~77^2~6
-> 
-> Added support for cfg80211/mac80211 to cleanly roam between two BSSes
-> on an ESS by allowing the station to authenticate to two APS at the
-> same time, and when an association comes in for the new AP we first
-> disassociate from the old AP and then associate with the new one.
-> 
-> What we forgot to take into consideration is that when we disassociate
-> with the older AP we may need to transmit frames to that AP and those
-> frames may actually be intended to go under a different channel and
-> even sometimes a completely separate band than the new APs. When we
-> TX a frame we assume the frame we want to TX however will be on the
-> current hardware configured channel. The channel we would try to
-> send a frame on can be different than the channel we prepared the
-> bitrates for the peer on though. What this meant is that upon tearing
-> down a BA agreement we would try to send a frame to a peer but not
-> find a valid rate for that peer and generate warnings like the
-> following:
-> 
-> WARNING: at include/net/mac80211.h:2677 rate_control_send_low+0xd3/0x140 [mac80211]()
-> Hardware name: 6460DWU
-> Modules linked in: ath9k mac80211 ath9k_common ath9k_hw ath cfg80211 <etc>
-> Pid: 898, comm: wpa_supplicant Tainted: G        W   2.6.36-rc5-wl+ #254
-> Call Trace:
->  [<ffffffff8105fddf>] warn_slowpath_common+0x7f/0xc0
->  [<ffffffff8105fe3a>] warn_slowpath_null+0x1a/0x20
->  [<ffffffffa03b8573>] rate_control_send_low+0xd3/0x140 [mac80211]
->  [<ffffffffa0192fa8>] ath_get_rate+0x48/0x570 [ath9k]
->  [<ffffffff812b8d19>] ? put_dec+0x59/0x60
->  [<ffffffffa03b839e>] rate_control_get_rate+0x8e/0x190 [mac80211]
->  [<ffffffffa03c27e8>] ieee80211_tx_h_rate_ctrl+0x1a8/0x4e0 [mac80211]
->  [<ffffffffa03c2ec0>] invoke_tx_handlers+0x100/0x140 [mac80211]
->  [<ffffffffa03c2f85>] ieee80211_tx+0x85/0x240 [mac80211]
->  [<ffffffff81479c70>] ? skb_release_data+0xd0/0xe0
->  [<ffffffff8147bb0d>] ? pskb_expand_head+0x10d/0x1a0
->  [<ffffffffa03c31f6>] ieee80211_xmit+0xb6/0x1d0 [mac80211]
->  [<ffffffff81479db3>] ? __alloc_skb+0x83/0x170
->  [<ffffffffa03c3364>] ieee80211_tx_skb+0x54/0x70 [mac80211]
->  [<ffffffffa03ac0dd>] ieee80211_send_delba+0x11d/0x190 [mac80211]
->  [<ffffffffa03adcf0>] ___ieee80211_stop_rx_ba_session+0xf0/0x110 [mac80211]
->  [<ffffffffa03add60>] __ieee80211_stop_rx_ba_session+0x50/0x70 [mac80211]
->  [<ffffffffa03ac3f3>] ieee80211_sta_tear_down_BA_sessions+0x43/0x50 [mac80211]
->  [<ffffffffa03b23c3>] ieee80211_set_disassoc+0x103/0x240 [mac80211]
->  [<ffffffffa03b3b2d>] ieee80211_mgd_assoc+0x8d/0x3a0 [mac80211]
->  [<ffffffffa03ba66f>] ieee80211_assoc+0x4f/0x80 [mac80211]
->  [<ffffffffa011e5b6>] __cfg80211_mlme_assoc+0x1f6/0x240 [cfg80211]
->  [<ffffffffa011e68f>] cfg80211_mlme_assoc+0x8f/0xc0 [cfg80211]
->  [<ffffffffa010afd0>] ? cfg80211_get_dev_from_ifindex+0x70/0x80 [cfg80211]
->  [<ffffffffa011489a>] nl80211_associate+0x23a/0x260 [cfg80211]
->  [<ffffffff812c6c6f>] ? nla_parse+0xef/0x110
->  [<ffffffff814ad738>] genl_rcv_msg+0x1d8/0x210
->  [<ffffffff81475cf4>] ? sock_alloc_send_pskb+0x1d4/0x330
->  [<ffffffff814ad560>] ? genl_rcv_msg+0x0/0x210
->  [<ffffffff814ac179>] netlink_rcv_skb+0xa9/0xd0
->  [<ffffffff814ad545>] genl_rcv+0x25/0x40
->  [<ffffffff814abdd8>] netlink_unicast+0x2c8/0x2e0
->  [<ffffffff814acc30>] netlink_sendmsg+0x250/0x360
->  [<ffffffff81472643>] sock_sendmsg+0xf3/0x120
->  [<ffffffff81562dbe>] ? _raw_spin_lock+0xe/0x20
->  [<ffffffff81471105>] ? move_addr_to_kernel+0x65/0x70
->  [<ffffffff8147d168>] ? verify_iovec+0x88/0xe0
->  [<ffffffff81472d70>] sys_sendmsg+0x240/0x3a0
->  [<ffffffff81151b0a>] ? do_readv_writev+0x1aa/0x1f0
->  [<ffffffff815604b0>] ? schedule+0x3c0/0xa00
->  [<ffffffff81151b98>] ? vfs_writev+0x48/0x60
->  [<ffffffff81151cc1>] ? sys_writev+0x51/0xb0
->  [<ffffffff8100b072>] system_call_fastpath+0x16/0x1b
-> 
-> This can be easily reproduced with the test-roam script [1] and
-> statically defining the ESS variable with the BSSes of an AP
-> in 2.4 GHz band and another one on the 5 GHz band.
-> 
-> Since we end up associated 
+From: Mohammed Shafi Shajakhan <mshajakhan@atheros.com>
 
-typo, I meant authenticate
+---
+ drivers/net/wireless/ath/ath9k/rc.c |    9 ++++++---
+ 1 files changed, 6 insertions(+), 3 deletions(-)
 
-> to two different APs at the same
-> time to transmit to either AP consists of an offchannel
-
-and this should read "to transmit to the new AP consinst
-of an offchannel"
-
-> operation and mac80211 does have a state machine for this
-> but assumes we don't transmit on our operating channel within
-> each work item. If we do need to transmit to on the operating
-> channel each work item needs to ensure this. This series
-> addresses this by addressing a series of possible races on
-> the frame's set channel, prevening us from associating to a
-> new AP if we were previously associated and haven't yet
-> associated, and ensuring we transmit the disassocation on
-> the operating channel.
+diff --git a/drivers/net/wireless/ath/ath9k/rc.c b/drivers/net/wireless/ath/ath9k/rc.c
+index 0cee90c..0c70839 100644
+--- a/drivers/net/wireless/ath/ath9k/rc.c
++++ b/drivers/net/wireless/ath/ath9k/rc.c
+@@ -1444,12 +1444,15 @@ static void ath_rate_init(void *priv, struct ieee80211_supported_band *sband,
+ 		ath_rc_priv->neg_ht_rates.rs_nrates = j;
+ 	}
+ 
+-	is_cw40 = sta->ht_cap.cap & IEEE80211_HT_CAP_SUP_WIDTH_20_40;
++	is_cw40 = (sta->ht_cap.cap & IEEE80211_HT_CAP_SUP_WIDTH_20_40) ?
++		true : false;
+ 
+ 	if (is_cw40)
+-		is_sgi = sta->ht_cap.cap & IEEE80211_HT_CAP_SGI_40;
++		is_sgi = (sta->ht_cap.cap & IEEE80211_HT_CAP_SGI_40) ?
++			true : false;
+ 	else if (sc->sc_ah->caps.hw_caps & ATH9K_HW_CAP_SGI_20)
+-		is_sgi = sta->ht_cap.cap & IEEE80211_HT_CAP_SGI_20;
++		is_sgi = (sta->ht_cap.cap & IEEE80211_HT_CAP_SGI_20) ?
++			true : false
+ 
+ 	/* Choose rate table first */
+ 
+-- 
+1.7.0.4
 
