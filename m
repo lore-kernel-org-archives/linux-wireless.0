@@ -1,327 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([88.198.39.176]:56771 "EHLO ds10.nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754113Ab0JCRH0 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 3 Oct 2010 13:07:26 -0400
-From: Felix Fietkau <nbd@openwrt.org>
-To: linux-wireless@vger.kernel.org
-Cc: lrodriguez@atheros.com, linville@tuxdriver.com
-Subject: [PATCH 2/4] ath9k_hw: merge codepaths that access the cycle counter registers
-Date: Sun,  3 Oct 2010 19:07:17 +0200
-Message-Id: <1286125639-15137-2-git-send-email-nbd@openwrt.org>
-In-Reply-To: <1286125639-15137-1-git-send-email-nbd@openwrt.org>
-References: <1286125639-15137-1-git-send-email-nbd@openwrt.org>
+Received: from mailout-de.gmx.net ([213.165.64.23]:47062 "HELO mail.gmx.net"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with SMTP
+	id S1751305Ab0JYHt7 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 25 Oct 2010 03:49:59 -0400
+Message-ID: <4CC540F1.2070303@gmx.net>
+Date: Mon, 25 Oct 2010 10:33:53 +0200
+From: George <george.news@gmx.net>
+MIME-Version: 1.0
+To: Kalle Valo <kvalo@adurom.com>
+CC: Grazvydas Ignotas <notasas@gmail.com>,
+	Luciano Coelho <luciano.coelho@nokia.com>,
+	"Luis R. Rodriguez" <mcgrof@gmail.com>,
+	Bob Copeland <me@bobcopeland.com>,
+	Denis 'GNUtoo' Carikli <GNUtoo@no-log.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: Compat-wireless N900
+References: <4CB6BE57.8010401@gmx.net>	<1287071844.11341.5.camel@gnutoo-laptop>	<AANLkTikosEtFnWqRVzMBKtNsB=aqOpqQFKDOZS3+pXTE@mail.gmail.com>	<4CB74759.3030807@gmx.net>	<AANLkTi=1Ar-gzRaskHGDLmkaDnr=9+oZnA=qBLCYcUAi@mail.gmail.com>	<4CB7F7C7.7030804@gmx.net>	<AANLkTi=u+mT2Xd0=0vt4uaf9hSnnkPKY+wN6DjAxME3m@mail.gmail.com>	<4CBABB84.1090100@gmx.net> <4CBC7725.7050202@gmx.net>	<AANLkTincCSBfwa_Y-cy_42HfU5kP1puCbi2-dBwGkkHu@mail.gmail.com>	<4CBC9A51.8030309@gmx.net> <1287427291.8043.2.camel@powerslave>	<1287428554.8043.6.camel@powerslave> <4CBD52DE.9090804@gmx.net>	<AANLkTi=dGSVBrdDXwJgmOjEGX+i+=P_KibiJd+NNMGfy@mail.gmail.com>	<4CBDB654.6060702@gmx.net>	<AANLkTimyCv6U+Yjf7q0OFEYF3PHr5PfACSpbXbTi_PZe@mail.gmail.com>	<4CBDBEDB.3070407@gmx.net>	<AANLkTik3ZdZov4OTn0NnnPe_ZUaRh_w0db4bwLYVGCRR@mail.gmail.com>	<4CBE9C4F.7050806@gmx.net> <87ocaj1120.fsf@purkki.adurom.net>
+In-Reply-To: <87ocaj1120.fsf@purkki.adurom.net>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The cycle counters are used by ANI to determine the amount of time that the
-radio spent not receiving or transmitting. They're also used for debugging
-purposes if the baseband watchdog on AR9003 detects a lockup.
-In the future, we want to use these counters to determine the medium utilization
-and export this information via survey. For that, we need to make sure that
-the counter is only accessed from one place, which also ensures that
-wraparounds won't occur at inconvenient points in time.
+On 25/10/2010 4:03, Kalle Valo wrote:
+> George<george.news@gmx.net>  writes:
+>
+>> It seems that it tries to do something but it is not finally done.
+>> However, as you can see it seems there is no error (at least
+>> reported). Could it be that spi_read buf is almost everytime reading
+>> 00 00 00 00?
+>
+> If you get nothing but zeros back from the device, most likely that
+> means that it's not powered up properly.
+>
+> wl1251 chip on n900 is powered up by using a gpio line. I'm worried
+> that the struct wl12xx_platform_data wl1251 wireless-compat driver
+> expects (defined in /include/linux/wl12xx.h) doesn't match what the
+> old maemo kernel provides. Unfortunately I can't remember anymore what
+> the platform data was like in maemo kernels and there's no easy way
+> for me to check that right now.
+>
 
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
----
- drivers/net/wireless/ath/ath9k/ani.c        |  119 +++++++++++----------------
- drivers/net/wireless/ath/ath9k/ani.h        |   13 ++-
- drivers/net/wireless/ath/ath9k/ar5008_phy.c |    9 +--
- drivers/net/wireless/ath/ath9k/ar9003_phy.c |   14 ++--
- drivers/net/wireless/ath/ath9k/hw.h         |    2 +
- 5 files changed, 65 insertions(+), 92 deletions(-)
+Thanks a lot for that hint. Now I'm involved in another issue but when I 
+have more time I will look at those .h, but don't expect too much from 
+me as I'm not expert but just user.
 
-diff --git a/drivers/net/wireless/ath/ath9k/ani.c b/drivers/net/wireless/ath/ath9k/ani.c
-index 0496f96..9936297 100644
---- a/drivers/net/wireless/ath/ath9k/ani.c
-+++ b/drivers/net/wireless/ath/ath9k/ani.c
-@@ -549,47 +549,15 @@ static u8 ath9k_hw_chan_2_clockrate_mhz(struct ath_hw *ah)
- 
- static int32_t ath9k_hw_ani_get_listen_time(struct ath_hw *ah)
- {
--	struct ar5416AniState *aniState;
--	struct ath_common *common = ath9k_hw_common(ah);
--	u32 txFrameCount, rxFrameCount, cycleCount;
--	int32_t listenTime;
--
--	txFrameCount = REG_READ(ah, AR_TFCNT);
--	rxFrameCount = REG_READ(ah, AR_RFCNT);
--	cycleCount = REG_READ(ah, AR_CCCNT);
--
--	aniState = ah->curani;
--	if (aniState->cycleCount == 0 || aniState->cycleCount > cycleCount) {
--		listenTime = 0;
--		ah->stats.ast_ani_lzero++;
--		ath_print(common, ATH_DBG_ANI,
--			  "1st call: aniState->cycleCount=%d\n",
--			  aniState->cycleCount);
--	} else {
--		int32_t ccdelta = cycleCount - aniState->cycleCount;
--		int32_t rfdelta = rxFrameCount - aniState->rxFrameCount;
--		int32_t tfdelta = txFrameCount - aniState->txFrameCount;
--		int32_t clock_rate;
--
--		/*
--		 * convert HW counter values to ms using mode
--		 * specifix clock rate
--		 */
--		clock_rate = ath9k_hw_chan_2_clockrate_mhz(ah) * 1000;;
-+	int32_t listen_time;
-+	int32_t clock_rate;
- 
--		listenTime = (ccdelta - rfdelta - tfdelta) / clock_rate;
-+	ath9k_hw_update_cycle_counters(ah);
-+	clock_rate = ath9k_hw_chan_2_clockrate_mhz(ah) * 1000;
-+	listen_time = ah->listen_time / clock_rate;
-+	ah->listen_time = 0;
- 
--		ath_print(common, ATH_DBG_ANI,
--			  "cyclecount=%d, rfcount=%d, "
--			  "tfcount=%d, listenTime=%d CLOCK_RATE=%d\n",
--			  ccdelta, rfdelta, tfdelta, listenTime, clock_rate);
--	}
--
--	aniState->cycleCount = cycleCount;
--	aniState->txFrameCount = txFrameCount;
--	aniState->rxFrameCount = rxFrameCount;
--
--	return listenTime;
-+	return listen_time;
- }
- 
- static void ath9k_ani_reset_old(struct ath_hw *ah, bool is_scanning)
-@@ -1041,45 +1009,52 @@ void ath9k_hw_disable_mib_counters(struct ath_hw *ah)
- }
- EXPORT_SYMBOL(ath9k_hw_disable_mib_counters);
- 
--u32 ath9k_hw_GetMibCycleCountsPct(struct ath_hw *ah,
--				  u32 *rxc_pcnt,
--				  u32 *rxf_pcnt,
--				  u32 *txf_pcnt)
-+void ath9k_hw_update_cycle_counters(struct ath_hw *ah)
- {
--	struct ath_common *common = ath9k_hw_common(ah);
--	static u32 cycles, rx_clear, rx_frame, tx_frame;
--	u32 good = 1;
-+	struct ath_cycle_counters cc;
-+	bool clear;
- 
--	u32 rc = REG_READ(ah, AR_RCCNT);
--	u32 rf = REG_READ(ah, AR_RFCNT);
--	u32 tf = REG_READ(ah, AR_TFCNT);
--	u32 cc = REG_READ(ah, AR_CCCNT);
-+	memcpy(&cc, &ah->cc, sizeof(cc));
- 
--	if (cycles == 0 || cycles > cc) {
--		ath_print(common, ATH_DBG_ANI,
--			  "cycle counter wrap. ExtBusy = 0\n");
--		good = 0;
--	} else {
--		u32 cc_d = cc - cycles;
--		u32 rc_d = rc - rx_clear;
--		u32 rf_d = rf - rx_frame;
--		u32 tf_d = tf - tx_frame;
--
--		if (cc_d != 0) {
--			*rxc_pcnt = rc_d * 100 / cc_d;
--			*rxf_pcnt = rf_d * 100 / cc_d;
--			*txf_pcnt = tf_d * 100 / cc_d;
--		} else {
--			good = 0;
--		}
-+	/* freeze counters */
-+	REG_WRITE(ah, AR_MIBC, AR_MIBC_FMC);
-+
-+	ah->cc.cycles = REG_READ(ah, AR_CCCNT);
-+	if (ah->cc.cycles < cc.cycles) {
-+		clear = true;
-+		goto skip;
- 	}
- 
--	cycles = cc;
--	rx_frame = rf;
--	rx_clear = rc;
--	tx_frame = tf;
-+	ah->cc.rx_clear = REG_READ(ah, AR_RCCNT);
-+	ah->cc.rx_frame = REG_READ(ah, AR_RFCNT);
-+	ah->cc.tx_frame = REG_READ(ah, AR_TFCNT);
-+
-+	/* prevent wraparound */
-+	if (ah->cc.cycles & BIT(31))
-+		clear = true;
-+
-+#define CC_DELTA(_field, _reg) ah->cc_delta._field += ah->cc._field - cc._field
-+	CC_DELTA(cycles, AR_CCCNT);
-+	CC_DELTA(rx_frame, AR_RFCNT);
-+	CC_DELTA(rx_clear, AR_RCCNT);
-+	CC_DELTA(tx_frame, AR_TFCNT);
-+#undef CC_DELTA
-+
-+	ah->listen_time += (ah->cc.cycles - cc.cycles) -
-+		 ((ah->cc.rx_frame - cc.rx_frame) +
-+		  (ah->cc.tx_frame - cc.tx_frame));
-+
-+skip:
-+	if (clear) {
-+		REG_WRITE(ah, AR_CCCNT, 0);
-+		REG_WRITE(ah, AR_RFCNT, 0);
-+		REG_WRITE(ah, AR_RCCNT, 0);
-+		REG_WRITE(ah, AR_TFCNT, 0);
-+		memset(&ah->cc, 0, sizeof(ah->cc));
-+	}
- 
--	return good;
-+	/* unfreeze counters */
-+	REG_WRITE(ah, AR_MIBC, 0);
- }
- 
- /*
-diff --git a/drivers/net/wireless/ath/ath9k/ani.h b/drivers/net/wireless/ath/ath9k/ani.h
-index f4d0a4d..15f9d67 100644
---- a/drivers/net/wireless/ath/ath9k/ani.h
-+++ b/drivers/net/wireless/ath/ath9k/ani.h
-@@ -93,6 +93,13 @@ struct ath9k_mib_stats {
- 	u32 beacons;
- };
- 
-+struct ath_cycle_counters {
-+	u32 cycles;
-+	u32 rx_frame;
-+	u32 rx_clear;
-+	u32 tx_frame;
-+};
-+
- /* INI default values for ANI registers */
- struct ath9k_ani_default {
- 	u16 m1ThreshLow;
-@@ -130,9 +137,6 @@ struct ar5416AniState {
- 	int32_t rssiThrLow;
- 	int32_t rssiThrHigh;
- 	u32 noiseFloor;
--	u32 txFrameCount;
--	u32 rxFrameCount;
--	u32 cycleCount;
- 	u32 ofdmPhyErrCount;
- 	u32 cckPhyErrCount;
- 	u32 ofdmPhyErrBase;
-@@ -166,8 +170,7 @@ struct ar5416Stats {
- 
- void ath9k_enable_mib_counters(struct ath_hw *ah);
- void ath9k_hw_disable_mib_counters(struct ath_hw *ah);
--u32 ath9k_hw_GetMibCycleCountsPct(struct ath_hw *ah, u32 *rxc_pcnt,
--				  u32 *rxf_pcnt, u32 *txf_pcnt);
-+void ath9k_hw_update_cycle_counters(struct ath_hw *ah);
- void ath9k_hw_ani_setup(struct ath_hw *ah);
- void ath9k_hw_ani_init(struct ath_hw *ah);
- int ath9k_hw_get_ani_channel_idx(struct ath_hw *ah,
-diff --git a/drivers/net/wireless/ath/ath9k/ar5008_phy.c b/drivers/net/wireless/ath/ath9k/ar5008_phy.c
-index 3937cfd..74b4213 100644
---- a/drivers/net/wireless/ath/ath9k/ar5008_phy.c
-+++ b/drivers/net/wireless/ath/ath9k/ar5008_phy.c
-@@ -1227,8 +1227,7 @@ static bool ar5008_hw_ani_control_old(struct ath_hw *ah,
- 		  aniState->firstepLevel,
- 		  aniState->listenTime);
- 	ath_print(common, ATH_DBG_ANI,
--		"cycleCount=%d, ofdmPhyErrCount=%d, cckPhyErrCount=%d\n\n",
--		aniState->cycleCount,
-+		"ofdmPhyErrCount=%d, cckPhyErrCount=%d\n\n",
- 		aniState->ofdmPhyErrCount,
- 		aniState->cckPhyErrCount);
- 
-@@ -1480,15 +1479,13 @@ static bool ar5008_hw_ani_control_new(struct ath_hw *ah,
- 
- 	ath_print(common, ATH_DBG_ANI,
- 		  "ANI parameters: SI=%d, ofdmWS=%s FS=%d "
--		  "MRCcck=%s listenTime=%d CC=%d listen=%d "
-+		  "MRCcck=%s listenTime=%d "
- 		  "ofdmErrs=%d cckErrs=%d\n",
- 		  aniState->spurImmunityLevel,
- 		  !aniState->ofdmWeakSigDetectOff ? "on" : "off",
- 		  aniState->firstepLevel,
- 		  !aniState->mrcCCKOff ? "on" : "off",
- 		  aniState->listenTime,
--		  aniState->cycleCount,
--		  aniState->listenTime,
- 		  aniState->ofdmPhyErrCount,
- 		  aniState->cckPhyErrCount);
- 	return true;
-@@ -1581,8 +1578,6 @@ static void ar5008_hw_ani_cache_ini_regs(struct ath_hw *ah)
- 	aniState->firstepLevel = ATH9K_ANI_FIRSTEP_LVL_NEW;
- 	aniState->ofdmWeakSigDetectOff = !ATH9K_ANI_USE_OFDM_WEAK_SIG;
- 	aniState->mrcCCKOff = true; /* not available on pre AR9003 */
--
--	aniState->cycleCount = 0;
- }
- 
- static void ar5008_hw_set_nf_limits(struct ath_hw *ah)
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_phy.c b/drivers/net/wireless/ath/ath9k/ar9003_phy.c
-index a491854..e15574c 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_phy.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_phy.c
-@@ -1005,15 +1005,13 @@ static bool ar9003_hw_ani_control(struct ath_hw *ah,
- 
- 	ath_print(common, ATH_DBG_ANI,
- 		  "ANI parameters: SI=%d, ofdmWS=%s FS=%d "
--		  "MRCcck=%s listenTime=%d CC=%d listen=%d "
-+		  "MRCcck=%s listenTime=%d "
- 		  "ofdmErrs=%d cckErrs=%d\n",
- 		  aniState->spurImmunityLevel,
- 		  !aniState->ofdmWeakSigDetectOff ? "on" : "off",
- 		  aniState->firstepLevel,
- 		  !aniState->mrcCCKOff ? "on" : "off",
- 		  aniState->listenTime,
--		  aniState->cycleCount,
--		  aniState->listenTime,
- 		  aniState->ofdmPhyErrCount,
- 		  aniState->cckPhyErrCount);
- 	return true;
-@@ -1116,8 +1114,6 @@ static void ar9003_hw_ani_cache_ini_regs(struct ath_hw *ah)
- 	aniState->firstepLevel = ATH9K_ANI_FIRSTEP_LVL_NEW;
- 	aniState->ofdmWeakSigDetectOff = !ATH9K_ANI_USE_OFDM_WEAK_SIG;
- 	aniState->mrcCCKOff = !ATH9K_ANI_ENABLE_MRC_CCK;
--
--	aniState->cycleCount = 0;
- }
- 
- void ar9003_hw_attach_phy_ops(struct ath_hw *ah)
-@@ -1232,7 +1228,7 @@ void ar9003_hw_bb_watchdog_read(struct ath_hw *ah)
- void ar9003_hw_bb_watchdog_dbg_info(struct ath_hw *ah)
- {
- 	struct ath_common *common = ath9k_hw_common(ah);
--	u32 rxc_pcnt = 0, rxf_pcnt = 0, txf_pcnt = 0, status;
-+	u32 status;
- 
- 	if (likely(!(common->debug_mask & ATH_DBG_RESET)))
- 		return;
-@@ -1261,11 +1257,13 @@ void ar9003_hw_bb_watchdog_dbg_info(struct ath_hw *ah)
- 		  "** BB mode: BB_gen_controls=0x%08x **\n",
- 		  REG_READ(ah, AR_PHY_GEN_CTRL));
- 
--	if (ath9k_hw_GetMibCycleCountsPct(ah, &rxc_pcnt, &rxf_pcnt, &txf_pcnt))
-+	ath9k_hw_update_cycle_counters(ah);
-+#define PCT(_field) (ah->cc_delta._field * 100 / ah->cc_delta.cycles)
-+	if (ah->cc_delta.cycles)
- 		ath_print(common, ATH_DBG_RESET,
- 			  "** BB busy times: rx_clear=%d%%, "
- 			  "rx_frame=%d%%, tx_frame=%d%% **\n",
--			  rxc_pcnt, rxf_pcnt, txf_pcnt);
-+			  PCT(rx_clear), PCT(rx_frame), PCT(tx_frame));
- 
- 	ath_print(common, ATH_DBG_RESET,
- 		  "==== BB update: done ====\n\n");
-diff --git a/drivers/net/wireless/ath/ath9k/hw.h b/drivers/net/wireless/ath/ath9k/hw.h
-index 246c707..87dbb85 100644
---- a/drivers/net/wireless/ath/ath9k/hw.h
-+++ b/drivers/net/wireless/ath/ath9k/hw.h
-@@ -765,6 +765,8 @@ struct ath_hw {
- 	int coarse_low[5];
- 	int firpwr[5];
- 	enum ath9k_ani_cmd ani_function;
-+	struct ath_cycle_counters cc, cc_delta;
-+	int32_t listen_time;
- 
- 	/* Bluetooth coexistance */
- 	struct ath_btcoex_hw btcoex_hw;
--- 
-1.7.2.2
-
+Thanks a lot.
