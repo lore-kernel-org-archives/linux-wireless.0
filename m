@@ -1,31 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:22460 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751518Ab0JYOtF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 25 Oct 2010 10:49:05 -0400
-Subject: Re: [PATCH 7/7] iwlwifi: avoid commit rxon during scan in
- iwl_set_no_assoc
-From: "Guy, Wey-Yi" <wey-yi.w.guy@intel.com>
-To: Stanislaw Gruszka <sgruszka@redhat.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <1287759870-5758-7-git-send-email-sgruszka@redhat.com>
-References: <1287759870-5758-1-git-send-email-sgruszka@redhat.com>
-	 <1287759870-5758-7-git-send-email-sgruszka@redhat.com>
-Content-Type: text/plain
-Date: Mon, 25 Oct 2010 07:48:14 -0700
-Message-Id: <1288018094.3435.13.camel@wwguy-ubuntu>
-Mime-Version: 1.0
+Received: from mail.candelatech.com ([208.74.158.172]:57783 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751518Ab0JYP7F (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 25 Oct 2010 11:59:05 -0400
+Message-ID: <4CC5A936.7070009@candelatech.com>
+Date: Mon, 25 Oct 2010 08:58:46 -0700
+From: Ben Greear <greearb@candelatech.com>
+MIME-Version: 1.0
+To: Mohammed Shafi Shajakhan <mshajakhan@atheros.com>
+CC: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	lrodriguez@atheros.com, j@w1.fi,
+	Senthilkumar.Balasubramanian@atheros.com,
+	Vasanth.Thiagarajan@atheros.com, nbd@openwrt.org
+Subject: Re: [PATCH] ath9k: Properly assign boolean types Signed-off-by: Mohammed
+ Shafi Shajakhan <mshajakhan@atheros.com>
+References: <1287990961-2619-1-git-send-email-mshajakhan@atheros.com>
+In-Reply-To: <1287990961-2619-1-git-send-email-mshajakhan@atheros.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2010-10-22 at 08:04 -0700, Stanislaw Gruszka wrote:
-> Currently we are canceling scan when changing BSSID. Behave the same
-> when changing association and beacon enablement, to avoid committing
-> rxon during scan in iwl_set_no_assoc().
-> 
-> Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
-Acked-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+On 10/25/2010 12:16 AM, Mohammed Shafi Shajakhan wrote:
+> From: Mohammed Shafi Shajakhan<mshajakhan@atheros.com>
+>
 > ---
+>   drivers/net/wireless/ath/ath9k/rc.c |    9 ++++++---
+>   1 files changed, 6 insertions(+), 3 deletions(-)
+>
+> diff --git a/drivers/net/wireless/ath/ath9k/rc.c b/drivers/net/wireless/ath/ath9k/rc.c
+> index 0cee90c..0c70839 100644
+> --- a/drivers/net/wireless/ath/ath9k/rc.c
+> +++ b/drivers/net/wireless/ath/ath9k/rc.c
+> @@ -1444,12 +1444,15 @@ static void ath_rate_init(void *priv, struct ieee80211_supported_band *sband,
+>   		ath_rc_priv->neg_ht_rates.rs_nrates = j;
+>   	}
+>
+> -	is_cw40 = sta->ht_cap.cap&  IEEE80211_HT_CAP_SUP_WIDTH_20_40;
+> +	is_cw40 = (sta->ht_cap.cap&  IEEE80211_HT_CAP_SUP_WIDTH_20_40) ?
+> +		true : false;
+
+Maybe use:
+is_cw40 = !!(sta->ht_cap.cap&  IEEE80211_HT_CAP_SUP_WIDTH_20_40);
+
+Seems a bit simpler to me...
+
+Ben
 
 
+>
+>   	if (is_cw40)
+> -		is_sgi = sta->ht_cap.cap&  IEEE80211_HT_CAP_SGI_40;
+> +		is_sgi = (sta->ht_cap.cap&  IEEE80211_HT_CAP_SGI_40) ?
+> +			true : false;
+>   	else if (sc->sc_ah->caps.hw_caps&  ATH9K_HW_CAP_SGI_20)
+> -		is_sgi = sta->ht_cap.cap&  IEEE80211_HT_CAP_SGI_20;
+> +		is_sgi = (sta->ht_cap.cap&  IEEE80211_HT_CAP_SGI_20) ?
+> +			true : false
+>
+>   	/* Choose rate table first */
+>
+
+
+-- 
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
