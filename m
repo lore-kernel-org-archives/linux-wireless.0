@@ -1,65 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.19.149.2]:64201 "EHLO mail.atheros.com"
+Received: from lo.gmane.org ([80.91.229.12]:34018 "EHLO lo.gmane.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753061Ab0JZIks (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 26 Oct 2010 04:40:48 -0400
-Received: from mail.atheros.com ([10.10.20.108])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Tue, 26 Oct 2010 01:40:37 -0700
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: <linux-wireless@vger.kernel.org>
-CC: <greearb@candelatech.com>, <kyungwan.nam@atheros.com>,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>
-Subject: [RFT 0/3] ath9k: more PCU locking enhancements
-Date: Tue, 26 Oct 2010 01:40:38 -0700
-Message-ID: <1288082441-4882-1-git-send-email-lrodriguez@atheros.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	id S1755604Ab0JYOaL (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 25 Oct 2010 10:30:11 -0400
+Received: from list by lo.gmane.org with local (Exim 4.69)
+	(envelope-from <glkwg-linux-wireless@m.gmane.org>)
+	id 1PAO3o-0006ZF-K5
+	for linux-wireless@vger.kernel.org; Mon, 25 Oct 2010 16:30:06 +0200
+Received: from itav173.av.it.pt ([193.136.93.173])
+        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Mon, 25 Oct 2010 16:30:04 +0200
+Received: from ric.vmoreira+gmaneorg by itav173.av.it.pt with local (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Mon, 25 Oct 2010 16:30:04 +0200
+To: linux-wireless@vger.kernel.org
+From: Ricardo <ric.vmoreira+gmaneorg@gmail.com>
+Subject: Re: Complexity of Adding 5/10 MHz Channel Support
+Date: Mon, 25 Oct 2010 14:27:06 +0000 (UTC)
+Message-ID: <loom.20101025T162119-425@post.gmane.org>
+References: <1A7DEBB8-6337-4551-9F21-14C20E13B86B@zinkconsulting.com> <1287996379.3587.11.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Here is some more PCU locking enhancements I tested today
-while trying to resolve the WARN() that happens when we
-try to stop RX DMA and fail. While working on that I figured
-I'd work on the TX DMA stuff too, here's a shot at it. I
-can no longer get TX / RX DMA rants, please test and let
-me know if you do. I only tried some basic testing like
-rmmoding while scannign, which typicallly produced some
-errors. Now I don't get squat.
+Johannes Berg <johannes@...> writes:
 
-Ben if you can test wit your super proprietary application
-that'd be great.
+> 
+> On Fri, 2010-10-15 at 15:30 -0700, Galen wrote:
+> > Can anybody give me an idea the extent and complexity of adding
+> > support for 5/10 MHz channels in mac80211?
+> > 
+> > Several different radios (including those supported by ath5k and
+> > ath9k) have the hardware capability to operate at 5 MHz. Obviously,
+> > support in those drivers is a separate issue, but it is my
+> > understanding that mac80211 must first support 5/10 MHz channels.
+> 
+> Since we already have channel types, I've always suggested to add 5/10
+> as such. The complexity comes from the fact that some channel types are
+> incompatible, and we currently do not have to handle that -- a regular
+> scan for example will cover all current channel types, but with 5/10 MHz
+> you need to do special scans etc.
+> 
+> Also, you need to start in cfg80211, not mac80211, and make everything
+> from auth/assoc/connect/ibss-join etc. aware of channel types as well as
+> center freq.
+> 
+> johannes
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@...
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
+> 
 
-This also simplifies locking considerably.
+Hello,
 
-This doesn't break suspend so I'm happy. It also depends
-on the last RX DMA fixes I had posted earlier. If you'd
-like to get an all-in-one patch of all my patches pending
-you can wget this file and git am it:
+I am also interested in seeing/having this functionality implemented in ath5k. I 
+am not an expert or have a big knowledge of the driver itself but it would be 
+great to be able to change the channel width (even if it was a "dirty" solution, 
+like manually hardcode some register values to achieve the desired channel 
+widths).
 
-http://www.kernel.org/pub/linux/kernel/people/mcgrof/patches/tmp/pending-mcgrof-2010-10-26-v1.patch
-sha1sum: 874a3cc1a57f7e26ad191cd7b5045315f94c5823
+Maybe someone has any useful tips for me? I can do the "dirty work" but i just 
+need some indications on HOW to do it.
 
-If they do indeed fix the rants, then great, but not sure
-if they warrant to be stable fixes.
+Best regards
+Ricardo
 
-If this works trick was to not mess with contend on the PCU for RX or TX
-and for resets, all together. There is one call not protected here
-though, the ath_tx_start_dma() but not sure how to address that or if we
-need to.
 
-Luis R. Rodriguez (3):
-  ath9k: simplify hw reset locking
-  ath9k: move the PCU lock to the sc structure
-  ath9k: content DMA start / stop through the PCU lock
-
- drivers/net/wireless/ath/ath9k/ath9k.h |    3 +-
- drivers/net/wireless/ath/ath9k/init.c  |    1 -
- drivers/net/wireless/ath/ath9k/main.c  |   70 ++++++++++++++------------------
- drivers/net/wireless/ath/ath9k/recv.c  |    2 +-
- drivers/net/wireless/ath/ath9k/xmit.c  |    4 +-
- 5 files changed, 34 insertions(+), 46 deletions(-)
-
--- 
-1.7.3.2.90.gd4c43
 
