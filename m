@@ -1,73 +1,99 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wy0-f174.google.com ([74.125.82.174]:63520 "EHLO
-	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753883Ab0JBJf1 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 2 Oct 2010 05:35:27 -0400
-Received: by mail-wy0-f174.google.com with SMTP id 28so3658520wyb.19
-        for <linux-wireless@vger.kernel.org>; Sat, 02 Oct 2010 02:35:26 -0700 (PDT)
-From: Ivo van Doorn <ivdoorn@gmail.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Subject: [PATCH 08/20] rt2x00: Allow tx duplication for legacy rates in HT40 mode
-Date: Sat, 2 Oct 2010 11:29:59 +0200
-Cc: users@rt2x00.serialmonkey.com, linux-wireless@vger.kernel.org,
-	Helmut Schaa <helmut.schaa@googlemail.com>
-References: <201010021126.18748.IvDoorn@gmail.com> <201010021129.09422.IvDoorn@gmail.com> <201010021129.31357.IvDoorn@gmail.com>
-In-Reply-To: <201010021129.31357.IvDoorn@gmail.com>
+Received: from bar.sig21.net ([80.81.252.164]:48337 "EHLO bar.sig21.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754666Ab0JZPkQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 26 Oct 2010 11:40:16 -0400
+Date: Tue, 26 Oct 2010 17:40:12 +0200
+From: Johannes Stezenbach <js@sig21.net>
+To: Helmut Schaa <helmut.schaa@googlemail.com>
+Cc: Lee <lee-in-berlin@web.de>, linux-wireless@vger.kernel.org
+Subject: Re: [regression]AP with hostapd 0.7.3 can't receive packets beyond
+ authentication (2.6.36, rt73usb)
+Message-ID: <20101026154012.GA6908@sig21.net>
+References: <4CC0D0F6.4080507@web.de>
+ <4CC33E83.4020505@web.de>
+ <201010260740.47692.helmut.schaa@googlemail.com>
+ <20101026110332.GA3982@sig21.net>
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Message-Id: <201010021130.00255.IvDoorn@gmail.com>
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20101026110332.GA3982@sig21.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Helmut Schaa <helmut.schaa@googlemail.com>
+On Tue, Oct 26, 2010 at 01:03:32PM +0200, Johannes Stezenbach wrote:
+> 
+> (The client is sending ARP requests but not getting answer:
+> zzz:~# tcpdump -p -i wlan0
+> tcpdump: verbose output suppressed, use -v or -vv for full protocol decode
+> listening on wlan0, link-type EN10MB (Ethernet), capture size 65535 bytes
+> 13:00:35.740957 ARP, Request who-has 172.28.120.1 tell 172.28.120.2, length 28
+> 13:00:36.740924 ARP, Request who-has 172.28.120.1 tell 172.28.120.2, length 28
+> 13:00:37.740926 ARP, Request who-has 172.28.120.1 tell 172.28.120.2, length 28
+> )
 
-Make use of the IEEE80211_TX_RC_DUP_DATA flag to duplicate a
-transmission with legacy rates to both 20Mhz channels if set.
-Also update the related comment in rt2800.h to describe the
-behavior of the BW_40 flag for legacy rates.
+I used a third machine (using ath9k) to dump the traffic with airodump-ng.
+ARP requests are sent to broadcast address.
 
-Signed-off-by: Helmut Schaa <helmut.schaa@googlemail.com>
-Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
----
- drivers/net/wireless/rt2x00/rt2800.h   |    3 ++-
- drivers/net/wireless/rt2x00/rt2x00ht.c |    8 +++++++-
- 2 files changed, 9 insertions(+), 2 deletions(-)
+- first I checked power save is off on the client
+  (iw dev wlan0 set power_save off)
+- then I made static ARP entry on the client (arp -i wlan0 -s 172.28.120.1 00:22:B0:xx:xx:xx)
 
-diff --git a/drivers/net/wireless/rt2x00/rt2800.h b/drivers/net/wireless/rt2x00/rt2800.h
-index e1583cf..9bf50a1 100644
---- a/drivers/net/wireless/rt2x00/rt2800.h
-+++ b/drivers/net/wireless/rt2x00/rt2800.h
-@@ -1982,7 +1982,8 @@ struct mac_iveiv_entry {
-  * FRAG: 1 To inform TKIP engine this is a fragment.
-  * MIMO_PS: The remote peer is in dynamic MIMO-PS mode
-  * TX_OP: 0:HT TXOP rule , 1:PIFS TX ,2:Backoff, 3:sifs
-- * BW: Channel bandwidth 20MHz or 40 MHz
-+ * BW: Channel bandwidth 0:20MHz, 1:40 MHz (for legacy rates this will
-+ *     duplicate the frame to both channels).
-  * STBC: 1: STBC support MCS =0-7, 2,3 : RESERVED
-  * AMPDU: 1: this frame is eligible for AMPDU aggregation, the hw will
-  *        aggregate consecutive frames with the same RA and QoS TID.
-diff --git a/drivers/net/wireless/rt2x00/rt2x00ht.c b/drivers/net/wireless/rt2x00/rt2x00ht.c
-index 48b6ed4..2023419 100644
---- a/drivers/net/wireless/rt2x00/rt2x00ht.c
-+++ b/drivers/net/wireless/rt2x00/rt2x00ht.c
-@@ -85,7 +85,13 @@ void rt2x00ht_create_tx_descriptor(struct queue_entry *entry,
- 		txdesc->rate_mode = RATE_MODE_HT_MIX;
- 	if (txrate->flags & IEEE80211_TX_RC_GREEN_FIELD)
- 		txdesc->rate_mode = RATE_MODE_HT_GREENFIELD;
--	if (txrate->flags & IEEE80211_TX_RC_40_MHZ_WIDTH)
-+
-+	/*
-+	 * Set 40Mhz mode if necessary (for legacy rates this will
-+	 * duplicate the frame to both channels).
-+	 */
-+	if (txrate->flags & IEEE80211_TX_RC_40_MHZ_WIDTH ||
-+	    txrate->flags & IEEE80211_TX_RC_DUP_DATA)
- 		__set_bit(ENTRY_TXD_HT_BW_40, &txdesc->flags);
- 	if (txrate->flags & IEEE80211_TX_RC_SHORT_GI)
- 		__set_bit(ENTRY_TXD_HT_SHORT_GI, &txdesc->flags);
--- 
-1.7.2.3
+Then I can see in the dump data packets going to the AP address, and
+the AP returns ACK packets.
+On AP, "tcpdump -i mon0" outputs one  packet per second (corresponding with
+the ping), but "tcpdump -p -i wlan0" does not output anything at all.
+RX packet count in "ifconfig wlan0" output does not increase.
 
+on AP:
+ # cd /sys/kernel/debug/ieee80211/phy0/stations/00*
+ # grep . *
+agg_status:next dialog_token: 0x1
+agg_status:(snip, all zeros)
+dev:wlan0
+flags:AUTH
+flags:ASSOC
+flags:AUTHORIZED
+flags:SHORT PREAMBLE
+ht_capa:ht not supported
+inactive_ms:1160
+last_seq_ctrl:ffff ffff ffff ffff ffff ffff ffff ffff ffff ffff ffff ffff ffff ffff ffff ffff cc0 
+last_signal:-40
+num_ps_buf_frames:0
+rc_stats:(snip, all zeors)
+rc_stats:Total packet count::    ideal 2      lookaround 0
+rx_bytes:1476
+rx_dropped:80
+rx_duplicates:0
+rx_fragments:19
+rx_packets:19
+tx_bytes:2238
+tx_filtered:0
+tx_fragments:18
+tx_packets:18
+tx_retry_count:0
+tx_retry_failed:0
+wep_weak_iv_count:0
+
+(rx_ + tx_packets does not increase with the ping)
+
+  # cd /sys/kernel/debug/ieee80211/phy0/keys/18
+(keys/18 appears after the station is connected)
+  # grep . *
+algorithm:CCMP
+flags:0x1
+hw_key_idx:0
+ifindex:wlan0
+key:1a62718edaf300998cc974f709a0baed
+keyidx:0
+keylen:16
+replays:1
+rx_spec:000000000000
+  (snip repeats)
+tx_rx_count:18
+tx_spec:000000000000
+
+  tx_rx_count increases with the ping
+
+
+HTH,
+Johannes
