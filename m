@@ -1,44 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.19.149.2]:37350 "EHLO mail.atheros.com"
+Received: from nbd.name ([88.198.39.176]:45366 "EHLO ds10.nbd.name"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751352Ab0JVNAe (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 22 Oct 2010 09:00:34 -0400
-Received: from mail.atheros.com ([10.10.20.105])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Fri, 22 Oct 2010 06:00:24 -0700
-From: Rajkumar Manoharan <rmanoharan@atheros.com>
-To: <johannes@sipsolutions.net>
-CC: <linux-wireless@vger.kernel.org>,
-	Rajkumar Manoharan <rmanoharan@atheros.com>
-Subject: [RFC] mac80211: Fix ibss station got expired immediately
-Date: Fri, 22 Oct 2010 18:36:27 +0530
-Message-ID: <1287752787-6616-1-git-send-email-rmanoharan@atheros.com>
+	id S933148Ab0JZM3D (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 26 Oct 2010 08:29:03 -0400
+Message-ID: <4CC6C988.4070706@openwrt.org>
+Date: Tue, 26 Oct 2010 14:28:56 +0200
+From: Felix Fietkau <nbd@openwrt.org>
 MIME-Version: 1.0
-Content-Type: text/plain
+To: Jaswinder Singh <jaswinderlinux@gmail.com>
+CC: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	netdev <netdev@vger.kernel.org>, ath9k-devel@lists.ath9k.org,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	shafi.wireless@gmail.com,
+	"John W. Linville" <linville@tuxdriver.com>
+Subject: Re: ath9k crashing the kernel
+References: <AANLkTim=jD-C4DwDS2=KuQnhPOyP+Cnd-hUTdaZ7Opth@mail.gmail.com> <AANLkTikHTgoJyxm80MuXM9oTvCPTFAPM12zVih1RsTfy@mail.gmail.com>
+In-Reply-To: <AANLkTikHTgoJyxm80MuXM9oTvCPTFAPM12zVih1RsTfy@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Station addition in ieee80211_ibss_rx_queued_mgmt is not updating
-sta->last_rx which is causing station expiry in ieee80211_ibss_work
-path. So sta addition and deletion happens repeatedly.
+On 2010-10-26 9:09 AM, Jaswinder Singh wrote:
+>> ath9k is crashing the kernel :
+>>
+>> [   21.276554] BUG: spinlock bad magic on CPU#1, NetworkManager/1056
+>> [   21.277015]  lock: f5be80a8, .magic: 00000000, .owner: <none>/-1,
+>> .owner_cpu: 0
+>> [   21.277015] Pid: 1056, comm: NetworkManager Not tainted 2.6.36-netbook+ #20
+>> [   21.277015] Call Trace:
+>> [   21.277015]  [<c14767a7>] ? printk+0xf/0x11
+>> [   21.277015]  [<c117b823>] spin_bug+0x7c/0x87
+>> [   21.301365]  [<c117b8bd>] do_raw_spin_lock+0x1e/0x125
+>> [   21.301365]  [<c1478d0a>] ? _raw_spin_unlock_bh+0x1a/0x1c
+>> [   21.301365]  [<c1478dc3>] _raw_spin_lock_irqsave+0x17/0x1c
+>> [   21.318857]  [<c1288a74>] ath9k_config+0x255/0x38b
+>> [   21.318857]  [<c1447bdb>] ieee80211_hw_config+0x10a/0x114
+>> [...]
+>>
+>> Linux 2.6.36 f6f94e2ab1 is good
+>> and
+>> 229aebb873e2972 is bad
+>>
+> 
+> After further investigation bad commit is :
+> 
+> 3430098ae463e31ab16926ac3eb295368a3ca5d9 is the first bad commit
+> commit 3430098ae463e31ab16926ac3eb295368a3ca5d9
+> Author: Felix Fietkau <nbd@openwrt.org>
+> Date:   Sun Oct 10 18:21:52 2010 +0200
+> 
+>     ath9k: implement channel utilization stats for survey
+> 
 
-Signed-off-by: Rajkumar Manoharan <rmanoharan@atheros.com>
----
- net/mac80211/ibss.c |    1 +
- 1 files changed, 1 insertions(+), 0 deletions(-)
+This should already be fixed in wireless-testing by the following commit
 
-diff --git a/net/mac80211/ibss.c b/net/mac80211/ibss.c
-index ff60c02..239c483 100644
---- a/net/mac80211/ibss.c
-+++ b/net/mac80211/ibss.c
-@@ -456,6 +456,7 @@ struct sta_info *ieee80211_ibss_add_sta(struct ieee80211_sub_if_data *sdata,
- 	if (!sta)
- 		return NULL;
- 
-+	sta->last_rx = jiffies;
- 	set_sta_flags(sta, WLAN_STA_AUTHORIZED);
- 
- 	/* make sure mandatory rates are always added */
--- 
-1.7.3.1
+commit 20b25744d1366762c6878d3254f93973cafe1f8e
+Author: Ben Greear <greearb@candelatech.com>
+Date:   Fri Oct 15 15:04:09 2010 -0700
 
+    ath9k: Properly initialize ath_common->cc_lock.
+
+
+- Felix
