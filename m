@@ -1,77 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from devils.ext.ti.com ([198.47.26.153]:53117 "EHLO
-	devils.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751764Ab0JMNBY convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 13 Oct 2010 09:01:24 -0400
-From: "Premi, Sanjeev" <premi@ti.com>
-To: Sanjay Kumar Champati <csanjay@mistralsolutions.com>,
-	"linux-omap@vger.kernel.org" <linux-omap@vger.kernel.org>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Date: Wed, 13 Oct 2010 18:31:18 +0530
-Subject: RE: [WL1271 DC support on OMAP3EVM 2/5] ARM: Supported for Standard
- SDIO driver on OMAP3EVM for WL1271 DC
-Message-ID: <B85A65D85D7EB246BE421B3FB0FBB5930234405CB8@dbde02.ent.ti.com>
-References: <B85A65D85D7EB246BE421B3FB0FBB5930234405BCA@dbde02.ent.ti.com>
- <2615178032399077084343141213216@psmtp.com>
-In-Reply-To: <2615178032399077084343141213216@psmtp.com>
-Content-Type: text/plain; charset="us-ascii"
+Received: from mail.atheros.com ([12.19.149.2]:23002 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754528Ab0JZP7F (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 26 Oct 2010 11:59:05 -0400
+Received: from mail.atheros.com ([10.10.20.108])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Tue, 26 Oct 2010 08:58:54 -0700
+From: Mohammed Shafi Shajakhan <mshajakhan@atheros.com>
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>, <lrodriguez@atheros.com>,
+	<greearb@candelatech.com>, <me@bobcopeland.com>,
+	Mohammed Shafi Shajakhan <mshajakhan@atheros.com>
+Subject: [PATCH v2] ath9k: Properly assign boolean types
+Date: Tue, 26 Oct 2010 21:28:57 +0530
+Message-ID: <1288108737-27781-1-git-send-email-mshajakhan@atheros.com>
 MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> -----Original Message-----
-> From: Sanjay Kumar Champati [mailto:csanjay@mistralsolutions.com] 
-> Sent: Wednesday, October 13, 2010 5:50 PM
-> To: Premi, Sanjeev; linux-omap@vger.kernel.org
-> Cc: linux-wireless@vger.kernel.org
-> Subject: RE: [WL1271 DC support on OMAP3EVM 2/5] ARM: 
-> Supported for Standard SDIO driver on OMAP3EVM for WL1271 DC
-> 
-[snip]...[snip]
+From: Mohammed Shafi Shajakhan <mshajakhan@atheros.com>
 
-> > > diff --git a/drivers/mmc/core/sdio_ops.c 
-> b/drivers/mmc/core/sdio_ops.c
-> > > index 4eb7825..4213ee0 100644
-> > > --- a/drivers/mmc/core/sdio_ops.c
-> > > +++ b/drivers/mmc/core/sdio_ops.c
-> > > @@ -114,6 +114,9 @@ int mmc_io_rw_direct(struct mmc_card
-> > > *card, int write, unsigned fn,
-> > >
-> > >  	return 0;
-> > >  }
-> > > +#ifdef CONFIG_WL1271_WLAN
-> > > +EXPORT_SYMBOL(mmc_io_rw_direct);
-> > > +#endif
-> > 
-> > [sp] Why is the export required?
-> For the standard SDIO support WL1271 driver is using 
-> "mmc_io_rw_direct".
-> > 
-> > >
-> > >  int mmc_io_rw_extended(struct mmc_card *card, int write, 
-> unsigned fn,
-> > >  	unsigned addr, int incr_addr, u8 *buf, unsigned blocks,
-> > > unsigned blksz)
-> > > @@ -181,4 +184,6 @@ int mmc_io_rw_extended(struct mmc_card
-> > > *card, int write, unsigned fn,
-> > >
-> > >  	return 0;
-> > >  }
-> > > -
-> > > +#ifdef CONFIG_WL1271_WLAN
-> > > +EXPORT_SYMBOL(mmc_io_rw_extended);
-> > > +#endif
-> > 
-> > [sp] Why is the export required?
-> For the standard SDIO support WL1271 driver is using 
-> "mmc_io_rw_extended".
-> > 
+This takes care that boolean types are properly assigned
 
-[sp] part of my question is: Why do you need to modify the
-     generic sdio implementation to export these functions?
+Signed-off-by: Mohammed Shafi Shajakhan <mshajakhan@atheros.com>
+---
+ drivers/net/wireless/ath/ath9k/rc.c |   12 +++++-------
+ 1 files changed, 5 insertions(+), 7 deletions(-)
 
-     You cannot make "custom" modifications here. See similar
-     comment in other patch as well.
+diff --git a/drivers/net/wireless/ath/ath9k/rc.c b/drivers/net/wireless/ath/ath9k/rc.c
+index 0cee90c..69d54fa 100644
+--- a/drivers/net/wireless/ath/ath9k/rc.c
++++ b/drivers/net/wireless/ath/ath9k/rc.c
+@@ -1444,12 +1444,12 @@ static void ath_rate_init(void *priv, struct ieee80211_supported_band *sband,
+ 		ath_rc_priv->neg_ht_rates.rs_nrates = j;
+ 	}
+ 
+-	is_cw40 = sta->ht_cap.cap & IEEE80211_HT_CAP_SUP_WIDTH_20_40;
++	is_cw40 = !!(sta->ht_cap.cap & IEEE80211_HT_CAP_SUP_WIDTH_20_40);
+ 
+ 	if (is_cw40)
+-		is_sgi = sta->ht_cap.cap & IEEE80211_HT_CAP_SGI_40;
++		is_sgi = !!(sta->ht_cap.cap & IEEE80211_HT_CAP_SGI_40);
+ 	else if (sc->sc_ah->caps.hw_caps & ATH9K_HW_CAP_SGI_20)
+-		is_sgi = sta->ht_cap.cap & IEEE80211_HT_CAP_SGI_20;
++		is_sgi = !!(sta->ht_cap.cap & IEEE80211_HT_CAP_SGI_20);
+ 
+ 	/* Choose rate table first */
+ 
+@@ -1468,10 +1468,8 @@ static void ath_rate_update(void *priv, struct ieee80211_supported_band *sband,
+ 	struct ath_rate_priv *ath_rc_priv = priv_sta;
+ 	const struct ath_rate_table *rate_table = NULL;
+ 	bool oper_cw40 = false, oper_sgi;
+-	bool local_cw40 = (ath_rc_priv->ht_cap & WLAN_RC_40_FLAG) ?
+-		true : false;
+-	bool local_sgi = (ath_rc_priv->ht_cap & WLAN_RC_SGI_FLAG) ?
+-		true : false;
++	bool local_cw40 = !!(ath_rc_priv->ht_cap & WLAN_RC_40_FLAG);
++	bool local_sgi = !!(ath_rc_priv->ht_cap & WLAN_RC_SGI_FLAG);
+ 
+ 	/* FIXME: Handle AP mode later when we support CWM */
+ 
+-- 
+1.7.0.4
 
-[snip]...[snip]
