@@ -1,92 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.19.149.2]:63879 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757220Ab0JLNiz (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 12 Oct 2010 09:38:55 -0400
-From: Kevin Hayes <kevin@Atheros.com>
-To: Marcel Holtmann <holtmann@linux.intel.com>,
-	Shanmugamkamatchi Balashanmugam
-	<Shanmugamkamatchi.Balashanmugam@Atheros.com>
-CC: Shanmugamkamatchi Balashanmugam
-	<Shanmugamkamatchi.Balashanmugam@Atheros.com>,
-	Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	linux-bluetooth <linux-bluetooth@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Deepak Dhamdhere <Deepak.Dhamdhere@Atheros.com>,
-	Sree Durbha <Sree.Durbha@Atheros.com>
-Date: Tue, 12 Oct 2010 06:38:51 -0700
-Subject: RE: RFC: btusb firmware load help
-Message-ID: <B7132A25476D334D9130FE7532F2A56314B58158FF@SC1EXMB-MBCL.global.atheros.com>
-References: <1286349552.6145.11.camel@aeonflux>
-	 <AANLkTimDvgFtoGLEjgWyYRrhQy6Num-rn_2WYO4Lf84b@mail.gmail.com>
-	 <1286380566.6145.42.camel@aeonflux> <20101006163816.GE7070@tux>
-	 <AANLkTik9w4_PdcEsbRHakLcxcD334_1Q8hGArxTXPCGF@mail.gmail.com>
-	 <20101006173949.GG7070@tux>
-	 <1286387660.3655.382.camel@jlt3.sipsolutions.net>
-	 <AANLkTikYRSQw-+Tcj4VS1qxi=OaeF9C5hjAMWVu+0M=v@mail.gmail.com>
-	 <AANLkTi=o4Mc72NrNoALBdS3YHeY7RMyyAJPsCy=uW3+F@mail.gmail.com>
-	 <1286389697.3655.401.camel@jlt3.sipsolutions.net>
-	 ,<20101006183340.GI7070@tux>
-	 <44EE5C37ADC36343B0625A05DD408C4850DAD2CA31@CHEXMB-01.global.atheros.com>
-	 <1286465072.6145.151.camel@aeonflux>  <4CADF6BF.6070305@atheros.com>
- <1286469741.6145.165.camel@aeonflux>
-In-Reply-To: <1286469741.6145.165.camel@aeonflux>
-Content-Type: text/plain; charset="utf-8"
+Received: from mail-yx0-f174.google.com ([209.85.213.174]:44729 "EHLO
+	mail-yx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753379Ab0JZRPF convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 26 Oct 2010 13:15:05 -0400
+Received: by yxn35 with SMTP id 35so3050708yxn.19
+        for <linux-wireless@vger.kernel.org>; Tue, 26 Oct 2010 10:15:03 -0700 (PDT)
 MIME-Version: 1.0
+In-Reply-To: <AANLkTi=Qs8tQyNQQik8unFd5NUf2LW2UFowMJ0yjTr0b@mail.gmail.com>
+References: <AANLkTinP32=snam3Bex+OC8LL00awfjrJz4834mhOaNL@mail.gmail.com>
+ <1287995967.3587.9.camel@jlt3.sipsolutions.net> <AANLkTik-SaE2ShV7H6Lv1qFQ-FM5fPuWGws6pWM+b6Go@mail.gmail.com>
+ <AANLkTik12g6kmynbgyhPuu+B5jZ9Swv+1PhAg9EKMByw@mail.gmail.com> <AANLkTi=Qs8tQyNQQik8unFd5NUf2LW2UFowMJ0yjTr0b@mail.gmail.com>
+From: "Cassiano Tartari, Eng." <falecom@cassianotartari.eng.br>
+Date: Tue, 26 Oct 2010 15:14:43 -0200
+Message-ID: <AANLkTimt8yX6NTsLdwaWuOZifhN5hDnQkH+FBsPr50+Z@mail.gmail.com>
+Subject: Re: Modifying the driver iwlwifi
+To: Blaise Gassend <blaise@willowgarage.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-SGkgTWFyY2VsLCBCYWxhLA0KDQoNCj4gLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCj4gRnJv
-bTogbGludXgtYmx1ZXRvb3RoLW93bmVyQHZnZXIua2VybmVsLm9yZyBbbWFpbHRvOmxpbnV4LWJs
-dWV0b290aC0NCj4gb3duZXJAdmdlci5rZXJuZWwub3JnXSBPbiBCZWhhbGYgT2YgTWFyY2VsIEhv
-bHRtYW5uDQo+IFNlbnQ6IFRodXJzZGF5LCBPY3RvYmVyIDA3LCAyMDEwIDk6NDIgQU0NCj4gVG86
-IFNoYW5tdWdhbWthbWF0Y2hpIEJhbGFzaGFubXVnYW0NCj4gQ2M6IFNoYW5tdWdhbWthbWF0Y2hp
-IEJhbGFzaGFubXVnYW07IEx1aXMgUm9kcmlndWV6OyBKb2hhbm5lcyBCZXJnOw0KPiBsaW51eC1i
-bHVldG9vdGg7IGxpbnV4LWtlcm5lbEB2Z2VyLmtlcm5lbC5vcmc7IGxpbnV4LQ0KPiB3aXJlbGVz
-c0B2Z2VyLmtlcm5lbC5vcmc7IERlZXBhayBEaGFtZGhlcmU7IFNyZWUgRHVyYmhhDQo+IFN1Ympl
-Y3Q6IFJlOiBSRkM6IGJ0dXNiIGZpcm13YXJlIGxvYWQgaGVscA0KPiANCj4gSGkgQmFsYSwNCj4g
-DQo+ID4gPj4gVGhhbmtzIEpvaGFubmVzLiAgVGhpcyB3b3VsZCBiZSBiZXR0ZXIgb3B0aW9uIHRv
-IGNoYW5nZSBQSUQgaW4NCj4gZmlybXdhcmUNCj4gPiA+PiBhcyBibGFja2xpc3RpbmcgMzAwMiBt
-aWdodCBjcmVhdGUgcHJvYmxlbXMgZm9yIDMwMTEgY2hpcHNldHMuDQo+ID4gPj4gV2lsbCB0cnkg
-YW5kIGxldCB5b3UgcGVvcGxlIGtub3cuDQo+ID4gPiBUaGUgbWlzYmVoYXZpbmcgMzAwMiBuZWVk
-cyB0byBiZSBibGFja2xpc3RlZCBpbiBidHVzYi5jIGFueXdheS4NCj4gSG93ZXZlcg0KPiA+ID4g
-YWZ0ZXIgbG9hZGluZyB0aGUgZmlybXdhcmUgdG8gMzAwMiBkZXZpY2UsIGl0IHNob3VsZCBjaGFu
-Z2UgaXRzIFBJRA0KPiB0bw0KPiA+ID4gc29tZXRoaW5nIGVsc2UuDQo+ID4gPg0KPiA+ID4gSSBh
-bSBzdGlsbCB0cnlpbmcgdG8gZmlndXJlIG91dCBpZiB0aGlzIGlzIG9uZSBzdGFnZSBmaXJtd2Fy
-ZQ0KPiBsb2FkaW5nIG9yDQo+ID4gPiBhIHR3byBzdGFnZSBmaXJtd2FyZSBsb2FkaW5nLiBUaGlz
-IGlzIGFsbCBwcmV0dHkgdW5jbGVhciBhbmQgbm9ib2R5DQo+IGhhcw0KPiA+ID4gYW5zd2VyZWQg
-dGhpcyBjbGVhcmx5IHNvIGZhci4NCj4gPg0KPiA+IGVlcHJvbSBiYXNlZCAzMDExIGNoaXBzIGNv
-bWVzIHVwIHdpdGggUElEIDMwMDAgZ2l2aW5nIGNvbnRyb2wgdG8gREZVDQo+ID4gZHJpdmVyIFth
-dGgza10uICBhdGgzayBkb3dubG9hZHMgdGhlDQo+ID4gZmlybXdhcmUgY2hhbmdpbmcgUElEIHRv
-IDMwMDIuICBOb3cgYnR1c2IgZ2V0cyBjb250cm9sLg0KPiA+DQo+ID4gSW4gc2ZsYXNoIGJhc2Vk
-IGRldmljZXMgdG8gcmVkdWNlIHdpbmRvd3Mgc3VzcGVuZC9yZXN1bWUgdGltZSB3ZSBoYWQNCj4g
-YQ0KPiA+IHNtYWxsIGZpcm13YXJlIGluIGZsYXNoIHdoaWNoDQo+ID4gZW5hYmxlcyB0aGUgZGV2
-aWNlIHRvIGdldCBkZXRlY3RlZCBhcyBHZW5lcmljIEJsdWV0b290aCBVU0IgZGV2aWNlDQo+IHdp
-dGgNCj4gPiBQSUQgMzAwMi4gIFNvIGNvbnRyb2wgcmVhY2hlcyBidHVzYiB3aGVuIGRldmljZSBp
-cyBwbHVnZ2VkIGluLA0KPiBsZWF2aW5nDQo+ID4gbm8gb3B0aW9uIGZvciB1cyB0byBsb2FkIHRo
-ZSBhY3R1YWwgZmlybXdhcmUuDQo+ID4NCj4gPiBTb2x1dGlvbiB3b3VsZCBiZSB0byBibGFja2xp
-c3QgMzAwMiBpbiBidHVzYiwgZW5hYmxlIGF0aDNrIHRvIGdldA0KPiA+IGNvbnRyb2wgZm9yIGJv
-dGggdGhlIGRldmljZXMsIGRvd25sb2FkIHRoZSBmaXJtd2FyZSBhbmQgY2hhbmdlIFBJRCB0bw0K
-PiA+IDMwMDMgc28gdGhhdCBjb250cm9sIHdpdGggY29tZSB0byBidHVzYi4NCj4gDQo+IHNvIGhl
-cmUgaXMgdGhlIHRoaW5nIHRoYXQgbmVlZHMgdG8gYmUgZG9uZS4NCj4gDQo+IGEpIEdldCBhIGZp
-cm13YXJlIGZvciBQSUQgMzAwMCBkZXZpY2VzIHRoYXQgY2hhbmdlIHRoZSBmaXJtd2FyZSB0byBz
-b21lDQo+IG90aGVyIFBJRC4gU2luY2UgMzAwMyBpcyBhbHJlYWR5IGluIHVzZSBhcyB3ZWxsLCB1
-c2luZyAzMDA0IG9yIGxhdGVyIGlzDQo+IGJldHRlciBhcHByb2FjaC4NCj4gDQo+IGIpIEJsYWNr
-bGlzdCBQSUQgMzAwMiBpbiBidHVzYi5jLg0KPiANCj4gYykgSGFuZGxlIHNwZWNpYWwgZmlybXdh
-cmUgbG9hZGluZyBjYXNlIGZvciBQSUQgMzAwMiBzZmxhc2ggZGV2aWNlcy4gSWYNCj4gZmlybXdh
-cmUgaXMgbG9hZGVkIGNoYW5nZWQgdG8gMzAwNSBvciBvdGhlci4NCj4gDQo+IEFuZCBhcyBhIGdl
-bmVyYWwgbm90ZSwgSSBwcmVmZXIgdGhhdCB0aGUgUElEIGFmdGVyIGxvYWRpbmcgZmlybXdhcmUg
-aXMNCj4gZGlmZmVyZW50IGlmIHlvdSBkb24ndCBoYXBwZW4gdG8gYWN0dWFsbHkgbG9hZCB0aGUg
-c2FtZSBmaXJtd2FyZS4NCj4gDQo+IFNvIHBsZWFzZSBzb3J0IG91dCB5b3VyIFVTQiBQSUQgYXNz
-aWdubWVudCBmb3IgQmx1ZXRvb3RoIGluIGdlbmVyYWwuDQo+IFRoaXMgc2VlbXMgdG8gYmUgYSBt
-ZXNzIHRoYXQgaXMgbm90IHRob3VnaHQgdGhyb3VnaCBwcm9wZXJseS4NCj4gDQo+IFJlZ2FyZHMN
-Cj4gDQo+IE1hcmNlbA0KPiANCg0KWWVzLCBpdCBpcyBhIGdvb2QgaWRlYSB0byBsZXQgdGhlIGRv
-d25sb2FkYWJsZSBmaXJtd2FyZSBzZXQgYSBuZXcgUElELCBhbG9uZyB3aXRoIHRoZSBibGFja2xp
-c3Qgb24gdGhlIDMwMDIgUElEIGZvciB0aGUgZmlyc3QgZ28gcm91bmQuICBJIGVtcGhhc2l6ZSwg
-aXQgaXMgdGhlIGRvd25sb2FkZWQgZmlybXdhcmUgdGhhdCB3aWxsIGJlIHJlcXVpcmVkIHRvIGRv
-IHRoZSBQSUQgc3dpenpsaW5nLCBub3QgdGhlIHNmbGFzaCBmaXJtd2FyZS4gIEFuZCBJIGFncmVl
-IHdlIHNob3VsZCBoYXZlIGEgbWFwIG9mIHRoZSBQSURzIGluIHVzZSBhbmQgd2hhdCB0aGV5IGFy
-ZSB1c2VkIGZvciwgb25jZSB3ZSBnZXQgdGhyb3VnaCB0aGlzIGltbWVkaWF0ZSBmaXhpbmcgcGhh
-c2UuDQoNClRoYW5rcywNCg0KCUsrKw0KDQoNCg0K
+On Mon, Oct 25, 2010 at 5:31 PM, Blaise Gassend <blaise@willowgarage.com> wrote:
+>
+> > How can I know if a AP is "compliant/certified" ? I'm such a newbie.
+>
+> I suspect that most of them are. If they have a WiFi logo on the box
+> they should be:
+> http://www.wi-fiplanet.com/tutorials/article.php/2203361/Wi-Fi-Interoperability-Compliance-Steps.htm
+>
+> >> I had a look at the paper, and the original poster seems to have
+> >> exaggerated the paper's claims. They do indeed do the authentication
+> >> and association request before getting responses. For everything else,
+> >> they wait to get the response for the previous stage. The main
+> >> difference is that they greatly reduce the timeouts before retrying at
+> >> each stage. The paper is also limited to non-encrypted networks.
+> >
+> > My objetive in my current job is just that, reduce the time of authentication.
+> >
+> > Someone has a better idea or solution to reduce the association time?
+> > I need to use DHCP and could be a open network.
+>
+> How short does it need to be for you? In my experience sub-second is
+> pretty if you know the frequency, have low packet loss, and have an
+> aggressive DHCP client. The methods in the paper should make it work
+> even with higher packet loss.
+
+what is a "agressive DHCP client" ? I saw in the manual, there a lot
+of telnet commans for DHCP
+
+I tryed:
+sudo iwconfig wlan0 mode managed freq 2.437G rate 1M frag 256 key open
+essid 'cassiano-PC_AP'
+
+But when I try to run:
+sudo dhclient wlan0
+
+return: "No DHCPOFFERS received"
+
+And I need to do this because my code will connect automatic. Using
+the networkManager (ubuntu) the connection appears to occur fast.
+
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
