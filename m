@@ -1,52 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.19.149.2]:58846 "EHLO mail.atheros.com"
+Received: from bar.sig21.net ([80.81.252.164]:59537 "EHLO bar.sig21.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752191Ab0JRSh6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 18 Oct 2010 14:37:58 -0400
-Received: from mail.atheros.com ([10.10.20.108])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Mon, 18 Oct 2010 11:37:48 -0700
-Date: Mon, 18 Oct 2010 11:37:56 -0700
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: <linux-wireless@vger.kernel.org>
-Subject: [PATCH] iw: print out eirp for triplets on scan
-Message-ID: <20101018183756.GC22887@tux>
+	id S1754539Ab0JZUkr (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 26 Oct 2010 16:40:47 -0400
+Date: Tue, 26 Oct 2010 22:40:43 +0200
+From: Johannes Stezenbach <js@sig21.net>
+To: Ivo Van Doorn <ivdoorn@gmail.com>
+Cc: "Luis R. Rodriguez" <mcgrof@gmail.com>,
+	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: Compat-wireless release for 2010-10-25 is baked
+Message-ID: <20101026204043.GA2608@sig21.net>
+References: <20101025190358.AEC6840F97@repository3.orbit-lab.org>
+ <20101026123552.GA4604@sig21.net>
+ <AANLkTimzUKj=C9PxGs1PkQy_KWu0PGKd1zv_m-ZpWaEm@mail.gmail.com>
+ <20101026184123.GA1616@sig21.net>
+ <AANLkTimHpyJho6AheQc6zos7Pmr-ECjvaL83mYDC19Yd@mail.gmail.com>
+ <AANLkTi=TPCXXki3jrrFA1HiauDp0rZVtMK9fK4z8B_kv@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <AANLkTi=TPCXXki3jrrFA1HiauDp0rZVtMK9fK4z8B_kv@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-When debugging country IE parsing when scanning you will not see this:
+Hi,
 
-	Channels [1 - 1] @ 14 dBm
-	Channels [2 - 10] @ 21 dBm
-	Channels [11 - 11] @ 14 dBm
+On Tue, Oct 26, 2010 at 09:48:12PM +0200, Ivo Van Doorn wrote:
+> For rt2x00 development you can choose between rt2x00.git and
+> wireless-testing.git,
+> the trees are usually not that far apart, since smaller patches are pushed quite
+> quickly upstream. (Also rt2x00.git is rebased frequently, while
+> wireless-testing.git rarely
+> is rebased)
 
-Instead of this:
+Thanks for clarification.  I guess I'll start with wireless-testing,
+that sounds a bit more newbie-friendly.  I just want to avoid
+searching or reporting bugs which are already fixed, but your description
+sounds like changes are pushed from rt2x00.git to wireless-testing.git
+maybe weekly.  I was afraid patches would be pushed to wireless-testing.git
+only when it's time to get ready for the next merge window.
 
-	Channels [1 - 1]
-	Channels [2 - 10]
-	Channels [11 - 11
 
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
----
- scan.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
-
-diff --git a/scan.c b/scan.c
-index 3b5fb60..486a70e 100644
---- a/scan.c
-+++ b/scan.c
-@@ -222,7 +222,7 @@ static void print_country(const uint8_t type, uint8_t len, const uint8_t *data)
- 		else
- 			end_channel =  triplet->chans.first_channel + (4 * (triplet->chans.num_channels - 1));
- 
--		printf("\t\tChannels [%d - %d]\n", triplet->chans.first_channel, end_channel);
-+		printf("\t\tChannels [%d - %d] @ %d dBm\n", triplet->chans.first_channel, end_channel, triplet->chans.max_power);
- 
- 		data += 3;
- 		len -= 3;
--- 
-1.7.0.4
-
+Thanks,
+Johannes
