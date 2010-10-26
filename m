@@ -1,139 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from comal.ext.ti.com ([198.47.26.152]:45544 "EHLO comal.ext.ti.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755072Ab0JKPoq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 11 Oct 2010 11:44:46 -0400
-From: Shahar Levi <shahar_levi@ti.com>
-To: <linux-wireless@vger.kernel.org>
-Cc: Luciano Coelho <luciano.coelho@nokia.com>
-Subject: [PATCH v3 02/03] wl1271: 11n Support, ACX Commands
-Date: Mon, 11 Oct 2010 17:47:17 +0200
-Message-Id: <1286812038-19013-3-git-send-email-shahar_levi@ti.com>
-In-Reply-To: <1286812038-19013-1-git-send-email-shahar_levi@ti.com>
-References: <1286812038-19013-1-git-send-email-shahar_levi@ti.com>
+Received: from mail-fx0-f46.google.com ([209.85.161.46]:43822 "EHLO
+	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751095Ab0JZJgT (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 26 Oct 2010 05:36:19 -0400
+Received: by fxm16 with SMTP id 16so3873908fxm.19
+        for <linux-wireless@vger.kernel.org>; Tue, 26 Oct 2010 02:36:17 -0700 (PDT)
+From: Helmut Schaa <helmut.schaa@googlemail.com>
+To: Ivo van Doorn <ivdoorn@gmail.com>
+Subject: Re: Question about starting up an AP
+Date: Tue, 26 Oct 2010 11:35:31 +0200
+Cc: Joshua Smith <JoshuaESmith@charter.net>,
+	"linux-wireless" <linux-wireless@vger.kernel.org>,
+	users@rt2x00.serialmonkey.com
+References: <DA0C92FD-F6BF-4746-9BE1-A643A0D70F7A@kaon.com> <B3E6C8F9-24E4-4F12-B19C-15A474E5BCFA@charter.net> <201010151146.53640.helmut.schaa@googlemail.com>
+In-Reply-To: <201010151146.53640.helmut.schaa@googlemail.com>
+MIME-Version: 1.0
+Content-Type: Text/Plain;
+  charset="us-ascii"
+Message-Id: <201010261135.31232.helmut.schaa@googlemail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Added ACX command to the FW for 11n support.
+Am Freitag 15 Oktober 2010 schrieb Helmut Schaa:
+> Am Donnerstag 14 Oktober 2010 schrieb Joshua Smith:
+> > Not sure how you want to proceed with this, but this is the code that makes my AP work:
+> > 
+> >  nl compat-wireless-2010-09-20/drivers/net/wireless/rt2x00/rt2800lib.c | grep -C 10 1000/
+> > 
+> >    225	int rt2800_wait_wpdma_ready(struct rt2x00_dev *rt2x00dev)
+> >    226	{
+> >    227		unsigned int i;
+> >    228		u32 reg;
+> >        
+> >    229		for (i = 0; i < 1000/*REGISTER_BUSY_COUNT*/; i++) {
+> >    230			rt2800_register_read(rt2x00dev, WPDMA_GLO_CFG, &reg);
+> >    231			if (!rt2x00_get_field32(reg, WPDMA_GLO_CFG_TX_DMA_BUSY) &&
+> >    232			    !rt2x00_get_field32(reg, WPDMA_GLO_CFG_RX_DMA_BUSY))
+> >    233				return 0;
+> >        
+> >    234			msleep(1);
+> >    235		}
+> >        
+> >    236		ERROR(rt2x00dev, "WPDMA TX/RX busy, aborting.\n");
+> >    237		return -EACCES;
+> 
+> I'll let Ivo decide on this. At least if we really want to wait more then one
+> second for DMA to be ready we should increase the msleep(1) to msleep(10) and
+> keep the maximum number of retries at 100.
 
-Signed-off-by: Shahar Levi <shahar_levi@ti.com>
----
- drivers/net/wireless/wl12xx/wl1271_acx.c |   85 ++++++++++++++++++++++++++++++
- drivers/net/wireless/wl12xx/wl1271_acx.h |    5 ++
- 2 files changed, 90 insertions(+), 0 deletions(-)
+Ping.
 
-diff --git a/drivers/net/wireless/wl12xx/wl1271_acx.c b/drivers/net/wireless/wl12xx/wl1271_acx.c
-index 6189934..cd89482 100644
---- a/drivers/net/wireless/wl12xx/wl1271_acx.c
-+++ b/drivers/net/wireless/wl12xx/wl1271_acx.c
-@@ -1226,6 +1226,91 @@ out:
- 	return ret;
- }
- 
-+int wl1271_acx_set_ht_capabilities(struct wl1271 *wl,
-+				    struct ieee80211_sta_ht_cap *ht_cap,
-+				    bool allow_ht_operation)
-+{
-+	struct wl1271_acx_ht_capabilities *acx;
-+	u8 mac_address[ETH_ALEN] = {0xff, 0xff, 0xff, 0xff, 0xff, 0xff};
-+	int ret = 0;
-+
-+	wl1271_debug(DEBUG_ACX, "acx ht capabilities setting");
-+
-+	acx = kzalloc(sizeof(*acx), GFP_KERNEL);
-+	if (!acx) {
-+		ret = -ENOMEM;
-+		goto out;
-+	}
-+
-+	/* Allow HT Operation ? */
-+	if (allow_ht_operation) {
-+		acx->ht_capabilites =
-+		  WL1271_ACX_FW_CAP_BIT_MASK_HT_OPERATION;
-+		acx->ht_capabilites |=
-+		  ((ht_cap->cap & IEEE80211_HT_CAP_GRN_FLD) ?
-+		   WL1271_ACX_FW_CAP_BIT_MASK_GREENFIELD_FRAME_FORMAT : 0);
-+		acx->ht_capabilites |=
-+		  ((ht_cap->cap & IEEE80211_HT_CAP_SGI_20) ?
-+		   WL1271_ACX_FW_CAP_BIT_MASK_SHORT_GI_FOR_20MHZ_PACKETS : 0);
-+		acx->ht_capabilites |=
-+		  ((ht_cap->cap & IEEE80211_HT_CAP_LSIG_TXOP_PROT) ?
-+		   WL1271_ACX_FW_CAP_BIT_MASK_LSIG_TXOP_PROTECTION : 0);
-+
-+		/* get data from A-MPDU parameters field */
-+		acx->ampdu_max_length = ht_cap->ampdu_factor;
-+		acx->ampdu_min_spacing = ht_cap->ampdu_density;
-+
-+		memcpy(acx->mac_address, mac_address, ETH_ALEN);
-+	}
-+	/* HT operations are not allowed */
-+	else {
-+		acx->ht_capabilites = 0;
-+	}
-+
-+	ret = wl1271_cmd_configure(wl, ACX_PEER_HT_CAP, acx, sizeof(*acx));
-+	if (ret < 0) {
-+		wl1271_warning("acx ht capabilities setting failed: %d", ret);
-+		goto out;
-+	}
-+
-+out:
-+	kfree(acx);
-+	return ret;
-+}
-+
-+int wl1271_acx_set_ht_information(struct wl1271 *wl,
-+				   u16 ht_operation_mode)
-+{
-+	struct wl1271_acx_ht_information *acx;
-+	int ret = 0;
-+
-+	wl1271_debug(DEBUG_ACX, "acx ht information setting");
-+
-+	acx = kzalloc(sizeof(*acx), GFP_KERNEL);
-+	if (!acx) {
-+		ret = -ENOMEM;
-+		goto out;
-+	}
-+
-+	acx->ht_protection =
-+		(u8)(ht_operation_mode & IEEE80211_HT_OP_MODE_PROTECTION);
-+	acx->rifs_mode = 0;
-+	acx->gf_protection = 0;
-+	acx->ht_tx_burst_limit = 0;
-+	acx->dual_cts_protection = 0;
-+
-+	ret = wl1271_cmd_configure(wl, ACX_HT_BSS_OPERATION, acx, sizeof(*acx));
-+
-+	if (ret < 0) {
-+		wl1271_warning("acx ht information setting failed: %d", ret);
-+		goto out;
-+	}
-+
-+out:
-+	kfree(acx);
-+	return ret;
-+}
-+
- int wl1271_acx_tsf_info(struct wl1271 *wl, u64 *mactime)
- {
- 	struct wl1271_acx_fw_tsf_information *tsf_info;
-diff --git a/drivers/net/wireless/wl12xx/wl1271_acx.h b/drivers/net/wireless/wl12xx/wl1271_acx.h
-index 90082c5..57d503b 100644
---- a/drivers/net/wireless/wl12xx/wl1271_acx.h
-+++ b/drivers/net/wireless/wl12xx/wl1271_acx.h
-@@ -1176,6 +1176,11 @@ int wl1271_acx_keep_alive_config(struct wl1271 *wl, u8 index, u8 tpl_valid);
- int wl1271_acx_rssi_snr_trigger(struct wl1271 *wl, bool enable,
- 				s16 thold, u8 hyst);
- int wl1271_acx_rssi_snr_avg_weights(struct wl1271 *wl);
-+int wl1271_acx_set_ht_capabilities(struct wl1271 *wl,
-+				    struct ieee80211_sta_ht_cap *ht_cap,
-+				    bool allow_ht_operation);
-+int wl1271_acx_set_ht_information(struct wl1271 *wl,
-+				   u16 ht_operation_mode);
- int wl1271_acx_tsf_info(struct wl1271 *wl, u64 *mactime);
- 
- #endif /* __WL1271_ACX_H__ */
--- 
-1.6.0.4
+Ivo, do we want to add the excessive waiting (up to one second) for DMA on
+rt2800 as it fixes Joshuas device? At the moment we're waiting 100ms.
 
+Helmut
