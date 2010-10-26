@@ -1,46 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:53552 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754395Ab0JFLqV (ORCPT
+Received: from mgw-sa02.ext.nokia.com ([147.243.1.48]:51748 "EHLO
+	mgw-sa02.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932478Ab0JZMXS (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 6 Oct 2010 07:46:21 -0400
-Subject: Re: [PATCH] mac80211: hoist sta->lock from reorder release timer
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Christian Lamparter <chunkeey@googlemail.com>
-Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com,
-	Ben Greear <greearb@candelatech.com>,
-	Ming Lei <tom.leiming@gmail.com>
-In-Reply-To: <201010061343.23463.chunkeey@googlemail.com>
-References: <201010061200.54364.chunkeey@googlemail.com>
-	 <201010061220.50800.chunkeey@googlemail.com>
-	 <1286361705.3655.121.camel@jlt3.sipsolutions.net>
-	 <201010061343.23463.chunkeey@googlemail.com>
+	Tue, 26 Oct 2010 08:23:18 -0400
+Subject: Re: [PATCH 1/2] wl1271: Fix scan failure detection
+From: Juuso Oikarinen <juuso.oikarinen@nokia.com>
+To: ext Johannes Berg <johannes@sipsolutions.net>
+Cc: "Coelho Luciano (Nokia-MS/Helsinki)" <Luciano.Coelho@nokia.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <1288095526.3761.63.camel@jlt3.sipsolutions.net>
+References: <1288092279-31272-1-git-send-email-juuso.oikarinen@nokia.com>
+	 <1288093257.3761.59.camel@jlt3.sipsolutions.net>
+	 <1288094517.2607.33.camel@wimaxnb.nmp.nokia.com>
+	 <1288095526.3761.63.camel@jlt3.sipsolutions.net>
 Content-Type: text/plain; charset="UTF-8"
-Date: Wed, 06 Oct 2010 13:46:18 +0200
-Message-ID: <1286365578.3655.187.camel@jlt3.sipsolutions.net>
+Date: Tue, 26 Oct 2010 15:22:49 +0300
+Message-ID: <1288095769.2607.34.camel@wimaxnb.nmp.nokia.com>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2010-10-06 at 13:43 +0200, Christian Lamparter wrote:
-
-> > Basically the thing is that until your patch, the data in the struct
-> > didn't actually need locking because it was accessed by the RX path only
-> > which is not concurrent.
-> > 
-> I see. So basically all rx handlers are affected by these rx->sta races.
+On Tue, 2010-10-26 at 14:18 +0200, ext Johannes Berg wrote:
+> On Tue, 2010-10-26 at 15:01 +0300, Juuso Oikarinen wrote:
+> > On Tue, 2010-10-26 at 13:40 +0200, ext Johannes Berg wrote:
 > 
-> John, can you please revert (or at least drop from the upcoming 2.6.37-rcX cycle):
+> > > > +	if (wl->state == WL1271_STATE_OFF) {
+> > > > +		/*
+> > > > +		 * We cannot return -EBUSY here because mac80211 will expect
+> > > > +		 * a call to ieee80211_scan_completed if we do - in this case
+> > > > +		 * there won't be any call.
+> > > > +		 */
+> > > 
+> > > ???
 > 
-> (mac80211: fix release_reorder_timeout in scan)
-> mac80211: fix rcu-unsafe pointer dereference
-> mac80211: AMPDU rx reorder timeout timer
-> (mac80211: remove unused rate function parameter)
-> mac80211: put rx handlers into separate functions
+> > I'll try explain what this is about. In net/wireless/sme.c you'll find
+> > this:
+> 
+> [snip]
+> 
+> so it's really about cfg80211, that explains my confusion :)
 
-I think it's probably easier to fix than to revert now? There are only a
-handful of fields, and it seemed to me that most of them can easily be
-moved under the reorder lock.
+Yeah, it seems it's my confusion :/
 
-johannes
+-Juuso
+
+> johannes
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
 
