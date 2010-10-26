@@ -1,112 +1,85 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.19.149.2]:33083 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752859Ab0JUISd (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 21 Oct 2010 04:18:33 -0400
-Received: from mail.atheros.com ([10.10.20.108])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Thu, 21 Oct 2010 01:18:22 -0700
-Date: Thu, 21 Oct 2010 13:48:28 +0530
-From: Senthil Balasubramanian <senthilkumar@atheros.com>
-To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-CC: "linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"johannes@sipsolutions.net" <johannes@sipsolutions.net>,
-	Easwar Krishnan <Easwar.Krishnan@Atheros.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Luis Rodriguez <Luis.Rodriguez@Atheros.com>
-Subject: Re: [PATCH 6/7] cfg80211: add debug print when processing a channel
-Message-ID: <20101021081828.GA1840@senthil-lnx.users.atheros.com>
-References: <1287595139-10761-1-git-send-email-lrodriguez@atheros.com>
- <1287595139-10761-7-git-send-email-lrodriguez@atheros.com>
+Received: from mail-wy0-f174.google.com ([74.125.82.174]:41945 "EHLO
+	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752417Ab0JZFGU (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 26 Oct 2010 01:06:20 -0400
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <1287595139-10761-7-git-send-email-lrodriguez@atheros.com>
+Date: Tue, 26 Oct 2010 10:36:19 +0530
+Message-ID: <AANLkTim=jD-C4DwDS2=KuQnhPOyP+Cnd-hUTdaZ7Opth@mail.gmail.com>
+Subject: ath9k crashing the kernel
+From: Jaswinder Singh <jaswinderlinux@gmail.com>
+To: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	netdev <netdev@vger.kernel.org>, ath9k-devel@lists.ath9k.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Oct 20, 2010 at 10:48:58PM +0530, Luis R. Rodriguez wrote:
-> In the worst case you are seeing really odd things you want
-> more information than what is provided right now, for those
-> that insist and want debug info through CONFIG_CFG80211_REG_DEBUG
-> provide a print of when we are processing a channel and with what
-> regulatory rule.
-> 
-> Cc: Easwar Krishnan <easwar.krishnan@atheros.com>
-> Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
-> ---
->  net/wireless/reg.c |   40 ++++++++++++++++++++++++++++++++++++++++
->  1 files changed, 40 insertions(+), 0 deletions(-)
-> 
-> diff --git a/net/wireless/reg.c b/net/wireless/reg.c
-> index 62396b2..f0ff146 100644
-> --- a/net/wireless/reg.c
-> +++ b/net/wireless/reg.c
-> @@ -728,6 +728,42 @@ static const char *reg_initiator_name(enum nl80211_reg_initiator initiator)
->  	}
->  }
->  
-> +#ifdef CONFIG_CFG80211_REG_DEBUG
-> +
-> +static void chan_reg_rule_print_dbg(struct ieee80211_channel *chan,
-> +				    u32 desired_bw_khz,
-> +				    const struct ieee80211_reg_rule *reg_rule)
-> +{
-> +	const struct ieee80211_power_rule *power_rule;
-> +	const struct ieee80211_freq_range *freq_range;
-> +	char max_antenna_gain[32];
-> +
-> +	power_rule = &reg_rule->power_rule;
-> +	freq_range = &reg_rule->freq_range;
-> +
-> +	if (!power_rule->max_antenna_gain)
-> +		snprintf(max_antenna_gain, 32, "N/A");
-> +	else
-> +		snprintf(max_antenna_gain, 32, "%d", power_rule->max_antenna_gain);
-> +
-> +	REG_DBG_PRINT("cfg80211: Updating information on frequency %d MHz "
-> +		      "for %d a MHz width channel with regulatory rule:\n",
-> +		      chan->center_freq,
-> +		      KHZ_TO_MHZ(desired_bw_khz));
-> +
-> +	REG_DBG_PRINT("cfg80211: %d KHz - %d KHz @  KHz), (%s mBi, %d mBm)\n",
-> +		      freq_range->start_freq_khz,
-> +		      freq_range->end_freq_khz,
-> +		      max_antenna_gain,
-> +		      power_rule->max_eirp);
-> +}
-> +#else
-> +static void reg_reg_rule_print_dbg(const struct ieee80211_reg_rule *reg_rule)
-This will break compilation. Function name and arguments needs to be fixed here.
-> +{
-> +	return;
-> +}
-> +#endif
-> +
->  /*
->   * Note that right now we assume the desired channel bandwidth
->   * is always 20 MHz for each individual channel (HT40 uses 20 MHz
-> @@ -788,6 +824,8 @@ static void handle_channel(struct wiphy *wiphy,
->  		return;
->  	}
->  
-> +	chan_reg_rule_print_dbg(chan, desired_bw_khz, reg_rule);
-> +
->  	power_rule = &reg_rule->power_rule;
->  	freq_range = &reg_rule->freq_range;
->  
-> @@ -1132,6 +1170,8 @@ static void handle_channel_custom(struct wiphy *wiphy,
->  		return;
->  	}
->  
-> +	chan_reg_rule_print_dbg(chan, desired_bw_khz, reg_rule);
-> +
->  	power_rule = &reg_rule->power_rule;
->  	freq_range = &reg_rule->freq_range;
->  
-> -- 
-> 1.7.0.4
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Hello,
+
+ath9k is crashing the kernel :
+
+[   21.276554] BUG: spinlock bad magic on CPU#1, NetworkManager/1056
+[   21.277015]  lock: f5be80a8, .magic: 00000000, .owner: <none>/-1,
+.owner_cpu: 0
+[   21.277015] Pid: 1056, comm: NetworkManager Not tainted 2.6.36-netbook+ #20
+[   21.277015] Call Trace:
+[   21.277015]  [<c14767a7>] ? printk+0xf/0x11
+[   21.277015]  [<c117b823>] spin_bug+0x7c/0x87
+[   21.301365]  [<c117b8bd>] do_raw_spin_lock+0x1e/0x125
+[   21.301365]  [<c1478d0a>] ? _raw_spin_unlock_bh+0x1a/0x1c
+[   21.301365]  [<c1478dc3>] _raw_spin_lock_irqsave+0x17/0x1c
+[   21.318857]  [<c1288a74>] ath9k_config+0x255/0x38b
+[   21.318857]  [<c1447bdb>] ieee80211_hw_config+0x10a/0x114
+[   21.328034]  [<c1453545>] ieee80211_do_open+0x3de/0x4cf
+[   21.328034]  [<c1452206>] ? ieee80211_check_concurrent_iface+0x21/0x13a
+[   21.328034]  [<c104c470>] ? raw_notifier_call_chain+0xc/0xe
+[   21.328034]  [<c1453691>] ieee80211_open+0x5b/0x5e
+[   21.328034]  [<c13947cf>] __dev_open+0x80/0xa9
+[   21.328034]  [<c13920bb>] __dev_change_flags+0xa1/0x116
+[   21.328034]  [<c1394723>] dev_change_flags+0x13/0x3f
+[   21.328034]  [<c139d568>] do_setlink+0x226/0x507
+[   21.328034]  [<c139d917>] rtnl_setlink+0xce/0xd4
+[   21.328034]  [<c11786d2>] ? copy_to_user+0x3a/0x118
+[   21.328034]  [<c139d849>] ? rtnl_setlink+0x0/0xd4
+[   21.328034]  [<c139df4d>] rtnetlink_rcv_msg+0x17e/0x194
+[   21.328034]  [<c139ddcf>] ? rtnetlink_rcv_msg+0x0/0x194
+[   21.328034]  [<c13a59c4>] netlink_rcv_skb+0x30/0x76
+[   21.328034]  [<c139ddc8>] rtnetlink_rcv+0x1b/0x22
+[   21.328034]  [<c13a5772>] netlink_unicast+0x1aa/0x20b
+[   21.328034]  [<c13a5eac>] netlink_sendmsg+0x22c/0x27a
+[   21.328034]  [<c13862b8>] sock_sendmsg+0xa5/0xbb
+[   21.328034]  [<c13862b8>] ? sock_sendmsg+0xa5/0xbb
+[   21.328034]  [<c138e05b>] ? verify_iovec+0x3e/0x6b
+[   21.328034]  [<c1386ab2>] sys_sendmsg+0x149/0x196
+[   21.328034]  [<c10826f5>] ? unlock_page+0x40/0x43
+[   21.328034]  [<c10952d5>] ? __do_fault+0x367/0x393
+[   21.328034]  [<c1096b8e>] ? handle_mm_fault+0x3bd/0x77a
+[   21.328034]  [<c10b6fb3>] ? destroy_inode+0x1f/0x30
+[   21.328034]  [<c138694e>] ? sys_recvmsg+0x2b/0x46
+[   21.328034]  [<c1387c00>] sys_socketcall+0x146/0x18b
+[   21.328034]  [<c1002850>] sysenter_do_call+0x12/0x26
+[   21.344846] ADDRCONF(NETDEV_UP): wlan0: link is not ready
+[   21.487994] atl1c 0000:03:00.0: irq 42 for MSI/MSI-X
+[   21.543870] ADDRCONF(NETDEV_UP): eth0: link is not ready
+
+
+Linux 2.6.36 f6f94e2ab1 is good
+and
+229aebb873e2972 is bad
+
+I am trying to bisect it but I am getting compilation error :
+
+  LD      .tmp_vmlinux1
+drivers/built-in.o: In function `ath_do_set_opmode':
+/home/jaswinder/jaswinder-git/linux-2.6/drivers/net/wireless/ath/ath5k/base.c:567:
+undefined reference to `ath_opmode_to_string'
+/home/jaswinder/jaswinder-git/linux-2.6/drivers/net/wireless/ath/ath5k/base.c:568:
+undefined reference to `ath_opmode_to_string'
+make: *** [.tmp_vmlinux1] Error 1
+[jaswinder@ linux-2.6]$
+
+Thanks,
+--
+Jaswinder Singh.
