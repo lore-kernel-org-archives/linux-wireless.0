@@ -1,45 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qy0-f181.google.com ([209.85.216.181]:57279 "EHLO
-	mail-qy0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932177Ab0JAPUz (ORCPT
+Received: from mail.atheros.com ([12.19.149.2]:31313 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753379Ab0JZRUo convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 1 Oct 2010 11:20:55 -0400
-Received: by qyk9 with SMTP id 9so1079767qyk.19
-        for <linux-wireless@vger.kernel.org>; Fri, 01 Oct 2010 08:20:54 -0700 (PDT)
-From: Bill Jordan <bjordan@rajant.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Bill Jordan <bjordan@rajant.com>
-Subject: [PATCH 0/3] patches for WDS interfaces
-Date: Fri,  1 Oct 2010 11:20:38 -0400
-Message-Id: <1285946441-20152-1-git-send-email-bjordan@rajant.com>
+	Tue, 26 Oct 2010 13:20:44 -0400
+Received: from mail.atheros.com ([10.10.20.105])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Tue, 26 Oct 2010 10:20:33 -0700
+From: Rajkumar Manoharan <Rajkumar.Manoharan@Atheros.com>
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+CC: "linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Date: Tue, 26 Oct 2010 22:46:00 +0530
+Subject: RE: [PATCH] ath9k_htc: Set proper firmware offset for AR7010 devices
+Message-ID: <44EE5C37ADC36343B0625A05DD408C4850DAB4D6C7@CHEXMB-01.global.atheros.com>
+References: <1288104164-18940-1-git-send-email-rmanoharan@atheros.com>,<AANLkTin+TtPKtOgWd2+BZyYLpP4Jagv4u68CALjBNc7G@mail.gmail.com>
+In-Reply-To: <AANLkTin+TtPKtOgWd2+BZyYLpP4Jagv4u68CALjBNc7G@mail.gmail.com>
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Apologies to Luis Rodriguez and Johannes Berg.  Thanks for bearing with me.
-I think I've got it right this time.
+>On Tue, Oct 26, 2010 at 7:42 AM, Rajkumar Manoharan
+><rmanoharan@atheros.com> wrote:
+>> This patch handles the firmware loading properly for
+> >AR7010 HTC devices.
 
-With these patches, I'm able to interoperate over WDS between
-linux-wireless and MadWifi. I'm running wireless-testing plus OpenWRT
-patches on a Cambria board with an AR9160 radio.
+>This description is vague, you could have said instead that it treats
+>0x9018 as a AR7010.
+>
+> Luis
 
-Bill Jordan (3):
-  Patches to ath9k for WDS.
-  Patches to cfg80211 to allow setting the WDS peer.
-  Patches to mac80211 to allow WDS interfaces to pass packets.
+0x9018 was already treated as AR7010 devices. But it is missed in firmware offset
+selection. I'll resend the patch. Thanks for pointing out Luis :)
 
- drivers/net/wireless/ath/ath9k/init.c |    1 +
- drivers/net/wireless/ath/ath9k/main.c |    3 ++
- include/linux/nl80211.h               |    3 ++
- net/mac80211/iface.c                  |    3 ++
- net/mac80211/main.c                   |    3 ++
- net/mac80211/rx.c                     |    1 +
- net/mac80211/tx.c                     |    3 ++
- net/wireless/nl80211.c                |   49 +++++++++++++++++++++++++++++++++
- 8 files changed, 66 insertions(+), 0 deletions(-)
-
--- 
-1.7.2.3
-
+- Rajkumar
