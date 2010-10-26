@@ -1,51 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gx0-f174.google.com ([209.85.161.174]:60971 "EHLO
-	mail-gx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751061Ab0JNXkI convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 14 Oct 2010 19:40:08 -0400
-Received: by gxk6 with SMTP id 6so97343gxk.19
-        for <linux-wireless@vger.kernel.org>; Thu, 14 Oct 2010 16:40:06 -0700 (PDT)
+Received: from mail.atheros.com ([12.19.149.2]:19180 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755807Ab0JZOgm (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 26 Oct 2010 10:36:42 -0400
+Received: from mail.atheros.com ([10.10.20.105])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Tue, 26 Oct 2010 07:36:31 -0700
+From: Rajkumar Manoharan <rmanoharan@atheros.com>
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>,
+	Rajkumar Manoharan <rmanoharan@atheros.com>
+Subject: [PATCH] ath9k_htc: Set proper firmware offset for AR7010 devices
+Date: Tue, 26 Oct 2010 20:12:44 +0530
+Message-ID: <1288104164-18940-1-git-send-email-rmanoharan@atheros.com>
 MIME-Version: 1.0
-In-Reply-To: <4CB79299.7000005@candelatech.com>
-References: <4CB4AA89.1070009@candelatech.com> <20101013053141.GA15798@vasanth-laptop>
- <4CB5E0A8.5020502@candelatech.com> <AANLkTimp_GSwwX_RnQSyN9QNe55HQ+0HZJ1yd8Xp+dWG@mail.gmail.com>
- <AANLkTinyVqdgPqzpyihuaPtVVqDmzj-ZbXzQ-4qdA2yH@mail.gmail.com>
- <4CB77EA0.1000005@candelatech.com> <AANLkTimC0+6PiqWO+LmtBV7uKCVpZueAQs6m_6kAnbq9@mail.gmail.com>
- <AANLkTi=1oOCcdvBHo+8WAVHv-M8tE14ntmK4M_09SWh5@mail.gmail.com>
- <AANLkTi=pp2Ob06YCi6GsR9rtRaDWPP95n2M72qWLdbwM@mail.gmail.com>
- <20101014225150.GB15740@tux> <20101014231958.GA3242@tux> <4CB79299.7000005@candelatech.com>
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Date: Thu, 14 Oct 2010 16:39:45 -0700
-Message-ID: <AANLkTinQmE6wm1pXkRL6p_3rkMvNrppmirjj3-jagMp8@mail.gmail.com>
-Subject: Re: memory clobber in rx path, maybe related to ath9k.
-To: Ben Greear <greearb@candelatech.com>
-Cc: Luis Rodriguez <Luis.Rodriguez@atheros.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Oct 14, 2010 at 4:30 PM, Ben Greear <greearb@candelatech.com> wrote:
-> On 10/14/2010 04:19 PM, Luis R. Rodriguez wrote:
->>
->> Ok please try this patch, it cures it for me.
->
-> Well, it got a lot further than normal, but it still
-> hit the poison check after a few minutes.
->
-> Current test case is my app loading 130 or so stations, each running
-> wpa_supplicant.  All were created, and quite a few had associated
-> when the poison check hit.
->
-> So, it definitely looks like a step in the right direction, but
-> not fully fixed yet.
->
-> I'll do some more testing with this patch applied and using just my
-> perl script to make sure the problem is reproducible outside of my
-> application.
+This patch handles the firmware loading properly for
+AR7010 HTC devices.
 
-Ok, whatever userspace does it should not corrupt to kernel, unless
-its poking /dev/mem
+Signed-off-by: Rajkumar Manoharan <rmanoharan@atheros.com>
+---
+ drivers/net/wireless/ath/ath9k/hif_usb.c |   10 ++++++++--
+ 1 files changed, 8 insertions(+), 2 deletions(-)
 
-  Luis
+diff --git a/drivers/net/wireless/ath/ath9k/hif_usb.c b/drivers/net/wireless/ath/ath9k/hif_usb.c
+index 728d904..6576f68 100644
+--- a/drivers/net/wireless/ath/ath9k/hif_usb.c
++++ b/drivers/net/wireless/ath/ath9k/hif_usb.c
+@@ -801,10 +801,16 @@ static int ath9k_hif_usb_download_fw(struct hif_device_usb *hif_dev)
+ 	}
+ 	kfree(buf);
+ 
+-	if ((hif_dev->device_id == 0x7010) || (hif_dev->device_id == 0x7015))
++	switch (hif_dev->device_id) {
++	case 0x7010:
++	case 0x7015:
++	case 0x9018:
+ 		firm_offset = AR7010_FIRMWARE_TEXT;
+-	else
++		break;
++	default:
+ 		firm_offset = AR9271_FIRMWARE_TEXT;
++		break;
++	}
+ 
+ 	/*
+ 	 * Issue FW download complete command to firmware.
+-- 
+1.7.3.2
+
