@@ -1,85 +1,120 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from perninha.conectiva.com.br ([187.115.55.249]:37968 "EHLO
-	perninha.conectiva.com.br" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756580Ab0J2NPy (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 29 Oct 2010 09:15:54 -0400
-Date: Fri, 29 Oct 2010 11:15:52 -0200
-From: Herton Ronaldo Krzesinski <herton@mandriva.com.br>
-To: Thadeu Lima de Souza Cascardo <cascardo@holoscopio.com>
-Cc: linux-wireless@vger.kernel.org,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	Rogerio Luz Coelho <rogluz.news@gmail.com>,
-	Hin-Tak Leung <hintak.leung@gmail.com>,
-	seno <senada@t-online.de>
-Subject: Re: [PATCH] rtl8187b: do not do per packet TX AGC
-Message-ID: <20101029111552.1e96be6b@gotham.conectiva>
-In-Reply-To: <1288303260-6149-1-git-send-email-cascardo@holoscopio.com>
-References: <20101028191305.2960c83b@gotham.conectiva>
-	<1288303260-6149-1-git-send-email-cascardo@holoscopio.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Received: from mail.sysgo.com ([195.145.229.155]:39745 "EHLO mail.sysgo.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751561Ab0JZKyr (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 26 Oct 2010 06:54:47 -0400
+Date: Tue, 26 Oct 2010 12:48:11 +0200
+From: Pavel Machek <pma@sysgo.com>
+To: kernel list <linux-kernel@vger.kernel.org>,
+	chunkeey@googlemail.com, linux-wireless@vger.kernel.org
+Subject: carl9170 disconnects under load
+Message-ID: <20101026104811.GA11357@pma.sysgo.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 28 Oct 2010 20:01:00 -0200
-Thadeu Lima de Souza Cascardo <cascardo@holoscopio.com> wrote:
+Hi!
 
-> Clearing the per packet TX AGC for the RTL8187B device appears to
-> increase its overall TX power. This allows the device to associate and a
-> connection to be established using APs a little further away.
-> 
-> This is in accordance to what is done for RTL8187L devices and also what
-> Realtek drivers do.
-> 
-> Tested-by: Thadeu Lima de Souza Cascardo <cascardo@holoscopio.com>
-> Signed-off-by: Thadeu Lima de Souza Cascardo <cascardo@holoscopio.com>
-> Cc: linux-wireless@vger.kernel.org
-> Cc: Larry Finger <Larry.Finger@lwfinger.net>
-> Cc: Rogerio Luz Coelho <rogluz.news@gmail.com>
-> Cc: Herton Ronaldo Krzesinski <herton@mandriva.com.br>
-> Cc: Hin-Tak Leung <hintak.leung@gmail.com>
-> Cc: seno <senada@t-online.de>
+I'm testing driver from -wireless testing, cca 2.6.26-rc7.
 
-Tested-by: Herton Ronaldo Krzesinski <herton@mandriva.com.br>
+It seems to work (up to 802.11n speeds -- I've seen iwconfig claiming
+121 MB/sec), but disconnects rather quickly when under load:
 
-> ---
->  drivers/net/wireless/rtl818x/rtl8187_dev.c |   10 ++++++----
->  1 files changed, 6 insertions(+), 4 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/rtl818x/rtl8187_dev.c b/drivers/net/wireless/rtl818x/rtl8187_dev.c
-> index 38fa824..6e26149 100644
-> --- a/drivers/net/wireless/rtl818x/rtl8187_dev.c
-> +++ b/drivers/net/wireless/rtl818x/rtl8187_dev.c
-> @@ -775,10 +775,6 @@ static int rtl8187b_init_hw(struct ieee80211_hw *dev)
->  	reg = rtl818x_ioread8(priv, &priv->map->CW_CONF);
->  	reg |= RTL818X_CW_CONF_PERPACKET_RETRY_SHIFT;
->  	rtl818x_iowrite8(priv, &priv->map->CW_CONF, reg);
-> -	reg = rtl818x_ioread8(priv, &priv->map->TX_AGC_CTL);
-> -	reg |= RTL818X_TX_AGC_CTL_PERPACKET_GAIN_SHIFT |
-> -	       RTL818X_TX_AGC_CTL_PERPACKET_ANTSEL_SHIFT;
-> -	rtl818x_iowrite8(priv, &priv->map->TX_AGC_CTL, reg);
->  
->  	rtl818x_iowrite16_idx(priv, (__le16 *)0xFFE0, 0x0FFF, 1);
->  
-> @@ -929,6 +925,12 @@ static int rtl8187_start(struct ieee80211_hw *dev)
->  		priv->rx_conf = reg;
->  		rtl818x_iowrite32(priv, &priv->map->RX_CONF, reg);
->  
-> +		reg = rtl818x_ioread8(priv, &priv->map->TX_AGC_CTL);
-> +		reg &= ~RTL818X_TX_AGC_CTL_PERPACKET_GAIN_SHIFT;
-> +		reg &= ~RTL818X_TX_AGC_CTL_PERPACKET_ANTSEL_SHIFT;
-> +		reg &= ~RTL818X_TX_AGC_CTL_FEEDBACK_ANT;
-> +		rtl818x_iowrite8(priv, &priv->map->TX_AGC_CTL, reg);
-> +
->  		rtl818x_iowrite32(priv, &priv->map->TX_CONF,
->  				  RTL818X_TX_CONF_HW_SEQNUM |
->  				  RTL818X_TX_CONF_DISREQQSIZE |
-> -- 
-> 1.7.1
-> 
+telnet 192.168.1.3 chargen > /dev/null
 
+The machine is powerpc mpc5200b board, with OHCI driver -- it is not
+capable of USB2.0 speeds.
 
--- 
-[]'s
-Herton
+Any ideas?
+								Pavel
+
+wlan0: RX AssocResp from 00:23:f8:5d:76:93 (capab=0xc21 status=0
+aid=1)
+wlan0: associated
+ieee80211 phy2: Allocated STA 00:23:f8:5d:76:93
+ieee80211 phy2: Inserted STA 00:23:f8:5d:76:93
+ieee80211 phy2: WMM queue=2 aci=0 acm=0 aifs=3 cWmin=15 cWmax=1023
+txop=0 uapsd=0
+ieee80211 phy2: WMM queue=3 aci=1 acm=0 aifs=7 cWmin=15 cWmax=1023
+txop=0 uapsd=0
+ieee80211 phy2: WMM queue=1 aci=2 acm=0 aifs=2 cWmin=7 cWmax=15
+txop=94 uapsd=0
+ieee80211 phy2: WMM queue=0 aci=3 acm=0 aifs=2 cWmin=3 cWmax=7 txop=47
+uapsd=0
+Open BA session requested for 00:23:f8:5d:76:93 tid 0
+activated addBA response timer on tid 0
+switched off addBA timer for tid 0
+Aggregation is on for tid 0
+Rx A-MPDU request on tid 0 result 0
+ieee80211 phy2: release an RX reorder frame due to timeout on earlier
+frames
+ieee80211 phy2: release an RX reorder frame due to timeout on earlier
+frames
+ieee80211 phy2: release an RX reorder frame due to timeout on earlier
+frames
+ieee80211 phy2: release an RX reorder frame due to timeout on earlier
+frames
+ieee80211 phy2: release an RX reorder frame due to timeout on earlier
+frames
+ieee80211 phy2: release an RX reorder frame due to timeout on earlier
+frames
+ieee80211 phy2: release an RX reorder frame due to timeout on earlier
+frames
+ieee80211 phy2: release an RX reorder frame due to timeout on earlier
+frames
+ieee80211 phy2: release an RX reorder frame due to timeout on earlier
+frames
+ieee80211 phy2: release an RX reorder frame due to timeout on earlier
+frames
+net_ratelimit: 79 callbacks suppressed
+ieee80211 phy2: release an RX reorder frame due to timeout on earlier
+frames
+ieee80211 phy2: release an RX reorder frame due to timeout on earlier
+frames
+ieee80211 phy2: release an RX reorder frame due to timeout on earlier
+frames
+ieee80211 phy2: release an RX reorder frame due to timeout on earlier
+frames
+ieee80211 phy2: release an RX reorder frame due to timeout on earlier
+frames
+ieee80211 phy2: release an RX reorder frame due to timeout on earlier
+frames
+ieee80211 phy2: release an RX reorder frame due to timeout on earlier
+frames
+ieee80211 phy2: release an RX reorder frame due to timeout on earlier
+frames
+ieee80211 phy2: release an RX reorder frame due to timeout on earlier
+frames
+ieee80211 phy2: release an RX reorder frame due to timeout on earlier
+frames
+net_ratelimit: 58 callbacks suppressed
+ieee80211 phy2: release an RX reorder frame due to timeout on earlier
+frames
+ieee80211 phy2: release an RX reorder frame due to timeout on earlier
+frames
+ieee80211 phy2: release an RX reorder frame due to timeout on earlier
+frames
+ieee80211 phy2: release an RX reorder frame due to timeout on earlier
+frames
+ieee80211 phy2: release an RX reorder frame due to timeout on earlier
+frames
+ieee80211 phy2: release an RX reorder frame due to timeout on earlier
+frames
+ieee80211 phy2: release an RX reorder frame due to timeout on earlier
+frames
+ieee80211 phy2: release an RX reorder frame due to timeout on earlier
+frames
+ieee80211 phy2: release an RX reorder frame due to timeout on earlier
+frames
+ieee80211 phy2: release an RX reorder frame due to timeout on earlier
+frames
+usb 1-1: USB disconnect, address 6
+Tx BA session stop requested for 00:23:f8:5d:76:93 tid 0
+Rx BA session stop requested for 00:23:f8:5d:76:93 tid 0
+wlan0: deauthenticating from 00:23:f8:5d:76:93 by local choice
+(reason=3)
+Tx BA session stop requested for 00:23:f8:5d:76:93 tid 0
+ieee80211 phy2: Removed STA 00:23:f8:5d:76:93
+ieee80211 phy2: Destroyed STA 00:23:f8:5d:76:93
+ieee80211 phy2: device now idle
