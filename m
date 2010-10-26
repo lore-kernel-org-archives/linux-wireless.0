@@ -1,58 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iw0-f174.google.com ([209.85.214.174]:60444 "EHLO
-	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750974Ab0JAVVr convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 1 Oct 2010 17:21:47 -0400
-MIME-Version: 1.0
-In-Reply-To: <1285965236-17907-1-git-send-email-gadiyar@ti.com>
-References: <1285965236-17907-1-git-send-email-gadiyar@ti.com>
-From: Ohad Ben-Cohen <ohad@wizery.com>
-Date: Fri, 1 Oct 2010 23:21:27 +0200
-Message-ID: <AANLkTi=+dtqdZLb8rfu8NZRU5GceUL5+S3B=MeW1xF=M@mail.gmail.com>
-Subject: Re: [PATCH] omap: zoom2: fix build break when CONFIG_WL12XX_PLATFORM_DATA=n
-To: Anand Gadiyar <gadiyar@ti.com>
-Cc: linux-omap@vger.kernel.org, linux-wireless@vger.kernel.org,
-	Tony Lindgren <tony@atomide.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from smtp.nokia.com ([147.243.1.47]:31555 "EHLO mgw-sa01.nokia.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1759493Ab0JZKSZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 26 Oct 2010 06:18:25 -0400
+Received: from nokia.com (localhost [127.0.0.1])
+	by mgw-sa01.nokia.com (Switch-3.4.3/Switch-3.4.3) with ESMTP id o9QAINT6030051
+	for <linux-wireless@vger.kernel.org>; Tue, 26 Oct 2010 13:18:23 +0300
+Subject: Re: [PATCH] wl1271: Fix RX path stall
+From: Luciano Coelho <luciano.coelho@nokia.com>
+To: "juuso.oikarinen@nokia.com" <juuso.oikarinen@nokia.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <1287998669-27209-1-git-send-email-juuso.oikarinen@nokia.com>
+References: <1287998669-27209-1-git-send-email-juuso.oikarinen@nokia.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Tue, 26 Oct 2010 13:18:10 +0300
+Message-ID: <1288088290.27698.0.camel@chilepepper>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Oct 1, 2010 at 10:33 PM, Anand Gadiyar <gadiyar@ti.com> wrote:
-> Fix this build break when CONFIG_WL12XX_PLATFORM_DATA is not set.
+On Mon, 2010-10-25 at 11:24 +0200, juuso.oikarinen@nokia.com wrote:
+> From: Juuso Oikarinen <juuso.oikarinen@nokia.com>
+> 
+> The wl1271_rx function loops through packets in an aggregated buffer. Each
+> packet in the buffer is handled by a call to wl1271_rx_handle_data, which will
+> fail if skb memory allocation fails or production mode is enabled. These
+> failures currently prevent the rx counters to be incremented, thus causing the
+> rx loop to run forever.
+> 
+> Fix this by ignoring error codes reported wl1271_rx_handle_data function.
+> This essentially means that frames will be dropped in production mode, which
+> is the intetion, and frames will be dropped if memory allocation fails, which
+> is a decent way to recover from that situation.
+> 
+> Signed-off-by: Juuso Oikarinen <juuso.oikarinen@nokia.com>
+> ---
 
-A similar fix was already submitted and is pending to be merged
-(http://permalink.gmane.org/gmane.linux.kernel.wireless.general/56595)
+Reviewed-by: Luciano Coelho <luciano.coelho@nokia.com>
 
-> There are still many warnings about the function wl12xx_set_platform_data
-> being unused. Haven't fixed those. Ohad, care to take a look?
+And applied to the wl12xx tree.  Thank you!
 
-Sure. Which warnings do you refer to (I haven't seen any) ?
+-- 
+Cheers,
+Luca.
 
-Thanks,
-Ohad.
-
->
->  include/linux/wl12xx.h |    7 +++++++
->  1 file changed, 7 insertions(+)
->
-> Index: linux-2.6/include/linux/wl12xx.h
-> ===================================================================
-> --- linux-2.6.orig/include/linux/wl12xx.h
-> +++ linux-2.6/include/linux/wl12xx.h
-> @@ -32,7 +32,14 @@ struct wl12xx_platform_data {
->        int board_ref_clock;
->  };
->
-> +#ifdef CONFIG_WL12XX_PLATFORM_DATA
->  int wl12xx_set_platform_data(const struct wl12xx_platform_data *data);
-> +#else
-> +static int wl12xx_set_platform_data(const struct wl12xx_platform_data *data)
-> +{
-> +       return 0;
-> +}
-> +#endif
->  const struct wl12xx_platform_data *wl12xx_get_platform_data(void);
->
->  #endif
->
