@@ -1,58 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp-out.google.com ([216.239.44.51]:38219 "EHLO
-	smtp-out.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753621Ab0JMWsy (ORCPT
+Received: from mail-iw0-f174.google.com ([209.85.214.174]:63894 "EHLO
+	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755211Ab0JZUwt convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 13 Oct 2010 18:48:54 -0400
-Received: from wpaz29.hot.corp.google.com (wpaz29.hot.corp.google.com [172.24.198.93])
-	by smtp-out.google.com with ESMTP id o9DMmrVm019360
-	for <linux-wireless@vger.kernel.org>; Wed, 13 Oct 2010 15:48:53 -0700
-Received: from glenhelen.mtv.corp.google.com (glenhelen.mtv.corp.google.com [172.22.72.223])
-	by wpaz29.hot.corp.google.com with ESMTP id o9DMmq8q012845
-	for <linux-wireless@vger.kernel.org>; Wed, 13 Oct 2010 15:48:53 -0700
-From: Paul Stewart <pstew@google.com>
-Date: Wed, 13 Oct 2010 15:21:27 -0700
-Subject: [PATCH 6/6] Work proc for bitrate changes
-To: linux-wireless@vger.kernel.org
-Message-Id: <20101013224851.E3E5B2093C@glenhelen.mtv.corp.google.com>
+	Tue, 26 Oct 2010 16:52:49 -0400
+MIME-Version: 1.0
+In-Reply-To: <20101026204043.GA2608@sig21.net>
+References: <20101025190358.AEC6840F97@repository3.orbit-lab.org>
+ <20101026123552.GA4604@sig21.net> <AANLkTimzUKj=C9PxGs1PkQy_KWu0PGKd1zv_m-ZpWaEm@mail.gmail.com>
+ <20101026184123.GA1616@sig21.net> <AANLkTimHpyJho6AheQc6zos7Pmr-ECjvaL83mYDC19Yd@mail.gmail.com>
+ <AANLkTi=TPCXXki3jrrFA1HiauDp0rZVtMK9fK4z8B_kv@mail.gmail.com> <20101026204043.GA2608@sig21.net>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Tue, 26 Oct 2010 13:52:26 -0700
+Message-ID: <AANLkTi=f-mx1Sqv6+PB5rmitkNnsWaQazrDfV7UNCp34@mail.gmail.com>
+Subject: Re: Compat-wireless release for 2010-10-25 is baked
+To: Johannes Stezenbach <js@sig21.net>
+Cc: Ivo Van Doorn <ivdoorn@gmail.com>, linux-wireless@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Paul Stewart <pstew@google.com>
+On Tue, Oct 26, 2010 at 1:40 PM, Johannes Stezenbach <js@sig21.net> wrote:
+> Hi,
+>
+> On Tue, Oct 26, 2010 at 09:48:12PM +0200, Ivo Van Doorn wrote:
+>> For rt2x00 development you can choose between rt2x00.git and
+>> wireless-testing.git,
+>> the trees are usually not that far apart, since smaller patches are pushed quite
+>> quickly upstream. (Also rt2x00.git is rebased frequently, while
+>> wireless-testing.git rarely
+>> is rebased)
+>
+> Thanks for clarification.  I guess I'll start with wireless-testing,
+> that sounds a bit more newbie-friendly.  I just want to avoid
+> searching or reporting bugs which are already fixed, but your description
+> sounds like changes are pushed from rt2x00.git to wireless-testing.git
+> maybe weekly.
 
----
- net/mac80211/main.c |   11 +++++++++++
- 1 files changed, 11 insertions(+), 0 deletions(-)
+Remember, wireless-testing gets stuff from wireless-next.git sucked in
+after wireless-2.6.git bits are pulled in, so really its
+wireless-next.git --> linux-next.git as the daily compat-wireless is
+based on linux-next.git. The wireless-testing.git tree just lets you
+use a stabe RC kernel with the next kernels' 802.11 bits sucked in. So
+you will get your patches merged daily on a good
+John-Linville-and-Stephen-Rothwell-ate-his-wheaties-day :)
 
-diff --git a/net/mac80211/main.c b/net/mac80211/main.c
-index 5162303..e617b17 100644
---- a/net/mac80211/main.c
-+++ b/net/mac80211/main.c
-@@ -339,6 +339,16 @@ static void ieee80211_recalc_smps_work(struct work_struct *work)
- 	mutex_unlock(&local->iflist_mtx);
- }
- 
-+static void ieee80211_rate_notify_work(struct work_struct *work)
-+{
-+	struct ieee80211_local *local =
-+		container_of(work, struct ieee80211_local, rate_notify);
-+
-+	mutex_lock(&local->iflist_mtx);
-+	ieee80211_cqm_bitrate_notify(local);
-+	mutex_unlock(&local->iflist_mtx);
-+}
-+
- #ifdef CONFIG_INET
- static int ieee80211_ifa_changed(struct notifier_block *nb,
- 				 unsigned long data, void *arg)
-@@ -565,6 +575,7 @@ struct ieee80211_hw *ieee80211_alloc_hw(size_t priv_data_len,
- 
- 	INIT_WORK(&local->reconfig_filter, ieee80211_reconfig_filter);
- 	INIT_WORK(&local->recalc_smps, ieee80211_recalc_smps_work);
-+	INIT_WORK(&local->rate_notify, ieee80211_rate_notify_work);
- 	local->smps_mode = IEEE80211_SMPS_OFF;
- 
- 	INIT_WORK(&local->dynamic_ps_enable_work,
--- 
-1.7.1
+> I was afraid patches would be pushed to wireless-testing.git
+> only when it's time to get ready for the next merge window.
 
+Hell no!
+
+  Luis
