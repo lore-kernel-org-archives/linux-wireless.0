@@ -1,62 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:20988 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755406Ab0JNPz6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 14 Oct 2010 11:55:58 -0400
-Subject: Re: [PATCH] libertas: Communicate USB transfer errors
-From: Dan Williams <dcbw@redhat.com>
-To: Daniel Drake <dsd@laptop.org>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	libertas-dev@lists.infradead.org, pgf@laptop.org, steve@cozybit.com
-In-Reply-To: <20101013191456.BA0A99D401B@zog.reactivated.net>
-References: <20101013191456.BA0A99D401B@zog.reactivated.net>
-Content-Type: text/plain; charset="UTF-8"
-Date: Thu, 14 Oct 2010 10:59:17 -0500
-Message-ID: <1287071957.7921.36.camel@dcbw.foobar.com>
-Mime-Version: 1.0
+Received: from mail-bw0-f46.google.com ([209.85.214.46]:46815 "EHLO
+	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756470Ab0JZKEr (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 26 Oct 2010 06:04:47 -0400
+Received: by bwz11 with SMTP id 11so3201480bwz.19
+        for <linux-wireless@vger.kernel.org>; Tue, 26 Oct 2010 03:04:46 -0700 (PDT)
+From: Helmut Schaa <helmut.schaa@googlemail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Subject: Re: Question about starting up an AP
+Date: Tue, 26 Oct 2010 12:04:01 +0200
+Cc: Ivo van Doorn <ivdoorn@gmail.com>,
+	Joshua Smith <JoshuaESmith@charter.net>,
+	"linux-wireless" <linux-wireless@vger.kernel.org>,
+	users@rt2x00.serialmonkey.com
+References: <DA0C92FD-F6BF-4746-9BE1-A643A0D70F7A@kaon.com> <201010261135.31232.helmut.schaa@googlemail.com> <1288086094.3761.6.camel@jlt3.sipsolutions.net>
+In-Reply-To: <1288086094.3761.6.camel@jlt3.sipsolutions.net>
+MIME-Version: 1.0
+Content-Type: Text/Plain;
+  charset="us-ascii"
+Message-Id: <201010261204.01481.helmut.schaa@googlemail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2010-10-13 at 20:14 +0100, Daniel Drake wrote:
-> From: Paul Fox <pgf@laptop.org>
+Am Dienstag 26 Oktober 2010 schrieb Johannes Berg:
+> On Tue, 2010-10-26 at 11:35 +0200, Helmut Schaa wrote:
 > 
-> The return code was being overwritten with -1.
-> Useful for debugging.
+> > > I'll let Ivo decide on this. At least if we really want to wait more then one
+> > > second for DMA to be ready we should increase the msleep(1) to msleep(10) and
+> > > keep the maximum number of retries at 100.
 > 
-> Signed-off-by: Paul Fox <pgf@laptop.org>
-> Signed-off-by: Daniel Drake <dsd@laptop.org>
-
-Acked-by: Dan Williams <dcbw@redhat.com>
-
-> ---
->  drivers/net/wireless/libertas/if_usb.c |    4 ++--
->  1 files changed, 2 insertions(+), 2 deletions(-)
+> > Ivo, do we want to add the excessive waiting (up to one second) for DMA on
+> > rt2800 as it fixes Joshuas device? At the moment we're waiting 100ms.
 > 
-> diff --git a/drivers/net/wireless/libertas/if_usb.c b/drivers/net/wireless/libertas/if_usb.c
-> index 3ff6106..16e2575 100644
-> --- a/drivers/net/wireless/libertas/if_usb.c
-> +++ b/drivers/net/wireless/libertas/if_usb.c
-> @@ -472,11 +472,12 @@ static int if_usb_reset_device(struct if_usb_card *cardp)
->   */
->  static int usb_tx_block(struct if_usb_card *cardp, uint8_t *payload, uint16_t nb)
->  {
-> -	int ret = -1;
-> +	int ret;
->  
->  	/* check if device is removed */
->  	if (cardp->surprise_removed) {
->  		lbs_deb_usbd(&cardp->udev->dev, "Device removed\n");
-> +		ret = -ENODEV;
->  		goto tx_ret;
->  	}
->  
-> @@ -489,7 +490,6 @@ static int usb_tx_block(struct if_usb_card *cardp, uint8_t *payload, uint16_t nb
->  
->  	if ((ret = usb_submit_urb(cardp->tx_urb, GFP_ATOMIC))) {
->  		lbs_deb_usbd(&cardp->udev->dev, "usb_submit_urb failed: %d\n", ret);
-> -		ret = -1;
->  	} else {
->  		lbs_deb_usb2(&cardp->udev->dev, "usb_submit_urb success\n");
->  		ret = 0;
+> I don't usually chime in on other drivers but is there any reason not
+> to? Properly functioning devices obviously reply within 100ms, so they
+> wouldn't change behaviour, hopefully broken ones that _never_ work are
+> rare, and the remaining ones like Joshua's would be fixed ...
 
+True, nevertheless I wanted to get Ivos ack before going ahead.
 
+Helmut
