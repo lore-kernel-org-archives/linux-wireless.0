@@ -1,73 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bear.ext.ti.com ([192.94.94.41]:47814 "EHLO bear.ext.ti.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752329Ab0JFFVO (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 6 Oct 2010 01:21:14 -0400
-From: "Gabay, Benzy" <benzyg@ti.com>
-To: Juuso Oikarinen <juuso.oikarinen@nokia.com>
-CC: "Coelho Luciano (Nokia-MS/Helsinki)" <Luciano.Coelho@nokia.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Date: Wed, 6 Oct 2010 00:21:03 -0500
-Subject: RE: [PATCH 24/25] wl1271: Optimize scan duration
-Message-ID: <676FD6AA0F002F49B89E70F0C5EFD22C135ADBA311@dlee04.ent.ti.com>
-References: <1285576669-8070-1-git-send-email-luciano.coelho@nokia.com>
-	 <1285576669-8070-25-git-send-email-luciano.coelho@nokia.com>
-	 <676FD6AA0F002F49B89E70F0C5EFD22C135AD3C603@dlee04.ent.ti.com>
-	 <1286257254.11177.224.camel@wimaxnb.nmp.nokia.com>
-	 <676FD6AA0F002F49B89E70F0C5EFD22C135AD3CB17@dlee04.ent.ti.com>
- <1286341161.11177.254.camel@wimaxnb.nmp.nokia.com>
-In-Reply-To: <1286341161.11177.254.camel@wimaxnb.nmp.nokia.com>
-Content-Type: text/plain; charset="utf-8"
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:47407 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756841Ab0JZNAN (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 26 Oct 2010 09:00:13 -0400
+Date: Tue, 26 Oct 2010 08:58:26 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Jonathan Guerin <jonathan@guerin.id.au>
+Cc: Bruno Randolf <br1@einfach.org>,
+	ath5k-devel <ath5k-devel@venema.h4ckr.net>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: Access Channel Utilization
+Message-ID: <20101026125825.GA2446@tuxdriver.com>
+References: <AANLkTinqLcr7OpQZijX70aVE_P8gpUp=6RkozzVZH5Fm@mail.gmail.com>
+ <201010261539.34710.br1@einfach.org>
+ <AANLkTimKpBCr1sJvZyvCzScacup8DmVxNKzWBmLFRCya@mail.gmail.com>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <AANLkTimKpBCr1sJvZyvCzScacup8DmVxNKzWBmLFRCya@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-SnV1c28sDQoNCg0KPiBTZW50OiBUdWVzZGF5LCBPY3RvYmVyIDA1LCAyMDEwIDExOjU5IFBNDQo+
-IA0KPiBIaSwNCj4gDQo+IE9uIFR1ZSwgMjAxMC0xMC0wNSBhdCAxNzo0MiArMDIwMCwgZXh0IEdh
-YmF5LCBCZW56eSB3cm90ZToNCj4gPiBKdXVzbywNCj4gDQo+ID4gPiA+ID4NCj4gPiA+ID4gPiBG
-cm9tOiBKdXVzbyBPaWthcmluZW4gPGp1dXNvLm9pa2FyaW5lbkBub2tpYS5jb20+DQo+ID4gPiA+
-ID4NCj4gPiA+ID4gPiBDdXJyZW50bHkgdGhlbiBkd2VsbCB0aW1lcyBmb3IgZWFjaCBjaGFubmVs
-IGluIHNjYW5zIGlzIHNldCB0bw0KPiBhbg0KPiA+ID4gPiA+IG92ZXJseQ0KPiA+ID4gPiA+IGxv
-bmcgdmFsdWUsIGFuZCBleGNlc3NpdmUgbnVtYmVyIG9mIHByb2JlLXJlcXVlc3RzIGFyZQ0KPiB0
-cmFuc21pdHRlZA0KPiA+ID4gb24NCj4gPiA+ID4gPiBlYWNoDQo+ID4gPiA+ID4gY2hhbm5lbCAo
-Zm9yIGFjdGl2ZSBzY2Fucy4pDQo+ID4gPiA+ID4NCj4gPiA+ID4gPiBCYXNlZCBvbiB0ZXN0aW5n
-LCBjb21wYXJhYmxlIHJlc3VsdHMgY2FuIGJlIHJlY2VpdmVkIHdpdGgNCj4gc21hbGxlcg0KPiA+
-ID4gPiA+IGR3ZWxsLXRpbWUsDQo+ID4gPiA+ID4gYW5kLCB3aXRoIGZldmVyIHByb2JlLXJlcXVl
-c3RzIC0gaW4gZmFjdCwgcmVkdWNpbmcgdGhlIG51bWJlcg0KPiBvZg0KPiA+ID4gcHJvYmUtDQo+
-ID4gPiA+ID4gcmVxdWVzdHMNCj4gPiA+ID4gPiB0byAyIHNlZW1zIHRvIGluY3JlYXNlIHRoZSBu
-dW1iZXIgb2YgZm91bmQgcmVzdWx0cy4NCj4gPiA+ID4NCj4gPiA+ID4gSSB0aGluayB0aGF0IHRo
-aXMgZG9lcyBub3QgbWFraW5nIGFueSBzZW5zZS4gTGVzcyBwcm9iIHJlcXVlc3RzDQo+ID4gPiBz
-aG91bGQgZ2l2ZSB5b3UgYmFjayBsZXNzIHJlc3VsdHMuIEFzIGxlc3MgYmVhY29ucy9wcm9iIHJl
-c3BvbnNlcw0KPiBhcmUNCj4gPiA+IGdldHRpbmcgYmFjayB0byB0aGUgc3RhdGlvbi4NCj4gPiA+
-ID4gSSB0aGluayBhbHNvIHRoYXQgb2ZmaWNlIHdpdGggNzAgQVAgaXMgbm90IGEgbm9ybWFsIGVu
-dmlyb25tZW50DQo+IHRvDQo+ID4gPiB0ZXN0IGFuZCBvcHRpbWl6ZSBudW1iZXJzLg0KPiA+ID4g
-PiBJIHdvdWxkIHN1Z2dlc3QgdG8gcmUtdGVzdCBpbiBhIDEtNiBBUCBlbnZpcm9ubWVudCB3aGlj
-aCBpcw0KPiBtYWtpbmcNCj4gPiA+IG1vcmUgc2Vuc2UgZm9yIGJvdGggaG9tZSBhbmQgZW50ZXJw
-cmlzZSBlbnZpcm9ubWVudC4NCj4gPiA+DQo+ID4gPiBXZSBoYXZlIGFjdHVhbGx5IHBlcmZvcm1l
-ZCBtb3JlIHRlc3RpbmcgdGhhbiBqdXN0IG1lbnRpb25lZCBoZXJlLA0KPiBpbg0KPiA+ID4gdmFy
-aWVkIGVudmlyb25tZW50cywgYW5kIGFsbCBvZiB0aGUgdGVzdGluZyBzZWVtcyB0byBpbmRpY2F0
-ZSB0aGF0DQo+ID4gPiByZWR1Y2luZyB0aGUgbnVtYmVyIG9mIHByb2JlLXJlcXMgcGVyIGNoYW5u
-ZWwgaXMgbm90IHJlZHVjaW5nIHRoZQ0KPiA+ID4gbnVtYmVyDQo+ID4gPiBvZiBhY3F1aXJlZCBy
-ZXN1bHRzLiBJbnN0ZWFkLCBpbiBzb21lIHNjZW5hcmlvcywgaXQgaXMgaW5jcmVhc2luZw0KPiB0
-aGUNCj4gPiA+IG51bWJlciBvZiBhY3F1aXJlZCByZXN1bHRzLg0KPiA+ID4NCj4gPg0KPiA+ID4+
-ICBJIGRvbuKAmXQga25vdyBpZiB0aGF0IGlzIGNvbnZlbnRpb25hbCByZXF1ZXN0OiBjYW4geW91
-IHNoYXJlIHRoZQ0KPiBmdWxsIHJlc3VsdHMgYW5kIHNldHVwIGRldGFpbHM/DQo+IA0KPiBObywg
-SSBkb24ndCBoYXZlIGFueSBmb3JtYWwgZG9jdW1lbnRhdGlvbiB0byBzaGFyZS4NCj4gDQo+IFRo
-ZSBzZXR1cCBkZXRhaWxzIGFyZSBzaW1wbGUgZW5vdWdoIHRob3VnaC4gVGhlIHRlc3RlZCB0aGlz
-IG9uIGNvbW1hbmQNCj4gbGluZSB1c2luZyBhIHNpbXBsZSBzY3JpcHQgdGhhdCBmbHVzaGVzIGV4
-aXN0aW5nIHNjYW4gcmVzdWx0cywgdGhlbg0KPiBwZXJmb3JtcyB0d28gb3IgdGhyZWUgc2NhbnMg
-Y291bnRpbmcgdGhlIG51bWJlciBvZiBzY2FuIHJlc3VsdHMgb24gdGhlDQo+IGxhc3Qgcm91bmQg
-dXNpbmcgZ3JlcCBhbmQgd2MuDQo+IA0KPiBXZSBwZXJmb3JtZWQgdGhlIHRlc3RpbmcgaW4gb2Zm
-aWNlIGVudmlyb25tZW50IGFuZCBhIHNoaWVsZGVkIGNoYW1iZXIsDQo+IHdoaWNoIG9ubHkgaGFz
-IHNlbGVjdGVkIEFQJ3Mgd2l0aGluIGl0Lg0KPiANCj4gQmV0d2VlbiB0ZXN0IHJvdW5kcyB3ZSBt
-b2RpZmllZCB0aGUgZHJpdmVyIHBhcmFtZXRlcnMgcmVsYXRlZCB0bw0KPiBzY2FubmluZywgaS5l
-LiB3ZSBtb2RpZmllZCB0aGUgbnVtYmVyIG9mIHByb2JlLXJlcXMgYW5kIHRoZSBkd2VsbCB0aW1l
-DQo+IG9uIGVhY2ggY2hhbm5lbC4NCj4gDQo+IC1KdXVzbw0KDQoNClNvdW5kcyBncmVhdC4gSnVz
-dCBvbmUgbW9yZTogd2hpY2ggQVAgYnJhbmRzIChleGNsdWRpbmcgQ2lzY28pID8NCg0KDQoNCj4g
-DQo+ID4gPiBXZSBkaWQgbm90IHNlZSByZWR1Y3Rpb24gaW4gdGhlIHByb2JhYmlsaXR5IG9mIGZp
-bmRpbmcgYSBzcGVjaWZpYw0KPiBBUCBpbg0KPiA+ID4gYSBmZXcgKG9uZSBvciB0d28pIEFQIGVu
-dmlyb25tZW50IGVpdGhlci4NCj4gPiA+DQo+ID4gPiBUaGUgZWZmZWN0IHNlZW1zIHRvIGJlIHRo
-aXMgd2F5IGJlY2F1c2UgcmVkdWNpbmcgdGhlIG51bWJlciBvZg0KPiA+ID4gcHJvYmUtcmVxJ3Mg
-ZHJhbWF0aWNhbGx5IHJlZHVjZXMgdGhlIG5vaXNlIGdlbmVyYXRlZCBieSBwcm9iZS0NCj4gcmVz
-cG9uc2VzDQo+ID4gPiBmcm9tIEFQJ3Mgb24gbmVpZ2hib3VyaW5nIGNoYW5uZWxzLg0KPiA+ID4N
-Cj4gPiA+IC1KdXVzbw0KPiA+ID4NCj4gDQoNCg==
+On Tue, Oct 26, 2010 at 04:44:35PM +1000, Jonathan Guerin wrote:
+> On Tue, Oct 26, 2010 at 4:39 PM, Bruno Randolf <br1@einfach.org> wrote:
+> > On Tue October 26 2010 15:24:42 Jonathan Guerin wrote:
+> >> Hi,
+> >>
+> >> I'm trying to access the phy-layer stats that were recently added to
+> >> cfg80211 and nl80211. I'm using a modified version of iw as per this
+> >> patch:
+> >> https://dev.openwrt.org/browser/trunk/package/iw/patches/110-survey_phy_sta
+> >> ts.patch
+> >>
+> >> Unfortunately, the utilization stats don't appear to be getting sent
+> >> back. I'm using ath5k as the underlying driver.
+> >
+> > are you missing this patch?
+> >
+> > "ath5k: Add channel time to survey data"
+> > https://patchwork.kernel.org/patch/264831/
+> 
+> commit ebe5fd859224e706e0c027e1d6c3859684ae41fe
+> Author: John W. Linville <linville@tuxdriver.com>
+> Date:   Thu Oct 21 13:43:56 2010 -0400
+> 
+>     Revert "ath5k: Add channel time to survey data"
+> 
+>     This reverts commit 2f5155b69eca2a62a5defb15762019486a638a88.
+> 
+> Ah - the patch was reverted. Any reason why this was done?
+
+http://marc.info/?l=linux-wireless&m=128768402812361&w=2
+
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
