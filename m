@@ -1,82 +1,104 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([88.198.39.176]:40832 "EHLO ds10.nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932477Ab0JLOIK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 12 Oct 2010 10:08:10 -0400
-From: Felix Fietkau <nbd@openwrt.org>
-To: linux-wireless@vger.kernel.org
-Cc: linville@tuxdriver.com, lrodriguez@atheros.com
-Subject: [PATCH 1/3] ath9k_hw: fix division by zero in the ANI monitor code
-Date: Tue, 12 Oct 2010 16:08:01 +0200
-Message-Id: <1286892483-71182-1-git-send-email-nbd@openwrt.org>
+Received: from smtp.nokia.com ([192.100.122.230]:39255 "EHLO
+	mgw-mx03.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932384Ab0JZLYr (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 26 Oct 2010 07:24:47 -0400
+Received: from vaebh106.NOE.Nokia.com (vaebh106.europe.nokia.com [10.160.244.32])
+	by mgw-mx03.nokia.com (Switch-3.3.3/Switch-3.3.3) with ESMTP id o9QBOcbn012445
+	for <linux-wireless@vger.kernel.org>; Tue, 26 Oct 2010 14:24:44 +0300
+From: juuso.oikarinen@nokia.com
+To: luciano.coelho@nokia.com
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH 1/2] wl1271: Fix scan failure detection
+Date: Tue, 26 Oct 2010 14:24:38 +0300
+Message-Id: <1288092279-31272-1-git-send-email-juuso.oikarinen@nokia.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The commit "ath9k_hw: remove code duplication in phy error counter handling"
-split off some duplicate code into a separate function, but did not have a
-return code for aborting ANI processing based on counter values.
-This introduced a divide by zero issue.
-This patch adds the missing return code check in ath9k_hw_ani_monitor
+From: Juuso Oikarinen <juuso.oikarinen@nokia.com>
 
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+In scan_complete_work, because the mutex is released before accessing the
+scan->failed flag, it is possible for unfounded hardware recovery rounds
+to be executed.
+
+Fix this.
+
+Signed-off-by: Juuso Oikarinen <juuso.oikarinen@nokia.com>
 ---
- drivers/net/wireless/ath/ath9k/ani.c |   13 +++++++------
- 1 files changed, 7 insertions(+), 6 deletions(-)
+ drivers/net/wireless/wl12xx/wl1271_main.c |   17 ++++++++++++++---
+ drivers/net/wireless/wl12xx/wl1271_scan.c |    5 +++--
+ 2 files changed, 17 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/ani.c b/drivers/net/wireless/ath/ath9k/ani.c
-index 3aa8fb1..9297f57 100644
---- a/drivers/net/wireless/ath/ath9k/ani.c
-+++ b/drivers/net/wireless/ath/ath9k/ani.c
-@@ -633,7 +633,7 @@ void ath9k_ani_reset(struct ath_hw *ah, bool is_scanning)
- 	REGWRITE_BUFFER_FLUSH(ah);
- }
+diff --git a/drivers/net/wireless/wl12xx/wl1271_main.c b/drivers/net/wireless/wl12xx/wl1271_main.c
+index 63036b5..20027f4 100644
+--- a/drivers/net/wireless/wl12xx/wl1271_main.c
++++ b/drivers/net/wireless/wl12xx/wl1271_main.c
+@@ -1056,6 +1056,7 @@ static void __wl1271_op_remove_interface(struct wl1271 *wl)
+ 		wl->scan.state = WL1271_SCAN_STATE_IDLE;
+ 		kfree(wl->scan.scanned_ch);
+ 		wl->scan.scanned_ch = NULL;
++		wl->scan.req = NULL;
+ 		ieee80211_scan_completed(wl->hw, true);
+ 	}
  
--static void ath9k_hw_ani_read_counters(struct ath_hw *ah)
-+static bool ath9k_hw_ani_read_counters(struct ath_hw *ah)
+@@ -1676,6 +1677,16 @@ static int wl1271_op_hw_scan(struct ieee80211_hw *hw,
+ 
+ 	mutex_lock(&wl->mutex);
+ 
++	if (wl->state == WL1271_STATE_OFF) {
++		/*
++		 * We cannot return -EBUSY here because mac80211 will expect
++		 * a call to ieee80211_scan_completed if we do - in this case
++		 * there won't be any call.
++		 */
++		ret = -EAGAIN;
++		goto out;
++	}
++
+ 	ret = wl1271_ps_elp_wakeup(wl, false);
+ 	if (ret < 0)
+ 		goto out;
+@@ -2093,14 +2104,14 @@ static int wl1271_op_get_survey(struct ieee80211_hw *hw, int idx,
  {
- 	struct ath_common *common = ath9k_hw_common(ah);
- 	struct ar5416AniState *aniState = &ah->curchan->ani;
-@@ -646,10 +646,10 @@ static void ath9k_hw_ani_read_counters(struct ath_hw *ah)
- 	ath_hw_cycle_counters_update(common);
- 	listenTime = ath_hw_get_listen_time(common);
- 
--	if (listenTime < 0) {
-+	if (listenTime <= 0) {
- 		ah->stats.ast_ani_lneg++;
- 		ath9k_ani_restart(ah);
--		return;
-+		return false;
- 	}
- 
- 	if (!use_new_ani(ah)) {
-@@ -683,7 +683,7 @@ static void ath9k_hw_ani_read_counters(struct ath_hw *ah)
- 			REG_WRITE(ah, AR_PHY_ERR_MASK_2,
- 				  AR_PHY_ERR_CCK_TIMING);
- 		}
--		return;
-+		return false;
- 	}
- 
- 	ofdmPhyErrCnt = phyCnt1 - ofdm_base;
-@@ -695,7 +695,7 @@ static void ath9k_hw_ani_read_counters(struct ath_hw *ah)
- 	ah->stats.ast_ani_cckerrs +=
- 		cckPhyErrCnt - aniState->cckPhyErrCount;
- 	aniState->cckPhyErrCount = cckPhyErrCnt;
--
-+	return true;
+ 	struct wl1271 *wl = hw->priv;
+ 	struct ieee80211_conf *conf = &hw->conf;
+- 
++
+ 	if (idx != 0)
+ 		return -ENOENT;
+- 
++
+ 	survey->channel = conf->channel;
+ 	survey->filled = SURVEY_INFO_NOISE_DBM;
+ 	survey->noise = wl->noise;
+- 
++
+ 	return 0;
  }
  
- void ath9k_hw_ani_monitor(struct ath_hw *ah, struct ath9k_channel *chan)
-@@ -711,7 +711,8 @@ void ath9k_hw_ani_monitor(struct ath_hw *ah, struct ath9k_channel *chan)
- 	if (WARN_ON(!aniState))
- 		return;
+diff --git a/drivers/net/wireless/wl12xx/wl1271_scan.c b/drivers/net/wireless/wl12xx/wl1271_scan.c
+index 909bb47..e0661a5 100644
+--- a/drivers/net/wireless/wl12xx/wl1271_scan.c
++++ b/drivers/net/wireless/wl12xx/wl1271_scan.c
+@@ -48,14 +48,15 @@ void wl1271_scan_complete_work(struct work_struct *work)
+ 	wl->scan.state = WL1271_SCAN_STATE_IDLE;
+ 	kfree(wl->scan.scanned_ch);
+ 	wl->scan.scanned_ch = NULL;
+-	mutex_unlock(&wl->mutex);
+-
++	wl->scan.req = NULL;
+ 	ieee80211_scan_completed(wl->hw, false);
  
--	ath9k_hw_ani_read_counters(ah);
-+	if (!ath9k_hw_ani_read_counters(ah))
-+		return;
+ 	if (wl->scan.failed) {
+ 		wl1271_info("Scan completed due to error.");
+ 		ieee80211_queue_work(wl->hw, &wl->recovery_work);
+ 	}
++	mutex_unlock(&wl->mutex);
++
+ }
  
- 	ofdmPhyErrRate = aniState->ofdmPhyErrCount * 1000 /
- 			 aniState->listenTime;
+ 
 -- 
-1.7.2.2
+1.7.0.4
 
