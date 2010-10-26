@@ -1,35 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from web56803.mail.re3.yahoo.com ([66.196.97.77]:22936 "HELO
-	web56803.mail.re3.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1759222Ab0J2U0o (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 29 Oct 2010 16:26:44 -0400
-Message-ID: <694082.86488.qm@web56803.mail.re3.yahoo.com>
-Date: Fri, 29 Oct 2010 13:26:43 -0700 (PDT)
-From: Walter Goldens <goldenstranger@yahoo.com>
-Subject: Re: Realtek rtl8188 support?
-To: Larry Finger <Larry.Finger@lwfinger.net>,
-	Stefan Lippers-Hollmann <s.L-H@gmx.de>
-Cc: wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <201010292202.25486.s.L-H@gmx.de>
+Received: from mail.atheros.com ([12.19.149.2]:19600 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752862Ab0JZW13 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 26 Oct 2010 18:27:29 -0400
+Received: from mail.atheros.com ([10.10.20.108])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Tue, 26 Oct 2010 15:27:18 -0700
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>, <greearb@candelatech.com>,
+	<kyungwan.nam@atheros.com>, <amod.bodas@atheros.com>,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>
+Subject: [PATCH 0/3] ath9k: more PCU locking enhancements
+Date: Tue, 26 Oct 2010 15:27:22 -0700
+Message-ID: <1288132045-4718-1-git-send-email-lrodriguez@atheros.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> With both devices the connection is stable and quite
-> performant (~9 MB/s, 
-> short distance, little channel overlap) against an Atheros/
-> athk9 based 
-> router running OpenWrt (HT20 && HT40-, b/g/n). In
-> comparison to rtl8192su
-> the authentification handshake succeeds a lot quicker and
-> without needing 
-> retries, performance is comparable.
+This addresses some more DMA / PCU locking. It simplifies the locking
+and includes now TX control over the PCU. These patches help with the
+overall realiability of RX and TX and conflicts between them and
+resets. When you start/stop RX or TX or do resets it will all be
+done atomically now. These all now go tested by Ben Greear over at
+candelatech.com using a proprietary userspace applicatin which
+creates 130 STAs associating to one AP that only accepts 30 STAs at
+a time. Ben had never seen this test run more than about 10 minutes
+without poison warnings and/or lockups.
 
-Now, that we're in the habit of adding staging drivers to compat-wireless, shouldn't this one follow the likes of ath6kl and brcm80211? Surely lots of users will benefit from this.
+This last series (first series addressed RX poison issues) addresses
+the last bit of complaints on DMA that he got when testing with these
+large amount of STAs on one 802.11 device.
+    
+For more details about this issue refer to this thread:
 
-Walter
+http://marc.info/?l=linux-wireless&m=128629803703756&w=2
 
+Many thanks to Ben Greear @ candelatech.com for the testing, reports
+and patience with this.
 
-      
+Luis R. Rodriguez (3):
+  ath9k: simplify hw reset locking
+  ath9k: move the PCU lock to the sc structure
+  ath9k: content DMA start / stop through the PCU lock
+
+ drivers/net/wireless/ath/ath9k/ath9k.h |    3 +-
+ drivers/net/wireless/ath/ath9k/init.c  |    1 -
+ drivers/net/wireless/ath/ath9k/main.c  |   70 ++++++++++++++------------------
+ drivers/net/wireless/ath/ath9k/recv.c  |    2 +-
+ drivers/net/wireless/ath/ath9k/xmit.c  |    4 +-
+ 5 files changed, 34 insertions(+), 46 deletions(-)
+
+-- 
+1.7.3.2.90.gd4c43
+
