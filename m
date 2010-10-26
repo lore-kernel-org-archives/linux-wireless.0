@@ -1,40 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from external1.orbit-lab.org ([128.6.192.131]:59769 "HELO
-	external1.orbit-lab.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1753553Ab0J2TEW (ORCPT
+Received: from mail30f.wh2.ocn.ne.jp ([220.111.41.203]:14213 "HELO
+	mail30f.wh2.ocn.ne.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1754990Ab0JZGjf (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 29 Oct 2010 15:04:22 -0400
-Received: from repository3.orbit-lab.org (repository3.orbit-lab.org [10.50.0.41])
-	by external1.orbit-lab.org (Postfix) with ESMTP id 0AD58418D8
-	for <linux-wireless@vger.kernel.org>; Fri, 29 Oct 2010 15:00:45 -0400 (EDT)
-Subject: Compat-wireless release for 2010-10-29 is baked
-To: <linux-wireless@vger.kernel.org>
-Message-Id: <20101029190420.7F86F40F97@repository3.orbit-lab.org>
-Date: Fri, 29 Oct 2010 15:04:20 -0400 (EDT)
-From: compat@orbit-lab.org (Compat-wireless cronjob account)
+	Tue, 26 Oct 2010 02:39:35 -0400
+Received: from vs3008.wh2.ocn.ne.jp (125.206.180.171)
+	by mail30f.wh2.ocn.ne.jp (RS ver 1.0.95vs) with SMTP id 1-0853565171
+	for <linux-wireless@vger.kernel.org>; Tue, 26 Oct 2010 15:39:33 +0900 (JST)
+From: Bruno Randolf <br1@einfach.org>
+To: Jonathan Guerin <jonathan@guerin.id.au>
+Subject: Re: Access Channel Utilization
+Date: Tue, 26 Oct 2010 15:39:34 +0900
+Cc: "ath5k-devel" <ath5k-devel@lists.ath5k.org>,
+	"linux-wireless" <linux-wireless@vger.kernel.org>
+References: <AANLkTinqLcr7OpQZijX70aVE_P8gpUp=6RkozzVZH5Fm@mail.gmail.com>
+In-Reply-To: <AANLkTinqLcr7OpQZijX70aVE_P8gpUp=6RkozzVZH5Fm@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Message-Id: <201010261539.34710.br1@einfach.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
->From git://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next
-   4dc42d2..84f9b99  history    -> origin/history
- + 2517527...b051608 master     -> origin/master  (forced update)
-   12ba8d1..2301b65  stable     -> origin/stable
- * [new tag]         next-20101029 -> next-20101029
+On Tue October 26 2010 15:24:42 Jonathan Guerin wrote:
+> Hi,
+> 
+> I'm trying to access the phy-layer stats that were recently added to
+> cfg80211 and nl80211. I'm using a modified version of iw as per this
+> patch:
+> https://dev.openwrt.org/browser/trunk/package/iw/patches/110-survey_phy_sta
+> ts.patch
+> 
+> Unfortunately, the utilization stats don't appear to be getting sent
+> back. I'm using ath5k as the underlying driver.
 
-compat-wireless code metrics
+are you missing this patch?
 
-    739330 - Total upstream lines of code being pulled
-      2163 - backport code changes
-      1909 - backport code additions
-       254 - backport code deletions
-      6409 - backport from compat module
-      8572 - total backport code
-    1.1594 - % of code consists of backport work
-      1534 - Crap changes not yet posted
-      1491 - Crap additions not yet posted
-        43 - Crap deletions not yet posted
-    0.2075 - % of crap code
+"ath5k: Add channel time to survey data"
+https://patchwork.kernel.org/patch/264831/
 
-Base tree: linux-next.git
-Base tree version: next-20101029
-compat-wireless release: compat-wireless-2010-10-22-5-g69fdc09-pc
+bruno
