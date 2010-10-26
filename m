@@ -1,71 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:51152 "EHLO
+Received: from he.sipsolutions.net ([78.46.109.217]:53783 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755015Ab0JDNOm (ORCPT
+	with ESMTP id S1758816Ab0JZJli (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 4 Oct 2010 09:14:42 -0400
-Subject: Re: [PATCH v2 2/3] mac80211: wait until completely disassociated
- before new association
+	Tue, 26 Oct 2010 05:41:38 -0400
+Subject: Re: Question about starting up an AP
 From: Johannes Berg <johannes@sipsolutions.net>
-To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	stable@kernel.org, Jouni Malinen <j@w1.fi>,
-	Paul Stewart <pstew@google.com>,
-	Amod Bodas <amod.bodas@atheros.com>,
-	Vasanthakumar Thiagarajan <vasanth@atheros.com>
-In-Reply-To: <1285965233-11097-3-git-send-email-lrodriguez@atheros.com>
-References: <1285965233-11097-1-git-send-email-lrodriguez@atheros.com>
-	 <1285965233-11097-3-git-send-email-lrodriguez@atheros.com>
+To: Helmut Schaa <helmut.schaa@googlemail.com>
+Cc: Ivo van Doorn <ivdoorn@gmail.com>,
+	Joshua Smith <JoshuaESmith@charter.net>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	users@rt2x00.serialmonkey.com
+In-Reply-To: <201010261135.31232.helmut.schaa@googlemail.com>
+References: <DA0C92FD-F6BF-4746-9BE1-A643A0D70F7A@kaon.com>
+	 <B3E6C8F9-24E4-4F12-B19C-15A474E5BCFA@charter.net>
+	 <201010151146.53640.helmut.schaa@googlemail.com>
+	 <201010261135.31232.helmut.schaa@googlemail.com>
 Content-Type: text/plain; charset="UTF-8"
-Date: Mon, 04 Oct 2010 15:14:40 +0200
-Message-ID: <1286198080.3620.34.camel@jlt3.sipsolutions.net>
+Date: Tue, 26 Oct 2010 11:41:34 +0200
+Message-ID: <1288086094.3761.6.camel@jlt3.sipsolutions.net>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2010-10-01 at 16:33 -0400, Luis R. Rodriguez wrote:
+On Tue, 2010-10-26 at 11:35 +0200, Helmut Schaa wrote:
 
-> @@ -936,7 +936,6 @@ static void ieee80211_set_disassoc(struct ieee80211_sub_if_data *sdata,
->  
->  	memcpy(bssid, ifmgd->associated->bssid, ETH_ALEN);
->  
-> -	ifmgd->associated = NULL;
->  	memset(ifmgd->bssid, 0, ETH_ALEN);
->  
->  	/*
+> > I'll let Ivo decide on this. At least if we really want to wait more then one
+> > second for DMA to be ready we should increase the msleep(1) to msleep(10) and
+> > keep the maximum number of retries at 100.
 
-You need to read this comment and the one below it :-)
+> Ivo, do we want to add the excessive waiting (up to one second) for DMA on
+> rt2800 as it fixes Joshuas device? At the moment we're waiting 100ms.
 
-> @@ -513,6 +513,19 @@ ieee80211_associate(struct ieee80211_work *wk)
->  {
->  	struct ieee80211_sub_if_data *sdata = wk->sdata;
->  	struct ieee80211_local *local = sdata->local;
-> +	struct ieee80211_if_managed *ifmgd = &sdata->u.mgd;
-> +	bool associated;
-> +
-> +	mutex_lock(&ifmgd->mtx);
-> +	associated = !!ifmgd->associated;
-> +	mutex_unlock(&ifmgd->mtx);
-> +
-> +	if (associated) {
-> +		printk(KERN_DEBUG "%s: delaying association with %pM as "
-> +		       "we are still associated",
-> +		       sdata->name, wk->filter_ta);
-> +		goto wait;
-> +	}
->  
->  	wk->assoc.tries++;
->  	if (wk->assoc.tries > IEEE80211_ASSOC_MAX_TRIES) {
-> @@ -534,6 +547,7 @@ ieee80211_associate(struct ieee80211_work *wk)
->  	       sdata->name, wk->filter_ta, wk->assoc.tries);
->  	ieee80211_send_assoc(sdata, wk);
->  
-> +wait:
->  	wk->timeout = jiffies + IEEE80211_ASSOC_TIMEOUT;
->  	run_again(local, wk->timeout);
-
-But you'll be staying off-channel for the wait period, so what does this
-really help?
+I don't usually chime in on other drivers but is there any reason not
+to? Properly functioning devices obviously reply within 100ms, so they
+wouldn't change behaviour, hopefully broken ones that _never_ work are
+rare, and the remaining ones like Joshua's would be fixed ...
 
 johannes
 
