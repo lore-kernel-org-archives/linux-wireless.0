@@ -1,72 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:49355 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751217Ab0JOXjw (ORCPT
+Received: from mail-qw0-f46.google.com ([209.85.216.46]:34031 "EHLO
+	mail-qw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755655Ab0JZCmj convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 15 Oct 2010 19:39:52 -0400
-Message-ID: <4CB8E647.9030808@candelatech.com>
-Date: Fri, 15 Oct 2010 16:39:51 -0700
-From: Ben Greear <greearb@candelatech.com>
+	Mon, 25 Oct 2010 22:42:39 -0400
+Received: by qwk3 with SMTP id 3so2105933qwk.19
+        for <linux-wireless@vger.kernel.org>; Mon, 25 Oct 2010 19:42:38 -0700 (PDT)
 MIME-Version: 1.0
-To: "Luis R. Rodriguez" <lrodriguez@Atheros.com>
-CC: Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: memory clobber in rx path, maybe related to ath9k.
-References: <AANLkTi=pp2Ob06YCi6GsR9rtRaDWPP95n2M72qWLdbwM@mail.gmail.com> <20101014225150.GB15740@tux> <20101014231958.GA3242@tux> <4CB79299.7000005@candelatech.com> <AANLkTinQmE6wm1pXkRL6p_3rkMvNrppmirjj3-jagMp8@mail.gmail.com> <20101014234853.GA10113@tux> <4CB886AF.3070800@candelatech.com> <AANLkTinhFj_iYjVzyfSfpUVdytfk4O9kCBnN8=Bwv0N7@mail.gmail.com> <4CB8AD3F.50201@candelatech.com> <20101015210720.GA2007@tux> <20101015232140.GA1796@tux> <4CB8E4DE.9070706@candelatech.com>
-In-Reply-To: <4CB8E4DE.9070706@candelatech.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+In-Reply-To: <4CC5A936.7070009@candelatech.com>
+References: <1287990961-2619-1-git-send-email-mshajakhan@atheros.com>
+	<4CC5A936.7070009@candelatech.com>
+Date: Mon, 25 Oct 2010 22:42:37 -0400
+Message-ID: <AANLkTimXLX8Am6_7QK2tNSFbr4_MNNYReN-Co26STNnU@mail.gmail.com>
+Subject: Re: [PATCH] ath9k: Properly assign boolean types Signed-off-by:
+ Mohammed Shafi Shajakhan <mshajakhan@atheros.com>
+From: Bob Copeland <me@bobcopeland.com>
+To: Ben Greear <greearb@candelatech.com>
+Cc: Mohammed Shafi Shajakhan <mshajakhan@atheros.com>,
+	linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	lrodriguez@atheros.com, j@w1.fi,
+	Senthilkumar.Balasubramanian@atheros.com,
+	Vasanth.Thiagarajan@atheros.com, nbd@openwrt.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 10/15/2010 04:33 PM, Ben Greear wrote:
-> On 10/15/2010 04:21 PM, Luis R. Rodriguez wrote:
->> Ben, please give this patch a shot. I addresses three races on the PCU:
->>
->> * When we were stopping the CPU for non-EDMA cards we never locked
->> against
->> anything starting the PCU again
->>
->> * ath9k_hw_startpcureceive() was being called without locking
->>
->> * Although we lock on the rxbuf lock for contention against
->> starting/stopping
->> the PCU, we also need to lock on the driver in locations where we
->> start/stop
->> the PCU within the same location otherwise we end up in inconsistant
->> states
->> and the hardware may end up proessing an incorrect buffer for DMA. To
->> protect against this we use a new PCU lock on the main part of the
->> driver to
->> ensure each start/stop/reset operation is done atomically.
->>
->> And fixes one issue as a side effect:
->>
->> * No more packet loss on ping flood when you have one STA associated :)
->>
->> The only issue I see with this is I eventually run out of memory and
->> my box
->> becomes useless, unless I am mistaking that for some other issue.
->>
->> Please give this a shot and if it cures your woes I'll split it up into
->> 3 separate patches, or maybe just two, one for the first two and one for
->> the last issue.
+On Mon, Oct 25, 2010 at 11:58 AM, Ben Greear <greearb@candelatech.com> wrote:
+> On 10/25/2010 12:16 AM, Mohammed Shafi Shajakhan wrote:
+>> -       is_cw40 = sta->ht_cap.cap&  IEEE80211_HT_CAP_SUP_WIDTH_20_40;
+>> +       is_cw40 = (sta->ht_cap.cap&  IEEE80211_HT_CAP_SUP_WIDTH_20_40) ?
+>> +               true : false;
 >
-> Sounds good, but this lockdep splat happens almost immediately upon
-> starting
-> my app:
+> Maybe use:
+> is_cw40 = !!(sta->ht_cap.cap&  IEEE80211_HT_CAP_SUP_WIDTH_20_40);
 >
-> =======================================================
-> [ INFO: possible circular locking dependency detected ]
-> 2.6.36-rc8-wl+ #32
+> Seems a bit simpler to me...
 
-It ran for a bit..never did see the poison warning, but system hard-locked
-(sysrq b on the serial console got no response) after a bit.  Hopefully
-just because it hit this potential deadlock.
-
-Thanks,
-Ben
+Agreed, !! is idiomatic.
 
 -- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
-
+Bob Copeland %% www.bobcopeland.com
