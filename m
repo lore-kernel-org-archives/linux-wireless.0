@@ -1,41 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:34870 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756805Ab0JANvU (ORCPT
+Received: from mail-qy0-f181.google.com ([209.85.216.181]:39941 "EHLO
+	mail-qy0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754654Ab0JZTsN (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 1 Oct 2010 09:51:20 -0400
-Subject: Re: [PATCH] mac80211: Add validity check for beacon_crc value
-From: Johannes Berg <johannes@sipsolutions.net>
-To: juuso.oikarinen@nokia.com
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
-In-Reply-To: <1285938151-6306-1-git-send-email-juuso.oikarinen@nokia.com>
-References: <1285938151-6306-1-git-send-email-juuso.oikarinen@nokia.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Fri, 01 Oct 2010 15:51:15 +0200
-Message-ID: <1285941075.3739.35.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+	Tue, 26 Oct 2010 15:48:13 -0400
+MIME-Version: 1.0
+In-Reply-To: <AANLkTimHpyJho6AheQc6zos7Pmr-ECjvaL83mYDC19Yd@mail.gmail.com>
+References: <20101025190358.AEC6840F97@repository3.orbit-lab.org>
+	<20101026123552.GA4604@sig21.net>
+	<AANLkTimzUKj=C9PxGs1PkQy_KWu0PGKd1zv_m-ZpWaEm@mail.gmail.com>
+	<20101026184123.GA1616@sig21.net>
+	<AANLkTimHpyJho6AheQc6zos7Pmr-ECjvaL83mYDC19Yd@mail.gmail.com>
+Date: Tue, 26 Oct 2010 21:48:12 +0200
+Message-ID: <AANLkTi=TPCXXki3jrrFA1HiauDp0rZVtMK9fK4z8B_kv@mail.gmail.com>
+Subject: Re: Compat-wireless release for 2010-10-25 is baked
+From: Ivo Van Doorn <ivdoorn@gmail.com>
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Cc: Johannes Stezenbach <js@sig21.net>, linux-wireless@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2010-10-01 at 16:02 +0300, juuso.oikarinen@nokia.com wrote:
-> From: Juuso Oikarinen <juuso.oikarinen@nokia.com>
-> 
-> On association to an AP, after receiving beacons, the beacon_crc value is set.
-> The beacon_crc value is not reset in disassociation, but the BSS data may be
-> expired at a later point. When associating again, it's possible that a
-> beacon for the AP is not received, resulting in the beacon_ies to remain NULL.
-> 
-> After association, further beacons will not update the beacon data, as the
-> crc value of the beacon has not changed, and the beacon_crc still holds a
-> value matching the beacon. The beacon_ies will remain forever null.
-> 
-> One of the results of this is that WLAN power save cannot be entered, the STA
-> will remain foreven in active mode.
-> 
-> Fix this by adding a validation flag for the beacon_crc, which is cleared on
-> association.
+Hi,
 
-Acked-by: Johannes Berg <johannes@sipsolutions.net>
+>> Well so just
+>> But according to
+>> http://rt2x00.serialmonkey.com/pipermail/users_rt2x00.serialmonkey.com/2010-October/002175.html
+>> the compat-rt2x00 tarballs seem to be made manually?
+>
+> Too lazy to check that, best thing might be to just focus on upstream
+> development, ensuring patches get into linux-next.git and having your
+> users just use the daily tarballs and stable releases for stable
+> stuff.
 
+The compat-rt2x00 package only contains the experimental patches,
+which are not always ready for upstream usage. It exists for testing purposes.
+Not all patches inside the experimental tree will be moved upstream,
+they often cause a lot of crashes and are often incomplete.
+Basically the package only exists for some people who want to test
+the latest rt2x00 code the first.  The mac80211 code inside the package
+usually lags a few days behind compat-wireless, simply because I
+don't always care for the latest mac80211 version. ;)
 
+>> Sorry for stupid questions, I want to get into rt2x00 development
+>> but I need to target a stable 2.6.32 kernel and I'm trying to figure
+>> out which git tree to base my work on.
+>
+> My advice, work on wireless-testing.git, send patches ASAP, and let
+> them propagate. Use the daily tarballs for user testing and for stable
+> release you can support users using the stable compat-wireless
+> releases.
 
+For rt2x00 development you can choose between rt2x00.git and
+wireless-testing.git,
+the trees are usually not that far apart, since smaller patches are pushed quite
+quickly upstream. (Also rt2x00.git is rebased frequently, while
+wireless-testing.git rarely
+is rebased)
+
+Ivo
