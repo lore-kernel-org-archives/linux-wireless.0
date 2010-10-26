@@ -1,69 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from web56805.mail.re3.yahoo.com ([66.196.97.79]:36140 "HELO
-	web56805.mail.re3.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1754251Ab0JLTo5 (ORCPT
+Received: from mail-gw0-f46.google.com ([74.125.83.46]:46450 "EHLO
+	mail-gw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759948Ab0JZP70 convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 12 Oct 2010 15:44:57 -0400
-Message-ID: <45257.13862.qm@web56805.mail.re3.yahoo.com>
-Date: Tue, 12 Oct 2010 12:44:55 -0700 (PDT)
-From: Walter Goldens <goldenstranger@yahoo.com>
-Subject: [PATCH] compat-wireless: update unload/wlunload scripts
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Cc: linux-wireless@vger.kernel.org
+	Tue, 26 Oct 2010 11:59:26 -0400
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20101026123552.GA4604@sig21.net>
+References: <20101025190358.AEC6840F97@repository3.orbit-lab.org> <20101026123552.GA4604@sig21.net>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Tue, 26 Oct 2010 08:59:04 -0700
+Message-ID: <AANLkTimzUKj=C9PxGs1PkQy_KWu0PGKd1zv_m-ZpWaEm@mail.gmail.com>
+Subject: Re: Compat-wireless release for 2010-10-25 is baked
+To: Johannes Stezenbach <js@sig21.net>
+Cc: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Added: carl9170, brcm80211, aht6kl and orinoco to wlunload.sh and unload.sh
-Added: atlxx ethernet drivers to unload.sh
+On Tue, Oct 26, 2010 at 5:35 AM, Johannes Stezenbach <js@sig21.net> wrote:
+> On Mon, Oct 25, 2010 at 03:03:57PM -0400, Compat-wireless cronjob account wrote:
+>> From git://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next
+>>    d9f241e..e10b307  history    -> origin/history
+>>  + c8b020e...fd4f9b3 master     -> origin/master  (forced update)
+>>    b515316..229aebb  stable     -> origin/stable
+>>  * [new tag]         next-20101025 -> next-20101025
+> ...
+>> Base tree: linux-next.git
+>> Base tree version: next-20101025
+>> compat-wireless release: compat-wireless-2010-10-22-pc
+>
+> I wonder about the different tarballs in
+> http://wireless.kernel.org/download/compat-wireless-2.6/
+>
+> compat-wireless-2010-10-25.tar.bz2
+> compat-wireless-2010-10-25-p.tar.bz2
+> compat-wireless-2010-10-25-pc.tar.bz2
+>
+> Those -p and -pc postfixes are not explained in
+> http://wireless.kernel.org/en/users/Download
 
+Right, sorry, I haven't updated the docs to add documentation for
+them. First please read:
 
-Signed-off-by: Walter Goldens <goldenstranger@yahoo.com>
----
+http://marc.info/?l=linux-wireless&m=128716953726075&w=2
 
---- a/scripts/wlunload.sh
-+++ b/scripts/wlunload.sh
-@@ -10,10 +10,11 @@ MODULES="$OLD_MODULES"
- MODULES="$MODULES ipw2100 ipw2200 libipw"
- MODULES="$MODULES libertas_cs usb8xxx libertas libertas_sdio libertas_spi"
- MODULES="$MODULES libertas_tf libertas_tf_usb"
--MODULES="$MODULES adm8211 zd1211rw"
--MODULES="$MODULES b43 b43legacy ssb"
-+MODULES="$MODULES adm8211 zd1211rw orinoco"
-+MODULES="$MODULES b43 b43legacy brcm80211 ssb"
- MODULES="$MODULES iwl3945 iwlagn iwlcore"
--MODULES="$MODULES ath9k ath5k ar9170usb ath"
-+MODULES="$MODULES ath9k ath9k_htc ath9k_common ath9k_hw "
-+MODULES="$MODULES ath5k ath ath6kl ar9170usb carl9170"
- MODULES="$MODULES p54pci p54usb p54spi p54common"
- MODULES="$MODULES rt2400pci rt2500pci rt61pci"
- MODULES="$MODULES rt2500usb rt73usb"
---- a/scripts/unload.sh
-+++ b/scripts/unload.sh	
-@@ -10,11 +10,11 @@ MODULES="$OLD_MODULES"
- MODULES="$MODULES ipw2100 ipw2200 libipw"
- MODULES="$MODULES libertas_cs usb8xxx libertas libertas_sdio libertas_spi"
- MODULES="$MODULES libertas_tf libertas_tf_usb"
--MODULES="$MODULES adm8211 zd1211rw"
--MODULES="$MODULES b43 b43legacy ssb"
-+MODULES="$MODULES adm8211 zd1211rw orinoco"
-+MODULES="$MODULES b43 b43legacy brcm80211 ssb"
- MODULES="$MODULES iwl3945 iwlagn iwlcore"
- MODULES="$MODULES ath9k ath9k_htc ath9k_common ath9k_hw "
--MODULES="$MODULES ath5k ar9170usb ath"
-+MODULES="$MODULES ath5k ath ath6kl ar9170usb carl9170"
- MODULES="$MODULES p54pci p54usb p54spi p54common"
- MODULES="$MODULES rt2400pci rt2500pci rt61pci"
- MODULES="$MODULES rt2500usb rt73usb"
-@@ -24,6 +24,7 @@ MODULES="$MODULES rtl8180 rtl8187"
- MODULES="$MODULES mwl8k mac80211_hwsim"
- MODULES="$MODULES at76c50x_usb at76_usb"
- MODULES="$MODULES rndis_wlan rndis_host cdc_ether usbnet"
-+MODULES="$MODULES atl1 atl2 atl1e atl1c"
- # eeprom_93cx6 is used by rt2x00 (rt61pci, rt2500pci, rt2400pci) 
- # and Realtek drivers ( rtl8187, rtl8180)
- MODULES="$MODULES eeprom_93cx6"
+-s is for getting and applying pending-stable/ fixes
+-n is for applying the patches linux-next-cherry-picks directory
+-p is for applying the patches on the linux-next-pending directory
+-s is for applying the patches on the crap directory
 
+> On a related note, I ran across compat-wireless-2.6.36-rc8-1-cs.tar.bz2 in
+> http://www.orbit-lab.org/kernel/compat-wireless-2.6-stable/v2.6.36/
+> which is not linked on
+> http://wireless.kernel.org/en/users/Download/stable/#Releases
 
-      
+That was sort of an RC release I made that I was waiting on feedback
+on for some extra linux-next-pending patch merged but I was still
+waiting for one test and no one got back to me yet on that. I'm just
+going to go ahead and release a new tarball today.
+
+> and I wonder about the -s and -cs postfixes?
+
+This is the crap and the stable fixes propagated. I only had one crap
+patch to incorporate though so I will move that to linux-next-pending
+and we'll have at -ps release, which means one linux-next-pending
+patch will be applied and we'll also get all pending stable fixes
+merged.
+
+> Can someone shed a light on this?
+
+Hope this helps.
+
+  Luis
