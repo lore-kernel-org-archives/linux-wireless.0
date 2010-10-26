@@ -1,126 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([192.100.122.233]:41462 "EHLO
-	mgw-mx06.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754464Ab0JNFrL (ORCPT
+Received: from mail-qw0-f46.google.com ([209.85.216.46]:38949 "EHLO
+	mail-qw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756233Ab0JZLeH (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 14 Oct 2010 01:47:11 -0400
-Received: from esebh106.NOE.Nokia.com (esebh106.ntc.nokia.com [172.21.138.213])
-	by mgw-mx06.nokia.com (Switch-3.3.3/Switch-3.3.3) with ESMTP id o9E5kk2x008232
-	for <linux-wireless@vger.kernel.org>; Thu, 14 Oct 2010 08:47:07 +0300
-From: Teemu Paasikivi <ext-teemu.3.paasikivi@nokia.com>
-To: luciano.coelho@nokia.com
-Cc: linux-wireless@vger.kernel.org,
-	Teemu Paasikivi <ext-teemu.3.paasikivi@nokia.com>
-Subject: [PATCH] wl1271: Fix warning about unsupported RX rate
-Date: Thu, 14 Oct 2010 08:46:30 +0300
-Message-Id: <1287035190-26392-1-git-send-email-ext-teemu.3.paasikivi@nokia.com>
+	Tue, 26 Oct 2010 07:34:07 -0400
+Received: by qwk3 with SMTP id 3so2442344qwk.19
+        for <linux-wireless@vger.kernel.org>; Tue, 26 Oct 2010 04:34:06 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <201010261204.01481.helmut.schaa@googlemail.com>
+References: <DA0C92FD-F6BF-4746-9BE1-A643A0D70F7A@kaon.com>
+	<201010261135.31232.helmut.schaa@googlemail.com>
+	<1288086094.3761.6.camel@jlt3.sipsolutions.net>
+	<201010261204.01481.helmut.schaa@googlemail.com>
+Date: Tue, 26 Oct 2010 13:34:06 +0200
+Message-ID: <AANLkTimrw_UFa-K7um59+E_MkuCUYBRahs=qJVfAW-g8@mail.gmail.com>
+Subject: Re: Question about starting up an AP
+From: Ivo Van Doorn <ivdoorn@gmail.com>
+To: Helmut Schaa <helmut.schaa@googlemail.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	Joshua Smith <JoshuaESmith@charter.net>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	users@rt2x00.serialmonkey.com
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-While scanning, it is possible that beacon and probe response frames are
-received on other band than configured to the driver. In rx status
-handling this has caused "Unsupported RX rate from HW" warnings. This
-patch changes the wl1271_rate_to_index function to take the band of the
-received frame as a parameter instead of using value configuret to
-wl->band.
+On Tue, Oct 26, 2010 at 12:04 PM, Helmut Schaa
+<helmut.schaa@googlemail.com> wrote:
+> Am Dienstag 26 Oktober 2010 schrieb Johannes Berg:
+>> On Tue, 2010-10-26 at 11:35 +0200, Helmut Schaa wrote:
+>>
+>> > > I'll let Ivo decide on this. At least if we really want to wait more then one
+>> > > second for DMA to be ready we should increase the msleep(1) to msleep(10) and
+>> > > keep the maximum number of retries at 100.
+>>
+>> > Ivo, do we want to add the excessive waiting (up to one second) for DMA on
+>> > rt2800 as it fixes Joshuas device? At the moment we're waiting 100ms.
+>>
+>> I don't usually chime in on other drivers but is there any reason not
+>> to? Properly functioning devices obviously reply within 100ms, so they
+>> wouldn't change behaviour, hopefully broken ones that _never_ work are
+>> rare, and the remaining ones like Joshua's would be fixed ...
+>
+> True, nevertheless I wanted to get Ivos ack before going ahead.
 
-Signed-off-by: Teemu Paasikivi <ext-teemu.3.paasikivi@nokia.com>
----
- drivers/net/wireless/wl12xx/wl1271_main.c |    6 +++---
- drivers/net/wireless/wl12xx/wl1271_rx.c   |   10 +++++++++-
- drivers/net/wireless/wl12xx/wl1271_rx.h   |    2 +-
- drivers/net/wireless/wl12xx/wl1271_tx.c   |    2 +-
- drivers/net/wireless/wl12xx/wl1271_tx.h   |    2 +-
- 5 files changed, 15 insertions(+), 7 deletions(-)
+yeah, I don't mind waiting for a full second, on my machine a normal
+ifconfig up takes already ages for some odd reason, so another second wouldn't
+matter if that means that more devices can function. :)
 
-diff --git a/drivers/net/wireless/wl12xx/wl1271_main.c b/drivers/net/wireless/wl12xx/wl1271_main.c
-index a99ad40..8d350cd 100644
---- a/drivers/net/wireless/wl12xx/wl1271_main.c
-+++ b/drivers/net/wireless/wl12xx/wl1271_main.c
-@@ -2269,18 +2269,18 @@ static const struct ieee80211_ops wl1271_ops = {
- };
- 
- 
--u8 wl1271_rate_to_idx(struct wl1271 *wl, int rate)
-+u8 wl1271_rate_to_idx(int rate, enum ieee80211_band band)
- {
- 	u8 idx;
- 
--	BUG_ON(wl->band >= sizeof(wl1271_band_rate_to_idx)/sizeof(u8 *));
-+	BUG_ON(band >= sizeof(wl1271_band_rate_to_idx)/sizeof(u8 *));
- 
- 	if (unlikely(rate >= CONF_HW_RXTX_RATE_MAX)) {
- 		wl1271_error("Illegal RX rate from HW: %d", rate);
- 		return 0;
- 	}
- 
--	idx = wl1271_band_rate_to_idx[wl->band][rate];
-+	idx = wl1271_band_rate_to_idx[band][rate];
- 	if (unlikely(idx == CONF_HW_RXTX_RATE_UNSUPPORTED)) {
- 		wl1271_error("Unsupported RX rate from HW: %d", rate);
- 		return 0;
-diff --git a/drivers/net/wireless/wl12xx/wl1271_rx.c b/drivers/net/wireless/wl12xx/wl1271_rx.c
-index 0478f29..64ce6ae 100644
---- a/drivers/net/wireless/wl12xx/wl1271_rx.c
-+++ b/drivers/net/wireless/wl12xx/wl1271_rx.c
-@@ -46,10 +46,18 @@ static void wl1271_rx_status(struct wl1271 *wl,
- 			     struct ieee80211_rx_status *status,
- 			     u8 beacon)
- {
-+	enum ieee80211_band desc_band;
-+
- 	memset(status, 0, sizeof(struct ieee80211_rx_status));
- 
- 	status->band = wl->band;
--	status->rate_idx = wl1271_rate_to_idx(wl, desc->rate);
-+
-+	if ((desc->flags & WL1271_RX_DESC_BAND_MASK) == WL1271_RX_DESC_BAND_BG)
-+		desc_band = IEEE80211_BAND_2GHZ;
-+	else
-+		desc_band = IEEE80211_BAND_5GHZ;
-+
-+	status->rate_idx = wl1271_rate_to_idx(desc->rate, desc_band);
- 
- 	status->signal = desc->rssi;
- 
-diff --git a/drivers/net/wireless/wl12xx/wl1271_rx.h b/drivers/net/wireless/wl12xx/wl1271_rx.h
-index b89be47..3968d37 100644
---- a/drivers/net/wireless/wl12xx/wl1271_rx.h
-+++ b/drivers/net/wireless/wl12xx/wl1271_rx.h
-@@ -116,6 +116,6 @@ struct wl1271_rx_descriptor {
- } __attribute__ ((packed));
- 
- void wl1271_rx(struct wl1271 *wl, struct wl1271_fw_status *status);
--u8 wl1271_rate_to_idx(struct wl1271 *wl, int rate);
-+u8 wl1271_rate_to_idx(int rate, enum ieee80211_band band);
- 
- #endif
-diff --git a/drivers/net/wireless/wl12xx/wl1271_tx.c b/drivers/net/wireless/wl12xx/wl1271_tx.c
-index e3dc13c..c97ba31 100644
---- a/drivers/net/wireless/wl12xx/wl1271_tx.c
-+++ b/drivers/net/wireless/wl12xx/wl1271_tx.c
-@@ -298,7 +298,7 @@ static void wl1271_tx_complete_packet(struct wl1271 *wl,
- 	if (result->status == TX_SUCCESS) {
- 		if (!(info->flags & IEEE80211_TX_CTL_NO_ACK))
- 			info->flags |= IEEE80211_TX_STAT_ACK;
--		rate = wl1271_rate_to_idx(wl, result->rate_class_index);
-+		rate = wl1271_rate_to_idx(result->rate_class_index, wl->band);
- 		retries = result->ack_failures;
- 	} else if (result->status == TX_RETRY_EXCEEDED) {
- 		wl->stats.excessive_retries++;
-diff --git a/drivers/net/wireless/wl12xx/wl1271_tx.h b/drivers/net/wireless/wl12xx/wl1271_tx.h
-index 8979085..a952022 100644
---- a/drivers/net/wireless/wl12xx/wl1271_tx.h
-+++ b/drivers/net/wireless/wl12xx/wl1271_tx.h
-@@ -143,7 +143,7 @@ void wl1271_tx_work(struct work_struct *work);
- void wl1271_tx_complete(struct wl1271 *wl);
- void wl1271_tx_reset(struct wl1271 *wl);
- void wl1271_tx_flush(struct wl1271 *wl);
--u8 wl1271_rate_to_idx(struct wl1271 *wl, int rate);
-+u8 wl1271_rate_to_idx(int rate, enum ieee80211_band band);
- u32 wl1271_tx_enabled_rates_get(struct wl1271 *wl, u32 rate_set);
- 
- #endif
--- 
-1.7.1
-
+Ivo
