@@ -1,60 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:24293 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932316Ab0JAMEX (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 1 Oct 2010 08:04:23 -0400
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: Johannes Berg <johannes@sipsolutions.net>,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org,
-	Stanislaw Gruszka <sgruszka@redhat.com>
-Subject: [PATCH 5/6] mac80211: do not requeue scan work when not needed
-Date: Fri,  1 Oct 2010 14:05:31 +0200
-Message-Id: <1285934732-16087-5-git-send-email-sgruszka@redhat.com>
-In-Reply-To: <1285934732-16087-1-git-send-email-sgruszka@redhat.com>
-References: <1285934732-16087-1-git-send-email-sgruszka@redhat.com>
+Received: from smtp.nokia.com ([192.100.105.134]:57716 "EHLO
+	mgw-mx09.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933075Ab0JZMsQ (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 26 Oct 2010 08:48:16 -0400
+Received: from esebh106.NOE.Nokia.com (esebh106.ntc.nokia.com [172.21.138.213])
+	by mgw-mx09.nokia.com (Switch-3.3.3/Switch-3.3.3) with ESMTP id o9QCm4Jo027935
+	for <linux-wireless@vger.kernel.org>; Tue, 26 Oct 2010 07:48:16 -0500
+Subject: Re: [PATCH 2/2] wl1271: Check interface state in op_* functions
+From: Tuomas Katila <ext-tuomas.2.katila@nokia.com>
+To: "ext juuso.oikarinen@nokia.com" <juuso.oikarinen@nokia.com>
+Cc: "Coelho Luciano (Nokia-MS/Helsinki)" <Luciano.Coelho@nokia.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <1288092279-31272-2-git-send-email-juuso.oikarinen@nokia.com>
+References: <1288092279-31272-1-git-send-email-juuso.oikarinen@nokia.com>
+	 <1288092279-31272-2-git-send-email-juuso.oikarinen@nokia.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Tue, 26 Oct 2010 15:42:11 +0300
+Message-ID: <1288096931.17497.352.camel@tukatila-desktop>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-In case of performing hw scan and not abort it
-__ieee80211_scan_completed() is currently called from scan work, so does
-not need to reschedule work to call drv_hw_scan().
+On Tue, 2010-10-26 at 13:24 +0200, ext juuso.oikarinen@nokia.com wrote:
+> From: Juuso Oikarinen <juuso.oikarinen@nokia.com>
+> 
+> Check the state of the interface on op_* function so we don't try to access
+> the hardware in when its off.
+> 
+> The mac80211 may call these in some corner cases related, for instance, to
+> the hardware recovery procedure. These accesses cause a kernel crash on at
+> least some SDIO devices, because the bus is not properly claimed in that
+> scenario.
+> 
+> Signed-off-by: Juuso Oikarinen <juuso.oikarinen@nokia.com>
+> ---
 
-Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
----
- net/mac80211/scan.c |   11 +++--------
- 1 files changed, 3 insertions(+), 8 deletions(-)
+Tested-by: Tuomas Katila <ext-tuomas.2.katila@nokia.com>
 
-diff --git a/net/mac80211/scan.c b/net/mac80211/scan.c
-index 2e9a70c..cf60f20 100644
---- a/net/mac80211/scan.c
-+++ b/net/mac80211/scan.c
-@@ -270,9 +270,9 @@ static bool __ieee80211_scan_completed(struct ieee80211_hw *hw, bool aborted,
- 		return false;
- 
- 	if (was_hw_scan && !aborted && ieee80211_prep_hw_scan(local)) {
--		ieee80211_queue_delayed_work(&local->hw,
--					     &local->scan_work, 0);
--		return false;
-+		int rc = drv_hw_scan(local, local->scan_sdata, local->hw_scan_req);
-+		if (rc == 0)
-+			return false;
- 	}
- 
- 	kfree(local->hw_scan_req);
-@@ -660,11 +660,6 @@ void ieee80211_scan_work(struct work_struct *work)
- 		return;
- 	}
- 
--	if (local->hw_scan_req) {
--		rc = drv_hw_scan(local, sdata, local->hw_scan_req);
--		goto out_complete;
--	}
--
- 	if (local->scan_req && !local->scanning) {
- 		struct cfg80211_scan_request *req = local->scan_req;
- 
--- 
-1.7.1
+-Tuomas
 
