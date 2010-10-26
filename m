@@ -1,40 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:51896 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756103Ab0JGVWh (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 7 Oct 2010 17:22:37 -0400
-From: Hauke Mehrtens <hauke@hauke-m.de>
-To: lrodriguez@atheros.com
-Cc: linux-wireless@vger.kernel.org, mcgrof@infradead.org,
-	Hauke Mehrtens <hauke@hauke-m.de>
-Subject: [PATCH 2/2] compat: rename member in struct mmc_host.
-Date: Thu,  7 Oct 2010 23:22:24 +0200
-Message-Id: <1286486544-18975-2-git-send-email-hauke@hauke-m.de>
-In-Reply-To: <1286486544-18975-1-git-send-email-hauke@hauke-m.de>
-References: <1286486544-18975-1-git-send-email-hauke@hauke-m.de>
+Received: from mail-fx0-f46.google.com ([209.85.161.46]:53443 "EHLO
+	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757655Ab0JZSYt (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 26 Oct 2010 14:24:49 -0400
+Received: by fxm16 with SMTP id 16so4393245fxm.19
+        for <linux-wireless@vger.kernel.org>; Tue, 26 Oct 2010 11:24:48 -0700 (PDT)
+Message-ID: <4CC71CFF.8050004@lwfinger.net>
+Date: Tue, 26 Oct 2010 13:25:03 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
+MIME-Version: 1.0
+To: seno <senada@t-online.de>
+CC: linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] rtl8187b: do not do per packet TX AGC
+References: <1282974868-22237-1-git-send-email-cascardo@holoscopio.com> <4C798080.8010002@lwfinger.net> <20100830141218.GB30864@tuxdriver.com> <4C7BC4D9.1010108@lwfinger.net> <20100830152841.GB2950@barata.holoscopio.com> <loom.20101026T200014-691@post.gmane.org>
+In-Reply-To: <loom.20101026T200014-691@post.gmane.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On 10/26/2010 01:03 PM, seno wrote:
+> I tried that patch on compat-wireless-2010-10-25 (Kernel 2.6.33.7).
+> 
+> Performance improves minimal, but thousands of errors occur in iwconfig output.
+> (Tx excessive retries, Invalid misc, Missed beacon).
+> 
+> The router also shows lots of errors 
+> (for Received (RX) / Transmitted (TX) packets)
 
-Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
----
- include/linux/compat-2.6.37.h |    3 +++
- 1 files changed, 3 insertions(+), 0 deletions(-)
+I no longer remember the details of why this patch was abandoned, but I suspect
+you found the answer.
 
-diff --git a/include/linux/compat-2.6.37.h b/include/linux/compat-2.6.37.h
-index 3bb9228..716f528 100644
---- a/include/linux/compat-2.6.37.h
-+++ b/include/linux/compat-2.6.37.h
-@@ -110,6 +110,9 @@ int genl_unregister_family(struct genl_family *family);
- #define genl_register_mc_group(_fam, _grp) genl_register_mc_group(&(_fam)->family, _grp)
- #define genl_unregister_mc_group(_fam, _grp) genl_unregister_mc_group(&(_fam)->family, _grp)
- 
-+/* rename member in struct mmc_host in include/linux/mmc/host.h */
-+#define max_segs	max_hw_segs
-+
- #endif /* (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,37)) */
- 
- #endif /* LINUX_26_37_COMPAT_H */
--- 
-1.7.0.4
-
+Larry
