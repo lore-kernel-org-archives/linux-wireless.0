@@ -1,328 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([88.198.39.176]:38723 "EHLO ds10.nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932274Ab0JOSDk (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 15 Oct 2010 14:03:40 -0400
-From: Felix Fietkau <nbd@openwrt.org>
-To: linux-wireless@vger.kernel.org
-Cc: linville@tuxdriver.com, lrodriguez@atheros.com
-Subject: [PATCH 1/6] ath9k_hw: optimize interrupt mask changes
-Date: Fri, 15 Oct 2010 20:03:28 +0200
-Message-Id: <1287165813-94331-1-git-send-email-nbd@openwrt.org>
+Received: from mail.candelatech.com ([208.74.158.172]:46806 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756546Ab0JZV7S (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 26 Oct 2010 17:59:18 -0400
+Message-ID: <4CC74F35.60009@candelatech.com>
+Date: Tue, 26 Oct 2010 14:59:17 -0700
+From: Ben Greear <greearb@candelatech.com>
+MIME-Version: 1.0
+To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+CC: linux-wireless@vger.kernel.org, kyungwan.nam@atheros.com
+Subject: Re: [RFT 0/3] ath9k: more PCU locking enhancements
+References: <1288082441-4882-1-git-send-email-lrodriguez@atheros.com>
+In-Reply-To: <1288082441-4882-1-git-send-email-lrodriguez@atheros.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-OProfile showed that ath9k was spending way too much time in
-ath9k_hw_set_interrupts. Since most of the interrupt mask changes only
-need to globally enable/disable interrupts, it makes sense to split
-this part into separate functions, replacing all calls to
-ath9k_hw_set_interrupts(ah, 0) with ath9k_hw_disable_interrupts(ah).
+On 10/26/2010 01:40 AM, Luis R. Rodriguez wrote:
+> Here is some more PCU locking enhancements I tested today
+> while trying to resolve the WARN() that happens when we
+> try to stop RX DMA and fail. While working on that I figured
+> I'd work on the TX DMA stuff too, here's a shot at it. I
+> can no longer get TX / RX DMA rants, please test and let
+> me know if you do. I only tried some basic testing like
+> rmmoding while scannign, which typicallly produced some
+> errors. Now I don't get squat.
+>
+> Ben if you can test wit your super proprietary application
+> that'd be great.
+>
+> This also simplifies locking considerably.
+>
+> This doesn't break suspend so I'm happy. It also depends
+> on the last RX DMA fixes I had posted earlier. If you'd
+> like to get an all-in-one patch of all my patches pending
+> you can wget this file and git am it:
+>
+> http://www.kernel.org/pub/linux/kernel/people/mcgrof/patches/tmp/pending-mcgrof-2010-10-26-v1.patch
+> sha1sum: 874a3cc1a57f7e26ad191cd7b5045315f94c5823
 
-ath9k_hw_set_interrupts(ah, ah->imask) only gets changed to
-ath9k_hw_enable_interrupts(ah), whenever ah->imask was not changed
-since the point where interrupts were disabled.
+I have done some initial testing on the combined patch on top of today's
+wireless-testing tree.  I also have the memory-barrier patch applied to
+ath9k, as that is still not upstream.  I have no idea if it has any affect
+or not (I'm on x86..seems that wmb() stuff was mostly for other platforms?).
 
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
----
- drivers/net/wireless/ath/ath9k/beacon.c |   10 ++--
- drivers/net/wireless/ath/ath9k/gpio.c   |    4 +-
- drivers/net/wireless/ath/ath9k/mac.c    |   86 ++++++++++++++++++-------------
- drivers/net/wireless/ath/ath9k/mac.h    |    6 ++-
- drivers/net/wireless/ath/ath9k/main.c   |   18 +++---
- 5 files changed, 70 insertions(+), 54 deletions(-)
+So far, it is showing zero problems, certainly no memory poison issues.
 
-diff --git a/drivers/net/wireless/ath/ath9k/beacon.c b/drivers/net/wireless/ath/ath9k/beacon.c
-index 081192e..8ff342f 100644
---- a/drivers/net/wireless/ath/ath9k/beacon.c
-+++ b/drivers/net/wireless/ath/ath9k/beacon.c
-@@ -500,10 +500,10 @@ static void ath_beacon_config_ap(struct ath_softc *sc,
- 
- 	/* Set the computed AP beacon timers */
- 
--	ath9k_hw_set_interrupts(ah, 0);
-+	ath9k_hw_disable_interrupts(ah);
- 	ath9k_beacon_init(sc, nexttbtt, intval);
- 	sc->beacon.bmisscnt = 0;
--	ath9k_hw_set_interrupts(ah, ah->imask);
-+	ath9k_hw_enable_interrupts(ah);
- 
- 	/* Clear the reset TSF flag, so that subsequent beacon updation
- 	   will not reset the HW TSF. */
-@@ -635,7 +635,7 @@ static void ath_beacon_config_sta(struct ath_softc *sc,
- 
- 	/* Set the computed STA beacon timers */
- 
--	ath9k_hw_set_interrupts(ah, 0);
-+	ath9k_hw_disable_interrupts(ah);
- 	ath9k_hw_set_sta_beacon_timers(ah, &bs);
- 	ah->imask |= ATH9K_INT_BMISS;
- 	ath9k_hw_set_interrupts(ah, ah->imask);
-@@ -683,10 +683,10 @@ static void ath_beacon_config_adhoc(struct ath_softc *sc,
- 
- 	/* Set the computed ADHOC beacon timers */
- 
--	ath9k_hw_set_interrupts(ah, 0);
-+	ath9k_hw_disable_interrupts(ah);
- 	ath9k_beacon_init(sc, nexttbtt, intval);
- 	sc->beacon.bmisscnt = 0;
--	ath9k_hw_set_interrupts(ah, ah->imask);
-+	ath9k_hw_enable_interrupts(ah);
- }
- 
- void ath_beacon_config(struct ath_softc *sc, struct ieee80211_vif *vif)
-diff --git a/drivers/net/wireless/ath/ath9k/gpio.c b/drivers/net/wireless/ath/ath9k/gpio.c
-index 4a9a68b..db9c6fe 100644
---- a/drivers/net/wireless/ath/ath9k/gpio.c
-+++ b/drivers/net/wireless/ath/ath9k/gpio.c
-@@ -259,7 +259,7 @@ static void ath9k_gen_timer_start(struct ath_hw *ah,
- 	ath9k_hw_gen_timer_start(ah, timer, timer_next, timer_period);
- 
- 	if ((ah->imask & ATH9K_INT_GENTIMER) == 0) {
--		ath9k_hw_set_interrupts(ah, 0);
-+		ath9k_hw_disable_interrupts(ah);
- 		ah->imask |= ATH9K_INT_GENTIMER;
- 		ath9k_hw_set_interrupts(ah, ah->imask);
- 	}
-@@ -273,7 +273,7 @@ static void ath9k_gen_timer_stop(struct ath_hw *ah, struct ath_gen_timer *timer)
- 
- 	/* if no timer is enabled, turn off interrupt mask */
- 	if (timer_table->timer_mask.val == 0) {
--		ath9k_hw_set_interrupts(ah, 0);
-+		ath9k_hw_disable_interrupts(ah);
- 		ah->imask &= ~ATH9K_INT_GENTIMER;
- 		ath9k_hw_set_interrupts(ah, ah->imask);
- 	}
-diff --git a/drivers/net/wireless/ath/ath9k/mac.c b/drivers/net/wireless/ath/ath9k/mac.c
-index 8c13479..65b1ee2 100644
---- a/drivers/net/wireless/ath/ath9k/mac.c
-+++ b/drivers/net/wireless/ath/ath9k/mac.c
-@@ -117,12 +117,11 @@ EXPORT_SYMBOL(ath9k_hw_numtxpending);
- bool ath9k_hw_updatetxtriglevel(struct ath_hw *ah, bool bIncTrigLevel)
- {
- 	u32 txcfg, curLevel, newLevel;
--	enum ath9k_int omask;
- 
- 	if (ah->tx_trig_level >= ah->config.max_txtrig_level)
- 		return false;
- 
--	omask = ath9k_hw_set_interrupts(ah, ah->imask & ~ATH9K_INT_GLOBAL);
-+	ath9k_hw_disable_interrupts(ah);
- 
- 	txcfg = REG_READ(ah, AR_TXCFG);
- 	curLevel = MS(txcfg, AR_FTRIG);
-@@ -136,7 +135,7 @@ bool ath9k_hw_updatetxtriglevel(struct ath_hw *ah, bool bIncTrigLevel)
- 		REG_WRITE(ah, AR_TXCFG,
- 			  (txcfg & ~AR_FTRIG) | SM(newLevel, AR_FTRIG));
- 
--	ath9k_hw_set_interrupts(ah, omask);
-+	ath9k_hw_enable_interrupts(ah);
- 
- 	ah->tx_trig_level = newLevel;
- 
-@@ -849,28 +848,59 @@ bool ath9k_hw_intrpend(struct ath_hw *ah)
- }
- EXPORT_SYMBOL(ath9k_hw_intrpend);
- 
--enum ath9k_int ath9k_hw_set_interrupts(struct ath_hw *ah,
--					      enum ath9k_int ints)
-+void ath9k_hw_disable_interrupts(struct ath_hw *ah)
-+{
-+	struct ath_common *common = ath9k_hw_common(ah);
-+
-+	ath_print(common, ATH_DBG_INTERRUPT, "disable IER\n");
-+	REG_WRITE(ah, AR_IER, AR_IER_DISABLE);
-+	(void) REG_READ(ah, AR_IER);
-+	if (!AR_SREV_9100(ah)) {
-+		REG_WRITE(ah, AR_INTR_ASYNC_ENABLE, 0);
-+		(void) REG_READ(ah, AR_INTR_ASYNC_ENABLE);
-+
-+		REG_WRITE(ah, AR_INTR_SYNC_ENABLE, 0);
-+		(void) REG_READ(ah, AR_INTR_SYNC_ENABLE);
-+	}
-+}
-+EXPORT_SYMBOL(ath9k_hw_disable_interrupts);
-+
-+void ath9k_hw_enable_interrupts(struct ath_hw *ah)
-+{
-+	struct ath_common *common = ath9k_hw_common(ah);
-+
-+	if (!(ah->imask & ATH9K_INT_GLOBAL))
-+		return;
-+
-+	ath_print(common, ATH_DBG_INTERRUPT, "enable IER\n");
-+	REG_WRITE(ah, AR_IER, AR_IER_ENABLE);
-+	if (!AR_SREV_9100(ah)) {
-+		REG_WRITE(ah, AR_INTR_ASYNC_ENABLE,
-+			  AR_INTR_MAC_IRQ);
-+		REG_WRITE(ah, AR_INTR_ASYNC_MASK, AR_INTR_MAC_IRQ);
-+
-+
-+		REG_WRITE(ah, AR_INTR_SYNC_ENABLE,
-+			  AR_INTR_SYNC_DEFAULT);
-+		REG_WRITE(ah, AR_INTR_SYNC_MASK,
-+			  AR_INTR_SYNC_DEFAULT);
-+	}
-+	ath_print(common, ATH_DBG_INTERRUPT, "AR_IMR 0x%x IER 0x%x\n",
-+		  REG_READ(ah, AR_IMR), REG_READ(ah, AR_IER));
-+}
-+EXPORT_SYMBOL(ath9k_hw_enable_interrupts);
-+
-+void ath9k_hw_set_interrupts(struct ath_hw *ah, enum ath9k_int ints)
- {
- 	enum ath9k_int omask = ah->imask;
- 	u32 mask, mask2;
- 	struct ath9k_hw_capabilities *pCap = &ah->caps;
- 	struct ath_common *common = ath9k_hw_common(ah);
- 
--	ath_print(common, ATH_DBG_INTERRUPT, "0x%x => 0x%x\n", omask, ints);
--
--	if (omask & ATH9K_INT_GLOBAL) {
--		ath_print(common, ATH_DBG_INTERRUPT, "disable IER\n");
--		REG_WRITE(ah, AR_IER, AR_IER_DISABLE);
--		(void) REG_READ(ah, AR_IER);
--		if (!AR_SREV_9100(ah)) {
--			REG_WRITE(ah, AR_INTR_ASYNC_ENABLE, 0);
--			(void) REG_READ(ah, AR_INTR_ASYNC_ENABLE);
-+	if (!(ints & ATH9K_INT_GLOBAL))
-+		ath9k_hw_enable_interrupts(ah);
- 
--			REG_WRITE(ah, AR_INTR_SYNC_ENABLE, 0);
--			(void) REG_READ(ah, AR_INTR_SYNC_ENABLE);
--		}
--	}
-+	ath_print(common, ATH_DBG_INTERRUPT, "0x%x => 0x%x\n", omask, ints);
- 
- 	/* TODO: global int Ref count */
- 	mask = ints & ATH9K_INT_COMMON;
-@@ -946,24 +976,8 @@ enum ath9k_int ath9k_hw_set_interrupts(struct ath_hw *ah,
- 			REG_CLR_BIT(ah, AR_IMR_S5, AR_IMR_S5_TIM_TIMER);
- 	}
- 
--	if (ints & ATH9K_INT_GLOBAL) {
--		ath_print(common, ATH_DBG_INTERRUPT, "enable IER\n");
--		REG_WRITE(ah, AR_IER, AR_IER_ENABLE);
--		if (!AR_SREV_9100(ah)) {
--			REG_WRITE(ah, AR_INTR_ASYNC_ENABLE,
--				  AR_INTR_MAC_IRQ);
--			REG_WRITE(ah, AR_INTR_ASYNC_MASK, AR_INTR_MAC_IRQ);
--
--
--			REG_WRITE(ah, AR_INTR_SYNC_ENABLE,
--				  AR_INTR_SYNC_DEFAULT);
--			REG_WRITE(ah, AR_INTR_SYNC_MASK,
--				  AR_INTR_SYNC_DEFAULT);
--		}
--		ath_print(common, ATH_DBG_INTERRUPT, "AR_IMR 0x%x IER 0x%x\n",
--			  REG_READ(ah, AR_IMR), REG_READ(ah, AR_IER));
--	}
-+	ath9k_hw_enable_interrupts(ah);
- 
--	return omask;
-+	return;
- }
- EXPORT_SYMBOL(ath9k_hw_set_interrupts);
-diff --git a/drivers/net/wireless/ath/ath9k/mac.h b/drivers/net/wireless/ath/ath9k/mac.h
-index 7c1a34d..538c676 100644
---- a/drivers/net/wireless/ath/ath9k/mac.h
-+++ b/drivers/net/wireless/ath/ath9k/mac.h
-@@ -669,6 +669,7 @@ enum ath9k_key_type {
- 
- struct ath_hw;
- struct ath9k_channel;
-+enum ath9k_int;
- 
- u32 ath9k_hw_gettxbuf(struct ath_hw *ah, u32 q);
- void ath9k_hw_puttxbuf(struct ath_hw *ah, u32 q, u32 txdp);
-@@ -700,8 +701,9 @@ int ath9k_hw_beaconq_setup(struct ath_hw *ah);
- 
- /* Interrupt Handling */
- bool ath9k_hw_intrpend(struct ath_hw *ah);
--enum ath9k_int ath9k_hw_set_interrupts(struct ath_hw *ah,
--				       enum ath9k_int ints);
-+void ath9k_hw_set_interrupts(struct ath_hw *ah, enum ath9k_int ints);
-+void ath9k_hw_enable_interrupts(struct ath_hw *ah);
-+void ath9k_hw_disable_interrupts(struct ath_hw *ah);
- 
- void ar9002_hw_attach_mac_ops(struct ath_hw *ah);
- 
-diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
-index 7bb8a0b..029c6d2 100644
---- a/drivers/net/wireless/ath/ath9k/main.c
-+++ b/drivers/net/wireless/ath/ath9k/main.c
-@@ -219,7 +219,7 @@ int ath_set_channel(struct ath_softc *sc, struct ieee80211_hw *hw,
- 	 * hardware at the new frequency, and then re-enable
- 	 * the relevant bits of the h/w.
- 	 */
--	ath9k_hw_set_interrupts(ah, 0);
-+	ath9k_hw_disable_interrupts(ah);
- 	ath_drain_all_txq(sc, false);
- 	stopped = ath_stoprecv(sc);
- 
-@@ -626,7 +626,7 @@ void ath9k_tasklet(unsigned long data)
- 			ath_gen_timer_isr(sc->sc_ah);
- 
- 	/* re-enable hardware interrupt */
--	ath9k_hw_set_interrupts(ah, ah->imask);
-+	ath9k_hw_enable_interrupts(ah);
- 	ath9k_ps_restore(sc);
- }
- 
-@@ -725,7 +725,7 @@ irqreturn_t ath_isr(int irq, void *dev)
- 		 * interrupt; otherwise it will continue to
- 		 * fire.
- 		 */
--		ath9k_hw_set_interrupts(ah, 0);
-+		ath9k_hw_disable_interrupts(ah);
- 		/*
- 		 * Let the hal handle the event. We assume
- 		 * it will clear whatever condition caused
-@@ -734,7 +734,7 @@ irqreturn_t ath_isr(int irq, void *dev)
- 		spin_lock(&common->cc_lock);
- 		ath9k_hw_proc_mib_event(ah);
- 		spin_unlock(&common->cc_lock);
--		ath9k_hw_set_interrupts(ah, ah->imask);
-+		ath9k_hw_enable_interrupts(ah);
- 	}
- 
- 	if (!(ah->caps.hw_caps & ATH9K_HW_CAP_AUTOSLEEP))
-@@ -751,8 +751,8 @@ chip_reset:
- 	ath_debug_stat_interrupt(sc, status);
- 
- 	if (sched) {
--		/* turn off every interrupt except SWBA */
--		ath9k_hw_set_interrupts(ah, (ah->imask & ATH9K_INT_SWBA));
-+		/* turn off every interrupt */
-+		ath9k_hw_disable_interrupts(ah);
- 		tasklet_schedule(&sc->intr_tq);
- 	}
- 
-@@ -907,7 +907,7 @@ void ath_radio_disable(struct ath_softc *sc, struct ieee80211_hw *hw)
- 	}
- 
- 	/* Disable interrupts */
--	ath9k_hw_set_interrupts(ah, 0);
-+	ath9k_hw_disable_interrupts(ah);
- 
- 	ath_drain_all_txq(sc, false);	/* clear pending tx frames */
- 	ath_stoprecv(sc);		/* turn off frame recv */
-@@ -944,7 +944,7 @@ int ath_reset(struct ath_softc *sc, bool retry_tx)
- 
- 	ieee80211_stop_queues(hw);
- 
--	ath9k_hw_set_interrupts(ah, 0);
-+	ath9k_hw_disable_interrupts(ah);
- 	ath_drain_all_txq(sc, retry_tx);
- 	ath_stoprecv(sc);
- 	ath_flushrecv(sc);
-@@ -1349,7 +1349,7 @@ static void ath9k_stop(struct ieee80211_hw *hw)
- 
- 	/* make sure h/w will not generate any interrupt
- 	 * before setting the invalid flag. */
--	ath9k_hw_set_interrupts(ah, 0);
-+	ath9k_hw_disable_interrupts(ah);
- 
- 	if (!(sc->sc_flags & SC_OP_INVALID)) {
- 		ath_drain_all_txq(sc, false);
+The wireless-testing tree has some lockdep warning related to a mouse driver
+that disables lockdep early, so it's possible there are lockdep issues waiting.
+
+I will let this test run for a while, but it already looks more stable
+than before, so:
+
+Tested-by:  Ben Greear <greearb@candelatech.com>
+
+Thanks,
+Ben
+
 -- 
-1.7.2.2
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
 
