@@ -1,54 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.perches.com ([173.55.12.10]:2770 "EHLO mail.perches.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754308Ab0JLPn0 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 12 Oct 2010 11:43:26 -0400
-Subject: Re: [PATCH] ath5k: fix build break from "ath5k: Print out opmode
- in debugfs"
-From: Joe Perches <joe@perches.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org,
-	Stephen Rothwell <sfr@canb.auug.org.au>,
-	Ben Greear <greearb@candelatech.com>,
-	linux-kernel@vger.kernel.org
-In-Reply-To: <1286895206-3030-1-git-send-email-linville@tuxdriver.com>
-References: <20101012163519.a88f2040.sfr@canb.auug.org.au>
-	 <1286895206-3030-1-git-send-email-linville@tuxdriver.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Tue, 12 Oct 2010 08:43:24 -0700
-Message-ID: <1286898204.1117.47.camel@Joe-Laptop>
-Mime-Version: 1.0
+Received: from mail-wy0-f174.google.com ([74.125.82.174]:55580 "EHLO
+	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754743Ab0JZGpW (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 26 Oct 2010 02:45:22 -0400
+Received: by wyf28 with SMTP id 28so4251766wyf.19
+        for <linux-wireless@vger.kernel.org>; Mon, 25 Oct 2010 23:45:20 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <201010261539.34710.br1@einfach.org>
+References: <AANLkTinqLcr7OpQZijX70aVE_P8gpUp=6RkozzVZH5Fm@mail.gmail.com> <201010261539.34710.br1@einfach.org>
+From: Jonathan Guerin <jonathan@guerin.id.au>
+Date: Tue, 26 Oct 2010 16:44:35 +1000
+Message-ID: <AANLkTimKpBCr1sJvZyvCzScacup8DmVxNKzWBmLFRCya@mail.gmail.com>
+Subject: Re: Access Channel Utilization
+To: Bruno Randolf <br1@einfach.org>
+Cc: ath5k-devel <ath5k-devel@lists.ath5k.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2010-10-12 at 10:53 -0400, John W. Linville wrote:
-> Without this and with CONFIG_ATH_DEBUG not set...
-> ERROR: ".ath_opmode_to_string" [drivers/net/wireless/ath/ath5k/ath5k.ko] undefined!
+On Tue, Oct 26, 2010 at 4:39 PM, Bruno Randolf <br1@einfach.org> wrote:
+> On Tue October 26 2010 15:24:42 Jonathan Guerin wrote:
+>> Hi,
+>>
+>> I'm trying to access the phy-layer stats that were recently added to
+>> cfg80211 and nl80211. I'm using a modified version of iw as per this
+>> patch:
+>> https://dev.openwrt.org/browser/trunk/package/iw/patches/110-survey_phy_sta
+>> ts.patch
+>>
+>> Unfortunately, the utilization stats don't appear to be getting sent
+>> back. I'm using ath5k as the underlying driver.
+>
+> are you missing this patch?
+>
+> "ath5k: Add channel time to survey data"
+> https://patchwork.kernel.org/patch/264831/
 
-Perhaps this instead?
+commit ebe5fd859224e706e0c027e1d6c3859684ae41fe
+Author: John W. Linville <linville@tuxdriver.com>
+Date:   Thu Oct 21 13:43:56 2010 -0400
 
-Signed-off-by: Joe Perches <joe@perches.com>
----
- drivers/net/wireless/ath/debug.h |    7 +++++++
- 1 files changed, 7 insertions(+), 0 deletions(-)
+    Revert "ath5k: Add channel time to survey data"
 
-diff --git a/drivers/net/wireless/ath/debug.h b/drivers/net/wireless/ath/debug.h
-index a3a5a62..5013045 100644
---- a/drivers/net/wireless/ath/debug.h
-+++ b/drivers/net/wireless/ath/debug.h
-@@ -78,6 +78,13 @@ ath_print(struct ath_common *common, int dbg_mask, const char *fmt, ...)
- #endif /* CONFIG_ATH_DEBUG */
- 
- /** Returns string describing opmode, or NULL if unknown mode. */
-+#ifdef CONFIG_ATH_DEBUG
- const char *ath_opmode_to_string(enum nl80211_iftype opmode);
-+#else
-+static inline const char *ath_opmode_to_string(enum nl80211_iftype opmode)
-+{
-+	return NULL;
-+}
-+#endif
- 
- #endif /* ATH_DEBUG_H */
+    This reverts commit 2f5155b69eca2a62a5defb15762019486a638a88.
 
+Ah - the patch was reverted. Any reason why this was done?
 
+>
+> bruno
+>
