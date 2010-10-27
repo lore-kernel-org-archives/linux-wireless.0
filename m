@@ -1,56 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:19771 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756468Ab0JDRza (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 4 Oct 2010 13:55:30 -0400
-Subject: Re: carl9170: wnda3100 only 54MB/s
-From: Dan Williams <dcbw@redhat.com>
-To: Christian Lamparter <chunkeey@googlemail.com>
-Cc: Saqeb Akhter <saqeb.akhter@gmail.com>,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <201010020519.29042.chunkeey@googlemail.com>
-References: <AANLkTimN3X_e4fZhUSoTs-GmQ9kmaJUrgnxAu8=W2dT_@mail.gmail.com>
-	 <201010020452.24306.chunkeey@googlemail.com>
-	 <AANLkTin2ycTicNim+ZiwNV3pWr7AQWPp432vJVLUL1k1@mail.gmail.com>
-	 <201010020519.29042.chunkeey@googlemail.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Mon, 04 Oct 2010 12:58:41 -0500
-Message-ID: <1286215121.2255.3.camel@dcbw.foobar.com>
-Mime-Version: 1.0
+Received: from mail-gw0-f46.google.com ([74.125.83.46]:34951 "EHLO
+	mail-gw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932400Ab0J0VVO convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 27 Oct 2010 17:21:14 -0400
+Received: by gwj21 with SMTP id 21so801494gwj.19
+        for <linux-wireless@vger.kernel.org>; Wed, 27 Oct 2010 14:21:13 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <AANLkTinbaAk-=xqhuJ4bJWoLw2cF+iBTEa0S6xfxw4UP@mail.gmail.com>
+References: <alpine.DEB.2.00.1010102245220.31264@bigbill> <4CB22F79.60806@openwrt.org>
+ <AANLkTinbaAk-=xqhuJ4bJWoLw2cF+iBTEa0S6xfxw4UP@mail.gmail.com>
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Date: Wed, 27 Oct 2010 14:20:52 -0700
+Message-ID: <AANLkTikk_LDfMD71teckmYxLDcjhrUoy_J0gR4HOirt8@mail.gmail.com>
+Subject: Re: [PATCH 3/3] ath9k: built-in rate control A-MPDU fix
+To: =?UTF-8?Q?Bj=C3=B6rn_Smedman?= <bjorn.smedman@venatech.se>
+Cc: Felix Fietkau <nbd@openwrt.org>, linville@tuxdriver.com,
+	johannes@sipsolutions.net, linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, 2010-10-02 at 05:19 +0200, Christian Lamparter wrote:
-> On Saturday 02 October 2010 04:56:35 Saqeb Akhter wrote:
-> > Nope I already noticed that 1.8.8.3 was available so to that step, I
-> > am getting frequent disconnects though, it might have to do with
-> > NetworkManager doing background scanning so going to try and it it to
-> > stop doing that.
-> Channel changes (especially with HT) are more expensive with AR9170
-> than AR9271 which features "fastcc" (fast channel change).
-> 
-> > The NetGear driver on windows seems to ignore the WMM requirement
-> > looks like.
-> You can actually peek into the Windows' driver logic.
-> The code is available under drivers/staging/otus/(80211core)
-> AFAIK, it only checks if the HT IEs are all present.
-> 
-> > Either way that's what the problem was, going to see if i
-> > can get this disconnect problem sorted out.
-> I thought "the new" NetworkManager is more intelligent and
-> doesn't schedule scans while the device is actively
-> transmitting/receiving data. Anyway, NetworkManager is
-> "just" a manager for wpa_supplicant and wpa_supp works
-> well enough.
+2010/10/10 Björn Smedman <bjorn.smedman@venatech.se>:
+> 2010/10/10 Felix Fietkau <nbd@openwrt.org>:
+>> On 2010-10-10 10:51 PM, Björn Smedman wrote:
+>>> --- a/drivers/net/wireless/ath/ath9k/rc.c
+>>> +++ b/drivers/net/wireless/ath/ath9k/rc.c
+>>> @@ -1375,6 +1375,12 @@ static void ath_tx_status(void *priv, struct ieee80211_supported_band *sband,
+>>>       if (tx_info->flags & IEEE80211_TX_STAT_TX_FILTERED)
+>>>               return;
+>>>
+>>> +     if (!(tx_info->flags & IEEE80211_TX_STAT_AMPDU)) {
+>>> +             tx_info->status.ampdu_ack_len =
+>>> +                     (tx_info->flags & IEEE80211_TX_STAT_ACK ? 1 : 0);
+>>> +             tx_info->status.ampdu_len = 1;
+>>> +     }
+>>> +
+>> Shouldn't mac80211 do this instead?
+>
+> I guess you could move this into mac80211 but that would change the
+> suggested contract: (1) the ampdu_len and ampdu_ack_len fields of the
+> tx status structure must be set correctly by the driver if the
+> IEEE80211_TX_STAT_AMPDU flag is set, and (2) the value of these fields
+> must not be relied upon by rate control if the flag is not set. I
+> personally think this is more clean than having rate control
+> algorithms trust the value of ampdu_len and ampdu_ack_len even when
+> the frame has clearly not been aggregated.
+>
+> If the interface was correct in principle I think I could be persuaded
+> with a simple renaming of the fields, but in this case the interface
+> is fundamentally broken (e.g. in the case of an aggregate in which all
+> frames failed to be ACKed and are to be software retried - no rate
+> control feedback is possible).
+>
+> For that reason I think we should push the temporary/ugly code out
+> into drivers and rate control plugins and not try to "tidy up" the
+> wrong solution in mac80211. But that's just my two cents of course.
 
-NM >= 0.8.1 will request periodic scans unless you've locked the device
-to a specific BSSID, because if you've done this you are indicating that
-you don't need roaming.  If you haven't specified a BSSID, then we still
-need periodic scans in case the device needs to roam between APs in a
-multi-AP system.
+what's the status of this patch
 
-Note that some drivers still appear to ignore BSSID locking.
-
-Dan
-
-
+ Luis
