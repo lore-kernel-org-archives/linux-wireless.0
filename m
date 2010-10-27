@@ -1,30 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:57480 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932333Ab0JDTBW (ORCPT
+Received: from 128-177-27-249.ip.openhosting.com ([128.177.27.249]:45179 "EHLO
+	jmalinen.user.openhosting.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1755376Ab0J0Kks (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 4 Oct 2010 15:01:22 -0400
-Subject: Re: Crash in agg-tx.c, with ath9k and lots of STA VIFs.
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Ben Greear <greearb@candelatech.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <4CAA2247.50402@candelatech.com>
-References: <4CAA2247.50402@candelatech.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Mon, 04 Oct 2010 21:01:19 +0200
-Message-ID: <1286218879.3620.55.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+	Wed, 27 Oct 2010 06:40:48 -0400
+Date: Wed, 27 Oct 2010 13:40:33 +0300
+From: Jouni Malinen <j@w1.fi>
+To: "John W. Linville" <linville@tuxdriver.com>,
+	Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH] mac80211: Fix scan_ies_len to include DS Params
+Message-ID: <20101027104033.GA8305@jm.kir.nu>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2010-10-04 at 11:51 -0700, Ben Greear wrote:
-> Just in case this seems familiar to anyone...
-> 
-> IP: [<f8ba74da>] ieee80211_stop_tx_ba_session+0x14/0x84 [mac80211]
+Commit 651b52254fc061f02d965524e71de4333a009a5a added DS Parameter Set
+information into Probe Request frames that are transmitted on 2.4 GHz
+band, but it failed to increment local->scan_ies_len to cover this new
+information. This variable needs to be updated to match the maximum IE
+data length so that the extra buffer need gets reduced from the driver
+limit.
 
-Do you have debug info that'd point to a code line?
+Signed-off-by: Jouni Malinen <j@w1.fi>
 
-I have never heard of this.
+---
+ net/mac80211/main.c |    5 +++--
+ 1 file changed, 3 insertions(+), 2 deletions(-)
 
-johannes
+--- uml.orig/net/mac80211/main.c	2010-10-27 12:56:39.000000000 +0300
++++ uml/net/mac80211/main.c	2010-10-27 12:58:32.000000000 +0300
+@@ -677,10 +677,11 @@ int ieee80211_register_hw(struct ieee802
+ 	/*
+ 	 * Calculate scan IE length -- we need this to alloc
+ 	 * memory and to subtract from the driver limit. It
+-	 * includes the (extended) supported rates and HT
++	 * includes the DS Params, (extended) supported rates, and HT
+ 	 * information -- SSID is the driver's responsibility.
+ 	 */
+-	local->scan_ies_len = 4 + max_bitrates; /* (ext) supp rates */
++	local->scan_ies_len = 4 + max_bitrates /* (ext) supp rates */ +
++		3 /* DS Params */;
+ 	if (supp_ht)
+ 		local->scan_ies_len += 2 + sizeof(struct ieee80211_ht_cap);
+ 
 
+-- 
+Jouni Malinen                                            PGP id EFC895FA
