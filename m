@@ -1,41 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:47307 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752587Ab0JJIQr (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 10 Oct 2010 04:16:47 -0400
-Subject: Re: phyX enumeration conflict
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Christian Lamparter <chunkeey@googlemail.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Ben Greear <greearb@candelatech.com>,
-	rainbow lum <rainbowlum@gmail.com>
-In-Reply-To: <1286698152.3547.4.camel@jlt3.sipsolutions.net>
-References: <201010082159.59262.chunkeey@googlemail.com>
-	 <1286698152.3547.4.camel@jlt3.sipsolutions.net>
-Content-Type: text/plain; charset="UTF-8"
-Date: Sun, 10 Oct 2010 10:16:44 +0200
-Message-ID: <1286698604.3547.7.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+Received: from server19320154104.serverpool.info ([193.201.54.104]:51447 "EHLO
+	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752584Ab0J0Syx (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 27 Oct 2010 14:54:53 -0400
+From: Hauke Mehrtens <hauke@hauke-m.de>
+To: lrodriguez@atheros.com
+Cc: linux-wireless@vger.kernel.org, mcgrof@infradead.org,
+	Hauke Mehrtens <hauke@hauke-m.de>
+Subject: [PATCH 1/2] compat-wireless: fix regression:
+Date: Wed, 27 Oct 2010 20:54:34 +0200
+Message-Id: <1288205675-25061-1-git-send-email-hauke@hauke-m.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, 2010-10-10 at 10:09 +0200, Johannes Berg wrote:
+The ifdef was accidentally removed in bb0324638d7301b8f87dfbee63b9633a8150cebc,
+add it again.
 
-> The commit failed to take into account that allocated wireless devices
-> (wiphys) are not added into the device list upon allocation, but only
-> when they are registered. Therefore, it opened up a race between
-> allocating and registering a name, so that if two processes allocate and
-> register concurrently ("alloc, alloc, register, register" rather than
-> "alloc, register, alloc, register") the code will attempt to use the
-> same name twice.
+Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+---
+ patches/04-netns.patch |   12 ++++++++++++
+ 1 files changed, 12 insertions(+), 0 deletions(-)
 
-And as for the actual feature, as far as I'm concerned the discussion
-ends here because we otherwise need to use something as complex as idr.
-A udev rule can't break the kernel and works just as well, even if
-you'll have to use a different namespace, i.e. not "phy%d" -- use say
-"wiphy%d" instead.
-
-johannes
+diff --git a/patches/04-netns.patch b/patches/04-netns.patch
+index 2e17bc2..fbd9164 100644
+--- a/patches/04-netns.patch
++++ b/patches/04-netns.patch
+@@ -4,6 +4,18 @@ for the other changes. It'd be nice to figure out a way to
+ bring thise here cleanly and seprately but they touch the same
+ files...
+ 
++--- a/net/wireless/nl80211.c
+++++ b/net/wireless/nl80211.c
++@@ -3904,7 +3904,9 @@ static int nl80211_wiphy_netns(struct sk
++ 	if (!net_eq(wiphy_net(&rdev->wiphy), net))
++ 		err = cfg80211_switch_netns(rdev, net);
++ 
+++#if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,24))
++ 	put_net(net);
+++#endif
++ 	return err;
++ }
++ 
+ --- a/net/wireless/core.c
+ +++ b/net/wireless/core.c
+ @@ -224,6 +224,7 @@ int cfg80211_dev_rename(struct cfg80211_
+-- 
+1.7.1
 
