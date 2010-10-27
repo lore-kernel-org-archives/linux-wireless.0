@@ -1,40 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mgw-sa02.nokia.com ([147.243.1.48]:62085 "EHLO
-	mgw-sa02.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751646Ab0JTNLv (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 20 Oct 2010 09:11:51 -0400
-Received: from nokia.com (localhost [127.0.0.1])
-	by mgw-sa02.nokia.com (Switch-3.4.3/Switch-3.4.3) with ESMTP id o9KDBnoT016324
-	for <linux-wireless@vger.kernel.org>; Wed, 20 Oct 2010 16:11:49 +0300
-Subject: Re: [PATCH] wl1271: exit ELP mode when setting enabled rates in tx
-From: Tuomas Katila <ext-tuomas.2.katila@nokia.com>
-To: "ext luciano.coelho@nokia.com" <luciano.coelho@nokia.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <1287577300-9240-1-git-send-email-luciano.coelho@nokia.com>
-References: <1287577300-9240-1-git-send-email-luciano.coelho@nokia.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Wed, 20 Oct 2010 16:06:02 +0300
-Message-ID: <1287579962.17497.330.camel@tukatila-desktop>
-Mime-Version: 1.0
+Received: from server19320154104.serverpool.info ([193.201.54.104]:51455 "EHLO
+	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752687Ab0J0Syx (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 27 Oct 2010 14:54:53 -0400
+From: Hauke Mehrtens <hauke@hauke-m.de>
+To: lrodriguez@atheros.com
+Cc: linux-wireless@vger.kernel.org, mcgrof@infradead.org,
+	Hauke Mehrtens <hauke@hauke-m.de>
+Subject: [PATCH 2/2] compat-wireless: revert workqueue patch
+Date: Wed, 27 Oct 2010 20:54:35 +0200
+Message-Id: <1288205675-25061-2-git-send-email-hauke@hauke-m.de>
+In-Reply-To: <1288205675-25061-1-git-send-email-hauke@hauke-m.de>
+References: <1288205675-25061-1-git-send-email-hauke@hauke-m.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2010-10-20 at 14:21 +0200, ext luciano.coelho@nokia.com wrote:
-> From: Luciano Coelho <luciano.coelho@nokia.com>
-> 
-> This bug was being triggered by a call to acx_rate_policies in tx_work
-> without calling ps_elp_wakeup first.  If we have full PSM enabled, this
-> happens rather often, immediately after association.
-> 
-> Reported-by: Tuomas Katila <ext-tuomas.2.katila@nokia.com>
-> Signed-off-by: Luciano Coelho <luciano.coelho@nokia.com>
-> ---
+This just reverts the workqueue patch commited in
+99b88a0ecbdbc6df03527292571b2b442965814a
+        mac80211: cancel restart_work explicitly instead of depending on flush_scheduled_work()
 
-Tested-by: Tuomas Katila <ext-tuomas.2.katila@nokia.com>
+Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+---
+ patches/36-workqueue.patch |   27 +++++++++++++++++++++++++++
+ 1 files changed, 27 insertions(+), 0 deletions(-)
+ create mode 100644 patches/36-workqueue.patch
 
-I couldn't reproduce the error after tens of tries.
-
--Tuomas
-
+diff --git a/patches/36-workqueue.patch b/patches/36-workqueue.patch
+new file mode 100644
+index 0000000..9bb2705
+--- /dev/null
++++ b/patches/36-workqueue.patch
+@@ -0,0 +1,27 @@
++Backport commit 99b88a0ecbdbc6df03527292571b2b442965814a
++
++--- a/net/mac80211/main.c
+++++ b/net/mac80211/main.c
++@@ -754,7 +754,11 @@ int ieee80211_register_hw(struct ieee802
++ 		hw->queues = IEEE80211_MAX_QUEUES;
++ 
++ 	local->workqueue =
+++#if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,37))
++ 		alloc_ordered_workqueue(wiphy_name(local->hw.wiphy), 0);
+++#else
+++		create_singlethread_workqueue(wiphy_name(local->hw.wiphy));
+++#endif
++ 	if (!local->workqueue) {
++ 		result = -ENOMEM;
++ 		goto fail_workqueue;
++@@ -968,6 +972,10 @@ static void __exit ieee80211_exit(void)
++ 	rc80211_minstrel_ht_exit();
++ 	rc80211_minstrel_exit();
++ 
+++#if (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,37))
+++	flush_scheduled_work();
+++#endif
+++
++ 	if (mesh_allocated)
++ 		ieee80211s_stop();
++ 
+-- 
+1.7.1
 
