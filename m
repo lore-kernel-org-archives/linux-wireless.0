@@ -1,58 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from senator.holtmann.net ([87.106.208.187]:50894 "EHLO
-	mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758571Ab0JFHJb (ORCPT
+Received: from mail-ww0-f42.google.com ([74.125.82.42]:33997 "EHLO
+	mail-ww0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756126Ab0J0MJy (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 6 Oct 2010 03:09:31 -0400
-Subject: Re: RFC: btusb firmware load help
-From: Marcel Holtmann <holtmann@linux.intel.com>
-To: Matthew Garrett <mjg59@srcf.ucam.org>
-Cc: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	Luis Rodriguez <Luis.Rodriguez@atheros.com>,
-	linux-bluetooth <linux-bluetooth@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Deepak Dhamdhere <Deepak.Dhamdhere@atheros.com>,
-	Sree Durbha <Sree.Durbha@atheros.com>
-In-Reply-To: <20101005215008.GA11117@srcf.ucam.org>
-References: <20100924230730.GB6566@tux> <1286266981.17473.33.camel@aeonflux>
-	 <20101005192814.GB11831@tux> <1286308731.2588.13.camel@aeonflux>
-	 <AANLkTimz7U52_qHaTutQDOFQde+GrWJRA0WpqY__FPgi@mail.gmail.com>
-	 <20101005215008.GA11117@srcf.ucam.org>
-Content-Type: text/plain; charset="UTF-8"
-Date: Wed, 06 Oct 2010 09:09:25 +0200
-Message-ID: <1286348965.6145.1.camel@aeonflux>
-Mime-Version: 1.0
+	Wed, 27 Oct 2010 08:09:54 -0400
+Received: by wwi18 with SMTP id 18so1468737wwi.1
+        for <linux-wireless@vger.kernel.org>; Wed, 27 Oct 2010 05:09:52 -0700 (PDT)
+From: Eliad Peller <eliad@wizery.com>
+To: <linux-wireless@vger.kernel.org>
+Cc: Luciano Coelho <luciano.coelho@nokia.com>
+Subject: [PATCH 2/2] wl1271: add recover testmode command
+Date: Wed, 27 Oct 2010 14:09:58 +0200
+Message-Id: <1288181398-2358-2-git-send-email-eliad@wizery.com>
+In-Reply-To: <1288181398-2358-1-git-send-email-eliad@wizery.com>
+References: <1288181398-2358-1-git-send-email-eliad@wizery.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Matthew,
+add RECOVER testmode command.
+this command triggers a recovery sequence (by enqueueing a recovery_work).
 
-> > Right -- so ath3k depends on some atheros USB device IDs, and its a
-> > stupid driver that just loads firmware. The problem with this new
-> > device is that it requires two phases. One to load some sort of
-> > firmware onto it to get it to read as an ath3k device, and then ath3k
-> > will load the right firmware to it. So the hardware device is already
-> > claiming a btusb vendor:device ID, we can't change that I believe. Of
-> > course for future devices we can, and we've addressed this and its
-> > been fixed.
-> 
-> If the device IDs can be changed when the firmware is loaded, then 
-> simply provide a driver that binds to the original IDs and uploads the 
-> firmware. The original IDs can be blacklisted from btusb so it won't 
-> interfere. The device will then boot the firmware, detach and reattach 
-> with new IDs - btusb will then bind. Repeat for every cold reset.
-> 
-> If you can't change the IDs from firmware then an alternative would be 
-> to blacklist it from btusb and provide a userspace application triggered 
-> by a udev rule. Have it load the firmware and then poke 
-> /sys/bus/usb/drivers/btusb/new_id .
+Signed-off-by: Eliad Peller <eliad@wizery.com>
+---
+ drivers/net/wireless/wl12xx/wl1271_testmode.c |   12 ++++++++++++
+ 1 files changed, 12 insertions(+), 0 deletions(-)
 
-exactly, we just blacklist the original USB IDs in the btusb driver. It
-already has a blacklist table and you just use BTUSB_IGNORE in there.
-
-Regards
-
-Marcel
-
+diff --git a/drivers/net/wireless/wl12xx/wl1271_testmode.c b/drivers/net/wireless/wl12xx/wl1271_testmode.c
+index a3aa843..55ec442 100644
+--- a/drivers/net/wireless/wl12xx/wl1271_testmode.c
++++ b/drivers/net/wireless/wl12xx/wl1271_testmode.c
+@@ -37,6 +37,7 @@ enum wl1271_tm_commands {
+ 	WL1271_TM_CMD_CONFIGURE,
+ 	WL1271_TM_CMD_NVS_PUSH,
+ 	WL1271_TM_CMD_SET_PLT_MODE,
++	WL1271_TM_CMD_RECOVER,
+ 
+ 	__WL1271_TM_CMD_AFTER_LAST
+ };
+@@ -248,6 +249,15 @@ static int wl1271_tm_cmd_set_plt_mode(struct wl1271 *wl, struct nlattr *tb[])
+ 	return ret;
+ }
+ 
++static int wl1271_tm_cmd_recover(struct wl1271 *wl, struct nlattr *tb[])
++{
++	wl1271_debug(DEBUG_TESTMODE, "testmode cmd recover");
++
++	ieee80211_queue_work(wl->hw, &wl->recovery_work);
++
++	return 0;
++}
++
+ int wl1271_tm_cmd(struct ieee80211_hw *hw, void *data, int len)
+ {
+ 	struct wl1271 *wl = hw->priv;
+@@ -272,6 +282,8 @@ int wl1271_tm_cmd(struct ieee80211_hw *hw, void *data, int len)
+ 		return wl1271_tm_cmd_nvs_push(wl, tb);
+ 	case WL1271_TM_CMD_SET_PLT_MODE:
+ 		return wl1271_tm_cmd_set_plt_mode(wl, tb);
++	case WL1271_TM_CMD_RECOVER:
++		return wl1271_tm_cmd_recover(wl, tb);
+ 	default:
+ 		return -EOPNOTSUPP;
+ 	}
+-- 
+1.7.0.4
 
