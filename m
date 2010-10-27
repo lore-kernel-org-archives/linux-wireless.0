@@ -1,38 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:32935 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753782Ab0JDN2z (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 4 Oct 2010 09:28:55 -0400
-Subject: Re: [Patch] iw: Implement set 4addr.
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Holger Schurig <holgerschurig@gmail.com>
-Cc: Jochen Friedrich <jochen@scram.de>, linux-wireless@vger.kernel.org
-In-Reply-To: <201010041502.14459.holgerschurig@gmail.com>
-References: <1286041239-19169-1-git-send-email-jochen@scram.de>
-	 <201010040915.58549.holgerschurig@gmail.com> <4CA997A3.7080409@scram.de>
-	 <201010041502.14459.holgerschurig@gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Mon, 04 Oct 2010 15:28:51 +0200
-Message-ID: <1286198931.3620.38.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+Received: from nbd.name ([88.198.39.176]:36019 "EHLO ds10.nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752577Ab0J0APJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 26 Oct 2010 20:15:09 -0400
+Message-ID: <4CC76F09.3010509@openwrt.org>
+Date: Wed, 27 Oct 2010 02:15:05 +0200
+From: Felix Fietkau <nbd@openwrt.org>
+MIME-Version: 1.0
+To: linux-wireless <linux-wireless@vger.kernel.org>
+CC: "John W. Linville" <linville@tuxdriver.com>,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>
+Subject: [PATCH] ath9k: fix tx aggregation flush on AR9003
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2010-10-04 at 15:02 +0200, Holger Schurig wrote:
-> > Yes, that's the idea behind this. I'm using an OpenWRT based WLAN router 
-> > and a Debian client with the configuration below.
-> 
-> Oh, I don't have much success so far.
-> 
-> My setup is like this:
-> 
->    Linux 2.6.35.4
->    compat-wireless-2010-10-02, using
->       ath5k from this
->    iw from git with your patch
+Completing aggregate frames can lead to new buffers being pushed into
+the tid queues due to software retransmission.
+When the tx queues are being drained, all pending aggregates must be
+completed before the tid queues get drained, otherwise buffers might be
+leaked.
 
-What's your AP? You need to enable the 4addr mode on the AP as well.
-
-johannes
-
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+Cc: stable@kernel.org
+---
+--- a/drivers/net/wireless/ath/ath9k/xmit.c
++++ b/drivers/net/wireless/ath/ath9k/xmit.c
+@@ -1089,15 +1089,6 @@ void ath_draintxq(struct ath_softc *sc, 
+ 	txq->axq_tx_inprogress = false;
+ 	spin_unlock_bh(&txq->axq_lock);
+ 
+-	/* flush any pending frames if aggregation is enabled */
+-	if (sc->sc_flags & SC_OP_TXAGGR) {
+-		if (!retry_tx) {
+-			spin_lock_bh(&txq->axq_lock);
+-			ath_txq_drain_pending_buffers(sc, txq);
+-			spin_unlock_bh(&txq->axq_lock);
+-		}
+-	}
+-
+ 	if (sc->sc_ah->caps.hw_caps & ATH9K_HW_CAP_EDMA) {
+ 		spin_lock_bh(&txq->axq_lock);
+ 		while (!list_empty(&txq->txq_fifo_pending)) {
+@@ -1118,6 +1109,15 @@ void ath_draintxq(struct ath_softc *sc, 
+ 		}
+ 		spin_unlock_bh(&txq->axq_lock);
+ 	}
++
++	/* flush any pending frames if aggregation is enabled */
++	if (sc->sc_flags & SC_OP_TXAGGR) {
++		if (!retry_tx) {
++			spin_lock_bh(&txq->axq_lock);
++			ath_txq_drain_pending_buffers(sc, txq);
++			spin_unlock_bh(&txq->axq_lock);
++		}
++	}
+ }
+ 
+ void ath_drain_all_txq(struct ath_softc *sc, bool retry_tx)
