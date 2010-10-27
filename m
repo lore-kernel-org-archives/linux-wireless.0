@@ -1,50 +1,107 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iw0-f174.google.com ([209.85.214.174]:42943 "EHLO
-	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750978Ab0JGGvu convert rfc822-to-8bit (ORCPT
+Received: from mail-bw0-f46.google.com ([209.85.214.46]:59651 "EHLO
+	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751881Ab0J0Rih (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 7 Oct 2010 02:51:50 -0400
-Received: by iwn9 with SMTP id 9so448105iwn.19
-        for <linux-wireless@vger.kernel.org>; Wed, 06 Oct 2010 23:51:49 -0700 (PDT)
+	Wed, 27 Oct 2010 13:38:37 -0400
+Received: by bwz11 with SMTP id 11so814942bwz.19
+        for <linux-wireless@vger.kernel.org>; Wed, 27 Oct 2010 10:38:35 -0700 (PDT)
+Message-ID: <4CC8639A.9070409@27m.se>
+Date: Wed, 27 Oct 2010 19:38:34 +0200
+From: Jones Desougi <jones.desougi@27m.se>
 MIME-Version: 1.0
-In-Reply-To: <201010071003.37599.br1@einfach.org>
-References: <20101005095510.3083.46174.stgit@tt-desk>
-	<20101005095526.3083.82322.stgit@tt-desk>
-	<AANLkTimpPuwDFUidUprBkLoJrpr=5tnwCcNcnHmfT_Z7@mail.gmail.com>
-	<201010071003.37599.br1@einfach.org>
-Date: Thu, 7 Oct 2010 08:51:49 +0200
-Message-ID: <AANLkTimf=f1DhP68=aHZ7WKVCN9RPBq7sh+46ExnYRVa@mail.gmail.com>
-Subject: Re: [PATCH 4/5] nl80211/mac80211: Add channel utilization to survey
-From: Helmut Schaa <helmut.schaa@googlemail.com>
-To: Bruno Randolf <br1@einfach.org>
-Cc: linville@tuxdriver.com, nbd@openwrt.org,
-	ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org,
-	adrian@freebsd.org, vasanth@atheros.com,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: linville@tuxdriver.com
+CC: linux-wireless@vger.kernel.org, ath5k-devel@lists.ath5k.org
+Subject: [PATCH] ath5k: Fix double free on hw attach error path
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Oct 7, 2010 at 3:03 AM, Bruno Randolf <br1@einfach.org> wrote:
-> On Wed October 6 2010 18:54:37 Helmut Schaa wrote:
->> On Tue, Oct 5, 2010 at 11:55 AM, Bruno Randolf <br1@einfach.org> wrote:
->> > This adds three new values to the survey results:
->> >
->> >  * BUSY - percentage of time the channel was busy
->> >  * BUSY_TX - percentage of time spent transmitting frames
->> >  * BUSY_RX - percentage of time spent receiving frames
->>
->> Does BUSY include BUSY_RX and BUSY_TX already? At least on
->> rt2800 devices we only have access to BUSY which already includes
->> BUSY_RX and TX.
->
-> yes, BUSY includes TX and RX.
->
->> And what about BUSY on the secondary channel in case of 40Mhz?
->
-> i have no information about that. luis?
+If ath5k_hw_attach fails it will free sc->ah (local variable ah) before
+returning. However, when it reports failure the caller (ath5k_pci_probe)
+will also free sc->ah. Let the caller handle the deallocation, it does
+so on further errors as well.
 
-At least we've got a register for that in rt2800 ;)
-That's why I'm asking.
+Signed-off-by: Jones Desougi <jones.desougi@27m.se>
+---
+The patch is generated from a week-old compat-wireless, but applies
+cleanly with -p1 to wireless-testing today.
 
-Helmut
+diff -r -u -p
+compat-wireless-2010-10-19.orig/drivers/net/wireless/ath/ath5k/attach.c
+compat-wireless-2010-10-19/drivers/net/wireless/ath/ath5k/attach.c
+---
+compat-wireless-2010-10-19.orig/drivers/net/wireless/ath/ath5k/attach.c
+2010-10-19 23:41:54.000000000 +0200
++++ compat-wireless-2010-10-19/drivers/net/wireless/ath/ath5k/attach.c
+2010-10-22 14:28:29.000000000 +0200
+@@ -139,12 +139,12 @@ int ath5k_hw_attach(struct ath5k_softc *
+ 	/* Fill the ath5k_hw struct with the needed functions */
+ 	ret = ath5k_hw_init_desc_functions(ah);
+ 	if (ret)
+-		goto err_free;
++		goto err;
+
+ 	/* Bring device out of sleep and reset its units */
+ 	ret = ath5k_hw_nic_wakeup(ah, 0, true);
+ 	if (ret)
+-		goto err_free;
++		goto err;
+
+ 	/* Get MAC, PHY and RADIO revisions */
+ 	ah->ah_mac_srev = srev;
+@@ -234,7 +234,7 @@ int ath5k_hw_attach(struct ath5k_softc *
+ 		} else {
+ 			ATH5K_ERR(sc, "Couldn't identify radio revision.\n");
+ 			ret = -ENODEV;
+-			goto err_free;
++			goto err;
+ 		}
+ 	}
+
+@@ -244,7 +244,7 @@ int ath5k_hw_attach(struct ath5k_softc *
+ 	(srev < AR5K_SREV_AR2425)) {
+ 		ATH5K_ERR(sc, "Device not yet supported.\n");
+ 		ret = -ENODEV;
+-		goto err_free;
++		goto err;
+ 	}
+
+ 	/*
+@@ -252,7 +252,7 @@ int ath5k_hw_attach(struct ath5k_softc *
+ 	 */
+ 	ret = ath5k_hw_post(ah);
+ 	if (ret)
+-		goto err_free;
++		goto err;
+
+ 	/* Enable pci core retry fix on Hainan (5213A) and later chips */
+ 	if (srev >= AR5K_SREV_AR5213A)
+@@ -265,7 +265,7 @@ int ath5k_hw_attach(struct ath5k_softc *
+ 	ret = ath5k_eeprom_init(ah);
+ 	if (ret) {
+ 		ATH5K_ERR(sc, "unable to init EEPROM\n");
+-		goto err_free;
++		goto err;
+ 	}
+
+ 	ee = &ah->ah_capabilities.cap_eeprom;
+@@ -307,7 +307,7 @@ int ath5k_hw_attach(struct ath5k_softc *
+ 	if (ret) {
+ 		ATH5K_ERR(sc, "unable to get device capabilities: 0x%04x\n",
+ 			sc->pdev->device);
+-		goto err_free;
++		goto err;
+ 	}
+
+ 	/* Crypto settings */
+@@ -341,8 +341,7 @@ int ath5k_hw_attach(struct ath5k_softc *
+ 	ath5k_hw_set_ledstate(ah, AR5K_LED_INIT);
+
+ 	return 0;
+-err_free:
+-	kfree(ah);
++err:
+ 	return ret;
+ }
+
