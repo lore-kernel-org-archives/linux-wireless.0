@@ -1,82 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.19.149.2]:52731 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751317Ab0JGRGp (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 7 Oct 2010 13:06:45 -0400
-Message-ID: <4CADFE1E.1070708@atheros.com>
-Date: Thu, 7 Oct 2010 22:36:38 +0530
-From: Bala Shanmugam <sbalashanmugam@atheros.com>
+Received: from mail30t.wh2.ocn.ne.jp ([125.206.180.136]:21592 "HELO
+	mail30t.wh2.ocn.ne.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S933636Ab0J0DHz (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 26 Oct 2010 23:07:55 -0400
+Received: from vs3008.wh2.ocn.ne.jp (125.206.180.171)
+	by mail30t.wh2.ocn.ne.jp (RS ver 1.0.95vs) with SMTP id 4-082748872
+	for <linux-wireless@vger.kernel.org>; Wed, 27 Oct 2010 12:07:53 +0900 (JST)
+Subject: [PATCH v2] iw: Add ibss join parameter for beacon interval
+To: johannes@sipsolutions.net, linville@tuxdriver.com
+From: Bruno Randolf <br1@einfach.org>
+Cc: linux-wireless@vger.kernel.org
+Date: Wed, 27 Oct 2010 12:07:56 +0900
+Message-ID: <20101027030756.29191.4213.stgit@localhost6.localdomain6>
 MIME-Version: 1.0
-To: Marcel Holtmann <holtmann@linux.intel.com>
-CC: Shanmugamkamatchi Balashanmugam
-	<Shanmugamkamatchi.Balashanmugam@Atheros.com>,
-	Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	linux-bluetooth <linux-bluetooth@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Deepak Dhamdhere <Deepak.Dhamdhere@Atheros.com>,
-	Sree Durbha <Sree.Durbha@Atheros.com>
-Subject: Re: RFC: btusb firmware load help
-References: <1286349552.6145.11.camel@aeonflux>	 <AANLkTimDvgFtoGLEjgWyYRrhQy6Num-rn_2WYO4Lf84b@mail.gmail.com>	 <1286380566.6145.42.camel@aeonflux> <20101006163816.GE7070@tux>	 <AANLkTik9w4_PdcEsbRHakLcxcD334_1Q8hGArxTXPCGF@mail.gmail.com>	 <20101006173949.GG7070@tux>	 <1286387660.3655.382.camel@jlt3.sipsolutions.net>	 <AANLkTikYRSQw-+Tcj4VS1qxi=OaeF9C5hjAMWVu+0M=v@mail.gmail.com>	 <AANLkTi=o4Mc72NrNoALBdS3YHeY7RMyyAJPsCy=uW3+F@mail.gmail.com>	 <1286389697.3655.401.camel@jlt3.sipsolutions.net>	 ,<20101006183340.GI7070@tux>	 <44EE5C37ADC36343B0625A05DD408C4850DAD2CA31@CHEXMB-01.global.atheros.com>	 <1286465072.6145.151.camel@aeonflux>  <4CADF6BF.6070305@atheros.com> <1286469741.6145.165.camel@aeonflux>
-In-Reply-To: <1286469741.6145.165.camel@aeonflux>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-  On 10/7/2010 10:12 PM, Marcel Holtmann wrote:
-> Hi Bala,
->
->>>> Thanks Johannes.  This would be better option to change PID in firmware
->>>> as blacklisting 3002 might create problems for 3011 chipsets.
->>>> Will try and let you people know.
->>> The misbehaving 3002 needs to be blacklisted in btusb.c anyway. However
->>> after loading the firmware to 3002 device, it should change its PID to
->>> something else.
->>>
->>> I am still trying to figure out if this is one stage firmware loading or
->>> a two stage firmware loading. This is all pretty unclear and nobody has
->>> answered this clearly so far.
->> eeprom based 3011 chips comes up with PID 3000 giving control to DFU
->> driver [ath3k].  ath3k downloads the
->> firmware changing PID to 3002.  Now btusb gets control.
->>
->> In sflash based devices to reduce windows suspend/resume time we had a
->> small firmware in flash which
->> enables the device to get detected as Generic Bluetooth USB device with
->> PID 3002.  So control reaches btusb when device is plugged in, leaving
->> no option for us to load the actual firmware.
->>
->> Solution would be to blacklist 3002 in btusb, enable ath3k to get
->> control for both the devices, download the firmware and change PID to
->> 3003 so that control with come to btusb.
-> so here is the thing that needs to be done.
->
-> a) Get a firmware for PID 3000 devices that change the firmware to some
-> other PID. Since 3003 is already in use as well, using 3004 or later is
-> better approach.
->
-> b) Blacklist PID 3002 in btusb.c.
->
-> c) Handle special firmware loading case for PID 3002 sflash devices. If
-> firmware is loaded changed to 3005 or other.
->
-> And as a general note, I prefer that the PID after loading firmware is
-> different if you don't happen to actually load the same firmware.
->
-> So please sort out your USB PID assignment for Bluetooth in general.
-> This seems to be a mess that is not thought through properly.
->
-> Regards
->
-> Marcel
->
->
-Thanks for your suggestion Marcel.
-Can't we have same PID[3004 or later] for both the devices after loading 
-the firmware by ath3k?
-We need two different firmware if we plan to have two different PIDs for 
-these two bluetooth devices.
+NL80211_ATTR_BEACON_INTERVAL already exists, we just have to use it.
 
-Regards,
-Bala.
+Signed-off-by: Bruno Randolf <br1@einfach.org>
+
+--
+v2: rename from 'bintval' to 'beacon-interval' and use correct units (TU)
+---
+ ibss.c |   17 ++++++++++++++---
+ 1 files changed, 14 insertions(+), 3 deletions(-)
+
+diff --git a/ibss.c b/ibss.c
+index e85ef1d..1d24ad2 100644
+--- a/ibss.c
++++ b/ibss.c
+@@ -26,6 +26,7 @@ static int join_ibss(struct nl80211_state *state,
+ 	int n_rates = 0;
+ 	char *value = NULL, *sptr = NULL;
+ 	float rate;
++	int bintval;
+ 
+ 	if (argc < 2)
+ 		return 1;
+@@ -57,6 +58,15 @@ static int join_ibss(struct nl80211_state *state,
+ 		}
+ 	}
+ 
++	if (argc > 1 && strcmp(argv[0], "beacon-interval") == 0) {
++		argv++;
++		argc--;
++		bintval = strtoul(argv[0], &end, 10);
++		NLA_PUT_U32(msg, NL80211_ATTR_BEACON_INTERVAL, bintval);
++		argv++;
++		argc--;
++	}
++
+ 	/* basic rates */
+ 	if (argc > 1 && strcmp(argv[0], "basic-rates") == 0) {
+ 		argv++;
+@@ -108,11 +118,12 @@ COMMAND(ibss, leave, NULL,
+ 	NL80211_CMD_LEAVE_IBSS, 0, CIB_NETDEV, leave_ibss,
+ 	"Leave the current IBSS cell.");
+ COMMAND(ibss, join,
+-	"<SSID> <freq in MHz> [fixed-freq] [<fixed bssid>] "
+-	"[basic-rates <rate in Mbps,rate2,...>] [key d:0:abcde]",
++	"<SSID> <freq in MHz> [fixed-freq] [<fixed bssid>] [beacon-interval "
++	"<TU>] [basic-rates <rate in Mbps,rate2,...>] [key d:0:abcde]",
+ 	NL80211_CMD_JOIN_IBSS, 0, CIB_NETDEV, join_ibss,
+ 	"Join the IBSS cell with the given SSID, if it doesn't exist create\n"
+ 	"it on the given frequency. When fixed frequency is requested, don't\n"
+ 	"join/create a cell on a different frequency. When a fixed BSSID is\n"
+ 	"requested use that BSSID and do not adopt another cell's BSSID even\n"
+-	"if it has higher TSF and the same SSID.");
++	"if it has higher TSF and the same SSID. If an IBSS is created, create\n"
++	"it with the specified basic-rates and beacon-interval (in TU).");
+
