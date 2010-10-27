@@ -1,67 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f46.google.com ([209.85.214.46]:35949 "EHLO
-	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1762167Ab0J2Xfl (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:53127 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932087Ab0J0UAR (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 29 Oct 2010 19:35:41 -0400
-Received: by bwz11 with SMTP id 11so3037820bwz.19
-        for <linux-wireless@vger.kernel.org>; Fri, 29 Oct 2010 16:35:40 -0700 (PDT)
-Message-Id: <9f86a3d821426da8b6e3d9b7b8ab7bd9f8e76d71.1288393804.git.chunkeey@googlemail.com>
-In-Reply-To: <cover.1288393804.git.chunkeey@googlemail.com>
-References: <cover.1288393804.git.chunkeey@googlemail.com>
-From: Christian Lamparter <chunkeey@googlemail.com>
-Date: Fri, 29 Oct 2010 23:11:23 +0200
-Subject: [PATCH 2/6] carl9170: use generic sign_extend32
-To: linux-wireless@vger.kernel.org
-Cc: linville@tuxdriver.com
+	Wed, 27 Oct 2010 16:00:17 -0400
+Date: Wed, 27 Oct 2010 15:54:27 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Daniel Drake <dsd@laptop.org>
+Cc: linux-wireless@vger.kernel.org, dcbw@redhat.com,
+	libertas-dev@lists.infradead.org, pgf@laptop.org
+Subject: Re: [PATCH v2] libertas: Fix sd8686 firmware reload
+Message-ID: <20101027195427.GB2410@tuxdriver.com>
+References: <20101027142052.9607A9D401B@zog.reactivated.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <20101027142052.9607A9D401B@zog.reactivated.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch replaces the handcrafted
-sign extension cruft with a generic
-bitop function.
+On Wed, Oct 27, 2010 at 03:20:52PM +0100, Daniel Drake wrote:
+> From: Paul Fox <pgf@laptop.org>
+> 
+> For the SD8686, we cannot rely on the scratch register to read the firmware
+> load status, because the same register is used for storing RX packet length.
+> Broaden the check to account for this.
+> 
+> The module can now be unloaded/reloaded successfully.
+> 
+> Based on the implementation from libertas_tf.
+> 
+> Signed-off-by: Daniel Drake <dsd@laptop.org>
 
-Signed-off-by: Christian Lamparter <chunkeey@googlemail.com>
----
- drivers/net/wireless/ath/carl9170/phy.c |   17 ++++-------------
- 1 files changed, 4 insertions(+), 13 deletions(-)
+  CC [M]  drivers/net/wireless/libertas/if_sdio.o
+drivers/net/wireless/libertas/if_sdio.c: In function ‘if_sdio_prog_firmware’:
+drivers/net/wireless/libertas/if_sdio.c:718: error: ‘IF_SDIO_MODEL_8686’ undeclared (first use in this function)
+drivers/net/wireless/libertas/if_sdio.c:718: error: (Each undeclared identifier is reported only once
+drivers/net/wireless/libertas/if_sdio.c:718: error: for each function it appears in.)
 
-diff --git a/drivers/net/wireless/ath/carl9170/phy.c b/drivers/net/wireless/ath/carl9170/phy.c
-index 89deca3..82bc81c 100644
---- a/drivers/net/wireless/ath/carl9170/phy.c
-+++ b/drivers/net/wireless/ath/carl9170/phy.c
-@@ -1554,15 +1554,6 @@ static int carl9170_set_power_cal(struct ar9170 *ar, u32 freq,
- 	return carl9170_regwrite_result();
- }
- 
--/* TODO: replace this with sign_extend32(noise, 8) */
--static int carl9170_calc_noise_dbm(u32 raw_noise)
--{
--	if (raw_noise & 0x100)
--		return ~0x1ff | raw_noise;
--	else
--		return raw_noise;
--}
--
- int carl9170_get_noisefloor(struct ar9170 *ar)
- {
- 	static const u32 phy_regs[] = {
-@@ -1578,11 +1569,11 @@ int carl9170_get_noisefloor(struct ar9170 *ar)
- 		return err;
- 
- 	for (i = 0; i < 2; i++) {
--		ar->noise[i] = carl9170_calc_noise_dbm(
--			(phy_res[i] >> 19) & 0x1ff);
-+		ar->noise[i] = sign_extend32(GET_VAL(
-+			AR9170_PHY_CCA_MIN_PWR, phy_res[i]), 8);
- 
--		ar->noise[i + 2] = carl9170_calc_noise_dbm(
--			(phy_res[i + 2] >> 23) & 0x1ff);
-+		ar->noise[i + 2] = sign_extend32(GET_VAL(
-+			AR9170_PHY_EXT_CCA_MIN_PWR, phy_res[i + 2]), 8);
- 	}
- 
- 	return 0;
+What tree has this definition?
+
+John
 -- 
-1.7.2.3
-
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
