@@ -1,67 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp-out.google.com ([216.239.44.51]:55877 "EHLO
-	smtp-out.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754949Ab0JNOYn convert rfc822-to-8bit (ORCPT
+Received: from fmmailgate02.web.de ([217.72.192.227]:41972 "EHLO
+	fmmailgate02.web.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757152Ab0J1TGO (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 14 Oct 2010 10:24:43 -0400
-Received: from wpaz37.hot.corp.google.com (wpaz37.hot.corp.google.com [172.24.198.101])
-	by smtp-out.google.com with ESMTP id o9EEOglb031871
-	for <linux-wireless@vger.kernel.org>; Thu, 14 Oct 2010 07:24:42 -0700
-Received: from gyh3 (gyh3.prod.google.com [10.243.50.195])
-	by wpaz37.hot.corp.google.com with ESMTP id o9EEOC0O012329
-	for <linux-wireless@vger.kernel.org>; Thu, 14 Oct 2010 07:24:41 -0700
-Received: by gyh3 with SMTP id 3so2285597gyh.35
-        for <linux-wireless@vger.kernel.org>; Thu, 14 Oct 2010 07:24:41 -0700 (PDT)
+	Thu, 28 Oct 2010 15:06:14 -0400
+Message-ID: <4CC9C9A4.2020802@web.de>
+Date: Thu, 28 Oct 2010 21:06:12 +0200
+From: Lee <lee-in-berlin@web.de>
 MIME-Version: 1.0
-In-Reply-To: <1287064265.4641.435.camel@jlt3.sipsolutions.net>
-References: <20101013224851.B8E5D20465@glenhelen.mtv.corp.google.com>
-	<1287064265.4641.435.camel@jlt3.sipsolutions.net>
-Date: Thu, 14 Oct 2010 07:24:40 -0700
-Message-ID: <AANLkTinq=B13gPd3obqAkBDQv4Ufz5Upp2UPVw9bpED2@mail.gmail.com>
-Subject: Re: [PATCH 3/6] Add a function for evaluating rate changes for
- possible notification
-From: Paul Stewart <pstew@google.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org
+To: Helmut Schaa <helmut.schaa@googlemail.com>
+CC: linux-wireless@vger.kernel.org
+Subject: Re: [regression]AP with hostapd 0.7.3 can't receive packets beyond
+ authentication (2.6.36, rt73usb)
+References: <4CC0D0F6.4080507@web.de> <201010260740.47692.helmut.schaa@googlemail.com> <4CC93148.7090308@web.de> <201010281023.26957.helmut.schaa@googlemail.com>
+In-Reply-To: <201010281023.26957.helmut.schaa@googlemail.com>
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Oct 14, 2010 at 6:51 AM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
-> On Wed, 2010-10-13 at 15:13 -0700, Paul Stewart wrote:
->> Called from a work proc, this examines the last transmit rate change
->> to see if it warrants an event transmission.
->
->> +        list_for_each_entry(sdata, &local->interfaces, list) {
->> +                if (!netif_running(sdata->dev) ||
->
-> ieee80211_sdata_running
->
->> +             if (!(ifmgd->flags & IEEE80211_STA_TX_RATE_CHANGED) ||
->> +                 bss_conf->cqm_bitrate_thold == 0)
->> +                     continue;
->
-> why would this work item even be running with a threshold of zero?
+On 28/10/10 10:23, Helmut Schaa wrote:
+> Am Donnerstag 28 Oktober 2010 schrieb Lee:
+>> On 26/10/10 07:40, Helmut Schaa wrote:
+>>> # tcpdump -i mon0 "ether src XX:XX:XX:XX:XX:XX"
+>>>
+>>> Do you see any frames from your specific client?
+>>
+>> Yes. I can see this:
+>> # tcpdump -i mon0 "ether host 00:1F:3B:79:41:6F"
+> [...]
+>> 10:10:03.013402 5.5 Mb/s 2462 MHz 11b -76dB signal antenna 1 [bit 14] Data IV: 14 Pad 20 KeyID 0
+>>
+>> However, on wlan0 I don't see anything beyond the EAPOL packets.
+>> Temporarily turning off WPA encryption let me successfully connect to my AP.
+> 
+> Aha, could you please try if loading rt73usb with nohwcrypt=1 helps?
+> 
+> Helmut
 
-This would be in the case where the userspace reset the threshold back
-to zero (no longer interested in bitrate change events) but a work
-task was already scheduled it's a small window and I can remove that
-conditional if it suits.
+(argh, brown paper bag)
 
-> Again, this won't compile without the next patch.
+I went through the compiled kernels again, and I've screwed up at the last 
+commit while bisecting (Sorry, Helmut!). The first bad kernel is a commit 
+later:
 
-I'll fix.
+# bad: [f1aa4c541e98afa8b770a75ccaa8504d0bff44a7] rt2x00: Write the BSSID to register when interface is added
 
-> However, I think all of this is really expensive. For many devices,
-> you'll effectively be triggering an evaluation of the bitrate for every
-> packet. This will work well with minstrel, since it properly uses and
-> advertises the "best throughput" rate, but not necessarily with other
-> algorithms.
-
-I could throttle-down the execution rate of this work proc to a
-minimum periodicity, at the expense of timely information.  Is this
-along the lines of what you'd like done?
-
---
-Paul
+On the good side, I tested 2.6.36 with nohwcrypt=1, and it works. Yay!
