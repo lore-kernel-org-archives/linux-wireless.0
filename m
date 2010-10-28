@@ -1,54 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:58377 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759497Ab0JFRyW (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 6 Oct 2010 13:54:22 -0400
-Subject: Re: RFC: btusb firmware load help
-From: Johannes Berg <johannes@sipsolutions.net>
-To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Cc: Marcel Holtmann <holtmann@linux.intel.com>,
-	Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
-	linux-bluetooth <linux-bluetooth@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Deepak Dhamdhere <Deepak.Dhamdhere@Atheros.com>,
-	Sree Durbha <Sree.Durbha@Atheros.com>
-In-Reply-To: <20101006173949.GG7070@tux>
-References: <20100924230730.GB6566@tux> <1286266981.17473.33.camel@aeonflux>
-	 <20101005192814.GB11831@tux> <1286308731.2588.13.camel@aeonflux>
-	 <AANLkTimz7U52_qHaTutQDOFQde+GrWJRA0WpqY__FPgi@mail.gmail.com>
-	 <1286349552.6145.11.camel@aeonflux>
-	 <AANLkTimDvgFtoGLEjgWyYRrhQy6Num-rn_2WYO4Lf84b@mail.gmail.com>
-	 <1286380566.6145.42.camel@aeonflux> <20101006163816.GE7070@tux>
-	 <AANLkTik9w4_PdcEsbRHakLcxcD334_1Q8hGArxTXPCGF@mail.gmail.com>
-	 <20101006173949.GG7070@tux>
-Content-Type: text/plain; charset="UTF-8"
-Date: Wed, 06 Oct 2010 19:54:20 +0200
-Message-ID: <1286387660.3655.382.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+Received: from slowhand.arndnet.de ([88.198.19.76]:38827 "EHLO mail.unitix.de"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1754253Ab0J1PIz (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 28 Oct 2010 11:08:55 -0400
+Message-ID: <4CC99206.5090105@arndnet.de>
+Date: Thu, 28 Oct 2010 17:08:54 +0200
+From: Arnd Hannemann <arnd@arndnet.de>
+MIME-Version: 1.0
+To: Larry Finger <Larry.Finger@lwfinger.net>
+CC: "linux-mmc@vger.kernel.org" <linux-mmc@vger.kernel.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: b43 sdio: WARNING: at drivers/mmc/core/core.c:237 mmc_wait_for_cmd
+References: <4CC874F4.5050908@arndnet.de> <4CC8CAAE.3040100@lwfinger.net> <4CC98892.7080000@arndnet.de> <4CC98D85.20703@lwfinger.net>
+In-Reply-To: <4CC98D85.20703@lwfinger.net>
+Content-Type: text/plain; charset=ISO-8859-15
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2010-10-06 at 10:39 -0700, Luis R. Rodriguez wrote:
+Hi,
 
+Am 28.10.2010 16:49, schrieb Larry Finger:
+> On 10/28/2010 09:28 AM, Arnd Hannemann wrote:
+>> Hi,
+> \> [ 1364.620044] b43-phy1 debug: Removing Interface type 2
+>> [ 1364.621812] b43-phy1 debug: Wireless interface stopped
+>> [ 1372.440297] b43-sdio: before ssb_bus_unregister, claimed is 0
+>> [ 1372.440345] b43-sdio: before sdio_disable_func, claimed is 0
+>> [ 1372.440351] ------------[ cut here ]------------
+>> [ 1372.440367] WARNING: at drivers/mmc/core/core.c:237 mmc_wait_for_cmd+0x88/0x90()
+> 
+> Please try the patch below. It claims the device before the sdio_disable_func(()
+> call and releases it afterwords.
+ 
+> 
+> Index: wireless-testing/drivers/net/wireless/b43/sdio.c
+> ===================================================================
+> --- wireless-testing.orig/drivers/net/wireless/b43/sdio.c
+> +++ wireless-testing/drivers/net/wireless/b43/sdio.c
+> @@ -175,7 +175,9 @@ static void b43_sdio_remove(struct sdio_
+>  	struct b43_sdio *sdio = sdio_get_drvdata(func);
+> 
+>  	ssb_bus_unregister(&sdio->ssb);
+> +	sdio_claim_host(func);
+>  	sdio_disable_func(func);
+> +	sdio_release_host(func);
+>  	kfree(sdio);
+>  	sdio_set_drvdata(func, NULL);
+>  }
+> 
 
-> > With sflash based AR3011 hardware, when we connect the device to USB
-> > port it gets detected as a Bluetooth device because of firmware in
-> > Flash (VID=0x0CF3, PID=0x3002). This triggers the Bluetooth sub
-> > system driver (btusb.ko) directly in the host instead of ath3k
-> > DFU driver. Therefore, there is no firmware downloaded in to the
-> > RAM to bring up Bluetooth at this point. This is the problem
-> > we're trying to "fix".
+Thanks, that fixes the warning.
 
-So the easiest fix for this would be to
- a) ignore 0x0cf3,0x3002 in btusb
- b) add it to ath3k firmware loading
- c) change the ath3k firmware to load with 0x0cf3,0x3003 (or whatever
-    else you want, as long as it's not 0x3000 and not 0x3002)
-
-Then the ignore in btusb won't affect ath3k after that new firmware was
-loaded.
-
-johannes
-
+Regards
+Arnd
