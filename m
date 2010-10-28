@@ -1,41 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f46.google.com ([209.85.215.46]:49151 "EHLO
-	mail-ew0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753236Ab0JKJHz (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 11 Oct 2010 05:07:55 -0400
-From: Andy Shevchenko <andy.shevchenko@gmail.com>
-To: linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
-	linux-kernel@vger.kernel.org
-Cc: Nohee Ko <noheek@broadcom.com>,
-	Greg Kroah-Hartman <gregkh@suse.de>,
-	Andy Shevchenko <andy.shevchenko@gmail.com>
-Subject: [PATCHv2 1/2] staging: brcm80211: clean up custom ctype library again
-Date: Mon, 11 Oct 2010 12:07:34 +0300
-Message-Id: <9134fce655e27d36628ab508127a6d3f2d8fbfb8.1286787946.git.andy.shevchenko@gmail.com>
+Received: from mailout-de.gmx.net ([213.165.64.22]:37323 "HELO mail.gmx.net"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with SMTP
+	id S1755694Ab0J1VsW (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 28 Oct 2010 17:48:22 -0400
+From: "Stefan Lippers-Hollmann" <s.L-H@gmx.de>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Subject: Re: Realtek rtl8188 support?
+Date: Thu, 28 Oct 2010 23:48:13 +0200
+Cc: wireless <linux-wireless@vger.kernel.org>
+References: <c785bba31003060945j22be2e78pfeaa1bcd39fcba2c@mail.gmail.com> <201009212120.07914.s.L-H@gmx.de> <4CC9C067.9040105@lwfinger.net>
+In-Reply-To: <4CC9C067.9040105@lwfinger.net>
+MIME-Version: 1.0
+Content-Type: Text/Plain;
+  charset="utf-8"
+Message-Id: <201010282348.16673.s.L-H@gmx.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The similar cleanup was done before for softmac implementation.  But the
-fullmac driver brings this back. Remove it again.
+Hi
 
-Signed-off-by: Andy Shevchenko <andy.shevchenko@gmail.com>
----
- drivers/staging/brcm80211/brcmfmac/wl_iw.h |    1 -
- 1 files changed, 0 insertions(+), 1 deletions(-)
+On Thursday 28 October 2010, Larry Finger wrote:
+> On 09/21/2010 02:20 PM, Stefan Lippers-Hollmann wrote:
+[...]
+> As part of the inclusion of r8712u in staging, Greg KH asked for a TODO item to
+> convert the firmware to an external binary. I see this as a 2 step process: (1)
+> get the firmware binary accepted into linux-firmware, and (2) make it work with
+> the external loading mechanism. Step 1 has been completed with the following
+> commit message:
+> 
+> commit c500ee5be41b7954ba9630d7e5d409a24efaf249
+> Author: Larry Finger <Larry.Finger@lwfinger.net>
+> Date:   Wed Oct 20 11:49:59 2010 -0500
+> 
+>     Convert firmware for Realtek RTL8192SU (rtl8712u) from embedded to
+>     an external file.
+> 
+>     Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+> 
+> The code for step 2 is running locally. I'm waiting for the new version of
+> linux-firmware to propagate through the distros before I submit the patch. If
 
-diff --git a/drivers/staging/brcm80211/brcmfmac/wl_iw.h b/drivers/staging/brcm80211/brcmfmac/wl_iw.h
-index 1488657..d15abc0 100644
---- a/drivers/staging/brcm80211/brcmfmac/wl_iw.h
-+++ b/drivers/staging/brcm80211/brcmfmac/wl_iw.h
-@@ -58,7 +58,6 @@ typedef struct wl_iw_extra_params {
- #define	WL_IW_RSSI_EXCELLENT	-57
- #define	WL_IW_RSSI_INVALID	 0
- #define MAX_WX_STRING 80
--#define isprint(c) bcm_isprint(c)
- #define WL_IW_SET_ACTIVE_SCAN	(SIOCIWFIRSTPRIV+1)
- #define WL_IW_GET_RSSI			(SIOCIWFIRSTPRIV+3)
- #define WL_IW_SET_PASSIVE_SCAN	(SIOCIWFIRSTPRIV+5)
--- 
-1.7.2.3
+I assume you refer to rtl8712u.bin in your r8712u_firmware tree:
+http://git.kernel.org/?p=linux/kernel/git/lwfinger/r8712u_firmware.git;a=blob_plain;f=rtl8712u.bin
+200fd952db3cc9259b1fd05e3e51966f  *rtl8712u.bin
 
+> you want to grab the new firmware package, I can send you a copy of the patch.
+
+I'd very much like to test the patch(2) needed for rtl8712, if possible.
+
+Regards
+	Stefan Lippers-Hollmann
