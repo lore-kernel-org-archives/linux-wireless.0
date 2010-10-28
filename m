@@ -1,87 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([192.100.105.134]:49757 "EHLO
-	mgw-mx09.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751501Ab0JANC6 (ORCPT
+Received: from cpsmtpb-ews04.kpnxchange.com ([213.75.39.7]:3443 "EHLO
+	cpsmtpb-ews04.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S934192Ab0J1UkP (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 1 Oct 2010 09:02:58 -0400
-From: juuso.oikarinen@nokia.com
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH] mac80211: Add validity check for beacon_crc value
-Date: Fri,  1 Oct 2010 16:02:31 +0300
-Message-Id: <1285938151-6306-1-git-send-email-juuso.oikarinen@nokia.com>
+	Thu, 28 Oct 2010 16:40:15 -0400
+Message-ID: <4CC9DFAD.7050801@gmail.com>
+Date: Thu, 28 Oct 2010 22:40:13 +0200
+From: Gertjan van Wingerde <gwingerde@gmail.com>
+MIME-Version: 1.0
+To: Ivo Van Doorn <ivdoorn@gmail.com>
+CC: Lee <lee-in-berlin@web.de>,
+	Helmut Schaa <helmut.schaa@googlemail.com>,
+	linux-wireless@vger.kernel.org
+Subject: Re: [regression]AP with hostapd 0.7.3 can't receive packets beyond
+ authentication (2.6.36, rt73usb)
+References: <4CC0D0F6.4080507@web.de>	<201010260740.47692.helmut.schaa@googlemail.com>	<4CC93148.7090308@web.de>	<201010281023.26957.helmut.schaa@googlemail.com>	<4CC9C9A4.2020802@web.de>	<4CC9D50F.5070403@gmail.com> <AANLkTi=0ZAGUvDRHrw1cS9O8-7ihdKnHTXRKsy5ED5fo@mail.gmail.com>
+In-Reply-To: <AANLkTi=0ZAGUvDRHrw1cS9O8-7ihdKnHTXRKsy5ED5fo@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Juuso Oikarinen <juuso.oikarinen@nokia.com>
+On 10/28/10 22:36, Ivo Van Doorn wrote:
+> Hi.
+> 
+> On Thu, Oct 28, 2010 at 9:54 PM, Gertjan van Wingerde
+> <gwingerde@gmail.com> wrote:
+>> On 10/28/10 21:06, Lee wrote:
+>>> On 28/10/10 10:23, Helmut Schaa wrote:
+>>>> Am Donnerstag 28 Oktober 2010 schrieb Lee:
+>>>>> On 26/10/10 07:40, Helmut Schaa wrote:
+>>>>>> # tcpdump -i mon0 "ether src XX:XX:XX:XX:XX:XX"
+>>>>>>
+>>>>>> Do you see any frames from your specific client?
+>>>>>
+>>>>> Yes. I can see this:
+>>>>> # tcpdump -i mon0 "ether host 00:1F:3B:79:41:6F"
+>>>> [...]
+>>>>> 10:10:03.013402 5.5 Mb/s 2462 MHz 11b -76dB signal antenna 1 [bit 14] Data IV: 14 Pad 20 KeyID 0
+>>>>>
+>>>>> However, on wlan0 I don't see anything beyond the EAPOL packets.
+>>>>> Temporarily turning off WPA encryption let me successfully connect to my AP.
+>>>>
+>>>> Aha, could you please try if loading rt73usb with nohwcrypt=1 helps?
+>>>>
+>>>> Helmut
+>>>
+>>> (argh, brown paper bag)
+>>>
+>>> I went through the compiled kernels again, and I've screwed up at the last
+>>> commit while bisecting (Sorry, Helmut!). The first bad kernel is a commit
+>>> later:
+>>>
+>>> # bad: [f1aa4c541e98afa8b770a75ccaa8504d0bff44a7] rt2x00: Write the BSSID to register when interface is added
+>>>
+>>> On the good side, I tested 2.6.36 with nohwcrypt=1, and it works. Yay!
+>>
+>> Hmm, the patch itself that seems to cause the badness doesn't look bad.
+>> However, closer inspection shows that the intf->bssid field may be initialized incorrectly.
+>>
+>> I may be a long shot, but can you check if the attached patch helps?
+> 
+> Good catch, but with this invalid copy, I would also expected random segfaults.
+> But even if this doesn't fix the hostapd issue, I would be a valid
+> bugfix anyway. ;)
+> 
 
-On association to an AP, after receiving beacons, the beacon_crc value is set.
-The beacon_crc value is not reset in disassociation, but the BSS data may be
-expired at a later point. When associating again, it's possible that a
-beacon for the AP is not received, resulting in the beacon_ies to remain NULL.
+Yeah, that's why I called it a long shot. I wouldn't expect segfaults, BTW, but more strange behavior.
+However, you never know, maybe this fixes the issue.
 
-After association, further beacons will not update the beacon data, as the
-crc value of the beacon has not changed, and the beacon_crc still holds a
-value matching the beacon. The beacon_ies will remain forever null.
+I found more occurrences of the same pointer mistake, so I will prepare a single patch fixing all of them
+and submit it later.
 
-One of the results of this is that WLAN power save cannot be entered, the STA
-will remain foreven in active mode.
-
-Fix this by adding a validation flag for the beacon_crc, which is cleared on
-association.
-
-Signed-off-by: Juuso Oikarinen <juuso.oikarinen@nokia.com>
 ---
- net/mac80211/ieee80211_i.h |    1 +
- net/mac80211/mlme.c        |    7 +++++--
- 2 files changed, 6 insertions(+), 2 deletions(-)
-
-diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
-index 945fbf2..c7aaf03 100644
---- a/net/mac80211/ieee80211_i.h
-+++ b/net/mac80211/ieee80211_i.h
-@@ -369,6 +369,7 @@ struct ieee80211_if_managed {
- 
- 	unsigned int flags;
- 
-+	bool beacon_crc_valid;
- 	u32 beacon_crc;
- 
- 	enum {
-diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index 77913a1..c37086a 100644
---- a/net/mac80211/mlme.c
-+++ b/net/mac80211/mlme.c
-@@ -1639,7 +1639,7 @@ static void ieee80211_rx_mgmt_beacon(struct ieee80211_sub_if_data *sdata,
- 		directed_tim = ieee80211_check_tim(elems.tim, elems.tim_len,
- 						   ifmgd->aid);
- 
--	if (ncrc != ifmgd->beacon_crc) {
-+	if (ncrc != ifmgd->beacon_crc || !ifmgd->beacon_crc_valid) {
- 		ieee80211_rx_bss_info(sdata, mgmt, len, rx_status, &elems,
- 				      true);
- 
-@@ -1670,9 +1670,10 @@ static void ieee80211_rx_mgmt_beacon(struct ieee80211_sub_if_data *sdata,
- 		}
- 	}
- 
--	if (ncrc == ifmgd->beacon_crc)
-+	if (ncrc == ifmgd->beacon_crc && ifmgd->beacon_crc_valid)
- 		return;
- 	ifmgd->beacon_crc = ncrc;
-+	ifmgd->beacon_crc_valid = true;
- 
- 	if (elems.erp_info && elems.erp_info_len >= 1) {
- 		erp_valid = true;
-@@ -2214,6 +2215,8 @@ int ieee80211_mgd_assoc(struct ieee80211_sub_if_data *sdata,
- 	ifmgd->flags &= ~IEEE80211_STA_DISABLE_11N;
- 	ifmgd->flags &= ~IEEE80211_STA_NULLFUNC_ACKED;
- 
-+	ifmgd->beacon_crc_valid = false;
-+
- 	for (i = 0; i < req->crypto.n_ciphers_pairwise; i++)
- 		if (req->crypto.ciphers_pairwise[i] == WLAN_CIPHER_SUITE_WEP40 ||
- 		    req->crypto.ciphers_pairwise[i] == WLAN_CIPHER_SUITE_TKIP ||
--- 
-1.6.3.3
-
+Gertjan.
