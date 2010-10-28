@@ -1,59 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:53473 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759356Ab0JFTpa (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 6 Oct 2010 15:45:30 -0400
-Subject: RE: [PATCH v2 03/03] wl1271: 11n Support, functionality and
- configuration ability
-From: Johannes Berg <johannes@sipsolutions.net>
-To: "Levi, Shahar" <shahar_levi@ti.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Luciano Coelho <luciano.coelho@nokia.com>
-In-Reply-To: <AC090B9732AB2B4DB7FF476E907FE660011378562B@dnce02.ent.ti.com>
-References: <1286388491-28752-1-git-send-email-shahar_levi@ti.com>
-	 <1286388491-28752-5-git-send-email-shahar_levi@ti.com>
-	 <1286389287.3655.398.camel@jlt3.sipsolutions.net>
-	 <AC090B9732AB2B4DB7FF476E907FE660011378562B@dnce02.ent.ti.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Wed, 06 Oct 2010 21:45:30 +0200
-Message-ID: <1286394330.3655.429.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+Received: from void.printf.net ([89.145.121.20]:56926 "EHLO void.printf.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752633Ab0J1F5S (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 28 Oct 2010 01:57:18 -0400
+Date: Thu, 28 Oct 2010 06:57:04 +0100
+From: Chris Ball <cjb@laptop.org>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: Daniel Drake <dsd@laptop.org>, dcbw@redhat.com, pgf@laptop.org,
+	linux-wireless@vger.kernel.org, libertas-dev@lists.infradead.org
+Subject: Re: [PATCH v2] libertas: Fix sd8686 firmware reload
+Message-ID: <20101028055704.GA16352@void.printf.net>
+References: <20101027142052.9607A9D401B@zog.reactivated.net> <20101027195427.GB2410@tuxdriver.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <20101027195427.GB2410@tuxdriver.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2010-10-06 at 21:38 +0200, Levi, Shahar wrote:
+Hi,
 
-> > >  	/* peek into the rates configured in the STA entry */
-> > >  	spin_lock_irqsave(&wl->wl_lock, flags);
-> > > -	if (sta && sta->supp_rates[conf->channel->band] != wl->sta_rate_set) {
-> > > +	if (sta &&
-> > > +	    (sta->supp_rates[conf->channel->band] !=
-> > > +	    (wl->sta_rate_set & HW_BG_RATES_MASK))) {
-> > >  		wl->sta_rate_set = sta->supp_rates[conf->channel->band];
-> > >  		set_bit(WL1271_FLAG_STA_RATES_CHANGED, &wl->flags);
-> > >  	}
-> > 
-> > ???
-> > 
-> > How can non-BG rates ever show up there? Is this really an 11a change?
-> > 
-> > johannes
+On Wed, Oct 27, 2010 at 03:54:27PM -0400, John W. Linville wrote:
+>   CC [M]  drivers/net/wireless/libertas/if_sdio.o
+> drivers/net/wireless/libertas/if_sdio.c: In function ‘if_sdio_prog_firmware’:
+> drivers/net/wireless/libertas/if_sdio.c:718: error: ‘IF_SDIO_MODEL_8686’ undeclared (first use in this function)
+> drivers/net/wireless/libertas/if_sdio.c:718: error: (Each undeclared identifier is reported only once
+> drivers/net/wireless/libertas/if_sdio.c:718: error: for each function it appears in.)
 > 
-> 
-> Thanks for the review.
-> Non BG rates set in the next if:
-> +	if (sta &&
-> +	    sta->ht_cap.ht_supported &&
-> +	    ((wl->sta_rate_set >> HW_HT_RATES_OFFSET) !=
-> +	      sta->ht_cap.mcs.rx_mask[0])) {
-> +		wl->sta_rate_set |=
-> +		(sta->ht_cap.mcs.rx_mask[0] << HW_HT_RATES_OFFSET);
-> +		set_bit(WL1271_FLAG_STA_RATES_CHANGED, &wl->flags);
-> sta_rate_set bits are: bits0-15 BG, bits 16-23 MCS.
-> Did you meant 11n change?
+> What tree has this definition?
 
-Never mind, I misread the patch.
+Odd, it's been upstream in if_sdio.h since 2.6.31; mainline commit e70a5ac5.
 
-johannes
-
+- Chris.
+-- 
+Chris Ball   <cjb@laptop.org>   <http://printf.net/>
+One Laptop Per Child
