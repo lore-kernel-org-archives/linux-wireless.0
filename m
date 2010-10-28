@@ -1,76 +1,99 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:35419 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753311Ab0JAUdz (ORCPT
+Received: from mail-wy0-f174.google.com ([74.125.82.174]:58524 "EHLO
+	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751496Ab0J1Tqd (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 1 Oct 2010 16:33:55 -0400
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>, stable@kernel.org,
-	Jouni Malinen <j@w1.fi>, Paul Stewart <pstew@google.com>,
-	Amod Bodas <amod.bodas@atheros.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Vasanthakumar Thiagarajan <vasanth@atheros.com>
-Subject: [PATCH v2 1/3] mac80211: fix channel assumption for association done work
-Date: Fri,  1 Oct 2010 16:33:51 -0400
-Message-Id: <1285965233-11097-2-git-send-email-lrodriguez@atheros.com>
-In-Reply-To: <1285965233-11097-1-git-send-email-lrodriguez@atheros.com>
-References: <1285965233-11097-1-git-send-email-lrodriguez@atheros.com>
+	Thu, 28 Oct 2010 15:46:33 -0400
+Received: by wyf28 with SMTP id 28so2320750wyf.19
+        for <linux-wireless@vger.kernel.org>; Thu, 28 Oct 2010 12:46:32 -0700 (PDT)
+From: Eliad Peller <eliad@wizery.com>
+To: Luciano Coelho <luciano.coelho@nokia.com>
+Cc: <linux-wireless@vger.kernel.org>
+Subject: [PATCH v2] wl1271: set wl->vif only if add_interface succeeded.
+Date: Thu, 28 Oct 2010 21:46:43 +0200
+Message-Id: <1288295203-12373-1-git-send-email-eliad@wizery.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Be consistent and use the wk->chan instead of the
-local->hw.conf.channel for the association done work.
-This prevents any possible races against channel changes
-while we run this work.
+set wl->vif to the newly created interface only after the firmware booted
+successfully. on the way - make the function flow more clear.
 
-In the case that the race did happen we would be initializing
-the bit rates for the new AP under the assumption of a wrong
-channel and in the worst case, wrong band. This could lead
-to trying to assuming we could use CCK frames on 5 GHz, for
-example.
-
-This patch has a fix for kernels >= v2.6.34
-
-Cc: stable@kernel.org
-Cc: Jouni Malinen <j@w1.fi>
-Cc: Paul Stewart <pstew@google.com>
-Cc: Amod Bodas <amod.bodas@atheros.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>
-Cc: Vasanthakumar Thiagarajan <vasanth@atheros.com>
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+Signed-off-by: Eliad Peller <eliad@wizery.com>
 ---
- net/mac80211/mlme.c |    6 +++---
- 1 files changed, 3 insertions(+), 3 deletions(-)
+v1->v2:
+	use wl1271_debug instead of wl1271_error
 
-diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index 77913a1..daab0c6 100644
---- a/net/mac80211/mlme.c
-+++ b/net/mac80211/mlme.c
-@@ -1291,7 +1291,7 @@ static bool ieee80211_assoc_success(struct ieee80211_work *wk,
+ drivers/net/wireless/wl12xx/wl1271_main.c |   33 +++++++++++++++++-----------
+ 1 files changed, 20 insertions(+), 13 deletions(-)
+
+diff --git a/drivers/net/wireless/wl12xx/wl1271_main.c b/drivers/net/wireless/wl12xx/wl1271_main.c
+index c54887c..a3a1ebc 100644
+--- a/drivers/net/wireless/wl12xx/wl1271_main.c
++++ b/drivers/net/wireless/wl12xx/wl1271_main.c
+@@ -950,18 +950,19 @@ static int wl1271_op_add_interface(struct ieee80211_hw *hw,
+ 	struct wiphy *wiphy = hw->wiphy;
+ 	int retries = WL1271_BOOT_RETRIES;
+ 	int ret = 0;
++	bool booted = false;
  
- 	rates = 0;
- 	basic_rates = 0;
--	sband = local->hw.wiphy->bands[local->hw.conf.channel->band];
-+	sband = local->hw.wiphy->bands[wk->chan->band];
+ 	wl1271_debug(DEBUG_MAC80211, "mac80211 add interface type %d mac %pM",
+ 		     vif->type, vif->addr);
  
- 	for (i = 0; i < elems.supp_rates_len; i++) {
- 		int rate = (elems.supp_rates[i] & 0x7f) * 5;
-@@ -1327,11 +1327,11 @@ static bool ieee80211_assoc_success(struct ieee80211_work *wk,
- 		}
+ 	mutex_lock(&wl->mutex);
+ 	if (wl->vif) {
++		wl1271_debug(DEBUG_MAC80211,
++			     "multiple vifs are not supported yet");
+ 		ret = -EBUSY;
+ 		goto out;
  	}
  
--	sta->sta.supp_rates[local->hw.conf.channel->band] = rates;
-+	sta->sta.supp_rates[wk->chan->band] = rates;
- 	sdata->vif.bss_conf.basic_rates = basic_rates;
+-	wl->vif = vif;
+-
+ 	switch (vif->type) {
+ 	case NL80211_IFTYPE_STATION:
+ 		wl->bss_type = BSS_TYPE_STA_BSS;
+@@ -999,15 +1000,8 @@ static int wl1271_op_add_interface(struct ieee80211_hw *hw,
+ 		if (ret < 0)
+ 			goto irq_disable;
  
- 	/* cf. IEEE 802.11 9.2.12 */
--	if (local->hw.conf.channel->band == IEEE80211_BAND_2GHZ &&
-+	if (wk->chan->band == IEEE80211_BAND_2GHZ &&
- 	    have_higher_than_11mbit)
- 		sdata->flags |= IEEE80211_SDATA_OPERATING_GMODE;
- 	else
+-		wl->state = WL1271_STATE_ON;
+-		wl1271_info("firmware booted (%s)", wl->chip.fw_ver);
+-
+-		/* update hw/fw version info in wiphy struct */
+-		wiphy->hw_version = wl->chip.id;
+-		strncpy(wiphy->fw_version, wl->chip.fw_ver,
+-			sizeof(wiphy->fw_version));
+-
+-		goto out;
++		booted = true;
++		break;
+ 
+ irq_disable:
+ 		wl1271_disable_interrupts(wl);
+@@ -1025,8 +1019,21 @@ power_off:
+ 		wl1271_power_off(wl);
+ 	}
+ 
+-	wl1271_error("firmware boot failed despite %d retries",
+-		     WL1271_BOOT_RETRIES);
++	if (!booted) {
++		wl1271_error("firmware boot failed despite %d retries",
++			     WL1271_BOOT_RETRIES);
++		goto out;
++	}
++
++	wl->vif = vif;
++	wl->state = WL1271_STATE_ON;
++	wl1271_info("firmware booted (%s)", wl->chip.fw_ver);
++
++	/* update hw/fw version info in wiphy struct */
++	wiphy->hw_version = wl->chip.id;
++	strncpy(wiphy->fw_version, wl->chip.fw_ver,
++		sizeof(wiphy->fw_version));
++
+ out:
+ 	mutex_unlock(&wl->mutex);
+ 
 -- 
 1.7.0.4
 
