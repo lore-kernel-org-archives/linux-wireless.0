@@ -1,42 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:43193 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754227Ab0JKTHM (ORCPT
+Received: from liberdade2.minaslivre.org ([74.50.53.203]:41585 "EHLO
+	liberdade.minaslivre.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758043Ab0J1WBU (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 11 Oct 2010 15:07:12 -0400
-Message-ID: <4CB3605D.1040509@candelatech.com>
-Date: Mon, 11 Oct 2010 12:07:09 -0700
-From: Ben Greear <greearb@candelatech.com>
-MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 1/2] wireless:  Support wiphy_renamed hook for drivers.
-References: <1286822537-28756-1-git-send-email-greearb@candelatech.com>	 <1286822639.3634.84.camel@jlt3.sipsolutions.net> <1286822771.3634.85.camel@jlt3.sipsolutions.net>
-In-Reply-To: <1286822771.3634.85.camel@jlt3.sipsolutions.net>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+	Thu, 28 Oct 2010 18:01:20 -0400
+From: Thadeu Lima de Souza Cascardo <cascardo@holoscopio.com>
+To: linux-wireless@vger.kernel.org
+Cc: Thadeu Lima de Souza Cascardo <cascardo@holoscopio.com>,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	Rogerio Luz Coelho <rogluz.news@gmail.com>,
+	Herton Ronaldo Krzesinski <herton@mandriva.com.br>,
+	Hin-Tak Leung <hintak.leung@gmail.com>,
+	seno <senada@t-online.de>
+Subject: [PATCH] rtl8187b: do not do per packet TX AGC
+Date: Thu, 28 Oct 2010 20:01:00 -0200
+Message-Id: <1288303260-6149-1-git-send-email-cascardo@holoscopio.com>
+In-Reply-To: <20101028191305.2960c83b@gotham.conectiva>
+References: <20101028191305.2960c83b@gotham.conectiva>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 10/11/2010 11:46 AM, Johannes Berg wrote:
-> I think you should just do this (untested):
+Clearing the per packet TX AGC for the RTL8187B device appears to
+increase its overall TX power. This allows the device to associate and a
+connection to be established using APs a little further away.
 
->   void
-> @@ -892,8 +889,8 @@ ath5k_debug_init_device(struct ath5k_sof
->   {
->   	sc->debug.level = ath5k_debug;
->
-> -	sc->debug.debugfs_phydir = debugfs_create_dir(wiphy_name(sc->hw->wiphy),
-> -				ath5k_global_debugfs);
-> +	sc->debug.debugfs_phydir = debugfs_create_dir("ath5k",
-> +				sc->hw->wiphy->debugfsdir);
+This is in accordance to what is done for RTL8187L devices and also what
+Realtek drivers do.
 
-This fails to work because sc->hw->wiphy->debugfsdir is null when this
-method is called...
+Tested-by: Thadeu Lima de Souza Cascardo <cascardo@holoscopio.com>
+Signed-off-by: Thadeu Lima de Souza Cascardo <cascardo@holoscopio.com>
+Cc: linux-wireless@vger.kernel.org
+Cc: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Rogerio Luz Coelho <rogluz.news@gmail.com>
+Cc: Herton Ronaldo Krzesinski <herton@mandriva.com.br>
+Cc: Hin-Tak Leung <hintak.leung@gmail.com>
+Cc: seno <senada@t-online.de>
+---
+ drivers/net/wireless/rtl818x/rtl8187_dev.c |   10 ++++++----
+ 1 files changed, 6 insertions(+), 4 deletions(-)
 
-Thanks,
-Ben
-
+diff --git a/drivers/net/wireless/rtl818x/rtl8187_dev.c b/drivers/net/wireless/rtl818x/rtl8187_dev.c
+index 38fa824..6e26149 100644
+--- a/drivers/net/wireless/rtl818x/rtl8187_dev.c
++++ b/drivers/net/wireless/rtl818x/rtl8187_dev.c
+@@ -775,10 +775,6 @@ static int rtl8187b_init_hw(struct ieee80211_hw *dev)
+ 	reg = rtl818x_ioread8(priv, &priv->map->CW_CONF);
+ 	reg |= RTL818X_CW_CONF_PERPACKET_RETRY_SHIFT;
+ 	rtl818x_iowrite8(priv, &priv->map->CW_CONF, reg);
+-	reg = rtl818x_ioread8(priv, &priv->map->TX_AGC_CTL);
+-	reg |= RTL818X_TX_AGC_CTL_PERPACKET_GAIN_SHIFT |
+-	       RTL818X_TX_AGC_CTL_PERPACKET_ANTSEL_SHIFT;
+-	rtl818x_iowrite8(priv, &priv->map->TX_AGC_CTL, reg);
+ 
+ 	rtl818x_iowrite16_idx(priv, (__le16 *)0xFFE0, 0x0FFF, 1);
+ 
+@@ -929,6 +925,12 @@ static int rtl8187_start(struct ieee80211_hw *dev)
+ 		priv->rx_conf = reg;
+ 		rtl818x_iowrite32(priv, &priv->map->RX_CONF, reg);
+ 
++		reg = rtl818x_ioread8(priv, &priv->map->TX_AGC_CTL);
++		reg &= ~RTL818X_TX_AGC_CTL_PERPACKET_GAIN_SHIFT;
++		reg &= ~RTL818X_TX_AGC_CTL_PERPACKET_ANTSEL_SHIFT;
++		reg &= ~RTL818X_TX_AGC_CTL_FEEDBACK_ANT;
++		rtl818x_iowrite8(priv, &priv->map->TX_AGC_CTL, reg);
++
+ 		rtl818x_iowrite32(priv, &priv->map->TX_CONF,
+ 				  RTL818X_TX_CONF_HW_SEQNUM |
+ 				  RTL818X_TX_CONF_DISREQQSIZE |
 -- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+1.7.1
 
