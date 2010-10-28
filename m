@@ -1,87 +1,218 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fmmailgate03.web.de ([217.72.192.234]:42518 "EHLO
-	fmmailgate03.web.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757537Ab0JZCE1 (ORCPT
+Received: from mail.candelatech.com ([208.74.158.172]:56581 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759268Ab0J1Xdi (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 25 Oct 2010 22:04:27 -0400
-Message-ID: <4CC63728.4030009@web.de>
-Date: Tue, 26 Oct 2010 04:04:24 +0200
-From: Lee <lee-in-berlin@web.de>
+	Thu, 28 Oct 2010 19:33:38 -0400
+Message-ID: <4CCA0848.7080001@candelatech.com>
+Date: Thu, 28 Oct 2010 16:33:28 -0700
+From: Ben Greear <greearb@candelatech.com>
 MIME-Version: 1.0
-To: "John W. Linville" <linville@tuxdriver.com>
-CC: linux-wireless@vger.kernel.org
-Subject: Re: [regression]AP with hostapd 0.7.3 can't receive packets beyond
- authentication (2.6.36, rt73usb)
-References: <4CC0D0F6.4080507@web.de> <4CC33E83.4020505@web.de> <20101025174957.GD2414@tuxdriver.com>
-In-Reply-To: <20101025174957.GD2414@tuxdriver.com>
+To: greearb@candelatech.com
+CC: linux-wireless@vger.kernel.org, ath9k-devel@venema.h4ckr.net
+Subject: Re: [PATCH] ath9k:  Clear DMA addresses when buffers are freed.
+References: <1287178199-7506-1-git-send-email-greearb@candelatech.com>
+In-Reply-To: <1287178199-7506-1-git-send-email-greearb@candelatech.com>
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 25/10/10 19:49, John W. Linville wrote:
-> On Sat, Oct 23, 2010 at 09:58:59PM +0200, Lee wrote:
->> On 22/10/10 01:47, Lee wrote:
->>> Hi everyone,
->>>
->>> I noticed a bug (details later) in Linus' git tree, which wasn't there in
->>> 2.6.35.7. So I went on to bisect the bug. 12 compiles and reboots later, I
->>> could narrow it down to this commit:
->>>
->>> # bad: [05318bc905467237d4aa68a701f6e92a2b332218] Merge branch 'master' of
->>> git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-next-2.6
->>>
->>> Unfortunately, I couldn't further bisect down wireless-next, because all three
->>> commits I picked were unworkable (bringing down an interface caused the kernel
->>> to oops, which made my test case impossible).
->>>
->>> The test case is as follows: I have eth0 and wlan0 (the interface to an
->>> rt37usb device) in a bridge lan0. I have a properly configured hostapd. When I
->>> try to connect with a client to my hostapd AP, I can successfully
->>> authenticate, but all further packets don't reach the interface of the AP.
->>>
->>> However, I can see broadcast packets *from* the AP on my client, but not the
->>> other way round (DHCP requests from client to AP). To make sure the bug was
->>> not specific to broadcast packets, I manually set an IP on my client and tried
->>> to ping the AP, but those packets didn't come through, either.
->>>
->>> Right now I'm a bit clueless on how to get to the root of this bug, so any
->>> help is appreciated.
->>>
->>> Regards,
->>> Lee
->>
->> I checked vanilla 2.6.36, the bug is still there. Is this a known
->> bug? Does anyone care to give me some hints? Are any details needed?
+On 10/15/2010 02:29 PM, greearb@candelatech.com wrote:
+> From: Ben Greear<greearb@candelatech.com>
 >
-> Hard to say if you can't complete the bisect.
+> Previous patches cleared the pointer to the SKB, but did not
+> clear the DMA addresses.  This patch moves the clear logic into
+> a method and makes sure that the DMA addresses are cleared as well.
 >
-> The bisect you mention is a merge from wireless-next-2.6 at 88c1f4f.
-> The preceding merge from wireless-next-2.6 was from abf52f8.  It looks
-> like there were a number of rt2x00 commits in between.
->
-> So, you might try a new bisect:
->
-> 	git bisect start 88c1f4f abf52f8
->
-> If you still get commits that don't work but in an apparently unrelated
-> way, you can use 'git bisect skip'.
->
-> Does that help you to narrow things down?
->
-> John
+> This does not obviously fix any bug, but may make it harder to
+> cause bugs in the future.
 
-I found a way to work around that oops I was hitting, so I took your two 
-commit points to start off a new bisect.
+I wanted to follow up to see if there was any interest in this patch,
+as it received no comment and has not been accepted upstream.
 
- > 1df90809f79b765fd4e8868c2b182d948f198a17 is the first bad commit
+Thanks,
+Ben
 
-I tried to revert that commit on top of v2.6.36, but there were a few commits 
-to rt2800lib.c. But since that file doesn't get compiled in my .config, I just 
-reverted the changes to rt2x00dev.c and tried that kernel. It compiled fine, 
-but didn't fix my problem.
 
-I don't really understand the code, so I guess I'll stop fiddling around with 
-it. I've got a working test-case, though, so I'm happy to test any patches 
-that are sent in my direction.
+>
+> Signed-off-by: Ben Greear<greearb@candelatech.com>
+> ---
+> :100644 100644 0c917e5... 8fba13d... M	drivers/net/wireless/ath/ath9k/ath9k.h
+> :100644 100644 97d471f... cc406f9... M	drivers/net/wireless/ath/ath9k/beacon.c
+> :100644 100644 62294da... 1560280... M	drivers/net/wireless/ath/ath9k/main.c
+> :100644 100644 fd778d2... 5afb46f... M	drivers/net/wireless/ath/ath9k/recv.c
+> :100644 100644 a5e5f27... e86f59c... M	drivers/net/wireless/ath/ath9k/xmit.c
+>   drivers/net/wireless/ath/ath9k/ath9k.h  |    2 ++
+>   drivers/net/wireless/ath/ath9k/beacon.c |   14 +++++---------
+>   drivers/net/wireless/ath/ath9k/main.c   |   11 +++++++++++
+>   drivers/net/wireless/ath/ath9k/recv.c   |   12 ++++--------
+>   drivers/net/wireless/ath/ath9k/xmit.c   |    6 ++----
+>   5 files changed, 24 insertions(+), 21 deletions(-)
+>
+> diff --git a/drivers/net/wireless/ath/ath9k/ath9k.h b/drivers/net/wireless/ath/ath9k/ath9k.h
+> index 0c917e5..8fba13d 100644
+> --- a/drivers/net/wireless/ath/ath9k/ath9k.h
+> +++ b/drivers/net/wireless/ath/ath9k/ath9k.h
+> @@ -737,4 +737,6 @@ bool ath_mac80211_start_queue(struct ath_softc *sc, u16 skb_queue);
+>   void ath_start_rfkill_poll(struct ath_softc *sc);
+>   extern void ath9k_rfkill_poll_state(struct ieee80211_hw *hw);
+>
+> +void ath_clear_dma_ptrs(struct ath_buf *bf);
+> +
+>   #endif /* ATH9K_H */
+> diff --git a/drivers/net/wireless/ath/ath9k/beacon.c b/drivers/net/wireless/ath/ath9k/beacon.c
+> index 97d471f..cc406f9 100644
+> --- a/drivers/net/wireless/ath/ath9k/beacon.c
+> +++ b/drivers/net/wireless/ath/ath9k/beacon.c
+> @@ -139,7 +139,7 @@ static struct ath_buf *ath_beacon_generate(struct ieee80211_hw *hw,
+>   		dma_unmap_single(sc->dev, bf->bf_buf_addr,
+>   				 skb->len, DMA_TO_DEVICE);
+>   		dev_kfree_skb_any(skb);
+> -		bf->bf_buf_addr = 0;
+> +		ath_clear_dma_ptrs(bf);
+>   	}
+>
+>   	/* Get a new beacon from mac80211 */
+> @@ -167,8 +167,7 @@ static struct ath_buf *ath_beacon_generate(struct ieee80211_hw *hw,
+>   					 skb->len, DMA_TO_DEVICE);
+>   	if (unlikely(dma_mapping_error(sc->dev, bf->bf_buf_addr))) {
+>   		dev_kfree_skb_any(skb);
+> -		bf->bf_mpdu = NULL;
+> -		bf->bf_buf_addr = 0;
+> +		ath_clear_dma_ptrs(bf);
+>   		ath_print(common, ATH_DBG_FATAL,
+>   			  "dma_mapping_error on beaconing\n");
+>   		return NULL;
+> @@ -256,8 +255,7 @@ int ath_beacon_alloc(struct ath_wiphy *aphy, struct ieee80211_vif *vif)
+>   		dma_unmap_single(sc->dev, bf->bf_buf_addr,
+>   				 skb->len, DMA_TO_DEVICE);
+>   		dev_kfree_skb_any(skb);
+> -		bf->bf_mpdu = NULL;
+> -		bf->bf_buf_addr = 0;
+> +		ath_clear_dma_ptrs(bf);
+>   	}
+>
+>   	/* NB: the beacon data buffer must be 32-bit aligned. */
+> @@ -302,8 +300,7 @@ int ath_beacon_alloc(struct ath_wiphy *aphy, struct ieee80211_vif *vif)
+>   					 skb->len, DMA_TO_DEVICE);
+>   	if (unlikely(dma_mapping_error(sc->dev, bf->bf_buf_addr))) {
+>   		dev_kfree_skb_any(skb);
+> -		bf->bf_mpdu = NULL;
+> -		bf->bf_buf_addr = 0;
+> +		ath_clear_dma_ptrs(bf);
+>   		ath_print(common, ATH_DBG_FATAL,
+>   			  "dma_mapping_error on beacon alloc\n");
+>   		return -ENOMEM;
+> @@ -329,8 +326,7 @@ void ath_beacon_return(struct ath_softc *sc, struct ath_vif *avp)
+>   			dma_unmap_single(sc->dev, bf->bf_buf_addr,
+>   					 skb->len, DMA_TO_DEVICE);
+>   			dev_kfree_skb_any(skb);
+> -			bf->bf_mpdu = NULL;
+> -			bf->bf_buf_addr = 0;
+> +			ath_clear_dma_ptrs(bf);
+>   		}
+>   		list_add_tail(&bf->list,&sc->beacon.bbuf);
+>
+> diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
+> index 62294da..1560280 100644
+> --- a/drivers/net/wireless/ath/ath9k/main.c
+> +++ b/drivers/net/wireless/ath/ath9k/main.c
+> @@ -213,6 +213,17 @@ static void ath_update_survey_stats(struct ath_softc *sc)
+>   	ath_update_survey_nf(sc, pos);
+>   }
+>
+> +void ath_clear_dma_ptrs(struct ath_buf *bf)
+> +{
+> +	struct ath_desc *ds = bf->bf_desc;
+> +	bf->bf_buf_addr = 0;
+> +	bf->bf_mpdu = NULL;
+> +	if (ds) {
+> +		ds->ds_data = 0;
+> +		ds->ds_vdata = NULL;
+> +	}
+> +}
+> +
+>   /*
+>    * Set/change channels.  If the channel is really being changed, it's done
+>    * by reseting the chip.  To accomplish this we must first cleanup any pending
+> diff --git a/drivers/net/wireless/ath/ath9k/recv.c b/drivers/net/wireless/ath/ath9k/recv.c
+> index fd778d2..5afb46f 100644
+> --- a/drivers/net/wireless/ath/ath9k/recv.c
+> +++ b/drivers/net/wireless/ath/ath9k/recv.c
+> @@ -269,8 +269,7 @@ static int ath_rx_edma_init(struct ath_softc *sc, int nbufs)
+>   		if (unlikely(dma_mapping_error(sc->dev,
+>   						bf->bf_buf_addr))) {
+>   				dev_kfree_skb_any(skb);
+> -				bf->bf_mpdu = NULL;
+> -				bf->bf_buf_addr = 0;
+> +				ath_clear_dma_ptrs(bf);
+>   				ath_print(common, ATH_DBG_FATAL,
+>   					"dma_mapping_error() on RX init\n");
+>   				error = -ENOMEM;
+> @@ -360,8 +359,7 @@ int ath_rx_init(struct ath_softc *sc, int nbufs)
+>   			if (unlikely(dma_mapping_error(sc->dev,
+>   							bf->bf_buf_addr))) {
+>   				dev_kfree_skb_any(skb);
+> -				bf->bf_mpdu = NULL;
+> -				bf->bf_buf_addr = 0;
+> +				ath_clear_dma_ptrs(bf);
+>   				ath_print(common, ATH_DBG_FATAL,
+>   					  "dma_mapping_error() on RX init\n");
+>   				error = -ENOMEM;
+> @@ -396,8 +394,7 @@ void ath_rx_cleanup(struct ath_softc *sc)
+>   						common->rx_bufsize,
+>   						DMA_FROM_DEVICE);
+>   				dev_kfree_skb(skb);
+> -				bf->bf_buf_addr = 0;
+> -				bf->bf_mpdu = NULL;
+> +				ath_clear_dma_ptrs(bf);
+>   			}
+>   		}
+>
+> @@ -1741,8 +1738,7 @@ int ath_rx_tasklet(struct ath_softc *sc, int flush, bool hp)
+>   		if (unlikely(dma_mapping_error(sc->dev,
+>   			  bf->bf_buf_addr))) {
+>   			dev_kfree_skb_any(requeue_skb);
+> -			bf->bf_mpdu = NULL;
+> -			bf->bf_buf_addr = 0;
+> +			ath_clear_dma_ptrs(bf);
+>   			ath_print(common, ATH_DBG_FATAL,
+>   				  "dma_mapping_error() on RX\n");
+>   			ath_rx_send_to_mac80211(hw, sc, skb, rxs);
+> diff --git a/drivers/net/wireless/ath/ath9k/xmit.c b/drivers/net/wireless/ath/ath9k/xmit.c
+> index a5e5f27..e86f59c 100644
+> --- a/drivers/net/wireless/ath/ath9k/xmit.c
+> +++ b/drivers/net/wireless/ath/ath9k/xmit.c
+> @@ -1644,8 +1644,7 @@ static int ath_tx_setup_buffer(struct ieee80211_hw *hw, struct ath_buf *bf,
+>   	bf->bf_buf_addr = dma_map_single(sc->dev, skb->data,
+>   					 skb->len, DMA_TO_DEVICE);
+>   	if (unlikely(dma_mapping_error(sc->dev, bf->bf_buf_addr))) {
+> -		bf->bf_mpdu = NULL;
+> -		bf->bf_buf_addr = 0;
+> +		ath_clear_dma_ptrs(bf);
+>   		ath_print(ath9k_hw_common(sc->sc_ah), ATH_DBG_FATAL,
+>   			  "dma_mapping_error() on TX\n");
+>   		return -ENOMEM;
+> @@ -1915,7 +1914,6 @@ static void ath_tx_complete_buf(struct ath_softc *sc, struct ath_buf *bf,
+>   	}
+>
+>   	dma_unmap_single(sc->dev, bf->bf_buf_addr, skb->len, DMA_TO_DEVICE);
+> -	bf->bf_buf_addr = 0;
+>
+>   	if (bf->bf_state.bfs_paprd) {
+>   		if (time_after(jiffies,
+> @@ -1931,7 +1929,7 @@ static void ath_tx_complete_buf(struct ath_softc *sc, struct ath_buf *bf,
+>   	/* At this point, skb (bf->bf_mpdu) is consumed...make sure we don't
+>   	 * accidentally reference it later.
+>   	 */
+> -	bf->bf_mpdu = NULL;
+> +	ath_clear_dma_ptrs(bf);
+>
+>   	/*
+>   	 * Return the list of ath_buf of this mpdu to free queue
 
-Lee
+
+-- 
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
+
