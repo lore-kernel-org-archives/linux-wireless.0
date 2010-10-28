@@ -1,46 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wy0-f174.google.com ([74.125.82.174]:42710 "EHLO
-	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754687Ab0JDSBU convert rfc822-to-8bit (ORCPT
+Received: from perninha.conectiva.com.br ([187.115.55.249]:57559 "EHLO
+	perninha.conectiva.com.br" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S934169Ab0J1Vfx (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 4 Oct 2010 14:01:20 -0400
-MIME-Version: 1.0
-In-Reply-To: <OjxVjYbf_EJ.A.ReC.pTPqMB@chimera>
-References: <OjxVjYbf_EJ.A.ReC.pTPqMB@chimera>
-Date: Mon, 4 Oct 2010 20:01:00 +0200
-Message-ID: <AANLkTi=ZwaH6ZL1g4d1jhfSXtQJGMGu-=YN+vTm+=UgS@mail.gmail.com>
-Subject: Re: 2.6.36-rc6-git2: Reported regressions 2.6.34 -> 2.6.35
-From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-To: "Rafael J. Wysocki" <rjw@sisk.pl>
-Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	Maciej Rutecki <maciej.rutecki@gmail.com>,
-	Florian Mickler <florian@mickler.org>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	Kernel Testers List <kernel-testers@vger.kernel.org>,
-	Network Development <netdev@vger.kernel.org>,
-	Linux ACPI <linux-acpi@vger.kernel.org>,
-	Linux PM List <linux-pm@lists.linux-foundation.org>,
-	Linux SCSI List <linux-scsi@vger.kernel.org>,
-	Linux Wireless List <linux-wireless@vger.kernel.org>,
-	DRI <dri-devel@lists.freedesktop.org>
-Content-Type: text/plain; charset=UTF-8
+	Thu, 28 Oct 2010 17:35:53 -0400
+Date: Thu, 28 Oct 2010 19:13:05 -0200
+From: Herton Ronaldo Krzesinski <herton@mandriva.com.br>
+To: Thadeu Lima de Souza Cascardo <cascardo@holoscopio.com>
+Cc: Larry Finger <Larry.Finger@lwfinger.net>,
+	seno <senada@t-online.de>, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] rtl8187b: do not do per packet TX AGC
+Message-ID: <20101028191305.2960c83b@gotham.conectiva>
+In-Reply-To: <20101026185341.GA4608@barata.holoscopio.com>
+References: <1282974868-22237-1-git-send-email-cascardo@holoscopio.com>
+	<4C798080.8010002@lwfinger.net>
+	<20100830141218.GB30864@tuxdriver.com>
+	<4C7BC4D9.1010108@lwfinger.net>
+	<20100830152841.GB2950@barata.holoscopio.com>
+	<loom.20101026T200014-691@post.gmane.org>
+	<4CC71CFF.8050004@lwfinger.net>
+	<20101026185341.GA4608@barata.holoscopio.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2010/10/3 Rafael J. Wysocki <rjw@sisk.pl>:
-> Bug-Entry       : http://bugzilla.kernel.org/show_bug.cgi?id=19302
-> Subject         : PROBLEM: kernel crash on USB-modem (Huawei E1750) hangup.
-> Submitter       : O01eg <O01eg@yandex.ru>
-> Date            : 2010-09-26 19:50 (8 days old)
-> Message-ID      : <op.vjnn1up1yohvy1@localhost>
-> References      : http://marc.info/?l=linux-kernel&m=128553111709569&w=2
+On Tue, 26 Oct 2010 16:53:42 -0200
+Thadeu Lima de Souza Cascardo <cascardo@holoscopio.com> wrote:
+> On Tue, Oct 26, 2010 at 01:25:03PM -0500, Larry Finger wrote:
+> > On 10/26/2010 01:03 PM, seno wrote:
+> > > I tried that patch on compat-wireless-2010-10-25 (Kernel 2.6.33.7).
+> > > 
+> > > Performance improves minimal, but thousands of errors occur in iwconfig output.
+> > > (Tx excessive retries, Invalid misc, Missed beacon).
+> > > 
+> > > The router also shows lots of errors 
+> > > (for Received (RX) / Transmitted (TX) packets)
+> > 
+> > I no longer remember the details of why this patch was abandoned, but I suspect
+> > you found the answer.
+> > 
+> 
+> It was because of the bad wording in the commit description. I was
+> expecting some more testing from my client before posting it again with
+> the wording fixed. They've been testing it and there is enough
+> improvement they require the patch. I don't get the thousands of errors
+> in iwconfig output. I can try to reproduce it here if I get more
+> details.
 
-Comment from bugzilla:
-> I got this bug at 2.6.34-gentoo-r6 and 2.6.36-rc5. Other kernels were not
-> checked.
+The excessive retries etc. should be another issue. The patch from Thadeu
+really improves the driver. In last days I got back a RTL8187B device for
+testing, and for me it also improved the range and throughput doing some
+scps or with iperf. And looking at newer realtek drivers for 8187B, they
+also started to clear the flags. In fact, while doing a printk to see the
+contents of the register after chip reset, it's already cleared, but I don't
+see any problem to make sure we already have all *TX_AGC_CTL* flags cleared.
+Also for 8180 and 8187L they are cleared. Unfortunately we don't have details
+(documentation) on what these flags are exactly supposed to do...
 
-Doesn't sound like regression.
+But I really think the patch should go in, Thadeu can you post it again with
+commit description fixed?
 
--- 
-Rafał
+> 
+> Thanks,
+> Cascardo.
+> 
+> > Larry
+> > --
+> > To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> > the body of a message to majordomo@vger.kernel.org
+> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+--
+[]'s
+Herton
