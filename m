@@ -1,64 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:49944 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754337Ab0JLD10 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 11 Oct 2010 23:27:26 -0400
-Message-ID: <4CB3D598.7050904@candelatech.com>
-Date: Mon, 11 Oct 2010 20:27:20 -0700
-From: Ben Greear <greearb@candelatech.com>
-MIME-Version: 1.0
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-CC: Johannes Berg <johannes@sipsolutions.net>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: memory clobber in rx path, maybe related to ath9k.
-References: <4CAB59B2.5050106@candelatech.com> <4CAB5F3D.9060201@candelatech.com> <AANLkTimV3GrwU+9PPtirT4sCzveLY2egr3PRQhfDBET1@mail.gmail.com> <4CAB627F.8020804@candelatech.com> <AANLkTi=sT5QJe4V8gFGjF-nzx0uJAMLG_XG2715qrEEd@mail.gmail.com> <4CAB64AD.4080105@candelatech.com> <AANLkTi=3dHbB5tmQDp3Ba54-DqQydVCkNdFo1vKbfaGY@mail.gmail.com> <4CAB6B08.4050801@candelatech.com> <4CAE0474.4090605@candelatech.com> <1286475250.20974.22.camel@jlt3.sipsolutions.net> <AANLkTinbRSnPVgbBxvVpMdnP+K--bye=Q-miHf4X44kz@mail.gmail.com> <4CAE13F6.2010003@candelatech.com> <AANLkTimEZ5GY7WFz-F4YyC+6MEwNn2Dki4tonp645XrS@mail.gmail.com> <4CAE1DFB.303@candelatech.com> <1286479642.20974.32.camel@jlt3.sipsolutions.net> <AANLkTimxp703Gy_Atg8=wpFszRDR=OJCXwOUKRh-a-d7@mail.gmail.com> <AANLkTi=t-P_5c14brJohM8UgxeOknv+3syO=7W=ix6qf@mail.gmail.com> <AANLkTinC46a+nE-XOQuBCmRJwjzgh24uC7ZJ7HtbVHnT@mail.gmail.com> <4CB378CD.1080800@candelatech.com> <AANLkTim42zmDwf744BCrPwa1kT5ph57bNMyvSyOpesVv@mail.gmail.com>
-In-Reply-To: <AANLkTim42zmDwf744BCrPwa1kT5ph57bNMyvSyOpesVv@mail.gmail.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Received: from lo.gmane.org ([80.91.229.12]:46665 "EHLO lo.gmane.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1759127Ab0J1XV7 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 28 Oct 2010 19:21:59 -0400
+Received: from list by lo.gmane.org with local (Exim 4.69)
+	(envelope-from <glkwg-linux-wireless@m.gmane.org>)
+	id 1PBbnB-0004J3-98
+	for linux-wireless@vger.kernel.org; Fri, 29 Oct 2010 01:21:57 +0200
+Received: from CPE0014bf4aedf8-CM00111ae2cca2.cpe.net.cable.rogers.com ([173.34.126.150])
+        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Fri, 29 Oct 2010 01:21:57 +0200
+Received: from senada by CPE0014bf4aedf8-CM00111ae2cca2.cpe.net.cable.rogers.com with local (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Fri, 29 Oct 2010 01:21:57 +0200
+To: linux-wireless@vger.kernel.org
+From: seno <senada@t-online.de>
+Subject: Re: [PATCH] rtl8187b: do not do per packet TX AGC
+Date: Thu, 28 Oct 2010 23:21:47 +0000 (UTC)
+Message-ID: <loom.20101029T010426-834@post.gmane.org>
+References: <1282974868-22237-1-git-send-email-cascardo@holoscopio.com> <4C798080.8010002@lwfinger.net> <20100830141218.GB30864@tuxdriver.com> <4C7BC4D9.1010108@lwfinger.net> <20100830152841.GB2950@barata.holoscopio.com> <loom.20101026T200014-691@post.gmane.org> <4CC71CFF.8050004@lwfinger.net> <20101026185341.GA4608@barata.holoscopio.com> <20101028191305.2960c83b@gotham.conectiva>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 10/11/2010 06:03 PM, Luis R. Rodriguez wrote:
-> On Mon, Oct 11, 2010 at 1:51 PM, Ben Greear<greearb@candelatech.com>  wrote:
->> On 10/07/2010 02:59 PM, Luis R. Rodriguez wrote:
->>>
->>> On Thu, Oct 7, 2010 at 2:36 PM, Luis R. Rodriguez<mcgrof@gmail.com>
->>>   wrote:
->>
->>>>> But other than this I got nothing. I left the box sit there for about
->>>>> 1 hour and came back and it was still going with no issues. Mind you,
->>>>> I can't ping but that seems like another issue.
->>>>>
->>>>> You can find my logs here:
->>>>>
->>>>>
->>>>> http://www.kernel.org/pub/linux/kernel/people/mcgrof/logs/2010/10-07-stress-sta-01/
->>>>
->>>> Doh, I did not have CONFIG_SLUB_DEBUG_ON=y so building now with that.
->>>
->>> Yay I can reproduce now. I'll be back, going to dig now.
->>
->> Any luck tracking this down?
->
-> No, today for example I just finished reading e-mail and its already
-> 6pm PST... But Friday I did get do do a lot of work and testing on
-> this. The only pattern I see so far is that skb_copy() is used on the
-> poison all the time. I am not sure if its because skb_copy() happens
-> to run the poison check or what. I'll work on this tomorrow.
+Herton Ronaldo Krzesinski <herton@...> writes:
 
-I know how that goes.
+> The excessive retries etc. should be another issue. The patch from Thadeu
+> really improves the driver.
 
-Do you happen to have any magic tools that could be instrumented to show
-when DMA was happening in the chip, and to see if it somehow happens to dma
-to something after it is supposedly un-mapped?
+Well, I tried once more today, maybe I'm doing something wrong?
 
-Another thing I was thinking about:  Maybe the queue of skbs and dma addresses
-in ath9k is getting corrupted by multiple VIFs trying to write at once?  Maybe
-some locking is needed in the xmit path?
+- I run "./scripts/driver-select rtl818x" in compat-wireless-2010-10-28
+- then "patch -p1 rtl8187_dev.c rtl8187b-do-not-do-per-packet-TX-AGC.patch"
+- then "make"
+- then "sudo make install"
+- then reboot
 
-Thanks,
-Ben
+"dmesg |grep compat" gives "Compat-wireless backport release: compat-
+wireless-2010-10-22-5-g69fdc09" so the new module is used.
 
--- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+On speedtest.net, max speed is ~ 1mbit (on 10 mbit cable internet @10 meters 
+distance)
+The router reports an improved "Signal Quality", but iwconfig now shows:
+
+"Rx invalid nwid:0  Rx invalid crypt:0  Rx invalid frag:0"
+"Tx excessive retries:2589  Invalid misc:17686   Missed beacon:0"
+
+Herton: If I make something wrong, can you please post your rtl8187.ko.gz 
+(Mandriva 2010.1 / 2.6.33.7-desktop-2mnb x86_64)?
+
+Thank you.
+
