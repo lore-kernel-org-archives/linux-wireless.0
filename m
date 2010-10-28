@@ -1,56 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:48082 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757346Ab0JHSHK (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:58217 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755199Ab0J1OPK (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 8 Oct 2010 14:07:10 -0400
-Message-ID: <4CAF5DB3.7070603@candelatech.com>
-Date: Fri, 08 Oct 2010 11:06:43 -0700
-From: Ben Greear <greearb@candelatech.com>
+	Thu, 28 Oct 2010 10:15:10 -0400
+Date: Thu, 28 Oct 2010 10:08:07 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Chris Ball <cjb@laptop.org>
+Cc: Daniel Drake <dsd@laptop.org>, dcbw@redhat.com, pgf@laptop.org,
+	linux-wireless@vger.kernel.org, libertas-dev@lists.infradead.org
+Subject: Re: [PATCH v2] libertas: Fix sd8686 firmware reload
+Message-ID: <20101028140807.GA3841@tuxdriver.com>
+References: <20101027142052.9607A9D401B@zog.reactivated.net>
+ <20101027195427.GB2410@tuxdriver.com>
+ <20101028055704.GA16352@void.printf.net>
 MIME-Version: 1.0
-To: Bob Copeland <me@bobcopeland.com>
-CC: linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 2/2] ath5k: Adjust opmode when interfaces are removed.
-References: <1286556210-29643-1-git-send-email-greearb@candelatech.com>	<1286556210-29643-2-git-send-email-greearb@candelatech.com> <AANLkTinXFLL25-r-LUb5vqjNkwoa68xWhN_CaD0KVE=p@mail.gmail.com>
-In-Reply-To: <AANLkTinXFLL25-r-LUb5vqjNkwoa68xWhN_CaD0KVE=p@mail.gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <20101028055704.GA16352@void.printf.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 10/08/2010 11:03 AM, Bob Copeland wrote:
-> On Fri, Oct 8, 2010 at 12:43 PM,<greearb@candelatech.com>  wrote:
->> @@ -558,6 +577,7 @@ void ath5k_update_bssid_mask(struct ath5k_softc *sc, struct ieee80211_vif *vif)
->>         memset(&iter_data.mask, 0xff, ETH_ALEN);
->>         iter_data.found_active = false;
->>         iter_data.need_set_hw_addr = true;
->> +       iter_data.opmode = NL80211_IFTYPE_UNSPECIFIED;
->>
->>         if (vif)
->>                 ath_vif_iter(&iter_data, vif->addr, vif);
->> @@ -567,6 +587,11 @@ void ath5k_update_bssid_mask(struct ath5k_softc *sc, struct ieee80211_vif *vif)
->>                                                    &iter_data);
->>         memcpy(sc->bssidmask, iter_data.mask, ETH_ALEN);
->>
->> +       if (update_opmode&&  sc->opmode != iter_data.opmode) {
->> +               sc->opmode = iter_data.opmode;
->> +               ath_do_set_opmode(sc);
->> +       }
->> +
->
-> Should we really couple updating bssid mask and configuring
-> the opmode?  Generally, I dislike adding boolean flags to
-> functions because it's hard to figure out from the callsite
-> what is happening (you have to go back to the prototype), and
-> it usually indicates that the abstraction is a little broken.
+On Thu, Oct 28, 2010 at 06:57:04AM +0100, Chris Ball wrote:
+> Hi,
+> 
+> On Wed, Oct 27, 2010 at 03:54:27PM -0400, John W. Linville wrote:
+> >   CC [M]  drivers/net/wireless/libertas/if_sdio.o
+> > drivers/net/wireless/libertas/if_sdio.c: In function ‘if_sdio_prog_firmware’:
+> > drivers/net/wireless/libertas/if_sdio.c:718: error: ‘IF_SDIO_MODEL_8686’ undeclared (first use in this function)
+> > drivers/net/wireless/libertas/if_sdio.c:718: error: (Each undeclared identifier is reported only once
+> > drivers/net/wireless/libertas/if_sdio.c:718: error: for each function it appears in.)
+> > 
+> > What tree has this definition?
+> 
+> Odd, it's been upstream in if_sdio.h since 2.6.31; mainline commit e70a5ac5.
 
-Well, we need to do the iteration over all VIFS to figure out what to set this
-too.  Seems doing one iteration v/s doing two is worth the
-extra flag?
+Apparently you guys are missing 3d32a58b87cd251b50842f93b87d5458061c0cfc.
 
-Thanks,
-Ben
-
+John
 -- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
-
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
