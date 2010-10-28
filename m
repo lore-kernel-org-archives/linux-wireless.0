@@ -1,36 +1,99 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:34148 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751987Ab0JUO1F (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 21 Oct 2010 10:27:05 -0400
-Subject: Re: [PATCH 1/2] iwlwifi: fix set_tx_power vs scan
-From: "Guy, Wey-Yi" <wey-yi.w.guy@intel.com>
-To: Stanislaw Gruszka <sgruszka@redhat.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <20101021131348.GA5654@redhat.com>
-References: <1286977193-12144-1-git-send-email-sgruszka@redhat.com>
-	 <1286983100.10446.1.camel@wwguy-ubuntu> <20101014083204.GA2286@redhat.com>
-	 <20101021131348.GA5654@redhat.com>
-Content-Type: text/plain
-Date: Thu, 21 Oct 2010 07:26:14 -0700
-Message-Id: <1287671174.25126.0.camel@wwguy-ubuntu>
-Mime-Version: 1.0
+Received: from col0-omc3-s5.col0.hotmail.com ([65.55.34.143]:1750 "EHLO
+	col0-omc3-s5.col0.hotmail.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S932542Ab0J1MPO convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 28 Oct 2010 08:15:14 -0400
+Message-ID: <COL121-W4399D19465DDBEEFA3FBA9A1440@phx.gbl>
+From: Rajkumar Manoharan <rajkumarvm@live.com>
+To: <mshajakhan@atheros.com>, <lrodriguez@atheros.com>
+CC: <linux-wireless@vger.kernel.org>,
+	<senthilkumar.balasubramanian@atheros.com>
+Subject: RE: [RFC] ath9k: Fix incorrect access of rate flags in RC
+Date: Thu, 28 Oct 2010 17:45:13 +0530
+In-Reply-To: <4CC65C42.70604@atheros.com>
+References: <1288021004-7315-1-git-send-email-mshajakhan@atheros.com>
+ <AANLkTi=M9AR6ubFfuZb3rDLit_DvrkL14emM7OQYdmSb@mail.gmail.com>,<4CC65C42.70604@atheros.com>
+Content-Type: text/plain; charset="iso-8859-1"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2010-10-21 at 06:13 -0700, Stanislaw Gruszka wrote:
-> On Thu, Oct 14, 2010 at 10:32:05AM +0200, Stanislaw Gruszka wrote:
-> > > Looks good, the only thing is if priv->tx_power_user_lmt ==
-> > > priv->tx_power_next, we don't even have to call set_tx_power, but I
-> > > guess calling it won't hurt, so its your decision check or not.
-> > 
-> > I'll will call iwl_set_tx_power( ... , false); what seems to be right
-> > thing to do.
-> 
-> Set tx power have to be forces. Without that I get  
-> 
-Thanks
 
-Wey
+> looks like ,but not very sure Luis,need to consult Senthil and will tell
+> you.
+> thanks,
+> shafi
+>
+> On Monday 25 October 2010 10:06 PM, Luis R. Rodriguez wrote:
+> > On Mon, Oct 25, 2010 at 8:36 AM, Mohammed Shafi Shajakhan
+> >  wrote:
+> >
+> >> From: Mohammed Shafi Shajakhan
+> >>
+> >> The index variable to access the rate flags should be obtained from the
+> >> inner loop counter which corresponds to rate table structure.
+> >>
+> >> Signed-off-by: Mohammed Shafi Shajakhan
+> >>
+> > Is this a stable fix?
+> >
+> > Luis
+> >
 
+Yes it is a stable fix. It solves the invalid rate selection when the supported basic rate
+
+is invalid on a purticular band. This patch fixed the following warning message.
+
+
+
+Call Trace:
+
+ [<ffffffff8104ee4a>] warn_slowpath_common+0x7a/0xb0
+
+ [<ffffffff8104ee95>] warn_slowpath_null+0x15/0x20
+
+ [<ffffffffa0583c45>] ath_get_rate+0x595/0x5b0 [ath9k]
+
+ [<ffffffff811a0636>] ? cpumask_next_and+0x36/0x50
+
+ [<ffffffffa0405186>] rate_control_get_rate+0x86/0x160 [mac80211]
+
+ [<ffffffffa040dfac>] invoke_tx_handlers+0x81c/0x12d0 [mac80211]
+
+ [<ffffffffa040eae9>] ieee80211_tx+0x89/0x2b0 [mac80211]
+
+ [<ffffffff812891bc>] ? pskb_expand_head+0x1cc/0x1f0
+
+ [<ffffffffa040edc5>] ieee80211_xmit+0xb5/0x1c0 [mac80211]
+
+ [<ffffffffa041026f>] ieee80211_tx_skb+0x4f/0x60 [mac80211]
+
+ [<ffffffffa03fe016>] ieee80211_send_nullfunc+0x46/0x60 [mac80211]
+
+ [<ffffffffa03f91d7>] ieee80211_offchannel_stop_station+0x107/0x150 [mac80211]
+
+ [<ffffffff812891bc>] ? pskb_expand_head+0x1cc/0x1f0
+
+ [<ffffffffa040edc5>] ieee80211_xmit+0xb5/0x1c0 [mac80211]
+
+ [<ffffffffa041026f>] ieee80211_tx_skb+0x4f/0x60 [mac80211]
+
+ [<ffffffffa03fe016>] ieee80211_send_nullfunc+0x46/0x60 [mac80211]
+
+ [<ffffffffa03f91d7>] ieee80211_offchannel_stop_station+0x107/0x150 [mac80211]
+
+ [<ffffffffa03f8896>] ieee80211_scan_work+0x146/0x600 [mac80211]
+
+ [<ffffffff8133a375>] ? schedule+0x2f5/0x8e0
+
+ [<ffffffffa03f8750>] ? ieee80211_scan_work+0x0/0x600 [mac80211]
+
+ [<ffffffff81064fcf>] process_one_work+0x10f/0x380
+
+ [<ffffffff81066bc2>] worker_thread+0x162/0x340
+
+ [<ffffffff81066a60>] ? worker_thread+0x0/0x340
+
+- Rajkumar
+ 		 	   		  
