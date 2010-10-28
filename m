@@ -1,66 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yw0-f46.google.com ([209.85.213.46]:45829 "EHLO
-	mail-yw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752097Ab0JMRm7 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 13 Oct 2010 13:42:59 -0400
-MIME-Version: 1.0
-In-Reply-To: <1286964370.3316.6.camel@aeonflux>
-References: <20101008170258.GJ10149@tux> <4CAF5488.3030706@Atheros.com>
- <20101008181508.GM10149@tux> <20101012211726.GE2678@broadcom.com> <1286964370.3316.6.camel@aeonflux>
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Date: Wed, 13 Oct 2010 10:42:38 -0700
-Message-ID: <AANLkTimAeoS2Vi7GhKSTrghqaOQ=XKSzjcou15dn+YDR@mail.gmail.com>
-Subject: Re: Firmware versioning best practices: ath3k-2.fw rename or replace
- ath3k-1.fw ?
-To: Marcel Holtmann <marcel@holtmann.org>
-Cc: Henry Ptasinski <henryp@broadcom.com>,
-	Suraj Sumangala <Suraj.Sumangala@atheros.com>,
-	Luis Rodriguez <Luis.Rodriguez@atheros.com>,
-	David Woodhouse <dwmw2@infradead.org>,
-	linux-bluetooth <linux-bluetooth@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Received: from smtp.nokia.com ([147.243.1.47]:53233 "EHLO mgw-sa01.nokia.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1761435Ab0J1Szn (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 28 Oct 2010 14:55:43 -0400
+Subject: Re: [PATCH] wl1271: set wl->vif only if add_interface succeeded.
+From: Luciano Coelho <luciano.coelho@nokia.com>
+To: ext Eliad Peller <eliad@wizery.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <1288106769-11990-1-git-send-email-eliad@wizery.com>
+References: <1288106769-11990-1-git-send-email-eliad@wizery.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Thu, 28 Oct 2010 21:56:59 +0300
+Message-ID: <1288292219.3414.28.camel@powerslave>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Oct 13, 2010 at 3:06 AM, Marcel Holtmann <marcel@holtmann.org> wrote:
-> Hi Henry,
->
->> > > Marcel had answered me before. It makes sense to have same file name.
->> > > Other ways we end up changing the driver whenever there is a firmware
->> > > change.
->> >
->> > > > I last tried to document a thread we had over this here:
->> > > >
->> > > > http://wireless.kernel.org/en/developers/Documentation/firmware-versioning
->> > > >
->> >
->> > Thanks, I've updated that link above to document bug fixing does not require
->> > a filename change.
->>
->> I don't really understand why you would not want to change the code revision
->> part of the filename.
->>
->> I totally agree that you don't want to change the driver every time the
->> firmware gets a bug fix, but wasn't that the whole point of splitting the name
->> into API and code revisions portions, and symlinking the file to one that just
->> has the API version?
->>
->> What's the issue with using the process as originally documented?
->
-> as I stated before, for Bluetooth this makes no sense. You don't need
-> API version numbers since the API is a STANDARD. It is called HCI. So
-> please don't use API version numbers in the firmware files.
->
-> I will reject firmware file versions for upstream drivers.
+On Tue, 2010-10-26 at 17:26 +0200, ext Eliad Peller wrote:
+> set wl->vif to the newly created interface only after the firmware booted
+> successfully. on the way - make the function flow more clear.
+> 
+> Signed-off-by: Eliad Peller <eliad@wizery.com>
+> ---
 
-Does the HCI standard ever get improved upon? If so, how do devices
-never get firmware updates that would allow them to use some newer HCI
-APIs?
+Looks good.  Just one comment below.
 
-I've updated the documentation above for 802.11 and Bluetooth with the
-above, please feel free to further extend it as you see fit.
 
-  Luis
+>  drivers/net/wireless/wl12xx/wl1271_main.c |   32 +++++++++++++++++-----------
+>  1 files changed, 19 insertions(+), 13 deletions(-)
+> 
+> diff --git a/drivers/net/wireless/wl12xx/wl1271_main.c b/drivers/net/wireless/wl12xx/wl1271_main.c
+> index c54887c..2599157 100644
+> --- a/drivers/net/wireless/wl12xx/wl1271_main.c
+> +++ b/drivers/net/wireless/wl12xx/wl1271_main.c
+> @@ -950,18 +950,18 @@ static int wl1271_op_add_interface(struct ieee80211_hw *hw,
+>  	struct wiphy *wiphy = hw->wiphy;
+>  	int retries = WL1271_BOOT_RETRIES;
+>  	int ret = 0;
+> +	bool booted = false;
+>  
+>  	wl1271_debug(DEBUG_MAC80211, "mac80211 add interface type %d mac %pM",
+>  		     vif->type, vif->addr);
+>  
+>  	mutex_lock(&wl->mutex);
+>  	if (wl->vif) {
+> +		wl1271_error("multiple vifs are not supported yet");
+
+I don't think we should use wl1271_error here.  This will cause a lot of
+information to be printed out and look bad.  It is not an error if
+someone tries to add a new vif when we already have one.  Use
+wl1271_debug instead.
+
+
+-- 
+Cheers,
+Luca.
+
