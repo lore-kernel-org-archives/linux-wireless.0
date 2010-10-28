@@ -1,66 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from hrndva-omtalb.mail.rr.com ([71.74.56.125]:38602 "EHLO
-	hrndva-omtalb.mail.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753028Ab0JTO7Z (ORCPT
+Received: from mail-ey0-f174.google.com ([209.85.215.174]:40535 "EHLO
+	mail-ey0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751438Ab0J1JB0 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 20 Oct 2010 10:59:25 -0400
-Date: Wed, 20 Oct 2010 09:59:33 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: John W Linville <linville@tuxdriver.com>,
-	Michael Buesch <mb@bu3sch.de>
-Cc: b43-dev@lists.infradead.org, linux-wireless@vger.kernel.org
-Subject: [PATCH] ssb: Clear RETRY_TIMEOUT in PCI Configuration for normal
- devices
-Message-ID: <4cbf03d5.sBoVK5FZiEsbJ8xu%Larry.Finger@lwfinger.net>
+	Thu, 28 Oct 2010 05:01:26 -0400
+Received: by eye27 with SMTP id 27so1333272eye.19
+        for <linux-wireless@vger.kernel.org>; Thu, 28 Oct 2010 02:01:25 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Date: Thu, 28 Oct 2010 02:01:24 -0700
+Message-ID: <AANLkTi=t-rEsFKMv-V7Q3cyY6A_+LiBBYW2WbwXzg50b@mail.gmail.com>
+Subject: [PATCH] mac80211_hwsim: Incorporate txpower into rssi
+From: Blaise Gassend <blaise@willowgarage.com>
+To: linville@redhat.com
+Cc: linux-wireless@vger.kernel.org, Jouni Malinen <j@w1.fi>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The previous patch of this type fixed the case where a PCI device is behind
-an SSB->PCI bridge as found on an embedded device. This one treats the normal
-case of a "normal" Broadcom wireless PCI core on an SSB interconnect.
+Up to now mac80211_hwsim has been reporting an rssi of -50. This patch
+improves the model slightly by returning txpower-50. This makes it
+easy to stimulate tests that need to see a varying rssi.
 
-MMIO log traces obtained using the Broadcom wl hybrid driver show that
-the RETRY_TIMEOUT register (0x41) in PCI configuration space is cleared
-if non-zero. Similar code found in other drivers such as ipw2100 show
-this operation is needed to keep PCI Tx retries from interfering with
-C3 CPU state. There are no known cases where omission of this code has
-caused a problem, but this patch is offered just in case such a situation
-occurs.
-
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+Signed-off-by: Blaise Gassend <blaise@willowgarage.com>
 ---
-
-John,
-
-No particular urgency for this patch.
-
-Larry
----
-
-Index: wireless-testing/drivers/ssb/pcihost_wrapper.c
-===================================================================
---- wireless-testing.orig/drivers/ssb/pcihost_wrapper.c
-+++ wireless-testing/drivers/ssb/pcihost_wrapper.c
-@@ -59,6 +59,7 @@ static int ssb_pcihost_probe(struct pci_
- 	struct ssb_bus *ssb;
- 	int err = -ENOMEM;
- 	const char *name;
-+	u32 val;
- 
- 	ssb = kzalloc(sizeof(*ssb), GFP_KERNEL);
- 	if (!ssb)
-@@ -74,6 +75,12 @@ static int ssb_pcihost_probe(struct pci_
- 		goto err_pci_disable;
- 	pci_set_master(dev);
- 
-+	/* Disable the RETRY_TIMEOUT register (0x41) to keep
-+	 * PCI Tx retries from interfering with C3 CPU state */
-+	pci_read_config_dword(dev, 0x40, &val);
-+	if ((val & 0x0000ff00) != 0)
-+		pci_write_config_dword(dev, 0x40, val & 0xffff00ff);
+diff --git a/drivers/net/wireless/mac80211_hwsim.c
+b/drivers/net/wireless/mac80211
+index 7eaaa3b..3c44246 100644
+--- a/drivers/net/wireless/mac80211_hwsim.c
++++ b/drivers/net/wireless/mac80211_hwsim.c
+@@ -309,6 +309,8 @@ struct mac80211_hwsim_data {
+         */
+        u64 group;
+        struct dentry *debugfs_group;
 +
- 	err = ssb_bus_pcibus_register(ssb, dev);
- 	if (err)
- 		goto err_pci_release_regions;
++       int power_level;
+ };
+
+
+@@ -497,7 +499,7 @@ static bool mac80211_hwsim_tx_frame(struct ieee80211_hw *hw,
+        rx_status.band = data->channel->band;
+        rx_status.rate_idx = info->control.rates[0].idx;
+        /* TODO: simulate real signal strength (and optional packet loss) */
+-       rx_status.signal = -50;
++       rx_status.signal = data->power_level-50;
+
+        if (data->ps != PS_DISABLED)
+                hdr->frame_control |= cpu_to_le16(IEEE80211_FCTL_PM);
+@@ -698,6 +700,7 @@ static int mac80211_hwsim_config(struct
+ieee80211_hw *hw, u32
+        data->idle = !!(conf->flags & IEEE80211_CONF_IDLE);
+
+        data->channel = conf->channel;
++       data->power_level = conf->power_level;
+        if (!data->started || !data->beacon_int)
+                del_timer(&data->beacon_timer);
+        else
