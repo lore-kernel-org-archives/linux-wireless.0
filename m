@@ -1,40 +1,266 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([192.100.105.134]:32360 "EHLO
-	mgw-mx09.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751661Ab0JMNCM (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 13 Oct 2010 09:02:12 -0400
-Subject: Re: [PATCH v2 1/4] wl1271: TX aggregation optimization
-From: Juuso Oikarinen <juuso.oikarinen@nokia.com>
-To: ext Ido Yariv <ido@wizery.com>
-Cc: "Coelho Luciano (Nokia-MS/Helsinki)" <Luciano.Coelho@nokia.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <1286873633-10080-2-git-send-email-ido@wizery.com>
-References: <1286873633-10080-1-git-send-email-ido@wizery.com>
-	 <1286873633-10080-2-git-send-email-ido@wizery.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Tue, 12 Oct 2010 14:10:35 +0300
-Message-ID: <1286881835.11177.493.camel@wimaxnb.nmp.nokia.com>
-Mime-Version: 1.0
+Received: from comal.ext.ti.com ([198.47.26.152]:52114 "EHLO comal.ext.ti.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753683Ab0J1QRM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 28 Oct 2010 12:17:12 -0400
+Message-ID: <4CC9A1F5.4010308@ti.com>
+Date: Thu, 28 Oct 2010 18:16:53 +0200
+From: Shahar Levi <shahar_levi@ti.com>
+MIME-Version: 1.0
+To: Luciano Coelho <luciano.coelho@nokia.com>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH ] wl1271: Change wl12xx Files Names
+References: <1288091935-21688-1-git-send-email-shahar_levi@ti.com> <1288207558.1698.56.camel@powerslave>
+In-Reply-To: <1288207558.1698.56.camel@powerslave>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2010-10-12 at 10:53 +0200, ext Ido Yariv wrote:
-> In case the aggregation buffer is too small to hold all available packets,
-> the buffer is transferred to the FW and no more packets are aggregated.
-> Although there may be enough available TX blocks, no additional packets will
-> be handled by the current TX work.
-> 
-> Fix this by flushing the aggregation buffer when it's full, and continue
-> transferring packets as long as there are enough available TX blocks.
-> 
-> Signed-off-by: Ido Yariv <ido@wizery.com>
-> ---
->  drivers/net/wireless/wl12xx/wl1271_tx.c |   27 +++++++++++++++++++--------
->  1 files changed, 19 insertions(+), 8 deletions(-)
-> 
+On 10/27/2010 09:25 PM, Luciano Coelho wrote:
+> On Tue, 2010-10-26 at 13:18 +0200, ext Shahar Levi wrote:
+>> As part of adding support to wl1281/3 all files name prefix removed.
+>> Also the definition in Kconfig changed respectively.
+>>
+>> Signed-off-by: Shahar Levi<shahar_levi@ti.com>
+>> ---
+>
+> Thanks, Shahar! I have some comments below.
+Hi Luca,
+Thanks for you review. comments inline.
 
-Reviewed-by: Juuso Oikarinen <juuso.oikarinen@nokia.com>
+> In the commit message, maybe you could mention that the change makes
+> sense alto due to wl1273 support (which is already implemented).
+Will be fix in v2.
 
--Juuso
+>> diff --git a/drivers/net/wireless/wl12xx/Kconfig b/drivers/net/wireless/wl12xx/Kconfig
+>> index 1b3b7bd..1f29284 100644
+>> --- a/drivers/net/wireless/wl12xx/Kconfig
+>> +++ b/drivers/net/wireless/wl12xx/Kconfig
+>> @@ -2,55 +2,55 @@ menuconfig WL12XX
+>>          tristate "TI wl12xx driver support"
+>>          depends on MAC80211&&  EXPERIMENTAL
+>>          ---help---
+>> -         This will enable TI wl12xx driver support. The drivers make
+>> -         use of the mac80211 stack.
+>> +         This will enable TI wl12xx driver support: 1271, 1273.
+>> +         The drivers make use of the mac80211 stack.
+>
+> Maybe "This will enable TI wl12xx driver support for the following
+> chips: wl1271 and wl1273." would look better?
+Will be fix in v2.
+
+>> -config WL1271
+>> -       tristate "TI wl1271 support"
+>> +config WL127X
+>> +       tristate "TI wl127x support"make -j10 modules && (make modules_install ARCH=arm INSTALL_MOD_PATH=/home/nfs/ )
+>
+> Why not use WL12XX and wl12xx here already? Regarding the wl128x stuff,
+> as I mentioned before, I think it's best if we do the check at runtime
+> and not in Kconfig.
+In case the 128x will check at runtime you right.
+Will be fix in v2, if we will agreed otherwise i will revert.
+
+>
+>>          depends on WL12XX&&  GENERIC_HARDIRQS
+>>          depends on INET
+>>          select FW_LOADER
+>>          select CRC7
+>>          ---help---
+>>            This module adds support for wireless adapters based on the
+>> -         TI wl1271 chipset.
+>> +         TI wl127x chipset.
+>
+> TI wl127x is not a chipset.  Maybe we should say "This module adds
+> support for wireless adapters based on TI wl1271 and TI wl1273
+> chipsets"?
+Will be fix in v2
+
+>
+>
+>> -         If you choose to build a module, it'll be called wl1271. Say N if
+>> +         If you choose to build a module, it'll be called wl127x. Say N if
+>>            unsure.
+>
+> "it will be called wl12xx."
+Will be fix in v2
+
+>> -config WL1271_HT
+>> -        bool "TI wl1271 802.11 HT support (EXPERIMENTAL)"
+>> -        depends on WL1271&&  EXPERIMENTAL
+>> +config WL12XX_HT
+>> +        bool "TI wl12xx 802.11 HT support (EXPERIMENTAL)"
+>> +        depends on WL127X&&  EXPERIMENTAL
+>
+> WL12XX
+Will be fix in v2
+
+
+>>           default n
+>>           ---help---
+>> -          This will enable 802.11 HT support for TI wl1271 chipset.
+>> +          This will enable 802.11 HT support for TI wl12xx chipset.
+>
+> Maybe, to avoid confusion with wl1251 without repeating "wl1271, wl1273"
+> all the time, we could use "enable 802.11 HT support in the wl12xx
+> module"?
+Will be fix in v2
+
+>>            That configuration is temporary due to the code incomplete and
+>>            still in testing process.
+>>
+>> -config WL1271_SPI
+>> -       tristate "TI wl1271 SPI support"
+>> -       depends on WL1271&&  SPI_MASTER
+>> +config WL127X_SPI
+>> +       tristate "TI wl12xx SPI support"
+>> +       depends on WL127X&&  SPI_MASTER
+>
+> WL12XX_SPI
+Will be fix in v2
+
+>>          ---help---
+>>            This module adds support for the SPI interface of adapters using
+>> -         TI wl1271 chipset.  Select this if your platform is using
+>> +         TI wl12xx chipset.  Select this if your platform is using
+>
+> Maybe also here, something like "TI wl12xx chipsets."
+Will be fix in v2
+
+
+>>            the SPI bus.
+>>
+>> -         If you choose to build a module, it'll be called wl1251_spi.
+>> +         If you choose to build a module, it'll be called spi.
+>
+> Calling it simply "spi" is very confusing.  It should be called
+> wl12xx_spi. (wl1251 in the previous code was probably a copy&paste
+> mistake ;)
+Will be fix in v2
+
+
+>>            Say N if unsure.
+>>
+>> -config WL1271_SDIO
+>> -       tristate "TI wl1271 SDIO support"
+>> -       depends on WL1271&&  MMC
+>> +config WL12XX_SDIO
+>> +       tristate "TI wl12xx SDIO support"
+>> +       depends on WL127X&&  MMC
+>>          ---help---
+>>            This module adds support for the SDIO interface of adapters using
+>> -         TI wl1271 chipset.  Select this if your platform is using
+>> +         TI wl12xx chipset.  Select this if your platform is using
+>>            the SDIO bus.
+>>
+>> -         If you choose to build a module, it'll be called
+>> -         wl1271_sdio. Say N if unsure.
+>> +         If you choose to build a module, it'll be called sdio.
+>> +         Say N if unsure.
+>
+> Same as above for this whole block. "wl12xx chipsets" and wl12xx_sdio.
+Will be fix in v2
+
+>
+>>   config WL12XX_PLATFORM_DATA
+>>          bool
+>> -       depends on WL1271_SDIO != n
+>> +       depends on WL12XX_SDIO != n
+>>          default y
+>> diff --git a/drivers/net/wireless/wl12xx/Makefile b/drivers/net/wireless/wl12xx/Makefile
+>> index 3a80744..a19f4f3 100644
+>> --- a/drivers/net/wireless/wl12xx/Makefile
+>> +++ b/drivers/net/wireless/wl12xx/Makefile
+>> @@ -1,12 +1,14 @@
+>> -wl1271-objs            = wl1271_main.o  wl1271_cmd.o wl1271_io.o \
+>> -                         wl1271_event.o wl1271_tx.o  wl1271_rx.o   \
+>> -                         wl1271_ps.o    wl1271_acx.o wl1271_boot.o \
+>> -                         wl1271_init.o  wl1271_debugfs.o wl1271_scan.o
+>> +wl12xx-objs            = main.o  cmd.o io.o \
+>> +                         event.o tx.o  rx.o   \
+>> +                         ps.o    acx.o boot.o \
+>> +                         init.o  debugfs.o scan.o
+>
+> You can put these in less lines, now that the names are much shorter.
+Will be fix in v2
+
+>
+>> +wl12xx_spi-objs                = spi.o
+>> +wl12xx_sdio-objs       = sdio.o
+>
+> Here...
+Will be fix in v2
+
+>
+>
+>> -wl1271-$(CONFIG_NL80211_TESTMODE)      += wl1271_testmode.o
+>> -obj-$(CONFIG_WL1271)   += wl1271.o
+>> -obj-$(CONFIG_WL1271_SPI)       += wl1271_spi.o
+>> -obj-$(CONFIG_WL1271_SDIO)      += wl1271_sdio.o
+>> +wl1271-$(CONFIG_NL80211_TESTMODE)      += testmode.o
+>> +obj-$(CONFIG_WL127X)                   += wl12xx.o
+>> +obj-$(CONFIG_WL12XX_SPI)               += wl12xx_spi.o
+>> +obj-$(CONFIG_WL12XX_SDIO)              += wl12xx_sdio.o
+>
+> ...and here, you're using wl12xx_spi and wl12xx_sdio correctly, which
+> reinforces my comment about calling the modules "spi.ko" and "sdio.ko"
+> in the Kconfig section ;)
+Will be fix in v2
+
+
+>
+>> diff --git a/drivers/net/wireless/wl12xx/wl1271_conf.h b/drivers/net/wireless/wl12xx/conf.h
+>> similarity index 100%
+>> rename from drivers/net/wireless/wl12xx/wl1271_conf.h
+>> rename to drivers/net/wireless/wl12xx/conf.h
+>
+> You forgot to change this:
+>
+> #ifndef __WL1271_CONF_H__
+>
+> to:
+>
+> #ifndef __WL12XX_CONF_H__
+>
+> And the other appearances of __WL1271_CONF_H__ in that file.  This
+> applies to all header files.
+we agreed that change will be in second stage.
+not fix for now.
+
+>> diff --git a/drivers/net/wireless/wl12xx/wl1271_debugfs.h b/drivers/net/wireless/wl12xx/debugfs.h
+>> similarity index 98%
+>> rename from drivers/net/wireless/wl12xx/wl1271_debugfs.h
+>> rename to drivers/net/wireless/wl12xx/debugfs.h
+>> index 00a45b2..d12bf93 100644
+>> --- a/drivers/net/wireless/wl12xx/wl1271_debugfs.h
+>> +++ b/drivers/net/wireless/wl12xx/debugfs.h
+>> @@ -24,7 +24,7 @@
+>>   #ifndef WL1271_DEBUGFS_H
+>>   #define WL1271_DEBUGFS_H
+>
+> As mentioned above, this #ifndef and #define needs to be changed too.
+we agreed that change will be in second stage.
+not fix for now.
+
+
+
+>> diff --git a/drivers/net/wireless/wl12xx/wl1271_main.c b/drivers/net/wireless/wl12xx/main.c
+>> similarity index 99%
+>> rename from drivers/net/wireless/wl12xx/wl1271_main.c
+>> rename to drivers/net/wireless/wl12xx/main.c
+>> index 63036b5..dab10a5 100644
+>> --- a/drivers/net/wireless/wl12xx/wl1271_main.c
+>> +++ b/drivers/net/wireless/wl12xx/main.c
+>> @@ -31,20 +31,20 @@
+>
+> [...]
+>
+>>   #define WL1271_BOOT_RETRIES 3
+>
+> Did we agree not to change this stuff for now? Yes, now I remember, it's
+> better to do it in two steps indeed (ie. do the other changes in a
+> separate patch).  But I'd rather apply all the patches add once.
+I believe that patch could stand alone. There isn't any connection 
+between files names and function+defines names.
+
+
 
