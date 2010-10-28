@@ -1,39 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f46.google.com ([209.85.215.46]:38656 "EHLO
-	mail-ew0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754020Ab0JDRTx (ORCPT
+Received: from mail-iw0-f174.google.com ([209.85.214.174]:57019 "EHLO
+	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758933Ab0J1Qnl (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 4 Oct 2010 13:19:53 -0400
-Received: by ewy23 with SMTP id 23so2013860ewy.19
-        for <linux-wireless@vger.kernel.org>; Mon, 04 Oct 2010 10:19:51 -0700 (PDT)
+	Thu, 28 Oct 2010 12:43:41 -0400
+Received: by iwn10 with SMTP id 10so2554623iwn.19
+        for <linux-wireless@vger.kernel.org>; Thu, 28 Oct 2010 09:43:41 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <1286181700.3620.1.camel@jlt3.sipsolutions.net>
-References: <AANLkTin5zuxUY9ySYKrT9qD6cgV7eb7UhCjDYFzTUTeU@mail.gmail.com>
-	<1286181700.3620.1.camel@jlt3.sipsolutions.net>
-Date: Mon, 4 Oct 2010 18:19:49 +0100
-Message-ID: <AANLkTikfriP-KM1NqZuKV0Wvz8ew4rz9uCGMuJx2hzE0@mail.gmail.com>
-Subject: Re: OLPC XO-1 rfkill driver design
-From: Daniel Drake <dsd@laptop.org>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org,
-	Andres Salomon <dilinger@queued.net>
-Content-Type: text/plain; charset=ISO-8859-1
+In-Reply-To: <728838.98715.qm@web56803.mail.re3.yahoo.com>
+References: <728838.98715.qm@web56803.mail.re3.yahoo.com>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Thu, 28 Oct 2010 09:43:07 -0700
+Message-ID: <AANLkTikShmy=8DU113jmfDtmsPyZwgB1Cv9VM2orWVCR@mail.gmail.com>
+Subject: Re: [PATCH 2/2] compat-wireless: fix update-initramfs script
+To: Walter Goldens <goldenstranger@yahoo.com>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 4 October 2010 09:41, Johannes Berg <johannes@sipsolutions.net> wrote:
-> None of these seem to allow for automatic detection that the module is
-> needed? Is there maybe some platform device already that it could match?
+On Thu, Oct 28, 2010 at 2:14 AM, Walter Goldens
+<goldenstranger@yahoo.com> wrote:
+> There are traces of a widespread error logs from installing
+> compat-wireless pertaining to update-initramfs, as google would
+> suggest. Ubuntu 10.10, for example complains of excessive:
+> "FATAL: Could not load /lib/modules/2.6.31-wl/modules.dep: No such file or directory"
+> Other distributions/kernels: "Cannot find /lib/modules/2.6.31-wl"
+>
+> * Fix kernel version detection
+> * Fix updating of initramfs. Instead of generating new initramfs image,
+> simply update the existing one. This makes update-grub redundant, which
+> is good thing, considering it messes with people's grub.cfg settings
+> every time compat-wireless is installed. At some point replacing this
+> script in Makefile with "@update-initramfs -u" will probably be best.
+>
+>
+> Signed-off-by: Walter Goldens <goldenstranger@yahoo.com>
 
-Good point.
-I found a load of rfkill drivers in drivers/platform/x86 and spoke
-with the maintainer who agreed that the XO-1 driver should go there as
-well.
-As for the probing issue, good point, it can be solved with platform devices.
+applied both and pushed, thanks!
 
-I sent some patches for review:
-http://article.gmane.org/gmane.linux.kernel/1044224
-http://article.gmane.org/gmane.linux.kernel/1044225
-
-Thanks for your input!
-Daniel
+  Luis
