@@ -1,60 +1,82 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f46.google.com ([209.85.214.46]:62817 "EHLO
-	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754735Ab0JIPiH (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 9 Oct 2010 11:38:07 -0400
-Received: by bwz15 with SMTP id 15so888250bwz.19
-        for <linux-wireless@vger.kernel.org>; Sat, 09 Oct 2010 08:38:05 -0700 (PDT)
-From: Helmut Schaa <helmut.schaa@googlemail.com>
-To: Felix Fietkau <nbd@openwrt.org>
-Subject: Re: [PATCH 1/3] cfg80211: add channel utilization stats to the survey command
-Date: Sat, 9 Oct 2010 17:37:16 +0200
-Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com,
-	lrodriguez@atheros.com, br1@einfach.org
-References: <1286584771-76663-1-git-send-email-nbd@openwrt.org> <201010091417.25727.helmut.schaa@googlemail.com> <4CB06966.9070905@openwrt.org>
-In-Reply-To: <4CB06966.9070905@openwrt.org>
+Received: from slowhand.arndnet.de ([88.198.19.76]:48635 "EHLO mail.unitix.de"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S933088Ab0J1O2g (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 28 Oct 2010 10:28:36 -0400
+Message-ID: <4CC98892.7080000@arndnet.de>
+Date: Thu, 28 Oct 2010 16:28:34 +0200
+From: Arnd Hannemann <arnd@arndnet.de>
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="us-ascii"
-Message-Id: <201010091737.17000.helmut.schaa@googlemail.com>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+CC: "linux-mmc@vger.kernel.org" <linux-mmc@vger.kernel.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: b43 sdio: WARNING: at drivers/mmc/core/core.c:237 mmc_wait_for_cmd
+References: <4CC874F4.5050908@arndnet.de> <4CC8CAAE.3040100@lwfinger.net>
+In-Reply-To: <4CC8CAAE.3040100@lwfinger.net>
+Content-Type: text/plain; charset=ISO-8859-15
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Am Samstag 09 Oktober 2010 schrieb Felix Fietkau:
-> On 2010-10-09 2:17 PM, Helmut Schaa wrote:
-> > Am Samstag 09 Oktober 2010 schrieb Felix Fietkau:
-> >> Using these, user space can calculate a relative channel utilization
-> >> with arbitrary intervals by regularly taking snapshots of the survey
-> >> results.
-> > 
-> > What if you've got multiple consumers, wouldn't that mess up the
-> > survey results?
-> > 
-> > I mean, for example mac80211 and/or hostapd might want to use the busy time
-> > statistics for the BSS load IE while a different userspace process might
-> > want to monitor the channel utilization in order to detect a worsening
-> > channel condition.
-> > 
-> > If the consumers happen to use the same interval and request the survey
-> > very soon after each other one consumer will get the values on a nice (close
-> > to the query interval) time base while the other one will get the values
-> > based on a very small interval (which might lower the value's
-> > representativeness).
-> Multiple consumers work just fine, since the survey results are relative
-> to the time the hardware started using the channel, not relative to the
-> last request. Maybe my description was a bit unclear on that part.
+Hi,
 
-Ah, thanks Felix, I only read the comment, not the code :)
+Am 28.10.2010 02:58, schrieb Larry Finger:
+> On 10/27/2010 01:52 PM, Arnd Hannemann wrote:
+>> first of all: great! b43 sdio card works with open firmware!
+>>
+>> However, on "rmmod b43" I get the following backtraces 
+>> with current Linus git (v2.6.36-6794-g12ba8d1):
+>>
+>>
+>> [  831.696189] b43-phy1 debug: Removing Interface type 2
+>> [  831.698425] b43-phy1 debug: Wireless interface stopped
+>> [  851.560519] ------------[ cut here ]------------
+>> [  851.560531] WARNING: at drivers/mmc/core/core.c:237 mmc_wait_for_cmd+0x88/0x90()
+>> [  851.560534] Hardware name: 20552PG
+>> [  851.560536] Modules linked in: b43(-) ssb mmc_block binfmt_misc rfcomm sco bnep ppdev l2cap ipt_MASQUERADE iptable_nat nf_nat nf_conntrack_ipv4 nf_defrag_ipv4 xt_state nf_conntrack ipt_REJECT xt_tcpudp iptable_filter ip_tables x_tables bridge stp kvm_intel kvm arc4 iwlagn snd_hda_codec_conexant snd_hda_intel snd_hda_codec iwlcore snd_hwdep snd_pcm thinkpad_acpi mac80211 snd_seq_midi snd_rawmidi snd_seq_midi_event snd_seq r852 joydev snd_timer sm_common pcmcia nand snd_seq_device cfg80211 sdhci_pci btusb psmouse tpm_tis yenta_socket nand_ids lp snd pcmcia_rsrc nand_ecc bluetooth sdhci tpm pcmcia_core parport mtd snd_page_alloc serio_raw tpm_bios soundcore nvram led_class sha256_generic aes_i586 aes_generic dm_crypt i915 drm_kms_helper drm ahci intel_agp i2c_algo_bit intel_gtt e1000e libahci video agpgart output
+>> [  851.560620] Pid: 2504, comm: rmmod Not tainted 2.6.36-titan0+ #1
+>> [  851.560622] Call Trace:
+>> [  851.560631]  [<c014a102>] warn_slowpath_common+0x72/0xa0
+>> [  851.560636]  [<c04d94c8>] ? mmc_wait_for_cmd+0x88/0x90
+>> [  851.560641]  [<c04d94c8>] ? mmc_wait_for_cmd+0x88/0x90
+>> [  851.560645]  [<c014a152>] warn_slowpath_null+0x22/0x30
+>> [  851.560649]  [<c04d94c8>] mmc_wait_for_cmd+0x88/0x90
+>> [  851.560655]  [<c0401585>] ? device_release+0x25/0x80
+>> [  851.560660]  [<c04df210>] mmc_io_rw_direct_host+0xa0/0x150
+>> [  851.560665]  [<c04df370>] mmc_io_rw_direct+0x30/0x40
+>> [  851.560669]  [<c04e06e7>] sdio_disable_func+0x37/0xa0
+>> [  851.560683]  [<f8dfcb80>] b43_sdio_remove+0x30/0x50 [b43]
+>> [  851.560687]  [<c04df8cc>] sdio_bus_remove+0x1c/0x60
+>> [  851.560692]  [<c016d39f>] ? blocking_notifier_call_chain+0x1f/0x30
+>> [  851.560697]  [<c0404991>] __device_release_driver+0x51/0xb0
+>> [  851.560701]  [<c0404a7f>] driver_detach+0x8f/0xa0
+>> [  851.560705]  [<c0403c83>] bus_remove_driver+0x63/0xa0
+>> [  851.560709]  [<c0405039>] driver_unregister+0x49/0x80
+>> [  851.560713]  [<c0405039>] ? driver_unregister+0x49/0x80
+>> [  851.560718]  [<c04dfad7>] sdio_unregister_driver+0x17/0x20
+>> [  851.560727]  [<f8dfcb42>] b43_sdio_exit+0x12/0x20 [b43]
+>> [  851.560734]  [<f8dfe76f>] b43_exit+0x17/0x3c [b43]
+>> [  851.560740]  [<c017fb8d>] sys_delete_module+0x13d/0x200
+>> [  851.560747]  [<c01fd7d2>] ? do_munmap+0x212/0x300
+>> [  851.560752]  [<c010311f>] sysenter_do_call+0x12/0x28
+>> [  851.560757] ---[ end trace 31e14488072d2f7d ]---
+>> [  851.560759] ------------[ cut here ]------------
+> 
+> I'm not an expert on the sdio interface, but I'll take a crack at this.
+> 
+> The first WARN_ON comes because the host has not been claimed. Please try the
+> following patch so that we know if it is claimed when b43_sdio_remove() is
+> entered and ssb_unregister_bus() clears it, or it has not been claimed when the
+> routine is entered. If the latter, we will likely need to surround the
+> sdio_disable_func() calls with sdio_claim_host()...sdio_remove_host() statements.
 
-So, the busy time statistics for channel i are gathered starting with the
-switch to i. Hence, if a user space process would like to measure multiple
-channels it will just switch through all of them and call get survey right
-before switching to the next one, right?
+I get the following output from your patch when unloading b43:
 
-However, if we think about the BSS load IE we might want to measure the busy
-times without switching the channel? But we'd like have a somewhat actual
-value and not an average throughout the last minute/hour or so. Any ideas how
-to integrate that into your approach?
+[ 1364.620044] b43-phy1 debug: Removing Interface type 2
+[ 1364.621812] b43-phy1 debug: Wireless interface stopped
+[ 1372.440297] b43-sdio: before ssb_bus_unregister, claimed is 0
+[ 1372.440345] b43-sdio: before sdio_disable_func, claimed is 0
+[ 1372.440351] ------------[ cut here ]------------
+[ 1372.440367] WARNING: at drivers/mmc/core/core.c:237 mmc_wait_for_cmd+0x88/0x90()
 
-Helmut
+Regards
+Arnd
