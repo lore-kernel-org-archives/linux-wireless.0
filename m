@@ -1,56 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([88.198.39.176]:47287 "EHLO ds10.nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753036Ab0JUArf (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 20 Oct 2010 20:47:35 -0400
-From: Felix Fietkau <nbd@openwrt.org>
-To: linux-wireless@vger.kernel.org
-Cc: linville@tuxdriver.com, lrodriguez@atheros.com
-Subject: [PATCH 1/3] ath9k_hw: fix potential spurious tx error bit interpretation
-Date: Thu, 21 Oct 2010 02:47:23 +0200
-Message-Id: <1287622045-21795-1-git-send-email-nbd@openwrt.org>
+Received: from web56807.mail.re3.yahoo.com ([66.196.97.81]:39760 "HELO
+	web56807.mail.re3.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1752525Ab0J1JMu (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 28 Oct 2010 05:12:50 -0400
+Message-ID: <879667.39110.qm@web56807.mail.re3.yahoo.com>
+Date: Thu, 28 Oct 2010 02:12:48 -0700 (PDT)
+From: Walter Goldens <goldenstranger@yahoo.com>
+Subject: [PATCH 1/2] compat-wireless: disable update-initramfs except for b4xx/ssb
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Cc: linux-wireless@vger.kernel.org
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-According to documentation, AR_ExcessiveRetries, AR_Filtered and
-AR_FIFOUnderrun are only valid if AR_FrmXmitOK is clear.
+Currently, the only drivers requiring update of the initramfs image
+are b43/legacy/b44/ssb, yet the process is in place for every other
+driver, including driver-select entries. Disable update-initramfs
+for all but b4xx/ssb.
+ 
 
-Not checking this might result in suboptimal FIFO settings, unnecessary
-retransmissions, or other connectivity issues.
-
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
-Cc: stable@kernel.org
+Signed-off-by: Walter Goldens <goldenstranger@yahoo.com>
 ---
- drivers/net/wireless/ath/ath9k/ar9002_mac.c |   16 +++++++++-------
- 1 files changed, 9 insertions(+), 7 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/ar9002_mac.c b/drivers/net/wireless/ath/ath9k/ar9002_mac.c
-index 3b4c52c..f0268e5 100644
---- a/drivers/net/wireless/ath/ath9k/ar9002_mac.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9002_mac.c
-@@ -237,13 +237,15 @@ static int ar9002_hw_proc_txdesc(struct ath_hw *ah, void *ds,
- 	status = ACCESS_ONCE(ads->ds_txstatus1);
- 	if (status & AR_FrmXmitOK)
- 		ts->ts_status |= ATH9K_TX_ACKED;
--	if (status & AR_ExcessiveRetries)
--		ts->ts_status |= ATH9K_TXERR_XRETRY;
--	if (status & AR_Filtered)
--		ts->ts_status |= ATH9K_TXERR_FILT;
--	if (status & AR_FIFOUnderrun) {
--		ts->ts_status |= ATH9K_TXERR_FIFO;
--		ath9k_hw_updatetxtriglevel(ah, true);
-+	else {
-+		if (status & AR_ExcessiveRetries)
-+			ts->ts_status |= ATH9K_TXERR_XRETRY;
-+		if (status & AR_Filtered)
-+			ts->ts_status |= ATH9K_TXERR_FILT;
-+		if (status & AR_FIFOUnderrun) {
-+			ts->ts_status |= ATH9K_TXERR_FIFO;
-+			ath9k_hw_updatetxtriglevel(ah, true);
-+		}
- 	}
- 	if (status & AR_TxTimerExpired)
- 		ts->ts_status |= ATH9K_TXERR_TIMER_EXPIRED;
--- 
-1.7.2.2
+--- a/scripts/driver-select
++++ b/scripts/driver-select
+@@ -169,6 +169,7 @@ function disable_bt_usb_ethernet_var {
+ 	disable_ethernet
+ 	disable_var_03
+ 	disable_bt
++	disable_update-initramfs
+ } 
+ 
+ function enable_only_ethernet {
+@@ -187,6 +188,7 @@ function disable_var {
+ 	disable_ssb
+ 	disable_usbnet
+ 	disable_eeprom
++	disable_update-initramfs
+ } 
+ 
+ function disable_var_01 {
+@@ -199,6 +201,7 @@ function disable_var_02 {
+ 	disable_lib80211
+ 	disable_ssb
+ 	disable_usbnet
++	disable_update-initramfs
+ }
+ 
+ function disable_staging {
+@@ -216,6 +219,12 @@ function disable_brcm80211 {
+ 	perl -i -ne 'print if ! /brcm80211/ ' Makefile
+ }
+ 
++function disable_update-initramfs
++{
++	backup_file Makefile
++	perl -i -ne 'print if ! /update-initramfs/' Makefile
++}
++
+ function select_ath_driver 
+ {
+ 	backup_file $ATH_MAKEFILE
+@@ -408,6 +417,7 @@ case $1 in
+ 		select_drivers		CONFIG_ATL1 CONFIG_ATL2 CONFIG_ATL1E CONFIG_ATL1C
+ 		enable_only_ethernet
+ 		disable_b44
++		disable_update-initramfs
+ 		;;
+ 	bt)
+ 		select_driver 		CONFIG_BT
 
+
+
+      
