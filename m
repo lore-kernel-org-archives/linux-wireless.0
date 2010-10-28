@@ -1,62 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([192.100.122.233]:33262 "EHLO
-	mgw-mx06.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751610Ab0JYJZF (ORCPT
+Received: from web56803.mail.re3.yahoo.com ([66.196.97.77]:35821 "HELO
+	web56803.mail.re3.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1752525Ab0J1JOT (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 25 Oct 2010 05:25:05 -0400
-Received: from vaebh106.NOE.Nokia.com (vaebh106.europe.nokia.com [10.160.244.32])
-	by mgw-mx06.nokia.com (Switch-3.3.3/Switch-3.3.3) with ESMTP id o9P9OvYm001113
-	for <linux-wireless@vger.kernel.org>; Mon, 25 Oct 2010 12:25:02 +0300
-From: juuso.oikarinen@nokia.com
-To: luciano.coelho@nokia.com
+	Thu, 28 Oct 2010 05:14:19 -0400
+Message-ID: <728838.98715.qm@web56803.mail.re3.yahoo.com>
+Date: Thu, 28 Oct 2010 02:14:18 -0700 (PDT)
+From: Walter Goldens <goldenstranger@yahoo.com>
+Subject: [PATCH 2/2] compat-wireless: fix update-initramfs script
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
 Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH] wl1271: Fix RX path stall
-Date: Mon, 25 Oct 2010 12:24:29 +0300
-Message-Id: <1287998669-27209-1-git-send-email-juuso.oikarinen@nokia.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Juuso Oikarinen <juuso.oikarinen@nokia.com>
+There are traces of a widespread error logs from installing
+compat-wireless pertaining to update-initramfs, as google would
+suggest. Ubuntu 10.10, for example complains of excessive:
+"FATAL: Could not load /lib/modules/2.6.31-wl/modules.dep: No such file or directory"
+Other distributions/kernels: "Cannot find /lib/modules/2.6.31-wl"
 
-The wl1271_rx function loops through packets in an aggregated buffer. Each
-packet in the buffer is handled by a call to wl1271_rx_handle_data, which will
-fail if skb memory allocation fails or production mode is enabled. These
-failures currently prevent the rx counters to be incremented, thus causing the
-rx loop to run forever.
+* Fix kernel version detection
+* Fix updating of initramfs. Instead of generating new initramfs image,
+simply update the existing one. This makes update-grub redundant, which
+is good thing, considering it messes with people's grub.cfg settings
+every time compat-wireless is installed. At some point replacing this
+script in Makefile with "@update-initramfs -u" will probably be best.
+ 
 
-Fix this by ignoring error codes reported wl1271_rx_handle_data function.
-This essentially means that frames will be dropped in production mode, which
-is the intetion, and frames will be dropped if memory allocation fails, which
-is a decent way to recover from that situation.
-
-Signed-off-by: Juuso Oikarinen <juuso.oikarinen@nokia.com>
+Signed-off-by: Walter Goldens <goldenstranger@yahoo.com>
 ---
- drivers/net/wireless/wl12xx/wl1271_rx.c |   12 ++++++++----
- 1 files changed, 8 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/net/wireless/wl12xx/wl1271_rx.c b/drivers/net/wireless/wl12xx/wl1271_rx.c
-index 35448e7..cacfee5 100644
---- a/drivers/net/wireless/wl12xx/wl1271_rx.c
-+++ b/drivers/net/wireless/wl12xx/wl1271_rx.c
-@@ -184,10 +184,14 @@ void wl1271_rx(struct wl1271 *wl, struct wl1271_fw_status *status)
- 		while (pkt_offset < buf_size) {
- 			pkt_length = wl1271_rx_get_buf_size(status,
- 					drv_rx_counter);
--			if (wl1271_rx_handle_data(wl,
--					wl->aggr_buf + pkt_offset,
--					pkt_length) < 0)
--				break;
-+			/*
-+			 * the handle data call can only fail in memory-outage
-+			 * conditions, in that case the received frame will just
-+			 * be dropped.
-+			 */
-+			wl1271_rx_handle_data(wl,
-+					      wl->aggr_buf + pkt_offset,
-+					      pkt_length);
- 			wl->rx_counter++;
- 			drv_rx_counter++;
- 			drv_rx_counter &= NUM_RX_PKT_DESC_MOD_MASK;
--- 
-1.7.0.4
+--- a/scripts/update-initramfs
++++ b/scripts/update-initramfs
+@@ -10,16 +10,18 @@
+ 
+ LSB_RED_ID=$(/usr/bin/lsb_release -i -s)
+ 
+-KLIB=/lib/modules/2.6.31-wl/build
++KLIB=/lib/modules/$(uname -r)/build
+ ver=$(echo $KLIB | awk -F "/lib/modules/" '{print $2}' | awk -F"/" '{print $1}')
+ dir=/boot/
+ 
+ case $LSB_RED_ID in
+ "Ubuntu")
+ 	echo "Updating Ubuntu's initramfs for $ver under $dir ..."
+-	mkinitramfs -o $dir/initrd.img-$ver $ver
+-	echo "Will now run update-grub to ensure grub will find the new initramfs ..."
+-	update-grub
++#	mkinitramfs -o $dir/initrd.img-$ver $ver
++	update-initramfs -u
++	echo "update complete"
++#	echo "Will now run update-grub to ensure grub will find the new initramfs ..."
++#	update-grub
+ 	;;
+ *)
+ 	echo "Warning:"
 
+
+
+      
