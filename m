@@ -1,68 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga14.intel.com ([143.182.124.37]:23083 "EHLO mga14.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751190Ab0JFQNt (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 6 Oct 2010 12:13:49 -0400
-Subject: Re: [PATCH wireless-2.6 or stable] iwlwifi: return error when fail
- to start scanning
-From: "Guy, Wey-Yi" <wey-yi.w.guy@intel.com>
-To: Stanislaw Gruszka <sgruszka@redhat.com>
-Cc: Florian Mickler <florian@mickler.org>,
-	"linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"stable@kernel.org" <stable@kernel.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"Chatre, Reinette" <reinette.chatre@intel.com>,
-	"ilw@linux.intel.com" <ilw@linux.intel.com>,
-	"Berg, Johannes" <johannes.berg@intel.com>,
-	"Cahill, Ben M" <ben.m.cahill@intel.com>,
-	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-In-Reply-To: <20101006160434.GB24581@redhat.com>
-References: <20101005085717.GA18012@redhat.com>
-	 <1286317292-10679-1-git-send-email-florian@mickler.org>
-	 <20101006090228.GA2523@redhat.com>  <20101006160434.GB24581@redhat.com>
-Content-Type: text/plain
-Date: Wed, 06 Oct 2010 09:12:58 -0700
-Message-Id: <1286381578.12594.18.camel@wwguy-ubuntu>
-Mime-Version: 1.0
+Received: from mail.candelatech.com ([208.74.158.172]:56596 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759451Ab0J1Xgz (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 28 Oct 2010 19:36:55 -0400
+Message-ID: <4CCA0908.6000105@candelatech.com>
+Date: Thu, 28 Oct 2010 16:36:40 -0700
+From: Ben Greear <greearb@candelatech.com>
+MIME-Version: 1.0
+To: Felix Fietkau <nbd@openwrt.org>
+CC: =?ISO-8859-1?Q?Bj=F6rn_Smedman?= <bjorn.smedman@venatech.se>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	"ath9k-devel@venema.h4ckr.net" <ath9k-devel@venema.h4ckr.net>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: [ath9k-devel] [RFC] ath9k: Insert wmb before linking dma descriptors
+References: <alpine.DEB.2.00.1010042059130.29449@vtdt3>	<20101005131744.GB4074@tuxdriver.com>	<20101005195039.GD11831@tux> <AANLkTikxayNdakE-MrCQWS10nZ3ZQk1pnEcHC+sMck1p@mail.gmail.com> <4CB0890D.3050208@openwrt.org>
+In-Reply-To: <4CB0890D.3050208@openwrt.org>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Gruszka,
+On 10/09/2010 08:23 AM, Felix Fietkau wrote:
+> On 2010-10-09 5:19 PM, Björn Smedman wrote:
+>> On Tue, Oct 5, 2010 at 9:50 PM, Luis R. Rodriguez
+>> <lrodriguez@atheros.com>  wrote:
+>>> Felix is more familiar with this area so I'll let him chime with
+>>> his ACK/NACK.
+>>>
+>>>   Luis
+>>
+>> So Felix, what do you think? I realize it may not be a common problem
+>> on any currently popular platform, but don't you agree it is in
+>> principle unsafe to write to the ds_link field of dma descriptors
+>> without a guarantee that those writes will be performed in the
+>> intended order?
+> Haven't had time to review this in detail yet. I'll take another look at
+> it later...
 
-On Wed, 2010-10-06 at 09:04 -0700, Stanislaw Gruszka wrote:
-> This is stable friendly backport of wireless-testing commit
-> 3eecce527c7434dfd16517ce08b49632c8a26717 "iwlwifi: unify scan start
-> checks". Wireless-testing version include also a lot of cleanups.
-> 
-> On error case in {iwl3945,iwlagn}_request_scan we queue abort_scan work,
-> which in a fact do nothing, so we never complete the scan. Thats gives
-> "WARNING: at net/wireless/core.c:614 wdev_cleanup_work" and stopped
-> network connection until reload iwlwifi modules. Return of -EIO, and
-> stopping queuing any work is a fix.
-> 
-> Note there are still many cases when we can get: 
-> 
-> WARNING: at net/wireless/core.c:614 wdev_cleanup_work  
-> WARNING: at net/mac80211/scan.c:266 ieee80211_scan_completed
-> WARNING: at net/mac80211/scan.c:269 ieee80211_scan_complete
-> 
-> which are not fixed. Unfortunately does not exist single, small fix
-> for that problems, and we probably will see some more bug reports
-> with scan warnings. As solution we rewrite iwl-scan.c code to avoid
-> all possible race conditions. That quite big patch set is queued
-> for 2.6.37 .
-> 
-> Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
-> ---
-> Patch is intended for wireless-2.6, or in case when it does not
-> make 2.6.36 release, for -stable 2.6.36.y 
-> 
+Had a chance to look at it?  I've been carrying this in my
+tree and it hasn't caused any obvious problems, for what that's
+worth...
 
-Is this the replacement for Mickler's patch?
+Ben
 
-Thanks
-Wey
-
-
+-- 
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
 
