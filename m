@@ -1,59 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:52789 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754805Ab0JNObr (ORCPT
+Received: from mail-bw0-f46.google.com ([209.85.214.46]:37365 "EHLO
+	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751209Ab0J2Xfl (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 14 Oct 2010 10:31:47 -0400
-Subject: Re: [PATCH 3/6] Add a function for evaluating rate changes for
- possible notification
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Paul Stewart <pstew@google.com>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <AANLkTinq=B13gPd3obqAkBDQv4Ufz5Upp2UPVw9bpED2@mail.gmail.com>
-References: <20101013224851.B8E5D20465@glenhelen.mtv.corp.google.com>
-	 <1287064265.4641.435.camel@jlt3.sipsolutions.net>
-	 <AANLkTinq=B13gPd3obqAkBDQv4Ufz5Upp2UPVw9bpED2@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Thu, 14 Oct 2010 16:32:30 +0200
-Message-ID: <1287066750.4641.439.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+	Fri, 29 Oct 2010 19:35:41 -0400
+Received: by bwz11 with SMTP id 11so3037811bwz.19
+        for <linux-wireless@vger.kernel.org>; Fri, 29 Oct 2010 16:35:40 -0700 (PDT)
+Message-Id: <cover.1288393804.git.chunkeey@googlemail.com>
+From: Christian Lamparter <chunkeey@googlemail.com>
+Date: Sat, 30 Oct 2010 01:10:04 +0200
+Subject: [PATCH 0/6] carl9170: 2.6.38 patches
+To: linux-wireless@vger.kernel.org
+Cc: linville@tuxdriver.com
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2010-10-14 at 07:24 -0700, Paul Stewart wrote:
+I haven't heard of any serious complains yet?
+So I'm moving on with the next batch for the
+next -next cycle.
 
-> >> +             if (!(ifmgd->flags & IEEE80211_STA_TX_RATE_CHANGED) ||
-> >> +                 bss_conf->cqm_bitrate_thold == 0)
-> >> +                     continue;
-> >
-> > why would this work item even be running with a threshold of zero?
-> 
-> This would be in the case where the userspace reset the threshold back
-> to zero (no longer interested in bitrate change events) but a work
-> task was already scheduled it's a small window and I can remove that
-> conditional if it suits.
+Christian Lamparter (7):
+  carl9170: import hw/fw header updates
+  carl9170: use generic sign_extend32
+  carl9170: initialize HW aMPDU parameters properly
+  carl9170: fix spurious restart due to high latency
+  carl9170: stop stale uplink BA sessions
+  carl9170: configurable beacon rates
+  carl9170: improve rx ampdu software deaggregation
 
-Makes sense, I was just wondering. Maybe just add a comment?
+ drivers/net/wireless/ath/carl9170/carl9170.h |    6 +-
+ drivers/net/wireless/ath/carl9170/fwcmd.h    |   13 ++-
+ drivers/net/wireless/ath/carl9170/hw.h       |    7 ++-
+ drivers/net/wireless/ath/carl9170/mac.c      |   56 ++++++++-----
+ drivers/net/wireless/ath/carl9170/main.c     |   18 ++++
+ drivers/net/wireless/ath/carl9170/phy.c      |   17 +---
+ drivers/net/wireless/ath/carl9170/phy.h      |   24 +++---
+ drivers/net/wireless/ath/carl9170/rx.c       |  117 +++++++++++++++++++++-----
+ drivers/net/wireless/ath/carl9170/tx.c       |   54 ++++++++++++
+ drivers/net/wireless/ath/carl9170/usb.c      |    2 +-
+ drivers/net/wireless/ath/carl9170/version.h  |    6 +-
+ 11 files changed, 243 insertions(+), 77 deletions(-)
 
-> > However, I think all of this is really expensive. For many devices,
-> > you'll effectively be triggering an evaluation of the bitrate for every
-> > packet. This will work well with minstrel, since it properly uses and
-> > advertises the "best throughput" rate, but not necessarily with other
-> > algorithms.
-> 
-> I could throttle-down the execution rate of this work proc to a
-> minimum periodicity, at the expense of timely information.  Is this
-> along the lines of what you'd like done?
-
-If I'd had a good idea I probably would've mentioned it. I guess that
-would work, but I don't really know. I'm just worried that there is a
-lot of calculation going on all the time, like all those divisions.
-Those are _really_ expensive on embedded systems.
-
-I wonder if "rate" is really the best interface for this. Since it's a
-threshold event, does it matter? Maybe there should instead be events
-for MCS changes and legacy rate changes so we can avoid all those
-calculations?
-
-johannes
+-- 
+1.7.2.3
 
