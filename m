@@ -1,108 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.19.149.2]:33440 "EHLO mail.atheros.com"
+Received: from lo.gmane.org ([80.91.229.12]:47073 "EHLO lo.gmane.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753418Ab0JTRTH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 20 Oct 2010 13:19:07 -0400
-Received: from mail.atheros.com ([10.10.20.105])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Wed, 20 Oct 2010 10:18:57 -0700
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: <linville@tuxdriver.com>, <johannes@sipsolutions.net>
-CC: <easwar.krishnan@atheros.com>, <linux-wireless@vger.kernel.org>,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	David Quan <david.quan@atheros.com>,
-	Jouni Malinen <jouni.malinen@atheros.com>, <stable@kernel.org>
-Subject: [PATCH 3/7] cfg80211: fix disabling channels based on hints
-Date: Wed, 20 Oct 2010 10:18:55 -0700
-Message-ID: <1287595139-10761-4-git-send-email-lrodriguez@atheros.com>
-In-Reply-To: <1287595139-10761-1-git-send-email-lrodriguez@atheros.com>
-References: <1287595139-10761-1-git-send-email-lrodriguez@atheros.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	id S933070Ab0J2Wbb (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 29 Oct 2010 18:31:31 -0400
+Received: from list by lo.gmane.org with local (Exim 4.69)
+	(envelope-from <glkwg-linux-wireless@m.gmane.org>)
+	id 1PBxTo-0001YL-D0
+	for linux-wireless@vger.kernel.org; Sat, 30 Oct 2010 00:31:24 +0200
+Received: from CPE0014bf4aedf8-CM00111ae2cca2.cpe.net.cable.rogers.com ([173.34.126.150])
+        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Sat, 30 Oct 2010 00:31:24 +0200
+Received: from senada by CPE0014bf4aedf8-CM00111ae2cca2.cpe.net.cable.rogers.com with local (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Sat, 30 Oct 2010 00:31:24 +0200
+To: linux-wireless@vger.kernel.org
+From: seno <senada@t-online.de>
+Subject: Re: [PATCH] rtl8187b: do not do per packet TX AGC
+Date: Fri, 29 Oct 2010 22:31:14 +0000 (UTC)
+Message-ID: <loom.20101030T001241-932@post.gmane.org>
+References: <1282974868-22237-1-git-send-email-cascardo@holoscopio.com> <4C798080.8010002@lwfinger.net> <20100830141218.GB30864@tuxdriver.com> <4C7BC4D9.1010108@lwfinger.net> <20100830152841.GB2950@barata.holoscopio.com> <loom.20101026T200014-691@post.gmane.org> <4CC71CFF.8050004@lwfinger.net> <20101026185341.GA4608@barata.holoscopio.com> <20101028191305.2960c83b@gotham.conectiva> <loom.20101029T010426-834@post.gmane.org> <20101029135449.GB3768@barata.holoscopio.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-After a module loads you will have loaded the world roaming regulatory
-domain or a custom regulatory domain. Further regulatory hints are
-welcomed and should be respected unless the regulatory hint is coming
-from a country IE as the IEEE spec allows for a country IE to be a subset
-of what is allowed by the local regulatory agencies.
+Thadeu Lima de Souza Cascardo <cascardo@...> writes:
 
-So disable all channels that do not fit a regulatory domain sent
-from a unless the hint is from a country IE and the country IE had
-no information about the band we are currently processing.
+> Perhaps, the problem is related to using compat-wireless. Have you tried
+> using the module without the patch, using this same compat-wireless
+> version in the same linux version you are using?
 
-This fixes a few regulatory issues, for example for drivers that depend
-on CRDA and had no 5 GHz freqencies allowed were not properly disabling
-5 GHz at all, furthermore it also allows users to restrict devices
-further as was intended.
+Cascardo, you were right :-) Your patch did not cause the problem.
+I get those errors also with an unpatched compat-wireless-2010-10-25 driver.
 
-If you recieve a country IE upon association we will also disable the
-channels that are not allowed if the country IE had at least one
-channel on the respective band we are procesing.
+With a patched compat-wireless-2.6.33.6 there occur no errors.
 
-This was the original intention behind this design but it was
-completely overlooked...
+The router reports a better signal quality compared to the unpatched module, but 
+I can not really recognize a better throughput - usually still max 1 mbit @ 10 
+meters.
 
-Cc: David Quan <david.quan@atheros.com>
-Cc: Jouni Malinen <jouni.malinen@atheros.com>
-cc: Easwar Krishnan <easwar.krishnan@atheros.com>
-Cc: stable@kernel.org
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
----
- include/linux/nl80211.h |    6 +++++-
- net/wireless/reg.c      |   20 +++++++++++++++++++-
- 2 files changed, 24 insertions(+), 2 deletions(-)
-
-diff --git a/include/linux/nl80211.h b/include/linux/nl80211.h
-index 0edb256..fb877b5 100644
---- a/include/linux/nl80211.h
-+++ b/include/linux/nl80211.h
-@@ -1307,7 +1307,11 @@ enum nl80211_bitrate_attr {
-  * 	wireless core it thinks its knows the regulatory domain we should be in.
-  * @NL80211_REGDOM_SET_BY_COUNTRY_IE: the wireless core has received an
-  * 	802.11 country information element with regulatory information it
-- * 	thinks we should consider.
-+ * 	thinks we should consider. cfg80211 only processes the country
-+ *	code from the IE, and relies on the regulatory domain information
-+ *	structure pased by userspace (CRDA) from our wireless-regdb.
-+ *	If a channel is enabled but the country code indicates it should
-+ *	be disabled we disable the channel and re-enable it upon disassociation.
-  */
- enum nl80211_reg_initiator {
- 	NL80211_REGDOM_SET_BY_CORE,
-diff --git a/net/wireless/reg.c b/net/wireless/reg.c
-index 1bc8131..8ab65f2 100644
---- a/net/wireless/reg.c
-+++ b/net/wireless/reg.c
-@@ -750,8 +750,26 @@ static void handle_channel(struct wiphy *wiphy,
- 			  desired_bw_khz,
- 			  &reg_rule);
- 
--	if (r)
-+	if (r) {
-+		/*
-+		 * We will disable all channels that do not match our
-+		 * recieved regulatory rule unless the hint is coming
-+		 * from a Country IE and the Country IE had no information
-+		 * about a band. The IEEE 802.11 spec allows for an AP
-+		 * to send only a subset of the regulatory rules allowed,
-+		 * so an AP in the US that only supports 2.4 GHz may only send
-+		 * a country IE with information for the 2.4 GHz band
-+		 * while 5 GHz is still supported.
-+		 */
-+		if (initiator == NL80211_REGDOM_SET_BY_COUNTRY_IE &&
-+		    r == -ERANGE)
-+			return;
-+
-+		REG_DBG_PRINT("cfg80211: Disabling freq %d MHz\n",
-+			      chan->center_freq);
-+		chan->flags = IEEE80211_CHAN_DISABLED;
- 		return;
-+	}
- 
- 	power_rule = &reg_rule->power_rule;
- 	freq_range = &reg_rule->freq_range;
--- 
-1.7.0.4
+I noticed that the connection is fast for a short time after booting (10 mbit @ 
+10 meters), but a few seconds after the download on speedtest.net started 
+(meaning the network gets under load), speed drops to 1 mbit and never recovers 
+to faster speed again; somehow like an "unrecoverable fallback mechanism"...?
 
