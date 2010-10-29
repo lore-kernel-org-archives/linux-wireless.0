@@ -1,45 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from hera.kernel.org ([140.211.167.34]:41906 "EHLO hera.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756242Ab0JOTdf (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 15 Oct 2010 15:33:35 -0400
-Message-ID: <4CB8AC80.7090802@kernel.org>
-Date: Fri, 15 Oct 2010 21:33:20 +0200
-From: Tejun Heo <tj@kernel.org>
-MIME-Version: 1.0
-To: "John W. Linville" <linville@tuxdriver.com>
-CC: Christian Lamparter <chunkeey@googlemail.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Linux Wireless List <linux-wireless@vger.kernel.org>,
-	lkml <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH v2.6.36-rc7] mac80211: cancel restart_work explicitly
- instead of depending on flush_scheduled_work()
-References: <4CB874C0.8090003@kernel.org> <1287159715.1870.11.camel@Nokia-N900-51-1> <4CB883C9.6050104@kernel.org> <201010151858.45000.chunkeey@googlemail.com> <20101015192645.GA2438@tuxdriver.com>
-In-Reply-To: <20101015192645.GA2438@tuxdriver.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from smtp.nokia.com ([192.100.122.230]:51789 "EHLO
+	mgw-mx03.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933729Ab0J2Lne (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 29 Oct 2010 07:43:34 -0400
+Subject: Re: [RFC PATCH 0/2] mac80211: Possibility for driver to get AP
+ probereq template
+From: Juuso Oikarinen <juuso.oikarinen@nokia.com>
+To: ext Johannes Berg <johannes@sipsolutions.net>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <1288352136.3826.28.camel@jlt3.sipsolutions.net>
+References: <1288351673-12224-1-git-send-email-juuso.oikarinen@nokia.com>
+	 <1288352136.3826.28.camel@jlt3.sipsolutions.net>
+Content-Type: text/plain; charset="UTF-8"
+Date: Fri, 29 Oct 2010 14:42:51 +0300
+Message-ID: <1288352571.12373.4.camel@wimaxnb.nmp.nokia.com>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello,
-
-On 10/15/2010 09:26 PM, John W. Linville wrote:
->> wireless-testing/wireless-next has already such a patch:
->> "mac80211: cancel restart_work in ieee80211_unregister_hw" (2010-08-25)
->>
->> <http://git.kernel.org/?p=linux/kernel/git/linville/wireless-next-2.6.git;a=commit;h=258086a48b766d12a500f98834654ffa927ca475>
->>
->> John, can you please push to 2.6.36-rc8?
->> (I know, I am _late_, but I didn't know about any potential problem
->> in the mainline?)
+On Fri, 2010-10-29 at 13:35 +0200, ext Johannes Berg wrote:
+> On Fri, 2010-10-29 at 14:27 +0300, juuso.oikarinen@nokia.com wrote:
+> > From: Juuso Oikarinen <juuso.oikarinen@nokia.com>
+> > 
+> > The wl1271 has hardware connection monitoring, i.e. the hardware chipset 
+> > internally handles periodic null-funcs and probe-req transmitting in case of
+> > non-acked periodic null-func or beacon loss.
 > 
-> I don't see how either patch would merit inclusion in 2.6.36 at this point.
+> I'm wondering why it wants to do probe-req instead of nullfunc? I mean,
+> we're trying to make mac80211 use nullfunc+ACK instead of probereq
+> +proberesp ...
 
-My patch definitely was aimed for 2.6.37-rc1 or later.  I'm not sure
-whether the cancel_work_sync() is a bug fix or not but if it hasn't
-actually triggered yet, I guess leaving it as-is isn't too bad at this
-point.
+The wl1271 actually uses null-funcs for the periodic stuff.
 
-Thanks.
+Only when the null-func fails, or it misses a specific number of
+consecutive beacons, it will transmit a probe-request to the AP in a
+final attempt to re-sync before indicating connection loss to the host.
 
--- 
-tejun
+The thing with the wl1271 is, that we cannot disable the probe-req. If
+we don't configure a template for it, it will transmit garbage upon
+losing connection with the AP.
+
+Why it uses a probe-request as the final means to resync, I'm not sure.
+
+-Juuso
+
+
+
+
