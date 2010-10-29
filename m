@@ -1,68 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail30f.wh2.ocn.ne.jp ([220.111.41.203]:5217 "HELO
-	mail30f.wh2.ocn.ne.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1755116Ab0JSH47 (ORCPT
+Received: from mail-bw0-f46.google.com ([209.85.214.46]:35949 "EHLO
+	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1762167Ab0J2Xfl (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 19 Oct 2010 03:56:59 -0400
-Received: from vs3003.wh2.ocn.ne.jp (125.206.180.231)
-	by mail30f.wh2.ocn.ne.jp (RS ver 1.0.95vs) with SMTP id 2-0305215016
-	for <linux-wireless@vger.kernel.org>; Tue, 19 Oct 2010 16:56:58 +0900 (JST)
-Subject: [PATCH 2/2] ath5k: Add channel time to survey data
-To: linville@tuxdriver.com
-From: Bruno Randolf <br1@einfach.org>
-Cc: ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org
-Date: Tue, 19 Oct 2010 16:56:54 +0900
-Message-ID: <20101019075654.19979.9679.stgit@localhost6.localdomain6>
-In-Reply-To: <20101019075648.19979.42181.stgit@localhost6.localdomain6>
-References: <20101019075648.19979.42181.stgit@localhost6.localdomain6>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+	Fri, 29 Oct 2010 19:35:41 -0400
+Received: by bwz11 with SMTP id 11so3037820bwz.19
+        for <linux-wireless@vger.kernel.org>; Fri, 29 Oct 2010 16:35:40 -0700 (PDT)
+Message-Id: <9f86a3d821426da8b6e3d9b7b8ab7bd9f8e76d71.1288393804.git.chunkeey@googlemail.com>
+In-Reply-To: <cover.1288393804.git.chunkeey@googlemail.com>
+References: <cover.1288393804.git.chunkeey@googlemail.com>
+From: Christian Lamparter <chunkeey@googlemail.com>
+Date: Fri, 29 Oct 2010 23:11:23 +0200
+Subject: [PATCH 2/6] carl9170: use generic sign_extend32
+To: linux-wireless@vger.kernel.org
+Cc: linville@tuxdriver.com
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Include the channel utilization (busy, rx, tx) in the survey results.
+This patch replaces the handcrafted
+sign extension cruft with a generic
+bitop function.
 
-Signed-off-by: Bruno Randolf <br1@einfach.org>
+Signed-off-by: Christian Lamparter <chunkeey@googlemail.com>
 ---
- drivers/net/wireless/ath/ath5k/base.c |   20 +++++++++++++++++++-
- 1 files changed, 19 insertions(+), 1 deletions(-)
+ drivers/net/wireless/ath/carl9170/phy.c |   17 ++++-------------
+ 1 files changed, 4 insertions(+), 13 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath5k/base.c b/drivers/net/wireless/ath/ath5k/base.c
-index 8251946..484aad5 100644
---- a/drivers/net/wireless/ath/ath5k/base.c
-+++ b/drivers/net/wireless/ath/ath5k/base.c
-@@ -3206,14 +3206,32 @@ static int ath5k_get_survey(struct ieee80211_hw *hw, int idx,
- {
- 	struct ath5k_softc *sc = hw->priv;
- 	struct ieee80211_conf *conf = &hw->conf;
-+	struct ath_common *common = ath5k_hw_common(sc->ah);
-+	struct ath_cycle_counters *cc = &common->cc_survey;
-+	unsigned int div = common->clockrate * 1000;
- 
--	 if (idx != 0)
-+	if (idx != 0)
- 		return -ENOENT;
- 
- 	survey->channel = conf->channel;
- 	survey->filled = SURVEY_INFO_NOISE_DBM;
- 	survey->noise = sc->ah->ah_noise_floor;
- 
-+	spin_lock_bh(&common->cc_lock);
-+	ath_hw_cycle_counters_update(common);
-+	if (cc->cycles > 0) {
-+		survey->filled |= SURVEY_INFO_CHANNEL_TIME |
-+			SURVEY_INFO_CHANNEL_TIME_BUSY |
-+			SURVEY_INFO_CHANNEL_TIME_RX |
-+			SURVEY_INFO_CHANNEL_TIME_TX;
-+		survey->channel_time += cc->cycles / div;
-+		survey->channel_time_busy += cc->rx_busy / div;
-+		survey->channel_time_rx += cc->rx_frame / div;
-+		survey->channel_time_tx += cc->tx_frame / div;
-+	}
-+	memset(cc, 0, sizeof(*cc));
-+	spin_unlock_bh(&common->cc_lock);
-+
- 	return 0;
+diff --git a/drivers/net/wireless/ath/carl9170/phy.c b/drivers/net/wireless/ath/carl9170/phy.c
+index 89deca3..82bc81c 100644
+--- a/drivers/net/wireless/ath/carl9170/phy.c
++++ b/drivers/net/wireless/ath/carl9170/phy.c
+@@ -1554,15 +1554,6 @@ static int carl9170_set_power_cal(struct ar9170 *ar, u32 freq,
+ 	return carl9170_regwrite_result();
  }
  
+-/* TODO: replace this with sign_extend32(noise, 8) */
+-static int carl9170_calc_noise_dbm(u32 raw_noise)
+-{
+-	if (raw_noise & 0x100)
+-		return ~0x1ff | raw_noise;
+-	else
+-		return raw_noise;
+-}
+-
+ int carl9170_get_noisefloor(struct ar9170 *ar)
+ {
+ 	static const u32 phy_regs[] = {
+@@ -1578,11 +1569,11 @@ int carl9170_get_noisefloor(struct ar9170 *ar)
+ 		return err;
+ 
+ 	for (i = 0; i < 2; i++) {
+-		ar->noise[i] = carl9170_calc_noise_dbm(
+-			(phy_res[i] >> 19) & 0x1ff);
++		ar->noise[i] = sign_extend32(GET_VAL(
++			AR9170_PHY_CCA_MIN_PWR, phy_res[i]), 8);
+ 
+-		ar->noise[i + 2] = carl9170_calc_noise_dbm(
+-			(phy_res[i + 2] >> 23) & 0x1ff);
++		ar->noise[i + 2] = sign_extend32(GET_VAL(
++			AR9170_PHY_EXT_CCA_MIN_PWR, phy_res[i + 2]), 8);
+ 	}
+ 
+ 	return 0;
+-- 
+1.7.2.3
 
