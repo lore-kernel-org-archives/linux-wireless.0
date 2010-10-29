@@ -1,45 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:37930 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758997Ab0JFPaF (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 6 Oct 2010 11:30:05 -0400
-Date: Wed, 6 Oct 2010 11:27:16 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Christian Jaeger <chrjae@gmail.com>
-Cc: "Luis R. Rodriguez" <mcgrof@gmail.com>,
-	linux-wireless@vger.kernel.org,
-	Christian Lamparter <chunkeey@googlemail.com>
-Subject: Re: Why were patches reverted on 2010-09-21? (carl9170 and others)
-Message-ID: <20101006152716.GF2472@tuxdriver.com>
-References: <AANLkTin9hFUE_RH0Zb4OuV2dU_kJs6_ap=VxEmT3e3F8@mail.gmail.com>
- <20101006132301.GA2472@tuxdriver.com>
- <AANLkTi=1-r8XZHn9nqbbh2N=7yrsKXZbgxHNcNg+qFxo@mail.gmail.com>
- <AANLkTi=buSXukPp4xeSdig6z3rvNs2G=v6s1Y794Q2JK@mail.gmail.com>
+Received: from mailout-de.gmx.net ([213.165.64.23]:42737 "HELO mail.gmx.net"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with SMTP
+	id S1754404Ab0J2UDq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 29 Oct 2010 16:03:46 -0400
+From: "Stefan Lippers-Hollmann" <s.L-H@gmx.de>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Subject: staging: r8712u: Fix external firmware loading
+Date: Fri, 29 Oct 2010 22:03:36 +0200
+Cc: wireless <linux-wireless@vger.kernel.org>
+References: <c785bba31003060945j22be2e78pfeaa1bcd39fcba2c@mail.gmail.com> <4CC9F4BE.7070500@lwfinger.net> <201010292202.25486.s.L-H@gmx.de>
+In-Reply-To: <201010292202.25486.s.L-H@gmx.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <AANLkTi=buSXukPp4xeSdig6z3rvNs2G=v6s1Y794Q2JK@mail.gmail.com>
+Content-Type: Text/Plain;
+  charset="utf-8"
+Message-Id: <201010292203.39953.s.L-H@gmx.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Oct 06, 2010 at 11:07:12AM -0400, Christian Jaeger wrote:
-> Thanks for your explantion.
-> 
-> My patches on top of the stable kernel don't build (they depend a
-> 'cipher' member on ‘struct ieee80211_key_conf’, and I guess there may
-> be more). If I want to reach my goal of trying carl9170 with a stable
-> kernel, should I still proceed that route, i.e. finding the patches
-> that carl* depends on, or trying to change the carl* code to not
-> require them, or is there a better idea? I'd like to avoid running
-> wireless-testing as is if possible (for fear of stability and security
-> issues on this world-facing, supposedly stable router of mine).
+* select FW_LOADER
+* declare MODULE_FIRMWARE for r8712u
 
-You might try the compat-wireless stuff on top of whatever kernel
-you are using.
+Signed-off-by: Stefan Lippers-Hollmann <s.l-h@gmx.de>
+---
+ drivers/staging/rtl8712/Kconfig    |    1 +
+ drivers/staging/rtl8712/hal_init.c |    1 +
+ 2 files changed, 2 insertions(+)
 
-Hth!
-
-John
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+--- a/drivers/staging/rtl8712/Kconfig
++++ b/drivers/staging/rtl8712/Kconfig
+@@ -3,6 +3,7 @@ config R8712U
+ 	depends on WLAN && USB
+ 	select WIRELESS_EXT
+ 	select WEXT_PRIV
++	select FW_LOADER
+ 	default N
+ 	---help---
+ 	This option adds the Realtek RTL8712 USB device such as the D-Link DWA-130.
+--- a/drivers/staging/rtl8712/hal_init.c
++++ b/drivers/staging/rtl8712/hal_init.c
+@@ -58,6 +58,7 @@ static u32 rtl871x_open_fw(struct _adapt
+ 	*ppmappedfw = (u8 *)((*praw)->data);
+ 	return (*praw)->size;
+ }
++MODULE_FIRMWARE("rtl8712u/rtl8712u.bin");
+ 
+ static void fill_fwpriv(struct _adapter *padapter, struct fw_priv *pfwpriv)
+ {
