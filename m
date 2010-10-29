@@ -1,178 +1,106 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga14.intel.com ([143.182.124.37]:25140 "EHLO mga14.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753547Ab0JMPTL (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 13 Oct 2010 11:19:11 -0400
-Subject: Re: [PATCH 1/2] iwlwifi: fix set_tx_power vs scan
-From: "Guy, Wey-Yi" <wey-yi.w.guy@intel.com>
-To: Stanislaw Gruszka <sgruszka@redhat.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <1286977193-12144-1-git-send-email-sgruszka@redhat.com>
-References: <1286977193-12144-1-git-send-email-sgruszka@redhat.com>
-Content-Type: text/plain
-Date: Wed, 13 Oct 2010 08:18:20 -0700
-Message-Id: <1286983100.10446.1.camel@wwguy-ubuntu>
-Mime-Version: 1.0
+Received: from mailout-de.gmx.net ([213.165.64.23]:48533 "HELO mail.gmx.net"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with SMTP
+	id S1754404Ab0J2UCf (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 29 Oct 2010 16:02:35 -0400
+From: "Stefan Lippers-Hollmann" <s.L-H@gmx.de>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Subject: Re: Realtek rtl8188 support?
+Date: Fri, 29 Oct 2010 22:02:22 +0200
+Cc: wireless <linux-wireless@vger.kernel.org>
+References: <c785bba31003060945j22be2e78pfeaa1bcd39fcba2c@mail.gmail.com> <201010282348.16673.s.L-H@gmx.de> <4CC9F4BE.7070500@lwfinger.net>
+In-Reply-To: <4CC9F4BE.7070500@lwfinger.net>
+MIME-Version: 1.0
+Content-Type: Text/Plain;
+  charset="utf-8"
+Message-Id: <201010292202.25486.s.L-H@gmx.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Gruszka,
+Hi
 
-On Wed, 2010-10-13 at 06:39 -0700, Stanislaw Gruszka wrote:
-> In scan code completion send set TX power command again, as according
-> to comment it can be deferred during scan. Currently this comment is
-> only partially true - on 4965 device iwl4965_send_tx_power will fail
-> when scanning, but the new tx power value is lost. On other device
-> we do not defer setting tx power.
+On Friday 29 October 2010, Larry Finger wrote:
+> On 10/28/2010 04:48 PM, Stefan Lippers-Hollmann wrote:
+> > 
+> > I assume you refer to rtl8712u.bin in your r8712u_firmware tree:
+> > http://git.kernel.org/?p=linux/kernel/git/lwfinger/r8712u_firmware.git;a=blob_plain;f=rtl8712u.bin
+> > 200fd952db3cc9259b1fd05e3e51966f  *rtl8712u.bin
+> > 
+> >> you want to grab the new firmware package, I can send you a copy of the patch.
+> > 
+> > I'd very much like to test the patch(2) needed for rtl8712, if possible.
 > 
-> This patch change code to:
-> - save newly requested tx power value
-> - defer sending command to firmware when scanning on all devices
-> - add WARN_ONCE in all *_send_tx_power methods
-> - on 5xxx and 6xxx change to send command synchronously, to not
->   start other commands when setting tx is pending, like we do for older
->   devices
-> 
-> Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
-> ---
->  drivers/net/wireless/iwlwifi/iwl-3945.c     |    4 ++++
->  drivers/net/wireless/iwlwifi/iwl-4965.c     |    8 ++------
->  drivers/net/wireless/iwlwifi/iwl-agn-lib.c  |    9 ++++++---
->  drivers/net/wireless/iwlwifi/iwl-agn.c      |    1 +
->  drivers/net/wireless/iwlwifi/iwl-core.c     |    8 ++++++++
->  drivers/net/wireless/iwlwifi/iwl-dev.h      |    1 +
->  drivers/net/wireless/iwlwifi/iwl-scan.c     |    2 +-
->  drivers/net/wireless/iwlwifi/iwl3945-base.c |    1 +
->  8 files changed, 24 insertions(+), 10 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/iwlwifi/iwl-3945.c b/drivers/net/wireless/iwlwifi/iwl-3945.c
-> index 176e525..6fd79f2 100644
-> --- a/drivers/net/wireless/iwlwifi/iwl-3945.c
-> +++ b/drivers/net/wireless/iwlwifi/iwl-3945.c
-> @@ -1451,6 +1451,10 @@ static int iwl3945_send_tx_power(struct iwl_priv *priv)
->  	};
->  	u16 chan;
->  
-> +	if (WARN_ONCE(test_bit(STATUS_SCANNING, &priv->status),
-> +		      "TX Power requested while scanning!\n"))
-> +		return -EAGAIN;
-> +
->  	chan = le16_to_cpu(priv->contexts[IWL_RXON_CTX_BSS].active.channel);
->  
->  	txpower.band = (priv->band == IEEE80211_BAND_5GHZ) ? 0 : 1;
-> diff --git a/drivers/net/wireless/iwlwifi/iwl-4965.c b/drivers/net/wireless/iwlwifi/iwl-4965.c
-> index b207e3e..93e1696 100644
-> --- a/drivers/net/wireless/iwlwifi/iwl-4965.c
-> +++ b/drivers/net/wireless/iwlwifi/iwl-4965.c
-> @@ -1377,13 +1377,9 @@ static int iwl4965_send_tx_power(struct iwl_priv *priv)
->  	u8 ctrl_chan_high = 0;
->  	struct iwl_rxon_context *ctx = &priv->contexts[IWL_RXON_CTX_BSS];
->  
-> -	if (test_bit(STATUS_SCANNING, &priv->status)) {
-> -		/* If this gets hit a lot, switch it to a BUG() and catch
-> -		 * the stack trace to find out who is calling this during
-> -		 * a scan. */
-> -		IWL_WARN(priv, "TX Power requested while scanning!\n");
-> +	if (WARN_ONCE(test_bit(STATUS_SCANNING, &priv->status),
-> +		      "TX Power requested while scanning!\n"))
->  		return -EAGAIN;
-> -	}
->  
->  	band = priv->band == IEEE80211_BAND_2GHZ;
->  
-> diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-lib.c b/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
-> index c1a3898..b717ac0 100644
-> --- a/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
-> +++ b/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
-> @@ -496,6 +496,10 @@ int iwlagn_send_tx_power(struct iwl_priv *priv)
->  	struct iwlagn_tx_power_dbm_cmd tx_power_cmd;
->  	u8 tx_ant_cfg_cmd;
->  
-> +	if (WARN_ONCE(test_bit(STATUS_SCANNING, &priv->status),
-> +		      "TX Power requested while scanning!\n"))
-> +		return -EAGAIN;
-> +
->  	/* half dBm need to multiply */
->  	tx_power_cmd.global_lmt = (s8)(2 * priv->tx_power_user_lmt);
->  
-> @@ -522,9 +526,8 @@ int iwlagn_send_tx_power(struct iwl_priv *priv)
->  	else
->  		tx_ant_cfg_cmd = REPLY_TX_POWER_DBM_CMD;
->  
-> -	return  iwl_send_cmd_pdu_async(priv, tx_ant_cfg_cmd,
-> -				       sizeof(tx_power_cmd), &tx_power_cmd,
-> -				       NULL);
-> +	return iwl_send_cmd_pdu(priv, tx_ant_cfg_cmd, sizeof(tx_power_cmd),
-> +				&tx_power_cmd);
->  }
->  
->  void iwlagn_temperature(struct iwl_priv *priv)
-> diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
-> index 6771c40..0881452 100644
-> --- a/drivers/net/wireless/iwlwifi/iwl-agn.c
-> +++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
-> @@ -4179,6 +4179,7 @@ static int iwl_init_drv(struct iwl_priv *priv)
->  	 * this value will get overwritten by channel max power avg
->  	 * from eeprom */
->  	priv->tx_power_user_lmt = IWLAGN_TX_POWER_TARGET_POWER_MIN;
-> +	priv->tx_power_next = IWLAGN_TX_POWER_TARGET_POWER_MIN;
->  
->  	ret = iwl_init_channel_map(priv);
->  	if (ret) {
-> diff --git a/drivers/net/wireless/iwlwifi/iwl-core.c b/drivers/net/wireless/iwlwifi/iwl-core.c
-> index b3efbe0..2a5d57f 100644
-> --- a/drivers/net/wireless/iwlwifi/iwl-core.c
-> +++ b/drivers/net/wireless/iwlwifi/iwl-core.c
-> @@ -1211,6 +1211,8 @@ int iwl_set_tx_power(struct iwl_priv *priv, s8 tx_power, bool force)
->  	int ret = 0;
->  	s8 prev_tx_power = priv->tx_power_user_lmt;
->  
-> +	lockdep_assert_held(&priv->mutex);
-> +
->  	if (tx_power < IWLAGN_TX_POWER_TARGET_POWER_MIN) {
->  		IWL_WARN(priv,
->  			 "Requested user TXPOWER %d below lower limit %d.\n",
-> @@ -1226,6 +1228,12 @@ int iwl_set_tx_power(struct iwl_priv *priv, s8 tx_power, bool force)
->  		return -EINVAL;
->  	}
->  
-> +	if (test_bit(STATUS_SCANNING, &priv->status)) {
-> +		priv->tx_power_next = tx_power;
-> +		IWL_DEBUG_INFO(priv, "Deferring tx power set while scanning\n");
-> +		return 0;
-> +	}
-> +
->  	if (priv->tx_power_user_lmt != tx_power)
->  		force = true;
->  
-> diff --git a/drivers/net/wireless/iwlwifi/iwl-dev.h b/drivers/net/wireless/iwlwifi/iwl-dev.h
-> index de43e13..4c09d21 100644
-> --- a/drivers/net/wireless/iwlwifi/iwl-dev.h
-> +++ b/drivers/net/wireless/iwlwifi/iwl-dev.h
-> @@ -1517,6 +1517,7 @@ struct iwl_priv {
->  	s8 tx_power_user_lmt;
->  	s8 tx_power_device_lmt;
->  	s8 tx_power_lmt_in_half_dbm; /* max tx power in half-dBm format */
-> +	s8 tx_power_next;
->  
-> 
->  #ifdef CONFIG_IWLWIFI_DEBUG
-> diff --git a/drivers/net/wireless/iwlwifi/iwl-scan.c b/drivers/net/wireless/iwlwifi/iwl-scan.c
-> index 67da312..1424267 100644
-> --- a/drivers/net/wireless/iwlwifi/iwl-scan.c
-> +++ b/drivers/net/wireless/iwlwifi/iwl-scan.c
-> @@ -605,7 +605,7 @@ out_settings:
->  
->  	/* Since setting the TXPOWER may have been deferred while
->  	 * performing the scan, fire one off */
-> -	iwl_set_tx_power(priv, priv->tx_power_user_lmt, true);
-> +	iwl_set_tx_power(priv, priv->tx_power_next, true);
->  
-Looks good, the only thing is if priv->tx_power_user_lmt ==
-priv->tx_power_next, we don't even have to call set_tx_power, but I
-guess calling it won't hurt, so its your decision check or not.
+> Attached is the patch. You should place rtl8712u.bin in
+> /lib/modules/rtl8712u/rtl8712u.bin.
+200fd952db3cc9259b1fd05e3e51966f */lib/firmware/rtl8712u/rtl8712u.bin
+[...]
 
-Thanks
-Wey
 
+Given this module only needs one firmware image, what about dropping that 
+subdirectory?
+
+My tests with RTL8188S and RTL8191S are very successful so far, including 
+the imaginable cornercases (missing firmware, wrong firmware file, etc.).
+
+RTL8188S:
+[  104.239032] usb 1-9: new high speed USB device using ehci_hcd and address 4
+[  104.355650] usb 1-9: New USB device found, idVendor=0bda, idProduct=8171
+[  104.355658] usb 1-9: New USB device strings: Mfr=1, Product=2, SerialNumber=3
+[  104.355664] usb 1-9: Product: RTL8188S WLAN Adapter 
+[  104.355669] usb 1-9: Manufacturer: Manufacturer Realtek 
+[  104.355673] usb 1-9: SerialNumber: 00e04c000001
+[  104.386766] r8712u: module is from the staging directory, the quality is unknown, you have been warned.
+[  104.393694] r8712u: DriverVersion: v7_0.20100831
+[  104.393728] r8712u: register rtl8712_netdev_ops to netdev_ops
+[  104.393735] r8712u: USB_SPEED_HIGH with 4 endpoints
+[  104.394644] r8712u: Boot from EFUSE: Autoload OK
+[  104.908448] r8712u: CustomerID = 0x0000
+[  104.908454] r8712u: MAC Address from efuse = 00:08:54:99:6f:99
+[  104.910922] usbcore: registered new interface driver r8712u
+[  120.721878] CPUFREQ: Per core ondemand sysfs interface is deprecated - up_threshold
+[  135.957515] lo: Disabled Privacy Extensions
+[  155.603760] r8712u: Loading firmware from "rtl8712u/rtl8712u.bin"
+[  156.246429] r8712u: 1 RCR=0x153f00e
+[  156.247462] r8712u: 2 RCR=0x553f00e
+[  156.352536] ADDRCONF(NETDEV_UP): wlan1: link is not ready
+[  162.190670] ADDRCONF(NETDEV_CHANGE): wlan1: link becomes ready
+[  166.025559] r8712u: [r8712_got_addbareq_event_callback] mac = 00:27:19:fe:47:84, seq = 16, tid = 0
+[  172.226017] wlan1: no IPv6 routers present
+[  629.891124] r8712u: [r8712_got_addbareq_event_callback] mac = 00:27:19:fe:47:84, seq = 16, tid = 6
+
+RTL8191S:
+[  573.003014] usb 1-3: new high speed USB device using ehci_hcd and address 6
+[  573.119503] usb 1-3: New USB device found, idVendor=0bda, idProduct=8172
+[  573.119507] usb 1-3: New USB device strings: Mfr=1, Product=2, SerialNumber=3
+[  573.119509] usb 1-3: Product: RTL8191S WLAN Adapter 
+[  573.119511] usb 1-3: Manufacturer: Manufacturer Realtek 
+[  573.119513] usb 1-3: SerialNumber: 00e04c000001
+[  573.128096] r8712u: module is from the staging directory, the quality is unknown, you have been warned.
+[  573.130926] r8712u: DriverVersion: v7_0.20100831
+[  573.130939] r8712u: register rtl8712_netdev_ops to netdev_ops
+[  573.130942] r8712u: USB_SPEED_HIGH with 4 endpoints
+[  573.131499] r8712u: Boot from EFUSE: Autoload OK
+[  573.584756] r8712u: CustomerID = 0x0000
+[  573.584759] r8712u: MAC Address from efuse = 00:02:72:8c:05:16
+[  573.585488] usbcore: registered new interface driver r8712u
+[  598.630199] r8712u: Loading firmware from "rtl8712u/rtl8712u.bin"
+[  599.264458] r8712u: 1 RCR=0x153f00e
+[  599.265210] r8712u: 2 RCR=0x553f00e
+[  599.370062] ADDRCONF(NETDEV_UP): wlan1: link is not ready
+[  604.898813] ADDRCONF(NETDEV_CHANGE): wlan1: link becomes ready
+[  607.391186] r8712u: [r8712_got_addbareq_event_callback] mac = 00:27:19:fe:47:84, seq = 16, tid = 0
+[  615.266009] wlan1: no IPv6 routers present
+[ 2346.336558] r8712u: [r8712_got_addbareq_event_callback] mac = 00:27:19:fe:47:84, seq = 32, tid = 6
+
+With both devices the connection is stable and quite performant (~9 MB/s, 
+short distance, little channel overlap) against an Atheros/ athk9 based 
+router running OpenWrt (HT20 && HT40-, b/g/n). In comparison to rtl8192su
+the authentification handshake succeeds a lot quicker and without needing 
+retries, performance is comparable.
+
+I'm following up this mail with a patch covering two minor changes, 
+selecting FW_LOADER in Kconfig and declaring MODULE_FIRMWARE, feel free 
+to merge them into your patch.
+
+Thank you a lot, regards
+	Stefan Lippers-Hollmann
