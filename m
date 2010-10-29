@@ -1,43 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f46.google.com ([209.85.214.46]:46815 "EHLO
-	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756470Ab0JZKEr (ORCPT
+Received: from web56803.mail.re3.yahoo.com ([66.196.97.77]:22936 "HELO
+	web56803.mail.re3.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1759222Ab0J2U0o (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 26 Oct 2010 06:04:47 -0400
-Received: by bwz11 with SMTP id 11so3201480bwz.19
-        for <linux-wireless@vger.kernel.org>; Tue, 26 Oct 2010 03:04:46 -0700 (PDT)
-From: Helmut Schaa <helmut.schaa@googlemail.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Subject: Re: Question about starting up an AP
-Date: Tue, 26 Oct 2010 12:04:01 +0200
-Cc: Ivo van Doorn <ivdoorn@gmail.com>,
-	Joshua Smith <JoshuaESmith@charter.net>,
-	"linux-wireless" <linux-wireless@vger.kernel.org>,
-	users@rt2x00.serialmonkey.com
-References: <DA0C92FD-F6BF-4746-9BE1-A643A0D70F7A@kaon.com> <201010261135.31232.helmut.schaa@googlemail.com> <1288086094.3761.6.camel@jlt3.sipsolutions.net>
-In-Reply-To: <1288086094.3761.6.camel@jlt3.sipsolutions.net>
+	Fri, 29 Oct 2010 16:26:44 -0400
+Message-ID: <694082.86488.qm@web56803.mail.re3.yahoo.com>
+Date: Fri, 29 Oct 2010 13:26:43 -0700 (PDT)
+From: Walter Goldens <goldenstranger@yahoo.com>
+Subject: Re: Realtek rtl8188 support?
+To: Larry Finger <Larry.Finger@lwfinger.net>,
+	Stefan Lippers-Hollmann <s.L-H@gmx.de>
+Cc: wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <201010292202.25486.s.L-H@gmx.de>
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="us-ascii"
-Message-Id: <201010261204.01481.helmut.schaa@googlemail.com>
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Am Dienstag 26 Oktober 2010 schrieb Johannes Berg:
-> On Tue, 2010-10-26 at 11:35 +0200, Helmut Schaa wrote:
-> 
-> > > I'll let Ivo decide on this. At least if we really want to wait more then one
-> > > second for DMA to be ready we should increase the msleep(1) to msleep(10) and
-> > > keep the maximum number of retries at 100.
-> 
-> > Ivo, do we want to add the excessive waiting (up to one second) for DMA on
-> > rt2800 as it fixes Joshuas device? At the moment we're waiting 100ms.
-> 
-> I don't usually chime in on other drivers but is there any reason not
-> to? Properly functioning devices obviously reply within 100ms, so they
-> wouldn't change behaviour, hopefully broken ones that _never_ work are
-> rare, and the remaining ones like Joshua's would be fixed ...
+> With both devices the connection is stable and quite
+> performant (~9 MB/s, 
+> short distance, little channel overlap) against an Atheros/
+> athk9 based 
+> router running OpenWrt (HT20 && HT40-, b/g/n). In
+> comparison to rtl8192su
+> the authentification handshake succeeds a lot quicker and
+> without needing 
+> retries, performance is comparable.
 
-True, nevertheless I wanted to get Ivos ack before going ahead.
+Now, that we're in the habit of adding staging drivers to compat-wireless, shouldn't this one follow the likes of ath6kl and brcm80211? Surely lots of users will benefit from this.
 
-Helmut
+Walter
+
+
+      
