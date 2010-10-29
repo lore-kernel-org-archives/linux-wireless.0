@@ -1,36 +1,28 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from void.printf.net ([89.145.121.20]:56926 "EHLO void.printf.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752633Ab0J1F5S (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 28 Oct 2010 01:57:18 -0400
-Date: Thu, 28 Oct 2010 06:57:04 +0100
-From: Chris Ball <cjb@laptop.org>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: Daniel Drake <dsd@laptop.org>, dcbw@redhat.com, pgf@laptop.org,
-	linux-wireless@vger.kernel.org, libertas-dev@lists.infradead.org
-Subject: Re: [PATCH v2] libertas: Fix sd8686 firmware reload
-Message-ID: <20101028055704.GA16352@void.printf.net>
-References: <20101027142052.9607A9D401B@zog.reactivated.net> <20101027195427.GB2410@tuxdriver.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <20101027195427.GB2410@tuxdriver.com>
+Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:41731
+	"EHLO sunset.davemloft.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754068Ab0J2Taj (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 29 Oct 2010 15:30:39 -0400
+Date: Fri, 29 Oct 2010 12:31:02 -0700 (PDT)
+Message-Id: <20101029.123102.193718695.davem@davemloft.net>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: pull request: wireless-2.6 2010-10-29
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <20101029191422.GE2399@tuxdriver.com>
+References: <20101029191422.GE2399@tuxdriver.com>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+From: "John W. Linville" <linville@tuxdriver.com>
+Date: Fri, 29 Oct 2010 15:14:22 -0400
 
-On Wed, Oct 27, 2010 at 03:54:27PM -0400, John W. Linville wrote:
->   CC [M]  drivers/net/wireless/libertas/if_sdio.o
-> drivers/net/wireless/libertas/if_sdio.c: In function ‘if_sdio_prog_firmware’:
-> drivers/net/wireless/libertas/if_sdio.c:718: error: ‘IF_SDIO_MODEL_8686’ undeclared (first use in this function)
-> drivers/net/wireless/libertas/if_sdio.c:718: error: (Each undeclared identifier is reported only once
-> drivers/net/wireless/libertas/if_sdio.c:718: error: for each function it appears in.)
-> 
-> What tree has this definition?
+> Here are more fixes intended for 2.6.37.  Most are obvious one-liners
+> (more-or-less).  The series from Luis fixes a bug as documented in the
+> changelog.
 
-Odd, it's been upstream in if_sdio.h since 2.6.31; mainline commit e70a5ac5.
-
-- Chris.
--- 
-Chris Ball   <cjb@laptop.org>   <http://printf.net/>
-One Laptop Per Child
+Pulled, thanks John.
