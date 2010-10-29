@@ -1,77 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from comal.ext.ti.com ([198.47.26.152]:46413 "EHLO comal.ext.ti.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752920Ab0JMMDd convert rfc822-to-8bit (ORCPT
+Received: from smtp.nokia.com ([192.100.105.134]:24207 "EHLO
+	mgw-mx09.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933746Ab0J2L2g (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 13 Oct 2010 08:03:33 -0400
-From: "Premi, Sanjeev" <premi@ti.com>
-To: "csanjay@mistralsolutions.com" <csanjay@mistralsolutions.com>,
-	"linux-omap@vger.kernel.org" <linux-omap@vger.kernel.org>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Date: Wed, 13 Oct 2010 17:33:25 +0530
-Subject: RE: [WL1271 DC supprot on OMAP3EVM 3/5] ARM: Supported for BT
- enable on OMAP3EVM for WL1271 DC
-Message-ID: <B85A65D85D7EB246BE421B3FB0FBB5930234405C3F@dbde02.ent.ti.com>
-References: <1286967077-20071-1-git-send-email-csanjay@mistralsolutions.com>
- <1286967077-20071-4-git-send-email-csanjay@mistralsolutions.com>
-In-Reply-To: <1286967077-20071-4-git-send-email-csanjay@mistralsolutions.com>
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
+	Fri, 29 Oct 2010 07:28:36 -0400
+Received: from vaebh106.NOE.Nokia.com (vaebh106.europe.nokia.com [10.160.244.32])
+	by mgw-mx09.nokia.com (Switch-3.3.3/Switch-3.3.3) with ESMTP id o9TBSRkW003381
+	for <linux-wireless@vger.kernel.org>; Fri, 29 Oct 2010 06:28:35 -0500
+Received: from wimaxnb.nmp.nokia.com (wimaxnb.nmp.nokia.com [172.22.211.32])
+	by mgw-da02.ext.nokia.com (Switch-3.3.3/Switch-3.3.3) with ESMTP id o9TBRrfE023236
+	for <linux-wireless@vger.kernel.org>; Fri, 29 Oct 2010 14:27:54 +0300
+From: juuso.oikarinen@nokia.com
+To: linux-wireless@vger.kernel.org
+Subject: [RFC PATCH 0/2] mac80211: Possibility for driver to get AP probereq template
+Date: Fri, 29 Oct 2010 14:27:51 +0300
+Message-Id: <1288351673-12224-1-git-send-email-juuso.oikarinen@nokia.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> -----Original Message-----
-> From: linux-omap-owner@vger.kernel.org 
-> [mailto:linux-omap-owner@vger.kernel.org] On Behalf Of 
-> csanjay@mistralsolutions.com
-> Sent: Wednesday, October 13, 2010 4:21 PM
-> To: linux-omap@vger.kernel.org
-> Cc: linux-wireless@vger.kernel.org; Sanjay Kumar Champati
-> Subject: [WL1271 DC supprot on OMAP3EVM 3/5] ARM: Supported 
-> for BT enable on OMAP3EVM for WL1271 DC
-> 
-> From: Sanjay Kumar Champati <csanjay@mistralsolutions.com>
-> 
-> * Midified "tty_io.c" and "Kconfig" files to suuport BT 
-> enable for WL1271
-> 
-> Signed-off-by: Sanjay Kumar Champati <csanjay@mistralsolutions.com>
-> ---
->  drivers/bluetooth/Kconfig |    7 +++
->  drivers/char/tty_io.c     |  110 
-> +++++++++++++++++++++++++++++++++++++++++++++
->  2 files changed, 117 insertions(+), 0 deletions(-)
-> 
-> diff --git a/drivers/bluetooth/Kconfig b/drivers/bluetooth/Kconfig
-> index 652367a..2ed159c 100644
-> --- a/drivers/bluetooth/Kconfig
-> +++ b/drivers/bluetooth/Kconfig
-> @@ -195,5 +195,12 @@ config BT_MRVL_SDIO
->  	  Say Y here to compile support for Marvell BT-over-SDIO driver
->  	  into the kernel or say M to compile it as module.
->  
-> +config BT_WL1271
-> +	bool "WL1271 Bluetooth driver support"
-> +	depends on BT_HCIUART
-> +	help
-> +	The core driver to support WL1271 Bluetooth devices.
-> +	Say Y here to compile WL1271 Bluetooth driver into the kernel.
-> +
->  endmenu
->  
-> diff --git a/drivers/char/tty_io.c b/drivers/char/tty_io.c
-> index f15df40..a3ae352 100644
-> --- a/drivers/char/tty_io.c
-> +++ b/drivers/char/tty_io.c
-> @@ -107,6 +107,17 @@
->  #include <linux/kmod.h>
->  #include <linux/nsproxy.h>
->  
-> +#ifdef CONFIG_BT_WL1271
+From: Juuso Oikarinen <juuso.oikarinen@nokia.com>
 
-[sp] No. This isn't the place for it.
-     You cannot change the generic driver for custom implementation.
+The wl1271 has hardware connection monitoring, i.e. the hardware chipset 
+internally handles periodic null-funcs and probe-req transmitting in case of
+non-acked periodic null-func or beacon loss.
 
-     Same comment applies to all the changes in this file.
+To be able to transmit a valid probe-request to the associated to AP, the
+hardware needs a template for it. Currently, there is no way for the hardware
+to have this template, as the SSID and supported rate IE's are not passed down
+by the mac80211.
 
-[snip]...[snip]
+These patches propose adding a function to mac80211, which the driver can use
+to get a template for the currently associated-to AP, filled with the basic
+needed IE's. The wl1271 patch uses this function, and configures it to the
+hardware.
+
+Any thoughts?
+
+
+Juuso Oikarinen (2):
+  mac80211: Add function to get probe request template for current AP
+  wl1271: Fix setting of the hardware connection monitoring probe-req
+    template
+
+ drivers/net/wireless/wl12xx/wl1271.h      |    3 ++
+ drivers/net/wireless/wl12xx/wl1271_cmd.c  |   28 +++++++++++++++++++++++++
+ drivers/net/wireless/wl12xx/wl1271_cmd.h  |    2 +
+ drivers/net/wireless/wl12xx/wl1271_main.c |   32 ++++++++++++++++++----------
+ drivers/net/wireless/wl12xx/wl1271_scan.c |    4 +++
+ include/net/mac80211.h                    |   12 ++++++++++
+ net/mac80211/ieee80211_i.h                |    4 +++
+ net/mac80211/mlme.c                       |   24 +++++++++++++++++++++
+ net/mac80211/util.c                       |   23 ++++++++++++++++----
+ 9 files changed, 115 insertions(+), 17 deletions(-)
+
