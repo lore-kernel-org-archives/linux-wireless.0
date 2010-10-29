@@ -1,106 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:52543 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751575Ab0JMKH1 (ORCPT
+Received: from external1.orbit-lab.org ([128.6.192.131]:59769 "HELO
+	external1.orbit-lab.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1753553Ab0J2TEW (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 13 Oct 2010 06:07:27 -0400
-Message-Id: <20101013100657.853360719@sipsolutions.net>
-Date: Wed, 13 Oct 2010 12:06:23 +0200
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org,
-	Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH 1/2] cfg80211: notify drivers about frame registrations
-References: <20101013100622.939014559@sipsolutions.net>
-Mime-Version: 1.0
+	Fri, 29 Oct 2010 15:04:22 -0400
+Received: from repository3.orbit-lab.org (repository3.orbit-lab.org [10.50.0.41])
+	by external1.orbit-lab.org (Postfix) with ESMTP id 0AD58418D8
+	for <linux-wireless@vger.kernel.org>; Fri, 29 Oct 2010 15:00:45 -0400 (EDT)
+Subject: Compat-wireless release for 2010-10-29 is baked
+To: <linux-wireless@vger.kernel.org>
+Message-Id: <20101029190420.7F86F40F97@repository3.orbit-lab.org>
+Date: Fri, 29 Oct 2010 15:04:20 -0400 (EDT)
+From: compat@orbit-lab.org (Compat-wireless cronjob account)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+>From git://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next
+   4dc42d2..84f9b99  history    -> origin/history
+ + 2517527...b051608 master     -> origin/master  (forced update)
+   12ba8d1..2301b65  stable     -> origin/stable
+ * [new tag]         next-20101029 -> next-20101029
 
-Drivers may need to adjust their filters according
-to frame registrations, so notify them about them.
+compat-wireless code metrics
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- include/net/cfg80211.h |    7 +++++++
- net/wireless/mlme.c    |   23 ++++++++++++++++++++---
- 2 files changed, 27 insertions(+), 3 deletions(-)
+    739330 - Total upstream lines of code being pulled
+      2163 - backport code changes
+      1909 - backport code additions
+       254 - backport code deletions
+      6409 - backport from compat module
+      8572 - total backport code
+    1.1594 - % of code consists of backport work
+      1534 - Crap changes not yet posted
+      1491 - Crap additions not yet posted
+        43 - Crap deletions not yet posted
+    0.2075 - % of crap code
 
---- wireless-testing.orig/include/net/cfg80211.h	2010-10-13 11:26:27.000000000 +0200
-+++ wireless-testing/include/net/cfg80211.h	2010-10-13 11:28:32.000000000 +0200
-@@ -1147,6 +1147,9 @@ struct cfg80211_pmksa {
-  *	allows the driver to adjust the dynamic ps timeout value.
-  * @set_cqm_rssi_config: Configure connection quality monitor RSSI threshold.
-  *
-+ * @mgmt_frame_register: Notify driver that a management frame type was
-+ *	registered. Note that this callback may not sleep, and cannot run
-+ *	concurrently with itself.
-  */
- struct cfg80211_ops {
- 	int	(*suspend)(struct wiphy *wiphy);
-@@ -1297,6 +1300,10 @@ struct cfg80211_ops {
- 	int	(*set_cqm_rssi_config)(struct wiphy *wiphy,
- 				       struct net_device *dev,
- 				       s32 rssi_thold, u32 rssi_hyst);
-+
-+	void	(*mgmt_frame_register)(struct wiphy *wiphy,
-+				       struct net_device *dev,
-+				       u16 frame_type, bool reg);
- };
- 
- /*
---- wireless-testing.orig/net/wireless/mlme.c	2010-10-13 11:26:27.000000000 +0200
-+++ wireless-testing/net/wireless/mlme.c	2010-10-13 11:29:06.000000000 +0200
-@@ -764,6 +764,8 @@ int cfg80211_mlme_register_mgmt(struct w
- 				u16 frame_type, const u8 *match_data,
- 				int match_len)
- {
-+	struct wiphy *wiphy = wdev->wiphy;
-+	struct cfg80211_registered_device *rdev = wiphy_to_dev(wiphy);
- 	struct cfg80211_mgmt_registration *reg, *nreg;
- 	int err = 0;
- 	u16 mgmt_type;
-@@ -810,22 +812,37 @@ int cfg80211_mlme_register_mgmt(struct w
- 	nreg->frame_type = cpu_to_le16(frame_type);
- 	list_add(&nreg->list, &wdev->mgmt_registrations);
- 
-+	if (rdev->ops->mgmt_frame_register)
-+		rdev->ops->mgmt_frame_register(wiphy, wdev->netdev,
-+					       frame_type, true);
-+
-  out:
- 	spin_unlock_bh(&wdev->mgmt_registrations_lock);
-+
- 	return err;
- }
- 
- void cfg80211_mlme_unregister_socket(struct wireless_dev *wdev, u32 nlpid)
- {
-+	struct wiphy *wiphy = wdev->wiphy;
-+	struct cfg80211_registered_device *rdev = wiphy_to_dev(wiphy);
- 	struct cfg80211_mgmt_registration *reg, *tmp;
- 
- 	spin_lock_bh(&wdev->mgmt_registrations_lock);
- 
- 	list_for_each_entry_safe(reg, tmp, &wdev->mgmt_registrations, list) {
--		if (reg->nlpid == nlpid) {
--			list_del(&reg->list);
--			kfree(reg);
-+		if (reg->nlpid != nlpid)
-+			continue;
-+
-+		if (rdev->ops->mgmt_frame_register) {
-+			u16 frame_type = le16_to_cpu(reg->frame_type);
-+
-+			rdev->ops->mgmt_frame_register(wiphy, wdev->netdev,
-+						       frame_type, false);
- 		}
-+
-+		list_del(&reg->list);
-+		kfree(reg);
- 	}
- 
- 	spin_unlock_bh(&wdev->mgmt_registrations_lock);
-
-
+Base tree: linux-next.git
+Base tree version: next-20101029
+compat-wireless release: compat-wireless-2010-10-22-5-g69fdc09-pc
