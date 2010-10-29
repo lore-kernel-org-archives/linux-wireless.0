@@ -1,110 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.perches.com ([173.55.12.10]:3744 "EHLO mail.perches.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752162Ab0J3VJh (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 30 Oct 2010 17:09:37 -0400
-From: Joe Perches <joe@perches.com>
-To: Jiri Kosina <trivial@kernel.org>
-Cc: Reinette Chatre <reinette.chatre@intel.com>,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>,
-	Intel Linux Wireless <ilw@linux.intel.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: [PATCH 18/39] drivers/net/wireless/iwlwifi: Update WARN uses
-Date: Sat, 30 Oct 2010 14:08:35 -0700
-Message-Id: <e95402f05ba92bbd0039505856641acf84dab981.1288471898.git.joe@perches.com>
-In-Reply-To: <cover.1288471897.git.joe@perches.com>
-References: <cover.1288471897.git.joe@perches.com>
+Received: from swampdragon.chaosbits.net ([90.184.90.115]:27815 "EHLO
+	swampdragon.chaosbits.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933902Ab0J2O2F (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 29 Oct 2010 10:28:05 -0400
+Date: Fri, 29 Oct 2010 16:10:26 +0200 (CEST)
+From: Jesper Juhl <jj@chaosbits.net>
+To: Johannes Berg <johannes@sipsolutions.net>
+cc: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: [PATCH] mac80211 failure to check kmalloc return value in key_key_read
+ could lead to unpleasant surprises
+Message-ID: <alpine.LNX.2.00.1010291544510.8123@swampdragon.chaosbits.net>
+MIME-Version: 1.0
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Align arguments.
-Add missing newlines.
+I noticed two small issues in mac80211/debugfs_key.c::key_key_read while 
+reading through the code. Patch below.
 
-Signed-off-by: Joe Perches <joe@perches.com>
+The key_key_read() function returns ssize_t and the value that's actually 
+returned is the return value of simple_read_from_buffer() which also 
+returns ssize_t, so let's hold the return value in a ssize_t local 
+variable rather than a int one.
+
+Also, memory is allocated dynamically with kmalloc() which can fail, but 
+the return value of kmalloc() is not checked, so we may end up operating 
+on a null pointer further on. So check for a NULL return and bail out with 
+-ENOMEM in that case.
+
+Please keep me on CC on replies since I'm not subscribed to 
+linux-wireless.
+
+
+Signed-off-by: Jesper Juhl <jj@chaosbits.net>
 ---
- drivers/net/wireless/iwlwifi/iwl-agn-lib.c  |    3 +--
- drivers/net/wireless/iwlwifi/iwl-agn-sta.c  |    6 +++---
- drivers/net/wireless/iwlwifi/iwl-tx.c       |    6 +++---
- drivers/net/wireless/iwlwifi/iwl3945-base.c |    2 +-
- 4 files changed, 8 insertions(+), 9 deletions(-)
+ debugfs_key.c |    6 +++++-
+ 1 file changed, 5 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-lib.c b/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
-index b555edd..cbb63f3 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
-@@ -2139,8 +2139,7 @@ static int iwl_get_idle_rx_chain_count(struct iwl_priv *priv, int active_cnt)
- 	case IEEE80211_SMPS_OFF:
- 		return active_cnt;
- 	default:
--		WARN(1, "invalid SMPS mode %d",
--		     priv->current_ht_config.smps);
-+		WARN(1, "invalid SMPS mode %d\n", priv->current_ht_config.smps);
- 		return active_cnt;
- 	}
- }
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-sta.c b/drivers/net/wireless/iwlwifi/iwl-agn-sta.c
-index 35a30d2..46c45e7 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn-sta.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn-sta.c
-@@ -284,7 +284,7 @@ static int iwl_set_wep_dynamic_key_info(struct iwl_priv *priv,
- 	 * in uCode. */
+diff --git a/net/mac80211/debugfs_key.c b/net/mac80211/debugfs_key.c
+index 4aa47d0..1243d1d 100644
+--- a/net/mac80211/debugfs_key.c
++++ b/net/mac80211/debugfs_key.c
+@@ -203,9 +203,13 @@ static ssize_t key_key_read(struct file *file, char __user *userbuf,
+ 			    size_t count, loff_t *ppos)
+ {
+ 	struct ieee80211_key *key = file->private_data;
+-	int i, res, bufsize = 2 * key->conf.keylen + 2;
++	int i, bufsize = 2 * key->conf.keylen + 2;
+ 	char *buf = kmalloc(bufsize, GFP_KERNEL);
+ 	char *p = buf;
++	ssize_t res;
++
++	if (!buf)
++		return -ENOMEM;
  
- 	WARN(priv->stations[sta_id].sta.key.key_offset == WEP_INVALID_OFFSET,
--		"no space for a new key");
-+	     "no space for a new key\n");
- 
- 	priv->stations[sta_id].sta.key.key_flags = key_flags;
- 	priv->stations[sta_id].sta.sta.modify_mask = STA_MODIFY_KEY_MASK;
-@@ -334,7 +334,7 @@ static int iwl_set_ccmp_dynamic_key_info(struct iwl_priv *priv,
- 	 * in uCode. */
- 
- 	WARN(priv->stations[sta_id].sta.key.key_offset == WEP_INVALID_OFFSET,
--		"no space for a new key");
-+	     "no space for a new key\n");
- 
- 	priv->stations[sta_id].sta.key.key_flags = key_flags;
- 	priv->stations[sta_id].sta.sta.modify_mask = STA_MODIFY_KEY_MASK;
-@@ -378,7 +378,7 @@ static int iwl_set_tkip_dynamic_key_info(struct iwl_priv *priv,
- 	 * in uCode. */
- 
- 	WARN(priv->stations[sta_id].sta.key.key_offset == WEP_INVALID_OFFSET,
--		"no space for a new key");
-+	     "no space for a new key\n");
- 
- 	priv->stations[sta_id].sta.key.key_flags = key_flags;
- 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-tx.c b/drivers/net/wireless/iwlwifi/iwl-tx.c
-index 7261ee4..1d8c4a6 100644
---- a/drivers/net/wireless/iwlwifi/iwl-tx.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-tx.c
-@@ -594,9 +594,9 @@ void iwl_tx_cmd_complete(struct iwl_priv *priv, struct iwl_rx_mem_buffer *rxb)
- 	 * in the queue management code. */
- 	if (WARN(txq_id != priv->cmd_queue,
- 		 "wrong command queue %d (should be %d), sequence 0x%X readp=%d writep=%d\n",
--		  txq_id, priv->cmd_queue, sequence,
--		  priv->txq[priv->cmd_queue].q.read_ptr,
--		  priv->txq[priv->cmd_queue].q.write_ptr)) {
-+		 txq_id, priv->cmd_queue, sequence,
-+		 priv->txq[priv->cmd_queue].q.read_ptr,
-+		 priv->txq[priv->cmd_queue].q.write_ptr)) {
- 		iwl_print_hex_error(priv, pkt, 32);
- 		return;
- 	}
-diff --git a/drivers/net/wireless/iwlwifi/iwl3945-base.c b/drivers/net/wireless/iwlwifi/iwl3945-base.c
-index 8f8c4b7..c89c409 100644
---- a/drivers/net/wireless/iwlwifi/iwl3945-base.c
-+++ b/drivers/net/wireless/iwlwifi/iwl3945-base.c
-@@ -168,7 +168,7 @@ static int iwl3945_set_ccmp_dynamic_key_info(struct iwl_priv *priv,
- 	* in uCode. */
- 
- 	WARN(priv->stations[sta_id].sta.key.key_offset == WEP_INVALID_OFFSET,
--		"no space for a new key");
-+	     "no space for a new key\n");
- 
- 	priv->stations[sta_id].sta.key.key_flags = key_flags;
- 	priv->stations[sta_id].sta.sta.modify_mask = STA_MODIFY_KEY_MASK;
+ 	for (i = 0; i < key->conf.keylen; i++)
+ 		p += scnprintf(p, bufsize + buf - p, "%02x", key->conf.key[i]);
+
+
 -- 
-1.7.3.1.g432b3.dirty
-
+Jesper Juhl <jj@chaosbits.net>             http://www.chaosbits.net/
+Plain text mails only, please      http://www.expita.com/nomime.html
+Don't top-post  http://www.catb.org/~esr/jargon/html/T/top-post.html
