@@ -1,83 +1,101 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:49806 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758010Ab0JFUpG (ORCPT
+Received: from liberdade2.minaslivre.org ([74.50.53.203]:40895 "EHLO
+	liberdade.minaslivre.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757785Ab0J2Ny5 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 6 Oct 2010 16:45:06 -0400
-Date: Wed, 6 Oct 2010 16:32:40 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Felix Fietkau <nbd@openwrt.org>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Senthil Balasubramanian <senthilkumar@atheros.com>,
-	Rajkumar Manoharan <Rajkumar.Manoharan@atheros.com>,
-	Luis Rodriguez <Luis.Rodriguez@atheros.com>
-Subject: Re: [PATCH v3 3/4] ath9k_hw: clean up register write buffering
-Message-ID: <20101006203240.GM2472@tuxdriver.com>
-References: <1286125639-15137-1-git-send-email-nbd@openwrt.org>
- <1286125639-15137-2-git-send-email-nbd@openwrt.org>
- <1286125639-15137-3-git-send-email-nbd@openwrt.org>
- <20101004085608.GA5931@vmraj-lnx.users.atheros.com>
- <4CA9C03D.9010503@openwrt.org>
- <4CAA0D5E.1080200@openwrt.org>
- <20101005043856.GB2462@senthil-lnx.users.atheros.com>
- <4CAAF7FE.1050105@openwrt.org>
+	Fri, 29 Oct 2010 09:54:57 -0400
+Date: Fri, 29 Oct 2010 11:54:50 -0200
+From: Thadeu Lima de Souza Cascardo <cascardo@holoscopio.com>
+To: seno <senada@t-online.de>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] rtl8187b: do not do per packet TX AGC
+Message-ID: <20101029135449.GB3768@barata.holoscopio.com>
+References: <1282974868-22237-1-git-send-email-cascardo@holoscopio.com>
+ <4C798080.8010002@lwfinger.net>
+ <20100830141218.GB30864@tuxdriver.com>
+ <4C7BC4D9.1010108@lwfinger.net>
+ <20100830152841.GB2950@barata.holoscopio.com>
+ <loom.20101026T200014-691@post.gmane.org>
+ <4CC71CFF.8050004@lwfinger.net>
+ <20101026185341.GA4608@barata.holoscopio.com>
+ <20101028191305.2960c83b@gotham.conectiva>
+ <loom.20101029T010426-834@post.gmane.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <4CAAF7FE.1050105@openwrt.org>
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="ADZbWkCsHQ7r3kzd"
+In-Reply-To: <loom.20101029T010426-834@post.gmane.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Oct 05, 2010 at 12:03:42PM +0200, Felix Fietkau wrote:
-> Throughout the code, DISABLE_REGWRITE_BUFFER is always called right after
-> REGWRITE_BUFFER_FLUSH. Since that's unlikely to change any time soon, that
-> makes keeping those ops separate rather pointless, as it only increases
-> code size and line number counts.
-> 
-> Signed-off-by: Felix Fietkau <nbd@openwrt.org>
-> ---
->  drivers/net/wireless/ath/ath.h                |    4 +---
->  drivers/net/wireless/ath/ath9k/ani.c          |    6 ------
->  drivers/net/wireless/ath/ath9k/ar5008_phy.c   |    9 ++-------
->  drivers/net/wireless/ath/ath9k/ar9002_calib.c |    1 -
->  drivers/net/wireless/ath/ath9k/ar9002_hw.c    |    4 ----
->  drivers/net/wireless/ath/ath9k/ar9002_phy.c   |    1 -
->  drivers/net/wireless/ath/ath9k/calib.c        |    1 -
->  drivers/net/wireless/ath/ath9k/eeprom_4k.c    |    2 --
->  drivers/net/wireless/ath/ath9k/htc_drv_init.c |   12 ++----------
->  drivers/net/wireless/ath/ath9k/hw.c           |   14 --------------
->  drivers/net/wireless/ath/ath9k/hw.h           |   10 ++--------
->  drivers/net/wireless/ath/ath9k/mac.c          |    4 ----
->  12 files changed, 7 insertions(+), 61 deletions(-)
-> 
-> v2: removed mwrite_cnt test
-> v3: removed comment about it from description
 
-Several patch hunks are buggered...examples:
+--ADZbWkCsHQ7r3kzd
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
->  diff --git a/drivers/net/wireless/ath/ath9k/ani.c b/drivers/net/wireless/ath/ath9k/ani.c
-> index 9936297..61e7a48 100644
-> --- a/drivers/net/wireless/ath/ath9k/ani.c
-> +++ b/drivers/net/wireless/ath/ath9k/ani.c
-> @@ -180,7 +180,6 @@ static void ath9k_ani_restart_old(struct ath_hw *ah)
->  	REG_WRITE(ah, AR_PHY_ERR_MASK_2, AR_PHY_ERR_CCK_TIMING);
->   	REGWRITE_BUFFER_FLUSH(ah);
-> -	DISABLE_REGWRITE_BUFFER(ah);
->   	ath9k_hw_update_mibstats(ah, &ah->ah_mibStats);
->  @@ -215,7 +214,6 @@ static void ath9k_ani_restart_new(struct ath_hw *ah)
->  	REG_WRITE(ah, AR_PHY_ERR_MASK_2, AR_PHY_ERR_CCK_TIMING);
->   	REGWRITE_BUFFER_FLUSH(ah);
-> -	DISABLE_REGWRITE_BUFFER(ah);
->   	ath9k_hw_update_mibstats(ah, &ah->ah_mibStats);
->  @@ -643,7 +641,6 @@ static void ath9k_ani_reset_old(struct ath_hw *ah, bool is_scanning)
->  	REG_WRITE(ah, AR_PHY_ERR_MASK_2, AR_PHY_ERR_CCK_TIMING);
->   	REGWRITE_BUFFER_FLUSH(ah);
-> -	DISABLE_REGWRITE_BUFFER(ah);
->  }
->   /*
+On Thu, Oct 28, 2010 at 11:21:47PM +0000, seno wrote:
+> Herton Ronaldo Krzesinski <herton@...> writes:
+>=20
+> > The excessive retries etc. should be another issue. The patch from Thad=
+eu
+> > really improves the driver.
+>=20
+> Well, I tried once more today, maybe I'm doing something wrong?
+>=20
+> - I run "./scripts/driver-select rtl818x" in compat-wireless-2010-10-28
+> - then "patch -p1 rtl8187_dev.c rtl8187b-do-not-do-per-packet-TX-AGC.patc=
+h"
+> - then "make"
+> - then "sudo make install"
+> - then reboot
+>=20
+> "dmesg |grep compat" gives "Compat-wireless backport release: compat-
+> wireless-2010-10-22-5-g69fdc09" so the new module is used.
+>=20
+> On speedtest.net, max speed is ~ 1mbit (on 10 mbit cable internet @10 met=
+ers=20
+> distance)
+> The router reports an improved "Signal Quality", but iwconfig now shows:
+>=20
+> "Rx invalid nwid:0  Rx invalid crypt:0  Rx invalid frag:0"
+> "Tx excessive retries:2589  Invalid misc:17686   Missed beacon:0"
+>=20
+> Herton: If I make something wrong, can you please post your rtl8187.ko.gz=
+=20
+> (Mandriva 2010.1 / 2.6.33.7-desktop-2mnb x86_64)?
+>=20
+> Thank you.
 
-I applied the v2 version, but w/ the modification to the commit log.
+Hello, seno.
 
-John
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+Perhaps, the problem is related to using compat-wireless. Have you tried
+using the module without the patch, using this same compat-wireless
+version in the same linux version you are using?
+
+Regards,
+Cascardo.
+
+--ADZbWkCsHQ7r3kzd
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Digital signature
+Content-Disposition: inline
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.10 (GNU/Linux)
+
+iQIcBAEBAgAGBQJMytIpAAoJEEWxSg7udFZI2mcP/RU8kJOzKt18vvsBGfvcITFT
+l5fdiApowymgzXUaRrlh4n19Jf8koKxNqwrR9fY2ckvm/t2WFJIkDwBAv7PfRTiO
+6K+3L0JccTVjhLR/05cyaYdnGPlMaBQAJiv4L53EqHcgkR4rUgasjrDKoi7N00bo
+BmQuIZBwTjT3MwKpFKxCLAA7mtIkuXsZkXzir9FKEc/Jkib1qJDJ4cN7s7Uhz/bO
+Wu/zifT90BDczOhZwRA/uJfizTtmyeMnymqoWxt6f7l3HUPE25nBF+4CJtcSLrJc
+6cjXJKgisJc4fcqVqixEja91/U3mrD21qPnw+8ywZZEzvO5c99BJ/cD29yjku4BQ
+emhj9GZMtDTtnNewd9WYEgxZeT/TB+KDJZgKEJwDAi3R6e1/tXS3Zoiu3p7wy8ph
+IFEM4iVRLGazX5VH7dGI4t2sSmPNzmRI0uVs2QJ55sc+949MId3zz/fVnkkXSIvm
+4Xy/R7bDNoVNR/7WxYz/D/cdtVNoPF9m718ef3lRVk7RKeKlZaxAdN2S97g4TjVm
+dmsth0iijrZAXIFyryHrWqXTHpTp+/DLegdGfvlm/CaSlhm+4yURBRSqyDuL5Skd
+hPpXBDVngnLRPifMC+2f9D7H9vKjQF65fNzJcM34ItWfVbl8Do7hsAqD6xZnay2c
+6EaxFZj7Bkd588z50QaT
+=1+1x
+-----END PGP SIGNATURE-----
+
+--ADZbWkCsHQ7r3kzd--
