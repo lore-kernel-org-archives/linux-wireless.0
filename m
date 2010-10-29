@@ -1,138 +1,92 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:47312 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932413Ab0JDTTl (ORCPT
+Received: from fmmailgate03.web.de ([217.72.192.234]:58446 "EHLO
+	fmmailgate03.web.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758575Ab0J2VkR (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 4 Oct 2010 15:19:41 -0400
-Message-Id: <20101004191838.763690480@sipsolutions.net>
-Date: Mon, 04 Oct 2010 21:14:03 +0200
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org
-Subject: [PATCH 1/4] genetlink: introduce pre_doit/post_doit hooks
-References: <20101004191402.183055479@sipsolutions.net>
-Mime-Version: 1.0
+	Fri, 29 Oct 2010 17:40:17 -0400
+Message-ID: <4CCB3F24.1030701@web.de>
+Date: Fri, 29 Oct 2010 23:39:48 +0200
+From: Lee <lee-in-berlin@web.de>
+MIME-Version: 1.0
+To: Helmut Schaa <helmut.schaa@googlemail.com>
+CC: Gertjan van Wingerde <gwingerde@gmail.com>,
+	linux-wireless@vger.kernel.org, Ivo van Doorn <ivdoorn@gmail.com>
+Subject: Re: [regression]AP with hostapd 0.7.3 can't receive packets beyond
+ authentication (2.6.36, rt73usb)
+References: <4CC0D0F6.4080507@web.de> <4CC9C9A4.2020802@web.de> <4CC9D50F.5070403@gmail.com> <201010290017.13174.helmut.schaa@googlemail.com>
+In-Reply-To: <201010290017.13174.helmut.schaa@googlemail.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+On 29/10/10 00:17, Helmut Schaa wrote:
+> Am Donnerstag 28 Oktober 2010 schrieb Gertjan van Wingerde:
+>> On 10/28/10 21:06, Lee wrote:
+>>> On 28/10/10 10:23, Helmut Schaa wrote:
+>>>> Am Donnerstag 28 Oktober 2010 schrieb Lee:
+>>>>> On 26/10/10 07:40, Helmut Schaa wrote:
+>>>>>> # tcpdump -i mon0 "ether src XX:XX:XX:XX:XX:XX"
+>>>>>>
+>>>>>> Do you see any frames from your specific client?
+>>>>>
+>>>>> Yes. I can see this:
+>>>>> # tcpdump -i mon0 "ether host 00:1F:3B:79:41:6F"
+>>>> [...]
+>>>>> 10:10:03.013402 5.5 Mb/s 2462 MHz 11b -76dB signal antenna 1 [bit 14] Data IV: 14 Pad 20 KeyID 0
+>>>>>
+>>>>> However, on wlan0 I don't see anything beyond the EAPOL packets.
+>>>>> Temporarily turning off WPA encryption let me successfully connect to my AP.
+>>>>
+>>>> Aha, could you please try if loading rt73usb with nohwcrypt=1 helps?
+>>>>
+>>>> Helmut
+>>>
+>>> (argh, brown paper bag)
+>>>
+>>> I went through the compiled kernels again, and I've screwed up at the last
+>>> commit while bisecting (Sorry, Helmut!). The first bad kernel is a commit
+>>> later:
+>>>
+>>> # bad: [f1aa4c541e98afa8b770a75ccaa8504d0bff44a7] rt2x00: Write the BSSID to register when interface is added
+>>>
+>>> On the good side, I tested 2.6.36 with nohwcrypt=1, and it works. Yay!
+>>
+>> Hmm, the patch itself that seems to cause the badness doesn't look bad.
+>> However, closer inspection shows that the intf->bssid field may be initialized incorrectly.
+>>
+>> I may be a long shot, but can you check if the attached patch helps?
+>
+> Hmm, indeed that part of the code looks suspicious. However, setting the bssid
+> and mac always worked for me on rt2800pci.
+>
+> Furthermore, the removal of the&  seems to not make any difference in this
+> case. I've just tried the following:
+>
+> 	#include<stdio.h>
+> 	int main() {
+> 		int x[2];
+> 		printf("%p %p\n", x,&x);
+> 	}
+>
+> Output is as follows:
+>
+> 0x7fff74cb1df0 0x7fff74cb1df0
+>
+> So, x and&x are equivalent in this case and this is similar to the code in
+> rt2x00mac. I'm fine with changing both memcpy's as you've suggested as it
+> really looks cleaner but I doubt that this is going to fix the problem.
+>
+> In commit f1aa4c541e98afa8b770a75ccaa8504d0bff44a7 "rt2x00: Write the BSSID
+> to register when interface is added" we've added the bssid passing to the
+> device in AP mode to fix hw crypto on rt2800 devices in AP mode. But maybe
+> the older devices behave differently and don't like getting a bssid set
+> in AP mode?
+>
+> Lee, if you just revert the commit you've identified are you able to use
+> the device in AP mode with hw crypto?
+>
+> Thanks,
+> Helmut
 
-Each family may have some amount of boilerplate
-locking code that applies to most, or even all,
-commands.
-
-This allows a family to handle such things in
-a more generic way, by allowing it to
- a) include private flags in each operation
- b) specify a pre_doit hook that is called,
-    before an operation's doit() callback and
-    may return an error directly,
- c) specify a post_doit hook that can undo
-    locking or similar things done by pre_doit,
-    and finally
- d) include two private pointers in each info
-    struct passed between all these operations
-    including doit(). (It's two because I'll
-    need two in nl80211 -- can be extended.)
-
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- include/net/genetlink.h |   18 ++++++++++++++++++
- net/netlink/genetlink.c |   14 +++++++++++++-
- 2 files changed, 31 insertions(+), 1 deletion(-)
-
---- wireless-testing.orig/include/net/genetlink.h	2010-10-04 21:13:52.000000000 +0200
-+++ wireless-testing/include/net/genetlink.h	2010-10-04 21:18:16.000000000 +0200
-@@ -20,6 +20,9 @@ struct genl_multicast_group {
- 	u32			id;
- };
- 
-+struct genl_ops;
-+struct genl_info;
-+
- /**
-  * struct genl_family - generic netlink family
-  * @id: protocol family idenfitier
-@@ -29,6 +32,10 @@ struct genl_multicast_group {
-  * @maxattr: maximum number of attributes supported
-  * @netnsok: set to true if the family can handle network
-  *	namespaces and should be presented in all of them
-+ * @pre_doit: called before an operation's doit callback, it may
-+ *	do additional, common, filtering and return an error
-+ * @post_doit: called after an operation's doit callback, it may
-+ *	undo operations done by pre_doit, for example release locks
-  * @attrbuf: buffer to store parsed attributes
-  * @ops_list: list of all assigned operations
-  * @family_list: family list
-@@ -41,6 +48,12 @@ struct genl_family {
- 	unsigned int		version;
- 	unsigned int		maxattr;
- 	bool			netnsok;
-+	int			(*pre_doit)(struct genl_ops *ops,
-+					    struct sk_buff *skb,
-+					    struct genl_info *info);
-+	void			(*post_doit)(struct genl_ops *ops,
-+					     struct sk_buff *skb,
-+					     struct genl_info *info);
- 	struct nlattr **	attrbuf;	/* private */
- 	struct list_head	ops_list;	/* private */
- 	struct list_head	family_list;	/* private */
-@@ -55,6 +68,8 @@ struct genl_family {
-  * @genlhdr: generic netlink message header
-  * @userhdr: user specific header
-  * @attrs: netlink attributes
-+ * @_net: network namespace
-+ * @user_ptr: user pointers
-  */
- struct genl_info {
- 	u32			snd_seq;
-@@ -66,6 +81,7 @@ struct genl_info {
- #ifdef CONFIG_NET_NS
- 	struct net *		_net;
- #endif
-+	void *			user_ptr[2];
- };
- 
- static inline struct net *genl_info_net(struct genl_info *info)
-@@ -81,6 +97,7 @@ static inline void genl_info_net_set(str
- /**
-  * struct genl_ops - generic netlink operations
-  * @cmd: command identifier
-+ * @internal_flags: flags used by the family
-  * @flags: flags
-  * @policy: attribute validation policy
-  * @doit: standard command callback
-@@ -90,6 +107,7 @@ static inline void genl_info_net_set(str
-  */
- struct genl_ops {
- 	u8			cmd;
-+	u8			internal_flags;
- 	unsigned int		flags;
- 	const struct nla_policy	*policy;
- 	int		       (*doit)(struct sk_buff *skb,
---- wireless-testing.orig/net/netlink/genetlink.c	2010-10-04 21:13:52.000000000 +0200
-+++ wireless-testing/net/netlink/genetlink.c	2010-10-04 21:18:16.000000000 +0200
-@@ -547,8 +547,20 @@ static int genl_rcv_msg(struct sk_buff *
- 	info.userhdr = nlmsg_data(nlh) + GENL_HDRLEN;
- 	info.attrs = family->attrbuf;
- 	genl_info_net_set(&info, net);
-+	memset(&info.user_ptr, 0, sizeof(info.user_ptr));
- 
--	return ops->doit(skb, &info);
-+	if (family->pre_doit) {
-+		err = family->pre_doit(ops, skb, &info);
-+		if (err)
-+			return err;
-+	}
-+
-+	err = ops->doit(skb, &info);
-+
-+	if (family->post_doit)
-+		family->post_doit(ops, skb, &info);
-+
-+	return err;
- }
- 
- static void genl_rcv(struct sk_buff *skb)
-
-
+Reverting that memcpy() to it's original parameters works for me (AP mode + hw 
+crypto).
