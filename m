@@ -1,147 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from web56801.mail.re3.yahoo.com ([66.196.97.75]:46073 "HELO
-	web56801.mail.re3.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1757380Ab0JQRmN (ORCPT
+Received: from mail-fx0-f46.google.com ([209.85.161.46]:40856 "EHLO
+	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753281Ab0J3MbK (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 17 Oct 2010 13:42:13 -0400
-Message-ID: <983671.73519.qm@web56801.mail.re3.yahoo.com>
-Date: Sun, 17 Oct 2010 10:42:12 -0700 (PDT)
-From: Walter Goldens <goldenstranger@yahoo.com>
-Subject: [PATCH] compat-wireless: update Makefile modules
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <756358.10174.qm@web56802.mail.re3.yahoo.com>
+	Sat, 30 Oct 2010 08:31:10 -0400
+Received: by fxm16 with SMTP id 16so3842552fxm.19
+        for <linux-wireless@vger.kernel.org>; Sat, 30 Oct 2010 05:31:09 -0700 (PDT)
+From: Helmut Schaa <helmut.schaa@googlemail.com>
+To: Lee <lee-in-berlin@web.de>
+Subject: Re: [regression]AP with hostapd 0.7.3 can't receive packets beyond authentication (2.6.36, rt73usb)
+Date: Sat, 30 Oct 2010 14:30:15 +0200
+Cc: Gertjan van Wingerde <gwingerde@gmail.com>,
+	linux-wireless@vger.kernel.org, Ivo van Doorn <ivdoorn@gmail.com>
+References: <4CC0D0F6.4080507@web.de> <201010290017.13174.helmut.schaa@googlemail.com> <4CCB3F24.1030701@web.de>
+In-Reply-To: <4CCB3F24.1030701@web.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: Text/Plain;
+  charset="us-ascii"
+Message-Id: <201010301430.15868.helmut.schaa@googlemail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-update "modprobe -l X" list in Makefile
+Am Freitag 29 Oktober 2010 schrieb Lee:
+> On 29/10/10 00:17, Helmut Schaa wrote:
+> > In commit f1aa4c541e98afa8b770a75ccaa8504d0bff44a7 "rt2x00: Write the BSSID
+> > to register when interface is added" we've added the bssid passing to the
+> > device in AP mode to fix hw crypto on rt2800 devices in AP mode. But maybe
+> > the older devices behave differently and don't like getting a bssid set
+> > in AP mode?
+> >
+> > Lee, if you just revert the commit you've identified are you able to use
+> > the device in AP mode with hw crypto?
+> >
+> Reverting that memcpy() to it's original parameters works for me (AP mode + hw 
+> crypto).
 
+Thanks for the info Lee. So, in AP mode we need to set the bssid on rt2800
+devices in order to get hw crypto to work but on (at least) rt73 devices we
+may not set the bssid to get hw crypto to work :(
 
-Signed-off-by: Walter Goldens <goldenstranger@yahoo.com>
----
+Ivo, Gertjan, any ideas how to handle that case. I don't feel like introducing
+another device specific flag makes sense here?
 
---- a/Makefile
-+++ b/Makefile
-@@ -194,10 +194,14 @@ install-scripts:
- 	@$(MODPROBE) -l at76c50x-usb
- 	@$(MODPROBE) -l ath
- 	@$(MODPROBE) -l ath5k
-+	@$(MODPROBE) -l ath6kl
- 	@$(MODPROBE) -l ath9k
-+	@$(MODPROBE) -l ath9k_htc
- 	@$(MODPROBE) -l b43
- 	@$(MODPROBE) -l b43legacy
- 	@$(MODPROBE) -l b44
-+	@$(MODPROBE) -l carl9170
-+	@$(MODPROBE) -l brcm80211
- 	@$(MODPROBE) -l cdc_ether
- 	@$(MODPROBE) -l eeprom_93cx6
- 	@$(MODPROBE) -l ipw2100
-@@ -205,6 +209,7 @@ install-scripts:
- 	@$(MODPROBE) -l iwl3945
- 	@$(MODPROBE) -l iwlagn
- 	@$(MODPROBE) -l iwlcore
-+	@$(MODPROBE) -l iwmc3200wifi
- 	@$(MODPROBE) -l lib80211_crypt_ccmp
- 	@$(MODPROBE) -l lib80211_crypt_tkip
- 	@$(MODPROBE) -l lib80211_crypt_wep
-@@ -217,6 +222,13 @@ install-scripts:
- 	@$(MODPROBE) -l libipw
- 	@$(MODPROBE) -l mac80211_hwsim
- 	@$(MODPROBE) -l mwl8k
-+	@$(MODPROBE) -l orinoco_cs
-+	@$(MODPROBE) -l orinoco_nortel
-+	@$(MODPROBE) -l orinoco_pci
-+	@$(MODPROBE) -l orinoco_plx
-+	@$(MODPROBE) -l orinoco_tld
-+	@$(MODPROBE) -l orinoco_usb
-+	@$(MODPROBE) -l orinoco
- 	@$(MODPROBE) -l p54common
- 	@$(MODPROBE) -l p54pci
- 	@$(MODPROBE) -l p54spi
-@@ -226,6 +238,8 @@ install-scripts:
- 	@$(MODPROBE) -l rt2400pci
- 	@$(MODPROBE) -l rt2500pci
- 	@$(MODPROBE) -l rt2500usb
-+	@$(MODPROBE) -l rt2800pci
-+	@$(MODPROBE) -l rt2800usb
- 	@$(MODPROBE) -l rt2x00lib
- 	@$(MODPROBE) -l rt2x00pci
- 	@$(MODPROBE) -l rt2x00usb
-@@ -233,9 +247,12 @@ install-scripts:
- 	@$(MODPROBE) -l rt73usb
- 	@$(MODPROBE) -l rtl8180
- 	@$(MODPROBE) -l rtl8187
-+	@$(MODPROBE) -l spectrum_cs
- 	@$(MODPROBE) -l ssb
- 	@$(MODPROBE) -l usb8xxx
- 	@$(MODPROBE) -l usbnet
-+	@$(MODPROBE) -l wl1251
-+	@$(MODPROBE) -l wl1271
- 	@$(MODPROBE) -l zd1211rw
- 	@echo
- 	@echo "Currently detected bluetooth subsystem modules:"
-@@ -284,10 +301,14 @@ uninstall:
- 	@$(MODPROBE) -l at76c50x-usb
- 	@$(MODPROBE) -l ath
- 	@$(MODPROBE) -l ath5k
-+	@$(MODPROBE) -l ath6kl
- 	@$(MODPROBE) -l ath9k
-+	@$(MODPROBE) -l ath9k_htc
- 	@$(MODPROBE) -l b43
- 	@$(MODPROBE) -l b43legacy
- 	@$(MODPROBE) -l b44
-+	@$(MODPROBE) -l carl9170
-+	@$(MODPROBE) -l brcm80211
- 	@$(MODPROBE) -l cdc_ether
- 	@$(MODPROBE) -l eeprom_93cx6
- 	@$(MODPROBE) -l ipw2100
-@@ -295,6 +316,7 @@ uninstall:
- 	@$(MODPROBE) -l iwl3945
- 	@$(MODPROBE) -l iwlagn
- 	@$(MODPROBE) -l iwlcore
-+	@$(MODPROBE) -l iwmc3200wifi
- 	@$(MODPROBE) -l lib80211_crypt_ccmp
- 	@$(MODPROBE) -l lib80211_crypt_tkip
- 	@$(MODPROBE) -l lib80211_crypt_wep
-@@ -307,6 +329,13 @@ uninstall:
- 	@$(MODPROBE) -l libipw
- 	@$(MODPROBE) -l mac80211_hwsim
- 	@$(MODPROBE) -l mwl8k
-+	@$(MODPROBE) -l orinoco_cs
-+	@$(MODPROBE) -l orinoco_nortel
-+	@$(MODPROBE) -l orinoco_pci
-+	@$(MODPROBE) -l orinoco_plx
-+	@$(MODPROBE) -l orinoco_tld
-+	@$(MODPROBE) -l orinoco_usb
-+	@$(MODPROBE) -l orinoco
- 	@$(MODPROBE) -l p54common
- 	@$(MODPROBE) -l p54pci
- 	@$(MODPROBE) -l p54spi
-@@ -316,6 +345,8 @@ uninstall:
- 	@$(MODPROBE) -l rt2400pci
- 	@$(MODPROBE) -l rt2500pci
- 	@$(MODPROBE) -l rt2500usb
-+	@$(MODPROBE) -l rt2800pci
-+	@$(MODPROBE) -l rt2800usb
- 	@$(MODPROBE) -l rt2x00lib
- 	@$(MODPROBE) -l rt2x00pci
- 	@$(MODPROBE) -l rt2x00usb
-@@ -323,9 +354,12 @@ uninstall:
- 	@$(MODPROBE) -l rt73usb
- 	@$(MODPROBE) -l rtl8180
- 	@$(MODPROBE) -l rtl8187
-+	@$(MODPROBE) -l spectrum_cs
- 	@$(MODPROBE) -l ssb
- 	@$(MODPROBE) -l usb8xxx
- 	@$(MODPROBE) -l usbnet
-+	@$(MODPROBE) -l wl1251
-+	@$(MODPROBE) -l wl1271
- 	@$(MODPROBE) -l zd1211rw
- 	@echo
- 	@echo "Your old bluetooth subsystem modules were left intact:"
-
-
-      
+Helmut
