@@ -1,105 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:57279 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932090Ab0JDRwO (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 4 Oct 2010 13:52:14 -0400
-Message-ID: <4CAA144C.7040906@candelatech.com>
-Date: Mon, 04 Oct 2010 10:52:12 -0700
-From: Ben Greear <greearb@candelatech.com>
-MIME-Version: 1.0
-To: Christian Lamparter <chunkeey@googlemail.com>
-CC: Ming Lei <tom.leiming@gmail.com>, linux-wireless@vger.kernel.org
-Subject: Re: lockdep warning in ieee80211 rx path
-References: <AANLkTin5KfmQLYxLWdhTcO-AM0t83dVq=LFCG0UGysaw@mail.gmail.com> <201009142251.53021.chunkeey@googlemail.com>
-In-Reply-To: <201009142251.53021.chunkeey@googlemail.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Received: from lo.gmane.org ([80.91.229.12]:47692 "EHLO lo.gmane.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751135Ab0J3CMc (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 29 Oct 2010 22:12:32 -0400
+Received: from list by lo.gmane.org with local (Exim 4.69)
+	(envelope-from <glkwg-linux-wireless@m.gmane.org>)
+	id 1PC0vk-0006qW-EO
+	for linux-wireless@vger.kernel.org; Sat, 30 Oct 2010 04:12:28 +0200
+Received: from CPE0014bf4aedf8-CM00111ae2cca2.cpe.net.cable.rogers.com ([173.34.126.150])
+        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Sat, 30 Oct 2010 04:12:28 +0200
+Received: from senada by CPE0014bf4aedf8-CM00111ae2cca2.cpe.net.cable.rogers.com with local (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Sat, 30 Oct 2010 04:12:28 +0200
+To: linux-wireless@vger.kernel.org
+From: seno <senada@t-online.de>
+Subject: Re: [PATCH] rtl8187b: do not do per packet TX AGC
+Date: Sat, 30 Oct 2010 02:12:17 +0000 (UTC)
+Message-ID: <loom.20101030T035315-813@post.gmane.org>
+References: <1282974868-22237-1-git-send-email-cascardo@holoscopio.com> <4C798080.8010002@lwfinger.net> <20100830141218.GB30864@tuxdriver.com> <4C7BC4D9.1010108@lwfinger.net> <20100830152841.GB2950@barata.holoscopio.com> <loom.20101026T200014-691@post.gmane.org> <4CC71CFF.8050004@lwfinger.net> <20101026185341.GA4608@barata.holoscopio.com> <20101028191305.2960c83b@gotham.conectiva> <loom.20101029T010426-834@post.gmane.org> <20101029135449.GB3768@barata.holoscopio.com> <loom.20101030T001241-932@post.gmane.org> <4CCB601A.9010909@lwfinger.net>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 09/14/2010 01:51 PM, Christian Lamparter wrote:
-> On Sunday 05 September 2010 11:32:26 Ming Lei wrote:
->> Seems the warning does not affect use of wireless,  false positive?
->
-> No, it's a bug... but please read&  test the attached patch.
+Larry Finger <Larry.Finger@...> writes:
 
-This is not yet in wireless-testing.  Should it be?
+> Is your device overheating?
 
-Thanks,
-Ben
+I don't think so.
 
->
->> [  221.023116] =======================================================
->> [  221.023164] [ INFO: possible circular locking dependency detected ]
->> [  221.023195] 2.6.36-rc3-next-20100903+ #65
->> [  221.023215] -------------------------------------------------------
->> [  221.023246] X/2091 is trying to acquire lock:
->> [  221.023268]  (slock-AF_INET/1){+.-...}, at: [<ffffffff81381151>]
->> tcp_v4_rcv+0x290/0x6b7
->> [  221.023323]
->> [  221.023323] but task is already holding lock:
->> [  221.023354]  (&(&sta->lock)->rlock){+.-...}, at:
->> [<ffffffffa01edd37>] sta_rx_agg_reorder_timer_expired+0x61/0x9c
->> [mac80211]
->> [  221.023425]
->> [  221.023426] which lock already depends on the new lock.
->> [  221.023426]
->> [  221.023469]
->> [  221.023469] the existing dependency chain (in reverse order) is:
->> [  221.023508]
->> [  221.023509] ->  #2 (&(&sta->lock)->rlock){+.-...}:
->> [  221.023547]        [<ffffffff8107d7e3>] lock_acquire+0xe6/0x113
->> [  221.023581]        [<ffffffff813ce6a4>] _raw_spin_lock_irqsave+0x5d/0x97
->> [  221.024007]
->> [  221.024007] ->  #1 (_xmit_ETHER){+.-...}:
->> [  221.024007]        [<ffffffff8107d7e3>] lock_acquire+0xe6/0x113
->> [  221.024007]        [<ffffffff81340d9c>] netif_receive_skb+0x6c/0x73
->> [  221.024007]        [<ffffffffa01fcf27>] ieee80211_rx+0x7b5/0x826 [mac80211]
->> [  221.024007]
->> [  221.024007] ->  #0 (slock-AF_INET/1){+.-...}:
->> [  221.024007]        [<ffffffff8107d406>] __lock_acquire+0xa2c/0xd23
->> [  221.024007]        [<ffffffff8107d7e3>] lock_acquire+0xe6/0x113
->> [  221.024007]        [<ffffffff813ce47b>] _raw_spin_lock_nested+0x43/0x76
->> [  221.024007]        [<ffffffff81381151>] tcp_v4_rcv+0x290/0x6b7
->> [  221.024007]        [<ffffffff81364424>] ip_local_deliver+0x130/0x1c0
->> [  221.024007]        [<ffffffff81364161>] ip_rcv+0x4d9/0x519
->> [  221.024007]        [<ffffffff8133fdd9>] __netif_receive_skb+0x292/0x2bf
->> [  221.024007]        [<ffffffff81340d9c>] netif_receive_skb+0x6c/0x73
-> ---
-> [PATCH] mac80211: hoist sta->lock from reorder release timer
->
-> The patch "mac80211: AMPDU rx reorder timeout timer" clashes
-> with "mac80211: use netif_receive_skb in ieee80211_rx callpath"
->
-> The timer itself is part of the station's private struct and
-> it gets killed whenever the station is removed. Therefore
-> the extra sta->lock protection (that can interferes with the
-> tx path) is not necessary.
->
-> Reported-by: Ming Lei<tom.leiming@gmail.com>
-> Signed-off-by: Christian Lamparter<chunkeey@googlemail.com>
-> ---
-> diff --git a/net/mac80211/agg-rx.c b/net/mac80211/agg-rx.c
-> index 58eab9e..309ed70 100644
-> --- a/net/mac80211/agg-rx.c
-> +++ b/net/mac80211/agg-rx.c
-> @@ -129,9 +129,7 @@ static void sta_rx_agg_reorder_timer_expired(unsigned long data)
->   			timer_to_tid[0]);
->
->   	rcu_read_lock();
-> -	spin_lock(&sta->lock);
->   	ieee80211_release_reorder_timeout(sta, *ptid);
-> -	spin_unlock(&sta->lock);
->   	rcu_read_unlock();
->   }
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+I reduced Tx-Power to 20 dBm (wireless regulatory domain DE).
+That doesn't make any difference to 27 dBm (CA) or even 30 dBm (BO).
+(Beside that: it performs fine in w7)
 
-
--- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+In contrast to the unchanged measured performance, web browsing feels 'snappier'
+with the patched driver (websites load faster although speed peek never top > 140
+kByte/s)
 
