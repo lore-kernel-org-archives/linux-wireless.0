@@ -1,92 +1,155 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iw0-f174.google.com ([209.85.214.174]:49985 "EHLO
-	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751542Ab0JGRVx convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 7 Oct 2010 13:21:53 -0400
-Received: by iwn9 with SMTP id 9so81338iwn.19
-        for <linux-wireless@vger.kernel.org>; Thu, 07 Oct 2010 10:21:53 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1286435892.3657.9.camel@jlt3.sipsolutions.net>
-References: <20101006185000.GJ7070@tux> <1286391301.3655.403.camel@jlt3.sipsolutions.net>
- <20101006191215.GM7070@tux> <1286392799.3655.414.camel@jlt3.sipsolutions.net>
- <AANLkTinOTsYKFpQkg2B7GVMF-eKykFd8LM1m8xmtXX7j@mail.gmail.com> <1286435892.3657.9.camel@jlt3.sipsolutions.net>
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Date: Thu, 7 Oct 2010 10:21:32 -0700
-Message-ID: <AANLkTi=iW1T7w-9akkR=DNnrGg3XD5nO=8pJ7V2_PiL4@mail.gmail.com>
-Subject: Re: [PATCH] mac80211: Deny new BA agreements from being started
- during offchannel operation
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Luis Rodriguez <Luis.Rodriguez@atheros.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Srinivasa Duvvuri <Srinivasa.Duvvuri@atheros.com>,
-	Matt Smith <Matt.Smith@atheros.com>,
-	Bennyam Malavazi <Bennyam.Malavazi@atheros.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Received: from mail.perches.com ([173.55.12.10]:3817 "EHLO mail.perches.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752674Ab0J3VJw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 30 Oct 2010 17:09:52 -0400
+From: Joe Perches <joe@perches.com>
+To: Jiri Kosina <trivial@kernel.org>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	"David S. Miller" <davem@davemloft.net>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: [PATCH 37/39] net/mac80211: Update WARN uses
+Date: Sat, 30 Oct 2010 14:08:54 -0700
+Message-Id: <de75963e04701e309b86dfee54c36e11873048c2.1288471898.git.joe@perches.com>
+In-Reply-To: <cover.1288471897.git.joe@perches.com>
+References: <cover.1288471897.git.joe@perches.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Oct 7, 2010 at 12:18 AM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
-> On Wed, 2010-10-06 at 13:48 -0700, Luis R. Rodriguez wrote:
->> On Wed, Oct 6, 2010 at 12:19 PM, Johannes Berg
->> <johannes@sipsolutions.net> wrote:
->> > On Wed, 2010-10-06 at 12:12 -0700, Luis R. Rodriguez wrote:
->> >
->> >> Good question, will ieee80211_offchannel_ps_disable() possibly be
->> >> called during suspend? I can imagine its possible. So how about we
->> >> check for local->quiescing prior to lifting the flag only:
->> >
->> > Or suspended?
->>
->> If we're suspended we would be quiesced so I do not see us calling
->> ieee80211_offchannel_ps_disable() then, but we can also just bail out
->> if quescing or suspended on  ieee80211_offchannel_ps_disable() and
->> friends.
->
-> Oh, wait, yeah, while quiescing we stop the workqueue so we can't be
-> processing this, so we should be fine.
+Coalesce long formats.
+Add missing newlines.
 
-Right.
+Signed-off-by: Joe Perches <joe@perches.com>
+---
+ net/mac80211/agg-tx.c |    5 +++--
+ net/mac80211/iface.c  |    4 ++--
+ net/mac80211/mlme.c   |    2 +-
+ net/mac80211/rx.c     |    4 +---
+ net/mac80211/tx.c     |    4 +---
+ net/mac80211/util.c   |    4 +---
+ net/mac80211/work.c   |    4 ++--
+ 7 files changed, 11 insertions(+), 16 deletions(-)
 
-> We might still be off-channel
-> while suspending which is odd, and then we might lift the BA block
-> earlier than you'd want.
+diff --git a/net/mac80211/agg-tx.c b/net/mac80211/agg-tx.c
+index d4679b2..9f2c3f6 100644
+--- a/net/mac80211/agg-tx.c
++++ b/net/mac80211/agg-tx.c
+@@ -454,8 +454,9 @@ ieee80211_agg_splice_packets(struct ieee80211_local *local,
+ 
+ 	ieee80211_stop_queue_agg(local, tid);
+ 
+-	if (WARN(!tid_tx, "TID %d gone but expected when splicing aggregates"
+-			  " from the pending queue\n", tid))
++	if (WARN(!tid_tx,
++		 "TID %d gone but expected when splicing aggregates from the pending queue\n",
++		 tid))
+ 		return;
+ 
+ 	if (!skb_queue_empty(&tid_tx->pending)) {
+diff --git a/net/mac80211/iface.c b/net/mac80211/iface.c
+index f9163b1..328e637 100644
+--- a/net/mac80211/iface.c
++++ b/net/mac80211/iface.c
+@@ -820,7 +820,7 @@ static void ieee80211_iface_work(struct work_struct *work)
+ 			ieee80211_mesh_rx_queued_mgmt(sdata, skb);
+ 			break;
+ 		default:
+-			WARN(1, "frame for unexpected interface type");
++			WARN(1, "frame for unexpected interface type\n");
+ 			break;
+ 		}
+ 
+@@ -979,7 +979,7 @@ static int ieee80211_runtime_change_iftype(struct ieee80211_sub_if_data *sdata,
+ 	ieee80211_setup_sdata(sdata, type);
+ 
+ 	err = ieee80211_do_open(sdata->dev, false);
+-	WARN(err, "type change: do_open returned %d", err);
++	WARN(err, "type change: do_open returned %d\n", err);
+ 
+ 	return ret;
+ }
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+index a3a9421..22f054a 100644
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -1780,7 +1780,7 @@ void ieee80211_sta_rx_queued_mgmt(struct ieee80211_sub_if_data *sdata,
+ 			cfg80211_send_disassoc(sdata->dev, (u8 *)mgmt, skb->len);
+ 			break;
+ 		default:
+-			WARN(1, "unexpected: %d", rma);
++			WARN(1, "unexpected: %d\n", rma);
+ 		}
+ 		return;
+ 	}
+diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
+index 902b03e..7775375 100644
+--- a/net/mac80211/rx.c
++++ b/net/mac80211/rx.c
+@@ -2840,9 +2840,7 @@ void ieee80211_rx(struct ieee80211_hw *hw, struct sk_buff *skb)
+ 			 */
+ 			if (WARN((status->rate_idx < 0 ||
+ 				 status->rate_idx > 76),
+-				 "Rate marked as an HT rate but passed "
+-				 "status->rate_idx is not "
+-				 "an MCS index [0-76]: %d (0x%02x)\n",
++				 "Rate marked as an HT rate but passed status->rate_idx is not an MCS index [0-76]: %d (0x%02x)\n",
+ 				 status->rate_idx,
+ 				 status->rate_idx))
+ 				goto drop;
+diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
+index 96c5943..a511d69 100644
+--- a/net/mac80211/tx.c
++++ b/net/mac80211/tx.c
+@@ -649,9 +649,7 @@ ieee80211_tx_h_rate_ctrl(struct ieee80211_tx_data *tx)
+ 	if (WARN(test_bit(SCAN_SW_SCANNING, &tx->local->scanning) &&
+ 		 (sta_flags & WLAN_STA_ASSOC) &&
+ 		 !rate_usable_index_exists(sband, &tx->sta->sta),
+-		 "%s: Dropped data frame as no usable bitrate found while "
+-		 "scanning and associated. Target station: "
+-		 "%pM on %d GHz band\n",
++		 "%s: Dropped data frame as no usable bitrate found while scanning and associated. Target station: %pM on %d GHz band\n",
+ 		 tx->sdata->name, hdr->addr1,
+ 		 tx->channel->band ? 5 : 2))
+ 		return TX_DROP;
+diff --git a/net/mac80211/util.c b/net/mac80211/util.c
+index 0b6fc92..2a14723 100644
+--- a/net/mac80211/util.c
++++ b/net/mac80211/util.c
+@@ -1120,9 +1120,7 @@ int ieee80211_reconfig(struct ieee80211_local *local)
+ 		 */
+ 		res = drv_start(local);
+ 		if (res) {
+-			WARN(local->suspended, "Hardware became unavailable "
+-			     "upon resume. This could be a software issue "
+-			     "prior to suspend or a hardware issue.\n");
++			WARN(local->suspended, "Hardware became unavailable upon resume. This could be a software issue prior to suspend or a hardware issue.\n");
+ 			return res;
+ 		}
+ 
+diff --git a/net/mac80211/work.c b/net/mac80211/work.c
+index ae344d1..8583206 100644
+--- a/net/mac80211/work.c
++++ b/net/mac80211/work.c
+@@ -830,7 +830,7 @@ static void ieee80211_work_rx_queued_mgmt(struct ieee80211_local *local,
+ 		list_del_rcu(&wk->list);
+ 		break;
+ 	default:
+-		WARN(1, "unexpected: %d", rma);
++		WARN(1, "unexpected: %d\n", rma);
+ 	}
+ 
+ 	mutex_unlock(&local->mtx);
+@@ -973,7 +973,7 @@ static void ieee80211_work_work(struct work_struct *work)
+ 			list_add(&wk->list, &free_work);
+ 			break;
+ 		default:
+-			WARN(1, "unexpected: %d", rma);
++			WARN(1, "unexpected: %d\n", rma);
+ 		}
+ 	}
+ 
+-- 
+1.7.3.1.g432b3.dirty
 
-Hehe.. unless we deny going off channel when quiescing or suspended.
-
-> But then again, come to think of it, why are you doing this anyway?
-
-The goal is to clean up a lot of stuff we forgot to cleanup for
-offchannel operation and in the end to help with multicast/broadcast
-data. This patch just addresses one of the cleanups. The timers kicked
-off when going off channel will not make sense, so best to just deny
-ADDBA when going offchannel.
-
-> I'm not convinced of the whole idea, it's all racy. I'm starting to think
-> that this patch won't help anything since we'll still be racy and start
-> BA agreements just before we block,
-
-Establishing the BA agreement is fine, we don't want to cancel
-existing BA agreements when going offchannel, we just want to prevent
-making the timers for new ADDBA requests from going stale
-unnecessarily.
-
-> _and_ if we're a station and going off-channel we'll be going into powersave
-> which means we won't actually get the addBA frame until we return.
-
-There's a race between trying to go offchannel, sending the nullfunc
-and switching channels. When the race hits the ADDBA timer will just
-go stale. If our goal is to go offchannel we should avoid the race by
-simply denying new ADDBA requests. I just noticed that we can't
-possible receive ADDBA requests when we are scanning though, since
-ieee80211_iface_work() already has a check and bail out for
-local->scanning, but note that local->scanning will not be checked
-when doing other offchannel work.
-
-So perhaps there is another way we can deal with this for the
-non-scanning offchannel work case that might also take care of not
-handling other queued up management frames when offchannel.
-
- Luis
