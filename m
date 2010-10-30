@@ -1,50 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:42015 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932376Ab0JOUPH (ORCPT
+Received: from mail18.bluewin.ch ([195.186.19.64]:53559 "EHLO
+	mail18.bluewin.ch" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751967Ab0J3Iz4 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 15 Oct 2010 16:15:07 -0400
-Date: Fri, 15 Oct 2010 16:04:34 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: "Gustavo F. Padovan" <padovan@profusion.mobi>
-Cc: marcel@holtmann.org, linux-wireless@vger.kernel.org,
-	linux-bluetooth@vger.kernel.org
-Subject: Re: pull request: bluetooth-next-2.6 2010-10-13
-Message-ID: <20101015200434.GB2438@tuxdriver.com>
-References: <20101013034808.GA3205@vigoh>
+	Sat, 30 Oct 2010 04:55:56 -0400
+Received: from ps28zhh.bluewin.ch (localhost [127.0.0.1])
+	by ps28zhh.bluewin.ch (Postfix) with ESMTP id 258FD10926
+	for <linux-wireless@vger.kernel.org>; Sat, 30 Oct 2010 08:48:51 +0000 (GMT)
+Message-ID: <13216803.15461288428531150.JavaMail.webmail@bluewin.ch>
+Date: Sat, 30 Oct 2010 08:48:51 +0000 (GMT+00:00)
+From: "benjmeier@bluewin.ch" <benjmeier@bluewin.ch>
+Reply-To: benjmeier@bluewin.ch
+To: linux-wireless@vger.kernel.org
+Subject: USB Setup failed (-32)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20101013034808.GA3205@vigoh>
+Content-Type: text/plain;charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Oct 13, 2010 at 12:48:08AM -0300, Gustavo F. Padovan wrote:
-> Hi John,
-> 
-> Here goes the Bluetooth patches for the next merge window. In this
-> patchset we have a new stream-oriented recvmsg() which is used in L2CAP
-> and RFCOMM. Support for two new MacBookPro devices. A buffer overflow
-> check for L2CAP to prevent frames exceeding the receiving MTU. All the
-> rest are simple bugfixes. No big features this time.
-> 
-> One notable change is in the MAINTAINERS file, From now and on I'm going
-> to maintain the Bluetooth trees as well as send the pull requests to you.
-> Despite this maintenance change, Marcel will remain helping with patch
-> review, and ACK/NAK in the Bluetooth subsystem as he always did. Not a
-> big change in the end. ;)
-> 
-> Thanks,
-> 
-> The following changes since commit 29b4433d991c88d86ca48a4c1cc33c671475be4b:
-> 
->   net: percpu net_device refcount (2010-10-12 12:35:25 -0700)
-> 
-> are available in the git repository at:
->   git://git.kernel.org/pub/scm/linux/kernel/git/padovan/bluetooth-next-2.6.git master
+Hello,
 
-Pulled, thanks -- I plan to send a pull request to Dave later today.
+I have a Olimex SAM9-L9260-Board (http://www.olimex.com/dev/sam9-L9260.html), which has an ARM-Processor.
 
-John
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+I used many 
+devices on this hardware, mostly over usb (UMTS-Modems, Sticks...). Everything worked.
+I saw that i can use the 
+ar9170usb-driver for wireless, so i bought a Netgear WN111v2 (http://linuxwireless.org/en/users/Drivers/ar9170).
+
+Then 
+i installed the needed firmware. But it didnt work. This is the output:
+
+usb 1-1.3: new full speed USB device using 
+at91_ohci and address 3
+usb 1-1.3: New USB device found, idVendor=0846, idProduct=9001
+usb 1-1.3: New USB device 
+strings: Mfr=16, Product=32, SerialNumber=48
+usb 1-1.3: Product: USB2.0 WLAN
+usb 1-1.3: Manufacturer: ATHER
+usb 1-1.3: 
+SerialNumber: 12345
+cfg80211: Calling CRDA to update world regulatory domain
+usb 1-1.3: reset full speed USB device 
+using at91_ohci and address 3
+usbcore: registered new interface driver ar9170usb
+usb 1-1.3: firmware: requesting ar9170.
+fw
+usb 1-1.3: USB setup failed (-32).
+
+I searched everywhere the errormessage with the errorcode -32, but i didnt find 
+a meaning.
+On the pc the wireless-stick works perfectly (with the same firmware).
+
+Has someone an idea what i can do?
+
+
+Thanks
+Best Regards
