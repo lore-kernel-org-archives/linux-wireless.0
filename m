@@ -1,59 +1,110 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fmmailgate01.web.de ([217.72.192.221]:47034 "EHLO
-	fmmailgate01.web.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758464Ab0JWT7J (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 23 Oct 2010 15:59:09 -0400
-Received: from smtp03.web.de  ( [172.20.0.65])
-	by fmmailgate01.web.de (Postfix) with ESMTP id 975C9170007D0
-	for <linux-wireless@vger.kernel.org>; Sat, 23 Oct 2010 21:59:07 +0200 (CEST)
-Received: from [217.186.43.131] (helo=[192.168.178.24])
-	by smtp03.web.de with asmtp (TLSv1:AES256-SHA:256)
-	(WEB.DE 4.110 #24)
-	id 1P9kF9-0007x3-00
-	for linux-wireless@vger.kernel.org; Sat, 23 Oct 2010 21:59:07 +0200
-Message-ID: <4CC33E83.4020505@web.de>
-Date: Sat, 23 Oct 2010 21:58:59 +0200
-From: Lee <lee-in-berlin@web.de>
-MIME-Version: 1.0
-To: linux-wireless@vger.kernel.org
-Subject: Re: [regression]AP with hostapd 0.7.3 can't receive packets beyond
- authentication (2.6.36, rt73usb)
-References: <4CC0D0F6.4080507@web.de>
-In-Reply-To: <4CC0D0F6.4080507@web.de>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Received: from mail.perches.com ([173.55.12.10]:3744 "EHLO mail.perches.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752162Ab0J3VJh (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 30 Oct 2010 17:09:37 -0400
+From: Joe Perches <joe@perches.com>
+To: Jiri Kosina <trivial@kernel.org>
+Cc: Reinette Chatre <reinette.chatre@intel.com>,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>,
+	Intel Linux Wireless <ilw@linux.intel.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: [PATCH 18/39] drivers/net/wireless/iwlwifi: Update WARN uses
+Date: Sat, 30 Oct 2010 14:08:35 -0700
+Message-Id: <e95402f05ba92bbd0039505856641acf84dab981.1288471898.git.joe@perches.com>
+In-Reply-To: <cover.1288471897.git.joe@perches.com>
+References: <cover.1288471897.git.joe@perches.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 22/10/10 01:47, Lee wrote:
-> Hi everyone,
->
-> I noticed a bug (details later) in Linus' git tree, which wasn't there in
-> 2.6.35.7. So I went on to bisect the bug. 12 compiles and reboots later, I
-> could narrow it down to this commit:
->
-> # bad: [05318bc905467237d4aa68a701f6e92a2b332218] Merge branch 'master' of
-> git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-next-2.6
->
-> Unfortunately, I couldn't further bisect down wireless-next, because all three
-> commits I picked were unworkable (bringing down an interface caused the kernel
-> to oops, which made my test case impossible).
->
-> The test case is as follows: I have eth0 and wlan0 (the interface to an
-> rt37usb device) in a bridge lan0. I have a properly configured hostapd. When I
-> try to connect with a client to my hostapd AP, I can successfully
-> authenticate, but all further packets don't reach the interface of the AP.
->
-> However, I can see broadcast packets *from* the AP on my client, but not the
-> other way round (DHCP requests from client to AP). To make sure the bug was
-> not specific to broadcast packets, I manually set an IP on my client and tried
-> to ping the AP, but those packets didn't come through, either.
->
-> Right now I'm a bit clueless on how to get to the root of this bug, so any
-> help is appreciated.
->
-> Regards,
-> Lee
+Align arguments.
+Add missing newlines.
 
-I checked vanilla 2.6.36, the bug is still there. Is this a known bug? Does 
-anyone care to give me some hints? Are any details needed?
+Signed-off-by: Joe Perches <joe@perches.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-agn-lib.c  |    3 +--
+ drivers/net/wireless/iwlwifi/iwl-agn-sta.c  |    6 +++---
+ drivers/net/wireless/iwlwifi/iwl-tx.c       |    6 +++---
+ drivers/net/wireless/iwlwifi/iwl3945-base.c |    2 +-
+ 4 files changed, 8 insertions(+), 9 deletions(-)
+
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-lib.c b/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
+index b555edd..cbb63f3 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
+@@ -2139,8 +2139,7 @@ static int iwl_get_idle_rx_chain_count(struct iwl_priv *priv, int active_cnt)
+ 	case IEEE80211_SMPS_OFF:
+ 		return active_cnt;
+ 	default:
+-		WARN(1, "invalid SMPS mode %d",
+-		     priv->current_ht_config.smps);
++		WARN(1, "invalid SMPS mode %d\n", priv->current_ht_config.smps);
+ 		return active_cnt;
+ 	}
+ }
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-sta.c b/drivers/net/wireless/iwlwifi/iwl-agn-sta.c
+index 35a30d2..46c45e7 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn-sta.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn-sta.c
+@@ -284,7 +284,7 @@ static int iwl_set_wep_dynamic_key_info(struct iwl_priv *priv,
+ 	 * in uCode. */
+ 
+ 	WARN(priv->stations[sta_id].sta.key.key_offset == WEP_INVALID_OFFSET,
+-		"no space for a new key");
++	     "no space for a new key\n");
+ 
+ 	priv->stations[sta_id].sta.key.key_flags = key_flags;
+ 	priv->stations[sta_id].sta.sta.modify_mask = STA_MODIFY_KEY_MASK;
+@@ -334,7 +334,7 @@ static int iwl_set_ccmp_dynamic_key_info(struct iwl_priv *priv,
+ 	 * in uCode. */
+ 
+ 	WARN(priv->stations[sta_id].sta.key.key_offset == WEP_INVALID_OFFSET,
+-		"no space for a new key");
++	     "no space for a new key\n");
+ 
+ 	priv->stations[sta_id].sta.key.key_flags = key_flags;
+ 	priv->stations[sta_id].sta.sta.modify_mask = STA_MODIFY_KEY_MASK;
+@@ -378,7 +378,7 @@ static int iwl_set_tkip_dynamic_key_info(struct iwl_priv *priv,
+ 	 * in uCode. */
+ 
+ 	WARN(priv->stations[sta_id].sta.key.key_offset == WEP_INVALID_OFFSET,
+-		"no space for a new key");
++	     "no space for a new key\n");
+ 
+ 	priv->stations[sta_id].sta.key.key_flags = key_flags;
+ 
+diff --git a/drivers/net/wireless/iwlwifi/iwl-tx.c b/drivers/net/wireless/iwlwifi/iwl-tx.c
+index 7261ee4..1d8c4a6 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-tx.c
++++ b/drivers/net/wireless/iwlwifi/iwl-tx.c
+@@ -594,9 +594,9 @@ void iwl_tx_cmd_complete(struct iwl_priv *priv, struct iwl_rx_mem_buffer *rxb)
+ 	 * in the queue management code. */
+ 	if (WARN(txq_id != priv->cmd_queue,
+ 		 "wrong command queue %d (should be %d), sequence 0x%X readp=%d writep=%d\n",
+-		  txq_id, priv->cmd_queue, sequence,
+-		  priv->txq[priv->cmd_queue].q.read_ptr,
+-		  priv->txq[priv->cmd_queue].q.write_ptr)) {
++		 txq_id, priv->cmd_queue, sequence,
++		 priv->txq[priv->cmd_queue].q.read_ptr,
++		 priv->txq[priv->cmd_queue].q.write_ptr)) {
+ 		iwl_print_hex_error(priv, pkt, 32);
+ 		return;
+ 	}
+diff --git a/drivers/net/wireless/iwlwifi/iwl3945-base.c b/drivers/net/wireless/iwlwifi/iwl3945-base.c
+index 8f8c4b7..c89c409 100644
+--- a/drivers/net/wireless/iwlwifi/iwl3945-base.c
++++ b/drivers/net/wireless/iwlwifi/iwl3945-base.c
+@@ -168,7 +168,7 @@ static int iwl3945_set_ccmp_dynamic_key_info(struct iwl_priv *priv,
+ 	* in uCode. */
+ 
+ 	WARN(priv->stations[sta_id].sta.key.key_offset == WEP_INVALID_OFFSET,
+-		"no space for a new key");
++	     "no space for a new key\n");
+ 
+ 	priv->stations[sta_id].sta.key.key_flags = key_flags;
+ 	priv->stations[sta_id].sta.sta.modify_mask = STA_MODIFY_KEY_MASK;
+-- 
+1.7.3.1.g432b3.dirty
+
