@@ -1,71 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from senator.holtmann.net ([87.106.208.187]:59185 "EHLO
-	mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754417Ab0JET65 (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:54657 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754040Ab0J3OvX (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 5 Oct 2010 15:58:57 -0400
-Subject: Re: RFC: btusb firmware load help
-From: Marcel Holtmann <holtmann@linux.intel.com>
-To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Cc: Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
-	linux-bluetooth <linux-bluetooth@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Deepak Dhamdhere <Deepak.Dhamdhere@Atheros.com>,
-	Sree Durbha <Sree.Durbha@Atheros.com>
-In-Reply-To: <20101005192814.GB11831@tux>
-References: <20100924230730.GB6566@tux> <1286266981.17473.33.camel@aeonflux>
-	 <20101005192814.GB11831@tux>
-Content-Type: text/plain; charset="UTF-8"
-Date: Tue, 05 Oct 2010 21:58:51 +0200
-Message-ID: <1286308731.2588.13.camel@aeonflux>
-Mime-Version: 1.0
+	Sat, 30 Oct 2010 10:51:23 -0400
+Date: Sat, 30 Oct 2010 10:49:48 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: =?iso-8859-1?Q?G=E1bor?= Stefanik <netrolller.3d@gmail.com>,
+	Walter Goldens <goldenstranger@yahoo.com>,
+	Stefan Lippers-Hollmann <s.L-H@gmx.de>,
+	wireless <linux-wireless@vger.kernel.org>
+Subject: Re: Realtek rtl8188 support?
+Message-ID: <20101030144947.GA2058@tuxdriver.com>
+References: <201010292202.25486.s.L-H@gmx.de>
+ <694082.86488.qm@web56803.mail.re3.yahoo.com>
+ <AANLkTimnuHM3E3G=d+R4-b=1NDkdEQ9jkbQsqB9ASiEC@mail.gmail.com>
+ <4CCB99CB.9000400@lwfinger.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=iso-8859-1
+In-Reply-To: <4CCB99CB.9000400@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Luis,
-
-> > > Marcel, I was just poked about this thread:
-> > > 
-> > > http://www.spinics.net/lists/linux-bluetooth/msg06087.html
-> > > 
-> > > The hack is required because our BT hardware does not accept HCI commands
-> > > when the device is plugged in. If I understood your position you did not
-> > > want to accept the patch because our BT USB devices are violating the
-> > > specification by not acceping HCI commands and yet claiming to be BT
-> > > devices, is that right?
+On Fri, Oct 29, 2010 at 11:06:35PM -0500, Larry Finger wrote:
+> On 10/29/2010 04:27 PM, Gábor Stefanik wrote:
 > > 
-> > you don't have to accept HCI commands when your device has no firmware
-> > loaded. That is just fine. However at that point you should not claim to
-> > be a Bluetooth H:2 device with USB Bluetooth descriptors.
-> > 
-> > Just having different USB PIDs for without firmware and with firmware
-> > stages would have been fine. The ancient Broadcom 203x devices even got
-> > that part right.
+> > AFAIK we only add staging drivers that will eventually move out of
+> > staging. r8712 has no chance of ever leaving staging; a completely new
+> > driver needs to be written (because it isn't mac80211-based).
 > 
-> Ah I see.
-> 
-> > So what about sticking with the current VID:PID for the device without
-> > firmware and we blacklist it in btusb driver. And then the firmware
-> > loading ensures that after reset it uses a different PID for the device
-> > with valid HCI firmware.
-> 
-> How would firmware be uploaded to the device if no module
-> is claiming it?
+> That is correct, but it should not be too long until there is a mac80211 driver
+> for that chip. I just got GPLd sources from Realtek for a mac80211-based driver
+> for the RTL8192CE PCIe device. It will need only a small amount of work to make
+> it ready for mainline. The critical part is that it uses the same chip as is
+> used in the RTL8712 USB device.
 
-most likely via a separate firmware loading driver. Your ath3k driver is
-such a driver. Same as the bcm203x driver. They don't do anything than
-claiming that USB device, loading the firmware, and then let it reset.
+Sounds like good news...
 
-And after the reset the btusb can claim the one where the firmware has
-been loaded and which behaves like a proper USB dongle.
+> For those that are interested in the RTL8187SE, I'm told that they have a
+> working mac80211 driver for it, but that it is not yet stable.
 
-The part that I don't understand is that you have the ath3k driver doing
-it exactly how it should be done, why now started to make nasty hacks in
-the btusb driver.
+More good news!  Even if that device is aging, this indicates that
+Realtek is getting serious about working with the community, even on
+older devices.
 
-Regards
-
-Marcel
-
-
+John
+-- 
+John W. Linville                Someday the world will need a hero, and you
+linville@tuxdriver.com                  might be all we have.  Be ready.
