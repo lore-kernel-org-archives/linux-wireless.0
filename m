@@ -1,47 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ist.d-labs.de ([213.239.218.44]:52560 "EHLO mx01.d-labs.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753199Ab0JEW3q (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 5 Oct 2010 18:29:46 -0400
-Date: Wed, 6 Oct 2010 00:29:44 +0200
-From: Florian Mickler <florian@mickler.org>
-To: stable@kernel.org
-Cc: Stanislaw Gruszka <sgruszka@redhat.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"Guy, Wey-Yi" <wey-yi.w.guy@intel.com>,
-	"Chatre, Reinette" <reinette.chatre@intel.com>,
-	Intel Linux Wireless <ilw@linux.intel.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	"Berg, Johannes" <johannes.berg@intel.com>,
-	"Cahill, Ben M" <ben.m.cahill@intel.com>,
-	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] iwl3945: queue the right work if the scan needs to be
- aborted
-Message-ID: <20101006002944.4545cf32@schatten.dmk.lab>
-In-Reply-To: <20101005104357.GB18833@redhat.com>
-References: <20101005084305.52a31ed4@schatten.dmk.lab>
-	<20101005085717.GA18012@redhat.com>
-	<20101005121242.79cdafc2@schatten.dmk.lab>
-	<20101005104357.GB18833@redhat.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Received: from mail-vw0-f46.google.com ([209.85.212.46]:48499 "EHLO
+	mail-vw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755082Ab0J3SLg convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 30 Oct 2010 14:11:36 -0400
+Received: by mail-vw0-f46.google.com with SMTP id 13so1466466vws.19
+        for <linux-wireless@vger.kernel.org>; Sat, 30 Oct 2010 11:11:35 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <20101030144947.GA2058@tuxdriver.com>
+References: <201010292202.25486.s.L-H@gmx.de> <694082.86488.qm@web56803.mail.re3.yahoo.com>
+ <AANLkTimnuHM3E3G=d+R4-b=1NDkdEQ9jkbQsqB9ASiEC@mail.gmail.com>
+ <4CCB99CB.9000400@lwfinger.net> <20101030144947.GA2058@tuxdriver.com>
+From: =?ISO-8859-1?Q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>
+Date: Sat, 30 Oct 2010 20:11:14 +0200
+Message-ID: <AANLkTi=WTFY07fqV5QsDcmzdL+0=4TQe7xv0ui90J=Jd@mail.gmail.com>
+Subject: Re: Realtek rtl8188 support?
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: Larry Finger <Larry.Finger@lwfinger.net>,
+	Walter Goldens <goldenstranger@yahoo.com>,
+	Stefan Lippers-Hollmann <s.L-H@gmx.de>,
+	wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 5 Oct 2010 12:43:58 +0200
-Stanislaw Gruszka <sgruszka@redhat.com> wrote:
+On Sat, Oct 30, 2010 at 4:49 PM, John W. Linville
+<linville@tuxdriver.com> wrote:
+> On Fri, Oct 29, 2010 at 11:06:35PM -0500, Larry Finger wrote:
+>> On 10/29/2010 04:27 PM, Gábor Stefanik wrote:
+>> >
+>> > AFAIK we only add staging drivers that will eventually move out of
+>> > staging. r8712 has no chance of ever leaving staging; a completely new
+>> > driver needs to be written (because it isn't mac80211-based).
+>>
+>> That is correct, but it should not be too long until there is a mac80211 driver
+>> for that chip. I just got GPLd sources from Realtek for a mac80211-based driver
+>> for the RTL8192CE PCIe device. It will need only a small amount of work to make
+>> it ready for mainline. The critical part is that it uses the same chip as is
+>> used in the RTL8712 USB device.
+>
+> Sounds like good news...
+>
+>> For those that are interested in the RTL8187SE, I'm told that they have a
+>> working mac80211 driver for it, but that it is not yet stable.
+>
+> More good news!  Even if that device is aging, this indicates that
+> Realtek is getting serious about working with the community, even on
+> older devices.
 
-> > > 
-> > > However, I do not think we should go with that to -stable (below
-> > > 2.6.36). IIRC warnings showed up in current 2.6.36-rc, because of
-> > > some other changes in the code.
-> > > 
-> > > Stanislaw
-Hello stable,
+However, it may be a good idea to indicate that "it is not yet stable"
+AFAIK doesn't preclude inclusion...
 
-scrap this. I handed out a brown paper bag bug fix and if that doesn't
-get into 2.6.36, it probably should go into 2.6.36.y. But let's see...
+>
+> John
+> --
+> John W. Linville                Someday the world will need a hero, and you
+> linville@tuxdriver.com                  might be all we have.  Be ready.
+>
 
-Regards,
-Flo
+
+
+-- 
+Vista: [V]iruses, [I]ntruders, [S]pyware, [T]rojans and [A]dware. :-)
