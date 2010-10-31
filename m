@@ -1,53 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:49810 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758954Ab0JFUpJ (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 6 Oct 2010 16:45:09 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: linux-wireless@vger.kernel.org
-Cc: sgruszka@redhat.com, johannes@sipsolutions.net,
-	"John W. Linville" <linville@tuxdriver.com>
-Subject: [PATCH] mac80211: avoid uninitialized var warning in ieee80211_scan_cancel
-Date: Wed,  6 Oct 2010 16:42:23 -0400
-Message-Id: <1286397743-21687-1-git-send-email-linville@tuxdriver.com>
+Received: from slowhand.arndnet.de ([88.198.19.76]:51906 "EHLO mail.unitix.de"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1756219Ab0JaRfU (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 31 Oct 2010 13:35:20 -0400
+Message-ID: <4CCDA8D6.7030905@arndnet.de>
+Date: Sun, 31 Oct 2010 18:35:18 +0100
+From: Arnd Hannemann <arnd@arndnet.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+To: Ohad Ben-Cohen <ohad@wizery.com>,
+	"linux-mmc@vger.kernel.org" <linux-mmc@vger.kernel.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	linux-kernel@vger.kernel.org
+Subject: Re: regression: b43-sdio: probe of mmc0:0001:1 failed with error
+ -16
+References: <4CCDA454.708@arndnet.de>
+In-Reply-To: <4CCDA454.708@arndnet.de>
+Content-Type: text/plain; charset=ISO-8859-15
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-net/mac80211/scan.c: In function ‘ieee80211_scan_cancel’:
-net/mac80211/scan.c:794: warning: ‘finish’ may be used uninitialized in this function
 
-Signed-off-by: John W. Linville <linville@tuxdriver.com>
----
- net/mac80211/scan.c |    7 ++++---
- 1 files changed, 4 insertions(+), 3 deletions(-)
+Am 31.10.2010 18:16, schrieb Arnd Hannemann:
 
-diff --git a/net/mac80211/scan.c b/net/mac80211/scan.c
-index 80e017d..523db93 100644
---- a/net/mac80211/scan.c
-+++ b/net/mac80211/scan.c
-@@ -791,7 +791,8 @@ int ieee80211_request_internal_scan(struct ieee80211_sub_if_data *sdata,
-  */
- void ieee80211_scan_cancel(struct ieee80211_local *local)
- {
--	bool abortscan, finish;
-+	bool abortscan;
-+	bool finish = false;
- 
- 	/*
- 	 * We are only canceling software scan, or deferred scan that was not
-@@ -818,7 +819,7 @@ void ieee80211_scan_cancel(struct ieee80211_local *local)
- 	if (abortscan) {
- 		/* The scan is canceled, but stop work from being pending */
- 		cancel_delayed_work_sync(&local->scan_work);
--		if (finish)
--			__ieee80211_scan_completed_finish(&local->hw, false);
- 	}
-+	if (finish)
-+		__ieee80211_scan_completed_finish(&local->hw, false);
- }
--- 
-1.7.2.3
+> on todays Linus' git (v2.6.36-9871-g3985c7c) b43 sdio stopped working.
+> It was working on (v2.6.36-6794-g12ba8d1).
+> 
+> b43-sdio: probe of mmc0:0001:1 failed with error -16
+> 
+> The error seems to originate from the following code in drivers/mmc/core/sdio_bus.c:sdio_bus_probe()
+> 
+> 135         ret = pm_runtime_get_sync(dev);
+> 136         if (ret < 0)
+> 137                 goto out;
+> 
+> so I suspect this has something to do with the following commit: 
+> 
+> commit 40bba0c1ca83a370f749c8bc9afda71cf79ebd91
+> Author: Ohad Ben-Cohen <ohad@wizery.com>
+> Date:   Sat Oct 2 13:54:11 2010 +0200
+> 
+>     mmc: sdio: enable runtime PM for SDIO functions
+> 
+> However, simply reverting 40bba0c1ca83a370f749c8bc9afda71cf79ebd91 does not work because then
+> modprobe hangs.
+> 
+> Tested on AP4EVB (arm) with tmio_mmc. Any ideas?
 
+FYI:
+
+disabling CONFIG_PM_RUNTIME in my config seems to fix the issue for me.
+
+Best regards,
+Arnd
