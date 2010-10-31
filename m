@@ -1,39 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f46.google.com ([209.85.161.46]:63587 "EHLO
-	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754746Ab0JLJFd convert rfc822-to-8bit (ORCPT
+Received: from mail-vw0-f46.google.com ([209.85.212.46]:32800 "EHLO
+	mail-vw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755116Ab0JaPDw (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 12 Oct 2010 05:05:33 -0400
-Received: by fxm4 with SMTP id 4so895136fxm.19
-        for <linux-wireless@vger.kernel.org>; Tue, 12 Oct 2010 02:05:32 -0700 (PDT)
+	Sun, 31 Oct 2010 11:03:52 -0400
+Received: by vws13 with SMTP id 13so2468163vws.19
+        for <linux-wireless@vger.kernel.org>; Sun, 31 Oct 2010 08:03:51 -0700 (PDT)
+Message-ID: <4CCD856E.9010006@lwfinger.net>
+Date: Sun, 31 Oct 2010 10:04:14 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-Date: Tue, 12 Oct 2010 10:41:50 +0200
-Message-ID: <AANLkTimFhnAM2wo=wrDUMg6fcQ6DuyjgpvDqk9k2t4hT@mail.gmail.com>
-Subject: Chromium Wifi test ?
-From: Jim Harvey <jmhrv3@gmail.com>
-To: linux-wireless <linux-wireless@vger.kernel.org>
-Cc: Paul Stewart <pstew@google.com>,
-	Sam Leffler <sleffler@chromium.org>
+To: Walter Goldens <goldenstranger@yahoo.com>
+CC: =?ISO-8859-1?Q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Stefan Lippers-Hollmann <s.L-H@gmx.de>,
+	wireless <linux-wireless@vger.kernel.org>
+Subject: Re: Realtek rtl8188 support?
+References: <699923.49894.qm@web56805.mail.re3.yahoo.com>
+In-Reply-To: <699923.49894.qm@web56805.mail.re3.yahoo.com>
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello,
+On 10/31/2010 06:30 AM, Walter Goldens wrote:
+>> Perhaps not, but I want to have one that works before
+>> removing the staging driver.
+>>
+>> I think Realtek is serious. After the r8712u driver was
+>> ready for inclusion in
+>> staging, I sent them a copy of my revisions to their code.
+>> Obviously, they
+>> studied it. When I received the new code for a
+>> mac80211-based driver for the
+>> RTL8192CE driver, it was pretty clean and the sort of
+>> changes that were needed
+>> for the 8712 had already been done. After only a few hours
+>> work, the sparse and
+>> checkpatch warnings and errors were fixed. As far as I can
+>> tell, this code is
+> 
+>   By "this code" you mean the code for the PCI chips or the USB ones? This topic here mostly touches on the USB cards, which is why I'm asking. And does that mean you'll include the driver once you've tested the cards?
 
-An Automated WiFi Testing facility was presented at the last wireless
-summit by the chromium folks:
+I mean the PCIe devices. I plan to submit that driver in time to make the 2.6.38
+merge. Realtek has not yet sent me the code for the USB devices, but as the chip
+and core code is common, it should not be far behind.
 
-http://wireless.kernel.org/en/developers/Summits/SanFranciscoBayArea-2010
+Larry
 
-I can see that it is built on top of autotest, but I can't seem to
-find the actual wifi tests.. can you please send a link to it ?
-
-It sounds interesting.
-
-Can you please tell what is the latest status ?
-
-Btw, why wasn't the wifi-test project re-used ? does it have any
-conceptual gap ?
-
-Thank you,
-~jmhrv
