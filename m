@@ -1,101 +1,99 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.19.149.2]:18365 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758691Ab0J1OVy (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 28 Oct 2010 10:21:54 -0400
-Received: from mail.atheros.com ([10.10.20.108])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Thu, 28 Oct 2010 07:21:43 -0700
-From: Mohammed Shafi Shajakhan <mshajakhan@atheros.com>
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>, <lrodriguez@atheros.com>,
-	<stable@kernel.org>,
-	Mohammed Shafi Shajakhan <mshajakhan@atheros.com>
-Subject: [PATCH v2] ath9k: Fix incorrect access of rate flags in RC
-Date: Thu, 28 Oct 2010 19:51:47 +0530
-Message-ID: <1288275707-10904-1-git-send-email-mshajakhan@atheros.com>
+Received: from slowhand.arndnet.de ([88.198.19.76]:59162 "EHLO mail.unitix.de"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1752823Ab0JaVvl (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 31 Oct 2010 17:51:41 -0400
+Message-ID: <4CCDE4EB.7060001@arndnet.de>
+Date: Sun, 31 Oct 2010 22:51:39 +0100
+From: Arnd Hannemann <arnd@arndnet.de>
 MIME-Version: 1.0
-Content-Type: text/plain
+To: Ohad Ben-Cohen <ohad@wizery.com>
+CC: "linux-mmc@vger.kernel.org" <linux-mmc@vger.kernel.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	linux-kernel@vger.kernel.org
+Subject: Re: regression: b43-sdio: probe of mmc0:0001:1 failed with error
+ -16
+References: <4CCDA454.708@arndnet.de> <AANLkTin80pwnb1DX8OdZK3Wgsq0nj==G9VM3pahsmo0U@mail.gmail.com>
+In-Reply-To: <AANLkTin80pwnb1DX8OdZK3Wgsq0nj==G9VM3pahsmo0U@mail.gmail.com>
+Content-Type: multipart/mixed;
+ boundary="------------090604000406090506030406"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Mohammed Shafi Shajakhan <mshajakhan@atheros.com>
+This is a multi-part message in MIME format.
+--------------090604000406090506030406
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 
-The index variable to access the rate flags should be obtained from the
-inner loop counter which corresponds to the rate table structure.This
-fixes the invalid rate selection i.e when the supported basic rate is
-invalid on a particular band and also the following warning message.
-Thanks to Raj for finding this out.
+Hi Ohad,
 
-Call Trace:
+Am 31.10.2010 20:14, schrieb Ohad Ben-Cohen:
 
- [<ffffffff8104ee4a>] warn_slowpath_common+0x7a/0xb0
+> On Sun, Oct 31, 2010 at 7:16 PM, Arnd Hannemann <arnd@arndnet.de> wrote:
+>> b43-sdio: probe of mmc0:0001:1 failed with error -16
+> 
+> It's exactly what Daniel is experiencing with the XO-1.5.
+> 
+> In Daniel's scenario, mmc_sdio_init_card() fails because
+> mmc_send_relative_addr() returns -110.
+> 
+> Can you please check out if that's the same thing you have too ?
 
- [<ffffffff8104ee95>] warn_slowpath_null+0x15/0x20
+No, it seems to be the pm_runtime_get_sync in sdio_bus.c::sdio_bus_probe().
 
- [<ffffffffa0583c45>] ath_get_rate+0x595/0x5b0 [ath9k]
+If I test with CONFIG_PM_RUNTIME=y and the attached modifications,
+then I get this as output:
 
- [<ffffffff811a0636>] ? cpumask_next_and+0x36/0x50
+root@ap4evb:~# modprobe b43
+[   29.859375] cfg80211: Calling CRDA to update world regulatory domain
+[   30.226562] pm_runtime_get_sync: -16
+[   30.234375] b43-sdio: probe of mmc0:0001:1 failed with error -16
+[   30.242187] Broadcom 43xx driver loaded [ Features: LS, Firmware-ID: FW13 ]
 
- [<ffffffffa0405186>] rate_control_get_rate+0x86/0x160 [mac80211]
+If CONFIG_PM_RUNTIME is not set in .config, the problem goes away.
 
- [<ffffffffa040dfac>] invoke_tx_handlers+0x81c/0x12d0 [mac80211]
+Regards,
+Arnd
 
- [<ffffffffa040eae9>] ieee80211_tx+0x89/0x2b0 [mac80211]
 
- [<ffffffff812891bc>] ? pskb_expand_head+0x1cc/0x1f0
+--------------090604000406090506030406
+Content-Type: text/plain;
+ name="diff"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: attachment;
+ filename="diff"
 
- [<ffffffffa040edc5>] ieee80211_xmit+0xb5/0x1c0 [mac80211]
-
- [<ffffffffa041026f>] ieee80211_tx_skb+0x4f/0x60 [mac80211]
-
- [<ffffffffa03fe016>] ieee80211_send_nullfunc+0x46/0x60 [mac80211]
-
- [<ffffffffa03f91d7>] ieee80211_offchannel_stop_station+0x107/0x150
-[mac80211]
-
- [<ffffffff812891bc>] ? pskb_expand_head+0x1cc/0x1f0
-
- [<ffffffffa040edc5>] ieee80211_xmit+0xb5/0x1c0 [mac80211]
-
- [<ffffffffa041026f>] ieee80211_tx_skb+0x4f/0x60 [mac80211]
-
- [<ffffffffa03fe016>] ieee80211_send_nullfunc+0x46/0x60 [mac80211]
-
- [<ffffffffa03f91d7>] ieee80211_offchannel_stop_station+0x107/0x150
-[mac80211]
-
- [<ffffffffa03f8896>] ieee80211_scan_work+0x146/0x600 [mac80211]
-
- [<ffffffff8133a375>] ? schedule+0x2f5/0x8e0
-
- [<ffffffffa03f8750>] ? ieee80211_scan_work+0x0/0x600 [mac80211]
-
- [<ffffffff81064fcf>] process_one_work+0x10f/0x380
-
- [<ffffffff81066bc2>] worker_thread+0x162/0x340
-
- [<ffffffff81066a60>] ? worker_thread+0x0/0x340
-
-Cc: stable@kernel.org
-Signed-off-by: Mohammed Shafi Shajakhan <mshajakhan@atheros.com>
----
- drivers/net/wireless/ath/ath9k/rc.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/ath9k/rc.c b/drivers/net/wireless/ath/ath9k/rc.c
-index 0cee90c..89978d7 100644
---- a/drivers/net/wireless/ath/ath9k/rc.c
-+++ b/drivers/net/wireless/ath/ath9k/rc.c
-@@ -527,7 +527,7 @@ static u8 ath_rc_setvalid_rates(struct ath_rate_priv *ath_rc_priv,
- 	for (i = 0; i < rateset->rs_nrates; i++) {
- 		for (j = 0; j < rate_table->rate_cnt; j++) {
- 			u32 phy = rate_table->info[j].phy;
--			u16 rate_flags = rate_table->info[i].rate_flags;
-+			u16 rate_flags = rate_table->info[j].rate_flags;
- 			u8 rate = rateset->rs_rates[i];
- 			u8 dot11rate = rate_table->info[j].dot11rate;
+diff --git a/drivers/mmc/core/sd_ops.c b/drivers/mmc/core/sd_ops.c
+index 797cdb5..57b6dd4 100644
+--- a/drivers/mmc/core/sd_ops.c
++++ b/drivers/mmc/core/sd_ops.c
+@@ -237,8 +237,10 @@ int mmc_send_relative_addr(struct mmc_host *host, unsigned int *rca)
+ 	cmd.flags = MMC_RSP_R6 | MMC_CMD_BCR;
  
--- 
-1.7.0.4
+ 	err = mmc_wait_for_cmd(host, &cmd, MMC_CMD_RETRIES);
+-	if (err)
++	if (err) {
++		printk(KERN_INFO "%s(): %d\n", __func__, err);
+ 		return err;
++	}
+ 
+ 	*rca = cmd.resp[0] >> 16;
+ 
+diff --git a/drivers/mmc/core/sdio_bus.c b/drivers/mmc/core/sdio_bus.c
+index 2716c7a..102c163 100644
+--- a/drivers/mmc/core/sdio_bus.c
++++ b/drivers/mmc/core/sdio_bus.c
+@@ -133,8 +133,10 @@ static int sdio_bus_probe(struct device *dev)
+ 	 * pm_runtime_get_noresume() in its remove routine.
+ 	 */
+ 	ret = pm_runtime_get_sync(dev);
+-	if (ret < 0)
++	if (ret < 0) {
++		printk(KERN_INFO "pm_runtime_get_sync: %d\n", ret);
+ 		goto out;
++	}
+ 
+ 	/* Set the default block size so the driver is sure it's something
+ 	 * sensible. */
 
+--------------090604000406090506030406--
