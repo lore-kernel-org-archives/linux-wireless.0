@@ -1,128 +1,29 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([192.100.122.233]:17289 "EHLO
-	mgw-mx06.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755078Ab0JNJAa (ORCPT
+Received: from mail-yw0-f46.google.com ([209.85.213.46]:52898 "EHLO
+	mail-yw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753642Ab0JaDbQ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 14 Oct 2010 05:00:30 -0400
-Received: from esebh105.NOE.Nokia.com (esebh105.ntc.nokia.com [172.21.138.211])
-	by mgw-mx06.nokia.com (Switch-3.3.3/Switch-3.3.3) with ESMTP id o9E8xtXO015436
-	for <linux-wireless@vger.kernel.org>; Thu, 14 Oct 2010 12:00:28 +0300
-From: Teemu Paasikivi <ext-teemu.3.paasikivi@nokia.com>
-To: luciano.coelho@nokia.com
-Cc: linux-wireless@vger.kernel.org,
-	Teemu Paasikivi <ext-teemu.3.paasikivi@nokia.com>
-Subject: [PATCH v2] wl1271: Fix warning about unsupported RX rate
-Date: Thu, 14 Oct 2010 12:00:04 +0300
-Message-Id: <1287046804-19356-1-git-send-email-ext-teemu.3.paasikivi@nokia.com>
+	Sat, 30 Oct 2010 23:31:16 -0400
+Received: by ywc21 with SMTP id 21so273430ywc.19
+        for <linux-wireless@vger.kernel.org>; Sat, 30 Oct 2010 20:31:15 -0700 (PDT)
+Message-ID: <4CCCE31A.5030608@lwfinger.net>
+Date: Sat, 30 Oct 2010 22:31:38 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
+MIME-Version: 1.0
+To: wireless <linux-wireless@vger.kernel.org>
+Subject: Deauthentication for reason 6 using Intel 5300 in 2.6.34
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-While scanning, it is possible that beacon and probe response frames are
-received on other band than configured to the driver. In rx status
-handling this has caused "Unsupported RX rate from HW" warnings. This
-patch changes the wl1271_rate_to_index function to take the band of the
-received frame as a parameter instead of using value configuret to
-wl->band.
+A user on the openSUSE forum reports that the connection drops frequently when
+using 802.11n on a 5300 with a 2.6.34 kernel. It is deauthenticated for reason
+6. He was able to stabilize the connection by disabling N mode. I think he used
+"options iwlagn 11n_disable=1 11n_disable50=1".
 
-Signed-off-by: Teemu Paasikivi <ext-teemu.3.paasikivi@nokia.com>
----
-Changes v1 -> v2: Fixed patch to apply on wl12xx tree
+Is this a known problem? Would the situation be improved by using
+compat-wireless? If so, is "bleeding-edge" needed?
 
- drivers/net/wireless/wl12xx/wl1271_main.c |    6 +++---
- drivers/net/wireless/wl12xx/wl1271_rx.c   |   10 +++++++++-
- drivers/net/wireless/wl12xx/wl1271_rx.h   |    2 +-
- drivers/net/wireless/wl12xx/wl1271_tx.c   |    2 +-
- drivers/net/wireless/wl12xx/wl1271_tx.h   |    2 +-
- 5 files changed, 15 insertions(+), 7 deletions(-)
+Thanks,
 
-diff --git a/drivers/net/wireless/wl12xx/wl1271_main.c b/drivers/net/wireless/wl12xx/wl1271_main.c
-index 48a4b99..a225400 100644
---- a/drivers/net/wireless/wl12xx/wl1271_main.c
-+++ b/drivers/net/wireless/wl12xx/wl1271_main.c
-@@ -2281,18 +2281,18 @@ static const struct ieee80211_ops wl1271_ops = {
- };
- 
- 
--u8 wl1271_rate_to_idx(struct wl1271 *wl, int rate)
-+u8 wl1271_rate_to_idx(int rate, enum ieee80211_band band)
- {
- 	u8 idx;
- 
--	BUG_ON(wl->band >= sizeof(wl1271_band_rate_to_idx)/sizeof(u8 *));
-+	BUG_ON(band >= sizeof(wl1271_band_rate_to_idx)/sizeof(u8 *));
- 
- 	if (unlikely(rate >= CONF_HW_RXTX_RATE_MAX)) {
- 		wl1271_error("Illegal RX rate from HW: %d", rate);
- 		return 0;
- 	}
- 
--	idx = wl1271_band_rate_to_idx[wl->band][rate];
-+	idx = wl1271_band_rate_to_idx[band][rate];
- 	if (unlikely(idx == CONF_HW_RXTX_RATE_UNSUPPORTED)) {
- 		wl1271_error("Unsupported RX rate from HW: %d", rate);
- 		return 0;
-diff --git a/drivers/net/wireless/wl12xx/wl1271_rx.c b/drivers/net/wireless/wl12xx/wl1271_rx.c
-index bea133b..282d286 100644
---- a/drivers/net/wireless/wl12xx/wl1271_rx.c
-+++ b/drivers/net/wireless/wl12xx/wl1271_rx.c
-@@ -48,10 +48,18 @@ static void wl1271_rx_status(struct wl1271 *wl,
- 			     struct ieee80211_rx_status *status,
- 			     u8 beacon)
- {
-+	enum ieee80211_band desc_band;
-+
- 	memset(status, 0, sizeof(struct ieee80211_rx_status));
- 
- 	status->band = wl->band;
--	status->rate_idx = wl1271_rate_to_idx(wl, desc->rate);
-+
-+	if ((desc->flags & WL1271_RX_DESC_BAND_MASK) == WL1271_RX_DESC_BAND_BG)
-+		desc_band = IEEE80211_BAND_2GHZ;
-+	else
-+		desc_band = IEEE80211_BAND_5GHZ;
-+
-+	status->rate_idx = wl1271_rate_to_idx(desc->rate, desc_band);
- 
- 	status->signal = desc->rssi;
- 
-diff --git a/drivers/net/wireless/wl12xx/wl1271_rx.h b/drivers/net/wireless/wl12xx/wl1271_rx.h
-index 13a2323..6d41981 100644
---- a/drivers/net/wireless/wl12xx/wl1271_rx.h
-+++ b/drivers/net/wireless/wl12xx/wl1271_rx.h
-@@ -116,6 +116,6 @@ struct wl1271_rx_descriptor {
- } __packed;
- 
- void wl1271_rx(struct wl1271 *wl, struct wl1271_fw_status *status);
--u8 wl1271_rate_to_idx(struct wl1271 *wl, int rate);
-+u8 wl1271_rate_to_idx(int rate, enum ieee80211_band band);
- 
- #endif
-diff --git a/drivers/net/wireless/wl12xx/wl1271_tx.c b/drivers/net/wireless/wl12xx/wl1271_tx.c
-index e3dc13c..c97ba31 100644
---- a/drivers/net/wireless/wl12xx/wl1271_tx.c
-+++ b/drivers/net/wireless/wl12xx/wl1271_tx.c
-@@ -298,7 +298,7 @@ static void wl1271_tx_complete_packet(struct wl1271 *wl,
- 	if (result->status == TX_SUCCESS) {
- 		if (!(info->flags & IEEE80211_TX_CTL_NO_ACK))
- 			info->flags |= IEEE80211_TX_STAT_ACK;
--		rate = wl1271_rate_to_idx(wl, result->rate_class_index);
-+		rate = wl1271_rate_to_idx(result->rate_class_index, wl->band);
- 		retries = result->ack_failures;
- 	} else if (result->status == TX_RETRY_EXCEEDED) {
- 		wl->stats.excessive_retries++;
-diff --git a/drivers/net/wireless/wl12xx/wl1271_tx.h b/drivers/net/wireless/wl12xx/wl1271_tx.h
-index d12a129..eff1260 100644
---- a/drivers/net/wireless/wl12xx/wl1271_tx.h
-+++ b/drivers/net/wireless/wl12xx/wl1271_tx.h
-@@ -143,7 +143,7 @@ void wl1271_tx_work(struct work_struct *work);
- void wl1271_tx_complete(struct wl1271 *wl);
- void wl1271_tx_reset(struct wl1271 *wl);
- void wl1271_tx_flush(struct wl1271 *wl);
--u8 wl1271_rate_to_idx(struct wl1271 *wl, int rate);
-+u8 wl1271_rate_to_idx(int rate, enum ieee80211_band band);
- u32 wl1271_tx_enabled_rates_get(struct wl1271 *wl, u32 rate_set);
- 
- #endif
--- 
-1.7.1
-
+Larry
