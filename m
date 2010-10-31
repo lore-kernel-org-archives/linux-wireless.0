@@ -1,57 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.19.149.2]:19600 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752862Ab0JZW13 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 26 Oct 2010 18:27:29 -0400
-Received: from mail.atheros.com ([10.10.20.108])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Tue, 26 Oct 2010 15:27:18 -0700
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>, <greearb@candelatech.com>,
-	<kyungwan.nam@atheros.com>, <amod.bodas@atheros.com>,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>
-Subject: [PATCH 0/3] ath9k: more PCU locking enhancements
-Date: Tue, 26 Oct 2010 15:27:22 -0700
-Message-ID: <1288132045-4718-1-git-send-email-lrodriguez@atheros.com>
+Received: from mail-iw0-f174.google.com ([209.85.214.174]:33781 "EHLO
+	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756451Ab0JaTPD (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 31 Oct 2010 15:15:03 -0400
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <4CCDA454.708@arndnet.de>
+References: <4CCDA454.708@arndnet.de>
+From: Ohad Ben-Cohen <ohad@wizery.com>
+Date: Sun, 31 Oct 2010 21:14:43 +0200
+Message-ID: <AANLkTin80pwnb1DX8OdZK3Wgsq0nj==G9VM3pahsmo0U@mail.gmail.com>
+Subject: Re: regression: b43-sdio: probe of mmc0:0001:1 failed with error -16
+To: Arnd Hannemann <arnd@arndnet.de>
+Cc: "linux-mmc@vger.kernel.org" <linux-mmc@vger.kernel.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This addresses some more DMA / PCU locking. It simplifies the locking
-and includes now TX control over the PCU. These patches help with the
-overall realiability of RX and TX and conflicts between them and
-resets. When you start/stop RX or TX or do resets it will all be
-done atomically now. These all now go tested by Ben Greear over at
-candelatech.com using a proprietary userspace applicatin which
-creates 130 STAs associating to one AP that only accepts 30 STAs at
-a time. Ben had never seen this test run more than about 10 minutes
-without poison warnings and/or lockups.
+Hi Arnd,
 
-This last series (first series addressed RX poison issues) addresses
-the last bit of complaints on DMA that he got when testing with these
-large amount of STAs on one 802.11 device.
-    
-For more details about this issue refer to this thread:
+On Sun, Oct 31, 2010 at 7:16 PM, Arnd Hannemann <arnd@arndnet.de> wrote:
+> b43-sdio: probe of mmc0:0001:1 failed with error -16
 
-http://marc.info/?l=linux-wireless&m=128629803703756&w=2
+It's exactly what Daniel is experiencing with the XO-1.5.
 
-Many thanks to Ben Greear @ candelatech.com for the testing, reports
-and patience with this.
+In Daniel's scenario, mmc_sdio_init_card() fails because
+mmc_send_relative_addr() returns -110.
 
-Luis R. Rodriguez (3):
-  ath9k: simplify hw reset locking
-  ath9k: move the PCU lock to the sc structure
-  ath9k: content DMA start / stop through the PCU lock
+Can you please check out if that's the same thing you have too ?
 
- drivers/net/wireless/ath/ath9k/ath9k.h |    3 +-
- drivers/net/wireless/ath/ath9k/init.c  |    1 -
- drivers/net/wireless/ath/ath9k/main.c  |   70 ++++++++++++++------------------
- drivers/net/wireless/ath/ath9k/recv.c  |    2 +-
- drivers/net/wireless/ath/ath9k/xmit.c  |    4 +-
- 5 files changed, 34 insertions(+), 46 deletions(-)
-
--- 
-1.7.3.2.90.gd4c43
-
+Thanks,
+Ohad.
