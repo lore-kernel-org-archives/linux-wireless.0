@@ -1,85 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:60594 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754326Ab0JHSTB (ORCPT
+Received: from mail-vw0-f46.google.com ([209.85.212.46]:61866 "EHLO
+	mail-vw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754852Ab0JaJrE convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 8 Oct 2010 14:19:01 -0400
-Message-ID: <4CAF607A.4090305@candelatech.com>
-Date: Fri, 08 Oct 2010 11:18:34 -0700
-From: Ben Greear <greearb@candelatech.com>
+	Sun, 31 Oct 2010 05:47:04 -0400
+Received: by vws13 with SMTP id 13so2184134vws.19
+        for <linux-wireless@vger.kernel.org>; Sun, 31 Oct 2010 02:47:04 -0700 (PDT)
 MIME-Version: 1.0
-To: Bob Copeland <me@bobcopeland.com>
-CC: linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 2/2] ath5k: Adjust opmode when interfaces are removed.
-References: <1286556210-29643-1-git-send-email-greearb@candelatech.com>	<1286556210-29643-2-git-send-email-greearb@candelatech.com>	<AANLkTinXFLL25-r-LUb5vqjNkwoa68xWhN_CaD0KVE=p@mail.gmail.com>	<4CAF5DB3.7070603@candelatech.com> <AANLkTi=abVBncBxEKV4oQNSSm4fS5a-qZ=a38BJRPSg_@mail.gmail.com>
-In-Reply-To: <AANLkTi=abVBncBxEKV4oQNSSm4fS5a-qZ=a38BJRPSg_@mail.gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+In-Reply-To: <E9954878DD1FB34FAE5187FB88C58A35012BE7FC4E@orsmsx506.amr.corp.intel.com>
+References: <AANLkTim4_HoHwdhGqAZqcGf2oq7boktdZFW4-w5DpdDa@mail.gmail.com>
+	<AANLkTinuYOvwNZAFgq67f4XBL4YQ+b2z4EBMcmvbMYi3@mail.gmail.com>
+	<1281481505.20038.10.camel@wwguy-ubuntu>
+	<AANLkTinDjp500wXXHbiOmom70Wbvs1OL6LXOfTq06A=U@mail.gmail.com>
+	<1282762406.23359.1.camel@wwguy-huron>
+	<AANLkTik0ssMim0-eRS1kWD+CsE_kCS-RjEm_iEbdPy05@mail.gmail.com>
+	<1283356663.22660.27.camel@wwguy-ubuntu>
+	<loom.20101005T185120-614@post.gmane.org>
+	<E9954878DD1FB34FAE5187FB88C58A35012BE7FC4E@orsmsx506.amr.corp.intel.com>
+Date: Sun, 31 Oct 2010 10:47:03 +0100
+Message-ID: <AANLkTimrh-wn1Wbp1_9WpWSsAsnuJ3UOfBUd5pSz7h7G@mail.gmail.com>
+Subject: Re: [WTF, maintainers] Re: *PING* iwlagn 2.6.35: &quot;BA scd_flow 0
+ does not match txq_id 10&quot; regression
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+To: "Guy, Wey-Yi W" <wey-yi.w.guy@intel.com>
+Cc: Nate Weibley <nweibley@gmail.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 10/08/2010 11:13 AM, Bob Copeland wrote:
-> On Fri, Oct 8, 2010 at 2:06 PM, Ben Greear<greearb@candelatech.com>  wrote:
->> On 10/08/2010 11:03 AM, Bob Copeland wrote:
->>>
->>> On Fri, Oct 8, 2010 at 12:43 PM,<greearb@candelatech.com>    wrote:
->>>>
->>>> @@ -558,6 +577,7 @@ void ath5k_update_bssid_mask(struct ath5k_softc *sc,
->>>> struct ieee80211_vif *vif)
->>>>         memset(&iter_data.mask, 0xff, ETH_ALEN);
->>>>         iter_data.found_active = false;
->>>>         iter_data.need_set_hw_addr = true;
->>>> +       iter_data.opmode = NL80211_IFTYPE_UNSPECIFIED;
->>>>
->>>>         if (vif)
->>>>                 ath_vif_iter(&iter_data, vif->addr, vif);
->>>> @@ -567,6 +587,11 @@ void ath5k_update_bssid_mask(struct ath5k_softc *sc,
->>>> struct ieee80211_vif *vif)
->>>>                                                    &iter_data);
->>>>         memcpy(sc->bssidmask, iter_data.mask, ETH_ALEN);
->>>>
->>>> +       if (update_opmode&&    sc->opmode != iter_data.opmode) {
->>>> +               sc->opmode = iter_data.opmode;
->>>> +               ath_do_set_opmode(sc);
->>>> +       }
->>>> +
->>>
->>> Should we really couple updating bssid mask and configuring
->>> the opmode?  Generally, I dislike adding boolean flags to
->>> functions because it's hard to figure out from the callsite
->>> what is happening (you have to go back to the prototype), and
->>> it usually indicates that the abstraction is a little broken.
->>
->> Well, we need to do the iteration over all VIFS to figure out what to set
->> this
->> too.  Seems doing one iteration v/s doing two is worth the
->> extra flag?
->
-> I admit I haven't looked at the context, so I'm not sure how ugly it
-> is, but you can often do this kind of thing by inverting the loop:
->
-> update_vif_data()
-> {
->     for all vifs:
->        compute new bssid&  opmode
->
->     update_bssid(new_bssid)
->     update_opmode(neW_opmode)
-> }
->
-> and call that instead (even in the single vif case).
+2010/10/6 Guy, Wey-Yi W <wey-yi.w.guy@intel.com>:
+> Sorry for delaying, we are working on the experimental uCode available to the public which should happen very soon.
 
-I can just always set the opmode if you prefer that.  Maybe
-change the name of that method.
-
-I'll work on a patch.
-
-Thanks,
-Ben
-
->
-
+Please, help and define "very soon". My wifi card is halfly-usable for
+3 months (or more?) and "very soon" didn't happen since your mail,
+which is about 3 weeks now. I bought notebook with Intel card for your
+Linux support but I've to say it's disaster now.
 
 -- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
-
+Rafał
