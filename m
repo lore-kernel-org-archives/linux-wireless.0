@@ -1,94 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:53620 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751862Ab0JAVFW (ORCPT
+Received: from queueout02-winn.ispmail.ntl.com ([81.103.221.56]:51710 "EHLO
+	queueout02-winn.ispmail.ntl.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1755733Ab0JaOxJ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 1 Oct 2010 17:05:22 -0400
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+	Sun, 31 Oct 2010 10:53:09 -0400
+From: Daniel Drake <dsd@laptop.org>
 To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>, stable@kernel.org
-Subject: [PATCH v3 2/3] mac80211: wait until completely disassociated before new association
-Date: Fri,  1 Oct 2010 17:05:20 -0400
-Message-Id: <1285967121-16665-3-git-send-email-lrodriguez@atheros.com>
-In-Reply-To: <1285967121-16665-1-git-send-email-lrodriguez@atheros.com>
-References: <1285967121-16665-1-git-send-email-lrodriguez@atheros.com>
+Cc: dcbw@redhat.com
+Cc: linux-wireless@vger.kernel.org
+Cc: libertas-dev@lists.infradead.org
+Cc: akarwar@marvell.com
+Subject: [PATCH] libertas: don't block usb8388 suspend if no wakeup conditions are set
+Message-Id: <20101031134012.F21FF9D401B@zog.reactivated.net>
+Date: Sun, 31 Oct 2010 13:40:12 +0000 (GMT)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-When roaming we try to disassociate with our old AP prior to
-associating. The assumption though is that we will send our
-disassociation first prior to sending our association request
-to the new AP. This should in theory work given that the
-association is put in through a workqueue but to avoid any
-possible races just ensure we wait for complete disassociation
-prior to trying to associate to the new AP.
+This hunk added by commit 66fceb69b72f seems erroneous. We don't want to
+prevent suspend of the whole system if no wakeup params are set.
 
-In the worst case scenerio this will delay our association
-request by one iteration on the work item.
+In the case of the usb8388 we do want to keep the card powered up even
+if there are no wakeup params. This is because it will continue acting
+as a mesh node.
 
-This patch has a fix for kernels >= v2.6.34
+If the mesh is disabled, it would indeed make more sense to power down
+the card during suspend, as the equivalent hunk does for the SD interface.
+But that's a separate task; for now just restore the previous behaviour.
 
-Cc: stable@kernel.org
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+Signed-off-by: Daniel Drake <dsd@laptop.org>
 ---
- net/mac80211/mlme.c |    3 ++-
- net/mac80211/work.c |   14 ++++++++++++++
- 2 files changed, 16 insertions(+), 1 deletions(-)
+ drivers/net/wireless/libertas/if_usb.c |    6 ------
+ 1 files changed, 0 insertions(+), 6 deletions(-)
 
-diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index daab0c6..7eff124 100644
---- a/net/mac80211/mlme.c
-+++ b/net/mac80211/mlme.c
-@@ -936,7 +936,6 @@ static void ieee80211_set_disassoc(struct ieee80211_sub_if_data *sdata,
+diff --git a/drivers/net/wireless/libertas/if_usb.c b/drivers/net/wireless/libertas/if_usb.c
+index efaf850..35931cf 100644
+--- a/drivers/net/wireless/libertas/if_usb.c
++++ b/drivers/net/wireless/libertas/if_usb.c
+@@ -1090,12 +1090,6 @@ static int if_usb_suspend(struct usb_interface *intf, pm_message_t message)
+ 	if (priv->psstate != PS_STATE_FULL_POWER)
+ 		return -1;
  
- 	memcpy(bssid, ifmgd->associated->bssid, ETH_ALEN);
- 
--	ifmgd->associated = NULL;
- 	memset(ifmgd->bssid, 0, ETH_ALEN);
- 
- 	/*
-@@ -1007,6 +1006,8 @@ static void ieee80211_set_disassoc(struct ieee80211_sub_if_data *sdata,
- 	del_timer_sync(&sdata->u.mgd.bcn_mon_timer);
- 	del_timer_sync(&sdata->u.mgd.timer);
- 	del_timer_sync(&sdata->u.mgd.chswitch_timer);
-+
-+	ifmgd->associated = NULL;
- }
- 
- void ieee80211_sta_rx_notify(struct ieee80211_sub_if_data *sdata,
-diff --git a/net/mac80211/work.c b/net/mac80211/work.c
-index ae344d1..268ac1d 100644
---- a/net/mac80211/work.c
-+++ b/net/mac80211/work.c
-@@ -513,6 +513,19 @@ ieee80211_associate(struct ieee80211_work *wk)
- {
- 	struct ieee80211_sub_if_data *sdata = wk->sdata;
- 	struct ieee80211_local *local = sdata->local;
-+	struct ieee80211_if_managed *ifmgd = &sdata->u.mgd;
-+	bool associated;
-+
-+	mutex_lock(&ifmgd->mtx);
-+	associated = !!ifmgd->associated;
-+	mutex_unlock(&ifmgd->mtx);
-+
-+	if (associated) {
-+		printk(KERN_DEBUG "%s: delaying association with %pM as "
-+		       "we are still associated",
-+		       sdata->name, wk->filter_ta);
-+		goto wait;
-+	}
- 
- 	wk->assoc.tries++;
- 	if (wk->assoc.tries > IEEE80211_ASSOC_MAX_TRIES) {
-@@ -534,6 +547,7 @@ ieee80211_associate(struct ieee80211_work *wk)
- 	       sdata->name, wk->filter_ta, wk->assoc.tries);
- 	ieee80211_send_assoc(sdata, wk);
- 
-+wait:
- 	wk->timeout = jiffies + IEEE80211_ASSOC_TIMEOUT;
- 	run_again(local, wk->timeout);
- 
+-	if (priv->wol_criteria == EHS_REMOVE_WAKEUP) {
+-		lbs_pr_info("Suspend attempt without "
+-						"configuring wake params!\n");
+-		return -ENOSYS;
+-	}
+-
+ 	ret = lbs_suspend(priv);
+ 	if (ret)
+ 		goto out;
 -- 
-1.7.0.4
+1.7.2.3
 
