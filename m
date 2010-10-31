@@ -1,43 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from web29504.mail.ird.yahoo.com ([77.238.189.131]:27800 "HELO
-	web29504.mail.ird.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1756468Ab0JYPql convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 25 Oct 2010 11:46:41 -0400
-Message-ID: <902045.66378.qm@web29504.mail.ird.yahoo.com>
-Date: Mon, 25 Oct 2010 16:39:58 +0100 (BST)
-From: Hin-Tak Leung <htl10@users.sourceforge.net>
-Reply-To: htl10@users.sourceforge.net
-Subject: Re: [PATCH] drivers: rtl818x: request DMA-able memory
-To: "John W. Linville" <linville@tuxdriver.com>
+Received: from mga09.intel.com ([134.134.136.24]:25408 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756026Ab0JaPck (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 31 Oct 2010 11:32:40 -0400
+Subject: Re: Deauthentication for reason 6 using Intel 5300 in 2.6.34
+From: "Guy, Wey-Yi" <wey-yi.w.guy@intel.com>
+To: =?UTF-8?Q?Rafa=C5=82_Mi=C5=82ecki?= <zajec5@gmail.com>
 Cc: Larry Finger <Larry.Finger@lwfinger.net>,
-	Serafeim Zanikolas <sez@debian.org>, herton@mandriva.com.br,
-	joe@perches.com, davem@davemloft.net,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-In-Reply-To: <20101025142232.GC2414@tuxdriver.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
+	wireless <linux-wireless@vger.kernel.org>,
+	"Zheng, Jiajia" <jiajia.zheng@intel.com>,
+	"ipw3945-devel@lists.sourceforge.net"
+	<ipw3945-devel@lists.sourceforge.net>
+In-Reply-To: <AANLkTin_dPPk8XBKWjEbuHmQJg3zok5bUcrrn99qV6dn@mail.gmail.com>
+References: <4CCCE31A.5030608@lwfinger.net>
+	 <AANLkTin_dPPk8XBKWjEbuHmQJg3zok5bUcrrn99qV6dn@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Sun, 31 Oct 2010 08:31:40 -0700
+Message-Id: <1288539100.14805.16.camel@wwguy-ubuntu>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Hi Rafal,
 
---- On Mon, 25/10/10, John W. Linville <linville@tuxdriver.com> wrote:
 
-> > I had a quick look for similiar constructs and AFAIK
-> only the
-> > b43/b43legacy drivers uses DMA buffers. Seems to be a
-> rare practice.
-> > Is that something we should or should not do?
+On Sun, 2010-10-31 at 02:38 -0700, Rafał Miłecki wrote:
+> 2010/10/31 Larry Finger <Larry.Finger@lwfinger.net>:
+> > A user on the openSUSE forum reports that the connection drops frequently when
+> > using 802.11n on a 5300 with a 2.6.34 kernel. It is deauthenticated for reason
+> > 6. He was able to stabilize the connection by disabling N mode. I think he used
+> > "options iwlagn 11n_disable=1 11n_disable50=1".
+> >
+> > Is this a known problem? Would the situation be improved by using
+> > compat-wireless? If so, is "bleeding-edge" needed?
 > 
-> It doesn't mean what you think it means.� It is a
-> relic of the past,
-> used to indicate memory below 16MB so that ISA devices
-> could do DMA.
+> It's fu* known problem. Intel doesn't seem to care about users, they
+> have fixed firmware but didn't decide to release it for 2 months.
+> 
+> http://bugzilla.intellinuxwireless.org/show_bug.cgi?id=2214#c19
+> 
 
-okay - sorry about the confusion - I was grep'ing for GFP_DMA and only b43/b43lagacy have it and it is relatively rare. AFAIK none of the rtl8187 devices are non-USB... probably a NACK then, but I should ask Serafeim if there is a reason for him to submit this patch? (other than "it says dma"...) 
+We do care very much, really sorry the delay. we need to pass regulatory
+before we can release it. I am doing everything I can to move the
+process  as fast as it can.
 
-Hin-tak
+Wey
+ 
 
-
-      
