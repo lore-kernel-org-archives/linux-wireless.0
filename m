@@ -1,64 +1,30 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from dallas.jonmasters.org ([72.29.103.172]:60387 "EHLO
-	dallas.jonmasters.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755379Ab0JLHtL (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:48049 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755137Ab0JaPRC (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 12 Oct 2010 03:49:11 -0400
-Subject: Re: PROBLEM: brcm80211 hangs on 2.6.36-0.34.rc6.git3.fc15.x86_64
-From: Jon Masters <jonathan@jonmasters.org>
-To: linux-wireless@vger.kernel.org
-Cc: Brett Rudley <brudley@broadcom.com>,
-	Henry Ptasinski <henryp@broadcom.com>,
-	Nohee Ko <noheek@broadcom.com>,
-	Jon Masters <jcm@jonmasters.org>,
-	LKML <linux-kernel@vger.kernel.org>
-In-Reply-To: <1286538243.21485.298.camel@constitution.bos.jonmasters.org>
-References: <20101008065810.GA1680@constitution.bos.jonmasters.org>
-	 <1286538243.21485.298.camel@constitution.bos.jonmasters.org>
+	Sun, 31 Oct 2010 11:17:02 -0400
+Subject: Re: [PATCH] cfg80211: fix a crash in dev lookup on dump commands
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Felix Fietkau <nbd@openwrt.org>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	"John W. Linville" <linville@tuxdriver.com>
+In-Reply-To: <4CCD7DDA.3050806@openwrt.org>
+References: <4CCD7DDA.3050806@openwrt.org>
 Content-Type: text/plain; charset="UTF-8"
-Date: Tue, 12 Oct 2010 03:47:39 -0400
-Message-ID: <1286869659.8574.10.camel@constitution.bos.jonmasters.org>
+Date: Sun, 31 Oct 2010 16:17:00 +0100
+Message-ID: <1288538220.3839.15.camel@jlt3.sipsolutions.net>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2010-10-08 at 07:44 -0400, Jon Masters wrote:
-> On Fri, 2010-10-08 at 02:58 -0400, Jon Masters wrote:
-> 
-> > I tried building the new brcm80211 driver from staging-next on Fedora rawhide
-> > kernel 2.6.36-0.34.rc6.git3.fc15.x86_64. Now, of course, it's not the
-> > staging-next kernel (I'll try that now this doesn't work) but perhaps this
-> > report will still be of use to the Broadcom/other wireless folks.
-> 
-> I pulled the latest staging-next onto Linus' latest git tree and still
-> experience problems with the driver. It seems that the first attempt to
-> actually transmit results in the system locking hard. Once again, I am
-> attaching the output from running a netconsole (due to the box I'm on,
-> it's an attachment this time, sorry about that - don't trust evolution)
-> where the trace is basically the same as the original trace I posted.
-> 
-> NOTE: in both cases, the driver is loaded with "msglevel=2
-> phymsglevel=2" which (although not documented) suggests to enable
-> tracing, and does certainly yield more debugging output.
+On Sun, 2010-10-31 at 15:31 +0100, Felix Fietkau wrote:
+> IS_ERR and PTR_ERR were called with the wrong pointer, leading to a
+> crash when cfg80211_get_dev_from_ifindex fails.
 
-The problem may be that the driver doesn't correctly handle its logic in
-wl_up in the case that the call to wlc_up doesn't result in the value of
-wl->pub->up being TRUE. This can happen, for example if radio_disabled
-is true, but I'm sure there are other problems, too. This result is not
-properly checked in wl_up, so we can get a situation where we will later
-try to call the ops->tx function with wl down. You also don't check
-wl_up return codes in general, for example in wlc_radio_enable.
+Good catch, thanks.
 
-This might all be related to the rfkill and other soft switch stuff I'm
-not really super up to date on. This laptop doesn't have a hardware
-switch that I'm aware of, but I assume the state is somehow recorded in
-software (by the BIOS?) and perhaps this is how rfkill is supposed to
-work (I'll go look this up). Anyway, if I can figure out how to get the
-radio to work and hack up the driver to start with the device down,
-perhaps it'll not try to transmit and not fall over :)
+Acked-by: Johannes Berg <johannes@sipsolutions.net>
 
-Keep you posted.
-
-Jon.
-
+johannes
 
