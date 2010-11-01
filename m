@@ -1,42 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from [218.247.216.29] ([218.247.216.29]:58770 "EHLO
-	mail.linuxfire.com.cn" rhost-flags-FAIL-FAIL-OK-OK) by vger.kernel.org
-	with ESMTP id S1751008Ab0KGFQc (ORCPT
+Received: from canuck.infradead.org ([134.117.69.58]:55084 "EHLO
+	canuck.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756439Ab0KAO3K (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 7 Nov 2010 01:16:32 -0400
-From: Haitao Zhang <minipanda@linuxrobot.org>
-To: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	Jouni Malinen <jmalinen@atheros.com>,
-	Vasanthakumar Thiagarajan <vasanth@atheros.com>,
-	Senthil Balasubramanian <senthilkumar@atheros.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
-	netdev@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH] ath9k_htc: Add support for device ID 3346
-Date: Sun,  7 Nov 2010 12:50:24 +0800
-Message-Id: <1289105424-3597-1-git-send-email-minipanda@linuxrobot.org>
+	Mon, 1 Nov 2010 10:29:10 -0400
+Subject: Re: [PATCH] linux-firmware: brcm: Removed codeversion from
+ firmware filenames.
+From: David Woodhouse <dwmw2@infradead.org>
+To: Henry Ptasinski <henryp@broadcom.com>
+Cc: Nohee Ko <noheek@broadcom.com>,
+	"devel@linuxdriverproject.org" <devel@linuxdriverproject.org>,
+	Brett Rudley <brudley@broadcom.com>,
+	"grundler@google.com" <grundler@google.com>, greg@kroah.com,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <20101021170810.GA15357@broadcom.com>
+References: <4CBE23F4.4020104@broadcom.com>
+	 <20101019233520.GA12510@kroah.com>
+	 <FD96C117992C584DBC47231B1EB6F5568206D859DC@SJEXCHCCR02.corp.ad.broadcom.com>
+	 <20101020004743.GB31965@kroah.com> <20101020005546.GL10832@broadcom.com>
+	 <20101020010320.GA370@kroah.com>  <20101021170810.GA15357@broadcom.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Mon, 01 Nov 2010 10:28:59 -0400
+Message-ID: <1288621739.26983.32.camel@macbook.infradead.org>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch adds support for USB dongle with device ID 3346 from IMC Networks.
+On Thu, 2010-10-21 at 10:08 -0700, Henry Ptasinski wrote:
+> Here's a patch to rename our firmware files in the linux-firmware repo.  I'll
+> be sending a complimentary patch to Greg for staging-next-2.6 shortly.
+> 
+> The basename-apiversion-codeversion construction for firmware filenames is not
+> used by most other firmware files, adds complexity, and is not providing any
+> value.  Rename the firmware files using just basename-apiversion. 
 
-Signed-off-by: Haitao Zhang <minipanda@linuxrobot.org>
----
- drivers/net/wireless/ath/ath9k/hif_usb.c |    1 +
- 1 files changed, 1 insertions(+), 0 deletions(-)
+Please use the '-M' option to git diff (or whatever you're using) to
+make it detect renames -- the resulting patch would be a lot shorter.
 
-diff --git a/drivers/net/wireless/ath/ath9k/hif_usb.c b/drivers/net/wireless/ath/ath9k/hif_usb.c
-index 6576f68..2f6b1e9 100644
---- a/drivers/net/wireless/ath/ath9k/hif_usb.c
-+++ b/drivers/net/wireless/ath/ath9k/hif_usb.c
-@@ -35,6 +35,7 @@ static struct usb_device_id ath9k_hif_usb_ids[] = {
- 	{ USB_DEVICE(0x07D1, 0x3A10) }, /* Dlink Wireless 150 */
- 	{ USB_DEVICE(0x13D3, 0x3327) }, /* Azurewave */
- 	{ USB_DEVICE(0x13D3, 0x3328) }, /* Azurewave */
-+	{ USB_DEVICE(0x13D3, 0x3346) }, /* IMC Networks */
- 	{ USB_DEVICE(0x04CA, 0x4605) }, /* Liteon */
- 	{ USB_DEVICE(0x083A, 0xA704) }, /* SMC Networks */
- 	{ },
+And also please ensure the filenames listed in the WHENCE file are all
+correct. You don't seem to have fixed those to reflect your changes. And
+in fact I think the WHENCE file is *already* listing the bcm4329 files
+in the wrong directory?
+
 -- 
-1.7.0.4
+dwmw2
 
