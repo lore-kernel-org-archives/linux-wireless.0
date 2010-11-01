@@ -1,41 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:34763 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755228Ab0KJUO4 (ORCPT
+Received: from mail-iw0-f174.google.com ([209.85.214.174]:33056 "EHLO
+	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758128Ab0KAPoV convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 10 Nov 2010 15:14:56 -0500
-Date: Wed, 10 Nov 2010 15:06:36 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Christian Lamparter <chunkeey@googlemail.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 2/6] carl9170: use generic sign_extend32
-Message-ID: <20101110200635.GF2714@tuxdriver.com>
-References: <cover.1288393804.git.chunkeey@googlemail.com>
- <9f86a3d821426da8b6e3d9b7b8ab7bd9f8e76d71.1288393804.git.chunkeey@googlemail.com>
+	Mon, 1 Nov 2010 11:44:21 -0400
+Received: by iwn10 with SMTP id 10so7167013iwn.19
+        for <linux-wireless@vger.kernel.org>; Mon, 01 Nov 2010 08:44:21 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <9f86a3d821426da8b6e3d9b7b8ab7bd9f8e76d71.1288393804.git.chunkeey@googlemail.com>
+In-Reply-To: <AANLkTinu4_EcvzgS6AhxRYtSg=y=iwfcFtk0AhgOK-bS@mail.gmail.com>
+References: <alpine.DEB.2.00.1010042059130.29449@vtdt3>
+	<20101005131744.GB4074@tuxdriver.com>
+	<20101005195039.GD11831@tux>
+	<AANLkTikxayNdakE-MrCQWS10nZ3ZQk1pnEcHC+sMck1p@mail.gmail.com>
+	<4CB0890D.3050208@openwrt.org>
+	<4CCA0908.6000105@candelatech.com>
+	<4CCA0B26.5010008@openwrt.org>
+	<AANLkTinu4_EcvzgS6AhxRYtSg=y=iwfcFtk0AhgOK-bS@mail.gmail.com>
+Date: Mon, 1 Nov 2010 16:44:21 +0100
+Message-ID: <AANLkTi=+L+R1HowfmcLc7fTP+p0=u0T8bcYcob-TNyNb@mail.gmail.com>
+Subject: Re: [ath9k-devel] [RFC] ath9k: Insert wmb before linking dma descriptors
+From: =?ISO-8859-1?Q?Bj=F6rn_Smedman?= <bjorn.smedman@venatech.se>
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Cc: Felix Fietkau <nbd@openwrt.org>,
+	Ben Greear <greearb@candelatech.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	"ath9k-devel@venema.h4ckr.net" <ath9k-devel@venema.h4ckr.net>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Oct 29, 2010 at 11:11:23PM +0200, Christian Lamparter wrote:
-> This patch replaces the handcrafted
-> sign extension cruft with a generic
-> bitop function.
-> 
-> Signed-off-by: Christian Lamparter <chunkeey@googlemail.com>
+On Fri, Oct 29, 2010 at 2:57 AM, Luis R. Rodriguez <mcgrof@gmail.com> wrote:
+[snip]
+> I'd rather not add it if its not fixing anything. I hate code that is
+> there just because we have a fuzzy feeling it helps.
+>
+> So NACK unless it fixes something.
+>
+> �Luis
 
-  CC [M]  drivers/net/wireless/ath/carl9170/phy.o
-drivers/net/wireless/ath/carl9170/phy.c: In function ‘carl9170_get_noisefloor’:
-drivers/net/wireless/ath/carl9170/phy.c:1572: error: implicit declaration of function ‘sign_extend32’
-make[3]: *** [drivers/net/wireless/ath/carl9170/phy.o] Error 1
-make[2]: *** [drivers/net/wireless/ath/carl9170] Error 2
-make[1]: *** [drivers/net/wireless/ath] Error 2
-make: *** [drivers/net/wireless/] Error 2
+IMHO there is a right and wrong, at the very least inside a computer.
+If we can't read the documentation (Documentation/memory-barriers.txt)
+and decide if the patch is correct or incorrect (I'm not saying I can
+with 100% certainty) then perhaps we should ask somebody who can?
 
-Maybe we should wait until this function exists before we use it? :-)
+BTW, I also hate code that is there just because somebody has a fuzzy
+feeling it helps. We definitely don't need more of that. But I do like
+code that is correct in principle, code that I can change and get a
+predictable result. Code that works most of the time on most platforms
+(as long as I don't make any changes) is no friend of mine.
 
-John
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+/Bj�rn
