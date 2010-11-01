@@ -1,58 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:45858 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753120Ab0KLVGx (ORCPT
+Received: from mgw-da01.nokia.com ([147.243.128.24]:26080 "EHLO
+	mgw-da01.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753722Ab0KAMZ7 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 12 Nov 2010 16:06:53 -0500
-Subject: Re: [PATCH] mac80211:  Fix deadlock in ieee80211_do_stop.
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Ben Greear <greearb@candelatech.com>
-Cc: linux-wireless@vger.kernel.org, Tejun Heo <tj@kernel.org>
-In-Reply-To: <4CDDAA3B.9090007@candelatech.com>
-References: <1289592426-5367-1-git-send-email-greearb@candelatech.com>
-	 <1289594998.3736.11.camel@jlt3.sipsolutions.net>
-	 <4CDDAA3B.9090007@candelatech.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Fri, 12 Nov 2010 13:08:16 -0800
-Message-ID: <1289596096.3736.13.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+	Mon, 1 Nov 2010 08:25:59 -0400
+Received: from localhost.localdomain (chilepepper.research.nokia.com [172.21.50.167])
+	by mgw-da01.nokia.com (Switch-3.4.3/Switch-3.4.3) with ESMTP id oA1BqGcE020116
+	for <linux-wireless@vger.kernel.org>; Mon, 1 Nov 2010 13:52:18 +0200
+From: Luciano Coelho <luciano.coelho@nokia.com>
+To: linux-wireless@vger.kernel.org
+Subject: [RFC 02/15] cfg80211: add periodic scan request structure
+Date: Mon,  1 Nov 2010 13:52:03 +0200
+Message-Id: <1288612336-2830-3-git-send-email-luciano.coelho@nokia.com>
+In-Reply-To: <1288612336-2830-1-git-send-email-luciano.coelho@nokia.com>
+References: <1288612336-2830-1-git-send-email-luciano.coelho@nokia.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2010-11-12 at 12:57 -0800, Ben Greear wrote:
+Tihs patch adds the periodic scan request structure to cfg80211.
 
-> > However, I also don't think it should be necessary to do this.
-> > sdata->work is always queued on local->workqueue, which is created using
-> > alloc_ordered_workqueue(), and there is no work on this workqueue that
-> > uses the RTNL. Therefore, even flushing the entire workqueue must work,
-> > unless alloc_ordered_workqueue() has no such guarantee any more -- which
-> > I would consider to be a bug in the new workqueue framework.
-> 
-> The problem appears (to me) to be that the flush_work() attempts
-> to wait for the worker to complete it's current task.  The worker can
-> be doing a completely separate task (ie, wireless_nlevent_process),
-> but that task can never complete because do_stop() holds rtnl
-> and the task-in-progress may block on acquiring rtnl.
-> 
-> So, flush_work() cannot make any progress.
-> 
-> The stack-traces for hung programs I originally posted seem
-> to agree with this analysis.
-> 
-> So far, I reproduced the bug around 20 times in a row witout the patch,
-> and since I added this patch, I have two good runs in a row, so it definitely
-> has an affect.
-> 
-> If my assumptions are correct, it would seem to unsafe to EVER
-> call flush_work() while holding rtnl (or indeed, any other lock
-> that any other work could possibly require).
+Signed-off-by: Luciano Coelho <luciano.coelho@nokia.com>
+---
+ include/net/cfg80211.h |   12 ++++++++++++
+ net/wireless/core.h    |    1 +
+ 2 files changed, 13 insertions(+), 0 deletions(-)
 
-Well then in that case all I'm saying is that we have a bug in the
-workqueue code, because it used to be allowed to flush a workqueue that
-never had any work items on it that grabbed the RTNL themselves. I
-actually added lockdep detection for the case where you _did_, but since
-I'm sure we don't have anything that grabs the RTNL on our workqueue,
-this should be OK.
-
-johannes
+diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+index 2a7936d..84518cc 100644
+--- a/include/net/cfg80211.h
++++ b/include/net/cfg80211.h
+@@ -719,6 +719,18 @@ struct cfg80211_scan_request {
+ };
+ 
+ /**
++ * struct cfg80211_periodic_request - periodic scan request description
++ *
++ * @wiphy: the wiphy this was for
++ * @dev: the interface
++ */
++struct cfg80211_periodic_request {
++	/* internal */
++	struct wiphy *wiphy;
++	struct net_device *dev;
++};
++
++/**
+  * enum cfg80211_signal_type - signal type
+  *
+  * @CFG80211_SIGNAL_TYPE_NONE: no signal strength information available
+diff --git a/net/wireless/core.h b/net/wireless/core.h
+index 2d1d4c7..bf4e348 100644
+--- a/net/wireless/core.h
++++ b/net/wireless/core.h
+@@ -60,6 +60,7 @@ struct cfg80211_registered_device {
+ 	struct rb_root bss_tree;
+ 	u32 bss_generation;
+ 	struct cfg80211_scan_request *scan_req; /* protected by RTNL */
++	struct cfg80211_periodic_request *periodic_req; /* protected by RTNL */
+ 	unsigned long suspend_at;
+ 	struct work_struct scan_done_wk;
+ 
+-- 
+1.7.0.4
 
