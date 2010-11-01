@@ -1,54 +1,83 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f46.google.com ([209.85.161.46]:42074 "EHLO
-	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754065Ab0KRLdJ (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 18 Nov 2010 06:33:09 -0500
-Received: by mail-fx0-f46.google.com with SMTP id 6so1460042fxm.19
-        for <linux-wireless@vger.kernel.org>; Thu, 18 Nov 2010 03:33:08 -0800 (PST)
-From: Arik Nemtsov <arik@wizery.com>
-To: <linux-wireless@vger.kernel.org>
-Cc: Luciano Coelho <luciano.coelho@nokia.com>,
-	Arik Nemtsov <arik@wizery.com>
-Subject: [PATCH 17/18] wl1271: Read MAC address from NVS file on HW startup
-Date: Thu, 18 Nov 2010 13:32:30 +0200
-Message-Id: <1290079951-16793-18-git-send-email-arik@wizery.com>
-In-Reply-To: <1290079951-16793-1-git-send-email-arik@wizery.com>
-References: <1290079951-16793-1-git-send-email-arik@wizery.com>
+Received: from mail.sysgo.com ([195.145.229.155]:52584 "EHLO mail.sysgo.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755651Ab0KAMMK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 1 Nov 2010 08:12:10 -0400
+Date: Mon, 1 Nov 2010 13:11:59 +0100
+From: Pavel Machek <pma@sysgo.com>
+To: kernel list <linux-kernel@vger.kernel.org>,
+	chunkeey@googlemail.com, linux-wireless@vger.kernel.org
+Subject: Re: carl9170 disconnects under load
+Message-ID: <20101101121159.GB19442@pma.sysgo.com>
+References: <20101026104811.GA11357@pma.sysgo.com>
+ <20101101093140.GA2766@pma.sysgo.com>
+ <20101101094649.GA3391@pma.sysgo.com>
+ <20101101101012.GB3391@pma.sysgo.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20101101101012.GB3391@pma.sysgo.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Try to read the MAC address from the on-disk NVS file.
-A non-zero MAC address is required to add an AP interface.
+Hi!
 
-Signed-off-by: Arik Nemtsov <arik@wizery.com>
----
- drivers/net/wireless/wl12xx/main.c |   12 ++++++++++++
- 1 files changed, 12 insertions(+), 0 deletions(-)
+> > > > I'm testing driver from -wireless testing, cca 2.6.26-rc7.
+> > > > 
+> > > > It seems to work (up to 802.11n speeds -- I've seen iwconfig claiming
+> > > > 121 MB/sec), but disconnects rather quickly when under load:
+> > > > 
+> > > > telnet 192.168.1.3 chargen > /dev/null
+> > > > 
+> > > > The machine is powerpc mpc5200b board, with OHCI driver -- it is not
+> > > > capable of USB2.0 speeds.
+> > > 
+> > > So I tried with different AP, one not capable of 802.11n speeds. It
+> > > fails in different way :-(. But this one is with my backport to
+> > > 2.6.34...
+> > 
+> > But it fails with wireless-testing tree, too :-(.
+> > 
+> > Linux mpc5200b 2.6.36-rc8-wl-pma-48197-gdcae733-dirty #43 Tue Oct 26
+> >  12:06:21 CEST 2010 ppc
+> 
+> It works "better" if I force AP to 1Mbps.... (Note that I have USB1.1
+> host only).
 
-diff --git a/drivers/net/wireless/wl12xx/main.c b/drivers/net/wireless/wl12xx/main.c
-index 708b699..e5fbbb6 100644
---- a/drivers/net/wireless/wl12xx/main.c
-+++ b/drivers/net/wireless/wl12xx/main.c
-@@ -2987,6 +2987,18 @@ int wl1271_register_hw(struct wl1271 *wl)
- 	if (wl->mac80211_registered)
- 		return 0;
- 
-+	ret = wl1271_fetch_nvs(wl);
-+	if (ret == 0) {
-+		u8 *nvs_ptr = (u8 *)wl->nvs->nvs;
-+
-+		wl->mac_addr[0] = nvs_ptr[11];
-+		wl->mac_addr[1] = nvs_ptr[10];
-+		wl->mac_addr[2] = nvs_ptr[6];
-+		wl->mac_addr[3] = nvs_ptr[5];
-+		wl->mac_addr[4] = nvs_ptr[4];
-+		wl->mac_addr[5] = nvs_ptr[3];
-+	}
-+
- 	SET_IEEE80211_PERM_ADDR(wl->hw, wl->mac_addr);
- 
- 	ret = ieee80211_register_hw(wl->hw);
--- 
-1.7.1
+Ok, so I tried on powerpc machine with usb2.0... it worked a bit
+better, but after a reboot, I got this one:
 
+usb 1-3: Atheros AR9170 is registered as 'phy0'
+kjournald starting.  Commit interval 5 seconds
+EXT3-fs (sda3): warning: maximal mount count reached, running e2fsck
+is recommended
+EXT3-fs (sda3): using internal journal
+EXT3-fs (sda3): recovery complete
+EXT3-fs (sda3): mounted filesystem with writeback data mode
+warning: `proftpd' uses 32-bit capabilities (legacy support in use)
+PHY: f0003000:01 - Link is Up - 100/Full
+mpc5xxx_can f0000900.can: setting BTR0=0x07 BTR1=0x1c
+FW: MAC RESET
+wlan0: authenticate with 00:11:95:05:30:d7 (try 1)
+wlan0: authenticated
+wlan0: associate with 00:11:95:05:30:d7 (try 1)
+wlan0: RX AssocResp from 00:11:95:05:30:d7 (capab=0x421 status=0
+aid=1)
+wlan0: associated
+usb 1-3: no command feedback received (-110).
+carl9170 cmd: 08 01 00 00 f0 36 1c 00 00 24 00 00
+.....6...$..
+usb 1-3: restart device (6)
+writing reg 0x1c36f0 (val 0x2400) failed (-110)
+lost 3 command responses/traps! w:13 g:0
+writing reg 0x1d0104 (val 0x3) failed (-110)
+usb 1-3: kill pending tx urbs.
+usb 1-3: firmware upload failed (-110).
+usb 1-3: stuck tx urbs!
+usb 1-3: Failed to restart device  (-110).
+writing reg 0x1c36f0 (val 0x2400) failed (-5)
+writing reg 0x1c36f0 (val 0x2400) failed (-5)
+writing reg 0x1c36f0 (val 0x5000) failed (-5)
+wlan0: deauthenticating from 00:11:95:05:30:d7 by local choice
+(reason=3)
+usb 1-3: reset high speed USB device using ehci_hcd and address 3
+cfg80211: Calling CRDA to update world regulatory domain
