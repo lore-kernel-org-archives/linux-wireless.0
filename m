@@ -1,40 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:45114 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756497Ab0KJQWt (ORCPT
+Received: from casper.infradead.org ([85.118.1.10]:59091 "EHLO
+	casper.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758054Ab0KAOWV (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 10 Nov 2010 11:22:49 -0500
-Subject: Re: [PATCH v7 1/3] cfg80211: Add nl80211 antenna configuration
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Felix Fietkau <nbd@openwrt.org>
-Cc: Bruno Randolf <br1@einfach.org>, linville@tuxdriver.com,
-	mcgrof@gmail.com, linux-wireless@vger.kernel.org
-In-Reply-To: <4CDAC16A.2050300@openwrt.org>
-References: <20101110035050.23721.15617.stgit@localhost6.localdomain6>
-	 <1289404367.3748.0.camel@jlt3.sipsolutions.net>
-	 <4CDAC16A.2050300@openwrt.org>
+	Mon, 1 Nov 2010 10:22:21 -0400
+Subject: Re: [PATCH v3b] linux-firmware: wl12xx-Add Firmware and NVS files
+ to support Texas Instruments WLAN driver
+From: David Woodhouse <dwmw2@infradead.org>
+To: Shahar Levi <shahar_levi@ti.com>
+Cc: linux-wireless@vger.kernel.org,
+	Luciano Coelho <luciano.coelho@nokia.com>
+In-Reply-To: <1286118243-10633-1-git-send-email-shahar_levi@ti.com>
+References: <1286118243-10633-1-git-send-email-shahar_levi@ti.com>
 Content-Type: text/plain; charset="UTF-8"
-Date: Wed, 10 Nov 2010 08:24:06 -0800
-Message-ID: <1289406246.3748.21.camel@jlt3.sipsolutions.net>
+Date: Mon, 01 Nov 2010 10:21:58 -0400
+Message-ID: <1288621318.26983.29.camel@macbook.infradead.org>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2010-11-10 at 16:59 +0100, Felix Fietkau wrote:
-> > I'm not entirely convinced that this is a good idea. Nor that, even if
-> > 11n devices were to implement it, they should all implementing their own
-> > code to update the HT capabilities. However, I suppose that nothing
-> > forces them to implement it, and when somebody does I can still complain
-> > when they put everything into the driver.
+On Sun, 2010-10-03 at 17:04 +0200, Shahar Levi wrote:
+> FW & NVS Support wl127x wireless LAN driver (wl1271 & wl1273).
+> In order to use those files copy them to target FS at /lib/firmware/.
+> 
+> Signed-off-by: Shahar Levi <shahar_levi@ti.com>
+> Tested-by: Luciano Coelho <luciano.coelho@nokia.com>
+> ---
+> Changes from v1:
+> - Update the wl1271-nvs.bin that support a band to the correct size (912B)
+> Changes from v2:
+> - convert LICENCE file to UTF-8 (clean 0xA0) and fit in 80 columns
 
-> Drivers already need to calculate their HT capabilities based on the
-> number of chains.
-> If chains get masked out based on the antenna mask settings, the driver
-> code would most of the time only need minor refactoring for updating the
-> settings which wouldn't necessarily result in any new code duplication
-> at all.
+Still crap in LICENCE.ti-connectivity. It starts with a gratuitous
+U+FEFF unicode byte-order mark. I've removed that myself and committed
+it.
 
-Good point.
-
-johannes
+-- 
+David Woodhouse                            Open Source Technology Centre
+David.Woodhouse@intel.com                              Intel Corporation
 
