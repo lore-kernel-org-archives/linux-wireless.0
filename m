@@ -1,67 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ww0-f42.google.com ([74.125.82.42]:62589 "EHLO
-	mail-ww0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751311Ab0K3Vdj (ORCPT
+Received: from mgw-da01.ext.nokia.com ([147.243.128.24]:26097 "EHLO
+	mgw-da01.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755755Ab0KAMZ7 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 30 Nov 2010 16:33:39 -0500
-Received: by wwb28 with SMTP id 28so40675wwb.1
-        for <linux-wireless@vger.kernel.org>; Tue, 30 Nov 2010 13:33:38 -0800 (PST)
-From: =?utf-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-To: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-Cc: b43-dev@lists.infradead.org,
-	=?utf-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-Subject: [PATCH 3/3] b43: N-PHY: fix code path on PHY init
-Date: Tue, 30 Nov 2010 22:33:16 +0100
-Message-Id: <1291152796-18700-3-git-send-email-zajec5@gmail.com>
-In-Reply-To: <1291152796-18700-1-git-send-email-zajec5@gmail.com>
-References: <1291152796-18700-1-git-send-email-zajec5@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+	Mon, 1 Nov 2010 08:25:59 -0400
+Received: from localhost.localdomain (chilepepper.research.nokia.com [172.21.50.167])
+	by mgw-da01.nokia.com (Switch-3.4.3/Switch-3.4.3) with ESMTP id oA1BqGcO020116
+	for <linux-wireless@vger.kernel.org>; Mon, 1 Nov 2010 13:52:28 +0200
+From: Luciano Coelho <luciano.coelho@nokia.com>
+To: linux-wireless@vger.kernel.org
+Subject: [RFC 12/15] cfg80211: add ssid support to periodic scan
+Date: Mon,  1 Nov 2010 13:52:13 +0200
+Message-Id: <1288612336-2830-13-git-send-email-luciano.coelho@nokia.com>
+In-Reply-To: <1288612336-2830-1-git-send-email-luciano.coelho@nokia.com>
+References: <1288612336-2830-1-git-send-email-luciano.coelho@nokia.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
----
-John: this introduces 2 lines over 80 chars, but I really dislike idea of
-breaking line between argument, and so having start of function name in one
-line and comparing result to zero in another.
-Are you OK with this?
----
- drivers/net/wireless/b43/phy_n.c |   17 +++++++----------
- 1 files changed, 7 insertions(+), 10 deletions(-)
+Just add ssids in the periodic_request structure.  This is needed in order to
+pass the desired ssids to filter down to the mac.
 
-diff --git a/drivers/net/wireless/b43/phy_n.c b/drivers/net/wireless/b43/phy_n.c
-index f26b60b..905f1d7 100644
---- a/drivers/net/wireless/b43/phy_n.c
-+++ b/drivers/net/wireless/b43/phy_n.c
-@@ -3498,19 +3498,16 @@ int b43_phy_initn(struct b43_wldev *dev)
- 					/* TODO N PHY Pre Calibrate TX Gain */
- 					target = b43_nphy_get_tx_gains(dev);
- 				}
--			}
-+				if (!b43_nphy_cal_tx_iq_lo(dev, target, true, false))
-+					if (b43_nphy_cal_rx_iq(dev, target, 2, 0) == 0)
-+						b43_nphy_save_cal(dev);
-+			} else if (nphy->mphase_cal_phase_id == 0)
-+				;/* N PHY Periodic Calibration with arg 3 */
-+		} else {
-+			b43_nphy_restore_cal(dev);
- 		}
- 	}
+Signed-off-by: Luciano Coelho <luciano.coelho@nokia.com>
+---
+ include/net/cfg80211.h |    8 ++++++++
+ 1 files changed, 8 insertions(+), 0 deletions(-)
+
+diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+index 218e59f..3ac6fc9 100644
+--- a/include/net/cfg80211.h
++++ b/include/net/cfg80211.h
+@@ -721,12 +721,16 @@ struct cfg80211_scan_request {
+ /**
+  * struct cfg80211_periodic_request - periodic scan request description
+  *
++ * @ssids: SSIDs to report (other SSIDs will be filtered out)
++ * @n_ssids: number of SSIDs
+  * @n_channels: total number of channels to scan
+  * @wiphy: the wiphy this was for
+  * @dev: the interface
+  * @channels: channels to scan
+  */
+ struct cfg80211_periodic_request {
++	struct cfg80211_ssid *ssids;
++	int n_ssids;
+ 	u32 n_channels;
  
--	if (!b43_nphy_cal_tx_iq_lo(dev, target, true, false)) {
--		if (b43_nphy_cal_rx_iq(dev, target, 2, 0) == 0)
--			b43_nphy_save_cal(dev);
--		else if (nphy->mphase_cal_phase_id == 0)
--			;/* N PHY Periodic Calibration with argument 3 */
--	} else {
--		b43_nphy_restore_cal(dev);
--	}
--
- 	b43_nphy_tx_pwr_ctrl_coef_setup(dev);
- 	b43_nphy_tx_power_ctrl(dev, tx_pwr_state);
- 	b43_phy_write(dev, B43_NPHY_TXMACIF_HOLDOFF, 0x0015);
+ 	/* internal */
+@@ -1436,6 +1440,8 @@ struct ieee80211_txrx_stypes {
+  * @max_scan_ie_len: maximum length of user-controlled IEs device can
+  *	add to probe request frames transmitted during a scan, must not
+  *	include fixed IEs like supported rates
++ * @max_periodic_ssids: maximum number of SSIDs the device can use in
++ *	periodic scans
+  * @coverage_class: current coverage class
+  * @fw_version: firmware version for ethtool reporting
+  * @hw_version: hardware version for ethtool reporting
+@@ -1472,6 +1478,8 @@ struct wiphy {
+ 	u8 max_scan_ssids;
+ 	u16 max_scan_ie_len;
+ 
++	u8 max_periodic_ssids;
++
+ 	int n_cipher_suites;
+ 	const u32 *cipher_suites;
+ 
 -- 
-1.6.3.3
+1.7.0.4
 
