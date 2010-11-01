@@ -1,44 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:58393 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753007Ab0K2TwY (ORCPT
+Received: from mail-iw0-f174.google.com ([209.85.214.174]:50466 "EHLO
+	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751026Ab0KAQoh convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 29 Nov 2010 14:52:24 -0500
-Date: Mon, 29 Nov 2010 14:51:26 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Felix Fietkau <nbd@openwrt.org>
-Cc: linux-wireless@vger.kernel.org, lrodriguez@atheros.com
-Subject: Re: [PATCH] ath9k_hw: fix more bitfield related endian issues
-Message-ID: <20101129195125.GE8199@tuxdriver.com>
-References: <1290280970-37519-1-git-send-email-nbd@openwrt.org>
- <20101122201541.GH2117@tuxdriver.com>
- <4CEADB73.1050205@openwrt.org>
+	Mon, 1 Nov 2010 12:44:37 -0400
+Received: by iwn10 with SMTP id 10so7222842iwn.19
+        for <linux-wireless@vger.kernel.org>; Mon, 01 Nov 2010 09:44:36 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <4CEADB73.1050205@openwrt.org>
+In-Reply-To: <AANLkTin1oXb8mkyxZgn5jEy7FJF9BPpiuJ1Q7j9XCDYz@mail.gmail.com>
+References: <AANLkTik=LvRZja13SGOpicVjbyf6chRtTD-RkvSm2VcE@mail.gmail.com>
+ <8762whrqvm.fsf@gmail.com> <AANLkTin1oXb8mkyxZgn5jEy7FJF9BPpiuJ1Q7j9XCDYz@mail.gmail.com>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Mon, 1 Nov 2010 09:44:15 -0700
+Message-ID: <AANLkTimBf6PRdTNUpx1HLu6Q70onHi3YhqKOYQ2Rk-yF@mail.gmail.com>
+Subject: Re: [ath9k-devel] ath9k: race conditions in dma
+To: =?UTF-8?Q?Bj=C3=B6rn_Smedman?= <bjorn.smedman@venatech.se>
+Cc: Ben Gamari <bgamari@gmail.com>, ath9k-devel@lists.ath9k.org,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Nov 22, 2010 at 10:06:59PM +0100, Felix Fietkau wrote:
-> On 2010-11-22 9:15 PM, John W. Linville wrote:
-> > On Sat, Nov 20, 2010 at 08:22:50PM +0100, Felix Fietkau wrote:
-> >> A few LNA control related flags were also specified as a bitfields, however
-> >> for some strange reason they were written in big-endian order this time.
-> >> Fix this by using flags instead.
-> >> 
-> >> Signed-off-by: Felix Fietkau <nbd@openwrt.org>
-> >> Cc: stable@kenrel.org
-> Oops.
-> 
-> > Why does this merit stable@kernel.org (misspelled, BTW) inclusion?
-> Trivial bug that can easily mess up baseband settings in some cases. Not
-> sure if it could also mess with tx power.
+2010/11/1 Björn Smedman <bjorn.smedman@venatech.se>:
+> On Mon, Nov 1, 2010 at 4:43 PM, Ben Gamari <bgamari@gmail.com> wrote:
+>> On Mon, 1 Nov 2010 16:17:23 +0100, Björn Smedman <bjorn.smedman@venatech.se> wrote:
+>>> Hi all,
+>>>
+>>> I have an application that creates and destroys a lot of ap vifs and
+>>> does a lot of monitor frame injection. The recent ath9k rx locking
+>>> fixes have helped with stability in this use-case but there still
+>>> seems to be some tx/beacon related race condition(s). These manifests
+>>> themselves as follows on an AR913x based router running
+>>> compat-wireless-2010-10-19 (with locking fixes etc from openwrt):
+>>>
+>>> 1. TX DMA hangs under simultaneous high RX and TX load
+>>> 2. TX is completely hung but chip is never reset
+>>
+>> I have also observed both of these behaviors with just a standard
+>> hostapd single VIF configuration. Quite annoying. It seems to be better
+>> with recent wireless-testing trees.
+>>
+>> - Ben
+>
+> The next thing that looks racy to me is ath_beacon_alloc() vs
+> ath_beacon_tasklet() in beacon.c. Beacon queue TX DMA is always
+> stopped in main.c before calling ath_beacon_alloc() but
+> ath_beacon_tasklet() is scheduled when we get an SWBA interrupt. My
+> guess is that these keep coming even if we stop TX DMA on the beacon
+> queue, no?
 
-See my reply to the related bug.  Should this go to 2.6.37?
+My TX PCU patches for ath9k are not merged yet, try those or wait
+until John merges them.
 
-Thanks,
-
-John
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+  Luis
