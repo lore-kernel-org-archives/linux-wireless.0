@@ -1,45 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yx0-f174.google.com ([209.85.213.174]:53222 "EHLO
-	mail-yx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753523Ab0K2N3M (ORCPT
+Received: from mgw-da01.nokia.com ([147.243.128.24]:18197 "EHLO
+	mgw-da01.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750941Ab0KATPN (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 29 Nov 2010 08:29:12 -0500
-From: Sujith <m.sujith@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Message-ID: <19699.43671.455291.972969@gargle.gargle.HOWL>
-Date: Mon, 29 Nov 2010 18:58:55 +0530
-To: Pavel Machek <pma@sysgo.com>
-Cc: Larry Finger <Larry.Finger@lwfinger.net>,
-	"ath9k-devel@venema.h4ckr.net" <ath9k-devel@venema.h4ckr.net>,
-	kernel list <linux-kernel@vger.kernel.org>,
-	"chunkeey@googlemail.com" <chunkeey@googlemail.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"rudolf.marek@sysgo.com" <rudolf.marek@sysgo.com>,
-	"cko@sysgo.com" <cko@sysgo.com>, "mfa@sysgo.com" <mfa@sysgo.com>,
-	"anl@sysgo.com" <anl@sysgo.com>
-Subject: Re: ath9k_htc vs. powerpc (was Re: working usb wifi card, that is still possible to buy)
-In-Reply-To: <20101129125705.GB31518@pma.sysgo.com>
-References: <20101124081616.GA30595@pma.sysgo.com>
-	<20101124131320.GA2611@pma.sysgo.com>
-	<4CED33E0.5040000@lwfinger.net>
-	<20101126083125.GA28982@pma.sysgo.com>
-	<20101126102026.GA11857@pma.sysgo.com>
-	<20101126112737.GB11857@pma.sysgo.com>
-	<19695.40541.335361.81396@gargle.gargle.HOWL>
-	<20101126123706.GA19755@pma.sysgo.com>
-	<20101129100159.GC28833@pma.sysgo.com>
-	<19699.40557.302196.832862@gargle.gargle.HOWL>
-	<20101129125705.GB31518@pma.sysgo.com>
+	Mon, 1 Nov 2010 15:15:13 -0400
+Subject: Re: [PATCH 2/2] wl1271: refactor debugfs function generation code
+From: Luciano Coelho <luciano.coelho@nokia.com>
+To: ext Eliad Peller <eliad@wizery.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <1288184310-6781-2-git-send-email-eliad@wizery.com>
+References: <1288184310-6781-1-git-send-email-eliad@wizery.com>
+	 <1288184310-6781-2-git-send-email-eliad@wizery.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Mon, 01 Nov 2010 21:23:23 +0200
+Message-ID: <1288639403.21112.50.camel@powerslave>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Pavel Machek wrote:
-> We know the code currently works on PC; but this adds conversions that
-> are nop on PowerPC and do something on PC... so they should have no
-> effect on PowerPC and could break PC...?
+On Wed, 2010-10-27 at 14:58 +0200, ext Eliad Peller wrote:
+> refactor wl1271_debugfs by using a format&copy function, instead of
+> duplicating the code for each generated function.
+> 
+> this change reduces about 3Kb from wl1271.ko
+> 
+> Signed-off-by: Eliad Peller <eliad@wizery.com>
+> ---
 
-Well, I tested the patch on x86 and it seemed to work okay.
-But yeah, it needs to be tested well.
+Looks good, thanks!
 
-Sujith
+Reviewed-by: Luciano Coelho <luciano.coelho@nokia.com>
+
+I have applied this patch, but I won't apply the one for mac80211 [1/2],
+because patches for mac80211 go directly to linux-wireless.
+
+John, can you apply patch [1/2], the mac80211 part, separately on your
+tree? If Johannes agrees, of course.  This one I'll send together with
+my next pull request.  
+
+PS: I have fixed a couple of whitespace checkpatch warnings.
+
+-- 
+Cheers,
+Luca.
+
