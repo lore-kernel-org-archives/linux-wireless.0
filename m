@@ -1,47 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([192.100.122.233]:59829 "EHLO
-	mgw-mx06.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753753Ab0KCLvP (ORCPT
+Received: from mail-iw0-f174.google.com ([209.85.214.174]:59310 "EHLO
+	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756573Ab0KAOcj (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 3 Nov 2010 07:51:15 -0400
-Subject: Re: [PATCH v2] wl1271: Change wl12xx Files Names
-From: Luciano Coelho <luciano.coelho@nokia.com>
-To: ext Shahar Levi <shahar_levi@ti.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <4CD14B9D.1070305@ti.com>
-References: <1288505649-28733-1-git-send-email-shahar_levi@ti.com>
-	 <1288772739.1164.10.camel@chilepepper>  <4CD14B9D.1070305@ti.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Wed, 03 Nov 2010 13:50:53 +0200
-Message-ID: <1288785053.1164.13.camel@chilepepper>
-Mime-Version: 1.0
+	Mon, 1 Nov 2010 10:32:39 -0400
+Received: by iwn10 with SMTP id 10so7100523iwn.19
+        for <linux-wireless@vger.kernel.org>; Mon, 01 Nov 2010 07:32:39 -0700 (PDT)
+From: tom.leiming@gmail.com
+To: lrodriguez@atheros.com
+Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com,
+	Ming Lei <tom.leiming@gmail.com>
+Subject: [PATCH] ath9k-htc: fix probe failure
+Date: Mon,  1 Nov 2010 22:32:30 +0800
+Message-Id: <1288621950-13918-1-git-send-email-tom.leiming@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2010-11-03 at 12:46 +0100, ext Shahar Levi wrote:
-> On 11/03/2010 10:25 AM, Luciano Coelho wrote:
-> > I'm also getting two checkpatch warnings:
-> >
-> > WARNING: please, no space for starting a line,
-> > 				excluding comments
-> > #669: FILE: drivers/net/wireless/wl12xx/main.c:2227:
-> > +       .ht_cap = WL12XX_HT_CAP,$
-> This is weird. In order to find those warning i ran:
-> "./scripts/checkpatch.pl 
-> wl12xx-files-prefix-v2/0001-wl1271-Change-wl12xx-Files-Names.patch
-> total: 0 errors, 0 warnings, 598 lines checked
-> 
-> wl12xx-files-prefix-v2/0001-wl1271-Change-wl12xx-Files-Names.patch has 
-> no obvious style problems and is ready for submission."
-> 
-> On that patch it didn't find warning.
-> Is there more efficient way to validate those issue?
+From: Ming Lei <tom.leiming@gmail.com>
 
-Hmmm... This could also be our mailserver fscking up again.  If you
-don't get those warnings yourself, just ignore this comment :)
+Obviously, we should set the transfer type consitent with
+endpoint descriptor type to urb, this patch fixes the probe
+failure below:
 
+[    8.018768] PM: Removing info for No Bus:1-2.2
+[    8.019470] usb 1-2.2: BOGUS urb xfer, pipe 3 != type 1
+[    8.031707] usb 1-2.2: ath9k_htc: Unable to allocate URBs
+[    8.037506] ath9k_hif_usb: probe of 1-2.2:1.0 failed with error -22
+[    8.044250] usbcore: registered new interface driver ath9k_hif_usb
 
+Signed-off-by: Ming Lei <tom.leiming@gmail.com>
+---
+ drivers/net/wireless/ath/ath9k/hif_usb.c |    4 ++--
+ 1 files changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath9k/hif_usb.c b/drivers/net/wireless/ath/ath9k/hif_usb.c
+index 728d904..04242bc 100644
+--- a/drivers/net/wireless/ath/ath9k/hif_usb.c
++++ b/drivers/net/wireless/ath/ath9k/hif_usb.c
+@@ -541,7 +541,7 @@ static void ath9k_hif_usb_reg_in_cb(struct urb *urb)
+ 		}
+ 
+ 		usb_fill_int_urb(urb, hif_dev->udev,
+-				 usb_rcvbulkpipe(hif_dev->udev,
++				 usb_rcvintpipe(hif_dev->udev,
+ 						 USB_REG_IN_PIPE),
+ 				 nskb->data, MAX_REG_IN_BUF_SIZE,
+ 				 ath9k_hif_usb_reg_in_cb, nskb, 1);
+@@ -721,7 +721,7 @@ static int ath9k_hif_usb_alloc_reg_in_urb(struct hif_device_usb *hif_dev)
+ 		goto err;
+ 
+ 	usb_fill_int_urb(hif_dev->reg_in_urb, hif_dev->udev,
+-			 usb_rcvbulkpipe(hif_dev->udev,
++			 usb_rcvintpipe(hif_dev->udev,
+ 					 USB_REG_IN_PIPE),
+ 			 skb->data, MAX_REG_IN_BUF_SIZE,
+ 			 ath9k_hif_usb_reg_in_cb, skb, 1);
 -- 
-Cheers,
-Luca.
+1.7.3
 
