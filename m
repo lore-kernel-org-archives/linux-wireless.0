@@ -1,46 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.sysgo.com ([195.145.229.155]:58871 "EHLO mail.sysgo.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751546Ab0KXIPW (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 24 Nov 2010 03:15:22 -0500
-Date: Wed, 24 Nov 2010 09:16:16 +0100
-From: Pavel Machek <pma@sysgo.com>
-To: kernel list <linux-kernel@vger.kernel.org>,
-	chunkeey@googlemail.com, linux-wireless@vger.kernel.org
-Subject: Re: working usb wifi card, that is still possible to buy
-Message-ID: <20101124081616.GA30595@pma.sysgo.com>
-References: <20101103092431.GA21138@pma.sysgo.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20101103092431.GA21138@pma.sysgo.com>
+Received: from smtp.nokia.com ([192.100.122.230]:21063 "EHLO
+	mgw-mx03.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750766Ab0KATOi (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 1 Nov 2010 15:14:38 -0400
+Received: from esebh106.NOE.Nokia.com (esebh106.ntc.nokia.com [172.21.138.213])
+	by mgw-mx03.nokia.com (Switch-3.3.3/Switch-3.3.3) with ESMTP id oA1JEYox024236
+	for <linux-wireless@vger.kernel.org>; Mon, 1 Nov 2010 21:14:35 +0200
+Received: from [10.162.252.142] (essapo-nirac252142.europe.nokia.com [10.162.252.142])
+	by mgw-da02.ext.nokia.com (Switch-3.3.3/Switch-3.3.3) with ESMTP id oA1JEVkI021047
+	for <linux-wireless@vger.kernel.org>; Mon, 1 Nov 2010 21:14:31 +0200
+Subject: wl12xx tree has been rebased
+From: Luciano Coelho <luciano.coelho@nokia.com>
+To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
+Date: Mon, 01 Nov 2010 21:23:06 +0200
+Message-ID: <1288639386.21112.48.camel@powerslave>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi!
+Hello,
 
-So we shopped around a bit, and got following cards:
+I had to rebase the wl12xx tree again to better align with
+wireless-testing.  Please reset your trees.
 
-TP-LINK TL-WN321G, 148f:2070, ralink?
-PEGATRON WL166N11, 1d4d:000c, ralink?
-Tenda w311U, 148f:3070, ralink?
-Netgear WPN111, 1385:5f01, atheros?
-edimax ew-7711UMn, 7392:7711, ralink?
-Canyon CNP-WF518N2, 0bda:8171, realtek? 
-EMTEC Wi350, 0bda:8172, realtek?
-MSI WLAN 11N US300EX Lite, 148f:3070, ralink?
-AirLive Wl-1600 USB, 1b75:8187, rtl8187 driver, works out of the box
-on 2.6.27.25-78.2.56.fc9.i686 kernel
-Netgear wg111, 05e3:4260, rtl8187 driver, works out of the box on
-2.6.27.25-78.2.56.fc9.i686 kernel
-D-Link DWA-131, 07d1:3303, realtek?
-TP-Link TL-WN721N, 0cf3:9271, atheros?
-TP-Link TL-WN322G, 0cf3:1006, atheros?
+I hope this doesn't cause too much trouble.
 
-I'd update database at linuxwireless.org, but have not figured out how
-to do that. I do have an account, but "edit" button on 
+-- 
+Cheers,
+Luca.
 
-http://linuxwireless.org/en/users/Devices/USB
-
-does not exactly do anything useful :-(.
-
-								Pavel
