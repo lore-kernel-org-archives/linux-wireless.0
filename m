@@ -1,54 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qw0-f46.google.com ([209.85.216.46]:65142 "EHLO
-	mail-qw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754837Ab0KJCVg (ORCPT
+Received: from mail-yw0-f46.google.com ([209.85.213.46]:45963 "EHLO
+	mail-yw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755014Ab0KAVWF convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 9 Nov 2010 21:21:36 -0500
-Received: by mail-qw0-f46.google.com with SMTP id 5so5749qwh.19
-        for <linux-wireless@vger.kernel.org>; Tue, 09 Nov 2010 18:21:36 -0800 (PST)
-From: Arnaud Lacombe <lacombar@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: lrodriguez@atheros.com, Arnaud Lacombe <lacombar@gmail.com>
-Subject: [PATCH 29/44] compat/2.6.22: rework `uninitialized_var' and `__maybe_unused' macros
-Date: Tue,  9 Nov 2010 21:20:11 -0500
-Message-Id: <1289355626-25373-30-git-send-email-lacombar@gmail.com>
-In-Reply-To: <1289355626-25373-1-git-send-email-lacombar@gmail.com>
-References: <1289355626-25373-1-git-send-email-lacombar@gmail.com>
+	Mon, 1 Nov 2010 17:22:05 -0400
+Received: by ywc21 with SMTP id 21so1187367ywc.19
+        for <linux-wireless@vger.kernel.org>; Mon, 01 Nov 2010 14:22:04 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <AANLkTi=jyGZ+LLZ2cDiF7CFC1h_WbzwmOOLQkSpOaLAz@mail.gmail.com>
+References: <1288181398-2358-1-git-send-email-eliad@wizery.com>
+ <1288181398-2358-2-git-send-email-eliad@wizery.com> <1288617893.20937.10.camel@chilepepper>
+ <AANLkTi=jyGZ+LLZ2cDiF7CFC1h_WbzwmOOLQkSpOaLAz@mail.gmail.com>
+From: =?ISO-8859-1?Q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>
+Date: Mon, 1 Nov 2010 22:21:42 +0100
+Message-ID: <AANLkTin+RQ8zjbQKFcZJjoVcT=GkuMYTYEbt47TFuAC6@mail.gmail.com>
+Subject: Re: [PATCH 2/2] wl1271: add recover testmode command
+To: Eliad Peller <eliad@wizery.com>
+Cc: Luciano Coelho <luciano.coelho@nokia.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Protect their definitions, and add fallbacks.
+On Mon, Nov 1, 2010 at 9:59 PM, Eliad Peller <eliad@wizery.com> wrote:
+>>> add RECOVER testmode command.
+>>> this command triggers a recovery sequence (by enqueueing a recovery_work).
+>>>
+>>> Signed-off-by: Eliad Peller <eliad@wizery.com>
+>>> ---
+>>
+>> So, the point of this patch is to allow hardware recovery from the
+>> userspace? In what kind of scenario do you need this?
+>>
+>
+> yes.
+> it's mainly for testing (or if we want to recover manually for some reason).
+> this is why i implemented it as a testmode command.
 
-Signed-off-by: Arnaud Lacombe <lacombar@gmail.com>
----
- include/linux/compat-2.6.22.h |   13 +++++++++++--
- 1 files changed, 11 insertions(+), 2 deletions(-)
+Isn't testmode for features used during regulatory testing, that the
+user should be unable to access to ensure further regulatory
+compliance?
 
-diff --git a/include/linux/compat-2.6.22.h b/include/linux/compat-2.6.22.h
-index 7ca1b18..174a269 100644
---- a/include/linux/compat-2.6.22.h
-+++ b/include/linux/compat-2.6.22.h
-@@ -80,9 +80,18 @@ static inline void skb_copy_from_linear_data_offset(const struct sk_buff *skb,
- 	memcpy(to, skb->data + offset, len);
- }
- 
--#define __maybe_unused	__attribute__((unused))
-+#if defined(__GNUC__)
-+#define __maybe_unused		__attribute__((unused))
-+#define uninitialized_var(x)	x = x
-+#endif
-+
-+#ifndef __maybe_unused
-+#define __maybe_unused		/* unimplemented */
-+#endif
- 
--#define uninitialized_var(x) x = x
-+#ifndef uninitialized_var
-+#define uninitialized_var(x)	x
-+#endif
- 
- /* This will lead to very weird behaviour... */
- #define NLA_BINARY NLA_STRING
+>
+> i added it after observing some recovery issues (until applying
+> Juuso's "wl1271: Check interface state in op_* functions" :) )
+>
+> Eliad.
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
+
+
+
 -- 
-1.7.2.30.gc37d7.dirty
-
+Vista: [V]iruses, [I]ntruders, [S]pyware, [T]rojans and [A]dware. :-)
