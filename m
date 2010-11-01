@@ -1,95 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f46.google.com ([209.85.161.46]:45795 "EHLO
-	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755329Ab0KSQj3 convert rfc822-to-8bit (ORCPT
+Received: from mail-bw0-f46.google.com ([209.85.214.46]:34151 "EHLO
+	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751026Ab0KAQYV (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 19 Nov 2010 11:39:29 -0500
+	Mon, 1 Nov 2010 12:24:21 -0400
+Received: by bwz11 with SMTP id 11so4668477bwz.19
+        for <linux-wireless@vger.kernel.org>; Mon, 01 Nov 2010 09:24:20 -0700 (PDT)
+Message-ID: <4CCEE9C9.3090308@lwfinger.net>
+Date: Mon, 01 Nov 2010 11:24:41 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-In-Reply-To: <4CE5C919.7090504@teksavvy.com>
-References: <tTUH_XeInOH.A.dMF.c3b5MB@chimera>
-	<4CE5C919.7090504@teksavvy.com>
-Date: Fri, 19 Nov 2010 11:39:26 -0500
-Message-ID: <AANLkTi=8G7pNA7QTxaXDWKrWrCERPfmKU+nLJWCA=JUH@mail.gmail.com>
-Subject: Re: 2.6.37-rc2-git4: Reported regressions 2.6.35 -> 2.6.36
-From: Alex Deucher <alexdeucher@gmail.com>
-To: Mark Lord <kernel@teksavvy.com>
-Cc: "Rafael J. Wysocki" <rjw@sisk.pl>,
-	Linux SCSI List <linux-scsi@vger.kernel.org>,
-	Linux ACPI <linux-acpi@vger.kernel.org>,
-	Network Development <netdev@vger.kernel.org>,
-	Linux Wireless List <linux-wireless@vger.kernel.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	DRI <dri-devel@lists.freedesktop.org>,
-	Florian Mickler <florian@mickler.org>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Kernel Testers List <kernel-testers@vger.kernel.org>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	Linux PM List <linux-pm@lists.linux-foundation.org>,
-	Maciej Rutecki <maciej.rutecki@gmail.com>
+To: Herton Ronaldo Krzesinski <herton@mandriva.com.br>
+CC: seno <senada@t-online.de>, linux-wireless@vger.kernel.org,
+	hintak.leung@gmail.com
+Subject: Re: [PATCH] rtl8187b: do not do per packet TX AGC
+References: <1282974868-22237-1-git-send-email-cascardo@holoscopio.com> <4C798080.8010002@lwfinger.net> <20100830141218.GB30864@tuxdriver.com> <4C7BC4D9.1010108@lwfinger.net> <20100830152841.GB2950@barata.holoscopio.com> <loom.20101026T200014-691@post.gmane.org> <4CC71CFF.8050004@lwfinger.net> <20101026185341.GA4608@barata.holoscopio.com> <20101028191305.2960c83b@gotham.conectiva> <loom.20101029T010426-834@post.gmane.org> <20101029135449.GB3768@barata.holoscopio.com> <loom.20101030T001241-932@post.gmane.org> <4CCE4479.1010400@mandriva.com.br>
+In-Reply-To: <4CCE4479.1010400@mandriva.com.br>
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Nov 18, 2010 at 7:47 PM, Mark Lord <kernel@teksavvy.com> wrote:
-> On 10-11-18 06:50 PM, Rafael J. Wysocki wrote:
->>
->> This message contains a list of some post-2.6.35 regressions introduced
->> before
->> 2.6.36, for which there are no fixes in the mainline known to the tracking
->> team.
->> If any of them have been fixed already, please let us know.
->>
->> If you know of any other unresolved post-2.6.35 regressions, please let us
->> know
->> either and we'll add them to the list.  Also, please let us know if any
->> of the entries below are invalid.
->
->> Bug-Entry       : http://bugzilla.kernel.org/show_bug.cgi?id=21652
->> Subject         : several problems with intel graphics since 2.6.36
->> Submitter       : Norbert Preining<preining@logic.at>
->> Date            : 2010-10-27 14:32 (23 days old)
->> Message-ID      :<20101027143252.GA8676@gamma.logic.tuwien.ac.at>
->> References      : http://marc.info/?l=linux-kernel&m=128818998630241&w=2
->
-> That one is interesting to me.. I suspect it may be the same cause
-> as for https://bugzilla.kernel.org/show_bug.cgi?id=21952
->
-> I have one of those Samsung (N210) Netbooks here: works fine with 2.6.34 and
-> earlier,
-> but fails to come out of suspend on 2.6.35/2.6.36 (haven't tried 2.6.37).
->
-> So perhaps add 21952 to the list, or link it to the 21652
-> (kind of amusing how similar the bug numbers are..).
->
->
-> My non-Intel graphics notebook (has ATI X1400 graphics) also has a resume
-> regression with 2.6.36.  But it does work fine with 2.6.35 (and earlier,
-> back many years).  As a result, I'm stuck with 2.6.35 for the time being,
-> and lack the time for a concerted debug effort on 2.6.36+ right now.
->
+On 10/31/2010 11:39 PM, Herton Ronaldo Krzesinski wrote:
+> I have seen the throughput issue, but on my tests it wasn't so bad.
+> Usually max I got on testing was 24M while close to the AP, and it goes
+> into lower speeds when going more far away, but takes a good number of
+> meters to go down to 1M.
+> 
+> Anyway of course something isn't right. I started reviewing realtek GPL
+> code (their ieee80211 drivers) and code in rtl8187 in the kernel, doing
+> many tests and verifying things, trying to understand and check some
+> register writes etc. (hard with missing doc or other info).
+> 
+> I did some cleanups, and discovered two bad things in the code. After
+> the fixes, I can get normal rates (up to 54M close to the AP) without
+> issue. I'll soon post the patch series to be included in
+> wireless-testing, for now just for test I attach them to be easier (hope
+> it isn't stripped by ML, and yes they start on 0003 through 0011 :P),
+> check if with it you get better results.
+> 
+> The patches that matter (shown by my tests) are:
+> 0010-rtl8187-remove-uneeded-setting-of-anaparam-write.patch
+> 0011-rtl8187-restore-anaparam-registers-after-reset-with-.patch
+> 
+> but they depend on some previous patches in the series (better apply
+> all), and I diffed on a tree with Thadeu's patch applied already. There
+> is more cleanups and checking to do, but I probably will submit this
+> initial series and later come with more ones, as with this initial
+> series the throughput issue should be solved.
 
-Can you bisect?  Does this patch help?
+Good work. As you noted, patches 3 - 9 did not make any difference in the
+transmit throughput. From a distance of 2 m from the AP, my 8187B yielded up to
+11.4 Mb/s and an indicated rate of 24 M. Applying patch 10 raised those numbers
+to 17.5 Mb/s and 48 M. Adding patch 11 raised them again to 26.9 Mb/s and 54 M,
+thus getting full throughput for the 8187B and a transmit rate increase of 2.4X.
 
-diff --git a/drivers/gpu/drm/radeon/atom.c b/drivers/gpu/drm/radeon/atom.c
-index 8e421f6..05efb5b 100644
---- a/drivers/gpu/drm/radeon/atom.c
-+++ b/drivers/gpu/drm/radeon/atom.c
-@@ -112,6 +112,7 @@ static uint32_t atom_iio_execute(struct
-atom_context *ctx, int base,
-                        base += 3;
-                        break;
-                case ATOM_IIO_WRITE:
-+                       (void)ctx->card->ioreg_read(ctx->card, CU16(base + 1));
-                        ctx->card->ioreg_write(ctx->card, CU16(base + 1), temp);
-                        base += 3;
-                        break;
+As expected, these changes had no affect on the RTL8187L. Note: The 8187L gets
+values of 23.0 Mb/s and 54M - there may be a little performance gain to be
+obtained from the driver.
 
+You should submit these patches now, and feel free to add my "Acked-by:" to them.
 
-Alex
-
-> Cheers
-> _______________________________________________
-> dri-devel mailing list
-> dri-devel@lists.freedesktop.org
-> http://lists.freedesktop.org/mailman/listinfo/dri-devel
->
+Larry
