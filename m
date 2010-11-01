@@ -1,73 +1,129 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mailout-de.gmx.net ([213.165.64.23]:51204 "HELO mail.gmx.net"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with SMTP
-	id S1755648Ab0KSVWp (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 19 Nov 2010 16:22:45 -0500
-Message-ID: <4CE6EA98.3020300@gmx.net>
-Date: Fri, 19 Nov 2010 22:22:32 +0100
-From: Wolfgang Breyha <wbreyha@gmx.net>
-MIME-Version: 1.0
-To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Linux Client vs. CISCO AP with band select
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from mgw-da01.nokia.com ([147.243.128.24]:26092 "EHLO
+	mgw-da01.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754346Ab0KAMZ7 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 1 Nov 2010 08:25:59 -0400
+Received: from localhost.localdomain (chilepepper.research.nokia.com [172.21.50.167])
+	by mgw-da01.nokia.com (Switch-3.4.3/Switch-3.4.3) with ESMTP id oA1BqGcM020116
+	for <linux-wireless@vger.kernel.org>; Mon, 1 Nov 2010 13:52:26 +0200
+From: Luciano Coelho <luciano.coelho@nokia.com>
+To: linux-wireless@vger.kernel.org
+Subject: [RFC 10/15] nl80211: add channel support to the periodic scan
+Date: Mon,  1 Nov 2010 13:52:11 +0200
+Message-Id: <1288612336-2830-11-git-send-email-luciano.coelho@nokia.com>
+In-Reply-To: <1288612336-2830-1-git-send-email-luciano.coelho@nokia.com>
+References: <1288612336-2830-1-git-send-email-luciano.coelho@nokia.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi!
+Parse and add channel information to the periodic scan request.
 
-I'm working at the IT department at the University of Vienna. We've a
-large installation of CISCO APs providing WLAN access to students and
-employees. All of these APs provide both 2,4GHz and 5GHz channels. CISCO
-provides two features called "load balancing" and "band select".
+Signed-off-by: Luciano Coelho <luciano.coelho@nokia.com>
+---
+ net/wireless/nl80211.c |   73 ++++++++++++++++++++++++++++++++++++++++++++++-
+ 1 files changed, 71 insertions(+), 2 deletions(-)
 
-At least "band select" causes lots of troubles using a Linux client. It
-needs a big portion of luck to successfully connect.
-
-I'm using my HP Elitebook 2540p with Intel 6200 abgn
-pci id: 8086:4239 (rev 35)
-
-Starting with Fedora 13, now Fedora 14 I tried to get into all the
-wireless stuff. Currently I'm running compat-wireless-20101115 and
-wpa_supplicant 0.7.3. Additionally I patched NetworkManager to use a
-timeout of 180 seconds instead of the default 25 and "-D nl80211" as
-driver for wpa_supplicant. Firmware used is iwlwifi-6000-4.ucode.
-
-AFAIK "band select" tries to "convince" a client to prefer 5GHz channels
-by not answering to 2.4GHz probes at least two times (configurable with
-2 as default) the same client asks. But the AP appears in scans since
-beacons are received as usual.
-
-In my case I see 10 BSSIDs for this SSID. 2 strong 2.4GHz APs and the
-first 5GHz AP appears on third position reception wise. wpa_supplicant
-starts authentication at the strongest. Then I see a probe request for
-the SSID in wireshark, but no response from the selected BSSID. No
-authentication packet is seen from wireshark.
-
-Authentication times out. And then the worst case scenario takes
-place... wpa_supplicant retries and retries the same AP with time outs
-and scans in between. Sometimes even 180 seconds is not enough to try an
-other AP.
-
-I can provide sample wpa_supplicant.log and wireshark traces if of interest.
-
-I just built wireless-compat 20101119 with DEBUG_VERBOSE and can get
-details if needed.
-
-Last but not least I tried with Windows. Windows is able to connected
-even to the 2.4GHz channels. I've monitored the channel with my linux
-machine while windows connected to the 2.4GHz AP. All I see are
-unanswered probes also, but Windows seems to simply send an
-authentication request afterwards and gets an answer then.
-
-I can't figure out how CISCO hopes that a client behaves to cooperate
-well with this feature.
-
-I'm sorry that I'm not very proficient with all that wireless stuff yet,
-but I'll try to improve and help as good as possible if that's appreciated.
-
-With kind regards,
-Wolfgang Breyha
-University of Vienna
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index e1d7ab2..d5b9047 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -3004,7 +3004,11 @@ static int nl80211_start_periodic(struct sk_buff *skb,
+ 	struct cfg80211_periodic_request *request;
+ 	struct cfg80211_registered_device *rdev;
+ 	struct net_device *dev;
+-	int err;
++	struct ieee80211_channel *channel;
++	struct nlattr *attr;
++	struct wiphy *wiphy;
++	int err, tmp, n_channels, i;
++	enum ieee80211_band band;
+ 
+ 	printk("nl80211_start_periodic\n");
+ 
+@@ -3029,7 +3033,24 @@ static int nl80211_start_periodic(struct sk_buff *skb,
+ 		goto out;
+ 	}
+ 
+-	request = kzalloc(sizeof(*request), GFP_KERNEL);
++	wiphy = &rdev->wiphy;
++
++	if (info->attrs[NL80211_ATTR_SCAN_FREQUENCIES]) {
++		n_channels = validate_scan_freqs(
++				info->attrs[NL80211_ATTR_SCAN_FREQUENCIES]);
++		if (!n_channels)
++			return -EINVAL;
++	} else {
++		n_channels = 0;
++
++		for (band = 0; band < IEEE80211_NUM_BANDS; band++)
++			if (wiphy->bands[band])
++				n_channels += wiphy->bands[band]->n_channels;
++	}
++
++	request = kzalloc(sizeof(*request)
++			  + sizeof(channel) * n_channels,
++			  GFP_KERNEL);
+ 	if (!request) {
+ 		err = -ENOMEM;
+ 		goto out;
+@@ -3040,8 +3061,56 @@ static int nl80211_start_periodic(struct sk_buff *skb,
+ 
+ 	rdev->periodic_req = request;
+ 
++	i = 0;
++	if (info->attrs[NL80211_ATTR_SCAN_FREQUENCIES]) {
++		/* user specified, bail out if channel not found */
++		nla_for_each_nested(attr, info->attrs[NL80211_ATTR_SCAN_FREQUENCIES], tmp) {
++			struct ieee80211_channel *chan;
++
++			chan = ieee80211_get_channel(wiphy, nla_get_u32(attr));
++
++			if (!chan) {
++				err = -EINVAL;
++				goto out_free;
++			}
++
++			/* ignore disabled channels */
++			if (chan->flags & IEEE80211_CHAN_DISABLED)
++				continue;
++
++			request->channels[i] = chan;
++			i++;
++		}
++	} else {
++		/* all channels */
++		for (band = 0; band < IEEE80211_NUM_BANDS; band++) {
++			int j;
++			if (!wiphy->bands[band])
++				continue;
++			for (j = 0; j < wiphy->bands[band]->n_channels; j++) {
++				struct ieee80211_channel *chan;
++
++				chan = &wiphy->bands[band]->channels[j];
++
++				if (chan->flags & IEEE80211_CHAN_DISABLED)
++					continue;
++
++				request->channels[i] = chan;
++				i++;
++			}
++		}
++	}
++
++	if (!i) {
++		err = -EINVAL;
++		goto out_free;
++	}
++
++	request->n_channels = i;
++
+ 	err = rdev->ops->periodic_start(&rdev->wiphy, dev, request);
+ 	if (err) {
++out_free:
+ 		kfree(request);
+ 		rdev->periodic_req = NULL;
+ 		goto out;
 -- 
-Wolfgang Breyha <wbreyha@gmx.net> | http://www.blafasel.at/
-Vienna University Computer Center | Austria
+1.7.0.4
+
