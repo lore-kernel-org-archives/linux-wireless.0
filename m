@@ -1,50 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-vw0-f46.google.com ([209.85.212.46]:54122 "EHLO
-	mail-vw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755413Ab0KTXFy convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 20 Nov 2010 18:05:54 -0500
-Received: by vws13 with SMTP id 13so2988798vws.19
-        for <linux-wireless@vger.kernel.org>; Sat, 20 Nov 2010 15:05:53 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <AANLkTimEMtt1JJerTzG4-X_Ez83MxtU_52wVQ_xJC8N3@mail.gmail.com>
-References: <AANLkTik_4HRwUUYnFLR6BwevQi6W+FK2rNN7Kph+dAWk@mail.gmail.com>
- <AANLkTikda-CP42-_wnNtEpCJGc3kwNXvT0KgXjOOL+Bc@mail.gmail.com>
- <AANLkTimZnnjBMYUDM1pACYv8fHtu0xe-F_C0RJ8_ay_o@mail.gmail.com> <AANLkTimEMtt1JJerTzG4-X_Ez83MxtU_52wVQ_xJC8N3@mail.gmail.com>
-From: Jonathan Guerin <jonathan@guerin.id.au>
-Date: Sun, 21 Nov 2010 09:05:36 +1000
-Message-ID: <AANLkTimJtXrhubvXUWSEsFy=knAs6CZDwTBA4d9xo8+E@mail.gmail.com>
-Subject: Re: Unloading ath5k fails
-To: Bob Copeland <me@bobcopeland.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	ath5k-devel <ath5k-devel@lists.ath5k.org>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from smtp.nokia.com ([147.243.1.47]:40911 "EHLO mgw-sa01.nokia.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755181Ab0KAVbA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 1 Nov 2010 17:31:00 -0400
+Subject: Re: [PATCH 2/2] wl1271: add recover testmode command
+From: Luciano Coelho <luciano.coelho@nokia.com>
+To: ext =?ISO-8859-1?Q?G=E1bor?= Stefanik <netrolller.3d@gmail.com>
+Cc: Eliad Peller <eliad@wizery.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <AANLkTin+RQ8zjbQKFcZJjoVcT=GkuMYTYEbt47TFuAC6@mail.gmail.com>
+References: <1288181398-2358-1-git-send-email-eliad@wizery.com>
+	 <1288181398-2358-2-git-send-email-eliad@wizery.com>
+	 <1288617893.20937.10.camel@chilepepper>
+	 <AANLkTi=jyGZ+LLZ2cDiF7CFC1h_WbzwmOOLQkSpOaLAz@mail.gmail.com>
+	 <AANLkTin+RQ8zjbQKFcZJjoVcT=GkuMYTYEbt47TFuAC6@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Mon, 01 Nov 2010 23:42:25 +0200
+Message-ID: <1288647745.21112.76.camel@powerslave>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, Nov 21, 2010 at 12:18 AM, Bob Copeland <me@bobcopeland.com> wrote:
-> On Wed, Nov 17, 2010 at 8:01 PM, Jonathan Guerin <jonathan@guerin.id.au> wrote:
->>> Hmm.. I just ran some tests myself on wireless-testing, with ath5k
->>> connected and not connected and didn't have any problems.  Are you
->>> doing anything special when bringing up the interface?  Can you
->>> post your kernel config?
->>
->> The interface is being set to IBSS. All that's been done is this:
->> iw reg set AU
->> iw dev wlan0 set type ibss
->> rmmod ath5k
->
-> I don't know if you saw the other linux-wireless thread on this
-> topic, but it seems related to ipv6 and not any particular driver,
-> which explains why I didn't see it (I currently compile ipv6 out).
+On Mon, 2010-11-01 at 22:21 +0100, ext GÃ¡bor Stefanik wrote:
+> On Mon, Nov 1, 2010 at 9:59 PM, Eliad Peller <eliad@wizery.com> wrote:
+> >>> add RECOVER testmode command.
+> >>> this command triggers a recovery sequence (by enqueueing a recovery_work).
+> >>>
+> >>> Signed-off-by: Eliad Peller <eliad@wizery.com>
+> >>> ---
+> >>
+> >> So, the point of this patch is to allow hardware recovery from the
+> >> userspace? In what kind of scenario do you need this?
+> >>
+> >
+> > yes.
+> > it's mainly for testing (or if we want to recover manually for some reason).
+> > this is why i implemented it as a testmode command.
+> 
+> Isn't testmode for features used during regulatory testing, that the
+> user should be unable to access to ensure further regulatory
+> compliance?
 
-Ahhh I'm not going crazy! Thanks, I'll change the config and try again.
+Not exactly, it's just an interface to be used during production (and
+possibly R&D) tests.  In the specific case of wl12xx, we use it for
+production-line testing and for calibration and testing during R&D.
 
+A normal user shouldn't use this by default (all distros and device
+manufacturers should have it disabled in the kernel), but there's no way
+to prevent a hacker from enabling it in a custom kernel.
+
+In any case, I'm not sure I really like this idea of a HW recovery test
+command.  This should really be done automatically by the driver and,
+with Juuso's implementation plus the watchdog, we shouldn't really need
+it.
+
+-- 
 Cheers,
+Luca.
 
-Jonathan
-
->
-> --
-> Bob Copeland %% www.bobcopeland.com
->
