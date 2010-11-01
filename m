@@ -1,69 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from earthlight.etchedpixels.co.uk ([81.2.110.250]:55828 "EHLO
-	www.etchedpixels.co.uk" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1750854Ab0KRLhV (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 18 Nov 2010 06:37:21 -0500
-Date: Thu, 18 Nov 2010 11:34:41 +0000
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Cc: linux-kernel@vger.kernel.org,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Greg KH <greg@kroah.com>, David Miller <davem@davemloft.net>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Stephen Hemminger <shemminger@vyatta.com>,
-	"Perez-Gonzalez, Inaky" <inaky.perez-gonzalez@intel.com>,
-	Charles Marker <Charles.Marker@atheros.com>,
-	Jouni Malinen <Jouni.Malinen@atheros.com>,
-	Kevin Hayes <kevin@atheros.com>,
-	Zhifeng Cai <zhifeng.cai@atheros.com>,
-	"Luis R. Rodriguez" <mcgrof@gmail.com>,
-	Don Breslin <Don.Breslin@atheros.com>,
-	Doug Dahlby <Doug.Dahlby@atheros.com>,
-	Julia Lawall <julia@diku.dk>
-Subject: Re: Challenges with doing hardware bring up with Linux first
-Message-ID: <20101118113441.74fcdc21@lxorguk.ukuu.org.uk>
-In-Reply-To: <AANLkTim4jVaZxYp8nSgJyy28iwxcxbPeNUzxTfoHAX4S@mail.gmail.com>
-References: <AANLkTim4jVaZxYp8nSgJyy28iwxcxbPeNUzxTfoHAX4S@mail.gmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Received: from mail.sysgo.com ([195.145.229.155]:39876 "EHLO mail.sysgo.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752285Ab0KAKKX (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 1 Nov 2010 06:10:23 -0400
+Date: Mon, 1 Nov 2010 11:10:12 +0100
+From: Pavel Machek <pma@sysgo.com>
+To: kernel list <linux-kernel@vger.kernel.org>,
+	chunkeey@googlemail.com, linux-wireless@vger.kernel.org
+Subject: Re: carl9170 disconnects under load
+Message-ID: <20101101101012.GB3391@pma.sysgo.com>
+References: <20101026104811.GA11357@pma.sysgo.com>
+ <20101101093140.GA2766@pma.sysgo.com>
+ <20101101094649.GA3391@pma.sysgo.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20101101094649.GA3391@pma.sysgo.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> I'd like to see hardware bring up at companies being done with Linux.
+On Mon 2010-11-01 10:46:49, Pavel Machek wrote:
+> Hi!
+> 
+> > > I'm testing driver from -wireless testing, cca 2.6.26-rc7.
+> > > 
+> > > It seems to work (up to 802.11n speeds -- I've seen iwconfig claiming
+> > > 121 MB/sec), but disconnects rather quickly when under load:
+> > > 
+> > > telnet 192.168.1.3 chargen > /dev/null
+> > > 
+> > > The machine is powerpc mpc5200b board, with OHCI driver -- it is not
+> > > capable of USB2.0 speeds.
+> > 
+> > So I tried with different AP, one not capable of 802.11n speeds. It
+> > fails in different way :-(. But this one is with my backport to
+> > 2.6.34...
+> 
+> But it fails with wireless-testing tree, too :-(.
+> 
+> Linux mpc5200b 2.6.36-rc8-wl-pma-48197-gdcae733-dirty #43 Tue Oct 26
+>  12:06:21 CEST 2010 ppc
 
-I know several companies where it is sometimes used.
+It works "better" if I force AP to 1Mbps.... (Note that I have USB1.1
+host only).
+								Pavel
 
-> with this though. For starters hardware teams typically want to get
-> hardware brought up as fast as possible to be able to sell chipsets.
-> Its always a race. Proper Linux upstream support will get there but
-> depending on the company this may mean this gets done after the
-> proprietary driver approach is done first or simply until you have a
-> big enough customer to justify it.
+Registered led device: carl9170-phy1::assoc
+usb 1-1: Atheros AR9170 is registered as 'phy1'
+ieee80211 phy1: device now idle
+ieee80211 phy1: device no longer idle - scanning
+wlan0: authenticate with 00:11:95:05:30:d7 (try 1)
+wlan0: authenticated
+ieee80211 phy1: device now idle
+ieee80211 phy1: device no longer idle - working
+wlan0: associate with 00:11:95:05:30:d7 (try 1)
+wlan0: RX AssocResp from 00:11:95:05:30:d7 (capab=0x421 status=0
+aid=1)
+wlan0: associated
+ieee80211 phy1: Allocated STA 00:11:95:05:30:d7
+ieee80211 phy1: Inserted STA 00:11:95:05:30:d7
+ieee80211 phy1: FW: MAC RESET
+ieee80211 phy1: FW: MAC RESET
+ieee80211 phy1: FW: MAC RESET
+ieee80211 phy1: FW: MAC RESET
+ieee80211 phy1: FW: MAC RESET
+ieee80211 phy1: FW: MAC RESET
+ieee80211 phy1: FW: MAC RESET
+ieee80211 phy1: FW: MAC RESET
+ieee80211 phy1: FW: MAC RESET
+ieee80211 phy1: FW: MAC RESET
+ieee80211 phy1: FW: MAC RESET
+ieee80211 phy1: FW: MAC RESET
+ieee80211 phy1: FW: MAC RESET
+ieee80211 phy1: FW: MAC RESET
+-/bin/sh-3.00# 
 
-I've seen the kind of code written to "get it up as fast as possible" and
-also to do validation. It's the sort of code that has to be written
-anyway, and which contains a multitude of fascinating stuff which doesn't
-ever want to go near upstream.
 
-> everything else can be independent code. For ath9k in particular this
-> means we keep ath9k_hw shared between our Operating Systems and that's
-> it. In addition to this I believe opening up the common drivers for
-
-The Linux copy needs to be GPL, but if you own every line of it then you
-can relicense it. In fact we have examples of big bits of code that are
-not Linux only - eg the ACPI stack which are managed in a non entirely
-unrelated way.
-
-> Can Linux help in any way? What if we used staging for a common driver
-> architecture for different OSes? 
-
-It's generally gone pear shaped in the past, although tools like spatch
-are more modern than many of those attempts.
-
-There is another way to do it which is instead of writing a glue layer
-for Linux write to the general Linux interfaces which have the virtue of
-being very simple for the most part, and keep the glue layer for the
-other obscure environments where you are doing the stack ?
-
-Alan
