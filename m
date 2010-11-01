@@ -1,34 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iw0-f174.google.com ([209.85.214.174]:63460 "EHLO
-	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753658Ab0KKSgY (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 11 Nov 2010 13:36:24 -0500
-Received: by iwn10 with SMTP id 10so2470945iwn.19
-        for <linux-wireless@vger.kernel.org>; Thu, 11 Nov 2010 10:36:24 -0800 (PST)
+Received: from foo.birdnet.se ([213.88.146.6]:59364 "HELO foo.birdnet.se"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
+	id S1751355Ab0KAXMW (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 1 Nov 2010 19:12:22 -0400
+Message-ID: <20101101231220.8591.qmail@stuge.se>
+Date: Tue, 2 Nov 2010 00:12:20 +0100
+From: Peter Stuge <peter@stuge.se>
+To: =?utf-8?B?QmrDtnJu?= Smedman <bjorn.smedman@venatech.se>
+Cc: Ben Gamari <bgamari@gmail.com>, ath9k-devel@lists.ath9k.org,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: [ath9k-devel] ath9k: race conditions in dma
+References: <AANLkTik=LvRZja13SGOpicVjbyf6chRtTD-RkvSm2VcE@mail.gmail.com> <8762whrqvm.fsf@gmail.com> <AANLkTins=0vM=+qpdDB2-KvMBq6J5vwUjn6Ni76GyQst@mail.gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <6105834.1111289487490143.JavaMail.wlan@CHBU500181>
-References: <17186438.751289486686690.JavaMail.wlan@CHBU500181> <6105834.1111289487490143.JavaMail.wlan@CHBU500181>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Thu, 11 Nov 2010 10:36:02 -0800
-Message-ID: <AANLkTikJzj8RdpEddxmjm1FP8g79J0twvouKvut7AWb8@mail.gmail.com>
-Subject: Re: [PATCH 6/9] ath5k: AHB port. Use more generic functions for
- finding mac revision instead of pci specific.
-To: Wojciech Dubowik <dubowoj@neratec.com>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <AANLkTins=0vM=+qpdDB2-KvMBq6J5vwUjn6Ni76GyQst@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Nov 11, 2010 at 6:58 AM, Wojciech Dubowik <dubowoj@neratec.com> wrote:
-> Use ath5k_bus_read_srev as a wrapper for MAC revision register reading. Different buses have
-> to aceess it with own functions before hardware is initialized.
->
-> Signed-off-by: Wojciech Dubowik <Wojciech.Dubowik@neratec.com>
+Björn Smedman wrote:
+> >> 1. TX DMA hangs under simultaneous high RX and TX load
+> >> 2. TX is completely hung but chip is never reset
+> >
+> > I have also observed both of these behaviors with just a standard
+> > hostapd single VIF configuration.
+> 
+> Thanx Ben, it's a relief to know I'm not the only one suffering
+> from this.
 
-Your subject is too long, trim it, remove all that AHB port on every
-single patch.
-Also, have you run all your patches through ./scripts/checkpatch.pl
-prior to submission?
+Just a note to confirm that I have also seen many different failures
+related to this. The lasting impression is that it's a big mess.
 
- Luis
+I bought my first ath9k hardware roughly a year ago. That was totally
+useless as STA up until kernels a few months ago. I am now using an
+AR9280 card and for the very first time ath9k hardware and driver is
+actually working at all for me, but there are still issues as I noted
+in the other email.
+
+Unfortunately they're the kind of issues which can't be debugged much
+lacking strong knowledge of device internals.
+
+
+//Peter
