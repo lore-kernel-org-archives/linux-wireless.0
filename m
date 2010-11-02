@@ -1,43 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:58693 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754711Ab0K2P6m (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 29 Nov 2010 10:58:42 -0500
-Subject: Re: [PATCH v2 RFC] mac80211: fix "NOHZ: local_softirq_pending 08"
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Johannes Stezenbach <js@sig21.net>
-Cc: linux-wireless@vger.kernel.org, Ivo van Doorn <IvDoorn@gmail.com>,
-	Gertjan van Wingerde <gwingerde@gmail.com>,
-	"John W. Linville" <linville@tuxdriver.com>
-In-Reply-To: <20101129155126.GA32482@sig21.net>
-References: <20101129145439.GA31910@sig21.net>
-	 <1291043349.3532.4.camel@jlt3.sipsolutions.net>
-	 <20101129152735.GA32319@sig21.net>
-	 <1291045056.3532.5.camel@jlt3.sipsolutions.net>
-	 <20101129155126.GA32482@sig21.net>
-Content-Type: text/plain; charset="UTF-8"
-Date: Mon, 29 Nov 2010 16:58:40 +0100
-Message-ID: <1291046320.3532.6.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+Received: from web29511.mail.ird.yahoo.com ([77.238.189.156]:27908 "HELO
+	web29511.mail.ird.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1755233Ab0KBDBb convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 1 Nov 2010 23:01:31 -0400
+Message-ID: <62826.5358.qm@web29511.mail.ird.yahoo.com>
+Date: Tue, 2 Nov 2010 03:01:29 +0000 (GMT)
+From: Hin-Tak Leung <htl10@users.sourceforge.net>
+Reply-To: htl10@users.sourceforge.net
+Subject: Re: [PATCH 3/9] rtl8187: fix wrong register initialization in 8187B
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: linux-wireless@vger.kernel.org,
+	Herton Ronaldo Krzesinski <herton@mandriva.com.br>,
+	John W Linville <linville@tuxdriver.com>
+In-Reply-To: <4CCF7B73.7040906@lwfinger.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=iso-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2010-11-29 at 16:51 +0100, Johannes Stezenbach wrote:
+--- On Tue, 2/11/10, Larry Finger <Larry.Finger@lwfinger.net> wrote:
+
+> > ANAPARAM* stands for "anonymous parameters",
+> right?  One of these days we should give them some
+> meaningful names. 
+> 
+> I have always thought it was for "analog parameter". Am I
+> wrong?
+
+Argh, you are right :-). Sorry for the noise. It is one of those big-eyeful tokens among the source where the meaningful part (the "analog" part) of it is much smaller than the not-so-meaningful part.
 
 
-> -void ieee80211_tx_status(struct ieee80211_hw *hw, struct sk_buff *skb)
-> +void __ieee80211_tx_status(struct ieee80211_hw *hw, struct sk_buff *skb,
-> +			   int (*netif_rx_func)(struct sk_buff *skb))
-
-This seems weird to me -- why not just do
-
-static inline void ieee80211_tx_status_ni(...)
-{
-	local_bh_disable();
-	ieee80211_tx_status(...);
-	local_bh_enable();
-}
-
-johannes
-
+      
