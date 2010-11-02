@@ -1,43 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from aurora.create-net.org ([193.206.22.116]:49865 "EHLO
-	aurora.create-net.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753540Ab0KCOqH (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 3 Nov 2010 10:46:07 -0400
-Received: from localhost (localhost.localdomain [127.0.0.1])
-	by aurora.create-net.org (Postfix) with ESMTP id 0445E383F6
-	for <linux-wireless@vger.kernel.org>; Wed,  3 Nov 2010 15:46:05 +0100 (CET)
-Received: from aurora.create-net.org ([127.0.0.1])
-	by localhost (aurora.create-net.org [127.0.0.1]) (amavisd-new, port 10024)
-	with ESMTP id 1zTkAM-ckrM7 for <linux-wireless@vger.kernel.org>;
-	Wed,  3 Nov 2010 15:46:04 +0100 (CET)
-Received: from [192.168.9.142] (unknown [192.168.9.142])
-	by aurora.create-net.org (Postfix) with ESMTPSA id 59365383D6
-	for <linux-wireless@vger.kernel.org>; Wed,  3 Nov 2010 15:46:04 +0100 (CET)
-Message-ID: <4CD175AB.7000002@create-net.org>
-Date: Wed, 03 Nov 2010 15:46:03 +0100
-From: Roberto Riggio <roberto.riggio@create-net.org>
-MIME-Version: 1.0
-To: linux-wireless@vger.kernel.org
-Subject: Transmission feedback in monitor mode
-Content-Type: text/plain; charset=ISO-8859-15; format=flowed
+Received: from smtp.nokia.com ([147.243.1.47]:43535 "EHLO mgw-sa01.nokia.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756754Ab0KBHe2 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 2 Nov 2010 03:34:28 -0400
+Subject: Re: [PATCH 2/2] wl1271: add recover testmode command
+From: Luciano Coelho <luciano.coelho@nokia.com>
+To: ext Eliad Peller <eliad@wizery.com>
+Cc: ext =?ISO-8859-1?Q?G=E1bor?= Stefanik <netrolller.3d@gmail.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <AANLkTiny9BHyk0_g7gfuZtjNYa4LXG0UKOsyoxMm0_pV@mail.gmail.com>
+References: <1288181398-2358-1-git-send-email-eliad@wizery.com>
+	 <1288181398-2358-2-git-send-email-eliad@wizery.com>
+	 <1288617893.20937.10.camel@chilepepper>
+	 <AANLkTi=jyGZ+LLZ2cDiF7CFC1h_WbzwmOOLQkSpOaLAz@mail.gmail.com>
+	 <AANLkTin+RQ8zjbQKFcZJjoVcT=GkuMYTYEbt47TFuAC6@mail.gmail.com>
+	 <1288647745.21112.76.camel@powerslave>
+	 <AANLkTiny9BHyk0_g7gfuZtjNYa4LXG0UKOsyoxMm0_pV@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Tue, 02 Nov 2010 09:34:25 +0200
+Message-ID: <1288683265.28890.0.camel@chilepepper>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-   Hi,
+On Tue, 2010-11-02 at 08:05 +0100, ext Eliad Peller wrote:
+> On Mon, Nov 1, 2010 at 11:42 PM, Luciano Coelho
+> <luciano.coelho@nokia.com> wrote:
+> >
+> > In any case, I'm not sure I really like this idea of a HW recovery test
+> > command.  This should really be done automatically by the driver and,
+> > with Juuso's implementation plus the watchdog, we shouldn't really need
+> > it.
+> >
+> as i wrote before - it's mainly for testing purposes.
+> that's why adding it as a testcmd made sense to me (i guess we do want
+> some easy way to trigger and test the recovery sequence).
 
+Okay, so it's for testing the actual recovery sequence... That makes
+sense.  I'll apply your patch.
 
-I'm looking for an example on how to use transmission
-feedback on a device operating in monitor mode.
-
-I've already managed to write an userlevel software (using the click
-modular router) that injects packets over a monitor interface however
-if I use wireshark to sniff the traffic from that interface
-i see no tx feedback packets (albeit for example I can clearly
-see that there are some retransmissions).
-
-Is there a patch for making mac80211 use the IEEE80211_RADIOTAP_TX_FLAGS?
-
-Thanks
-R.
+-- 
+Cheers,
+Luca.
 
