@@ -1,38 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:47135 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756752Ab0KJPvx (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:33694 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752447Ab0KBSAL (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 10 Nov 2010 10:51:53 -0500
-Subject: Re: [PATCH v7 1/3] cfg80211: Add nl80211 antenna configuration
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Bruno Randolf <br1@einfach.org>
-Cc: linville@tuxdriver.com, nbd@openwrt.org, mcgrof@gmail.com,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <20101110035050.23721.15617.stgit@localhost6.localdomain6>
-References: <20101110035050.23721.15617.stgit@localhost6.localdomain6>
-Content-Type: text/plain; charset="UTF-8"
-Date: Wed, 10 Nov 2010 07:52:47 -0800
-Message-ID: <1289404367.3748.0.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+	Tue, 2 Nov 2010 14:00:11 -0400
+Received: from uucp by smtp.tuxdriver.com with local-rmail (Exim 4.63)
+	(envelope-from <linville@tuxdriver.com>)
+	id 1PDL9W-0007cn-Ed
+	for linux-wireless@vger.kernel.org; Tue, 02 Nov 2010 14:00:10 -0400
+Received: from linville-8530p.local (localhost.localdomain [127.0.0.1])
+	by linville-8530p.local (8.14.4/8.14.4) with ESMTP id oA2HtTZn006936
+	for <linux-wireless@vger.kernel.org>; Tue, 2 Nov 2010 13:55:30 -0400
+Received: (from linville@localhost)
+	by linville-8530p.local (8.14.4/8.14.4/Submit) id oA2HtTI3006935
+	for linux-wireless@vger.kernel.org; Tue, 2 Nov 2010 13:55:29 -0400
+Date: Tue, 2 Nov 2010 13:55:28 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: linux-wireless@vger.kernel.org
+Subject: tree borkage on git.kernel.org
+Message-ID: <20101102175528.GC2425@tuxdriver.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2010-11-10 at 12:50 +0900, Bruno Randolf wrote:
+There was some sort of IT hiccup on kernel.org overnight, and at
+least the wireless trees (and probably others) there got restored
+from several days prior.  If you cloned or pulled the wireless trees
+in the last 48 hours or so, you should consider doing it again now.
 
-> 802.11n devices should enable or disable chains, based on which antennas are
-> present (If all antennas belonging to a particular chain are disabled, the
-> entire chain should be disabled). HT capabilities (like STBC, TX Beamforming,
-> Antenna selection) should be calculated based on the available chains after
-> applying the antenna masks. Should a 802.11n device have diversity antennas
-> attached to one of their chains, diversity can be enabled or disabled based on
-> the antenna information.
+In particular, you might also note that wireless-testing has been
+rebased on 2.6.37-rc1...
 
-I'm not entirely convinced that this is a good idea. Nor that, even if
-11n devices were to implement it, they should all implementing their own
-code to update the HT capabilities. However, I suppose that nothing
-forces them to implement it, and when somebody does I can still complain
-when they put everything into the driver.
-
-johannes
-
+John
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
