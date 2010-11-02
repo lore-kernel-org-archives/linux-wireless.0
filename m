@@ -1,55 +1,82 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yx0-f174.google.com ([209.85.213.174]:62123 "EHLO
-	mail-yx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753526Ab0KJSq1 convert rfc822-to-8bit (ORCPT
+Received: from fw.wantstofly.org ([80.101.37.227]:58846 "EHLO
+	mail.wantstofly.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751979Ab0KBIxf (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 10 Nov 2010 13:46:27 -0500
-MIME-Version: 1.0
-In-Reply-To: <B7132A25476D334D9130FE7532F2A56314B58158FF@SC1EXMB-MBCL.global.atheros.com>
-References: <1286349552.6145.11.camel@aeonflux> <AANLkTimDvgFtoGLEjgWyYRrhQy6Num-rn_2WYO4Lf84b@mail.gmail.com>
- <1286380566.6145.42.camel@aeonflux> <20101006163816.GE7070@tux>
- <AANLkTik9w4_PdcEsbRHakLcxcD334_1Q8hGArxTXPCGF@mail.gmail.com>
- <20101006173949.GG7070@tux> <1286387660.3655.382.camel@jlt3.sipsolutions.net>
- <AANLkTikYRSQw-+Tcj4VS1qxi=OaeF9C5hjAMWVu+0M=v@mail.gmail.com>
- <AANLkTi=o4Mc72NrNoALBdS3YHeY7RMyyAJPsCy=uW3+F@mail.gmail.com>
- <1286389697.3655.401.camel@jlt3.sipsolutions.net> <20101006183340.GI7070@tux>
- <44EE5C37ADC36343B0625A05DD408C4850DAD2CA31@CHEXMB-01.global.atheros.com>
- <1286465072.6145.151.camel@aeonflux> <4CADF6BF.6070305@atheros.com>
- <1286469741.6145.165.camel@aeonflux> <B7132A25476D334D9130FE7532F2A56314B58158FF@SC1EXMB-MBCL.global.atheros.com>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Wed, 10 Nov 2010 10:46:06 -0800
-Message-ID: <AANLkTikiST6OxNj2TN951s5Mh45ypgVi0bo=g0Hhkmaq@mail.gmail.com>
-Subject: Re: RFC: btusb firmware load help
-To: Kevin Hayes <kevin@atheros.com>,
-	Deepak Dhamdhere <Deepak.Dhamdhere@atheros.com>,
-	Helen Chu <Helen.Chu@atheros.com>
-Cc: Marcel Holtmann <holtmann@linux.intel.com>,
-	Shanmugamkamatchi Balashanmugam
-	<Shanmugamkamatchi.Balashanmugam@atheros.com>,
-	Luis Rodriguez <Luis.Rodriguez@atheros.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	linux-bluetooth <linux-bluetooth@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Sree Durbha <Sree.Durbha@atheros.com>
-Content-Type: text/plain; charset=UTF-8
+	Tue, 2 Nov 2010 04:53:35 -0400
+Date: Tue, 2 Nov 2010 09:53:34 +0100
+From: Lennert Buytenhek <buytenh@wantstofly.org>
+To: Brian Cavagnolo <brian@cozybit.com>
+Cc: linux-wireless@vger.kernel.org,
+	Pradeep Nemavat <pnemavat@marvell.com>,
+	Nishant Sarmukadam <nishants@marvell.com>
+Subject: Re: [PATCH 3/7] mwl8k: allow for padding in AP transmit descriptor
+Message-ID: <20101102085334.GP1733@mail.wantstofly.org>
+References: <1288659351-22313-1-git-send-email-brian@cozybit.com> <1288659351-22313-3-git-send-email-brian@cozybit.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1288659351-22313-3-git-send-email-brian@cozybit.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Oct 12, 2010 at 6:38 AM, Kevin Hayes <kevin@atheros.com> wrote:
-> Yes, it is a good idea to let the downloadable firmware set a new PID, along with the
->  blacklist on the 3002 PID for the first go round.  I emphasize, it is the downloaded
-> firmware that will be required to do the PID swizzling, not the sflash firmware.  And I
-> agree we should have a map of the PIDs in use and what they are used for, once
-> we get through this immediate fixing phase.
+On Mon, Nov 01, 2010 at 05:55:47PM -0700, Brian Cavagnolo wrote:
 
-FWIW, since we actually have customers already using this I took
-Bala's original patch and put it into compat-wirelesss-2.6.36 and the
-current bleeding edge compat-wireless so we can get customers at least
-something working in the mean time. Of course this means we'll need to
-support this patch should any issues come up ;).
+> +/*
+> + * The size of the tx descriptors used by the firmware varies depending on
+> + * whether we use AP firmware or STA firmware.  However, the fields used by
+> + * this driver are identical, so the difference in size is treated as padding
+> + * at the end of the structure.
+> + */
+> +#define MWL8K_TX_DESC_SIZE_STA			32
+> +#define MWL8K_TX_DESC_SIZE_AP			52
 
-The proper patch didn't make it to 2.6.37, hoping this will get
-resolved for 2.6.38.
+This is misleading, if not downright a lie.
 
-  Luis
+Only the STA firmware branch bothers to mostly keep a degree of ABI
+compatibility -- the TX descriptor for STA firmware images is 32 bytes,
+no matter whether you're on 8687, 8363, or 8366.
+
+(I like this very much about STA firmware -- it meant I could take the
+8687 STA driver and run it on 8363 and 8366 STA with hardly any changes.
+And there's reports that mwl8k runs on 8361P STA with almost no patching
+needed either.)
+
+But the AP firmware branch changes stuff around all the time, as the AP
+people generally supply their driver along with the firmware, and can
+make concurrent changes to those while not having to give a damn about
+the other users of their firmware.
+
+E.g., the format of the SET_MAC_ADDR command packet changing if you're
+compiling the AP firmware for multi-BSS (a 16 bit field is added in the
+_middle_ of the command packet if you do that, see mwl8k_cmd_set_mac_addr)
+-- and changing the TX descriptor format is another one of those things.
+
+The reason that the AP TX descriptor for 8366 is 52 bytes is not because
+it has been defined to be such, but because the "official" AP driver for
+8366 just so happens, at this moment, to have 20 bytes of driver-private
+info for every TX packet, which it stashes into the TX descriptor (that
+doesn't even make any sense either, but hey).  If next week they decide
+they need 4 more bytes for driver-private info, they'll just bump it to
+56, and we'll be left to pick up the pieces.
+
+So this
+
+> +#define MWL8K_TX_DESC_SIZE_AP                        52
+
+is very misleading, as:
+
+- It suggests that something is set in stone which isn't set in stone at
+  all.
+- It only applies to this particular 8366 AP image, and might not apply
+  to other 8366 AP images or even AP images in general.
+
+In other words, it's just a quick hack to get things to work for one
+more HW/firmware/version combo, but it doesn't solve the problem in a
+clean way or in general.  (Then again, you probably don't care about
+that anyway.)
+
+Since you're being paid by Marvell to do this, please tell them that
+this nonsense needs to stop, and that they need to add something to the
+firmware so that the driver can figure out what options the firmware
+has been built with, or include some way that we can reliably figure
+out which ABI variation to use to talk to the firmware.
