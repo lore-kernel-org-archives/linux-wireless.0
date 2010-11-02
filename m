@@ -1,67 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([147.243.1.48]:56073 "EHLO mgw-sa02.nokia.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1753235Ab0KDVvr (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 4 Nov 2010 17:51:47 -0400
-Subject: Re: [PATCH v4] wl1271: Change wl12xx Files Names
-From: Luciano Coelho <luciano.coelho@nokia.com>
-To: ext =?ISO-8859-1?Q?G=E1bor?= Stefanik <netrolller.3d@gmail.com>
-Cc: ext Grazvydas Ignotas <notasas@gmail.com>,
-	Shahar Levi <shahar_levi@ti.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Kalle Valo <kvalo@adurom.com>
-In-Reply-To: <AANLkTi=Luv2+5Hys2PcrH+G8jmc4vwz8PM0LFKm+fTt8@mail.gmail.com>
-References: <1288883257-30060-1-git-send-email-shahar_levi@ti.com>
-	 <AANLkTincpxdpmf5J38LiGsF-d9dG7sG9-bjbkH-B8Ld0@mail.gmail.com>
-	 <1288891196.17643.6.camel@powerslave>
-	 <AANLkTi=Luv2+5Hys2PcrH+G8jmc4vwz8PM0LFKm+fTt8@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Thu, 04 Nov 2010 23:52:35 +0200
-Message-ID: <1288907555.17643.14.camel@powerslave>
-Mime-Version: 1.0
+Received: from perninha.conectiva.com.br ([187.115.55.249]:47820 "EHLO
+	perninha.conectiva.com.br" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752756Ab0KBBAL (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 1 Nov 2010 21:00:11 -0400
+From: Herton Ronaldo Krzesinski <herton@mandriva.com.br>
+To: linux-wireless@vger.kernel.org
+Cc: Larry Finger <Larry.Finger@lwfinger.net>,
+	Hin-Tak Leung <htl10@users.sourceforge.net>,
+	John W Linville <linville@tuxdriver.com>,
+	Herton Ronaldo Krzesinski <herton@mandriva.com.br>
+Subject: [PATCH 2/9] rtl8187: remove setting of beacon/atim registers from initialization
+Date: Mon,  1 Nov 2010 22:59:32 -0200
+Message-Id: <1288659579-4986-3-git-send-email-herton@mandriva.com.br>
+In-Reply-To: <1288659579-4986-1-git-send-email-herton@mandriva.com.br>
+References: <1288659579-4986-1-git-send-email-herton@mandriva.com.br>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2010-11-04 at 22:48 +0100, ext Gábor Stefanik wrote:
-> On Thu, Nov 4, 2010 at 6:19 PM, Luciano Coelho <luciano.coelho@nokia.com> wrote:
-> > On Thu, 2010-11-04 at 17:37 +0100, ext Grazvydas Ignotas wrote:
-> >> On Thu, Nov 4, 2010 at 5:07 PM, Shahar Levi <shahar_levi@ti.com> wrote:
-> >> > All files name prefix removed due to the fact that wl12xx driver supports
-> >> > wl1271 and wl1273.
-> >> > Also the definition in Kconfig and header files changed respectively.
-> >> >
-> >> > Signed-off-by: Shahar Levi <shahar_levi@ti.com>
-> >>
-> >> Hmh the name 'wl12xx' kind of implies it covers 1251, while in fact
-> >> wl1251 is completely separate driver.. At least the Kconfig help text
-> >> should mention it doesn't cover wl1251 and users should use respective
-> >> driver for wl1251.
-> >
-> > That's a good point.  We have discussed this before and this was the
-> > best solution we found.  The wl12xx driver includes support for wl1271
-> > and wl1273, so we considered calling it wl127x, but in the near future,
-> > we'll have support for wl1281 and wl1283 as well.  So we have to use
-> > wl12xx.
-> >
-> > At least in my opinion, it is kind of clear that if there is a separate
-> > driver for wl1251, the user would use that one.  In any case, A note in
-> > the Kconfig help text would definitely not hurt.
-> >
-> > Shahar, could you please change the text in the Kconfig so that it reads
-> > something like this?
-> >
-> > "This module adds support for wireless adapters based on TI wl1271 and
-> > TI wl1273 chipsets.  This module does *not* include support for wl1251.
-> > For wl1251 support, use the separate homonymous driver instead."
-> 
-> What about wl1251 vs. wl12agn (or wl12bgn if no .11a support), like iwlwifi?
+On 8187B path, we set a initial value for beacon interval and atim
+window on initialization. But this isn't needed, since same setup is
+done on rtl8187_config.
 
-Hmmm... wl1251 supports bg.  wl12xx supports abgn.  I don't really see
-the logic in this? What difference does it make comparing to calling it
-wl12xx? From wl12agn the user still doesn't know whether wl1251 is
-supported or not.
+Signed-off-by: Herton Ronaldo Krzesinski <herton@mandriva.com.br>
+Acked-by: Larry Finger <Larry.Finger@lwfinger.net>
+---
+ drivers/net/wireless/rtl818x/rtl8187_dev.c |    2 --
+ 1 files changed, 0 insertions(+), 2 deletions(-)
 
+diff --git a/drivers/net/wireless/rtl818x/rtl8187_dev.c b/drivers/net/wireless/rtl818x/rtl8187_dev.c
+index 3dbf305..30c2120 100644
+--- a/drivers/net/wireless/rtl818x/rtl8187_dev.c
++++ b/drivers/net/wireless/rtl818x/rtl8187_dev.c
+@@ -779,8 +779,6 @@ static int rtl8187b_init_hw(struct ieee80211_hw *dev)
+ 	rtl818x_iowrite16_idx(priv, (__le16 *)0xFFE0, 0x0FFF, 1);
+ 	rtl818x_iowrite8_idx(priv, (u8 *)0xFFE2, 0x00, 1);
+ 
+-	rtl818x_iowrite16(priv, &priv->map->BEACON_INTERVAL, 100);
+-	rtl818x_iowrite16(priv, &priv->map->ATIM_WND, 2);
+ 	rtl818x_iowrite16_idx(priv, (__le16 *)0xFFD4, 0xFFFF, 1);
+ 
+ 	rtl818x_iowrite8(priv, &priv->map->EEPROM_CMD,
 -- 
-Cheers,
-Luca.
+1.7.3.2
 
