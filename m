@@ -1,77 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iw0-f174.google.com ([209.85.214.174]:34497 "EHLO
-	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751621Ab0KTA3f (ORCPT
+Received: from perninha.conectiva.com.br ([187.115.55.249]:47236 "EHLO
+	perninha.conectiva.com.br" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751995Ab0KBBDB (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 19 Nov 2010 19:29:35 -0500
+	Mon, 1 Nov 2010 21:03:01 -0400
+Message-ID: <4CCF6332.1080902@mandriva.com.br>
+Date: Mon, 01 Nov 2010 23:02:42 -0200
+From: Herton Ronaldo Krzesinski <herton@mandriva.com.br>
 MIME-Version: 1.0
-From: Julian Calaby <julian.calaby@gmail.com>
-Date: Sat, 20 Nov 2010 11:29:12 +1100
-Message-ID: <AANLkTim0=ds3EhQOEfHdrKt2dSnEqUgf5CLOPHNyW=jE@mail.gmail.com>
-Subject: Re-distributable 88w8335 Firmware?
-To: Dan Williams <dcbw@redhat.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	David.Woodhouse@intel.com, Greg KH <greg@kroah.com>,
-	linux-kernel@vger.kernel.org,
-	Lennert Buytenhek <buytenh@wantstofly.org>,
-	Holger Schurig <holgerschurig@googlemail.com>,
-	Markus Becker <mab@comnets.uni-bremen.de>,
-	andreamrl@tiscali.it, Denis Kirjanov <kirjanov@gmail.com>,
-	dwmw2@infradead.org
-Content-Type: text/plain; charset=ISO-8859-1
+To: Herton Ronaldo Krzesinski <herton@mandriva.com.br>
+CC: linux-wireless@vger.kernel.org,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	Hin-Tak Leung <htl10@users.sourceforge.net>,
+	John W Linville <linville@tuxdriver.com>
+Subject: Re: [PATCH 0/9] rtl8187: start cleanup/revisiting code
+References: <1288659579-4986-1-git-send-email-herton@mandriva.com.br>
+In-Reply-To: <1288659579-4986-1-git-send-email-herton@mandriva.com.br>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi all,
+On 01-11-2010 22:59, Herton Ronaldo Krzesinski wrote:
+> Hi,
+>
+> While looking at rtl8187 driver I noticed possible cleanups and found 2
+> bugs (last 2 patches in the series). This series presents the changes.
+> I didn't finished revisiting everything, so there are more cleanups
+> possible, but for now the 2 bug fixes are worth the initial submit.
 
-Once again, someone is trying to build a working driver for the Marvel
-88w8335 chipset, and is once again hampered by a lack of
-re-distributable or official firmware. (See:
-http://marc.info/?l=linux-wireless&m=128923265210125&w=2 )
+Sorry, forgot to add that this series should be applied after "rtl8187b: 
+do not do per packet TX AGC" posted last week on linux-wireless (first 
+patch probably will conflict/not apply without it).
 
-As such, on Denis's behalf, I'm asking if anyone knows of anyone at
-Marvel that they can poke in an attempt to get a re-distributable
-firmware for this chipset released for eventual inclusion into
-linux-firmware.
-
-I believe that this chipset is pretty much obsolete (being only an
-802.11g part) so I cannot see any reasonable reason not to release the
-firmware, especially given that newer chipsets ("TopDog" - see the
-mwl8k driver) have had re-distributable firmware released along with
-open source Linux drivers for some time now.
-
-If we cannot obtain proper firmware files, the very least Marvel could
-do would be to bless the *BSD Malo driver's firmware files (obtainable
-here: http://www.nazgul.ch/malo/malo-firmware-1.4.tgz - see
-http://www.unix.com/man-page/freebsd/4/MALO/ for more info) with a
-proper re-distributable license.
-
-In terms of the actual chipsets in question, I'm referring to the
-88w8335, 88w8338, and 88w8385 chipsets. I believe Marvel refers to
-them as being part of the "Libertas" family of chipsets - however they
-don't have the fancy mesh stuff that the chips the libertas driver
-talks to have - and are also PCI.
-
-A previous effort in 2008 is viewable here:
-http://lwn.net/Articles/275719/ and searching for "mrv8k" reveals the
-remnants of that effort which mostly happened before my involvement in
-this.
-
-A proper "official" set of firmware files would smooth one of the
-bumps in getting proper support for this driver into the Linux Kernel.
-(as well as helping the BSD folks with the Malo driver) Marvel has
-shown that they are willing to provide some support for the open
-source community with the TopDog driver, as well as the driver for the
-SAS chipset. Hopefully they can continue their support with what would
-be a small gesture in support of our efforts to write a driver for
-this old chipset.
-
-Thanks,
-
--- 
-
-Julian Calaby
-
-Email: julian.calaby@gmail.com
-Profile: http://www.google.com/profiles/julian.calaby/
-.Plan: http://sites.google.com/site/juliancalaby/
+--
+[]'s
+Herton
