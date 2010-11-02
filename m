@@ -1,112 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 80-190-117-144.ip-home.de ([80.190.117.144]:54572 "EHLO
-	bu3sch.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S934983Ab0KQUR0 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 17 Nov 2010 15:17:26 -0500
-Subject: Re: [RFC][PATCH] b43: rfkill: use HI enabled bit for all devices
-From: Michael =?ISO-8859-1?Q?B=FCsch?= <mb@bu3sch.de>
-To: =?UTF-8?Q?Rafa=C5=82_Mi=C5=82ecki?= <zajec5@gmail.com>
-Cc: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>,
-	b43-dev@lists.infradead.org
-In-Reply-To: <1290023808-26672-1-git-send-email-zajec5@gmail.com> (sfid-20101117_145657_975544_E473BB3F)
-References: <1290023808-26672-1-git-send-email-zajec5@gmail.com>
-	 (sfid-20101117_145657_975544_E473BB3F)
-Content-Type: text/plain; charset="UTF-8"
-Date: Wed, 17 Nov 2010 21:17:20 +0100
-Message-ID: <1290025040.2513.69.camel@maggie>
-Mime-Version: 1.0
+Received: from perninha.conectiva.com.br ([187.115.55.249]:47830 "EHLO
+	perninha.conectiva.com.br" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753037Ab0KBBAM (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 1 Nov 2010 21:00:12 -0400
+From: Herton Ronaldo Krzesinski <herton@mandriva.com.br>
+To: linux-wireless@vger.kernel.org
+Cc: Larry Finger <Larry.Finger@lwfinger.net>,
+	Hin-Tak Leung <htl10@users.sourceforge.net>,
+	John W Linville <linville@tuxdriver.com>,
+	Herton Ronaldo Krzesinski <herton@mandriva.com.br>
+Subject: [PATCH 1/9] rtl8187: remove redundant initialization of ARFR
+Date: Mon,  1 Nov 2010 22:59:31 -0200
+Message-Id: <1288659579-4986-2-git-send-email-herton@mandriva.com.br>
+In-Reply-To: <1288659579-4986-1-git-send-email-herton@mandriva.com.br>
+References: <1288659579-4986-1-git-send-email-herton@mandriva.com.br>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2010-11-17 at 20:56 +0100, Rafał Miłecki wrote: 
-> Devices which use LO enabled bit are covered by b43legacy
-> 
-> Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
-> ---
-> Is this alright to use inline for this? Is my WARN_ON OK?
-> ---
->  drivers/net/wireless/b43/main.c   |    2 ++
->  drivers/net/wireless/b43/rfkill.c |   21 +++------------------
->  drivers/net/wireless/b43/rfkill.h |    4 ++--
->  3 files changed, 7 insertions(+), 20 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/b43/main.c b/drivers/net/wireless/b43/main.c
-> index fa48803..9b71bb1 100644
-> --- a/drivers/net/wireless/b43/main.c
-> +++ b/drivers/net/wireless/b43/main.c
-> @@ -4527,6 +4527,8 @@ static int b43_op_start(struct ieee80211_hw *hw)
->  		}
->  	}
->  
-> +	/* we don't expect older devices which need other RFKILL check */
-> +	B43_WARN_ON(dev->dev->id.revision < 3);
+This removes redundant write to Auto Rate Fallback Register on RTL8187B.
+The same value was being written twice in the same function. Avoid this
+removing the duplicate initialization on rtl8187b_reg_table, and also
+add comment for this write (information from Realtek source).
 
-Do we really need that check? The driver is full of assumptions that
-the core revision is >=5.
-I also think this assertion is misplaced in the interface start
-handler. If you want it, do it in the rfkill check function. (for
-nondebug build it's a no-op)
+Signed-off-by: Herton Ronaldo Krzesinski <herton@mandriva.com.br>
+Acked-by: Larry Finger <Larry.Finger@lwfinger.net>
+---
+ drivers/net/wireless/rtl818x/rtl8187_dev.c |    9 +++++----
+ 1 files changed, 5 insertions(+), 4 deletions(-)
 
-> 	/* XXX: only do if device doesn't support rfkill irq */
->  	wiphy_rfkill_start_polling(hw->wiphy);
->  
-> diff --git a/drivers/net/wireless/b43/rfkill.c b/drivers/net/wireless/b43/rfkill.c
-> index 78016ae..012ed2f 100644
-> --- a/drivers/net/wireless/b43/rfkill.c
-> +++ b/drivers/net/wireless/b43/rfkill.c
-> @@ -26,25 +26,10 @@
->  
-> 
->  /* Returns TRUE, if the radio is enabled in hardware. */
-> -bool b43_is_hw_radio_enabled(struct b43_wldev *dev)
-> +inline bool b43_is_hw_radio_enabled(struct b43_wldev *dev)
-
-inline doesn't make sense here.
-
-> {
-> -	if (dev->phy.rev >= 3 || dev->phy.type == B43_PHYTYPE_LP) {
-> -		if (!(b43_read32(dev, B43_MMIO_RADIO_HWENABLED_HI)
-> -		      & B43_MMIO_RADIO_HWENABLED_HI_MASK))
-> -			return 1;
-> -	} else {
-> -		/* To prevent CPU fault on PPC, do not read a register
-> -		 * unless the interface is started; however, on resume
-> -		 * for hibernation, this routine is entered early. When
-> -		 * that happens, unconditionally return TRUE.
-> -		 */
-> -		if (b43_status(dev) < B43_STAT_STARTED)
-> -			return 1;
-> -		if (b43_read16(dev, B43_MMIO_RADIO_HWENABLED_LO)
-> -		    & B43_MMIO_RADIO_HWENABLED_LO_MASK)
-> -			return 1;
-> -	}
-> -	return 0;
-> +	return !(b43_read32(dev, B43_MMIO_RADIO_HWENABLED_HI)
-> +		& B43_MMIO_RADIO_HWENABLED_HI_MASK);
->  }
-
-Getting rid of that old crap is a good idea. So ACK on this part.
-
-> /* The poll callback for the hardware button. */
-> diff --git a/drivers/net/wireless/b43/rfkill.h b/drivers/net/wireless/b43/rfkill.h
-> index f046c3c..7aa8a5a 100644
-> --- a/drivers/net/wireless/b43/rfkill.h
-> +++ b/drivers/net/wireless/b43/rfkill.h
-> @@ -4,8 +4,8 @@
->  struct ieee80211_hw;
->  struct b43_wldev;
->  
-> -void b43_rfkill_poll(struct ieee80211_hw *hw);
-> +inline bool b43_is_hw_radio_enabled(struct b43_wldev *dev);
->  
-> -bool b43_is_hw_radio_enabled(struct b43_wldev *dev);
-> +void b43_rfkill_poll(struct ieee80211_hw *hw);
->  
->  #endif /* B43_RFKILL_H_ */
-
-doesn't make sense.
-
+diff --git a/drivers/net/wireless/rtl818x/rtl8187_dev.c b/drivers/net/wireless/rtl818x/rtl8187_dev.c
+index 6e26149..3dbf305 100644
+--- a/drivers/net/wireless/rtl818x/rtl8187_dev.c
++++ b/drivers/net/wireless/rtl818x/rtl8187_dev.c
+@@ -712,10 +712,9 @@ static const u8 rtl8187b_reg_table[][3] = {
+ 
+ 	{0x58, 0x4B, 1}, {0x59, 0x00, 1}, {0x5A, 0x4B, 1}, {0x5B, 0x00, 1},
+ 	{0x60, 0x4B, 1}, {0x61, 0x09, 1}, {0x62, 0x4B, 1}, {0x63, 0x09, 1},
+-	{0xCE, 0x0F, 1}, {0xCF, 0x00, 1}, {0xE0, 0xFF, 1}, {0xE1, 0x0F, 1},
+-	{0xE2, 0x00, 1}, {0xF0, 0x4E, 1}, {0xF1, 0x01, 1}, {0xF2, 0x02, 1},
+-	{0xF3, 0x03, 1}, {0xF4, 0x04, 1}, {0xF5, 0x05, 1}, {0xF6, 0x06, 1},
+-	{0xF7, 0x07, 1}, {0xF8, 0x08, 1},
++	{0xCE, 0x0F, 1}, {0xCF, 0x00, 1}, {0xF0, 0x4E, 1}, {0xF1, 0x01, 1},
++	{0xF2, 0x02, 1}, {0xF3, 0x03, 1}, {0xF4, 0x04, 1}, {0xF5, 0x05, 1},
++	{0xF6, 0x06, 1}, {0xF7, 0x07, 1}, {0xF8, 0x08, 1},
+ 
+ 	{0x4E, 0x00, 2}, {0x0C, 0x04, 2}, {0x21, 0x61, 2}, {0x22, 0x68, 2},
+ 	{0x23, 0x6F, 2}, {0x24, 0x76, 2}, {0x25, 0x7D, 2}, {0x26, 0x84, 2},
+@@ -776,7 +775,9 @@ static int rtl8187b_init_hw(struct ieee80211_hw *dev)
+ 	reg |= RTL818X_CW_CONF_PERPACKET_RETRY_SHIFT;
+ 	rtl818x_iowrite8(priv, &priv->map->CW_CONF, reg);
+ 
++	/* Auto Rate Fallback Register (ARFR): 1M-54M setting */
+ 	rtl818x_iowrite16_idx(priv, (__le16 *)0xFFE0, 0x0FFF, 1);
++	rtl818x_iowrite8_idx(priv, (u8 *)0xFFE2, 0x00, 1);
+ 
+ 	rtl818x_iowrite16(priv, &priv->map->BEACON_INTERVAL, 100);
+ 	rtl818x_iowrite16(priv, &priv->map->ATIM_WND, 2);
 -- 
-Greetings Michael.
+1.7.3.2
 
