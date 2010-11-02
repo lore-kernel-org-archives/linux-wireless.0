@@ -1,36 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:52408
-	"EHLO sunset.davemloft.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751199Ab0KVPgV (ORCPT
+Received: from mail-px0-f174.google.com ([209.85.212.174]:48472 "EHLO
+	mail-px0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752137Ab0KBA4f (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 22 Nov 2010 10:36:21 -0500
-Date: Mon, 22 Nov 2010 07:36:46 -0800 (PST)
-Message-Id: <20101122.073646.193727189.davem@davemloft.net>
-To: eric.dumazet@gmail.com
-Cc: mhocko@suse.cz, linux-wireless@vger.kernel.org,
-	reinette.chatre@intel.com, wey-yi.w.guy@intel.com,
-	ilw@linux.intel.com, linux-kernel@vger.kernel.org,
-	netdev@vger.kernel.org
-Subject: Re: iwl3945: regression - unregister_netdevice: waiting for wlan0
- to become free. Usage count = 1
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <1290424776.2811.32.camel@edumazet-laptop>
-References: <20101122104341.GA3897@tiehlicka.suse.cz>
-	<1290424776.2811.32.camel@edumazet-laptop>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+	Mon, 1 Nov 2010 20:56:35 -0400
+Received: by mail-px0-f174.google.com with SMTP id 15so630739pxi.19
+        for <linux-wireless@vger.kernel.org>; Mon, 01 Nov 2010 17:56:35 -0700 (PDT)
+From: Brian Cavagnolo <brian@cozybit.com>
+To: linux-wireless@vger.kernel.org
+Cc: buytenh@wantstofly.org, Brian Cavagnolo <brian@cozybit.com>
+Subject: [PATCH 7/7] mac80211: unset SDATA_STATE_OFFCHANNEL when cancelling a scan
+Date: Mon,  1 Nov 2010 17:55:51 -0700
+Message-Id: <1288659351-22313-7-git-send-email-brian@cozybit.com>
+In-Reply-To: <1288659351-22313-1-git-send-email-brian@cozybit.com>
+References: <1288659351-22313-1-git-send-email-brian@cozybit.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Eric Dumazet <eric.dumazet@gmail.com>
-Date: Mon, 22 Nov 2010 12:19:36 +0100
+For client STA interfaces, ieee80211_do_stop unsets the relevant
+interface's SDATA_STATE_RUNNING state bit prior to cancelling an
+interrupted scan.  When ieee80211_offchannel_return is invoked as
+part of cancelling the scan, it doesn't bother unsetting the
+SDATA_STATE_OFFCHANNEL bit because it sees that the interface is
+down.  Normally this doesn't matter because when the client STA
+interface is brought back up, it will probably issue a scan.  But
+in some cases (e.g., the user changes the interface type while it
+is down), the SDATA_STATE_OFFCHANNEL bit will remain set.  This
+prevents the interface queues from being started.  So we
+unconditionally unset this bit when we cancel a scan.
 
-> Oh well, it seems David put the fix in net-next-2.6 instead of net-2.6
-> 
-> Please try :
-> 
-> http://git.kernel.org/?p=linux/kernel/git/davem/net-next-2.6.git;a=commitdiff;h=9d82ca98f71fd686ef2f3017c5e3e6a4871b6e46
+Signed-off-by: Brian Cavagnolo <brian@cozybit.com>
+---
+ net/mac80211/offchannel.c |    4 +++-
+ 1 files changed, 3 insertions(+), 1 deletions(-)
 
-My bad, I'll toss this into net-2.6
+diff --git a/net/mac80211/offchannel.c b/net/mac80211/offchannel.c
+index 4b56409..6252a76 100644
+--- a/net/mac80211/offchannel.c
++++ b/net/mac80211/offchannel.c
+@@ -156,8 +156,10 @@ void ieee80211_offchannel_return(struct ieee80211_local *local,
+ 
+ 	mutex_lock(&local->iflist_mtx);
+ 	list_for_each_entry(sdata, &local->interfaces, list) {
+-		if (!ieee80211_sdata_running(sdata))
++		if (!ieee80211_sdata_running(sdata)) {
++			clear_bit(SDATA_STATE_OFFCHANNEL, &sdata->state);
+ 			continue;
++		}
+ 
+ 		/* Tell AP we're back */
+ 		if (sdata->vif.type == NL80211_IFTYPE_STATION) {
+-- 
+1.7.1.1
 
-Thanks for catching this Eric.
