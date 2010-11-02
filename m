@@ -1,56 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:56563 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752179Ab0K3Ogm (ORCPT
+Received: from mail-pv0-f174.google.com ([74.125.83.174]:61114 "EHLO
+	mail-pv0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752976Ab0KBA40 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 30 Nov 2010 09:36:42 -0500
-Subject: Re: [PATCH w-t] iwlagn: fix microcode error on 4965
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Stanislaw Gruszka <sgruszka@redhat.com>
-Cc: Wey-Yi Guy <wey-yi.w.guy@intel.com>,
-	Intel Linux Wireless <ilw@linux.intel.com>,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <20101130143339.GC3074@redhat.com>
-References: <20101130130148.GA3074@redhat.com>
-	 <1291123016.3624.17.camel@jlt3.sipsolutions.net>
-	 <20101130134903.GB3074@redhat.com>
-	 <1291126178.3624.19.camel@jlt3.sipsolutions.net>
-	 <20101130143339.GC3074@redhat.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Tue, 30 Nov 2010 15:36:37 +0100
-Message-ID: <1291127797.3624.20.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+	Mon, 1 Nov 2010 20:56:26 -0400
+Received: by mail-pv0-f174.google.com with SMTP id 32so629365pvb.19
+        for <linux-wireless@vger.kernel.org>; Mon, 01 Nov 2010 17:56:26 -0700 (PDT)
+From: Brian Cavagnolo <brian@cozybit.com>
+To: linux-wireless@vger.kernel.org
+Cc: buytenh@wantstofly.org, Nishant Sarmukadam <nishants@marvell.com>,
+	Pradeep Nemavat <pnemavat@marvell.com>,
+	Brian Cavagnolo <brian@cozybit.com>
+Subject: [PATCH 4/7] mwl8k: force AP mode to use non-AMPDU frames
+Date: Mon,  1 Nov 2010 17:55:48 -0700
+Message-Id: <1288659351-22313-4-git-send-email-brian@cozybit.com>
+In-Reply-To: <1288659351-22313-1-git-send-email-brian@cozybit.com>
+References: <1288659351-22313-1-git-send-email-brian@cozybit.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2010-11-30 at 15:33 +0100, Stanislaw Gruszka wrote:
-> Commit dbbf1755b09eef8ff6dd21c8dafe1606f051ce12 "iwlwifi: use
-> antenna information in EEPROM" caused 4965 device breakage with
-> "Microcode SW error detected.  Restarting 0x82000000." message.
-> This patch reverts 4965 part of that commit.
-> 
-> Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+From: Nishant Sarmukadam <nishants@marvell.com>
 
-Acked-by: Johannes Berg <johannes@sipsolutions.net>
+AP firmware uses xmitcontrol to differentiate between AMPDU
+and non-AMPDU frames. As the support for AMPDU is not yet
+added, set xmitcontrol to non-AMPDU for all tx frames for AP
+firmware. This field will be set to indicate ampdu/non-ampdu
+frames when tx AMPDU support is added.
 
-Thanks!
+Signed-off-by: Pradeep Nemavat <pnemavat@marvell.com>
+Signed-off-by: Brian Cavagnolo <brian@cozybit.com>
+---
+ drivers/net/wireless/mwl8k.c |    7 ++++++-
+ 1 files changed, 6 insertions(+), 1 deletions(-)
 
-> ---
->  drivers/net/wireless/iwlwifi/iwl-4965.c |    2 ++
->  1 files changed, 2 insertions(+), 0 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/iwlwifi/iwl-4965.c b/drivers/net/wireless/iwlwifi/iwl-4965.c
-> index 9f1d8d8..6788ceb 100644
-> --- a/drivers/net/wireless/iwlwifi/iwl-4965.c
-> +++ b/drivers/net/wireless/iwlwifi/iwl-4965.c
-> @@ -2624,6 +2624,8 @@ struct iwl_cfg iwl4965_agn_cfg = {
->  	.fw_name_pre = IWL4965_FW_PRE,
->  	.ucode_api_max = IWL4965_UCODE_API_MAX,
->  	.ucode_api_min = IWL4965_UCODE_API_MIN,
-> +	.valid_tx_ant = ANT_AB,
-> +	.valid_rx_ant = ANT_ABC,
->  	.eeprom_ver = EEPROM_4965_EEPROM_VERSION,
->  	.eeprom_calib_ver = EEPROM_4965_TX_POWER_VERSION,
->  	.ops = &iwl4965_ops,
-
+diff --git a/drivers/net/wireless/mwl8k.c b/drivers/net/wireless/mwl8k.c
+index 9d614b8..99cc48d 100644
+--- a/drivers/net/wireless/mwl8k.c
++++ b/drivers/net/wireless/mwl8k.c
+@@ -1141,10 +1141,12 @@ struct mwl8k_tx_desc {
+ 	__le32 reserved;
+ 	__le16 rate_info;
+ 	__u8 peer_id;
+-	__u8 tx_frag_cnt;
++	__u8 xmitcontrol;
+ } __packed;
+ 
+ #define MWL8K_TX_DESCS		128
++#define MWL8K_XMITCONTROL_NON_AMPDU	0x04
++
+ 
+ static int mwl8k_txq_init(struct ieee80211_hw *hw, int index)
+ {
+@@ -1465,6 +1467,9 @@ mwl8k_txq_xmit(struct ieee80211_hw *hw, int index, struct sk_buff *skb)
+ 		tx->peer_id = MWL8K_STA(tx_info->control.sta)->peer_id;
+ 	else
+ 		tx->peer_id = 0;
++
++	if (priv->ap_fw)
++		tx->xmitcontrol = MWL8K_XMITCONTROL_NON_AMPDU;
+ 	wmb();
+ 	tx->status = cpu_to_le32(MWL8K_TXD_STATUS_FW_OWNED | txstatus);
+ 
+-- 
+1.7.1.1
 
