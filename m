@@ -1,43 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 80-190-117-144.ip-home.de ([80.190.117.144]:49980 "EHLO
-	bu3sch.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S934928Ab0KQRNC (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 17 Nov 2010 12:13:02 -0500
-Subject: Re: [PATCH] ssb: fail registration for unknown SPROM revision
-From: Michael =?ISO-8859-1?Q?B=FCsch?= <mb@bu3sch.de>
+Received: from vostochny.stro.at ([78.47.22.85]:48411 "EHLO vostochny.stro.at"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752172Ab0KBWjW (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 2 Nov 2010 18:39:22 -0400
+From: maximilian attems <max@stro.at>
 To: "John W. Linville" <linville@tuxdriver.com>
-Cc: =?UTF-8?Q?Rafa=C5=82_Mi=C5=82ecki?= <zajec5@gmail.com>,
-	linux-wireless@vger.kernel.org, b43-dev@lists.infradead.org
-In-Reply-To: <20101116212321.GF10774@tuxdriver.com> (sfid-20101116_162951_428051_09CF3C97)
-References: <1288823326-9686-1-git-send-email-zajec5@gmail.com>
-	 <1288823326-9686-2-git-send-email-zajec5@gmail.com>
-	 <20101116212321.GF10774@tuxdriver.com>
-	 (sfid-20101116_162951_428051_09CF3C97)
-Content-Type: text/plain; charset="UTF-8"
-Date: Wed, 17 Nov 2010 18:12:56 +0100
-Message-ID: <1290013976.2513.14.camel@maggie>
-Mime-Version: 1.0
+Cc: linux-wireless@vger.kernel.org, maximilian attems <max@stro.at>
+Subject: [PATCH] zd1201: Add missing id
+Date: Tue,  2 Nov 2010 23:39:12 +0100
+Message-Id: <1288737552-3524-1-git-send-email-max@stro.at>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2010-11-16 at 16:23 -0500, John W. Linville wrote: 
-> > -		ssb_printk(KERN_WARNING PFX "Unsupported SPROM"
-> > -			   "  revision %d detected. Will extract"
-> > -			   " v1\n", out->revision);
-> > -		out->revision = 1;
-> > -		sprom_extract_r123(out, in);
-> > +		ssb_printk(KERN_ERR PFX "Unsupported SPROM revision %d"
-> > +			   " detected\n", out->revision);
-> > +		return -EINVAL;
-> >  	}
-> >  
-> >  	if (out->boardflags_lo == 0xFFFF)
-> 
-> I think this is going to make my b43 PCI-E card not work...I'll try
-> it and get back to you...
+The Mandriva patch seems to stem from 2.6.14, so much for their
+upstreaming effort.
 
-Hm, what version does it report?
+Didn't find another Linux reference of it, just an omnious
+"USB\VID_1044&PID_8004" from GigabyteZD1201U.INF for
+Gigabyte GN-WLBZ101 802.11b USB Adapter, which matches the
+Mandriva patch comment.
 
+Aboves file also lists an "USB\VID_1044&PID_8006", which I have
+kept appart as this "Gigabyte GN-WBZB-M 802.11b USB Adapter"
+didn't show up in googling.
+
+Signed-off-by: maximilian attems <max@stro.at>
+---
+ drivers/net/wireless/zd1201.c |    1 +
+ 1 files changed, 1 insertions(+), 0 deletions(-)
+
+diff --git a/drivers/net/wireless/zd1201.c b/drivers/net/wireless/zd1201.c
+index 390d77f..b97aa9c 100644
+--- a/drivers/net/wireless/zd1201.c
++++ b/drivers/net/wireless/zd1201.c
+@@ -30,6 +30,7 @@ static struct usb_device_id zd1201_table[] = {
+ 	{USB_DEVICE(0x0ace, 0x1201)}, /* ZyDAS ZD1201 Wireless USB Adapter */
+ 	{USB_DEVICE(0x050d, 0x6051)}, /* Belkin F5D6051 usb  adapter */
+ 	{USB_DEVICE(0x0db0, 0x6823)}, /* MSI UB11B usb  adapter */
++	{USB_DEVICE(0x1044, 0x8004)}, /* Gigabyte GN-WLBZ101 */
+ 	{USB_DEVICE(0x1044, 0x8005)}, /* GIGABYTE GN-WLBZ201 usb adapter */
+ 	{}
+ };
 -- 
-Greetings Michael.
+1.7.1
 
