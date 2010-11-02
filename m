@@ -1,39 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gx0-f174.google.com ([209.85.161.174]:49078 "EHLO
-	mail-gx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751699Ab0KBLKV (ORCPT
+Received: from external1.orbit-lab.org ([128.6.192.131]:46652 "HELO
+	external1.orbit-lab.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1752151Ab0KBTCu (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 2 Nov 2010 07:10:21 -0400
-Received: by gxk23 with SMTP id 23so3913629gxk.19
-        for <linux-wireless@vger.kernel.org>; Tue, 02 Nov 2010 04:10:21 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1288692717.24531.2.camel@chilepepper>
-References: <1288181398-2358-1-git-send-email-eliad@wizery.com>
-	<1288692717.24531.2.camel@chilepepper>
-Date: Tue, 2 Nov 2010 13:10:20 +0200
-Message-ID: <AANLkTinBeubKDzBKB9JUWcACWgLYvO9sdwUNtVde3tRF@mail.gmail.com>
-Subject: Re: [PATCH 1/2] wl1271: handle HW watchdog interrupt
-From: Eliad Peller <eliad@wizery.com>
-To: Luciano Coelho <luciano.coelho@nokia.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+	Tue, 2 Nov 2010 15:02:50 -0400
+Received: from repository3.orbit-lab.org (repository3.orbit-lab.org [10.50.0.41])
+	by external1.orbit-lab.org (Postfix) with ESMTP id 224A4418D8
+	for <linux-wireless@vger.kernel.org>; Tue,  2 Nov 2010 14:59:03 -0400 (EDT)
+Subject: Compat-wireless release for 2010-11-02 is baked
+To: <linux-wireless@vger.kernel.org>
+Message-Id: <20101102190249.5CD0340F97@repository3.orbit-lab.org>
+Date: Tue,  2 Nov 2010 15:02:49 -0400 (EDT)
+From: compat@orbit-lab.org (Compat-wireless cronjob account)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Nov 2, 2010 at 12:11 PM, Luciano Coelho
-<luciano.coelho@nokia.com> wrote:
-> On Wed, 2010-10-27 at 14:09 +0200, ext Eliad Peller wrote:
->> unmask the WL1271_ACX_INTR_WATCHDOG interrupt.
->> when getting it - enqueue a recovery work and bail out.
->>
->> Signed-off-by: Eliad Peller <eliad@wizery.com>
->> ---
->
-> Applied and fixed a couple of checkpatch "line over 80 characters"
-> warnings.
->
-> Please remember to *always* run checkpatch and fix any eventual
-> warnings/errors before submitting.
->
-will do.
-thanks!
+
+compat-wireless code metrics
+
+    739330 - Total upstream lines of code being pulled
+      2163 - backport code changes
+      1909 - backport code additions
+       254 - backport code deletions
+      6409 - backport from compat module
+      8572 - total backport code
+    1.1594 - % of code consists of backport work
+      1534 - Crap changes not yet posted
+      1491 - Crap additions not yet posted
+        43 - Crap deletions not yet posted
+    0.2075 - % of crap code
+
+Base tree: linux-next.git
+Base tree version: next-20101029
+compat-wireless release: compat-wireless-2010-10-22-5-g69fdc09-pc
