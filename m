@@ -1,61 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.19.149.2]:63853 "EHLO mail.atheros.com"
+Received: from bar.sig21.net ([80.81.252.164]:51569 "EHLO bar.sig21.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756150Ab0KSBXz (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 18 Nov 2010 20:23:55 -0500
-Received: from mail.atheros.com ([10.10.20.108])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Thu, 18 Nov 2010 17:23:42 -0800
-Date: Thu, 18 Nov 2010 17:23:52 -0800
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Matt Smith <Matt.Smith@Atheros.com>,
-	Senthilkumar Balasubramanian
-	<Senthilkumar.Balasubramanian@Atheros.com>
-Subject: Re: [RFC] mac80211: disable aggregatin for voice traffic
-Message-ID: <20101119012352.GN3426@tux>
-References: <1290129534-21785-1-git-send-email-lrodriguez@atheros.com>
- <8e66f390eb4591841e22b8f5f2188e5d@localhost>
+	id S1751649Ab0KBPtT (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 2 Nov 2010 11:49:19 -0400
+Date: Tue, 2 Nov 2010 16:49:12 +0100
+From: Johannes Stezenbach <js@sig21.net>
+To: Helmut Schaa <helmut.schaa@googlemail.com>
+Cc: Ivo Van Doorn <ivdoorn@gmail.com>, Lee <lee-in-berlin@web.de>,
+	Gertjan van Wingerde <gwingerde@gmail.com>,
+	linux-wireless@vger.kernel.org
+Subject: Re: [regression]AP with hostapd 0.7.3 can't receive packets beyond
+ authentication (2.6.36, rt73usb)
+Message-ID: <20101102154911.GA593@sig21.net>
+References: <4CC0D0F6.4080507@web.de>
+ <20101102144625.GA32002@sig21.net>
+ <AANLkTikYDHBSVuMEnUsR7WpPPo8rK0+OBm_Rd-H0znHT@mail.gmail.com>
+ <201011021605.37137.helmut.schaa@googlemail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <8e66f390eb4591841e22b8f5f2188e5d@localhost>
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <201011021605.37137.helmut.schaa@googlemail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Nov 18, 2010 at 05:21:24PM -0800, Johannes Berg wrote:
-> On Thu, 18 Nov 2010 17:18:54 -0800, "Luis R. Rodriguez"
-> <lrodriguez@atheros.com> wrote:
-> > This should help with latency issues which can happen when
-> > using aggregation.
+On Tue, Nov 02, 2010 at 04:05:36PM +0100, Helmut Schaa wrote:
+> Am Dienstag 02 November 2010 schrieb Ivo Van Doorn:
 > > 
-> > Cc: Matt Smith <matt.smith@atheros.com>
-> > Cc: Senthil Balasubramanian <senthilkumar@atheros.com>
-> > Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
-> > ---
-> > 
-> > We discussed this a while ago but never to around to it.
-> > 
-> >  net/mac80211/tx.c |    3 ++-
-> >  1 files changed, 2 insertions(+), 1 deletions(-)
-> > 
-> > diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
-> > index e694836..405ddc9 100644
-> > --- a/net/mac80211/tx.c
-> > +++ b/net/mac80211/tx.c
-> > @@ -1225,7 +1225,8 @@ ieee80211_tx_prepare(struct ieee80211_sub_if_data
-> > *sdata,
-> >  		tx->sta = sta_info_get(sdata, hdr->addr1);
-> >  
-> >  	if (tx->sta && ieee80211_is_data_qos(hdr->frame_control) &&
-> > -	    (local->hw.flags & IEEE80211_HW_AMPDU_AGGREGATION)) {
-> > +	    (local->hw.flags & IEEE80211_HW_AMPDU_AGGREGATION) &&
-> > +	    (ieee802_1d_to_ac[skb->priority] != IEEE80211_AC_VO)) {
+> > The legacy drivers from Ralink configure the BSSID, same as rt2x00 driver do,
+> > when we start the association procedure. This complies with the 802.11 standard
+> > for filtering the data frames.
 > 
-> wtf? total NACK. You're setting up an aggregation session and then not
-> using it? That's totally deluded ... just don't set up the session!!
+> Yep, Ivo is correct.
 
-:) thanks for the kind review.
+Ah, I see.  I missed the call in rt2x00mac_bss_info_changed().
+Sorry for the noise and thanks for your comments.
 
-  Luis
+
+Johannes
