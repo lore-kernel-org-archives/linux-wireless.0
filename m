@@ -1,42 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from arroyo.ext.ti.com ([192.94.94.40]:35983 "EHLO arroyo.ext.ti.com"
+Received: from nbd.name ([88.198.39.176]:49065 "EHLO ds10.nbd.name"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S933102Ab0KQIZu (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 17 Nov 2010 03:25:50 -0500
-From: "Gabay, Benzy" <benzyg@ti.com>
-To: Juuso Oikarinen <juuso.oikarinen@nokia.com>
-CC: "luciano.coelho@nokia.com" <luciano.coelho@nokia.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Date: Wed, 17 Nov 2010 02:25:43 -0600
-Subject: RE: [PATCH 1/2] wl1271: Prevent ad-hoc and active scanning on 11a
- DFS frequencies
-Message-ID: <676FD6AA0F002F49B89E70F0C5EFD22C136DEA03CC@dlee04.ent.ti.com>
-References: <1289384840-28305-1-git-send-email-juuso.oikarinen@nokia.com>
-	 <676FD6AA0F002F49B89E70F0C5EFD22C136DEA03B9@dlee04.ent.ti.com>
- <1289977249.2522.148.camel@wimaxnb.nmp.nokia.com>
-In-Reply-To: <1289977249.2522.148.camel@wimaxnb.nmp.nokia.com>
-Content-Type: text/plain; charset="utf-8"
+	id S1754905Ab0KBSyF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 2 Nov 2010 14:54:05 -0400
+Message-ID: <4CD05E49.70701@openwrt.org>
+Date: Tue, 02 Nov 2010 19:54:01 +0100
+From: Felix Fietkau <nbd@openwrt.org>
 MIME-Version: 1.0
+To: =?ISO-8859-1?Q?Bj=F6rn_Smedman?= <bjorn.smedman@venatech.se>
+CC: ath9k-devel@lists.ath9k.org,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: [ath9k-devel] [RFC] ath9k: fix tx queue selection
+References: <alpine.DEB.2.00.1011021655080.23045@vtdt3>	<4CD046D2.4080703@openwrt.org>	<4CD04C61.4070007@openwrt.org> <AANLkTikUUue=Nt0iFPcQC68kDCh=EeEpeBT9xnhW6bf+@mail.gmail.com>
+In-Reply-To: <AANLkTikUUue=Nt0iFPcQC68kDCh=EeEpeBT9xnhW6bf+@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-SnV1c28sDQoNCj4gLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCj4gPg0KPiA+IEkga25vdyBp
-dCdzIGEgYml0IGxhdGUgYnV0Og0KPiA+IERvZXNuJ3QgdGhlIGZhY3QgdGhhdCB5b3VyIHJlZmVy
-cmluZyBoZXJlIHRvIDEyNzEsIHdoaWNoIGlzIHN1cHBvcnQNCj4gMi40R2h6IGRldmljZSBvbmx5
-IG1hdHRlciBoZXJlIHRvIGFueW9uZT8NCj4gPiBDb3JyZWN0IG1lIGlmIEknbSB3cm9uZyBoZXJl
-IGJ1dCByYWRhciBkZXRlY3Rpb24gd2FzIG1lYW50IG9ubHkgZm9yDQo+IDUuMEdoeiBkZXZpY2Ug
-dHlwZXMuDQo+ID4gU2hvdWxkIHRoaXMgcGF0Y2ggc2hvdWxkIGJlIGRvbmUgb24gMTI3MyBkZXZp
-Y2UgdHlwZSBvciBhIGNoYW5nZSBpbg0KPiB0aGUgbmFtaW5nIGNvbnZlbnRpb24gc2hvdWxkIGJl
-IGFwcGxpZWQgaGVyZS4NCj4gDQo+IFllcywgeW91IGFyZSBjb3JyZWN0IGluIHRoZSBmYWN0IHRo
-ZSBuYW1pbmcgaGVyZSBpcyB3cm9uZy4gSSB1c2VkIGl0LA0KPiBiZWNhdXNlIGZvciBsZWdhY3kg
-cmVhc29ucywgdGhlIGRyaXZlciB3YXMgc3RpbGwgY2FsbGVkIHdsMTI3MSBhdCB0aGUNCj4gdGlt
-ZSBJIHdyb3RlIHRoZSBwYXRjaC4gQWx0aG91Z2ggdGhlIGRyaXZlciB3YXMgbmFtZWQgIndsMTI3
-MSIgaXQgaXMNCj4gc3RpbGwgaW50ZW5kZWQgdG8gZHJpdmUgYWxzbyB0aGUgd2wxMjczLg0KPiAN
-Cj4gUmVjZW50bHksIHdvcmsgaGFzIGJlZW4gb25nb2luZyB0byBjaGFuZ2UgdGhpcyBuYW1pbmcu
-IFRoZSB3bDEyNzENCj4gZHJpdmVyDQo+IHdhcyByZW5hbWVkIHRvIHdsMTJ4eCB0byBiZXR0ZXIg
-cmVmbGVjdCByZWFsaXR5LCBhcyB5b3UgaGF2ZSBwb3NzaWJseQ0KPiBub3RlZC4NCj4gDQo+IC1K
-dXVzbw0KPiANCj4gPg0KDQpZZWFoIGp1c3Qgc2F3IGl0LCBhZnRlciBJJ3ZlIHBvc3RlZCB0aGUg
-ZW1haWwgOi0pDQoNCllldCBhbm90aGVyIHF1ZXN0aW9uIG9uIHRoaXMgdG9waWMsDQpBZC1Ib2Mg
-d2FzIGRlc2lnbmVkIG9yaWdpbmFsbHkgZm9yIEIgbW9kZSBvbmx5LiBTb21lIGNvbXBhbmllcyBl
-eHRlbmRlZCBpdCB0byBHIGFsc28uIA0KRG8gd2UgaGF2ZSBNQUM4MDIuMTEgc3VwcG9ydCBmb3Ig
-QWQtSG9jIG9uIDExYSBjaGFubmVscyB0aGVzZSBkYXlzPw0KDQpCZW56eQ0K
+On 2010-11-02 7:20 PM, Björn Smedman wrote:
+> 2010/11/2 Felix Fietkau <nbd@openwrt.org>:
+>> +       q = ath_get_mac80211_qnum(txq->axq_class, sc);
+>>        r = ath_tx_setup_buffer(hw, bf, skb, txctl);
+>>        if (unlikely(r)) {
+>>                ath_print(common, ATH_DBG_FATAL, "TX mem alloc failure\n");
+>> @@ -1756,8 +1757,8 @@ int ath_tx_start(struct ieee80211_hw *hw
+>>                 * we will at least have to run TX completionon one buffer
+>>                 * on the queue */
+>>                spin_lock_bh(&txq->axq_lock);
+>> -               if (!txq->stopped && txq->axq_depth > 1) {
+>> -                       ath_mac80211_stop_queue(sc, skb_get_queue_mapping(skb));
+>> +               if (q >= 0 && !txq->stopped && txq->axq_depth > 1) {
+>> +                       ath_mac80211_stop_queue(sc, q);
+>>                        txq->stopped = 1;
+>>                }
+> 
+> You cannot be sure that you are stopping the queue that the skb
+> actually came in on here since mac80211 queues are mapped to hw queues
+> by ath_get_hal_qnum() and that mapping is not reversible (due to the
+> default statement):
+How does the default statement matter here? The queue number always
+comes from an index of the ieee802_1d_to_ac[] array, which only contains
+numbers from 0 to 3. That should make the conversion reversible.
+
+- Felix
