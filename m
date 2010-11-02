@@ -1,83 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.sysgo.com ([195.145.229.155]:52584 "EHLO mail.sysgo.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755651Ab0KAMMK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 1 Nov 2010 08:12:10 -0400
-Date: Mon, 1 Nov 2010 13:11:59 +0100
-From: Pavel Machek <pma@sysgo.com>
-To: kernel list <linux-kernel@vger.kernel.org>,
-	chunkeey@googlemail.com, linux-wireless@vger.kernel.org
-Subject: Re: carl9170 disconnects under load
-Message-ID: <20101101121159.GB19442@pma.sysgo.com>
-References: <20101026104811.GA11357@pma.sysgo.com>
- <20101101093140.GA2766@pma.sysgo.com>
- <20101101094649.GA3391@pma.sysgo.com>
- <20101101101012.GB3391@pma.sysgo.com>
+Received: from mail-vw0-f46.google.com ([209.85.212.46]:46621 "EHLO
+	mail-vw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751423Ab0KBX5e (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 2 Nov 2010 19:57:34 -0400
+Received: by vws13 with SMTP id 13so347551vws.19
+        for <linux-wireless@vger.kernel.org>; Tue, 02 Nov 2010 16:57:33 -0700 (PDT)
+Message-ID: <4CD0A583.40105@lwfinger.net>
+Date: Tue, 02 Nov 2010 18:57:55 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20101101101012.GB3391@pma.sysgo.com>
+To: Rogerio Luz Coelho <rogluz.news@gmail.com>
+CC: Herton Ronaldo Krzesinski <herton@mandriva.com.br>,
+	Thadeu Lima de Souza Cascardo <cascardo@holoscopio.com>,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 3/9] rtl8187: fix wrong register initialization in 8187B
+References: <309278.75116.qm@web29520.mail.ird.yahoo.com>	<4CCF7B73.7040906@lwfinger.net>	<4CCF7EFC.1050000@mandriva.com.br> <AANLkTinEsp+-EU4Oau71qHbL6ftO544+H4GA3WZk7CX5@mail.gmail.com>
+In-Reply-To: <AANLkTinEsp+-EU4Oau71qHbL6ftO544+H4GA3WZk7CX5@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi!
-
-> > > > I'm testing driver from -wireless testing, cca 2.6.26-rc7.
-> > > > 
-> > > > It seems to work (up to 802.11n speeds -- I've seen iwconfig claiming
-> > > > 121 MB/sec), but disconnects rather quickly when under load:
-> > > > 
-> > > > telnet 192.168.1.3 chargen > /dev/null
-> > > > 
-> > > > The machine is powerpc mpc5200b board, with OHCI driver -- it is not
-> > > > capable of USB2.0 speeds.
-> > > 
-> > > So I tried with different AP, one not capable of 802.11n speeds. It
-> > > fails in different way :-(. But this one is with my backport to
-> > > 2.6.34...
-> > 
-> > But it fails with wireless-testing tree, too :-(.
-> > 
-> > Linux mpc5200b 2.6.36-rc8-wl-pma-48197-gdcae733-dirty #43 Tue Oct 26
-> >  12:06:21 CEST 2010 ppc
+On 11/02/2010 06:48 PM, Rogerio Luz Coelho wrote:
+> Ok, I see the 8187b is in development.
 > 
-> It works "better" if I force AP to 1Mbps.... (Note that I have USB1.1
-> host only).
+> But PLEASE ask Thadeu Cascardo for his patch as it seems to fix the
+> issue with these cards when connected to Laptop (Positivo Laptops in
+> Brasil for instance), this would even let the Mandriva folks show
+> Positivo that they don't need to ship the Mandriva 2008.0 woith their
+> Linux Laptops anymore ...
+> 
+> the patch he sent me FIXED the problem where the chip did not connect
+> or when it did it would lose the connection right away...
+> 
+> see
+> https://bugs.launchpad.net/ubuntu/+source/linux/+bug/215802?comments=all
+> 
+> 
+> I haven´t aplied any other patches and the one he sent me JUST WORKS,
+> tested in a Ubuntu 10.04 64bit (64bit being important since the
+> Realtek support told me they did NOT support 64bit with their linux
+> drivers)
 
-Ok, so I tried on powerpc machine with usb2.0... it worked a bit
-better, but after a reboot, I got this one:
+Realtek does not support 64-bit systems with most of their drivers, but we do.
+In fact, I only do development on x86_64 and then test on i386.
 
-usb 1-3: Atheros AR9170 is registered as 'phy0'
-kjournald starting.  Commit interval 5 seconds
-EXT3-fs (sda3): warning: maximal mount count reached, running e2fsck
-is recommended
-EXT3-fs (sda3): using internal journal
-EXT3-fs (sda3): recovery complete
-EXT3-fs (sda3): mounted filesystem with writeback data mode
-warning: `proftpd' uses 32-bit capabilities (legacy support in use)
-PHY: f0003000:01 - Link is Up - 100/Full
-mpc5xxx_can f0000900.can: setting BTR0=0x07 BTR1=0x1c
-FW: MAC RESET
-wlan0: authenticate with 00:11:95:05:30:d7 (try 1)
-wlan0: authenticated
-wlan0: associate with 00:11:95:05:30:d7 (try 1)
-wlan0: RX AssocResp from 00:11:95:05:30:d7 (capab=0x421 status=0
-aid=1)
-wlan0: associated
-usb 1-3: no command feedback received (-110).
-carl9170 cmd: 08 01 00 00 f0 36 1c 00 00 24 00 00
-.....6...$..
-usb 1-3: restart device (6)
-writing reg 0x1c36f0 (val 0x2400) failed (-110)
-lost 3 command responses/traps! w:13 g:0
-writing reg 0x1d0104 (val 0x3) failed (-110)
-usb 1-3: kill pending tx urbs.
-usb 1-3: firmware upload failed (-110).
-usb 1-3: stuck tx urbs!
-usb 1-3: Failed to restart device  (-110).
-writing reg 0x1c36f0 (val 0x2400) failed (-5)
-writing reg 0x1c36f0 (val 0x2400) failed (-5)
-writing reg 0x1c36f0 (val 0x5000) failed (-5)
-wlan0: deauthenticating from 00:11:95:05:30:d7 by local choice
-(reason=3)
-usb 1-3: reset high speed USB device using ehci_hcd and address 3
-cfg80211: Calling CRDA to update world regulatory domain
+Obviously, there is something special about the Toshiba/Brazil devices. The
+patch that you need to make a cdonnection had absolutely no effect on mine.
+
+Larry
+
