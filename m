@@ -1,87 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iw0-f174.google.com ([209.85.214.174]:54048 "EHLO
-	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753864Ab0KLCxY convert rfc822-to-8bit (ORCPT
+Received: from mail-yx0-f174.google.com ([209.85.213.174]:45872 "EHLO
+	mail-yx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751504Ab0KBO64 convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 11 Nov 2010 21:53:24 -0500
-Received: by iwn10 with SMTP id 10so2922498iwn.19
-        for <linux-wireless@vger.kernel.org>; Thu, 11 Nov 2010 18:53:24 -0800 (PST)
+	Tue, 2 Nov 2010 10:58:56 -0400
+Received: by yxk8 with SMTP id 8so3749786yxk.19
+        for <linux-wireless@vger.kernel.org>; Tue, 02 Nov 2010 07:58:55 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <AANLkTik9w0_ZJJ273m7B30H4mUcaVeGVirOWAaMuPO-s@mail.gmail.com>
-References: <1289528843-21982-1-git-send-email-lrodriguez@atheros.com> <AANLkTik9w0_ZJJ273m7B30H4mUcaVeGVirOWAaMuPO-s@mail.gmail.com>
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Date: Thu, 11 Nov 2010 18:53:03 -0800
-Message-ID: <AANLkTimCxqmpxfNoxAVtHhLx5Lkx+HPcA8iwacOYLYHg@mail.gmail.com>
-Subject: Re: [PATCH] cfg80211: Fix regulatory bug with multiple cards with a
- delayed CRDA response
-To: linville@tuxdriver.com, Johannes Berg <johannes@sipsolutions.net>
-Cc: mark@moxienet.com, linux-wireless@vger.kernel.org,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>, stable@kernel.org
-Content-Type: text/plain; charset=UTF-8
+In-Reply-To: <20101102144625.GA32002@sig21.net>
+References: <4CC0D0F6.4080507@web.de>
+	<201010290017.13174.helmut.schaa@googlemail.com>
+	<4CCB3F24.1030701@web.de>
+	<201010301430.15868.helmut.schaa@googlemail.com>
+	<20101102125007.GA30000@sig21.net>
+	<20101102144625.GA32002@sig21.net>
+Date: Tue, 2 Nov 2010 15:58:53 +0100
+Message-ID: <AANLkTikYDHBSVuMEnUsR7WpPPo8rK0+OBm_Rd-H0znHT@mail.gmail.com>
+Subject: Re: [regression]AP with hostapd 0.7.3 can't receive packets beyond
+ authentication (2.6.36, rt73usb)
+From: Ivo Van Doorn <ivdoorn@gmail.com>
+To: Johannes Stezenbach <js@sig21.net>
+Cc: Helmut Schaa <helmut.schaa@googlemail.com>,
+	Lee <lee-in-berlin@web.de>,
+	Gertjan van Wingerde <gwingerde@gmail.com>,
+	linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Nov 11, 2010 at 6:45 PM, Luis R. Rodriguez
-<lrodriguez@atheros.com> wrote:
-> On Thu, Nov 11, 2010 at 6:27 PM, Luis R. Rodriguez
-> <lrodriguez@atheros.com> wrote:
->> When two cards are connected with the same regulatory domain
->> if CRDA had a delayed response then cfg80211's own set regulatory
->> domain would still be the world regulatory domain. There was a bug
->> on cfg80211's ignore_request() when analyzing incoming driver
->> regulatory hints as it was only checking against the currently
->> set cfg80211 regulatory domain and not for any other new
->> pending requests. This is easily fixed by also checking against
->> the pending request.
->>
->> Without this fix the second card would end up with an intersected
->> regulatory domain and now allow it to use the channels it really
->> is designed for.
->>
->> This was reproduced and tested against mac80211_hwsim using this
->> CRDA delayer:
->>
->> Â  Â  Â  Â #!/bin/bash
->> Â  Â  Â  Â echo $COUNTRY >> /tmp/log
->> Â  Â  Â  Â sleep 2
->> Â  Â  Â  Â /sbin/crda.orig
->>
->> And this regulatory test:
->>
->> Â  Â  Â  Â modprobe mac80211_hwsim regtest=2
->>
->> This patch has fixes for cfg80211 all the way back.
->>
->> Reported-by: Mark Mentovai <mark@moxienet.com>
->> Cc: stable@kernel.org
->> Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+Hi,
+
+>> Sorry for slow response time.  I can confirm that changing
+>>               rt2x00lib_config_intf(rt2x00dev, intf, vif->type,
+>>                                     intf->mac, intf->bssid);
+>> to
+>>               rt2x00lib_config_intf(rt2x00dev, intf, vif->type,
+>>                                     intf->mac, NULL);
+>> in rt2x00mac_add_interface() fixes rt73usb AP mode for me, too.
 >
-> Hrm,
+> After studying the code some more, I'm confused by the
+> comment for this code in rt2x00mac_add_interface():
 >
-> modprobe mac80211_hwsim regtest=3
+>         * The BSSID address must only be configured in AP mode,
+>         * however we should not send an empty BSSID address for
+>         * STA interfaces at this time, since this can cause
+>         * invalid behavior in the device.
 >
-> Does the similar test but using two different regulatory domains,
-> however this ends up slapping an intersection over to both. Going to
-> think this through a bit more.
+> On the contrary I think the BSSID needs to be configured for STA mode
+> since it acts as a receive filter for broadcase/multicast frames.
+> The 802.11 standard says in 7.2.2 Data frames:
+>
+>        A STA uses the contents of the Address 1 field to perform address
+>        matching for receive decisions. In cases where the Address 1 field
+>        contains a group address, the BSSID also is validated to ensure that
+>        the broadcast or multicast originated from a STA in the BSS of which
+>        the receiving STA is a member.
+>
+> The ralinktech.com drivers seem to set the BSSID for STA mode and IBSS mode.
 
-Actually this highlights an issue in design that I originally
-addressed in my code by setting up a queue. Without a queue for all
-pending requests we have to drop all pending requests that differ. The
-extra race here happens because of the new delay. Without the delay
-things work as expected, each card would get two separate regulatory
-domains and with a core intersected for cards that have no hints. With
-the delay we end up getting an intersection but since the cfg80211's
-regulatory domain hasn't yet been set and the previous request hasn't
-yet been processed by differ we tell cfg80211 to intersect.
+True, but the comment in rt2x00 says:
+ 'empty BSSID address' and 'at this time'
 
-I'd like to keep this simple too though, but without a queue not sure
-how other than rejecting the new requests under the assumption a
-timeout was reached and no CRDA was present. This is of course
-incorrect logic given that you can just install CRDA later.
+The legacy drivers from Ralink configure the BSSID, same as rt2x00 driver do,
+when we start the association procedure. This complies with the 802.11 standard
+for filtering the data frames.
 
-Anyway, that's the issue, the patch is still correct as without the
-delay it does not introduce a regression. There is still a lingering
-bug for when two cards issue separate regulatory domains and the
-pending request is not yet processed. What do do there.
-
-  Luis
+Ivo
