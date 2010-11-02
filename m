@@ -1,68 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gx0-f174.google.com ([209.85.161.174]:64785 "EHLO
-	mail-gx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754211Ab0KRUP4 convert rfc822-to-8bit (ORCPT
+Received: from perninha.conectiva.com.br ([187.115.55.249]:47852 "EHLO
+	perninha.conectiva.com.br" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753700Ab0KBBAP (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 18 Nov 2010 15:15:56 -0500
-Received: by gxk23 with SMTP id 23so2153358gxk.19
-        for <linux-wireless@vger.kernel.org>; Thu, 18 Nov 2010 12:15:56 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <1289604579.21000.5.camel@dcbw.foobar.com>
-References: <20101031134012.F21FF9D401B@zog.reactivated.net>
-	<1289604579.21000.5.camel@dcbw.foobar.com>
-Date: Thu, 18 Nov 2010 20:15:55 +0000
-Message-ID: <AANLkTinpvmS1ZH=T5BtA3+qyYLnNijxfjonFMaY8fO4F@mail.gmail.com>
-Subject: Re: [PATCH] libertas: don't block usb8388 suspend if no wakeup
- conditions are set
-From: Daniel Drake <dsd@laptop.org>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, libertas-dev@lists.infradead.org,
-	akarwar@marvell.com, Dan Williams <dcbw@redhat.com>
-Content-Type: text/plain; charset=ISO-8859-1
+	Mon, 1 Nov 2010 21:00:15 -0400
+From: Herton Ronaldo Krzesinski <herton@mandriva.com.br>
+To: linux-wireless@vger.kernel.org
+Cc: Larry Finger <Larry.Finger@lwfinger.net>,
+	Hin-Tak Leung <htl10@users.sourceforge.net>,
+	John W Linville <linville@tuxdriver.com>,
+	Herton Ronaldo Krzesinski <herton@mandriva.com.br>,
+	seno <senada@t-online.de>
+Subject: [PATCH 8/9] rtl8187: remove uneeded setting of anaparam write
+Date: Mon,  1 Nov 2010 22:59:38 -0200
+Message-Id: <1288659579-4986-9-git-send-email-herton@mandriva.com.br>
+In-Reply-To: <1288659579-4986-1-git-send-email-herton@mandriva.com.br>
+References: <1288659579-4986-1-git-send-email-herton@mandriva.com.br>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-John, just a quick ping on this maintainer-acked patch
-Thanks :)
+Usually you set RTL818X_CONFIG3_ANAPARAM_WRITE when you are going to
+change/write ANAPARAM registers. But in current initialization of
+RTL8187B there is a place where ANAPARAM_WRITE bit is set without any
+ANAPARAM register being written, without reason, so remove it.
 
-On 12 November 2010 23:29, Dan Williams <dcbw@redhat.com> wrote:
-> On Sun, 2010-10-31 at 13:40 +0000, Daniel Drake wrote:
->> This hunk added by commit 66fceb69b72f seems erroneous. We don't want to
->> prevent suspend of the whole system if no wakeup params are set.
->>
->> In the case of the usb8388 we do want to keep the card powered up even
->> if there are no wakeup params. This is because it will continue acting
->> as a mesh node.
->>
->> If the mesh is disabled, it would indeed make more sense to power down
->> the card during suspend, as the equivalent hunk does for the SD interface.
->> But that's a separate task; for now just restore the previous behaviour.
->>
->> Signed-off-by: Daniel Drake <dsd@laptop.org>
->
-> Acked-by: Dan Williams <dcbw@redhat.com>
->
->> ---
->>  drivers/net/wireless/libertas/if_usb.c |    6 ------
->>  1 files changed, 0 insertions(+), 6 deletions(-)
->>
->> diff --git a/drivers/net/wireless/libertas/if_usb.c b/drivers/net/wireless/libertas/if_usb.c
->> index efaf850..35931cf 100644
->> --- a/drivers/net/wireless/libertas/if_usb.c
->> +++ b/drivers/net/wireless/libertas/if_usb.c
->> @@ -1090,12 +1090,6 @@ static int if_usb_suspend(struct usb_interface *intf, pm_message_t message)
->>       if (priv->psstate != PS_STATE_FULL_POWER)
->>               return -1;
->>
->> -     if (priv->wol_criteria == EHS_REMOVE_WAKEUP) {
->> -             lbs_pr_info("Suspend attempt without "
->> -                                             "configuring wake params!\n");
->> -             return -ENOSYS;
->> -     }
->> -
->>       ret = lbs_suspend(priv);
->>       if (ret)
->>               goto out;
->
->
->
+Signed-off-by: Herton Ronaldo Krzesinski <herton@mandriva.com.br>
+Acked-by: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: seno <senada@t-online.de>
+---
+ drivers/net/wireless/rtl818x/rtl8187_dev.c |    8 --------
+ 1 files changed, 0 insertions(+), 8 deletions(-)
+
+diff --git a/drivers/net/wireless/rtl818x/rtl8187_dev.c b/drivers/net/wireless/rtl818x/rtl8187_dev.c
+index c0c75aa..4448647 100644
+--- a/drivers/net/wireless/rtl818x/rtl8187_dev.c
++++ b/drivers/net/wireless/rtl818x/rtl8187_dev.c
+@@ -814,14 +814,6 @@ static int rtl8187b_init_hw(struct ieee80211_hw *dev)
+ 	/* RFSW_CTRL register */
+ 	rtl818x_iowrite16_idx(priv, (__le16 *)0xFF72, 0x569A, 2);
+ 
+-	rtl818x_iowrite8(priv, &priv->map->EEPROM_CMD,
+-			 RTL818X_EEPROM_CMD_CONFIG);
+-	reg = rtl818x_ioread8(priv, &priv->map->CONFIG3);
+-	reg |= RTL818X_CONFIG3_ANAPARAM_WRITE;
+-	rtl818x_iowrite8(priv, &priv->map->CONFIG3, reg);
+-	rtl818x_iowrite8(priv, &priv->map->EEPROM_CMD,
+-			 RTL818X_EEPROM_CMD_NORMAL);
+-
+ 	rtl818x_iowrite16(priv, &priv->map->RFPinsOutput, 0x0480);
+ 	rtl818x_iowrite16(priv, &priv->map->RFPinsSelect, 0x2488);
+ 	rtl818x_iowrite16(priv, &priv->map->RFPinsEnable, 0x1FFF);
+-- 
+1.7.3.2
+
