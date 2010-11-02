@@ -1,49 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f46.google.com ([209.85.215.46]:44208 "EHLO
-	mail-ew0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754845Ab0KFOtv (ORCPT
+Received: from mail-vw0-f46.google.com ([209.85.212.46]:57373 "EHLO
+	mail-vw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754083Ab0KBCpp (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 6 Nov 2010 10:49:51 -0400
-Received: by mail-ew0-f46.google.com with SMTP id 7so2253925ewy.19
-        for <linux-wireless@vger.kernel.org>; Sat, 06 Nov 2010 07:49:50 -0700 (PDT)
-From: Ivo van Doorn <ivdoorn@gmail.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Subject: [PATCH 11/18] rt2x00: checkpatch.pl error fixes for rt2x00lib.h
-Date: Sat, 6 Nov 2010 15:46:53 +0100
-Cc: linux-wireless@vger.kernel.org
-References: <201011061544.00876.IvDoorn@gmail.com> <201011061546.18043.IvDoorn@gmail.com> <201011061546.37042.IvDoorn@gmail.com>
-In-Reply-To: <201011061546.37042.IvDoorn@gmail.com>
+	Mon, 1 Nov 2010 22:45:45 -0400
+Received: by vws13 with SMTP id 13so4381646vws.19
+        for <linux-wireless@vger.kernel.org>; Mon, 01 Nov 2010 19:45:45 -0700 (PDT)
+Message-ID: <4CCF7B73.7040906@lwfinger.net>
+Date: Mon, 01 Nov 2010 21:46:11 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Message-Id: <201011061546.53938.IvDoorn@gmail.com>
+To: htl10@users.sourceforge.net
+CC: linux-wireless@vger.kernel.org,
+	Herton Ronaldo Krzesinski <herton@mandriva.com.br>,
+	John W Linville <linville@tuxdriver.com>
+Subject: Re: [PATCH 3/9] rtl8187: fix wrong register initialization in 8187B
+References: <309278.75116.qm@web29520.mail.ird.yahoo.com>
+In-Reply-To: <309278.75116.qm@web29520.mail.ird.yahoo.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Mark Einon <mark.einon@gmail.com>
+On 11/01/2010 09:42 PM, Hin-Tak Leung wrote:
+> 
+> --- On Tue, 2/11/10, Herton Ronaldo Krzesinski <herton@mandriva.com.br> wrote:
+> 
+>> We were using wrong address for BRSR
+>> (Basic Rate Set Register) while
+>> initializing its value, comparing with Realtek sources, for
+>> 8187B case.
+>>
+>> Also, the same register is initialized in
+>> rtl8187b_reg_table, so remove
+>> the duplicate initialization from the table.
+>>
+>> Signed-off-by: Herton Ronaldo Krzesinski <herton@mandriva.com.br>
+>> Acked-by: Larry Finger <Larry.Finger@lwfinger.net>
+> 
+> Acked-by: Hin-Tak Leung <htl10@users.sourceforge.net>
+> 
+> ANAPARAM* stands for "anonymous parameters", right?  One of these days we should give them some meaningful names. 
 
-rt2x00lib.h:60: ERROR: space prohibited after that open parenthesis '('
-rt2x00lib.h:60: ERROR: space prohibited before that close parenthesis ')'
+I have always thought it was for "analog parameter". Am I wrong?
 
-Signed-off-by: Mark Einon <mark.einon@gmail.com>
-Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
----
- drivers/net/wireless/rt2x00/rt2x00lib.h |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
-
-diff --git a/drivers/net/wireless/rt2x00/rt2x00lib.h b/drivers/net/wireless/rt2x00/rt2x00lib.h
-index 619da23..9835402 100644
---- a/drivers/net/wireless/rt2x00/rt2x00lib.h
-+++ b/drivers/net/wireless/rt2x00/rt2x00lib.h
-@@ -57,7 +57,7 @@ static inline const struct rt2x00_rate *rt2x00_get_rate(const u16 hw_value)
- }
- 
- #define RATE_MCS(__mode, __mcs) \
--	( (((__mode) & 0x00ff) << 8) | ((__mcs) & 0x00ff) )
-+	((((__mode) & 0x00ff) << 8) | ((__mcs) & 0x00ff))
- 
- static inline int rt2x00_get_rate_mcs(const u16 mcs_value)
- {
--- 
-1.7.2.3
-
+Larry
