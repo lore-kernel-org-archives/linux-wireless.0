@@ -1,86 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.lang.hm ([64.81.33.126]:36627 "EHLO bifrost.lang.hm"
+Received: from nbd.name ([88.198.39.176]:48107 "EHLO ds10.nbd.name"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751468Ab0K3U3C (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 30 Nov 2010 15:29:02 -0500
-Date: Tue, 30 Nov 2010 12:13:05 -0800 (PST)
-From: david@lang.hm
-To: Pavel Machek <pavel@ucw.cz>
-cc: "Luis R. Rodriguez" <lrodriguez@atheros.com>, bkuhn@ebb.org,
-	Alan Cox <alan@lxorguk.ukuu.org.uk>,
-	linux-kernel@vger.kernel.org,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Greg KH <greg@kroah.com>, David Miller <davem@davemloft.net>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Stephen Hemminger <shemminger@vyatta.com>,
-	"Perez-Gonzalez, Inaky" <inaky.perez-gonzalez@intel.com>,
-	Charles Marker <Charles.Marker@atheros.com>,
-	Jouni Malinen <Jouni.Malinen@atheros.com>,
-	Kevin Hayes <kevin@atheros.com>,
-	Zhifeng Cai <zhifeng.cai@atheros.com>,
-	Don Breslin <Don.Breslin@atheros.com>,
-	Doug Dahlby <Doug.Dahlby@atheros.com>,
-	Julia Lawall <julia@diku.dk>
-Subject: Re: Challenges with doing hardware bring up with Linux first
-In-Reply-To: <20101130200019.GA28735@elf.ucw.cz>
-Message-ID: <alpine.DEB.2.00.1011301209090.423@asgard.lang.hm>
-References: <AANLkTim4jVaZxYp8nSgJyy28iwxcxbPeNUzxTfoHAX4S@mail.gmail.com> <20101118113441.74fcdc21@lxorguk.ukuu.org.uk> <AANLkTikOZbtyhsk0OBb4OdUi6qj-7k_hU-aW_Pkhfpq0@mail.gmail.com> <20101130192648.GA1623@ucw.cz> <AANLkTinMyAeVJJc7Lc-vt_Ywr+vcSf-GAiQwggTGbqh8@mail.gmail.com>
- <20101130200019.GA28735@elf.ucw.cz>
+	id S1752653Ab0KBROB (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 2 Nov 2010 13:14:01 -0400
+Message-ID: <4CD046D2.4080703@openwrt.org>
+Date: Tue, 02 Nov 2010 18:13:54 +0100
+From: Felix Fietkau <nbd@openwrt.org>
 MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+To: =?ISO-8859-15?Q?Bj=F6rn_Smedman?= <bjorn.smedman@venatech.se>
+CC: ath9k-devel@lists.ath9k.org,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: [ath9k-devel] [RFC] ath9k: fix tx queue selection
+References: <alpine.DEB.2.00.1011021655080.23045@vtdt3>
+In-Reply-To: <alpine.DEB.2.00.1011021655080.23045@vtdt3>
+Content-Type: text/plain; charset=ISO-8859-15
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 30 Nov 2010, Pavel Machek wrote:
+On 2010-11-02 5:13 PM, Björn Smedman wrote:
+> Hi all,
+> 
+> The following patch attempts to fix some problems with ath9k tx queue 
+> selection:
+> 
+> 1. There was a posible mismatch between the queue selected for QoS packets 
+> (on which locking, queue start/stop and statistics where performed) and 
+> the queue actually used for TX. This is fixed by selecting the tx queue 
+> based on the TID of the 802.11 header for this type of packet.
+This should not be necessary. mac80211 should take care of queue
+selection properly for QoS frames. If it doesn't, then that is the bug
+that needs to be fixed...
 
-> On Tue 2010-11-30 11:30:18, Luis R. Rodriguez wrote:
->> On Tue, Nov 30, 2010 at 11:26 AM, Pavel Machek <pavel@ucw.cz> wrote:
->>> Hi!
->>>
->>>>>> everything else can be independent code. For ath9k in particular this
->>>>>> means we keep ath9k_hw shared between our Operating Systems and that's
->>>>>> it. In addition to this I believe opening up the common drivers for
->>>>>
->>>>> The Linux copy needs to be GPL,
->>>>
->>>> GPL-Compatible you mean, right. I mean we have ath9k_hw with
->>>> permissive licensed files.
->>>
->>> GPL-compatible is not right word. It has to be either GPL, or so
->>> permissive that anyone is allowed to turn it into GPL.
->>
->> Oh?
->
-> Kernel is GPL. Dual BSD/GPL is ok. Just BSD... I don't think so.
->
-> /*
-> * Copyright (c) 2008 Atheros Communications Inc.
-> *
-> * Permission to use, copy, modify, and/or distribute this software
-> for any
-> * purpose with or without fee is hereby granted, provided that the
-> above
-> * copyright notice and this permission notice appear in all copies.
-> *
->
-> ...but I need permission to relicense it under GPL, and I'm not sure I
-> have it.
-> 							Pavel
+> 2. Even with the above fix there was still a risk of mac80211 queue 
+> "deadlock" because the queue to stop was selected on the basis of the skb 
+> queue mapping whereas the queue to start was selected based on the hardware
+> tx queue to mac80211 queue mapping. These may not in all situations be one 
+> and the same.
+Instead of working around this, we need to make sure that those are
+always identical.
 
-unless it's the old 4-clause BSD license (with the advertising clause, 
-which almost nobody used anymore), the BSD code can be relicensed as 
-anything (including proprietary), as long as the notices in the file are 
-maintained.
+> This patch is against latest wireless-testing but I've only tested it 
+> against compat-wireless-2010-10-19 with openwrt patches on top (including 
+> Luis latest pcu lock patch) and some other patches I'm working on. If you 
+> can run wireless-testing directly, please give it a spin. For me it's a 
+> big improvement in stability under high tx/rx load. 
+> 
+> Any thoughts?
+Let's do a thorough review of the tx path and figure out where the
+mismatch is actually coming from.
 
-it doesn't take more explicit permission to re-license something as GPL 
-than it does to make it closed-source.
-
-However,
-   there are quite a few files in the kernel that are BSD licensed, when 
-combined with other GPL code, the only way you can re-distribute the 
-result is under the GPL, so it is effectivly 'converted' when you compile, 
-but by leaving the file BSD, improvements to it can be shared back with 
-the original authors and put into their main codebase, so it's actually 
-more polite to leave the license as-is for this file.
-
-David Lang
+- Felix
