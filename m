@@ -1,62 +1,92 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from perninha.conectiva.com.br ([187.115.55.249]:47830 "EHLO
-	perninha.conectiva.com.br" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753037Ab0KBBAM (ORCPT
+Received: from mail-pw0-f46.google.com ([209.85.160.46]:50545 "EHLO
+	mail-pw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753195Ab0KCRbM convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 1 Nov 2010 21:00:12 -0400
-From: Herton Ronaldo Krzesinski <herton@mandriva.com.br>
-To: linux-wireless@vger.kernel.org
-Cc: Larry Finger <Larry.Finger@lwfinger.net>,
-	Hin-Tak Leung <htl10@users.sourceforge.net>,
-	John W Linville <linville@tuxdriver.com>,
-	Herton Ronaldo Krzesinski <herton@mandriva.com.br>
-Subject: [PATCH 1/9] rtl8187: remove redundant initialization of ARFR
-Date: Mon,  1 Nov 2010 22:59:31 -0200
-Message-Id: <1288659579-4986-2-git-send-email-herton@mandriva.com.br>
-In-Reply-To: <1288659579-4986-1-git-send-email-herton@mandriva.com.br>
-References: <1288659579-4986-1-git-send-email-herton@mandriva.com.br>
+	Wed, 3 Nov 2010 13:31:12 -0400
+Received: by pwj3 with SMTP id 3so367846pwj.19
+        for <linux-wireless@vger.kernel.org>; Wed, 03 Nov 2010 10:31:11 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <4CD19421.6000407@openwrt.org>
+References: <alpine.DEB.2.00.1011021655080.23045@vtdt3>
+	<4CD046D2.4080703@openwrt.org>
+	<4CD04C61.4070007@openwrt.org>
+	<AANLkTikUUue=Nt0iFPcQC68kDCh=EeEpeBT9xnhW6bf+@mail.gmail.com>
+	<4CD05E49.70701@openwrt.org>
+	<AANLkTinBSeUSGR_9P-e5ZgKSeLfp36JfUbJOk73hpnQ2@mail.gmail.com>
+	<4CD08C86.9030202@openwrt.org>
+	<AANLkTi=zzGv7Vagb18Rpby=Xo_+g2yuVoFvAejU1KEud@mail.gmail.com>
+	<4CD14D39.5020401@openwrt.org>
+	<AANLkTinvmmqCsgKsfAikdsb88_bCV=VL2+1ZxrwdFHFm@mail.gmail.com>
+	<4CD19421.6000407@openwrt.org>
+Date: Wed, 3 Nov 2010 18:31:10 +0100
+Message-ID: <AANLkTik_dZ2ZVDLHOiDwj6XsxGkA=K4meW_LPPnnjDo7@mail.gmail.com>
+Subject: Re: [ath9k-devel] [RFC] ath9k: fix tx queue selection
+From: =?ISO-8859-1?Q?Bj=F6rn_Smedman?= <bjorn.smedman@venatech.se>
+To: Felix Fietkau <nbd@openwrt.org>
+Cc: ath9k-devel@lists.ath9k.org,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This removes redundant write to Auto Rate Fallback Register on RTL8187B.
-The same value was being written twice in the same function. Avoid this
-removing the duplicate initialization on rtl8187b_reg_table, and also
-add comment for this write (information from Realtek source).
+2010/11/3 Felix Fietkau <nbd@openwrt.org>:
+> On 2010-11-03 5:27 PM, Björn Smedman wrote:
+>> Ok, regardless. So lets say there is a bug in mac80211 that allows a
+>> "mismatch" between header qos tid and skb queue mapping to occur
+>> (which in fact there is because this happens all the time with my
+>> frame injection heavy app). Then it's ok for ath9k to screw up the
+>> locking, possibly corrupt data and so on, silently?
+> I don't see potential for locking issues or data corruption here, even
+> if such a bug were to show up.
 
-Signed-off-by: Herton Ronaldo Krzesinski <herton@mandriva.com.br>
-Acked-by: Larry Finger <Larry.Finger@lwfinger.net>
----
- drivers/net/wireless/rtl818x/rtl8187_dev.c |    9 +++++----
- 1 files changed, 5 insertions(+), 4 deletions(-)
+Then I think this is the only point we really disagree on. :)
 
-diff --git a/drivers/net/wireless/rtl818x/rtl8187_dev.c b/drivers/net/wireless/rtl818x/rtl8187_dev.c
-index 6e26149..3dbf305 100644
---- a/drivers/net/wireless/rtl818x/rtl8187_dev.c
-+++ b/drivers/net/wireless/rtl818x/rtl8187_dev.c
-@@ -712,10 +712,9 @@ static const u8 rtl8187b_reg_table[][3] = {
- 
- 	{0x58, 0x4B, 1}, {0x59, 0x00, 1}, {0x5A, 0x4B, 1}, {0x5B, 0x00, 1},
- 	{0x60, 0x4B, 1}, {0x61, 0x09, 1}, {0x62, 0x4B, 1}, {0x63, 0x09, 1},
--	{0xCE, 0x0F, 1}, {0xCF, 0x00, 1}, {0xE0, 0xFF, 1}, {0xE1, 0x0F, 1},
--	{0xE2, 0x00, 1}, {0xF0, 0x4E, 1}, {0xF1, 0x01, 1}, {0xF2, 0x02, 1},
--	{0xF3, 0x03, 1}, {0xF4, 0x04, 1}, {0xF5, 0x05, 1}, {0xF6, 0x06, 1},
--	{0xF7, 0x07, 1}, {0xF8, 0x08, 1},
-+	{0xCE, 0x0F, 1}, {0xCF, 0x00, 1}, {0xF0, 0x4E, 1}, {0xF1, 0x01, 1},
-+	{0xF2, 0x02, 1}, {0xF3, 0x03, 1}, {0xF4, 0x04, 1}, {0xF5, 0x05, 1},
-+	{0xF6, 0x06, 1}, {0xF7, 0x07, 1}, {0xF8, 0x08, 1},
- 
- 	{0x4E, 0x00, 2}, {0x0C, 0x04, 2}, {0x21, 0x61, 2}, {0x22, 0x68, 2},
- 	{0x23, 0x6F, 2}, {0x24, 0x76, 2}, {0x25, 0x7D, 2}, {0x26, 0x84, 2},
-@@ -776,7 +775,9 @@ static int rtl8187b_init_hw(struct ieee80211_hw *dev)
- 	reg |= RTL818X_CW_CONF_PERPACKET_RETRY_SHIFT;
- 	rtl818x_iowrite8(priv, &priv->map->CW_CONF, reg);
- 
-+	/* Auto Rate Fallback Register (ARFR): 1M-54M setting */
- 	rtl818x_iowrite16_idx(priv, (__le16 *)0xFFE0, 0x0FFF, 1);
-+	rtl818x_iowrite8_idx(priv, (u8 *)0xFFE2, 0x00, 1);
- 
- 	rtl818x_iowrite16(priv, &priv->map->BEACON_INTERVAL, 100);
- 	rtl818x_iowrite16(priv, &priv->map->ATIM_WND, 2);
--- 
-1.7.3.2
+It goes like this. When we get to ath_tx_start_dma() there already is
+a txq assigned (passed as txctl->txq) and we lock that txq. Then, if
+it's aggregation data we look up the tid:
 
+                an = (struct ath_node *)tx_info->control.sta->drv_priv;
+                tid = ATH_AN_2_TID(an, bf->bf_tidno);
+
+Notice how bf->bf_tidno is used. This contains the TID from the 802.11
+header qos field. That means tid->ac->txq may not be the same as
+txctl->txq if there is a mismatch between frame data and skb queue
+mapping. Now we call ath_tx_send_ampdu() which presumes the txq (and
+therefore the associated tid) is already locked and starts fiddling
+with e.g. tid->buf_q, in this case without holding
+tid->ac->txq->axq_lock. This is racy e.g. against ath_draintxq() /
+ath_txq_drain_pending_buffers() which does not know about this madness
+and locks the correct txq.
+
+> I'm not saying we should assume that everything is always fine, but I do
+> object to adding defensive code against made up scenarios of potential
+> bugs that "might" be introduced at some point in the future.
+
+I can see your point. I don't want lots of defensive stuff (like what
+you removed in your patch). But I still feel the balance is wrong.
+Take one recent case for example: We're not 100% sure we can always
+stop RX dma. In fact, a few weeks ago we weren't even sure what we
+didn't start it when we weren't supposed to. Yet for some reason there
+seems to be a consensus it is a good idea to keep ds_data of all those
+dma descriptors pointing at arbitrary kernel data. I realize it takes
+some time and adds some clutter to do "ds_data = 0". I also understand
+it does not help in all cases. But I think it's a reasonable
+precaution under the circumstances. It's like in medicine, patients
+will die but when they do you want to be able to say "we did
+everything we could". ;)
+
+>> If you relay on something so fragile as the contents of frame data
+>> "matching" skb_get_queue_mapping() I think you owe me at least a
+>> WARN_ON_ONCE before you start corrupting memory. ;)
+> The assumption that I make is not just about some random field in the
+> frame contents. I'm assuming that ieee80211_select_queue() makes a sane
+> decision that matches the description in the standard, and that the
+> network stack preserves the decision that this function made.
+> And besides - it's not like part of ath9k that cares about the TID is
+> going to live on for much longer :)
+
+I guess you are talking aggregation in mac80211. Very much looking
+forward to that. :)
+
+/Björn
