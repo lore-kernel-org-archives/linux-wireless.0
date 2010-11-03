@@ -1,83 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ogre.sisk.pl ([217.79.144.158]:35496 "EHLO ogre.sisk.pl"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751972Ab0KIT1p (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 9 Nov 2010 14:27:45 -0500
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
-To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Subject: Re: [Regression, post-2.6.35] ath9k occasionally drops out of PCI config space
-Date: Tue, 9 Nov 2010 20:26:48 +0100
-Cc: Luis Rodriguez <Luis.Rodriguez@atheros.com>,
-	Felix Fietkau <nbd@openwrt.org>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	LKML <linux-kernel@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-References: <201011052150.02245.rjw@sisk.pl> <201011082147.14170.rjw@sisk.pl> <AANLkTikhQrk3aMJLLeeTmy9KJHd-H3xxFPNdUT9uJoD8@mail.gmail.com>
-In-Reply-To: <AANLkTikhQrk3aMJLLeeTmy9KJHd-H3xxFPNdUT9uJoD8@mail.gmail.com>
+Received: from mail-gx0-f174.google.com ([209.85.161.174]:43021 "EHLO
+	mail-gx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753808Ab0KCPWp (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 3 Nov 2010 11:22:45 -0400
+Received: by gxk23 with SMTP id 23so557777gxk.19
+        for <linux-wireless@vger.kernel.org>; Wed, 03 Nov 2010 08:22:44 -0700 (PDT)
+From: Helmut Schaa <helmut.schaa@googlemail.com>
+To: Johannes Stezenbach <js@sig21.net>
+Subject: Re: [regression]AP with hostapd 0.7.3 can't receive packets beyond authentication (2.6.36, rt73usb)
+Date: Wed, 3 Nov 2010 16:21:48 +0100
+Cc: Ivo Van Doorn <ivdoorn@gmail.com>, Lee <lee-in-berlin@web.de>,
+	Gertjan van Wingerde <gwingerde@gmail.com>,
+	linux-wireless@vger.kernel.org
+References: <4CC0D0F6.4080507@web.de> <AANLkTint5Y0X4F_OcvwWLxYhScf=sTZ2cD4gq-sMoNmy@mail.gmail.com> <20101103145950.GA5798@sig21.net>
+In-Reply-To: <20101103145950.GA5798@sig21.net>
 MIME-Version: 1.0
 Content-Type: Text/Plain;
-  charset="utf-8"
-Message-Id: <201011092026.48434.rjw@sisk.pl>
+  charset="us-ascii"
+Message-Id: <201011031621.48923.helmut.schaa@googlemail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Monday, November 08, 2010, Luis R. Rodriguez wrote:
-> On Mon, Nov 8, 2010 at 12:47 PM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
-> > On Friday, November 05, 2010, Luis R. Rodriguez wrote:
-> >> On Fri, Nov 05, 2010 at 01:50:02PM -0700, Rafael J. Wysocki wrote:
-> >> > Hi,
-> >> >
-> >> > For some time I've been experiencing a regression associated with ath9k
-> >> > that occasionally it drops the connection with the AP and goes into a state
-> >> > in which reading from its PCI config registers (as done by lspci) return all
-> >> > ones.
-> >> >
-> >> > It may be sort of brought back to life by a suspend/resume afterwards, but
-> >> > then the driver cannot really handle it and realoding the driver doesn't help
-> >> > (probe fails).  Basically, full machine reboot is needed to revive the adapter.
-> >> >
-> >> > The device is:
-> >> >
-> >> > 09:00.0 Network controller: Atheros Communications Inc. AR928X Wireless Network Adapter (PCI-Express) (rev 01)
-> >> >         Subsystem: Foxconn International, Inc. Device e01f
-> >> >
-> >> > and the kernel says:
-> >> >
-> >> > [    9.623217] ath9k 0000:09:00.0: PCI INT A -> GSI 19 (level, low) -> IRQ 19
-> >> > [    9.631518] ath9k 0000:09:00.0: setting latency timer to 64
-> >> > [   10.071497] ath: EEPROM regdomain: 0x65
-> >> > [   10.071502] ath: EEPROM indicates we should expect a direct regpair map
-> >> > [   10.071510] ath: Country alpha2 being used: 00
-> >> > [   10.071514] ath: Regpair used: 0x65
-> >> > [   10.096025] phy0: Selected rate control algorithm 'ath9k_rate_control'
-> >> > [   10.097803] Registered led device: ath9k-phy0::radio
-> >> > [   10.098035] Registered led device: ath9k-phy0::assoc
-> >> > [   10.098249] Registered led device: ath9k-phy0::tx
-> >> > [   10.098483] Registered led device: ath9k-phy0::rx
-> >> > [   10.098496] phy0: Atheros AR9280 Rev:2 mem=0xffffc900017e0000, irq=19
-> >> >
-> >> > The issue is not really bisectable, because I'm unable to trigger it on demand
-> >> > and it occurs approx. 1-2 times a day.  So, if you have any ideas what to test,
-> >> > please let me know.
-> >> >
-> >> > It is not reproducible with the 2.6.35 kernel.
-> >>
-> >> Please try this patch.
-> >
-> > It _appears_ to help.  At least I haven't been able to reproduce the problem
-> > since I applied it, which was on Saturday early in the morning.
-> >
-> > Still, I also haven't used wireless a lot since that time, because I've been
-> > traveling mostly.
+Am Mittwoch 03 November 2010 schrieb Johannes Stezenbach:
+> On Wed, Nov 03, 2010 at 03:51:52PM +0100, Ivo Van Doorn wrote:
+> > On Wed, Nov 3, 2010 at 3:14 PM, Johannes Stezenbach <js@sig21.net> wrote:
+> > > On Tue, Nov 02, 2010 at 01:50:07PM +0100, Johannes Stezenbach wrote:
+> > >>
+> > >> While reading through the code I noticed the following in rt2800_config_intf():
+> > >>
+> > >>               rt2x00_set_field32(&reg, MAC_BSSID_DW1_BSS_ID_MASK, 3);
+> > >>
+> > >> However, in Ralink source from http://www.ralinktech.com/support.php?s=2
+> > >> in DPO_RT3370_LinuxSTA_V2.4.0.1_20100831/include/chip/rtmp_mac.h it says:
+> > >>                 USHORT          BssIdMask:2; // 0: one BSSID, 10: 4 BSSID,  01: 2 BSSID , 11: 8BSSID
+> > >>
+> > >> This is different from rt73usb where 3 means "one BSSID".
+> > >
+> > > Any comments on this?
+> > 
+> > Well RT3370 isn't rt73 ;)
+> > Instead (altough I don't know this exact chipset), I suspect it to be
+> > of the rt2800 family.
 > 
-> Thanks, please let us know when you are satisfied with this as a fix.
+> OK, seems hat I wrote was confusing.
+> 
+> rt73usb sets the field to 3 (meaning "one BSSID").
+> 
+> But rt2800usb also sets it to 3, but it should be 0 (in rt2800_config_intf).
 
-OK, I'm now quite confident that it really helps.
+I would be fine with setting this to 0 but only in STA and IBSS mode. At
+least in AP mode we want to keep the max value to be able to use multiple
+AP mode interfaces.
 
-> Its going upstream so either way if you find you hit the issue just
-> let us know.
-
-Great, thanks, I will.
-
-Rafael
+Helmut
