@@ -1,30 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:44906 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932823Ab0KPWWf (ORCPT
+Received: from aurora.create-net.org ([193.206.22.116]:49865 "EHLO
+	aurora.create-net.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753540Ab0KCOqH (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 16 Nov 2010 17:22:35 -0500
-Subject: Re: [PATCH] iw: Resolve namespace clash between station plink and
- vlan commands
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Javier Cardona <javier@cozybit.com>
-Cc: nbd@openwrt.org, linux-wireless@vger.kernel.org
-In-Reply-To: <1289867251-21559-1-git-send-email-javier@cozybit.com>
-References: <1289867251-21559-1-git-send-email-javier@cozybit.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Tue, 16 Nov 2010 14:24:06 -0800
-Message-ID: <1289946246.3673.12.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+	Wed, 3 Nov 2010 10:46:07 -0400
+Received: from localhost (localhost.localdomain [127.0.0.1])
+	by aurora.create-net.org (Postfix) with ESMTP id 0445E383F6
+	for <linux-wireless@vger.kernel.org>; Wed,  3 Nov 2010 15:46:05 +0100 (CET)
+Received: from aurora.create-net.org ([127.0.0.1])
+	by localhost (aurora.create-net.org [127.0.0.1]) (amavisd-new, port 10024)
+	with ESMTP id 1zTkAM-ckrM7 for <linux-wireless@vger.kernel.org>;
+	Wed,  3 Nov 2010 15:46:04 +0100 (CET)
+Received: from [192.168.9.142] (unknown [192.168.9.142])
+	by aurora.create-net.org (Postfix) with ESMTPSA id 59365383D6
+	for <linux-wireless@vger.kernel.org>; Wed,  3 Nov 2010 15:46:04 +0100 (CET)
+Message-ID: <4CD175AB.7000002@create-net.org>
+Date: Wed, 03 Nov 2010 15:46:03 +0100
+From: Roberto Riggio <roberto.riggio@create-net.org>
+MIME-Version: 1.0
+To: linux-wireless@vger.kernel.org
+Subject: Transmission feedback in monitor mode
+Content-Type: text/plain; charset=ISO-8859-15; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2010-11-15 at 16:27 -0800, Javier Cardona wrote:
-> This patch: http://osdir.com/ml/linux-wireless/2009-11/msg00981.html
-> kicked the command to manage mesh plinks into non-existence.  Here we
-> bring it back under a different name.
+   Hi,
 
-I'll happily take this, but would you prefer to have the other one
-backed out instead?
 
-johannes
+I'm looking for an example on how to use transmission
+feedback on a device operating in monitor mode.
+
+I've already managed to write an userlevel software (using the click
+modular router) that injects packets over a monitor interface however
+if I use wireshark to sniff the traffic from that interface
+i see no tx feedback packets (albeit for example I can clearly
+see that there are some retransmissions).
+
+Is there a patch for making mac80211 use the IEEE80211_RADIOTAP_TX_FLAGS?
+
+Thanks
+R.
 
