@@ -1,48 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qy0-f181.google.com ([209.85.216.181]:59038 "EHLO
-	mail-qy0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S935559Ab0KQXLT (ORCPT
+Received: from mail-ww0-f44.google.com ([74.125.82.44]:51670 "EHLO
+	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753047Ab0KCW33 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 17 Nov 2010 18:11:19 -0500
+	Wed, 3 Nov 2010 18:29:29 -0400
+Received: by wwe15 with SMTP id 15so1307211wwe.1
+        for <linux-wireless@vger.kernel.org>; Wed, 03 Nov 2010 15:29:28 -0700 (PDT)
+From: =?utf-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+To: linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>,
+	=?utf-8?q?Michael=20B=C3=BCsch?= <mb@bu3sch.de>
+Cc: b43-dev@lists.infradead.org,
+	=?utf-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+Subject: [PATCH] ssb: return -ENOMEM on alloc fail (instead of CRC check's result)
+Date: Wed,  3 Nov 2010 23:28:45 +0100
+Message-Id: <1288823326-9686-1-git-send-email-zajec5@gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <1290010595.3777.0.camel@jlt3.sipsolutions.net>
-References: <20101112024901.28522.21895.stgit@localhost6.localdomain6>
-	<20101112030035.28522.75318.stgit@localhost6.localdomain6>
-	<20101116093743.GA21872@jm.kir.nu>
-	<201011171728.06801.br1@einfach.org>
-	<1290010595.3777.0.camel@jlt3.sipsolutions.net>
-Date: Wed, 17 Nov 2010 18:11:18 -0500
-Message-ID: <AANLkTimoogSLAipNy=njGtHypqBQSk=usDmXut=KN9TM@mail.gmail.com>
-Subject: Re: [PATCH v7 3/3] nl80211/mac80211: Report signal average
-From: Bob Copeland <me@bobcopeland.com>
-To: Bruno Randolf <br1@einfach.org>
-Cc: Johannes Berg <johannes@sipsolutions.net>, Jouni Malinen <j@w1.fi>,
-	linville@tuxdriver.com, randy.dunlap@oracle.com,
-	peterz@infradead.org, blp@cs.stanford.edu,
-	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Lars_Ericsson@telia.com, stefanr@s5r6.in-berlin.de,
-	kosaki.motohiro@jp.fujitsu.com, akpm@linux-foundation.org,
-	kevin.granade@gmail.com
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Nov 17, 2010 at 11:16 AM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
-> On Wed, 2010-11-17 at 17:28 +0900, Bruno Randolf wrote:
->> I understand that this could be more efficient, but if it matters or not -
->> honestly, I don't know. Can a more knowledgeable person than me comment on
->> this?
->
-> Yes, it does matter -- think of an embedded MIPS board running at 500MHz
-> and trying to push 11n speeds.
+Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
+---
+John: it's for 2.6.38.
+---
+ drivers/ssb/pci.c |    7 +++----
+ 1 files changed, 3 insertions(+), 4 deletions(-)
 
-I assume the number of samples (weight) is the more
-important tunable.  One option is you can require factor
-to be a power of two that is much larger than weight,
-then at least you can store factor/weight precomputed
-and multiply by it instead of doing a divide in ewma_add.
-Then ewma_get can also just be a shift as well.
-
+diff --git a/drivers/ssb/pci.c b/drivers/ssb/pci.c
+index 3226832..b5343ac 100644
+--- a/drivers/ssb/pci.c
++++ b/drivers/ssb/pci.c
+@@ -619,7 +619,7 @@ static int ssb_pci_sprom_get(struct ssb_bus *bus,
+ 			     struct ssb_sprom *sprom)
+ {
+ 	const struct ssb_sprom *fallback;
+-	int err = -ENOMEM;
++	int err;
+ 	u16 *buf;
+ 
+ 	if (!ssb_is_sprom_available(bus)) {
+@@ -646,7 +646,7 @@ static int ssb_pci_sprom_get(struct ssb_bus *bus,
+ 
+ 	buf = kcalloc(SSB_SPROMSIZE_WORDS_R123, sizeof(u16), GFP_KERNEL);
+ 	if (!buf)
+-		goto out;
++		return -ENOMEM;
+ 	bus->sprom_size = SSB_SPROMSIZE_WORDS_R123;
+ 	sprom_do_read(bus, buf);
+ 	err = sprom_check_crc(buf, bus->sprom_size);
+@@ -656,7 +656,7 @@ static int ssb_pci_sprom_get(struct ssb_bus *bus,
+ 		buf = kcalloc(SSB_SPROMSIZE_WORDS_R4, sizeof(u16),
+ 			      GFP_KERNEL);
+ 		if (!buf)
+-			goto out;
++			return -ENOMEM;
+ 		bus->sprom_size = SSB_SPROMSIZE_WORDS_R4;
+ 		sprom_do_read(bus, buf);
+ 		err = sprom_check_crc(buf, bus->sprom_size);
+@@ -678,7 +678,6 @@ static int ssb_pci_sprom_get(struct ssb_bus *bus,
+ 
+ out_free:
+ 	kfree(buf);
+-out:
+ 	return err;
+ }
+ 
 -- 
-Bob Copeland %% www.bobcopeland.com
+1.6.0.4
+
