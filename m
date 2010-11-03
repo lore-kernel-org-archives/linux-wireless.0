@@ -1,37 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:56691 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751944Ab0KRSx4 (ORCPT
+Received: from smtp.nokia.com ([192.100.122.233]:59829 "EHLO
+	mgw-mx06.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753753Ab0KCLvP (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 18 Nov 2010 13:53:56 -0500
-Subject: Re: module unloading busted ?
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Rajkumar Manoharan <rmanoharan@atheros.com>
-Cc: "Luis R. Rodriguez" <mcgrof@gmail.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <20101118093725.GA3388@vmraj-lnx.users.atheros.com>
-References: <AANLkTim775JXAkrvVjn-TmwD5B6-MYCRw6ah=rVF8Opk@mail.gmail.com>
-	 <20101118093725.GA3388@vmraj-lnx.users.atheros.com>
+	Wed, 3 Nov 2010 07:51:15 -0400
+Subject: Re: [PATCH v2] wl1271: Change wl12xx Files Names
+From: Luciano Coelho <luciano.coelho@nokia.com>
+To: ext Shahar Levi <shahar_levi@ti.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <4CD14B9D.1070305@ti.com>
+References: <1288505649-28733-1-git-send-email-shahar_levi@ti.com>
+	 <1288772739.1164.10.camel@chilepepper>  <4CD14B9D.1070305@ti.com>
 Content-Type: text/plain; charset="UTF-8"
-Date: Thu, 18 Nov 2010 10:55:15 -0800
-Message-ID: <1290106515.3801.4.camel@jlt3.sipsolutions.net>
+Date: Wed, 03 Nov 2010 13:50:53 +0200
+Message-ID: <1288785053.1164.13.camel@chilepepper>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2010-11-18 at 15:07 +0530, Rajkumar Manoharan wrote:
-> On Thu, Nov 18, 2010 at 12:56:00PM +0530, Luis R. Rodriguez wrote:
-> > 05:33 < mcgrof> so module unload on ath9k no longer works
-> > 06:11 < vmraj> mcgrof: module unload is not working for intel cards too
-> > 06:15 < vmraj> it can be reproduced by rmmod on active connection
-> > 
-> > I haven't yet figured out why. Anyone else with other modules experiencing this?
-> > 
-> cfg80211_netdev_notifier_call invokes dev_hold on NETDEV_DOWN which increments
-> Usage count. hence unregister_netdevice fails.
+On Wed, 2010-11-03 at 12:46 +0100, ext Shahar Levi wrote:
+> On 11/03/2010 10:25 AM, Luciano Coelho wrote:
+> > I'm also getting two checkpatch warnings:
+> >
+> > WARNING: please, no space for starting a line,
+> > 				excluding comments
+> > #669: FILE: drivers/net/wireless/wl12xx/main.c:2227:
+> > +       .ht_cap = WL12XX_HT_CAP,$
+> This is weird. In order to find those warning i ran:
+> "./scripts/checkpatch.pl 
+> wl12xx-files-prefix-v2/0001-wl1271-Change-wl12xx-Files-Names.patch
+> total: 0 errors, 0 warnings, 598 lines checked
+> 
+> wl12xx-files-prefix-v2/0001-wl1271-Change-wl12xx-Files-Names.patch has 
+> no obvious style problems and is ready for submission."
+> 
+> On that patch it didn't find warning.
+> Is there more efficient way to validate those issue?
 
-The cleanup_work should fix that up -- but I can see this being a corner
-case that the network stack no longer likes us for ...
+Hmmm... This could also be our mailserver fscking up again.  If you
+don't get those warnings yourself, just ignore this comment :)
 
-johannes
+
+-- 
+Cheers,
+Luca.
 
