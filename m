@@ -1,45 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qw0-f46.google.com ([209.85.216.46]:65142 "EHLO
-	mail-qw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753067Ab0KJCVB (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 9 Nov 2010 21:21:01 -0500
-Received: by mail-qw0-f46.google.com with SMTP id 5so5749qwh.19
-        for <linux-wireless@vger.kernel.org>; Tue, 09 Nov 2010 18:21:00 -0800 (PST)
-From: Arnaud Lacombe <lacombar@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: lrodriguez@atheros.com, Arnaud Lacombe <lacombar@gmail.com>
-Subject: [PATCH 08/44] compat/2.6.20: add header's skeleton
-Date: Tue,  9 Nov 2010 21:19:50 -0500
-Message-Id: <1289355626-25373-9-git-send-email-lacombar@gmail.com>
-In-Reply-To: <1289355626-25373-1-git-send-email-lacombar@gmail.com>
-References: <1289355626-25373-1-git-send-email-lacombar@gmail.com>
+Received: from 80-190-117-144.ip-home.de ([80.190.117.144]:35689 "EHLO
+	bu3sch.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751960Ab0KCVxp (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 3 Nov 2010 17:53:45 -0400
+Subject: Re: [PATCH] ssb: workarounds: be verbose about hacking SPROM
+ revision, don't duplicate code
+From: Michael =?ISO-8859-1?Q?B=FCsch?= <mb@bu3sch.de>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: =?UTF-8?Q?Rafa=C5=82_Mi=C5=82ecki?= <zajec5@gmail.com>,
+	linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>,
+	b43-dev@lists.infradead.org
+In-Reply-To: <4CD1D99D.5070501@lwfinger.net> (sfid-20101103_225215_757770_7A4F5678)
+References: <1288818386-25073-1-git-send-email-zajec5@gmail.com>
+	 (sfid-20101103_220727_407923_69716152) <1288820625.7368.117.camel@maggie>
+	 <4CD1D99D.5070501@lwfinger.net> (sfid-20101103_225215_757770_7A4F5678)
+Content-Type: text/plain; charset="UTF-8"
+Date: Wed, 03 Nov 2010 22:53:38 +0100
+Message-ID: <1288821218.7368.118.camel@maggie>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Arnaud Lacombe <lacombar@gmail.com>
----
- include/linux/compat-2.6.20.h |   11 +++++++++++
- 1 files changed, 11 insertions(+), 0 deletions(-)
- create mode 100644 include/linux/compat-2.6.20.h
+On Wed, 2010-11-03 at 16:52 -0500, Larry Finger wrote: 
+> On 11/03/2010 04:43 PM, Michael Büsch wrote:
+> > On Wed, 2010-11-03 at 22:06 +0100, Rafał Miłecki wrote: 
+> >> +	default:
+> >> +		ssb_printk(KERN_WARNING PFX "Unsupported SPROM"
+> >> +			   "  revision %d detected. Will extract"
+> >> +			   " v1\n", out->revision);
+> >> +		out->revision = 1;
+> >> +		sprom_extract_r123(out, in);
+> > 
+> > I think we should change this to throw a hard error if the sprom is
+> > unknown. Extracting r123 is unlikely to do any good these days.
+> > This workaround was only useful back in the days where 95% of the
+> > cards out there were r123. But today that's not the case.
+> > 
+> >> 	}
+> >>  
+> >>  	if (out->boardflags_lo == 0xFFFF)
+> 
+> In any case, the out->revision = 1 statement should be before the ssb_printk() call.
 
-diff --git a/include/linux/compat-2.6.20.h b/include/linux/compat-2.6.20.h
-new file mode 100644
-index 0000000..bbfdacb
---- /dev/null
-+++ b/include/linux/compat-2.6.20.h
-@@ -0,0 +1,11 @@
-+#ifndef LINUX_26_20_COMPAT_H
-+#define LINUX_26_20_COMPAT_H
-+
-+#include <linux/version.h>
-+
-+/* Compat work for 2.6.20 */
-+#if (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,20))
-+
-+#endif /* (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,20)) */
-+
-+#endif /* LINUX_26_20_COMPAT_H */
+I don't think so.
+
 -- 
-1.7.2.30.gc37d7.dirty
+Greetings Michael.
 
