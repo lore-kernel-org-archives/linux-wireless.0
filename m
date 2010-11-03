@@ -1,65 +1,120 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([147.243.1.47]:53982 "EHLO mgw-sa01.nokia.com"
+Received: from arroyo.ext.ti.com ([192.94.94.40]:59932 "EHLO arroyo.ext.ti.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753885Ab0K2NCF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 29 Nov 2010 08:02:05 -0500
-Subject: Re: [RFC 2/2] wl12xx: Stop BA session event from device
-From: Luciano Coelho <luciano.coelho@nokia.com>
-To: ext Shahar Levi <shahar_levi@ti.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <4CF3A2BE.8040305@ti.com>
-References: <1290695964-4208-1-git-send-email-shahar_levi@ti.com>
-	 <1290695964-4208-2-git-send-email-shahar_levi@ti.com>
-	 <1291035211.1673.68.camel@powerslave>  <4CF3A2BE.8040305@ti.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Mon, 29 Nov 2010 14:58:28 +0200
-Message-ID: <1291035508.1673.70.camel@powerslave>
-Mime-Version: 1.0
+	id S1752850Ab0KCLqo (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 3 Nov 2010 07:46:44 -0400
+Message-ID: <4CD14B9D.1070305@ti.com>
+Date: Wed, 03 Nov 2010 13:46:37 +0200
+From: Shahar Levi <shahar_levi@ti.com>
+MIME-Version: 1.0
+To: Luciano Coelho <luciano.coelho@nokia.com>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH v2] wl1271: Change wl12xx Files Names
+References: <1288505649-28733-1-git-send-email-shahar_levi@ti.com> <1288772739.1164.10.camel@chilepepper>
+In-Reply-To: <1288772739.1164.10.camel@chilepepper>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2010-11-29 at 14:55 +0200, ext Shahar Levi wrote:
-> On 11/29/2010 02:53 PM, Luciano Coelho wrote:
-> > On Thu, 2010-11-25 at 16:39 +0200, ext Shahar Levi wrote:
-> >> Adding new event that close RX BA session in case of periodic BT activity
-> >> limiting WLAN activity.
-> >>
-> >> Signed-off-by: Shahar Levi<shahar_levi@ti.com>
-> >> ---
-> >
-> > [...]
-> >
-> >> diff --git a/drivers/net/wireless/wl12xx/event.c b/drivers/net/wireless/wl12xx/event.c
-> >> index 9815b7b..7cbeb2b 100644
-> >> --- a/drivers/net/wireless/wl12xx/event.c
-> >> +++ b/drivers/net/wireless/wl12xx/event.c
-> >> @@ -174,6 +174,25 @@ static void wl1271_event_rssi_trigger(struct wl1271 *wl,
-> >>   	wl->last_rssi_event = event;
-> >>   }
-> >>
-> >> +static void wl1271_event_ba_rx_constraint(struct wl1271 *wl,
-> >> +					  struct event_mailbox *mbox)
-> >> +{
-> >> +	u8 tid_index = 0;
-> >> +
-> >> +	wl1271_debug(DEBUG_EVENT, "BA RX constraint event. ba_allowed = %d",
-> >> +		     mbox->ba_allowed);
-> >> +
-> >> +	wl->ba_allowed = mbox->ba_allowed;
-> >> +
-> >> +	if (!wl->ba_rx_bitmap)
-> >> +		return;
-> >> +
-> >> +	for (tid_index = 0; tid_index<  CONF_TX_MAX_TID_COUNT; ++tid_index)
-> >
-> > Please use the more classic tid_index++ instead.
-> OK, will be fix on v2.
+On 11/03/2010 10:25 AM, Luciano Coelho wrote:
+> On Sun, 2010-10-31 at 07:14 +0100, ext Shahar Levi wrote:
+>> All files name prefix removed due to the fuct that wl12xx driver supports
+>> wl1271 and wl1273.
+>> Also the definition in Kconfig and header files changed respectively.
+>>
+>> Signed-off-by: Shahar Levi<shahar_levi@ti.com>
+>> ---
+>
+> Some more comments.
+Hi,
 
-This is really nitpicking now, but if you change tid_index to i instead,
-you won't need two lines for the call to ieee80211_stop_rx_ba_session(),
-because it will fit in one line. :P
+>> diff --git a/drivers/net/wireless/wl12xx/Kconfig b/drivers/net/wireless/wl12xx/Kconfig
+>> index 1b3b7bd..6941618 100644
+>> --- a/drivers/net/wireless/wl12xx/Kconfig
+>> +++ b/drivers/net/wireless/wl12xx/Kconfig
+>> @@ -1,56 +1,57 @@
+>> -menuconfig WL12XX
+>> +menuconfig WL12XX_MENU
+>
+> Actually we don't have WL1251 here anymore, so maybe this could be
+> removed instead? But that can go in a separate patch.
+OK, i will implement separate patch after that one will apply.
 
--- 
-Cheers,
-Luca.
+>> -config WL1271_SPI
+>> -       tristate "TI wl1271 SPI support"
+>> -       depends on WL1271&&  SPI_MASTER
+>> +config WL12XX_SPI
+>> +       tristate "TI wl12xx SPI support"
+>> +       depends on WL12XX&&  SPI_MASTER
+>>          ---help---
+>>            This module adds support for the SPI interface of adapters using
+>> -         TI wl1271 chipset.  Select this if your platform is using
+>> -         the SPI bus.
+>> +         TI wl12xx chipsets.  Select this if your platform is using
+>> +         the wl12xx_spi bus.
+>
+> Change wl12xx_spi bus back to SPI bus.
+Will be fix on v3.
+
+>> -         If you choose to build a module, it'll be called wl1251_spi.
+>> +         If you choose to build a module, it'll be called spi.
+>
+> "it will be called wl1271_spi".
+Will be fix on v3.
+
+>> -config WL1271_SDIO
+>> -       tristate "TI wl1271 SDIO support"
+>> -       depends on WL1271&&  MMC
+>> +config WL12XX_SDIO
+>> +       tristate "TI wl12xx SDIO support"
+>> +       depends on WL12XX&&  MMC
+>>          ---help---
+>>            This module adds support for the SDIO interface of adapters using
+>> -         TI wl1271 chipset.  Select this if your platform is using
+>> -         the SDIO bus.
+>> +         TI wl12xx chipsets.  Select this if your platform is using
+>> +         the wl12xx_sdio bus.
+>
+> Change back to SDIO bus.
+Will be fix on v3.
+
+>> -         If you choose to build a module, it'll be called
+>> -         wl1271_sdio. Say N if unsure.
+>> +         If you choose to build a module, it'll be called sdio.
+>> +         Say N if unsure.
+>
+> "it will be called wl12xx_sdio".
+Will be fix on v3.
+
+> I'm also getting two checkpatch warnings:
+>
+> WARNING: please, no space for starting a line,
+> 				excluding comments
+> #669: FILE: drivers/net/wireless/wl12xx/main.c:2227:
+> +       .ht_cap = WL12XX_HT_CAP,$
+This is weird. In order to find those warning i ran:
+"./scripts/checkpatch.pl 
+wl12xx-files-prefix-v2/0001-wl1271-Change-wl12xx-Files-Names.patch
+total: 0 errors, 0 warnings, 598 lines checked
+
+wl12xx-files-prefix-v2/0001-wl1271-Change-wl12xx-Files-Names.patch has 
+no obvious style problems and is ready for submission."
+
+On that patch it didn't find warning.
+Is there more efficient way to validate those issue?
+
+> WARNING: please, no space for starting a line,
+> 				excluding comments
+> #678: FILE: drivers/net/wireless/wl12xx/main.c:2342:
+> +       .ht_cap = WL12XX_HT_CAP,$
+the same as above
+
+> And due to other changes in the code, this patch doesn't apply cleanly
+> anymore.  Can you please rebase it on the latest wl12xx code?
+No problem, i will rebase  it to latest.
+
+I greatly appreciate your review and help.
+Shahar
+
+
 
