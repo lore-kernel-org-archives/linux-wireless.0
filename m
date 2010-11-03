@@ -1,52 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.perches.com ([173.55.12.10]:1739 "EHLO mail.perches.com"
+Received: from mail.sysgo.com ([195.145.229.155]:49213 "EHLO mail.sysgo.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757164Ab0KUCkk (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 20 Nov 2010 21:40:40 -0500
-From: Joe Perches <joe@perches.com>
-To: Stefano Brivio <stefano.brivio@polimi.it>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: [PATCH 55/62] b43: Use static const
-Date: Sat, 20 Nov 2010 18:38:56 -0800
-Message-Id: <515c42b1b99e90575869532cfa383cadb7b66515.1290305776.git.joe@perches.com>
-In-Reply-To: <cover.1290305773.git.joe@perches.com>
-References: <cover.1290305773.git.joe@perches.com>
+	id S1753990Ab0KCJYb (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 3 Nov 2010 05:24:31 -0400
+Date: Wed, 3 Nov 2010 10:24:31 +0100
+From: Pavel Machek <pma@sysgo.com>
+To: kernel list <linux-kernel@vger.kernel.org>,
+	chunkeey@googlemail.com, linux-wireless@vger.kernel.org
+Subject: working usb wifi card, that is still possible to buy
+Message-ID: <20101103092431.GA21138@pma.sysgo.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Using static const generally increases object text and decreases data size.
-It also generally decreases overall object size.
+Hi!
 
-   text	   data	    bss	    dec	    hex	filename
-   5502	     56	   1336	   6894	   1aee	drivers/net/wireless/b43/phy_common.o.new
-   5511	     56	   1336	   6903	   1af7	drivers/net/wireless/b43/phy_common.o.old
+Is there an USB wifi card that can still be bought in reasonable
+ammount (like 1000 pieces) and is well supported by Linux?
 
-Signed-off-by: Joe Perches <joe@perches.com>
----
- drivers/net/wireless/b43/phy_common.c |    8 +++++---
- 1 files changed, 5 insertions(+), 3 deletions(-)
+So far I tried carl9170 (as seen by previous mails) and
+rt2x00usb. carl9170 is not really usable; rt2x00usb works a bit
+better, but also fails after some time:
 
-diff --git a/drivers/net/wireless/b43/phy_common.c b/drivers/net/wireless/b43/phy_common.c
-index 7b2ea67..fa7f83f 100644
---- a/drivers/net/wireless/b43/phy_common.c
-+++ b/drivers/net/wireless/b43/phy_common.c
-@@ -427,9 +427,11 @@ void b43_phyop_switch_analog_generic(struct b43_wldev *dev, bool on)
- /* http://bcm-v4.sipsolutions.net/802.11/PHY/Cordic */
- struct b43_c32 b43_cordic(int theta)
- {
--	u32 arctg[] = { 2949120, 1740967, 919879, 466945, 234379, 117304,
--		      58666, 29335, 14668, 7334, 3667, 1833, 917, 458,
--		      229, 115, 57, 29, };
-+	static const u32 arctg[] = {
-+		2949120, 1740967, 919879, 466945, 234379, 117304,
-+		  58666,   29335,  14668,   7334,   3667,   1833,
-+		    917,     458,    229,    115,     57,     29,
-+	};
- 	u8 i;
- 	s32 tmp;
- 	s8 signx = 1;
--- 
-1.7.3.2.245.g03276.dirty
+phy0 -> rt2x00usb_vendor_request: Error - Vendor Request 0x07 failed
+for offset.
+phy0 -> rt2x00usb_vendor_request: Error - Vendor Request 0x06 failed
+for offset.
+phy0 -> rt2x00usb_vendor_request: Error - Vendor Request 0x07 failed
+for offset.
+phy0 -> rt2x00usb_vendor_request: Error - Vendor Request 0x06 failed
+for offset.
+phy0 -> rt2x00usb_vendor_request: Error - Vendor Request 0x07 failed
+for offset.
+phy0 -> rt2x00usb_vendor_request: Error - Vendor Request 0x06 failed
+for offset.
+phy0 -> rt2x00usb_vendor_request: Error - Vendor Request 0x07 failed
+for offset.
+...
+phy0 -> rt2x00usb_vendor_request: Error - Vendor Request 0x07 failed
+for offset.
+usb 1-1: USB disconnect, address 2
+usb 1-1: new full speed USB device using ppc-of-ohci and address 3
+usb 1-1: device descriptor read/64, error -62
+usb 1-1: device descriptor read/64, error -62
+usb 1-1: new full speed USB device using ppc-of-ohci and address 4
+usb 1-1: device descriptor read/64, error -62
+usb 1-1: device descriptor read/64, error -62
+usb 1-1: new full speed USB device using ppc-of-ohci and address 5
+usb 1-1: device not accepting address 5, error -62
+usb 1-1: new full speed USB device using ppc-of-ohci and address 6
+usb 1-1: device not accepting address 6, error -62
+hub 1-0:1.0: unable to enumerate USB device on port 1
+usb 1-1: new full speed USB device using ppc-of-ohci and address 7
+usb 1-1: device descriptor read/64, error -62
+usb 1-1: device descriptor read/64, error -62
+usb 1-1: new full speed USB device using ppc-of-ohci and address 8
+usb 1-1: device descriptor read/64, error -62
+usb 1-1: device descriptor read/64, error -62
+usb 1-1: new full speed USB device using ppc-of-ohci and address 9
+usb 1-1: device not accepting address 9, error -62
+usb 1-1: new full speed USB device using ppc-of-ohci and address 10
+usb 1-1: device not accepting address 10, error -62
+hub 1-0:1.0: unable to enumerate USB device on port 1
 
+(is that failing firmware?) 
+
+Note that this is powerpc with OHCI/USB1.1 controller.
+								Pavel
