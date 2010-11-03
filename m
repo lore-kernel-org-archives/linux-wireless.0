@@ -1,53 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.19.149.2]:22946 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756882Ab0KJV5v (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 10 Nov 2010 16:57:51 -0500
-Received: from mail.atheros.com ([10.10.20.105])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Wed, 10 Nov 2010 13:57:39 -0800
-Date: Wed, 10 Nov 2010 13:57:49 -0800
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: Arnaud Lacombe <lacombar@gmail.com>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"Luis Rodriguez" <Luis.Rodriguez@Atheros.com>
-Subject: Re: [PATCH 07/44] compat/2.6.19: rework compat macro to
- kmem_cache_destroy()
-Message-ID: <20101110215749.GE4667@tux>
-References: <1289355626-25373-1-git-send-email-lacombar@gmail.com>
- <1289355626-25373-8-git-send-email-lacombar@gmail.com>
+Received: from mail-qy0-f181.google.com ([209.85.216.181]:40788 "EHLO
+	mail-qy0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752903Ab0KCRrp convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 3 Nov 2010 13:47:45 -0400
+Received: by qyk10 with SMTP id 10so319948qyk.19
+        for <linux-wireless@vger.kernel.org>; Wed, 03 Nov 2010 10:47:45 -0700 (PDT)
+From: Ben Gamari <bgamari@gmail.com>
+To: =?utf-8?Q?Bj=C3=B6rn?= Smedman <bjorn.smedman@venatech.se>
+Cc: ath9k-devel@lists.ath9k.org,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: [ath9k-devel] ath9k: race conditions in dma
+In-Reply-To: <AANLkTik+dFEAqGdk9NJpbr8tGKc_NagO8nXSBF4sDtTt@mail.gmail.com>
+References: <AANLkTik=LvRZja13SGOpicVjbyf6chRtTD-RkvSm2VcE@mail.gmail.com> <8762whrqvm.fsf@gmail.com> <AANLkTik+dFEAqGdk9NJpbr8tGKc_NagO8nXSBF4sDtTt@mail.gmail.com>
+Date: Wed, 03 Nov 2010 13:47:34 -0400
+Message-ID: <87k4kuuwnd.fsf@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <1289355626-25373-8-git-send-email-lacombar@gmail.com>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Nov 09, 2010 at 06:19:49PM -0800, Arnaud Lacombe wrote:
-> Signed-off-by: Arnaud Lacombe <lacombar@gmail.com>
-> ---
->  include/linux/compat-2.6.19.h |   11 +----------
->  1 files changed, 1 insertions(+), 10 deletions(-)
+On Tue, 2 Nov 2010 17:55:22 +0100, Björn Smedman <bjorn.smedman@venatech.se> wrote:
+> Ben, if you can easily trigger these problems on wireless-testing,
+> could you test with my patch and see if it helps? I'm especially
+> interested to see if it really fixes problem 1.
 > 
-> diff --git a/include/linux/compat-2.6.19.h b/include/linux/compat-2.6.19.h
-> index bcffc47..ddba97d 100644
-> --- a/include/linux/compat-2.6.19.h
-> +++ b/include/linux/compat-2.6.19.h
-> @@ -8,16 +8,7 @@
->  
->  #include <linux/slab.h>
->  
-> -static inline int
-> -compat_kmem_cache_destroy(struct kmem_cache *cachep)
-> -{
-> -#if (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,19))
-> -	return kmem_cache_destroy(cachep);
-> -#else
-> -	kmem_cache_destroy(cachep);
-> -	return 0;
-> -#endif
-> -}
-> +#define kmem_cache_destroy(cachep)	({ kmem_cache_destroy(cachep); 0; })
+The only time I've been able to reproduce the issue with
+wireless-testing is when using my work laptop. I'll bring it home
+tonight and see if your patch makes any difference. Thanks,
 
-Is this because it shall not even fail for older kernels?
+- Ben
 
-  Luis
