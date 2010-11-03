@@ -1,455 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.perches.com ([173.55.12.10]:1730 "EHLO mail.perches.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757074Ab0KUCkh (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 20 Nov 2010 21:40:37 -0500
-From: Joe Perches <joe@perches.com>
-To: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	Jouni Malinen <jmalinen@atheros.com>,
-	Vasanthakumar Thiagarajan <vasanth@atheros.com>,
-	Senthil Balasubramanian <senthilkumar@atheros.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
-	netdev@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH 52/62] ath9k: Use static const
-Date: Sat, 20 Nov 2010 18:38:53 -0800
-Message-Id: <b81ca280ba06c62e869cbed7b72e91463883e42a.1290305776.git.joe@perches.com>
-In-Reply-To: <cover.1290305773.git.joe@perches.com>
-References: <cover.1290305773.git.joe@perches.com>
+Received: from rcsinet10.oracle.com ([148.87.113.121]:45889 "EHLO
+	rcsinet10.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751298Ab0KCXS4 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 3 Nov 2010 19:18:56 -0400
+Date: Wed, 3 Nov 2010 16:18:37 -0700
+From: Randy Dunlap <randy.dunlap@oracle.com>
+To: Linus Torvalds <torvalds@linux-foundation.org>,
+	linux-wireless@vger.kernel.org
+Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+Subject: Re: Linux 2.6.37-rc1 (libipw remove_proc_entry warning)
+Message-Id: <20101103161837.fad11d79.randy.dunlap@oracle.com>
+In-Reply-To: <AANLkTimr3rW67HxgOUyReEW8dmmSsd4b7-Ns57mXzS1w@mail.gmail.com>
+References: <AANLkTimr3rW67HxgOUyReEW8dmmSsd4b7-Ns57mXzS1w@mail.gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Using static const generally increases object text and decreases data size.
-It also generally decreases overall object size.
 
-   text	   data	    bss	    dec	    hex	filename
-  11161	     56	   2136	  13353	   3429	drivers/net/wireless/ath/ath9k/ar9003_paprd.o.new
-  11167	     56	   2136	  13359	   342f	drivers/net/wireless/ath/ath9k/ar9003_paprd.o.old
-  15428	     56	   3056	  18540	   486c	drivers/net/wireless/ath/ath9k/eeprom_4k.o.old
-  15451	     56	   3056	  18563	   4883	drivers/net/wireless/ath/ath9k/eeprom_4k.o.new
-  14087	     56	   2560	  16703	   413f	drivers/net/wireless/ath/ath9k/eeprom_9287.o.old
-  14036	     56	   2560	  16652	   410c	drivers/net/wireless/ath/ath9k/eeprom_9287.o.new
-  10041	     56	   2384	  12481	   30c1	drivers/net/wireless/ath/ath9k/ani.o.new
-  10088	     56	   2384	  12528	   30f0	drivers/net/wireless/ath/ath9k/ani.o.old
-   9316	   1580	   2304	  13200	   3390	drivers/net/wireless/ath/ath9k/htc_drv_init.o.new
-   9316	   1580	   2304	  13200	   3390	drivers/net/wireless/ath/ath9k/htc_drv_init.o.old
-  16483	     56	   3432	  19971	   4e03	drivers/net/wireless/ath/ath9k/ar9003_phy.o.new
-  16517	     56	   3432	  20005	   4e25	drivers/net/wireless/ath/ath9k/ar9003_phy.o.old
-  18221	    104	   2960	  21285	   5325	drivers/net/wireless/ath/ath9k/rc.o.old
-  18203	    104	   2960	  21267	   5313	drivers/net/wireless/ath/ath9k/rc.o.new
-  19985	     56	   4288	  24329	   5f09	drivers/net/wireless/ath/ath9k/eeprom_def.o.new
-  20040	     56	   4288	  24384	   5f40	drivers/net/wireless/ath/ath9k/eeprom_def.o.old
-  23997	     56	   4984	  29037	   716d	drivers/net/wireless/ath/ath9k/ar5008_phy.o.old
-  23846	     56	   4984	  28886	   70d6	drivers/net/wireless/ath/ath9k/ar5008_phy.o.new
-  24285	     56	   3184	  27525	   6b85	drivers/net/wireless/ath/ath9k/ar9003_eeprom.o.old
-  24101	     56	   3184	  27341	   6acd	drivers/net/wireless/ath/ath9k/ar9003_eeprom.o.new
-   6834	     56	   1032	   7922	   1ef2	drivers/net/wireless/ath/ath9k/ar9002_phy.o.old
-   6780	     56	   1032	   7868	   1ebc	drivers/net/wireless/ath/ath9k/ar9002_phy.o.new
-  36211	     64	   8624	  44899	   af63	drivers/net/wireless/ath/ath9k/hw.o.new
-  36401	     64	   8624	  45089	   b021	drivers/net/wireless/ath/ath9k/hw.o.old
-   9281	     56	   1496	  10833	   2a51	drivers/net/wireless/ath/ath9k/ar9003_calib.o.old
-   9150	     56	   1496	  10702	   29ce	drivers/net/wireless/ath/ath9k/ar9003_calib.o.new
+Nov  3 16:03:11 control kernel: [   74.701367]     (5170000[   74.846676] calling  libipw_init+0x0/0xe4 [libipw] @ 2992
+[   74.852356] libipw: 802.11 data/management/control stack, git-1.1.13
+[   74.858790] libipw: Copyright (C) 2004-2005 Intel Corporation <jketreno@linux.intel.com>
+[   74.866977] initcall libipw_init+0x0/0xe4 [libipw] returned 0 after 14318 usecs
+Nov  3 16:03:11 control kernel: [   74.846676] calling  libipw_iNov  3 16:03:11 control kernel: [   74.852356] libipw: 802.11 data/management/control stack, git-1.1.13
+Nov  3 16:03:11 control kernel: [   74.858790] libipw: C
 
-Use ARRAY_SIZE instead of a magic number.
 
-Signed-off-by: Joe Perches <joe@perches.com>
+[   78.273409] ------------[ cut here ]------------
+[   78.278210] WARNING: at /local/linsrc/lnx-2637-rc1/fs/proc/generic.c:816 remove_proc_entry+0x156/0x35e()
+Nov  3 16:03:14 [   78.288314] Hardware name: OptiPlex GX620               
+control kernel: [   78.294870] name 'libipw'
+[   78.298520] Modules linked in: libipw(-) lib80211 cfg80211 ipt_MASQUERADE iptable_nat nf_nat af_packet nfsd lockd nfs_acl auth_rpcgss exportfs sco bridge stp llc bnep l2cap crc16 bluetoothNov  3 16:03:14  rfkillcontrol kernel:  sunrpc[   78.278210] W ipt_REJECTARNING: at /loca nf_conntrack_ipv4l/linsrc/lnx-263 nf_defrag_ipv47-rc1/fs/proc/ge iptable_filterneric.c:816 remo ip_tablesve_proc_entry+0x ip6t_REJECT156/0x35e()
+Nov  xt_tcpudp 3 16:03:14 cont nf_conntrack_ipv6rol kernel: [    nf_defrag_ipv678.288314] Hardw xt_stateare name: OptiPl nf_conntrackex GX620         ip6table_filter       
+Nov  3 1 ip6_tables6:03:14 control  x_tableskernel: [   78.2 ipv694870] name 'lib p4_clockmodipw'
+ freq_table speedstep_lib binfmt_misc dm_mirror dm_region_hash dm_log dm_multipath scsi_dh dm_mod kvm uinput mousedev joydev snd_intel8x0 snd_ac97_codec ac97_bus ppdev snd_seq snd_seq_device usbmouse snd_pcm led_class usbkbd snd_timer usbhid iTCO_wdt hid snd iTCO_vendor_support tg3 sr_mod dcdbas cdrom soundcore i2c_i801 rtc_cmos sg pcspkr rng_core parport_pc snd_page_alloc rtc_core shpchp evdev rtc_lib parport 8250_pnp pci_hotplug mac_hid unix ide_pci_generic ide_core ata_generic pata_acpi ata_piix sd_mod crc_t10dif ext3 jbd mbcache uhci_hcd ohci_hcd ssb mmc_core pcmcia pcmcia_core firmware_class ehci_hcd usbcore nls_base i915 drm_kms_helper intel_agp button intel_gtt video thermal_sys hwmon output [last unloaded: mperf]
+[   78.429364] Pid: 3067, comm: rmmod Not tainted 2.6.37-rc1 #10
+[   78.435209] Call Trace:
+[   78.437982]  [<ffffffff8107e1ed>] warn_slowpath_common+0xc6/0xf3
+[   78.444119]  [<ffffffff8107e30a>] warn_slowpath_fmt+0x5b/0x6b
+[   78.449973]  [<ffffffff81550dbb>] ? _raw_spin_unlock+0x40/0x4b
+[   78.456247]  [<ffffffff8123d37e>] remove_proc_entry+0x156/0x35e
+Nov  3 16:03:14 [   78.462289]  [<ffffffff81017d29>] ? native_sched_clock+0x3b/0x6d
+control kernel: [   78.470047]  [<ffffffff810b067f>] ? sched_clock_cpu+0x147/0x160
+[   78.298520] M[   78.477041]  [<ffffffff81137479>] ? trace_hardirqs_off+0x10/0x4a
+odules linked in: libipw(-) lib80211 cfg80211 ip[   78.487138]  [<ffffffff810b0742>] ? local_clock+0xaa/0xf4
+t_MASQUERADE iptable_nat nf_nat [   78.496297]  [<ffffffff810c0ab9>] ? lock_release_holdtime+0x41/0x177
+Nov  3 16:03:14 [   78.505725]  [<ffffffff810c3a1b>] ? lock_release_nested+0xfb/0x133
+Nov  3 16:03:14 [   78.514477]  [<ffffffffa0c39cad>] libipw_exit+0x49/0x5d [libipw]
+Nov  3 16:03:14 [   78.523311]  [<ffffffff810d3310>] sys_delete_module+0x2d6/0x368
+[   78.531755]  [<ffffffff8154f9cb>] ? lockdep_sys_exit_thunk+0x35/0x67
+Nov  3 16:03:14 Nov  3 16:03:14 [   78.540954]  [<ffffffff810fd60f>] ? audit_syscall_entry+0x172/0x1a5
+Nov  3 16:03:14 [   78.550029]  [<ffffffff8154f955>] ? trace_hardirqs_on_thunk+0x3a/0x3f
+Nov  3 16:03:14 [   78.559196]  [<ffffffff8100ea72>] system_call_fastpath+0x16/0x1b
+Nov  3 16:03:14 [   78.567700] ---[ end trace b9ae9f3ab8d89ea5 ]---
+
+
 ---
- drivers/net/wireless/ath/ath9k/ani.c           |    8 +++---
- drivers/net/wireless/ath/ath9k/ar5008_phy.c    |   32 ++++++++++++-----------
- drivers/net/wireless/ath/ath9k/ar9002_phy.c    |   12 +++++---
- drivers/net/wireless/ath/ath9k/ar9003_calib.c  |   10 +++---
- drivers/net/wireless/ath/ath9k/ar9003_eeprom.c |    8 +++--
- drivers/net/wireless/ath/ath9k/ar9003_paprd.c  |    4 +-
- drivers/net/wireless/ath/ath9k/ar9003_phy.c    |    4 +-
- drivers/net/wireless/ath/ath9k/eeprom_4k.c     |   12 +++++---
- drivers/net/wireless/ath/ath9k/eeprom_9287.c   |   14 +++++-----
- drivers/net/wireless/ath/ath9k/eeprom_def.c    |   17 +++++++-----
- drivers/net/wireless/ath/ath9k/htc_drv_init.c  |    2 +-
- drivers/net/wireless/ath/ath9k/hw.c            |    9 +++---
- drivers/net/wireless/ath/ath9k/rc.c            |    6 ++--
- 13 files changed, 74 insertions(+), 64 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/ath9k/ani.c b/drivers/net/wireless/ath/ath9k/ani.c
-index 63ccb39..29a045d 100644
---- a/drivers/net/wireless/ath/ath9k/ani.c
-+++ b/drivers/net/wireless/ath/ath9k/ani.c
-@@ -834,10 +834,10 @@ void ath9k_hw_ani_setup(struct ath_hw *ah)
- {
- 	int i;
- 
--	const int totalSizeDesired[] = { -55, -55, -55, -55, -62 };
--	const int coarseHigh[] = { -14, -14, -14, -14, -12 };
--	const int coarseLow[] = { -64, -64, -64, -64, -70 };
--	const int firpwr[] = { -78, -78, -78, -78, -80 };
-+	static const int totalSizeDesired[] = { -55, -55, -55, -55, -62 };
-+	static const int coarseHigh[] = { -14, -14, -14, -14, -12 };
-+	static const int coarseLow[] = { -64, -64, -64, -64, -70 };
-+	static const int firpwr[] = { -78, -78, -78, -78, -80 };
- 
- 	for (i = 0; i < 5; i++) {
- 		ah->totalSizeDesired[i] = totalSizeDesired[i];
-diff --git a/drivers/net/wireless/ath/ath9k/ar5008_phy.c b/drivers/net/wireless/ath/ath9k/ar5008_phy.c
-index 7303d98..06e34d2 100644
---- a/drivers/net/wireless/ath/ath9k/ar5008_phy.c
-+++ b/drivers/net/wireless/ath/ath9k/ar5008_phy.c
-@@ -244,13 +244,15 @@ static void ar5008_hw_spur_mitigate(struct ath_hw *ah,
- 	int upper, lower, cur_vit_mask;
- 	int tmp, new;
- 	int i;
--	int pilot_mask_reg[4] = { AR_PHY_TIMING7, AR_PHY_TIMING8,
--			  AR_PHY_PILOT_MASK_01_30, AR_PHY_PILOT_MASK_31_60
-+	static int pilot_mask_reg[4] = {
-+		AR_PHY_TIMING7, AR_PHY_TIMING8,
-+		AR_PHY_PILOT_MASK_01_30, AR_PHY_PILOT_MASK_31_60
- 	};
--	int chan_mask_reg[4] = { AR_PHY_TIMING9, AR_PHY_TIMING10,
--			 AR_PHY_CHANNEL_MASK_01_30, AR_PHY_CHANNEL_MASK_31_60
-+	static int chan_mask_reg[4] = {
-+		AR_PHY_TIMING9, AR_PHY_TIMING10,
-+		AR_PHY_CHANNEL_MASK_01_30, AR_PHY_CHANNEL_MASK_31_60
- 	};
--	int inc[4] = { 0, 100, 0, 0 };
-+	static int inc[4] = { 0, 100, 0, 0 };
- 
- 	int8_t mask_m[123];
- 	int8_t mask_p[123];
-@@ -1084,12 +1086,12 @@ static bool ar5008_hw_ani_control_old(struct ath_hw *ah,
- 		break;
- 	}
- 	case ATH9K_ANI_OFDM_WEAK_SIGNAL_DETECTION:{
--		const int m1ThreshLow[] = { 127, 50 };
--		const int m2ThreshLow[] = { 127, 40 };
--		const int m1Thresh[] = { 127, 0x4d };
--		const int m2Thresh[] = { 127, 0x40 };
--		const int m2CountThr[] = { 31, 16 };
--		const int m2CountThrLow[] = { 63, 48 };
-+		static const int m1ThreshLow[] = { 127, 50 };
-+		static const int m2ThreshLow[] = { 127, 40 };
-+		static const int m1Thresh[] = { 127, 0x4d };
-+		static const int m2Thresh[] = { 127, 0x40 };
-+		static const int m2CountThr[] = { 31, 16 };
-+		static const int m2CountThrLow[] = { 63, 48 };
- 		u32 on = param ? 1 : 0;
- 
- 		REG_RMW_FIELD(ah, AR_PHY_SFCORR_LOW,
-@@ -1141,7 +1143,7 @@ static bool ar5008_hw_ani_control_old(struct ath_hw *ah,
- 		break;
- 	}
- 	case ATH9K_ANI_CCK_WEAK_SIGNAL_THR:{
--		const int weakSigThrCck[] = { 8, 6 };
-+		static const int weakSigThrCck[] = { 8, 6 };
- 		u32 high = param ? 1 : 0;
- 
- 		REG_RMW_FIELD(ah, AR_PHY_CCK_DETECT,
-@@ -1157,7 +1159,7 @@ static bool ar5008_hw_ani_control_old(struct ath_hw *ah,
- 		break;
- 	}
- 	case ATH9K_ANI_FIRSTEP_LEVEL:{
--		const int firstep[] = { 0, 4, 8 };
-+		static const int firstep[] = { 0, 4, 8 };
- 		u32 level = param;
- 
- 		if (level >= ARRAY_SIZE(firstep)) {
-@@ -1178,7 +1180,7 @@ static bool ar5008_hw_ani_control_old(struct ath_hw *ah,
- 		break;
- 	}
- 	case ATH9K_ANI_SPUR_IMMUNITY_LEVEL:{
--		const int cycpwrThr1[] = { 2, 4, 6, 8, 10, 12, 14, 16 };
-+		static const int cycpwrThr1[] = { 2, 4, 6, 8, 10, 12, 14, 16 };
- 		u32 level = param;
- 
- 		if (level >= ARRAY_SIZE(cycpwrThr1)) {
-@@ -1627,7 +1629,7 @@ static void ar5008_hw_set_radar_conf(struct ath_hw *ah)
- void ar5008_hw_attach_phy_ops(struct ath_hw *ah)
- {
- 	struct ath_hw_private_ops *priv_ops = ath9k_hw_private_ops(ah);
--	const u32 ar5416_cca_regs[6] = {
-+	static const u32 ar5416_cca_regs[6] = {
- 		AR_PHY_CCA,
- 		AR_PHY_CH1_CCA,
- 		AR_PHY_CH2_CCA,
-diff --git a/drivers/net/wireless/ath/ath9k/ar9002_phy.c b/drivers/net/wireless/ath/ath9k/ar9002_phy.c
-index 3fb97fd..7ae66a8 100644
---- a/drivers/net/wireless/ath/ath9k/ar9002_phy.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9002_phy.c
-@@ -175,13 +175,15 @@ static void ar9002_hw_spur_mitigate(struct ath_hw *ah,
- 	int upper, lower, cur_vit_mask;
- 	int tmp, newVal;
- 	int i;
--	int pilot_mask_reg[4] = { AR_PHY_TIMING7, AR_PHY_TIMING8,
--			  AR_PHY_PILOT_MASK_01_30, AR_PHY_PILOT_MASK_31_60
-+	static const int pilot_mask_reg[4] = {
-+		AR_PHY_TIMING7, AR_PHY_TIMING8,
-+		AR_PHY_PILOT_MASK_01_30, AR_PHY_PILOT_MASK_31_60
- 	};
--	int chan_mask_reg[4] = { AR_PHY_TIMING9, AR_PHY_TIMING10,
--			 AR_PHY_CHANNEL_MASK_01_30, AR_PHY_CHANNEL_MASK_31_60
-+	static const int chan_mask_reg[4] = {
-+		AR_PHY_TIMING9, AR_PHY_TIMING10,
-+		AR_PHY_CHANNEL_MASK_01_30, AR_PHY_CHANNEL_MASK_31_60
- 	};
--	int inc[4] = { 0, 100, 0, 0 };
-+	static const int inc[4] = { 0, 100, 0, 0 };
- 	struct chan_centers centers;
- 
- 	int8_t mask_m[123];
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_calib.c b/drivers/net/wireless/ath/ath9k/ar9003_calib.c
-index 32eed19..4c94c9e 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_calib.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_calib.c
-@@ -196,7 +196,7 @@ static void ar9003_hw_iqcalibrate(struct ath_hw *ah, u8 numChains)
- 	u32 qCoffDenom, iCoffDenom;
- 	int32_t qCoff, iCoff;
- 	int iqCorrNeg, i;
--	const u_int32_t offset_array[3] = {
-+	static const u_int32_t offset_array[3] = {
- 		AR_PHY_RX_IQCAL_CORR_B0,
- 		AR_PHY_RX_IQCAL_CORR_B1,
- 		AR_PHY_RX_IQCAL_CORR_B2,
-@@ -603,22 +603,22 @@ static bool ar9003_hw_calc_iq_corr(struct ath_hw *ah,
- static void ar9003_hw_tx_iq_cal(struct ath_hw *ah)
- {
- 	struct ath_common *common = ath9k_hw_common(ah);
--	const u32 txiqcal_status[AR9300_MAX_CHAINS] = {
-+	static const u32 txiqcal_status[AR9300_MAX_CHAINS] = {
- 		AR_PHY_TX_IQCAL_STATUS_B0,
- 		AR_PHY_TX_IQCAL_STATUS_B1,
- 		AR_PHY_TX_IQCAL_STATUS_B2,
- 	};
--	const u32 tx_corr_coeff[AR9300_MAX_CHAINS] = {
-+	static const u32 tx_corr_coeff[AR9300_MAX_CHAINS] = {
- 		AR_PHY_TX_IQCAL_CORR_COEFF_01_B0,
- 		AR_PHY_TX_IQCAL_CORR_COEFF_01_B1,
- 		AR_PHY_TX_IQCAL_CORR_COEFF_01_B2,
- 	};
--	const u32 rx_corr[AR9300_MAX_CHAINS] = {
-+	static const u32 rx_corr[AR9300_MAX_CHAINS] = {
- 		AR_PHY_RX_IQCAL_CORR_B0,
- 		AR_PHY_RX_IQCAL_CORR_B1,
- 		AR_PHY_RX_IQCAL_CORR_B2,
- 	};
--	const u_int32_t chan_info_tab[] = {
-+	static const u_int32_t chan_info_tab[] = {
- 		AR_PHY_CHAN_INFO_TAB_0,
- 		AR_PHY_CHAN_INFO_TAB_1,
- 		AR_PHY_CHAN_INFO_TAB_2,
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
-index 9a7e151..3161a59 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
-@@ -4455,14 +4455,16 @@ static void ar9003_hw_set_power_per_rate_table(struct ath_hw *ah,
- 	int i;
- 	int16_t  twiceLargestAntenna;
- 	u16 scaledPower = 0, minCtlPower, maxRegAllowedPower;
--	u16 ctlModesFor11a[] = {
-+	static const u16 ctlModesFor11a[] = {
- 		CTL_11A, CTL_5GHT20, CTL_11A_EXT, CTL_5GHT40
- 	};
--	u16 ctlModesFor11g[] = {
-+	static const u16 ctlModesFor11g[] = {
- 		CTL_11B, CTL_11G, CTL_2GHT20, CTL_11B_EXT,
- 		CTL_11G_EXT, CTL_2GHT40
- 	};
--	u16 numCtlModes, *pCtlMode, ctlMode, freq;
-+	u16 numCtlModes;
-+	const u16 *pCtlMode;
-+	u16 ctlMode, freq;
- 	struct chan_centers centers;
- 	u8 *ctlIndex;
- 	u8 ctlNum;
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_paprd.c b/drivers/net/wireless/ath/ath9k/ar9003_paprd.c
-index 716db41..850bc98 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_paprd.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_paprd.c
-@@ -32,12 +32,12 @@ static void ar9003_paprd_setup_single_table(struct ath_hw *ah)
- {
- 	struct ar9300_eeprom *eep = &ah->eeprom.ar9300_eep;
- 	struct ar9300_modal_eep_header *hdr;
--	const u32 ctrl0[3] = {
-+	static const u32 ctrl0[3] = {
- 		AR_PHY_PAPRD_CTRL0_B0,
- 		AR_PHY_PAPRD_CTRL0_B1,
- 		AR_PHY_PAPRD_CTRL0_B2
- 	};
--	const u32 ctrl1[3] = {
-+	static const u32 ctrl1[3] = {
- 		AR_PHY_PAPRD_CTRL1_B0,
- 		AR_PHY_PAPRD_CTRL1_B1,
- 		AR_PHY_PAPRD_CTRL1_B2
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_phy.c b/drivers/net/wireless/ath/ath9k/ar9003_phy.c
-index e8d6455..656d8ce 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_phy.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_phy.c
-@@ -128,7 +128,7 @@ static int ar9003_hw_set_channel(struct ath_hw *ah, struct ath9k_channel *chan)
- static void ar9003_hw_spur_mitigate_mrc_cck(struct ath_hw *ah,
- 					    struct ath9k_channel *chan)
- {
--	u32 spur_freq[4] = { 2420, 2440, 2464, 2480 };
-+	static const u32 spur_freq[4] = { 2420, 2440, 2464, 2480 };
- 	int cur_bb_spur, negative = 0, cck_spur_freq;
- 	int i;
- 
-@@ -1161,7 +1161,7 @@ static void ar9003_hw_set_radar_conf(struct ath_hw *ah)
- void ar9003_hw_attach_phy_ops(struct ath_hw *ah)
- {
- 	struct ath_hw_private_ops *priv_ops = ath9k_hw_private_ops(ah);
--	const u32 ar9300_cca_regs[6] = {
-+	static const u32 ar9300_cca_regs[6] = {
- 		AR_PHY_CCA_0,
- 		AR_PHY_CCA_1,
- 		AR_PHY_CCA_2,
-diff --git a/drivers/net/wireless/ath/ath9k/eeprom_4k.c b/drivers/net/wireless/ath/ath9k/eeprom_4k.c
-index c40c534..c2481b3 100644
---- a/drivers/net/wireless/ath/ath9k/eeprom_4k.c
-+++ b/drivers/net/wireless/ath/ath9k/eeprom_4k.c
-@@ -534,7 +534,9 @@ static void ath9k_hw_set_4k_power_per_rate_table(struct ath_hw *ah,
- 	u16 twiceMinEdgePower;
- 	u16 twiceMaxEdgePower = AR5416_MAX_RATE_POWER;
- 	u16 scaledPower = 0, minCtlPower, maxRegAllowedPower;
--	u16 numCtlModes, *pCtlMode, ctlMode, freq;
-+	u16 numCtlModes;
-+	const u16 *pCtlMode;
-+	u16 ctlMode, freq;
- 	struct chan_centers centers;
- 	struct cal_ctl_data_4k *rep;
- 	struct ar5416_eeprom_4k *pEepData = &ah->eeprom.map4k;
-@@ -550,10 +552,10 @@ static void ath9k_hw_set_4k_power_per_rate_table(struct ath_hw *ah,
- 	struct cal_target_power_ht targetPowerHt20, targetPowerHt40 = {
- 		0, {0, 0, 0, 0}
- 	};
--	u16 ctlModesFor11g[] =
--		{ CTL_11B, CTL_11G, CTL_2GHT20, CTL_11B_EXT, CTL_11G_EXT,
--		  CTL_2GHT40
--		};
-+	static const u16 ctlModesFor11g[] = {
-+		CTL_11B, CTL_11G, CTL_2GHT20,
-+		CTL_11B_EXT, CTL_11G_EXT, CTL_2GHT40
-+	};
- 
- 	ath9k_hw_get_channel_centers(ah, chan, &centers);
- 
-diff --git a/drivers/net/wireless/ath/ath9k/eeprom_9287.c b/drivers/net/wireless/ath/ath9k/eeprom_9287.c
-index 3ad1de2..e756978 100644
---- a/drivers/net/wireless/ath/ath9k/eeprom_9287.c
-+++ b/drivers/net/wireless/ath/ath9k/eeprom_9287.c
-@@ -626,13 +626,13 @@ static void ath9k_hw_set_ar9287_power_per_rate_table(struct ath_hw *ah,
- 	struct cal_target_power_ht targetPowerHt20,
- 				    targetPowerHt40 = {0, {0, 0, 0, 0} };
- 	u16 scaledPower = 0, minCtlPower, maxRegAllowedPower;
--	u16 ctlModesFor11g[] = {CTL_11B,
--				CTL_11G,
--				CTL_2GHT20,
--				CTL_11B_EXT,
--				CTL_11G_EXT,
--				CTL_2GHT40};
--	u16 numCtlModes = 0, *pCtlMode = NULL, ctlMode, freq;
-+	static const u16 ctlModesFor11g[] = {
-+		CTL_11B, CTL_11G, CTL_2GHT20,
-+		CTL_11B_EXT, CTL_11G_EXT, CTL_2GHT40
-+	};
-+	u16 numCtlModes = 0;
-+	const u16 *pCtlMode = NULL;
-+	u16 ctlMode, freq;
- 	struct chan_centers centers;
- 	int tx_chainmask;
- 	u16 twiceMinEdgePower;
-diff --git a/drivers/net/wireless/ath/ath9k/eeprom_def.c b/drivers/net/wireless/ath/ath9k/eeprom_def.c
-index a819ddc..e94216e 100644
---- a/drivers/net/wireless/ath/ath9k/eeprom_def.c
-+++ b/drivers/net/wireless/ath/ath9k/eeprom_def.c
-@@ -1021,13 +1021,16 @@ static void ath9k_hw_set_def_power_per_rate_table(struct ath_hw *ah,
- 		0, {0, 0, 0, 0}
- 	};
- 	u16 scaledPower = 0, minCtlPower, maxRegAllowedPower;
--	u16 ctlModesFor11a[] =
--		{ CTL_11A, CTL_5GHT20, CTL_11A_EXT, CTL_5GHT40 };
--	u16 ctlModesFor11g[] =
--		{ CTL_11B, CTL_11G, CTL_2GHT20, CTL_11B_EXT, CTL_11G_EXT,
--		  CTL_2GHT40
--		};
--	u16 numCtlModes, *pCtlMode, ctlMode, freq;
-+	static const u16 ctlModesFor11a[] = {
-+		CTL_11A, CTL_5GHT20, CTL_11A_EXT, CTL_5GHT40
-+	};
-+	static const u16 ctlModesFor11g[] = {
-+		CTL_11B, CTL_11G, CTL_2GHT20,
-+		CTL_11B_EXT, CTL_11G_EXT, CTL_2GHT40
-+	};
-+	u16 numCtlModes;
-+	const u16 *pCtlMode;
-+	u16 ctlMode, freq;
- 	struct chan_centers centers;
- 	int tx_chainmask;
- 	u16 twiceMinEdgePower;
-diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_init.c b/drivers/net/wireless/ath/ath9k/htc_drv_init.c
-index 7c8a38d..7f2704d 100644
---- a/drivers/net/wireless/ath/ath9k/htc_drv_init.c
-+++ b/drivers/net/wireless/ath/ath9k/htc_drv_init.c
-@@ -308,7 +308,7 @@ static void ath9k_regwrite_single(void *hw_priv, u32 val, u32 reg_offset)
- 	struct ath_hw *ah = (struct ath_hw *) hw_priv;
- 	struct ath_common *common = ath9k_hw_common(ah);
- 	struct ath9k_htc_priv *priv = (struct ath9k_htc_priv *) common->priv;
--	__be32 buf[2] = {
-+	const __be32 buf[2] = {
- 		cpu_to_be32(reg_offset),
- 		cpu_to_be32(val),
- 	};
-diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
-index 1dbe53b..c6e971a 100644
---- a/drivers/net/wireless/ath/ath9k/hw.c
-+++ b/drivers/net/wireless/ath/ath9k/hw.c
-@@ -310,10 +310,9 @@ static bool ath9k_hw_chip_test(struct ath_hw *ah)
- 	struct ath_common *common = ath9k_hw_common(ah);
- 	u32 regAddr[2] = { AR_STA_ID0 };
- 	u32 regHold[2];
--	u32 patternData[4] = { 0x55555555,
--			       0xaaaaaaaa,
--			       0x66666666,
--			       0x99999999 };
-+	static const u32 patternData[4] = {
-+		0x55555555, 0xaaaaaaaa, 0x66666666, 0x99999999
-+	};
- 	int i, j, loop_max;
- 
- 	if (!AR_SREV_9300_20_OR_LATER(ah)) {
-@@ -436,7 +435,7 @@ static int ath9k_hw_init_macaddr(struct ath_hw *ah)
- 	u32 sum;
- 	int i;
- 	u16 eeval;
--	u32 EEP_MAC[] = { EEP_MAC_LSW, EEP_MAC_MID, EEP_MAC_MSW };
-+	static const u32 EEP_MAC[] = { EEP_MAC_LSW, EEP_MAC_MID, EEP_MAC_MSW };
- 
- 	sum = 0;
- 	for (i = 0; i < 3; i++) {
-diff --git a/drivers/net/wireless/ath/ath9k/rc.c b/drivers/net/wireless/ath/ath9k/rc.c
-index 33bb33b..ee4566d 100644
---- a/drivers/net/wireless/ath/ath9k/rc.c
-+++ b/drivers/net/wireless/ath/ath9k/rc.c
-@@ -864,7 +864,7 @@ static bool ath_rc_update_per(struct ath_softc *sc,
- 	bool state_change = false;
- 	int count, n_bad_frames;
- 	u8 last_per;
--	static u32 nretry_to_per_lookup[10] = {
-+	static const u32 nretry_to_per_lookup[10] = {
- 		100 * 0 / 1,
- 		100 * 1 / 4,
- 		100 * 1 / 2,
-@@ -1087,13 +1087,13 @@ static int ath_rc_get_rateindex(const struct ath_rate_table *rate_table,
- 				struct ieee80211_tx_rate *rate)
- {
- 	int rix = 0, i = 0;
--	int mcs_rix_off[] = { 7, 15, 20, 21, 22, 23 };
-+	static const int mcs_rix_off[] = { 7, 15, 20, 21, 22, 23 };
- 
- 	if (!(rate->flags & IEEE80211_TX_RC_MCS))
- 		return rate->idx;
- 
- 	while (rate->idx > mcs_rix_off[i] &&
--	      i < sizeof(mcs_rix_off)/sizeof(int)) {
-+	       i < ARRAY_SIZE(mcs_rix_off)) {
- 		rix++; i++;
- 	}
- 
--- 
-1.7.3.2.245.g03276.dirty
-
+~Randy
+*** Remember to use Documentation/SubmitChecklist when testing your code ***
