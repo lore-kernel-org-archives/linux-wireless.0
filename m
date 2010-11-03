@@ -1,66 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:37353 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756592Ab0KJTpA (ORCPT
+Received: from mail-yw0-f46.google.com ([209.85.213.46]:61495 "EHLO
+	mail-yw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752223Ab0KCApG (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 10 Nov 2010 14:45:00 -0500
-Message-ID: <4CDAF634.1010001@candelatech.com>
-Date: Wed, 10 Nov 2010 11:44:52 -0800
-From: Ben Greear <greearb@candelatech.com>
+	Tue, 2 Nov 2010 20:45:06 -0400
+Received: by ywc21 with SMTP id 21so61664ywc.19
+        for <linux-wireless@vger.kernel.org>; Tue, 02 Nov 2010 17:45:05 -0700 (PDT)
+Message-ID: <4CD0B0AC.4050102@lwfinger.net>
+Date: Tue, 02 Nov 2010 19:45:32 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-To: Bruno Randolf <br1@einfach.org>
-CC: linux-wireless@vger.kernel.org, ath5k-devel@venema.h4ckr.net
-Subject: Re: [PATCH v2] ath5k:  Adjust opmode when interfaces are removed.
-References: <1286564475-10105-1-git-send-email-greearb@candelatech.com> <201010121044.39093.br1@einfach.org> <4CB3C3A3.5040309@candelatech.com> <201010121148.19073.br1@einfach.org>
-In-Reply-To: <201010121148.19073.br1@einfach.org>
-Content-Type: text/plain; charset=ISO-8859-15; format=flowed
+To: Rogerio Luz Coelho <rogluz.news@gmail.com>
+CC: Herton Ronaldo Krzesinski <herton@mandriva.com.br>,
+	Thadeu Lima de Souza Cascardo <cascardo@holoscopio.com>,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 3/9] rtl8187: fix wrong register initialization in 8187B
+References: <309278.75116.qm@web29520.mail.ird.yahoo.com>	<4CCF7B73.7040906@lwfinger.net>	<4CCF7EFC.1050000@mandriva.com.br>	<AANLkTinEsp+-EU4Oau71qHbL6ftO544+H4GA3WZk7CX5@mail.gmail.com>	<4CD0A583.40105@lwfinger.net> <AANLkTin937V6hJ4L2o-SF5riTh0MpTd3e6faZnbZuV48@mail.gmail.com>
+In-Reply-To: <AANLkTin937V6hJ4L2o-SF5riTh0MpTd3e6faZnbZuV48@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 10/11/2010 07:48 PM, Bruno Randolf wrote:
-> On Tue October 12 2010 11:10:43 Ben Greear wrote:
->> On 10/11/2010 06:44 PM, Bruno Randolf wrote:
->>> On Sat October 9 2010 04:01:15 greearb@candelatech.com wrote:
->>>> +
->>>> +	/* Calculate combined mode - when APs are active, operate in AP mode.
->>>> +	 * Otherwise use the mode of the new interface. This can currently
->>>> +	 * only deal with combinations of APs and STAs. Only one ad-hoc
->>>> +	 * interfaces is allowed above.
->>>
->>> the comment reference to "above" does not make sense here any more.
->>
->> This patch is already in..but I can send a followup cleanup patch.
->
-> just for the comment it's probably not worth it, but...
->
->>>> ieee80211_vif *vif) +static void ath_do_set_opmode(struct ath5k_softc
->>>> *sc)
->>>> +{
->>>> +	struct ath5k_hw *ah = sc->ah;
->>>> +	ath5k_hw_set_opmode(ah, sc->opmode);
->>>> +	ATH5K_DBG(sc, ATH5K_DEBUG_MODE, "mode setup opmode %d (%s)\n",
->>>> +		  sc->opmode,
->>>> +		  ath_opmode_to_string(sc->opmode) ?
->>>> +		  ath_opmode_to_string(sc->opmode) : "UKNOWN");
->>>> +}
->>>
->>> what's the point of this function? just to add the debug print?
->>
->> Yes.  At one point, I had it being called from several places..but now it's
->> called from only one place currently, I think.  I could make it explicitly
->> inline code if someone cared.
->
-> i think i do care. could you please just open-code it at the one place where
-> you call this function?
+On 11/02/2010 07:01 PM, Rogerio Luz Coelho wrote:
+ No effect is better than "regression" right?
+> 
+> I am not saying the chip got magically better, it still seems a cheap
+> POS, but with Cascardo's patch is as good as the Win7 driver here.
 
-I just posted a patch to do these two things.
+If you apply Herton's series of 9 patches, you should see a throughput
+improvement. On my card, I get full performance from the 54M rate (27 Mb/s),
+whereas the best I could do before those patches was 11 Mb/s.
 
-Thanks for the suggestions!
+Incidentally, making the Realtek drivers work on x86_64 is not that difficult.
+In any place that they cast a pointer as (u32), that gets changed to
+(__kernel_size_t). The other place that is affected is due to changes in the skb
+buffer parameters tail and data, which are pointers in 32-bit, and offsets in
+64-bit systems. The main point is that you cannot ignore any gcc warnings.
 
-Ben
-
-
--- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
-
+Larry
