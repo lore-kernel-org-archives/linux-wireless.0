@@ -1,48 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:3233 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751069Ab0KHWBb convert rfc822-to-8bit (ORCPT
+Received: from mail-yx0-f174.google.com ([209.85.213.174]:35155 "EHLO
+	mail-yx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751193Ab0KCBoa (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 8 Nov 2010 17:01:31 -0500
-From: "Berg, Johannes" <johannes.berg@intel.com>
-To: Andi Kleen <andi@firstfloor.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-CC: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Andi Kleen <ak@linux.intel.com>,
-	"Guy, Wey-Yi W" <wey-yi.w.guy@intel.com>
-Date: Mon, 8 Nov 2010 22:01:11 +0000
-Subject: RE: [PATCH] iwl3945: Fix oops at module load
-Message-ID: <C5C86A19469DAE48AAAD0E5F3716E44501D40EE169@irsmsx504.ger.corp.intel.com>
-References: <1289253271-19981-1-git-send-email-andi@firstfloor.org>
-In-Reply-To: <1289253271-19981-1-git-send-email-andi@firstfloor.org>
-Content-Type: text/plain; charset="us-ascii"
+	Tue, 2 Nov 2010 21:44:30 -0400
+Received: by yxk8 with SMTP id 8so99647yxk.19
+        for <linux-wireless@vger.kernel.org>; Tue, 02 Nov 2010 18:44:30 -0700 (PDT)
+Message-ID: <4CD0BE99.8020409@lwfinger.net>
+Date: Tue, 02 Nov 2010 20:44:57 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
+To: Rogerio Luz Coelho <rogluz.news@gmail.com>
+CC: Herton Ronaldo Krzesinski <herton@mandriva.com.br>,
+	Thadeu Lima de Souza Cascardo <cascardo@holoscopio.com>,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 3/9] rtl8187: fix wrong register initialization in 8187B
+References: <309278.75116.qm@web29520.mail.ird.yahoo.com>	<4CCF7B73.7040906@lwfinger.net>	<4CCF7EFC.1050000@mandriva.com.br>	<AANLkTinEsp+-EU4Oau71qHbL6ftO544+H4GA3WZk7CX5@mail.gmail.com>	<4CD0A583.40105@lwfinger.net>	<AANLkTin937V6hJ4L2o-SF5riTh0MpTd3e6faZnbZuV48@mail.gmail.com>	<4CD0B0AC.4050102@lwfinger.net> <AANLkTinpJSKhf9PcG9bAPsLjVRKZ3bJEEK0-UQ4rpxJH@mail.gmail.com>
+In-Reply-To: <AANLkTinpJSKhf9PcG9bAPsLjVRKZ3bJEEK0-UQ4rpxJH@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> From: Andi Kleen <ak@linux.intel.com>
+On 11/02/2010 08:06 PM, Rogerio Luz Coelho wrote:
 > 
-> On my laptop the iwl3945 driver oopsed at boot with 2.6.37-rc1
-> in __dev_printk.
+> :) My biggest issue wasn't actually doing the patch, it was actually
+> compiling the damn thing on Ubuntu, that's what you get when you
+> install a distro that tells you in their kernel help page that they
+> don't WANT you to be able to compile your own kernel.
 > 
-> The problem is that for some reason it prints the sw scan
-> warning, but does that before the pci device is initialized
-> in the driver private structure. This leads to an oops
-> in the warning print code.
+> But as I said the connect - disconnect is gone.
 > 
-> Move the warning after the device has been initialized.
+> I will try the new patches alone and with Cascardo's ... will post result here.
 
-Yup, something like this is needed, sorry about this!
-I believe we have a fix for this in the pipeline somewhere.
+As I did something like 20 full kernel builds today, you know I do not use a
+distro that actively discourages kernel compilation. In fact I did run Ubuntu
+once to help a user debug a problem. After experiencing the hoops they make you
+jump through, I blew it away as soon as I could.
 
-johannes
---------------------------------------------------------------------------------------
-Intel GmbH
-Dornacher Strasse 1
-85622 Feldkirchen/Muenchen, Deutschland 
-Sitz der Gesellschaft: Feldkirchen bei Muenchen
-Geschaeftsfuehrer: Douglas Lusk, Peter Gleissner, Hannes Schwaderer
-Registergericht: Muenchen HRB 47456 
-Ust.-IdNr./VAT Registration No.: DE129385895
-Citibank Frankfurt a.M. (BLZ 502 109 00) 600119052
-
+Larry
