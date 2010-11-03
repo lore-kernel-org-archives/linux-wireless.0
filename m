@@ -1,62 +1,31 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from kroah.org ([198.145.64.141]:59091 "EHLO coco.kroah.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754857Ab0KUR2Z (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 21 Nov 2010 12:28:25 -0500
-Date: Sun, 21 Nov 2010 09:29:06 -0800
-From: Greg KH <greg@kroah.com>
-To: Ted Ts'o <tytso@mit.edu>,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	linux-kernel@vger.kernel.org,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	David Miller <davem@davemloft.net>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Stephen Hemminger <shemminger@vyatta.com>,
-	"Perez-Gonzalez, Inaky" <inaky.perez-gonzalez@intel.com>,
-	Charles Marker <Charles.Marker@atheros.com>,
-	Jouni Malinen <Jouni.Malinen@atheros.com>,
-	Kevin Hayes <kevin@atheros.com>,
-	Zhifeng Cai <zhifeng.cai@atheros.com>,
-	Don Breslin <Don.Breslin@atheros.com>,
-	Doug Dahlby <Doug.Dahlby@atheros.com>,
-	Julia Lawall <julia@diku.dk>
-Subject: Re: Challenges with doing hardware bring up with Linux first
-Message-ID: <20101121172906.GD3703@kroah.com>
-References: <AANLkTim4jVaZxYp8nSgJyy28iwxcxbPeNUzxTfoHAX4S@mail.gmail.com> <F46C52ED-8DB8-4347-957D-B9D84406D53F@mit.edu> <AANLkTinyafwe9MyXhSSe5vxEKnTUeLV0AZDWY_uXsu8f@mail.gmail.com> <20101121130236.GE23423@thunk.org>
+Received: from mail-qw0-f46.google.com ([209.85.216.46]:60246 "EHLO
+	mail-qw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753895Ab0KCXNx (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 3 Nov 2010 19:13:53 -0400
+Received: by qwf7 with SMTP id 7so645829qwf.19
+        for <linux-wireless@vger.kernel.org>; Wed, 03 Nov 2010 16:13:52 -0700 (PDT)
+Message-ID: <4CD1ECAE.6010105@gmail.com>
+Date: Wed, 03 Nov 2010 19:13:50 -0400
+From: Eric Appleman <erappleman@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20101121130236.GE23423@thunk.org>
+To: linux-wireless@vger.kernel.org
+Subject: iwl3945 miserably slow (1.5mbps) due to faulty rate control, unfixed
+ since the ipw3945 transition
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, Nov 21, 2010 at 08:02:36AM -0500, Ted Ts'o wrote:
-> On Thu, Nov 18, 2010 at 08:46:11AM -0800, Luis R. Rodriguez wrote:
-> > > What this provides for is a wonderful leverage for hardware
-> > > vendors. ? If they provide GPL'ed code for their core hardware
-> > > drivers that link against the Linux 802.11 layer, at one fell
-> > > swoop they also get Windows 7 and Mac OS X drivers for free!
-> > 
-> > Yes, indeed ! That would be ideal indeed, but we'd need then an 802.11
-> > stack which is also permissive licensed and then make APIs for that
-> > 802.11 stack to match mac80211's or cfg80211's or bridges between
-> > then. Because ultimately you will still need some 802.11 stack for
-> > some OSes that don't have one.
-> 
-> I wonder how much this is true.  Yes, at the moment we still need to
-> worry about those OS's that don't have one; but how much longer will
-> hardware vendors need to support Windows XP?  If Linux, Windows 7, and
-> Mac OS X all have an 802.11 stack, what other OS's do the hardware
-> vendors need to support?
+http://bugzilla.intellinuxwireless.org/show_bug.cgi?id=1932
+http://bugzilla.intellinuxwireless.org/show_bug.cgi?id=1592
+https://bugzilla.kernel.org/show_bug.cgi?id=16132
+https://bugs.launchpad.net/ubuntu/+source/linux/+bug/340418
+https://bugs.launchpad.net/ubuntu/+source/bcmwl/+bug/581936
 
-After visiting with a number of hardware companies that make wireless
-chips, they mentioned that they still need to support, and they still
-get new design wins for both eCos and vxworks, as well as some even
-more obscure embedded operating systems that their customers use.
+There's no shortage of documentation yet Intel devs have explicitly said 
+that fixing this is a very low priority.
 
-So unfortunatly, I don't see the ability for some of these vendors to
-drop their own internal wifi stacks any year soon, if they still wish to
-sell into some very large markets.
+Any insight would be welcome.
 
-sorry,
-
-greg k-h
+- Eric
