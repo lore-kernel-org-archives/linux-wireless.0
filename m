@@ -1,57 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f46.google.com ([209.85.161.46]:60920 "EHLO
-	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752124Ab0KTLV2 (ORCPT
+Received: from mail-ww0-f44.google.com ([74.125.82.44]:44342 "EHLO
+	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751323Ab0KCV7X (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 20 Nov 2010 06:21:28 -0500
-Received: by fxm13 with SMTP id 13so1419793fxm.19
-        for <linux-wireless@vger.kernel.org>; Sat, 20 Nov 2010 03:21:27 -0800 (PST)
-From: Christian Lamparter <chunkeey@googlemail.com>
-To: linux-wireless@vger.kernel.org
-Subject: [PATCH for-2.6.37] carl9170: fix virtual interface setup crash
-Date: Sat, 20 Nov 2010 13:15:27 +0100
-Cc: linville@tuxdriver.com
+	Wed, 3 Nov 2010 17:59:23 -0400
+Received: by wwe15 with SMTP id 15so1268791wwe.1
+        for <linux-wireless@vger.kernel.org>; Wed, 03 Nov 2010 14:59:22 -0700 (PDT)
+Message-ID: <4CD1DB53.8000502@lwfinger.net>
+Date: Wed, 03 Nov 2010 16:59:47 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="us-ascii"
-Message-Id: <201011201315.27401.chunkeey@googlemail.com>
+To: =?UTF-8?B?TWljaGFlbCBCw7xzY2g=?= <mb@bu3sch.de>
+CC: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
+	linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>,
+	b43-dev@lists.infradead.org
+Subject: Re: [PATCH] ssb: workarounds: be verbose about hacking SPROM revision,
+ don't duplicate code
+References: <1288818386-25073-1-git-send-email-zajec5@gmail.com>	 (sfid-20101103_220727_407923_69716152) <1288820625.7368.117.camel@maggie>	 <4CD1D99D.5070501@lwfinger.net> (sfid-20101103_225215_757770_7A4F5678) <1288821218.7368.118.camel@maggie>
+In-Reply-To: <1288821218.7368.118.camel@maggie>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch fixes a faulty bound check which caused a
-crash when too many virtual interface were brought up.
+On 11/03/2010 04:53 PM, Michael Büsch wrote:
+> On Wed, 2010-11-03 at 16:52 -0500, Larry Finger wrote: 
+>> On 11/03/2010 04:43 PM, Michael Büsch wrote:
+>>> On Wed, 2010-11-03 at 22:06 +0100, Rafał Miłecki wrote: 
+>>>> +	default:
+>>>> +		ssb_printk(KERN_WARNING PFX "Unsupported SPROM"
+>>>> +			   "  revision %d detected. Will extract"
+>>>> +			   " v1\n", out->revision);
+>>>> +		out->revision = 1;
+>>>> +		sprom_extract_r123(out, in);
+>>>
+>>> I think we should change this to throw a hard error if the sprom is
+>>> unknown. Extracting r123 is unlikely to do any good these days.
+>>> This workaround was only useful back in the days where 95% of the
+>>> cards out there were r123. But today that's not the case.
+>>>
+>>>> 	}
+>>>>  
+>>>>  	if (out->boardflags_lo == 0xFFFF)
+>>
+>> In any case, the out->revision = 1 statement should be before the ssb_printk() call.
+> 
+> I don't think so.
 
-BUG: unable to handle kernel NULL pointer dereference at 00000004
-IP: [<f8125f67>] carl9170_op_add_interface+0x1d7/0x2c0 [carl9170]
-*pde = 00000000
-Oops: 0002 [#1] PREEMPT 
-Modules linked in: carl9170 [...]
-Pid: 4720, comm: wpa_supplicant Not tainted 2.6.37-rc2-wl+
-EIP: 0060:[<f8125f67>] EFLAGS: 00210206 CPU: 0
-EIP is at carl9170_op_add_interface+0x1d7/0x2c0 [carl9170]
-EAX: 00000000 ...
-Process wpa_supplicant
-Stack:
- f4f88f34 fffffff4 ..
-Call Trace:
- [<f8f4e666>] ? ieee80211_do_open+0x406/0x5c0 [mac80211]
- [...]
-Code: <89> 42 04 ...
-EIP: [<f8125f67>] carl9170_op_add_interface+0x1d7/0x2c0 [carl9170]
-CR2: 0000000000000004
+You are right. I misread the code.
 
-Signed-off-by: Christian Lamparter <chunkeey@googlemail.com>
----
-diff --git a/drivers/net/wireless/ath/carl9170/main.c b/drivers/net/wireless/ath/carl9170/main.c
-index f015ab7..02999e5 100644
---- a/drivers/net/wireless/ath/carl9170/main.c
-+++ b/drivers/net/wireless/ath/carl9170/main.c
-@@ -664,7 +664,7 @@ init:
- 	}
- 
- unlock:
--	if (err && (vif_id != -1)) {
-+	if (err && (vif_id >= 0)) {
- 		vif_priv->active = false;
- 		bitmap_release_region(&ar->vif_bitmap, vif_id, 0);
- 		ar->vifs--;
+Larry
