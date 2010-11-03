@@ -1,83 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qy0-f174.google.com ([209.85.216.174]:50979 "EHLO
-	mail-qy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755838Ab0KUVsO convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 21 Nov 2010 16:48:14 -0500
+Received: from bar.sig21.net ([80.81.252.164]:43027 "EHLO bar.sig21.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755261Ab0KCPIv (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 3 Nov 2010 11:08:51 -0400
+Date: Wed, 3 Nov 2010 16:08:46 +0100
+From: Johannes Stezenbach <js@sig21.net>
+To: Ivo Van Doorn <ivdoorn@gmail.com>
+Cc: Helmut Schaa <helmut.schaa@googlemail.com>,
+	Lee <lee-in-berlin@web.de>,
+	Gertjan van Wingerde <gwingerde@gmail.com>,
+	linux-wireless@vger.kernel.org
+Subject: Re: [regression]AP with hostapd 0.7.3 can't receive packets beyond
+ authentication (2.6.36, rt73usb)
+Message-ID: <20101103150846.GB5798@sig21.net>
+References: <4CC0D0F6.4080507@web.de>
+ <201010290017.13174.helmut.schaa@googlemail.com>
+ <4CCB3F24.1030701@web.de>
+ <201010301430.15868.helmut.schaa@googlemail.com>
+ <20101102125007.GA30000@sig21.net>
+ <20101103141413.GA5364@sig21.net>
+ <AANLkTimR8aGZs3AMWGFzMwKvvaTTEQt9ovL7yS7DTi9A@mail.gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <20101121214407.GH23423@thunk.org>
-References: <AANLkTim4jVaZxYp8nSgJyy28iwxcxbPeNUzxTfoHAX4S@mail.gmail.com>
- <F46C52ED-8DB8-4347-957D-B9D84406D53F@mit.edu> <AANLkTinyafwe9MyXhSSe5vxEKnTUeLV0AZDWY_uXsu8f@mail.gmail.com>
- <20101121130236.GE23423@thunk.org> <20101121172906.GD3703@kroah.com>
- <AANLkTik6MQjYTCQ4wtyRpOGb94uyUTA+juvX-8UsP95J@mail.gmail.com>
- <20101121203124.1ba8212e@lxorguk.ukuu.org.uk> <20101121214407.GH23423@thunk.org>
-From: =?ISO-8859-1?Q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>
-Date: Sun, 21 Nov 2010 22:47:53 +0100
-Message-ID: <AANLkTinEm1mLAtPZdEp2sHRfKPeV6qYP8f9Dbbr92_JD@mail.gmail.com>
-Subject: Re: Challenges with doing hardware bring up with Linux first
-To: "Ted Ts'o" <tytso@mit.edu>, Alan Cox <alan@lxorguk.ukuu.org.uk>,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	Greg KH <greg@kroah.com>, linux-kernel@vger.kernel.org,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	David Miller <davem@davemloft.net>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Stephen Hemminger <shemminger@vyatta.com>,
-	"Perez-Gonzalez, Inaky" <inaky.perez-gonzalez@intel.com>,
-	Charles Marker <Charles.Marker@atheros.com>,
-	Jouni Malinen <Jouni.Malinen@atheros.com>,
-	Kevin Hayes <kevin@atheros.com>,
-	Zhifeng Cai <zhifeng.cai@atheros.com>,
-	Don Breslin <Don.Breslin@atheros.com>,
-	Doug Dahlby <Doug.Dahlby@atheros.com>,
-	Julia Lawall <julia@diku.dk>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <AANLkTimR8aGZs3AMWGFzMwKvvaTTEQt9ovL7yS7DTi9A@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, Nov 21, 2010 at 10:44 PM, Ted Ts'o <tytso@mit.edu> wrote:
-> On Sun, Nov 21, 2010 at 08:31:24PM +0000, Alan Cox wrote:
->>
->> Which we know in practice they won't. They'll sit on fixes (often
->> security fixes) and tweak and add private copies of features. In turn the
->> Linux one could then only keep up by adding features itself - which would
->> have to be GPL to stop the same abuse continuing.
->>
->> It's a nice idea but the corporations exist to make money and adding
->> proprietary custom stack add-ons is clearly a good move on their part to
->> do that.
->
-> Hence my recommendation that if someone is going to do the work to
-> create a 802.11 layer that has shims that work on multiple operating
-> systems, it be GPL with explicit exceptions to allow said layer to
-> work on legacy operating systems like QNX, et. al.  That way it forces
-> the hardware specific code to be released under the GPL --- if they
-> want to take advantage of the "write onces, work on multiple operating
-> systems" feature.
->
-> If someone is going to go through all of this work to make it possible
-> --- particularly if it's at a company such as Luis's employer, or any
-> other wifi chipset provider --- why should it allow their competitors
-> to do closed source drivers?  Better to structure the driver licensing
-> such that (a) there is benefit for companies to make a Linux driver by
-> using this common stack, and (b) but in exchange, it forces them to
-> make a driver which is guaranteed to be usable by Linux by virtual of
-> the fact that (1) the native interface is Linux's wireless stack, and
-> (2) the license forces them to GPL their driver.
+On Wed, Nov 03, 2010 at 03:50:20PM +0100, Ivo Van Doorn wrote:
+> 
+> Absolutely true, I committed a patch for that 1 or 2 weeks ago,
+> so that should be visible in compat-wireless by now.
 
-By forcing the driver to be GPL, you automatically exclude Windows
-from the list of platforms supported by such a cross-OS driver, as the
-Windows NDIS headers are AFAIK under a GPL-incompatible license, so no
-GPL driver can be written for Windows.
+grmbl, I was looking at wireless-testing updated on Monday, and it
+seems I got an outdated tree due to the hera server fuckup :-(
 
->
->                                   - Ted
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
-
-
-
--- 
-Vista: [V]iruses, [I]ntruders, [S]pyware, [T]rojans and [A]dware. :-)
+Johannes
