@@ -1,63 +1,100 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:49276 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755393Ab0KPTwo (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 16 Nov 2010 14:52:44 -0500
-Subject: [RFC 2/2] mac80211: implement packet loss notification
-From: Johannes Berg <johannes.berg@intel.com>
-To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Date: Tue, 16 Nov 2010 11:54:17 -0800
-Message-ID: <1289937257.3673.9.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Received: from mail-ww0-f44.google.com ([74.125.82.44]:51442 "EHLO
+	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756155Ab0KCVHP (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 3 Nov 2010 17:07:15 -0400
+Received: by wwe15 with SMTP id 15so1190931wwe.1
+        for <linux-wireless@vger.kernel.org>; Wed, 03 Nov 2010 14:07:13 -0700 (PDT)
+From: =?utf-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+To: linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>
+Cc: b43-dev@lists.infradead.org,
+	=?utf-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+Subject: [PATCH] ssb: workarounds: be verbose about hacking SPROM revision, don't duplicate code
+Date: Wed,  3 Nov 2010 22:06:26 +0100
+Message-Id: <1288818386-25073-1-git-send-email-zajec5@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-RnJvbTogSm9oYW5uZXMgQmVyZyA8am9oYW5uZXMuYmVyZ0BpbnRlbC5jb20+CgpGb3IgZHJpdmVy
-cyB0aGF0IGhhdmUgYWNjdXJhdGUgVFggc3RhdHVzIHJlcG9ydGluZwp3ZSBjYW4gcmVwb3J0IHRo
-ZSBudW1iZXIgb2YgY29uc2VjdXRpdmUgbG9zdCBwYWNrZXRzCnRvIHVzZXJzcGFjZSB1c2luZyB0
-aGUgbmV3IGNmZzgwMjExIENRTSBldmVudC4gVGhlCnRocmVzaG9sZCBpcyBmaXhlZCByaWdodCBu
-b3csIHRoaXMgbWF5IG5lZWQgdG8gYmUKaW1wcm92ZWQgaW4gdGhlIGZ1dHVyZS4KClNpZ25lZC1v
-ZmYtYnk6IEpvaGFubmVzIEJlcmcgPGpvaGFubmVzLmJlcmdAaW50ZWwuY29tPgotLS0KIG5ldC9t
-YWM4MDIxMS9zdGFfaW5mby5oIHwgICAgMyArKysKIG5ldC9tYWM4MDIxMS9zdGF0dXMuYyAgIHwg
-ICAxOSArKysrKysrKysrKysrKysrKysrCiAyIGZpbGVzIGNoYW5nZWQsIDIyIGluc2VydGlvbnMo
-KykKCi0tLSB3aXJlbGVzcy10ZXN0aW5nLm9yaWcvbmV0L21hYzgwMjExL3N0YV9pbmZvLmgJMjAx
-MC0xMS0xMiAxMzozNDozMy4wMDAwMDAwMDAgLTA4MDAKKysrIHdpcmVsZXNzLXRlc3RpbmcvbmV0
-L21hYzgwMjExL3N0YV9pbmZvLmgJMjAxMC0xMS0xMiAxMzozNDo0MS4wMDAwMDAwMDAgLTA4MDAK
-QEAgLTI0OCw2ICsyNDgsNyBAQCBlbnVtIHBsaW5rX3N0YXRlIHsKICAqIEBzdGE6IHN0YXRpb24g
-aW5mb3JtYXRpb24gd2Ugc2hhcmUgd2l0aCB0aGUgZHJpdmVyCiAgKiBAZGVhZDogc2V0IHRvIHRy
-dWUgd2hlbiBzdGEgaXMgdW5saW5rZWQKICAqIEB1cGxvYWRlZDogc2V0IHRvIHRydWUgd2hlbiBz
-dGEgaXMgdXBsb2FkZWQgdG8gdGhlIGRyaXZlcgorICogQGxvc3RfcGFja2V0czogbnVtYmVyIG9m
-IGNvbnNlY3V0aXZlIGxvc3QgcGFja2V0cwogICovCiBzdHJ1Y3Qgc3RhX2luZm8gewogCS8qIEdl
-bmVyYWwgaW5mb3JtYXRpb24sIG1vc3RseSBzdGF0aWMgKi8KQEAgLTMzNSw2ICszMzYsOCBAQCBz
-dHJ1Y3Qgc3RhX2luZm8gewogCX0gZGVidWdmczsKICNlbmRpZgogCisJdW5zaWduZWQgaW50IGxv
-c3RfcGFja2V0czsKKwogCS8qIGtlZXAgbGFzdCEgKi8KIAlzdHJ1Y3QgaWVlZTgwMjExX3N0YSBz
-dGE7CiB9OwotLS0gd2lyZWxlc3MtdGVzdGluZy5vcmlnL25ldC9tYWM4MDIxMS9zdGF0dXMuYwky
-MDEwLTExLTEyIDEzOjM0OjMzLjAwMDAwMDAwMCAtMDgwMAorKysgd2lyZWxlc3MtdGVzdGluZy9u
-ZXQvbWFjODAyMTEvc3RhdHVzLmMJMjAxMC0xMS0xMiAxMzozNDo0MS4wMDAwMDAwMDAgLTA4MDAK
-QEAgLTE1Nyw2ICsxNTcsMTUgQEAgc3RhdGljIHZvaWQgaWVlZTgwMjExX2ZyYW1lX2Fja2VkKHN0
-cnVjdAogCX0KIH0KIAorLyoKKyAqIFVzZSBhIHN0YXRpYyB0aHJlc2hvbGQgZm9yIG5vdywgYmVz
-dCB2YWx1ZSB0byBiZSBkZXRlcm1pbmVkCisgKiBieSB0ZXN0aW5nIC4uLgorICogU2hvdWxkIGl0
-IGRlcGVuZCBvbjoKKyAqICAtIG9uICMgb2YgcmV0cmFuc21pc3Npb25zCisgKiAgLSBjdXJyZW50
-IHRocm91Z2hwdXQgKGhpZ2hlciB2YWx1ZSBmb3IgaGlnaGVyIHRwdCk/CisgKi8KKyNkZWZpbmUg
-U1RBX0xPU1RfUEtUX1RIUkVTSE9MRAk1MAorCiB2b2lkIGllZWU4MDIxMV90eF9zdGF0dXMoc3Ry
-dWN0IGllZWU4MDIxMV9odyAqaHcsIHN0cnVjdCBza19idWZmICpza2IpCiB7CiAJc3RydWN0IHNr
-X2J1ZmYgKnNrYjI7CkBAIC0yNDMsNiArMjUyLDE2IEBAIHZvaWQgaWVlZTgwMjExX3R4X3N0YXR1
-cyhzdHJ1Y3QgaWVlZTgwMjEKIAkJaWYgKCEoaW5mby0+ZmxhZ3MgJiBJRUVFODAyMTFfVFhfQ1RM
-X0lOSkVDVEVEKSAmJgogCQkgICAgKGluZm8tPmZsYWdzICYgSUVFRTgwMjExX1RYX1NUQVRfQUNL
-KSkKIAkJCWllZWU4MDIxMV9mcmFtZV9hY2tlZChzdGEsIHNrYik7CisKKwkJaWYgKGxvY2FsLT5o
-dy5mbGFncyAmIElFRUU4MDIxMV9IV19SRVBPUlRTX1RYX0FDS19TVEFUVVMpIHsKKwkJCWlmIChp
-bmZvLT5mbGFncyAmIElFRUU4MDIxMV9UWF9TVEFUX0FDSykKKwkJCQlzdGEtPmxvc3RfcGFja2V0
-cyA9IDA7CisJCQllbHNlIGlmICgrK3N0YS0+bG9zdF9wYWNrZXRzID49IFNUQV9MT1NUX1BLVF9U
-SFJFU0hPTEQpCisJCQkJY2ZnODAyMTFfY3FtX3BrdGxvc3Nfbm90aWZ5KHN0YS0+c2RhdGEtPmRl
-diwKKwkJCQkJCQkgICAgc3RhLT5zdGEuYWRkciwKKwkJCQkJCQkgICAgc3RhLT5sb3N0X3BhY2tl
-dHMsCisJCQkJCQkJICAgIEdGUF9BVE9NSUMpOworCQl9CiAJfQogCiAJcmN1X3JlYWRfdW5sb2Nr
-KCk7CgoKLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
-LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0KSW50ZWwgR21iSApEb3JuYWNoZXIg
-U3RyYXNzZSAxCjg1NjIyIEZlbGRraXJjaGVuL011ZW5jaGVuLCBEZXV0c2NobGFuZCAKU2l0eiBk
-ZXIgR2VzZWxsc2NoYWZ0OiBGZWxka2lyY2hlbiBiZWkgTXVlbmNoZW4KR2VzY2hhZWZ0c2Z1ZWhy
-ZXI6IERvdWdsYXMgTHVzaywgUGV0ZXIgR2xlaXNzbmVyLCBIYW5uZXMgU2Nod2FkZXJlcgpSZWdp
-c3RlcmdlcmljaHQ6IE11ZW5jaGVuIEhSQiA0NzQ1NiAKVXN0Li1JZE5yLi9WQVQgUmVnaXN0cmF0
-aW9uIE5vLjogREUxMjkzODU4OTUKQ2l0aWJhbmsgRnJhbmtmdXJ0IGEuTS4gKEJMWiA1MDIgMTA5
-IDAwKSA2MDAxMTkwNTIK
+Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
+---
+This changes code flow the way even if workaround is needed, standard extracing
+calls are used. Additionaly if user wants to know SPROM version (enabled
+debugging) we really should let know also about hacking it!
+
+John: this is 2.6.38 material. Is this OK to submit this via wireless tree?
+---
+ drivers/ssb/pci.c |   45 +++++++++++++++++++++++----------------------
+ 1 files changed, 23 insertions(+), 22 deletions(-)
+
+diff --git a/drivers/ssb/pci.c b/drivers/ssb/pci.c
+index 6e88d2b..3226832 100644
+--- a/drivers/ssb/pci.c
++++ b/drivers/ssb/pci.c
+@@ -573,37 +573,38 @@ static int sprom_extract(struct ssb_bus *bus, struct ssb_sprom *out,
+ 	ssb_dprintk(KERN_DEBUG PFX "SPROM revision %d detected.\n", out->revision);
+ 	memset(out->et0mac, 0xFF, 6);		/* preset et0 and et1 mac */
+ 	memset(out->et1mac, 0xFF, 6);
++
+ 	if ((bus->chip_id & 0xFF00) == 0x4400) {
+ 		/* Workaround: The BCM44XX chip has a stupid revision
+ 		 * number stored in the SPROM.
+ 		 * Always extract r1. */
+ 		out->revision = 1;
+-		sprom_extract_r123(out, in);
++		ssb_dprintk(KERN_DEBUG PFX "SPROM treated as revision %d\n", out->revision);
+ 	} else if (bus->chip_id == 0x4321) {
+ 		/* the BCM4328 has a chipid == 0x4321 and a rev 4 SPROM */
+ 		out->revision = 4;
++		ssb_dprintk(KERN_DEBUG PFX "SPROM treated as revision %d\n", out->revision);
++	}
++
++	switch (out->revision) {
++	case 1:
++	case 2:
++	case 3:
++		sprom_extract_r123(out, in);
++		break;
++	case 4:
++	case 5:
+ 		sprom_extract_r45(out, in);
+-	} else {
+-		switch (out->revision) {
+-		case 1:
+-		case 2:
+-		case 3:
+-			sprom_extract_r123(out, in);
+-			break;
+-		case 4:
+-		case 5:
+-			sprom_extract_r45(out, in);
+-			break;
+-		case 8:
+-			sprom_extract_r8(out, in);
+-			break;
+-		default:
+-			ssb_printk(KERN_WARNING PFX "Unsupported SPROM"
+-				   "  revision %d detected. Will extract"
+-				   " v1\n", out->revision);
+-			out->revision = 1;
+-			sprom_extract_r123(out, in);
+-		}
++		break;
++	case 8:
++		sprom_extract_r8(out, in);
++		break;
++	default:
++		ssb_printk(KERN_WARNING PFX "Unsupported SPROM"
++			   "  revision %d detected. Will extract"
++			   " v1\n", out->revision);
++		out->revision = 1;
++		sprom_extract_r123(out, in);
+ 	}
+ 
+ 	if (out->boardflags_lo == 0xFFFF)
+-- 
+1.6.0.4
 
