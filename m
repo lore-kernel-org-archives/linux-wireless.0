@@ -1,64 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ww0-f44.google.com ([74.125.82.44]:42391 "EHLO
-	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752693Ab0K1MAS (ORCPT
+Received: from mail-vw0-f46.google.com ([209.85.212.46]:60792 "EHLO
+	mail-vw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753465Ab0KCOuV convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 28 Nov 2010 07:00:18 -0500
-Received: by mail-ww0-f44.google.com with SMTP id 36so3665501wwa.1
-        for <linux-wireless@vger.kernel.org>; Sun, 28 Nov 2010 04:00:17 -0800 (PST)
-From: =?utf-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-To: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-Cc: b43-dev@lists.infradead.org,
-	=?utf-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-Subject: [PATCH 4/4] b43: N-PHY: fix RSSI calibration
-Date: Sun, 28 Nov 2010 12:59:45 +0100
-Message-Id: <1290945585-20864-4-git-send-email-zajec5@gmail.com>
-In-Reply-To: <1290945585-20864-1-git-send-email-zajec5@gmail.com>
-References: <1290945585-20864-1-git-send-email-zajec5@gmail.com>
+	Wed, 3 Nov 2010 10:50:21 -0400
+Received: by vws13 with SMTP id 13so1158828vws.19
+        for <linux-wireless@vger.kernel.org>; Wed, 03 Nov 2010 07:50:21 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+In-Reply-To: <20101103141413.GA5364@sig21.net>
+References: <4CC0D0F6.4080507@web.de>
+	<201010290017.13174.helmut.schaa@googlemail.com>
+	<4CCB3F24.1030701@web.de>
+	<201010301430.15868.helmut.schaa@googlemail.com>
+	<20101102125007.GA30000@sig21.net>
+	<20101103141413.GA5364@sig21.net>
+Date: Wed, 3 Nov 2010 15:50:20 +0100
+Message-ID: <AANLkTimR8aGZs3AMWGFzMwKvvaTTEQt9ovL7yS7DTi9A@mail.gmail.com>
+Subject: Re: [regression]AP with hostapd 0.7.3 can't receive packets beyond
+ authentication (2.6.36, rt73usb)
+From: Ivo Van Doorn <ivdoorn@gmail.com>
+To: Johannes Stezenbach <js@sig21.net>
+Cc: Helmut Schaa <helmut.schaa@googlemail.com>,
+	Lee <lee-in-berlin@web.de>,
+	Gertjan van Wingerde <gwingerde@gmail.com>,
+	linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Rafa≈Ç Mi≈Çecki <zajec5@gmail.com>
----
- drivers/net/wireless/b43/phy_n.c |   14 ++++++++------
- 1 files changed, 8 insertions(+), 6 deletions(-)
+Hi,
 
-diff --git a/drivers/net/wireless/b43/phy_n.c b/drivers/net/wireless/b43/phy_n.c
-index 31bed83..bf09962 100644
---- a/drivers/net/wireless/b43/phy_n.c
-+++ b/drivers/net/wireless/b43/phy_n.c
-@@ -2064,7 +2064,10 @@ static void b43_nphy_rev2_rssi_cal(struct b43_wldev *dev, u8 type)
- 	u16 class, override;
- 	u8 regs_save_radio[2];
- 	u16 regs_save_phy[2];
-+
- 	s8 offset[4];
-+	u8 core;
-+	u8 rail;
- 
- 	u16 clip_state[2];
- 	u16 clip_off[2] = { 0xFFFF, 0xFFFF };
-@@ -2165,12 +2168,11 @@ static void b43_nphy_rev2_rssi_cal(struct b43_wldev *dev, u8 type)
- 		if (results_min[i] == 248)
- 			offset[i] = code - 32;
- 
--		if (i % 2 == 0)
--			b43_nphy_scale_offset_rssi(dev, 0, offset[i], 1, 0,
--							type);
--		else
--			b43_nphy_scale_offset_rssi(dev, 0, offset[i], 2, 1,
--							type);
-+		core = (i / 2) ? 2 : 1;
-+		rail = (i % 2) ? 1 : 0;
-+
-+		b43_nphy_scale_offset_rssi(dev, 0, offset[i], core, rail,
-+						type);
- 	}
- 
- 	b43_radio_maskset(dev, B2055_C1_PD_RSSIMISC, 0xF8, state[0]);
--- 
-1.6.3.3
+>>
+>> While reading through the code I noticed the following in rt2800_config_intf():
+>>
+>> † † † † † † † rt2x00_set_field32(&reg, MAC_BSSID_DW1_BSS_ID_MASK, 3);
+>>
+>> However, in Ralink source from http://www.ralinktech.com/support.php?s=2
+>> in DPO_RT3370_LinuxSTA_V2.4.0.1_20100831/include/chip/rtmp_mac.h it says:
+>> † † † † † † † † USHORT † † † † †BssIdMask:2; // 0: one BSSID, 10: 4 BSSID, †01: 2 BSSID , 11: 8BSSID
+>>
+>> This is different from rt73usb where 3 means "one BSSID".
+>
+> Any comments on this?
+>
+>
+> I still have a very limited understanding of mac80211 and rt2xx code,
+> but I'm reading through the code and report what looks suspicious
+> to me. †I hope that's OK? † Here's another one:
 
+Off course thats ok. :)
+
+> In rt2x00lib_rxdone():
+>
+> † † † †/*
+> † † † † * Allocate a new sk_buffer. If no new buffer available, drop the
+> † † † † * received frame and reuse the existing buffer.
+> † † † † */
+> † † † †skb = rt2x00queue_alloc_rxskb(rt2x00dev, entry);
+> † † † †if (!skb)
+> † † † † † † † †return;
+>
+> Should this not be "goto submit_entry;"?
+
+Absolutely true, I committed a patch for that 1 or 2 weeks ago,
+so that should be visible in compat-wireless by now.
+
+Ivo
