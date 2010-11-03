@@ -1,42 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f46.google.com ([209.85.161.46]:43225 "EHLO
-	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752167Ab0KTPTN convert rfc822-to-8bit (ORCPT
+Received: from external1.orbit-lab.org ([128.6.192.131]:57410 "HELO
+	external1.orbit-lab.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S932425Ab0KCTCy (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 20 Nov 2010 10:19:13 -0500
-Received: by fxm13 with SMTP id 13so1513242fxm.19
-        for <linux-wireless@vger.kernel.org>; Sat, 20 Nov 2010 07:19:12 -0800 (PST)
-From: Christian Lamparter <chunkeey@googlemail.com>
-To: linux-wireless@vger.kernel.org
-Subject: [PATCH] carl9170: fix init-self regression
-Date: Sat, 20 Nov 2010 16:53:26 +0100
-Cc: linville@tuxdriver.com
-MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="utf-8"
-Message-Id: <201011201653.26634.chunkeey@googlemail.com>
+	Wed, 3 Nov 2010 15:02:54 -0400
+Received: from repository3.orbit-lab.org (repository3.orbit-lab.org [10.50.0.41])
+	by external1.orbit-lab.org (Postfix) with ESMTP id F0219418D8
+	for <linux-wireless@vger.kernel.org>; Wed,  3 Nov 2010 14:59:03 -0400 (EDT)
+Subject: Compat-wireless release for 2010-11-03 is baked
+To: <linux-wireless@vger.kernel.org>
+Message-Id: <20101103190252.DC0D940F97@repository3.orbit-lab.org>
+Date: Wed,  3 Nov 2010 15:02:52 -0400 (EDT)
+From: compat@orbit-lab.org (Compat-wireless cronjob account)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The commit: "carl9170: tx path review" introduced a regression.
 
-gcc (with -Winit-self):
-tx.c:1264: warning: ‘super’ is used uninitialized in this function
+compat-wireless code metrics
 
-Signed-off-by: Christian Lamparter <chunkeey@googlemail.com>
----
-for wireless-next/wireless-testing.git
----
-diff --git a/drivers/net/wireless/ath/carl9170/tx.c b/drivers/net/wireless/ath/carl9170/tx.c
-index 688eede..aee5c9d 100644
---- a/drivers/net/wireless/ath/carl9170/tx.c
-+++ b/drivers/net/wireless/ath/carl9170/tx.c
-@@ -1261,7 +1261,7 @@ static void carl9170_tx(struct ar9170 *ar)
- static bool carl9170_tx_ampdu_queue(struct ar9170 *ar,
- 	struct ieee80211_sta *sta, struct sk_buff *skb)
- {
--	struct _carl9170_tx_superframe *super = (void *) super;
-+	struct _carl9170_tx_superframe *super = (void *) skb->data;
- 	struct carl9170_sta_info *sta_info;
- 	struct carl9170_sta_tid *agg;
- 	struct sk_buff *iter;
+    739330 - Total upstream lines of code being pulled
+      2163 - backport code changes
+      1909 - backport code additions
+       254 - backport code deletions
+      6409 - backport from compat module
+      8572 - total backport code
+    1.1594 - % of code consists of backport work
+      1534 - Crap changes not yet posted
+      1491 - Crap additions not yet posted
+        43 - Crap deletions not yet posted
+    0.2075 - % of crap code
+
+Base tree: linux-next.git
+Base tree version: next-20101029
+compat-wireless release: compat-wireless-2010-10-22-5-g69fdc09-pc
