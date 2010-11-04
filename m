@@ -1,55 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f46.google.com ([209.85.214.46]:33830 "EHLO
-	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750823Ab0KQIrG (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:51149 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753102Ab0KDUyG (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 17 Nov 2010 03:47:06 -0500
-Received: by bwz15 with SMTP id 15so1329379bwz.19
-        for <linux-wireless@vger.kernel.org>; Wed, 17 Nov 2010 00:47:04 -0800 (PST)
-From: Helmut Schaa <helmut.schaa@googlemail.com>
-To: Ivo van Doorn <ivdoorn@gmail.com>
-Subject: Re: [PATCH 9/9] rt2x00: Modify rt2x00queue_remove_l2pad to make skb->data two-byte alignment
-Date: Wed, 17 Nov 2010 09:46:04 +0100
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com,
-	"RA-Jay Hung" <jay_hung@ralinktech.com>
-References: <201011131908.15595.IvDoorn@gmail.com> <201011131913.55169.IvDoorn@gmail.com> <201011161645.15018.helmut.schaa@googlemail.com>
-In-Reply-To: <201011161645.15018.helmut.schaa@googlemail.com>
-MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="us-ascii"
-Message-Id: <201011170946.04629.helmut.schaa@googlemail.com>
+	Thu, 4 Nov 2010 16:54:06 -0400
+Subject: Re: [RFC 00/15] Implementation of periodic scan
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Luciano Coelho <luciano.coelho@nokia.com>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <1288612336-2830-1-git-send-email-luciano.coelho@nokia.com>
+References: <1288612336-2830-1-git-send-email-luciano.coelho@nokia.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Thu, 04 Nov 2010 11:51:07 -0400
+Message-ID: <1288885867.3659.8.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Am Dienstag 16 November 2010 schrieb Helmut Schaa:
-> Am Samstag 13 November 2010 schrieb Ivo van Doorn:
-> > From: RA-Jay Hung <Jay_Hung@ralinktech.com>
-> > 
-> > When send out skb data to mac80211, orignal code will cause mac80211
-> > unaligned access, so modify code to make mac80211 can natural access.
-> 
-> And this introduces the same panic again :(
-> 
-> The problem is the following:
-> 
-> We don't pass the skb in the same state back to mac80211 as we got it.
-> 
-> When inserting the l2pad we're moving the header and thus reduce headroom.
-> This patch modifies the bahavior during l2pad removal to not move the header
-> back into its old position but instead moves the payload. Thus the skb keeps
-> the reduced headroom. If this skb gets requeued into rt2x00 (which can happen
-> when the frame wasn't acked and the according STA is known to e in powersave
-> mode) the header and payload get aligned again further reducing headroom which
-> results in a too small headroom for the TXWI and thus a skb_under_panic.
+On Mon, 2010-11-01 at 13:52 +0200, Luciano Coelho wrote:
 
-Hmm, John merged that patch already. However, I would prefer if it would get
-reverted due to the occasional panics in AP mode.
+>   This set doesn't support variable intervals, and the intervals
+> need to be configure in the hw driver.
 
-Jay, I didn't notice any performance degradation on MIPS, on which architecture
-did you test?
+which is wrong -- you really want that to be configurable.
 
-Jay, Ivo, any objections against reverting this one?
+> This is an initial implementation and I'd like to get some comments before
+> submitting the final version.
+> 
+> I've split the implementation in many small patches, just to keep it clear
+> and due to the zillions of times I've had to task switch while implementing
+> this.  I can merge some of them, if that makes things cleaner.
 
-Thanks,
-Helmut
+Absolutely, the patch splitting is total crap :-) Heck, you even write
+code only to remove/change it again!
+
+johannes
+
