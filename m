@@ -1,43 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:47725 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753013Ab0KQQPZ (ORCPT
+Received: from mail-gy0-f174.google.com ([209.85.160.174]:41813 "EHLO
+	mail-gy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751401Ab0KDOGY (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 17 Nov 2010 11:15:25 -0500
-Subject: Re: [PATCH v7 3/3] nl80211/mac80211: Report signal average
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Bruno Randolf <br1@einfach.org>
-Cc: Jouni Malinen <j@w1.fi>, linville@tuxdriver.com,
-	randy.dunlap@oracle.com, peterz@infradead.org, blp@cs.stanford.edu,
-	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Lars_Ericsson@telia.com, stefanr@s5r6.in-berlin.de,
-	kosaki.motohiro@jp.fujitsu.com, akpm@linux-foundation.org,
-	kevin.granade@gmail.com
-In-Reply-To: <201011171728.06801.br1@einfach.org>
-References: <20101112024901.28522.21895.stgit@localhost6.localdomain6>
-	 <20101112030035.28522.75318.stgit@localhost6.localdomain6>
-	 <20101116093743.GA21872@jm.kir.nu>  <201011171728.06801.br1@einfach.org>
-Content-Type: text/plain; charset="UTF-8"
-Date: Wed, 17 Nov 2010 08:16:35 -0800
-Message-ID: <1290010595.3777.0.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+	Thu, 4 Nov 2010 10:06:24 -0400
+Received: by gyh4 with SMTP id 4so1389724gyh.19
+        for <linux-wireless@vger.kernel.org>; Thu, 04 Nov 2010 07:06:23 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <4CD0BE99.8020409@lwfinger.net>
+References: <309278.75116.qm@web29520.mail.ird.yahoo.com>
+	<4CCF7B73.7040906@lwfinger.net>
+	<4CCF7EFC.1050000@mandriva.com.br>
+	<AANLkTinEsp+-EU4Oau71qHbL6ftO544+H4GA3WZk7CX5@mail.gmail.com>
+	<4CD0A583.40105@lwfinger.net>
+	<AANLkTin937V6hJ4L2o-SF5riTh0MpTd3e6faZnbZuV48@mail.gmail.com>
+	<4CD0B0AC.4050102@lwfinger.net>
+	<AANLkTinpJSKhf9PcG9bAPsLjVRKZ3bJEEK0-UQ4rpxJH@mail.gmail.com>
+	<4CD0BE99.8020409@lwfinger.net>
+Date: Thu, 4 Nov 2010 14:06:23 +0000
+Message-ID: <AANLkTinSw9EDfqXaEbG9yhZ+G3ujC_ipBxx7gN5fBtn1@mail.gmail.com>
+Subject: Re: [PATCH 3/9] rtl8187: fix wrong register initialization in 8187B
+From: Hin-Tak Leung <hintak.leung@gmail.com>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Rogerio Luz Coelho <rogluz.news@gmail.com>,
+	Herton Ronaldo Krzesinski <herton@mandriva.com.br>,
+	Thadeu Lima de Souza Cascardo <cascardo@holoscopio.com>,
+	linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2010-11-17 at 17:28 +0900, Bruno Randolf wrote:
+On Wed, Nov 3, 2010 at 1:44 AM, Larry Finger <Larry.Finger@lwfinger.net> wrote:
+<snipped>
+> As I did something like 20 full kernel builds today, you know I do not use a
+> distro that actively discourages kernel compilation. In fact I did run Ubuntu
+> once to help a user debug a problem. After experiencing the hoops they make you
+> jump through, I blew it away as soon as I could.
 
-> > Or am I missing something here and we have a compiler that is actually
-> > able to take care of this kind of optimizations by itself in the current
-> > ewma library design? Or is the unsigned long division with the expected
-> > weight values going to be fast enough to not justify caring about it
-> > even on any of the embedded boards anyway?
-> 
-> I understand that this could be more efficient, but if it matters or not - 
-> honestly, I don't know. Can a more knowledgeable person than me comment on 
-> this?
+What hoops do they make you do? compiling a new kernel isn't really
+much more than the normal development with GNU toolchain?
 
-Yes, it does matter -- think of an embedded MIPS board running at 500MHz
-and trying to push 11n speeds.
-
-johannes
-
+I only did full kernel compilation with my old 32-bit x86 slackware
+box (and it died last year), but I found compat-wireless quite alright
+on top of x64_64 fedora, even for developing/tryinng patches. (that's
+thanks to Luis and John, of course).
