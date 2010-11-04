@@ -1,73 +1,87 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:33340 "EHLO mx1.redhat.com"
+Received: from mail.atheros.com ([12.19.149.2]:34104 "EHLO mail.atheros.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751686Ab0KXDEm (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 23 Nov 2010 22:04:42 -0500
-Subject: Re: RTL8187L: Can only "enable" hw radio switch after Windows boot
-From: Dan Williams <dcbw@redhat.com>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Klaas De Craemer <klaasdc@gmail.com>, htl10@users.sourceforge.net,
-	linux-wireless@vger.kernel.org,
-	Herton Ronaldo Krzesinski <herton@mandriva.com.br>
-Date: Tue, 23 Nov 2010 21:02:33 -0600
-In-Reply-To: <4CEC2292.1030808@lwfinger.net>
-References: <4CEA9903.6070604@lwfinger.net>
-	 <370521.43644.qm@web29514.mail.ird.yahoo.com>
-	 <AANLkTimd0EDGtZFcrhknyacoCQQZNMEKe-kvYNA9z_Bo@mail.gmail.com>
-	 <4CEAC868.9040402@lwfinger.net>
-	 <AANLkTim_O8SJ5xA4TWfOa2q7NXDG95-PDoXCqosiaGz3@mail.gmail.com>
-	 <4CEC2292.1030808@lwfinger.net>
-Content-Type: text/plain; charset="UTF-8"
-Message-ID: <1290567756.3074.25.camel@dcbw.foobar.com>
-Mime-Version: 1.0
+	id S1752089Ab0KDLlX convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 4 Nov 2010 07:41:23 -0400
+Received: from mail.atheros.com ([10.10.20.108])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Thu, 04 Nov 2010 04:41:11 -0700
+From: Rajkumar Manoharan <Rajkumar.Manoharan@Atheros.com>
+To: Bruno Randolf <br1@einfach.org>,
+	Luis Rodriguez <Luis.Rodriguez@Atheros.com>
+CC: "linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Felix Fietkau <nbd@openwrt.org>
+Date: Thu, 4 Nov 2010 17:11:18 +0530
+Subject: RE: [PATCH v2] ath9k_htc: Fix beacon distribution in IBSS mode
+Message-ID: <44EE5C37ADC36343B0625A05DD408C4850DAB4D6CB@CHEXMB-01.global.atheros.com>
+References: <1285054089-6707-1-git-send-email-rmanoharan@atheros.com>
+ <201009271018.42232.br1@einfach.org>,<201011041905.26464.br1@einfach.org>
+In-Reply-To: <201011041905.26464.br1@einfach.org>
+Content-Type: text/plain; charset="iso-8859-1"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2010-11-23 at 14:22 -0600, Larry Finger wrote:
-> On 11/23/2010 01:26 PM, Klaas De Craemer wrote:
-> > 
-> > This morning I put the transceiver inside. I just connected it to the
-> > Atom box without antenna and it reported no wireless block:
-> > 
-> > [  382.312044] usb 1-3: new high speed USB device using ehci_hcd and address 2
-> > [  382.450722] usb 1-3: New USB device found, idVendor=0bda, idProduct=8187
-> > [  382.450835] usb 1-3: New USB device strings: Mfr=1, Product=2, SerialNumber=3
-> > [  382.450939] usb 1-3: Product: RTL8187_Wireless
-> > [  382.451027] usb 1-3: Manufacturer: Manufacturer_Realtek_RTL8187_
-> > [  382.451122] usb 1-3: SerialNumber: 00C0CA3F9517
-> > [  382.451822] usb 1-3: configuration #1 chosen from 1 choice
-> > [  382.743060] phy1: Selected rate control algorithm 'minstrel'
-> > [  382.746490] phy1: hwaddr 00:c0:ca:3f:95:17, RTL8187vB (default) V1
-> > + rtl8225z2, rfkill mask 2
-> > [  382.764106] rtl8187: Customer ID is 0xFF
-> > [  382.764344] Registered led device: rtl8187-phy1::tx
-> > [  382.764554] Registered led device: rtl8187-phy1::rx
-> > [  382.765254] rtl8187: wireless switch is on
-> > [  382.765594] usbcore: registered new interface driver rtl8187
-> > 
-> > Then I put it back onto the antenna outside and it connected just fine.
-> > 
-> > I'm really confused now. Does this mean that it might be both a hard-
-> > & software problem? I guess I should also check if it works fine
-> > "warm" + immediately connecting it to the antenna. If temperature is
-> > such a problem I might put a heating resistor inside the transceiver
-> > housing...
-> 
-> I think we do have both a hardware problem in that your device is getting a
-> false hardware block reading when cold, and that the Linux driver is missing
-> some operation that compensates for this hardware error.
-> 
-> > The Windows driver is 6.1316.1209.2009 for Windows 7 64bit. It comes
-> > with a GUI from Alfa Networks that says version 700.1604.108.201.
-> 
-> The only Windows 7 system here belongs to my wife, and any requests to use it
-> for testing are not well received. In addition, the USB capture code I have only
-> works on XP. I will try to get that driver, or as close as I can.
+>> > -   qi.tqi_cwmin = 4*qi_be.tqi_cwmin;
+>> > +   /* For WIFI Beacon Distribution
+>> > +    * Long slot time  : 2x cwmin
+>> > +    * Short slot time : 4x cwmin
+>> > +    */
+>> > +   if (ah->slottime == ATH9K_SLOT_TIME_20)
+>> > +           qi.tqi_cwmin = 2*qi_be.tqi_cwmin;
+>> > +   else
+>> > +           qi.tqi_cwmin = 4*qi_be.tqi_cwmin;
+>> >
+>> >     qi.tqi_cwmax = qi_be.tqi_cwmax;
+>> >
+>> >     if (!ath9k_hw_set_txq_props(ah, priv->beaconq, &qi)) {
+>>
+>> i am wondering - how does this relate to what i read in IEEE802.11-2007:
+>>
+>>    11.1.2.2 Beacon generation in an IBSS
+>>
+>>    b) Calculate a random delay uniformly distributed in the range between
+>> zero and twice aCWmin × aSlotTime,
+>>
+>> wouldn't that mean that cwmin for the beacon queue should be 0 and cwmax
+>> should be 2x cwmin * slot time?
+>>
+>> if the beacon queue cwmin is higher than the best effort queue, it would
+>> mean that the best effort queue gets precedence over beacon transmissions.
+>> but we want beacons to get sent out in any case.
+>>
+> also, what is the rationale behind using the best effort queue as a
+> reference for cwmin/cwmax?
+>
+>I'm following up my own message since I just stumbled across that paragraph,
+>which IMHO would imply that the beacon queue should be based on AC_VO instead
+>of AC_BE, if anything.
+>
+>[9.2.4.2 HCF contention-based channel access (EDCA):
+>Management frames shall be sent using the access category AC_VO
+>without being restricted by admission control procedures. A QoS STA shall also
+>send management frames using the access category AC_VO before associating with
+>any BSS, even if there is no QoS facility available in that BSS.]
+>
+>Also I still doubt that 4*qi_be.tqi_cwmin is correct concerning the standard
+>paragraph which i quoted before. Did I miss something?
 
-Snoopy Pro perhaps?  I do wish there was a free sniffer that worked on
-Vista and Win7, would help sniffing 3G dongles.  The best one I can find
-is USBlyzer (non-free) which is a 30 day free trial but otherwise works
-pretty well.
+Hi Bruno,
 
-Dan
+Sorry for long gap. somehow I missed your mail. During our Interop Testing, we
+observed that ath9k based cards utilized the channel more frequently that others.
+To ensure fair beacon distribution, BE queue parameters were set to beacon queue.
 
+But still I couldn't find specific WMM parameters for beacon queue except
+hostap.conf which stats that
+
+tx_queue_beacon_aifs=2
+tx_queue_beacon_cwmin=3
+tx_queue_beacon_cwmax=7
+tx_queue_beacon_burst=1.5
+
+With these parameter we need to test again :) Any comments are welcome.
+
+- Rajkumar
