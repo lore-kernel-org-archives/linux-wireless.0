@@ -1,63 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f46.google.com ([209.85.214.46]:34151 "EHLO
-	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751026Ab0KAQYV (ORCPT
+Received: from swampdragon.chaosbits.net ([90.184.90.115]:27220 "EHLO
+	swampdragon.chaosbits.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750725Ab0KDWKw (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 1 Nov 2010 12:24:21 -0400
-Received: by bwz11 with SMTP id 11so4668477bwz.19
-        for <linux-wireless@vger.kernel.org>; Mon, 01 Nov 2010 09:24:20 -0700 (PDT)
-Message-ID: <4CCEE9C9.3090308@lwfinger.net>
-Date: Mon, 01 Nov 2010 11:24:41 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
+	Thu, 4 Nov 2010 18:10:52 -0400
+Date: Thu, 4 Nov 2010 22:59:56 +0100 (CET)
+From: Jesper Juhl <jj@chaosbits.net>
+To: linux-kernel@vger.kernel.org
+cc: "John W. Linville" <linville@tuxdriver.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	"David S. Miller" <davem@davemloft.net>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Subject: [PATCH] mac80211: Remove redundant checks for NULL before calls to
+ crypto_free_cipher()
+Message-ID: <alpine.LNX.2.00.1011042251520.16015@swampdragon.chaosbits.net>
 MIME-Version: 1.0
-To: Herton Ronaldo Krzesinski <herton@mandriva.com.br>
-CC: seno <senada@t-online.de>, linux-wireless@vger.kernel.org,
-	hintak.leung@gmail.com
-Subject: Re: [PATCH] rtl8187b: do not do per packet TX AGC
-References: <1282974868-22237-1-git-send-email-cascardo@holoscopio.com> <4C798080.8010002@lwfinger.net> <20100830141218.GB30864@tuxdriver.com> <4C7BC4D9.1010108@lwfinger.net> <20100830152841.GB2950@barata.holoscopio.com> <loom.20101026T200014-691@post.gmane.org> <4CC71CFF.8050004@lwfinger.net> <20101026185341.GA4608@barata.holoscopio.com> <20101028191305.2960c83b@gotham.conectiva> <loom.20101029T010426-834@post.gmane.org> <20101029135449.GB3768@barata.holoscopio.com> <loom.20101030T001241-932@post.gmane.org> <4CCE4479.1010400@mandriva.com.br>
-In-Reply-To: <4CCE4479.1010400@mandriva.com.br>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 10/31/2010 11:39 PM, Herton Ronaldo Krzesinski wrote:
-> I have seen the throughput issue, but on my tests it wasn't so bad.
-> Usually max I got on testing was 24M while close to the AP, and it goes
-> into lower speeds when going more far away, but takes a good number of
-> meters to go down to 1M.
-> 
-> Anyway of course something isn't right. I started reviewing realtek GPL
-> code (their ieee80211 drivers) and code in rtl8187 in the kernel, doing
-> many tests and verifying things, trying to understand and check some
-> register writes etc. (hard with missing doc or other info).
-> 
-> I did some cleanups, and discovered two bad things in the code. After
-> the fixes, I can get normal rates (up to 54M close to the AP) without
-> issue. I'll soon post the patch series to be included in
-> wireless-testing, for now just for test I attach them to be easier (hope
-> it isn't stripped by ML, and yes they start on 0003 through 0011 :P),
-> check if with it you get better results.
-> 
-> The patches that matter (shown by my tests) are:
-> 0010-rtl8187-remove-uneeded-setting-of-anaparam-write.patch
-> 0011-rtl8187-restore-anaparam-registers-after-reset-with-.patch
-> 
-> but they depend on some previous patches in the series (better apply
-> all), and I diffed on a tree with Thadeu's patch applied already. There
-> is more cleanups and checking to do, but I probably will submit this
-> initial series and later come with more ones, as with this initial
-> series the throughput issue should be solved.
+Hello,
 
-Good work. As you noted, patches 3 - 9 did not make any difference in the
-transmit throughput. From a distance of 2 m from the AP, my 8187B yielded up to
-11.4 Mb/s and an indicated rate of 24 M. Applying patch 10 raised those numbers
-to 17.5 Mb/s and 48 M. Adding patch 11 raised them again to 26.9 Mb/s and 54 M,
-thus getting full throughput for the 8187B and a transmit rate increase of 2.4X.
+crypto_free_cipher() is a wrapper around crypto_free_tfm() which is a 
+wrapper around crypto_destroy_tfm() and the latter can handle being passed 
+a NULL pointer, so checking for NULL in the 
+ieee80211_aes_key_free()/ieee80211_aes_cmac_key_free() wrappers around 
+crypto_free_cipher() is pointless and just increase object code size 
+needlesly and makes us execute extra test/branch instructions that we 
+don't need.
+Btw; don't we have to many wrappers around wrappers ad nauseam here?
+Anyway, this patch removes the redundant conditionals.
 
-As expected, these changes had no affect on the RTL8187L. Note: The 8187L gets
-values of 23.0 Mb/s and 54M - there may be a little performance gain to be
-obtained from the driver.
+Signed-off-by: Jesper Juhl <jj@chaosbits.net>
+---
+ aes_ccm.c  |    3 +--
+ aes_cmac.c |    3 +--
+ 2 files changed, 2 insertions(+), 4 deletions(-)
 
-You should submit these patches now, and feel free to add my "Acked-by:" to them.
+diff --git a/net/mac80211/aes_ccm.c b/net/mac80211/aes_ccm.c
+index d2b03e0..4bd6ef0 100644
+--- a/net/mac80211/aes_ccm.c
++++ b/net/mac80211/aes_ccm.c
+@@ -147,6 +147,5 @@ struct crypto_cipher *ieee80211_aes_key_setup_encrypt(const u8 key[])
+ 
+ void ieee80211_aes_key_free(struct crypto_cipher *tfm)
+ {
+-	if (tfm)
+-		crypto_free_cipher(tfm);
++	crypto_free_cipher(tfm);
+ }
+diff --git a/net/mac80211/aes_cmac.c b/net/mac80211/aes_cmac.c
+index b4d66cc..d502b26 100644
+--- a/net/mac80211/aes_cmac.c
++++ b/net/mac80211/aes_cmac.c
+@@ -128,6 +128,5 @@ struct crypto_cipher * ieee80211_aes_cmac_key_setup(const u8 key[])
+ 
+ void ieee80211_aes_cmac_key_free(struct crypto_cipher *tfm)
+ {
+-	if (tfm)
+-		crypto_free_cipher(tfm);
++	crypto_free_cipher(tfm);
+ }
 
-Larry
+
+
+-- 
+Jesper Juhl <jj@chaosbits.net>             http://www.chaosbits.net/
+Plain text mails only, please      http://www.expita.com/nomime.html
+Don't top-post  http://www.catb.org/~esr/jargon/html/T/top-post.html
+
