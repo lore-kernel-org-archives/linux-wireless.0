@@ -1,43 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:59621 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932439Ab0KPV7t (ORCPT
+Received: from mail-qw0-f46.google.com ([209.85.216.46]:49516 "EHLO
+	mail-qw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751111Ab0KDQhp (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 16 Nov 2010 16:59:49 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: linux-wireless@vger.kernel.org
-Cc: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>,
-	"John W. Linville" <linville@tuxdriver.com>
-Subject: [PATCH] rndis_wlan: avoid uninitialized var warning in rndis_wlan_craft_connected_bss
-Date: Tue, 16 Nov 2010 16:49:08 -0500
-Message-Id: <1289944148-10326-1-git-send-email-linville@tuxdriver.com>
+	Thu, 4 Nov 2010 12:37:45 -0400
+Received: by qwf7 with SMTP id 7so1438327qwf.19
+        for <linux-wireless@vger.kernel.org>; Thu, 04 Nov 2010 09:37:44 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+In-Reply-To: <1288883257-30060-1-git-send-email-shahar_levi@ti.com>
+References: <1288883257-30060-1-git-send-email-shahar_levi@ti.com>
+Date: Thu, 4 Nov 2010 18:37:44 +0200
+Message-ID: <AANLkTincpxdpmf5J38LiGsF-d9dG7sG9-bjbkH-B8Ld0@mail.gmail.com>
+Subject: Re: [PATCH v4] wl1271: Change wl12xx Files Names
+From: Grazvydas Ignotas <notasas@gmail.com>
+To: Shahar Levi <shahar_levi@ti.com>
+Cc: linux-wireless@vger.kernel.org,
+	Luciano Coelho <luciano.coelho@nokia.com>,
+	Kalle Valo <kvalo@adurom.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-  CC [M]  drivers/net/wireless/rndis_wlan.o
-drivers/net/wireless/rndis_wlan.c: In function ‘rndis_wlan_craft_connected_bss’:
-drivers/net/wireless/rndis_wlan.c:2542:2: warning: ‘ret’ may be used uninitialized in this function
+On Thu, Nov 4, 2010 at 5:07 PM, Shahar Levi <shahar_levi@ti.com> wrote:
+> All files name prefix removed due to the fact that wl12xx driver supports
+> wl1271 and wl1273.
+> Also the definition in Kconfig and header files changed respectively.
+>
+> Signed-off-by: Shahar Levi <shahar_levi@ti.com>
 
-Signed-off-by: John W. Linville <linville@tuxdriver.com>
----
- drivers/net/wireless/rndis_wlan.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
-
-diff --git a/drivers/net/wireless/rndis_wlan.c b/drivers/net/wireless/rndis_wlan.c
-index 8a77ff6..ee08bca 100644
---- a/drivers/net/wireless/rndis_wlan.c
-+++ b/drivers/net/wireless/rndis_wlan.c
-@@ -2536,7 +2536,7 @@ static void rndis_wlan_craft_connected_bss(struct usbnet *usbdev, u8 *bssid,
- 	/* Get signal quality, in case of error use rssi=0 and ignore error. */
- 	len = sizeof(rssi);
- 	rssi = 0;
--	rndis_query_oid(usbdev, OID_802_11_RSSI, &rssi, &len);
-+	ret = rndis_query_oid(usbdev, OID_802_11_RSSI, &rssi, &len);
- 	signal = level_to_qual(le32_to_cpu(rssi));
- 
- 	netdev_dbg(usbdev->net, "%s(): OID_802_11_RSSI -> %d, "
--- 
-1.7.3.2
-
+Hmh the name 'wl12xx' kind of implies it covers 1251, while in fact
+wl1251 is completely separate driver.. At least the Kconfig help text
+should mention it doesn't cover wl1251 and users should use respective
+driver for wl1251.
