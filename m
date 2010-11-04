@@ -1,82 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail30s.wh2.ocn.ne.jp ([125.206.180.198]:18215 "HELO
-	mail30s.wh2.ocn.ne.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1752337Ab0KEGxM (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 5 Nov 2010 02:53:12 -0400
-Received: from vs3011.wh2.ocn.ne.jp (125.206.180.239)
-	by mail30s.wh2.ocn.ne.jp (RS ver 1.0.95vs) with SMTP id 4-0533409990
-	for <linux-wireless@vger.kernel.org>; Fri,  5 Nov 2010 15:53:10 +0900 (JST)
-Subject: [PATCH v6 3/3] ath5k: Add support for antenna configuration
-To: johannes@sipsolutions.net, linville@tuxdriver.com
-From: Bruno Randolf <br1@einfach.org>
-Cc: nbd@openwrt.org, mcgrof@gmail.com, linux-wireless@vger.kernel.org
-Date: Fri, 05 Nov 2010 15:53:22 +0900
-Message-ID: <20101105065322.8122.85352.stgit@localhost6.localdomain6>
-In-Reply-To: <20101105064851.8122.57278.stgit@localhost6.localdomain6>
-References: <20101105064851.8122.57278.stgit@localhost6.localdomain6>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Received: from smtp.nokia.com ([147.243.1.48]:41848 "EHLO mgw-sa02.nokia.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1754133Ab0KDJtG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 4 Nov 2010 05:49:06 -0400
+Subject: Re: [PATCH 3/4] mac80211: don't fragment packets when
+ HW-fragmentation is on
+From: Luciano Coelho <luciano.coelho@nokia.com>
+To: ext Arik Nemtsov <arik@wizery.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <AANLkTimXwopqOUcBWxwAmEH1tJbtLQisW7dmm+XDWHPe@mail.gmail.com>
+References: <1288821053-19013-1-git-send-email-arik@wizery.com>
+	 <1288821053-19013-4-git-send-email-arik@wizery.com>
+	 <1288836908.4083.2.camel@jlt3.sipsolutions.net>
+	 <AANLkTimXwopqOUcBWxwAmEH1tJbtLQisW7dmm+XDWHPe@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Thu, 04 Nov 2010 11:52:48 +0200
+Message-ID: <1288864368.10002.43.camel@powerslave>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Support setting the antenna configuration via cfg/mac80211. At the moment only
-allow the simple pre-defined configurations we already have (fixed antenna A/B
-or diversity), but more advanced settings are possible to implement.
+On Thu, 2010-11-04 at 06:34 +0100, ext Arik Nemtsov wrote:
+> On Thu, Nov 4, 2010 at 04:15, Johannes Berg <johannes@sipsolutions.net> wrote:
+> >
+> > On Wed, 2010-11-03 at 23:50 +0200, Arik Nemtsov wrote:
+> > > If the driver supports hardware TX fragmentation, don't fragment
+> > > packets in the stack.
+> >
+> > I'm not sure why you have three patches? Seems like it could all be a
+> > single mac80211 patch.
+> 
+> Sure. I'll send a v2 with the mac80211 patches bundled into a single one.
+> 
+> >
+> > > @@ -1181,8 +1183,10 @@ ieee80211_tx_prepare(struct ieee80211_sub_if_data *sdata,
+> > >       /*
+> > >        * Set this flag (used below to indicate "automatic fragmentation"),
+> > >        * it will be cleared/left by radiotap as desired.
+> > > +      * Only valid when fragmentation is done by the stack.
+> > >        */
+> > > -     tx->flags |= IEEE80211_TX_FRAGMENTED;
+> > > +     if (!(local->hw.flags & IEEE80211_HW_TX_FRAGMENTATION))
+> > > +             tx->flags |= IEEE80211_TX_FRAGMENTED;
+> >
+> > Do we really need the hw flag? Couldn't we go off the callback, like we
+> > used to? I'm not really sure which one would perform better though, I
+> > guess the flag might ...
+> 
+> I think the flag may be less confusing for new driver writers.
+> Someone can implement the callback as a no-op and have a bug in his
+> code as a result.
 
-Signed-off-by: Bruno Randolf <br1@einfach.org>
----
- drivers/net/wireless/ath/ath5k/base.c |   32 ++++++++++++++++++++++++++++++++
- 1 files changed, 32 insertions(+), 0 deletions(-)
+Well, if someone implements the fragmentation setting function as a
+no-op, it is a bug in the driver and it should be fixed.  It's easy to
+make that clear in the documentation.  "If the hardware doesn't support
+fragmentation, set this function to NULL" or something.
 
-diff --git a/drivers/net/wireless/ath/ath5k/base.c b/drivers/net/wireless/ath/ath5k/base.c
-index 8251946..ba50a0b 100644
---- a/drivers/net/wireless/ath/ath5k/base.c
-+++ b/drivers/net/wireless/ath/ath5k/base.c
-@@ -3395,6 +3395,36 @@ static int ath5k_conf_tx(struct ieee80211_hw *hw, u16 queue,
- 	return ret;
- }
- 
-+static int ath5k_set_antenna(struct ieee80211_hw *hw, u8 tx_ant, u8 rx_ant)
-+{
-+	struct ath5k_softc *sc = hw->priv;
-+
-+	if (tx_ant == 1 && rx_ant == 1)
-+		ath5k_hw_set_antenna_mode(sc->ah, AR5K_ANTMODE_FIXED_A);
-+	else if (tx_ant == 2 && rx_ant == 2)
-+		ath5k_hw_set_antenna_mode(sc->ah, AR5K_ANTMODE_FIXED_B);
-+	else if ((tx_ant & 3) == 3 && (rx_ant & 3) == 3)
-+		ath5k_hw_set_antenna_mode(sc->ah, AR5K_ANTMODE_DEFAULT);
-+	else
-+		return -EINVAL;
-+	return 0;
-+}
-+
-+static int ath5k_get_antenna(struct ieee80211_hw *hw, u8 *tx_ant, u8 *rx_ant)
-+{
-+	struct ath5k_softc *sc = hw->priv;
-+
-+	switch (sc->ah->ah_ant_mode) {
-+	case AR5K_ANTMODE_FIXED_A:
-+		*tx_ant = 1; *rx_ant = 1; break;
-+	case AR5K_ANTMODE_FIXED_B:
-+		*tx_ant = 2; *rx_ant = 2; break;
-+	case AR5K_ANTMODE_DEFAULT:
-+		*tx_ant = 3; *rx_ant = 3; break;
-+	}
-+	return 0;
-+}
-+
- static const struct ieee80211_ops ath5k_hw_ops = {
- 	.tx 		= ath5k_tx,
- 	.start 		= ath5k_start,
-@@ -3415,6 +3445,8 @@ static const struct ieee80211_ops ath5k_hw_ops = {
- 	.sw_scan_start	= ath5k_sw_scan_start,
- 	.sw_scan_complete = ath5k_sw_scan_complete,
- 	.set_coverage_class = ath5k_set_coverage_class,
-+	.set_antenna	= ath5k_set_antenna,
-+	.get_antenna	= ath5k_get_antenna,
- };
- 
- /********************\
+That's how it's done already with other ops, such as hw_scan and so on.
+I don't see a need to have another flag.
+
+Performance-wise, if there's an impact it will be almost insignificant,
+I believe.
+
+-- 
+Cheers,
+Luca.
 
