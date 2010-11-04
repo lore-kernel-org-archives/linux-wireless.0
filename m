@@ -1,44 +1,96 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from arroyo.ext.ti.com ([192.94.94.40]:48021 "EHLO arroyo.ext.ti.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752030Ab0KZQhN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 26 Nov 2010 11:37:13 -0500
-From: "Levi, Shahar" <shahar_levi@ti.com>
-To: Juuso Oikarinen <juuso.oikarinen@nokia.com>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Luciano Coelho <luciano.coelho@nokia.com>
-Date: Fri, 26 Nov 2010 17:37:04 +0100
-Subject: RE: [PATCH ] wl12xx: BA receiver support
-Message-ID: <AC090B9732AB2B4DB7FF476E907FE660012AFF6D90@dnce02.ent.ti.com>
-References: <1290616392-16532-1-git-send-email-shahar_levi@ti.com>
- <1290765417.4284.101.camel@wimaxnb.nmp.nokia.com>
-In-Reply-To: <1290765417.4284.101.camel@wimaxnb.nmp.nokia.com>
-Content-Type: text/plain; charset="utf-8"
+Received: from mail-ew0-f46.google.com ([209.85.215.46]:36386 "EHLO
+	mail-ew0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752979Ab0KDTn6 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 4 Nov 2010 15:43:58 -0400
+Received: by mail-ew0-f46.google.com with SMTP id 7so1281902ewy.19
+        for <linux-wireless@vger.kernel.org>; Thu, 04 Nov 2010 12:43:57 -0700 (PDT)
+From: Ivo van Doorn <ivdoorn@gmail.com>
+To: linux-wireless@vger.kernel.org
+Subject: [PATCH 11/13] rt2x00: Fix crash on USB unplug
+Date: Thu, 4 Nov 2010 20:41:05 +0100
+Cc: Helmut Schaa <helmut.schaa@googlemail.com>
+References: <201011042037.00178.IvDoorn@gmail.com> <201011042040.12419.IvDoorn@gmail.com> <201011042040.47235.IvDoorn@gmail.com>
+In-Reply-To: <201011042040.47235.IvDoorn@gmail.com>
 MIME-Version: 1.0
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Message-Id: <201011042041.06812.IvDoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-PiAtLS0tLU9yaWdpbmFsIE1lc3NhZ2UtLS0tLQ0KPiBGcm9tOiBKdXVzbyBPaWthcmluZW4gW21h
-aWx0bzpqdXVzby5vaWthcmluZW5Abm9raWEuY29tXQ0KPiBTZW50OiBGcmlkYXksIE5vdmVtYmVy
-IDI2LCAyMDEwIDExOjU3IEFNDQo+IFRvOiBMZXZpLCBTaGFoYXINCj4gQ2M6IGxpbnV4LXdpcmVs
-ZXNzQHZnZXIua2VybmVsLm9yZzsgTHVjaWFubyBDb2VsaG8NCj4gU3ViamVjdDogUmU6IFtQQVRD
-SCBdIHdsMTJ4eDogQkEgcmVjZWl2ZXIgc3VwcG9ydA0KPiANCj4gT24gV2VkLCAyMDEwLTExLTI0
-IGF0IDE4OjMzICswMjAwLCBleHQgU2hhaGFyIExldmkgd3JvdGU6DQo+ID4NCj4gPiAraW50IHds
-MTI3MV9vcF9hbXBkdV9hY3Rpb24oc3RydWN0IGllZWU4MDIxMV9odyAqaHcsIHN0cnVjdA0KPiBp
-ZWVlODAyMTFfdmlmICp2aWYsDQo+ID4gKwkJCSAgIGVudW0gaWVlZTgwMjExX2FtcGR1X21sbWVf
-YWN0aW9uIGFjdGlvbiwNCj4gPiArCQkJICAgc3RydWN0IGllZWU4MDIxMV9zdGEgKnN0YSwgdTE2
-IHRpZCwgdTE2ICpzc24pDQo+ID4gK3sNCj4gPiArCXN0cnVjdCB3bDEyNzEgKndsID0gaHctPnBy
-aXY7DQo+ID4gKwlpbnQgcmV0Ow0KPiA+ICsNCj4gPiArCXJldCA9IHdsMTI3MV9wc19lbHBfd2Fr
-ZXVwKHdsLCBmYWxzZSk7DQo+ID4gKwlpZiAocmV0IDwgMCkNCj4gPiArCQlnb3RvIG91dDsNCj4g
-PiArDQo+ID4gKwlzd2l0Y2ggKGFjdGlvbikgew0KPiA+ICsJY2FzZSBJRUVFODAyMTFfQU1QRFVf
-UlhfU1RBUlQ6DQo+ID4gKwkJaWYgKHdsLT5iYV9hbGxvd2VkKSB7DQo+ID4gKwkJCXJldCA9IHds
-MTI3MV9hY3hfc2V0X2JhX3JlY2VpdmVyX3Nlc3Npb24od2wsIHRpZCwNCj4gc3NuLA0KPiA+ICsJ
-CQkJCQkJCSB0cnVlKTsNCj4gPiArCQkJaWYgKCFyZXQpDQo+ID4gKwkJCQl3bC0+YmFfcnhfYml0
-bWFwIHw9ICh1OCkoQklUKDApIDw8IHRpZCk7DQo+ID4gKwkJfSBlbHNlDQo+ID4gKwkJCXJldCA9
-IC1FUEVSTTsNCj4gPiArCQlicmVhazsNCj4gPiArDQo+ID4gKwljYXNlIElFRUU4MDIxMV9BTVBE
-VV9SWF9TVE9QOg0KPiA+ICsJCXJldCA9IHdsMTI3MV9hY3hfc2V0X2JhX3JlY2VpdmVyX3Nlc3Np
-b24od2wsIHRpZCwgc3NuLA0KPiBmYWxzZSk7DQo+ID4gKwkJaWYgKCFyZXQpDQo+ID4gKwkJCXds
-LT5iYV9yeF9iaXRtYXAgJj0gfih1OCkoQklUKDApIDw8IHRpZCk7DQo+ID4gKwkJYnJlYWs7DQo+
-ID4gKw0KPiA+ICsJLyoNCj4gDQo+IFRoZXNlICJCSVQoMCkgPDwgdGlkIiB0aGluZ2llcyBsb29r
-IHdlaXJkLiBXaHkgbm90IEJJVCh0aWQpID8NCj4gDQo+IC1KdXVzbw0KR29vZCBjYXRjaC4gV2ls
-bCBiZSBmaXggb24gdjIuDQpUaGFua3MsDQpTaGFoYXINCg0K
+By not scheduling the TX/RX completion worker threads
+when Radio is disabled, or hardware has been unplugged,
+the queues cannot be completely cleaned.
+
+This causes crashes when the hardware has been unplugged while
+the radio is still enabled.
+
+Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
+Acked-by: Gertjan van Wingerde <gwingerde@gmail.com>
+---
+ drivers/net/wireless/rt2x00/rt2x00dev.c |   12 ++++++++++--
+ drivers/net/wireless/rt2x00/rt2x00usb.c |    8 ++------
+ 2 files changed, 12 insertions(+), 8 deletions(-)
+
+diff --git a/drivers/net/wireless/rt2x00/rt2x00dev.c b/drivers/net/wireless/rt2x00/rt2x00dev.c
+index a5c7a4f..b6822cd 100644
+--- a/drivers/net/wireless/rt2x00/rt2x00dev.c
++++ b/drivers/net/wireless/rt2x00/rt2x00dev.c
+@@ -483,6 +483,10 @@ void rt2x00lib_rxdone(struct queue_entry *entry)
+ 	unsigned int header_length;
+ 	int rate_idx;
+ 
++	if (!test_bit(DEVICE_STATE_PRESENT, &rt2x00dev->flags) ||
++	    !test_bit(DEVICE_STATE_ENABLED_RADIO, &rt2x00dev->flags))
++		goto submit_entry;
++
+ 	if (test_bit(ENTRY_DATA_IO_FAILED, &entry->flags))
+ 		goto submit_entry;
+ 
+@@ -567,9 +571,13 @@ void rt2x00lib_rxdone(struct queue_entry *entry)
+ 	entry->skb = skb;
+ 
+ submit_entry:
+-	rt2x00dev->ops->lib->clear_entry(entry);
+-	rt2x00queue_index_inc(entry->queue, Q_INDEX);
++	entry->flags = 0;
+ 	rt2x00queue_index_inc(entry->queue, Q_INDEX_DONE);
++	if (test_bit(DEVICE_STATE_PRESENT, &rt2x00dev->flags) &&
++	    test_bit(DEVICE_STATE_ENABLED_RADIO, &rt2x00dev->flags)) {
++		rt2x00dev->ops->lib->clear_entry(entry);
++		rt2x00queue_index_inc(entry->queue, Q_INDEX);
++	}
+ }
+ EXPORT_SYMBOL_GPL(rt2x00lib_rxdone);
+ 
+diff --git a/drivers/net/wireless/rt2x00/rt2x00usb.c b/drivers/net/wireless/rt2x00/rt2x00usb.c
+index 6dd9619..9ac1459 100644
+--- a/drivers/net/wireless/rt2x00/rt2x00usb.c
++++ b/drivers/net/wireless/rt2x00/rt2x00usb.c
+@@ -226,9 +226,7 @@ static void rt2x00usb_interrupt_txdone(struct urb *urb)
+ 	 * Schedule the delayed work for reading the TX status
+ 	 * from the device.
+ 	 */
+-	if (test_bit(DEVICE_STATE_PRESENT, &rt2x00dev->flags) &&
+-	    test_bit(DEVICE_STATE_ENABLED_RADIO, &rt2x00dev->flags))
+-		ieee80211_queue_work(rt2x00dev->hw, &rt2x00dev->txdone_work);
++	ieee80211_queue_work(rt2x00dev->hw, &rt2x00dev->txdone_work);
+ }
+ 
+ static void rt2x00usb_kick_tx_entry(struct queue_entry *entry)
+@@ -409,9 +407,7 @@ static void rt2x00usb_interrupt_rxdone(struct urb *urb)
+ 	 * Schedule the delayed work for reading the RX status
+ 	 * from the device.
+ 	 */
+-	if (test_bit(DEVICE_STATE_PRESENT, &rt2x00dev->flags) &&
+-	    test_bit(DEVICE_STATE_ENABLED_RADIO, &rt2x00dev->flags))
+-		ieee80211_queue_work(rt2x00dev->hw, &rt2x00dev->rxdone_work);
++	ieee80211_queue_work(rt2x00dev->hw, &rt2x00dev->rxdone_work);
+ }
+ 
+ /*
+-- 
+1.7.2.3
+
