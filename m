@@ -1,82 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iw0-f174.google.com ([209.85.214.174]:37900 "EHLO
-	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751860Ab0K2MGZ convert rfc822-to-8bit (ORCPT
+Received: from mail-vw0-f46.google.com ([209.85.212.46]:47851 "EHLO
+	mail-vw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751384Ab0KDC45 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 29 Nov 2010 07:06:25 -0500
-Received: by iwn5 with SMTP id 5so73652iwn.19
-        for <linux-wireless@vger.kernel.org>; Mon, 29 Nov 2010 04:06:24 -0800 (PST)
+	Wed, 3 Nov 2010 22:56:57 -0400
+Received: by vws13 with SMTP id 13so1276844vws.19
+        for <linux-wireless@vger.kernel.org>; Wed, 03 Nov 2010 19:56:57 -0700 (PDT)
+Message-ID: <4CD22112.4080103@lwfinger.net>
+Date: Wed, 03 Nov 2010 21:57:22 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-In-Reply-To: <1290794073-5309-2-git-send-email-rmanoharan@atheros.com>
-References: <1290794073-5309-1-git-send-email-rmanoharan@atheros.com>
-	<1290794073-5309-2-git-send-email-rmanoharan@atheros.com>
-Date: Mon, 29 Nov 2010 13:06:23 +0100
-Message-ID: <AANLkTikdE_L+4Zxv7qT32P_AmzJ1RHRLRQjftUVpwOUk@mail.gmail.com>
-Subject: Re: [PATCH 2/3] ath9k: Add change_interface callback
-From: =?ISO-8859-1?Q?Bj=F6rn_Smedman?= <bjorn.smedman@venatech.se>
-To: Rajkumar Manoharan <rmanoharan@atheros.com>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
+To: Rogerio Luz Coelho <rogluz.news@gmail.com>
+CC: Herton Ronaldo Krzesinski <herton@mandriva.com.br>,
+	Thadeu Lima de Souza Cascardo <cascardo@holoscopio.com>,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 3/9] rtl8187: fix wrong register initialization in 8187B
+References: <309278.75116.qm@web29520.mail.ird.yahoo.com>	<4CCF7B73.7040906@lwfinger.net>	<4CCF7EFC.1050000@mandriva.com.br>	<AANLkTinEsp+-EU4Oau71qHbL6ftO544+H4GA3WZk7CX5@mail.gmail.com>	<20101103112843.15e51de7@gotham.conectiva> <AANLkTikkXd1w-6Cfq3T4gAKSar7YPV8DOwqEbvSPe7c3@mail.gmail.com>
+In-Reply-To: <AANLkTikkXd1w-6Cfq3T4gAKSar7YPV8DOwqEbvSPe7c3@mail.gmail.com>
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Nov 26, 2010 at 6:54 PM, Rajkumar Manoharan
-<rmanoharan@atheros.com> wrote:
-> Add support to change interface type
-> without bringing down the interface.
->
-> Signed-off-by: Rajkumar Manoharan <rmanoharan@atheros.com>
-> ---
-[snip]
-> +static int ath9k_change_interface(struct ieee80211_hw *hw,
-> +                                 struct ieee80211_vif *vif,
-> +                                 enum nl80211_iftype new_type,
-> +                                 bool p2p)
-> +{
-> +       struct ath_wiphy *aphy = hw->priv;
-> +       struct ath_softc *sc = aphy->sc;
-> +       struct ath_common *common = ath9k_hw_common(sc->sc_ah);
-> +
-> +       ath_print(common, ATH_DBG_CONFIG, "Change Interface\n");
-> +       mutex_lock(&sc->mutex);
-> +
-> +       new_type = ieee80211_iftype_p2p(new_type, p2p);
-> +
-> +       switch (new_type) {
-> +       case NL80211_IFTYPE_AP:
-> +       case NL80211_IFTYPE_ADHOC:
-> +               break;
+On 11/03/2010 09:41 PM, Rogerio Luz Coelho wrote:
+> Could I apply these patches on top of Cascardo's?
+> 
+> Or should I tru individually for better testing ?
 
-If you have to reclaim beacon in the case where you go from AP -> STA
-(replicate remove_interface), don't you have to replicate what
-add_interface does in this case, e.g. the check below etc?
+Herton said to apply after Cascardo's changes. I tested them individually to
+test whether the system would build at each step of the way. Only the last two
+made any difference in the throughput. You can just test before, and after all
+of them are applied.
 
-                if (sc->nbcnvifs >= ATH_BCBUF) {
-                        ret = -ENOBUFS;
-                        goto out;
-                }
+Larry
 
-> +       case NL80211_IFTYPE_STATION:
-> +               /* Stop ANI */
-> +               sc->sc_flags &= ~SC_OP_ANI_RUN;
-> +               del_timer_sync(&common->ani.timer);
-> +               if ((vif->type == NL80211_IFTYPE_AP) ||
-> +                   (vif->type == NL80211_IFTYPE_ADHOC))
-> +                       ath9k_reclaim_beacon(sc, vif);
-> +               break;
-> +       default:
-> +               ath_print(common, ATH_DBG_FATAL,
-> +                       "Interface type %d not yet supported\n", vif->type);
-> +               mutex_unlock(&sc->mutex);
-> +               return -ENOTSUPP;
-> +       }
-> +       vif->type = new_type;
-> +
-> +       mutex_unlock(&sc->mutex);
-> +       return 0;
-> +}
-
-Also, doesn't this patch introduce yet another race condition between
-configuration change in process context and bcn_tasklet?
-
-/Björn
