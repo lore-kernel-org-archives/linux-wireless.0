@@ -1,58 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gy0-f174.google.com ([209.85.160.174]:38398 "EHLO
-	mail-gy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757188Ab0KJV6m convert rfc822-to-8bit (ORCPT
+Received: from mail-iw0-f174.google.com ([209.85.214.174]:61014 "EHLO
+	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752429Ab0KDWFU convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 10 Nov 2010 16:58:42 -0500
-Received: by gyh4 with SMTP id 4so795735gyh.19
-        for <linux-wireless@vger.kernel.org>; Wed, 10 Nov 2010 13:58:42 -0800 (PST)
+	Thu, 4 Nov 2010 18:05:20 -0400
+Received: by iwn41 with SMTP id 41so8131iwn.19
+        for <linux-wireless@vger.kernel.org>; Thu, 04 Nov 2010 15:05:19 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <20101110215344.GD4667@tux>
-References: <1289355626-25373-1-git-send-email-lacombar@gmail.com>
-	<1289355626-25373-5-git-send-email-lacombar@gmail.com>
-	<20101110215344.GD4667@tux>
-Date: Wed, 10 Nov 2010 16:58:40 -0500
-Message-ID: <AANLkTikxg3hab+r-b2F2F2-XSW9uQiLuMEhVRMr4C33C@mail.gmail.com>
-Subject: Re: [PATCH 04/44] compat/2.6.18: add compat inline for netdev_alloc_skb()
-From: Arnaud Lacombe <lacombar@gmail.com>
-To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Luis Rodriguez <Luis.Rodriguez@atheros.com>
+In-Reply-To: <AANLkTik0tawXfer2DMSKFXZwFbjYWLoG3nRBYMAMO8WL@mail.gmail.com>
+References: <1288822429-24541-1-git-send-email-notasas@gmail.com>
+ <1288822429-24541-3-git-send-email-notasas@gmail.com> <AANLkTimfXO9r=DTW3CAiVswmsoKES2qxEiYz4JBOTGu_@mail.gmail.com>
+ <AANLkTik0tawXfer2DMSKFXZwFbjYWLoG3nRBYMAMO8WL@mail.gmail.com>
+From: Ohad Ben-Cohen <ohad@wizery.com>
+Date: Thu, 4 Nov 2010 18:04:58 -0400
+Message-ID: <AANLkTimtryH0HTWk0ymK6EY1XcCPv6eLDYM-GzuJxhEy@mail.gmail.com>
+Subject: Re: [PATCH 2/3] wl1251: add runtime PM support for SDIO
+To: Grazvydas Ignotas <notasas@gmail.com>
+Cc: linux-wireless@vger.kernel.org, Kalle Valo <kvalo@adurom.com>,
+	"John W. Linville" <linville@tuxdriver.com>
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
-
-On Wed, Nov 10, 2010 at 4:53 PM, Luis R. Rodriguez
-<lrodriguez@atheros.com> wrote:
-> On Tue, Nov 09, 2010 at 06:19:46PM -0800, Arnaud Lacombe wrote:
->> Signed-off-by: Arnaud Lacombe <lacombar@gmail.com>
->> ---
->>  include/linux/compat-2.6.18.h |   21 +++++++++++++++++++++
->>  1 files changed, 21 insertions(+), 0 deletions(-)
+On Thu, Nov 4, 2010 at 10:37 AM, Grazvydas Ignotas <notasas@gmail.com> wrote:
+> On Thu, Nov 4, 2010 at 3:51 PM, Ohad Ben-Cohen <ohad@wizery.com> wrote:
+>> On Wed, Nov 3, 2010 at 6:13 PM, Grazvydas Ignotas <notasas@gmail.com> wrote:
+>>> Add runtime PM support, similar to how it's done for wl1271.
+>>> This allows to power down the card when the driver is loaded but
+>>> network is not in use.
+>>>
+>>> CC: Ohad Ben-Cohen <ohad@wizery.com>
+>>> Signed-off-by: Grazvydas Ignotas <notasas@gmail.com>
+>>> ---
+>>>  drivers/net/wireless/wl1251/sdio.c |   62 ++++++++++++++++++++++++++++++++++--
+>>>  1 files changed, 59 insertions(+), 3 deletions(-)
+>>>
+>>> diff --git a/drivers/net/wireless/wl1251/sdio.c b/drivers/net/wireless/wl1251/sdio.c
+>>> index 0285190..0a5db21 100644
+>>> --- a/drivers/net/wireless/wl1251/sdio.c
+>>> +++ b/drivers/net/wireless/wl1251/sdio.c
+>>> @@ -26,6 +26,7 @@
+>>>  #include <linux/platform_device.h>
+>>>  #include <linux/wl12xx.h>
+>>>  #include <linux/irq.h>
+>>> +#include <linux/pm_runtime.h>
+>>>
+>>>  #include "wl1251.h"
+>>>
+>>> @@ -173,10 +174,36 @@ static void wl1251_disable_line_irq(struct wl1251 *wl)
+>>>
+>>>  static int wl1251_sdio_set_power(struct wl1251 *wl, bool enable)
+>>>  {
+>>> -       if (wl->set_power)
+>>> -               wl->set_power(enable);
+>>> +       struct sdio_func *func = wl_to_func(wl);
+>>> +       int ret;
+>>>
+>>> -       return 0;
+>>> +       if (enable) {
+>>> +               /* Power up the card */
+>>> +               if (wl->set_power)
+>>> +                       wl->set_power(true);
 >>
->> diff --git a/include/linux/compat-2.6.18.h b/include/linux/compat-2.6.18.h
->> index a45cfc7..4a7034a 100644
->> --- a/include/linux/compat-2.6.18.h
->> +++ b/include/linux/compat-2.6.18.h
->> @@ -6,8 +6,29 @@
->>  /* Compat work for 2.6.18 */
->>  #if (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,18))
->>
->> +#include <linux/gfp.h>
->> +#include <linux/netdevice.h>
->> +#include <linux/skbuff.h>
->> +
->>  #define roundup(x, y)        ((((x) + ((y) - 1)) / (y)) * (y))
->>
->> +#ifndef NET_SKB_PAD
->> +#define NET_SKB_PAD  16
+>> Why do you still need that ->set_power() handler ?
 >
-> Why are you adding the ifndef for NET_SKB_PAD if you know you already added it
-> for 2.6.17 on your patch 2/44 ?
->
-I should have lost a track when I made that change, it correctly
-appeared in 2.6.17. My mistake :)
+> On pandora besides power, we also have a GPIO to control clock buffer
+> for wl1251, so I thought I could enable it here.
 
- - Arnaud
+Oh, I see. The name set_power then is a bit misleading.. ;)
+
+>  Perhaps it could be
+> set up as regulator too, but I'm not sure how to set it up so that
+> clock is enabled before main power. Also it's not really a power
+> supply so it somehow felt wrong to set up regulator for it.
+>
