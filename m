@@ -1,73 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ksp.mff.cuni.cz ([195.113.26.206]:57590 "EHLO
-	atrey.karlin.mff.cuni.cz" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1752228Ab0K3UA2 (ORCPT
+Received: from mail-ww0-f44.google.com ([74.125.82.44]:45487 "EHLO
+	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751627Ab0KDATd (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 30 Nov 2010 15:00:28 -0500
-Date: Tue, 30 Nov 2010 21:00:19 +0100
-From: Pavel Machek <pavel@ucw.cz>
-To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Cc: bkuhn@ebb.org, Alan Cox <alan@lxorguk.ukuu.org.uk>,
-	linux-kernel@vger.kernel.org,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Greg KH <greg@kroah.com>, David Miller <davem@davemloft.net>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Stephen Hemminger <shemminger@vyatta.com>,
-	"Perez-Gonzalez, Inaky" <inaky.perez-gonzalez@intel.com>,
-	Charles Marker <Charles.Marker@atheros.com>,
-	Jouni Malinen <Jouni.Malinen@atheros.com>,
-	Kevin Hayes <kevin@atheros.com>,
-	Zhifeng Cai <zhifeng.cai@atheros.com>,
-	Don Breslin <Don.Breslin@atheros.com>,
-	Doug Dahlby <Doug.Dahlby@atheros.com>,
-	Julia Lawall <julia@diku.dk>
-Subject: Re: Challenges with doing hardware bring up with Linux first
-Message-ID: <20101130200019.GA28735@elf.ucw.cz>
-References: <AANLkTim4jVaZxYp8nSgJyy28iwxcxbPeNUzxTfoHAX4S@mail.gmail.com>
- <20101118113441.74fcdc21@lxorguk.ukuu.org.uk>
- <AANLkTikOZbtyhsk0OBb4OdUi6qj-7k_hU-aW_Pkhfpq0@mail.gmail.com>
- <20101130192648.GA1623@ucw.cz>
- <AANLkTinMyAeVJJc7Lc-vt_Ywr+vcSf-GAiQwggTGbqh8@mail.gmail.com>
+	Wed, 3 Nov 2010 20:19:33 -0400
+Received: by wwb13 with SMTP id 13so52769wwb.1
+        for <linux-wireless@vger.kernel.org>; Wed, 03 Nov 2010 17:19:32 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <AANLkTinMyAeVJJc7Lc-vt_Ywr+vcSf-GAiQwggTGbqh8@mail.gmail.com>
+In-Reply-To: <20101102082254.GL1733@mail.wantstofly.org>
+References: <1288659351-22313-1-git-send-email-brian@cozybit.com> <20101102082254.GL1733@mail.wantstofly.org>
+From: Brian Cavagnolo <brian@cozybit.com>
+Date: Wed, 3 Nov 2010 17:19:11 -0700
+Message-ID: <AANLkTi=iQgc+cMTrwGWyriHvOCGhAZ7TU+41ytBRYtea@mail.gmail.com>
+Subject: Re: [PATCH 1/7] mwl8k: add firmware files for 8366
+To: Lennert Buytenhek <buytenh@wantstofly.org>
+Cc: linux-wireless@vger.kernel.org,
+	Nishant Sarmukadam <nishants@marvell.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue 2010-11-30 11:30:18, Luis R. Rodriguez wrote:
-> On Tue, Nov 30, 2010 at 11:26 AM, Pavel Machek <pavel@ucw.cz> wrote:
-> > Hi!
-> >
-> >> >> everything else can be independent code. For ath9k in particular this
-> >> >> means we keep ath9k_hw shared between our Operating Systems and that's
-> >> >> it. In addition to this I believe opening up the common drivers for
-> >> >
-> >> > The Linux copy needs to be GPL,
-> >>
-> >> GPL-Compatible you mean, right. I mean we have ath9k_hw with
-> >> permissive licensed files.
-> >
-> > GPL-compatible is not right word. It has to be either GPL, or so
-> > permissive that anyone is allowed to turn it into GPL.
-> 
-> Oh?
+On Tue, Nov 2, 2010 at 1:22 AM, Lennert Buytenhek
+<buytenh@wantstofly.org> wrote:
+> On Mon, Nov 01, 2010 at 05:55:45PM -0700, Brian Cavagnolo wrote:
+>
+>> From: Nishant Sarmukadam <nishants@marvell.com>
+>>
+>> Add Helper image, client image (4.1.0.3) and ap image (5.2.6.6)
+>>
+>> Signed-off-by: Nishant Sarmukadam <nishants@marvell.com>
+>> Signed-off-by: Brian Cavagnolo <brian@cozybit.com>
+>
+> NAK, for obvious reasons.
+>
+> Also, spamming thousands of people's inboxes with 500kb firmware
+> patches is generally not a nice thing to do.
+>
 
-Kernel is GPL. Dual BSD/GPL is ok. Just BSD... I don't think so.
-
-/*
- * Copyright (c) 2008 Atheros Communications Inc.
- *
- * Permission to use, copy, modify, and/or distribute this software
-for any
- * purpose with or without fee is hereby granted, provided that the
-above
- * copyright notice and this permission notice appear in all copies.
- *
-
-...but I need permission to relicense it under GPL, and I'm not sure I
-have it.
-							Pavel
-
--- 
-(english) http://www.livejournal.com/~pavelmachek
-(cesky, pictures) http://atrey.karlin.mff.cuni.cz/~pavel/picture/horses/blog.html
+Well, patches containing hundreds of kB of binary firmware do pass
+through this mailing list.  However, a closer inspection reveals that
+these were destined for the linux-firmware with linux-wireless CC'd.
+My bad.  When I resubmit I'll do it that way.
