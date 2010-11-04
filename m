@@ -1,89 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:48060 "EHLO nbd.name"
-	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1755751Ab0KNOUW (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 14 Nov 2010 09:20:22 -0500
-From: Felix Fietkau <nbd@openwrt.org>
+Received: from mail-ew0-f46.google.com ([209.85.215.46]:61775 "EHLO
+	mail-ew0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752522Ab0KDTn4 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 4 Nov 2010 15:43:56 -0400
+Received: by mail-ew0-f46.google.com with SMTP id 7so1281934ewy.19
+        for <linux-wireless@vger.kernel.org>; Thu, 04 Nov 2010 12:43:56 -0700 (PDT)
+From: Ivo van Doorn <ivdoorn@gmail.com>
 To: linux-wireless@vger.kernel.org
-Cc: linville@tuxdriver.com, lrodriguez@atheros.com
-Subject: [PATCH 05/13] ath9k: remove bfs_keyix from struct ath_buf_state
-Date: Sun, 14 Nov 2010 15:20:05 +0100
-Message-Id: <1289744413-20789-5-git-send-email-nbd@openwrt.org>
-In-Reply-To: <1289744413-20789-4-git-send-email-nbd@openwrt.org>
-References: <1289744413-20789-1-git-send-email-nbd@openwrt.org>
- <1289744413-20789-2-git-send-email-nbd@openwrt.org>
- <1289744413-20789-3-git-send-email-nbd@openwrt.org>
- <1289744413-20789-4-git-send-email-nbd@openwrt.org>
+Subject: [PATCH 10/13] rt2x00: Fix MCU_SLEEP arguments
+Date: Thu, 4 Nov 2010 20:40:46 +0100
+Cc: Helmut Schaa <helmut.schaa@googlemail.com>
+References: <201011042037.00178.IvDoorn@gmail.com> <201011042039.49521.IvDoorn@gmail.com> <201011042040.12419.IvDoorn@gmail.com>
+In-Reply-To: <201011042040.12419.IvDoorn@gmail.com>
+MIME-Version: 1.0
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Message-Id: <201011042040.47235.IvDoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
----
- drivers/net/wireless/ath/ath9k/ath9k.h |    2 --
- drivers/net/wireless/ath/ath9k/xmit.c  |   14 ++++++++------
- 2 files changed, 8 insertions(+), 8 deletions(-)
+Legacy driver uses 0xff as the second argument for the MCU_SLEEP
+command. It is still unknown what the values actually mean, but
+this will at least keep the command in-sync with the original
+driver.
 
-diff --git a/drivers/net/wireless/ath/ath9k/ath9k.h b/drivers/net/wireless/ath/ath9k/ath9k.h
-index 9106d41..30c18e8 100644
---- a/drivers/net/wireless/ath/ath9k/ath9k.h
-+++ b/drivers/net/wireless/ath/ath9k/ath9k.h
-@@ -105,7 +105,6 @@ enum buffer_type {
- #define bf_al           	bf_state.bfs_al
- #define bf_frmlen       	bf_state.bfs_frmlen
- #define bf_retries      	bf_state.bfs_retries
--#define bf_keyix                bf_state.bfs_keyix
- #define bf_isht(bf)		(bf->bf_state.bf_type & BUF_HT)
- #define bf_isampdu(bf)		(bf->bf_state.bf_type & BUF_AMPDU)
- #define bf_isaggr(bf)		(bf->bf_state.bf_type & BUF_AGGR)
-@@ -221,7 +220,6 @@ struct ath_buf_state {
- 	int bfs_retries;
- 	u8 bf_type;
- 	u8 bfs_paprd;
--	u32 bfs_keyix;
- 	enum ath9k_internal_frame_type bfs_ftype;
- };
+Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
+Acked-by: Gertjan van Wingerde <gwingerde@gmail.com>
+---
+ drivers/net/wireless/rt2x00/rt2800pci.c |    2 +-
+ drivers/net/wireless/rt2x00/rt2800usb.c |    4 ++--
+ 2 files changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/net/wireless/rt2x00/rt2800pci.c b/drivers/net/wireless/rt2x00/rt2800pci.c
+index 6dc61b7..1db0c3b 100644
+--- a/drivers/net/wireless/rt2x00/rt2800pci.c
++++ b/drivers/net/wireless/rt2x00/rt2800pci.c
+@@ -442,7 +442,7 @@ static int rt2800pci_set_state(struct rt2x00_dev *rt2x00dev,
+ 	 * if the device is booting and wasn't asleep it will return
+ 	 * failure when attempting to wakeup.
+ 	 */
+-	rt2800_mcu_request(rt2x00dev, MCU_SLEEP, 0xff, 0, 2);
++	rt2800_mcu_request(rt2x00dev, MCU_SLEEP, 0xff, 0xff, 2);
  
-diff --git a/drivers/net/wireless/ath/ath9k/xmit.c b/drivers/net/wireless/ath/ath9k/xmit.c
-index 9f3d23a..176d88c 100644
---- a/drivers/net/wireless/ath/ath9k/xmit.c
-+++ b/drivers/net/wireless/ath/ath9k/xmit.c
-@@ -1604,12 +1604,8 @@ static struct ath_buf *ath_tx_setup_buffer(struct ieee80211_hw *hw,
+ 	if (state == STATE_AWAKE) {
+ 		rt2800_mcu_request(rt2x00dev, MCU_WAKEUP, TOKEN_WAKUP, 0, 0);
+diff --git a/drivers/net/wireless/rt2x00/rt2800usb.c b/drivers/net/wireless/rt2x00/rt2800usb.c
+index 04dfedc..5c31e33 100644
+--- a/drivers/net/wireless/rt2x00/rt2800usb.c
++++ b/drivers/net/wireless/rt2x00/rt2800usb.c
+@@ -184,9 +184,9 @@ static int rt2800usb_set_state(struct rt2x00_dev *rt2x00dev,
+ 			       enum dev_state state)
+ {
+ 	if (state == STATE_AWAKE)
+-		rt2800_mcu_request(rt2x00dev, MCU_WAKEUP, 0xff, 0, 0);
++		rt2800_mcu_request(rt2x00dev, MCU_WAKEUP, 0xff, 0, 2);
+ 	else
+-		rt2800_mcu_request(rt2x00dev, MCU_SLEEP, 0xff, 0, 2);
++		rt2800_mcu_request(rt2x00dev, MCU_SLEEP, 0xff, 0xff, 2);
  
- 	bf->bf_flags = setup_tx_flags(skb);
- 
--	if (tx_info->control.hw_key) {
-+	if (tx_info->control.hw_key)
- 		bf->bf_frmlen += tx_info->control.hw_key->icv_len;
--		bf->bf_keyix = tx_info->control.hw_key->hw_key_idx;
--	} else {
--		bf->bf_keyix = ATH9K_TXKEYIX_INVALID;
--	}
- 
- 	bf->bf_mpdu = skb;
- 
-@@ -1642,6 +1638,7 @@ static void ath_tx_start_dma(struct ath_softc *sc, struct ath_buf *bf,
- 	struct ath_atx_tid *tid;
- 	struct ath_hw *ah = sc->sc_ah;
- 	enum ath9k_key_type keytype;
-+	u32 keyix;
- 	int frm_type;
- 	__le16 fc;
- 	u8 tidno;
-@@ -1656,8 +1653,13 @@ static void ath_tx_start_dma(struct ath_softc *sc, struct ath_buf *bf,
- 	ath9k_hw_set_desc_link(ah, ds, 0);
- 
- 	keytype = ath9k_cmn_get_hw_crypto_keytype(skb);
-+	if (tx_info->control.hw_key)
-+		keyix = tx_info->control.hw_key->hw_key_idx;
-+	else
-+		keyix = ATH9K_TXKEYIX_INVALID;
-+
- 	ath9k_hw_set11n_txdesc(ah, ds, bf->bf_frmlen, frm_type, MAX_RATE_POWER,
--			       bf->bf_keyix, keytype, bf->bf_flags);
-+			       keyix, keytype, bf->bf_flags);
- 
- 	ath9k_hw_filltxdesc(ah, ds,
- 			    skb->len,	/* segment length */
+ 	return 0;
+ }
 -- 
-1.7.3.2
+1.7.2.3
 
