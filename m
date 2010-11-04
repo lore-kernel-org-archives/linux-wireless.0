@@ -1,66 +1,90 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-vw0-f46.google.com ([209.85.212.46]:45903 "EHLO
-	mail-vw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750742Ab0K2US2 convert rfc822-to-8bit (ORCPT
+Received: from perninha.conectiva.com.br ([187.115.55.249]:58159 "EHLO
+	perninha.conectiva.com.br" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752494Ab0KDPuk (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 29 Nov 2010 15:18:28 -0500
-Received: by vws3 with SMTP id 3so71918vws.19
-        for <linux-wireless@vger.kernel.org>; Mon, 29 Nov 2010 12:18:28 -0800 (PST)
-MIME-Version: 1.0
-Reply-To: sedat.dilek@gmail.com
-In-Reply-To: <20101129192628.GC8199@tuxdriver.com>
-References: <1290630782-11095-1-git-send-email-kilroyd@googlemail.com>
-	<20101129192628.GC8199@tuxdriver.com>
-Date: Mon, 29 Nov 2010 21:18:27 +0100
-Message-ID: <AANLkTincC1ETrH=562Ftc5_z-Tdv+fTd4O_HbGZkOccC@mail.gmail.com>
-Subject: Re: [PATCH] orinoco: abort scan on interface down
-From: Sedat Dilek <sedat.dilek@googlemail.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: David Kilroy <kilroyd@gmail.com>, linux-wireless@vger.kernel.org,
-	comes@naic.edu, David Kilroy <kilroyd@googlemail.com>
-Content-Type: text/plain; charset=UTF-8
+	Thu, 4 Nov 2010 11:50:40 -0400
+Date: Thu, 4 Nov 2010 13:50:37 -0200
+From: Herton Ronaldo Krzesinski <herton@mandriva.com.br>
+To: Thadeu Lima de Souza Cascardo <cascardo@holoscopio.com>
+Cc: linux-wireless@vger.kernel.org,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	Hin-Tak Leung <htl10@users.sourceforge.net>,
+	John W Linville <linville@tuxdriver.com>,
+	seno <senada@t-online.de>
+Subject: Re: [PATCH 9/9] rtl8187: restore anaparam registers after reset
+ with 8187B
+Message-ID: <20101104135037.4a465ea8@gotham.conectiva>
+In-Reply-To: <20101104153057.GA4610@barata.holoscopio.com>
+References: <1288659579-4986-1-git-send-email-herton@mandriva.com.br>
+	<1288659579-4986-10-git-send-email-herton@mandriva.com.br>
+	<20101104153057.GA4610@barata.holoscopio.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Nov 29, 2010 at 8:26 PM, John W. Linville
-<linville@tuxdriver.com> wrote:
-> On Wed, Nov 24, 2010 at 08:33:02PM +0000, David Kilroy wrote:
->> This fixes the problem causing the following trace:
->>
->> ------------[ cut here ]------------
->> WARNING: at linux-2.6.34/net/wireless/core.c:633 wdev_cleanup_work+0xb7/0xe0 [cfg80211]()
->> Hardware name: Latitude C840
->> Pid: 707, comm: cfg80211 Not tainted 2.6.34.7-0.5-desktop #1
->> Call Trace:
->>  [<c02065c3>] try_stack_unwind+0x173/0x190
->>  [<c02051cf>] dump_trace+0x3f/0xe0
->>  [<c020662b>] show_trace_log_lvl+0x4b/0x60
->>  [<c0206658>] show_trace+0x18/0x20
->>  [<c064e0b3>] dump_stack+0x6d/0x72
->>  [<c02443ae>] warn_slowpath_common+0x6e/0xb0
->>  [<c0244403>] warn_slowpath_null+0x13/0x20
->>  [<e2db5497>] wdev_cleanup_work+0xb7/0xe0 [cfg80211]
->>  [<c025cfa9>] run_workqueue+0x79/0x170
->>  [<c025d123>] worker_thread+0x83/0xe0
->>  [<c025fef4>] kthread+0x74/0x80
->>  [<c0203826>] kernel_thread_helper+0x6/0x10
->> ---[ end trace 3f0348b3b0c6f4ff ]---
->>
->> Reported by: Giacomo Comes <comes@naic.edu>
->> Signed-off-by: David Kilroy <kilroyd@googlemail.com>
->> ---
->>
->> This patch has only been compile tested. Given the trace, I've
->> guessed that cfg80211 would prefer that orinoco abort the scan on
->> interface down.
->
-> Any chance we can get a Tested-by on this one, so I can feel good
-> about sending it for 2.6.37?
+On Thu, 4 Nov 2010 13:30:57 -0200
+Thadeu Lima de Souza Cascardo <cascardo@holoscopio.com> wrote:
 
-I was looking for an old PCMCIA orinoco hermes-I or -II card, but I
-found a cheat sheet from my very first Linux book from Michael Kofler.
-Which key on a EN/US keyboard is equivalent to the one on a DE
-keyboard, nice catch :-).
-Will look in the other cartons in the cellar...
+> On Mon, Nov 01, 2010 at 10:59:39PM -0200, Herton Ronaldo Krzesinski wrote:
+> > Current 8187B initialization misses anaparam registers restore after
+> > 8187 reset. This causes ANAPARAM register to stay zeroed out (ANAPARAM2
+> > kept its value on my tests). To avoid this, call rtl8187_set_anaparam
+> > right after chip reset (to be on the safe side, as it makes sure we
+> > restore all ANAPARAM registers).
+> > 
+> 
+> Hello, Herton.
+> 
+> Thank you very much for these patches. I am in the process of testing
+> them right now. The first thing I've noticed is a drop in the signal
+> level by 10dBm when using this last patch. Is this something we should
+> be concerned with?
 
-- Sedat -
+I think not, may be the signal is a bit weaker with the anaparam now being
+what Realtek uses/recomends (unfortunately it's a magic number and not
+disclosed what each bit/parameter is doing..., probably the buggy previous
+behaviour of the setting being zero after reset was making the signal too
+high when not needed), but as with it we can get higher rate and bandwidth
+on same distance, it shouldn't be a concern (my iperf test results showed
+improvements too with the last two changes).
+
+> 
+> I will do some tests with the distance to the Access Point and send my
+> results later.
+> 
+> Regards,
+> Cascardo.
+> 
+> > Signed-off-by: Herton Ronaldo Krzesinski <herton@mandriva.com.br>
+> > Acked-by: Larry Finger <Larry.Finger@lwfinger.net>
+> > Cc: seno <senada@t-online.de>
+> > ---
+> >  drivers/net/wireless/rtl818x/rtl8187_dev.c |    2 ++
+> >  1 files changed, 2 insertions(+), 0 deletions(-)
+> > 
+> > diff --git a/drivers/net/wireless/rtl818x/rtl8187_dev.c b/drivers/net/wireless/rtl818x/rtl8187_dev.c
+> > index 4448647..eeee244 100644
+> > --- a/drivers/net/wireless/rtl818x/rtl8187_dev.c
+> > +++ b/drivers/net/wireless/rtl818x/rtl8187_dev.c
+> > @@ -771,6 +771,8 @@ static int rtl8187b_init_hw(struct ieee80211_hw *dev)
+> >  	if (res)
+> >  		return res;
+> >  
+> > +	rtl8187_set_anaparam(priv, true);
+> > +
+> >  	/* BRSR (Basic Rate Set Register) on 8187B looks to be the same as
+> >  	 * RESP_RATE on 8187L in Realtek sources: each bit should be each
+> >  	 * one of the 12 rates, all are enabled */
+> > -- 
+> > 1.7.3.2
+> > 
+> > --
+> > To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> > the body of a message to majordomo@vger.kernel.org
+> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+--
+[]'s
+Herton
