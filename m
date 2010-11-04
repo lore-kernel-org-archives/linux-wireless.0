@@ -1,74 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:10582 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751344Ab0KXEOA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 23 Nov 2010 23:14:00 -0500
-Subject: Re: Re-distributable 88w8335 Firmware?
-From: Dan Williams <dcbw@redhat.com>
-To: Julian Calaby <julian.calaby@gmail.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	David.Woodhouse@intel.com, Greg KH <greg@kroah.com>,
-	linux-kernel@vger.kernel.org,
-	Lennert Buytenhek <buytenh@wantstofly.org>,
-	Holger Schurig <holgerschurig@googlemail.com>,
-	Markus Becker <mab@comnets.uni-bremen.de>,
-	andreamrl@tiscali.it, Denis Kirjanov <kirjanov@gmail.com>,
-	dwmw2@infradead.org
-Date: Tue, 23 Nov 2010 22:13:04 -0600
-In-Reply-To: <AANLkTi=ioGgpAQ-rx_abCHcOmOezXwJFfbKWc7=tGAJ5@mail.gmail.com>
-References: <AANLkTim0=ds3EhQOEfHdrKt2dSnEqUgf5CLOPHNyW=jE@mail.gmail.com>
-	 <1290569516.3074.41.camel@dcbw.foobar.com>
-	 <AANLkTi=ioGgpAQ-rx_abCHcOmOezXwJFfbKWc7=tGAJ5@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Message-ID: <1290571986.3074.64.camel@dcbw.foobar.com>
-Mime-Version: 1.0
+Received: from mail-px0-f174.google.com ([209.85.212.174]:50204 "EHLO
+	mail-px0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750967Ab0KDX7n (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 4 Nov 2010 19:59:43 -0400
+Received: by pxi15 with SMTP id 15so373926pxi.19
+        for <linux-wireless@vger.kernel.org>; Thu, 04 Nov 2010 16:59:43 -0700 (PDT)
+From: Brian Cavagnolo <brian@cozybit.com>
+To: linux-wireless@vger.kernel.org,
+	Johannes Berg <johannes@sipsolutions.net>
+Cc: Brian Cavagnolo <brian@cozybit.com>
+Subject: [PATCH] mac80211: unset SDATA_STATE_OFFCHANNEL when cancelling a scan
+Date: Thu,  4 Nov 2010 16:59:28 -0700
+Message-Id: <1288915168-12804-1-git-send-email-brian@cozybit.com>
+In-Reply-To: <1288885952.3659.9.camel@jlt3.sipsolutions.net>
+References: <1288885952.3659.9.camel@jlt3.sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2010-11-24 at 14:55 +1100, Julian Calaby wrote:
-> On Wed, Nov 24, 2010 at 14:31, Dan Williams <dcbw@redhat.com> wrote:
-> > On Sat, 2010-11-20 at 11:29 +1100, Julian Calaby wrote:
-> >> If we cannot obtain proper firmware files, the very least Marvel could
-> >> do would be to bless the *BSD Malo driver's firmware files (obtainable
-> >> here: http://www.nazgul.ch/malo/malo-firmware-1.4.tgz - see
-> >> http://www.unix.com/man-page/freebsd/4/MALO/ for more info) with a
-> >> proper re-distributable license.
-> >>
-> >> In terms of the actual chipsets in question, I'm referring to the
-> >> 88w8335, 88w8338, and 88w8385 chipsets. I believe Marvel refers to
-> >
-> > Note that the 8385 shouldn't be included in this list, since it's a
-> > FullMAC chip, is handled already by the 'libertas' kernel driver, and
-> > we've already got firmware for its CF & SDIO variants in linux-firmware
-> > along with the 8388, 8682, 8686, and 8688.
-> 
-> That'll teach me to not do all the research on this =)
-> 
-> I pulled that number from the Malo firmware archive linked above.
-> (Malo claims to only work with 8335s, but yeah) I'm guessing that if
-> that firmware file is used, it'd be for a PCI variant of the 8385
-> chipset (given that such a thing exists) and that isn't supported by
-> the "libertas" driver.
+For client STA interfaces, ieee80211_do_stop unsets the relevant
+interface's SDATA_STATE_RUNNING state bit prior to cancelling an
+interrupted scan.  When ieee80211_offchannel_return is invoked as
+part of cancelling the scan, it doesn't bother unsetting the
+SDATA_STATE_OFFCHANNEL bit because it sees that the interface is
+down.  Normally this doesn't matter because when the client STA
+interface is brought back up, it will probably issue a scan.  But
+in some cases (e.g., the user changes the interface type while it
+is down), the SDATA_STATE_OFFCHANNEL bit will remain set.  This
+prevents the interface queues from being started.  So we
+cancel the scan before unsetting the SDATA_STATE_RUNNING bit.
 
-Malo supports the PCMCIA/CF variant of the 8385; not a PCI variant
-AFAICT.  I know of no PCI variant for the 8385, just CF, SDIO, and GSPI.
-But I find it curious that malo supports 8335+8385, given that the
-firmware interface of the 8385 and the 8335 are so different.  Unless
-they have special firmware, the 8385 is a fullmac device, while the 8335
-is a softmac device.  Enough differences exist that I'd expect them to
-be driven by separate drivers, otherwise the code would be quite ugly.
-Which is why we didn't try to shoehorn the 8335 or TopDog stuff into
-libertas.
+Signed-off-by: Brian Cavagnolo <brian@cozybit.com>
+---
+ net/mac80211/iface.c |    6 +++---
+ 1 files changed, 3 insertions(+), 3 deletions(-)
 
-Dan
-
-> Either way, having the firmware for the 833x chipsets would be more
-> than enough =)
-> 
-> And thanks for reaching out to your contact. Hopefully we'll get
-> something useful out of this.
-> 
-> Thanks,
-> 
-
+diff --git a/net/mac80211/iface.c b/net/mac80211/iface.c
+index f9163b1..7aa8559 100644
+--- a/net/mac80211/iface.c
++++ b/net/mac80211/iface.c
+@@ -391,6 +391,9 @@ static void ieee80211_do_stop(struct ieee80211_sub_if_data *sdata,
+ 	u32 hw_reconf_flags = 0;
+ 	int i;
+ 
++	if (local->scan_sdata == sdata)
++		ieee80211_scan_cancel(local);
++
+ 	clear_bit(SDATA_STATE_RUNNING, &sdata->state);
+ 
+ 	/*
+@@ -523,9 +526,6 @@ static void ieee80211_do_stop(struct ieee80211_sub_if_data *sdata,
+ 		synchronize_rcu();
+ 		skb_queue_purge(&sdata->skb_queue);
+ 
+-		if (local->scan_sdata == sdata)
+-			ieee80211_scan_cancel(local);
+-
+ 		/*
+ 		 * Disable beaconing here for mesh only, AP and IBSS
+ 		 * are already taken care of.
+-- 
+1.7.1.1
 
