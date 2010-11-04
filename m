@@ -1,48 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ww0-f44.google.com ([74.125.82.44]:57788 "EHLO
-	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754012Ab0KCUgz (ORCPT
+Received: from mail-qy0-f181.google.com ([209.85.216.181]:34955 "EHLO
+	mail-qy0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751987Ab0KDOrx (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 3 Nov 2010 16:36:55 -0400
-Received: by wwe15 with SMTP id 15so1147379wwe.1
-        for <linux-wireless@vger.kernel.org>; Wed, 03 Nov 2010 13:36:54 -0700 (PDT)
-From: =?utf-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-To: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-Cc: b43-dev@lists.infradead.org,
-	=?utf-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-Subject: [PATCH] b43legacy: rfkill: use status register based on core revision (not PHY's)
-Date: Wed,  3 Nov 2010 21:36:12 +0100
-Message-Id: <1288816572-12743-1-git-send-email-zajec5@gmail.com>
+	Thu, 4 Nov 2010 10:47:53 -0400
+Received: by qyk10 with SMTP id 10so1454058qyk.19
+        for <linux-wireless@vger.kernel.org>; Thu, 04 Nov 2010 07:47:52 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+In-Reply-To: <loom.20101104T140201-178@post.gmane.org>
+References: <loom.20101104T140201-178@post.gmane.org>
+Date: Thu, 4 Nov 2010 10:47:52 -0400
+Message-ID: <AANLkTinMSH2Vr=iUTD0Pc_OdaM_LFETDEjsOJn+2ZzVD@mail.gmail.com>
+Subject: Re: Adding custom channels to ath5k for researching purposes
+From: Bob Copeland <me@bobcopeland.com>
+To: Vadim <Vadims.Kurmis@gmail.com>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
----
-With this patch we follow specs. I hope this will fix bug where radio was
-magically auto-turning on/off. Unfortunately I didn't get answer from reporter
-of that issue.
+On Thu, Nov 4, 2010 at 9:03 AM, Vadim <Vadims.Kurmis@gmail.com> wrote:
+> I need to enable 802.11p standard frequencies. How can I accomplish this? I
+> found that CRDA is responsible for allowed channels.
 
-John: I suggest taking it for 2.6.38
----
- drivers/net/wireless/b43legacy/rfkill.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+Partially -- the channel list is exported by the driver but CRDA
+adds additional regulatory restrictions.  The driver also imposes
+certain regulatory restrictions based on the EEPROM data.
 
-diff --git a/drivers/net/wireless/b43legacy/rfkill.c b/drivers/net/wireless/b43legacy/rfkill.c
-index d579df7..b90f223 100644
---- a/drivers/net/wireless/b43legacy/rfkill.c
-+++ b/drivers/net/wireless/b43legacy/rfkill.c
-@@ -29,7 +29,7 @@
- /* Returns TRUE, if the radio is enabled in hardware. */
- bool b43legacy_is_hw_radio_enabled(struct b43legacy_wldev *dev)
- {
--	if (dev->phy.rev >= 3) {
-+	if (dev->dev->id.revision >= 3) {
- 		if (!(b43legacy_read32(dev, B43legacy_MMIO_RADIO_HWENABLED_HI)
- 		      & B43legacy_MMIO_RADIO_HWENABLED_HI_MASK))
- 			return 1;
+> So, where can I get binary
+> frequency/channel database to use my hardware for researching purposes ?
+
+You can create your own database, but you may need to modify the driver to
+disregard the EEPROM settings, with the usual disclaimers: we won't support
+it and if it breaks you get to keep both pieces.
+
+Also note that ath5k only advertises a partial channel list; you can
+get more via all_channels=1 modparam.  We don't do this by default
+because they make scanning take forever and exceed channel list limits
+in netlink.
+
 -- 
-1.6.0.4
-
+Bob Copeland %% www.bobcopeland.com
