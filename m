@@ -1,57 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qy0-f181.google.com ([209.85.216.181]:43780 "EHLO
-	mail-qy0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750939Ab0K0HgM convert rfc822-to-8bit (ORCPT
+Received: from mail-qw0-f46.google.com ([209.85.216.46]:35338 "EHLO
+	mail-qw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751849Ab0KDTdd convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 27 Nov 2010 02:36:12 -0500
-Received: by qyk12 with SMTP id 12so4283161qyk.19
-        for <linux-wireless@vger.kernel.org>; Fri, 26 Nov 2010 23:36:11 -0800 (PST)
+	Thu, 4 Nov 2010 15:33:33 -0400
+Received: by qwf7 with SMTP id 7so1598360qwf.19
+        for <linux-wireless@vger.kernel.org>; Thu, 04 Nov 2010 12:33:32 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <201011270257.09456.8an@praha12.net>
-References: <20101123191533.GP4303@makis.mantri> <AANLkTi=QquDgSAYn4HS+vupdNUTNSngt03ZKuakYu6Fd@mail.gmail.com>
- <AANLkTinC4-N7ACt4_ijTi2rs8TtQkARR1-vcaiSSaH3O@mail.gmail.com> <201011270257.09456.8an@praha12.net>
-From: Jonathan Guerin <jonathan@guerin.id.au>
-Date: Sat, 27 Nov 2010 17:35:55 +1000
-Message-ID: <AANLkTimj1dS98Mo_pFdJ47JDXDYN7xtW11k=ZPLNuHuY@mail.gmail.com>
-Subject: Re: [ath5k-devel] [PATCH 16/30] ath5k: Set all IFS intervals, not
- just slot time
-To: =?UTF-8?B?THVrw6HFoSBUdXJlaw==?= <8an@praha12.net>
-Cc: ath5k-devel@lists.ath5k.org, Nick Kossifidis <mickflemm@gmail.com>,
-	jirislaby@gmail.com, br1@einfach.org,
-	linux-wireless@vger.kernel.org, linville@tuxdriver.com
+In-Reply-To: <4CD2C8F4.5000309@lwfinger.net>
+References: <4CD2B6E9.9080303@lwfinger.net>
+	<1288878640.10023.2.camel@Nokia-N900-51-1>
+	<4CD2C8F4.5000309@lwfinger.net>
+Date: Thu, 4 Nov 2010 20:33:32 +0100
+Message-ID: <AANLkTikqsZyyOWcODScuo63a+B60QvkWO=f39cS8j4Ey@mail.gmail.com>
+Subject: Re: Question about wireless configuration
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	wireless <linux-wireless@vger.kernel.org>
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, Nov 27, 2010 at 11:57 AM, Lukáš Turek <8an@praha12.net> wrote:
-> On Saturday 27 November 2010 02:31:53 Nick Kossifidis wrote:
->> When we convert to core clock units it's what we should do, all
->> timings should change the same way. I don't know what this
->> aPHY-RX-START-Delay is but if it changes that way we can use absolute
->> values as we do for slot time and sifs.
+2010/11/4 Larry Finger <Larry.Finger@lwfinger.net>:
+> On 11/04/2010 08:50 AM, Johannes Berg wrote:
+>>> I am trying to test the latest Realtek driver for the RTL8187L. In order
+>>> for the driver to be able to scan, CONFIG_WIRELESS_EXT must be set to
+>>> "y". I could find no way to do that with the kernel configuration
+>>> utilities until I made the following patch. I know it is wrong, but I
+>>> would like to know the correct way.
+>>
+>> There is no correct way, drivers that need it will select it in kconfig which obviously doesn't work for out-of-tree drivers.
 >
-> Although aPHY-RX-START-Delay is specified in the standard, it's not needed on
-> Atheros hardware, probably the hardware starts the timeout countdown after it
-> switches to RX mode (so aPHY-RX-START-Delay is added implicitly). See my
-> discussion with Felix Fietkau a year ago, starting here:
-> http://www.mail-archive.com/ath5k-devel@lists.ath5k.org/msg02810.html
->
-> The calculation used in set_coverage_class is also the same as the one in
-> Madwifi driver. When I wrote that code, I intentionally kept the old initvals
-> when no coverage class was set to prevent regressions (the ACK timeout in
-> initivals is larger than the one for coverage class 0, so a long distance link
-> that worked before would break). Maybe I was too careful.
+> Thanks. I selected ZD1201 in the configuration, and WIRELESS_EXT is there.
 
-I'm going to be ashamed to admit that this is going way beyond my
-understanding. You guys understand the hardware way more than I can.
-Once registers don't exactly map to an 802.11 value, I'm honestly out
-of my league. I hope I've helped find the correct values for
-parameters that are lifted straight out of the standard, but I'm don't
-want to make any comments when I don't know the full picture.
+Done the same for wl :) I think I just used ipw2200 driver, not ZD1201.
 
-Cheers,
-
-Jonathan
->
-> Lukas Turek
->
+-- 
+Rafał
