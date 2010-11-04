@@ -1,57 +1,29 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:2765 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756448Ab0KWTEa (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 23 Nov 2010 14:04:30 -0500
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Subject: [PATCH 4/5] iwlwifi: power management checking for shadow register
-Date: Tue, 23 Nov 2010 10:58:55 -0800
-Message-Id: <1290538736-10816-5-git-send-email-wey-yi.w.guy@intel.com>
-In-Reply-To: <1290538736-10816-1-git-send-email-wey-yi.w.guy@intel.com>
-References: <1290538736-10816-1-git-send-email-wey-yi.w.guy@intel.com>
+Received: from devils.ext.ti.com ([198.47.26.153]:46103 "EHLO
+	devils.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751483Ab0KDPEF (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 4 Nov 2010 11:04:05 -0400
+Message-ID: <4CD2CB5D.7040104@ti.com>
+Date: Thu, 04 Nov 2010 17:03:57 +0200
+From: Shahar Levi <shahar_levi@ti.com>
+MIME-Version: 1.0
+To: =?ISO-8859-1?Q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Luciano Coelho <luciano.coelho@nokia.com>
+Subject: Re: [PATCH v3] wl1271: Change wl12xx Files Names
+References: <1288882189-29945-1-git-send-email-shahar_levi@ti.com> <AANLkTi=zfrodP3qWu-PH0jhARob2PH7EGs8QoJM+bnFk@mail.gmail.com>
+In-Reply-To: <AANLkTi=zfrodP3qWu-PH0jhARob2PH7EGs8QoJM+bnFk@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-If shadow register is enable, modify the power management
-command to inform uCode
+On 11/04/2010 04:52 PM, Gábor Stefanik wrote:
+> On Thu, Nov 4, 2010 at 3:49 PM, Shahar Levi<shahar_levi@ti.com>  wrote:
+>> All files name prefix removed due to the fuct that wl12xx driver supports
+>
+> What the fuct? :-)
+in fact...this is more deeper ;-)
 
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-power.c |   10 ++++++++++
- 1 files changed, 10 insertions(+), 0 deletions(-)
-
-diff --git a/drivers/net/wireless/iwlwifi/iwl-power.c b/drivers/net/wireless/iwlwifi/iwl-power.c
-index 306c852..21c5e6a 100644
---- a/drivers/net/wireless/iwlwifi/iwl-power.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-power.c
-@@ -163,6 +163,11 @@ static void iwl_static_sleep_cmd(struct iwl_priv *priv,
- 	else
- 		cmd->flags &= ~IWL_POWER_SLEEP_OVER_DTIM_MSK;
- 
-+	if (priv->cfg->base_params->shadow_reg_enable)
-+		cmd->flags |= IWL_POWER_SHADOW_REG_ENA;
-+	else
-+		cmd->flags &= ~IWL_POWER_SHADOW_REG_ENA;
-+
- 	if (priv->cfg->bt_params &&
- 	    priv->cfg->bt_params->advanced_bt_coexist) {
- 		if (!priv->cfg->bt_params->bt_sco_disable)
-@@ -245,6 +250,11 @@ static void iwl_power_fill_sleep_cmd(struct iwl_priv *priv,
- 	if (priv->power_data.pci_pm)
- 		cmd->flags |= IWL_POWER_PCI_PM_MSK;
- 
-+	if (priv->cfg->base_params->shadow_reg_enable)
-+		cmd->flags |= IWL_POWER_SHADOW_REG_ENA;
-+	else
-+		cmd->flags &= ~IWL_POWER_SHADOW_REG_ENA;
-+
- 	if (priv->cfg->bt_params &&
- 	    priv->cfg->bt_params->advanced_bt_coexist) {
- 		if (!priv->cfg->bt_params->bt_sco_disable)
--- 
-1.7.0.4
-
+Thanks for the fix,
+Shahar
