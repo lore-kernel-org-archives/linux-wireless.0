@@ -1,60 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qy0-f174.google.com ([209.85.216.174]:54254 "EHLO
-	mail-qy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756598Ab0KJVYv (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 10 Nov 2010 16:24:51 -0500
-Received: by qyk12 with SMTP id 12so3502448qyk.19
-        for <linux-wireless@vger.kernel.org>; Wed, 10 Nov 2010 13:24:51 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <AANLkTikx=wmDbQEz8bAsLKmjx88mQYsBjFctpntV3ex1@mail.gmail.com>
-References: <AANLkTikVZT-hQvr83bTkuVENe8jPSG=LNMw5NTwUXCp1@mail.gmail.com>
- <AANLkTinT72TE_z2JW1x+pMHNys6jVEeGfkQZFAW_f+48@mail.gmail.com>
- <AANLkTikRLBYHjKzRZeo7+zuELv+tMgDKLmrmNjYL7GxU@mail.gmail.com> <AANLkTikx=wmDbQEz8bAsLKmjx88mQYsBjFctpntV3ex1@mail.gmail.com>
-From: Joerie de Gram <j.de.gram@gmail.com>
-Date: Wed, 10 Nov 2010 22:24:30 +0100
-Message-ID: <AANLkTikgUi-22TRWeQYUOsMAHR47_nAxjcs-jrrrWJ=r@mail.gmail.com>
-Subject: Re: wl1271 sdio timeouts on omap3
-To: Ohad Ben-Cohen <ohad@wizery.com>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from smtp.nokia.com ([147.243.1.47]:55340 "EHLO mgw-sa01.nokia.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752525Ab0KEOOo (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 5 Nov 2010 10:14:44 -0400
+Subject: Re: [RFC 01/15] nl80211: add periodic scan commands
+From: Luciano Coelho <luciano.coelho@nokia.com>
+To: ext Johannes Berg <johannes@sipsolutions.net>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <1288885334.3659.0.camel@jlt3.sipsolutions.net>
+References: <1288612336-2830-1-git-send-email-luciano.coelho@nokia.com>
+	 <1288612336-2830-2-git-send-email-luciano.coelho@nokia.com>
+	 <1288885334.3659.0.camel@jlt3.sipsolutions.net>
+Content-Type: text/plain; charset="UTF-8"
+Date: Fri, 05 Nov 2010 16:14:17 +0200
+Message-ID: <1288966457.1849.25.camel@chilepepper>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+On Thu, 2010-11-04 at 16:42 +0100, ext Johannes Berg wrote:
+> On Mon, 2010-11-01 at 13:52 +0200, Luciano Coelho wrote:
+> 
+> > +	rtnl_lock();
+> > +
+> > +	err = get_rdev_dev_by_info_ifindex(info, &rdev, &dev);
+> > +	if (err)
+> > +		goto out_rtnl;
+> > +
+> > +	if (!netif_running(dev)) {
+> > +		err = -ENETDOWN;
+> > +		goto out;
+> > +	}
+> 
+> ahem. we have infrastructure for this now.
 
-On Wed, Nov 10, 2010 at 4:13 PM, Ohad Ben-Cohen <ohad@wizery.com> wrote:
-> Can you pls tell me what's the output of those commands (after
-> bringing up the wlan interface):
+Yeah, I noticed this.  My implementation was originally done so far in
+the past that this wasn't available then.  I hadn't bothered changing it
+yet, but I'll do it now.
 
-clock:		25000000 Hz
-vdd:		7 (1.65 - 1.95 V)
-bus mode:	2 (push-pull)
-chip select:	0 (don't care)
-power mode:	2 (on)
-bus width:	2 (4 bits)
-timing spec:	0 (legacy)
 
-> Can you say what board is it ? is it something you assembled or is it
-> off-the-shelf ?
+> 
+> > +		.doit = nl80211_start_periodic,
+> 
+> > +		.doit = nl80211_stop_periodic,
+> 
+> > +void nl80211_send_periodic(struct cfg80211_registered_device *rdev,
+> > +			   struct net_device *netdev, u32 cmd);
+> 
+> I think you should add _scan to all these names.
 
-It's a samsung GT-i8320 smartphone. Supposedly assembled correctly..
+I had _scan in all the names, but they got way too long and I couldn't
+find a better way to do it shorter.  But since you seem to prefer the
+longer version with _scan, I'll change it back.
 
-> Honestly I would hook up a hw scope and sniff the SDIO lines to see
-> what's going on.
+-- 
+Cheers,
+Luca.
 
-Unfortunately I don't have access to a scope.
-
-> Check out mmc_sdio_init_card() - the clock rate is increased there.
-
-If I stop it from setting maximum clock speed, it appears to run at
-400 KHz and subsequently it (usually) manages to bring up the
-interface. AP scans seem to complete just fine too (although they
-yield no result, which is a different problem). It's still not
-entirely stable though (bringing the interface down and back up again
-results in another timeout).
-
-Peeking at /dev/mem with the proprietary driver running suggests it
-runs at a (usual) 24 MHz mmc clock.
-
-Joerie
