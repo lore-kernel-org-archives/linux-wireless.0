@@ -1,85 +1,158 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:54842 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752768Ab0KPRDS (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 16 Nov 2010 12:03:18 -0500
-Message-ID: <4CE2B953.9090509@candelatech.com>
-Date: Tue, 16 Nov 2010 09:03:15 -0800
-From: Ben Greear <greearb@candelatech.com>
+Received: from mail.atheros.com ([12.19.149.2]:58318 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752646Ab0KEVTd (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 5 Nov 2010 17:19:33 -0400
+Received: from mail.atheros.com ([10.10.20.108])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Fri, 05 Nov 2010 14:19:21 -0700
+Date: Fri, 5 Nov 2010 14:19:31 -0700
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: "Rafael J. Wysocki" <rjw@sisk.pl>
+CC: Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
+	Felix Fietkau <nbd@openwrt.org>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	LKML <linux-kernel@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Subject: Re: [Regression, post-2.6.35] ath9k occasionally drops out of PCI
+ config space
+Message-ID: <20101105211931.GA1921@tux>
+References: <201011052150.02245.rjw@sisk.pl>
 MIME-Version: 1.0
-To: hostap@lists.shmoo.com,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: RFC/PATCH:  Allow wpa_supplicant to share scan results.
-References: <4CE1CEC6.2050103@candelatech.com> <20101116094512.GB21872@jm.kir.nu>
-In-Reply-To: <20101116094512.GB21872@jm.kir.nu>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <201011052150.02245.rjw@sisk.pl>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 11/16/2010 01:45 AM, Jouni Malinen wrote:
-> On Mon, Nov 15, 2010 at 04:22:30PM -0800, Ben Greear wrote:
->> The attached (and inline) patch allows wpa_supplicant to share scan results
->> between all VIFS on the same radio (phy).  This patch is a bit rough, but
->> it does appear to do what I was hoping for.
->>
->> Please let me know if this has any chance and upstream inclusion.
->
-> With the changes in wpa_supplicant/events.c, the likelihood of that
-> getting anywhere is about zero, but if the driver specific changes were
-> to be moved to src/drivers/driver_nl80211.c, this could be quite a
-> reasonable change to include in the upstream tree. Note the
-> global_init() and init2() struct wpa_driver_ops callbacks that should
-> make it easy to track the interfaces within driver_nl80211.c.
+On Fri, Nov 05, 2010 at 01:50:02PM -0700, Rafael J. Wysocki wrote:
+> Hi,
+> 
+> For some time I've been experiencing a regression associated with ath9k
+> that occasionally it drops the connection with the AP and goes into a state
+> in which reading from its PCI config registers (as done by lspci) return all
+> ones.
+> 
+> It may be sort of brought back to life by a suspend/resume afterwards, but
+> then the driver cannot really handle it and realoding the driver doesn't help
+> (probe fails).  Basically, full machine reboot is needed to revive the adapter.
+> 
+> The device is:
+> 
+> 09:00.0 Network controller: Atheros Communications Inc. AR928X Wireless Network Adapter (PCI-Express) (rev 01)
+>         Subsystem: Foxconn International, Inc. Device e01f
+> 
+> and the kernel says:
+> 
+> [    9.623217] ath9k 0000:09:00.0: PCI INT A -> GSI 19 (level, low) -> IRQ 19
+> [    9.631518] ath9k 0000:09:00.0: setting latency timer to 64
+> [   10.071497] ath: EEPROM regdomain: 0x65
+> [   10.071502] ath: EEPROM indicates we should expect a direct regpair map
+> [   10.071510] ath: Country alpha2 being used: 00
+> [   10.071514] ath: Regpair used: 0x65
+> [   10.096025] phy0: Selected rate control algorithm 'ath9k_rate_control'
+> [   10.097803] Registered led device: ath9k-phy0::radio
+> [   10.098035] Registered led device: ath9k-phy0::assoc
+> [   10.098249] Registered led device: ath9k-phy0::tx
+> [   10.098483] Registered led device: ath9k-phy0::rx
+> [   10.098496] phy0: Atheros AR9280 Rev:2 mem=0xffffc900017e0000, irq=19
+> 
+> The issue is not really bisectable, because I'm unable to trigger it on demand
+> and it occurs approx. 1-2 times a day.  So, if you have any ideas what to test,
+> please let me know.
+> 
+> It is not reproducible with the 2.6.35 kernel.
 
-It would be easy enough to save the phyname in the wpa_s struct so it
-doesn't need to be probed all the time.
-
-As for the logic that actually propagates scan results to all of the
-peer VIFS, do you mean you want that moved farther up into the driver
-as well?
-
-> I would like to have more knowledge of virtual interfaces sharing the
-> same radio in the driver wrappers anyway, e.g., for shared_freq()
-> implementations. If this can be reliably detected from the driver (which
-> hopefully is the case with mac80211-based ones), it would be great to be
-> able to that without having to ask the user to configure anything.
-
-It simple to know the phy-name for a particular VIF (on the latest kernel),
-so knowing parent-child and sibling relationships is also easy.  Older
-kernels don't have the phy-name available in sysfs, but they also didn't
-support multiple VIFS well anyway..so maybe just ignore them?
-
->
->> I know I need to at least strip out some of the debug code, and make
->> this optional via the global config file, but I was hoping early feedback
->> might save more work later...
->
-> What would be need for configuring this? In which case would it be
-> preferred to not process the scan results from other virtual interfaces
-> on the same radio? Wouldn't those scan events look exactly like the same
-> if some other application would have triggered them?
-
-I was afraid that one VIF might scan with one set of scan-options and another
-a different set.  However, I have no real understanding of how wpa_supplicant
-works, so if you think it can be always enabled, then I'm fine with that.
-
-Also, with it enabled, I can currently reliably crash ath9k.  This is a
-kernel bug that hopefully can be fixed soon, but it would be one small reason to
-keep the old behaviour available.
-
-> In addition, it might be interesting to considering sharing the BSS
-> table and scan result parsing in wpa_supplicant among the interface,
-> too, instead of just the scan completed events..
-
-I'm happy to test patches..but I probably don't have time to do more
-than the bare minimum to get the shared-scan results functional at
-this time.
-
-Thanks,
-Ben
+Please try this patch.
 
 
+From: Vasanthakumar Thiagarajan <vasanth@atheros.com>
+Date: Tue, 2 Nov 2010 23:57:34 -0700
+Subject: [PATCH] ath9k_hw: Fix AR9280 surprise removal during frequent idle on/off
+
+Bit 22 of AR_WA should be set to fix the situation where chip reset
+is asynchronous to clock of analog shift registers, such that when
+reset is released, it could mess up the values of analog shift registers
+and cause some hw issue on AR9280.
+
+This bit is write only, but the driver does a read-modify-write
+on AR_WA without setting bit 22 in ar9002_hw_configpcipowersave()
+during radio disable. This causes surprise removal of hw. It can
+never recover from this state and the hw will become usable only
+after a power on/off cycle, and sometimes only during a cold reboot.
+
+This issue can be triggered by doing frequent roaming with the
+simple/test-roam script available from the wifi-test project [1]
+when roaming between APs quickly. When roaming there is a is a high
+possibility that the device being put into idle (radio disable) state
+by mac80211 during AUTH->ASSOC. A device hardware reset would fail
+and the kernel would output:
+
+[40251.363799] ath: AWAKE -> FULL-SLEEP
+[40251.363815] ieee80211 phy17: device no longer idle - working
+[40251.363817] ath: Marking phy17 as not-idle
+[40251.363819] ath: FULL-SLEEP -> AWAKE
+[40251.415978] pciehp 0000:00:1c.3:pcie04: Card not present on Slot(3)
+[40251.419896] ath: ah->misc_mode 0x4
+[40251.428138] pciehp 0000:00:1c.3:pcie04: Card present on Slot(3)
+[40251.532247] ath: timeout (100000 us) on reg 0x9860: 0xffffffff & 0x00000001 != 0x00000000
+[40251.532250] ath: Unable to reset channel (2462 MHz), reset status -5
+[40251.532422] ath: Set channel: 5745 MHz
+[40251.540639] ath: Failed to stop TX DMA in 100 msec after killing last frame
+[40251.548826] ath: Failed to stop TX DMA in 100 msec after killing last frame
+[40251.557023] ath: Failed to stop TX DMA in 100 msec after killing last frame
+[40251.565211] ath: Failed to stop TX DMA in 100 msec after killing last frame
+[40251.573415] ath: Failed to stop TX DMA in 100 msec after killing last frame
+[40251.581603] ath: Failed to stop TX DMA in 100 msec after killing last frame
+[40251.581606] ath: Failed to stop TX DMA. Resetting hardware!
+[40251.592679] ath: DMA failed to stop in 10 ms AR_CR=0xffffffff AR_DIAG_SW=0xffffffff
+[40251.703330] ath: timeout (100000 us) on reg 0x7000: 0xffffffff & 0x00000003 != 0x00000000
+[40251.703333] ath: RTC stuck in MAC reset
+[40251.703334] ath: Chip reset failed
+[40251.703335] ath: Unable to reset hardware; reset status -22
+
+This is currently only reproducible with some HB92 (Half Mini-PCIE)
+cards but the fix applies to all AR9280 cards. This patch fixes this
+issue by setting bit 22 during radio disable.
+
+[1] http://wireless.kernel.org/en/developers/Testing/wifi-test
+
+Cc: Amod.bodas@atheros.com
+Cc: David.Quan@atheros.com
+Cc: Kyungwan.Nam@atheros.com
+Cc: stable@kernel.org
+Signed-off-by: Vasanthakumar Thiagarajan <vasanth@atheros.com>
+---
+ drivers/net/wireless/ath/ath9k/ar9002_hw.c |    3 +++
+ drivers/net/wireless/ath/ath9k/reg.h       |    1 +
+ 2 files changed, 4 insertions(+), 0 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath9k/ar9002_hw.c b/drivers/net/wireless/ath/ath9k/ar9002_hw.c
+index a0471f2..48261b7 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9002_hw.c
++++ b/drivers/net/wireless/ath/ath9k/ar9002_hw.c
+@@ -410,6 +410,9 @@ static void ar9002_hw_configpcipowersave(struct ath_hw *ah,
+ 			val &= ~(AR_WA_BIT6 | AR_WA_BIT7);
+ 		}
+ 
++		if (AR_SREV_9280(ah))
++			val |= AR_WA_BIT22;
++
+ 		if (AR_SREV_9285E_20(ah))
+ 			val |= AR_WA_BIT23;
+ 
+diff --git a/drivers/net/wireless/ath/ath9k/reg.h b/drivers/net/wireless/ath/ath9k/reg.h
+index 42976b0..fa05b71 100644
+--- a/drivers/net/wireless/ath/ath9k/reg.h
++++ b/drivers/net/wireless/ath/ath9k/reg.h
+@@ -703,6 +703,7 @@
+ #define AR_WA_RESET_EN                  (1 << 18) /* Sw Control to enable PCI-Reset to POR (bit 15) */
+ #define AR_WA_ANALOG_SHIFT              (1 << 20)
+ #define AR_WA_POR_SHORT                 (1 << 21) /* PCI-E Phy reset control */
++#define AR_WA_BIT22			(1 << 22)
+ #define AR9285_WA_DEFAULT		0x004a050b
+ #define AR9280_WA_DEFAULT           	0x0040073b
+ #define AR_WA_DEFAULT               	0x0000073f
 -- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+1.7.3.2.90.gd4c43
+
