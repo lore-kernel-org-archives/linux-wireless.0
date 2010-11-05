@@ -1,56 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from comal.ext.ti.com ([198.47.26.152]:39776 "EHLO comal.ext.ti.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751288Ab0K3PtB (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 30 Nov 2010 10:49:01 -0500
-Message-ID: <4CF51CE8.9090809@ti.com>
-Date: Tue, 30 Nov 2010 17:48:56 +0200
-From: Gery Kahn <geryk@ti.com>
-Reply-To: geryk@ti.com
+Received: from mail-qy0-f181.google.com ([209.85.216.181]:33143 "EHLO
+	mail-qy0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752730Ab0KEUaw (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 5 Nov 2010 16:30:52 -0400
+Received: by qyk10 with SMTP id 10so3022862qyk.19
+        for <linux-wireless@vger.kernel.org>; Fri, 05 Nov 2010 13:30:51 -0700 (PDT)
 MIME-Version: 1.0
-To: Arik Nemtsov <arik@wizery.com>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Luciano Coelho <luciano.coelho@nokia.com>
-Subject: Re: [PATCH 17/18] wl1271: Read MAC address from NVS file on HW startup
-References: <1290079951-16793-1-git-send-email-arik@wizery.com> <1290079951-16793-18-git-send-email-arik@wizery.com>
-In-Reply-To: <1290079951-16793-18-git-send-email-arik@wizery.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+In-Reply-To: <AANLkTin_RYRFzFbsXrCLjT7Vq=uy4WrUtaKVi0=0R8Gj@mail.gmail.com>
+References: <309278.75116.qm@web29520.mail.ird.yahoo.com>
+	<4CCF7B73.7040906@lwfinger.net>
+	<4CCF7EFC.1050000@mandriva.com.br>
+	<AANLkTinEsp+-EU4Oau71qHbL6ftO544+H4GA3WZk7CX5@mail.gmail.com>
+	<4CD0A583.40105@lwfinger.net>
+	<AANLkTin937V6hJ4L2o-SF5riTh0MpTd3e6faZnbZuV48@mail.gmail.com>
+	<AANLkTin_RYRFzFbsXrCLjT7Vq=uy4WrUtaKVi0=0R8Gj@mail.gmail.com>
+Date: Fri, 5 Nov 2010 18:30:51 -0200
+Message-ID: <AANLkTin_T_SNkksOFmtjKgah0o0o1vZgpf=R4kEryQ_F@mail.gmail.com>
+Subject: Re: [PATCH 3/9] rtl8187: fix wrong register initialization in 8187B
+From: Rogerio Luz Coelho <rogluz.news@gmail.com>
+To: Hin-Tak Leung <hintak.leung@gmail.com>
+Cc: Larry Finger <Larry.Finger@lwfinger.net>,
+	Herton Ronaldo Krzesinski <herton@mandriva.com.br>,
+	Thadeu Lima de Souza Cascardo <cascardo@holoscopio.com>,
+	linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 11/18/2010 01:32 PM, Arik Nemtsov wrote:
-> Try to read the MAC address from the on-disk NVS file.
-> A non-zero MAC address is required to add an AP interface.
+2010/11/4 Hin-Tak Leung <hintak.leung@gmail.com>:
+> On Wed, Nov 3, 2010 at 12:01 AM, Rogerio Luz Coelho
+> <rogluz.news@gmail.com> wrote:
 >
-> Signed-off-by: Arik Nemtsov<arik@wizery.com>
-> ---
->   drivers/net/wireless/wl12xx/main.c |   12 ++++++++++++
->   1 files changed, 12 insertions(+), 0 deletions(-)
+>>
+>> No effect is better than "regression" right?
+>>
+>> I am not saying the chip got magically better, it still seems a cheap
+>> POS, but with Cascardo's patch is as good as the Win7 driver here.
 >
-> diff --git a/drivers/net/wireless/wl12xx/main.c b/drivers/net/wireless/wl12xx/main.c
-> index 708b699..e5fbbb6 100644
-> --- a/drivers/net/wireless/wl12xx/main.c
-> +++ b/drivers/net/wireless/wl12xx/main.c
-> @@ -2987,6 +2987,18 @@ int wl1271_register_hw(struct wl1271 *wl)
->   	if (wl->mac80211_registered)
->   		return 0;
+> i'll have to read the Ubuntu launchpad thread a bit, but "no effect"
+> patches need to be clearly documented, etc because
+> (1) code stays in the kernel for a long time (years) and get modified,
+> re-factored, etc over time and one day somebody might need to
+> continue/modify/change a "no effect" patch and need to know why it was
+> included and what impact further changes.
+> (2) "no effect" really meant "no known effect" (yet).
 >
-> +	ret = wl1271_fetch_nvs(wl);
-> +	if (ret == 0) {
-> +		u8 *nvs_ptr = (u8 *)wl->nvs->nvs;
-> +
-> +		wl->mac_addr[0] = nvs_ptr[11];
-> +		wl->mac_addr[1] = nvs_ptr[10];
-> +		wl->mac_addr[2] = nvs_ptr[6];
-> +		wl->mac_addr[3] = nvs_ptr[5];
-> +		wl->mac_addr[4] = nvs_ptr[4];
-> +		wl->mac_addr[5] = nvs_ptr[3];
-> +	}
-> +
->   	SET_IEEE80211_PERM_ADDR(wl->hw, wl->mac_addr);
->
->   	ret = ieee80211_register_hw(wl->hw);
-The code flow of the add if (wl1271_op_add_interface) overwrites it from vif.
-There are 3 places for MAC: wl, vif and NVS :)
-Should be considered also PLT flow which is not goes
-through wl1271_op_add_interface, but from wl1271_tm_cmd().
+But that's the point ... no effect to Larry that has an external card
+is ok, but for my internal card the patch made everything better (more
+so, now the box is useable again), so even if it is just 1 person (or
+vendor) if the patch is "no effect" for the rest of the functionality
+it should be added to mainline (al least IMHO)
+
+Rogerio
