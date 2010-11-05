@@ -1,67 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qw0-f46.google.com ([209.85.216.46]:38242 "EHLO
-	mail-qw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754305Ab0KKLGB convert rfc822-to-8bit (ORCPT
+Received: from rcsinet10.oracle.com ([148.87.113.121]:31510 "EHLO
+	rcsinet10.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753944Ab0KEXH0 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 11 Nov 2010 06:06:01 -0500
-Received: by qwi4 with SMTP id 4so1560022qwi.19
-        for <linux-wireless@vger.kernel.org>; Thu, 11 Nov 2010 03:06:00 -0800 (PST)
+	Fri, 5 Nov 2010 19:07:26 -0400
+Message-ID: <4CD48E04.2050709@oracle.com>
+Date: Fri, 05 Nov 2010 16:06:44 -0700
+From: Randy Dunlap <randy.dunlap@oracle.com>
 MIME-Version: 1.0
-In-Reply-To: <AANLkTikRLBYHjKzRZeo7+zuELv+tMgDKLmrmNjYL7GxU@mail.gmail.com>
-References: <AANLkTikVZT-hQvr83bTkuVENe8jPSG=LNMw5NTwUXCp1@mail.gmail.com>
-	<AANLkTinT72TE_z2JW1x+pMHNys6jVEeGfkQZFAW_f+48@mail.gmail.com>
-	<AANLkTikRLBYHjKzRZeo7+zuELv+tMgDKLmrmNjYL7GxU@mail.gmail.com>
-Date: Thu, 11 Nov 2010 13:06:00 +0200
-Message-ID: <AANLkTin6oaCQ02Je5X2CMR83mLzTBKfjCF+rVuOxk_X+@mail.gmail.com>
-Subject: Re: wl1271 sdio timeouts on omap3
-From: Grazvydas Ignotas <notasas@gmail.com>
-To: Joerie de Gram <j.de.gram@gmail.com>
-Cc: Ohad Ben-Cohen <ohad@wizery.com>, linux-wireless@vger.kernel.org
+To: Linus Torvalds <torvalds@linux-foundation.org>
+CC: Pavel Roskin <proski@gnu.org>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+Subject: Re: Linux 2.6.37-rc1 (libipw remove_proc_entry warning)
+References: <AANLkTimr3rW67HxgOUyReEW8dmmSsd4b7-Ns57mXzS1w@mail.gmail.com> <20101103161837.fad11d79.randy.dunlap@oracle.com> <AANLkTimnHFHJq13xpJ0ZgLmpd+cHmHH5sQ4HWtL_MrMT@mail.gmail.com>
+In-Reply-To: <AANLkTimnHFHJq13xpJ0ZgLmpd+cHmHH5sQ4HWtL_MrMT@mail.gmail.com>
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Nov 10, 2010 at 5:01 PM, Joerie de Gram <j.de.gram@gmail.com> wrote:
-> On Wed, Nov 10, 2010 at 6:35 AM, Ohad Ben-Cohen <ohad@wizery.com> wrote:
->> Snippets below are not complete. E.g., where do you actually indicate
->> the gpio number ?
->> It's better to send your complete patch so we can have a look.
->
-> Sorry, I've attached a full diff of the board changes below.
+On 11/05/10 15:24, Linus Torvalds wrote:
+> This bug seems to be due to commit 27ae60f8f7aac ("ipw2x00: replace
+> "ieee80211" with "libipw" where appropriate"), where Pavel did this:
+> 
+> -       libipw_proc = proc_mkdir(DRV_NAME, init_net.proc_net);
+> +       libipw_proc = proc_mkdir("ieee80211", init_net.proc_net);
+> 
+> but then the cleanup was kept as
+> 
+>         remove_proc_entry(DRV_NAME, init_net.proc_net);
+> 
+> in both places (both in the failure case and in the unload case). The
+> error string is also total crap, and says
+> 
+>      "Unable to create " DRV_NAME " proc directory\n");
+> 
+> Even though it doesn't actually create a proc directory named DRV_NAME at all.
+> 
+> So that patch looks like total and utter crap to me. The commit message says
+> 
+>   "Keep /proc/net/ieee80211 under the original name to avoid breaking user
+>     interface."
+> 
+> but the thing is, it really didn't fix anything but that one create
+> thing. It needs to fix all the other cases too.
+> 
+> Totally UNTESTED patch attached. It may or may not compile. And maybe
+> it doesn't catch all cases, but it should catch the obvious ones.
 
-Your vsim configuration looks wrong.
+That works for me.
 
-<snip>
+Tested-by: Randy Dunlap <randy.dunlap@oracle.com>
 
->
-> @@ -213,6 +224,16 @@ static struct regulator_consumer_supply
-> nowplus_vpll2_supply = {
->        .dev                    = &nowplus_dss_device.dev,
->  };
->
-> +static struct regulator_consumer_supply nowplus_vsim_supply = {
-> +       .supply                 = "vmmc",
-> +};
 
-You need to set .dev or .dev_name here, best just do
-+       .dev_name               = "mmci-omap-hs.2",
-
-> +
-> +
-> +static struct regulator_consumer_supply nowplus_wl1271_supply = {
-> +       .supply                 = "vmmc_aux",
-> +       .dev_name               = "mmci-omap-hs.2",
-> +};
-> +
->  /* VMMC1 for MMC1 card */
->  static struct regulator_init_data nowplus_vmmc1 = {
->        .constraints = {
-> @@ -311,6 +332,53 @@ static struct regulator_init_data nowplus_vpll2 = {
->        .consumer_supplies      = &nowplus_vpll2_supply,
->  };
->
-> +/* VSIM for WiFi SDIO */
-> +static struct regulator_init_data nowplus_vsim = {
-
-doesn't seem to be referenced anywhere? You need to add it to
-twl4030_platform_data I think.
+thanks,
+-- 
+~Randy
+*** Remember to use Documentation/SubmitChecklist when testing your code ***
