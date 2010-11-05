@@ -1,64 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yx0-f174.google.com ([209.85.213.174]:52583 "EHLO
-	mail-yx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932080Ab0KLOOV (ORCPT
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:38683 "EHLO
+	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1755054Ab0KEXjF (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 12 Nov 2010 09:14:21 -0500
-Received: by yxn35 with SMTP id 35so15558yxn.19
-        for <linux-wireless@vger.kernel.org>; Fri, 12 Nov 2010 06:14:20 -0800 (PST)
+	Fri, 5 Nov 2010 19:39:05 -0400
 MIME-Version: 1.0
-In-Reply-To: <1289509738.3695.7.camel@jlt3.sipsolutions.net>
-References: <AANLkTinDJxnMHEbQjUwWjT2MnW5r7gcxoZW7bZetT7a9@mail.gmail.com>
- <1289497988.3695.3.camel@jlt3.sipsolutions.net> <AANLkTikL5VCadteiDCfDeA5VL8kdofM1rN1gBKmUbG9O@mail.gmail.com>
- <1289509738.3695.7.camel@jlt3.sipsolutions.net>
-From: Cassiano Tartari <cassianotartari@gmail.com>
-Date: Fri, 12 Nov 2010 12:13:58 -0200
-Message-ID: <AANLkTimY1p+Jcc4jXL6LJnNgaQ1KwcSNUApe-GSRHVB-@mail.gmail.com>
-Subject: Re: Overload Probe Request to send data
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <4CD48E04.2050709@oracle.com>
+References: <AANLkTimr3rW67HxgOUyReEW8dmmSsd4b7-Ns57mXzS1w@mail.gmail.com>
+ <20101103161837.fad11d79.randy.dunlap@oracle.com> <AANLkTimnHFHJq13xpJ0ZgLmpd+cHmHH5sQ4HWtL_MrMT@mail.gmail.com>
+ <4CD48E04.2050709@oracle.com>
+From: Linus Torvalds <torvalds@linux-foundation.org>
+Date: Fri, 5 Nov 2010 16:38:14 -0700
+Message-ID: <AANLkTik80AuVEefHwccB81WPdT4UPfTSjQdG-3Yq17e7@mail.gmail.com>
+Subject: Re: Linux 2.6.37-rc1 (libipw remove_proc_entry warning)
+To: Randy Dunlap <randy.dunlap@oracle.com>
+Cc: Pavel Roskin <proski@gnu.org>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-@johannes
-
-I tryed to find some information about how to overload the Vendor
-Specific Action frame.
-
-But I only found:
-
-VSA frame - vendor specific action frame
-- stand-alone management frame
-- doesn't contain timestamp
-- no segmentation required (max MMPDU)
-
-I don't know if I used the correct works, but I tryed: "vendor
-specific action frame" 802.11 on my researchs.
-
-And a little more information at IEEE Std 802.11 pdf on page 151.
-
-I'm studying the protocol.
-
-
-On Thu, Nov 11, 2010 at 7:08 PM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
+On Fri, Nov 5, 2010 at 4:06 PM, Randy Dunlap <randy.dunlap@oracle.com> wrote:
+> On 11/05/10 15:24, Linus Torvalds wrote:
+>>
+>> Totally UNTESTED patch attached. It may or may not compile. And maybe
+>> it doesn't catch all cases, but it should catch the obvious ones.
 >
-> On Thu, 2010-11-11 at 17:18 -0200, Cassiano Tartari wrote:
-> > Sorry johannes, but I didn't understand what you said.
-> >
-> > I need to send data without confiability, just in one way client->AP
-> > and without association, and this information is too short.
+> That works for me.
 >
-> Oh ... and why not use vendor specific public action frames?
->
-> johannes
->
+> Tested-by: Randy Dunlap <randy.dunlap@oracle.com>
 
--
-Cassiano Valle Tartari
-Computer Engineer
+Goodie. Pavel, John - feel free to add my sign-off on that patch. Make
+up a relevant commit message. Ok?
 
-Tel: +55.48.84474818
-Email: falecom@cassianotartari.eng.br
-Site: http://www.cassianotartari.eng.br
+                     Linus
