@@ -1,38 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:49113 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750707Ab0K2Phi (ORCPT
+Received: from mail-vw0-f46.google.com ([209.85.212.46]:39947 "EHLO
+	mail-vw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754253Ab0KENO5 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 29 Nov 2010 10:37:38 -0500
-Subject: Re: [PATCH RFC] mac80211: fix "NOHZ: local_softirq_pending 08"
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Johannes Stezenbach <js@sig21.net>
-Cc: linux-wireless@vger.kernel.org, Ivo van Doorn <IvDoorn@gmail.com>,
-	Gertjan van Wingerde <gwingerde@gmail.com>,
-	"John W. Linville" <linville@tuxdriver.com>
-In-Reply-To: <20101129152735.GA32319@sig21.net>
-References: <20101129145439.GA31910@sig21.net>
-	 <1291043349.3532.4.camel@jlt3.sipsolutions.net>
-	 <20101129152735.GA32319@sig21.net>
-Content-Type: text/plain; charset="UTF-8"
-Date: Mon, 29 Nov 2010 16:37:36 +0100
-Message-ID: <1291045056.3532.5.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+	Fri, 5 Nov 2010 09:14:57 -0400
+Received: by vws13 with SMTP id 13so1423855vws.19
+        for <linux-wireless@vger.kernel.org>; Fri, 05 Nov 2010 06:14:56 -0700 (PDT)
+Message-ID: <4CD4036E.9090300@lwfinger.net>
+Date: Fri, 05 Nov 2010 08:15:26 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
+MIME-Version: 1.0
+To: Josh Lehan <krellan@krellan.com>
+CC: Pavel Machek <pma@sysgo.com>, linux-wireless@vger.kernel.org
+Subject: Re: working usb wifi card, that is still possible to buy
+References: <20101103092431.GA21138@pma.sysgo.com> <4CD3CDB1.2090508@krellan.com>
+In-Reply-To: <4CD3CDB1.2090508@krellan.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2010-11-29 at 16:27 +0100, Johannes Stezenbach wrote:
-
-> > That's kinda pointless though for drivers that already call it from a
-> > tasklet or similar -- how about instead adding an
-> > ieee80211_tx_status_ni() inline along the lines of ieee80211_rx_ni()?
+On 11/05/2010 04:26 AM, Josh Lehan wrote:
+> On 11/03/2010 02:24 AM, Pavel Machek wrote:
+>> Hi!
+>>
+>> Is there an USB wifi card that can still be bought in reasonable
+>> ammount (like 1000 pieces) and is well supported by Linux?
+>>
+>> So far I tried carl9170 (as seen by previous mails) and
+>> rt2x00usb. carl9170 is not really usable; rt2x00usb works a bit
+>> better, but also fails after some time:
 > 
-> It gets confusing...
-> There already is ieee80211_tx_status_irqsafe(), but you want a third
-> option, right?
+> I would like to know as well.  This would be for ARM, though, not
+> PowerPC.  It's tough finding reliable USB Wi-Fi adapters that work under
+> Linux these days.  It seems the development focus has shifted to
+> PCI-based chipsets, unfortunately.
+> 
+> I've had mixed success with the VIA VT6656.  These drivers are only at
+> "staging" quality within the mainline kernel, though.  There are
+> separate drivers that can be downloaded directly from the vendor, though.
+> 
+> Anybody else have a good suggestion?
 
-Yes: _irqsafe has to go through the tasklet, _ni just has to disable
-local BHs.
+The Realtek RTL8712 (aka RTL8192U) and found in the D-Link DWA 130, has a driver
+in 2.6.37 (r8712u). Although not based on mac80211, thus found in staging, the
+driver is extremely stable - my connection never drops out. With an 802.11n
+router, I get transmission throughput of up to 70 Mb/s. The D-Link site has
+these available for about $55, although I bought mine new on E-bay for a lot
+less than that.
 
-johannes
+Realtek has recently supplied me with a mac80211-based driver for the RTL8192CE,
+which has the same wireless chip with a PCIe interface. As soon as I receive my
+sample cards, that driver will be submitted to wireless testing, and it will be
+the template for conversion of r8712u. As a result, the current staging driver
+should be converted into mainline within the next few months.
 
+Larry
