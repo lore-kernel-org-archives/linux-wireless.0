@@ -1,206 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([147.243.1.47]:22791 "EHLO mgw-sa01.nokia.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751467Ab0KXGRL (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 24 Nov 2010 01:17:11 -0500
-Received: from nokia.com (localhost [127.0.0.1])
-	by mgw-sa01.nokia.com (Switch-3.4.3/Switch-3.4.3) with ESMTP id oAO6H8sj012806
-	for <linux-wireless@vger.kernel.org>; Wed, 24 Nov 2010 08:17:08 +0200
-From: juuso.oikarinen@nokia.com
-To: luciano.coelho@nokia.com
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH] wl1271: Fix setting of the hardware connection monitoring probe-req template
-Date: Wed, 24 Nov 2010 08:16:56 +0200
-Message-Id: <1290579417-1382-1-git-send-email-juuso.oikarinen@nokia.com>
+Received: from fw.wantstofly.org ([80.101.37.227]:54565 "EHLO
+	mail.wantstofly.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751966Ab0KEAPE (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 4 Nov 2010 20:15:04 -0400
+Date: Fri, 5 Nov 2010 01:15:01 +0100
+From: Lennert Buytenhek <buytenh@wantstofly.org>
+To: Brian Cavagnolo <brian@cozybit.com>
+Cc: linux-wireless@vger.kernel.org,
+	Nishant Sarmukadam <nishants@marvell.com>
+Subject: Re: [PATCH 1/7] mwl8k: add firmware files for 8366
+Message-ID: <20101105001501.GE30287@mail.wantstofly.org>
+References: <1288659351-22313-1-git-send-email-brian@cozybit.com> <20101102082254.GL1733@mail.wantstofly.org> <AANLkTi=iQgc+cMTrwGWyriHvOCGhAZ7TU+41ytBRYtea@mail.gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <AANLkTi=iQgc+cMTrwGWyriHvOCGhAZ7TU+41ytBRYtea@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Juuso Oikarinen <juuso.oikarinen@nokia.com>
+On Wed, Nov 03, 2010 at 05:19:11PM -0700, Brian Cavagnolo wrote:
 
-The probe-request template used in the hardware connection monitoring feature
-thus far has been an empty one, without the SSID IE and without supported rate
-IEs. This causes problems with some AP's.
+> >> From: Nishant Sarmukadam <nishants@marvell.com>
+> >>
+> >> Add Helper image, client image (4.1.0.3) and ap image (5.2.6.6)
+> >>
+> >> Signed-off-by: Nishant Sarmukadam <nishants@marvell.com>
+> >> Signed-off-by: Brian Cavagnolo <brian@cozybit.com>
+> >
+> > NAK, for obvious reasons.
+> >
+> > Also, spamming thousands of people's inboxes with 500kb firmware
+> > patches is generally not a nice thing to do.
+> 
+> Well, patches containing hundreds of kB of binary firmware do pass
+> through this mailing list.
 
-Additionally, after connected scans, the template for connection maintenance
-would remain to be the one last used for scanning - potentially incorrect.
+Not through linux-wireless@.
 
-Fix these by getting a pre-filled directed probe-request template for the
-associated-to AP from mac80211.
 
-Signed-off-by: Juuso Oikarinen <juuso.oikarinen@nokia.com>
----
- drivers/net/wireless/wl12xx/cmd.c    |   28 ++++++++++++++++++++++++++++
- drivers/net/wireless/wl12xx/cmd.h    |    2 ++
- drivers/net/wireless/wl12xx/main.c   |   34 +++++++++++++++++++++-------------
- drivers/net/wireless/wl12xx/scan.c   |    4 ++++
- drivers/net/wireless/wl12xx/wl12xx.h |    3 +++
- 5 files changed, 58 insertions(+), 13 deletions(-)
+> However, a closer inspection reveals that these were destined for the
+> linux-firmware with linux-wireless CC'd.
 
-diff --git a/drivers/net/wireless/wl12xx/cmd.c b/drivers/net/wireless/wl12xx/cmd.c
-index f3d0541..8e438e2 100644
---- a/drivers/net/wireless/wl12xx/cmd.c
-+++ b/drivers/net/wireless/wl12xx/cmd.c
-@@ -611,6 +611,34 @@ out:
- 	return ret;
- }
- 
-+struct sk_buff *wl1271_cmd_build_ap_probe_req(struct wl1271 *wl,
-+					      struct sk_buff *skb)
-+{
-+	int ret;
-+
-+	if (!skb)
-+		skb = ieee80211_ap_probereq_get(wl->hw, wl->vif);
-+	if (!skb)
-+		goto out;
-+
-+	wl1271_dump(DEBUG_SCAN, "AP PROBE REQ: ", skb->data, skb->len);
-+
-+	if (wl->band == IEEE80211_BAND_2GHZ)
-+		ret = wl1271_cmd_template_set(wl, CMD_TEMPL_CFG_PROBE_REQ_2_4,
-+					      skb->data, skb->len, 0,
-+					      wl->conf.tx.basic_rate);
-+	else
-+		ret = wl1271_cmd_template_set(wl, CMD_TEMPL_CFG_PROBE_REQ_5,
-+					      skb->data, skb->len, 0,
-+					      wl->conf.tx.basic_rate_5);
-+
-+	if (ret < 0)
-+		wl1271_error("Unable to set ap probe request template.");
-+
-+out:
-+	return skb;
-+}
-+
- int wl1271_build_qos_null_data(struct wl1271 *wl)
- {
- 	struct ieee80211_qos_hdr template;
-diff --git a/drivers/net/wireless/wl12xx/cmd.h b/drivers/net/wireless/wl12xx/cmd.h
-index 16d1bf8..111d112 100644
---- a/drivers/net/wireless/wl12xx/cmd.h
-+++ b/drivers/net/wireless/wl12xx/cmd.h
-@@ -49,6 +49,8 @@ int wl1271_cmd_build_ps_poll(struct wl1271 *wl, u16 aid);
- int wl1271_cmd_build_probe_req(struct wl1271 *wl,
- 			       const u8 *ssid, size_t ssid_len,
- 			       const u8 *ie, size_t ie_len, u8 band);
-+struct sk_buff *wl1271_cmd_build_ap_probe_req(struct wl1271 *wl,
-+					      struct sk_buff *skb);
- int wl1271_build_qos_null_data(struct wl1271 *wl);
- int wl1271_cmd_build_klv_null_data(struct wl1271 *wl);
- int wl1271_cmd_set_default_wep_key(struct wl1271 *wl, u8 id);
-diff --git a/drivers/net/wireless/wl12xx/main.c b/drivers/net/wireless/wl12xx/main.c
-index 35cfcf6..2b579e0 100644
---- a/drivers/net/wireless/wl12xx/main.c
-+++ b/drivers/net/wireless/wl12xx/main.c
-@@ -1807,21 +1807,21 @@ out:
- 	return ret;
- }
- 
--static void wl1271_ssid_set(struct wl1271 *wl, struct sk_buff *beacon)
-+static void wl1271_ssid_set(struct wl1271 *wl, struct sk_buff *skb,
-+			    int offset)
- {
--	u8 *ptr = beacon->data +
--		offsetof(struct ieee80211_mgmt, u.beacon.variable);
-+	u8 *ptr = skb->data + offset;
- 
- 	/* find the location of the ssid in the beacon */
--	while (ptr < beacon->data + beacon->len) {
-+	while (ptr < skb->data + skb->len) {
- 		if (ptr[0] == WLAN_EID_SSID) {
- 			wl->ssid_len = ptr[1];
- 			memcpy(wl->ssid, ptr+2, wl->ssid_len);
- 			return;
- 		}
--		ptr += ptr[1];
-+		ptr += (ptr[1] + 2);
- 	}
--	wl1271_error("ad-hoc beacon template has no SSID!\n");
-+	wl1271_error("No SSID in IEs!\n");
- }
- 
- static void wl1271_op_bss_info_changed(struct ieee80211_hw *hw,
-@@ -1864,8 +1864,11 @@ static void wl1271_op_bss_info_changed(struct ieee80211_hw *hw,
- 
- 		if (beacon) {
- 			struct ieee80211_hdr *hdr;
-+			int ieoffset = offsetof(struct ieee80211_mgmt,
-+						u.beacon.variable);
-+
-+			wl1271_ssid_set(wl, beacon, ieoffset);
- 
--			wl1271_ssid_set(wl, beacon);
- 			ret = wl1271_cmd_template_set(wl, CMD_TEMPL_BEACON,
- 						      beacon->data,
- 						      beacon->len, 0,
-@@ -1945,6 +1948,7 @@ static void wl1271_op_bss_info_changed(struct ieee80211_hw *hw,
- 	if (changed & BSS_CHANGED_ASSOC) {
- 		if (bss_conf->assoc) {
- 			u32 rates;
-+			int ieoffset;
- 			wl->aid = bss_conf->aid;
- 			set_assoc = true;
- 
-@@ -1973,13 +1977,13 @@ static void wl1271_op_bss_info_changed(struct ieee80211_hw *hw,
- 				goto out_sleep;
- 
- 			/*
--			 * The SSID is intentionally set to NULL here - the
--			 * firmware will set the probe request with a
--			 * broadcast SSID regardless of what we set in the
--			 * template.
-+			 * Get a template for hardware connection maintenance
- 			 */
--			ret = wl1271_cmd_build_probe_req(wl, NULL, 0,
--							 NULL, 0, wl->band);
-+			dev_kfree_skb(wl->probereq);
-+			wl->probereq = wl1271_cmd_build_ap_probe_req(wl, NULL);
-+			ieoffset = offsetof(struct ieee80211_mgmt,
-+					    u.probe_req.variable);
-+			wl1271_ssid_set(wl, wl->probereq, ieoffset);
- 
- 			/* enable the connection monitoring feature */
- 			ret = wl1271_acx_conn_monit_params(wl, true);
-@@ -2002,6 +2006,10 @@ static void wl1271_op_bss_info_changed(struct ieee80211_hw *hw,
- 			clear_bit(WL1271_FLAG_STA_ASSOCIATED, &wl->flags);
- 			wl->aid = 0;
- 
-+			/* free probe-request template */
-+			dev_kfree_skb(wl->probereq);
-+			wl->probereq = NULL;
-+
- 			/* re-enable dynamic ps - just in case */
- 			ieee80211_enable_dyn_ps(wl->vif);
- 
-diff --git a/drivers/net/wireless/wl12xx/scan.c b/drivers/net/wireless/wl12xx/scan.c
-index f3f2c5b..6f897b9 100644
---- a/drivers/net/wireless/wl12xx/scan.c
-+++ b/drivers/net/wireless/wl12xx/scan.c
-@@ -51,6 +51,10 @@ void wl1271_scan_complete_work(struct work_struct *work)
- 	wl->scan.req = NULL;
- 	ieee80211_scan_completed(wl->hw, false);
- 
-+	/* restore hardware connection monitoring template */
-+	if (test_bit(WL1271_FLAG_STA_ASSOCIATED, &wl->flags))
-+		wl1271_cmd_build_ap_probe_req(wl, wl->probereq);
-+
- 	if (wl->scan.failed) {
- 		wl1271_info("Scan completed due to error.");
- 		ieee80211_queue_work(wl->hw, &wl->recovery_work);
-diff --git a/drivers/net/wireless/wl12xx/wl12xx.h b/drivers/net/wireless/wl12xx/wl12xx.h
-index 3c836e6..9f8aa69 100644
---- a/drivers/net/wireless/wl12xx/wl12xx.h
-+++ b/drivers/net/wireless/wl12xx/wl12xx.h
-@@ -431,6 +431,9 @@ struct wl1271 {
- 	struct wl1271_scan scan;
- 	struct delayed_work scan_complete_work;
- 
-+	/* probe-req template for the current AP */
-+	struct sk_buff *probereq;
-+
- 	/* Our association ID */
- 	u16 aid;
- 
--- 
-1.7.1
-
+Since they are patching different things, they shouldn't even be in
+the same patch series anyway.
