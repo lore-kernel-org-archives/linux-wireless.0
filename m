@@ -1,37 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail30s.wh2.ocn.ne.jp ([125.206.180.198]:35724 "HELO
-	mail30s.wh2.ocn.ne.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1754328Ab0KXBpF (ORCPT
+Received: from mail-qy0-f174.google.com ([209.85.216.174]:54215 "EHLO
+	mail-qy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752705Ab0KEJwl convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 23 Nov 2010 20:45:05 -0500
-Received: from vs3017.wh2.ocn.ne.jp (125.206.180.250)
-	by mail30s.wh2.ocn.ne.jp (RS ver 1.0.95vs) with SMTP id 3-0242773103
-	for <linux-wireless@vger.kernel.org>; Wed, 24 Nov 2010 10:45:03 +0900 (JST)
-From: Bruno Randolf <br1@einfach.org>
-To: Johannes Berg <johannes@sipsolutions.net>
-Subject: Re: [PATCH v7 1/3] cfg80211: Add nl80211 antenna configuration
-Date: Wed, 24 Nov 2010 10:45:05 +0900
-Cc: linville@tuxdriver.com, nbd@openwrt.org, mcgrof@gmail.com,
-	linux-wireless@vger.kernel.org
-References: <20101110035050.23721.15617.stgit@localhost6.localdomain6> <201011221133.36594.br1@einfach.org> <1290439881.5718.0.camel@jlt3.sipsolutions.net>
-In-Reply-To: <1290439881.5718.0.camel@jlt3.sipsolutions.net>
+	Fri, 5 Nov 2010 05:52:41 -0400
+Received: by qyk12 with SMTP id 12so2486963qyk.19
+        for <linux-wireless@vger.kernel.org>; Fri, 05 Nov 2010 02:52:41 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="utf-8"
-Message-Id: <201011241045.05708.br1@einfach.org>
+In-Reply-To: <201011051044.37167.helmut.schaa@googlemail.com>
+References: <201011042037.00178.IvDoorn@gmail.com>
+	<201011042037.23442.IvDoorn@gmail.com>
+	<201011042037.47939.IvDoorn@gmail.com>
+	<201011051044.37167.helmut.schaa@googlemail.com>
+Date: Fri, 5 Nov 2010 10:52:40 +0100
+Message-ID: <AANLkTinDwi_77iVS-bOTSX_4zs76nyttoEsdfpV0_F2g@mail.gmail.com>
+Subject: Re: [PATCH 03/13] rt2x00: Wait up to one second on rt2800 for WPDMA
+ to be ready
+From: Ivo Van Doorn <ivdoorn@gmail.com>
+To: Helmut Schaa <helmut.schaa@googlemail.com>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue November 23 2010 00:31:21 Johannes Berg wrote:
-> On Mon, 2010-11-22 at 11:33 +0900, Bruno Randolf wrote:
-> > On Sat November 20 2010 03:45:37 Johannes Berg wrote:
-> > > You'll need to provide documentation updates for this ASAP.
-> > 
-> > What do you mean? There is lots of kerneldoc in my patch. Is it not
-> > enough?
-> 
-> Not for the cfg80211 ops afaict, or did I just miss that?
+Hi,
 
-True. Sorry. I will add it.
+On Fri, Nov 5, 2010 at 10:44 AM, Helmut Schaa
+<helmut.schaa@googlemail.com> wrote:
+> Hi,
+>
+> Am Donnerstag 04 November 2010 schrieb Ivo van Doorn:
+>> From: Helmut Schaa <helmut.schaa@googlemail.com>
+>>
+>> At least some devices need such a long time to inititalize WPDMA. This
+>> only increases the maximum wait time and shouldn't affect devices that
+>> have been working before.
+>>
+>> Reported-by: Joshua Smith <jesmith@kaon.com>
+>> Signed-off-by: Helmut Schaa <helmut.schaa@googlemail.com>
+>> Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
+>> ---
+>
+> Ivo, the patch context looks different then in the version I've send to you.
+>
+> The
+>        for (i = 0; i < REGISTER_BUSY_COUNT; i++) {
+> should be
+>        for (i = 0; i < 100; i++) {
+>
+> Otherwise we don't wait up to one second as in the comment but just 50ms :P
+>
+> However, that change was part of a previous patch that was already merged into
+> the rt2x00 git tree. Seems like that change got lost during the merge ...
 
-bruno
+I'll try to find the patch which changed the REGISTER_BUSY_COUNT behavior.
+I'm almost worried that more patches have somehow gotten lost (I already noticed
+that there were a bunch of patches which were send upstream had disappeared
+from rt2x00.git, but those fortunately reappeared during the last
+update from wireless-testing).
+
+Ivo
+
+Ivo
