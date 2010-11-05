@@ -1,67 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.19.149.2]:26493 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754399Ab0KJNDz (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 10 Nov 2010 08:03:55 -0500
-Received: from mail.atheros.com ([10.10.20.105])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Wed, 10 Nov 2010 05:03:43 -0800
-From: Vasanthakumar Thiagarajan <vasanth@atheros.com>
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>
-Subject: [PATCH 06/11] ath9k_hw: Fix XPABIAS level configuration for AR9003
-Date: Wed, 10 Nov 2010 05:03:11 -0800
-Message-ID: <1289394196-3465-6-git-send-email-vasanth@atheros.com>
-In-Reply-To: <1289394196-3465-1-git-send-email-vasanth@atheros.com>
-References: <1289394196-3465-1-git-send-email-vasanth@atheros.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from smtp.nokia.com ([147.243.1.48]:29657 "EHLO mgw-sa02.nokia.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1754146Ab0KEORH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 5 Nov 2010 10:17:07 -0400
+Subject: Re: [RFC 03/15] nl80211: alloc and free the periodic_req data
+From: Luciano Coelho <luciano.coelho@nokia.com>
+To: ext Johannes Berg <johannes@sipsolutions.net>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <1288885396.3659.1.camel@jlt3.sipsolutions.net>
+References: <1288612336-2830-1-git-send-email-luciano.coelho@nokia.com>
+	 <1288612336-2830-4-git-send-email-luciano.coelho@nokia.com>
+	 <1288885396.3659.1.camel@jlt3.sipsolutions.net>
+Content-Type: text/plain; charset="UTF-8"
+Date: Fri, 05 Nov 2010 16:14:55 +0200
+Message-ID: <1288966495.1849.26.camel@chilepepper>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Improper configuration of 0x16288 and 0x16290 would affect transmission.
+On Thu, 2010-11-04 at 16:43 +0100, ext Johannes Berg wrote:
+> On Mon, 2010-11-01 at 13:52 +0200, Luciano Coelho wrote:
+> 
+> > +	/*
+> > +	 * FIXME: Can this stay here? How will the auto-complete and other
+> > +	 * cleanup cases work?
+> > +	 */
+> > +	kfree(rdev->periodic_req);
+> > +	rdev->periodic_req = NULL;
+> 
+> No ... you want a new function that you call here, and also call the
+> stop into the device at netdev down from the notifier in core.c.
 
-Cc:stable@kernel.org
-Signed-off-by: Vasanthakumar Thiagarajan <vasanth@atheros.com>
----
- drivers/net/wireless/ath/ath9k/ar9003_eeprom.c |   14 ++++++++------
- 1 files changed, 8 insertions(+), 6 deletions(-)
+Sure! I'll change it.
 
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
-index 3d467fc..17f73e4 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
-@@ -22,12 +22,14 @@
- #define COMP_CKSUM_LEN 2
- 
- #define AR_CH0_TOP (0x00016288)
--#define AR_CH0_TOP_XPABIASLVL (0x3)
-+#define AR_CH0_TOP_XPABIASLVL (0x300)
- #define AR_CH0_TOP_XPABIASLVL_S (8)
- 
- #define AR_CH0_THERM (0x00016290)
--#define AR_CH0_THERM_SPARE (0x3f)
--#define AR_CH0_THERM_SPARE_S (0)
-+#define AR_CH0_THERM_XPABIASLVL_MSB 0x3
-+#define AR_CH0_THERM_XPABIASLVL_MSB_S 0
-+#define AR_CH0_THERM_XPASHORT2GND 0x4
-+#define AR_CH0_THERM_XPASHORT2GND_S 2
- 
- #define AR_SWITCH_TABLE_COM_ALL (0xffff)
- #define AR_SWITCH_TABLE_COM_ALL_S (0)
-@@ -3336,9 +3338,9 @@ static s32 ar9003_hw_xpa_bias_level_get(struct ath_hw *ah, bool is2ghz)
- static void ar9003_hw_xpa_bias_level_apply(struct ath_hw *ah, bool is2ghz)
- {
- 	int bias = ar9003_hw_xpa_bias_level_get(ah, is2ghz);
--	REG_RMW_FIELD(ah, AR_CH0_TOP, AR_CH0_TOP_XPABIASLVL, (bias & 0x3));
--	REG_RMW_FIELD(ah, AR_CH0_THERM, AR_CH0_THERM_SPARE,
--		      ((bias >> 2) & 0x3));
-+	REG_RMW_FIELD(ah, AR_CH0_TOP, AR_CH0_TOP_XPABIASLVL, bias);
-+	REG_RMW_FIELD(ah, AR_CH0_THERM, AR_CH0_THERM_XPABIASLVL_MSB, bias >> 2);
-+	REG_RMW_FIELD(ah, AR_CH0_THERM, AR_CH0_THERM_XPASHORT2GND, 1);
- }
- 
- static u32 ar9003_hw_ant_ctrl_common_get(struct ath_hw *ah, bool is2ghz)
+
 -- 
-1.7.0.4
+Cheers,
+Luca.
 
