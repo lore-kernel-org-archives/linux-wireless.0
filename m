@@ -1,38 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([147.243.1.48]:35933 "EHLO mgw-sa02.nokia.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752996Ab0K2KQE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 29 Nov 2010 05:16:04 -0500
-Received: from nokia.com (localhost [127.0.0.1])
-	by mgw-sa02.nokia.com (Switch-3.4.3/Switch-3.4.3) with ESMTP id oATAG1W3025774
-	for <linux-wireless@vger.kernel.org>; Mon, 29 Nov 2010 12:16:01 +0200
-Subject: Re: [PATCH] wl12xx: Remove 11j channels from the supported
- channels list.
-From: Luciano Coelho <luciano.coelho@nokia.com>
-To: juuso.oikarinen@nokia.com
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <1291025153-17570-1-git-send-email-juuso.oikarinen@nokia.com>
-References: <1291025153-17570-1-git-send-email-juuso.oikarinen@nokia.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Mon, 29 Nov 2010 12:11:21 +0200
-Message-ID: <1291025481.1673.3.camel@powerslave>
-Mime-Version: 1.0
+Received: from external1.orbit-lab.org ([128.6.192.131]:51293 "HELO
+	external1.orbit-lab.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1753190Ab0KFTDb (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 6 Nov 2010 15:03:31 -0400
+Received: from repository3.orbit-lab.org (repository3.orbit-lab.org [10.50.0.41])
+	by external1.orbit-lab.org (Postfix) with ESMTP id 1557D418D8
+	for <linux-wireless@vger.kernel.org>; Sat,  6 Nov 2010 14:59:33 -0400 (EDT)
+Subject: Compat-wireless release for 2010-11-06 is baked
+To: <linux-wireless@vger.kernel.org>
+Message-Id: <20101106190330.0EECA40F97@repository3.orbit-lab.org>
+Date: Sat,  6 Nov 2010 15:03:29 -0400 (EDT)
+From: compat@orbit-lab.org (Compat-wireless cronjob account)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2010-11-29 at 12:05 +0200, juuso.oikarinen@nokia.com wrote:
-> From: Juuso Oikarinen <juuso.oikarinen@nokia.com>
-> 
-> Because we don't support them at this stage.
-> 
-> Signed-off-by: Juuso Oikarinen <juuso.oikarinen@nokia.com>
-> ---
+>From git://git.kernel.org/pub/scm/linux/kernel/git/mcgrof/compat
+   a5556e6..4b598d6  master     -> origin/master
 
-Looks good.  I'll apply it in the next round.
+compat-wireless code metrics
 
-Reviewed-by: Luciano Coelho <luciano.coelho@nokia.com>
+    739330 - Total upstream lines of code being pulled
+      2163 - backport code changes
+      1909 - backport code additions
+       254 - backport code deletions
+      6324 - backport from compat module
+      8487 - total backport code
+    1.1479 - % of code consists of backport work
+      1534 - Crap changes not yet posted
+      1491 - Crap additions not yet posted
+        43 - Crap deletions not yet posted
+    0.2075 - % of crap code
 
--- 
-Cheers,
-Luca.
-
+Base tree: linux-next.git
+Base tree version: next-20101029
+compat-wireless release: compat-wireless-2010-10-29-pc
