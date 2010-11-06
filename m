@@ -1,36 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from saarni.dnainternet.net ([83.102.40.136]:42840 "EHLO
-	saarni.dnainternet.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755354Ab0KKTIh (ORCPT
+Received: from mail-ey0-f174.google.com ([209.85.215.174]:33441 "EHLO
+	mail-ey0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752951Ab0KFOtl (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 11 Nov 2010 14:08:37 -0500
-Message-ID: <20101111210824.685154i2r52oacqo@hayate.sektori.org>
-Date: Thu, 11 Nov 2010 21:08:24 +0200
-From: "Jussi Kivilinna" <jussi.kivilinna@mbnet.fi>
-To: "Johannes Berg" <johannes@sipsolutions.net>
-Cc: "John Linville" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH] cfg80211/mac80211: allow per-station GTKs
-References: <1286300370.3641.17.camel@jlt3.sipsolutions.net>
-In-Reply-To: <1286300370.3641.17.camel@jlt3.sipsolutions.net>
+	Sat, 6 Nov 2010 10:49:41 -0400
+Received: by mail-ey0-f174.google.com with SMTP id 27so2216256eye.19
+        for <linux-wireless@vger.kernel.org>; Sat, 06 Nov 2010 07:49:40 -0700 (PDT)
+From: Ivo van Doorn <ivdoorn@gmail.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Subject: [PATCH 05/18] rt2x00: checkpatch.pl error fixes for rt2800lib.c
+Date: Sat, 6 Nov 2010 15:45:06 +0100
+Cc: linux-wireless@vger.kernel.org
+References: <201011061544.00876.IvDoorn@gmail.com> <201011061544.33907.IvDoorn@gmail.com> <201011061544.52879.IvDoorn@gmail.com>
+In-Reply-To: <201011061544.52879.IvDoorn@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain;
-	charset=UTF-8;
-	DelSp="Yes";
-	format="flowed"
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Message-Id: <201011061545.07105.IvDoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Quoting "Johannes Berg" <johannes@sipsolutions.net>:
+From: Mark Einon <mark.einon@gmail.com>
 
-> @@ -1312,6 +1314,7 @@ enum wiphy_flags {
->  	WIPHY_FLAG_4ADDR_AP			= BIT(5),
->  	WIPHY_FLAG_4ADDR_STATION		= BIT(6),
->  	WIPHY_FLAG_CONTROL_PORT_PROTOCOL	= BIT(7),
-> +	WIPHY_FLAG_IBSS_RSN			= BIT(7),
->  };
+rt2800lib.c:831: ERROR: inline keyword should sit between storage class and type
 
-This should be BIT(8), right?
+Signed-off-by: Mark Einon <mark.einon@gmail.com>
+Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
+---
+ drivers/net/wireless/rt2x00/rt2800lib.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
--Jussi
+diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
+index a53536d..b5d2eba 100644
+--- a/drivers/net/wireless/rt2x00/rt2800lib.c
++++ b/drivers/net/wireless/rt2x00/rt2800lib.c
+@@ -828,7 +828,7 @@ void rt2800_write_beacon(struct queue_entry *entry, struct txentry_desc *txdesc)
+ }
+ EXPORT_SYMBOL_GPL(rt2800_write_beacon);
+ 
+-static void inline rt2800_clear_beacon(struct rt2x00_dev *rt2x00dev,
++static inline void rt2800_clear_beacon(struct rt2x00_dev *rt2x00dev,
+ 				       unsigned int beacon_base)
+ {
+ 	int i;
+-- 
+1.7.2.3
 
