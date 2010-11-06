@@ -1,55 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.perches.com ([173.55.12.10]:4838 "EHLO mail.perches.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753733Ab0KJAf3 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 9 Nov 2010 19:35:29 -0500
-From: Joe Perches <joe@perches.com>
-To: linux-kernel@vger.kernel.org
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH 3/9] drivers/net/wireless/ath/debug.c: Use printf extension %pV
-Date: Tue,  9 Nov 2010 16:35:17 -0800
-Message-Id: <a6721b7e8c66b79da756a7b3d9dbf74e7663a1e9.1289348757.git.joe@perches.com>
-In-Reply-To: <cover.1289348757.git.joe@perches.com>
-References: <cover.1289348757.git.joe@perches.com>
+Received: from mail-ew0-f46.google.com ([209.85.215.46]:44208 "EHLO
+	mail-ew0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754420Ab0KFOtn (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 6 Nov 2010 10:49:43 -0400
+Received: by mail-ew0-f46.google.com with SMTP id 7so2253925ewy.19
+        for <linux-wireless@vger.kernel.org>; Sat, 06 Nov 2010 07:49:43 -0700 (PDT)
+From: Ivo van Doorn <ivdoorn@gmail.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Subject: [PATCH 06/18] rt2x00: checkpatch.pl error fixes for rt2800pci.h
+Date: Sat, 6 Nov 2010 15:45:22 +0100
+Cc: linux-wireless@vger.kernel.org
+References: <201011061544.00876.IvDoorn@gmail.com> <201011061544.52879.IvDoorn@gmail.com> <201011061545.07105.IvDoorn@gmail.com>
+In-Reply-To: <201011061545.07105.IvDoorn@gmail.com>
+MIME-Version: 1.0
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Message-Id: <201011061545.23058.IvDoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Using %pV reduces the number of printk calls and
-eliminates any possible message interleaving from
-other printk calls.
+From: Mark Einon <mark.einon@gmail.com>
 
-Signed-off-by: Joe Perches <joe@perches.com>
+rt2800pci.h:41: ERROR: Macros with complex values should be enclosed in parenthesis
+rt2800pci.h:42: ERROR: Macros with complex values should be enclosed in parenthesis
+rt2800pci.h:43: ERROR: Macros with complex values should be enclosed in parenthesis
+rt2800pci.h:44: ERROR: Macros with complex values should be enclosed in parenthesis
+rt2800pci.h:55: ERROR: space prohibited after that open parenthesis '('
+rt2800pci.h:55: ERROR: space prohibited before that close parenthesis ')'
+rt2800pci.h:56: ERROR: space prohibited after that open parenthesis '('
+rt2800pci.h:56: ERROR: space prohibited before that close parenthesis ')'
+
+Signed-off-by: Mark Einon <mark.einon@gmail.com>
+Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
 ---
- drivers/net/wireless/ath/debug.c |    9 +++++++--
- 1 files changed, 7 insertions(+), 2 deletions(-)
+ drivers/net/wireless/rt2x00/rt2800pci.h |   12 ++++++------
+ 1 files changed, 6 insertions(+), 6 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/debug.c b/drivers/net/wireless/ath/debug.c
-index dacfb23..a9600ba 100644
---- a/drivers/net/wireless/ath/debug.c
-+++ b/drivers/net/wireless/ath/debug.c
-@@ -19,14 +19,19 @@
+diff --git a/drivers/net/wireless/rt2x00/rt2800pci.h b/drivers/net/wireless/rt2x00/rt2800pci.h
+index 5a8dda9..70e050d 100644
+--- a/drivers/net/wireless/rt2x00/rt2800pci.h
++++ b/drivers/net/wireless/rt2x00/rt2800pci.h
+@@ -38,10 +38,10 @@
+  * Queue register offset macros
+  */
+ #define TX_QUEUE_REG_OFFSET		0x10
+-#define TX_BASE_PTR(__x)		TX_BASE_PTR0 + ((__x) * TX_QUEUE_REG_OFFSET)
+-#define TX_MAX_CNT(__x)			TX_MAX_CNT0 + ((__x) * TX_QUEUE_REG_OFFSET)
+-#define TX_CTX_IDX(__x)			TX_CTX_IDX0 + ((__x) * TX_QUEUE_REG_OFFSET)
+-#define TX_DTX_IDX(__x)			TX_DTX_IDX0 + ((__x) * TX_QUEUE_REG_OFFSET)
++#define TX_BASE_PTR(__x)		(TX_BASE_PTR0 + ((__x) * TX_QUEUE_REG_OFFSET))
++#define TX_MAX_CNT(__x)			(TX_MAX_CNT0 + ((__x) * TX_QUEUE_REG_OFFSET))
++#define TX_CTX_IDX(__x)			(TX_CTX_IDX0 + ((__x) * TX_QUEUE_REG_OFFSET))
++#define TX_DTX_IDX(__x)			(TX_DTX_IDX0 + ((__x) * TX_QUEUE_REG_OFFSET))
  
- void ath_print(struct ath_common *common, int dbg_mask, const char *fmt, ...)
- {
-+	struct va_format vaf;
- 	va_list args;
+ /*
+  * 8051 firmware image.
+@@ -52,8 +52,8 @@
+ /*
+  * DMA descriptor defines.
+  */
+-#define TXD_DESC_SIZE			( 4 * sizeof(__le32) )
+-#define RXD_DESC_SIZE			( 4 * sizeof(__le32) )
++#define TXD_DESC_SIZE			(4 * sizeof(__le32))
++#define RXD_DESC_SIZE			(4 * sizeof(__le32))
  
- 	if (likely(!(common->debug_mask & dbg_mask)))
- 		return;
- 
- 	va_start(args, fmt);
--	printk(KERN_DEBUG "ath: ");
--	vprintk(fmt, args);
-+
-+	vaf.fmt = fmt;
-+	vaf.va = &args;
-+
-+	printk(KERN_DEBUG "ath: %pV", &vaf);
-+
- 	va_end(args);
- }
- EXPORT_SYMBOL(ath_print);
+ /*
+  * TX descriptor format for TX, PRIO and Beacon Ring.
 -- 
-1.7.3.1.g432b3.dirty
+1.7.2.3
 
