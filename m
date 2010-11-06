@@ -1,54 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:33544 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757851Ab0KRSLI (ORCPT
+Received: from mail-ew0-f46.google.com ([209.85.215.46]:44208 "EHLO
+	mail-ew0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754845Ab0KFOtv (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 18 Nov 2010 13:11:08 -0500
-Message-ID: <4CE56C38.30500@candelatech.com>
-Date: Thu, 18 Nov 2010 10:11:04 -0800
-From: Ben Greear <greearb@candelatech.com>
+	Sat, 6 Nov 2010 10:49:51 -0400
+Received: by mail-ew0-f46.google.com with SMTP id 7so2253925ewy.19
+        for <linux-wireless@vger.kernel.org>; Sat, 06 Nov 2010 07:49:50 -0700 (PDT)
+From: Ivo van Doorn <ivdoorn@gmail.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Subject: [PATCH 11/18] rt2x00: checkpatch.pl error fixes for rt2x00lib.h
+Date: Sat, 6 Nov 2010 15:46:53 +0100
+Cc: linux-wireless@vger.kernel.org
+References: <201011061544.00876.IvDoorn@gmail.com> <201011061546.18043.IvDoorn@gmail.com> <201011061546.37042.IvDoorn@gmail.com>
+In-Reply-To: <201011061546.37042.IvDoorn@gmail.com>
 MIME-Version: 1.0
-To: Tejun Heo <tj@kernel.org>
-CC: Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] mac80211:  Fix deadlock in ieee80211_do_stop.
-References: <1289592426-5367-1-git-send-email-greearb@candelatech.com>	 <1289594998.3736.11.camel@jlt3.sipsolutions.net>	 <4CDDAA3B.9090007@candelatech.com>	 <1289596096.3736.13.camel@jlt3.sipsolutions.net>	 <4CDE699B.70401@kernel.org> <4CE1A344.7040201@candelatech.com>	 <4CE292F7.4090200@kernel.org>	 <1289929258.3673.1.camel@jlt3.sipsolutions.net>	 <4CE396A9.1050908@kernel.org> <1290020005.3777.6.camel@jlt3.sipsolutions.net> <4CE4C8DD.6010806@kernel.org> <51f5dd53c39a77fff4efc1a99b189725@localhost> <4CE4D41F.1080005@kernel.org> <4CE56892.9090606@candelatech.com> <4CE56AAB.7080507@kernel.org>
-In-Reply-To: <4CE56AAB.7080507@kernel.org>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Message-Id: <201011061546.53938.IvDoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 11/18/2010 10:04 AM, Tejun Heo wrote:
-> Hello, Ben.
->
-> On 11/18/2010 06:55 PM, Ben Greear wrote:
->> I understand your desire for a stack dump, but it appears that sysrq-t
->> isn't getting everything you want, for whatever reason.
->
-> Can you please try again and investigate why it's not working?  If
-> task dump is not working as expected, there is a much more serious
-> problem than wireless locking up.
->
->> Does my explanation of the rtnl deadlock that I posted near the beginning
->> of this thread (with some backtraces to back that up) make sense, or
->> are my assumptions invalid?
->
-> Yes, it makes sense.  At this point, I'm fairly sure that something is
-> holding the workqueue but I really can't tell anything without proper
-> stack dump.
+From: Mark Einon <mark.einon@gmail.com>
 
-I'm swamped with work today...but hopefully will get back to this later
-today or tomorrow.
+rt2x00lib.h:60: ERROR: space prohibited after that open parenthesis '('
+rt2x00lib.h:60: ERROR: space prohibited before that close parenthesis ')'
 
-Thanks,
-Ben
+Signed-off-by: Mark Einon <mark.einon@gmail.com>
+Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
+---
+ drivers/net/wireless/rt2x00/rt2x00lib.h |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
->
-> Thanks.
->
-
-
+diff --git a/drivers/net/wireless/rt2x00/rt2x00lib.h b/drivers/net/wireless/rt2x00/rt2x00lib.h
+index 619da23..9835402 100644
+--- a/drivers/net/wireless/rt2x00/rt2x00lib.h
++++ b/drivers/net/wireless/rt2x00/rt2x00lib.h
+@@ -57,7 +57,7 @@ static inline const struct rt2x00_rate *rt2x00_get_rate(const u16 hw_value)
+ }
+ 
+ #define RATE_MCS(__mode, __mcs) \
+-	( (((__mode) & 0x00ff) << 8) | ((__mcs) & 0x00ff) )
++	((((__mode) & 0x00ff) << 8) | ((__mcs) & 0x00ff))
+ 
+ static inline int rt2x00_get_rate_mcs(const u16 mcs_value)
+ {
 -- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+1.7.2.3
 
