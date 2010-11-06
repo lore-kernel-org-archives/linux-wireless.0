@@ -1,111 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:36499 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753731Ab0KLSOy (ORCPT
+Received: from mail-ey0-f174.google.com ([209.85.215.174]:33441 "EHLO
+	mail-ey0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752951Ab0KFOtr (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 12 Nov 2010 13:14:54 -0500
-Date: Fri, 12 Nov 2010 13:11:55 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: linux-wireless@vger.kernel.org, linux-bluetooth@vger.kernel.org
-Subject: [PATCH] compat: support building on RHEL 6 kernels
-Message-ID: <20101112181154.GF2338@tuxdriver.com>
+	Sat, 6 Nov 2010 10:49:47 -0400
+Received: by mail-ey0-f174.google.com with SMTP id 27so2216256eye.19
+        for <linux-wireless@vger.kernel.org>; Sat, 06 Nov 2010 07:49:46 -0700 (PDT)
+From: Ivo van Doorn <ivdoorn@gmail.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Subject: [PATCH 08/18] rt2x00: checkpatch.pl error fixes for rt2800usb.h
+Date: Sat, 6 Nov 2010 15:45:58 +0100
+Cc: linux-wireless@vger.kernel.org
+References: <201011061544.00876.IvDoorn@gmail.com> <201011061545.23058.IvDoorn@gmail.com> <201011061545.42379.IvDoorn@gmail.com>
+In-Reply-To: <201011061545.42379.IvDoorn@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Message-Id: <201011061545.59571.IvDoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-RHEL kernels in general (and RHEL 6 kernels in particular) often
-contain features backported from later upstream kernels.  This means
-that the normal KERNEL_VERSION checks are not always correct for RHEL
-kernels.  This patch augments a number of such tests to be compatible
-with building compat-wireless on RHEL 6 kernels.
+From: Mark Einon <mark.einon@gmail.com>
 
-Signed-off-by: John W. Linville <linville@tuxdriver.com>
+rt2800usb.h:43: ERROR: space prohibited after that open parenthesis '('
+rt2800usb.h:43: ERROR: space prohibited before that close parenthesis ')'
+rt2800usb.h:44: ERROR: space prohibited after that open parenthesis '('
+rt2800usb.h:44: ERROR: space prohibited before that close parenthesis ')'
+
+Signed-off-by: Mark Einon <mark.einon@gmail.com>
+Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
 ---
-This patch contains the general compat portions...
+ drivers/net/wireless/rt2x00/rt2800usb.h |    4 ++--
+ 1 files changed, 2 insertions(+), 2 deletions(-)
 
-diff -up compat-wireless-2.6.36-4/compat/compat_firmware_class.c.orig compat-wireless-2.6.36-4/compat/compat_firmware_class.c
---- compat-wireless-2.6.36-4/compat/compat_firmware_class.c.orig	2010-11-12 12:00:39.050193706 -0500
-+++ compat-wireless-2.6.36-4/compat/compat_firmware_class.c	2010-11-12 12:10:47.288513373 -0500
-@@ -314,9 +314,15 @@ static ssize_t firmware_loading_store(st
+diff --git a/drivers/net/wireless/rt2x00/rt2800usb.h b/drivers/net/wireless/rt2x00/rt2800usb.h
+index 0722bad..671ea35 100644
+--- a/drivers/net/wireless/rt2x00/rt2800usb.h
++++ b/drivers/net/wireless/rt2x00/rt2800usb.h
+@@ -40,8 +40,8 @@
+ /*
+  * DMA descriptor defines.
+  */
+-#define TXINFO_DESC_SIZE		( 1 * sizeof(__le32) )
+-#define RXINFO_DESC_SIZE		( 1 * sizeof(__le32) )
++#define TXINFO_DESC_SIZE		(1 * sizeof(__le32))
++#define RXINFO_DESC_SIZE		(1 * sizeof(__le32))
  
- static DEVICE_ATTR(loading, 0644, firmware_loading_show, firmware_loading_store);
- 
-+#if !defined(RHEL_MAJOR) || (RHEL_MAJOR != 6)
- static ssize_t firmware_data_read(struct kobject *kobj,
- 				  struct bin_attribute *bin_attr,
- 				  char *buffer, loff_t offset, size_t count)
-+#else
-+static ssize_t firmware_data_read(struct file *filp, struct kobject *kobj,
-+				  struct bin_attribute *bin_attr,
-+				  char *buffer, loff_t offset, size_t count)
-+#endif
- {
- 	struct device *dev = to_dev(kobj);
- 	struct firmware_priv *fw_priv = to_firmware_priv(dev);
-@@ -407,9 +413,15 @@ static int fw_realloc_buffer(struct firm
-  *	Data written to the 'data' attribute will be later handed to
-  *	the driver as a firmware image.
-  **/
-+#if !defined(RHEL_MAJOR) || (RHEL_MAJOR != 6)
- static ssize_t firmware_data_write(struct kobject *kobj,
- 				   struct bin_attribute *bin_attr,
- 				   char *buffer, loff_t offset, size_t count)
-+#else
-+static ssize_t firmware_data_write(struct file *filp, struct kobject *kobj,
-+				   struct bin_attribute *bin_attr,
-+				   char *buffer, loff_t offset, size_t count)
-+#endif
- {
- 	struct device *dev = to_dev(kobj);
- 	struct firmware_priv *fw_priv = to_firmware_priv(dev);
-diff -up compat-wireless-2.6.36-4/include/linux/compat-2.6.33.h.orig compat-wireless-2.6.36-4/include/linux/compat-2.6.33.h
---- compat-wireless-2.6.36-4/include/linux/compat-2.6.33.h.orig	2010-11-12 10:25:13.561172060 -0500
-+++ compat-wireless-2.6.36-4/include/linux/compat-2.6.33.h	2010-11-12 11:19:10.369172382 -0500
-@@ -47,7 +47,9 @@ static inline void compat_release_firmwa
- }
- #endif
- 
-+#if (!defined(RHEL_MAJOR) || (RHEL_MAJOR != 6))
- #define KEY_RFKILL		247	/* Key that controls all radios */
-+#endif
- 
- #define IFF_DONT_BRIDGE 0x800		/* disallow bridging this ether dev */
- /* source: include/linux/if.h */
-@@ -55,6 +57,7 @@ static inline void compat_release_firmwa
- /* this will never happen on older kernels */
- #define NETDEV_POST_INIT 0xffff
- 
-+#if (!defined(RHEL_MAJOR) || (RHEL_MAJOR != 6))
- static inline struct sk_buff *netdev_alloc_skb_ip_align(struct net_device *dev,
-                 unsigned int length)
- {
-@@ -64,6 +67,7 @@ static inline struct sk_buff *netdev_all
- 		skb_reserve(skb, NET_IP_ALIGN);
- 	return skb;
- }
-+#endif
- 
- #if defined(CONFIG_PCCARD) || defined(CONFIG_PCCARD_MODULE)
- 
-diff -up compat-wireless-2.6.36-4/include/linux/compat-2.6.34.h.orig compat-wireless-2.6.36-4/include/linux/compat-2.6.34.h
---- compat-wireless-2.6.36-4/include/linux/compat-2.6.34.h.orig	2010-11-12 10:25:44.165172202 -0500
-+++ compat-wireless-2.6.36-4/include/linux/compat-2.6.34.h	2010-11-12 11:19:29.315182613 -0500
-@@ -19,12 +19,14 @@
- 
- /* netdev_printk helpers, similar to dev_printk */
- 
-+#if (!defined(RHEL_MAJOR) || (RHEL_MAJOR != 6))
- static inline const char *netdev_name(const struct net_device *dev)
- {
- 	if (dev->reg_state != NETREG_REGISTERED)
- 		return "(unregistered net_device)";
- 	return dev->name;
- }
-+#endif
- 
- #define netdev_printk(level, netdev, format, args...)		\
- 	dev_printk(level, (netdev)->dev.parent,			\
+ /*
+  * TX Info structure
 -- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+1.7.2.3
+
