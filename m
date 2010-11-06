@@ -1,41 +1,114 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from arroyo.ext.ti.com ([192.94.94.40]:43804 "EHLO arroyo.ext.ti.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754328Ab0KXCMx (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 23 Nov 2010 21:12:53 -0500
-From: "Krakowski, Oz" <ozk@ti.com>
-To: Josh Watts <JWatts@d3engineering.com>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"ido@wizery.com" <ido@wizery.com>
-Date: Tue, 23 Nov 2010 20:12:48 -0600
-Subject: RE: No scan results from wl1271-sdio
-Message-ID: <B3E8D1AE4503414CAFD215C4B3688A0501EF42F95442@dlee07.ent.ti.com>
-References: <AB927C5B3615784183753F31BCC83EA38C58FE29@AD.d3.local>
- <20101123191338.GG3245@WorkStation>
- <AB927C5B3615784183753F31BCC83EA38C58FE32@AD.d3.local>
- <AB927C5B3615784183753F31BCC83EA38C58FE34@AD.d3.local>
-In-Reply-To: <AB927C5B3615784183753F31BCC83EA38C58FE34@AD.d3.local>
-Content-Type: text/plain; charset="utf-8"
+Received: from mail-bw0-f46.google.com ([209.85.214.46]:42018 "EHLO
+	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754669Ab0KFNHQ (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 6 Nov 2010 09:07:16 -0400
+Received: by bwz11 with SMTP id 11so3492094bwz.19
+        for <linux-wireless@vger.kernel.org>; Sat, 06 Nov 2010 06:07:14 -0700 (PDT)
+From: Christian Lamparter <chunkeey@googlemail.com>
+To: linux-wireless@vger.kernel.org
+Subject: [PATCH] carl9170: tx path review
+Date: Sat, 6 Nov 2010 14:07:10 +0100
+Cc: linville@tuxdriver.com
 MIME-Version: 1.0
+Content-Type: Text/Plain;
+  charset="us-ascii"
+Message-Id: <201011061407.11139.chunkeey@googlemail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Sm9zaCwNCg0KPiA+ID4gVGhlc2Uga2luZCBvZiBwcm9ibGVtcyBjb3VsZCBiZSBjYXVzZWQgYnkg
-dXNpbmcgYSB3cm9uZyByZWZlcmVuY2UgY2xvY2sNCj4gPiA+IHZhbHVlLiBDb3VsZCB5b3UgcGxl
-YXNlIGRvdWJsZSBjaGVjayB0aGF0IHRoZSByZWZlcmVuY2UgY2xvY2sNCj4gPiA+IChib2FyZF9y
-ZWZfY2xvY2spIG1hdGNoZXMgdGhlIHJlZmVyZW5jZSBjbG9jayBjb25uZWN0ZWQgdG8gdGhlIHds
-MTI3MT8NCj4gPiA+DQo+ID4gPiBSZWdhcmRzLA0KPiA+ID4gSWRvLg0KPiA+DQo+ID4gRG9lcyBi
-b2FyZF9yZWZfY2xvY2sgcmVmZXIgdG8gdGhlIFNMT1dfQ0xLIHNpZ25hbCBmZWQgdG8gdGhlIFRp
-V2kgYm9hcmQ/DQo+IA0KPiBPb3BzLCBJIHNlZSBub3cgSSB3YXMgY29uZnVzZWQgb24gdGhpcyBw
-b2ludC4gSXQgYXBwZWFycyBib2FyZF9yZWZfY2xvY2sNCj4gcmVmZXJzIHRvIHRoZSBTRElPIGNs
-b2NrIGxpbmUsIGNvcnJlY3Q/IEl0IGFwcGVhcnMgdGhhdCBteSBNTUMvU0RJTw0KPiBpbnRlcmZh
-Y2UgaXMgYXV0by1jb25maWd1cmluZyBpdHNlbGYgdG8gMjVNSHouIElzIHRoaXMgY2xvc2UgZW5v
-dWdoIHRvDQo+IDI2TUh6LCBvciBkbyB5b3UgdGhpbmsgSSBzaG91bGQgbG9vayBpbnRvIGFkanVz
-dGluZy9mb3JjaW5nIHRoZQ0KPiBpbnRlcmZhY2UgdG8gb3BlcmF0ZSBhdCBvbmUgb2YgdGhlIHJh
-dGVzIGxpc3RlZCBpbiB3bDEyeHgvYm9vdC5jPw0KPiANCg0KMjVNSHogZm9yIHRoZSBTRElPIGNs
-b2NrIGlzIGEgY29ycmVjdCB2YWx1ZS4NCkhvd2V2ZXIsIEkgYmVsaWV2ZSB0aGUgaXNzdWUgZGlz
-Y3Vzc2VkIGlzIG1vcmUgcmVsYXRlZCB0byB0aGUgZmFzdCBjbG9jayAocmVmZXJlbmNlIGNsb2Nr
-KSBzdXBwbGllZCB0byB0aGUgV0wxMjcxIGNoaXAgaXRzZWxmIGFuZCBub3QgdG8gdGhlIFNESU8g
-YnVzLg0KVGhpcyBpcyBtb3N0IHByb2JhYmx5IGEgMjZNSHogY2xvY2sgYnV0IHlvdSdkIGJldHRl
-ciB2ZXJpZnkgaG93IHlvdXIgaGFyZHdhcmUgaXMgd2lyZWQuDQoNClJlZ2FyZHMsDQpPei4NCg0K
-DQoNCg0KDQoNCg0KDQoNCg0KDQoNCg0KDQoNCg0KDQoNCg0KDQoNCg0KDQoNCg0KDQoNCg==
+This patch fixes a few shortcomings in the tx path.
+
+ * move temp. ampdu_[ack]_len out of txinfo->pad.
+
+ * fix WARN_ON from tx.c:line 300 when tx_ampdu_queue
+   fails to queue the frame.
+
+ * In tx_prepare, we already have a local pointer
+   to the station's ieee80211_sta struct.
+
+ * remove a second !sta check, tx_prepare already takes
+   care of that.
+    
+Signed-off-by: Christian Lamparter <chunkeey@googlemail.com>
+---
+diff --git a/drivers/net/wireless/ath/carl9170/tx.c b/drivers/net/wireless/ath/carl9170/tx.c
+index b27969c..688eede 100644
+--- a/drivers/net/wireless/ath/carl9170/tx.c
++++ b/drivers/net/wireless/ath/carl9170/tx.c
+@@ -242,9 +242,11 @@ static void carl9170_tx_release(struct kref *ref)
+ 			ar->tx_ampdu_schedule = true;
+ 
+ 		if (txinfo->flags & IEEE80211_TX_STAT_AMPDU) {
+-			txinfo->status.ampdu_len = txinfo->pad[0];
+-			txinfo->status.ampdu_ack_len = txinfo->pad[1];
+-			txinfo->pad[0] = txinfo->pad[1] = 0;
++			struct _carl9170_tx_superframe *super;
++
++			super = (void *)skb->data;
++			txinfo->status.ampdu_len = super->s.rix;
++			txinfo->status.ampdu_ack_len = super->s.cnt;
+ 		} else if (txinfo->flags & IEEE80211_TX_STAT_ACK) {
+ 			/*
+ 			 * drop redundant tx_status reports:
+@@ -337,7 +339,8 @@ static void carl9170_tx_status_process_ampdu(struct ar9170 *ar,
+ 	u8 tid;
+ 
+ 	if (!(txinfo->flags & IEEE80211_TX_CTL_AMPDU) ||
+-	    txinfo->flags & IEEE80211_TX_CTL_INJECTED)
++	    txinfo->flags & IEEE80211_TX_CTL_INJECTED ||
++	   (!(super->f.mac_control & cpu_to_le16(AR9170_TX_MAC_AGGR))))
+ 		return;
+ 
+ 	tx_info = IEEE80211_SKB_CB(skb);
+@@ -389,8 +392,8 @@ static void carl9170_tx_status_process_ampdu(struct ar9170 *ar,
+ 		sta_info->stats[tid].ampdu_ack_len++;
+ 
+ 	if (super->f.mac_control & cpu_to_le16(AR9170_TX_MAC_IMM_BA)) {
+-		txinfo->pad[0] = sta_info->stats[tid].ampdu_len;
+-		txinfo->pad[1] = sta_info->stats[tid].ampdu_ack_len;
++		super->s.rix = sta_info->stats[tid].ampdu_len;
++		super->s.cnt = sta_info->stats[tid].ampdu_ack_len;
+ 		txinfo->flags |= IEEE80211_TX_STAT_AMPDU;
+ 		sta_info->stats[tid].clear = true;
+ 	}
+@@ -896,10 +899,8 @@ static int carl9170_tx_prepare(struct ar9170 *ar, struct sk_buff *skb)
+ 		if (unlikely(!sta || !cvif))
+ 			goto err_out;
+ 
+-		factor = min_t(unsigned int, 1u,
+-			 info->control.sta->ht_cap.ampdu_factor);
+-
+-		density = info->control.sta->ht_cap.ampdu_density;
++		factor = min_t(unsigned int, 1u, sta->ht_cap.ampdu_factor);
++		density = sta->ht_cap.ampdu_density;
+ 
+ 		if (density) {
+ 			/*
+@@ -1260,6 +1261,7 @@ static void carl9170_tx(struct ar9170 *ar)
+ static bool carl9170_tx_ampdu_queue(struct ar9170 *ar,
+ 	struct ieee80211_sta *sta, struct sk_buff *skb)
+ {
++	struct _carl9170_tx_superframe *super = (void *) super;
+ 	struct carl9170_sta_info *sta_info;
+ 	struct carl9170_sta_tid *agg;
+ 	struct sk_buff *iter;
+@@ -1328,6 +1330,7 @@ err_unlock:
+ 
+ err_unlock_rcu:
+ 	rcu_read_unlock();
++	super->f.mac_control &= ~cpu_to_le16(AR9170_TX_MAC_AGGR);
+ 	carl9170_tx_status(ar, skb, false);
+ 	ar->tx_dropped++;
+ 	return false;
+@@ -1356,9 +1359,6 @@ int carl9170_op_tx(struct ieee80211_hw *hw, struct sk_buff *skb)
+ 	 */
+ 
+ 	if (info->flags & IEEE80211_TX_CTL_AMPDU) {
+-		if (WARN_ON_ONCE(!sta))
+-			goto err_free;
+-
+ 		run = carl9170_tx_ampdu_queue(ar, sta, skb);
+ 		if (run)
+ 			carl9170_tx_ampdu(ar);
