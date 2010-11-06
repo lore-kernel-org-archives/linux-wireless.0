@@ -1,27 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:15320 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757052Ab0KLPyl (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 12 Nov 2010 10:54:41 -0500
-Subject: Re: [PATCH 3/3] iwlwifi: kill elapsed_jiffies
-From: "Guy, Wey-Yi" <wey-yi.w.guy@intel.com>
-To: Stanislaw Gruszka <sgruszka@redhat.com>
-Cc: Intel Linux Wireless <ilw@linux.intel.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <1289548027-3383-3-git-send-email-sgruszka@redhat.com>
-References: <1289548027-3383-1-git-send-email-sgruszka@redhat.com>
-	 <1289548027-3383-3-git-send-email-sgruszka@redhat.com>
-Content-Type: text/plain
-Date: Fri, 12 Nov 2010 07:53:50 -0800
-Message-Id: <1289577230.16178.8.camel@wwguy-ubuntu>
-Mime-Version: 1.0
+Received: from mail-ew0-f46.google.com ([209.85.215.46]:44208 "EHLO
+	mail-ew0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754879Ab0KFOtx (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 6 Nov 2010 10:49:53 -0400
+Received: by mail-ew0-f46.google.com with SMTP id 7so2253925ewy.19
+        for <linux-wireless@vger.kernel.org>; Sat, 06 Nov 2010 07:49:52 -0700 (PDT)
+From: Ivo van Doorn <ivdoorn@gmail.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Subject: [PATCH 12/18] rt2x00: checkpatch.pl error fixes for rt2x00link.c
+Date: Sat, 6 Nov 2010 15:47:09 +0100
+Cc: linux-wireless@vger.kernel.org
+References: <201011061544.00876.IvDoorn@gmail.com> <201011061546.37042.IvDoorn@gmail.com> <201011061546.53938.IvDoorn@gmail.com>
+In-Reply-To: <201011061546.53938.IvDoorn@gmail.com>
+MIME-Version: 1.0
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Message-Id: <201011061547.09763.IvDoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2010-11-11 at 23:47 -0800, Stanislaw Gruszka wrote:
-> Subtract of jiffies is fine even if one variable overwrap.
-> 
-> Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
-Acked-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+From: Mark Einon <mark.einon@gmail.com>
 
+rt2x00link.c:70: ERROR: space prohibited before that close parenthesis ')'
+
+Signed-off-by: Mark Einon <mark.einon@gmail.com>
+Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
+---
+ drivers/net/wireless/rt2x00/rt2x00link.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
+
+diff --git a/drivers/net/wireless/rt2x00/rt2x00link.c b/drivers/net/wireless/rt2x00/rt2x00link.c
+index b971d87..bfda60e 100644
+--- a/drivers/net/wireless/rt2x00/rt2x00link.c
++++ b/drivers/net/wireless/rt2x00/rt2x00link.c
+@@ -67,7 +67,7 @@
+ 	    (__avg).avg_weight  ? \
+ 		((((__avg).avg_weight * ((AVG_SAMPLES) - 1)) + \
+ 		  ((__val) * (AVG_FACTOR))) / \
+-		 (AVG_SAMPLES) ) : \
++		 (AVG_SAMPLES)) : \
+ 		((__val) * (AVG_FACTOR)); \
+ 	__new.avg = __new.avg_weight / (AVG_FACTOR); \
+ 	__new; \
+-- 
+1.7.2.3
 
