@@ -1,57 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gx0-f174.google.com ([209.85.161.174]:43979 "EHLO
-	mail-gx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751039Ab0K0GV6 (ORCPT
+Received: from mail-ey0-f174.google.com ([209.85.215.174]:33441 "EHLO
+	mail-ey0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753143Ab0KFOtf (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 27 Nov 2010 01:21:58 -0500
-From: "Justin P. Mattock" <justinmattock@gmail.com>
-To: trivial@kernel.org
-Cc: linux-rdma@vger.kernel.org, linux-ide@vger.kernel.org,
-	linux-mtd@lists.infradead.org, linux-wireless@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	"Justin P. Mattock" <justinmattock@gmail.com>
-Subject: [RFC 4/9]drivers:ide Change the copyright info.
-Date: Fri, 26 Nov 2010 22:21:14 -0800
-Message-Id: <1290838879-11038-5-git-send-email-justinmattock@gmail.com>
-In-Reply-To: <1290838879-11038-1-git-send-email-justinmattock@gmail.com>
-References: <1290838879-11038-1-git-send-email-justinmattock@gmail.com>
+	Sat, 6 Nov 2010 10:49:35 -0400
+Received: by eye27 with SMTP id 27so2216256eye.19
+        for <linux-wireless@vger.kernel.org>; Sat, 06 Nov 2010 07:49:31 -0700 (PDT)
+From: Ivo van Doorn <ivdoorn@gmail.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Subject: [PATCH 01/18] rt2x00: checkpatch.pl error fixes for rt2400pci.h
+Date: Sat, 6 Nov 2010 15:44:00 +0100
+Cc: linux-wireless@vger.kernel.org
+MIME-Version: 1.0
+Content-Type: Text/Plain;
+  charset="us-ascii"
+Message-Id: <201011061544.00876.IvDoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Change the copyright info from Sun Microsystems to Oracle since Oracle now owns them.
+From: Mark Einon <mark.einon@gmail.com>
 
-Signed-off-by: Justin P. Mattock <justinmattock@gmail.com>
+rt2400pci.h:812: ERROR: space prohibited after that open parenthesis '('
+rt2400pci.h:812: ERROR: space prohibited before that close parenthesis ')'
+rt2400pci.h:813: ERROR: space prohibited after that open parenthesis '('
+rt2400pci.h:813: ERROR: space prohibited before that close parenthesis ')'
+rt2400pci.h:950: ERROR: Macros with complex values should be enclosed in parenthesis
 
+Signed-off-by: Mark Einon <mark.einon@gmail.com>
+Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
 ---
- drivers/ide/hpt366.c      |    2 +-
- drivers/ide/serverworks.c |    2 +-
- 2 files changed, 2 insertions(+), 2 deletions(-)
+ drivers/net/wireless/rt2x00/rt2400pci.h |    6 +++---
+ 1 files changed, 3 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/ide/hpt366.c b/drivers/ide/hpt366.c
-index 58c51cd..8e31cfa 100644
---- a/drivers/ide/hpt366.c
-+++ b/drivers/ide/hpt366.c
-@@ -1,6 +1,6 @@
+diff --git a/drivers/net/wireless/rt2x00/rt2400pci.h b/drivers/net/wireless/rt2x00/rt2400pci.h
+index c048b18..d3a4a68 100644
+--- a/drivers/net/wireless/rt2x00/rt2400pci.h
++++ b/drivers/net/wireless/rt2x00/rt2400pci.h
+@@ -809,8 +809,8 @@
  /*
-  * Copyright (C) 1999-2003		Andre Hedrick <andre@linux-ide.org>
-- * Portions Copyright (C) 2001	        Sun Microsystems, Inc.
-+ * Portions Copyright (C) 2001	        Oracle and/or its affiliates. 
-  * Portions Copyright (C) 2003		Red Hat Inc
-  * Portions Copyright (C) 2007		Bartlomiej Zolnierkiewicz
-  * Portions Copyright (C) 2005-2009	MontaVista Software, Inc.
-diff --git a/drivers/ide/serverworks.c b/drivers/ide/serverworks.c
-index 35fb8da..267c87e 100644
---- a/drivers/ide/serverworks.c
-+++ b/drivers/ide/serverworks.c
-@@ -3,7 +3,7 @@
-  * Copyright (C) 1998-2000 Andrzej Krzysztofowicz
-  * Copyright (C) 1998-2000 Andre Hedrick <andre@linux-ide.org>
-  * Copyright (C) 2007-2010 Bartlomiej Zolnierkiewicz
-- * Portions copyright (c) 2001 Sun Microsystems
-+ * Portions copyright (c) 2001 Oracle and/or its affiliates. 
-  *
-  *
-  * RCC/ServerWorks IDE driver for Linux
+  * DMA descriptor defines.
+  */
+-#define TXD_DESC_SIZE			( 8 * sizeof(__le32) )
+-#define RXD_DESC_SIZE			( 8 * sizeof(__le32) )
++#define TXD_DESC_SIZE			(8 * sizeof(__le32))
++#define RXD_DESC_SIZE			(8 * sizeof(__le32))
+ 
+ /*
+  * TX descriptor format for TX, PRIO, ATIM and Beacon Ring.
+@@ -948,6 +948,6 @@
+ 	((__CLAMP_TX(__txpower) - MAX_TXPOWER) + MIN_TXPOWER)
+ 
+ #define TXPOWER_TO_DEV(__txpower) \
+-	MAX_TXPOWER - (__CLAMP_TX(__txpower) - MIN_TXPOWER)
++	(MAX_TXPOWER - (__CLAMP_TX(__txpower) - MIN_TXPOWER))
+ 
+ #endif /* RT2400PCI_H */
 -- 
-1.7.1
+1.7.2.3
 
