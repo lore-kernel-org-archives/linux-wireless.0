@@ -1,116 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:53277 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750783Ab0KLHng (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 12 Nov 2010 02:43:36 -0500
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: Wey-Yi Guy <wey-yi.w.guy@intel.com>,
-	Intel Linux Wireless <ilw@linux.intel.com>
-Cc: linux-wireless@vger.kernel.org,
-	Stanislaw Gruszka <sgruszka@redhat.com>
-Subject: [PATCH 2/3] iwlagn: simplify iwlagn_tx_skb
-Date: Fri, 12 Nov 2010 08:47:06 +0100
-Message-Id: <1289548027-3383-2-git-send-email-sgruszka@redhat.com>
-In-Reply-To: <1289548027-3383-1-git-send-email-sgruszka@redhat.com>
-References: <1289548027-3383-1-git-send-email-sgruszka@redhat.com>
+Received: from mail-ey0-f174.google.com ([209.85.215.174]:33441 "EHLO
+	mail-ey0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754933Ab0KFOt4 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 6 Nov 2010 10:49:56 -0400
+Received: by mail-ey0-f174.google.com with SMTP id 27so2216256eye.19
+        for <linux-wireless@vger.kernel.org>; Sat, 06 Nov 2010 07:49:55 -0700 (PDT)
+From: Ivo van Doorn <ivdoorn@gmail.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Subject: [PATCH 14/18] rt2x00: checkpatch.pl error fixes for rt73usb.c
+Date: Sat, 6 Nov 2010 15:47:46 +0100
+Cc: linux-wireless@vger.kernel.org
+References: <201011061544.00876.IvDoorn@gmail.com> <201011061547.09763.IvDoorn@gmail.com> <201011061547.26776.IvDoorn@gmail.com>
+In-Reply-To: <201011061547.26776.IvDoorn@gmail.com>
+MIME-Version: 1.0
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Message-Id: <201011061547.46948.IvDoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-We can simplify length calculation in iwlagn_tx_skb, that function
-is enough complex, without fuzz it more than necessary.
+From: Mark Einon <mark.einon@gmail.com>
 
-Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+rt73usb.c:43: ERROR: do not initialise statics to 0 or NULL
+
+Signed-off-by: Mark Einon <mark.einon@gmail.com>
+Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
 ---
- drivers/net/wireless/iwlwifi/iwl-agn-tx.c |   33 ++++++++++------------------
- 1 files changed, 12 insertions(+), 21 deletions(-)
+ drivers/net/wireless/rt2x00/rt73usb.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-tx.c b/drivers/net/wireless/iwlwifi/iwl-agn-tx.c
-index 2b078a9..1205cec 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn-tx.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn-tx.c
-@@ -522,7 +522,7 @@ int iwlagn_tx_skb(struct iwl_priv *priv, struct sk_buff *skb)
- 	dma_addr_t phys_addr;
- 	dma_addr_t txcmd_phys;
- 	dma_addr_t scratch_phys;
--	u16 len, len_org, firstlen, secondlen;
-+	u16 len, firstlen, secondlen;
- 	u16 seq_number = 0;
- 	__le16 fc;
- 	u8 hdr_len;
-@@ -687,30 +687,23 @@ int iwlagn_tx_skb(struct iwl_priv *priv, struct sk_buff *skb)
- 	 */
- 	len = sizeof(struct iwl_tx_cmd) +
- 		sizeof(struct iwl_cmd_header) + hdr_len;
--
--	len_org = len;
--	firstlen = len = (len + 3) & ~3;
--
--	if (len_org != len)
--		len_org = 1;
--	else
--		len_org = 0;
-+	firstlen = (len + 3) & ~3;
+diff --git a/drivers/net/wireless/rt2x00/rt73usb.c b/drivers/net/wireless/rt2x00/rt73usb.c
+index dcb9211..29602b5 100644
+--- a/drivers/net/wireless/rt2x00/rt73usb.c
++++ b/drivers/net/wireless/rt2x00/rt73usb.c
+@@ -40,7 +40,7 @@
+ /*
+  * Allow hardware encryption to be disabled.
+  */
+-static int modparam_nohwcrypt = 0;
++static int modparam_nohwcrypt;
+ module_param_named(nohwcrypt, modparam_nohwcrypt, bool, S_IRUGO);
+ MODULE_PARM_DESC(nohwcrypt, "Disable hardware encryption.");
  
- 	/* Tell NIC about any 2-byte padding after MAC header */
--	if (len_org)
-+	if (firstlen != len)
- 		tx_cmd->tx_flags |= TX_CMD_FLG_MH_PAD_MSK;
- 
- 	/* Physical address of this Tx command's header (not MAC header!),
- 	 * within command buffer array. */
- 	txcmd_phys = pci_map_single(priv->pci_dev,
--				    &out_cmd->hdr, len,
-+				    &out_cmd->hdr, firstlen,
- 				    PCI_DMA_BIDIRECTIONAL);
- 	dma_unmap_addr_set(out_meta, mapping, txcmd_phys);
--	dma_unmap_len_set(out_meta, len, len);
-+	dma_unmap_len_set(out_meta, len, firstlen);
- 	/* Add buffer containing Tx command and MAC(!) header to TFD's
- 	 * first entry */
- 	priv->cfg->ops->lib->txq_attach_buf_to_tfd(priv, txq,
--						   txcmd_phys, len, 1, 0);
-+						   txcmd_phys, firstlen, 1, 0);
- 
- 	if (!ieee80211_has_morefrags(hdr->frame_control)) {
- 		txq->need_update = 1;
-@@ -721,23 +714,21 @@ int iwlagn_tx_skb(struct iwl_priv *priv, struct sk_buff *skb)
- 
- 	/* Set up TFD's 2nd entry to point directly to remainder of skb,
- 	 * if any (802.11 null frames have no payload). */
--	secondlen = len = skb->len - hdr_len;
--	if (len) {
-+	secondlen = skb->len - hdr_len;
-+	if (secondlen > 0) {
- 		phys_addr = pci_map_single(priv->pci_dev, skb->data + hdr_len,
--					   len, PCI_DMA_TODEVICE);
-+					   secondlen, PCI_DMA_TODEVICE);
- 		priv->cfg->ops->lib->txq_attach_buf_to_tfd(priv, txq,
--							   phys_addr, len,
-+							   phys_addr, secondlen,
- 							   0, 0);
- 	}
- 
- 	scratch_phys = txcmd_phys + sizeof(struct iwl_cmd_header) +
- 				offsetof(struct iwl_tx_cmd, scratch);
- 
--	len = sizeof(struct iwl_tx_cmd) +
--		sizeof(struct iwl_cmd_header) + hdr_len;
- 	/* take back ownership of DMA buffer to enable update */
- 	pci_dma_sync_single_for_cpu(priv->pci_dev, txcmd_phys,
--				    len, PCI_DMA_BIDIRECTIONAL);
-+				    firstlen, PCI_DMA_BIDIRECTIONAL);
- 	tx_cmd->dram_lsb_ptr = cpu_to_le32(scratch_phys);
- 	tx_cmd->dram_msb_ptr = iwl_get_dma_hi_addr(scratch_phys);
- 
-@@ -753,7 +744,7 @@ int iwlagn_tx_skb(struct iwl_priv *priv, struct sk_buff *skb)
- 						     le16_to_cpu(tx_cmd->len));
- 
- 	pci_dma_sync_single_for_device(priv->pci_dev, txcmd_phys,
--				       len, PCI_DMA_BIDIRECTIONAL);
-+				       firstlen, PCI_DMA_BIDIRECTIONAL);
- 
- 	trace_iwlwifi_dev_tx(priv,
- 			     &((struct iwl_tfd *)txq->tfds)[txq->q.write_ptr],
 -- 
-1.7.1
+1.7.2.3
 
