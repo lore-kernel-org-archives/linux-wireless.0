@@ -1,77 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:32698 "EHLO mga02.intel.com"
+Received: from purkki.adurom.net ([80.68.90.206]:43356 "EHLO purkki.adurom.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756455Ab0KYBib (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 24 Nov 2010 20:38:31 -0500
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-To: linville@tuxdriver.com
+	id S1751228Ab0KGK21 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 7 Nov 2010 05:28:27 -0500
+To: Grazvydas Ignotas <notasas@gmail.com>
 Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Subject: [PATCH 10/12] iwlagn: Offical name for 100/130 device
-Date: Wed, 24 Nov 2010 17:32:46 -0800
-Message-Id: <1290648768-10075-11-git-send-email-wey-yi.w.guy@intel.com>
-In-Reply-To: <1290648768-10075-1-git-send-email-wey-yi.w.guy@intel.com>
-References: <1290648768-10075-1-git-send-email-wey-yi.w.guy@intel.com>
+	"John W. Linville" <linville@tuxdriver.com>,
+	Tony Lindgren <tony@atomide.com>,
+	Ohad Ben-Cohen <ohad@wizery.com>, luciano.coelho@nokia.com
+Subject: Re: [PATCH 3/3] wl1251: use wl12xx_platform_data to pass data
+References: <1288822429-24541-1-git-send-email-notasas@gmail.com>
+	<1288822429-24541-4-git-send-email-notasas@gmail.com>
+From: Kalle Valo <kvalo@adurom.com>
+Date: Sun, 07 Nov 2010 12:28:19 +0200
+In-Reply-To: <1288822429-24541-4-git-send-email-notasas@gmail.com> (Grazvydas Ignotas's message of "Thu\,  4 Nov 2010 00\:13\:49 +0200")
+Message-ID: <874obtzauz.fsf@purkki.adurom.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Change to offical name for 100 devices:
-   "Intel(R) Centrino(R) Wireless-N 100"
+Grazvydas Ignotas <notasas@gmail.com> writes:
 
-Change to offical name for 130 devices:
-   "Intel(R) Centrino(R) Wireless-N 130"
+> Make use the newly added method to pass platform data for wl1251 too.
+> This allows to eliminate some redundant code.
+>
+> Cc: Tony Lindgren <tony@atomide.com>
+> Cc: Ohad Ben-Cohen <ohad@wizery.com>
+> Signed-off-by: Grazvydas Ignotas <notasas@gmail.com>
 
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-1000.c |    4 ++--
- drivers/net/wireless/iwlwifi/iwl-6000.c |    4 ++--
- 2 files changed, 4 insertions(+), 4 deletions(-)
+For the wl1251 part:
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-1000.c b/drivers/net/wireless/iwlwifi/iwl-1000.c
-index 9170120..fb3e371 100644
---- a/drivers/net/wireless/iwlwifi/iwl-1000.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-1000.c
-@@ -301,7 +301,7 @@ struct iwl_cfg iwl1000_bg_cfg = {
- };
- 
- struct iwl_cfg iwl100_bgn_cfg = {
--	.name = "Intel(R) 100 Series 1x1 BGN",
-+	.name = "Intel(R) Centrino(R) Wireless-N 100 BGN",
- 	.fw_name_pre = IWL100_FW_PRE,
- 	.ucode_api_max = IWL100_UCODE_API_MAX,
- 	.ucode_api_min = IWL100_UCODE_API_MIN,
-@@ -315,7 +315,7 @@ struct iwl_cfg iwl100_bgn_cfg = {
- };
- 
- struct iwl_cfg iwl100_bg_cfg = {
--	.name = "Intel(R) 100 Series 1x1 BG",
-+	.name = "Intel(R) Centrino(R) Wireless-N 100 BG",
- 	.fw_name_pre = IWL100_FW_PRE,
- 	.ucode_api_max = IWL100_UCODE_API_MAX,
- 	.ucode_api_min = IWL100_UCODE_API_MIN,
-diff --git a/drivers/net/wireless/iwlwifi/iwl-6000.c b/drivers/net/wireless/iwlwifi/iwl-6000.c
-index 3591dc8..ec41f27 100644
---- a/drivers/net/wireless/iwlwifi/iwl-6000.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-6000.c
-@@ -827,7 +827,7 @@ struct iwl_cfg iwl6000_3agn_cfg = {
- };
- 
- struct iwl_cfg iwl130_bgn_cfg = {
--	.name = "Intel(R) 130 Series 1x1 BGN",
-+	.name = "Intel(R) Centrino(R) Wireless-N 130 BGN",
- 	.fw_name_pre = IWL6000G2B_FW_PRE,
- 	.ucode_api_max = IWL6000G2_UCODE_API_MAX,
- 	.ucode_api_min = IWL6000G2_UCODE_API_MIN,
-@@ -846,7 +846,7 @@ struct iwl_cfg iwl130_bgn_cfg = {
- };
- 
- struct iwl_cfg iwl130_bg_cfg = {
--	.name = "Intel(R) 130 Series 1x2 BG",
-+	.name = "Intel(R) Centrino(R) Wireless-N 130 BG",
- 	.fw_name_pre = IWL6000G2B_FW_PRE,
- 	.ucode_api_max = IWL6000G2_UCODE_API_MAX,
- 	.ucode_api_min = IWL6000G2_UCODE_API_MIN,
+Acked-by: Kalle Valo <kvalo@adurom.com>
+
+> ---
+> This touches arch/arm/mach-omap2/* but I think it should go through
+> the wireless tree to avoid cross-tree dependencies, if Tony and others
+> are ok with this.
+
+I agree, better to push this through the wireless tree.
+
+>  arch/arm/mach-omap2/board-omap3pandora.c |   32 +++++++-------------------
+>  drivers/net/wireless/wl1251/sdio.c       |   35 +----------------------------
+>  drivers/net/wireless/wl12xx/Kconfig      |    2 +-
+
+We need to CC Luciano for the wl12xx change.
+
+> --- a/drivers/net/wireless/wl12xx/Kconfig
+> +++ b/drivers/net/wireless/wl12xx/Kconfig
+> @@ -42,5 +42,5 @@ config WL1271_SDIO
+>  
+>  config WL12XX_PLATFORM_DATA
+>  	bool
+> -	depends on WL1271_SDIO != n
+> +	depends on WL1271_SDIO != n || WL1251_SDIO != n
+>  	default y
+
+Oh, I didn't take this into account when I moved wl1251 out from the
+wl12xx directory. Now wl1251 has a dependency to wl12xx stuff. 
+
+Oh well, it's a small issue. I guess we can live with that :)
+
 -- 
-1.7.0.4
-
+Kalle Valo
