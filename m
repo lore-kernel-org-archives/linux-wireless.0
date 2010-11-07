@@ -1,43 +1,119 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f46.google.com ([209.85.215.46]:51935 "EHLO
-	mail-ew0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756335Ab0KWTWy (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 23 Nov 2010 14:22:54 -0500
-Received: by ewy5 with SMTP id 5so2667633ewy.19
-        for <linux-wireless@vger.kernel.org>; Tue, 23 Nov 2010 11:22:53 -0800 (PST)
-Date: Tue, 23 Nov 2010 21:21:50 +0200
-From: Nick Kossifidis <mickflemm@gmail.com>
-To: ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org
-Cc: linville@tuxdriver.com, me@bobcopeland.com, mcgrof@gmail.com,
-	jirislaby@gmail.com, nbd@openwrt.org, br1@einfach.org
-Subject: [PATCH 17/30] ath5k: Use turbo flag on DCU
-Message-ID: <20101123192150.GQ4303@makis.mantri>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: from shadbolt.e.decadent.org.uk ([88.96.1.126]:55450 "EHLO
+	shadbolt.e.decadent.org.uk" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752121Ab0KGRWt convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 7 Nov 2010 12:22:49 -0500
+From: Ben Hutchings <ben@decadent.org.uk>
+To: Greg Kroah-Hartman <gregkh@suse.de>
+Cc: Brett Rudley <brudley@broadcom.com>,
+	Henry Ptasinski <henryp@broadcom.com>,
+	Nohee Ko <noheek@broadcom.com>,
+	Johannes Berg <johannes.berg@intel.com>,
+	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org
+Content-Type: text/plain; charset="UTF-8"
+Date: Sun, 07 Nov 2010 17:22:41 +0000
+Message-ID: <1289150561.2816.75.camel@localhost>
+Mime-Version: 1.0
+Subject: [PATCH 3/5] Staging: Update parameters for cfg80211 key management
+ operation
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
- * Set AR5K_DCU_GBL_IFS_MISC_TURBO_MODE flag on DCU when operating
- on 40MHz
+Commit e31b82136d1adc7a599b6e99d3321e5831841f5a ("cfg80211/mac80211:
+allow per-station GTKs") changed the signatures of these operations
+but did not update the staging drivers.
 
- Signed-off-by: Nick Kossifidis <mickflemm@gmail.com>
+Signed-off-by: Ben Hutchings <ben@decadent.org.uk>
 ---
- drivers/net/wireless/ath/ath5k/qcu.c |    5 +++++
- 1 files changed, 5 insertions(+), 0 deletions(-)
+Compile-tested only.  This should be 2.6.37 material.
 
-diff --git a/drivers/net/wireless/ath/ath5k/qcu.c b/drivers/net/wireless/ath/ath5k/qcu.c
-index e13142a..69bff04 100644
---- a/drivers/net/wireless/ath/ath5k/qcu.c
-+++ b/drivers/net/wireless/ath/ath5k/qcu.c
-@@ -647,5 +647,10 @@ int ath5k_hw_init_queues(struct ath5k_hw *ah)
- 		 * on ath5k_hw_set_ifs_intervals */
- 		ath5k_hw_set_tx_retry_limits(ah, 0);
+Ben.
+
+ drivers/staging/brcm80211/brcmfmac/wl_cfg80211.c |   12 ++++++------
+ drivers/staging/wlan-ng/cfg80211.c               |    6 +++---
+ 2 files changed, 9 insertions(+), 9 deletions(-)
+
+diff --git a/drivers/staging/brcm80211/brcmfmac/wl_cfg80211.c b/drivers/staging/brcm80211/brcmfmac/wl_cfg80211.c
+index 3f29488..ea08252 100644
+--- a/drivers/staging/brcm80211/brcmfmac/wl_cfg80211.c
++++ b/drivers/staging/brcm80211/brcmfmac/wl_cfg80211.c
+@@ -95,12 +95,12 @@ static s32 wl_cfg80211_config_default_key(struct wiphy *wiphy,
+ 					    struct net_device *dev,
+ 					    u8 key_idx);
+ static s32 wl_cfg80211_add_key(struct wiphy *wiphy, struct net_device *dev,
+-				 u8 key_idx, const u8 *mac_addr,
++				 u8 key_idx, bool pairwise, const u8 *mac_addr,
+ 				 struct key_params *params);
+ static s32 wl_cfg80211_del_key(struct wiphy *wiphy, struct net_device *dev,
+-				 u8 key_idx, const u8 *mac_addr);
++				 u8 key_idx, bool pairwise, const u8 *mac_addr);
+ static s32 wl_cfg80211_get_key(struct wiphy *wiphy, struct net_device *dev,
+-				 u8 key_idx, const u8 *mac_addr,
++				 u8 key_idx, bool pairwise, const u8 *mac_addr,
+ 				 void *cookie, void (*callback) (void *cookie,
+ 								 struct
+ 								 key_params *
+@@ -1615,7 +1615,7 @@ wl_add_keyext(struct wiphy *wiphy, struct net_device *dev,
  
-+	/* Set the turbo flag when operating on 40MHz */
-+	if (ah->ah_bwmode == AR5K_BWMODE_40MHZ)
-+		AR5K_REG_ENABLE_BITS(ah, AR5K_DCU_GBL_IFS_MISC,
-+				AR5K_DCU_GBL_IFS_MISC_TURBO_MODE);
-+
- 	return 0;
+ static s32
+ wl_cfg80211_add_key(struct wiphy *wiphy, struct net_device *dev,
+-		    u8 key_idx, const u8 *mac_addr,
++		    u8 key_idx, bool pairwise, const u8 *mac_addr,
+ 		    struct key_params *params)
+ {
+ 	struct wl_wsec_key key;
+@@ -1700,7 +1700,7 @@ wl_cfg80211_add_key(struct wiphy *wiphy, struct net_device *dev,
+ 
+ static s32
+ wl_cfg80211_del_key(struct wiphy *wiphy, struct net_device *dev,
+-		    u8 key_idx, const u8 *mac_addr)
++		    u8 key_idx, bool pairwise, const u8 *mac_addr)
+ {
+ 	struct wl_wsec_key key;
+ 	s32 err = 0;
+@@ -1756,7 +1756,7 @@ wl_cfg80211_del_key(struct wiphy *wiphy, struct net_device *dev,
+ 
+ static s32
+ wl_cfg80211_get_key(struct wiphy *wiphy, struct net_device *dev,
+-		    u8 key_idx, const u8 *mac_addr, void *cookie,
++		    u8 key_idx, bool pairwise, const u8 *mac_addr, void *cookie,
+ 		    void (*callback) (void *cookie, struct key_params * params))
+ {
+ 	struct key_params params;
+diff --git a/drivers/staging/wlan-ng/cfg80211.c b/drivers/staging/wlan-ng/cfg80211.c
+index 4af83d5..6a71f52 100644
+--- a/drivers/staging/wlan-ng/cfg80211.c
++++ b/drivers/staging/wlan-ng/cfg80211.c
+@@ -139,7 +139,7 @@ exit:
  }
+ 
+ int prism2_add_key(struct wiphy *wiphy, struct net_device *dev,
+-		   u8 key_index, const u8 *mac_addr,
++		   u8 key_index, bool pairwise, const u8 *mac_addr,
+ 		   struct key_params *params)
+ {
+ 	wlandevice_t *wlandev = dev->ml_priv;
+@@ -198,7 +198,7 @@ exit:
+ }
+ 
+ int prism2_get_key(struct wiphy *wiphy, struct net_device *dev,
+-		   u8 key_index, const u8 *mac_addr, void *cookie,
++		   u8 key_index, bool pairwise, const u8 *mac_addr, void *cookie,
+ 		   void (*callback)(void *cookie, struct key_params*))
+ {
+ 	wlandevice_t *wlandev = dev->ml_priv;
+@@ -227,7 +227,7 @@ int prism2_get_key(struct wiphy *wiphy, struct net_device *dev,
+ }
+ 
+ int prism2_del_key(struct wiphy *wiphy, struct net_device *dev,
+-		   u8 key_index, const u8 *mac_addr)
++		   u8 key_index, bool pairwise, const u8 *mac_addr)
+ {
+ 	wlandevice_t *wlandev = dev->ml_priv;
+ 	u32 did;
+-- 
+1.7.2.3
+
+
+
