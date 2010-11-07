@@ -1,41 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pv0-f174.google.com ([74.125.83.174]:53092 "EHLO
-	mail-pv0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753284Ab0KHQCc (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 8 Nov 2010 11:02:32 -0500
-Message-ID: <4CD81EDD.1000309@gmail.com>
-Date: Mon, 08 Nov 2010 21:31:33 +0530
-From: Atul Sowani <sowani@gmail.com>
-Reply-To: sowani@gmail.com
+Received: from purkki.adurom.net ([80.68.90.206]:54673 "EHLO purkki.adurom.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751228Ab0KGKPd (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 7 Nov 2010 05:15:33 -0500
+To: Grazvydas Ignotas <notasas@gmail.com>
+Cc: linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>
+Subject: Re: [PATCH 1/3] wl1251: add power callback to wl1251_if_operations
+References: <1288822429-24541-1-git-send-email-notasas@gmail.com>
+	<1288822429-24541-2-git-send-email-notasas@gmail.com>
+From: Kalle Valo <kvalo@adurom.com>
+Date: Sun, 07 Nov 2010 12:15:31 +0200
+In-Reply-To: <1288822429-24541-2-git-send-email-notasas@gmail.com> (Grazvydas Ignotas's message of "Thu\,  4 Nov 2010 00\:13\:47 +0200")
+Message-ID: <87hbftzbgc.fsf@purkki.adurom.net>
 MIME-Version: 1.0
-To: johannes@sipsolutions.net
-CC: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH 2.6.36 1/1] mac80211: fix for tx.c compiler warnings.
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Added conditional compilation with CONFIG_MAC80211_MESH to avoid compile time
-warning about declared but unused variable.
+Grazvydas Ignotas <notasas@gmail.com> writes:
 
-Signed-off-by: Atul Sowani <sowani@gmail.com>
----
-diff -uprN a/net/mac80211/tx.c b/net/mac80211/tx.c
---- a/net/mac80211/tx.c	2010-10-21 02:00:22.000000000 +0530
-+++ b/net/mac80211/tx.c	2010-11-08 10:37:42.331750460 +0530
-@@ -1699,7 +1699,9 @@ netdev_tx_t ieee80211_subif_start_xmit(s
- 	u16 ethertype, hdrlen,  meshhdrlen = 0;
- 	__le16 fc;
- 	struct ieee80211_hdr hdr;
-+#ifdef CONFIG_MAC80211_MESH
- 	struct ieee80211s_hdr mesh_hdr;
-+#endif
- 	const u8 *encaps_data;
- 	int encaps_len, skip_header_bytes;
- 	int nh_pos, h_pos;
+> Call interface specific power callback before calling board specific
+> one. Also allow that callback to fail. This is how it's done for
+> wl1271 and will be used for runtime_pm support.
+
+Thanks, looks good to me.
+
+> Signed-off-by: Grazvydas Ignotas <notasas@gmail.com>
+
+Acked-by: Kalle Valo <kvalo@adurom.com>
 
 -- 
-Atul Sowani (sowani@gmail.com)
-http://savannah.gnu.org/users/atul
-------------------------------------------------------------------------
+Kalle Valo
