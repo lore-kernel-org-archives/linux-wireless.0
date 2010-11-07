@@ -1,34 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:46858 "EHLO nbd.name"
-	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1751008Ab0KMBuj (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 12 Nov 2010 20:50:39 -0500
-Message-ID: <4CDDEEEA.2030000@openwrt.org>
-Date: Sat, 13 Nov 2010 02:50:34 +0100
-From: Felix Fietkau <nbd@openwrt.org>
+Received: from web29507.mail.ird.yahoo.com ([77.238.189.134]:34255 "HELO
+	web29507.mail.ird.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1753999Ab0KGB3d convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 6 Nov 2010 21:29:33 -0400
+Message-ID: <873714.85933.qm@web29507.mail.ird.yahoo.com>
+Date: Sun, 7 Nov 2010 01:29:30 +0000 (GMT)
+From: Hin-Tak Leung <htl10@users.sourceforge.net>
+Reply-To: htl10@users.sourceforge.net
+Subject: Re: [PATCH 9/9] rtl8187: restore anaparam registers after reset with 8187B
+To: Thadeu Lima de Souza Cascardo <cascardo@holoscopio.com>,
+	Herton Ronaldo Krzesinski <herton@mandriva.com.br>
+Cc: linux-wireless@vger.kernel.org,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	John W Linville <linville@tuxdriver.com>,
+	seno <senada@t-online.de>
+In-Reply-To: <20101106230731.3524ae6b@mandriva.com.br>
 MIME-Version: 1.0
-To: Wojciech Dubowik <Wojciech.Dubowik@neratec.com>
-CC: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	lrodriguez@atheros.com
-Subject: Re: [PATCH v3 2/9] ath5k: Introduce ath5k_init_softc function as
- in ath9k
-References: <1289577459-4276-1-git-send-email-Wojciech.Dubowik@neratec.com> <1289577459-4276-3-git-send-email-Wojciech.Dubowik@neratec.com>
-In-Reply-To: <1289577459-4276-3-git-send-email-Wojciech.Dubowik@neratec.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2010-11-12 4:57 PM, Wojciech Dubowik wrote:
-> Split pci initialization into hardware specific
-> functions and softc structure initialization.
-> Make function naming similar to ones ath9k.
-> Introduce ath_bus_opts in ath5k for later
-> AHB bus integration.
-> 
-> From: Felix Fietkau <nbd@openwrt.org>
-> Signed-off-by: Felix Fietkau <nbd@openwrt.org>
-> Signed-off-by: Wojciech Dubowik <Wojciech.Dubowik@neratec.com>
-The 'From:' part only works if it's put in the first line of the message
-body.
+--- On Sun, 7/11/10, Herton Ronaldo Krzesinski <herton@mandriva.com.br> wrote:
 
-- Felix
+<snipped>
+> It's strange that with or without the patch you get too low
+> transfer
+> values. In this case we should have another bug with your
+> device. I don't
+> know now what could be happening, but first thing that I
+> thought is that
+> this could be related to antenna selection (and I'm curious
+> about analog
+> parameters on the eeprom of device too). Please try
+> following debug patch
+> and post results (also post what type of RTL8187 the driver
+> detects/prints
+> on kernel log too, may help). And if is something related
+> to antena selection,
+> try change the if condition on the patch and see if that
+> helps.
+<snipped>
+
+That reminds me - I have an "antenna diversity" patch dated "April 9 2009" on my desktop which I think I got off linux-wireless from somebody with a dual-antenna device, derived from scavenging from the vendor driver, I think, that we are supposed to do something about but I certainly haven't done anything about it. Did either/any of you look at that and/or remember having done anything about that patch? 
+
+
+
+      
