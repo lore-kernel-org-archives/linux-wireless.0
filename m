@@ -1,36 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:58262 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756298Ab0KPSG5 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 16 Nov 2010 13:06:57 -0500
-Subject: Re: [PATCH] mac80211:  Fix deadlock in ieee80211_do_stop.
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Tejun Heo <tj@kernel.org>
-Cc: Ben Greear <greearb@candelatech.com>,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <4CE292F7.4090200@kernel.org>
-References: <1289592426-5367-1-git-send-email-greearb@candelatech.com>
-	 <1289594998.3736.11.camel@jlt3.sipsolutions.net>
-	 <4CDDAA3B.9090007@candelatech.com>
-	 <1289596096.3736.13.camel@jlt3.sipsolutions.net>
-	 <4CDE699B.70401@kernel.org> <4CE1A344.7040201@candelatech.com>
-	 <4CE292F7.4090200@kernel.org>
+Received: from shadbolt.e.decadent.org.uk ([88.96.1.126]:37934 "EHLO
+	shadbolt.e.decadent.org.uk" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751609Ab0KGRUm convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 7 Nov 2010 12:20:42 -0500
+From: Ben Hutchings <ben@decadent.org.uk>
+To: Greg Kroah-Hartman <gregkh@suse.de>
+Cc: Brett Rudley <brudley@broadcom.com>,
+	Henry Ptasinski <henryp@broadcom.com>,
+	Nohee Ko <noheek@broadcom.com>, linux-wireless@vger.kernel.org,
+	devel@driverdev.osuosl.org
 Content-Type: text/plain; charset="UTF-8"
-Date: Tue, 16 Nov 2010 09:40:58 -0800
-Message-ID: <1289929258.3673.1.camel@jlt3.sipsolutions.net>
+Date: Sun, 07 Nov 2010 17:20:37 +0000
+Message-ID: <1289150437.2816.73.camel@localhost>
 Mime-Version: 1.0
+Subject: [PATCH 2/5] Staging: brcmfmac: Fix MAC header lookup on 64-bit
+ architectures
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2010-11-16 at 15:19 +0100, Tejun Heo wrote:
+Fix direct use of sk_buff::mac_header which is an offset rather
+than a pointer on 64-bit architectures.
 
-> 3. What if you replace it with the following?
-> 
->    alloc_workqueue(wiphy_name(local->hw.wiphy), WQ_NON_REENTRANT, 0)
+Signed-off-by: Ben Hutchings <ben@decadent.org.uk>
+---
+Compile-tested only.  This should be 2.6.37 material.
 
-Wait ... what's the difference between this and
-alloc_ordered_workqueue() then?
+Ben.
 
-johannes
+ drivers/staging/brcm80211/brcmfmac/dhd_linux.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
+
+diff --git a/drivers/staging/brcm80211/brcmfmac/dhd_linux.c b/drivers/staging/brcm80211/brcmfmac/dhd_linux.c
+index e535787..4218f87 100644
+--- a/drivers/staging/brcm80211/brcmfmac/dhd_linux.c
++++ b/drivers/staging/brcm80211/brcmfmac/dhd_linux.c
+@@ -1190,7 +1190,7 @@ void dhd_rx_frame(dhd_pub_t *dhdp, int ifidx, void *pktbuf, int numpkt)
+ 		/* Process special event packets and then discard them */
+ 		if (ntoh16(skb->protocol) == ETHER_TYPE_BRCM)
+ 			dhd_wl_host_event(dhd, &ifidx,
+-					  skb->mac_header,
++					  skb_mac_header(skb),
+ 					  &event, &data);
+ 
+ 		ASSERT(ifidx < DHD_MAX_IFS && dhd->iflist[ifidx]);
+-- 
+1.7.2.3
+
+
 
