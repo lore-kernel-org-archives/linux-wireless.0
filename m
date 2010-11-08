@@ -1,60 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yw0-f46.google.com ([209.85.213.46]:55463 "EHLO
+Received: from mail-yw0-f46.google.com ([209.85.213.46]:58589 "EHLO
 	mail-yw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753711Ab0K0XHu convert rfc822-to-8bit (ORCPT
+	with ESMTP id S1755568Ab0KHWOj (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 27 Nov 2010 18:07:50 -0500
+	Mon, 8 Nov 2010 17:14:39 -0500
+Received: by ywc21 with SMTP id 21so3788690ywc.19
+        for <linux-wireless@vger.kernel.org>; Mon, 08 Nov 2010 14:14:38 -0800 (PST)
 MIME-Version: 1.0
-In-Reply-To: <4CF18853.1000402@gmail.com>
-References: <1290838879-11038-1-git-send-email-justinmattock@gmail.com>
-	<adaoc9afout.fsf@cisco.com>
-	<4CF18853.1000402@gmail.com>
-Date: Sun, 28 Nov 2010 00:07:48 +0100
-Message-ID: <AANLkTi=BxGFjLV6fO7GbyedX1b3xnXKW4Ss=qNDOLDjy@mail.gmail.com>
-Subject: Re: [RFC 0/9] Change the copyright info.
-From: Miguel Ojeda <miguel.ojeda.sandonis@gmail.com>
-To: "Justin P. Mattock" <justinmattock@gmail.com>
-Cc: Roland Dreier <rdreier@cisco.com>, trivial@kernel.org,
-	linux-rdma@vger.kernel.org, linux-ide@vger.kernel.org,
-	linux-mtd@lists.infradead.org, linux-wireless@vger.kernel.org,
-	linux-kernel@vger.kernel.org
+From: Joerie de Gram <j.de.gram@gmail.com>
+Date: Mon, 8 Nov 2010 23:14:18 +0100
+Message-ID: <AANLkTikVZT-hQvr83bTkuVENe8jPSG=LNMw5NTwUXCp1@mail.gmail.com>
+Subject: wl1271 sdio timeouts on omap3
+To: linux-wireless@vger.kernel.org
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, Nov 27, 2010 at 11:38 PM, Justin P. Mattock
-<justinmattock@gmail.com> wrote:
-> On 11/27/2010 01:17 PM, Roland Dreier wrote:
->>
->>  >  Below you will find a set of patches, that update the copyright info
->> from
->>  >  Sun Microsystems to Oracle.
->>
->> Are you working for Oracle?  If so I would like to see these patches
->> with an @oracle.com signed-off-by address.  If not let's let the
->> companies involved sort out the copyrights.
->>
->>  - R.
->>
->
-> it's true what they say "you learn something new everyday".. in this case I
-> needed to be from the company in order too submit patches like this.(no
-> worries over here, let the companies sort out the copyrights(like what you
-> said))
+Hi,
 
-You can't change others' copyright, be it a company or not. AFAIK,
-what you can do is adding/changing/improving/copying/... the code (and
-add your own copyright for the changes if they are important enough);
-but you have to maintain the original copyright if you keep the code
-as is.
+I'm trying to get the wl1271 (sdio) driver running on an
+OMAP3430-based board. I've based my board support on the patches by
+Ohad Ben-Cohen for zoom2 and Luciano Coelho's beagleboard patches.
+However, I'm experiencing trouble bringing the interface up, getting a
+lockup in mmc_wait_for_req (called from wl1271_sdio_power_on). In 10%
+of my attempts the driver gets as far as uploading the firmware after
+which I'm getting similar SDIO timeouts.
 
->
-> cheers,
->
-> Justin P. Mattock
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> Please read the FAQ at  http://www.tux.org/lkml/
->
+I'm mostly unsure about my regulator config (relevant snippets below),
+having no wl1271 documentation to work with. The wl1271 is on mmc3,
+powered by twl4030 vsim. I assume the fixed regulator in [1] is just
+to be able to control the PMENA GPIO?
+
+Pin muxing aside, all changes are equal to those displayed in [1]. Is
+there anything I might be doing wrong wrt. the power-up sequence?
+
+[1]: https://patchwork.kernel.org/patch/201572/
+
+Joerie
+
+----------
+
+static struct regulator_consumer_supply nowplus_vsim_supply = {
+	.supply			= "vmmc",
+};
+
+
+static struct regulator_consumer_supply nowplus_wl1271_supply = {
+	.supply			= "vmmc_aux",
+	.dev_name		= "mmci-omap-hs.2",
+};
+
+
+/* VSIM for WiFi SDIO */
+static struct regulator_init_data nowplus_vsim = {
+	.constraints = {
+		.name			= "VSIM",
+		.min_uV			= 1800000,
+		.max_uV			= 1800000,
+		.apply_uV		= true,
+		.valid_modes_mask	= REGULATOR_MODE_NORMAL
+					| REGULATOR_MODE_STANDBY,
+		.valid_ops_mask		= REGULATOR_CHANGE_MODE
+					| REGULATOR_CHANGE_STATUS,
+	},
+	.num_consumer_supplies	= 1,
+	.consumer_supplies	= &nowplus_vsim_supply,
+};
+
+static struct regulator_init_data nowplus_wlgpio = {
+	.constraints = {
+		.valid_ops_mask = REGULATOR_CHANGE_STATUS,
+	},
+	.num_consumer_supplies	= 1,
+	.consumer_supplies	= &nowplus_wl1271_supply,
+};
