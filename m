@@ -1,66 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:64544 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750925Ab0K3NBx (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 30 Nov 2010 08:01:53 -0500
-Date: Tue, 30 Nov 2010 14:01:49 +0100
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Cc: Intel Linux Wireless <ilw@linux.intel.com>,
-	linux-wireless@vger.kernel.org
-Subject: Microcode SW error detected on current wireless-testing
-Message-ID: <20101130130148.GA3074@redhat.com>
+Received: from mail-gy0-f174.google.com ([209.85.160.174]:36145 "EHLO
+	mail-gy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755170Ab0KHVHJ convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 8 Nov 2010 16:07:09 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <201011082147.14170.rjw@sisk.pl>
+References: <201011052150.02245.rjw@sisk.pl> <20101105211931.GA1921@tux> <201011082147.14170.rjw@sisk.pl>
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Date: Mon, 8 Nov 2010 13:06:47 -0800
+Message-ID: <AANLkTikhQrk3aMJLLeeTmy9KJHd-H3xxFPNdUT9uJoD8@mail.gmail.com>
+Subject: Re: [Regression, post-2.6.35] ath9k occasionally drops out of PCI
+ config space
+To: "Rafael J. Wysocki" <rjw@sisk.pl>
+Cc: Luis Rodriguez <Luis.Rodriguez@atheros.com>,
+	Felix Fietkau <nbd@openwrt.org>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	LKML <linux-kernel@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi
+On Mon, Nov 8, 2010 at 12:47 PM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
+> On Friday, November 05, 2010, Luis R. Rodriguez wrote:
+>> On Fri, Nov 05, 2010 at 01:50:02PM -0700, Rafael J. Wysocki wrote:
+>> > Hi,
+>> >
+>> > For some time I've been experiencing a regression associated with ath9k
+>> > that occasionally it drops the connection with the AP and goes into a state
+>> > in which reading from its PCI config registers (as done by lspci) return all
+>> > ones.
+>> >
+>> > It may be sort of brought back to life by a suspend/resume afterwards, but
+>> > then the driver cannot really handle it and realoding the driver doesn't help
+>> > (probe fails).  Basically, full machine reboot is needed to revive the adapter.
+>> >
+>> > The device is:
+>> >
+>> > 09:00.0 Network controller: Atheros Communications Inc. AR928X Wireless Network Adapter (PCI-Express) (rev 01)
+>> >         Subsystem: Foxconn International, Inc. Device e01f
+>> >
+>> > and the kernel says:
+>> >
+>> > [    9.623217] ath9k 0000:09:00.0: PCI INT A -> GSI 19 (level, low) -> IRQ 19
+>> > [    9.631518] ath9k 0000:09:00.0: setting latency timer to 64
+>> > [   10.071497] ath: EEPROM regdomain: 0x65
+>> > [   10.071502] ath: EEPROM indicates we should expect a direct regpair map
+>> > [   10.071510] ath: Country alpha2 being used: 00
+>> > [   10.071514] ath: Regpair used: 0x65
+>> > [   10.096025] phy0: Selected rate control algorithm 'ath9k_rate_control'
+>> > [   10.097803] Registered led device: ath9k-phy0::radio
+>> > [   10.098035] Registered led device: ath9k-phy0::assoc
+>> > [   10.098249] Registered led device: ath9k-phy0::tx
+>> > [   10.098483] Registered led device: ath9k-phy0::rx
+>> > [   10.098496] phy0: Atheros AR9280 Rev:2 mem=0xffffc900017e0000, irq=19
+>> >
+>> > The issue is not really bisectable, because I'm unable to trigger it on demand
+>> > and it occurs approx. 1-2 times a day.  So, if you have any ideas what to test,
+>> > please let me know.
+>> >
+>> > It is not reproducible with the 2.6.35 kernel.
+>>
+>> Please try this patch.
+>
+> It _appears_ to help.  At least I haven't been able to reproduce the problem
+> since I applied it, which was on Saturday early in the morning.
+>
+> Still, I also haven't used wireless a lot since that time, because I've been
+> traveling mostly.
 
-Today pull on wireless testing caused this on my 4965 device (100%
-reproducible on my system, yesterday w-t does not have this).
+Thanks, please let us know when you are satisfied with this as a fix.
+Its going upstream so either way if you find you hit the issue just
+let us know.
 
-iwlagn 0000:40:00.0: Microcode SW error detected.  Restarting 0x82000000.
-iwlagn 0000:40:00.0: Loaded firmware version: 228.61.2.24
-iwlagn 0000:40:00.0: Start IWL Error Log Dump:
-iwlagn 0000:40:00.0: Status: 0x0002B3E4, count: 5
-iwlagn 0000:40:00.0: Desc                                  Time       data1      data2      line
-iwlagn 0000:40:00.0: SYSASSERT                    (0x0005) 0000851408 0x000000FF 0x00000000 578
-iwlagn 0000:40:00.0: pc      blink1  blink2  ilink1  ilink2  hcmd
-iwlagn 0000:40:00.0: 0x13AC0 0x13A36 0x13AD6 0x006DE 0x00000 0x44140080
-iwlagn 0000:40:00.0: FH register values:
-iwlagn 0000:40:00.0:         FH_RSCSR_CHNL0_STTS_WPTR_REG: 0X11a7cd00
-iwlagn 0000:40:00.0:        FH_RSCSR_CHNL0_RBDCB_BASE_REG: 0X0119e720
-iwlagn 0000:40:00.0:                  FH_RSCSR_CHNL0_WPTR: 0X00000060
-iwlagn 0000:40:00.0:         FH_MEM_RCSR_CHNL0_CONFIG_REG: 0X80819004
-iwlagn 0000:40:00.0:          FH_MEM_RSSR_SHARED_CTRL_REG: 0X0000003c
-iwlagn 0000:40:00.0:            FH_MEM_RSSR_RX_STATUS_REG: 0X07030000
-iwlagn 0000:40:00.0:    FH_MEM_RSSR_RX_ENABLE_ERR_IRQ2DRV: 0X00000000
-iwlagn 0000:40:00.0:                FH_TSSR_TX_STATUS_REG: 0X07ff0002
-iwlagn 0000:40:00.0:                 FH_TSSR_TX_ERROR_REG: 0X00000000
-iwlagn 0000:40:00.0: Start IWL Event Log Dump: display last 20 entries
-iwlagn 0000:40:00.0: EVT_LOGT:0000851099:0x781c3b6e:0450
-iwlagn 0000:40:00.0: EVT_LOGT:0000851103:0x7c233b6e:0450
-iwlagn 0000:40:00.0: EVT_LOGT:0000851105:0x7c1b3b6e:0450
-iwlagn 0000:40:00.0: EVT_LOGT:0000851109:0x80223b6e:0450
-iwlagn 0000:40:00.0: EVT_LOGT:0000851111:0x801b3b6e:0450
-iwlagn 0000:40:00.0: EVT_LOGT:0000851115:0x84213b6e:0450
-iwlagn 0000:40:00.0: EVT_LOGT:0000851117:0x841b3b6e:0450
-iwlagn 0000:40:00.0: EVT_LOGT:0000851121:0x88223b6e:0450
-iwlagn 0000:40:00.0: EVT_LOGT:0000851123:0x881a3b6e:0450
-iwlagn 0000:40:00.0: EVT_LOGT:0000851128:0x8c213b6e:0450
-iwlagn 0000:40:00.0: EVT_LOGT:0000851130:0x8c193b6e:0450
-iwlagn 0000:40:00.0: EVT_LOGT:0000851132:0x0000007f:0601
-iwlagn 0000:40:00.0: EVT_LOGT:0000851138:0x00000100:0706
-iwlagn 0000:40:00.0: EVT_LOGT:0000851140:0x00000000:0708
-iwlagn 0000:40:00.0: EVT_LOGT:0000851143:0x01000300:0706
-iwlagn 0000:40:00.0: EVT_LOGT:0000851145:0x01000300:0725
-iwlagn 0000:40:00.0: EVT_LOGT:0000851146:0x00000000:0710
-iwlagn 0000:40:00.0: EVT_LOGT:0000851148:0x00000024:0729
-iwlagn 0000:40:00.0: EVT_LOGT:0000851149:0x000cfccc:0729
-iwlagn 0000:40:00.0: EVT_LOGT:0000851411:0x00000000:0125
-iwlagn 0000:40:00.0: Command REPLY_SCAN_CMD failed: FW Error
-
-Is Intel aware of that problem? Should I bisect it?
-
-Stanislaw
+  Luis
