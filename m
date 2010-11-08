@@ -1,52 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.19.149.2]:24992 "EHLO mail.atheros.com"
+Received: from mail.sysgo.com ([195.145.229.155]:40848 "EHLO mail.sysgo.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753918Ab0KJMNz (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 10 Nov 2010 07:13:55 -0500
-Received: from mail.atheros.com ([10.10.20.105])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Wed, 10 Nov 2010 04:13:42 -0800
-From: Rajkumar Manoharan <rmanoharan@atheros.com>
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>,
-	Rajkumar Manoharan <rmanoharan@atheros.com>,
-	<stable@kernel.org>
-Subject: [PATCH v2 1/3] ath9k_htc: Update usb device ID list
-Date: Wed, 10 Nov 2010 17:51:24 +0530
-Message-ID: <1289391686-27632-1-git-send-email-rmanoharan@atheros.com>
+	id S1752035Ab0KHHT3 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 8 Nov 2010 02:19:29 -0500
+Date: Mon, 8 Nov 2010 08:19:37 +0100
+From: Pavel Machek <pma@sysgo.com>
+To: Christian Lamparter <chunkeey@googlemail.com>
+Cc: Larry Finger <Larry.Finger@lwfinger.net>,
+	linux-wireless@vger.kernel.org,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Josh Lehan <krellan@krellan.com>
+Subject: Re: working usb wifi card, that is still possible to buy
+Message-ID: <20101108071937.GA13817@pma.sysgo.com>
+References: <20101103092431.GA21138@pma.sysgo.com>
+ <ff5cf9bdd23aa256b379521d4c4263d8@localhost>
+ <4CD46524.5010100@lwfinger.net>
+ <201011061143.12038.chunkeey@googlemail.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <201011061143.12038.chunkeey@googlemail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Added new VID/PIDs into supported devices list
+Hi!
 
-Cc: stable@kernel.org
-Signed-off-by: Rajkumar Manoharan <rmanoharan@atheros.com>
----
-v2: Cc'd stable kernel
+> > >> The Realtek RTL8712 (aka RTL8192U) and found in the D-Link DWA 130, has
+> > > a
+> > >> driver
+> > >> in 2.6.37 (r8712u). Although not based on mac80211, thus found in
+> > > staging,
+> > >> the
+> > >> driver is extremely stable - my connection never drops out. With an
+> > > 802.11n
+> > >> router, I get transmission throughput of up to 70 Mb/s.
+> > > 
+> > > That definitely requires USB 2 though, and I suspect that
+> > > nobody actually ever tests their devices on a 1.1 only
+> > > controller like Pavel was asking for.
+> > 
+> > I have tested on 1.1 and it works. The rate mechanism of that non-mac80211
+> > driver ends up at 54M with a maximum transmission rate of 7.1 Mb/s. That must be
+> > the maximum that USB 1.1 can handle.
+> 
+> heh, be careful with what you're saying. He has problems
+> with not just one, but two completely different devices.
+> So r8712u might work perfectly well for you and your 1.1
+> USB hcd. But from the logs he posted I think it's not
+> just a wacky driver or firmware "problem".
 
- drivers/net/wireless/ath/ath9k/hif_usb.c |    5 +++++
- 1 files changed, 5 insertions(+), 0 deletions(-)
+Okay, so in the meantime, I found a reason why AirLive card did not
+work properly. Cable supplied with DLink card had borderline connector
+:-(.
 
-diff --git a/drivers/net/wireless/ath/ath9k/hif_usb.c b/drivers/net/wireless/ath/ath9k/hif_usb.c
-index f7ec31b..0e12277 100644
---- a/drivers/net/wireless/ath/ath9k/hif_usb.c
-+++ b/drivers/net/wireless/ath/ath9k/hif_usb.c
-@@ -36,8 +36,13 @@ static struct usb_device_id ath9k_hif_usb_ids[] = {
- 	{ USB_DEVICE(0x13D3, 0x3327) }, /* Azurewave */
- 	{ USB_DEVICE(0x13D3, 0x3328) }, /* Azurewave */
- 	{ USB_DEVICE(0x13D3, 0x3346) }, /* IMC Networks */
-+	{ USB_DEVICE(0x13D3, 0x3348) }, /* Azurewave */
-+	{ USB_DEVICE(0x13D3, 0x3349) }, /* Azurewave */
-+	{ USB_DEVICE(0x13D3, 0x3350) }, /* Azurewave */
- 	{ USB_DEVICE(0x04CA, 0x4605) }, /* Liteon */
- 	{ USB_DEVICE(0x083A, 0xA704) }, /* SMC Networks */
-+	{ USB_DEVICE(0x040D, 0x3801) }, /* VIA */
-+	{ USB_DEVICE(0x1668, 0x1200) }, /* Verizon */
- 	{ },
- };
- 
--- 
-1.7.3.2
+AirLive (rt2800) card is actually stable, even on USB 1.1 -- it
+survived overnight testing.
 
+I still got around 5% packet loss -- it seems every minute or so
+connection fails for few seconds -- but TCP connection survived
+overnight, doing ~1MB/sec all the time.
+
+So AirLive card works here.
+							Pavel
