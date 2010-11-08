@@ -1,125 +1,142 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.19.149.2]:44588 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754264Ab0KZRzO (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 26 Nov 2010 12:55:14 -0500
-Received: from mail.atheros.com ([10.10.20.105])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Fri, 26 Nov 2010 09:55:00 -0800
-From: Rajkumar Manoharan <rmanoharan@atheros.com>
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>,
-	Rajkumar Manoharan <rmanoharan@atheros.com>
-Subject: [PATCH 3/3] Revert "ath9k_htc: Handle monitor mode properly for HTC devices"
-Date: Fri, 26 Nov 2010 23:24:33 +0530
-Message-ID: <1290794073-5309-3-git-send-email-rmanoharan@atheros.com>
-In-Reply-To: <1290794073-5309-1-git-send-email-rmanoharan@atheros.com>
-References: <1290794073-5309-1-git-send-email-rmanoharan@atheros.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from mail-fx0-f46.google.com ([209.85.161.46]:38062 "EHLO
+	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754266Ab0KHNaH (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 8 Nov 2010 08:30:07 -0500
+Received: by fxm16 with SMTP id 16so3971185fxm.19
+        for <linux-wireless@vger.kernel.org>; Mon, 08 Nov 2010 05:30:06 -0800 (PST)
+From: Grazvydas Ignotas <notasas@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: Kalle Valo <kvalo@adurom.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Grazvydas Ignotas <notasas@gmail.com>,
+	Ohad Ben-Cohen <ohad@wizery.com>
+Subject: [PATCHv2 2/3] wl1251: add runtime PM support for SDIO
+Date: Mon,  8 Nov 2010 15:29:36 +0200
+Message-Id: <1289222976-19793-1-git-send-email-notasas@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This reverts commit 446fad5a5b6be765c8ec39bfdbbc6c7aa63fbcbb.
+Add runtime PM support, similar to how it's done for wl1271.
+This allows to power down the card when the driver is loaded but
+network is not in use.
 
-The change had broken the packet injection on monitoring mode.
-
-Signed-off-by: Rajkumar Manoharan <rmanoharan@atheros.com>
+Cc: Ohad Ben-Cohen <ohad@wizery.com>
+Signed-off-by: Grazvydas Ignotas <notasas@gmail.com>
 ---
- drivers/net/wireless/ath/ath9k/htc_drv_main.c |   64 +++++++++++++++++++++++--
- 1 files changed, 59 insertions(+), 5 deletions(-)
+ drivers/net/wireless/wl1251/sdio.c |   64 ++++++++++++++++++++++++++++++++++--
+ 1 files changed, 61 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_main.c b/drivers/net/wireless/ath/ath9k/htc_drv_main.c
-index e9761c2..8266ce1 100644
---- a/drivers/net/wireless/ath/ath9k/htc_drv_main.c
-+++ b/drivers/net/wireless/ath/ath9k/htc_drv_main.c
-@@ -184,6 +184,47 @@ err:
- 	return ret;
+diff --git a/drivers/net/wireless/wl1251/sdio.c b/drivers/net/wireless/wl1251/sdio.c
+index 0285190..f3e185e 100644
+--- a/drivers/net/wireless/wl1251/sdio.c
++++ b/drivers/net/wireless/wl1251/sdio.c
+@@ -26,6 +26,7 @@
+ #include <linux/platform_device.h>
+ #include <linux/wl12xx.h>
+ #include <linux/irq.h>
++#include <linux/pm_runtime.h>
+ 
+ #include "wl1251.h"
+ 
+@@ -173,10 +174,40 @@ static void wl1251_disable_line_irq(struct wl1251 *wl)
+ 
+ static int wl1251_sdio_set_power(struct wl1251 *wl, bool enable)
+ {
+-	if (wl->set_power)
+-		wl->set_power(enable);
++	struct sdio_func *func = wl_to_func(wl);
++	int ret;
+ 
+-	return 0;
++	if (enable) {
++		/*
++		 * Power is controlled by runtime PM, but we still call board
++		 * callback in case it wants to do any additional setup,
++		 * for example enabling clock buffer for the module.
++		 */
++		if (wl->set_power)
++			wl->set_power(true);
++
++		ret = pm_runtime_get_sync(&func->dev);
++		if (ret < 0)
++			goto out;
++
++		sdio_claim_host(func);
++		sdio_enable_func(func);
++		sdio_release_host(func);
++	} else {
++		sdio_claim_host(func);
++		sdio_disable_func(func);
++		sdio_release_host(func);
++
++		ret = pm_runtime_put_sync(&func->dev);
++		if (ret < 0)
++			goto out;
++
++		if (wl->set_power)
++			wl->set_power(false);
++	}
++
++out:
++	return ret;
  }
  
-+static int ath9k_htc_add_monitor_interface(struct ath9k_htc_priv *priv)
+ static struct wl1251_if_operations wl1251_sdio_ops = {
+@@ -277,6 +308,10 @@ static int wl1251_sdio_probe(struct sdio_func *func,
+ 		goto out_free_irq;
+ 
+ 	sdio_set_drvdata(func, wl);
++
++	/* Tell PM core that we don't need the card to be powered now */
++	pm_runtime_put_noidle(&func->dev);
++
+ 	return ret;
+ 
+ out_free_irq:
+@@ -298,6 +333,9 @@ static void __devexit wl1251_sdio_remove(struct sdio_func *func)
+ 	struct wl1251 *wl = sdio_get_drvdata(func);
+ 	struct wl1251_sdio *wl_sdio = wl->if_priv;
+ 
++	/* Undo decrement done above in wl1251_probe */
++	pm_runtime_get_noresume(&func->dev);
++
+ 	if (wl->irq)
+ 		free_irq(wl->irq, wl);
+ 	kfree(wl_sdio);
+@@ -309,11 +347,31 @@ static void __devexit wl1251_sdio_remove(struct sdio_func *func)
+ 	sdio_release_host(func);
+ }
+ 
++static int wl1251_suspend(struct device *dev)
 +{
-+	struct ath_common *common = ath9k_hw_common(priv->ah);
-+	struct ath9k_htc_target_vif hvif;
-+	int ret = 0;
-+	u8 cmd_rsp;
-+
-+	if (priv->nvifs > 0)
-+		return -ENOBUFS;
-+
-+	memset(&hvif, 0, sizeof(struct ath9k_htc_target_vif));
-+	memcpy(&hvif.myaddr, common->macaddr, ETH_ALEN);
-+
-+	hvif.opmode = cpu_to_be32(HTC_M_MONITOR);
-+	priv->ah->opmode = NL80211_IFTYPE_MONITOR;
-+	hvif.index = priv->nvifs;
-+
-+	WMI_CMD_BUF(WMI_VAP_CREATE_CMDID, &hvif);
-+	if (ret)
-+		return ret;
-+
-+	priv->nvifs++;
++	/*
++	 * Tell MMC/SDIO core it's OK to power down the card
++	 * (if it isn't already), but not to remove it completely.
++	 */
 +	return 0;
 +}
 +
-+static int ath9k_htc_remove_monitor_interface(struct ath9k_htc_priv *priv)
++static int wl1251_resume(struct device *dev)
 +{
-+	struct ath_common *common = ath9k_hw_common(priv->ah);
-+	struct ath9k_htc_target_vif hvif;
-+	int ret = 0;
-+	u8 cmd_rsp;
-+
-+	memset(&hvif, 0, sizeof(struct ath9k_htc_target_vif));
-+	memcpy(&hvif.myaddr, common->macaddr, ETH_ALEN);
-+	hvif.index = 0; /* Should do for now */
-+	WMI_CMD_BUF(WMI_VAP_REMOVE_CMDID, &hvif);
-+	priv->nvifs--;
-+
-+	return ret;
++	return 0;
 +}
 +
- static int ath9k_htc_add_station(struct ath9k_htc_priv *priv,
- 				 struct ieee80211_vif *vif,
- 				 struct ieee80211_sta *sta)
-@@ -1199,6 +1240,16 @@ static void ath9k_htc_stop(struct ieee80211_hw *hw)
- 	WMI_CMD(WMI_STOP_RECV_CMDID);
- 	skb_queue_purge(&priv->tx_queue);
- 
-+	/* Remove monitor interface here */
-+	if (ah->opmode == NL80211_IFTYPE_MONITOR) {
-+		if (ath9k_htc_remove_monitor_interface(priv))
-+			ath_print(common, ATH_DBG_FATAL,
-+				  "Unable to remove monitor interface\n");
-+		else
-+			ath_print(common, ATH_DBG_CONFIG,
-+				  "Monitor interface removed\n");
-+	}
++static const struct dev_pm_ops wl1251_sdio_pm_ops = {
++	.suspend        = wl1251_suspend,
++	.resume         = wl1251_resume,
++};
 +
- 	if (ah->btcoex_hw.enabled) {
- 		ath9k_hw_btcoex_disable(ah);
- 		if (ah->btcoex_hw.scheme == ATH_BTCOEX_CFG_3WIRE)
-@@ -1372,13 +1423,16 @@ static int ath9k_htc_config(struct ieee80211_hw *hw, u32 changed)
- 		}
- 	}
+ static struct sdio_driver wl1251_sdio_driver = {
+ 	.name		= "wl1251_sdio",
+ 	.id_table	= wl1251_devices,
+ 	.probe		= wl1251_sdio_probe,
+ 	.remove		= __devexit_p(wl1251_sdio_remove),
++	.drv.pm		= &wl1251_sdio_pm_ops,
+ };
  
--	if (changed & IEEE80211_CONF_CHANGE_MONITOR)
-+	if (changed & IEEE80211_CONF_CHANGE_MONITOR) {
- 		if (conf->flags & IEEE80211_CONF_MONITOR) {
--			ath_print(common, ATH_DBG_CONFIG,
--				  "HW opmode set to Monitor mode\n");
--			priv->ah->opmode = NL80211_IFTYPE_MONITOR;
-+			if (ath9k_htc_add_monitor_interface(priv))
-+				ath_print(common, ATH_DBG_FATAL,
-+					  "Failed to set monitor mode\n");
-+			else
-+				ath_print(common, ATH_DBG_CONFIG,
-+					  "HW opmode set to Monitor mode\n");
- 		}
--
-+	}
- 
- 	if (changed & IEEE80211_CONF_CHANGE_IDLE) {
- 		mutex_lock(&priv->htc_pm_lock);
+ static int __init wl1251_sdio_init(void)
 -- 
-1.7.3.2
+1.6.3.3
 
