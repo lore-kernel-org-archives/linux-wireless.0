@@ -1,72 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 128-177-27-249.ip.openhosting.com ([128.177.27.249]:33660 "EHLO
-	jmalinen.user.openhosting.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753395Ab0KZJs7 (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:44901 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755434Ab0KHVo7 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 26 Nov 2010 04:48:59 -0500
-Date: Fri, 26 Nov 2010 11:48:47 +0200
-From: Jouni Malinen <j@w1.fi>
-To: Wolfgang Breyha <wbreyha@gmx.net>
-Cc: Helmut Schaa <helmut.schaa@googlemail.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: Linux Client vs. CISCO AP with band select
-Message-ID: <20101126094847.GA28425@jm.kir.nu>
-References: <4CE6EA98.3020300@gmx.net>
- <20101120112753.GA12225@jm.kir.nu>
- <201011201304.48821.helmut.schaa@googlemail.com>
- <4CEBE834.9000303@gmx.net>
- <20101125211857.GB6907@jm.kir.nu>
- <4CEEF03A.1000608@gmx.net>
+	Mon, 8 Nov 2010 16:44:59 -0500
+Date: Mon, 8 Nov 2010 16:33:44 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: Randy Dunlap <randy.dunlap@oracle.com>,
+	Pavel Roskin <proski@gnu.org>, linux-wireless@vger.kernel.org,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+Subject: Re: Linux 2.6.37-rc1 (libipw remove_proc_entry warning)
+Message-ID: <20101108213343.GC2310@tuxdriver.com>
+References: <AANLkTimr3rW67HxgOUyReEW8dmmSsd4b7-Ns57mXzS1w@mail.gmail.com>
+ <20101103161837.fad11d79.randy.dunlap@oracle.com>
+ <AANLkTimnHFHJq13xpJ0ZgLmpd+cHmHH5sQ4HWtL_MrMT@mail.gmail.com>
+ <4CD48E04.2050709@oracle.com>
+ <AANLkTik80AuVEefHwccB81WPdT4UPfTSjQdG-3Yq17e7@mail.gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <4CEEF03A.1000608@gmx.net>
+In-Reply-To: <AANLkTik80AuVEefHwccB81WPdT4UPfTSjQdG-3Yq17e7@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Nov 26, 2010 at 12:24:42AM +0100, Wolfgang Breyha wrote:
-> I did some more tests meanwhile. After hacking mac80211 to not send the
-> direct probe I was able to connect to 2.4GHz again as I already noted. What
-> I didn't recognize initially was that the AP responded to probes afterwards
-> for some time. But after a short time (0-5 Minutes) it stopped responding
-> again. I think that's the way load balancing works with CISCO APs.
+On Fri, Nov 05, 2010 at 04:38:14PM -0700, Linus Torvalds wrote:
+> On Fri, Nov 5, 2010 at 4:06 PM, Randy Dunlap <randy.dunlap@oracle.com> wrote:
+> > On 11/05/10 15:24, Linus Torvalds wrote:
+> >>
+> >> Totally UNTESTED patch attached. It may or may not compile. And maybe
+> >> it doesn't catch all cases, but it should catch the obvious ones.
+> >
+> > That works for me.
+> >
+> > Tested-by: Randy Dunlap <randy.dunlap@oracle.com>
+> 
+> Goodie. Pavel, John - feel free to add my sign-off on that patch. Make
+> up a relevant commit message. Ok?
 
-Interesting.. I'm not sure whether that would get many stations leaving
-the current AP, so there may be other more aggressive options that the
-AP ends up using in the end, though. I think that mac80211 was just
-modified to use another AP probing mechanism (data nullfunc instead of
-Probe Request), so mac80211-based drivers may not react to the probe
-response changes while associated anymore.
+In the queue...
 
-> wpa_supplicant deauthenticates then with "due to inactivity" and blacklists
-> the AP. And this is another case in which the same AP is tried again at the
-> next reconnect attempt because the blacklist count reaches only 1 in
-> events.c:wpa_supplicant_event_disassoc():1298
->         e = wpa_blacklist_get(wpa_s, bss->bssid);
->         if (e && e->count > 1) {
->                 wpa_printf(MSG_DEBUG, "   skip - blacklisted");
+commit 269e2d77b82d92d8dad543a2375e74372e9d773e
+Author: Linus Torvalds <torvalds@linux-foundation.org>
+Date:   Mon Nov 8 16:27:12 2010 -0500
 
-> to "e->count >= 1" and had better results since a BSSID is never tried
-> again in the following retry. But your commitdiffs let me guess that it is
-> wanted in some other cases I'm not aware of.
+    libipw: fix proc entry removal
+    
+    This bug seems to be due to commit 27ae60f8f7aac ("ipw2x00: replace
+    "ieee80211" with "libipw" where appropriate"), where Pavel did this:
+    
+    -       libipw_proc = proc_mkdir(DRV_NAME, init_net.proc_net);
+    +       libipw_proc = proc_mkdir("ieee80211", init_net.proc_net);
+    
+    but then the cleanup was kept as
+    
+            remove_proc_entry(DRV_NAME, init_net.proc_net);
+    
+    in both places (both in the failure case and in the unload case). The
+    error string is also total crap, and says
+    
+         "Unable to create " DRV_NAME " proc directory\n");
+    
+    Even though it doesn't actually create a proc directory named DRV_NAME at all.
+    
+    So that patch looks like total and utter crap to me. The commit message says
+    
+      "Keep /proc/net/ieee80211 under the original name to avoid breaking user
+        interface."
+    
+    but the thing is, it really didn't fix anything but that one create
+    thing. It needs to fix all the other cases too.
+    
+    Signed-off-by: Linus Torvalds <torvalds@linux-foundation.org>
+    Tested-by: Randy Dunlap <randy.dunlap@oracle.com>
+    Signed-off-by: John W. Linville <linville@tuxdriver.com>
 
-Yes, but that only applies for the case where more than a single network
-configuration block is enabled. I changed wpa_supplicant to change
-between 0 and 1 in this check based on the number of enabled networks.
-In addition, I extended the optimized scan after auth/assoc failure
-mechanism to apply for the disconnection event, too. That should speed
-up recovery from this type of situation quite a bit.
-
-> Last but not least I talked to my college some days ago and he told me that
-> "band select" is not a feature he needs desperately. But "load balancing"
-> is indeed needed for our large audiences with up to 750 people. If the
-> decision is left to the clients alone some APs are pretty overcrowded very
-> fast.
-
-Could you please send me a wireless capture log with some of the Beacon
-and Probe Response frames from those APs? I would like to see what kind
-of information they advertise and whether there would be anything worth
-using in BSS selection to avoid being kicked off from the network based
-on more aggressive load balancing mechanisms.
-
+Sorry for the delay -- I'm not a good traveler!
 -- 
-Jouni Malinen                                            PGP id EFC895FA
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
