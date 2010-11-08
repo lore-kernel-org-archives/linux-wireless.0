@@ -1,66 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f46.google.com ([209.85.215.46]:61775 "EHLO
-	mail-ew0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752522Ab0KDTn4 (ORCPT
+Received: from mga11.intel.com ([192.55.52.93]:3233 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751069Ab0KHWBb convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 4 Nov 2010 15:43:56 -0400
-Received: by mail-ew0-f46.google.com with SMTP id 7so1281934ewy.19
-        for <linux-wireless@vger.kernel.org>; Thu, 04 Nov 2010 12:43:56 -0700 (PDT)
-From: Ivo van Doorn <ivdoorn@gmail.com>
-To: linux-wireless@vger.kernel.org
-Subject: [PATCH 10/13] rt2x00: Fix MCU_SLEEP arguments
-Date: Thu, 4 Nov 2010 20:40:46 +0100
-Cc: Helmut Schaa <helmut.schaa@googlemail.com>
-References: <201011042037.00178.IvDoorn@gmail.com> <201011042039.49521.IvDoorn@gmail.com> <201011042040.12419.IvDoorn@gmail.com>
-In-Reply-To: <201011042040.12419.IvDoorn@gmail.com>
+	Mon, 8 Nov 2010 17:01:31 -0500
+From: "Berg, Johannes" <johannes.berg@intel.com>
+To: Andi Kleen <andi@firstfloor.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+CC: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Andi Kleen <ak@linux.intel.com>,
+	"Guy, Wey-Yi W" <wey-yi.w.guy@intel.com>
+Date: Mon, 8 Nov 2010 22:01:11 +0000
+Subject: RE: [PATCH] iwl3945: Fix oops at module load
+Message-ID: <C5C86A19469DAE48AAAD0E5F3716E44501D40EE169@irsmsx504.ger.corp.intel.com>
+References: <1289253271-19981-1-git-send-email-andi@firstfloor.org>
+In-Reply-To: <1289253271-19981-1-git-send-email-andi@firstfloor.org>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Message-Id: <201011042040.47235.IvDoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Legacy driver uses 0xff as the second argument for the MCU_SLEEP
-command. It is still unknown what the values actually mean, but
-this will at least keep the command in-sync with the original
-driver.
+> From: Andi Kleen <ak@linux.intel.com>
+> 
+> On my laptop the iwl3945 driver oopsed at boot with 2.6.37-rc1
+> in __dev_printk.
+> 
+> The problem is that for some reason it prints the sw scan
+> warning, but does that before the pci device is initialized
+> in the driver private structure. This leads to an oops
+> in the warning print code.
+> 
+> Move the warning after the device has been initialized.
 
-Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
-Acked-by: Gertjan van Wingerde <gwingerde@gmail.com>
----
- drivers/net/wireless/rt2x00/rt2800pci.c |    2 +-
- drivers/net/wireless/rt2x00/rt2800usb.c |    4 ++--
- 2 files changed, 3 insertions(+), 3 deletions(-)
+Yup, something like this is needed, sorry about this!
+I believe we have a fix for this in the pipeline somewhere.
 
-diff --git a/drivers/net/wireless/rt2x00/rt2800pci.c b/drivers/net/wireless/rt2x00/rt2800pci.c
-index 6dc61b7..1db0c3b 100644
---- a/drivers/net/wireless/rt2x00/rt2800pci.c
-+++ b/drivers/net/wireless/rt2x00/rt2800pci.c
-@@ -442,7 +442,7 @@ static int rt2800pci_set_state(struct rt2x00_dev *rt2x00dev,
- 	 * if the device is booting and wasn't asleep it will return
- 	 * failure when attempting to wakeup.
- 	 */
--	rt2800_mcu_request(rt2x00dev, MCU_SLEEP, 0xff, 0, 2);
-+	rt2800_mcu_request(rt2x00dev, MCU_SLEEP, 0xff, 0xff, 2);
- 
- 	if (state == STATE_AWAKE) {
- 		rt2800_mcu_request(rt2x00dev, MCU_WAKEUP, TOKEN_WAKUP, 0, 0);
-diff --git a/drivers/net/wireless/rt2x00/rt2800usb.c b/drivers/net/wireless/rt2x00/rt2800usb.c
-index 04dfedc..5c31e33 100644
---- a/drivers/net/wireless/rt2x00/rt2800usb.c
-+++ b/drivers/net/wireless/rt2x00/rt2800usb.c
-@@ -184,9 +184,9 @@ static int rt2800usb_set_state(struct rt2x00_dev *rt2x00dev,
- 			       enum dev_state state)
- {
- 	if (state == STATE_AWAKE)
--		rt2800_mcu_request(rt2x00dev, MCU_WAKEUP, 0xff, 0, 0);
-+		rt2800_mcu_request(rt2x00dev, MCU_WAKEUP, 0xff, 0, 2);
- 	else
--		rt2800_mcu_request(rt2x00dev, MCU_SLEEP, 0xff, 0, 2);
-+		rt2800_mcu_request(rt2x00dev, MCU_SLEEP, 0xff, 0xff, 2);
- 
- 	return 0;
- }
--- 
-1.7.2.3
+johannes
+--------------------------------------------------------------------------------------
+Intel GmbH
+Dornacher Strasse 1
+85622 Feldkirchen/Muenchen, Deutschland 
+Sitz der Gesellschaft: Feldkirchen bei Muenchen
+Geschaeftsfuehrer: Douglas Lusk, Peter Gleissner, Hannes Schwaderer
+Registergericht: Muenchen HRB 47456 
+Ust.-IdNr./VAT Registration No.: DE129385895
+Citibank Frankfurt a.M. (BLZ 502 109 00) 600119052
 
