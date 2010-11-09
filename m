@@ -1,118 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qw0-f46.google.com ([209.85.216.46]:59690 "EHLO
-	mail-qw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932068Ab0KMQpl convert rfc822-to-8bit (ORCPT
+Received: from eos.fwall.u-szeged.hu ([160.114.120.248]:43915 "EHLO
+	eos.fwall.u-szeged.hu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754686Ab0KIVHY (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 13 Nov 2010 11:45:41 -0500
-Received: by qwh5 with SMTP id 5so466955qwh.19
-        for <linux-wireless@vger.kernel.org>; Sat, 13 Nov 2010 08:45:39 -0800 (PST)
+	Tue, 9 Nov 2010 16:07:24 -0500
+Received: from localhost ([127.0.0.1] helo=eos.fwall.u-szeged.hu)
+	by eos.fwall.u-szeged.hu with esmtp (Exim 4.67)
+	(envelope-from <zherczeg@inf.u-szeged.hu>)
+	id 1PFuqi-0004Ft-HY
+	for linux-wireless@vger.kernel.org; Tue, 09 Nov 2010 21:31:24 +0100
+Received: from mail.inf.u-szeged.hu ([160.114.37.227])
+	by eos.fwall.u-szeged.hu with esmtp (Exim 4.67)
+	(envelope-from <zherczeg@inf.u-szeged.hu>)
+	id 1PFuqi-0004Fq-EO
+	for linux-wireless@vger.kernel.org; Tue, 09 Nov 2010 21:31:24 +0100
+Received: from webmail.inf.u-szeged.hu (nora3.inf.u-szeged.hu [160.114.37.221])
+	by mail.inf.u-szeged.hu (Postfix) with ESMTP id 5CA2816A08AB
+	for <linux-wireless@vger.kernel.org>; Tue,  9 Nov 2010 21:31:24 +0100 (CET)
+Message-ID: <32995.82.131.221.21.1289334684.squirrel@webmail.inf.u-szeged.hu>
+Date: Tue, 9 Nov 2010 21:31:24 +0100 (CET)
+Subject: connecting ieee80211_hw and net_device
+From: "Zoltan Herczeg" <zherczeg@inf.u-szeged.hu>
+To: linux-wireless@vger.kernel.org
 MIME-Version: 1.0
-In-Reply-To: <1289607742.21000.23.camel@dcbw.foobar.com>
-References: <AANLkTik+BWQdU4hhKN7yfgOdJuQXopvYr4Z59RTntqSW@mail.gmail.com>
-	<1289607742.21000.23.camel@dcbw.foobar.com>
-Date: Sat, 13 Nov 2010 19:45:37 +0300
-Message-ID: <AANLkTi=1RFZwRYvA=VfuKTQS6YwZkTv17Q0nnWnQW3Hq@mail.gmail.com>
-Subject: Re: Bringing up Marvell 88W8300
-From: Denis Kirjanov <kirjanov@gmail.com>
-To: Dan Williams <dcbw@redhat.com>
-Cc: andreamrl@tiscali.it,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	dwmw2@infradead.org
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain;charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, Nov 13, 2010 at 3:22 AM, Dan Williams <dcbw@redhat.com> wrote:
-> On Mon, 2010-11-08 at 19:10 +0300, Denis Kirjanov wrote:
->> Hi Andrea and wireless folks!
->>
->> I'm trying to bring up my WiFi card under Linux. I've found the code
->> for the mac80211 (mrv8kng).
->> My card is Asus Wi-Fi-Tv card (integrated tv capturing+WiFi adapter:
->> 01:0f.0 Ethernet controller: Marvell Technology Group Ltd. 88W8335
->> [Libertas] 802.11b/g Wireless (rev 43).
->
-> I'd been using a Netgear WG311v3 which apparently ships with v3.1.1.7
-> firmware for screwing around with the driver.  I've got about 3 or 4
-> 8335 CardBus cards lying around.
->
->>
->> My current problem is that I can't load the firmware on the chip.
->> There are two files (Win drivers) on the Asus CDROM:
->
-> I played with these a long time back based on mrv8k.  I found it tricky
-> to find the right firmware combo.  The firmware I got from the card's
-> drivers worked, but the firmware I tried to extract from the official
-> Marvell 8335 drivers did not work.  I've still got all the stuff around
-> though.
->
->> denis@denis-desktop:~/Downloads$ ls -al CB55N50.sys CB55N51.sys
->> -rw-r--r-- 1 denis denis 297856 2005-04-16 13:27 CB55N50.sys
->> -rw-r--r-- 1 denis denis 297856 2005-04-16 13:26 CB55N51.sys
->
-> Hmm, one file I have (MRV8335.sys) is 339968 bytes in size.  I think the
-> Netgear drivers were smaller though.
->
->> The FW cutter can't find the the main FW:
->> denis@denis-desktop:~/Downloads$ ./mrv8k_extract_fw CB55N51.sys
->> Bootloader found at 282088
->> Firmware not found
->
-> It's pretty clear where the main firmware starts if you poke around.
-> The extractor has a whitelist of known firmwares and yours may not be on
-> it.  You might need to spend a bit of time with the hex editor and find
-> out approximately where your firmware starts and ends, and add that to
-> the list.  No guarantee that it'll actually boot on the card though.
->
->> I also tried the firmware from the *BSD (malo firmware), but also
->> without success.
->
-> Yeah, this is a problem.  Not all firmware is the same; different builds
-> have different things turned on or off and could well be customized by
-> the vendor for their specific part.  It's unclear how generic the
-> firmwares actually are.
->
->> Current problem that after loading the 'main' firmware the
->> MRV_REG_STATUS register is not
->> equal to MRV_FW_SIGNATURE.
->
-> Yup, that means the bootloader firmware either failed to load the main
-> firmware correctly, that the main firmware you extracted was not in the
-> correct format, or that the main firmware simply failed to boot.  I've
-> had that problem before too.
->
->>
->> PS: Looks like that this tree no longer available
->> git://git.infradead.org/mrv8k.git :/
->
-> So I've actually got a Marvell GPL-ed 8335 "duplex" driver and firmware
-> (ie, STA and AP mode in one firmware file) lying around.  It's the
-> standard Marvell net80211-based driver built for 2.6.18 or something,
-> but I'm happy to post it and then you could try to (1) port the existing
-> net80211 stuff to 2.6.3x to make sure the card + firmware actually work,
-> then (2) fix up mrv8k or write a new mac80211 driver once we have the
-> baseline from #1.
+Hi,
 
-Ok, I think that I also found this one (Don't know exactly where, but
-I think that on the OpenWRT forum):
- * Name:        img_cb35_fw_duplex.h
- * Project:     Linux SoftAP for Marvell CB32/CB35 cardbus adapter
- * Version:     $Revision: 1.12.01 $
+I am developing a wireless driver for a cycle accurate energy simulator,
+and cannot solve the following issue:
 
-I will try to load the firmware that comes with the driver source.
+I can allocate a "wlan0" and "wlan1" platform device with
+ieee80211_alloc_hw, and can initialize it in Ad-Hoc mode. However, I
+realized this is not enough to have a wireless interface, since it has no
+receive operation, only transfer. Looking at the other drivers, I found
+that they allocate a net_device with the common alloc_etherdev.
+Unfortunately the register_netdev registers a new eth interface in my
+case, and this interface is not connected to the wlan interface. I set
+wireless_handlers and ieee80211_ptr for this device, still it is totally
+independent from the wlan interface.
 
-> Does that sound like a plan?  I have no time for it, but I'm happy to
-> put the driver up somewhere that others can make use of it.  I'll
-> recheck the provenience of the driver but it's got MODULE_LICENSE("GPL")
-> and GPL headers all over, including on the firmware file.  I might have
-> grabbed it off the Extranet but I'll check.
->
-> Dan
->
+Am I missing something? (Sorry if this is a trivial question, I tried
+google but no luck so far)
+
+Thanks in advance
+Zoltan
 
 
-
-
--- 
-Regards,
-Denis
