@@ -1,50 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:41737 "EHLO nbd.name"
-	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1752408Ab0KLPL2 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 12 Nov 2010 10:11:28 -0500
-Message-ID: <4CDD5915.5080604@openwrt.org>
-Date: Fri, 12 Nov 2010 16:11:17 +0100
-From: Felix Fietkau <nbd@openwrt.org>
+Received: from mail.atheros.com ([12.19.149.2]:41744 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754225Ab0KIWlS (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 9 Nov 2010 17:41:18 -0500
+Received: from mail.atheros.com ([10.10.20.105])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Tue, 09 Nov 2010 14:41:06 -0800
+Date: Tue, 9 Nov 2010 14:41:16 -0800
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+CC: Larry Finger <Larry.Finger@lwfinger.net>,
+	Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
+	David Quan <David.Quan@Atheros.com>,
+	wireless <linux-wireless@vger.kernel.org>
+Subject: Re: What kind of Atheros device is this?
+Message-ID: <20101109224116.GD12756@tux>
+References: <4CD8A71E.6040604@lwfinger.net>
+ <AANLkTi=sxSRLFEF6-kBtb_94ViyaKCmP3ra099X3G44H@mail.gmail.com>
+ <93781E992CBA7843962D8B0E7D683F3C16331A1E0D@SC1EXMB-MBCL.global.atheros.com>
+ <4CD9CC4E.9060208@lwfinger.net>
+ <AANLkTikK+1xMAJ_4M3BKMivikKcaisEazuP_nbDbm3qJ@mail.gmail.com>
 MIME-Version: 1.0
-To: Wojciech Dubowik <Wojciech.Dubowik@neratec.com>
-CC: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	lrodriguez@atheros.com
-Subject: Re: [PATCH v2 0/9] ath5k: Add AHB support
-References: <1289573296-3129-1-git-send-email-Wojciech.Dubowik@neratec.com>
-In-Reply-To: <1289573296-3129-1-git-send-email-Wojciech.Dubowik@neratec.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <AANLkTikK+1xMAJ_4M3BKMivikKcaisEazuP_nbDbm3qJ@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2010-11-12 3:48 PM, Wojciech Dubowik wrote:
-> This series of patches implements AHB bus support for ath5k driver.
+On Tue, Nov 09, 2010 at 02:35:01PM -0800, Luis R. Rodriguez wrote:
+> On Tue, Nov 9, 2010 at 2:33 PM, Larry Finger <Larry.Finger@lwfinger.net> wrote:
+> > On 11/09/2010 03:35 PM, David Quan wrote:
+> >>
+> >> "Atheros AR2427 Wireless Network Adapter"
+> >>
+> >> Legacy 11b/g 2.4Ghz.
+> >
+> > Was there a driver in Linux for this device that has been removed? The OP on the
+> > openSUSE Forum claims that it "used to work".
 > 
-> General comments for AHB bus support in ath5k:
-> 	* most of the original patches came from Felix Fetikau. I have used
-> 		them as a reference and ported to current git tree
-> 	* tried with access point functionality with WPA2 and without encryption
-> 	* tested on AR5312 for AHB and AR5414 and AR5212 for PCI
-> 	* compat wireless from openwrt was used for testing these patches
-> 	* last two patches have to be applied together because otherwise
-> 		hardware will crash on reset if only number 9 is committed.
-> 		I have kept them separated for better visibility. 
-> 		There are two false positive checkpatch warnings from them.
 > 
-> Wojciech Dubowik (9):
->   ath5k: Use Generic DMA for later support of AHB bus.
->   ath5k: Introduce ath5k_init_softc function as in ath9k
->   ath5k: Move PCI bus functions to separate file.
->   ath5k: Use generic eeprom read from common ath_bus_opts struct.
->   ath5k: Check if pci pdev struct is initialized in common functions.
->   ath5k: Add a function to read chipset's MAC revision
->   ath5k: Add initial registers values for radio RF2317 chip.
->   ath5k: Add AHB bus support.
->   ath5k: Fix reset and interrupts for AHB type of devices.
-One thing I forgot: it would be nice if you could add my Signed-off-by
-for patches that I co-authored, maybe also a From: for patches that were
-almost entirely written by me.
+> One second.
 
-Thanks,
+Havem them try something like this:
 
-- Felix
+diff --git a/drivers/net/wireless/ath/ath9k/pci.c b/drivers/net/wireless/ath/ath9k/pci.c
+index b5b6514..eab555f 100644
+--- a/drivers/net/wireless/ath/ath9k/pci.c
++++ b/drivers/net/wireless/ath/ath9k/pci.c
+@@ -26,6 +26,7 @@ static DEFINE_PCI_DEVICE_TABLE(ath_pci_id_table) = {
+ 	{ PCI_VDEVICE(ATHEROS, 0x002A) }, /* PCI-E */
+ 	{ PCI_VDEVICE(ATHEROS, 0x002B) }, /* PCI-E */
+ 	{ PCI_VDEVICE(ATHEROS, 0x002C) }, /* PCI-E 802.11n bonded out */
++	{ PCI_VDEVICE(AZWAVE,  0x1112) }, /* PCI-E 802.11n bonded out */
+ 	{ PCI_VDEVICE(ATHEROS, 0x002D) }, /* PCI   */
+ 	{ PCI_VDEVICE(ATHEROS, 0x002E) }, /* PCI-E */
+ 	{ PCI_VDEVICE(ATHEROS, 0x0030) }, /* PCI-E  AR9300 */
