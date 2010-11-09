@@ -1,54 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cpsmtpb-ews01.kpnxchange.com ([213.75.39.4]:2807 "EHLO
-	cpsmtpb-ews01.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752496Ab0KUI66 (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:54339 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752278Ab0KIVo7 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 21 Nov 2010 03:58:58 -0500
-Message-ID: <4CE8DF4F.5050803@gmail.com>
-Date: Sun, 21 Nov 2010 09:58:55 +0100
-From: Gertjan van Wingerde <gwingerde@gmail.com>
+	Tue, 9 Nov 2010 16:44:59 -0500
+Date: Tue, 9 Nov 2010 16:40:45 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Paul Stewart <pstew@google.com>
+Cc: linux-wireless@vger.kernel.org, johannes@sipsolutions.net,
+	helmut.schaa@googlemail.com
+Subject: Re: [PATCH 2/2] mac80211: Add support for CQM tx bitrate monitoring
+Message-ID: <20101109214045.GF2374@tuxdriver.com>
+References: <201010211402.43857.helmut.schaa@googlemail.com>
+ <20101021161006.CF75720391@glenhelen.mtv.corp.google.com>
 MIME-Version: 1.0
-To: Joe Perches <joe@perches.com>
-CC: Ivo van Doorn <IvDoorn@gmail.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com,
-	netdev@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH 60/62] rt2x00: Use static const
-References: <cover.1290305773.git.joe@perches.com> <d8bfaded20da2265673391a81536d63b0e81dc7f.1290305776.git.joe@perches.com>
-In-Reply-To: <d8bfaded20da2265673391a81536d63b0e81dc7f.1290305776.git.joe@perches.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <20101021161006.CF75720391@glenhelen.mtv.corp.google.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 11/21/10 03:39, Joe Perches wrote:
-> Using static const generally increases object text and decreases data size.
-> It also generally decreases overall object size.
+On Thu, Oct 21, 2010 at 08:58:12AM -0700, Paul Stewart wrote:
+> Am Donnerstag 21 Oktober 2010 schrieb Helmut Schaa:
+> > You might want to filter out probe frames based on
+> > IEEE80211_TX_CTL_RATE_CTRL_PROBE as otherwise you could end up with
+> > sending a huge number of events to userspace.
 > 
->    text	   data	    bss	    dec	    hex	filename
->   40197	     56	   8336	  48589	   bdcd	drivers/net/wireless/rt2x00/rt2800lib.o.new
->   40205	     56	   8336	  48597	   bdd5	drivers/net/wireless/rt2x00/rt2800lib.o.old
+> Thanks, Helmut.  I've incorporated your excellent suggestion.  In practice
+> I have gotten reasonably modest rates of updates at the user side, but
+> filtering unnecessary stuff is definitely worthwhile.
 > 
-> Signed-off-by: Joe Perches <joe@perches.com>
-
-For rt2x00 this is just a tiny optimization, but for what it's worth:
-
-Acked-by: Gertjan van Wingerde <gwingerde@gmail.com>
-
-> ---
->  drivers/net/wireless/rt2x00/rt2800lib.c |    2 +-
->  1 files changed, 1 insertions(+), 1 deletions(-)
+> --
 > 
-> diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
-> index ce8df66..7563161 100644
-> --- a/drivers/net/wireless/rt2x00/rt2800lib.c
-> +++ b/drivers/net/wireless/rt2x00/rt2800lib.c
-> @@ -2166,7 +2166,7 @@ static int rt2800_init_registers(struct rt2x00_dev *rt2x00dev)
->  					 SHARED_KEY_MODE_ENTRY(i), 0);
+> Add state, work proc and debugging parameters for monitoring
+> transmit-rate changes.
+> 
+> Signed-off-by: Paul Stewart <pstew@google.com>
+
+> diff --git a/net/mac80211/status.c b/net/mac80211/status.c
+> index 3153c19..22c2c61 100644
+> --- a/net/mac80211/status.c
+> +++ b/net/mac80211/status.c
+> @@ -154,6 +154,24 @@ static void ieee80211_frame_acked(struct sta_info *sta, struct sk_buff *skb)
+>  		}
 >  
->  	for (i = 0; i < 256; i++) {
-> -		u32 wcid[2] = { 0xffffffff, 0x00ffffff };
-> +		static const u32 wcid[2] = { 0xffffffff, 0x00ffffff };
->  		rt2800_register_multiwrite(rt2x00dev, MAC_WCID_ENTRY(i),
->  					      wcid, sizeof(wcid));
->  
+>  		ieee80211_queue_work(&local->hw, &local->recalc_smps);
+> +	} else if (ieee80211_is_data(mgmt->frame_control) &&
+> +		   sdata->vif.type == NL80211_IFTYPE_STATION &&
+> +                   !(info->flags & IEEE80211_TX_CTL_RATE_CTRL_PROBE)) {
+> +		struct ieee80211_if_managed *ifmgd = &sdata->u.mgd;
+> +		if (ifmgd->cqm_bitrate_thold != 0 &&
+> +		    (ifmgd->last_cqm_tx_rate.idx != sta->last_tx_rate.idx ||
+> +		     (ifmgd->last_cqm_tx_rate.flags &
+> +		      (IEEE80211_TX_RC_MCS | IEEE80211_TX_RC_40_MHZ_WIDTH |
+> +		       IEEE80211_TX_RC_SHORT_GI)) !=
+> +		     (sta->last_tx_rate.flags &
+> +		      (IEEE80211_TX_RC_MCS | IEEE80211_TX_RC_40_MHZ_WIDTH |
+> +		       IEEE80211_TX_RC_SHORT_GI)) ||
+> +		     sdata->u.mgd.last_cqm_bitrate == 0)) {
+> +			ifmgd->last_cqm_tx_rate = sta->last_tx_rate;
+> +			ifmgd->tx_bitrate_changed = true;
+> +			ieee80211_queue_work(&local->hw,
+> +					     &ifmgd->bitrate_notify_work);
+> +		}
+>  	}
+>  }
 
+  CC [M]  net/mac80211/status.o
+net/mac80211/status.c: In function ‘ieee80211_frame_acked’:
+net/mac80211/status.c:159: error: ‘info’ undeclared (first use in this function)
+net/mac80211/status.c:159: error: (Each undeclared identifier is reported only once
+net/mac80211/status.c:159: error: for each function it appears in.)
+make[1]: *** [net/mac80211/status.o] Error 1
+make: *** [net/mac80211/] Error 2
+
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
