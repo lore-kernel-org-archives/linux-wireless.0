@@ -1,44 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yx0-f174.google.com ([209.85.213.174]:33249 "EHLO
-	mail-yx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752183Ab0K0GWE (ORCPT
+Received: from mail-iw0-f174.google.com ([209.85.214.174]:50814 "EHLO
+	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755309Ab0KIVTk convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 27 Nov 2010 01:22:04 -0500
-From: "Justin P. Mattock" <justinmattock@gmail.com>
-To: trivial@kernel.org
-Cc: linux-rdma@vger.kernel.org, linux-ide@vger.kernel.org,
-	linux-mtd@lists.infradead.org, linux-wireless@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	"Justin P. Mattock" <justinmattock@gmail.com>
-Subject: [RFC 6/9]drivers:char:nvram.c Change the copyright info.
-Date: Fri, 26 Nov 2010 22:21:16 -0800
-Message-Id: <1290838879-11038-7-git-send-email-justinmattock@gmail.com>
-In-Reply-To: <1290838879-11038-1-git-send-email-justinmattock@gmail.com>
-References: <1290838879-11038-1-git-send-email-justinmattock@gmail.com>
+	Tue, 9 Nov 2010 16:19:40 -0500
+Received: by iwn10 with SMTP id 10so1767931iwn.19
+        for <linux-wireless@vger.kernel.org>; Tue, 09 Nov 2010 13:19:39 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <185731CC-606D-407D-80F4-33FEF08ED35D@moxienet.com>
+References: <185731CC-606D-407D-80F4-33FEF08ED35D@moxienet.com>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Tue, 9 Nov 2010 13:19:16 -0800
+Message-ID: <AANLkTik35wHXiznjGm7nc9HBYUy7iQk65FVSq7T2Gw8u@mail.gmail.com>
+Subject: Re: Regulatory/CRDA Race
+To: Mark Mentovai <mark@moxienet.com>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Change the copyright info from Sun Microsystems to Oracle since Oracle now owns them.
+On Mon, Nov 8, 2010 at 11:40 AM, Mark Mentovai <mark@moxienet.com> wrote:
+> Following up on the old-ish “[ath5k-devel] Race condition in CRDA calls?” thread…
+>
+> I independently experienced this problem, debugged it, and came to the same conclusion. There is in fact a race between regulatory requests being made via regulatory_hint and CRDA actually updating regulatory data. I see this on a system with two cards that come up one after the other during boot.
+>
+> 1. cfg80211 calls CRDA to update the world regulatory domain and CRDA does so. The regulatory domain is now 00.
+>
+> 2. The first card’s driver (in my case, ath9k) calls regulatory_hint to provide US as a driver hint. ignore_request decides against intersection because the last request came from the core. There’s a CRDA call, but CRDA isn’t quick enough to respond. The regulatory domain is still 00, because CRDA hasn’t changed it yet.
+>
+> 3. The second card’s driver (also ath9k) calls regulatory_hint to provide US as a driver hint. ignore_request sees that the last request came from a driver (instead of the core) and since the regulatory domain is changing from 00 to US, decides that intersection must be performed.
+>
+> 4. When CRDA finally responds to the request from #2 or #3, cfg80211 sees that last_request->intersect is true, and intersects. The regulatory domain is set to the intersection of 00 and US.
+>
+> The race here is between CRDA providing data and the second card’s request being made via regulatory_hint. regulatory_hint and ignore_request assume that last_request is in sync with the currently-set regulatory domain, but there is no such synchronization.
+>
+> Here’s my openwrt-devel post describing the above in a slightly different level of detail:https://lists.openwrt.org/pipermail/openwrt-devel/2010-November/008570.html.--
 
-Signed-off-by: Justin P. Mattock <justinmattock@gmail.com>
+I'll take a look at this once I get done with the
+compat-wireless-2.6.37 release. Thanks for the report.
 
----
- drivers/char/nvram.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
-
-diff --git a/drivers/char/nvram.c b/drivers/char/nvram.c
-index 166f1e7..33e8faa 100644
---- a/drivers/char/nvram.c
-+++ b/drivers/char/nvram.c
-@@ -3,7 +3,7 @@
-  *
-  * Copyright (C) 1997 Roman Hodek <Roman.Hodek@informatik.uni-erlangen.de>
-  * idea by and with help from Richard Jelinek <rj@suse.de>
-- * Portions copyright (c) 2001,2002 Sun Microsystems (thockin@sun.com)
-+ * Portions copyright (c) 2001,2002 Oracle and/or its affiliates. (thockin@sun.com)
-  *
-  * This driver allows you to access the contents of the non-volatile memory in
-  * the mc146818rtc.h real-time clock. This chip is built into all PCs and into
--- 
-1.7.1
-
+  Luis
