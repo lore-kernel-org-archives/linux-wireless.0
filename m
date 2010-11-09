@@ -1,44 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:42417 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S935040Ab0KQS7e (ORCPT
+Received: from mail-iw0-f174.google.com ([209.85.214.174]:52707 "EHLO
+	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754424Ab0KIVO3 convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 17 Nov 2010 13:59:34 -0500
-Message-ID: <4CE4260F.80603@candelatech.com>
-Date: Wed, 17 Nov 2010 10:59:27 -0800
-From: Ben Greear <greearb@candelatech.com>
+	Tue, 9 Nov 2010 16:14:29 -0500
+Received: by iwn10 with SMTP id 10so1757935iwn.19
+        for <linux-wireless@vger.kernel.org>; Tue, 09 Nov 2010 13:14:29 -0800 (PST)
 MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: Tejun Heo <tj@kernel.org>, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] mac80211:  Fix deadlock in ieee80211_do_stop.
-References: <1289592426-5367-1-git-send-email-greearb@candelatech.com>	 <1289594998.3736.11.camel@jlt3.sipsolutions.net>	 <4CDDAA3B.9090007@candelatech.com>	 <1289596096.3736.13.camel@jlt3.sipsolutions.net>	 <4CDE699B.70401@kernel.org> <4CE1A344.7040201@candelatech.com>	 <4CE292F7.4090200@kernel.org>	 <1289929258.3673.1.camel@jlt3.sipsolutions.net>	 <4CE396A9.1050908@kernel.org> <1290020005.3777.6.camel@jlt3.sipsolutions.net>
-In-Reply-To: <1290020005.3777.6.camel@jlt3.sipsolutions.net>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+In-Reply-To: <4CD8A71E.6040604@lwfinger.net>
+References: <4CD8A71E.6040604@lwfinger.net>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Tue, 9 Nov 2010 13:14:08 -0800
+Message-ID: <AANLkTi=sxSRLFEF6-kBtb_94ViyaKCmP3ra099X3G44H@mail.gmail.com>
+Subject: Re: What kind of Atheros device is this?
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: wireless <linux-wireless@vger.kernel.org>,
+	David Quan <David.Quan@atheros.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 11/17/2010 10:53 AM, Johannes Berg wrote:
-> On Wed, 2010-11-17 at 09:47 +0100, Tejun Heo wrote:
+On Mon, Nov 8, 2010 at 5:42 PM, Larry Finger <Larry.Finger@lwfinger.net> wrote:
+> On the openSUSE forum, one of the posters got this output from lspci -nnk:
 >
->> WQ_NON_REENTRANT doesn't guarantee ordered execution but it guarantees
->> that a single work is not executed concurrently on multiple CPUs.  I'm
->> not sure whether this would be safe for the workqueue used by mac80211
->> but it should let us know whether the workqueue is choked due to a
->> work which is executing for long time.  In the long run, if using non
->> reentrant is safe for mac80211, using it would be much better.
+> 02:00.0 Network controller [0280]: Atheros Communications Inc. Device
+> [168c:002c] (rev 01)
+>        Subsystem: Device [1a3b:1112]
 >
-> No, I don't think it's safe for mac80211.
+> I did not find these PCI IDs for any device in wireless or staging. What is it,
+> and what driver should it use?
 
-So maybe my patch is a good enough way to fix this?
+Hm, not sure, David, have you ever heard of this?
 
-Thanks,
-Ben
-
->
-> johannes
-
-
--- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
-
+ Luis
