@@ -1,150 +1,160 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.perches.com ([173.55.12.10]:2036 "EHLO mail.perches.com"
+Received: from smtp.nokia.com ([147.243.128.24]:32784 "EHLO mgw-da01.nokia.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752001Ab0K3VmN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 30 Nov 2010 16:42:13 -0500
-From: Joe Perches <joe@perches.com>
-To: Christian Lamparter <chunkeey@web.de>,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	Jouni Malinen <jmalinen@atheros.com>,
-	Vasanthakumar Thiagarajan <vasanth@atheros.com>,
-	Senthil Balasubramanian <senthilkumar@atheros.com>,
-	"John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org, ath9k-devel@lists.ath9k.org
-Subject: [PATCH 2/2] wireless: Remove unnecessary casts of usb_get_intfdata
-Date: Tue, 30 Nov 2010 13:42:08 -0800
-Message-Id: <cc6f3ee4ad9b301a00c0de89e7adcedda4d3674f.1291153099.git.joe@perches.com>
-In-Reply-To: <ce546290dcd54062fa8cda575ab3d6e7d806c52f.1291153099.git.joe@perches.com>
-References: <ce546290dcd54062fa8cda575ab3d6e7d806c52f.1291153099.git.joe@perches.com>
+	id S1753442Ab0KIIVu (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 9 Nov 2010 03:21:50 -0500
+From: juuso.oikarinen@nokia.com
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH] mac80211: Add function to get probe request template for current AP
+Date: Tue,  9 Nov 2010 10:21:33 +0200
+Message-Id: <1289290893-6766-1-git-send-email-juuso.oikarinen@nokia.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Joe Perches <joe@perches.com>
----
- drivers/net/wireless/ath/ar9170/usb.c    |    6 ++----
- drivers/net/wireless/ath/ath9k/hif_usb.c |   13 +++++--------
- drivers/net/wireless/ath/carl9170/usb.c  |    3 +--
- drivers/net/wireless/p54/p54usb.c        |    2 +-
- drivers/net/wireless/zd1201.c            |    2 +-
- 5 files changed, 10 insertions(+), 16 deletions(-)
+From: Juuso Oikarinen <juuso.oikarinen@nokia.com>
 
-diff --git a/drivers/net/wireless/ath/ar9170/usb.c b/drivers/net/wireless/ath/ar9170/usb.c
-index 5dbb536..d3be6f9 100644
---- a/drivers/net/wireless/ath/ar9170/usb.c
-+++ b/drivers/net/wireless/ath/ar9170/usb.c
-@@ -161,8 +161,7 @@ static void ar9170_usb_submit_urb(struct ar9170_usb *aru)
- static void ar9170_usb_tx_urb_complete_frame(struct urb *urb)
+Chipsets with hardware based connection monitoring need to autonomically
+send directed probe-request frames to the AP (in the event of beacon loss,
+for example.)
+
+For the hardware to be able to do this, it requires a template for the frame
+to transmit to the AP, filled in with the BSSID and SSID of the AP, but also
+the supported rate IE's.
+
+This patch adds a function to mac80211, which allows the hardware driver to
+fetch this template after association, so it can be configured to the hardware.
+
+Signed-off-by: Juuso Oikarinen <juuso.oikarinen@nokia.com>
+---
+ include/net/mac80211.h     |   12 ++++++++++++
+ net/mac80211/ieee80211_i.h |    4 ++++
+ net/mac80211/mlme.c        |   24 ++++++++++++++++++++++++
+ net/mac80211/util.c        |   23 ++++++++++++++++++-----
+ 4 files changed, 58 insertions(+), 5 deletions(-)
+
+diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+index 9fdf982..8f212e9 100644
+--- a/include/net/mac80211.h
++++ b/include/net/mac80211.h
+@@ -2501,6 +2501,18 @@ void ieee80211_sta_block_awake(struct ieee80211_hw *hw,
+ 			       struct ieee80211_sta *pubsta, bool block);
+ 
+ /**
++ * ieee80211_ap_probereq_get - retrieve a Probe Request template
++ * @hw: pointer obtained from ieee80211_alloc_hw().
++ * @vif: &struct ieee80211_vif pointer from the add_interface callback.
++ *
++ * Creates a Probe Request template which can, for example, be uploaded to
++ * hardware. The template is filled with bssid, ssid and supported rate
++ * information.
++ */
++struct sk_buff *ieee80211_ap_probereq_get(struct ieee80211_hw *hw,
++					  struct ieee80211_vif *vif);
++
++/**
+  * ieee80211_beacon_loss - inform hardware does not receive beacons
+  *
+  * @vif: &struct ieee80211_vif pointer from the add_interface callback.
+diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+index b80c386..59a1d38 100644
+--- a/net/mac80211/ieee80211_i.h
++++ b/net/mac80211/ieee80211_i.h
+@@ -1287,6 +1287,10 @@ int ieee80211_build_preq_ies(struct ieee80211_local *local, u8 *buffer,
+ 			     const u8 *ie, size_t ie_len,
+ 			     enum ieee80211_band band, u32 rate_mask,
+ 			     u8 channel);
++struct sk_buff *ieee80211_build_probe_req(struct ieee80211_sub_if_data *sdata,
++					  u8 *dst,
++					  const u8 *ssid, size_t ssid_len,
++					  const u8 *ie, size_t ie_len);
+ void ieee80211_send_probe_req(struct ieee80211_sub_if_data *sdata, u8 *dst,
+ 			      const u8 *ssid, size_t ssid_len,
+ 			      const u8 *ie, size_t ie_len);
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+index a3a9421..dfc4a31 100644
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -1108,6 +1108,30 @@ static void ieee80211_mgd_probe_ap(struct ieee80211_sub_if_data *sdata,
+ 	mutex_unlock(&ifmgd->mtx);
+ }
+ 
++struct sk_buff *ieee80211_ap_probereq_get(struct ieee80211_hw *hw,
++					  struct ieee80211_vif *vif)
++{
++	struct ieee80211_sub_if_data *sdata = vif_to_sdata(vif);
++	struct ieee80211_if_managed *ifmgd = &sdata->u.mgd;
++	struct sk_buff *skb;
++	const u8 *ssid;
++
++	if (WARN_ON(sdata->vif.type != NL80211_IFTYPE_STATION))
++		return NULL;
++
++	ASSERT_MGD_MTX(ifmgd);
++
++	if (!ifmgd->associated)
++		return NULL;
++
++	ssid = ieee80211_bss_get_ie(ifmgd->associated, WLAN_EID_SSID);
++	skb = ieee80211_build_probe_req(sdata, ifmgd->associated->bssid,
++					ssid + 2, ssid[1], NULL, 0);
++
++	return skb;
++}
++EXPORT_SYMBOL(ieee80211_ap_probereq_get);
++
+ static void __ieee80211_connection_loss(struct ieee80211_sub_if_data *sdata)
  {
- 	struct sk_buff *skb = urb->context;
--	struct ar9170_usb *aru = (struct ar9170_usb *)
--	      usb_get_intfdata(usb_ifnum_to_if(urb->dev, 0));
-+	struct ar9170_usb *aru = usb_get_intfdata(usb_ifnum_to_if(urb->dev, 0));
+ 	struct ieee80211_if_managed *ifmgd = &sdata->u.mgd;
+diff --git a/net/mac80211/util.c b/net/mac80211/util.c
+index 0b6fc92..885713d 100644
+--- a/net/mac80211/util.c
++++ b/net/mac80211/util.c
+@@ -1011,9 +1011,10 @@ int ieee80211_build_preq_ies(struct ieee80211_local *local, u8 *buffer,
+ 	return pos - buffer;
+ }
  
- 	if (unlikely(!aru)) {
- 		dev_kfree_skb_irq(skb);
-@@ -219,8 +218,7 @@ free:
- static void ar9170_usb_rx_completed(struct urb *urb)
+-void ieee80211_send_probe_req(struct ieee80211_sub_if_data *sdata, u8 *dst,
+-			      const u8 *ssid, size_t ssid_len,
+-			      const u8 *ie, size_t ie_len)
++struct sk_buff *ieee80211_build_probe_req(struct ieee80211_sub_if_data *sdata,
++					  u8 *dst,
++					  const u8 *ssid, size_t ssid_len,
++					  const u8 *ie, size_t ie_len)
  {
- 	struct sk_buff *skb = urb->context;
--	struct ar9170_usb *aru = (struct ar9170_usb *)
--		usb_get_intfdata(usb_ifnum_to_if(urb->dev, 0));
-+	struct ar9170_usb *aru = usb_get_intfdata(usb_ifnum_to_if(urb->dev, 0));
- 	int err;
+ 	struct ieee80211_local *local = sdata->local;
+ 	struct sk_buff *skb;
+@@ -1027,7 +1028,7 @@ void ieee80211_send_probe_req(struct ieee80211_sub_if_data *sdata, u8 *dst,
+ 	if (!buf) {
+ 		printk(KERN_DEBUG "%s: failed to allocate temporary IE "
+ 		       "buffer\n", sdata->name);
+-		return;
++		return NULL;
+ 	}
  
- 	if (!aru)
-diff --git a/drivers/net/wireless/ath/ath9k/hif_usb.c b/drivers/net/wireless/ath/ath9k/hif_usb.c
-index ae842db..beb750e 100644
---- a/drivers/net/wireless/ath/ath9k/hif_usb.c
-+++ b/drivers/net/wireless/ath/ath9k/hif_usb.c
-@@ -471,7 +471,7 @@ err:
- static void ath9k_hif_usb_rx_cb(struct urb *urb)
- {
- 	struct sk_buff *skb = (struct sk_buff *) urb->context;
--	struct hif_device_usb *hif_dev = (struct hif_device_usb *)
-+	struct hif_device_usb *hif_dev =
- 		usb_get_intfdata(usb_ifnum_to_if(urb->dev, 0));
- 	int ret;
+ 	chan = ieee80211_frequency_to_channel(
+@@ -1050,8 +1051,20 @@ void ieee80211_send_probe_req(struct ieee80211_sub_if_data *sdata, u8 *dst,
+ 	}
  
-@@ -518,7 +518,7 @@ static void ath9k_hif_usb_reg_in_cb(struct urb *urb)
- {
- 	struct sk_buff *skb = (struct sk_buff *) urb->context;
- 	struct sk_buff *nskb;
--	struct hif_device_usb *hif_dev = (struct hif_device_usb *)
-+	struct hif_device_usb *hif_dev =
- 		usb_get_intfdata(usb_ifnum_to_if(urb->dev, 0));
- 	int ret;
+ 	IEEE80211_SKB_CB(skb)->flags |= IEEE80211_TX_INTFL_DONT_ENCRYPT;
+-	ieee80211_tx_skb(sdata, skb);
+ 	kfree(buf);
++
++	return skb;
++}
++
++void ieee80211_send_probe_req(struct ieee80211_sub_if_data *sdata, u8 *dst,
++			      const u8 *ssid, size_t ssid_len,
++			      const u8 *ie, size_t ie_len)
++{
++	struct sk_buff *skb;
++
++	skb = ieee80211_build_probe_req(sdata, dst, ssid, ssid_len, ie, ie_len);
++	if (skb)
++		ieee80211_tx_skb(sdata, skb);
+ }
  
-@@ -993,8 +993,7 @@ static void ath9k_hif_usb_reboot(struct usb_device *udev)
- static void ath9k_hif_usb_disconnect(struct usb_interface *interface)
- {
- 	struct usb_device *udev = interface_to_usbdev(interface);
--	struct hif_device_usb *hif_dev =
--		(struct hif_device_usb *) usb_get_intfdata(interface);
-+	struct hif_device_usb *hif_dev = usb_get_intfdata(interface);
- 
- 	if (hif_dev) {
- 		ath9k_htc_hw_deinit(hif_dev->htc_handle,
-@@ -1016,8 +1015,7 @@ static void ath9k_hif_usb_disconnect(struct usb_interface *interface)
- static int ath9k_hif_usb_suspend(struct usb_interface *interface,
- 				 pm_message_t message)
- {
--	struct hif_device_usb *hif_dev =
--		(struct hif_device_usb *) usb_get_intfdata(interface);
-+	struct hif_device_usb *hif_dev = usb_get_intfdata(interface);
- 
- 	ath9k_hif_usb_dealloc_urbs(hif_dev);
- 
-@@ -1026,8 +1024,7 @@ static int ath9k_hif_usb_suspend(struct usb_interface *interface,
- 
- static int ath9k_hif_usb_resume(struct usb_interface *interface)
- {
--	struct hif_device_usb *hif_dev =
--		(struct hif_device_usb *) usb_get_intfdata(interface);
-+	struct hif_device_usb *hif_dev = usb_get_intfdata(interface);
- 	struct htc_target *htc_handle = hif_dev->htc_handle;
- 	int ret;
- 
-diff --git a/drivers/net/wireless/ath/carl9170/usb.c b/drivers/net/wireless/ath/carl9170/usb.c
-index a268053..2d947a3 100644
---- a/drivers/net/wireless/ath/carl9170/usb.c
-+++ b/drivers/net/wireless/ath/carl9170/usb.c
-@@ -160,8 +160,7 @@ err_acc:
- 
- static void carl9170_usb_tx_data_complete(struct urb *urb)
- {
--	struct ar9170 *ar = (struct ar9170 *)
--	      usb_get_intfdata(usb_ifnum_to_if(urb->dev, 0));
-+	struct ar9170 *ar = usb_get_intfdata(usb_ifnum_to_if(urb->dev, 0));
- 
- 	if (WARN_ON_ONCE(!ar)) {
- 		dev_kfree_skb_irq(urb->context);
-diff --git a/drivers/net/wireless/p54/p54usb.c b/drivers/net/wireless/p54/p54usb.c
-index d5bc21e..dd4d8fc 100644
---- a/drivers/net/wireless/p54/p54usb.c
-+++ b/drivers/net/wireless/p54/p54usb.c
-@@ -183,7 +183,7 @@ static void p54u_rx_cb(struct urb *urb)
- static void p54u_tx_cb(struct urb *urb)
- {
- 	struct sk_buff *skb = urb->context;
--	struct ieee80211_hw *dev = (struct ieee80211_hw *)
-+	struct ieee80211_hw *dev =
- 		usb_get_intfdata(usb_ifnum_to_if(urb->dev, 0));
- 
- 	p54_free_skb(dev, skb);
-diff --git a/drivers/net/wireless/zd1201.c b/drivers/net/wireless/zd1201.c
-index b97aa9c..415eec4 100644
---- a/drivers/net/wireless/zd1201.c
-+++ b/drivers/net/wireless/zd1201.c
-@@ -1830,7 +1830,7 @@ err_zd:
- 
- static void zd1201_disconnect(struct usb_interface *interface)
- {
--	struct zd1201 *zd=(struct zd1201 *)usb_get_intfdata(interface);
-+	struct zd1201 *zd = usb_get_intfdata(interface);
- 	struct hlist_node *node, *node2;
- 	struct zd1201_frag *frag;
- 
+ u32 ieee80211_sta_get_rates(struct ieee80211_local *local,
 -- 
-1.7.3.2.245.g03276.dirty
+1.7.1
 
