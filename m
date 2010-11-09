@@ -1,136 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qy0-f181.google.com ([209.85.216.181]:43099 "EHLO
-	mail-qy0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754830Ab0KIUxP convert rfc822-to-8bit (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:43572 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751972Ab0KITPM (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 9 Nov 2010 15:53:15 -0500
-Received: by qyk31 with SMTP id 31so301166qyk.19
-        for <linux-wireless@vger.kernel.org>; Tue, 09 Nov 2010 12:53:14 -0800 (PST)
+	Tue, 9 Nov 2010 14:15:12 -0500
+Date: Tue, 9 Nov 2010 13:57:51 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Clyde McPherson <ccmcphe@verizon.net>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: Wireless and RFKILL
+Message-ID: <20101109185750.GA2374@tuxdriver.com>
+References: <4CD99096.5020105@verizon.net>
 MIME-Version: 1.0
-In-Reply-To: <4CD9474C.5010003@lwfinger.net>
-References: <AANLkTim5a_oFXqjMrcbcUipG5FijbUoFkYF6ri6zO7wg@mail.gmail.com>
-	<4CD9474C.5010003@lwfinger.net>
-Date: Tue, 9 Nov 2010 18:53:14 -0200
-Message-ID: <AANLkTikxUedowJOW=u1ObXjd02gppHX_wnq1uTkJuhZ2@mail.gmail.com>
-Subject: Re: RTL8187/8189
-From: Rogerio Luz Coelho <rogluz.news@gmail.com>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Yermandu Patapitafious <yermandu.dev@gmail.com>,
-	linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <4CD99096.5020105@verizon.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2010/11/9 Larry Finger <Larry.Finger@lwfinger.net>:
-> On 11/08/2010 09:25 PM, Yermandu Patapitafious wrote:
->> Hellow people, i buy an notebooks with the rtl8187b card.
->> I have heavyly test several ways to connect but the connection can not
->> be stabilize a connection.
->> I try with wep, wap, without pass. Nothing works with this card.
->>
->> Identify card
->>
->> # lsusb
->>
->> ```
->> Bus 002 Device 002: ID 0bda:8189 Realtek Semiconductor Corp. RTL8187B
->> Wireless 802.11g 54Mbps Network Adapter
->> ```
->>
->> I wanna give the atention for ID Card: 0bda:**8189**
->>
->> This is not 0bda:8187 or 0bda:8197. Why i saying this? Because i
->> research in the web and discover some people can get work with
->> 0bda:8187 using linux kernel native module driver. But i can not
->> really make connection i think something wrong with this card or
->> module or maybe not, i dont know.
->
-> Driver rtl8187 should work for this device.
->
->> When i set the AP with pass i got this error:
->>
->> # iwconfig wlan0 essid "MyEssid" key s:asciikey
->>
->> Error for wireless request "Set Encode" (8B2A) :
->>      SET failed on device wlan0 ; Invalid argument.
->>
->> Using wep, wap or nopass.
->
-> AFAIK, that has never worked.
->
->> I subscribe the ht tps: //qa.  mandriva  .com/ show_bug.cgi?id= 39334
->> a bug open related with this problem. Recently we have a notice in
->> comment #11 to try use with ndiswrapper
->>
->> ```
->>
->> ndiswrapper -a 0bda:8197 net8187b
->>
->> ```
->> But i can not force to use 0bda:8197 instead 0bda:8189:
->
-> Your device has the USB ID 0bda:8189. That is built into the device. You cannot
-> force it to be anything else.
->
->> ```
->> # ndiswrapper -a 0bda:8197 net8187b
->> Driver 'net8187b' is already used for '0BDA:8197'
->>
->> # ndiswrapper -l
->> net8187b : driver installed
->>         device (0BDA:8189) present (alternate driver: rtl8187)
->> ```
->>
->> But this can not be donned, it persist to use 8189 and not 8197 as related.
->>
->> I don't know anyone else with this same model of card, and how we can
->> do more tests. I hope someone can help us.
->>
->> Im using
->>
->> Linux  2.6.33.7-rt29 #7 SMP PREEMPT RT Tue Nov 2 23:41:52 BRST 2010
->> x86_64 Pentium(R) Dual-Core CPU T4200 @ 2.00GHz GenuineIntel GNU/Linux
->>
->> I test in the Ubuntu, Mandriva and Arch and no lucky. I try in Gentoo
->> too with kernel 2.6.36-wl+ (git version), same issues.
->
-> It appears that you are not using NetworkManager. If that is true, then I think
-> you should be preparing the correct ifcfg file for whatever distro you are
-> using. The hexadecimal key for WEP should be there. A passphrase almost never
-> works there. If you want to use WPA or WPA2, then you can use a phrase; however,
-> you will need to install wpa_supplicant and the appropriate configuration file.
->
-> To test is your device is working, get rid of ndiswrapper, allow rtl8187 to
-> load, and (as root) run the command 'iwlist scan'. If you can see your AP, then
-> the device is likely OK.
->
-> You should pick one of the distros you mention, and post a request for wireless
-> configuration on their help forum. I do not use any of them, and I'm not
-> familiar with their specific configuration.
->
-> I also recommend using NetworkManager. It makes wireless setup much easier.
->
-> Larry
-> --
+On Tue, Nov 09, 2010 at 01:19:02PM -0500, Clyde McPherson wrote:
 
-Hello Yarmandu ...
+> I build and use the compat-wireless source for use with SBC
+> applications, and I have a question about the wireless portion of
+> the code. Our SBCs do not have RFKILL capabilities, and since we use
+> wireless we are forced to include it in our kernel due to the
+> depends in wireless. What are the chances of adding #ifdef's for
+> CONFIG_RFKILL on the code segments that require RFKILL, this way
+> integrators like myself would not need to load and/or build the
+> rfkill modules? This would also save us memory and storage that is
+> limited on a SBC system.
 
-I am currenly using my 8187b chip card with WPA2 encription on a
-Ubuntu 10.10 64bit machine ... I use WICD as network manager and I get
-better results with it than with Networkmanager on this chip
-(Networlkmanager does not bring wireless up after resume, wicd does)
+Why can't you just turn-off CONFIG_RFKILL?
 
-Please install Ubuntu 10.10 64bit, install wicd configure your wi-fi
-network (should be wlan0 ) and try to connect as you stand IMEDIATELLY
-BESIDE the wi-fi router.
-
-DO NOT install ndiswrapper ...
-
-If you get a connection please go 10-15m away from the router and see
-if it connects ...
-
-Post errors ...
-
-Thanks
-
-Rogerio
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
