@@ -1,48 +1,136 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f46.google.com ([209.85.215.46]:44208 "EHLO
-	mail-ew0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754879Ab0KFOtx (ORCPT
+Received: from mail-qy0-f181.google.com ([209.85.216.181]:43099 "EHLO
+	mail-qy0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754830Ab0KIUxP convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 6 Nov 2010 10:49:53 -0400
-Received: by mail-ew0-f46.google.com with SMTP id 7so2253925ewy.19
-        for <linux-wireless@vger.kernel.org>; Sat, 06 Nov 2010 07:49:52 -0700 (PDT)
-From: Ivo van Doorn <ivdoorn@gmail.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Subject: [PATCH 12/18] rt2x00: checkpatch.pl error fixes for rt2x00link.c
-Date: Sat, 6 Nov 2010 15:47:09 +0100
-Cc: linux-wireless@vger.kernel.org
-References: <201011061544.00876.IvDoorn@gmail.com> <201011061546.37042.IvDoorn@gmail.com> <201011061546.53938.IvDoorn@gmail.com>
-In-Reply-To: <201011061546.53938.IvDoorn@gmail.com>
+	Tue, 9 Nov 2010 15:53:15 -0500
+Received: by qyk31 with SMTP id 31so301166qyk.19
+        for <linux-wireless@vger.kernel.org>; Tue, 09 Nov 2010 12:53:14 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Message-Id: <201011061547.09763.IvDoorn@gmail.com>
+In-Reply-To: <4CD9474C.5010003@lwfinger.net>
+References: <AANLkTim5a_oFXqjMrcbcUipG5FijbUoFkYF6ri6zO7wg@mail.gmail.com>
+	<4CD9474C.5010003@lwfinger.net>
+Date: Tue, 9 Nov 2010 18:53:14 -0200
+Message-ID: <AANLkTikxUedowJOW=u1ObXjd02gppHX_wnq1uTkJuhZ2@mail.gmail.com>
+Subject: Re: RTL8187/8189
+From: Rogerio Luz Coelho <rogluz.news@gmail.com>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Yermandu Patapitafious <yermandu.dev@gmail.com>,
+	linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Mark Einon <mark.einon@gmail.com>
+2010/11/9 Larry Finger <Larry.Finger@lwfinger.net>:
+> On 11/08/2010 09:25 PM, Yermandu Patapitafious wrote:
+>> Hellow people, i buy an notebooks with the rtl8187b card.
+>> I have heavyly test several ways to connect but the connection can not
+>> be stabilize a connection.
+>> I try with wep, wap, without pass. Nothing works with this card.
+>>
+>> Identify card
+>>
+>> # lsusb
+>>
+>> ```
+>> Bus 002 Device 002: ID 0bda:8189 Realtek Semiconductor Corp. RTL8187B
+>> Wireless 802.11g 54Mbps Network Adapter
+>> ```
+>>
+>> I wanna give the atention for ID Card: 0bda:**8189**
+>>
+>> This is not 0bda:8187 or 0bda:8197. Why i saying this? Because i
+>> research in the web and discover some people can get work with
+>> 0bda:8187 using linux kernel native module driver. But i can not
+>> really make connection i think something wrong with this card or
+>> module or maybe not, i dont know.
+>
+> Driver rtl8187 should work for this device.
+>
+>> When i set the AP with pass i got this error:
+>>
+>> # iwconfig wlan0 essid "MyEssid" key s:asciikey
+>>
+>> Error for wireless request "Set Encode" (8B2A) :
+>>      SET failed on device wlan0 ; Invalid argument.
+>>
+>> Using wep, wap or nopass.
+>
+> AFAIK, that has never worked.
+>
+>> I subscribe the ht tps: //qa.  mandriva  .com/ show_bug.cgi?id= 39334
+>> a bug open related with this problem. Recently we have a notice in
+>> comment #11 to try use with ndiswrapper
+>>
+>> ```
+>>
+>> ndiswrapper -a 0bda:8197 net8187b
+>>
+>> ```
+>> But i can not force to use 0bda:8197 instead 0bda:8189:
+>
+> Your device has the USB ID 0bda:8189. That is built into the device. You cannot
+> force it to be anything else.
+>
+>> ```
+>> # ndiswrapper -a 0bda:8197 net8187b
+>> Driver 'net8187b' is already used for '0BDA:8197'
+>>
+>> # ndiswrapper -l
+>> net8187b : driver installed
+>>         device (0BDA:8189) present (alternate driver: rtl8187)
+>> ```
+>>
+>> But this can not be donned, it persist to use 8189 and not 8197 as related.
+>>
+>> I don't know anyone else with this same model of card, and how we can
+>> do more tests. I hope someone can help us.
+>>
+>> Im using
+>>
+>> Linux  2.6.33.7-rt29 #7 SMP PREEMPT RT Tue Nov 2 23:41:52 BRST 2010
+>> x86_64 Pentium(R) Dual-Core CPU T4200 @ 2.00GHz GenuineIntel GNU/Linux
+>>
+>> I test in the Ubuntu, Mandriva and Arch and no lucky. I try in Gentoo
+>> too with kernel 2.6.36-wl+ (git version), same issues.
+>
+> It appears that you are not using NetworkManager. If that is true, then I think
+> you should be preparing the correct ifcfg file for whatever distro you are
+> using. The hexadecimal key for WEP should be there. A passphrase almost never
+> works there. If you want to use WPA or WPA2, then you can use a phrase; however,
+> you will need to install wpa_supplicant and the appropriate configuration file.
+>
+> To test is your device is working, get rid of ndiswrapper, allow rtl8187 to
+> load, and (as root) run the command 'iwlist scan'. If you can see your AP, then
+> the device is likely OK.
+>
+> You should pick one of the distros you mention, and post a request for wireless
+> configuration on their help forum. I do not use any of them, and I'm not
+> familiar with their specific configuration.
+>
+> I also recommend using NetworkManager. It makes wireless setup much easier.
+>
+> Larry
+> --
 
-rt2x00link.c:70: ERROR: space prohibited before that close parenthesis ')'
+Hello Yarmandu ...
 
-Signed-off-by: Mark Einon <mark.einon@gmail.com>
-Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
----
- drivers/net/wireless/rt2x00/rt2x00link.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+I am currenly using my 8187b chip card with WPA2 encription on a
+Ubuntu 10.10 64bit machine ... I use WICD as network manager and I get
+better results with it than with Networkmanager on this chip
+(Networlkmanager does not bring wireless up after resume, wicd does)
 
-diff --git a/drivers/net/wireless/rt2x00/rt2x00link.c b/drivers/net/wireless/rt2x00/rt2x00link.c
-index b971d87..bfda60e 100644
---- a/drivers/net/wireless/rt2x00/rt2x00link.c
-+++ b/drivers/net/wireless/rt2x00/rt2x00link.c
-@@ -67,7 +67,7 @@
- 	    (__avg).avg_weight  ? \
- 		((((__avg).avg_weight * ((AVG_SAMPLES) - 1)) + \
- 		  ((__val) * (AVG_FACTOR))) / \
--		 (AVG_SAMPLES) ) : \
-+		 (AVG_SAMPLES)) : \
- 		((__val) * (AVG_FACTOR)); \
- 	__new.avg = __new.avg_weight / (AVG_FACTOR); \
- 	__new; \
--- 
-1.7.2.3
+Please install Ubuntu 10.10 64bit, install wicd configure your wi-fi
+network (should be wlan0 ) and try to connect as you stand IMEDIATELLY
+BESIDE the wi-fi router.
 
+DO NOT install ndiswrapper ...
+
+If you get a connection please go 10-15m away from the router and see
+if it connects ...
+
+Post errors ...
+
+Thanks
+
+Rogerio
