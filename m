@@ -1,34 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wy0-f174.google.com ([74.125.82.174]:38145 "EHLO
-	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752714Ab0KHBK4 (ORCPT
+Received: from mail-iw0-f174.google.com ([209.85.214.174]:46303 "EHLO
+	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753899Ab0KIWfW (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 7 Nov 2010 20:10:56 -0500
-Received: by wyb36 with SMTP id 36so2956259wyb.19
-        for <linux-wireless@vger.kernel.org>; Sun, 07 Nov 2010 17:10:55 -0800 (PST)
+	Tue, 9 Nov 2010 17:35:22 -0500
+Received: by iwn10 with SMTP id 10so1846035iwn.19
+        for <linux-wireless@vger.kernel.org>; Tue, 09 Nov 2010 14:35:22 -0800 (PST)
 MIME-Version: 1.0
-From: Jonathan Guerin <jonathan@guerin.id.au>
-Date: Mon, 8 Nov 2010 11:10:33 +1000
-Message-ID: <AANLkTikFXb+u+Vdq4Fo6dR1jHNRxKa6GrGQH7gvi8Dfn@mail.gmail.com>
-Subject: Close of 2.6.37 Merge Window and Re-applying Patches
-To: linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+In-Reply-To: <4CD9CC4E.9060208@lwfinger.net>
+References: <4CD8A71E.6040604@lwfinger.net> <AANLkTi=sxSRLFEF6-kBtb_94ViyaKCmP3ra099X3G44H@mail.gmail.com>
+ <93781E992CBA7843962D8B0E7D683F3C16331A1E0D@SC1EXMB-MBCL.global.atheros.com> <4CD9CC4E.9060208@lwfinger.net>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Tue, 9 Nov 2010 14:35:01 -0800
+Message-ID: <AANLkTikK+1xMAJ_4M3BKMivikKcaisEazuP_nbDbm3qJ@mail.gmail.com>
+Subject: Re: What kind of Atheros device is this?
+To: Larry Finger <Larry.Finger@lwfinger.net>,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>
+Cc: David Quan <David.Quan@atheros.com>,
+	wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+On Tue, Nov 9, 2010 at 2:33 PM, Larry Finger <Larry.Finger@lwfinger.net> wrote:
+> On 11/09/2010 03:35 PM, David Quan wrote:
+>>
+>> "Atheros AR2427 Wireless Network Adapter"
+>>
+>> Legacy 11b/g 2.4Ghz.
+>
+> Was there a driver in Linux for this device that has been removed? The OP on the
+> openSUSE Forum claims that it "used to work".
 
-I've noticed that the merge window for 2.6.37 was closed one week ago:
-http://lwn.net/Articles/412634/
 
-I would like to make use of some patches that went in, but we're
-trying to cherry-pick the right ones to make a build work.
-Unfortunately, that's a major pain, especially seeing as they will all
-be reapplied anyway.
-
-Will the patches that were reverted for the merge window be re-applied soon?
-
-Thanks,
-
---
-Jonathan Guerin
+One second.
