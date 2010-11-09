@@ -1,62 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cantor.suse.de ([195.135.220.2]:54684 "EHLO mx1.suse.de"
+Received: from mga02.intel.com ([134.134.136.20]:22118 "EHLO mga02.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1759120Ab0KQWNk (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 17 Nov 2010 17:13:40 -0500
-Date: Wed, 17 Nov 2010 14:11:58 -0800
-From: Greg KH <gregkh@suse.de>
-To: Mike Rapoport <mike.rapoport@gmail.com>
-Cc: Greg KH <greg@kroah.com>, Brett Rudley <brudley@broadcom.com>,
-	Henry Ptasinski <henryp@broadcom.com>,
-	Dowan Kim <dowan@broadcom.com>, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 4/4] staging: brcm80211: brcmfmac: cleanup
- bcmsdh_(un)register
-Message-ID: <20101117221158.GC3851@suse.de>
-References: <20101116200438.GA10803@kroah.com>
- <1289980800-28743-1-git-send-email-mike.rapoport@gmail.com>
- <20101117211129.GA31776@kroah.com>
- <AANLkTikkVhc=3ismFX_5jWnzYHQiVXKbWQsFMPwTw6YZ@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-In-Reply-To: <AANLkTikkVhc=3ismFX_5jWnzYHQiVXKbWQsFMPwTw6YZ@mail.gmail.com>
+	id S1755329Ab0KIDIl (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 8 Nov 2010 22:08:41 -0500
+Subject: Re: [PATCH] iwl3945: Fix oops at module load
+From: "Guy, Wey-Yi" <wey-yi.w.guy@intel.com>
+To: Andi Kleen <andi@firstfloor.org>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Andi Kleen <ak@linux.intel.com>,
+	"Berg, Johannes" <johannes.berg@intel.com>
+In-Reply-To: <20101109014559.GA21551@basil.fritz.box>
+References: <1289253271-19981-1-git-send-email-andi@firstfloor.org>
+	 <1289254122.12056.86.camel@wwguy-huron>
+	 <20101109014559.GA21551@basil.fritz.box>
+Content-Type: text/plain; charset="UTF-8"
+Date: Mon, 08 Nov 2010 19:04:40 -0800
+Message-ID: <1289271880.12056.87.camel@wwguy-huron>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Nov 18, 2010 at 12:02:15AM +0200, Mike Rapoport wrote:
-> On Wed, Nov 17, 2010 at 11:11 PM, Greg KH <greg@kroah.com> wrote:
-> > On Wed, Nov 17, 2010 at 10:00:00AM +0200, Mike Rapoport wrote:
-> >> Signed-off-by: Mike Rapoport <mike.rapoport@gmail.com>
-> >> ---
-> >>  drivers/staging/brcm80211/brcmfmac/bcmsdh_linux.c |   13 +------------
-> >>  1 files changed, 1 insertions(+), 12 deletions(-)
-> >>
-> >> diff --git a/drivers/staging/brcm80211/brcmfmac/bcmsdh_linux.c b/drivers/staging/brcm80211/brcmfmac/bcmsdh_linux.c
-> >> index fd327e1..e3fb7ed 100644
-> >> --- a/drivers/staging/brcm80211/brcmfmac/bcmsdh_linux.c
-> >> +++ b/drivers/staging/brcm80211/brcmfmac/bcmsdh_linux.c
-> >> @@ -285,28 +285,17 @@ extern int sdio_function_init(void);
-> >>
-> >>  int bcmsdh_register(bcmsdh_driver_t *driver)
-> >>  {
-> >> -     int error = 0;
-> >> -
-> >>       drvinfo = *driver;
-> >>
-> >> -#if defined(BCMPLATFORM_BUS)
-> >> -#if defined(BCMLXSDMMC)
-> >>       SDLX_MSG(("Linux Kernel SDIO/MMC Driver\n"));
-> >> -     error = sdio_function_init();
-> >
-> > Same question here, are you sure we can remove this code?
+On Mon, 2010-11-08 at 17:46 -0800, Andi Kleen wrote:
+> > I believe the fix already in
+> > http://git.kernel.org/?p=linux/kernel/git/iwlwifi/iwlwifi-2.6.git;a=summary
+> > commit#6e0922e0781884ff4eb3638f10a91b63b6120207
 > 
-> I'm not removing sdio_function_init here. I've only replaced
->         error = sdio_function_init();
->         return error;
-> with
->         return sdio_function_init();
+> Thanks. Can that please be sent to Linus ASAP? It doesn't really
+> help my laptop if it's in some obscure git tree.
+> 
+Done, thanks to let me know
 
-Doh, you are right, sorry about that, I missread the patch.
+Wey
+> 
 
-thanks
 
-greg k-h
