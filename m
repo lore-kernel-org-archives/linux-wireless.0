@@ -1,71 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([147.243.128.26]:34209 "EHLO mgw-da02.nokia.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752100Ab0KRF1q (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 18 Nov 2010 00:27:46 -0500
-Received: from nokia.com (localhost [127.0.0.1])
-	by mgw-da02.nokia.com (Switch-3.4.3/Switch-3.4.3) with ESMTP id oAI5RiXH010486
-	for <linux-wireless@vger.kernel.org>; Thu, 18 Nov 2010 07:27:44 +0200
-Subject: Re: [PATCH] wl12xx: Unset bssid filter, ssid and bssid from
- firmware on disassoc
-From: Juuso Oikarinen <juuso.oikarinen@nokia.com>
-To: Luciano Coelho <luciano.coelho@nokia.com>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <1290008460.12140.64.camel@chilepepper>
-References: <1290000541-17828-1-git-send-email-juuso.oikarinen@nokia.com>
-	 <1290008460.12140.64.camel@chilepepper>
-Content-Type: text/plain; charset="UTF-8"
-Date: Thu, 18 Nov 2010 07:27:33 +0200
-Message-ID: <1290058053.2522.186.camel@wimaxnb.nmp.nokia.com>
-Mime-Version: 1.0
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:53493 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755087Ab0KIB37 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 8 Nov 2010 20:29:59 -0500
+Date: Mon, 8 Nov 2010 20:23:46 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Jesper Juhl <jj@chaosbits.net>
+Cc: linux-kernel@vger.kernel.org, trivial@kernel.org,
+	Ulrich Kunitz <kune@deine-taler.de>,
+	Daniel Drake <dsd@gentoo.org>, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org
+Subject: Re: [PATCH 07/17][trivial] net, wireless: Remove unnecessary casts
+ of void ptr returning alloc function return values
+Message-ID: <20101109012346.GA32743@tuxdriver.com>
+References: <alpine.LNX.2.00.1011082330390.23697@swampdragon.chaosbits.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <alpine.LNX.2.00.1011082330390.23697@swampdragon.chaosbits.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2010-11-17 at 17:41 +0200, Luciano Coelho wrote:
-> On Wed, 2010-11-17 at 15:29 +0200, juuso.oikarinen@nokia.com wrote:
-> > From: Juuso Oikarinen <juuso.oikarinen@nokia.com>
-> > 
-> > On the disassociation event from the mac80211, the wl12xx driver does not
-> > clear the chipset configuration related to the AP - i.e. it does not perform
-> > a DISCONNECT and then a JOIN with zero SSID and dummy BSSID. Also, it does not
-> > unset the BSSID filter.
-> > 
-> > Often this is not a problem, as the above is performed upon entering idle
-> > state. But if a scenario arises where a new association is attempted without
-> > cycling through idle state, the new association will fail.
-> > 
-> > Fix this by resetting the firmware state on disassociation.
-> > 
-> > Signed-off-by: Juuso Oikarinen <juuso.oikarinen@nokia.com>
-> > ---
-> >  drivers/net/wireless/wl12xx/main.c |    4 ++++
-> >  1 files changed, 4 insertions(+), 0 deletions(-)
-> > 
-> > diff --git a/drivers/net/wireless/wl12xx/main.c b/drivers/net/wireless/wl12xx/main.c
-> > index 31f0e2f..c523778 100644
-> > --- a/drivers/net/wireless/wl12xx/main.c
-> > +++ b/drivers/net/wireless/wl12xx/main.c
-> > @@ -2012,6 +2012,10 @@ static void wl1271_op_bss_info_changed(struct ieee80211_hw *hw,
-> >  			/* Disable the keep-alive feature */
-> >  			ret = wl1271_acx_keep_alive_mode(wl, false);
-> >  
-> > +			/* restore the bssid filter and go to dummy bssid */
-> > +			wl1271_handle_idle(wl, true);
-> > +			wl1271_handle_idle(wl, false);
-> > +
+On Tue, Nov 09, 2010 at 12:09:13AM +0100, Jesper Juhl wrote:
+> Hi,
 > 
-> Hmmm... This looks quite hacky.  Can 't you create functions with that
-> "restore the bssid" and "go to dummy bssid" and call them instead? If
-> you do so, you don't have to artificially go to idle and leave idle
-> immediately...
+> The [vk][cmz]alloc(_node) family of functions return void pointers which
+> it's completely unnecessary/pointless to cast to other pointer types since
+> that happens implicitly.
 > 
+> This patch removes such casts from drivers/net/
+> 
+> 
+> Signed-off-by: Jesper Juhl <jj@chaosbits.net>
+> ---
+>  zd_chip.c |    3 +--
+>  1 file changed, 1 insertion(+), 2 deletions(-)
+> diff --git a/drivers/net/wireless/zd1211rw/zd_chip.c b/drivers/net/wireless/zd1211rw/zd_chip.c
+> index 87a95bc..dfcebed 100644
+> --- a/drivers/net/wireless/zd1211rw/zd_chip.c
+> +++ b/drivers/net/wireless/zd1211rw/zd_chip.c
+> @@ -117,8 +117,7 @@ int zd_ioread32v_locked(struct zd_chip *chip, u32 *values, const zd_addr_t *addr
+>  
+>  	/* Allocate a single memory block for values and addresses. */
+>  	count16 = 2*count;
+> -	a16 = (zd_addr_t *) kmalloc(count16 * (sizeof(zd_addr_t) + sizeof(u16)),
+> -		                   GFP_KERNEL);
+> +	a16 = kmalloc(count16 * (sizeof(zd_addr_t) + sizeof(u16)), GFP_KERNEL);
+>  	if (!a16) {
+>  		dev_dbg_f(zd_chip_dev(chip),
+>  			  "error ENOMEM in allocation of a16\n");
 
-We can, but their content will be the same. Here we are not
-"artificially" entering/leaving idle, we're just performing the same
-steps towards the firmware as we would on idle entry and idle exit.
+kcalloc?
 
-If you like, we can rename the handle_idle function to something more
-generic.
-
--Juuso
-
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
