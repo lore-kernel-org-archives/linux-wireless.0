@@ -1,64 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:36198 "EHLO nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756387Ab0KTByg (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 19 Nov 2010 20:54:36 -0500
-From: Felix Fietkau <nbd@openwrt.org>
-To: linux-wireless@vger.kernel.org
-Cc: linville@tuxdriver.com, johannes@sipsolutions.net
-Subject: [PATCH v3 2/2] mac80211: reduce the number of retries for nullfunc probing
-Date: Sat, 20 Nov 2010 02:54:29 +0100
-Message-Id: <1290218069-85434-2-git-send-email-nbd@openwrt.org>
-In-Reply-To: <1290218069-85434-1-git-send-email-nbd@openwrt.org>
-References: <1290218069-85434-1-git-send-email-nbd@openwrt.org>
+Received: from eos.fwall.u-szeged.hu ([160.114.120.248]:44543 "EHLO
+	eos.fwall.u-szeged.hu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753901Ab0KIViO (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 9 Nov 2010 16:38:14 -0500
+Message-ID: <33316.82.131.221.21.1289338691.squirrel@webmail.inf.u-szeged.hu>
+In-Reply-To: <AANLkTimwoTBazrsEBmbrW36DOy5bkvuJQnS9VcczO=Wq@mail.gmail.com>
+References: <33010.82.131.221.21.1289337099.squirrel@webmail.inf.u-szeged.hu>
+    <AANLkTimwoTBazrsEBmbrW36DOy5bkvuJQnS9VcczO=Wq@mail.gmail.com>
+Date: Tue, 9 Nov 2010 22:38:11 +0100 (CET)
+Subject: Re: [Fwd: connecting ieee80211_hw and net_device]
+From: "Zoltan Herczeg" <zherczeg@inf.u-szeged.hu>
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Cc: linux-wireless@vger.kernel.org
+MIME-Version: 1.0
+Content-Type: text/plain;charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Since nullfunc frames are transmitted as unicast frames, they're more
-reliable than the broadcast probe requests, so we need fewer retries
-to figure out whether the AP is really gone.
+> On Tue, Nov 9, 2010 at 1:11 PM, Zoltan Herczeg <zherczeg@inf.u-szeged.hu>
+> wrote:
+>> Hi,
+>>
+>> I am developing a wireless driver for a cycle accurate energy simulator,
+>> and cannot solve the following issue:
+>>
+>> I can allocate a "wlan0" and "wlan1" platform device with
+>> ieee80211_alloc_hw, and can initialize it in Ad-Hoc mode. However, I
+>> realized this is not enough to have a wireless interface, since it has
+>> no
+>> receive operation, only transfer. Looking at the other drivers, I found
+>> that they allocate a net_device with the common alloc_etherdev.
+>> Unfortunately the register_netdev registers a new eth interface in my
+>> case, and this interface is not connected to the wlan interface. I set
+>> wireless_handlers and ieee80211_ptr for this device, still it is totally
+>> independent from the wlan interface.
+>>
+>> Am I missing something? (Sorry if this is a trivial question, I tried
+>> google but no luck so far)
+>
+> Have you looked at mac80211_hwsim under drivers/net/wireless ?
 
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
----
- net/mac80211/mlme.c |    9 ++++++++-
- 1 files changed, 8 insertions(+), 1 deletions(-)
+Yes, of course. However, mac80211_hwsim do thing in an other way than the
+other drivers (allocate a custom, global static net_device). I would like
+to understand the connection between the ieee80211_hw and net_device
+objects, and how they connected together to form a single device.
 
-diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index 18c0e42..0c0f9fa 100644
---- a/net/mac80211/mlme.c
-+++ b/net/mac80211/mlme.c
-@@ -28,6 +28,7 @@
- #include "rate.h"
- #include "led.h"
- 
-+#define IEEE80211_MAX_NULLFUNC_TRIES 2
- #define IEEE80211_MAX_PROBE_TRIES 5
- 
- /*
-@@ -1915,16 +1916,22 @@ void ieee80211_sta_work(struct ieee80211_sub_if_data *sdata)
- 			    IEEE80211_STA_CONNECTION_POLL) &&
- 	    ifmgd->associated) {
- 		u8 bssid[ETH_ALEN];
-+		int max_tries;
- 
- 		/* ACK received for nullfunc probing frame */
- 		if (!ifmgd->probe_send_count)
- 			ieee80211_reset_ap_probe(sdata);
- 
-+		if (local->hw.flags & IEEE80211_HW_REPORTS_TX_ACK_STATUS)
-+			max_tries = IEEE80211_MAX_NULLFUNC_TRIES;
-+		else
-+			max_tries = IEEE80211_MAX_PROBE_TRIES;
-+
- 		memcpy(bssid, ifmgd->associated->bssid, ETH_ALEN);
- 		if (time_is_after_jiffies(ifmgd->probe_timeout))
- 			run_again(ifmgd, ifmgd->probe_timeout);
- 
--		else if (ifmgd->probe_send_count < IEEE80211_MAX_PROBE_TRIES) {
-+		else if (ifmgd->probe_send_count < max_tries) {
- #ifdef CONFIG_MAC80211_VERBOSE_DEBUG
- 			wiphy_debug(local->hw.wiphy,
- 				    "%s: No probe response from AP %pM"
--- 
-1.7.3.2
+Thanks,
+Zoltan
+
 
