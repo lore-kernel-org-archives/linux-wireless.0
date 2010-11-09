@@ -1,40 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qy0-f174.google.com ([209.85.216.174]:47672 "EHLO
-	mail-qy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753067Ab0KJCUu (ORCPT
+Received: from mail-iw0-f174.google.com ([209.85.214.174]:52707 "EHLO
+	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755075Ab0KIVO6 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 9 Nov 2010 21:20:50 -0500
-Received: by qyk12 with SMTP id 12so2500227qyk.19
-        for <linux-wireless@vger.kernel.org>; Tue, 09 Nov 2010 18:20:49 -0800 (PST)
-From: Arnaud Lacombe <lacombar@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: lrodriguez@atheros.com, Arnaud Lacombe <lacombar@gmail.com>
-Subject: [PATCH 02/44] compat/2.6.17: add compat macro for `NET_SKB_PAD'
-Date: Tue,  9 Nov 2010 21:19:44 -0500
-Message-Id: <1289355626-25373-3-git-send-email-lacombar@gmail.com>
-In-Reply-To: <1289355626-25373-1-git-send-email-lacombar@gmail.com>
-References: <1289355626-25373-1-git-send-email-lacombar@gmail.com>
+	Tue, 9 Nov 2010 16:14:58 -0500
+Received: by mail-iw0-f174.google.com with SMTP id 10so1757935iwn.19
+        for <linux-wireless@vger.kernel.org>; Tue, 09 Nov 2010 13:14:58 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <33010.82.131.221.21.1289337099.squirrel@webmail.inf.u-szeged.hu>
+References: <33010.82.131.221.21.1289337099.squirrel@webmail.inf.u-szeged.hu>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Tue, 9 Nov 2010 13:14:35 -0800
+Message-ID: <AANLkTimwoTBazrsEBmbrW36DOy5bkvuJQnS9VcczO=Wq@mail.gmail.com>
+Subject: Re: [Fwd: connecting ieee80211_hw and net_device]
+To: Zoltan Herczeg <zherczeg@inf.u-szeged.hu>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Arnaud Lacombe <lacombar@gmail.com>
----
- include/linux/compat-2.6.17.h |    2 ++
- 1 files changed, 2 insertions(+), 0 deletions(-)
+On Tue, Nov 9, 2010 at 1:11 PM, Zoltan Herczeg <zherczeg@inf.u-szeged.hu> wrote:
+> Hi,
+>
+> I am developing a wireless driver for a cycle accurate energy simulator,
+> and cannot solve the following issue:
+>
+> I can allocate a "wlan0" and "wlan1" platform device with
+> ieee80211_alloc_hw, and can initialize it in Ad-Hoc mode. However, I
+> realized this is not enough to have a wireless interface, since it has no
+> receive operation, only transfer. Looking at the other drivers, I found
+> that they allocate a net_device with the common alloc_etherdev.
+> Unfortunately the register_netdev registers a new eth interface in my
+> case, and this interface is not connected to the wlan interface. I set
+> wireless_handlers and ieee80211_ptr for this device, still it is totally
+> independent from the wlan interface.
+>
+> Am I missing something? (Sorry if this is a trivial question, I tried
+> google but no luck so far)
 
-diff --git a/include/linux/compat-2.6.17.h b/include/linux/compat-2.6.17.h
-index 36d9fb2..b7c9473 100644
---- a/include/linux/compat-2.6.17.h
-+++ b/include/linux/compat-2.6.17.h
-@@ -6,6 +6,8 @@
- /* Compat work for 2.6.17 */
- #if (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,17))
- 
-+#define NET_SKB_PAD	16
-+
- #endif /* (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,17)) */
- 
- #endif /* LINUX_26_17_COMPAT_H */
--- 
-1.7.2.30.gc37d7.dirty
+Have you looked at mac80211_hwsim under drivers/net/wireless ?
 
+ Luis
