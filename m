@@ -1,100 +1,100 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.deathmatch.net ([72.66.92.28]:3628 "EHLO
-	mail.deathmatch.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750877Ab0KZTuc (ORCPT
+Received: from mail-iw0-f174.google.com ([209.85.214.174]:62935 "EHLO
+	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751265Ab0KIDZB convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 26 Nov 2010 14:50:32 -0500
-Date: Fri, 26 Nov 2010 14:37:55 -0500
-From: Bob Copeland <me@bobcopeland.com>
-To: Octav Chipara <ochipara@gmail.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: help with ath5k --- wlan0 no private ioctls
-Message-ID: <20101126193754.GB5815@hash.localnet>
-References: <AANLkTikCQPq-HVUJhDet-ZbA97nt+1uYTKgtzvK2cyd7@mail.gmail.com> <AANLkTikgkBZPEVOuZQHeJSXiiwBsVgMOGxRwOu315Vn4@mail.gmail.com> <AANLkTikMDT5qXrNZSdwsZDE6_rCcHnbv9pCWpHVaZo3K@mail.gmail.com>
+	Mon, 8 Nov 2010 22:25:01 -0500
+Received: by iwn10 with SMTP id 10so654315iwn.19
+        for <linux-wireless@vger.kernel.org>; Mon, 08 Nov 2010 19:25:00 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-In-Reply-To: <AANLkTikMDT5qXrNZSdwsZDE6_rCcHnbv9pCWpHVaZo3K@mail.gmail.com>
+Date: Tue, 9 Nov 2010 01:25:00 -0200
+Message-ID: <AANLkTim5a_oFXqjMrcbcUipG5FijbUoFkYF6ri6zO7wg@mail.gmail.com>
+Subject: RTL8187/8189
+From: Yermandu Patapitafious <yermandu.dev@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: Yermandu Patapitafious <yermandu.dev@gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Nov 26, 2010 at 09:09:25AM -0800, Octav Chipara wrote:
-> HI,
-> 
-> > Hmm, someone can correct me if I'm wrong, but according to my
-> > reading of the code, minstrel only uses hw->max_rate_tries
-> > and not wiphy->retry_{short,long}.  Also it looks like the only
-> > drivers that poke at these values only use it for failure
-> > indication when they don't support accurate tx status reporting.
-> >
-> 
-> Is there an easy way to control them? Can you set it through iwconfig?
+Hellow people, i buy an notebooks with the rtl8187b card.
+I have heavyly test several ways to connect but the connection can not
+be stabilize a connection.
+I try with wep, wap, without pass. Nothing works with this card.
 
-No, you can easily patch the driver but this is ostensibly a
-hardware-specific setting (although in ath5k it is more or less
-arbitrary).
+Identify card
 
-You can use pid controller, or maybe try this completely untested patch.
-Again this is only based on a glance at the code, I do not know if this
-is a real diagnosis of your issue.
+# lsusb
 
-From: Bob Copeland <me@bobcopeland.com>
-Date: Fri, 26 Nov 2010 14:28:35 -0500
-Subject: [PATCH] mac80211: minstrel: honor max retry counts from cfg80211
+```
+Bus 002 Device 002: ID 0bda:8189 Realtek Semiconductor Corp. RTL8187B
+Wireless 802.11g 54Mbps Network Adapter
+```
 
-We may configure dot11{Short,Long}RetryLimit in addition to whatever
-the hardware sets up as the maximum frame retry limit.  The pid
-controller used these values but minstrel did not.
+I wanna give the atention for ID Card: 0bda:**8189**
 
-Signed-off-by: Bob Copeland <me@bobcopeland.com>
----
- net/mac80211/rc80211_minstrel.c |    9 +++++++--
- net/mac80211/rc80211_minstrel.h |    1 +
- 2 files changed, 8 insertions(+), 2 deletions(-)
+This is not 0bda:8187 or 0bda:8197. Why i saying this? Because i
+research in the web and discover some people can get work with
+0bda:8187 using linux kernel native module driver. But i can not
+really make connection i think something wrong with this card or
+module or maybe not, i dont know.
 
-diff --git a/net/mac80211/rc80211_minstrel.c b/net/mac80211/rc80211_minstrel.c
-index 778c604..cf5393d 100644
---- a/net/mac80211/rc80211_minstrel.c
-+++ b/net/mac80211/rc80211_minstrel.c
-@@ -424,10 +424,10 @@ minstrel_rate_init(void *priv, struct ieee80211_supported_band *sband,
- 			tx_time_cts += tx_time_single + mi->sp_ack_dur;
- 			tx_time_rtscts += tx_time_single + 2 * mi->sp_ack_dur;
- 			if ((tx_time_cts < mp->segment_size) &&
--				(mr->retry_count_cts < mp->max_retry))
-+				(mr->retry_count_cts < mp->max_long_retry))
- 				mr->retry_count_cts++;
- 			if ((tx_time_rtscts < mp->segment_size) &&
--				(mr->retry_count_rtscts < mp->max_retry))
-+				(mr->retry_count_rtscts < mp->max_long_retry))
- 				mr->retry_count_rtscts++;
- 		} while ((tx_time < mp->segment_size) &&
- 				(++mr->retry_count < mp->max_retry));
-@@ -526,6 +526,11 @@ minstrel_alloc(struct ieee80211_hw *hw, struct dentry *debugfsdir)
- 		/* safe default, does not necessarily have to match hw properties */
- 		mp->max_retry = 7;
- 
-+	mp->max_long_retry = min(mp->max_retry,
-+		(unsigned int) hw->conf.long_frame_max_tx_count);
-+	mp->max_retry = min(mp->max_retry,
-+		(unsigned int) hw->conf.short_frame_max_tx_count);
-+
- 	if (hw->max_rates >= 4)
- 		mp->has_mrr = true;
- 
-diff --git a/net/mac80211/rc80211_minstrel.h b/net/mac80211/rc80211_minstrel.h
-index 0f5a833..5079b88 100644
---- a/net/mac80211/rc80211_minstrel.h
-+++ b/net/mac80211/rc80211_minstrel.h
-@@ -73,6 +73,7 @@ struct minstrel_priv {
- 	unsigned int cw_min;
- 	unsigned int cw_max;
- 	unsigned int max_retry;
-+	unsigned int max_long_retry;
- 	unsigned int ewma_level;
- 	unsigned int segment_size;
- 	unsigned int update_interval;
--- 
-1.5.6.5
+When i set the AP with pass i got this error:
 
--- 
-Bob Copeland %% www.bobcopeland.com
+# iwconfig wlan0 essid "MyEssid" key s:asciikey
 
+Error for wireless request "Set Encode" (8B2A) :
+     SET failed on device wlan0 ; Invalid argument.
+
+Using wep, wap or nopass.
+
+?
+
+I subscribe the ht tps: //qa.  mandriva  .com/ show_bug.cgi?id= 39334
+a bug open related with this problem. Recently we have a notice in
+comment #11 to try use with ndiswrapper
+
+```
+
+ndiswrapper -a 0bda:8197 net8187b
+
+```
+But i can not force to use 0bda:8197 instead 0bda:8189:
+
+```
+# ndiswrapper -a 0bda:8197 net8187b
+Driver 'net8187b' is already used for '0BDA:8197'
+
+# ndiswrapper -l
+net8187b : driver installed
+        device (0BDA:8189) present (alternate driver: rtl8187)
+```
+
+But this can not be donned, it persist to use 8189 and not 8197 as related.
+
+I don't know anyone else with this same model of card, and how we can
+do more tests. I hope someone can help us.
+
+Im using
+
+Linux  2.6.33.7-rt29 #7 SMP PREEMPT RT Tue Nov 2 23:41:52 BRST 2010
+x86_64 Pentium(R) Dual-Core CPU T4200 @ 2.00GHz GenuineIntel GNU/Linux
+
+I test in the Ubuntu, Mandriva and Arch and no lucky. I try in Gentoo
+too with kernel 2.6.36-wl+ (git version), same issues.
+
+
+Links:
+
+lsusb-verbose.log:  ht tp pastebin . ca/1985873
+Windows 7 X64 driver: ht tp  filebin . ca /ogzobt/ Win7X64.tar.gz
+lsmod : paste.pocoo .org/ show/288123
+
+RTL8187b mandriva bug: ht  tps: //  qa.  mandriva  .com/
+show_bug.cgi?id  =39334
+
+
+So pp that's it.
+
+Regards,
+yermandu
