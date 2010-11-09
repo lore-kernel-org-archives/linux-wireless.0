@@ -1,74 +1,83 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:50398 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756592Ab0KJTo4 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 10 Nov 2010 14:44:56 -0500
-Date: Wed, 10 Nov 2010 14:40:39 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Ivo Van Doorn <ivdoorn@gmail.com>
-Cc: Helmut Schaa <helmut.schaa@googlemail.com>,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 03/13] rt2x00: Wait up to one second on rt2800 for WPDMA
- to be ready
-Message-ID: <20101110194039.GE2714@tuxdriver.com>
-References: <201011042037.00178.IvDoorn@gmail.com>
- <201011051044.37167.helmut.schaa@googlemail.com>
- <AANLkTinDwi_77iVS-bOTSX_4zs76nyttoEsdfpV0_F2g@mail.gmail.com>
- <201011051056.03700.helmut.schaa@googlemail.com>
- <AANLkTi=2PBV2nQTqnMwm_hJcq6=jb_E=81mhic9DbqpG@mail.gmail.com>
+Received: from ogre.sisk.pl ([217.79.144.158]:35496 "EHLO ogre.sisk.pl"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751972Ab0KIT1p (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 9 Nov 2010 14:27:45 -0500
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
+To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Subject: Re: [Regression, post-2.6.35] ath9k occasionally drops out of PCI config space
+Date: Tue, 9 Nov 2010 20:26:48 +0100
+Cc: Luis Rodriguez <Luis.Rodriguez@atheros.com>,
+	Felix Fietkau <nbd@openwrt.org>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	LKML <linux-kernel@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+References: <201011052150.02245.rjw@sisk.pl> <201011082147.14170.rjw@sisk.pl> <AANLkTikhQrk3aMJLLeeTmy9KJHd-H3xxFPNdUT9uJoD8@mail.gmail.com>
+In-Reply-To: <AANLkTikhQrk3aMJLLeeTmy9KJHd-H3xxFPNdUT9uJoD8@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-In-Reply-To: <AANLkTi=2PBV2nQTqnMwm_hJcq6=jb_E=81mhic9DbqpG@mail.gmail.com>
+Content-Type: Text/Plain;
+  charset="utf-8"
+Message-Id: <201011092026.48434.rjw@sisk.pl>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Nov 05, 2010 at 11:07:22AM +0100, Ivo Van Doorn wrote:
-> Hi,
-> 
-> >> On Fri, Nov 5, 2010 at 10:44 AM, Helmut Schaa
-> >> <helmut.schaa@googlemail.com> wrote:
+On Monday, November 08, 2010, Luis R. Rodriguez wrote:
+> On Mon, Nov 8, 2010 at 12:47 PM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
+> > On Friday, November 05, 2010, Luis R. Rodriguez wrote:
+> >> On Fri, Nov 05, 2010 at 01:50:02PM -0700, Rafael J. Wysocki wrote:
 > >> > Hi,
 > >> >
-> >> > Am Donnerstag 04 November 2010 schrieb Ivo van Doorn:
-> >> >> From: Helmut Schaa <helmut.schaa@googlemail.com>
-> >> >>
-> >> >> At least some devices need such a long time to inititalize WPDMA. This
-> >> >> only increases the maximum wait time and shouldn't affect devices that
-> >> >> have been working before.
-> >> >>
-> >> >> Reported-by: Joshua Smith <jesmith@kaon.com>
-> >> >> Signed-off-by: Helmut Schaa <helmut.schaa@googlemail.com>
-> >> >> Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
-> >> >> ---
+> >> > For some time I've been experiencing a regression associated with ath9k
+> >> > that occasionally it drops the connection with the AP and goes into a state
+> >> > in which reading from its PCI config registers (as done by lspci) return all
+> >> > ones.
 > >> >
-> >> > Ivo, the patch context looks different then in the version I've send to you.
+> >> > It may be sort of brought back to life by a suspend/resume afterwards, but
+> >> > then the driver cannot really handle it and realoding the driver doesn't help
+> >> > (probe fails).  Basically, full machine reboot is needed to revive the adapter.
 > >> >
-> >> > The
-> >> >        for (i = 0; i < REGISTER_BUSY_COUNT; i++) {
-> >> > should be
-> >> >        for (i = 0; i < 100; i++) {
+> >> > The device is:
 > >> >
-> >> > Otherwise we don't wait up to one second as in the comment but just 50ms :P
+> >> > 09:00.0 Network controller: Atheros Communications Inc. AR928X Wireless Network Adapter (PCI-Express) (rev 01)
+> >> >         Subsystem: Foxconn International, Inc. Device e01f
 > >> >
-> >> > However, that change was part of a previous patch that was already merged into
-> >> > the rt2x00 git tree. Seems like that change got lost during the merge ...
+> >> > and the kernel says:
+> >> >
+> >> > [    9.623217] ath9k 0000:09:00.0: PCI INT A -> GSI 19 (level, low) -> IRQ 19
+> >> > [    9.631518] ath9k 0000:09:00.0: setting latency timer to 64
+> >> > [   10.071497] ath: EEPROM regdomain: 0x65
+> >> > [   10.071502] ath: EEPROM indicates we should expect a direct regpair map
+> >> > [   10.071510] ath: Country alpha2 being used: 00
+> >> > [   10.071514] ath: Regpair used: 0x65
+> >> > [   10.096025] phy0: Selected rate control algorithm 'ath9k_rate_control'
+> >> > [   10.097803] Registered led device: ath9k-phy0::radio
+> >> > [   10.098035] Registered led device: ath9k-phy0::assoc
+> >> > [   10.098249] Registered led device: ath9k-phy0::tx
+> >> > [   10.098483] Registered led device: ath9k-phy0::rx
+> >> > [   10.098496] phy0: Atheros AR9280 Rev:2 mem=0xffffc900017e0000, irq=19
+> >> >
+> >> > The issue is not really bisectable, because I'm unable to trigger it on demand
+> >> > and it occurs approx. 1-2 times a day.  So, if you have any ideas what to test,
+> >> > please let me know.
+> >> >
+> >> > It is not reproducible with the 2.6.35 kernel.
 > >>
-> >> I'll try to find the patch which changed the REGISTER_BUSY_COUNT behavior.
+> >> Please try this patch.
 > >
-> > I'm not sure but I guess I haven't sent that one as separate [PATCH] but it
-> > was inlined in the mail traffic with Joshua ("Question about starting up an
-> > AP").
+> > It _appears_ to help.  At least I haven't been able to reproduce the problem
+> > since I applied it, which was on Saturday early in the morning.
+> >
+> > Still, I also haven't used wireless a lot since that time, because I've been
+> > traveling mostly.
 > 
-> Ah ok, that explains why I missed it. I'll dig it up, and send it to
-> wireless-testing
-> as soon as possible (John, do you want it as separate patch, or should
-> it be merged
-> into this patch?).
+> Thanks, please let us know when you are satisfied with this as a fix.
 
-Separate patch, please (if you haven't already sent it).
+OK, I'm now quite confident that it really helps.
 
-John
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+> Its going upstream so either way if you find you hit the issue just
+> let us know.
+
+Great, thanks, I will.
+
+Rafael
