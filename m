@@ -1,37 +1,30 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:52978 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752877Ab0KYOsy (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 25 Nov 2010 09:48:54 -0500
-From: Hauke Mehrtens <hauke@hauke-m.de>
-To: lrodriguez@atheros.com
-Cc: linux-wireless@vger.kernel.org, mcgrof@infradead.org,
-	Hauke Mehrtens <hauke@hauke-m.de>
-Subject: [PATCH 5/5] compat-wireless: remove double definition of CONFIG_SSB_DEBUG
-Date: Thu, 25 Nov 2010 15:48:37 +0100
-Message-Id: <1290696517-20437-5-git-send-email-hauke@hauke-m.de>
-In-Reply-To: <1290696517-20437-1-git-send-email-hauke@hauke-m.de>
-References: <1290696517-20437-1-git-send-email-hauke@hauke-m.de>
+Received: from mail-ww0-f44.google.com ([74.125.82.44]:32944 "EHLO
+	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752899Ab0KIBmY (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 8 Nov 2010 20:42:24 -0500
+Received: by wwi18 with SMTP id 18so222340wwi.1
+        for <linux-wireless@vger.kernel.org>; Mon, 08 Nov 2010 17:42:23 -0800 (PST)
+Message-ID: <4CD8A71E.6040604@lwfinger.net>
+Date: Mon, 08 Nov 2010 19:42:54 -0600
+From: Larry Finger <Larry.Finger@lwfinger.net>
+MIME-Version: 1.0
+To: wireless <linux-wireless@vger.kernel.org>
+Subject: What kind of Atheros device is this?
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
----
- config.mk |    1 -
- 1 files changed, 0 insertions(+), 1 deletions(-)
+On the openSUSE forum, one of the posters got this output from lspci -nnk:
 
-diff --git a/config.mk b/config.mk
-index 38477b8..fcf575d 100644
---- a/config.mk
-+++ b/config.mk
-@@ -286,7 +286,6 @@ endif #CONFIG_WIRELESS_EXT
- ifdef CONFIG_SSB
- # Sonics Silicon Backplane
- CONFIG_SSB_SPROM=y
--# CONFIG_SSB_DEBUG=y
- 
- CONFIG_SSB_BLOCKIO=y
- CONFIG_SSB_PCIHOST=y
--- 
-1.7.1
+02:00.0 Network controller [0280]: Atheros Communications Inc. Device
+[168c:002c] (rev 01)
+	Subsystem: Device [1a3b:1112]
 
+I did not find these PCI IDs for any device in wireless or staging. What is it,
+and what driver should it use?
+
+Thanks,
+
+Larry
