@@ -1,38 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iw0-f174.google.com ([209.85.214.174]:57058 "EHLO
-	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754009Ab0KNJAz (ORCPT
+Received: from mail-fx0-f46.google.com ([209.85.161.46]:45127 "EHLO
+	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756117Ab0KJUWA convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 14 Nov 2010 04:00:55 -0500
-Received: by iwn10 with SMTP id 10so5390934iwn.19
-        for <linux-wireless@vger.kernel.org>; Sun, 14 Nov 2010 01:00:54 -0800 (PST)
+	Wed, 10 Nov 2010 15:22:00 -0500
+Received: by fxm16 with SMTP id 16so735997fxm.19
+        for <linux-wireless@vger.kernel.org>; Wed, 10 Nov 2010 12:21:59 -0800 (PST)
+From: Christian Lamparter <chunkeey@googlemail.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Subject: Re: [PATCH 2/6] carl9170: use generic sign_extend32
+Date: Wed, 10 Nov 2010 21:21:49 +0100
+Cc: linux-wireless@vger.kernel.org,
+	Andreas Herrmann <andreas.herrmann3@amd.com>
+References: <cover.1288393804.git.chunkeey@googlemail.com> <9f86a3d821426da8b6e3d9b7b8ab7bd9f8e76d71.1288393804.git.chunkeey@googlemail.com> <20101110200635.GF2714@tuxdriver.com>
+In-Reply-To: <20101110200635.GF2714@tuxdriver.com>
 MIME-Version: 1.0
-In-Reply-To: <AANLkTi=b5czEjEM8zD1ZUq0hNdeJg1wy7OS4-OhE6fO_@mail.gmail.com>
-References: <201011131908.15595.IvDoorn@gmail.com> <201011131909.50885.IvDoorn@gmail.com>
- <201011131910.11947.IvDoorn@gmail.com> <AANLkTi=b5czEjEM8zD1ZUq0hNdeJg1wy7OS4-OhE6fO_@mail.gmail.com>
-From: Julian Calaby <julian.calaby@gmail.com>
-Date: Sun, 14 Nov 2010 20:00:34 +1100
-Message-ID: <AANLkTikO0Vg5y_yanLyZg+SMnxN-3Gftg=OS70UBom_v@mail.gmail.com>
-Subject: Re: [PATCH 3/9] rt2x00: Clean up Kconfig for RT2800 devices.
-To: Ivo van Doorn <ivdoorn@gmail.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: Text/Plain;
+  charset="utf-8"
+Message-Id: <201011102121.50082.chunkeey@googlemail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, Nov 14, 2010 at 19:59, Julian Calaby <julian.calaby@gmail.com> wrote:
-> IVD,
->
-> A minor nit:
+On Wednesday 10 November 2010 21:06:36 John W. Linville wrote:
+> On Fri, Oct 29, 2010 at 11:11:23PM +0200, Christian Lamparter wrote:
+> > This patch replaces the handcrafted
+> > sign extension cruft with a generic
+> > bitop function.
+> > 
+> > Signed-off-by: Christian Lamparter <chunkeey@googlemail.com>
+> 
+>   CC [M]  drivers/net/wireless/ath/carl9170/phy.o
+> drivers/net/wireless/ath/carl9170/phy.c: In function ‘carl9170_get_noisefloor’:
+> drivers/net/wireless/ath/carl9170/phy.c:1572: error: implicit declaration of function ‘sign_extend32’
+> make[3]: *** [drivers/net/wireless/ath/carl9170/phy.o] Error 1
+> make[2]: *** [drivers/net/wireless/ath/carl9170] Error 2
+> make[1]: *** [drivers/net/wireless/ath] Error 2
+> make: *** [drivers/net/wireless/] Error 2
+> 
+> Maybe we should wait until this function exists before we use it? :-)
+interesting,
 
-Disregard this, I hadn't read patch #4 =)
+https://patchwork.kernel.org/patch/143241/
 
-Thanks,
+so why exactly wasn't this patch merged?
 
--- 
-Julian Calaby
-
-Email: julian.calaby@gmail.com
-Profile: http://www.google.com/profiles/julian.calaby/
-.Plan: http://sites.google.com/site/juliancalaby/
+Regards,
+	Chr
