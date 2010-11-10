@@ -1,50 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from perninha.conectiva.com.br ([187.115.55.249]:47849 "EHLO
-	perninha.conectiva.com.br" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753494Ab0KBBAO (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 1 Nov 2010 21:00:14 -0400
-From: Herton Ronaldo Krzesinski <herton@mandriva.com.br>
-To: linux-wireless@vger.kernel.org
-Cc: Larry Finger <Larry.Finger@lwfinger.net>,
-	Hin-Tak Leung <htl10@users.sourceforge.net>,
-	John W Linville <linville@tuxdriver.com>,
-	Herton Ronaldo Krzesinski <herton@mandriva.com.br>,
-	seno <senada@t-online.de>
-Subject: [PATCH 9/9] rtl8187: restore anaparam registers after reset with 8187B
-Date: Mon,  1 Nov 2010 22:59:39 -0200
-Message-Id: <1288659579-4986-10-git-send-email-herton@mandriva.com.br>
-In-Reply-To: <1288659579-4986-1-git-send-email-herton@mandriva.com.br>
-References: <1288659579-4986-1-git-send-email-herton@mandriva.com.br>
+Received: from nbd.name ([46.4.11.11]:35558 "EHLO nbd.name"
+	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1757208Ab0KJWXg (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 10 Nov 2010 17:23:36 -0500
+Message-ID: <4CDB1B64.6010002@openwrt.org>
+Date: Wed, 10 Nov 2010 23:23:32 +0100
+From: Felix Fietkau <nbd@openwrt.org>
+MIME-Version: 1.0
+To: Arnaud Lacombe <lacombar@gmail.com>
+CC: linux-wireless@vger.kernel.org, lrodriguez@atheros.com
+Subject: Re: [PATCH 28/44] compat: avoid using `#include_next' directive in
+ compat headers
+References: <1289355626-25373-1-git-send-email-lacombar@gmail.com> <1289355626-25373-29-git-send-email-lacombar@gmail.com>
+In-Reply-To: <1289355626-25373-29-git-send-email-lacombar@gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Current 8187B initialization misses anaparam registers restore after
-8187 reset. This causes ANAPARAM register to stay zeroed out (ANAPARAM2
-kept its value on my tests). To avoid this, call rtl8187_set_anaparam
-right after chip reset (to be on the safe side, as it makes sure we
-restore all ANAPARAM registers).
+On 2010-11-10 3:20 AM, Arnaud Lacombe wrote:
+> Signed-off-by: Arnaud Lacombe <lacombar@gmail.com>
+> ---
+>  include/linux/pm_qos_params.h |    7 +++----
+>  include/linux/tracepoint.h    |   14 +++++++-------
+>  include/net/net_namespace.h   |   14 +++++++-------
+>  include/trace/define_trace.h  |    5 -----
+>  4 files changed, 17 insertions(+), 23 deletions(-)
+> 
+> diff --git a/include/linux/pm_qos_params.h b/include/linux/pm_qos_params.h
+> index e1f083c..8c69ab2 100644
+> --- a/include/linux/pm_qos_params.h
+> +++ b/include/linux/pm_qos_params.h
+> @@ -1,8 +1,7 @@
+>  #include <linux/version.h>
+>  
+> -#if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,25))
+> -#include_next <linux/pm_qos_params.h>
+> -#else
+> +#if (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,25))
+> +
+>  /* interface for the pm_qos_power infrastructure of the linux kernel.
+>   *
+>   * Mark Gross <mgross@linux.intel.com>
+> @@ -28,5 +27,5 @@ int pm_qos_requirement(int qos);
+>  
+>  int pm_qos_add_notifier(int qos, struct notifier_block *notifier);
+>  int pm_qos_remove_notifier(int qos, struct notifier_block *notifier);
+> -#endif /* (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,25)) */
+>  
+> +#endif /* (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,25)) */
+With #include_next gone, how would the compiler find the other header
+file for version >= 2.6.25?
 
-Signed-off-by: Herton Ronaldo Krzesinski <herton@mandriva.com.br>
-Acked-by: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: seno <senada@t-online.de>
----
- drivers/net/wireless/rtl818x/rtl8187_dev.c |    2 ++
- 1 files changed, 2 insertions(+), 0 deletions(-)
-
-diff --git a/drivers/net/wireless/rtl818x/rtl8187_dev.c b/drivers/net/wireless/rtl818x/rtl8187_dev.c
-index 4448647..eeee244 100644
---- a/drivers/net/wireless/rtl818x/rtl8187_dev.c
-+++ b/drivers/net/wireless/rtl818x/rtl8187_dev.c
-@@ -771,6 +771,8 @@ static int rtl8187b_init_hw(struct ieee80211_hw *dev)
- 	if (res)
- 		return res;
- 
-+	rtl8187_set_anaparam(priv, true);
-+
- 	/* BRSR (Basic Rate Set Register) on 8187B looks to be the same as
- 	 * RESP_RATE on 8187L in Realtek sources: each bit should be each
- 	 * one of the 12 rates, all are enabled */
--- 
-1.7.3.2
-
+- Felix
