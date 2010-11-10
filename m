@@ -1,64 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:52974 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752856Ab0KYOsx (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 25 Nov 2010 09:48:53 -0500
-From: Hauke Mehrtens <hauke@hauke-m.de>
-To: lrodriguez@atheros.com
-Cc: linux-wireless@vger.kernel.org, mcgrof@infradead.org,
-	Hauke Mehrtens <hauke@hauke-m.de>
-Subject: [PATCH 3/5] compat-wireless: rename config symbols to CONFIG_WL12XX
-Date: Thu, 25 Nov 2010 15:48:35 +0100
-Message-Id: <1290696517-20437-3-git-send-email-hauke@hauke-m.de>
-In-Reply-To: <1290696517-20437-1-git-send-email-hauke@hauke-m.de>
-References: <1290696517-20437-1-git-send-email-hauke@hauke-m.de>
+Received: from mga09.intel.com ([134.134.136.24]:40709 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754938Ab0KJSBG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 10 Nov 2010 13:01:06 -0500
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	Johannes Berg <johannes.berg@intel.com>,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Subject: [PATCH 12/16] iwlagn: re-enable calibration
+Date: Wed, 10 Nov 2010 09:56:46 -0800
+Message-Id: <1289411810-23093-13-git-send-email-wey-yi.w.guy@intel.com>
+In-Reply-To: <1289411810-23093-1-git-send-email-wey-yi.w.guy@intel.com>
+References: <1289411810-23093-1-git-send-email-wey-yi.w.guy@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Rename config Symbols from CONFIG_WL1271 to CONFIG_WL12XX. This was
-missing in 3bd28daf2ad78adf652c3e6b74645b7fa0cf3fc2.
-Add CONFIG_WL12XX_HT and remove double definition of CONFIG_WL12XX
+From: Johannes Berg <johannes.berg@intel.com>
 
-Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+During the RXON rewrite, this code got lost.
+When we've just associated, we need to enable
+all calibrations and see if some were already
+finished. Add back the missing code.
+
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
 ---
- config.mk |    8 ++++----
- 1 files changed, 4 insertions(+), 4 deletions(-)
+ drivers/net/wireless/iwlwifi/iwl-agn-rxon.c |   14 ++++++++++++++
+ 1 files changed, 14 insertions(+), 0 deletions(-)
 
-diff --git a/config.mk b/config.mk
-index 0f58320..ad597cb 100644
---- a/config.mk
-+++ b/config.mk
-@@ -468,7 +468,7 @@ ifndef CONFIG_COMPAT_KERNEL_25
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-rxon.c b/drivers/net/wireless/iwlwifi/iwl-agn-rxon.c
+index d594a16..d9d617f 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn-rxon.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn-rxon.c
+@@ -569,6 +569,20 @@ void iwlagn_bss_info_changed(struct ieee80211_hw *hw,
+ 	if (force || memcmp(&ctx->staging, &ctx->active, sizeof(ctx->staging)))
+ 		iwlagn_commit_rxon(priv, ctx);
  
- ifdef CONFIG_CRC7
- CONFIG_WL1251_SPI=m
--CONFIG_WL1271_SPI=m
-+CONFIG_WL12XX_SPI=m
- endif #CONFIG_CRC7
- CONFIG_P54_SPI=m
- 
-@@ -495,7 +495,7 @@ endif #CONFIG_WL12XX_PLATFORM_DATA
- 
- ifndef CONFIG_COMPAT_KERNEL_32
- ifdef CONFIG_WL12XX_PLATFORM_DATA
--CONFIG_WL1271_SDIO=m
-+CONFIG_WL12XX_SDIO=m
- endif #CONFIG_WL12XX_PLATFORM_DATA
- endif #CONFIG_COMPAT_KERNEL_32
- 
-@@ -564,10 +564,10 @@ CONFIG_P54_LEDS=y
- CONFIG_ATH_COMMON=m
- # CONFIG_ATH_DEBUG=y
- 
--CONFIG_WL12XX=y
- ifdef CONFIG_CRC7
- CONFIG_WL1251=m
--CONFIG_WL1271=m
-+CONFIG_WL12XX=m
-+CONFIG_WL12XX_HT=y
- endif #CONFIG_CRC7
- 
- ifdef CONFIG_COMPAT_KERNEL_27
++	if (changes & BSS_CHANGED_ASSOC && bss_conf->assoc) {
++		/*
++		 * The chain noise calibration will enable PM upon
++		 * completion. If calibration has already been run
++		 * then we need to enable power management here.
++		 */
++		if (priv->chain_noise_data.state == IWL_CHAIN_NOISE_DONE)
++			iwl_power_update_mode(priv, false);
++
++		/* Enable RX differential gain and sensitivity calibrations */
++		iwl_chain_noise_reset(priv);
++		priv->start_calib = 1;
++	}
++
+ 	if (changes & BSS_CHANGED_IBSS) {
+ 		ret = iwlagn_manage_ibss_station(priv, vif,
+ 						 bss_conf->ibss_joined);
 -- 
-1.7.1
+1.7.0.4
 
