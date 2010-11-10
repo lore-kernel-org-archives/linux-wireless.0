@@ -1,104 +1,86 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.neratec.ch ([80.75.119.105]:56674 "EHLO mail.neratec.ch"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756234Ab0KKO6R (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 11 Nov 2010 09:58:17 -0500
-Date: Thu, 11 Nov 2010 15:58:11 +0100 (CET)
-From: Wojciech Dubowik <dubowoj@neratec.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org
-Message-ID: <6105834.1111289487490143.JavaMail.wlan@CHBU500181>
-In-Reply-To: <17186438.751289486686690.JavaMail.wlan@CHBU500181>
-Subject: [PATCH 6/9] ath5k: AHB port. Use more generic functions for finding
- mac revision instead of pci specific.
+Received: from mail.candelatech.com ([208.74.158.172]:35953 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754086Ab0KJXCe (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 10 Nov 2010 18:02:34 -0500
+Received: from [192.168.100.195] (firewall.candelatech.com [70.89.124.249])
+	(authenticated bits=0)
+	by ns3.lanforge.com (8.14.2/8.14.2) with ESMTP id oAAN2Wak027099
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
+	for <linux-wireless@vger.kernel.org>; Wed, 10 Nov 2010 15:02:33 -0800
+Message-ID: <4CDB2488.4040802@candelatech.com>
+Date: Wed, 10 Nov 2010 15:02:32 -0800
+From: Ben Greear <greearb@candelatech.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: ath5k/mac80211:  Reproducible deadlock with 64-stations.
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Use ath5k_bus_read_srev as a wrapper for MAC revision register reading. Different buses have
-to aceess it with own functions before hardware is initialized.
+We started up our strenuous wifi testing again, with this morning's wireless-testing
+(plus some of our own non-wifi-related patches).
 
-Signed-off-by: Wojciech Dubowik <Wojciech.Dubowik@neratec.com>
----
- drivers/net/wireless/ath/ath5k/ath5k.h  |    2 ++
- drivers/net/wireless/ath/ath5k/attach.c |   11 +++++++----
- drivers/net/wireless/ath/ath5k/pci.c    |    6 ++++++
- 3 files changed, 15 insertions(+), 4 deletions(-)
+We have a reproducible kernel hang when attempting to quickly
+create and configure 64 STA interfaces, no encryption, with
+an ath5k NIC.
 
-diff --git a/drivers/net/wireless/ath/ath5k/ath5k.h b/drivers/net/wireless/ath/ath5k/ath5k.h
-index 2b9d693..a13243a 100644
---- a/drivers/net/wireless/ath/ath5k/ath5k.h
-+++ b/drivers/net/wireless/ath/ath5k/ath5k.h
-@@ -1034,6 +1034,7 @@ struct ath5k_hw {
- 	u32			ah_phy;
- 	u32			ah_mac_srev;
- 	u16			ah_mac_version;
-+	u16			ah_mac_revision;
- 	u16			ah_phy_revision;
- 	u16			ah_radio_5ghz_revision;
- 	u16			ah_radio_2ghz_revision;
-@@ -1144,6 +1145,7 @@ void ath5k_sysfs_unregister(struct ath5k_softc *sc);
- 
- /*chip id helper function */
- const char * ath5k_chip_name(enum ath5k_srev_type type, u_int16_t val);
-+int ath5k_bus_read_srev(struct ath5k_hw *ah);
- 
- /* LED functions */
- int ath5k_init_leds(struct ath5k_softc *sc);
-diff --git a/drivers/net/wireless/ath/ath5k/attach.c b/drivers/net/wireless/ath/ath5k/attach.c
-index c5b2eb7..15e3a83 100644
---- a/drivers/net/wireless/ath/ath5k/attach.c
-+++ b/drivers/net/wireless/ath/ath5k/attach.c
-@@ -128,7 +128,8 @@ int ath5k_hw_attach(struct ath5k_softc *sc)
- 	/*
- 	 * Find the mac version
- 	 */
--	srev = ath5k_hw_reg_read(ah, AR5K_SREV);
-+	ath5k_bus_read_srev(ah);
-+	srev = ah->ah_mac_srev;
- 	if (srev < AR5K_SREV_AR5311)
- 		ah->ah_version = AR5K_AR5210;
- 	else if (srev < AR5K_SREV_AR5212)
-@@ -136,6 +137,10 @@ int ath5k_hw_attach(struct ath5k_softc *sc)
- 	else
- 		ah->ah_version = AR5K_AR5212;
- 
-+	/* Get the MAC revision */
-+	ah->ah_mac_version = AR5K_REG_MS(srev, AR5K_SREV_VER);
-+	ah->ah_mac_revision = AR5K_REG_MS(srev, AR5K_SREV_REV);
-+
- 	/* Fill the ath5k_hw struct with the needed functions */
- 	ret = ath5k_hw_init_desc_functions(ah);
- 	if (ret)
-@@ -146,9 +151,7 @@ int ath5k_hw_attach(struct ath5k_softc *sc)
- 	if (ret)
- 		goto err;
- 
--	/* Get MAC, PHY and RADIO revisions */
--	ah->ah_mac_srev = srev;
--	ah->ah_mac_version = AR5K_REG_MS(srev, AR5K_SREV_VER);
-+	/* Get PHY and RADIO revisions */
- 	ah->ah_phy_revision = ath5k_hw_reg_read(ah, AR5K_PHY_CHIP_ID) &
- 			0xffffffff;
- 	ah->ah_radio_5ghz_revision = ath5k_hw_radio_revision(ah,
-diff --git a/drivers/net/wireless/ath/ath5k/pci.c b/drivers/net/wireless/ath/ath5k/pci.c
-index 0d8dd2d..0acf1fc 100644
---- a/drivers/net/wireless/ath/ath5k/pci.c
-+++ b/drivers/net/wireless/ath/ath5k/pci.c
-@@ -100,6 +100,12 @@ bool ath5k_pci_eeprom_read(struct ath_common *common, u32 offset, u16 *data)
- 	return -ETIMEDOUT;
- }
- 
-+int ath5k_bus_read_srev(struct ath5k_hw *ah)
-+{
-+	ah->ah_mac_srev = ath5k_hw_reg_read(ah, AR5K_SREV);
-+	return 0;
-+}
-+
- /* Common ath_bus_opts structure */
- static const struct ath_bus_ops ath_pci_bus_ops = {
- 	.ath_bus_type = ATH_PCI,
+It appears to me that this may be a general mac80211 deadlock
+from the 'sysrq d' output below.
+
+We'll attempt to reproduce with a lesser-patched wireless-testing
+in the meantime.
+
+
+Nov 10 14:54:33 localhost kernel: SysRq : Show Locks Held
+Nov 10 14:54:33 localhost kernel:
+Nov 10 14:54:33 localhost kernel: Showing all locks held in the system:
+Nov 10 14:54:33 localhost kernel: 3 locks held by kworker/0:0/4:
+Nov 10 14:54:33 localhost kernel: #0:  (events){+.+.+.}, at: [<c0446ded>] process_one_work+0x13e/0x2bf
+Nov 10 14:54:33 localhost kernel: #1:  ((linkwatch_work).work){+.+.+.}, at: [<c0446ded>] process_one_work+0x13e/0x2bf
+Nov 10 14:54:33 localhost kernel: #2:  (rtnl_mutex){+.+.+.}, at: [<c070220f>] rtnl_lock+0xf/0x11
+Nov 10 14:54:33 localhost kernel: 1 lock held by ntpd/1675:
+Nov 10 14:54:33 localhost kernel: #0:  (rtnl_mutex){+.+.+.}, at: [<c070220f>] rtnl_lock+0xf/0x11
+Nov 10 14:54:33 localhost kernel: 1 lock held by bash/2182:
+Nov 10 14:54:33 localhost kernel: #0:  (&tty->atomic_read_lock){+.+...}, at: [<c060f4a5>] n_tty_read+0x1d2/0x5ee
+Nov 10 14:54:33 localhost kernel: 1 lock held by bash/2199:
+Nov 10 14:54:33 localhost kernel: #0:  (&tty->atomic_read_lock){+.+...}, at: [<c060f4a5>] n_tty_read+0x1d2/0x5ee
+Nov 10 14:54:33 localhost kernel: 1 lock held by mingetty/2517:
+Nov 10 14:54:33 localhost kernel: #0:  (&tty->atomic_read_lock){+.+...}, at: [<c060f4a5>] n_tty_read+0x1d2/0x5ee
+Nov 10 14:54:33 localhost kernel: 1 lock held by mingetty/2518:
+Nov 10 14:54:33 localhost kernel: #0:  (&tty->atomic_read_lock){+.+...}, at: [<c060f4a5>] n_tty_read+0x1d2/0x5ee
+Nov 10 14:54:33 localhost kernel: 1 lock held by mingetty/2519:
+Nov 10 14:54:33 localhost kernel: #0:  (&tty->atomic_read_lock){+.+...}, at: [<c060f4a5>] n_tty_read+0x1d2/0x5ee
+Nov 10 14:54:33 localhost kernel: 1 lock held by mingetty/2520:
+Nov 10 14:54:33 localhost kernel: #0:  (&tty->atomic_read_lock){+.+...}, at: [<c060f4a5>] n_tty_read+0x1d2/0x5ee
+Nov 10 14:54:33 localhost kernel: 1 lock held by mingetty/2521:
+Nov 10 14:54:33 localhost kernel: #0:  (&tty->atomic_read_lock){+.+...}, at: [<c060f4a5>] n_tty_read+0x1d2/0x5ee
+Nov 10 14:54:33 localhost kernel: 1 lock held by mingetty/2522:
+Nov 10 14:54:33 localhost kernel: #0:  (&tty->atomic_read_lock){+.+...}, at: [<c060f4a5>] n_tty_read+0x1d2/0x5ee
+Nov 10 14:54:33 localhost kernel: 1 lock held by bash/2679:
+Nov 10 14:54:33 localhost kernel: #0:  (&tty->atomic_read_lock){+.+...}, at: [<c060f4a5>] n_tty_read+0x1d2/0x5ee
+Nov 10 14:54:33 localhost kernel: 3 locks held by kworker/0:3/5698:
+Nov 10 14:54:33 localhost kernel: #0:  (events){+.+.+.}, at: [<c0446ded>] process_one_work+0x13e/0x2bf
+Nov 10 14:54:33 localhost kernel: #1:  (wireless_nlevent_work){+.+.+.}, at: [<c0446ded>] process_one_work+0x13e/0x2bf
+Nov 10 14:54:33 localhost kernel: #2:  (rtnl_mutex){+.+.+.}, at: [<c070220f>] rtnl_lock+0xf/0x11
+Nov 10 14:54:33 localhost kernel: 1 lock held by ip/6438:
+Nov 10 14:54:33 localhost kernel: #0:  (rtnl_mutex){+.+.+.}, at: [<c070f78c>] netlink_dump+0x3a/0x16a
+Nov 10 14:54:33 localhost kernel: 1 lock held by ip/6441:
+Nov 10 14:54:33 localhost kernel: #0:  (rtnl_mutex){+.+.+.}, at: [<c070220f>] rtnl_lock+0xf/0x11
+Nov 10 14:54:33 localhost kernel: 1 lock held by ip/6442:
+Nov 10 14:54:33 localhost kernel: #0:  (rtnl_mutex){+.+.+.}, at: [<c070220f>] rtnl_lock+0xf/0x11
+Nov 10 14:54:33 localhost kernel: 1 lock held by iwconfig/6443:
+Nov 10 14:54:33 localhost kernel: #0:  (rtnl_mutex){+.+.+.}, at: [<c070220f>] rtnl_lock+0xf/0x11
+Nov 10 14:54:33 localhost kernel: 1 lock held by ip/6444:
+Nov 10 14:54:33 localhost kernel: #0:  (rtnl_mutex){+.+.+.}, at: [<c070220f>] rtnl_lock+0xf/0x11
+Nov 10 14:54:33 localhost kernel: 4 locks held by sh/6449:
+Nov 10 14:54:33 localhost kernel: #0:  (&(&i->lock)->rlock){-.-...}, at: [<c0631760>] serial8250_interrupt+0x1e/0xe2
+Nov 10 14:54:33 localhost kernel: #1:  (&port_lock_key){-.-...}, at: [<c06314e6>] serial8250_handle_port+0x10/0x26c
+Nov 10 14:54:33 localhost kernel: #2:  (sysrq_key_table_lock){-.....}, at: [<c061e912>] __handle_sysrq+0x18/0x11d
+Nov 10 14:54:33 localhost kernel: #3:  (tasklist_lock){.+.+..}, at: [<c0459d53>] debug_show_all_locks+0x43/0x179
+
 -- 
-1.7.1
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
 
