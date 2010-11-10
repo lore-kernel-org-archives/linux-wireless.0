@@ -1,124 +1,86 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f46.google.com ([209.85.161.46]:42074 "EHLO
-	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750915Ab0KRLcy (ORCPT
+Received: from mail-qw0-f46.google.com ([209.85.216.46]:64160 "EHLO
+	mail-qw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751379Ab0KJCHl (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 18 Nov 2010 06:32:54 -0500
-Received: by mail-fx0-f46.google.com with SMTP id 6so1460042fxm.19
-        for <linux-wireless@vger.kernel.org>; Thu, 18 Nov 2010 03:32:54 -0800 (PST)
-From: Arik Nemtsov <arik@wizery.com>
-To: <linux-wireless@vger.kernel.org>
-Cc: Luciano Coelho <luciano.coelho@nokia.com>,
-	Arik Nemtsov <arik@wizery.com>
-Subject: [PATCH 10/18] wl1271: AP mode config in ieee80211_ops.config
-Date: Thu, 18 Nov 2010 13:32:23 +0200
-Message-Id: <1290079951-16793-11-git-send-email-arik@wizery.com>
-In-Reply-To: <1290079951-16793-1-git-send-email-arik@wizery.com>
-References: <1290079951-16793-1-git-send-email-arik@wizery.com>
+	Tue, 9 Nov 2010 21:07:41 -0500
+Message-ID: <4CD9FE64.5010600@gmail.com>
+Date: Tue, 09 Nov 2010 21:07:32 -0500
+From: Richard Farina <sidhayn@gmail.com>
+MIME-Version: 1.0
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+CC: linux-wireless <linux-wireless@vger.kernel.org>,
+	linux-bluetooth <linux-bluetooth@vger.kernel.org>,
+	linux-kernel@vger.kernel.org
+Subject: Re: Compat-wireless for 2.6.37-rc1 - 802.11, Bluetooth and Ethernet
+ backported
+References: <AANLkTimz=0MknJnivvEb_Uq4fjDWFDUN5ug=kOo+eocd@mail.gmail.com>
+In-Reply-To: <AANLkTimz=0MknJnivvEb_Uq4fjDWFDUN5ug=kOo+eocd@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Separate configuration according to mode. AP has different rate
-set configuration and no handling of idle-state.
+Luis R. Rodriguez wrote:
+> Linus released 2.6.37-rc1 a couple of weeks ago and we now have our
+> first vanilla release for the same kernel. This is a stable  [1]
+> compat-wireless-2.6.36-rc7-1 [2], this release has no extra patches
+> applied on top and at this point I am a bit lazy to go ahead and suck
+> these in so please note you'll likely end up with a lot of stable
+> patches missing but I will hope that in the next linux-next.git these
+> get sucked in and I can simply use ./scripts/admin-updates.sh -s to
+> suck them in for the rc2 release.
+>
+> Please report any issues ASAP but be-aware there are a few stable
+> patches missing still. I'd trust the compat-wireless-2.6.36-5-spn
+> right now more if you are looking for something really stable, but I
+> do expect this release to stabilize after a couple of RCs. For details
+> on changes you can refer to the now very highly detailed
+> ChangeLog-2.6.37-rc1-wireless [3] which includes the changes for
+> compat.git, compat-wireless.git and the Linux kernel for the
+> backported subsystems.
+>
+> Origin remote URL:
+> git://git.kernel.org/pub/scm/linux/kernel/git/hpa/linux-2.6-allstable.git
+> This is a stable compat-wireless release
+>
+> compat-wireless code metrics
+>
+>     739355 - Total upstream lines of code being pulled
+>       2163 - backport code changes
+>       1909 - backport code additions
+>        254 - backport code deletions
+>       6324 - backport from compat module
+>       8487 - total backport code
+>     1.1479 - % of code consists of backport work
+>
+> Base tree: linux-2.6-allstable.git
+> Base tree version: v2.6.37-rc1
+> compat-wireless release: compat-wireless-v2.6.37-rc1-1
+>
+> Cleaning up the release ...
+> Creating compat-wireless-2.6.37-rc1-1.tar.bz2 ...
+>
+> Compat-wireles release: compat-wireless-2.6.37-rc1-1
+> Size: 3.7M	compat-wireless-2.6.37-rc1-1.tar.bz2
+> sha1sum: 60b1c6e9d421f039e22b62901de816a46931a603
+> compat-wireless-2.6.37-rc1-1.tar.bz2
+>
+>   
+http://www.orbit-lab.org/kernel/compat-wireless-2.6-stable/v2.6.37/compat-wireless-2.6.37-1.tar.bz2
+The filename on the website has no -rc, please fix as this will 
+definitely cause confusion.
 
-Signed-off-by: Arik Nemtsov <arik@wizery.com>
----
- drivers/net/wireless/wl12xx/main.c |   58 +++++++++++++++++++++--------------
- 1 files changed, 35 insertions(+), 23 deletions(-)
-
-diff --git a/drivers/net/wireless/wl12xx/main.c b/drivers/net/wireless/wl12xx/main.c
-index 49def62..30d7a77 100644
---- a/drivers/net/wireless/wl12xx/main.c
-+++ b/drivers/net/wireless/wl12xx/main.c
-@@ -1371,7 +1371,7 @@ u32 wl1271_min_rate_get(struct wl1271 *wl)
- 	return rate;
- }
- 
--static int wl1271_handle_idle(struct wl1271 *wl, bool idle)
-+static int wl1271_sta_handle_idle(struct wl1271 *wl, bool idle)
- {
- 	int ret;
- 
-@@ -1412,14 +1412,17 @@ static int wl1271_op_config(struct ieee80211_hw *hw, u32 changed)
- 	struct wl1271 *wl = hw->priv;
- 	struct ieee80211_conf *conf = &hw->conf;
- 	int channel, ret = 0;
-+	bool is_ap;
- 
- 	channel = ieee80211_frequency_to_channel(conf->channel->center_freq);
- 
--	wl1271_debug(DEBUG_MAC80211, "mac80211 config ch %d psm %s power %d %s",
-+	wl1271_debug(DEBUG_MAC80211, "mac80211 config ch %d psm %s power %d %s"
-+		     " changed 0x%x",
- 		     channel,
- 		     conf->flags & IEEE80211_CONF_PS ? "on" : "off",
- 		     conf->power_level,
--		     conf->flags & IEEE80211_CONF_IDLE ? "idle" : "in use");
-+		     conf->flags & IEEE80211_CONF_IDLE ? "idle" : "in use",
-+			 changed);
- 
- 	/*
- 	 * mac80211 will go to idle nearly immediately after transmitting some
-@@ -1448,31 +1451,40 @@ static int wl1271_op_config(struct ieee80211_hw *hw, u32 changed)
- 		wl->band = conf->channel->band;
- 		wl->channel = channel;
- 
--		/*
--		 * FIXME: the mac80211 should really provide a fixed rate
--		 * to use here. for now, just use the smallest possible rate
--		 * for the band as a fixed rate for association frames and
--		 * other control messages.
--		 */
--		if (!test_bit(WL1271_FLAG_STA_ASSOCIATED, &wl->flags))
--			wl1271_set_band_rate(wl);
--
--		wl->basic_rate = wl1271_min_rate_get(wl);
--		ret = wl1271_acx_sta_rate_policies(wl);
--		if (ret < 0)
--			wl1271_warning("rate policy for update channel "
--				       "failed %d", ret);
-+		if (is_ap) {
-+			/* set basic rates according to HW */
-+			u32 rates = wl->vif->bss_conf.basic_rates;
-+			wl->basic_rate_set = wl1271_tx_enabled_rates_get(wl,
-+									rates);
-+			wl->basic_rate = wl1271_min_rate_get(wl);
-+		} else {
-+			/*
-+			 * FIXME: the mac80211 should really provide a fixed
-+			 * rate to use here. for now, just use the smallest
-+			 * possible rate for the band as a fixed rate for
-+			 * association frames and other control messages.
-+			 */
-+			if (!test_bit(WL1271_FLAG_STA_ASSOCIATED, &wl->flags))
-+				wl1271_set_band_rate(wl);
- 
--		if (test_bit(WL1271_FLAG_JOINED, &wl->flags)) {
--			ret = wl1271_join(wl, false);
-+			wl->basic_rate = wl1271_min_rate_get(wl);
-+			ret = wl1271_acx_sta_rate_policies(wl);
- 			if (ret < 0)
--				wl1271_warning("cmd join to update channel "
-+				wl1271_warning("rate policy for channel "
- 					       "failed %d", ret);
-+
-+			if (test_bit(WL1271_FLAG_JOINED, &wl->flags)) {
-+				ret = wl1271_join(wl, false);
-+				if (ret < 0)
-+					wl1271_warning("cmd join on channel "
-+						       "failed %d", ret);
-+			}
- 		}
- 	}
- 
--	if (changed & IEEE80211_CONF_CHANGE_IDLE) {
--		ret = wl1271_handle_idle(wl, conf->flags & IEEE80211_CONF_IDLE);
-+	if (changed & IEEE80211_CONF_CHANGE_IDLE && !is_ap) {
-+		ret = wl1271_sta_handle_idle(wl,
-+					conf->flags & IEEE80211_CONF_IDLE);
- 		if (ret < 0)
- 			wl1271_warning("idle mode change failed %d", ret);
- 	}
--- 
-1.7.1
+Thanks,
+Rick Farina
+>   Luis
+>
+> [1] http://wireless.kernel.org/en/users/Download/stable
+> [2] http://www.orbit-lab.org/kernel/compat-wireless-2.6-stable/v2.6.37/compat-wireless-2.6.37-1.tar.bz2
+> [3] http://www.orbit-lab.org/kernel/compat-wireless-2.6-stable/v2.6.37/ChangeLog-2.6.37-wireless
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
+>   
 
