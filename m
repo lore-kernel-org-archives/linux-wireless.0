@@ -1,68 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from lugano1.hostireland.com ([72.32.223.205]:42818 "EHLO
-	lugano.hostireland.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1751407Ab0KKOvj convert rfc822-to-8bit (ORCPT
+Received: from mail-qw0-f46.google.com ([209.85.216.46]:65142 "EHLO
+	mail-qw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754847Ab0KJCVW (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 11 Nov 2010 09:51:39 -0500
-From: "raghunath" <raghunath@airvod.com>
-To: "'Luciano Coelho'" <luciano.coelho@nokia.com>
-Cc: <linux-wireless@vger.kernel.org>
-References: <004701cb8191$e82c75e0$b88561a0$@com>	 <AANLkTikZD_1DUqkxQyGSLdaQS01Qg15+_TDkW3QuRuOt@mail.gmail.com> <1289476604.1606.36.camel@powerslave>
-In-Reply-To: <1289476604.1606.36.camel@powerslave>
-Subject: RE: Ti's WL1271 on OMAP3EVM board with kernel version 2.6.36
-Date: Thu, 11 Nov 2010 20:21:34 +0530
-Message-ID: <005101cb81af$f1e75280$d5b5f780$@com>
-MIME-Version: 1.0
-Content-Type: text/plain;
-	charset="UTF-8"
+	Tue, 9 Nov 2010 21:21:22 -0500
+Received: by mail-qw0-f46.google.com with SMTP id 5so5749qwh.19
+        for <linux-wireless@vger.kernel.org>; Tue, 09 Nov 2010 18:21:22 -0800 (PST)
+From: Arnaud Lacombe <lacombar@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: lrodriguez@atheros.com, Arnaud Lacombe <lacombar@gmail.com>
+Subject: [PATCH 20/44] compat/2.6.32: fix compat inline to flush_delayed_work()
+Date: Tue,  9 Nov 2010 21:20:02 -0500
+Message-Id: <1289355626-25373-21-git-send-email-lacombar@gmail.com>
+In-Reply-To: <1289355626-25373-1-git-send-email-lacombar@gmail.com>
+References: <1289355626-25373-1-git-send-email-lacombar@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Luca,
-I applied the patch which u have mentioned, but there is no change.
+This was needed as major API changes was made in 2.6.21.
 
-Raghu
+Signed-off-by: Arnaud Lacombe <lacombar@gmail.com>
+---
+ include/linux/compat-2.6.32.h |    5 +++++
+ 1 files changed, 5 insertions(+), 0 deletions(-)
 
------Original Message-----
-From: linux-wireless-owner@vger.kernel.org [mailto:linux-wireless-owner@vger.kernel.org] On Behalf Of Luciano Coelho
-Sent: Thursday, November 11, 2010 5:27 PM
-To: raghunath
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: Ti's WL1271 on OMAP3EVM board with kernel version 2.6.36
-
-Hi,
-
-
-On Thu, 2010-11-11 at 12:45 +0100, raghunath wrote:
-> I am working on OMAP3EVM board with Mistral wl1271 daughter board and using
-> linux kernel 2.6.36 I am using wl1271 drivers and getting this error pls
-> Let me know if any thing is wrong..
-
-[...]
-
-> [    2.614593] wl1271: mac80211 configure filter
-> [    2.614624] wl1271: acx group address tbl
-> [    2.614624] wl1271: cmd configure
-> [    2.615173] AIRVOD __dev_change_flags   net/core/dev.c ret = 0
-> [    2.621398] wl1271: elp work
-> [    2.621398] wl1271: chip to elp
-> [    2.621459] wl1271: mac80211 configure filter
-> [    2.621490] wl1271: waking up chip from elp
-> [    3.118377] wl1271: ERROR ELP wakeup timeout!
-> [    3.122955] wl1271: mac80211 configure filter
-> [    3.122985] wl1271: waking up chip from elp
-> [    3.618469] wl1271: ERROR ELP wakeup timeout!
-
-It seems that you need this patch:
-http://git.kernel.org/?p=linux/kernel/git/luca/wl12xx.git;a=commit;h=e8f1046f716a71d3a4426a5103e39c70059b8d0a
-
-
+diff --git a/include/linux/compat-2.6.32.h b/include/linux/compat-2.6.32.h
+index 321a89a..873ae3d 100644
+--- a/include/linux/compat-2.6.32.h
++++ b/include/linux/compat-2.6.32.h
+@@ -20,6 +20,10 @@
+ 
+ static inline void flush_delayed_work(struct delayed_work *dwork)
+ {
++#if (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,21))
++	cancel_delayed_work(dwork);
++	flush_scheduled_work();
++#else
+ 	if (del_timer_sync(&dwork->timer)) {
+ 		/*
+ 		 * This is what would happen on 2.6.32 but since we don't have
+@@ -34,6 +38,7 @@ static inline void flush_delayed_work(struct delayed_work *dwork)
+ 		*/
+ 	}
+ 	flush_work(&dwork->work);
++#endif
+ }
+ 
+ /*
 -- 
-Cheers,
-Luca.
-
---
-To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+1.7.2.30.gc37d7.dirty
 
