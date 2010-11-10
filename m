@@ -1,48 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.19.149.2]:22181 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751436Ab0KJKiF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 10 Nov 2010 05:38:05 -0500
-Received: from mail.atheros.com ([10.10.20.105])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Wed, 10 Nov 2010 02:37:52 -0800
-From: Rajkumar Manoharan <rmanoharan@atheros.com>
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>,
-	Rajkumar Manoharan <rmanoharan@atheros.com>
-Subject: [PATCH] ath9k_htc: Update usb device ID list
-Date: Wed, 10 Nov 2010 16:15:36 +0530
-Message-ID: <1289385936-25463-1-git-send-email-rmanoharan@atheros.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from mail-qy0-f174.google.com ([209.85.216.174]:47672 "EHLO
+	mail-qy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754780Ab0KJCVH (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 9 Nov 2010 21:21:07 -0500
+Received: by mail-qy0-f174.google.com with SMTP id 12so2500227qyk.19
+        for <linux-wireless@vger.kernel.org>; Tue, 09 Nov 2010 18:21:06 -0800 (PST)
+From: Arnaud Lacombe <lacombar@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: lrodriguez@atheros.com, Arnaud Lacombe <lacombar@gmail.com>
+Subject: [PATCH 12/44] compat/2.6.25: don't include <linux/hw_random.h> prior to 2.6.18
+Date: Tue,  9 Nov 2010 21:19:54 -0500
+Message-Id: <1289355626-25373-13-git-send-email-lacombar@gmail.com>
+In-Reply-To: <1289355626-25373-1-git-send-email-lacombar@gmail.com>
+References: <1289355626-25373-1-git-send-email-lacombar@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Added new VID/PIDs into supported devices list
-
-Signed-off-by: Rajkumar Manoharan <rmanoharan@atheros.com>
+Signed-off-by: Arnaud Lacombe <lacombar@gmail.com>
 ---
- drivers/net/wireless/ath/ath9k/hif_usb.c |    5 +++++
- 1 files changed, 5 insertions(+), 0 deletions(-)
+ include/linux/compat-2.6.25.h |    4 +++-
+ 1 files changed, 3 insertions(+), 1 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/hif_usb.c b/drivers/net/wireless/ath/ath9k/hif_usb.c
-index f7ec31b..0e12277 100644
---- a/drivers/net/wireless/ath/ath9k/hif_usb.c
-+++ b/drivers/net/wireless/ath/ath9k/hif_usb.c
-@@ -36,8 +36,13 @@ static struct usb_device_id ath9k_hif_usb_ids[] = {
- 	{ USB_DEVICE(0x13D3, 0x3327) }, /* Azurewave */
- 	{ USB_DEVICE(0x13D3, 0x3328) }, /* Azurewave */
- 	{ USB_DEVICE(0x13D3, 0x3346) }, /* IMC Networks */
-+	{ USB_DEVICE(0x13D3, 0x3348) }, /* Azurewave */
-+	{ USB_DEVICE(0x13D3, 0x3349) }, /* Azurewave */
-+	{ USB_DEVICE(0x13D3, 0x3350) }, /* Azurewave */
- 	{ USB_DEVICE(0x04CA, 0x4605) }, /* Liteon */
- 	{ USB_DEVICE(0x083A, 0xA704) }, /* SMC Networks */
-+	{ USB_DEVICE(0x040D, 0x3801) }, /* VIA */
-+	{ USB_DEVICE(0x1668, 0x1200) }, /* Verizon */
- 	{ },
- };
+diff --git a/include/linux/compat-2.6.25.h b/include/linux/compat-2.6.25.h
+index ad3220a..641fbde 100644
+--- a/include/linux/compat-2.6.25.h
++++ b/include/linux/compat-2.6.25.h
+@@ -8,8 +8,10 @@
  
+ #include <linux/types.h>
+ #include <linux/io.h>
+-#include <linux/hw_random.h>
+ #include <linux/leds.h>
++#if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,18))
++#include <linux/hw_random.h>
++#endif
+ #include <linux/kernel.h>
+ #include <linux/netdevice.h>
+ #include <linux/pm.h>
 -- 
-1.7.3.2
+1.7.2.30.gc37d7.dirty
 
