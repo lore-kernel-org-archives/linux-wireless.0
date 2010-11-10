@@ -1,42 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:51301 "EHLO nbd.name"
+Received: from mail.atheros.com ([12.19.149.2]:26482 "EHLO mail.atheros.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755479Ab0KWPxu (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 23 Nov 2010 10:53:50 -0500
-Message-ID: <4CEBE389.1020209@openwrt.org>
-Date: Tue, 23 Nov 2010 16:53:45 +0100
-From: Felix Fietkau <nbd@openwrt.org>
+	id S1754283Ab0KJNDf (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 10 Nov 2010 08:03:35 -0500
+Received: from mail.atheros.com ([10.10.20.105])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Wed, 10 Nov 2010 05:03:22 -0800
+From: Vasanthakumar Thiagarajan <vasanth@atheros.com>
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>,
+	Senthil Balasubramanian <senthilkumar@atheros.com>
+Subject: [PATCH 03/11] ath9k_hw: Initialize 2GHz CTL properly.
+Date: Wed, 10 Nov 2010 05:03:08 -0800
+Message-ID: <1289394196-3465-3-git-send-email-vasanth@atheros.com>
+In-Reply-To: <1289394196-3465-1-git-send-email-vasanth@atheros.com>
+References: <1289394196-3465-1-git-send-email-vasanth@atheros.com>
 MIME-Version: 1.0
-To: Mohammed Shafi Shajakhan <mshajakhan@atheros.com>
-CC: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	Paul.Shaw@atheros.com, lrodriguez@atheros.com
-Subject: Re: [PATCH] ath9k: Add support for Adaptive Power Management
-References: <1290525147-6927-1-git-send-email-mshajakhan@atheros.com>
-In-Reply-To: <1290525147-6927-1-git-send-email-mshajakhan@atheros.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2010-11-23 4:12 PM, Mohammed Shafi Shajakhan wrote:
-> From: Mohammed Shafi Shajakhan <mshajakhan@atheros.com>
-> 
-> This feature is to mitigate the problem of certain 3
-> stream chips that exceed the PCIe power requirements.An EEPROM flag
-> controls which chips have APM enabled which is basically read from
-> miscellaneous configuration element of the EEPROM header.
-> 
-> This workaround will reduce power consumption by using 2 Tx chains for
-> Single and Double stream rates (5 GHz only).All self generated frames
-> (regardless of rate) are sent on 2 chains when this feature is
-> enabled(Chip Limitation).
-> 
-> Cc: Paul Shaw <paul.shaw@atheros.com>
-> Signed-off-by: Mohammed Shafi Shajakhan <mshajakhan@atheros.com>
-> Tested-by: Mohammed Shafi Shajakhan <mshajakhan@atheros.com>
-I think this code would get a lot more concise if you'd move it to
-ar9003_mac.c, since this issue is AR9003 specific anyway.
-It would also allow you to avoid adding yet another redundant ath_softc
-capability flag, as the driver part really doesn't need to be concerned
-with this.
+From: Senthil Balasubramanian <senthilkumar@atheros.com>
 
-- Felix
+The last 2GHz CTL was not being initialized, so power was being
+set to 0 instead of 30dbm. Initialize to 30 like other CTLs.
+
+Signed-off-by: Senthil Balasubramanian <senthilkumar@atheros.com>
+---
+ drivers/net/wireless/ath/ath9k/ar9003_eeprom.c |    1 +
+ 1 files changed, 1 insertions(+), 0 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
+index bc3f49c..b33fb5b 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
++++ b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
+@@ -306,6 +306,7 @@ static const struct ar9300_eeprom ar9300_default = {
+ 
+ 		 { { {60, 0}, {60, 1}, {60, 0}, {60, 0} } },
+ 		 { { {60, 0}, {60, 1}, {60, 1}, {60, 1} } },
++		 { { {60, 0}, {60, 1}, {60, 1}, {60, 1} } },
+ 	 },
+ 	.modalHeader5G = {
+ 		/* 4 idle,t1,t2,b (4 bits per setting) */
+-- 
+1.7.0.4
+
