@@ -1,37 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from external1.orbit-lab.org ([128.6.192.131]:51293 "HELO
-	external1.orbit-lab.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1753190Ab0KFTDb (ORCPT
+Received: from mail-qw0-f46.google.com ([209.85.216.46]:58629 "EHLO
+	mail-qw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754983Ab0KJCVu (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 6 Nov 2010 15:03:31 -0400
-Received: from repository3.orbit-lab.org (repository3.orbit-lab.org [10.50.0.41])
-	by external1.orbit-lab.org (Postfix) with ESMTP id 1557D418D8
-	for <linux-wireless@vger.kernel.org>; Sat,  6 Nov 2010 14:59:33 -0400 (EDT)
-Subject: Compat-wireless release for 2010-11-06 is baked
-To: <linux-wireless@vger.kernel.org>
-Message-Id: <20101106190330.0EECA40F97@repository3.orbit-lab.org>
-Date: Sat,  6 Nov 2010 15:03:29 -0400 (EDT)
-From: compat@orbit-lab.org (Compat-wireless cronjob account)
+	Tue, 9 Nov 2010 21:21:50 -0500
+Received: by mail-qw0-f46.google.com with SMTP id 5so5541qwh.19
+        for <linux-wireless@vger.kernel.org>; Tue, 09 Nov 2010 18:21:49 -0800 (PST)
+From: Arnaud Lacombe <lacombar@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: lrodriguez@atheros.com, Arnaud Lacombe <lacombar@gmail.com>
+Subject: [PATCH 33/44] compat/2.6.22: constify skb_transport_header()'s argument
+Date: Tue,  9 Nov 2010 21:20:15 -0500
+Message-Id: <1289355626-25373-34-git-send-email-lacombar@gmail.com>
+In-Reply-To: <1289355626-25373-1-git-send-email-lacombar@gmail.com>
+References: <1289355626-25373-1-git-send-email-lacombar@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
->From git://git.kernel.org/pub/scm/linux/kernel/git/mcgrof/compat
-   a5556e6..4b598d6  master     -> origin/master
+Signed-off-by: Arnaud Lacombe <lacombar@gmail.com>
+---
+ include/linux/compat-2.6.22.h |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-compat-wireless code metrics
+diff --git a/include/linux/compat-2.6.22.h b/include/linux/compat-2.6.22.h
+index 6675027..7c0c615 100644
+--- a/include/linux/compat-2.6.22.h
++++ b/include/linux/compat-2.6.22.h
+@@ -46,7 +46,7 @@ static inline void skb_set_transport_header(struct sk_buff *skb, int offset)
+ 	skb->h.raw = skb->data + offset;
+ }
+ 
+-static inline unsigned char *skb_transport_header(struct sk_buff *skb)
++static inline unsigned char *skb_transport_header(const struct sk_buff *skb)
+ {
+ 	return skb->h.raw;
+ }
+-- 
+1.7.2.30.gc37d7.dirty
 
-    739330 - Total upstream lines of code being pulled
-      2163 - backport code changes
-      1909 - backport code additions
-       254 - backport code deletions
-      6324 - backport from compat module
-      8487 - total backport code
-    1.1479 - % of code consists of backport work
-      1534 - Crap changes not yet posted
-      1491 - Crap additions not yet posted
-        43 - Crap deletions not yet posted
-    0.2075 - % of crap code
-
-Base tree: linux-next.git
-Base tree version: next-20101029
-compat-wireless release: compat-wireless-2010-10-29-pc
