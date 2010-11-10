@@ -1,77 +1,155 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gy0-f174.google.com ([209.85.160.174]:64291 "EHLO
-	mail-gy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756127Ab0K3UJj convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 30 Nov 2010 15:09:39 -0500
-MIME-Version: 1.0
-In-Reply-To: <20101130200019.GA28735@elf.ucw.cz>
-References: <AANLkTim4jVaZxYp8nSgJyy28iwxcxbPeNUzxTfoHAX4S@mail.gmail.com>
- <20101118113441.74fcdc21@lxorguk.ukuu.org.uk> <AANLkTikOZbtyhsk0OBb4OdUi6qj-7k_hU-aW_Pkhfpq0@mail.gmail.com>
- <20101130192648.GA1623@ucw.cz> <AANLkTinMyAeVJJc7Lc-vt_Ywr+vcSf-GAiQwggTGbqh8@mail.gmail.com>
- <20101130200019.GA28735@elf.ucw.cz>
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Date: Tue, 30 Nov 2010 12:09:18 -0800
-Message-ID: <AANLkTi=bs3ev9A2RQdKujVsDrpQJCCRZ+e2BzYeFNmD_@mail.gmail.com>
-Subject: Re: Challenges with doing hardware bring up with Linux first
-To: Pavel Machek <pavel@ucw.cz>
-Cc: bkuhn@ebb.org, Alan Cox <alan@lxorguk.ukuu.org.uk>,
-	linux-kernel@vger.kernel.org,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Greg KH <greg@kroah.com>, David Miller <davem@davemloft.net>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Stephen Hemminger <shemminger@vyatta.com>,
-	"Perez-Gonzalez, Inaky" <inaky.perez-gonzalez@intel.com>,
-	Charles Marker <Charles.Marker@atheros.com>,
-	Jouni Malinen <Jouni.Malinen@atheros.com>,
-	Kevin Hayes <kevin@atheros.com>,
-	Zhifeng Cai <zhifeng.cai@atheros.com>,
-	Don Breslin <Don.Breslin@atheros.com>,
-	Doug Dahlby <Doug.Dahlby@atheros.com>,
-	Julia Lawall <julia@diku.dk>
-Content-Type: text/plain; charset=UTF-8
+Received: from smtp.nokia.com ([147.243.1.48]:26544 "EHLO mgw-sa02.nokia.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754069Ab0KJK11 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 10 Nov 2010 05:27:27 -0500
+Received: from nokia.com (localhost [127.0.0.1])
+	by mgw-sa02.nokia.com (Switch-3.4.3/Switch-3.4.3) with ESMTP id oAAARODT024270
+	for <linux-wireless@vger.kernel.org>; Wed, 10 Nov 2010 12:27:24 +0200
+From: juuso.oikarinen@nokia.com
+To: luciano.coelho@nokia.com
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH 2/2] Revert "wl1271: Change supported channel order for a more optimal scan"
+Date: Wed, 10 Nov 2010 12:27:20 +0200
+Message-Id: <1289384840-28305-2-git-send-email-juuso.oikarinen@nokia.com>
+In-Reply-To: <1289384840-28305-1-git-send-email-juuso.oikarinen@nokia.com>
+References: <1289384840-28305-1-git-send-email-juuso.oikarinen@nokia.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Nov 30, 2010 at 12:00 PM, Pavel Machek <pavel@ucw.cz> wrote:
-> On Tue 2010-11-30 11:30:18, Luis R. Rodriguez wrote:
->> On Tue, Nov 30, 2010 at 11:26 AM, Pavel Machek <pavel@ucw.cz> wrote:
->> > Hi!
->> >
->> >> >> everything else can be independent code. For ath9k in particular this
->> >> >> means we keep ath9k_hw shared between our Operating Systems and that's
->> >> >> it. In addition to this I believe opening up the common drivers for
->> >> >
->> >> > The Linux copy needs to be GPL,
->> >>
->> >> GPL-Compatible you mean, right. I mean we have ath9k_hw with
->> >> permissive licensed files.
->> >
->> > GPL-compatible is not right word. It has to be either GPL, or so
->> > permissive that anyone is allowed to turn it into GPL.
->>
->> Oh?
->
-> Kernel is GPL. Dual BSD/GPL is ok. Just BSD... I don't think so.
->
-> /*
->  * Copyright (c) 2008 Atheros Communications Inc.
->  *
->  * Permission to use, copy, modify, and/or distribute this software
-> for any
->  * purpose with or without fee is hereby granted, provided that the
-> above
->  * copyright notice and this permission notice appear in all copies.
->  *
->
-> ...but I need permission to relicense it under GPL, and I'm not sure I
-> have it.
+From: Juuso Oikarinen <juuso.oikarinen@nokia.com>
 
-Got it, OK let me clarify that for you then. Yes. That is what makes
-it GPL-Compatible. We droped the Dual GPL/BSD practice and picked up
-the ISC license to help OpenBSD when we took Reyk's HAL from OpenBSD.
-The ISC license is just a simpler BSD license due the Berne Convention
-which makes one of the clauses implicit (respecting copyright between
-countries). Its just a very simple permissive license.
+This reverts commit fa21c7a9e4be439e217fe72edbd39b643b643791.
 
- Luis
+The reverted patch caused more harm than benefit.
+
+Signed-off-by: Juuso Oikarinen <juuso.oikarinen@nokia.com>
+---
+ drivers/net/wireless/wl12xx/wl1271_main.c |   86 +++++++++++++---------------
+ 1 files changed, 40 insertions(+), 46 deletions(-)
+
+diff --git a/drivers/net/wireless/wl12xx/wl1271_main.c b/drivers/net/wireless/wl12xx/wl1271_main.c
+index eb9f821..1f912cd 100644
+--- a/drivers/net/wireless/wl12xx/wl1271_main.c
++++ b/drivers/net/wireless/wl12xx/wl1271_main.c
+@@ -2215,24 +2215,21 @@ static struct ieee80211_rate wl1271_rates[] = {
+ 	  .hw_value_short = CONF_HW_BIT_RATE_54MBPS, },
+ };
+ 
+-/*
+- * Can't be const, mac80211 writes to this. The order of the channels here
+- * is designed to improve scanning.
+- */
++/* can't be const, mac80211 writes to this */
+ static struct ieee80211_channel wl1271_channels[] = {
+ 	{ .hw_value = 1, .center_freq = 2412, .max_power = 25 },
+-	{ .hw_value = 5, .center_freq = 2432, .max_power = 25 },
+-	{ .hw_value = 9, .center_freq = 2452, .max_power = 25 },
+-	{ .hw_value = 13, .center_freq = 2472, .max_power = 25 },
+-	{ .hw_value = 4, .center_freq = 2427, .max_power = 25 },
+-	{ .hw_value = 8, .center_freq = 2447, .max_power = 25 },
+-	{ .hw_value = 12, .center_freq = 2467, .max_power = 25 },
+-	{ .hw_value = 3, .center_freq = 2422, .max_power = 25 },
+-	{ .hw_value = 7, .center_freq = 2442, .max_power = 25 },
+-	{ .hw_value = 11, .center_freq = 2462, .max_power = 25 },
+ 	{ .hw_value = 2, .center_freq = 2417, .max_power = 25 },
++	{ .hw_value = 3, .center_freq = 2422, .max_power = 25 },
++	{ .hw_value = 4, .center_freq = 2427, .max_power = 25 },
++	{ .hw_value = 5, .center_freq = 2432, .max_power = 25 },
+ 	{ .hw_value = 6, .center_freq = 2437, .max_power = 25 },
++	{ .hw_value = 7, .center_freq = 2442, .max_power = 25 },
++	{ .hw_value = 8, .center_freq = 2447, .max_power = 25 },
++	{ .hw_value = 9, .center_freq = 2452, .max_power = 25 },
+ 	{ .hw_value = 10, .center_freq = 2457, .max_power = 25 },
++	{ .hw_value = 11, .center_freq = 2462, .max_power = 25 },
++	{ .hw_value = 12, .center_freq = 2467, .max_power = 25 },
++	{ .hw_value = 13, .center_freq = 2472, .max_power = 25 },
+ };
+ 
+ /* mapping to indexes for wl1271_rates */
+@@ -2323,52 +2320,49 @@ static struct ieee80211_rate wl1271_rates_5ghz[] = {
+ 	  .hw_value_short = CONF_HW_BIT_RATE_54MBPS, },
+ };
+ 
+-/*
+- * 5 GHz band channels for WL1273 - can't be const, mac80211 writes to this.
+- * The order of the channels here is designed to improve scanning.
+- */
++/* 5 GHz band channels for WL1273 */
+ static struct ieee80211_channel wl1271_channels_5ghz[] = {
+ 	{ .hw_value = 183, .center_freq = 4915},
+-	{ .hw_value = 188, .center_freq = 4940},
+-	{ .hw_value = 8, .center_freq = 5040},
+-	{ .hw_value = 34, .center_freq = 5170},
+-	{ .hw_value = 44, .center_freq = 5220},
+-	{ .hw_value = 60, .center_freq = 5300},
+-	{ .hw_value = 112, .center_freq = 5560},
+-	{ .hw_value = 132, .center_freq = 5660},
+-	{ .hw_value = 157, .center_freq = 5785},
+ 	{ .hw_value = 184, .center_freq = 4920},
++	{ .hw_value = 185, .center_freq = 4925},
++	{ .hw_value = 187, .center_freq = 4935},
++	{ .hw_value = 188, .center_freq = 4940},
+ 	{ .hw_value = 189, .center_freq = 4945},
+-	{ .hw_value = 9, .center_freq = 5045},
+-	{ .hw_value = 36, .center_freq = 5180},
+-	{ .hw_value = 46, .center_freq = 5230},
+-	{ .hw_value = 64, .center_freq = 5320},
+-	{ .hw_value = 116, .center_freq = 5580},
+-	{ .hw_value = 136, .center_freq = 5680},
+ 	{ .hw_value = 192, .center_freq = 4960},
+-	{ .hw_value = 11, .center_freq = 5055},
+-	{ .hw_value = 38, .center_freq = 5190},
+-	{ .hw_value = 48, .center_freq = 5240},
+-	{ .hw_value = 100, .center_freq = 5500},
+-	{ .hw_value = 120, .center_freq = 5600},
+-	{ .hw_value = 140, .center_freq = 5700},
+-	{ .hw_value = 185, .center_freq = 4925},
+ 	{ .hw_value = 196, .center_freq = 4980},
+-	{ .hw_value = 12, .center_freq = 5060},
+-	{ .hw_value = 40, .center_freq = 5200},
+-	{ .hw_value = 52, .center_freq = 5260},
+-	{ .hw_value = 104, .center_freq = 5520},
+-	{ .hw_value = 124, .center_freq = 5620},
+-	{ .hw_value = 149, .center_freq = 5745},
+-	{ .hw_value = 161, .center_freq = 5805},
+-	{ .hw_value = 187, .center_freq = 4935},
+ 	{ .hw_value = 7, .center_freq = 5035},
++	{ .hw_value = 8, .center_freq = 5040},
++	{ .hw_value = 9, .center_freq = 5045},
++	{ .hw_value = 11, .center_freq = 5055},
++	{ .hw_value = 12, .center_freq = 5060},
+ 	{ .hw_value = 16, .center_freq = 5080},
++	{ .hw_value = 34, .center_freq = 5170},
++	{ .hw_value = 36, .center_freq = 5180},
++	{ .hw_value = 38, .center_freq = 5190},
++	{ .hw_value = 40, .center_freq = 5200},
+ 	{ .hw_value = 42, .center_freq = 5210},
++	{ .hw_value = 44, .center_freq = 5220},
++	{ .hw_value = 46, .center_freq = 5230},
++	{ .hw_value = 48, .center_freq = 5240},
++	{ .hw_value = 52, .center_freq = 5260},
+ 	{ .hw_value = 56, .center_freq = 5280},
++	{ .hw_value = 60, .center_freq = 5300},
++	{ .hw_value = 64, .center_freq = 5320},
++	{ .hw_value = 100, .center_freq = 5500},
++	{ .hw_value = 104, .center_freq = 5520},
+ 	{ .hw_value = 108, .center_freq = 5540},
++	{ .hw_value = 112, .center_freq = 5560},
++	{ .hw_value = 116, .center_freq = 5580},
++	{ .hw_value = 120, .center_freq = 5600},
++	{ .hw_value = 124, .center_freq = 5620},
+ 	{ .hw_value = 128, .center_freq = 5640},
++	{ .hw_value = 132, .center_freq = 5660},
++	{ .hw_value = 136, .center_freq = 5680},
++	{ .hw_value = 140, .center_freq = 5700},
++	{ .hw_value = 149, .center_freq = 5745},
+ 	{ .hw_value = 153, .center_freq = 5765},
++	{ .hw_value = 157, .center_freq = 5785},
++	{ .hw_value = 161, .center_freq = 5805},
+ 	{ .hw_value = 165, .center_freq = 5825},
+ };
+ 
+-- 
+1.7.1
+
