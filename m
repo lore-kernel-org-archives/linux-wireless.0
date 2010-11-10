@@ -1,36 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:46685 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932840Ab0KQWOt (ORCPT
+Received: from mail-iw0-f174.google.com ([209.85.214.174]:53217 "EHLO
+	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757318Ab0KJWwa (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 17 Nov 2010 17:14:49 -0500
-Date: Wed, 17 Nov 2010 17:03:55 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Leonid Lundin <leonid.lundin@gmail.com>
-Cc: linux-wireless@vger.kernel.org, wireless-regdb@lists.infradead.org
-Subject: Re: wireless-regdb: Update regulatory rules for Russian Federation
- (RU)
-Message-ID: <20101117220355.GC2380@tuxdriver.com>
-References: <AANLkTim28-S7TFQTMjF9Vdx3R6vG0MZBdZ6EQKez+Jk4@mail.gmail.com>
+	Wed, 10 Nov 2010 17:52:30 -0500
+Received: by iwn10 with SMTP id 10so1353111iwn.19
+        for <linux-wireless@vger.kernel.org>; Wed, 10 Nov 2010 14:52:30 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <AANLkTim28-S7TFQTMjF9Vdx3R6vG0MZBdZ6EQKez+Jk4@mail.gmail.com>
+In-Reply-To: <AANLkTimqcK0PEhkW6Y7No8=s4X_HRWOk3tsYPmA5BQ20@mail.gmail.com>
+References: <4CDB20D9.603@openwrt.org> <AANLkTimqcK0PEhkW6Y7No8=s4X_HRWOk3tsYPmA5BQ20@mail.gmail.com>
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Date: Wed, 10 Nov 2010 14:52:10 -0800
+Message-ID: <AANLkTinkJq0pGxDcJt=bNtHsHa=Q3YZe_9uweTf6cCMm@mail.gmail.com>
+Subject: Re: [PATCH] compat: backport pm_qos_*_request
+To: Felix Fietkau <nbd@openwrt.org>,
+	Arnaud Lacombe <lacombar@gmail.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Could you post a wireless-regdb patch for review?
+On Wed, Nov 10, 2010 at 2:50 PM, Luis R. Rodriguez
+<lrodriguez@atheros.com> wrote:
+> On Wed, Nov 10, 2010 at 2:46 PM, Felix Fietkau <nbd@openwrt.org> wrote:
+>> Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+>
+> applied with some fuzz, pushed, thanks.
 
-On Thu, Oct 28, 2010 at 05:08:25PM +0400, Leonid Lundin wrote:
-> Hello!
-> 
-> It's not prohibited by law in Russian Federation to indoor use bands:
-> 
-> 2400-2483,5 Mhz
-> 5150-5350 Mhz
-> 5650-6425 Mhz
-> 
-> Thanks a lot.
+Arnaud, please
 
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+git fetch
+git rebase origin/master
+
+to ensure you get this too prior to your next submission. No need to
+post all the other patches as likely it seems you only need to address
+2 patches.
+
+ Luis
