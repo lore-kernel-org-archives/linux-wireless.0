@@ -1,35 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:56567 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758287Ab0KOUot (ORCPT
+Received: from mail-qw0-f46.google.com ([209.85.216.46]:58629 "EHLO
+	mail-qw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754751Ab0KJCVF (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 15 Nov 2010 15:44:49 -0500
-Received: from uucp by smtp.tuxdriver.com with local-rmail (Exim 4.63)
-	(envelope-from <linville@tuxdriver.com>)
-	id 1PI5uy-00053Z-Rt
-	for linux-wireless@vger.kernel.org; Mon, 15 Nov 2010 15:44:48 -0500
-Received: from linville-8530p.local (localhost.localdomain [127.0.0.1])
-	by linville-8530p.local (8.14.4/8.14.4) with ESMTP id oAFKilTo016506
-	for <linux-wireless@vger.kernel.org>; Mon, 15 Nov 2010 15:44:47 -0500
-Received: (from linville@localhost)
-	by linville-8530p.local (8.14.4/8.14.4/Submit) id oAFKilaQ016503
-	for linux-wireless@vger.kernel.org; Mon, 15 Nov 2010 15:44:47 -0500
-Date: Mon, 15 Nov 2010 15:44:47 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
+	Tue, 9 Nov 2010 21:21:05 -0500
+Received: by mail-qw0-f46.google.com with SMTP id 5so5541qwh.19
+        for <linux-wireless@vger.kernel.org>; Tue, 09 Nov 2010 18:21:05 -0800 (PST)
+From: Arnaud Lacombe <lacombar@gmail.com>
 To: linux-wireless@vger.kernel.org
-Subject: FYI -- wireless-next-2.6 rebased
-Message-ID: <20101115204446.GC2297@tuxdriver.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Cc: lrodriguez@atheros.com, Arnaud Lacombe <lacombar@gmail.com>
+Subject: [PATCH 11/44] compat/2.6.24: add compat macro for sk_alloc()
+Date: Tue,  9 Nov 2010 21:19:53 -0500
+Message-Id: <1289355626-25373-12-git-send-email-lacombar@gmail.com>
+In-Reply-To: <1289355626-25373-1-git-send-email-lacombar@gmail.com>
+References: <1289355626-25373-1-git-send-email-lacombar@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-For those following wireless-next-2.6.git directly, be aware that it
-has been rebased.  I needed to drop an extraneous ssb patch.
+This was part of the network namespace move.
 
-I apologize for any inconvenience!
+Signed-off-by: Arnaud Lacombe <lacombar@gmail.com>
+---
+ include/linux/compat-2.6.24.h |    3 +++
+ 1 files changed, 3 insertions(+), 0 deletions(-)
 
-John
+diff --git a/include/linux/compat-2.6.24.h b/include/linux/compat-2.6.24.h
+index f9c777c..6d5dce5 100644
+--- a/include/linux/compat-2.6.24.h
++++ b/include/linux/compat-2.6.24.h
+@@ -13,6 +13,7 @@
+ #include <linux/types.h>
+ #include <linux/list.h>
+ #include <linux/scatterlist.h>
++#include <net/sock.h>
+ 
+ #define KEY_BLUETOOTH	237
+ #define KEY_WLAN	238
+@@ -161,6 +162,8 @@ struct ssb_device_id {
+ /* Namespace stuff, introduced on 2.6.24 */
+ #define dev_get_by_index(a, b)		dev_get_by_index(b)
+ #define __dev_get_by_index(a, b)	__dev_get_by_index(b)
++#define sk_alloc(net, fam, pri, prot)	sk_alloc(fam, pri, prot, 1)
++
+ 
+ /*
+  * Display a 6 byte device address (MAC) in a readable format.
 -- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+1.7.2.30.gc37d7.dirty
+
