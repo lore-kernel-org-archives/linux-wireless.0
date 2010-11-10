@@ -1,50 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f46.google.com ([209.85.161.46]:63163 "EHLO
-	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751822Ab0KHJvP (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:35693 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753828Ab0KJUo5 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 8 Nov 2010 04:51:15 -0500
-Received: by fxm16 with SMTP id 16so3835093fxm.19
-        for <linux-wireless@vger.kernel.org>; Mon, 08 Nov 2010 01:51:14 -0800 (PST)
-From: Arik Nemtsov <arik@wizery.com>
-To: <linux-wireless@vger.kernel.org>
-Cc: Luciano Coelho <luciano.coelho@nokia.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Arik Nemtsov <arik@wizery.com>
-Subject: [PATCH v2 0/2] Add support for fragmentation offload
-Date: Mon,  8 Nov 2010 11:51:05 +0200
-Message-Id: <1289209867-21422-1-git-send-email-arik@wizery.com>
+	Wed, 10 Nov 2010 15:44:57 -0500
+Date: Wed, 10 Nov 2010 15:43:17 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Christian Lamparter <chunkeey@googlemail.com>
+Cc: linux-wireless@vger.kernel.org,
+	Andreas Herrmann <andreas.herrmann3@amd.com>
+Subject: Re: [PATCH 2/6] carl9170: use generic sign_extend32
+Message-ID: <20101110204317.GI2714@tuxdriver.com>
+References: <cover.1288393804.git.chunkeey@googlemail.com>
+ <9f86a3d821426da8b6e3d9b7b8ab7bd9f8e76d71.1288393804.git.chunkeey@googlemail.com>
+ <20101110200635.GF2714@tuxdriver.com>
+ <201011102121.50082.chunkeey@googlemail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <201011102121.50082.chunkeey@googlemail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patchset adds support for hardware TX fragmentation offload
-to mac80211 based drivers. A callback is added to ieee80211_ops
-to receive fragmentation threshold updates.
+On Wed, Nov 10, 2010 at 09:21:49PM +0100, Christian Lamparter wrote:
+> On Wednesday 10 November 2010 21:06:36 John W. Linville wrote:
+> > On Fri, Oct 29, 2010 at 11:11:23PM +0200, Christian Lamparter wrote:
+> > > This patch replaces the handcrafted
+> > > sign extension cruft with a generic
+> > > bitop function.
+> > > 
+> > > Signed-off-by: Christian Lamparter <chunkeey@googlemail.com>
+> > 
+> >   CC [M]  drivers/net/wireless/ath/carl9170/phy.o
+> > drivers/net/wireless/ath/carl9170/phy.c: In function ‘carl9170_get_noisefloor’:
+> > drivers/net/wireless/ath/carl9170/phy.c:1572: error: implicit declaration of function ‘sign_extend32’
+> > make[3]: *** [drivers/net/wireless/ath/carl9170/phy.o] Error 1
+> > make[2]: *** [drivers/net/wireless/ath/carl9170] Error 2
+> > make[1]: *** [drivers/net/wireless/ath] Error 2
+> > make: *** [drivers/net/wireless/] Error 2
+> > 
+> > Maybe we should wait until this function exists before we use it? :-)
+> interesting,
+> 
+> https://patchwork.kernel.org/patch/143241/
+> 
+> so why exactly wasn't this patch merged?
 
-The added functionality is very similar to the one removed by
-patch f546638c3f80.
+Probably because the combination of To: and Cc: he used made everyone
+think it was someone else's patch to merge. :-(
 
-The patchset is required for wl1271 based cards. The firmware
-does not support fragmentation in software and in fact clears
-the MOREFRAGS flag for TX packets.
+I can take it, thanks for the link.
 
-v1->v2: Merge mac80211 patches. Remove flag indicating support
-for HW fragmentation. An implemented set_frag_threshold callback
-indicates HW fragmentation.
-
-Arik Nemtsov (2):
-  mac80211: support hardware TX fragmentation offload
-  wl1271: add support for HW TX fragmentation
-
- drivers/net/wireless/wl12xx/wl1271_acx.c  |    4 +-
- drivers/net/wireless/wl12xx/wl1271_acx.h  |    2 +-
- drivers/net/wireless/wl12xx/wl1271_init.c |    2 +-
- drivers/net/wireless/wl12xx/wl1271_main.c |   31 ++++++++++++++++++++++++++++-
- include/net/mac80211.h                    |    6 +++++
- net/mac80211/cfg.c                        |    7 ++++++
- net/mac80211/driver-ops.h                 |   14 +++++++++++++
- net/mac80211/driver-trace.h               |   21 +++++++++++++++++++
- net/mac80211/tx.c                         |   11 ++++++++-
- net/mac80211/util.c                       |    3 ++
- 10 files changed, 94 insertions(+), 7 deletions(-)
-
+John
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
