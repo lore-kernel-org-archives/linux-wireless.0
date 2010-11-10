@@ -1,38 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gy0-f174.google.com ([209.85.160.174]:54345 "EHLO
-	mail-gy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755955Ab0KVVTi (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 22 Nov 2010 16:19:38 -0500
-Received: by gyb11 with SMTP id 11so1670413gyb.19
-        for <linux-wireless@vger.kernel.org>; Mon, 22 Nov 2010 13:19:37 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <AANLkTinu+xPRZyWT0_rzDXi3Z6p6BoTpLVTLdK=5yKee@mail.gmail.com>
-References: <AANLkTinu+xPRZyWT0_rzDXi3Z6p6BoTpLVTLdK=5yKee@mail.gmail.com>
-Date: Mon, 22 Nov 2010 16:19:35 -0500
-Message-ID: <AANLkTinBH4gEaF-MEGab_nDmFzJQYa_=bTnai264SB5q@mail.gmail.com>
-Subject: Re: Issue with ath9k driver
-From: Bob Copeland <me@bobcopeland.com>
-To: Martin Dubuc <martind1111@gmail.com>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from mga02.intel.com ([134.134.136.20]:3958 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753242Ab0KJSv0 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 10 Nov 2010 13:51:26 -0500
+Subject: Re: [PATCH 00/16] update for 2.6.37
+From: "Guy, Wey-Yi" <wey-yi.w.guy@intel.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"ipw3945-devel@lists.sourceforge.net"
+	<ipw3945-devel@lists.sourceforge.net>
+In-Reply-To: <20101110181609.GB2714@tuxdriver.com>
+References: <1289411810-23093-1-git-send-email-wey-yi.w.guy@intel.com>
+	 <20101110181609.GB2714@tuxdriver.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Wed, 10 Nov 2010 10:47:16 -0800
+Message-ID: <1289414836.12056.88.camel@wwguy-huron>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Nov 22, 2010 at 10:56 AM, Martin Dubuc <martind1111@gmail.com> wrote:
-> I have found an issue with the ath9k driver that first appeared in
-> Fedora 13 kernel and also found in latest Fedora 14 kernel
-> (2.6.35.6-48). I do not know if this issue was already raised and a
-> fix has already been identified.
-[...]
-> The ath5k driver had similar issue in Fedora 13, but the problem was
-> solved in Fedora 14 kernel.
+Hi John,
 
-In the ath5k case it was most likely a stray ieee80211_stop_queues()
-without the corresponding restart.
+On Wed, 2010-11-10 at 10:16 -0800, John W. Linville wrote:
+> On Wed, Nov 10, 2010 at 09:56:34AM -0800, Wey-Yi Guy wrote:
+> > We make the correction for the latest PCI ID used for multiple NICs
+> > We also fix the low tpt problem cause by mac80211 changes
+> > Number of code clean up to separate new agn devices from legacy devices
+> > 
+> > Johannes Berg (5):
+> >   iwlagn: fix non-5000+ build
+> >   iwlagn: fix needed chains calculation
+> >   iwlagn: fix RXON issues
+> >   iwlagn: re-enable calibration
+> >   iwlagn: fix RXON HT
+> > 
+> > Shanyu Zhao (2):
+> >   iwlwifi: seperate disconnected antenna function
+> >   iwlwifi: disable disconnected antenna for advanced bt coex
+> > 
+> > Wey-Yi Guy (8):
+> >   iwlagn: update PCI ID for 6000g2b series devices
+> >   iwlagn: update PCI ID for 6000g2a series devices
+> >   iwlagn: update PCI ID for 100 series devices
+> >   iwlwifi: Legacy isr only used by legacy devices
+> >   iwlwifi: put all the isr related function under ops
+> >   iwlwifi: legacy tx_cmd_protection function
+> >   iwlwifi: resending QoS command when HT changes
+> >   iwlagn: enabel shadow register
+> > 
+> > Winkler, Tomas (1):
+> >   iwlwlifi: update rx write pointer w/o request mac access in the CAM
+> >     mode
+> 
+> Is this really intended for 2.6.37?  Some of these might be
+> appropriate, although at first glance even some of the fixes may be
+> for code in -next.
+> 
+> Fixes only for 2.6.37 -- it has been that way for weeks.  Perhaps you
+> actually intended this for 2.6.38?
+> 
+Oops, it is for 2.6.38, I forgot to change the "Subject", sorry.
 
-But since I have no idea what F-13 vs F-14 kernels are, that's just a
-guess.
+Wey
 
--- 
-Bob Copeland %% www.bobcopeland.com
+
