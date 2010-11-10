@@ -1,96 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qw0-f46.google.com ([209.85.216.46]:58629 "EHLO
-	mail-qw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755084Ab0KJCV6 (ORCPT
+Received: from mail-iw0-f174.google.com ([209.85.214.174]:34683 "EHLO
+	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932074Ab0KJR0Q (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 9 Nov 2010 21:21:58 -0500
-Received: by mail-qw0-f46.google.com with SMTP id 5so5541qwh.19
-        for <linux-wireless@vger.kernel.org>; Tue, 09 Nov 2010 18:21:57 -0800 (PST)
-From: Arnaud Lacombe <lacombar@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: lrodriguez@atheros.com, Arnaud Lacombe <lacombar@gmail.com>
-Subject: [PATCH 38/44] compat/2.6.2{8,9}: fix tracepoint macros
-Date: Tue,  9 Nov 2010 21:20:20 -0500
-Message-Id: <1289355626-25373-39-git-send-email-lacombar@gmail.com>
-In-Reply-To: <1289355626-25373-1-git-send-email-lacombar@gmail.com>
-References: <1289355626-25373-1-git-send-email-lacombar@gmail.com>
+	Wed, 10 Nov 2010 12:26:16 -0500
+Received: by iwn10 with SMTP id 10so1045412iwn.19
+        for <linux-wireless@vger.kernel.org>; Wed, 10 Nov 2010 09:26:16 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <1289391829-8577-5-git-send-email-vnatarajan@atheros.com>
+References: <1289391829-8577-1-git-send-email-vnatarajan@atheros.com>
+ <1289391829-8577-2-git-send-email-vnatarajan@atheros.com> <1289391829-8577-3-git-send-email-vnatarajan@atheros.com>
+ <1289391829-8577-4-git-send-email-vnatarajan@atheros.com> <1289391829-8577-5-git-send-email-vnatarajan@atheros.com>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Wed, 10 Nov 2010 09:25:55 -0800
+Message-ID: <AANLkTik6T9bSNUrQB6+Ob75+B3070MbZagYh_0MRbB+U@mail.gmail.com>
+Subject: Re: [RFC 5/5] ath9k_hw: Add support for Tx beamforming.
+To: Vivek Natarajan <vnatarajan@atheros.com>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-It was introduced in 2.6.29, not 2.6.28.
+On Wed, Nov 10, 2010 at 4:23 AM, Vivek Natarajan <vnatarajan@atheros.com> wrote:
+> Initialize Tx beamforming capabilities, related registers and set
+> descriptors for sounding frames.
+>
+> Signed-off-by: Vivek Natarajan <vnatarajan@atheros.com>
 
-Signed-off-by: Arnaud Lacombe <lacombar@gmail.com>
----
- include/linux/compat-2.6.28.h |   24 ------------------------
- include/linux/compat-2.6.29.h |   20 ++++++++++++++++++++
- 2 files changed, 20 insertions(+), 24 deletions(-)
+Hardware patch for ath9k_hw should go first otherwise would you not
+get a compile issue?
 
-diff --git a/include/linux/compat-2.6.28.h b/include/linux/compat-2.6.28.h
-index 4cd623b..289ec06 100644
---- a/include/linux/compat-2.6.28.h
-+++ b/include/linux/compat-2.6.28.h
-@@ -192,30 +192,6 @@ static inline void skb_queue_splice_tail(const struct sk_buff_head *list,
- 		head->qlen += list->qlen;
- 	}
- }
--
--#ifndef DECLARE_TRACE
--
--#define TP_PROTO(args...)	args
--#define TP_ARGS(args...)		args
--
--#define DECLARE_TRACE(name, proto, args)				\
--	static inline void _do_trace_##name(struct tracepoint *tp, proto) \
--	{ }								\
--	static inline void trace_##name(proto)				\
--	{ }								\
--	static inline int register_trace_##name(void (*probe)(proto))	\
--	{								\
--		return -ENOSYS;						\
--	}								\
--	static inline int unregister_trace_##name(void (*probe)(proto))	\
--	{								\
--		return -ENOSYS;						\
--	}
--
--#define EXPORT_TRACEPOINT_SYMBOL_GPL(name)
--#define EXPORT_TRACEPOINT_SYMBOL(name)
--
--
- #endif
- 
- /* openSuse includes round_jiffies_up in it's kernel 2.6.27.
-diff --git a/include/linux/compat-2.6.29.h b/include/linux/compat-2.6.29.h
-index bd112d0..fa29806 100644
---- a/include/linux/compat-2.6.29.h
-+++ b/include/linux/compat-2.6.29.h
-@@ -277,6 +277,26 @@ static inline struct net *read_pnet(struct net * const *pnet)
- 
- #endif
- 
-+#define TP_PROTO(args...)	args
-+#define TP_ARGS(args...)		args
-+
-+#define DECLARE_TRACE(name, proto, args)				\
-+	static inline void _do_trace_##name(struct tracepoint *tp, proto) \
-+	{ }								\
-+	static inline void trace_##name(proto)				\
-+	{ }								\
-+	static inline int register_trace_##name(void (*probe)(proto))	\
-+	{								\
-+		return -ENOSYS;						\
-+	}								\
-+	static inline int unregister_trace_##name(void (*probe)(proto))	\
-+	{								\
-+		return -ENOSYS;						\
-+	}
-+
-+#define EXPORT_TRACEPOINT_SYMBOL_GPL(name)
-+#define EXPORT_TRACEPOINT_SYMBOL(name)
-+
- extern int		init_dummy_netdev(struct net_device *dev);
- 
- #else
--- 
-1.7.2.30.gc37d7.dirty
-
+  Luis
