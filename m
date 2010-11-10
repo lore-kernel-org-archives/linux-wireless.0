@@ -1,70 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.sysgo.com ([195.145.229.155]:43261 "EHLO mail.sysgo.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751950Ab0K2J56 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 29 Nov 2010 04:57:58 -0500
-Date: Mon, 29 Nov 2010 10:58:01 +0100
-From: Pavel Machek <pma@sysgo.com>
-To: Sujith <Sujith.Manoharan@atheros.com>
-Cc: Larry Finger <Larry.Finger@lwfinger.net>,
-	"ath9k-devel@venema.h4ckr.net" <ath9k-devel@venema.h4ckr.net>,
-	kernel list <linux-kernel@vger.kernel.org>,
-	"chunkeey@googlemail.com" <chunkeey@googlemail.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"rudolf.marek@sysgo.com" <rudolf.marek@sysgo.com>,
-	"cko@sysgo.com" <cko@sysgo.com>, "mfa@sysgo.com" <mfa@sysgo.com>,
-	"anl@sysgo.com" <anl@sysgo.com>
-Subject: [PATCH] fix endianity on ath9k_htc
-Message-ID: <20101129095801.GA28833@pma.sysgo.com>
-References: <20101103092431.GA21138@pma.sysgo.com>
- <20101124081616.GA30595@pma.sysgo.com>
- <20101124131320.GA2611@pma.sysgo.com>
- <4CED33E0.5040000@lwfinger.net>
- <20101126083125.GA28982@pma.sysgo.com>
- <20101126102026.GA11857@pma.sysgo.com>
- <20101126112737.GB11857@pma.sysgo.com>
- <19695.40541.335361.81396@gargle.gargle.HOWL>
- <20101126123706.GA19755@pma.sysgo.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20101126123706.GA19755@pma.sysgo.com>
+Received: from mail-qw0-f46.google.com ([209.85.216.46]:65142 "EHLO
+	mail-qw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753067Ab0KJCVB (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 9 Nov 2010 21:21:01 -0500
+Received: by mail-qw0-f46.google.com with SMTP id 5so5749qwh.19
+        for <linux-wireless@vger.kernel.org>; Tue, 09 Nov 2010 18:21:00 -0800 (PST)
+From: Arnaud Lacombe <lacombar@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: lrodriguez@atheros.com, Arnaud Lacombe <lacombar@gmail.com>
+Subject: [PATCH 08/44] compat/2.6.20: add header's skeleton
+Date: Tue,  9 Nov 2010 21:19:50 -0500
+Message-Id: <1289355626-25373-9-git-send-email-lacombar@gmail.com>
+In-Reply-To: <1289355626-25373-1-git-send-email-lacombar@gmail.com>
+References: <1289355626-25373-1-git-send-email-lacombar@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Signed-off-by: Arnaud Lacombe <lacombar@gmail.com>
+---
+ include/linux/compat-2.6.20.h |   11 +++++++++++
+ 1 files changed, 11 insertions(+), 0 deletions(-)
+ create mode 100644 include/linux/compat-2.6.20.h
 
-It seems struct eep_header lacks proper #ifdef BIG_ENDIAN_BITFIELD
-markup. eep_4k_header has proper markup, but two fields were swapped.
-
-Signed-off-by: Pavel Machek <pma@sysgo.com>
-
-diff --git a/drivers/net/wireless/ath/ath9k/eeprom.h b/drivers/net/wireless/ath/ath9k/eeprom.h
-index 3c99830..022589d 100644
---- a/drivers/net/wireless/ath/ath9k/eeprom.h
-+++ b/drivers/net/wireless/ath/ath9k/eeprom.h
-@@ -378,10 +374,14 @@ struct modal_eep_header {
- 	u8 xatten2Margin[AR5416_MAX_CHAINS];
- 	u8 ob_ch1;
- 	u8 db_ch1;
--	u8 useAnt1:1,
--	    force_xpaon:1,
--	    local_bias:1,
-+#ifndef __BIG_ENDIAN_BITFIELD
-+	u8 useAnt1:1, force_xpaon:1, local_bias:1,
- 	    femBandSelectUsed:1, xlnabufin:1, xlnaisel:2, xlnabufmode:1;
-+#else
-+	u8 xlnabufmode:1, xlnaisel:2, xlnabufin:1, 
-+	    femBandSelectUsed:1, local_bias:1, force_xpaon:1, useAnt1:1;
-+#endif
+diff --git a/include/linux/compat-2.6.20.h b/include/linux/compat-2.6.20.h
+new file mode 100644
+index 0000000..bbfdacb
+--- /dev/null
++++ b/include/linux/compat-2.6.20.h
+@@ -0,0 +1,11 @@
++#ifndef LINUX_26_20_COMPAT_H
++#define LINUX_26_20_COMPAT_H
 +
- 	u8 miscBits;
- 	u16 xpaBiasLvlFreq[3];
- 	u8 futureModal[6];
-@@ -443,7 +444,7 @@ struct modal_eep_4k_header {
- 	u8 antdiv_ctl1:4, ob_4:4;
- 	u8 db1_3:4, db1_2:4;
- 	u8 antdiv_ctl2:4, db1_4:4;
--	u8 db2_2:4, db2_3:4;
-+	u8 db2_3:4, db2_2:4;
- 	u8 reserved:4, db2_4:4;
- #else
- 	u8 ob_2:4, ob_3:4;
++#include <linux/version.h>
++
++/* Compat work for 2.6.20 */
++#if (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,20))
++
++#endif /* (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,20)) */
++
++#endif /* LINUX_26_20_COMPAT_H */
+-- 
+1.7.2.30.gc37d7.dirty
+
