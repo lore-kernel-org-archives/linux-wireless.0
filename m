@@ -1,49 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from lo.gmane.org ([80.91.229.12]:55324 "EHLO lo.gmane.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754817Ab0KLRkt (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 12 Nov 2010 12:40:49 -0500
-Received: from list by lo.gmane.org with local (Exim 4.69)
-	(envelope-from <glkwg-linux-wireless@m.gmane.org>)
-	id 1PGxcF-0005yV-KR
-	for linux-wireless@vger.kernel.org; Fri, 12 Nov 2010 18:40:47 +0100
-Received: from function.justgohome.co.uk ([217.169.15.243])
-        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Fri, 12 Nov 2010 18:40:47 +0100
-Received: from rb-oss-3 by function.justgohome.co.uk with local (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Fri, 12 Nov 2010 18:40:47 +0100
+Received: from mail-qw0-f46.google.com ([209.85.216.46]:58629 "EHLO
+	mail-qw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754847Ab0KJCVb (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 9 Nov 2010 21:21:31 -0500
+Received: by mail-qw0-f46.google.com with SMTP id 5so5541qwh.19
+        for <linux-wireless@vger.kernel.org>; Tue, 09 Nov 2010 18:21:30 -0800 (PST)
+From: Arnaud Lacombe <lacombar@gmail.com>
 To: linux-wireless@vger.kernel.org
-From: Robie Basak <rb-oss-3@justgohome.co.uk>
-Subject: Re: r8187se panic
-Date: Fri, 12 Nov 2010 17:40:36 +0000 (UTC)
-Message-ID: <slrnidqv0k.g21.rb-oss-3@mal.justgohome.co.uk>
-References: <slrnidp3ae.79c.rb-oss-3@mal.justgohome.co.uk>
- <4CDC9FA5.10002@lwfinger.net>
- <slrnidq7u0.9ic.rb-oss-3@mal.justgohome.co.uk>
- <4CDD3BC4.7070102@lwfinger.net>
- <slrnidqorp.dlr.rb-oss-3@mal.justgohome.co.uk>
- <4CDD66C4.10603@lwfinger.net>
- <slrnidqsld.dlr.rb-oss-3@mal.justgohome.co.uk>
- <4CDD7945.70005@lwfinger.net>
+Cc: lrodriguez@atheros.com, Arnaud Lacombe <lacombar@gmail.com>
+Subject: [PATCH 26/44] compat: remove a couple of macro definition protection
+Date: Tue,  9 Nov 2010 21:20:08 -0500
+Message-Id: <1289355626-25373-27-git-send-email-lacombar@gmail.com>
+In-Reply-To: <1289355626-25373-1-git-send-email-lacombar@gmail.com>
+References: <1289355626-25373-1-git-send-email-lacombar@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2010-11-12, Larry Finger <Larry.Finger@lwfinger.net> wrote:
-> What does the following log entry signify?
->
-> Nov 12 16:29:03 tiny kernel: [  160.306731]
->=>>>>>>>>>>=============================>set power:0,0!
->
-> On my system, switching to battery does not affect the rtl8187se at all.
+Signed-off-by: Arnaud Lacombe <lacombar@gmail.com>
+---
+ include/linux/compat-2.6.31.h |    4 ----
+ include/linux/compat-2.6.32.h |    2 --
+ 2 files changed, 0 insertions(+), 6 deletions(-)
 
-That is consistently showing up every time I switch from AC to battery
-(but not battery to AC) while wireless is on. It does not appear if I
-turn the wireless off, disconnect AC and then turn wireless on again.
-
-Also for a suspend/resume cycle, it appears only if on battery and
-wireless is on.
-
-Robie
+diff --git a/include/linux/compat-2.6.31.h b/include/linux/compat-2.6.31.h
+index b1b7b28..52291f4 100644
+--- a/include/linux/compat-2.6.31.h
++++ b/include/linux/compat-2.6.31.h
+@@ -50,13 +50,9 @@
+ #endif
+ #endif
+ 
+-#ifndef NETDEV_PRE_UP
+ #define NETDEV_PRE_UP		0x000D
+-#endif
+ 
+-#ifndef SDIO_DEVICE_ID_MARVELL_8688WLAN
+ #define SDIO_DEVICE_ID_MARVELL_8688WLAN		0x9104
+-#endif
+ 
+ /*
+  * kmemleak was introduced on 2.6.31, since older kernels do not have
+diff --git a/include/linux/compat-2.6.32.h b/include/linux/compat-2.6.32.h
+index 3b9915e..8f139b3 100644
+--- a/include/linux/compat-2.6.32.h
++++ b/include/linux/compat-2.6.32.h
+@@ -59,7 +59,6 @@ static inline void flush_delayed_work(struct delayed_work *dwork)
+ 
+ #define SET_NETDEV_DEVTYPE(netdev, type)
+ 
+-#ifdef __KERNEL__
+ /* Driver transmit return codes */
+ enum netdev_tx {
+ 	BACKPORT_NETDEV_TX_OK = NETDEV_TX_OK,       /* driver took care of packet */
+@@ -67,7 +66,6 @@ enum netdev_tx {
+ 	BACKPORT_NETDEV_TX_LOCKED = NETDEV_TX_LOCKED,  /* driver tx lock was already taken */
+ };
+ typedef enum netdev_tx netdev_tx_t;
+-#endif /* __KERNEL__ */
+ 
+ /*
+  * dev_pm_ops is only available on kernels >= 2.6.29, for
+-- 
+1.7.2.30.gc37d7.dirty
 
