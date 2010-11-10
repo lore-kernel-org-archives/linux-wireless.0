@@ -1,48 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from hera.kernel.org ([140.211.167.34]:47458 "EHLO hera.kernel.org"
+Received: from bear.ext.ti.com ([192.94.94.41]:60606 "EHLO bear.ext.ti.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932140Ab0KLSNX (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 12 Nov 2010 13:13:23 -0500
-Message-ID: <4CDD83BC.1090207@kernel.org>
-Date: Fri, 12 Nov 2010 19:13:16 +0100
-From: Tejun Heo <tj@kernel.org>
+	id S1751072Ab0KJLge (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 10 Nov 2010 06:36:34 -0500
+Message-ID: <4CDA83BD.2000306@ti.com>
+Date: Wed, 10 Nov 2010 13:36:29 +0200
+From: Gery Kahn <geryk@ti.com>
+Reply-To: geryk@ti.com
 MIME-Version: 1.0
-To: Ben Greear <greearb@candelatech.com>
-CC: Johannes Berg <johannes@sipsolutions.net>,
+To: Juuso Oikarinen <juuso.oikarinen@nokia.com>
+CC: "Coelho Luciano (Nokia-MS/Helsinki)" <Luciano.Coelho@nokia.com>,
 	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: ath5k/mac80211:  Reproducible deadlock with 64-stations.
-References: <4CDB2488.4040802@candelatech.com> <1289437356.3748.25.camel@jlt3.sipsolutions.net> <4CDBB716.7020802@kernel.org> <4CDC2016.8020200@candelatech.com> <4CDC354C.2060503@candelatech.com> <4CDC7860.3070307@candelatech.com> <4CDD12BD.7030208@kernel.org> <4CDD13D1.9070608@kernel.org> <4CDD8241.8000302@candelatech.com>
-In-Reply-To: <4CDD8241.8000302@candelatech.com>
-Content-Type: text/plain; charset=UTF-8
+Subject: Re: [PATCH 2/2] Revert "wl1271: Change supported channel order for
+ a more optimal scan"
+References: <1289384840-28305-1-git-send-email-juuso.oikarinen@nokia.com>	 <1289384840-28305-2-git-send-email-juuso.oikarinen@nokia.com>	 <4CDA7F7A.4000705@ti.com> <1289388086.2522.72.camel@wimaxnb.nmp.nokia.com>
+In-Reply-To: <1289388086.2522.72.camel@wimaxnb.nmp.nokia.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello,
+On 11/10/2010 01:21 PM, Juuso Oikarinen wrote:
+> On Wed, 2010-11-10 at 12:18 +0100, ext Gery Kahn wrote:
+>> On 11/10/2010 12:27 PM, juuso.oikarinen@nokia.com wrote:
+>>> From: Juuso Oikarinen<juuso.oikarinen@nokia.com>
+>>>
+>>> This reverts commit fa21c7a9e4be439e217fe72edbd39b643b643791.
+>>>
+>>> The reverted patch caused more harm than benefit.
+>>>
+>>> Signed-off-by: Juuso Oikarinen<juuso.oikarinen@nokia.com>
+>>>
+>> Just couple words what harm it was?
+>
+> The harm is that the supported channels are reported to user-space in
+> the order they are registered in the driver. The result of that is quite
+> messy in userspace PoV.
+>
+> -Juuso
+>
+Thank you for answer.
 
-On 11/12/2010 07:06 PM, Ben Greear wrote:
-> On 11/12/2010 02:15 AM, Tejun Heo wrote:
->> Please note that under those circumstances, what's guaranteed is
->> forward-progress for workqueues which are used during memory reclaim.
->> Continuously scheduling works which will in turn pile up on rtnl_lock
->> is akin to constantly allocating memory while something holding
->> rtnl_lock is blocked due to memory pressure.  Correctness-wise, it
->> isn't necessarily deadlock but the only possible recourse is OOM.
-> 
-> From looking at the wireless code, since sdata is stopped, the
-> 'work' isn't going to actually do anything anyway.
-> 
-> Is there a way to clear the work from the work-queue w/out
-> requiring any locks that a running worker thread might hold?
-> (So instead of flush_work, we could call something like "remove_all_work"
-> and not block on the worker thread that may currently be trying to
-> acquire rtnl?)
+The reason of doing such channel sorting was channel overlapping.
 
-Hmmm... there's cancel_work_sync().  It'll cancel if the work is
-pending and wait for completion if it's already running.  BTW, which
-part of code are we talking about?  Can you please attach full thread
-dump at deadlock?
+Let's say for 11a (bandwidth 20MHz) it is not a problem.
+While 11g, preferred channel sorting would be 1,6,11,...
 
-Thanks.
+Gery
 
--- 
-tejun
