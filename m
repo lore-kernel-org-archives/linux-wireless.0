@@ -1,64 +1,156 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iw0-f174.google.com ([209.85.214.174]:49378 "EHLO
-	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751293Ab0KXD4M (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 23 Nov 2010 22:56:12 -0500
+Received: from bear.ext.ti.com ([192.94.94.41]:59794 "EHLO bear.ext.ti.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754305Ab0KJLS0 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 10 Nov 2010 06:18:26 -0500
+Message-ID: <4CDA7F7A.4000705@ti.com>
+Date: Wed, 10 Nov 2010 13:18:18 +0200
+From: Gery Kahn <geryk@ti.com>
+Reply-To: geryk@ti.com
 MIME-Version: 1.0
-In-Reply-To: <1290569516.3074.41.camel@dcbw.foobar.com>
-References: <AANLkTim0=ds3EhQOEfHdrKt2dSnEqUgf5CLOPHNyW=jE@mail.gmail.com> <1290569516.3074.41.camel@dcbw.foobar.com>
-From: Julian Calaby <julian.calaby@gmail.com>
-Date: Wed, 24 Nov 2010 14:55:50 +1100
-Message-ID: <AANLkTi=ioGgpAQ-rx_abCHcOmOezXwJFfbKWc7=tGAJ5@mail.gmail.com>
-Subject: Re: Re-distributable 88w8335 Firmware?
-To: Dan Williams <dcbw@redhat.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	David.Woodhouse@intel.com, Greg KH <greg@kroah.com>,
-	linux-kernel@vger.kernel.org,
-	Lennert Buytenhek <buytenh@wantstofly.org>,
-	Holger Schurig <holgerschurig@googlemail.com>,
-	Markus Becker <mab@comnets.uni-bremen.de>,
-	andreamrl@tiscali.it, Denis Kirjanov <kirjanov@gmail.com>,
-	dwmw2@infradead.org
-Content-Type: text/plain; charset=ISO-8859-1
+To: "juuso.oikarinen@nokia.com" <juuso.oikarinen@nokia.com>
+CC: "luciano.coelho@nokia.com" <luciano.coelho@nokia.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH 2/2] Revert "wl1271: Change supported channel order for
+ a more optimal scan"
+References: <1289384840-28305-1-git-send-email-juuso.oikarinen@nokia.com> <1289384840-28305-2-git-send-email-juuso.oikarinen@nokia.com>
+In-Reply-To: <1289384840-28305-2-git-send-email-juuso.oikarinen@nokia.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Nov 24, 2010 at 14:31, Dan Williams <dcbw@redhat.com> wrote:
-> On Sat, 2010-11-20 at 11:29 +1100, Julian Calaby wrote:
->> If we cannot obtain proper firmware files, the very least Marvel could
->> do would be to bless the *BSD Malo driver's firmware files (obtainable
->> here: http://www.nazgul.ch/malo/malo-firmware-1.4.tgz - see
->> http://www.unix.com/man-page/freebsd/4/MALO/ for more info) with a
->> proper re-distributable license.
->>
->> In terms of the actual chipsets in question, I'm referring to the
->> 88w8335, 88w8338, and 88w8385 chipsets. I believe Marvel refers to
+On 11/10/2010 12:27 PM, juuso.oikarinen@nokia.com wrote:
+> From: Juuso Oikarinen<juuso.oikarinen@nokia.com>
 >
-> Note that the 8385 shouldn't be included in this list, since it's a
-> FullMAC chip, is handled already by the 'libertas' kernel driver, and
-> we've already got firmware for its CF & SDIO variants in linux-firmware
-> along with the 8388, 8682, 8686, and 8688.
-
-That'll teach me to not do all the research on this =)
-
-I pulled that number from the Malo firmware archive linked above.
-(Malo claims to only work with 8335s, but yeah) I'm guessing that if
-that firmware file is used, it'd be for a PCI variant of the 8385
-chipset (given that such a thing exists) and that isn't supported by
-the "libertas" driver.
-
-Either way, having the firmware for the 833x chipsets would be more
-than enough =)
-
-And thanks for reaching out to your contact. Hopefully we'll get
-something useful out of this.
-
-Thanks,
-
--- 
-Julian Calaby
-
-Email: julian.calaby@gmail.com
-Profile: http://www.google.com/profiles/julian.calaby/
-.Plan: http://sites.google.com/site/juliancalaby/
+> This reverts commit fa21c7a9e4be439e217fe72edbd39b643b643791.
+>
+> The reverted patch caused more harm than benefit.
+>
+> Signed-off-by: Juuso Oikarinen<juuso.oikarinen@nokia.com>
+> ---
+>   drivers/net/wireless/wl12xx/wl1271_main.c |   86 +++++++++++++---------------
+>   1 files changed, 40 insertions(+), 46 deletions(-)
+>
+> diff --git a/drivers/net/wireless/wl12xx/wl1271_main.c b/drivers/net/wireless/wl12xx/wl1271_main.c
+> index eb9f821..1f912cd 100644
+> --- a/drivers/net/wireless/wl12xx/wl1271_main.c
+> +++ b/drivers/net/wireless/wl12xx/wl1271_main.c
+> @@ -2215,24 +2215,21 @@ static struct ieee80211_rate wl1271_rates[] = {
+>   	  .hw_value_short = CONF_HW_BIT_RATE_54MBPS, },
+>   };
+>
+> -/*
+> - * Can't be const, mac80211 writes to this. The order of the channels here
+> - * is designed to improve scanning.
+> - */
+> +/* can't be const, mac80211 writes to this */
+>   static struct ieee80211_channel wl1271_channels[] = {
+>   	{ .hw_value = 1, .center_freq = 2412, .max_power = 25 },
+> -	{ .hw_value = 5, .center_freq = 2432, .max_power = 25 },
+> -	{ .hw_value = 9, .center_freq = 2452, .max_power = 25 },
+> -	{ .hw_value = 13, .center_freq = 2472, .max_power = 25 },
+> -	{ .hw_value = 4, .center_freq = 2427, .max_power = 25 },
+> -	{ .hw_value = 8, .center_freq = 2447, .max_power = 25 },
+> -	{ .hw_value = 12, .center_freq = 2467, .max_power = 25 },
+> -	{ .hw_value = 3, .center_freq = 2422, .max_power = 25 },
+> -	{ .hw_value = 7, .center_freq = 2442, .max_power = 25 },
+> -	{ .hw_value = 11, .center_freq = 2462, .max_power = 25 },
+>   	{ .hw_value = 2, .center_freq = 2417, .max_power = 25 },
+> +	{ .hw_value = 3, .center_freq = 2422, .max_power = 25 },
+> +	{ .hw_value = 4, .center_freq = 2427, .max_power = 25 },
+> +	{ .hw_value = 5, .center_freq = 2432, .max_power = 25 },
+>   	{ .hw_value = 6, .center_freq = 2437, .max_power = 25 },
+> +	{ .hw_value = 7, .center_freq = 2442, .max_power = 25 },
+> +	{ .hw_value = 8, .center_freq = 2447, .max_power = 25 },
+> +	{ .hw_value = 9, .center_freq = 2452, .max_power = 25 },
+>   	{ .hw_value = 10, .center_freq = 2457, .max_power = 25 },
+> +	{ .hw_value = 11, .center_freq = 2462, .max_power = 25 },
+> +	{ .hw_value = 12, .center_freq = 2467, .max_power = 25 },
+> +	{ .hw_value = 13, .center_freq = 2472, .max_power = 25 },
+>   };
+>
+>   /* mapping to indexes for wl1271_rates */
+> @@ -2323,52 +2320,49 @@ static struct ieee80211_rate wl1271_rates_5ghz[] = {
+>   	  .hw_value_short = CONF_HW_BIT_RATE_54MBPS, },
+>   };
+>
+> -/*
+> - * 5 GHz band channels for WL1273 - can't be const, mac80211 writes to this.
+> - * The order of the channels here is designed to improve scanning.
+> - */
+> +/* 5 GHz band channels for WL1273 */
+>   static struct ieee80211_channel wl1271_channels_5ghz[] = {
+>   	{ .hw_value = 183, .center_freq = 4915},
+> -	{ .hw_value = 188, .center_freq = 4940},
+> -	{ .hw_value = 8, .center_freq = 5040},
+> -	{ .hw_value = 34, .center_freq = 5170},
+> -	{ .hw_value = 44, .center_freq = 5220},
+> -	{ .hw_value = 60, .center_freq = 5300},
+> -	{ .hw_value = 112, .center_freq = 5560},
+> -	{ .hw_value = 132, .center_freq = 5660},
+> -	{ .hw_value = 157, .center_freq = 5785},
+>   	{ .hw_value = 184, .center_freq = 4920},
+> +	{ .hw_value = 185, .center_freq = 4925},
+> +	{ .hw_value = 187, .center_freq = 4935},
+> +	{ .hw_value = 188, .center_freq = 4940},
+>   	{ .hw_value = 189, .center_freq = 4945},
+> -	{ .hw_value = 9, .center_freq = 5045},
+> -	{ .hw_value = 36, .center_freq = 5180},
+> -	{ .hw_value = 46, .center_freq = 5230},
+> -	{ .hw_value = 64, .center_freq = 5320},
+> -	{ .hw_value = 116, .center_freq = 5580},
+> -	{ .hw_value = 136, .center_freq = 5680},
+>   	{ .hw_value = 192, .center_freq = 4960},
+> -	{ .hw_value = 11, .center_freq = 5055},
+> -	{ .hw_value = 38, .center_freq = 5190},
+> -	{ .hw_value = 48, .center_freq = 5240},
+> -	{ .hw_value = 100, .center_freq = 5500},
+> -	{ .hw_value = 120, .center_freq = 5600},
+> -	{ .hw_value = 140, .center_freq = 5700},
+> -	{ .hw_value = 185, .center_freq = 4925},
+>   	{ .hw_value = 196, .center_freq = 4980},
+> -	{ .hw_value = 12, .center_freq = 5060},
+> -	{ .hw_value = 40, .center_freq = 5200},
+> -	{ .hw_value = 52, .center_freq = 5260},
+> -	{ .hw_value = 104, .center_freq = 5520},
+> -	{ .hw_value = 124, .center_freq = 5620},
+> -	{ .hw_value = 149, .center_freq = 5745},
+> -	{ .hw_value = 161, .center_freq = 5805},
+> -	{ .hw_value = 187, .center_freq = 4935},
+>   	{ .hw_value = 7, .center_freq = 5035},
+> +	{ .hw_value = 8, .center_freq = 5040},
+> +	{ .hw_value = 9, .center_freq = 5045},
+> +	{ .hw_value = 11, .center_freq = 5055},
+> +	{ .hw_value = 12, .center_freq = 5060},
+>   	{ .hw_value = 16, .center_freq = 5080},
+> +	{ .hw_value = 34, .center_freq = 5170},
+> +	{ .hw_value = 36, .center_freq = 5180},
+> +	{ .hw_value = 38, .center_freq = 5190},
+> +	{ .hw_value = 40, .center_freq = 5200},
+>   	{ .hw_value = 42, .center_freq = 5210},
+> +	{ .hw_value = 44, .center_freq = 5220},
+> +	{ .hw_value = 46, .center_freq = 5230},
+> +	{ .hw_value = 48, .center_freq = 5240},
+> +	{ .hw_value = 52, .center_freq = 5260},
+>   	{ .hw_value = 56, .center_freq = 5280},
+> +	{ .hw_value = 60, .center_freq = 5300},
+> +	{ .hw_value = 64, .center_freq = 5320},
+> +	{ .hw_value = 100, .center_freq = 5500},
+> +	{ .hw_value = 104, .center_freq = 5520},
+>   	{ .hw_value = 108, .center_freq = 5540},
+> +	{ .hw_value = 112, .center_freq = 5560},
+> +	{ .hw_value = 116, .center_freq = 5580},
+> +	{ .hw_value = 120, .center_freq = 5600},
+> +	{ .hw_value = 124, .center_freq = 5620},
+>   	{ .hw_value = 128, .center_freq = 5640},
+> +	{ .hw_value = 132, .center_freq = 5660},
+> +	{ .hw_value = 136, .center_freq = 5680},
+> +	{ .hw_value = 140, .center_freq = 5700},
+> +	{ .hw_value = 149, .center_freq = 5745},
+>   	{ .hw_value = 153, .center_freq = 5765},
+> +	{ .hw_value = 157, .center_freq = 5785},
+> +	{ .hw_value = 161, .center_freq = 5805},
+>   	{ .hw_value = 165, .center_freq = 5825},
+>   };
+>
+Just couple words what harm it was?
