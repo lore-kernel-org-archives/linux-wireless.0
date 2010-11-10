@@ -1,60 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:39914 "EHLO nbd.name"
-	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1751406Ab0KLT4K (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 12 Nov 2010 14:56:10 -0500
-Message-ID: <4CDD9BB8.1040305@openwrt.org>
-Date: Fri, 12 Nov 2010 20:55:36 +0100
-From: Felix Fietkau <nbd@openwrt.org>
+Received: from mail-bw0-f46.google.com ([209.85.214.46]:64731 "EHLO
+	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755119Ab0KJUBX (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 10 Nov 2010 15:01:23 -0500
+Received: by bwz15 with SMTP id 15so1122956bwz.19
+        for <linux-wireless@vger.kernel.org>; Wed, 10 Nov 2010 12:01:21 -0800 (PST)
+From: Christian Lamparter <chunkeey@googlemail.com>
+To: Ben Greear <greearb@candelatech.com>
+Subject: Re: [mac80211] mac80211:  Support multiple VIFS per AP in debugfs.
+Date: Wed, 10 Nov 2010 21:01:01 +0100
+Cc: linux-wireless@vger.kernel.org
+References: <1285212541-6834-1-git-send-email-greearb@candelatech.com> <201010162100.02477.chunkeey@googlemail.com> <4CDAF182.4030409@candelatech.com>
+In-Reply-To: <4CDAF182.4030409@candelatech.com>
 MIME-Version: 1.0
-To: Wojciech Dubowik <dubowoj@neratec.com>
-CC: Bob Copeland <me@bobcopeland.com>, linville@tuxdriver.com,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 8/9] ath5k: AHB port. Add AHB bus support.
-References: <1298013311.4723.1289591505420.JavaMail.root@idefix>
-In-Reply-To: <1298013311.4723.1289591505420.JavaMail.root@idefix>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: Text/Plain;
+  charset="utf-8"
+Message-Id: <201011102101.02263.chunkeey@googlemail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2010-11-12 8:51 PM, Wojciech Dubowik wrote:
->> From: "Felix Fietkau" <nbd@openwrt.org>
->> To: "Bob Copeland" <me@bobcopeland.com>
->> Cc: "Wojciech Dubowik" <dubowoj@neratec.com>, linville@tuxdriver.com, linux-wireless@vger.kernel.org
->> Sent: Freitag, 12. November 2010 20:36:51
->> Subject: Re: [PATCH 8/9] ath5k: AHB port. Add AHB bus support.
->> On 2010-11-12 8:26 PM, Bob Copeland wrote:
->> > On Thu, Nov 11, 2010 at 9:58 AM, Wojciech Dubowik
->> > <dubowoj@neratec.com> wrote:
->> >>
->> >> AHB specific functions are now in ahb.c file. There is no common
->> >> init functions which tries first pci and then ahb becasue on some
->> >
->> > 'because'
->> >
->> >> --- a/drivers/net/wireless/ath/ath5k/Makefile
->> >> +++ b/drivers/net/wireless/ath/ath5k/Makefile
->> >> @@ -15,5 +15,5 @@ ath5k-y += rfkill.o
->> >>  ath5k-y += ani.o
->> >>  ath5k-y += sysfs.o
->> >>  ath5k-$(CONFIG_ATH5K_DEBUG) += debug.o
->> >> -ath5k-y += pci.o
->> >> +ath5k-y += $(if $(CONFIG_ATHEROS_AR231X),ahb,pci).o
->> >>  obj-$(CONFIG_ATH5K) += ath5k.o
->> >
->> > This is not the right way.. what if someone wants both in one
->> > kernel?
->> Having both in the kernel is completely pointless. There are no
->> devices
->> that can support both, nor will there ever be.
->> 
->> - Felix
+On Wednesday 10 November 2010 20:24:50 Ben Greear wrote:
+> On 10/16/2010 12:00 PM, Christian Lamparter wrote:
+> > On Thursday 23 September 2010 10:36:58 Johannes Berg wrote:
+> >> On Wed, 2010-09-22 at 20:29 -0700, greearb@gmail.com wrote:
+> >>> From: Ben Greear<greearb@candelatech.com>
+> >>>
+> >>> Create 'stations' sub-directory under each netdev:[vif-name]
+> >>> directory to hold all stations for that network device.
+> >>>
+> >>> Signed-off-by: Ben Greear<greearb@candelatech.com>
+> >>
+> >> Acked-by: Johannes Berg<johannes@sipsolutions.net>
+> >
+> > ieee80211_debugfs_key_add needs to be updated (debugfs_key.c).
+> > Either the "station" symlink has to go, or we need to loop up
+> > to which interface the sta belongs. currently it's hard-coded to
+> > "sprintf(buf, "../../stations/%pM", sta->sta.addr);"
+> > (something which no longer exists)
 > 
-> I agree. The only advantage would be that some of the typos and missing
-> functions in either of the files would be detected during compile time.
-> My AR5312 board crashes when I enable PCI. I guess it's fixable but it's
-> out of the scope of the ath5k driver...
-Well, AR5312 does not have PCI. Only AR2315 has it, and there is only
-one device that even uses it (Atheros never officially supported it).
+> To reproduce this problem, do I need to be using WEP, or should
+> WPA do the trick?  Or something else?
+well, STAs are involved. So you want an encryption which needs/generates
+per-station keys. And the setup of choice would be to go with WPA/RSN.
 
-- Felix
+> Are the keys supposed to show up only in STA mode, or also when
+> acting as an AP?
+They will show up in STA and AP mode.
+
+Regards,
+	Chr
