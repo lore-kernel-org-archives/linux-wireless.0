@@ -1,76 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:56013 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754390Ab0KPQGk (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 16 Nov 2010 11:06:40 -0500
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Subject: [PATCH 00/18]  update for 2.6.38
-Date: Tue, 16 Nov 2010 08:01:33 -0800
-Message-Id: <1289923311-14920-1-git-send-email-wey-yi.w.guy@intel.com>
+Received: from mail-qy0-f174.google.com ([209.85.216.174]:47672 "EHLO
+	mail-qy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755062Ab0KJCV7 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 9 Nov 2010 21:21:59 -0500
+Received: by mail-qy0-f174.google.com with SMTP id 12so2500227qyk.19
+        for <linux-wireless@vger.kernel.org>; Tue, 09 Nov 2010 18:21:59 -0800 (PST)
+From: Arnaud Lacombe <lacombar@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: lrodriguez@atheros.com, Arnaud Lacombe <lacombar@gmail.com>
+Subject: [PATCH 39/44] compat/2.6.29: protect headers inclusion
+Date: Tue,  9 Nov 2010 21:20:21 -0500
+Message-Id: <1289355626-25373-40-git-send-email-lacombar@gmail.com>
+In-Reply-To: <1289355626-25373-1-git-send-email-lacombar@gmail.com>
+References: <1289355626-25373-1-git-send-email-lacombar@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-We add more changes to prepare P2P supports
-We also add few features/changes to WiFi/BT coex,
-such as dynamic aggregation.
-For newer devices, we change the default LED mode to On/Off
+Signed-off-by: Arnaud Lacombe <lacombar@gmail.com>
+---
+ include/linux/compat-2.6.29.h |    5 +++--
+ 1 files changed, 3 insertions(+), 2 deletions(-)
 
-Johannes Berg (9):
-  iwlagn: fix some naming regarding FIFOs
-  iwlagn: remove unused variable swq_id
-  iwlagn: remove a bogus AGG_OFF check
-  iwlwifi: pass txq to wake/stop queue
-  iwlwifi: always build swq_id as virtual queue ID
-  iwlagn: fix PAN queues
-  iwlagn: avoid crash if vif is not assigned
-  iwlagn: reprogram AP STA after assoc
-  iwlagn: fix PAN slot timing wrt. DTIM
-
-Shanyu Zhao (2):
-  iwlagn: update QoS before commit associated RXON
-  iwlagn: check change before commit RXON cmd
-
-Wey-Yi Guy (7):
-  iwlagn: used frame count info in compressed ba packet
-  iwlagn: set dynamic aggregation threshold for BT
-  iwlagn: support dynamic aggregation for BT coex
-  iwlagn: change default ACK/CTS MASK setting for WiFi/BT coex
-  iwlwifi: change default led mode for different devices
-  iwlagn: use SKU information in the EEPROM
-  iwlwifi: set STATUS_READY before commit_rxon
-
-these patches are also available from wireless-next-2.6 branch on
- git://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi-2.6.git
-
- drivers/net/wireless/iwlwifi/iwl-1000.c       |    8 +-
- drivers/net/wireless/iwlwifi/iwl-3945.c       |    4 +-
- drivers/net/wireless/iwlwifi/iwl-4965.c       |   13 +--
- drivers/net/wireless/iwlwifi/iwl-5000.c       |   14 ++--
- drivers/net/wireless/iwlwifi/iwl-6000.c       |   37 +++++-----
- drivers/net/wireless/iwlwifi/iwl-agn-eeprom.c |   21 +++++
- drivers/net/wireless/iwlwifi/iwl-agn-hcmd.c   |    5 +-
- drivers/net/wireless/iwlwifi/iwl-agn-lib.c    |   17 +---
- drivers/net/wireless/iwlwifi/iwl-agn-rs.c     |   32 ++++----
- drivers/net/wireless/iwlwifi/iwl-agn-rxon.c   |  103 ++++++++++++++-----------
- drivers/net/wireless/iwlwifi/iwl-agn-tx.c     |   77 ++++++++++++-------
- drivers/net/wireless/iwlwifi/iwl-agn-ucode.c  |   65 +++++++++-------
- drivers/net/wireless/iwlwifi/iwl-agn.c        |   11 ++-
- drivers/net/wireless/iwlwifi/iwl-commands.h   |   13 ++-
- drivers/net/wireless/iwlwifi/iwl-core.c       |    2 +-
- drivers/net/wireless/iwlwifi/iwl-core.h       |    7 ++-
- drivers/net/wireless/iwlwifi/iwl-debugfs.c    |    9 +--
- drivers/net/wireless/iwlwifi/iwl-dev.h        |    3 +-
- drivers/net/wireless/iwlwifi/iwl-eeprom.h     |   12 +++-
- drivers/net/wireless/iwlwifi/iwl-helpers.h    |   36 ++++-----
- drivers/net/wireless/iwlwifi/iwl-led.c        |   10 ++-
- drivers/net/wireless/iwlwifi/iwl-led.h        |    6 +-
- drivers/net/wireless/iwlwifi/iwl-sta.c        |   51 +++++++++++-
- drivers/net/wireless/iwlwifi/iwl-sta.h        |    1 +
- drivers/net/wireless/iwlwifi/iwl-tx.c         |   11 +--
- drivers/net/wireless/iwlwifi/iwl3945-base.c   |    2 +-
- 26 files changed, 345 insertions(+), 225 deletions(-)
+diff --git a/include/linux/compat-2.6.29.h b/include/linux/compat-2.6.29.h
+index fa29806..b83aca0 100644
+--- a/include/linux/compat-2.6.29.h
++++ b/include/linux/compat-2.6.29.h
+@@ -2,7 +2,10 @@
+ #define LINUX_26_29_COMPAT_H
+ 
+ #include <linux/version.h>
++
+ #include <linux/netdevice.h>
++
++#if (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,29))
+ #if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,19))
+ #include <linux/if_link.h>
+ #endif
+@@ -14,8 +17,6 @@
+  */
+ #include <linux/compat-2.6.32.h>
+ 
+-#if (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,29))
+-
+ #include <linux/skbuff.h>
+ #include <linux/usb.h>
+ 
+-- 
+1.7.2.30.gc37d7.dirty
 
