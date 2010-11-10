@@ -1,41 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:34527 "EHLO nbd.name"
-	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
-	id S932654Ab0KLTNC (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 12 Nov 2010 14:13:02 -0500
-Message-ID: <4CDD91BA.6000003@openwrt.org>
-Date: Fri, 12 Nov 2010 20:12:58 +0100
-From: Felix Fietkau <nbd@openwrt.org>
+Received: from mail.atheros.com ([12.19.149.2]:26493 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754399Ab0KJNDz (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 10 Nov 2010 08:03:55 -0500
+Received: from mail.atheros.com ([10.10.20.105])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Wed, 10 Nov 2010 05:03:43 -0800
+From: Vasanthakumar Thiagarajan <vasanth@atheros.com>
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>
+Subject: [PATCH 06/11] ath9k_hw: Fix XPABIAS level configuration for AR9003
+Date: Wed, 10 Nov 2010 05:03:11 -0800
+Message-ID: <1289394196-3465-6-git-send-email-vasanth@atheros.com>
+In-Reply-To: <1289394196-3465-1-git-send-email-vasanth@atheros.com>
+References: <1289394196-3465-1-git-send-email-vasanth@atheros.com>
 MIME-Version: 1.0
-To: linux-wireless <linux-wireless@vger.kernel.org>
-CC: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Subject: [PATCH v2] compat: fix pm_qos_params compile error on 2.6.35
-References: <4CDD70FA.40402@openwrt.org>
-In-Reply-To: <4CDD70FA.40402@openwrt.org>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Linux 2.6.35 pm_qos_params.h is missing a #ifndef/define/endif around
-its header file contents, causing a compile error when its functions
-are overwritten by macros in the compat header files.
-Fix this by adding these to the compat version of this header file.
+Improper configuration of 0x16288 and 0x16290 would affect transmission.
 
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+Cc:stable@kernel.org
+Signed-off-by: Vasanthakumar Thiagarajan <vasanth@atheros.com>
 ---
---- a/include/linux/pm_qos_params.h
-+++ b/include/linux/pm_qos_params.h
-@@ -1,5 +1,8 @@
- #include <linux/version.h>
+ drivers/net/wireless/ath/ath9k/ar9003_eeprom.c |   14 ++++++++------
+ 1 files changed, 8 insertions(+), 6 deletions(-)
 
-+#ifndef __COMPAT_LINUX_PM_QOS_PARAMS_H
-+#define __COMPAT_LINUX_PM_QOS_PARAMS_H
-+
- #if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,25))
- #include_next <linux/pm_qos_params.h>
- #else
-@@ -30,3 +33,4 @@ int pm_qos_add_notifier(int qos, struct notifier_block *notifier);
- int pm_qos_remove_notifier(int qos, struct notifier_block *notifier);
- #endif /* (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,25)) */
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
+index 3d467fc..17f73e4 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
++++ b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
+@@ -22,12 +22,14 @@
+ #define COMP_CKSUM_LEN 2
+ 
+ #define AR_CH0_TOP (0x00016288)
+-#define AR_CH0_TOP_XPABIASLVL (0x3)
++#define AR_CH0_TOP_XPABIASLVL (0x300)
+ #define AR_CH0_TOP_XPABIASLVL_S (8)
+ 
+ #define AR_CH0_THERM (0x00016290)
+-#define AR_CH0_THERM_SPARE (0x3f)
+-#define AR_CH0_THERM_SPARE_S (0)
++#define AR_CH0_THERM_XPABIASLVL_MSB 0x3
++#define AR_CH0_THERM_XPABIASLVL_MSB_S 0
++#define AR_CH0_THERM_XPASHORT2GND 0x4
++#define AR_CH0_THERM_XPASHORT2GND_S 2
+ 
+ #define AR_SWITCH_TABLE_COM_ALL (0xffff)
+ #define AR_SWITCH_TABLE_COM_ALL_S (0)
+@@ -3336,9 +3338,9 @@ static s32 ar9003_hw_xpa_bias_level_get(struct ath_hw *ah, bool is2ghz)
+ static void ar9003_hw_xpa_bias_level_apply(struct ath_hw *ah, bool is2ghz)
+ {
+ 	int bias = ar9003_hw_xpa_bias_level_get(ah, is2ghz);
+-	REG_RMW_FIELD(ah, AR_CH0_TOP, AR_CH0_TOP_XPABIASLVL, (bias & 0x3));
+-	REG_RMW_FIELD(ah, AR_CH0_THERM, AR_CH0_THERM_SPARE,
+-		      ((bias >> 2) & 0x3));
++	REG_RMW_FIELD(ah, AR_CH0_TOP, AR_CH0_TOP_XPABIASLVL, bias);
++	REG_RMW_FIELD(ah, AR_CH0_THERM, AR_CH0_THERM_XPABIASLVL_MSB, bias >> 2);
++	REG_RMW_FIELD(ah, AR_CH0_THERM, AR_CH0_THERM_XPASHORT2GND, 1);
+ }
+ 
+ static u32 ar9003_hw_ant_ctrl_common_get(struct ath_hw *ah, bool is2ghz)
+-- 
+1.7.0.4
 
-+#endif
