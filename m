@@ -1,54 +1,86 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from hera.kernel.org ([140.211.167.34]:43230 "EHLO hera.kernel.org"
+Received: from mail.atheros.com ([12.19.149.2]:46645 "EHLO mail.atheros.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752711Ab0KLKLP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 12 Nov 2010 05:11:15 -0500
-Message-ID: <4CDD12BD.7030208@kernel.org>
-Date: Fri, 12 Nov 2010 11:11:09 +0100
-From: Tejun Heo <tj@kernel.org>
+	id S1755351Ab0KJSdC (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 10 Nov 2010 13:33:02 -0500
+Message-ID: <4CDAE550.8090202@atheros.com>
+Date: Thu, 11 Nov 2010 00:02:48 +0530
+From: Bala Shanmugam <sbalashanmugam@atheros.com>
 MIME-Version: 1.0
-To: Ben Greear <greearb@candelatech.com>
-CC: Johannes Berg <johannes@sipsolutions.net>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: ath5k/mac80211:  Reproducible deadlock with 64-stations.
-References: <4CDB2488.4040802@candelatech.com> <1289437356.3748.25.camel@jlt3.sipsolutions.net> <4CDBB716.7020802@kernel.org> <4CDC2016.8020200@candelatech.com> <4CDC354C.2060503@candelatech.com> <4CDC7860.3070307@candelatech.com>
-In-Reply-To: <4CDC7860.3070307@candelatech.com>
-Content-Type: text/plain; charset=UTF-8
+To: Marcel Holtmann <holtmann@linux.intel.com>
+CC: Shanmugamkamatchi Balashanmugam
+	<Shanmugamkamatchi.Balashanmugam@Atheros.com>,
+	Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	linux-bluetooth <linux-bluetooth@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Deepak Dhamdhere <Deepak.Dhamdhere@Atheros.com>,
+	Sree Durbha <Sree.Durbha@Atheros.com>
+Subject: Re: RFC: btusb firmware load help
+References: <1286349552.6145.11.camel@aeonflux>	 <AANLkTimDvgFtoGLEjgWyYRrhQy6Num-rn_2WYO4Lf84b@mail.gmail.com>	 <1286380566.6145.42.camel@aeonflux> <20101006163816.GE7070@tux>	 <AANLkTik9w4_PdcEsbRHakLcxcD334_1Q8hGArxTXPCGF@mail.gmail.com>	 <20101006173949.GG7070@tux>	 <1286387660.3655.382.camel@jlt3.sipsolutions.net>	 <AANLkTikYRSQw-+Tcj4VS1qxi=OaeF9C5hjAMWVu+0M=v@mail.gmail.com>	 <AANLkTi=o4Mc72NrNoALBdS3YHeY7RMyyAJPsCy=uW3+F@mail.gmail.com>	 <1286389697.3655.401.camel@jlt3.sipsolutions.net>	 ,<20101006183340.GI7070@tux>	 <44EE5C37ADC36343B0625A05DD408C4850DAD2CA31@CHEXMB-01.global.atheros.com> <1286465072.6145.151.camel@aeonflux> <4CADF6BF.6070305@atheros.com>
+In-Reply-To: <4CADF6BF.6070305@atheros.com>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello,
+  Hi Marcel,
+On 10/7/2010 10:05 PM, Bala Shanmugam wrote:
+>    On 10/7/2010 8:54 PM, Marcel Holtmann wrote:
+>> Hi Bala,
+>>
+>>> Thanks Johannes.  This would be better option to change PID in firmware
+>>> as blacklisting 3002 might create problems for 3011 chipsets.
+>>> Will try and let you people know.
+>> The misbehaving 3002 needs to be blacklisted in btusb.c anyway. However
+>> after loading the firmware to 3002 device, it should change its PID to
+>> something else.
+>>
+>> I am still trying to figure out if this is one stage firmware loading or
+>> a two stage firmware loading. This is all pretty unclear and nobody has
+>> answered this clearly so far.
+>>
+>> Regards
+>>
+>> Marcel
+>>
+>>
+> Marcel,
+>
+> eeprom based 3011 chips comes up with PID 3000 giving control to DFU
+> driver [ath3k].  ath3k downloads the
+> firmware changing PID to 3002.  Now btusb gets control.
+>
+> In sflash based devices to reduce windows suspend/resume time we had a
+> small firmware in flash which
+> enables the device to get detected as Generic Bluetooth USB device with
+> PID 3002.  So control reaches btusb when device is plugged in, leaving
+> no option for us to load the actual firmware.
+>
+> Solution would be to blacklist 3002 in btusb, enable ath3k to get
+> control for both the devices, download the firmware and change PID to
+> 3003 so that control with come to btusb.
+>
+> Thanks for your time.
+>
+> Regards,
+> Bala.
 
-On 11/12/2010 12:12 AM, Ben Greear wrote:
-> The lockup (or extreme slowdown?) happens before the
-> serious memory pressure.
-> 
-> One thing I noticed is that at one point near (at?) the beginning
-> of the slowdown, it took 36-seconds to complete the
-> flush_work() call in ieee80211_do_stop in iface.c
-> 
-> From some printk's I added:
-> 
-> Nov 11 14:58:13 localhost kernel: do_stop: sta14 flushing work: e51298b4
-> Nov 11 14:58:49 localhost kernel: do_stop: sta14 flushed.
-> 
-> It is holding RTNL for this entire time, which of course stops
-> a large number of other useful processes from making
-> progress.
-> 
-> Is there any good reason for the flush to take so long?
-
-It depends on what the work being flushed was doing.  Which one is it
-trying to flush?  Also, if the memory pressure is high enough, due to
-the dynamic nature of workqueue, processing of works can be delayed
-while trying to create new workers to process them.  Situations like
-that usually don't happen often as it's likely that workers get freed
-up as other works finish; however, if workers are piling up on
-rtnl_lock, there really isn't much it can do.  If there's work user
-which can behave like that, it would be a good idea to restrict its
-maximum concurrency using a separate workqueue.
-
+As you suggested we blacklisted PID 3002 in btusb and loaded firmware 
+using ath3k and it worked.
 Thanks.
+Many of our customers are using their own PIDs and blacklisting 3002 
+won't work for them.
+Can we blacklist all the PIDs used by different customers?
 
--- 
-tejun
+We have another device similar to above one, it doesn't do a USB reset 
+after downloading firmware.
+This is basically to reduce bring-up and suspend/resume time.
+Can we add an infrastructure in btusb to download configuration or 
+firmware for these devices?
+If not can you please suggest a solution for this device.
+
+Thanks in advance.
+
+Regards,
+Bala.
