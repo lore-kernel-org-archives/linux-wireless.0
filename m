@@ -1,87 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qw0-f46.google.com ([209.85.216.46]:52363 "EHLO
-	mail-qw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756044Ab0KXWlm convert rfc822-to-8bit (ORCPT
+Received: from mail-qy0-f181.google.com ([209.85.216.181]:36265 "EHLO
+	mail-qy0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754831Ab0KJCVN (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 24 Nov 2010 17:41:42 -0500
-Received: by qwb7 with SMTP id 7so259002qwb.19
-        for <linux-wireless@vger.kernel.org>; Wed, 24 Nov 2010 14:41:41 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <AANLkTimEZnDrXYa4WOKn=9VvL0qwYUTbABy1WgmSqe4m@mail.gmail.com>
-References: <20101123191533.GP4303@makis.mantri> <AANLkTi=YLPnqRzzfXaeghQ-w5vDgfCX5v59tGbgSp8zA@mail.gmail.com>
- <AANLkTimEZnDrXYa4WOKn=9VvL0qwYUTbABy1WgmSqe4m@mail.gmail.com>
-From: Jonathan Guerin <jonathan@guerin.id.au>
-Date: Thu, 25 Nov 2010 08:41:25 +1000
-Message-ID: <AANLkTim6G7rO852RCma7qg=LqTwNav6E_OdqwLD7esCP@mail.gmail.com>
-Subject: Re: [ath5k-devel] [PATCH 16/30] ath5k: Set all IFS intervals, not
- just slot time
-To: Nick Kossifidis <mickflemm@gmail.com>
-Cc: ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org,
-	linville@tuxdriver.com, me@bobcopeland.com, mcgrof@gmail.com,
-	jirislaby@gmail.com, nbd@openwrt.org, br1@einfach.org
-Content-Type: text/plain; charset=windows-1252
+	Tue, 9 Nov 2010 21:21:13 -0500
+Received: by qyk31 with SMTP id 31so159944qyk.19
+        for <linux-wireless@vger.kernel.org>; Tue, 09 Nov 2010 18:21:12 -0800 (PST)
+From: Arnaud Lacombe <lacombar@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: lrodriguez@atheros.com, Arnaud Lacombe <lacombar@gmail.com>
+Subject: [PATCH 16/44] compat/2.6.29: don't include <linux/if_link.h> prior to 2.6.19
+Date: Tue,  9 Nov 2010 21:19:58 -0500
+Message-Id: <1289355626-25373-17-git-send-email-lacombar@gmail.com>
+In-Reply-To: <1289355626-25373-1-git-send-email-lacombar@gmail.com>
+References: <1289355626-25373-1-git-send-email-lacombar@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Nov 24, 2010 at 10:55 PM, Nick Kossifidis <mickflemm@gmail.com> wrote:
-> 2010/11/24 Jonathan Guerin <jonathan@guerin.id.au>:
->>
->>> diff --git a/drivers/net/wireless/ath/ath5k/pcu.c b/drivers/net/wireless/ath/ath5k/pcu.c
->>> index e691378..4556f29 100644
->>> --- a/drivers/net/wireless/ath/ath5k/pcu.c
->>> +++ b/drivers/net/wireless/ath/ath5k/pcu.c
->>> @@ -763,7 +763,7 @@ ath5k_hw_check_beacon_timers(struct ath5k_hw *ah, int intval)
->>>  * @ah: The &struct ath5k_hw
->>>  * @coverage_class: IEEE 802.11 coverage class number
->>>  *
->>> - * Sets slot time, ACK timeout and CTS timeout for given coverage class.
->>> + * Sets IFS intervals and ACK/CTS timeouts for given coverage class.
->>>  */
->>>  void ath5k_hw_set_coverage_class(struct ath5k_hw *ah, u8 coverage_class)
->>>  {
->>> @@ -772,7 +772,7 @@ void ath5k_hw_set_coverage_class(struct ath5k_hw *ah, u8 coverage_class)
->>>        int ack_timeout = ath5k_hw_get_default_sifs(ah) + slot_time;
->>
->> This is not quite right:
->>
->> According to the 802.11-2007 spec document, the ACKTimeout value is
->> (Section 9.2.8 ACK procedure):
->> ACKTimeout = aSIFSTime + aSlotTime + aPHY-RX-START-Delay
->>
->> From Table 17-15—OFDM PHY characteristics, the values are:
->> aSIFSTime = 16
->> aSlotTime = 9
->> aPHY-RX-START-Delay = 25
->>
->> Therefore, ACKTimeout = 50
->>
->> Ignoring my uniformed comments from before, this is the only thing I
->> can see that's wrong.
->>
->> Cheers,
->>
->> Jonathan
->
-> Hmm I didn't mess with set_coverage_class so i didn't look up for ack
-> timeout. That phy-rx-start-delay is standard value or hw specific ?
-> Also does it change with clockrate (bwmodes) ? We already have a phy
-> activation -> rx start delay (check patch 25). It's 10.000 on RF5111
-> and 2.000 on RF5112 and later, if we divide by A clock it's 250 on
-> RF5111 and 50 on RF5112 and later. Do you think it's related ?
+Signed-off-by: Arnaud Lacombe <lacombar@gmail.com>
+---
+ include/linux/compat-2.6.29.h |    2 ++
+ 1 files changed, 2 insertions(+), 0 deletions(-)
 
-The phy-rx-start-delay is set in the standard. I'll find you the
-relevant pages soon.
+diff --git a/include/linux/compat-2.6.29.h b/include/linux/compat-2.6.29.h
+index cce678f..ef40d00 100644
+--- a/include/linux/compat-2.6.29.h
++++ b/include/linux/compat-2.6.29.h
+@@ -3,7 +3,9 @@
+ 
+ #include <linux/version.h>
+ #include <linux/netdevice.h>
++#if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,19))
+ #include <linux/if_link.h>
++#endif
+ 
+ /*
+  * I kow this looks odd.. but 2.6.32 added the netdev_tx_t
+-- 
+1.7.2.30.gc37d7.dirty
 
-I'll look up the others tomorrow. I'm feeling pretty sick today, so
-not sure if I'll get a chance.
-
-Cheers,
-
-Jonathan
-
->
-> --
-> GPG ID: 0xD21DB2DB
-> As you read this post global entropy rises. Have Fun ;-)
-> Nick
->
