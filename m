@@ -1,47 +1,27 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fw.wantstofly.org ([80.101.37.227]:38987 "EHLO
-	mail.wantstofly.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752156Ab0KBI6A (ORCPT
+Received: from mail-iw0-f174.google.com ([209.85.214.174]:46855 "EHLO
+	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757302Ab0KJWvK (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 2 Nov 2010 04:58:00 -0400
-Date: Tue, 2 Nov 2010 09:57:58 +0100
-From: Lennert Buytenhek <buytenh@wantstofly.org>
-To: Brian Cavagnolo <brian@cozybit.com>
-Cc: linux-wireless@vger.kernel.org,
-	Nishant Sarmukadam <nishants@marvell.com>,
-	Pradeep Nemavat <pnemavat@marvell.com>
-Subject: Re: [PATCH 4/7] mwl8k: force AP mode to use non-AMPDU frames
-Message-ID: <20101102085758.GQ1733@mail.wantstofly.org>
-References: <1288659351-22313-1-git-send-email-brian@cozybit.com> <1288659351-22313-4-git-send-email-brian@cozybit.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1288659351-22313-4-git-send-email-brian@cozybit.com>
+	Wed, 10 Nov 2010 17:51:10 -0500
+Received: by iwn10 with SMTP id 10so1352082iwn.19
+        for <linux-wireless@vger.kernel.org>; Wed, 10 Nov 2010 14:51:09 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <4CDB20D9.603@openwrt.org>
+References: <4CDB20D9.603@openwrt.org>
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Date: Wed, 10 Nov 2010 14:50:46 -0800
+Message-ID: <AANLkTimqcK0PEhkW6Y7No8=s4X_HRWOk3tsYPmA5BQ20@mail.gmail.com>
+Subject: Re: [PATCH] compat: backport pm_qos_*_request
+To: Felix Fietkau <nbd@openwrt.org>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Nov 01, 2010 at 05:55:48PM -0700, Brian Cavagnolo wrote:
+On Wed, Nov 10, 2010 at 2:46 PM, Felix Fietkau <nbd@openwrt.org> wrote:
+> Signed-off-by: Felix Fietkau <nbd@openwrt.org>
 
-> From: Nishant Sarmukadam <nishants@marvell.com>
-> 
-> AP firmware uses xmitcontrol to differentiate between AMPDU
-> and non-AMPDU frames. As the support for AMPDU is not yet
-> added, set xmitcontrol to non-AMPDU for all tx frames for AP
-> firmware. This field will be set to indicate ampdu/non-ampdu
-> frames when tx AMPDU support is added.
-> 
-> Signed-off-by: Pradeep Nemavat <pnemavat@marvell.com>
-> Signed-off-by: Brian Cavagnolo <brian@cozybit.com>
+applied with some fuzz, pushed, thanks.
 
-It's still pretty dumb of the firmware to require that the driver tell
-the firmware _again_ (it already has that info) whether a TX packet is
-part of an AMPDU session or not, but I guess this requirement is set in
-stone now.
-
-I'm still not happy that it just does this blindly based on whether
-the image is an AP firmware image or not (earlier AP images did not
-require this).
-
-Ideally they'd just replace the firmware people by ones that have
-some taste, but that probably won't happen.
-
-Acked-by: Lennert Buytenhek <buytenh@wantstofly.org>
+  Luis
