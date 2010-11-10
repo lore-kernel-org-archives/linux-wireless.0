@@ -1,73 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iw0-f174.google.com ([209.85.214.174]:38227 "EHLO
-	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757989Ab0KRPFW (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 18 Nov 2010 10:05:22 -0500
-Received: by iwn35 with SMTP id 35so3599548iwn.19
-        for <linux-wireless@vger.kernel.org>; Thu, 18 Nov 2010 07:05:22 -0800 (PST)
+Received: from mail.atheros.com ([12.19.149.2]:26503 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754399Ab0KJNEH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 10 Nov 2010 08:04:07 -0500
+Received: from mail.atheros.com ([10.10.20.105])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Wed, 10 Nov 2010 05:03:54 -0800
+From: Vasanthakumar Thiagarajan <vasanth@atheros.com>
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>
+Subject: [PATCH 08/11] ath9k_hw: Improve power control accuracy for AR9003
+Date: Wed, 10 Nov 2010 05:03:13 -0800
+Message-ID: <1289394196-3465-8-git-send-email-vasanth@atheros.com>
+In-Reply-To: <1289394196-3465-1-git-send-email-vasanth@atheros.com>
+References: <1289394196-3465-1-git-send-email-vasanth@atheros.com>
 MIME-Version: 1.0
-Date: Thu, 18 Nov 2010 16:05:20 +0100
-Message-ID: <AANLkTin910W2HofnYpHn7a+g7mS0VQaJoqOq=1JrVXM4@mail.gmail.com>
-Subject: [iwlwifi] Change MIMO Bit Rates
-From: "An (Jack) Chan" <jackachan@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes@sipsolutions.net>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Dear all,
+It is done for 5Ghz by adding three temperature slopes.
 
->From linux-wireless documentation for iw, I find that setting
-preferences for transmitting using MCS rates is not yet supported.
-Does it mean I cannot set different MIMO rate through iw CLI?
+Signed-off-by: Vasanthakumar Thiagarajan <vasanth@atheros.com>
+---
+ drivers/net/wireless/ath/ath9k/ar9003_eeprom.c |   12 +++++++++++-
+ 1 files changed, 11 insertions(+), 1 deletions(-)
 
-What is the default MIMO bit rate the iwl5000 would use? I setting up
-an ad-hoc connection between two laptops equipped with Intel 5300
-cards with 3 antennas each. I find the bit rate is only 5.5Mbps when I
-use "iw dev ah0 station dump" to check. It seems not a MIMO bit rate.
-
-Maybe I miss something. Does anyone have any idea?
-
-Thank you very much.
-
-Best,
-
-Jack
-
-
-On Tue, Nov 16, 2010 at 10:45 PM, An (Jack) Chan <jackachan@gmail.com> wrote:
-> Thank you very much, Johannes.
->
-> I have one more question. Do you know if iwl5000 supports both
-> Space-Time Block Coding (STBC) and Spatial Multiplexing (SM)? That
-> means I can change the rates in both STBC and SM schemes?
->
-> As I know in Ralink's RT2880, their configuration file provides an
-> interface for setting different MCS values. STBC is from 0 to 7, while
-> SM is from 8 to 15, and 33 is auto-rate.
->
-> Jack
->
->
-> On Tue, Nov 16, 2010 at 10:36 PM, Johannes Berg
-> <johannes@sipsolutions.net> wrote:
->> On Tue, 2010-11-16 at 21:12 +0100, An (Jack) Chan wrote:
->>
->>> Does anyone know where I can find the implementation of rate
->>> adaptation in iwl5000 driver?
->>
->> It's in iwl-agn-rs.c
->>
->> johannes
->>
->>
->
-
-
-
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
+index da26d37..5ffeda2 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
++++ b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
+@@ -4062,6 +4062,7 @@ static int ar9003_hw_power_control_override(struct ath_hw *ah,
+ {
+ 	int tempSlope = 0;
+ 	struct ar9300_eeprom *eep = &ah->eeprom.ar9300_eep;
++	int f[3], t[3];
+ 
+ 	REG_RMW(ah, AR_PHY_TPC_11_B0,
+ 		(correction[0] << AR_PHY_TPC_OLPC_GAIN_DELTA_S),
+@@ -4090,7 +4091,16 @@ static int ar9003_hw_power_control_override(struct ath_hw *ah,
+ 	 */
+ 	if (frequency < 4000)
+ 		tempSlope = eep->modalHeader2G.tempSlope;
+-	else
++	else if (eep->base_ext2.tempSlopeLow != 0) {
++		t[0] = eep->base_ext2.tempSlopeLow;
++		f[0] = 5180;
++		t[1] = eep->modalHeader5G.tempSlope;
++		f[1] = 5500;
++		t[2] = eep->base_ext2.tempSlopeHigh;
++		f[2] = 5785;
++		tempSlope = ar9003_hw_power_interpolate((s32) frequency,
++							f, t, 3);
++	} else
+ 		tempSlope = eep->modalHeader5G.tempSlope;
+ 
+ 	REG_RMW_FIELD(ah, AR_PHY_TPC_19, AR_PHY_TPC_19_ALPHA_THERM, tempSlope);
 -- 
+1.7.0.4
 
-Jack
-http://csiflabs.cs.ucdavis.edu/~jackchan/
