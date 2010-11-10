@@ -1,64 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:46772 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751934Ab0KPQvx (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 16 Nov 2010 11:51:53 -0500
-Message-ID: <4CE2B6A0.8020709@candelatech.com>
-Date: Tue, 16 Nov 2010 08:51:44 -0800
-From: Ben Greear <greearb@candelatech.com>
+Received: from nbd.name ([46.4.11.11]:51348 "EHLO nbd.name"
+	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1755817Ab0KJMrd (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 10 Nov 2010 07:47:33 -0500
+Message-ID: <4CDA9463.2090003@openwrt.org>
+Date: Wed, 10 Nov 2010 13:47:31 +0100
+From: Felix Fietkau <nbd@openwrt.org>
 MIME-Version: 1.0
-To: Tejun Heo <tj@kernel.org>
-CC: Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] mac80211:  Fix deadlock in ieee80211_do_stop.
-References: <1289592426-5367-1-git-send-email-greearb@candelatech.com>	 <1289594998.3736.11.camel@jlt3.sipsolutions.net>	 <4CDDAA3B.9090007@candelatech.com> <1289596096.3736.13.camel@jlt3.sipsolutions.net> <4CDE699B.70401@kernel.org> <4CE1A344.7040201@candelatech.com> <4CE292F7.4090200@kernel.org>
-In-Reply-To: <4CE292F7.4090200@kernel.org>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+To: Vivek Natarajan <vnatarajan@atheros.com>
+CC: linux-wireless@vger.kernel.org
+Subject: Re: [RFC 2/5] ath: Add a keycache entry if beamforming is enabled.
+References: <1289391829-8577-1-git-send-email-vnatarajan@atheros.com> <1289391829-8577-2-git-send-email-vnatarajan@atheros.com>
+In-Reply-To: <1289391829-8577-2-git-send-email-vnatarajan@atheros.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 11/16/2010 06:19 AM, Tejun Heo wrote:
-> Hello,
->
-> On 11/15/2010 10:16 PM, Ben Greear wrote:
->> Here's the full trace of sysrq-t output:
->
-> Hmmm... for some reason, the dump is not complete.  Only two kworkers
-> are printed out.
+On 2010-11-10 1:23 PM, Vivek Natarajan wrote:
+> Keycache entry for a sta has the details of the negotiated
+> beamforming parameters which is to be used by the hardware
+> while trasmitting to that specific sta.
+> 
+> Signed-off-by: Vivek Natarajan <vnatarajan@atheros.com>
+> ---
+>  drivers/net/wireless/ath/ath.h |    2 ++
+>  drivers/net/wireless/ath/key.c |   29 +++++++++++++++++++++++++++++
+>  2 files changed, 31 insertions(+), 0 deletions(-)
+> 
+> diff --git a/drivers/net/wireless/ath/key.c b/drivers/net/wireless/ath/key.c
+> index 62e3dac..11f562e 100644
+> --- a/drivers/net/wireless/ath/key.c
+> +++ b/drivers/net/wireless/ath/key.c
+> @@ -115,6 +115,7 @@ static bool ath_hw_set_keycache_entry(struct ath_common *common, u16 entry,
+>  	void *ah = common->ah;
+>  	u32 key0, key1, key2, key3, key4;
+>  	u32 keyType;
+> +	u32 txbf = 0;
+>  
+>  	if (entry >= common->keymax) {
+>  		ath_print(common, ATH_DBG_FATAL,
+> @@ -199,6 +200,9 @@ static bool ath_hw_set_keycache_entry(struct ath_common *common, u16 entry,
+>  		REG_WRITE(ah, AR_KEYTABLE_KEY4(entry), key4);
+>  		REG_WRITE(ah, AR_KEYTABLE_TYPE(entry), keyType);
+>  
+> +		REG_WRITE(ah, AR_KEYTABLE_TYPE(entry),
+> +				keyType | txbf);
+> +
+>  		/* Write MAC address for the entry */
+>  		(void) ath_hw_keysetmac(common, entry, mac);
+>  
+What's the point of this change, if txbf is always zero?
+And why duplicate the REG_WRITE?
 
-> Can you please do the followings?
->
-> 1. Try to capture the full dump.  Usually serial console works best.
-
-This was from serial console, and I grabbed everything it printed
-to the screen.  I'll look in /var/log/messages in case there is more
-there.
-
-If you have a system with an ath5k nic, I should be able to show you
-how to reproduce it, if you're interested.
-
-> 2. Does adding WQ_MEM_RECLAIM to alloc_ordered_workqueue() call in
->     ieee80211_register_hw() make any difference?
->
-> 3. What if you replace it with the following?
->
->     alloc_workqueue(wiphy_name(local->hw.wiphy), WQ_NON_REENTRANT, 0)
-
-I can try these things..hopefully today.
-
-Can you explain briefly how this is supposed to work?  I'm certain that some
-workers can be blocked attempting to get rtnl.  When we call flush_work(),
-how is a worker chosen/created to flush that work?
-
-Thanks,
-Ben
-
->
-> Thanks.
->
-
-
--- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+- Felix
