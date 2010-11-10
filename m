@@ -1,44 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qw0-f46.google.com ([209.85.216.46]:56935 "EHLO
-	mail-qw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755413Ab0KLK6w (ORCPT
+Received: from mail.candelatech.com ([208.74.158.172]:37340 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756687Ab0KJTn6 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 12 Nov 2010 05:58:52 -0500
-Received: by qwi4 with SMTP id 4so897700qwi.19
-        for <linux-wireless@vger.kernel.org>; Fri, 12 Nov 2010 02:58:51 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <000101cb8248$579d3d90$06d7b8b0$@com>
-References: <004701cb8191$e82c75e0$b88561a0$@com> <AANLkTikZD_1DUqkxQyGSLdaQS01Qg15+_TDkW3QuRuOt@mail.gmail.com>
- <1289476604.1606.36.camel@powerslave> <005101cb81af$f1e75280$d5b5f780$@com>
- <1289488173.1606.58.camel@powerslave> <000001cb822d$067f8230$137e8690$@com>
- <AC090B9732AB2B4DB7FF476E907FE6600113BB263C@dnce02.ent.ti.com> <000101cb8248$579d3d90$06d7b8b0$@com>
-From: Arik Nemtsov <arik@wizery.com>
-Date: Fri, 12 Nov 2010 12:58:36 +0200
-Message-ID: <AANLkTi=YH7df-oqbGkW1gZxCD6jBhCvfDMf_882Cj5si@mail.gmail.com>
-Subject: Re: Ti's WL1271 on OMAP3EVM board with kernel version 2.6.36
-To: raghunath <raghunath@airvod.com>
-Cc: "Levi, Shahar" <shahar_levi@ti.com>,
-	Luciano Coelho <luciano.coelho@nokia.com>,
-	linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+	Wed, 10 Nov 2010 14:43:58 -0500
+From: greearb@candelatech.com
+To: linux-wireless@vger.kernel.org
+Cc: ath5k-devel@venema.h4ckr.net, Ben Greear <greearb@candelatech.com>
+Subject: [PATCH] ath5k:  Cleanup opmode setting logic.
+Date: Wed, 10 Nov 2010 11:43:51 -0800
+Message-Id: <1289418231-2427-1-git-send-email-greearb@candelatech.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Nov 12, 2010 at 11:02, raghunath <raghunath@airvod.com> wrote:
-> Hi Shahar/Luca,
->
-> Its constantly coming, I am building wl1271 sdio driver statically and I am running on OMAP3EVM board from Mistral
-> And running 2.6.36 kernel and wl1271 sits on MMC2 I have modified code to set PIN MUX and clock for MMC2 and WLAN_EN(GPIO 150)
-> And WLAN_IRQ(GPIO-149). I am able to download firmare successfully and get Static data from firmware and Chip ID after firmware
-> Download. With this I am assuming that code I modified for MMC2 on EVM is proper(correct me if I am worng) after that ware is
-> Failing ,in ELP wake up.
->
+From: Ben Greear <greearb@candelatech.com>
 
-Is it only ELP mode that's failing? You can test this by commenting
-out these line in wl1271_elp_work():
+An earlier review suggested moving the code in a small
+method that was only called once inline.  This patch
+accomplishes that.
 
-	wl1271_raw_write32(wl, HW_ACCESS_ELP_CTRL_REG_ADDR, ELPCTRL_SLEEP);
-	set_bit(WL1271_FLAG_IN_ELP, &wl->flags);
+Signed-off-by: Ben Greear <greearb@candelatech.com>
+---
+:100644 100644 b9f93fb... afd3094... M	drivers/net/wireless/ath/ath5k/base.c
+ drivers/net/wireless/ath/ath5k/base.c |   14 ++++----------
+ 1 files changed, 4 insertions(+), 10 deletions(-)
 
-Regards,
-Arik
+diff --git a/drivers/net/wireless/ath/ath5k/base.c b/drivers/net/wireless/ath/ath5k/base.c
+index b9f93fb..afd3094 100644
+--- a/drivers/net/wireless/ath/ath5k/base.c
++++ b/drivers/net/wireless/ath/ath5k/base.c
+@@ -549,7 +549,7 @@ static void ath_vif_iter(void *data, u8 *mac, struct ieee80211_vif *vif)
+ 	/* Calculate combined mode - when APs are active, operate in AP mode.
+ 	 * Otherwise use the mode of the new interface. This can currently
+ 	 * only deal with combinations of APs and STAs. Only one ad-hoc
+-	 * interfaces is allowed above.
++	 * interfaces is allowed.
+ 	 */
+ 	if (avf->opmode == NL80211_IFTYPE_AP)
+ 		iter_data->opmode = NL80211_IFTYPE_AP;
+@@ -558,14 +558,6 @@ static void ath_vif_iter(void *data, u8 *mac, struct ieee80211_vif *vif)
+ 			iter_data->opmode = avf->opmode;
+ }
+ 
+-static void ath_do_set_opmode(struct ath5k_softc *sc)
+-{
+-	struct ath5k_hw *ah = sc->ah;
+-	ath5k_hw_set_opmode(ah, sc->opmode);
+-	ATH5K_DBG(sc, ATH5K_DEBUG_MODE, "mode setup opmode %d (%s)\n",
+-		  sc->opmode, ath_opmode_to_string(sc->opmode));
+-}
+-
+ static void ath5k_update_bssid_mask_and_opmode(struct ath5k_softc *sc,
+ 					       struct ieee80211_vif *vif)
+ {
+@@ -595,7 +587,9 @@ static void ath5k_update_bssid_mask_and_opmode(struct ath5k_softc *sc,
+ 		/* Nothing active, default to station mode */
+ 		sc->opmode = NL80211_IFTYPE_STATION;
+ 
+-	ath_do_set_opmode(sc);
++	ath5k_hw_set_opmode(sc->ah, sc->opmode);
++	ATH5K_DBG(sc, ATH5K_DEBUG_MODE, "mode setup opmode %d (%s)\n",
++		  sc->opmode, ath_opmode_to_string(sc->opmode));
+ 
+ 	if (iter_data.need_set_hw_addr && iter_data.found_active)
+ 		ath5k_hw_set_lladdr(sc->ah, iter_data.active_mac);
+-- 
+1.7.2.3
+
