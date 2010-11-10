@@ -1,67 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f46.google.com ([209.85.214.46]:37919 "EHLO
-	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756319Ab0KQKtG (ORCPT
+Received: from mail-qw0-f46.google.com ([209.85.216.46]:58629 "EHLO
+	mail-qw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754639Ab0KJCVC (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 17 Nov 2010 05:49:06 -0500
-Received: by bwz15 with SMTP id 15so1442757bwz.19
-        for <linux-wireless@vger.kernel.org>; Wed, 17 Nov 2010 02:49:04 -0800 (PST)
-From: Helmut Schaa <helmut.schaa@googlemail.com>
-To: "RA-Jay Hung" <Jay_Hung@ralinktech.com>
-Subject: Re: [PATCH 9/9] rt2x00: Modify rt2x00queue_remove_l2pad to make skb->data two-byte alignment
-Date: Wed, 17 Nov 2010 11:48:04 +0100
-Cc: Ivo van Doorn <ivdoorn@gmail.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"users@rt2x00.serialmonkey.com" <users@rt2x00.serialmonkey.com>
-References: <201011131908.15595.IvDoorn@gmail.com> <201011170946.04629.helmut.schaa@googlemail.com> <B7288B2B5878D747BA031EF4B170D7F6BC5C60@TWHCMBS01.tw.ralinktech.ad>
-In-Reply-To: <B7288B2B5878D747BA031EF4B170D7F6BC5C60@TWHCMBS01.tw.ralinktech.ad>
-MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="us-ascii"
-Message-Id: <201011171148.04286.helmut.schaa@googlemail.com>
+	Tue, 9 Nov 2010 21:21:02 -0500
+Received: by mail-qw0-f46.google.com with SMTP id 5so5541qwh.19
+        for <linux-wireless@vger.kernel.org>; Tue, 09 Nov 2010 18:21:02 -0800 (PST)
+From: Arnaud Lacombe <lacombar@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: lrodriguez@atheros.com, Arnaud Lacombe <lacombar@gmail.com>
+Subject: [PATCH 09/44] compat/2.6.20: add compat macro for `struct delayed_work'
+Date: Tue,  9 Nov 2010 21:19:51 -0500
+Message-Id: <1289355626-25373-10-git-send-email-lacombar@gmail.com>
+In-Reply-To: <1289355626-25373-1-git-send-email-lacombar@gmail.com>
+References: <1289355626-25373-1-git-send-email-lacombar@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Am Mittwoch 17 November 2010 schrieb RA-Jay Hung:
-> > > When inserting the l2pad we're moving the header and thus reduce headroom.
-> > > This patch modifies the bahavior during l2pad removal to not move the header
-> > > back into its old position but instead moves the payload. Thus the skb keeps
-> > > the reduced headroom. If this skb gets requeued into rt2x00 (which can happen
-> > > when the frame wasn't acked and the according STA is known to e in powersave
-> > > mode) the header and payload get aligned again further reducing headroom which
-> > > results in a too small headroom for the TXWI and thus a skb_under_panic.
-> >
-> > Hmm, John merged that patch already. However, I would prefer if it would get
-> > reverted due to the occasional panics in AP mode.
-> >
-> > Jay, I didn't notice any performance degradation on MIPS, on which architecture
-> > did you test?
-> 
-> My test environment as below
-> Architecture is AMD Athlon 64 X2 Dual Core, and use rt3070 to test throughput.
-> Before not patch code, the throughput just only 5, 6M, but after patch,
-> throughput can achieve about 40M on open air. How about your test?
+Signed-off-by: Arnaud Lacombe <lacombar@gmail.com>
+---
+ include/linux/compat-2.6.20.h |    3 +++
+ 1 files changed, 3 insertions(+), 0 deletions(-)
 
-I tried with rt2800pci on MIPS32 in AP mode (STA <- eth -> AP <- wifi -> STA2).
-An UDP iperf stream (STA -> STA2) was able to achieve up to 90Mbps while a TCP
-stream maxed out at around 70Mbps (before and after this patch). STA2 is an
-Intel HT20 11n client.
+diff --git a/include/linux/compat-2.6.20.h b/include/linux/compat-2.6.20.h
+index bbfdacb..c77e87e 100644
+--- a/include/linux/compat-2.6.20.h
++++ b/include/linux/compat-2.6.20.h
+@@ -6,6 +6,9 @@
+ /* Compat work for 2.6.20 */
+ #if (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,20))
+ 
++/* `struct work_struct' and `struct delayed_work' are field compatible */
++#define delayed_work work_struct
++
+ #endif /* (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,20)) */
+ 
+ #endif /* LINUX_26_20_COMPAT_H */
+-- 
+1.7.2.30.gc37d7.dirty
 
-Hmm, you've been testing on USB. Maybe that makes a difference?
-
-Nevertheless, such a performance drop on such a fast machine is likely caused
-by something different, no? Did you have any warnings in dmesg (due to
-watchdog timeouts for example)? Maybe the rate control algorithm made a wrong
-decision and used a low tx rate?
-
-> > Jay, Ivo, any objections against reverting this one?
->
-> I agree to revert this one because this will cause tool small headroom of your mention.
-> We need to supply another patch when resolve all issue. Thanks.
-
-John, should I send a follow-up (with a nice description why it this is needed)
-or are you simply reverting this one?
-
-Thanks,
-Helmut
