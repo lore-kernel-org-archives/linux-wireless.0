@@ -1,35 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:34334 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751440Ab0KYI1V (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 25 Nov 2010 03:27:21 -0500
-Subject: Re: [PATCH] compat-wireless:Fix interface redefine when backport
- to 2.6.32
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Youquan Song <youquan.song@linux.intel.com>
-Cc: lrodriguez@atheros.com, linux-wireless@vger.kernel.org,
-	hui.xiao@intel.com, youquan.song@intel.com
-In-Reply-To: <20101125200539.GA31878@linux-youquan.bj.intel.com>
-References: <20101125200539.GA31878@linux-youquan.bj.intel.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Thu, 25 Nov 2010 09:27:15 +0100
-Message-ID: <1290673635.3770.0.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+Received: from nbd.name ([46.4.11.11]:41942 "EHLO nbd.name"
+	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
+	id S932091Ab0KJWtR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 10 Nov 2010 17:49:17 -0500
+Message-ID: <4CDB216B.5050704@openwrt.org>
+Date: Wed, 10 Nov 2010 23:49:15 +0100
+From: Felix Fietkau <nbd@openwrt.org>
+MIME-Version: 1.0
+To: Vivek Natarajan <vnatarajan@atheros.com>
+CC: lrodriguez@atheros.com, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH v2] compat/ath9k: pm-qos params patch
+References: <1289382968-4165-1-git-send-email-vnatarajan@atheros.com>
+In-Reply-To: <1289382968-4165-1-git-send-email-vnatarajan@atheros.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2010-11-25 at 15:05 -0500, Youquan Song wrote:
-> Netdev_alloc_skb_ip_align already define at 2.6.32 kernel, so only < 2.6.32 
-> kernel needs it, so when backport latest compat-wirelss to 2.6.32, it report
-> redefine the interface.
+On 2010-11-10 10:56 AM, Vivek Natarajan wrote:
+> This patch is similar to the one for ipw2x00:
+> This patch is required because now pm-qos has 3 different flavors:
+> 
+> On kernels >= 2.6.36 the pm qos req is kzalloc()'d by pm-qos itself
+> On kernel   = 2.6.35 the pm qos req uses the stack
+> On kernels <  2.6.35 the pm qos req is pegged to a unique name.
+> 
+> Signed-off-by: Vivek Natarajan <vnatarajan@atheros.com>
+> ---
+> Rebased on top of my recent patch:
+> ath9k: Remove pm_qos request after hw unregister.
+I just posted a less intrusive backport for pm_qos that does not require
+patching.
 
-That doesn't seem to be true:
-
-$ git describe --contains --match=v* 61321bbd
-v2.6.33-rc1~388^2~825
-
-Maybe you're using a patched (distro) kernel?
-
-johannes
-
+- Felix
