@@ -1,111 +1,164 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f46.google.com ([209.85.161.46]:59917 "EHLO
-	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755529Ab0KRIrq (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 18 Nov 2010 03:47:46 -0500
-Received: by fxm6 with SMTP id 6so1366500fxm.19
-        for <linux-wireless@vger.kernel.org>; Thu, 18 Nov 2010 00:47:45 -0800 (PST)
-From: Helmut Schaa <helmut.schaa@googlemail.com>
-To: linux-wireless@vger.kernel.org
-Subject: GTK issues wrt dynamic VLAN tagging with hostapd + mac80211
-Date: Thu, 18 Nov 2010 09:44:59 +0100
-MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="us-ascii"
-Message-Id: <201011180944.59216.helmut.schaa@googlemail.com>
+Received: from server19320154104.serverpool.info ([193.201.54.104]:60055 "EHLO
+	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756401Ab0KJVEl (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 10 Nov 2010 16:04:41 -0500
+From: Hauke Mehrtens <hauke@hauke-m.de>
+To: lrodriguez@atheros.com
+Cc: linux-wireless@vger.kernel.org, mcgrof@infradead.org,
+	Hauke Mehrtens <hauke@hauke-m.de>
+Subject: [PATCH 1/2] compat-wireless: make patches apply again
+Date: Wed, 10 Nov 2010 22:04:27 +0100
+Message-Id: <1289423068-9107-1-git-send-email-hauke@hauke-m.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
-
-I'm just playing with dynamic VLAN tagging using hostapd + mac80211 +
-rt2800pci. It looks very promising so far, hostapd automatically creates
-the according vlan interfaces (wlan0.100, wlan0.101, ...) on top of wlan0
-as soon as a client associates. The wireless traffic appears on the correct
-interface for each station but there's a problem with broadcast traffic.
-
-Hostapd generates per default one GTK for each VLAN interface. That means
-wlan0.100 and wlan0.101 get different GTKs (that's also what I've expected
-since each VLAN should be in its own broadcast domain).
-
-However, mac80211 will configure the GTK to the hw as follows:
-
-static int ieee80211_key_enable_hw_accel(struct ieee80211_key *key)
-{
-	[...]
-
-        /*  
-         * If this is a per-STA GTK, check if it
-         * is supported; if not, return.
-         */
-        if (sta && !(key->conf.flags & IEEE80211_KEY_FLAG_PAIRWISE) &&
-            !(key->local->hw.flags & IEEE80211_HW_SUPPORTS_PER_STA_GTK))
-                goto out_unsupported;
-
-        sdata = key->sdata;
-        if (sdata->vif.type == NL80211_IFTYPE_AP_VLAN)
-                sdata = container_of(sdata->bss,
-                                     struct ieee80211_sub_if_data,
-                                     u.ap);
-
-        ret = drv_set_key(key->local, SET_KEY, sdata, sta, &key->conf);
-
-So, on a VLAN interface it will tell the driver to set the key as if it was
-meant for the subjacent AP mode interface.
-
-As a result when the first client ends up on wlan0.100, the GTK for VLAN 100
-gets configured to the hw. When a second client ends up on wlan0.101, the GTK
-for VLAN 101 gets configured to the hw but the driver has no chance to
-distinguish the both GTKs as both are configured for the same interface.
-In case of rt2x00 that means the GTK gets overwritten and the client that
-associated first won't be able to decrypt any broadcast frames anymore since
-they are encrypted with the GTK for VLAN 101.
-
-To fix this issue we could disable hw crypto by default on VLAN interfaces or
-we could configure the GTK as a special form of per station GTKs.
-
-For rt2x00 we definitely need to fall back to sw crypto since the hw only
-allows 4 GTKs (index 0..3) per bssid and no per-station GTKs.
-
-Are there any drivers that could make use of per-VLAN GTKs? In that case we
-need to make the driver aware of the different GTKs and would need a flag if
-the driver supports different GTKs for VLANs on one BSSID.
-
-Thanks,
-Helmut
-
-Using this patch broadcast traffic on VLAN interfaces will always fall back
-to sw crypto and fixes this problem for me.
-
-Any objections?
-
-Signed-off-by: Helmut Schaa <helmut.schaa@googlemail.com>
+Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
 ---
+ patches/03-rfkill.patch                |   27 +++++++++------------------
+ patches/08-rename-iwl4965-config.patch |   14 ++++++++++----
+ 2 files changed, 19 insertions(+), 22 deletions(-)
 
-diff --git a/net/mac80211/key.c b/net/mac80211/key.c
-index ccd676b..2ddd767 100644
---- a/net/mac80211/key.c
-+++ b/net/mac80211/key.c
-@@ -85,9 +85,7 @@ static int ieee80211_key_enable_hw_accel(struct ieee80211_key *key)
- 
- 	sdata = key->sdata;
- 	if (sdata->vif.type == NL80211_IFTYPE_AP_VLAN)
--		sdata = container_of(sdata->bss,
--				     struct ieee80211_sub_if_data,
--				     u.ap);
-+		goto out_unsupported;
- 
- 	ret = drv_set_key(key->local, SET_KEY, sdata, sta, &key->conf);
- 
-@@ -135,9 +133,7 @@ static void ieee80211_key_disable_hw_accel(struct ieee80211_key *key)
- 	sdata = key->sdata;
- 
- 	if (sdata->vif.type == NL80211_IFTYPE_AP_VLAN)
--		sdata = container_of(sdata->bss,
--				     struct ieee80211_sub_if_data,
--				     u.ap);
-+		return;
- 
- 	ret = drv_set_key(key->local, DISABLE_KEY, sdata,
- 			  sta, &key->conf);
+diff --git a/patches/03-rfkill.patch b/patches/03-rfkill.patch
+index 0ac3758..673ebd0 100644
+--- a/patches/03-rfkill.patch
++++ b/patches/03-rfkill.patch
+@@ -92,7 +92,7 @@ This would do the policing from within mac80211.
+  static void rfkill_led_trigger_event(struct rfkill *rfkill)
+  {
+  	struct led_trigger *trigger;
+-@@ -318,7 +318,7 @@ static void rfkill_set_block(struct rfki
++@@ -304,7 +304,7 @@ static void rfkill_set_block(struct rfki
+  	rfkill_event(rfkill);
+  }
+  
+@@ -101,7 +101,7 @@ This would do the policing from within mac80211.
+  static atomic_t rfkill_input_disabled = ATOMIC_INIT(0);
+  
+  /**
+-@@ -819,7 +819,7 @@ static int rfkill_resume(struct device *
++@@ -805,7 +805,7 @@ static int rfkill_resume(struct device *
+  }
+  
+  static struct class rfkill_class = {
+@@ -110,7 +110,7 @@ This would do the policing from within mac80211.
+  	.dev_release	= rfkill_release,
+  	.dev_attrs	= rfkill_dev_attrs,
+  	.dev_uevent	= rfkill_dev_uevent,
+-@@ -965,7 +965,7 @@ int __must_check rfkill_register(struct
++@@ -951,7 +951,7 @@ int __must_check rfkill_register(struct
+  	if (!rfkill->persistent || rfkill_epo_lock_active) {
+  		schedule_work(&rfkill->sync_work);
+  	} else {
+@@ -119,7 +119,7 @@ This would do the policing from within mac80211.
+  		bool soft_blocked = !!(rfkill->state & RFKILL_BLOCK_SW);
+  
+  		if (!atomic_read(&rfkill_input_disabled))
+-@@ -1193,7 +1193,7 @@ static int rfkill_fop_release(struct ino
++@@ -1179,7 +1179,7 @@ static int rfkill_fop_release(struct ino
+  	list_for_each_entry_safe(ev, tmp, &data->events, list)
+  		kfree(ev);
+  
+@@ -128,7 +128,7 @@ This would do the policing from within mac80211.
+  	if (data->input_handler)
+  		if (atomic_dec_return(&rfkill_input_disabled) == 0)
+  			printk(KERN_DEBUG "rfkill: input handler enabled\n");
+-@@ -1204,7 +1204,7 @@ static int rfkill_fop_release(struct ino
++@@ -1190,7 +1190,7 @@ static int rfkill_fop_release(struct ino
+  	return 0;
+  }
+  
+@@ -137,7 +137,7 @@ This would do the policing from within mac80211.
+  static long rfkill_fop_ioctl(struct file *file, unsigned int cmd,
+  			     unsigned long arg)
+  {
+-@@ -1237,7 +1237,7 @@ static const struct file_operations rfki
++@@ -1223,7 +1223,7 @@ static const struct file_operations rfki
+  	.write		= rfkill_fop_write,
+  	.poll		= rfkill_fop_poll,
+  	.release	= rfkill_fop_release,
+@@ -146,7 +146,7 @@ This would do the policing from within mac80211.
+  	.unlocked_ioctl	= rfkill_fop_ioctl,
+  	.compat_ioctl	= rfkill_fop_ioctl,
+  #endif
+-@@ -1268,7 +1268,7 @@ static int __init rfkill_init(void)
++@@ -1254,7 +1254,7 @@ static int __init rfkill_init(void)
+  		goto out;
+  	}
+  
+@@ -155,7 +155,7 @@ This would do the policing from within mac80211.
+  	error = rfkill_handler_init();
+  	if (error) {
+  		misc_deregister(&rfkill_miscdev);
+-@@ -1284,7 +1284,7 @@ subsys_initcall(rfkill_init);
++@@ -1270,7 +1270,7 @@ subsys_initcall(rfkill_init);
+  
+  static void __exit rfkill_exit(void)
+  {
+@@ -183,15 +183,6 @@ This would do the policing from within mac80211.
+  /**
+   * rfkill_alloc - allocate rfkill structure
+   * @name: name of the struct -- the string is not copied internally
+-@@ -355,7 +356,7 @@ static inline bool rfkill_blocked(struct
+- #endif /* RFKILL || RFKILL_MODULE */
+- 
+- 
+--#ifdef CONFIG_RFKILL_LEDS
+-+#ifdef CONFIG_RFKILL_BACKPORT_LEDS
+- /**
+-  * rfkill_get_led_trigger_name - Get the LED trigger name for the button's LED.
+-  * This function might return a NULL pointer if registering of the
+ --- a/net/wireless/core.h
+ +++ b/net/wireless/core.h
+ @@ -11,7 +11,11 @@
+@@ -208,7 +199,7 @@ This would do the policing from within mac80211.
+  #include <net/cfg80211.h>
+ --- a/drivers/net/wireless/ath/ath9k/hw.c
+ +++ b/drivers/net/wireless/ath/ath9k/hw.c
+-@@ -1872,7 +1872,7 @@ int ath9k_hw_fill_cap_info(struct ath_hw
++@@ -1883,7 +1883,7 @@ int ath9k_hw_fill_cap_info(struct ath_hw
+  
+  	pCap->hw_caps |= ATH9K_HW_CAP_ENHANCEDPM;
+  
+diff --git a/patches/08-rename-iwl4965-config.patch b/patches/08-rename-iwl4965-config.patch
+index 46d8bf9..a2354e9 100644
+--- a/patches/08-rename-iwl4965-config.patch
++++ b/patches/08-rename-iwl4965-config.patch
+@@ -16,24 +16,30 @@ CONFIG_IWL4965 has to be set to y, to build correctly.
+  obj-$(CONFIG_P54_COMMON)	+= p54/
+ --- a/drivers/net/wireless/iwlwifi/Makefile
+ +++ b/drivers/net/wireless/iwlwifi/Makefile
+-@@ -1,4 +1,4 @@
++@@ -1,9 +1,9 @@
+ -obj-$(CONFIG_IWLWIFI)	+= iwlcore.o
+ +obj-$(CONFIG_COMPAT_IWLWIFI)	+= iwlcore.o
+  iwlcore-objs 		:= iwl-core.o iwl-eeprom.o iwl-hcmd.o iwl-power.o
+  iwlcore-objs 		+= iwl-rx.o iwl-tx.o iwl-sta.o
+  iwlcore-objs 		+= iwl-scan.o iwl-led.o
+-@@ -15,7 +15,7 @@ iwlagn-objs		+= iwl-agn-lib.o iwl-agn-rx
++ iwlcore-$(CONFIG_IWL3945) += iwl-legacy.o
++-iwlcore-$(CONFIG_IWL4965) += iwl-legacy.o
+++iwlcore-$(CONFIG_COMPAT_IWL4965) += iwl-legacy.o
++ iwlcore-$(CONFIG_IWLWIFI_DEBUGFS) += iwl-debugfs.o
++ iwlcore-$(CONFIG_IWLWIFI_DEVICE_TRACING) += iwl-devtrace.o
++ 
++@@ -17,7 +17,7 @@ iwlagn-objs		+= iwl-agn-lib.o iwl-agn-rx
+  iwlagn-objs		+= iwl-agn-tt.o iwl-agn-sta.o iwl-agn-eeprom.o
+  iwlagn-$(CONFIG_IWLWIFI_DEBUGFS) += iwl-agn-debugfs.o
+  
+ -iwlagn-$(CONFIG_IWL4965) += iwl-4965.o
+ +iwlagn-$(CONFIG_COMPAT_IWL4965) += iwl-4965.o
++ iwlagn-$(CONFIG_IWL5000) += iwl-agn-rxon.o
+  iwlagn-$(CONFIG_IWL5000) += iwl-5000.o
+  iwlagn-$(CONFIG_IWL5000) += iwl-6000.o
+- iwlagn-$(CONFIG_IWL5000) += iwl-1000.o
+ --- a/drivers/net/wireless/iwlwifi/iwl-agn.c
+ +++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
+-@@ -4659,10 +4659,10 @@ static void __devexit iwl_pci_remove(str
++@@ -4357,10 +4357,10 @@ static void __devexit iwl_pci_remove(str
+  
+  /* Hardware specific file defines the PCI IDs table for that hardware module */
+  static DEFINE_PCI_DEVICE_TABLE(iwl_hw_card_ids) = {
+-- 
+1.7.1
+
