@@ -1,279 +1,209 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.19.149.2]:19647 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757691Ab0JZW1d (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 26 Oct 2010 18:27:33 -0400
-Received: from mail.atheros.com ([10.10.20.108])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Tue, 26 Oct 2010 15:27:22 -0700
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>, <greearb@candelatech.com>,
-	<kyungwan.nam@atheros.com>, <amod.bodas@atheros.com>,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>, <stable@kernel.org>
-Subject: [PATCH 3/3] ath9k: content DMA start / stop through the PCU lock
-Date: Tue, 26 Oct 2010 15:27:25 -0700
-Message-ID: <1288132045-4718-4-git-send-email-lrodriguez@atheros.com>
-In-Reply-To: <1288132045-4718-1-git-send-email-lrodriguez@atheros.com>
-References: <1288132045-4718-1-git-send-email-lrodriguez@atheros.com>
+Received: from nbd.name ([46.4.11.11]:49210 "EHLO nbd.name"
+	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1757268Ab0KJXYL (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 10 Nov 2010 18:24:11 -0500
+Message-ID: <4CDB2998.3070209@openwrt.org>
+Date: Thu, 11 Nov 2010 00:24:08 +0100
+From: Felix Fietkau <nbd@openwrt.org>
 MIME-Version: 1.0
-Content-Type: text/plain
+To: linux-wireless <linux-wireless@vger.kernel.org>
+CC: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Subject: [PATCH 2/2] compat-wireless: remove unnecessary chunks from the rfkill
+ patch
+References: <4CDB2967.7030805@openwrt.org>
+In-Reply-To: <4CDB2967.7030805@openwrt.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This helps align resets / RX enable & disable / TX stop / start.
-Locking around the PCU is important to ensure the hardware doesn't
-get stale data when working with DMA'able data.
-
-This is part of a series of patches which fix stopping
-TX DMA completley when requested on the driver.
-For more details about this issue refer to this thread:
-
-http://marc.info/?l=linux-wireless&m=128629803703756&w=2
-
-Tested-by:  Ben Greear <greearb@candelatech.com>
-Cc: Kyungwan Nam <kyungwan.nam@atheros.com>
-Cc: stable@kernel.org
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
 ---
- drivers/net/wireless/ath/ath9k/main.c |   52 ++++++++++++++++----------------
- drivers/net/wireless/ath/ath9k/xmit.c |    4 +-
- 2 files changed, 28 insertions(+), 28 deletions(-)
+--- a/patches/03-rfkill.patch
++++ b/patches/03-rfkill.patch
+@@ -42,19 +42,7 @@ This would do the policing from within mac80211.
+ +obj-$(CONFIG_RFKILL_BACKPORT)		+= rfkill_backport.o
+ --- a/net/rfkill/input.c
+ +++ b/net/rfkill/input.c
+-@@ -17,7 +17,11 @@
+- #include <linux/slab.h>
+- #include <linux/workqueue.h>
+- #include <linux/init.h>
+-+#if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,31))
+- #include <linux/rfkill.h>
+-+#else
+-+#include <linux/rfkill_backport.h>
+-+#endif
+- #include <linux/sched.h>
+-
+- #include "rfkill.h"
+-@@ -232,7 +236,7 @@ static int rfkill_connect(struct input_h
++@@ -232,7 +232,7 @@ static int rfkill_connect(struct input_h
 
-diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
-index 4196336..f494bb2 100644
---- a/drivers/net/wireless/ath/ath9k/main.c
-+++ b/drivers/net/wireless/ath/ath9k/main.c
-@@ -230,6 +230,8 @@ int ath_set_channel(struct ath_softc *sc, struct ieee80211_hw *hw,
- 
- 	ath9k_ps_wakeup(sc);
- 
-+	spin_lock_bh(&sc->sc_pcu_lock);
-+
- 	/*
- 	 * This is only performed if the channel settings have
- 	 * actually changed.
-@@ -242,8 +244,6 @@ int ath_set_channel(struct ath_softc *sc, struct ieee80211_hw *hw,
- 	ath9k_hw_set_interrupts(ah, 0);
- 	ath_drain_all_txq(sc, false);
- 
--	spin_lock_bh(&sc->sc_pcu_lock);
+  	handle->dev = dev;
+  	handle->handler = handler;
+@@ -65,42 +53,6 @@ This would do the policing from within mac80211.
+  	error = input_register_handle(handle);
+ --- a/net/rfkill/core.c
+ +++ b/net/rfkill/core.c
+-@@ -26,7 +26,7 @@
+- #include <linux/capability.h>
+- #include <linux/list.h>
+- #include <linux/mutex.h>
+--#include <linux/rfkill.h>
+-+#include <linux/rfkill_backport.h>
+- #include <linux/sched.h>
+- #include <linux/spinlock.h>
+- #include <linux/miscdevice.h>
+-@@ -63,7 +63,7 @@ struct rfkill {
+- 	const struct rfkill_ops	*ops;
+- 	void			*data;
 -
- 	stopped = ath_stoprecv(sc);
- 
- 	/* XXX: do not flush receive queue here. We don't want
-@@ -268,7 +268,6 @@ int ath_set_channel(struct ath_softc *sc, struct ieee80211_hw *hw,
- 			  "Unable to reset channel (%u MHz), "
- 			  "reset status %d\n",
- 			  channel->center_freq, r);
--		spin_unlock_bh(&sc->sc_pcu_lock);
- 		goto ps_restore;
- 	}
- 
-@@ -276,12 +275,9 @@ int ath_set_channel(struct ath_softc *sc, struct ieee80211_hw *hw,
- 		ath_print(common, ATH_DBG_FATAL,
- 			  "Unable to restart recv logic\n");
- 		r = -EIO;
--		spin_unlock_bh(&sc->sc_pcu_lock);
- 		goto ps_restore;
- 	}
- 
--	spin_unlock_bh(&sc->sc_pcu_lock);
+--#ifdef CONFIG_RFKILL_LEDS
+-+#ifdef CONFIG_RFKILL_BACKPORT_LEDS
+- 	struct led_trigger	led_trigger;
+- 	const char		*ledtrigname;
+- #endif
+-@@ -124,7 +124,7 @@ static struct {
+- static bool rfkill_epo_lock_active;
 -
- 	ath_update_txpow(sc);
- 	ath9k_hw_set_interrupts(ah, ah->imask);
- 
-@@ -292,6 +288,8 @@ int ath_set_channel(struct ath_softc *sc, struct ieee80211_hw *hw,
- 	}
- 
-  ps_restore:
-+	spin_unlock_bh(&sc->sc_pcu_lock);
-+
- 	ath9k_ps_restore(sc);
- 	return r;
- }
-@@ -606,6 +604,8 @@ void ath9k_tasklet(unsigned long data)
- 		return;
- 	}
- 
-+	spin_lock_bh(&sc->sc_pcu_lock);
-+
- 	if (!ath9k_hw_check_alive(ah))
- 		ieee80211_queue_work(sc->hw, &sc->hw_check_work);
- 
-@@ -616,15 +616,12 @@ void ath9k_tasklet(unsigned long data)
- 		rxmask = (ATH9K_INT_RX | ATH9K_INT_RXEOL | ATH9K_INT_RXORN);
- 
- 	if (status & rxmask) {
--		spin_lock_bh(&sc->sc_pcu_lock);
 -
- 		/* Check for high priority Rx first */
- 		if ((ah->caps.hw_caps & ATH9K_HW_CAP_EDMA) &&
- 		    (status & ATH9K_INT_RXHP))
- 			ath_rx_tasklet(sc, 0, true);
- 
- 		ath_rx_tasklet(sc, 0, false);
--		spin_unlock_bh(&sc->sc_pcu_lock);
- 	}
- 
- 	if (status & ATH9K_INT_TX) {
-@@ -650,6 +647,8 @@ void ath9k_tasklet(unsigned long data)
- 
- 	/* re-enable hardware interrupt */
- 	ath9k_hw_set_interrupts(ah, ah->imask);
-+
-+	spin_unlock_bh(&sc->sc_pcu_lock);
- 	ath9k_ps_restore(sc);
- }
- 
-@@ -874,12 +873,13 @@ void ath_radio_enable(struct ath_softc *sc, struct ieee80211_hw *hw)
- 	int r;
- 
- 	ath9k_ps_wakeup(sc);
-+	spin_lock_bh(&sc->sc_pcu_lock);
-+
- 	ath9k_hw_configpcipowersave(ah, 0, 0);
- 
- 	if (!ah->curchan)
- 		ah->curchan = ath_get_curchannel(sc, sc->hw);
- 
--	spin_lock_bh(&sc->sc_pcu_lock);
- 	r = ath9k_hw_reset(ah, ah->curchan, ah->caldata, false);
- 	if (r) {
- 		ath_print(common, ATH_DBG_FATAL,
-@@ -895,8 +895,6 @@ void ath_radio_enable(struct ath_softc *sc, struct ieee80211_hw *hw)
- 		spin_unlock_bh(&sc->sc_pcu_lock);
- 		return;
- 	}
--	spin_unlock_bh(&sc->sc_pcu_lock);
+--#ifdef CONFIG_RFKILL_LEDS
+-+#ifdef CONFIG_RFKILL_BACKPORT_LEDS
+- static void rfkill_led_trigger_event(struct rfkill *rfkill)
+- {
+- 	struct led_trigger *trigger;
+-@@ -304,7 +304,7 @@ static void rfkill_set_block(struct rfki
+- 	rfkill_event(rfkill);
+- }
 -
- 	if (sc->sc_flags & SC_OP_BEACONS)
- 		ath_beacon_config(sc, NULL);	/* restart beacons */
- 
-@@ -909,6 +907,8 @@ void ath_radio_enable(struct ath_softc *sc, struct ieee80211_hw *hw)
- 	ath9k_hw_set_gpio(ah, ah->led_pin, 0);
- 
- 	ieee80211_wake_queues(hw);
-+	spin_unlock_bh(&sc->sc_pcu_lock);
-+
- 	ath9k_ps_restore(sc);
- }
- 
-@@ -919,6 +919,8 @@ void ath_radio_disable(struct ath_softc *sc, struct ieee80211_hw *hw)
- 	int r;
- 
- 	ath9k_ps_wakeup(sc);
-+	spin_lock_bh(&sc->sc_pcu_lock);
-+
- 	ieee80211_stop_queues(hw);
- 
- 	/*
-@@ -935,8 +937,6 @@ void ath_radio_disable(struct ath_softc *sc, struct ieee80211_hw *hw)
- 
- 	ath_drain_all_txq(sc, false);	/* clear pending tx frames */
- 
--	spin_lock_bh(&sc->sc_pcu_lock);
+--#ifdef CONFIG_RFKILL_INPUT
+-+#ifdef CONFIG_RFKILL_BACKPORT_INPUT
+- static atomic_t rfkill_input_disabled = ATOMIC_INIT(0);
 -
- 	ath_stoprecv(sc);		/* turn off frame recv */
- 	ath_flushrecv(sc);		/* flush recv queue */
- 
-@@ -953,10 +953,11 @@ void ath_radio_disable(struct ath_softc *sc, struct ieee80211_hw *hw)
- 
- 	ath9k_hw_phy_disable(ah);
- 
--	spin_unlock_bh(&sc->sc_pcu_lock);
+- /**
+ @@ -805,7 +805,7 @@ static int rfkill_resume(struct device *
+  }
+
+@@ -110,115 +62,3 @@ This would do the policing from within mac80211.
+  	.dev_release	= rfkill_release,
+  	.dev_attrs	= rfkill_dev_attrs,
+  	.dev_uevent	= rfkill_dev_uevent,
+-@@ -951,7 +951,7 @@ int __must_check rfkill_register(struct
+- 	if (!rfkill->persistent || rfkill_epo_lock_active) {
+- 		schedule_work(&rfkill->sync_work);
+- 	} else {
+--#ifdef CONFIG_RFKILL_INPUT
+-+#ifdef CONFIG_RFKILL_BACKPORT_INPUT
+- 		bool soft_blocked = !!(rfkill->state & RFKILL_BLOCK_SW);
 -
- 	ath9k_hw_configpcipowersave(ah, 1, 1);
-+
-+	spin_unlock_bh(&sc->sc_pcu_lock);
- 	ath9k_ps_restore(sc);
-+
- 	ath9k_setpower(sc, ATH9K_PM_FULL_SLEEP);
- }
- 
-@@ -970,13 +971,13 @@ int ath_reset(struct ath_softc *sc, bool retry_tx)
- 	/* Stop ANI */
- 	del_timer_sync(&common->ani.timer);
- 
-+	spin_lock_bh(&sc->sc_pcu_lock);
-+
- 	ieee80211_stop_queues(hw);
- 
- 	ath9k_hw_set_interrupts(ah, 0);
- 	ath_drain_all_txq(sc, retry_tx);
- 
--	spin_lock_bh(&sc->sc_pcu_lock);
+- 		if (!atomic_read(&rfkill_input_disabled))
+-@@ -1179,7 +1179,7 @@ static int rfkill_fop_release(struct ino
+- 	list_for_each_entry_safe(ev, tmp, &data->events, list)
+- 		kfree(ev);
 -
- 	ath_stoprecv(sc);
- 	ath_flushrecv(sc);
- 
-@@ -989,8 +990,6 @@ int ath_reset(struct ath_softc *sc, bool retry_tx)
- 		ath_print(common, ATH_DBG_FATAL,
- 			  "Unable to start recv logic\n");
- 
--	spin_unlock_bh(&sc->sc_pcu_lock);
+--#ifdef CONFIG_RFKILL_INPUT
+-+#ifdef CONFIG_RFKILL_BACKPORT_INPUT
+- 	if (data->input_handler)
+- 		if (atomic_dec_return(&rfkill_input_disabled) == 0)
+- 			printk(KERN_DEBUG "rfkill: input handler enabled\n");
+-@@ -1190,7 +1190,7 @@ static int rfkill_fop_release(struct ino
+- 	return 0;
+- }
 -
- 	/*
- 	 * We may be doing a reset in response to a request
- 	 * that changes the channel so update any state that
-@@ -1015,6 +1014,7 @@ int ath_reset(struct ath_softc *sc, bool retry_tx)
- 	}
- 
- 	ieee80211_wake_queues(hw);
-+	spin_unlock_bh(&sc->sc_pcu_lock);
- 
- 	/* Start ANI */
- 	ath_start_ani(common);
-@@ -1379,25 +1379,25 @@ static void ath9k_stop(struct ieee80211_hw *hw)
- 			ath9k_btcoex_timer_pause(sc);
- 	}
- 
-+	spin_lock_bh(&sc->sc_pcu_lock);
-+
- 	/* make sure h/w will not generate any interrupt
- 	 * before setting the invalid flag. */
- 	ath9k_hw_set_interrupts(ah, 0);
- 
- 	if (!(sc->sc_flags & SC_OP_INVALID)) {
- 		ath_drain_all_txq(sc, false);
--		spin_lock_bh(&sc->sc_pcu_lock);
- 		ath_stoprecv(sc);
- 		ath9k_hw_phy_disable(ah);
--		spin_unlock_bh(&sc->sc_pcu_lock);
--	} else {
--		spin_lock_bh(&sc->sc_pcu_lock);
-+	} else
- 		sc->rx.rxlink = NULL;
--		spin_unlock_bh(&sc->sc_pcu_lock);
--	}
- 
- 	/* disable HAL and put h/w to sleep */
- 	ath9k_hw_disable(ah);
- 	ath9k_hw_configpcipowersave(ah, 1, 1);
-+
-+	spin_unlock_bh(&sc->sc_pcu_lock);
-+
- 	ath9k_ps_restore(sc);
- 
- 	/* Finally, put the chip in FULL SLEEP mode */
-diff --git a/drivers/net/wireless/ath/ath9k/xmit.c b/drivers/net/wireless/ath/ath9k/xmit.c
-index 81f63e52..e1383e5 100644
---- a/drivers/net/wireless/ath/ath9k/xmit.c
-+++ b/drivers/net/wireless/ath/ath9k/xmit.c
-@@ -1148,13 +1148,11 @@ void ath_drain_all_txq(struct ath_softc *sc, bool retry_tx)
- 		ath_print(common, ATH_DBG_FATAL,
- 			  "Failed to stop TX DMA. Resetting hardware!\n");
- 
--		spin_lock_bh(&sc->sc_pcu_lock);
- 		r = ath9k_hw_reset(ah, sc->sc_ah->curchan, ah->caldata, false);
- 		if (r)
- 			ath_print(common, ATH_DBG_FATAL,
- 				  "Unable to reset hardware; reset status %d\n",
- 				  r);
--		spin_unlock_bh(&sc->sc_pcu_lock);
- 	}
- 
- 	for (i = 0; i < ATH9K_NUM_TX_QUEUES; i++) {
--- 
-1.7.3.2.90.gd4c43
+--#ifdef CONFIG_RFKILL_INPUT
+-+#ifdef CONFIG_RFKILL_BACKPORT_INPUT
+- static long rfkill_fop_ioctl(struct file *file, unsigned int cmd,
+- 			     unsigned long arg)
+- {
+-@@ -1223,7 +1223,7 @@ static const struct file_operations rfki
+- 	.write		= rfkill_fop_write,
+- 	.poll		= rfkill_fop_poll,
+- 	.release	= rfkill_fop_release,
+--#ifdef CONFIG_RFKILL_INPUT
+-+#ifdef CONFIG_RFKILL_BACKPORT_INPUT
+- 	.unlocked_ioctl	= rfkill_fop_ioctl,
+- 	.compat_ioctl	= rfkill_fop_ioctl,
+- #endif
+-@@ -1254,7 +1254,7 @@ static int __init rfkill_init(void)
+- 		goto out;
+- 	}
+-
+--#ifdef CONFIG_RFKILL_INPUT
+-+#ifdef CONFIG_RFKILL_BACKPORT_INPUT
+- 	error = rfkill_handler_init();
+- 	if (error) {
+- 		misc_deregister(&rfkill_miscdev);
+-@@ -1270,7 +1270,7 @@ subsys_initcall(rfkill_init);
+-
+- static void __exit rfkill_exit(void)
+- {
+--#ifdef CONFIG_RFKILL_INPUT
+-+#ifdef CONFIG_RFKILL_BACKPORT_INPUT
+- 	rfkill_handler_exit();
+- #endif
+- 	misc_deregister(&rfkill_miscdev);
+---- a/include/linux/rfkill_backport.h
+-+++ b/include/linux/rfkill_backport.h
+-@@ -20,6 +20,7 @@
+-  */
+-
+- #include <linux/types.h>
+-+#include <linux/compat-2.6.h>
+-
+- /* define userspace visible states */
+- #define RFKILL_STATE_SOFT_BLOCKED	0
+-@@ -148,7 +149,7 @@ struct rfkill_ops {
+- 	int	(*set_block)(void *data, bool blocked);
+- };
+-
+--#if defined(CONFIG_RFKILL) || defined(CONFIG_RFKILL_MODULE)
+-+#if defined(CONFIG_RFKILL_BACKPORT) ||
+defined(CONFIG_RFKILL_BACKPORT_MODULE)
+- /**
+-  * rfkill_alloc - allocate rfkill structure
+-  * @name: name of the struct -- the string is not copied internally
+---- a/net/wireless/core.h
+-+++ b/net/wireless/core.h
+-@@ -11,7 +11,11 @@
+- #include <linux/kref.h>
+- #include <linux/rbtree.h>
+- #include <linux/debugfs.h>
+-+#if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,31))
+- #include <linux/rfkill.h>
+-+#else
+-+#include <linux/rfkill_backport.h>
+-+#endif
+- #include <linux/workqueue.h>
+- #include <net/genetlink.h>
+- #include <net/cfg80211.h>
+---- a/drivers/net/wireless/ath/ath9k/hw.c
+-+++ b/drivers/net/wireless/ath/ath9k/hw.c
+-@@ -1883,7 +1883,7 @@ int ath9k_hw_fill_cap_info(struct ath_hw
+-
+- 	pCap->hw_caps |= ATH9K_HW_CAP_ENHANCEDPM;
+-
+--#if defined(CONFIG_RFKILL) || defined(CONFIG_RFKILL_MODULE)
+-+#if ((LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,31)) &&
+defined(CONFIG_RFKILL) || defined(CONFIG_RFKILL_MODULE)) ||
+((LINUX_VERSION_CODE < KERNEL_VERSION(2,6,31)) &&
+defined(CONFIG_RFKILL_BACKPORT) || defined(CONFIG_RFKILL_BACKPORT_MODULE))
+- 	ah->rfsilent = ah->eep_ops->get_eeprom(ah, EEP_RF_SILENT);
+- 	if (ah->rfsilent & EEP_RFSILENT_ENABLED) {
+- 		ah->rfkill_gpio =
+---- a/drivers/net/wireless/ath/ath5k/base.h
+-+++ b/drivers/net/wireless/ath/ath5k/base.h
+-@@ -46,7 +46,11 @@
+- #include <linux/wireless.h>
+- #include <linux/if_ether.h>
+- #include <linux/leds.h>
+-+#if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,31))
+- #include <linux/rfkill.h>
+-+#else
+-+#include <linux/rfkill_backport.h>
+-+#endif
+- #include <linux/workqueue.h>
+-
+- #include "ath5k.h"
+
 
