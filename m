@@ -1,81 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wp020.webpack.hosteurope.de ([80.237.132.27]:42988 "EHLO
-	wp020.webpack.hosteurope.de" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S935047Ab0KQWeT (ORCPT
+Received: from mail-qw0-f46.google.com ([209.85.216.46]:58629 "EHLO
+	mail-qw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754114Ab0KJCUx (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 17 Nov 2010 17:34:19 -0500
-From: Michael Gerdau <mgd@qata.de>
-To: =?utf-8?q?Rafa=C5=82_Mi=C5=82ecki?= <zajec5@gmail.com>
-Subject: Re: [PATCH] ssb: drop BCM4328 hack for SPROM revision
-Date: Thu, 18 Nov 2010 01:12:06 +0100
-Cc: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>,
-	b43-dev@lists.infradead.org
-References: <1290019933-9924-1-git-send-email-zajec5@gmail.com>
-In-Reply-To: <1290019933-9924-1-git-send-email-zajec5@gmail.com>
-MIME-Version: 1.0
-Content-Type: multipart/signed;
-  boundary="nextPart4392141.GMKsCa1SWM";
-  protocol="application/pgp-signature";
-  micalg=pgp-sha1
-Message-Id: <201011180112.18813.mgd@qata.de>
+	Tue, 9 Nov 2010 21:20:53 -0500
+Received: by mail-qw0-f46.google.com with SMTP id 5so5541qwh.19
+        for <linux-wireless@vger.kernel.org>; Tue, 09 Nov 2010 18:20:53 -0800 (PST)
+From: Arnaud Lacombe <lacombar@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: lrodriguez@atheros.com, Arnaud Lacombe <lacombar@gmail.com>
+Subject: [PATCH 05/44] compat/2.6.19: fix comment
+Date: Tue,  9 Nov 2010 21:19:47 -0500
+Message-Id: <1289355626-25373-6-git-send-email-lacombar@gmail.com>
+In-Reply-To: <1289355626-25373-1-git-send-email-lacombar@gmail.com>
+References: <1289355626-25373-1-git-send-email-lacombar@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---nextPart4392141.GMKsCa1SWM
-Content-Type: Text/Plain;
-  charset="utf-8"
-Content-Transfer-Encoding: quoted-printable
+Signed-off-by: Arnaud Lacombe <lacombar@gmail.com>
+---
+ include/linux/compat-2.6.19.h |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-> This hacks leads to incorrect SPROM parsing for me and reading for
-> example MAC as: 00:00:00:54:00:00. Michael G. who introduced this
-> confirmed it is not needed anymore.
->=20
-> Signed-off-by: Rafa=C5=82 Mi=C5=82ecki <zajec5@gmail.com>
-> ---
-> Michael: I guess I could add your Tested-by. Is that right?
+diff --git a/include/linux/compat-2.6.19.h b/include/linux/compat-2.6.19.h
+index 1e648c0..9bb1ace 100644
+--- a/include/linux/compat-2.6.19.h
++++ b/include/linux/compat-2.6.19.h
+@@ -19,6 +19,6 @@ compat_kmem_cache_destroy(struct kmem_cache *cachep)
+ #endif
+ }
+ 
+-#endif /* (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,19)) */
++#endif /* (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,19)) */
+ 
+ #endif /* LINUX_26_19_COMPAT_H */
+-- 
+1.7.2.30.gc37d7.dirty
 
-That ist right. I suppose the correct entry would be
-Tested-by: Michael Gerdau <mgd@qata.de>
-
-> John: it's 2.6.38 ofc. It should apply cleanly no matter if you applied
-> my previous patch for guessing unknown SPROM revision. There is not
-> dependence between that 2 patches.
-> ---
->  drivers/ssb/pci.c |    4 ----
->  1 files changed, 0 insertions(+), 4 deletions(-)
->=20
-> diff --git a/drivers/ssb/pci.c b/drivers/ssb/pci.c
-> index b5343ac..f529663 100644
-> --- a/drivers/ssb/pci.c
-> +++ b/drivers/ssb/pci.c
-> @@ -580,10 +580,6 @@ static int sprom_extract(struct ssb_bus *bus, struct
-> ssb_sprom *out, * Always extract r1. */
->  		out->revision =3D 1;
->  		ssb_dprintk(KERN_DEBUG PFX "SPROM treated as revision %d\n",
-> out->revision); -	} else if (bus->chip_id =3D=3D 0x4321) {
-> -		/* the BCM4328 has a chipid =3D=3D 0x4321 and a rev 4 SPROM */
-> -		out->revision =3D 4;
-> -		ssb_dprintk(KERN_DEBUG PFX "SPROM treated as revision %d\n",
-> out->revision); }
->=20
->  	switch (out->revision) {
-
-
-=2D-=20
- Michael Gerdau       email: mgd@qata.de
- GPG-keys available on request or at public keyserver
-
---nextPart4392141.GMKsCa1SWM
-Content-Type: application/pgp-signature; name=signature.asc 
-Content-Description: This is a digitally signed message part.
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.15 (GNU/Linux)
-
-iEYEABECAAYFAkzkb2IACgkQFas8bfo4d/ckAQCbBVCoLn1yDKBtH3umBnJCz0Ji
-t0oAn2yH/fFG+wSl82ws2X+GJTdsYlza
-=mrgz
------END PGP SIGNATURE-----
-
---nextPart4392141.GMKsCa1SWM--
