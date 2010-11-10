@@ -1,55 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([147.243.1.48]:48218 "EHLO mgw-sa02.nokia.com"
+Received: from mail.perches.com ([173.55.12.10]:4831 "EHLO mail.perches.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754195Ab0KZJ53 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 26 Nov 2010 04:57:29 -0500
-Subject: Re: [PATCH ] wl12xx: BA receiver support
-From: Juuso Oikarinen <juuso.oikarinen@nokia.com>
-To: ext Shahar Levi <shahar_levi@ti.com>
-Cc: linux-wireless@vger.kernel.org,
-	Luciano Coelho <luciano.coelho@nokia.com>
-In-Reply-To: <1290616392-16532-1-git-send-email-shahar_levi@ti.com>
-References: <1290616392-16532-1-git-send-email-shahar_levi@ti.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Fri, 26 Nov 2010 11:56:57 +0200
-Message-ID: <1290765417.4284.101.camel@wimaxnb.nmp.nokia.com>
-Mime-Version: 1.0
+	id S1752104Ab0KJAf1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 9 Nov 2010 19:35:27 -0500
+From: Joe Perches <joe@perches.com>
+To: linux-kernel@vger.kernel.org
+Cc: dri-devel@lists.freedesktop.org, netdev@vger.kernel.org,
+	linux-wireless@vger.kernel.org, cluster-devel@redhat.com,
+	linux-nilfs@vger.kernel.org, linux-nfs@vger.kernel.org
+Subject: [PATCH 0/9] treewide: convert vprintk uses to %pV
+Date: Tue,  9 Nov 2010 16:35:14 -0800
+Message-Id: <cover.1289348757.git.joe@perches.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2010-11-24 at 18:33 +0200, ext Shahar Levi wrote:
->  
-> +int wl1271_op_ampdu_action(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
-> +			   enum ieee80211_ampdu_mlme_action action,
-> +			   struct ieee80211_sta *sta, u16 tid, u16 *ssn)
-> +{
-> +	struct wl1271 *wl = hw->priv;
-> +	int ret;
-> +
-> +	ret = wl1271_ps_elp_wakeup(wl, false);
-> +	if (ret < 0)
-> +		goto out;
-> +
-> +	switch (action) {
-> +	case IEEE80211_AMPDU_RX_START:
-> +		if (wl->ba_allowed) {
-> +			ret = wl1271_acx_set_ba_receiver_session(wl, tid, ssn,
-> +								 true);
-> +			if (!ret)
-> +				wl->ba_rx_bitmap |= (u8)(BIT(0) << tid);
-> +		} else
-> +			ret = -EPERM;
-> +		break;
-> +
-> +	case IEEE80211_AMPDU_RX_STOP:
-> +		ret = wl1271_acx_set_ba_receiver_session(wl, tid, ssn, false);
-> +		if (!ret)
-> +			wl->ba_rx_bitmap &= ~(u8)(BIT(0) << tid);
-> +		break;
-> +
-> +	/*
+Multiple secessive calls to printk can be interleaved.
+Avoid this possible interleaving by using %pV
 
-These "BIT(0) << tid" thingies look weird. Why not BIT(tid) ?
+Joe Perches (9):
+  drivers/gpu/drm/drm_stub.c: Use printf extension %pV
+  drivers/isdn/mISDN: Use printf extension %pV
+  drivers/net/wireless/ath/debug.c: Use printf extension %pV
+  drivers/net/wireless/b43/main.c: Use printf extension %pV
+  drivers/net/wireless/b43legacy/main.c: Use printf extension %pV
+  fs/gfs2/glock.c: Use printf extension %pV
+  fs/nilfs2/super.c: Use printf extension %pV
+  fs/quota/dquot.c: Use printf extension %pV
+  net/sunrpc/svc.c: Use printf extension %pV
 
--Juuso
+ drivers/gpu/drm/drm_stub.c            |   14 +++++++--
+ drivers/isdn/mISDN/layer1.c           |   10 +++++--
+ drivers/isdn/mISDN/layer2.c           |   12 ++++++--
+ drivers/isdn/mISDN/tei.c              |   23 +++++++++++----
+ drivers/net/wireless/ath/debug.c      |    9 +++++-
+ drivers/net/wireless/b43/main.c       |   48 ++++++++++++++++++++++++--------
+ drivers/net/wireless/b43legacy/main.c |   47 ++++++++++++++++++++++++--------
+ fs/gfs2/glock.c                       |    9 +++++-
+ fs/nilfs2/super.c                     |   23 +++++++++++-----
+ fs/quota/dquot.c                      |   12 +++++---
+ net/sunrpc/svc.c                      |   12 +++++---
+ 11 files changed, 161 insertions(+), 58 deletions(-)
+
+-- 
+1.7.3.1.g432b3.dirty
 
