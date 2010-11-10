@@ -1,47 +1,135 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pw0-f46.google.com ([209.85.160.46]:48963 "EHLO
-	mail-pw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759173Ab0KPVYP convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 16 Nov 2010 16:24:15 -0500
-Received: by pwj1 with SMTP id 1so92025pwj.19
-        for <linux-wireless@vger.kernel.org>; Tue, 16 Nov 2010 13:24:15 -0800 (PST)
+Received: from mail.atheros.com ([12.19.149.2]:19701 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752107Ab0KJG3Q (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 10 Nov 2010 01:29:16 -0500
+Received: from mail.atheros.com ([10.10.20.107])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Tue, 09 Nov 2010 22:29:03 -0800
+From: Vivek Natarajan <vnatarajan@atheros.com>
+To: <lrodriguez@atheros.com>
+CC: <linux-wireless@vger.kernel.org>
+Subject: [PATCH] compat/ath9k: pm-qos params patch
+Date: Wed, 10 Nov 2010 11:59:09 +0530
+Message-ID: <1289370549-9788-1-git-send-email-vnatarajan@atheros.com>
 MIME-Version: 1.0
-In-Reply-To: <20101116210247.GE10774@tuxdriver.com>
-References: <1289923311-14920-1-git-send-email-wey-yi.w.guy@intel.com>
-	<20101116210247.GE10774@tuxdriver.com>
-Date: Tue, 16 Nov 2010 22:24:13 +0100
-Message-ID: <AANLkTimQzkenikBzf9r_+H9YOWkLauKnwjBso-TdaHaS@mail.gmail.com>
-Subject: Re: [PATCH 00/18] update for 2.6.38
-From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: Wey-Yi Guy <wey-yi.w.guy@intel.com>,
-	linux-wireless@vger.kernel.org, ipw3945-devel@lists.sourceforge.net
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2010/11/16 John W. Linville <linville@tuxdriver.com>:
-> On Tue, Nov 16, 2010 at 08:01:33AM -0800, Wey-Yi Guy wrote:
->> We add more changes to prepare P2P supports
->> We also add few features/changes to WiFi/BT coex,
->> such as dynamic aggregation.
->> For newer devices, we change the default LED mode to On/Off
->
-> There had been some talk of a firmware update that would solve some
-> user-reported bugs on bugzilla.kernel.org.  I don't have the bug
-> numbers handy, but I can probably find them.  I imagine you can find
-> them quite easily as well.
->
-> Is that firmware update still in the works?  When can we expect to
-> see that?
+This patch is similar to the one for ipw2x00:
+This patch is required because now pm-qos has 3 different flavors:
 
-http://bugzilla.intellinuxwireless.org/show_bug.cgi?id=2214#c19
+On kernels >= 2.6.36 the pm qos req is kzalloc()'d by pm-qos itself
+On kernel   = 2.6.35 the pm qos req uses the stack
+On kernels <  2.6.35 the pm qos req is pegged to a unique name.
 
-The last time I got answer to my criticism I felt mean for my hard bad
-words. But there's another half of month without fix/update.
+Signed-off-by: Vivek Natarajan <vnatarajan@atheros.com>
+---
+ drivers/net/wireless/ath/ath9k/ath9k.h |    4 ++++
+ drivers/net/wireless/ath/ath9k/init.c  |   19 +++++++++++++++++++
+ drivers/net/wireless/ath/ath9k/main.c  |   15 +++++++++++++++
+ 3 files changed, 38 insertions(+), 0 deletions(-)
 
-The fix is expected to come with firmware update, not driver update.
-
+diff --git a/drivers/net/wireless/ath/ath9k/ath9k.h b/drivers/net/wireless/ath/ath9k/ath9k.h
+index 170d44a..ab920fb 100644
+--- a/drivers/net/wireless/ath/ath9k/ath9k.h
++++ b/drivers/net/wireless/ath/ath9k/ath9k.h
+@@ -675,7 +675,11 @@ static inline void ath_read_cachesize(struct ath_common *common, int *csz)
+ }
+ 
+ extern struct ieee80211_ops ath9k_ops;
++#if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,36))
+ extern struct pm_qos_request_list ath9k_pm_qos_req;
++#elif (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,35))
++extern struct pm_qos_request_list *ath9k_pm_qos_req;
++#endif
+ extern int modparam_nohwcrypt;
+ extern int led_blink;
+ 
+diff --git a/drivers/net/wireless/ath/ath9k/init.c b/drivers/net/wireless/ath/ath9k/init.c
+index 6a0d99e..928171a 100644
+--- a/drivers/net/wireless/ath/ath9k/init.c
++++ b/drivers/net/wireless/ath/ath9k/init.c
+@@ -180,7 +180,12 @@ static const struct ath_ops ath9k_common_ops = {
+ 	.write = ath9k_iowrite32,
+ };
+ 
++#if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,36))
+ struct pm_qos_request_list ath9k_pm_qos_req;
++#elif (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,35))
++struct pm_qos_request_list *ath9k_pm_qos_req;
++#endif
++
+ 
+ /**************************/
+ /*     Initialization     */
+@@ -759,8 +764,16 @@ int ath9k_init_device(u16 devid, struct ath_softc *sc, u16 subsysid,
+ 	ath_init_leds(sc);
+ 	ath_start_rfkill_poll(sc);
+ 
++#if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,36))
+ 	pm_qos_add_request(&ath9k_pm_qos_req, PM_QOS_CPU_DMA_LATENCY,
+ 			   PM_QOS_DEFAULT_VALUE);
++#elif (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,35))
++	ath9k_pm_qos_req = pm_qos_add_request(PM_QOS_CPU_DMA_LATENCY,
++					      PM_QOS_DEFAULT_VALUE);
++#else
++	pm_qos_add_requirement(PM_QOS_CPU_DMA_LATENCY, "ath9k",
++			       PM_QOS_DEFAULT_VALUE);
++#endif
+ 
+ 	return 0;
+ 
+@@ -817,7 +830,13 @@ void ath9k_deinit_device(struct ath_softc *sc)
+ 
+ 	ath9k_ps_wakeup(sc);
+ 
++#if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,36))
+ 	pm_qos_remove_request(&ath9k_pm_qos_req);
++#elif (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,35))
++	pm_qos_remove_request(ath9k_pm_qos_req);
++#else
++	pm_qos_remove_requirement(PM_QOS_CPU_DMA_LATENCY, "ath9k");
++#endif
+ 
+ 	wiphy_rfkill_stop_polling(sc->hw->wiphy);
+ 	ath_deinit_leds(sc);
+diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
+index 25d3ef4..fa378bc 100644
+--- a/drivers/net/wireless/ath/ath9k/main.c
++++ b/drivers/net/wireless/ath/ath9k/main.c
+@@ -1244,7 +1244,14 @@ static int ath9k_start(struct ieee80211_hw *hw)
+ 			ath9k_btcoex_timer_resume(sc);
+ 	}
+ 
++#if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,36))
+ 	pm_qos_update_request(&ath9k_pm_qos_req, 55);
++#elif (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,35))
++	pm_qos_update_request(ath9k_pm_qos_req, 55);
++#else
++	pm_qos_update_requirement(PM_QOS_CPU_DMA_LATENCY, "ath9k", 55);
++#endif
++
+ 
+ mutex_unlock:
+ 	mutex_unlock(&sc->mutex);
+@@ -1423,7 +1430,15 @@ static void ath9k_stop(struct ieee80211_hw *hw)
+ 
+ 	sc->sc_flags |= SC_OP_INVALID;
+ 
++#if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,36))
+ 	pm_qos_update_request(&ath9k_pm_qos_req, PM_QOS_DEFAULT_VALUE);
++#elif (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,35))
++	pm_qos_update_request(ath9k_pm_qos_req, PM_QOS_DEFAULT_VALUE);
++#else
++	pm_qos_update_requirement(PM_QOS_CPU_DMA_LATENCY, "ath9k",
++			PM_QOS_DEFAULT_VALUE);
++#endif
++
+ 
+ 	mutex_unlock(&sc->mutex);
+ 
 -- 
-Rafał
+1.6.3.3
+
