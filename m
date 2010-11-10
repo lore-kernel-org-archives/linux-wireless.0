@@ -1,96 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from hrndva-omtalb.mail.rr.com ([71.74.56.125]:43396 "EHLO
-	hrndva-omtalb.mail.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751152Ab0KUCZy (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 20 Nov 2010 21:25:54 -0500
-Date: Sat, 20 Nov 2010 20:25:46 -0600
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: John W Linville <linville@tuxdriver.com>
-Cc: chaoming_li@realsil.com.cn, linux-wireless@vger.kernel.org
-Subject: [RFC PATCH 22/22] rtl8192ce: Introduce new driver
-Message-ID: <4ce8832a.DZz4FWAYDhgfWaf3%Larry.Finger@lwfinger.net>
+Received: from mail.atheros.com ([12.19.149.2]:26470 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754283Ab0KJNDW (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 10 Nov 2010 08:03:22 -0500
+Received: from mail.atheros.com ([10.10.20.105])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Wed, 10 Nov 2010 05:03:09 -0800
+From: Vasanthakumar Thiagarajan <vasanth@atheros.com>
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>,
+	Senthil Balasubramanian <senthilkumar@atheros.com>
+Subject: [PATCH 01/11] ath9k_hw: Fix a reset failure on AR9382 (2x2).
+Date: Wed, 10 Nov 2010 05:03:06 -0800
+Message-ID: <1289394196-3465-1-git-send-email-vasanth@atheros.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
->From 0f120e9532e3362141a39b20a09a1ce39847c7f2 Mon Sep 17 00:00:00 2001
-From: Larry Finger <Larry.Finger@lwfinger.net>
-Date: Sat, 20 Nov 2010 19:09:13 -0600
-Subject: [PATCH 22/23] rtl8192ce: rtlwifi: Add files to rtl8192ce.ko Part 12
+From: Senthil Balasubramanian <senthilkumar@atheros.com>
 
-Add files rtl8192c/Makefile, Makefile, and Kconfig
+AR9382 needs to be configured for the correct chain mask before
+running AGC/TxIQ caliberation. Otherwise reset would fail.
 
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+Signed-off-by: Senthil Balasubramanian <senthilkumar@atheros.com>
 ---
- drivers/net/wireless/rtlwifi/Kconfig           |   16 ++++++++++++++++
- drivers/net/wireless/rtlwifi/Makefile          |   13 +++++++++++++
- drivers/net/wireless/rtlwifi/rtl8192c/Makefile |   12 ++++++++++++
- 3 files changed, 41 insertions(+), 0 deletions(-)
- create mode 100644 drivers/net/wireless/rtlwifi/Kconfig
- create mode 100644 drivers/net/wireless/rtlwifi/Makefile
- create mode 100644 drivers/net/wireless/rtlwifi/rtl8192c/Makefile
+ drivers/net/wireless/ath/ath9k/ar9003_calib.c |    7 +++++++
+ drivers/net/wireless/ath/ath9k/reg.h          |    2 ++
+ 2 files changed, 9 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/net/wireless/rtlwifi/Kconfig b/drivers/net/wireless/rtlwifi/Kconfig
-new file mode 100644
-index 0000000..9ff3081
---- /dev/null
-+++ b/drivers/net/wireless/rtlwifi/Kconfig
-@@ -0,0 +1,16 @@
-+config RTL8192CE
-+	tristate "Realtek RTL8192CE/RTL8188SE Wireless Network Adapter"
-+	depends on MAC80211 && EXPERIMENTAL
-+	select FW_LOADER
-+	select RTLWIFI
-+	---help---
-+	This is the driver for Realtek RTL8192CE/RTL8188CE 802.11n PCIe
-+	wireless network adapters.
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_calib.c b/drivers/net/wireless/ath/ath9k/ar9003_calib.c
+index 9e6edff..ba898f2 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_calib.c
++++ b/drivers/net/wireless/ath/ath9k/ar9003_calib.c
+@@ -718,7 +718,14 @@ static bool ar9003_hw_init_cal(struct ath_hw *ah,
+ 			       struct ath9k_channel *chan)
+ {
+ 	struct ath_common *common = ath9k_hw_common(ah);
++	int val;
+ 
++	val = REG_READ(ah, AR_ENT_OTP);
++	ath_print(common, ATH_DBG_CALIBRATE, "ath9k: AR_ENT_OTP 0x%x\n", val);
 +
-+	If you choose to build it as a module, it will be calledrtl8192ce.
-+
-+config RTLWIFI
-+	tristate
-+	depends on RTL8192CE
-+	default m
-+
-diff --git a/drivers/net/wireless/rtlwifi/Makefile b/drivers/net/wireless/rtlwifi/Makefile
-new file mode 100644
-index 0000000..cd2fb60
---- /dev/null
-+++ b/drivers/net/wireless/rtlwifi/Makefile
-@@ -0,0 +1,13 @@
-+obj-$(CONFIG_RTLWIFI) 		+= rtlwifi.o
-+rtlwifi-objs	:=		\
-+		base.o		\
-+		cam.o		\
-+		core.o		\
-+		debug.o		\
-+		efuse.o		\
-+		pci.o		\
-+		ps.o		\
-+		rc.o		\
-+		regd.o
-+
-+obj-$(CONFIG_RTL8192CE)		+= rtl8192c/
-diff --git a/drivers/net/wireless/rtlwifi/rtl8192c/Makefile b/drivers/net/wireless/rtlwifi/rtl8192c/Makefile
-new file mode 100644
-index 0000000..f3d7682
---- /dev/null
-+++ b/drivers/net/wireless/rtlwifi/rtl8192c/Makefile
-@@ -0,0 +1,12 @@
-+rtl8192ce-objs :=		\
-+	rtl8192c-dm.o		\
-+	rtl8192c-fw.o		\
-+	rtl8192c-hw.o		\
-+	rtl8192c-led.o		\
-+	rtl8192c-phy.o		\
-+	rtl8192c-rf.o		\
-+	rtl8192c-sw.o		\
-+	rtl8192c-table.o	\
-+	rtl8192c-trx.o
-+
-+obj-$(CONFIG_RTL8192CE) += rtl8192ce.o
++	if (val & AR_ENT_OTP_CHAIN2_DISABLE)
++		ar9003_hw_set_chain_masks(ah, 0x3, 0x3);
++	else
+ 	/*
+ 	 * 0x7 = 0b111 , AR9003 needs to be configured for 3-chain mode before
+ 	 * running AGC/TxIQ cals
+diff --git a/drivers/net/wireless/ath/ath9k/reg.h b/drivers/net/wireless/ath/ath9k/reg.h
+index fa05b71..e676a80 100644
+--- a/drivers/net/wireless/ath/ath9k/reg.h
++++ b/drivers/net/wireless/ath/ath9k/reg.h
+@@ -1066,6 +1066,8 @@ enum {
+ #define AR_INTR_PRIO_ASYNC_MASK   0x40c8
+ #define AR_INTR_PRIO_SYNC_MASK    0x40cc
+ #define AR_INTR_PRIO_ASYNC_ENABLE 0x40d4
++#define AR_ENT_OTP		  0x40d8
++#define AR_ENT_OTP_CHAIN2_DISABLE               0x00020000
+ 
+ #define AR_RTC_9300_PLL_DIV          0x000003ff
+ #define AR_RTC_9300_PLL_DIV_S        0
 -- 
-1.7.1
+1.7.0.4
 
