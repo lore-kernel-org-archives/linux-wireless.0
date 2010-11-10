@@ -1,416 +1,249 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from hrndva-omtalb.mail.rr.com ([71.74.56.125]:42741 "EHLO
-	hrndva-omtalb.mail.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750969Ab0KUCXy (ORCPT
+Received: from mail-gx0-f174.google.com ([209.85.161.174]:52370 "EHLO
+	mail-gx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756130Ab0KJPNa convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 20 Nov 2010 21:23:54 -0500
-Date: Sat, 20 Nov 2010 20:23:45 -0600
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: John W Linville <linville@tuxdriver.com>
-Cc: chaoming_li@realsil.com.cn, linux-wireless@vger.kernel.org
-Subject: [RFC PATCH 08/23] rtl8192ce: Introduce new driver
-Message-ID: <4ce882b1.CeRtnw1iNFC5+Cu8%Larry.Finger@lwfinger.net>
+	Wed, 10 Nov 2010 10:13:30 -0500
+Received: by gxk23 with SMTP id 23so398676gxk.19
+        for <linux-wireless@vger.kernel.org>; Wed, 10 Nov 2010 07:13:29 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <AANLkTikRLBYHjKzRZeo7+zuELv+tMgDKLmrmNjYL7GxU@mail.gmail.com>
+References: <AANLkTikVZT-hQvr83bTkuVENe8jPSG=LNMw5NTwUXCp1@mail.gmail.com>
+ <AANLkTinT72TE_z2JW1x+pMHNys6jVEeGfkQZFAW_f+48@mail.gmail.com> <AANLkTikRLBYHjKzRZeo7+zuELv+tMgDKLmrmNjYL7GxU@mail.gmail.com>
+From: Ohad Ben-Cohen <ohad@wizery.com>
+Date: Wed, 10 Nov 2010 17:13:08 +0200
+Message-ID: <AANLkTikx=wmDbQEz8bAsLKmjx88mQYsBjFctpntV3ex1@mail.gmail.com>
+Subject: Re: wl1271 sdio timeouts on omap3
+To: Joerie de Gram <j.de.gram@gmail.com>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
->From 114479da8460f0f903b5f21f68899093a004ca3e Mon Sep 17 00:00:00 2001
-From: Larry Finger <Larry.Finger@lwfinger.net>
-Date: Sat, 20 Nov 2010 18:33:42 -0600
-Subject: [PATCH 08/23] rtl8192ce: rtlwifi: Add files to rtlwifi.ko, Part 8
+Hi Joerie,
 
-Add files rc.{c,h}
+On Wed, Nov 10, 2010 at 5:01 PM, Joerie de Gram <j.de.gram@gmail.com> wrote:
+> Sorry, I've attached a full diff of the board changes below.
 
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
----
- drivers/net/wireless/rtlwifi/rc.c |  329 +++++++++++++++++++++++++++++++++++++
- drivers/net/wireless/rtlwifi/rc.h |   40 +++++
- 2 files changed, 369 insertions(+), 0 deletions(-)
- create mode 100644 drivers/net/wireless/rtlwifi/rc.c
- create mode 100644 drivers/net/wireless/rtlwifi/rc.h
+Ok, thanks.
 
-diff --git a/drivers/net/wireless/rtlwifi/rc.c b/drivers/net/wireless/rtlwifi/rc.c
-new file mode 100644
-index 0000000..904b8fd
---- /dev/null
-+++ b/drivers/net/wireless/rtlwifi/rc.c
-@@ -0,0 +1,329 @@
-+/******************************************************************************
-+ *
-+ * Copyright(c) 2009-2010  Realtek Corporation.
-+ *
-+ * This program is free software; you can redistribute it and/or modify it
-+ * under the terms of version 2 of the GNU General Public License as
-+ * published by the Free Software Foundation.
-+ *
-+ * This program is distributed in the hope that it will be useful, but WITHOUT
-+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
-+ * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
-+ * more details.
-+ *
-+ * You should have received a copy of the GNU General Public License along with
-+ * this program; if not, write to the Free Software Foundation, Inc.,
-+ * 51 Franklin Street, Fifth Floor, Boston, MA 02110, USA
-+ *
-+ * The full GNU General Public License is included in this distribution in the
-+ * file called LICENSE.
-+ *
-+ * Contact Information:
-+ * wlanfae <wlanfae@realtek.com>
-+ * Realtek Corporation, No. 2, Innovation Road II, Hsinchu Science Park,
-+ * Hsinchu 300, Taiwan.
-+ *
-+ * Larry Finger <Larry.Finger@lwfinger.net>
-+ *
-+ *****************************************************************************/
-+
-+#include "wifi.h"
-+#include "base.h"
-+#include "rc.h"
-+
-+/*
-+ *Finds the highest rate index we can use
-+ *if skb is special data like DHCP/EAPOL, we set should
-+ *it to lowest rate CCK_1M, otherwise we set rate to
-+ *CCK11M or OFDM_54M based on wireless mode.
-+ */
-+static u8 _rtl_rc_get_highest_rix(struct rtl_priv *rtlpriv,
-+				  struct sk_buff *skb, bool not_data)
-+{
-+	struct rtl_mac *rtlmac = rtl_mac(rtlpriv);
-+
-+	/*
-+	 *mgt use 1M, although we have check it
-+	 *before this function use rate_control_send_low,
-+	 *we still check it here
-+	 */
-+	if (not_data)
-+		return rtlpriv->cfg->maps[RTL_RC_CCK_RATE1M];
-+
-+	/*
-+	 *this rate is no use for true rate, firmware
-+	 *will control rate at all it just used for
-+	 *1.show in iwconfig in B/G mode
-+	 *2.in rtl_get_tcb_desc when we check rate is
-+	 *      1M we will not use FW rate but user rate.
-+	 */
-+	if (rtl_is_special_data(rtlpriv->mac80211.hw, skb, true)) {
-+		return rtlpriv->cfg->maps[RTL_RC_CCK_RATE1M];
-+	} else {
-+		if (rtlmac->mode == WIRELESS_MODE_B)
-+			return rtlpriv->cfg->maps[RTL_RC_CCK_RATE11M];
-+		else
-+			return rtlpriv->cfg->maps[RTL_RC_OFDM_RATE54M];
-+	}
-+}
-+
-+static void _rtl_rc_rate_set_series(struct rtl_priv *rtlpriv,
-+				    struct ieee80211_tx_rate *rate,
-+				    struct ieee80211_tx_rate_control *txrc,
-+				    u8 tries, u8 rix, int rtsctsenable,
-+				    bool not_data)
-+{
-+	struct rtl_mac *mac = rtl_mac(rtlpriv);
-+
-+	rate->count = tries;
-+	rate->idx = (rix > 0x2) ? rix : 0x2;
-+
-+	if (!not_data) {
-+		if (txrc->short_preamble)
-+			rate->flags |= IEEE80211_TX_RC_USE_SHORT_PREAMBLE;
-+		if (mac->bw_40)
-+			rate->flags |= IEEE80211_TX_RC_40_MHZ_WIDTH;
-+		if (mac->sgi_20 || mac->sgi_40)
-+			rate->flags |= IEEE80211_TX_RC_SHORT_GI;
-+		if (mac->ht_enable)
-+			rate->flags |= IEEE80211_TX_RC_MCS;
-+	}
-+}
-+
-+static void rtl_get_rate(void *ppriv, struct ieee80211_sta *sta,
-+			 void *priv_sta, struct ieee80211_tx_rate_control *txrc)
-+{
-+	struct rtl_priv *rtlpriv = ppriv;
-+	struct sk_buff *skb = txrc->skb;
-+	struct ieee80211_tx_info *tx_info = IEEE80211_SKB_CB(skb);
-+	struct ieee80211_tx_rate *rates = tx_info->control.rates;
-+	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *)skb->data;
-+	__le16 fc = hdr->frame_control;
-+	u8 try_per_rate, i, rix;
-+	bool not_data = !ieee80211_is_data(fc);
-+
-+	if (rate_control_send_low(sta, priv_sta, txrc))
-+		return;
-+
-+	rix = _rtl_rc_get_highest_rix(rtlpriv, skb, not_data);
-+
-+	try_per_rate = 1;
-+	_rtl_rc_rate_set_series(rtlpriv, &rates[0], txrc,
-+				try_per_rate, rix, 1, not_data);
-+
-+	if (!not_data) {
-+		for (i = 1; i < 4; i++)
-+			_rtl_rc_rate_set_series(rtlpriv, &rates[i],
-+						txrc, i, (rix - i), 1,
-+						not_data);
-+	}
-+}
-+
-+static bool _rtl_tx_aggr_check(struct rtl_priv *rtlpriv, u16 tid)
-+{
-+	struct rtl_mac *mac = rtl_mac(rtlpriv);
-+
-+	if (mac->act_scanning)
-+		return false;
-+
-+	if (mac->cnt_after_linked < 3)
-+		return false;
-+
-+	if (mac->tids[tid].agg.agg_state == RTL_AGG_OFF)
-+		return true;
-+
-+	return false;
-+}
-+
-+/*mac80211 Rate Control callbacks*/
-+static void rtl_tx_status(void *ppriv,
-+			  struct ieee80211_supported_band *sband,
-+			  struct ieee80211_sta *sta, void *priv_sta,
-+			  struct sk_buff *skb)
-+{
-+	struct rtl_priv *rtlpriv = ppriv;
-+	struct rtl_mac *mac = rtl_mac(rtlpriv);
-+	struct ieee80211_hdr *hdr;
-+	__le16 fc;
-+
-+	hdr = (struct ieee80211_hdr *)skb->data;
-+	fc = hdr->frame_control;
-+
-+	if (!priv_sta || !ieee80211_is_data(fc))
-+		return;
-+
-+	if (rtl_is_special_data(mac->hw, skb, true))
-+		return;
-+
-+	if (is_multicast_ether_addr(ieee80211_get_DA(hdr))
-+	    || is_broadcast_ether_addr(ieee80211_get_DA(hdr)))
-+		return;
-+
-+	/* Check if aggregation has to be enabled for this tid */
-+	if (conf_is_ht(&mac->hw->conf) &&
-+	    !(skb->protocol == cpu_to_be16(ETH_P_PAE))) {
-+		if (ieee80211_is_data_qos(fc)) {
-+			u8 *qc, tid;
-+
-+			qc = ieee80211_get_qos_ctl(hdr);
-+			tid = qc[0] & 0xf;
-+
-+			if (_rtl_tx_aggr_check(rtlpriv, tid))
-+				ieee80211_start_tx_ba_session(sta, tid);
-+		}
-+	}
-+}
-+
-+static void rtl_rate_init(void *ppriv,
-+			  struct ieee80211_supported_band *sband,
-+			  struct ieee80211_sta *sta, void *priv_sta)
-+{
-+	struct rtl_priv *rtlpriv = ppriv;
-+	struct rtl_mac *mac = rtl_mac(rtlpriv);
-+	u8 is_ht = conf_is_ht(&mac->hw->conf);
-+
-+	if ((mac->opmode == NL80211_IFTYPE_STATION) ||
-+	    (mac->opmode == NL80211_IFTYPE_MESH_POINT) ||
-+	    (mac->opmode == NL80211_IFTYPE_ADHOC)) {
-+
-+		switch (sband->band) {
-+		case IEEE80211_BAND_2GHZ:
-+			rtlpriv->rate_priv->cur_ratetab_idx =
-+			    RATR_INX_WIRELESS_G;
-+			if (is_ht)
-+				rtlpriv->rate_priv->cur_ratetab_idx =
-+				    RATR_INX_WIRELESS_NGB;
-+			break;
-+		case IEEE80211_BAND_5GHZ:
-+			rtlpriv->rate_priv->cur_ratetab_idx =
-+			    RATR_INX_WIRELESS_A;
-+			if (is_ht)
-+				rtlpriv->rate_priv->cur_ratetab_idx =
-+				    RATR_INX_WIRELESS_NGB;
-+			break;
-+		default:
-+			RT_TRACE(rtlpriv, COMP_ERR, DBG_WARNING,
-+				 ("Invalid band\n"));
-+			rtlpriv->rate_priv->cur_ratetab_idx =
-+			    RATR_INX_WIRELESS_NGB;
-+			break;
-+		}
-+
-+		RT_TRACE(rtlpriv, COMP_RATE, DBG_DMESG,
-+			 ("Choosing rate table index: %d\n",
-+			  rtlpriv->rate_priv->cur_ratetab_idx));
-+
-+	}
-+
-+}
-+
-+static void rtl_rate_update(void *ppriv,
-+			    struct ieee80211_supported_band *sband,
-+			    struct ieee80211_sta *sta, void *priv_sta,
-+			    u32 changed,
-+			    enum nl80211_channel_type oper_chan_type)
-+{
-+	struct rtl_priv *rtlpriv = ppriv;
-+	struct rtl_mac *mac = rtl_mac(rtlpriv);
-+	struct rtl_hal *rtlhal = rtl_hal(rtlpriv);
-+	bool oper_cw40 = false, oper_sgi40;
-+	bool local_cw40 = mac->bw_40;
-+	bool local_sgi40 = mac->sgi_40;
-+	u8 is_ht = conf_is_ht(&mac->hw->conf);
-+
-+	if (changed & IEEE80211_RC_HT_CHANGED) {
-+		if (mac->opmode != NL80211_IFTYPE_STATION)
-+			return;
-+
-+		if (rtlhal->hw->conf.channel_type == NL80211_CHAN_HT40MINUS ||
-+		    rtlhal->hw->conf.channel_type == NL80211_CHAN_HT40PLUS)
-+			oper_cw40 = true;
-+
-+		oper_sgi40 = mac->sgi_40;
-+
-+		if ((local_cw40 != oper_cw40) || (local_sgi40 != oper_sgi40)) {
-+			switch (sband->band) {
-+			case IEEE80211_BAND_2GHZ:
-+				rtlpriv->rate_priv->cur_ratetab_idx =
-+				    RATR_INX_WIRELESS_G;
-+				if (is_ht)
-+					rtlpriv->rate_priv->cur_ratetab_idx =
-+					    RATR_INX_WIRELESS_NGB;
-+				break;
-+			case IEEE80211_BAND_5GHZ:
-+				rtlpriv->rate_priv->cur_ratetab_idx =
-+				    RATR_INX_WIRELESS_A;
-+				if (is_ht)
-+					rtlpriv->rate_priv->cur_ratetab_idx =
-+					    RATR_INX_WIRELESS_NGB;
-+				break;
-+			default:
-+				RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
-+					 ("Invalid band\n"));
-+				rtlpriv->rate_priv->cur_ratetab_idx =
-+				    RATR_INX_WIRELESS_NGB;
-+				break;
-+			}
-+		}
-+	}
-+}
-+
-+static void *rtl_rate_alloc(struct ieee80211_hw *hw,
-+		struct dentry *debugfsdir)
-+{
-+	struct rtl_priv *rtlpriv = rtl_priv(hw);
-+	return rtlpriv;
-+}
-+
-+static void rtl_rate_free(void *rtlpriv)
-+{
-+	return;
-+}
-+
-+static void *rtl_rate_alloc_sta(void *ppriv,
-+				struct ieee80211_sta *sta, gfp_t gfp)
-+{
-+	struct rtl_priv *rtlpriv = ppriv;
-+	struct rtl_rate_priv *rate_priv;
-+
-+	rate_priv = kzalloc(sizeof(struct rtl_rate_priv), gfp);
-+	if (!rate_priv) {
-+		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
-+			 ("Unable to allocate private rc structure\n"));
-+		return NULL;
-+	}
-+
-+	rtlpriv->rate_priv = rate_priv;
-+
-+	return rate_priv;
-+}
-+
-+static void rtl_rate_free_sta(void *rtlpriv,
-+			      struct ieee80211_sta *sta, void *priv_sta)
-+{
-+	struct rtl_rate_priv *rate_priv = priv_sta;
-+	kfree(rate_priv);
-+}
-+
-+static struct rate_control_ops rtl_rate_ops = {
-+	.module = NULL,
-+	.name = "rtl_rc",
-+	.alloc = rtl_rate_alloc,
-+	.free = rtl_rate_free,
-+	.alloc_sta = rtl_rate_alloc_sta,
-+	.free_sta = rtl_rate_free_sta,
-+	.rate_init = rtl_rate_init,
-+	.rate_update = rtl_rate_update,
-+	.tx_status = rtl_tx_status,
-+	.get_rate = rtl_get_rate,
-+};
-+
-+int rtl_rate_control_register(void)
-+{
-+	return ieee80211_rate_control_register(&rtl_rate_ops);
-+}
-+
-+void rtl_rate_control_unregister(void)
-+{
-+	ieee80211_rate_control_unregister(&rtl_rate_ops);
-+}
-diff --git a/drivers/net/wireless/rtlwifi/rc.h b/drivers/net/wireless/rtlwifi/rc.h
-new file mode 100644
-index 0000000..b4667c0
---- /dev/null
-+++ b/drivers/net/wireless/rtlwifi/rc.h
-@@ -0,0 +1,40 @@
-+/******************************************************************************
-+ *
-+ * Copyright(c) 2009-2010  Realtek Corporation.
-+ *
-+ * This program is free software; you can redistribute it and/or modify it
-+ * under the terms of version 2 of the GNU General Public License as
-+ * published by the Free Software Foundation.
-+ *
-+ * This program is distributed in the hope that it will be useful, but WITHOUT
-+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
-+ * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
-+ * more details.
-+ *
-+ * You should have received a copy of the GNU General Public License along with
-+ * this program; if not, write to the Free Software Foundation, Inc.,
-+ * 51 Franklin Street, Fifth Floor, Boston, MA 02110, USA
-+ *
-+ * The full GNU General Public License is included in this distribution in the
-+ * file called LICENSE.
-+ *
-+ * Contact Information:
-+ * wlanfae <wlanfae@realtek.com>
-+ * Realtek Corporation, No. 2, Innovation Road II, Hsinchu Science Park,
-+ * Hsinchu 300, Taiwan.
-+ *
-+ * Larry Finger <Larry.Finger@lwfinger.net>
-+ *
-+ *****************************************************************************/
-+
-+#ifndef __RTL_RC_H__
-+#define __RTL_RC_H__
-+
-+struct rtl_rate_priv {
-+	u8 cur_ratetab_idx;
-+	u8 ht_cap;
-+};
-+
-+int rtl_rate_control_register(void);
-+void rtl_rate_control_unregister(void);
-+#endif
--- 
-1.7.1
+I took a brief look and couldn't find anything outstanding, but as I
+said, if you passed CMD5 (very early at the SDIO init process) then
+your card is powered and communicating.
 
+Can you pls tell me what's the output of those commands (after
+bringing up the wlan interface):
+
+mount -t debugfs none /sys/kernel/debug
+cat /sys/kernel/debug/mmc2/ios
+
+> The board shipped with a firmware image which uses the TI proprietary
+
+Can you say what board is it ? is it something you assembled or is it
+off-the-shelf ?
+
+Honestly I would hook up a hw scope and sniff the SDIO lines to see
+what's going on.
+
+> driver, that works.. I've carefully checked my pin muxing (the other
+> pads on which MMC3 may be muxed are disabled).
+>
+>> I suggest you to try working with 1 bit SDIO and/or low clock speeds
+>> and see if stability is improved.
+>
+> Setting .wires to 1 unfortunately didn't help. I'm not sure how to
+> lower the clock speeds though.
+
+There are several ways to do that.
+
+Check out mmc_sdio_init_card() - the clock rate is increased there.
+
+Regards,
+Ohad.
+
+>
+> I've enabled MMC debugging, which yields the following dmesg output
+> (tried to bring the interface up at t=265).
+>
+> [    6.108154] mmc2: req done (CMD52): 0: 00001000 00000000 00000000 00000000
+> [    6.108215] mmc2: starting CMD52 arg 80042202 flags 00000195
+> [    6.108245] mmc2: req done (CMD52): 0: 00001002 00000000 00000000 00000000
+> [    6.112121] wl1271: loaded
+> [    6.112152] wl1271: initialized
+> [   15.989318] wl1271: mac80211 start
+> [   15.989410] wl1271: mac80211 stop
+> [  265.258666] wl1271: mac80211 start
+> [  265.258758] wl1271: mac80211 add interface type 2 mac 9e:be:10:f4:a4:d6
+> [  265.512664] SDIO: Enabling device mmc2:0001:2...
+> [  265.512695] mmc2: starting CMD52 arg 00000400 flags 00000195
+> [  279.317413] INFO: task ifconfig:1301 blocked for more than 10 seconds.
+> [  279.317443] "echo 0 > /proc/sys/kernel/hung_task_timeout_secs"
+> disables this message.
+> [  279.317474] ifconfig      D c03111d4     0  1301   1269 0x00000000
+> [  279.317535] [<c03111d4>] (schedule+0x37c/0x404) from [<c0311814>]
+> (schedule_timeout+0x18/0x1dc)
+> [  279.317565] [<c0311814>] (schedule_timeout+0x18/0x1dc) from
+> [<c0311698>] (wait_for_common+0xf0/0x1a8)
+> [  279.317626] [<c0311698>] (wait_for_common+0xf0/0x1a8) from
+> [<c02194a8>] (mmc_wait_for_req+0x224/0x244)
+> [  279.317657] [<c02194a8>] (mmc_wait_for_req+0x224/0x244) from
+> [<c021952c>] (mmc_wait_for_cmd+0x64/0x74)
+> [  279.317687] [<c021952c>] (mmc_wait_for_cmd+0x64/0x74) from
+> [<c021d8dc>] (mmc_io_rw_direct_host+0xc0/0x124)
+> [  279.317749] [<c021d8dc>] (mmc_io_rw_direct_host+0xc0/0x124) from
+> [<c021efcc>] (sdio_enable_func+0x64/0x15c)
+> [  279.317779] [<c021efcc>] (sdio_enable_func+0x64/0x15c) from
+> [<c01cdaec>] (wl1271_sdio_set_power+0x20/0x44)
+> [  279.317810] [<c01cdaec>] (wl1271_sdio_set_power+0x20/0x44) from
+> [<c01c500c>] (wl1271_chip_wakeup+0x28/0x2f0)
+> <snip>
+>
+> Joerie
+>
+> ----
+>
+> diff --git b/arch/arm/mach-omap2/board-nowplus.c
+> a/arch/arm/mach-omap2/board-nowplus.c
+> index 54246dd..af47e98 100644
+> --- b/arch/arm/mach-omap2/board-nowplus.c
+> +++ a/arch/arm/mach-omap2/board-nowplus.c
+> @@ -29,6 +29,7 @@
+>  #include <linux/input.h>
+>  #include <linux/input/matrix_keypad.h>
+>
+> +#include <linux/wl12xx.h>
+>  #include <linux/leds-bd2802.h>
+>  #include <linux/max17040_battery.h>
+>
+> @@ -52,6 +53,8 @@
+>
+>  #define NOWPLUS_CHARGER_ENABLE_GPIO    157
+>  #define NOWPLUS_CHARGING_STATUS_GPIO   16
+> +#define NOWPLUS_WLAN_IRQ_GPIO          21
+> +#define NOWPLUS_WLAN_PMENA_GPIO        160
+>
+>  static struct bd2802_led_platform_data nowplus_led_data = {
+>        .reset_gpio = 151,
+> @@ -119,6 +122,14 @@ static struct omap2_hsmmc_info nowplus_mmc[] = {
+>                .gpio_cd        = -EINVAL,
+>                .gpio_wp        = -EINVAL,
+>        },
+> +       {
+> +               .name           = "wl1271",
+> +               .mmc            = 3,
+> +               .wires          = 4,
+> +               .nonremovable   = 1,
+> +               .gpio_cd        = -EINVAL,
+> +               .gpio_wp        = -EINVAL,
+> +       },
+>        {}      /* Terminator */
+>  };
+>
+> @@ -213,6 +224,16 @@ static struct regulator_consumer_supply
+> nowplus_vpll2_supply = {
+>        .dev                    = &nowplus_dss_device.dev,
+>  };
+>
+> +static struct regulator_consumer_supply nowplus_vsim_supply = {
+> +       .supply                 = "vmmc",
+> +};
+> +
+> +
+> +static struct regulator_consumer_supply nowplus_wl1271_supply = {
+> +       .supply                 = "vmmc_aux",
+> +       .dev_name               = "mmci-omap-hs.2",
+> +};
+> +
+>  /* VMMC1 for MMC1 card */
+>  static struct regulator_init_data nowplus_vmmc1 = {
+>        .constraints = {
+> @@ -311,6 +332,53 @@ static struct regulator_init_data nowplus_vpll2 = {
+>        .consumer_supplies      = &nowplus_vpll2_supply,
+>  };
+>
+> +/* VSIM for WiFi SDIO */
+> +static struct regulator_init_data nowplus_vsim = {
+> +       .constraints = {
+> +               .name                   = "VSIM",
+> +               .min_uV                 = 1800000,
+> +               .max_uV                 = 1800000,
+> +               .apply_uV               = true,
+> +               .valid_modes_mask       = REGULATOR_MODE_NORMAL
+> +                                       | REGULATOR_MODE_STANDBY,
+> +               .valid_ops_mask         = REGULATOR_CHANGE_MODE
+> +                                       | REGULATOR_CHANGE_STATUS,
+> +       },
+> +       .num_consumer_supplies  = 1,
+> +       .consumer_supplies      = &nowplus_vsim_supply,
+> +};
+> +
+> +static struct regulator_init_data nowplus_wlgpio = {
+> +       .constraints = {
+> +               .valid_ops_mask = REGULATOR_CHANGE_STATUS,
+> +       },
+> +       .num_consumer_supplies  = 1,
+> +       .consumer_supplies      = &nowplus_wl1271_supply,
+> +};
+> +
+> +static struct fixed_voltage_config nowplus_vwlan = {
+> +       .supply_name            = "vwl1271",
+> +       .microvolts             = 1800000, /* 1.8V */
+> +       .gpio                   = NOWPLUS_WLAN_PMENA_GPIO,
+> +       .startup_delay          = 70000, /* 70msec */
+> +       .enable_high            = 1,
+> +       .enabled_at_boot        = 0,
+> +       .init_data              = &nowplus_wlgpio,
+> +};
+> +
+> +static struct platform_device nowplus_vwlan_device = {
+> +       .name           = "reg-fixed-voltage",
+> +       .id             = 1,
+> +       .dev = {
+> +               .platform_data  = &nowplus_vwlan,
+> +       },
+> +};
+> +
+> +struct wl12xx_platform_data nowplus_wlan_data __initdata = {
+> +       .irq = OMAP_GPIO_IRQ(NOWPLUS_WLAN_IRQ_GPIO),
+> +       .board_ref_clock = 1, /* 26 MHz */
+> +};
+> +
+>  static int nowplus_twl_gpio_setup(struct device *dev,
+>                unsigned gpio, unsigned ngpio)
+>  {
+> @@ -467,6 +535,19 @@ static void __init nowplus_init_irq(void)
+>
+>  #ifdef CONFIG_OMAP_MUX
+>  static struct omap_board_mux board_mux[] __initdata = {
+> +       /* WLAN IRQ - GPIO 21 */
+> +       OMAP3_MUX(ETK_D7, OMAP_MUX_MODE4 | OMAP_PIN_INPUT_PULLUP),
+> +       /* WLAN POWER ENABLE - GPIO 160 */
+> +       OMAP3_MUX(MCBSP_CLKS, OMAP_MUX_MODE4 | OMAP_PIN_OUTPUT),
+> +       /* WLAN SDIO: MMC3 CMD */
+> +       OMAP3_MUX(MCSPI1_CS1, OMAP_MUX_MODE3 | OMAP_PIN_INPUT_PULLUP),
+> +       /* WLAN SDIO: MMC3 CLK */
+> +       OMAP3_MUX(MCSPI1_CS2, OMAP_MUX_MODE3 | OMAP_PIN_INPUT_PULLUP),
+> +       /* WLAN SDIO: MMC3 DAT[0-3] */
+> +       OMAP3_MUX(ETK_D3, OMAP_MUX_MODE2 | OMAP_PIN_INPUT_PULLUP),
+> +       OMAP3_MUX(ETK_D4, OMAP_MUX_MODE2 | OMAP_PIN_INPUT_PULLUP),
+> +       OMAP3_MUX(ETK_D5, OMAP_MUX_MODE2 | OMAP_PIN_INPUT_PULLUP),
+> +       OMAP3_MUX(ETK_D6, OMAP_MUX_MODE2 | OMAP_PIN_INPUT_PULLUP),
+>        { .reg_offset = OMAP_MUX_TERMINATOR },
+>  };
+>  #else
+> @@ -483,10 +564,14 @@ static void __init nowplus_init(void)
+>  {
+>        omap3_mux_init(board_mux, OMAP_PACKAGE_CBB);
+>
+> +       if (wl12xx_set_platform_data(&nowplus_wlan_data))
+> +               pr_err("error setting wl12xx data\n");
+> +
+>        nowplus_i2c_init();
+>
+>        platform_add_devices(nowplus_devices,
+>                        ARRAY_SIZE(nowplus_devices));
+> +       platform_device_register(&nowplus_vwlan_device);
+>
+>        spi_register_board_info(nowplus_spi_board_info,
+>                        ARRAY_SIZE(nowplus_spi_board_info));
+>
