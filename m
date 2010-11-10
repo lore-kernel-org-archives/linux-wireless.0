@@ -1,114 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f46.google.com ([209.85.214.46]:42018 "EHLO
-	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754669Ab0KFNHQ (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:44993 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752104Ab0KJAZa (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 6 Nov 2010 09:07:16 -0400
-Received: by bwz11 with SMTP id 11so3492094bwz.19
-        for <linux-wireless@vger.kernel.org>; Sat, 06 Nov 2010 06:07:14 -0700 (PDT)
-From: Christian Lamparter <chunkeey@googlemail.com>
-To: linux-wireless@vger.kernel.org
-Subject: [PATCH] carl9170: tx path review
-Date: Sat, 6 Nov 2010 14:07:10 +0100
-Cc: linville@tuxdriver.com
-MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="us-ascii"
-Message-Id: <201011061407.11139.chunkeey@googlemail.com>
+	Tue, 9 Nov 2010 19:25:30 -0500
+Subject: Re: connecting ieee80211_hw and net_device
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Zoltan Herczeg <zherczeg@inf.u-szeged.hu>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <32995.82.131.221.21.1289334684.squirrel@webmail.inf.u-szeged.hu>
+References: <32995.82.131.221.21.1289334684.squirrel@webmail.inf.u-szeged.hu>
+Content-Type: text/plain; charset="UTF-8"
+Date: Tue, 09 Nov 2010 16:26:51 -0800
+Message-ID: <1289348811.3660.4.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch fixes a few shortcomings in the tx path.
+On Tue, 2010-11-09 at 21:31 +0100, Zoltan Herczeg wrote:
 
- * move temp. ampdu_[ack]_len out of txinfo->pad.
+> I can allocate a "wlan0" and "wlan1" platform device with
+> ieee80211_alloc_hw, and can initialize it in Ad-Hoc mode. However, I
+> realized this is not enough to have a wireless interface, since it has no
+> receive operation, only transfer. Looking at the other drivers, I found
+> that they allocate a net_device with the common alloc_etherdev.
+> Unfortunately the register_netdev registers a new eth interface in my
+> case, and this interface is not connected to the wlan interface. I set
+> wireless_handlers and ieee80211_ptr for this device, still it is totally
+> independent from the wlan interface.
+> 
+> Am I missing something? (Sorry if this is a trivial question, I tried
+> google but no luck so far)
 
- * fix WARN_ON from tx.c:line 300 when tx_ampdu_queue
-   fails to queue the frame.
+Your question doesn't make any sense. You never need wlan0/1, you only
+need alloc_hw/register_hw and then the interfaces will be managed by
+mac80211. You should post the code so people can help you.
 
- * In tx_prepare, we already have a local pointer
-   to the station's ieee80211_sta struct.
+johannes
 
- * remove a second !sta check, tx_prepare already takes
-   care of that.
-    
-Signed-off-by: Christian Lamparter <chunkeey@googlemail.com>
----
-diff --git a/drivers/net/wireless/ath/carl9170/tx.c b/drivers/net/wireless/ath/carl9170/tx.c
-index b27969c..688eede 100644
---- a/drivers/net/wireless/ath/carl9170/tx.c
-+++ b/drivers/net/wireless/ath/carl9170/tx.c
-@@ -242,9 +242,11 @@ static void carl9170_tx_release(struct kref *ref)
- 			ar->tx_ampdu_schedule = true;
- 
- 		if (txinfo->flags & IEEE80211_TX_STAT_AMPDU) {
--			txinfo->status.ampdu_len = txinfo->pad[0];
--			txinfo->status.ampdu_ack_len = txinfo->pad[1];
--			txinfo->pad[0] = txinfo->pad[1] = 0;
-+			struct _carl9170_tx_superframe *super;
-+
-+			super = (void *)skb->data;
-+			txinfo->status.ampdu_len = super->s.rix;
-+			txinfo->status.ampdu_ack_len = super->s.cnt;
- 		} else if (txinfo->flags & IEEE80211_TX_STAT_ACK) {
- 			/*
- 			 * drop redundant tx_status reports:
-@@ -337,7 +339,8 @@ static void carl9170_tx_status_process_ampdu(struct ar9170 *ar,
- 	u8 tid;
- 
- 	if (!(txinfo->flags & IEEE80211_TX_CTL_AMPDU) ||
--	    txinfo->flags & IEEE80211_TX_CTL_INJECTED)
-+	    txinfo->flags & IEEE80211_TX_CTL_INJECTED ||
-+	   (!(super->f.mac_control & cpu_to_le16(AR9170_TX_MAC_AGGR))))
- 		return;
- 
- 	tx_info = IEEE80211_SKB_CB(skb);
-@@ -389,8 +392,8 @@ static void carl9170_tx_status_process_ampdu(struct ar9170 *ar,
- 		sta_info->stats[tid].ampdu_ack_len++;
- 
- 	if (super->f.mac_control & cpu_to_le16(AR9170_TX_MAC_IMM_BA)) {
--		txinfo->pad[0] = sta_info->stats[tid].ampdu_len;
--		txinfo->pad[1] = sta_info->stats[tid].ampdu_ack_len;
-+		super->s.rix = sta_info->stats[tid].ampdu_len;
-+		super->s.cnt = sta_info->stats[tid].ampdu_ack_len;
- 		txinfo->flags |= IEEE80211_TX_STAT_AMPDU;
- 		sta_info->stats[tid].clear = true;
- 	}
-@@ -896,10 +899,8 @@ static int carl9170_tx_prepare(struct ar9170 *ar, struct sk_buff *skb)
- 		if (unlikely(!sta || !cvif))
- 			goto err_out;
- 
--		factor = min_t(unsigned int, 1u,
--			 info->control.sta->ht_cap.ampdu_factor);
--
--		density = info->control.sta->ht_cap.ampdu_density;
-+		factor = min_t(unsigned int, 1u, sta->ht_cap.ampdu_factor);
-+		density = sta->ht_cap.ampdu_density;
- 
- 		if (density) {
- 			/*
-@@ -1260,6 +1261,7 @@ static void carl9170_tx(struct ar9170 *ar)
- static bool carl9170_tx_ampdu_queue(struct ar9170 *ar,
- 	struct ieee80211_sta *sta, struct sk_buff *skb)
- {
-+	struct _carl9170_tx_superframe *super = (void *) super;
- 	struct carl9170_sta_info *sta_info;
- 	struct carl9170_sta_tid *agg;
- 	struct sk_buff *iter;
-@@ -1328,6 +1330,7 @@ err_unlock:
- 
- err_unlock_rcu:
- 	rcu_read_unlock();
-+	super->f.mac_control &= ~cpu_to_le16(AR9170_TX_MAC_AGGR);
- 	carl9170_tx_status(ar, skb, false);
- 	ar->tx_dropped++;
- 	return false;
-@@ -1356,9 +1359,6 @@ int carl9170_op_tx(struct ieee80211_hw *hw, struct sk_buff *skb)
- 	 */
- 
- 	if (info->flags & IEEE80211_TX_CTL_AMPDU) {
--		if (WARN_ON_ONCE(!sta))
--			goto err_free;
--
- 		run = carl9170_tx_ampdu_queue(ar, sta, skb);
- 		if (run)
- 			carl9170_tx_ampdu(ar);
