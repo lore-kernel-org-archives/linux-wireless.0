@@ -1,39 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ey0-f174.google.com ([209.85.215.174]:44763 "EHLO
-	mail-ey0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752915Ab0KCWN4 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 3 Nov 2010 18:13:56 -0400
-Received: by eye27 with SMTP id 27so668478eye.19
-        for <linux-wireless@vger.kernel.org>; Wed, 03 Nov 2010 15:13:55 -0700 (PDT)
-From: Grazvydas Ignotas <notasas@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: Kalle Valo <kvalo@adurom.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Grazvydas Ignotas <notasas@gmail.com>
-Subject: [PATCH 0/3] wl1251 SDIO patches
-Date: Thu,  4 Nov 2010 00:13:46 +0200
-Message-Id: <1288822429-24541-1-git-send-email-notasas@gmail.com>
+Received: from smtp.nokia.com ([147.243.128.24]:16589 "EHLO mgw-da01.nokia.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754254Ab0KJLVz (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 10 Nov 2010 06:21:55 -0500
+Subject: Re: [PATCH 2/2] Revert "wl1271: Change supported channel order for
+ a more optimal scan"
+From: Juuso Oikarinen <juuso.oikarinen@nokia.com>
+To: "geryk@ti.com" <geryk@ti.com>
+Cc: "Coelho Luciano (Nokia-MS/Helsinki)" <Luciano.Coelho@nokia.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <4CDA7F7A.4000705@ti.com>
+References: <1289384840-28305-1-git-send-email-juuso.oikarinen@nokia.com>
+	 <1289384840-28305-2-git-send-email-juuso.oikarinen@nokia.com>
+	 <4CDA7F7A.4000705@ti.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Wed, 10 Nov 2010 13:21:26 +0200
+Message-ID: <1289388086.2522.72.camel@wimaxnb.nmp.nokia.com>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-These patches add runtime PM support for wl1251, similar to how
-it's done for wl1271. This allows powering down the card properly
-when the driver is loaded but not started.
+On Wed, 2010-11-10 at 12:18 +0100, ext Gery Kahn wrote:
+> On 11/10/2010 12:27 PM, juuso.oikarinen@nokia.com wrote:
+> > From: Juuso Oikarinen<juuso.oikarinen@nokia.com>
+> >
+> > This reverts commit fa21c7a9e4be439e217fe72edbd39b643b643791.
+> >
+> > The reverted patch caused more harm than benefit.
+> >
+> > Signed-off-by: Juuso Oikarinen<juuso.oikarinen@nokia.com>
+> >
+> Just couple words what harm it was?
 
-Last patch switches to cleaner method for passing platform_data.
-Most of this code is based on Ohad Ben-Cohen's wl1271 work.
+The harm is that the supported channels are reported to user-space in
+the order they are registered in the driver. The result of that is quite
+messy in userspace PoV.
 
-Grazvydas Ignotas (3):
-  wl1251: add power callback to wl1251_if_operations
-  wl1251: add runtime PM support for SDIO
-  wl1251: use wl12xx_platform_data to pass data
-
- arch/arm/mach-omap2/board-omap3pandora.c |   32 +++-------
- drivers/net/wireless/wl1251/main.c       |   15 +++--
- drivers/net/wireless/wl1251/sdio.c       |   99 +++++++++++++++++++-----------
- drivers/net/wireless/wl1251/spi.c        |    9 +++
- drivers/net/wireless/wl1251/wl1251.h     |    1 +
- drivers/net/wireless/wl12xx/Kconfig      |    2 +-
- 6 files changed, 93 insertions(+), 65 deletions(-)
+-Juuso
 
