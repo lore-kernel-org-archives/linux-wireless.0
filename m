@@ -1,66 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:60286 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757233Ab0KKXMj (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 11 Nov 2010 18:12:39 -0500
-Message-ID: <4CDC7860.3070307@candelatech.com>
-Date: Thu, 11 Nov 2010 15:12:32 -0800
-From: Ben Greear <greearb@candelatech.com>
-MIME-Version: 1.0
-To: Tejun Heo <tj@kernel.org>
-CC: Johannes Berg <johannes@sipsolutions.net>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: ath5k/mac80211:  Reproducible deadlock with 64-stations.
-References: <4CDB2488.4040802@candelatech.com> <1289437356.3748.25.camel@jlt3.sipsolutions.net> <4CDBB716.7020802@kernel.org> <4CDC2016.8020200@candelatech.com> <4CDC354C.2060503@candelatech.com>
-In-Reply-To: <4CDC354C.2060503@candelatech.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Received: from mga09.intel.com ([134.134.136.24]:40709 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752684Ab0KJSBE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 10 Nov 2010 13:01:04 -0500
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Subject: [PATCH 01/16] iwlagn: update PCI ID for 6000g2b series devices
+Date: Wed, 10 Nov 2010 09:56:35 -0800
+Message-Id: <1289411810-23093-2-git-send-email-wey-yi.w.guy@intel.com>
+In-Reply-To: <1289411810-23093-1-git-send-email-wey-yi.w.guy@intel.com>
+References: <1289411810-23093-1-git-send-email-wey-yi.w.guy@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 11/11/2010 10:26 AM, Ben Greear wrote:
-> On 11/11/2010 08:55 AM, Ben Greear wrote:
->> On 11/11/2010 01:27 AM, Tejun Heo wrote:
->>> Hello,
->>>
->>> On 11/11/2010 02:02 AM, Johannes Berg wrote:
->>>> I don't really see any deadlock here... hmm. Tejun, do you see anything
->>>> wrong with the "locking" in workq stuff here?
->>>>
->>>> Something is holding the RTNL, and a bunch of other things are
->>>> trying to
->>>> acquire it. We don't really know who's holding it and who's
->>>> acquiring it
->>>> though.
->
-> I notice that the system is consistently running OOM, even though
-> it has 2GB RAM. I'll try disabling some of the memory-poisoning
-> debugging that may
-> be consuming excess amounts of RAM to see if that helps any.
+Update the supported PCI ID list for 6000g2b series devices
 
-The lockup (or extreme slowdown?) happens before the
-serious memory pressure.
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-agn.c |   16 ++--------------
+ 1 files changed, 2 insertions(+), 14 deletions(-)
 
-One thing I noticed is that at one point near (at?) the beginning
-of the slowdown, it took 36-seconds to complete the
-flush_work() call in ieee80211_do_stop in iface.c
-
- From some printk's I added:
-
-Nov 11 14:58:13 localhost kernel: do_stop: sta14 flushing work: e51298b4
-Nov 11 14:58:49 localhost kernel: do_stop: sta14 flushed.
-
-It is holding RTNL for this entire time, which of course stops
-a large number of other useful processes from making
-progress.
-
-Is there any good reason for the flush to take so long?
-
-Thanks,
-Ben
-
-
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
+index 6a82b20..d6891a4 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
+@@ -4444,24 +4444,12 @@ static DEFINE_PCI_DEVICE_TABLE(iwl_hw_card_ids) = {
+ 	{IWL_PCI_DEVICE(0x0085, 0x1316, iwl6000g2a_2abg_cfg)},
+ 
+ /* 6x00 Series Gen2b */
+-	{IWL_PCI_DEVICE(0x008F, 0x5105, iwl6000g2b_bgn_cfg)},
+-	{IWL_PCI_DEVICE(0x0090, 0x5115, iwl6000g2b_bgn_cfg)},
+-	{IWL_PCI_DEVICE(0x008F, 0x5125, iwl6000g2b_bgn_cfg)},
+-	{IWL_PCI_DEVICE(0x008F, 0x5107, iwl6000g2b_bg_cfg)},
+-	{IWL_PCI_DEVICE(0x008F, 0x5201, iwl6000g2b_2agn_cfg)},
+-	{IWL_PCI_DEVICE(0x0090, 0x5211, iwl6000g2b_2agn_cfg)},
+-	{IWL_PCI_DEVICE(0x008F, 0x5221, iwl6000g2b_2agn_cfg)},
+-	{IWL_PCI_DEVICE(0x008F, 0x5206, iwl6000g2b_2abg_cfg)},
+-	{IWL_PCI_DEVICE(0x0090, 0x5216, iwl6000g2b_2abg_cfg)},
+-	{IWL_PCI_DEVICE(0x008F, 0x5226, iwl6000g2b_2abg_cfg)},
+-	{IWL_PCI_DEVICE(0x008F, 0x5207, iwl6000g2b_2bg_cfg)},
+-	{IWL_PCI_DEVICE(0x008A, 0x5301, iwl6000g2b_bgn_cfg)},
+ 	{IWL_PCI_DEVICE(0x008A, 0x5305, iwl6000g2b_bgn_cfg)},
+ 	{IWL_PCI_DEVICE(0x008A, 0x5307, iwl6000g2b_bg_cfg)},
+-	{IWL_PCI_DEVICE(0x008A, 0x5321, iwl6000g2b_bgn_cfg)},
+ 	{IWL_PCI_DEVICE(0x008A, 0x5325, iwl6000g2b_bgn_cfg)},
+-	{IWL_PCI_DEVICE(0x008B, 0x5311, iwl6000g2b_bgn_cfg)},
++	{IWL_PCI_DEVICE(0x008A, 0x5327, iwl6000g2b_bg_cfg)},
+ 	{IWL_PCI_DEVICE(0x008B, 0x5315, iwl6000g2b_bgn_cfg)},
++	{IWL_PCI_DEVICE(0x008B, 0x5317, iwl6000g2b_bg_cfg)},
+ 	{IWL_PCI_DEVICE(0x0090, 0x5211, iwl6000g2b_2agn_cfg)},
+ 	{IWL_PCI_DEVICE(0x0090, 0x5215, iwl6000g2b_2bgn_cfg)},
+ 	{IWL_PCI_DEVICE(0x0090, 0x5216, iwl6000g2b_2abg_cfg)},
 -- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+1.7.0.4
 
