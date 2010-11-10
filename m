@@ -1,45 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 128-177-27-249.ip.openhosting.com ([128.177.27.249]:46395 "EHLO
-	jmalinen.user.openhosting.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751648Ab0KYRut (ORCPT
+Received: from mail-qw0-f46.google.com ([209.85.216.46]:65142 "EHLO
+	mail-qw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755143Ab0KJCWH (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 25 Nov 2010 12:50:49 -0500
-Date: Thu, 25 Nov 2010 19:50:43 +0200
-From: Jouni Malinen <j@w1.fi>
-To: Wolfgang Breyha <wbreyha@gmx.net>
-Cc: Helmut Schaa <helmut.schaa@googlemail.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: Linux Client vs. CISCO AP with band select
-Message-ID: <20101125175043.GA6907@jm.kir.nu>
-References: <4CE6EA98.3020300@gmx.net>
- <20101120112753.GA12225@jm.kir.nu>
- <201011201304.48821.helmut.schaa@googlemail.com>
- <4CEBE834.9000303@gmx.net>
- <4CED27A0.70001@gmx.net>
- <20101125164724.GA6269@jm.kir.nu>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20101125164724.GA6269@jm.kir.nu>
+	Tue, 9 Nov 2010 21:22:07 -0500
+Received: by mail-qw0-f46.google.com with SMTP id 5so5749qwh.19
+        for <linux-wireless@vger.kernel.org>; Tue, 09 Nov 2010 18:22:06 -0800 (PST)
+From: Arnaud Lacombe <lacombar@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: lrodriguez@atheros.com, Arnaud Lacombe <lacombar@gmail.com>
+Subject: [PATCH 44/44] compat/2.6.35: 2.6.35 does not define `SHRT_MIN'
+Date: Tue,  9 Nov 2010 21:20:26 -0500
+Message-Id: <1289355626-25373-45-git-send-email-lacombar@gmail.com>
+In-Reply-To: <1289355626-25373-1-git-send-email-lacombar@gmail.com>
+References: <1289355626-25373-1-git-send-email-lacombar@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Nov 25, 2010 at 06:47:24PM +0200, Jouni Malinen wrote:
-> Interestingly enough, that seems to be exactly what the current
-> wireless-testing.git snapshot is doing.. I was trying to reproduce this
-> issue by modifying my AP not to reply to Probe Request frames on 2.4 GHz
-> band and did not see any problems in getting connected. The station saw
-> both the 2.4 and 5 GHz BSSes from the AP and the 2.4 GHz BSS was
-> selected based on signal strength. mac80211 went through the
-> authentication and association frame exchanges without any problems (and
-> without sending out a directed Probe Request frame). Whether this change
-> was done by design is another question, but at least this seems to be
-> the current behavior.
+Signed-off-by: Arnaud Lacombe <lacombar@gmail.com>
+---
+ include/linux/compat-2.6.35.h |    1 -
+ 1 files changed, 0 insertions(+), 1 deletions(-)
 
-Well, maybe not. I could not reproduce that after adding more debug code
-to mac80211. In other words, the Probe Request is still there before
-authentication is attempted. Anyway, with this, I did get to reproduce
-the problem that shows up wpa_supplicant blacklisting not working
-properly in this case at least with -Dnl80211.
-
+diff --git a/include/linux/compat-2.6.35.h b/include/linux/compat-2.6.35.h
+index 32fd039..c1e5dea 100644
+--- a/include/linux/compat-2.6.35.h
++++ b/include/linux/compat-2.6.35.h
+@@ -11,7 +11,6 @@
+ /* added on linux/kernel.h */
+ #define USHRT_MAX      ((u16)(~0U))
+ #define SHRT_MAX       ((s16)(USHRT_MAX>>1))
+-#define SHRT_MIN       ((s16)(-SHRT_MAX - 1))
+ 
+ #define  SDIO_BUS_ECSI		0x20	/* Enable continuous SPI interrupt */
+ #define  SDIO_BUS_SCSI		0x40	/* Support continuous SPI interrupt */
 -- 
-Jouni Malinen                                            PGP id EFC895FA
+1.7.2.30.gc37d7.dirty
+
