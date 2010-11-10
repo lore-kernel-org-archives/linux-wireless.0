@@ -1,51 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iw0-f174.google.com ([209.85.214.174]:43945 "EHLO
-	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756439Ab0KAOeQ convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 1 Nov 2010 10:34:16 -0400
+Received: from mail.atheros.com ([12.19.149.2]:29590 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757198Ab0KJWk1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 10 Nov 2010 17:40:27 -0500
+Received: from mail.atheros.com ([10.10.20.108])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Wed, 10 Nov 2010 14:40:15 -0800
+Date: Wed, 10 Nov 2010 14:40:25 -0800
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: Vivek Natarajan <Vivek.Natarajan@Atheros.com>
+CC: Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH v2] compat/ath9k: pm-qos params patch
+Message-ID: <20101110224025.GK4667@tux>
+References: <1289382968-4165-1-git-send-email-vnatarajan@atheros.com>
 MIME-Version: 1.0
-In-Reply-To: <4CCECD09.2010505@arndnet.de>
-References: <4CCDA454.708@arndnet.de> <AANLkTin80pwnb1DX8OdZK3Wgsq0nj==G9VM3pahsmo0U@mail.gmail.com>
- <4CCDE4EB.7060001@arndnet.de> <AANLkTik52SVa0SC_RtNtgFu2U9Gye7BKtQ7jNgMPKe=W@mail.gmail.com>
- <4CCE74DB.8000206@arndnet.de> <AANLkTinhYqhcQor3PhTKoS3At3Tt2Qv5WAGSirfR8eNG@mail.gmail.com>
- <4CCECD09.2010505@arndnet.de>
-From: Ohad Ben-Cohen <ohad@wizery.com>
-Date: Mon, 1 Nov 2010 16:33:54 +0200
-Message-ID: <AANLkTim8bfNDacFLs-kmkmtQuxUb-1BEqTNVW1dGQZxd@mail.gmail.com>
-Subject: Re: regression: b43-sdio: probe of mmc0:0001:1 failed with error -16
-To: Arnd Hannemann <arnd@arndnet.de>
-Cc: "linux-mmc@vger.kernel.org" <linux-mmc@vger.kernel.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	linux-kernel@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <1289382968-4165-1-git-send-email-vnatarajan@atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Nov 1, 2010 at 4:22 PM, Arnd Hannemann <arnd@arndnet.de> wrote:
-> It looks like this:
->
-> root@ap4evb:~# modprobe b43
-> [   36.023437] cfg80211: Calling CRDA to update world regulatory domain
-> [   36.460937] sdio_bus_probe()
-> [   36.468750] sdio_bus_probe() calling pm_runtime_get_sync()
-> [   36.468750] mmc_power_restore_host() begin
-> [   36.570312] mmc_sdio_power_restore() begin
-> [   36.570312] mmc_sdio_init_card()
-> [   36.578125] mmc_sdio_init_card() mmc_send_io_op_cond ret=-110
+On Wed, Nov 10, 2010 at 01:56:08AM -0800, Vivek Natarajan wrote:
+> This patch is similar to the one for ipw2x00:
+> This patch is required because now pm-qos has 3 different flavors:
+> 
+> On kernels >= 2.6.36 the pm qos req is kzalloc()'d by pm-qos itself
+> On kernel   = 2.6.35 the pm qos req uses the stack
+> On kernels <  2.6.35 the pm qos req is pegged to a unique name.
+> 
+> Signed-off-by: Vivek Natarajan <vnatarajan@atheros.com>
 
-OK, thanks. CMD5 time outs. I suspect it's similar to what we have
-with the XO-1.5: despite software calling mmc_power_off/on, the
-hardware does not go through full power off/on cycle.
+Vivek, what tree is this for? It seems to me you want to
+patch up ath9k for compat-wireless. If so that would go
+through compat-wireless.git and you'd add the hunks below
+to patches/28-pm-qos-params.patch.
 
->> The interesting part is actually what happens after sdio_bus_probe(),
->> not before it.
->
-> Actually nothing special happens after sdio_bus_probe()
+Is this going to be required for our compat-wireless-2.6.36 release,
+the compat-wireless-2.6.37 or will this just be for compat-wireless-2.6.38?
 
-The actual failure happens after it (in mmc_sdio_init_card).
-
-> With your patch the problem goes away, thanks.
-
-Thank you for testing this,
-Ohad.
+  Luis
