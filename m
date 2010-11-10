@@ -1,32 +1,106 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from am1ehsobe002.messaging.microsoft.com ([213.199.154.205]:27023
-	"EHLO AM1EHSOBE002.bigfish.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752400Ab0K3WGq convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 30 Nov 2010 17:06:46 -0500
-Received: from mail54-am1 (localhost.localdomain [127.0.0.1])	by
- mail54-am1-R.bigfish.com (Postfix) with ESMTP id 287A71440465	for
- <linux-wireless@vger.kernel.org>; Tue, 30 Nov 2010 22:06:45 +0000 (UTC)
-Received: from AM1EHSMHS008.bigfish.com (unknown [10.3.201.249])	by
- mail54-am1.bigfish.com (Postfix) with ESMTP id 9A70B1C40054	for
- <linux-wireless@vger.kernel.org>; Tue, 30 Nov 2010 22:06:43 +0000 (UTC)
-From: "Heyendal, Carl" <CHeyendal@stanleyworks.com>
-To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Date: Tue, 30 Nov 2010 17:05:54 -0500
-Subject: wireless in linux 
-Message-ID: <1D6034426110564DA0DEA9EE9793B38357E35E4823@NBE-MBX01.americas.swk.pri>
-Content-Type: text/plain; charset="us-ascii"
+Received: from mail-iw0-f174.google.com ([209.85.214.174]:65252 "EHLO
+	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750714Ab0KJFfg convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 10 Nov 2010 00:35:36 -0500
+Received: by iwn10 with SMTP id 10so338539iwn.19
+        for <linux-wireless@vger.kernel.org>; Tue, 09 Nov 2010 21:35:35 -0800 (PST)
 MIME-Version: 1.0
+In-Reply-To: <AANLkTikVZT-hQvr83bTkuVENe8jPSG=LNMw5NTwUXCp1@mail.gmail.com>
+References: <AANLkTikVZT-hQvr83bTkuVENe8jPSG=LNMw5NTwUXCp1@mail.gmail.com>
+From: Ohad Ben-Cohen <ohad@wizery.com>
+Date: Wed, 10 Nov 2010 07:35:15 +0200
+Message-ID: <AANLkTinT72TE_z2JW1x+pMHNys6jVEeGfkQZFAW_f+48@mail.gmail.com>
+Subject: Re: wl1271 sdio timeouts on omap3
+To: Joerie de Gram <j.de.gram@gmail.com>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Hi Joerie,
 
-I'm a somewhat of a newbie to Linux. So far I have been impressed with the information that I have been able to readily find to get things done in Linux amongst all the reference books, on-line tutorials, and various Linux communities. However wireless in Linux has been a different story.
+On Tue, Nov 9, 2010 at 12:14 AM, Joerie de Gram <j.de.gram@gmail.com> wrote:
+> lockup in mmc_wait_for_req (called from wl1271_sdio_power_on). In 10%
+> of my attempts the driver gets as far as uploading the firmware after
+> which I'm getting similar SDIO timeouts.
+>
+> I'm mostly unsure about my regulator config (relevant snippets below),
 
-A few weeks ago I was asked to provide wireless functionality for an embedded system. A simple USB wireless adapter to connect to an access point was all. I thought it shouldn't be too much of a challenge. However adding wireless capability has truly been a formidable challenge. I'm still not there yet. I'm staring right now at the latest wpa_supplicant readme with all the choices that I need to make. I'll be lucky if it works. It's really been a piece-meal effort so far. 
+Snippets below are not complete. E.g., where do you actually indicate
+the gpio number ?
 
-The only information I can find is very limited to it's context and is geared to individuals who have intimate knowledge of Linux wireless. How does one get up to speed with wireless-linux with the apparent lack of good general information regarding what's needed in a wireless linux kernel? 
+It's better to send your complete patch so we can have a look.
 
-Are there any reference books, tutorials, howto's, wireless enabled kernels...anything that someone can point me to that would help?
+> having no wl1271 documentation to work with. The wl1271 is on mmc3,
+> powered by twl4030 vsim. I assume the fixed regulator in [1] is just
+> to be able to control the PMENA GPIO?
 
-/carl
+Yes.
+
+> Pin muxing aside, all changes are equal to those displayed in [1]. Is
+> there anything I might be doing wrong wrt. the power-up sequence?
+
+Indeterministic SDIO behavior is unlikely to be related to the
+device's gpio-based power, since it's either on or off.
+
+The issues you are experiencing sound more like hw issues (e.g. faulty
+board level shifter) or misconfiguration of the SDIO pins (e.g. lines
+not pulled up).
+
+I suggest you to try working with 1 bit SDIO and/or low clock speeds
+and see if stability is improved.
+
+If not, the best thing to do is sniffing the hardware lines - power,
+clock, mmc 1-4,.. You will then know exactly what's wrong.
+
+Regards,
+Ohad.
+
+>
+> [1]: https://patchwork.kernel.org/patch/201572/
+>
+> Joerie
+>
+> ----------
+>
+> static struct regulator_consumer_supply nowplus_vsim_supply = {
+>        .supply                 = "vmmc",
+> };
+>
+>
+> static struct regulator_consumer_supply nowplus_wl1271_supply = {
+>        .supply                 = "vmmc_aux",
+>        .dev_name               = "mmci-omap-hs.2",
+> };
+>
+>
+> /* VSIM for WiFi SDIO */
+> static struct regulator_init_data nowplus_vsim = {
+>        .constraints = {
+>                .name                   = "VSIM",
+>                .min_uV                 = 1800000,
+>                .max_uV                 = 1800000,
+>                .apply_uV               = true,
+>                .valid_modes_mask       = REGULATOR_MODE_NORMAL
+>                                        | REGULATOR_MODE_STANDBY,
+>                .valid_ops_mask         = REGULATOR_CHANGE_MODE
+>                                        | REGULATOR_CHANGE_STATUS,
+>        },
+>        .num_consumer_supplies  = 1,
+>        .consumer_supplies      = &nowplus_vsim_supply,
+> };
+>
+> static struct regulator_init_data nowplus_wlgpio = {
+>        .constraints = {
+>                .valid_ops_mask = REGULATOR_CHANGE_STATUS,
+>        },
+>        .num_consumer_supplies  = 1,
+>        .consumer_supplies      = &nowplus_wl1271_supply,
+> };
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
