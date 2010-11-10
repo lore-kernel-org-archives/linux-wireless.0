@@ -1,55 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from perninha.conectiva.com.br ([187.115.55.249]:47852 "EHLO
-	perninha.conectiva.com.br" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753700Ab0KBBAP (ORCPT
+Received: from mail-qw0-f46.google.com ([209.85.216.46]:58629 "EHLO
+	mail-qw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755156Ab0KJCWF (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 1 Nov 2010 21:00:15 -0400
-From: Herton Ronaldo Krzesinski <herton@mandriva.com.br>
+	Tue, 9 Nov 2010 21:22:05 -0500
+Received: by mail-qw0-f46.google.com with SMTP id 5so5541qwh.19
+        for <linux-wireless@vger.kernel.org>; Tue, 09 Nov 2010 18:22:05 -0800 (PST)
+From: Arnaud Lacombe <lacombar@gmail.com>
 To: linux-wireless@vger.kernel.org
-Cc: Larry Finger <Larry.Finger@lwfinger.net>,
-	Hin-Tak Leung <htl10@users.sourceforge.net>,
-	John W Linville <linville@tuxdriver.com>,
-	Herton Ronaldo Krzesinski <herton@mandriva.com.br>,
-	seno <senada@t-online.de>
-Subject: [PATCH 8/9] rtl8187: remove uneeded setting of anaparam write
-Date: Mon,  1 Nov 2010 22:59:38 -0200
-Message-Id: <1288659579-4986-9-git-send-email-herton@mandriva.com.br>
-In-Reply-To: <1288659579-4986-1-git-send-email-herton@mandriva.com.br>
-References: <1288659579-4986-1-git-send-email-herton@mandriva.com.br>
+Cc: lrodriguez@atheros.com, Arnaud Lacombe <lacombar@gmail.com>
+Subject: [PATCH 43/44] compat/2.6.{19,31}: fix threaded irq backport for <2.6.19
+Date: Tue,  9 Nov 2010 21:20:25 -0500
+Message-Id: <1289355626-25373-44-git-send-email-lacombar@gmail.com>
+In-Reply-To: <1289355626-25373-1-git-send-email-lacombar@gmail.com>
+References: <1289355626-25373-1-git-send-email-lacombar@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Usually you set RTL818X_CONFIG3_ANAPARAM_WRITE when you are going to
-change/write ANAPARAM registers. But in current initialization of
-RTL8187B there is a place where ANAPARAM_WRITE bit is set without any
-ANAPARAM register being written, without reason, so remove it.
-
-Signed-off-by: Herton Ronaldo Krzesinski <herton@mandriva.com.br>
-Acked-by: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: seno <senada@t-online.de>
+Signed-off-by: Arnaud Lacombe <lacombar@gmail.com>
 ---
- drivers/net/wireless/rtl818x/rtl8187_dev.c |    8 --------
- 1 files changed, 0 insertions(+), 8 deletions(-)
+ include/linux/compat-2.6.31.h |   17 +++++++++++++++++
+ 1 files changed, 17 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/net/wireless/rtl818x/rtl8187_dev.c b/drivers/net/wireless/rtl818x/rtl8187_dev.c
-index c0c75aa..4448647 100644
---- a/drivers/net/wireless/rtl818x/rtl8187_dev.c
-+++ b/drivers/net/wireless/rtl818x/rtl8187_dev.c
-@@ -814,14 +814,6 @@ static int rtl8187b_init_hw(struct ieee80211_hw *dev)
- 	/* RFSW_CTRL register */
- 	rtl818x_iowrite16_idx(priv, (__le16 *)0xFF72, 0x569A, 2);
+diff --git a/include/linux/compat-2.6.31.h b/include/linux/compat-2.6.31.h
+index 52291f4..76b2cf8 100644
+--- a/include/linux/compat-2.6.31.h
++++ b/include/linux/compat-2.6.31.h
+@@ -101,6 +101,10 @@ static inline struct rtable *skb_rtable(const struct sk_buff *skb)
+ }
  
--	rtl818x_iowrite8(priv, &priv->map->EEPROM_CMD,
--			 RTL818X_EEPROM_CMD_CONFIG);
--	reg = rtl818x_ioread8(priv, &priv->map->CONFIG3);
--	reg |= RTL818X_CONFIG3_ANAPARAM_WRITE;
--	rtl818x_iowrite8(priv, &priv->map->CONFIG3, reg);
--	rtl818x_iowrite8(priv, &priv->map->EEPROM_CMD,
--			 RTL818X_EEPROM_CMD_NORMAL);
--
- 	rtl818x_iowrite16(priv, &priv->map->RFPinsOutput, 0x0480);
- 	rtl818x_iowrite16(priv, &priv->map->RFPinsSelect, 0x2488);
- 	rtl818x_iowrite16(priv, &priv->map->RFPinsEnable, 0x1FFF);
+ /* Backport threaded IRQ support */
++#if (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,19))
++typedef irqreturn_t (*irq_handler_t)(int, void *, struct pt_regs *);
++#endif
++
+ struct compat_threaded_irq {
+ 	unsigned int irq;
+ 	irq_handler_t handler;
+@@ -117,7 +121,11 @@ void compat_irq_work(void *arg)
+ {
+ 	struct work_struct *work = arg;
+ 	struct compat_threaded_irq *comp = container_of(work, struct compat_threaded_irq, work);
++#if (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,19))
++	comp->thread_fn(comp->irq, comp->dev_id, NULL);
++#else
+ 	comp->thread_fn(comp->irq, comp->dev_id);
++#endif
+ }
+ #else
+ static inline
+@@ -128,13 +136,22 @@ void compat_irq_work(struct work_struct *work)
+ }
+ #endif
+ 
++#if (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,19))
++static inline
++irqreturn_t compat_irq_dispatcher(int irq, void *dev_id, struct pt_regs *regs)
++#else
+ static inline
+ irqreturn_t compat_irq_dispatcher(int irq, void *dev_id)
++#endif
+ {
+ 	struct compat_threaded_irq *comp = dev_id;
+ 	irqreturn_t res;
+ 
++#if (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,19))
++	res = comp->handler(irq, comp->dev_id, regs);
++#else
+ 	res = comp->handler(irq, comp->dev_id);
++#endif
+ 	if (res == IRQ_WAKE_THREAD) {
+ 		queue_work(comp->wq, &comp->work);
+ 		res = IRQ_HANDLED;
 -- 
-1.7.3.2
+1.7.2.30.gc37d7.dirty
 
