@@ -1,36 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:50961 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932772Ab0KPWOv (ORCPT
+Received: from mail-qy0-f181.google.com ([209.85.216.181]:36265 "EHLO
+	mail-qy0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754837Ab0KJCVV (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 16 Nov 2010 17:14:51 -0500
-Received: from uucp by smtp.tuxdriver.com with local-rmail (Exim 4.63)
-	(envelope-from <linville@tuxdriver.com>)
-	id 1PITne-0003VR-CV
-	for linux-wireless@vger.kernel.org; Tue, 16 Nov 2010 17:14:50 -0500
-Received: from linville-8530p.local (localhost.localdomain [127.0.0.1])
-	by linville-8530p.local (8.14.4/8.14.4) with ESMTP id oAGM886N026347
-	for <linux-wireless@vger.kernel.org>; Tue, 16 Nov 2010 17:08:09 -0500
-Received: (from linville@localhost)
-	by linville-8530p.local (8.14.4/8.14.4/Submit) id oAGM86Ug026345
-	for linux-wireless@vger.kernel.org; Tue, 16 Nov 2010 17:08:06 -0500
-Date: Tue, 16 Nov 2010 17:08:05 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
+	Tue, 9 Nov 2010 21:21:21 -0500
+Received: by mail-qy0-f181.google.com with SMTP id 31so159944qyk.19
+        for <linux-wireless@vger.kernel.org>; Tue, 09 Nov 2010 18:21:20 -0800 (PST)
+From: Arnaud Lacombe <lacombar@gmail.com>
 To: linux-wireless@vger.kernel.org
-Subject: caught-up on merging for 2.6.38 -next wireless bits
-Message-ID: <20101116220804.GA21198@tuxdriver.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Cc: lrodriguez@atheros.com, Arnaud Lacombe <lacombar@gmail.com>
+Subject: [PATCH 19/44] compat/2.6.31: fix threaded irq backport wrt. INIT_WORK() macro
+Date: Tue,  9 Nov 2010 21:20:01 -0500
+Message-Id: <1289355626-25373-20-git-send-email-lacombar@gmail.com>
+In-Reply-To: <1289355626-25373-1-git-send-email-lacombar@gmail.com>
+References: <1289355626-25373-1-git-send-email-lacombar@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-All,
+Signed-off-by: Arnaud Lacombe <lacombar@gmail.com>
+---
+ include/linux/compat-2.6.31.h |   14 ++++++++++++++
+ 1 files changed, 14 insertions(+), 0 deletions(-)
 
-I have finally (more-or-less) cleared my patch queue for 2.6.38 -next
-bits.  If you are waiting to see patches posted prior to last week
-show-up in wireless-testing then you may want to ping me about them.
-
-John
+diff --git a/include/linux/compat-2.6.31.h b/include/linux/compat-2.6.31.h
+index b9a70bd..b1b7b28 100644
+--- a/include/linux/compat-2.6.31.h
++++ b/include/linux/compat-2.6.31.h
+@@ -115,12 +115,22 @@ struct compat_threaded_irq {
+ 	struct work_struct work;
+ };
+ 
++#if (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,20))
++static inline
++void compat_irq_work(void *arg)
++{
++	struct work_struct *work = arg;
++	struct compat_threaded_irq *comp = container_of(work, struct compat_threaded_irq, work);
++	comp->thread_fn(comp->irq, comp->dev_id);
++}
++#else
+ static inline
+ void compat_irq_work(struct work_struct *work)
+ {
+ 	struct compat_threaded_irq *comp = container_of(work, struct compat_threaded_irq, work);
+ 	comp->thread_fn(comp->irq, comp->dev_id);
+ }
++#endif
+ 
+ static inline
+ irqreturn_t compat_irq_dispatcher(int irq, void *dev_id)
+@@ -150,7 +160,11 @@ int compat_request_threaded_irq(struct compat_threaded_irq *comp,
+ 	comp->handler = handler;
+ 	comp->thread_fn = thread_fn;
+ 	comp->dev_id = dev_id;
++#if (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,20))
++	INIT_WORK(&comp->work, compat_irq_work, &comp->work);
++#else
+ 	INIT_WORK(&comp->work, compat_irq_work);
++#endif
+ 
+ 	if (!comp->wq) {
+ 		snprintf(comp->wq_name, sizeof(comp->wq_name),
 -- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+1.7.2.30.gc37d7.dirty
+
