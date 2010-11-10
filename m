@@ -1,33 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:38340 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1760286Ab0KRUow (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 18 Nov 2010 15:44:52 -0500
-Date: Thu, 18 Nov 2010 15:40:45 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Daniel Drake <dsd@laptop.org>
-Cc: linux-wireless@vger.kernel.org, libertas-dev@lists.infradead.org,
-	akarwar@marvell.com, Dan Williams <dcbw@redhat.com>
-Subject: Re: [PATCH] libertas: don't block usb8388 suspend if no wakeup
- conditions are set
-Message-ID: <20101118204045.GE2468@tuxdriver.com>
-References: <20101031134012.F21FF9D401B@zog.reactivated.net>
- <1289604579.21000.5.camel@dcbw.foobar.com>
- <AANLkTinpvmS1ZH=T5BtA3+qyYLnNijxfjonFMaY8fO4F@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <AANLkTinpvmS1ZH=T5BtA3+qyYLnNijxfjonFMaY8fO4F@mail.gmail.com>
+Received: from mga09.intel.com ([134.134.136.24]:43232 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752041Ab0KJSBD (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 10 Nov 2010 13:01:03 -0500
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Subject: [PATCH 02/16] iwlagn: update PCI ID for 6000g2a series devices
+Date: Wed, 10 Nov 2010 09:56:36 -0800
+Message-Id: <1289411810-23093-3-git-send-email-wey-yi.w.guy@intel.com>
+In-Reply-To: <1289411810-23093-1-git-send-email-wey-yi.w.guy@intel.com>
+References: <1289411810-23093-1-git-send-email-wey-yi.w.guy@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Nov 18, 2010 at 08:15:55PM +0000, Daniel Drake wrote:
-> John, just a quick ping on this maintainer-acked patch
-> Thanks :)
+Update the supported PCI ID list for 6000g2a series devices
 
-I have it in wireless-next-2.6.  Do you think it needs to be in 2.6.37?
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-agn.c |    7 -------
+ 1 files changed, 0 insertions(+), 7 deletions(-)
 
-John
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
+index d6891a4..83a5405 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
+@@ -4428,13 +4428,6 @@ static DEFINE_PCI_DEVICE_TABLE(iwl_hw_card_ids) = {
+ 	{IWL_PCI_DEVICE(0x4239, 0x1316, iwl6000i_2abg_cfg)},
+ 
+ /* 6x00 Series Gen2a */
+-	{IWL_PCI_DEVICE(0x0082, 0x1201, iwl6000g2a_2agn_cfg)},
+-	{IWL_PCI_DEVICE(0x0085, 0x1211, iwl6000g2a_2agn_cfg)},
+-	{IWL_PCI_DEVICE(0x0082, 0x1221, iwl6000g2a_2agn_cfg)},
+-	{IWL_PCI_DEVICE(0x0082, 0x1206, iwl6000g2a_2abg_cfg)},
+-	{IWL_PCI_DEVICE(0x0085, 0x1216, iwl6000g2a_2abg_cfg)},
+-	{IWL_PCI_DEVICE(0x0082, 0x1226, iwl6000g2a_2abg_cfg)},
+-	{IWL_PCI_DEVICE(0x0082, 0x1207, iwl6000g2a_2bg_cfg)},
+ 	{IWL_PCI_DEVICE(0x0082, 0x1301, iwl6000g2a_2agn_cfg)},
+ 	{IWL_PCI_DEVICE(0x0082, 0x1306, iwl6000g2a_2abg_cfg)},
+ 	{IWL_PCI_DEVICE(0x0082, 0x1307, iwl6000g2a_2bg_cfg)},
 -- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+1.7.0.4
+
