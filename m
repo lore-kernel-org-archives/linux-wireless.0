@@ -1,54 +1,96 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f46.google.com ([209.85.161.46]:42074 "EHLO
-	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753759Ab0KRLdL (ORCPT
+Received: from mail-qw0-f46.google.com ([209.85.216.46]:58629 "EHLO
+	mail-qw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755084Ab0KJCV6 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 18 Nov 2010 06:33:11 -0500
-Received: by mail-fx0-f46.google.com with SMTP id 6so1460042fxm.19
-        for <linux-wireless@vger.kernel.org>; Thu, 18 Nov 2010 03:33:10 -0800 (PST)
-From: Arik Nemtsov <arik@wizery.com>
-To: <linux-wireless@vger.kernel.org>
-Cc: Luciano Coelho <luciano.coelho@nokia.com>,
-	Arik Nemtsov <arik@wizery.com>
-Subject: [PATCH 18/18] wl1271: Enable AP-mode
-Date: Thu, 18 Nov 2010 13:32:31 +0200
-Message-Id: <1290079951-16793-19-git-send-email-arik@wizery.com>
-In-Reply-To: <1290079951-16793-1-git-send-email-arik@wizery.com>
-References: <1290079951-16793-1-git-send-email-arik@wizery.com>
+	Tue, 9 Nov 2010 21:21:58 -0500
+Received: by mail-qw0-f46.google.com with SMTP id 5so5541qwh.19
+        for <linux-wireless@vger.kernel.org>; Tue, 09 Nov 2010 18:21:57 -0800 (PST)
+From: Arnaud Lacombe <lacombar@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: lrodriguez@atheros.com, Arnaud Lacombe <lacombar@gmail.com>
+Subject: [PATCH 38/44] compat/2.6.2{8,9}: fix tracepoint macros
+Date: Tue,  9 Nov 2010 21:20:20 -0500
+Message-Id: <1289355626-25373-39-git-send-email-lacombar@gmail.com>
+In-Reply-To: <1289355626-25373-1-git-send-email-lacombar@gmail.com>
+References: <1289355626-25373-1-git-send-email-lacombar@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Indicate support for the NL80211_IFTYPE_AP interface mode to enable AP
-mode operation.
+It was introduced in 2.6.29, not 2.6.28.
 
-Signed-off-by: Arik Nemtsov <arik@wizery.com>
+Signed-off-by: Arnaud Lacombe <lacombar@gmail.com>
 ---
- drivers/net/wireless/wl12xx/main.c |    5 ++++-
- 1 files changed, 4 insertions(+), 1 deletions(-)
+ include/linux/compat-2.6.28.h |   24 ------------------------
+ include/linux/compat-2.6.29.h |   20 ++++++++++++++++++++
+ 2 files changed, 20 insertions(+), 24 deletions(-)
 
-diff --git a/drivers/net/wireless/wl12xx/main.c b/drivers/net/wireless/wl12xx/main.c
-index e5fbbb6..4dbca5e 100644
---- a/drivers/net/wireless/wl12xx/main.c
-+++ b/drivers/net/wireless/wl12xx/main.c
-@@ -1067,6 +1067,9 @@ static int wl1271_op_add_interface(struct ieee80211_hw *hw,
- 		wl->bss_type = BSS_TYPE_IBSS;
- 		wl->set_bss_type = BSS_TYPE_STA_BSS;
- 		break;
-+	case NL80211_IFTYPE_AP:
-+		wl->bss_type = BSS_TYPE_AP_BSS;
-+		break;
- 	default:
- 		ret = -EOPNOTSUPP;
- 		goto out;
-@@ -3057,7 +3060,7 @@ int wl1271_init_ieee80211(struct wl1271 *wl)
- 	wl->hw->wiphy->n_cipher_suites = ARRAY_SIZE(cipher_suites);
+diff --git a/include/linux/compat-2.6.28.h b/include/linux/compat-2.6.28.h
+index 4cd623b..289ec06 100644
+--- a/include/linux/compat-2.6.28.h
++++ b/include/linux/compat-2.6.28.h
+@@ -192,30 +192,6 @@ static inline void skb_queue_splice_tail(const struct sk_buff_head *list,
+ 		head->qlen += list->qlen;
+ 	}
+ }
+-
+-#ifndef DECLARE_TRACE
+-
+-#define TP_PROTO(args...)	args
+-#define TP_ARGS(args...)		args
+-
+-#define DECLARE_TRACE(name, proto, args)				\
+-	static inline void _do_trace_##name(struct tracepoint *tp, proto) \
+-	{ }								\
+-	static inline void trace_##name(proto)				\
+-	{ }								\
+-	static inline int register_trace_##name(void (*probe)(proto))	\
+-	{								\
+-		return -ENOSYS;						\
+-	}								\
+-	static inline int unregister_trace_##name(void (*probe)(proto))	\
+-	{								\
+-		return -ENOSYS;						\
+-	}
+-
+-#define EXPORT_TRACEPOINT_SYMBOL_GPL(name)
+-#define EXPORT_TRACEPOINT_SYMBOL(name)
+-
+-
+ #endif
  
- 	wl->hw->wiphy->interface_modes = BIT(NL80211_IFTYPE_STATION) |
--		BIT(NL80211_IFTYPE_ADHOC);
-+		BIT(NL80211_IFTYPE_ADHOC) | BIT(NL80211_IFTYPE_AP);
- 	wl->hw->wiphy->max_scan_ssids = 1;
- 	wl->hw->wiphy->bands[IEEE80211_BAND_2GHZ] = &wl1271_band_2ghz;
- 	wl->hw->wiphy->bands[IEEE80211_BAND_5GHZ] = &wl1271_band_5ghz;
+ /* openSuse includes round_jiffies_up in it's kernel 2.6.27.
+diff --git a/include/linux/compat-2.6.29.h b/include/linux/compat-2.6.29.h
+index bd112d0..fa29806 100644
+--- a/include/linux/compat-2.6.29.h
++++ b/include/linux/compat-2.6.29.h
+@@ -277,6 +277,26 @@ static inline struct net *read_pnet(struct net * const *pnet)
+ 
+ #endif
+ 
++#define TP_PROTO(args...)	args
++#define TP_ARGS(args...)		args
++
++#define DECLARE_TRACE(name, proto, args)				\
++	static inline void _do_trace_##name(struct tracepoint *tp, proto) \
++	{ }								\
++	static inline void trace_##name(proto)				\
++	{ }								\
++	static inline int register_trace_##name(void (*probe)(proto))	\
++	{								\
++		return -ENOSYS;						\
++	}								\
++	static inline int unregister_trace_##name(void (*probe)(proto))	\
++	{								\
++		return -ENOSYS;						\
++	}
++
++#define EXPORT_TRACEPOINT_SYMBOL_GPL(name)
++#define EXPORT_TRACEPOINT_SYMBOL(name)
++
+ extern int		init_dummy_netdev(struct net_device *dev);
+ 
+ #else
 -- 
-1.7.1
+1.7.2.30.gc37d7.dirty
 
