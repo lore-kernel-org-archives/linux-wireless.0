@@ -1,55 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cantor.suse.de ([195.135.220.2]:54677 "EHLO mx1.suse.de"
+Received: from smtp.nokia.com ([147.243.1.48]:26543 "EHLO mgw-sa02.nokia.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1759025Ab0KQWNg (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 17 Nov 2010 17:13:36 -0500
-Date: Wed, 17 Nov 2010 14:11:27 -0800
-From: Greg KH <gregkh@suse.de>
-To: Mike Rapoport <mike.rapoport@gmail.com>
-Cc: Greg KH <greg@kroah.com>, Brett Rudley <brudley@broadcom.com>,
-	Henry Ptasinski <henryp@broadcom.com>,
-	Dowan Kim <dowan@broadcom.com>, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 2/4] staging: brcm80211: brcmfmac: remove PCI SDIO
- controller binding
-Message-ID: <20101117221127.GB3851@suse.de>
-References: <20101116200420.GA10793@kroah.com>
- <1289980726-28706-1-git-send-email-mike.rapoport@gmail.com>
- <20101117211035.GA2442@kroah.com>
- <AANLkTi=p_iH32zads+9RwQGY+m7JK+FTmhBTth_x9ouK@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-In-Reply-To: <AANLkTi=p_iH32zads+9RwQGY+m7JK+FTmhBTth_x9ouK@mail.gmail.com>
+	id S1755378Ab0KJK11 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 10 Nov 2010 05:27:27 -0500
+Received: from nokia.com (localhost [127.0.0.1])
+	by mgw-sa02.nokia.com (Switch-3.4.3/Switch-3.4.3) with ESMTP id oAAAROBF024251
+	for <linux-wireless@vger.kernel.org>; Wed, 10 Nov 2010 12:27:24 +0200
+From: juuso.oikarinen@nokia.com
+To: luciano.coelho@nokia.com
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH 1/2] wl1271: Prevent ad-hoc and active scanning on 11a DFS frequencies
+Date: Wed, 10 Nov 2010 12:27:19 +0200
+Message-Id: <1289384840-28305-1-git-send-email-juuso.oikarinen@nokia.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Nov 18, 2010 at 12:00:16AM +0200, Mike Rapoport wrote:
-> On Wed, Nov 17, 2010 at 11:10 PM, Greg KH <greg@kroah.com> wrote:
-> > On Wed, Nov 17, 2010 at 09:58:46AM +0200, Mike Rapoport wrote:
-> >> Signed-off-by: Mike Rapoport <mike.rapoport@gmail.com>
-> >> ---
-> >>  drivers/staging/brcm80211/brcmfmac/bcmsdh_linux.c |  229 ---------------------
-> >>  1 files changed, 0 insertions(+), 229 deletions(-)
-> >
-> > Wait, is this really ok code to be removing from the driver?
-> >
-> > Brett and Henry, any objections to this?
-> >
-> > Mike, why do you think this is ok to remove?  Is it because no one is
-> > ever calling this even for both types of config for this driver?
-> 
-> There's a lot of code in the brcmfmac part of the driver that tries to
-> re-implement SDIO stack. In particular, the code removed by this patch
-> registers a pci_driver for SDIO controller and then the brcmfmac
-> driver accesses the WiFi device attached to that SDIO controller by
-> means of custom re-implementation of SDHC.
+From: Juuso Oikarinen <juuso.oikarinen@nokia.com>
 
-Ok, so even with this patch, it will still work properly in the SDIO
-mode?
+The wl1271 does not support radar detection. Hence, prevent ad-hoc and
+active scanning on frequencies requiring DFS.
 
-Have you been able to test this?
+Signed-off-by: Juuso Oikarinen <juuso.oikarinen@nokia.com>
+---
+ drivers/net/wireless/wl12xx/wl1271_main.c |   23 +++++++++++++++++++++++
+ 1 files changed, 23 insertions(+), 0 deletions(-)
 
-Brett, Henry, I would like to get your ack on this before applying it.
+diff --git a/drivers/net/wireless/wl12xx/wl1271_main.c b/drivers/net/wireless/wl12xx/wl1271_main.c
+index f5b1d19..eb9f821 100644
+--- a/drivers/net/wireless/wl12xx/wl1271_main.c
++++ b/drivers/net/wireless/wl12xx/wl1271_main.c
+@@ -335,6 +335,27 @@ out:
+ 	return NOTIFY_OK;
+ }
+ 
++static int wl1271_reg_notify(struct wiphy *wiphy,
++			     struct regulatory_request *request) {
++	struct ieee80211_supported_band *band;
++	struct ieee80211_channel *ch;
++	int i;
++
++	band = wiphy->bands[IEEE80211_BAND_5GHZ];
++	for (i = 0; i < band->n_channels; i++) {
++		ch = &band->channels[i];
++		if (ch->flags % IEEE80211_CHAN_DISABLED)
++			continue;
++
++		if (ch->flags & IEEE80211_CHAN_RADAR)
++			ch->flags |= IEEE80211_CHAN_NO_IBSS |
++				     IEEE80211_CHAN_PASSIVE_SCAN;
++
++	}
++
++	return 0;
++}
++
+ static void wl1271_conf_init(struct wl1271 *wl)
+ {
+ 
+@@ -2590,6 +2611,8 @@ int wl1271_init_ieee80211(struct wl1271 *wl)
+ 	wl->hw->queues = 4;
+ 	wl->hw->max_rates = 1;
+ 
++	wl->hw->wiphy->reg_notifier = wl1271_reg_notify;
++
+ 	SET_IEEE80211_DEV(wl->hw, wl1271_wl_to_dev(wl));
+ 
+ 	return 0;
+-- 
+1.7.1
 
-thanks,
-
-greg k-h
