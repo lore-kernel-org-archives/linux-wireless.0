@@ -1,42 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:32698 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754718Ab0KYBia (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 24 Nov 2010 20:38:30 -0500
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Subject: [PATCH 07/12] iwlagn: Offical name for 6050g2 device
-Date: Wed, 24 Nov 2010 17:32:43 -0800
-Message-Id: <1290648768-10075-8-git-send-email-wey-yi.w.guy@intel.com>
-In-Reply-To: <1290648768-10075-1-git-send-email-wey-yi.w.guy@intel.com>
-References: <1290648768-10075-1-git-send-email-wey-yi.w.guy@intel.com>
+Received: from mail-qw0-f46.google.com ([209.85.216.46]:65142 "EHLO
+	mail-qw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754940Ab0KJCVl (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 9 Nov 2010 21:21:41 -0500
+Received: by mail-qw0-f46.google.com with SMTP id 5so5749qwh.19
+        for <linux-wireless@vger.kernel.org>; Tue, 09 Nov 2010 18:21:41 -0800 (PST)
+From: Arnaud Lacombe <lacombar@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: lrodriguez@atheros.com, Arnaud Lacombe <lacombar@gmail.com>
+Subject: [PATCH 31/44] compat/2.6.22: add compat for couple of TCP accessors
+Date: Tue,  9 Nov 2010 21:20:13 -0500
+Message-Id: <1289355626-25373-32-git-send-email-lacombar@gmail.com>
+In-Reply-To: <1289355626-25373-1-git-send-email-lacombar@gmail.com>
+References: <1289355626-25373-1-git-send-email-lacombar@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Change to offical name for 6050g2 devices:
-   "Intel(R) Centrino(R) Wireless-N 6150"
-
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Signed-off-by: Arnaud Lacombe <lacombar@gmail.com>
 ---
- drivers/net/wireless/iwlwifi/iwl-6000.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+ include/linux/compat-2.6.22.h |   20 ++++++++++++++++++++
+ 1 files changed, 20 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-6000.c b/drivers/net/wireless/iwlwifi/iwl-6000.c
-index a3a055f..43eb99b 100644
---- a/drivers/net/wireless/iwlwifi/iwl-6000.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-6000.c
-@@ -783,7 +783,7 @@ struct iwl_cfg iwl6050_2agn_cfg = {
- };
+diff --git a/include/linux/compat-2.6.22.h b/include/linux/compat-2.6.22.h
+index e0cdab2..73dbbb6 100644
+--- a/include/linux/compat-2.6.22.h
++++ b/include/linux/compat-2.6.22.h
+@@ -80,6 +80,26 @@ static inline void skb_copy_from_linear_data_offset(const struct sk_buff *skb,
+ 	memcpy(to, skb->data + offset, len);
+ }
  
- struct iwl_cfg iwl6050g2_bgn_cfg = {
--	.name = "6050 Series 1x2 BGN Gen2",
-+	.name = "Intel(R) Centrino(R) Wireless-N + WiMAX 6150 BGN",
- 	.fw_name_pre = IWL6050_FW_PRE,
- 	.ucode_api_max = IWL6050_UCODE_API_MAX,
- 	.ucode_api_min = IWL6050_UCODE_API_MIN,
++static inline struct iphdr *ip_hdr(const struct sk_buff *skb)
++{
++	return (struct iphdr *)skb_network_header(skb);
++}
++
++static inline struct tcphdr *tcp_hdr(const struct sk_buff *skb)
++{
++	return (struct tcphdr *)skb_transport_header(skb);
++}
++
++static inline unsigned int tcp_hdrlen(const struct sk_buff *skb)
++{
++	return tcp_hdr(skb)->doff * 4;
++}
++
++static inline unsigned int tcp_optlen(const struct sk_buff *skb)
++{
++	return (tcp_hdr(skb)->doff - 5) * 4;
++}
++
+ #if defined(__GNUC__)
+ #define __maybe_unused		__attribute__((unused))
+ #define uninitialized_var(x)	x = x
 -- 
-1.7.0.4
+1.7.2.30.gc37d7.dirty
 
