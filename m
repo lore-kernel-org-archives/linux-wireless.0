@@ -1,40 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iw0-f174.google.com ([209.85.214.174]:35906 "EHLO
-	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756777Ab0KLUJB convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 12 Nov 2010 15:09:01 -0500
-Received: by iwn10 with SMTP id 10so3862935iwn.19
-        for <linux-wireless@vger.kernel.org>; Fri, 12 Nov 2010 12:09:01 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <1289592426-5367-1-git-send-email-greearb@candelatech.com>
-References: <1289592426-5367-1-git-send-email-greearb@candelatech.com>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Fri, 12 Nov 2010 12:08:40 -0800
-Message-ID: <AANLkTin_qaMO+3Zm3qnqZ2WDjLoujvCa0W2eLO1BT_Ti@mail.gmail.com>
-Subject: Re: [PATCH] mac80211: Fix deadlock in ieee80211_do_stop.
-To: greearb@candelatech.com
+Received: from mail.neratec.ch ([80.75.119.105]:56690 "EHLO mail.neratec.ch"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752618Ab0KKO6W (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 11 Nov 2010 09:58:22 -0500
+Date: Thu, 11 Nov 2010 15:58:16 +0100 (CET)
+From: Wojciech Dubowik <dubowoj@neratec.com>
+To: linville@tuxdriver.com
 Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+Message-ID: <12365511.1131289487494944.JavaMail.wlan@CHBU500181>
+In-Reply-To: <30519539.771289486691846.JavaMail.wlan@CHBU500181>
+Subject: [PATCH 7/9] ath5k: AHB port. Add specific initialization for RF2317
+ radio chip.
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Nov 12, 2010 at 12:07 PM,  <greearb@candelatech.com> wrote:
-> From: Ben Greear <greearb@candelatech.com>
->
-> We cannot call flush_work here because we are holding
-> RTNL and the worker thread(s) that will be called upon to
-> do the flushing might already be running a piece of work
-> that is blocking on RTNL.  That leads to deadlock and/or
-> OOM.
->
-> The ieee80211_iface_work method does nothing when sdata
-> is stopped (as it would be when the flush_work was called)
-> so it shouldn't be any big change to just cancel the work
-> entirely.
->
-> Signed-off-by: Ben Greear <greearb@candelatech.com>
+Needed for some WiSoC devices.
 
-Is this a stable fix?
+Signed-off-by: Wojciech Dubowik <Wojciech.Dubowik@neratec.com>
+---
+ drivers/net/wireless/ath/ath5k/initvals.c |   23 +++++++++++++++++++++++
+ 1 files changed, 23 insertions(+), 0 deletions(-)
 
-  Luis
+diff --git a/drivers/net/wireless/ath/ath5k/initvals.c b/drivers/net/wireless/ath/ath5k/initvals.c
+index 8fa4393..05baa4e 100644
+--- a/drivers/net/wireless/ath/ath5k/initvals.c
++++ b/drivers/net/wireless/ath/ath5k/initvals.c
+@@ -1501,6 +1501,29 @@ int ath5k_hw_write_initvals(struct ath5k_hw *ah, u8 mode, bool change_channel)
+ 					rf5112_ini_bbgain, change_channel);
+ 			break;
+ 		case AR5K_RF2317:
++
++			ath5k_hw_ini_mode_registers(ah,
++					ARRAY_SIZE(rf2413_ini_mode_end),
++					rf2413_ini_mode_end, mode);
++
++			ath5k_hw_ini_registers(ah,
++					ARRAY_SIZE(rf2425_ini_common_end),
++					rf2425_ini_common_end, change_channel);
++
++			/* Override settings from rf2413_ini_mode_end */
++			ath5k_hw_reg_write(ah, 0x00180a65, AR5K_PHY_GAIN);
++
++			/* Override settings from rf2413_ini_common_end */
++			ath5k_hw_reg_write(ah, 0x00004000, AR5K_PHY_AGC);
++			AR5K_REG_WRITE_BITS(ah, AR5K_PHY_TPC_RG5,
++				AR5K_PHY_TPC_RG5_PD_GAIN_OVERLAP, 0xa);
++			ath5k_hw_reg_write(ah, 0x800000a8, 0x8140);
++			ath5k_hw_reg_write(ah, 0x000000ff, 0x9958);
++
++			ath5k_hw_ini_registers(ah,
++					ARRAY_SIZE(rf5112_ini_bbgain),
++					rf5112_ini_bbgain, change_channel);
++			break;
+ 		case AR5K_RF2425:
+ 
+ 			ath5k_hw_ini_mode_registers(ah,
+-- 
+1.7.1
