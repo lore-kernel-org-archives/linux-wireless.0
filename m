@@ -1,43 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f46.google.com ([209.85.161.46]:47834 "EHLO
-	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751663Ab0KZW31 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 26 Nov 2010 17:29:27 -0500
-Received: by fxm15 with SMTP id 15so1036785fxm.19
-        for <linux-wireless@vger.kernel.org>; Fri, 26 Nov 2010 14:29:26 -0800 (PST)
-From: Christian Lamparter <chunkeey@googlemail.com>
-To: linux-wireless@vger.kernel.org
-Subject: [PATCH for-2.6.37] carl9170: fix carl9170_tx_prepare typo
-Date: Fri, 26 Nov 2010 23:29:23 +0100
-Cc: linville@tuxdriver.com
-MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="us-ascii"
-Message-Id: <201011262329.23314.chunkeey@googlemail.com>
+Received: from smtp.nokia.com ([147.243.1.47]:44293 "EHLO mgw-sa01.nokia.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751358Ab0KKKqU (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 11 Nov 2010 05:46:20 -0500
+Subject: Re: [PATCH v2 2/2] wl1271: add support for HW TX fragmentation
+From: Luciano Coelho <luciano.coelho@nokia.com>
+To: ext Arik Nemtsov <arik@wizery.com>,
+	John Linville <linville@tuxdriver.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Johannes Berg <johannes@sipsolutions.net>
+In-Reply-To: <1289209867-21422-3-git-send-email-arik@wizery.com>
+References: <1289209867-21422-1-git-send-email-arik@wizery.com>
+	 <1289209867-21422-3-git-send-email-arik@wizery.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Thu, 11 Nov 2010 12:45:42 +0200
+Message-ID: <1289472342.1606.25.camel@powerslave>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-commit: "carl9170: revamp carl9170_tx_prepare"
-introduced a peculiar bug that would only show
-up if the the module parameter noht is set to 1.
+On Mon, 2010-11-08 at 10:51 +0100, ext Arik Nemtsov wrote:
+> Indicate to mac80211 we support HW fragmentation.
+> Support updates of the fragmentation threshold via the
+> set_frag_threshold callback.
+> 
+> Signed-off-by: Arik Nemtsov <arik@wizery.com>
+> ---
 
-Then all outbound voice, video and background
-frames would each invoke a (bogus) RTS/CTS
-handshake.
+Acked-by: Luciano Coelho <luciano.coelho@nokia.com>
 
-Signed-off-by: Christian Lamparter <chunkeey@googlemail.com>
----
-diff --git a/drivers/net/wireless/ath/carl9170/tx.c b/drivers/net/wireless/ath/carl9170/tx.c
-index aee5c9d..6cc58e0 100644
---- a/drivers/net/wireless/ath/carl9170/tx.c
-+++ b/drivers/net/wireless/ath/carl9170/tx.c
-@@ -867,7 +867,7 @@ static int carl9170_tx_prepare(struct ar9170 *ar, struct sk_buff *skb)
- 
- 	mac_tmp = cpu_to_le16(AR9170_TX_MAC_HW_DURATION |
- 			      AR9170_TX_MAC_BACKOFF);
--	mac_tmp |= cpu_to_le16((hw_queue << AR9170_TX_MAC_QOS_S) &&
-+	mac_tmp |= cpu_to_le16((hw_queue << AR9170_TX_MAC_QOS_S) &
- 			       AR9170_TX_MAC_QOS);
- 
- 	no_ack = !!(info->flags & IEEE80211_TX_CTL_NO_ACK);
+John, can you apply this directly on your tree, due to the dependency on
+mac80211? There will be a merge conflict with my next pull-request, due
+to the driver renaming, but it should be very easily solvable.
+
+The other option would be for me to wait until the mac80211 part is in
+wireless-next and only then I apply it to wl12xx.
+
+Which one would you prefer?
+
+-- 
+Cheers,
+Luca.
+
