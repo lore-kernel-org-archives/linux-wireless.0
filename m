@@ -1,37 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-vw0-f46.google.com ([209.85.212.46]:46540 "EHLO
-	mail-vw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750953Ab0KVQXr (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 22 Nov 2010 11:23:47 -0500
-Received: by vws13 with SMTP id 13so3461262vws.19
-        for <linux-wireless@vger.kernel.org>; Mon, 22 Nov 2010 08:23:46 -0800 (PST)
-Message-ID: <4CEA9903.6070604@lwfinger.net>
-Date: Mon, 22 Nov 2010 10:23:31 -0600
-From: Larry Finger <Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-To: Klaas De Craemer <klaasdc@gmail.com>
-CC: linux-wireless@vger.kernel.org,
-	Herton Ronaldo Krzesinski <herton@mandriva.com.br>,
-	Hin-Tak Leung <htl10@users.sourceforge.net>
-Subject: Re: RTL8187L: Can only "enable" hw radio switch after Windows boot
-References: <AANLkTi=gzBDd6AZAzUKpLyTxtOgkwUkB5STeaU45=OFB@mail.gmail.com> <4CE997E3.9080706@lwfinger.net> <AANLkTi=kF956KYU393jmZhMagX=mz6dZcf1xwMaqPJ3Q@mail.gmail.com>
-In-Reply-To: <AANLkTi=kF956KYU393jmZhMagX=mz6dZcf1xwMaqPJ3Q@mail.gmail.com>
-Content-Type: text/plain; charset=UTF-8
+Received: from mga14.intel.com ([143.182.124.37]:41581 "EHLO mga14.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754128Ab0KKRpe (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 11 Nov 2010 12:45:34 -0500
+Subject: Re: Overload Probe Request to send data
+From: "Guy, Wey-Yi" <wey-yi.w.guy@intel.com>
+To: Cassiano Tartari <cassianotartari@gmail.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <AANLkTinDJxnMHEbQjUwWjT2MnW5r7gcxoZW7bZetT7a9@mail.gmail.com>
+References: <AANLkTinDJxnMHEbQjUwWjT2MnW5r7gcxoZW7bZetT7a9@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Thu, 11 Nov 2010 09:41:16 -0800
+Message-ID: <1289497276.12056.91.camel@wwguy-huron>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 11/22/2010 02:59 AM, Klaas De Craemer wrote:
+On Thu, 2010-11-11 at 07:35 -0800, Cassiano Tartari wrote:
+> Hi,
 > 
-> Sorry, I meant I get a few errors in the form of "SIOCSIFFLAGS:
-> Unknown error 132" on the stdout when trying to bring up the blocked
-> interface.
+>     I'd like to know if somebody could help me giving a way to modify
+> the iwlwifi driver to overload the Probe Requests to send data? Which
+> file I need to modify, for what word I need search for...
+> 
+> Thankful,
+> 
 
-Do those errors also occur when it works, or just when it is blocked?
+If you want to do it in iwlwifi, lease take a look at
+iwl_fill_probe_req() in iwl-scan.c
 
-Is it possible to keep the box in a warm place to see if it is temperature
-related? The problem of it working with Windows is still puzzling. As your Atom
-is 32 bit, there is the possibility of trying ndiswrapper with the Windows XP
-driver. Oh it hurts to write that, but that would isolate the problem to rtl8187.
+But do please aware there is size limitation of the probe request from
+uCode.
 
-Larry
+Wey
+
