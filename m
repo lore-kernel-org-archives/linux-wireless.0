@@ -1,42 +1,204 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qw0-f46.google.com ([209.85.216.46]:65142 "EHLO
-	mail-qw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754800Ab0KJCVL (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 9 Nov 2010 21:21:11 -0500
-Received: by mail-qw0-f46.google.com with SMTP id 5so5749qwh.19
-        for <linux-wireless@vger.kernel.org>; Tue, 09 Nov 2010 18:21:10 -0800 (PST)
-From: Arnaud Lacombe <lacombar@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: lrodriguez@atheros.com, Arnaud Lacombe <lacombar@gmail.com>
-Subject: [PATCH 15/44] compat/2.6.25: add compat macro for ip_route_output_key()
-Date: Tue,  9 Nov 2010 21:19:57 -0500
-Message-Id: <1289355626-25373-16-git-send-email-lacombar@gmail.com>
-In-Reply-To: <1289355626-25373-1-git-send-email-lacombar@gmail.com>
-References: <1289355626-25373-1-git-send-email-lacombar@gmail.com>
+Received: from nbd.name ([46.4.11.11]:47004 "EHLO nbd.name"
+	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1757116Ab0KKAEO (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 10 Nov 2010 19:04:14 -0500
+Message-ID: <4CDB32FC.9070004@openwrt.org>
+Date: Thu, 11 Nov 2010 01:04:12 +0100
+From: Felix Fietkau <nbd@openwrt.org>
+MIME-Version: 1.0
+To: linux-wireless <linux-wireless@vger.kernel.org>
+CC: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Subject: [PATCH v2 2/2] compat-wireless: remove unnecessary chunks from the
+ rfkill patch
+References: <4CDB2967.7030805@openwrt.org> <4CDB2998.3070209@openwrt.org>
+In-Reply-To: <4CDB2998.3070209@openwrt.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is was a late network namespace conversion :)
-
-Signed-off-by: Arnaud Lacombe <lacombar@gmail.com>
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
 ---
- include/linux/compat-2.6.25.h |    2 ++
- 1 files changed, 2 insertions(+), 0 deletions(-)
-
-diff --git a/include/linux/compat-2.6.25.h b/include/linux/compat-2.6.25.h
-index b2bf50f..4d55bbb 100644
---- a/include/linux/compat-2.6.25.h
-+++ b/include/linux/compat-2.6.25.h
-@@ -88,6 +88,8 @@ extern void		__dev_addr_unsync(struct dev_addr_list **to, int *to_count, struct
- 
- #define seq_file_net &init_net;
- 
-+#define ip_route_output_key(net, rt, fl)	ip_route_output_key(rt, fl)
+--- a/patches/03-rfkill.patch
++++ b/patches/03-rfkill.patch
+@@ -42,18 +42,6 @@ This would do the policing from within mac80211.
+ +obj-$(CONFIG_RFKILL_BACKPORT)		+= rfkill_backport.o
+ --- a/net/rfkill/input.c
+ +++ b/net/rfkill/input.c
+-@@ -17,7 +17,11 @@
+- #include <linux/slab.h>
+- #include <linux/workqueue.h>
+- #include <linux/init.h>
+-+#if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,31))
+- #include <linux/rfkill.h>
+-+#else
+-+#include <linux/rfkill_backport.h>
+-+#endif
+- #include <linux/sched.h>
+- 
+- #include "rfkill.h"
+ @@ -232,7 +236,7 @@ static int rfkill_connect(struct input_h
+  
+  	handle->dev = dev;
+@@ -65,43 +53,7 @@ This would do the policing from within mac80211.
+  	error = input_register_handle(handle);
+ --- a/net/rfkill/core.c
+ +++ b/net/rfkill/core.c
+-@@ -26,7 +26,7 @@
+- #include <linux/capability.h>
+- #include <linux/list.h>
+- #include <linux/mutex.h>
+--#include <linux/rfkill.h>
+-+#include <linux/rfkill_backport.h>
+- #include <linux/sched.h>
+- #include <linux/spinlock.h>
+- #include <linux/miscdevice.h>
+-@@ -63,7 +63,7 @@ struct rfkill {
+- 	const struct rfkill_ops	*ops;
+- 	void			*data;
+- 
+--#ifdef CONFIG_RFKILL_LEDS
+-+#ifdef CONFIG_RFKILL_BACKPORT_LEDS
+- 	struct led_trigger	led_trigger;
+- 	const char		*ledtrigname;
+- #endif
+-@@ -124,7 +124,7 @@ static struct {
+- static bool rfkill_epo_lock_active;
+- 
+- 
+--#ifdef CONFIG_RFKILL_LEDS
+-+#ifdef CONFIG_RFKILL_BACKPORT_LEDS
+- static void rfkill_led_trigger_event(struct rfkill *rfkill)
+- {
+- 	struct led_trigger *trigger;
+-@@ -304,7 +304,7 @@ static void rfkill_set_block(struct rfki
+- 	rfkill_event(rfkill);
+- }
+- 
+--#ifdef CONFIG_RFKILL_INPUT
+-+#ifdef CONFIG_RFKILL_BACKPORT_INPUT
+- static atomic_t rfkill_input_disabled = ATOMIC_INIT(0);
+- 
+- /**
+-@@ -805,7 +805,7 @@ static int rfkill_resume(struct device *
++@@ -819,7 +819,7 @@ static int rfkill_resume(struct device *
+  }
+  
+  static struct class rfkill_class = {
+@@ -110,115 +62,4 @@ This would do the policing from within mac80211.
+  	.dev_release	= rfkill_release,
+  	.dev_attrs	= rfkill_dev_attrs,
+  	.dev_uevent	= rfkill_dev_uevent,
+-@@ -951,7 +951,7 @@ int __must_check rfkill_register(struct
+- 	if (!rfkill->persistent || rfkill_epo_lock_active) {
+- 		schedule_work(&rfkill->sync_work);
+- 	} else {
+--#ifdef CONFIG_RFKILL_INPUT
+-+#ifdef CONFIG_RFKILL_BACKPORT_INPUT
+- 		bool soft_blocked = !!(rfkill->state & RFKILL_BLOCK_SW);
+- 
+- 		if (!atomic_read(&rfkill_input_disabled))
+-@@ -1179,7 +1179,7 @@ static int rfkill_fop_release(struct ino
+- 	list_for_each_entry_safe(ev, tmp, &data->events, list)
+- 		kfree(ev);
+- 
+--#ifdef CONFIG_RFKILL_INPUT
+-+#ifdef CONFIG_RFKILL_BACKPORT_INPUT
+- 	if (data->input_handler)
+- 		if (atomic_dec_return(&rfkill_input_disabled) == 0)
+- 			printk(KERN_DEBUG "rfkill: input handler enabled\n");
+-@@ -1190,7 +1190,7 @@ static int rfkill_fop_release(struct ino
+- 	return 0;
+- }
+- 
+--#ifdef CONFIG_RFKILL_INPUT
+-+#ifdef CONFIG_RFKILL_BACKPORT_INPUT
+- static long rfkill_fop_ioctl(struct file *file, unsigned int cmd,
+- 			     unsigned long arg)
+- {
+-@@ -1223,7 +1223,7 @@ static const struct file_operations rfki
+- 	.write		= rfkill_fop_write,
+- 	.poll		= rfkill_fop_poll,
+- 	.release	= rfkill_fop_release,
+--#ifdef CONFIG_RFKILL_INPUT
+-+#ifdef CONFIG_RFKILL_BACKPORT_INPUT
+- 	.unlocked_ioctl	= rfkill_fop_ioctl,
+- 	.compat_ioctl	= rfkill_fop_ioctl,
+- #endif
+-@@ -1254,7 +1254,7 @@ static int __init rfkill_init(void)
+- 		goto out;
+- 	}
+- 
+--#ifdef CONFIG_RFKILL_INPUT
+-+#ifdef CONFIG_RFKILL_BACKPORT_INPUT
+- 	error = rfkill_handler_init();
+- 	if (error) {
+- 		misc_deregister(&rfkill_miscdev);
+-@@ -1270,7 +1270,7 @@ subsys_initcall(rfkill_init);
+- 
+- static void __exit rfkill_exit(void)
+- {
+--#ifdef CONFIG_RFKILL_INPUT
+-+#ifdef CONFIG_RFKILL_BACKPORT_INPUT
+- 	rfkill_handler_exit();
+- #endif
+- 	misc_deregister(&rfkill_miscdev);
+---- a/include/linux/rfkill_backport.h
+-+++ b/include/linux/rfkill_backport.h
+-@@ -20,6 +20,7 @@
+-  */
+- 
+- #include <linux/types.h>
+-+#include <linux/compat-2.6.h>
+- 
+- /* define userspace visible states */
+- #define RFKILL_STATE_SOFT_BLOCKED	0
+-@@ -148,7 +149,7 @@ struct rfkill_ops {
+- 	int	(*set_block)(void *data, bool blocked);
+- };
+- 
+--#if defined(CONFIG_RFKILL) || defined(CONFIG_RFKILL_MODULE)
+-+#if defined(CONFIG_RFKILL_BACKPORT) || defined(CONFIG_RFKILL_BACKPORT_MODULE)
+- /**
+-  * rfkill_alloc - allocate rfkill structure
+-  * @name: name of the struct -- the string is not copied internally
+---- a/net/wireless/core.h
+-+++ b/net/wireless/core.h
+-@@ -11,7 +11,11 @@
+- #include <linux/kref.h>
+- #include <linux/rbtree.h>
+- #include <linux/debugfs.h>
+-+#if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,31))
+- #include <linux/rfkill.h>
+-+#else
+-+#include <linux/rfkill_backport.h>
+-+#endif
+- #include <linux/workqueue.h>
+- #include <net/genetlink.h>
+- #include <net/cfg80211.h>
+---- a/drivers/net/wireless/ath/ath9k/hw.c
+-+++ b/drivers/net/wireless/ath/ath9k/hw.c
+-@@ -1883,7 +1883,7 @@ int ath9k_hw_fill_cap_info(struct ath_hw
+- 
+- 	pCap->hw_caps |= ATH9K_HW_CAP_ENHANCEDPM;
+- 
+--#if defined(CONFIG_RFKILL) || defined(CONFIG_RFKILL_MODULE)
+-+#if ((LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,31)) && defined(CONFIG_RFKILL) || defined(CONFIG_RFKILL_MODULE)) || ((LINUX_VERSION_CODE < KERNEL_VERSION(2,6,31)) && defined(CONFIG_RFKILL_BACKPORT) || defined(CONFIG_RFKILL_BACKPORT_MODULE))
+- 	ah->rfsilent = ah->eep_ops->get_eeprom(ah, EEP_RF_SILENT);
+- 	if (ah->rfsilent & EEP_RFSILENT_ENABLED) {
+- 		ah->rfkill_gpio =
+---- a/drivers/net/wireless/ath/ath5k/base.h
+-+++ b/drivers/net/wireless/ath/ath5k/base.h
+-@@ -46,7 +46,11 @@
+- #include <linux/wireless.h>
+- #include <linux/if_ether.h>
+- #include <linux/leds.h>
+-+#if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,31))
+- #include <linux/rfkill.h>
+-+#else
+-+#include <linux/rfkill_backport.h>
+-+#endif
+- #include <linux/workqueue.h>
+- 
+- #include "ath5k.h"
 +
- enum nf_inet_hooks {
- 	NF_INET_PRE_ROUTING = 0,
- 	NF_INET_LOCAL_IN = 1,
--- 
-1.7.2.30.gc37d7.dirty
-
