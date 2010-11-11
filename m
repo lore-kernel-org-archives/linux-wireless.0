@@ -1,113 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.19.149.2]:50910 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751613Ab0KEAmG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 4 Nov 2010 20:42:06 -0400
-Received: from mail.atheros.com ([10.10.20.105])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Thu, 04 Nov 2010 17:41:54 -0700
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>, <kyungwan.nam@atheros.com>,
-	<pstew@google.com>, <sleffler@google.com>, <ctl@google.com>,
-	<amod.bodas@atheros.com>,
-	Vasanthakumar Thiagarajan <vasanth@atheros.com>,
-	<david.quan@atheros.com>, <stable@kernel.org>
-Subject: [PATCH] ath9k_hw: Fix AR9280 surprise removal during frequent idle on/off
-Date: Thu, 4 Nov 2010 17:41:25 -0700
-Message-ID: <1288917685-3182-1-git-send-email-lrodriguez@atheros.com>
+Received: from mail-gy0-f174.google.com ([209.85.160.174]:62839 "EHLO
+	mail-gy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753956Ab0KKTPC convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 11 Nov 2010 14:15:02 -0500
+Received: by gyh4 with SMTP id 4so1434837gyh.19
+        for <linux-wireless@vger.kernel.org>; Thu, 11 Nov 2010 11:15:01 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <4CDC049C.90005@lwfinger.net>
+References: <AANLkTi=+0BOUaTs73jRMnJ=9qyNkqnBvMuKVTG4od9_+@mail.gmail.com>
+	<0022152d6729673f6a0494b1f2e6@google.com>
+	<AANLkTi=PYCwTtNmt9Baw=mYPqzyUQsiBNDOBXGic++5_@mail.gmail.com>
+	<4CDAB99D.7030100@lwfinger.net>
+	<AANLkTik9=-8bXNOvrY-JnFuVJr1wZG24o8m8JzJVD8tQ@mail.gmail.com>
+	<4CDC049C.90005@lwfinger.net>
+Date: Thu, 11 Nov 2010 20:14:56 +0100
+Message-ID: <AANLkTi=JG=5tX2zcXOCdtUMHcASaZOWppZzb4vLyJSxc@mail.gmail.com>
+Subject: Re: Question about Edimax 7811Un
+From: "miloofr@gmail.com" <miloofr@gmail.com>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Vasanthakumar Thiagarajan <vasanth@atheros.com>
+Thank you.
 
-Bit 22 of AR_WA should be set to fix the situation where chip reset
-is asynchronous to clock of analog shift registers, such that when
-reset is released, it could mess up the values of analog shift registers
-and cause some hw issue on AR9280.
+In fact I successfully compiled this driver (latest 1126 version) with
+a 2.6.35 kernel from ubuntu 10.10 . It seems to work ok, except some
+freezing sometimes while booting with the stick installed on the PC.
+It also compiles with the same kernel on a 64 bits system, with a lot
+of errors, but does not work at all (freezes immediately). It is
+precised in the doc of the realtek linux driver that this is a 32 bits
+driver.
+Can you warn if the usb stick is in the samples sent from Realtek?
+If necessary, I can test your 64 bits converted driver on my system
+and give you the results in order to fix it.
 
-This bit is write only, but the driver does a read-modify-write
-on AR_WA without setting bit 22 in ar9002_hw_configpcipowersave()
-during radio disable. This causes surprise removal of hw. It can
-never recover from this state and the hw will become usable only
-after a power on/off cycle, and sometimes only during a cold reboot.
+Eric
 
-This issue can be triggered by doing frequent roaming with the
-simple/test-roam script available from the wifi-test project [1]
-when roaming between APs quickly. When roaming there is a is a high
-possibility that the device being put into idle (radio disable) state
-by mac80211 during AUTH->ASSOC. A device hardware reset would fail
-and the kernel would output:
+PS: sorry for the reply-to-all forgetting. I realized that one minute
+after and resent my email to the ML also ;).
 
-[40251.363799] ath: AWAKE -> FULL-SLEEP
-[40251.363815] ieee80211 phy17: device no longer idle - working
-[40251.363817] ath: Marking phy17 as not-idle
-[40251.363819] ath: FULL-SLEEP -> AWAKE
-[40251.415978] pciehp 0000:00:1c.3:pcie04: Card not present on Slot(3)
-[40251.419896] ath: ah->misc_mode 0x4
-[40251.428138] pciehp 0000:00:1c.3:pcie04: Card present on Slot(3)
-[40251.532247] ath: timeout (100000 us) on reg 0x9860: 0xffffffff & 0x00000001 != 0x00000000
-[40251.532250] ath: Unable to reset channel (2462 MHz), reset status -5
-[40251.532422] ath: Set channel: 5745 MHz
-[40251.540639] ath: Failed to stop TX DMA in 100 msec after killing last frame
-[40251.548826] ath: Failed to stop TX DMA in 100 msec after killing last frame
-[40251.557023] ath: Failed to stop TX DMA in 100 msec after killing last frame
-[40251.565211] ath: Failed to stop TX DMA in 100 msec after killing last frame
-[40251.573415] ath: Failed to stop TX DMA in 100 msec after killing last frame
-[40251.581603] ath: Failed to stop TX DMA in 100 msec after killing last frame
-[40251.581606] ath: Failed to stop TX DMA. Resetting hardware!
-[40251.592679] ath: DMA failed to stop in 10 ms AR_CR=0xffffffff AR_DIAG_SW=0xffffffff
-[40251.703330] ath: timeout (100000 us) on reg 0x7000: 0xffffffff & 0x00000003 != 0x00000000
-[40251.703333] ath: RTC stuck in MAC reset
-[40251.703334] ath: Chip reset failed
-[40251.703335] ath: Unable to reset hardware; reset status -22
 
-This is currently only reproducible with some HB92 (Half Mini-PCIE)
-cards but the fix applies to all AR9280 cards. This patch fixes this
-issue by setting bit 22 during radio disable.
-
-This patch has fixes for all kernels that has ath9k.
-
-[1] http://wireless.kernel.org/en/developers/Testing/wifi-test
-
-Cc: kyungwan.nam@atheros.com
-Cc: amod.bodas@atheros.com
-Cc: david.quan@atheros.com
-Cc: stable@kernel.org
-Signed-off-by: Vasanthakumar Thiagarajan <vasanth@atheros.com>
----
- drivers/net/wireless/ath/ath9k/ar9002_hw.c |    3 +++
- drivers/net/wireless/ath/ath9k/reg.h       |    1 +
- 2 files changed, 4 insertions(+), 0 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/ath9k/ar9002_hw.c b/drivers/net/wireless/ath/ath9k/ar9002_hw.c
-index a0471f2..48261b7 100644
---- a/drivers/net/wireless/ath/ath9k/ar9002_hw.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9002_hw.c
-@@ -410,6 +410,9 @@ static void ar9002_hw_configpcipowersave(struct ath_hw *ah,
- 			val &= ~(AR_WA_BIT6 | AR_WA_BIT7);
- 		}
- 
-+		if (AR_SREV_9280(ah))
-+			val |= AR_WA_BIT22;
-+
- 		if (AR_SREV_9285E_20(ah))
- 			val |= AR_WA_BIT23;
- 
-diff --git a/drivers/net/wireless/ath/ath9k/reg.h b/drivers/net/wireless/ath/ath9k/reg.h
-index 42976b0..fa05b71 100644
---- a/drivers/net/wireless/ath/ath9k/reg.h
-+++ b/drivers/net/wireless/ath/ath9k/reg.h
-@@ -703,6 +703,7 @@
- #define AR_WA_RESET_EN                  (1 << 18) /* Sw Control to enable PCI-Reset to POR (bit 15) */
- #define AR_WA_ANALOG_SHIFT              (1 << 20)
- #define AR_WA_POR_SHORT                 (1 << 21) /* PCI-E Phy reset control */
-+#define AR_WA_BIT22			(1 << 22)
- #define AR9285_WA_DEFAULT		0x004a050b
- #define AR9280_WA_DEFAULT           	0x0040073b
- #define AR_WA_DEFAULT               	0x0000073f
--- 
-1.7.3.2.90.gd4c43
-
+2010/11/11 Larry Finger <Larry.Finger@lwfinger.net>:
+> On 11/11/2010 02:55 AM, miloofr@gmail.com wrote:
+>> The device as shown in lsusb is:
+>> 0x7392:0x7811
+>>
+>> The vendor id seems to be different as those recognized by the  r8712u
+>> driver. How could I try the driver to confirm that the 7811 device
+>> works with this driver?
+>
+> Please use the "Reply-to-all" when you respond to an email. I want to keep the
+> wireless mailing list informed about what we are doing.
+>
+> Driver r8712u does not appear to work with your device. I could not get the
+> Linux driver source for the 7811 to download from the Edimax site, but I found
+> it on the Realtek site as RTL8192CU_v2.0.1126.zip. There is a tarball inside
+> that zip file with the Linux driver. It does not compile under 2.6.37-rc1. From
+> the warnings, I can see that it needs work to get it to run on a 64-bit system,
+> but it is likely to work in the 32-bit version.
+>
+> Realtek is sending me some sample devices. If one of these nano USB devices is
+> included, I will convert the driver to 64 bits and send the modifications back
+> to Realtek. If/when that happens, I'll let you know.
+>
+> Larry
+>
