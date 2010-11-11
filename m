@@ -1,41 +1,171 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iw0-f174.google.com ([209.85.214.174]:34283 "EHLO
-	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752366Ab0KWNkv convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 23 Nov 2010 08:40:51 -0500
-Received: by iwn33 with SMTP id 33so120603iwn.19
-        for <linux-wireless@vger.kernel.org>; Tue, 23 Nov 2010 05:40:50 -0800 (PST)
+Received: from mail.neratec.ch ([80.75.119.105]:56640 "EHLO mail.neratec.ch"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756143Ab0KKO6F (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 11 Nov 2010 09:58:05 -0500
+Date: Thu, 11 Nov 2010 15:58:01 +0100 (CET)
+From: Wojciech Dubowik <dubowoj@neratec.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org
+Message-ID: <22205438.1071289487479070.JavaMail.wlan@CHBU500181>
+In-Reply-To: <19249879.711289486676029.JavaMail.wlan@CHBU500181>
+Subject: [PATCH 4/9] ath5k: AHB port. Use generic eeprom read from common
+ ath_bus_opts structure.
 MIME-Version: 1.0
-In-Reply-To: <4CEBBA11.6060505@openwrt.org>
-References: <1290475383-26911-1-git-send-email-lrodriguez@atheros.com>
-	<1290475383-26911-2-git-send-email-lrodriguez@atheros.com>
-	<AANLkTi=LBVHDZSygYA9rF6zWS1JEM3WtP9rA7zpfjNP=@mail.gmail.com>
-	<4CEBBA11.6060505@openwrt.org>
-Date: Tue, 23 Nov 2010 14:40:49 +0100
-Message-ID: <AANLkTi=LyDy6xMYz8z09e9aQpwBu_CVwG1zUjFg2q+Qa@mail.gmail.com>
-Subject: Re: [PATCH 2/3] ath9k: avoid aggregation for VO traffic
-From: =?ISO-8859-1?Q?Bj=F6rn_Smedman?= <bjorn.smedman@venatech.se>
-To: Felix Fietkau <nbd@openwrt.org>
-Cc: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	johannes@sipsolutions.net, linux-wireless@vger.kernel.org,
-	Matt Smith <matt.smith@atheros.com>,
-	Senthil Balasubramanian <senthilkumar@atheros.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2010/11/23 Felix Fietkau <nbd@openwrt.org>:
-> On 2010-11-23 1:14 PM, Björn Smedman wrote:
->> On Tue, Nov 23, 2010 at 2:23 AM, Luis R. Rodriguez
->> <lrodriguez@atheros.com> wrote:
->>> This should help with latency issues which can happen when
->>> using aggregation.
->>
->> Wouldn't it be better to fix the TXOP limit handling in
->> ath_lookup_rate() instead?
-> That wouldn't help with latency caused by receiver-side reordering.
+Replaces specific pci eeprom read function.
 
-Aha, good reason. :)
+Signed-off-by: Wojciech Dubowik <Wojciech.Dubowik@neratec.com>
+---
+ drivers/net/wireless/ath/ath5k/ath5k.h  |    5 ++++
+ drivers/net/wireless/ath/ath5k/eeprom.c |   38 +-----------------------------
+ drivers/net/wireless/ath/ath5k/eeprom.h |    2 +-
+ drivers/net/wireless/ath/ath5k/pci.c    |   36 +++++++++++++++++++++++++++++
+ 4 files changed, 44 insertions(+), 37 deletions(-)
 
-/Björn
+diff --git a/drivers/net/wireless/ath/ath5k/ath5k.h b/drivers/net/wireless/ath/ath5k/ath5k.h
+index 2524a6c..2b9d693 100644
+--- a/drivers/net/wireless/ath/ath5k/ath5k.h
++++ b/drivers/net/wireless/ath/ath5k/ath5k.h
+@@ -1314,6 +1314,11 @@ static inline void ath5k_read_cachesize(struct ath_common *common, int *csz)
+ 	common->bus_ops->read_cachesize(common, csz);
+ }
+ 
++static inline bool ath5k_hw_nvram_read(struct ath5k_hw *ah, u32 offset, u16 *data)
++{
++	return ath5k_hw_common(ah)->bus_ops->eeprom_read(ath5k_hw_common(ah), offset, data);
++}
++
+ static inline u32 ath5k_hw_bitswap(u32 val, unsigned int bits)
+ {
+ 	u32 retval = 0, bit, i;
+diff --git a/drivers/net/wireless/ath/ath5k/eeprom.c b/drivers/net/wireless/ath/ath5k/eeprom.c
+index 39722dd..d0c92ed 100644
+--- a/drivers/net/wireless/ath/ath5k/eeprom.c
++++ b/drivers/net/wireless/ath/ath5k/eeprom.c
+@@ -29,40 +29,6 @@
+ #include "base.h"
+ 
+ /*
+- * Read from eeprom
+- */
+-static int ath5k_hw_eeprom_read(struct ath5k_hw *ah, u32 offset, u16 *data)
+-{
+-	u32 status, timeout;
+-
+-	/*
+-	 * Initialize EEPROM access
+-	 */
+-	if (ah->ah_version == AR5K_AR5210) {
+-		AR5K_REG_ENABLE_BITS(ah, AR5K_PCICFG, AR5K_PCICFG_EEAE);
+-		(void)ath5k_hw_reg_read(ah, AR5K_EEPROM_BASE + (4 * offset));
+-	} else {
+-		ath5k_hw_reg_write(ah, offset, AR5K_EEPROM_BASE);
+-		AR5K_REG_ENABLE_BITS(ah, AR5K_EEPROM_CMD,
+-				AR5K_EEPROM_CMD_READ);
+-	}
+-
+-	for (timeout = AR5K_TUNE_REGISTER_TIMEOUT; timeout > 0; timeout--) {
+-		status = ath5k_hw_reg_read(ah, AR5K_EEPROM_STATUS);
+-		if (status & AR5K_EEPROM_STAT_RDDONE) {
+-			if (status & AR5K_EEPROM_STAT_RDERR)
+-				return -EIO;
+-			*data = (u16)(ath5k_hw_reg_read(ah, AR5K_EEPROM_DATA) &
+-					0xffff);
+-			return 0;
+-		}
+-		udelay(15);
+-	}
+-
+-	return -ETIMEDOUT;
+-}
+-
+-/*
+  * Translate binary channel representation in EEPROM to frequency
+  */
+ static u16 ath5k_eeprom_bin2freq(struct ath5k_eeprom_info *ee, u16 bin,
+@@ -1797,12 +1763,12 @@ int ath5k_eeprom_read_mac(struct ath5k_hw *ah, u8 *mac)
+ 	u16 data;
+ 	int octet, ret;
+ 
+-	ret = ath5k_hw_eeprom_read(ah, 0x20, &data);
++	ret = ath5k_hw_nvram_read(ah, 0x20, &data);
+ 	if (ret)
+ 		return ret;
+ 
+ 	for (offset = 0x1f, octet = 0, total = 0; offset >= 0x1d; offset--) {
+-		ret = ath5k_hw_eeprom_read(ah, offset, &data);
++		ret = ath5k_hw_nvram_read(ah, offset, &data);
+ 		if (ret)
+ 			return ret;
+ 
+diff --git a/drivers/net/wireless/ath/ath5k/eeprom.h b/drivers/net/wireless/ath/ath5k/eeprom.h
+index c4a6d5f..0017006 100644
+--- a/drivers/net/wireless/ath/ath5k/eeprom.h
++++ b/drivers/net/wireless/ath/ath5k/eeprom.h
+@@ -241,7 +241,7 @@ enum ath5k_eeprom_freq_bands{
+ #define	AR5K_SPUR_SYMBOL_WIDTH_TURBO_100Hz	6250
+ 
+ #define AR5K_EEPROM_READ(_o, _v) do {			\
+-	ret = ath5k_hw_eeprom_read(ah, (_o), &(_v));	\
++	ret = ath5k_hw_nvram_read(ah, (_o), &(_v));	\
+ 	if (ret)					\
+ 		return ret;				\
+ } while (0)
+diff --git a/drivers/net/wireless/ath/ath5k/pci.c b/drivers/net/wireless/ath/ath5k/pci.c
+index 0653659..0d8dd2d 100644
+--- a/drivers/net/wireless/ath/ath5k/pci.c
++++ b/drivers/net/wireless/ath/ath5k/pci.c
+@@ -65,10 +65,46 @@ static void ath5k_pci_read_cachesize(struct ath_common *common, int *csz)
+ 		*csz = L1_CACHE_BYTES >> 2;   /* Use the default size */
+ }
+ 
++/*
++ * Read from eeprom
++ */
++bool ath5k_pci_eeprom_read(struct ath_common *common, u32 offset, u16 *data)
++{
++	struct ath5k_hw *ah = (struct ath5k_hw *) common->ah;
++	u32 status, timeout;
++
++	/*
++	 * Initialize EEPROM access
++	 */
++	if (ah->ah_version == AR5K_AR5210) {
++		AR5K_REG_ENABLE_BITS(ah, AR5K_PCICFG, AR5K_PCICFG_EEAE);
++		(void)ath5k_hw_reg_read(ah, AR5K_EEPROM_BASE + (4 * offset));
++	} else {
++		ath5k_hw_reg_write(ah, offset, AR5K_EEPROM_BASE);
++		AR5K_REG_ENABLE_BITS(ah, AR5K_EEPROM_CMD,
++				AR5K_EEPROM_CMD_READ);
++	}
++
++	for (timeout = AR5K_TUNE_REGISTER_TIMEOUT; timeout > 0; timeout--) {
++		status = ath5k_hw_reg_read(ah, AR5K_EEPROM_STATUS);
++		if (status & AR5K_EEPROM_STAT_RDDONE) {
++			if (status & AR5K_EEPROM_STAT_RDERR)
++				return -EIO;
++			*data = (u16)(ath5k_hw_reg_read(ah, AR5K_EEPROM_DATA) &
++					0xffff);
++			return 0;
++		}
++		udelay(15);
++	}
++
++	return -ETIMEDOUT;
++}
++
+ /* Common ath_bus_opts structure */
+ static const struct ath_bus_ops ath_pci_bus_ops = {
+ 	.ath_bus_type = ATH_PCI,
+ 	.read_cachesize = ath5k_pci_read_cachesize,
++	.eeprom_read = ath5k_pci_eeprom_read,
+ };
+ 
+ /********************\
+-- 
+1.7.1
+
