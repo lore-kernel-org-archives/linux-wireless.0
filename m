@@ -1,56 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.19.149.2]:41744 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754225Ab0KIWlS (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 9 Nov 2010 17:41:18 -0500
-Received: from mail.atheros.com ([10.10.20.105])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Tue, 09 Nov 2010 14:41:06 -0800
-Date: Tue, 9 Nov 2010 14:41:16 -0800
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-CC: Larry Finger <Larry.Finger@lwfinger.net>,
-	Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
-	David Quan <David.Quan@Atheros.com>,
-	wireless <linux-wireless@vger.kernel.org>
-Subject: Re: What kind of Atheros device is this?
-Message-ID: <20101109224116.GD12756@tux>
-References: <4CD8A71E.6040604@lwfinger.net>
- <AANLkTi=sxSRLFEF6-kBtb_94ViyaKCmP3ra099X3G44H@mail.gmail.com>
- <93781E992CBA7843962D8B0E7D683F3C16331A1E0D@SC1EXMB-MBCL.global.atheros.com>
- <4CD9CC4E.9060208@lwfinger.net>
- <AANLkTikK+1xMAJ_4M3BKMivikKcaisEazuP_nbDbm3qJ@mail.gmail.com>
+Received: from mail.candelatech.com ([208.74.158.172]:60286 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757233Ab0KKXMj (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 11 Nov 2010 18:12:39 -0500
+Message-ID: <4CDC7860.3070307@candelatech.com>
+Date: Thu, 11 Nov 2010 15:12:32 -0800
+From: Ben Greear <greearb@candelatech.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <AANLkTikK+1xMAJ_4M3BKMivikKcaisEazuP_nbDbm3qJ@mail.gmail.com>
+To: Tejun Heo <tj@kernel.org>
+CC: Johannes Berg <johannes@sipsolutions.net>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: ath5k/mac80211:  Reproducible deadlock with 64-stations.
+References: <4CDB2488.4040802@candelatech.com> <1289437356.3748.25.camel@jlt3.sipsolutions.net> <4CDBB716.7020802@kernel.org> <4CDC2016.8020200@candelatech.com> <4CDC354C.2060503@candelatech.com>
+In-Reply-To: <4CDC354C.2060503@candelatech.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Nov 09, 2010 at 02:35:01PM -0800, Luis R. Rodriguez wrote:
-> On Tue, Nov 9, 2010 at 2:33 PM, Larry Finger <Larry.Finger@lwfinger.net> wrote:
-> > On 11/09/2010 03:35 PM, David Quan wrote:
-> >>
-> >> "Atheros AR2427 Wireless Network Adapter"
-> >>
-> >> Legacy 11b/g 2.4Ghz.
-> >
-> > Was there a driver in Linux for this device that has been removed? The OP on the
-> > openSUSE Forum claims that it "used to work".
-> 
-> 
-> One second.
+On 11/11/2010 10:26 AM, Ben Greear wrote:
+> On 11/11/2010 08:55 AM, Ben Greear wrote:
+>> On 11/11/2010 01:27 AM, Tejun Heo wrote:
+>>> Hello,
+>>>
+>>> On 11/11/2010 02:02 AM, Johannes Berg wrote:
+>>>> I don't really see any deadlock here... hmm. Tejun, do you see anything
+>>>> wrong with the "locking" in workq stuff here?
+>>>>
+>>>> Something is holding the RTNL, and a bunch of other things are
+>>>> trying to
+>>>> acquire it. We don't really know who's holding it and who's
+>>>> acquiring it
+>>>> though.
+>
+> I notice that the system is consistently running OOM, even though
+> it has 2GB RAM. I'll try disabling some of the memory-poisoning
+> debugging that may
+> be consuming excess amounts of RAM to see if that helps any.
 
-Havem them try something like this:
+The lockup (or extreme slowdown?) happens before the
+serious memory pressure.
 
-diff --git a/drivers/net/wireless/ath/ath9k/pci.c b/drivers/net/wireless/ath/ath9k/pci.c
-index b5b6514..eab555f 100644
---- a/drivers/net/wireless/ath/ath9k/pci.c
-+++ b/drivers/net/wireless/ath/ath9k/pci.c
-@@ -26,6 +26,7 @@ static DEFINE_PCI_DEVICE_TABLE(ath_pci_id_table) = {
- 	{ PCI_VDEVICE(ATHEROS, 0x002A) }, /* PCI-E */
- 	{ PCI_VDEVICE(ATHEROS, 0x002B) }, /* PCI-E */
- 	{ PCI_VDEVICE(ATHEROS, 0x002C) }, /* PCI-E 802.11n bonded out */
-+	{ PCI_VDEVICE(AZWAVE,  0x1112) }, /* PCI-E 802.11n bonded out */
- 	{ PCI_VDEVICE(ATHEROS, 0x002D) }, /* PCI   */
- 	{ PCI_VDEVICE(ATHEROS, 0x002E) }, /* PCI-E */
- 	{ PCI_VDEVICE(ATHEROS, 0x0030) }, /* PCI-E  AR9300 */
+One thing I noticed is that at one point near (at?) the beginning
+of the slowdown, it took 36-seconds to complete the
+flush_work() call in ieee80211_do_stop in iface.c
+
+ From some printk's I added:
+
+Nov 11 14:58:13 localhost kernel: do_stop: sta14 flushing work: e51298b4
+Nov 11 14:58:49 localhost kernel: do_stop: sta14 flushed.
+
+It is holding RTNL for this entire time, which of course stops
+a large number of other useful processes from making
+progress.
+
+Is there any good reason for the flush to take so long?
+
+Thanks,
+Ben
+
+
+-- 
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
+
