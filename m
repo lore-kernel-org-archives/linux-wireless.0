@@ -1,72 +1,166 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f46.google.com ([209.85.215.46]:44208 "EHLO
-	mail-ew0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754420Ab0KFOtn (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 6 Nov 2010 10:49:43 -0400
-Received: by mail-ew0-f46.google.com with SMTP id 7so2253925ewy.19
-        for <linux-wireless@vger.kernel.org>; Sat, 06 Nov 2010 07:49:43 -0700 (PDT)
-From: Ivo van Doorn <ivdoorn@gmail.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Subject: [PATCH 06/18] rt2x00: checkpatch.pl error fixes for rt2800pci.h
-Date: Sat, 6 Nov 2010 15:45:22 +0100
+Received: from smtp.nokia.com ([147.243.1.47]:34606 "EHLO mgw-sa01.nokia.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750742Ab0KKGuc (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 11 Nov 2010 01:50:32 -0500
+From: juuso.oikarinen@nokia.com
+To: linville@tuxdriver.com
 Cc: linux-wireless@vger.kernel.org
-References: <201011061544.00876.IvDoorn@gmail.com> <201011061544.52879.IvDoorn@gmail.com> <201011061545.07105.IvDoorn@gmail.com>
-In-Reply-To: <201011061545.07105.IvDoorn@gmail.com>
-MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Message-Id: <201011061545.23058.IvDoorn@gmail.com>
+Subject: [PATCHv3] mac80211: Add function to get probe request template for current AP
+Date: Thu, 11 Nov 2010 08:50:18 +0200
+Message-Id: <1289458218-5218-1-git-send-email-juuso.oikarinen@nokia.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Mark Einon <mark.einon@gmail.com>
+From: Juuso Oikarinen <juuso.oikarinen@nokia.com>
 
-rt2800pci.h:41: ERROR: Macros with complex values should be enclosed in parenthesis
-rt2800pci.h:42: ERROR: Macros with complex values should be enclosed in parenthesis
-rt2800pci.h:43: ERROR: Macros with complex values should be enclosed in parenthesis
-rt2800pci.h:44: ERROR: Macros with complex values should be enclosed in parenthesis
-rt2800pci.h:55: ERROR: space prohibited after that open parenthesis '('
-rt2800pci.h:55: ERROR: space prohibited before that close parenthesis ')'
-rt2800pci.h:56: ERROR: space prohibited after that open parenthesis '('
-rt2800pci.h:56: ERROR: space prohibited before that close parenthesis ')'
+Chipsets with hardware based connection monitoring need to autonomically
+send directed probe-request frames to the AP (in the event of beacon loss,
+for example.)
 
-Signed-off-by: Mark Einon <mark.einon@gmail.com>
-Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
+For the hardware to be able to do this, it requires a template for the frame
+to transmit to the AP, filled in with the BSSID and SSID of the AP, but also
+the supported rate IE's.
+
+This patch adds a function to mac80211, which allows the hardware driver to
+fetch this template after association, so it can be configured to the hardware.
+
+Signed-off-by: Juuso Oikarinen <juuso.oikarinen@nokia.com>
 ---
- drivers/net/wireless/rt2x00/rt2800pci.h |   12 ++++++------
- 1 files changed, 6 insertions(+), 6 deletions(-)
+v2: Add more documentation to the ieee80211_ap_probereq_get function
+v3: Added some honesty to the documentation of ieee80211_ap_probereq_get
 
-diff --git a/drivers/net/wireless/rt2x00/rt2800pci.h b/drivers/net/wireless/rt2x00/rt2800pci.h
-index 5a8dda9..70e050d 100644
---- a/drivers/net/wireless/rt2x00/rt2800pci.h
-+++ b/drivers/net/wireless/rt2x00/rt2800pci.h
-@@ -38,10 +38,10 @@
-  * Queue register offset macros
-  */
- #define TX_QUEUE_REG_OFFSET		0x10
--#define TX_BASE_PTR(__x)		TX_BASE_PTR0 + ((__x) * TX_QUEUE_REG_OFFSET)
--#define TX_MAX_CNT(__x)			TX_MAX_CNT0 + ((__x) * TX_QUEUE_REG_OFFSET)
--#define TX_CTX_IDX(__x)			TX_CTX_IDX0 + ((__x) * TX_QUEUE_REG_OFFSET)
--#define TX_DTX_IDX(__x)			TX_DTX_IDX0 + ((__x) * TX_QUEUE_REG_OFFSET)
-+#define TX_BASE_PTR(__x)		(TX_BASE_PTR0 + ((__x) * TX_QUEUE_REG_OFFSET))
-+#define TX_MAX_CNT(__x)			(TX_MAX_CNT0 + ((__x) * TX_QUEUE_REG_OFFSET))
-+#define TX_CTX_IDX(__x)			(TX_CTX_IDX0 + ((__x) * TX_QUEUE_REG_OFFSET))
-+#define TX_DTX_IDX(__x)			(TX_DTX_IDX0 + ((__x) * TX_QUEUE_REG_OFFSET))
+ include/net/mac80211.h     |   15 +++++++++++++++
+ net/mac80211/ieee80211_i.h |    4 ++++
+ net/mac80211/mlme.c        |   24 ++++++++++++++++++++++++
+ net/mac80211/util.c        |   23 ++++++++++++++++++-----
+ 4 files changed, 61 insertions(+), 5 deletions(-)
+
+diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+index 9fdf982..773694b 100644
+--- a/include/net/mac80211.h
++++ b/include/net/mac80211.h
+@@ -2501,6 +2501,21 @@ void ieee80211_sta_block_awake(struct ieee80211_hw *hw,
+ 			       struct ieee80211_sta *pubsta, bool block);
  
- /*
-  * 8051 firmware image.
-@@ -52,8 +52,8 @@
- /*
-  * DMA descriptor defines.
-  */
--#define TXD_DESC_SIZE			( 4 * sizeof(__le32) )
--#define RXD_DESC_SIZE			( 4 * sizeof(__le32) )
-+#define TXD_DESC_SIZE			(4 * sizeof(__le32))
-+#define RXD_DESC_SIZE			(4 * sizeof(__le32))
+ /**
++ * ieee80211_ap_probereq_get - retrieve a Probe Request template
++ * @hw: pointer obtained from ieee80211_alloc_hw().
++ * @vif: &struct ieee80211_vif pointer from the add_interface callback.
++ *
++ * Creates a Probe Request template which can, for example, be uploaded to
++ * hardware. The template is filled with bssid, ssid and supported rate
++ * information. This function must only be called from within the
++ * .bss_info_changed callback function and only in managed mode. The function
++ * is only useful when the interface is associated, otherwise it will return
++ * NULL.
++ */
++struct sk_buff *ieee80211_ap_probereq_get(struct ieee80211_hw *hw,
++					  struct ieee80211_vif *vif);
++
++/**
+  * ieee80211_beacon_loss - inform hardware does not receive beacons
+  *
+  * @vif: &struct ieee80211_vif pointer from the add_interface callback.
+diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+index b80c386..59a1d38 100644
+--- a/net/mac80211/ieee80211_i.h
++++ b/net/mac80211/ieee80211_i.h
+@@ -1287,6 +1287,10 @@ int ieee80211_build_preq_ies(struct ieee80211_local *local, u8 *buffer,
+ 			     const u8 *ie, size_t ie_len,
+ 			     enum ieee80211_band band, u32 rate_mask,
+ 			     u8 channel);
++struct sk_buff *ieee80211_build_probe_req(struct ieee80211_sub_if_data *sdata,
++					  u8 *dst,
++					  const u8 *ssid, size_t ssid_len,
++					  const u8 *ie, size_t ie_len);
+ void ieee80211_send_probe_req(struct ieee80211_sub_if_data *sdata, u8 *dst,
+ 			      const u8 *ssid, size_t ssid_len,
+ 			      const u8 *ie, size_t ie_len);
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+index a3a9421..dfc4a31 100644
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -1108,6 +1108,30 @@ static void ieee80211_mgd_probe_ap(struct ieee80211_sub_if_data *sdata,
+ 	mutex_unlock(&ifmgd->mtx);
+ }
  
- /*
-  * TX descriptor format for TX, PRIO and Beacon Ring.
++struct sk_buff *ieee80211_ap_probereq_get(struct ieee80211_hw *hw,
++					  struct ieee80211_vif *vif)
++{
++	struct ieee80211_sub_if_data *sdata = vif_to_sdata(vif);
++	struct ieee80211_if_managed *ifmgd = &sdata->u.mgd;
++	struct sk_buff *skb;
++	const u8 *ssid;
++
++	if (WARN_ON(sdata->vif.type != NL80211_IFTYPE_STATION))
++		return NULL;
++
++	ASSERT_MGD_MTX(ifmgd);
++
++	if (!ifmgd->associated)
++		return NULL;
++
++	ssid = ieee80211_bss_get_ie(ifmgd->associated, WLAN_EID_SSID);
++	skb = ieee80211_build_probe_req(sdata, ifmgd->associated->bssid,
++					ssid + 2, ssid[1], NULL, 0);
++
++	return skb;
++}
++EXPORT_SYMBOL(ieee80211_ap_probereq_get);
++
+ static void __ieee80211_connection_loss(struct ieee80211_sub_if_data *sdata)
+ {
+ 	struct ieee80211_if_managed *ifmgd = &sdata->u.mgd;
+diff --git a/net/mac80211/util.c b/net/mac80211/util.c
+index 0b6fc92..885713d 100644
+--- a/net/mac80211/util.c
++++ b/net/mac80211/util.c
+@@ -1011,9 +1011,10 @@ int ieee80211_build_preq_ies(struct ieee80211_local *local, u8 *buffer,
+ 	return pos - buffer;
+ }
+ 
+-void ieee80211_send_probe_req(struct ieee80211_sub_if_data *sdata, u8 *dst,
+-			      const u8 *ssid, size_t ssid_len,
+-			      const u8 *ie, size_t ie_len)
++struct sk_buff *ieee80211_build_probe_req(struct ieee80211_sub_if_data *sdata,
++					  u8 *dst,
++					  const u8 *ssid, size_t ssid_len,
++					  const u8 *ie, size_t ie_len)
+ {
+ 	struct ieee80211_local *local = sdata->local;
+ 	struct sk_buff *skb;
+@@ -1027,7 +1028,7 @@ void ieee80211_send_probe_req(struct ieee80211_sub_if_data *sdata, u8 *dst,
+ 	if (!buf) {
+ 		printk(KERN_DEBUG "%s: failed to allocate temporary IE "
+ 		       "buffer\n", sdata->name);
+-		return;
++		return NULL;
+ 	}
+ 
+ 	chan = ieee80211_frequency_to_channel(
+@@ -1050,8 +1051,20 @@ void ieee80211_send_probe_req(struct ieee80211_sub_if_data *sdata, u8 *dst,
+ 	}
+ 
+ 	IEEE80211_SKB_CB(skb)->flags |= IEEE80211_TX_INTFL_DONT_ENCRYPT;
+-	ieee80211_tx_skb(sdata, skb);
+ 	kfree(buf);
++
++	return skb;
++}
++
++void ieee80211_send_probe_req(struct ieee80211_sub_if_data *sdata, u8 *dst,
++			      const u8 *ssid, size_t ssid_len,
++			      const u8 *ie, size_t ie_len)
++{
++	struct sk_buff *skb;
++
++	skb = ieee80211_build_probe_req(sdata, dst, ssid, ssid_len, ie, ie_len);
++	if (skb)
++		ieee80211_tx_skb(sdata, skb);
+ }
+ 
+ u32 ieee80211_sta_get_rates(struct ieee80211_local *local,
 -- 
-1.7.2.3
+1.7.1
 
