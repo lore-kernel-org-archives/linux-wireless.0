@@ -1,98 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from lo.gmane.org ([80.91.229.12]:58915 "EHLO lo.gmane.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756115Ab0KKNCY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 11 Nov 2010 08:02:24 -0500
-Received: from list by lo.gmane.org with local (Exim 4.69)
-	(envelope-from <glkwg-linux-wireless@m.gmane.org>)
-	id 1PGWnF-0000sW-KW
-	for linux-wireless@vger.kernel.org; Thu, 11 Nov 2010 14:02:21 +0100
-Received: from 85-127-79-157.dynamic.xdsl-line.inode.at ([85.127.79.157])
-        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Thu, 11 Nov 2010 14:02:21 +0100
-Received: from tim by 85-127-79-157.dynamic.xdsl-line.inode.at with local (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Thu, 11 Nov 2010 14:02:21 +0100
-To: linux-wireless@vger.kernel.org
-From: Tim Blechmann <tim@klingt.org>
-Subject: rt61pci issue
-Date: Thu, 11 Nov 2010 14:02:10 +0100
-Message-ID: <ibgpgg$a5m$1@dough.gmane.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="ISO-8859-1"
+Received: from mail-iw0-f174.google.com ([209.85.214.174]:63903 "EHLO
+	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756023Ab0KKTWa convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 11 Nov 2010 14:22:30 -0500
+Received: by iwn10 with SMTP id 10so2510491iwn.19
+        for <linux-wireless@vger.kernel.org>; Thu, 11 Nov 2010 11:22:30 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <AANLkTikjg+jY6XYhJjRPydwveW0xr+8tLv-Oypsks4ay@mail.gmail.com>
+References: <AANLkTikjg+jY6XYhJjRPydwveW0xr+8tLv-Oypsks4ay@mail.gmail.com>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Thu, 11 Nov 2010 11:22:09 -0800
+Message-ID: <AANLkTimVEm7=c-fof_niToJqy1t+C5fk_JYH_=x1+p5r@mail.gmail.com>
+Subject: Re: ath9k max_power question
+To: Mark Mentovai <mark@moxienet.com>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-hi all,
+On Thu, Nov 11, 2010 at 11:15 AM, Mark Mentovai <mark@moxienet.com> wrote:
+> In drivers/net/wireless/ath/ath9k/init.c, both CHAN2G and CHAN5G set
+> .max_power to 20, represented in dBm. I’m wondering how this number
+> was chosen. Is it simply a safe generic value? I’m dealing with a
+> device on which the vendor’s madwifi-based binary driver would show
+> 23dBm for 2.4GHz and 18dBm for 5GHz (although only when I asked it for
+> 26dBm and 24dBm respectively, so I’m not sure which set of numbers to
+> believe.)
+>
+> I noticed that in ath9k, if these .max_power limits are raised, the
+> driver is happy to set a somewhat higher transmit power. In this case,
+> it will max out at 25dBm for 2.4GHz and 21dBm for 5GHz. These are
+> still below the relevant regulatory limits. These values seem to be
+> computed by routines in eeprom_*.c, so I’m wondering if they’re based
+> on the card’s own data and safe to use without fear of burning the
+> radios.
 
-i am using tn rt61pci driver and besides having not the best wireless 
-performance, it network transfer sometimes disturbs the audio playback on my 
-machine. sometimes it works fine, but the machine can get into a state, where i 
-will have to reboot the machine to get back to normal. i suppose, this is 
-because of the rt61pci driver.
+The values are just some safe value to use as defaults but will
+quickly be replaced by the max regulatory allowed and then upon
+further inspection also capped to the lower value of the regulatory
+limit, the max allowed device limit (where things start becoming
+unreliable), and the CTL indexed limit which is calibrated
+specifically for the card you use, so this will vary. You can read
+more about it here:
 
-in general if found, that the specific irq thread produces a lot of interrupts 
-and does quite a lot of work. the specific irq thread takes quite some cpu time 
-(currently i have an uptime of 5 hours and the irq thread used 4 minutes of cpu 
-time) and about 200 interupts are issued per second:
+http://wireless.kernel.org/en/users/Drivers/ath
 
-cat /proc/interrupts |grep 16\: && sleep 1 && cat /proc/interrupts | grep 16\:
-  16:          0    5140126          0          0   IO-APIC-fasteoi   
-uhci_hcd:usb3, ahci, 0000:08:00.0
-  16:          0    5140357          0          0   IO-APIC-fasteoi   
-uhci_hcd:usb3, ahci, 0000:08:00.0
-
-using perf, i get the following data about the spent cpu time:
-# Events: 106  cycles
-#
-# Overhead          Command      Shared Object  Symbol
-# ........  ...............  .................  ......
-#
-    61.17%  irq/16-0000:08:  [rt61pci]          [k] rt61pci_interrupt_thread
-    12.77%  irq/16-0000:08:  [rt61pci]          [k] rt61pci_set_device_state
-     3.72%  irq/16-0000:08:  [kernel.kallsyms]  [k] __ticket_spin_lock
-     3.17%  irq/16-0000:08:  [kernel.kallsyms]  [k] local_bh_disable
-     2.14%  irq/16-0000:08:  [kernel.kallsyms]  [k] schedule
-     1.81%  irq/16-0000:08:  [rt61pci]          [k] rt61pci_kick_tx_queue
-     1.50%  irq/16-0000:08:  [mac80211]         [k] prepare_for_handlers
-     1.38%  irq/16-0000:08:  [rt2x00pci]        [k] rt2x00pci_rxdone
-     1.03%  irq/16-0000:08:  [kernel.kallsyms]  [k] __ticket_spin_unlock
-     0.87%  irq/16-0000:08:  [kernel.kallsyms]  [k] __inet_lookup_established
-     0.87%  irq/16-0000:08:  [kernel.kallsyms]  [k] tcp_event_data_recv
-     0.82%  irq/16-0000:08:  [kernel.kallsyms]  [k] irq_thread
-     0.66%  irq/16-0000:08:  [kernel.kallsyms]  [k] update_curr_rt
-     0.64%  irq/16-0000:08:  [rt2x00lib]        [k] rt2x00lib_rxdone
-     0.64%  irq/16-0000:08:  [kernel.kallsyms]  [k] mod_timer
-     0.51%  irq/16-0000:08:  [kernel.kallsyms]  [k] pick_next_task_rt
-     0.51%  irq/16-0000:08:  [kernel.kallsyms]  [k] cpupri_set
-     0.51%  irq/16-0000:08:  [kernel.kallsyms]  [k] _raw_spin_unlock_irqrestore
-     0.50%  irq/16-0000:08:  [kernel.kallsyms]  [k] hrtick_update
-     0.49%  irq/16-0000:08:  [kernel.kallsyms]  [k] __phys_addr
-     0.49%  irq/16-0000:08:  [kernel.kallsyms]  [k] update_shares
-     0.49%  irq/16-0000:08:  [kernel.kallsyms]  [k] dequeue_task
-     0.49%  irq/16-0000:08:  [kernel.kallsyms]  [k] dequeue_rt_stack
-     0.49%  irq/16-0000:08:  [kernel.kallsyms]  [k] skb_release_data
-     0.44%  irq/16-0000:08:  [kernel.kallsyms]  [k] load_balance
-     0.40%  irq/16-0000:08:  [kernel.kallsyms]  [k] memcpy
-     0.36%  irq/16-0000:08:  [kernel.kallsyms]  [k] map_single
-     0.36%  irq/16-0000:08:  [kernel.kallsyms]  [k] ip_output
-     0.36%  irq/16-0000:08:  [kernel.kallsyms]  [k] tcp_ack
-     0.22%  irq/16-0000:08:  [mac80211]         [k] minstrel_ht_tx_status
-     0.22%  irq/16-0000:08:  [kernel.kallsyms]  [k] tcp_v4_rcv
-     0.00%  irq/16-0000:08:  [kernel.kallsyms]  [k] native_write_msr_safe
-
-not sure, if this is really helpful, but this amount of interrupts doesn't look 
-good to me. if i can be on any further help to track down this issue, i would be 
-happy to assist.
-
-thanks, tim
-
--- 
-tim@klingt.org
-http://tim.klingt.org
-
-Life is really simple, but we insist on making it complicated.
-  Confucius
-
-
+  Luis
