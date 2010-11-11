@@ -1,78 +1,122 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iw0-f174.google.com ([209.85.214.174]:46925 "EHLO
-	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754297Ab0KUVuv convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 21 Nov 2010 16:50:51 -0500
+Received: from mail.neratec.ch ([80.75.119.105]:56652 "EHLO mail.neratec.ch"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756215Ab0KKO6J (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 11 Nov 2010 09:58:09 -0500
+Date: Thu, 11 Nov 2010 15:58:06 +0100 (CET)
+From: Wojciech Dubowik <dubowoj@neratec.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org
+Message-ID: <11504658.1091289487485202.JavaMail.wlan@CHBU500181>
+In-Reply-To: <19040211.731289486681533.JavaMail.wlan@CHBU500181>
+Subject: [PATCH 5/9] ath5k: AHB port. Assume that pci device might not be
+ initialized.
 MIME-Version: 1.0
-In-Reply-To: <AANLkTinEm1mLAtPZdEp2sHRfKPeV6qYP8f9Dbbr92_JD@mail.gmail.com>
-References: <AANLkTim4jVaZxYp8nSgJyy28iwxcxbPeNUzxTfoHAX4S@mail.gmail.com>
- <F46C52ED-8DB8-4347-957D-B9D84406D53F@mit.edu> <AANLkTinyafwe9MyXhSSe5vxEKnTUeLV0AZDWY_uXsu8f@mail.gmail.com>
- <20101121130236.GE23423@thunk.org> <20101121172906.GD3703@kroah.com>
- <AANLkTik6MQjYTCQ4wtyRpOGb94uyUTA+juvX-8UsP95J@mail.gmail.com>
- <20101121203124.1ba8212e@lxorguk.ukuu.org.uk> <20101121214407.GH23423@thunk.org>
- <AANLkTinEm1mLAtPZdEp2sHRfKPeV6qYP8f9Dbbr92_JD@mail.gmail.com>
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Date: Sun, 21 Nov 2010 13:50:30 -0800
-Message-ID: <AANLkTikVdm5bnXhGeg9rYsacWJsf_2s6A+b3iKJQeisD@mail.gmail.com>
-Subject: Re: Challenges with doing hardware bring up with Linux first
-To: =?UTF-8?Q?G=C3=A1bor_Stefanik?= <netrolller.3d@gmail.com>
-Cc: "Ted Ts'o" <tytso@mit.edu>, Alan Cox <alan@lxorguk.ukuu.org.uk>,
-	Greg KH <greg@kroah.com>, linux-kernel@vger.kernel.org,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	David Miller <davem@davemloft.net>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Stephen Hemminger <shemminger@vyatta.com>,
-	"Perez-Gonzalez, Inaky" <inaky.perez-gonzalez@intel.com>,
-	Charles Marker <Charles.Marker@atheros.com>,
-	Jouni Malinen <Jouni.Malinen@atheros.com>,
-	Kevin Hayes <kevin@atheros.com>,
-	Zhifeng Cai <zhifeng.cai@atheros.com>,
-	Don Breslin <Don.Breslin@atheros.com>,
-	Doug Dahlby <Doug.Dahlby@atheros.com>,
-	Julia Lawall <julia@diku.dk>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2010/11/21 Gábor Stefanik <netrolller.3d@gmail.com>:
-> On Sun, Nov 21, 2010 at 10:44 PM, Ted Ts'o <tytso@mit.edu> wrote:
->> On Sun, Nov 21, 2010 at 08:31:24PM +0000, Alan Cox wrote:
->>>
->>> Which we know in practice they won't. They'll sit on fixes (often
->>> security fixes) and tweak and add private copies of features. In turn the
->>> Linux one could then only keep up by adding features itself - which would
->>> have to be GPL to stop the same abuse continuing.
->>>
->>> It's a nice idea but the corporations exist to make money and adding
->>> proprietary custom stack add-ons is clearly a good move on their part to
->>> do that.
->>
->> Hence my recommendation that if someone is going to do the work to
->> create a 802.11 layer that has shims that work on multiple operating
->> systems, it be GPL with explicit exceptions to allow said layer to
->> work on legacy operating systems like QNX, et. al.  That way it forces
->> the hardware specific code to be released under the GPL --- if they
->> want to take advantage of the "write onces, work on multiple operating
->> systems" feature.
->>
->> If someone is going to go through all of this work to make it possible
->> --- particularly if it's at a company such as Luis's employer, or any
->> other wifi chipset provider --- why should it allow their competitors
->> to do closed source drivers?  Better to structure the driver licensing
->> such that (a) there is benefit for companies to make a Linux driver by
->> using this common stack, and (b) but in exchange, it forces them to
->> make a driver which is guaranteed to be usable by Linux by virtual of
->> the fact that (1) the native interface is Linux's wireless stack, and
->> (2) the license forces them to GPL their driver.
->
-> By forcing the driver to be GPL, you automatically exclude Windows
-> from the list of platforms supported by such a cross-OS driver, as the
-> Windows NDIS headers are AFAIK under a GPL-incompatible license, so no
-> GPL driver can be written for Windows.
+In preparation for ahb we have to assume that only generic
+device is initialized and pci device might be not.
 
-I've actually have been told GPL drivers for windows are possible with
-some hard work. I have yet to investigate further on what that "hard
-work" means. But yes, that is a good example.
+Signed-off-by: Wojciech Dubowik <Wojciech.Dubowik@neratec.com>
+---
+ drivers/net/wireless/ath/ath5k/attach.c |    5 ++---
+ drivers/net/wireless/ath/ath5k/led.c    |    5 ++++-
+ drivers/net/wireless/ath/ath5k/reset.c  |    4 ++--
+ drivers/net/wireless/ath/ath5k/sysfs.c  |    4 ++--
+ 4 files changed, 10 insertions(+), 8 deletions(-)
 
-  Luis
+diff --git a/drivers/net/wireless/ath/ath5k/attach.c b/drivers/net/wireless/ath/ath5k/attach.c
+index fbe8aca..c5b2eb7 100644
+--- a/drivers/net/wireless/ath/ath5k/attach.c
++++ b/drivers/net/wireless/ath/ath5k/attach.c
+@@ -273,7 +273,7 @@ int ath5k_hw_attach(struct ath5k_softc *sc)
+ 	/*
+ 	 * Write PCI-E power save settings
+ 	 */
+-	if ((ah->ah_version == AR5K_AR5212) && (pdev->is_pcie)) {
++	if ((ah->ah_version == AR5K_AR5212) && pdev && (pdev->is_pcie)) {
+ 		ath5k_hw_reg_write(ah, 0x9248fc00, AR5K_PCIE_SERDES);
+ 		ath5k_hw_reg_write(ah, 0x24924924, AR5K_PCIE_SERDES);
+ 
+@@ -305,8 +305,7 @@ int ath5k_hw_attach(struct ath5k_softc *sc)
+ 	/* Get misc capabilities */
+ 	ret = ath5k_hw_set_capabilities(ah);
+ 	if (ret) {
+-		ATH5K_ERR(sc, "unable to get device capabilities: 0x%04x\n",
+-			sc->pdev->device);
++		ATH5K_ERR(sc, "unable to get device capabilities\n");
+ 		goto err;
+ 	}
+ 
+diff --git a/drivers/net/wireless/ath/ath5k/led.c b/drivers/net/wireless/ath/ath5k/led.c
+index 67aa52e..1f5a991 100644
+--- a/drivers/net/wireless/ath/ath5k/led.c
++++ b/drivers/net/wireless/ath/ath5k/led.c
+@@ -133,7 +133,7 @@ ath5k_register_led(struct ath5k_softc *sc, struct ath5k_led *led,
+ 	led->led_dev.default_trigger = trigger;
+ 	led->led_dev.brightness_set = ath5k_led_brightness_set;
+ 
+-	err = led_classdev_register(&sc->pdev->dev, &led->led_dev);
++	err = led_classdev_register(sc->dev, &led->led_dev);
+ 	if (err) {
+ 		ATH5K_WARN(sc, "could not register LED %s\n", name);
+ 		led->sc = NULL;
+@@ -165,6 +165,9 @@ int ath5k_init_leds(struct ath5k_softc *sc)
+ 	char name[ATH5K_LED_MAX_NAME_LEN + 1];
+ 	const struct pci_device_id *match;
+ 
++	if (!sc->pdev)
++		return 0;
++
+ 	match = pci_match_id(&ath5k_led_devices[0], pdev);
+ 	if (match) {
+ 		__set_bit(ATH_STAT_LEDSOFT, sc->status);
+diff --git a/drivers/net/wireless/ath/ath5k/reset.c b/drivers/net/wireless/ath/ath5k/reset.c
+index 5b179d0..198a146 100644
+--- a/drivers/net/wireless/ath/ath5k/reset.c
++++ b/drivers/net/wireless/ath/ath5k/reset.c
+@@ -349,7 +349,7 @@ int ath5k_hw_on_hold(struct ath5k_hw *ah)
+ 	 * we ingore that flag for PCI-E cards. On PCI cards
+ 	 * this flag gets cleared after 64 PCI clocks.
+ 	 */
+-	bus_flags = (pdev->is_pcie) ? 0 : AR5K_RESET_CTL_PCI;
++	bus_flags = (pdev && pdev->is_pcie) ? 0 : AR5K_RESET_CTL_PCI;
+ 
+ 	if (ah->ah_version == AR5K_AR5210) {
+ 		ret = ath5k_hw_nic_reset(ah, AR5K_RESET_CTL_PCU |
+@@ -405,7 +405,7 @@ int ath5k_hw_nic_wakeup(struct ath5k_hw *ah, int flags, bool initial)
+ 	 * we ingore that flag for PCI-E cards. On PCI cards
+ 	 * this flag gets cleared after 64 PCI clocks.
+ 	 */
+-	bus_flags = (pdev->is_pcie) ? 0 : AR5K_RESET_CTL_PCI;
++	bus_flags = (pdev && pdev->is_pcie) ? 0 : AR5K_RESET_CTL_PCI;
+ 
+ 	if (ah->ah_version == AR5K_AR5210) {
+ 		ret = ath5k_hw_nic_reset(ah, AR5K_RESET_CTL_PCU |
+diff --git a/drivers/net/wireless/ath/ath5k/sysfs.c b/drivers/net/wireless/ath/ath5k/sysfs.c
+index 90757de..929c68c 100644
+--- a/drivers/net/wireless/ath/ath5k/sysfs.c
++++ b/drivers/net/wireless/ath/ath5k/sysfs.c
+@@ -95,7 +95,7 @@ static struct attribute_group ath5k_attribute_group_ani = {
+ int
+ ath5k_sysfs_register(struct ath5k_softc *sc)
+ {
+-	struct device *dev = &sc->pdev->dev;
++	struct device *dev = sc->dev;
+ 	int err;
+ 
+ 	err = sysfs_create_group(&dev->kobj, &ath5k_attribute_group_ani);
+@@ -110,7 +110,7 @@ ath5k_sysfs_register(struct ath5k_softc *sc)
+ void
+ ath5k_sysfs_unregister(struct ath5k_softc *sc)
+ {
+-	struct device *dev = &sc->pdev->dev;
++	struct device *dev = sc->dev;
+ 
+ 	sysfs_remove_group(&dev->kobj, &ath5k_attribute_group_ani);
+ }
+-- 
+1.7.1
+
