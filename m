@@ -1,78 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f46.google.com ([209.85.161.46]:36762 "EHLO
-	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932211Ab0KSXR4 convert rfc822-to-8bit (ORCPT
+Received: from mail-gx0-f174.google.com ([209.85.161.174]:63291 "EHLO
+	mail-gx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756143Ab0KKO57 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 19 Nov 2010 18:17:56 -0500
+	Thu, 11 Nov 2010 09:57:59 -0500
+Received: by gxk23 with SMTP id 23so1185266gxk.19
+        for <linux-wireless@vger.kernel.org>; Thu, 11 Nov 2010 06:57:59 -0800 (PST)
+Message-ID: <4CDC049C.90005@lwfinger.net>
+Date: Thu, 11 Nov 2010 08:58:36 -0600
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-In-Reply-To: <4CE70543.2000206@teksavvy.com>
-References: <tTUH_XeInOH.A.dMF.c3b5MB@chimera>
-	<4CE5C919.7090504@teksavvy.com>
-	<AANLkTi=8G7pNA7QTxaXDWKrWrCERPfmKU+nLJWCA=JUH@mail.gmail.com>
-	<4CE7006E.4040102@teksavvy.com>
-	<AANLkTim9aXi1_EJyh2f-+X4HnNWJ3uk2z=P6m1hQso5a@mail.gmail.com>
-	<4CE70543.2000206@teksavvy.com>
-Date: Fri, 19 Nov 2010 18:17:54 -0500
-Message-ID: <AANLkTi==0+pNswCwfgo5v5tKA+Qkq7UfRdH4ftEqx7rf@mail.gmail.com>
-Subject: Re: 2.6.37-rc2-git4: Reported regressions 2.6.35 -> 2.6.36
-From: Alex Deucher <alexdeucher@gmail.com>
-To: Mark Lord <kernel@teksavvy.com>
-Cc: "Rafael J. Wysocki" <rjw@sisk.pl>,
-	Linux SCSI List <linux-scsi@vger.kernel.org>,
-	Linux ACPI <linux-acpi@vger.kernel.org>,
-	Network Development <netdev@vger.kernel.org>,
-	Linux Wireless List <linux-wireless@vger.kernel.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	DRI <dri-devel@lists.freedesktop.org>,
-	Florian Mickler <florian@mickler.org>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Kernel Testers List <kernel-testers@vger.kernel.org>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	Linux PM List <linux-pm@lists.linux-foundation.org>,
-	Maciej Rutecki <maciej.rutecki@gmail.com>
+To: "miloofr@gmail.com" <miloofr@gmail.com>
+CC: wireless <linux-wireless@vger.kernel.org>
+Subject: Re: Question about Edimax 7811Un
+References: <AANLkTi=+0BOUaTs73jRMnJ=9qyNkqnBvMuKVTG4od9_+@mail.gmail.com>	<0022152d6729673f6a0494b1f2e6@google.com>	<AANLkTi=PYCwTtNmt9Baw=mYPqzyUQsiBNDOBXGic++5_@mail.gmail.com>	<4CDAB99D.7030100@lwfinger.net> <AANLkTik9=-8bXNOvrY-JnFuVJr1wZG24o8m8JzJVD8tQ@mail.gmail.com>
+In-Reply-To: <AANLkTik9=-8bXNOvrY-JnFuVJr1wZG24o8m8JzJVD8tQ@mail.gmail.com>
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Nov 19, 2010 at 6:16 PM, Mark Lord <kernel@teksavvy.com> wrote:
-> On 10-11-19 05:58 PM, Alex Deucher wrote:
->>
->> On Fri, Nov 19, 2010 at 5:55 PM, Mark Lord<kernel@teksavvy.com>  wrote:
->>
->>> It now comes back at resume time.
->>
->> So that patch helped?
->
-> I think so.  It didn't used to resume from suspend with 2.6.36, and now it
-> does.
->
->>> But suffers long delays (also sometimes with 2.6.35) doing this:
->>>
->>> [drm:atom_op_jump] *ERROR* atombios stuck in loop for more than 5secs
->>> aborting
->>> [drm:atom_execute_table_locked] *ERROR* atombios stuck executing E576
->>> (len
->>> 105, WS 12, PS 8) @ 0xE5C4
->>> [drm:atom_op_jump] *ERROR* atombios stuck in loop for more than 5secs
->>> aborting
->>> [drm:atom_execute_table_locked] *ERROR* atombios stuck executing ECD2
->>> (len
->>> 86, WS 4, PS 0) @ 0xED05
->>> [drm:atom_op_jump] *ERROR* atombios stuck in loop for more than 5secs
->>> aborting
->>> [drm:atom_execute_table_locked] *ERROR* atombios stuck executing E576
->>> (len
->>> 105, WS 12, PS 8) @ 0xE5C4
->>> PM: resume of devices complete after 15718.253 msecs
->>>
->>
->> It's be nice if you could bisect to track down when those started.
->
-> It'd be even nicer if they hadn't started.  :)
->
-> What kernel release first had that atom/ops table in it?  I'll try that.
->
+On 11/11/2010 02:55 AM, miloofr@gmail.com wrote:
+> The device as shown in lsusb is:
+> 0x7392:0x7811
+> 
+> The vendor id seems to be different as those recognized by the  r8712u
+> driver. How could I try the driver to confirm that the 7811 device
+> works with this driver?
 
-2.6.31 or 32 was when radeon kms got merged IIRC.
+Please use the "Reply-to-all" when you respond to an email. I want to keep the
+wireless mailing list informed about what we are doing.
 
-Alex
+Driver r8712u does not appear to work with your device. I could not get the
+Linux driver source for the 7811 to download from the Edimax site, but I found
+it on the Realtek site as RTL8192CU_v2.0.1126.zip. There is a tarball inside
+that zip file with the Linux driver. It does not compile under 2.6.37-rc1. From
+the warnings, I can see that it needs work to get it to run on a 64-bit system,
+but it is likely to work in the 32-bit version.
+
+Realtek is sending me some sample devices. If one of these nano USB devices is
+included, I will convert the driver to 64 bits and send the modifications back
+to Realtek. If/when that happens, I'll let you know.
+
+Larry
