@@ -1,79 +1,88 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.neratec.ch ([80.75.119.105]:46334 "EHLO mail.neratec.ch"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S933951Ab0KPJMo (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 16 Nov 2010 04:12:44 -0500
-Date: Tue, 16 Nov 2010 10:12:41 +0100 (CET)
-From: Wojciech Dubowik <dubowoj@neratec.com>
-To: Wojciech Dubowik <Wojciech.Dubowik@neratec.com>
-Cc: linux-wireless@vger.kernel.org, nbd@openwrt.org,
-	lrodriguez@atheros.com, ath5k-devel@lists.ath5k.org,
-	linville@tuxdriver.com
-Message-ID: <25599345.31289898761015.JavaMail.wlan@CHBU500181>
-In-Reply-To: <1289897272-8997-1-git-send-email-Wojciech.Dubowik@neratec.com>
-Subject: Re: [PATCH v4 0/9] ath5k: Add AHB support
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Received: from nbd.name ([46.4.11.11]:56853 "EHLO nbd.name"
+	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1752469Ab0KKOHc (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 11 Nov 2010 09:07:32 -0500
+From: Felix Fietkau <nbd@openwrt.org>
+To: linux-wireless@vger.kernel.org
+Cc: linville@tuxdriver.com, johannes@sipsolutions.net
+Subject: [PATCH 1/2] cfg80211: add support for setting the ad-hoc multicast rate
+Date: Thu, 11 Nov 2010 15:07:22 +0100
+Message-Id: <1289484443-96326-1-git-send-email-nbd@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> This series of patches implements AHB bus support for ath5k driver.
-> 
-> General comments for AHB bus support in ath5k:
-> 	* original patches came from Felix Fetikau
-> 	* tried with access point functionality with WPA2 and without
-> encryption
-> 	* tested on AR5312 and AR2313for AHB and AR5414 and AR5212 for PCI
-> 	* compat wireless 2010-11-10 from openwrt was used for testing
-> 	* last two patches have to be applied together because otherwise
-> 		hardware will crash on reset if only number 9 is committed.
-> 		I have kept them separated for better visibility. 
-> 		There are three false positive checkpatch warnings from them.
-> 
-> Wojciech Dubowik (9):
->   ath5k: Use Generic DMA for later support of AHB bus.     From:
-> Felix
->     Fietkau <nbd@openwrt.org>
->   ath5k: Introduce ath5k_init_softc function as in ath9k     From:
->     Felix Fietkau <nbd@openwrt.org>
->   ath5k: Move PCI bus functions to separate file.     From: Felix
->     Fietkau <nbd@openwrt.org>
->   ath5k: Use generic eeprom read from common ath_bus_opts struct.    
->     From: Felix Fietkau <nbd@openwrt.org>
->   ath5k: Check if pci pdev struct is initialized in common functions. 
-> 
->       From: Felix Fietkau <nbd@openwrt.org>
->   ath5k: Add a function to read chipset's MAC revision     From:
-> Felix
->     Fietkau <nbd@openwrt.org>
->   ath5k: Add initial registers values for radio RF2317 chip.    
-> From:
->     Felix Fietkau <nbd@openwrt.org>
->   ath5k: Add AHB bus support.     From: Felix Fietkau
-> <nbd@openwrt.org>
->   ath5k: Fix reset and interrupts for AHB type of devices.     From:
->     Felix Fietkau <nbd@openwrt.org>
-> 
->  drivers/net/wireless/ath/ath5k/Kconfig    |   17 +-
->  drivers/net/wireless/ath/ath5k/Makefile   |    2 +
->  drivers/net/wireless/ath/ath5k/ahb.c      |  219 ++++++++++
->  drivers/net/wireless/ath/ath5k/ath5k.h    |   37 ++-
->  drivers/net/wireless/ath/ath5k/attach.c   |   26 +-
->  drivers/net/wireless/ath/ath5k/base.c     |  626
-> ++++++++++-------------------
->  drivers/net/wireless/ath/ath5k/base.h     |    5 +-
->  drivers/net/wireless/ath/ath5k/eeprom.c   |   40 +--
->  drivers/net/wireless/ath/ath5k/eeprom.h   |    2 +-
->  drivers/net/wireless/ath/ath5k/initvals.c |   23 +
->  drivers/net/wireless/ath/ath5k/led.c      |   11 +-
->  drivers/net/wireless/ath/ath5k/pci.c      |  326 +++++++++++++++
->  drivers/net/wireless/ath/ath5k/reg.h      |   25 ++
->  drivers/net/wireless/ath/ath5k/reset.c    |  116 ++++--
->  drivers/net/wireless/ath/ath5k/sysfs.c    |    4 +-
->  15 files changed, 988 insertions(+), 491 deletions(-)
->  create mode 100644 drivers/net/wireless/ath/ath5k/ahb.c
->  create mode 100644 drivers/net/wireless/ath/ath5k/pci.c
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+---
+ include/linux/nl80211.h |    4 ++++
+ include/net/cfg80211.h  |    2 ++
+ net/wireless/nl80211.c  |    4 ++++
+ 3 files changed, 10 insertions(+), 0 deletions(-)
 
-Obviously my script to send patches didn't work as expected so I will have to send them again.
+diff --git a/include/linux/nl80211.h b/include/linux/nl80211.h
+index fb877b5..9ee61fa 100644
+--- a/include/linux/nl80211.h
++++ b/include/linux/nl80211.h
+@@ -804,6 +804,8 @@ enum nl80211_commands {
+  * @NL80211_ATTR_SUPPORT_IBSS_RSN: The device supports IBSS RSN, which mostly
+  *	means support for per-station GTKs.
+  *
++ * @NL80211_ATTR_MCAST_RATE: Multicast tx rate (in 100 kbps) for IBSS
++ *
+  * @NL80211_ATTR_MAX: highest attribute number currently defined
+  * @__NL80211_ATTR_AFTER_LAST: internal use
+  */
+@@ -973,6 +975,8 @@ enum nl80211_attrs {
+ 
+ 	NL80211_ATTR_SUPPORT_IBSS_RSN,
+ 
++	NL80211_ATTR_MCAST_RATE,
++
+ 	/* add attributes here, update the policy in nl80211.c */
+ 
+ 	__NL80211_ATTR_AFTER_LAST,
+diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+index e5702f5..15cc593 100644
+--- a/include/net/cfg80211.h
++++ b/include/net/cfg80211.h
+@@ -923,6 +923,7 @@ struct cfg80211_disassoc_request {
+  * @privacy: this is a protected network, keys will be configured
+  *	after joining
+  * @basic_rates: bitmap of basic rates to use when creating the IBSS
++ * @mcast_rate: multicast tx rate (in 100 kbps)
+  */
+ struct cfg80211_ibss_params {
+ 	u8 *ssid;
+@@ -934,6 +935,7 @@ struct cfg80211_ibss_params {
+ 	u32 basic_rates;
+ 	bool channel_fixed;
+ 	bool privacy;
++	int mcast_rate;
+ };
+ 
+ /**
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index 4e78e3f..b3da2e0 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -167,6 +167,7 @@ static const struct nla_policy nl80211_policy[NL80211_ATTR_MAX+1] = {
+ 	[NL80211_ATTR_WIPHY_TX_POWER_SETTING] = { .type = NLA_U32 },
+ 	[NL80211_ATTR_WIPHY_TX_POWER_LEVEL] = { .type = NLA_U32 },
+ 	[NL80211_ATTR_FRAME_TYPE] = { .type = NLA_U16 },
++	[NL80211_ATTR_MCAST_RATE] = { .type = NLA_U32 },
+ };
+ 
+ /* policy for the key attributes */
+@@ -3652,6 +3653,9 @@ static int nl80211_join_ibss(struct sk_buff *skb, struct genl_info *info)
+ 				return -EINVAL;
+ 		}
+ 	}
++	if (info->attrs[NL80211_ATTR_MCAST_RATE])
++		ibss.mcast_rate =
++			nla_get_u32(info->attrs[NL80211_ATTR_MCAST_RATE]);
+ 
+ 	if (ibss.privacy && info->attrs[NL80211_ATTR_KEYS]) {
+ 		connkeys = nl80211_parse_connkeys(rdev,
+-- 
+1.7.2.2
 
-Wojtek
