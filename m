@@ -1,35 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from external1.orbit-lab.org ([128.6.192.131]:46652 "HELO
-	external1.orbit-lab.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1752151Ab0KBTCu (ORCPT
+Received: from mail-iw0-f174.google.com ([209.85.214.174]:50774 "EHLO
+	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752186Ab0KKScL (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 2 Nov 2010 15:02:50 -0400
-Received: from repository3.orbit-lab.org (repository3.orbit-lab.org [10.50.0.41])
-	by external1.orbit-lab.org (Postfix) with ESMTP id 224A4418D8
-	for <linux-wireless@vger.kernel.org>; Tue,  2 Nov 2010 14:59:03 -0400 (EDT)
-Subject: Compat-wireless release for 2010-11-02 is baked
-To: <linux-wireless@vger.kernel.org>
-Message-Id: <20101102190249.5CD0340F97@repository3.orbit-lab.org>
-Date: Tue,  2 Nov 2010 15:02:49 -0400 (EDT)
-From: compat@orbit-lab.org (Compat-wireless cronjob account)
+	Thu, 11 Nov 2010 13:32:11 -0500
+Received: by iwn10 with SMTP id 10so2466808iwn.19
+        for <linux-wireless@vger.kernel.org>; Thu, 11 Nov 2010 10:32:10 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <11581781.1031289487462262.JavaMail.wlan@CHBU500181>
+References: <7180198.951289487321198.JavaMail.wlan@CHBU500181> <11581781.1031289487462262.JavaMail.wlan@CHBU500181>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Thu, 11 Nov 2010 10:31:49 -0800
+Message-ID: <AANLkTi=pPi02QskWK3zMzuMBpzOhpD5sJGYTNn8hmRbK@mail.gmail.com>
+Subject: Re: [PATCH 2/9] ath5k: AHB port. Use ath_bus_opts structure.
+To: Wojciech Dubowik <dubowoj@neratec.com>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Thu, Nov 11, 2010 at 6:57 AM, Wojciech Dubowik <dubowoj@neratec.com> wrote:
+> In main ath folder ath_bus_opts is used to specify AHB/PCI/USB specific functions. Use it for ath5k since it's needed for AHB support.
+> PCI initialization has been split to bus specific and common which have been moved to ath5k_attach.
+>
+> Signed-off-by: Wojciech Dubowik <Wojciech.Dubowik@neratec.com>
 
-compat-wireless code metrics
+Your patch commit log entry is way too long. Please trim it to around
+76 characters per line or less. Also I'd prefer to help the reader of
+the code and make it clear that the work you do in ath5k_attach() is
+just to initialize the softc struct so please instead rename the
+routine to ath5k_init_softc() just as we do that in ath9k while you're
+at it. Later on (on a separate patch or series) you can also then
+rename ath5k_hw_attach() to ath5k_hw_init() as we did so on ath9k.
 
-    739330 - Total upstream lines of code being pulled
-      2163 - backport code changes
-      1909 - backport code additions
-       254 - backport code deletions
-      6409 - backport from compat module
-      8572 - total backport code
-    1.1594 - % of code consists of backport work
-      1534 - Crap changes not yet posted
-      1491 - Crap additions not yet posted
-        43 - Crap deletions not yet posted
-    0.2075 - % of crap code
-
-Base tree: linux-next.git
-Base tree version: next-20101029
-compat-wireless release: compat-wireless-2010-10-22-5-g69fdc09-pc
+  Luis
