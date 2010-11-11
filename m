@@ -1,46 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 80-190-117-144.ip-home.de ([80.190.117.144]:53599 "EHLO
-	bu3sch.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755124Ab0KRRIE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 18 Nov 2010 12:08:04 -0500
-Subject: Re: [PATCH] ssb: fail registration for unknown SPROM revision
-From: Michael =?ISO-8859-1?Q?B=FCsch?= <mb@bu3sch.de>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: =?UTF-8?Q?Rafa=C5=82_Mi=C5=82ecki?= <zajec5@gmail.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, b43-dev@lists.infradead.org
-In-Reply-To: <4CE55C3B.6020803@lwfinger.net> (sfid-20101118_180314_721728_2D534AE3)
-References: <1288823326-9686-1-git-send-email-zajec5@gmail.com>
-	 <1288823326-9686-2-git-send-email-zajec5@gmail.com>
-	 <20101116212321.GF10774@tuxdriver.com> <1290013976.2513.14.camel@maggie>
-	 <20101118162748.GB2468@tuxdriver.com> <1290098156.12596.2.camel@maggie>
-	 <AANLkTimh_8X1uRPudmQLDOTeA_X0ciR9BbDgyahLDMSs@mail.gmail.com>
-	 (sfid-20101118_174421_892253_3B53C8D3) <1290098865.12596.6.camel@maggie>
-	 <4CE55C3B.6020803@lwfinger.net> (sfid-20101118_180314_721728_2D534AE3)
-Content-Type: text/plain; charset="UTF-8"
-Date: Thu, 18 Nov 2010 18:07:55 +0100
-Message-ID: <1290100075.12596.8.camel@maggie>
-Mime-Version: 1.0
+Received: from mail.atheros.com ([12.19.149.2]:12728 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932122Ab0KKIkl (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 11 Nov 2010 03:40:41 -0500
+Received: from mail.atheros.com ([10.10.20.105])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Thu, 11 Nov 2010 00:40:29 -0800
+From: Vasanthakumar Thiagarajan <vasanth@atheros.com>
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>,
+	Senthil Balasubramanian <senthilkumar@atheros.com>
+Subject: [PATCH 01/11 V2] ath9k_hw: Fix a reset failure on AR9382 (2x2).
+Date: Thu, 11 Nov 2010 00:40:33 -0800
+Message-ID: <1289464833-7989-1-git-send-email-vasanth@atheros.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2010-11-18 at 11:02 -0600, Larry Finger wrote: 
-> On 11/18/2010 10:47 AM, Michael Büsch wrote:
-> > If it would really succeed to initialize the device, this would be a
-> > regulatory issue, because the sprom contains various power amplifier
-> > calibration data. I think it should rather fail and be fixed correctly
-> > instead of incorrectly using rev1 in that case.
-> 
-> I agree that it is better to fail than use incorrect power data.
-> 
-> Would it be useful if the SPROM data were logged when the revision is crap?
+From: Senthil Balasubramanian <senthilkumar@atheros.com>
 
+AR9382 needs to be configured for the correct chain mask before
+running AGC/TxIQ caliberation. Otherwise reset would fail.
 
-We need to keep in mind that there will be no new SSB devices.
-It seems pretty much EOL'ed by Broadcom.
-So I'm not sure whether this would be of any use or just random dead
-code.
+Signed-off-by: Senthil Balasubramanian <senthilkumar@atheros.com>
+Signed-off-by: Vasanthakumar Thiagarajan <vasanth@atheros.com>
+---
+V2 - Fix indentation
 
+ drivers/net/wireless/ath/ath9k/ar9003_calib.c |   17 ++++++++++++-----
+ drivers/net/wireless/ath/ath9k/reg.h          |    2 ++
+ 2 files changed, 14 insertions(+), 5 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_calib.c b/drivers/net/wireless/ath/ath9k/ar9003_calib.c
+index 9e6edff..32eed19 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_calib.c
++++ b/drivers/net/wireless/ath/ath9k/ar9003_calib.c
+@@ -718,12 +718,19 @@ static bool ar9003_hw_init_cal(struct ath_hw *ah,
+ 			       struct ath9k_channel *chan)
+ {
+ 	struct ath_common *common = ath9k_hw_common(ah);
++	int val;
+ 
+-	/*
+-	 * 0x7 = 0b111 , AR9003 needs to be configured for 3-chain mode before
+-	 * running AGC/TxIQ cals
+-	 */
+-	ar9003_hw_set_chain_masks(ah, 0x7, 0x7);
++	val = REG_READ(ah, AR_ENT_OTP);
++	ath_print(common, ATH_DBG_CALIBRATE, "ath9k: AR_ENT_OTP 0x%x\n", val);
++
++	if (val & AR_ENT_OTP_CHAIN2_DISABLE)
++		ar9003_hw_set_chain_masks(ah, 0x3, 0x3);
++	else
++		/*
++		 * 0x7 = 0b111 , AR9003 needs to be configured for 3-chain
++		 * mode before running AGC/TxIQ cals
++		 */
++		ar9003_hw_set_chain_masks(ah, 0x7, 0x7);
+ 
+ 	/* Do Tx IQ Calibration */
+ 	ar9003_hw_tx_iq_cal(ah);
+diff --git a/drivers/net/wireless/ath/ath9k/reg.h b/drivers/net/wireless/ath/ath9k/reg.h
+index fa05b71..e676a80 100644
+--- a/drivers/net/wireless/ath/ath9k/reg.h
++++ b/drivers/net/wireless/ath/ath9k/reg.h
+@@ -1066,6 +1066,8 @@ enum {
+ #define AR_INTR_PRIO_ASYNC_MASK   0x40c8
+ #define AR_INTR_PRIO_SYNC_MASK    0x40cc
+ #define AR_INTR_PRIO_ASYNC_ENABLE 0x40d4
++#define AR_ENT_OTP		  0x40d8
++#define AR_ENT_OTP_CHAIN2_DISABLE               0x00020000
+ 
+ #define AR_RTC_9300_PLL_DIV          0x000003ff
+ #define AR_RTC_9300_PLL_DIV_S        0
 -- 
-Greetings Michael.
+1.7.0.4
 
