@@ -1,44 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.perches.com ([173.55.12.10]:1913 "EHLO mail.perches.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750779Ab0K1KDB (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 28 Nov 2010 05:03:01 -0500
-Subject: [PATCH V2 4/4] zd1211rw: document need for kmalloc cast
-From: Joe Perches <joe@perches.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Daniel Drake <dsd@gentoo.org>, Ulrich Kunitz <kune@deine-taler.de>,
-	linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-kernel@vger.kernel.org, netdev <netdev@vger.kernel.org>
-In-Reply-To: <1290936606.3467.2.camel@jlt3.sipsolutions.net>
-References: <cover.1290934782.git.joe@perches.com>
-	 <704bdd89d630b364043ac7a9ec0a110d311a17a2.1290934782.git.joe@perches.com>
-	 <1290935566.3467.0.camel@jlt3.sipsolutions.net>
-	 <1290936047.16349.13.camel@Joe-Laptop>
-	 <1290936606.3467.2.camel@jlt3.sipsolutions.net>
-Content-Type: text/plain; charset="UTF-8"
-Date: Sun, 28 Nov 2010 02:02:59 -0800
-Message-ID: <1290938579.16349.19.camel@Joe-Laptop>
-Mime-Version: 1.0
+Received: from mail-fx0-f46.google.com ([209.85.161.46]:46652 "EHLO
+	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751184Ab0KKOMu (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 11 Nov 2010 09:12:50 -0500
+Received: by fxm16 with SMTP id 16so1326212fxm.19
+        for <linux-wireless@vger.kernel.org>; Thu, 11 Nov 2010 06:12:49 -0800 (PST)
+From: Christian Lamparter <chunkeey@googlemail.com>
+To: Rajkumar Manoharan <rmanoharan@atheros.com>
+Subject: Re: [PATCH] ath9k_htc: Add new devices into AR7010
+Date: Thu, 11 Nov 2010 15:12:29 +0100
+Cc: "linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+References: <1289389041-26938-1-git-send-email-rmanoharan@atheros.com> <20101110131356.GA27734@vmraj-lnx.users.atheros.com> <20101111132341.GA8029@vmraj-lnx.users.atheros.com>
+In-Reply-To: <20101111132341.GA8029@vmraj-lnx.users.atheros.com>
+MIME-Version: 1.0
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Message-Id: <201011111512.30343.chunkeey@googlemail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Joe Perches <joe@perches.com>
----
+On Thursday 11 November 2010 14:23:41 Rajkumar Manoharan wrote:
+> On Wed, Nov 10, 2010 at 06:43:57PM +0530, Rajkumar Manoharan wrote:
+> > On Wed, Nov 10, 2010 at 06:05:14PM +0530, Christian Lamparter wrote:
+> > > On Wednesday 10 November 2010 12:37:21 Rajkumar Manoharan wrote:
+> > > > Treat PIDs (0xA704, 0x1200) as AR7010 devices.
+> > > 
+> > > just a though, but instead of relying only on the pid and
+> > > hope for no collisions. you could put a @driver_info flag
+> > > for all AR7010 devices into the usb_device_id table and
+> > > remove the per-device "cases". 
+> > > 
+> > Make sense. Thanks for your review. I'll resend the patch.
+> >
+> After adding @driver_info to replace per-device cases,
+> the patch looks like cleanup one which is not compatible for stable kernel.
+> So let the previous patches to be integrated, due to minimal changes.
+> And I'll submit the cleanup patch separately. Is that fine?
+sure?
 
-V2: Just document the need for the cast
-
-diff --git a/drivers/net/wireless/zd1211rw/zd_chip.c b/drivers/net/wireless/zd1211rw/zd_chip.c
-index 87a95bc..dd0bb0c 100644
---- a/drivers/net/wireless/zd1211rw/zd_chip.c
-+++ b/drivers/net/wireless/zd1211rw/zd_chip.c
-@@ -117,6 +117,7 @@ int zd_ioread32v_locked(struct zd_chip *chip, u32 *values, const zd_addr_t *addr
- 
- 	/* Allocate a single memory block for values and addresses. */
- 	count16 = 2*count;
-+	/* zd_addr_t is __nocast, so the kmalloc needs an explicit cast */
- 	a16 = (zd_addr_t *) kmalloc(count16 * (sizeof(zd_addr_t) + sizeof(u16)),
- 		                   GFP_KERNEL);
- 	if (!a16) {
-
-
+Or is this a question directed to John?
