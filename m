@@ -1,46 +1,104 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-vw0-f46.google.com ([209.85.212.46]:41496 "EHLO
-	mail-vw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754484Ab0KXAeC (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 23 Nov 2010 19:34:02 -0500
-Received: by vws13 with SMTP id 13so4781164vws.19
-        for <linux-wireless@vger.kernel.org>; Tue, 23 Nov 2010 16:34:02 -0800 (PST)
-Message-ID: <4CEC5D6B.4060401@lwfinger.net>
-Date: Tue, 23 Nov 2010 18:33:47 -0600
-From: Larry Finger <Larry.Finger@lwfinger.net>
+Received: from mail.neratec.ch ([80.75.119.105]:56674 "EHLO mail.neratec.ch"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756234Ab0KKO6R (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 11 Nov 2010 09:58:17 -0500
+Date: Thu, 11 Nov 2010 15:58:11 +0100 (CET)
+From: Wojciech Dubowik <dubowoj@neratec.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org
+Message-ID: <6105834.1111289487490143.JavaMail.wlan@CHBU500181>
+In-Reply-To: <17186438.751289486686690.JavaMail.wlan@CHBU500181>
+Subject: [PATCH 6/9] ath5k: AHB port. Use more generic functions for finding
+ mac revision instead of pci specific.
 MIME-Version: 1.0
-To: Klaas De Craemer <klaasdc@gmail.com>
-CC: htl10@users.sourceforge.net, linux-wireless@vger.kernel.org,
-	Herton Ronaldo Krzesinski <herton@mandriva.com.br>
-Subject: Re: RTL8187L: Can only "enable" hw radio switch after Windows boot
-References: <4CEA9903.6070604@lwfinger.net> <370521.43644.qm@web29514.mail.ird.yahoo.com> <AANLkTimd0EDGtZFcrhknyacoCQQZNMEKe-kvYNA9z_Bo@mail.gmail.com> <4CEAC868.9040402@lwfinger.net> <AANLkTim_O8SJ5xA4TWfOa2q7NXDG95-PDoXCqosiaGz3@mail.gmail.com> <4CEC2292.1030808@lwfinger.net> <AANLkTi=2rXEGLh+89AhPe_SAP=oH7_=D1GmrCVFRL2uT@mail.gmail.com>
-In-Reply-To: <AANLkTi=2rXEGLh+89AhPe_SAP=oH7_=D1GmrCVFRL2uT@mail.gmail.com>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 11/23/2010 03:06 PM, Klaas De Craemer wrote:
-> 
-> Don't worry, I live in Belgium and temperatures in winter rarely get
-> below -10 °C. I might just jam an USB cup heater in the enclosure...
-> 
-> If you think there is anything I can help you with, please let me
-> know. For now I'll try some more test variations to see if I can find
-> more clues.
+Use ath5k_bus_read_srev as a wrapper for MAC revision register reading. Different buses have
+to aceess it with own functions before hardware is initialized.
 
-I got drivers for XP and Linux from the Alfa site. I selected the high-power
-version, which should match your device.
+Signed-off-by: Wojciech Dubowik <Wojciech.Dubowik@neratec.com>
+---
+ drivers/net/wireless/ath/ath5k/ath5k.h  |    2 ++
+ drivers/net/wireless/ath/ath5k/attach.c |   11 +++++++----
+ drivers/net/wireless/ath/ath5k/pci.c    |    6 ++++++
+ 3 files changed, 15 insertions(+), 4 deletions(-)
 
-I don't know what version is in the Windows version, but the Linux version has
-rtl8187_linux_26.1025.0328.2007, which is pretty old. I have
-rtl8187L_linux_26.1038.0626.2009, rtl8187L_linux_26.1039.0104.2010, and
-rtl8187L_linux_26.1040.0820.2010 on my disk. At this point, I'm not sure which
-version was used to generate the in-kernel Linux driver. Perhaps Herton
-remembers, but it had to be something about the 2007 time frame.
+diff --git a/drivers/net/wireless/ath/ath5k/ath5k.h b/drivers/net/wireless/ath/ath5k/ath5k.h
+index 2b9d693..a13243a 100644
+--- a/drivers/net/wireless/ath/ath5k/ath5k.h
++++ b/drivers/net/wireless/ath/ath5k/ath5k.h
+@@ -1034,6 +1034,7 @@ struct ath5k_hw {
+ 	u32			ah_phy;
+ 	u32			ah_mac_srev;
+ 	u16			ah_mac_version;
++	u16			ah_mac_revision;
+ 	u16			ah_phy_revision;
+ 	u16			ah_radio_5ghz_revision;
+ 	u16			ah_radio_2ghz_revision;
+@@ -1144,6 +1145,7 @@ void ath5k_sysfs_unregister(struct ath5k_softc *sc);
+ 
+ /*chip id helper function */
+ const char * ath5k_chip_name(enum ath5k_srev_type type, u_int16_t val);
++int ath5k_bus_read_srev(struct ath5k_hw *ah);
+ 
+ /* LED functions */
+ int ath5k_init_leds(struct ath5k_softc *sc);
+diff --git a/drivers/net/wireless/ath/ath5k/attach.c b/drivers/net/wireless/ath/ath5k/attach.c
+index c5b2eb7..15e3a83 100644
+--- a/drivers/net/wireless/ath/ath5k/attach.c
++++ b/drivers/net/wireless/ath/ath5k/attach.c
+@@ -128,7 +128,8 @@ int ath5k_hw_attach(struct ath5k_softc *sc)
+ 	/*
+ 	 * Find the mac version
+ 	 */
+-	srev = ath5k_hw_reg_read(ah, AR5K_SREV);
++	ath5k_bus_read_srev(ah);
++	srev = ah->ah_mac_srev;
+ 	if (srev < AR5K_SREV_AR5311)
+ 		ah->ah_version = AR5K_AR5210;
+ 	else if (srev < AR5K_SREV_AR5212)
+@@ -136,6 +137,10 @@ int ath5k_hw_attach(struct ath5k_softc *sc)
+ 	else
+ 		ah->ah_version = AR5K_AR5212;
+ 
++	/* Get the MAC revision */
++	ah->ah_mac_version = AR5K_REG_MS(srev, AR5K_SREV_VER);
++	ah->ah_mac_revision = AR5K_REG_MS(srev, AR5K_SREV_REV);
++
+ 	/* Fill the ath5k_hw struct with the needed functions */
+ 	ret = ath5k_hw_init_desc_functions(ah);
+ 	if (ret)
+@@ -146,9 +151,7 @@ int ath5k_hw_attach(struct ath5k_softc *sc)
+ 	if (ret)
+ 		goto err;
+ 
+-	/* Get MAC, PHY and RADIO revisions */
+-	ah->ah_mac_srev = srev;
+-	ah->ah_mac_version = AR5K_REG_MS(srev, AR5K_SREV_VER);
++	/* Get PHY and RADIO revisions */
+ 	ah->ah_phy_revision = ath5k_hw_reg_read(ah, AR5K_PHY_CHIP_ID) &
+ 			0xffffffff;
+ 	ah->ah_radio_5ghz_revision = ath5k_hw_radio_revision(ah,
+diff --git a/drivers/net/wireless/ath/ath5k/pci.c b/drivers/net/wireless/ath/ath5k/pci.c
+index 0d8dd2d..0acf1fc 100644
+--- a/drivers/net/wireless/ath/ath5k/pci.c
++++ b/drivers/net/wireless/ath/ath5k/pci.c
+@@ -100,6 +100,12 @@ bool ath5k_pci_eeprom_read(struct ath_common *common, u32 offset, u16 *data)
+ 	return -ETIMEDOUT;
+ }
+ 
++int ath5k_bus_read_srev(struct ath5k_hw *ah)
++{
++	ah->ah_mac_srev = ath5k_hw_reg_read(ah, AR5K_SREV);
++	return 0;
++}
++
+ /* Common ath_bus_opts structure */
+ static const struct ath_bus_ops ath_pci_bus_ops = {
+ 	.ath_bus_type = ATH_PCI,
+-- 
+1.7.1
 
-I had to build a new Windows XP system in a virtual machine. The one I already
-had won't run on the machine I have now and the original is in the shop. Access
-to the new host is restricted to mornings.
-
-Larry
