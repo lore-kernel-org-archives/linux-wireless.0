@@ -1,61 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms1.broadcom.com ([216.31.210.17]:1397 "EHLO mms1.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756488Ab0KST1b convert rfc822-to-8bit (ORCPT
+Received: from saarni.dnainternet.net ([83.102.40.136]:42840 "EHLO
+	saarni.dnainternet.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755354Ab0KKTIh (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 19 Nov 2010 14:27:31 -0500
-From: "Brett Rudley" <brudley@broadcom.com>
-To: "Mike Rapoport" <mike.rapoport@gmail.com>,
-	"Greg Kroah-Hartman" <gregkh@suse.de>
-cc: "Henry Ptasinski" <henryp@broadcom.com>,
-	"Dowan Kim" <dowan@broadcom.com>,
+	Thu, 11 Nov 2010 14:08:37 -0500
+Message-ID: <20101111210824.685154i2r52oacqo@hayate.sektori.org>
+Date: Thu, 11 Nov 2010 21:08:24 +0200
+From: "Jussi Kivilinna" <jussi.kivilinna@mbnet.fi>
+To: "Johannes Berg" <johannes@sipsolutions.net>
+Cc: "John Linville" <linville@tuxdriver.com>,
 	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Date: Fri, 19 Nov 2010 11:27:22 -0800
-Subject: RE: [PATCH 0/4] staging: brcm80211: misc cleanups
-Message-ID: <7A94256FD72B884D9E7C55586C3CBCEE138429379A@SJEXCHCCR01.corp.ad.broadcom.com>
-References: <cover.1289734125.git.mike.rapoport@gmail.com>
-In-Reply-To: <cover.1289734125.git.mike.rapoport@gmail.com>
+Subject: Re: [PATCH] cfg80211/mac80211: allow per-station GTKs
+References: <1286300370.3641.17.camel@jlt3.sipsolutions.net>
+In-Reply-To: <1286300370.3641.17.camel@jlt3.sipsolutions.net>
 MIME-Version: 1.0
 Content-Type: text/plain;
- charset=us-ascii
+	charset=UTF-8;
+	DelSp="Yes";
+	format="flowed"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Quoting "Johannes Berg" <johannes@sipsolutions.net>:
 
-There was a little confusion within our fullmac team but they say these are OK.
+> @@ -1312,6 +1314,7 @@ enum wiphy_flags {
+>  	WIPHY_FLAG_4ADDR_AP			= BIT(5),
+>  	WIPHY_FLAG_4ADDR_STATION		= BIT(6),
+>  	WIPHY_FLAG_CONTROL_PORT_PROTOCOL	= BIT(7),
+> +	WIPHY_FLAG_IBSS_RSN			= BIT(7),
+>  };
 
-Thanks greg for asking.
+This should be BIT(8), right?
 
-Signed-off-by: Brett Rudley<brudley@broadcom.com>
-
-
-> -----Original Message-----
-> From: linux-wireless-owner@vger.kernel.org [mailto:linux-wireless-
-> owner@vger.kernel.org] On Behalf Of Mike Rapoport
-> Sent: Sunday, November 14, 2010 3:36 AM
-> To: Greg Kroah-Hartman
-> Cc: Brett Rudley; Henry Ptasinski; Dowan Kim; linux-
-> wireless@vger.kernel.org; Mike Rapoport
-> Subject: [PATCH 0/4] staging: brcm80211: misc cleanups
-> 
-> These patches remove some unused declarations in include/linux_osl.h
-> and unused bindings to SDIO controller devices in brcmfmac driver
-> 
-> Mike Rapoport (4):
->   staging: brcm80211: remove unused osl_pkt{get,free}_static
->   staging: brcm80211: brcmfmac: remove PCI SDIO controller binding
->   staging: brcm80211: brcmfmac: remove PXA SDIO controller binding
->   staging: brcm80211: brcmfmac: cleanup bcmsdh_(un)register
-> 
->  drivers/staging/brcm80211/brcmfmac/bcmsdh_linux.c |  259 +--------------
-> ------
->  drivers/staging/brcm80211/include/linux_osl.h     |    3 -
->  2 files changed, 1 insertions(+), 261 deletions(-)
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless"
-> in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-
+-Jussi
 
