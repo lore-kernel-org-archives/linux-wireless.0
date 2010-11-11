@@ -1,187 +1,183 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f46.google.com ([209.85.161.46]:42074 "EHLO
-	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750915Ab0KRLch (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 18 Nov 2010 06:32:37 -0500
-Received: by mail-fx0-f46.google.com with SMTP id 6so1460042fxm.19
-        for <linux-wireless@vger.kernel.org>; Thu, 18 Nov 2010 03:32:36 -0800 (PST)
-From: Arik Nemtsov <arik@wizery.com>
-To: <linux-wireless@vger.kernel.org>
-Cc: Luciano Coelho <luciano.coelho@nokia.com>,
-	Arik Nemtsov <arik@wizery.com>
-Subject: [PATCH 01/18] wl1271: Add AP related configuration to conf_drv_settings
-Date: Thu, 18 Nov 2010 13:32:14 +0200
-Message-Id: <1290079951-16793-2-git-send-email-arik@wizery.com>
-In-Reply-To: <1290079951-16793-1-git-send-email-arik@wizery.com>
-References: <1290079951-16793-1-git-send-email-arik@wizery.com>
+Received: from nbd.name ([46.4.11.11]:56137 "EHLO nbd.name"
+	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
+	id S932281Ab0KKCfP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 10 Nov 2010 21:35:15 -0500
+From: Felix Fietkau <nbd@openwrt.org>
+To: linux-wireless@vger.kernel.org
+Cc: linville@tuxdriver.com, lrodriguez@atheros.com
+Subject: [PATCH 5/5] ath9k_hw: add a private op for configuring radar pulse detection
+Date: Thu, 11 Nov 2010 03:18:38 +0100
+Message-Id: <1289441918-94905-5-git-send-email-nbd@openwrt.org>
+In-Reply-To: <1289441918-94905-4-git-send-email-nbd@openwrt.org>
+References: <1289441918-94905-1-git-send-email-nbd@openwrt.org>
+ <1289441918-94905-2-git-send-email-nbd@openwrt.org>
+ <1289441918-94905-3-git-send-email-nbd@openwrt.org>
+ <1289441918-94905-4-git-send-email-nbd@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Rate class configuration has been split up for AP and STA modes.
-Template related configuration likewise separated.
-
-Signed-off-by: Arik Nemtsov <arik@wizery.com>
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
 ---
- drivers/net/wireless/wl12xx/acx.c  |    2 +-
- drivers/net/wireless/wl12xx/cmd.c  |    4 +-
- drivers/net/wireless/wl12xx/conf.h |   26 +++++++++++++++++++-
- drivers/net/wireless/wl12xx/main.c |   45 ++++++++++++++++++++++++++++++++++-
- 4 files changed, 70 insertions(+), 7 deletions(-)
+ drivers/net/wireless/ath/ath9k/ar5008_phy.c |   32 ++++++++++++++++++++++++
+ drivers/net/wireless/ath/ath9k/ar9003_phy.c |   32 ++++++++++++++++++++++++
+ drivers/net/wireless/ath/ath9k/hw.h         |   36 +++++++++++++++++++++++++++
+ 3 files changed, 100 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/net/wireless/wl12xx/acx.c b/drivers/net/wireless/wl12xx/acx.c
-index 7cbaeb6..4f1cb84 100644
---- a/drivers/net/wireless/wl12xx/acx.c
-+++ b/drivers/net/wireless/wl12xx/acx.c
-@@ -754,7 +754,7 @@ int wl1271_acx_statistics(struct wl1271 *wl, struct acx_statistics *stats)
- int wl1271_acx_rate_policies(struct wl1271 *wl)
+diff --git a/drivers/net/wireless/ath/ath9k/ar5008_phy.c b/drivers/net/wireless/ath/ath9k/ar5008_phy.c
+index c83a22c..3686811 100644
+--- a/drivers/net/wireless/ath/ath9k/ar5008_phy.c
++++ b/drivers/net/wireless/ath/ath9k/ar5008_phy.c
+@@ -1579,6 +1579,37 @@ static void ar5008_hw_set_nf_limits(struct ath_hw *ah)
+ 	ah->nf_5g.nominal = AR_PHY_CCA_NOM_VAL_5416_5GHZ;
+ }
+ 
++static void ar5008_hw_set_radar_params(struct ath_hw *ah,
++				       struct ath_hw_radar_conf *conf)
++{
++	u32 radar_0 = 0, radar_1 = 0;
++
++	if (!conf) {
++		REG_CLR_BIT(ah, AR_PHY_RADAR_0, AR_PHY_RADAR_0_ENA);
++		return;
++	}
++
++	radar_0 |= AR_PHY_RADAR_0_ENA | AR_PHY_RADAR_0_FFT_ENA;
++	radar_0 |= SM(conf->fir_power, AR_PHY_RADAR_0_FIRPWR);
++	radar_0 |= SM(conf->radar_rssi, AR_PHY_RADAR_0_RRSSI);
++	radar_0 |= SM(conf->pulse_height, AR_PHY_RADAR_0_HEIGHT);
++	radar_0 |= SM(conf->pulse_rssi, AR_PHY_RADAR_0_PRSSI);
++	radar_0 |= SM(conf->pulse_inband, AR_PHY_RADAR_0_INBAND);
++
++	radar_1 |= AR_PHY_RADAR_1_MAX_RRSSI;
++	radar_1 |= AR_PHY_RADAR_1_BLOCK_CHECK;
++	radar_1 |= SM(conf->pulse_maxlen, AR_PHY_RADAR_1_MAXLEN);
++	radar_1 |= SM(conf->pulse_inband_step, AR_PHY_RADAR_1_RELSTEP_THRESH);
++	radar_1 |= SM(conf->radar_inband, AR_PHY_RADAR_1_RELPWR_THRESH);
++
++	REG_WRITE(ah, AR_PHY_RADAR_0, radar_0);
++	REG_WRITE(ah, AR_PHY_RADAR_1, radar_1);
++	if (conf->ext_channel)
++		REG_SET_BIT(ah, AR_PHY_RADAR_EXT, AR_PHY_RADAR_EXT_ENA);
++	else
++		REG_CLR_BIT(ah, AR_PHY_RADAR_EXT, AR_PHY_RADAR_EXT_ENA);
++}
++
+ void ar5008_hw_attach_phy_ops(struct ath_hw *ah)
  {
- 	struct acx_rate_policy *acx;
--	struct conf_tx_rate_class *c = &wl->conf.tx.rc_conf;
-+	struct conf_tx_rate_class *c = &wl->conf.tx.sta_rc_conf;
- 	int idx = 0;
- 	int ret = 0;
+ 	struct ath_hw_private_ops *priv_ops = ath9k_hw_private_ops(ah);
+@@ -1609,6 +1640,7 @@ void ar5008_hw_attach_phy_ops(struct ath_hw *ah)
+ 	priv_ops->restore_chainmask = ar5008_restore_chainmask;
+ 	priv_ops->set_diversity = ar5008_set_diversity;
+ 	priv_ops->do_getnf = ar5008_hw_do_getnf;
++	priv_ops->set_radar_params = ar5008_hw_set_radar_params;
  
-diff --git a/drivers/net/wireless/wl12xx/cmd.c b/drivers/net/wireless/wl12xx/cmd.c
-index f3d0541..40f15c1 100644
---- a/drivers/net/wireless/wl12xx/cmd.c
-+++ b/drivers/net/wireless/wl12xx/cmd.c
-@@ -490,8 +490,8 @@ int wl1271_cmd_template_set(struct wl1271 *wl, u16 template_id,
- 	cmd->len = cpu_to_le16(buf_len);
- 	cmd->template_type = template_id;
- 	cmd->enabled_rates = cpu_to_le32(rates);
--	cmd->short_retry_limit = wl->conf.tx.rc_conf.short_retry_limit;
--	cmd->long_retry_limit = wl->conf.tx.rc_conf.long_retry_limit;
-+	cmd->short_retry_limit = wl->conf.tx.tmpl_short_retry_limit;
-+	cmd->long_retry_limit = wl->conf.tx.tmpl_long_retry_limit;
- 	cmd->index = index;
+ 	if (modparam_force_new_ani) {
+ 		priv_ops->ani_control = ar5008_hw_ani_control_new;
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_phy.c b/drivers/net/wireless/ath/ath9k/ar9003_phy.c
+index 44c5454..f676b21 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_phy.c
++++ b/drivers/net/wireless/ath/ath9k/ar9003_phy.c
+@@ -1113,6 +1113,37 @@ static void ar9003_hw_ani_cache_ini_regs(struct ath_hw *ah)
+ 	aniState->mrcCCKOff = !ATH9K_ANI_ENABLE_MRC_CCK;
+ }
  
- 	if (buf)
-diff --git a/drivers/net/wireless/wl12xx/conf.h b/drivers/net/wireless/wl12xx/conf.h
-index a16b361..47094f0 100644
---- a/drivers/net/wireless/wl12xx/conf.h
-+++ b/drivers/net/wireless/wl12xx/conf.h
-@@ -636,9 +636,9 @@ struct conf_tx_settings {
- 
- 	/*
- 	 * Configuration for rate classes for TX (currently only one
--	 * rate class supported.)
-+	 * rate class supported). Used in non-AP mode.
- 	 */
--	struct conf_tx_rate_class rc_conf;
-+	struct conf_tx_rate_class sta_rc_conf;
- 
- 	/*
- 	 * Configuration for access categories for TX rate control.
-@@ -647,6 +647,22 @@ struct conf_tx_settings {
- 	struct conf_tx_ac_category ac_conf[CONF_TX_MAX_AC_COUNT];
- 
- 	/*
-+	 * Configuration for rate classes in AP-mode. These rate classes
-+	 * are for the AC TX queues
-+	 */
-+	struct conf_tx_rate_class ap_rc_conf[CONF_TX_MAX_AC_COUNT];
++static void ar9003_hw_set_radar_params(struct ath_hw *ah,
++				       struct ath_hw_radar_conf *conf)
++{
++	u32 radar_0 = 0, radar_1 = 0;
 +
-+	/*
-+	 * Management TX rate class for AP-mode.
-+	 */
-+	struct conf_tx_rate_class ap_mgmt_conf;
++	if (!conf) {
++		REG_CLR_BIT(ah, AR_PHY_RADAR_0, AR_PHY_RADAR_0_ENA);
++		return;
++	}
 +
-+	/*
-+	 * Broadcast TX rate class for AP-mode.
-+	 */
-+	struct conf_tx_rate_class ap_bcst_conf;
++	radar_0 |= AR_PHY_RADAR_0_ENA | AR_PHY_RADAR_0_FFT_ENA;
++	radar_0 |= SM(conf->fir_power, AR_PHY_RADAR_0_FIRPWR);
++	radar_0 |= SM(conf->radar_rssi, AR_PHY_RADAR_0_RRSSI);
++	radar_0 |= SM(conf->pulse_height, AR_PHY_RADAR_0_HEIGHT);
++	radar_0 |= SM(conf->pulse_rssi, AR_PHY_RADAR_0_PRSSI);
++	radar_0 |= SM(conf->pulse_inband, AR_PHY_RADAR_0_INBAND);
 +
-+	/*
- 	 * Configuration for TID parameters.
- 	 */
- 	u8 tid_conf_count;
-@@ -687,6 +703,12 @@ struct conf_tx_settings {
- 	 * Range: CONF_HW_BIT_RATE_* bit mask
- 	 */
- 	u32 basic_rate_5;
++	radar_1 |= AR_PHY_RADAR_1_MAX_RRSSI;
++	radar_1 |= AR_PHY_RADAR_1_BLOCK_CHECK;
++	radar_1 |= SM(conf->pulse_maxlen, AR_PHY_RADAR_1_MAXLEN);
++	radar_1 |= SM(conf->pulse_inband_step, AR_PHY_RADAR_1_RELSTEP_THRESH);
++	radar_1 |= SM(conf->radar_inband, AR_PHY_RADAR_1_RELPWR_THRESH);
 +
-+	/*
-+	 * TX retry limits for templates
-+	 */
-+	u8 tmpl_short_retry_limit;
-+	u8 tmpl_long_retry_limit;
++	REG_WRITE(ah, AR_PHY_RADAR_0, radar_0);
++	REG_WRITE(ah, AR_PHY_RADAR_1, radar_1);
++	if (conf->ext_channel)
++		REG_SET_BIT(ah, AR_PHY_RADAR_EXT, AR_PHY_RADAR_EXT_ENA);
++	else
++		REG_CLR_BIT(ah, AR_PHY_RADAR_EXT, AR_PHY_RADAR_EXT_ENA);
++}
++
+ void ar9003_hw_attach_phy_ops(struct ath_hw *ah)
+ {
+ 	struct ath_hw_private_ops *priv_ops = ath9k_hw_private_ops(ah);
+@@ -1141,6 +1172,7 @@ void ar9003_hw_attach_phy_ops(struct ath_hw *ah)
+ 	priv_ops->ani_control = ar9003_hw_ani_control;
+ 	priv_ops->do_getnf = ar9003_hw_do_getnf;
+ 	priv_ops->ani_cache_ini_regs = ar9003_hw_ani_cache_ini_regs;
++	priv_ops->set_radar_params = ar9003_hw_set_radar_params;
+ 
+ 	ar9003_hw_set_nf_limits(ah);
+ 	memcpy(ah->nf_regs, ar9300_cca_regs, sizeof(ah->nf_regs));
+diff --git a/drivers/net/wireless/ath/ath9k/hw.h b/drivers/net/wireless/ath/ath9k/hw.h
+index e29c712..f5689cd 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.h
++++ b/drivers/net/wireless/ath/ath9k/hw.h
+@@ -485,6 +485,40 @@ struct ath_hw_antcomb_conf {
  };
  
- enum {
-diff --git a/drivers/net/wireless/wl12xx/main.c b/drivers/net/wireless/wl12xx/main.c
-index 31f0e2f..1bb2575 100644
---- a/drivers/net/wireless/wl12xx/main.c
-+++ b/drivers/net/wireless/wl12xx/main.c
-@@ -116,11 +116,11 @@ static struct conf_drv_settings default_conf = {
- 	},
- 	.tx = {
- 		.tx_energy_detection         = 0,
--		.rc_conf                     = {
-+		.sta_rc_conf                 = {
- 			.enabled_rates       = 0,
- 			.short_retry_limit   = 10,
- 			.long_retry_limit    = 10,
--			.aflags              = 0
-+			.aflags              = 0,
- 		},
- 		.ac_conf_count               = 4,
- 		.ac_conf                     = {
-@@ -153,6 +153,45 @@ static struct conf_drv_settings default_conf = {
- 				.tx_op_limit = 1504,
- 			},
- 		},
-+		.ap_rc_conf                  = {
-+			[0] = {
-+				.enabled_rates = 0x1EFF,
-+				.short_retry_limit = 10,
-+				.long_retry_limit = 10,
-+				.aflags      = 0,
-+			},
-+			[1] = {
-+				.enabled_rates = 0x1EFF,
-+				.short_retry_limit = 10,
-+				.long_retry_limit = 10,
-+				.aflags      = 0,
-+			},
-+			[2] = {
-+				.enabled_rates = 0x1EFF,
-+				.short_retry_limit = 10,
-+				.long_retry_limit = 10,
-+				.aflags      = 0,
-+			},
-+			[3] = {
-+				.enabled_rates = 0x1EFF,
-+				.short_retry_limit = 10,
-+				.long_retry_limit = 10,
-+				.aflags      = 0,
-+			},
-+		},
-+		.ap_mgmt_conf = {
-+			.enabled_rates       = 0x7,
-+			.short_retry_limit   = 10,
-+			.long_retry_limit    = 10,
-+			.aflags              = 0,
-+		},
-+		.ap_bcst_conf = {
-+			.enabled_rates       = 0x1,
-+			.short_retry_limit   = 10,
-+			.long_retry_limit    = 10,
-+			.aflags              = 0,
-+		},
+ /**
++ * struct ath_hw_radar_conf - radar detection initialization parameters
++ *
++ * @pulse_inband: threshold for checking the ratio of in-band power
++ *	to total power for short radar pulses (half dB steps)
++ * @pulse_inband_step: threshold for checking an in-band power to total
++ *	power ratio increase for short radar pulses (half dB steps)
++ * @pulse_height: threshold for detecting the beginning of a short
++ *	radar pulse (dB step)
++ * @pulse_rssi: threshold for detecting if a short radar pulse is
++ *	gone (dB step)
++ * @pulse_maxlen: maximum pulse length (0.8 us steps)
++ *
++ * @radar_rssi: RSSI threshold for starting long radar detection (dB steps)
++ * @radar_inband: threshold for checking the ratio of in-band power
++ *	to total power for long radar pulses (half dB steps)
++ * @fir_power: threshold for detecting the end of a long radar pulse (dB)
++ *
++ * @ext_channel: enable extension channel radar detection
++ */
++struct ath_hw_radar_conf {
++	unsigned int pulse_inband;
++	unsigned int pulse_inband_step;
++	unsigned int pulse_height;
++	unsigned int pulse_rssi;
++	unsigned int pulse_maxlen;
 +
- 		.tid_conf_count = 4,
- 		.tid_conf = {
- 			[CONF_TX_AC_BE] = {
-@@ -193,6 +232,8 @@ static struct conf_drv_settings default_conf = {
- 		.tx_compl_threshold          = 4,
- 		.basic_rate                  = CONF_HW_BIT_RATE_1MBPS,
- 		.basic_rate_5                = CONF_HW_BIT_RATE_6MBPS,
-+		.tmpl_short_retry_limit      = 10,
-+		.tmpl_long_retry_limit       = 10,
- 	},
- 	.conn = {
- 		.wake_up_event               = CONF_WAKE_UP_EVENT_DTIM,
++	unsigned int radar_rssi;
++	unsigned int radar_inband;
++	int fir_power;
++
++	bool ext_channel;
++};
++
++/**
+  * struct ath_hw_private_ops - callbacks used internally by hardware code
+  *
+  * This structure contains private callbacks designed to only be used internally
+@@ -549,6 +583,8 @@ struct ath_hw_private_ops {
+ 	bool (*ani_control)(struct ath_hw *ah, enum ath9k_ani_cmd cmd,
+ 			    int param);
+ 	void (*do_getnf)(struct ath_hw *ah, int16_t nfarray[NUM_NF_READINGS]);
++	void (*set_radar_params)(struct ath_hw *ah,
++				 struct ath_hw_radar_conf *conf);
+ 
+ 	/* ANI */
+ 	void (*ani_cache_ini_regs)(struct ath_hw *ah);
 -- 
-1.7.1
+1.7.2.2
 
