@@ -1,53 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ey0-f174.google.com ([209.85.215.174]:47304 "EHLO
-	mail-ey0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756031Ab0KMSOZ (ORCPT
+Received: from mail-qw0-f46.google.com ([209.85.216.46]:53739 "EHLO
+	mail-qw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753820Ab0KKTPf convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 13 Nov 2010 13:14:25 -0500
-Received: by mail-ey0-f174.google.com with SMTP id 27so2445882eye.19
-        for <linux-wireless@vger.kernel.org>; Sat, 13 Nov 2010 10:14:24 -0800 (PST)
-From: Ivo van Doorn <ivdoorn@gmail.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Subject: [PATCH 9/9] rt2x00: Modify rt2x00queue_remove_l2pad to make skb->data two-byte alignment
-Date: Sat, 13 Nov 2010 19:13:53 +0100
-Cc: linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com
-References: <201011131908.15595.IvDoorn@gmail.com> <201011131911.47346.IvDoorn@gmail.com> <201011131912.55384.IvDoorn@gmail.com>
-In-Reply-To: <201011131912.55384.IvDoorn@gmail.com>
+	Thu, 11 Nov 2010 14:15:35 -0500
+Received: by qwi4 with SMTP id 4so160252qwi.19
+        for <linux-wireless@vger.kernel.org>; Thu, 11 Nov 2010 11:15:34 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Message-Id: <201011131913.55169.IvDoorn@gmail.com>
+Date: Thu, 11 Nov 2010 14:15:34 -0500
+Message-ID: <AANLkTikjg+jY6XYhJjRPydwveW0xr+8tLv-Oypsks4ay@mail.gmail.com>
+Subject: ath9k max_power question
+From: Mark Mentovai <mark@moxienet.com>
+To: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=windows-1252
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: RA-Jay Hung <Jay_Hung@ralinktech.com>
+In drivers/net/wireless/ath/ath9k/init.c, both CHAN2G and CHAN5G set
+.max_power to 20, represented in dBm. I’m wondering how this number
+was chosen. Is it simply a safe generic value? I’m dealing with a
+device on which the vendor’s madwifi-based binary driver would show
+23dBm for 2.4GHz and 18dBm for 5GHz (although only when I asked it for
+26dBm and 24dBm respectively, so I’m not sure which set of numbers to
+believe.)
 
-When send out skb data to mac80211, orignal code will cause mac80211
-unaligned access, so modify code to make mac80211 can natural access.
-
-Signed-off-by: RA-Jay Hung <jay_hung@ralinktech.com>
-Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
----
- drivers/net/wireless/rt2x00/rt2x00queue.c |    6 ++++--
- 1 files changed, 4 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/net/wireless/rt2x00/rt2x00queue.c b/drivers/net/wireless/rt2x00/rt2x00queue.c
-index dc54317..a3d79c7 100644
---- a/drivers/net/wireless/rt2x00/rt2x00queue.c
-+++ b/drivers/net/wireless/rt2x00/rt2x00queue.c
-@@ -204,8 +204,10 @@ void rt2x00queue_remove_l2pad(struct sk_buff *skb, unsigned int header_length)
- 	if (!l2pad)
- 		return;
- 
--	memmove(skb->data + l2pad, skb->data, header_length);
--	skb_pull(skb, l2pad);
-+	memmove(skb->data + header_length, skb->data + header_length + l2pad,
-+				skb->len - header_length - l2pad);
-+
-+	skb_trim(skb, skb->len - l2pad);
- }
- 
- static void rt2x00queue_create_tx_descriptor_seq(struct queue_entry *entry,
--- 
-1.7.2.3
-
+I noticed that in ath9k, if these .max_power limits are raised, the
+driver is happy to set a somewhat higher transmit power. In this case,
+it will max out at 25dBm for 2.4GHz and 21dBm for 5GHz. These are
+still below the relevant regulatory limits. These values seem to be
+computed by routines in eeprom_*.c, so I’m wondering if they’re based
+on the card’s own data and safe to use without fear of burning the
+radios.
