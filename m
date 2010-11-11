@@ -1,40 +1,98 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qw0-f46.google.com ([209.85.216.46]:58629 "EHLO
-	mail-qw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754983Ab0KJCVu (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 9 Nov 2010 21:21:50 -0500
-Received: by mail-qw0-f46.google.com with SMTP id 5so5541qwh.19
-        for <linux-wireless@vger.kernel.org>; Tue, 09 Nov 2010 18:21:49 -0800 (PST)
-From: Arnaud Lacombe <lacombar@gmail.com>
+Received: from lo.gmane.org ([80.91.229.12]:58915 "EHLO lo.gmane.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756115Ab0KKNCY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 11 Nov 2010 08:02:24 -0500
+Received: from list by lo.gmane.org with local (Exim 4.69)
+	(envelope-from <glkwg-linux-wireless@m.gmane.org>)
+	id 1PGWnF-0000sW-KW
+	for linux-wireless@vger.kernel.org; Thu, 11 Nov 2010 14:02:21 +0100
+Received: from 85-127-79-157.dynamic.xdsl-line.inode.at ([85.127.79.157])
+        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Thu, 11 Nov 2010 14:02:21 +0100
+Received: from tim by 85-127-79-157.dynamic.xdsl-line.inode.at with local (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Thu, 11 Nov 2010 14:02:21 +0100
 To: linux-wireless@vger.kernel.org
-Cc: lrodriguez@atheros.com, Arnaud Lacombe <lacombar@gmail.com>
-Subject: [PATCH 33/44] compat/2.6.22: constify skb_transport_header()'s argument
-Date: Tue,  9 Nov 2010 21:20:15 -0500
-Message-Id: <1289355626-25373-34-git-send-email-lacombar@gmail.com>
-In-Reply-To: <1289355626-25373-1-git-send-email-lacombar@gmail.com>
-References: <1289355626-25373-1-git-send-email-lacombar@gmail.com>
+From: Tim Blechmann <tim@klingt.org>
+Subject: rt61pci issue
+Date: Thu, 11 Nov 2010 14:02:10 +0100
+Message-ID: <ibgpgg$a5m$1@dough.gmane.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="ISO-8859-1"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Arnaud Lacombe <lacombar@gmail.com>
----
- include/linux/compat-2.6.22.h |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+hi all,
 
-diff --git a/include/linux/compat-2.6.22.h b/include/linux/compat-2.6.22.h
-index 6675027..7c0c615 100644
---- a/include/linux/compat-2.6.22.h
-+++ b/include/linux/compat-2.6.22.h
-@@ -46,7 +46,7 @@ static inline void skb_set_transport_header(struct sk_buff *skb, int offset)
- 	skb->h.raw = skb->data + offset;
- }
- 
--static inline unsigned char *skb_transport_header(struct sk_buff *skb)
-+static inline unsigned char *skb_transport_header(const struct sk_buff *skb)
- {
- 	return skb->h.raw;
- }
+i am using tn rt61pci driver and besides having not the best wireless 
+performance, it network transfer sometimes disturbs the audio playback on my 
+machine. sometimes it works fine, but the machine can get into a state, where i 
+will have to reboot the machine to get back to normal. i suppose, this is 
+because of the rt61pci driver.
+
+in general if found, that the specific irq thread produces a lot of interrupts 
+and does quite a lot of work. the specific irq thread takes quite some cpu time 
+(currently i have an uptime of 5 hours and the irq thread used 4 minutes of cpu 
+time) and about 200 interupts are issued per second:
+
+cat /proc/interrupts |grep 16\: && sleep 1 && cat /proc/interrupts | grep 16\:
+  16:          0    5140126          0          0   IO-APIC-fasteoi   
+uhci_hcd:usb3, ahci, 0000:08:00.0
+  16:          0    5140357          0          0   IO-APIC-fasteoi   
+uhci_hcd:usb3, ahci, 0000:08:00.0
+
+using perf, i get the following data about the spent cpu time:
+# Events: 106  cycles
+#
+# Overhead          Command      Shared Object  Symbol
+# ........  ...............  .................  ......
+#
+    61.17%  irq/16-0000:08:  [rt61pci]          [k] rt61pci_interrupt_thread
+    12.77%  irq/16-0000:08:  [rt61pci]          [k] rt61pci_set_device_state
+     3.72%  irq/16-0000:08:  [kernel.kallsyms]  [k] __ticket_spin_lock
+     3.17%  irq/16-0000:08:  [kernel.kallsyms]  [k] local_bh_disable
+     2.14%  irq/16-0000:08:  [kernel.kallsyms]  [k] schedule
+     1.81%  irq/16-0000:08:  [rt61pci]          [k] rt61pci_kick_tx_queue
+     1.50%  irq/16-0000:08:  [mac80211]         [k] prepare_for_handlers
+     1.38%  irq/16-0000:08:  [rt2x00pci]        [k] rt2x00pci_rxdone
+     1.03%  irq/16-0000:08:  [kernel.kallsyms]  [k] __ticket_spin_unlock
+     0.87%  irq/16-0000:08:  [kernel.kallsyms]  [k] __inet_lookup_established
+     0.87%  irq/16-0000:08:  [kernel.kallsyms]  [k] tcp_event_data_recv
+     0.82%  irq/16-0000:08:  [kernel.kallsyms]  [k] irq_thread
+     0.66%  irq/16-0000:08:  [kernel.kallsyms]  [k] update_curr_rt
+     0.64%  irq/16-0000:08:  [rt2x00lib]        [k] rt2x00lib_rxdone
+     0.64%  irq/16-0000:08:  [kernel.kallsyms]  [k] mod_timer
+     0.51%  irq/16-0000:08:  [kernel.kallsyms]  [k] pick_next_task_rt
+     0.51%  irq/16-0000:08:  [kernel.kallsyms]  [k] cpupri_set
+     0.51%  irq/16-0000:08:  [kernel.kallsyms]  [k] _raw_spin_unlock_irqrestore
+     0.50%  irq/16-0000:08:  [kernel.kallsyms]  [k] hrtick_update
+     0.49%  irq/16-0000:08:  [kernel.kallsyms]  [k] __phys_addr
+     0.49%  irq/16-0000:08:  [kernel.kallsyms]  [k] update_shares
+     0.49%  irq/16-0000:08:  [kernel.kallsyms]  [k] dequeue_task
+     0.49%  irq/16-0000:08:  [kernel.kallsyms]  [k] dequeue_rt_stack
+     0.49%  irq/16-0000:08:  [kernel.kallsyms]  [k] skb_release_data
+     0.44%  irq/16-0000:08:  [kernel.kallsyms]  [k] load_balance
+     0.40%  irq/16-0000:08:  [kernel.kallsyms]  [k] memcpy
+     0.36%  irq/16-0000:08:  [kernel.kallsyms]  [k] map_single
+     0.36%  irq/16-0000:08:  [kernel.kallsyms]  [k] ip_output
+     0.36%  irq/16-0000:08:  [kernel.kallsyms]  [k] tcp_ack
+     0.22%  irq/16-0000:08:  [mac80211]         [k] minstrel_ht_tx_status
+     0.22%  irq/16-0000:08:  [kernel.kallsyms]  [k] tcp_v4_rcv
+     0.00%  irq/16-0000:08:  [kernel.kallsyms]  [k] native_write_msr_safe
+
+not sure, if this is really helpful, but this amount of interrupts doesn't look 
+good to me. if i can be on any further help to track down this issue, i would be 
+happy to assist.
+
+thanks, tim
+
 -- 
-1.7.2.30.gc37d7.dirty
+tim@klingt.org
+http://tim.klingt.org
+
+Life is really simple, but we insist on making it complicated.
+  Confucius
+
 
