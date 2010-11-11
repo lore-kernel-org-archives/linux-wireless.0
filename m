@@ -1,65 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iw0-f174.google.com ([209.85.214.174]:57973 "EHLO
-	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753064Ab0KLCpb convert rfc822-to-8bit (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:46769 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754437Ab0KKQo5 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 11 Nov 2010 21:45:31 -0500
-Received: by iwn10 with SMTP id 10so2915093iwn.19
-        for <linux-wireless@vger.kernel.org>; Thu, 11 Nov 2010 18:45:31 -0800 (PST)
+	Thu, 11 Nov 2010 11:44:57 -0500
+Date: Thu, 11 Nov 2010 11:37:56 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Luciano Coelho <luciano.coelho@nokia.com>
+Cc: ext Arik Nemtsov <arik@wizery.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Johannes Berg <johannes@sipsolutions.net>
+Subject: Re: [PATCH v2 2/2] wl1271: add support for HW TX fragmentation
+Message-ID: <20101111163755.GC2559@tuxdriver.com>
+References: <1289209867-21422-1-git-send-email-arik@wizery.com>
+ <1289209867-21422-3-git-send-email-arik@wizery.com>
+ <1289472342.1606.25.camel@powerslave>
 MIME-Version: 1.0
-In-Reply-To: <1289528843-21982-1-git-send-email-lrodriguez@atheros.com>
-References: <1289528843-21982-1-git-send-email-lrodriguez@atheros.com>
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Date: Thu, 11 Nov 2010 18:45:11 -0800
-Message-ID: <AANLkTik9w0_ZJJ273m7B30H4mUcaVeGVirOWAaMuPO-s@mail.gmail.com>
-Subject: Re: [PATCH] cfg80211: Fix regulatory bug with multiple cards with a
- delayed CRDA response
-To: linville@tuxdriver.com
-Cc: mark@moxienet.com, linux-wireless@vger.kernel.org,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>, stable@kernel.org
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1289472342.1606.25.camel@powerslave>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Nov 11, 2010 at 6:27 PM, Luis R. Rodriguez
-<lrodriguez@atheros.com> wrote:
-> When two cards are connected with the same regulatory domain
-> if CRDA had a delayed response then cfg80211's own set regulatory
-> domain would still be the world regulatory domain. There was a bug
-> on cfg80211's ignore_request() when analyzing incoming driver
-> regulatory hints as it was only checking against the currently
-> set cfg80211 regulatory domain and not for any other new
-> pending requests. This is easily fixed by also checking against
-> the pending request.
->
-> Without this fix the second card would end up with an intersected
-> regulatory domain and now allow it to use the channels it really
-> is designed for.
->
-> This was reproduced and tested against mac80211_hwsim using this
-> CRDA delayer:
->
->        #!/bin/bash
->        echo $COUNTRY >> /tmp/log
->        sleep 2
->        /sbin/crda.orig
->
-> And this regulatory test:
->
->        modprobe mac80211_hwsim regtest=2
->
-> This patch has fixes for cfg80211 all the way back.
->
-> Reported-by: Mark Mentovai <mark@moxienet.com>
-> Cc: stable@kernel.org
-> Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+On Thu, Nov 11, 2010 at 12:45:42PM +0200, Luciano Coelho wrote:
+> On Mon, 2010-11-08 at 10:51 +0100, ext Arik Nemtsov wrote:
+> > Indicate to mac80211 we support HW fragmentation.
+> > Support updates of the fragmentation threshold via the
+> > set_frag_threshold callback.
+> > 
+> > Signed-off-by: Arik Nemtsov <arik@wizery.com>
+> > ---
+> 
+> Acked-by: Luciano Coelho <luciano.coelho@nokia.com>
+> 
+> John, can you apply this directly on your tree, due to the dependency on
+> mac80211? There will be a merge conflict with my next pull-request, due
+> to the driver renaming, but it should be very easily solvable.
+> 
+> The other option would be for me to wait until the mac80211 part is in
+> wireless-next and only then I apply it to wl12xx.
+> 
+> Which one would you prefer?
 
-Hrm,
+I'll apply them, thanks.
 
-modprobe mac80211_hwsim regtest=3
-
-Does the similar test but using two different regulatory domains,
-however this ends up slapping an intersection over to both. Going to
-think this through a bit more.
-
-  Luis
+John
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
