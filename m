@@ -1,43 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.19.149.2]:46404 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751318Ab0KAQjK convert rfc822-to-8bit (ORCPT
+Received: from lugano1.hostireland.com ([72.32.223.205]:42818 "EHLO
+	lugano.hostireland.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1751407Ab0KKOvj convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 1 Nov 2010 12:39:10 -0400
-Received: from mail.atheros.com ([10.10.20.105])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Mon, 01 Nov 2010 09:38:58 -0700
-From: Rajkumar Manoharan <Rajkumar.Manoharan@Atheros.com>
-To: "tom.leiming@gmail.com" <tom.leiming@gmail.com>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"linville@tuxdriver.com" <linville@tuxdriver.com>
-Date: Mon, 1 Nov 2010 22:09:05 +0530
-Subject: RE: [PATCH] ath9k-htc: fix probe failure
-Message-ID: <44EE5C37ADC36343B0625A05DD408C4850DAB4D6C8@CHEXMB-01.global.atheros.com>
-References: <1288621950-13918-1-git-send-email-tom.leiming@gmail.com>
-In-Reply-To: <1288621950-13918-1-git-send-email-tom.leiming@gmail.com>
-Content-Type: text/plain; charset="us-ascii"
+	Thu, 11 Nov 2010 09:51:39 -0500
+From: "raghunath" <raghunath@airvod.com>
+To: "'Luciano Coelho'" <luciano.coelho@nokia.com>
+Cc: <linux-wireless@vger.kernel.org>
+References: <004701cb8191$e82c75e0$b88561a0$@com>	 <AANLkTikZD_1DUqkxQyGSLdaQS01Qg15+_TDkW3QuRuOt@mail.gmail.com> <1289476604.1606.36.camel@powerslave>
+In-Reply-To: <1289476604.1606.36.camel@powerslave>
+Subject: RE: Ti's WL1271 on OMAP3EVM board with kernel version 2.6.36
+Date: Thu, 11 Nov 2010 20:21:34 +0530
+Message-ID: <005101cb81af$f1e75280$d5b5f780$@com>
 MIME-Version: 1.0
+Content-Type: text/plain;
+	charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ming Lei <tom.leiming@gmail.com>
+Hi Luca,
+I applied the patch which u have mentioned, but there is no change.
 
-Obviously, we should set the transfer type consitent with
-endpoint descriptor type to urb, this patch fixes the probe
-failure below:
+Raghu
 
-[    8.018768] PM: Removing info for No Bus:1-2.2
-[    8.019470] usb 1-2.2: BOGUS urb xfer, pipe 3 != type 1
-[    8.031707] usb 1-2.2: ath9k_htc: Unable to allocate URBs
-[    8.037506] ath9k_hif_usb: probe of 1-2.2:1.0 failed with error -22
-[    8.044250] usbcore: registered new interface driver ath9k_hif_usb
+-----Original Message-----
+From: linux-wireless-owner@vger.kernel.org [mailto:linux-wireless-owner@vger.kernel.org] On Behalf Of Luciano Coelho
+Sent: Thursday, November 11, 2010 5:27 PM
+To: raghunath
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: Ti's WL1271 on OMAP3EVM board with kernel version 2.6.36
 
-NACK. To optimize CPU consumption and scan duration,  HTC device firmwares
-were patched to change descriptor types of EP3 and EP4 from Interrupt to Bulk.
-After firmware download in initialization, endpoint descriptors got changed. 
-Please use the latest firmwares from linux-firmware git tree.
+Hi,
 
-http://git.kernel.org/?p=linux/kernel/git/dwmw2/linux-firmware.git;a=summary
 
-- Rajkumar
+On Thu, 2010-11-11 at 12:45 +0100, raghunath wrote:
+> I am working on OMAP3EVM board with Mistral wl1271 daughter board and using
+> linux kernel 2.6.36 I am using wl1271 drivers and getting this error pls
+> Let me know if any thing is wrong..
+
+[...]
+
+> [    2.614593] wl1271: mac80211 configure filter
+> [    2.614624] wl1271: acx group address tbl
+> [    2.614624] wl1271: cmd configure
+> [    2.615173] AIRVOD __dev_change_flags   net/core/dev.c ret = 0
+> [    2.621398] wl1271: elp work
+> [    2.621398] wl1271: chip to elp
+> [    2.621459] wl1271: mac80211 configure filter
+> [    2.621490] wl1271: waking up chip from elp
+> [    3.118377] wl1271: ERROR ELP wakeup timeout!
+> [    3.122955] wl1271: mac80211 configure filter
+> [    3.122985] wl1271: waking up chip from elp
+> [    3.618469] wl1271: ERROR ELP wakeup timeout!
+
+It seems that you need this patch:
+http://git.kernel.org/?p=linux/kernel/git/luca/wl12xx.git;a=commit;h=e8f1046f716a71d3a4426a5103e39c70059b8d0a
+
+
+-- 
+Cheers,
+Luca.
+
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
