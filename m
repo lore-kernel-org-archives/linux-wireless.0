@@ -1,69 +1,176 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([147.243.1.48]:41848 "EHLO mgw-sa02.nokia.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1754133Ab0KDJtG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 4 Nov 2010 05:49:06 -0400
-Subject: Re: [PATCH 3/4] mac80211: don't fragment packets when
- HW-fragmentation is on
-From: Luciano Coelho <luciano.coelho@nokia.com>
-To: ext Arik Nemtsov <arik@wizery.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <AANLkTimXwopqOUcBWxwAmEH1tJbtLQisW7dmm+XDWHPe@mail.gmail.com>
-References: <1288821053-19013-1-git-send-email-arik@wizery.com>
-	 <1288821053-19013-4-git-send-email-arik@wizery.com>
-	 <1288836908.4083.2.camel@jlt3.sipsolutions.net>
-	 <AANLkTimXwopqOUcBWxwAmEH1tJbtLQisW7dmm+XDWHPe@mail.gmail.com>
+Received: from he.sipsolutions.net ([78.46.109.217]:33373 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753820Ab0KKRxc (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 11 Nov 2010 12:53:32 -0500
+Subject: Re: [PATCHv3] mac80211: Add function to get probe request template
+ for current AP
+From: Johannes Berg <johannes@sipsolutions.net>
+To: juuso.oikarinen@nokia.com
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
+In-Reply-To: <1289458218-5218-1-git-send-email-juuso.oikarinen@nokia.com>
+References: <1289458218-5218-1-git-send-email-juuso.oikarinen@nokia.com>
 Content-Type: text/plain; charset="UTF-8"
-Date: Thu, 04 Nov 2010 11:52:48 +0200
-Message-ID: <1288864368.10002.43.camel@powerslave>
+Date: Thu, 11 Nov 2010 09:54:50 -0800
+Message-ID: <1289498090.3695.4.camel@jlt3.sipsolutions.net>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2010-11-04 at 06:34 +0100, ext Arik Nemtsov wrote:
-> On Thu, Nov 4, 2010 at 04:15, Johannes Berg <johannes@sipsolutions.net> wrote:
-> >
-> > On Wed, 2010-11-03 at 23:50 +0200, Arik Nemtsov wrote:
-> > > If the driver supports hardware TX fragmentation, don't fragment
-> > > packets in the stack.
-> >
-> > I'm not sure why you have three patches? Seems like it could all be a
-> > single mac80211 patch.
+On Thu, 2010-11-11 at 08:50 +0200, juuso.oikarinen@nokia.com wrote:
+> From: Juuso Oikarinen <juuso.oikarinen@nokia.com>
 > 
-> Sure. I'll send a v2 with the mac80211 patches bundled into a single one.
+> Chipsets with hardware based connection monitoring need to autonomically
+> send directed probe-request frames to the AP (in the event of beacon loss,
+> for example.)
 > 
-> >
-> > > @@ -1181,8 +1183,10 @@ ieee80211_tx_prepare(struct ieee80211_sub_if_data *sdata,
-> > >       /*
-> > >        * Set this flag (used below to indicate "automatic fragmentation"),
-> > >        * it will be cleared/left by radiotap as desired.
-> > > +      * Only valid when fragmentation is done by the stack.
-> > >        */
-> > > -     tx->flags |= IEEE80211_TX_FRAGMENTED;
-> > > +     if (!(local->hw.flags & IEEE80211_HW_TX_FRAGMENTATION))
-> > > +             tx->flags |= IEEE80211_TX_FRAGMENTED;
-> >
-> > Do we really need the hw flag? Couldn't we go off the callback, like we
-> > used to? I'm not really sure which one would perform better though, I
-> > guess the flag might ...
+> For the hardware to be able to do this, it requires a template for the frame
+> to transmit to the AP, filled in with the BSSID and SSID of the AP, but also
+> the supported rate IE's.
 > 
-> I think the flag may be less confusing for new driver writers.
-> Someone can implement the callback as a no-op and have a bug in his
-> code as a result.
+> This patch adds a function to mac80211, which allows the hardware driver to
+> fetch this template after association, so it can be configured to the hardware.
+> 
+> Signed-off-by: Juuso Oikarinen <juuso.oikarinen@nokia.com>
+> ---
+> v2: Add more documentation to the ieee80211_ap_probereq_get function
+> v3: Added some honesty to the documentation of ieee80211_ap_probereq_get
 
-Well, if someone implements the fragmentation setting function as a
-no-op, it is a bug in the driver and it should be fixed.  It's easy to
-make that clear in the documentation.  "If the hardware doesn't support
-fragmentation, set this function to NULL" or something.
+:-)
 
-That's how it's done already with other ops, such as hw_scan and so on.
-I don't see a need to have another flag.
+Acked-by: Johannes Berg <johannes@sipsolutions.net>
 
-Performance-wise, if there's an impact it will be almost insignificant,
-I believe.
+>  include/net/mac80211.h     |   15 +++++++++++++++
+>  net/mac80211/ieee80211_i.h |    4 ++++
+>  net/mac80211/mlme.c        |   24 ++++++++++++++++++++++++
+>  net/mac80211/util.c        |   23 ++++++++++++++++++-----
+>  4 files changed, 61 insertions(+), 5 deletions(-)
+> 
+> diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+> index 9fdf982..773694b 100644
+> --- a/include/net/mac80211.h
+> +++ b/include/net/mac80211.h
+> @@ -2501,6 +2501,21 @@ void ieee80211_sta_block_awake(struct ieee80211_hw *hw,
+>  			       struct ieee80211_sta *pubsta, bool block);
+>  
+>  /**
+> + * ieee80211_ap_probereq_get - retrieve a Probe Request template
+> + * @hw: pointer obtained from ieee80211_alloc_hw().
+> + * @vif: &struct ieee80211_vif pointer from the add_interface callback.
+> + *
+> + * Creates a Probe Request template which can, for example, be uploaded to
+> + * hardware. The template is filled with bssid, ssid and supported rate
+> + * information. This function must only be called from within the
+> + * .bss_info_changed callback function and only in managed mode. The function
+> + * is only useful when the interface is associated, otherwise it will return
+> + * NULL.
+> + */
+> +struct sk_buff *ieee80211_ap_probereq_get(struct ieee80211_hw *hw,
+> +					  struct ieee80211_vif *vif);
+> +
+> +/**
+>   * ieee80211_beacon_loss - inform hardware does not receive beacons
+>   *
+>   * @vif: &struct ieee80211_vif pointer from the add_interface callback.
+> diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+> index b80c386..59a1d38 100644
+> --- a/net/mac80211/ieee80211_i.h
+> +++ b/net/mac80211/ieee80211_i.h
+> @@ -1287,6 +1287,10 @@ int ieee80211_build_preq_ies(struct ieee80211_local *local, u8 *buffer,
+>  			     const u8 *ie, size_t ie_len,
+>  			     enum ieee80211_band band, u32 rate_mask,
+>  			     u8 channel);
+> +struct sk_buff *ieee80211_build_probe_req(struct ieee80211_sub_if_data *sdata,
+> +					  u8 *dst,
+> +					  const u8 *ssid, size_t ssid_len,
+> +					  const u8 *ie, size_t ie_len);
+>  void ieee80211_send_probe_req(struct ieee80211_sub_if_data *sdata, u8 *dst,
+>  			      const u8 *ssid, size_t ssid_len,
+>  			      const u8 *ie, size_t ie_len);
+> diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+> index a3a9421..dfc4a31 100644
+> --- a/net/mac80211/mlme.c
+> +++ b/net/mac80211/mlme.c
+> @@ -1108,6 +1108,30 @@ static void ieee80211_mgd_probe_ap(struct ieee80211_sub_if_data *sdata,
+>  	mutex_unlock(&ifmgd->mtx);
+>  }
+>  
+> +struct sk_buff *ieee80211_ap_probereq_get(struct ieee80211_hw *hw,
+> +					  struct ieee80211_vif *vif)
+> +{
+> +	struct ieee80211_sub_if_data *sdata = vif_to_sdata(vif);
+> +	struct ieee80211_if_managed *ifmgd = &sdata->u.mgd;
+> +	struct sk_buff *skb;
+> +	const u8 *ssid;
+> +
+> +	if (WARN_ON(sdata->vif.type != NL80211_IFTYPE_STATION))
+> +		return NULL;
+> +
+> +	ASSERT_MGD_MTX(ifmgd);
+> +
+> +	if (!ifmgd->associated)
+> +		return NULL;
+> +
+> +	ssid = ieee80211_bss_get_ie(ifmgd->associated, WLAN_EID_SSID);
+> +	skb = ieee80211_build_probe_req(sdata, ifmgd->associated->bssid,
+> +					ssid + 2, ssid[1], NULL, 0);
+> +
+> +	return skb;
+> +}
+> +EXPORT_SYMBOL(ieee80211_ap_probereq_get);
+> +
+>  static void __ieee80211_connection_loss(struct ieee80211_sub_if_data *sdata)
+>  {
+>  	struct ieee80211_if_managed *ifmgd = &sdata->u.mgd;
+> diff --git a/net/mac80211/util.c b/net/mac80211/util.c
+> index 0b6fc92..885713d 100644
+> --- a/net/mac80211/util.c
+> +++ b/net/mac80211/util.c
+> @@ -1011,9 +1011,10 @@ int ieee80211_build_preq_ies(struct ieee80211_local *local, u8 *buffer,
+>  	return pos - buffer;
+>  }
+>  
+> -void ieee80211_send_probe_req(struct ieee80211_sub_if_data *sdata, u8 *dst,
+> -			      const u8 *ssid, size_t ssid_len,
+> -			      const u8 *ie, size_t ie_len)
+> +struct sk_buff *ieee80211_build_probe_req(struct ieee80211_sub_if_data *sdata,
+> +					  u8 *dst,
+> +					  const u8 *ssid, size_t ssid_len,
+> +					  const u8 *ie, size_t ie_len)
+>  {
+>  	struct ieee80211_local *local = sdata->local;
+>  	struct sk_buff *skb;
+> @@ -1027,7 +1028,7 @@ void ieee80211_send_probe_req(struct ieee80211_sub_if_data *sdata, u8 *dst,
+>  	if (!buf) {
+>  		printk(KERN_DEBUG "%s: failed to allocate temporary IE "
+>  		       "buffer\n", sdata->name);
+> -		return;
+> +		return NULL;
+>  	}
+>  
+>  	chan = ieee80211_frequency_to_channel(
+> @@ -1050,8 +1051,20 @@ void ieee80211_send_probe_req(struct ieee80211_sub_if_data *sdata, u8 *dst,
+>  	}
+>  
+>  	IEEE80211_SKB_CB(skb)->flags |= IEEE80211_TX_INTFL_DONT_ENCRYPT;
+> -	ieee80211_tx_skb(sdata, skb);
+>  	kfree(buf);
+> +
+> +	return skb;
+> +}
+> +
+> +void ieee80211_send_probe_req(struct ieee80211_sub_if_data *sdata, u8 *dst,
+> +			      const u8 *ssid, size_t ssid_len,
+> +			      const u8 *ie, size_t ie_len)
+> +{
+> +	struct sk_buff *skb;
+> +
+> +	skb = ieee80211_build_probe_req(sdata, dst, ssid, ssid_len, ie, ie_len);
+> +	if (skb)
+> +		ieee80211_tx_skb(sdata, skb);
+>  }
+>  
+>  u32 ieee80211_sta_get_rates(struct ieee80211_local *local,
 
--- 
-Cheers,
-Luca.
 
