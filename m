@@ -1,37 +1,28 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 128-177-27-249.ip.openhosting.com ([128.177.27.249]:41910 "EHLO
-	jmalinen.user.openhosting.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753497Ab0KIWVW (ORCPT
+Received: from mail-iw0-f174.google.com ([209.85.214.174]:58245 "EHLO
+	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756699Ab0KKANI (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 9 Nov 2010 17:21:22 -0500
-Date: Wed, 10 Nov 2010 00:20:58 +0200
-From: Jouni Malinen <j@w1.fi>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: Blaise Gassend <blaise@willowgarage.com>, linville@redhat.com,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] mac80211_hwsim: Incorporate txpower into rssi
-Message-ID: <20101109222058.GA12611@jm.kir.nu>
-References: <AANLkTi=t-rEsFKMv-V7Q3cyY6A_+LiBBYW2WbwXzg50b@mail.gmail.com>
- <20101109212422.GE2374@tuxdriver.com>
+	Wed, 10 Nov 2010 19:13:08 -0500
+Received: by iwn10 with SMTP id 10so1434745iwn.19
+        for <linux-wireless@vger.kernel.org>; Wed, 10 Nov 2010 16:13:07 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20101109212422.GE2374@tuxdriver.com>
+In-Reply-To: <4CDB32FC.9070004@openwrt.org>
+References: <4CDB2967.7030805@openwrt.org> <4CDB2998.3070209@openwrt.org> <4CDB32FC.9070004@openwrt.org>
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Date: Wed, 10 Nov 2010 16:12:47 -0800
+Message-ID: <AANLkTik462iOZh3tiBfrBCG_GLq_OrkF-CH0P7Qgrc3k@mail.gmail.com>
+Subject: Re: [PATCH v2 2/2] compat-wireless: remove unnecessary chunks from
+ the rfkill patch
+To: Felix Fietkau <nbd@openwrt.org>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Nov 09, 2010 at 04:24:22PM -0500, John W. Linville wrote:
-> On Thu, Oct 28, 2010 at 02:01:24AM -0700, Blaise Gassend wrote:
-> > Up to now mac80211_hwsim has been reporting an rssi of -50. This patch
-> > improves the model slightly by returning txpower-50. This makes it
-> > easy to stimulate tests that need to see a varying rssi.
+On Wed, Nov 10, 2010 at 4:04 PM, Felix Fietkau <nbd@openwrt.org> wrote:
+> Signed-off-by: Felix Fietkau <nbd@openwrt.org>
 
-> Any comments on this patch from the mac80211_hwsim users?
+applied an pushed, thanks!
 
-I'm not really using the RSSI value in my tests with hwsim at the moment
-and would eventually prefer to see more complete options for simulating
-changing RSSI. Anyway, the proposed change does not seem to any harm and
-it can potentially help in getting somewhat different information for
-simulations, so I'm fine with it.
-
--- 
-Jouni Malinen                                            PGP id EFC895FA
+  Luis
