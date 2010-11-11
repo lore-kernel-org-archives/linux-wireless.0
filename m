@@ -1,43 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:34221 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754599Ab0KVUfc (ORCPT
+Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:38687
+	"EHLO sunset.davemloft.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751535Ab0KKGPi (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 22 Nov 2010 15:35:32 -0500
-Subject: Re: [PATCH] wireless-regdb: update rules for DE
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Michael Green <Michael.Green@Atheros.com>
-Cc: "Luis R. Rodriguez" <mcgrof@gmail.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <93781E992CBA7843962D8B0E7D683F3C1633485053@SC1EXMB-MBCL.global.atheros.com>
-References: <20100525151429.GC6342@tpkurt2.garloff.de>
-	 <1290029817-711-1-git-send-email-linville@tuxdriver.com>
-	 <AANLkTimDkoqNbkFWDsU2HgFK3926gRpcBbokX_GL5sSc@mail.gmail.com>
-	 <93781E992CBA7843962D8B0E7D683F3C163340D5AE@SC1EXMB-MBCL.global.atheros.com>
-	 <20101119020414.GB2512@tuxdriver.com>
-	 <20101119091450.GD12228@tpkurt2.nue.garloff.de>
-	 <93781E992CBA7843962D8B0E7D683F3C16334843DD@SC1EXMB-MBCL.global.atheros.com>
-	 <AANLkTi=ySDQtw+M6ATV47HszkJN7vfR7q+FOC6-OBqjk@mail.gmail.com>
-	 <93781E992CBA7843962D8B0E7D683F3C1633484F57@SC1EXMB-MBCL.global.atheros.com>
-	 <AANLkTimbCzK6RPCnc0T117D0X+Yvi8S3j3L9aG74L=Jg@mail.gmail.com>
-	 <93781E992CBA7843962D8B0E7D683F3C1633485053@SC1EXMB-MBCL.global.atheros.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Mon, 22 Nov 2010 21:35:10 +0100
-Message-ID: <1290458110.5718.7.camel@jlt3.sipsolutions.net>
+	Thu, 11 Nov 2010 01:15:38 -0500
+Date: Wed, 10 Nov 2010 22:16:02 -0800 (PST)
+Message-Id: <20101110.221602.112602821.davem@davemloft.net>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: pull request: wireless-2.6 2010-11-10
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <20101110185843.GC2714@tuxdriver.com>
+References: <20101110185843.GC2714@tuxdriver.com>
 Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2010-11-22 at 12:22 -0800, Michael Green wrote:
+From: "John W. Linville" <linville@tuxdriver.com>
+Date: Wed, 10 Nov 2010 13:58:43 -0500
 
-> The issue is that some EU countries state some differences in spectrum
-> allocation rules, but all WLAN products must comply with the
-> harmonized conformance standard (EN301 839) which specifies the same
-> set of rules, that I believe all WLAN products should be set to.
+> Here is a batch of fixes intended for 2.6.37.  Also mixed-in are a few
+> device ID updates.  I think the changelog entries are reasonably
+> documentary of the issues being fixed, so I won't belabor them. ;-)
+> 
+> This also includes a round of Bluetooth fixes from Gustavo:
+> 
+> "The following batch contains some bugfixes for 2.6.37. A fix for unaligned
+> access in L2CAP, a Kconfig error, two fixes related to security of
+> the Bluetooth links, and support for the a MacBook Air Bluetooth device.
+> There is also a one line patch from Matthew Garret, that enables USB
+> autosuspend for btusb module, which shall be completely safe. Please
+> pull, thanks."
 
-Any idea where that is stated? I thought EN301 839 was basically
-something you could comply with to be legal, but some countries allowed
-using more spectrum or different usages beyond that.
-
-johannes
-
+Pulled, thanks.
