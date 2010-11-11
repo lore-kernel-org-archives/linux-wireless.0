@@ -1,47 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([147.243.128.24]:22275 "EHLO mgw-da01.nokia.com"
+Received: from smtp.nokia.com ([147.243.1.48]:46208 "EHLO mgw-sa02.nokia.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753064Ab0KKQAJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 11 Nov 2010 11:00:09 -0500
-Subject: Re: [RFC 06/15] mac80211: add support for HW periodic scan
+	id S1755105Ab0KKL4v (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 11 Nov 2010 06:56:51 -0500
+Subject: Re: Ti's WL1271 on OMAP3EVM board with kernel version 2.6.36
 From: Luciano Coelho <luciano.coelho@nokia.com>
-To: "geryk@ti.com" <geryk@ti.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <4CDC0CBA.30201@ti.com>
-References: <1288612336-2830-1-git-send-email-luciano.coelho@nokia.com>
-	 <1288612336-2830-7-git-send-email-luciano.coelho@nokia.com>
-	 <1288885537.3659.4.camel@jlt3.sipsolutions.net>
-	 <1288987177.25600.15.camel@powerslave>
-	 <03639d1a6cc12b36b036145a8c31da33@localhost>  <4CDC0CBA.30201@ti.com>
+To: raghunath <raghunath@airvod.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <AANLkTikZD_1DUqkxQyGSLdaQS01Qg15+_TDkW3QuRuOt@mail.gmail.com>
+References: <004701cb8191$e82c75e0$b88561a0$@com>
+	 <AANLkTikZD_1DUqkxQyGSLdaQS01Qg15+_TDkW3QuRuOt@mail.gmail.com>
 Content-Type: text/plain; charset="UTF-8"
-Date: Thu, 11 Nov 2010 17:59:43 +0200
-Message-ID: <1289491183.1606.61.camel@powerslave>
+Date: Thu, 11 Nov 2010 13:56:44 +0200
+Message-ID: <1289476604.1606.36.camel@powerslave>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2010-11-11 at 16:33 +0100, ext Gery Kahn wrote:
-> On 11/05/2010 09:55 PM, Johannes Berg wrote:
-> >
-> > On Fri, 05 Nov 2010 21:59:37 +0200, Luciano Coelho
-> > <luciano.coelho@nokia.com>  wrote:
-> >> I think the idea of using background is good.  Something like bg_scan or
-> >> something.  The original idea was to call it background scan, but since
-> >> wl1271 doesn't support this while connected, I thought calling it
-> >> periodic scan would be slightly clearer about that.  Background scan
-> >> sounds like you do it while connected (to me at least).
-> >
-> > Come to think of it though, we also call what we do when connected
-> > and trigger a scan manually a "background scan", so that's probably
-> > not a good name here.
-> >
-> > Not sure ... don't really have a good idea right now.
+Hi,
 
-> It may be sched_scan
 
-Hmmm... Scheduled scan is a good idea.  And sched_scan is a clear and
-short abbreviation.  What do you think, Johannes?
+On Thu, 2010-11-11 at 12:45 +0100, raghunath wrote:
+> I am working on OMAP3EVM board with Mistral wl1271 daughter board and using
+> linux kernel 2.6.36 I am using wl1271 drivers and getting this error pls
+> Let me know if any thing is wrong..
+
+[...]
+
+> [    2.614593] wl1271: mac80211 configure filter
+> [    2.614624] wl1271: acx group address tbl
+> [    2.614624] wl1271: cmd configure
+> [    2.615173] AIRVOD __dev_change_flags   net/core/dev.c ret = 0
+> [    2.621398] wl1271: elp work
+> [    2.621398] wl1271: chip to elp
+> [    2.621459] wl1271: mac80211 configure filter
+> [    2.621490] wl1271: waking up chip from elp
+> [    3.118377] wl1271: ERROR ELP wakeup timeout!
+> [    3.122955] wl1271: mac80211 configure filter
+> [    3.122985] wl1271: waking up chip from elp
+> [    3.618469] wl1271: ERROR ELP wakeup timeout!
+
+It seems that you need this patch:
+http://git.kernel.org/?p=linux/kernel/git/luca/wl12xx.git;a=commit;h=e8f1046f716a71d3a4426a5103e39c70059b8d0a
+
 
 -- 
 Cheers,
