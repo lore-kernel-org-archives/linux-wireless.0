@@ -1,76 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:26170 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754448Ab0KPQGm (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 16 Nov 2010 11:06:42 -0500
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Johannes Berg <johannes.berg@intel.com>,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Subject: [PATCH 06/18] iwlagn: fix some naming regarding FIFOs
-Date: Tue, 16 Nov 2010 08:01:39 -0800
-Message-Id: <1289923311-14920-7-git-send-email-wey-yi.w.guy@intel.com>
-In-Reply-To: <1289923311-14920-1-git-send-email-wey-yi.w.guy@intel.com>
-References: <1289923311-14920-1-git-send-email-wey-yi.w.guy@intel.com>
+Received: from he.sipsolutions.net ([78.46.109.217]:40300 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755820Ab0KKUE5 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 11 Nov 2010 15:04:57 -0500
+Subject: Re: [PATCH] cfg80211/mac80211: allow per-station GTKs
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
+Cc: John Linville <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <20101111210824.685154i2r52oacqo@hayate.sektori.org>
+References: <1286300370.3641.17.camel@jlt3.sipsolutions.net>
+	 <20101111210824.685154i2r52oacqo@hayate.sektori.org>
+Content-Type: text/plain; charset="UTF-8"
+Date: Thu, 11 Nov 2010 12:06:17 -0800
+Message-ID: <1289505977.3695.6.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+On Thu, 2010-11-11 at 21:08 +0200, Jussi Kivilinna wrote:
+> Quoting "Johannes Berg" <johannes@sipsolutions.net>:
+> 
+> > @@ -1312,6 +1314,7 @@ enum wiphy_flags {
+> >  	WIPHY_FLAG_4ADDR_AP			= BIT(5),
+> >  	WIPHY_FLAG_4ADDR_STATION		= BIT(6),
+> >  	WIPHY_FLAG_CONTROL_PORT_PROTOCOL	= BIT(7),
+> > +	WIPHY_FLAG_IBSS_RSN			= BIT(7),
+> >  };
+> 
+> This should be BIT(8), right?
 
-Some variables are misnamed in the FIFO setup
-code, fix that.
+Crap, yes, of course. I guess this overlapped with the patch that added
+the control port stuff. Since it's already merged, do you want to send a
+fixup?
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-agn-ucode.c |   12 ++++++------
- 1 files changed, 6 insertions(+), 6 deletions(-)
-
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-ucode.c b/drivers/net/wireless/iwlwifi/iwl-agn-ucode.c
-index 7036211..8b129e2 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn-ucode.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn-ucode.c
-@@ -429,7 +429,7 @@ void iwlagn_send_bt_env(struct iwl_priv *priv, u8 action, u8 type)
- 
- int iwlagn_alive_notify(struct iwl_priv *priv)
- {
--	const s8 *queues;
-+	const s8 *queue_to_fifo;
- 	u32 a;
- 	unsigned long flags;
- 	int i, chan;
-@@ -492,9 +492,9 @@ int iwlagn_alive_notify(struct iwl_priv *priv)
- 
- 	/* map queues to FIFOs */
- 	if (priv->valid_contexts != BIT(IWL_RXON_CTX_BSS))
--		queues = iwlagn_ipan_queue_to_tx_fifo;
-+		queue_to_fifo = iwlagn_ipan_queue_to_tx_fifo;
- 	else
--		queues = iwlagn_default_queue_to_tx_fifo;
-+		queue_to_fifo = iwlagn_default_queue_to_tx_fifo;
- 
- 	iwlagn_set_wr_ptrs(priv, priv->cmd_queue, 0);
- 
-@@ -510,14 +510,14 @@ int iwlagn_alive_notify(struct iwl_priv *priv)
- 	BUILD_BUG_ON(ARRAY_SIZE(iwlagn_ipan_queue_to_tx_fifo) != 10);
- 
- 	for (i = 0; i < 10; i++) {
--		int ac = queues[i];
-+		int fifo = queue_to_fifo[i];
- 
- 		iwl_txq_ctx_activate(priv, i);
- 
--		if (ac == IWL_TX_FIFO_UNUSED)
-+		if (fifo == IWL_TX_FIFO_UNUSED)
- 			continue;
- 
--		iwlagn_tx_queue_set_status(priv, &priv->txq[i], ac, 0);
-+		iwlagn_tx_queue_set_status(priv, &priv->txq[i], fifo, 0);
- 	}
- 
- 	spin_unlock_irqrestore(&priv->lock, flags);
--- 
-1.7.0.4
+johannes
 
