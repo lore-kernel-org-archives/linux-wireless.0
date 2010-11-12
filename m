@@ -1,52 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iw0-f174.google.com ([209.85.214.174]:37604 "EHLO
-	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751258Ab0K2Vfl (ORCPT
+Received: from lugano1.hostireland.com ([72.32.223.205]:46373 "EHLO
+	lugano.hostireland.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1750764Ab0KLFrD (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 29 Nov 2010 16:35:41 -0500
-Received: by iwn5 with SMTP id 5so609273iwn.19
-        for <linux-wireless@vger.kernel.org>; Mon, 29 Nov 2010 13:35:41 -0800 (PST)
+	Fri, 12 Nov 2010 00:47:03 -0500
+From: "raghunath" <raghunath@airvod.com>
+To: "'Luciano Coelho'" <luciano.coelho@nokia.com>
+Cc: <linux-wireless@vger.kernel.org>
+References: <004701cb8191$e82c75e0$b88561a0$@com>	 <AANLkTikZD_1DUqkxQyGSLdaQS01Qg15+_TDkW3QuRuOt@mail.gmail.com>	 <1289476604.1606.36.camel@powerslave> <005101cb81af$f1e75280$d5b5f780$@com> <1289488173.1606.58.camel@powerslave>
+In-Reply-To: <1289488173.1606.58.camel@powerslave>
+Subject: RE: Ti's WL1271 on OMAP3EVM board with kernel version 2.6.36
+Date: Fri, 12 Nov 2010 11:16:56 +0530
+Message-ID: <000001cb822d$067f8230$137e8690$@com>
 MIME-Version: 1.0
-In-Reply-To: <20101129212707.GG8199@tuxdriver.com>
-References: <1290279018-29716-1-git-send-email-nbd@openwrt.org>
- <20101122201511.GG2117@tuxdriver.com> <4CEAD7FA.1060107@openwrt.org>
- <20101129195038.GD8199@tuxdriver.com> <AANLkTimS1hsfoOe9bdgad7kkUPPcMVjd_kB_Ru8kbqt8@mail.gmail.com>
- <20101129212707.GG8199@tuxdriver.com>
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Date: Mon, 29 Nov 2010 13:35:20 -0800
-Message-ID: <AANLkTino9jsjw=9WVhPNPBZt1T76Hi+1bWXE0yHowG1Q@mail.gmail.com>
-Subject: Re: [PATCH] ath9k_hw: fix endian issues with CTLs on AR9003
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: Felix Fietkau <nbd@openwrt.org>, linux-wireless@vger.kernel.org,
-	Greg KH <greg@kroah.com>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain;
+	charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Nov 29, 2010 at 1:27 PM, John W. Linville
-<linville@tuxdriver.com> wrote:
-> On Mon, Nov 29, 2010 at 01:19:19PM -0800, Luis R. Rodriguez wrote:
->> On Mon, Nov 29, 2010 at 11:50 AM, John W. Linville
->> <linville@tuxdriver.com> wrote:
->
->> > After being chided for having an excessive number of patches in -next
->> > with "Cc: stable@kernel.org", I would prefer to avoid (or strongly
->> > limit) merging such patches that way.
->>
->> Is this a bad thing?
->
-> The point was that if it was a fix worth of consideration for stable
-> then it generally ought to be worth of consideration for the current
-> release.
->
->> Come to think of it we didn't get OTP patches in for 2.6.36 so I am
->> not considering we should just disable AR9003 from the PCI ID list for
->> ath9k as all cards sold should have it so in that case this patch
->> would just need to go to 2.6.37 and not 2.6.36.
->
-> Do you perhaps mean "need to go to 2.6.38 and not 2.6.37"?
+I am using firmware version "wl1271: firmware booted (Rev 6.1.0.0.343)"
 
-Yeah sorry, proper OTP likely didn't make it for 2.6.37, not sure now.
-Will have to check and get back to you.
+Raghu
 
-  Luis
+
+-----Original Message-----
+From: Luciano Coelho [mailto:luciano.coelho@nokia.com] 
+Sent: Thursday, November 11, 2010 8:40 PM
+To: ext raghunath
+Cc: linux-wireless@vger.kernel.org
+Subject: RE: Ti's WL1271 on OMAP3EVM board with kernel version 2.6.36
+
+On Thu, 2010-11-11 at 15:51 +0100, ext raghunath wrote:
+> I applied the patch which u have mentioned, but there is no change.
+
+Hmmm... Too bad.  It looked like the same problem that was fixed in that
+patch, but apparently it wasn't.
+
+Which firmware version are you using? You can find that out by checking
+the dmesg (grep for "firmware booted").
+
+-- 
+Cheers,
+Luca.
+
