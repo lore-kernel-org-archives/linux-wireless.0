@@ -1,45 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:64302 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755170Ab0KPVkR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 16 Nov 2010 16:40:17 -0500
-Subject: Re: [PATCH 00/18]  update for 2.6.38
-From: "Guy, Wey-Yi" <wey-yi.w.guy@intel.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"ipw3945-devel@lists.sourceforge.net"
-	<ipw3945-devel@lists.sourceforge.net>
-In-Reply-To: <20101116210247.GE10774@tuxdriver.com>
-References: <1289923311-14920-1-git-send-email-wey-yi.w.guy@intel.com>
-	 <20101116210247.GE10774@tuxdriver.com>
-Content-Type: text/plain
-Date: Tue, 16 Nov 2010 13:39:26 -0800
-Message-Id: <1289943566.31636.2.camel@wwguy-ubuntu>
-Mime-Version: 1.0
+Received: from nbd.name ([46.4.11.11]:35452 "EHLO nbd.name"
+	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1752310Ab0KLThV (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 12 Nov 2010 14:37:21 -0500
+Message-ID: <4CDD9753.80909@openwrt.org>
+Date: Fri, 12 Nov 2010 20:36:51 +0100
+From: Felix Fietkau <nbd@openwrt.org>
+MIME-Version: 1.0
+To: Bob Copeland <me@bobcopeland.com>
+CC: Wojciech Dubowik <dubowoj@neratec.com>, linville@tuxdriver.com,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 8/9] ath5k: AHB port. Add AHB bus support.
+References: <22942120.791289486697022.JavaMail.wlan@CHBU500181>	<13896234.1151289487498939.JavaMail.wlan@CHBU500181> <AANLkTinoANxSOiBJpa2hDk7V=ScSa66rcj-f1HfQGV1u@mail.gmail.com>
+In-Reply-To: <AANLkTinoANxSOiBJpa2hDk7V=ScSa66rcj-f1HfQGV1u@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2010-11-16 at 13:02 -0800, John W. Linville wrote:
-> On Tue, Nov 16, 2010 at 08:01:33AM -0800, Wey-Yi Guy wrote:
-> > We add more changes to prepare P2P supports
-> > We also add few features/changes to WiFi/BT coex,
-> > such as dynamic aggregation.
-> > For newer devices, we change the default LED mode to On/Off
+On 2010-11-12 8:26 PM, Bob Copeland wrote:
+> On Thu, Nov 11, 2010 at 9:58 AM, Wojciech Dubowik <dubowoj@neratec.com> wrote:
+>>
+>> AHB specific functions are now in ahb.c file. There is no common
+>> init functions which tries first pci and then ahb becasue on some
 > 
-> There had been some talk of a firmware update that would solve some
-> user-reported bugs on bugzilla.kernel.org.  I don't have the bug
-> numbers handy, but I can probably find them.  I imagine you can find
-> them quite easily as well.
+> 'because'
 > 
-> Is that firmware update still in the works?  When can we expect to
-> see that?
+>> --- a/drivers/net/wireless/ath/ath5k/Makefile
+>> +++ b/drivers/net/wireless/ath/ath5k/Makefile
+>> @@ -15,5 +15,5 @@ ath5k-y                               += rfkill.o
+>>  ath5k-y                                += ani.o
+>>  ath5k-y                                += sysfs.o
+>>  ath5k-$(CONFIG_ATH5K_DEBUG)    += debug.o
+>> -ath5k-y                                += pci.o
+>> +ath5k-y                                += $(if $(CONFIG_ATHEROS_AR231X),ahb,pci).o
+>>  obj-$(CONFIG_ATH5K)            += ath5k.o
 > 
-I finially got "Thumb up" for experimental uCode release for 1000, I
-understand it is not what needed the most (5000 uCode). I am really
-sorry for the delay, still try to work it out and take very long time.
+> This is not the right way.. what if someone wants both in one kernel?
+Having both in the kernel is completely pointless. There are no devices
+that can support both, nor will there ever be.
 
-I will publish the 1000 experimental uCode in the next 1 or 2 days
-
-Thanks
-Wey
-
+- Felix
