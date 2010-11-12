@@ -1,46 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:43232 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752684Ab0KJSBG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 10 Nov 2010 13:01:06 -0500
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Johannes Berg <johannes.berg@intel.com>,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Subject: [PATCH 13/16] iwlagn: fix RXON HT
-Date: Wed, 10 Nov 2010 09:56:47 -0800
-Message-Id: <1289411810-23093-14-git-send-email-wey-yi.w.guy@intel.com>
-In-Reply-To: <1289411810-23093-1-git-send-email-wey-yi.w.guy@intel.com>
-References: <1289411810-23093-1-git-send-email-wey-yi.w.guy@intel.com>
+Received: from he.sipsolutions.net ([78.46.109.217]:38418 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932127Ab0KLQn3 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 12 Nov 2010 11:43:29 -0500
+Subject: Re: [2.6.37 PATCH] cfg80211: fix WIPHY_FLAG_IBSS_RSN bit
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <20101112065356.3307.26298.stgit@fate.lan>
+References: <20101112065356.3307.26298.stgit@fate.lan>
+Content-Type: text/plain; charset="UTF-8"
+Date: Fri, 12 Nov 2010 08:44:40 -0800
+Message-ID: <1289580280.3736.0.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+On Fri, 2010-11-12 at 08:53 +0200, Jussi Kivilinna wrote:
+> WIPHY_FLAG_IBSS_RSN is BIT(7) as is WIPHY_FLAG_CONTROL_PORT_PROTOCOL. Change
+> to BIT(8).
 
-When the HT information is changed due to
-BSS changes (like legacy stations joining)
-we need to recalculate HT RXON parameters.
+Thanks Jussi!
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-agn-rxon.c |    1 +
- 1 files changed, 1 insertions(+), 0 deletions(-)
+Acked-by: Johannes Berg <johannes@sipsolutions.net>
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-rxon.c b/drivers/net/wireless/iwlwifi/iwl-agn-rxon.c
-index d9d617f..2d927a9 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn-rxon.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn-rxon.c
-@@ -538,6 +538,7 @@ void iwlagn_bss_info_changed(struct ieee80211_hw *hw,
- 		ctx->ht.non_gf_sta_present = !!(bss_conf->ht_operation_mode &
- 					IEEE80211_HT_OP_MODE_NON_GF_STA_PRSNT);
- 		iwlagn_check_needed_chains(priv, ctx, bss_conf);
-+		iwl_set_rxon_ht(priv, &priv->current_ht_config);
- 	}
- 
- 	if (priv->cfg->ops->hcmd->set_rxon_chain)
--- 
-1.7.0.4
+> Cc: Johannes Berg <johannes@sipsolutions.net>
+> Signed-off-by: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
+> ---
+>  include/net/cfg80211.h |    2 +-
+>  1 files changed, 1 insertions(+), 1 deletions(-)
+> 
+> diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+> index 2a7936d..97b8b7c 100644
+> --- a/include/net/cfg80211.h
+> +++ b/include/net/cfg80211.h
+> @@ -1355,7 +1355,7 @@ enum wiphy_flags {
+>  	WIPHY_FLAG_4ADDR_AP			= BIT(5),
+>  	WIPHY_FLAG_4ADDR_STATION		= BIT(6),
+>  	WIPHY_FLAG_CONTROL_PORT_PROTOCOL	= BIT(7),
+> -	WIPHY_FLAG_IBSS_RSN			= BIT(7),
+> +	WIPHY_FLAG_IBSS_RSN			= BIT(8),
+>  };
+>  
+>  struct mac_address {
+> 
+> 
+
 
