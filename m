@@ -1,41 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f46.google.com ([209.85.161.46]:58805 "EHLO
-	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754320Ab0KVTqN (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 22 Nov 2010 14:46:13 -0500
-Received: by fxm13 with SMTP id 13so2985547fxm.19
-        for <linux-wireless@vger.kernel.org>; Mon, 22 Nov 2010 11:46:12 -0800 (PST)
-Message-ID: <4CEAC868.9040402@lwfinger.net>
-Date: Mon, 22 Nov 2010 13:45:44 -0600
-From: Larry Finger <Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-To: Klaas De Craemer <klaasdc@gmail.com>
-CC: htl10@users.sourceforge.net, linux-wireless@vger.kernel.org,
-	Herton Ronaldo Krzesinski <herton@mandriva.com.br>
-Subject: Re: RTL8187L: Can only "enable" hw radio switch after Windows boot
-References: <4CEA9903.6070604@lwfinger.net> <370521.43644.qm@web29514.mail.ird.yahoo.com> <AANLkTimd0EDGtZFcrhknyacoCQQZNMEKe-kvYNA9z_Bo@mail.gmail.com>
-In-Reply-To: <AANLkTimd0EDGtZFcrhknyacoCQQZNMEKe-kvYNA9z_Bo@mail.gmail.com>
-Content-Type: text/plain; charset=UTF-8
+Received: from mx1.redhat.com ([209.132.183.28]:1805 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752465Ab0KLHnh (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 12 Nov 2010 02:43:37 -0500
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: Wey-Yi Guy <wey-yi.w.guy@intel.com>,
+	Intel Linux Wireless <ilw@linux.intel.com>
+Cc: linux-wireless@vger.kernel.org,
+	Stanislaw Gruszka <sgruszka@redhat.com>
+Subject: [PATCH 3/3] iwlwifi: kill elapsed_jiffies
+Date: Fri, 12 Nov 2010 08:47:07 +0100
+Message-Id: <1289548027-3383-3-git-send-email-sgruszka@redhat.com>
+In-Reply-To: <1289548027-3383-1-git-send-email-sgruszka@redhat.com>
+References: <1289548027-3383-1-git-send-email-sgruszka@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 11/22/2010 01:13 PM, Klaas De Craemer wrote:
-> Not sure if you meant this, but the box itself is inside (warm), only
-> the transceiver is outside.
-> Just to be sure, I skipped trying it in Linux first today and
-> immediately plugged it in my Windows laptop: instant connection. Next
-> I plugged it in Linux and it works fine. This way the device had no
-> time to "warm up" because of first being powered in Linux.
-> 
-> I cannot easily take it inside without unscrewing the antenna (a dish
-> with biquad feeder). So I'll try it without antenna tomorrow.
+Subtract of jiffies is fine even if one variable overwrap.
 
-If it is not too much trouble, please try it with the transceiver box warm. In
-the meantime, I will do a USB dump of rtl8187 and the Windows driver using an XP
-system that I have as a VM. Please check in the device manager on your Windows
-box and get the driver version.
+Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-helpers.h |    9 ---------
+ drivers/net/wireless/iwlwifi/iwl-scan.c    |    3 +--
+ 2 files changed, 1 insertions(+), 11 deletions(-)
 
-Thanks,
+diff --git a/drivers/net/wireless/iwlwifi/iwl-helpers.h b/drivers/net/wireless/iwlwifi/iwl-helpers.h
+index 1aaef70..9233683 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-helpers.h
++++ b/drivers/net/wireless/iwlwifi/iwl-helpers.h
+@@ -44,15 +44,6 @@ static inline struct ieee80211_conf *ieee80211_get_hw_conf(
+ 	return &hw->conf;
+ }
+ 
+-static inline unsigned long elapsed_jiffies(unsigned long start,
+-					    unsigned long end)
+-{
+-	if (end >= start)
+-		return end - start;
+-
+-	return end + (MAX_JIFFY_OFFSET - start) + 1;
+-}
+-
+ /**
+  * iwl_queue_inc_wrap - increment queue index, wrap back to beginning
+  * @index -- current index
+diff --git a/drivers/net/wireless/iwlwifi/iwl-scan.c b/drivers/net/wireless/iwlwifi/iwl-scan.c
+index e1aa0e1..12d9363 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-scan.c
++++ b/drivers/net/wireless/iwlwifi/iwl-scan.c
+@@ -252,8 +252,7 @@ static void iwl_rx_scan_complete_notif(struct iwl_priv *priv,
+ 
+ 	IWL_DEBUG_SCAN(priv, "Scan on %sGHz took %dms\n",
+ 		       (priv->scan_band == IEEE80211_BAND_2GHZ) ? "2.4" : "5.2",
+-		       jiffies_to_msecs(elapsed_jiffies
+-					(priv->scan_start, jiffies)));
++		       jiffies_to_msecs(jiffies - priv->scan_start));
+ 
+ 	queue_work(priv->workqueue, &priv->scan_completed);
+ 
+-- 
+1.7.1
 
-Larry
