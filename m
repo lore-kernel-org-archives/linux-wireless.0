@@ -1,40 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:38194 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756541Ab0KLTVg (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 12 Nov 2010 14:21:36 -0500
-From: Hauke Mehrtens <hauke@hauke-m.de>
-To: lrodriguez@atheros.com
-Cc: linux-wireless@vger.kernel.org, mcgrof@infradead.org,
-	Hauke Mehrtens <hauke@hauke-m.de>
-Subject: [PATCH 2/2] compat-wireless: fix compile error with iwl
-Date: Fri, 12 Nov 2010 20:21:25 +0100
-Message-Id: <1289589685-16372-2-git-send-email-hauke@hauke-m.de>
-In-Reply-To: <1289589685-16372-1-git-send-email-hauke@hauke-m.de>
-References: <1289589685-16372-1-git-send-email-hauke@hauke-m.de>
+Received: from he.sipsolutions.net ([78.46.109.217]:45858 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753120Ab0KLVGx (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 12 Nov 2010 16:06:53 -0500
+Subject: Re: [PATCH] mac80211:  Fix deadlock in ieee80211_do_stop.
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Ben Greear <greearb@candelatech.com>
+Cc: linux-wireless@vger.kernel.org, Tejun Heo <tj@kernel.org>
+In-Reply-To: <4CDDAA3B.9090007@candelatech.com>
+References: <1289592426-5367-1-git-send-email-greearb@candelatech.com>
+	 <1289594998.3736.11.camel@jlt3.sipsolutions.net>
+	 <4CDDAA3B.9090007@candelatech.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Fri, 12 Nov 2010 13:08:16 -0800
+Message-ID: <1289596096.3736.13.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The header file declares the const.
+On Fri, 2010-11-12 at 12:57 -0800, Ben Greear wrote:
 
-Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
----
- patches/11-dev-pm-ops.patch |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+> > However, I also don't think it should be necessary to do this.
+> > sdata->work is always queued on local->workqueue, which is created using
+> > alloc_ordered_workqueue(), and there is no work on this workqueue that
+> > uses the RTNL. Therefore, even flushing the entire workqueue must work,
+> > unless alloc_ordered_workqueue() has no such guarantee any more -- which
+> > I would consider to be a bug in the new workqueue framework.
+> 
+> The problem appears (to me) to be that the flush_work() attempts
+> to wait for the worker to complete it's current task.  The worker can
+> be doing a completely separate task (ie, wireless_nlevent_process),
+> but that task can never complete because do_stop() holds rtnl
+> and the task-in-progress may block on acquiring rtnl.
+> 
+> So, flush_work() cannot make any progress.
+> 
+> The stack-traces for hung programs I originally posted seem
+> to agree with this analysis.
+> 
+> So far, I reproduced the bug around 20 times in a row witout the patch,
+> and since I added this patch, I have two good runs in a row, so it definitely
+> has an affect.
+> 
+> If my assumptions are correct, it would seem to unsafe to EVER
+> call flush_work() while holding rtnl (or indeed, any other lock
+> that any other work could possibly require).
 
-diff --git a/patches/11-dev-pm-ops.patch b/patches/11-dev-pm-ops.patch
-index 8931276..6f00db8 100644
---- a/patches/11-dev-pm-ops.patch
-+++ b/patches/11-dev-pm-ops.patch
-@@ -178,7 +178,7 @@ calls on compat code with only slight modifications.
- +EXPORT_SYMBOL(iwl_pci_resume_compat);
- +#endif
- +
--+SIMPLE_DEV_PM_OPS(iwl_pm_ops, iwl_pci_suspend, iwl_pci_resume);
-++const SIMPLE_DEV_PM_OPS(iwl_pm_ops, iwl_pci_suspend, iwl_pci_resume);
- +
- +#if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,29))
-  EXPORT_SYMBOL(iwl_pm_ops);
--- 
-1.7.1
+Well then in that case all I'm saying is that we have a bug in the
+workqueue code, because it used to be allowed to flush a workqueue that
+never had any work items on it that grabbed the RTNL themselves. I
+actually added lockdep detection for the case where you _did_, but since
+I'm sure we don't have anything that grabs the RTNL on our workqueue,
+this should be OK.
+
+johannes
 
