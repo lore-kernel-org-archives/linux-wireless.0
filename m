@@ -1,40 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yx0-f174.google.com ([209.85.213.174]:34983 "EHLO
-	mail-yx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755316Ab0KMUCv (ORCPT
+Received: from mail-qw0-f46.google.com ([209.85.216.46]:56935 "EHLO
+	mail-qw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755413Ab0KLK6w (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 13 Nov 2010 15:02:51 -0500
-Received: by yxn35 with SMTP id 35so588497yxn.19
-        for <linux-wireless@vger.kernel.org>; Sat, 13 Nov 2010 12:02:50 -0800 (PST)
-Message-ID: <4CDEEEE4.80801@lwfinger.net>
-Date: Sat, 13 Nov 2010 14:02:44 -0600
-From: Larry Finger <Larry.Finger@lwfinger.net>
+	Fri, 12 Nov 2010 05:58:52 -0500
+Received: by qwi4 with SMTP id 4so897700qwi.19
+        for <linux-wireless@vger.kernel.org>; Fri, 12 Nov 2010 02:58:51 -0800 (PST)
 MIME-Version: 1.0
-To: James Womack <james.c.womack@gmail.com>
-CC: linux-wireless@vger.kernel.org
-Subject: Re: r8187se panic
-References: <slrnidp3ae.79c.rb-oss-3@mal.justgohome.co.uk> <4CDC9FA5.10002@lwfinger.net> <slrnidq7u0.9ic.rb-oss-3@mal.justgohome.co.uk> <4CDD3BC4.7070102@lwfinger.net> <slrnidqorp.dlr.rb-oss-3@mal.justgohome.co.uk> <4CDD66C4.10603@lwfinger.net> <slrnidqsld.dlr.rb-oss-3@mal.justgohome.co.uk> <4CDD7945.70005@lwfinger.net> <slrnidqv0k.g21.rb-oss-3@mal.justgohome.co.uk> <loom.20101113T191727-421@post.gmane.org> <4CDEDC74.3040902@lwfinger.net> <ibmosc$4au$1@dough.gmane.org>
-In-Reply-To: <ibmosc$4au$1@dough.gmane.org>
+In-Reply-To: <000101cb8248$579d3d90$06d7b8b0$@com>
+References: <004701cb8191$e82c75e0$b88561a0$@com> <AANLkTikZD_1DUqkxQyGSLdaQS01Qg15+_TDkW3QuRuOt@mail.gmail.com>
+ <1289476604.1606.36.camel@powerslave> <005101cb81af$f1e75280$d5b5f780$@com>
+ <1289488173.1606.58.camel@powerslave> <000001cb822d$067f8230$137e8690$@com>
+ <AC090B9732AB2B4DB7FF476E907FE6600113BB263C@dnce02.ent.ti.com> <000101cb8248$579d3d90$06d7b8b0$@com>
+From: Arik Nemtsov <arik@wizery.com>
+Date: Fri, 12 Nov 2010 12:58:36 +0200
+Message-ID: <AANLkTi=YH7df-oqbGkW1gZxCD6jBhCvfDMf_882Cj5si@mail.gmail.com>
+Subject: Re: Ti's WL1271 on OMAP3EVM board with kernel version 2.6.36
+To: raghunath <raghunath@airvod.com>
+Cc: "Levi, Shahar" <shahar_levi@ti.com>,
+	Luciano Coelho <luciano.coelho@nokia.com>,
+	linux-wireless@vger.kernel.org
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 11/13/2010 01:27 PM, James Womack wrote:
-> If building a kernel is as simple as building other programs from source
-> (i.e. configure, make, make install), I could do that. I'm using Debian
-> at the moment. Presumably I'd need a compiler of some kind, which I
-> could obtain from the repos. I am not sure how one would apply patches
-> to the kernel, however. Would I be able to compile a modified kernel and
-> add this to grub whilst retaining the ability to boot in the unmodified
-> kernel?
+On Fri, Nov 12, 2010 at 11:02, raghunath <raghunath@airvod.com> wrote:
+> Hi Shahar/Luca,
+>
+> Its constantly coming, I am building wl1271 sdio driver statically and I am running on OMAP3EVM board from Mistral
+> And running 2.6.36 kernel and wl1271 sits on MMC2 I have modified code to set PIN MUX and clock for MMC2 and WLAN_EN(GPIO 150)
+> And WLAN_IRQ(GPIO-149). I am able to download firmare successfully and get Static data from firmware and Chip ID after firmware
+> Download. With this I am assuming that code I modified for MMC2 on EVM is proper(correct me if I am worng) after that ware is
+> Failing ,in ELP wake up.
+>
 
-It is similar to the process used with other programs. My distro is openSUSE and
-the steps are to get the kernel source, the kernel development package, and the
-patch utility using YaST. Other distros use emerge, apt-get, or similar
-utilities. The easiest way to configure the kernel is to match the current one
-using the compressed version in /proc/config.gz. You should end up with an
-additional kernel in the GRUB menu that can be selected at boot time.
+Is it only ELP mode that's failing? You can test this by commenting
+out these line in wl1271_elp_work():
 
-Larry
+	wl1271_raw_write32(wl, HW_ACCESS_ELP_CTRL_REG_ADDR, ELPCTRL_SLEEP);
+	set_bit(WL1271_FLAG_IN_ELP, &wl->flags);
 
-
+Regards,
+Arik
