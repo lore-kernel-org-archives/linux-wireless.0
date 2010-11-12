@@ -1,74 +1,158 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:56013 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754418Ab0KPQGm (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 16 Nov 2010 11:06:42 -0500
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Johannes Berg <johannes.berg@intel.com>,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Subject: [PATCH 08/18] iwlagn: remove a bogus AGG_OFF check
-Date: Tue, 16 Nov 2010 08:01:41 -0800
-Message-Id: <1289923311-14920-9-git-send-email-wey-yi.w.guy@intel.com>
-In-Reply-To: <1289923311-14920-1-git-send-email-wey-yi.w.guy@intel.com>
-References: <1289923311-14920-1-git-send-email-wey-yi.w.guy@intel.com>
+Received: from mail-iw0-f174.google.com ([209.85.214.174]:50164 "EHLO
+	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753169Ab0KLABL convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 11 Nov 2010 19:01:11 -0500
+Received: by iwn10 with SMTP id 10so2770401iwn.19
+        for <linux-wireless@vger.kernel.org>; Thu, 11 Nov 2010 16:01:10 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <AANLkTikf13HMEtVkpTftKrZenvPwPcHbuhgqmh2m-UYU@mail.gmail.com>
+References: <185731CC-606D-407D-80F4-33FEF08ED35D@moxienet.com>
+ <AANLkTik35wHXiznjGm7nc9HBYUy7iQk65FVSq7T2Gw8u@mail.gmail.com> <AANLkTikf13HMEtVkpTftKrZenvPwPcHbuhgqmh2m-UYU@mail.gmail.com>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Thu, 11 Nov 2010 16:00:48 -0800
+Message-ID: <AANLkTin_5Nhwby79eYY972ZFh-0Tr4MaauSn4LAtsn-7@mail.gmail.com>
+Subject: Re: Regulatory/CRDA Race
+To: Mark Mentovai <mark@moxienet.com>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+On Thu, Nov 11, 2010 at 3:36 PM, Luis R. Rodriguez <mcgrof@gmail.com> wrote:
+> On Tue, Nov 9, 2010 at 1:19 PM, Luis R. Rodriguez <mcgrof@gmail.com> wrote:
+>> On Mon, Nov 8, 2010 at 11:40 AM, Mark Mentovai <mark@moxienet.com> wrote:
+>>> Following up on the old-ish “[ath5k-devel] Race condition in CRDA calls?” thread…
+>>>
+>>> I independently experienced this problem, debugged it, and came to the same conclusion. There is in fact a race between regulatory requests being made via regulatory_hint and CRDA actually updating regulatory data. I see this on a system with two cards that come up one after the other during boot.
+>>>
+>>> 1. cfg80211 calls CRDA to update the world regulatory domain and CRDA does so. The regulatory domain is now 00.
+>>>
+>>> 2. The first card’s driver (in my case, ath9k) calls regulatory_hint to provide US as a driver hint. ignore_request decides against intersection because the last request came from the core. There’s a CRDA call, but CRDA isn’t quick enough to respond. The regulatory domain is still 00, because CRDA hasn’t changed it yet.
+>>>
+>>> 3. The second card’s driver (also ath9k) calls regulatory_hint to provide US as a driver hint. ignore_request sees that the last request came from a driver (instead of the core) and since the regulatory domain is changing from 00 to US, decides that intersection must be performed.
+>>>
+>>> 4. When CRDA finally responds to the request from #2 or #3, cfg80211 sees that last_request->intersect is true, and intersects. The regulatory domain is set to the intersection of 00 and US.
+>>>
+>>> The race here is between CRDA providing data and the second card’s request being made via regulatory_hint. regulatory_hint and ignore_request assume that last_request is in sync with the currently-set regulatory domain, but there is no such synchronization.
+>>>
+>>> Here’s my openwrt-devel post describing the above in a slightly different level of detail:https://lists.openwrt.org/pipermail/openwrt-devel/2010-November/008570.html.--
+>>
+>> I'll take a look at this once I get done with the
+>> compat-wireless-2.6.37 release. Thanks for the report.
+>
+> I'm looking at this now, can you do me a favor and test against
+> today's wireless-testing to verify the issue is still present? I'll be
+> digging at this in the mean time.
 
-Even if this check were to happen, using the
-txq_id here (which is a HW queue) would lead
-to confusion in mac80211. Luckily, it doesn't
-seem like this can ever happen.
+I can reproduce this easily now with:
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-4965.c    |    8 ++------
- drivers/net/wireless/iwlwifi/iwl-agn-lib.c |    8 ++------
- 2 files changed, 4 insertions(+), 12 deletions(-)
+mcgrof@flash ~ $ sudo cat /sbin/crda
+#!/bin/bash
+echo $COUNTRY >> /tmp/log
+sleep 2
+/sbin/crda.orig
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-4965.c b/drivers/net/wireless/iwlwifi/iwl-4965.c
-index 19da3e5..1940079 100644
---- a/drivers/net/wireless/iwlwifi/iwl-4965.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-4965.c
-@@ -2238,12 +2238,8 @@ static void iwl4965_rx_reply_tx(struct iwl_priv *priv,
- 
- 			if (priv->mac80211_registered &&
- 			    (iwl_queue_space(&txq->q) > txq->q.low_mark) &&
--			    (agg->state != IWL_EMPTYING_HW_QUEUE_DELBA)) {
--				if (agg->state == IWL_AGG_OFF)
--					iwl_wake_queue(priv, txq_id);
--				else
--					iwl_wake_queue(priv, txq->swq_id);
--			}
-+			    (agg->state != IWL_EMPTYING_HW_QUEUE_DELBA))
-+				iwl_wake_queue(priv, txq->swq_id);
- 		}
- 	} else {
- 		info->status.rates[0].count = tx_resp->failure_frame + 1;
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-lib.c b/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
-index c6f65fd..2ba83b5 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
-@@ -445,12 +445,8 @@ static void iwlagn_rx_reply_tx(struct iwl_priv *priv,
- 
- 			if (priv->mac80211_registered &&
- 			    (iwl_queue_space(&txq->q) > txq->q.low_mark) &&
--			    (agg->state != IWL_EMPTYING_HW_QUEUE_DELBA)) {
--				if (agg->state == IWL_AGG_OFF)
--					iwl_wake_queue(priv, txq_id);
--				else
--					iwl_wake_queue(priv, txq->swq_id);
--			}
-+			    (agg->state != IWL_EMPTYING_HW_QUEUE_DELBA))
-+				iwl_wake_queue(priv, txq->swq_id);
- 		}
- 	} else {
- 		BUG_ON(txq_id != txq->swq_id);
--- 
-1.7.0.4
 
+mcgrof@flash ~ $ iw reg get
+country 98:
+        (2402 - 2472 @ 40), (N/A, 20)
+        (2457 - 2482 @ 20), (N/A, 20), PASSIVE-SCAN, NO-IBSS
+        (2474 - 2482 @ 8), (N/A, 20), NO-OFDM, PASSIVE-SCAN, NO-IBSS
+        (5170 - 5250 @ 40), (N/A, 20), PASSIVE-SCAN, NO-IBSS
+
+You don't even have to use ath9k, just use mac80211_hwsim with:
+
+modprobe mac80211_hwsim regtest=2
+
+I get (I'm trimming irrelevant output)
+
+Wiphy phy1
+        Band 1:
+                Frequencies:
+                        * 2412 MHz [1] (20.0 dBm)
+                        * 2417 MHz [2] (20.0 dBm)
+                        * 2422 MHz [3] (20.0 dBm)
+                        * 2427 MHz [4] (20.0 dBm)
+                        * 2432 MHz [5] (20.0 dBm)
+                        * 2437 MHz [6] (20.0 dBm)
+                        * 2442 MHz [7] (20.0 dBm)
+                        * 2447 MHz [8] (20.0 dBm)
+                        * 2452 MHz [9] (20.0 dBm)
+                        * 2457 MHz [10] (20.0 dBm)
+                        * 2462 MHz [11] (20.0 dBm)
+                        * 2467 MHz [12] (20.0 dBm)
+                        * 2472 MHz [13] (20.0 dBm)
+                        * 2484 MHz [14] (disabled)
+        Band 2:
+                Frequencies:
+                        * 5180 MHz [36] (20.0 dBm)
+                        * 5200 MHz [40] (20.0 dBm)
+                        * 5220 MHz [44] (20.0 dBm)
+                        * 5240 MHz [48] (20.0 dBm)
+                        * 5260 MHz [52] (20.0 dBm) (radar detection)
+                        * 5280 MHz [56] (20.0 dBm) (radar detection)
+                        * 5300 MHz [60] (20.0 dBm) (radar detection)
+                        * 5320 MHz [64] (20.0 dBm) (radar detection)
+                        * 5500 MHz [100] (20.0 dBm) (radar detection)
+                        * 5520 MHz [104] (20.0 dBm) (radar detection)
+                        * 5540 MHz [108] (20.0 dBm) (radar detection)
+                        * 5560 MHz [112] (20.0 dBm) (radar detection)
+                        * 5580 MHz [116] (20.0 dBm) (radar detection)
+                        * 5600 MHz [120] (20.0 dBm) (radar detection)
+                        * 5620 MHz [124] (20.0 dBm) (radar detection)
+                        * 5640 MHz [128] (20.0 dBm) (radar detection)
+                        * 5660 MHz [132] (20.0 dBm) (radar detection)
+                        * 5680 MHz [136] (20.0 dBm) (radar detection)
+                        * 5700 MHz [140] (20.0 dBm) (radar detection)
+                        * 5745 MHz [149] (disabled)
+                        * 5765 MHz [153] (disabled)
+                        * 5785 MHz [157] (disabled)
+                        * 5805 MHz [161] (disabled)
+                        * 5825 MHz [165] (disabled)
+Wiphy phy0
+        Band 1:
+                Frequencies:
+                        * 2412 MHz [1] (20.0 dBm)
+                        * 2417 MHz [2] (20.0 dBm)
+                        * 2422 MHz [3] (20.0 dBm)
+                        * 2427 MHz [4] (20.0 dBm)
+                        * 2432 MHz [5] (20.0 dBm)
+                        * 2437 MHz [6] (20.0 dBm)
+                        * 2442 MHz [7] (20.0 dBm)
+                        * 2447 MHz [8] (20.0 dBm)
+                        * 2452 MHz [9] (20.0 dBm)
+                        * 2457 MHz [10] (20.0 dBm)
+                        * 2462 MHz [11] (20.0 dBm)
+                        * 2467 MHz [12] (20.0 dBm) (passive scanning, no IBSS)
+                        * 2472 MHz [13] (20.0 dBm) (passive scanning, no IBSS)
+                        * 2484 MHz [14] (disabled)
+        Band 2:
+                Frequencies:
+                        * 5180 MHz [36] (20.0 dBm) (passive scanning, no IBSS)
+                        * 5200 MHz [40] (20.0 dBm) (passive scanning, no IBSS)
+                        * 5220 MHz [44] (20.0 dBm) (passive scanning, no IBSS)
+                        * 5240 MHz [48] (20.0 dBm) (passive scanning, no IBSS)
+                        * 5260 MHz [52] (disabled)
+                        * 5280 MHz [56] (disabled)
+                        * 5300 MHz [60] (disabled)
+                        * 5320 MHz [64] (disabled)
+                        * 5500 MHz [100] (disabled)
+                        * 5520 MHz [104] (disabled)
+                        * 5540 MHz [108] (disabled)
+                        * 5560 MHz [112] (disabled)
+                        * 5580 MHz [116] (disabled)
+                        * 5600 MHz [120] (disabled)
+                        * 5620 MHz [124] (disabled)
+                        * 5640 MHz [128] (disabled)
+                        * 5660 MHz [132] (disabled)
+                        * 5680 MHz [136] (disabled)
+                        * 5700 MHz [140] (disabled)
+                        * 5745 MHz [149] (disabled)
+                        * 5765 MHz [153] (disabled)
+                        * 5785 MHz [157] (disabled)
+                        * 5805 MHz [161] (disabled)
+                        * 5825 MHz [165] (disabled)
+
+  Luis
