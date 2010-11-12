@@ -1,57 +1,31 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qw0-f46.google.com ([209.85.216.46]:65142 "EHLO
-	mail-qw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754742Ab0KJCVE (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 9 Nov 2010 21:21:04 -0500
-Received: by mail-qw0-f46.google.com with SMTP id 5so5749qwh.19
-        for <linux-wireless@vger.kernel.org>; Tue, 09 Nov 2010 18:21:03 -0800 (PST)
-From: Arnaud Lacombe <lacombar@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: lrodriguez@atheros.com, Arnaud Lacombe <lacombar@gmail.com>
-Subject: [PATCH 10/44] compat/2.6.23: add compat inline for notifier_{from,to}_errno()
-Date: Tue,  9 Nov 2010 21:19:52 -0500
-Message-Id: <1289355626-25373-11-git-send-email-lacombar@gmail.com>
-In-Reply-To: <1289355626-25373-1-git-send-email-lacombar@gmail.com>
-References: <1289355626-25373-1-git-send-email-lacombar@gmail.com>
+Received: from bear.ext.ti.com ([192.94.94.41]:58433 "EHLO bear.ext.ti.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750936Ab0KLHQt (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 12 Nov 2010 02:16:49 -0500
+From: "Levi, Shahar" <shahar_levi@ti.com>
+To: raghunath <raghunath@airvod.com>,
+	"'Luciano Coelho'" <luciano.coelho@nokia.com>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Date: Fri, 12 Nov 2010 08:16:39 +0100
+Subject: RE: Ti's WL1271 on OMAP3EVM board with kernel version 2.6.36
+Message-ID: <AC090B9732AB2B4DB7FF476E907FE6600113BB263C@dnce02.ent.ti.com>
+References: <004701cb8191$e82c75e0$b88561a0$@com>
+	 <AANLkTikZD_1DUqkxQyGSLdaQS01Qg15+_TDkW3QuRuOt@mail.gmail.com>
+	 <1289476604.1606.36.camel@powerslave> <005101cb81af$f1e75280$d5b5f780$@com>
+ <1289488173.1606.58.camel@powerslave> <000001cb822d$067f8230$137e8690$@com>
+In-Reply-To: <000001cb822d$067f8230$137e8690$@com>
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Arnaud Lacombe <lacombar@gmail.com>
----
- include/linux/compat-2.6.23.h |   14 ++++++++++++++
- 1 files changed, 14 insertions(+), 0 deletions(-)
-
-diff --git a/include/linux/compat-2.6.23.h b/include/linux/compat-2.6.23.h
-index fbfb470..5dd6301 100644
---- a/include/linux/compat-2.6.23.h
-+++ b/include/linux/compat-2.6.23.h
-@@ -7,11 +7,25 @@
- #if (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,23))
- 
- #include <linux/netdevice.h>
-+#include <linux/notifier.h>
- #include <linux/sched.h>
- #include <linux/workqueue.h>
- #include <linux/genetlink.h>
- #include <net/sch_generic.h>
- 
-+/* Encapsulate (negative) errno value (in particular, NOTIFY_BAD <=> EPERM). */
-+static inline int notifier_from_errno(int err)
-+{
-+	return NOTIFY_STOP_MASK | (NOTIFY_OK - err);
-+}
-+
-+/* Restore (negative) errno value from notify return value. */
-+static inline int notifier_to_errno(int ret)
-+{
-+	ret &= ~NOTIFY_STOP_MASK;
-+	return ret > NOTIFY_OK ? NOTIFY_OK - ret : 0;
-+}
-+
- /*
-  * Tell gcc if a function is cold. The compiler will assume any path
-  * directly leading to the call is unlikely.
--- 
-1.7.2.30.gc37d7.dirty
-
+PiAtLS0tLU9yaWdpbmFsIE1lc3NhZ2UtLS0tLQ0KPiBGcm9tOiBsaW51eC13aXJlbGVzcy1vd25l
+ckB2Z2VyLmtlcm5lbC5vcmcgW21haWx0bzpsaW51eC13aXJlbGVzcy0NCj4gb3duZXJAdmdlci5r
+ZXJuZWwub3JnXSBPbiBCZWhhbGYgT2YgcmFnaHVuYXRoDQo+IFNlbnQ6IEZyaWRheSwgTm92ZW1i
+ZXIgMTIsIDIwMTAgNzo0NyBBTQ0KPiBUbzogJ0x1Y2lhbm8gQ29lbGhvJw0KPiBDYzogbGludXgt
+d2lyZWxlc3NAdmdlci5rZXJuZWwub3JnDQo+IFN1YmplY3Q6IFJFOiBUaSdzIFdMMTI3MSBvbiBP
+TUFQM0VWTSBib2FyZCB3aXRoIGtlcm5lbCB2ZXJzaW9uIDIuNi4zNg0KPiANCj4gSSBhbSB1c2lu
+ZyBmaXJtd2FyZSB2ZXJzaW9uICJ3bDEyNzE6IGZpcm13YXJlIGJvb3RlZCAoUmV2IDYuMS4wLjAu
+MzQzKSINCj4gDQo+IFJhZ2h1DQoNCmRvIHlvdSBnZXQgaXQgY29uc3RhbnRseSBvciByYW5kb21s
+eT8NClJlZ2FyZHMsDQpTaGFoYXINCg0K
