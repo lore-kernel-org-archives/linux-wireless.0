@@ -1,69 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bar.sig21.net ([80.81.252.164]:37975 "EHLO bar.sig21.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757033Ab0KPTHF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 16 Nov 2010 14:07:05 -0500
-Date: Tue, 16 Nov 2010 20:06:54 +0100
-From: Johannes Stezenbach <js@sig21.net>
-To: Ivo Van Doorn <ivdoorn@gmail.com>
-Cc: Helmut Schaa <helmut.schaa@googlemail.com>,
-	jay_hung@ralinktech.com, linux-wireless@vger.kernel.org,
-	users@rt2x00.serialmonkey.com,
-	Walter Goldens <goldenstranger@yahoo.com>,
-	"John W. Linville" <linville@tuxdriver.com>
-Subject: Re: [PATCH 7/9] rt2x00: Fix rt2800 USB TX Path DMA issue
-Message-ID: <20101116190654.GA3659@sig21.net>
-References: <201011131911.47346.IvDoorn@gmail.com>
- <201011161742.08503.helmut.schaa@googlemail.com>
- <20101116165302.GA29570@sig21.net>
- <201011161800.40654.helmut.schaa@googlemail.com>
- <AANLkTi=ANfE3s8RUmS5=qyofqHM2geRnatK-eCUjovEc@mail.gmail.com>
+Received: from mail-iw0-f174.google.com ([209.85.214.174]:50765 "EHLO
+	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753473Ab0KLC1l convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 11 Nov 2010 21:27:41 -0500
+Received: by iwn10 with SMTP id 10so2900107iwn.19
+        for <linux-wireless@vger.kernel.org>; Thu, 11 Nov 2010 18:27:40 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <AANLkTi=ANfE3s8RUmS5=qyofqHM2geRnatK-eCUjovEc@mail.gmail.com>
+In-Reply-To: <AANLkTikkH2GPTh0cPHODqJLe_Xte27qnHLSfuxqzzJYV@mail.gmail.com>
+References: <185731CC-606D-407D-80F4-33FEF08ED35D@moxienet.com>
+ <AANLkTik35wHXiznjGm7nc9HBYUy7iQk65FVSq7T2Gw8u@mail.gmail.com>
+ <AANLkTikf13HMEtVkpTftKrZenvPwPcHbuhgqmh2m-UYU@mail.gmail.com>
+ <AANLkTin_5Nhwby79eYY972ZFh-0Tr4MaauSn4LAtsn-7@mail.gmail.com>
+ <AANLkTin8+ecx5e04CJM8sv2LrY=+xnJ7cD2CPcMHHcYe@mail.gmail.com> <AANLkTikkH2GPTh0cPHODqJLe_Xte27qnHLSfuxqzzJYV@mail.gmail.com>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Thu, 11 Nov 2010 18:27:20 -0800
+Message-ID: <AANLkTikuEpe-SPZKmhvYizGARvW-fKszTB=OO2oVvNVo@mail.gmail.com>
+Subject: Re: Regulatory/CRDA Race
+To: Mark Mentovai <mark@moxienet.com>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+On Thu, Nov 11, 2010 at 4:04 PM, Luis R. Rodriguez <mcgrof@gmail.com> wrote:
+>>>>> On Mon, Nov 8, 2010 at 11:40 AM, Mark Mentovai <mark@moxienet.com> wrote:
+>>>>>> 3. The second card’s driver (also ath9k) calls regulatory_hint to provide US as a driver hint. ignore_request sees that the last request came from a driver (instead of the core) and since the regulatory domain is changing from 00 to US, decides that intersection must be performed.
+>
+> This interpretation however is incorrect, as a driver hint shall
+> always be respected if the current regulatory domain is 00. We do end
+> up with an intersection but there is another reason and that is the
+> bug. I will try to track it down.
 
-(quoting repaired)
+OK fixed, please try the posted patch.
 
-On Tue, Nov 16, 2010 at 06:36:27PM +0100, Ivo Van Doorn wrote:
-> On Nov 16, 2010 6:01 PM, "Helmut Schaa" <helmut.schaa@googlemail.com> wrote:
-> > Am Dienstag 16 November 2010 schrieb Johannes Stezenbach:
-> >> On Tue, Nov 16, 2010 at 05:42:08PM +0100, Helmut Schaa wrote:
-> >> >
-> >> > Right. We could of course add a mac80211-queue <-> rt2x00-queue mapping in
-> >> > the appropriate places or rename the QID_* identifiers accordingly. Not sure
-> >> > if it's worth it ...
-> >>
-> >> Hm, reducing confusion enhances maintainability.
-> >
-> > I fully agree. I just meant that there are more severe issues in rt2x00 I plan
-> > to work on. But feel free to send a patch :)
-> 
-> But is this a mapping problem, or naming problem? Queue 0 is supposed to be
-> the queue with highest priority right?
-> So that would inficate a naming problem only
-
-The main source of confusion for me is the implicit conversion
-between the queue number 0..3 used by the mac80211 layer
-and the enum data_queue_qid used by rt2x00, which assignes a
-different _meaning_ to the numbers.  IMHO the enum values
-should be rearranged.  Maybe a comment would be good, too.
-
-And I'm still confused.  There is code like e.g.
-rt2400pci_kick_tx_queue() which tests against QID_AC_BE etc.,
-but does it really the kick the right queue?
-IOW, where does the qid passed to it ultimately come from?
-
-  rt2x00mac_tx():   qid = skb_get_queue_mapping(skb);  i.e. 2 for AC_BE
-  -> rt2x00queue_get_queue()  returns queue #2 which has queue->qid == QID_AC_VI
-    -> rt2x00queue_write_tx_frame()
-      -> rt2400pci_kick_tx_queue() is called with qid == QID_AC_VI
-
-Bug?
-
-
-Thanks
-Johannes
+  Luis
