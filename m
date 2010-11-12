@@ -1,45 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:51864 "EHLO nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752027Ab0K2Wlh (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 29 Nov 2010 17:41:37 -0500
-Message-ID: <4CF42C17.2070500@openwrt.org>
-Date: Mon, 29 Nov 2010 23:41:27 +0100
-From: Felix Fietkau <nbd@openwrt.org>
+Received: from mail-fx0-f46.google.com ([209.85.161.46]:64460 "EHLO
+	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757099Ab0KLNuo (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 12 Nov 2010 08:50:44 -0500
+Received: by fxm6 with SMTP id 6so95043fxm.19
+        for <linux-wireless@vger.kernel.org>; Fri, 12 Nov 2010 05:50:43 -0800 (PST)
+From: Helmut Schaa <helmut.schaa@googlemail.com>
+To: Tim Blechmann <tim@klingt.org>
+Subject: Re: rt61pci issue
+Date: Fri, 12 Nov 2010 14:49:27 +0100
+Cc: linux-wireless@vger.kernel.org
+References: <ibgpgg$a5m$1@dough.gmane.org>
+In-Reply-To: <ibgpgg$a5m$1@dough.gmane.org>
 MIME-Version: 1.0
-To: peter@stuge.se
-CC: ath9k-devel@lists.ath9k.org, linux-kernel@vger.kernel.org,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: [ath9k-devel] [PATCH wireless-next] ath: Rename ath_print to
- ath_debug
-References: <5febb0e1fba0ec2bb77f6ade8b251ba0edf4614c.1290988277.git.joe@perches.com>	<AANLkTinc251WbwuLqFbOZ5ipNGZW7=wub3DoWwy42=+e@mail.gmail.com> <20101129060732.5130.qmail@stuge.se>
-In-Reply-To: <20101129060732.5130.qmail@stuge.se>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: Text/Plain;
+  charset="us-ascii"
+Message-Id: <201011121449.27414.helmut.schaa@googlemail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2010-11-29 7:07 AM, Peter Stuge wrote:
-> Luis R. Rodriguez wrote:
->> On Sun, Nov 28, 2010 at 3:53 PM, Joe Perches <joe@perches.com> wrote:
->> > Make the function name match the function purpose.
->> > ath_debug is a debug only facility.
->> > ath_print seems too generic a name for a debug only use.
->> 
->> Nack, I don't see the point.
-> 
-> The point is to improve readability. I like the patch.
-And how exactly does this improve readability? Don't get me wrong, I
-generally like to see more cleanups merged to the ath/ath9k drivers
-(they do need it, after all).
+Hi Tim,
 
-But in my opinion, simple renaming churn like this does nothing but
-annoy people who want to get other work done at the same time.
-Consider the large number of lines touched (and the potential merge
-conflicts with other code because of that), relative to the microscopic
-aesthetic gain (if any).
+Am Donnerstag 11 November 2010 schrieb Tim Blechmann:
+> cat /proc/interrupts |grep 16\: && sleep 1 && cat /proc/interrupts | grep 16\:
+>   16:          0    5140126          0          0   IO-APIC-fasteoi   
+> uhci_hcd:usb3, ahci, 0000:08:00.0
+>   16:          0    5140357          0          0   IO-APIC-fasteoi   
+> uhci_hcd:usb3, ahci, 0000:08:00.0
 
-Instead I'd like to see more cleanups that go beyond trivial function
-renames.
+Ehm, one more thing: are you sure irq 16 is used for rt61pci. At least
+that part of /proc/interrupts suggests that irq 16 is somehow USB related.
 
-- Felix
+Could you check which irq is assigned to rt61pci?
+Can you reproduce the hangs without rt61pci as well?
+
+Helmut
