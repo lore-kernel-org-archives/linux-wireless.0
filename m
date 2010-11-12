@@ -1,63 +1,96 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.sysgo.com ([195.145.229.155]:40848 "EHLO mail.sysgo.com"
+Received: from mail.atheros.com ([12.19.149.2]:30408 "EHLO mail.atheros.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752035Ab0KHHT3 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 8 Nov 2010 02:19:29 -0500
-Date: Mon, 8 Nov 2010 08:19:37 +0100
-From: Pavel Machek <pma@sysgo.com>
-To: Christian Lamparter <chunkeey@googlemail.com>
-Cc: Larry Finger <Larry.Finger@lwfinger.net>,
-	linux-wireless@vger.kernel.org,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Josh Lehan <krellan@krellan.com>
-Subject: Re: working usb wifi card, that is still possible to buy
-Message-ID: <20101108071937.GA13817@pma.sysgo.com>
-References: <20101103092431.GA21138@pma.sysgo.com>
- <ff5cf9bdd23aa256b379521d4c4263d8@localhost>
- <4CD46524.5010100@lwfinger.net>
- <201011061143.12038.chunkeey@googlemail.com>
+	id S932661Ab0KLU1g convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 12 Nov 2010 15:27:36 -0500
+Received: from mail.atheros.com ([10.10.20.105])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Fri, 12 Nov 2010 12:27:23 -0800
+Date: Fri, 12 Nov 2010 12:27:32 -0800
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: Mark Mentovai <mark@moxienet.com>
+CC: Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
+	"linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"stable@kernel.org" <stable@kernel.org>,
+	Johannes Berg <johannes@sipsolutions.net>
+Subject: Re: [PATCH] cfg80211: Fix regulatory bug with multiple cards with
+ a delayed CRDA response
+Message-ID: <20101112202732.GI25089@tux>
+References: <1289528843-21982-1-git-send-email-lrodriguez@atheros.com>
+ <AANLkTimKdqoWx2FtvJ9HG3Yj0ofROMDNo30=FJv1vVGG@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <201011061143.12038.chunkeey@googlemail.com>
+Content-Type: text/plain; charset="utf-8"
+In-Reply-To: <AANLkTimKdqoWx2FtvJ9HG3Yj0ofROMDNo30=FJv1vVGG@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi!
-
-> > >> The Realtek RTL8712 (aka RTL8192U) and found in the D-Link DWA 130, has
-> > > a
-> > >> driver
-> > >> in 2.6.37 (r8712u). Although not based on mac80211, thus found in
-> > > staging,
-> > >> the
-> > >> driver is extremely stable - my connection never drops out. With an
-> > > 802.11n
-> > >> router, I get transmission throughput of up to 70 Mb/s.
-> > > 
-> > > That definitely requires USB 2 though, and I suspect that
-> > > nobody actually ever tests their devices on a 1.1 only
-> > > controller like Pavel was asking for.
-> > 
-> > I have tested on 1.1 and it works. The rate mechanism of that non-mac80211
-> > driver ends up at 54M with a maximum transmission rate of 7.1 Mb/s. That must be
-> > the maximum that USB 1.1 can handle.
+On Thu, Nov 11, 2010 at 10:05:21PM -0800, Mark Mentovai wrote:
+> Luis R. Rodriguez wrote:
+> > When two cards are connected with the same regulatory domain
+> > if CRDA had a delayed response then cfg80211's own set regulatory
+> > domain would still be the world regulatory domain. There was a bug
+> > on cfg80211's ignore_request() when analyzing incoming driver
+> > regulatory hints as it was only checking against the currently
+> > set cfg80211 regulatory domain and not for any other new
+> > pending requests. This is easily fixed by also checking against
+> > the pending request.
 > 
-> heh, be careful with what you're saying. He has problems
-> with not just one, but two completely different devices.
-> So r8712u might work perfectly well for you and your 1.1
-> USB hcd. But from the logs he posted I think it's not
-> just a wacky driver or firmware "problem".
+> Luis, thanks for taking a look at this bug.
+> 
+> Capsule summary: you’ve overloaded -EALREADY, which until now seemed
+> to mean “that’s the regdomain I’m already using,” to now also mean
+> “I’m going to be using that regdomain soon but I’m waiting on CRDA.”
+> The two cases need to be handled differently.
+> 
+> In my case, this patch makes things a little bit worse. I tested it
+> with compat_wireless 20101110. I’ve included what I see after boot
+> below the explanation.
+> 
+> Your patch changes things so that, according to the steps in my
+> original message, steps 3 and 4 become:
+> 
+> 3. The second card’s driver calls regulatory_hint to provide US as a
+> driver hint. ignore_request sees that the last request came from a
+> driver and that the current and last request sought to set the same
+> hint, so it returns -EALREADY. This triggers the “if the regulatory
+> domain being requested by the driver” block, which calls reg_copy_regd
+> on the apparent assumption that cfg80211_regdomain contains the
+> regdomain that the wiphy actually wants, although it doesn’t, and it’s
+> very wrong to do this copy. cfg80211_regdomain is still on 00, because
+> CRDA hasn’t responded to the first card’s request yet.
+> 
+> 4. When CRDA finally responds to the first card’s request from #2, it
+> gets plumbed to set_regdom, which calls __set_regdom. __set_regdom
+> sees that it’s not intersecting, and enters the block where it would
+> normally copy reg_copy_regd to set the wiphy’s regd, but the wiphy it
+> uses is the one saved from last_request (in step 3), and it already
+> had something copied to it (also in step 3). Since __set_regdom checks
+> for this and bails out with -EALREADY in the “userspace could have
+> sent two replies with only one kernel request” case. Because
+> __set_regdom fails, set_regdom returns early and never makes it to the
+> update_all_wiphy_regulatory or print_regdomain steps. The regdomain
+> remains unchanged. I’m still stuck at 00.
+> 
+> What about using something other than -EALREADY to signal “that
+> request is already pending?” On its face, this works, but I think
+> there’s a deeper flaw that also needs to be addressed. I’m concerned
+> that the wiphys that fall into this state won’t see a reg_copy_regd
+> call at all. The idea is that any such wiphy shouldn’t really be
+> ignored, but it should be joined to a group of wiphys waiting on the
+> pending request, and when the request is satisfied, the regd field
+> should be populated for each of them.
 
-Okay, so in the meantime, I found a reason why AirLive card did not
-work properly. Cable supplied with DLink card had borderline connector
-:-(.
+Thanks for testing and your review.
 
-AirLive (rt2800) card is actually stable, even on USB 1.1 -- it
-survived overnight testing.
+We need to address a queue of requests with the associated wiphys,
+as I originally had developed, I'll go ahead and add this and
+treat these, it should take care of even multiple cards with
+different regulatory hints. I expect the amount of code will be
+a bit to large for stable though so likely we may only be able
+to fix this for new kernels.
 
-I still got around 5% packet loss -- it seems every minute or so
-connection fails for few seconds -- but TCP connection survived
-overnight, doing ~1MB/sec all the time.
+I'll take a stab at this now.
 
-So AirLive card works here.
-							Pavel
+  Luis
