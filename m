@@ -1,45 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from arroyo.ext.ti.com ([192.94.94.40]:58382 "EHLO arroyo.ext.ti.com"
+Received: from lo.gmane.org ([80.91.229.12]:55324 "EHLO lo.gmane.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752855Ab0K2KOy (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 29 Nov 2010 05:14:54 -0500
-Message-ID: <4CF37D29.8090701@ti.com>
-Date: Mon, 29 Nov 2010 12:15:05 +0200
-From: Shahar Levi <shahar_levi@ti.com>
-MIME-Version: 1.0
-To: Juuso Oikarinen <juuso.oikarinen@nokia.com>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Luciano Coelho <luciano.coelho@nokia.com>
-Subject: Re: [PATCH v3] wl12xx: BA Initiator support
-References: <1290616180-16473-1-git-send-email-shahar_levi@ti.com> <1291023948.4284.4432.camel@wimaxnb.nmp.nokia.com>
-In-Reply-To: <1291023948.4284.4432.camel@wimaxnb.nmp.nokia.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+	id S1754817Ab0KLRkt (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 12 Nov 2010 12:40:49 -0500
+Received: from list by lo.gmane.org with local (Exim 4.69)
+	(envelope-from <glkwg-linux-wireless@m.gmane.org>)
+	id 1PGxcF-0005yV-KR
+	for linux-wireless@vger.kernel.org; Fri, 12 Nov 2010 18:40:47 +0100
+Received: from function.justgohome.co.uk ([217.169.15.243])
+        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Fri, 12 Nov 2010 18:40:47 +0100
+Received: from rb-oss-3 by function.justgohome.co.uk with local (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Fri, 12 Nov 2010 18:40:47 +0100
+To: linux-wireless@vger.kernel.org
+From: Robie Basak <rb-oss-3@justgohome.co.uk>
+Subject: Re: r8187se panic
+Date: Fri, 12 Nov 2010 17:40:36 +0000 (UTC)
+Message-ID: <slrnidqv0k.g21.rb-oss-3@mal.justgohome.co.uk>
+References: <slrnidp3ae.79c.rb-oss-3@mal.justgohome.co.uk>
+ <4CDC9FA5.10002@lwfinger.net>
+ <slrnidq7u0.9ic.rb-oss-3@mal.justgohome.co.uk>
+ <4CDD3BC4.7070102@lwfinger.net>
+ <slrnidqorp.dlr.rb-oss-3@mal.justgohome.co.uk>
+ <4CDD66C4.10603@lwfinger.net>
+ <slrnidqsld.dlr.rb-oss-3@mal.justgohome.co.uk>
+ <4CDD7945.70005@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 11/29/2010 11:45 AM, Juuso Oikarinen wrote:
-> On Wed, 2010-11-24 at 18:29 +0200, ext Shahar Levi wrote:
->> Add 80211n BA initiator session support wl1271 driver.
->> BA initiator session management included in FW independently.
->>
->> Signed-off-by: Shahar Levi<shahar_levi@ti.com>
->> ---
->> diff --git a/drivers/net/wireless/wl12xx/acx.h b/drivers/net/wireless/wl12xx/acx.h
->> index 75a6306..c511dce 100644
->> --- a/drivers/net/wireless/wl12xx/acx.h
->> +++ b/drivers/net/wireless/wl12xx/acx.h
->> @@ -1046,6 +1046,40 @@ struct wl1271_acx_ht_information {
->>   	u8 padding[3];
->>   } __packed;
->>
->> +#define BA_RECEIVER_WIN_SIZE 8
+On 2010-11-12, Larry Finger <Larry.Finger@lwfinger.net> wrote:
+> What does the following log entry signify?
 >
-> This seems to be used only to configure the initiator mode window size,
-> so why is the macro called BA_RECEIVER_WIN_SIZE?
-should be change to BA_WIN_SIZE. will be fix on v2
-Thanks.
+> Nov 12 16:29:03 tiny kernel: [  160.306731]
+>=>>>>>>>>>>=============================>set power:0,0!
+>
+> On my system, switching to battery does not affect the rtl8187se at all.
 
->
-> -Juuso
->
+That is consistently showing up every time I switch from AC to battery
+(but not battery to AC) while wireless is on. It does not appear if I
+turn the wireless off, disconnect AC and then turn wireless on again.
+
+Also for a suspend/resume cycle, it appears only if on battery and
+wireless is on.
+
+Robie
 
