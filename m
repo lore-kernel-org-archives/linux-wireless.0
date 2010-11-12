@@ -1,111 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.neratec.ch ([80.75.119.105]:33404 "EHLO mail.neratec.ch"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754160Ab0KZJ5J (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 26 Nov 2010 04:57:09 -0500
-Date: Fri, 26 Nov 2010 10:57:07 +0100 (CET)
-From: Wojciech Dubowik <dubowoj@neratec.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, nbd@openwrt.org,
-	ath5k-devel@lists.ath5k.org
-Message-ID: <12054859.501290765425878.JavaMail.wlan@CHBU500181>
-In-Reply-To: <8993750.301290765190311.JavaMail.wlan@CHBU500181>
-Subject: [PATCH v6 6/9] ath5k: Add a function to read chipset's MAC revision
+Received: from mail-fx0-f46.google.com ([209.85.161.46]:49915 "EHLO
+	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751289Ab0KLHEa (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 12 Nov 2010 02:04:30 -0500
+Received: by fxm16 with SMTP id 16so2026816fxm.19
+        for <linux-wireless@vger.kernel.org>; Thu, 11 Nov 2010 23:04:29 -0800 (PST)
+From: Helmut Schaa <helmut.schaa@googlemail.com>
+To: Tim Blechmann <tim@klingt.org>
+Subject: Re: rt61pci issue
+Date: Fri, 12 Nov 2010 08:03:32 +0100
+Cc: linux-wireless@vger.kernel.org
+References: <ibgpgg$a5m$1@dough.gmane.org> <AANLkTikqx43LwfyB4979Mazhch41cGaa7txP6zjCa99F@mail.gmail.com> <201011120747.28837.helmut.schaa@googlemail.com>
+In-Reply-To: <201011120747.28837.helmut.schaa@googlemail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: Text/Plain;
+  charset="us-ascii"
+Message-Id: <201011120803.32721.helmut.schaa@googlemail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Felix Fietkau <nbd@openwrt.org>
+Am Freitag 12 November 2010 schrieb Helmut Schaa:
+> Am Donnerstag 11 November 2010 schrieb Helmut Schaa:
+> > On Thu, Nov 11, 2010 at 3:56 PM, Tim Blechmann <tim@klingt.org> wrote:
+> > >> Mind to put a (maybe rate limited) printk into the interrupt thread
+> > >> that prints out "reg"
+> > >> and "reg_mcu" so that we can see which interrupts get triggered?
+> > >
+> > > log attached, generated with:
+> > 
+> > Thanks. Unfortunately nothing special in there. Mostly RX and TX interrupts. So
+> > there must be something else ...
+> 
+> Tim, is this on x86 hw? Or something else?
 
-Add bus dependent revision read function which is used to
-determine chipset's MAC before hardware is initialized.
+I don't know if this will do any good or harm but it could be worth a try as
+the spec for rt61pci says something like: "Don't enable interrupt mitigation
+in the same write as releasing the other masks.". Since we always write a
+mitigation period of 0xff == "No mitigation period" we can simply leave
+interrupt mitigation disabled.
 
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
-Signed-off-by: Wojciech Dubowik <Wojciech.Dubowik@neratec.com>
----
- drivers/net/wireless/ath/ath5k/ath5k.h  |    5 +++--
- drivers/net/wireless/ath/ath5k/attach.c |   11 +++++++----
- drivers/net/wireless/ath/ath5k/pci.c    |    6 ++++++
- 3 files changed, 16 insertions(+), 6 deletions(-)
+I really don't have any clue if this will fix anything but it might be worth
+a try.
 
-diff --git a/drivers/net/wireless/ath/ath5k/ath5k.h b/drivers/net/wireless/ath/ath5k/ath5k.h
-index 946e54a..917deb4 100644
---- a/drivers/net/wireless/ath/ath5k/ath5k.h
-+++ b/drivers/net/wireless/ath/ath5k/ath5k.h
-@@ -1035,6 +1035,7 @@ struct ath5k_hw {
- 	u32			ah_phy;
- 	u32			ah_mac_srev;
- 	u16			ah_mac_version;
-+	u16			ah_mac_revision;
- 	u16			ah_phy_revision;
- 	u16			ah_radio_5ghz_revision;
- 	u16			ah_radio_2ghz_revision;
-@@ -1143,9 +1144,9 @@ void ath5k_hw_deinit(struct ath5k_hw *ah);
- int ath5k_sysfs_register(struct ath5k_softc *sc);
- void ath5k_sysfs_unregister(struct ath5k_softc *sc);
+Thanks,
+Helmut
+
+diff --git a/drivers/net/wireless/rt2x00/rt61pci.c b/drivers/net/wireless/rt2x00/rt61pci.c
+index af548c8..fde8220 100644
+--- a/drivers/net/wireless/rt2x00/rt61pci.c
++++ b/drivers/net/wireless/rt2x00/rt61pci.c
+@@ -1655,8 +1655,6 @@ static void rt61pci_toggle_irq(struct rt2x00_dev *rt2x00dev,
+ 	rt2x00_set_field32(&reg, INT_MASK_CSR_TXDONE, mask);
+ 	rt2x00_set_field32(&reg, INT_MASK_CSR_RXDONE, mask);
+ 	rt2x00_set_field32(&reg, INT_MASK_CSR_BEACON_DONE, mask);
+-	rt2x00_set_field32(&reg, INT_MASK_CSR_ENABLE_MITIGATION, mask);
+-	rt2x00_set_field32(&reg, INT_MASK_CSR_MITIGATION_PERIOD, 0xff);
+ 	rt2x00pci_register_write(rt2x00dev, INT_MASK_CSR, reg);
  
--/*Chip id helper function */
-+/*Chip id helper functions */
- const char *ath5k_chip_name(enum ath5k_srev_type type, u_int16_t val);
--
-+int ath5k_bus_read_srev(struct ath5k_hw *ah);
- 
- /* LED functions */
- int ath5k_init_leds(struct ath5k_softc *sc);
-diff --git a/drivers/net/wireless/ath/ath5k/attach.c b/drivers/net/wireless/ath/ath5k/attach.c
-index fe7e6f1..9b5f6e4 100644
---- a/drivers/net/wireless/ath/ath5k/attach.c
-+++ b/drivers/net/wireless/ath/ath5k/attach.c
-@@ -128,7 +128,8 @@ int ath5k_hw_init(struct ath5k_softc *sc)
- 	/*
- 	 * Find the mac version
- 	 */
--	srev = ath5k_hw_reg_read(ah, AR5K_SREV);
-+	ath5k_bus_read_srev(ah);
-+	srev = ah->ah_mac_srev;
- 	if (srev < AR5K_SREV_AR5311)
- 		ah->ah_version = AR5K_AR5210;
- 	else if (srev < AR5K_SREV_AR5212)
-@@ -136,6 +137,10 @@ int ath5k_hw_init(struct ath5k_softc *sc)
- 	else
- 		ah->ah_version = AR5K_AR5212;
- 
-+	/* Get the MAC revision */
-+	ah->ah_mac_version = AR5K_REG_MS(srev, AR5K_SREV_VER);
-+	ah->ah_mac_revision = AR5K_REG_MS(srev, AR5K_SREV_REV);
-+
- 	/* Fill the ath5k_hw struct with the needed functions */
- 	ret = ath5k_hw_init_desc_functions(ah);
- 	if (ret)
-@@ -146,9 +151,7 @@ int ath5k_hw_init(struct ath5k_softc *sc)
- 	if (ret)
- 		goto err;
- 
--	/* Get MAC, PHY and RADIO revisions */
--	ah->ah_mac_srev = srev;
--	ah->ah_mac_version = AR5K_REG_MS(srev, AR5K_SREV_VER);
-+	/* Get PHY and RADIO revisions */
- 	ah->ah_phy_revision = ath5k_hw_reg_read(ah, AR5K_PHY_CHIP_ID) &
- 			0xffffffff;
- 	ah->ah_radio_5ghz_revision = ath5k_hw_radio_revision(ah,
-diff --git a/drivers/net/wireless/ath/ath5k/pci.c b/drivers/net/wireless/ath/ath5k/pci.c
-index 3f26cf2..4eff891 100644
---- a/drivers/net/wireless/ath/ath5k/pci.c
-+++ b/drivers/net/wireless/ath/ath5k/pci.c
-@@ -100,6 +100,12 @@ bool ath5k_pci_eeprom_read(struct ath_common *common, u32 offset, u16 *data)
- 	return -ETIMEDOUT;
- }
- 
-+int ath5k_bus_read_srev(struct ath5k_hw *ah)
-+{
-+	ah->ah_mac_srev = ath5k_hw_reg_read(ah, AR5K_SREV);
-+	return 0;
-+}
-+
- /* Common ath_bus_opts structure */
- static const struct ath_bus_ops ath_pci_bus_ops = {
- 	.ath_bus_type = ATH_PCI,
--- 
-1.7.1
+ 	rt2x00pci_register_read(rt2x00dev, MCU_INT_MASK_CSR, &reg);
 
