@@ -1,57 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f46.google.com ([209.85.215.46]:45938 "EHLO
-	mail-ew0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751322Ab0KWToI (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 23 Nov 2010 14:44:08 -0500
-Received: by ewy5 with SMTP id 5so2681338ewy.19
-        for <linux-wireless@vger.kernel.org>; Tue, 23 Nov 2010 11:44:07 -0800 (PST)
-Date: Tue, 23 Nov 2010 21:44:02 +0200
-From: Nick Kossifidis <mickflemm@gmail.com>
-To: ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org
-Cc: linville@tuxdriver.com, me@bobcopeland.com, mcgrof@gmail.com,
-	jirislaby@gmail.com, nbd@openwrt.org, br1@einfach.org
-Subject: [PATCH 25/30] ath5k: Tweak phy activate to rx start delay based on
- bwmode
-Message-ID: <20101123194402.GY4303@makis.mantri>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: from server19320154104.serverpool.info ([193.201.54.104]:47987 "EHLO
+	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S933009Ab0KLXWv (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 12 Nov 2010 18:22:51 -0500
+From: Hauke Mehrtens <hauke@hauke-m.de>
+To: lrodriguez@atheros.com
+Cc: linux-wireless@vger.kernel.org, mcgrof@infradead.org,
+	Hauke Mehrtens <hauke@hauke-m.de>
+Subject: [PATCH 2/2] compat-wireless: WL1251_SDIO needs WL12XX_PLATFORM_DATA
+Date: Sat, 13 Nov 2010 00:22:40 +0100
+Message-Id: <1289604160-13383-2-git-send-email-hauke@hauke-m.de>
+In-Reply-To: <1289604160-13383-1-git-send-email-hauke@hauke-m.de>
+References: <1289604160-13383-1-git-send-email-hauke@hauke-m.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
- * Tweak phy activation -> rx delay for different bwmodes
 
- Signed-off-by: Nick Kossifidis <mickflemm@gmail.com>
+Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
 ---
- drivers/net/wireless/ath/ath5k/phy.c |   11 +++++++----
- 1 files changed, 7 insertions(+), 4 deletions(-)
+ config.mk |    2 ++
+ 1 files changed, 2 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath5k/phy.c b/drivers/net/wireless/ath/ath5k/phy.c
-index 1b6fcf9..8790f0a 100644
---- a/drivers/net/wireless/ath/ath5k/phy.c
-+++ b/drivers/net/wireless/ath/ath5k/phy.c
-@@ -3356,8 +3356,6 @@ int ath5k_hw_phy_init(struct ath5k_hw *ah, struct ieee80211_channel *channel,
- 	/*
- 	 * On 5211+ read activation -> rx delay
- 	 * and use it.
--	 *
--	 * TODO: Half/quarter rate support
- 	 */
- 	if (ah->ah_version != AR5K_AR5210) {
- 		u32 delay;
-@@ -3365,8 +3363,13 @@ int ath5k_hw_phy_init(struct ath5k_hw *ah, struct ieee80211_channel *channel,
- 			AR5K_PHY_RX_DELAY_M;
- 		delay = (channel->hw_value & CHANNEL_CCK) ?
- 			((delay << 2) / 22) : (delay / 10);
--
--		udelay(100 + (2 * delay));
-+		if (ah->ah_bwmode == AR5K_BWMODE_10MHZ)
-+			delay = delay << 1;
-+		if (ah->ah_bwmode == AR5K_BWMODE_5MHZ)
-+			delay = delay << 2;
-+		/* XXX: /2 on turbo ? Let's be safe
-+		 * for now */
-+		udelay(100 + delay);
- 	} else {
- 		mdelay(1);
- 	}
+diff --git a/config.mk b/config.mk
+index 1c5d3d9..4ddf26e 100644
+--- a/config.mk
++++ b/config.mk
+@@ -489,7 +489,9 @@ CONFIG_SSB_SDIOHOST=y
+ CONFIG_B43_SDIO=y
+ 
+ ifdef CONFIG_CRC7
++ifdef CONFIG_WL12XX_PLATFORM_DATA
+ CONFIG_WL1251_SDIO=m
++endif #CONFIG_WL12XX_PLATFORM_DATA
+ 
+ ifndef CONFIG_COMPAT_KERNEL_32
+ ifdef CONFIG_WL12XX_PLATFORM_DATA
+-- 
+1.7.1
+
