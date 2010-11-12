@@ -1,37 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:61375 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754120Ab0KXNE2 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 24 Nov 2010 08:04:28 -0500
-Date: Wed, 24 Nov 2010 14:04:13 +0100
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Wey-Yi Guy <wey-yi.w.guy@intel.com>,
-	Intel Linux Wireless <ilw@linux.intel.com>,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] iwlwifi: avoid "Error sending TX power (-5)"
-Message-ID: <20101124130403.GA2446@redhat.com>
-References: <1290595069-3878-1-git-send-email-sgruszka@redhat.com>
- <1290595452.3790.13.camel@jlt3.sipsolutions.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1290595452.3790.13.camel@jlt3.sipsolutions.net>
+Received: from he.sipsolutions.net ([78.46.109.217]:56942 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753062Ab0KLCgy (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 11 Nov 2010 21:36:54 -0500
+Subject: Re: ath5k/mac80211:  Reproducible deadlock with 64-stations.
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Ben Greear <greearb@candelatech.com>
+Cc: Tejun Heo <tj@kernel.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <4CDC8EED.60602@candelatech.com>
+References: <4CDB2488.4040802@candelatech.com>
+	 <1289437356.3748.25.camel@jlt3.sipsolutions.net>
+	 <4CDBB716.7020802@kernel.org> <4CDC2016.8020200@candelatech.com>
+	 <4CDC8EED.60602@candelatech.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Thu, 11 Nov 2010 18:37:07 -0800
+Message-ID: <1289529427.3695.9.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Nov 24, 2010 at 11:44:12AM +0100, Johannes Berg wrote:
-> On Wed, 2010-11-24 at 11:37 +0100, Stanislaw Gruszka wrote:
-> > We can have this error message when loading or unloading module, when
-> > device is not marked as ready, but we want to set tx power from
-> > commit_rxon. Perhaps something better should be done like call
-> > lib->send_tx_power() directly from commit_rxon, but for now just
-> > do not return error.
+On Thu, 2010-11-11 at 16:48 -0800, Ben Greear wrote:
+> I have a potential scenario:
 > 
-> I think this actually fixes it, as opposed to hiding it:
+> The ieee80211_do_stop logic is called under RTNL, and it
+> then calls flush_work().
 > 
-> http://git.kernel.org/?p=linux/kernel/git/iwlwifi/iwlwifi-2.6.git;a=commitdiff;h=9e2e7422d059f9b98c3a0810df92a1ff660ade2f
+> What if the worker thread is currently blocked on something like
+> wireless_nlevent_process which tries to acquire rtnl?
+> 
+> Wouldn't that cause a deadlock?
 
-Yes.
+Only if Tejun's deadlock avoidance doesn't work -- we used to have a
+separate kernel thread for mac80211 work including sdata->work which
+never acquired the RTNL. Also, we have lockdep annotations for exactly
+this kind of thing ("events" and "(linkwatch_work).work" in your held
+locks output) that should catch this.
 
-Thanks
-Stanislaw 
+johannes
+
