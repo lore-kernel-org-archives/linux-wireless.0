@@ -1,64 +1,29 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:45150 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757339Ab0KKBBP (ORCPT
+Received: from mail-iw0-f174.google.com ([209.85.214.174]:59698 "EHLO
+	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751008Ab0KLTtN (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 10 Nov 2010 20:01:15 -0500
-Subject: Re: ath5k/mac80211:  Reproducible deadlock with 64-stations.
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Ben Greear <greearb@candelatech.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Tejun Heo <tj@kernel.org>
-In-Reply-To: <4CDB2488.4040802@candelatech.com>
-References: <4CDB2488.4040802@candelatech.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Wed, 10 Nov 2010 17:02:36 -0800
-Message-ID: <1289437356.3748.25.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+	Fri, 12 Nov 2010 14:49:13 -0500
+Received: by iwn10 with SMTP id 10so3839957iwn.19
+        for <linux-wireless@vger.kernel.org>; Fri, 12 Nov 2010 11:49:12 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <1289589685-16372-2-git-send-email-hauke@hauke-m.de>
+References: <1289589685-16372-1-git-send-email-hauke@hauke-m.de> <1289589685-16372-2-git-send-email-hauke@hauke-m.de>
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Date: Fri, 12 Nov 2010 11:48:52 -0800
+Message-ID: <AANLkTimhMFtyYkf=sn0sfdQ7G0N3xa0BTNeWS6OC7Z1e@mail.gmail.com>
+Subject: Re: [PATCH 2/2] compat-wireless: fix compile error with iwl
+To: Hauke Mehrtens <hauke@hauke-m.de>
+Cc: linux-wireless@vger.kernel.org, mcgrof@infradead.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I don't really see any deadlock here... hmm. Tejun, do you see anything
-wrong with the "locking" in workq stuff here?
+On Fri, Nov 12, 2010 at 11:21 AM, Hauke Mehrtens <hauke@hauke-m.de> wrote:
+> The header file declares the const.
+>
+> Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
 
-Something is holding the RTNL, and a bunch of other things are trying to
-acquire it. We don't really know who's holding it and who's acquiring it
-though.
+Applied and pushed, thanks!
 
-> Nov 10 14:54:33 localhost kernel: Showing all locks held in the system:
-> Nov 10 14:54:33 localhost kernel: 3 locks held by kworker/0:0/4:
-> Nov 10 14:54:33 localhost kernel: #0:  (events){+.+.+.}, at: [<c0446ded>] process_one_work+0x13e/0x2bf
-> Nov 10 14:54:33 localhost kernel: #1:  ((linkwatch_work).work){+.+.+.}, at: [<c0446ded>] process_one_work+0x13e/0x2bf
-> Nov 10 14:54:33 localhost kernel: #2:  (rtnl_mutex){+.+.+.}, at: [<c070220f>] rtnl_lock+0xf/0x11
-
-This comes in from schedule_work() IIRC.
-
-> Nov 10 14:54:33 localhost kernel: 1 lock held by ntpd/1675:
-> Nov 10 14:54:33 localhost kernel: #0:  (rtnl_mutex){+.+.+.}, at: [<c070220f>] rtnl_lock+0xf/0x11
-
-ntpd holding/acquiring rtnl
-
-...
-> Nov 10 14:54:33 localhost kernel: #0:  (events){+.+.+.}, at: [<c0446ded>] process_one_work+0x13e/0x2bf
-> Nov 10 14:54:33 localhost kernel: #1:  (wireless_nlevent_work){+.+.+.}, at: [<c0446ded>] process_one_work+0x13e/0x2bf
-> Nov 10 14:54:33 localhost kernel: #2:  (rtnl_mutex){+.+.+.}, at: [<c070220f>] rtnl_lock+0xf/0x11
-
-another schedule_work() acquiring/holding RTNL.
-
-> Nov 10 14:54:33 localhost kernel: 1 lock held by ip/6438:
-> Nov 10 14:54:33 localhost kernel: #0:  (rtnl_mutex){+.+.+.}, at: [<c070f78c>] netlink_dump+0x3a/0x16a
-> Nov 10 14:54:33 localhost kernel: 1 lock held by ip/6441:
-> Nov 10 14:54:33 localhost kernel: #0:  (rtnl_mutex){+.+.+.}, at: [<c070220f>] rtnl_lock+0xf/0x11
-> Nov 10 14:54:33 localhost kernel: 1 lock held by ip/6442:
-> Nov 10 14:54:33 localhost kernel: #0:  (rtnl_mutex){+.+.+.}, at: [<c070220f>] rtnl_lock+0xf/0x11
-> Nov 10 14:54:33 localhost kernel: 1 lock held by iwconfig/6443:
-> Nov 10 14:54:33 localhost kernel: #0:  (rtnl_mutex){+.+.+.}, at: [<c070220f>] rtnl_lock+0xf/0x11
-> Nov 10 14:54:33 localhost kernel: 1 lock held by ip/6444:
-> Nov 10 14:54:33 localhost kernel: #0:  (rtnl_mutex){+.+.+.}, at: [<c070220f>] rtnl_lock+0xf/0x11
-
-bunch of other things trying / holding ...
-
-The other things I snipped seem completely orthogonal...
-
-johannes
-
+ Luis
