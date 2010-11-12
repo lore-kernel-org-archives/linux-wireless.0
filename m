@@ -1,64 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:43154 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751222Ab0K3Som (ORCPT
+Received: from mail.candelatech.com ([208.74.158.172]:41485 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755894Ab0KLVvP (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 30 Nov 2010 13:44:42 -0500
-Date: Tue, 30 Nov 2010 13:38:35 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Johannes Stezenbach <js@sig21.net>, linux-wireless@vger.kernel.org,
-	Ivo van Doorn <IvDoorn@gmail.com>,
-	Gertjan van Wingerde <gwingerde@gmail.com>,
-	Helmut Schaa <helmut.schaa@googlemail.com>
-Subject: Re: [PATCH v4] mac80211/rt2x00: add ieee80211_tx_status_ni()
-Message-ID: <20101130183835.GE2341@tuxdriver.com>
-References: <1291043349.3532.4.camel@jlt3.sipsolutions.net>
- <20101129152735.GA32319@sig21.net>
- <1291045056.3532.5.camel@jlt3.sipsolutions.net>
- <20101129155126.GA32482@sig21.net>
- <1291046320.3532.6.camel@jlt3.sipsolutions.net>
- <20101129161316.GA32760@sig21.net>
- <20101130154923.GA4618@sig21.net>
- <1291132380.3624.22.camel@jlt3.sipsolutions.net>
- <20101130163457.GA4647@sig21.net>
- <1291134958.3624.23.camel@jlt3.sipsolutions.net>
+	Fri, 12 Nov 2010 16:51:15 -0500
+Message-ID: <4CDDB6C9.1010602@candelatech.com>
+Date: Fri, 12 Nov 2010 13:51:05 -0800
+From: Ben Greear <greearb@candelatech.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1291134958.3624.23.camel@jlt3.sipsolutions.net>
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: linux-wireless@vger.kernel.org, Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCH] mac80211:  Fix deadlock in ieee80211_do_stop.
+References: <1289592426-5367-1-git-send-email-greearb@candelatech.com>	 <1289594998.3736.11.camel@jlt3.sipsolutions.net>	 <4CDDAA3B.9090007@candelatech.com> <1289596096.3736.13.camel@jlt3.sipsolutions.net>
+In-Reply-To: <1289596096.3736.13.camel@jlt3.sipsolutions.net>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Nov 30, 2010 at 05:35:58PM +0100, Johannes Berg wrote:
-> On Tue, 2010-11-30 at 17:34 +0100, Johannes Stezenbach wrote:
-> > On Tue, Nov 30, 2010 at 04:53:00PM +0100, Johannes Berg wrote:
-> > > On Tue, 2010-11-30 at 16:49 +0100, Johannes Stezenbach wrote:
-> > > 
-> > > >   * This function may not be called in IRQ context. Calls to this function
-> > > >   * for a single hardware must be synchronized against each other. Calls
-> > > > - * to this function and ieee80211_tx_status_irqsafe() may not be mixed
-> > > > - * for a single hardware.
-> > > > + * to this function, ieee80211_tx_status_ni() and ieee80211_tx_status_irqsafe()
-> > > > + * may not be mixed for a single hardware.
-> > > 
-> > > I'm ok with this, although technically you can mix
-> > > ieee80211_tx_status_ni() and ieee80211_tx_status(), just not either or
-> > > both of them with _irqsafe().
-> > 
-> > I copied these from ieee80211_rx() etc. since I wasn't sure if there's
-> > not some subtlety I didn't get.  One can mix ieee80211_rx() and
-> > ieee80211_rx_ni(), too, right?
-> 
-> Yes. Note that all this doesn't make any sense though, since you must
-> never call them concurrently. And it's hard to imagine a situation where
-> a single driver calls _ni and non-_ni versions, while making sure they
-> can't both happen at the same time ...
+On 11/12/2010 01:08 PM, Johannes Berg wrote:
+> On Fri, 2010-11-12 at 12:57 -0800, Ben Greear wrote:
+>
+>>> However, I also don't think it should be necessary to do this.
+>>> sdata->work is always queued on local->workqueue, which is created using
+>>> alloc_ordered_workqueue(), and there is no work on this workqueue that
+>>> uses the RTNL. Therefore, even flushing the entire workqueue must work,
+>>> unless alloc_ordered_workqueue() has no such guarantee any more -- which
+>>> I would consider to be a bug in the new workqueue framework.
+>>
+>> The problem appears (to me) to be that the flush_work() attempts
+>> to wait for the worker to complete it's current task.  The worker can
+>> be doing a completely separate task (ie, wireless_nlevent_process),
+>> but that task can never complete because do_stop() holds rtnl
+>> and the task-in-progress may block on acquiring rtnl.
+>>
+>> So, flush_work() cannot make any progress.
+>>
+>> The stack-traces for hung programs I originally posted seem
+>> to agree with this analysis.
+>>
+>> So far, I reproduced the bug around 20 times in a row witout the patch,
+>> and since I added this patch, I have two good runs in a row, so it definitely
+>> has an affect.
+>>
+>> If my assumptions are correct, it would seem to unsafe to EVER
+>> call flush_work() while holding rtnl (or indeed, any other lock
+>> that any other work could possibly require).
+>
+> Well then in that case all I'm saying is that we have a bug in the
+> workqueue code, because it used to be allowed to flush a workqueue that
+> never had any work items on it that grabbed the RTNL themselves. I
+> actually added lockdep detection for the case where you _did_, but since
+> I'm sure we don't have anything that grabs the RTNL on our workqueue,
+> this should be OK.
 
-Maybe someone can clarify the wording of the comments and send a follow-on patch?
+You may well be right.  The current behaviour makes
+flush_work() pretty tricky to use correctly.
+
+I'll let the folks that know work-queues better be
+the judge.
 
 Thanks,
+Ben
 
-John
+>
+> johannes
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+
 -- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
+
