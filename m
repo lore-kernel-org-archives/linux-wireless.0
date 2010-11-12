@@ -1,186 +1,175 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f46.google.com ([209.85.215.46]:34995 "EHLO
-	mail-ew0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756242Ab0KMSOR (ORCPT
+Received: from mail-iw0-f174.google.com ([209.85.214.174]:61744 "EHLO
+	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753169Ab0KLAB6 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 13 Nov 2010 13:14:17 -0500
-Received: by ewy8 with SMTP id 8so221945ewy.19
-        for <linux-wireless@vger.kernel.org>; Sat, 13 Nov 2010 10:14:16 -0800 (PST)
-From: Ivo van Doorn <ivdoorn@gmail.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Subject: [PATCH 5/9] rt2x00: Remove unneccessary internal Kconfig symbols.
-Date: Sat, 13 Nov 2010 19:10:54 +0100
-Cc: linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com
-References: <201011131908.15595.IvDoorn@gmail.com> <201011131910.11947.IvDoorn@gmail.com> <201011131910.32367.IvDoorn@gmail.com>
-In-Reply-To: <201011131910.32367.IvDoorn@gmail.com>
+	Thu, 11 Nov 2010 19:01:58 -0500
+Received: by iwn10 with SMTP id 10so2771075iwn.19
+        for <linux-wireless@vger.kernel.org>; Thu, 11 Nov 2010 16:01:57 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Message-Id: <201011131910.55175.IvDoorn@gmail.com>
+In-Reply-To: <AANLkTin_5Nhwby79eYY972ZFh-0Tr4MaauSn4LAtsn-7@mail.gmail.com>
+References: <185731CC-606D-407D-80F4-33FEF08ED35D@moxienet.com>
+ <AANLkTik35wHXiznjGm7nc9HBYUy7iQk65FVSq7T2Gw8u@mail.gmail.com>
+ <AANLkTikf13HMEtVkpTftKrZenvPwPcHbuhgqmh2m-UYU@mail.gmail.com> <AANLkTin_5Nhwby79eYY972ZFh-0Tr4MaauSn4LAtsn-7@mail.gmail.com>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Thu, 11 Nov 2010 16:01:37 -0800
+Message-ID: <AANLkTin8+ecx5e04CJM8sv2LrY=+xnJ7cD2CPcMHHcYe@mail.gmail.com>
+Subject: Re: Regulatory/CRDA Race
+To: Mark Mentovai <mark@moxienet.com>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Gertjan van Wingerde <gwingerde@gmail.com>
-
-CONFIG_RT2800PCI_PCI and CONFIG_RT2800PCI_SOC are strictly not needed
-as we can check the dependent symbols directly in the rest of Kconfig
-and the code, so clean up the Kconfig namespace a bit.
-
-Signed-off-by: Gertjan van Wingerde <gwingerde@gmail.com>
-Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
----
- drivers/net/wireless/rt2x00/Kconfig     |   16 ++-----------
- drivers/net/wireless/rt2x00/rt2800pci.c |   34 +++++++++++++++---------------
- 2 files changed, 20 insertions(+), 30 deletions(-)
-
-diff --git a/drivers/net/wireless/rt2x00/Kconfig b/drivers/net/wireless/rt2x00/Kconfig
-index a6939cc..ade3025 100644
---- a/drivers/net/wireless/rt2x00/Kconfig
-+++ b/drivers/net/wireless/rt2x00/Kconfig
-@@ -53,22 +53,12 @@ config RT61PCI
- 
- 	  When compiled as a module, this driver will be called rt61pci.
- 
--config RT2800PCI_PCI
--	boolean
--	depends on PCI
--	default y
--
--config RT2800PCI_SOC
--	boolean
--	depends on RALINK_RT288X || RALINK_RT305X
--	default y
--
- config RT2800PCI
- 	tristate "Ralink rt27xx/rt28xx/rt30xx (PCI/PCIe/PCMCIA) support"
--	depends on RT2800PCI_PCI || RT2800PCI_SOC
-+	depends on PCI || RALINK_RT288X || RALINK_RT305X
- 	select RT2800_LIB
--	select RT2X00_LIB_PCI if RT2800PCI_PCI
--	select RT2X00_LIB_SOC if RT2800PCI_SOC
-+	select RT2X00_LIB_PCI if PCI
-+	select RT2X00_LIB_SOC if RALINK_RT288X || RALINK_RT305X
- 	select RT2X00_LIB_HT
- 	select RT2X00_LIB_FIRMWARE
- 	select RT2X00_LIB_CRYPTO
-diff --git a/drivers/net/wireless/rt2x00/rt2800pci.c b/drivers/net/wireless/rt2x00/rt2800pci.c
-index 97f4df6..b0946f8 100644
---- a/drivers/net/wireless/rt2x00/rt2800pci.c
-+++ b/drivers/net/wireless/rt2x00/rt2800pci.c
-@@ -84,7 +84,7 @@ static void rt2800pci_mcu_status(struct rt2x00_dev *rt2x00dev, const u8 token)
- 	rt2800_register_write(rt2x00dev, H2M_MAILBOX_CID, ~0);
- }
- 
--#ifdef CONFIG_RT2800PCI_SOC
-+#if defined(CONFIG_RALINK_RT288X) || defined(CONFIG_RALINK_RT305X)
- static void rt2800pci_read_eeprom_soc(struct rt2x00_dev *rt2x00dev)
- {
- 	u32 *base_addr = (u32 *) KSEG1ADDR(0x1F040000); /* XXX for RT3052 */
-@@ -95,9 +95,9 @@ static void rt2800pci_read_eeprom_soc(struct rt2x00_dev *rt2x00dev)
- static inline void rt2800pci_read_eeprom_soc(struct rt2x00_dev *rt2x00dev)
- {
- }
--#endif /* CONFIG_RT2800PCI_SOC */
-+#endif /* CONFIG_RALINK_RT288X || CONFIG_RALINK_RT305X */
- 
--#ifdef CONFIG_RT2800PCI_PCI
-+#ifdef CONFIG_PCI
- static void rt2800pci_eepromregister_read(struct eeprom_93cx6 *eeprom)
- {
- 	struct rt2x00_dev *rt2x00dev = eeprom->data;
-@@ -181,7 +181,7 @@ static inline int rt2800pci_efuse_detect(struct rt2x00_dev *rt2x00dev)
- static inline void rt2800pci_read_eeprom_efuse(struct rt2x00_dev *rt2x00dev)
- {
- }
--#endif /* CONFIG_RT2800PCI_PCI */
-+#endif /* CONFIG_PCI */
- 
- /*
-  * Firmware functions
-@@ -1031,7 +1031,7 @@ static const struct rt2x00_ops rt2800pci_ops = {
- /*
-  * RT2800pci module information.
-  */
--#ifdef CONFIG_RT2800PCI_PCI
-+#ifdef CONFIG_PCI
- static DEFINE_PCI_DEVICE_TABLE(rt2800pci_device_table) = {
- 	{ PCI_DEVICE(0x1814, 0x0601), PCI_DEVICE_DATA(&rt2800pci_ops) },
- 	{ PCI_DEVICE(0x1814, 0x0681), PCI_DEVICE_DATA(&rt2800pci_ops) },
-@@ -1061,19 +1061,19 @@ static DEFINE_PCI_DEVICE_TABLE(rt2800pci_device_table) = {
- #endif
- 	{ 0, }
- };
--#endif /* CONFIG_RT2800PCI_PCI */
-+#endif /* CONFIG_PCI */
- 
- MODULE_AUTHOR(DRV_PROJECT);
- MODULE_VERSION(DRV_VERSION);
- MODULE_DESCRIPTION("Ralink RT2800 PCI & PCMCIA Wireless LAN driver.");
- MODULE_SUPPORTED_DEVICE("Ralink RT2860 PCI & PCMCIA chipset based cards");
--#ifdef CONFIG_RT2800PCI_PCI
-+#ifdef CONFIG_PCI
- MODULE_FIRMWARE(FIRMWARE_RT2860);
- MODULE_DEVICE_TABLE(pci, rt2800pci_device_table);
--#endif /* CONFIG_RT2800PCI_PCI */
-+#endif /* CONFIG_PCI */
- MODULE_LICENSE("GPL");
- 
--#ifdef CONFIG_RT2800PCI_SOC
-+#if defined(CONFIG_RALINK_RT288X) || defined(CONFIG_RALINK_RT305X)
- static int rt2800soc_probe(struct platform_device *pdev)
- {
- 	return rt2x00soc_probe(pdev, &rt2800pci_ops);
-@@ -1090,9 +1090,9 @@ static struct platform_driver rt2800soc_driver = {
- 	.suspend	= rt2x00soc_suspend,
- 	.resume		= rt2x00soc_resume,
- };
--#endif /* CONFIG_RT2800PCI_SOC */
-+#endif /* CONFIG_RALINK_RT288X || CONFIG_RALINK_RT305X */
- 
--#ifdef CONFIG_RT2800PCI_PCI
-+#ifdef CONFIG_PCI
- static struct pci_driver rt2800pci_driver = {
- 	.name		= KBUILD_MODNAME,
- 	.id_table	= rt2800pci_device_table,
-@@ -1101,21 +1101,21 @@ static struct pci_driver rt2800pci_driver = {
- 	.suspend	= rt2x00pci_suspend,
- 	.resume		= rt2x00pci_resume,
- };
--#endif /* CONFIG_RT2800PCI_PCI */
-+#endif /* CONFIG_PCI */
- 
- static int __init rt2800pci_init(void)
- {
- 	int ret = 0;
- 
--#ifdef CONFIG_RT2800PCI_SOC
-+#if defined(CONFIG_RALINK_RT288X) || defined(CONFIG_RALINK_RT305X)
- 	ret = platform_driver_register(&rt2800soc_driver);
- 	if (ret)
- 		return ret;
- #endif
--#ifdef CONFIG_RT2800PCI_PCI
-+#ifdef CONFIG_PCI
- 	ret = pci_register_driver(&rt2800pci_driver);
- 	if (ret) {
--#ifdef CONFIG_RT2800PCI_SOC
-+#if defined(CONFIG_RALINK_RT288X) || defined(CONFIG_RALINK_RT305X)
- 		platform_driver_unregister(&rt2800soc_driver);
- #endif
- 		return ret;
-@@ -1127,10 +1127,10 @@ static int __init rt2800pci_init(void)
- 
- static void __exit rt2800pci_exit(void)
- {
--#ifdef CONFIG_RT2800PCI_PCI
-+#ifdef CONFIG_PCI
- 	pci_unregister_driver(&rt2800pci_driver);
- #endif
--#ifdef CONFIG_RT2800PCI_SOC
-+#if defined(CONFIG_RALINK_RT288X) || defined(CONFIG_RALINK_RT305X)
- 	platform_driver_unregister(&rt2800soc_driver);
- #endif
- }
--- 
-1.7.2.3
-
+T24gVGh1LCBOb3YgMTEsIDIwMTAgYXQgNDowMCBQTSwgTHVpcyBSLiBSb2RyaWd1ZXogPG1jZ3Jv
+ZkBnbWFpbC5jb20+IHdyb3RlOgo+IE9uIFRodSwgTm92IDExLCAyMDEwIGF0IDM6MzYgUE0sIEx1
+aXMgUi4gUm9kcmlndWV6IDxtY2dyb2ZAZ21haWwuY29tPiB3cm90ZToKPj4gT24gVHVlLCBOb3Yg
+OSwgMjAxMCBhdCAxOjE5IFBNLCBMdWlzIFIuIFJvZHJpZ3VleiA8bWNncm9mQGdtYWlsLmNvbT4g
+d3JvdGU6Cj4+PiBPbiBNb24sIE5vdiA4LCAyMDEwIGF0IDExOjQwIEFNLCBNYXJrIE1lbnRvdmFp
+IDxtYXJrQG1veGllbmV0LmNvbT4gd3JvdGU6Cj4+Pj4gRm9sbG93aW5nIHVwIG9uIHRoZSBvbGQt
+aXNoIOKAnFthdGg1ay1kZXZlbF0gUmFjZSBjb25kaXRpb24gaW4gQ1JEQSBjYWxscz/igJ0gdGhy
+ZWFk4oCmCj4+Pj4KPj4+PiBJIGluZGVwZW5kZW50bHkgZXhwZXJpZW5jZWQgdGhpcyBwcm9ibGVt
+LCBkZWJ1Z2dlZCBpdCwgYW5kIGNhbWUgdG8gdGhlIHNhbWUgY29uY2x1c2lvbi4gVGhlcmUgaXMg
+aW4gZmFjdCBhIHJhY2UgYmV0d2VlbiByZWd1bGF0b3J5IHJlcXVlc3RzIGJlaW5nIG1hZGUgdmlh
+IHJlZ3VsYXRvcnlfaGludCBhbmQgQ1JEQSBhY3R1YWxseSB1cGRhdGluZyByZWd1bGF0b3J5IGRh
+dGEuIEkgc2VlIHRoaXMgb24gYSBzeXN0ZW0gd2l0aCB0d28gY2FyZHMgdGhhdCBjb21lIHVwIG9u
+ZSBhZnRlciB0aGUgb3RoZXIgZHVyaW5nIGJvb3QuCj4+Pj4KPj4+PiAxLiBjZmc4MDIxMSBjYWxs
+cyBDUkRBIHRvIHVwZGF0ZSB0aGUgd29ybGQgcmVndWxhdG9yeSBkb21haW4gYW5kIENSREEgZG9l
+cyBzby4gVGhlIHJlZ3VsYXRvcnkgZG9tYWluIGlzIG5vdyAwMC4KPj4+Pgo+Pj4+IDIuIFRoZSBm
+aXJzdCBjYXJk4oCZcyBkcml2ZXIgKGluIG15IGNhc2UsIGF0aDlrKSBjYWxscyByZWd1bGF0b3J5
+X2hpbnQgdG8gcHJvdmlkZSBVUyBhcyBhIGRyaXZlciBoaW50LiBpZ25vcmVfcmVxdWVzdCBkZWNp
+ZGVzIGFnYWluc3QgaW50ZXJzZWN0aW9uIGJlY2F1c2UgdGhlIGxhc3QgcmVxdWVzdCBjYW1lIGZy
+b20gdGhlIGNvcmUuIFRoZXJl4oCZcyBhIENSREEgY2FsbCwgYnV0IENSREEgaXNu4oCZdCBxdWlj
+ayBlbm91Z2ggdG8gcmVzcG9uZC4gVGhlIHJlZ3VsYXRvcnkgZG9tYWluIGlzIHN0aWxsIDAwLCBi
+ZWNhdXNlIENSREEgaGFzbuKAmXQgY2hhbmdlZCBpdCB5ZXQuCj4+Pj4KPj4+PiAzLiBUaGUgc2Vj
+b25kIGNhcmTigJlzIGRyaXZlciAoYWxzbyBhdGg5aykgY2FsbHMgcmVndWxhdG9yeV9oaW50IHRv
+IHByb3ZpZGUgVVMgYXMgYSBkcml2ZXIgaGludC4gaWdub3JlX3JlcXVlc3Qgc2VlcyB0aGF0IHRo
+ZSBsYXN0IHJlcXVlc3QgY2FtZSBmcm9tIGEgZHJpdmVyIChpbnN0ZWFkIG9mIHRoZSBjb3JlKSBh
+bmQgc2luY2UgdGhlIHJlZ3VsYXRvcnkgZG9tYWluIGlzIGNoYW5naW5nIGZyb20gMDAgdG8gVVMs
+IGRlY2lkZXMgdGhhdCBpbnRlcnNlY3Rpb24gbXVzdCBiZSBwZXJmb3JtZWQuCj4+Pj4KPj4+PiA0
+LiBXaGVuIENSREEgZmluYWxseSByZXNwb25kcyB0byB0aGUgcmVxdWVzdCBmcm9tICMyIG9yICMz
+LCBjZmc4MDIxMSBzZWVzIHRoYXQgbGFzdF9yZXF1ZXN0LT5pbnRlcnNlY3QgaXMgdHJ1ZSwgYW5k
+IGludGVyc2VjdHMuIFRoZSByZWd1bGF0b3J5IGRvbWFpbiBpcyBzZXQgdG8gdGhlIGludGVyc2Vj
+dGlvbiBvZiAwMCBhbmQgVVMuCj4+Pj4KPj4+PiBUaGUgcmFjZSBoZXJlIGlzIGJldHdlZW4gQ1JE
+QSBwcm92aWRpbmcgZGF0YSBhbmQgdGhlIHNlY29uZCBjYXJk4oCZcyByZXF1ZXN0IGJlaW5nIG1h
+ZGUgdmlhIHJlZ3VsYXRvcnlfaGludC4gcmVndWxhdG9yeV9oaW50IGFuZCBpZ25vcmVfcmVxdWVz
+dCBhc3N1bWUgdGhhdCBsYXN0X3JlcXVlc3QgaXMgaW4gc3luYyB3aXRoIHRoZSBjdXJyZW50bHkt
+c2V0IHJlZ3VsYXRvcnkgZG9tYWluLCBidXQgdGhlcmUgaXMgbm8gc3VjaCBzeW5jaHJvbml6YXRp
+b24uCj4+Pj4KPj4+PiBIZXJl4oCZcyBteSBvcGVud3J0LWRldmVsIHBvc3QgZGVzY3JpYmluZyB0
+aGUgYWJvdmUgaW4gYSBzbGlnaHRseSBkaWZmZXJlbnQgbGV2ZWwgb2YgZGV0YWlsOmh0dHBzOi8v
+bGlzdHMub3BlbndydC5vcmcvcGlwZXJtYWlsL29wZW53cnQtZGV2ZWwvMjAxMC1Ob3ZlbWJlci8w
+MDg1NzAuaHRtbC4tLQo+Pj4KPj4+IEknbGwgdGFrZSBhIGxvb2sgYXQgdGhpcyBvbmNlIEkgZ2V0
+IGRvbmUgd2l0aCB0aGUKPj4+IGNvbXBhdC13aXJlbGVzcy0yLjYuMzcgcmVsZWFzZS4gVGhhbmtz
+IGZvciB0aGUgcmVwb3J0Lgo+Pgo+PiBJJ20gbG9va2luZyBhdCB0aGlzIG5vdywgY2FuIHlvdSBk
+byBtZSBhIGZhdm9yIGFuZCB0ZXN0IGFnYWluc3QKPj4gdG9kYXkncyB3aXJlbGVzcy10ZXN0aW5n
+IHRvIHZlcmlmeSB0aGUgaXNzdWUgaXMgc3RpbGwgcHJlc2VudD8gSSdsbCBiZQo+PiBkaWdnaW5n
+IGF0IHRoaXMgaW4gdGhlIG1lYW4gdGltZS4KPgo+IEkgY2FuIHJlcHJvZHVjZSB0aGlzIGVhc2ls
+eSBub3cgd2l0aDoKPgo+IG1jZ3JvZkBmbGFzaCB+ICQgc3VkbyBjYXQgL3NiaW4vY3JkYQo+ICMh
+L2Jpbi9iYXNoCj4gZWNobyAkQ09VTlRSWSA+PiAvdG1wL2xvZwo+IHNsZWVwIDIKPiAvc2Jpbi9j
+cmRhLm9yaWcKPgo+Cj4gbWNncm9mQGZsYXNoIH4gJCBpdyByZWcgZ2V0Cj4gY291bnRyeSA5ODoK
+PiDCoCDCoCDCoCDCoCgyNDAyIC0gMjQ3MiBAIDQwKSwgKE4vQSwgMjApCj4gwqAgwqAgwqAgwqAo
+MjQ1NyAtIDI0ODIgQCAyMCksIChOL0EsIDIwKSwgUEFTU0lWRS1TQ0FOLCBOTy1JQlNTCj4gwqAg
+wqAgwqAgwqAoMjQ3NCAtIDI0ODIgQCA4KSwgKE4vQSwgMjApLCBOTy1PRkRNLCBQQVNTSVZFLVND
+QU4sIE5PLUlCU1MKPiDCoCDCoCDCoCDCoCg1MTcwIC0gNTI1MCBAIDQwKSwgKE4vQSwgMjApLCBQ
+QVNTSVZFLVNDQU4sIE5PLUlCU1MKPgo+IFlvdSBkb24ndCBldmVuIGhhdmUgdG8gdXNlIGF0aDlr
+LCBqdXN0IHVzZSBtYWM4MDIxMV9od3NpbSB3aXRoOgo+Cj4gbW9kcHJvYmUgbWFjODAyMTFfaHdz
+aW0gcmVndGVzdD0yCj4KPiBJIGdldCAoSSdtIHRyaW1taW5nIGlycmVsZXZhbnQgb3V0cHV0KQo+
+Cj4gV2lwaHkgcGh5MQo+IMKgIMKgIMKgIMKgQmFuZCAxOgo+IMKgIMKgIMKgIMKgIMKgIMKgIMKg
+IMKgRnJlcXVlbmNpZXM6Cj4gwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAqIDI0
+MTIgTUh6IFsxXSAoMjAuMCBkQm0pCj4gwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAg
+wqAqIDI0MTcgTUh6IFsyXSAoMjAuMCBkQm0pCj4gwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAg
+wqAgwqAgwqAqIDI0MjIgTUh6IFszXSAoMjAuMCBkQm0pCj4gwqAgwqAgwqAgwqAgwqAgwqAgwqAg
+wqAgwqAgwqAgwqAgwqAqIDI0MjcgTUh6IFs0XSAoMjAuMCBkQm0pCj4gwqAgwqAgwqAgwqAgwqAg
+wqAgwqAgwqAgwqAgwqAgwqAgwqAqIDI0MzIgTUh6IFs1XSAoMjAuMCBkQm0pCj4gwqAgwqAgwqAg
+wqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAqIDI0MzcgTUh6IFs2XSAoMjAuMCBkQm0pCj4gwqAg
+wqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAqIDI0NDIgTUh6IFs3XSAoMjAuMCBkQm0p
+Cj4gwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAqIDI0NDcgTUh6IFs4XSAoMjAu
+MCBkQm0pCj4gwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAqIDI0NTIgTUh6IFs5
+XSAoMjAuMCBkQm0pCj4gwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAqIDI0NTcg
+TUh6IFsxMF0gKDIwLjAgZEJtKQo+IMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKg
+KiAyNDYyIE1IeiBbMTFdICgyMC4wIGRCbSkKPiDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDC
+oCDCoCDCoCogMjQ2NyBNSHogWzEyXSAoMjAuMCBkQm0pCj4gwqAgwqAgwqAgwqAgwqAgwqAgwqAg
+wqAgwqAgwqAgwqAgwqAqIDI0NzIgTUh6IFsxM10gKDIwLjAgZEJtKQo+IMKgIMKgIMKgIMKgIMKg
+IMKgIMKgIMKgIMKgIMKgIMKgIMKgKiAyNDg0IE1IeiBbMTRdIChkaXNhYmxlZCkKPiDCoCDCoCDC
+oCDCoEJhbmQgMjoKPiDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoEZyZXF1ZW5jaWVzOgo+IMKgIMKg
+IMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgKiA1MTgwIE1IeiBbMzZdICgyMC4wIGRCbSkK
+PiDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCogNTIwMCBNSHogWzQwXSAoMjAu
+MCBkQm0pCj4gwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAqIDUyMjAgTUh6IFs0
+NF0gKDIwLjAgZEJtKQo+IMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgKiA1MjQw
+IE1IeiBbNDhdICgyMC4wIGRCbSkKPiDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDC
+oCogNTI2MCBNSHogWzUyXSAoMjAuMCBkQm0pIChyYWRhciBkZXRlY3Rpb24pCj4gwqAgwqAgwqAg
+wqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAqIDUyODAgTUh6IFs1Nl0gKDIwLjAgZEJtKSAocmFk
+YXIgZGV0ZWN0aW9uKQo+IMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgKiA1MzAw
+IE1IeiBbNjBdICgyMC4wIGRCbSkgKHJhZGFyIGRldGVjdGlvbikKPiDCoCDCoCDCoCDCoCDCoCDC
+oCDCoCDCoCDCoCDCoCDCoCDCoCogNTMyMCBNSHogWzY0XSAoMjAuMCBkQm0pIChyYWRhciBkZXRl
+Y3Rpb24pCj4gwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAqIDU1MDAgTUh6IFsx
+MDBdICgyMC4wIGRCbSkgKHJhZGFyIGRldGVjdGlvbikKPiDCoCDCoCDCoCDCoCDCoCDCoCDCoCDC
+oCDCoCDCoCDCoCDCoCogNTUyMCBNSHogWzEwNF0gKDIwLjAgZEJtKSAocmFkYXIgZGV0ZWN0aW9u
+KQo+IMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgKiA1NTQwIE1IeiBbMTA4XSAo
+MjAuMCBkQm0pIChyYWRhciBkZXRlY3Rpb24pCj4gwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAg
+wqAgwqAgwqAqIDU1NjAgTUh6IFsxMTJdICgyMC4wIGRCbSkgKHJhZGFyIGRldGVjdGlvbikKPiDC
+oCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCogNTU4MCBNSHogWzExNl0gKDIwLjAg
+ZEJtKSAocmFkYXIgZGV0ZWN0aW9uKQo+IMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKg
+IMKgKiA1NjAwIE1IeiBbMTIwXSAoMjAuMCBkQm0pIChyYWRhciBkZXRlY3Rpb24pCj4gwqAgwqAg
+wqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAqIDU2MjAgTUh6IFsxMjRdICgyMC4wIGRCbSkg
+KHJhZGFyIGRldGVjdGlvbikKPiDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCog
+NTY0MCBNSHogWzEyOF0gKDIwLjAgZEJtKSAocmFkYXIgZGV0ZWN0aW9uKQo+IMKgIMKgIMKgIMKg
+IMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgKiA1NjYwIE1IeiBbMTMyXSAoMjAuMCBkQm0pIChyYWRh
+ciBkZXRlY3Rpb24pCj4gwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAqIDU2ODAg
+TUh6IFsxMzZdICgyMC4wIGRCbSkgKHJhZGFyIGRldGVjdGlvbikKPiDCoCDCoCDCoCDCoCDCoCDC
+oCDCoCDCoCDCoCDCoCDCoCDCoCogNTcwMCBNSHogWzE0MF0gKDIwLjAgZEJtKSAocmFkYXIgZGV0
+ZWN0aW9uKQo+IMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgKiA1NzQ1IE1IeiBb
+MTQ5XSAoZGlzYWJsZWQpCj4gwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAqIDU3
+NjUgTUh6IFsxNTNdIChkaXNhYmxlZCkKPiDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDC
+oCDCoCogNTc4NSBNSHogWzE1N10gKGRpc2FibGVkKQo+IMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKg
+IMKgIMKgIMKgIMKgKiA1ODA1IE1IeiBbMTYxXSAoZGlzYWJsZWQpCj4gwqAgwqAgwqAgwqAgwqAg
+wqAgwqAgwqAgwqAgwqAgwqAgwqAqIDU4MjUgTUh6IFsxNjVdIChkaXNhYmxlZCkKPiBXaXBoeSBw
+aHkwCj4gwqAgwqAgwqAgwqBCYW5kIDE6Cj4gwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqBGcmVxdWVu
+Y2llczoKPiDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCogMjQxMiBNSHogWzFd
+ICgyMC4wIGRCbSkKPiDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCogMjQxNyBN
+SHogWzJdICgyMC4wIGRCbSkKPiDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCog
+MjQyMiBNSHogWzNdICgyMC4wIGRCbSkKPiDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDC
+oCDCoCogMjQyNyBNSHogWzRdICgyMC4wIGRCbSkKPiDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDC
+oCDCoCDCoCDCoCogMjQzMiBNSHogWzVdICgyMC4wIGRCbSkKPiDCoCDCoCDCoCDCoCDCoCDCoCDC
+oCDCoCDCoCDCoCDCoCDCoCogMjQzNyBNSHogWzZdICgyMC4wIGRCbSkKPiDCoCDCoCDCoCDCoCDC
+oCDCoCDCoCDCoCDCoCDCoCDCoCDCoCogMjQ0MiBNSHogWzddICgyMC4wIGRCbSkKPiDCoCDCoCDC
+oCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCogMjQ0NyBNSHogWzhdICgyMC4wIGRCbSkKPiDC
+oCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCogMjQ1MiBNSHogWzldICgyMC4wIGRC
+bSkKPiDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCogMjQ1NyBNSHogWzEwXSAo
+MjAuMCBkQm0pCj4gwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAqIDI0NjIgTUh6
+IFsxMV0gKDIwLjAgZEJtKQo+IMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgKiAy
+NDY3IE1IeiBbMTJdICgyMC4wIGRCbSkgKHBhc3NpdmUgc2Nhbm5pbmcsIG5vIElCU1MpCj4gwqAg
+wqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAqIDI0NzIgTUh6IFsxM10gKDIwLjAgZEJt
+KSAocGFzc2l2ZSBzY2FubmluZywgbm8gSUJTUykKPiDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDC
+oCDCoCDCoCDCoCogMjQ4NCBNSHogWzE0XSAoZGlzYWJsZWQpCj4gwqAgwqAgwqAgwqBCYW5kIDI6
+Cj4gwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqBGcmVxdWVuY2llczoKPiDCoCDCoCDCoCDCoCDCoCDC
+oCDCoCDCoCDCoCDCoCDCoCDCoCogNTE4MCBNSHogWzM2XSAoMjAuMCBkQm0pIChwYXNzaXZlIHNj
+YW5uaW5nLCBubyBJQlNTKQo+IMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgKiA1
+MjAwIE1IeiBbNDBdICgyMC4wIGRCbSkgKHBhc3NpdmUgc2Nhbm5pbmcsIG5vIElCU1MpCj4gwqAg
+wqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAqIDUyMjAgTUh6IFs0NF0gKDIwLjAgZEJt
+KSAocGFzc2l2ZSBzY2FubmluZywgbm8gSUJTUykKPiDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDC
+oCDCoCDCoCDCoCogNTI0MCBNSHogWzQ4XSAoMjAuMCBkQm0pIChwYXNzaXZlIHNjYW5uaW5nLCBu
+byBJQlNTKQo+IMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgKiA1MjYwIE1IeiBb
+NTJdIChkaXNhYmxlZCkKPiDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCogNTI4
+MCBNSHogWzU2XSAoZGlzYWJsZWQpCj4gwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAg
+wqAqIDUzMDAgTUh6IFs2MF0gKGRpc2FibGVkKQo+IMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKg
+IMKgIMKgIMKgKiA1MzIwIE1IeiBbNjRdIChkaXNhYmxlZCkKPiDCoCDCoCDCoCDCoCDCoCDCoCDC
+oCDCoCDCoCDCoCDCoCDCoCogNTUwMCBNSHogWzEwMF0gKGRpc2FibGVkKQo+IMKgIMKgIMKgIMKg
+IMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgKiA1NTIwIE1IeiBbMTA0XSAoZGlzYWJsZWQpCj4gwqAg
+wqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAqIDU1NDAgTUh6IFsxMDhdIChkaXNhYmxl
+ZCkKPiDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCogNTU2MCBNSHogWzExMl0g
+KGRpc2FibGVkKQo+IMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgKiA1NTgwIE1I
+eiBbMTE2XSAoZGlzYWJsZWQpCj4gwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAq
+IDU2MDAgTUh6IFsxMjBdIChkaXNhYmxlZCkKPiDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDC
+oCDCoCDCoCogNTYyMCBNSHogWzEyNF0gKGRpc2FibGVkKQo+IMKgIMKgIMKgIMKgIMKgIMKgIMKg
+IMKgIMKgIMKgIMKgIMKgKiA1NjQwIE1IeiBbMTI4XSAoZGlzYWJsZWQpCj4gwqAgwqAgwqAgwqAg
+wqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAqIDU2NjAgTUh6IFsxMzJdIChkaXNhYmxlZCkKPiDCoCDC
+oCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCogNTY4MCBNSHogWzEzNl0gKGRpc2FibGVk
+KQo+IMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgKiA1NzAwIE1IeiBbMTQwXSAo
+ZGlzYWJsZWQpCj4gwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAqIDU3NDUgTUh6
+IFsxNDldIChkaXNhYmxlZCkKPiDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCog
+NTc2NSBNSHogWzE1M10gKGRpc2FibGVkKQo+IMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKg
+IMKgIMKgKiA1Nzg1IE1IeiBbMTU3XSAoZGlzYWJsZWQpCj4gwqAgwqAgwqAgwqAgwqAgwqAgwqAg
+wqAgwqAgwqAgwqAgwqAqIDU4MDUgTUh6IFsxNjFdIChkaXNhYmxlZCkKPiDCoCDCoCDCoCDCoCDC
+oCDCoCDCoCDCoCDCoCDCoCDCoCDCoCogNTgyNSBNSHogWzE2NV0gKGRpc2FibGVkKQoKSSdsbCBm
+aXggdGhhbmtzIGZvciByZXBvcnRpbmcgdGhpcy4KCiAgTHVpcwo=
