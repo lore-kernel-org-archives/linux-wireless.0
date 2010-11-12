@@ -1,66 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw0-f46.google.com ([74.125.83.46]:50359 "EHLO
-	mail-gw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752340Ab0KDVct convert rfc822-to-8bit (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:50510 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932181Ab0KLSiN (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 4 Nov 2010 17:32:49 -0400
-Received: by gwj21 with SMTP id 21so1812348gwj.19
-        for <linux-wireless@vger.kernel.org>; Thu, 04 Nov 2010 14:32:48 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <201011042038.35919.IvDoorn@gmail.com>
-References: <201011042037.00178.IvDoorn@gmail.com>
-	<201011042037.47939.IvDoorn@gmail.com>
-	<201011042038.16312.IvDoorn@gmail.com>
-	<201011042038.35919.IvDoorn@gmail.com>
-Date: Thu, 4 Nov 2010 21:32:48 +0000
-Message-ID: <AANLkTi=1eHFOX5S6H_ZETWoXz_8nm5Xd+hExrRWX7go8@mail.gmail.com>
-Subject: Re: [PATCH 05/13] rt2x00: Add unlikely to skb allocation failure check
-From: Christian Lamparter <chunkeey@googlemail.com>
-To: Ivo van Doorn <ivdoorn@gmail.com>
-Cc: linux-wireless@vger.kernel.org,
-	Helmut Schaa <helmut.schaa@googlemail.com>
-Content-Type: text/plain; charset=ISO-8859-1
+	Fri, 12 Nov 2010 13:38:13 -0500
+Subject: Re: [PATCH] compat-wireless: support backporting bluetooth to RHEL
+ 6
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	linux-wireless@vger.kernel.org, linux-bluetooth@vger.kernel.org
+In-Reply-To: <20101112181348.GG2338@tuxdriver.com>
+References: <20101112181348.GG2338@tuxdriver.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Fri, 12 Nov 2010 10:39:32 -0800
+Message-ID: <1289587172.3736.7.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Nov 4, 2010 at 7:38 PM, Ivo van Doorn <ivdoorn@gmail.com> wrote:
-> From: Helmut Schaa <helmut.schaa@googlemail.com>
->
-> The skb allocation should really only fail under high memory pressure
-> or other uncommon situations. Hence, mark the allocation failure check
-> as unlikely.
->
-> Signed-off-by: Helmut Schaa <helmut.schaa@googlemail.com>
-> Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
-> ---
->  drivers/net/wireless/rt2x00/rt2x00dev.c |    2 +-
->  1 files changed, 1 insertions(+), 1 deletions(-)
->
-> diff --git a/drivers/net/wireless/rt2x00/rt2x00dev.c b/drivers/net/wireless/rt2x00/rt2x00dev.c
-> index 5ba79b9..a5c7a4f 100644
-> --- a/drivers/net/wireless/rt2x00/rt2x00dev.c
-> +++ b/drivers/net/wireless/rt2x00/rt2x00dev.c
-> @@ -491,7 +491,7 @@ void rt2x00lib_rxdone(struct queue_entry *entry)
->         * received frame and reuse the existing buffer.
->         */
->        skb = rt2x00queue_alloc_rxskb(entry);
-> -       if (!skb)
-> +       if (unlikely(!skb))
->                goto submit_entry;
->
->        /*
-> --
-err, wait a sec, I've been looking for this mail for some time, but:
+On Fri, 2010-11-12 at 13:13 -0500, John W. Linville wrote:
+>   
+> -+#if (LINUX_VERSION_CODE > KERNEL_VERSION(2,6,32))
+> ++#if (LINUX_VERSION_CODE > KERNEL_VERSION(2,6,32)) || (defined(RHEL_MAJOR) && (RHEL_MAJOR == 6))
 
-http://mail.linux.ie/pipermail/ilug/2004-December/075654.html
+Hmmm. I kinda support this, but I'd rather see something like a header
+file having
 
-"Note tests for NULL (!something) don't need an unlikely as gcc does
- that by default itself."
+#if (LINUX_VERSION ...) || ...
+#define OLD_BT_API 1
+#endif
 
-But there's more, according to http://gcc.gnu.org/news/profiledriven.html:
-(static program profile) gcc expect pointers to be non-null
+and then using ifdef OLD_BT_API? That way, other distros don't get into
+a huge mess trying to add that too, and something like we had two days
+ago where we had to make it work on some other custom kernel would be
+much easier too since we can just amend the one check or define/undef
+the OLD_BT_API symbol.
 
-(therefore all !skb tests should be unlikely branches by default, or?)
+johannes
 
-Best regards,
-    Chr
