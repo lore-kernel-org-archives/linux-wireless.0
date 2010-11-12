@@ -1,67 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from thunk.org ([69.25.196.29]:41398 "EHLO thunker.thunk.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755838Ab0KUVoe (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 21 Nov 2010 16:44:34 -0500
-Date: Sun, 21 Nov 2010 16:44:07 -0500
-From: Ted Ts'o <tytso@mit.edu>
-To: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Cc: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	Greg KH <greg@kroah.com>, linux-kernel@vger.kernel.org,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	David Miller <davem@davemloft.net>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Stephen Hemminger <shemminger@vyatta.com>,
-	"Perez-Gonzalez, Inaky" <inaky.perez-gonzalez@intel.com>,
-	Charles Marker <Charles.Marker@atheros.com>,
-	Jouni Malinen <Jouni.Malinen@atheros.com>,
-	Kevin Hayes <kevin@atheros.com>,
-	Zhifeng Cai <zhifeng.cai@atheros.com>,
-	Don Breslin <Don.Breslin@atheros.com>,
-	Doug Dahlby <Doug.Dahlby@atheros.com>,
-	Julia Lawall <julia@diku.dk>
-Subject: Re: Challenges with doing hardware bring up with Linux first
-Message-ID: <20101121214407.GH23423@thunk.org>
-References: <AANLkTim4jVaZxYp8nSgJyy28iwxcxbPeNUzxTfoHAX4S@mail.gmail.com>
- <F46C52ED-8DB8-4347-957D-B9D84406D53F@mit.edu>
- <AANLkTinyafwe9MyXhSSe5vxEKnTUeLV0AZDWY_uXsu8f@mail.gmail.com>
- <20101121130236.GE23423@thunk.org>
- <20101121172906.GD3703@kroah.com>
- <AANLkTik6MQjYTCQ4wtyRpOGb94uyUTA+juvX-8UsP95J@mail.gmail.com>
- <20101121203124.1ba8212e@lxorguk.ukuu.org.uk>
+Received: from mail.candelatech.com ([208.74.158.172]:46904 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932137Ab0KLUQI (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 12 Nov 2010 15:16:08 -0500
+Message-ID: <4CDDA086.2010803@candelatech.com>
+Date: Fri, 12 Nov 2010 12:16:06 -0800
+From: Ben Greear <greearb@candelatech.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20101121203124.1ba8212e@lxorguk.ukuu.org.uk>
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+CC: linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] mac80211: Fix deadlock in ieee80211_do_stop.
+References: <1289592426-5367-1-git-send-email-greearb@candelatech.com> <AANLkTin_qaMO+3Zm3qnqZ2WDjLoujvCa0W2eLO1BT_Ti@mail.gmail.com>
+In-Reply-To: <AANLkTin_qaMO+3Zm3qnqZ2WDjLoujvCa0W2eLO1BT_Ti@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, Nov 21, 2010 at 08:31:24PM +0000, Alan Cox wrote:
-> 
-> Which we know in practice they won't. They'll sit on fixes (often
-> security fixes) and tweak and add private copies of features. In turn the
-> Linux one could then only keep up by adding features itself - which would
-> have to be GPL to stop the same abuse continuing.
-> 
-> It's a nice idea but the corporations exist to make money and adding
-> proprietary custom stack add-ons is clearly a good move on their part to
-> do that.
+On 11/12/2010 12:08 PM, Luis R. Rodriguez wrote:
+> On Fri, Nov 12, 2010 at 12:07 PM,<greearb@candelatech.com>  wrote:
+>> From: Ben Greear<greearb@candelatech.com>
+>>
+>> We cannot call flush_work here because we are holding
+>> RTNL and the worker thread(s) that will be called upon to
+>> do the flushing might already be running a piece of work
+>> that is blocking on RTNL.  That leads to deadlock and/or
+>> OOM.
+>>
+>> The ieee80211_iface_work method does nothing when sdata
+>> is stopped (as it would be when the flush_work was called)
+>> so it shouldn't be any big change to just cancel the work
+>> entirely.
+>>
+>> Signed-off-by: Ben Greear<greearb@candelatech.com>
+>
+> Is this a stable fix?
 
-Hence my recommendation that if someone is going to do the work to
-create a 802.11 layer that has shims that work on multiple operating
-systems, it be GPL with explicit exceptions to allow said layer to
-work on legacy operating systems like QNX, et. al.  That way it forces
-the hardware specific code to be released under the GPL --- if they
-want to take advantage of the "write onces, work on multiple operating
-systems" feature.
+We didn't see this when testing against .36-ish
+wireless-testing...
 
-If someone is going to go through all of this work to make it possible
---- particularly if it's at a company such as Luis's employer, or any
-other wifi chipset provider --- why should it allow their competitors
-to do closed source drivers?  Better to structure the driver licensing
-such that (a) there is benefit for companies to make a Linux driver by
-using this common stack, and (b) but in exchange, it forces them to
-make a driver which is guaranteed to be usable by Linux by virtual of
-the fact that (1) the native interface is Linux's wireless stack, and
-(2) the license forces them to GPL their driver. 
+I can't do any useful testing against official .36 since it
+doesn't have the ath5k multi-vif support.
 
-    		       	       	   - Ted
+I'm also not sure this patch 100% right, though
+it does fix a very reproducible bug for me.  I might be
+missing some side-affect of cancelling instead of attempting
+to flush the work queue, however, so we should wait for
+input from whoever wrote that code in the first place...
+
+Thanks,
+Ben
+
+-- 
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
+
