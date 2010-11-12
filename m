@@ -1,76 +1,121 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:42429 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754848Ab0KKS01 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 11 Nov 2010 13:26:27 -0500
-Message-ID: <4CDC354C.2060503@candelatech.com>
-Date: Thu, 11 Nov 2010 10:26:20 -0800
-From: Ben Greear <greearb@candelatech.com>
-MIME-Version: 1.0
-To: Tejun Heo <tj@kernel.org>
-CC: Johannes Berg <johannes@sipsolutions.net>,
+Received: from mx1.redhat.com ([209.132.183.28]:33404 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932107Ab0KLQmi (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 12 Nov 2010 11:42:38 -0500
+Date: Fri, 12 Nov 2010 17:46:20 +0100
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: "Guy, Wey-Yi" <wey-yi.w.guy@intel.com>
+Cc: Intel Linux Wireless <ilw@linux.intel.com>,
 	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: ath5k/mac80211:  Reproducible deadlock with 64-stations.
-References: <4CDB2488.4040802@candelatech.com> <1289437356.3748.25.camel@jlt3.sipsolutions.net> <4CDBB716.7020802@kernel.org> <4CDC2016.8020200@candelatech.com>
-In-Reply-To: <4CDC2016.8020200@candelatech.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Subject: Re: [PATCH 2/3] iwlagn: simplify iwlagn_tx_skb
+Message-ID: <20101112164620.GA10877@redhat.com>
+References: <1289548027-3383-1-git-send-email-sgruszka@redhat.com>
+ <1289548027-3383-2-git-send-email-sgruszka@redhat.com>
+ <1289577125.16178.7.camel@wwguy-ubuntu>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1289577125.16178.7.camel@wwguy-ubuntu>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 11/11/2010 08:55 AM, Ben Greear wrote:
-> On 11/11/2010 01:27 AM, Tejun Heo wrote:
->> Hello,
->>
->> On 11/11/2010 02:02 AM, Johannes Berg wrote:
->>> I don't really see any deadlock here... hmm. Tejun, do you see anything
->>> wrong with the "locking" in workq stuff here?
->>>
->>> Something is holding the RTNL, and a bunch of other things are trying to
->>> acquire it. We don't really know who's holding it and who's acquiring it
->>> though.
+Hi,
 
-I notice that the system is consistently running OOM, even though
-it has 2GB RAM.  I'll try disabling some of the memory-poisoning debugging that may
-be consuming excess amounts of RAM to see if that helps any.
+On Fri, Nov 12, 2010 at 07:52:05AM -0800, Guy, Wey-Yi wrote:
+> On Thu, 2010-11-11 at 23:47 -0800, Stanislaw Gruszka wrote:
+> > We can simplify length calculation in iwlagn_tx_skb, that function
+> > is enough complex, without fuzz it more than necessary.
+> > 
+> > Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+> > ---
+> >  drivers/net/wireless/iwlwifi/iwl-agn-tx.c |   33 ++++++++++------------------
+> >  1 files changed, 12 insertions(+), 21 deletions(-)
+> > 
+> > diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-tx.c b/drivers/net/wireless/iwlwifi/iwl-agn-tx.c
+> > index 2b078a9..1205cec 100644
+> > --- a/drivers/net/wireless/iwlwifi/iwl-agn-tx.c
+> > +++ b/drivers/net/wireless/iwlwifi/iwl-agn-tx.c
+> > @@ -522,7 +522,7 @@ int iwlagn_tx_skb(struct iwl_priv *priv, struct sk_buff *skb)
+> >  	dma_addr_t phys_addr;
+> >  	dma_addr_t txcmd_phys;
+> >  	dma_addr_t scratch_phys;
+> > -	u16 len, len_org, firstlen, secondlen;
+> > +	u16 len, firstlen, secondlen;
+> >  	u16 seq_number = 0;
+> >  	__le16 fc;
+> >  	u8 hdr_len;
+> > @@ -687,30 +687,23 @@ int iwlagn_tx_skb(struct iwl_priv *priv, struct sk_buff *skb)
+> >  	 */
+> >  	len = sizeof(struct iwl_tx_cmd) +
+> >  		sizeof(struct iwl_cmd_header) + hdr_len;
+> > -
+> > -	len_org = len;
+> > -	firstlen = len = (len + 3) & ~3;
+> > -
+> > -	if (len_org != len)
+> > -		len_org = 1;
+> > -	else
+> > -		len_org = 0;
+> > +	firstlen = (len + 3) & ~3;
+> >  
+> >  	/* Tell NIC about any 2-byte padding after MAC header */
+> > -	if (len_org)
+> > +	if (firstlen != len)
+> >  		tx_cmd->tx_flags |= TX_CMD_FLG_MH_PAD_MSK;
+> >  
+> >  	/* Physical address of this Tx command's header (not MAC header!),
+> >  	 * within command buffer array. */
+> >  	txcmd_phys = pci_map_single(priv->pci_dev,
+> > -				    &out_cmd->hdr, len,
+> > +				    &out_cmd->hdr, firstlen,
+> >  				    PCI_DMA_BIDIRECTIONAL);
+> >  	dma_unmap_addr_set(out_meta, mapping, txcmd_phys);
+> > -	dma_unmap_len_set(out_meta, len, len);
+> > +	dma_unmap_len_set(out_meta, len, firstlen);
+> 
+> it is possible len != firstlen, right?
 
-Mem-Info:
-DMA per-cpu:
-CPU    0: hi:    0, btch:   1 usd:   0
-Normal per-cpu:
-CPU    0: hi:  186, btch:  31 usd:   0
-HighMem per-cpu:
-CPU    0: hi:  186, btch:  31 usd:   0
-active_anon:13122 inactive_anon:4414 isolated_anon:0
-  active_file:2904 inactive_file:16491 isolated_file:13
-  unevictable:0 dirty:1 writeback:0 unstable:0
-  free:257367 slab_reclaimable:2005 slab_unreclaimable:210550
-  mapped:9108 shmem:521 pagetables:964 bounce:0
-DMA free:3484kB min:64kB low:80kB high:96kB active_anon:0kB inactive_anon:0kB active_file:0kB inactive_file:0kB unevictable:0kB isolated(anon):0kB isoo
-lowmem_reserve[]: 0 865 2007 2007
-Normal free:2296kB min:3728kB low:4660kB high:5592kB active_anon:0kB inactive_anon:0kB active_file:0kB inactive_file:0kB unevictable:0kB isolated(anono
-lowmem_reserve[]: 0 0 9135 9135
-HighMem free:1023688kB min:512kB low:1740kB high:2972kB active_anon:52488kB inactive_anon:17656kB active_file:11616kB inactive_file:65964kB unevictablo
-lowmem_reserve[]: 0 0 0 0
-DMA: 3*4kB 0*8kB 1*16kB 0*32kB 0*64kB 1*128kB 1*256kB 0*512kB 1*1024kB 1*2048kB 0*4096kB = 3484kB
-Normal: 402*4kB 64*8kB 1*16kB 1*32kB 0*64kB 1*128kB 0*256kB 0*512kB 0*1024kB 0*2048kB 0*4096kB = 2296kB
-HighMem: 694*4kB 868*8kB 463*16kB 277*32kB 175*64kB 25*128kB 7*256kB 3*512kB 3*1024kB 1*2048kB 238*4096kB = 1023688kB
-19928 total pagecache pages
-0 pages in swap cache
-Swap cache stats: add 0, delete 0, find 0/0
-Free swap  = 4112380kB
-Total swap = 4112380kB
-521952 pages RAM
-294642 pages HighMem
-10948 pages reserved
-58052 pages shared
-241328 pages non-shared
+Yes it is, firstlen is aligned up to 4 byes value, txcmd_phys dma map
+size is firstlen and in consequence I use it every time with txcmd_phys.
 
+> >  	/* Add buffer containing Tx command and MAC(!) header to TFD's
+> >  	 * first entry */
+> >  	priv->cfg->ops->lib->txq_attach_buf_to_tfd(priv, txq,
+> > -						   txcmd_phys, len, 1, 0);
+> > +						   txcmd_phys, firstlen, 1, 0);
+> >  
+> >  	if (!ieee80211_has_morefrags(hdr->frame_control)) {
+> >  		txq->need_update = 1;
+> > @@ -721,23 +714,21 @@ int iwlagn_tx_skb(struct iwl_priv *priv, struct sk_buff *skb)
+> >  
+> >  	/* Set up TFD's 2nd entry to point directly to remainder of skb,
+> >  	 * if any (802.11 null frames have no payload). */
+> > -	secondlen = len = skb->len - hdr_len;
+> > -	if (len) {
+> > +	secondlen = skb->len - hdr_len;
+> > +	if (secondlen > 0) {
+> >  		phys_addr = pci_map_single(priv->pci_dev, skb->data + hdr_len,
+> > -					   len, PCI_DMA_TODEVICE);
+> > +					   secondlen, PCI_DMA_TODEVICE);
+> >  		priv->cfg->ops->lib->txq_attach_buf_to_tfd(priv, txq,
+> > -							   phys_addr, len,
+> > +							   phys_addr, secondlen,
+> >  							   0, 0);
+> >  	}
+> >  
+> >  	scratch_phys = txcmd_phys + sizeof(struct iwl_cmd_header) +
+> >  				offsetof(struct iwl_tx_cmd, scratch);
+> >  
+> > -	len = sizeof(struct iwl_tx_cmd) +
+> > -		sizeof(struct iwl_cmd_header) + hdr_len;
+> >  	/* take back ownership of DMA buffer to enable update */
+> >  	pci_dma_sync_single_for_cpu(priv->pci_dev, txcmd_phys,
+> > -				    len, PCI_DMA_BIDIRECTIONAL);
+> > +				    firstlen, PCI_DMA_BIDIRECTIONAL);
+> 
+> same here, "firstlen" not necessary equal "len"
 
-Thanks,
-Ben
+I guess its enough to sync just "len" but I prefer to use the
+size we used to map dma.
 
--- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
-
+Stanislaw
