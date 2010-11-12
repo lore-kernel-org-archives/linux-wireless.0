@@ -1,37 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:40344 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755170Ab0KPVOu (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 16 Nov 2010 16:14:50 -0500
-Date: Tue, 16 Nov 2010 16:02:47 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Cc: linux-wireless@vger.kernel.org, ipw3945-devel@lists.sourceforge.net
-Subject: Re: [PATCH 00/18]  update for 2.6.38
-Message-ID: <20101116210247.GE10774@tuxdriver.com>
-References: <1289923311-14920-1-git-send-email-wey-yi.w.guy@intel.com>
+Received: from mail.neratec.ch ([80.75.119.105]:37338 "EHLO mail.neratec.ch"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932080Ab0KLPaD (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 12 Nov 2010 10:30:03 -0500
+Date: Fri, 12 Nov 2010 16:29:59 +0100 (CET)
+From: Wojciech Dubowik <dubowoj@neratec.com>
+To: Felix Fietkau <nbd@openwrt.org>
+Cc: linux-wireless@vger.kernel.org
+Message-ID: <25416517.111289575792862.JavaMail.wlan@CHBU500181>
+In-Reply-To: <4CDD5915.5080604@openwrt.org>
+Subject: Re: [PATCH v2 0/9] ath5k: Add AHB support
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1289923311-14920-1-git-send-email-wey-yi.w.guy@intel.com>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Nov 16, 2010 at 08:01:33AM -0800, Wey-Yi Guy wrote:
-> We add more changes to prepare P2P supports
-> We also add few features/changes to WiFi/BT coex,
-> such as dynamic aggregation.
-> For newer devices, we change the default LED mode to On/Off
+>On 2010-11-12 3:48 PM, Wojciech Dubowik wrote:
+>> This series of patches implements AHB bus support for ath5k driver.
+>> 
+>> General comments for AHB bus support in ath5k:
+>> 	* most of the original patches came from Felix Fetikau. I have used
+>> 		them as a reference and ported to current git tree
+>> 	* tried with access point functionality with WPA2 and without encryption
+>> 	* tested on AR5312 for AHB and AR5414 and AR5212 for PCI
+>> 	* compat wireless from openwrt was used for testing these patches
+>> 	* last two patches have to be applied together because otherwise
+>> 		hardware will crash on reset if only number 9 is committed.
+>> 		I have kept them separated for better visibility. 
+>> 		There are two false positive checkpatch warnings from them.
+>> 
+>> Wojciech Dubowik (9):
+>>   ath5k: Use Generic DMA for later support of AHB bus.
+>>   ath5k: Introduce ath5k_init_softc function as in ath9k
+>>   ath5k: Move PCI bus functions to separate file.
+>>   ath5k: Use generic eeprom read from common ath_bus_opts struct.
+>>   ath5k: Check if pci pdev struct is initialized in common functions.
+>>   ath5k: Add a function to read chipset's MAC revision
+>>   ath5k: Add initial registers values for radio RF2317 chip.
+>>   ath5k: Add AHB bus support.
+>>   ath5k: Fix reset and interrupts for AHB type of devices.
+>One thing I forgot: it would be nice if you could add my Signed-off-by
+>for patches that I co-authored, maybe also a From: for patches that were
+>almost entirely written by me.
+>
+>Thanks,
+>
+>- Felix
 
-There had been some talk of a firmware update that would solve some
-user-reported bugs on bugzilla.kernel.org.  I don't have the bug
-numbers handy, but I can probably find them.  I imagine you can find
-them quite easily as well.
+Sure. I will generate new set.
 
-Is that firmware update still in the works?  When can we expect to
-see that?
+br,
+Wojtek
 
-John
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
