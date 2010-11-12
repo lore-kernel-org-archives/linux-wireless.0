@@ -1,76 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iw0-f174.google.com ([209.85.214.174]:61014 "EHLO
-	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752429Ab0KDWFU convert rfc822-to-8bit (ORCPT
+Received: from mail.candelatech.com ([208.74.158.172]:54621 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753181Ab0KLRTD (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 4 Nov 2010 18:05:20 -0400
-Received: by iwn41 with SMTP id 41so8131iwn.19
-        for <linux-wireless@vger.kernel.org>; Thu, 04 Nov 2010 15:05:19 -0700 (PDT)
+	Fri, 12 Nov 2010 12:19:03 -0500
+Message-ID: <4CDD76FF.7060307@candelatech.com>
+Date: Fri, 12 Nov 2010 09:18:55 -0800
+From: Ben Greear <greearb@candelatech.com>
 MIME-Version: 1.0
-In-Reply-To: <AANLkTik0tawXfer2DMSKFXZwFbjYWLoG3nRBYMAMO8WL@mail.gmail.com>
-References: <1288822429-24541-1-git-send-email-notasas@gmail.com>
- <1288822429-24541-3-git-send-email-notasas@gmail.com> <AANLkTimfXO9r=DTW3CAiVswmsoKES2qxEiYz4JBOTGu_@mail.gmail.com>
- <AANLkTik0tawXfer2DMSKFXZwFbjYWLoG3nRBYMAMO8WL@mail.gmail.com>
-From: Ohad Ben-Cohen <ohad@wizery.com>
-Date: Thu, 4 Nov 2010 18:04:58 -0400
-Message-ID: <AANLkTimtryH0HTWk0ymK6EY1XcCPv6eLDYM-GzuJxhEy@mail.gmail.com>
-Subject: Re: [PATCH 2/3] wl1251: add runtime PM support for SDIO
-To: Grazvydas Ignotas <notasas@gmail.com>
-Cc: linux-wireless@vger.kernel.org, Kalle Valo <kvalo@adurom.com>,
-	"John W. Linville" <linville@tuxdriver.com>
-Content-Type: text/plain; charset=ISO-8859-1
+To: Tejun Heo <tj@kernel.org>
+CC: Johannes Berg <johannes@sipsolutions.net>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: ath5k/mac80211:  Reproducible deadlock with 64-stations.
+References: <4CDB2488.4040802@candelatech.com> <1289437356.3748.25.camel@jlt3.sipsolutions.net> <4CDBB716.7020802@kernel.org> <4CDC2016.8020200@candelatech.com> <4CDC354C.2060503@candelatech.com> <4CDC7860.3070307@candelatech.com> <4CDD12BD.7030208@kernel.org>
+In-Reply-To: <4CDD12BD.7030208@kernel.org>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Nov 4, 2010 at 10:37 AM, Grazvydas Ignotas <notasas@gmail.com> wrote:
-> On Thu, Nov 4, 2010 at 3:51 PM, Ohad Ben-Cohen <ohad@wizery.com> wrote:
->> On Wed, Nov 3, 2010 at 6:13 PM, Grazvydas Ignotas <notasas@gmail.com> wrote:
->>> Add runtime PM support, similar to how it's done for wl1271.
->>> This allows to power down the card when the driver is loaded but
->>> network is not in use.
->>>
->>> CC: Ohad Ben-Cohen <ohad@wizery.com>
->>> Signed-off-by: Grazvydas Ignotas <notasas@gmail.com>
->>> ---
->>>  drivers/net/wireless/wl1251/sdio.c |   62 ++++++++++++++++++++++++++++++++++--
->>>  1 files changed, 59 insertions(+), 3 deletions(-)
->>>
->>> diff --git a/drivers/net/wireless/wl1251/sdio.c b/drivers/net/wireless/wl1251/sdio.c
->>> index 0285190..0a5db21 100644
->>> --- a/drivers/net/wireless/wl1251/sdio.c
->>> +++ b/drivers/net/wireless/wl1251/sdio.c
->>> @@ -26,6 +26,7 @@
->>>  #include <linux/platform_device.h>
->>>  #include <linux/wl12xx.h>
->>>  #include <linux/irq.h>
->>> +#include <linux/pm_runtime.h>
->>>
->>>  #include "wl1251.h"
->>>
->>> @@ -173,10 +174,36 @@ static void wl1251_disable_line_irq(struct wl1251 *wl)
->>>
->>>  static int wl1251_sdio_set_power(struct wl1251 *wl, bool enable)
->>>  {
->>> -       if (wl->set_power)
->>> -               wl->set_power(enable);
->>> +       struct sdio_func *func = wl_to_func(wl);
->>> +       int ret;
->>>
->>> -       return 0;
->>> +       if (enable) {
->>> +               /* Power up the card */
->>> +               if (wl->set_power)
->>> +                       wl->set_power(true);
+On 11/12/2010 02:11 AM, Tejun Heo wrote:
+> Hello,
+>
+> On 11/12/2010 12:12 AM, Ben Greear wrote:
+>> The lockup (or extreme slowdown?) happens before the
+>> serious memory pressure.
 >>
->> Why do you still need that ->set_power() handler ?
+>> One thing I noticed is that at one point near (at?) the beginning
+>> of the slowdown, it took 36-seconds to complete the
+>> flush_work() call in ieee80211_do_stop in iface.c
+>>
+>>  From some printk's I added:
+>>
+>> Nov 11 14:58:13 localhost kernel: do_stop: sta14 flushing work: e51298b4
+>> Nov 11 14:58:49 localhost kernel: do_stop: sta14 flushed.
+>>
+>> It is holding RTNL for this entire time, which of course stops
+>> a large number of other useful processes from making
+>> progress.
+>>
+>> Is there any good reason for the flush to take so long?
 >
-> On pandora besides power, we also have a GPIO to control clock buffer
-> for wl1251, so I thought I could enable it here.
+> It depends on what the work being flushed was doing.  Which one is it
+> trying to flush?  Also, if the memory pressure is high enough, due to
 
-Oh, I see. The name set_power then is a bit misleading.. ;)
+It's trying to flush sdata->work.  I have no idea which worker..how
+can I tell?
 
->  Perhaps it could be
-> set up as regulator too, but I'm not sure how to set it up so that
-> clock is enabled before main power. Also it's not really a power
-> supply so it somehow felt wrong to set up regulator for it.
+I can reproduce this every time, and I don't mind adding debugging
+code, so please let me know if there is something I can do to get
+you better information.
+
+> the dynamic nature of workqueue, processing of works can be delayed
+> while trying to create new workers to process them.  Situations like
+> that usually don't happen often as it's likely that workers get freed
+> up as other works finish; however, if workers are piling up on
+> rtnl_lock, there really isn't much it can do.  If there's work user
+> which can behave like that, it would be a good idea to restrict its
+> maximum concurrency using a separate workqueue.
+
+In my case, it seems that memory is OK, but as the deadlock happens
+the system runs slow for a bit and then goes OOM.  I compiled with 2G/2G split
+so that I have extra low-memory and it runs a bit longer before locking
+up completely (or just endlessly spewing allocation-failed messages).
+
+Thanks,
+Ben
+
 >
+> Thanks.
+>
+
+
+-- 
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
+
