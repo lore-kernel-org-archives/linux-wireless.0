@@ -1,90 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([147.243.1.47]:17610 "EHLO mgw-sa01.nokia.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750975Ab0KRGVO (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 18 Nov 2010 01:21:14 -0500
-Subject: RE: [PATCH v4] wl1271: Change wl12xx Files Names
-From: Luciano Coelho <luciano.coelho@nokia.com>
-To: "ext Krakowski, Oz" <ozk@ti.com>
-Cc: "Gabay, Benzy" <benzyg@ti.com>,
-	ext =?ISO-8859-1?Q?G=E1bor?= Stefanik <netrolller.3d@gmail.com>,
-	ext Grazvydas Ignotas <notasas@gmail.com>,
-	"Levi, Shahar" <shahar_levi@ti.com>, Kalle Valo <kvalo@adurom.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <B3E8D1AE4503414CAFD215C4B3688A0501EF42D70641@dlee07.ent.ti.com>
-References: <1288883257-30060-1-git-send-email-shahar_levi@ti.com>
-	 <AANLkTincpxdpmf5J38LiGsF-d9dG7sG9-bjbkH-B8Ld0@mail.gmail.com>
-	 <1288891196.17643.6.camel@powerslave>
-	 <AANLkTi=Luv2+5Hys2PcrH+G8jmc4vwz8PM0LFKm+fTt8@mail.gmail.com>
-	 <1288907555.17643.14.camel@powerslave>
-	 <676FD6AA0F002F49B89E70F0C5EFD22C136DEA0A14@dlee04.ent.ti.com>
-	 <1290019712.28892.5.camel@powerslave>
-	 <676FD6AA0F002F49B89E70F0C5EFD22C136DEA102C@dlee04.ent.ti.com>
-	 <B3E8D1AE4503414CAFD215C4B3688A0501EF42D70641@dlee07.ent.ti.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Thu, 18 Nov 2010 08:21:05 +0200
-Message-ID: <1290061265.28892.17.camel@powerslave>
-Mime-Version: 1.0
+Received: from nbd.name ([46.4.11.11]:39914 "EHLO nbd.name"
+	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1751406Ab0KLT4K (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 12 Nov 2010 14:56:10 -0500
+Message-ID: <4CDD9BB8.1040305@openwrt.org>
+Date: Fri, 12 Nov 2010 20:55:36 +0100
+From: Felix Fietkau <nbd@openwrt.org>
+MIME-Version: 1.0
+To: Wojciech Dubowik <dubowoj@neratec.com>
+CC: Bob Copeland <me@bobcopeland.com>, linville@tuxdriver.com,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 8/9] ath5k: AHB port. Add AHB bus support.
+References: <1298013311.4723.1289591505420.JavaMail.root@idefix>
+In-Reply-To: <1298013311.4723.1289591505420.JavaMail.root@idefix>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2010-11-17 at 23:18 -0600, ext Krakowski, Oz wrote:
-> Benzy,
+On 2010-11-12 8:51 PM, Wojciech Dubowik wrote:
+>> From: "Felix Fietkau" <nbd@openwrt.org>
+>> To: "Bob Copeland" <me@bobcopeland.com>
+>> Cc: "Wojciech Dubowik" <dubowoj@neratec.com>, linville@tuxdriver.com, linux-wireless@vger.kernel.org
+>> Sent: Freitag, 12. November 2010 20:36:51
+>> Subject: Re: [PATCH 8/9] ath5k: AHB port. Add AHB bus support.
+>> On 2010-11-12 8:26 PM, Bob Copeland wrote:
+>> > On Thu, Nov 11, 2010 at 9:58 AM, Wojciech Dubowik
+>> > <dubowoj@neratec.com> wrote:
+>> >>
+>> >> AHB specific functions are now in ahb.c file. There is no common
+>> >> init functions which tries first pci and then ahb becasue on some
+>> >
+>> > 'because'
+>> >
+>> >> --- a/drivers/net/wireless/ath/ath5k/Makefile
+>> >> +++ b/drivers/net/wireless/ath/ath5k/Makefile
+>> >> @@ -15,5 +15,5 @@ ath5k-y += rfkill.o
+>> >>  ath5k-y += ani.o
+>> >>  ath5k-y += sysfs.o
+>> >>  ath5k-$(CONFIG_ATH5K_DEBUG) += debug.o
+>> >> -ath5k-y += pci.o
+>> >> +ath5k-y += $(if $(CONFIG_ATHEROS_AR231X),ahb,pci).o
+>> >>  obj-$(CONFIG_ATH5K) += ath5k.o
+>> >
+>> > This is not the right way.. what if someone wants both in one
+>> > kernel?
+>> Having both in the kernel is completely pointless. There are no
+>> devices
+>> that can support both, nor will there ever be.
+>> 
+>> - Felix
 > 
-> 
-> > > Doesn't help much.  The problem is that the driver which is now called
-> > > wl12xx already support wl1271 and wl1273.  In the near future, it will
-> > > also support wl1281 and wl1283, so the wl6 or wilink6 scheme would
-> > > break
-> > > already.
-> > >
-> > > The wl1251 driver, at least at the moment, only supports wl1251, it
-> > > doesn't have the 11a implementation.  If in the future someone adds
-> > > support for wl1253, it could be renamed to wl125x.
-> > >
-> > > In any case, I think the name of the driver is not that important, as
-> > > long as we're clear about which chips each one of them supports in the
-> > > Kconfig description.
-> > >
-> > > Renaming the driver all the time (we already did it twice), ends up
-> > > confusing more than clarifying things.
-> > >
-> > > --
-> > > Cheers,
-> > > Luca.
-> > 
-> > mmm...
-> > 
-> > In that case, another idea:
-> > 1. why not create new driver source code which will designated for 128x.
-> > 2. If we have a problem with unified 12xx then lets dived it completely to sub drivers and
-> > have only common part as a unified driver. That way you get to keep the old names and
-> > just divide the files content to a new file name wl12xx.c.
-> > 
-> > e.g:
-> > wl1251.c wl1253.c  common part
-> > wl1271.c wl1273.c  ---------->  wl12xx.c
-> > wl1281.c wl1283.c
-> > 
-> 
-> I agree with Luca here. The names have been changed recently and anyway represent both chipsets (127x and 128x) in a way that makes sense. I don't think we should make any changes to that. 
-> Also re-writing the driver into a new partitioning does not serve any special need IMO. Especially since wilink6 and wilink7 share the same driver essentially.
+> I agree. The only advantage would be that some of the typos and missing
+> functions in either of the files would be detected during compile time.
+> My AR5312 board crashes when I enable PCI. I guess it's fixable but it's
+> out of the scope of the ath5k driver...
+Well, AR5312 does not have PCI. Only AR2315 has it, and there is only
+one device that even uses it (Atheros never officially supported it).
 
-Yeah, we tried to have a common part for the wl1251 and wl1251 when we
-started implementing support for wl1271.  But the firmware API was very
-different between the two, so we realized it was better to completely
-split them into two.
-
-Now, for the wl1281/3, your colleagues at TI are claiming that the
-differences are tiny, so wl1281/3 should fit easily in the same driver
-and we'll make the differentiation at runtime.
-
-Thanks for your suggestions anyway! Let's keep them in mind in case
-things don't go as expected and if we have to split the drivers again
-for wl1281/3.  But at least for now, I think it's good as it is (famous
-last words).
-
--- 
-Cheers,
-Luca.
-
+- Felix
