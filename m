@@ -1,140 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f46.google.com ([209.85.161.46]:63163 "EHLO
-	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752446Ab0KHJvU (ORCPT
+Received: from mail-vw0-f46.google.com ([209.85.212.46]:35087 "EHLO
+	mail-vw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756825Ab0KLT3B convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 8 Nov 2010 04:51:20 -0500
-Received: by mail-fx0-f46.google.com with SMTP id 16so3835093fxm.19
-        for <linux-wireless@vger.kernel.org>; Mon, 08 Nov 2010 01:51:19 -0800 (PST)
-From: Arik Nemtsov <arik@wizery.com>
-To: <linux-wireless@vger.kernel.org>
-Cc: Luciano Coelho <luciano.coelho@nokia.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Arik Nemtsov <arik@wizery.com>
-Subject: [PATCH v2 2/2] wl1271: add support for HW TX fragmentation
-Date: Mon,  8 Nov 2010 11:51:07 +0200
-Message-Id: <1289209867-21422-3-git-send-email-arik@wizery.com>
-In-Reply-To: <1289209867-21422-1-git-send-email-arik@wizery.com>
-References: <1289209867-21422-1-git-send-email-arik@wizery.com>
+	Fri, 12 Nov 2010 14:29:01 -0500
+Received: by vws13 with SMTP id 13so1098067vws.19
+        for <linux-wireless@vger.kernel.org>; Fri, 12 Nov 2010 11:29:00 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <12365511.1131289487494944.JavaMail.wlan@CHBU500181>
+References: <30519539.771289486691846.JavaMail.wlan@CHBU500181>
+	<12365511.1131289487494944.JavaMail.wlan@CHBU500181>
+Date: Fri, 12 Nov 2010 14:28:58 -0500
+Message-ID: <AANLkTi=MstcO94GctAjAajiFiEOAUSL63-KT_B8EahxJ@mail.gmail.com>
+Subject: Re: [PATCH 7/9] ath5k: AHB port. Add specific initialization for
+ RF2317 radio chip.
+From: Bob Copeland <me@bobcopeland.com>
+To: Wojciech Dubowik <dubowoj@neratec.com>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Indicate to mac80211 we support HW fragmentation.
-Support updates of the fragmentation threshold via the
-set_frag_threshold callback.
+On Thu, Nov 11, 2010 at 9:58 AM, Wojciech Dubowik <dubowoj@neratec.com> wrote:
+> +                       /* Override settings from rf2413_ini_common_end */
+> +                       ath5k_hw_reg_write(ah, 0x00004000, AR5K_PHY_AGC);
+> +                       AR5K_REG_WRITE_BITS(ah, AR5K_PHY_TPC_RG5,
+> +                               AR5K_PHY_TPC_RG5_PD_GAIN_OVERLAP, 0xa);
+> +                       ath5k_hw_reg_write(ah, 0x800000a8, 0x8140);
+> +                       ath5k_hw_reg_write(ah, 0x000000ff, 0x9958);
 
-Signed-off-by: Arik Nemtsov <arik@wizery.com>
----
- drivers/net/wireless/wl12xx/wl1271_acx.c  |    4 +-
- drivers/net/wireless/wl12xx/wl1271_acx.h  |    2 +-
- drivers/net/wireless/wl12xx/wl1271_init.c |    2 +-
- drivers/net/wireless/wl12xx/wl1271_main.c |   31 ++++++++++++++++++++++++++++-
- 4 files changed, 34 insertions(+), 5 deletions(-)
+It'd be better not to use magic numbers here if we know what they are.
 
-diff --git a/drivers/net/wireless/wl12xx/wl1271_acx.c b/drivers/net/wireless/wl12xx/wl1271_acx.c
-index bd7f95f..bbaf066 100644
---- a/drivers/net/wireless/wl12xx/wl1271_acx.c
-+++ b/drivers/net/wireless/wl12xx/wl1271_acx.c
-@@ -862,7 +862,7 @@ out:
- 	return ret;
- }
- 
--int wl1271_acx_frag_threshold(struct wl1271 *wl)
-+int wl1271_acx_frag_threshold(struct wl1271 *wl, u16 frag_threshold)
- {
- 	struct acx_frag_threshold *acx;
- 	int ret = 0;
-@@ -876,7 +876,7 @@ int wl1271_acx_frag_threshold(struct wl1271 *wl)
- 		goto out;
- 	}
- 
--	acx->frag_threshold = cpu_to_le16(wl->conf.tx.frag_threshold);
-+	acx->frag_threshold = cpu_to_le16(frag_threshold);
- 	ret = wl1271_cmd_configure(wl, ACX_FRAG_CFG, acx, sizeof(*acx));
- 	if (ret < 0) {
- 		wl1271_warning("Setting of frag threshold failed: %d", ret);
-diff --git a/drivers/net/wireless/wl12xx/wl1271_acx.h b/drivers/net/wireless/wl12xx/wl1271_acx.h
-index b7c4908..5963dea 100644
---- a/drivers/net/wireless/wl12xx/wl1271_acx.h
-+++ b/drivers/net/wireless/wl12xx/wl1271_acx.h
-@@ -1161,7 +1161,7 @@ int wl1271_acx_ac_cfg(struct wl1271 *wl, u8 ac, u8 cw_min, u16 cw_max,
- int wl1271_acx_tid_cfg(struct wl1271 *wl, u8 queue_id, u8 channel_type,
- 		       u8 tsid, u8 ps_scheme, u8 ack_policy,
- 		       u32 apsd_conf0, u32 apsd_conf1);
--int wl1271_acx_frag_threshold(struct wl1271 *wl);
-+int wl1271_acx_frag_threshold(struct wl1271 *wl, u16 frag_threshold);
- int wl1271_acx_tx_config_options(struct wl1271 *wl);
- int wl1271_acx_mem_cfg(struct wl1271 *wl);
- int wl1271_acx_init_mem_config(struct wl1271 *wl);
-diff --git a/drivers/net/wireless/wl12xx/wl1271_init.c b/drivers/net/wireless/wl12xx/wl1271_init.c
-index 8044bba..3ba7acd 100644
---- a/drivers/net/wireless/wl12xx/wl1271_init.c
-+++ b/drivers/net/wireless/wl12xx/wl1271_init.c
-@@ -290,7 +290,7 @@ int wl1271_hw_init(struct wl1271 *wl)
- 		goto out_free_memmap;
- 
- 	/* Default fragmentation threshold */
--	ret = wl1271_acx_frag_threshold(wl);
-+	ret = wl1271_acx_frag_threshold(wl, wl->conf.tx.frag_threshold);
- 	if (ret < 0)
- 		goto out_free_memmap;
- 
-diff --git a/drivers/net/wireless/wl12xx/wl1271_main.c b/drivers/net/wireless/wl12xx/wl1271_main.c
-index f5b1d19..a1f2786 100644
---- a/drivers/net/wireless/wl12xx/wl1271_main.c
-+++ b/drivers/net/wireless/wl12xx/wl1271_main.c
-@@ -404,7 +404,7 @@ static int wl1271_plt_init(struct wl1271 *wl)
- 		goto out_free_memmap;
- 
- 	/* Default fragmentation threshold */
--	ret = wl1271_acx_frag_threshold(wl);
-+	ret = wl1271_acx_frag_threshold(wl, wl->conf.tx.frag_threshold);
- 	if (ret < 0)
- 		goto out_free_memmap;
- 
-@@ -1724,6 +1724,34 @@ out:
- 	return ret;
- }
- 
-+static int wl1271_op_set_frag_threshold(struct ieee80211_hw *hw, u32 value)
-+{
-+	struct wl1271 *wl = hw->priv;
-+	int ret = 0;
-+
-+	mutex_lock(&wl->mutex);
-+
-+	if (unlikely(wl->state == WL1271_STATE_OFF)) {
-+		ret = -EAGAIN;
-+		goto out;
-+	}
-+
-+	ret = wl1271_ps_elp_wakeup(wl, false);
-+	if (ret < 0)
-+		goto out;
-+
-+	ret = wl1271_acx_frag_threshold(wl, (u16)value);
-+	if (ret < 0)
-+		wl1271_warning("wl1271_op_set_frag_threshold failed: %d", ret);
-+
-+	wl1271_ps_elp_sleep(wl);
-+
-+out:
-+	mutex_unlock(&wl->mutex);
-+
-+	return ret;
-+}
-+
- static int wl1271_op_set_rts_threshold(struct ieee80211_hw *hw, u32 value)
- {
- 	struct wl1271 *wl = hw->priv;
-@@ -2406,6 +2434,7 @@ static const struct ieee80211_ops wl1271_ops = {
- 	.set_key = wl1271_op_set_key,
- 	.hw_scan = wl1271_op_hw_scan,
- 	.bss_info_changed = wl1271_op_bss_info_changed,
-+	.set_frag_threshold = wl1271_op_set_frag_threshold,
- 	.set_rts_threshold = wl1271_op_set_rts_threshold,
- 	.conf_tx = wl1271_op_conf_tx,
- 	.get_tsf = wl1271_op_get_tsf,
 -- 
-1.7.1
-
+Bob Copeland %% www.bobcopeland.com
