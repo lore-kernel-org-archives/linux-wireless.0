@@ -1,33 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iw0-f174.google.com ([209.85.214.174]:56891 "EHLO
-	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755631Ab0KPUM6 (ORCPT
+Received: from mail.candelatech.com ([208.74.158.172]:50422 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933009Ab0KLXXa (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 16 Nov 2010 15:12:58 -0500
-Received: by iwn35 with SMTP id 35so1187235iwn.19
-        for <linux-wireless@vger.kernel.org>; Tue, 16 Nov 2010 12:12:58 -0800 (PST)
+	Fri, 12 Nov 2010 18:23:30 -0500
+Received: from [192.168.100.195] (firewall.candelatech.com [70.89.124.249])
+	(authenticated bits=0)
+	by ns3.lanforge.com (8.14.2/8.14.2) with ESMTP id oACNNUCE014804
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
+	for <linux-wireless@vger.kernel.org>; Fri, 12 Nov 2010 15:23:30 -0800
+Message-ID: <4CDDCC72.6070006@candelatech.com>
+Date: Fri, 12 Nov 2010 15:23:30 -0800
+From: Ben Greear <greearb@candelatech.com>
 MIME-Version: 1.0
-In-Reply-To: <AANLkTikb+2PypN+nOGDYbuN1mRGjWCZRuTQ16HsRNo=p@mail.gmail.com>
-References: <AANLkTikb+2PypN+nOGDYbuN1mRGjWCZRuTQ16HsRNo=p@mail.gmail.com>
-Date: Tue, 16 Nov 2010 21:12:57 +0100
-Message-ID: <AANLkTi=PZ8TH2PG7rKz9-nt3S4ZLzvMw_478QrYOpVkm@mail.gmail.com>
-Subject: [iwlwifi] Rate Adaptation
-From: "An (Jack) Chan" <jackachan@gmail.com>
-To: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Scanning improvements for multiple VIFS.
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Dear all,
+When I am using lots of virtual stations, each of them will attempt
+to scan when started.  Most of them get EBUSY
+until finally everyone is associated.  This can take a long time.
 
-I am a beginner on developing wireless drivers. I am looking into
-iwl5000 driver as we have some Intel 5300 cards here.
+I was considering trying something a bit different.
 
-Does anyone know where I can find the implementation of rate
-adaptation in iwl5000 driver? Or it is implemented in firmware?
-I do find rate tables and a iwl_set_rate function in iwl-core.c, but
-it seems not the rate adaptation implementation.
+In nl80211_trigger_scan, if rdev->scan_req is != NULL,
+instead of returning EBUSY, what if we set a flag in
+the VIF that said "I want scan results too."
 
-Thank you,
+Then, when whatever is scanning is finished, it would send
+scan results to all interested vifs.
 
-Jack
+Does that sound like something that could work?
+
+Thanks,
+Ben
+
+-- 
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
+
