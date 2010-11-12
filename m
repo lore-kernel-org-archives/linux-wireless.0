@@ -1,174 +1,84 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw0-f46.google.com ([74.125.83.46]:47580 "EHLO
-	mail-gw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757730Ab0KMBYQ (ORCPT
+Received: from eos.fwall.u-szeged.hu ([160.114.120.248]:36789 "EHLO
+	eos.fwall.u-szeged.hu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751313Ab0KLWdh (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 12 Nov 2010 20:24:16 -0500
-Received: by mail-gw0-f46.google.com with SMTP id 17so250698gwj.19
-        for <linux-wireless@vger.kernel.org>; Fri, 12 Nov 2010 17:24:16 -0800 (PST)
-From: Brian Cavagnolo <brian@cozybit.com>
-To: linux-wireless@vger.kernel.org
-Cc: buytenh@wantstofly.org, Nishant Sarmukadam <nishants@marvell.com>,
-	Pradeep Nemavat <pnemavat@marvell.com>,
-	Brian Cavagnolo <brian@cozybit.com>
-Subject: [PATCH V2 2/7] mwl8k: rf_tx_power cmd not supported by AP firmware APIv1
-Date: Fri, 12 Nov 2010 17:23:48 -0800
-Message-Id: <1289611433-5119-3-git-send-email-brian@cozybit.com>
-In-Reply-To: <1288659351-22313-1-git-send-email-brian@cozybit.com>
-References: <1288659351-22313-1-git-send-email-brian@cozybit.com>
+	Fri, 12 Nov 2010 17:33:37 -0500
+Received: from localhost ([127.0.0.1] helo=eos.fwall.u-szeged.hu)
+	by eos.fwall.u-szeged.hu with esmtp (Exim 4.67)
+	(envelope-from <zherczeg@inf.u-szeged.hu>)
+	id 1PH2Bc-0005PI-KZ
+	for linux-wireless@vger.kernel.org; Fri, 12 Nov 2010 23:33:36 +0100
+Received: from mail.inf.u-szeged.hu ([160.114.37.227])
+	by eos.fwall.u-szeged.hu with esmtp (Exim 4.67)
+	(envelope-from <zherczeg@inf.u-szeged.hu>)
+	id 1PH2Bc-0005PF-HO
+	for linux-wireless@vger.kernel.org; Fri, 12 Nov 2010 23:33:36 +0100
+Message-ID: <33375.91.82.180.162.1289601216.squirrel@webmail.inf.u-szeged.hu>
+In-Reply-To: <3272.160.114.36.137.1289485257.squirrel@webmail.inf.u-szeged.hu>
+References: <32995.82.131.221.21.1289334684.squirrel@webmail.inf.u-szeged.hu>
+    <1289348811.3660.4.camel@jlt3.sipsolutions.net>
+    <3272.160.114.36.137.1289485257.squirrel@webmail.inf.u-szeged.hu>
+Date: Fri, 12 Nov 2010 23:33:36 +0100 (CET)
+Subject: Re: connecting ieee80211_hw and net_device
+From: "Zoltan Herczeg" <zherczeg@inf.u-szeged.hu>
+To: "Zoltan Herczeg" <zherczeg@inf.u-szeged.hu>
+Cc: linux-wireless@vger.kernel.org
+MIME-Version: 1.0
+Content-Type: text/plain;charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Nishant Sarmukadam <nishants@marvell.com>
+Hi,
 
-APIv1 AP firmware does not support the RF_TX_POWER command.  It
-supports the similar TX_POWER command.
+is the presp means probe response? In ibss.c, there is a pair of
+functions: ieee80211_rx_mgmt_probe_req and ieee80211_rx_mgmt_probe_resp,
+but both are for receiving such messages. Shall I create them like
+b43legacy_generate_probe_resp?
 
-Signed-off-by: Pradeep Nemavat <pnemavat@marvell.com>
-Signed-off-by: Nishant Sarmukadam <nishants@marvell.com>
-Signed-off-by: Brian Cavagnolo <brian@cozybit.com>
----
- drivers/net/wireless/mwl8k.c |   78 ++++++++++++++++++++++++++++++++++++++---
- 1 files changed, 72 insertions(+), 6 deletions(-)
+Thanks in advance
+Zoltan
 
-diff --git a/drivers/net/wireless/mwl8k.c b/drivers/net/wireless/mwl8k.c
-index f152a25..cfda87a 100644
---- a/drivers/net/wireless/mwl8k.c
-+++ b/drivers/net/wireless/mwl8k.c
-@@ -285,8 +285,9 @@ static const struct ieee80211_rate mwl8k_rates_50[] = {
- };
- 
- /* Set or get info from Firmware */
--#define MWL8K_CMD_SET			0x0001
- #define MWL8K_CMD_GET			0x0000
-+#define MWL8K_CMD_SET			0x0001
-+#define MWL8K_CMD_SET_LIST		0x0002
- 
- /* Firmware command codes */
- #define MWL8K_CMD_CODE_DNLD		0x0001
-@@ -296,6 +297,7 @@ static const struct ieee80211_rate mwl8k_rates_50[] = {
- #define MWL8K_CMD_GET_STAT		0x0014
- #define MWL8K_CMD_RADIO_CONTROL		0x001c
- #define MWL8K_CMD_RF_TX_POWER		0x001e
-+#define MWL8K_CMD_TX_POWER		0x001f
- #define MWL8K_CMD_RF_ANTENNA		0x0020
- #define MWL8K_CMD_SET_BEACON		0x0100		/* per-vif */
- #define MWL8K_CMD_SET_PRE_SCAN		0x0107
-@@ -333,6 +335,7 @@ static const char *mwl8k_cmd_name(__le16 cmd, char *buf, int bufsize)
- 		MWL8K_CMDNAME(GET_STAT);
- 		MWL8K_CMDNAME(RADIO_CONTROL);
- 		MWL8K_CMDNAME(RF_TX_POWER);
-+		MWL8K_CMDNAME(TX_POWER);
- 		MWL8K_CMDNAME(RF_ANTENNA);
- 		MWL8K_CMDNAME(SET_BEACON);
- 		MWL8K_CMDNAME(SET_PRE_SCAN);
-@@ -2084,7 +2087,7 @@ mwl8k_set_radio_preamble(struct ieee80211_hw *hw, bool short_preamble)
- /*
-  * CMD_RF_TX_POWER.
-  */
--#define MWL8K_TX_POWER_LEVEL_TOTAL	8
-+#define MWL8K_RF_TX_POWER_LEVEL_TOTAL	8
- 
- struct mwl8k_cmd_rf_tx_power {
- 	struct mwl8k_cmd_pkt header;
-@@ -2092,7 +2095,7 @@ struct mwl8k_cmd_rf_tx_power {
- 	__le16 support_level;
- 	__le16 current_level;
- 	__le16 reserved;
--	__le16 power_level_list[MWL8K_TX_POWER_LEVEL_TOTAL];
-+	__le16 power_level_list[MWL8K_RF_TX_POWER_LEVEL_TOTAL];
- } __packed;
- 
- static int mwl8k_cmd_rf_tx_power(struct ieee80211_hw *hw, int dBm)
-@@ -2116,6 +2119,65 @@ static int mwl8k_cmd_rf_tx_power(struct ieee80211_hw *hw, int dBm)
- }
- 
- /*
-+ * CMD_TX_POWER.
-+ */
-+#define MWL8K_TX_POWER_LEVEL_TOTAL      12
-+
-+struct mwl8k_cmd_tx_power {
-+	struct mwl8k_cmd_pkt header;
-+	__le16 action;
-+	__le16 band;
-+	__le16 channel;
-+	__le16 bw;
-+	__le16 sub_ch;
-+	__le16 power_level_list[MWL8K_TX_POWER_LEVEL_TOTAL];
-+} __attribute__((packed));
-+
-+static int mwl8k_cmd_tx_power(struct ieee80211_hw *hw,
-+				     struct ieee80211_conf *conf,
-+				     unsigned short pwr)
-+{
-+	struct ieee80211_channel *channel = conf->channel;
-+	struct mwl8k_cmd_tx_power *cmd;
-+	int rc;
-+	int i;
-+
-+	cmd = kzalloc(sizeof(*cmd), GFP_KERNEL);
-+	if (cmd == NULL)
-+		return -ENOMEM;
-+
-+	cmd->header.code = cpu_to_le16(MWL8K_CMD_TX_POWER);
-+	cmd->header.length = cpu_to_le16(sizeof(*cmd));
-+	cmd->action = cpu_to_le16(MWL8K_CMD_SET_LIST);
-+
-+	if (channel->band == IEEE80211_BAND_2GHZ)
-+		cmd->band = cpu_to_le16(0x1);
-+	else if (channel->band == IEEE80211_BAND_5GHZ)
-+		cmd->band = cpu_to_le16(0x4);
-+
-+	cmd->channel = channel->hw_value;
-+
-+	if (conf->channel_type == NL80211_CHAN_NO_HT ||
-+	    conf->channel_type == NL80211_CHAN_HT20) {
-+		cmd->bw = cpu_to_le16(0x2);
-+	} else {
-+		cmd->bw = cpu_to_le16(0x4);
-+		if (conf->channel_type == NL80211_CHAN_HT40MINUS)
-+			cmd->sub_ch = cpu_to_le16(0x3);
-+		else if (conf->channel_type == NL80211_CHAN_HT40PLUS)
-+			cmd->sub_ch = cpu_to_le16(0x1);
-+	}
-+
-+	for (i = 0; i < MWL8K_TX_POWER_LEVEL_TOTAL; i++)
-+		cmd->power_level_list[i] = cpu_to_le16(pwr);
-+
-+	rc = mwl8k_post_cmd(hw, &cmd->header);
-+	kfree(cmd);
-+
-+	return rc;
-+}
-+
-+/*
-  * CMD_RF_ANTENNA.
-  */
- struct mwl8k_cmd_rf_antenna {
-@@ -3377,15 +3439,19 @@ static int mwl8k_config(struct ieee80211_hw *hw, u32 changed)
- 
- 	if (conf->power_level > 18)
- 		conf->power_level = 18;
--	rc = mwl8k_cmd_rf_tx_power(hw, conf->power_level);
--	if (rc)
--		goto out;
- 
- 	if (priv->ap_fw) {
-+		rc = mwl8k_cmd_tx_power(hw, conf, conf->power_level);
-+		if (rc)
-+			goto out;
-+
- 		rc = mwl8k_cmd_rf_antenna(hw, MWL8K_RF_ANTENNA_RX, 0x7);
- 		if (!rc)
- 			rc = mwl8k_cmd_rf_antenna(hw, MWL8K_RF_ANTENNA_TX, 0x7);
- 	} else {
-+		rc = mwl8k_cmd_rf_tx_power(hw, conf->power_level);
-+		if (rc)
-+			goto out;
- 		rc = mwl8k_cmd_mimo_config(hw, 0x7, 0x7);
- 	}
- 
--- 
-1.7.1.1
+> Hi,
+>
+> thanks for you reply. I was thinking and realized probably the
+> alloc_etherdev() calls have a different purpose and removed them (and
+> found an ieee80211_rx_irqsafe function, which pass the received messages
+> to 80211). My plan is to run the network in ad-hoc mode (passing 1 to
+> SIOCSIWMODE ioctl command). Unfortunately it is still not working, because
+> rx.sta = sta_info_get(local, hdr->addr2) in rx.c returns with NULL, and
+> the received messages are eventually dropped. I tried to understand the
+> code, and I think messages called "beacons" are needed to make
+> sta_info_get() work. These messages can be created by
+> ieee80211_beacon_get, but it also returns with NULL in my case, because
+> rcu_dereference(ifibss->presp) returns with NULL. Could you help me?
+>
+> The code is attached to this mail.
+>
+> Thanks in advance,
+> Zoltan
+>
+>> On Tue, 2010-11-09 at 21:31 +0100, Zoltan Herczeg wrote:
+>>
+>>> I can allocate a "wlan0" and "wlan1" platform device with
+>>> ieee80211_alloc_hw, and can initialize it in Ad-Hoc mode. However, I
+>>> realized this is not enough to have a wireless interface, since it has
+>>> no
+>>> receive operation, only transfer. Looking at the other drivers, I found
+>>> that they allocate a net_device with the common alloc_etherdev.
+>>> Unfortunately the register_netdev registers a new eth interface in my
+>>> case, and this interface is not connected to the wlan interface. I set
+>>> wireless_handlers and ieee80211_ptr for this device, still it is
+>>> totally
+>>> independent from the wlan interface.
+>>>
+>>> Am I missing something? (Sorry if this is a trivial question, I tried
+>>> google but no luck so far)
+>>
+>> Your question doesn't make any sense. You never need wlan0/1, you only
+>> need alloc_hw/register_hw and then the interfaces will be managed by
+>> mac80211. You should post the code so people can help you.
+>>
+>> johannes
+>
 
