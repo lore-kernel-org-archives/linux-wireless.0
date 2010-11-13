@@ -1,38 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from purkki.adurom.net ([80.68.90.206]:58962 "EHLO purkki.adurom.net"
+Received: from mail.atheros.com ([12.19.149.2]:22191 "EHLO mail.atheros.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751358Ab0KGKUK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 7 Nov 2010 05:20:10 -0500
-To: Ohad Ben-Cohen <ohad@wizery.com>
-Cc: Grazvydas Ignotas <notasas@gmail.com>,
-	linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-Subject: Re: [PATCH 2/3] wl1251: add runtime PM support for SDIO
-References: <1288822429-24541-1-git-send-email-notasas@gmail.com>
-	<1288822429-24541-3-git-send-email-notasas@gmail.com>
-	<AANLkTimfXO9r=DTW3CAiVswmsoKES2qxEiYz4JBOTGu_@mail.gmail.com>
-	<AANLkTik0tawXfer2DMSKFXZwFbjYWLoG3nRBYMAMO8WL@mail.gmail.com>
-	<AANLkTimtryH0HTWk0ymK6EY1XcCPv6eLDYM-GzuJxhEy@mail.gmail.com>
-From: Kalle Valo <kvalo@adurom.com>
-Date: Sun, 07 Nov 2010 12:20:09 +0200
-In-Reply-To: <AANLkTimtryH0HTWk0ymK6EY1XcCPv6eLDYM-GzuJxhEy@mail.gmail.com> (Ohad Ben-Cohen's message of "Thu\, 4 Nov 2010 18\:04\:58 -0400")
-Message-ID: <878w15zb8m.fsf@purkki.adurom.net>
+	id S1754818Ab0KMP2e (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 13 Nov 2010 10:28:34 -0500
+Received: from mail.atheros.com ([10.10.20.108])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Sat, 13 Nov 2010 07:28:22 -0800
+From: Mohammed Shafi Shajakhan <mshajakhan@atheros.com>
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>, <lrodriguez@atheros.com>,
+	Mohammed Shafi Shajakhan <mshajakhan@atheros.com>
+Subject: [PATCH] ath9k_htc: Use macro for caldata array size
+Date: Sat, 13 Nov 2010 20:58:27 +0530
+Message-ID: <1289662107-29613-1-git-send-email-mshajakhan@atheros.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Ohad Ben-Cohen <ohad@wizery.com> writes:
+From: Mohammed Shafi Shajakhan <mshajakhan@atheros.com>
 
->>> Why do you still need that ->set_power() handler ?
->>
->> On pandora besides power, we also have a GPIO to control clock buffer
->> for wl1251, so I thought I could enable it here.
->
-> Oh, I see. The name set_power then is a bit misleading.. ;)
+The calibration data variable size is based on the number of
+channels available in the ath9k driver.
 
-Maybe a comment stating the reason for the callback would make it more
-clear?
+Signed-off-by: Mohammed Shafi Shajakhan <mshajakhan@atheros.com>
+---
+ drivers/net/wireless/ath/ath9k/htc.h |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
+diff --git a/drivers/net/wireless/ath/ath9k/htc.h b/drivers/net/wireless/ath/ath9k/htc.h
+index 75ecf6a..db00289 100644
+--- a/drivers/net/wireless/ath/ath9k/htc.h
++++ b/drivers/net/wireless/ath/ath9k/htc.h
+@@ -368,7 +368,7 @@ struct ath9k_htc_priv {
+ 	u16 seq_no;
+ 	u32 bmiss_cnt;
+ 
+-	struct ath9k_hw_cal_data caldata[38];
++	struct ath9k_hw_cal_data caldata[ATH9K_NUM_CHANNELS];
+ 
+ 	spinlock_t beacon_lock;
+ 
 -- 
-Kalle Valo
+1.7.0.4
+
