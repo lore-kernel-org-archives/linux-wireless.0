@@ -1,48 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:41884 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S935040Ab0KQTCG (ORCPT
+Received: from mail-yw0-f46.google.com ([209.85.213.46]:55148 "EHLO
+	mail-yw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754013Ab0KMBYO (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 17 Nov 2010 14:02:06 -0500
-Subject: Re: [PATCH] mac80211:  Fix deadlock in ieee80211_do_stop.
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Ben Greear <greearb@candelatech.com>
-Cc: Tejun Heo <tj@kernel.org>, linux-wireless@vger.kernel.org
-In-Reply-To: <4CE4260F.80603@candelatech.com>
-References: <1289592426-5367-1-git-send-email-greearb@candelatech.com>
-	 <1289594998.3736.11.camel@jlt3.sipsolutions.net>
-	 <4CDDAA3B.9090007@candelatech.com>
-	 <1289596096.3736.13.camel@jlt3.sipsolutions.net>
-	 <4CDE699B.70401@kernel.org> <4CE1A344.7040201@candelatech.com>
-	 <4CE292F7.4090200@kernel.org>
-	 <1289929258.3673.1.camel@jlt3.sipsolutions.net>
-	 <4CE396A9.1050908@kernel.org>
-	 <1290020005.3777.6.camel@jlt3.sipsolutions.net>
-	 <4CE4260F.80603@candelatech.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Wed, 17 Nov 2010 11:03:37 -0800
-Message-ID: <1290020617.3777.7.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+	Fri, 12 Nov 2010 20:24:14 -0500
+Received: by ywc21 with SMTP id 21so947866ywc.19
+        for <linux-wireless@vger.kernel.org>; Fri, 12 Nov 2010 17:24:13 -0800 (PST)
+From: Brian Cavagnolo <brian@cozybit.com>
+To: linux-wireless@vger.kernel.org
+Cc: buytenh@wantstofly.org, Brian Cavagnolo <brian@cozybit.com>
+Subject: [PATCH V2 1/7] mwl8k: revert unnecessary modification of tx descriptor
+Date: Fri, 12 Nov 2010 17:23:47 -0800
+Message-Id: <1289611433-5119-2-git-send-email-brian@cozybit.com>
+In-Reply-To: <1288659351-22313-1-git-send-email-brian@cozybit.com>
+References: <1288659351-22313-1-git-send-email-brian@cozybit.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2010-11-17 at 10:59 -0800, Ben Greear wrote:
-> On 11/17/2010 10:53 AM, Johannes Berg wrote:
-> > On Wed, 2010-11-17 at 09:47 +0100, Tejun Heo wrote:
-> >
-> >> WQ_NON_REENTRANT doesn't guarantee ordered execution but it guarantees
-> >> that a single work is not executed concurrently on multiple CPUs.  I'm
-> >> not sure whether this would be safe for the workqueue used by mac80211
-> >> but it should let us know whether the workqueue is choked due to a
-> >> work which is executing for long time.  In the long run, if using non
-> >> reentrant is safe for mac80211, using it would be much better.
-> >
-> > No, I don't think it's safe for mac80211.
-> 
-> So maybe my patch is a good enough way to fix this?
+This reverts change 783391c443728febc669e40597193308460e7b4f.
+The stabilized AP v1 firmware uses the same tx descriptor as
+the STA firmware.
 
-Not before we get to the bottom of it, I think, and somebody goes and
-analyses _all_ the work items that might be there.
+Signed-off-by: Brian Cavagnolo <brian@cozybit.com>
+---
+ drivers/net/wireless/mwl8k.c |    7 +------
+ 1 files changed, 1 insertions(+), 6 deletions(-)
 
-johannes
+diff --git a/drivers/net/wireless/mwl8k.c b/drivers/net/wireless/mwl8k.c
+index 1bbcd7c..f152a25 100644
+--- a/drivers/net/wireless/mwl8k.c
++++ b/drivers/net/wireless/mwl8k.c
+@@ -1125,12 +1125,10 @@ struct mwl8k_tx_desc {
+ 	__le32 reserved;
+ 	__le16 rate_info;
+ 	__u8 peer_id;
+-	__u8 xmitcontrol;
++	__u8 tx_frag_cnt;
+ } __packed;
+ 
+ #define MWL8K_TX_DESCS		128
+-#define MWL8K_XMITCONTROL_NON_AMPDU	0x04
+-
+ 
+ static int mwl8k_txq_init(struct ieee80211_hw *hw, int index)
+ {
+@@ -1450,9 +1448,6 @@ mwl8k_txq_xmit(struct ieee80211_hw *hw, int index, struct sk_buff *skb)
+ 		tx->peer_id = MWL8K_STA(tx_info->control.sta)->peer_id;
+ 	else
+ 		tx->peer_id = 0;
+-
+-	if (priv->ap_fw)
+-		tx->xmitcontrol = MWL8K_XMITCONTROL_NON_AMPDU;
+ 	wmb();
+ 	tx->status = cpu_to_le32(MWL8K_TXD_STATUS_FW_OWNED | txstatus);
+ 
+-- 
+1.7.1.1
 
