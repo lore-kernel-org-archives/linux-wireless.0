@@ -1,54 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([147.243.1.48]:58997 "EHLO mgw-sa02.nokia.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1753124Ab0KDVr2 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 4 Nov 2010 17:47:28 -0400
-Subject: Re: [RFC 00/15] Implementation of periodic scan
-From: Luciano Coelho <luciano.coelho@nokia.com>
-To: ext Johannes Berg <johannes@sipsolutions.net>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <1288885867.3659.8.camel@jlt3.sipsolutions.net>
-References: <1288612336-2830-1-git-send-email-luciano.coelho@nokia.com>
-	 <1288885867.3659.8.camel@jlt3.sipsolutions.net>
-Content-Type: text/plain; charset="UTF-8"
-Date: Thu, 04 Nov 2010 23:46:08 +0200
-Message-ID: <1288907168.17643.12.camel@powerslave>
+Received: from lo.gmane.org ([80.91.229.12]:58029 "EHLO lo.gmane.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754601Ab0KMSaF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 13 Nov 2010 13:30:05 -0500
+Received: from list by lo.gmane.org with local (Exim 4.69)
+	(envelope-from <glkwg-linux-wireless@m.gmane.org>)
+	id 1PHKrU-0004c6-Kv
+	for linux-wireless@vger.kernel.org; Sat, 13 Nov 2010 19:30:04 +0100
+Received: from cpc7-aztw22-2-0-cust235.aztw.cable.virginmedia.com ([94.171.255.236])
+        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Sat, 13 Nov 2010 19:30:04 +0100
+Received: from james.c.womack by cpc7-aztw22-2-0-cust235.aztw.cable.virginmedia.com with local (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Sat, 13 Nov 2010 19:30:04 +0100
+To: linux-wireless@vger.kernel.org
+From: James Womack <james.c.womack@gmail.com>
+Subject: Re: Post test
+Date: Sat, 13 Nov 2010 18:28:03 +0000
+Message-ID: <ibmlc4$l1p$1@dough.gmane.org>
+References: <ibml5a$jkj$2@dough.gmane.org>
 Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+In-Reply-To: <ibml5a$jkj$2@dough.gmane.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Thanks for your review, Johannes!
+On 13/11/10 18:24, James Womack wrote:
+> Testing e-mail client posting.
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe
+> linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at http://vger.kernel.org/majordomo-info.html
+>
+Apologies, I have just discover the gmane.test group.
 
-On Thu, 2010-11-04 at 16:51 +0100, ext Johannes Berg wrote:
-> On Mon, 2010-11-01 at 13:52 +0200, Luciano Coelho wrote:
-> 
-> >   This set doesn't support variable intervals, and the intervals
-> > need to be configure in the hw driver.
-> 
-> which is wrong -- you really want that to be configurable.
-
-Yes, for sure I will.  I'm already working on it.  It's a requirement
-for us.
-
-
-> > This is an initial implementation and I'd like to get some comments before
-> > submitting the final version.
-> > 
-> > I've split the implementation in many small patches, just to keep it clear
-> > and due to the zillions of times I've had to task switch while implementing
-> > this.  I can merge some of them, if that makes things cleaner.
-> 
-> Absolutely, the patch splitting is total crap :-) Heck, you even write
-> code only to remove/change it again!
-
-Indeed! I would never have accepted patches split up like this
-myself! :P My excuse is that I've been multitasking heavily lately and,
-knowing how buggy the task-switching implementation is in my brain, I
-reckoned it would be safer to commit often.
-
-Tomorrow I'll fix these issues and send a new version.
-
--- 
-Cheers,
-Luca.
+James
 
