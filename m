@@ -1,52 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yw0-f46.google.com ([209.85.213.46]:49718 "EHLO
-	mail-yw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751384Ab0KDAVP (ORCPT
+Received: from mail.candelatech.com ([208.74.158.172]:35368 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754992Ab0KMSTl (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 3 Nov 2010 20:21:15 -0400
-Received: by ywc21 with SMTP id 21so936815ywc.19
-        for <linux-wireless@vger.kernel.org>; Wed, 03 Nov 2010 17:21:15 -0700 (PDT)
-From: Brian Cavagnolo <brian@cozybit.com>
-To: linux-wireless@vger.kernel.org,
-	Johannes Berg <johannes@sipsolutions.net>
-Cc: Brian Cavagnolo <brian@cozybit.com>
-Subject: [PATCH] mac80211: unset SDATA_STATE_OFFCHANNEL when cancelling a scan
-Date: Wed,  3 Nov 2010 17:20:56 -0700
-Message-Id: <1288830056-841-1-git-send-email-brian@cozybit.com>
+	Sat, 13 Nov 2010 13:19:41 -0500
+Message-ID: <4CDED6B7.1060605@candelatech.com>
+Date: Sat, 13 Nov 2010 10:19:35 -0800
+From: Ben Greear <greearb@candelatech.com>
+MIME-Version: 1.0
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: linux-wireless@vger.kernel.org
+Subject: Re: Scanning improvements for multiple VIFS.
+References: <4CDDCC72.6070006@candelatech.com> <4CDDE324.3070801@candelatech.com> <4b2689e6064549781b072ac8956bcc1a@localhost>
+In-Reply-To: <4b2689e6064549781b072ac8956bcc1a@localhost>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-For client STA interfaces, ieee80211_do_stop unsets the relevant
-interface's SDATA_STATE_RUNNING state bit prior to cancelling an
-interrupted scan.  When ieee80211_offchannel_return is invoked as
-part of cancelling the scan, it doesn't bother unsetting the
-SDATA_STATE_OFFCHANNEL bit because it sees that the interface is
-down.  Normally this doesn't matter because when the client STA
-interface is brought back up, it will probably issue a scan.  But
-in some cases (e.g., the user changes the interface type while it
-is down), the SDATA_STATE_OFFCHANNEL bit will remain set.  This
-prevents the interface queues from being started.  So we
-unconditionally unset this bit when we cancel a scan.
----
- net/mac80211/offchannel.c |    4 +++-
- 1 files changed, 3 insertions(+), 1 deletions(-)
+On 11/12/2010 09:19 PM, Johannes Berg wrote:
+>>> In nl80211_trigger_scan, if rdev->scan_req is != NULL,
+>>> instead of returning EBUSY, what if we set a flag in
+>>> the VIF that said "I want scan results too."
+>>>
+>>> Then, when whatever is scanning is finished, it would send
+>>> scan results to all interested vifs.
+>
+> But the scans results could technically be different
+> if they've been done on a different interface. Besides,
 
-diff --git a/net/mac80211/offchannel.c b/net/mac80211/offchannel.c
-index 4b56409..6252a76 100644
---- a/net/mac80211/offchannel.c
-+++ b/net/mac80211/offchannel.c
-@@ -156,8 +156,10 @@ void ieee80211_offchannel_return(struct ieee80211_local *local,
- 
- 	mutex_lock(&local->iflist_mtx);
- 	list_for_each_entry(sdata, &local->interfaces, list) {
--		if (!ieee80211_sdata_running(sdata))
-+		if (!ieee80211_sdata_running(sdata)) {
-+			clear_bit(SDATA_STATE_OFFCHANNEL, &sdata->state);
- 			continue;
-+		}
- 
- 		/* Tell AP we're back */
- 		if (sdata->vif.type == NL80211_IFTYPE_STATION) {
+I was wondering about that...I was hoping that some results
+were better than none, and that supplicant or whatever would
+re-scan if it didn't find what it was looking for.
+
+I'd also be happy to add a flag that would allow user-space
+to request this feature enabled or not per-scan attempt,
+and disable it by default so that no one is surprised by new
+behaviour.
+
+> you can handle it in userspace. You've been trying for
+> weeks to avoid changing your userspace by changing the
+> kernel, which is still the wrong approach.
+
+ From what I can tell, you are right about wpa_supplicant
+controlled interfaces (perhaps requires some supplicant hacking,
+but logically it can be done), but what about non-encrypted
+interfaces that do not even need supplicant?  It seems
+user-space has very little to do with how these scan and
+associated aside from setting the initial values.
+
+Thanks,
+Ben
+
 -- 
-1.7.1.1
-
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
