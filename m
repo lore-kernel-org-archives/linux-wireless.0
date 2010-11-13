@@ -1,44 +1,88 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.19.149.2]:19048 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756722Ab0KKNQJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 11 Nov 2010 08:16:09 -0500
-Received: from mail.atheros.com ([10.10.20.105])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Thu, 11 Nov 2010 05:15:57 -0800
-Date: Thu, 11 Nov 2010 18:53:41 +0530
-From: Rajkumar Manoharan <rmanoharan@atheros.com>
-To: Christian Lamparter <chunkeey@googlemail.com>
-CC: Christian Lamparter <chunkeey@googlemail.com>,
-	"linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH] ath9k_htc: Add new devices into AR7010
-Message-ID: <20101111132341.GA8029@vmraj-lnx.users.atheros.com>
-References: <1289389041-26938-1-git-send-email-rmanoharan@atheros.com>
- <201011101335.14311.chunkeey@googlemail.com>
- <20101110131356.GA27734@vmraj-lnx.users.atheros.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <20101110131356.GA27734@vmraj-lnx.users.atheros.com>
+Received: from mail-yw0-f46.google.com ([209.85.213.46]:55148 "EHLO
+	mail-yw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933225Ab0KMBY2 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 12 Nov 2010 20:24:28 -0500
+Received: by mail-yw0-f46.google.com with SMTP id 21so947866ywc.19
+        for <linux-wireless@vger.kernel.org>; Fri, 12 Nov 2010 17:24:27 -0800 (PST)
+From: Brian Cavagnolo <brian@cozybit.com>
+To: linux-wireless@vger.kernel.org
+Cc: buytenh@wantstofly.org, Brian Cavagnolo <brian@cozybit.com>
+Subject: [PATCH V2 7/7] mwl8k: use const struct fw pointers throughout
+Date: Fri, 12 Nov 2010 17:23:53 -0800
+Message-Id: <1289611433-5119-8-git-send-email-brian@cozybit.com>
+In-Reply-To: <1288659351-22313-1-git-send-email-brian@cozybit.com>
+References: <1288659351-22313-1-git-send-email-brian@cozybit.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Nov 10, 2010 at 06:43:57PM +0530, Rajkumar Manoharan wrote:
-> On Wed, Nov 10, 2010 at 06:05:14PM +0530, Christian Lamparter wrote:
-> > On Wednesday 10 November 2010 12:37:21 Rajkumar Manoharan wrote:
-> > > Treat PIDs (0xA704, 0x1200) as AR7010 devices.
-> > 
-> > just a though, but instead of relying only on the pid and
-> > hope for no collisions. you could put a @driver_info flag
-> > for all AR7010 devices into the usb_device_id table and
-> > remove the per-device "cases". 
-> > 
-> Make sense. Thanks for your review. I'll resend the patch.
->
-After adding @driver_info to replace per-device cases,
-the patch looks like cleanup one which is not compatible for stable kernel.
-So let the previous patches to be integrated, due to minimal changes.
-And I'll submit the cleanup patch separately. Is that fine ?
+This eliminates compiler warnings by doing things how the
+firmware class expects.
 
---
-Rajkumar
+Signed-off-by: Brian Cavagnolo <brian@cozybit.com>
+---
+ drivers/net/wireless/mwl8k.c |   15 +++++++--------
+ 1 files changed, 7 insertions(+), 8 deletions(-)
+
+diff --git a/drivers/net/wireless/mwl8k.c b/drivers/net/wireless/mwl8k.c
+index 081bb6c..9ecf840 100644
+--- a/drivers/net/wireless/mwl8k.c
++++ b/drivers/net/wireless/mwl8k.c
+@@ -144,8 +144,8 @@ struct mwl8k_priv {
+ 	void __iomem *regs;
+ 
+ 	/* firmware */
+-	struct firmware *fw_helper;
+-	struct firmware *fw_ucode;
++	const struct firmware *fw_helper;
++	const struct firmware *fw_ucode;
+ 
+ 	/* hardware/firmware parameters */
+ 	bool ap_fw;
+@@ -395,7 +395,7 @@ static void mwl8k_hw_reset(struct mwl8k_priv *priv)
+ }
+ 
+ /* Release fw image */
+-static void mwl8k_release_fw(struct firmware **fw)
++static void mwl8k_release_fw(const struct firmware **fw)
+ {
+ 	if (*fw == NULL)
+ 		return;
+@@ -420,7 +420,7 @@ enum {
+ 
+ /* Request fw image */
+ static int mwl8k_request_fw(struct mwl8k_priv *priv,
+-			    const char *fname, struct firmware **fw,
++			    const char *fname, const struct firmware **fw,
+ 			    bool nowait)
+ {
+ 	/* release current image */
+@@ -432,8 +432,7 @@ static int mwl8k_request_fw(struct mwl8k_priv *priv,
+ 					       &priv->pdev->dev, GFP_KERNEL,
+ 					       priv, mwl8k_fw_state_machine);
+ 	else
+-		return request_firmware((const struct firmware **)fw,
+-					fname, &priv->pdev->dev);
++		return request_firmware(fw, fname, &priv->pdev->dev);
+ }
+ 
+ static int mwl8k_request_firmware(struct mwl8k_priv *priv, char *fw_image,
+@@ -632,12 +631,12 @@ static int mwl8k_feed_fw_image(struct mwl8k_priv *priv,
+ static int mwl8k_load_firmware(struct ieee80211_hw *hw)
+ {
+ 	struct mwl8k_priv *priv = hw->priv;
+-	struct firmware *fw = priv->fw_ucode;
++	const struct firmware *fw = priv->fw_ucode;
+ 	int rc;
+ 	int loops;
+ 
+ 	if (!memcmp(fw->data, "\x01\x00\x00\x00", 4)) {
+-		struct firmware *helper = priv->fw_helper;
++		const struct firmware *helper = priv->fw_helper;
+ 
+ 		if (helper == NULL) {
+ 			printk(KERN_ERR "%s: helper image needed but none "
+-- 
+1.7.1.1
+
