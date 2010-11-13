@@ -1,42 +1,28 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.perches.com ([173.55.12.10]:1174 "EHLO mail.perches.com"
+Received: from lo.gmane.org ([80.91.229.12]:36170 "EHLO lo.gmane.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932718Ab0KODFj (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 14 Nov 2010 22:05:39 -0500
-From: Joe Perches <joe@perches.com>
-To: Jiri Kosina <trivial@kernel.org>
-Cc: Reinette Chatre <reinette.chatre@intel.com>,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>,
-	Intel Linux Wireless <ilw@linux.intel.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: [PATCH 17/44] drivers/net/wireless/iwlwifi: Remove unnecessary semicolons
-Date: Sun, 14 Nov 2010 19:04:36 -0800
-Message-Id: <6beaab935c2c511a5833e855db527976ef05e2dc.1289789604.git.joe@perches.com>
-In-Reply-To: <cover.1289789604.git.joe@perches.com>
-References: <cover.1289789604.git.joe@perches.com>
+	id S1754890Ab0KMSZH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 13 Nov 2010 13:25:07 -0500
+Received: from list by lo.gmane.org with local (Exim 4.69)
+	(envelope-from <glkwg-linux-wireless@m.gmane.org>)
+	id 1PHKmf-0001jT-0M
+	for linux-wireless@vger.kernel.org; Sat, 13 Nov 2010 19:25:05 +0100
+Received: from cpc7-aztw22-2-0-cust235.aztw.cable.virginmedia.com ([94.171.255.236])
+        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Sat, 13 Nov 2010 19:25:04 +0100
+Received: from james.c.womack by cpc7-aztw22-2-0-cust235.aztw.cable.virginmedia.com with local (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Sat, 13 Nov 2010 19:25:04 +0100
+To: linux-wireless@vger.kernel.org
+From: James Womack <james.c.womack@gmail.com>
+Subject: Post test
+Date: Sat, 13 Nov 2010 18:24:25 +0000
+Message-ID: <ibml5a$jkj$2@dough.gmane.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Joe Perches <joe@perches.com>
----
- drivers/net/wireless/iwlwifi/iwl-agn.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
-
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
-index c2636a7..f293fb6 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
-@@ -2420,7 +2420,7 @@ static const char *desc_lookup(u32 num)
- 	max = ARRAY_SIZE(advanced_lookup) - 1;
- 	for (i = 0; i < max; i++) {
- 		if (advanced_lookup[i].num == num)
--			break;;
-+			break;
- 	}
- 	return advanced_lookup[i].name;
- }
--- 
-1.7.3.1.g432b3.dirty
+Testing e-mail client posting.
 
