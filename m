@@ -1,77 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ey0-f174.google.com ([209.85.215.174]:52337 "EHLO
-	mail-ey0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754506Ab0KWSuq (ORCPT
+Received: from rcsinet10.oracle.com ([148.87.113.121]:33349 "EHLO
+	rcsinet10.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755195Ab0KMQqF (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 23 Nov 2010 13:50:46 -0500
-Received: by eye27 with SMTP id 27so4867549eye.19
-        for <linux-wireless@vger.kernel.org>; Tue, 23 Nov 2010 10:50:45 -0800 (PST)
-Date: Tue, 23 Nov 2010 20:50:16 +0200
-From: Nick Kossifidis <mickflemm@gmail.com>
-To: ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org
-Cc: linville@tuxdriver.com, me@bobcopeland.com, mcgrof@gmail.com,
-	jirislaby@gmail.com, nbd@openwrt.org, br1@einfach.org
-Subject: [PATCH 06/30] ath5k: Use DCU early termination correctly
-Message-ID: <20101123185016.GF4303@makis.mantri>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+	Sat, 13 Nov 2010 11:46:05 -0500
+Date: Sat, 13 Nov 2010 08:44:31 -0800
+From: Randy Dunlap <randy.dunlap@oracle.com>
+To: Stephen Rothwell <sfr@canb.auug.org.au>,
+	linux-wireless@vger.kernel.org, akpm <akpm@linux-foundation.org>
+Cc: linux-next@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>,
+	linville@tuxdriver.com, einette Chatre <reinette.chatre@intel.com>,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Subject: [PATCH -next] iwlwifi: fix modular legacy build errors
+Message-Id: <20101113084431.d72d096a.randy.dunlap@oracle.com>
+In-Reply-To: <20101112130547.c2a3c2c1.sfr@canb.auug.org.au>
+References: <20101112130547.c2a3c2c1.sfr@canb.auug.org.au>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
- * DCU early termination should be used to quickly flush QCU
- according to docs so don't enable it for all queues, enable
- it only when stopping each queue and disable it when we are
- done.
+From: Randy Dunlap <randy.dunlap@oracle.com>
 
- Signed-off-by: Nick Kossifidis <mickflemm@gmail.com>
+With CONFIG_IWLWIFI=m, CONFIG_IWLAGN=m, and CONFIG_IWL3945=m,
+a kernel build has errors as below.  Changing a few lines in the
+Makefile is one possible fix for these build errors.
+
+ERROR: "iwl_legacy_mac_config" [drivers/net/wireless/iwlwifi/iwl3945.ko] undefined!
+ERROR: "iwl_isr_legacy" [drivers/net/wireless/iwlwifi/iwl3945.ko] undefined!
+ERROR: "iwl_legacy_tx_cmd_protection" [drivers/net/wireless/iwlwifi/iwl3945.ko] undefined!
+ERROR: "iwl_legacy_mac_bss_info_changed" [drivers/net/wireless/iwlwifi/iwl3945.ko] undefined!
+ERROR: "iwl_legacy_mac_reset_tsf" [drivers/net/wireless/iwlwifi/iwl3945.ko] undefined!
+
+Signed-off-by: Randy Dunlap <randy.dunlap@oracle.com>
+Cc:	Reinette Chatre <reinette.chatre@intel.com>
+Cc:	Wey-Yi Guy <wey-yi.w.guy@intel.com>
 ---
- drivers/net/wireless/ath/ath5k/dma.c |   14 ++++++++++++++
- drivers/net/wireless/ath/ath5k/qcu.c |    3 ---
- 2 files changed, 14 insertions(+), 3 deletions(-)
+ drivers/net/wireless/iwlwifi/Makefile |    6 ++----
+ 1 file changed, 2 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath5k/dma.c b/drivers/net/wireless/ath/ath5k/dma.c
-index e39c953..bfdfcff 100644
---- a/drivers/net/wireless/ath/ath5k/dma.c
-+++ b/drivers/net/wireless/ath/ath5k/dma.c
-@@ -216,6 +216,14 @@ int ath5k_hw_stop_tx_dma(struct ath5k_hw *ah, unsigned int queue)
- 		ath5k_hw_reg_write(ah, tx_queue, AR5K_CR);
- 		ath5k_hw_reg_read(ah, AR5K_CR);
- 	} else {
-+
-+		/*
-+		 * Enable DCU early termination to quickly
-+		 * flush any pending frames from QCU
-+		 */
-+		AR5K_REG_ENABLE_BITS(ah, AR5K_QUEUE_MISC(queue),
-+					AR5K_QCU_MISC_DCU_EARLY);
-+
- 		/*
- 		 * Schedule TX disable and wait until queue is empty
- 		 */
-@@ -285,6 +293,12 @@ int ath5k_hw_stop_tx_dma(struct ath5k_hw *ah, unsigned int queue)
- 					queue);
- 		}
+--- linux-next-20101112.orig/drivers/net/wireless/iwlwifi/Makefile
++++ linux-next-20101112/drivers/net/wireless/iwlwifi/Makefile
+@@ -2,8 +2,6 @@ obj-$(CONFIG_IWLWIFI)	+= iwlcore.o
+ iwlcore-objs 		:= iwl-core.o iwl-eeprom.o iwl-hcmd.o iwl-power.o
+ iwlcore-objs 		+= iwl-rx.o iwl-tx.o iwl-sta.o
+ iwlcore-objs 		+= iwl-scan.o iwl-led.o
+-iwlcore-$(CONFIG_IWL3945) += iwl-legacy.o
+-iwlcore-$(CONFIG_IWL4965) += iwl-legacy.o
+ iwlcore-$(CONFIG_IWLWIFI_DEBUGFS) += iwl-debugfs.o
+ iwlcore-$(CONFIG_IWLWIFI_DEVICE_TRACING) += iwl-devtrace.o
  
-+		/*
-+		 * Disable DCU early termination
-+		 */
-+		AR5K_REG_DISABLE_BITS(ah, AR5K_QUEUE_MISC(queue),
-+					AR5K_QCU_MISC_DCU_EARLY);
-+
- 		/* Clear register */
- 		ath5k_hw_reg_write(ah, 0, AR5K_QCU_TXD);
- 		if (pending) {
-diff --git a/drivers/net/wireless/ath/ath5k/qcu.c b/drivers/net/wireless/ath/ath5k/qcu.c
-index 52eee34f..ed62273 100644
---- a/drivers/net/wireless/ath/ath5k/qcu.c
-+++ b/drivers/net/wireless/ath/ath5k/qcu.c
-@@ -340,9 +340,6 @@ int ath5k_hw_reset_tx_queue(struct ath5k_hw *ah, unsigned int queue)
- 		/*
- 		 * Set misc registers
- 		 */
--		/* Enable DCU early termination for this queue */
--		AR5K_REG_ENABLE_BITS(ah, AR5K_QUEUE_MISC(queue),
--					AR5K_QCU_MISC_DCU_EARLY);
+@@ -17,7 +15,7 @@ iwlagn-objs		+= iwl-agn-lib.o iwl-agn-rx
+ iwlagn-objs		+= iwl-agn-tt.o iwl-agn-sta.o iwl-agn-eeprom.o
+ iwlagn-$(CONFIG_IWLWIFI_DEBUGFS) += iwl-agn-debugfs.o
  
- 		/* Enable DCU to wait for next fragment from QCU */
- 		AR5K_REG_ENABLE_BITS(ah, AR5K_QUEUE_DFS_MISC(queue),
+-iwlagn-$(CONFIG_IWL4965) += iwl-4965.o
++iwlagn-$(CONFIG_IWL4965) += iwl-4965.o iwl-legacy.o
+ iwlagn-$(CONFIG_IWL5000) += iwl-agn-rxon.o iwl-agn-hcmd.o iwl-agn-ict.o
+ iwlagn-$(CONFIG_IWL5000) += iwl-5000.o
+ iwlagn-$(CONFIG_IWL5000) += iwl-6000.o
+@@ -25,7 +23,7 @@ iwlagn-$(CONFIG_IWL5000) += iwl-1000.o
+ 
+ # 3945
+ obj-$(CONFIG_IWL3945)	+= iwl3945.o
+-iwl3945-objs		:= iwl3945-base.o iwl-3945.o iwl-3945-rs.o iwl-3945-led.o
++iwl3945-objs		:= iwl3945-base.o iwl-3945.o iwl-3945-rs.o iwl-3945-led.o iwl-legacy.o
+ iwl3945-$(CONFIG_IWLWIFI_DEBUGFS) += iwl-3945-debugfs.o
+ 
+ ccflags-y += -D__CHECK_ENDIAN__
