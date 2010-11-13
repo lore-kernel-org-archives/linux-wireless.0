@@ -1,119 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([147.243.1.47]:31296 "EHLO mgw-sa01.nokia.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755834Ab0KVOxX (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 22 Nov 2010 09:53:23 -0500
-Subject: pull request: wl12xx 2010-11-22
-From: Luciano Coelho <luciano.coelho@nokia.com>
+Received: from mail-ew0-f46.google.com ([209.85.215.46]:33747 "EHLO
+	mail-ew0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756861Ab0KMSOW (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 13 Nov 2010 13:14:22 -0500
+Received: by mail-ew0-f46.google.com with SMTP id 8so221913ewy.19
+        for <linux-wireless@vger.kernel.org>; Sat, 13 Nov 2010 10:14:22 -0800 (PST)
+From: Ivo van Doorn <ivdoorn@gmail.com>
 To: "John W. Linville" <linville@tuxdriver.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
-Date: Mon, 22 Nov 2010 16:53:13 +0200
-Message-ID: <1290437593.3322.36.camel@chilepepper>
-Mime-Version: 1.0
+Subject: [PATCH 8/9] rt2x00: Fix header_length in rt2x00lib_txdone
+Date: Sat, 13 Nov 2010 19:12:54 +0100
+Cc: linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com
+References: <201011131908.15595.IvDoorn@gmail.com> <201011131911.22874.IvDoorn@gmail.com> <201011131911.47346.IvDoorn@gmail.com>
+In-Reply-To: <201011131911.47346.IvDoorn@gmail.com>
+MIME-Version: 1.0
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Message-Id: <201011131912.55384.IvDoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi John,
+From: RA-Jay Hung <Jay_Hung@ralinktech.com>
 
-This pull-request contains patches that change the name of the driver
-from wl1271 to wl12xx and a few other improvements and bug fixes.
+Put the assignment of header_length after pull out extra tx headroom
 
-Please pull or let me know if there's any problem.  This tree is based
-on wireless-next/master.
+Signed-off-by: RA-Jay Hung <jay_hung@ralinktech.com>
+Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
+---
+ drivers/net/wireless/rt2x00/rt2x00dev.c |    8 ++++++--
+ 1 files changed, 6 insertions(+), 2 deletions(-)
 
-Thanks!
-
-The following changes since commit a76a574ca9ce7c05791cee42f000f2a42c687837:
-  Rafał Miłecki (1):
-        ssb: drop BCM4328 hack for SPROM revision
-
-are available in the git repository at:
-
-  git://git.kernel.org/pub/scm/linux/kernel/git/luca/wl12xx.git wl12xx-next
-
-Arik Nemtsov (1):
-      wl1271: add support for HW TX fragmentation
-
-Gery Kahn (1):
-      wl1271: cleanup unused code of calibration structures
-
-Juuso Oikarinen (3):
-      wl1271: Prevent ad-hoc and active scanning on 11a DFS frequencies
-      Revert "wl1271: Change supported channel order for a more optimal scan"
-      wl12xx: Unset bssid filter, ssid and bssid from firmware on disassoc
-
-Shahar Levi (1):
-      wl1271: Change wl12xx Files Names
-
- drivers/net/wireless/wl12xx/Kconfig                |   52 +++---
- drivers/net/wireless/wl12xx/Makefile               |   17 +-
- .../net/wireless/wl12xx/{wl1271_acx.c => acx.c}    |   12 +-
- .../net/wireless/wl12xx/{wl1271_acx.h => acx.h}    |   10 +-
- .../net/wireless/wl12xx/{wl1271_boot.c => boot.c}  |   10 +-
- .../net/wireless/wl12xx/{wl1271_boot.h => boot.h}  |    2 +-
- .../net/wireless/wl12xx/{wl1271_cmd.c => cmd.c}    |   12 +-
- .../net/wireless/wl12xx/{wl1271_cmd.h => cmd.h}    |   54 +------
- .../net/wireless/wl12xx/{wl1271_conf.h => conf.h}  |    4 +-
- .../wl12xx/{wl1271_debugfs.c => debugfs.c}         |   10 +-
- .../wl12xx/{wl1271_debugfs.h => debugfs.h}         |    6 +-
- .../wireless/wl12xx/{wl1271_event.c => event.c}    |   12 +-
- .../wireless/wl12xx/{wl1271_event.h => event.h}    |    4 +-
- .../net/wireless/wl12xx/{wl1271_ini.h => ini.h}    |    4 +-
- .../net/wireless/wl12xx/{wl1271_init.c => init.c}  |   10 +-
- .../net/wireless/wl12xx/{wl1271_init.h => init.h}  |    6 +-
- drivers/net/wireless/wl12xx/{wl1271_io.c => io.c}  |    4 +-
- drivers/net/wireless/wl12xx/{wl1271_io.h => io.h}  |    6 +-
- .../net/wireless/wl12xx/{wl1271_main.c => main.c}  |  183 +++++++++++++-------
- drivers/net/wireless/wl12xx/{wl1271_ps.c => ps.c}  |    6 +-
- drivers/net/wireless/wl12xx/{wl1271_ps.h => ps.h}  |    8 +-
- .../net/wireless/wl12xx/{wl1271_reg.h => reg.h}    |    0
- drivers/net/wireless/wl12xx/{wl1271_rx.c => rx.c}  |   12 +-
- drivers/net/wireless/wl12xx/{wl1271_rx.h => rx.h}  |    4 +-
- .../net/wireless/wl12xx/{wl1271_scan.c => scan.c}  |    8 +-
- .../net/wireless/wl12xx/{wl1271_scan.h => scan.h}  |    6 +-
- .../net/wireless/wl12xx/{wl1271_sdio.c => sdio.c}  |    4 +-
- .../net/wireless/wl12xx/{wl1271_spi.c => spi.c}    |    6 +-
- .../wl12xx/{wl1271_testmode.c => testmode.c}       |    6 +-
- .../wl12xx/{wl1271_testmode.h => testmode.h}       |    4 +-
- drivers/net/wireless/wl12xx/{wl1271_tx.c => tx.c}  |   12 +-
- drivers/net/wireless/wl12xx/{wl1271_tx.h => tx.h}  |    4 +-
- drivers/net/wireless/wl12xx/{wl1271.h => wl12xx.h} |    8 +-
- 33 files changed, 255 insertions(+), 251 deletions(-)
- rename drivers/net/wireless/wl12xx/{wl1271_acx.c => acx.c} (99%)
- rename drivers/net/wireless/wl12xx/{wl1271_acx.h => acx.h} (99%)
- rename drivers/net/wireless/wl12xx/{wl1271_boot.c => boot.c} (99%)
- rename drivers/net/wireless/wl12xx/{wl1271_boot.h => boot.h} (98%)
- rename drivers/net/wireless/wl12xx/{wl1271_cmd.c => cmd.c} (99%)
- rename drivers/net/wireless/wl12xx/{wl1271_cmd.h => cmd.h} (91%)
- rename drivers/net/wireless/wl12xx/{wl1271_conf.h => conf.h} (99%)
- rename drivers/net/wireless/wl12xx/{wl1271_debugfs.c => debugfs.c} (99%)
- rename drivers/net/wireless/wl12xx/{wl1271_debugfs.h => debugfs.h} (93%)
- rename drivers/net/wireless/wl12xx/{wl1271_event.c => event.c} (98%)
- rename drivers/net/wireless/wl12xx/{wl1271_event.h => event.h} (98%)
- rename drivers/net/wireless/wl12xx/{wl1271_ini.h => ini.h} (98%)
- rename drivers/net/wireless/wl12xx/{wl1271_init.c => init.c} (98%)
- rename drivers/net/wireless/wl12xx/{wl1271_init.h => init.h} (93%)
- rename drivers/net/wireless/wl12xx/{wl1271_io.c => io.c} (99%)
- rename drivers/net/wireless/wl12xx/{wl1271_io.h => io.h} (98%)
- rename drivers/net/wireless/wl12xx/{wl1271_main.c => main.c} (97%)
- rename drivers/net/wireless/wl12xx/{wl1271_ps.c => ps.c} (98%)
- rename drivers/net/wireless/wl12xx/{wl1271_ps.h => ps.h} (92%)
- rename drivers/net/wireless/wl12xx/{wl1271_reg.h => reg.h} (100%)
- rename drivers/net/wireless/wl12xx/{wl1271_rx.c => rx.c} (97%)
- rename drivers/net/wireless/wl12xx/{wl1271_rx.h => rx.h} (98%)
- rename drivers/net/wireless/wl12xx/{wl1271_scan.c => scan.c} (98%)
- rename drivers/net/wireless/wl12xx/{wl1271_scan.h => scan.h} (97%)
- rename drivers/net/wireless/wl12xx/{wl1271_sdio.c => sdio.c} (99%)
- rename drivers/net/wireless/wl12xx/{wl1271_spi.c => spi.c} (99%)
- rename drivers/net/wireless/wl12xx/{wl1271_testmode.c => testmode.c} (98%)
- rename drivers/net/wireless/wl12xx/{wl1271_testmode.h => testmode.h} (93%)
- rename drivers/net/wireless/wl12xx/{wl1271_tx.c => tx.c} (98%)
- rename drivers/net/wireless/wl12xx/{wl1271_tx.h => tx.h} (99%)
- rename drivers/net/wireless/wl12xx/{wl1271.h => wl12xx.h} (99%)
-
-
+diff --git a/drivers/net/wireless/rt2x00/rt2x00dev.c b/drivers/net/wireless/rt2x00/rt2x00dev.c
+index 3afa2a3..c879f9a 100644
+--- a/drivers/net/wireless/rt2x00/rt2x00dev.c
++++ b/drivers/net/wireless/rt2x00/rt2x00dev.c
+@@ -250,10 +250,9 @@ void rt2x00lib_txdone(struct queue_entry *entry,
+ 	struct ieee80211_tx_info *tx_info = IEEE80211_SKB_CB(entry->skb);
+ 	struct skb_frame_desc *skbdesc = get_skb_frame_desc(entry->skb);
+ 	enum data_queue_qid qid = skb_get_queue_mapping(entry->skb);
+-	unsigned int header_length = ieee80211_get_hdrlen_from_skb(entry->skb);
++	unsigned int header_length, i;
+ 	u8 rate_idx, rate_flags, retry_rates;
+ 	u8 skbdesc_flags = skbdesc->flags;
+-	unsigned int i;
+ 	bool success;
+ 
+ 	/*
+@@ -272,6 +271,11 @@ void rt2x00lib_txdone(struct queue_entry *entry,
+ 	skbdesc->flags &= ~SKBDESC_DESC_IN_SKB;
+ 
+ 	/*
++	 * Determine the length of 802.11 header.
++	 */
++	header_length = ieee80211_get_hdrlen_from_skb(entry->skb);
++
++	/*
+ 	 * Remove L2 padding which was added during
+ 	 */
+ 	if (test_bit(DRIVER_REQUIRE_L2PAD, &rt2x00dev->flags))
 -- 
-Cheers,
-Luca.
+1.7.2.3
 
