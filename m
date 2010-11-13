@@ -1,58 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.sysgo.com ([195.145.229.155]:52313 "EHLO mail.sysgo.com"
+Received: from hera.kernel.org ([140.211.167.34]:39290 "EHLO hera.kernel.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752796Ab0K2KBw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 29 Nov 2010 05:01:52 -0500
-Date: Mon, 29 Nov 2010 11:01:59 +0100
-From: Pavel Machek <pma@sysgo.com>
-To: Sujith <Sujith.Manoharan@atheros.com>
-Cc: Larry Finger <Larry.Finger@lwfinger.net>,
-	"ath9k-devel@venema.h4ckr.net" <ath9k-devel@venema.h4ckr.net>,
-	kernel list <linux-kernel@vger.kernel.org>,
-	"chunkeey@googlemail.com" <chunkeey@googlemail.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"rudolf.marek@sysgo.com" <rudolf.marek@sysgo.com>,
-	"cko@sysgo.com" <cko@sysgo.com>, "mfa@sysgo.com" <mfa@sysgo.com>,
-	"anl@sysgo.com" <anl@sysgo.com>
-Subject: Re: ath9k_htc vs. powerpc (was Re: working usb wifi card, that is
- still possible to buy)
-Message-ID: <20101129100159.GC28833@pma.sysgo.com>
-References: <20101103092431.GA21138@pma.sysgo.com>
- <20101124081616.GA30595@pma.sysgo.com>
- <20101124131320.GA2611@pma.sysgo.com>
- <4CED33E0.5040000@lwfinger.net>
- <20101126083125.GA28982@pma.sysgo.com>
- <20101126102026.GA11857@pma.sysgo.com>
- <20101126112737.GB11857@pma.sysgo.com>
- <19695.40541.335361.81396@gargle.gargle.HOWL>
- <20101126123706.GA19755@pma.sysgo.com>
+	id S1752601Ab0KMKeL (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 13 Nov 2010 05:34:11 -0500
+Message-ID: <4CDE699B.70401@kernel.org>
+Date: Sat, 13 Nov 2010 11:34:03 +0100
+From: Tejun Heo <tj@kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20101126123706.GA19755@pma.sysgo.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: Ben Greear <greearb@candelatech.com>,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] mac80211:  Fix deadlock in ieee80211_do_stop.
+References: <1289592426-5367-1-git-send-email-greearb@candelatech.com>	 <1289594998.3736.11.camel@jlt3.sipsolutions.net>	 <4CDDAA3B.9090007@candelatech.com> <1289596096.3736.13.camel@jlt3.sipsolutions.net>
+In-Reply-To: <1289596096.3736.13.camel@jlt3.sipsolutions.net>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi!
+Hello,
 
-> > > Sujith, I see you fought with endianness issues on ath9k_htc
-> > > driver. Was you able to test it on actual hardware? Should I try the
-> > > version just after your commit?
-> > 
-> > No, I never had a chance to test the driver on a big-endian system.
-> > I assume you are referring to this commit: "ath9k_htc: Fix sparse endian warnings" ?
+On 11/12/2010 10:08 PM, Johannes Berg wrote:
+> On Fri, 2010-11-12 at 12:57 -0800, Ben Greear wrote:
 > 
-> Yes.
-> 
-> > Does using latest wireless-testing help ?
-> 
-> I updated to wireless-testing from today, and still same results.
-> 
-> > Or you can try compat-wireless to get the latest code.
-> 
-> wireless-testing is actually easier to be.
+>>> However, I also don't think it should be necessary to do this.
+>>> sdata->work is always queued on local->workqueue, which is created using
+>>> alloc_ordered_workqueue(), and there is no work on this workqueue that
+>>> uses the RTNL. Therefore, even flushing the entire workqueue must work,
+>>> unless alloc_ordered_workqueue() has no such guarantee any more -- which
+>>> I would consider to be a bug in the new workqueue framework.
 
-...so I indentified two endianness problems in eeprom, but even with
-both fixed, it still will not associate. Is there some way to dump USB
-packets, then compare them between PC and PowerPC versions? Should I
-expect them to match?
-								Pavel
+alloc_ordered_workqueue() itself doesn't have forward progress
+guarantee under memory pressure.  You'll need to add WQ_MEM_RECLAIM
+for that, but I don't really think that's the problem here as it isn't
+in the memory reclaim path.
+
+>> The problem appears (to me) to be that the flush_work() attempts
+>> to wait for the worker to complete it's current task.  The worker can
+>> be doing a completely separate task (ie, wireless_nlevent_process),
+>> but that task can never complete because do_stop() holds rtnl
+>> and the task-in-progress may block on acquiring rtnl.
+>>
+>> So, flush_work() cannot make any progress.
+>>
+>> The stack-traces for hung programs I originally posted seem
+>> to agree with this analysis.
+
+Can you please attach the whole thing?
+
+>> So far, I reproduced the bug around 20 times in a row witout the patch,
+>> and since I added this patch, I have two good runs in a row, so it definitely
+>> has an affect.
+>>
+>> If my assumptions are correct, it would seem to unsafe to EVER
+>> call flush_work() while holding rtnl (or indeed, any other lock
+>> that any other work could possibly require).
+> 
+> Well then in that case all I'm saying is that we have a bug in the
+> workqueue code, because it used to be allowed to flush a workqueue that
+> never had any work items on it that grabbed the RTNL themselves. I
+> actually added lockdep detection for the case where you _did_, but since
+> I'm sure we don't have anything that grabs the RTNL on our workqueue,
+> this should be OK.
+
+Yeah, that would be a pretty big flaw in the workqueue code and we
+would be seeing the system collapsing in whole lot more places.  It's
+likely a more subtle issue which is livelocking or fork-bombing
+workqueue.  New workqueue code maintains compatibility with the old
+implementation but sometimes does triggers problems which were masked
+due to the statically allocated execution resource before.  So, there
+are few cases where the user code needs to be adjusted (e.g. xfs
+needed some tweaking).
+
+Anyways, let's look into what's going on.
+
+Thanks.
+
+-- 
+tejun
