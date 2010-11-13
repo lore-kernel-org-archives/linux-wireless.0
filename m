@@ -1,115 +1,186 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:43920 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756880Ab0KSXM1 (ORCPT
+Received: from mail-ew0-f46.google.com ([209.85.215.46]:34995 "EHLO
+	mail-ew0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756242Ab0KMSOR (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 19 Nov 2010 18:12:27 -0500
-Message-ID: <4CE70456.8070008@candelatech.com>
-Date: Fri, 19 Nov 2010 15:12:22 -0800
-From: Ben Greear <greearb@candelatech.com>
+	Sat, 13 Nov 2010 13:14:17 -0500
+Received: by ewy8 with SMTP id 8so221945ewy.19
+        for <linux-wireless@vger.kernel.org>; Sat, 13 Nov 2010 10:14:16 -0800 (PST)
+From: Ivo van Doorn <ivdoorn@gmail.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Subject: [PATCH 5/9] rt2x00: Remove unneccessary internal Kconfig symbols.
+Date: Sat, 13 Nov 2010 19:10:54 +0100
+Cc: linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com
+References: <201011131908.15595.IvDoorn@gmail.com> <201011131910.11947.IvDoorn@gmail.com> <201011131910.32367.IvDoorn@gmail.com>
+In-Reply-To: <201011131910.32367.IvDoorn@gmail.com>
 MIME-Version: 1.0
-To: Felix Fietkau <nbd@openwrt.org>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: recursive locking on wireless-testing.
-References: <4CE446E3.3090604@candelatech.com> <4CE47563.2090803@openwrt.org> <4CE47978.8050405@candelatech.com> <4CE4F79B.3000500@openwrt.org>
-In-Reply-To: <4CE4F79B.3000500@openwrt.org>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Message-Id: <201011131910.55175.IvDoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 11/18/2010 01:53 AM, Felix Fietkau wrote:
-> On 2010-11-18 1:55 AM, Ben Greear wrote:
->> On 11/17/2010 04:37 PM, Felix Fietkau wrote:
->>> On 2010-11-17 10:19 PM, Ben Greear wrote:
->>>> I found this while testing wpa_supplicant that shares scan results.
->>>> The kernel has no scan-sharing hacks in it..just a few patches
->>>> I've been using for a while (and the deadlock prevention patch
->>>> previously mentioned in other threads).
->>>>
->>>>
->>>> Nov 17 13:16:25 ath9k kernel: ieee80211 wiphy0: Removed STA 00:14:d1:c6:d2:54
->>>> Nov 17 13:16:25 ath9k kernel: ieee80211 wiphy0: Destroyed STA 00:14:d1:c6:d2:54
->>>>
->>>> =============================================
->>>> [ INFO: possible recursive locking detected ]
->>>> 2.6.37-rc1-wl+ #48
->>>> ---------------------------------------------
->>> This should fix it. ath_tx_complete is already called with the txq locked.
->>>
->>> --- a/drivers/net/wireless/ath/ath9k/xmit.c
->>> +++ b/drivers/net/wireless/ath/ath9k/xmit.c
->>> @@ -1830,10 +1830,8 @@ static void ath_tx_complete(struct ath_s
->>>    	else {
->>>    		q = skb_get_queue_mapping(skb);
->>>    		if (txq == sc->tx.txq_map[q]) {
->>> -			spin_lock_bh(&txq->axq_lock);
->>>    			if (WARN_ON(--txq->pending_frames<   0))
->>>    				txq->pending_frames = 0;
->>> -			spin_unlock_bh(&txq->axq_lock);
->>>    		}
->>>
->>>    		ieee80211_tx_status(hw, skb);
->>
->>
-> How about this instead of the other patch?
->
-> --- a/drivers/net/wireless/ath/ath9k/xmit.c
-> +++ b/drivers/net/wireless/ath/ath9k/xmit.c
-> @@ -163,6 +163,7 @@ static void ath_tx_flush_tid(struct ath_
->   		bf = list_first_entry(&tid->buf_q, struct ath_buf, list);
->   		list_move_tail(&bf->list,&bf_head);
->
-> +		spin_unlock_bh(&txq->axq_lock);
->   		fi = get_frame_info(bf->bf_mpdu);
->   		if (fi->retries) {
->   			ath_tx_update_baw(sc, tid, fi->seqno);
-> @@ -170,6 +171,7 @@ static void ath_tx_flush_tid(struct ath_
->   		} else {
->   			ath_tx_send_normal(sc, txq, tid,&bf_head);
->   		}
-> +		spin_lock_bh(&txq->axq_lock);
->   	}
->
->   	spin_unlock_bh(&txq->axq_lock);
+From: Gertjan van Wingerde <gwingerde@gmail.com>
 
-I don't see any lockdep errors with this, but I did see this spit out:
+CONFIG_RT2800PCI_PCI and CONFIG_RT2800PCI_SOC are strictly not needed
+as we can check the dependent symbols directly in the rest of Kconfig
+and the code, so clean up the Kconfig namespace a bit.
 
+Signed-off-by: Gertjan van Wingerde <gwingerde@gmail.com>
+Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
+---
+ drivers/net/wireless/rt2x00/Kconfig     |   16 ++-----------
+ drivers/net/wireless/rt2x00/rt2800pci.c |   34 +++++++++++++++---------------
+ 2 files changed, 20 insertions(+), 30 deletions(-)
 
-WARNING: at /home/greearb/git/linux.wireless-testing/drivers/net/wireless/ath/ath9k/recv.c:532 ath_stoprecv+0x90/0x9a [ath9k]()
-Hardware name: PDSBM
-Could not stop RX, we could be confusing the DMA engine when we start RX up
-Modules linked in: bluetooth aes_i586 aes_generic 8021q garp stp llc michael_mic macvlan pktgen fuse nfs lockd fscache nfs_acl auth_rpcgss sunrpc ipv6]
-Pid: 16092, comm: kworker/u:0 Tainted: P        W   2.6.37-rc2-wl+ #50
-Call Trace:
-  [<78436f25>] warn_slowpath_common+0x77/0x8c
-  [<f91f513e>] ? ath_stoprecv+0x90/0x9a [ath9k]
-  [<f91f513e>] ? ath_stoprecv+0x90/0x9a [ath9k]
-  [<78436fb6>] warn_slowpath_fmt+0x2e/0x30
-  [<f91f513e>] ath_stoprecv+0x90/0x9a [ath9k]
-  [<f91f40dc>] ath_set_channel+0x94/0x1e8 [ath9k]
-  [<f8c73767>] ? ath_hw_cycle_counters_update+0xc4/0x114 [ath]
-  [<f91f4574>] ath9k_config+0x344/0x423 [ath9k]
-  [<f9111aaa>] ieee80211_hw_config+0x11b/0x125 [mac80211]
-  [<f9115dea>] ieee80211_scan_work+0x29e/0x3f8 [mac80211]
-  [<7845a5e5>] ? trace_hardirqs_on+0xb/0xd
-  [<7878ea66>] ? _raw_spin_unlock_irq+0x22/0x2b
-  [<78446ecb>] ? process_one_work+0x13e/0x2bf
-  [<78446f3c>] process_one_work+0x1af/0x2bf
-  [<78446ecb>] ? process_one_work+0x13e/0x2bf
-  [<f9115b4c>] ? ieee80211_scan_work+0x0/0x3f8 [mac80211]
-  [<7844868a>] worker_thread+0xf9/0x1bf
-  [<78448591>] ? worker_thread+0x0/0x1bf
-  [<7844b1ba>] kthread+0x62/0x67
-  [<7844b158>] ? kthread+0x0/0x67
-  [<784036c6>] kernel_thread_helper+0x6/0x1a
-
-
-That, or similar,  was happening before, so your patch may still be fine.
-
-Thanks,
-Ben
-
+diff --git a/drivers/net/wireless/rt2x00/Kconfig b/drivers/net/wireless/rt2x00/Kconfig
+index a6939cc..ade3025 100644
+--- a/drivers/net/wireless/rt2x00/Kconfig
++++ b/drivers/net/wireless/rt2x00/Kconfig
+@@ -53,22 +53,12 @@ config RT61PCI
+ 
+ 	  When compiled as a module, this driver will be called rt61pci.
+ 
+-config RT2800PCI_PCI
+-	boolean
+-	depends on PCI
+-	default y
+-
+-config RT2800PCI_SOC
+-	boolean
+-	depends on RALINK_RT288X || RALINK_RT305X
+-	default y
+-
+ config RT2800PCI
+ 	tristate "Ralink rt27xx/rt28xx/rt30xx (PCI/PCIe/PCMCIA) support"
+-	depends on RT2800PCI_PCI || RT2800PCI_SOC
++	depends on PCI || RALINK_RT288X || RALINK_RT305X
+ 	select RT2800_LIB
+-	select RT2X00_LIB_PCI if RT2800PCI_PCI
+-	select RT2X00_LIB_SOC if RT2800PCI_SOC
++	select RT2X00_LIB_PCI if PCI
++	select RT2X00_LIB_SOC if RALINK_RT288X || RALINK_RT305X
+ 	select RT2X00_LIB_HT
+ 	select RT2X00_LIB_FIRMWARE
+ 	select RT2X00_LIB_CRYPTO
+diff --git a/drivers/net/wireless/rt2x00/rt2800pci.c b/drivers/net/wireless/rt2x00/rt2800pci.c
+index 97f4df6..b0946f8 100644
+--- a/drivers/net/wireless/rt2x00/rt2800pci.c
++++ b/drivers/net/wireless/rt2x00/rt2800pci.c
+@@ -84,7 +84,7 @@ static void rt2800pci_mcu_status(struct rt2x00_dev *rt2x00dev, const u8 token)
+ 	rt2800_register_write(rt2x00dev, H2M_MAILBOX_CID, ~0);
+ }
+ 
+-#ifdef CONFIG_RT2800PCI_SOC
++#if defined(CONFIG_RALINK_RT288X) || defined(CONFIG_RALINK_RT305X)
+ static void rt2800pci_read_eeprom_soc(struct rt2x00_dev *rt2x00dev)
+ {
+ 	u32 *base_addr = (u32 *) KSEG1ADDR(0x1F040000); /* XXX for RT3052 */
+@@ -95,9 +95,9 @@ static void rt2800pci_read_eeprom_soc(struct rt2x00_dev *rt2x00dev)
+ static inline void rt2800pci_read_eeprom_soc(struct rt2x00_dev *rt2x00dev)
+ {
+ }
+-#endif /* CONFIG_RT2800PCI_SOC */
++#endif /* CONFIG_RALINK_RT288X || CONFIG_RALINK_RT305X */
+ 
+-#ifdef CONFIG_RT2800PCI_PCI
++#ifdef CONFIG_PCI
+ static void rt2800pci_eepromregister_read(struct eeprom_93cx6 *eeprom)
+ {
+ 	struct rt2x00_dev *rt2x00dev = eeprom->data;
+@@ -181,7 +181,7 @@ static inline int rt2800pci_efuse_detect(struct rt2x00_dev *rt2x00dev)
+ static inline void rt2800pci_read_eeprom_efuse(struct rt2x00_dev *rt2x00dev)
+ {
+ }
+-#endif /* CONFIG_RT2800PCI_PCI */
++#endif /* CONFIG_PCI */
+ 
+ /*
+  * Firmware functions
+@@ -1031,7 +1031,7 @@ static const struct rt2x00_ops rt2800pci_ops = {
+ /*
+  * RT2800pci module information.
+  */
+-#ifdef CONFIG_RT2800PCI_PCI
++#ifdef CONFIG_PCI
+ static DEFINE_PCI_DEVICE_TABLE(rt2800pci_device_table) = {
+ 	{ PCI_DEVICE(0x1814, 0x0601), PCI_DEVICE_DATA(&rt2800pci_ops) },
+ 	{ PCI_DEVICE(0x1814, 0x0681), PCI_DEVICE_DATA(&rt2800pci_ops) },
+@@ -1061,19 +1061,19 @@ static DEFINE_PCI_DEVICE_TABLE(rt2800pci_device_table) = {
+ #endif
+ 	{ 0, }
+ };
+-#endif /* CONFIG_RT2800PCI_PCI */
++#endif /* CONFIG_PCI */
+ 
+ MODULE_AUTHOR(DRV_PROJECT);
+ MODULE_VERSION(DRV_VERSION);
+ MODULE_DESCRIPTION("Ralink RT2800 PCI & PCMCIA Wireless LAN driver.");
+ MODULE_SUPPORTED_DEVICE("Ralink RT2860 PCI & PCMCIA chipset based cards");
+-#ifdef CONFIG_RT2800PCI_PCI
++#ifdef CONFIG_PCI
+ MODULE_FIRMWARE(FIRMWARE_RT2860);
+ MODULE_DEVICE_TABLE(pci, rt2800pci_device_table);
+-#endif /* CONFIG_RT2800PCI_PCI */
++#endif /* CONFIG_PCI */
+ MODULE_LICENSE("GPL");
+ 
+-#ifdef CONFIG_RT2800PCI_SOC
++#if defined(CONFIG_RALINK_RT288X) || defined(CONFIG_RALINK_RT305X)
+ static int rt2800soc_probe(struct platform_device *pdev)
+ {
+ 	return rt2x00soc_probe(pdev, &rt2800pci_ops);
+@@ -1090,9 +1090,9 @@ static struct platform_driver rt2800soc_driver = {
+ 	.suspend	= rt2x00soc_suspend,
+ 	.resume		= rt2x00soc_resume,
+ };
+-#endif /* CONFIG_RT2800PCI_SOC */
++#endif /* CONFIG_RALINK_RT288X || CONFIG_RALINK_RT305X */
+ 
+-#ifdef CONFIG_RT2800PCI_PCI
++#ifdef CONFIG_PCI
+ static struct pci_driver rt2800pci_driver = {
+ 	.name		= KBUILD_MODNAME,
+ 	.id_table	= rt2800pci_device_table,
+@@ -1101,21 +1101,21 @@ static struct pci_driver rt2800pci_driver = {
+ 	.suspend	= rt2x00pci_suspend,
+ 	.resume		= rt2x00pci_resume,
+ };
+-#endif /* CONFIG_RT2800PCI_PCI */
++#endif /* CONFIG_PCI */
+ 
+ static int __init rt2800pci_init(void)
+ {
+ 	int ret = 0;
+ 
+-#ifdef CONFIG_RT2800PCI_SOC
++#if defined(CONFIG_RALINK_RT288X) || defined(CONFIG_RALINK_RT305X)
+ 	ret = platform_driver_register(&rt2800soc_driver);
+ 	if (ret)
+ 		return ret;
+ #endif
+-#ifdef CONFIG_RT2800PCI_PCI
++#ifdef CONFIG_PCI
+ 	ret = pci_register_driver(&rt2800pci_driver);
+ 	if (ret) {
+-#ifdef CONFIG_RT2800PCI_SOC
++#if defined(CONFIG_RALINK_RT288X) || defined(CONFIG_RALINK_RT305X)
+ 		platform_driver_unregister(&rt2800soc_driver);
+ #endif
+ 		return ret;
+@@ -1127,10 +1127,10 @@ static int __init rt2800pci_init(void)
+ 
+ static void __exit rt2800pci_exit(void)
+ {
+-#ifdef CONFIG_RT2800PCI_PCI
++#ifdef CONFIG_PCI
+ 	pci_unregister_driver(&rt2800pci_driver);
+ #endif
+-#ifdef CONFIG_RT2800PCI_SOC
++#if defined(CONFIG_RALINK_RT288X) || defined(CONFIG_RALINK_RT305X)
+ 	platform_driver_unregister(&rt2800soc_driver);
+ #endif
+ }
 -- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+1.7.2.3
 
