@@ -1,42 +1,32 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from external1.orbit-lab.org ([128.6.192.131]:37372 "HELO
-	external1.orbit-lab.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1753572Ab0K3UEn (ORCPT
+Received: from server4.hostdango.com ([70.86.37.74]:45045 "EHLO
+	server4.hostdango.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750932Ab0KNCg5 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 30 Nov 2010 15:04:43 -0500
-Received: from repository3.orbit-lab.org (repository3.orbit-lab.org [10.50.0.41])
-	by external1.orbit-lab.org (Postfix) with ESMTP id EA145418D8
-	for <linux-wireless@vger.kernel.org>; Tue, 30 Nov 2010 14:59:40 -0500 (EST)
-Subject: Compat-wireless release for 2010-11-30 is baked
-To: <linux-wireless@vger.kernel.org>
-Message-Id: <20101130200442.670A140F97@repository3.orbit-lab.org>
-Date: Tue, 30 Nov 2010 15:04:41 -0500 (EST)
-From: compat@orbit-lab.org (Compat-wireless cronjob account)
+	Sat, 13 Nov 2010 21:36:57 -0500
+Message-ID: <4CDF4B47.2000207@krellan.com>
+Date: Sat, 13 Nov 2010 18:36:55 -0800
+From: Josh Lehan <krellan@krellan.com>
+MIME-Version: 1.0
+To: Paul Stewart <pstew@google.com>
+CC: linux-wireless@vger.kernel.org
+Subject: Re: Distinguishing wrong password from other failure to connect?
+References: <4CDCEBE9.8060905@krellan.com> <AANLkTikHOsYPwU0J-bYFGQamCS4CVUP5T_B1yGLCjmD5@mail.gmail.com>
+In-Reply-To: <AANLkTikHOsYPwU0J-bYFGQamCS4CVUP5T_B1yGLCjmD5@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
->From git://git.kernel.org/pub/scm/linux/kernel/git/mcgrof/compat
-   34dd5d5..53f0279  master     -> origin/master
->From git://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next
-   18771db..206c290  history    -> origin/history
- + 4c8394b...c966c49 master     -> origin/master  (forced update)
-   c66fb34..7208364  stable     -> origin/stable
- * [new tag]         next-20101130 -> next-20101130
+On 11/12/2010 09:21 AM, Paul Stewart wrote:
+> The "reason=xx" codes are standardized by 802.11.  However when
+> reading such messages, one needs to be careful to note which party
+> sent that reason code.  There are times when the AP sends this
+> message, and other times where the station sends it as it departs.
 
-compat-wireless code metrics
+Thanks for the information.  Is there a guideline as to what messages
+indicate wrong settings by the user (wrong password, etc.)?
 
-    749385 - Total upstream lines of code being pulled
-      2201 - backport code changes
-      1939 - backport code additions
-       262 - backport code deletions
-      6633 - backport from compat module
-      8834 - total backport code
-    1.1788 - % of code consists of backport work
-      1534 - Crap changes not yet posted
-      1491 - Crap additions not yet posted
-        43 - Crap deletions not yet posted
-    0.2047 - % of crap code
+Basically, I'm trying to know where to pin the blame: on the user's
+wrong password, or on the network itself.
 
-Base tree: linux-next.git
-Base tree version: next-20101130
-compat-wireless release: compat-wireless-2010-11-23-6-gefeeae7-pc
+Josh
