@@ -1,95 +1,239 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.sysgo.com ([195.145.229.155]:57922 "EHLO mail.sysgo.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750835Ab0KZLfG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 26 Nov 2010 06:35:06 -0500
-Date: Fri, 26 Nov 2010 12:35:03 +0100
-From: Pavel Machek <pma@sysgo.com>
-To: Larry Finger <Larry.Finger@lwfinger.net>,
-	ath9k-devel@venema.h4ckr.net, Sujith.Manoharan@atheros.com
-Cc: kernel list <linux-kernel@vger.kernel.org>,
-	chunkeey@googlemail.com, linux-wireless@vger.kernel.org,
-	rudolf.marek@sysgo.com, cko@sysgo.com, mfa@sysgo.com, anl@sysgo.com
-Subject: [PATCH] ath9k_htc: cleanup eeprom endiannes handling
-Message-ID: <20101126113503.GA28137@pma.sysgo.com>
-References: <20101103092431.GA21138@pma.sysgo.com>
- <20101124081616.GA30595@pma.sysgo.com>
- <20101124131320.GA2611@pma.sysgo.com>
- <4CED33E0.5040000@lwfinger.net>
- <20101126083125.GA28982@pma.sysgo.com>
- <20101126102026.GA11857@pma.sysgo.com>
- <20101126112737.GB11857@pma.sysgo.com>
+Received: from mail-yw0-f46.google.com ([209.85.213.46]:46448 "EHLO
+	mail-yw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752920Ab0KNQYp (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 14 Nov 2010 11:24:45 -0500
+Received: by ywc21 with SMTP id 21so1356518ywc.19
+        for <linux-wireless@vger.kernel.org>; Sun, 14 Nov 2010 08:24:44 -0800 (PST)
+Message-ID: <4CE00D45.8030105@lwfinger.net>
+Date: Sun, 14 Nov 2010 10:24:37 -0600
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20101126112737.GB11857@pma.sysgo.com>
+To: "miloofr@gmail.com" <miloofr@gmail.com>
+CC: wireless <linux-wireless@vger.kernel.org>
+Subject: Re: Question about Edimax 7811Un
+References: <AANLkTi=+0BOUaTs73jRMnJ=9qyNkqnBvMuKVTG4od9_+@mail.gmail.com>	<0022152d6729673f6a0494b1f2e6@google.com>	<AANLkTi=PYCwTtNmt9Baw=mYPqzyUQsiBNDOBXGic++5_@mail.gmail.com>	<4CDAB99D.7030100@lwfinger.net>	<AANLkTik9=-8bXNOvrY-JnFuVJr1wZG24o8m8JzJVD8tQ@mail.gmail.com>	<4CDC049C.90005@lwfinger.net>	<AANLkTi=JG=5tX2zcXOCdtUMHcASaZOWppZzb4vLyJSxc@mail.gmail.com>	<4CDDA103.3010209@lwfinger.net> <AANLkTi=YcrfQyspBgWxwqD4AE-S26jmLtZKn6XmRHbxF@mail.gmail.com>
+In-Reply-To: <AANLkTi=YcrfQyspBgWxwqD4AE-S26jmLtZKn6XmRHbxF@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On 11/12/2010 04:13 PM, miloofr@gmail.com wrote:
+> Thank you Larry. I successfully compiled the patched driver on a 64
+> bits system without any error. The driver loads, no freeze when
+> inserting the stick, however, there are a lot of timeout errors, as
+> shown below (the drivers seems to unload itself). That's why I guess a
+> "lshw -C network" does not show the wireless usb network.
+> 
+> Eric
+> 
+> Nov 12 23:12:26 grandsom kernel: [99800.313048]
+> Nov 12 23:12:26 grandsom kernel: [99800.313050] 8712_usb_endpoint_descriptor(0):
+> Nov 12 23:12:26 grandsom kernel: [99800.313054] bLength=7
+> Nov 12 23:12:26 grandsom kernel: [99800.313057] bDescriptorType=5
+> Nov 12 23:12:26 grandsom kernel: [99800.313060] bEndpointAddress=81
+> Nov 12 23:12:26 grandsom kernel: [99800.313063] wMaxPacketSize=200
+> Nov 12 23:12:26 grandsom kernel: [99800.313065] bInterval=0
+> Nov 12 23:12:26 grandsom kernel: [99800.313068]
+> Nov 12 23:12:26 grandsom kernel: [99800.313070] 8712_usb_endpoint_descriptor(1):
+> Nov 12 23:12:26 grandsom kernel: [99800.313073] bLength=7
+> Nov 12 23:12:26 grandsom kernel: [99800.313075] bDescriptorType=5
+> Nov 12 23:12:26 grandsom kernel: [99800.313078] bEndpointAddress=2
+> Nov 12 23:12:26 grandsom kernel: [99800.313081] wMaxPacketSize=200
+> Nov 12 23:12:26 grandsom kernel: [99800.313084] bInterval=0
+> Nov 12 23:12:26 grandsom kernel: [99800.313086]
+> Nov 12 23:12:26 grandsom kernel: [99800.313088] 8712_usb_endpoint_descriptor(2):
+> Nov 12 23:12:26 grandsom kernel: [99800.313091] bLength=7
+> Nov 12 23:12:26 grandsom kernel: [99800.313094] bDescriptorType=5
+> Nov 12 23:12:26 grandsom kernel: [99800.313096] bEndpointAddress=3
+> Nov 12 23:12:26 grandsom kernel: [99800.313099] wMaxPacketSize=200
+> Nov 12 23:12:26 grandsom kernel: [99800.313102] bInterval=0
+> Nov 12 23:12:26 grandsom kernel: [99800.313104]
+> Nov 12 23:12:26 grandsom kernel: [99800.313106] 8712_usb_endpoint_descriptor(3):
+> Nov 12 23:12:26 grandsom kernel: [99800.313109] bLength=7
+> Nov 12 23:12:26 grandsom kernel: [99800.313112] bDescriptorType=5
+> Nov 12 23:12:26 grandsom kernel: [99800.313114] bEndpointAddress=84
+> Nov 12 23:12:26 grandsom kernel: [99800.313117] wMaxPacketSize=40
+> Nov 12 23:12:26 grandsom kernel: [99800.313120] bInterval=1
+> Nov 12 23:12:26 grandsom kernel: [99800.313123] nr_endpoint=4,
+> in_num=2, out_num=2
+> Nov 12 23:12:26 grandsom kernel: [99800.313126]
+> Nov 12 23:12:26 grandsom kernel: [99800.313128] 8192cu: USB_SPEED_HIGH
+> Nov 12 23:12:26 grandsom kernel: [99800.313301] Chip Version ID:
+> VERSION_NORMAL_TSMC_CHIP_88C.
+> Nov 12 23:12:26 grandsom kernel: [99800.314046] EEPROM type is E-FUSE
+> Nov 12 23:12:26 grandsom kernel: [99800.314052] ====> ReadAdapterInfo8192C
+> Nov 12 23:12:26 grandsom kernel: [99800.314163] Boot from EFUSE,
+> Autoload Success !
+> Nov 12 23:12:26 grandsom kernel: [99800.323541]
+> rtw_efuse_get_max_phy_size...eeprompriv.efuse_phy_max_size(504)
+> Nov 12 23:12:26 grandsom kernel: [99800.822117] EEPROMVID = 0x7392
+> Nov 12 23:12:26 grandsom kernel: [99800.822123] EEPROMPID = 0x7811
+> Nov 12 23:12:26 grandsom kernel: [99800.822126] EEPROMCustomerID : 0x00
+> Nov 12 23:12:26 grandsom kernel: [99800.822130] EEPROMSubCustomerID: 0x00
+> Nov 12 23:12:26 grandsom kernel: [99800.822133] RT_CustomerID: 0x00
+> Nov 12 23:12:26 grandsom kernel: [99800.822137] RT_ChannelPlan: 0x02
+> Nov 12 23:12:26 grandsom kernel: [99800.822140] _ReadBoardType(0)
+> Nov 12 23:12:26 grandsom kernel: [99800.822143] ### AntDivCfg(0)
+> Nov 12 23:12:26 grandsom kernel: [99800.822147] BT Coexistance = disable
+> Nov 12 23:12:26 grandsom kernel: [99800.822152]
+> _ReadHWPDSelection...bHWPwrPindetect(0) bSupportRemoteWakeup(0)
+> Nov 12 23:12:26 grandsom kernel: [99800.822156] <==== ReadAdapterInfo8192C
+> Nov 12 23:12:26 grandsom kernel: [99800.822168] MAC Address from
+> efuse= 00:1f:1f:c7:8b:df
+> Nov 12 23:12:26 grandsom kernel: [99800.844971] +871x_drv - drv_open, bup=0
+> Nov 12 23:12:26 grandsom kernel: [99800.953013]  ===>
+> FirmwareDownload91C() fw:Rtl819XFwImageArray_TSMC
+> Nov 12 23:12:26 grandsom kernel: [99800.953030] fw_ver=v57,
+> fw_subver=0, sig=0x88c0
+> Nov 12 23:12:27 grandsom kernel: [99801.030141] reg 0x1fd4, usb write
+> TimeOut! status:-110 value=0x144e046
+> Nov 12 23:12:27 grandsom kernel: [99801.080149] reg 0x1fe4, usb write
+> TimeOut! status:-110 value=0x6f97901d
+> Nov 12 23:12:27 grandsom kernel: [99801.126605] fw download ok!
+> Nov 12 23:12:27 grandsom kernel: [99801.126612] Set RF Chip ID to
+> RF_6052 and RF type to 1T1R.
+> Nov 12 23:12:27 grandsom kernel: [99801.126617] rf_chip=0x4, rf_type=0x3
+> and/or
+> ...
+> Nov 12 23:05:37 grandsom kernel: [99391.020266] reg 0x33, usb read
+> TimeOut! status:-19 value=0x0
+> Nov 12 23:05:37 grandsom kernel: [99391.020268] reg 0x33, usb read
+> TimeOut! status:-19 value=0x0
+> Nov 12 23:05:37 grandsom kernel: [99391.020271] reg 0x33, usb read
+> TimeOut! status:-19 value=0x0
+> Nov 12 23:05:37 grandsom kernel: [99391.020273] reg 0x33, usb read
+> TimeOut! status:-19 value=0x0
+> Nov 12 23:05:37 grandsom kernel: [99391.020275] reg 0x33, usb read
+> TimeOut! status:-19 value=0x0
+> Nov 12 23:05:37 grandsom kernel: [99391.020278] reg 0x33, usb read
+> TimeOut! status:-19 value=0x0
+> Nov 12 23:05:37 grandsom kernel: [99391.020280] reg 0x33, usb read
+> TimeOut! status:-19 value=0x0
+> Nov 12 23:05:37 grandsom kernel: [99391.020283] reg 0x33, usb read
+> TimeOut! status:-19 value=0x0
+> Nov 12 23:05:37 grandsom kernel: [99391.020285] reg 0x33, usb read
+> TimeOut! status:-19 value=0x0
+> Nov 12 23:05:37 grandsom kernel: [99391.020288] reg 0x33, usb read
+> TimeOut! status:-19 value=0x0
+> Nov 12 23:05:37 grandsom kernel: [99391.020290] reg 0x33, usb read
+> TimeOut! status:-19 value=0x0
+> Nov 12 23:05:37 grandsom kernel: [99391.020292] reg 0x33, usb read
+> TimeOut! status:-19 value=0x0
+> Nov 12 23:05:37 grandsom kernel: [99391.020295] reg 0x33, usb read
+> TimeOut! status:-19 value=0x0
+> Nov 12 23:05:37 grandsom kernel: [99391.020297] reg 0x33, usb read
+> TimeOut! status:-19 value=0x0
+> Nov 12 23:05:37 grandsom kernel: [99391.020300] reg 0x33, usb read
+> TimeOut! status:-19 value=0x0
+> Nov 12 23:05:37 grandsom kernel: [99391.020302] reg 0x33, usb read
+> TimeOut! status:-19 value=0x0
+> Nov 12 23:05:37 grandsom kernel: [99391.020305] reg 0x33, usb read
+> TimeOut! status:-19 value=0x0
+> Nov 12 23:05:37 grandsom kernel: [99391.020307] reg 0x33, usb read
+> TimeOut! status:-19 value=0x0
+> Nov 12 23:05:37 grandsom kernel: [99391.020309] reg 0x33, usb read
+> TimeOut! status:-19 value=0x0
+> Nov 12 23:05:37 grandsom kernel: [99391.020312] reg 0x33, usb read
+> TimeOut! status:-19 value=0x0
+> Nov 12 23:05:37 grandsom kernel: [99391.020314] reg 0x33, usb read
+> TimeOut! status:-19 value=0x0
+> Nov 12 23:05:37 grandsom kernel: [99391.020317] reg 0x33, usb read
+> TimeOut! status:-19 value=0x0
+> Nov 12 23:05:37 grandsom kernel: [99391.020319] reg 0x33, usb read
+> TimeOut! status:-19 value=0x0
+> Nov 12 23:05:37 grandsom kernel: [99391.020322] reg 0x33, usb read
+> TimeOut! status:-19 value=0x0
+> Nov 12 23:05:37 grandsom kernel: [99391.020324] reg 0x33, usb read
+> TimeOut! status:-19 value=0x0
+> Nov 12 23:05:37 grandsom kernel: [99391.020327] reg 0x33, usb read
+> TimeOut! status:-19 value=0x0
+> Nov 12 23:05:37 grandsom kernel: [99391.020329] reg 0x33, usb read
+> TimeOut! status:-19 value=0x0
+> Nov 12 23:05:37 grandsom kernel: [99391.020331] reg 0x33, usb read
+> TimeOut! status:-19 value=0x0
+> Nov 12 23:05:37 grandsom kernel: [99391.020334] reg 0x33, usb read
+> TimeOut! status:-19 value=0x0
+> Nov 12 23:05:37 grandsom kernel: [99391.020336] reg 0x33, usb read
+> TimeOut! status:-19 value=0x0
+> Nov 12 23:05:37 grandsom kernel: [99391.020339] reg 0x33, usb read
+> TimeOut! status:-19 value=0x0
+> Nov 12 23:05:37 grandsom kernel: [99391.020341] reg 0x33, usb read
+> TimeOut! status:-19 value=0x0
+> Nov 12 23:05:37 grandsom kernel: [99391.020344] reg 0x33, usb read
+> TimeOut! status:-19 value=0x0
+> Nov 12 23:05:37 grandsom kernel: [99391.020377] reg 0x33, usb read
+> TimeOut! status:-19 value=0x0
+> Nov 12 23:05:37 grandsom kernel: [99391.020379] reg 0x33, usb read
+> TimeOut! status:-19 value=0x0
+> Nov 12 23:05:37 grandsom kernel: [99391.020382] reg 0x33, usb read
+> TimeOut! status:-19 value=0x0
+> Nov 12 23:05:37 grandsom kernel: [99391.020384] reg 0x33, usb read
+> TimeOut! status:-19 value=0x0
+> Nov 12 23:05:37 grandsom kernel: [99391.020386] reg 0x33, usb read
+> TimeOut! status:-19 value=0x0
+> Nov 12 23:05:37 grandsom kernel: [99391.020389] reg 0x33, usb read
+> TimeOut! status:-19 value=0x0
+> Nov 12 23:05:37 grandsom kernel: [99391.020391] reg 0x33, usb read
+> TimeOut! status:-19 value=0x0
+> Nov 12 23:05:37 grandsom kernel: [99391.020394] reg 0x33, usb read
+> TimeOut! status:-19 value=0x0
+> Nov 12 23:05:37 grandsom kernel: [99391.020396] reg 0x33, usb read
+> TimeOut! status:-19 value=0x0
+> Nov 12 23:05:37 grandsom kernel: [99391.020398] reg 0x33, usb read
+> TimeOut! status:-19 value=0x0
+> Nov 12 23:05:37 grandsom kernel: [99391.020401] reg 0x33, usb read
+> TimeOut! status:-19 value=0x0
+> Nov 12 23:05:37 grandsom kernel: [99391.020403] reg 0x33, usb read
+> TimeOut! status:-19 value=0x0
+> Nov 12 23:05:37 grandsom kernel: [99391.020406] reg 0x33, usb read
+> TimeOut! status:-19 value=0x0
+> Nov 12 23:05:37 grandsom kernel: [99391.020408] reg 0x33, usb read
+> TimeOut! status:-19 value=0x0
+> Nov 12 23:05:37 grandsom kernel: [99391.020410] reg 0x33, usb read
+> TimeOut! status:-19 value=0x0
+> Nov 12 23:05:37 grandsom kernel: [99391.020413] reg 0x33, usb read
+> TimeOut! status:-19 value=0x0
+> Nov 12 23:05:37 grandsom kernel: [99391.020415] reg 0x33, usb read
+> TimeOut! status:-19 value=0x0
+> Nov 12 23:05:37 grandsom kernel: [99391.020419] pdmpriv->TxPowerTrackControl = 1
+> Nov 12 23:05:37 grandsom kernel: [99391.020421] reg 0x40, usb read
+> TimeOut! status:-19 value=0x0
+> Nov 12 23:05:37 grandsom kernel: [99391.020424] reg 0x40, usb write
+> TimeOut! status:-19 value=0x0
+> Nov 12 23:05:37 grandsom kernel: [99391.020426] usb_write8...error(-19)
+> Nov 12 23:05:37 grandsom kernel: [99391.020428] reg 0xf0, usb read
+> TimeOut! status:-19 value=0x0
+> Nov 12 23:05:37 grandsom kernel: [99391.020431] reg 0x15, usb write
+> TimeOut! status:-19 value=0xe9
+> Nov 12 23:05:37 grandsom kernel: [99391.020432] usb_write8...error(-19)
+> Nov 12 23:05:37 grandsom kernel: [99391.020435] reg 0xf0, usb read
+> TimeOut! status:-19 value=0xe9
+> Nov 12 23:05:37 grandsom kernel: [99391.020438] MAC Address = 0-1f-1f-c7-8b-df
+> Nov 12 23:05:37 grandsom kernel: [99391.020471] -871x_drv - drv_open, bup=1
+> Nov 12 23:05:37 grandsom kernel: [99391.020693] ADDRCONF(NETDEV_UP):
+> wlan0: link is not ready
+> Nov 12 23:05:37 grandsom kernel: [99391.020711] (2)871x_drv -
+> drv_close, bup=1, hw_init_completed=1
+> Nov 12 23:05:37 grandsom kernel: [99391.020716] -871x_drv - drv_close, bup=1
+> Nov 12 23:05:37 grandsom kernel: [99391.029314] ###> rtw_cmd_thread
+> break.................
+> Nov 12 23:05:37 grandsom kernel: [99391.280874] +rtw_dev_unload
+> Nov 12 23:05:37 grandsom kernel: [99391.280884] reg 0x522, usb write
+> TimeOut! status:-19 value=0xff
+> Nov 12 23:05:37 grandsom kernel: [99391.280887] usb_write8...error(-19)
+> Nov 12 23:05:37 grandsom kernel: [99391.280890] reg 0xf0, usb read
+> TimeOut! status:-19 value=0xff
+> Nov 12 23:05:37 grandsom kernel: [99391.280892] usb_read_port_cancel
+> Nov 12 23:05:37 grandsom kernel: [99391.280894] usb_read_port_cancel
+> Nov 12 23:05:37 grandsom kernel: [99391.280896] -rtw_dev_unload
+> Nov 12 23:05:37 grandsom kernel: [99391.280897] +r871xu_dev_remove,
+> hw_init_completed=1
 
-There are already in-place byte swapping macros in Linux, use them.
+At least we made some progress. I'll go through the driver again to see what I
+may have missed. In addition, I have just bought one of these 7811Un devices
+through Ebay. It should arrive in early December.
 
-Signed-off-by: Pavel Machek <pma@sysgo.com>
+Larry
 
-diff --git a/drivers/net/wireless/ath/ath9k/eeprom_4k.c b/drivers/net/wireless/ath/ath9k/eeprom_4k.c
-index 4fa4d8e..ee4e893 100644
---- a/drivers/net/wireless/ath/ath9k/eeprom_4k.c
-+++ b/drivers/net/wireless/ath/ath9k/eeprom_4k.c
-@@ -117,47 +117,25 @@ static int ath9k_hw_4k_check_eeprom(struct ath_hw *ah)
- 		sum ^= *eepdata++;
- 
- 	if (need_swap) {
--		u32 integer;
--		u16 word;
--
- 		ath_print(common, ATH_DBG_EEPROM,
- 			  "EEPROM Endianness is not native.. Changing\n");
- 
--		word = swab16(eep->baseEepHeader.length);
--		eep->baseEepHeader.length = word;
--
--		word = swab16(eep->baseEepHeader.checksum);
--		eep->baseEepHeader.checksum = word;
--
--		word = swab16(eep->baseEepHeader.version);
--		eep->baseEepHeader.version = word;
--
--		word = swab16(eep->baseEepHeader.regDmn[0]);
--		eep->baseEepHeader.regDmn[0] = word;
--
--		word = swab16(eep->baseEepHeader.regDmn[1]);
--		eep->baseEepHeader.regDmn[1] = word;
--
--		word = swab16(eep->baseEepHeader.rfSilent);
--		eep->baseEepHeader.rfSilent = word;
--
--		word = swab16(eep->baseEepHeader.blueToothOptions);
--		eep->baseEepHeader.blueToothOptions = word;
--
--		word = swab16(eep->baseEepHeader.deviceCap);
--		eep->baseEepHeader.deviceCap = word;
--
--		integer = swab32(eep->modalHeader.antCtrlCommon);
--		eep->modalHeader.antCtrlCommon = integer;
-+		swab16s(&eep->baseEepHeader.length);
-+		swab16s(&eep->baseEepHeader.checksum);
-+		swab16s(&eep->baseEepHeader.version);
-+		swab16s(&eep->baseEepHeader.regDmn[0]);
-+		swab16s(&eep->baseEepHeader.regDmn[1]);
-+		swab16s(&eep->baseEepHeader.rfSilent);
-+		swab16s(&eep->baseEepHeader.blueToothOptions);
-+		swab16s(&eep->baseEepHeader.deviceCap);
-+		swab32s(&eep->modalHeader.antCtrlCommon);
- 
- 		for (i = 0; i < AR5416_EEP4K_MAX_CHAINS; i++) {
--			integer = swab32(eep->modalHeader.antCtrlChain[i]);
--			eep->modalHeader.antCtrlChain[i] = integer;
-+			swab32s(&eep->modalHeader.antCtrlChain[i]);
- 		}
- 
- 		for (i = 0; i < AR5416_EEPROM_MODAL_SPURS; i++) {
--			word = swab16(eep->modalHeader.spurChans[i].spurChan);
--			eep->modalHeader.spurChans[i].spurChan = word;
-+			swab16s(&eep->modalHeader.spurChans[i].spurChan);
- 		}
- 	}
- 
