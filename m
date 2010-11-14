@@ -1,125 +1,126 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:56135 "EHLO nbd.name"
+Received: from nbd.name ([46.4.11.11]:48056 "EHLO nbd.name"
 	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
-	id S932267Ab0KKCfM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 10 Nov 2010 21:35:12 -0500
+	id S1755701Ab0KNOUW (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 14 Nov 2010 09:20:22 -0500
 From: Felix Fietkau <nbd@openwrt.org>
 To: linux-wireless@vger.kernel.org
 Cc: linville@tuxdriver.com, lrodriguez@atheros.com
-Subject: [PATCH 2/5] ath9k: handle tx underrun in the driver instead of rate control
-Date: Thu, 11 Nov 2010 03:18:35 +0100
-Message-Id: <1289441918-94905-2-git-send-email-nbd@openwrt.org>
-In-Reply-To: <1289441918-94905-1-git-send-email-nbd@openwrt.org>
-References: <1289441918-94905-1-git-send-email-nbd@openwrt.org>
+Subject: [PATCH 02/13] ath9k: remove bfs_tidno from struct ath_buf_state
+Date: Sun, 14 Nov 2010 15:20:02 +0100
+Message-Id: <1289744413-20789-2-git-send-email-nbd@openwrt.org>
+In-Reply-To: <1289744413-20789-1-git-send-email-nbd@openwrt.org>
+References: <1289744413-20789-1-git-send-email-nbd@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 Signed-off-by: Felix Fietkau <nbd@openwrt.org>
 ---
- drivers/net/wireless/ath/ath9k/rc.c   |   18 ------------------
- drivers/net/wireless/ath/ath9k/rc.h   |    2 --
- drivers/net/wireless/ath/ath9k/xmit.c |   25 ++++++++++++++++++++-----
- 3 files changed, 20 insertions(+), 25 deletions(-)
+ drivers/net/wireless/ath/ath9k/ath9k.h |    2 --
+ drivers/net/wireless/ath/ath9k/xmit.c  |   25 +++++++++++++------------
+ 2 files changed, 13 insertions(+), 14 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/rc.c b/drivers/net/wireless/ath/ath9k/rc.c
-index c052bd6..33bb33b 100644
---- a/drivers/net/wireless/ath/ath9k/rc.c
-+++ b/drivers/net/wireless/ath/ath9k/rc.c
-@@ -1354,22 +1354,6 @@ static void ath_tx_status(void *priv, struct ieee80211_supported_band *sband,
- 		tx_info->status.ampdu_len = 1;
- 	}
- 
--	/*
--	 * If an underrun error is seen assume it as an excessive retry only
--	 * if max frame trigger level has been reached (2 KB for singel stream,
--	 * and 4 KB for dual stream). Adjust the long retry as if the frame was
--	 * tried hw->max_rate_tries times to affect how ratectrl updates PER for
--	 * the failed rate. In case of congestion on the bus penalizing these
--	 * type of underruns should help hardware actually transmit new frames
--	 * successfully by eventually preferring slower rates. This itself
--	 * should also alleviate congestion on the bus.
--	 */
--	if ((tx_info->pad[0] & ATH_TX_INFO_UNDERRUN) &&
--	    (sc->sc_ah->tx_trig_level >= ath_rc_priv->tx_triglevel_max)) {
--		tx_status = 1;
--		is_underrun = 1;
--	}
--
- 	if (!(tx_info->flags & IEEE80211_TX_STAT_ACK))
- 		tx_status = 1;
- 
-@@ -1596,8 +1580,6 @@ static void *ath_rate_alloc_sta(void *priv, struct ieee80211_sta *sta, gfp_t gfp
- 		return NULL;
- 	}
- 
--	rate_priv->tx_triglevel_max = sc->sc_ah->caps.tx_triglevel_max;
--
- 	return rate_priv;
- }
- 
-diff --git a/drivers/net/wireless/ath/ath9k/rc.h b/drivers/net/wireless/ath/ath9k/rc.h
-index a1dce43..a96f5eb 100644
---- a/drivers/net/wireless/ath/ath9k/rc.h
-+++ b/drivers/net/wireless/ath/ath9k/rc.h
-@@ -215,7 +215,6 @@ struct ath_rate_priv {
- 	u32 per_down_time;
- 	u32 probe_interval;
- 	u32 prev_data_rix;
--	u32 tx_triglevel_max;
- 	struct ath_rateset neg_rates;
- 	struct ath_rateset neg_ht_rates;
- 	struct ath_rate_softc *asc;
-@@ -227,7 +226,6 @@ struct ath_rate_priv {
- 
- #define ATH_TX_INFO_FRAME_TYPE_INTERNAL	(1 << 0)
- #define ATH_TX_INFO_FRAME_TYPE_PAUSE	(1 << 1)
--#define ATH_TX_INFO_UNDERRUN		(1 << 4)
- 
- enum ath9k_internal_frame_type {
- 	ATH9K_IFT_NOT_INTERNAL,
+diff --git a/drivers/net/wireless/ath/ath9k/ath9k.h b/drivers/net/wireless/ath/ath9k/ath9k.h
+index 332c2c4..05fe1c1 100644
+--- a/drivers/net/wireless/ath/ath9k/ath9k.h
++++ b/drivers/net/wireless/ath/ath9k/ath9k.h
+@@ -105,7 +105,6 @@ enum buffer_type {
+ #define bf_al           	bf_state.bfs_al
+ #define bf_frmlen       	bf_state.bfs_frmlen
+ #define bf_retries      	bf_state.bfs_retries
+-#define bf_tidno        	bf_state.bfs_tidno
+ #define bf_keyix                bf_state.bfs_keyix
+ #define bf_keytype      	bf_state.bfs_keytype
+ #define bf_isht(bf)		(bf->bf_state.bf_type & BUF_HT)
+@@ -220,7 +219,6 @@ struct ath_buf_state {
+ 	int bfs_nframes;
+ 	u16 bfs_al;
+ 	u16 bfs_frmlen;
+-	int bfs_tidno;
+ 	int bfs_retries;
+ 	u8 bf_type;
+ 	u8 bfs_paprd;
 diff --git a/drivers/net/wireless/ath/ath9k/xmit.c b/drivers/net/wireless/ath/ath9k/xmit.c
-index eaaeb93..8785ec3 100644
+index e84c9c2..c7097a5 100644
 --- a/drivers/net/wireless/ath/ath9k/xmit.c
 +++ b/drivers/net/wireless/ath/ath9k/xmit.c
-@@ -1968,6 +1968,8 @@ static void ath_tx_rc_status(struct ath_buf *bf, struct ath_tx_status *ts,
- 	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *)skb->data;
- 	struct ieee80211_tx_info *tx_info = IEEE80211_SKB_CB(skb);
- 	struct ieee80211_hw *hw = bf->aphy->hw;
-+	struct ath_softc *sc = bf->aphy->sc;
-+	struct ath_hw *ah = sc->sc_ah;
- 	u8 i, tx_rateindex;
+@@ -323,6 +323,7 @@ static void ath_tx_complete_aggr(struct ath_softc *sc, struct ath_txq *txq,
+ 	struct ieee80211_tx_rate rates[4];
+ 	u16 bf_seqno;
+ 	int nframes;
++	u8 tidno;
  
- 	if (txok)
-@@ -1989,11 +1991,24 @@ static void ath_tx_rc_status(struct ath_buf *bf, struct ath_tx_status *ts,
- 
- 	if ((ts->ts_status & ATH9K_TXERR_FILT) == 0 &&
- 	    (bf->bf_flags & ATH9K_TXDESC_NOACK) == 0 && update_rc) {
--		if (ieee80211_is_data(hdr->frame_control)) {
--			if (ts->ts_flags &
--			    (ATH9K_TX_DATA_UNDERRUN | ATH9K_TX_DELIM_UNDERRUN))
--				tx_info->pad[0] |= ATH_TX_INFO_UNDERRUN;
--		}
-+		/*
-+		 * If an underrun error is seen assume it as an excessive
-+		 * retry only if max frame trigger level has been reached
-+		 * (2 KB for single stream, and 4 KB for dual stream).
-+		 * Adjust the long retry as if the frame was tried
-+		 * hw->max_rate_tries times to affect how rate control updates
-+		 * PER for the failed rate.
-+		 * In case of congestion on the bus penalizing this type of
-+		 * underruns should help hardware actually transmit new frames
-+		 * successfully by eventually preferring slower rates.
-+		 * This itself should also alleviate congestion on the bus.
-+		 */
-+		if (ieee80211_is_data(hdr->frame_control) &&
-+		    (ts->ts_flags & (ATH9K_TX_DATA_UNDERRUN |
-+		                     ATH9K_TX_DELIM_UNDERRUN)) &&
-+		    ah->tx_trig_level >= sc->sc_ah->caps.tx_triglevel_max)
-+			tx_info->status.rates[tx_rateindex].count =
-+				hw->max_rate_tries;
+ 	skb = bf->bf_mpdu;
+ 	hdr = (struct ieee80211_hdr *)skb->data;
+@@ -358,14 +359,15 @@ static void ath_tx_complete_aggr(struct ath_softc *sc, struct ath_txq *txq,
  	}
  
- 	for (i = tx_rateindex + 1; i < hw->max_rates; i++) {
+ 	an = (struct ath_node *)sta->drv_priv;
+-	tid = ATH_AN_2_TID(an, bf->bf_tidno);
++	tidno = ieee80211_get_qos_ctl(hdr)[0] & IEEE80211_QOS_CTL_TID_MASK;
++	tid = ATH_AN_2_TID(an, tidno);
+ 
+ 	/*
+ 	 * The hardware occasionally sends a tx status for the wrong TID.
+ 	 * In this case, the BA status cannot be considered valid and all
+ 	 * subframes need to be retransmitted
+ 	 */
+-	if (bf->bf_tidno != ts->tid)
++	if (tidno != ts->tid)
+ 		txok = false;
+ 
+ 	isaggr = bf_isaggr(bf);
+@@ -1386,7 +1388,7 @@ static void assign_aggr_tid_seqno(struct sk_buff *skb,
+ 	struct ath_node *an;
+ 	struct ath_atx_tid *tid;
+ 	__le16 fc;
+-	u8 *qc;
++	u8 tidno;
+ 
+ 	if (!tx_info->control.sta)
+ 		return;
+@@ -1394,18 +1396,13 @@ static void assign_aggr_tid_seqno(struct sk_buff *skb,
+ 	an = (struct ath_node *)tx_info->control.sta->drv_priv;
+ 	hdr = (struct ieee80211_hdr *)skb->data;
+ 	fc = hdr->frame_control;
+-
+-	if (ieee80211_is_data_qos(fc)) {
+-		qc = ieee80211_get_qos_ctl(hdr);
+-		bf->bf_tidno = qc[0] & 0xf;
+-	}
++	tidno = ieee80211_get_qos_ctl(hdr)[0] & IEEE80211_QOS_CTL_TID_MASK;
+ 
+ 	/*
+-	 * For HT capable stations, we save tidno for later use.
+-	 * We also override seqno set by upper layer with the one
++	 * Override seqno set by upper layer with the one
+ 	 * in tx aggregation state.
+ 	 */
+-	tid = ATH_AN_2_TID(an, bf->bf_tidno);
++	tid = ATH_AN_2_TID(an, tidno);
+ 	hdr->seq_ctrl = cpu_to_le16(tid->seq_next << IEEE80211_SEQ_SEQ_SHIFT);
+ 	INCR(tid->seq_next, IEEE80211_SEQ_MAX);
+ }
+@@ -1647,6 +1644,7 @@ static void ath_tx_start_dma(struct ath_softc *sc, struct ath_buf *bf,
+ 	struct ath_hw *ah = sc->sc_ah;
+ 	int frm_type;
+ 	__le16 fc;
++	u8 tidno;
+ 
+ 	frm_type = get_hw_packet_type(skb);
+ 	fc = hdr->frame_control;
+@@ -1673,7 +1671,10 @@ static void ath_tx_start_dma(struct ath_softc *sc, struct ath_buf *bf,
+ 	if (bf_isht(bf) && (sc->sc_flags & SC_OP_TXAGGR) &&
+ 	    tx_info->control.sta) {
+ 		an = (struct ath_node *)tx_info->control.sta->drv_priv;
+-		tid = ATH_AN_2_TID(an, bf->bf_tidno);
++		tidno = ieee80211_get_qos_ctl(hdr)[0] &
++			IEEE80211_QOS_CTL_TID_MASK;
++		tid = ATH_AN_2_TID(an, tidno);
++
+ 
+ 		WARN_ON(tid->ac->txq != txctl->txq);
+ 		if (tx_info->flags & IEEE80211_TX_CTL_AMPDU) {
 -- 
-1.7.2.2
+1.7.3.2
 
