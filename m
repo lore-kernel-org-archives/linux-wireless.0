@@ -1,94 +1,188 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bear.ext.ti.com ([192.94.94.41]:34444 "EHLO bear.ext.ti.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752877Ab0KYLtf (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 25 Nov 2010 06:49:35 -0500
-Message-ID: <4CEE4D3A.3000606@ti.com>
-Date: Thu, 25 Nov 2010 13:49:14 +0200
-From: Shahar Levi <shahar_levi@ti.com>
-MIME-Version: 1.0
-To: Juuso Oikarinen <juuso.oikarinen@nokia.com>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Luciano Coelho <luciano.coelho@nokia.com>
-Subject: Re: [PATCH ] wl12xx: BA receiver support
-References: <1290616392-16532-1-git-send-email-shahar_levi@ti.com> <1290678776.4284.67.camel@wimaxnb.nmp.nokia.com>
-In-Reply-To: <1290678776.4284.67.camel@wimaxnb.nmp.nokia.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Received: from nbd.name ([46.4.11.11]:48043 "EHLO nbd.name"
+	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1755615Ab0KNOUU (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 14 Nov 2010 09:20:20 -0500
+From: Felix Fietkau <nbd@openwrt.org>
+To: linux-wireless@vger.kernel.org
+Cc: linville@tuxdriver.com, lrodriguez@atheros.com
+Subject: [PATCH 06/13] ath9k: remove bfs_al from struct ath_buf_state
+Date: Sun, 14 Nov 2010 15:20:06 +0100
+Message-Id: <1289744413-20789-6-git-send-email-nbd@openwrt.org>
+In-Reply-To: <1289744413-20789-5-git-send-email-nbd@openwrt.org>
+References: <1289744413-20789-1-git-send-email-nbd@openwrt.org>
+ <1289744413-20789-2-git-send-email-nbd@openwrt.org>
+ <1289744413-20789-3-git-send-email-nbd@openwrt.org>
+ <1289744413-20789-4-git-send-email-nbd@openwrt.org>
+ <1289744413-20789-5-git-send-email-nbd@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 11/25/2010 11:52 AM, Juuso Oikarinen wrote:
-> On Wed, 2010-11-24 at 18:33 +0200, ext Shahar Levi wrote:
->> Add new ampdu_action ops to support receiver BA.
->> The BA initiator session management in FW independently.
->>
->> Signed-off-by: Shahar Levi<shahar_levi@ti.com>
->> ---
->>
->> +int wl1271_op_ampdu_action(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
->> +			   enum ieee80211_ampdu_mlme_action action,
->> +			   struct ieee80211_sta *sta, u16 tid, u16 *ssn)
->> +{
->> +	struct wl1271 *wl = hw->priv;
->> +	int ret;
->> +
->> +	ret = wl1271_ps_elp_wakeup(wl, false);
->> +	if (ret<  0)
->> +		goto out;
->> +
->> +	switch (action) {
->> +	case IEEE80211_AMPDU_RX_START:
->> +		if (wl->ba_allowed) {
->> +			ret = wl1271_acx_set_ba_receiver_session(wl, tid, ssn,
->> +								 true);
->> +			if (!ret)
->> +				wl->ba_rx_bitmap |= (u8)(BIT(0)<<  tid);
->> +		} else
->> +			ret = -EPERM;
->> +		break;
->> +
->> +	case IEEE80211_AMPDU_RX_STOP:
->> +		ret = wl1271_acx_set_ba_receiver_session(wl, tid, ssn, false);
->> +		if (!ret)
->> +			wl->ba_rx_bitmap&= ~(u8)(BIT(0)<<  tid);
->> +		break;
->> +
->> +	/*
->> +	 * The BA initiator session management in FW independently.
->> +	 * Falling break here on purpose for all TX APDU commands.
->> +	 */
->> +	case IEEE80211_AMPDU_TX_START:
->> +	case IEEE80211_AMPDU_TX_STOP:
->> +	case IEEE80211_AMPDU_TX_OPERATIONAL:
->> +		ret = -EINVAL;
->> +		break;
->> +
->> +	default:
->> +		wl1271_error("Incorrect ampdu action id=%x\n", action);
->> +		ret = -ENODEV;
->> +	}
->> +
->> +	wl1271_ps_elp_sleep(wl);
->> +
->> +out:
->> +	return ret;
->> +}
->> +
->
-> Seems to me that locking of the wl1271 mutex is missing here.
-You right. will be fix on v2
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+---
+ drivers/net/wireless/ath/ath9k/ath9k.h |    4 +--
+ drivers/net/wireless/ath/ath9k/xmit.c  |   34 ++++++++++++++++----------------
+ 2 files changed, 18 insertions(+), 20 deletions(-)
 
->
-> Also, I think it would be good to add checking for interface status
-> (wl->state == WL1271_STATE_OFF) here too. In normal cases this would not
-> be needed, but there are at least some hardware recovery scenarios where
-> this could be called while the firmware is off, causing all types of odd
-> behavior.
-it seems that it is good protraction. the setting of WL1271_STATE_OFF is 
-in wl1271_alloc_hw() and __wl1271_op_remove_interface(). i was expect 
-that in static void wl1271_recovery_work() after validate (wl->state != 
-WL1271_STATE_ON) we will set it to WL1271_STATE_OFF.
-
-> -Juuso
->
+diff --git a/drivers/net/wireless/ath/ath9k/ath9k.h b/drivers/net/wireless/ath/ath9k/ath9k.h
+index 30c18e8..d1c714a 100644
+--- a/drivers/net/wireless/ath/ath9k/ath9k.h
++++ b/drivers/net/wireless/ath/ath9k/ath9k.h
+@@ -102,7 +102,6 @@ enum buffer_type {
+ };
+ 
+ #define bf_nframes      	bf_state.bfs_nframes
+-#define bf_al           	bf_state.bfs_al
+ #define bf_frmlen       	bf_state.bfs_frmlen
+ #define bf_retries      	bf_state.bfs_retries
+ #define bf_isht(bf)		(bf->bf_state.bf_type & BUF_HT)
+@@ -215,11 +214,10 @@ struct ath_atx_ac {
+ 
+ struct ath_buf_state {
+ 	int bfs_nframes;
+-	u16 bfs_al;
+-	u16 bfs_frmlen;
+ 	int bfs_retries;
+ 	u8 bf_type;
+ 	u8 bfs_paprd;
++	u16 bfs_frmlen;
+ 	enum ath9k_internal_frame_type bfs_ftype;
+ };
+ 
+diff --git a/drivers/net/wireless/ath/ath9k/xmit.c b/drivers/net/wireless/ath/ath9k/xmit.c
+index 176d88c..88efcc1 100644
+--- a/drivers/net/wireless/ath/ath9k/xmit.c
++++ b/drivers/net/wireless/ath/ath9k/xmit.c
+@@ -56,7 +56,7 @@ static void ath_tx_complete_buf(struct ath_softc *sc, struct ath_buf *bf,
+ 				struct ath_tx_status *ts, int txok, int sendbar);
+ static void ath_tx_txqaddbuf(struct ath_softc *sc, struct ath_txq *txq,
+ 			     struct list_head *head);
+-static void ath_buf_set_rate(struct ath_softc *sc, struct ath_buf *bf);
++static void ath_buf_set_rate(struct ath_softc *sc, struct ath_buf *bf, int len);
+ static int ath_tx_num_badfrms(struct ath_softc *sc, struct ath_buf *bf,
+ 			      struct ath_tx_status *ts, int txok);
+ static void ath_tx_rc_status(struct ath_buf *bf, struct ath_tx_status *ts,
+@@ -674,7 +674,8 @@ static int ath_compute_num_delims(struct ath_softc *sc, struct ath_atx_tid *tid,
+ static enum ATH_AGGR_STATUS ath_tx_form_aggr(struct ath_softc *sc,
+ 					     struct ath_txq *txq,
+ 					     struct ath_atx_tid *tid,
+-					     struct list_head *bf_q)
++					     struct list_head *bf_q,
++					     int *aggr_len)
+ {
+ #define PADBYTES(_len) ((4 - ((_len) % 4)) % 4)
+ 	struct ath_buf *bf, *bf_first, *bf_prev = NULL;
+@@ -750,7 +751,7 @@ static enum ATH_AGGR_STATUS ath_tx_form_aggr(struct ath_softc *sc,
+ 
+ 	} while (!list_empty(&tid->buf_q));
+ 
+-	bf_first->bf_al = al;
++	*aggr_len = al;
+ 	bf_first->bf_nframes = nframes;
+ 
+ 	return status;
+@@ -763,6 +764,7 @@ static void ath_tx_sched_aggr(struct ath_softc *sc, struct ath_txq *txq,
+ 	struct ath_buf *bf;
+ 	enum ATH_AGGR_STATUS status;
+ 	struct list_head bf_q;
++	int aggr_len;
+ 
+ 	do {
+ 		if (list_empty(&tid->buf_q))
+@@ -770,7 +772,7 @@ static void ath_tx_sched_aggr(struct ath_softc *sc, struct ath_txq *txq,
+ 
+ 		INIT_LIST_HEAD(&bf_q);
+ 
+-		status = ath_tx_form_aggr(sc, txq, tid, &bf_q);
++		status = ath_tx_form_aggr(sc, txq, tid, &bf_q, &aggr_len);
+ 
+ 		/*
+ 		 * no frames picked up to be aggregated;
+@@ -786,15 +788,15 @@ static void ath_tx_sched_aggr(struct ath_softc *sc, struct ath_txq *txq,
+ 		if (bf->bf_nframes == 1) {
+ 			bf->bf_state.bf_type &= ~BUF_AGGR;
+ 			ath9k_hw_clr11n_aggr(sc->sc_ah, bf->bf_desc);
+-			ath_buf_set_rate(sc, bf);
++			ath_buf_set_rate(sc, bf, bf->bf_frmlen);
+ 			ath_tx_txqaddbuf(sc, txq, &bf_q);
+ 			continue;
+ 		}
+ 
+ 		/* setup first desc of aggregate */
+ 		bf->bf_state.bf_type |= BUF_AGGR;
+-		ath_buf_set_rate(sc, bf);
+-		ath9k_hw_set11n_aggr_first(sc->sc_ah, bf->bf_desc, bf->bf_al);
++		ath_buf_set_rate(sc, bf, aggr_len);
++		ath9k_hw_set11n_aggr_first(sc->sc_ah, bf->bf_desc, aggr_len);
+ 
+ 		/* anchor last desc of aggregate */
+ 		ath9k_hw_set11n_aggr_last(sc->sc_ah, bf->bf_lastbf->bf_desc);
+@@ -1333,7 +1335,7 @@ static void ath_tx_send_ampdu(struct ath_softc *sc, struct ath_atx_tid *tid,
+ 	/* Queue to h/w without aggregation */
+ 	bf->bf_nframes = 1;
+ 	bf->bf_lastbf = bf;
+-	ath_buf_set_rate(sc, bf);
++	ath_buf_set_rate(sc, bf, bf->bf_frmlen);
+ 	ath_tx_txqaddbuf(sc, txctl->txq, bf_head);
+ }
+ 
+@@ -1352,7 +1354,7 @@ static void ath_tx_send_normal(struct ath_softc *sc, struct ath_txq *txq,
+ 
+ 	bf->bf_nframes = 1;
+ 	bf->bf_lastbf = bf;
+-	ath_buf_set_rate(sc, bf);
++	ath_buf_set_rate(sc, bf, bf->bf_frmlen);
+ 	ath_tx_txqaddbuf(sc, txq, bf_head);
+ 	TX_STAT_INC(txq->axq_qnum, queued);
+ }
+@@ -1430,13 +1432,11 @@ static int setup_tx_flags(struct sk_buff *skb)
+  * width  - 0 for 20 MHz, 1 for 40 MHz
+  * half_gi - to use 4us v/s 3.6 us for symbol time
+  */
+-static u32 ath_pkt_duration(struct ath_softc *sc, u8 rix, struct ath_buf *bf,
++static u32 ath_pkt_duration(struct ath_softc *sc, u8 rix, int pktlen,
+ 			    int width, int half_gi, bool shortPreamble)
+ {
+ 	u32 nbits, nsymbits, duration, nsymbols;
+-	int streams, pktlen;
+-
+-	pktlen = bf_isaggr(bf) ? bf->bf_al : bf->bf_frmlen;
++	int streams;
+ 
+ 	/* find number of symbols: PLCP + data */
+ 	streams = HT_RC_2_STREAMS(rix);
+@@ -1455,7 +1455,7 @@ static u32 ath_pkt_duration(struct ath_softc *sc, u8 rix, struct ath_buf *bf,
+ 	return duration;
+ }
+ 
+-static void ath_buf_set_rate(struct ath_softc *sc, struct ath_buf *bf)
++static void ath_buf_set_rate(struct ath_softc *sc, struct ath_buf *bf, int len)
+ {
+ 	struct ath_common *common = ath9k_hw_common(sc->sc_ah);
+ 	struct ath9k_11n_rate_series series[4];
+@@ -1518,7 +1518,7 @@ static void ath_buf_set_rate(struct ath_softc *sc, struct ath_buf *bf)
+ 		if (rates[i].flags & IEEE80211_TX_RC_MCS) {
+ 			/* MCS rates */
+ 			series[i].Rate = rix | 0x80;
+-			series[i].PktDuration = ath_pkt_duration(sc, rix, bf,
++			series[i].PktDuration = ath_pkt_duration(sc, rix, len,
+ 				 is_40, is_sgi, is_sp);
+ 			if (rix < 8 && (tx_info->flags & IEEE80211_TX_CTL_STBC))
+ 				series[i].RateFlags |= ATH9K_RATESERIES_STBC;
+@@ -1542,11 +1542,11 @@ static void ath_buf_set_rate(struct ath_softc *sc, struct ath_buf *bf)
+ 		}
+ 
+ 		series[i].PktDuration = ath9k_hw_computetxtime(sc->sc_ah,
+-			phy, rate->bitrate * 100, bf->bf_frmlen, rix, is_sp);
++			phy, rate->bitrate * 100, len, rix, is_sp);
+ 	}
+ 
+ 	/* For AR5416 - RTS cannot be followed by a frame larger than 8K */
+-	if (bf_isaggr(bf) && (bf->bf_al > sc->sc_ah->caps.rts_aggr_limit))
++	if (bf_isaggr(bf) && (len > sc->sc_ah->caps.rts_aggr_limit))
+ 		flags &= ~ATH9K_TXDESC_RTSENA;
+ 
+ 	/* ATH9K_TXDESC_RTSENA and ATH9K_TXDESC_CTSENA are mutually exclusive. */
+-- 
+1.7.3.2
 
