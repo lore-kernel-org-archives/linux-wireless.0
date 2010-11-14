@@ -1,66 +1,93 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from devils.ext.ti.com ([198.47.26.153]:57143 "EHLO
-	devils.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753835Ab0K3JF4 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 30 Nov 2010 04:05:56 -0500
-Message-ID: <4CF4BE87.5060307@ti.com>
-Date: Tue, 30 Nov 2010 11:06:15 +0200
-From: Shahar Levi <shahar_levi@ti.com>
-MIME-Version: 1.0
-To: Luciano Coelho <luciano.coelho@nokia.com>
-CC: ext Ohad Ben-Cohen <ohad@wizery.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH v4 ] wl12xx: BA Initiator support
-References: <1291038135-20672-1-git-send-email-shahar_levi@ti.com>	 <AANLkTikUOfQbk-TEE2=EejXOTr_t-LXvTim-Sc1OVwKG@mail.gmail.com>	 <1291097500.1673.100.camel@powerslave>	 <AANLkTi=y38YDVFQxS--2074FpQNsDD7iWqVjF77Gg_dg@mail.gmail.com> <1291101352.1673.112.camel@powerslave>
-In-Reply-To: <1291101352.1673.112.camel@powerslave>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Received: from nbd.name ([46.4.11.11]:48059 "EHLO nbd.name"
+	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1755724Ab0KNOUW (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 14 Nov 2010 09:20:22 -0500
+From: Felix Fietkau <nbd@openwrt.org>
+To: linux-wireless@vger.kernel.org
+Cc: linville@tuxdriver.com, lrodriguez@atheros.com
+Subject: [PATCH 04/13] ath9k: remove bfs_paprd_timestamp from struct ath_buf_state
+Date: Sun, 14 Nov 2010 15:20:04 +0100
+Message-Id: <1289744413-20789-4-git-send-email-nbd@openwrt.org>
+In-Reply-To: <1289744413-20789-3-git-send-email-nbd@openwrt.org>
+References: <1289744413-20789-1-git-send-email-nbd@openwrt.org>
+ <1289744413-20789-2-git-send-email-nbd@openwrt.org>
+ <1289744413-20789-3-git-send-email-nbd@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 11/30/2010 09:15 AM, Luciano Coelho wrote:
-> On Mon, 2010-11-29 at 23:07 -0800, ext Ohad Ben-Cohen wrote:
->> On Mon, Nov 29, 2010 at 10:11 PM, Luciano Coelho
->> <luciano.coelho@nokia.com>  wrote:
->> ...
->>> In theory the API *has* changed, not just extended.  Check this:
->>>
->>> -       ACX_BA_SESSION_RESPONDER_POLICY = 0x0055,
->>> -       ACX_BA_SESSION_INITIATOR_POLICY = 0x0056,
->>> +       ACX_BA_SESSION_POLICY_CFG   = 0x0055,
->>> +       ACX_BA_SESSION_RX_SETUP     = 0x0056,
->>>
->>> But in practice, this doesn't matter, because we were not using the
->>> RESPONDER/INITIATOR commands before...
->>
->> Right.  So an old driver will still work with this new firmware.
->>
->>> It's basically just those two extra commands that were added.  And one
->>> new event that is part of a future patch.
->>>
->>> In theory, we could check the firmware revision after boot and bail out
->>> if the version doesn't match.
->>
->> Why not just disable BA sessions in this case (and keep that new event
->> masked), and let the driver keep running (just like it does today) ?
->>
->> This way the new driver will work even with the old firmware (yes,
->> with degraded functionality, but most random ppl will just not care),
->> and of course, the old driver will keep working with the new firmware.
->>
->> For us developers who lurk in linux-wireless it seems like a trivial
->> change, but if we consider the growing size of the 12xx community, and
->> the long period of time for which such a change will be effective (ppl
->> upgrading to latest compat, ppl that will one day upgrade to 2.6.38,
->> future ppl that will bisect and cross this firmware name change,
->> etc...), it's actually a lot of accumulated pain.
->>
->> To keep our community happy, I vote to eliminate this pain when not necessary.
->
-> Hear, hear!
->
-> Shahar, can you fix that?
-Yes, will do.
-Shahar
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+---
+ drivers/net/wireless/ath/ath9k/ath9k.h |    2 +-
+ drivers/net/wireless/ath/ath9k/main.c  |    2 ++
+ drivers/net/wireless/ath/ath9k/xmit.c  |    7 +------
+ 3 files changed, 4 insertions(+), 7 deletions(-)
 
+diff --git a/drivers/net/wireless/ath/ath9k/ath9k.h b/drivers/net/wireless/ath/ath9k/ath9k.h
+index 7316459..9106d41 100644
+--- a/drivers/net/wireless/ath/ath9k/ath9k.h
++++ b/drivers/net/wireless/ath/ath9k/ath9k.h
+@@ -221,7 +221,6 @@ struct ath_buf_state {
+ 	int bfs_retries;
+ 	u8 bf_type;
+ 	u8 bfs_paprd;
+-	unsigned long bfs_paprd_timestamp;
+ 	u32 bfs_keyix;
+ 	enum ath9k_internal_frame_type bfs_ftype;
+ };
+@@ -598,6 +597,7 @@ struct ath_softc {
+ 	struct work_struct paprd_work;
+ 	struct work_struct hw_check_work;
+ 	struct completion paprd_complete;
++	bool paprd_pending;
+ 
+ 	u32 intrstatus;
+ 	u32 sc_flags; /* SC_OP_* */
+diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
+index f8c811a..611797a 100644
+--- a/drivers/net/wireless/ath/ath9k/main.c
++++ b/drivers/net/wireless/ath/ath9k/main.c
+@@ -380,6 +380,7 @@ void ath_paprd_calibrate(struct work_struct *work)
+ 		}
+ 
+ 		init_completion(&sc->paprd_complete);
++		sc->paprd_pending = true;
+ 		ar9003_paprd_setup_gain_table(ah, chain);
+ 		txctl.paprd = BIT(chain);
+ 		if (ath_tx_start(hw, skb, &txctl) != 0)
+@@ -387,6 +388,7 @@ void ath_paprd_calibrate(struct work_struct *work)
+ 
+ 		time_left = wait_for_completion_timeout(&sc->paprd_complete,
+ 				msecs_to_jiffies(ATH_PAPRD_TIMEOUT));
++		sc->paprd_pending = false;
+ 		if (!time_left) {
+ 			ath_print(ath9k_hw_common(ah), ATH_DBG_CALIBRATE,
+ 				  "Timeout waiting for paprd training on "
+diff --git a/drivers/net/wireless/ath/ath9k/xmit.c b/drivers/net/wireless/ath/ath9k/xmit.c
+index 6e0467c..9f3d23a 100644
+--- a/drivers/net/wireless/ath/ath9k/xmit.c
++++ b/drivers/net/wireless/ath/ath9k/xmit.c
+@@ -1698,9 +1698,6 @@ static void ath_tx_start_dma(struct ath_softc *sc, struct ath_buf *bf,
+ 		if (bf->bf_state.bfs_paprd)
+ 			ar9003_hw_set_paprd_txdesc(ah, ds, bf->bf_state.bfs_paprd);
+ 
+-		if (txctl->paprd)
+-			bf->bf_state.bfs_paprd_timestamp = jiffies;
+-
+ 		ath_tx_send_normal(sc, txctl->txq, NULL, &bf_head);
+ 	}
+ 
+@@ -1874,9 +1871,7 @@ static void ath_tx_complete_buf(struct ath_softc *sc, struct ath_buf *bf,
+ 	bf->bf_buf_addr = 0;
+ 
+ 	if (bf->bf_state.bfs_paprd) {
+-		if (time_after(jiffies,
+-			       bf->bf_state.bfs_paprd_timestamp +
+-			       msecs_to_jiffies(ATH_PAPRD_TIMEOUT)))
++		if (!sc->paprd_pending)
+ 			dev_kfree_skb_any(skb);
+ 		else
+ 			complete(&sc->paprd_complete);
+-- 
+1.7.3.2
 
