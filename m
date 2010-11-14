@@ -1,85 +1,104 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([147.243.128.26]:65140 "EHLO mgw-da02.nokia.com"
+Received: from lo.gmane.org ([80.91.229.12]:53765 "EHLO lo.gmane.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750975Ab0KRGOq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 18 Nov 2010 01:14:46 -0500
-Received: from nokia.com (localhost [127.0.0.1])
-	by mgw-da02.nokia.com (Switch-3.4.3/Switch-3.4.3) with ESMTP id oAI6EjWj007488
-	for <linux-wireless@vger.kernel.org>; Thu, 18 Nov 2010 08:14:45 +0200
-Subject: Re: [PATCH] wl12xx: Unset bssid filter, ssid and bssid from
- firmware on disassoc
-From: Luciano Coelho <luciano.coelho@nokia.com>
-To: Juuso Oikarinen <juuso.oikarinen@nokia.com>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <1290058053.2522.186.camel@wimaxnb.nmp.nokia.com>
-References: <1290000541-17828-1-git-send-email-juuso.oikarinen@nokia.com>
-	 <1290008460.12140.64.camel@chilepepper>
-	 <1290058053.2522.186.camel@wimaxnb.nmp.nokia.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Thu, 18 Nov 2010 08:14:16 +0200
-Message-ID: <1290060856.28892.12.camel@powerslave>
+	id S1756629Ab0KNTj1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 14 Nov 2010 14:39:27 -0500
+Received: from list by lo.gmane.org with local (Exim 4.69)
+	(envelope-from <glkwg-linux-wireless@m.gmane.org>)
+	id 1PHiQ9-000716-T0
+	for linux-wireless@vger.kernel.org; Sun, 14 Nov 2010 20:39:25 +0100
+Received: from cpc7-aztw22-2-0-cust235.aztw.cable.virginmedia.com ([94.171.255.236])
+        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Sun, 14 Nov 2010 20:39:25 +0100
+Received: from james.c.womack by cpc7-aztw22-2-0-cust235.aztw.cable.virginmedia.com with local (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Sun, 14 Nov 2010 20:39:25 +0100
+To: linux-wireless@vger.kernel.org
+From: James Womack <james.c.womack@gmail.com>
+Subject: Re: r8187se panic
+Date: Sun, 14 Nov 2010 19:38:46 +0000
+Message-ID: <ibpdt0$cie$1@dough.gmane.org>
+References: <slrnidp3ae.79c.rb-oss-3@mal.justgohome.co.uk> <4CDC9FA5.10002@lwfinger.net> <slrnidq7u0.9ic.rb-oss-3@mal.justgohome.co.uk> <4CDD3BC4.7070102@lwfinger.net>
 Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+In-Reply-To: <4CDD3BC4.7070102@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2010-11-18 at 07:27 +0200, Juuso Oikarinen wrote:
-> On Wed, 2010-11-17 at 17:41 +0200, Luciano Coelho wrote:
-> > On Wed, 2010-11-17 at 15:29 +0200, juuso.oikarinen@nokia.com wrote:
-> > > From: Juuso Oikarinen <juuso.oikarinen@nokia.com>
-> > > 
-> > > On the disassociation event from the mac80211, the wl12xx driver does not
-> > > clear the chipset configuration related to the AP - i.e. it does not perform
-> > > a DISCONNECT and then a JOIN with zero SSID and dummy BSSID. Also, it does not
-> > > unset the BSSID filter.
-> > > 
-> > > Often this is not a problem, as the above is performed upon entering idle
-> > > state. But if a scenario arises where a new association is attempted without
-> > > cycling through idle state, the new association will fail.
-> > > 
-> > > Fix this by resetting the firmware state on disassociation.
-> > > 
-> > > Signed-off-by: Juuso Oikarinen <juuso.oikarinen@nokia.com>
-> > > ---
-> > >  drivers/net/wireless/wl12xx/main.c |    4 ++++
-> > >  1 files changed, 4 insertions(+), 0 deletions(-)
-> > > 
-> > > diff --git a/drivers/net/wireless/wl12xx/main.c b/drivers/net/wireless/wl12xx/main.c
-> > > index 31f0e2f..c523778 100644
-> > > --- a/drivers/net/wireless/wl12xx/main.c
-> > > +++ b/drivers/net/wireless/wl12xx/main.c
-> > > @@ -2012,6 +2012,10 @@ static void wl1271_op_bss_info_changed(struct ieee80211_hw *hw,
-> > >  			/* Disable the keep-alive feature */
-> > >  			ret = wl1271_acx_keep_alive_mode(wl, false);
-> > >  
-> > > +			/* restore the bssid filter and go to dummy bssid */
-> > > +			wl1271_handle_idle(wl, true);
-> > > +			wl1271_handle_idle(wl, false);
-> > > +
-> > 
-> > Hmmm... This looks quite hacky.  Can 't you create functions with that
-> > "restore the bssid" and "go to dummy bssid" and call them instead? If
-> > you do so, you don't have to artificially go to idle and leave idle
-> > immediately...
-> > 
-> 
-> We can, but their content will be the same. Here we are not
-> "artificially" entering/leaving idle, we're just performing the same
-> steps towards the firmware as we would on idle entry and idle exit.
-> 
-> If you like, we can rename the handle_idle function to something more
-> generic.
-
-No, I meant that you could create functions with names that mirror the
-things you want to do and call them here *and* in wl1271_handle_idle(),
-so you won't have duplicate code and it will be quite clear what you
-want to do here.  What I mean by artificially entering idle is that in
-the wl1271_handle_idle() function you even set the IDLE bit and so on.
-In this case you don't need that.
-
-This is really a small thing, so I won't fight much for it, but I think
-it could be clearer...
-
--- 
-Cheers,
-Luca.
+On 12/11/10 13:06, Larry Finger wrote:
+> On 11/12/2010 05:06 AM, Robie Basak wrote:
+>> On 2010-11-12, Larry Finger<Larry.Finger@lwfinger.net>  wrote:
+>>> On 11/11/2010 06:41 PM, Robie Basak wrote:
+>>>> I'm getting a panic when I to turn off the wireless using the Fn-F2
+>>>> combination on my Asus Eee PC 701SDX. Although I'm using Ubuntu 10.10,
+>>>> I've tried it using the mainline kernel (as supplied by Ubuntu for
+>>>> testing bugs against mainline). So far I've reproduced consistently
+>>>> against Ubuntu's 2.6.35-22-generic-pae as well as Ubuntu-supplied
+>>>> mainstream 2.6.35-02063504.201008271919 and
+>>>> 2.6.37-020637rc1.201011020905.
+>>>
+>>> Is Fn-F2 the radio kill switch?
+>>
+>> Yes, that's right.
+>>
+>>> At this point, I see no point in building a mainstream kernel.
+>>>
+>>> Do you have another host that might be setup as a net console?
+>>
+>> Yes, I managed to get net console working (eventually):
+>>
+>> (the first four lines are from when I modprobed r8187se)
+>>
+>> [  941.787361] r8187se: module is from the staging directory, the quality is unknown, you have been warned.
+>> [  941.821968] rtl8180_init:Error channel plan! Set to default.
+>> [  941.825000] Dot11d_Init()
+>> [  941.877241] r8180: WW:**PLEASE** REPORT SUCCESSFUL/UNSUCCESSFUL TO Realtek!
+>> [  947.318002] ------------[ cut here ]------------
+>> [  947.321315] WARNING: at /home/kernel-ppa/COD/linux/fs/proc/generic.c:816 remove_proc_entry+0x1e5/0x240()
+>> [  947.328160] Hardware name: 701SDX
+>> [  947.331607] name 'wlan0'
+>> [  947.334987] Modules linked in: r8187se(C) netconsole eeprom_93cx6 parport_pc ppdev binfmt_misc snd_hda_codec_realtek snd_hda_intel i915 snd_hda_codec snd_hwdep snd_pcm drm_kms_helper joydev snd_seq_midi snd_rawmidi snd_seq_midi_event snd_seq drm snd_timer snd_seq_device intel_agp i2c_algo_bit intel_gtt snd psmouse eeepc_laptop video shpchp soundcore serio_raw agpgart sparse_keymap snd_page_alloc output led_class lp parport atl1e configfs [last unloaded: r8187se]
+>> [  947.354968] Pid: 1350, comm: kworker/0:2 Tainted: G        WC  2.6.37-020637rc1-generic #201011020905
+>> [  947.363331] Call Trace:
+>> [  947.367541]  [<c02700d5>] ? remove_proc_entry+0x1e5/0x240
+>
+> --snip--
+>
+>> [  947.491911] Kernel panic - not syncing: HwThreeWire(): CmdReg: 0XFF RE|WE bits are not clear!!
+>> [  947.491916]
+>> [  947.498375] Pid: 1350, comm: kworker/0:2 Tainted: G        WC  2.6.37-020637rc1-generic #201011020905
+>> [  947.505177] Call Trace:
+>> [  947.508561]  [<c014f90f>] panic+0x5f/0x190
+>> [  947.511965]  [<e02ccd3f>] HwHSSIThreeWire+0x4f/0x270 [r8187se]
+>> [  947.515424]  [<e02ccfd2>] RF_WriteReg+0x32/0x40 [r8187se]
+>> [  947.518877]  [<e02cb29a>] rtl8225z2_rf_close+0x1a/0x50 [r8187se]
+>> [  947.522384]  [<e02dd885>] rtl8180_pci_remove+0x45/0x107 [r8187se]
+>> [  947.525861]  [<c0420206>] ? __pm_runtime_resume+0x46/0x60
+>> [  947.529347]  [<c038372a>] pci_device_remove+0
+>
+> Thanks for the netconsole output. That helps a lot.
+>
+> The warning in remove_proc_entry() is essentially harmless. I'll take care of
+> that later.
+>
+> The driver should never panic over a condition as trivial as the RE/WE bits are
+> not zero. I missed that when I worked on the original version of the driver. As
+> the bits are all 1, it appears that the device is partially disabled before this
+> code is reached. One thing I notice is that there is no lock around the
+> unregister_netdevice() call.
+>
+> Attached are two patches. One changes the panic statements into log entries with
+> a stack dump, and the second provides a lock for the call noted above. The first
+> patch cannot cause any problems; however, the second may cause the machine to
+> freeze. At least with the first, the system will no longer crash.
+>
+> While you are testing these, I'll try to sort out why there is a warning in
+> remove_proc_entry().
+>
+> Larry
+>
+>
+>
+f
 
