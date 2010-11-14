@@ -1,32 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qw0-f46.google.com ([209.85.216.46]:61723 "EHLO
-	mail-qw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757485Ab0KRNqH (ORCPT
+Received: from external1.orbit-lab.org ([128.6.192.131]:33801 "HELO
+	external1.orbit-lab.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1753880Ab0KNUDA (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 18 Nov 2010 08:46:07 -0500
-Received: by qwd7 with SMTP id 7so115865qwd.19
-        for <linux-wireless@vger.kernel.org>; Thu, 18 Nov 2010 05:46:05 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <AANLkTim775JXAkrvVjn-TmwD5B6-MYCRw6ah=rVF8Opk@mail.gmail.com>
-References: <AANLkTim775JXAkrvVjn-TmwD5B6-MYCRw6ah=rVF8Opk@mail.gmail.com>
-Date: Thu, 18 Nov 2010 08:46:04 -0500
-Message-ID: <AANLkTinLBBMapuktN1rqNEJjYb1P-fP833wmgoybJ4Xb@mail.gmail.com>
-Subject: Re: module unloading busted ?
-From: Bob Copeland <me@bobcopeland.com>
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+	Sun, 14 Nov 2010 15:03:00 -0500
+Received: from repository3.orbit-lab.org (repository3.orbit-lab.org [10.50.0.41])
+	by external1.orbit-lab.org (Postfix) with ESMTP id 062B9418D8
+	for <linux-wireless@vger.kernel.org>; Sun, 14 Nov 2010 14:58:40 -0500 (EST)
+Subject: Compat-wireless release for 2010-11-14 is baked
+To: <linux-wireless@vger.kernel.org>
+Message-Id: <20101114200258.88D4A40F97@repository3.orbit-lab.org>
+Date: Sun, 14 Nov 2010 15:02:58 -0500 (EST)
+From: compat@orbit-lab.org (Compat-wireless cronjob account)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Nov 18, 2010 at 2:26 AM, Luis R. Rodriguez <mcgrof@gmail.com> wrote:
-> 05:33 < mcgrof> so module unload on ath9k no longer works
-> 06:11 < vmraj> mcgrof: module unload is not working for intel cards too
-> 06:15 < vmraj> it can be reproduced by rmmod on active connection
->
-> I haven't yet figured out why. Anyone else with other modules experiencing this?
 
-I guess this explains the ath5k one from another thread too.
+compat-wireless code metrics
 
--- 
-Bob Copeland %% www.bobcopeland.com
+    741659 - Total upstream lines of code being pulled
+      2187 - backport code changes
+      1930 - backport code additions
+       257 - backport code deletions
+      6360 - backport from compat module
+      8547 - total backport code
+    1.1524 - % of code consists of backport work
+      1534 - Crap changes not yet posted
+      1491 - Crap additions not yet posted
+        43 - Crap deletions not yet posted
+    0.2068 - % of crap code
+
+Base tree: linux-next.git
+Base tree version: next-20101112
+compat-wireless release: compat-wireless-2010-11-10-8-g12f3be5-pc
