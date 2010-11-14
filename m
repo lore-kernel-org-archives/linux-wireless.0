@@ -1,61 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from lo.gmane.org ([80.91.229.12]:42095 "EHLO lo.gmane.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753396Ab0KLRAn (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 12 Nov 2010 12:00:43 -0500
-Received: from list by lo.gmane.org with local (Exim 4.69)
-	(envelope-from <glkwg-linux-wireless@m.gmane.org>)
-	id 1PGwzR-0005Qc-Fx
-	for linux-wireless@vger.kernel.org; Fri, 12 Nov 2010 18:00:41 +0100
-Received: from function.justgohome.co.uk ([217.169.15.243])
-        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Fri, 12 Nov 2010 18:00:41 +0100
-Received: from rb-oss-3 by function.justgohome.co.uk with local (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Fri, 12 Nov 2010 18:00:41 +0100
-To: linux-wireless@vger.kernel.org
-From: Robie Basak <rb-oss-3@justgohome.co.uk>
+Received: from mail-gx0-f174.google.com ([209.85.161.174]:33308 "EHLO
+	mail-gx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756292Ab0KNQS6 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 14 Nov 2010 11:18:58 -0500
+Received: by gxk23 with SMTP id 23so2593244gxk.19
+        for <linux-wireless@vger.kernel.org>; Sun, 14 Nov 2010 08:18:57 -0800 (PST)
+Message-ID: <4CE00BEE.8060100@lwfinger.net>
+Date: Sun, 14 Nov 2010 10:18:54 -0600
+From: Larry Finger <Larry.Finger@lwfinger.net>
+MIME-Version: 1.0
+To: James Womack <james.c.womack@gmail.com>
+CC: linux-wireless@vger.kernel.org
 Subject: Re: r8187se panic
-Date: Fri, 12 Nov 2010 17:00:29 +0000 (UTC)
-Message-ID: <slrnidqsld.dlr.rb-oss-3@mal.justgohome.co.uk>
-References: <slrnidp3ae.79c.rb-oss-3@mal.justgohome.co.uk>
- <4CDC9FA5.10002@lwfinger.net>
- <slrnidq7u0.9ic.rb-oss-3@mal.justgohome.co.uk>
- <4CDD3BC4.7070102@lwfinger.net>
- <slrnidqorp.dlr.rb-oss-3@mal.justgohome.co.uk>
- <4CDD66C4.10603@lwfinger.net>
+References: <slrnidp3ae.79c.rb-oss-3@mal.justgohome.co.uk> <4CDC9FA5.10002@lwfinger.net> <slrnidq7u0.9ic.rb-oss-3@mal.justgohome.co.uk> <4CDD3BC4.7070102@lwfinger.net> <slrnidqorp.dlr.rb-oss-3@mal.justgohome.co.uk> <4CDD66C4.10603@lwfinger.net> <slrnidqsld.dlr.rb-oss-3@mal.justgohome.co.uk> <4CDD7945.70005@lwfinger.net> <slrnidqv0k.g21.rb-oss-3@mal.justgohome.co.uk> <loom.20101113T191727-421@post.gmane.org> <4CDEDC74.3040902@lwfinger.net> <ibmosc$4au$1@dough.gmane.org> <4CDEEEE4.80801@lwfinger.net> <ibokag$481$1@dough.gmane.org>
+In-Reply-To: <ibokag$481$1@dough.gmane.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2010-11-12, Larry Finger <Larry.Finger@lwfinger.net> wrote:
-> Apply the new patch and the "change panic to warning" patch and redo your case
-> B. Send me the dmesg output and a description of what happened. That data you
-> can send directly. No need to spam the list with the lengthy dmesg output.
+On 11/14/2010 06:22 AM, James Womack wrote:
+> Okay, I've downloaded the necessary tools and extracted the kernel
+> source. I have a tutorial on how to patch and build the kernel. Where
+> should I apply your patches?
 
-OK this is with change_panic_to_warn and fix_proc_entry_warning. I
-forgot to mention that I'm applying all these patches to Ubuntu's stock
-10.10 kernel, since module symbols etc. come with the build - and then
-just compiling the one kernel module and copying it over (not much space
-or CPU power on the netbook and the keyboard is tiny!).
+Change directory to the main directory of the kernel source - the one with
+subdirectories like arch, block, crypto, drivers, etc. Apply patches with a
+command of the form
 
-Behaviour is the same as case B from before. To clarify, after step 3 in
-case B, wireless has always reconnected no problem. It is after a few
-seconds after removing AC power that it loses connection (or perhaps it
-takes a few seconds for Network Manager to notice). Once it has lost
-connection it does seem to occasionally associate and then loses it
-again (according to Network Manager).
+patch -p1 --dry-run < <nameofpatch>
 
-Reloading the kernel module doesn't fix it, but then toggling the
-wireless switch after the reload does.
+If that works without any error, then leave out the "--dry-run" to apply the
+patch. If/when it is necessary to remove the patch, adding a "-R" option will do
+that.
 
-I reproduced it a second time, this time not reloading the module but
-just toggling the wireless switch afterwards. This seemed to fix it as
-well, so it seems that reloading the module is not required.
+When you build the kernel, you should do that as a normal user, not root. If the
+source files are not owned by that user, you should do a chown on that tree
+before starting.
 
-(dmesg output sent directly to Larry)
-
-Thanks,
-
-Robie
-
+Larry
