@@ -1,29 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.sysgo.com ([195.145.229.155]:51118 "EHLO mail.sysgo.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752203Ab0KXJ4z (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 24 Nov 2010 04:56:55 -0500
-Date: Wed, 24 Nov 2010 10:57:50 +0100
-From: Pavel Machek <pma@sysgo.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: kernel list <linux-kernel@vger.kernel.org>,
-	chunkeey@googlemail.com, linux-wireless@vger.kernel.org
-Subject: Re: working usb wifi card, that is still possible to buy
-Message-ID: <20101124095750.GB11950@pma.sysgo.com>
-References: <20101103092431.GA21138@pma.sysgo.com>
- <20101124081616.GA30595@pma.sysgo.com>
- <1290588158.3790.6.camel@jlt3.sipsolutions.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1290588158.3790.6.camel@jlt3.sipsolutions.net>
+Received: from mail-ww0-f44.google.com ([74.125.82.44]:50423 "EHLO
+	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755232Ab0KNLgm (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 14 Nov 2010 06:36:42 -0500
+Received: by wwb29 with SMTP id 29so387874wwb.1
+        for <linux-wireless@vger.kernel.org>; Sun, 14 Nov 2010 03:36:41 -0800 (PST)
+From: Mike Rapoport <mike.rapoport@gmail.com>
+To: Greg Kroah-Hartman <gregkh@suse.de>
+Cc: Brett Rudley <brudley@broadcom.com>,
+	Henry Ptasinski <henryp@broadcom.com>,
+	Dowan Kim <dowan@broadcom.com>, linux-wireless@vger.kernel.org,
+	Mike Rapoport <mike.rapoport@gmail.com>
+Subject: [PATCH 0/4] staging: brcm80211: misc cleanups
+Date: Sun, 14 Nov 2010 13:36:20 +0200
+Message-Id: <cover.1289734125.git.mike.rapoport@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi!
+These patches remove some unused declarations in include/linux_osl.h
+and unused bindings to SDIO controller devices in brcmfmac driver
 
-> > http://linuxwireless.org/en/users/Devices/USB
-> 
-> You have to edit the driver pages, like
-> http://linuxwireless.org/en/users/Drivers/p54/devices
+Mike Rapoport (4):
+  staging: brcm80211: remove unused osl_pkt{get,free}_static
+  staging: brcm80211: brcmfmac: remove PCI SDIO controller binding
+  staging: brcm80211: brcmfmac: remove PXA SDIO controller binding
+  staging: brcm80211: brcmfmac: cleanup bcmsdh_(un)register
 
-Thanks, that works.
+ drivers/staging/brcm80211/brcmfmac/bcmsdh_linux.c |  259 +--------------------
+ drivers/staging/brcm80211/include/linux_osl.h     |    3 -
+ 2 files changed, 1 insertions(+), 261 deletions(-)
+
