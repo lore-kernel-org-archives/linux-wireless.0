@@ -1,105 +1,96 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qw0-f46.google.com ([209.85.216.46]:50138 "EHLO
-	mail-qw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757470Ab0KPTYY convert rfc822-to-8bit (ORCPT
+Received: from mail-iw0-f174.google.com ([209.85.214.174]:39899 "EHLO
+	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754157Ab0KNI7h convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 16 Nov 2010 14:24:24 -0500
-Received: by qwh6 with SMTP id 6so864981qwh.19
-        for <linux-wireless@vger.kernel.org>; Tue, 16 Nov 2010 11:24:23 -0800 (PST)
+	Sun, 14 Nov 2010 03:59:37 -0500
+Received: by iwn10 with SMTP id 10so5390191iwn.19
+        for <linux-wireless@vger.kernel.org>; Sun, 14 Nov 2010 00:59:36 -0800 (PST)
 MIME-Version: 1.0
-In-Reply-To: <4CDC4480.8050206@openwrt.org>
-References: <AANLkTikjg+jY6XYhJjRPydwveW0xr+8tLv-Oypsks4ay@mail.gmail.com>
-	<AANLkTimVEm7=c-fof_niToJqy1t+C5fk_JYH_=x1+p5r@mail.gmail.com>
-	<4CDC4480.8050206@openwrt.org>
-Date: Tue, 16 Nov 2010 14:24:23 -0500
-Message-ID: <AANLkTimKuEako8VahvNSP0q59DPXppcuQ_bedpTaWDcb@mail.gmail.com>
-Subject: Re: ath9k max_power question
-From: Mark Mentovai <mark@moxienet.com>
-To: Felix Fietkau <nbd@openwrt.org>
-Cc: "Luis R. Rodriguez" <mcgrof@gmail.com>,
-	linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=windows-1252
+In-Reply-To: <201011131910.11947.IvDoorn@gmail.com>
+References: <201011131908.15595.IvDoorn@gmail.com> <201011131909.50885.IvDoorn@gmail.com>
+ <201011131910.11947.IvDoorn@gmail.com>
+From: Julian Calaby <julian.calaby@gmail.com>
+Date: Sun, 14 Nov 2010 19:59:16 +1100
+Message-ID: <AANLkTi=b5czEjEM8zD1ZUq0hNdeJg1wy7OS4-OhE6fO_@mail.gmail.com>
+Subject: Re: [PATCH 3/9] rt2x00: Clean up Kconfig for RT2800 devices.
+To: Ivo van Doorn <ivdoorn@gmail.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Felix Fietkau wrote:
-> On 2010-11-11 8:22 PM, Luis R. Rodriguez wrote:
-> > The values are just some safe value to use as defaults but will
-> > quickly be replaced by the max regulatory allowed and then upon
-> > further inspection also capped to the lower value of the regulatory
-> > limit, the max allowed device limit (where things start becoming
-> > unreliable), and the CTL indexed limit which is calibrated
-> > specifically for the card you use, so this will vary. You can read
-> > more about it here:
-> >
-> > http://wireless.kernel.org/en/users/Drivers/ath
+IVD,
+
+A minor nit:
+
+On Sun, Nov 14, 2010 at 05:10, Ivo van Doorn <ivdoorn@gmail.com> wrote:
+> From: Gertjan van Wingerde <gwingerde@gmail.com>
 >
-> That should have already been taken care of by this commit (w-t):
+> General clean up of the Kconfig part for RT28XX devices.
+> Also remove the indications of non functional support for rt27xx/rt28xx/rt30xx
+> devices, as this is no longer true. They just work fine.
+> Finally, remove the experimental indications for rt27xx/rt28xx/rt30xx devices
+> as that is no longer true. Keep the experimental indications for rt33xx/rt35xx
+> devices, though.
 >
-> commit 6cdd07721180145b7ef46bd63f1eee636983f0e6
-> Author: Felix Fietkau <nbd@openwrt.org>
-> Date:   Wed Oct 20 02:09:46 2010 +0200
+> Signed-off-by: Gertjan van Wingerde <gwingerde@gmail.com>
+> Acked-by: Helmut Schaa <helmut.schaa@googlemail.com>
+> Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
+> ---
+>  drivers/net/wireless/rt2x00/Kconfig |   47 ++++++++++++++--------------------
+>  1 files changed, 19 insertions(+), 28 deletions(-)
 >
-> ath9k: initialize per-channel tx power limits instead of hardcoding them
+> diff --git a/drivers/net/wireless/rt2x00/Kconfig b/drivers/net/wireless/rt2x00/Kconfig
+> index f0f0152..f2be1d3 100644
+> --- a/drivers/net/wireless/rt2x00/Kconfig
+> +++ b/drivers/net/wireless/rt2x00/Kconfig
+> @@ -154,30 +150,24 @@ config RT2800USB
+>        select RT2X00_LIB_CRYPTO
+>        select CRC_CCITT
+>        ---help---
+> -         This adds experimental support for rt2800 wireless chipset family.
+> +         This adds support for rt27xx/rt28xx wireless chipset family.
+>          Supported chips: RT2770, RT2870 & RT3070.
 
-I see. Now that some of the more important regulatory bugs with
-multiple cards are more under control, and with your and Luis’
-explanations, I took another look at all of this.
+Isn't RT3070 support selected below?
 
-The CTL capping is working properly when it comes to actually setting
-txpower, but as far as the maximum allowable values are concerned
-(ieee80211_channel’s max_power or orig_mpwr), only the regulatory
-value is being used, which may be higher than the CTL limit.  It
-certainly doesn’t help me that I can set txpower to 30dBm (the
-regulatory limit) on 5825MHz when nothing over 21dBm (the CTL limit)
-will actually transmit any louder, and frankly, it scares me when I
-see iwconfig reporting 30dBm because I know that if it really were
-shouting that loudly, it’d be close to toasting itself. After reading
-the code I’m convinced that it won’t actually toast itself, but
-reporting 30dBm back to userland is freaky.
+> -         Known issues:
+> -         - support for RT2870 chips doesn't work with 802.11n APs yet
+> -         - support for RT3070 chips is non-functional at the moment
+> -
+>          When compiled as a module, this driver will be called "rt2800usb.ko".
+>
+>  if RT2800USB
+>
+>  config RT2800USB_RT30XX
+> -       bool "rt2800usb - Include support for rt30xx (USB) devices"
+> +       bool "rt2800usb - Include support for rt30xx devices"
+>        default y
+>        ---help---
+>          This adds support for rt30xx wireless chipset family to the
+>          rt2800usb driver.
+>          Supported chips: RT3070, RT3071 & RT3072
 
-ath9k_init_txpower_limits is only called once (hence the “init”) from
-ath9k_init_device. Any changes that it makes to a channel’s max_power
-will be overwritten by subsequent operation of the regulatory
-machinery. At the very least, the subsequent regulatory_hint call in
-ath9k_init_device will trigger this work; it will happen at an
-unspecified point in the future due to CRDA’s asynchronous nature, but
-it will generally happen “soon.” This renders
-ath9k_init_txpower_limits’ work ineffective.
+I.e. here?
 
-I think that the point of ath9k_init_txpower_limits was to make
-max_power more useful, but as things stand now, max_power is still set
-to the regulatory value as was the case before. I don’t think that
-this is what was intended. I would find it more useful if at each
-regulatory change, each channel’s max_power was set to
-min(regulatory_max_power, ctl_max_power).
+> -         Support for these devices is non-functional at the moment and is
+> -         intended for testers and developers.
+> -
+>  config RT2800USB_RT33XX
+> -       bool "rt2800usb - Include support for rt33xx (USB) devices"
+> +       bool "rt2800usb - Include support for rt33xx devices (EXPERIMENTAL)"
+> +       depends on EXPERIMENTAL
+>        default n
+>        ---help---
+>          This adds support for rt33xx wireless chipset family to the
 
-The only time that ath9k_init_txpower_limits appears to have close to
-the intended effect is with the OpenWrt ATH_USER_REGD option, which
-bypasses some of the regulatory machinery. While ATH_USER_REGD may
-have its purpose, I don’t think that this feature should cater to that
-option, and I don’t think that the behavior of setting max_power to
-regulatory_max_power outright or to min(regulatory_max_power,
-ctl_max_power) should be dependent on that option. I’m not using
-ATH_USER_REGD, the mainstream won’t use it, and it’d be nice to wean
-others off it.
+Thanks,
 
-I propose making ath9k_reg_notifier set each channel’s max_power to
-min(regulatory_max_power, ctl_max_power), although I’m a little wary
-of using ath9k_hw_set_txpowerlimit, even with the test flag, after
-driver initialization. The interface as it stands now would require
-touching ah->curchan from within the notifier, and I’m not convinced
-that’s safe or smart. I’m also concerned about dependencies on
-chan->chanmode and ah->txchainmask. In fact, as things stand now, I
-fall into the “invalid chainmask configuration” block when
-ath9k_init_device calls ath9k_init_txpower_limits because txchainmask
-is 0. Maybe 0 is fine to just compute ctl_max_power, but it seems that
-if this is to be done from ath9k_reg_notifier, it should be made more
-deterministic.
+-- 
+Julian Calaby
 
-If these concerns are valid, I think that what’s truly needed is a
-refactoring to provide an EEPROM routine that gets the CTL power limit
-for a channel given a caller-supplied channel, chanmode, txchainmask,
-and anything else in ah that really shouldn’t be modified or relied
-upon for this purpose. Does this sound like the right approach? Is
-anyone already working on this?
+Email: julian.calaby@gmail.com
+Profile: http://www.google.com/profiles/julian.calaby/
+.Plan: http://sites.google.com/site/juliancalaby/
