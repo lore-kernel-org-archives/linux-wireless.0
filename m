@@ -1,198 +1,261 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:54614 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752433Ab0KPAb6 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 15 Nov 2010 19:31:58 -0500
-Message-ID: <4CE1D0F8.70108@candelatech.com>
-Date: Mon, 15 Nov 2010 16:31:52 -0800
-From: Ben Greear <greearb@candelatech.com>
-MIME-Version: 1.0
-To: "ath9k-devel@lists.ath9k.org" <ath9k-devel@venema.h4ckr.net>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: ath9k:  TX DMA, reset errors and 0xdeadbeef on not-so-hacked kernel.
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Received: from nbd.name ([46.4.11.11]:48045 "EHLO nbd.name"
+	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1755626Ab0KNOUU (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 14 Nov 2010 09:20:20 -0500
+From: Felix Fietkau <nbd@openwrt.org>
+To: linux-wireless@vger.kernel.org
+Cc: linville@tuxdriver.com, lrodriguez@atheros.com
+Subject: [PATCH 07/13] ath9k: remove bfs_nframes from struct ath_buf_state
+Date: Sun, 14 Nov 2010 15:20:07 +0100
+Message-Id: <1289744413-20789-7-git-send-email-nbd@openwrt.org>
+In-Reply-To: <1289744413-20789-6-git-send-email-nbd@openwrt.org>
+References: <1289744413-20789-1-git-send-email-nbd@openwrt.org>
+ <1289744413-20789-2-git-send-email-nbd@openwrt.org>
+ <1289744413-20789-3-git-send-email-nbd@openwrt.org>
+ <1289744413-20789-4-git-send-email-nbd@openwrt.org>
+ <1289744413-20789-5-git-send-email-nbd@openwrt.org>
+ <1289744413-20789-6-git-send-email-nbd@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-With the previously posted wpa_supplicant patch, I am able to reproduce
-the ath9k DMA errors previously seen when I hacked the kernel
-to share scan results.
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+---
+ drivers/net/wireless/ath/ath9k/ath9k.h |    2 -
+ drivers/net/wireless/ath/ath9k/xmit.c  |   97 +++++++++++++++----------------
+ 2 files changed, 47 insertions(+), 52 deletions(-)
 
-The basic test:  Create 30 STA interfaces, run one patched instance of
-wpa_supplicant to manage all interfaces.  My proprietary user-space app
-is also running (gathering stats, etc).  The system crashed within a few
-minutes of starting the test.
-
-The kernel does NOT have any significant changes, though it does have
-this one applied:
-
-mac80211:  Fix deadlock in ieee80211_do_stop.
-
-I cannot reproduce the problem with un-modified wpa_supplicant, so the error
-is likely related to the speed at which interfaces attempt to associate.
-
-
-Nov 15 16:13:36 localhost kernel: ieee80211 phy0: device no longer idle - scanning
-Nov 15 16:13:37 localhost kernel: ieee80211 phy0: device now idle
-Nov 15 16:13:37 localhost kernel: ieee80211 phy0: device no longer idle - working
-Nov 15 16:13:37 localhost kernel: sta8: authenticate with 00:14:d1:c6:d2:54 (try 1)
-Nov 15 16:13:37 localhost kernel: sta28: authenticate with 00:14:d1:c6:d2:54 (try 1)
-Nov 15 16:13:37 localhost kernel: sta27: authenticate with 00:14:d1:c6:d2:54 (try 1)
-Nov 15 16:13:37 localhost kernel: sta25: authenticate with 00:14:d1:c6:d2:54 (try 1)
-Nov 15 16:13:37 localhost kernel: sta23: authenticate with 00:14:d1:c6:d2:54 (try 1)
-Nov 15 16:13:37 localhost kernel: sta22: authenticate with 00:14:d1:c6:d2:54 (try 1)
-Nov 15 16:13:37 localhost kernel: sta20: authenticate with 00:14:d1:c6:d2:54 (try 1)
-Nov 15 16:13:37 localhost kernel: sta19: authenticate with 00:14:d1:c6:d2:54 (try 1)
-Nov 15 16:13:37 localhost kernel: sta18: authenticate with 00:14:d1:c6:d2:54 (try 1)
-Nov 15 16:13:37 localhost kernel: sta17: authenticate with 00:14:d1:c6:d2:54 (try 1)
-Nov 15 16:13:37 localhost kernel: sta16: authenticate with 00:14:d1:c6:d2:54 (try 1)
-Nov 15 16:13:37 localhost kernel: sta15: authenticate with 00:14:d1:c6:d2:54 (try 1)
-Nov 15 16:13:37 localhost kernel: sta8: authenticated
-Nov 15 16:13:37 localhost kernel: sta28: authenticated
-Nov 15 16:13:37 localhost kernel: sta27: authenticated
-Nov 15 16:13:37 localhost kernel: sta28: associate with 00:14:d1:c6:d2:54 (try 1)
-Nov 15 16:13:37 localhost kernel: sta8: associate with 00:14:d1:c6:d2:54 (try 1)
-Nov 15 16:13:37 localhost kernel: sta14: authenticate with 00:14:d1:c6:d2:54 (try 1)
-Nov 15 16:13:37 localhost kernel: sta13: authenticate with 00:14:d1:c6:d2:54 (try 1)
-Nov 15 16:13:37 localhost kernel: sta12: authenticate with 00:14:d1:c6:d2:54 (try 1)
-Nov 15 16:13:37 localhost kernel: sta11: authenticate with 00:14:d1:c6:d2:54 (try 1)
-Nov 15 16:13:37 localhost kernel: sta9: authenticate with 00:14:d1:c6:d2:54 (try 1)
-Nov 15 16:13:37 localhost kernel: sta7: authenticate with 00:14:d1:c6:d2:54 (try 1)
-Nov 15 16:13:37 localhost kernel: sta24: authenticate with 00:14:d1:c6:d2:54 (try 1)
-Nov 15 16:13:37 localhost kernel: sta6: authenticate with 00:14:d1:c6:d2:54 (try 1)
-Nov 15 16:13:37 localhost kernel: sta5: authenticate with 00:14:d1:c6:d2:54 (try 1)
-Nov 15 16:13:37 localhost kernel: sta4: authenticate with 00:14:d1:c6:d2:54 (try 1)
-Nov 15 16:13:37 localhost kernel: sta25: authenticated
-Nov 15 16:13:37 localhost kernel: sta3: authenticate with 00:14:d1:c6:d2:54 (try 1)
-Nov 15 16:13:37 localhost kernel: sta2: authenticate with 00:14:d1:c6:d2:54 (try 1)
-Nov 15 16:13:37 localhost kernel: sta1: authenticate with 00:14:d1:c6:d2:54 (try 1)
-Nov 15 16:13:37 localhost kernel: sta21: authenticate with 00:14:d1:c6:d2:54 (try 1)
-Nov 15 16:13:37 localhost kernel: sta23: authenticate with 00:14:d1:c6:d2:54 (try 2)
-Nov 15 16:13:37 localhost kernel: sta10: authenticate with 00:14:d1:c6:d2:54 (try 1)
-Nov 15 16:13:37 localhost kernel: sta22: authenticate with 00:14:d1:c6:d2:54 (try 2)
-Nov 15 16:13:37 localhost kernel: wlan0: authenticate with 00:14:d1:c6:d2:54 (try 1)
-Nov 15 16:13:37 localhost kernel: sta20: authenticate with 00:14:d1:c6:d2:54 (try 2)
-Nov 15 16:13:37 localhost kernel: ath: Failed to stop TX DMA in 100 msec after killing last frame
-Nov 15 16:13:37 localhost kernel: ath: Failed to stop TX DMA. Resetting hardware!
-Nov 15 16:13:37 localhost kernel: sta19: authenticate with 00:14:d1:c6:d2:54 (try 2)
-Nov 15 16:13:37 localhost kernel: sta18: authenticate with 00:14:d1:c6:d2:54 (try 2)
-Nov 15 16:13:37 localhost kernel: sta17: authenticate with 00:14:d1:c6:d2:54 (try 2)
-Nov 15 16:13:37 localhost kernel: sta16: authenticate with 00:14:d1:c6:d2:54 (try 2)
-Nov 15 16:13:37 localhost kernel: sta15: authenticate with 00:14:d1:c6:d2:54 (try 2)
-Nov 15 16:13:37 localhost kernel: sta28: associate with 00:14:d1:c6:d2:54 (try 2)
-Nov 15 16:13:37 localhost kernel: sta8: associate with 00:14:d1:c6:d2:54 (try 2)
-Nov 15 16:13:37 localhost kernel: sta14: authenticate with 00:14:d1:c6:d2:54 (try 2)
-Nov 15 16:13:37 localhost kernel: sta13: authenticate with 00:14:d1:c6:d2:54 (try 2)
-Nov 15 16:13:37 localhost kernel: sta12: authenticate with 00:14:d1:c6:d2:54 (try 2)
-Nov 15 16:13:37 localhost kernel: sta11: authenticate with 00:14:d1:c6:d2:54 (try 2)
-Nov 15 16:13:37 localhost kernel: sta9: authenticate with 00:14:d1:c6:d2:54 (try 2)
-Nov 15 16:13:37 localhost kernel: sta7: authenticate with 00:14:d1:c6:d2:54 (try 2)
-Nov 15 16:13:37 localhost kernel: sta24: authenticate with 00:14:d1:c6:d2:54 (try 2)
-Nov 15 16:13:37 localhost kernel: sta6: authenticate with 00:14:d1:c6:d2:54 (try 2)
-Nov 15 16:13:37 localhost kernel: sta5: authenticate with 00:14:d1:c6:d2:54 (try 2)
-Nov 15 16:13:37 localhost kernel: sta4: authenticate with 00:14:d1:c6:d2:54 (try 2)
-Nov 15 16:13:37 localhost kernel: sta3: authenticate with 00:14:d1:c6:d2:54 (try 2)
-Nov 15 16:13:37 localhost kernel: sta2: authenticate with 00:14:d1:c6:d2:54 (try 2)
-Nov 15 16:13:37 localhost kernel: sta1: authenticate with 00:14:d1:c6:d2:54 (try 2)
-Nov 15 16:13:37 localhost kernel: sta21: authenticate with 00:14:d1:c6:d2:54 (try 2)
-Nov 15 16:13:37 localhost kernel: sta23: authenticate with 00:14:d1:c6:d2:54 (try 3)
-Nov 15 16:13:37 localhost kernel: sta10: authenticate with 00:14:d1:c6:d2:54 (try 2)
-Nov 15 16:13:37 localhost kernel: sta22: authenticate with 00:14:d1:c6:d2:54 (try 3)
-Nov 15 16:13:37 localhost kernel: wlan0: authenticate with 00:14:d1:c6:d2:54 (try 2)
-Nov 15 16:13:37 localhost kernel: sta20: authenticate with 00:14:d1:c6:d2:54 (try 3)
-Nov 15 16:13:37 localhost kernel: sta19: authenticate with 00:14:d1:c6:d2:54 (try 3)
-Nov 15 16:13:37 localhost kernel: sta18: authenticate with 00:14:d1:c6:d2:54 (try 3)
-Nov 15 16:13:37 localhost kernel: sta17: authenticate with 00:14:d1:c6:d2:54 (try 3)
-Nov 15 16:13:37 localhost kernel: sta16: authenticate with 00:14:d1:c6:d2:54 (try 3)
-Nov 15 16:13:37 localhost kernel: sta15: authenticate with 00:14:d1:c6:d2:54 (try 3)
-Nov 15 16:13:37 localhost kernel: sta28: associate with 00:14:d1:c6:d2:54 (try 3)
-Nov 15 16:13:37 localhost kernel: sta8: associate with 00:14:d1:c6:d2:54 (try 3)
-Nov 15 16:13:37 localhost kernel: sta14: authenticate with 00:14:d1:c6:d2:54 (try 3)
-Nov 15 16:13:37 localhost kernel: sta13: authenticate with 00:14:d1:c6:d2:54 (try 3)
-Nov 15 16:13:37 localhost kernel: sta12: authenticate with 00:14:d1:c6:d2:54 (try 3)
-Nov 15 16:13:37 localhost kernel: sta11: authenticate with 00:14:d1:c6:d2:54 (try 3)
-Nov 15 16:13:37 localhost kernel: sta9: authenticate with 00:14:d1:c6:d2:54 (try 3)
-Nov 15 16:13:37 localhost kernel: sta7: authenticate with 00:14:d1:c6:d2:54 (try 3)
-Nov 15 16:13:37 localhost kernel: sta24: authenticate with 00:14:d1:c6:d2:54 (try 3)
-Nov 15 16:13:37 localhost kernel: sta6: authenticate with 00:14:d1:c6:d2:54 (try 3)
-Nov 15 16:13:37 localhost kernel: sta5: authenticate with 00:14:d1:c6:d2:54 (try 3)
-Nov 15 16:13:37 localhost kernel: sta4: authenticate with 00:14:d1:c6:d2:54 (try 3)
-Nov 15 16:13:37 localhost kernel: sta3: authenticate with 00:14:d1:c6:d2:54 (try 3)
-Nov 15 16:13:37 localhost kernel: sta2: authenticate with 00:14:d1:c6:d2:54 (try 3)
-Nov 15 16:13:37 localhost kernel: sta1: authenticate with 00:14:d1:c6:d2:54 (try 3)
-Nov 15 16:13:38 localhost kernel: sta21: authenticate with 00:14:d1:c6:d2:54 (try 3)
-Nov 15 16:13:38 localhost kernel: sta23: authentication with 00:14:d1:c6:d2:54 timed out
-Nov 15 16:13:39 localhost kernel: ath: timeout (100000 us) on reg 0x9860: 0xdeadbeef & 0x00000001 != 0x00000000
-Nov 15 16:13:39 localhost kernel: ath: Unable to reset hardware; reset status -5
-Nov 15 16:13:39 localhost kernel: ath: DMA failed to stop in 10 ms AR_CR=0xdeadbeef AR_DIAG_SW=0xdeadbeef
-Nov 15 16:13:39 localhost kernel: ------------[ cut here ]------------
-Nov 15 16:13:39 localhost kernel: WARNING: at /home/greearb/git/linux.wireless-testing/drivers/net/wireless/ath/ath9k/recv.c:532 ath_stoprecv+0x90/0x9a [at)
-Nov 15 16:13:39 localhost kernel: Hardware name: PDSBM
-Nov 15 16:13:39 localhost kernel: Could not stop RX, we could be confusing the DMA engine when we start RX up
-Nov 15 16:13:39 localhost kernel: Modules linked in: michael_mic aes_i586 aes_generic 8021q garp stp llc fuse macvlan pktgen nfs lockd fscache nfs_acl auth]
-Nov 15 16:13:39 localhost kernel: Pid: 16755, comm: wpa_supplicant Not tainted 2.6.37-rc1-wl+ #48
-Nov 15 16:13:39 localhost kernel: Call Trace:
-Nov 15 16:13:39 localhost kernel: [<78436f25>] warn_slowpath_common+0x77/0x8c
-Nov 15 16:13:39 localhost kernel: [<f8a4a106>] ? ath_stoprecv+0x90/0x9a [ath9k]
-Nov 15 16:13:39 localhost kernel: [<f8a4a106>] ? ath_stoprecv+0x90/0x9a [ath9k]
-Nov 15 16:13:39 localhost kernel: [<78436fb6>] warn_slowpath_fmt+0x2e/0x30
-Nov 15 16:13:39 localhost kernel: [<f8a4a106>] ath_stoprecv+0x90/0x9a [ath9k]
-Nov 15 16:13:39 localhost kernel: [<f8a490b9>] ath_set_channel+0x94/0x1e8 [ath9k]
-Nov 15 16:13:39 localhost kernel: [<7845a2e9>] ? mark_held_locks+0x47/0x5f
-Nov 15 16:13:39 localhost kernel: [<7878e27b>] ? _raw_spin_unlock_irqrestore+0x3c/0x48
-Nov 15 16:13:39 localhost kernel: [<f8a49551>] ath9k_config+0x344/0x423 [ath9k]
-Nov 15 16:13:39 localhost kernel: [<f8ae2aaa>] ieee80211_hw_config+0x11b/0x125 [mac80211]
-Nov 15 16:13:39 localhost kernel: [<f8af1e36>] ieee80211_set_channel+0x74/0x9e [mac80211]
-Nov 15 16:13:39 localhost kernel: [<f83288b5>] cfg80211_set_freq+0x92/0xb5 [cfg80211]
-Nov 15 16:13:39 localhost kernel: [<f8af1dc2>] ? ieee80211_set_channel+0x0/0x9e [mac80211]
-Nov 15 16:13:39 localhost kernel: [<f832adb4>] cfg80211_mgd_wext_siwfreq+0x108/0x148 [cfg80211]
-Nov 15 16:13:39 localhost kernel: [<f832a132>] cfg80211_wext_siwfreq+0x42/0xbf [cfg80211]
-Nov 15 16:13:39 localhost kernel: [<7876deeb>] ioctl_standard_call+0x52/0x28e
-Nov 15 16:13:39 localhost kernel: [<786f2b2b>] ? dev_name_hash+0x16/0x48
-Nov 15 16:13:39 localhost kernel: [<786f653c>] ? __dev_get_by_name+0x32/0x3d
-Nov 15 16:13:39 localhost kernel: [<7876e1b4>] wext_handle_ioctl+0x8d/0x18d
-Nov 15 16:13:39 localhost kernel: [<f832a0f0>] ? cfg80211_wext_siwfreq+0x0/0xbf [cfg80211]
-Nov 15 16:13:39 localhost kernel: [<786f7669>] dev_ioctl+0x520/0x53f
-Nov 15 16:13:39 localhost kernel: [<784593ff>] ? register_lock_class+0x17/0x297
-Nov 15 16:13:39 localhost kernel: [<786e6ada>] ? sys_sendto+0xb8/0xc6
-Nov 15 16:13:39 localhost kernel: [<7845a0d5>] ? mark_lock+0x1e/0x1eb
-Nov 15 16:13:39 localhost kernel: [<786e5d1f>] ? sock_ioctl+0x0/0x202
-Nov 15 16:13:39 localhost kernel: [<786e5f15>] sock_ioctl+0x1f6/0x202
-Nov 15 16:13:39 localhost kernel: [<7845bce2>] ? lock_release_non_nested+0x86/0x1ec
-Nov 15 16:13:39 localhost kernel: [<786e5d1f>] ? sock_ioctl+0x0/0x202
-Nov 15 16:13:39 localhost kernel: [<784cc071>] do_vfs_ioctl+0x56d/0x5c3
-Nov 15 16:13:39 localhost kernel: [<784a00be>] ? might_fault+0x4a/0x96
-Nov 15 16:13:39 localhost kernel: [<784c130d>] ? fcheck_files+0x9b/0xca
-Nov 15 16:13:39 localhost kernel: [<784c1369>] ? fget_light+0x2d/0xb0
-Nov 15 16:13:39 localhost kernel: [<784cc10a>] sys_ioctl+0x43/0x62
-Nov 15 16:13:39 localhost kernel: [<784030dc>] sysenter_do_call+0x12/0x38
-Nov 15 16:13:39 localhost kernel: ---[ end trace 7f695003c0bcd2c7 ]---
-Nov 15 16:13:39 localhost kernel: ath: DMA failed to stop in 10 ms AR_CR=0xdeadbeef AR_DIAG_SW=0xdeadbeef
-Nov 15 16:13:40 localhost kernel: ath: timeout (100000 us) on reg 0x7000: 0xdeadbeef & 0x00000003 != 0x00000000
-Nov 15 16:13:40 localhost kernel: ath: Chip reset failed
-Nov 15 16:13:40 localhost kernel: ath: Unable to reset channel (2437 MHz), reset status -22
-Nov 15 16:13:40 localhost kernel: ath: Unable to set channel
-
-and after a few more of these..system died hard:
-
-Nov 15 16:13:44 localhost kernel: ath: Failed to stop TX DMA in 100 msec after killing last frame
-Nov 15 16:13:44 localhost kernel: ath: Failed to stop TX DMA in 100 msec after killing last frame
-Nov 15 16:13:44 localhost kernel: ath: Failed to stop TX DMA. Resetting hardware!
-Nov 15 16:13:45 localhost kernel: ath: DMA failed to stop in 10 ms AR_CR=0xdeadbeef AR_DIAG_SW=0xdeadbeef
-Nov 15 16:13:45 localhost kernel: ath: timeout (100000 us) on reg 0x7000: 0x00000001 & 0x00000003 != 0x00000000
-Nov 15 16:13:45 localhost kernel: ath: Chip reset failed
-Nov 15 16:13:45 localhost kernel: ath: Unable to reset hardware; reset status -22
-Nov 15 16:13:45 localhost kernel: ath: DMA failed to stop in 10 ms AR_CR=0xbadc0ffe AR_DIAG_SW=0xbadc0ffe
-Nov 15 16:13:45 localhost kernel: ------------[ cut here ]------------
-EXT4-fs (dm-2): delayed block allocation failed for inode 394823 at logical offset 0 with max blocks 13 with error -30
-EXT4-fs (dm-2): This should not happen!! Data will be lost
-EXT4-fs error (device dm-2) in ext4_da_writepages:3068: Journal has aborted
-
-Thanks,
-Ben
-
+diff --git a/drivers/net/wireless/ath/ath9k/ath9k.h b/drivers/net/wireless/ath/ath9k/ath9k.h
+index d1c714a..ddfddbb 100644
+--- a/drivers/net/wireless/ath/ath9k/ath9k.h
++++ b/drivers/net/wireless/ath/ath9k/ath9k.h
+@@ -101,7 +101,6 @@ enum buffer_type {
+ 	BUF_XRETRY		= BIT(5),
+ };
+ 
+-#define bf_nframes      	bf_state.bfs_nframes
+ #define bf_frmlen       	bf_state.bfs_frmlen
+ #define bf_retries      	bf_state.bfs_retries
+ #define bf_isht(bf)		(bf->bf_state.bf_type & BUF_HT)
+@@ -213,7 +212,6 @@ struct ath_atx_ac {
+ };
+ 
+ struct ath_buf_state {
+-	int bfs_nframes;
+ 	int bfs_retries;
+ 	u8 bf_type;
+ 	u8 bfs_paprd;
+diff --git a/drivers/net/wireless/ath/ath9k/xmit.c b/drivers/net/wireless/ath/ath9k/xmit.c
+index 88efcc1..87b79ef 100644
+--- a/drivers/net/wireless/ath/ath9k/xmit.c
++++ b/drivers/net/wireless/ath/ath9k/xmit.c
+@@ -57,10 +57,8 @@ static void ath_tx_complete_buf(struct ath_softc *sc, struct ath_buf *bf,
+ static void ath_tx_txqaddbuf(struct ath_softc *sc, struct ath_txq *txq,
+ 			     struct list_head *head);
+ static void ath_buf_set_rate(struct ath_softc *sc, struct ath_buf *bf, int len);
+-static int ath_tx_num_badfrms(struct ath_softc *sc, struct ath_buf *bf,
+-			      struct ath_tx_status *ts, int txok);
+ static void ath_tx_rc_status(struct ath_buf *bf, struct ath_tx_status *ts,
+-			     int nbad, int txok, bool update_rc);
++			     int nframes, int nbad, int txok, bool update_rc);
+ static void ath_tx_update_baw(struct ath_softc *sc, struct ath_atx_tid *tid,
+ 			      int seqno);
+ 
+@@ -303,6 +301,39 @@ static struct ath_buf* ath_clone_txbuf(struct ath_softc *sc, struct ath_buf *bf)
+ 	return tbf;
+ }
+ 
++static void ath_tx_count_frames(struct ath_softc *sc, struct ath_buf *bf,
++			        struct ath_tx_status *ts, int txok,
++			        int *nframes, int *nbad)
++{
++	u16 seq_st = 0;
++	u32 ba[WME_BA_BMP_SIZE >> 5];
++	int ba_index;
++	int isaggr = 0;
++
++	*nbad = 0;
++	*nframes = 0;
++
++	if (bf->bf_lastbf->bf_tx_aborted)
++		return;
++
++	isaggr = bf_isaggr(bf);
++	if (isaggr) {
++		seq_st = ts->ts_seqnum;
++		memcpy(ba, &ts->ba_low, WME_BA_BMP_SIZE >> 3);
++	}
++
++	while (bf) {
++		ba_index = ATH_BA_INDEX(seq_st, ath_frame_seqno(bf->bf_mpdu));
++
++		(*nframes)++;
++		if (!txok || (isaggr && !ATH_BA_ISSET(ba, ba_index)))
++			(*nbad)++;
++
++		bf = bf->bf_next;
++	}
++}
++
++
+ static void ath_tx_complete_aggr(struct ath_softc *sc, struct ath_txq *txq,
+ 				 struct ath_buf *bf, struct list_head *bf_q,
+ 				 struct ath_tx_status *ts, int txok)
+@@ -332,7 +363,6 @@ static void ath_tx_complete_aggr(struct ath_softc *sc, struct ath_txq *txq,
+ 	hw = bf->aphy->hw;
+ 
+ 	memcpy(rates, tx_info->control.rates, sizeof(rates));
+-	nframes = bf->bf_nframes;
+ 
+ 	rcu_read_lock();
+ 
+@@ -349,7 +379,7 @@ static void ath_tx_complete_aggr(struct ath_softc *sc, struct ath_txq *txq,
+ 			    !bf->bf_stale || bf_next != NULL)
+ 				list_move_tail(&bf->list, &bf_head);
+ 
+-			ath_tx_rc_status(bf, ts, 1, 0, false);
++			ath_tx_rc_status(bf, ts, 1, 1, 0, false);
+ 			ath_tx_complete_buf(sc, bf, txq, &bf_head, ts,
+ 				0, 0);
+ 
+@@ -393,7 +423,7 @@ static void ath_tx_complete_aggr(struct ath_softc *sc, struct ath_txq *txq,
+ 	INIT_LIST_HEAD(&bf_pending);
+ 	INIT_LIST_HEAD(&bf_head);
+ 
+-	nbad = ath_tx_num_badfrms(sc, bf, ts, txok);
++	ath_tx_count_frames(sc, bf, ts, txok, &nframes, &nbad);
+ 	while (bf) {
+ 		txfail = txpending = 0;
+ 		bf_next = bf->bf_next;
+@@ -456,11 +486,10 @@ static void ath_tx_complete_aggr(struct ath_softc *sc, struct ath_txq *txq,
+ 
+ 			if (rc_update && (acked_cnt == 1 || txfail_cnt == 1)) {
+ 				memcpy(tx_info->control.rates, rates, sizeof(rates));
+-				bf->bf_nframes = nframes;
+-				ath_tx_rc_status(bf, ts, nbad, txok, true);
++				ath_tx_rc_status(bf, ts, nframes, nbad, txok, true);
+ 				rc_update = false;
+ 			} else {
+-				ath_tx_rc_status(bf, ts, nbad, txok, false);
++				ath_tx_rc_status(bf, ts, nframes, nbad, txok, false);
+ 			}
+ 
+ 			ath_tx_complete_buf(sc, bf, txq, &bf_head, ts,
+@@ -485,8 +514,8 @@ static void ath_tx_complete_aggr(struct ath_softc *sc, struct ath_txq *txq,
+ 
+ 						bf->bf_state.bf_type |=
+ 							BUF_XRETRY;
+-						ath_tx_rc_status(bf, ts, nbad,
+-								0, false);
++						ath_tx_rc_status(bf, ts, nframes,
++								nbad, 0, false);
+ 						ath_tx_complete_buf(sc, bf, txq,
+ 								    &bf_head,
+ 								    ts, 0, 0);
+@@ -752,7 +781,6 @@ static enum ATH_AGGR_STATUS ath_tx_form_aggr(struct ath_softc *sc,
+ 	} while (!list_empty(&tid->buf_q));
+ 
+ 	*aggr_len = al;
+-	bf_first->bf_nframes = nframes;
+ 
+ 	return status;
+ #undef PADBYTES
+@@ -785,7 +813,7 @@ static void ath_tx_sched_aggr(struct ath_softc *sc, struct ath_txq *txq,
+ 		bf->bf_lastbf = list_entry(bf_q.prev, struct ath_buf, list);
+ 
+ 		/* if only one frame, send as non-aggregate */
+-		if (bf->bf_nframes == 1) {
++		if (bf == bf->bf_lastbf) {
+ 			bf->bf_state.bf_type &= ~BUF_AGGR;
+ 			ath9k_hw_clr11n_aggr(sc->sc_ah, bf->bf_desc);
+ 			ath_buf_set_rate(sc, bf, bf->bf_frmlen);
+@@ -1333,7 +1361,6 @@ static void ath_tx_send_ampdu(struct ath_softc *sc, struct ath_atx_tid *tid,
+ 		ath_tx_addto_baw(sc, tid, bf_seqno);
+ 
+ 	/* Queue to h/w without aggregation */
+-	bf->bf_nframes = 1;
+ 	bf->bf_lastbf = bf;
+ 	ath_buf_set_rate(sc, bf, bf->bf_frmlen);
+ 	ath_tx_txqaddbuf(sc, txctl->txq, bf_head);
+@@ -1352,7 +1379,6 @@ static void ath_tx_send_normal(struct ath_softc *sc, struct ath_txq *txq,
+ 	if (tid)
+ 		INCR(tid->seq_start, IEEE80211_SEQ_MAX);
+ 
+-	bf->bf_nframes = 1;
+ 	bf->bf_lastbf = bf;
+ 	ath_buf_set_rate(sc, bf, bf->bf_frmlen);
+ 	ath_tx_txqaddbuf(sc, txq, bf_head);
+@@ -1895,37 +1921,8 @@ static void ath_tx_complete_buf(struct ath_softc *sc, struct ath_buf *bf,
+ 	spin_unlock_irqrestore(&sc->tx.txbuflock, flags);
+ }
+ 
+-static int ath_tx_num_badfrms(struct ath_softc *sc, struct ath_buf *bf,
+-			      struct ath_tx_status *ts, int txok)
+-{
+-	u16 seq_st = 0;
+-	u32 ba[WME_BA_BMP_SIZE >> 5];
+-	int ba_index;
+-	int nbad = 0;
+-	int isaggr = 0;
+-
+-	if (bf->bf_lastbf->bf_tx_aborted)
+-		return 0;
+-
+-	isaggr = bf_isaggr(bf);
+-	if (isaggr) {
+-		seq_st = ts->ts_seqnum;
+-		memcpy(ba, &ts->ba_low, WME_BA_BMP_SIZE >> 3);
+-	}
+-
+-	while (bf) {
+-		ba_index = ATH_BA_INDEX(seq_st, ath_frame_seqno(bf->bf_mpdu));
+-		if (!txok || (isaggr && !ATH_BA_ISSET(ba, ba_index)))
+-			nbad++;
+-
+-		bf = bf->bf_next;
+-	}
+-
+-	return nbad;
+-}
+-
+ static void ath_tx_rc_status(struct ath_buf *bf, struct ath_tx_status *ts,
+-			     int nbad, int txok, bool update_rc)
++			     int nframes, int nbad, int txok, bool update_rc)
+ {
+ 	struct sk_buff *skb = bf->bf_mpdu;
+ 	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *)skb->data;
+@@ -1946,10 +1943,10 @@ static void ath_tx_rc_status(struct ath_buf *bf, struct ath_tx_status *ts,
+ 	if ((tx_info->flags & IEEE80211_TX_CTL_AMPDU) && update_rc) {
+ 		tx_info->flags |= IEEE80211_TX_STAT_AMPDU;
+ 
+-		BUG_ON(nbad > bf->bf_nframes);
++		BUG_ON(nbad > nframes);
+ 
+-		tx_info->status.ampdu_len = bf->bf_nframes;
+-		tx_info->status.ampdu_ack_len = bf->bf_nframes - nbad;
++		tx_info->status.ampdu_len = nframes;
++		tx_info->status.ampdu_ack_len = nframes - nbad;
+ 	}
+ 
+ 	if ((ts->ts_status & ATH9K_TXERR_FILT) == 0 &&
+@@ -2078,7 +2075,7 @@ static void ath_tx_processq(struct ath_softc *sc, struct ath_txq *txq)
+ 			 */
+ 			if (ts.ts_status & ATH9K_TXERR_XRETRY)
+ 				bf->bf_state.bf_type |= BUF_XRETRY;
+-			ath_tx_rc_status(bf, &ts, txok ? 0 : 1, txok, true);
++			ath_tx_rc_status(bf, &ts, 1, txok ? 0 : 1, txok, true);
+ 		}
+ 
+ 		qnum = skb_get_queue_mapping(bf->bf_mpdu);
+@@ -2200,7 +2197,7 @@ void ath_tx_edma_tasklet(struct ath_softc *sc)
+ 		if (!bf_isampdu(bf)) {
+ 			if (txs.ts_status & ATH9K_TXERR_XRETRY)
+ 				bf->bf_state.bf_type |= BUF_XRETRY;
+-			ath_tx_rc_status(bf, &txs, txok ? 0 : 1, txok, true);
++			ath_tx_rc_status(bf, &txs, 1, txok ? 0 : 1, txok, true);
+ 		}
+ 
+ 		qnum = skb_get_queue_mapping(bf->bf_mpdu);
 -- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+1.7.3.2
 
