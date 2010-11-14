@@ -1,57 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:53493 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755087Ab0KIB37 (ORCPT
+Received: from mail-iw0-f174.google.com ([209.85.214.174]:57058 "EHLO
+	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754009Ab0KNJAz (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 8 Nov 2010 20:29:59 -0500
-Date: Mon, 8 Nov 2010 20:23:46 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Jesper Juhl <jj@chaosbits.net>
-Cc: linux-kernel@vger.kernel.org, trivial@kernel.org,
-	Ulrich Kunitz <kune@deine-taler.de>,
-	Daniel Drake <dsd@gentoo.org>, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org
-Subject: Re: [PATCH 07/17][trivial] net, wireless: Remove unnecessary casts
- of void ptr returning alloc function return values
-Message-ID: <20101109012346.GA32743@tuxdriver.com>
-References: <alpine.LNX.2.00.1011082330390.23697@swampdragon.chaosbits.net>
+	Sun, 14 Nov 2010 04:00:55 -0500
+Received: by iwn10 with SMTP id 10so5390934iwn.19
+        for <linux-wireless@vger.kernel.org>; Sun, 14 Nov 2010 01:00:54 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <alpine.LNX.2.00.1011082330390.23697@swampdragon.chaosbits.net>
+In-Reply-To: <AANLkTi=b5czEjEM8zD1ZUq0hNdeJg1wy7OS4-OhE6fO_@mail.gmail.com>
+References: <201011131908.15595.IvDoorn@gmail.com> <201011131909.50885.IvDoorn@gmail.com>
+ <201011131910.11947.IvDoorn@gmail.com> <AANLkTi=b5czEjEM8zD1ZUq0hNdeJg1wy7OS4-OhE6fO_@mail.gmail.com>
+From: Julian Calaby <julian.calaby@gmail.com>
+Date: Sun, 14 Nov 2010 20:00:34 +1100
+Message-ID: <AANLkTikO0Vg5y_yanLyZg+SMnxN-3Gftg=OS70UBom_v@mail.gmail.com>
+Subject: Re: [PATCH 3/9] rt2x00: Clean up Kconfig for RT2800 devices.
+To: Ivo van Doorn <ivdoorn@gmail.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Nov 09, 2010 at 12:09:13AM +0100, Jesper Juhl wrote:
-> Hi,
-> 
-> The [vk][cmz]alloc(_node) family of functions return void pointers which
-> it's completely unnecessary/pointless to cast to other pointer types since
-> that happens implicitly.
-> 
-> This patch removes such casts from drivers/net/
-> 
-> 
-> Signed-off-by: Jesper Juhl <jj@chaosbits.net>
-> ---
->  zd_chip.c |    3 +--
->  1 file changed, 1 insertion(+), 2 deletions(-)
-> diff --git a/drivers/net/wireless/zd1211rw/zd_chip.c b/drivers/net/wireless/zd1211rw/zd_chip.c
-> index 87a95bc..dfcebed 100644
-> --- a/drivers/net/wireless/zd1211rw/zd_chip.c
-> +++ b/drivers/net/wireless/zd1211rw/zd_chip.c
-> @@ -117,8 +117,7 @@ int zd_ioread32v_locked(struct zd_chip *chip, u32 *values, const zd_addr_t *addr
->  
->  	/* Allocate a single memory block for values and addresses. */
->  	count16 = 2*count;
-> -	a16 = (zd_addr_t *) kmalloc(count16 * (sizeof(zd_addr_t) + sizeof(u16)),
-> -		                   GFP_KERNEL);
-> +	a16 = kmalloc(count16 * (sizeof(zd_addr_t) + sizeof(u16)), GFP_KERNEL);
->  	if (!a16) {
->  		dev_dbg_f(zd_chip_dev(chip),
->  			  "error ENOMEM in allocation of a16\n");
+On Sun, Nov 14, 2010 at 19:59, Julian Calaby <julian.calaby@gmail.com> wrote:
+> IVD,
+>
+> A minor nit:
 
-kcalloc?
+Disregard this, I hadn't read patch #4 =)
+
+Thanks,
 
 -- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+Julian Calaby
+
+Email: julian.calaby@gmail.com
+Profile: http://www.google.com/profiles/julian.calaby/
+.Plan: http://sites.google.com/site/juliancalaby/
