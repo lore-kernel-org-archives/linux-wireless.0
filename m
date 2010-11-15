@@ -1,28 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iw0-f174.google.com ([209.85.214.174]:51222 "EHLO
-	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751992Ab0KVRzA (ORCPT
+Received: from mail.candelatech.com ([208.74.158.172]:60141 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932217Ab0KOTKQ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 22 Nov 2010 12:55:00 -0500
-Received: by iwn38 with SMTP id 38so248654iwn.19
-        for <linux-wireless@vger.kernel.org>; Mon, 22 Nov 2010 09:55:00 -0800 (PST)
+	Mon, 15 Nov 2010 14:10:16 -0500
+Message-ID: <4CE18592.8090804@candelatech.com>
+Date: Mon, 15 Nov 2010 11:10:10 -0800
+From: Ben Greear <greearb@candelatech.com>
 MIME-Version: 1.0
-In-Reply-To: <1290372517-6777-2-git-send-email-hauke@hauke-m.de>
-References: <1290372517-6777-1-git-send-email-hauke@hauke-m.de> <1290372517-6777-2-git-send-email-hauke@hauke-m.de>
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Date: Mon, 22 Nov 2010 09:54:37 -0800
-Message-ID: <AANLkTi=h+RTtsqHiLnaLCKRMd_kRCXAyiRdqHyAcdoqS@mail.gmail.com>
-Subject: Re: [PATCH 2/2] compat: update wireless.h with new version from linux-next
-To: Hauke Mehrtens <hauke@hauke-m.de>
-Cc: linux-wireless@vger.kernel.org, mcgrof@infradead.org
-Content-Type: text/plain; charset=UTF-8
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: linux-wireless@vger.kernel.org
+Subject: Re: Scanning improvements for multiple VIFS.
+References: <4CDDCC72.6070006@candelatech.com> <4CDDE324.3070801@candelatech.com> <4b2689e6064549781b072ac8956bcc1a@localhost>
+In-Reply-To: <4b2689e6064549781b072ac8956bcc1a@localhost>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, Nov 21, 2010 at 12:48 PM, Hauke Mehrtens <hauke@hauke-m.de> wrote:
+On 11/12/2010 09:19 PM, Johannes Berg wrote:
+>>> In nl80211_trigger_scan, if rdev->scan_req is != NULL,
+>>> instead of returning EBUSY, what if we set a flag in
+>>> the VIF that said "I want scan results too."
+>>>
+>>> Then, when whatever is scanning is finished, it would send
+>>> scan results to all interested vifs.
 >
-> Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+> But the scans results could technically be different
+> if they've been done on a different interface. Besides,
+> you can handle it in userspace. You've been trying for
+> weeks to avoid changing your userspace by changing the
+> kernel, which is still the wrong approach.
 
-Applied and pushed both patches, thanks!
+I just attempted to start wpa_supplicant to control 30
+STAs.  It still seems to scan sequentially.
 
-  Luis
+I guess I need to hack wpa_supplicant to cache scan
+results?
+
+Thanks,
+Ben
+
+>
+> johannes
+
+
+-- 
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
+
