@@ -1,88 +1,107 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.19.149.2]:36488 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754835Ab0KRVXw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 18 Nov 2010 16:23:52 -0500
-Received: from mail.atheros.com ([10.10.20.105])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Thu, 18 Nov 2010 13:23:39 -0800
-From: Michael Green <Michael.Green@Atheros.com>
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>,
-	"John W. Linville" <linville@tuxdriver.com>
-CC: "wireless-regdb@lists.infradead.org"
-	<wireless-regdb@lists.infradead.org>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Kurt Garloff <garloff@suse.de>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Date: Thu, 18 Nov 2010 13:23:42 -0800
-Subject: RE: [PATCH] wireless-regdb: update rules for DE
-Message-ID: <93781E992CBA7843962D8B0E7D683F3C163340D5AE@SC1EXMB-MBCL.global.atheros.com>
-References: <20100525151429.GC6342@tpkurt2.garloff.de>
- <1290029817-711-1-git-send-email-linville@tuxdriver.com>
- <AANLkTimDkoqNbkFWDsU2HgFK3926gRpcBbokX_GL5sSc@mail.gmail.com>
-In-Reply-To: <AANLkTimDkoqNbkFWDsU2HgFK3926gRpcBbokX_GL5sSc@mail.gmail.com>
-Content-Type: text/plain; charset="utf-8"
+Received: from mail.candelatech.com ([208.74.158.172]:45703 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758086Ab0KOSPd (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 15 Nov 2010 13:15:33 -0500
+Received: from [192.168.100.195] (firewall.candelatech.com [70.89.124.249])
+	(authenticated bits=0)
+	by ns3.lanforge.com (8.14.2/8.14.2) with ESMTP id oAFIFWi8004427
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
+	for <linux-wireless@vger.kernel.org>; Mon, 15 Nov 2010 10:15:32 -0800
+Message-ID: <4CE178C4.5010006@candelatech.com>
+Date: Mon, 15 Nov 2010 10:15:32 -0800
+From: Ben Greear <greearb@candelatech.com>
 MIME-Version: 1.0
+To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: ath9k:  Warning on rmmod  (hacked wifi stack)
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-SGkgZ3V5cywNCg0KSSBhbSBvbiBQVE8gdW50aWwgTW9uZGF5LiBEbyBJIG5lZWQgdG8gcmVhZCB0
-aGlzIG5vdyBhbmQgcmVzcG9uZCBvciBjYW4gaXQgd2FpdD8gIEkgYW0gbm90IGFza2luZyB5b3Ug
-dG8gaG9sZCBhbnl0aGluZyB1cCBkdWUgdG8gbWUuIEJ1dCBpZiB5b3Ugd2FudCBtZSB0byBnaXZl
-IGZlZWRiYWNrIG9uIHNvbWV0aGluZywgcGxzIGxldCBtZSBrbm93IGlmIGl0IGNhbiB3YWl0IHVu
-dGlsIE1vbi4NCg0KTWljaGFlbCBHcmVlbg0KQXRoZXJvcyBDb21tdW5pY2F0aW9ucywgSW5jLg0K
-bWdyZWVuQGF0aGVyb3MuY29tDQpEZXNrOiAgICsxLTc4MS00MDAtMTQ5MQ0KTW9iaWxlOiArMS01
-MDgtMzgwLTQ5MjENCi0tLS0tT3JpZ2luYWwgTWVzc2FnZS0tLS0tDQpGcm9tOiBMdWlzIFIuIFJv
-ZHJpZ3VleiBbbWFpbHRvOm1jZ3JvZkBnbWFpbC5jb21dIA0KU2VudDogVGh1cnNkYXksIE5vdmVt
-YmVyIDE4LCAyMDEwIDE6MjkgUE0NClRvOiBKb2huIFcuIExpbnZpbGxlOyBNaWNoYWVsIEdyZWVu
-DQpDYzogd2lyZWxlc3MtcmVnZGJAbGlzdHMuaW5mcmFkZWFkLm9yZzsgSm9oYW5uZXMgQmVyZzsg
-S3VydCBHYXJsb2ZmOyBsaW51eC13aXJlbGVzc0B2Z2VyLmtlcm5lbC5vcmcNClN1YmplY3Q6IFJl
-OiBbUEFUQ0hdIHdpcmVsZXNzLXJlZ2RiOiB1cGRhdGUgcnVsZXMgZm9yIERFDQoNCk9uIFdlZCwg
-Tm92IDE3LCAyMDEwIGF0IDE6MzYgUE0sIEpvaG4gVy4gTGludmlsbGUNCjxsaW52aWxsZUB0dXhk
-cml2ZXIuY29tPiB3cm90ZToNCj4gRnJvbTogS3VydCBHYXJsb2ZmIDxnYXJsb2ZmQHN1c2UuZGU+
-DQo+DQo+IGh0dHA6Ly9tYXJjLmluZm8vP2w9bGludXgtd2lyZWxlc3MmbT0xMjc0ODAwNzUzMDY0
-ODImdz0yDQo+DQo+IENjOiAiTHVpcyBSLiBSb2RyaWd1ZXoiIDxtY2dyb2ZAZ21haWwuY29tPg0K
-PiBBY2tlZC1ieTogSm9oYW5uZXMgQmVyZyA8am9oYW5uZXNAc2lwc29sdXRpb25zLm5ldD4NCj4g
-U2lnbmVkLW9mZi1ieTogSm9obiBXLiBMaW52aWxsZSA8bGludmlsbGVAdHV4ZHJpdmVyLmNvbT4N
-Cj4gLS0tDQo+IFRpbWUgdG8gY2xlYXIgdGhlIGxvZ2phbS4uLg0KDQpNaWNoYWVsLCBhcmUgeW91
-IHN1YnNjcmliZWQgdG8gd2lyZWxlc3MtcmVnZGIgbm93PyBEaWQgeW91IGdldCB0aGlzIGUtbWFp
-bD8gQUNLPw0KDQogIEx1aXMNCg0KPiDCoGRiLnR4dCB8IMKgIDI0ICsrKysrKysrKysrKysrKysr
-LS0tLS0tLQ0KPiDCoDEgZmlsZXMgY2hhbmdlZCwgMTcgaW5zZXJ0aW9ucygrKSwgNyBkZWxldGlv
-bnMoLSkNCj4NCj4gZGlmZiAtLWdpdCBhL2RiLnR4dCBiL2RiLnR4dA0KPiBpbmRleCBlNjNhNDNl
-Li40MGE4YmJjIDEwMDY0NA0KPiAtLS0gYS9kYi50eHQNCj4gKysrIGIvZGIudHh0DQo+IEBAIC0x
-NzYsMTcgKzE3NiwyNyBAQCBjb3VudHJ5IENaOg0KPiDCoCDCoCDCoCDCoCg1MjUwIC0gNTM1MCBA
-IDQwKSwgKE4vQSwgMjAwIG1XKSwgTk8tT1VURE9PUiwgREZTDQo+IMKgIMKgIMKgIMKgKDU0NzAg
-LSA1NzI1IEAgNDApLCAoTi9BLCAxMDAwIG1XKSwgREZTDQo+DQo+IC0jIERhdGEgZnJvbSAiRnJl
-cXVlbnpudXR6dW5nc3BsYW4iIChhcyBwdWJsaXNoZWQgaW4gQXByaWwgMjAwOCksDQo+IC0jIGRv
-d25sb2FkZWQgZnJvbSBodHRwOi8vd3d3LmJ1bmRlc25ldHphZ2VudHVyLmRlL21lZGlhL2FyY2hp
-dmUvMTMzNTgucGRmDQo+IC0jIEFsc28gYXBwbGljYWJsZSBpcyBodHRwOi8vd3d3LmJ1bmRlc25l
-dHphZ2VudHVyLmRlL21lZGlhL2FyY2hpdmUvNTAwOS5wZGYNCj4gLSMgT24gdGhlIDUgR0h6IHJh
-bmdlcyBUWCBwb3dlciBjYW4gYmUgZG91YmxlZCBpZiBUUEMgaXMgaW1wbGVtZW50ZWQuDQo+ICsj
-IERhdGEgZnJvbSAiRnJlcXVlbnpudXR6dW5nc3BsYW4iIChhcyBwdWJsaXNoZWQgaW4gQXByaWwg
-MjAwOCksIGRvd25sb2FkZWQgZnJvbQ0KPiArIyBodHRwOi8vd3d3LmJ1bmRlc25ldHphZ2VudHVy
-LmRlL2NhZS9zZXJ2bGV0L2NvbnRlbnRibG9iLzM4NDQ4L3B1YmxpY2F0aW9uRmlsZS8yNjU5L0Zy
-ZXF1ZW56bnV0enVuZ3NwbGFuMjAwOF9JZDE3NDQ4cGRmLnBkZg0KPiArIyBGb3IgdGhlIDVHSHog
-cmFuZ2UgYWxzbyBzZWUNCj4gKyMgaHR0cDovL3d3dy5idW5kZXNuZXR6YWdlbnR1ci5kZS9jYWUv
-c2VydmxldC9jb250ZW50YmxvYi8zODIxNi9wdWJsaWNhdGlvbkZpbGUvNjU3OS9XTEFONUdIelZm
-ZzdfMjAxMF8yODA0MjAxMHBkZi5wZGYNCj4gKyMgVGhlIHZhbHVlcyBoYXZlIGJlZW4gcmVkdWNl
-ZCBieSBhIGZhY3RvciBvZiAyICgzZGIpIGZvciBub24gVFBDIGRldmljZXMNCj4gKyMgKGluIG90
-aGVyIHdvcmRzOiBkZXZpY2VzIHdpdGggVFBDIGNhbiB1c2UgdHdpY2UgdGhlIHR4IHBvd2VyIG9m
-IHRoaXMgdGFibGUpLg0KPiArIyBOb3RlIHRoYXQgdGhlIGRvY3MgZG8gbm90IHJlcXVpcmUgVFBD
-IGZvciA1MTUwLS01MjUwOyB0aGUgcmVkdWN0aW9uIHRvDQo+ICsjIDEwMG1XIHRodXMgaXMgbm90
-IHN0cmljdGx5IHJlcXVpcmVkIC0tIGhvd2V2ZXIgdGhlIGNvbnNlcnZhdGl2ZSAxMDBtVw0KPiAr
-IyBsaW1pdCBpcyB1c2VkIGhlcmUgYXMgdGhlIG5vbi1pbnRlcmZlcmVuY2Ugd2l0aCByYWRhciBh
-bmQgc2F0ZWxsaXRlDQo+ICsjIGFwcHMgcmVsaWVzIG9uIHRoZSBhdHRlbnVhdGlvbiBieSB0aGUg
-YnVpbGRpbmcgd2FsbHMgb25seSBpbiB0aGUNCj4gKyMgYWJzZW5jZSBvZiBERlM7IHRoZSBuZWln
-aGJvdXIgY291bnRyaWVzIGhhdmUgMTAwbVcgbGltaXQgaGVyZSBhcyB3ZWxsLg0KPiArDQo+IMKg
-Y291bnRyeSBERToNCj4gwqAgwqAgwqAgwqAjIGVudHJpZXMgMjc5MDA0IGFuZCAyODAwMDYNCj4g
-wqAgwqAgwqAgwqAoMjQwMCAtIDI0ODMuNSBAIDQwKSwgKE4vQSwgMTAwIG1XKQ0KPiAtIMKgIMKg
-IMKgICMgZW50cmllcyAzMDMwMDUsIDMwNDAwMiBhbmQgMzA1MDAyDQo+IC0gwqAgwqAgwqAgKDUx
-NTAgLSA1MzUwIEAgNDApLCAoTi9BLCAxMDAgbVcpLCBOTy1PVVRET09SLCBERlMNCj4gKyDCoCDC
-oCDCoCAjIGVudHJ5IDMwMzAwNQ0KPiArIMKgIMKgIMKgICg1MTUwIC0gNTI1MCBAIDQwKSwgKE4v
-QSwgMTAwIG1XKSwgTk8tT1VURE9PUg0KPiArIMKgIMKgIMKgICMgZW50cmllcyAzMDQwMDIgYW5k
-IDMwNTAwMg0KPiArIMKgIMKgIMKgICg1MjUwIC0gNTM1MCBAIDQwKSwgKE4vQSwgMTAwIG1XKSwg
-Tk8tT1VURE9PUiwgREZTDQo+IMKgIMKgIMKgIMKgIyBlbnRyaWVzIDMwODAwMiwgMzA5MDAxIGFu
-ZCAzMTAwMDMNCj4gLSDCoCDCoCDCoCAoNTQ3MCAtIDU3MjUgQCA0MCksIChOL0EsIDUwMCBtVyks
-IE5PLU9VVERPT1IsIERGUw0KPiArIMKgIMKgIMKgICg1NDcwIC0gNTcyNSBAIDQwKSwgKE4vQSwg
-NTAwIG1XKSwgREZTDQo+DQo+IMKgY291bnRyeSBESzoNCj4gwqAgwqAgwqAgwqAoMjQwMiAtIDI0
-ODIgQCA0MCksIChOL0EsIDIwKQ0KPiAtLQ0KPiAxLjcuMy4yDQo+DQo+DQo=
+Same hacked stack..saw this when I unloaded ath9k.  It had just been loaded
+and hadn't otherwise complained.
+
+Nov 15 10:11:36 localhost kernel: ieee80211 phy0: Destroyed STA 00:14:d1:c6:d2:54
+rmNov 15 10:11:38 localhost kernel: sta7: deauthenticated from 00:14:d1:c6:d2:54 (Reason: 0)
+Nov 15 10:11:38 localhost kernel: ieee80211 phy0: Removed STA 00:14:d1:c6:d2:54
+Nov 15 10:11:38 localhost kernel: ieee80211 phy0: Destroyed STA 00:14:d1:c6:d2:54
+Nov 15 10:11:38 localhost kernel: sta8: deauthenticated from 00:14:d1:c6:d2:54 (Reason: 0)
+mNov 15 10:11:38 localhost kernel: ieee80211 phy0: Removed STA 00:14:d1:c6:d2:54
+Nov 15 10:11:38 localhost kernel: ieee80211 phy0: Destroyed STA 00:14:d1:c6:d2:54
+od ath9k
+Nov 15 10:11:39 localhost kernel: ieee80211 phy0: device now idle
+Nov 15 10:11:39 localhost kernel: sta10: deauthenticating from 00:14:d1:c6:d2:54 by local choice (reason=3)
+Nov 15 10:11:39 localhost kernel: ieee80211 phy0: Removed STA 00:14:d1:c6:d2:54
+Nov 15 10:11:39 localhost kernel: ieee80211 phy0: Destroyed STA 00:14:d1:c6:d2:54
+Nov 15 10:11:39 localhost kernel: sta1: deauthenticating from 00:14:d1:c6:d2:54 by local choice (reason=3)
+Nov 15 10:11:39 localhost kernel: ieee80211 phy0: Removed STA 00:14:d1:c6:d2:54
+Nov 15 10:11:39 localhost kernel: ieee80211 phy0: Destroyed STA 00:14:d1:c6:d2:54
+Nov 15 10:11:39 localhost kernel: sta5: deauthenticating from 00:14:d1:c6:d2:54 by local choice (reason=3)
+Nov 15 10:11:39 localhost kernel: ieee80211 phy0: Removed STA 00:14:d1:c6:d2:54
+Nov 15 10:11:39 localhost kernel: ieee80211 phy0: Destroyed STA 00:14:d1:c6:d2:54
+Nov 15 10:11:39 localhost kernel: cfg80211: Calling CRDA to update world regulatory domain
+Nov 15 10:11:39 localhost kernel: cfg80211: World regulatory domain updated:
+Nov 15 10:11:39 localhost kernel:    (start_freq - end_freq @ bandwidth), (max_antenna_gain, max_eirp)
+Nov 15 10:11:39 localhost kernel:    (2402000 KHz - 2472000 KHz @ 40000 KHz), (300 mBi, 2000 mBm)
+Nov 15 10:11:39 localhost kernel:    (2457000 KHz - 2482000 KHz @ 20000 KHz), (300 mBi, 2000 mBm)
+Nov 15 10:11:39 localhost kernel:    (2474000 KHz - 2494000 KHz @ 20000 KHz), (300 mBi, 2000 mBm)
+Nov 15 10:11:39 localhost kernel:    (5170000 KHz - 5250000 KHz @ 40000 KHz), (300 mBi, 2000 mBm)
+Nov 15 10:11:39 localhost kernel:    (5735000 KHz - 5835000 KHz @ 40000 KHz), (300 mBi, 2000 mBm)
+Nov 15 10:11:39 localhost kernel: ath: Failed to stop TX DMA in 100 msec after killing last frame
+Nov 15 10:11:39 localhost kernel: ath: Failed to stop TX DMA in 100 msec after killing last frame
+Nov 15 10:11:39 localhost kernel: ath: Failed to stop TX DMA in 100 msec after killing last frame
+Nov 15 10:11:39 localhost kernel: ath: Failed to stop TX DMA in 100 msec after killing last frame
+Nov 15 10:11:39 localhost kernel: ath: Failed to stop TX DMA in 100 msec after killing last frame
+Nov 15 10:11:39 localhost kernel: ath: Failed to stop TX DMA in 100 msec after killing last frame
+Nov 15 10:11:39 localhost kernel: ath: Failed to stop TX DMA. Resetting hardware!
+Nov 15 10:11:39 localhost kernel: ------------[ cut here ]------------
+Nov 15 10:11:39 localhost kernel: WARNING: at /home/greearb/git/linux.wireless-testing/kernel/pm_qos_params.c:267 pm_qos_update_request+0x2e/0x57()
+Nov 15 10:11:39 localhost kernel: Hardware name: PDSBM
+Nov 15 10:11:39 localhost kernel: pm_qos_update_request() called for unknown object
+Nov 15 10:11:39 localhost kernel: Modules linked in: aes_i586 aes_generic 8021q garp stp llc michael_mic macvlan pktgen fuse nfs lockd fscache nfs_acl auth]
+Nov 15 10:11:39 localhost kernel: Pid: 2863, comm: rmmod Not tainted 2.6.37-rc1-wl+ #47
+Nov 15 10:11:39 localhost kernel: Call Trace:
+Nov 15 10:11:39 localhost kernel: [<78436f25>] warn_slowpath_common+0x77/0x8c
+Nov 15 10:11:39 localhost kernel: [<7844fd46>] ? pm_qos_update_request+0x2e/0x57
+Nov 15 10:11:39 localhost kernel: [<7844fd46>] ? pm_qos_update_request+0x2e/0x57
+Nov 15 10:11:39 localhost kernel: [<78436fb6>] warn_slowpath_fmt+0x2e/0x30
+Nov 15 10:11:39 localhost kernel: [<7844fd46>] pm_qos_update_request+0x2e/0x57
+Nov 15 10:11:39 localhost kernel: [<f8ff0b22>] ath9k_stop+0x17e/0x1a9 [ath9k]
+Nov 15 10:11:39 localhost kernel: [<f8f35e58>] ieee80211_stop_device+0x41/0x6d [mac80211]
+Nov 15 10:11:39 localhost kernel: [<f8f2b29c>] ieee80211_do_stop+0x31d/0x3b7 [mac80211]
+Nov 15 10:11:39 localhost kernel: [<7878e211>] ? _raw_spin_unlock_bh+0x25/0x28
+Nov 15 10:11:39 localhost kernel: [<f8f2b348>] ieee80211_stop+0x12/0x16 [mac80211]
+Nov 15 10:11:39 localhost kernel: [<786f5e55>] __dev_close+0x73/0x88
+Nov 15 10:11:39 localhost kernel: [<7878dd8c>] ? _raw_write_unlock_bh+0x25/0x28
+Nov 15 10:11:39 localhost kernel: [<786f5e7e>] dev_close+0x14/0x36
+Nov 15 10:11:39 localhost kernel: [<786f5f24>] rollback_registered_many+0x84/0x17a
+Nov 15 10:11:39 localhost kernel: [<786f602a>] unregister_netdevice_many+0x10/0x42
+Nov 15 10:11:39 localhost kernel: [<f8f2ab9e>] ieee80211_remove_interfaces+0x90/0x98 [mac80211]
+Nov 15 10:11:39 localhost kernel: [<f8f1e0b3>] ieee80211_unregister_hw+0x46/0xed [mac80211]
+Nov 15 10:11:39 localhost kernel: [<f8fee4d0>] ? ath_deinit_leds+0x93/0x96 [ath9k]
+Nov 15 10:11:39 localhost kernel: [<f8fee8f2>] ath9k_deinit_device+0x6a/0x8d [ath9k]
+Nov 15 10:11:39 localhost kernel: [<f8ff8ebe>] ath_pci_remove+0x22/0x54 [ath9k]
+Nov 15 10:11:39 localhost kernel: [<785af79e>] pci_device_remove+0x27/0xa3
+Nov 15 10:11:39 localhost kernel: [<7863616c>] __device_release_driver+0x5c/0xa3
+Nov 15 10:11:39 localhost kernel: [<78636221>] driver_detach+0x6e/0x8f
+Nov 15 10:11:39 localhost kernel: [<786356e3>] bus_remove_driver+0x69/0x85
+Nov 15 10:11:39 localhost kernel: [<7863669e>] driver_unregister+0x53/0x5a
+Nov 15 10:11:39 localhost kernel: [<7850728d>] ? sysfs_remove_file+0xf/0x11
+Nov 15 10:11:39 localhost kernel: [<785af9d5>] pci_unregister_driver+0x2d/0x6c
+Nov 15 10:11:39 localhost kernel: [<f8ff8df5>] ath_pci_exit+0xd/0xf [ath9k]
+Nov 15 10:11:39 localhost kernel: [<f8ffb91f>] ath9k_exit+0xb/0x35 [ath9k]
+Nov 15 10:11:39 localhost kernel: [<7878ce20>] ? mutex_unlock+0x8/0xa
+Nov 15 10:11:39 localhost kernel: [<78461f5b>] sys_delete_module+0x173/0x1c4
+Nov 15 10:11:39 localhost kernel: [<784a4d4b>] ? remove_vma+0x57/0x5d
+Nov 15 10:11:39 localhost kernel: [<784a59eb>] ? do_munmap+0x239/0x252
+Nov 15 10:11:39 localhost kernel: [<7878e53e>] ? restore_all_notrace+0x0/0x18
+Nov 15 10:11:39 localhost kernel: [<784030dc>] sysenter_do_call+0x12/0x38
+Nov 15 10:11:39 localhost kernel: ---[ end trace e38d5c78a9f7d834 ]---
+Nov 15 10:11:40 localhost kernel: ath9k 0000:08:01.0: PCI INT A disabled
+Nov 15 10:11:40 localhost kernel: ath9k: Driver unloaded
+
+-- 
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
+
