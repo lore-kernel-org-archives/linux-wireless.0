@@ -1,45 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 80-190-117-144.ip-home.de ([80.190.117.144]:37479 "EHLO
-	bu3sch.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755069Ab0KSRPU (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 19 Nov 2010 12:15:20 -0500
-Subject: Re: [PATCH V2] b43: rfkill: use HI enabled bit for all devices
-From: Michael =?ISO-8859-1?Q?B=FCsch?= <mb@bu3sch.de>
-To: =?ISO-8859-1?Q?G=E1bor?= Stefanik <netrolller.3d@gmail.com>
-Cc: =?UTF-8?Q?Rafa=C5=82_Mi=C5=82ecki?= <zajec5@gmail.com>,
-	linux-wireless@vger.kernel.org, b43-dev@lists.infradead.org
-In-Reply-To: <AANLkTimFQ9UYWKtHpjXBTS0PPJcB_vPD7kawfffY_c+-@mail.gmail.com> (sfid-20101119_180023_531984_6B3BA604)
-References: <1290028477-6462-1-git-send-email-zajec5@gmail.com>
-	 <AANLkTikXqg9boY1H_OPAvs7WPd6SXUt8DpykRHuRxB6E@mail.gmail.com>
-	 <1290184873.23033.3.camel@maggie>
-	 <AANLkTimFQ9UYWKtHpjXBTS0PPJcB_vPD7kawfffY_c+-@mail.gmail.com>
-	 (sfid-20101119_180023_531984_6B3BA604)
-Content-Type: text/plain; charset="UTF-8"
-Date: Fri, 19 Nov 2010 18:15:17 +0100
-Message-ID: <1290186917.23033.8.camel@maggie>
-Mime-Version: 1.0
+Received: from mail.deathmatch.net ([72.66.92.28]:4990 "EHLO
+	mail.deathmatch.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754292Ab0KOPTr (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 15 Nov 2010 10:19:47 -0500
+Date: Mon, 15 Nov 2010 10:07:02 -0500
+From: Bob Copeland <me@bobcopeland.com>
+To: Wojciech Dubowik <dubowoj@neratec.com>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	Felix Fietkau <nbd@openwrt.org>
+Subject: Re: [PATCH 8/9] ath5k: AHB port. Add AHB bus support.
+Message-ID: <20101115150702.GA30935@hash.localnet>
+References: <16168765.161289826231239.JavaMail.wlan@CHBU500181> <1785288.181289826959653.JavaMail.wlan@CHBU500181>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1785288.181289826959653.JavaMail.wlan@CHBU500181>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2010-11-19 at 17:59 +0100, Gábor Stefanik wrote: 
-> > There's no difference.
-> > (int)0 implicitly casts to false and anything else to true.
-> 
-> I know, just for the sake of coding style.
+On Mon, Nov 15, 2010 at 02:16:06PM +0100, Wojciech Dubowik wrote:
+> What about such changes compared to original patch? It's then possible to
+> compile both modules at the same time. Of course linking won't work because
+> I would need to separate functions like in ath9k.
 
-All of my code in b43 uses 0/1. That's just less characters to write
-and is as readable as true/false (to me).
-And most b43 G code existed before bool was added to the kernel. ;)
+Is there a plan to add a config entry for ATHEROS_AR231X (or did
+I miss it?)  Someone will one day run their Kconfig checker and
+report it missing.
 
-> Same as initializing
-> pointers to NULL, not 0 (though AFAIK there are platforms where 0x0 is
-> a valid memory address, so using NULL is more than just coding style).
+> --- a/drivers/net/wireless/ath/ath5k/Kconfig
+> +++ b/drivers/net/wireless/ath/ath5k/Kconfig
+> @@ -1,9 +1,11 @@
+>  config ATH5K
+>         tristate "Atheros 5xxx wireless cards support"
+> -       depends on PCI && MAC80211
+> +       depends on (PCI || ATHEROS_AR231X) && MAC80211
+>         select MAC80211_LEDS
+>         select LEDS_CLASS
+>         select NEW_LEDS
+> +       select ATH5K_AHB if ATHEROS_AR231X
+> +       select ATH5K_PCI if PCI
 
-No it is not. C handles the case for NULL not being zero and generates
-correct code even if 0 is used. But Linux doesn't support those
-platforms due to other reasons (memset(..., 0, ...) on struct
-with pointers, for example).
+I like this better, but there probably needs to be a mutual
+exclusion so that randconfig builds don't break.  Then you don't
+get to build both still, but the resulting Makefile is a bit more
+normal.  And then if someone shows up saying that they really do
+have some AR231X device with PCI, then it's more obvious what they
+need to do to fix it (i.e. separate bus interfaces from core).
+
+Something like?
+select ATH5K_PCI if (PCI && !ATHEROS_AR231X)
+or
+depends on ((PCI && !ATHEROS_AR231X) || (!PCI && ATHEROS_AR231X)) ...
 
 -- 
-Greetings Michael.
+Bob Copeland %% www.bobcopeland.com
 
