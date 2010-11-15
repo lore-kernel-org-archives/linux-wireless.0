@@ -1,45 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f46.google.com ([209.85.161.46]:45445 "EHLO
-	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752116Ab0K0Jss (ORCPT
+Received: from external1.orbit-lab.org ([128.6.192.131]:60844 "HELO
+	external1.orbit-lab.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1757044Ab0KOUDe (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 27 Nov 2010 04:48:48 -0500
-Subject: Re: [RFC 0/9] Change the copyright info.
-From: Artem Bityutskiy <dedekind1@gmail.com>
-Reply-To: dedekind1@gmail.com
-To: "Justin P. Mattock" <justinmattock@gmail.com>
-Cc: trivial@kernel.org, linux-rdma@vger.kernel.org,
-	linux-ide@vger.kernel.org, linux-mtd@lists.infradead.org,
-	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
-In-Reply-To: <4CF0B781.2080209@gmail.com>
-References: <1290838879-11038-1-git-send-email-justinmattock@gmail.com>
-	 <1290843702.2379.1.camel@koala>  <4CF0B781.2080209@gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Sat, 27 Nov 2010 11:48:43 +0200
-Message-ID: <1290851323.2379.3.camel@koala>
-Mime-Version: 1.0
+	Mon, 15 Nov 2010 15:03:34 -0500
+Received: from repository3.orbit-lab.org (repository3.orbit-lab.org [10.50.0.41])
+	by external1.orbit-lab.org (Postfix) with ESMTP id 8A32B418D8
+	for <linux-wireless@vger.kernel.org>; Mon, 15 Nov 2010 14:59:11 -0500 (EST)
+Subject: Compat-wireless release for 2010-11-15 is baked
+To: <linux-wireless@vger.kernel.org>
+Message-Id: <20101115200332.BEB6040F97@repository3.orbit-lab.org>
+Date: Mon, 15 Nov 2010 15:03:32 -0500 (EST)
+From: compat@orbit-lab.org (Compat-wireless cronjob account)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2010-11-26 at 23:47 -0800, Justin P. Mattock wrote:
-> On 11/26/2010 11:41 PM, Artem Bityutskiy wrote:
-> > On Fri, 2010-11-26 at 22:21 -0800, Justin P. Mattock wrote:
-> >>
-> >
-> >> Below you will find a set of patches, that update the copyright info from
-> >> Sun Microsystems to Oracle.
-> >
-> > Shouldn't @oracle.com e-mail used for such patches?
-> >
-> 
-> yeah was looking at all the @oracle addresses, but thought to just focus 
-> on this part, then later send out something for the addresses
+>From git://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next
+   522d4fb..2ed3f79  history    -> origin/history
+ + e684160...d8273d8 master     -> origin/master  (forced update)
+   f6614b7..0143832  stable     -> origin/stable
+ * [new tag]         next-20101115 -> next-20101115
 
-Err, I actually meant that you (the submitter) should use @oracle.com
-e-mail, because it looks a bit confusing why @gmail.com guy changes
-copyrights :-)
+compat-wireless code metrics
 
--- 
-Best Regards,
-Artem Bityutskiy (Битюцкий Артём)
+    741659 - Total upstream lines of code being pulled
+      2187 - backport code changes
+      1930 - backport code additions
+       257 - backport code deletions
+      6360 - backport from compat module
+      8547 - total backport code
+    1.1524 - % of code consists of backport work
+      1534 - Crap changes not yet posted
+      1491 - Crap additions not yet posted
+        43 - Crap deletions not yet posted
+    0.2068 - % of crap code
 
+Base tree: linux-next.git
+Base tree version: next-20101115
+compat-wireless release: compat-wireless-2010-11-10-8-g12f3be5-pc
