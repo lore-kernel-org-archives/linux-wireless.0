@@ -1,49 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f46.google.com ([209.85.215.46]:50085 "EHLO
-	mail-ew0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759300Ab0KRUKy (ORCPT
+Received: from mail-qw0-f46.google.com ([209.85.216.46]:62748 "EHLO
+	mail-qw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755605Ab0KOVz5 convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 18 Nov 2010 15:10:54 -0500
-Received: by ewy5 with SMTP id 5so32028ewy.19
-        for <linux-wireless@vger.kernel.org>; Thu, 18 Nov 2010 12:10:53 -0800 (PST)
-From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-To: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-Cc: b43-dev@lists.infradead.org,
-	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-Subject: [PATCH 1/3] b43: N-PHY: fix BPHY init
-Date: Thu, 18 Nov 2010 21:11:41 +0100
-Message-Id: <1290111103-19308-1-git-send-email-zajec5@gmail.com>
+	Mon, 15 Nov 2010 16:55:57 -0500
 MIME-Version: 1.0
+In-Reply-To: <20101115212520.GD2297@tuxdriver.com>
+References: <20101115212520.GD2297@tuxdriver.com>
+Date: Mon, 15 Nov 2010 22:55:55 +0100
+Message-ID: <AANLkTikZyvZ+vNti_9FTg3JgAC19QFkXDX4nTvaA-YaX@mail.gmail.com>
+Subject: Re: pull request: wireless-next-2.6 2010-11-15
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: davem@davemloft.net, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
----
- drivers/net/wireless/b43/phy_n.c |    4 ++--
- 1 files changed, 2 insertions(+), 2 deletions(-)
+2010/11/15 John W. Linville <linville@tuxdriver.com>:
+> Here is the traditional first huge pull request intended for the 2.6.38!
+>
+> Included are the usual batch of updates to various wireless drivers.
+> For good measure, Luis also gives us a few wireless regulatory control
+> patches as well.
+>
+> Please let me know if there are problems!
 
-diff --git a/drivers/net/wireless/b43/phy_n.c b/drivers/net/wireless/b43/phy_n.c
-index 2c60793..ff0c2b9 100644
---- a/drivers/net/wireless/b43/phy_n.c
-+++ b/drivers/net/wireless/b43/phy_n.c
-@@ -1579,13 +1579,13 @@ static void b43_nphy_bphy_init(struct b43_wldev *dev)
- 	u16 val;
- 
- 	val = 0x1E1F;
--	for (i = 0; i < 14; i++) {
-+	for (i = 0; i < 16; i++) {
- 		b43_phy_write(dev, B43_PHY_N_BMODE(0x88 + i), val);
- 		val -= 0x202;
- 	}
- 	val = 0x3E3F;
- 	for (i = 0; i < 16; i++) {
--		b43_phy_write(dev, B43_PHY_N_BMODE(0x97 + i), val);
-+		b43_phy_write(dev, B43_PHY_N_BMODE(0x98 + i), val);
- 		val -= 0x202;
- 	}
- 	b43_phy_write(dev, B43_PHY_N_BMODE(0x38), 0x668);
+Nothing that should postpone this pull, but could you check for
+following patches?
+[PATCH] ssb: workarounds: be verbose about hacking SPROM revision,
+don't duplicate code
+[PATCH] ssb: return -ENOMEM on alloc fail (instead of CRC check's result)
+[PATCH] ssb: fail registration for unknown SPROM revision
+
+It looks like you missed them. All 3 were sent on 3.11.2010
+
 -- 
-1.7.1
-
+Rafał
