@@ -1,37 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:39784 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752037Ab0KISvs (ORCPT
+Received: from mail-vw0-f46.google.com ([209.85.212.46]:47898 "EHLO
+	mail-vw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753055Ab0KOXpA (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 9 Nov 2010 13:51:48 -0500
-Subject: Re: Wireless and RFKILL, this way integrators like myself
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Clyde McPherson <ccmcphe@verizon.net>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <4CD99096.5020105@verizon.net>
-References: <4CD99096.5020105@verizon.net>
-Content-Type: text/plain; charset="UTF-8"
-Date: Tue, 09 Nov 2010 10:53:07 -0800
-Message-ID: <1289328787.3660.3.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+	Mon, 15 Nov 2010 18:45:00 -0500
+Received: by vws13 with SMTP id 13so35931vws.19
+        for <linux-wireless@vger.kernel.org>; Mon, 15 Nov 2010 15:45:00 -0800 (PST)
+Message-ID: <4CE1C5F7.90607@lwfinger.net>
+Date: Mon, 15 Nov 2010 17:44:55 -0600
+From: Larry Finger <Larry.Finger@lwfinger.net>
+MIME-Version: 1.0
+To: James Womack <james.c.womack@gmail.com>
+CC: linux-wireless@vger.kernel.org
+Subject: Re: r8187se panic
+References: <slrnidp3ae.79c.rb-oss-3@mal.justgohome.co.uk> <4CDC9FA5.10002@lwfinger.net> <slrnidq7u0.9ic.rb-oss-3@mal.justgohome.co.uk> <4CDD3BC4.7070102@lwfinger.net> <slrnidqorp.dlr.rb-oss-3@mal.justgohome.co.uk> <4CDD66C4.10603@lwfinger.net> <slrnidqsld.dlr.rb-oss-3@mal.justgohome.co.uk> <4CDD7945.70005@lwfinger.net> <slrnidqv0k.g21.rb-oss-3@mal.justgohome.co.uk> <loom.20101113T191727-421@post.gmane.org> <4CDEDC74.3040902@lwfinger.net> <ibmosc$4au$1@dough.gmane.org> <4CDEEEE4.80801@lwfinger.net> <ibokag$481$1@dough.gmane.org> <4CE00BEE.8060100@lwfinger.net> <ibpauk$v12$1@dough.gmane.org> <4CE0455A.50709@lwfinger.net> <ibs7c3$3dn$1@dough.gmane.org>
+In-Reply-To: <ibs7c3$3dn$1@dough.gmane.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2010-11-09 at 13:19 -0500, Clyde McPherson wrote:
+On 11/15/2010 03:05 PM, James Womack wrote:
+> On 14/11/10 20:23, Larry Finger wrote:
+>> On 11/14/2010 12:49 PM, James Womack wrote:
+>>> Hey, I tried patching the kernel I downloaded, but the dry runs both
+>>> presented errors detailed below:
+>>>
+>>> james@mercury:/usr/src/linux-source-2.6.32$ patch -p1 --dry-run<
+>>> /home/james/rtl8187se_change_panic_to_warn
+>>> patching file drivers/staging/rtl8187se/r8185b_init.c
+>>> Hunk #1 succeeded at 356 with fuzz 2 (offset 92 lines).
+>>> Hunk #2 FAILED at 302.
+>>> 1 out of 2 hunks FAILED -- saving rejects to file
+>>> drivers/staging/rtl8187se/r8185b_init.c.rej
+>>> james@mercury:/usr/src/linux-source-2.6.32$ patch -p1 --dry-run<
+>>> /home/james/rtl8187se_
+>>> rtl8187se_change_panic_to_warn  rtl8187se_lock_pci_remove
+>>> james@mercury:/usr/src/linux-source-2.6.32$ patch -p1 --dry-run<
+>>> /home/james/rtl8187se_lock_pci_remove
+>>> patching file drivers/staging/rtl8187se/r8180_core.c
+>>> patch unexpectedly ends in middle of line
+>>> patch: **** unexpected end of file in patch
+>>> james@mercury:/usr/src/linux-source-2.6.32$
+>>>
+>>> Do I need to do anything to the kernel source before applying the
+>>> patches?
+>>
+>> You needed a different version of the patch for 2.6.32. Apply the
+>> attached
+>> version. You only need the one patch.
+>>
+>> Larry
+> 
+> Hello,
+> 
+> I managed to compile the patched kernel. To confirm - the issue of the
+> kernel panic occuring when Fn-F2 is used to turn off the wireless card
+> is resolved. Thank you. I'll let you know if I notice any side effects
+> from the patch.
 
-> I build and use the compat-wireless source for use with SBC 
-> applications, and I have a question about the wireless portion of the 
-> code. Our SBCs do not have RFKILL capabilities, and since we use 
-> wireless we are forced to include it in our kernel due to the depends in 
-> wireless.
+After you do the Fn-F2 sequence, there should be a stack dump in the output of
+the dmesg command. Could you please post that? With it, I should be able to find
+what is leading to the original error. It does not happen on my system.
 
-Not true. The depends is "depends on RFKILL || !RFKILL".
-
-> What are the chances of adding #ifdef's for CONFIG_RFKILL on 
-> the code segments that require RFKILL
-
-Zero, because if you configure w/o RFKILL then the rfkill functions all
-become stubs and there's nothing for you to worry about.
-
-johannes
-
+Larry
