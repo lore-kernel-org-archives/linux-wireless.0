@@ -1,72 +1,93 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([147.243.128.26]:44588 "EHLO mgw-da02.nokia.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751195Ab0K3FaV (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 30 Nov 2010 00:30:21 -0500
-Subject: Re: [PATCH] wl12xx: Remove 11j channels from the supported
- channels list.
-From: Juuso Oikarinen <juuso.oikarinen@nokia.com>
-To: Luciano Coelho <luciano.coelho@nokia.com>
-Cc: geryk@ti.com,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <1291061407.1673.78.camel@powerslave>
-References: <1291025153-17570-1-git-send-email-juuso.oikarinen@nokia.com>
-	 <4CF39DBA.2020004@ti.com>  <1291061407.1673.78.camel@powerslave>
-Content-Type: text/plain; charset="UTF-8"
-Date: Tue, 30 Nov 2010 07:30:03 +0200
-Message-ID: <1291095003.4284.5632.camel@wimaxnb.nmp.nokia.com>
-Mime-Version: 1.0
+Received: from mail-wy0-f174.google.com ([74.125.82.174]:64684 "EHLO
+	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757944Ab0KOQhG (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 15 Nov 2010 11:37:06 -0500
+Received: by wyb28 with SMTP id 28so4584836wyb.19
+        for <linux-wireless@vger.kernel.org>; Mon, 15 Nov 2010 08:37:04 -0800 (PST)
+From: Florian Fainelli <florian@openwrt.org>
+To: Wojciech Dubowik <dubowoj@neratec.com>
+Subject: Re: [PATCH 8/9] ath5k: AHB port. Add AHB bus support.
+Date: Mon, 15 Nov 2010 17:37:13 +0100
+Cc: Bob Copeland <me@bobcopeland.com>, linville@tuxdriver.com,
+	linux-wireless@vger.kernel.org, Felix Fietkau <nbd@openwrt.org>
+References: <9968918.321289836178712.JavaMail.wlan@CHBU500181>
+In-Reply-To: <9968918.321289836178712.JavaMail.wlan@CHBU500181>
+MIME-Version: 1.0
+Content-Type: Text/Plain;
+  charset="utf-8"
+Message-Id: <201011151737.13737.florian@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2010-11-29 at 22:10 +0200, Luciano Coelho wrote:
-> On Mon, 2010-11-29 at 14:34 +0200, ext Gery Kahn wrote:
-> > On 11/29/2010 12:05 PM, juuso.oikarinen@nokia.com wrote:
-> > > From: Juuso Oikarinen<juuso.oikarinen@nokia.com>
-> > >
-> > > Because we don't support them at this stage.
-> > >
-> > > Signed-off-by: Juuso Oikarinen<juuso.oikarinen@nokia.com>
-> > > ---
-> > >   drivers/net/wireless/wl12xx/main.c |    8 --------
-> > >   1 files changed, 0 insertions(+), 8 deletions(-)
-> > >
-> > > diff --git a/drivers/net/wireless/wl12xx/main.c b/drivers/net/wireless/wl12xx/main.c
-> > > index 7fecefe..dc3a093 100644
-> > > --- a/drivers/net/wireless/wl12xx/main.c
-> > > +++ b/drivers/net/wireless/wl12xx/main.c
-> > > @@ -2374,14 +2374,6 @@ static struct ieee80211_rate wl1271_rates_5ghz[] = {
-> > >
-> > >   /* 5 GHz band channels for WL1273 */
-> > >   static struct ieee80211_channel wl1271_channels_5ghz[] = {
-> > > -	{ .hw_value = 183, .center_freq = 4915},
-> > > -	{ .hw_value = 184, .center_freq = 4920},
-> > > -	{ .hw_value = 185, .center_freq = 4925},
-> > > -	{ .hw_value = 187, .center_freq = 4935},
-> > > -	{ .hw_value = 188, .center_freq = 4940},
-> > > -	{ .hw_value = 189, .center_freq = 4945},
-> > > -	{ .hw_value = 192, .center_freq = 4960},
-> > > -	{ .hw_value = 196, .center_freq = 4980},
-> > >   	{ .hw_value = 7, .center_freq = 5035},
-> > >   	{ .hw_value = 8, .center_freq = 5040},
-> > >   	{ .hw_value = 9, .center_freq = 5045},
-> > Our firmware do supports Japan channels, so why to remove them?
+On Monday 15 November 2010 16:49:47 Wojciech Dubowik wrote:
+> > On Mon, Nov 15, 2010 at 02:16:06PM +0100, Wojciech Dubowik wrote:
+> > > What about such changes compared to original patch? It's then
+> > 
+> > possible to
+> > 
+> > > compile both modules at the same time. Of course linking won't work
+> > 
+> > because
+> > 
+> > > I would need to separate functions like in ath9k.
+> > 
+> > Is there a plan to add a config entry for ATHEROS_AR231X (or did
+> > I miss it?)  Someone will one day run their Kconfig checker and
+> > report it missing.
 > 
-> We experienced some problems with it (at least).  Juuso reported that
-> some strange things were happening, like probe_reqs were going to 2.4GHz
-> channels with 11a IEs when these 11j channels were scanned.
+> Openwrt has whole implementation but I have no idea why it's not
+> in the official kernel.
 > 
-> Have you actively tried to use 11j channels? Did you have any problems?
+> Actually the same applies to ath9k because ATHEROS_AR71XX definition
+> needed for AHB is not specified in latest kernel.
+> http://www.mail-archive.com/ath9k-devel@lists.ath9k.org/msg03660.html
+
+Support for Atheros AR71xx chips has been submitted for review a couple of 
+days ago: http://www.linux-mips.org/archives/linux-mips/2010-11/msg00085.html
+
+the Kconfig symbol name should be changed accordingly when the patches are 
+accepted.
+
 > 
-
-Yes, and also the NVS INI section (look at ini.h) appears to be
-currently missing all the calibration/compensation etc values for the
-11j channels.
-
-So it seems even if the firmware may support 11j, the infrastructure on
-the host side is still lacking. It seems to me there is some work to be
-done before these can be enabled.
-
--Juuso
-
-
+> > > --- a/drivers/net/wireless/ath/ath5k/Kconfig
+> > > +++ b/drivers/net/wireless/ath/ath5k/Kconfig
+> > > @@ -1,9 +1,11 @@
+> > > 
+> > >  config ATH5K
+> > >  
+> > >         tristate "Atheros 5xxx wireless cards support"
+> > > 
+> > > -       depends on PCI && MAC80211
+> > > +       depends on (PCI || ATHEROS_AR231X) && MAC80211
+> > > 
+> > >         select MAC80211_LEDS
+> > >         select LEDS_CLASS
+> > >         select NEW_LEDS
+> > > 
+> > > +       select ATH5K_AHB if ATHEROS_AR231X
+> > > +       select ATH5K_PCI if PCI
+> > 
+> > I like this better, but there probably needs to be a mutual
+> > exclusion so that randconfig builds don't break.  Then you don't
+> > get to build both still, but the resulting Makefile is a bit more
+> > normal.  And then if someone shows up saying that they really do
+> > have some AR231X device with PCI, then it's more obvious what they
+> > need to do to fix it (i.e. separate bus interfaces from core).
+> > 
+> > Something like?
+> > select ATH5K_PCI if (PCI && !ATHEROS_AR231X)
+> > or
+> > depends on ((PCI && !ATHEROS_AR231X) || (!PCI && ATHEROS_AR231X)) ...
+> 
+> I will make it exclusive and post in the the series if there are
+> no more comments.
+> 
+> Wojtek
+> 
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless"
+> in the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
