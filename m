@@ -1,38 +1,93 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:50484 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755531Ab0KUUss (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 21 Nov 2010 15:48:48 -0500
-From: Hauke Mehrtens <hauke@hauke-m.de>
-To: lrodriguez@atheros.com
-Cc: linux-wireless@vger.kernel.org, mcgrof@infradead.org,
-	Hauke Mehrtens <hauke@hauke-m.de>
-Subject: [PATCH 2/2] compat: update wireless.h with new version from linux-next
-Date: Sun, 21 Nov 2010 21:48:37 +0100
-Message-Id: <1290372517-6777-2-git-send-email-hauke@hauke-m.de>
-In-Reply-To: <1290372517-6777-1-git-send-email-hauke@hauke-m.de>
-References: <1290372517-6777-1-git-send-email-hauke@hauke-m.de>
+Received: from mail.neratec.ch ([80.75.119.105]:51936 "EHLO mail.neratec.ch"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753946Ab0KONQN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 15 Nov 2010 08:16:13 -0500
+Date: Mon, 15 Nov 2010 14:16:06 +0100 (CET)
+From: Wojciech Dubowik <dubowoj@neratec.com>
+To: Bob Copeland <me@bobcopeland.com>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	Felix Fietkau <nbd@openwrt.org>
+Message-ID: <1785288.181289826959653.JavaMail.wlan@CHBU500181>
+In-Reply-To: <16168765.161289826231239.JavaMail.wlan@CHBU500181>
+Subject: Re: [PATCH 8/9] ath5k: AHB port. Add AHB bus support.
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+> On Fri, Nov 12, 2010 at 08:55:36PM +0100, Felix Fietkau wrote:
+> > On 2010-11-12 8:51 PM, Wojciech Dubowik wrote:
+> > >> Having both in the kernel is completely pointless. There are no
+> > >> devices
+> > >> that can support both, nor will there ever be.
+> > > 
+> > > I agree. The only advantage would be that some of the typos and
+> missing
+> > > functions in either of the files would be detected during compile
+> time.
+> 
+> Compile-testing coverage is a fine reason to allow people to compile
+> both modules.  Ok, I accept that it's a bit of a pain to create
+> separate
+> modules, but can we at least do it like:
+> 
+> ath5k-$(CONFIG_ATH5K_PCI) += pci.o
+> ath5k-$(CONFIG_ATH5K_AHB) += ahb.o
+> 
+> and add the appropriate selects and mutual exclusion to the Kconfig?
+> Of course, that presupposes a Kconfig entry for CONFIG_ATHEROS_AR2316
+> where there is not one currently.
+> 
+> -- 
+> Bob Copeland %% www.bobcopeland.com
 
-Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+What about such changes compared to original patch? It's then possible to
+compile both modules at the same time. Of course linking won't work because
+I would need to separate functions like in ath9k.
+
 ---
- include/linux/wireless.h |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
-
-diff --git a/include/linux/wireless.h b/include/linux/wireless.h
-index e6827ee..4395b28 100644
---- a/include/linux/wireless.h
-+++ b/include/linux/wireless.h
-@@ -1157,6 +1157,6 @@ struct __compat_iw_event {
- #define IW_EV_PARAM_PK_LEN	(IW_EV_LCP_PK_LEN + sizeof(struct iw_param))
- #define IW_EV_ADDR_PK_LEN	(IW_EV_LCP_PK_LEN + sizeof(struct sockaddr))
- #define IW_EV_QUAL_PK_LEN	(IW_EV_LCP_PK_LEN + sizeof(struct iw_quality))
--#define IW_EV_POINT_PK_LEN	(IW_EV_LCP_LEN + 4)
-+#define IW_EV_POINT_PK_LEN	(IW_EV_LCP_PK_LEN + 4)
+diff --git a/drivers/net/wireless/ath/ath5k/Kconfig b/drivers/net/wireless/ath/ath5k/Kconfig
+index eb83b7b..eba97f8 100644
+--- a/drivers/net/wireless/ath/ath5k/Kconfig
++++ b/drivers/net/wireless/ath/ath5k/Kconfig
+@@ -1,9 +1,11 @@
+ config ATH5K
+        tristate "Atheros 5xxx wireless cards support"
+-       depends on PCI && MAC80211
++       depends on (PCI || ATHEROS_AR231X) && MAC80211
+        select MAC80211_LEDS
+        select LEDS_CLASS
+        select NEW_LEDS
++       select ATH5K_AHB if ATHEROS_AR231X
++       select ATH5K_PCI if PCI
+        ---help---
+          This module adds support for wireless adapters based on
+          Atheros 5xxx chipset.
+@@ -37,3 +39,14 @@ config ATH5K_DEBUG
  
- #endif	/* _LINUX_WIRELESS_H */
--- 
-1.7.1
-
+          modprobe ath5k debug=0x00000400
+ 
++config ATH5K_AHB
++       bool "Atheros 5xxx AHB bus support"
++       depends on ATHEROS_AR231X
++       ---help---
++       This adds support for WiSoC type chipsets of the 5xxx family
++
++config ATH5K_PCI
++       bool "Atheros 5xxx PCI bus support"
++       depends on PCI
++       ---help---
++       This adds support for PCI type chipsets of the 5xxx family
+diff --git a/drivers/net/wireless/ath/ath5k/Makefile b/drivers/net/wireless/ath/ath5k/Makefile
+index 50d5e08..a16b178 100644
+--- a/drivers/net/wireless/ath/ath5k/Makefile
++++ b/drivers/net/wireless/ath/ath5k/Makefile
+@@ -15,5 +15,6 @@ ath5k-y                               += rfkill.o
+ ath5k-y                                += ani.o
+ ath5k-y                                += sysfs.o
+ ath5k-$(CONFIG_ATH5K_DEBUG)    += debug.o
+-ath5k-y                                += $(if $(CONFIG_ATHEROS_AR231X),ahb,pci).o
++ath5k-$(CONFIG_ATH5K_PCI)      += pci.o
++ath5k-$(CONFIG_ATH5K_AHB)      += ahb.o
+ obj-$(CONFIG_ATH5K)            += ath5k.o
