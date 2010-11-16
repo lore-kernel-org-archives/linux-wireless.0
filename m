@@ -1,39 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pz0-f46.google.com ([209.85.210.46]:62225 "EHLO
-	mail-pz0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752301Ab0K0O2f (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:40344 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755170Ab0KPVOu (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 27 Nov 2010 09:28:35 -0500
-Message-ID: <4CF1158F.9070501@gmail.com>
-Date: Sat, 27 Nov 2010 06:28:31 -0800
-From: "Justin P. Mattock" <justinmattock@gmail.com>
+	Tue, 16 Nov 2010 16:14:50 -0500
+Date: Tue, 16 Nov 2010 16:02:47 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Cc: linux-wireless@vger.kernel.org, ipw3945-devel@lists.sourceforge.net
+Subject: Re: [PATCH 00/18]  update for 2.6.38
+Message-ID: <20101116210247.GE10774@tuxdriver.com>
+References: <1289923311-14920-1-git-send-email-wey-yi.w.guy@intel.com>
 MIME-Version: 1.0
-To: Alan Cox <alan@lxorguk.ukuu.org.uk>
-CC: trivial@kernel.org, linux-rdma@vger.kernel.org,
-	linux-ide@vger.kernel.org, linux-mtd@lists.infradead.org,
-	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [RFC 0/9] Change the copyright info.
-References: <1290838879-11038-1-git-send-email-justinmattock@gmail.com> <20101127135047.6645bbfb@pyx>
-In-Reply-To: <20101127135047.6645bbfb@pyx>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1289923311-14920-1-git-send-email-wey-yi.w.guy@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 11/27/2010 05:50 AM, Alan Cox wrote:
->> Below you will find a set of patches, that update the copyright info from
->> Sun Microsystems to Oracle.
->
-> This should come from an official oracle address. It's not trivial stuff
-> at all - its rather important it's done right.
->
+On Tue, Nov 16, 2010 at 08:01:33AM -0800, Wey-Yi Guy wrote:
+> We add more changes to prepare P2P supports
+> We also add few features/changes to WiFi/BT coex,
+> such as dynamic aggregation.
+> For newer devices, we change the default LED mode to On/Off
 
+There had been some talk of a firmware update that would solve some
+user-reported bugs on bugzilla.kernel.org.  I don't have the bug
+numbers handy, but I can probably find them.  I imagine you can find
+them quite easily as well.
 
-o.k. any oracle employees want to take this? also the email addresses 
-need fixing as well(grep -Re "sun.com" *) shows some people with sun 
-still there as well
+Is that firmware update still in the works?  When can we expect to
+see that?
 
-Justin P. Mattock
-
-
-
-
+John
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
