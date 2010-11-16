@@ -1,58 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f46.google.com ([209.85.214.46]:64891 "EHLO
-	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932147Ab0KLWyU (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 12 Nov 2010 17:54:20 -0500
-Received: by mail-bw0-f46.google.com with SMTP id 15so3543570bwz.19
-        for <linux-wireless@vger.kernel.org>; Fri, 12 Nov 2010 14:54:20 -0800 (PST)
-From: Christian Lamparter <chunkeey@googlemail.com>
-To: Ivo Anjo <knuckles@gmail.com>
-Subject: Re: Kernel panic with carl9170
-Date: Fri, 12 Nov 2010 23:54:16 +0100
-Cc: linux-wireless@vger.kernel.org
-References: <AANLkTimtnRgJzWx8XUZjNqTkmNzppstcbWxuPr2Hkf41@mail.gmail.com> <AANLkTikqyg_Z5kTWQa1R9ftxEPyqoLf6u=-ptS7RPzt9@mail.gmail.com>
-In-Reply-To: <AANLkTikqyg_Z5kTWQa1R9ftxEPyqoLf6u=-ptS7RPzt9@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-15"
-Message-Id: <201011122354.16506.chunkeey@googlemail.com>
+Received: from mga09.intel.com ([134.134.136.24]:17196 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753064Ab0KPQGn (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 16 Nov 2010 11:06:43 -0500
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	Johannes Berg <johannes.berg@intel.com>,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Subject: [PATCH 12/18] iwlagn: avoid crash if vif is not assigned
+Date: Tue, 16 Nov 2010 08:01:45 -0800
+Message-Id: <1289923311-14920-13-git-send-email-wey-yi.w.guy@intel.com>
+In-Reply-To: <1289923311-14920-1-git-send-email-wey-yi.w.guy@intel.com>
+References: <1289923311-14920-1-git-send-email-wey-yi.w.guy@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Friday 12 November 2010 21:41:31 Ivo Anjo wrote:
-> Hello,
-> 
-> I'm getting a kernel panic with carl9170 when connecting to a network,
-> for example with my home network (WPA2 with AES, 2.4Ghz 802.11b/g/n
-> mixed mode).
-> I've been running compat-wireless for a while now, and the panic has
-> been there for at least a month. With latest compat-wireless
-> (09November) I still get this problem.
+From: Johannes Berg <johannes.berg@intel.com>
 
-at least a month? So you are saying that you didn't experience the bug
-back in September, when the driver first appeared in compat-wireless?
+For reasons that aren't entirely clear to me,
+we sometimes get here during hardware reset
+without the interface being set. Don't crash,
+but keep a warning.
 
-Have you tried to "git bisect" the panic then.
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-agn-rxon.c |    5 +++++
+ 1 files changed, 5 insertions(+), 0 deletions(-)
+
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-rxon.c b/drivers/net/wireless/iwlwifi/iwl-agn-rxon.c
+index 2d927a9..fbaa8d2 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn-rxon.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn-rxon.c
+@@ -507,6 +507,11 @@ void iwlagn_bss_info_changed(struct ieee80211_hw *hw,
  
-> The kernel panic does not happen always, and it seems to happen more
-> frequently when I try to connect to the network and my signal is not
-> very good. If I sit right next to the AP, I never get any panics. The
-> panic happens right when I'm connecting (network-manager is still
-> displaying a spinning icon).
-Unrelated but I hope you're running a recent network-manager version
-and you've "locked" the AP bssid. Otherwise you might experience
-serve link problems due to "expensive" background scans.
+ 	mutex_lock(&priv->mutex);
+ 
++	if (WARN_ON(!ctx->vif)) {
++		mutex_unlock(&priv->mutex);
++		return;
++	}
++
+ 	if (changes & BSS_CHANGED_BEACON_INT)
+ 		force = true;
+ 
+-- 
+1.7.0.4
 
-> My hardware is the TP-Link TL-WN821N v2 and I'm running kernel 2.6.36-rc8.
-What carl9170 firmware are you using?
-
-> Backtrace is in attached picture.
-The backtrace is a bit clipped (I would love to see what happens
-before the bug too). But what I can say is that it didn't crash
-in the driver itself. Maybe the problem could be solved by a
-kernel update (isn't 2.6.36-rc8 now nearly a month old?), or
-at least it could produce a "better" backtrace?!
-
-Best regards,
-	Chr
