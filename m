@@ -1,36 +1,28 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:41676 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751940Ab0KXVOt (ORCPT
+Received: from mail-fx0-f46.google.com ([209.85.161.46]:39579 "EHLO
+	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755918Ab0KPPAV (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 24 Nov 2010 16:14:49 -0500
-Received: from uucp by smtp.tuxdriver.com with local-rmail (Exim 4.63)
-	(envelope-from <linville@tuxdriver.com>)
-	id 1PLMfw-0002Eo-IJ
-	for linux-wireless@vger.kernel.org; Wed, 24 Nov 2010 16:14:48 -0500
-Received: from linville-8530p.local (localhost.localdomain [127.0.0.1])
-	by linville-8530p.local (8.14.4/8.14.4) with ESMTP id oAOLETgQ014374
-	for <linux-wireless@vger.kernel.org>; Wed, 24 Nov 2010 16:14:29 -0500
-Received: (from linville@localhost)
-	by linville-8530p.local (8.14.4/8.14.4/Submit) id oAOLETFc014372
-	for linux-wireless@vger.kernel.org; Wed, 24 Nov 2010 16:14:29 -0500
-Date: Wed, 24 Nov 2010 16:14:29 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: linux-wireless@vger.kernel.org
-Subject: Re: wireless-next-2.6 rebased 2010-11-24
-Message-ID: <20101124211428.GA9351@tuxdriver.com>
-References: <20101124170956.GE7435@tuxdriver.com>
+	Tue, 16 Nov 2010 10:00:21 -0500
+Received: by fxm6 with SMTP id 6so538682fxm.19
+        for <linux-wireless@vger.kernel.org>; Tue, 16 Nov 2010 07:00:19 -0800 (PST)
+Message-ID: <4CE29C7E.6000200@lwfinger.net>
+Date: Tue, 16 Nov 2010 09:00:14 -0600
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20101124170956.GE7435@tuxdriver.com>
+To: James Womack <james.c.womack@gmail.com>
+CC: linux-wireless@vger.kernel.org
+Subject: Re: r8187se panic
+References: <slrnidp3ae.79c.rb-oss-3@mal.justgohome.co.uk> <4CDC9FA5.10002@lwfinger.net> <slrnidq7u0.9ic.rb-oss-3@mal.justgohome.co.uk> <4CDD3BC4.7070102@lwfinger.net> <slrnidqorp.dlr.rb-oss-3@mal.justgohome.co.uk> <4CDD66C4.10603@lwfinger.net> <slrnidqsld.dlr.rb-oss-3@mal.justgohome.co.uk> <4CDD7945.70005@lwfinger.net> <slrnidqv0k.g21.rb-oss-3@mal.justgohome.co.uk> <loom.20101113T191727-421@post.gmane.org> <4CDEDC74.3040902@lwfinger.net> <ibmosc$4au$1@dough.gmane.org> <4CDEEEE4.80801@lwfinger.net> <ibokag$481$1@dough.gmane.org> <4CE00BEE.8060100@lwfinger.net> <ibpauk$v12$1@dough.gmane.org> <4CE0455A.50709@lwfinger.net> <ibs7c3$3dn$1@dough.gmane.org> <4CE1C5F7.90607@lwfinger.net> <ibtkeo$efc$1@dough.gmane.org> <4CE29413.5090103@lwfinger.net> <ibu5eh$15d$1@dough.gmane.org>
+In-Reply-To: <ibu5eh$15d$1@dough.gmane.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Nov 24, 2010 at 12:09:56PM -0500, John W. Linville wrote:
-> Rebased to drop a problematic patch -- FYI!
+On 11/16/2010 08:46 AM, James Womack wrote:
 
-I messed this up -- don't rebase any downstream trees yet...
+> This should be sufficient, hopefully!
 
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+Perfect.
+
+Larry
