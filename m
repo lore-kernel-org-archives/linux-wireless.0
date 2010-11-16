@@ -1,55 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f46.google.com ([209.85.215.46]:41002 "EHLO
-	mail-ew0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750810Ab0KWTsz (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 23 Nov 2010 14:48:55 -0500
-Received: by ewy5 with SMTP id 5so2684055ewy.19
-        for <linux-wireless@vger.kernel.org>; Tue, 23 Nov 2010 11:48:54 -0800 (PST)
-Date: Tue, 23 Nov 2010 21:48:32 +0200
-From: Nick Kossifidis <mickflemm@gmail.com>
-To: ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org
-Cc: linville@tuxdriver.com, me@bobcopeland.com, mcgrof@gmail.com,
-	jirislaby@gmail.com, nbd@openwrt.org, br1@einfach.org
-Subject: [PATCH 27/30] ath5k: Use correct clock when setting ofdm timings
-Message-ID: <20101123194832.GA4303@makis.mantri>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: from mga11.intel.com ([192.55.52.93]:23522 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932480Ab0KPVnq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 16 Nov 2010 16:43:46 -0500
+Subject: Re: iwl3945 miserably slow (1.5mbps) due to faulty rate control,
+ unfixed since the ipw3945 transition
+From: "Guy, Wey-Yi" <wey-yi.w.guy@intel.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: Eric Appleman <erappleman@gmail.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"ilw@linux.intel.com" <ilw@linux.intel.com>
+In-Reply-To: <20101116212511.GG10774@tuxdriver.com>
+References: <4CD1ECAE.6010105@gmail.com>
+	 <20101116212511.GG10774@tuxdriver.com>
+Content-Type: text/plain
+Date: Tue, 16 Nov 2010 13:42:54 -0800
+Message-Id: <1289943774.31636.6.camel@wwguy-ubuntu>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
- * Use correct clock value when setting OFDM timings on
- non-default bwmodes.
+On Tue, 2010-11-16 at 13:25 -0800, John W. Linville wrote:
+> Any word on this from the Intel folks?  I realize the iwl3945 isn't
+> a big money-make for you.  But not fixing bugs is bad community
+> relations...
+> 
 
- Signed-off-by: Nick Kossifidis <mickflemm@gmail.com>
----
- drivers/net/wireless/ath/ath5k/phy.c |   16 ++++++++++++++--
- 1 files changed, 14 insertions(+), 2 deletions(-)
+Fully agree, sure sure we want to make sure we can do the best for the
+community. I am working on try to get people focus on legacy bugs fix,
+but as you can tell, I am not getting much progress there. I will keep
+push and get back to you on the status.
 
-diff --git a/drivers/net/wireless/ath/ath5k/phy.c b/drivers/net/wireless/ath/ath5k/phy.c
-index 31239ab..95b602b 100644
---- a/drivers/net/wireless/ath/ath5k/phy.c
-+++ b/drivers/net/wireless/ath/ath5k/phy.c
-@@ -228,8 +228,20 @@ static inline int ath5k_hw_write_ofdm_timings(struct ath5k_hw *ah,
- 	 * ALGO: coef = (5 * clock / carrier_freq) / 2
- 	 * we scale coef by shifting clock value by 24 for
- 	 * better precision since we use integers */
--	/* TODO: Half/quarter rate */
--	clock =  (channel->hw_value & CHANNEL_TURBO) ? 80 : 40;
-+	switch (ah->ah_bwmode) {
-+	case AR5K_BWMODE_40MHZ:
-+		clock = 40 * 2;
-+		break;
-+	case AR5K_BWMODE_10MHZ:
-+		clock = 40 / 2;
-+		break;
-+	case AR5K_BWMODE_5MHZ:
-+		clock = 40 / 4;
-+		break;
-+	default:
-+		clock = 40;
-+		break;
-+	}
- 	coef_scaled = ((5 * (clock << 24)) / 2) / channel->center_freq;
- 
- 	/* Get exponent
+Thanks
+Wey
+
+> 
+> On Wed, Nov 03, 2010 at 07:13:50PM -0400, Eric Appleman wrote:
+> > http://bugzilla.intellinuxwireless.org/show_bug.cgi?id=1932
+> > http://bugzilla.intellinuxwireless.org/show_bug.cgi?id=1592
+> > https://bugzilla.kernel.org/show_bug.cgi?id=16132
+> > https://bugs.launchpad.net/ubuntu/+source/linux/+bug/340418
+> > https://bugs.launchpad.net/ubuntu/+source/bcmwl/+bug/581936
+> > 
+> > There's no shortage of documentation yet Intel devs have explicitly
+> > said that fixing this is a very low priority.
+> > 
+> > Any insight would be welcome.
+> > 
+> > - Eric
+> > --
+> > To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> > the body of a message to majordomo@vger.kernel.org
+> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> > 
+> 
+
