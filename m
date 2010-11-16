@@ -1,65 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-vw0-f46.google.com ([209.85.212.46]:47898 "EHLO
-	mail-vw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753055Ab0KOXpA (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 15 Nov 2010 18:45:00 -0500
-Received: by vws13 with SMTP id 13so35931vws.19
-        for <linux-wireless@vger.kernel.org>; Mon, 15 Nov 2010 15:45:00 -0800 (PST)
-Message-ID: <4CE1C5F7.90607@lwfinger.net>
-Date: Mon, 15 Nov 2010 17:44:55 -0600
-From: Larry Finger <Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-To: James Womack <james.c.womack@gmail.com>
-CC: linux-wireless@vger.kernel.org
-Subject: Re: r8187se panic
-References: <slrnidp3ae.79c.rb-oss-3@mal.justgohome.co.uk> <4CDC9FA5.10002@lwfinger.net> <slrnidq7u0.9ic.rb-oss-3@mal.justgohome.co.uk> <4CDD3BC4.7070102@lwfinger.net> <slrnidqorp.dlr.rb-oss-3@mal.justgohome.co.uk> <4CDD66C4.10603@lwfinger.net> <slrnidqsld.dlr.rb-oss-3@mal.justgohome.co.uk> <4CDD7945.70005@lwfinger.net> <slrnidqv0k.g21.rb-oss-3@mal.justgohome.co.uk> <loom.20101113T191727-421@post.gmane.org> <4CDEDC74.3040902@lwfinger.net> <ibmosc$4au$1@dough.gmane.org> <4CDEEEE4.80801@lwfinger.net> <ibokag$481$1@dough.gmane.org> <4CE00BEE.8060100@lwfinger.net> <ibpauk$v12$1@dough.gmane.org> <4CE0455A.50709@lwfinger.net> <ibs7c3$3dn$1@dough.gmane.org>
-In-Reply-To: <ibs7c3$3dn$1@dough.gmane.org>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from mga09.intel.com ([134.134.136.24]:56013 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754418Ab0KPQGm (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 16 Nov 2010 11:06:42 -0500
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	Johannes Berg <johannes.berg@intel.com>,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Subject: [PATCH 08/18] iwlagn: remove a bogus AGG_OFF check
+Date: Tue, 16 Nov 2010 08:01:41 -0800
+Message-Id: <1289923311-14920-9-git-send-email-wey-yi.w.guy@intel.com>
+In-Reply-To: <1289923311-14920-1-git-send-email-wey-yi.w.guy@intel.com>
+References: <1289923311-14920-1-git-send-email-wey-yi.w.guy@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 11/15/2010 03:05 PM, James Womack wrote:
-> On 14/11/10 20:23, Larry Finger wrote:
->> On 11/14/2010 12:49 PM, James Womack wrote:
->>> Hey, I tried patching the kernel I downloaded, but the dry runs both
->>> presented errors detailed below:
->>>
->>> james@mercury:/usr/src/linux-source-2.6.32$ patch -p1 --dry-run<
->>> /home/james/rtl8187se_change_panic_to_warn
->>> patching file drivers/staging/rtl8187se/r8185b_init.c
->>> Hunk #1 succeeded at 356 with fuzz 2 (offset 92 lines).
->>> Hunk #2 FAILED at 302.
->>> 1 out of 2 hunks FAILED -- saving rejects to file
->>> drivers/staging/rtl8187se/r8185b_init.c.rej
->>> james@mercury:/usr/src/linux-source-2.6.32$ patch -p1 --dry-run<
->>> /home/james/rtl8187se_
->>> rtl8187se_change_panic_to_warn  rtl8187se_lock_pci_remove
->>> james@mercury:/usr/src/linux-source-2.6.32$ patch -p1 --dry-run<
->>> /home/james/rtl8187se_lock_pci_remove
->>> patching file drivers/staging/rtl8187se/r8180_core.c
->>> patch unexpectedly ends in middle of line
->>> patch: **** unexpected end of file in patch
->>> james@mercury:/usr/src/linux-source-2.6.32$
->>>
->>> Do I need to do anything to the kernel source before applying the
->>> patches?
->>
->> You needed a different version of the patch for 2.6.32. Apply the
->> attached
->> version. You only need the one patch.
->>
->> Larry
-> 
-> Hello,
-> 
-> I managed to compile the patched kernel. To confirm - the issue of the
-> kernel panic occuring when Fn-F2 is used to turn off the wireless card
-> is resolved. Thank you. I'll let you know if I notice any side effects
-> from the patch.
+From: Johannes Berg <johannes.berg@intel.com>
 
-After you do the Fn-F2 sequence, there should be a stack dump in the output of
-the dmesg command. Could you please post that? With it, I should be able to find
-what is leading to the original error. It does not happen on my system.
+Even if this check were to happen, using the
+txq_id here (which is a HW queue) would lead
+to confusion in mac80211. Luckily, it doesn't
+seem like this can ever happen.
 
-Larry
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-4965.c    |    8 ++------
+ drivers/net/wireless/iwlwifi/iwl-agn-lib.c |    8 ++------
+ 2 files changed, 4 insertions(+), 12 deletions(-)
+
+diff --git a/drivers/net/wireless/iwlwifi/iwl-4965.c b/drivers/net/wireless/iwlwifi/iwl-4965.c
+index 19da3e5..1940079 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-4965.c
++++ b/drivers/net/wireless/iwlwifi/iwl-4965.c
+@@ -2238,12 +2238,8 @@ static void iwl4965_rx_reply_tx(struct iwl_priv *priv,
+ 
+ 			if (priv->mac80211_registered &&
+ 			    (iwl_queue_space(&txq->q) > txq->q.low_mark) &&
+-			    (agg->state != IWL_EMPTYING_HW_QUEUE_DELBA)) {
+-				if (agg->state == IWL_AGG_OFF)
+-					iwl_wake_queue(priv, txq_id);
+-				else
+-					iwl_wake_queue(priv, txq->swq_id);
+-			}
++			    (agg->state != IWL_EMPTYING_HW_QUEUE_DELBA))
++				iwl_wake_queue(priv, txq->swq_id);
+ 		}
+ 	} else {
+ 		info->status.rates[0].count = tx_resp->failure_frame + 1;
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-lib.c b/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
+index c6f65fd..2ba83b5 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
+@@ -445,12 +445,8 @@ static void iwlagn_rx_reply_tx(struct iwl_priv *priv,
+ 
+ 			if (priv->mac80211_registered &&
+ 			    (iwl_queue_space(&txq->q) > txq->q.low_mark) &&
+-			    (agg->state != IWL_EMPTYING_HW_QUEUE_DELBA)) {
+-				if (agg->state == IWL_AGG_OFF)
+-					iwl_wake_queue(priv, txq_id);
+-				else
+-					iwl_wake_queue(priv, txq->swq_id);
+-			}
++			    (agg->state != IWL_EMPTYING_HW_QUEUE_DELBA))
++				iwl_wake_queue(priv, txq->swq_id);
+ 		}
+ 	} else {
+ 		BUG_ON(txq_id != txq->swq_id);
+-- 
+1.7.0.4
+
