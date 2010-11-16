@@ -1,49 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from purkki.adurom.net ([80.68.90.206]:58958 "EHLO purkki.adurom.net"
+Received: from bar.sig21.net ([80.81.252.164]:56685 "EHLO bar.sig21.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751358Ab0KGKSk (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 7 Nov 2010 05:18:40 -0500
-To: Grazvydas Ignotas <notasas@gmail.com>
-Cc: linux-wireless@vger.kernel.org,
+	id S1753977Ab0KPQxR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 16 Nov 2010 11:53:17 -0500
+Date: Tue, 16 Nov 2010 17:53:02 +0100
+From: Johannes Stezenbach <js@sig21.net>
+To: Helmut Schaa <helmut.schaa@googlemail.com>
+Cc: Walter Goldens <goldenstranger@yahoo.com>,
 	"John W. Linville" <linville@tuxdriver.com>,
-	Ohad Ben-Cohen <ohad@wizery.com>
-Subject: Re: [PATCH 2/3] wl1251: add runtime PM support for SDIO
-References: <1288822429-24541-1-git-send-email-notasas@gmail.com>
-	<1288822429-24541-3-git-send-email-notasas@gmail.com>
-From: Kalle Valo <kvalo@adurom.com>
-Date: Sun, 07 Nov 2010 12:18:37 +0200
-In-Reply-To: <1288822429-24541-3-git-send-email-notasas@gmail.com> (Grazvydas Ignotas's message of "Thu\,  4 Nov 2010 00\:13\:48 +0200")
-Message-ID: <87d3qhzbb6.fsf@purkki.adurom.net>
+	Ivo van Doorn <ivdoorn@gmail.com>, jay_hung@ralinktech.com,
+	linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com
+Subject: Re: [PATCH 7/9] rt2x00: Fix rt2800 USB TX Path DMA issue
+Message-ID: <20101116165302.GA29570@sig21.net>
+References: <201011131911.47346.IvDoorn@gmail.com>
+ <201011161711.51581.helmut.schaa@googlemail.com>
+ <20101116163434.GA29414@sig21.net>
+ <201011161742.08503.helmut.schaa@googlemail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <201011161742.08503.helmut.schaa@googlemail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Grazvydas Ignotas <notasas@gmail.com> writes:
+On Tue, Nov 16, 2010 at 05:42:08PM +0100, Helmut Schaa wrote:
+> Am Dienstag 16 November 2010 schrieb Johannes Stezenbach:
+> > 
+> > Hm, yes, rt2x00mac_conf_tx() has the same issue that it calls
+> > rt2x00queue_get_queue() with an argument which is a mac80211 AC,
+> > but expects an enum data_queue_qid.  So one could says one
+> > bug cancels the other out.
+> 
+> Right. We could of course add a mac80211-queue <-> rt2x00-queue mapping in
+> the appropriate places or rename the QID_* identifiers accordingly. Not sure
+> if it's worth it ...
 
-> Add runtime PM support, similar to how it's done for wl1271.
-> This allows to power down the card when the driver is loaded but
-> network is not in use.
+Hm, reducing confusion enhances maintainability.
 
-Few minor comments:
+> > > And btw. queue 0 is used for managment frames as well.
+> > 
+> > Queue 0 means QID_AC_BE?  Or AC_VI?
+> 
+> It's AC_VO.
 
-> +	/* Undo decrement done above in wl1271_probe */
+Ah, right got it now.  This explains the output of
+/sys/kernel/debug/ieee80211/phy0/rt2800usb/queue/queue,
+qid 0 is used by management frames and queue 2 for BE data.
 
-Should be wl1251_probe().
 
-> +static int wl1251_suspend(struct device *dev)
-> +{
-> +	/*
-> +	 * Tell MMC/SDIO core it's OK to power down the card
-> +	 * (if it isn't already), but not to remove it completely
-> +	 */
-> +	return 0;
-> +}
-
-Sorry, I'm not familiar with pm_ops and I don't fully understand the
-comment above. Does the comment mean that by returning 0 we can
-accomplish all that? Or instead is it a fixme comment that we should
-do that, but it's not implemented yet?
-
--- 
-Kalle Valo
+Thanks,
+Johannes
