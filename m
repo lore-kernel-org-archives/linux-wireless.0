@@ -1,38 +1,30 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gx0-f174.google.com ([209.85.161.174]:62822 "EHLO
-	mail-gx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754904Ab0KRUxh convert rfc822-to-8bit (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:44906 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932823Ab0KPWWf (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 18 Nov 2010 15:53:37 -0500
-Received: by gxk23 with SMTP id 23so2188086gxk.19
-        for <linux-wireless@vger.kernel.org>; Thu, 18 Nov 2010 12:53:37 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <20101118204045.GE2468@tuxdriver.com>
-References: <20101031134012.F21FF9D401B@zog.reactivated.net>
-	<1289604579.21000.5.camel@dcbw.foobar.com>
-	<AANLkTinpvmS1ZH=T5BtA3+qyYLnNijxfjonFMaY8fO4F@mail.gmail.com>
-	<20101118204045.GE2468@tuxdriver.com>
-Date: Thu, 18 Nov 2010 20:53:37 +0000
-Message-ID: <AANLkTi=uimE0jt+UeSzrx96cKAF705eNXzj1Xy2qRW28@mail.gmail.com>
-Subject: Re: [PATCH] libertas: don't block usb8388 suspend if no wakeup
- conditions are set
-From: Daniel Drake <dsd@laptop.org>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, libertas-dev@lists.infradead.org,
-	akarwar@marvell.com, Dan Williams <dcbw@redhat.com>
-Content-Type: text/plain; charset=ISO-8859-1
+	Tue, 16 Nov 2010 17:22:35 -0500
+Subject: Re: [PATCH] iw: Resolve namespace clash between station plink and
+ vlan commands
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Javier Cardona <javier@cozybit.com>
+Cc: nbd@openwrt.org, linux-wireless@vger.kernel.org
+In-Reply-To: <1289867251-21559-1-git-send-email-javier@cozybit.com>
+References: <1289867251-21559-1-git-send-email-javier@cozybit.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Tue, 16 Nov 2010 14:24:06 -0800
+Message-ID: <1289946246.3673.12.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 18 November 2010 20:40, John W. Linville <linville@tuxdriver.com> wrote:
-> On Thu, Nov 18, 2010 at 08:15:55PM +0000, Daniel Drake wrote:
->> John, just a quick ping on this maintainer-acked patch
->> Thanks :)
->
-> I have it in wireless-next-2.6.  Do you think it needs to be in 2.6.37?
+On Mon, 2010-11-15 at 16:27 -0800, Javier Cardona wrote:
+> This patch: http://osdir.com/ml/linux-wireless/2009-11/msg00981.html
+> kicked the command to manage mesh plinks into non-existence.  Here we
+> bring it back under a different name.
 
-Sorry about that. Must have missed it!
-linux-next is good enough.
+I'll happily take this, but would you prefer to have the other one
+backed out instead?
 
-Thanks
-Daniel
+johannes
+
