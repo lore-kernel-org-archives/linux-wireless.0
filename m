@@ -1,63 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([147.243.1.47]:53140 "EHLO mgw-sa01.nokia.com"
+Received: from mga09.intel.com ([134.134.136.24]:56013 "EHLO mga09.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758571Ab0KQPlY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 17 Nov 2010 10:41:24 -0500
-Received: from nokia.com (localhost [127.0.0.1])
-	by mgw-sa01.nokia.com (Switch-3.4.3/Switch-3.4.3) with ESMTP id oAHFfMo0002094
-	for <linux-wireless@vger.kernel.org>; Wed, 17 Nov 2010 17:41:23 +0200
-Subject: Re: [PATCH] wl12xx: Unset bssid filter, ssid and bssid from
- firmware on disassoc
-From: Luciano Coelho <luciano.coelho@nokia.com>
-To: juuso.oikarinen@nokia.com
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <1290000541-17828-1-git-send-email-juuso.oikarinen@nokia.com>
-References: <1290000541-17828-1-git-send-email-juuso.oikarinen@nokia.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Wed, 17 Nov 2010 17:41:00 +0200
-Message-ID: <1290008460.12140.64.camel@chilepepper>
-Mime-Version: 1.0
+	id S1754510Ab0KPQGn (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 16 Nov 2010 11:06:43 -0500
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	Johannes Berg <johannes.berg@intel.com>,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Subject: [PATCH 14/18] iwlagn: fix PAN slot timing wrt. DTIM
+Date: Tue, 16 Nov 2010 08:01:47 -0800
+Message-Id: <1289923311-14920-15-git-send-email-wey-yi.w.guy@intel.com>
+In-Reply-To: <1289923311-14920-1-git-send-email-wey-yi.w.guy@intel.com>
+References: <1289923311-14920-1-git-send-email-wey-yi.w.guy@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2010-11-17 at 15:29 +0200, juuso.oikarinen@nokia.com wrote:
-> From: Juuso Oikarinen <juuso.oikarinen@nokia.com>
-> 
-> On the disassociation event from the mac80211, the wl12xx driver does not
-> clear the chipset configuration related to the AP - i.e. it does not perform
-> a DISCONNECT and then a JOIN with zero SSID and dummy BSSID. Also, it does not
-> unset the BSSID filter.
-> 
-> Often this is not a problem, as the above is performed upon entering idle
-> state. But if a scenario arises where a new association is attempted without
-> cycling through idle state, the new association will fail.
-> 
-> Fix this by resetting the firmware state on disassociation.
-> 
-> Signed-off-by: Juuso Oikarinen <juuso.oikarinen@nokia.com>
-> ---
->  drivers/net/wireless/wl12xx/main.c |    4 ++++
->  1 files changed, 4 insertions(+), 0 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/wl12xx/main.c b/drivers/net/wireless/wl12xx/main.c
-> index 31f0e2f..c523778 100644
-> --- a/drivers/net/wireless/wl12xx/main.c
-> +++ b/drivers/net/wireless/wl12xx/main.c
-> @@ -2012,6 +2012,10 @@ static void wl1271_op_bss_info_changed(struct ieee80211_hw *hw,
->  			/* Disable the keep-alive feature */
->  			ret = wl1271_acx_keep_alive_mode(wl, false);
->  
-> +			/* restore the bssid filter and go to dummy bssid */
-> +			wl1271_handle_idle(wl, true);
-> +			wl1271_handle_idle(wl, false);
-> +
+From: Johannes Berg <johannes.berg@intel.com>
 
-Hmmm... This looks quite hacky.  Can 't you create functions with that
-"restore the bssid" and "go to dummy bssid" and call them instead? If
-you do so, you don't have to artificially go to idle and leave idle
-immediately...
+When the DTIM is not 1, then the slot timing is in
+some cases required to be calclulated based on the
+DTIM interval instead of the beacon interval, fix
+that.
 
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-agn-hcmd.c |    5 +++--
+ 1 files changed, 3 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-hcmd.c b/drivers/net/wireless/iwlwifi/iwl-agn-hcmd.c
+index ffb2f41..366340f 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn-hcmd.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn-hcmd.c
+@@ -307,6 +307,7 @@ static int iwlagn_set_pan_params(struct iwl_priv *priv)
+ 
+ 	if (ctx_bss->vif && ctx_pan->vif) {
+ 		int bcnint = ctx_pan->vif->bss_conf.beacon_int;
++		int dtim = ctx_pan->vif->bss_conf.dtim_period ?: 1;
+ 
+ 		/* should be set, but seems unused?? */
+ 		cmd.flags |= cpu_to_le16(IWL_WIPAN_PARAMS_FLG_SLOTTED_MODE);
+@@ -329,10 +330,10 @@ static int iwlagn_set_pan_params(struct iwl_priv *priv)
+ 		if (test_bit(STATUS_SCAN_HW, &priv->status) ||
+ 		    (!ctx_bss->vif->bss_conf.idle &&
+ 		     !ctx_bss->vif->bss_conf.assoc)) {
+-			slot0 = bcnint * 3 - 20;
++			slot0 = dtim * bcnint * 3 - 20;
+ 			slot1 = 20;
+ 		} else if (!ctx_pan->vif->bss_conf.idle &&
+-                           !ctx_pan->vif->bss_conf.assoc) {
++			   !ctx_pan->vif->bss_conf.assoc) {
+ 			slot1 = bcnint * 3 - 20;
+ 			slot0 = 20;
+ 		}
 -- 
-Cheers,
-Luca.
+1.7.0.4
 
