@@ -1,48 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.sysgo.com ([195.145.229.155]:34610 "EHLO mail.sysgo.com"
+Received: from mga09.intel.com ([134.134.136.24]:56013 "EHLO mga09.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753474Ab0K2Msg (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 29 Nov 2010 07:48:36 -0500
-Date: Mon, 29 Nov 2010 13:48:44 +0100
-From: Pavel Machek <pma@sysgo.com>
-To: Sujith <m.sujith@gmail.com>
-Cc: Larry Finger <Larry.Finger@lwfinger.net>,
-	"ath9k-devel@venema.h4ckr.net" <ath9k-devel@venema.h4ckr.net>,
-	kernel list <linux-kernel@vger.kernel.org>,
-	"chunkeey@googlemail.com" <chunkeey@googlemail.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"rudolf.marek@sysgo.com" <rudolf.marek@sysgo.com>,
-	"cko@sysgo.com" <cko@sysgo.com>, "mfa@sysgo.com" <mfa@sysgo.com>,
-	"anl@sysgo.com" <anl@sysgo.com>
-Subject: Re: ath9k_htc vs. powerpc (was Re: working usb wifi card, that is
- still possible to buy)
-Message-ID: <20101129124844.GA31518@pma.sysgo.com>
-References: <20101124081616.GA30595@pma.sysgo.com>
- <20101124131320.GA2611@pma.sysgo.com>
- <4CED33E0.5040000@lwfinger.net>
- <20101126083125.GA28982@pma.sysgo.com>
- <20101126102026.GA11857@pma.sysgo.com>
- <20101126112737.GB11857@pma.sysgo.com>
- <19695.40541.335361.81396@gargle.gargle.HOWL>
- <20101126123706.GA19755@pma.sysgo.com>
- <20101129100159.GC28833@pma.sysgo.com>
- <19699.40557.302196.832862@gargle.gargle.HOWL>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <19699.40557.302196.832862@gargle.gargle.HOWL>
+	id S1754390Ab0KPQGo (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 16 Nov 2010 11:06:44 -0500
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	Shanyu Zhao <shanyu.zhao@intel.com>,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Subject: [PATCH 17/18] iwlagn: check change before commit RXON cmd
+Date: Tue, 16 Nov 2010 08:01:50 -0800
+Message-Id: <1289923311-14920-18-git-send-email-wey-yi.w.guy@intel.com>
+In-Reply-To: <1289923311-14920-1-git-send-email-wey-yi.w.guy@intel.com>
+References: <1289923311-14920-1-git-send-email-wey-yi.w.guy@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi!
+From: Shanyu Zhao <shanyu.zhao@intel.com>
 
-> > ...so I indentified two endianness problems in eeprom, but even with
-> > both fixed, it still will not associate. Is there some way to dump USB
-> > packets, then compare them between PC and PowerPC versions? Should I
-> > expect them to match?
-> 
-> Does this patch help ?
+When setting rxon chain and filter, no need to commit RXON when the
+chain flag is not changed. This reduces the number of RXON commands
+we send down to uCode.
 
-No, it does not seem to. (I did apply it on top of other fixes, but
-they should not interfere.)
+Signed-off-by: Shanyu Zhao <shanyu.zhao@intel.com>
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-agn.c |    3 ++-
+ 1 files changed, 2 insertions(+), 1 deletions(-)
 
-								Pavel
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
+index 59af06d..c6e455e 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
+@@ -97,7 +97,8 @@ void iwl_update_chain_flags(struct iwl_priv *priv)
+ 	if (priv->cfg->ops->hcmd->set_rxon_chain) {
+ 		for_each_context(priv, ctx) {
+ 			priv->cfg->ops->hcmd->set_rxon_chain(priv, ctx);
+-			iwlcore_commit_rxon(priv, ctx);
++			if (ctx->active.rx_chain != ctx->staging.rx_chain)
++				iwlcore_commit_rxon(priv, ctx);
+ 		}
+ 	}
+ }
+-- 
+1.7.0.4
+
