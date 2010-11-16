@@ -1,412 +1,198 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.neratec.ch ([80.75.119.105]:56700 "EHLO mail.neratec.ch"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752618Ab0KKO60 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 11 Nov 2010 09:58:26 -0500
-Date: Thu, 11 Nov 2010 15:58:21 +0100 (CET)
-From: Wojciech Dubowik <dubowoj@neratec.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org
-Message-ID: <13896234.1151289487498939.JavaMail.wlan@CHBU500181>
-In-Reply-To: <22942120.791289486697022.JavaMail.wlan@CHBU500181>
-Subject: [PATCH 8/9] ath5k: AHB port. Add AHB bus support.
+Received: from mail.candelatech.com ([208.74.158.172]:54614 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752433Ab0KPAb6 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 15 Nov 2010 19:31:58 -0500
+Message-ID: <4CE1D0F8.70108@candelatech.com>
+Date: Mon, 15 Nov 2010 16:31:52 -0800
+From: Ben Greear <greearb@candelatech.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+To: "ath9k-devel@lists.ath9k.org" <ath9k-devel@venema.h4ckr.net>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: ath9k:  TX DMA, reset errors and 0xdeadbeef on not-so-hacked kernel.
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+With the previously posted wpa_supplicant patch, I am able to reproduce
+the ath9k DMA errors previously seen when I hacked the kernel
+to share scan results.
 
-AHB specific functions are now in ahb.c file. There is no common
-init functions which tries first pci and then ahb becasue on some
-wisoc's PCI is not present. AHB bus is compiled in when
-CONFIG_ATHEROS_AR231X is set in kernel.
+The basic test:  Create 30 STA interfaces, run one patched instance of
+wpa_supplicant to manage all interfaces.  My proprietary user-space app
+is also running (gathering stats, etc).  The system crashed within a few
+minutes of starting the test.
 
-Signed-off-by: Wojciech Dubowik <Wojciech.Dubowik@neratec.com>
----
- drivers/net/wireless/ath/ath5k/Makefile |    2 +-
- drivers/net/wireless/ath/ath5k/ahb.c    |  221 +++++++++++++++++++++++++++++++
- drivers/net/wireless/ath/ath5k/ath5k.h  |   12 ++
- drivers/net/wireless/ath/ath5k/base.c   |   16 ++-
- drivers/net/wireless/ath/ath5k/led.c    |    6 +
- drivers/net/wireless/ath/ath5k/reg.h    |   25 ++++
- 6 files changed, 279 insertions(+), 3 deletions(-)
- create mode 100644 drivers/net/wireless/ath/ath5k/ahb.c
+The kernel does NOT have any significant changes, though it does have
+this one applied:
 
-diff --git a/drivers/net/wireless/ath/ath5k/Makefile b/drivers/net/wireless/ath/ath5k/Makefile
-index dae881c..50d5e08 100644
---- a/drivers/net/wireless/ath/ath5k/Makefile
-+++ b/drivers/net/wireless/ath/ath5k/Makefile
-@@ -15,5 +15,5 @@ ath5k-y				+= rfkill.o
- ath5k-y				+= ani.o
- ath5k-y				+= sysfs.o
- ath5k-$(CONFIG_ATH5K_DEBUG)	+= debug.o
--ath5k-y				+= pci.o
-+ath5k-y				+= $(if $(CONFIG_ATHEROS_AR231X),ahb,pci).o
- obj-$(CONFIG_ATH5K)		+= ath5k.o
-diff --git a/drivers/net/wireless/ath/ath5k/ahb.c b/drivers/net/wireless/ath/ath5k/ahb.c
-new file mode 100644
-index 0000000..6e1aa65
---- /dev/null
-+++ b/drivers/net/wireless/ath/ath5k/ahb.c
-@@ -0,0 +1,221 @@
-+/*
-+ * Copyright (c) 2008-2009 Atheros Communications Inc.
-+ * Copyright (c) 2009 Gabor Juhos <juhosg@openwrt.org>
-+ * Copyright (c) 2009 Imre Kaloz <kaloz@openwrt.org>
-+ *
-+ * Permission to use, copy, modify, and/or distribute this software for any
-+ * purpose with or without fee is hereby granted, provided that the above
-+ * copyright notice and this permission notice appear in all copies.
-+ *
-+ * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
-+ * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
-+ * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
-+ * ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
-+ * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
-+ * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
-+ * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
-+ */
-+
-+#include <linux/nl80211.h>
-+#include <linux/platform_device.h>
-+#include <ar231x_platform.h>
-+#include "ath5k.h"
-+#include "debug.h"
-+#include "base.h"
-+#include "reg.h"
-+#include "debug.h"
-+
-+/* return bus cachesize in 4B word units */
-+static void ath5k_ahb_read_cachesize(struct ath_common *common, int *csz)
-+{
-+	*csz = L1_CACHE_BYTES >> 2;
-+}
-+
-+bool ath5k_ahb_eeprom_read(struct ath_common *common, u32 off, u16 *data)
-+{
-+	struct ath5k_softc *sc = common->priv;
-+	struct platform_device *pdev = to_platform_device(sc->dev);
-+	struct ar231x_board_config *bcfg = pdev->dev.platform_data;
-+	u16 *eeprom, *eeprom_end;
-+
-+
-+
-+	bcfg = pdev->dev.platform_data;
-+	eeprom = (u16 *) bcfg->radio;
-+	eeprom_end = ((void *) bcfg->config) + BOARD_CONFIG_BUFSZ;
-+
-+	eeprom += off;
-+	if (eeprom > eeprom_end)
-+		return -EINVAL;
-+
-+	*data = *eeprom;
-+	return 0;
-+}
-+
-+int ath5k_bus_read_srev(struct ath5k_hw *ah)
-+{
-+	struct ath5k_softc *sc = ah->ah_sc;
-+	struct platform_device *pdev = to_platform_device(sc->dev);
-+	struct ar231x_board_config *bcfg = pdev->dev.platform_data;
-+	ah->ah_mac_srev = bcfg->devid;
-+	return 0;
-+}
-+
-+static const struct ath_bus_ops ath_ahb_bus_ops = {
-+	.ath_bus_type = ATH_AHB,
-+	.read_cachesize = ath5k_ahb_read_cachesize,
-+	.eeprom_read = ath5k_ahb_eeprom_read,
-+};
-+
-+/*Initialization*/
-+static int ath_ahb_probe(struct platform_device *pdev)
-+{
-+	struct ar231x_board_config *bcfg = pdev->dev.platform_data;
-+	struct ath5k_softc *sc;
-+	struct ieee80211_hw *hw;
-+	struct resource *res;
-+	void __iomem *mem;
-+	int irq;
-+	int ret = 0;
-+	u32 reg;
-+
-+	if (!pdev->dev.platform_data) {
-+		dev_err(&pdev->dev, "no platform data specified\n");
-+		ret = -EINVAL;
-+		goto err_out;
-+	}
-+
-+	res = platform_get_resource(pdev, IORESOURCE_MEM, 0);
-+	if (res == NULL) {
-+		dev_err(&pdev->dev, "no memory resource found\n");
-+		ret = -ENXIO;
-+		goto err_out;
-+	}
-+
-+	mem = ioremap_nocache(res->start, res->end - res->start + 1);
-+	if (mem == NULL) {
-+		dev_err(&pdev->dev, "ioremap failed\n");
-+		ret = -ENOMEM;
-+		goto err_out;
-+	}
-+
-+	res = platform_get_resource(pdev, IORESOURCE_IRQ, 0);
-+	if (res == NULL) {
-+		dev_err(&pdev->dev, "no IRQ resource found\n");
-+		ret = -ENXIO;
-+		goto err_out;
-+	}
-+
-+	irq = res->start;
-+
-+	hw = ieee80211_alloc_hw(sizeof(struct ath5k_softc), &ath5k_hw_ops);
-+	if (hw == NULL) {
-+		dev_err(&pdev->dev, "no memory for ieee80211_hw\n");
-+		ret = -ENOMEM;
-+		goto err_out;
-+	}
-+
-+	sc = hw->priv;
-+	sc->hw = hw;
-+	sc->dev = &pdev->dev;
-+	sc->iobase = mem;
-+	sc->irq = irq;
-+	sc->devid = bcfg->devid;
-+
-+	if (bcfg->devid >= AR5K_SREV_AR2315_R6) {
-+		/* Enable WMAC AHB arbitration */
-+		reg = __raw_readl((void __iomem *) AR5K_AR2315_AHB_ARB_CTL);
-+		reg |= AR5K_AR2315_AHB_ARB_CTL_WLAN;
-+		__raw_writel(reg, (void __iomem *) AR5K_AR2315_AHB_ARB_CTL);
-+
-+		/* Enable global WMAC swapping */
-+		reg = __raw_readl((void __iomem *) AR5K_AR2315_BYTESWAP);
-+		reg |= AR5K_AR2315_BYTESWAP_WMAC;
-+		__raw_writel(reg, (void __iomem *) AR5K_AR2315_BYTESWAP);
-+	} else 	{
-+		/* Enable WMAC DMA access (assuming 5312 or 231x*/
-+		/* TODO: check other platforms */
-+		reg = __raw_readl((void __iomem *) AR5K_AR5312_ENABLE);
-+		if( to_platform_device(sc->dev)->id == 0) {
-+			reg |= AR5K_AR5312_ENABLE_WLAN0;
-+		} else {
-+			reg |= AR5K_AR5312_ENABLE_WLAN1;
-+		}
-+		__raw_writel(reg, (void __iomem *) AR5K_AR5312_ENABLE);
-+	}
-+
-+	ret = ath5k_attach(sc, &ath_ahb_bus_ops);
-+	if (ret != 0) {
-+		dev_err(&pdev->dev, "failed to attach device, err=%d\n", ret);
-+		ret = -ENODEV;
-+		goto err_free_hw;
-+	}
-+
-+	platform_set_drvdata(pdev, hw);
-+
-+	return 0;
-+
-+ err_free_hw:
-+	ieee80211_free_hw(hw);
-+	platform_set_drvdata(pdev, NULL);
-+ err_out:
-+	return ret;
-+}
-+
-+static int ath_ahb_remove(struct platform_device *pdev)
-+{
-+	struct ar231x_board_config *bcfg = pdev->dev.platform_data;
-+	struct ieee80211_hw *hw = platform_get_drvdata(pdev);
-+	struct ath5k_softc *sc;
-+	u32 reg;
-+
-+	if (!hw)
-+		return 0;
-+
-+	sc = hw->priv;
-+
-+	if (bcfg->devid >= AR5K_SREV_AR2315_R6) {
-+		/* Disable WMAC AHB arbitration */
-+		reg = __raw_readl((void __iomem *) AR5K_AR2315_AHB_ARB_CTL);
-+		reg &= ~AR5K_AR2315_AHB_ARB_CTL_WLAN;
-+		__raw_writel(reg, (void __iomem *) AR5K_AR2315_AHB_ARB_CTL);
-+	} else {
-+		/*Stop DMA access */
-+		reg = __raw_readl((void __iomem *) AR5K_AR5312_ENABLE);
-+		if( to_platform_device(sc->dev)->id == 0) {
-+			reg &= ~AR5K_AR5312_ENABLE_WLAN0;
-+		} else {
-+			reg &= ~AR5K_AR5312_ENABLE_WLAN1;
-+		}
-+		__raw_writel(reg, (void __iomem *) AR5K_AR5312_ENABLE);
-+	}
-+	
-+	ath5k_detach(sc);
-+	platform_set_drvdata(pdev, NULL);
-+
-+	return 0;
-+}
-+
-+static struct platform_driver ath_ahb_driver = {
-+	.probe      = ath_ahb_probe,
-+	.remove     = ath_ahb_remove,
-+	.driver		= {
-+		.name	= "ar231x-wmac",
-+		.owner	= THIS_MODULE,
-+	},
-+};
-+
-+static int __init
-+ath5k_ahb_init(void)
-+{
-+	return platform_driver_register(&ath_ahb_driver);
-+}
-+
-+static void __exit
-+ath5k_ahb_exit(void)
-+{
-+	platform_driver_unregister(&ath_ahb_driver);
-+}
-+
-+module_init(ath5k_ahb_init);
-+module_exit(ath5k_ahb_exit);
-diff --git a/drivers/net/wireless/ath/ath5k/ath5k.h b/drivers/net/wireless/ath/ath5k/ath5k.h
-index a13243a..1c46a63 100644
---- a/drivers/net/wireless/ath/ath5k/ath5k.h
-+++ b/drivers/net/wireless/ath/ath5k/ath5k.h
-@@ -303,12 +303,19 @@ struct ath5k_srev_name {
- #define AR5K_SREV_AR5311B	0x30 /* Spirit */
- #define AR5K_SREV_AR5211	0x40 /* Oahu */
- #define AR5K_SREV_AR5212	0x50 /* Venice */
-+#define AR5K_SREV_AR5312_R2	0x52 /* AP31 */
- #define AR5K_SREV_AR5212_V4	0x54 /* ??? */
- #define AR5K_SREV_AR5213	0x55 /* ??? */
-+#define AR5K_SREV_AR5312_R7	0x57 /* AP30 */
-+#define AR5K_SREV_AR2313_R8	0x58 /* AP43 */
- #define AR5K_SREV_AR5213A	0x59 /* Hainan */
- #define AR5K_SREV_AR2413	0x78 /* Griffin lite */
- #define AR5K_SREV_AR2414	0x70 /* Griffin */
-+#define AR5K_SREV_AR2315_R6 0x86 /* AP51-Light */
-+#define AR5K_SREV_AR2315_R7 0x87 /* AP51-Full */
- #define AR5K_SREV_AR5424	0x90 /* Condor */
-+#define AR5K_SREV_AR2317_R1 0x90 /* AP61-Light */
-+#define AR5K_SREV_AR2317_R2 0x91 /* AP61-Full */
- #define AR5K_SREV_AR5413	0xa4 /* Eagle lite */
- #define AR5K_SREV_AR5414	0xa0 /* Eagle */
- #define AR5K_SREV_AR2415	0xb0 /* Talon */
-@@ -1311,6 +1318,11 @@ static inline void ath5k_hw_reg_write(struct ath5k_hw *ah, u32 val, u16 reg)
- 	iowrite32(val, ah->ah_iobase + reg);
- }
- 
-+static inline enum ath_bus_type ath5k_get_bus_type(struct ath5k_hw *ah)
-+{
-+	return ath5k_hw_common(ah)->bus_ops->ath_bus_type;
-+}
-+
- static inline void ath5k_read_cachesize(struct ath_common *common, int *csz)
- {
- 	common->bus_ops->read_cachesize(common, csz);
-diff --git a/drivers/net/wireless/ath/ath5k/base.c b/drivers/net/wireless/ath/ath5k/base.c
-index 22464e2..13d5da5 100644
---- a/drivers/net/wireless/ath/ath5k/base.c
-+++ b/drivers/net/wireless/ath/ath5k/base.c
-@@ -86,6 +86,15 @@ static void ath5k_beacon_update_timers(struct ath5k_softc *sc, u64 bc_tsf);
- 
- /* Known SREVs */
- static const struct ath5k_srev_name srev_names[] = {
-+#ifdef CONFIG_ATHEROS_AR231X
-+	{ "5312",	AR5K_VERSION_MAC,	AR5K_SREV_AR5312_R2 },
-+	{ "5312",	AR5K_VERSION_MAC,	AR5K_SREV_AR5312_R7 },
-+	{ "2313",	AR5K_VERSION_MAC,	AR5K_SREV_AR2313_R8 },
-+	{ "2315",	AR5K_VERSION_MAC,	AR5K_SREV_AR2315_R6 },
-+	{ "2315",	AR5K_VERSION_MAC,	AR5K_SREV_AR2315_R7 },
-+	{ "2317",	AR5K_VERSION_MAC,	AR5K_SREV_AR2317_R1 },
-+	{ "2317",	AR5K_VERSION_MAC,	AR5K_SREV_AR2317_R2 },
-+#else
- 	{ "5210",	AR5K_VERSION_MAC,	AR5K_SREV_AR5210 },
- 	{ "5311",	AR5K_VERSION_MAC,	AR5K_SREV_AR5311 },
- 	{ "5311A",	AR5K_VERSION_MAC,	AR5K_SREV_AR5311A },
-@@ -104,6 +113,7 @@ static const struct ath5k_srev_name srev_names[] = {
- 	{ "5418",	AR5K_VERSION_MAC,	AR5K_SREV_AR5418 },
- 	{ "2425",	AR5K_VERSION_MAC,	AR5K_SREV_AR2425 },
- 	{ "2417",	AR5K_VERSION_MAC,	AR5K_SREV_AR2417 },
-+#endif
- 	{ "xxxxx",	AR5K_VERSION_MAC,	AR5K_SREV_UNKNOWN },
- 	{ "5110",	AR5K_VERSION_RAD,	AR5K_SREV_RAD_5110 },
- 	{ "5111",	AR5K_VERSION_RAD,	AR5K_SREV_RAD_5111 },
-@@ -117,10 +127,12 @@ static const struct ath5k_srev_name srev_names[] = {
- 	{ "2112B",	AR5K_VERSION_RAD,	AR5K_SREV_RAD_2112B },
- 	{ "2413",	AR5K_VERSION_RAD,	AR5K_SREV_RAD_2413 },
- 	{ "5413",	AR5K_VERSION_RAD,	AR5K_SREV_RAD_5413 },
--	{ "2316",	AR5K_VERSION_RAD,	AR5K_SREV_RAD_2316 },
--	{ "2317",	AR5K_VERSION_RAD,	AR5K_SREV_RAD_2317 },
- 	{ "5424",	AR5K_VERSION_RAD,	AR5K_SREV_RAD_5424 },
- 	{ "5133",	AR5K_VERSION_RAD,	AR5K_SREV_RAD_5133 },
-+#ifdef CONFIG_ATHEROS_AR231X
-+	{ "2316",	AR5K_VERSION_RAD,	AR5K_SREV_RAD_2316 },
-+	{ "2317",	AR5K_VERSION_RAD,	AR5K_SREV_RAD_2317 },
-+#endif
- 	{ "xxxxx",	AR5K_VERSION_RAD,	AR5K_SREV_UNKNOWN },
- };
- 
-diff --git a/drivers/net/wireless/ath/ath5k/led.c b/drivers/net/wireless/ath/ath5k/led.c
-index 1f5a991..be43158 100644
---- a/drivers/net/wireless/ath/ath5k/led.c
-+++ b/drivers/net/wireless/ath/ath5k/led.c
-@@ -161,14 +161,20 @@ int ath5k_init_leds(struct ath5k_softc *sc)
- {
- 	int ret = 0;
- 	struct ieee80211_hw *hw = sc->hw;
-+#ifndef CONFIG_ATHEROS_AR231X
- 	struct pci_dev *pdev = sc->pdev;
-+#endif
- 	char name[ATH5K_LED_MAX_NAME_LEN + 1];
- 	const struct pci_device_id *match;
- 
- 	if (!sc->pdev)
- 		return 0;
- 
-+#ifdef CONFIG_ATHEROS_AR231X
-+	match=NULL;
-+#else
- 	match = pci_match_id(&ath5k_led_devices[0], pdev);
-+#endif
- 	if (match) {
- 		__set_bit(ATH_STAT_LEDSOFT, sc->status);
- 		sc->led_pin = ATH_PIN(match->driver_data);
-diff --git a/drivers/net/wireless/ath/ath5k/reg.h b/drivers/net/wireless/ath/ath5k/reg.h
-index ca79ecd..2ed6b43 100644
---- a/drivers/net/wireless/ath/ath5k/reg.h
-+++ b/drivers/net/wireless/ath/ath5k/reg.h
-@@ -2558,3 +2558,28 @@
-  */
- #define AR5K_PHY_PDADC_TXPOWER_BASE	0xa280
- #define	AR5K_PHY_PDADC_TXPOWER(_n)	(AR5K_PHY_PDADC_TXPOWER_BASE + ((_n) << 2))
-+
-+/*
-+ * Platform registers for WiSoC
-+ */
-+#define AR5K_AR5312_RESET		0xbc003020
-+#define AR5K_AR5312_RESET_BB0_COLD	0x00000004
-+#define AR5K_AR5312_RESET_BB1_COLD	0x00000200
-+#define AR5K_AR5312_RESET_WMAC0		0x00002000
-+#define AR5K_AR5312_RESET_BB0_WARM	0x00004000
-+#define AR5K_AR5312_RESET_WMAC1		0x00020000
-+#define AR5K_AR5312_RESET_BB1_WARM	0x00040000
-+
-+#define AR5K_AR5312_ENABLE		0xbc003080
-+#define AR5K_AR5312_ENABLE_WLAN0    0x00000001
-+#define AR5K_AR5312_ENABLE_WLAN1    0x00000008
-+
-+#define AR5K_AR2315_RESET		0xb1000004
-+#define AR5K_AR2315_RESET_WMAC		0x00000001
-+#define AR5K_AR2315_RESET_BB_WARM	0x00000002
-+
-+#define AR5K_AR2315_AHB_ARB_CTL		0xb1000008
-+#define AR5K_AR2315_AHB_ARB_CTL_WLAN	0x00000002
-+
-+#define AR5K_AR2315_BYTESWAP	0xb100000c
-+#define AR5K_AR2315_BYTESWAP_WMAC	0x00000002
+mac80211:  Fix deadlock in ieee80211_do_stop.
+
+I cannot reproduce the problem with un-modified wpa_supplicant, so the error
+is likely related to the speed at which interfaces attempt to associate.
+
+
+Nov 15 16:13:36 localhost kernel: ieee80211 phy0: device no longer idle - scanning
+Nov 15 16:13:37 localhost kernel: ieee80211 phy0: device now idle
+Nov 15 16:13:37 localhost kernel: ieee80211 phy0: device no longer idle - working
+Nov 15 16:13:37 localhost kernel: sta8: authenticate with 00:14:d1:c6:d2:54 (try 1)
+Nov 15 16:13:37 localhost kernel: sta28: authenticate with 00:14:d1:c6:d2:54 (try 1)
+Nov 15 16:13:37 localhost kernel: sta27: authenticate with 00:14:d1:c6:d2:54 (try 1)
+Nov 15 16:13:37 localhost kernel: sta25: authenticate with 00:14:d1:c6:d2:54 (try 1)
+Nov 15 16:13:37 localhost kernel: sta23: authenticate with 00:14:d1:c6:d2:54 (try 1)
+Nov 15 16:13:37 localhost kernel: sta22: authenticate with 00:14:d1:c6:d2:54 (try 1)
+Nov 15 16:13:37 localhost kernel: sta20: authenticate with 00:14:d1:c6:d2:54 (try 1)
+Nov 15 16:13:37 localhost kernel: sta19: authenticate with 00:14:d1:c6:d2:54 (try 1)
+Nov 15 16:13:37 localhost kernel: sta18: authenticate with 00:14:d1:c6:d2:54 (try 1)
+Nov 15 16:13:37 localhost kernel: sta17: authenticate with 00:14:d1:c6:d2:54 (try 1)
+Nov 15 16:13:37 localhost kernel: sta16: authenticate with 00:14:d1:c6:d2:54 (try 1)
+Nov 15 16:13:37 localhost kernel: sta15: authenticate with 00:14:d1:c6:d2:54 (try 1)
+Nov 15 16:13:37 localhost kernel: sta8: authenticated
+Nov 15 16:13:37 localhost kernel: sta28: authenticated
+Nov 15 16:13:37 localhost kernel: sta27: authenticated
+Nov 15 16:13:37 localhost kernel: sta28: associate with 00:14:d1:c6:d2:54 (try 1)
+Nov 15 16:13:37 localhost kernel: sta8: associate with 00:14:d1:c6:d2:54 (try 1)
+Nov 15 16:13:37 localhost kernel: sta14: authenticate with 00:14:d1:c6:d2:54 (try 1)
+Nov 15 16:13:37 localhost kernel: sta13: authenticate with 00:14:d1:c6:d2:54 (try 1)
+Nov 15 16:13:37 localhost kernel: sta12: authenticate with 00:14:d1:c6:d2:54 (try 1)
+Nov 15 16:13:37 localhost kernel: sta11: authenticate with 00:14:d1:c6:d2:54 (try 1)
+Nov 15 16:13:37 localhost kernel: sta9: authenticate with 00:14:d1:c6:d2:54 (try 1)
+Nov 15 16:13:37 localhost kernel: sta7: authenticate with 00:14:d1:c6:d2:54 (try 1)
+Nov 15 16:13:37 localhost kernel: sta24: authenticate with 00:14:d1:c6:d2:54 (try 1)
+Nov 15 16:13:37 localhost kernel: sta6: authenticate with 00:14:d1:c6:d2:54 (try 1)
+Nov 15 16:13:37 localhost kernel: sta5: authenticate with 00:14:d1:c6:d2:54 (try 1)
+Nov 15 16:13:37 localhost kernel: sta4: authenticate with 00:14:d1:c6:d2:54 (try 1)
+Nov 15 16:13:37 localhost kernel: sta25: authenticated
+Nov 15 16:13:37 localhost kernel: sta3: authenticate with 00:14:d1:c6:d2:54 (try 1)
+Nov 15 16:13:37 localhost kernel: sta2: authenticate with 00:14:d1:c6:d2:54 (try 1)
+Nov 15 16:13:37 localhost kernel: sta1: authenticate with 00:14:d1:c6:d2:54 (try 1)
+Nov 15 16:13:37 localhost kernel: sta21: authenticate with 00:14:d1:c6:d2:54 (try 1)
+Nov 15 16:13:37 localhost kernel: sta23: authenticate with 00:14:d1:c6:d2:54 (try 2)
+Nov 15 16:13:37 localhost kernel: sta10: authenticate with 00:14:d1:c6:d2:54 (try 1)
+Nov 15 16:13:37 localhost kernel: sta22: authenticate with 00:14:d1:c6:d2:54 (try 2)
+Nov 15 16:13:37 localhost kernel: wlan0: authenticate with 00:14:d1:c6:d2:54 (try 1)
+Nov 15 16:13:37 localhost kernel: sta20: authenticate with 00:14:d1:c6:d2:54 (try 2)
+Nov 15 16:13:37 localhost kernel: ath: Failed to stop TX DMA in 100 msec after killing last frame
+Nov 15 16:13:37 localhost kernel: ath: Failed to stop TX DMA. Resetting hardware!
+Nov 15 16:13:37 localhost kernel: sta19: authenticate with 00:14:d1:c6:d2:54 (try 2)
+Nov 15 16:13:37 localhost kernel: sta18: authenticate with 00:14:d1:c6:d2:54 (try 2)
+Nov 15 16:13:37 localhost kernel: sta17: authenticate with 00:14:d1:c6:d2:54 (try 2)
+Nov 15 16:13:37 localhost kernel: sta16: authenticate with 00:14:d1:c6:d2:54 (try 2)
+Nov 15 16:13:37 localhost kernel: sta15: authenticate with 00:14:d1:c6:d2:54 (try 2)
+Nov 15 16:13:37 localhost kernel: sta28: associate with 00:14:d1:c6:d2:54 (try 2)
+Nov 15 16:13:37 localhost kernel: sta8: associate with 00:14:d1:c6:d2:54 (try 2)
+Nov 15 16:13:37 localhost kernel: sta14: authenticate with 00:14:d1:c6:d2:54 (try 2)
+Nov 15 16:13:37 localhost kernel: sta13: authenticate with 00:14:d1:c6:d2:54 (try 2)
+Nov 15 16:13:37 localhost kernel: sta12: authenticate with 00:14:d1:c6:d2:54 (try 2)
+Nov 15 16:13:37 localhost kernel: sta11: authenticate with 00:14:d1:c6:d2:54 (try 2)
+Nov 15 16:13:37 localhost kernel: sta9: authenticate with 00:14:d1:c6:d2:54 (try 2)
+Nov 15 16:13:37 localhost kernel: sta7: authenticate with 00:14:d1:c6:d2:54 (try 2)
+Nov 15 16:13:37 localhost kernel: sta24: authenticate with 00:14:d1:c6:d2:54 (try 2)
+Nov 15 16:13:37 localhost kernel: sta6: authenticate with 00:14:d1:c6:d2:54 (try 2)
+Nov 15 16:13:37 localhost kernel: sta5: authenticate with 00:14:d1:c6:d2:54 (try 2)
+Nov 15 16:13:37 localhost kernel: sta4: authenticate with 00:14:d1:c6:d2:54 (try 2)
+Nov 15 16:13:37 localhost kernel: sta3: authenticate with 00:14:d1:c6:d2:54 (try 2)
+Nov 15 16:13:37 localhost kernel: sta2: authenticate with 00:14:d1:c6:d2:54 (try 2)
+Nov 15 16:13:37 localhost kernel: sta1: authenticate with 00:14:d1:c6:d2:54 (try 2)
+Nov 15 16:13:37 localhost kernel: sta21: authenticate with 00:14:d1:c6:d2:54 (try 2)
+Nov 15 16:13:37 localhost kernel: sta23: authenticate with 00:14:d1:c6:d2:54 (try 3)
+Nov 15 16:13:37 localhost kernel: sta10: authenticate with 00:14:d1:c6:d2:54 (try 2)
+Nov 15 16:13:37 localhost kernel: sta22: authenticate with 00:14:d1:c6:d2:54 (try 3)
+Nov 15 16:13:37 localhost kernel: wlan0: authenticate with 00:14:d1:c6:d2:54 (try 2)
+Nov 15 16:13:37 localhost kernel: sta20: authenticate with 00:14:d1:c6:d2:54 (try 3)
+Nov 15 16:13:37 localhost kernel: sta19: authenticate with 00:14:d1:c6:d2:54 (try 3)
+Nov 15 16:13:37 localhost kernel: sta18: authenticate with 00:14:d1:c6:d2:54 (try 3)
+Nov 15 16:13:37 localhost kernel: sta17: authenticate with 00:14:d1:c6:d2:54 (try 3)
+Nov 15 16:13:37 localhost kernel: sta16: authenticate with 00:14:d1:c6:d2:54 (try 3)
+Nov 15 16:13:37 localhost kernel: sta15: authenticate with 00:14:d1:c6:d2:54 (try 3)
+Nov 15 16:13:37 localhost kernel: sta28: associate with 00:14:d1:c6:d2:54 (try 3)
+Nov 15 16:13:37 localhost kernel: sta8: associate with 00:14:d1:c6:d2:54 (try 3)
+Nov 15 16:13:37 localhost kernel: sta14: authenticate with 00:14:d1:c6:d2:54 (try 3)
+Nov 15 16:13:37 localhost kernel: sta13: authenticate with 00:14:d1:c6:d2:54 (try 3)
+Nov 15 16:13:37 localhost kernel: sta12: authenticate with 00:14:d1:c6:d2:54 (try 3)
+Nov 15 16:13:37 localhost kernel: sta11: authenticate with 00:14:d1:c6:d2:54 (try 3)
+Nov 15 16:13:37 localhost kernel: sta9: authenticate with 00:14:d1:c6:d2:54 (try 3)
+Nov 15 16:13:37 localhost kernel: sta7: authenticate with 00:14:d1:c6:d2:54 (try 3)
+Nov 15 16:13:37 localhost kernel: sta24: authenticate with 00:14:d1:c6:d2:54 (try 3)
+Nov 15 16:13:37 localhost kernel: sta6: authenticate with 00:14:d1:c6:d2:54 (try 3)
+Nov 15 16:13:37 localhost kernel: sta5: authenticate with 00:14:d1:c6:d2:54 (try 3)
+Nov 15 16:13:37 localhost kernel: sta4: authenticate with 00:14:d1:c6:d2:54 (try 3)
+Nov 15 16:13:37 localhost kernel: sta3: authenticate with 00:14:d1:c6:d2:54 (try 3)
+Nov 15 16:13:37 localhost kernel: sta2: authenticate with 00:14:d1:c6:d2:54 (try 3)
+Nov 15 16:13:37 localhost kernel: sta1: authenticate with 00:14:d1:c6:d2:54 (try 3)
+Nov 15 16:13:38 localhost kernel: sta21: authenticate with 00:14:d1:c6:d2:54 (try 3)
+Nov 15 16:13:38 localhost kernel: sta23: authentication with 00:14:d1:c6:d2:54 timed out
+Nov 15 16:13:39 localhost kernel: ath: timeout (100000 us) on reg 0x9860: 0xdeadbeef & 0x00000001 != 0x00000000
+Nov 15 16:13:39 localhost kernel: ath: Unable to reset hardware; reset status -5
+Nov 15 16:13:39 localhost kernel: ath: DMA failed to stop in 10 ms AR_CR=0xdeadbeef AR_DIAG_SW=0xdeadbeef
+Nov 15 16:13:39 localhost kernel: ------------[ cut here ]------------
+Nov 15 16:13:39 localhost kernel: WARNING: at /home/greearb/git/linux.wireless-testing/drivers/net/wireless/ath/ath9k/recv.c:532 ath_stoprecv+0x90/0x9a [at)
+Nov 15 16:13:39 localhost kernel: Hardware name: PDSBM
+Nov 15 16:13:39 localhost kernel: Could not stop RX, we could be confusing the DMA engine when we start RX up
+Nov 15 16:13:39 localhost kernel: Modules linked in: michael_mic aes_i586 aes_generic 8021q garp stp llc fuse macvlan pktgen nfs lockd fscache nfs_acl auth]
+Nov 15 16:13:39 localhost kernel: Pid: 16755, comm: wpa_supplicant Not tainted 2.6.37-rc1-wl+ #48
+Nov 15 16:13:39 localhost kernel: Call Trace:
+Nov 15 16:13:39 localhost kernel: [<78436f25>] warn_slowpath_common+0x77/0x8c
+Nov 15 16:13:39 localhost kernel: [<f8a4a106>] ? ath_stoprecv+0x90/0x9a [ath9k]
+Nov 15 16:13:39 localhost kernel: [<f8a4a106>] ? ath_stoprecv+0x90/0x9a [ath9k]
+Nov 15 16:13:39 localhost kernel: [<78436fb6>] warn_slowpath_fmt+0x2e/0x30
+Nov 15 16:13:39 localhost kernel: [<f8a4a106>] ath_stoprecv+0x90/0x9a [ath9k]
+Nov 15 16:13:39 localhost kernel: [<f8a490b9>] ath_set_channel+0x94/0x1e8 [ath9k]
+Nov 15 16:13:39 localhost kernel: [<7845a2e9>] ? mark_held_locks+0x47/0x5f
+Nov 15 16:13:39 localhost kernel: [<7878e27b>] ? _raw_spin_unlock_irqrestore+0x3c/0x48
+Nov 15 16:13:39 localhost kernel: [<f8a49551>] ath9k_config+0x344/0x423 [ath9k]
+Nov 15 16:13:39 localhost kernel: [<f8ae2aaa>] ieee80211_hw_config+0x11b/0x125 [mac80211]
+Nov 15 16:13:39 localhost kernel: [<f8af1e36>] ieee80211_set_channel+0x74/0x9e [mac80211]
+Nov 15 16:13:39 localhost kernel: [<f83288b5>] cfg80211_set_freq+0x92/0xb5 [cfg80211]
+Nov 15 16:13:39 localhost kernel: [<f8af1dc2>] ? ieee80211_set_channel+0x0/0x9e [mac80211]
+Nov 15 16:13:39 localhost kernel: [<f832adb4>] cfg80211_mgd_wext_siwfreq+0x108/0x148 [cfg80211]
+Nov 15 16:13:39 localhost kernel: [<f832a132>] cfg80211_wext_siwfreq+0x42/0xbf [cfg80211]
+Nov 15 16:13:39 localhost kernel: [<7876deeb>] ioctl_standard_call+0x52/0x28e
+Nov 15 16:13:39 localhost kernel: [<786f2b2b>] ? dev_name_hash+0x16/0x48
+Nov 15 16:13:39 localhost kernel: [<786f653c>] ? __dev_get_by_name+0x32/0x3d
+Nov 15 16:13:39 localhost kernel: [<7876e1b4>] wext_handle_ioctl+0x8d/0x18d
+Nov 15 16:13:39 localhost kernel: [<f832a0f0>] ? cfg80211_wext_siwfreq+0x0/0xbf [cfg80211]
+Nov 15 16:13:39 localhost kernel: [<786f7669>] dev_ioctl+0x520/0x53f
+Nov 15 16:13:39 localhost kernel: [<784593ff>] ? register_lock_class+0x17/0x297
+Nov 15 16:13:39 localhost kernel: [<786e6ada>] ? sys_sendto+0xb8/0xc6
+Nov 15 16:13:39 localhost kernel: [<7845a0d5>] ? mark_lock+0x1e/0x1eb
+Nov 15 16:13:39 localhost kernel: [<786e5d1f>] ? sock_ioctl+0x0/0x202
+Nov 15 16:13:39 localhost kernel: [<786e5f15>] sock_ioctl+0x1f6/0x202
+Nov 15 16:13:39 localhost kernel: [<7845bce2>] ? lock_release_non_nested+0x86/0x1ec
+Nov 15 16:13:39 localhost kernel: [<786e5d1f>] ? sock_ioctl+0x0/0x202
+Nov 15 16:13:39 localhost kernel: [<784cc071>] do_vfs_ioctl+0x56d/0x5c3
+Nov 15 16:13:39 localhost kernel: [<784a00be>] ? might_fault+0x4a/0x96
+Nov 15 16:13:39 localhost kernel: [<784c130d>] ? fcheck_files+0x9b/0xca
+Nov 15 16:13:39 localhost kernel: [<784c1369>] ? fget_light+0x2d/0xb0
+Nov 15 16:13:39 localhost kernel: [<784cc10a>] sys_ioctl+0x43/0x62
+Nov 15 16:13:39 localhost kernel: [<784030dc>] sysenter_do_call+0x12/0x38
+Nov 15 16:13:39 localhost kernel: ---[ end trace 7f695003c0bcd2c7 ]---
+Nov 15 16:13:39 localhost kernel: ath: DMA failed to stop in 10 ms AR_CR=0xdeadbeef AR_DIAG_SW=0xdeadbeef
+Nov 15 16:13:40 localhost kernel: ath: timeout (100000 us) on reg 0x7000: 0xdeadbeef & 0x00000003 != 0x00000000
+Nov 15 16:13:40 localhost kernel: ath: Chip reset failed
+Nov 15 16:13:40 localhost kernel: ath: Unable to reset channel (2437 MHz), reset status -22
+Nov 15 16:13:40 localhost kernel: ath: Unable to set channel
+
+and after a few more of these..system died hard:
+
+Nov 15 16:13:44 localhost kernel: ath: Failed to stop TX DMA in 100 msec after killing last frame
+Nov 15 16:13:44 localhost kernel: ath: Failed to stop TX DMA in 100 msec after killing last frame
+Nov 15 16:13:44 localhost kernel: ath: Failed to stop TX DMA. Resetting hardware!
+Nov 15 16:13:45 localhost kernel: ath: DMA failed to stop in 10 ms AR_CR=0xdeadbeef AR_DIAG_SW=0xdeadbeef
+Nov 15 16:13:45 localhost kernel: ath: timeout (100000 us) on reg 0x7000: 0x00000001 & 0x00000003 != 0x00000000
+Nov 15 16:13:45 localhost kernel: ath: Chip reset failed
+Nov 15 16:13:45 localhost kernel: ath: Unable to reset hardware; reset status -22
+Nov 15 16:13:45 localhost kernel: ath: DMA failed to stop in 10 ms AR_CR=0xbadc0ffe AR_DIAG_SW=0xbadc0ffe
+Nov 15 16:13:45 localhost kernel: ------------[ cut here ]------------
+EXT4-fs (dm-2): delayed block allocation failed for inode 394823 at logical offset 0 with max blocks 13 with error -30
+EXT4-fs (dm-2): This should not happen!! Data will be lost
+EXT4-fs error (device dm-2) in ext4_da_writepages:3068: Journal has aborted
+
+Thanks,
+Ben
+
 -- 
-1.7.1
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
 
