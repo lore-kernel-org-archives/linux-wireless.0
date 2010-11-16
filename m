@@ -1,53 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:33487 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751797Ab0K1JaM (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 28 Nov 2010 04:30:12 -0500
-Subject: Re: [PATCH 4/4] zd1211rw: remove unnecessary [kv][mcz]alloc casts
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Joe Perches <joe@perches.com>
-Cc: Daniel Drake <dsd@gentoo.org>, Ulrich Kunitz <kune@deine-taler.de>,
-	linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-kernel@vger.kernel.org, netdev <netdev@vger.kernel.org>
-In-Reply-To: <1290936047.16349.13.camel@Joe-Laptop>
-References: <cover.1290934782.git.joe@perches.com>
-	 <704bdd89d630b364043ac7a9ec0a110d311a17a2.1290934782.git.joe@perches.com>
-	 <1290935566.3467.0.camel@jlt3.sipsolutions.net>
-	 <1290936047.16349.13.camel@Joe-Laptop>
-Content-Type: text/plain; charset="UTF-8"
-Date: Sun, 28 Nov 2010 10:30:06 +0100
-Message-ID: <1290936606.3467.2.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+Received: from tulikuusama.dnainternet.net ([83.102.40.132]:57904 "EHLO
+	tulikuusama.dnainternet.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754056Ab0KPXuC convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 16 Nov 2010 18:50:02 -0500
+Message-ID: <20101117014957.19165rsfffapfudc@hayate.sektori.org>
+Date: Wed, 17 Nov 2010 01:49:57 +0200
+From: "Jussi Kivilinna" <jussi.kivilinna@mbnet.fi>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] rndis_wlan: avoid uninitialized var warning in
+	rndis_wlan_craft_connected_bss
+References: <1289944148-10326-1-git-send-email-linville@tuxdriver.com>
+In-Reply-To: <1289944148-10326-1-git-send-email-linville@tuxdriver.com>
+MIME-Version: 1.0
+Content-Type: text/plain;
+	charset=UTF-8;
+	DelSp="Yes";
+	format="flowed"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, 2010-11-28 at 01:20 -0800, Joe Perches wrote:
-> On Sun, 2010-11-28 at 10:12 +0100, Johannes Berg wrote:
-> > On Sun, 2010-11-28 at 01:05 -0800, Joe Perches wrote:
-> > > diff --git a/drivers/net/wireless/zd1211rw/zd_chip.c b/drivers/net/wireless/zd1211rw/zd_chip.c
-> > > @@ -117,8 +117,7 @@ int zd_ioread32v_locked(struct zd_chip *chip, u32 *values, const zd_addr_t *addr
-> > >  
-> > >  	/* Allocate a single memory block for values and addresses. */
-> > >  	count16 = 2*count;
-> > > -	a16 = (zd_addr_t *) kmalloc(count16 * (sizeof(zd_addr_t) + sizeof(u16)),
-> > > -		                   GFP_KERNEL);
-> > > +	a16 = kmalloc(count16 * (sizeof(zd_addr_t) + sizeof(u16)), GFP_KERNEL);
-> > I believe this is on purpose for sparse.
-> 
-> Perhaps in a previous version, but not now.
-> 
-> $ make C=1 drivers/net/wireless/zd1211rw/zd_chip.o
->   CHK     include/linux/version.h
->   CHK     include/generated/utsrelease.h
->   CALL    scripts/checksyscalls.sh
->   CHECK   drivers/net/wireless/zd1211rw/zd_chip.c
-> include/trace/events/kmem.h:45:1: error: Expected ( after asm
-> include/trace/events/kmem.h:45:1: error: got goto
+Quoting "John W. Linville" <linville@tuxdriver.com>:
 
-How do you know? I thought sparse was pretty much not reliable after the
-first error it prints.
+>   CC [M]  drivers/net/wireless/rndis_wlan.o
+> drivers/net/wireless/rndis_wlan.c: In function  
+> ‘rndis_wlan_craft_connected_bss’:
+> drivers/net/wireless/rndis_wlan.c:2542:2: warning: ‘ret’ may be used  
+> uninitialized in this function
+>
+> Signed-off-by: John W. Linville <linville@tuxdriver.com>
 
-johannes
+Ah.. yes, netdev_dbg needs the return value. Thanks.
+
+Acked-by: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
 
