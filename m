@@ -1,97 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f46.google.com ([209.85.161.46]:42074 "EHLO
-	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751936Ab0KRLcl (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:52175 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753121Ab0KPXoY (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 18 Nov 2010 06:32:41 -0500
-Received: by mail-fx0-f46.google.com with SMTP id 6so1460042fxm.19
-        for <linux-wireless@vger.kernel.org>; Thu, 18 Nov 2010 03:32:40 -0800 (PST)
-From: Arik Nemtsov <arik@wizery.com>
-To: <linux-wireless@vger.kernel.org>
-Cc: Luciano Coelho <luciano.coelho@nokia.com>,
-	Arik Nemtsov <arik@wizery.com>
-Subject: [PATCH 03/18] wl1271: AP mode - add AP specific event
-Date: Thu, 18 Nov 2010 13:32:16 +0200
-Message-Id: <1290079951-16793-4-git-send-email-arik@wizery.com>
-In-Reply-To: <1290079951-16793-1-git-send-email-arik@wizery.com>
-References: <1290079951-16793-1-git-send-email-arik@wizery.com>
+	Tue, 16 Nov 2010 18:44:24 -0500
+Subject: Re: [PATCH 1/2] cfg80211: add support for setting the ad-hoc
+ multicast rate
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Felix Fietkau <nbd@openwrt.org>
+Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com
+In-Reply-To: <4CE3150A.7000300@openwrt.org>
+References: <1289484443-96326-1-git-send-email-nbd@openwrt.org>
+	 <1289946423.3673.13.camel@jlt3.sipsolutions.net>
+	 <4CE3150A.7000300@openwrt.org>
+Content-Type: text/plain; charset="UTF-8"
+Date: Tue, 16 Nov 2010 15:45:55 -0800
+Message-ID: <1289951155.3673.17.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Add STA-remove completion event. Unmask it during boot if operating in
-AP-mode.
-Ignore unrelated events in AP-mode.
+On Wed, 2010-11-17 at 00:34 +0100, Felix Fietkau wrote:
+> On 2010-11-16 11:27 PM, Johannes Berg wrote:
+> > On Thu, 2010-11-11 at 15:07 +0100, Felix Fietkau wrote:
+> > 
+> >> +	if (info->attrs[NL80211_ATTR_MCAST_RATE])
+> >> +		ibss.mcast_rate =
+> >> +			nla_get_u32(info->attrs[NL80211_ATTR_MCAST_RATE]);
+> > 
+> > That should really check that the rate is supported, and maybe that it's
+> > a basic rate.
 
-Signed-off-by: Arik Nemtsov <arik@wizery.com>
----
- drivers/net/wireless/wl12xx/boot.c  |    3 +++
- drivers/net/wireless/wl12xx/event.c |    7 ++++---
- drivers/net/wireless/wl12xx/event.h |    1 +
- 3 files changed, 8 insertions(+), 3 deletions(-)
+> But what about band changes then?
 
-diff --git a/drivers/net/wireless/wl12xx/boot.c b/drivers/net/wireless/wl12xx/boot.c
-index 1eafb81..a2b496b 100644
---- a/drivers/net/wireless/wl12xx/boot.c
-+++ b/drivers/net/wireless/wl12xx/boot.c
-@@ -432,6 +432,9 @@ static int wl1271_boot_run_firmware(struct wl1271 *wl)
- 		PSPOLL_DELIVERY_FAILURE_EVENT_ID |
- 		SOFT_GEMINI_SENSE_EVENT_ID;
- 
-+	if (wl->bss_type == BSS_TYPE_AP_BSS)
-+		wl->event_mask |= STA_REMOVE_COMPLETE_EVENT_ID;
-+
- 	ret = wl1271_event_unmask(wl);
- 	if (ret < 0) {
- 		wl1271_error("EVENT mask setting failed");
-diff --git a/drivers/net/wireless/wl12xx/event.c b/drivers/net/wireless/wl12xx/event.c
-index f9146f5..3376a5d 100644
---- a/drivers/net/wireless/wl12xx/event.c
-+++ b/drivers/net/wireless/wl12xx/event.c
-@@ -186,6 +186,7 @@ static int wl1271_event_process(struct wl1271 *wl, struct event_mailbox *mbox)
- 	int ret;
- 	u32 vector;
- 	bool beacon_loss = false;
-+	bool is_ap = (wl->bss_type == BSS_TYPE_AP_BSS);
- 
- 	wl1271_event_mbox_dump(mbox);
- 
-@@ -218,21 +219,21 @@ static int wl1271_event_process(struct wl1271 *wl, struct event_mailbox *mbox)
- 	 * BSS_LOSE_EVENT, beacon loss has to be reported to the stack.
- 	 *
- 	 */
--	if (vector & BSS_LOSE_EVENT_ID) {
-+	if ((vector & BSS_LOSE_EVENT_ID) && !is_ap) {
- 		wl1271_info("Beacon loss detected.");
- 
- 		/* indicate to the stack, that beacons have been lost */
- 		beacon_loss = true;
- 	}
- 
--	if (vector & PS_REPORT_EVENT_ID) {
-+	if ((vector & PS_REPORT_EVENT_ID) && !is_ap) {
- 		wl1271_debug(DEBUG_EVENT, "PS_REPORT_EVENT");
- 		ret = wl1271_event_ps_report(wl, mbox, &beacon_loss);
- 		if (ret < 0)
- 			return ret;
- 	}
- 
--	if (vector & PSPOLL_DELIVERY_FAILURE_EVENT_ID)
-+	if ((vector & PSPOLL_DELIVERY_FAILURE_EVENT_ID) && !is_ap)
- 		wl1271_event_pspoll_delivery_fail(wl);
- 
- 	if (vector & RSSI_SNR_TRIGGER_0_EVENT_ID) {
-diff --git a/drivers/net/wireless/wl12xx/event.h b/drivers/net/wireless/wl12xx/event.h
-index 6cce014..fd955f3 100644
---- a/drivers/net/wireless/wl12xx/event.h
-+++ b/drivers/net/wireless/wl12xx/event.h
-@@ -59,6 +59,7 @@ enum {
- 	BSS_LOSE_EVENT_ID			 = BIT(18),
- 	REGAINED_BSS_EVENT_ID			 = BIT(19),
- 	ROAMING_TRIGGER_MAX_TX_RETRY_EVENT_ID	 = BIT(20),
-+	STA_REMOVE_COMPLETE_EVENT_ID		 = BIT(21), /* AP */
- 	SOFT_GEMINI_SENSE_EVENT_ID		 = BIT(22),
- 	SOFT_GEMINI_PREDICTION_EVENT_ID		 = BIT(23),
- 	SOFT_GEMINI_AVALANCHE_EVENT_ID		 = BIT(24),
--- 
-1.7.1
+Yeah but what about them? You don't handle them anyway -- should maybe
+do a per-band setting? Basically right now you end up ignoring the rate
+if it's not available.
+
+johannes
 
