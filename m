@@ -1,55 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mgw-da01.nokia.com ([147.243.128.24]:26086 "EHLO
-	mgw-da01.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755585Ab0KAMZ7 (ORCPT
+Received: from emita2.mittwald.de ([188.94.250.252]:50157 "EHLO
+	emita2.mittwald.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933802Ab0KPLzO (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 1 Nov 2010 08:25:59 -0400
-Received: from localhost.localdomain (chilepepper.research.nokia.com [172.21.50.167])
-	by mgw-da01.nokia.com (Switch-3.4.3/Switch-3.4.3) with ESMTP id oA1BqGcL020116
-	for <linux-wireless@vger.kernel.org>; Mon, 1 Nov 2010 13:52:25 +0200
-From: Luciano Coelho <luciano.coelho@nokia.com>
-To: linux-wireless@vger.kernel.org
-Subject: [RFC 09/15] cfg80211: add channel support to periodic scan
-Date: Mon,  1 Nov 2010 13:52:10 +0200
-Message-Id: <1288612336-2830-10-git-send-email-luciano.coelho@nokia.com>
-In-Reply-To: <1288612336-2830-1-git-send-email-luciano.coelho@nokia.com>
-References: <1288612336-2830-1-git-send-email-luciano.coelho@nokia.com>
+	Tue, 16 Nov 2010 06:55:14 -0500
+Received: from mx51.mymxserver.com (mail5102.internal [172.16.51.2])
+	by emita2.mittwald.de (Postfix) with ESMTP id 4897E1FA445
+	for <linux-wireless@vger.kernel.org>; Tue, 16 Nov 2010 12:47:57 +0100 (CET)
+From: Holger Schurig <holgerschurig@gmail.com>
+To: Elvis Dowson <elvis.dowson@mac.com>
+Subject: Re: Android 2.2/2.2.1 wifi not working after restart with driver-awext
+Date: Tue, 16 Nov 2010 13:04:26 +0100
+Cc: Linux Wireless Mailing List <linux-wireless@vger.kernel.org>
+References: <0604E650-C4CD-40FF-ACC6-262E555C8194@mac.com>
+In-Reply-To: <0604E650-C4CD-40FF-ACC6-262E555C8194@mac.com>
+MIME-Version: 1.0
+Content-Type: Text/Plain;
+  charset="us-ascii"
+Message-Id: <201011161304.26637.holgerschurig@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Just add channels in the periodic_request structure.  This is needed in order
-to pass the desired channels to scan on down to the mac.
+Android doesn't work well with upstream groups. They made their own ecosystem,
+both in kernel-space and much more in user-space. They also usualy use
+outdated software, e.g. ancient kernel version.
 
-Signed-off-by: Luciano Coelho <luciano.coelho@nokia.com>
----
- include/net/cfg80211.h |    7 +++++++
- 1 files changed, 7 insertions(+), 0 deletions(-)
+You're therefore encouraged to use android-specific mailing-lists or forums to
+solve your problems.
 
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index 41e7dc4..218e59f 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -721,13 +721,20 @@ struct cfg80211_scan_request {
- /**
-  * struct cfg80211_periodic_request - periodic scan request description
-  *
-+ * @n_channels: total number of channels to scan
-  * @wiphy: the wiphy this was for
-  * @dev: the interface
-+ * @channels: channels to scan
-  */
- struct cfg80211_periodic_request {
-+	u32 n_channels;
-+
- 	/* internal */
- 	struct wiphy *wiphy;
- 	struct net_device *dev;
-+
-+	/* keep last */
-+	struct ieee80211_channel *channels[0];
- };
- 
- /**
+That said, the interface isn't up, contrary to your belief:
+
+V/WifiStateTracker(  969): Changing supplicant state: DISCONNECTED ==> 
+SCANNING
+I//system/bin/wpa_supplicant( 1396): ioctl[SIOCGIWSTATS]: Operation not 
+supported on transport endpoint
+I//system/bin/wpa_supplicant( 1396): ioctl[SIOCGIWRATE]: Network is down
+
+So something in restarting the wifi link forgot Android's equivalent
+of "ifconfig $interface up". If the interface isn't up, it won't scan. Without
+current scan results and an "up"-interface, it cannot associate.
+
 -- 
-1.7.0.4
-
+Homepage: http://www.holgerschurig.de
