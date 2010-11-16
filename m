@@ -1,74 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iw0-f174.google.com ([209.85.214.174]:65313 "EHLO
+Received: from mail-iw0-f174.google.com ([209.85.214.174]:39817 "EHLO
 	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750863Ab0KWCcj (ORCPT
+	with ESMTP id S1755170Ab0KPVpn (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 22 Nov 2010 21:32:39 -0500
-Received: by iwn38 with SMTP id 38so750617iwn.19
-        for <linux-wireless@vger.kernel.org>; Mon, 22 Nov 2010 18:32:39 -0800 (PST)
+	Tue, 16 Nov 2010 16:45:43 -0500
+Received: by iwn35 with SMTP id 35so1299398iwn.19
+        for <linux-wireless@vger.kernel.org>; Tue, 16 Nov 2010 13:45:43 -0800 (PST)
 MIME-Version: 1.0
-In-Reply-To: <AANLkTin=WkXaP58UV8rREcYYxDw5xDfnqAEanEO0ETQY@mail.gmail.com>
-References: <1289355626-25373-1-git-send-email-lacombar@gmail.com>
- <1289355626-25373-29-git-send-email-lacombar@gmail.com> <20101110222448.GG4667@tux>
- <AANLkTikh2XJ1ONjD3PaYcw-yV9EkNZMX4Td3jAi9dGvs@mail.gmail.com>
- <AANLkTinWrnugirPczxp5dMwMTvYn_HOaPtVw88YqXEmZ@mail.gmail.com> <AANLkTin=WkXaP58UV8rREcYYxDw5xDfnqAEanEO0ETQY@mail.gmail.com>
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Date: Mon, 22 Nov 2010 18:32:18 -0800
-Message-ID: <AANLkTi=7ErFUgPOFaePh6GUP5rF18c=q5Gs6+GYvMiOK@mail.gmail.com>
-Subject: Re: [PATCH 28/44] compat: avoid using `#include_next' directive in
- compat headers
-To: Arnaud Lacombe <lacombar@gmail.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Luis Rodriguez <Luis.Rodriguez@atheros.com>
-Content-Type: text/plain; charset=UTF-8
+In-Reply-To: <1289943378.3673.11.camel@jlt3.sipsolutions.net>
+References: <AANLkTikb+2PypN+nOGDYbuN1mRGjWCZRuTQ16HsRNo=p@mail.gmail.com>
+	<AANLkTi=PZ8TH2PG7rKz9-nt3S4ZLzvMw_478QrYOpVkm@mail.gmail.com>
+	<1289943378.3673.11.camel@jlt3.sipsolutions.net>
+Date: Tue, 16 Nov 2010 22:45:41 +0100
+Message-ID: <AANLkTikkcfsRWuXLAxtx5fSdj5fRkose6_A8+TnPF83H@mail.gmail.com>
+Subject: Re: [iwlwifi] Rate Adaptation
+From: "An (Jack) Chan" <jackachan@gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Nov 22, 2010 at 6:19 PM, Arnaud Lacombe <lacombar@gmail.com> wrote:
-> Hi,
+Thank you very much, Johannes.
+
+I have one more question. Do you know if iwl5000 supports both
+Space-Time Block Coding (STBC) and Spatial Multiplexing (SM)? That
+means I can change the rates in both STBC and SM schemes?
+
+As I know in Ralink's RT2880, their configuration file provides an
+interface for setting different MCS values. STBC is from 0 to 7, while
+SM is from 8 to 15, and 33 is auto-rate.
+
+Jack
+
+
+On Tue, Nov 16, 2010 at 10:36 PM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
+> On Tue, 2010-11-16 at 21:12 +0100, An (Jack) Chan wrote:
 >
-> On Mon, Nov 22, 2010 at 1:09 PM, Luis R. Rodriguez
-> <lrodriguez@atheros.com> wrote:
->> On Sun, Nov 21, 2010 at 5:36 PM, Arnaud Lacombe <lacombar@gmail.com> wrote:
->>> [...]
->>> The compat headers should be at the end of the include list, so that
->>> the kernel headers get included first, and the compat one will only be
->>> when the kernel does not provide the header. This is the only sane way
->>> to override kernel provided stuff. That said, there is certainly a
->>> use-case I missed.
->>
->> Agreed, but you are missing the purpose of the trick used here.
-> certainly :)
+>> Does anyone know where I can find the implementation of rate
+>> adaptation in iwl5000 driver?
 >
->> The
->> purpose of the include_next was so that we can name our own
->> <linux/pm_qos_params.h> which is part of compat and these directories
->> *will* get a priority over the kernel's so that way we can avoid
->> ifdef'ing all includes for the same file on the upstream code.
-> I'm not sure to get what you mean by "we can avoid ifdef'ing all
-> includes for the same file on the upstream code", can you details ?
-
-Ah, that's right, you don't see or use compat-wireless likely. Ok, so
-what we do for backporting the 802.11 subsystem, Bluetooth and some
-Ethernet drivers is we take the stock upstream files, stuff them into
-a new directory, and then apply a series of patches to them to get the
-files to properly compile. The patches address all things that was not
-possible to backport through compat.git. Header file changes is one of
-the typical things we run into. If a new header file is added to newer
-kernels we can play a hack for older kernels and leave the code intact
-and introduce our own include/linux/foo.h through compat by prefering
-the local path over the kernel's path. If we're on newer kernels
-though include_next will go on the search path and find the kernel's
-own header file.
-
->> Without
->> an include_next we'd simply skip including the kernel's own original
->> header file.
->>
-> I admit that I removed that part merely because I went loose on the
-> trigger that day. AFAIR, there was no technical point per-se, so I
-> would not mind omitting this patch.
-
-OK cool, lets skip that then.
-
-  Luis
+> It's in iwl-agn-rs.c
+>
+> johannes
+>
+>
