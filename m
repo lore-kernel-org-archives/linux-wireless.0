@@ -1,46 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qy0-f174.google.com ([209.85.216.174]:47672 "EHLO
-	mail-qy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755084Ab0KJCWB (ORCPT
+Received: from mail-qw0-f46.google.com ([209.85.216.46]:46668 "EHLO
+	mail-qw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752263Ab0KPPIt convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 9 Nov 2010 21:22:01 -0500
-Received: by mail-qy0-f174.google.com with SMTP id 12so2500227qyk.19
-        for <linux-wireless@vger.kernel.org>; Tue, 09 Nov 2010 18:22:00 -0800 (PST)
-From: Arnaud Lacombe <lacombar@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: lrodriguez@atheros.com, Arnaud Lacombe <lacombar@gmail.com>
-Subject: [PATCH 40/44] compat/2.6.29: don't waste space around DIV_ROUND_CLOSEST()
-Date: Tue,  9 Nov 2010 21:20:22 -0500
-Message-Id: <1289355626-25373-41-git-send-email-lacombar@gmail.com>
-In-Reply-To: <1289355626-25373-1-git-send-email-lacombar@gmail.com>
-References: <1289355626-25373-1-git-send-email-lacombar@gmail.com>
+	Tue, 16 Nov 2010 10:08:49 -0500
+Received: by qwh6 with SMTP id 6so604195qwh.19
+        for <linux-wireless@vger.kernel.org>; Tue, 16 Nov 2010 07:08:48 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <4CE29C7E.6000200@lwfinger.net>
+References: <slrnidp3ae.79c.rb-oss-3@mal.justgohome.co.uk>
+	<4CDC9FA5.10002@lwfinger.net>
+	<slrnidq7u0.9ic.rb-oss-3@mal.justgohome.co.uk>
+	<4CDD3BC4.7070102@lwfinger.net>
+	<slrnidqorp.dlr.rb-oss-3@mal.justgohome.co.uk>
+	<4CDD66C4.10603@lwfinger.net>
+	<slrnidqsld.dlr.rb-oss-3@mal.justgohome.co.uk>
+	<4CDD7945.70005@lwfinger.net>
+	<slrnidqv0k.g21.rb-oss-3@mal.justgohome.co.uk>
+	<loom.20101113T191727-421@post.gmane.org>
+	<4CDEDC74.3040902@lwfinger.net>
+	<ibmosc$4au$1@dough.gmane.org>
+	<4CDEEEE4.80801@lwfinger.net>
+	<ibokag$481$1@dough.gmane.org>
+	<4CE00BEE.8060100@lwfinger.net>
+	<ibpauk$v12$1@dough.gmane.org>
+	<4CE0455A.50709@lwfinger.net>
+	<ibs7c3$3dn$1@dough.gmane.org>
+	<4CE1C5F7.90607@lwfinger.net>
+	<ibtkeo$efc$1@dough.gmane.org>
+	<4CE29413.5090103@lwfinger.net>
+	<ibu5eh$15d$1@dough.gmane.org>
+	<4CE29C7E.6000200@lwfinger.net>
+Date: Tue, 16 Nov 2010 16:08:48 +0100
+Message-ID: <AANLkTi=QA5UuY=rjM_jpGqxyfVmtJDkpMbq-OaK6tG_J@mail.gmail.com>
+Subject: Re: r8187se panic
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: James Womack <james.c.womack@gmail.com>,
+	linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Arnaud Lacombe <lacombar@gmail.com>
----
- include/linux/compat-2.6.29.h |    6 ++----
- 1 files changed, 2 insertions(+), 4 deletions(-)
+2010/11/16 Larry Finger <Larry.Finger@lwfinger.net>:
+> On 11/16/2010 08:46 AM, James Womack wrote:
+>
+>> This should be sufficient, hopefully!
+>
+> Perfect.
 
-diff --git a/include/linux/compat-2.6.29.h b/include/linux/compat-2.6.29.h
-index b83aca0..0c20c9e 100644
---- a/include/linux/compat-2.6.29.h
-+++ b/include/linux/compat-2.6.29.h
-@@ -242,12 +242,10 @@ extern void usb_unpoison_anchored_urbs(struct usb_anchor *anchor);
- #endif /* CONFIG_USB */
- #endif
- 
--#define DIV_ROUND_CLOSEST(x, divisor)(			\
--{							\
-+#define DIV_ROUND_CLOSEST(x, divisor)	({		\
- 	typeof(divisor) __divisor = divisor;		\
- 	(((x) + ((__divisor) / 2)) / (__divisor));	\
--}							\
--)
-+})
- 
- extern int eth_mac_addr(struct net_device *dev, void *p);
- extern int eth_change_mtu(struct net_device *dev, int new_mtu);
+Would be nice if you could decide to talk privately or on ML ;)
+
+James you do not use "Reply to all" for most of the discussion.
+
 -- 
-1.7.2.30.gc37d7.dirty
-
+Rafał
