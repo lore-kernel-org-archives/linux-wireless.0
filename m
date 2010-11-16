@@ -1,174 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ey0-f174.google.com ([209.85.215.174]:49848 "EHLO
-	mail-ey0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756307Ab0KWTFG (ORCPT
+Received: from mail-pw0-f46.google.com ([209.85.160.46]:54531 "EHLO
+	mail-pw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755472Ab0KPRQf (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 23 Nov 2010 14:05:06 -0500
-Received: by eye27 with SMTP id 27so4877928eye.19
-        for <linux-wireless@vger.kernel.org>; Tue, 23 Nov 2010 11:05:05 -0800 (PST)
-Date: Tue, 23 Nov 2010 21:04:43 +0200
-From: Nick Kossifidis <mickflemm@gmail.com>
-To: ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org
-Cc: linville@tuxdriver.com, me@bobcopeland.com, mcgrof@gmail.com,
-	jirislaby@gmail.com, nbd@openwrt.org, br1@einfach.org
-Subject: [PATCH 12/30] ath5k: Increase PHY settling parameters for turo mode
-Message-ID: <20101123190359.GL4303@makis.mantri>
+	Tue, 16 Nov 2010 12:16:35 -0500
+Received: by pwi9 with SMTP id 9so220560pwi.19
+        for <linux-wireless@vger.kernel.org>; Tue, 16 Nov 2010 09:16:35 -0800 (PST)
+Message-ID: <4CE2BC64.4050302@lwfinger.net>
+Date: Tue, 16 Nov 2010 11:16:20 -0600
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+To: James Womack <james.c.womack@gmail.com>
+CC: linux-wireless@vger.kernel.org
+Subject: Re: r8187se panic
+References: <slrnidp3ae.79c.rb-oss-3@mal.justgohome.co.uk> <4CDC9FA5.10002@lwfinger.net> <slrnidq7u0.9ic.rb-oss-3@mal.justgohome.co.uk> <4CDD3BC4.7070102@lwfinger.net> <slrnidqorp.dlr.rb-oss-3@mal.justgohome.co.uk> <4CDD66C4.10603@lwfinger.net> <slrnidqsld.dlr.rb-oss-3@mal.justgohome.co.uk> <4CDD7945.70005@lwfinger.net> <slrnidqv0k.g21.rb-oss-3@mal.justgohome.co.uk> <loom.20101113T191727-421@post.gmane.org> <4CDEDC74.3040902@lwfinger.net> <ibmosc$4au$1@dough.gmane.org> <4CDEEEE4.80801@lwfinger.net> <ibokag$481$1@dough.gmane.org> <4CE00BEE.8060100@lwfinger.net> <ibpauk$v12$1@dough.gmane.org> <4CE0455A.50709@lwfinger.net> <ibs7c3$3dn$1@dough.gmane.org> <4CE1C5F7.90607@lwfinger.net> <ibtkeo$efc$1@dough.gmane.org> <4CE29413.5090103@lwfinger.net> <ibu5eh$15d$1@dough.gmane.org> <4CE29C7E.6000200@lwfinger.net> <4CE2B78D.1010202@gmail.com>
+In-Reply-To: <4CE2B78D.1010202@gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
- * On turbo mode increase PHY settling times, note that
- we only increase switch settling time on AR5212 as indicated
- by initvals.
+On 11/16/2010 10:55 AM, James Womack wrote:
+> On 16/11/10 15:00, Larry Finger wrote:
+>> On 11/16/2010 08:46 AM, James Womack wrote:
+>>
+>>> This should be sufficient, hopefully!
+>>
+>> Perfect.
+>>
+>> Larry
+> 
+> Good. Thanks for fixing this issue. Do you have any idea when we could
+> expect to see this fix incorporated into a mainstream kernel?
 
- * A few cleanups: Move frame control settings for AR5210 from
- reset_tx_queue to tweak_initvals and remove phy_scal settings
- from tweak_initvals (we tweak them alread on set_sleep_clock).
+The fix to change the panic into a simple warning has been pushed upstream. If
+GregKH, the staging maintainer, thinks it can go into 2.6.37, then the
+backporting to stable will happen fairly quickly. If he decides it is too
+invasive (not likely), then the patch will wait for ~2 months for 2.6.38. Once
+in mainline, there will be some delay as the patch for 2.6.37 does not apply to
+your kernel (2.6.32 as I recall), thus I will have to supply a revised version.
+Once it is in 2.6.32.Y, then your disto will have to pick up the changes and
+create an updated kernel. The wheels of change turn slowly - kernel stability is
+extremely important.
 
- Signed-off-by: Nick Kossifidis <mickflemm@gmail.com>
----
- drivers/net/wireless/ath/ath5k/ath5k.h |   14 +++++++--
- drivers/net/wireless/ath/ath5k/qcu.c   |   13 --------
- drivers/net/wireless/ath/ath5k/reg.h   |    2 +
- drivers/net/wireless/ath/ath5k/reset.c |   52 ++++++++++++++++++++++++--------
- 4 files changed, 52 insertions(+), 29 deletions(-)
+My estimate would be 6 weeks at a minimum. Note that I still do not have a real
+fix for the warning. That could take a long time to find, particularly as I
+cannot duplicate the condition on my box. Long-range debugging is a very slow
+process.
 
-diff --git a/drivers/net/wireless/ath/ath5k/ath5k.h b/drivers/net/wireless/ath/ath5k/ath5k.h
-index c953544..005cad0 100644
---- a/drivers/net/wireless/ath/ath5k/ath5k.h
-+++ b/drivers/net/wireless/ath/ath5k/ath5k.h
-@@ -259,15 +259,23 @@
- #define	AR5K_INIT_TX_LAT_BG			384
- /* Tx latency for 40MHz (turbo) operation (min ?) */
- #define	AR5K_INIT_TX_LAT_MIN			32
-+/* Default Tx/Rx latencies (same for 5211)*/
-+#define AR5K_INIT_TX_LATENCY_5210		54
-+#define	AR5K_INIT_RX_LATENCY_5210		29
- 
- /* Tx frame to Tx data start delay */
- #define AR5K_INIT_TXF2TXD_START_DEFAULT		14
- #define AR5K_INIT_TXF2TXD_START_DELAY_10MHZ	12
- #define AR5K_INIT_TXF2TXD_START_DELAY_5MHZ	13
- 
--/* Default Tx/Rx latencies (same for 5211)*/
--#define AR5K_INIT_TX_LATENCY_5210		54
--#define	AR5K_INIT_RX_LATENCY_5210		29
-+/* We need to increase PHY switch and agc settling time
-+ * on turbo mode */
-+#define	AR5K_SWITCH_SETTLING			5760
-+#define	AR5K_SWITCH_SETTLING_TURBO		7168
-+
-+#define	AR5K_AGC_SETTLING			28
-+/* 38 on 5210 but shouldn't matter */
-+#define	AR5K_AGC_SETTLING_TURBO			37
- 
- 
- /* GENERIC CHIPSET DEFINITIONS */
-diff --git a/drivers/net/wireless/ath/ath5k/qcu.c b/drivers/net/wireless/ath/ath5k/qcu.c
-index f89bc94..00c4908 100644
---- a/drivers/net/wireless/ath/ath5k/qcu.c
-+++ b/drivers/net/wireless/ath/ath5k/qcu.c
-@@ -271,19 +271,6 @@ int ath5k_hw_reset_tx_queue(struct ath5k_hw *ah, unsigned int queue)
- 		ath5k_hw_reg_write(ah, (ah->ah_bwmode == AR5K_BWMODE_40MHZ) ?
- 			AR5K_INIT_PROTO_TIME_CNTRL_TURBO :
- 			AR5K_INIT_PROTO_TIME_CNTRL, AR5K_IFS1);
--		/* Set AR5K_PHY_SETTLING */
--		ath5k_hw_reg_write(ah, (ah->ah_bwmode == AR5K_BWMODE_40MHZ) ?
--			(ath5k_hw_reg_read(ah, AR5K_PHY_SETTLING) & ~0x7F)
--			| 0x38 :
--			(ath5k_hw_reg_read(ah, AR5K_PHY_SETTLING) & ~0x7F)
--			| 0x1C,
--			AR5K_PHY_SETTLING);
--		/* Set Frame Control Register */
--		ath5k_hw_reg_write(ah, (ah->ah_bwmode == AR5K_BWMODE_40MHZ) ?
--			(AR5K_PHY_FRAME_CTL_INI | AR5K_PHY_TURBO_MODE |
--			AR5K_PHY_TURBO_SHORT | 0x2020) :
--			(AR5K_PHY_FRAME_CTL_INI | 0x1020),
--			AR5K_PHY_FRAME_CTL_5210);
- 	}
- 
- 	/*
-diff --git a/drivers/net/wireless/ath/ath5k/reg.h b/drivers/net/wireless/ath/ath5k/reg.h
-index 4d61061..dc213bb 100644
---- a/drivers/net/wireless/ath/ath5k/reg.h
-+++ b/drivers/net/wireless/ath/ath5k/reg.h
-@@ -2245,6 +2245,8 @@
- #define	AR5K_PHY_FRAME_CTL		(ah->ah_version == AR5K_AR5210 ? \
- 					AR5K_PHY_FRAME_CTL_5210 : AR5K_PHY_FRAME_CTL_5211)
- /*---[5111+]---*/
-+#define	AR5K_PHY_FRAME_CTL_WIN_LEN	0x00000003	/* Force window length (?) */
-+#define	AR5K_PHY_FRAME_CTL_WIN_LEN_S	0
- #define	AR5K_PHY_FRAME_CTL_TX_CLIP	0x00000038	/* Mask for tx clip (?) */
- #define	AR5K_PHY_FRAME_CTL_TX_CLIP_S	3
- #define	AR5K_PHY_FRAME_CTL_PREP_CHINFO	0x00010000	/* Prepend chan info */
-diff --git a/drivers/net/wireless/ath/ath5k/reset.c b/drivers/net/wireless/ath/ath5k/reset.c
-index f9457f4..ee605cd 100644
---- a/drivers/net/wireless/ath/ath5k/reset.c
-+++ b/drivers/net/wireless/ath/ath5k/reset.c
-@@ -688,19 +688,6 @@ static void ath5k_hw_tweak_initval_settings(struct ath5k_hw *ah,
- 		AR5K_REG_DISABLE_BITS(ah, AR5K_TXCFG,
- 				AR5K_TXCFG_DCU_DBL_BUF_DIS);
- 
--	/* Set DAC/ADC delays */
--	if (ah->ah_version == AR5K_AR5212) {
--		u32 scal;
--		struct ath5k_eeprom_info *ee = &ah->ah_capabilities.cap_eeprom;
--		if (ah->ah_mac_version == (AR5K_SREV_AR2417 >> 4))
--			scal = AR5K_PHY_SCAL_32MHZ_2417;
--		else if (ee->ee_is_hb63)
--			scal = AR5K_PHY_SCAL_32MHZ_HB63;
--		else
--			scal = AR5K_PHY_SCAL_32MHZ;
--		ath5k_hw_reg_write(ah, scal, AR5K_PHY_SCAL);
--	}
--
- 	/* Set fast ADC */
- 	if ((ah->ah_radio == AR5K_RF5413) ||
- 	(ah->ah_mac_version == (AR5K_SREV_AR2417 >> 4))) {
-@@ -740,6 +727,45 @@ static void ath5k_hw_tweak_initval_settings(struct ath5k_hw *ah,
- 		AR5K_REG_ENABLE_BITS(ah, AR5K_DIAG_SW_5211,
- 					AR5K_DIAG_SW_ECO_ENABLE);
- 	}
-+
-+	if (ah->ah_bwmode) {
-+		/* Increase PHY switch and AGC settling time
-+		 * on turbo mode (ath5k_hw_commit_eeprom_settings
-+		 * will override settling time if available) */
-+		if (ah->ah_bwmode == AR5K_BWMODE_40MHZ) {
-+
-+			AR5K_REG_WRITE_BITS(ah, AR5K_PHY_SETTLING,
-+						AR5K_PHY_SETTLING_AGC,
-+						AR5K_AGC_SETTLING_TURBO);
-+
-+			/* XXX: Initvals indicate we only increase
-+			 * switch time on AR5212, 5211 and 5210
-+			 * only change agc time (bug?) */
-+			if (ah->ah_version == AR5K_AR5212)
-+				AR5K_REG_WRITE_BITS(ah, AR5K_PHY_SETTLING,
-+						AR5K_PHY_SETTLING_SWITCH,
-+						AR5K_SWITCH_SETTLING_TURBO);
-+
-+			if (ah->ah_version == AR5K_AR5210) {
-+				/* Set Frame Control Register */
-+				ath5k_hw_reg_write(ah,
-+					(AR5K_PHY_FRAME_CTL_INI |
-+					AR5K_PHY_TURBO_MODE |
-+					AR5K_PHY_TURBO_SHORT | 0x2020),
-+					AR5K_PHY_FRAME_CTL_5210);
-+			}
-+		/* On 5413 PHY force window length for half/quarter rate*/
-+		} else if ((ah->ah_mac_srev >= AR5K_SREV_AR5424) &&
-+		(ah->ah_mac_srev <= AR5K_SREV_AR5414)) {
-+			AR5K_REG_WRITE_BITS(ah, AR5K_PHY_FRAME_CTL_5211,
-+						AR5K_PHY_FRAME_CTL_WIN_LEN,
-+						3);
-+		}
-+	} else if (ah->ah_version == AR5K_AR5210) {
-+		/* Set Frame Control Register for normal operation */
-+		ath5k_hw_reg_write(ah, (AR5K_PHY_FRAME_CTL_INI | 0x1020),
-+						AR5K_PHY_FRAME_CTL_5210);
-+	}
- }
- 
- static void ath5k_hw_commit_eeprom_settings(struct ath5k_hw *ah,
+One other thing to note. I have a mac80211 version of the rtl8187se driver that
+almost works. It is able to receive and transmit short packets. When a packet
+longer than about 64 bytes is sent, the firmware locks up. I sent my source to
+Realtek to see if they could see what I'm doing wrong. Their report is that the
+driver is now working, but not stable. Once that driver is finished, it wil;l;
+be submitted to mainline, and the version in staging will be dropped.
+
+Larry
