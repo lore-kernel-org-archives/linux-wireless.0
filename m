@@ -1,292 +1,203 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ogre.sisk.pl ([217.79.144.158]:34786 "EHLO ogre.sisk.pl"
+Received: from mail.atheros.com ([12.19.149.2]:23601 "EHLO mail.atheros.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756263Ab0KRXiF convert rfc822-to-8bit (ORCPT
+	id S1751955Ab0KPU1d convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 18 Nov 2010 18:38:05 -0500
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
-To: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
-Subject: 2.6.37-rc2-git4: Reported regressions from 2.6.36
-Cc: Maciej Rutecki <maciej.rutecki@gmail.com>,
-	Florian Mickler <florian@mickler.org>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	Kernel Testers List <kernel-testers@vger.kernel.org>,
-	Network Development <netdev@vger.kernel.org>,
-	Linux ACPI <linux-acpi@vger.kernel.org>,
-	Linux PM List <linux-pm@lists.linux-foundation.org>,
-	Linux SCSI List <linux-scsi@vger.kernel.org>,
-	Linux Wireless List <linux-wireless@vger.kernel.org>,
-	DRI <dri-devel@lists.freedesktop.org>
+	Tue, 16 Nov 2010 15:27:33 -0500
+Received: from mail.atheros.com ([10.10.20.105])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Tue, 16 Nov 2010 12:27:20 -0800
+Date: Tue, 16 Nov 2010 12:27:30 -0800
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: Mark Mentovai <mark@moxienet.com>
+CC: Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
+	"linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"stable@kernel.org" <stable@kernel.org>,
+	Johannes Berg <johannes@sipsolutions.net>
+Subject: Re: [PATCH] cfg80211: Fix regulatory bug with multiple cards with
+ a delayed CRDA response
+Message-ID: <20101116202730.GA1783@tux>
+References: <1289528843-21982-1-git-send-email-lrodriguez@atheros.com>
+ <AANLkTimKdqoWx2FtvJ9HG3Yj0ofROMDNo30=FJv1vVGG@mail.gmail.com>
+ <20101112202732.GI25089@tux>
+ <20101116000605.GA5679@tux>
+ <AANLkTinOdQMi=vF1CgLmdmMQTC_jayV361KsxTanAoy5@mail.gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
-Message-ID: <sKkKYVppECN.A.KhC.Phb5MB@chimera>
-Date: Fri, 19 Nov 2010 00:23:56 +0100 (CET)
+In-Reply-To: <AANLkTinOdQMi=vF1CgLmdmMQTC_jayV361KsxTanAoy5@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This message contains a list of some regressions from 2.6.36,
-for which there are no fixes in the mainline known to the tracking team.
-If any of them have been fixed already, please let us know.
+On Mon, Nov 15, 2010 at 07:34:57PM -0800, Mark Mentovai wrote:
+> Luis-
+> 
+> Excellent, this does the trick!
+> 
+> I’ve got some review comments. This looks longish, but many of these
+> suggestions are minor and will probably result in a simpler and better
+> implementation.
+> 
+> - The reg_process_hint call in regulatory_core bypasses the queue. I
+> don’t think this is a great idea. regulatory_core call should probably
+> go through queue_regulatory_request instead. Since the kernel
+> regulatory code doesn’t maintain any sort of synchronization with user
+> space, I think it’s real important to avoid having more than one
+> request pending at any time. It would be bad if there were a pending
+> request out, CRDA was slow to respond, and then a regulatory_hint_core
+> call came in from restore_regulatory_settings expecting to set things
+> back to a clean slate. That would put two outstanding requests out at
+> once. When CRDA responds, the kernel wouldn’t be able to distinguish
+> between the responses, it would possibly process them out of order,
+> and with only a single last_request to refer to, it would process them
+> incorrectly even if handled in the correct order.
+
+Good point, I skipped the queue in the original work as I ran into
+issues using it during the cfg80211's init process. Its odd, I had
+complaints about using a mutex. Anyway, its using a mutex now and
+it should work I think so I'll try it.
+
+> - With the above change to regulatory_core, last_request becomes
+> extraneous: it’s a rough synonym for the head of reg_requests_list.
+> You may be able to get rid of last_request altogether. This is a more
+> invasive change and should almost certainly not be a part of this
+> patch, but it’s something to keep in mind.
+
+Eh, not really, we'd have to keep around the request on the queue, and
+we do not. So last_request really is the last process/being processed
+request.
+
+> - This will spin on reg_delayed_work/reg_process_pending_hints if user
+> space never provides regulatory data. (You point this out in your
+> subsequent e-mail.) The way things are implemented in your patch, I
+> don’t see any point to spinning in reg_delayed_work. You could just
+> call schedule_work from where you set last_request->processed to true
+> if reg_requests_list is non-empty.
+
+I also thought of doing it this way but for some reason which I forget
+I ended up doing it using the delayed work.
+
+> - Also looking at delayed work, it looks like there’s a way to call
+> schedule_delayed_work when delayed work is already scheduled, and I
+> think that the workqueue implementation considers this a bug. Assume
+> that reg_process_pending_hints calls schedule_delayed_work. Then,
+> before the delay expires, regulatory_hint calls
+> queue_regulatory_request, which calls schedule_work. In that case,
+> reg_process_pending_hints can be called again before the delay expires
+> from the earlier pass through, and you’ll hit this case (kernel bug.)
+
+Sure, thought of this as well, but left it as a after-thought excercise
+for optimization.
+
+> - I don’t think queue_regulatory_request needs to call schedule_work
+> if there was already something in reg_requests_list. 
+
+You mean because we'd be iterating over the list already?
+
+> I guess that
+> making the call conditional on an empty list would work around the
+> above problem too, although you’d still have to worry about the
+> schedule_work call in regulatory_hint_found_beacon—more on that in a
+> sec. Still, this doesn’t feel as clean or simple to me as just getting
+> rid of the delayed work. Then you could keep this schedule_work call
+> and just let the workqueue’s one-shot nature sort it all out for you.
+
+I'll review this a bit more, thanks for the pointers.
+
+> - I haven’t looked at reg_process_pending_beacon_hints or
+> regulatory_hint_found_beacon much, but I suspect that they don’t have
+> anything to do with ordering CRDA calls, 
+
+Right, they are used to send hints to cfg80211 when a beacon is found.
+When a beacon from an AP is found we tell cfg80211, it in turn will
+lift passive-scan and no-ibss flags from the channel if the card is
+world roaming. This is done for all non-DFS and non-channel-12-13-14.
+
+> and it might be better to
+> just separate the beacon stuff and the regulatory request stuff into
+> their own work_structs.
+
+Don't see the point. I'd rather just clean up the possible theoretical
+races you've pointed out.
+
+> Be especially careful if you decide to keep
+> them on the same work_struct AND you keep the delayed work—see above.
+
+Sure.
+
+> - Your comment describing @processed in regulatory.h could be
+> reworded: “the currently regulatory domain set” and “when a the last
+> request”.
+
+Thanks.
 
-If you know of any other unresolved regressions from 2.6.36, please let us
-know either and we'll add them to the list.  Also, please let us know
-if any of the entries below are invalid.
+> I agree that the most serious concern is the one you pointed out in
+> your e-mail about the “missing or sick CRDA” problem. I think that
+> this is particularly scary because CRDA is needed pretty much right
+> from the first time the module initializes.
 
-Each entry from the list will be sent additionally in an automatic reply
-to this message with CCs to the people involved in reporting and handling
-the issue.
+Not if you have CONFIG_CFG80211_INTERNAL_REGDB and are OK with
+a static update of the regulatory database or if you are just
+using world roaming cards.
 
+> If at any point CRDA is
+> missing, there’s no way to ensure that regulatory data is correct,
 
-Listed regressions statistics:
+Yes there is, this was by design, you'll just world roam.
 
-  Date          Total  Pending  Unresolved
-  ----------------------------------------
-  2010-11-19       39       29          25
+> even if CRDA shows up later.
 
+If CRDA shows up later then yes, the only way to get a regulatory
+domain applied to the card if it was not world roaming would be
+to reload the module right now. This is a separate issue though
+and I think we should treat it as such.
 
-Unresolved regressions
-----------------------
+> I think that the only reasonable thing to
+> do is to just ensure that there’s only one request outstanding at a
+> time. I’m very opposed to reissuing CRDA requests as long as there’s
+> no way to synchronize by tying a CRDA response to a specific kernel
+> request. 
 
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=23222
-Subject		: 2.6.36 radeon KMS: [drm] Cannot find any crtc or sizes
-Submitter	: Ján Bednár <jan.bednar@gmail.com>
-Date		: 2010-11-18 15:33 (1 days old)
+Sure, well so I believe udev is supposed to queue these things,
+not sure, either way I am pretty sure if a udev event was issued
+and CRDA was not present we would not get anything going. One idea
+here is to implement a CRDA wrapper that uses inotify for /sbin/crda
+and queues up requests until CRDA pops in. Can't say I have strong
+motivation for this right now though, chances of you not having
+CRDA are pretty slim ;) but its a way to resolve this IMHO.
 
+> Still, it might not be a bad idea to log something if CRDA
+> doesn’t respond for, say, five seconds, and then to log something
+> again if CRDA finally shows up.
 
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=23142
-Subject		: autofs4 hang in 2.6.37-rc1
-Submitter	: Avi Kivity <avi@redhat.com>
-Date		: 2010-11-14 12:55 (5 days old)
-Message-ID	: <4CDFDC2B.6040205@redhat.com>
-References	: http://marc.info/?l=linux-kernel&m=128973936026185&w=2
+I'd rather leave this to userspace and just decide ourselves what
+to do in the kernel if we never get a response.
 
+I think that with the implementation I used but with your suggestion
+with avoiding a delayed work struct might be best. If no CRDA response
+goes through then we simply world roam unless you had
+CONFIG_CFG80211_INTERNAL_REGDB.
 
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=23122
-Subject		: Regression in 2.6.37-rc1 for Intel 915 Graphics Adapter - bisected to commit e9e331a
-Submitter	: Larry Finger <Larry.Finger@lwfinger.net>
-Date		: 2010-11-11 1:47 (8 days old)
-Message-ID	: <4CDB4B1D.7000503@lwfinger.net>
-References	: http://marc.info/?l=linux-kernel&m=128944001311444&w=2
+Whatyda think?
 
+> Getting rid of the delayed work spin
+> in the kernel means that at least the rest of the system won’t suffer
+> if CRDA goes to lunch.
 
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=23102
-Subject		: [bisected] i915 regression in post 2.6.36 kernels
-Submitter	: Johannes Hirte <johannes.hirte@fem.tu-ilmenau.de>
-Date		: 2010-11-10 7:02 (9 days old)
-Message-ID	: <201011100802.20332.johannes.hirte@fem.tu-ilmenau.de>
-References	: http://marc.info/?l=linux-kernel&m=128937310017057&w=2
+Agreed wholeheartedly.
 
+> It sucks that user space isn’t as reliable as kernel space and that
+> it’s possible for a transient problem like “no more processes” or “no
+> more FDs” in user space to wedge the regulatory code like this, but I
+> guess that was already considered and dismissed when the
+> regulatory-CRDA interface was designed.
 
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=23092
-Subject		: WARNING in tty_io.c
-Submitter	: Shan Wei <shanwei@cn.fujitsu.com>
-Date		: 2010-11-10 8:06 (9 days old)
-Message-ID	: <4CDA5291.4010802@cn.fujitsu.com>
-References	: http://marc.info/?l=linux-kernel&m=128937645120159&w=2
+That's userspace's problem :D but yea we can implement the inotify
+thingy, that would help. Patches welcomed.
 
+> Thanks for working on this.
 
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=23012
-Subject		: ftdi_sio /dev/ttyUSB error:  "Resource Temporarily Unavailable"
-Submitter	: Kevin Smith <thirdwiggin@gmail.com>
-Date		: 2010-11-16 06:25 (3 days old)
+Thanks for reporting this and working with me on testing it, and of course
+all the suggestions.
 
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=22942
-Subject		: [2.6.37-rc1, OOM] virtblk: OOM in do_virtblk_request()
-Submitter	: Dave Chinner <david@fromorbit.com>
-Date		: 2010-11-05 1:30 (14 days old)
-Message-ID	: <20101105013003.GE13830@dastard>
-References	: http://marc.info/?l=linux-kernel&m=128892062917641&w=2
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=22912
-Subject		: spi_lm70llp module crash on unload (2.6.37-rc1)
-Submitter	: Randy Dunlap <randy.dunlap@oracle.com>
-Date		: 2010-11-05 0:16 (14 days old)
-Message-ID	: <20101104171620.00d8c95d.randy.dunlap@oracle.com>
-References	: http://marc.info/?l=linux-kernel&m=128891627913647&w=2
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=22882
-Subject		: (2.6.37-rc1) amd64-agp module crashed on second load
-Submitter	: Randy Dunlap <randy.dunlap@oracle.com>
-Date		: 2010-11-05 0:13 (14 days old)
-Message-ID	: <20101104171333.fea1f498.randy.dunlap@oracle.com>
-References	: http://marc.info/?l=linux-kernel&m=128891605213447&w=2
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=22812
-Subject		: kernel oops on 2.6.37-rc1
-Submitter	: Andrew <atswartz@gmail.com>
-Date		: 2010-11-12 16:05 (7 days old)
-First-Bad-Commit: http://git.kernel.org/linus/a68c439b1966c91f0ef474e2bf275d6792312726
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=22692
-Subject		: [regression, 2.6.37-rc1] 'ip link tap0 up' stuck in do_exit()
-Submitter	: Dave Chinner <david@fromorbit.com>
-Date		: 2010-11-03 6:26 (16 days old)
-Message-ID	: <20101103062609.GB31163@dastard>
-References	: http://marc.info/?l=linux-kernel&m=128876560131870&w=2
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=22682
-Subject		: [oops, 2.6.37-rc1] Unpacking initramfs failed, oops in free_init_pages()
-Submitter	: Dave Chinner <david@fromorbit.com>
-Date		: 2010-11-03 1:54 (16 days old)
-Message-ID	: <20101103015427.GA31163@dastard>
-References	: http://marc.info/?l=linux-kernel&m=128874930119723&w=2
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=22672
-Subject		: Regression in 2.6.37-rc1 for Intel 945 Graphics Adapter - bisected to commit e9e331a
-Submitter	: Larry Finger <Larry.Finger@lwfinger.net>
-Date		: 2010-11-11 01:56 (8 days old)
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=22652
-Subject		: [drm:i915_gem_mmap_gtt_ioctl] *ERROR* Attempting to mmap a purgeable buffer
-Submitter	: Tobias <devnull@plzk.org>
-Date		: 2010-11-10 21:59 (9 days old)
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=22642
-Subject		: 2.6.37-rc1: Disk takes 10 seconds to resume - MacBook2,1
-Submitter	: Tobias <devnull@plzk.org>
-Date		: 2010-11-10 19:33 (9 days old)
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=22572
-Subject		: Linux 2.6.37-rc1 (acpi_video)
-Submitter	: Randy Dunlap <randy.dunlap@oracle.com>
-Date		: 2010-11-02 18:51 (17 days old)
-Message-ID	: <20101102115106.bac57d21.randy.dunlap@oracle.com>
-References	: http://marc.info/?l=linux-kernel&m=128872403920449&w=2
-		  http://marc.info/?l=linux-acpi&m=128874714517914&w=2
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=22562
-Subject		: Regression in 2.6.37-rc1 - logs spammed with "unable to enumerate USB port" - bisected to commit 3df7169e
-Submitter	: Larry Finger <Larry.Finger@lwfinger.net>
-Date		: 2010-11-02 22:32 (17 days old)
-First-Bad-Commit: http://git.kernel.org/linus/3df7169e73fc1d71a39cffeacc969f6840cdf52b
-Message-ID	: <4CD09166.4060202@lwfinger.net>
-References	: http://marc.info/?l=linux-kernel&m=128873713207906&w=2
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=22552
-Subject		: AMD boot freeze bisected to b126b4703afa4010b161784a43650337676dd03b
-Submitter	: Borislav Petkov <bp@amd64.org>
-Date		: 2010-11-02 17:03 (17 days old)
-First-Bad-Commit: http://git.kernel.org/linus/b126b4703afa4010b161784a43650337676dd03b
-Message-ID	: <20101102170335.GC24927@aftab>
-References	: http://marc.info/?l=linux-kernel&m=128871752109913&w=2
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=22542
-Subject		: [2.6.37-rc1] drm:i195 errors
-Submitter	: Paul Rolland <rol@witbe.net>
-Date		: 2010-11-02 14:58 (17 days old)
-Message-ID	: <20101102155813.09cb2c6e@tux.DEF.witbe.net>
-References	: http://marc.info/?l=linux-kernel&m=128870991628970&w=2
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=22532
-Subject		: 2.6.37-rc1: BUG: scheduling while atomic (kvm_init)
-Submitter	: Thomas Meyer <thomas@m3y3r.de>
-Date		: 2010-11-02 19:06 (17 days old)
-Message-ID	: <50AA24C585B14210A44AB599605C7CBD@hugo>
-References	: http://marc.info/?l=linux-kernel&m=128872479921559&w=2
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=22522
-Subject		: 2.6.37-rc1 boot Problem - BUG: unable to handle kernel null pointer - dmesg und config Datei
-Submitter	: werner <w.landgraf@ru.ru>
-Date		: 2010-11-02 2:09 (17 days old)
-Message-ID	: <web-395697375@zbackend1.aha.ru>
-References	: http://marc.info/?l=linux-kernel&m=128866380110940&w=2
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=22472
-Subject		: vga_switcheroo fails to switch from intel to ati
-Submitter	: Radu Andries <admiral0@tuxfamily.org>
-Date		: 2010-11-08 16:46 (11 days old)
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=22282
-Subject		: 2.6.37-rc1: WARNING..debugobjects: ODEBUG: free active (active state 0) object type: percpu_counter
-Submitter	: Randy Dunlap <randy.dunlap@oracle.com>
-Date		: 2010-11-01 21:58 (18 days old)
-Message-ID	: <4CCF37E8.1070208@oracle.com>
-References	: http://marc.info/?l=linux-kernel&m=128864879328429&w=2
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=22102
-Subject		: [2.6.36-09452-g2d10d87] BUG: unable to handle kernel NULL pointer dereference at (null)
-Submitter	: Carlos R. Mafra <crmafra2@gmail.com>
-Date		: 2010-10-30 20:07 (20 days old)
-Message-ID	: <20101030200751.GA2866@Pilar.aei.mpg.de>
-References	: http://marc.info/?l=linux-kernel&m=128846935825136&w=2
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=22082
-Subject		: 2.6.36-git11 -- kernel/pid.c:419 invoked rcu_dereference_check() without protection!
-Submitter	: Miles Lane <miles.lane@gmail.com>
-Date		: 2010-10-29 5:22 (21 days old)
-Message-ID	: <AANLkTimGgzOZb8EwUQO16cZcL+ycveKTYzg_AAX+D+Kw@mail.gmail.com>
-References	: http://marc.info/?l=linux-kernel&m=128832975924288&w=2
-
-
-Regressions with patches
-------------------------
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=22962
-Subject		: building (e)glibc against 2.6.37-rc1 headers fails
-Submitter	:  <stephan@openelec.tv>
-Date		: 2010-11-15 00:09 (4 days old)
-Patch		: https://bugzilla.kernel.org/show_bug.cgi?id=22962#c5
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=22932
-Subject		: [REGRESSION] [2.6.37-rc1] Fan noise after suspend to ram/disk
-Submitter	: Maciej Rutecki <maciej.rutecki@gmail.com>
-Date		: 2010-11-04 16:06 (15 days old)
-First-Bad-Commit: http://git.kernel.org/linus/3e384ee6c687cb397581ee8f9440fc8220cfac80
-Message-ID	: <201011041706.59046.maciej.rutecki@gmail.com>
-References	: http://marc.info/?l=linux-kernel&m=128888684308982&w=2
-Handled-By	: Rafael J. Wysocki <rjw@sisk.pl>
-Patch		: https://bugzilla.kernel.org/attachment.cgi?id=37372
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=22722
-Subject		: regression since 2.6.36: backlight in sony-laptop not working
-Submitter	: Norbert Preining <preining@logic.at>
-Date		: 2010-11-04 14:29 (15 days old)
-Message-ID	: <20101104142915.GC7650@gamma.logic.tuwien.ac.at>
-References	: http://marc.info/?l=linux-kernel&m=128888097600601&w=2
-Handled-By	: Mattia Dongili <malattia@linux.it>
-Patch		: https://bugzilla.kernel.org/attachment.cgi?id=37442
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=22662
-Subject		: divide error in select_task_rq_fair()
-Submitter	: Myron Stowe <myron.stowe@hp.com>
-Date		: 2010-11-10 23:58 (9 days old)
-Patch		: http://lkml.org/lkml/2010/11/13/176
-
-
-For details, please visit the bug entries and follow the links given in
-references.
-
-As you can see, there is a Bugzilla entry for each of the listed regressions.
-There also is a Bugzilla entry used for tracking the regressions from 2.6.36,
-unresolved as well as resolved, at:
-
-http://bugzilla.kernel.org/show_bug.cgi?id=21782
-
-Please let the tracking team know if there are any Bugzilla entries that
-should be added to the list in there.
-
-Thanks!
-
+  Luis
