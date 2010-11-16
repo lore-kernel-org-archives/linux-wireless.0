@@ -1,69 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from perninha.conectiva.com.br ([187.115.55.249]:47824 "EHLO
-	perninha.conectiva.com.br" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752859Ab0KBBAL (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:35887 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751444Ab0KPW0T (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 1 Nov 2010 21:00:11 -0400
-From: Herton Ronaldo Krzesinski <herton@mandriva.com.br>
-To: linux-wireless@vger.kernel.org
-Cc: Larry Finger <Larry.Finger@lwfinger.net>,
-	Hin-Tak Leung <htl10@users.sourceforge.net>,
-	John W Linville <linville@tuxdriver.com>,
-	Herton Ronaldo Krzesinski <herton@mandriva.com.br>
-Subject: [PATCH 3/9] rtl8187: fix wrong register initialization in 8187B
-Date: Mon,  1 Nov 2010 22:59:33 -0200
-Message-Id: <1288659579-4986-4-git-send-email-herton@mandriva.com.br>
-In-Reply-To: <1288659579-4986-1-git-send-email-herton@mandriva.com.br>
-References: <1288659579-4986-1-git-send-email-herton@mandriva.com.br>
+	Tue, 16 Nov 2010 17:26:19 -0500
+Subject: Re: [PATCH 2/2] mac80211: add support for setting the ad-hoc
+ multicast rate
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Felix Fietkau <nbd@openwrt.org>
+Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com
+In-Reply-To: <1289484443-96326-2-git-send-email-nbd@openwrt.org>
+References: <1289484443-96326-1-git-send-email-nbd@openwrt.org>
+	 <1289484443-96326-2-git-send-email-nbd@openwrt.org>
+Content-Type: text/plain; charset="UTF-8"
+Date: Tue, 16 Nov 2010 14:27:51 -0800
+Message-ID: <1289946471.3673.14.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-We were using wrong address for BRSR (Basic Rate Set Register) while
-initializing its value, comparing with Realtek sources, for 8187B case.
+On Thu, 2010-11-11 at 15:07 +0100, Felix Fietkau wrote:
 
-Also, the same register is initialized in rtl8187b_reg_table, so remove
-the duplicate initialization from the table.
+> +	if (mcast_rate) {
+> +		for (i = 0; i < sband->n_bitrates; i++) {
+> +			if (sband->bitrates[i].bitrate == mcast_rate) {
+> +				*idx = i;
+> +				return;
+> +			}
+> +		}
+> +	}
 
-Signed-off-by: Herton Ronaldo Krzesinski <herton@mandriva.com.br>
-Acked-by: Larry Finger <Larry.Finger@lwfinger.net>
----
- drivers/net/wireless/rtl818x/rtl8187_dev.c |   16 ++++++++++------
- 1 files changed, 10 insertions(+), 6 deletions(-)
+That conversion loop really shouldn't be in the hotpath.
 
-diff --git a/drivers/net/wireless/rtl818x/rtl8187_dev.c b/drivers/net/wireless/rtl818x/rtl8187_dev.c
-index 30c2120..b9ce2a8 100644
---- a/drivers/net/wireless/rtl818x/rtl8187_dev.c
-+++ b/drivers/net/wireless/rtl818x/rtl8187_dev.c
-@@ -725,11 +725,11 @@ static const u8 rtl8187b_reg_table[][3] = {
- 	{0x62, 0x08, 2}, {0x63, 0x08, 2}, {0x64, 0xCF, 2}, {0x72, 0x56, 2},
- 	{0x73, 0x9A, 2},
- 
--	{0x34, 0xF0, 0}, {0x35, 0x0F, 0}, {0x5B, 0x40, 0}, {0x84, 0x88, 0},
--	{0x85, 0x24, 0}, {0x88, 0x54, 0}, {0x8B, 0xB8, 0}, {0x8C, 0x07, 0},
--	{0x8D, 0x00, 0}, {0x94, 0x1B, 0}, {0x95, 0x12, 0}, {0x96, 0x00, 0},
--	{0x97, 0x06, 0}, {0x9D, 0x1A, 0}, {0x9F, 0x10, 0}, {0xB4, 0x22, 0},
--	{0xBE, 0x80, 0}, {0xDB, 0x00, 0}, {0xEE, 0x00, 0}, {0x4C, 0x00, 2},
-+	{0x5B, 0x40, 0}, {0x84, 0x88, 0}, {0x85, 0x24, 0}, {0x88, 0x54, 0},
-+	{0x8B, 0xB8, 0}, {0x8C, 0x07, 0}, {0x8D, 0x00, 0}, {0x94, 0x1B, 0},
-+	{0x95, 0x12, 0}, {0x96, 0x00, 0}, {0x97, 0x06, 0}, {0x9D, 0x1A, 0},
-+	{0x9F, 0x10, 0}, {0xB4, 0x22, 0}, {0xBE, 0x80, 0}, {0xDB, 0x00, 0},
-+	{0xEE, 0x00, 0}, {0x4C, 0x00, 2},
- 
- 	{0x9F, 0x00, 3}, {0x8C, 0x01, 0}, {0x8D, 0x10, 0}, {0x8E, 0x08, 0},
- 	{0x8F, 0x00, 0}
-@@ -770,7 +770,11 @@ static int rtl8187b_init_hw(struct ieee80211_hw *dev)
- 	if (res)
- 		return res;
- 
--	rtl818x_iowrite16(priv, (__le16 *)0xFF2D, 0x0FFF);
-+	/* BRSR (Basic Rate Set Register) on 8187B looks to be the same as
-+	 * RESP_RATE on 8187L in Realtek sources: each bit should be each
-+	 * one of the 12 rates, all are enabled */
-+	rtl818x_iowrite16(priv, (__le16 *)0xFF34, 0x0FFF);
-+
- 	reg = rtl818x_ioread8(priv, &priv->map->CW_CONF);
- 	reg |= RTL818X_CW_CONF_PERPACKET_RETRY_SHIFT;
- 	rtl818x_iowrite8(priv, &priv->map->CW_CONF, reg);
--- 
-1.7.3.2
+johannes
 
