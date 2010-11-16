@@ -1,105 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.19.149.2]:26505 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754399Ab0KJNEN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 10 Nov 2010 08:04:13 -0500
-Received: from mail.atheros.com ([10.10.20.105])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Wed, 10 Nov 2010 05:04:00 -0800
-From: Vasanthakumar Thiagarajan <vasanth@atheros.com>
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>
-Subject: [PATCH 09/11] ath9k_hw: Add helper function for interpolation
-Date: Wed, 10 Nov 2010 05:03:14 -0800
-Message-ID: <1289394196-3465-9-git-send-email-vasanth@atheros.com>
-In-Reply-To: <1289394196-3465-1-git-send-email-vasanth@atheros.com>
-References: <1289394196-3465-1-git-send-email-vasanth@atheros.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from external1.orbit-lab.org ([128.6.192.131]:46570 "HELO
+	external1.orbit-lab.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1758681Ab0KPUEl (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 16 Nov 2010 15:04:41 -0500
+Received: from repository3.orbit-lab.org (repository3.orbit-lab.org [10.50.0.41])
+	by external1.orbit-lab.org (Postfix) with ESMTP id 85FA9418D8
+	for <linux-wireless@vger.kernel.org>; Tue, 16 Nov 2010 15:00:15 -0500 (EST)
+Subject: Compat-wireless release for 2010-11-16 is baked
+To: <linux-wireless@vger.kernel.org>
+Message-Id: <20101116200439.69CAA40F97@repository3.orbit-lab.org>
+Date: Tue, 16 Nov 2010 15:04:39 -0500 (EST)
+From: compat@orbit-lab.org (Compat-wireless cronjob account)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Also round off interpolated values this would improve power
-accuracy by 0.5dB in some cases.
+>From git://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next
+   2ed3f79..964678b  history    -> origin/history
+ + d8273d8...fd49c15 master     -> origin/master  (forced update)
+   0143832..6800e4c  stable     -> origin/stable
+ * [new tag]         next-20101116 -> next-20101116
 
-Signed-off-by: Vasanthakumar Thiagarajan <vasanth@atheros.com>
----
- drivers/net/wireless/ath/ath9k/ar9003_eeprom.c |   48 ++++++++++++++----------
- 1 files changed, 28 insertions(+), 20 deletions(-)
+compat-wireless code metrics
 
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
-index 5ffeda2..1b4e991 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
-@@ -2982,6 +2982,16 @@ static int ath9k_hw_ar9300_check_eeprom(struct ath_hw *ah)
- 	return 0;
- }
- 
-+static int interpolate(int x, int xa, int xb, int ya, int yb)
-+{
-+	int bf, factor, plus;
-+
-+	bf = 2 * (yb - ya) * (x - xa) / (xb - xa);
-+	factor = bf / 2;
-+	plus = bf % 2;
-+	return ya + factor + plus;
-+}
-+
- static u32 ath9k_hw_ar9300_get_eeprom(struct ath_hw *ah,
- 				      enum eeprom_param param)
- {
-@@ -3614,7 +3624,7 @@ static int ar9003_hw_power_interpolate(int32_t x,
- 			if (hx == lx)
- 				y = ly;
- 			else	/* interpolate  */
--				y = ly + (((x - lx) * (hy - ly)) / (hx - lx));
-+				y = interpolate(x, lx, hx, ly, hy);
- 		} else		/* only low is good, use it */
- 			y = ly;
- 	} else if (hhave)	/* only high is good, use it */
-@@ -4204,25 +4214,23 @@ static int ar9003_hw_calibration_apply(struct ath_hw *ah, int frequency)
- 			/* so is the high frequency, interpolate */
- 			if (hfrequency[ichain] - frequency < 1000) {
- 
--				correction[ichain] = lcorrection[ichain] +
--				    (((frequency - lfrequency[ichain]) *
--				      (hcorrection[ichain] -
--				       lcorrection[ichain])) /
--				     (hfrequency[ichain] - lfrequency[ichain]));
--
--				temperature[ichain] = ltemperature[ichain] +
--				    (((frequency - lfrequency[ichain]) *
--				      (htemperature[ichain] -
--				       ltemperature[ichain])) /
--				     (hfrequency[ichain] - lfrequency[ichain]));
--
--				voltage[ichain] =
--				    lvoltage[ichain] +
--				    (((frequency -
--				       lfrequency[ichain]) * (hvoltage[ichain] -
--							      lvoltage[ichain]))
--				     / (hfrequency[ichain] -
--					lfrequency[ichain]));
-+				correction[ichain] = interpolate(frequency,
-+						lfrequency[ichain],
-+						hfrequency[ichain],
-+						lcorrection[ichain],
-+						hcorrection[ichain]);
-+
-+				temperature[ichain] = interpolate(frequency,
-+						lfrequency[ichain],
-+						hfrequency[ichain],
-+						ltemperature[ichain],
-+						htemperature[ichain]);
-+
-+				voltage[ichain] = interpolate(frequency,
-+						lfrequency[ichain],
-+						hfrequency[ichain],
-+						lvoltage[ichain],
-+						hvoltage[ichain]);
- 			}
- 			/* only low is good, use it */
- 			else {
--- 
-1.7.0.4
+    741659 - Total upstream lines of code being pulled
+      2187 - backport code changes
+      1930 - backport code additions
+       257 - backport code deletions
+      6360 - backport from compat module
+      8547 - total backport code
+    1.1524 - % of code consists of backport work
+      1534 - Crap changes not yet posted
+      1491 - Crap additions not yet posted
+        43 - Crap deletions not yet posted
+    0.2068 - % of crap code
 
+Base tree: linux-next.git
+Base tree version: next-20101116
+compat-wireless release: compat-wireless-2010-11-10-8-g12f3be5-pc
