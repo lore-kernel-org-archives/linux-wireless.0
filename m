@@ -1,41 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gx0-f174.google.com ([209.85.161.174]:33308 "EHLO
-	mail-gx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756292Ab0KNQS6 (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:46024 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755444Ab0KPV3t (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 14 Nov 2010 11:18:58 -0500
-Received: by gxk23 with SMTP id 23so2593244gxk.19
-        for <linux-wireless@vger.kernel.org>; Sun, 14 Nov 2010 08:18:57 -0800 (PST)
-Message-ID: <4CE00BEE.8060100@lwfinger.net>
-Date: Sun, 14 Nov 2010 10:18:54 -0600
-From: Larry Finger <Larry.Finger@lwfinger.net>
+	Tue, 16 Nov 2010 16:29:49 -0500
+Date: Tue, 16 Nov 2010 16:25:11 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Eric Appleman <erappleman@gmail.com>
+Cc: linux-wireless@vger.kernel.org, ilw@linux.intel.com
+Subject: Re: iwl3945 miserably slow (1.5mbps) due to faulty rate control,
+ unfixed since the ipw3945 transition
+Message-ID: <20101116212511.GG10774@tuxdriver.com>
+References: <4CD1ECAE.6010105@gmail.com>
 MIME-Version: 1.0
-To: James Womack <james.c.womack@gmail.com>
-CC: linux-wireless@vger.kernel.org
-Subject: Re: r8187se panic
-References: <slrnidp3ae.79c.rb-oss-3@mal.justgohome.co.uk> <4CDC9FA5.10002@lwfinger.net> <slrnidq7u0.9ic.rb-oss-3@mal.justgohome.co.uk> <4CDD3BC4.7070102@lwfinger.net> <slrnidqorp.dlr.rb-oss-3@mal.justgohome.co.uk> <4CDD66C4.10603@lwfinger.net> <slrnidqsld.dlr.rb-oss-3@mal.justgohome.co.uk> <4CDD7945.70005@lwfinger.net> <slrnidqv0k.g21.rb-oss-3@mal.justgohome.co.uk> <loom.20101113T191727-421@post.gmane.org> <4CDEDC74.3040902@lwfinger.net> <ibmosc$4au$1@dough.gmane.org> <4CDEEEE4.80801@lwfinger.net> <ibokag$481$1@dough.gmane.org>
-In-Reply-To: <ibokag$481$1@dough.gmane.org>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <4CD1ECAE.6010105@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 11/14/2010 06:22 AM, James Womack wrote:
-> Okay, I've downloaded the necessary tools and extracted the kernel
-> source. I have a tutorial on how to patch and build the kernel. Where
-> should I apply your patches?
+Any word on this from the Intel folks?  I realize the iwl3945 isn't
+a big money-make for you.  But not fixing bugs is bad community
+relations...
 
-Change directory to the main directory of the kernel source - the one with
-subdirectories like arch, block, crypto, drivers, etc. Apply patches with a
-command of the form
+John
 
-patch -p1 --dry-run < <nameofpatch>
+On Wed, Nov 03, 2010 at 07:13:50PM -0400, Eric Appleman wrote:
+> http://bugzilla.intellinuxwireless.org/show_bug.cgi?id=1932
+> http://bugzilla.intellinuxwireless.org/show_bug.cgi?id=1592
+> https://bugzilla.kernel.org/show_bug.cgi?id=16132
+> https://bugs.launchpad.net/ubuntu/+source/linux/+bug/340418
+> https://bugs.launchpad.net/ubuntu/+source/bcmwl/+bug/581936
+> 
+> There's no shortage of documentation yet Intel devs have explicitly
+> said that fixing this is a very low priority.
+> 
+> Any insight would be welcome.
+> 
+> - Eric
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
 
-If that works without any error, then leave out the "--dry-run" to apply the
-patch. If/when it is necessary to remove the patch, adding a "-R" option will do
-that.
-
-When you build the kernel, you should do that as a normal user, not root. If the
-source files are not owned by that user, you should do a chown on that tree
-before starting.
-
-Larry
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
