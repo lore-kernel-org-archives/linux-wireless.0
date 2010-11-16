@@ -1,378 +1,396 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:56639 "EHLO nbd.name"
-	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1755892Ab0KJN0E (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 10 Nov 2010 08:26:04 -0500
-Message-ID: <4CDA9D68.3080108@openwrt.org>
-Date: Wed, 10 Nov 2010 14:26:00 +0100
-From: Felix Fietkau <nbd@openwrt.org>
-MIME-Version: 1.0
-To: Vivek Natarajan <vnatarajan@atheros.com>
-CC: linux-wireless@vger.kernel.org
-Subject: Re: [RFC 5/5] ath9k_hw: Add support for Tx beamforming.
-References: <1289391829-8577-1-git-send-email-vnatarajan@atheros.com> <1289391829-8577-2-git-send-email-vnatarajan@atheros.com> <1289391829-8577-3-git-send-email-vnatarajan@atheros.com> <1289391829-8577-4-git-send-email-vnatarajan@atheros.com> <1289391829-8577-5-git-send-email-vnatarajan@atheros.com>
-In-Reply-To: <1289391829-8577-5-git-send-email-vnatarajan@atheros.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from mga09.intel.com ([134.134.136.24]:56013 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754427Ab0KPQGm (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 16 Nov 2010 11:06:42 -0500
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Subject: [PATCH 05/18] iwlwifi: change default led mode for different devices
+Date: Tue, 16 Nov 2010 08:01:38 -0800
+Message-Id: <1289923311-14920-6-git-send-email-wey-yi.w.guy@intel.com>
+In-Reply-To: <1289923311-14920-1-git-send-email-wey-yi.w.guy@intel.com>
+References: <1289923311-14920-1-git-send-email-wey-yi.w.guy@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2010-11-10 1:23 PM, Vivek Natarajan wrote:
-> Initialize Tx beamforming capabilities, related registers and set
-> descriptors for sounding frames.
-> 
-> Signed-off-by: Vivek Natarajan <vnatarajan@atheros.com>
-> ---
->  drivers/net/wireless/ath/ath9k/Makefile      |    3 +-
->  drivers/net/wireless/ath/ath9k/ar9003_mac.c  |   80 ++++++-
->  drivers/net/wireless/ath/ath9k/ar9003_mac.h  |   22 ++
->  drivers/net/wireless/ath/ath9k/ar9003_phy.h  |   11 +
->  drivers/net/wireless/ath/ath9k/ar9003_txbf.c |  359 ++++++++++++++++++++++++++
->  drivers/net/wireless/ath/ath9k/ar9003_txbf.h |   87 +++++++
->  drivers/net/wireless/ath/ath9k/hw.c          |    3 +
->  drivers/net/wireless/ath/ath9k/hw.h          |   56 ++++
->  drivers/net/wireless/ath/ath9k/mac.h         |   48 ++++-
->  drivers/net/wireless/ath/ath9k/reg.h         |  119 +++++++++-
->  10 files changed, 782 insertions(+), 6 deletions(-)
->  create mode 100644 drivers/net/wireless/ath/ath9k/ar9003_txbf.c
->  create mode 100644 drivers/net/wireless/ath/ath9k/ar9003_txbf.h
-> 
-> diff --git a/drivers/net/wireless/ath/ath9k/ar9003_phy.h b/drivers/net/wireless/ath/ath9k/ar9003_phy.h
-> index 3394dfe..a1fada3 100644
-> --- a/drivers/net/wireless/ath/ath9k/ar9003_phy.h
-> +++ b/drivers/net/wireless/ath/ath9k/ar9003_phy.h
-> @@ -101,6 +101,8 @@
->   */
->  #define AR_PHY_TIMING2_USE_FORCE_PPM    0x00001000
->  #define AR_PHY_TIMING2_FORCE_PPM_VAL    0x00000fff
-> +#define AR_PHY_TIMING2_HT_Fine_Timing_EN    0x80000000
-> +
->  #define AR_PHY_TIMING3_DSC_MAN      0xFFFE0000
->  #define AR_PHY_TIMING3_DSC_MAN_S    17
->  #define AR_PHY_TIMING3_DSC_EXP      0x0001E000
-> @@ -188,6 +190,12 @@
->  #define AR_PHY_RADAR_DC_PWR_THRESH_S    15
->  #define AR_PHY_RADAR_LB_DC_CAP          0x7f800000
->  #define AR_PHY_RADAR_LB_DC_CAP_S        23
-> +#define AR_PHY_PERCHAIN_CSD_chn1_2chains    0x0000001f
-> +#define AR_PHY_PERCHAIN_CSD_chn1_2chains_S  0
-> +#define AR_PHY_PERCHAIN_CSD_chn1_3chains    0x000003e0
-> +#define AR_PHY_PERCHAIN_CSD_chn1_3chains_S  5
-> +#define AR_PHY_PERCHAIN_CSD_chn2_3chains    0x00007c00
-> +#define AR_PHY_PERCHAIN_CSD_chn2_3chains_S  10
->  #define AR_PHY_FIND_SIG_LOW_FIRSTEP_LOW (0x3f << 6)
->  #define AR_PHY_FIND_SIG_LOW_FIRSTEP_LOW_S   6
->  #define AR_PHY_FIND_SIG_LOW_FIRPWR      (0x7f << 12)
-Lowercase/Uppercase consistency?
+Set the default led mode for different devices.
 
-> diff --git a/drivers/net/wireless/ath/ath9k/ar9003_txbf.h b/drivers/net/wireless/ath/ath9k/ar9003_txbf.h
-> new file mode 100644
-> index 0000000..1b6f5f8
-> --- /dev/null
-> +++ b/drivers/net/wireless/ath/ath9k/ar9003_txbf.h
-> @@ -0,0 +1,87 @@
-> +/*
-> + * Copyright (c) 2008-2010, Atheros Communications Inc.
-> + *
-> + * Permission to use, copy, modify, and/or distribute this software for any
-> + * purpose with or without fee is hereby granted, provided that the above
-> + * copyright notice and this permission notice appear in all copies.
-> + *
-> + * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
-> + * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
-> + * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
-> + * ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
-> + * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
-> + * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
-> + * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
-> + */
-> +
-> +#ifndef _ATH_AR9000_TxBF_CAL_H_
-> +#define _ATH_AR9300_TxBF_CAL_H_
-> +
-> +#define debugKa     0
-> +#define debugRC     0
-> +#define debugWinRC  0
-???
+For the newer devices such as 6000g2a, 6000g2b and newer,
+the default led mode is On/Off instead of blinking.
 
-> +
-> +#define NUM_OF_BW   2   /* two bandwidth used for mapping:20M,40M */
-> +#define NUM_OF_Ng   3   /* three group define used for mapping :Ng=0,Ng=1,Ng=2*/
-> +
-> +#define MAX_BITS_PER_SYMBOL 8
-> +#define NUM_OF_CHAINMASK (1 << AR9300_MAX_CHAINS)
+The led_mode still can be control through module parameter
+  0: system default
+  1: On/Off
+  2: blinking
 
-> +#define BITS_PER_BYTE       8
-What's this for?
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-1000.c |    4 ++++
+ drivers/net/wireless/iwlwifi/iwl-3945.c |    2 ++
+ drivers/net/wireless/iwlwifi/iwl-4965.c |    1 +
+ drivers/net/wireless/iwlwifi/iwl-5000.c |    7 +++++++
+ drivers/net/wireless/iwlwifi/iwl-6000.c |   18 ++++++++++++++++++
+ drivers/net/wireless/iwlwifi/iwl-core.h |    2 ++
+ drivers/net/wireless/iwlwifi/iwl-led.c  |   10 ++++++----
+ drivers/net/wireless/iwlwifi/iwl-led.h  |    6 ++++--
+ 8 files changed, 44 insertions(+), 6 deletions(-)
 
-> +#define BITS_PER_COMPLEX_SYMBOL (2 * BITS_PER_SYMBOL)
-> +#define BITS_PER_SYMBOL      10
-> +
-> +#define MAX_STREAMS 3
-> +#define MAX_PILOTS  6
-> +#define EVM_MIN     -128
-> +
-> +#define Tone_40M	114
-> +#define Tone_20M	56
-> +#define NUM_ITER	8
-> +
-> +#define Nb_phin		(10-1)
-> +#define Nb_coridc	(12-1)
-> +#define Nb_sin		(8-1)
-> +#define	Nb_ph		5
-> +#define	Nb_psi		4
-> +#define	NUM_ITER_V	6
-> +
-> +#define Nb_MHINV	13
-> +#define EVM_TH		10
-> +#define rc_max		6000
-> +#define rc_min		100
-> +
-> +#define BW_40M      1
-> +#define BW_20M_low  2
-> +#define BW_20M_up   3
-What are those for?
+diff --git a/drivers/net/wireless/iwlwifi/iwl-1000.c b/drivers/net/wireless/iwlwifi/iwl-1000.c
+index 068f1e1..e881b08 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-1000.c
++++ b/drivers/net/wireless/iwlwifi/iwl-1000.c
+@@ -287,6 +287,7 @@ struct iwl_cfg iwl1000_bgn_cfg = {
+ 	.mod_params = &iwlagn_mod_params,
+ 	.base_params = &iwl1000_base_params,
+ 	.ht_params = &iwl1000_ht_params,
++	.led_mode = IWL_LED_BLINK,
+ };
+ 
+ struct iwl_cfg iwl1000_bg_cfg = {
+@@ -302,6 +303,7 @@ struct iwl_cfg iwl1000_bg_cfg = {
+ 	.ops = &iwl1000_ops,
+ 	.mod_params = &iwlagn_mod_params,
+ 	.base_params = &iwl1000_base_params,
++	.led_mode = IWL_LED_BLINK,
+ };
+ 
+ struct iwl_cfg iwl100_bgn_cfg = {
+@@ -318,6 +320,7 @@ struct iwl_cfg iwl100_bgn_cfg = {
+ 	.mod_params = &iwlagn_mod_params,
+ 	.base_params = &iwl1000_base_params,
+ 	.ht_params = &iwl1000_ht_params,
++	.led_mode = IWL_LED_RF_STATE,
+ };
+ 
+ struct iwl_cfg iwl100_bg_cfg = {
+@@ -333,6 +336,7 @@ struct iwl_cfg iwl100_bg_cfg = {
+ 	.ops = &iwl1000_ops,
+ 	.mod_params = &iwlagn_mod_params,
+ 	.base_params = &iwl1000_base_params,
++	.led_mode = IWL_LED_RF_STATE,
+ };
+ 
+ MODULE_FIRMWARE(IWL1000_MODULE_FIRMWARE(IWL1000_UCODE_API_MAX));
+diff --git a/drivers/net/wireless/iwlwifi/iwl-3945.c b/drivers/net/wireless/iwlwifi/iwl-3945.c
+index ebac04b..4503245 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-3945.c
++++ b/drivers/net/wireless/iwlwifi/iwl-3945.c
+@@ -2788,6 +2788,7 @@ static struct iwl_cfg iwl3945_bg_cfg = {
+ 	.ops = &iwl3945_ops,
+ 	.mod_params = &iwl3945_mod_params,
+ 	.base_params = &iwl3945_base_params,
++	.led_mode = IWL_LED_BLINK,
+ };
+ 
+ static struct iwl_cfg iwl3945_abg_cfg = {
+@@ -2800,6 +2801,7 @@ static struct iwl_cfg iwl3945_abg_cfg = {
+ 	.ops = &iwl3945_ops,
+ 	.mod_params = &iwl3945_mod_params,
+ 	.base_params = &iwl3945_base_params,
++	.led_mode = IWL_LED_BLINK,
+ };
+ 
+ DEFINE_PCI_DEVICE_TABLE(iwl3945_hw_card_ids) = {
+diff --git a/drivers/net/wireless/iwlwifi/iwl-4965.c b/drivers/net/wireless/iwlwifi/iwl-4965.c
+index a172bd1..19da3e5 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-4965.c
++++ b/drivers/net/wireless/iwlwifi/iwl-4965.c
+@@ -2636,6 +2636,7 @@ struct iwl_cfg iwl4965_agn_cfg = {
+ 	.ops = &iwl4965_ops,
+ 	.mod_params = &iwlagn_mod_params,
+ 	.base_params = &iwl4965_base_params,
++	.led_mode = IWL_LED_BLINK,
+ 	/*
+ 	 * Force use of chains B and C for scan RX on 5 GHz band
+ 	 * because the device has off-channel reception on chain A.
+diff --git a/drivers/net/wireless/iwlwifi/iwl-5000.c b/drivers/net/wireless/iwlwifi/iwl-5000.c
+index ad43f0f..b147580 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-5000.c
++++ b/drivers/net/wireless/iwlwifi/iwl-5000.c
+@@ -536,6 +536,7 @@ struct iwl_cfg iwl5300_agn_cfg = {
+ 	.mod_params = &iwlagn_mod_params,
+ 	.base_params = &iwl5000_base_params,
+ 	.ht_params = &iwl5000_ht_params,
++	.led_mode = IWL_LED_BLINK,
+ };
+ 
+ struct iwl_cfg iwl5100_bgn_cfg = {
+@@ -552,6 +553,7 @@ struct iwl_cfg iwl5100_bgn_cfg = {
+ 	.mod_params = &iwlagn_mod_params,
+ 	.base_params = &iwl5000_base_params,
+ 	.ht_params = &iwl5000_ht_params,
++	.led_mode = IWL_LED_BLINK,
+ };
+ 
+ struct iwl_cfg iwl5100_abg_cfg = {
+@@ -567,6 +569,7 @@ struct iwl_cfg iwl5100_abg_cfg = {
+ 	.ops = &iwl5000_ops,
+ 	.mod_params = &iwlagn_mod_params,
+ 	.base_params = &iwl5000_base_params,
++	.led_mode = IWL_LED_BLINK,
+ };
+ 
+ struct iwl_cfg iwl5100_agn_cfg = {
+@@ -583,6 +586,7 @@ struct iwl_cfg iwl5100_agn_cfg = {
+ 	.mod_params = &iwlagn_mod_params,
+ 	.base_params = &iwl5000_base_params,
+ 	.ht_params = &iwl5000_ht_params,
++	.led_mode = IWL_LED_BLINK,
+ };
+ 
+ struct iwl_cfg iwl5350_agn_cfg = {
+@@ -599,6 +603,7 @@ struct iwl_cfg iwl5350_agn_cfg = {
+ 	.mod_params = &iwlagn_mod_params,
+ 	.base_params = &iwl5000_base_params,
+ 	.ht_params = &iwl5000_ht_params,
++	.led_mode = IWL_LED_BLINK,
+ };
+ 
+ struct iwl_cfg iwl5150_agn_cfg = {
+@@ -616,6 +621,7 @@ struct iwl_cfg iwl5150_agn_cfg = {
+ 	.base_params = &iwl5000_base_params,
+ 	.ht_params = &iwl5000_ht_params,
+ 	.need_dc_calib = true,
++	.led_mode = IWL_LED_BLINK,
+ };
+ 
+ struct iwl_cfg iwl5150_abg_cfg = {
+@@ -632,6 +638,7 @@ struct iwl_cfg iwl5150_abg_cfg = {
+ 	.mod_params = &iwlagn_mod_params,
+ 	.base_params = &iwl5000_base_params,
+ 	.need_dc_calib = true,
++	.led_mode = IWL_LED_BLINK,
+ };
+ 
+ MODULE_FIRMWARE(IWL5000_MODULE_FIRMWARE(IWL5000_UCODE_API_MAX));
+diff --git a/drivers/net/wireless/iwlwifi/iwl-6000.c b/drivers/net/wireless/iwlwifi/iwl-6000.c
+index d8f9df6..9f835ac 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-6000.c
++++ b/drivers/net/wireless/iwlwifi/iwl-6000.c
+@@ -567,6 +567,7 @@ struct iwl_cfg iwl6000g2a_2agn_cfg = {
+ 	.ht_params = &iwl6000_ht_params,
+ 	.need_dc_calib = true,
+ 	.need_temp_offset_calib = true,
++	.led_mode = IWL_LED_RF_STATE,
+ };
+ 
+ struct iwl_cfg iwl6000g2a_2abg_cfg = {
+@@ -584,6 +585,7 @@ struct iwl_cfg iwl6000g2a_2abg_cfg = {
+ 	.base_params = &iwl6000_base_params,
+ 	.need_dc_calib = true,
+ 	.need_temp_offset_calib = true,
++	.led_mode = IWL_LED_RF_STATE,
+ };
+ 
+ struct iwl_cfg iwl6000g2a_2bg_cfg = {
+@@ -601,6 +603,7 @@ struct iwl_cfg iwl6000g2a_2bg_cfg = {
+ 	.base_params = &iwl6000_base_params,
+ 	.need_dc_calib = true,
+ 	.need_temp_offset_calib = true,
++	.led_mode = IWL_LED_RF_STATE,
+ };
+ 
+ struct iwl_cfg iwl6000g2b_2agn_cfg = {
+@@ -620,6 +623,7 @@ struct iwl_cfg iwl6000g2b_2agn_cfg = {
+ 	.ht_params = &iwl6000_ht_params,
+ 	.need_dc_calib = true,
+ 	.need_temp_offset_calib = true,
++	.led_mode = IWL_LED_RF_STATE,
+ 	/* Due to bluetooth, we transmit 2.4 GHz probes only on antenna A */
+ 	.scan_tx_antennas[IEEE80211_BAND_2GHZ] = ANT_A,
+ };
+@@ -640,6 +644,7 @@ struct iwl_cfg iwl6000g2b_2abg_cfg = {
+ 	.bt_params = &iwl6000_bt_params,
+ 	.need_dc_calib = true,
+ 	.need_temp_offset_calib = true,
++	.led_mode = IWL_LED_RF_STATE,
+ 	/* Due to bluetooth, we transmit 2.4 GHz probes only on antenna A */
+ 	.scan_tx_antennas[IEEE80211_BAND_2GHZ] = ANT_A,
+ };
+@@ -661,6 +666,7 @@ struct iwl_cfg iwl6000g2b_2bgn_cfg = {
+ 	.ht_params = &iwl6000_ht_params,
+ 	.need_dc_calib = true,
+ 	.need_temp_offset_calib = true,
++	.led_mode = IWL_LED_RF_STATE,
+ 	/* Due to bluetooth, we transmit 2.4 GHz probes only on antenna A */
+ 	.scan_tx_antennas[IEEE80211_BAND_2GHZ] = ANT_A,
+ };
+@@ -681,6 +687,7 @@ struct iwl_cfg iwl6000g2b_2bg_cfg = {
+ 	.bt_params = &iwl6000_bt_params,
+ 	.need_dc_calib = true,
+ 	.need_temp_offset_calib = true,
++	.led_mode = IWL_LED_RF_STATE,
+ 	/* Due to bluetooth, we transmit 2.4 GHz probes only on antenna A */
+ 	.scan_tx_antennas[IEEE80211_BAND_2GHZ] = ANT_A,
+ };
+@@ -702,6 +709,7 @@ struct iwl_cfg iwl6000g2b_bgn_cfg = {
+ 	.ht_params = &iwl6000_ht_params,
+ 	.need_dc_calib = true,
+ 	.need_temp_offset_calib = true,
++	.led_mode = IWL_LED_RF_STATE,
+ 	/* Due to bluetooth, we transmit 2.4 GHz probes only on antenna A */
+ 	.scan_tx_antennas[IEEE80211_BAND_2GHZ] = ANT_A,
+ };
+@@ -722,6 +730,7 @@ struct iwl_cfg iwl6000g2b_bg_cfg = {
+ 	.bt_params = &iwl6000_bt_params,
+ 	.need_dc_calib = true,
+ 	.need_temp_offset_calib = true,
++	.led_mode = IWL_LED_RF_STATE,
+ 	/* Due to bluetooth, we transmit 2.4 GHz probes only on antenna A */
+ 	.scan_tx_antennas[IEEE80211_BAND_2GHZ] = ANT_A,
+ };
+@@ -744,6 +753,7 @@ struct iwl_cfg iwl6000i_2agn_cfg = {
+ 	.base_params = &iwl6000_base_params,
+ 	.ht_params = &iwl6000_ht_params,
+ 	.pa_type = IWL_PA_INTERNAL,
++	.led_mode = IWL_LED_BLINK,
+ };
+ 
+ struct iwl_cfg iwl6000i_2abg_cfg = {
+@@ -760,6 +770,7 @@ struct iwl_cfg iwl6000i_2abg_cfg = {
+ 	.mod_params = &iwlagn_mod_params,
+ 	.base_params = &iwl6000_base_params,
+ 	.pa_type = IWL_PA_INTERNAL,
++	.led_mode = IWL_LED_BLINK,
+ };
+ 
+ struct iwl_cfg iwl6000i_2bg_cfg = {
+@@ -776,6 +787,7 @@ struct iwl_cfg iwl6000i_2bg_cfg = {
+ 	.mod_params = &iwlagn_mod_params,
+ 	.base_params = &iwl6000_base_params,
+ 	.pa_type = IWL_PA_INTERNAL,
++	.led_mode = IWL_LED_BLINK,
+ };
+ 
+ struct iwl_cfg iwl6050_2agn_cfg = {
+@@ -793,6 +805,7 @@ struct iwl_cfg iwl6050_2agn_cfg = {
+ 	.base_params = &iwl6050_base_params,
+ 	.ht_params = &iwl6000_ht_params,
+ 	.need_dc_calib = true,
++	.led_mode = IWL_LED_BLINK,
+ };
+ 
+ struct iwl_cfg iwl6050g2_bgn_cfg = {
+@@ -810,6 +823,7 @@ struct iwl_cfg iwl6050g2_bgn_cfg = {
+ 	.base_params = &iwl6050_base_params,
+ 	.ht_params = &iwl6000_ht_params,
+ 	.need_dc_calib = true,
++	.led_mode = IWL_LED_RF_STATE,
+ };
+ 
+ struct iwl_cfg iwl6050_2abg_cfg = {
+@@ -826,6 +840,7 @@ struct iwl_cfg iwl6050_2abg_cfg = {
+ 	.mod_params = &iwlagn_mod_params,
+ 	.base_params = &iwl6050_base_params,
+ 	.need_dc_calib = true,
++	.led_mode = IWL_LED_BLINK,
+ };
+ 
+ struct iwl_cfg iwl6000_3agn_cfg = {
+@@ -843,6 +858,7 @@ struct iwl_cfg iwl6000_3agn_cfg = {
+ 	.base_params = &iwl6000_base_params,
+ 	.ht_params = &iwl6000_ht_params,
+ 	.need_dc_calib = true,
++	.led_mode = IWL_LED_BLINK,
+ };
+ 
+ struct iwl_cfg iwl130_bgn_cfg = {
+@@ -861,6 +877,7 @@ struct iwl_cfg iwl130_bgn_cfg = {
+ 	.bt_params = &iwl6000_bt_params,
+ 	.ht_params = &iwl6000_ht_params,
+ 	.need_dc_calib = true,
++	.led_mode = IWL_LED_RF_STATE,
+ 	/* Due to bluetooth, we transmit 2.4 GHz probes only on antenna A */
+ 	.scan_tx_antennas[IEEE80211_BAND_2GHZ] = ANT_A,
+ };
+@@ -880,6 +897,7 @@ struct iwl_cfg iwl130_bg_cfg = {
+ 	.base_params = &iwl6000_coex_base_params,
+ 	.bt_params = &iwl6000_bt_params,
+ 	.need_dc_calib = true,
++	.led_mode = IWL_LED_RF_STATE,
+ 	/* Due to bluetooth, we transmit 2.4 GHz probes only on antenna A */
+ 	.scan_tx_antennas[IEEE80211_BAND_2GHZ] = ANT_A,
+ };
+diff --git a/drivers/net/wireless/iwlwifi/iwl-core.h b/drivers/net/wireless/iwlwifi/iwl-core.h
+index 98b79f6..9035cd8 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-core.h
++++ b/drivers/net/wireless/iwlwifi/iwl-core.h
+@@ -363,6 +363,7 @@ struct iwl_ht_params {
+  * @need_dc_calib: need to perform init dc calibration
+  * @need_temp_offset_calib: need to perform temperature offset calibration
+  * @scan_antennas: available antenna for scan operation
++ * @led_mode: 0=blinking, 1=On(RF On)/Off(RF Off)
+  *
+  * We enable the driver to be backward compatible wrt API version. The
+  * driver specifies which APIs it supports (with @ucode_api_max being the
+@@ -409,6 +410,7 @@ struct iwl_cfg {
+ 	const bool need_temp_offset_calib; /* if used set to true */
+ 	u8 scan_rx_antennas[IEEE80211_NUM_BANDS];
+ 	u8 scan_tx_antennas[IEEE80211_NUM_BANDS];
++	enum iwl_led_mode led_mode;
+ };
+ 
+ /***************************
+diff --git a/drivers/net/wireless/iwlwifi/iwl-led.c b/drivers/net/wireless/iwlwifi/iwl-led.c
+index 5a91292..516e557 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-led.c
++++ b/drivers/net/wireless/iwlwifi/iwl-led.c
+@@ -45,9 +45,8 @@
+ /* default: IWL_LED_BLINK(0) using blinking index table */
+ static int led_mode;
+ module_param(led_mode, int, S_IRUGO);
+-MODULE_PARM_DESC(led_mode, "led mode: 0=blinking, 1=On(RF On)/Off(RF Off), "
+-			   "(default 0)");
+-
++MODULE_PARM_DESC(led_mode, "led mode: 0=system default, "
++		"1=On(RF On)/Off(RF Off), 2=blinking");
+ 
+ static const struct {
+ 	u16 tpt;	/* Mb/s */
+@@ -128,7 +127,7 @@ EXPORT_SYMBOL(iwl_led_start);
+ int iwl_led_associate(struct iwl_priv *priv)
+ {
+ 	IWL_DEBUG_LED(priv, "Associated\n");
+-	if (led_mode == IWL_LED_BLINK)
++	if (priv->cfg->led_mode == IWL_LED_BLINK)
+ 		priv->allow_blinking = 1;
+ 	priv->last_blink_time = jiffies;
+ 
+@@ -223,5 +222,8 @@ void iwl_leds_init(struct iwl_priv *priv)
+ 	priv->last_blink_rate = 0;
+ 	priv->last_blink_time = 0;
+ 	priv->allow_blinking = 0;
++	if (led_mode != IWL_LED_DEFAULT &&
++	    led_mode != priv->cfg->led_mode)
++		priv->cfg->led_mode = led_mode;
+ }
+ EXPORT_SYMBOL(iwl_leds_init);
+diff --git a/drivers/net/wireless/iwlwifi/iwl-led.h b/drivers/net/wireless/iwlwifi/iwl-led.h
+index 49a70ba..9079b33 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-led.h
++++ b/drivers/net/wireless/iwlwifi/iwl-led.h
+@@ -47,14 +47,16 @@ enum led_type {
+ 
+ /*
+  * LED mode
+- *    IWL_LED_BLINK:    adjust led blink rate based on blink table
++ *    IWL_LED_DEFAULT:  use system default
+  *    IWL_LED_RF_STATE: turn LED on/off based on RF state
+  *			LED ON  = RF ON
+  *			LED OFF = RF OFF
++ *    IWL_LED_BLINK:    adjust led blink rate based on blink table
+  */
+ enum iwl_led_mode {
+-	IWL_LED_BLINK,
++	IWL_LED_DEFAULT,
+ 	IWL_LED_RF_STATE,
++	IWL_LED_BLINK,
+ };
+ 
+ void iwl_leds_init(struct iwl_priv *priv);
+-- 
+1.7.0.4
 
-> diff --git a/drivers/net/wireless/ath/ath9k/ar9003_txbf.c b/drivers/net/wireless/ath/ath9k/ar9003_txbf.c
-> new file mode 100644
-> index 0000000..94a5133
-> --- /dev/null
-> +++ b/drivers/net/wireless/ath/ath9k/ar9003_txbf.c
-> @@ -0,0 +1,359 @@
-> +/*
-> + * Copyright (c) 2008-2010, Atheros Communications Inc.
-> + *
-> + * Permission to use, copy, modify, and/or distribute this software for any
-> + * purpose with or without fee is hereby granted, provided that the above
-> + * copyright notice and this permission notice appear in all copies.
-> + *
-> + * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
-> + * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
-> + * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
-> + * ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
-> + * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
-> + * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
-> + * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
-> + */
-> +#include "hw.h"
-> +#include "ar9003_txbf.h"
-> +#include "ar9003_phy.h"
-> +#include "ar9003_mac.h"
-> +/* number of carrier mappings under different bandwidth and grouping, ex:
-> + * bw = 1 (40M), Ng=0 (no group), number of carrier = 114*/
-> +static u8 const Ns[NUM_OF_BW][NUM_OF_Ng] = {
-> +	{56, 30, 16},
-> +	{114, 58, 30}
-> +};
-> +static u8 const Valid_bits[MAX_BITS_PER_SYMBOL] = {
-> +	0x1, 0x3, 0x7, 0xf, 0x1f, 0x3f, 0x7f, 0xff
-> +};
-Unused, also rather useless, there are kernel functions for that sort of
-thing.
-
-> diff --git a/drivers/net/wireless/ath/ath9k/hw.h b/drivers/net/wireless/ath/ath9k/hw.h
-> index 8bebc3e..670a5ca 100644
-> --- a/drivers/net/wireless/ath/ath9k/hw.h
-> +++ b/drivers/net/wireless/ath/ath9k/hw.h
-> @@ -238,6 +238,29 @@ struct ath9k_ops_config {
->  	u16 spurchans[AR_EEPROM_MODAL_SPURS][2];
->  	u8 max_txtrig_level;
->  	u16 ani_poll_interval; /* ANI poll interval in ms */
-> +	u8    ath_hw_cvtimeout;
-> +	u8    ath_hw_txbf_ctl;
-> +#define TxBFCtl_ImBF                        0x01
-> +#define TxBFCtl_ImBF_S                      0
-> +#define TxBFCtl_Non_ExBF                    0x02
-> +#define TxBFCtl_Non_ExBF_S                  1
-> +#define TxBFCtl_Comp_ExBF                   0x04
-> +#define TxBFCtl_Comp_ExBF_S                 2
-> +#define TxBFCtl_ImBF_FB                     0x08
-> +#define TxBFCtl_ImBF_FB_S                   3
-> +#define TxBFCtl_Non_ExBF_Immediately_Rpt    0x10
-> +#define TxBFCtl_Non_ExBF_Immediately_Rpt_S  4
-> +#define TxBFCtl_Comp_ExBF_Immediately_Rpt   0x20
-> +#define TxBFCtl_Comp_ExBF_Immediately_Rpt_S 5
-> +
-> +#define TxBFCtl_Non_ExBF_delay_Rpt          0x40
-> +#define TxBFCtl_Non_ExBF_delay_Rpt_S        6
-> +#define TxBFCtl_Comp_ExBF_delay_Rpt         0x80
-> +#define TxBFCtl_Comp_ExBF_delay_Rpt_S       7
-Why the _S defines? Also, why not just use BIT() instead of the raw hex
-values.
-
-> @@ -603,6 +626,28 @@ struct ath_nf_limits {
->  	s16 nominal;
->  };
->  
-> +struct hal_txbf_caps {
-> +	u8 channel_estimation_cap;
-> +	u8 csi_max_rows_bfer;
-> +	u8 comp_bfer_antennas;
-> +	u8 noncomp_bfer_antennas;
-> +	u8 csi_bfer_antennas;
-> +	u8 minimal_grouping;
-> +	u8 explicit_comp_bf;
-> +	u8 explicit_noncomp_bf;
-> +	u8 explicit_csi_feedback;
-> +	u8 explicit_comp_steering;
-> +	u8 explicit_noncomp_steering;
-> +	u8 explicit_csi_txbf_capable;
-> +	u8 calibration;
-> +	u8 implicit_txbf_capable;
-> +	u8 tx_ndp_capable;
-> +	u8 rx_ndp_capable;
-> +	u8 tx_staggered_sounding;
-> +	u8 rx_staggered_sounding;
-> +	u8 implicit_rx_capable;
-> +};
-Maybe rename this to ath9k_hw_txbf_caps?
-
-> @@ -955,6 +1002,15 @@ void ath9k_ani_reset(struct ath_hw *ah, bool is_scanning);
->  void ath9k_hw_proc_mib_event(struct ath_hw *ah);
->  void ath9k_hw_ani_monitor(struct ath_hw *ah, struct ath9k_channel *chan);
->  
-> +extern void ar9003_init_txbf(struct ath_hw *ah);
-> +extern void ar9003_set_11n_txbf_sounding(struct ath_hw *ah,
-> +		void *ds, struct ath9k_11n_rate_series series[],
-> +		u8 cec, u16 opt);
-> +extern void ar9003_fill_txbf_capabilities(struct ath_hw *ah);
-> +extern struct ieee80211_txbf_caps
-> +		ar9003_get_txbf_capabilities(struct ath_hw *ah);
-> +extern bool ar9300_read_key_cache_mac(struct ath_hw *ah, u16 entry,
-> +		u8 *mac);
->  #define ATH_PCIE_CAP_LINK_CTRL	0x70
->  #define ATH_PCIE_CAP_LINK_L0S	1
->  #define ATH_PCIE_CAP_LINK_L1	2
-> diff --git a/drivers/net/wireless/ath/ath9k/mac.h b/drivers/net/wireless/ath/ath9k/mac.h
-> index 22907e2..7110506 100644
-> --- a/drivers/net/wireless/ath/ath9k/mac.h
-> +++ b/drivers/net/wireless/ath/ath9k/mac.h
-> @@ -89,7 +89,7 @@
->  #define ATH9K_TX_DATA_UNDERRUN     0x08
->  #define ATH9K_TX_DELIM_UNDERRUN    0x10
->  #define ATH9K_TX_SW_FILTERED       0x80
-> -
-> +#define ATH9K_TX_BF_ERR		   0xa0
->  /* 64 bytes */
->  #define MIN_TX_FIFO_THRESHOLD   0x1
->  
-> @@ -124,6 +124,12 @@ struct ath_tx_status {
->  	u32 evm0;
->  	u32 evm1;
->  	u32 evm2;
-> +	u8  ts_txbfstatus;  /* Tx bf status */
-> +#define AR_BW_Mismatch      0x1
-> +#define AR_Stream_Miss      0x2
-> +#define AR_CV_Missed        0x4
-> +#define AR_Dest_Miss        0x8
-> +#define AR_Expired          0x10
->  };
->  
->  struct ath_rx_status {
-> @@ -151,6 +157,11 @@ struct ath_rx_status {
->  	u32 evm2;
->  	u32 evm3;
->  	u32 evm4;
-> +	u8 rx_hw_upload_data:1,
-> +	   rx_not_sounding:1,
-> +	   rx_Ness:2,
-> +	   rx_hw_upload_data_valid:1,
-> +	   rx_hw_upload_data_type:2;
->  };
->  
->  struct ath_htc_rx_status {
-> @@ -263,6 +274,15 @@ struct ath_desc {
->  #define ATH9K_TXDESC_VMF		0x0100
->  #define ATH9K_TXDESC_FRAG_IS_ON 	0x0200
->  #define ATH9K_TXDESC_LOWRXCHAIN		0x0400
-> +#define ATH9K_TXDESC_TXBF         0x0800  /*for txbf*/
-> +#define ATH9K_TXDESC_TXBF_SOUND   0x1000  /* for sounding settings*/
-> +#define ATH9K_TXDESC_TXBF_SOUND_S 11
-It's just one bit, it doesn't need a _S
-
-> diff --git a/drivers/net/wireless/ath/ath9k/reg.h b/drivers/net/wireless/ath/ath9k/reg.h
-> index fa05b71..3d9914e 100644
-> --- a/drivers/net/wireless/ath/ath9k/reg.h
-> +++ b/drivers/net/wireless/ath/ath9k/reg.h
-
-> @@ -1816,5 +1849,89 @@ enum {
->  #define AR_PHY_AGC_CONTROL_CLC_SUCCESS		0x00080000  /* carrier leak calibration done */
->  #define AR_PHY_AGC_CONTROL_YCOK_MAX		0x000003c0
->  #define AR_PHY_AGC_CONTROL_YCOK_MAX_S		6
-> -
-> +#define AR_TXBF_DBG             0x10000
-> +
-> +#define AR_TXBF          0x10004
-> +#define AR_TXBF_CB_TX       0x00000003
-> +#define AR_TXBF_CB_TX_S     0
-> +#define AR_TXBF_PSI_1_PHI_3         0
-> +#define AR_TXBF_PSI_2_PHI_4         1
-> +#define AR_TXBF_PSI_3_PHI_5         2
-> +#define AR_TXBF_PSI_4_PHI_6         3
-> +
-> +#define AR_TXBF_NB_TX       0x0000000C
-> +#define AR_TXBF_NB_TX_S     2
-> +#define AR_TXBF_NUMBEROFBIT_4       0
-> +#define AR_TXBF_NUMBEROFBIT_2       1
-> +#define AR_TXBF_NUMBEROFBIT_6       2
-> +#define AR_TXBF_NUMBEROFBIT_8       3
-> +
-> +#define AR_TXBF_NG_RPT_TX   0x00000030
-> +#define AR_TXBF_NG_RPT_TX_S 4
-> +#define AR_TXBF_No_GROUP            0
-> +#define AR_TXBF_TWO_GROUP           1
-> +#define AR_TXBF_FOUR_GROUP          2
-> +
-> +#define AR_TXBF_NG_CVCACHE  0x000000C0
-> +#define AR_TXBF_NG_CVCACHE_S  6
-> +#define AR_TXBF_FOUR_CLIENTS        0
-> +#define AR_TXBF_EIGHT_CLIENTS       1
-> +#define AR_TXBF_SIXTEEN_CLIENTS     2
-> +
-> +#define AR_TXBF_TXCV_BFWEIGHT_METHOD 0x00000600
-> +#define AR_TXBF_TXCV_BFWEIGHT_METHOD_S 9
-> +#define AR_TXBF_NO_WEIGHTING        0
-> +#define AR_TXBF_MAX_POWER           1
-> +#define AR_TXBF_KEEP_RATIO          2
-> +
-> +#define AR_TXBF_RLR_EN        0x00000800
-> +#define AR_TXBF_RC_20_U_DONE  0x00001000
-> +#define AR_TXBF_RC_20_L_DONE  0x00002000
-> +#define AR_TXBF_RC_40_DONE        0x00004000
-> +#define AR_TXBF_FORCE_UPDATE_V2BB       0x00008000
-> +
-> +#define AR_TXBF_TIMER            0x10008
-> +#define AR_TXBF_TIMER_TIMEOUT     0x000000FF
-> +#define AR_TXBF_TIMER_TIMEOUT_S   0
-> +#define AR_TXBF_TIMER_ATIMEOUT    0x0000FF00
-> +#define AR_TXBF_TIMER_ATIMEOUT_S  8
-> +
-> +/* for SVD cache update */
-> +#define AR_TXBF_SW                     0x1000c
-> +#define AR_LRU_ACK                      0x00000001
-> +#define AR_LRU_ADDR                     0x000003FE
-> +#define AR_LRU_ADDR_S           1
-> +#define AR_LRU_EN                       0x00000400
-> +#define AR_LRU_EN_S                     11
-> +#define AR_DEST_IDX                     0x0007f000
-> +#define AR_DEST_IDX_S           12
-> +#define AR_LRU_WR_ACK			0x00080000
-> +#define AR_LRU_WR_ACK_S			19
-> +#define AR_LRU_RD_ACK			0x00100000
-> +#define AR_LRU_RD_ACK_S			20
-> +
-> +#define AR_RC0_0                       0x11000
-> +#define AR_RC0(_idx)            (AR_RC0_0+(_idx))
-> +#define AR_RC1_0                       0x11200
-> +#define AR_RC1(_idx)            (AR_RC1_0+(_idx))
-> +
-> +#define AR_CVCACHE_0            0x12400
-> +#define AR_CVCACHE(_idx)        (AR_CVCACHE_0+(_idx))
-> +#define AR_CVCACHE_Ng_IDX       0x0000C000
-> +#define AR_CVCACHE_Ng_IDX_S     14
-> +#define AR_CVCACHE_BW40         0x00010000
-> +#define AR_CVCACHE_BW40_S       16
-> +#define AR_CVCACHE_IMPLICIT     0x00020000
-> +#define AR_CVCACHE_IMPLICIT_S   17
-_S unnecessary here as well
-
-- Felix
