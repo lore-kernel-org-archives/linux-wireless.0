@@ -1,70 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rcsinet10.oracle.com ([148.87.113.121]:37310 "EHLO
-	rcsinet10.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755304Ab0KRRMd (ORCPT
+Received: from mail-yw0-f46.google.com ([209.85.213.46]:53577 "EHLO
+	mail-yw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752433Ab0KPA1q (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 18 Nov 2010 12:12:33 -0500
-Date: Thu, 18 Nov 2010 09:11:38 -0800
-From: Randy Dunlap <randy.dunlap@oracle.com>
-To: "Guy, Wey-Yi" <wey-yi.w.guy@intel.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	"linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: iwlwifi: fix modular legacy build errors
-Message-Id: <20101118091138.80875baf.randy.dunlap@oracle.com>
-In-Reply-To: <1290013876.12056.260.camel@wwguy-huron>
-References: <1290011797.12056.255.camel@wwguy-huron>
-	<1290012580.3777.1.camel@jlt3.sipsolutions.net>
-	<4CE40CF9.8090404@oracle.com>
-	<1290013876.12056.260.camel@wwguy-huron>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+	Mon, 15 Nov 2010 19:27:46 -0500
+Received: by ywg8 with SMTP id 8so41862ywg.19
+        for <linux-wireless@vger.kernel.org>; Mon, 15 Nov 2010 16:27:46 -0800 (PST)
+From: Javier Cardona <javier@cozybit.com>
+To: johannes@sipsolutions.net
+Cc: nbd@openwrt.org, Javier Cardona <javier@cozybit.com>,
+	linux-wireless@vger.kernel.org
+Subject: [PATCH] iw: Resolve namespace clash between station plink and vlan commands
+Date: Mon, 15 Nov 2010 16:27:31 -0800
+Message-Id: <1289867251-21559-1-git-send-email-javier@cozybit.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 17 Nov 2010 09:11:16 -0800 Guy, Wey-Yi wrote:
-
-> Hi Randy,
-> 
-> On Wed, 2010-11-17 at 09:12 -0800, Randy Dunlap wrote:
-> > On 11/17/10 08:49, Johannes Berg wrote:
-> > > On Wed, 2010-11-17 at 08:36 -0800, Guy, Wey-Yi wrote:
-> > >> Hi Randy,
-> > >>
-> > >> the "iwlwifi: fix modular legacy build errors" patch cause the following
-> > >> WARNING when compile 
-> > > 
-> > > I thought we already had had a fix for that issue anyway?
-> > 
-> > Not that I know of.  I reported a different build error and
-> > included a patch, which is now causing problems, so I asked
-> > John to drop/revert my patch.
-> > 
-> > Here is part of the patch description that I sent:
-> > 
-> > 
-> > With CONFIG_IWLWIFI=m, CONFIG_IWLAGN=m, and CONFIG_IWL3945=m,
-> > a kernel build has errors as below.  Changing a few lines in the
-> > Makefile is one possible fix for these build errors.
-> > 
-> > ERROR: "iwl_legacy_mac_config" [drivers/net/wireless/iwlwifi/iwl3945.ko] undefined!
-> > ERROR: "iwl_isr_legacy" [drivers/net/wireless/iwlwifi/iwl3945.ko] undefined!
-> > ERROR: "iwl_legacy_tx_cmd_protection" [drivers/net/wireless/iwlwifi/iwl3945.ko] undefined!
-> > ERROR: "iwl_legacy_mac_bss_info_changed" [drivers/net/wireless/iwlwifi/iwl3945.ko] undefined!
-> > ERROR: "iwl_legacy_mac_reset_tsf" [drivers/net/wireless/iwlwifi/iwl3945.ko] undefined!
-> > 
-> > 
-> > So John can revert my patch and then let the iwlwifi maintainers fix this problem,
-> > please.
-> > 
-> 
-> "iwlagn: fix non-5000+ build" send by Johannes should have this problem
-> addressed.
-
-
-Can we get this patch into linux-next, please?
-linux-next of 2010.1118 is still having these build errors.
-
+This patch: http://osdir.com/ml/linux-wireless/2009-11/msg00981.html
+kicked the command to manage mesh plinks into non-existence.  Here we
+bring it back under a different name.
 ---
-~Randy
-*** Remember to use Documentation/SubmitChecklist when testing your code ***
+ station.c |    8 ++++----
+ 1 files changed, 4 insertions(+), 4 deletions(-)
+
+diff --git a/station.c b/station.c
+index 7639553..8f7fac1 100644
+--- a/station.c
++++ b/station.c
+@@ -204,7 +204,7 @@ COMMAND(station, del, "<MAC address>",
+ 	NL80211_CMD_DEL_STATION, 0, CIB_NETDEV, handle_station_get,
+ 	"Remove the given station entry (use with caution!)");
+ 
+-static int handle_station_set_plink(struct nl80211_state *state,
++static int handle_station_plink(struct nl80211_state *state,
+ 			      struct nl_cb *cb,
+ 			      struct nl_msg *msg,
+ 			      int argc, char **argv)
+@@ -222,7 +222,7 @@ static int handle_station_set_plink(struct nl80211_state *state,
+ 	argc--;
+ 	argv++;
+ 
+-	if (strcmp("plink_action", argv[0]) != 0)
++	if (strcmp("action", argv[0]) != 0)
+ 		return 1;
+ 	argc--;
+ 	argv++;
+@@ -248,8 +248,8 @@ static int handle_station_set_plink(struct nl80211_state *state,
+  nla_put_failure:
+ 	return -ENOBUFS;
+ }
+-COMMAND(station, set, "<MAC address> plink_action <open|block>",
+-	NL80211_CMD_SET_STATION, 0, CIB_NETDEV, handle_station_set_plink,
++COMMAND(station, plink, "<MAC address> action <open|block>",
++	NL80211_CMD_SET_STATION, 0, CIB_NETDEV, handle_station_plink,
+ 	"Set mesh peer link action for this station (peer).");
+ 
+ static int handle_station_set_vlan(struct nl80211_state *state,
+-- 
+1.7.1
+
