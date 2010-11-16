@@ -1,65 +1,31 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-vw0-f46.google.com ([209.85.212.46]:41522 "EHLO
-	mail-vw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755961Ab0KVUOP (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 22 Nov 2010 15:14:15 -0500
-Date: Mon, 22 Nov 2010 18:13:31 -0200
-From: "Gustavo F. Padovan" <padovan@profusion.mobi>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, linux-bluetooth@vger.kernel.org
-Subject: Re: pull request: bluetooth-2.6 2010-11-22
-Message-ID: <20101122201330.GE23109@vigoh>
-References: <20101122181411.GD23109@vigoh>
- <20101122193029.GE2117@tuxdriver.com>
+Received: from nbd.name ([46.4.11.11]:53469 "EHLO nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756990Ab0KPXeh (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 16 Nov 2010 18:34:37 -0500
+Message-ID: <4CE3150A.7000300@openwrt.org>
+Date: Wed, 17 Nov 2010 00:34:34 +0100
+From: Felix Fietkau <nbd@openwrt.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20101122193029.GE2117@tuxdriver.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: linux-wireless@vger.kernel.org, linville@tuxdriver.com
+Subject: Re: [PATCH 1/2] cfg80211: add support for setting the ad-hoc multicast
+ rate
+References: <1289484443-96326-1-git-send-email-nbd@openwrt.org> <1289946423.3673.13.camel@jlt3.sipsolutions.net>
+In-Reply-To: <1289946423.3673.13.camel@jlt3.sipsolutions.net>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-* John W. Linville <linville@tuxdriver.com> [2010-11-22 14:30:30 -0500]:
-
-> On Mon, Nov 22, 2010 at 04:14:11PM -0200, Gustavo F. Padovan wrote:
-> > Hi John,
-> > 
-> > Following batch is intended to 2.6.37, it includes a very trivial return
-> > err fix from myself and an remote name request fix from Johan Hedberg.
-> > This fix move the remote name request (during the connection creation
-> > process) to the kernelspace. In addition we have removed this operation
-> > from BlueZ in userspace. Quoting part of Johan's patch which already
-> > explain the change:
-> > 
-> >    "So far userspace has been responsible for this extra name request but
-> >     tighter control is needed in order not to flood Bluetooth controllers
-> >     with two many commands during connection creation. It has been shown
-> >     that some controllers simply fail to function correctly if they get too
-> >     many (almost) simultaneous commands during connection creation. The
-> >     simplest way to acheive better control of these commands is to move
-> >     their sending completely to the kernel side."
-> > 
-> > As side effect, we have a clean up patch in preparation to this fix.
-> > 
-> > Please pull, or let me know any problems you find here. Thanks.
+On 2010-11-16 11:27 PM, Johannes Berg wrote:
+> On Thu, 2010-11-11 at 15:07 +0100, Felix Fietkau wrote:
 > 
-> The return code fix seems reasonable -- small and obvious, etc.
+>> +	if (info->attrs[NL80211_ATTR_MCAST_RATE])
+>> +		ibss.mcast_rate =
+>> +			nla_get_u32(info->attrs[NL80211_ATTR_MCAST_RATE]);
 > 
-> The other fixes are larger than I would like to see.  What is the
-> effect of the bug?  Does the Bluetooth controller stop completely?
-> Does it cause a crash?
-> 
-> Is this a newly-introduced bug?  Or one that has been around for
-> a while?
+> That should really check that the rate is supported, and maybe that it's
+> a basic rate.
+But what about band changes then?
 
-No, it is not serious like that. By not having this patch we won't have
-the remote name request command during connection setup, The remote name
-request was done by bluetoothd, but we already removed it from
-userspace. It is not a really big problem once we also cache the remote
-devices names in bluetoothd.
-So I'm seeing no way to convince you tou pull this patch (actually I'm
-now also covinced to queue this to bluetooth-next).  I'll sent a new
-pull request soon, after wait some time for new patches.
-
--- 
-Gustavo F. Padovan
-http://profusion.mobi
+- Felix
