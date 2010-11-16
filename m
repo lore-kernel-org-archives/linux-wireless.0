@@ -1,107 +1,100 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from liberdade2.minaslivre.org ([74.50.53.203]:56529 "EHLO
-	liberdade.minaslivre.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752518Ab0KDPbJ (ORCPT
+Received: from mail-fx0-f46.google.com ([209.85.161.46]:35007 "EHLO
+	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758913Ab0KPOY2 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 4 Nov 2010 11:31:09 -0400
-Date: Thu, 4 Nov 2010 13:30:57 -0200
-From: Thadeu Lima de Souza Cascardo <cascardo@holoscopio.com>
-To: Herton Ronaldo Krzesinski <herton@mandriva.com.br>
-Cc: linux-wireless@vger.kernel.org,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	Hin-Tak Leung <htl10@users.sourceforge.net>,
-	John W Linville <linville@tuxdriver.com>,
-	seno <senada@t-online.de>
-Subject: Re: [PATCH 9/9] rtl8187: restore anaparam registers after reset
- with 8187B
-Message-ID: <20101104153057.GA4610@barata.holoscopio.com>
-References: <1288659579-4986-1-git-send-email-herton@mandriva.com.br>
- <1288659579-4986-10-git-send-email-herton@mandriva.com.br>
+	Tue, 16 Nov 2010 09:24:28 -0500
+Received: by fxm6 with SMTP id 6so503528fxm.19
+        for <linux-wireless@vger.kernel.org>; Tue, 16 Nov 2010 06:24:26 -0800 (PST)
+Message-ID: <4CE29413.5090103@lwfinger.net>
+Date: Tue, 16 Nov 2010 08:24:19 -0600
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="u3/rZRmxL6MmkK24"
-In-Reply-To: <1288659579-4986-10-git-send-email-herton@mandriva.com.br>
+To: James Womack <james.c.womack@gmail.com>
+CC: linux-wireless@vger.kernel.org
+Subject: Re: r8187se panic
+References: <slrnidp3ae.79c.rb-oss-3@mal.justgohome.co.uk> <4CDC9FA5.10002@lwfinger.net> <slrnidq7u0.9ic.rb-oss-3@mal.justgohome.co.uk> <4CDD3BC4.7070102@lwfinger.net> <slrnidqorp.dlr.rb-oss-3@mal.justgohome.co.uk> <4CDD66C4.10603@lwfinger.net> <slrnidqsld.dlr.rb-oss-3@mal.justgohome.co.uk> <4CDD7945.70005@lwfinger.net> <slrnidqv0k.g21.rb-oss-3@mal.justgohome.co.uk> <loom.20101113T191727-421@post.gmane.org> <4CDEDC74.3040902@lwfinger.net> <ibmosc$4au$1@dough.gmane.org> <4CDEEEE4.80801@lwfinger.net> <ibokag$481$1@dough.gmane.org> <4CE00BEE.8060100@lwfinger.net> <ibpauk$v12$1@dough.gmane.org> <4CE0455A.50709@lwfinger.net> <ibs7c3$3dn$1@dough.gmane.org> <4CE1C5F7.90607@lwfinger.net> <ibtkeo$efc$1@dough.gmane.org>
+In-Reply-To: <ibtkeo$efc$1@dough.gmane.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On 11/16/2010 03:55 AM, James Womack wrote:
+> On 15/11/10 23:44, Larry Finger wrote:
+>> On 11/15/2010 03:05 PM, James Womack wrote:
+>>> On 14/11/10 20:23, Larry Finger wrote:
+>>>> On 11/14/2010 12:49 PM, James Womack wrote:
+>>>>> Hey, I tried patching the kernel I downloaded, but the dry runs both
+>>>>> presented errors detailed below:
+>>>>>
+>>>>> james@mercury:/usr/src/linux-source-2.6.32$ patch -p1 --dry-run<
+>>>>> /home/james/rtl8187se_change_panic_to_warn
+>>>>> patching file drivers/staging/rtl8187se/r8185b_init.c
+>>>>> Hunk #1 succeeded at 356 with fuzz 2 (offset 92 lines).
+>>>>> Hunk #2 FAILED at 302.
+>>>>> 1 out of 2 hunks FAILED -- saving rejects to file
+>>>>> drivers/staging/rtl8187se/r8185b_init.c.rej
+>>>>> james@mercury:/usr/src/linux-source-2.6.32$ patch -p1 --dry-run<
+>>>>> /home/james/rtl8187se_
+>>>>> rtl8187se_change_panic_to_warn  rtl8187se_lock_pci_remove
+>>>>> james@mercury:/usr/src/linux-source-2.6.32$ patch -p1 --dry-run<
+>>>>> /home/james/rtl8187se_lock_pci_remove
+>>>>> patching file drivers/staging/rtl8187se/r8180_core.c
+>>>>> patch unexpectedly ends in middle of line
+>>>>> patch: **** unexpected end of file in patch
+>>>>> james@mercury:/usr/src/linux-source-2.6.32$
+>>>>>
+>>>>> Do I need to do anything to the kernel source before applying the
+>>>>> patches?
+>>>>
+>>>> You needed a different version of the patch for 2.6.32. Apply the
+>>>> attached
+>>>> version. You only need the one patch.
+>>>>
+>>>> Larry
+>>>
+>>> Hello,
+>>>
+>>> I managed to compile the patched kernel. To confirm - the issue of the
+>>> kernel panic occuring when Fn-F2 is used to turn off the wireless card
+>>> is resolved. Thank you. I'll let you know if I notice any side effects
+>>> from the patch.
+>>
+>> After you do the Fn-F2 sequence, there should be a stack dump in the
+>> output of
+>> the dmesg command. Could you please post that? With it, I should be
+>> able to find
+>> what is leading to the original error. It does not happen on my system.
+>>
+>> Larry
+>> -- 
+>> To unsubscribe from this list: send the line "unsubscribe
+>> linux-wireless" in
+>> the body of a message to majordomo@vger.kernel.org
+>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>>
+> 
+> Okay, I used dmesg | tail to print the last 10 lines of dmesg. Hopefully
+> this is what you were asking for:
+> 
+> [  812.500300]  [<f81d97c1>] ? eeepc_rfkill_hotplug+0x127/0x142
+> [eeepc_laptop]
+> [  812.500311]  [<c116a27d>] ? acpi_ev_notify_dispatch+0x4c/0x57
+> [  812.500320]  [<c115db60>] ? acpi_os_execute_deferred+0x1a/0x23
+> [  812.500330]  [<c103fc20>] ? worker_thread+0x142/0x1c2
+> [  812.500337]  [<c115db46>] ? acpi_os_execute_deferred+0x0/0x23
+> [  812.500347]  [<c104289e>] ? autoremove_wake_function+0x0/0x29
+> [  812.500354]  [<c103fade>] ? worker_thread+0x0/0x1c2
+> [  812.500362]  [<c1042680>] ? kthread+0x5f/0x64
+> [  812.500369]  [<c1042621>] ? kthread+0x0/0x64
+> [  812.500379]  [<c1003ca7>] ? kernel_thread_helper+0x7/0x10
+> [  812.700057] r8180: WW:Card reset timeout!
+> [  812.908439] r8180: Freeing irq 18
+> [  812.920050] r8180 0000:01:00.0: PCI INT A disabled
+> [  812.920056] r8180: wlan driver removed
+> [  812.920058]
 
---u3/rZRmxL6MmkK24
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+I need a few more than that. The sequence I want should start with the phrase
+"RE|WE bits not cleared".
 
-On Mon, Nov 01, 2010 at 10:59:39PM -0200, Herton Ronaldo Krzesinski wrote:
-> Current 8187B initialization misses anaparam registers restore after
-> 8187 reset. This causes ANAPARAM register to stay zeroed out (ANAPARAM2
-> kept its value on my tests). To avoid this, call rtl8187_set_anaparam
-> right after chip reset (to be on the safe side, as it makes sure we
-> restore all ANAPARAM registers).
->=20
-
-Hello, Herton.
-
-Thank you very much for these patches. I am in the process of testing
-them right now. The first thing I've noticed is a drop in the signal
-level by 10dBm when using this last patch. Is this something we should
-be concerned with?
-
-I will do some tests with the distance to the Access Point and send my
-results later.
-
-Regards,
-Cascardo.
-
-> Signed-off-by: Herton Ronaldo Krzesinski <herton@mandriva.com.br>
-> Acked-by: Larry Finger <Larry.Finger@lwfinger.net>
-> Cc: seno <senada@t-online.de>
-> ---
->  drivers/net/wireless/rtl818x/rtl8187_dev.c |    2 ++
->  1 files changed, 2 insertions(+), 0 deletions(-)
->=20
-> diff --git a/drivers/net/wireless/rtl818x/rtl8187_dev.c b/drivers/net/wir=
-eless/rtl818x/rtl8187_dev.c
-> index 4448647..eeee244 100644
-> --- a/drivers/net/wireless/rtl818x/rtl8187_dev.c
-> +++ b/drivers/net/wireless/rtl818x/rtl8187_dev.c
-> @@ -771,6 +771,8 @@ static int rtl8187b_init_hw(struct ieee80211_hw *dev)
->  	if (res)
->  		return res;
-> =20
-> +	rtl8187_set_anaparam(priv, true);
-> +
->  	/* BRSR (Basic Rate Set Register) on 8187B looks to be the same as
->  	 * RESP_RATE on 8187L in Realtek sources: each bit should be each
->  	 * one of the 12 rates, all are enabled */
-> --=20
-> 1.7.3.2
->=20
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless"=
- in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-
---u3/rZRmxL6MmkK24
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
-Content-Disposition: inline
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.10 (GNU/Linux)
-
-iQIcBAEBAgAGBQJM0tGwAAoJEEWxSg7udFZIQuwP/ij4C3np+40DT1+H8YrXibto
-0w5sTENXaTynzqAAv/lh9F7tNyHQWE14Dj4cHvc2WdPxzvpFYSl6nQDXfcu4Wrdf
-k1o61bObDI2utMzt2etXS48GVzW6PE2cxCsY/ttVX7SJfWg4yFL8aWcrPyG31+m1
-j6npo52kQJ5aHCsRIobJI5odVlfmawQ5/HzZqgHSzj04KxN5LkstYkMxeItM481X
-BTfOdIkDtSGmP1b5p2HcH7YbiWMAenLv1dV0IYOoW/ExQ3XZ91qKaKEQLl/YheGk
-lNW2PrCklWWHYIiG4nOugOvhLvd6U2vEh3pZvPeCfYIgpZ+WIu3dE9eSHmqhzYsb
-FOaLeS0bjPBXVx5iBlM1eNXABT4s1EkHwRyTqBy4uiFeB2CLRsVVxM4kh/3J1mFa
-3jhyVq7iobYo7KgCHQ9dKXnPcdkteBt1MeOxTICalCWnvr7ha2kyMA7jXtq/6CW6
-Tt/i88SkKdCvyr6dyje9LfmYV+qiERECwHt+kBIh09ffR002L3V26p76QX1RntfQ
-RCJMNouN6+fNhymZcoVwTz6yqQBnLaXQaCOJIgWJH2uTcUg5r/r+bHErwEKpIUAO
-gqReurnWJMF9rxUTgl2Ke4aiQHrn2UPqvkqD5zeKdGJCA8ztXjTE0XXJihSEFNYE
-8mvet6+YPUcB2fO+VhLS
-=Ck6Q
------END PGP SIGNATURE-----
-
---u3/rZRmxL6MmkK24--
+Larry
