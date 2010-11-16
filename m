@@ -1,107 +1,154 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ey0-f174.google.com ([209.85.215.174]:33441 "EHLO
-	mail-ey0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753113Ab0KFOtj (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:60783 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757744Ab0KPTs4 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 6 Nov 2010 10:49:39 -0400
-Received: by mail-ey0-f174.google.com with SMTP id 27so2216256eye.19
-        for <linux-wireless@vger.kernel.org>; Sat, 06 Nov 2010 07:49:38 -0700 (PDT)
-From: Ivo van Doorn <ivdoorn@gmail.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Subject: [PATCH 04/18] rt2x00: checkpatch.pl error fixes for rt2800.h
-Date: Sat, 6 Nov 2010 15:44:52 +0100
-Cc: linux-wireless@vger.kernel.org
-References: <201011061544.00876.IvDoorn@gmail.com> <201011061544.16363.IvDoorn@gmail.com> <201011061544.33907.IvDoorn@gmail.com>
-In-Reply-To: <201011061544.33907.IvDoorn@gmail.com>
-MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Message-Id: <201011061544.52879.IvDoorn@gmail.com>
+	Tue, 16 Nov 2010 14:48:56 -0500
+Subject: [PATCH] mac80211: fix powersaving clients races
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
+Date: Tue, 16 Nov 2010 11:50:28 -0800
+Message-ID: <1289937028.3673.5.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Mark Einon <mark.einon@gmail.com>
+From: Johannes Berg <johannes.berg@intel.com>
 
-rt2800.h:1511: ERROR: space prohibited after that open parenthesis '('
-rt2800.h:1511: ERROR: space prohibited before that close parenthesis ')'
-rt2800.h:1513: ERROR: space prohibited after that open parenthesis '('
-rt2800.h:1513: ERROR: space prohibited before that close parenthesis ')'
-rt2800.h:1515: ERROR: space prohibited after that open parenthesis '('
-rt2800.h:1515: ERROR: space prohibited before that close parenthesis ')'
-rt2800.h:1517: ERROR: space prohibited after that open parenthesis '('
-rt2800.h:1517: ERROR: space prohibited before that close parenthesis ')'
-rt2800.h:1519: ERROR: space prohibited after that open parenthesis '('
-rt2800.h:1519: ERROR: space prohibited before that close parenthesis ')'
-rt2800.h:1521: ERROR: space prohibited after that open parenthesis '('
-rt2800.h:1521: ERROR: space prohibited before that close parenthesis ')'
-rt2800.h:1661: ERROR: space prohibited after that open parenthesis '('
-rt2800.h:1661: ERROR: space prohibited before that close parenthesis ')'
-rt2800.h:1662: ERROR: space prohibited after that open parenthesis '('
-rt2800.h:1662: ERROR: space prohibited before that close parenthesis ')'
-rt2800.h:1663: ERROR: space prohibited before that close parenthesis ')'
-rt2800.h:2013: ERROR: space prohibited after that open parenthesis '('
-rt2800.h:2013: ERROR: space prohibited before that close parenthesis ')'
-rt2800.h:2014: ERROR: space prohibited after that open parenthesis '('
-rt2800.h:2014: ERROR: space prohibited before that close parenthesis ')'
+The code to handle powersaving stations has a race:
+when the powersave flag is lifted from a station,
+we could transmit a packet that is being processed
+for TX at the same time right away, even if there
+are other frames queued for it. This would cause
+frame reordering. To fix this, lift the flag only
+under the appropriate lock that blocks TX.
 
-Signed-off-by: Mark Einon <mark.einon@gmail.com>
-Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
+Additionally, the code to allow drivers to block a
+station while frames for it are on the HW queue is
+never re-enabled the station, so traffic would get
+stuck indefinitely. Fix this by clearing the flag
+for this appropriately.
+
+Finally, as an optimisation, don't do anything if
+the driver unblocks an already unblocked station.
+
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- drivers/net/wireless/rt2x00/rt2800.h |   22 +++++++++++-----------
- 1 files changed, 11 insertions(+), 11 deletions(-)
+ net/mac80211/ieee80211_i.h |    3 +++
+ net/mac80211/rx.c          |    2 --
+ net/mac80211/sta_info.c    |   17 ++++++++++++++---
+ net/mac80211/util.c        |   14 ++++++++++++--
+ 4 files changed, 29 insertions(+), 7 deletions(-)
 
-diff --git a/drivers/net/wireless/rt2x00/rt2800.h b/drivers/net/wireless/rt2x00/rt2800.h
-index 6cfed06..c2cc126 100644
---- a/drivers/net/wireless/rt2x00/rt2800.h
-+++ b/drivers/net/wireless/rt2x00/rt2800.h
-@@ -1508,17 +1508,17 @@
- #define SHARED_KEY_MODE_BASE		0x7000
+--- wireless-testing.orig/net/mac80211/ieee80211_i.h	2010-11-16 11:30:12.000000000 -0800
++++ wireless-testing/net/mac80211/ieee80211_i.h	2010-11-16 11:30:19.000000000 -0800
+@@ -1278,6 +1278,9 @@ void ieee80211_add_pending_skb(struct ie
+ 			       struct sk_buff *skb);
+ int ieee80211_add_pending_skbs(struct ieee80211_local *local,
+ 			       struct sk_buff_head *skbs);
++int ieee80211_add_pending_skbs_fn(struct ieee80211_local *local,
++				  struct sk_buff_head *skbs,
++				  void (*fn)(void *data), void *data);
  
- #define MAC_WCID_ENTRY(__idx) \
--	( MAC_WCID_BASE + ((__idx) * sizeof(struct mac_wcid_entry)) )
-+	(MAC_WCID_BASE + ((__idx) * sizeof(struct mac_wcid_entry)))
- #define PAIRWISE_KEY_ENTRY(__idx) \
--	( PAIRWISE_KEY_TABLE_BASE + ((__idx) * sizeof(struct hw_key_entry)) )
-+	(PAIRWISE_KEY_TABLE_BASE + ((__idx) * sizeof(struct hw_key_entry)))
- #define MAC_IVEIV_ENTRY(__idx) \
--	( MAC_IVEIV_TABLE_BASE + ((__idx) * sizeof(struct mac_iveiv_entry)) )
-+	(MAC_IVEIV_TABLE_BASE + ((__idx) * sizeof(struct mac_iveiv_entry)))
- #define MAC_WCID_ATTR_ENTRY(__idx) \
--	( MAC_WCID_ATTRIBUTE_BASE + ((__idx) * sizeof(u32)) )
-+	(MAC_WCID_ATTRIBUTE_BASE + ((__idx) * sizeof(u32)))
- #define SHARED_KEY_ENTRY(__idx) \
--	( SHARED_KEY_TABLE_BASE + ((__idx) * sizeof(struct hw_key_entry)) )
-+	(SHARED_KEY_TABLE_BASE + ((__idx) * sizeof(struct hw_key_entry)))
- #define SHARED_KEY_MODE_ENTRY(__idx) \
--	( SHARED_KEY_MODE_BASE + ((__idx) * sizeof(u32)) )
-+	(SHARED_KEY_MODE_BASE + ((__idx) * sizeof(u32)))
+ void ieee80211_send_auth(struct ieee80211_sub_if_data *sdata,
+ 			 u16 transaction, u16 auth_alg,
+--- wireless-testing.orig/net/mac80211/rx.c	2010-11-16 11:27:41.000000000 -0800
++++ wireless-testing/net/mac80211/rx.c	2010-11-16 11:30:19.000000000 -0800
+@@ -1102,8 +1102,6 @@ static void ap_sta_ps_end(struct sta_inf
  
- struct mac_wcid_entry {
- 	u8 mac[6];
-@@ -1658,9 +1658,9 @@ struct mac_iveiv_entry {
- #define HW_BEACON_BASE7			0x5bc0
+ 	atomic_dec(&sdata->bss->num_sta_ps);
  
- #define HW_BEACON_OFFSET(__index) \
--	( ((__index) < 4) ? ( HW_BEACON_BASE0 + (__index * 0x0200) ) : \
--	  (((__index) < 6) ? ( HW_BEACON_BASE4 + ((__index - 4) * 0x0200) ) : \
--	  (HW_BEACON_BASE6 - ((__index - 6) * 0x0200))) )
-+	(((__index) < 4) ? (HW_BEACON_BASE0 + (__index * 0x0200)) : \
-+	  (((__index) < 6) ? (HW_BEACON_BASE4 + ((__index - 4) * 0x0200)) : \
-+	  (HW_BEACON_BASE6 - ((__index - 6) * 0x0200))))
+-	clear_sta_flags(sta, WLAN_STA_PS_STA);
+-
+ #ifdef CONFIG_MAC80211_VERBOSE_PS_DEBUG
+ 	printk(KERN_DEBUG "%s: STA %pM aid %d exits power save mode\n",
+ 	       sdata->name, sta->sta.addr, sta->sta.aid);
+--- wireless-testing.orig/net/mac80211/sta_info.c	2010-11-16 11:30:12.000000000 -0800
++++ wireless-testing/net/mac80211/sta_info.c	2010-11-16 11:30:19.000000000 -0800
+@@ -199,8 +199,11 @@ static void sta_unblock(struct work_stru
  
- /*
-  * BBP registers.
-@@ -2010,8 +2010,8 @@ struct mac_iveiv_entry {
- /*
-  * DMA descriptor defines.
-  */
--#define TXWI_DESC_SIZE			( 4 * sizeof(__le32) )
--#define RXWI_DESC_SIZE			( 4 * sizeof(__le32) )
-+#define TXWI_DESC_SIZE			(4 * sizeof(__le32))
-+#define RXWI_DESC_SIZE			(4 * sizeof(__le32))
+ 	if (!test_sta_flags(sta, WLAN_STA_PS_STA))
+ 		ieee80211_sta_ps_deliver_wakeup(sta);
+-	else if (test_and_clear_sta_flags(sta, WLAN_STA_PSPOLL))
++	else if (test_and_clear_sta_flags(sta, WLAN_STA_PSPOLL)) {
++		clear_sta_flags(sta, WLAN_STA_PS_DRIVER);
+ 		ieee80211_sta_ps_deliver_poll_response(sta);
++	} else
++		clear_sta_flags(sta, WLAN_STA_PS_DRIVER);
+ }
  
- /*
-  * TX WI structure
--- 
-1.7.2.3
+ static int sta_prepare_rate_control(struct ieee80211_local *local,
+@@ -880,6 +883,13 @@ struct ieee80211_sta *ieee80211_find_sta
+ }
+ EXPORT_SYMBOL(ieee80211_find_sta);
+ 
++static void clear_sta_ps_flags(void *_sta)
++{
++	struct sta_info *sta = _sta;
++
++	clear_sta_flags(sta, WLAN_STA_PS_DRIVER | WLAN_STA_PS_STA);
++}
++
+ /* powersave support code */
+ void ieee80211_sta_ps_deliver_wakeup(struct sta_info *sta)
+ {
+@@ -894,7 +904,8 @@ void ieee80211_sta_ps_deliver_wakeup(str
+ 
+ 	/* Send all buffered frames to the station */
+ 	sent = ieee80211_add_pending_skbs(local, &sta->tx_filtered);
+-	buffered = ieee80211_add_pending_skbs(local, &sta->ps_tx_buf);
++	buffered = ieee80211_add_pending_skbs_fn(local, &sta->ps_tx_buf,
++						 clear_sta_ps_flags, sta);
+ 	sent += buffered;
+ 	local->total_ps_buffered -= buffered;
+ 
+@@ -973,7 +984,7 @@ void ieee80211_sta_block_awake(struct ie
+ 
+ 	if (block)
+ 		set_sta_flags(sta, WLAN_STA_PS_DRIVER);
+-	else
++	else if (test_sta_flags(sta, WLAN_STA_PS_DRIVER))
+ 		ieee80211_queue_work(hw, &sta->drv_unblock_wk);
+ }
+ EXPORT_SYMBOL(ieee80211_sta_block_awake);
+--- wireless-testing.orig/net/mac80211/util.c	2010-11-16 11:27:41.000000000 -0800
++++ wireless-testing/net/mac80211/util.c	2010-11-16 11:30:19.000000000 -0800
+@@ -368,8 +368,9 @@ void ieee80211_add_pending_skb(struct ie
+ 	spin_unlock_irqrestore(&local->queue_stop_reason_lock, flags);
+ }
+ 
+-int ieee80211_add_pending_skbs(struct ieee80211_local *local,
+-			       struct sk_buff_head *skbs)
++int ieee80211_add_pending_skbs_fn(struct ieee80211_local *local,
++				  struct sk_buff_head *skbs,
++				  void (*fn)(void *data), void *data)
+ {
+ 	struct ieee80211_hw *hw = &local->hw;
+ 	struct sk_buff *skb;
+@@ -394,6 +395,9 @@ int ieee80211_add_pending_skbs(struct ie
+ 		__skb_queue_tail(&local->pending[queue], skb);
+ 	}
+ 
++	if (fn)
++		fn(data);
++
+ 	for (i = 0; i < hw->queues; i++)
+ 		__ieee80211_wake_queue(hw, i,
+ 			IEEE80211_QUEUE_STOP_REASON_SKB_ADD);
+@@ -402,6 +406,12 @@ int ieee80211_add_pending_skbs(struct ie
+ 	return ret;
+ }
+ 
++int ieee80211_add_pending_skbs(struct ieee80211_local *local,
++			       struct sk_buff_head *skbs)
++{
++	return ieee80211_add_pending_skbs_fn(local, skbs, NULL, NULL);
++}
++
+ void ieee80211_stop_queues_by_reason(struct ieee80211_hw *hw,
+ 				    enum queue_stop_reason reason)
+ {
+
 
