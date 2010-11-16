@@ -1,48 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f46.google.com ([209.85.215.46]:44208 "EHLO
-	mail-ew0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754773Ab0KFOtu (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:59621 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932439Ab0KPV7t (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 6 Nov 2010 10:49:50 -0400
-Received: by mail-ew0-f46.google.com with SMTP id 7so2253925ewy.19
-        for <linux-wireless@vger.kernel.org>; Sat, 06 Nov 2010 07:49:49 -0700 (PDT)
-From: Ivo van Doorn <ivdoorn@gmail.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Subject: [PATCH 10/18] rt2x00: checkpatch.pl error fixes for rt2x00dev.c
-Date: Sat, 6 Nov 2010 15:46:36 +0100
-Cc: linux-wireless@vger.kernel.org
-References: <201011061544.00876.IvDoorn@gmail.com> <201011061545.59571.IvDoorn@gmail.com> <201011061546.18043.IvDoorn@gmail.com>
-In-Reply-To: <201011061546.18043.IvDoorn@gmail.com>
+	Tue, 16 Nov 2010 16:59:49 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: linux-wireless@vger.kernel.org
+Cc: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>,
+	"John W. Linville" <linville@tuxdriver.com>
+Subject: [PATCH] rndis_wlan: avoid uninitialized var warning in rndis_wlan_craft_connected_bss
+Date: Tue, 16 Nov 2010 16:49:08 -0500
+Message-Id: <1289944148-10326-1-git-send-email-linville@tuxdriver.com>
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Message-Id: <201011061546.37042.IvDoorn@gmail.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Mark Einon <mark.einon@gmail.com>
+  CC [M]  drivers/net/wireless/rndis_wlan.o
+drivers/net/wireless/rndis_wlan.c: In function ‘rndis_wlan_craft_connected_bss’:
+drivers/net/wireless/rndis_wlan.c:2542:2: warning: ‘ret’ may be used uninitialized in this function
 
-rt2x00dev.c:689: ERROR: spaces required around that '=' (ctx:WxV)
-
-Signed-off-by: Mark Einon <mark.einon@gmail.com>
-Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
+Signed-off-by: John W. Linville <linville@tuxdriver.com>
 ---
- drivers/net/wireless/rt2x00/rt2x00dev.c |    2 +-
+ drivers/net/wireless/rndis_wlan.c |    2 +-
  1 files changed, 1 insertions(+), 1 deletions(-)
 
-diff --git a/drivers/net/wireless/rt2x00/rt2x00dev.c b/drivers/net/wireless/rt2x00/rt2x00dev.c
-index b6822cd..942b4af 100644
---- a/drivers/net/wireless/rt2x00/rt2x00dev.c
-+++ b/drivers/net/wireless/rt2x00/rt2x00dev.c
-@@ -686,7 +686,7 @@ static void rt2x00lib_rate(struct ieee80211_rate *entry,
- {
- 	entry->flags = 0;
- 	entry->bitrate = rate->bitrate;
--	entry->hw_value =index;
-+	entry->hw_value = index;
- 	entry->hw_value_short = index;
+diff --git a/drivers/net/wireless/rndis_wlan.c b/drivers/net/wireless/rndis_wlan.c
+index 8a77ff6..ee08bca 100644
+--- a/drivers/net/wireless/rndis_wlan.c
++++ b/drivers/net/wireless/rndis_wlan.c
+@@ -2536,7 +2536,7 @@ static void rndis_wlan_craft_connected_bss(struct usbnet *usbdev, u8 *bssid,
+ 	/* Get signal quality, in case of error use rssi=0 and ignore error. */
+ 	len = sizeof(rssi);
+ 	rssi = 0;
+-	rndis_query_oid(usbdev, OID_802_11_RSSI, &rssi, &len);
++	ret = rndis_query_oid(usbdev, OID_802_11_RSSI, &rssi, &len);
+ 	signal = level_to_qual(le32_to_cpu(rssi));
  
- 	if (rate->flags & DEV_RATE_SHORT_PREAMBLE)
+ 	netdev_dbg(usbdev->net, "%s(): OID_802_11_RSSI -> %d, "
 -- 
-1.7.2.3
+1.7.3.2
 
