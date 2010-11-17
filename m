@@ -1,92 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mgw-da01.ext.nokia.com ([147.243.128.24]:26098 "EHLO
-	mgw-da01.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757387Ab0KAMZ7 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 1 Nov 2010 08:25:59 -0400
-Received: from localhost.localdomain (chilepepper.research.nokia.com [172.21.50.167])
-	by mgw-da01.nokia.com (Switch-3.4.3/Switch-3.4.3) with ESMTP id oA1BqGcF020116
-	for <linux-wireless@vger.kernel.org>; Mon, 1 Nov 2010 13:52:19 +0200
-From: Luciano Coelho <luciano.coelho@nokia.com>
-To: linux-wireless@vger.kernel.org
-Subject: [RFC 03/15] nl80211: alloc and free the periodic_req data
-Date: Mon,  1 Nov 2010 13:52:04 +0200
-Message-Id: <1288612336-2830-4-git-send-email-luciano.coelho@nokia.com>
-In-Reply-To: <1288612336-2830-1-git-send-email-luciano.coelho@nokia.com>
-References: <1288612336-2830-1-git-send-email-luciano.coelho@nokia.com>
+Received: from cantor.suse.de ([195.135.220.2]:54684 "EHLO mx1.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1759120Ab0KQWNk (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 17 Nov 2010 17:13:40 -0500
+Date: Wed, 17 Nov 2010 14:11:58 -0800
+From: Greg KH <gregkh@suse.de>
+To: Mike Rapoport <mike.rapoport@gmail.com>
+Cc: Greg KH <greg@kroah.com>, Brett Rudley <brudley@broadcom.com>,
+	Henry Ptasinski <henryp@broadcom.com>,
+	Dowan Kim <dowan@broadcom.com>, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 4/4] staging: brcm80211: brcmfmac: cleanup
+ bcmsdh_(un)register
+Message-ID: <20101117221158.GC3851@suse.de>
+References: <20101116200438.GA10803@kroah.com>
+ <1289980800-28743-1-git-send-email-mike.rapoport@gmail.com>
+ <20101117211129.GA31776@kroah.com>
+ <AANLkTikkVhc=3ismFX_5jWnzYHQiVXKbWQsFMPwTw6YZ@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=iso-8859-1
+In-Reply-To: <AANLkTikkVhc=3ismFX_5jWnzYHQiVXKbWQsFMPwTw6YZ@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch adds code to allocate and deallocate the periodic request data
-structure.  This structure will be passed down when making the actual scan
-call and it is also used to check whether a periodic scan is still running or
-not.
+On Thu, Nov 18, 2010 at 12:02:15AM +0200, Mike Rapoport wrote:
+> On Wed, Nov 17, 2010 at 11:11 PM, Greg KH <greg@kroah.com> wrote:
+> > On Wed, Nov 17, 2010 at 10:00:00AM +0200, Mike Rapoport wrote:
+> >> Signed-off-by: Mike Rapoport <mike.rapoport@gmail.com>
+> >> ---
+> >>  drivers/staging/brcm80211/brcmfmac/bcmsdh_linux.c |   13 +------------
+> >>  1 files changed, 1 insertions(+), 12 deletions(-)
+> >>
+> >> diff --git a/drivers/staging/brcm80211/brcmfmac/bcmsdh_linux.c b/drivers/staging/brcm80211/brcmfmac/bcmsdh_linux.c
+> >> index fd327e1..e3fb7ed 100644
+> >> --- a/drivers/staging/brcm80211/brcmfmac/bcmsdh_linux.c
+> >> +++ b/drivers/staging/brcm80211/brcmfmac/bcmsdh_linux.c
+> >> @@ -285,28 +285,17 @@ extern int sdio_function_init(void);
+> >>
+> >>  int bcmsdh_register(bcmsdh_driver_t *driver)
+> >>  {
+> >> -     int error = 0;
+> >> -
+> >>       drvinfo = *driver;
+> >>
+> >> -#if defined(BCMPLATFORM_BUS)
+> >> -#if defined(BCMLXSDMMC)
+> >>       SDLX_MSG(("Linux Kernel SDIO/MMC Driver\n"));
+> >> -     error = sdio_function_init();
+> >
+> > Same question here, are you sure we can remove this code?
+> 
+> I'm not removing sdio_function_init here. I've only replaced
+>         error = sdio_function_init();
+>         return error;
+> with
+>         return sdio_function_init();
 
-Signed-off-by: Luciano Coelho <luciano.coelho@nokia.com>
----
- net/wireless/nl80211.c |   28 +++++++++++++++++++++++++++-
- 1 files changed, 27 insertions(+), 1 deletions(-)
+Doh, you are right, sorry about that, I missread the patch.
 
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index a2293ea..0884464 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -3001,6 +3001,7 @@ static int nl80211_trigger_scan(struct sk_buff *skb, struct genl_info *info)
- static int nl80211_start_periodic(struct sk_buff *skb,
- 				  struct genl_info *info)
- {
-+	struct cfg80211_periodic_request *request;
- 	struct cfg80211_registered_device *rdev;
- 	struct net_device *dev;
- 	int err;
-@@ -3018,6 +3019,22 @@ static int nl80211_start_periodic(struct sk_buff *skb,
- 		goto out;
- 	}
- 
-+	if (rdev->periodic_req) {
-+		err = -EINPROGRESS;
-+		goto out;
-+	}
-+
-+	request = kzalloc(sizeof(*request), GFP_KERNEL);
-+	if (!request) {
-+		err = -ENOMEM;
-+		goto out;
-+	}
-+
-+	request->dev = dev;
-+	request->wiphy = &rdev->wiphy;
-+
-+	rdev->periodic_req = request;
-+
- 	/* add actual calls here */
- 
- 	if (!err) {
-@@ -3055,7 +3072,9 @@ static int nl80211_stop_periodic(struct sk_buff *skb,
- 		goto out;
- 	}
- 
--	/* add actual calls here */
-+	if (rdev->periodic_req) {
-+		/* add actual calls here */
-+	}
- 
- 	if (!err) {
- 		nl80211_send_periodic(rdev, dev,
-@@ -3063,6 +3082,13 @@ static int nl80211_stop_periodic(struct sk_buff *skb,
- 		dev_hold(dev);
- 	}
- 
-+	/*
-+	 * FIXME: Can this stay here? How will the auto-complete and other
-+	 * cleanup cases work?
-+	 */
-+	kfree(rdev->periodic_req);
-+	rdev->periodic_req = NULL;
-+
- out:
- 	cfg80211_unlock_rdev(rdev);
- 	dev_put(dev);
--- 
-1.7.0.4
+thanks
 
+greg k-h
