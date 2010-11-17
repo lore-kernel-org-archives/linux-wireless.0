@@ -1,57 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from external1.orbit-lab.org ([128.6.192.131]:38346 "HELO
-	external1.orbit-lab.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S932104Ab0KXUDg (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 24 Nov 2010 15:03:36 -0500
-Received: from repository3.orbit-lab.org (repository3.orbit-lab.org [10.50.0.41])
-	by external1.orbit-lab.org (Postfix) with ESMTP id 8E624418D8
-	for <linux-wireless@vger.kernel.org>; Wed, 24 Nov 2010 14:58:49 -0500 (EST)
-Subject: Compat-wireless release for 2010-11-24 is baked
-To: <linux-wireless@vger.kernel.org>
-Message-Id: <20101124200335.004A040F97@repository3.orbit-lab.org>
-Date: Wed, 24 Nov 2010 15:03:34 -0500 (EST)
-From: compat@orbit-lab.org (Compat-wireless cronjob account)
+Received: from nbd.name ([46.4.11.11]:47507 "EHLO nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757675Ab0KQDT4 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 16 Nov 2010 22:19:56 -0500
+From: Felix Fietkau <nbd@openwrt.org>
+To: linux-wireless@vger.kernel.org
+Cc: linville@tuxdriver.com, lrodriguez@atheros.com
+Subject: [PATCH 1/2] ath9k: add support for reading eeprom from platform data on PCI devices
+Date: Wed, 17 Nov 2010 04:19:46 +0100
+Message-Id: <1289963987-28583-1-git-send-email-nbd@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
->From git://git.kernel.org/pub/scm/linux/kernel/git/mcgrof/compat-wireless-2.6
-   7670673..2a32eea  linux-2.6.36.y -> origin/linux-2.6.36.y
-   4738a49..3d69e94  linux-2.6.37.y -> origin/linux-2.6.37.y
-   d70fb80..9a6e31a  master     -> origin/master
->From git://git.kernel.org/pub/scm/linux/kernel/git/mcgrof/compat-wireless-2.6
- * [new tag]         compat-wireless-2010-11-23 -> compat-wireless-2010-11-23
- * [new tag]         compat-wireless-v2.6.37-rc3-1 -> compat-wireless-v2.6.37-rc3-1
->From git://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next
-   1fce951..1d4836b  history    -> origin/history
- + c239aa9...bd59982 master     -> origin/master  (forced update)
- * [new tag]         next-20101124 -> next-20101124
-cat: /var/opt/compat/compat-wireless-2.6/compat_version: No such file or directory
-cat: compat_base_tree: No such file or directory
-cat: compat_base_tree_version: No such file or directory
-cat: compat_version: No such file or directory
-cat: /var/opt/compat/compat-wireless-2.6/compat_version: No such file or directory
-scripts/Makefile.clean:17: /var/opt/compat/compat-wireless-2.6/drivers/net/wireless/hostap/Makefile: No such file or directory
-make[4]: *** No rule to make target `/var/opt/compat/compat-wireless-2.6/drivers/net/wireless/hostap/Makefile'.  Stop.
-make[3]: *** [/var/opt/compat/compat-wireless-2.6/drivers/net/wireless/hostap] Error 2
-make[2]: *** [/var/opt/compat/compat-wireless-2.6/drivers/net/wireless] Error 2
-make[1]: *** [_clean_/var/opt/compat/compat-wireless-2.6] Error 2
-make: *** [clean] Error 2
+Some embedded boards store platform data for connected PCIe AR92xx
+chips in the system flash instead of a separate EEPROM chip.
 
-compat-wireless code metrics
+Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+---
+ drivers/net/wireless/ath/ath9k/hw.c   |    4 ----
+ drivers/net/wireless/ath/ath9k/init.c |    3 +++
+ 2 files changed, 3 insertions(+), 4 deletions(-)
 
-    748874 - Total upstream lines of code being pulled
-      2187 - backport code changes
-      1930 - backport code additions
-       257 - backport code deletions
-      6439 - backport from compat module
-      8626 - total backport code
-    1.1519 - % of code consists of backport work
-      1534 - Crap changes not yet posted
-      1491 - Crap additions not yet posted
-        43 - Crap deletions not yet posted
-    0.2048 - % of crap code
+diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
+index 986c779..1dbe53b 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.c
++++ b/drivers/net/wireless/ath/ath9k/hw.c
+@@ -419,10 +419,6 @@ static void ath9k_hw_init_defaults(struct ath_hw *ah)
+ 	ah->hw_version.magic = AR5416_MAGIC;
+ 	ah->hw_version.subvendorid = 0;
+ 
+-	ah->ah_flags = 0;
+-	if (!AR_SREV_9100(ah))
+-		ah->ah_flags = AH_USE_EEPROM;
+-
+ 	ah->atim_window = 0;
+ 	ah->sta_id1_defaults =
+ 		AR_STA_ID1_CRPT_MIC_ENABLE |
+diff --git a/drivers/net/wireless/ath/ath9k/init.c b/drivers/net/wireless/ath/ath9k/init.c
+index 5c26818d..7eef1fa 100644
+--- a/drivers/net/wireless/ath/ath9k/init.c
++++ b/drivers/net/wireless/ath/ath9k/init.c
+@@ -533,6 +533,9 @@ static int ath9k_init_softc(u16 devid, struct ath_softc *sc, u16 subsysid,
+ 	ah->hw_version.subsysid = subsysid;
+ 	sc->sc_ah = ah;
+ 
++	if (!sc->dev->platform_data)
++		ah->ah_flags |= AH_USE_EEPROM;
++
+ 	common = ath9k_hw_common(ah);
+ 	common->ops = &ath9k_common_ops;
+ 	common->bus_ops = bus_ops;
+-- 
+1.7.3.2
 
-Base tree: linux-next.git
-Base tree version: next-20101124
-compat-wireless release: compat-wireless-2010-11-23-1-g9a6e31a-pc
