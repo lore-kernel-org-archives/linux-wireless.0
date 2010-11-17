@@ -1,48 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f46.google.com ([209.85.214.46]:57866 "EHLO
-	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932515Ab0KRR3j (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 18 Nov 2010 12:29:39 -0500
-Received: by bwz15 with SMTP id 15so2994016bwz.19
-        for <linux-wireless@vger.kernel.org>; Thu, 18 Nov 2010 09:29:37 -0800 (PST)
-Message-ID: <4CE5627A.6060206@lwfinger.net>
-Date: Thu, 18 Nov 2010 11:29:30 -0600
-From: Larry Finger <Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-To: =?UTF-8?B?TWljaGFlbCBCw7xzY2g=?= <mb@bu3sch.de>
-CC: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, b43-dev@lists.infradead.org
-Subject: Re: [PATCH] ssb: fail registration for unknown SPROM revision
-References: <1288823326-9686-1-git-send-email-zajec5@gmail.com>	 <1288823326-9686-2-git-send-email-zajec5@gmail.com>	 <20101116212321.GF10774@tuxdriver.com> <1290013976.2513.14.camel@maggie>	 <20101118162748.GB2468@tuxdriver.com> <1290098156.12596.2.camel@maggie>	 <AANLkTimh_8X1uRPudmQLDOTeA_X0ciR9BbDgyahLDMSs@mail.gmail.com>	 (sfid-20101118_174421_892253_3B53C8D3) <1290098865.12596.6.camel@maggie>	 <4CE55C3B.6020803@lwfinger.net> (sfid-20101118_180314_721728_2D534AE3) <1290100075.12596.8.camel@maggie>
-In-Reply-To: <1290100075.12596.8.camel@maggie>
-Content-Type: text/plain; charset=UTF-8
+Received: from smtp.nokia.com ([147.243.128.26]:49519 "EHLO mgw-da02.nokia.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754571Ab0KQIfY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 17 Nov 2010 03:35:24 -0500
+Subject: Re: [PATCH v2 2/2] wl1271: add support for HW TX fragmentation
+From: Luciano Coelho <luciano.coelho@nokia.com>
+To: "ext John W. Linville" <linville@tuxdriver.com>
+Cc: ext Arik Nemtsov <arik@wizery.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Johannes Berg <johannes@sipsolutions.net>
+In-Reply-To: <20101111163755.GC2559@tuxdriver.com>
+References: <1289209867-21422-1-git-send-email-arik@wizery.com>
+	 <1289209867-21422-3-git-send-email-arik@wizery.com>
+	 <1289472342.1606.25.camel@powerslave> <20101111163755.GC2559@tuxdriver.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Wed, 17 Nov 2010 10:34:47 +0200
+Message-ID: <1289982887.12140.2.camel@chilepepper>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 11/18/2010 11:07 AM, Michael Büsch wrote:
-> On Thu, 2010-11-18 at 11:02 -0600, Larry Finger wrote: 
->> On 11/18/2010 10:47 AM, Michael Büsch wrote:
->>> If it would really succeed to initialize the device, this would be a
->>> regulatory issue, because the sprom contains various power amplifier
->>> calibration data. I think it should rather fail and be fixed correctly
->>> instead of incorrectly using rev1 in that case.
->>
->> I agree that it is better to fail than use incorrect power data.
->>
->> Would it be useful if the SPROM data were logged when the revision is crap?
-> 
-> 
-> We need to keep in mind that there will be no new SSB devices.
-> It seems pretty much EOL'ed by Broadcom.
-> So I'm not sure whether this would be of any use or just random dead
-> code.
+Hi John,
 
-Good point. When we get the data for the one case we know exists, we will have a
-better idea if a special quirk for this case is feasible. Assuming that this is
-not the only example of this hardware, then we might limit the breakage from
-this patch. At least the random code would be needed and useful in keeping our
-maintainer happy, which has a some merit.
+On Thu, 2010-11-11 at 17:37 +0100, ext John W. Linville wrote:
+> On Thu, Nov 11, 2010 at 12:45:42PM +0200, Luciano Coelho wrote:
+> > On Mon, 2010-11-08 at 10:51 +0100, ext Arik Nemtsov wrote:
+> > > Indicate to mac80211 we support HW fragmentation.
+> > > Support updates of the fragmentation threshold via the
+> > > set_frag_threshold callback.
+> > > 
+> > > Signed-off-by: Arik Nemtsov <arik@wizery.com>
+> > > ---
+> > 
+> > Acked-by: Luciano Coelho <luciano.coelho@nokia.com>
+> > 
+> > John, can you apply this directly on your tree, due to the dependency on
+> > mac80211? There will be a merge conflict with my next pull-request, due
+> > to the driver renaming, but it should be very easily solvable.
+> > 
+> > The other option would be for me to wait until the mac80211 part is in
+> > wireless-next and only then I apply it to wl12xx.
+> > 
+> > Which one would you prefer?
+> 
+> I'll apply them, thanks.
 
-Larry
+I noticed that you applied the mac80211 patch but you didn't apply the
+wl12xx part.  So I have applied the latter myself now and will send it
+together with my next pull-request.
+
+Please remove this patch from your "to-be-applied-inbox". ;)
+
+-- 
+Cheers,
+Luca.
+
