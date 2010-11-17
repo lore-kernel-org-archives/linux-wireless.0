@@ -1,110 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:52502 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755270Ab0KJSBP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 10 Nov 2010 13:01:15 -0500
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Johannes Berg <johannes.berg@intel.com>,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Subject: [PATCH 11/16] iwlagn: fix RXON issues
-Date: Wed, 10 Nov 2010 09:56:45 -0800
-Message-Id: <1289411810-23093-12-git-send-email-wey-yi.w.guy@intel.com>
-In-Reply-To: <1289411810-23093-1-git-send-email-wey-yi.w.guy@intel.com>
-References: <1289411810-23093-1-git-send-email-wey-yi.w.guy@intel.com>
+Received: from mail-wy0-f174.google.com ([74.125.82.174]:41342 "EHLO
+	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932066Ab0KQVOq (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 17 Nov 2010 16:14:46 -0500
+Received: by wyb28 with SMTP id 28so2427330wyb.19
+        for <linux-wireless@vger.kernel.org>; Wed, 17 Nov 2010 13:14:45 -0800 (PST)
+From: =?utf-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+To: linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>
+Cc: b43-dev@lists.infradead.org,
+	=?utf-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+Subject: [PATCH V2] b43: rfkill: use HI enabled bit for all devices
+Date: Wed, 17 Nov 2010 22:14:37 +0100
+Message-Id: <1290028477-6462-1-git-send-email-zajec5@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+Devices which use LO enabled bit are covered by b43legacy
 
-The RXON rework resulted in a massive loss of
-throughput because we weren't programming the
-device completely correctly -- the BSSID has
-to be programmed into the device before the
-AP station is uploaded. To fix this, simply
-always send the unassoc RXON, i.e. even when
-it was already unassoc so that the BSSID and
-some other parameters are updated properly.
-
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
 ---
- drivers/net/wireless/iwlwifi/iwl-agn-rxon.c |   50 +++++++++++---------------
- 1 files changed, 21 insertions(+), 29 deletions(-)
+V2: Dropped some not needed stuff as pointed by Michael, thanks!
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-rxon.c b/drivers/net/wireless/iwlwifi/iwl-agn-rxon.c
-index 1fab1bb..d594a16 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn-rxon.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn-rxon.c
-@@ -96,7 +96,6 @@ int iwlagn_commit_rxon(struct iwl_priv *priv, struct iwl_rxon_context *ctx)
+John: it's .38 ofc.
+---
+ drivers/net/wireless/b43/rfkill.c |   19 ++-----------------
+ 1 files changed, 2 insertions(+), 17 deletions(-)
+
+diff --git a/drivers/net/wireless/b43/rfkill.c b/drivers/net/wireless/b43/rfkill.c
+index 78016ae..86bc0a0 100644
+--- a/drivers/net/wireless/b43/rfkill.c
++++ b/drivers/net/wireless/b43/rfkill.c
+@@ -28,23 +28,8 @@
+ /* Returns TRUE, if the radio is enabled in hardware. */
+ bool b43_is_hw_radio_enabled(struct b43_wldev *dev)
  {
- 	/* cast away the const for active_rxon in this function */
- 	struct iwl_rxon_cmd *active = (void *)&ctx->active;
--	bool old_assoc = !!(ctx->active.filter_flags & RXON_FILTER_ASSOC_MSK);
- 	bool new_assoc = !!(ctx->staging.filter_flags & RXON_FILTER_ASSOC_MSK);
- 	int ret;
- 
-@@ -172,37 +171,30 @@ int iwlagn_commit_rxon(struct iwl_priv *priv, struct iwl_rxon_context *ctx)
- 		       ctx->staging.bssid_addr);
- 
- 	/*
--	 * If we are currently associated and the new config is also
--	 * going to be associated, OR if the new config is simply not
--	 * associated, clear associated.
-+	 * Always clear associated first, but with the correct config.
-+	 * This is required as for example station addition for the
-+	 * AP station must be done after the BSSID is set to correctly
-+	 * set up filters in the device.
- 	 */
--	if ((old_assoc && new_assoc) || !new_assoc) {
--		struct iwl_rxon_cmd *send = active;
--
--		if (!new_assoc)
--			send = &ctx->staging;
--
--		if (ctx->ctxid == IWL_RXON_CTX_BSS)
--			ret = iwlagn_disable_bss(priv, ctx, send);
--		else
--			ret = iwlagn_disable_pan(priv, ctx, send);
--		if (ret)
--			return ret;
-+	if (ctx->ctxid == IWL_RXON_CTX_BSS)
-+		ret = iwlagn_disable_bss(priv, ctx, &ctx->staging);
-+	else
-+		ret = iwlagn_disable_pan(priv, ctx, &ctx->staging);
-+	if (ret)
-+		return ret;
- 
--		if (send != active)
--			memcpy(active, send, sizeof(*active));
-+	memcpy(active, &ctx->staging, sizeof(*active));
- 
--		/*
--		 * Un-assoc RXON clears the station table and WEP
--		 * keys, so we have to restore those afterwards.
+-	if (dev->phy.rev >= 3 || dev->phy.type == B43_PHYTYPE_LP) {
+-		if (!(b43_read32(dev, B43_MMIO_RADIO_HWENABLED_HI)
+-		      & B43_MMIO_RADIO_HWENABLED_HI_MASK))
+-			return 1;
+-	} else {
+-		/* To prevent CPU fault on PPC, do not read a register
+-		 * unless the interface is started; however, on resume
+-		 * for hibernation, this routine is entered early. When
+-		 * that happens, unconditionally return TRUE.
 -		 */
--		iwl_clear_ucode_stations(priv, ctx);
--		iwl_restore_stations(priv, ctx);
--		ret = iwl_restore_default_wep_keys(priv, ctx);
--		if (ret) {
--			IWL_ERR(priv, "Failed to restore WEP keys (%d)\n", ret);
--			return ret;
--		}
-+	/*
-+	 * Un-assoc RXON clears the station table and WEP
-+	 * keys, so we have to restore those afterwards.
-+	 */
-+	iwl_clear_ucode_stations(priv, ctx);
-+	iwl_restore_stations(priv, ctx);
-+	ret = iwl_restore_default_wep_keys(priv, ctx);
-+	if (ret) {
-+		IWL_ERR(priv, "Failed to restore WEP keys (%d)\n", ret);
-+		return ret;
- 	}
+-		if (b43_status(dev) < B43_STAT_STARTED)
+-			return 1;
+-		if (b43_read16(dev, B43_MMIO_RADIO_HWENABLED_LO)
+-		    & B43_MMIO_RADIO_HWENABLED_LO_MASK)
+-			return 1;
+-	}
+-	return 0;
++	return !(b43_read32(dev, B43_MMIO_RADIO_HWENABLED_HI)
++		& B43_MMIO_RADIO_HWENABLED_HI_MASK);
+ }
  
- 	/* RXON timing must be before associated RXON */
+ /* The poll callback for the hardware button. */
 -- 
-1.7.0.4
+1.6.0.4
 
