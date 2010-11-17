@@ -1,63 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ironport2-out.teksavvy.com ([206.248.154.181]:47270 "EHLO
-	ironport2-out.pppoe.ca" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1757069Ab0KSArY (ORCPT
+Received: from mail-vw0-f46.google.com ([209.85.212.46]:50249 "EHLO
+	mail-vw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759251Ab0KQWCQ convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 18 Nov 2010 19:47:24 -0500
-Message-ID: <4CE5C919.7090504@teksavvy.com>
-Date: Thu, 18 Nov 2010 19:47:21 -0500
-From: Mark Lord <kernel@teksavvy.com>
+	Wed, 17 Nov 2010 17:02:16 -0500
+Received: by vws13 with SMTP id 13so1390615vws.19
+        for <linux-wireless@vger.kernel.org>; Wed, 17 Nov 2010 14:02:16 -0800 (PST)
 MIME-Version: 1.0
-To: "Rafael J. Wysocki" <rjw@sisk.pl>
-CC: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	Maciej Rutecki <maciej.rutecki@gmail.com>,
-	Florian Mickler <florian@mickler.org>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	Kernel Testers List <kernel-testers@vger.kernel.org>,
-	Network Development <netdev@vger.kernel.org>,
-	Linux ACPI <linux-acpi@vger.kernel.org>,
-	Linux PM List <linux-pm@lists.linux-foundation.org>,
-	Linux SCSI List <linux-scsi@vger.kernel.org>,
-	Linux Wireless List <linux-wireless@vger.kernel.org>,
-	DRI <dri-devel@lists.freedesktop.org>
-Subject: Re: 2.6.37-rc2-git4: Reported regressions 2.6.35 -> 2.6.36
-References: <tTUH_XeInOH.A.dMF.c3b5MB@chimera>
-In-Reply-To: <tTUH_XeInOH.A.dMF.c3b5MB@chimera>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+In-Reply-To: <20101117211129.GA31776@kroah.com>
+References: <20101116200438.GA10803@kroah.com>
+	<1289980800-28743-1-git-send-email-mike.rapoport@gmail.com>
+	<20101117211129.GA31776@kroah.com>
+Date: Thu, 18 Nov 2010 00:02:15 +0200
+Message-ID: <AANLkTikkVhc=3ismFX_5jWnzYHQiVXKbWQsFMPwTw6YZ@mail.gmail.com>
+Subject: Re: [PATCH 4/4] staging: brcm80211: brcmfmac: cleanup bcmsdh_(un)register
+From: Mike Rapoport <mike.rapoport@gmail.com>
+To: Greg KH <greg@kroah.com>
+Cc: Greg Kroah-Hartman <gregkh@suse.de>,
+	Brett Rudley <brudley@broadcom.com>,
+	Henry Ptasinski <henryp@broadcom.com>,
+	Dowan Kim <dowan@broadcom.com>, linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 10-11-18 06:50 PM, Rafael J. Wysocki wrote:
-> This message contains a list of some post-2.6.35 regressions introduced before
-> 2.6.36, for which there are no fixes in the mainline known to the tracking team.
-> If any of them have been fixed already, please let us know.
+On Wed, Nov 17, 2010 at 11:11 PM, Greg KH <greg@kroah.com> wrote:
+> On Wed, Nov 17, 2010 at 10:00:00AM +0200, Mike Rapoport wrote:
+>> Signed-off-by: Mike Rapoport <mike.rapoport@gmail.com>
+>> ---
+>>  drivers/staging/brcm80211/brcmfmac/bcmsdh_linux.c |   13 +------------
+>>  1 files changed, 1 insertions(+), 12 deletions(-)
+>>
+>> diff --git a/drivers/staging/brcm80211/brcmfmac/bcmsdh_linux.c b/drivers/staging/brcm80211/brcmfmac/bcmsdh_linux.c
+>> index fd327e1..e3fb7ed 100644
+>> --- a/drivers/staging/brcm80211/brcmfmac/bcmsdh_linux.c
+>> +++ b/drivers/staging/brcm80211/brcmfmac/bcmsdh_linux.c
+>> @@ -285,28 +285,17 @@ extern int sdio_function_init(void);
+>>
+>>  int bcmsdh_register(bcmsdh_driver_t *driver)
+>>  {
+>> -     int error = 0;
+>> -
+>>       drvinfo = *driver;
+>>
+>> -#if defined(BCMPLATFORM_BUS)
+>> -#if defined(BCMLXSDMMC)
+>>       SDLX_MSG(("Linux Kernel SDIO/MMC Driver\n"));
+>> -     error = sdio_function_init();
 >
-> If you know of any other unresolved post-2.6.35 regressions, please let us know
-> either and we'll add them to the list.  Also, please let us know if any
-> of the entries below are invalid.
+> Same question here, are you sure we can remove this code?
 
-> Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=21652
-> Subject		: several problems with intel graphics since 2.6.36
-> Submitter	: Norbert Preining<preining@logic.at>
-> Date		: 2010-10-27 14:32 (23 days old)
-> Message-ID	:<20101027143252.GA8676@gamma.logic.tuwien.ac.at>
-> References	: http://marc.info/?l=linux-kernel&m=128818998630241&w=2
+I'm not removing sdio_function_init here. I've only replaced
+        error = sdio_function_init();
+        return error;
+with
+        return sdio_function_init();
 
-That one is interesting to me.. I suspect it may be the same cause
-as for https://bugzilla.kernel.org/show_bug.cgi?id=21952
-
-I have one of those Samsung (N210) Netbooks here: works fine with 2.6.34 and 
-earlier,
-but fails to come out of suspend on 2.6.35/2.6.36 (haven't tried 2.6.37).
-
-So perhaps add 21952 to the list, or link it to the 21652
-(kind of amusing how similar the bug numbers are..).
+> just want to make sure.
+>
+> thanks,
+>
+> greg k-h
+>
 
 
-My non-Intel graphics notebook (has ATI X1400 graphics) also has a resume
-regression with 2.6.36.  But it does work fine with 2.6.35 (and earlier,
-back many years).  As a result, I'm stuck with 2.6.35 for the time being,
-and lack the time for a concerted debug effort on 2.6.36+ right now.
 
-Cheers
+-- 
+    Sincerely Yours,
+        Mike.
