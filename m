@@ -1,35 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f46.google.com ([209.85.215.46]:53227 "EHLO
-	mail-ew0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753064Ab0KKPgQ (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:59775 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933263Ab0KQCDa (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 11 Nov 2010 10:36:16 -0500
-Received: by ewy7 with SMTP id 7so1172315ewy.19
-        for <linux-wireless@vger.kernel.org>; Thu, 11 Nov 2010 07:36:15 -0800 (PST)
-MIME-Version: 1.0
-From: Cassiano Tartari <cassianotartari@gmail.com>
-Date: Thu, 11 Nov 2010 13:35:49 -0200
-Message-ID: <AANLkTinDJxnMHEbQjUwWjT2MnW5r7gcxoZW7bZetT7a9@mail.gmail.com>
-Subject: Overload Probe Request to send data
-To: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+	Tue, 16 Nov 2010 21:03:30 -0500
+Subject: Re: [PATCH] iw: Resolve namespace clash between station plink and
+ vlan commands
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Javier Cardona <javier@cozybit.com>
+Cc: nbd@openwrt.org, linux-wireless@vger.kernel.org
+In-Reply-To: <AANLkTimuW8wTVUW4dH1t+J6jhoEkFHZ7v5t78tXe050O@mail.gmail.com>
+References: <1289867251-21559-1-git-send-email-javier@cozybit.com>
+	 <1289946246.3673.12.camel@jlt3.sipsolutions.net>
+	 <AANLkTimuW8wTVUW4dH1t+J6jhoEkFHZ7v5t78tXe050O@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Tue, 16 Nov 2010 18:05:03 -0800
+Message-ID: <1289959503.29119.2.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+On Tue, 2010-11-16 at 17:41 -0800, Javier Cardona wrote:
 
-    I'd like to know if somebody could help me giving a way to modify
-the iwlwifi driver to overload the Probe Requests to send data? Which
-file I need to modify, for what word I need search for...
+> > I'll happily take this, but would you prefer to have the other one
+> > backed out instead?
+> 
+> That would save us and some of our clients from having to change a
+> bunch of scripts, yes.
 
-Thankful,
+Actually, I won't have time today, but it looks like they can be shared
+in some way? Maybe by sharing the same callback function or something? I
+mean -- it should be possible to do two things on set... not sure now,
+I'll take a look later. Maybe you can work with an older iw version
+until then?
 
-Best Regards,
+johannes
 
--
-Cassiano Valle Tartari
-Computer Engineer
-
-Tel: +55.48.84474818
-Email: falecom@cassianotartari.eng.br
-Site: http://www.cassianotartari.eng.br
