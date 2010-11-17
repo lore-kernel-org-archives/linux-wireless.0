@@ -1,82 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw0-f46.google.com ([74.125.83.46]:60399 "EHLO
-	mail-gw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751841Ab0K0GV4 (ORCPT
+Received: from mail-bw0-f46.google.com ([209.85.214.46]:42103 "EHLO
+	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759847Ab0KQIAK (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 27 Nov 2010 01:21:56 -0500
-From: "Justin P. Mattock" <justinmattock@gmail.com>
-To: trivial@kernel.org
-Cc: linux-rdma@vger.kernel.org, linux-ide@vger.kernel.org,
-	linux-mtd@lists.infradead.org, linux-wireless@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	"Justin P. Mattock" <justinmattock@gmail.com>
-Subject: [RFC 3/9]drivers:infiniband:ulp Change the copyright info.
-Date: Fri, 26 Nov 2010 22:21:13 -0800
-Message-Id: <1290838879-11038-4-git-send-email-justinmattock@gmail.com>
-In-Reply-To: <1290838879-11038-1-git-send-email-justinmattock@gmail.com>
-References: <1290838879-11038-1-git-send-email-justinmattock@gmail.com>
+	Wed, 17 Nov 2010 03:00:10 -0500
+Received: by bwz15 with SMTP id 15so1286360bwz.19
+        for <linux-wireless@vger.kernel.org>; Wed, 17 Nov 2010 00:00:09 -0800 (PST)
+From: Mike Rapoport <mike.rapoport@gmail.com>
+To: Greg Kroah-Hartman <gregkh@suse.de>
+Cc: Brett Rudley <brudley@broadcom.com>,
+	Henry Ptasinski <henryp@broadcom.com>,
+	Dowan Kim <dowan@broadcom.com>, linux-wireless@vger.kernel.org,
+	Mike Rapoport <mike.rapoport@gmail.com>
+Subject: [PATCH 4/4] staging: brcm80211: brcmfmac: cleanup bcmsdh_(un)register
+Date: Wed, 17 Nov 2010 10:00:00 +0200
+Message-Id: <1289980800-28743-1-git-send-email-mike.rapoport@gmail.com>
+In-Reply-To: <20101116200438.GA10803@kroah.com>
+References: <20101116200438.GA10803@kroah.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Change the copyright info from Sun Microsystems to Oracle since Oracle now owns them.
-
-Signed-off-by: Justin P. Mattock <justinmattock@gmail.com>
-
+Signed-off-by: Mike Rapoport <mike.rapoport@gmail.com>
 ---
- drivers/infiniband/ulp/ipoib/ipoib.h           |    2 +-
- drivers/infiniband/ulp/ipoib/ipoib_ib.c        |    2 +-
- drivers/infiniband/ulp/ipoib/ipoib_main.c      |    2 +-
- drivers/infiniband/ulp/ipoib/ipoib_multicast.c |    2 +-
- 4 files changed, 4 insertions(+), 4 deletions(-)
+ drivers/staging/brcm80211/brcmfmac/bcmsdh_linux.c |   13 +------------
+ 1 files changed, 1 insertions(+), 12 deletions(-)
 
-diff --git a/drivers/infiniband/ulp/ipoib/ipoib.h b/drivers/infiniband/ulp/ipoib/ipoib.h
-index 753a983..bdf2efb 100644
---- a/drivers/infiniband/ulp/ipoib/ipoib.h
-+++ b/drivers/infiniband/ulp/ipoib/ipoib.h
-@@ -1,6 +1,6 @@
- /*
-  * Copyright (c) 2004, 2005 Topspin Communications.  All rights reserved.
-- * Copyright (c) 2005 Sun Microsystems, Inc. All rights reserved.
-+ * Copyright (c) 2005 Oracle and/or its affiliates. All rights reserved.
-  * Copyright (c) 2004 Voltaire, Inc. All rights reserved.
-  *
-  * This software is available to you under a choice of one of two
-diff --git a/drivers/infiniband/ulp/ipoib/ipoib_ib.c b/drivers/infiniband/ulp/ipoib/ipoib_ib.c
-index dfa7190..87ff9eb 100644
---- a/drivers/infiniband/ulp/ipoib/ipoib_ib.c
-+++ b/drivers/infiniband/ulp/ipoib/ipoib_ib.c
-@@ -1,6 +1,6 @@
- /*
-  * Copyright (c) 2004, 2005 Topspin Communications.  All rights reserved.
-- * Copyright (c) 2005 Sun Microsystems, Inc. All rights reserved.
-+ * Copyright (c) 2005 Oracle and/or its affiliates. All rights reserved.
-  * Copyright (c) 2005 Mellanox Technologies. All rights reserved.
-  * Copyright (c) 2004, 2005 Voltaire, Inc. All rights reserved.
-  *
-diff --git a/drivers/infiniband/ulp/ipoib/ipoib_main.c b/drivers/infiniband/ulp/ipoib/ipoib_main.c
-index 9ff7bc7..43df433 100644
---- a/drivers/infiniband/ulp/ipoib/ipoib_main.c
-+++ b/drivers/infiniband/ulp/ipoib/ipoib_main.c
-@@ -1,6 +1,6 @@
- /*
-  * Copyright (c) 2004 Topspin Communications.  All rights reserved.
-- * Copyright (c) 2005 Sun Microsystems, Inc. All rights reserved.
-+ * Copyright (c) 2005 Oracle and/or its affiliates. All rights reserved.
-  * Copyright (c) 2004 Voltaire, Inc. All rights reserved.
-  *
-  * This software is available to you under a choice of one of two
-diff --git a/drivers/infiniband/ulp/ipoib/ipoib_multicast.c b/drivers/infiniband/ulp/ipoib/ipoib_multicast.c
-index 3871ac6..af52828 100644
---- a/drivers/infiniband/ulp/ipoib/ipoib_multicast.c
-+++ b/drivers/infiniband/ulp/ipoib/ipoib_multicast.c
-@@ -1,6 +1,6 @@
- /*
-  * Copyright (c) 2004, 2005 Topspin Communications.  All rights reserved.
-- * Copyright (c) 2005 Sun Microsystems, Inc. All rights reserved.
-+ * Copyright (c) 2005 Oracle and/or its affiliates. All rights reserved.
-  * Copyright (c) 2004 Voltaire, Inc. All rights reserved.
-  *
-  * This software is available to you under a choice of one of two
+diff --git a/drivers/staging/brcm80211/brcmfmac/bcmsdh_linux.c b/drivers/staging/brcm80211/brcmfmac/bcmsdh_linux.c
+index fd327e1..e3fb7ed 100644
+--- a/drivers/staging/brcm80211/brcmfmac/bcmsdh_linux.c
++++ b/drivers/staging/brcm80211/brcmfmac/bcmsdh_linux.c
+@@ -285,28 +285,17 @@ extern int sdio_function_init(void);
+ 
+ int bcmsdh_register(bcmsdh_driver_t *driver)
+ {
+-	int error = 0;
+-
+ 	drvinfo = *driver;
+ 
+-#if defined(BCMPLATFORM_BUS)
+-#if defined(BCMLXSDMMC)
+ 	SDLX_MSG(("Linux Kernel SDIO/MMC Driver\n"));
+-	error = sdio_function_init();
+-#endif				/* defined(BCMLXSDMMC) */
+-	return error;
+-#endif				/* defined(BCMPLATFORM_BUS) */
+-
+-	return error;
++	return sdio_function_init();
+ }
+ 
+ extern void sdio_function_cleanup(void);
+ 
+ void bcmsdh_unregister(void)
+ {
+-#if defined(BCMLXSDMMC)
+ 	sdio_function_cleanup();
+-#endif				/* BCMLXSDMMC */
+ }
+ 
+ #if defined(OOB_INTR_ONLY)
 -- 
-1.7.1
+1.6.4.4
 
