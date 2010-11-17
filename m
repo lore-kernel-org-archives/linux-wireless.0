@@ -1,29 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from devils.ext.ti.com ([198.47.26.153]:46103 "EHLO
-	devils.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751483Ab0KDPEF (ORCPT
+Received: from mail30s.wh2.ocn.ne.jp ([125.206.180.198]:39980 "HELO
+	mail30s.wh2.ocn.ne.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S933434Ab0KQI1t (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 4 Nov 2010 11:04:05 -0400
-Message-ID: <4CD2CB5D.7040104@ti.com>
-Date: Thu, 04 Nov 2010 17:03:57 +0200
-From: Shahar Levi <shahar_levi@ti.com>
+	Wed, 17 Nov 2010 03:27:49 -0500
+Received: from vs3006.wh2.ocn.ne.jp (125.206.180.169)
+	by mail30s.wh2.ocn.ne.jp (RS ver 1.0.95vs) with SMTP id 4-0844122466
+	for <linux-wireless@vger.kernel.org>; Wed, 17 Nov 2010 17:27:48 +0900 (JST)
+From: Bruno Randolf <br1@einfach.org>
+To: Jouni Malinen <j@w1.fi>
+Subject: Re: [PATCH v7 3/3] nl80211/mac80211: Report signal average
+Date: Wed, 17 Nov 2010 17:28:06 +0900
+Cc: linville@tuxdriver.com, randy.dunlap@oracle.com,
+	peterz@infradead.org, blp@cs.stanford.edu,
+	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Lars_Ericsson@telia.com, stefanr@s5r6.in-berlin.de,
+	kosaki.motohiro@jp.fujitsu.com, akpm@linux-foundation.org,
+	kevin.granade@gmail.com
+References: <20101112024901.28522.21895.stgit@localhost6.localdomain6> <20101112030035.28522.75318.stgit@localhost6.localdomain6> <20101116093743.GA21872@jm.kir.nu>
+In-Reply-To: <20101116093743.GA21872@jm.kir.nu>
 MIME-Version: 1.0
-To: =?ISO-8859-1?Q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Luciano Coelho <luciano.coelho@nokia.com>
-Subject: Re: [PATCH v3] wl1271: Change wl12xx Files Names
-References: <1288882189-29945-1-git-send-email-shahar_levi@ti.com> <AANLkTi=zfrodP3qWu-PH0jhARob2PH7EGs8QoJM+bnFk@mail.gmail.com>
-In-Reply-To: <AANLkTi=zfrodP3qWu-PH0jhARob2PH7EGs8QoJM+bnFk@mail.gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Message-Id: <201011171728.06801.br1@einfach.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 11/04/2010 04:52 PM, Gábor Stefanik wrote:
-> On Thu, Nov 4, 2010 at 3:49 PM, Shahar Levi<shahar_levi@ti.com>  wrote:
->> All files name prefix removed due to the fuct that wl12xx driver supports
->
-> What the fuct? :-)
-in fact...this is more deeper ;-)
+On Tue November 16 2010 18:37:43 Jouni Malinen wrote:
+> On Fri, Nov 12, 2010 at 12:00:35PM +0900, Bruno Randolf wrote:
+> > Extend nl80211 to report an exponential weighted moving average (EWMA) of
+> > the signal value. Since the signal value usually fluctuates between
+> > different packets, an average can be more useful than the value of the
+> > last packet.
+> > 
+> > This uses the recently added generic EWMA library function.
+> 
+> Isn't that generic EWMA library function making this much more CPU
+> intensive than necessary? I would assume the compiler is not able to
+> optimize the unsigned long division in ewma_add() when the weight value
+> is "hidden" in this way through ewma_init() call. While generic library
+> functions can be nice, it could be useful to have an option for using an
+> inline version of ewma_add that takes in avg->weight as one of the
+> arguments to allow cases like weight=8 here to be implemented using
+> shift right instead of unsigned long division especially when done on
+> hot path..
+> 
+> > @@ -1158,6 +1158,7 @@ ieee80211_rx_h_sta_process(struct ieee80211_rx_data
+> > *rx)
+> > 
+> >  	sta->last_signal = status->signal;
+> > 
+> > +	ewma_add(&sta->avg_signal, -status->signal);
+> 
+> This one here would be done for every frame received and by using a
+> function call that ends up doing a potentially expensive division.
+> 
+> > @@ -241,6 +241,8 @@ struct sta_info *sta_info_alloc(struct
+> > ieee80211_sub_if_data *sdata, +	ewma_init(&sta->avg_signal, 1000, 8);
+> 
+> The divisor (weight) is set to 8 here which should allow for quite a bit
+> more efficient ewma_add implementation if it were to be done in a way
+> that makes it easier for the compiler to see what value is being used
+> (e.g., passing this 8 to ewma_add_inline()) to allow shift right to be
+> used..
+> 
+> 
+> Or am I missing something here and we have a compiler that is actually
+> able to take care of this kind of optimizations by itself in the current
+> ewma library design? Or is the unsigned long division with the expected
+> weight values going to be fast enough to not justify caring about it
+> even on any of the embedded boards anyway?
 
-Thanks for the fix,
-Shahar
+I understand that this could be more efficient, but if it matters or not - 
+honestly, I don't know. Can a more knowledgeable person than me comment on 
+this?
+
+bruno
