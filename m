@@ -1,47 +1,99 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.perches.com ([173.55.12.10]:1751 "EHLO mail.perches.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757195Ab0KUCkp (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 20 Nov 2010 21:40:45 -0500
-From: Joe Perches <joe@perches.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: [PATCH 58/62] ray_cs: Use static const
-Date: Sat, 20 Nov 2010 18:38:59 -0800
-Message-Id: <e530e506090e3de049ea79098ccaa7665575db52.1290305776.git.joe@perches.com>
-In-Reply-To: <cover.1290305773.git.joe@perches.com>
-References: <cover.1290305773.git.joe@perches.com>
+Received: from mail30g.wh2.ocn.ne.jp ([220.111.41.239]:30943 "HELO
+	mail30g.wh2.ocn.ne.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S934588Ab0KQJcR (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 17 Nov 2010 04:32:17 -0500
+Received: from vs3011.wh2.ocn.ne.jp (125.206.180.239)
+	by mail30g.wh2.ocn.ne.jp (RS ver 1.0.95vs) with SMTP id 3-0994736335
+	for <linux-wireless@vger.kernel.org>; Wed, 17 Nov 2010 18:32:16 +0900 (JST)
+Subject: [PATCH v8] iw: Add antenna configuration commands
+To: johannes@sipsolutions.net, linville@tuxdriver.com
+From: Bruno Randolf <br1@einfach.org>
+Cc: linux-wireless@vger.kernel.org
+Date: Wed, 17 Nov 2010 18:32:36 +0900
+Message-ID: <20101117093236.13323.76800.stgit@localhost6.localdomain6>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Using static const generally increases object text and decreases data size.
-It also generally decreases overall object size.
+Add command to set the antenna configuration (iw phyX set antenna ...) and
+include antenna setting in wiphy information (iw phyX info).
 
-   text	   data	    bss	    dec	    hex	filename
-  42607	   3581	   8536	  54724	   d5c4	drivers/net/wireless/ray_cs.o.new
-  42603	   3585	   8536	  54724	   d5c4	drivers/net/wireless/ray_cs.o.old
+iw phyX set antenna all | <bitmap> | <tx bitmap> <rx bitmap>
 
-Signed-off-by: Joe Perches <joe@perches.com>
+Signed-off-by: Bruno Randolf <br1@einfach.org>
+
+v8:  Simplfied option parser as requested.
 ---
- drivers/net/wireless/ray_cs.c |    4 ++--
- 1 files changed, 2 insertions(+), 2 deletions(-)
+ info.c |    7 +++++++
+ phy.c  |   39 +++++++++++++++++++++++++++++++++++++++
+ 2 files changed, 46 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/net/wireless/ray_cs.c b/drivers/net/wireless/ray_cs.c
-index 97007d9..2b1cbba 100644
---- a/drivers/net/wireless/ray_cs.c
-+++ b/drivers/net/wireless/ray_cs.c
-@@ -2286,8 +2286,8 @@ static void untranslate(ray_dev_t *local, struct sk_buff *skb, int len)
- 	struct ethhdr *peth;
- 	UCHAR srcaddr[ADDRLEN];
- 	UCHAR destaddr[ADDRLEN];
--	static UCHAR org_bridge[3] = { 0, 0, 0xf8 };
--	static UCHAR org_1042[3] = { 0, 0, 0 };
-+	static const UCHAR org_bridge[3] = { 0, 0, 0xf8 };
-+	static const UCHAR org_1042[3] = { 0, 0, 0 };
+diff --git a/info.c b/info.c
+index d842c26..0e7e69f 100644
+--- a/info.c
++++ b/info.c
+@@ -168,6 +168,13 @@ static int print_phy_handler(struct nl_msg *msg, void *arg)
+ 		printf("\tCoverage class: %d (up to %dm)\n", coverage, 450 * coverage);
+ 	}
  
- 	memcpy(destaddr, ieee80211_get_DA(pmac), ADDRLEN);
- 	memcpy(srcaddr, ieee80211_get_SA(pmac), ADDRLEN);
--- 
-1.7.3.2.245.g03276.dirty
++	if (tb_msg[NL80211_ATTR_WIPHY_ANTENNA_TX] &&
++	    tb_msg[NL80211_ATTR_WIPHY_ANTENNA_RX]) {
++		printf("\tAntenna: TX %#x RX %#x\n",
++		       nla_get_u32(tb_msg[NL80211_ATTR_WIPHY_ANTENNA_TX]),
++		       nla_get_u32(tb_msg[NL80211_ATTR_WIPHY_ANTENNA_RX]));
++	}
++
+ 	if (tb_msg[NL80211_ATTR_SUPPORTED_IFTYPES]) {
+ 		printf("\tSupported interface modes:\n");
+ 		nla_for_each_nested(nl_mode, tb_msg[NL80211_ATTR_SUPPORTED_IFTYPES], rem_mode)
+diff --git a/phy.c b/phy.c
+index 7c6c7c8..e3bd4e8 100644
+--- a/phy.c
++++ b/phy.c
+@@ -307,3 +307,42 @@ COMMAND(set, txpower, "<auto|fixed|limit> [<tx power in mBm>]",
+ COMMAND(set, txpower, "<auto|fixed|limit> [<tx power in mBm>]",
+ 	NL80211_CMD_SET_WIPHY, 0, CIB_NETDEV, handle_txpower,
+ 	"Specify transmit power level and setting type.");
++
++static int handle_antenna(struct nl80211_state *state,
++			  struct nl_cb *cb,
++			  struct nl_msg *msg,
++			  int argc, char **argv)
++{
++	char *end;
++	uint32_t tx_ant = 0, rx_ant = 0;
++
++	if (argc == 1 && strcmp(argv[0], "all") == 0) {
++		tx_ant = 0xffffffff;
++		rx_ant = 0xffffffff;
++	} else if (argc == 1) {
++		tx_ant = rx_ant = strtoul(argv[0], &end, 0);
++		if (*end)
++			return 1;
++	}
++	else if (argc == 2) {
++		tx_ant = strtoul(argv[0], &end, 0);
++		if (*end)
++			return 1;
++		rx_ant = strtoul(argv[1], &end, 0);
++		if (*end)
++			return 1;
++	} else
++		return 1;
++
++	NLA_PUT_U32(msg, NL80211_ATTR_WIPHY_ANTENNA_TX, tx_ant);
++	NLA_PUT_U32(msg, NL80211_ATTR_WIPHY_ANTENNA_RX, rx_ant);
++
++	return 0;
++
++ nla_put_failure:
++	return -ENOBUFS;
++}
++COMMAND(set, antenna, "<bitmap> | all | <tx bitmap> <rx bitmap>",
++	NL80211_CMD_SET_WIPHY, 0, CIB_PHY, handle_antenna,
++	"Set a bitmap of allowed antennas to use for TX and RX.\n"
++	"The driver may reject antenna configurations it cannot support.");
 
