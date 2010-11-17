@@ -1,80 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:44901 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755434Ab0KHVo7 (ORCPT
+Received: from mail-ww0-f44.google.com ([74.125.82.44]:44216 "EHLO
+	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751349Ab0KQFdR (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 8 Nov 2010 16:44:59 -0500
-Date: Mon, 8 Nov 2010 16:33:44 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: Randy Dunlap <randy.dunlap@oracle.com>,
-	Pavel Roskin <proski@gnu.org>, linux-wireless@vger.kernel.org,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
-Subject: Re: Linux 2.6.37-rc1 (libipw remove_proc_entry warning)
-Message-ID: <20101108213343.GC2310@tuxdriver.com>
-References: <AANLkTimr3rW67HxgOUyReEW8dmmSsd4b7-Ns57mXzS1w@mail.gmail.com>
- <20101103161837.fad11d79.randy.dunlap@oracle.com>
- <AANLkTimnHFHJq13xpJ0ZgLmpd+cHmHH5sQ4HWtL_MrMT@mail.gmail.com>
- <4CD48E04.2050709@oracle.com>
- <AANLkTik80AuVEefHwccB81WPdT4UPfTSjQdG-3Yq17e7@mail.gmail.com>
+	Wed, 17 Nov 2010 00:33:17 -0500
+Received: by wwa36 with SMTP id 36so1628283wwa.1
+        for <linux-wireless@vger.kernel.org>; Tue, 16 Nov 2010 21:33:16 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <AANLkTik80AuVEefHwccB81WPdT4UPfTSjQdG-3Yq17e7@mail.gmail.com>
+From: Jonathan Guerin <jonathan@guerin.id.au>
+Date: Wed, 17 Nov 2010 15:32:53 +1000
+Message-ID: <AANLkTik_4HRwUUYnFLR6BwevQi6W+FK2rNN7Kph+dAWk@mail.gmail.com>
+Subject: Unloading ath5k fails
+To: linux-wireless <linux-wireless@vger.kernel.org>,
+	ath5k-devel <ath5k-devel@lists.ath5k.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Nov 05, 2010 at 04:38:14PM -0700, Linus Torvalds wrote:
-> On Fri, Nov 5, 2010 at 4:06 PM, Randy Dunlap <randy.dunlap@oracle.com> wrote:
-> > On 11/05/10 15:24, Linus Torvalds wrote:
-> >>
-> >> Totally UNTESTED patch attached. It may or may not compile. And maybe
-> >> it doesn't catch all cases, but it should catch the obvious ones.
-> >
-> > That works for me.
-> >
-> > Tested-by: Randy Dunlap <randy.dunlap@oracle.com>
-> 
-> Goodie. Pavel, John - feel free to add my sign-off on that patch. Make
-> up a relevant commit message. Ok?
+Hi all,
 
-In the queue...
+I'm not sure if this is a problem with ath5k, or with wireless-testing
+in general. We have a fresh build of today's git pull. When trying to
+unload ath5k with the interface still up, the rmmod command fails and
+goes into a 'zombie' state with the following error coming up every 5s
+or so:
+unregister_netdevice: waiting for wlan0 to become free. Usage count = 1
 
-commit 269e2d77b82d92d8dad543a2375e74372e9d773e
-Author: Linus Torvalds <torvalds@linux-foundation.org>
-Date:   Mon Nov 8 16:27:12 2010 -0500
+Unfortunately, the interfaces and phys disappear and cannot be
+unloaded and the only resolution to this is to ssh in with another
+terminal and reboot the machine (as the terminal issuing the rmmod
+command becomes unresponsive).
 
-    libipw: fix proc entry removal
-    
-    This bug seems to be due to commit 27ae60f8f7aac ("ipw2x00: replace
-    "ieee80211" with "libipw" where appropriate"), where Pavel did this:
-    
-    -       libipw_proc = proc_mkdir(DRV_NAME, init_net.proc_net);
-    +       libipw_proc = proc_mkdir("ieee80211", init_net.proc_net);
-    
-    but then the cleanup was kept as
-    
-            remove_proc_entry(DRV_NAME, init_net.proc_net);
-    
-    in both places (both in the failure case and in the unload case). The
-    error string is also total crap, and says
-    
-         "Unable to create " DRV_NAME " proc directory\n");
-    
-    Even though it doesn't actually create a proc directory named DRV_NAME at all.
-    
-    So that patch looks like total and utter crap to me. The commit message says
-    
-      "Keep /proc/net/ieee80211 under the original name to avoid breaking user
-        interface."
-    
-    but the thing is, it really didn't fix anything but that one create
-    thing. It needs to fix all the other cases too.
-    
-    Signed-off-by: Linus Torvalds <torvalds@linux-foundation.org>
-    Tested-by: Randy Dunlap <randy.dunlap@oracle.com>
-    Signed-off-by: John W. Linville <linville@tuxdriver.com>
+If the interface is not brought up, ath5k can be unloaded (and
+reloaded) successfully.
 
-Sorry for the delay -- I'm not a good traveler!
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+Thanks,
+
+--
+Jonathan Guerin
