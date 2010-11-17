@@ -1,45 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([147.243.1.48]:20773 "EHLO mgw-sa02.nokia.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750754Ab0KSG6Z (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 19 Nov 2010 01:58:25 -0500
-Received: from nokia.com (localhost [127.0.0.1])
-	by mgw-sa02.nokia.com (Switch-3.4.3/Switch-3.4.3) with ESMTP id oAJ6vpUH009692
-	for <linux-wireless@vger.kernel.org>; Fri, 19 Nov 2010 08:58:22 +0200
-Subject: Re: [PATCH] wl12xx: Fix kernel crash related to hw recovery and
- interface shutdown
-From: Tuomas Katila <ext-tuomas.2.katila@nokia.com>
-To: "Oikarinen Juuso (Nokia-MS/Tampere)" <juuso.oikarinen@nokia.com>
-Cc: "Coelho Luciano (Nokia-MS/Helsinki)" <Luciano.Coelho@nokia.com>,
+Received: from mail30t.wh2.ocn.ne.jp ([125.206.180.136]:38048 "HELO
+	mail30t.wh2.ocn.ne.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1751024Ab0KQJ5B (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 17 Nov 2010 04:57:01 -0500
+Received: from vs3000.wh2.ocn.ne.jp (125.206.180.163)
+	by mail30t.wh2.ocn.ne.jp (RS ver 1.0.95vs) with SMTP id 5-0728067819
+	for <linux-wireless@vger.kernel.org>; Wed, 17 Nov 2010 18:57:00 +0900 (JST)
+From: Bruno Randolf <br1@einfach.org>
+To: Juuso Oikarinen <juuso.oikarinen@nokia.com>
+Subject: Re: [PATCH 1/2] wl1271: Prevent ad-hoc and active scanning on 11a DFS frequencies
+Date: Wed, 17 Nov 2010 18:57:20 +0900
+Cc: "ext Gabay, Benzy" <benzyg@ti.com>,
+	"luciano.coelho@nokia.com" <luciano.coelho@nokia.com>,
 	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <1290086342-12015-1-git-send-email-juuso.oikarinen@nokia.com>
-References: <1290086342-12015-1-git-send-email-juuso.oikarinen@nokia.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Fri, 19 Nov 2010 08:51:52 +0200
-Message-ID: <1290149512.20720.100.camel@tukatila-desktop>
-Mime-Version: 1.0
+References: <1289384840-28305-1-git-send-email-juuso.oikarinen@nokia.com> <676FD6AA0F002F49B89E70F0C5EFD22C136DEA03CC@dlee04.ent.ti.com> <1289982876.2522.157.camel@wimaxnb.nmp.nokia.com>
+In-Reply-To: <1289982876.2522.157.camel@wimaxnb.nmp.nokia.com>
+MIME-Version: 1.0
+Content-Type: Text/Plain;
+  charset="utf-8"
+Message-Id: <201011171857.20200.br1@einfach.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2010-11-18 at 14:19 +0100, Oikarinen Juuso (Nokia-MS/Tampere)
-wrote:
-> From: Juuso Oikarinen <juuso.oikarinen@nokia.com>
+On Wed November 17 2010 17:34:36 Juuso Oikarinen wrote:
+> On Wed, 2010-11-17 at 02:25 -0600, ext Gabay, Benzy wrote:
+> > Yet another question on this topic,
+> > Ad-Hoc was designed originally for B mode only. Some companies extended
+> > it to G also. Do we have MAC802.11 support for Ad-Hoc on 11a channels
+> > these days?
 > 
-> It is possible that the op_remove_interface function  is invoked exactly at
-> the same time has hw recovery is started. In this case it is possible for the
-> interface to be already removed in the op_remove_interface call, which
-> currently leads to a kernel warning and a subsequent kernel crash.
-> 
-> Fix this by ignoring the op_remove_interface call if the interface is already
-> down at that point.
-> 
-> Signed-off-by: Juuso Oikarinen <juuso.oikarinen@nokia.com>
-> ---
+> Based on our testing, ad-hoc on 11a appears to work, tested between two
+> linux-based devices.
 
-Tested-by: Tuomas Katila <ext-tuomas.2.katila@nokia.com>
+Sure, we're using it all day & night... :)
+In the few bands where it's permitted, of course.
 
-I couldn't see the crash anymore with this patch.
-
--Tuomas
-
-
+bruno
