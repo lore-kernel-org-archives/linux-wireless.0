@@ -1,123 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.perches.com ([173.55.12.10]:4845 "EHLO mail.perches.com"
+Received: from mx1.redhat.com ([209.132.183.28]:14730 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753911Ab0KJAfb (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 9 Nov 2010 19:35:31 -0500
-From: Joe Perches <joe@perches.com>
-To: linux-kernel@vger.kernel.org
-Cc: Larry Finger <Larry.Finger@lwfinger.net>,
-	Stefano Brivio <stefano.brivio@polimi.it>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH 5/9] drivers/net/wireless/b43legacy/main.c: Use printf extension %pV
-Date: Tue,  9 Nov 2010 16:35:19 -0800
-Message-Id: <3c8217914a987ad3f86afbc1890637657b8b7aa7.1289348757.git.joe@perches.com>
-In-Reply-To: <cover.1289348757.git.joe@perches.com>
-References: <cover.1289348757.git.joe@perches.com>
+	id S1751563Ab0KQVIz (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 17 Nov 2010 16:08:55 -0500
+Subject: Re: Bringing up Marvell 88W8300
+From: Dan Williams <dcbw@redhat.com>
+To: Denis Kirjanov <kirjanov@gmail.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	dwmw2@infradead.org, David.Woodhouse@intel.com
+Date: Wed, 17 Nov 2010 15:07:57 -0600
+In-Reply-To: <AANLkTinKMfu2SX2fymUDi3JooAwKZv7=41BQBywR3pVe@mail.gmail.com>
+References: <AANLkTik+BWQdU4hhKN7yfgOdJuQXopvYr4Z59RTntqSW@mail.gmail.com>
+	 <1289607742.21000.23.camel@dcbw.foobar.com>
+	 <AANLkTi=1RFZwRYvA=VfuKTQS6YwZkTv17Q0nnWnQW3Hq@mail.gmail.com>
+	 <AANLkTinKMfu2SX2fymUDi3JooAwKZv7=41BQBywR3pVe@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Message-ID: <1290028078.8522.62.camel@dcbw.foobar.com>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Using %pV reduces the number of printk calls and
-eliminates any possible message interleaving from
-other printk calls.
+On Wed, 2010-11-17 at 20:15 +0300, Denis Kirjanov wrote:
+> >
+> > I will try to load the firmware that comes with the driver source.
+> >
+> >> Does that sound like a plan?  I have no time for it, but I'm happy to
+> >> put the driver up somewhere that others can make use of it.  I'll
+> >> recheck the provenience of the driver but it's got MODULE_LICENSE("GPL")
+> >> and GPL headers all over, including on the firmware file.  I might have
+> >> grabbed it off the Extranet but I'll check.
+> >>
+> Marvell firmware is OK for me and I can successfully boot in .
+> I believe that we can now port driver to the new wireless stuff such
+> as cfg80211.
 
-Signed-off-by: Joe Perches <joe@perches.com>
----
- drivers/net/wireless/b43legacy/main.c |   47 ++++++++++++++++++++++++--------
- 1 files changed, 35 insertions(+), 12 deletions(-)
+Yeah, that's the driver, the MSI thing or whatever linked from openwrt
+forums.  Basically, I think we should get that driver working so we know
+that *something* works on these cards, and then use it and mwl8k as a
+guide to writing a new mac80211 driver for the 8335.
 
-diff --git a/drivers/net/wireless/b43legacy/main.c b/drivers/net/wireless/b43legacy/main.c
-index 67f18ec..1f11e16 100644
---- a/drivers/net/wireless/b43legacy/main.c
-+++ b/drivers/net/wireless/b43legacy/main.c
-@@ -181,52 +181,75 @@ static int b43legacy_ratelimit(struct b43legacy_wl *wl)
- 
- void b43legacyinfo(struct b43legacy_wl *wl, const char *fmt, ...)
- {
-+	struct va_format vaf;
- 	va_list args;
- 
- 	if (!b43legacy_ratelimit(wl))
- 		return;
-+
- 	va_start(args, fmt);
--	printk(KERN_INFO "b43legacy-%s: ",
--	       (wl && wl->hw) ? wiphy_name(wl->hw->wiphy) : "wlan");
--	vprintk(fmt, args);
-+
-+	vaf.fmt = fmt;
-+	vaf.va = &args;
-+
-+	printk(KERN_INFO "b43legacy-%s: %pV",
-+	       (wl && wl->hw) ? wiphy_name(wl->hw->wiphy) : "wlan", &vaf);
-+
- 	va_end(args);
- }
- 
- void b43legacyerr(struct b43legacy_wl *wl, const char *fmt, ...)
- {
-+	struct va_format vaf;
- 	va_list args;
- 
- 	if (!b43legacy_ratelimit(wl))
- 		return;
-+
- 	va_start(args, fmt);
--	printk(KERN_ERR "b43legacy-%s ERROR: ",
--	       (wl && wl->hw) ? wiphy_name(wl->hw->wiphy) : "wlan");
--	vprintk(fmt, args);
-+
-+	vaf.fmt = fmt;
-+	vaf.va = &args;
-+
-+	printk(KERN_ERR "b43legacy-%s ERROR: %pV",
-+	       (wl && wl->hw) ? wiphy_name(wl->hw->wiphy) : "wlan", &vaf);
-+
- 	va_end(args);
- }
- 
- void b43legacywarn(struct b43legacy_wl *wl, const char *fmt, ...)
- {
-+	struct va_format vaf;
- 	va_list args;
- 
- 	if (!b43legacy_ratelimit(wl))
- 		return;
-+
- 	va_start(args, fmt);
--	printk(KERN_WARNING "b43legacy-%s warning: ",
--	       (wl && wl->hw) ? wiphy_name(wl->hw->wiphy) : "wlan");
--	vprintk(fmt, args);
-+
-+	vaf.fmt = fmt;
-+	vaf.va = &args;
-+
-+	printk(KERN_WARNING "b43legacy-%s warning: %pV",
-+	       (wl && wl->hw) ? wiphy_name(wl->hw->wiphy) : "wlan", &vaf);
-+
- 	va_end(args);
- }
- 
- #if B43legacy_DEBUG
- void b43legacydbg(struct b43legacy_wl *wl, const char *fmt, ...)
- {
-+	struct va_format vaf;
- 	va_list args;
- 
- 	va_start(args, fmt);
--	printk(KERN_DEBUG "b43legacy-%s debug: ",
--	       (wl && wl->hw) ? wiphy_name(wl->hw->wiphy) : "wlan");
--	vprintk(fmt, args);
-+
-+	vaf.fmt = fmt;
-+	vaf.va = &args;
-+
-+	printk(KERN_DEBUG "b43legacy-%s debug: %pV",
-+	       (wl && wl->hw) ? wiphy_name(wl->hw->wiphy) : "wlan", &vaf);
-+
- 	va_end(args);
- }
- #endif /* DEBUG */
--- 
-1.7.3.1.g432b3.dirty
+Dan
+
 
