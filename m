@@ -1,69 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.perches.com ([173.55.12.10]:1753 "EHLO mail.perches.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757210Ab0KUCkq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 20 Nov 2010 21:40:46 -0500
-From: Joe Perches <joe@perches.com>
-To: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>,
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:34174 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758075Ab0KQVox (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 17 Nov 2010 16:44:53 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: wireless-regdb@lists.infradead.org
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	"Luis R. Rodriguez" <mcgrof@gmail.com>,
+	Kurt Garloff <garloff@suse.de>, linux-wireless@vger.kernel.org,
 	"John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: [PATCH 59/62] rndis_wlan: Use static const
-Date: Sat, 20 Nov 2010 18:39:00 -0800
-Message-Id: <0b953a3dc6bb044f9aee4033caeb1693ac0796fc.1290305776.git.joe@perches.com>
-In-Reply-To: <cover.1290305773.git.joe@perches.com>
-References: <cover.1290305773.git.joe@perches.com>
+Subject: [PATCH] wireless-regdb: update rules for DE
+Date: Wed, 17 Nov 2010 16:36:57 -0500
+Message-Id: <1290029817-711-1-git-send-email-linville@tuxdriver.com>
+In-Reply-To: <20100525151429.GC6342@tpkurt2.garloff.de>
+References: <20100525151429.GC6342@tpkurt2.garloff.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Using static const generally increases object text and decreases data size.
-It also generally decreases overall object size.
+From: Kurt Garloff <garloff@suse.de>
 
-   text	   data	    bss	    dec	    hex	filename
-  41757	   2205	   9896	  53858	   d262	drivers/net/wireless/rndis_wlan.o.old
-  41653	   2205	   9880	  53738	   d1ea	drivers/net/wireless/rndis_wlan.o.new
+http://marc.info/?l=linux-wireless&m=127480075306482&w=2
 
-Changed functions rndis_set_oid and set_bssid to take const *'s.
-
-Signed-off-by: Joe Perches <joe@perches.com>
+Cc: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Acked-by: Johannes Berg <johannes@sipsolutions.net>
+Signed-off-by: John W. Linville <linville@tuxdriver.com>
 ---
- drivers/net/wireless/rndis_wlan.c |    9 ++++++---
- 1 files changed, 6 insertions(+), 3 deletions(-)
+Time to clear the logjam...
 
-diff --git a/drivers/net/wireless/rndis_wlan.c b/drivers/net/wireless/rndis_wlan.c
-index ee08bca..19f3d56 100644
---- a/drivers/net/wireless/rndis_wlan.c
-+++ b/drivers/net/wireless/rndis_wlan.c
-@@ -817,7 +817,8 @@ exit_unlock:
- 	return ret;
- }
+ db.txt |   24 +++++++++++++++++-------
+ 1 files changed, 17 insertions(+), 7 deletions(-)
+
+diff --git a/db.txt b/db.txt
+index e63a43e..40a8bbc 100644
+--- a/db.txt
++++ b/db.txt
+@@ -176,17 +176,27 @@ country CZ:
+ 	(5250 - 5350 @ 40), (N/A, 200 mW), NO-OUTDOOR, DFS
+ 	(5470 - 5725 @ 40), (N/A, 1000 mW), DFS
  
--static int rndis_set_oid(struct usbnet *dev, __le32 oid, void *data, int len)
-+static int rndis_set_oid(struct usbnet *dev, __le32 oid, const void *data,
-+			 int len)
- {
- 	struct rndis_wlan_private *priv = get_rndis_wlan_priv(dev);
- 	union {
-@@ -1033,7 +1034,7 @@ static int set_essid(struct usbnet *usbdev, struct ndis_80211_ssid *ssid)
- 	return ret;
- }
+-# Data from "Frequenznutzungsplan" (as published in April 2008),
+-# downloaded from http://www.bundesnetzagentur.de/media/archive/13358.pdf
+-# Also applicable is http://www.bundesnetzagentur.de/media/archive/5009.pdf
+-# On the 5 GHz ranges TX power can be doubled if TPC is implemented.
++# Data from "Frequenznutzungsplan" (as published in April 2008), downloaded from
++# http://www.bundesnetzagentur.de/cae/servlet/contentblob/38448/publicationFile/2659/Frequenznutzungsplan2008_Id17448pdf.pdf
++# For the 5GHz range also see
++# http://www.bundesnetzagentur.de/cae/servlet/contentblob/38216/publicationFile/6579/WLAN5GHzVfg7_2010_28042010pdf.pdf
++# The values have been reduced by a factor of 2 (3db) for non TPC devices
++# (in other words: devices with TPC can use twice the tx power of this table).
++# Note that the docs do not require TPC for 5150--5250; the reduction to
++# 100mW thus is not strictly required -- however the conservative 100mW
++# limit is used here as the non-interference with radar and satellite
++# apps relies on the attenuation by the building walls only in the
++# absence of DFS; the neighbour countries have 100mW limit here as well.
++
+ country DE:
+ 	# entries 279004 and 280006
+ 	(2400 - 2483.5 @ 40), (N/A, 100 mW)
+-	# entries 303005, 304002 and 305002
+-	(5150 - 5350 @ 40), (N/A, 100 mW), NO-OUTDOOR, DFS
++	# entry 303005
++	(5150 - 5250 @ 40), (N/A, 100 mW), NO-OUTDOOR
++	# entries 304002 and 305002
++	(5250 - 5350 @ 40), (N/A, 100 mW), NO-OUTDOOR, DFS
+ 	# entries 308002, 309001 and 310003
+-	(5470 - 5725 @ 40), (N/A, 500 mW), NO-OUTDOOR, DFS
++	(5470 - 5725 @ 40), (N/A, 500 mW), DFS
  
--static int set_bssid(struct usbnet *usbdev, u8 bssid[ETH_ALEN])
-+static int set_bssid(struct usbnet *usbdev, const u8 *bssid)
- {
- 	int ret;
- 
-@@ -1049,7 +1050,9 @@ static int set_bssid(struct usbnet *usbdev, u8 bssid[ETH_ALEN])
- 
- static int clear_bssid(struct usbnet *usbdev)
- {
--	u8 broadcast_mac[ETH_ALEN] = {0xff, 0xff, 0xff, 0xff, 0xff, 0xff};
-+	static const u8 broadcast_mac[ETH_ALEN] = {
-+		0xff, 0xff, 0xff, 0xff, 0xff, 0xff
-+	};
- 
- 	return set_bssid(usbdev, broadcast_mac);
- }
+ country DK:
+ 	(2402 - 2482 @ 40), (N/A, 20)
 -- 
-1.7.3.2.245.g03276.dirty
+1.7.3.2
 
