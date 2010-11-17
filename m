@@ -1,46 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qw0-f46.google.com ([209.85.216.46]:50440 "EHLO
-	mail-qw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751203Ab0KZPyn (ORCPT
+Received: from mail-vw0-f46.google.com ([209.85.212.46]:49414 "EHLO
+	mail-vw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S935381Ab0KQVei (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 26 Nov 2010 10:54:43 -0500
-Received: by mail-qw0-f46.google.com with SMTP id 7so2189640qwb.19
-        for <linux-wireless@vger.kernel.org>; Fri, 26 Nov 2010 07:54:43 -0800 (PST)
+	Wed, 17 Nov 2010 16:34:38 -0500
+Received: by vws13 with SMTP id 13so1363081vws.19
+        for <linux-wireless@vger.kernel.org>; Wed, 17 Nov 2010 13:34:37 -0800 (PST)
 MIME-Version: 1.0
-In-Reply-To: <AANLkTikCQPq-HVUJhDet-ZbA97nt+1uYTKgtzvK2cyd7@mail.gmail.com>
-References: <AANLkTikCQPq-HVUJhDet-ZbA97nt+1uYTKgtzvK2cyd7@mail.gmail.com>
-Date: Fri, 26 Nov 2010 10:54:41 -0500
-Message-ID: <AANLkTikgkBZPEVOuZQHeJSXiiwBsVgMOGxRwOu315Vn4@mail.gmail.com>
-Subject: Re: help with ath5k --- wlan0 no private ioctls
-From: Bob Copeland <me@bobcopeland.com>
-To: Octav Chipara <ochipara@gmail.com>
-Cc: linux-wireless@vger.kernel.org
+Date: Wed, 17 Nov 2010 16:34:37 -0500
+Message-ID: <AANLkTi=Z+60nkSv4umXyDdSp0_SUR84he5GYTZLO9=5E@mail.gmail.com>
+Subject: [PATCH] cfg80211: fix can_beacon_sec_chan, reenable HT40
+From: Mark Mentovai <mark@moxienet.com>
+To: linux-wireless@vger.kernel.org
+Cc: stable@kernel.org, "Luis R. Rodriguez" <lrodriguez@atheros.com>
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Nov 25, 2010 at 12:43 AM, Octav Chipara <ochipara@gmail.com> wrote:
-> Hi,
->
-> I'm having some problems properly configuring ath5k. I'm trying to set
-> the retransmission count so that the card will not perform more than a
-> transmission:
->
-> iwconfig wlan0 retry 1
+This follows wireless-testing 9236d838c920e90708570d9bbd7bb82d30a38130
+("cfg80211: fix extension channel checks to initiate communication") and
+fixes accidental case fall-through. Without this fix, HT40 is entirely
+blocked.
 
-Hmm, someone can correct me if I'm wrong, but according to my
-reading of the code, minstrel only uses hw->max_rate_tries
-and not wiphy->retry_{short,long}.  Also it looks like the only
-drivers that poke at these values only use it for failure
-indication when they don't support accurate tx status reporting.
+Cc: stable@kernel.org
+Cc: Luis R. Rodriguez <lrodriguez@atheros.com>
+Signed-off-by: Mark Mentovai <mark@moxienet.com>
+---
+ net/wireless/chan.c |    2 ++
+ 1 files changed, 2 insertions(+), 0 deletions(-)
 
-You can try the pid controller for now, it directly uses these
-settings.
-
-> I tried to set the value directly using iwpriv and I
-> get wlan0 no private ioctls.
-
-Unlearn iwpriv -- ath5k will never support it.
-
+diff --git a/net/wireless/chan.c b/net/wireless/chan.c
+index c8d190d..17cd0c0 100644
+--- a/net/wireless/chan.c
++++ b/net/wireless/chan.c
+@@ -54,8 +54,10 @@ static bool can_beacon_sec_chan(struct wiphy *wiphy,
+ 	switch (channel_type) {
+ 	case NL80211_CHAN_HT40PLUS:
+ 		diff = 20;
++		break;
+ 	case NL80211_CHAN_HT40MINUS:
+ 		diff = -20;
++		break;
+ 	default:
+ 		return false;
+ 	}
 -- 
-Bob Copeland %% www.bobcopeland.com
+1.7.0.4
