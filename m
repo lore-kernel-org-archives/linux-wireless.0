@@ -1,55 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iw0-f174.google.com ([209.85.214.174]:50466 "EHLO
-	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751026Ab0KAQoh convert rfc822-to-8bit (ORCPT
+Received: from mail-qy0-f174.google.com ([209.85.216.174]:53680 "EHLO
+	mail-qy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932950Ab0KQEmS (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 1 Nov 2010 12:44:37 -0400
-Received: by iwn10 with SMTP id 10so7222842iwn.19
-        for <linux-wireless@vger.kernel.org>; Mon, 01 Nov 2010 09:44:36 -0700 (PDT)
+	Tue, 16 Nov 2010 23:42:18 -0500
+Received: by qyk12 with SMTP id 12so5913382qyk.19
+        for <linux-wireless@vger.kernel.org>; Tue, 16 Nov 2010 20:42:17 -0800 (PST)
 MIME-Version: 1.0
-In-Reply-To: <AANLkTin1oXb8mkyxZgn5jEy7FJF9BPpiuJ1Q7j9XCDYz@mail.gmail.com>
-References: <AANLkTik=LvRZja13SGOpicVjbyf6chRtTD-RkvSm2VcE@mail.gmail.com>
- <8762whrqvm.fsf@gmail.com> <AANLkTin1oXb8mkyxZgn5jEy7FJF9BPpiuJ1Q7j9XCDYz@mail.gmail.com>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Mon, 1 Nov 2010 09:44:15 -0700
-Message-ID: <AANLkTimBf6PRdTNUpx1HLu6Q70onHi3YhqKOYQ2Rk-yF@mail.gmail.com>
-Subject: Re: [ath9k-devel] ath9k: race conditions in dma
-To: =?UTF-8?Q?Bj=C3=B6rn_Smedman?= <bjorn.smedman@venatech.se>
-Cc: Ben Gamari <bgamari@gmail.com>, ath9k-devel@lists.ath9k.org,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+In-Reply-To: <1289959503.29119.2.camel@jlt3.sipsolutions.net>
+References: <1289867251-21559-1-git-send-email-javier@cozybit.com>
+ <1289946246.3673.12.camel@jlt3.sipsolutions.net> <AANLkTimuW8wTVUW4dH1t+J6jhoEkFHZ7v5t78tXe050O@mail.gmail.com>
+ <1289959503.29119.2.camel@jlt3.sipsolutions.net>
+From: Javier Cardona <javier@cozybit.com>
+Date: Tue, 16 Nov 2010 20:41:57 -0800
+Message-ID: <AANLkTimFe7uo28u3Sx4rc9uYJms7Ggh=yW9UMDDWgQce@mail.gmail.com>
+Subject: Re: [PATCH] iw: Resolve namespace clash between station plink and
+ vlan commands
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: nbd@openwrt.org, linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2010/11/1 Björn Smedman <bjorn.smedman@venatech.se>:
-> On Mon, Nov 1, 2010 at 4:43 PM, Ben Gamari <bgamari@gmail.com> wrote:
->> On Mon, 1 Nov 2010 16:17:23 +0100, Björn Smedman <bjorn.smedman@venatech.se> wrote:
->>> Hi all,
->>>
->>> I have an application that creates and destroys a lot of ap vifs and
->>> does a lot of monitor frame injection. The recent ath9k rx locking
->>> fixes have helped with stability in this use-case but there still
->>> seems to be some tx/beacon related race condition(s). These manifests
->>> themselves as follows on an AR913x based router running
->>> compat-wireless-2010-10-19 (with locking fixes etc from openwrt):
->>>
->>> 1. TX DMA hangs under simultaneous high RX and TX load
->>> 2. TX is completely hung but chip is never reset
->>
->> I have also observed both of these behaviors with just a standard
->> hostapd single VIF configuration. Quite annoying. It seems to be better
->> with recent wireless-testing trees.
->>
->> - Ben
+On Tue, Nov 16, 2010 at 6:05 PM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
+> On Tue, 2010-11-16 at 17:41 -0800, Javier Cardona wrote:
 >
-> The next thing that looks racy to me is ath_beacon_alloc() vs
-> ath_beacon_tasklet() in beacon.c. Beacon queue TX DMA is always
-> stopped in main.c before calling ath_beacon_alloc() but
-> ath_beacon_tasklet() is scheduled when we get an SWBA interrupt. My
-> guess is that these keep coming even if we stop TX DMA on the beacon
-> queue, no?
+>> > I'll happily take this, but would you prefer to have the other one
+>> > backed out instead?
+>>
+>> That would save us and some of our clients from having to change a
+>> bunch of scripts, yes.
+>
+> Actually, I won't have time today, but it looks like they can be shared
+> in some way? Maybe by sharing the same callback function or something? I
+> mean -- it should be possible to do two things on set... not sure now,
+> I'll take a look later. Maybe you can work with an older iw version
+> until then?
 
-My TX PCU patches for ath9k are not merged yet, try those or wait
-until John merges them.
+We tried that at first but could not get the usage message right in
+case of missing parameters.  If you can suggest a solution to this,
+we'll be happy to implement it.
 
-  Luis
+Cheers,
+
+Javier
+
+
+-- 
+Javier Cardona
+cozybit Inc.
+http://www.cozybit.com
