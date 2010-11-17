@@ -1,46 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.perches.com ([173.55.12.10]:1908 "EHLO mail.perches.com"
+Received: from cantor.suse.de ([195.135.220.2]:54677 "EHLO mx1.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750779Ab0K1Jur (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 28 Nov 2010 04:50:47 -0500
-Subject: Re: [PATCH 4/4] zd1211rw: remove unnecessary [kv][mcz]alloc casts
-From: Joe Perches <joe@perches.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Daniel Drake <dsd@gentoo.org>, Ulrich Kunitz <kune@deine-taler.de>,
-	linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-kernel@vger.kernel.org, netdev <netdev@vger.kernel.org>
-In-Reply-To: <1290936606.3467.2.camel@jlt3.sipsolutions.net>
-References: <cover.1290934782.git.joe@perches.com>
-	 <704bdd89d630b364043ac7a9ec0a110d311a17a2.1290934782.git.joe@perches.com>
-	 <1290935566.3467.0.camel@jlt3.sipsolutions.net>
-	 <1290936047.16349.13.camel@Joe-Laptop>
-	 <1290936606.3467.2.camel@jlt3.sipsolutions.net>
-Content-Type: text/plain; charset="UTF-8"
-Date: Sun, 28 Nov 2010 01:50:45 -0800
-Message-ID: <1290937845.16349.16.camel@Joe-Laptop>
-Mime-Version: 1.0
+	id S1759025Ab0KQWNg (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 17 Nov 2010 17:13:36 -0500
+Date: Wed, 17 Nov 2010 14:11:27 -0800
+From: Greg KH <gregkh@suse.de>
+To: Mike Rapoport <mike.rapoport@gmail.com>
+Cc: Greg KH <greg@kroah.com>, Brett Rudley <brudley@broadcom.com>,
+	Henry Ptasinski <henryp@broadcom.com>,
+	Dowan Kim <dowan@broadcom.com>, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 2/4] staging: brcm80211: brcmfmac: remove PCI SDIO
+ controller binding
+Message-ID: <20101117221127.GB3851@suse.de>
+References: <20101116200420.GA10793@kroah.com>
+ <1289980726-28706-1-git-send-email-mike.rapoport@gmail.com>
+ <20101117211035.GA2442@kroah.com>
+ <AANLkTi=p_iH32zads+9RwQGY+m7JK+FTmhBTth_x9ouK@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=iso-8859-1
+In-Reply-To: <AANLkTi=p_iH32zads+9RwQGY+m7JK+FTmhBTth_x9ouK@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, 2010-11-28 at 10:30 +0100, Johannes Berg wrote:
-> On Sun, 2010-11-28 at 01:20 -0800, Joe Perches wrote:
-> > On Sun, 2010-11-28 at 10:12 +0100, Johannes Berg wrote:
-> > > On Sun, 2010-11-28 at 01:05 -0800, Joe Perches wrote:
-> > > > diff --git a/drivers/net/wireless/zd1211rw/zd_chip.c b/drivers/net/wireless/zd1211rw/zd_chip.c
-> > > > @@ -117,8 +117,7 @@ int zd_ioread32v_locked(struct zd_chip *chip, u32 *values, const zd_addr_t *addr
-> > > >  	/* Allocate a single memory block for values and addresses. */
-> > > >  	count16 = 2*count;
-> > > > -	a16 = (zd_addr_t *) kmalloc(count16 * (sizeof(zd_addr_t) + sizeof(u16)),
-> > > > -		                   GFP_KERNEL);
-> > > > +	a16 = kmalloc(count16 * (sizeof(zd_addr_t) + sizeof(u16)), GFP_KERNEL);
-> > > I believe this is on purpose for sparse.
-> > Perhaps in a previous version, but not now.
-> How do you know? I thought sparse was pretty much not reliable after the
-> first error it prints.
+On Thu, Nov 18, 2010 at 12:00:16AM +0200, Mike Rapoport wrote:
+> On Wed, Nov 17, 2010 at 11:10 PM, Greg KH <greg@kroah.com> wrote:
+> > On Wed, Nov 17, 2010 at 09:58:46AM +0200, Mike Rapoport wrote:
+> >> Signed-off-by: Mike Rapoport <mike.rapoport@gmail.com>
+> >> ---
+> >>  drivers/staging/brcm80211/brcmfmac/bcmsdh_linux.c |  229 ---------------------
+> >>  1 files changed, 0 insertions(+), 229 deletions(-)
+> >
+> > Wait, is this really ok code to be removing from the driver?
+> >
+> > Brett and Henry, any objections to this?
+> >
+> > Mike, why do you think this is ok to remove?  Is it because no one is
+> > ever calling this even for both types of config for this driver?
+> 
+> There's a lot of code in the brcmfmac part of the driver that tries to
+> re-implement SDIO stack. In particular, the code removed by this patch
+> registers a pci_driver for SDIO controller and then the brcmfmac
+> driver accesses the WiFi device attached to that SDIO controller by
+> means of custom re-implementation of SDHC.
 
-Good memory you have Johannes...
+Ok, so even with this patch, it will still work properly in the SDIO
+mode?
 
-http://marc.info/?l=linux-netdev&m=117113743902549&w=3
+Have you been able to test this?
 
+Brett, Henry, I would like to get your ack on this before applying it.
 
+thanks,
+
+greg k-h
