@@ -1,66 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.19.149.2]:26470 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754283Ab0KJNDW (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 10 Nov 2010 08:03:22 -0500
-Received: from mail.atheros.com ([10.10.20.105])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Wed, 10 Nov 2010 05:03:09 -0800
-From: Vasanthakumar Thiagarajan <vasanth@atheros.com>
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>,
-	Senthil Balasubramanian <senthilkumar@atheros.com>
-Subject: [PATCH 01/11] ath9k_hw: Fix a reset failure on AR9382 (2x2).
-Date: Wed, 10 Nov 2010 05:03:06 -0800
-Message-ID: <1289394196-3465-1-git-send-email-vasanth@atheros.com>
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:46685 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932840Ab0KQWOt (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 17 Nov 2010 17:14:49 -0500
+Date: Wed, 17 Nov 2010 17:03:55 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Leonid Lundin <leonid.lundin@gmail.com>
+Cc: linux-wireless@vger.kernel.org, wireless-regdb@lists.infradead.org
+Subject: Re: wireless-regdb: Update regulatory rules for Russian Federation
+ (RU)
+Message-ID: <20101117220355.GC2380@tuxdriver.com>
+References: <AANLkTim28-S7TFQTMjF9Vdx3R6vG0MZBdZ6EQKez+Jk4@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <AANLkTim28-S7TFQTMjF9Vdx3R6vG0MZBdZ6EQKez+Jk4@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Senthil Balasubramanian <senthilkumar@atheros.com>
+Could you post a wireless-regdb patch for review?
 
-AR9382 needs to be configured for the correct chain mask before
-running AGC/TxIQ caliberation. Otherwise reset would fail.
+On Thu, Oct 28, 2010 at 05:08:25PM +0400, Leonid Lundin wrote:
+> Hello!
+> 
+> It's not prohibited by law in Russian Federation to indoor use bands:
+> 
+> 2400-2483,5 Mhz
+> 5150-5350 Mhz
+> 5650-6425 Mhz
+> 
+> Thanks a lot.
 
-Signed-off-by: Senthil Balasubramanian <senthilkumar@atheros.com>
----
- drivers/net/wireless/ath/ath9k/ar9003_calib.c |    7 +++++++
- drivers/net/wireless/ath/ath9k/reg.h          |    2 ++
- 2 files changed, 9 insertions(+), 0 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_calib.c b/drivers/net/wireless/ath/ath9k/ar9003_calib.c
-index 9e6edff..ba898f2 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_calib.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_calib.c
-@@ -718,7 +718,14 @@ static bool ar9003_hw_init_cal(struct ath_hw *ah,
- 			       struct ath9k_channel *chan)
- {
- 	struct ath_common *common = ath9k_hw_common(ah);
-+	int val;
- 
-+	val = REG_READ(ah, AR_ENT_OTP);
-+	ath_print(common, ATH_DBG_CALIBRATE, "ath9k: AR_ENT_OTP 0x%x\n", val);
-+
-+	if (val & AR_ENT_OTP_CHAIN2_DISABLE)
-+		ar9003_hw_set_chain_masks(ah, 0x3, 0x3);
-+	else
- 	/*
- 	 * 0x7 = 0b111 , AR9003 needs to be configured for 3-chain mode before
- 	 * running AGC/TxIQ cals
-diff --git a/drivers/net/wireless/ath/ath9k/reg.h b/drivers/net/wireless/ath/ath9k/reg.h
-index fa05b71..e676a80 100644
---- a/drivers/net/wireless/ath/ath9k/reg.h
-+++ b/drivers/net/wireless/ath/ath9k/reg.h
-@@ -1066,6 +1066,8 @@ enum {
- #define AR_INTR_PRIO_ASYNC_MASK   0x40c8
- #define AR_INTR_PRIO_SYNC_MASK    0x40cc
- #define AR_INTR_PRIO_ASYNC_ENABLE 0x40d4
-+#define AR_ENT_OTP		  0x40d8
-+#define AR_ENT_OTP_CHAIN2_DISABLE               0x00020000
- 
- #define AR_RTC_9300_PLL_DIV          0x000003ff
- #define AR_RTC_9300_PLL_DIV_S        0
 -- 
-1.7.0.4
-
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
