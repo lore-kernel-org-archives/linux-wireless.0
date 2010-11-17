@@ -1,38 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:34946
-	"EHLO sunset.davemloft.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751825Ab0K2TVn (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 29 Nov 2010 14:21:43 -0500
-Date: Mon, 29 Nov 2010 11:22:09 -0800 (PST)
-Message-Id: <20101129.112209.48515799.davem@davemloft.net>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: Re: pull request: wireless-next-2.6 2010-11-29
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <20101129191352.GB8199@tuxdriver.com>
-References: <20101129191352.GB8199@tuxdriver.com>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+Received: from hera.kernel.org ([140.211.167.34]:43707 "EHLO hera.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1759895Ab0KQIro (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 17 Nov 2010 03:47:44 -0500
+Message-ID: <4CE396A9.1050908@kernel.org>
+Date: Wed, 17 Nov 2010 09:47:37 +0100
+From: Tejun Heo <tj@kernel.org>
+MIME-Version: 1.0
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: Ben Greear <greearb@candelatech.com>,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] mac80211:  Fix deadlock in ieee80211_do_stop.
+References: <1289592426-5367-1-git-send-email-greearb@candelatech.com>	 <1289594998.3736.11.camel@jlt3.sipsolutions.net>	 <4CDDAA3B.9090007@candelatech.com>	 <1289596096.3736.13.camel@jlt3.sipsolutions.net>	 <4CDE699B.70401@kernel.org> <4CE1A344.7040201@candelatech.com>	 <4CE292F7.4090200@kernel.org> <1289929258.3673.1.camel@jlt3.sipsolutions.net>
+In-Reply-To: <1289929258.3673.1.camel@jlt3.sipsolutions.net>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: "John W. Linville" <linville@tuxdriver.com>
-Date: Mon, 29 Nov 2010 14:13:52 -0500
+Hey, Johannes.
 
-> Between celebrating my birthday and the Thanksgiving holiday, this pull
-> request is a bit bigger than usual...sorry!
-
-Hey another November boy :-)
-
-> For the most part, this is the usual stuff -- driver updates and the
-> like.  mwl8k, wl1271, ath9k, carl9170, rt2x00, b43, and iwlwifi all get
-> significant attention, along with a smattering of others.  mac80211 gets
-> a variety of updates as well.
+On 11/16/2010 06:40 PM, Johannes Berg wrote:
+> On Tue, 2010-11-16 at 15:19 +0100, Tejun Heo wrote:
 > 
-> This includes the movement of an EWMA library to lib for general use.
-> Also included is some file renaming for drivers/net/wireless/wl12xx.
+>> 3. What if you replace it with the following?
+>>
+>>    alloc_workqueue(wiphy_name(local->hw.wiphy), WQ_NON_REENTRANT, 0)
 > 
-> Please let me know if there are problems!
+> Wait ... what's the difference between this and
+> alloc_ordered_workqueue() then?
 
-Pulled, thanks!
+alloc_ordered_workqueue() is fully ordered.  ie. Works are executed in
+the queued order regardless of where it's queued, which also implies
+that there is only one work in progress at any given time.
+
+WQ_NON_REENTRANT doesn't guarantee ordered execution but it guarantees
+that a single work is not executed concurrently on multiple CPUs.  I'm
+not sure whether this would be safe for the workqueue used by mac80211
+but it should let us know whether the workqueue is choked due to a
+work which is executing for long time.  In the long run, if using non
+reentrant is safe for mac80211, using it would be much better.
+
+Thanks.
+
+-- 
+tejun
