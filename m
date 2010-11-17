@@ -1,50 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ksp.mff.cuni.cz ([195.113.26.206]:60365 "EHLO
-	atrey.karlin.mff.cuni.cz" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1756199Ab0K3T1H (ORCPT
+Received: from mail.candelatech.com ([208.74.158.172]:55605 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933874Ab0KQUNQ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 30 Nov 2010 14:27:07 -0500
-Date: Tue, 30 Nov 2010 20:26:48 +0100
-From: Pavel Machek <pavel@ucw.cz>
-To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, linux-kernel@vger.kernel.org,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Greg KH <greg@kroah.com>, David Miller <davem@davemloft.net>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Stephen Hemminger <shemminger@vyatta.com>,
-	"Perez-Gonzalez, Inaky" <inaky.perez-gonzalez@intel.com>,
-	Charles Marker <Charles.Marker@atheros.com>,
-	Jouni Malinen <Jouni.Malinen@atheros.com>,
-	Kevin Hayes <kevin@atheros.com>,
-	Zhifeng Cai <zhifeng.cai@atheros.com>,
-	Don Breslin <Don.Breslin@atheros.com>,
-	Doug Dahlby <Doug.Dahlby@atheros.com>,
-	Julia Lawall <julia@diku.dk>
-Subject: Re: Challenges with doing hardware bring up with Linux first
-Message-ID: <20101130192648.GA1623@ucw.cz>
-References: <AANLkTim4jVaZxYp8nSgJyy28iwxcxbPeNUzxTfoHAX4S@mail.gmail.com>
- <20101118113441.74fcdc21@lxorguk.ukuu.org.uk>
- <AANLkTikOZbtyhsk0OBb4OdUi6qj-7k_hU-aW_Pkhfpq0@mail.gmail.com>
+	Wed, 17 Nov 2010 15:13:16 -0500
+Message-ID: <4CE43756.9030403@candelatech.com>
+Date: Wed, 17 Nov 2010 12:13:10 -0800
+From: Ben Greear <greearb@candelatech.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <AANLkTikOZbtyhsk0OBb4OdUi6qj-7k_hU-aW_Pkhfpq0@mail.gmail.com>
+To: Tejun Heo <tj@kernel.org>
+CC: Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] mac80211:  Fix deadlock in ieee80211_do_stop.
+References: <1289592426-5367-1-git-send-email-greearb@candelatech.com>	 <1289594998.3736.11.camel@jlt3.sipsolutions.net>	 <4CDDAA3B.9090007@candelatech.com> <1289596096.3736.13.camel@jlt3.sipsolutions.net> <4CDE699B.70401@kernel.org> <4CE1A344.7040201@candelatech.com> <4CE292F7.4090200@kernel.org>
+In-Reply-To: <4CE292F7.4090200@kernel.org>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi!
+On 11/16/2010 06:19 AM, Tejun Heo wrote:
 
-> >> everything else can be independent code. For ath9k in particular this
-> >> means we keep ath9k_hw shared between our Operating Systems and that's
-> >> it. In addition to this I believe opening up the common drivers for
-> >
-> > The Linux copy needs to be GPL,
-> 
-> GPL-Compatible you mean, right. I mean we have ath9k_hw with
-> permissive licensed files.
+>> Nov 15 13:12:13 localhost kernel: Showing all locks held in the system:
+>> Nov 15 13:12:13 localhost kernel: 3 locks held by kworker/0:1/19:
+>> Nov 15 13:12:13 localhost kernel: #0:  (events){+.+.+.}, at: [<78446e6f>] process_one_work+0x13e/0x2bf
+>> Nov 15 13:12:13 localhost kernel: #1:  (wireless_nlevent_work){+.+.+.}, at: [<78446e6f>] process_one_work+0x13e/0x2bf
+>> Nov 15 13:12:13 localhost kernel: #2:  (rtnl_mutex){+.+.+.}, at: [<786ffe97>] rtnl_lock+0xf/0x11
+>> Nov 15 13:12:13 localhost kernel: 3 locks held by kworker/0:2/1054:
+>> Nov 15 13:12:13 localhost kernel: #0:  (events){+.+.+.}, at: [<78446e6f>] process_one_work+0x13e/0x2bf
+>> Nov 15 13:12:13 localhost kernel: #1:  ((&rdev->conn_work)){+.+.+.}, at: [<78446e6f>] process_one_work+0x13e/0x2bf
+>> Nov 15 13:12:13 localhost kernel: #2:  (rtnl_mutex){+.+.+.}, at: [<786ffe97>] rtnl_lock+0xf/0x11
+>
+> Where are the backtraces for kworker/u:5, 0:1 and 0:2?
 
-GPL-compatible is not right word. It has to be either GPL, or so
-permissive that anyone is allowed to turn it into GPL.
+They are not in /var/log/messages either, at least not in the sysrq-t dump.
+I think at least some of them are in there from the blocked-task printouts.
+
+I've uploaded the /var/log/messages file here, in case you want to look
+at it:
+
+http://www.candelatech.com/~greearb/messages.gz
+
+Thanks,
+Ben
 
 -- 
-(english) http://www.livejournal.com/~pavelmachek
-(cesky, pictures) http://atrey.karlin.mff.cuni.cz/~pavel/picture/horses/blog.html
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
+
