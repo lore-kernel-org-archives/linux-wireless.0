@@ -1,56 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.19.149.2]:47485 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932364Ab0KQTj6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 17 Nov 2010 14:39:58 -0500
-Received: from mail.atheros.com ([10.10.20.105])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Wed, 17 Nov 2010 11:39:45 -0800
-Date: Wed, 17 Nov 2010 11:39:54 -0800
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: Youquan Song <youquan.song@linux.intel.com>
-CC: Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
-	"hui.xiao@intel.com" <hui.xiao@intel.com>,
-	"chaohong.guo@intel.com" <chaohong.guo@intel.com>,
-	"youquan.song@intel.com" <youquan.song@intel.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH] compat-wireless: Fix USHRT_MAX undefine before 2.6.35
-Message-ID: <20101117193954.GD2268@tux>
-References: <20101117201723.GA29982@linux-youquan.bj.intel.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <20101117201723.GA29982@linux-youquan.bj.intel.com>
+Received: from 80-190-117-144.ip-home.de ([80.190.117.144]:49980 "EHLO
+	bu3sch.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S934928Ab0KQRNC (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 17 Nov 2010 12:13:02 -0500
+Subject: Re: [PATCH] ssb: fail registration for unknown SPROM revision
+From: Michael =?ISO-8859-1?Q?B=FCsch?= <mb@bu3sch.de>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: =?UTF-8?Q?Rafa=C5=82_Mi=C5=82ecki?= <zajec5@gmail.com>,
+	linux-wireless@vger.kernel.org, b43-dev@lists.infradead.org
+In-Reply-To: <20101116212321.GF10774@tuxdriver.com> (sfid-20101116_162951_428051_09CF3C97)
+References: <1288823326-9686-1-git-send-email-zajec5@gmail.com>
+	 <1288823326-9686-2-git-send-email-zajec5@gmail.com>
+	 <20101116212321.GF10774@tuxdriver.com>
+	 (sfid-20101116_162951_428051_09CF3C97)
+Content-Type: text/plain; charset="UTF-8"
+Date: Wed, 17 Nov 2010 18:12:56 +0100
+Message-ID: <1290013976.2513.14.camel@maggie>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Nov 17, 2010 at 12:17:24PM -0800, Youquan Song wrote:
-> Since 2.6.35, USHORT_MAX change to USHRT_MAX, which also need be updated in
-> compat-wireless
+On Tue, 2010-11-16 at 16:23 -0500, John W. Linville wrote: 
+> > -		ssb_printk(KERN_WARNING PFX "Unsupported SPROM"
+> > -			   "  revision %d detected. Will extract"
+> > -			   " v1\n", out->revision);
+> > -		out->revision = 1;
+> > -		sprom_extract_r123(out, in);
+> > +		ssb_printk(KERN_ERR PFX "Unsupported SPROM revision %d"
+> > +			   " detected\n", out->revision);
+> > +		return -EINVAL;
+> >  	}
+> >  
+> >  	if (out->boardflags_lo == 0xFFFF)
 > 
-> Signed-off-by: Youquan Song <youquan.song@intel.com>
-> Signed-off-by: Hui Xiao <hui.xiao@intel.com>
-> ---
-> 
-> 
-> diff --git a/net/mac80211/sta_info.c b/net/mac80211/sta_info.c
-> index 6d8f897..d7ff02f 100644
-> --- a/net/mac80211/sta_info.c
-> +++ b/net/mac80211/sta_info.c
-> @@ -258,7 +258,11 @@ struct sta_info *sta_info_alloc(struct ieee80211_sub_if_data *sdata,
->  	skb_queue_head_init(&sta->tx_filtered);
->  
->  	for (i = 0; i < NUM_RX_DATA_QUEUES; i++)
-> +#if (LINUX_VERSION_CODE >= KERNEL_VERSION(2.6.35))
->  		sta->last_seq_ctrl[i] = cpu_to_le16(USHRT_MAX);
-> +#else
-> +		sta->last_seq_ctrl[i] = cpu_to_le16(USHORT_MAX);
-> +#endif
->  
->  #ifdef CONFIG_MAC80211_VERBOSE_DEBUG
->  	wiphy_debug(local->hw.wiphy, "Allocated STA %pM\n", sta->sta.addr);
+> I think this is going to make my b43 PCI-E card not work...I'll try
+> it and get back to you...
 
-Can you just #define USHRT_MAX USHORT_MAX for older kernels through compat.git ?
+Hm, what version does it report?
 
-git://git.kernel.org/pub/scm/linux/kernel/git/mcgrof/compat.git
+-- 
+Greetings Michael.
 
-  Luis
