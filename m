@@ -1,40 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from devils.ext.ti.com ([198.47.26.153]:44312 "EHLO
-	devils.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753994Ab0KWQ0M (ORCPT
+Received: from mail.candelatech.com ([208.74.158.172]:42417 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S935040Ab0KQS7e (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 23 Nov 2010 11:26:12 -0500
-From: "Levi, Shahar" <shahar_levi@ti.com>
-To: Josh Watts <JWatts@d3engineering.com>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Date: Tue, 23 Nov 2010 17:25:35 +0100
-Subject: RE: No scan results from wl1271-sdio
-Message-ID: <AC090B9732AB2B4DB7FF476E907FE660012AF3E788@dnce02.ent.ti.com>
-References: <AB927C5B3615784183753F31BCC83EA38C58FE29@AD.d3.local>
-In-Reply-To: <AB927C5B3615784183753F31BCC83EA38C58FE29@AD.d3.local>
-Content-Type: text/plain; charset="utf-8"
+	Wed, 17 Nov 2010 13:59:34 -0500
+Message-ID: <4CE4260F.80603@candelatech.com>
+Date: Wed, 17 Nov 2010 10:59:27 -0800
+From: Ben Greear <greearb@candelatech.com>
 MIME-Version: 1.0
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: Tejun Heo <tj@kernel.org>, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] mac80211:  Fix deadlock in ieee80211_do_stop.
+References: <1289592426-5367-1-git-send-email-greearb@candelatech.com>	 <1289594998.3736.11.camel@jlt3.sipsolutions.net>	 <4CDDAA3B.9090007@candelatech.com>	 <1289596096.3736.13.camel@jlt3.sipsolutions.net>	 <4CDE699B.70401@kernel.org> <4CE1A344.7040201@candelatech.com>	 <4CE292F7.4090200@kernel.org>	 <1289929258.3673.1.camel@jlt3.sipsolutions.net>	 <4CE396A9.1050908@kernel.org> <1290020005.3777.6.camel@jlt3.sipsolutions.net>
+In-Reply-To: <1290020005.3777.6.camel@jlt3.sipsolutions.net>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-PiAtLS0tLU9yaWdpbmFsIE1lc3NhZ2UtLS0tLQ0KPiBGcm9tOiBsaW51eC13aXJlbGVzcy1vd25l
-ckB2Z2VyLmtlcm5lbC5vcmcgW21haWx0bzpsaW51eC13aXJlbGVzcy0NCj4gb3duZXJAdmdlci5r
-ZXJuZWwub3JnXSBPbiBCZWhhbGYgT2YgSm9zaCBXYXR0cw0KPiBTZW50OiBUdWVzZGF5LCBOb3Zl
-bWJlciAyMywgMjAxMCA1OjM0IFBNDQo+IFRvOiBsaW51eC13aXJlbGVzc0B2Z2VyLmtlcm5lbC5v
-cmcNCj4gU3ViamVjdDogTm8gc2NhbiByZXN1bHRzIGZyb20gd2wxMjcxLXNkaW8NCj4gDQo+IEkn
-dmUgYmVlbiB0cnlpbmcgdG8gZ2V0IHRoZSB3bDEyNzEtc2RpbyBkcml2ZXIgdG8gd29yaywgYW5k
-IHNvIGZhciBJJ3ZlDQo+IG1hbmFnZWQgdG8gZ2V0IHRoZSBkZXZpY2UgdG8gc3RhcnQgdXAsIGJ1
-dCBhbSB1bmFibGUgdG8gc2VlIGFueSBhY2Nlc3MNCj4gcG9pbnRzLiBJJ20gdXNpbmcgdGhlIGxh
-dGVzdCBoZWFkIGZyb20gTHVjaWFubydzIHdsMTJ4eCB0cmVlLCBhbmQgZm9yDQo+IGZpcm13YXJl
-IEknbSB1c2luZyB0aGUgZmlsZXMgY29tbWl0dGVkIHRvIGxpbnV4LWZpcm13YXJlIGJ5IFNoYWhh
-ciBMZXZpDQo+ICh3bDEyNzEtZncuYmluIHZlcnNpb24gNi4xLjAuMC4zNDMpLiBJJ20gd29uZGVy
-aW5nIGlmIHRoZXJlJ3MgbWF5YmUNCj4gc29tZQ0KPiBtaW5vciBjb21wb25lbnQgb3Igc2V0dGlu
-ZyB0aGF0IEknbSBtaXNzaW5nIChsaWtlIHJhZGlvLWVuYWJsZSwgb3INCj4gcGVyaGFwcyBsaW1p
-dCB0byA4MDIuMTFhLCBldGMpPw0KPiANCj4gV2l0aCBhbGwgZGVidWcgaW5mb3JtYXRpb24gdHVy
-bmVkIG9uIGluIHRoZSBkcml2ZXIsIEkgc2VlIHBsZW50eSBvZg0KPiBjb21tdW5pY2F0aW9uIGdv
-aW5nIGJhY2sgYW5kIGZvcnRoIHcvbyBhbnkgKG5vdGljZWFibGUpIGVycm9ycywgYnV0IEkNCj4g
-ZG9uJ3Qgc2VlIGFueSBzaWduIG9mIG1hZ2ljIHN0cmluZ3Mgc3VjaCBhcyBhbnkgb2YgdGhlIEVT
-U0lEcyBJIGV4cGVjdA0KPiB0byBzZWUgaW4gdGhlIGFyZWEuDQo+IA0KPiAtLQ0KPiBKb3NoIFdh
-dHRzDQpJIHdvdWxkIGJlIGRlbGlnaHRlZCB0byBsb29rIG9uIGRlYnVnIGxvZyBpbiBvcmRlciB0
-byBoZWxwLiBTZW5kIG1lIGRpcmVjdGx5IGEgbG9nIGFuZCBJIHdpbGwgbG9vayBvbiB0aGF0Lg0K
-Q2hlZXJzLA0KU2hhaGFyDQoNCg==
+On 11/17/2010 10:53 AM, Johannes Berg wrote:
+> On Wed, 2010-11-17 at 09:47 +0100, Tejun Heo wrote:
+>
+>> WQ_NON_REENTRANT doesn't guarantee ordered execution but it guarantees
+>> that a single work is not executed concurrently on multiple CPUs.  I'm
+>> not sure whether this would be safe for the workqueue used by mac80211
+>> but it should let us know whether the workqueue is choked due to a
+>> work which is executing for long time.  In the long run, if using non
+>> reentrant is safe for mac80211, using it would be much better.
+>
+> No, I don't think it's safe for mac80211.
+
+So maybe my patch is a good enough way to fix this?
+
+Thanks,
+Ben
+
+>
+> johannes
+
+
+-- 
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
+
