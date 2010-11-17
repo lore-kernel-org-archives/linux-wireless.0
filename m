@@ -1,60 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:38770 "EHLO nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754778Ab0KSPVJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 19 Nov 2010 10:21:09 -0500
-From: Felix Fietkau <nbd@openwrt.org>
-To: linux-wireless@vger.kernel.org
-Cc: linville@tuxdriver.com, johannes@sipsolutions.net
-Subject: [PATCH v2 2/2] mac80211: reduce the number of retries for nullfunc probing
-Date: Fri, 19 Nov 2010 16:20:59 +0100
-Message-Id: <1290180059-43536-2-git-send-email-nbd@openwrt.org>
-In-Reply-To: <1290180059-43536-1-git-send-email-nbd@openwrt.org>
-References: <1290180059-43536-1-git-send-email-nbd@openwrt.org>
+Received: from mail-qy0-f181.google.com ([209.85.216.181]:59038 "EHLO
+	mail-qy0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S935559Ab0KQXLT (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 17 Nov 2010 18:11:19 -0500
+MIME-Version: 1.0
+In-Reply-To: <1290010595.3777.0.camel@jlt3.sipsolutions.net>
+References: <20101112024901.28522.21895.stgit@localhost6.localdomain6>
+	<20101112030035.28522.75318.stgit@localhost6.localdomain6>
+	<20101116093743.GA21872@jm.kir.nu>
+	<201011171728.06801.br1@einfach.org>
+	<1290010595.3777.0.camel@jlt3.sipsolutions.net>
+Date: Wed, 17 Nov 2010 18:11:18 -0500
+Message-ID: <AANLkTimoogSLAipNy=njGtHypqBQSk=usDmXut=KN9TM@mail.gmail.com>
+Subject: Re: [PATCH v7 3/3] nl80211/mac80211: Report signal average
+From: Bob Copeland <me@bobcopeland.com>
+To: Bruno Randolf <br1@einfach.org>
+Cc: Johannes Berg <johannes@sipsolutions.net>, Jouni Malinen <j@w1.fi>,
+	linville@tuxdriver.com, randy.dunlap@oracle.com,
+	peterz@infradead.org, blp@cs.stanford.edu,
+	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Lars_Ericsson@telia.com, stefanr@s5r6.in-berlin.de,
+	kosaki.motohiro@jp.fujitsu.com, akpm@linux-foundation.org,
+	kevin.granade@gmail.com
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Since nullfunc frames are transmitted as unicast frames, they're more
-reliable than the broadcast probe requests, so we need fewer retries
-to figure out whether the AP is really gone.
+On Wed, Nov 17, 2010 at 11:16 AM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
+> On Wed, 2010-11-17 at 17:28 +0900, Bruno Randolf wrote:
+>> I understand that this could be more efficient, but if it matters or not -
+>> honestly, I don't know. Can a more knowledgeable person than me comment on
+>> this?
+>
+> Yes, it does matter -- think of an embedded MIPS board running at 500MHz
+> and trying to push 11n speeds.
 
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
----
- net/mac80211/mlme.c |    9 ++++++++-
- 1 files changed, 8 insertions(+), 1 deletions(-)
+I assume the number of samples (weight) is the more
+important tunable.  One option is you can require factor
+to be a power of two that is much larger than weight,
+then at least you can store factor/weight precomputed
+and multiply by it instead of doing a divide in ewma_add.
+Then ewma_get can also just be a shift as well.
 
-diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index b24e51f..36b7ea3 100644
---- a/net/mac80211/mlme.c
-+++ b/net/mac80211/mlme.c
-@@ -28,6 +28,7 @@
- #include "rate.h"
- #include "led.h"
- 
-+#define IEEE80211_MAX_NULLFUNC_TRIES 2
- #define IEEE80211_MAX_PROBE_TRIES 5
- 
- /*
-@@ -1913,12 +1914,18 @@ void ieee80211_sta_work(struct ieee80211_sub_if_data *sdata)
- 			    IEEE80211_STA_CONNECTION_POLL) &&
- 	    ifmgd->associated) {
- 		u8 bssid[ETH_ALEN];
-+		int max_tries;
-+
-+		if (local->hw.flags & IEEE80211_HW_REPORTS_TX_ACK_STATUS)
-+			max_tries = IEEE80211_MAX_NULLFUNC_TRIES;
-+		else
-+			max_tries = IEEE80211_MAX_PROBE_TRIES;
- 
- 		memcpy(bssid, ifmgd->associated->bssid, ETH_ALEN);
- 		if (time_is_after_jiffies(ifmgd->probe_timeout))
- 			run_again(ifmgd, ifmgd->probe_timeout);
- 
--		else if (ifmgd->probe_send_count < IEEE80211_MAX_PROBE_TRIES) {
-+		else if (ifmgd->probe_send_count < max_tries) {
- #ifdef CONFIG_MAC80211_VERBOSE_DEBUG
- 			wiphy_debug(local->hw.wiphy,
- 				    "%s: No probe response from AP %pM"
 -- 
-1.7.3.2
-
+Bob Copeland %% www.bobcopeland.com
