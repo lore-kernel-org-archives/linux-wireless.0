@@ -1,56 +1,163 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.19.149.2]:48488 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755487Ab0KCQlG convert rfc822-to-8bit (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:46687 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S935224Ab0KQWOu (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 3 Nov 2010 12:41:06 -0400
-Received: from mail.atheros.com ([10.10.20.105])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Wed, 03 Nov 2010 09:40:54 -0700
-From: Rajkumar Manoharan <Rajkumar.Manoharan@Atheros.com>
-To: Ming Lei <tom.leiming@gmail.com>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"linville@tuxdriver.com" <linville@tuxdriver.com>
-Date: Wed, 3 Nov 2010 22:06:43 +0530
-Subject: RE: [PATCH] ath9k-htc: fix probe failure
-Message-ID: <44EE5C37ADC36343B0625A05DD408C4850DAB4D6C9@CHEXMB-01.global.atheros.com>
-References: <1288621950-13918-1-git-send-email-tom.leiming@gmail.com>
-	<44EE5C37ADC36343B0625A05DD408C4850DAB4D6C8@CHEXMB-01.global.atheros.com>,<AANLkTikkFOer0VWDjb0PrfeP-dB+tMiY4eTTxv_FNjSp@mail.gmail.com>
-In-Reply-To: <AANLkTikkFOer0VWDjb0PrfeP-dB+tMiY4eTTxv_FNjSp@mail.gmail.com>
-Content-Type: text/plain; charset="us-ascii"
+	Wed, 17 Nov 2010 17:14:50 -0500
+Date: Wed, 17 Nov 2010 17:03:03 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Cc: Robert =?iso-8859-1?Q?Gr=F8nning?= <slimg@iggu.org>,
+	Michael Green <Michael.Green@atheros.com>,
+	linux-wireless@vger.kernel.org, wireless-regdb@lists.infradead.org
+Subject: Re: Changes to NO (Norway) in wireless-regdb
+Message-ID: <20101117220303.GB2380@tuxdriver.com>
+References: <7de8d1c9fd95f3b714597b4cd15f7a29@post.subsys.no>
+ <AANLkTim9g63UYZaxow8SO7EZLihCbiukQyTqSbL6XkX=@mail.gmail.com>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=iso-8859-1
+In-Reply-To: <AANLkTim9g63UYZaxow8SO7EZLihCbiukQyTqSbL6XkX=@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
->2010/11/2 Rajkumar Manoharan <Rajkumar.Manoharan@atheros.com>:
->> From: Ming Lei <tom.leiming@gmail.com>
->>
->> Obviously, we should set the transfer type consitent with
->> endpoint descriptor type to urb, this patch fixes the probe
->> failure below:
->>
->>[    8.018768] PM: Removing info for No Bus:1-2.2
->> [    8.019470] usb 1-2.2: BOGUS urb xfer, pipe 3 != type 1
->> [    8.031707] usb 1-2.2: ath9k_htc: Unable to allocate URBs
->> [    8.037506] ath9k_hif_usb: probe of 1-2.2:1.0 failed with error -22
->> [    8.044250] usbcore: registered new interface driver ath9k_hif_usb
->>
->> NACK. To optimize CPU consumption and scan duration,  HTC device firmwares
->> were patched to change descriptor types of EP3 and EP4 from Interrupt to Bulk.
->> After firmware download in initialization, endpoint descriptors got changed.
->> Please use the latest firmwares from linux-firmware git tree.
->>
->> http://git.kernel.org/?p=linux/kernel/git/dwmw2/linux-firmware.git;a=summary
->
->My card is UB91, so you means I should update to this one(ar9271.fw) blew:
->
->http://git.kernel.org/?p=linux/kernel/git/dwmw2/linux->firmware.git;a=blob;f=ar9271.fw;h=0ec953b404c1912dc64fa3b0171cffae82b0f375;hb=8f919160792e4702c6b7a67a243cea4f757407e4
->
->This one still can't prevent the probe failure...
+Ping?
 
->Any suggestions?
+On Mon, Oct 25, 2010 at 03:55:00PM -0700, Luis R. Rodriguez wrote:
+> Adding Michael and the wireless-regdb list. Please use that list for
+> further reviews.
+> 
+>  Luis
+> 
+> On Mon, Oct 25, 2010 at 2:37 PM, Robert Grønning <slimg@iggu.org> wrote:
+> > It seems like NO is wrong according to Norwegian rules
+> >
+> > This is how NO currently looks like in wireless-regdb-2009.11.25.tar.bz2
+> > -------------------START-------------------
+> > country NO:
+> >        (2402 - 2482 @ 40), (N/A, 20)
+> >        (5170 - 5250 @ 40), (N/A, 20)
+> >        (5250 - 5330 @ 40), (N/A, 20), DFS
+> >        (5490 - 5710 @ 40), (N/A, 27), DFS
+> > --------------------END--------------------
+> >
+> > This is what the Norwegian rules say about general usage of frequencies
+> > for wi-fi:
+> > Note: The following text is a translation from a subsection of the
+> > following document written in Norwegian:
+> > http://www.lovdata.no/for/sf/sd/xd-20090602-0580.html#7
+> > -------------------------------------START--------------------------------------
+> > (3) the frequency band 5150-5350 MHz is authorized for indoor data
+> > transfer
+> > including radio-based local area networks (WAS / RLAN) with a maximum
+> > radiated
+> > power of 200 mW eirp the frequency use defined in the standard EN 301 893
+> > If any
+> > other use than indoor use, the average spectral density in the frequency
+> > band
+> > 5150-5350 MHz is limited to 10 mW / MHz eirp in any 1 MHz range.
+> >
+> > (4) the frequency band 5470-5725 MHz may be used for data transfer with
+> > maximum
+> > radiated power of 1 W eirp Maximum average spectral density shall not
+> > exceed
+> > 50 mW / MHz eirp in any 1 MHz band. The radio equipment shall implement
+> > transmit
+> > power control (TPC) which provides an average attenuation of at least 3
+> > dB. If
+> > TPC is not in use, the maximum allowed radiated power and power density is
+> > 3 dB
+> > lower than that following the first and second sentence. The radio
+> > equipment will
+> > use Dynamic Frequency Selection (DFS) as specified in the standard EN 301
+> > 893
+> >
+> > (5) The frequency bands 5725-5795 MHz and 5815-5850 MHz for data transfer
+> > with
+> > maximum radiated power of 4 W eirp Maximum average spectral density shall
+> > not
+> > exceed 200 mW / MHz eirp in any 1 MHz band. The radio equipment shall
+> > implement
+> > Dynamic Frequency Selection (DFS) as specified in the standard EN 302 502
+> > Radio
+> > equipment shall transmit power control (TPC) which provides an average
+> > attenuation of at least 3 dB. If TPC is not in use, the maximum allowed
+> > radiated
+> > power and power density is 3 dB lower than that following the first and
+> > second
+> > sentence. On the border between Norway and neighboring power density shall
+> > not
+> > exceed -122.5 dBW / m 2 measured with a reference bandwidth of 1 MHz
+> > unless
+> > otherwise stated in the coordination agreement.
+> >
+> > (6) The frequency bands 5725-5795 and 5815-5850 MHz for point-to-point
+> > radio
+> > links with maximum radiated power of 200 W eirp Maximum permitted power
+> > supplied
+> > antenna is 1 W. The maximum average spectral density shall not exceed 10 W
+> > / MHz
+> > eirp in any 1 MHz band. The concept of point-to-point radio links exclude
+> > all
+> > forms of point-to-multipoint, omnidirectional systems and transmitters
+> > send the
+> > same information located in the same place (sector antennas). The radio
+> > equipment
+> > shall implement Dynamic Frequency Selection (DFS) as specified in the
+> > standard
+> > EN 302 502 On the border between Norway and neighboring power density
+> > shall not
+> > exceed -122.5 dBW / m 2 measured with a reference bandwidth of 1 MHz
+> > unless
+> > otherwise stated in the coordination agreement.
+> > --------------------------------------END---------------------------------------
+> >
+> > Here is the link to google english-translated section mentioned above:
+> > http://translate.googleusercontent.com/translate_c?hl=no&sl=no&tl=en&u=http://www.lovdata.no/for/sf/sd/xd-20090602-0580.html&rurl=translate.google.com&usg=ALkJrhhGbQPtCjONnilyHdAgh1NwIZhFVA#7
+> >
+> > According to that documentation, NO should probably look like this
+> > instead:
+> > -------------------START-------------------
+> > country NO:
+> >        (2400 - 2483.5 @ 40), (N/A, 20)
+> >        (5150 - 5350 @ 40), (N/A, 23)
+> >        (5470 - 5725 @ 40), (N/A, 27), DFS
+> > --------------------END--------------------
+> >
+> > Question 1:
+> > The norwegian laws also says that if TPC is available, then the maximum
+> > allowed TX power
+> > of the 5470 -> 5725 MHz frequency range changes from 27 dBm to 30 dBm, I
+> > don't know how to write that in wireless-regdb.
+> >
+> > Question 2:
+> > The norwegian laws for the 5470 -> 5725 MHz frequency range seem to exceed
+> > the European restrictions in 802.11n-2009, I'm guessing that the upper 5725
+> > MHz frequency needs to be decreased to comply with the European
+> > restrictions? if so, I'm not sure what frequency it should be decreased to.
+> >
+> > Question 3:
+> > The norwegian documentation also mentions these radio frequencies for
+> > wireless data transfer:
+> >  * 5725 -> 5795 MHz and 5815-5850 MHz: point-to-point radio links
+> >  * 17,1 -> 17,3 GHz:
+> >  * 57 -> 66 GHz:
+> > Does these belong in the wireless-regdb as well?
+> >
+> > I hope my limited knowlege doesn't cause anyone unreasonable much work,
+> > I'm really trying to get better at this.
+> >
+> > -Robert Grønning (Norway)
+> > --
+> > To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> > the body of a message to majordomo@vger.kernel.org
+> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> >
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
 
-Could you please try it without CONFIG_USB_DEBUG option.
-
-Thanks,
-Rajkumar
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
