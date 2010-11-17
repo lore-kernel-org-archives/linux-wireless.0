@@ -1,47 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:52991 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751639Ab0KYSLH (ORCPT
+Received: from mail-bw0-f46.google.com ([209.85.214.46]:33830 "EHLO
+	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750823Ab0KQIrG (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 25 Nov 2010 13:11:07 -0500
-Subject: Re: [RFC 1/2] mac80211: Stop BA session event from device
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Shahar Levi <shahar_levi@ti.com>
-Cc: linux-wireless@vger.kernel.org,
-	Luciano Coelho <luciano.coelho@nokia.com>
-In-Reply-To: <1290695964-4208-1-git-send-email-shahar_levi@ti.com>
-References: <1290695964-4208-1-git-send-email-shahar_levi@ti.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Thu, 25 Nov 2010 19:11:06 +0100
-Message-ID: <1290708666.3770.8.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+	Wed, 17 Nov 2010 03:47:06 -0500
+Received: by bwz15 with SMTP id 15so1329379bwz.19
+        for <linux-wireless@vger.kernel.org>; Wed, 17 Nov 2010 00:47:04 -0800 (PST)
+From: Helmut Schaa <helmut.schaa@googlemail.com>
+To: Ivo van Doorn <ivdoorn@gmail.com>
+Subject: Re: [PATCH 9/9] rt2x00: Modify rt2x00queue_remove_l2pad to make skb->data two-byte alignment
+Date: Wed, 17 Nov 2010 09:46:04 +0100
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com,
+	"RA-Jay Hung" <jay_hung@ralinktech.com>
+References: <201011131908.15595.IvDoorn@gmail.com> <201011131913.55169.IvDoorn@gmail.com> <201011161645.15018.helmut.schaa@googlemail.com>
+In-Reply-To: <201011161645.15018.helmut.schaa@googlemail.com>
+MIME-Version: 1.0
+Content-Type: Text/Plain;
+  charset="us-ascii"
+Message-Id: <201011170946.04629.helmut.schaa@googlemail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2010-11-25 at 16:39 +0200, Shahar Levi wrote:
+Am Dienstag 16 November 2010 schrieb Helmut Schaa:
+> Am Samstag 13 November 2010 schrieb Ivo van Doorn:
+> > From: RA-Jay Hung <Jay_Hung@ralinktech.com>
+> > 
+> > When send out skb data to mac80211, orignal code will cause mac80211
+> > unaligned access, so modify code to make mac80211 can natural access.
+> 
+> And this introduces the same panic again :(
+> 
+> The problem is the following:
+> 
+> We don't pass the skb in the same state back to mac80211 as we got it.
+> 
+> When inserting the l2pad we're moving the header and thus reduce headroom.
+> This patch modifies the bahavior during l2pad removal to not move the header
+> back into its old position but instead moves the payload. Thus the skb keeps
+> the reduced headroom. If this skb gets requeued into rt2x00 (which can happen
+> when the frame wasn't acked and the according STA is known to e in powersave
+> mode) the header and payload get aligned again further reducing headroom which
+> results in a too small headroom for the TXWI and thus a skb_under_panic.
 
-> +void ieee80211_stop_rx_ba_session(struct ieee80211_vif *vif, u16 tid,
-> +				  const u8 *addr);
+Hmm, John merged that patch already. However, I would prefer if it would get
+reverted due to the occasional panics in AP mode.
 
-missing docs
+Jay, I didn't notice any performance degradation on MIPS, on which architecture
+did you test?
 
-> +void ieee80211_stop_rx_ba_session(struct ieee80211_vif *vif, u16 tid,
-> +				  const u8 *addr)
-> +{
-> +	struct ieee80211_sub_if_data *sdata = vif_to_sdata(vif);
-> +	struct sta_info *sta = sta_info_get(sdata, addr);
-> +
-> +	__ieee80211_stop_rx_ba_session(sta, tid, WLAN_BACK_INITIATOR, 0, true);
-> +}
-> +EXPORT_SYMBOL(ieee80211_stop_rx_ba_session);
+Jay, Ivo, any objections against reverting this one?
 
-Locking-wise, this is a disaster, as the function will acquire a mutex
-that it also holds across other calls into the driver. It would seem
-that this should have caused lockdep to warn you about ABBA style
-deadlock since you call this with wl->mutex held, and previously you
-said you were going to acquire that mutex from ampdu_action.
-
-This should use a similar trick to the one used in TX aggregation.
-
-johannes
-
+Thanks,
+Helmut
