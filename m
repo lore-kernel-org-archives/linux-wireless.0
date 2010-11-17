@@ -1,38 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw0-f46.google.com ([74.125.83.46]:35301 "EHLO
-	mail-gw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751308Ab0K3VXt (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 30 Nov 2010 16:23:49 -0500
-Received: by gwj20 with SMTP id 20so3010465gwj.19
-        for <linux-wireless@vger.kernel.org>; Tue, 30 Nov 2010 13:23:48 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <4CF55231.5000205@ti.com>
-References: <1290079951-16793-1-git-send-email-arik@wizery.com>
- <1290079951-16793-18-git-send-email-arik@wizery.com> <4CF51CE8.9090809@ti.com>
- <AANLkTimtk2qXYOVPo+WRyV1Jhe-Fk-7hvoctuAF35ik7@mail.gmail.com>
- <4CF54A03.2090104@ti.com> <AANLkTinbFBXi9J5up65tV2Hp-5-0jDbbLuuCEn6ts2nJ@mail.gmail.com>
- <4CF55231.5000205@ti.com>
-From: Arik Nemtsov <arik@wizery.com>
-Date: Tue, 30 Nov 2010 23:23:32 +0200
-Message-ID: <AANLkTi=72kjeJ5L9dUHmYuS1T8E-kKiGzB3t68gs7hWy@mail.gmail.com>
-Subject: Re: [PATCH 17/18] wl1271: Read MAC address from NVS file on HW startup
-To: Gery Kahn <geryk@ti.com>
+Received: from smtp.nokia.com ([147.243.128.26]:47151 "EHLO mgw-da02.nokia.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1758876Ab0KQIda (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 17 Nov 2010 03:33:30 -0500
+Subject: Re: [PATCH v2 2/2] wl1271: add support for HW TX fragmentation
+From: Luciano Coelho <luciano.coelho@nokia.com>
+To: ext Arik Nemtsov <arik@wizery.com>
 Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Luciano Coelho <luciano.coelho@nokia.com>
-Content-Type: text/plain; charset=ISO-8859-1
+	Johannes Berg <johannes@sipsolutions.net>
+In-Reply-To: <1289209867-21422-3-git-send-email-arik@wizery.com>
+References: <1289209867-21422-1-git-send-email-arik@wizery.com>
+	 <1289209867-21422-3-git-send-email-arik@wizery.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Wed, 17 Nov 2010 10:33:03 +0200
+Message-ID: <1289982783.12140.0.camel@chilepepper>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> Fully agree. Just set vif where u set wl and the solution would be synced
-> for your flow.
+On Mon, 2010-11-08 at 10:51 +0100, ext Arik Nemtsov wrote:
+> Indicate to mac80211 we support HW fragmentation.
+> Support updates of the fragmentation threshold via the
+> set_frag_threshold callback.
+> 
+> Signed-off-by: Arik Nemtsov <arik@wizery.com>
+> ---
 
-There is no way to set the vif addr from wl1271_register_hw() since no
-vif has been created yet. The hardware was only just initialized..
+Applied to the wl12xx tree.  Thanks!
 
-The vif addr is set from the perm address before add_interface is
-called (see ieee80211_if_add()). This means the last to write the MAC
-address effectively sets the vif addr.
 
-Regards,
-Arik
+-- 
+Cheers,
+Luca.
+
