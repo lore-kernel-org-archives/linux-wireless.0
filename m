@@ -1,40 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:2472 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753919Ab0K3Pjy (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 30 Nov 2010 10:39:54 -0500
-Subject: Re: [PATCH w-t] iwlagn: fix microcode error on 4965
-From: "Guy, Wey-Yi" <wey-yi.w.guy@intel.com>
-To: Stanislaw Gruszka <sgruszka@redhat.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	Intel Linux Wireless <ilw@linux.intel.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <20101130143339.GC3074@redhat.com>
-References: <20101130130148.GA3074@redhat.com>
-	 <1291123016.3624.17.camel@jlt3.sipsolutions.net>
-	 <20101130134903.GB3074@redhat.com>
-	 <1291126178.3624.19.camel@jlt3.sipsolutions.net>
-	 <20101130143339.GC3074@redhat.com>
-Content-Type: text/plain
-Date: Tue, 30 Nov 2010 07:38:50 -0800
-Message-Id: <1291131530.13968.2.camel@wwguy-ubuntu>
-Mime-Version: 1.0
+Received: from mail-wy0-f174.google.com ([74.125.82.174]:37912 "EHLO
+	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S935040Ab0KQSwq (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 17 Nov 2010 13:52:46 -0500
+Received: by wyb28 with SMTP id 28so2288664wyb.19
+        for <linux-wireless@vger.kernel.org>; Wed, 17 Nov 2010 10:52:45 -0800 (PST)
+From: =?utf-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+To: linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Michael Gerdau <mgd@qata.de>
+Cc: b43-dev@lists.infradead.org,
+	=?utf-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+Subject: [PATCH] ssb: drop BCM4328 hack for SPROM revision
+Date: Wed, 17 Nov 2010 19:52:13 +0100
+Message-Id: <1290019933-9924-1-git-send-email-zajec5@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2010-11-30 at 06:33 -0800, Stanislaw Gruszka wrote:
-> Commit dbbf1755b09eef8ff6dd21c8dafe1606f051ce12 "iwlwifi: use
-> antenna information in EEPROM" caused 4965 device breakage with
-> "Microcode SW error detected.  Restarting 0x82000000." message.
-> This patch reverts 4965 part of that commit.
-> 
-> Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
-Acked-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-> ---
+This hacks leads to incorrect SPROM parsing for me and reading for example MAC
+as: 00:00:00:54:00:00. Michael G. who introduced this confirmed it is not
+needed anymore.
 
-Yeap, my mistake to cause this problem. Sorry!
+Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
+---
+Michael: I guess I could add your Tested-by. Is that right?
 
-Wey
+John: it's 2.6.38 ofc. It should apply cleanly no matter if you applied my
+previous patch for guessing unknown SPROM revision. There is not dependence
+between that 2 patches.
+---
+ drivers/ssb/pci.c |    4 ----
+ 1 files changed, 0 insertions(+), 4 deletions(-)
 
-
+diff --git a/drivers/ssb/pci.c b/drivers/ssb/pci.c
+index b5343ac..f529663 100644
+--- a/drivers/ssb/pci.c
++++ b/drivers/ssb/pci.c
+@@ -580,10 +580,6 @@ static int sprom_extract(struct ssb_bus *bus, struct ssb_sprom *out,
+ 		 * Always extract r1. */
+ 		out->revision = 1;
+ 		ssb_dprintk(KERN_DEBUG PFX "SPROM treated as revision %d\n", out->revision);
+-	} else if (bus->chip_id == 0x4321) {
+-		/* the BCM4328 has a chipid == 0x4321 and a rev 4 SPROM */
+-		out->revision = 4;
+-		ssb_dprintk(KERN_DEBUG PFX "SPROM treated as revision %d\n", out->revision);
+ 	}
+ 
+ 	switch (out->revision) {
+-- 
+1.6.0.4
 
