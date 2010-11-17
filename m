@@ -1,62 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.19.149.2]:44582 "EHLO mail.atheros.com"
+Received: from kroah.org ([198.145.64.141]:58755 "EHLO coco.kroah.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754264Ab0KZRzB (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 26 Nov 2010 12:55:01 -0500
-Received: from mail.atheros.com ([10.10.20.105])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Fri, 26 Nov 2010 09:54:47 -0800
-From: Rajkumar Manoharan <rmanoharan@atheros.com>
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>,
-	Rajkumar Manoharan <rmanoharan@atheros.com>,
-	<stable@kernel.org>
-Subject: [PATCH 1/3] ath9k: Disable SWBA interrupt on remove_interface
-Date: Fri, 26 Nov 2010 23:24:31 +0530
-Message-ID: <1290794073-5309-1-git-send-email-rmanoharan@atheros.com>
+	id S935045Ab0KQVV5 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 17 Nov 2010 16:21:57 -0500
+Date: Wed, 17 Nov 2010 13:11:29 -0800
+From: Greg KH <greg@kroah.com>
+To: Mike Rapoport <mike.rapoport@gmail.com>
+Cc: Greg Kroah-Hartman <gregkh@suse.de>,
+	Brett Rudley <brudley@broadcom.com>,
+	Henry Ptasinski <henryp@broadcom.com>,
+	Dowan Kim <dowan@broadcom.com>, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 4/4] staging: brcm80211: brcmfmac: cleanup
+ bcmsdh_(un)register
+Message-ID: <20101117211129.GA31776@kroah.com>
+References: <20101116200438.GA10803@kroah.com>
+ <1289980800-28743-1-git-send-email-mike.rapoport@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1289980800-28743-1-git-send-email-mike.rapoport@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-while removing beaconing mode interface, SWBA interrupt
-was never disabled when there are no other beaconing interfaces.
+On Wed, Nov 17, 2010 at 10:00:00AM +0200, Mike Rapoport wrote:
+> Signed-off-by: Mike Rapoport <mike.rapoport@gmail.com>
+> ---
+>  drivers/staging/brcm80211/brcmfmac/bcmsdh_linux.c |   13 +------------
+>  1 files changed, 1 insertions(+), 12 deletions(-)
+> 
+> diff --git a/drivers/staging/brcm80211/brcmfmac/bcmsdh_linux.c b/drivers/staging/brcm80211/brcmfmac/bcmsdh_linux.c
+> index fd327e1..e3fb7ed 100644
+> --- a/drivers/staging/brcm80211/brcmfmac/bcmsdh_linux.c
+> +++ b/drivers/staging/brcm80211/brcmfmac/bcmsdh_linux.c
+> @@ -285,28 +285,17 @@ extern int sdio_function_init(void);
+>  
+>  int bcmsdh_register(bcmsdh_driver_t *driver)
+>  {
+> -	int error = 0;
+> -
+>  	drvinfo = *driver;
+>  
+> -#if defined(BCMPLATFORM_BUS)
+> -#if defined(BCMLXSDMMC)
+>  	SDLX_MSG(("Linux Kernel SDIO/MMC Driver\n"));
+> -	error = sdio_function_init();
 
-Cc: stable@kernel.org
-Signed-off-by: Rajkumar Manoharan <rmanoharan@atheros.com>
----
- drivers/net/wireless/ath/ath9k/main.c |   11 ++++++++++-
- 1 files changed, 10 insertions(+), 1 deletions(-)
+Same question here, are you sure we can remove this code?
 
-diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
-index 50bdb5d..6298603 100644
---- a/drivers/net/wireless/ath/ath9k/main.c
-+++ b/drivers/net/wireless/ath/ath9k/main.c
-@@ -1436,6 +1436,7 @@ static void ath9k_remove_interface(struct ieee80211_hw *hw,
- 	struct ath_softc *sc = aphy->sc;
- 	struct ath_common *common = ath9k_hw_common(sc->sc_ah);
- 	struct ath_vif *avp = (void *)vif->drv_priv;
-+	bool bs_valid = false;
- 	int i;
- 
- 	ath_print(common, ATH_DBG_CONFIG, "Detach Interface\n");
-@@ -1464,7 +1465,15 @@ static void ath9k_remove_interface(struct ieee80211_hw *hw,
- 			       "slot\n", __func__);
- 			sc->beacon.bslot[i] = NULL;
- 			sc->beacon.bslot_aphy[i] = NULL;
--		}
-+		} else if (sc->beacon.bslot[i])
-+			bs_valid = true;
-+	}
-+	if (!bs_valid && (sc->sc_ah->imask & ATH9K_INT_SWBA)) {
-+		/* Disable SWBA interrupt */
-+		sc->sc_ah->imask &= ~ATH9K_INT_SWBA;
-+		ath9k_ps_wakeup(sc);
-+		ath9k_hw_set_interrupts(sc->sc_ah, sc->sc_ah->imask);
-+		ath9k_ps_restore(sc);
- 	}
- 
- 	sc->nvifs--;
--- 
-1.7.3.2
+just want to make sure.
 
+thanks,
+
+greg k-h
