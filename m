@@ -1,106 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iw0-f174.google.com ([209.85.214.174]:65252 "EHLO
-	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750714Ab0KJFfg convert rfc822-to-8bit (ORCPT
+Received: from mail-bw0-f46.google.com ([209.85.214.46]:37919 "EHLO
+	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756319Ab0KQKtG (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 10 Nov 2010 00:35:36 -0500
-Received: by iwn10 with SMTP id 10so338539iwn.19
-        for <linux-wireless@vger.kernel.org>; Tue, 09 Nov 2010 21:35:35 -0800 (PST)
+	Wed, 17 Nov 2010 05:49:06 -0500
+Received: by bwz15 with SMTP id 15so1442757bwz.19
+        for <linux-wireless@vger.kernel.org>; Wed, 17 Nov 2010 02:49:04 -0800 (PST)
+From: Helmut Schaa <helmut.schaa@googlemail.com>
+To: "RA-Jay Hung" <Jay_Hung@ralinktech.com>
+Subject: Re: [PATCH 9/9] rt2x00: Modify rt2x00queue_remove_l2pad to make skb->data two-byte alignment
+Date: Wed, 17 Nov 2010 11:48:04 +0100
+Cc: Ivo van Doorn <ivdoorn@gmail.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"users@rt2x00.serialmonkey.com" <users@rt2x00.serialmonkey.com>
+References: <201011131908.15595.IvDoorn@gmail.com> <201011170946.04629.helmut.schaa@googlemail.com> <B7288B2B5878D747BA031EF4B170D7F6BC5C60@TWHCMBS01.tw.ralinktech.ad>
+In-Reply-To: <B7288B2B5878D747BA031EF4B170D7F6BC5C60@TWHCMBS01.tw.ralinktech.ad>
 MIME-Version: 1.0
-In-Reply-To: <AANLkTikVZT-hQvr83bTkuVENe8jPSG=LNMw5NTwUXCp1@mail.gmail.com>
-References: <AANLkTikVZT-hQvr83bTkuVENe8jPSG=LNMw5NTwUXCp1@mail.gmail.com>
-From: Ohad Ben-Cohen <ohad@wizery.com>
-Date: Wed, 10 Nov 2010 07:35:15 +0200
-Message-ID: <AANLkTinT72TE_z2JW1x+pMHNys6jVEeGfkQZFAW_f+48@mail.gmail.com>
-Subject: Re: wl1271 sdio timeouts on omap3
-To: Joerie de Gram <j.de.gram@gmail.com>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: Text/Plain;
+  charset="us-ascii"
+Message-Id: <201011171148.04286.helmut.schaa@googlemail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Joerie,
+Am Mittwoch 17 November 2010 schrieb RA-Jay Hung:
+> > > When inserting the l2pad we're moving the header and thus reduce headroom.
+> > > This patch modifies the bahavior during l2pad removal to not move the header
+> > > back into its old position but instead moves the payload. Thus the skb keeps
+> > > the reduced headroom. If this skb gets requeued into rt2x00 (which can happen
+> > > when the frame wasn't acked and the according STA is known to e in powersave
+> > > mode) the header and payload get aligned again further reducing headroom which
+> > > results in a too small headroom for the TXWI and thus a skb_under_panic.
+> >
+> > Hmm, John merged that patch already. However, I would prefer if it would get
+> > reverted due to the occasional panics in AP mode.
+> >
+> > Jay, I didn't notice any performance degradation on MIPS, on which architecture
+> > did you test?
+> 
+> My test environment as below
+> Architecture is AMD Athlon 64 X2 Dual Core, and use rt3070 to test throughput.
+> Before not patch code, the throughput just only 5, 6M, but after patch,
+> throughput can achieve about 40M on open air. How about your test?
 
-On Tue, Nov 9, 2010 at 12:14 AM, Joerie de Gram <j.de.gram@gmail.com> wrote:
-> lockup in mmc_wait_for_req (called from wl1271_sdio_power_on). In 10%
-> of my attempts the driver gets as far as uploading the firmware after
-> which I'm getting similar SDIO timeouts.
+I tried with rt2800pci on MIPS32 in AP mode (STA <- eth -> AP <- wifi -> STA2).
+An UDP iperf stream (STA -> STA2) was able to achieve up to 90Mbps while a TCP
+stream maxed out at around 70Mbps (before and after this patch). STA2 is an
+Intel HT20 11n client.
+
+Hmm, you've been testing on USB. Maybe that makes a difference?
+
+Nevertheless, such a performance drop on such a fast machine is likely caused
+by something different, no? Did you have any warnings in dmesg (due to
+watchdog timeouts for example)? Maybe the rate control algorithm made a wrong
+decision and used a low tx rate?
+
+> > Jay, Ivo, any objections against reverting this one?
 >
-> I'm mostly unsure about my regulator config (relevant snippets below),
+> I agree to revert this one because this will cause tool small headroom of your mention.
+> We need to supply another patch when resolve all issue. Thanks.
 
-Snippets below are not complete. E.g., where do you actually indicate
-the gpio number ?
+John, should I send a follow-up (with a nice description why it this is needed)
+or are you simply reverting this one?
 
-It's better to send your complete patch so we can have a look.
-
-> having no wl1271 documentation to work with. The wl1271 is on mmc3,
-> powered by twl4030 vsim. I assume the fixed regulator in [1] is just
-> to be able to control the PMENA GPIO?
-
-Yes.
-
-> Pin muxing aside, all changes are equal to those displayed in [1]. Is
-> there anything I might be doing wrong wrt. the power-up sequence?
-
-Indeterministic SDIO behavior is unlikely to be related to the
-device's gpio-based power, since it's either on or off.
-
-The issues you are experiencing sound more like hw issues (e.g. faulty
-board level shifter) or misconfiguration of the SDIO pins (e.g. lines
-not pulled up).
-
-I suggest you to try working with 1 bit SDIO and/or low clock speeds
-and see if stability is improved.
-
-If not, the best thing to do is sniffing the hardware lines - power,
-clock, mmc 1-4,.. You will then know exactly what's wrong.
-
-Regards,
-Ohad.
-
->
-> [1]: https://patchwork.kernel.org/patch/201572/
->
-> Joerie
->
-> ----------
->
-> static struct regulator_consumer_supply nowplus_vsim_supply = {
->        .supply                 = "vmmc",
-> };
->
->
-> static struct regulator_consumer_supply nowplus_wl1271_supply = {
->        .supply                 = "vmmc_aux",
->        .dev_name               = "mmci-omap-hs.2",
-> };
->
->
-> /* VSIM for WiFi SDIO */
-> static struct regulator_init_data nowplus_vsim = {
->        .constraints = {
->                .name                   = "VSIM",
->                .min_uV                 = 1800000,
->                .max_uV                 = 1800000,
->                .apply_uV               = true,
->                .valid_modes_mask       = REGULATOR_MODE_NORMAL
->                                        | REGULATOR_MODE_STANDBY,
->                .valid_ops_mask         = REGULATOR_CHANGE_MODE
->                                        | REGULATOR_CHANGE_STATUS,
->        },
->        .num_consumer_supplies  = 1,
->        .consumer_supplies      = &nowplus_vsim_supply,
-> };
->
-> static struct regulator_init_data nowplus_wlgpio = {
->        .constraints = {
->                .valid_ops_mask = REGULATOR_CHANGE_STATUS,
->        },
->        .num_consumer_supplies  = 1,
->        .consumer_supplies      = &nowplus_wl1271_supply,
-> };
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
+Thanks,
+Helmut
