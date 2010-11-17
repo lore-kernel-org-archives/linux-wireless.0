@@ -1,66 +1,284 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qy0-f174.google.com ([209.85.216.174]:57964 "EHLO
-	mail-qy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751261Ab0KXGJa (ORCPT
+Received: from mail-bw0-f46.google.com ([209.85.214.46]:48967 "EHLO
+	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759858Ab0KQH7E (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 24 Nov 2010 01:09:30 -0500
-MIME-Version: 1.0
-Reply-To: sedat.dilek@gmail.com
-Date: Wed, 24 Nov 2010 07:09:28 +0100
-Message-ID: <AANLkTinVUkgZKbAkQ3_27Jw3cXJ7qySxm1UMFSReujfp@mail.gmail.com>
-Subject: Re: linux-next: Tree for November 24 (iwlwifi-fix)
-From: Sedat Dilek <sedat.dilek@googlemail.com>
-To: LKML <linux-kernel@vger.kernel.org>,
-	wireless <linux-wireless@vger.kernel.org>
-Cc: sfr@canb.auug.org.au, Randy Dunlap <randy.dunlap@oracle.com>,
-	John Linville <linville@tuxdriver.com>,
-	Johannes Berg <johannes.berg@intel.com>,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Content-Type: text/plain; charset=UTF-8
+	Wed, 17 Nov 2010 02:59:04 -0500
+Received: by bwz15 with SMTP id 15so1285474bwz.19
+        for <linux-wireless@vger.kernel.org>; Tue, 16 Nov 2010 23:59:03 -0800 (PST)
+From: Mike Rapoport <mike.rapoport@gmail.com>
+To: Greg Kroah-Hartman <gregkh@suse.de>
+Cc: Brett Rudley <brudley@broadcom.com>,
+	Henry Ptasinski <henryp@broadcom.com>,
+	Dowan Kim <dowan@broadcom.com>, linux-wireless@vger.kernel.org,
+	Mike Rapoport <mike.rapoport@gmail.com>
+Subject: [PATCH 2/4] staging: brcm80211: brcmfmac: remove PCI SDIO controller binding
+Date: Wed, 17 Nov 2010 09:58:46 +0200
+Message-Id: <1289980726-28706-1-git-send-email-mike.rapoport@gmail.com>
+In-Reply-To: <20101116200420.GA10793@kroah.com>
+References: <20101116200420.GA10793@kroah.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+Signed-off-by: Mike Rapoport <mike.rapoport@gmail.com>
+---
+ drivers/staging/brcm80211/brcmfmac/bcmsdh_linux.c |  229 ---------------------
+ 1 files changed, 0 insertions(+), 229 deletions(-)
 
-the patch from Randy from [1] still applies, but my build-log from
-yesterday's linux-next shows:
+diff --git a/drivers/staging/brcm80211/brcmfmac/bcmsdh_linux.c b/drivers/staging/brcm80211/brcmfmac/bcmsdh_linux.c
+index b021d97..fd327e1 100644
+--- a/drivers/staging/brcm80211/brcmfmac/bcmsdh_linux.c
++++ b/drivers/staging/brcm80211/brcmfmac/bcmsdh_linux.c
+@@ -279,224 +279,6 @@ int bcmsdh_remove(struct device *dev)
+ 
+ 	return 0;
+ }
+-
+-#else				/* BCMPLATFORM_BUS */
+-
+-#if !defined(BCMLXSDMMC)
+-/* forward declarations for PCI probe and remove functions. */
+-static int __devinit bcmsdh_pci_probe(struct pci_dev *pdev,
+-				      const struct pci_device_id *ent);
+-static void __devexit bcmsdh_pci_remove(struct pci_dev *pdev);
+-
+-/**
+- * pci id table
+- */
+-static struct pci_device_id bcmsdh_pci_devid[] __devinitdata = {
+-{
+-	.vendor = PCI_ANY_ID,
+-	.device = PCI_ANY_ID,
+-	.subvendor = PCI_ANY_ID,
+-	.subdevice = PCI_ANY_ID,
+-	.class = 0,
+-	.class_mask = 0,
+-	.driver_data = 0,
+-},
+-{0,}
+-};
+-
+-MODULE_DEVICE_TABLE(pci, bcmsdh_pci_devid);
+-
+-/**
+- * SDIO Host Controller pci driver info
+- */
+-static struct pci_driver bcmsdh_pci_driver = {
+-	.node = {},
+-	.name = "bcmsdh",
+-	.id_table = bcmsdh_pci_devid,
+-	.probe = bcmsdh_pci_probe,
+-	.remove = bcmsdh_pci_remove,
+-	.suspend = NULL,
+-	.resume = NULL,
+-};
+-
+-extern uint sd_pci_slot;	/* Force detection to a particular PCI */
+-				/* slot only . Allows for having multiple */
+-				/* WL devices at once in a PC */
+-				/* Only one instance of dhd will be */
+-				/* usable at a time */
+-				/* Upper word is bus number, */
+-				/* lower word is slot number */
+-				/* Default value of 0xFFFFffff turns this */
+-				/* off */
+-module_param(sd_pci_slot, uint, 0);
+-
+-/**
+- * Detect supported SDIO Host Controller and attach if found.
+- *
+- * Determine if the device described by pdev is a supported SDIO Host
+- * Controller.  If so, attach to it and attach to the target device.
+- */
+-static int __devinit
+-bcmsdh_pci_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
+-{
+-	osl_t *osh = NULL;
+-	bcmsdh_hc_t *sdhc = NULL;
+-	unsigned long regs;
+-	bcmsdh_info_t *sdh = NULL;
+-	int rc;
+-
+-	if (sd_pci_slot != 0xFFFFffff) {
+-		if (pdev->bus->number != (sd_pci_slot >> 16) ||
+-		    PCI_SLOT(pdev->devfn) != (sd_pci_slot & 0xffff)) {
+-			SDLX_MSG(("%s: %s: bus %X, slot %X, vend %X, dev %X\n",
+-				  __func__,
+-				  bcmsdh_chipmatch(pdev->vendor, pdev->device) ?
+-				  "Found compatible SDIOHC" :
+-				  "Probing unknown device",
+-				  pdev->bus->number, PCI_SLOT(pdev->devfn),
+-				  pdev->vendor, pdev->device));
+-			return -ENODEV;
+-		}
+-		SDLX_MSG(("%s: %s: bus %X, slot %X, vendor %X, device %X "
+-			"(good PCI location)\n", __func__,
+-			bcmsdh_chipmatch(pdev->vendor, pdev->device) ?
+-			"Using compatible SDIOHC" : "WARNING, forced use "
+-			"of unkown device",
+-		pdev->bus->number, PCI_SLOT(pdev->devfn), pdev->vendor,
+-		pdev->device));
+-	}
+-
+-	if ((pdev->vendor == VENDOR_TI)
+-	    && ((pdev->device == PCIXX21_FLASHMEDIA_ID)
+-		|| (pdev->device == PCIXX21_FLASHMEDIA0_ID))) {
+-		u32 config_reg;
+-
+-		SDLX_MSG(("%s: Disabling TI FlashMedia Controller.\n",
+-			  __func__));
+-		osh = osl_attach(pdev, PCI_BUS);
+-		if (!osh) {
+-			SDLX_MSG(("%s: osl_attach failed\n", __func__));
+-			goto err;
+-		}
+-
+-		config_reg = OSL_PCI_READ_CONFIG(osh, 0x4c, 4);
+-
+-		/*
+-		 * Set MMC_SD_DIS bit in FlashMedia Controller.
+-		 * Disbling the SD/MMC Controller in the FlashMedia Controller
+-		 * allows the Standard SD Host Controller to take over control
+-		 * of the SD Slot.
+-		 */
+-		config_reg |= 0x02;
+-		OSL_PCI_WRITE_CONFIG(osh, 0x4c, 4, config_reg);
+-		osl_detach(osh);
+-	}
+-	/* match this pci device with what we support */
+-	/* we can't solely rely on this to believe it is
+-		our SDIO Host Controller! */
+-	if (!bcmsdh_chipmatch(pdev->vendor, pdev->device))
+-		return -ENODEV;
+-
+-	/* this is a pci device we might support */
+-	SDLX_MSG(("%s: Found possible SDIO Host Controller: "
+-		"bus %d slot %d func %d irq %d\n", __func__,
+-		pdev->bus->number, PCI_SLOT(pdev->devfn),
+-		PCI_FUNC(pdev->devfn), pdev->irq));
+-
+-	/* use bcmsdh_query_device() to get the vendor ID of the target device
+-	 * so it will eventually appear in the Broadcom string on the console
+-	 */
+-
+-	/* allocate SDIO Host Controller state info */
+-	osh = osl_attach(pdev, PCI_BUS);
+-	if (!osh) {
+-		SDLX_MSG(("%s: osl_attach failed\n", __func__));
+-		goto err;
+-	}
+-	sdhc = kzalloc(sizeof(bcmsdh_hc_t), GFP_ATOMIC);
+-	if (!sdhc) {
+-		SDLX_MSG(("%s: out of memory\n", __func__));
+-		goto err;
+-	}
+-	sdhc->osh = osh;
+-
+-	sdhc->dev = pdev;
+-
+-	/* map to address where host can access */
+-	pci_set_master(pdev);
+-	rc = pci_enable_device(pdev);
+-	if (rc) {
+-		SDLX_MSG(("%s: Cannot enable PCI device\n", __func__));
+-		goto err;
+-	}
+-	sdh = bcmsdh_attach(osh, (void *)(unsigned long)pci_resource_start(pdev, 0),
+-			(void **)&regs, pdev->irq);
+-	if (!sdh) {
+-		SDLX_MSG(("%s: bcmsdh_attach failed\n", __func__));
+-		goto err;
+-	}
+-
+-	sdhc->sdh = sdh;
+-
+-	/* try to attach to the target device */
+-	sdhc->ch = drvinfo.attach(VENDOR_BROADCOM, /* pdev->vendor, */
+-				bcmsdh_query_device(sdh) & 0xFFFF, 0, 0, 0, 0,
+-				(void *)regs, NULL, sdh);
+-	if (!sdhc->ch) {
+-		SDLX_MSG(("%s: device attach failed\n", __func__));
+-		goto err;
+-	}
+-
+-	/* chain SDIO Host Controller info together */
+-	sdhc->next = sdhcinfo;
+-	sdhcinfo = sdhc;
+-
+-	return 0;
+-
+-	/* error handling */
+-err:
+-	if (sdhc->sdh)
+-		bcmsdh_detach(sdhc->osh, sdhc->sdh);
+-	if (sdhc)
+-		kfree(sdhc);
+-	if (osh)
+-		osl_detach(osh);
+-	return -ENODEV;
+-}
+-
+-/**
+- * Detach from target devices and SDIO Host Controller
+- */
+-static void __devexit bcmsdh_pci_remove(struct pci_dev *pdev)
+-{
+-	bcmsdh_hc_t *sdhc, *prev;
+-	osl_t *osh;
+-
+-	/* find the SDIO Host Controller state for this
+-		 pdev and take it out from the list */
+-	for (sdhc = sdhcinfo, prev = NULL; sdhc; sdhc = sdhc->next) {
+-		if (sdhc->dev == pdev) {
+-			if (prev)
+-				prev->next = sdhc->next;
+-			else
+-				sdhcinfo = NULL;
+-			break;
+-		}
+-		prev = sdhc;
+-	}
+-	if (!sdhc)
+-		return;
+-
+-	drvinfo.detach(sdhc->ch);
+-
+-	bcmsdh_detach(sdhc->osh, sdhc->sdh);
+-
+-	/* release SDIO Host Controller info */
+-	osh = sdhc->osh;
+-	kfree(sdhc);
+-	osl_detach(osh);
+-}
+-#endif				/* BCMLXSDMMC */
+ #endif				/* BCMPLATFORM_BUS */
+ 
+ extern int sdio_function_init(void);
+@@ -515,14 +297,6 @@ int bcmsdh_register(bcmsdh_driver_t *driver)
+ 	return error;
+ #endif				/* defined(BCMPLATFORM_BUS) */
+ 
+-#if !defined(BCMPLATFORM_BUS) && !defined(BCMLXSDMMC)
+-	error = pci_register_driver(&bcmsdh_pci_driver);
+-	if (!error)
+-		return 0;
+-
+-	SDLX_MSG(("%s: pci_register_driver failed 0x%x\n", __func__, error));
+-#endif				/* BCMPLATFORM_BUS */
+-
+ 	return error;
+ }
+ 
+@@ -533,9 +307,6 @@ void bcmsdh_unregister(void)
+ #if defined(BCMLXSDMMC)
+ 	sdio_function_cleanup();
+ #endif				/* BCMLXSDMMC */
+-#if !defined(BCMPLATFORM_BUS) && !defined(BCMLXSDMMC)
+-	pci_unregister_driver(&bcmsdh_pci_driver);
+-#endif				/* BCMPLATFORM_BUS */
+ }
+ 
+ #if defined(OOB_INTR_ONLY)
+-- 
+1.6.4.4
 
-$ grep ^WARNING build_linux-next_next20101123.dileks.1.log | grep iwl
-WARNING: drivers/net/wireless/iwlwifi/iwlagn:
-'iwl_legacy_tx_cmd_protection' exported twice. Previous export was in
-drivers/net/wireless/iwlwifi/iwl3945.ko
-WARNING: drivers/net/wireless/iwlwifi/iwlagn: 'iwl_isr_legacy'
-exported twice. Previous export was in
-drivers/net/wireless/iwlwifi/iwl3945.ko
-WARNING: drivers/net/wireless/iwlwifi/iwlagn:
-'iwl_legacy_mac_bss_info_changed' exported twice. Previous export was
-in drivers/net/wireless/iwlwifi/iwl3945.ko
-WARNING: drivers/net/wireless/iwlwifi/iwlagn:
-'iwl_legacy_mac_reset_tsf' exported twice. Previous export was in
-drivers/net/wireless/iwlwifi/iwl3945.ko
-WARNING: drivers/net/wireless/iwlwifi/iwlagn: 'iwl_legacy_mac_config'
-exported twice. Previous export was in
-drivers/net/wireless/iwlwifi/iwl3945.ko
-
-The fix is doing:
-
-[ drivers/net/wireless/iwlwifi/Makefile ]
-...
--iwlcore-$(CONFIG_IWL3945) += iwl-legacy.o
--iwlcore-$(CONFIG_IWL4965) += iwl-legacy.o
-...
--iwlagn-$(CONFIG_IWL4965) += iwl-4965.o
-+iwlagn-$(CONFIG_IWL4965) += iwl-4965.o iwl-legacy.o
-...
--iwl3945-objs		:= iwl3945-base.o iwl-3945.o iwl-3945-rs.o iwl-3945-led.o
-+iwl3945-objs		:= iwl3945-base.o iwl-3945.o iwl-3945-rs.o
-iwl-3945-led.o iwl-legacy.o
-
-So why do I see warnings in iwl3945.ko but not in iwl-4965.ko?
-
-Is that fix still required? Fixed in wireless-next-2.6?
-
-Regards,
-- Sedat -
-
-[1] https://patchwork.kernel.org/patch/322492/
