@@ -1,28 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f46.google.com ([209.85.215.46]:48594 "EHLO
-	mail-ew0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751447Ab0KWOi5 (ORCPT
+Received: from rcsinet10.oracle.com ([148.87.113.121]:35723 "EHLO
+	rcsinet10.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S934928Ab0KQRNg (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 23 Nov 2010 09:38:57 -0500
-Received: by ewy5 with SMTP id 5so2458158ewy.19
-        for <linux-wireless@vger.kernel.org>; Tue, 23 Nov 2010 06:38:56 -0800 (PST)
-Message-ID: <4CEBD1F3.4030007@gmail.com>
-Date: Tue, 23 Nov 2010 16:38:43 +0200
-From: Sleijeri <sleijeri@gmail.com>
+	Wed, 17 Nov 2010 12:13:36 -0500
+Message-ID: <4CE40CF9.8090404@oracle.com>
+Date: Wed, 17 Nov 2010 09:12:25 -0800
+From: Randy Dunlap <randy.dunlap@oracle.com>
 MIME-Version: 1.0
-To: linux-wireless@vger.kernel.org
-Subject: ar9170usb broken partly 2.6.36
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: "Guy, Wey-Yi" <wey-yi.w.guy@intel.com>, linville@tuxdriver.com,
+	linux-wireless@vger.kernel.org
+Subject: Re: iwlwifi: fix modular legacy build errors
+References: <1290011797.12056.255.camel@wwguy-huron> <1290012580.3777.1.camel@jlt3.sipsolutions.net>
+In-Reply-To: <1290012580.3777.1.camel@jlt3.sipsolutions.net>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-It appears to me that latest Arch linux kernel26-2.6.36-x and my atheros 
-based card Dlink DWA-160A (ar9170usb) have a little problems with 
-connection. iwconfig appeared to show 300Mb/s-1Mb/s speed. As what i 
-have read about the driver ar9170usb doesn't yet support 802.11n ? But 
-if there is upgrade its not working right for me. My connection is very 
-unstable and very slow due this. Connection speed to router and so forth 
-is around 1kb/s - 27kb/s ping is between 200 - 10000. Problem appears to 
-be greater during the load of network.
-Problem disappeared while dropped kernel to verion 2.6.35.8-1 (arch 
-linux kernel). Dmesg is clear of errors.
+On 11/17/10 08:49, Johannes Berg wrote:
+> On Wed, 2010-11-17 at 08:36 -0800, Guy, Wey-Yi wrote:
+>> Hi Randy,
+>>
+>> the "iwlwifi: fix modular legacy build errors" patch cause the following
+>> WARNING when compile 
+> 
+> I thought we already had had a fix for that issue anyway?
+
+Not that I know of.  I reported a different build error and
+included a patch, which is now causing problems, so I asked
+John to drop/revert my patch.
+
+Here is part of the patch description that I sent:
+
+
+With CONFIG_IWLWIFI=m, CONFIG_IWLAGN=m, and CONFIG_IWL3945=m,
+a kernel build has errors as below.  Changing a few lines in the
+Makefile is one possible fix for these build errors.
+
+ERROR: "iwl_legacy_mac_config" [drivers/net/wireless/iwlwifi/iwl3945.ko] undefined!
+ERROR: "iwl_isr_legacy" [drivers/net/wireless/iwlwifi/iwl3945.ko] undefined!
+ERROR: "iwl_legacy_tx_cmd_protection" [drivers/net/wireless/iwlwifi/iwl3945.ko] undefined!
+ERROR: "iwl_legacy_mac_bss_info_changed" [drivers/net/wireless/iwlwifi/iwl3945.ko] undefined!
+ERROR: "iwl_legacy_mac_reset_tsf" [drivers/net/wireless/iwlwifi/iwl3945.ko] undefined!
+
+
+So John can revert my patch and then let the iwlwifi maintainers fix this problem,
+please.
+
+-- 
+~Randy
+*** Remember to use Documentation/SubmitChecklist when testing your code ***
