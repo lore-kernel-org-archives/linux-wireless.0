@@ -1,74 +1,85 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f46.google.com ([209.85.215.46]:45203 "EHLO
-	mail-ew0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754397Ab0KWTZE (ORCPT
+Received: from mail.vyatta.com ([76.74.103.46]:53034 "EHLO mail.vyatta.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932468Ab0KRRXm convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 23 Nov 2010 14:25:04 -0500
-Received: by ewy5 with SMTP id 5so2669075ewy.19
-        for <linux-wireless@vger.kernel.org>; Tue, 23 Nov 2010 11:25:03 -0800 (PST)
-Date: Tue, 23 Nov 2010 21:24:54 +0200
-From: Nick Kossifidis <mickflemm@gmail.com>
-To: ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org
-Cc: linville@tuxdriver.com, me@bobcopeland.com, mcgrof@gmail.com,
-	jirislaby@gmail.com, nbd@openwrt.org, br1@einfach.org
-Subject: [PATCH 18/30] ath5k: Always set IFS intervals on reset
-Message-ID: <20101123192454.GR4303@makis.mantri>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+	Thu, 18 Nov 2010 12:23:42 -0500
+Date: Thu, 18 Nov 2010 09:23:37 -0800
+From: Stephen Hemminger <shemminger@vyatta.com>
+To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Cc: Greg KH <greg@kroah.com>, linux-kernel@vger.kernel.org,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	David Miller <davem@davemloft.net>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	"Perez-Gonzalez, Inaky" <inaky.perez-gonzalez@intel.com>,
+	Charles Marker <Charles.Marker@atheros.com>,
+	Jouni Malinen <Jouni.Malinen@atheros.com>,
+	Kevin Hayes <kevin@atheros.com>,
+	Zhifeng Cai <zhifeng.cai@atheros.com>,
+	Don Breslin <Don.Breslin@atheros.com>,
+	Doug Dahlby <Doug.Dahlby@atheros.com>,
+	Julia Lawall <julia@diku.dk>
+Subject: Re: Challenges with doing hardware bring up with Linux first
+Message-ID: <20101118092337.370449e1@nehalam>
+In-Reply-To: <AANLkTing6JkfH=n2GfWtW+2=5oB40FDM-TYPvzd+PPkH@mail.gmail.com>
+References: <AANLkTim4jVaZxYp8nSgJyy28iwxcxbPeNUzxTfoHAX4S@mail.gmail.com>
+	<20101118164552.GC2855@kroah.com>
+	<AANLkTing6JkfH=n2GfWtW+2=5oB40FDM-TYPvzd+PPkH@mail.gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
- * Make sure we always set IFS timings even if no
- coverage class is set. If we don't we'll miss the
- needed changes for different bwmodes.
+On Thu, 18 Nov 2010 08:53:22 -0800
+"Luis R. Rodriguez" <lrodriguez@atheros.com> wrote:
 
- Signed-off-by: Nick Kossifidis <mickflemm@gmail.com>
----
- drivers/net/wireless/ath/ath5k/ath5k.h |    1 +
- drivers/net/wireless/ath/ath5k/pcu.c   |    2 +-
- drivers/net/wireless/ath/ath5k/qcu.c   |    8 ++++++++
- 3 files changed, 10 insertions(+), 1 deletions(-)
+> On Thu, Nov 18, 2010 at 8:45 AM, Greg KH <greg@kroah.com> wrote:
+> > On Thu, Nov 18, 2010 at 12:46:37AM -0800, Luis R. Rodriguez wrote:
+> >> Can Linux help in any way? What if we used staging for a common driver
+> >> architecture for different OSes? Most of those staging drivers already
+> >> have some sort of OS agnostic cruft, why not try to help hardware
+> >> vendors by providing them with a common OS agnostic solution they can
+> >> share? Is this not out turf? If its not, are we perfectly OK in being
+> >> second citizens so long as the driver eventually gets done on proper
+> >> upstream Linux ? I'm not OK with it and hence my e-mail. I'm looking
+> >> for ideas and thoughts on this. Please no trolls, would really just
+> >> like some constructive discussions on this. As I see it maybe we can
+> >> move some of this OS agnostic crap into staging, and then use spatch
+> >> to write tools to de-unwrap crap to Linux specific stuff and help
+> >> maintain it. What this does is it moves OS agnostic crap out as a
+> >> community effort to help aid proper development and porting for Linux.
+> >> Since we'd maintain the crap / scripts / de-wrappers, we'd likely be
+> >> able to get drivers quicker and can have a framework to help companies
+> >> who still [1] need to support other Operating Systems.
+> >
+> > No, staging is for gettingn code into, or out of, the kernel tree, not
+> > for anything else.
+> >
+> > I have allowed it to be used to hold drivers in that are not
+> > "acceptable", while another driver was written by others from scratch to
+> > work properly on that hardware, and then the original one is dropped.
+> > That's ok, as there is a time-limit on how long the code lives in the
+> > staging tree.
+> >
+> > But to try to use it to create a multi-os solution, no, that's not what
+> > staging is for.
+> 
+> OK thanks!
+> 
+> > Also, please review the past multi-os driver initiatives that have
+> > sprung up over the years (about 1 every 10 years it seems).  Please
+> > learn from the past as to why those have failed every single time, and
+> > why we don't want to even try to do that again.
+> 
+> :-) thanks, just testing waters to see what's possible and what
+> direction to focus more on.
+> 
+>   Luis
 
-diff --git a/drivers/net/wireless/ath/ath5k/ath5k.h b/drivers/net/wireless/ath/ath5k/ath5k.h
-index ddbbf4c..e258830 100644
---- a/drivers/net/wireless/ath/ath5k/ath5k.h
-+++ b/drivers/net/wireless/ath/ath5k/ath5k.h
-@@ -1224,6 +1224,7 @@ int ath5k_eeprom_read_mac(struct ath5k_hw *ah, u8 *mac);
- /* Helpers */
- int ath5k_hw_get_frame_duration(struct ath5k_hw *ah,
- 		int len, struct ieee80211_rate *rate);
-+unsigned int ath5k_hw_get_default_slottime(struct ath5k_hw *ah);
- unsigned int ath5k_hw_get_default_sifs(struct ath5k_hw *ah);
- extern int ath5k_hw_set_opmode(struct ath5k_hw *ah, enum nl80211_iftype opmode);
- void ath5k_hw_set_coverage_class(struct ath5k_hw *ah, u8 coverage_class);
-diff --git a/drivers/net/wireless/ath/ath5k/pcu.c b/drivers/net/wireless/ath/ath5k/pcu.c
-index 4556f29..420ab61 100644
---- a/drivers/net/wireless/ath/ath5k/pcu.c
-+++ b/drivers/net/wireless/ath/ath5k/pcu.c
-@@ -129,7 +129,7 @@ int ath5k_hw_get_frame_duration(struct ath5k_hw *ah,
-  *
-  * @ah: The &struct ath5k_hw
-  */
--static unsigned int ath5k_hw_get_default_slottime(struct ath5k_hw *ah)
-+unsigned int ath5k_hw_get_default_slottime(struct ath5k_hw *ah)
- {
- 	struct ieee80211_channel *channel = ah->ah_current_channel;
- 	unsigned int slot_time;
-diff --git a/drivers/net/wireless/ath/ath5k/qcu.c b/drivers/net/wireless/ath/ath5k/qcu.c
-index 69bff04..1849eee 100644
---- a/drivers/net/wireless/ath/ath5k/qcu.c
-+++ b/drivers/net/wireless/ath/ath5k/qcu.c
-@@ -652,5 +652,13 @@ int ath5k_hw_init_queues(struct ath5k_hw *ah)
- 		AR5K_REG_ENABLE_BITS(ah, AR5K_DCU_GBL_IFS_MISC,
- 				AR5K_DCU_GBL_IFS_MISC_TURBO_MODE);
- 
-+	/* If we didn't set IFS timings through
-+	 * ath5k_hw_set_coverage_class make sure
-+	 * we set them here */
-+	if (!ah->ah_coverage_class) {
-+		unsigned int slot_time = ath5k_hw_get_default_slottime(ah);
-+		ath5k_hw_set_ifs_intervals(ah, slot_time);
-+	}
-+
- 	return 0;
- }
+If you go back to the Mythical Man Month you will find:
+ "Plan on doing it twice; you are going to anyway"
+
+Therefore I wouldn't worry about whether the first development version
+is upstream.
+
+-- 
