@@ -1,46 +1,142 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.perches.com ([173.55.12.10]:4831 "EHLO mail.perches.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752104Ab0KJAf1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 9 Nov 2010 19:35:27 -0500
-From: Joe Perches <joe@perches.com>
-To: linux-kernel@vger.kernel.org
-Cc: dri-devel@lists.freedesktop.org, netdev@vger.kernel.org,
-	linux-wireless@vger.kernel.org, cluster-devel@redhat.com,
-	linux-nilfs@vger.kernel.org, linux-nfs@vger.kernel.org
-Subject: [PATCH 0/9] treewide: convert vprintk uses to %pV
-Date: Tue,  9 Nov 2010 16:35:14 -0800
-Message-Id: <cover.1289348757.git.joe@perches.com>
+Received: from mail-fx0-f46.google.com ([209.85.161.46]:42074 "EHLO
+	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753925Ab0KRLdD (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 18 Nov 2010 06:33:03 -0500
+Received: by mail-fx0-f46.google.com with SMTP id 6so1460042fxm.19
+        for <linux-wireless@vger.kernel.org>; Thu, 18 Nov 2010 03:33:02 -0800 (PST)
+From: Arik Nemtsov <arik@wizery.com>
+To: <linux-wireless@vger.kernel.org>
+Cc: Luciano Coelho <luciano.coelho@nokia.com>,
+	Arik Nemtsov <arik@wizery.com>
+Subject: [PATCH 14/18] wl1271: AP mode - record TX configuration settings
+Date: Thu, 18 Nov 2010 13:32:27 +0200
+Message-Id: <1290079951-16793-15-git-send-email-arik@wizery.com>
+In-Reply-To: <1290079951-16793-1-git-send-email-arik@wizery.com>
+References: <1290079951-16793-1-git-send-email-arik@wizery.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Multiple secessive calls to printk can be interleaved.
-Avoid this possible interleaving by using %pV
+Record TX configuration settings in the "conf" member of our global
+structure (struct wl1271) if conf_tx is called when the firmware is
+not loaded.
 
-Joe Perches (9):
-  drivers/gpu/drm/drm_stub.c: Use printf extension %pV
-  drivers/isdn/mISDN: Use printf extension %pV
-  drivers/net/wireless/ath/debug.c: Use printf extension %pV
-  drivers/net/wireless/b43/main.c: Use printf extension %pV
-  drivers/net/wireless/b43legacy/main.c: Use printf extension %pV
-  fs/gfs2/glock.c: Use printf extension %pV
-  fs/nilfs2/super.c: Use printf extension %pV
-  fs/quota/dquot.c: Use printf extension %pV
-  net/sunrpc/svc.c: Use printf extension %pV
+Later on when the firmware is loaded, we apply the tx conf as part of
+the init sequence.
 
- drivers/gpu/drm/drm_stub.c            |   14 +++++++--
- drivers/isdn/mISDN/layer1.c           |   10 +++++--
- drivers/isdn/mISDN/layer2.c           |   12 ++++++--
- drivers/isdn/mISDN/tei.c              |   23 +++++++++++----
- drivers/net/wireless/ath/debug.c      |    9 +++++-
- drivers/net/wireless/b43/main.c       |   48 ++++++++++++++++++++++++--------
- drivers/net/wireless/b43legacy/main.c |   47 ++++++++++++++++++++++++--------
- fs/gfs2/glock.c                       |    9 +++++-
- fs/nilfs2/super.c                     |   23 +++++++++++-----
- fs/quota/dquot.c                      |   12 +++++---
- net/sunrpc/svc.c                      |   12 +++++---
- 11 files changed, 161 insertions(+), 58 deletions(-)
+Important for AP mode since conf_tx is called before add_interface
+(where the firmware is initialized).
 
+Signed-off-by: Arik Nemtsov <arik@wizery.com>
+---
+ drivers/net/wireless/wl12xx/main.c |   74 ++++++++++++++++++++++++------------
+ 1 files changed, 50 insertions(+), 24 deletions(-)
+
+diff --git a/drivers/net/wireless/wl12xx/main.c b/drivers/net/wireless/wl12xx/main.c
+index 7e7b392..91bbb72 100644
+--- a/drivers/net/wireless/wl12xx/main.c
++++ b/drivers/net/wireless/wl12xx/main.c
+@@ -1442,6 +1442,8 @@ static int wl1271_op_config(struct ieee80211_hw *hw, u32 changed)
+ 		goto out;
+ 	}
+ 
++	is_ap = (wl->bss_type == BSS_TYPE_AP_BSS);
++
+ 	ret = wl1271_ps_elp_wakeup(wl, false);
+ 	if (ret < 0)
+ 		goto out;
+@@ -2216,42 +2218,66 @@ static int wl1271_op_conf_tx(struct ieee80211_hw *hw, u16 queue,
+ {
+ 	struct wl1271 *wl = hw->priv;
+ 	u8 ps_scheme;
+-	int ret;
++	int ret = 0;
+ 
+ 	mutex_lock(&wl->mutex);
+ 
+ 	wl1271_debug(DEBUG_MAC80211, "mac80211 conf tx %d", queue);
+ 
+-	if (unlikely(wl->state == WL1271_STATE_OFF)) {
+-		ret = -EAGAIN;
+-		goto out;
+-	}
+-
+-	ret = wl1271_ps_elp_wakeup(wl, false);
+-	if (ret < 0)
+-		goto out;
+-
+-	/* the txop is confed in units of 32us by the mac80211, we need us */
+-	ret = wl1271_acx_ac_cfg(wl, wl1271_tx_get_queue(queue),
+-				params->cw_min, params->cw_max,
+-				params->aifs, params->txop << 5);
+-	if (ret < 0)
+-		goto out_sleep;
+-
+ 	if (params->uapsd)
+ 		ps_scheme = CONF_PS_SCHEME_UPSD_TRIGGER;
+ 	else
+ 		ps_scheme = CONF_PS_SCHEME_LEGACY;
+ 
+-	ret = wl1271_acx_tid_cfg(wl, wl1271_tx_get_queue(queue),
+-				 CONF_CHANNEL_TYPE_EDCF,
+-				 wl1271_tx_get_queue(queue),
+-				 ps_scheme, CONF_ACK_POLICY_LEGACY, 0, 0);
+-	if (ret < 0)
+-		goto out_sleep;
++	if (wl->state == WL1271_STATE_OFF) {
++		/*
++		 * If the state is off, the parameters will be recorded and
++		 * configured on init. This happens in AP-mode.
++		 */
++		struct conf_tx_ac_category *conf_ac =
++			&wl->conf.tx.ac_conf[wl1271_tx_get_queue(queue)];
++		struct conf_tx_tid *conf_tid =
++			&wl->conf.tx.tid_conf[wl1271_tx_get_queue(queue)];
++
++		conf_ac->ac = wl1271_tx_get_queue(queue);
++		conf_ac->cw_min = (u8)params->cw_min;
++		conf_ac->cw_max = params->cw_max;
++		conf_ac->aifsn = params->aifs;
++		conf_ac->tx_op_limit = params->txop << 5;
++
++		conf_tid->queue_id = wl1271_tx_get_queue(queue);
++		conf_tid->channel_type = CONF_CHANNEL_TYPE_EDCF;
++		conf_tid->tsid = wl1271_tx_get_queue(queue);
++		conf_tid->ps_scheme = ps_scheme;
++		conf_tid->ack_policy = CONF_ACK_POLICY_LEGACY;
++		conf_tid->apsd_conf[0] = 0;
++		conf_tid->apsd_conf[1] = 0;
++	} else {
++		ret = wl1271_ps_elp_wakeup(wl, false);
++		if (ret < 0)
++			goto out;
++
++		/*
++		 * the txop is confed in units of 32us by the mac80211,
++		 * we need us
++		 */
++		ret = wl1271_acx_ac_cfg(wl, wl1271_tx_get_queue(queue),
++					params->cw_min, params->cw_max,
++					params->aifs, params->txop << 5);
++		if (ret < 0)
++			goto out_sleep;
++
++		ret = wl1271_acx_tid_cfg(wl, wl1271_tx_get_queue(queue),
++					 CONF_CHANNEL_TYPE_EDCF,
++					 wl1271_tx_get_queue(queue),
++					 ps_scheme, CONF_ACK_POLICY_LEGACY,
++					 0, 0);
++		if (ret < 0)
++			goto out_sleep;
+ 
+ out_sleep:
+-	wl1271_ps_elp_sleep(wl);
++		wl1271_ps_elp_sleep(wl);
++	}
+ 
+ out:
+ 	mutex_unlock(&wl->mutex);
 -- 
-1.7.3.1.g432b3.dirty
+1.7.1
 
