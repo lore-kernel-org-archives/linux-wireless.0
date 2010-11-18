@@ -1,55 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([147.243.128.26]:61202 "EHLO mgw-da02.nokia.com"
+Received: from mail.atheros.com ([12.19.149.2]:44530 "EHLO mail.atheros.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754191Ab0KRHQr (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 18 Nov 2010 02:16:47 -0500
-Received: from nokia.com (localhost [127.0.0.1])
-	by mgw-da02.nokia.com (Switch-3.4.3/Switch-3.4.3) with ESMTP id oAI7Gk22002231
-	for <linux-wireless@vger.kernel.org>; Thu, 18 Nov 2010 09:16:46 +0200
-From: juuso.oikarinen@nokia.com
-To: luciano.coelho@nokia.com
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCHv2] wl12xx: Unset bssid filter, ssid and bssid from firmware on disassoc
-Date: Thu, 18 Nov 2010 09:16:24 +0200
-Message-Id: <1290064584-10768-1-git-send-email-juuso.oikarinen@nokia.com>
+	id S1752619Ab0KRFqX (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 18 Nov 2010 00:46:23 -0500
+Received: from mail.atheros.com ([10.10.20.108])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Wed, 17 Nov 2010 21:46:10 -0800
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: <linville@tuxdriver.com>
+CC: <mark@moxienet.com>, <linux-wireless@vger.kernel.org>,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>
+Subject: [PATCH 2/4] cfg80211: move reg_work and reg_todo above
+Date: Wed, 17 Nov 2010 21:46:07 -0800
+Message-ID: <1290059169-2468-3-git-send-email-lrodriguez@atheros.com>
+In-Reply-To: <1290059169-2468-1-git-send-email-lrodriguez@atheros.com>
+References: <1290059169-2468-1-git-send-email-lrodriguez@atheros.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Juuso Oikarinen <juuso.oikarinen@nokia.com>
+These will be used earlier in the next few patches.
 
-On the disassociation event from the mac80211, the wl12xx driver does not
-clear the chipset configuration related to the AP - i.e. it does not perform
-a DISCONNECT and then a JOIN with zero SSID and dummy BSSID. Also, it does not
-unset the BSSID filter.
-
-Often this is not a problem, as the above is performed upon entering idle
-state. But if a scenario arises where a new association is attempted without
-cycling through idle state, the new association will fail.
-
-Fix this by resetting the firmware state on disassociation.
-
-Signed-off-by: Juuso Oikarinen <juuso.oikarinen@nokia.com>
+Cc: Mark Mentovai <mark@moxienet.com>
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
 ---
-v2: Changed the function calls to ones with a bit narrower scope
+ net/wireless/reg.c |    5 +++--
+ 1 files changed, 3 insertions(+), 2 deletions(-)
 
- drivers/net/wireless/wl12xx/main.c |    4 ++++
- 1 files changed, 4 insertions(+), 0 deletions(-)
-
-diff --git a/drivers/net/wireless/wl12xx/main.c b/drivers/net/wireless/wl12xx/main.c
-index 31f0e2f..c523778 100644
---- a/drivers/net/wireless/wl12xx/main.c
-+++ b/drivers/net/wireless/wl12xx/main.c
-@@ -2012,6 +2012,10 @@ static void wl1271_op_bss_info_changed(struct ieee80211_hw *hw,
- 			/* Disable the keep-alive feature */
- 			ret = wl1271_acx_keep_alive_mode(wl, false);
+diff --git a/net/wireless/reg.c b/net/wireless/reg.c
+index 9830db6..3fa2474 100644
+--- a/net/wireless/reg.c
++++ b/net/wireless/reg.c
+@@ -96,6 +96,9 @@ struct reg_beacon {
+ 	struct ieee80211_channel chan;
+ };
  
-+			/* restore the bssid filter and go to dummy bssid */
-+			wl1271_handle_idle(wl, true);
-+			wl1271_handle_idle(wl, false);
++static void reg_todo(struct work_struct *work);
++static DECLARE_WORK(reg_work, reg_todo);
 +
- 			if (ret < 0)
- 				goto out_sleep;
- 		}
+ /* We keep a static world regulatory domain in case of the absence of CRDA */
+ static const struct ieee80211_regdomain world_regdom = {
+ 	.n_reg_rules = 5,
+@@ -1494,8 +1497,6 @@ static void reg_todo(struct work_struct *work)
+ 	reg_process_pending_beacon_hints();
+ }
+ 
+-static DECLARE_WORK(reg_work, reg_todo);
+-
+ static void queue_regulatory_request(struct regulatory_request *request)
+ {
+ 	if (isalpha(request->alpha2[0]))
 -- 
-1.7.1
+1.7.3.2.90.gd4c43
 
