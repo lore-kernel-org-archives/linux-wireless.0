@@ -1,70 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from arroyo.ext.ti.com ([192.94.94.40]:55505 "EHLO arroyo.ext.ti.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758321Ab0KQSIl (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 17 Nov 2010 13:08:41 -0500
-From: "Gabay, Benzy" <benzyg@ti.com>
-To: Luciano Coelho <luciano.coelho@nokia.com>,
-	=?utf-8?B?ZXh0IEfDoWJvciBTdGVmYW5paw==?= <netrolller.3d@gmail.com>,
-	ext Grazvydas Ignotas <notasas@gmail.com>,
-	"Levi, Shahar" <shahar_levi@ti.com>, Kalle Valo <kvalo@adurom.com>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Date: Wed, 17 Nov 2010 12:08:25 -0600
-Subject: RE: [PATCH v4] wl1271: Change wl12xx Files Names
-Message-ID: <676FD6AA0F002F49B89E70F0C5EFD22C136DEA0A14@dlee04.ent.ti.com>
-References: <1288883257-30060-1-git-send-email-shahar_levi@ti.com>
-	 <AANLkTincpxdpmf5J38LiGsF-d9dG7sG9-bjbkH-B8Ld0@mail.gmail.com>
-	 <1288891196.17643.6.camel@powerslave>
-	 <AANLkTi=Luv2+5Hys2PcrH+G8jmc4vwz8PM0LFKm+fTt8@mail.gmail.com>
- <1288907555.17643.14.camel@powerslave>
-In-Reply-To: <1288907555.17643.14.camel@powerslave>
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
+Received: from he.sipsolutions.net ([78.46.109.217]:37893 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758229Ab0KRUBs (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 18 Nov 2010 15:01:48 -0500
+Subject: Re: iwlwifi: fix modular legacy build errors
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Randy Dunlap <randy.dunlap@oracle.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	"Guy, Wey-Yi" <wey-yi.w.guy@intel.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <4CE5849D.1060705@oracle.com>
+References: <1290011797.12056.255.camel@wwguy-huron>
+	 <1290012580.3777.1.camel@jlt3.sipsolutions.net>
+	 <4CE40CF9.8090404@oracle.com> <1290013876.12056.260.camel@wwguy-huron>
+	 <20101118091138.80875baf.randy.dunlap@oracle.com>
+	 <1290101760.6131.1.camel@wwguy-ubuntu>
+	 <20101118175434.GC2468@tuxdriver.com>  <4CE57EB3.5070902@oracle.com>
+	 <1290109607.3801.8.camel@jlt3.sipsolutions.net>
+	 <4CE5849D.1060705@oracle.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Thu, 18 Nov 2010 12:03:17 -0800
+Message-ID: <1290110597.3801.10.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-SGkgQWxsLA0KDQo+ID4gPj4gPiBBbGwgZmlsZXMgbmFtZSBwcmVmaXggcmVtb3ZlZCBkdWUgdG8g
-dGhlIGZhY3QgdGhhdCB3bDEyeHggZHJpdmVyDQo+IHN1cHBvcnRzDQo+ID4gPj4gPiB3bDEyNzEg
-YW5kIHdsMTI3My4NCj4gPiA+PiA+IEFsc28gdGhlIGRlZmluaXRpb24gaW4gS2NvbmZpZyBhbmQg
-aGVhZGVyIGZpbGVzIGNoYW5nZWQNCj4gcmVzcGVjdGl2ZWx5Lg0KPiA+ID4+ID4NCj4gPiA+PiA+
-IFNpZ25lZC1vZmYtYnk6IFNoYWhhciBMZXZpIDxzaGFoYXJfbGV2aUB0aS5jb20+DQo+ID4gPj4N
-Cj4gPiA+PiBIbWggdGhlIG5hbWUgJ3dsMTJ4eCcga2luZCBvZiBpbXBsaWVzIGl0IGNvdmVycyAx
-MjUxLCB3aGlsZSBpbg0KPiBmYWN0DQo+ID4gPj4gd2wxMjUxIGlzIGNvbXBsZXRlbHkgc2VwYXJh
-dGUgZHJpdmVyLi4gQXQgbGVhc3QgdGhlIEtjb25maWcgaGVscA0KPiB0ZXh0DQo+ID4gPj4gc2hv
-dWxkIG1lbnRpb24gaXQgZG9lc24ndCBjb3ZlciB3bDEyNTEgYW5kIHVzZXJzIHNob3VsZCB1c2UN
-Cj4gcmVzcGVjdGl2ZQ0KPiA+ID4+IGRyaXZlciBmb3Igd2wxMjUxLg0KPiA+ID4NCj4gPiA+IFRo
-YXQncyBhIGdvb2QgcG9pbnQuICBXZSBoYXZlIGRpc2N1c3NlZCB0aGlzIGJlZm9yZSBhbmQgdGhp
-cyB3YXMNCj4gdGhlDQo+ID4gPiBiZXN0IHNvbHV0aW9uIHdlIGZvdW5kLiAgVGhlIHdsMTJ4eCBk
-cml2ZXIgaW5jbHVkZXMgc3VwcG9ydCBmb3INCj4gd2wxMjcxDQo+ID4gPiBhbmQgd2wxMjczLCBz
-byB3ZSBjb25zaWRlcmVkIGNhbGxpbmcgaXQgd2wxMjd4LCBidXQgaW4gdGhlIG5lYXINCj4gZnV0
-dXJlLA0KPiA+ID4gd2UnbGwgaGF2ZSBzdXBwb3J0IGZvciB3bDEyODEgYW5kIHdsMTI4MyBhcyB3
-ZWxsLiAgU28gd2UgaGF2ZSB0bw0KPiB1c2UNCj4gPiA+IHdsMTJ4eC4NCj4gPiA+DQo+ID4gPiBB
-dCBsZWFzdCBpbiBteSBvcGluaW9uLCBpdCBpcyBraW5kIG9mIGNsZWFyIHRoYXQgaWYgdGhlcmUg
-aXMgYQ0KPiBzZXBhcmF0ZQ0KPiA+ID4gZHJpdmVyIGZvciB3bDEyNTEsIHRoZSB1c2VyIHdvdWxk
-IHVzZSB0aGF0IG9uZS4gIEluIGFueSBjYXNlLCBBDQo+IG5vdGUgaW4NCj4gPiA+IHRoZSBLY29u
-ZmlnIGhlbHAgdGV4dCB3b3VsZCBkZWZpbml0ZWx5IG5vdCBodXJ0Lg0KPiA+ID4NCj4gPiA+IFNo
-YWhhciwgY291bGQgeW91IHBsZWFzZSBjaGFuZ2UgdGhlIHRleHQgaW4gdGhlIEtjb25maWcgc28g
-dGhhdCBpdA0KPiByZWFkcw0KPiA+ID4gc29tZXRoaW5nIGxpa2UgdGhpcz8NCj4gPiA+DQo+ID4g
-PiAiVGhpcyBtb2R1bGUgYWRkcyBzdXBwb3J0IGZvciB3aXJlbGVzcyBhZGFwdGVycyBiYXNlZCBv
-biBUSSB3bDEyNzENCj4gYW5kDQo+ID4gPiBUSSB3bDEyNzMgY2hpcHNldHMuICBUaGlzIG1vZHVs
-ZSBkb2VzICpub3QqIGluY2x1ZGUgc3VwcG9ydCBmb3INCj4gd2wxMjUxLg0KPiA+ID4gRm9yIHds
-MTI1MSBzdXBwb3J0LCB1c2UgdGhlIHNlcGFyYXRlIGhvbW9ueW1vdXMgZHJpdmVyIGluc3RlYWQu
-Ig0KPiA+DQo+ID4gV2hhdCBhYm91dCB3bDEyNTEgdnMuIHdsMTJhZ24gKG9yIHdsMTJiZ24gaWYg
-bm8gLjExYSBzdXBwb3J0KSwgbGlrZQ0KPiBpd2x3aWZpPw0KPiANCj4gSG1tbS4uLiB3bDEyNTEg
-c3VwcG9ydHMgYmcuICB3bDEyeHggc3VwcG9ydHMgYWJnbi4gIEkgZG9uJ3QgcmVhbGx5IHNlZQ0K
-PiB0aGUgbG9naWMgaW4gdGhpcz8gV2hhdCBkaWZmZXJlbmNlIGRvZXMgaXQgbWFrZSBjb21wYXJp
-bmcgdG8gY2FsbGluZyBpdA0KPiB3bDEyeHg/IEZyb20gd2wxMmFnbiB0aGUgdXNlciBzdGlsbCBk
-b2Vzbid0IGtub3cgd2hldGhlciB3bDEyNTEgaXMNCj4gc3VwcG9ydGVkIG9yIG5vdC4NCj4gDQo+
-IC0tDQo+IENoZWVycywNCj4gTHVjYS4NCj4gDQoNCkkgaGF2ZSBhbm90aGVyIGlkZWEgZm9yIG5h
-bWluZyBjb252ZW50aW9uIGhlcmUuDQpCdXQgZmlyc3QgdG8gYWxpZ24gZXZlcnlvbmUgb24gdGhl
-IFRJIGNoaXAgY29udmVudGlvbnM6DQoxMngxID09IHN1cHBvcnQgZm9yIDIuNEdoeg0KMTJ4MyA9
-PSBzdXBwb3J0cyBib3RoIDIuNEdoeiBhbmQgNS4wR2h6Lg0KDQpUaGUgVEkgcHJvamVjdCBuYW1p
-bmcgY29udmVudGlvbiBwZXIgY2hpcCBpcyBhcyBmb2xsb3c6DQoNCndpbGluazQgPT0gMTI1MSBh
-bmQgMTI1Mw0Kd2lsaW5rNiA9PSAxMjcxIGFuZCAxMjczDQp3aWxpbms3ID09IDEyODEgYW5kIDEy
-ODENCg0KU28gSSBwcm9wb3NlIHRvIHVzZSB0aGUgcHJvamVjdCBuYW1lIGluc3RlYWQgb2YgdXNp
-bmcgdGhlIGNoaXAgbmFtZS4NCmUuZy46IA0KZm9yIHdsMTI1eCB3ZSBjYW4gdXNlOiB3bDQgb3Ig
-d2lsaW5rNC4gSWYgd2Ugd2FudCB0byBpbXBseSB0aGUgYmFuZCBzdXBwb3J0OiB3bDRfYWJnIGFu
-ZCB3bDRfYmcNCmZvciB3bDEyN3ggd2UgY2FuIHVzZTogd2w2IG9yIHdpbGluazYuIElmIHdlIHdh
-bnQgdG8gaW1wbHkgdGhlIGJhbmQgYW5kIGNhcGFiaWxpdHkgc3VwcG9ydDogd2w2X2FiZ24gYW5k
-IHdsNF9iZ24NCg0KZXRjJw0KDQpXaGF0IHNheT8NCg0KQ2hlZXJzLA0KQmVuenkgR2FiYXkNClRl
-eGFzIEluc3RydW1lbnRzDQo=
+On Thu, 2010-11-18 at 11:55 -0800, Randy Dunlap wrote:
+
+> > iwlcore-objs += $(iwlcore-m)
+> > 
+> > to your Makefile after the iwl-legacy lines and see if that helps for
+> > you as well? It seems that the reason is that iwl-legacy never gets
+> 
+> Yes, that builds fine.
+
+Ok, thanks. I think I'll just not worry about it and add that then.
+
+> > -iwlagn-$(CONFIG_IWL4965) += iwl-4965.o
+> > +iwlagn-$(CONFIG_IWL4965) += iwl-4965.o iwl-legacy.o
+> > 
+> > Why does that work, but not iwlcore-$(CONFIG_IWL4965)??
+> 
+> I dunno, but I only tested my erroneous patch when building as loadable
+> modules, not builtin.  Testing error on my part.
+
+Actually, I get it -- 4965 cannot be modular. And then I probably never
+tested 3945 _only_, but maybe only 4965 _only_ ... oh well. I'll go fix
+it.
+
+johannes
+
