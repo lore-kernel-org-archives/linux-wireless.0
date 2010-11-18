@@ -1,67 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.perches.com ([173.55.12.10]:1997 "EHLO mail.perches.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755907Ab0K3Bjr (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 29 Nov 2010 20:39:47 -0500
-Subject: Re: [ath9k-devel] [PATCH wireless-next] ath: Rename ath_print to
- ath_debug
-From: Joe Perches <joe@perches.com>
-To: Felix Fietkau <nbd@openwrt.org>
-Cc: peter@stuge.se, ath9k-devel@lists.ath9k.org,
-	linux-kernel@vger.kernel.org,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <4CF42C17.2070500@openwrt.org>
-References: <5febb0e1fba0ec2bb77f6ade8b251ba0edf4614c.1290988277.git.joe@perches.com>
-	 <AANLkTinc251WbwuLqFbOZ5ipNGZW7=wub3DoWwy42=+e@mail.gmail.com>
-	 <20101129060732.5130.qmail@stuge.se>  <4CF42C17.2070500@openwrt.org>
-Content-Type: text/plain; charset="UTF-8"
-Date: Mon, 29 Nov 2010 17:39:45 -0800
-Message-ID: <1291081185.16349.133.camel@Joe-Laptop>
-Mime-Version: 1.0
+Received: from 128-177-27-249.ip.openhosting.com ([128.177.27.249]:32807 "EHLO
+	jmalinen.user.openhosting.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1755200Ab0KRTVu (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 18 Nov 2010 14:21:50 -0500
+Date: Thu, 18 Nov 2010 21:21:39 +0200
+From: Jouni Malinen <j@w1.fi>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Helmut Schaa <helmut.schaa@googlemail.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org,
+	Lennert Buytenhek <buytenh@wantstofly.org>
+Subject: Re: [PATCH] mac80211: Use sw crypto for GTKs on AP VLAN interfaces
+Message-ID: <20101118192139.GA6421@jm.kir.nu>
+References: <1290094587-5387-1-git-send-email-helmut.schaa@googlemail.com>
+ <1290099699.3801.3.camel@jlt3.sipsolutions.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1290099699.3801.3.camel@jlt3.sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2010-11-29 at 23:41 +0100, Felix Fietkau wrote:
-> On 2010-11-29 7:07 AM, Peter Stuge wrote:
-> > Luis R. Rodriguez wrote:
-> >> On Sun, Nov 28, 2010 at 3:53 PM, Joe Perches <joe@perches.com> wrote:
-> >> > Make the function name match the function purpose.
-> >> > ath_debug is a debug only facility.
-> >> > ath_print seems too generic a name for a debug only use.
-> >> Nack, I don't see the point.
+On Thu, Nov 18, 2010 at 09:01:39AM -0800, Johannes Berg wrote:
+> On Thu, 2010-11-18 at 16:36 +0100, Helmut Schaa wrote:
+> > If we want to support hardware crypto for broadcast traffic on AP VLAN
+> > interfaces we'd either need to switch to per station GTKs or need to
+> > make drivers aware of VLAN interfaces. Not sure if it's worth it.
 > > 
-> > The point is to improve readability. I like the patch.
-> And how exactly does this improve readability? Don't get me wrong, I
-> generally like to see more cleanups merged to the ath/ath9k drivers
-> (they do need it, after all).
+> > At least current rt2x00 devices won't be able to support that due to
+> > the limited amount of available key space.
 
-It's considered polite to cc the patch author.
+> Hmm, good point. Jouni, any comments? Lennert maybe?
 
-print is generic, debug is specific.
-This function has a specific use for debugging
-not a generic use all for logging.
+I haven't looked at how the per-STA GTKs interface would apply here, but
+since the broadcast keys are only used for TX, having multiple keys
+should not be much of an issue for drivers that have similar design to
+ath9k/ath5k as long as we can convince the driver to assign different
+hw_key_idx for each key. So yes, there will need to be some knowledge of
+different AP VLAN context to allow this to happen. Anyway, I would not
+be too worried about starting with forced sw crypto for
+broadcast/multicast frames in any other vif than the first one and
+considering optimizations later should someone care enough.
 
-If it was ath_print(level, etc) with KERN_<level>
-passed as the first argument that'd be similar
-to other kernel calls.  As is, it's not.
-
-> But in my opinion, simple renaming churn like this does nothing but
-> annoy people who want to get other work done at the same time.
-
-This sort of thing can be done when other changes have
-just been merged to minimize conflicts.
-
-> Consider the large number of lines touched (and the potential merge
-> conflicts with other code because of that), relative to the microscopic
-> aesthetic gain (if any).
-> 
-> Instead I'd like to see more cleanups that go beyond trivial function
-> renames.
-
-I gauge my willingness to spend time on subsystems on
-the maintainers willingness to merge things that improve
-readability and correctness.
-
-cheers, Joe
-
+-- 
+Jouni Malinen                                            PGP id EFC895FA
