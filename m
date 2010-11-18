@@ -1,204 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail30s.wh2.ocn.ne.jp ([125.206.180.198]:5033 "HELO
-	mail30s.wh2.ocn.ne.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1751659Ab0KEGxC (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 5 Nov 2010 02:53:02 -0400
-Received: from vs3012.wh2.ocn.ne.jp (125.206.180.183)
-	by mail30s.wh2.ocn.ne.jp (RS ver 1.0.95vs) with SMTP id 0-0532039980
-	for <linux-wireless@vger.kernel.org>; Fri,  5 Nov 2010 15:53:00 +0900 (JST)
-Subject: [PATCH v6 1/3] cfg80211: Add nl80211 antenna configuration
-To: johannes@sipsolutions.net, linville@tuxdriver.com
-From: Bruno Randolf <br1@einfach.org>
-Cc: nbd@openwrt.org, mcgrof@gmail.com, linux-wireless@vger.kernel.org
-Date: Fri, 05 Nov 2010 15:53:11 +0900
-Message-ID: <20101105065311.8122.83439.stgit@localhost6.localdomain6>
-In-Reply-To: <20101105064851.8122.57278.stgit@localhost6.localdomain6>
-References: <20101105064851.8122.57278.stgit@localhost6.localdomain6>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Received: from smtp.nokia.com ([147.243.128.26]:61202 "EHLO mgw-da02.nokia.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754191Ab0KRHQr (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 18 Nov 2010 02:16:47 -0500
+Received: from nokia.com (localhost [127.0.0.1])
+	by mgw-da02.nokia.com (Switch-3.4.3/Switch-3.4.3) with ESMTP id oAI7Gk22002231
+	for <linux-wireless@vger.kernel.org>; Thu, 18 Nov 2010 09:16:46 +0200
+From: juuso.oikarinen@nokia.com
+To: luciano.coelho@nokia.com
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCHv2] wl12xx: Unset bssid filter, ssid and bssid from firmware on disassoc
+Date: Thu, 18 Nov 2010 09:16:24 +0200
+Message-Id: <1290064584-10768-1-git-send-email-juuso.oikarinen@nokia.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Allow setting of TX and RX antenna configuration via nl80211.
+From: Juuso Oikarinen <juuso.oikarinen@nokia.com>
 
-The antenna configuration is defined as a bitmap of allowed antennas to use.
-This API can be used to mask out antennas which are not attached or should not
-be used for other reasons like regulatory concerns or special setups.
+On the disassociation event from the mac80211, the wl12xx driver does not
+clear the chipset configuration related to the AP - i.e. it does not perform
+a DISCONNECT and then a JOIN with zero SSID and dummy BSSID. Also, it does not
+unset the BSSID filter.
 
-Separate bitmaps are used for RX and TX to allow configuring different antennas
-for receiving and transmitting. The bitmap is 8 bit long, each bit representing
-one antenna, starting with antenna 1 at the first bit. If an antenna bit is
-set, this means the driver is allowed to use this antenna for RX or TX
-respectively; if the bit is not set the hardware is not allowed to use this
-antenna.
+Often this is not a problem, as the above is performed upon entering idle
+state. But if a scenario arises where a new association is attempted without
+cycling through idle state, the new association will fail.
 
-Using bitmaps has the benefit of allowing for a flexible configuration
-interface which can support many different configurations and which can be used
-for 802.11n as well as non-802.11n devices. Instead of relying on some hardware
-specific assumptions, drivers can use this information to know which antennas
-are actually attached to the system and derive their capabilities based on
-that.
+Fix this by resetting the firmware state on disassociation.
 
-802.11n devices should enable or disable chains, based on which antennas are
-present (If all antennas belonging to a particular chain are disabled, the
-entire chain should be disabled). HT capabilities (like STBC, TX Beamforming,
-Antenna selection) should be calculated based on the available chains after
-applying the antenna masks. Should a 802.11n device have diversity antennas
-attached to one of their chains, diversity can be enabled or disabled based on
-the antenna information.
-
-Non-802.11n drivers can use the antenna masks to enable or disable antenna
-diversity.
-
-While covering chainmasks for 802.11n and the standard "legacy" modes "fixed
-antenna 1", "fixed antenna 2" and "diversity" this API also allows more rare,
-but useful configurations as follows:
-
-1) Send on antenna 1, receive on antenna 2 (or vice versa). This can be used to
-have a low gain antenna for TX in order to keep within the regulatory
-constraints and a high gain antenna for RX in order to receive weaker signals
-("speak softly, but listen harder"). This can be useful for building long-shot
-outdoor links. Another usage of this setup is having a low-noise pre-amplifier
-on antenna 1 and a power amplifier on the other antenna. This way transmit
-noise is mostly kept out of the low noise receive channel.
-(This would be bitmaps: tx 1 rx 2).
-
-2) Another similar setup is: Use RX diversity on both antennas, but always send
-on antenna 1. Again that would allow us to benefit from a higher gain RX
-antenna, while staying within the legal limits.
-(This would be: tx 0 rx 3).
-
-3) And finally there can be special experimental setups in research and
-development even with pre 802.11n hardware where more than 2 antennas are
-available. It's good to keep the API simple, yet flexible.
-
-Signed-off-by: Bruno Randolf <br1@einfach.org>
+Signed-off-by: Juuso Oikarinen <juuso.oikarinen@nokia.com>
 ---
- include/linux/nl80211.h |   25 +++++++++++++++++++++++++
- include/net/cfg80211.h  |    3 +++
- net/wireless/nl80211.c  |   31 ++++++++++++++++++++++++++++++-
- 3 files changed, 58 insertions(+), 1 deletions(-)
+v2: Changed the function calls to ones with a bit narrower scope
 
-diff --git a/include/linux/nl80211.h b/include/linux/nl80211.h
-index 0edb256..276fec0 100644
---- a/include/linux/nl80211.h
-+++ b/include/linux/nl80211.h
-@@ -804,6 +804,28 @@ enum nl80211_commands {
-  * @NL80211_ATTR_SUPPORT_IBSS_RSN: The device supports IBSS RSN, which mostly
-  *	means support for per-station GTKs.
-  *
-+ * @NL80211_ATTR_WIPHY_ANTENNA_TX: Bitmap of allowed antennas for transmitting.
-+ *	This can be used to mask out antennas which are not attached or should
-+ *	not be used for transmitting. If an antenna is not selected in this
-+ *	bitmap the hardware is not allowed to transmit on this antenna.
-+ *
-+ *	Each bit represents one antenna, starting with antenna 1 at the first
-+ *	bit. Depending on which antennas are selected in the bitmap, 802.11n
-+ *	drivers can derive which chainmasks to use (if all antennas belonging to
-+ *	a particular chain are disabled this chain should be disabled) and if
-+ *	a chain has diversity antennas wether diversity should be used or not.
-+ *	HT capabilities (STBC, TX Beamforming, Antenna selection) can be
-+ *	derived from the available chains after applying the antenna mask.
-+ *	Non-802.11n drivers can derive wether to use diversity or not.
-+ *	Drivers may reject configurations or RX/TX mask combinations they cannot
-+ *	support by returning -EINVAL.
-+ *
-+ * @NL80211_ATTR_WIPHY_ANTENNA_RX: Bitmap of allowed antennas for receiving.
-+ *	This can be used to mask out antennas which are not attached or should
-+ *	not be used for receiving. If an antenna is not selected in this bitmap
-+ *	the hardware should not be configured to receive on this antenna.
-+ *	For a more detailed descripton see @NL80211_ATTR_WIPHY_ANTENNA_TX.
-+ *
-  * @NL80211_ATTR_MAX: highest attribute number currently defined
-  * @__NL80211_ATTR_AFTER_LAST: internal use
-  */
-@@ -973,6 +995,9 @@ enum nl80211_attrs {
+ drivers/net/wireless/wl12xx/main.c |    4 ++++
+ 1 files changed, 4 insertions(+), 0 deletions(-)
+
+diff --git a/drivers/net/wireless/wl12xx/main.c b/drivers/net/wireless/wl12xx/main.c
+index 31f0e2f..c523778 100644
+--- a/drivers/net/wireless/wl12xx/main.c
++++ b/drivers/net/wireless/wl12xx/main.c
+@@ -2012,6 +2012,10 @@ static void wl1271_op_bss_info_changed(struct ieee80211_hw *hw,
+ 			/* Disable the keep-alive feature */
+ 			ret = wl1271_acx_keep_alive_mode(wl, false);
  
- 	NL80211_ATTR_SUPPORT_IBSS_RSN,
- 
-+	NL80211_ATTR_WIPHY_ANTENNA_TX,
-+	NL80211_ATTR_WIPHY_ANTENNA_RX,
++			/* restore the bssid filter and go to dummy bssid */
++			wl1271_handle_idle(wl, true);
++			wl1271_handle_idle(wl, false);
 +
- 	/* add attributes here, update the policy in nl80211.c */
- 
- 	__NL80211_ATTR_AFTER_LAST,
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index 2a7936d..9b88fff 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -1304,6 +1304,9 @@ struct cfg80211_ops {
- 	void	(*mgmt_frame_register)(struct wiphy *wiphy,
- 				       struct net_device *dev,
- 				       u16 frame_type, bool reg);
-+
-+	int	(*set_antenna)(struct wiphy *wiphy, u8 tx_ant, u8 rx_ant);
-+	int	(*get_antenna)(struct wiphy *wiphy, u8 *tx_ant, u8 *rx_ant);
- };
- 
- /*
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index c506241..2343fde 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -166,7 +166,11 @@ static const struct nla_policy nl80211_policy[NL80211_ATTR_MAX+1] = {
- 
- 	[NL80211_ATTR_WIPHY_TX_POWER_SETTING] = { .type = NLA_U32 },
- 	[NL80211_ATTR_WIPHY_TX_POWER_LEVEL] = { .type = NLA_U32 },
-+
- 	[NL80211_ATTR_FRAME_TYPE] = { .type = NLA_U16 },
-+
-+	[NL80211_ATTR_WIPHY_ANTENNA_TX] = { .type = NLA_U8 },
-+	[NL80211_ATTR_WIPHY_ANTENNA_RX] = { .type = NLA_U8 },
- };
- 
- /* policy for the key attributes */
-@@ -526,7 +530,6 @@ static int nl80211_send_wiphy(struct sk_buff *msg, u32 pid, u32 seq, int flags,
- 		    dev->wiphy.rts_threshold);
- 	NLA_PUT_U8(msg, NL80211_ATTR_WIPHY_COVERAGE_CLASS,
- 		    dev->wiphy.coverage_class);
--
- 	NLA_PUT_U8(msg, NL80211_ATTR_MAX_NUM_SCAN_SSIDS,
- 		   dev->wiphy.max_scan_ssids);
- 	NLA_PUT_U16(msg, NL80211_ATTR_MAX_SCAN_IE_LEN,
-@@ -545,6 +548,16 @@ static int nl80211_send_wiphy(struct sk_buff *msg, u32 pid, u32 seq, int flags,
- 	if (dev->wiphy.flags & WIPHY_FLAG_CONTROL_PORT_PROTOCOL)
- 		NLA_PUT_FLAG(msg, NL80211_ATTR_CONTROL_PORT_ETHERTYPE);
- 
-+	if (dev->ops->get_antenna) {
-+		u8 tx_ant = 0, rx_ant = 0;
-+		int res;
-+		res = dev->ops->get_antenna(&dev->wiphy, &tx_ant, &rx_ant);
-+		if (!res) {
-+			NLA_PUT_U8(msg, NL80211_ATTR_WIPHY_ANTENNA_TX, tx_ant);
-+			NLA_PUT_U8(msg, NL80211_ATTR_WIPHY_ANTENNA_RX, rx_ant);
-+		}
-+	}
-+
- 	nl_modes = nla_nest_start(msg, NL80211_ATTR_SUPPORTED_IFTYPES);
- 	if (!nl_modes)
- 		goto nla_put_failure;
-@@ -1024,6 +1037,22 @@ static int nl80211_set_wiphy(struct sk_buff *skb, struct genl_info *info)
- 			goto bad_res;
- 	}
- 
-+	if (info->attrs[NL80211_ATTR_WIPHY_ANTENNA_TX] &&
-+	    info->attrs[NL80211_ATTR_WIPHY_ANTENNA_RX]) {
-+		u8 tx_ant, rx_ant;
-+		if (!rdev->ops->set_antenna) {
-+			result = -EOPNOTSUPP;
-+			goto bad_res;
-+		}
-+
-+		tx_ant = nla_get_u8(info->attrs[NL80211_ATTR_WIPHY_ANTENNA_TX]);
-+		rx_ant = nla_get_u8(info->attrs[NL80211_ATTR_WIPHY_ANTENNA_RX]);
-+
-+		result = rdev->ops->set_antenna(&rdev->wiphy, tx_ant, rx_ant);
-+		if (result)
-+			goto bad_res;
-+	}
-+
- 	changed = 0;
- 
- 	if (info->attrs[NL80211_ATTR_WIPHY_RETRY_SHORT]) {
+ 			if (ret < 0)
+ 				goto out_sleep;
+ 		}
+-- 
+1.7.1
 
