@@ -1,91 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bear.ext.ti.com ([192.94.94.41]:38420 "EHLO bear.ext.ti.com"
+Received: from mail.atheros.com ([12.19.149.2]:44529 "EHLO mail.atheros.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S933879Ab0KQGxE convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 17 Nov 2010 01:53:04 -0500
-From: "Gabay, Benzy" <benzyg@ti.com>
-To: "juuso.oikarinen@nokia.com" <juuso.oikarinen@nokia.com>,
-	"luciano.coelho@nokia.com" <luciano.coelho@nokia.com>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Date: Wed, 17 Nov 2010 00:52:56 -0600
-Subject: RE: [PATCH 1/2] wl1271: Prevent ad-hoc and active scanning on 11a
- DFS frequencies
-Message-ID: <676FD6AA0F002F49B89E70F0C5EFD22C136DEA03B9@dlee04.ent.ti.com>
-References: <1289384840-28305-1-git-send-email-juuso.oikarinen@nokia.com>
-In-Reply-To: <1289384840-28305-1-git-send-email-juuso.oikarinen@nokia.com>
-Content-Type: text/plain; charset="us-ascii"
+	id S1752619Ab0KRFqS (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 18 Nov 2010 00:46:18 -0500
+Received: from mail.atheros.com ([10.10.20.105])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Wed, 17 Nov 2010 21:46:05 -0800
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: <linville@tuxdriver.com>
+CC: <mark@moxienet.com>, <linux-wireless@vger.kernel.org>,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>
+Subject: [PATCH 1/4] cfg80211: put core regulatory request into queue
+Date: Wed, 17 Nov 2010 21:46:06 -0800
+Message-ID: <1290059169-2468-2-git-send-email-lrodriguez@atheros.com>
+In-Reply-To: <1290059169-2468-1-git-send-email-lrodriguez@atheros.com>
+References: <1290059169-2468-1-git-send-email-lrodriguez@atheros.com>
 MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Juuso,
+This will simplify the synchronization for pending requests.
+Without this we have a race between the core and when we
+restore regulatory settings, although this is unlikely
+its best to just avoid that race altogether.
 
-> From: Juuso Oikarinen <juuso.oikarinen@nokia.com>
-> 
-> The wl1271 does not support radar detection. Hence, prevent ad-hoc and
-> active scanning on frequencies requiring DFS.
+Cc: Mark Mentovai <mark@moxienet.com>
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+---
+ net/wireless/reg.c |    7 +------
+ 1 files changed, 1 insertions(+), 6 deletions(-)
 
-I know it's a bit late but:
-Doesn't the fact that your referring here to 1271, which is support 2.4Ghz device only matter here to anyone?
-Correct me if I'm wrong here but radar detection was meant only for 5.0Ghz device types. 
-Should this patch should be done on 1273 device type or a change in the naming convention should be applied here.
+diff --git a/net/wireless/reg.c b/net/wireless/reg.c
+index 3be18d9..9830db6 100644
+--- a/net/wireless/reg.c
++++ b/net/wireless/reg.c
+@@ -1530,12 +1530,7 @@ static int regulatory_hint_core(const char *alpha2)
+ 	request->alpha2[1] = alpha2[1];
+ 	request->initiator = NL80211_REGDOM_SET_BY_CORE;
+ 
+-	/*
+-	 * This ensures last_request is populated once modules
+-	 * come swinging in and calling regulatory hints and
+-	 * wiphy_apply_custom_regulatory().
+-	 */
+-	reg_process_hint(request);
++	queue_regulatory_request(request);
+ 
+ 	return 0;
+ }
+-- 
+1.7.3.2.90.gd4c43
 
-
-> 
-> Signed-off-by: Juuso Oikarinen <juuso.oikarinen@nokia.com>
-> ---
->  drivers/net/wireless/wl12xx/wl1271_main.c |   23
-> +++++++++++++++++++++++
->  1 files changed, 23 insertions(+), 0 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/wl12xx/wl1271_main.c
-> b/drivers/net/wireless/wl12xx/wl1271_main.c
-> index f5b1d19..eb9f821 100644
-> --- a/drivers/net/wireless/wl12xx/wl1271_main.c
-> +++ b/drivers/net/wireless/wl12xx/wl1271_main.c
-> @@ -335,6 +335,27 @@ out:
->  	return NOTIFY_OK;
->  }
-> 
-> +static int wl1271_reg_notify(struct wiphy *wiphy,
-> +			     struct regulatory_request *request) {
-> +	struct ieee80211_supported_band *band;
-> +	struct ieee80211_channel *ch;
-> +	int i;
-> +
-> +	band = wiphy->bands[IEEE80211_BAND_5GHZ];
-> +	for (i = 0; i < band->n_channels; i++) {
-> +		ch = &band->channels[i];
-> +		if (ch->flags % IEEE80211_CHAN_DISABLED)
-> +			continue;
-> +
-> +		if (ch->flags & IEEE80211_CHAN_RADAR)
-> +			ch->flags |= IEEE80211_CHAN_NO_IBSS |
-> +				     IEEE80211_CHAN_PASSIVE_SCAN;
-> +
-> +	}
-> +
-> +	return 0;
-> +}
-> +
->  static void wl1271_conf_init(struct wl1271 *wl)
->  {
-> 
-> @@ -2590,6 +2611,8 @@ int wl1271_init_ieee80211(struct wl1271 *wl)
->  	wl->hw->queues = 4;
->  	wl->hw->max_rates = 1;
-> 
-> +	wl->hw->wiphy->reg_notifier = wl1271_reg_notify;
-> +
->  	SET_IEEE80211_DEV(wl->hw, wl1271_wl_to_dev(wl));
-> 
->  	return 0;
-> --
-> 1.7.1
-
-
-
-=========
-Benzy Gabay
-Texas Instruments
