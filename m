@@ -1,55 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eos.fwall.u-szeged.hu ([160.114.120.248]:60610 "EHLO
-	eos.fwall.u-szeged.hu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753696Ab0KPRu6 (ORCPT
+Received: from mail-iw0-f174.google.com ([209.85.214.174]:53931 "EHLO
+	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756675Ab0KRQyf convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 16 Nov 2010 12:50:58 -0500
-Received: from localhost ([127.0.0.1] helo=eos.fwall.u-szeged.hu)
-	by eos.fwall.u-szeged.hu with esmtp (Exim 4.67)
-	(envelope-from <zherczeg@inf.u-szeged.hu>)
-	id 1PIPgH-0006PO-3G
-	for linux-wireless@vger.kernel.org; Tue, 16 Nov 2010 18:50:57 +0100
-Received: from mail.inf.u-szeged.hu ([160.114.37.227])
-	by eos.fwall.u-szeged.hu with esmtp (Exim 4.67)
-	(envelope-from <zherczeg@inf.u-szeged.hu>)
-	id 1PIPgH-0006PL-0T
-	for linux-wireless@vger.kernel.org; Tue, 16 Nov 2010 18:50:57 +0100
-Received: from webmail.inf.u-szeged.hu (nora3.inf.u-szeged.hu [160.114.37.221])
-	by mail.inf.u-szeged.hu (Postfix) with ESMTP id E09FD16A09CF
-	for <linux-wireless@vger.kernel.org>; Tue, 16 Nov 2010 18:50:56 +0100 (CET)
-Message-ID: <33024.87.97.18.179.1289929856.squirrel@webmail.inf.u-szeged.hu>
-In-Reply-To: <33375.91.82.180.162.1289601216.squirrel@webmail.inf.u-szeged.hu>
-References: <32995.82.131.221.21.1289334684.squirrel@webmail.inf.u-szeged.hu>
-    <1289348811.3660.4.camel@jlt3.sipsolutions.net>
-    <3272.160.114.36.137.1289485257.squirrel@webmail.inf.u-szeged.hu>
-    <33375.91.82.180.162.1289601216.squirrel@webmail.inf.u-szeged.hu>
-Date: Tue, 16 Nov 2010 18:50:56 +0100 (CET)
-Subject: some questions
-From: "Zoltan Herczeg" <zherczeg@inf.u-szeged.hu>
-To: linux-wireless@vger.kernel.org
+	Thu, 18 Nov 2010 11:54:35 -0500
 MIME-Version: 1.0
-Content-Type: text/plain;charset=utf-8
+In-Reply-To: <20101118164552.GC2855@kroah.com>
+References: <AANLkTim4jVaZxYp8nSgJyy28iwxcxbPeNUzxTfoHAX4S@mail.gmail.com> <20101118164552.GC2855@kroah.com>
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Date: Thu, 18 Nov 2010 08:53:22 -0800
+Message-ID: <AANLkTing6JkfH=n2GfWtW+2=5oB40FDM-TYPvzd+PPkH@mail.gmail.com>
+Subject: Re: Challenges with doing hardware bring up with Linux first
+To: Greg KH <greg@kroah.com>
+Cc: linux-kernel@vger.kernel.org,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	David Miller <davem@davemloft.net>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Stephen Hemminger <shemminger@vyatta.com>,
+	"Perez-Gonzalez, Inaky" <inaky.perez-gonzalez@intel.com>,
+	Charles Marker <Charles.Marker@atheros.com>,
+	Jouni Malinen <Jouni.Malinen@atheros.com>,
+	Kevin Hayes <kevin@atheros.com>,
+	Zhifeng Cai <zhifeng.cai@atheros.com>,
+	Don Breslin <Don.Breslin@atheros.com>,
+	Doug Dahlby <Doug.Dahlby@atheros.com>,
+	Julia Lawall <julia@diku.dk>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+On Thu, Nov 18, 2010 at 8:45 AM, Greg KH <greg@kroah.com> wrote:
+> On Thu, Nov 18, 2010 at 12:46:37AM -0800, Luis R. Rodriguez wrote:
+>> Can Linux help in any way? What if we used staging for a common driver
+>> architecture for different OSes? Most of those staging drivers already
+>> have some sort of OS agnostic cruft, why not try to help hardware
+>> vendors by providing them with a common OS agnostic solution they can
+>> share? Is this not out turf? If its not, are we perfectly OK in being
+>> second citizens so long as the driver eventually gets done on proper
+>> upstream Linux ? I'm not OK with it and hence my e-mail. I'm looking
+>> for ideas and thoughts on this. Please no trolls, would really just
+>> like some constructive discussions on this. As I see it maybe we can
+>> move some of this OS agnostic crap into staging, and then use spatch
+>> to write tools to de-unwrap crap to Linux specific stuff and help
+>> maintain it. What this does is it moves OS agnostic crap out as a
+>> community effort to help aid proper development and porting for Linux.
+>> Since we'd maintain the crap / scripts / de-wrappers, we'd likely be
+>> able to get drivers quicker and can have a framework to help companies
+>> who still [1] need to support other Operating Systems.
+>
+> No, staging is for gettingn code into, or out of, the kernel tree, not
+> for anything else.
+>
+> I have allowed it to be used to hold drivers in that are not
+> "acceptable", while another driver was written by others from scratch to
+> work properly on that hardware, and then the original one is dropped.
+> That's ok, as there is a time-limit on how long the code lives in the
+> staging tree.
+>
+> But to try to use it to create a multi-os solution, no, that's not what
+> staging is for.
 
-I have finished my work on the diver for the simulator, and it works fine.
-I am still wondering about some questions, though:
+OK thanks!
 
-1) can I set the bssid of an ad-hoc network (using ioctl or netlink)? The
-bssid is generated by get_random_bytes in mac80211/ibss.c, and if two
-devices start the join in the same time (in ms), they will create
-different bssids, even if their ssid are the same (another solution: the
-bssid could be generated by a hash function from the ssid).
+> Also, please review the past multi-os driver initiatives that have
+> sprung up over the years (about 1 every 10 years it seems).  Please
+> learn from the past as to why those have failed every single time, and
+> why we don't want to even try to do that again.
 
-2) if we have two networks, with the same ibss ssid but different bssid,
-and all nodes are brought to the same place (they can communicate with
-each other now, which was not possible before), how would be the two
-networks merge into one, which use the same bssid? How much time does it
-need?
+:-) thanks, just testing waters to see what's possible and what
+direction to focus more on.
 
-Regards,
-Zoltan
-
-
+  Luis
