@@ -1,158 +1,142 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.19.149.2]:36954 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752725Ab0K3MR5 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 30 Nov 2010 07:17:57 -0500
-Received: from mail.atheros.com ([10.10.20.105])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Tue, 30 Nov 2010 04:17:43 -0800
-From: Rajkumar Manoharan <rmanoharan@atheros.com>
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>,
-	Rajkumar Manoharan <rmanoharan@atheros.com>
-Subject: [PATCH 2/3 v3] ath9k: Add change_interface callback
-Date: Tue, 30 Nov 2010 17:47:32 +0530
-Message-ID: <1291119452-12355-1-git-send-email-rmanoharan@atheros.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from mail-fx0-f46.google.com ([209.85.161.46]:42074 "EHLO
+	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753894Ab0KRLdB (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 18 Nov 2010 06:33:01 -0500
+Received: by mail-fx0-f46.google.com with SMTP id 6so1460042fxm.19
+        for <linux-wireless@vger.kernel.org>; Thu, 18 Nov 2010 03:33:00 -0800 (PST)
+From: Arik Nemtsov <arik@wizery.com>
+To: <linux-wireless@vger.kernel.org>
+Cc: Luciano Coelho <luciano.coelho@nokia.com>,
+	Arik Nemtsov <arik@wizery.com>
+Subject: [PATCH 13/18] wl1271: AP mode - changes in TX path
+Date: Thu, 18 Nov 2010 13:32:26 +0200
+Message-Id: <1290079951-16793-14-git-send-email-arik@wizery.com>
+In-Reply-To: <1290079951-16793-1-git-send-email-arik@wizery.com>
+References: <1290079951-16793-1-git-send-email-arik@wizery.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Add support to change interface type
-without bringing down the interface.
+When in AP mode set appropriate HLID and rate policy for each skb.
+Respond to supported-rates related changes in op_tx only when acting
+as STA.
 
-Signed-off-by: Rajkumar Manoharan <rmanoharan@atheros.com>
+Signed-off-by: Arik Nemtsov <arik@wizery.com>
 ---
-v2: - ieee80211_iftype_p2p not needed
-    - missed to store p2p value
-v3: - nbcnvifs has to be checked
-      while changing to beaconing mode
+ drivers/net/wireless/wl12xx/main.c |    3 +-
+ drivers/net/wireless/wl12xx/tx.c   |   54 ++++++++++++++++++++++++++++++------
+ 2 files changed, 47 insertions(+), 10 deletions(-)
 
- drivers/net/wireless/ath/ath9k/main.c |   91 +++++++++++++++++++++++++--------
- 1 files changed, 70 insertions(+), 21 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
-index eabde4d..73d5d43 100644
---- a/drivers/net/wireless/ath/ath9k/main.c
-+++ b/drivers/net/wireless/ath/ath9k/main.c
-@@ -1428,13 +1428,79 @@ out:
- 	return ret;
+diff --git a/drivers/net/wireless/wl12xx/main.c b/drivers/net/wireless/wl12xx/main.c
+index c901051..7e7b392 100644
+--- a/drivers/net/wireless/wl12xx/main.c
++++ b/drivers/net/wireless/wl12xx/main.c
+@@ -941,7 +941,8 @@ static int wl1271_op_tx(struct ieee80211_hw *hw, struct sk_buff *skb)
+ 	spin_lock_irqsave(&wl->wl_lock, flags);
+ 	if (sta &&
+ 	    (sta->supp_rates[conf->channel->band] !=
+-	    (wl->sta_rate_set & HW_BG_RATES_MASK))) {
++	    (wl->sta_rate_set & HW_BG_RATES_MASK)) &&
++		wl->bss_type != BSS_TYPE_AP_BSS) {
+ 		wl->sta_rate_set = sta->supp_rates[conf->channel->band];
+ 		set_bit(WL1271_FLAG_STA_RATES_CHANGED, &wl->flags);
+ 	}
+diff --git a/drivers/net/wireless/wl12xx/tx.c b/drivers/net/wireless/wl12xx/tx.c
+index 74a0c07..485171b 100644
+--- a/drivers/net/wireless/wl12xx/tx.c
++++ b/drivers/net/wireless/wl12xx/tx.c
+@@ -23,6 +23,7 @@
+ 
+ #include <linux/kernel.h>
+ #include <linux/module.h>
++#include <linux/etherdevice.h>
+ 
+ #include "wl12xx.h"
+ #include "io.h"
+@@ -99,7 +100,7 @@ static void wl1271_tx_fill_hdr(struct wl1271 *wl, struct sk_buff *skb,
+ {
+ 	struct timespec ts;
+ 	struct wl1271_tx_hw_descr *desc;
+-	int pad, ac;
++	int pad, ac, rate_idx;
+ 	s64 hosttime;
+ 	u16 tx_attr;
+ 
+@@ -117,7 +118,11 @@ static void wl1271_tx_fill_hdr(struct wl1271 *wl, struct sk_buff *skb,
+ 	getnstimeofday(&ts);
+ 	hosttime = (timespec_to_ns(&ts) >> 10);
+ 	desc->start_time = cpu_to_le32(hosttime - wl->time_offset);
+-	desc->life_time = cpu_to_le16(TX_HW_MGMT_PKT_LIFETIME_TU);
++
++	if (wl->bss_type != BSS_TYPE_AP_BSS)
++		desc->life_time = cpu_to_le16(TX_HW_MGMT_PKT_LIFETIME_TU);
++	else
++		desc->life_time = cpu_to_le16(TX_HW_AP_MODE_PKT_LIFETIME_TU);
+ 
+ 	/* configure the tx attributes */
+ 	tx_attr = wl->session_counter << TX_HW_ATTR_OFST_SESSION_COUNTER;
+@@ -126,7 +131,40 @@ static void wl1271_tx_fill_hdr(struct wl1271 *wl, struct sk_buff *skb,
+ 	ac = wl1271_tx_get_queue(skb_get_queue_mapping(skb));
+ 	desc->tid = ac;
+ 
+-	desc->aid = TX_HW_DEFAULT_AID;
++	if (wl->bss_type != BSS_TYPE_AP_BSS) {
++		desc->aid = TX_HW_DEFAULT_AID;
++
++		/* if the packets are destined for AP (have a STA entry)
++		   send them with AP rate policies, otherwise use default
++		   basic rates */
++		if (control->control.sta)
++			rate_idx = ACX_TX_AP_FULL_RATE;
++		else
++			rate_idx = ACX_TX_BASIC_RATE;
++	} else {
++		if (control->control.sta) {
++			struct wl1271_station *wl_sta;
++
++			wl_sta = (struct wl1271_station *)
++					control->control.sta->drv_priv;
++			desc->hlid = wl_sta->hlid;
++			rate_idx = ac;
++		} else {
++			struct ieee80211_hdr *hdr;
++
++			hdr = (struct ieee80211_hdr *)
++						(skb->data + sizeof(*desc));
++			if (ieee80211_is_mgmt(hdr->frame_control)) {
++				desc->hlid = WL1271_AP_GLOBAL_HLID;
++				rate_idx = ACX_TX_AP_MODE_MGMT_RATE;
++			} else {
++				desc->hlid = WL1271_AP_BROADCAST_HLID;
++				rate_idx = ACX_TX_AP_MODE_BCST_RATE;
++			}
++		}
++	}
++
++	tx_attr |= rate_idx << TX_HW_ATTR_OFST_RATE_POLICY;
+ 	desc->reserved = 0;
+ 
+ 	/* align the length (and store in terms of words) */
+@@ -137,14 +175,12 @@ static void wl1271_tx_fill_hdr(struct wl1271 *wl, struct sk_buff *skb,
+ 	pad = pad - skb->len;
+ 	tx_attr |= pad << TX_HW_ATTR_OFST_LAST_WORD_PAD;
+ 
+-	/* if the packets are destined for AP (have a STA entry) send them
+-	   with AP rate policies, otherwise use default basic rates */
+-	if (control->control.sta)
+-		tx_attr |= ACX_TX_AP_FULL_RATE << TX_HW_ATTR_OFST_RATE_POLICY;
+-
+ 	desc->tx_attr = cpu_to_le16(tx_attr);
+ 
+-	wl1271_debug(DEBUG_TX, "tx_fill_hdr: pad: %d", pad);
++	wl1271_debug(DEBUG_TX, "tx_fill_hdr: pad: %d hlid: %d "
++		"tx_attr: 0x%x len: %d life: %d mem: %d", pad, (int)desc->hlid,
++		(int)desc->tx_attr, (int)desc->length, (int)desc->life_time,
++		(int)desc->total_mem_blocks);
  }
  
-+static void ath9k_reclaim_beacon(struct ath_softc *sc,
-+				 struct ieee80211_vif *vif)
-+{
-+	struct ath_vif *avp = (void *)vif->drv_priv;
-+
-+	/* Disable SWBA interrupt */
-+	sc->sc_ah->imask &= ~ATH9K_INT_SWBA;
-+	ath9k_ps_wakeup(sc);
-+	ath9k_hw_set_interrupts(sc->sc_ah, sc->sc_ah->imask);
-+	ath9k_hw_stoptxdma(sc->sc_ah, sc->beacon.beaconq);
-+	tasklet_kill(&sc->bcon_tasklet);
-+	ath9k_ps_restore(sc);
-+
-+	ath_beacon_return(sc, avp);
-+	sc->sc_flags &= ~SC_OP_BEACONS;
-+
-+	if (sc->nbcnvifs > 0) {
-+		/* Re-enable beaconing */
-+		sc->sc_ah->imask |= ATH9K_INT_SWBA;
-+		ath9k_ps_wakeup(sc);
-+		ath9k_hw_set_interrupts(sc->sc_ah, sc->sc_ah->imask);
-+		ath9k_ps_restore(sc);
-+	}
-+}
-+
-+static int ath9k_change_interface(struct ieee80211_hw *hw,
-+				  struct ieee80211_vif *vif,
-+				  enum nl80211_iftype new_type,
-+				  bool p2p)
-+{
-+	struct ath_wiphy *aphy = hw->priv;
-+	struct ath_softc *sc = aphy->sc;
-+	struct ath_common *common = ath9k_hw_common(sc->sc_ah);
-+
-+	ath_print(common, ATH_DBG_CONFIG, "Change Interface\n");
-+	mutex_lock(&sc->mutex);
-+
-+	switch (new_type) {
-+	case NL80211_IFTYPE_AP:
-+	case NL80211_IFTYPE_ADHOC:
-+		if (sc->nbcnvifs >= ATH_BCBUF) {
-+			ath_print(common, ATH_DBG_FATAL,
-+				"No beacon slot available\n");
-+			return -ENOBUFS;
-+		}
-+		break;
-+	case NL80211_IFTYPE_STATION:
-+		/* Stop ANI */
-+		sc->sc_flags &= ~SC_OP_ANI_RUN;
-+		del_timer_sync(&common->ani.timer);
-+		if ((vif->type == NL80211_IFTYPE_AP) ||
-+		    (vif->type == NL80211_IFTYPE_ADHOC))
-+			ath9k_reclaim_beacon(sc, vif);
-+		break;
-+	default:
-+		ath_print(common, ATH_DBG_FATAL,
-+			"Interface type %d not yet supported\n", vif->type);
-+		mutex_unlock(&sc->mutex);
-+		return -ENOTSUPP;
-+	}
-+	vif->type = new_type;
-+	vif->p2p = p2p;
-+
-+	mutex_unlock(&sc->mutex);
-+	return 0;
-+}
-+
- static void ath9k_remove_interface(struct ieee80211_hw *hw,
- 				   struct ieee80211_vif *vif)
- {
- 	struct ath_wiphy *aphy = hw->priv;
- 	struct ath_softc *sc = aphy->sc;
- 	struct ath_common *common = ath9k_hw_common(sc->sc_ah);
--	struct ath_vif *avp = (void *)vif->drv_priv;
- 
- 	ath_print(common, ATH_DBG_CONFIG, "Detach Interface\n");
- 
-@@ -1447,26 +1513,8 @@ static void ath9k_remove_interface(struct ieee80211_hw *hw,
- 	/* Reclaim beacon resources */
- 	if ((sc->sc_ah->opmode == NL80211_IFTYPE_AP) ||
- 	    (sc->sc_ah->opmode == NL80211_IFTYPE_ADHOC) ||
--	    (sc->sc_ah->opmode == NL80211_IFTYPE_MESH_POINT)) {
--		/* Disable SWBA interrupt */
--		sc->sc_ah->imask &= ~ATH9K_INT_SWBA;
--		ath9k_ps_wakeup(sc);
--		ath9k_hw_set_interrupts(sc->sc_ah, sc->sc_ah->imask);
--		ath9k_hw_stoptxdma(sc->sc_ah, sc->beacon.beaconq);
--		ath9k_ps_restore(sc);
--		tasklet_kill(&sc->bcon_tasklet);
--	}
--
--	ath_beacon_return(sc, avp);
--	sc->sc_flags &= ~SC_OP_BEACONS;
--
--	if (sc->nbcnvifs) {
--		/* Re-enable SWBA interrupt */
--		sc->sc_ah->imask |= ATH9K_INT_SWBA;
--		ath9k_ps_wakeup(sc);
--		ath9k_hw_set_interrupts(sc->sc_ah, sc->sc_ah->imask);
--		ath9k_ps_restore(sc);
--	}
-+	    (sc->sc_ah->opmode == NL80211_IFTYPE_MESH_POINT))
-+		ath9k_reclaim_beacon(sc, vif);
- 
- 	sc->nvifs--;
- 
-@@ -2115,6 +2163,7 @@ struct ieee80211_ops ath9k_ops = {
- 	.start 		    = ath9k_start,
- 	.stop 		    = ath9k_stop,
- 	.add_interface 	    = ath9k_add_interface,
-+	.change_interface   = ath9k_change_interface,
- 	.remove_interface   = ath9k_remove_interface,
- 	.config 	    = ath9k_config,
- 	.configure_filter   = ath9k_configure_filter,
+ /* caller must hold wl->mutex */
 -- 
-1.7.3.2
+1.7.1
 
