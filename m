@@ -1,42 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iw0-f174.google.com ([209.85.214.174]:50814 "EHLO
-	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755309Ab0KIVTk convert rfc822-to-8bit (ORCPT
+Received: from mail-bw0-f46.google.com ([209.85.214.46]:57866 "EHLO
+	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932515Ab0KRR3j (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 9 Nov 2010 16:19:40 -0500
-Received: by iwn10 with SMTP id 10so1767931iwn.19
-        for <linux-wireless@vger.kernel.org>; Tue, 09 Nov 2010 13:19:39 -0800 (PST)
+	Thu, 18 Nov 2010 12:29:39 -0500
+Received: by bwz15 with SMTP id 15so2994016bwz.19
+        for <linux-wireless@vger.kernel.org>; Thu, 18 Nov 2010 09:29:37 -0800 (PST)
+Message-ID: <4CE5627A.6060206@lwfinger.net>
+Date: Thu, 18 Nov 2010 11:29:30 -0600
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-In-Reply-To: <185731CC-606D-407D-80F4-33FEF08ED35D@moxienet.com>
-References: <185731CC-606D-407D-80F4-33FEF08ED35D@moxienet.com>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Tue, 9 Nov 2010 13:19:16 -0800
-Message-ID: <AANLkTik35wHXiznjGm7nc9HBYUy7iQk65FVSq7T2Gw8u@mail.gmail.com>
-Subject: Re: Regulatory/CRDA Race
-To: Mark Mentovai <mark@moxienet.com>
-Cc: linux-wireless@vger.kernel.org
+To: =?UTF-8?B?TWljaGFlbCBCw7xzY2g=?= <mb@bu3sch.de>
+CC: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, b43-dev@lists.infradead.org
+Subject: Re: [PATCH] ssb: fail registration for unknown SPROM revision
+References: <1288823326-9686-1-git-send-email-zajec5@gmail.com>	 <1288823326-9686-2-git-send-email-zajec5@gmail.com>	 <20101116212321.GF10774@tuxdriver.com> <1290013976.2513.14.camel@maggie>	 <20101118162748.GB2468@tuxdriver.com> <1290098156.12596.2.camel@maggie>	 <AANLkTimh_8X1uRPudmQLDOTeA_X0ciR9BbDgyahLDMSs@mail.gmail.com>	 (sfid-20101118_174421_892253_3B53C8D3) <1290098865.12596.6.camel@maggie>	 <4CE55C3B.6020803@lwfinger.net> (sfid-20101118_180314_721728_2D534AE3) <1290100075.12596.8.camel@maggie>
+In-Reply-To: <1290100075.12596.8.camel@maggie>
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Nov 8, 2010 at 11:40 AM, Mark Mentovai <mark@moxienet.com> wrote:
-> Following up on the old-ish “[ath5k-devel] Race condition in CRDA calls?” thread…
->
-> I independently experienced this problem, debugged it, and came to the same conclusion. There is in fact a race between regulatory requests being made via regulatory_hint and CRDA actually updating regulatory data. I see this on a system with two cards that come up one after the other during boot.
->
-> 1. cfg80211 calls CRDA to update the world regulatory domain and CRDA does so. The regulatory domain is now 00.
->
-> 2. The first card’s driver (in my case, ath9k) calls regulatory_hint to provide US as a driver hint. ignore_request decides against intersection because the last request came from the core. There’s a CRDA call, but CRDA isn’t quick enough to respond. The regulatory domain is still 00, because CRDA hasn’t changed it yet.
->
-> 3. The second card’s driver (also ath9k) calls regulatory_hint to provide US as a driver hint. ignore_request sees that the last request came from a driver (instead of the core) and since the regulatory domain is changing from 00 to US, decides that intersection must be performed.
->
-> 4. When CRDA finally responds to the request from #2 or #3, cfg80211 sees that last_request->intersect is true, and intersects. The regulatory domain is set to the intersection of 00 and US.
->
-> The race here is between CRDA providing data and the second card’s request being made via regulatory_hint. regulatory_hint and ignore_request assume that last_request is in sync with the currently-set regulatory domain, but there is no such synchronization.
->
-> Here’s my openwrt-devel post describing the above in a slightly different level of detail:https://lists.openwrt.org/pipermail/openwrt-devel/2010-November/008570.html.--
+On 11/18/2010 11:07 AM, Michael Büsch wrote:
+> On Thu, 2010-11-18 at 11:02 -0600, Larry Finger wrote: 
+>> On 11/18/2010 10:47 AM, Michael Büsch wrote:
+>>> If it would really succeed to initialize the device, this would be a
+>>> regulatory issue, because the sprom contains various power amplifier
+>>> calibration data. I think it should rather fail and be fixed correctly
+>>> instead of incorrectly using rev1 in that case.
+>>
+>> I agree that it is better to fail than use incorrect power data.
+>>
+>> Would it be useful if the SPROM data were logged when the revision is crap?
+> 
+> 
+> We need to keep in mind that there will be no new SSB devices.
+> It seems pretty much EOL'ed by Broadcom.
+> So I'm not sure whether this would be of any use or just random dead
+> code.
 
-I'll take a look at this once I get done with the
-compat-wireless-2.6.37 release. Thanks for the report.
+Good point. When we get the data for the one case we know exists, we will have a
+better idea if a special quirk for this case is feasible. Assuming that this is
+not the only example of this hardware, then we might limit the breakage from
+this patch. At least the random code would be needed and useful in keeping our
+maintainer happy, which has a some merit.
 
-  Luis
+Larry
