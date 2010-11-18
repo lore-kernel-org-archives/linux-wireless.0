@@ -1,131 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.perches.com ([173.55.12.10]:1782 "EHLO mail.perches.com"
+Received: from hera.kernel.org ([140.211.167.34]:36736 "EHLO hera.kernel.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756860Ab0KVWKs (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 22 Nov 2010 17:10:48 -0500
-Subject: Re: [PATCH 00/62] drivers/net: Use static const
-From: Joe Perches <joe@perches.com>
-To: David Miller <davem@davemloft.net>
-Cc: netdev@vger.kernel.org, e1000-devel@lists.sourceforge.net,
-	linux-usb@vger.kernel.org, linux-wireless@vger.kernel.org,
-	ath5k-devel@lists.ath5k.org, ath9k-devel@lists.ath9k.org,
-	libertas-dev@lists.infradead.org, users@rt2x00.serialmonkey.com,
-	linux-kernel@vger.kernel.org, socketcan-core@lists.berlios.de
-In-Reply-To: <20101120.205059.193725921.davem@davemloft.net>
-References: <cover.1290305773.git.joe@perches.com>
-	 <20101120.205059.193725921.davem@davemloft.net>
-Content-Type: text/plain; charset="UTF-8"
-Date: Mon, 22 Nov 2010 14:10:46 -0800
-Message-ID: <1290463846.27683.36.camel@Joe-Laptop>
-Mime-Version: 1.0
+	id S932549Ab0KRSEe (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 18 Nov 2010 13:04:34 -0500
+Message-ID: <4CE56AAB.7080507@kernel.org>
+Date: Thu, 18 Nov 2010 19:04:27 +0100
+From: Tejun Heo <tj@kernel.org>
+MIME-Version: 1.0
+To: Ben Greear <greearb@candelatech.com>
+CC: Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] mac80211:  Fix deadlock in ieee80211_do_stop.
+References: <1289592426-5367-1-git-send-email-greearb@candelatech.com>	 <1289594998.3736.11.camel@jlt3.sipsolutions.net>	 <4CDDAA3B.9090007@candelatech.com>	 <1289596096.3736.13.camel@jlt3.sipsolutions.net>	 <4CDE699B.70401@kernel.org> <4CE1A344.7040201@candelatech.com>	 <4CE292F7.4090200@kernel.org>	 <1289929258.3673.1.camel@jlt3.sipsolutions.net>	 <4CE396A9.1050908@kernel.org> <1290020005.3777.6.camel@jlt3.sipsolutions.net> <4CE4C8DD.6010806@kernel.org> <51f5dd53c39a77fff4efc1a99b189725@localhost> <4CE4D41F.1080005@kernel.org> <4CE56892.9090606@candelatech.com>
+In-Reply-To: <4CE56892.9090606@candelatech.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, 2010-11-20 at 20:50 -0800, David Miller wrote: 
-> From: Joe Perches <joe@perches.com>
-> Date: Sat, 20 Nov 2010 18:38:01 -0800
-> 
-> > Using static const generally increases object text and decreases data size.
-> > It also generally decreases overall object size.
-> 
-> Joe, I'm going to be frank and say that I'm not going to review and
-> apply such a large chunk of networking patches.
+Hello, Ben.
 
-Hi David.  No worries.
+On 11/18/2010 06:55 PM, Ben Greear wrote:
+> I understand your desire for a stack dump, but it appears that sysrq-t
+> isn't getting everything you want, for whatever reason.
 
-> Separation is cool, splitting up patches is cool to make review
-> perhaps easier and more distributed.
+Can you please try again and investigate why it's not working?  If
+task dump is not working as expected, there is a much more serious
+problem than wireless locking up.
 
-I know you have ownership of netdev.  Thanks for doing all that
-work.  You may not get enough feedback on the very good job that
-you do at it.
+> Does my explanation of the rtnl deadlock that I posted near the beginning
+> of this thread (with some backtraces to back that up) make sense, or
+> are my assumptions invalid?
 
-I posted these patches not so much to get you to immediately pick
-them up, but to get review from and/or notify the maintainers of
-each of these subsystems.  I would have submitted them to Jiri
-Kosina/trivial, but he asked me to post and track these style
-patches separately and wait for a few weeks before submitting any
-remaining patches not picked up by maintainers to him.
+Yes, it makes sense.  At this point, I'm fairly sure that something is
+holding the workqueue but I really can't tell anything without proper
+stack dump.
 
-> It severely negatively effects my mood,
+Thanks.
 
-Can't have that...
-
-> You also make this more difficult for me by not using GIT.
-
-I do of course use git locally.  I have a public tree as well,
-but I hardly update it.  I updated it recently for this.
-
-These patches are available in:
-
-  git://repo.or.cz/linux-2.6/trivial-mods.git 20101121_net_next_static_const
-
-Perhaps I should ask Stephen Rothwell to include some trivial tree
-branch like this in next.
-
-> Even with patchwork helping me significantly, it's still a lot of work
-> to apply large sets of patches.
-
-I think that cc'ing netdev is always appropriate for netdev patches, but
-maybe trivial@kernel.org could become linux-trivial@vger.kernel.org or
-something like that.
-
-Perhaps there could be some way to automatically mark these exceptionally
-trivial patches as something like "not applicable" so they don't appear
-on your personal queue.
-
-> If I had to take in John Linville's
-> wireless stuff without GIT I'd be banging my head on a wall.
-> 
-> And these incessant huge patch bombs also take time away from me for
-> the things I'd like to at least occiasionally work on that involve
-> more intellect than monkeying around with such mindless patches.
-
-Establishing trust is always a long term thing.
-Breaking trust is easy too.
-
-Anyway, I think these patches are obvious and correct and can be
-directly applied without significant risk.
-
-I think the the issues are:
-
-o should the nominal maintainers of the subsystems pick them up
-o should these subsystem maintainers should be bypassed
-o should the subsystem mailing lists be cc'd
-o should these be pulled as a single changeset or multiples
-
-I think that getting the nominal subsystem maintainers involved
-is good, but perhaps not too necessary for these sorts of patches.
-
-btw: it doesn't seem that, other than John Linville for wireless,
-you currently pull from many (any?) other people.  Do let me know
-if you'd consider pulling these sorts of changes from me.
-
-$ git log --merges --since=2-years-ago drivers/net | grep "^Author: " | sort | uniq -c | sort -rn
-    259 Author: David S. Miller <davem@davemloft.net>
-    201 Author: Linus Torvalds <torvalds@linux-foundation.org>
-     45 Author: John W. Linville <linville@tuxdriver.com>
-     15 Author: Russell King <rmk@dyn-67.arm.linux.org.uk>
-     15 Author: Ingo Molnar <mingo@elte.hu>
-     14 Author: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-      7 Author: Russell King <rmk+kernel@arm.linux.org.uk>
-      6 Author: Jiri Kosina <jkosina@suse.cz>
-      4 Author: Reinette Chatre <reinette.chatre@intel.com>
-      3 Author: Roland Dreier <rolandd@cisco.com>
-      3 Author: James Morris <jmorris@namei.org>
-      2 Author: Tony Lindgren <tony@atomide.com>
-      2 Author: Grant Likely <grant.likely@secretlab.ca>
-      1 Author: Stefano Stabellini <stefano.stabellini@eu.citrix.com>
-      1 Author: root <root@dyn-67.arm.linux.org.uk>
-      1 Author: Paul Mackerras <paulus@samba.org>
-      1 Author: Kevin Hilman <khilman@deeprootsystems.com>
-      1 Author: James Bottomley <James.Bottomley@HansenPartnership.com>
-
-> Thanks for your understanding.  Feel free to submit this stuff in
-> smaller chunks, say ~10 patches at a time.
-
-Let me know if you want to pull or want them in smaller chunks in
-say a month from now.
-
-cheers, Joe
-
+-- 
+tejun
