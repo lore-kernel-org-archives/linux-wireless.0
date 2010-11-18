@@ -1,85 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.vyatta.com ([76.74.103.46]:53034 "EHLO mail.vyatta.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932468Ab0KRRXm convert rfc822-to-8bit (ORCPT
+Received: from mail-ey0-f174.google.com ([209.85.215.174]:33596 "EHLO
+	mail-ey0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753731Ab0KRM0y (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 18 Nov 2010 12:23:42 -0500
-Date: Thu, 18 Nov 2010 09:23:37 -0800
-From: Stephen Hemminger <shemminger@vyatta.com>
-To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Cc: Greg KH <greg@kroah.com>, linux-kernel@vger.kernel.org,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	David Miller <davem@davemloft.net>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	"Perez-Gonzalez, Inaky" <inaky.perez-gonzalez@intel.com>,
-	Charles Marker <Charles.Marker@atheros.com>,
-	Jouni Malinen <Jouni.Malinen@atheros.com>,
-	Kevin Hayes <kevin@atheros.com>,
-	Zhifeng Cai <zhifeng.cai@atheros.com>,
-	Don Breslin <Don.Breslin@atheros.com>,
-	Doug Dahlby <Doug.Dahlby@atheros.com>,
-	Julia Lawall <julia@diku.dk>
-Subject: Re: Challenges with doing hardware bring up with Linux first
-Message-ID: <20101118092337.370449e1@nehalam>
-In-Reply-To: <AANLkTing6JkfH=n2GfWtW+2=5oB40FDM-TYPvzd+PPkH@mail.gmail.com>
-References: <AANLkTim4jVaZxYp8nSgJyy28iwxcxbPeNUzxTfoHAX4S@mail.gmail.com>
-	<20101118164552.GC2855@kroah.com>
-	<AANLkTing6JkfH=n2GfWtW+2=5oB40FDM-TYPvzd+PPkH@mail.gmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+	Thu, 18 Nov 2010 07:26:54 -0500
+Received: by mail-ey0-f174.google.com with SMTP id 27so1855656eye.19
+        for <linux-wireless@vger.kernel.org>; Thu, 18 Nov 2010 04:26:54 -0800 (PST)
+From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+To: linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>
+Cc: b43-dev@lists.infradead.org,
+	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+Subject: [PATCH 2/4] b43: N-PHY: minor fixes to match specs
+Date: Thu, 18 Nov 2010 13:27:58 +0100
+Message-Id: <1290083280-13550-2-git-send-email-zajec5@gmail.com>
+In-Reply-To: <1290083280-13550-1-git-send-email-zajec5@gmail.com>
+References: <1290083280-13550-1-git-send-email-zajec5@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 18 Nov 2010 08:53:22 -0800
-"Luis R. Rodriguez" <lrodriguez@atheros.com> wrote:
+Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
+---
+ drivers/net/wireless/b43/phy_n.c |    9 ++++++---
+ 1 files changed, 6 insertions(+), 3 deletions(-)
 
-> On Thu, Nov 18, 2010 at 8:45 AM, Greg KH <greg@kroah.com> wrote:
-> > On Thu, Nov 18, 2010 at 12:46:37AM -0800, Luis R. Rodriguez wrote:
-> >> Can Linux help in any way? What if we used staging for a common driver
-> >> architecture for different OSes? Most of those staging drivers already
-> >> have some sort of OS agnostic cruft, why not try to help hardware
-> >> vendors by providing them with a common OS agnostic solution they can
-> >> share? Is this not out turf? If its not, are we perfectly OK in being
-> >> second citizens so long as the driver eventually gets done on proper
-> >> upstream Linux ? I'm not OK with it and hence my e-mail. I'm looking
-> >> for ideas and thoughts on this. Please no trolls, would really just
-> >> like some constructive discussions on this. As I see it maybe we can
-> >> move some of this OS agnostic crap into staging, and then use spatch
-> >> to write tools to de-unwrap crap to Linux specific stuff and help
-> >> maintain it. What this does is it moves OS agnostic crap out as a
-> >> community effort to help aid proper development and porting for Linux.
-> >> Since we'd maintain the crap / scripts / de-wrappers, we'd likely be
-> >> able to get drivers quicker and can have a framework to help companies
-> >> who still [1] need to support other Operating Systems.
-> >
-> > No, staging is for gettingn code into, or out of, the kernel tree, not
-> > for anything else.
-> >
-> > I have allowed it to be used to hold drivers in that are not
-> > "acceptable", while another driver was written by others from scratch to
-> > work properly on that hardware, and then the original one is dropped.
-> > That's ok, as there is a time-limit on how long the code lives in the
-> > staging tree.
-> >
-> > But to try to use it to create a multi-os solution, no, that's not what
-> > staging is for.
-> 
-> OK thanks!
-> 
-> > Also, please review the past multi-os driver initiatives that have
-> > sprung up over the years (about 1 every 10 years it seems). �Please
-> > learn from the past as to why those have failed every single time, and
-> > why we don't want to even try to do that again.
-> 
-> :-) thanks, just testing waters to see what's possible and what
-> direction to focus more on.
-> 
->   Luis
-
-If you go back to the Mythical Man Month you will find:
- "Plan on doing it twice; you are going to anyway"
-
-Therefore I wouldn't worry about whether the first development version
-is upstream.
-
+diff --git a/drivers/net/wireless/b43/phy_n.c b/drivers/net/wireless/b43/phy_n.c
+index 6facb8a..e1d02f9 100644
+--- a/drivers/net/wireless/b43/phy_n.c
++++ b/drivers/net/wireless/b43/phy_n.c
+@@ -875,7 +875,7 @@ static void b43_nphy_adjust_lna_gain_table(struct b43_wldev *dev)
+ 			data[2] = lna_gain[2] + gain[i];
+ 			data[3] = lna_gain[3] + gain[i];
+ 		}
+-		b43_ntab_write_bulk(dev, B43_NTAB16(10, 8), 4, data);
++		b43_ntab_write_bulk(dev, B43_NTAB16(i, 8), 4, data);
+ 
+ 		minmax[i] = 23 + gain[i];
+ 	}
+@@ -895,6 +895,7 @@ static void b43_nphy_gain_ctrl_workarounds(struct b43_wldev *dev)
+ 	struct b43_phy_n *nphy = dev->phy.n;
+ 	u8 i, j;
+ 	u8 code;
++	u16 tmp;
+ 
+ 	/* TODO: for PHY >= 3
+ 	s8 *lna1_gain, *lna2_gain;
+@@ -999,9 +1000,11 @@ static void b43_nphy_gain_ctrl_workarounds(struct b43_wldev *dev)
+ 			for (i = 0; i < 4; i++) {
+ 				b43_phy_write(dev, B43_NPHY_TABLE_ADDR,
+ 						(0x0400 * i) + 0x0020);
+-				for (j = 0; j < 21; j++)
++				for (j = 0; j < 21; j++) {
++					tmp = j * (i < 2 ? 3 : 1);
+ 					b43_phy_write(dev,
+-						B43_NPHY_TABLE_DATALO, 3 * j);
++						B43_NPHY_TABLE_DATALO, tmp);
++				}
+ 			}
+ 
+ 			b43_nphy_set_rf_sequence(dev, 5,
 -- 
+1.7.1
+
