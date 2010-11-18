@@ -1,134 +1,146 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gy0-f174.google.com ([209.85.160.174]:34993 "EHLO
-	mail-gy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756635Ab0KNUYA (ORCPT
+Received: from mail-fx0-f46.google.com ([209.85.161.46]:42074 "EHLO
+	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752460Ab0KRLcv (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 14 Nov 2010 15:24:00 -0500
-Received: by gyh4 with SMTP id 4so2669093gyh.19
-        for <linux-wireless@vger.kernel.org>; Sun, 14 Nov 2010 12:24:00 -0800 (PST)
-Message-ID: <4CE0455A.50709@lwfinger.net>
-Date: Sun, 14 Nov 2010 14:23:54 -0600
-From: Larry Finger <Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-To: James Womack <james.c.womack@gmail.com>
-CC: linux-wireless@vger.kernel.org
-Subject: Re: r8187se panic
-References: <slrnidp3ae.79c.rb-oss-3@mal.justgohome.co.uk> <4CDC9FA5.10002@lwfinger.net> <slrnidq7u0.9ic.rb-oss-3@mal.justgohome.co.uk> <4CDD3BC4.7070102@lwfinger.net> <slrnidqorp.dlr.rb-oss-3@mal.justgohome.co.uk> <4CDD66C4.10603@lwfinger.net> <slrnidqsld.dlr.rb-oss-3@mal.justgohome.co.uk> <4CDD7945.70005@lwfinger.net> <slrnidqv0k.g21.rb-oss-3@mal.justgohome.co.uk> <loom.20101113T191727-421@post.gmane.org> <4CDEDC74.3040902@lwfinger.net> <ibmosc$4au$1@dough.gmane.org> <4CDEEEE4.80801@lwfinger.net> <ibokag$481$1@dough.gmane.org> <4CE00BEE.8060100@lwfinger.net> <ibpauk$v12$1@dough.gmane.org>
-In-Reply-To: <ibpauk$v12$1@dough.gmane.org>
-Content-Type: multipart/mixed;
- boundary="------------080308010200060304050706"
+	Thu, 18 Nov 2010 06:32:51 -0500
+Received: by mail-fx0-f46.google.com with SMTP id 6so1460042fxm.19
+        for <linux-wireless@vger.kernel.org>; Thu, 18 Nov 2010 03:32:50 -0800 (PST)
+From: Arik Nemtsov <arik@wizery.com>
+To: <linux-wireless@vger.kernel.org>
+Cc: Luciano Coelho <luciano.coelho@nokia.com>,
+	Arik Nemtsov <arik@wizery.com>
+Subject: [PATCH 08/18] wl1271: Add AP related definitions to HOST-FW interface
+Date: Thu, 18 Nov 2010 13:32:21 +0200
+Message-Id: <1290079951-16793-9-git-send-email-arik@wizery.com>
+In-Reply-To: <1290079951-16793-1-git-send-email-arik@wizery.com>
+References: <1290079951-16793-1-git-send-email-arik@wizery.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is a multi-part message in MIME format.
---------------080308010200060304050706
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Change structures in a non-destructive manner. This means no
+changes in size or location of existing members used by STA.
 
-On 11/14/2010 12:49 PM, James Womack wrote:
-> Hey, I tried patching the kernel I downloaded, but the dry runs both
-> presented errors detailed below:
-> 
-> james@mercury:/usr/src/linux-source-2.6.32$ patch -p1 --dry-run <
-> /home/james/rtl8187se_change_panic_to_warn
-> patching file drivers/staging/rtl8187se/r8185b_init.c
-> Hunk #1 succeeded at 356 with fuzz 2 (offset 92 lines).
-> Hunk #2 FAILED at 302.
-> 1 out of 2 hunks FAILED -- saving rejects to file
-> drivers/staging/rtl8187se/r8185b_init.c.rej
-> james@mercury:/usr/src/linux-source-2.6.32$ patch -p1 --dry-run <
-> /home/james/rtl8187se_
-> rtl8187se_change_panic_to_warn  rtl8187se_lock_pci_remove
-> james@mercury:/usr/src/linux-source-2.6.32$ patch -p1 --dry-run <
-> /home/james/rtl8187se_lock_pci_remove
-> patching file drivers/staging/rtl8187se/r8180_core.c
-> patch unexpectedly ends in middle of line
-> patch: **** unexpected end of file in patch
-> james@mercury:/usr/src/linux-source-2.6.32$
-> 
-> Do I need to do anything to the kernel source before applying the patches?
-
-You needed a different version of the patch for 2.6.32. Apply the attached
-version. You only need the one patch.
-
-Larry
-
---------------080308010200060304050706
-Content-Type: text/plain;
- name="rtl8187se_change_panic_to_warn"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: attachment;
- filename="rtl8187se_change_panic_to_warn"
-
-This driver issues a kernel panic over conditions that do not
-justify such drastic action. Change these to log entries with
-a stack dump.
-
-This patch fixes the system crash reported in
-https://bugs.launchpad.net/ubuntu/+source/linux/+bug/674285.
-
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-Reported-and-Tested-by: Robie Basik <rb-oss-3@justgohome.co.uk>
-Cc: Stable <stable@kernel.org>
+Signed-off-by: Arik Nemtsov <arik@wizery.com>
 ---
+ drivers/net/wireless/wl12xx/event.h  |    7 ++++++-
+ drivers/net/wireless/wl12xx/rx.h     |   12 ++++++++----
+ drivers/net/wireless/wl12xx/tx.h     |    9 +++++++--
+ drivers/net/wireless/wl12xx/wl12xx.h |   18 +++++++++++++++++-
+ 4 files changed, 38 insertions(+), 8 deletions(-)
 
-Greg,
-
-As this fix keeps the kernel from panicking over a trivial condition,
-it should be pushed as soon as possible.
-
-Larry
----
-
-Index: linux-2.6/drivers/staging/rtl8187se/r8185b_init.c
-===================================================================
---- linux-2.6.orig/drivers/staging/rtl8187se/r8185b_init.c
-+++ linux-2.6/drivers/staging/rtl8187se/r8185b_init.c
-@@ -356,8 +356,12 @@ HwHSSIThreeWire(
- 			}
- 			udelay(10);
- 		}
--		if (TryCnt == TC_3W_POLL_MAX_TRY_CNT)
--			panic("HwThreeWire(): CmdReg: %#X RE|WE bits are not clear!!\n", u1bTmp);
-+		if (TryCnt == TC_3W_POLL_MAX_TRY_CNT) {
-+			printk(KERN_ERR "rtl8187se: HwThreeWire(): CmdReg:"
-+			       " %#X RE|WE bits are not clear!!\n", u1bTmp);
-+			dump_stack();
-+			return 0;
-+		}
+diff --git a/drivers/net/wireless/wl12xx/event.h b/drivers/net/wireless/wl12xx/event.h
+index fd955f3..1d5ef67 100644
+--- a/drivers/net/wireless/wl12xx/event.h
++++ b/drivers/net/wireless/wl12xx/event.h
+@@ -116,7 +116,12 @@ struct event_mailbox {
+ 	u8 scheduled_scan_status;
+ 	u8 ps_status;
  
- 		// RTL8187S HSSI Read/Write Function
- 		u1bTmp = read_nic_byte(dev, RF_SW_CONFIG);
-@@ -397,13 +401,23 @@ HwHSSIThreeWire(
- 				int idx;
- 				int ByteCnt = nDataBufBitCnt / 8;
-                                 //printk("%d\n",nDataBufBitCnt);
--				if ((nDataBufBitCnt % 8) != 0)
--				panic("HwThreeWire(): nDataBufBitCnt(%d) should be multiple of 8!!!\n",
--				nDataBufBitCnt);
--
--			       if (nDataBufBitCnt > 64)
--				panic("HwThreeWire(): nDataBufBitCnt(%d) should <= 64!!!\n",
--				nDataBufBitCnt);
-+				if ((nDataBufBitCnt % 8) != 0) {
-+					printk(KERN_ERR "rtl8187se: "
-+					       "HwThreeWire(): nDataBufBitCnt(%d)"
-+					       " should be multiple of 8!!!\n",
-+					       nDataBufBitCnt);
-+					dump_stack();
-+					nDataBufBitCnt += 8;
-+					nDataBufBitCnt &= ~7;
-+				}
+-	u8 reserved_5[29];
++	/* AP FW only */
++	u8 hlid_removed;
++	__le16 sta_aging_status;
++	__le16 sta_tx_retry_exceeded;
 +
-+			       if (nDataBufBitCnt > 64) {
-+					printk(KERN_ERR "rtl8187se: HwThreeWire():"
-+					       " nDataBufBitCnt(%d) should <= 64!!!\n",
-+					       nDataBufBitCnt);
-+					dump_stack();
-+					nDataBufBitCnt = 64;
-+				}
++	u8 reserved_5[24];
+ } __packed;
  
- 				for(idx = 0; idx < ByteCnt; idx++)
- 				{
+ int wl1271_event_unmask(struct wl1271 *wl);
+diff --git a/drivers/net/wireless/wl12xx/rx.h b/drivers/net/wireless/wl12xx/rx.h
+index 3abb26f..19fd591 100644
+--- a/drivers/net/wireless/wl12xx/rx.h
++++ b/drivers/net/wireless/wl12xx/rx.h
+@@ -86,10 +86,11 @@
+ /*
+  * RX Descriptor status
+  *
+- * Bits 0-2 - status
+- * Bits 3-7 - reserved
++ * Bits 0-2 - error code
++ * Bits 3-5 - process_id tag (AP mode FW)
++ * Bits 6-7 - reserved
+  */
+-#define WL1271_RX_DESC_STATUS_MASK      0x07
++#define WL1271_RX_DESC_STATUS_MASK      0x03
+ 
+ #define WL1271_RX_DESC_SUCCESS          0x00
+ #define WL1271_RX_DESC_DECRYPT_FAIL     0x01
+@@ -110,7 +111,10 @@ struct wl1271_rx_descriptor {
+ 	u8  snr;
+ 	__le32 timestamp;
+ 	u8  packet_class;
+-	u8  process_id;
++	union {
++		u8  process_id; /* STA FW */
++		u8  hlid; /* AP FW */
++	} __packed;
+ 	u8  pad_len;
+ 	u8  reserved;
+ } __packed;
+diff --git a/drivers/net/wireless/wl12xx/tx.h b/drivers/net/wireless/wl12xx/tx.h
+index 903e5dc..0662b19 100644
+--- a/drivers/net/wireless/wl12xx/tx.h
++++ b/drivers/net/wireless/wl12xx/tx.h
+@@ -29,6 +29,7 @@
+ #define TX_HW_BLOCK_SIZE                 252
+ 
+ #define TX_HW_MGMT_PKT_LIFETIME_TU       2000
++#define TX_HW_AP_MODE_PKT_LIFETIME_TU    8000
+ /* The chipset reference driver states, that the "aid" value 1
+  * is for infra-BSS, but is still always used */
+ #define TX_HW_DEFAULT_AID                1
+@@ -77,8 +78,12 @@ struct wl1271_tx_hw_descr {
+ 	u8 id;
+ 	/* The packet TID value (as User-Priority) */
+ 	u8 tid;
+-	/* Identifier of the remote STA in IBSS, 1 in infra-BSS */
+-	u8 aid;
++	union {
++		/* STA - Identifier of the remote STA in IBSS, 1 in infra-BSS */
++		u8 aid;
++		/* AP - host link ID (HLID) */
++		u8 hlid;
++	} __packed;
+ 	u8 reserved;
+ } __packed;
+ 
+diff --git a/drivers/net/wireless/wl12xx/wl12xx.h b/drivers/net/wireless/wl12xx/wl12xx.h
+index cbad378..ee357c4 100644
+--- a/drivers/net/wireless/wl12xx/wl12xx.h
++++ b/drivers/net/wireless/wl12xx/wl12xx.h
+@@ -296,6 +296,11 @@ struct wl1271_debugfs {
+ #define NUM_TX_QUEUES              4
+ #define NUM_RX_PKT_DESC            8
+ 
++#define AP_MAX_STATIONS            5
++
++/* Broadcast and Global links + links to stations */
++#define AP_MAX_LINKS               (AP_MAX_STATIONS + 2)
++
+ /* FW status registers */
+ struct wl1271_fw_status {
+ 	__le32 intr;
+@@ -306,7 +311,18 @@ struct wl1271_fw_status {
+ 	__le32 rx_pkt_descs[NUM_RX_PKT_DESC];
+ 	__le32 tx_released_blks[NUM_TX_QUEUES];
+ 	__le32 fw_localtime;
+-	__le32 padding[2];
++
++	/* Next fields valid only in AP FW */
++
++	/*
++	 * A bitmap (where each bit represents a single HLID)
++	 * to indicate if the station is in PS mode.
++	 */
++	__le32 link_ps_bitmap;
++
++	/* Number of freed MBs per HLID */
++	u8 tx_lnk_free_blks[AP_MAX_LINKS];
++	u8 padding_1[1];
+ } __packed;
+ 
+ struct wl1271_rx_mem_pool_addr {
+-- 
+1.7.1
 
---------------080308010200060304050706--
