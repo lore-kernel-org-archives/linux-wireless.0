@@ -1,164 +1,258 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:59059 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750808Ab0KWI2i (ORCPT
+Received: from mail-fx0-f46.google.com ([209.85.161.46]:42074 "EHLO
+	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752577Ab0KRLcw (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 23 Nov 2010 03:28:38 -0500
-Subject: Re: [PATCH] iw: Resolve namespace clash between station plink and
- vlan commands
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Javier Cardona <javier@cozybit.com>
-Cc: nbd@openwrt.org, linux-wireless@vger.kernel.org
-In-Reply-To: <AANLkTimFe7uo28u3Sx4rc9uYJms7Ggh=yW9UMDDWgQce@mail.gmail.com>
-References: <1289867251-21559-1-git-send-email-javier@cozybit.com>
-	 <1289946246.3673.12.camel@jlt3.sipsolutions.net>
-	 <AANLkTimuW8wTVUW4dH1t+J6jhoEkFHZ7v5t78tXe050O@mail.gmail.com>
-	 <1289959503.29119.2.camel@jlt3.sipsolutions.net>
-	 <AANLkTimFe7uo28u3Sx4rc9uYJms7Ggh=yW9UMDDWgQce@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Tue, 23 Nov 2010 09:28:35 +0100
-Message-ID: <1290500915.3674.1.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+	Thu, 18 Nov 2010 06:32:52 -0500
+Received: by mail-fx0-f46.google.com with SMTP id 6so1460042fxm.19
+        for <linux-wireless@vger.kernel.org>; Thu, 18 Nov 2010 03:32:52 -0800 (PST)
+From: Arik Nemtsov <arik@wizery.com>
+To: <linux-wireless@vger.kernel.org>
+Cc: Luciano Coelho <luciano.coelho@nokia.com>,
+	Arik Nemtsov <arik@wizery.com>
+Subject: [PATCH 09/18] wl1271: Configure AP on BSS info change
+Date: Thu, 18 Nov 2010 13:32:22 +0200
+Message-Id: <1290079951-16793-10-git-send-email-arik@wizery.com>
+In-Reply-To: <1290079951-16793-1-git-send-email-arik@wizery.com>
+References: <1290079951-16793-1-git-send-email-arik@wizery.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2010-11-16 at 20:41 -0800, Javier Cardona wrote:
+Configure AP-specific beacon and probe response templates.
+Start the AP when beaconing is enabled.
 
-> > Actually, I won't have time today, but it looks like they can be shared
-> > in some way? Maybe by sharing the same callback function or something? I
-> > mean -- it should be possible to do two things on set... not sure now,
-> > I'll take a look later. Maybe you can work with an older iw version
-> > until then?
-> 
-> We tried that at first but could not get the usage message right in
-> case of missing parameters.  If you can suggest a solution to this,
-> we'll be happy to implement it.
+Signed-off-by: Arik Nemtsov <arik@wizery.com>
+---
+ drivers/net/wireless/wl12xx/main.c   |  126 ++++++++++++++++++++++------------
+ drivers/net/wireless/wl12xx/wl12xx.h |    3 +
+ 2 files changed, 85 insertions(+), 44 deletions(-)
 
-Try this please?
-
-johannes
-
-diff --git a/info.c b/info.c
-index d842c26..0783701 100644
---- a/info.c
-+++ b/info.c
-@@ -223,7 +223,7 @@ static int handle_info(struct nl80211_state *state,
- 	return 0;
+diff --git a/drivers/net/wireless/wl12xx/main.c b/drivers/net/wireless/wl12xx/main.c
+index e6682f2..49def62 100644
+--- a/drivers/net/wireless/wl12xx/main.c
++++ b/drivers/net/wireless/wl12xx/main.c
+@@ -1852,7 +1852,7 @@ out:
+ 	return ret;
  }
- __COMMAND(NULL, info, "info", NULL, NL80211_CMD_GET_WIPHY, 0, 0, CIB_PHY, handle_info,
--	 "Show capabilities for the specified wireless device.");
-+	 "Show capabilities for the specified wireless device.", NULL);
- TOPLEVEL(list, NULL, NL80211_CMD_GET_WIPHY, NLM_F_DUMP, CIB_NONE, handle_info,
- 	 "List all wireless devices and their capabilities.");
- TOPLEVEL(phy, NULL, NL80211_CMD_GET_WIPHY, NLM_F_DUMP, CIB_NONE, handle_info, NULL);
-diff --git a/iw.c b/iw.c
-index 562f17b..2593481 100644
---- a/iw.c
-+++ b/iw.c
-@@ -358,6 +358,12 @@ static int __handle_cmd(struct nl80211_state *state, enum id_input idby,
- 			return 1;
+ 
+-static void wl1271_ssid_set(struct wl1271 *wl, struct sk_buff *beacon)
++static int wl1271_ssid_set(struct wl1271 *wl, struct sk_buff *beacon)
+ {
+ 	u8 *ptr = beacon->data +
+ 		offsetof(struct ieee80211_mgmt, u.beacon.variable);
+@@ -1862,11 +1862,13 @@ static void wl1271_ssid_set(struct wl1271 *wl, struct sk_buff *beacon)
+ 		if (ptr[0] == WLAN_EID_SSID) {
+ 			wl->ssid_len = ptr[1];
+ 			memcpy(wl->ssid, ptr+2, wl->ssid_len);
+-			return;
++			return 0;
+ 		}
+ 		ptr += ptr[1];
+ 	}
+-	wl1271_error("ad-hoc beacon template has no SSID!\n");
++
++	wl1271_error("beacon template has no SSID!");
++	return -ENOENT;
+ }
+ 
+ static void wl1271_op_bss_info_changed(struct ieee80211_hw *hw,
+@@ -1878,70 +1880,84 @@ static void wl1271_op_bss_info_changed(struct ieee80211_hw *hw,
+ 	struct wl1271 *wl = hw->priv;
+ 	struct ieee80211_sta *sta = ieee80211_find_sta(vif, bss_conf->bssid);
+ 	bool do_join = false;
+-	bool set_assoc = false;
++	bool set_assoc = false, is_ap, is_ibss;
+ 	int ret;
+ 
+-	wl1271_debug(DEBUG_MAC80211, "mac80211 bss info changed");
++	wl1271_debug(DEBUG_MAC80211, "mac80211 bss info changed 0x%x",
++		     (int)changed);
+ 
+ 	mutex_lock(&wl->mutex);
+ 
+ 	if (unlikely(wl->state == WL1271_STATE_OFF))
+ 		goto out;
+ 
++	is_ap = (wl->bss_type == BSS_TYPE_AP_BSS);
++	is_ibss = (wl->bss_type == BSS_TYPE_IBSS);
++
+ 	ret = wl1271_ps_elp_wakeup(wl, false);
+ 	if (ret < 0)
+ 		goto out;
+ 
+-	if ((changed & BSS_CHANGED_BEACON_INT) &&
+-	    (wl->bss_type == BSS_TYPE_IBSS)) {
+-		wl1271_debug(DEBUG_ADHOC, "ad-hoc beacon interval updated: %d",
++	if ((changed & BSS_CHANGED_BEACON_INT) && (is_ap || is_ibss)) {
++		wl1271_debug(DEBUG_MASTER, "beacon interval updated: %d",
+ 			bss_conf->beacon_int);
+ 
+ 		wl->beacon_int = bss_conf->beacon_int;
+-		do_join = true;
++
++		if (!is_ap)
++			do_join = true;
  	}
  
-+	if (cmd->selector) {
-+		cmd = cmd->selector(argc, argv);
-+		if (!cmd)
-+			return 1;
+-	if ((changed & BSS_CHANGED_BEACON) &&
+-	    (wl->bss_type == BSS_TYPE_IBSS)) {
++	if ((changed & BSS_CHANGED_BEACON) && (is_ap || is_ibss)) {
++		struct ieee80211_hdr *hdr;
+ 		struct sk_buff *beacon = ieee80211_beacon_get(hw, vif);
++		u16 tmpl_id;
+ 
+-		wl1271_debug(DEBUG_ADHOC, "ad-hoc beacon updated");
++		if (!beacon)
++			goto end_changed_bcn;
+ 
+-		if (beacon) {
+-			struct ieee80211_hdr *hdr;
++		wl1271_debug(DEBUG_MASTER, "beacon updated");
+ 
+-			wl1271_ssid_set(wl, beacon);
+-			ret = wl1271_cmd_template_set(wl, CMD_TEMPL_BEACON,
+-						      beacon->data,
+-						      beacon->len, 0,
+-						      wl1271_min_rate_get(wl));
+-
+-			if (ret < 0) {
+-				dev_kfree_skb(beacon);
+-				goto out_sleep;
+-			}
+-
+-			hdr = (struct ieee80211_hdr *) beacon->data;
+-			hdr->frame_control = cpu_to_le16(
+-				IEEE80211_FTYPE_MGMT |
+-				IEEE80211_STYPE_PROBE_RESP);
++		ret = wl1271_ssid_set(wl, beacon);
++		if (ret < 0) {
++			dev_kfree_skb(beacon);
++			goto out_sleep;
++		}
+ 
+-			ret = wl1271_cmd_template_set(wl,
+-						      CMD_TEMPL_PROBE_RESPONSE,
+-						      beacon->data,
+-						      beacon->len, 0,
+-						      wl1271_min_rate_get(wl));
++		tmpl_id = is_ap ? CMD_TEMPL_AP_BEACON :
++				  CMD_TEMPL_BEACON;
++		ret = wl1271_cmd_template_set(wl, tmpl_id,
++					      beacon->data,
++					      beacon->len, 0,
++					      wl1271_min_rate_get(wl));
++		if (ret < 0) {
+ 			dev_kfree_skb(beacon);
+-			if (ret < 0)
+-				goto out_sleep;
++			goto out_sleep;
++		}
+ 
+-			/* Need to update the SSID (for filtering etc) */
++		hdr = (struct ieee80211_hdr *) beacon->data;
++		hdr->frame_control = cpu_to_le16(IEEE80211_FTYPE_MGMT |
++						 IEEE80211_STYPE_PROBE_RESP);
++
++		tmpl_id = is_ap ? CMD_TEMPL_AP_PROBE_RESPONSE :
++				  CMD_TEMPL_PROBE_RESPONSE;
++		ret = wl1271_cmd_template_set(wl,
++					      tmpl_id,
++					      beacon->data,
++					      beacon->len, 0,
++					      wl1271_min_rate_get(wl));
++		dev_kfree_skb(beacon);
++		if (ret < 0)
++			goto out_sleep;
++
++		/* Need to update the SSID (for filtering etc) */
++		if (!is_ap)
+ 			do_join = true;
+-		}
+ 	}
+ 
+-	if ((changed & BSS_CHANGED_BEACON_ENABLED) &&
+-	    (wl->bss_type == BSS_TYPE_IBSS)) {
++end_changed_bcn:
++
++	if ((changed & BSS_CHANGED_BEACON_ENABLED) && is_ibss) {
+ 		wl1271_debug(DEBUG_ADHOC, "ad-hoc beaconing: %s",
+ 			     bss_conf->enable_beacon ? "enabled" : "disabled");
+ 
+@@ -1952,7 +1968,29 @@ static void wl1271_op_bss_info_changed(struct ieee80211_hw *hw,
+ 		do_join = true;
+ 	}
+ 
+-	if (changed & BSS_CHANGED_CQM) {
++	if ((changed & BSS_CHANGED_BEACON_ENABLED) && is_ap) {
++		if (bss_conf->enable_beacon) {
++			if (!test_bit(WL1271_FLAG_AP_STARTED, &wl->flags)) {
++				ret = wl1271_cmd_start_bss(wl);
++				if (ret < 0)
++					goto out_sleep;
++
++				set_bit(WL1271_FLAG_AP_STARTED, &wl->flags);
++				wl1271_debug(DEBUG_AP, "started AP");
++			}
++		} else {
++			if (test_bit(WL1271_FLAG_AP_STARTED, &wl->flags)) {
++				ret = wl1271_cmd_stop_bss(wl);
++				if (ret < 0)
++					goto out_sleep;
++
++				clear_bit(WL1271_FLAG_AP_STARTED, &wl->flags);
++				wl1271_debug(DEBUG_AP, "stopped AP");
++			}
++		}
 +	}
 +
- 	if (cmdout)
- 		*cmdout = cmd;
++	if ((changed & BSS_CHANGED_CQM) && !is_ap) {
+ 		bool enable = false;
+ 		if (bss_conf->cqm_rssi_thold)
+ 			enable = true;
+@@ -1960,11 +1998,11 @@ static void wl1271_op_bss_info_changed(struct ieee80211_hw *hw,
+ 						  bss_conf->cqm_rssi_thold,
+ 						  bss_conf->cqm_rssi_hyst);
+ 		if (ret < 0)
+-			goto out;
++			goto out_sleep;
+ 		wl->rssi_thold = bss_conf->cqm_rssi_thold;
+ 	}
  
-diff --git a/iw.h b/iw.h
-index 5eb9083..b0bc489 100644
---- a/iw.h
-+++ b/iw.h
-@@ -51,12 +51,13 @@ struct cmd {
- 		       struct nl_cb *cb,
- 		       struct nl_msg *msg,
- 		       int argc, char **argv);
-+	const struct cmd *(*selector)(int argc, char **argv);
- 	const struct cmd *parent;
+-	if ((changed & BSS_CHANGED_BSSID) &&
++	if ((changed & BSS_CHANGED_BSSID) && !is_ap &&
+ 	    /*
+ 	     * Now we know the correct bssid, so we send a new join command
+ 	     * and enable the BSSID filter
+@@ -1987,7 +2025,7 @@ static void wl1271_op_bss_info_changed(struct ieee80211_hw *hw,
+ 			do_join = true;
+ 	}
+ 
+-	if (changed & BSS_CHANGED_ASSOC) {
++	if ((changed & BSS_CHANGED_ASSOC) && !is_ap) {
+ 		if (bss_conf->assoc) {
+ 			u32 rates;
+ 			wl->aid = bss_conf->aid;
+diff --git a/drivers/net/wireless/wl12xx/wl12xx.h b/drivers/net/wireless/wl12xx/wl12xx.h
+index ee357c4..cc654dd 100644
+--- a/drivers/net/wireless/wl12xx/wl12xx.h
++++ b/drivers/net/wireless/wl12xx/wl12xx.h
+@@ -57,6 +57,8 @@ enum {
+ 	DEBUG_SDIO	= BIT(14),
+ 	DEBUG_FILTERS   = BIT(15),
+ 	DEBUG_ADHOC     = BIT(16),
++	DEBUG_AP	= BIT(17),
++	DEBUG_MASTER	= (DEBUG_ADHOC | DEBUG_AP),
+ 	DEBUG_ALL	= ~0,
  };
  
- #define ARRAY_SIZE(ar) (sizeof(ar)/sizeof(ar[0]))
+@@ -385,6 +387,7 @@ struct wl1271 {
+ #define WL1271_FLAG_PSPOLL_FAILURE    (12)
+ #define WL1271_FLAG_STA_STATE_SENT    (13)
+ #define WL1271_FLAG_FW_TX_BUSY        (14)
++#define WL1271_FLAG_AP_STARTED        (15)
+ 	unsigned long flags;
  
--#define __COMMAND(_section, _symname, _name, _args, _nlcmd, _flags, _hidden, _idby, _handler, _help)\
-+#define __COMMAND(_section, _symname, _name, _args, _nlcmd, _flags, _hidden, _idby, _handler, _help, _sel)\
- 	static struct cmd						\
- 	__cmd ## _ ## _symname ## _ ## _handler ## _ ## _nlcmd ## _ ## _idby ## _ ## _hidden\
- 	__attribute__((used)) __attribute__((section("__cmd")))	= {	\
-@@ -69,11 +70,17 @@ struct cmd {
- 		.handler = (_handler),					\
- 		.help = (_help),					\
- 		.parent = _section,					\
--	 }
-+		.selector = (_sel),					\
-+	}
-+#define __ACMD(_section, _symname, _name, _args, _nlcmd, _flags, _hidden, _idby, _handler, _help, _sel, _alias)\
-+	__COMMAND(_section, _symname, _name, _args, _nlcmd, _flags, _hidden, _idby, _handler, _help, _sel);\
-+	static const struct cmd *_alias = &__cmd ## _ ## _symname ## _ ## _handler ## _ ## _nlcmd ## _ ## _idby ## _ ## _hidden
- #define COMMAND(section, name, args, cmd, flags, idby, handler, help)	\
--	__COMMAND(&(__section ## _ ## section), name, #name, args, cmd, flags, 0, idby, handler, help)
-+	__COMMAND(&(__section ## _ ## section), name, #name, args, cmd, flags, 0, idby, handler, help, NULL)
-+#define COMMAND_ALIAS(section, name, args, cmd, flags, idby, handler, help, selector, alias)\
-+	__ACMD(&(__section ## _ ## section), name, #name, args, cmd, flags, 0, idby, handler, help, selector, alias)
- #define HIDDEN(section, name, args, cmd, flags, idby, handler)		\
--	__COMMAND(&(__section ## _ ## section), name, #name, args, cmd, flags, 1, idby, handler, NULL)
-+	__COMMAND(&(__section ## _ ## section), name, #name, args, cmd, flags, 1, idby, handler, NULL, NULL)
- 
- #define TOPLEVEL(_name, _args, _nlcmd, _flags, _idby, _handler, _help)	\
- 	struct cmd							\
-diff --git a/station.c b/station.c
-index 7639553..bfcc5d1 100644
---- a/station.c
-+++ b/station.c
-@@ -204,6 +204,21 @@ COMMAND(station, del, "<MAC address>",
- 	NL80211_CMD_DEL_STATION, 0, CIB_NETDEV, handle_station_get,
- 	"Remove the given station entry (use with caution!)");
- 
-+static const struct cmd *station_set_plink;
-+static const struct cmd *station_set_vlan;
-+
-+static const struct cmd *select_station_cmd(int argc, char **argv)
-+{
-+	if (argc < 2)
-+		return NULL;
-+	if (strcmp(argv[1], "plink_action") == 0)
-+		return station_set_plink;
-+	if (strcmp(argv[1], "vlan") == 0)
-+		return station_set_vlan;
-+	return NULL;
-+}
-+
-+
- static int handle_station_set_plink(struct nl80211_state *state,
- 			      struct nl_cb *cb,
- 			      struct nl_msg *msg,
-@@ -248,9 +263,10 @@ static int handle_station_set_plink(struct nl80211_state *state,
-  nla_put_failure:
- 	return -ENOBUFS;
- }
--COMMAND(station, set, "<MAC address> plink_action <open|block>",
-+COMMAND_ALIAS(station, set, "<MAC address> plink_action <open|block>",
- 	NL80211_CMD_SET_STATION, 0, CIB_NETDEV, handle_station_set_plink,
--	"Set mesh peer link action for this station (peer).");
-+	"Set mesh peer link action for this station (peer).",
-+	select_station_cmd, station_set_plink);
- 
- static int handle_station_set_vlan(struct nl80211_state *state,
- 			      struct nl_cb *cb,
-@@ -294,9 +310,10 @@ static int handle_station_set_vlan(struct nl80211_state *state,
-  nla_put_failure:
- 	return -ENOBUFS;
- }
--COMMAND(station, set, "<MAC address> vlan <ifindex>",
-+COMMAND_ALIAS(station, set, "<MAC address> vlan <ifindex>",
- 	NL80211_CMD_SET_STATION, 0, CIB_NETDEV, handle_station_set_vlan,
--	"Set an AP VLAN for this station.");
-+	"Set an AP VLAN for this station.",
-+	select_station_cmd, station_set_vlan);
- 
- 
- static int handle_station_dump(struct nl80211_state *state,
-
+ 	struct wl1271_partition_set part;
+-- 
+1.7.1
 
