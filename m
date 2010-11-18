@@ -1,70 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f46.google.com ([209.85.161.46]:50735 "EHLO
-	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751319Ab0KEHYq (ORCPT
+Received: from mail-ey0-f174.google.com ([209.85.215.174]:62826 "EHLO
+	mail-ey0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755568Ab0KRUK6 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 5 Nov 2010 03:24:46 -0400
-Received: by fxm16 with SMTP id 16so2113298fxm.19
-        for <linux-wireless@vger.kernel.org>; Fri, 05 Nov 2010 00:24:45 -0700 (PDT)
-From: Helmut Schaa <helmut.schaa@googlemail.com>
-To: Christian Lamparter <chunkeey@googlemail.com>
-Subject: Re: [PATCH 05/13] rt2x00: Add unlikely to skb allocation failure check
-Date: Fri, 5 Nov 2010 08:23:48 +0100
-Cc: Ivo van Doorn <ivdoorn@gmail.com>, linux-wireless@vger.kernel.org
-References: <201011042037.00178.IvDoorn@gmail.com> <201011042038.35919.IvDoorn@gmail.com> <AANLkTi=1eHFOX5S6H_ZETWoXz_8nm5Xd+hExrRWX7go8@mail.gmail.com>
-In-Reply-To: <AANLkTi=1eHFOX5S6H_ZETWoXz_8nm5Xd+hExrRWX7go8@mail.gmail.com>
+	Thu, 18 Nov 2010 15:10:58 -0500
+Received: by eye27 with SMTP id 27so2259732eye.19
+        for <linux-wireless@vger.kernel.org>; Thu, 18 Nov 2010 12:10:57 -0800 (PST)
+From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+To: linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>
+Cc: b43-dev@lists.infradead.org,
+	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+Subject: [PATCH 2/3] b43: N-PHY: rev2: save and restore PHY regs on RSSI poll
+Date: Thu, 18 Nov 2010 21:11:42 +0100
+Message-Id: <1290111103-19308-2-git-send-email-zajec5@gmail.com>
+In-Reply-To: <1290111103-19308-1-git-send-email-zajec5@gmail.com>
+References: <1290111103-19308-1-git-send-email-zajec5@gmail.com>
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="us-ascii"
-Message-Id: <201011050823.48982.helmut.schaa@googlemail.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Am Donnerstag 04 November 2010 schrieb Christian Lamparter:
-> On Thu, Nov 4, 2010 at 7:38 PM, Ivo van Doorn <ivdoorn@gmail.com> wrote:
-> > From: Helmut Schaa <helmut.schaa@googlemail.com>
-> >
-> > The skb allocation should really only fail under high memory pressure
-> > or other uncommon situations. Hence, mark the allocation failure check
-> > as unlikely.
-> >
-> > Signed-off-by: Helmut Schaa <helmut.schaa@googlemail.com>
-> > Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
-> > ---
-> >  drivers/net/wireless/rt2x00/rt2x00dev.c |    2 +-
-> >  1 files changed, 1 insertions(+), 1 deletions(-)
-> >
-> > diff --git a/drivers/net/wireless/rt2x00/rt2x00dev.c b/drivers/net/wireless/rt2x00/rt2x00dev.c
-> > index 5ba79b9..a5c7a4f 100644
-> > --- a/drivers/net/wireless/rt2x00/rt2x00dev.c
-> > +++ b/drivers/net/wireless/rt2x00/rt2x00dev.c
-> > @@ -491,7 +491,7 @@ void rt2x00lib_rxdone(struct queue_entry *entry)
-> >         * received frame and reuse the existing buffer.
-> >         */
-> >        skb = rt2x00queue_alloc_rxskb(entry);
-> > -       if (!skb)
-> > +       if (unlikely(!skb))
-> >                goto submit_entry;
-> >
-> >        /*
-> > --
-> err, wait a sec, I've been looking for this mail for some time, but:
-> 
-> http://mail.linux.ie/pipermail/ilug/2004-December/075654.html
-> 
-> "Note tests for NULL (!something) don't need an unlikely as gcc does
->  that by default itself."
-> 
-> But there's more, according to http://gcc.gnu.org/news/profiledriven.html:
-> (static program profile) gcc expect pointers to be non-null
-> 
-> (therefore all !skb tests should be unlikely branches by default, or?)
+Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
+---
+ drivers/net/wireless/b43/phy_n.c |   16 ++++++++++++++++
+ 1 files changed, 16 insertions(+), 0 deletions(-)
 
-Interesting, didn't know that. I've just given it a try and the MIPS assembly
-indeed stays the same with and without the unlikely. Nevertheless, I've found
-quite a number of unlikely(!x) checks throughout the net stack ...
+diff --git a/drivers/net/wireless/b43/phy_n.c b/drivers/net/wireless/b43/phy_n.c
+index ff0c2b9..1354228 100644
+--- a/drivers/net/wireless/b43/phy_n.c
++++ b/drivers/net/wireless/b43/phy_n.c
+@@ -1845,6 +1845,14 @@ static int b43_nphy_poll_rssi(struct b43_wldev *dev, u8 type, s32 *buf,
+ 		save_regs_phy[5] = b43_phy_read(dev, B43_NPHY_AFECTL_OVER);
+ 		save_regs_phy[6] = b43_phy_read(dev, B43_NPHY_TXF_40CO_B1S0);
+ 		save_regs_phy[7] = b43_phy_read(dev, B43_NPHY_TXF_40CO_B32S1);
++	} else if (dev->phy.rev == 2) {
++		save_regs_phy[0] = b43_phy_read(dev, B43_NPHY_AFECTL_C1);
++		save_regs_phy[1] = b43_phy_read(dev, B43_NPHY_AFECTL_C2);
++		save_regs_phy[2] = b43_phy_read(dev, B43_NPHY_AFECTL_OVER);
++		save_regs_phy[3] = b43_phy_read(dev, B43_NPHY_RFCTL_CMD);
++		save_regs_phy[4] = b43_phy_read(dev, B43_NPHY_RFCTL_OVER);
++		save_regs_phy[5] = b43_phy_read(dev, B43_NPHY_RFCTL_RSSIO1);
++		save_regs_phy[6] = b43_phy_read(dev, B43_NPHY_RFCTL_RSSIO2);
+ 	}
+ 
+ 	b43_nphy_rssi_select(dev, 5, type);
+@@ -1888,6 +1896,14 @@ static int b43_nphy_poll_rssi(struct b43_wldev *dev, u8 type, s32 *buf,
+ 		b43_phy_write(dev, B43_NPHY_AFECTL_OVER, save_regs_phy[5]);
+ 		b43_phy_write(dev, B43_NPHY_TXF_40CO_B1S0, save_regs_phy[6]);
+ 		b43_phy_write(dev, B43_NPHY_TXF_40CO_B32S1, save_regs_phy[7]);
++	} else if (dev->phy.rev == 2) {
++		b43_phy_write(dev, B43_NPHY_AFECTL_C1, save_regs_phy[0]);
++		b43_phy_write(dev, B43_NPHY_AFECTL_C2, save_regs_phy[1]);
++		b43_phy_write(dev, B43_NPHY_AFECTL_OVER, save_regs_phy[2]);
++		b43_phy_write(dev, B43_NPHY_RFCTL_CMD, save_regs_phy[3]);
++		b43_phy_write(dev, B43_NPHY_RFCTL_OVER, save_regs_phy[4]);
++		b43_phy_write(dev, B43_NPHY_RFCTL_RSSIO1, save_regs_phy[5]);
++		b43_phy_write(dev, B43_NPHY_RFCTL_RSSIO2, save_regs_phy[6]);
+ 	}
+ 
+ 	return out;
+-- 
+1.7.1
 
-But still, this seems unnecessary. John, please drop this patch.
-
-Thanks Christian,
-Helmut
