@@ -1,260 +1,193 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.19.149.2]:17101 "EHLO mail.atheros.com"
+Received: from mail.atheros.com ([12.19.149.2]:44625 "EHLO mail.atheros.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753453Ab0K3Ao3 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 29 Nov 2010 19:44:29 -0500
-Received: from mail.atheros.com ([10.10.20.108])
+	id S1754035Ab0KRFzF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 18 Nov 2010 00:55:05 -0500
+Received: from mail.atheros.com ([10.10.20.105])
 	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Mon, 29 Nov 2010 16:44:15 -0800
-Date: Mon, 29 Nov 2010 16:44:24 -0800
+	for <linux-wireless@vger.kernel.org>; Wed, 17 Nov 2010 21:54:52 -0800
 From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: Ben Greear <greearb@candelatech.com>
-CC: "ath9k-devel@lists.ath9k.org" <ath9k-devel@venema.h4ckr.net>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [ath9k-devel] Script to crash ath9k with DMA errors.
-Message-ID: <20101130004424.GC1901@tux>
-References: <4CF44543.9070605@candelatech.com>
+To: <linville@tuxdriver.com>
+CC: <mark@moxienet.com>, <linux-wireless@vger.kernel.org>,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>
+Subject: [PATCH 4/4] cfg80211: Fix regulatory bug with multiple cards and delays
+Date: Wed, 17 Nov 2010 21:55:02 -0800
+Message-ID: <1290059702-2679-1-git-send-email-lrodriguez@atheros.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <4CF44543.9070605@candelatech.com>
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Nov 29, 2010 at 04:28:51PM -0800, Ben Greear wrote:
-> Here is a script that reliably crashes my ath9k box.
-> A second box with completely different hardware (except
-> for ath9k) experiences similar problems.
-> 
-> I am using today's wireless-testing kernel with a few
-> patches of my own.
-> 
-> You will also need the very latest hostap tree as it has the
-> optimizations for allowing STAs to share scans.  Without
-> this optimization, I did not see this problem.
-> 
-> A few notes about the script:
-> 
-> * I cannot remove any interfaces, seems a ref-count leak somewhere.
->    I haven't debugged this issue.
-> 
-> * Without the background ping, it is very hard to reproduce this problem,
->    but with it, it happens almost every time.
-> 
-> * You'll need to set up your paths at the top of the script.
-> 
-> 
-> #!/usr/bin/perl
-> 
-> use strict;
-> 
-> my $iw = "./local/sbin/iw";
-> my $ip = "./local/sbin/ip";
-> my $wpa_s = "./local/bin/wpa_supplicant";
-> my $ssid = "candela-n";
-> my $key = "wpadmz123";
-> 
-> my $phy = "wiphy0";
-> my $max = 32;
-> my $i;
-> my $bmac = "00:01:02:03:04:";
-> my $cmd;
-> 
-> # Cleanup previous stuff
-> runCmd("killall wpa_supplicant");
-> runCmd("killall ping");
-> 
-> for ($i = 0; $i<$max; $i++) {
->    # Work around ref-counting bugs in kernel
->    runCmd("$ip link set sta$i down");
->    runCmd("$ip addr flush dev sta$i");
->    runCmd("$ip route flush dev sta$i");
->    runCmd("$ip -6 addr flush dev sta$i");
->    runCmd("$ip -6 route flush dev sta$i");
-> 
->    # Bugger, cannot get the ref-count problem to go away.
->    # runCmd("$iw dev sta$i del");
-> }
-> 
-> #exit(0);
-> 
-> open(FD, ">pingbg") || die("Couldn't open pingbg.");
-> print FD "#!/bin/bash\n\n";
-> print FD "ping \$* > /dev/null 2>&1 &\n";
-> print FD "echo continuing....\n";
-> close(FD);
-> runCmd("chmod a+x pingbg");
-> 
-> # Create stations
-> for ($i = 0; $i<$max; $i++) {
->    runCmd("$iw phy $phy interface add sta$i type station");
->    my $mc5 = $i + 1;
->    if (length($mc5) == 1) {
->      $mc5 = "0$mc5"; # pad mac octet
->    }
->    my $mac = "$bmac$mc5";
->    runCmd("$ip link set sta$i address $mac");
-> 
->    runCmd("$iw dev sta$i set power_save off");
->    runCmd("$ip addr add 9.99.1.$mc5/24 dev sta$i");
->    runCmd("./pingbg -I sta$i 9.99.1.1");
-> }
-> 
-> # Bring them up with WPA
-> for ($i = 0; $i<$max; $i++) {
->    open(FD, ">sta$i" . "_wpa.conf") || die("Couldn't open file: $!\n");
->    print FD "
-> ctrl_interface=/var/run/wpa_supplicant
-> fast_reauth=1
-> #can_scan_one=1
-> network={
->      ssid=\"$ssid\"
->      proto=WPA
->      key_mgmt=WPA-PSK
->      psk=\"$key\"
->      pairwise=TKIP CCMP
->      group=TKIP CCMP
-> }
-> ";
->    #runCmd("$wpa_s -B -i sta$i -c sta$i" . "_wpa.conf -P sta$i" . "_wpa.pid -t -f sta$i" . "_wpa.log");
-> }
-> 
-> # Build command to start one wpa_supplicant for all interfaces.
-> my $cmd = "$wpa_s -B -g /var/run/wpa_supplicant_if -P /tmp/wpa_supplicant-all.pid -t -f /tmp/wpa_supplicant_log_all.txt -i sta0 -c sta0_wpa.conf";
-> for ($i = 1; $i<$max; $i++) {
->    $cmd = "$cmd -N -i sta$i -c sta$i" . "_wpa.conf";
-> }
-> runCmd($cmd);
-> 
-> sub runCmd {
->    my $cmd = shift;
->    print "$cmd\n";
->    `$cmd`;
-> }
-> 
-> 
-> Example kernel crash output:
-> 
-> ADDRCONF(NETDEV_CHANGE): sta6: link becomes ready
-> ADDRCONF(NETDEV_CHANGE): sta5: link becomes ready
-> ADDRCONF(NETDEV_CHANGE): sta4: link becomes ready
-> ADDRCONF(NETDEV_CHANGE): sta3: link becomes ready
-> ADDRCONF(NETDEV_CHANGE): sta1: link becomes ready
-> ADDRCONF(NETDEV_CHANGE): sta0: link becomes ready
-> padlock: VIA PadLock not detected.
-> 
-> [root@ath9k-dev1 ~]# ADDRCONF(NETDEV_CHANGE): sta30: link becomes ready
-> ADDRCONF(NETDEV_CHANGE): sta29: link becomes ready
-> ------------[ cut here ]------------
-> WARNING: at /home/greearb/git/linux.wireless-testing/drivers/net/wireless/ath/ath9k/recv.c:532 ath_stoprecv+0x90/0x9a [ath9k]()
-> Hardware name: PDSBM
-> Could not stop RX, we could be confusing the DMA engine when we start RX up
-> Modules linked in: aes_i586 aes_generic fuse nfs lockd fscache nfs_acl auth_rpcgss sunrpc ipv6 uinput arc4 ecb ath9k mac80211 ath9k_common ath9k_hw mi]
-> Pid: 3505, comm: wpa_supplicant Not tainted 2.6.37-rc3-wl+ #53
-> Call Trace:
->   [<78436fe9>] warn_slowpath_common+0x77/0x8c
->   [<f933019e>] ? ath_stoprecv+0x90/0x9a [ath9k]
->   [<f933019e>] ? ath_stoprecv+0x90/0x9a [ath9k]
->   [<7843707a>] warn_slowpath_fmt+0x2e/0x30
->   [<f933019e>] ath_stoprecv+0x90/0x9a [ath9k]
->   [<f932f13c>] ath_set_channel+0x94/0x1e8 [ath9k]
->   [<7845a425>] ? mark_held_locks+0x47/0x5f
->   [<7878e5bb>] ? _raw_spin_unlock_irqrestore+0x3c/0x48
->   [<f932f5d4>] ath9k_config+0x344/0x423 [ath9k]
->   [<f919aaaa>] ieee80211_hw_config+0x11b/0x125 [mac80211]
->   [<f91aa25a>] ieee80211_set_channel+0x74/0x9e [mac80211]
->   [<f8d37d36>] cfg80211_set_freq+0xf3/0x12d [cfg80211]
->   [<f91aa1e6>] ? ieee80211_set_channel+0x0/0x9e [mac80211]
->   [<f8d3a24c>] cfg80211_mgd_wext_siwfreq+0x108/0x148 [cfg80211]
->   [<f8d395c9>] cfg80211_wext_siwfreq+0x42/0xbf [cfg80211]
->   [<7876e14f>] ioctl_standard_call+0x52/0x28e
->   [<786f2db3>] ? dev_name_hash+0x16/0x48
->   [<786f67cc>] ? __dev_get_by_name+0x32/0x3d
->   [<7876e418>] wext_handle_ioctl+0x8d/0x18d
->   [<f8d39587>] ? cfg80211_wext_siwfreq+0x0/0xbf [cfg80211]
->   [<786f78f9>] dev_ioctl+0x520/0x53f
->   [<786e5f7f>] ? sock_ioctl+0x0/0x202
->   [<786e6175>] sock_ioctl+0x1f6/0x202
->   [<7878e576>] ? _raw_spin_unlock_irq+0x22/0x2b
->   [<786e5f7f>] ? sock_ioctl+0x0/0x202
->   [<784cc151>] do_vfs_ioctl+0x4b1/0x4f6
->   [<7878e576>] ? _raw_spin_unlock_irq+0x22/0x2b
->   [<784303cd>] ? finish_task_switch+0x72/0xd4
->   [<784c14a9>] ? fcheck_files+0x9b/0xca
->   [<784c1505>] ? fget_light+0x2d/0xb0
->   [<784cc1d9>] sys_ioctl+0x43/0x62
->   [<784030dc>] sysenter_do_call+0x12/0x38
-> ---[ end trace 34d8f42d696b7763 ]---
-> ------------[ cut here ]------------
-> WARNING: at /home/greearb/git/linux.wireless-testing/net/wireless/mlme.c:285 __cfg80211_auth_remove+0x98/0x9e [cfg80211]()
-> Hardware name: PDSBM
-> Modules linked in: aes_i586 aes_generic fuse nfs lockd fscache nfs_acl auth_rpcgss sunrpc ipv6 uinput arc4 ecb ath9k mac80211 ath9k_common ath9k_hw mi]
-> Pid: 38, comm: kworker/u:1 Tainted: G        W   2.6.37-rc3-wl+ #53
-> Call Trace:
->   [<78436fe9>] warn_slowpath_common+0x77/0x8c
->   [<f8d34888>] ? __cfg80211_auth_remove+0x98/0x9e [cfg80211]
->   [<f8d34888>] ? __cfg80211_auth_remove+0x98/0x9e [cfg80211]
->   [<7843701b>] warn_slowpath_null+0x1d/0x1f
->   [<f8d34888>] __cfg80211_auth_remove+0x98/0x9e [cfg80211]
->   [<f8d34fc2>] cfg80211_send_auth_timeout+0x90/0xa0 [cfg80211]
->   [<7845a681>] ? trace_hardirqs_on_caller+0x104/0x125
->   [<7845a6ad>] ? trace_hardirqs_on+0xb/0xd
->   [<f91a434b>] ieee80211_probe_auth_done+0x1e/0x7b [mac80211]
->   [<f91a6861>] ieee80211_work_work+0xd51/0xd8f [mac80211]
->   [<7845a681>] ? trace_hardirqs_on_caller+0x104/0x125
->   [<7845a602>] ? trace_hardirqs_on_caller+0x85/0x125
->   [<78447000>] process_one_work+0x1af/0x2bf
->   [<78446f8f>] ? process_one_work+0x13e/0x2bf
->   [<f91a5b10>] ? ieee80211_work_work+0x0/0xd8f [mac80211]
->   [<7844874e>] worker_thread+0xf9/0x1bf
->   [<78448655>] ? worker_thread+0x0/0x1bf
->   [<7844b27e>] kthread+0x62/0x67
->   [<7844b21c>] ? kthread+0x0/0x67
->   [<784036c6>] kernel_thread_helper+0x6/0x1a
-> ---[ end trace 34d8f42d696b7764 ]---
-> e1000e 0000:06:00.0: eth0: Detected Hardware Unit Hang:
->    TDH                  <f1>
->    TDT                  <f4>
->    next_to_use          <f4>
->    next_to_clean        <f1>
-> buffer_info[next_to_clean]:
->    time_stamp           <bcc5>
->    next_to_watch        <f1>
->    jiffies              <c73c>
->    next_to_watch.status <0>
-> MAC Status             <80080f83>
-> PHY Status             <796d>
-> PHY 1000BASE-T Status  <7c00>
-> PHY Extended Status    <3000>
-> PCI Status             <4010>
-> e1000e 0000:06:00.0: eth0: Detected Hardware Unit Hang:
->    TDH                  <f1>
->    TDT                  <f4>
->    next_to_use          <f4>
->    next_to_clean        <f1>
-> buffer_info[next_to_clean]:
->    time_stamp           <bcc5>
->    next_to_watch        <f1>
->    jiffies              <cf0c>
->    next_to_watch.status <0>
-> MAC Status             <80080f83>
-> PHY Status             <796d>
-> PHY 1000BASE-T Status  <7c00>
-> PHY Extended Status    <3000>
-> PCI Status             <4010>
-> BUG: unable to handle kernel NULL pointer dereference at 00000040
-> IP: [<f933470a>] ath_tx_start+0x461/0x5ef [ath9k]
-> *pde = 00000000
-> Oops: 0000 [#1] SMP DEBUG_PAGEALLOC
-> last sysfs file: /sys/devices/pci0000:00/0000:00:1e.0/0000:08:01.0/irq
-> Modules linked in: aes_i586 aes_generic fuse nfs lockd fscache nfs_acl auth_rpcgss sunrpc ipv6 uinput arc4 ecb ath9k mac80211 ath9k_common ath9k_hw mi]
-> 
-> Pid: 38, comm: kworker/u:1 Tainted: G        W   2.6.37-rc3-wl+ #53 PDSBM/PDSBM
-> EIP: 0060:[<f933470a>] EFLAGS: 00010246 CPU: 1
-> EIP is at ath_tx_start+0x461/0x5ef [ath9k]
+When two cards are connected with the same regulatory domain
+if CRDA had a delayed response then cfg80211's own set regulatory
+domain would still be the world regulatory domain. There was a bug
+on cfg80211's logic such that it assumed that once you pegged a
+request as the last request it was already the currently set
+regulatory domain. This would mean we would race setting a stale
+regulatory domain to secondary cards which had the same regulatory
+domain since the alpha2 would match.
 
-Please use
+We fix this by processing each regulatory request atomically,
+and only move on to the next one once we get it fully processed.
+In the case CRDA is not present we will simply world roam.
 
-gdb drivers/net/wireless/ath/ath9k/
-l *(ath_tx_start+0x461)
+This issue is only present when you have a slow system and the
+CRDA processing is delayed. Because of this it is not a known
+regression.
 
-  Luis
+Without this fix when a delay is present with CRDA the second card
+would end up with an intersected regulatory domain and not allow it
+to use the channels it really is designed for. When two cards with
+two different regulatory domains were inserted you'd end up
+rejecting the second card's regulatory domain request.
+This fails with mac80211_hswim's regtest=2 (two requests, same alpha2)
+and regtest=3 (two requests, different alpha2) module parameter
+options.
+
+This was reproduced and tested against mac80211_hwsim using this
+CRDA delayer:
+
+       #!/bin/bash
+       echo $COUNTRY >> /tmp/log
+       sleep 2
+       /sbin/crda.orig
+
+And these regulatory tests:
+
+       modprobe mac80211_hwsim regtest=2
+       modprobe mac80211_hwsim regtest=3
+
+Cc: Mark Mentovai <mark@moxienet.com>
+Reported-by: Mark Mentovai <mark@moxienet.com>
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+---
+ include/net/regulatory.h |    7 ++++++
+ net/wireless/reg.c       |   52 ++++++++++++++++++++++++++++++++++++++--------
+ 2 files changed, 50 insertions(+), 9 deletions(-)
+
+diff --git a/include/net/regulatory.h b/include/net/regulatory.h
+index 9e103a4..356d6e3 100644
+--- a/include/net/regulatory.h
++++ b/include/net/regulatory.h
+@@ -43,6 +43,12 @@ enum environment_cap {
+  * @intersect: indicates whether the wireless core should intersect
+  * 	the requested regulatory domain with the presently set regulatory
+  * 	domain.
++ * @processed: indicates whether or not this requests has already been
++ *	processed. When the last request is processed it means that the
++ *	currently regulatory domain set on cfg80211 is updated from
++ *	CRDA and can be used by other regulatory requests. When a
++ *	the last request is not yet processed we must yield until it
++ *	is processed before processing any new requests.
+  * @country_ie_checksum: checksum of the last processed and accepted
+  * 	country IE
+  * @country_ie_env: lets us know if the AP is telling us we are outdoor,
+@@ -54,6 +60,7 @@ struct regulatory_request {
+ 	enum nl80211_reg_initiator initiator;
+ 	char alpha2[2];
+ 	bool intersect;
++	bool processed;
+ 	enum environment_cap country_ie_env;
+ 	struct list_head list;
+ };
+diff --git a/net/wireless/reg.c b/net/wireless/reg.c
+index b522c46..bc14caa 100644
+--- a/net/wireless/reg.c
++++ b/net/wireless/reg.c
+@@ -1320,6 +1320,21 @@ static int ignore_request(struct wiphy *wiphy,
+ 	return -EINVAL;
+ }
+ 
++static void reg_set_request_processed(void)
++{
++	bool need_more_processing = false;
++
++	last_request->processed = true;
++
++	spin_lock(&reg_requests_lock);
++	if (!list_empty(&reg_requests_list))
++		need_more_processing = true;
++	spin_unlock(&reg_requests_lock);
++
++	if (need_more_processing)
++		schedule_work(&reg_work);
++}
++
+ /**
+  * __regulatory_hint - hint to the wireless core a regulatory domain
+  * @wiphy: if the hint comes from country information from an AP, this
+@@ -1395,8 +1410,10 @@ new_request:
+ 		 * have applied the requested regulatory domain before we just
+ 		 * inform userspace we have processed the request
+ 		 */
+-		if (r == -EALREADY)
++		if (r == -EALREADY) {
+ 			nl80211_send_reg_change_event(last_request);
++			reg_set_request_processed();
++		}
+ 		return r;
+ 	}
+ 
+@@ -1428,7 +1445,11 @@ static void reg_process_hint(struct regulatory_request *reg_request)
+ 		wiphy_update_regulatory(wiphy, initiator);
+ }
+ 
+-/* Processes regulatory hints, this is all the NL80211_REGDOM_SET_BY_* */
++/*
++ * Processes regulatory hints, this is all the NL80211_REGDOM_SET_BY_*
++ * Regulatory hints come on a first come first serve basis and we
++ * must process each one atomically.
++ */
+ static void reg_process_pending_hints(void)
+ {
+ 	struct regulatory_request *reg_request;
+@@ -1436,19 +1457,30 @@ static void reg_process_pending_hints(void)
+ 	mutex_lock(&cfg80211_mutex);
+ 	mutex_lock(&reg_mutex);
+ 
++	/* When last_request->processed becomes true this will be rescheduled */
++	if (last_request && !last_request->processed) {
++		REG_DBG_PRINT("Pending regulatory request, waiting "
++			      "for it to be processed...");
++		goto out;
++	}
++
+ 	spin_lock(&reg_requests_lock);
+-	while (!list_empty(&reg_requests_list)) {
+-		reg_request = list_first_entry(&reg_requests_list,
+-					       struct regulatory_request,
+-					       list);
+-		list_del_init(&reg_request->list);
+ 
++	if (list_empty(&reg_requests_list)) {
+ 		spin_unlock(&reg_requests_lock);
+-		reg_process_hint(reg_request);
+-		spin_lock(&reg_requests_lock);
++		goto out;
+ 	}
++
++	reg_request = list_first_entry(&reg_requests_list,
++				       struct regulatory_request,
++				       list);
++	list_del_init(&reg_request->list);
++
+ 	spin_unlock(&reg_requests_lock);
+ 
++	reg_process_hint(reg_request);
++
++out:
+ 	mutex_unlock(&reg_mutex);
+ 	mutex_unlock(&cfg80211_mutex);
+ }
+@@ -2057,6 +2089,8 @@ int set_regdom(const struct ieee80211_regdomain *rd)
+ 
+ 	nl80211_send_reg_change_event(last_request);
+ 
++	reg_set_request_processed();
++
+ 	mutex_unlock(&reg_mutex);
+ 
+ 	return r;
+-- 
+1.7.3.2.90.gd4c43
+
