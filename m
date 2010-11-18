@@ -1,33 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:35062 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751498Ab0KXGOv (ORCPT
+Received: from mail-gx0-f174.google.com ([209.85.161.174]:62822 "EHLO
+	mail-gx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754904Ab0KRUxh convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 24 Nov 2010 01:14:51 -0500
-Subject: Re: linux-next: Tree for November 24 (iwlwifi-fix)
-From: Johannes Berg <johannes@sipsolutions.net>
-To: sedat.dilek@gmail.com
-Cc: LKML <linux-kernel@vger.kernel.org>,
-	wireless <linux-wireless@vger.kernel.org>, sfr@canb.auug.org.au,
-	Randy Dunlap <randy.dunlap@oracle.com>,
-	John Linville <linville@tuxdriver.com>,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>
-In-Reply-To: <AANLkTinVUkgZKbAkQ3_27Jw3cXJ7qySxm1UMFSReujfp@mail.gmail.com>
-References: <AANLkTinVUkgZKbAkQ3_27Jw3cXJ7qySxm1UMFSReujfp@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Wed, 24 Nov 2010 07:14:45 +0100
-Message-ID: <1290579285.3790.1.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+	Thu, 18 Nov 2010 15:53:37 -0500
+Received: by gxk23 with SMTP id 23so2188086gxk.19
+        for <linux-wireless@vger.kernel.org>; Thu, 18 Nov 2010 12:53:37 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <20101118204045.GE2468@tuxdriver.com>
+References: <20101031134012.F21FF9D401B@zog.reactivated.net>
+	<1289604579.21000.5.camel@dcbw.foobar.com>
+	<AANLkTinpvmS1ZH=T5BtA3+qyYLnNijxfjonFMaY8fO4F@mail.gmail.com>
+	<20101118204045.GE2468@tuxdriver.com>
+Date: Thu, 18 Nov 2010 20:53:37 +0000
+Message-ID: <AANLkTi=uimE0jt+UeSzrx96cKAF705eNXzj1Xy2qRW28@mail.gmail.com>
+Subject: Re: [PATCH] libertas: don't block usb8388 suspend if no wakeup
+ conditions are set
+From: Daniel Drake <dsd@laptop.org>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org, libertas-dev@lists.infradead.org,
+	akarwar@marvell.com, Dan Williams <dcbw@redhat.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2010-11-24 at 07:09 +0100, Sedat Dilek wrote:
+On 18 November 2010 20:40, John W. Linville <linville@tuxdriver.com> wrote:
+> On Thu, Nov 18, 2010 at 08:15:55PM +0000, Daniel Drake wrote:
+>> John, just a quick ping on this maintainer-acked patch
+>> Thanks :)
+>
+> I have it in wireless-next-2.6.  Do you think it needs to be in 2.6.37?
 
-> Is that fix still required? Fixed in wireless-next-2.6?
+Sorry about that. Must have missed it!
+linux-next is good enough.
 
-That patch was causing that problem, but I fixed the original problem
-since.
-
-johannes
-
-
+Thanks
+Daniel
