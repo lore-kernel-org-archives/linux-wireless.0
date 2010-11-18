@@ -1,43 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qw0-f46.google.com ([209.85.216.46]:39675 "EHLO
-	mail-qw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751300Ab0KVTMh (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:56681 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756005Ab0KRSxp (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 22 Nov 2010 14:12:37 -0500
-Received: by qwc9 with SMTP id 9so1154469qwc.19
-        for <linux-wireless@vger.kernel.org>; Mon, 22 Nov 2010 11:12:34 -0800 (PST)
-Message-ID: <4CEAC095.7020706@lwfinger.net>
-Date: Mon, 22 Nov 2010 13:12:21 -0600
-From: Larry Finger <Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-To: =?UTF-8?B?TWljaGFlbCBCw7xzY2g=?= <mb@bu3sch.de>
-CC: b43-dev <b43-dev@lists.infradead.org>,
-	wireless <linux-wireless@vger.kernel.org>
-Subject: Re: b43 error under heavy load
-References: <4CEAB969.20702@lwfinger.net>	 (sfid-20101122_194209_226222_FFFFFFFFA98AFC1F) <1290451982.20888.2.camel@maggie>
-In-Reply-To: <1290451982.20888.2.camel@maggie>
-Content-Type: text/plain; charset=UTF-8
+	Thu, 18 Nov 2010 13:53:45 -0500
+Subject: Re: [PATCH] mac80211:  Fix deadlock in ieee80211_do_stop.
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Tejun Heo <tj@kernel.org>
+Cc: Ben Greear <greearb@candelatech.com>,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <4CE4D41F.1080005@kernel.org>
+References: <1289592426-5367-1-git-send-email-greearb@candelatech.com>
+	 <1289594998.3736.11.camel@jlt3.sipsolutions.net>
+	 <4CDDAA3B.9090007@candelatech.com>
+	 <1289596096.3736.13.camel@jlt3.sipsolutions.net>
+	 <4CDE699B.70401@kernel.org> <4CE1A344.7040201@candelatech.com>
+	 <4CE292F7.4090200@kernel.org>
+	 <1289929258.3673.1.camel@jlt3.sipsolutions.net>
+	 <4CE396A9.1050908@kernel.org>
+	 <1290020005.3777.6.camel@jlt3.sipsolutions.net>
+	 <4CE4C8DD.6010806@kernel.org> <51f5dd53c39a77fff4efc1a99b189725@localhost>
+	 <4CE4D41F.1080005@kernel.org>
+Content-Type: text/plain; charset="UTF-8"
+Date: Thu, 18 Nov 2010 08:59:45 -0800
+Message-ID: <1290099585.3801.1.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 11/22/2010 12:53 PM, Michael Büsch wrote:
-> On Mon, 2010-11-22 at 12:41 -0600, Larry Finger wrote: 
->> Under heavy load with multiple streams, I'm getting errors from my BCM4312
->> (14e4:4315) device as follows:
->>
->> b43-phy0 debug: TX-status contains invalid cookie: 0x0D4D
->> b43-phy0 debug: Out of order TX status report on DMA ring 1. Expected 74, but got 76
->> b43-phy0 debug: Out of order TX status report on DMA ring 1. Expected 74, but got 78
->> (and continues).
->>
->> Clearly that cookie is garbage as it has a slot number of 0. Any suggestions on
->> diagnostic information that I could dump to help debug this?
+On Thu, 2010-11-18 at 08:22 +0100, Tejun Heo wrote:
+
+> > But why is this unreliable and/or high latency anyway?
 > 
-> I think that probably is a firmware or hardware bug. The affected
-> kernel code was not changed in years, as far as I know.
+> Oh, no, it's not unreliable or high latency on workqueue side.  It's
+> just error prone for its users.  As there is only single executino
+> resource by definition, any single work can stall the whole queue and
+> it also is easy to create a deadlock by introducing circular
+> dependency.  For example, mac80211 uses system wq for restart work and
+> that's to avoid grabbing rtnl_lock from a work as that will introduce
+> a deadlock, right?  If you use non-ordered workqueues, you don't need
+> to worry about those artificial dependencies.
 
-Thanks. I'll see if I can figure out a way for the driver to recover more
-gracefully. In the meantime, I will be dumping the entire TX status struct to
-see if that helps in seeing what is wrong.
+Ok, that makes sense then. I thought you were saying there was some
+intrinsic issue with this! I do know about the issues, but we do have to
+process some things in the right order here so I'd rather be aware of
+those issues than have to deal with reordering and/or our own queueing.
 
-Larry
+> > It used to be just fine .. maybe this is one of the cases where we
+> > should actually be using a dedicated thread ...
+> 
+> Oh, trust me, that won't change anything.  If there's a bug in
+> workqueue (I don't think this is the case here tho), let's fix it.  If
+> mac80211 is somehow tripping a deadlock around single execution
+> resource, let's fix the culprit.  Okay?  At this point, all we need is
+> a proper task dump to see who's holding what where.
+
+I agree completely -- just misunderstood you there!
+
+johannes
+
