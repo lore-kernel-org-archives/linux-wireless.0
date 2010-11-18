@@ -1,56 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iw0-f174.google.com ([209.85.214.174]:65013 "EHLO
-	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755118Ab0KRHj3 convert rfc822-to-8bit (ORCPT
+Received: from mail-yw0-f46.google.com ([209.85.213.46]:59746 "EHLO
+	mail-yw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756551Ab0KRPxP (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 18 Nov 2010 02:39:29 -0500
-Received: by iwn35 with SMTP id 35so3165685iwn.19
-        for <linux-wireless@vger.kernel.org>; Wed, 17 Nov 2010 23:39:29 -0800 (PST)
+	Thu, 18 Nov 2010 10:53:15 -0500
+Received: by ywg8 with SMTP id 8so1895945ywg.19
+        for <linux-wireless@vger.kernel.org>; Thu, 18 Nov 2010 07:53:14 -0800 (PST)
+Message-ID: <4CE54BE2.2070302@lwfinger.net>
+Date: Thu, 18 Nov 2010 09:53:06 -0600
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-In-Reply-To: <201011181536.45076.br1@einfach.org>
-References: <1290059169-2468-1-git-send-email-lrodriguez@atheros.com> <201011181536.45076.br1@einfach.org>
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Date: Wed, 17 Nov 2010 23:39:08 -0800
-Message-ID: <AANLkTinEMTf28PFbDwcR5+TCc07_R=2LV3Oycdoa9x-5@mail.gmail.com>
-Subject: Re: [PATCH 0/4] cfg80211: fix bug with multiple cards and a CRDA delay
-To: Bruno Randolf <br1@einfach.org>
-Cc: linville@tuxdriver.com, mark@moxienet.com,
-	linux-wireless@vger.kernel.org
+To: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+CC: linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>,
+	b43-dev@lists.infradead.org
+Subject: Re: [PATCH 1/4] b43: N-PHY: fix values for PHY regs in channel tables
+ of 2055 radio
+References: <1290083280-13550-1-git-send-email-zajec5@gmail.com>
+In-Reply-To: <1290083280-13550-1-git-send-email-zajec5@gmail.com>
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Nov 17, 2010 at 10:36 PM, Bruno Randolf <br1@einfach.org> wrote:
-> On Thu November 18 2010 14:46:05 Luis R. Rodriguez wrote:
->> This series addresses the bug pointed out by Mark Mentovai
->> <mark@moxienet.com> when there is a delay on CRDA and you use multiple
->> cards with the same regulatory domain. After some testing I realized this
->> also introduced an issue when using multiple cards with different
->> regulatory settings. The issue is present only when there is a delay in
->> CRDA so technically this is not a regression so I am not marking these as
->> stable fixes. It also does not seem to be a regulatory bug as when the
->> issue is present you'd end up with an intersected regulatory domain (same
->> alpha2s) or get the regulatory domain rejected for the second card if the
->> alpha2 was different.
->>
->> Thanks to Mark for his testing, good ideas on alternative ways to resolve
->> this and thorough reports.
->>
->> Luis R. Rodriguez (4):
->>   cfg80211: put core regulatory request into queue
->>   cfg80211: move reg_work and reg_todo above
->>   cfg80211: move mutex locking to reg_process_pending_hints()
->>   cfg80211: Fix regulatory bug with multiple cards and delays
->>
->>  include/net/regulatory.h |    7 ++++
->>  net/wireless/reg.c       |   80
->> +++++++++++++++++++++++++++++++-------------- 2 files changed, 62
->> insertions(+), 25 deletions(-)
->
-> Yep - this fixes also my case (slow board under load + two or more ath5k
-> cards). Thanks, Luis!
+On 11/18/2010 06:27 AM, Rafał Miłecki wrote:
+> Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
+> ---
 
-Thanks for testing and sorry it took so long to look into this, but
-I've just been piled with tons of stuff.
+This change deserves a bit more explanation. You might include something like
+"These tables came from reverse engineering the 5.10.56.46 version of the
+Broadcom driver. Trace comparisons between b43 and the current Broadcom driver
+(5.10.120.0) show byte reversals for the PHY register writes."
 
-  Luis
+Larry
+
+>  drivers/net/wireless/b43/radio_2055.c |  248 ++++++++++++++++----------------
+>  1 files changed, 124 insertions(+), 124 deletions(-)
+> 
+> diff --git a/drivers/net/wireless/b43/radio_2055.c b/drivers/net/wireless/b43/radio_2055.c
+> index 0d67715..10910dc 100644
+> --- a/drivers/net/wireless/b43/radio_2055.c
+> +++ b/drivers/net/wireless/b43/radio_2055.c
+> @@ -307,7 +307,7 @@ static const struct b43_nphy_channeltab_entry_rev2 b43_nphy_channeltab_rev2[] =
+>  	RADIOREGS(0x71, 0x01, 0xEC, 0x0F, 0xFF, 0x01, 0x04, 0x0A,
+>  		  0x00, 0x8F, 0xFF, 0xFF, 0xFF, 0x00, 0x0F, 0x0F,
+>  		  0x8F, 0xFF, 0x00, 0x0F, 0x0F, 0x8F),
+> -	PHYREGS(0xB407, 0xB007, 0xAC07, 0x1402, 0x1502, 0x1602),
+> +	PHYREGS(0x07B4, 0x07B0, 0x07AC, 0x0214, 0x0215, 0x0216),
+>    },
