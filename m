@@ -1,41 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qw0-f46.google.com ([209.85.216.46]:58629 "EHLO
-	mail-qw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754639Ab0KJCVC (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 9 Nov 2010 21:21:02 -0500
-Received: by mail-qw0-f46.google.com with SMTP id 5so5541qwh.19
-        for <linux-wireless@vger.kernel.org>; Tue, 09 Nov 2010 18:21:02 -0800 (PST)
-From: Arnaud Lacombe <lacombar@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: lrodriguez@atheros.com, Arnaud Lacombe <lacombar@gmail.com>
-Subject: [PATCH 09/44] compat/2.6.20: add compat macro for `struct delayed_work'
-Date: Tue,  9 Nov 2010 21:19:51 -0500
-Message-Id: <1289355626-25373-10-git-send-email-lacombar@gmail.com>
-In-Reply-To: <1289355626-25373-1-git-send-email-lacombar@gmail.com>
-References: <1289355626-25373-1-git-send-email-lacombar@gmail.com>
+Received: from bear.ext.ti.com ([192.94.94.41]:40269 "EHLO bear.ext.ti.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754544Ab0KRCOA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 17 Nov 2010 21:14:00 -0500
+From: "Gabay, Benzy" <benzyg@ti.com>
+To: Luciano Coelho <luciano.coelho@nokia.com>
+CC: =?utf-8?B?ZXh0IEfDoWJvciBTdGVmYW5paw==?= <netrolller.3d@gmail.com>,
+	ext Grazvydas Ignotas <notasas@gmail.com>,
+	"Levi, Shahar" <shahar_levi@ti.com>, Kalle Valo <kvalo@adurom.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Date: Wed, 17 Nov 2010 20:13:47 -0600
+Subject: RE: [PATCH v4] wl1271: Change wl12xx Files Names
+Message-ID: <676FD6AA0F002F49B89E70F0C5EFD22C136DEA102C@dlee04.ent.ti.com>
+References: <1288883257-30060-1-git-send-email-shahar_levi@ti.com>
+	 <AANLkTincpxdpmf5J38LiGsF-d9dG7sG9-bjbkH-B8Ld0@mail.gmail.com>
+	 <1288891196.17643.6.camel@powerslave>
+	 <AANLkTi=Luv2+5Hys2PcrH+G8jmc4vwz8PM0LFKm+fTt8@mail.gmail.com>
+	 <1288907555.17643.14.camel@powerslave>
+	 <676FD6AA0F002F49B89E70F0C5EFD22C136DEA0A14@dlee04.ent.ti.com>
+ <1290019712.28892.5.camel@powerslave>
+In-Reply-To: <1290019712.28892.5.camel@powerslave>
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Arnaud Lacombe <lacombar@gmail.com>
----
- include/linux/compat-2.6.20.h |    3 +++
- 1 files changed, 3 insertions(+), 0 deletions(-)
-
-diff --git a/include/linux/compat-2.6.20.h b/include/linux/compat-2.6.20.h
-index bbfdacb..c77e87e 100644
---- a/include/linux/compat-2.6.20.h
-+++ b/include/linux/compat-2.6.20.h
-@@ -6,6 +6,9 @@
- /* Compat work for 2.6.20 */
- #if (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,20))
- 
-+/* `struct work_struct' and `struct delayed_work' are field compatible */
-+#define delayed_work work_struct
-+
- #endif /* (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,20)) */
- 
- #endif /* LINUX_26_20_COMPAT_H */
--- 
-1.7.2.30.gc37d7.dirty
-
+THVjYSwNCg0KPiANCj4gT24gV2VkLCAyMDEwLTExLTE3IGF0IDEyOjA4IC0wNjAwLCBleHQgR2Fi
+YXksIEJlbnp5IHdyb3RlOg0KPiA+IEhpIEFsbCwNCj4gDQo+IEhpIEJlbnp5LA0KPiANCj4gDQo+
+ID4gPiA+IFdoYXQgYWJvdXQgd2wxMjUxIHZzLiB3bDEyYWduIChvciB3bDEyYmduIGlmIG5vIC4x
+MWEgc3VwcG9ydCksDQo+IGxpa2UNCj4gPiA+IGl3bHdpZmk/DQo+ID4gPg0KPiA+ID4gSG1tbS4u
+LiB3bDEyNTEgc3VwcG9ydHMgYmcuICB3bDEyeHggc3VwcG9ydHMgYWJnbi4gIEkgZG9uJ3QgcmVh
+bGx5DQo+IHNlZQ0KPiA+ID4gdGhlIGxvZ2ljIGluIHRoaXM/IFdoYXQgZGlmZmVyZW5jZSBkb2Vz
+IGl0IG1ha2UgY29tcGFyaW5nIHRvDQo+IGNhbGxpbmcgaXQNCj4gPiA+IHdsMTJ4eD8gRnJvbSB3
+bDEyYWduIHRoZSB1c2VyIHN0aWxsIGRvZXNuJ3Qga25vdyB3aGV0aGVyIHdsMTI1MSBpcw0KPiA+
+ID4gc3VwcG9ydGVkIG9yIG5vdC4NCj4gPg0KPiA+IEkgaGF2ZSBhbm90aGVyIGlkZWEgZm9yIG5h
+bWluZyBjb252ZW50aW9uIGhlcmUuDQo+ID4gQnV0IGZpcnN0IHRvIGFsaWduIGV2ZXJ5b25lIG9u
+IHRoZSBUSSBjaGlwIGNvbnZlbnRpb25zOg0KPiA+IDEyeDEgPT0gc3VwcG9ydCBmb3IgMi40R2h6
+DQo+ID4gMTJ4MyA9PSBzdXBwb3J0cyBib3RoIDIuNEdoeiBhbmQgNS4wR2h6Lg0KPiA+DQo+ID4g
+VGhlIFRJIHByb2plY3QgbmFtaW5nIGNvbnZlbnRpb24gcGVyIGNoaXAgaXMgYXMgZm9sbG93Og0K
+PiA+DQo+ID4gd2lsaW5rNCA9PSAxMjUxIGFuZCAxMjUzDQo+ID4gd2lsaW5rNiA9PSAxMjcxIGFu
+ZCAxMjczDQo+ID4gd2lsaW5rNyA9PSAxMjgxIGFuZCAxMjgxDQo+ID4NCj4gPiBTbyBJIHByb3Bv
+c2UgdG8gdXNlIHRoZSBwcm9qZWN0IG5hbWUgaW5zdGVhZCBvZiB1c2luZyB0aGUgY2hpcCBuYW1l
+Lg0KPiA+IGUuZy46DQo+ID4gZm9yIHdsMTI1eCB3ZSBjYW4gdXNlOiB3bDQgb3Igd2lsaW5rNC4g
+SWYgd2Ugd2FudCB0byBpbXBseSB0aGUgYmFuZA0KPiBzdXBwb3J0OiB3bDRfYWJnIGFuZCB3bDRf
+YmcNCj4gPiBmb3Igd2wxMjd4IHdlIGNhbiB1c2U6IHdsNiBvciB3aWxpbms2LiBJZiB3ZSB3YW50
+IHRvIGltcGx5IHRoZSBiYW5kDQo+IGFuZCBjYXBhYmlsaXR5IHN1cHBvcnQ6IHdsNl9hYmduIGFu
+ZCB3bDRfYmduDQo+ID4NCj4gPiBldGMnDQo+ID4NCj4gPiBXaGF0IHNheT8NCj4gDQo+IERvZXNu
+J3QgaGVscCBtdWNoLiAgVGhlIHByb2JsZW0gaXMgdGhhdCB0aGUgZHJpdmVyIHdoaWNoIGlzIG5v
+dyBjYWxsZWQNCj4gd2wxMnh4IGFscmVhZHkgc3VwcG9ydCB3bDEyNzEgYW5kIHdsMTI3My4gIElu
+IHRoZSBuZWFyIGZ1dHVyZSwgaXQgd2lsbA0KPiBhbHNvIHN1cHBvcnQgd2wxMjgxIGFuZCB3bDEy
+ODMsIHNvIHRoZSB3bDYgb3Igd2lsaW5rNiBzY2hlbWUgd291bGQNCj4gYnJlYWsNCj4gYWxyZWFk
+eS4NCj4gDQo+IFRoZSB3bDEyNTEgZHJpdmVyLCBhdCBsZWFzdCBhdCB0aGUgbW9tZW50LCBvbmx5
+IHN1cHBvcnRzIHdsMTI1MSwgaXQNCj4gZG9lc24ndCBoYXZlIHRoZSAxMWEgaW1wbGVtZW50YXRp
+b24uICBJZiBpbiB0aGUgZnV0dXJlIHNvbWVvbmUgYWRkcw0KPiBzdXBwb3J0IGZvciB3bDEyNTMs
+IGl0IGNvdWxkIGJlIHJlbmFtZWQgdG8gd2wxMjV4Lg0KPiANCj4gSW4gYW55IGNhc2UsIEkgdGhp
+bmsgdGhlIG5hbWUgb2YgdGhlIGRyaXZlciBpcyBub3QgdGhhdCBpbXBvcnRhbnQsIGFzDQo+IGxv
+bmcgYXMgd2UncmUgY2xlYXIgYWJvdXQgd2hpY2ggY2hpcHMgZWFjaCBvbmUgb2YgdGhlbSBzdXBw
+b3J0cyBpbiB0aGUNCj4gS2NvbmZpZyBkZXNjcmlwdGlvbi4NCj4gDQo+IFJlbmFtaW5nIHRoZSBk
+cml2ZXIgYWxsIHRoZSB0aW1lICh3ZSBhbHJlYWR5IGRpZCBpdCB0d2ljZSksIGVuZHMgdXANCj4g
+Y29uZnVzaW5nIG1vcmUgdGhhbiBjbGFyaWZ5aW5nIHRoaW5ncy4NCj4gDQo+IC0tDQo+IENoZWVy
+cywNCj4gTHVjYS4NCg0KbW1tLi4uDQoNCkluIHRoYXQgY2FzZSwgYW5vdGhlciBpZGVhOg0KMS4g
+d2h5IG5vdCBjcmVhdGUgbmV3IGRyaXZlciBzb3VyY2UgY29kZSB3aGljaCB3aWxsIGRlc2lnbmF0
+ZWQgZm9yIDEyOHguDQoyLiBJZiB3ZSBoYXZlIGEgcHJvYmxlbSB3aXRoIHVuaWZpZWQgMTJ4eCB0
+aGVuIGxldHMgZGl2ZWQgaXQgY29tcGxldGVseSB0byBzdWIgZHJpdmVycyBhbmQgaGF2ZSBvbmx5
+IGNvbW1vbiBwYXJ0IGFzIGEgdW5pZmllZCBkcml2ZXIuIFRoYXQgd2F5IHlvdSBnZXQgdG8ga2Vl
+cCB0aGUgb2xkIG5hbWVzIGFuZCBqdXN0IGRpdmlkZSB0aGUgZmlsZXMgY29udGVudCB0byBhIG5l
+dyBmaWxlIG5hbWUgd2wxMnh4LmMuDQoNCmUuZzoNCndsMTI1MS5jIHdsMTI1My5jICBjb21tb24g
+cGFydA0Kd2wxMjcxLmMgd2wxMjczLmMgIC0tLS0tLS0tLS0+ICB3bDEyeHguYyANCndsMTI4MS5j
+IHdsMTI4My5jDQoNCg0KQmVueg0KDQo=
