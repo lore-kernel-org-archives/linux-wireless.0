@@ -1,99 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail30g.wh2.ocn.ne.jp ([220.111.41.239]:30943 "HELO
-	mail30g.wh2.ocn.ne.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S934588Ab0KQJcR (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 17 Nov 2010 04:32:17 -0500
-Received: from vs3011.wh2.ocn.ne.jp (125.206.180.239)
-	by mail30g.wh2.ocn.ne.jp (RS ver 1.0.95vs) with SMTP id 3-0994736335
-	for <linux-wireless@vger.kernel.org>; Wed, 17 Nov 2010 18:32:16 +0900 (JST)
-Subject: [PATCH v8] iw: Add antenna configuration commands
-To: johannes@sipsolutions.net, linville@tuxdriver.com
-From: Bruno Randolf <br1@einfach.org>
-Cc: linux-wireless@vger.kernel.org
-Date: Wed, 17 Nov 2010 18:32:36 +0900
-Message-ID: <20101117093236.13323.76800.stgit@localhost6.localdomain6>
+Received: from mail.atheros.com ([12.19.149.2]:39090 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751683Ab0KRCkM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 17 Nov 2010 21:40:12 -0500
+Received: from mail.atheros.com ([10.10.20.105])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Wed, 17 Nov 2010 18:39:59 -0800
+Date: Wed, 17 Nov 2010 18:40:08 -0800
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: Mark Mentovai <mark@moxienet.com>, <linville@tuxdriver.com>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"stable@kernel.org" <stable@kernel.org>,
+	Luis Rodriguez <Luis.Rodriguez@Atheros.com>
+Subject: Re: [PATCH] cfg80211: fix can_beacon_sec_chan, reenable HT40
+Message-ID: <20101118024008.GA2009@tux>
+References: <AANLkTi=Z+60nkSv4umXyDdSp0_SUR84he5GYTZLO9=5E@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <AANLkTi=Z+60nkSv4umXyDdSp0_SUR84he5GYTZLO9=5E@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Add command to set the antenna configuration (iw phyX set antenna ...) and
-include antenna setting in wiphy information (iw phyX info).
+On Wed, Nov 17, 2010 at 01:34:37PM -0800, Mark Mentovai wrote:
+> This follows wireless-testing 9236d838c920e90708570d9bbd7bb82d30a38130
+> ("cfg80211: fix extension channel checks to initiate communication") and
+> fixes accidental case fall-through. Without this fix, HT40 is entirely
+> blocked.
+> 
+> Cc: stable@kernel.org
+> Cc: Luis R. Rodriguez <lrodriguez@atheros.com>
+> Signed-off-by: Mark Mentovai <mark@moxienet.com>
 
-iw phyX set antenna all | <bitmap> | <tx bitmap> <rx bitmap>
+Thanks,
 
-Signed-off-by: Bruno Randolf <br1@einfach.org>
+Acked-by: Luis R. Rodriguez <lrodriguez@atheros.com
 
-v8:  Simplfied option parser as requested.
----
- info.c |    7 +++++++
- phy.c  |   39 +++++++++++++++++++++++++++++++++++++++
- 2 files changed, 46 insertions(+), 0 deletions(-)
+On your next patch please address John.
 
-diff --git a/info.c b/info.c
-index d842c26..0e7e69f 100644
---- a/info.c
-+++ b/info.c
-@@ -168,6 +168,13 @@ static int print_phy_handler(struct nl_msg *msg, void *arg)
- 		printf("\tCoverage class: %d (up to %dm)\n", coverage, 450 * coverage);
- 	}
- 
-+	if (tb_msg[NL80211_ATTR_WIPHY_ANTENNA_TX] &&
-+	    tb_msg[NL80211_ATTR_WIPHY_ANTENNA_RX]) {
-+		printf("\tAntenna: TX %#x RX %#x\n",
-+		       nla_get_u32(tb_msg[NL80211_ATTR_WIPHY_ANTENNA_TX]),
-+		       nla_get_u32(tb_msg[NL80211_ATTR_WIPHY_ANTENNA_RX]));
-+	}
-+
- 	if (tb_msg[NL80211_ATTR_SUPPORTED_IFTYPES]) {
- 		printf("\tSupported interface modes:\n");
- 		nla_for_each_nested(nl_mode, tb_msg[NL80211_ATTR_SUPPORTED_IFTYPES], rem_mode)
-diff --git a/phy.c b/phy.c
-index 7c6c7c8..e3bd4e8 100644
---- a/phy.c
-+++ b/phy.c
-@@ -307,3 +307,42 @@ COMMAND(set, txpower, "<auto|fixed|limit> [<tx power in mBm>]",
- COMMAND(set, txpower, "<auto|fixed|limit> [<tx power in mBm>]",
- 	NL80211_CMD_SET_WIPHY, 0, CIB_NETDEV, handle_txpower,
- 	"Specify transmit power level and setting type.");
-+
-+static int handle_antenna(struct nl80211_state *state,
-+			  struct nl_cb *cb,
-+			  struct nl_msg *msg,
-+			  int argc, char **argv)
-+{
-+	char *end;
-+	uint32_t tx_ant = 0, rx_ant = 0;
-+
-+	if (argc == 1 && strcmp(argv[0], "all") == 0) {
-+		tx_ant = 0xffffffff;
-+		rx_ant = 0xffffffff;
-+	} else if (argc == 1) {
-+		tx_ant = rx_ant = strtoul(argv[0], &end, 0);
-+		if (*end)
-+			return 1;
-+	}
-+	else if (argc == 2) {
-+		tx_ant = strtoul(argv[0], &end, 0);
-+		if (*end)
-+			return 1;
-+		rx_ant = strtoul(argv[1], &end, 0);
-+		if (*end)
-+			return 1;
-+	} else
-+		return 1;
-+
-+	NLA_PUT_U32(msg, NL80211_ATTR_WIPHY_ANTENNA_TX, tx_ant);
-+	NLA_PUT_U32(msg, NL80211_ATTR_WIPHY_ANTENNA_RX, rx_ant);
-+
-+	return 0;
-+
-+ nla_put_failure:
-+	return -ENOBUFS;
-+}
-+COMMAND(set, antenna, "<bitmap> | all | <tx bitmap> <rx bitmap>",
-+	NL80211_CMD_SET_WIPHY, 0, CIB_PHY, handle_antenna,
-+	"Set a bitmap of allowed antennas to use for TX and RX.\n"
-+	"The driver may reject antenna configurations it cannot support.");
-
+  Luis
