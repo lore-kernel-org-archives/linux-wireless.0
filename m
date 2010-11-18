@@ -1,66 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:3958 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753242Ab0KJSv0 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 10 Nov 2010 13:51:26 -0500
-Subject: Re: [PATCH 00/16] update for 2.6.37
-From: "Guy, Wey-Yi" <wey-yi.w.guy@intel.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"ipw3945-devel@lists.sourceforge.net"
-	<ipw3945-devel@lists.sourceforge.net>
-In-Reply-To: <20101110181609.GB2714@tuxdriver.com>
-References: <1289411810-23093-1-git-send-email-wey-yi.w.guy@intel.com>
-	 <20101110181609.GB2714@tuxdriver.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Wed, 10 Nov 2010 10:47:16 -0800
-Message-ID: <1289414836.12056.88.camel@wwguy-huron>
-Mime-Version: 1.0
+Received: from external1.orbit-lab.org ([128.6.192.131]:57195 "HELO
+	external1.orbit-lab.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1757681Ab0KRUE2 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 18 Nov 2010 15:04:28 -0500
+Received: from repository3.orbit-lab.org (repository3.orbit-lab.org [10.50.0.41])
+	by external1.orbit-lab.org (Postfix) with ESMTP id 41133418D8
+	for <linux-wireless@vger.kernel.org>; Thu, 18 Nov 2010 14:59:57 -0500 (EST)
+Subject: Compat-wireless release for 2010-11-18 is baked
+To: <linux-wireless@vger.kernel.org>
+Message-Id: <20101118200426.70C6F40F97@repository3.orbit-lab.org>
+Date: Thu, 18 Nov 2010 15:04:26 -0500 (EST)
+From: compat@orbit-lab.org (Compat-wireless cronjob account)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi John,
+>From git://git.kernel.org/pub/scm/linux/kernel/git/mcgrof/compat-wireless-2.6
+   12f3be5..b131f33  master     -> origin/master
+>From git://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next
+   404ded5..fbf58bc  history    -> origin/history
+ + 2422975...696d59d master     -> origin/master  (forced update)
+   4531491..7957f0a  stable     -> origin/stable
+ * [new tag]         next-20101118 -> next-20101118
+cat: /var/opt/compat/compat-wireless-2.6/compat_version: No such file or directory
+cat: compat_base_tree: No such file or directory
+cat: compat_base_tree_version: No such file or directory
+cat: compat_version: No such file or directory
+cat: /var/opt/compat/compat-wireless-2.6/compat_version: No such file or directory
 
-On Wed, 2010-11-10 at 10:16 -0800, John W. Linville wrote:
-> On Wed, Nov 10, 2010 at 09:56:34AM -0800, Wey-Yi Guy wrote:
-> > We make the correction for the latest PCI ID used for multiple NICs
-> > We also fix the low tpt problem cause by mac80211 changes
-> > Number of code clean up to separate new agn devices from legacy devices
-> > 
-> > Johannes Berg (5):
-> >   iwlagn: fix non-5000+ build
-> >   iwlagn: fix needed chains calculation
-> >   iwlagn: fix RXON issues
-> >   iwlagn: re-enable calibration
-> >   iwlagn: fix RXON HT
-> > 
-> > Shanyu Zhao (2):
-> >   iwlwifi: seperate disconnected antenna function
-> >   iwlwifi: disable disconnected antenna for advanced bt coex
-> > 
-> > Wey-Yi Guy (8):
-> >   iwlagn: update PCI ID for 6000g2b series devices
-> >   iwlagn: update PCI ID for 6000g2a series devices
-> >   iwlagn: update PCI ID for 100 series devices
-> >   iwlwifi: Legacy isr only used by legacy devices
-> >   iwlwifi: put all the isr related function under ops
-> >   iwlwifi: legacy tx_cmd_protection function
-> >   iwlwifi: resending QoS command when HT changes
-> >   iwlagn: enabel shadow register
-> > 
-> > Winkler, Tomas (1):
-> >   iwlwlifi: update rx write pointer w/o request mac access in the CAM
-> >     mode
-> 
-> Is this really intended for 2.6.37?  Some of these might be
-> appropriate, although at first glance even some of the fixes may be
-> for code in -next.
-> 
-> Fixes only for 2.6.37 -- it has been that way for weeks.  Perhaps you
-> actually intended this for 2.6.38?
-> 
-Oops, it is for 2.6.38, I forgot to change the "Subject", sorry.
+compat-wireless code metrics
 
-Wey
+    745241 - Total upstream lines of code being pulled
+      2187 - backport code changes
+      1930 - backport code additions
+       257 - backport code deletions
+      6360 - backport from compat module
+      8547 - total backport code
+    1.1469 - % of code consists of backport work
+      1534 - Crap changes not yet posted
+      1491 - Crap additions not yet posted
+        43 - Crap deletions not yet posted
+    0.2058 - % of crap code
 
-
+Base tree: linux-next.git
+Base tree version: next-20101118
+compat-wireless release: compat-wireless-2010-11-10-9-gb131f33-pc
