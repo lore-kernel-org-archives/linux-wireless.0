@@ -1,57 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iw0-f174.google.com ([209.85.214.174]:43664 "EHLO
-	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754904Ab0KRLhg convert rfc822-to-8bit (ORCPT
+Received: from earthlight.etchedpixels.co.uk ([81.2.110.250]:55828 "EHLO
+	www.etchedpixels.co.uk" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1750854Ab0KRLhV (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 18 Nov 2010 06:37:36 -0500
-Received: by iwn35 with SMTP id 35so3401550iwn.19
-        for <linux-wireless@vger.kernel.org>; Thu, 18 Nov 2010 03:37:35 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <1290028078.8522.62.camel@dcbw.foobar.com>
-References: <AANLkTik+BWQdU4hhKN7yfgOdJuQXopvYr4Z59RTntqSW@mail.gmail.com>
- <1289607742.21000.23.camel@dcbw.foobar.com> <AANLkTi=1RFZwRYvA=VfuKTQS6YwZkTv17Q0nnWnQW3Hq@mail.gmail.com>
- <AANLkTinKMfu2SX2fymUDi3JooAwKZv7=41BQBywR3pVe@mail.gmail.com> <1290028078.8522.62.camel@dcbw.foobar.com>
-From: Julian Calaby <julian.calaby@gmail.com>
-Date: Thu, 18 Nov 2010 22:37:15 +1100
-Message-ID: <AANLkTinc7F8pCXbKBf3-Nyeb05GQ=_DX+EsRxjkzO9ua@mail.gmail.com>
-Subject: Re: Bringing up Marvell 88W8300
-To: Dan Williams <dcbw@redhat.com>
-Cc: Denis Kirjanov <kirjanov@gmail.com>,
+	Thu, 18 Nov 2010 06:37:21 -0500
+Date: Thu, 18 Nov 2010 11:34:41 +0000
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Cc: linux-kernel@vger.kernel.org,
 	linux-wireless <linux-wireless@vger.kernel.org>,
-	dwmw2@infradead.org, David.Woodhouse@intel.com
-Content-Type: text/plain; charset=ISO-8859-1
+	Greg KH <greg@kroah.com>, David Miller <davem@davemloft.net>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Stephen Hemminger <shemminger@vyatta.com>,
+	"Perez-Gonzalez, Inaky" <inaky.perez-gonzalez@intel.com>,
+	Charles Marker <Charles.Marker@atheros.com>,
+	Jouni Malinen <Jouni.Malinen@atheros.com>,
+	Kevin Hayes <kevin@atheros.com>,
+	Zhifeng Cai <zhifeng.cai@atheros.com>,
+	"Luis R. Rodriguez" <mcgrof@gmail.com>,
+	Don Breslin <Don.Breslin@atheros.com>,
+	Doug Dahlby <Doug.Dahlby@atheros.com>,
+	Julia Lawall <julia@diku.dk>
+Subject: Re: Challenges with doing hardware bring up with Linux first
+Message-ID: <20101118113441.74fcdc21@lxorguk.ukuu.org.uk>
+In-Reply-To: <AANLkTim4jVaZxYp8nSgJyy28iwxcxbPeNUzxTfoHAX4S@mail.gmail.com>
+References: <AANLkTim4jVaZxYp8nSgJyy28iwxcxbPeNUzxTfoHAX4S@mail.gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Nov 18, 2010 at 08:07, Dan Williams <dcbw@redhat.com> wrote:
-> On Wed, 2010-11-17 at 20:15 +0300, Denis Kirjanov wrote:
->> >
->> > I will try to load the firmware that comes with the driver source.
->> >
->> >> Does that sound like a plan?  I have no time for it, but I'm happy to
->> >> put the driver up somewhere that others can make use of it.  I'll
->> >> recheck the provenience of the driver but it's got MODULE_LICENSE("GPL")
->> >> and GPL headers all over, including on the firmware file.  I might have
->> >> grabbed it off the Extranet but I'll check.
->> >>
->> Marvell firmware is OK for me and I can successfully boot in .
->> I believe that we can now port driver to the new wireless stuff such
->> as cfg80211.
->
-> Yeah, that's the driver, the MSI thing or whatever linked from openwrt
-> forums.  Basically, I think we should get that driver working so we know
-> that *something* works on these cards, and then use it and mwl8k as a
-> guide to writing a new mac80211 driver for the 8335.
+> I'd like to see hardware bring up at companies being done with Linux.
 
-I have a card with this chipset (A Netgear WG311v3) and have a spare
-machine to test it in. I'm quite happy to test the driver at any stage
-of development.
+I know several companies where it is sometimes used.
 
-Thanks,
+> with this though. For starters hardware teams typically want to get
+> hardware brought up as fast as possible to be able to sell chipsets.
+> Its always a race. Proper Linux upstream support will get there but
+> depending on the company this may mean this gets done after the
+> proprietary driver approach is done first or simply until you have a
+> big enough customer to justify it.
 
--- 
-Julian Calaby
+I've seen the kind of code written to "get it up as fast as possible" and
+also to do validation. It's the sort of code that has to be written
+anyway, and which contains a multitude of fascinating stuff which doesn't
+ever want to go near upstream.
 
-Email: julian.calaby@gmail.com
-Profile: http://www.google.com/profiles/julian.calaby/
-.Plan: http://sites.google.com/site/juliancalaby/
+> everything else can be independent code. For ath9k in particular this
+> means we keep ath9k_hw shared between our Operating Systems and that's
+> it. In addition to this I believe opening up the common drivers for
+
+The Linux copy needs to be GPL, but if you own every line of it then you
+can relicense it. In fact we have examples of big bits of code that are
+not Linux only - eg the ACPI stack which are managed in a non entirely
+unrelated way.
+
+> Can Linux help in any way? What if we used staging for a common driver
+> architecture for different OSes? 
+
+It's generally gone pear shaped in the past, although tools like spatch
+are more modern than many of those attempts.
+
+There is another way to do it which is instead of writing a glue layer
+for Linux write to the general Linux interfaces which have the virtue of
+being very simple for the most part, and keep the glue layer for the
+other obscure environments where you are doing the stack ?
+
+Alan
