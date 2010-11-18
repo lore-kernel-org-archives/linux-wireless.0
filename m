@@ -1,89 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iw0-f174.google.com ([209.85.214.174]:58965 "EHLO
-	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754297Ab0KUWMq (ORCPT
+Received: from mail30s.wh2.ocn.ne.jp ([125.206.180.198]:35328 "HELO
+	mail30s.wh2.ocn.ne.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1751543Ab0KRGg1 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 21 Nov 2010 17:12:46 -0500
+	Thu, 18 Nov 2010 01:36:27 -0500
+Received: from vs3003.wh2.ocn.ne.jp (125.206.180.231)
+	by mail30s.wh2.ocn.ne.jp (RS ver 1.0.95vs) with SMTP id 1-0109232185
+	for <linux-wireless@vger.kernel.org>; Thu, 18 Nov 2010 15:36:26 +0900 (JST)
+From: Bruno Randolf <br1@einfach.org>
+To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Subject: Re: [PATCH 0/4] cfg80211: fix bug with multiple cards and a CRDA delay
+Date: Thu, 18 Nov 2010 15:36:45 +0900
+Cc: linville@tuxdriver.com, mark@moxienet.com,
+	linux-wireless@vger.kernel.org
+References: <1290059169-2468-1-git-send-email-lrodriguez@atheros.com>
+In-Reply-To: <1290059169-2468-1-git-send-email-lrodriguez@atheros.com>
 MIME-Version: 1.0
-In-Reply-To: <AANLkTi==VRvn2XjNf3EWZf8jAXwFTrRz8uyFSnnYVi8c@mail.gmail.com>
-References: <AANLkTim4jVaZxYp8nSgJyy28iwxcxbPeNUzxTfoHAX4S@mail.gmail.com>
- <F46C52ED-8DB8-4347-957D-B9D84406D53F@mit.edu> <AANLkTinyafwe9MyXhSSe5vxEKnTUeLV0AZDWY_uXsu8f@mail.gmail.com>
- <20101121130236.GE23423@thunk.org> <20101121172906.GD3703@kroah.com>
- <AANLkTik6MQjYTCQ4wtyRpOGb94uyUTA+juvX-8UsP95J@mail.gmail.com>
- <20101121203124.1ba8212e@lxorguk.ukuu.org.uk> <AANLkTi==VRvn2XjNf3EWZf8jAXwFTrRz8uyFSnnYVi8c@mail.gmail.com>
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Date: Sun, 21 Nov 2010 14:12:25 -0800
-Message-ID: <AANLkTi=PQmAfNPFj9pytgP0yMX+B8eZ6Bg3KYwyZZsO3@mail.gmail.com>
-Subject: Re: Challenges with doing hardware bring up with Linux first
-To: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Cc: Greg KH <greg@kroah.com>, "Ted Ts'o" <tytso@mit.edu>,
-	linux-kernel@vger.kernel.org,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	David Miller <davem@davemloft.net>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Stephen Hemminger <shemminger@vyatta.com>,
-	"Perez-Gonzalez, Inaky" <inaky.perez-gonzalez@intel.com>,
-	Charles Marker <Charles.Marker@atheros.com>,
-	Jouni Malinen <Jouni.Malinen@atheros.com>,
-	Kevin Hayes <kevin@atheros.com>,
-	Zhifeng Cai <zhifeng.cai@atheros.com>,
-	Don Breslin <Don.Breslin@atheros.com>,
-	Doug Dahlby <Doug.Dahlby@atheros.com>,
-	Julia Lawall <julia@diku.dk>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: Text/Plain;
+  charset="iso-8859-15"
+Message-Id: <201011181536.45076.br1@einfach.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, Nov 21, 2010 at 1:47 PM, Luis R. Rodriguez
-<lrodriguez@atheros.com> wrote:
-> On Sun, Nov 21, 2010 at 12:31 PM, Alan Cox <alan@lxorguk.ukuu.org.uk> wrote:
->>> Right -- which is why ideally I think it'd be nice to have an open
->>> permissive stack people shared. My preference would be to just pick up
->>
->> Which we know in practice they won't. They'll sit on fixes (often
->> security fixes) and tweak and add private copies of features. In turn the
->> Linux one could then only keep up by adding features itself - which would
->> have to be GPL to stop the same abuse continuing.
->>
->> It's a nice idea but the corporations exist to make money and adding
->> proprietary custom stack add-ons is clearly a good move on their part to
->> do that.
->
-> I agree completely with you. Its up to companies to decide whether or
-> not they want to do that and ultimately traditionally companies have
-> preferred not to. I actually think there is more to it than not
-> wanting though... As I see it without people upstream working for some
-> of these companies its really hard for them to get these ideas and
-> actually believe in the possibility of it and the benefits. I'm
-> voicing this publicly to our own managers and lkml because I'd like to
-> see that companies get the message because realistically I really
-> don't expect anything like this has been *seriously* considered
-> before. When I ask people about it, I often hear people say they think
-> it'd be nice, but that's about it. Nothing more. No push, no action.
-> Its to the industry's best interest IMHO. Even if a common 802.11
-> stack was shared, if it was permissive licensed companies could still
-> go on and hack their own proprietary crap on top if they so wish, so
-> that would still be an option.
->
-> My point with all this thread is this: companies tend to not think out
-> of the proprietary box they have been put in by old driver development
-> habits, and driver development should not be so hard and tedious. They
-> should start considering working on more open solutions even for
-> proprietary operating systems, under a permissive license. I suspect
-> this will help out with resources considerations, bug fix propagation
-> and coordination between supporting different Operating Systems. We
-> also stand to gain from this on Linux too, after all a driver bug fix
-> for hardware sensitive code will need to be propagated to other OSes
-> anyway.
->
-> I can surely ignore the other OSes and their IMHO their terrible
-> software practices but I can't because although it only affects Linux
-> in a tedious way I think we can do better and strive for that. If
-> sharing an 802.11 stack seems like a pipe dream oh well, at least I
-> think we should consider opening up the code for the other OSes and
-> let communities help with that crap for our company. Let it evolve
-> naturally. The benefits of FOSS cannot just only benefit Linux.
+On Thu November 18 2010 14:46:05 Luis R. Rodriguez wrote:
+> This series addresses the bug pointed out by Mark Mentovai
+> <mark@moxienet.com> when there is a delay on CRDA and you use multiple
+> cards with the same regulatory domain. After some testing I realized this
+> also introduced an issue when using multiple cards with different
+> regulatory settings. The issue is present only when there is a delay in
+> CRDA so technically this is not a regression so I am not marking these as
+> stable fixes. It also does not seem to be a regulatory bug as when the
+> issue is present you'd end up with an intersected regulatory domain (same
+> alpha2s) or get the regulatory domain rejected for the second card if the
+> alpha2 was different.
+> 
+> Thanks to Mark for his testing, good ideas on alternative ways to resolve
+> this and thorough reports.
+> 
+> Luis R. Rodriguez (4):
+>   cfg80211: put core regulatory request into queue
+>   cfg80211: move reg_work and reg_todo above
+>   cfg80211: move mutex locking to reg_process_pending_hints()
+>   cfg80211: Fix regulatory bug with multiple cards and delays
+> 
+>  include/net/regulatory.h |    7 ++++
+>  net/wireless/reg.c       |   80
+> +++++++++++++++++++++++++++++++-------------- 2 files changed, 62
+> insertions(+), 25 deletions(-)
 
-Maybe what we need is a BSD guy at Atheros :)
+Yep - this fixes also my case (slow board under load + two or more ath5k 
+cards). Thanks, Luis!
 
-  Luis
+bruno
