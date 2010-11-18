@@ -1,47 +1,124 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qy0-f181.google.com ([209.85.216.181]:36265 "EHLO
-	mail-qy0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754847Ab0KJCV2 (ORCPT
+Received: from mail-fx0-f46.google.com ([209.85.161.46]:42074 "EHLO
+	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750915Ab0KRLcy (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 9 Nov 2010 21:21:28 -0500
-Received: by mail-qy0-f181.google.com with SMTP id 31so159944qyk.19
-        for <linux-wireless@vger.kernel.org>; Tue, 09 Nov 2010 18:21:27 -0800 (PST)
-From: Arnaud Lacombe <lacombar@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: lrodriguez@atheros.com, Arnaud Lacombe <lacombar@gmail.com>
-Subject: [PATCH 24/44] compat/2.6.33: don't export prototype for pccard_loop_tuple()
-Date: Tue,  9 Nov 2010 21:20:06 -0500
-Message-Id: <1289355626-25373-25-git-send-email-lacombar@gmail.com>
-In-Reply-To: <1289355626-25373-1-git-send-email-lacombar@gmail.com>
-References: <1289355626-25373-1-git-send-email-lacombar@gmail.com>
+	Thu, 18 Nov 2010 06:32:54 -0500
+Received: by mail-fx0-f46.google.com with SMTP id 6so1460042fxm.19
+        for <linux-wireless@vger.kernel.org>; Thu, 18 Nov 2010 03:32:54 -0800 (PST)
+From: Arik Nemtsov <arik@wizery.com>
+To: <linux-wireless@vger.kernel.org>
+Cc: Luciano Coelho <luciano.coelho@nokia.com>,
+	Arik Nemtsov <arik@wizery.com>
+Subject: [PATCH 10/18] wl1271: AP mode config in ieee80211_ops.config
+Date: Thu, 18 Nov 2010 13:32:23 +0200
+Message-Id: <1290079951-16793-11-git-send-email-arik@wizery.com>
+In-Reply-To: <1290079951-16793-1-git-send-email-arik@wizery.com>
+References: <1290079951-16793-1-git-send-email-arik@wizery.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Mainline kernel does not defines any prototype for this function.
+Separate configuration according to mode. AP has different rate
+set configuration and no handling of idle-state.
 
-Signed-off-by: Arnaud Lacombe <lacombar@gmail.com>
+Signed-off-by: Arik Nemtsov <arik@wizery.com>
 ---
- include/linux/compat-2.6.33.h |    7 -------
- 1 files changed, 0 insertions(+), 7 deletions(-)
+ drivers/net/wireless/wl12xx/main.c |   58 +++++++++++++++++++++--------------
+ 1 files changed, 35 insertions(+), 23 deletions(-)
 
-diff --git a/include/linux/compat-2.6.33.h b/include/linux/compat-2.6.33.h
-index 8c8789d..9b9ad35 100644
---- a/include/linux/compat-2.6.33.h
-+++ b/include/linux/compat-2.6.33.h
-@@ -87,13 +87,6 @@ int pcmcia_loop_tuple(struct pcmcia_device *p_dev, cisdata_t code,
+diff --git a/drivers/net/wireless/wl12xx/main.c b/drivers/net/wireless/wl12xx/main.c
+index 49def62..30d7a77 100644
+--- a/drivers/net/wireless/wl12xx/main.c
++++ b/drivers/net/wireless/wl12xx/main.c
+@@ -1371,7 +1371,7 @@ u32 wl1271_min_rate_get(struct wl1271 *wl)
+ 	return rate;
+ }
  
- #endif /* CONFIG_PCMCIA */
+-static int wl1271_handle_idle(struct wl1271 *wl, bool idle)
++static int wl1271_sta_handle_idle(struct wl1271 *wl, bool idle)
+ {
+ 	int ret;
  
--/* loop over CIS entries */
--int pccard_loop_tuple(struct pcmcia_socket *s, unsigned int function,
--		      cisdata_t code, cisparse_t *parse, void *priv_data,
--		      int (*loop_tuple) (tuple_t *tuple,
--					 cisparse_t *parse,
--					 void *priv_data));
+@@ -1412,14 +1412,17 @@ static int wl1271_op_config(struct ieee80211_hw *hw, u32 changed)
+ 	struct wl1271 *wl = hw->priv;
+ 	struct ieee80211_conf *conf = &hw->conf;
+ 	int channel, ret = 0;
++	bool is_ap;
+ 
+ 	channel = ieee80211_frequency_to_channel(conf->channel->center_freq);
+ 
+-	wl1271_debug(DEBUG_MAC80211, "mac80211 config ch %d psm %s power %d %s",
++	wl1271_debug(DEBUG_MAC80211, "mac80211 config ch %d psm %s power %d %s"
++		     " changed 0x%x",
+ 		     channel,
+ 		     conf->flags & IEEE80211_CONF_PS ? "on" : "off",
+ 		     conf->power_level,
+-		     conf->flags & IEEE80211_CONF_IDLE ? "idle" : "in use");
++		     conf->flags & IEEE80211_CONF_IDLE ? "idle" : "in use",
++			 changed);
+ 
+ 	/*
+ 	 * mac80211 will go to idle nearly immediately after transmitting some
+@@ -1448,31 +1451,40 @@ static int wl1271_op_config(struct ieee80211_hw *hw, u32 changed)
+ 		wl->band = conf->channel->band;
+ 		wl->channel = channel;
+ 
+-		/*
+-		 * FIXME: the mac80211 should really provide a fixed rate
+-		 * to use here. for now, just use the smallest possible rate
+-		 * for the band as a fixed rate for association frames and
+-		 * other control messages.
+-		 */
+-		if (!test_bit(WL1271_FLAG_STA_ASSOCIATED, &wl->flags))
+-			wl1271_set_band_rate(wl);
 -
- #endif /* CONFIG_PCCARD */
+-		wl->basic_rate = wl1271_min_rate_get(wl);
+-		ret = wl1271_acx_sta_rate_policies(wl);
+-		if (ret < 0)
+-			wl1271_warning("rate policy for update channel "
+-				       "failed %d", ret);
++		if (is_ap) {
++			/* set basic rates according to HW */
++			u32 rates = wl->vif->bss_conf.basic_rates;
++			wl->basic_rate_set = wl1271_tx_enabled_rates_get(wl,
++									rates);
++			wl->basic_rate = wl1271_min_rate_get(wl);
++		} else {
++			/*
++			 * FIXME: the mac80211 should really provide a fixed
++			 * rate to use here. for now, just use the smallest
++			 * possible rate for the band as a fixed rate for
++			 * association frames and other control messages.
++			 */
++			if (!test_bit(WL1271_FLAG_STA_ASSOCIATED, &wl->flags))
++				wl1271_set_band_rate(wl);
  
- /* Backport for kfifo
+-		if (test_bit(WL1271_FLAG_JOINED, &wl->flags)) {
+-			ret = wl1271_join(wl, false);
++			wl->basic_rate = wl1271_min_rate_get(wl);
++			ret = wl1271_acx_sta_rate_policies(wl);
+ 			if (ret < 0)
+-				wl1271_warning("cmd join to update channel "
++				wl1271_warning("rate policy for channel "
+ 					       "failed %d", ret);
++
++			if (test_bit(WL1271_FLAG_JOINED, &wl->flags)) {
++				ret = wl1271_join(wl, false);
++				if (ret < 0)
++					wl1271_warning("cmd join on channel "
++						       "failed %d", ret);
++			}
+ 		}
+ 	}
+ 
+-	if (changed & IEEE80211_CONF_CHANGE_IDLE) {
+-		ret = wl1271_handle_idle(wl, conf->flags & IEEE80211_CONF_IDLE);
++	if (changed & IEEE80211_CONF_CHANGE_IDLE && !is_ap) {
++		ret = wl1271_sta_handle_idle(wl,
++					conf->flags & IEEE80211_CONF_IDLE);
+ 		if (ret < 0)
+ 			wl1271_warning("idle mode change failed %d", ret);
+ 	}
 -- 
-1.7.2.30.gc37d7.dirty
+1.7.1
 
