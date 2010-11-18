@@ -1,62 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yw0-f46.google.com ([209.85.213.46]:45765 "EHLO
-	mail-yw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752377Ab0K0GWP (ORCPT
+Received: from mail-ew0-f46.google.com ([209.85.215.46]:40505 "EHLO
+	mail-ew0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750975Ab0KRI0b (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 27 Nov 2010 01:22:15 -0500
-From: "Justin P. Mattock" <justinmattock@gmail.com>
-To: trivial@kernel.org
-Cc: linux-rdma@vger.kernel.org, linux-ide@vger.kernel.org,
-	linux-mtd@lists.infradead.org, linux-wireless@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	"Justin P. Mattock" <justinmattock@gmail.com>
-Subject: [RFC 9/9]include:linux Change the copyright info.
-Date: Fri, 26 Nov 2010 22:21:19 -0800
-Message-Id: <1290838879-11038-10-git-send-email-justinmattock@gmail.com>
-In-Reply-To: <1290838879-11038-1-git-send-email-justinmattock@gmail.com>
-References: <1290838879-11038-1-git-send-email-justinmattock@gmail.com>
+	Thu, 18 Nov 2010 03:26:31 -0500
+Received: by ewy8 with SMTP id 8so1803227ewy.19
+        for <linux-wireless@vger.kernel.org>; Thu, 18 Nov 2010 00:26:30 -0800 (PST)
+Date: Thu, 18 Nov 2010 11:26:20 +0300
+From: Paul Fertser <fercerpav@gmail.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Leonid Lundin
+	<leonid.lundin-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Subject: Re: wireless-regdb: Update regulatory rules for Russian Federation
+	(RU)
+Message-ID: <20101118082619.GL1593@home.pavel.comp>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20101117220355.GC2380@tuxdriver.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Change the copyright info from Sun Microsystems to Oracle since Oracle now owns them.
+Hi,
 
-Signed-off-by: Justin P. Mattock <justinmattock@gmail.com>
+> On Thu, Oct 28, 2010 at 05:08:25PM +0400, Leonid Lundin wrote:
+>> It's not prohibited by law in Russian Federation to indoor use bands:
+>> 
+>> 2400-2483,5 Mhz
+>> 5150-5350 Mhz
+>> 5650-6425 Mhz
 
----
- include/linux/ethtool.h       |    4 ++--
- include/linux/mlx4/doorbell.h |    2 +-
- 2 files changed, 3 insertions(+), 3 deletions(-)
+As far as i understand, the wireless regdb should include the bands that do
+not require obtaining permit of any kind and do not require one to notify
+any regulatory agencies about the place/puprose/whatever of an installed
+WiFi equipment.
 
-diff --git a/include/linux/ethtool.h b/include/linux/ethtool.h
-index 6628a50..2d895be 100644
---- a/include/linux/ethtool.h
-+++ b/include/linux/ethtool.h
-@@ -3,11 +3,11 @@
-  *
-  * Copyright (C) 1998 David S. Miller (davem@redhat.com)
-  * Copyright 2001 Jeff Garzik <jgarzik@pobox.com>
-- * Portions Copyright 2001 Sun Microsystems (thockin@sun.com)
-+ * Portions Copyright 2001 Oracle and/or its affiliates. (thockin@sun.com)
-  * Portions Copyright 2002 Intel (eli.kupermann@intel.com,
-  *                                christopher.leech@intel.com,
-  *                                scott.feldman@intel.com)
-- * Portions Copyright (C) Sun Microsystems 2008
-+ * Portions Copyright (C) 2008 Oracle and/or its affiliates. 
-  */
- 
- #ifndef _LINUX_ETHTOOL_H
-diff --git a/include/linux/mlx4/doorbell.h b/include/linux/mlx4/doorbell.h
-index f31bba2..d251ee8 100644
---- a/include/linux/mlx4/doorbell.h
-+++ b/include/linux/mlx4/doorbell.h
-@@ -1,6 +1,6 @@
- /*
-  * Copyright (c) 2004 Topspin Communications.  All rights reserved.
-- * Copyright (c) 2005 Sun Microsystems, Inc. All rights reserved.
-+ * Copyright (c) 2005 Oracle and/or its affiliates. All rights reserved.
-  * Copyright (c) 2005 Mellanox Technologies. All rights reserved.
-  *
-  * This software is available to you under a choice of one of two
+But according to my reading of the latest regulations (15 Jul 2010,
+N10-07-02) [1] one still needs to obtain a permit (though it's supposed to
+be fairly simple) to use the 5GHz band mentioned.
+
+Leonid, do you have an alternative opinion?
+
+[1] http://www.grfc.ru/idc/groups/public/documents/grhc_resheniya/005576.doc
+
 -- 
-1.7.1
-
+Be free, use free (http://www.gnu.org/philosophy/free-sw.html) software!
+mailto:fercerpav@gmail.com
