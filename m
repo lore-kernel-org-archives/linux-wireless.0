@@ -1,43 +1,92 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qy0-f174.google.com ([209.85.216.174]:47672 "EHLO
-	mail-qy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753136Ab0KJCVs (ORCPT
+Received: from mail-fx0-f46.google.com ([209.85.161.46]:42074 "EHLO
+	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751092Ab0KRLcp (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 9 Nov 2010 21:21:48 -0500
-Received: by mail-qy0-f174.google.com with SMTP id 12so2500227qyk.19
-        for <linux-wireless@vger.kernel.org>; Tue, 09 Nov 2010 18:21:48 -0800 (PST)
-From: Arnaud Lacombe <lacombar@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: lrodriguez@atheros.com, Arnaud Lacombe <lacombar@gmail.com>
-Subject: [PATCH 32/44] compat/2.6.22: add compat inline for ip_hdrlen()
-Date: Tue,  9 Nov 2010 21:20:14 -0500
-Message-Id: <1289355626-25373-33-git-send-email-lacombar@gmail.com>
-In-Reply-To: <1289355626-25373-1-git-send-email-lacombar@gmail.com>
-References: <1289355626-25373-1-git-send-email-lacombar@gmail.com>
+	Thu, 18 Nov 2010 06:32:45 -0500
+Received: by mail-fx0-f46.google.com with SMTP id 6so1460042fxm.19
+        for <linux-wireless@vger.kernel.org>; Thu, 18 Nov 2010 03:32:44 -0800 (PST)
+From: Arik Nemtsov <arik@wizery.com>
+To: <linux-wireless@vger.kernel.org>
+Cc: Luciano Coelho <luciano.coelho@nokia.com>,
+	Arik Nemtsov <arik@wizery.com>
+Subject: [PATCH 05/18] wl1271: AP mode - workaround for FW bug on station remove
+Date: Thu, 18 Nov 2010 13:32:18 +0200
+Message-Id: <1290079951-16793-6-git-send-email-arik@wizery.com>
+In-Reply-To: <1290079951-16793-1-git-send-email-arik@wizery.com>
+References: <1290079951-16793-1-git-send-email-arik@wizery.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Arnaud Lacombe <lacombar@gmail.com>
----
- include/linux/compat-2.6.22.h |    5 +++++
- 1 files changed, 5 insertions(+), 0 deletions(-)
+Sometimes an event indicating station removal is not sent up by
+firmware. We work around this by always indicating success in when
+a wait for the event timeouts.
 
-diff --git a/include/linux/compat-2.6.22.h b/include/linux/compat-2.6.22.h
-index 73dbbb6..6675027 100644
---- a/include/linux/compat-2.6.22.h
-+++ b/include/linux/compat-2.6.22.h
-@@ -85,6 +85,11 @@ static inline struct iphdr *ip_hdr(const struct sk_buff *skb)
- 	return (struct iphdr *)skb_network_header(skb);
+Temporary workaround until a FW fix is introduced.
+
+Signed-off-by: Arik Nemtsov <arik@wizery.com>
+---
+ drivers/net/wireless/wl12xx/cmd.c |   26 +++++++++++++++++++++-----
+ 1 files changed, 21 insertions(+), 5 deletions(-)
+
+diff --git a/drivers/net/wireless/wl12xx/cmd.c b/drivers/net/wireless/wl12xx/cmd.c
+index 7df3012..282e476 100644
+--- a/drivers/net/wireless/wl12xx/cmd.c
++++ b/drivers/net/wireless/wl12xx/cmd.c
+@@ -222,7 +222,7 @@ int wl1271_cmd_ext_radio_parms(struct wl1271 *wl)
+  * Poll the mailbox event field until any of the bits in the mask is set or a
+  * timeout occurs (WL1271_EVENT_TIMEOUT in msecs)
+  */
+-static int wl1271_cmd_wait_for_event(struct wl1271 *wl, u32 mask)
++static int wl1271_cmd_wait_for_event_or_timeout(struct wl1271 *wl, u32 mask)
+ {
+ 	u32 events_vector, event;
+ 	unsigned long timeout;
+@@ -231,7 +231,8 @@ static int wl1271_cmd_wait_for_event(struct wl1271 *wl, u32 mask)
+ 
+ 	do {
+ 		if (time_after(jiffies, timeout)) {
+-			ieee80211_queue_work(wl->hw, &wl->recovery_work);
++			wl1271_debug(DEBUG_CMD, "timeout waiting for event %d",
++				     (int)mask);
+ 			return -ETIMEDOUT;
+ 		}
+ 
+@@ -249,6 +250,19 @@ static int wl1271_cmd_wait_for_event(struct wl1271 *wl, u32 mask)
+ 	return 0;
  }
  
-+static inline unsigned int ip_hdrlen(const struct sk_buff *skb)
++static int wl1271_cmd_wait_for_event(struct wl1271 *wl, u32 mask)
 +{
-+	return ip_hdr(skb)->ihl * 4;
++	int ret;
++
++	ret = wl1271_cmd_wait_for_event_or_timeout(wl, mask);
++	if (ret != 0) {
++		ieee80211_queue_work(wl->hw, &wl->recovery_work);
++		return ret;
++	}
++
++	return 0;
 +}
 +
- static inline struct tcphdr *tcp_hdr(const struct sk_buff *skb)
+ int wl1271_cmd_join(struct wl1271 *wl, u8 bss_type)
  {
- 	return (struct tcphdr *)skb_transport_header(skb);
+ 	struct wl1271_cmd_join *join;
+@@ -1039,9 +1053,11 @@ int wl1271_cmd_remove_sta(struct wl1271 *wl, u8 hlid)
+ 		goto out_free;
+ 	}
+ 
+-	ret = wl1271_cmd_wait_for_event(wl, STA_REMOVE_COMPLETE_EVENT_ID);
+-	if (ret < 0)
+-		wl1271_error("cmd remove sta event completion error");
++	/*
++	 * We are ok with a timeout here. The event is sometimes not sent
++	 * due to a firmware bug.
++	 */
++	wl1271_cmd_wait_for_event_or_timeout(wl, STA_REMOVE_COMPLETE_EVENT_ID);
+ 
+ out_free:
+ 	kfree(cmd);
 -- 
-1.7.2.30.gc37d7.dirty
+1.7.1
 
