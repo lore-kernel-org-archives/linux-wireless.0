@@ -1,157 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail30s.wh2.ocn.ne.jp ([125.206.180.198]:22360 "HELO
-	mail30s.wh2.ocn.ne.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1759154Ab0KPB6Z (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:54986 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932150Ab0KRQaA (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 15 Nov 2010 20:58:25 -0500
-Received: from vs3010.wh2.ocn.ne.jp (125.206.180.173)
-	by mail30s.wh2.ocn.ne.jp (RS ver 1.0.95vs) with SMTP id 5-0111152703
-	for <linux-wireless@vger.kernel.org>; Tue, 16 Nov 2010 10:58:23 +0900 (JST)
-Subject: [PATCH v8 2/3] ath5k: Use generic EWMA library
-To: linville@tuxdriver.com
-From: Bruno Randolf <br1@einfach.org>
-Cc: randy.dunlap@oracle.com, br1@thinktube.com, peterz@infradead.org,
-	blp@cs.stanford.edu, linux-wireless@vger.kernel.org,
-	linux-kernel@vger.kernel.org, Lars_Ericsson@telia.com,
-	stefanr@s5r6.in-berlin.de, kosaki.motohiro@jp.fujitsu.com,
-	akpm@linux-foundation.org, kevin.granade@gmail.com
-Date: Tue, 16 Nov 2010 10:58:43 +0900
-Message-ID: <20101116015843.21081.91503.stgit@localhost6.localdomain6>
-In-Reply-To: <20101116015837.21081.79264.stgit@localhost6.localdomain6>
-References: <20101116015837.21081.79264.stgit@localhost6.localdomain6>
+	Thu, 18 Nov 2010 11:30:00 -0500
+Date: Thu, 18 Nov 2010 11:26:18 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: =?utf-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+Cc: linux-wireless@vger.kernel.org,
+	Michael =?iso-8859-1?Q?B=FCsch?= <mb@bu3sch.de>,
+	b43-dev@lists.infradead.org
+Subject: Re: [PATCH] ssb: fail registration for unknown SPROM revision
+Message-ID: <20101118162617.GA2468@tuxdriver.com>
+References: <1288823326-9686-1-git-send-email-zajec5@gmail.com>
+ <1288823326-9686-2-git-send-email-zajec5@gmail.com>
+ <20101116212321.GF10774@tuxdriver.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <20101116212321.GF10774@tuxdriver.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Remove ath5k's private moving average implementation in favour of the generic
-library version.
+On Tue, Nov 16, 2010 at 04:23:21PM -0500, John W. Linville wrote:
+> On Wed, Nov 03, 2010 at 11:28:46PM +0100, Rafał Miłecki wrote:
+> > Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
+> > ---
+> > As noticed my Michael we have this left from old times of limited amount of
+> > revisions. It's not reliable to treat unknown as rev1.
+> > 
+> > Michael: would you like to add Reported-by?
+> > 
+> > John: it's for 2.6.38.
+> > ---
+> >  drivers/ssb/pci.c |    8 +++-----
+> >  1 files changed, 3 insertions(+), 5 deletions(-)
+> > 
+> > diff --git a/drivers/ssb/pci.c b/drivers/ssb/pci.c
+> > index b5343ac..41a7337 100644
+> > --- a/drivers/ssb/pci.c
+> > +++ b/drivers/ssb/pci.c
+> > @@ -600,11 +600,9 @@ static int sprom_extract(struct ssb_bus *bus, struct ssb_sprom *out,
+> >  		sprom_extract_r8(out, in);
+> >  		break;
+> >  	default:
+> > -		ssb_printk(KERN_WARNING PFX "Unsupported SPROM"
+> > -			   "  revision %d detected. Will extract"
+> > -			   " v1\n", out->revision);
+> > -		out->revision = 1;
+> > -		sprom_extract_r123(out, in);
+> > +		ssb_printk(KERN_ERR PFX "Unsupported SPROM revision %d"
+> > +			   " detected\n", out->revision);
+> > +		return -EINVAL;
+> >  	}
+> >  
+> >  	if (out->boardflags_lo == 0xFFFF)
+> 
+> I think this is going to make my b43 PCI-E card not work...I'll try
+> it and get back to you...
 
-Signed-off-by: Bruno Randolf <br1@einfach.org>
----
- drivers/net/wireless/ath/ath5k/Kconfig |    1 +
- drivers/net/wireless/ath/ath5k/ani.c   |    4 ++--
- drivers/net/wireless/ath/ath5k/ath5k.h |   26 ++------------------------
- drivers/net/wireless/ath/ath5k/base.c  |    4 ++--
- drivers/net/wireless/ath/ath5k/debug.c |    2 +-
- 5 files changed, 8 insertions(+), 29 deletions(-)
+Yeah...
 
-diff --git a/drivers/net/wireless/ath/ath5k/Kconfig b/drivers/net/wireless/ath/ath5k/Kconfig
-index eb83b7b..4784457 100644
---- a/drivers/net/wireless/ath/ath5k/Kconfig
-+++ b/drivers/net/wireless/ath/ath5k/Kconfig
-@@ -4,6 +4,7 @@ config ATH5K
- 	select MAC80211_LEDS
- 	select LEDS_CLASS
- 	select NEW_LEDS
-+	select AVERAGE
- 	---help---
- 	  This module adds support for wireless adapters based on
- 	  Atheros 5xxx chipset.
-diff --git a/drivers/net/wireless/ath/ath5k/ani.c b/drivers/net/wireless/ath/ath5k/ani.c
-index f141919..db98a85 100644
---- a/drivers/net/wireless/ath/ath5k/ani.c
-+++ b/drivers/net/wireless/ath/ath5k/ani.c
-@@ -216,7 +216,7 @@ static void
- ath5k_ani_raise_immunity(struct ath5k_hw *ah, struct ath5k_ani_state *as,
- 			 bool ofdm_trigger)
- {
--	int rssi = ah->ah_beacon_rssi_avg.avg;
-+	int rssi = ewma_read(&ah->ah_beacon_rssi_avg);
- 
- 	ATH5K_DBG_UNLIMIT(ah->ah_sc, ATH5K_DEBUG_ANI, "raise immunity (%s)",
- 		ofdm_trigger ? "ODFM" : "CCK");
-@@ -301,7 +301,7 @@ ath5k_ani_raise_immunity(struct ath5k_hw *ah, struct ath5k_ani_state *as,
- static void
- ath5k_ani_lower_immunity(struct ath5k_hw *ah, struct ath5k_ani_state *as)
- {
--	int rssi = ah->ah_beacon_rssi_avg.avg;
-+	int rssi = ewma_read(&ah->ah_beacon_rssi_avg);
- 
- 	ATH5K_DBG_UNLIMIT(ah->ah_sc, ATH5K_DEBUG_ANI, "lower immunity");
- 
-diff --git a/drivers/net/wireless/ath/ath5k/ath5k.h b/drivers/net/wireless/ath/ath5k/ath5k.h
-index 308b79e..2718136 100644
---- a/drivers/net/wireless/ath/ath5k/ath5k.h
-+++ b/drivers/net/wireless/ath/ath5k/ath5k.h
-@@ -25,6 +25,7 @@
- 
- #include <linux/io.h>
- #include <linux/types.h>
-+#include <linux/average.h>
- #include <net/mac80211.h>
- 
- /* RX/TX descriptor hw structs
-@@ -1102,7 +1103,7 @@ struct ath5k_hw {
- 	struct ath5k_nfcal_hist ah_nfcal_hist;
- 
- 	/* average beacon RSSI in our BSS (used by ANI) */
--	struct ath5k_avg_val	ah_beacon_rssi_avg;
-+	struct ewma		ah_beacon_rssi_avg;
- 
- 	/* noise floor from last periodic calibration */
- 	s32			ah_noise_floor;
-@@ -1315,27 +1316,4 @@ static inline u32 ath5k_hw_bitswap(u32 val, unsigned int bits)
- 	return retval;
- }
- 
--#define AVG_SAMPLES	8
--#define AVG_FACTOR	1000
--
--/**
-- * ath5k_moving_average -  Exponentially weighted moving average
-- * @avg: average structure
-- * @val: current value
-- *
-- * This implementation make use of a struct ath5k_avg_val to prevent rounding
-- * errors.
-- */
--static inline struct ath5k_avg_val
--ath5k_moving_average(const struct ath5k_avg_val avg, const int val)
--{
--	struct ath5k_avg_val new;
--	new.avg_weight = avg.avg_weight  ?
--		(((avg.avg_weight * ((AVG_SAMPLES) - 1)) +
--			(val * (AVG_FACTOR))) / (AVG_SAMPLES)) :
--		(val * (AVG_FACTOR));
--	new.avg = new.avg_weight / (AVG_FACTOR);
--	return new;
--}
--
- #endif
-diff --git a/drivers/net/wireless/ath/ath5k/base.c b/drivers/net/wireless/ath/ath5k/base.c
-index 4d21202..ae069b7 100644
---- a/drivers/net/wireless/ath/ath5k/base.c
-+++ b/drivers/net/wireless/ath/ath5k/base.c
-@@ -1307,8 +1307,7 @@ ath5k_update_beacon_rssi(struct ath5k_softc *sc, struct sk_buff *skb, int rssi)
- 	    memcmp(mgmt->bssid, common->curbssid, ETH_ALEN) != 0)
- 		return;
- 
--	ah->ah_beacon_rssi_avg = ath5k_moving_average(ah->ah_beacon_rssi_avg,
--						      rssi);
-+	ewma_add(&ah->ah_beacon_rssi_avg, rssi);
- 
- 	/* in IBSS mode we should keep RSSI statistics per neighbour */
- 	/* le16_to_cpu(mgmt->u.beacon.capab_info) & WLAN_CAPABILITY_IBSS */
-@@ -2562,6 +2561,7 @@ ath5k_reset(struct ath5k_softc *sc, struct ieee80211_channel *chan)
- 	ah->ah_cal_next_full = jiffies;
- 	ah->ah_cal_next_ani = jiffies;
- 	ah->ah_cal_next_nf = jiffies;
-+	ewma_init(&ah->ah_beacon_rssi_avg, 1000, 8);
- 
- 	/*
- 	 * Change channels and update the h/w rate map if we're switching;
-diff --git a/drivers/net/wireless/ath/ath5k/debug.c b/drivers/net/wireless/ath/ath5k/debug.c
-index 54dcf77..7d785cb 100644
---- a/drivers/net/wireless/ath/ath5k/debug.c
-+++ b/drivers/net/wireless/ath/ath5k/debug.c
-@@ -719,7 +719,7 @@ static ssize_t read_file_ani(struct file *file, char __user *user_buf,
- 			st->mib_intr);
- 	len += snprintf(buf+len, sizeof(buf)-len,
- 			"beacon RSSI average:\t%d\n",
--			sc->ah->ah_beacon_rssi_avg.avg);
-+			(int)ewma_read(&sc->ah->ah_beacon_rssi_avg));
- 
- #define CC_PRINT(_struct, _field) \
- 	_struct._field, \
+[  125.520348] b43-pci-bridge 0000:04:00.0: enabling device (0000 -> 0002)
+[  125.520359] b43-pci-bridge 0000:04:00.0: PCI INT A -> GSI 18 (level, low) -> IRQ 18
+[  125.520373] b43-pci-bridge 0000:04:00.0: setting latency timer to 64
+[  125.529241] ssb: Core 0 found: ChipCommon (cc 0x800, rev 0x11, vendor 0x4243)
+[  125.529255] ssb: Core 1 found: IEEE 802.11 (cc 0x812, rev 0x0A, vendor 0x4243)
+[  125.529268] ssb: Core 2 found: USB 1.1 Host (cc 0x817, rev 0x03, vendor 0x4243)
+[  125.529280] ssb: Core 3 found: PCI-E (cc 0x820, rev 0x01, vendor 0x4243)
+[  125.545750] ssb: WARNING: Invalid SPROM CRC (corrupt SPROM)
+[  125.545752] ssb: Unsupported SPROM revision 255 detected
+[  125.545797] ssb: Failed to register PCI version of SSB with error -22
+[  125.545810] b43-pci-bridge 0000:04:00.0: PCI INT A disabled
+[  125.545827] b43-pci-bridge: probe of 0000:04:00.0 failed with error -22
 
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
