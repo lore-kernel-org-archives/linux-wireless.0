@@ -1,70 +1,92 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.sysgo.com ([195.145.229.155]:50452 "EHLO mail.sysgo.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751602Ab0KAJq6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 1 Nov 2010 05:46:58 -0400
-Date: Mon, 1 Nov 2010 10:46:49 +0100
-From: Pavel Machek <pma@sysgo.com>
-To: kernel list <linux-kernel@vger.kernel.org>,
-	chunkeey@googlemail.com, linux-wireless@vger.kernel.org
-Subject: Re: carl9170 disconnects under load
-Message-ID: <20101101094649.GA3391@pma.sysgo.com>
-References: <20101026104811.GA11357@pma.sysgo.com>
- <20101101093140.GA2766@pma.sysgo.com>
+Received: from mail-ey0-f174.google.com ([209.85.215.174]:62826 "EHLO
+	mail-ey0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1760201Ab0KRULA (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 18 Nov 2010 15:11:00 -0500
+Received: by mail-ey0-f174.google.com with SMTP id 27so2259732eye.19
+        for <linux-wireless@vger.kernel.org>; Thu, 18 Nov 2010 12:11:00 -0800 (PST)
+From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+To: linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>
+Cc: b43-dev@lists.infradead.org,
+	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+Subject: [PATCH 3/3] b43: N-PHY: little cleanups
+Date: Thu, 18 Nov 2010 21:11:43 +0100
+Message-Id: <1290111103-19308-3-git-send-email-zajec5@gmail.com>
+In-Reply-To: <1290111103-19308-1-git-send-email-zajec5@gmail.com>
+References: <1290111103-19308-1-git-send-email-zajec5@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20101101093140.GA2766@pma.sysgo.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi!
+Remove some typos, warnings, initialize some values to follow wl's code path.
 
-> > I'm testing driver from -wireless testing, cca 2.6.26-rc7.
-> > 
-> > It seems to work (up to 802.11n speeds -- I've seen iwconfig claiming
-> > 121 MB/sec), but disconnects rather quickly when under load:
-> > 
-> > telnet 192.168.1.3 chargen > /dev/null
-> > 
-> > The machine is powerpc mpc5200b board, with OHCI driver -- it is not
-> > capable of USB2.0 speeds.
-> 
-> So I tried with different AP, one not capable of 802.11n speeds. It
-> fails in different way :-(. But this one is with my backport to
-> 2.6.34...
+Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
+---
+ drivers/net/wireless/b43/phy_n.c |   13 +++++--------
+ 1 files changed, 5 insertions(+), 8 deletions(-)
 
-But it fails with wireless-testing tree, too :-(.
+diff --git a/drivers/net/wireless/b43/phy_n.c b/drivers/net/wireless/b43/phy_n.c
+index 1354228..6c6c872 100644
+--- a/drivers/net/wireless/b43/phy_n.c
++++ b/drivers/net/wireless/b43/phy_n.c
+@@ -573,7 +573,6 @@ static void b43_nphy_calc_rx_iq_comp(struct b43_wldev *dev, u8 mask)
+ 			ii = est.i1_pwr;
+ 			qq = est.q1_pwr;
+ 		} else {
+-			B43_WARN_ON(1);
+ 			continue;
+ 		}
+ 
+@@ -2028,7 +2027,7 @@ static void b43_nphy_rev2_rssi_cal(struct b43_wldev *dev, u8 type)
+ 	}
+ 
+ 	b43_radio_maskset(dev, B2055_C1_PD_RSSIMISC, 0xF8, state[0]);
+-	b43_radio_maskset(dev, B2055_C1_PD_RSSIMISC, 0xF8, state[1]);
++	b43_radio_maskset(dev, B2055_C2_PD_RSSIMISC, 0xF8, state[1]);
+ 
+ 	switch (state[2]) {
+ 	case 1:
+@@ -3112,7 +3111,7 @@ static void b43_nphy_set_rx_core_state(struct b43_wldev *dev, u8 mask)
+ {
+ 	struct b43_phy *phy = &dev->phy;
+ 	struct b43_phy_n *nphy = phy->n;
+-	u16 buf[16];
++	/* u16 buf[16]; it's rev3+ */
+ 
+ 	nphy->phyrxchain = mask;
+ 
+@@ -3408,7 +3407,6 @@ static int b43_nphy_set_channel(struct b43_wldev *dev,
+ 				enum nl80211_channel_type channel_type)
+ {
+ 	struct b43_phy *phy = &dev->phy;
+-	struct b43_phy_n *nphy = dev->phy.n;
+ 
+ 	const struct b43_nphy_channeltab_entry_rev2 *tabent_r2;
+ 	const struct b43_nphy_channeltab_entry_rev3 *tabent_r3;
+@@ -3478,8 +3476,9 @@ static void b43_nphy_op_prepare_structs(struct b43_wldev *dev)
+ 
+ 	memset(nphy, 0, sizeof(*nphy));
+ 
+-	/* wl goes path which is executed for gain_boost, assume it is true */
+-	nphy->gain_boost = true;
++	nphy->gain_boost = true; /* this way we follow wl, assume it is true */
++	nphy->txrx_chain = 2; /* sth different than 0 and 1 for now */
++	nphy->phyrxchain = 3; /* to avoid b43_nphy_set_rx_core_state like wl */
+ }
+ 
+ static void b43_nphy_op_free(struct b43_wldev *dev)
+@@ -3552,8 +3551,6 @@ static void b43_nphy_op_radio_write(struct b43_wldev *dev, u16 reg, u16 value)
+ static void b43_nphy_op_software_rfkill(struct b43_wldev *dev,
+ 					bool blocked)
+ {
+-	struct b43_phy_n *nphy = dev->phy.n;
+-
+ 	if (b43_read32(dev, B43_MMIO_MACCTL) & B43_MACCTL_ENABLED)
+ 		b43err(dev->wl, "MAC not suspended\n");
+ 
+-- 
+1.7.1
 
-Linux mpc5200b 2.6.36-rc8-wl-pma-48197-gdcae733-dirty #43 Tue Oct 26
- 12:06:21 CEST 2010 ppc
-
-								Pavel
-
-PHY: f0003000:00 - Link is Up - 100/Full
-warning: `named' uses 32-bit capabilities (legacy support in use)
-process `named' is using obsolete setsockopt SO_BSDCOMPAT
-ieee80211 phy0: device now idle
-ieee80211 phy0: device no longer idle - scanning
-wlan0: authenticate with 00:11:95:05:30:d7 (try 1)
-wlan0: authenticated
-ieee80211 phy0: device now idle
-ieee80211 phy0: device no longer idle - working
-wlan0: associate with 00:11:95:05:30:d7 (try 1)
-wlan0: RX AssocResp from 00:11:95:05:30:d7 (capab=0x421 status=0
-aid=1)
-wlan0: associated
-ieee80211 phy0: Allocated STA 00:11:95:05:30:d7
-ieee80211 phy0: Inserted STA 00:11:95:05:30:d7
-usb 1-1: restart device (4)
-usb 1-1: firmware upload failed (-110).
-usb 1-1: Failed to restart device  (-110).
-ieee80211 phy0: writing reg 0x1c36f0 (val 0x5000) failed (-5)
-wlan0: deauthenticating from 00:11:95:05:30:d7 by local choice
-(reason=3)
-ieee80211 phy0: Removed STA 00:11:95:05:30:d7
-ieee80211 phy0: Destroyed STA 00:11:95:05:30:d7
-ieee80211 phy0: device now idle
-cfg80211: Calling CRDA to update world regulatory domain
-usb 1-1: reset full speed USB device using of:ppc-of-ohci and address
-2
--/bin/sh-3.00# usb 1-1: device descriptor read/64, error -110
