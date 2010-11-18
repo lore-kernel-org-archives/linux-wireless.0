@@ -1,67 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:33067 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755679Ab0K3LZ4 (ORCPT
+Received: from mail-iw0-f174.google.com ([209.85.214.174]:43664 "EHLO
+	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754904Ab0KRLhg convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 30 Nov 2010 06:25:56 -0500
-Subject: Re: [PATCH] mac80211: Minor optimization in ieee80211_rx_h_data
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Helmut Schaa <helmut.schaa@googlemail.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <1291115974-4878-1-git-send-email-helmut.schaa@googlemail.com>
-References: <1291115974-4878-1-git-send-email-helmut.schaa@googlemail.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Tue, 30 Nov 2010 12:25:51 +0100
-Message-ID: <1291116351.3624.12.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+	Thu, 18 Nov 2010 06:37:36 -0500
+Received: by iwn35 with SMTP id 35so3401550iwn.19
+        for <linux-wireless@vger.kernel.org>; Thu, 18 Nov 2010 03:37:35 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <1290028078.8522.62.camel@dcbw.foobar.com>
+References: <AANLkTik+BWQdU4hhKN7yfgOdJuQXopvYr4Z59RTntqSW@mail.gmail.com>
+ <1289607742.21000.23.camel@dcbw.foobar.com> <AANLkTi=1RFZwRYvA=VfuKTQS6YwZkTv17Q0nnWnQW3Hq@mail.gmail.com>
+ <AANLkTinKMfu2SX2fymUDi3JooAwKZv7=41BQBywR3pVe@mail.gmail.com> <1290028078.8522.62.camel@dcbw.foobar.com>
+From: Julian Calaby <julian.calaby@gmail.com>
+Date: Thu, 18 Nov 2010 22:37:15 +1100
+Message-ID: <AANLkTinc7F8pCXbKBf3-Nyeb05GQ=_DX+EsRxjkzO9ua@mail.gmail.com>
+Subject: Re: Bringing up Marvell 88W8300
+To: Dan Williams <dcbw@redhat.com>
+Cc: Denis Kirjanov <kirjanov@gmail.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	dwmw2@infradead.org, David.Woodhouse@intel.com
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2010-11-30 at 12:19 +0100, Helmut Schaa wrote:
-> Remove a superfluous ieee80211_is_data check as that was checked a few
-> lines before already and we wont't get here for non-data frames at all.
-> 
-> Second, the frame was already converted to 802.3 header format and
-> reading the fc and addr1 fields was only possible because the 802.3
-> header is short enough and didn't overwrite the relevant parts of the
-> 802.11 header. Make the code more obvious by checking the ethernet
-> header's h_dest field.
-> 
-> Furthermore reorder the conditions to reduce the number of checks
-> when dynamic powersave is not needed (AP mode for example).
-> 
-> Cc: Johannes Berg <johannes@sipsolutions.net>
-> Signed-off-by: Helmut Schaa <helmut.schaa@googlemail.com>
+On Thu, Nov 18, 2010 at 08:07, Dan Williams <dcbw@redhat.com> wrote:
+> On Wed, 2010-11-17 at 20:15 +0300, Denis Kirjanov wrote:
+>> >
+>> > I will try to load the firmware that comes with the driver source.
+>> >
+>> >> Does that sound like a plan?  I have no time for it, but I'm happy to
+>> >> put the driver up somewhere that others can make use of it.  I'll
+>> >> recheck the provenience of the driver but it's got MODULE_LICENSE("GPL")
+>> >> and GPL headers all over, including on the firmware file.  I might have
+>> >> grabbed it off the Extranet but I'll check.
+>> >>
+>> Marvell firmware is OK for me and I can successfully boot in .
+>> I believe that we can now port driver to the new wireless stuff such
+>> as cfg80211.
+>
+> Yeah, that's the driver, the MSI thing or whatever linked from openwrt
+> forums.  Basically, I think we should get that driver working so we know
+> that *something* works on these cards, and then use it and mwl8k as a
+> guide to writing a new mac80211 driver for the 8335.
 
-Looks sane to me. Indeed if the check was required it should use the
-"fc" variable, but clearly it's pointless. Must be some code that got
-moved during PS code restructuring...
+I have a card with this chipset (A Netgear WG311v3) and have a spare
+machine to test it in. I'm quite happy to test the driver at any stage
+of development.
 
-Reviewed-by: Johannes Berg <johannes@sipsolutions.net>
+Thanks,
 
-> ---
-> 
-> Found via code review, compile tested only.
-> 
->  net/mac80211/rx.c |    5 ++---
->  1 files changed, 2 insertions(+), 3 deletions(-)
-> 
-> diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
-> index 9dd60a7..9e44fbf 100644
-> --- a/net/mac80211/rx.c
-> +++ b/net/mac80211/rx.c
-> @@ -1871,9 +1871,8 @@ ieee80211_rx_h_data(struct ieee80211_rx_data *rx)
->  	dev->stats.rx_packets++;
->  	dev->stats.rx_bytes += rx->skb->len;
->  
-> -	if (ieee80211_is_data(hdr->frame_control) &&
-> -	    !is_multicast_ether_addr(hdr->addr1) &&
-> -	    local->hw.conf.dynamic_ps_timeout > 0 && local->ps_sdata) {
-> +	if (local->ps_sdata && local->hw.conf.dynamic_ps_timeout > 0 && 
-> +	    !is_multicast_ether_addr(((struct ethhdr *)rx->skb->data)->h_dest)) {
->  			mod_timer(&local->dynamic_ps_timer, jiffies +
->  			 msecs_to_jiffies(local->hw.conf.dynamic_ps_timeout));
->  	}
+-- 
+Julian Calaby
 
-
+Email: julian.calaby@gmail.com
+Profile: http://www.google.com/profiles/julian.calaby/
+.Plan: http://sites.google.com/site/juliancalaby/
