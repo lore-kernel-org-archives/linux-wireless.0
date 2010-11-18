@@ -1,65 +1,88 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wy0-f174.google.com ([74.125.82.174]:41342 "EHLO
-	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932066Ab0KQVOq (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 17 Nov 2010 16:14:46 -0500
-Received: by wyb28 with SMTP id 28so2427330wyb.19
-        for <linux-wireless@vger.kernel.org>; Wed, 17 Nov 2010 13:14:45 -0800 (PST)
-From: =?utf-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-To: linux-wireless@vger.kernel.org,
+Received: from mail.atheros.com ([12.19.149.2]:36488 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754835Ab0KRVXw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 18 Nov 2010 16:23:52 -0500
+Received: from mail.atheros.com ([10.10.20.105])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Thu, 18 Nov 2010 13:23:39 -0800
+From: Michael Green <Michael.Green@Atheros.com>
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>,
 	"John W. Linville" <linville@tuxdriver.com>
-Cc: b43-dev@lists.infradead.org,
-	=?utf-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-Subject: [PATCH V2] b43: rfkill: use HI enabled bit for all devices
-Date: Wed, 17 Nov 2010 22:14:37 +0100
-Message-Id: <1290028477-6462-1-git-send-email-zajec5@gmail.com>
+CC: "wireless-regdb@lists.infradead.org"
+	<wireless-regdb@lists.infradead.org>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Kurt Garloff <garloff@suse.de>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Date: Thu, 18 Nov 2010 13:23:42 -0800
+Subject: RE: [PATCH] wireless-regdb: update rules for DE
+Message-ID: <93781E992CBA7843962D8B0E7D683F3C163340D5AE@SC1EXMB-MBCL.global.atheros.com>
+References: <20100525151429.GC6342@tpkurt2.garloff.de>
+ <1290029817-711-1-git-send-email-linville@tuxdriver.com>
+ <AANLkTimDkoqNbkFWDsU2HgFK3926gRpcBbokX_GL5sSc@mail.gmail.com>
+In-Reply-To: <AANLkTimDkoqNbkFWDsU2HgFK3926gRpcBbokX_GL5sSc@mail.gmail.com>
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Devices which use LO enabled bit are covered by b43legacy
-
-Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
----
-V2: Dropped some not needed stuff as pointed by Michael, thanks!
-
-John: it's .38 ofc.
----
- drivers/net/wireless/b43/rfkill.c |   19 ++-----------------
- 1 files changed, 2 insertions(+), 17 deletions(-)
-
-diff --git a/drivers/net/wireless/b43/rfkill.c b/drivers/net/wireless/b43/rfkill.c
-index 78016ae..86bc0a0 100644
---- a/drivers/net/wireless/b43/rfkill.c
-+++ b/drivers/net/wireless/b43/rfkill.c
-@@ -28,23 +28,8 @@
- /* Returns TRUE, if the radio is enabled in hardware. */
- bool b43_is_hw_radio_enabled(struct b43_wldev *dev)
- {
--	if (dev->phy.rev >= 3 || dev->phy.type == B43_PHYTYPE_LP) {
--		if (!(b43_read32(dev, B43_MMIO_RADIO_HWENABLED_HI)
--		      & B43_MMIO_RADIO_HWENABLED_HI_MASK))
--			return 1;
--	} else {
--		/* To prevent CPU fault on PPC, do not read a register
--		 * unless the interface is started; however, on resume
--		 * for hibernation, this routine is entered early. When
--		 * that happens, unconditionally return TRUE.
--		 */
--		if (b43_status(dev) < B43_STAT_STARTED)
--			return 1;
--		if (b43_read16(dev, B43_MMIO_RADIO_HWENABLED_LO)
--		    & B43_MMIO_RADIO_HWENABLED_LO_MASK)
--			return 1;
--	}
--	return 0;
-+	return !(b43_read32(dev, B43_MMIO_RADIO_HWENABLED_HI)
-+		& B43_MMIO_RADIO_HWENABLED_HI_MASK);
- }
- 
- /* The poll callback for the hardware button. */
--- 
-1.6.0.4
-
+SGkgZ3V5cywNCg0KSSBhbSBvbiBQVE8gdW50aWwgTW9uZGF5LiBEbyBJIG5lZWQgdG8gcmVhZCB0
+aGlzIG5vdyBhbmQgcmVzcG9uZCBvciBjYW4gaXQgd2FpdD8gIEkgYW0gbm90IGFza2luZyB5b3Ug
+dG8gaG9sZCBhbnl0aGluZyB1cCBkdWUgdG8gbWUuIEJ1dCBpZiB5b3Ugd2FudCBtZSB0byBnaXZl
+IGZlZWRiYWNrIG9uIHNvbWV0aGluZywgcGxzIGxldCBtZSBrbm93IGlmIGl0IGNhbiB3YWl0IHVu
+dGlsIE1vbi4NCg0KTWljaGFlbCBHcmVlbg0KQXRoZXJvcyBDb21tdW5pY2F0aW9ucywgSW5jLg0K
+bWdyZWVuQGF0aGVyb3MuY29tDQpEZXNrOiAgICsxLTc4MS00MDAtMTQ5MQ0KTW9iaWxlOiArMS01
+MDgtMzgwLTQ5MjENCi0tLS0tT3JpZ2luYWwgTWVzc2FnZS0tLS0tDQpGcm9tOiBMdWlzIFIuIFJv
+ZHJpZ3VleiBbbWFpbHRvOm1jZ3JvZkBnbWFpbC5jb21dIA0KU2VudDogVGh1cnNkYXksIE5vdmVt
+YmVyIDE4LCAyMDEwIDE6MjkgUE0NClRvOiBKb2huIFcuIExpbnZpbGxlOyBNaWNoYWVsIEdyZWVu
+DQpDYzogd2lyZWxlc3MtcmVnZGJAbGlzdHMuaW5mcmFkZWFkLm9yZzsgSm9oYW5uZXMgQmVyZzsg
+S3VydCBHYXJsb2ZmOyBsaW51eC13aXJlbGVzc0B2Z2VyLmtlcm5lbC5vcmcNClN1YmplY3Q6IFJl
+OiBbUEFUQ0hdIHdpcmVsZXNzLXJlZ2RiOiB1cGRhdGUgcnVsZXMgZm9yIERFDQoNCk9uIFdlZCwg
+Tm92IDE3LCAyMDEwIGF0IDE6MzYgUE0sIEpvaG4gVy4gTGludmlsbGUNCjxsaW52aWxsZUB0dXhk
+cml2ZXIuY29tPiB3cm90ZToNCj4gRnJvbTogS3VydCBHYXJsb2ZmIDxnYXJsb2ZmQHN1c2UuZGU+
+DQo+DQo+IGh0dHA6Ly9tYXJjLmluZm8vP2w9bGludXgtd2lyZWxlc3MmbT0xMjc0ODAwNzUzMDY0
+ODImdz0yDQo+DQo+IENjOiAiTHVpcyBSLiBSb2RyaWd1ZXoiIDxtY2dyb2ZAZ21haWwuY29tPg0K
+PiBBY2tlZC1ieTogSm9oYW5uZXMgQmVyZyA8am9oYW5uZXNAc2lwc29sdXRpb25zLm5ldD4NCj4g
+U2lnbmVkLW9mZi1ieTogSm9obiBXLiBMaW52aWxsZSA8bGludmlsbGVAdHV4ZHJpdmVyLmNvbT4N
+Cj4gLS0tDQo+IFRpbWUgdG8gY2xlYXIgdGhlIGxvZ2phbS4uLg0KDQpNaWNoYWVsLCBhcmUgeW91
+IHN1YnNjcmliZWQgdG8gd2lyZWxlc3MtcmVnZGIgbm93PyBEaWQgeW91IGdldCB0aGlzIGUtbWFp
+bD8gQUNLPw0KDQogIEx1aXMNCg0KPiDCoGRiLnR4dCB8IMKgIDI0ICsrKysrKysrKysrKysrKysr
+LS0tLS0tLQ0KPiDCoDEgZmlsZXMgY2hhbmdlZCwgMTcgaW5zZXJ0aW9ucygrKSwgNyBkZWxldGlv
+bnMoLSkNCj4NCj4gZGlmZiAtLWdpdCBhL2RiLnR4dCBiL2RiLnR4dA0KPiBpbmRleCBlNjNhNDNl
+Li40MGE4YmJjIDEwMDY0NA0KPiAtLS0gYS9kYi50eHQNCj4gKysrIGIvZGIudHh0DQo+IEBAIC0x
+NzYsMTcgKzE3NiwyNyBAQCBjb3VudHJ5IENaOg0KPiDCoCDCoCDCoCDCoCg1MjUwIC0gNTM1MCBA
+IDQwKSwgKE4vQSwgMjAwIG1XKSwgTk8tT1VURE9PUiwgREZTDQo+IMKgIMKgIMKgIMKgKDU0NzAg
+LSA1NzI1IEAgNDApLCAoTi9BLCAxMDAwIG1XKSwgREZTDQo+DQo+IC0jIERhdGEgZnJvbSAiRnJl
+cXVlbnpudXR6dW5nc3BsYW4iIChhcyBwdWJsaXNoZWQgaW4gQXByaWwgMjAwOCksDQo+IC0jIGRv
+d25sb2FkZWQgZnJvbSBodHRwOi8vd3d3LmJ1bmRlc25ldHphZ2VudHVyLmRlL21lZGlhL2FyY2hp
+dmUvMTMzNTgucGRmDQo+IC0jIEFsc28gYXBwbGljYWJsZSBpcyBodHRwOi8vd3d3LmJ1bmRlc25l
+dHphZ2VudHVyLmRlL21lZGlhL2FyY2hpdmUvNTAwOS5wZGYNCj4gLSMgT24gdGhlIDUgR0h6IHJh
+bmdlcyBUWCBwb3dlciBjYW4gYmUgZG91YmxlZCBpZiBUUEMgaXMgaW1wbGVtZW50ZWQuDQo+ICsj
+IERhdGEgZnJvbSAiRnJlcXVlbnpudXR6dW5nc3BsYW4iIChhcyBwdWJsaXNoZWQgaW4gQXByaWwg
+MjAwOCksIGRvd25sb2FkZWQgZnJvbQ0KPiArIyBodHRwOi8vd3d3LmJ1bmRlc25ldHphZ2VudHVy
+LmRlL2NhZS9zZXJ2bGV0L2NvbnRlbnRibG9iLzM4NDQ4L3B1YmxpY2F0aW9uRmlsZS8yNjU5L0Zy
+ZXF1ZW56bnV0enVuZ3NwbGFuMjAwOF9JZDE3NDQ4cGRmLnBkZg0KPiArIyBGb3IgdGhlIDVHSHog
+cmFuZ2UgYWxzbyBzZWUNCj4gKyMgaHR0cDovL3d3dy5idW5kZXNuZXR6YWdlbnR1ci5kZS9jYWUv
+c2VydmxldC9jb250ZW50YmxvYi8zODIxNi9wdWJsaWNhdGlvbkZpbGUvNjU3OS9XTEFONUdIelZm
+ZzdfMjAxMF8yODA0MjAxMHBkZi5wZGYNCj4gKyMgVGhlIHZhbHVlcyBoYXZlIGJlZW4gcmVkdWNl
+ZCBieSBhIGZhY3RvciBvZiAyICgzZGIpIGZvciBub24gVFBDIGRldmljZXMNCj4gKyMgKGluIG90
+aGVyIHdvcmRzOiBkZXZpY2VzIHdpdGggVFBDIGNhbiB1c2UgdHdpY2UgdGhlIHR4IHBvd2VyIG9m
+IHRoaXMgdGFibGUpLg0KPiArIyBOb3RlIHRoYXQgdGhlIGRvY3MgZG8gbm90IHJlcXVpcmUgVFBD
+IGZvciA1MTUwLS01MjUwOyB0aGUgcmVkdWN0aW9uIHRvDQo+ICsjIDEwMG1XIHRodXMgaXMgbm90
+IHN0cmljdGx5IHJlcXVpcmVkIC0tIGhvd2V2ZXIgdGhlIGNvbnNlcnZhdGl2ZSAxMDBtVw0KPiAr
+IyBsaW1pdCBpcyB1c2VkIGhlcmUgYXMgdGhlIG5vbi1pbnRlcmZlcmVuY2Ugd2l0aCByYWRhciBh
+bmQgc2F0ZWxsaXRlDQo+ICsjIGFwcHMgcmVsaWVzIG9uIHRoZSBhdHRlbnVhdGlvbiBieSB0aGUg
+YnVpbGRpbmcgd2FsbHMgb25seSBpbiB0aGUNCj4gKyMgYWJzZW5jZSBvZiBERlM7IHRoZSBuZWln
+aGJvdXIgY291bnRyaWVzIGhhdmUgMTAwbVcgbGltaXQgaGVyZSBhcyB3ZWxsLg0KPiArDQo+IMKg
+Y291bnRyeSBERToNCj4gwqAgwqAgwqAgwqAjIGVudHJpZXMgMjc5MDA0IGFuZCAyODAwMDYNCj4g
+wqAgwqAgwqAgwqAoMjQwMCAtIDI0ODMuNSBAIDQwKSwgKE4vQSwgMTAwIG1XKQ0KPiAtIMKgIMKg
+IMKgICMgZW50cmllcyAzMDMwMDUsIDMwNDAwMiBhbmQgMzA1MDAyDQo+IC0gwqAgwqAgwqAgKDUx
+NTAgLSA1MzUwIEAgNDApLCAoTi9BLCAxMDAgbVcpLCBOTy1PVVRET09SLCBERlMNCj4gKyDCoCDC
+oCDCoCAjIGVudHJ5IDMwMzAwNQ0KPiArIMKgIMKgIMKgICg1MTUwIC0gNTI1MCBAIDQwKSwgKE4v
+QSwgMTAwIG1XKSwgTk8tT1VURE9PUg0KPiArIMKgIMKgIMKgICMgZW50cmllcyAzMDQwMDIgYW5k
+IDMwNTAwMg0KPiArIMKgIMKgIMKgICg1MjUwIC0gNTM1MCBAIDQwKSwgKE4vQSwgMTAwIG1XKSwg
+Tk8tT1VURE9PUiwgREZTDQo+IMKgIMKgIMKgIMKgIyBlbnRyaWVzIDMwODAwMiwgMzA5MDAxIGFu
+ZCAzMTAwMDMNCj4gLSDCoCDCoCDCoCAoNTQ3MCAtIDU3MjUgQCA0MCksIChOL0EsIDUwMCBtVyks
+IE5PLU9VVERPT1IsIERGUw0KPiArIMKgIMKgIMKgICg1NDcwIC0gNTcyNSBAIDQwKSwgKE4vQSwg
+NTAwIG1XKSwgREZTDQo+DQo+IMKgY291bnRyeSBESzoNCj4gwqAgwqAgwqAgwqAoMjQwMiAtIDI0
+ODIgQCA0MCksIChOL0EsIDIwKQ0KPiAtLQ0KPiAxLjcuMy4yDQo+DQo+DQo=
