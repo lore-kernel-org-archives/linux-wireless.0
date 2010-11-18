@@ -1,30 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iw0-f174.google.com ([209.85.214.174]:39154 "EHLO
-	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932273Ab0KVVhA (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 22 Nov 2010 16:37:00 -0500
+Received: from mail.atheros.com ([12.19.149.2]:46136 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754190Ab0KRJ3p (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 18 Nov 2010 04:29:45 -0500
+Received: from mail.atheros.com ([10.10.20.105])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Thu, 18 Nov 2010 01:29:32 -0800
+Date: Thu, 18 Nov 2010 15:07:26 +0530
+From: Rajkumar Manoharan <rmanoharan@atheros.com>
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+CC: linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: module unloading busted ?
+Message-ID: <20101118093725.GA3388@vmraj-lnx.users.atheros.com>
+References: <AANLkTim775JXAkrvVjn-TmwD5B6-MYCRw6ah=rVF8Opk@mail.gmail.com>
 MIME-Version: 1.0
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Mon, 22 Nov 2010 13:36:37 -0800
-Message-ID: <AANLkTimTpfQkBb=ZBE+JJ-kAi8m1WNXD=p6_2ESAh_R-@mail.gmail.com>
-Subject: compat-wireless based on 2.6.37-rc3 now available
-To: linux-wireless <linux-wireless@vger.kernel.org>
-Cc: linux-kernel@vger.kernel.org,
-	linux-bluetooth <linux-bluetooth@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <AANLkTim775JXAkrvVjn-TmwD5B6-MYCRw6ah=rVF8Opk@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Compat-wireless, which provides a backport of the 802.11 / Bluetooth /
-Ethernet drivers down to kernels >= 2.6.22 from code on 2.6.37-rc3 is
-now available;
+On Thu, Nov 18, 2010 at 12:56:00PM +0530, Luis R. Rodriguez wrote:
+> 05:33 < mcgrof> so module unload on ath9k no longer works
+> 06:11 < vmraj> mcgrof: module unload is not working for intel cards too
+> 06:15 < vmraj> it can be reproduced by rmmod on active connection
+> 
+> I haven't yet figured out why. Anyone else with other modules experiencing this?
+> 
+cfg80211_netdev_notifier_call invokes dev_hold on NETDEV_DOWN which increments
+Usage count. hence unregister_netdevice fails.
 
-http://www.orbit-lab.org/kernel/compat-wireless-2.6-stable/v2.6.37/compat-wireless-2.6.37-rc3-1.tar.bz2
-
-For details on changes you can review the respective combined
-ChangeLog of the kernel, compat and compat-wireless:
-
-http://www.orbit-lab.org/kernel/compat-wireless-2.6-stable/v2.6.37/ChangeLog-2.6.37-wireless
-
-  Luis
+--
+Rajkumar
