@@ -1,90 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail30t.wh2.ocn.ne.jp ([125.206.180.136]:18354 "HELO
-	mail30t.wh2.ocn.ne.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1754775Ab0KDKFT convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 4 Nov 2010 06:05:19 -0400
-Received: from vs3009.wh2.ocn.ne.jp (125.206.180.237)
-	by mail30t.wh2.ocn.ne.jp (RS ver 1.0.95vs) with SMTP id 4-0576755116
-	for <linux-wireless@vger.kernel.org>; Thu,  4 Nov 2010 19:05:17 +0900 (JST)
-From: Bruno Randolf <br1@einfach.org>
-To: Rajkumar Manoharan <rmanoharan@atheros.com>, lrodriguez@atheros.com
-Subject: Re: [PATCH v2] ath9k_htc: Fix beacon distribution in IBSS mode
-Date: Thu, 4 Nov 2010 19:05:26 +0900
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	Felix Fietkau <nbd@openwrt.org>
-References: <1285054089-6707-1-git-send-email-rmanoharan@atheros.com> <201009271018.42232.br1@einfach.org>
-In-Reply-To: <201009271018.42232.br1@einfach.org>
-MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-15"
-Message-Id: <201011041905.26464.br1@einfach.org>
+Received: from smtp.nokia.com ([147.243.128.24]:50461 "EHLO mgw-da01.nokia.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756514Ab0KRNTZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 18 Nov 2010 08:19:25 -0500
+Received: from nokia.com (localhost [127.0.0.1])
+	by mgw-da01.nokia.com (Switch-3.4.3/Switch-3.4.3) with ESMTP id oAIDJOPa030426
+	for <linux-wireless@vger.kernel.org>; Thu, 18 Nov 2010 15:19:24 +0200
+From: juuso.oikarinen@nokia.com
+To: luciano.coelho@nokia.com
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH] wl12xx: Fix kernel crash related to hw recovery and interface shutdown
+Date: Thu, 18 Nov 2010 15:19:02 +0200
+Message-Id: <1290086342-12015-1-git-send-email-juuso.oikarinen@nokia.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon September 27 2010 10:18:42 Bruno Randolf wrote:
-> On Tue September 21 2010 16:28:09 Rajkumar Manoharan wrote:
-> > This patch ensures fair beacon distribution in IBSS mode
-> > by configuring proper CWmin based on slot time.
-> > 
-> > Signed-off-by: Rajkumar Manoharan <rmanoharan@atheros.com>
-> > ---
-> > 
-> >  drivers/net/wireless/ath/ath9k/htc_drv_beacon.c |    9 ++++++++-
-> >  1 files changed, 8 insertions(+), 1 deletions(-)
-> > 
-> > diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_beacon.c
-> > b/drivers/net/wireless/ath/ath9k/htc_drv_beacon.c index bd1506e..1b72aa4
-> > 100644
-> > --- a/drivers/net/wireless/ath/ath9k/htc_drv_beacon.c
-> > +++ b/drivers/net/wireless/ath/ath9k/htc_drv_beacon.c
-> > @@ -235,7 +235,14 @@ void ath9k_htc_beaconq_config(struct ath9k_htc_priv
-> > *priv) ath9k_hw_get_txq_props(ah, qnum, &qi_be);
-> > 
-> >  	qi.tqi_aifs = qi_be.tqi_aifs;
-> > 
-> > -	qi.tqi_cwmin = 4*qi_be.tqi_cwmin;
-> > +	/* For WIFI Beacon Distribution
-> > +	 * Long slot time  : 2x cwmin
-> > +	 * Short slot time : 4x cwmin
-> > +	 */
-> > +	if (ah->slottime == ATH9K_SLOT_TIME_20)
-> > +		qi.tqi_cwmin = 2*qi_be.tqi_cwmin;
-> > +	else
-> > +		qi.tqi_cwmin = 4*qi_be.tqi_cwmin;
-> > 
-> >  	qi.tqi_cwmax = qi_be.tqi_cwmax;
-> >  	
-> >  	if (!ath9k_hw_set_txq_props(ah, priv->beaconq, &qi)) {
-> 
-> i am wondering - how does this relate to what i read in IEEE802.11-2007:
-> 
->    11.1.2.2 Beacon generation in an IBSS
-> 
->    b) Calculate a random delay uniformly distributed in the range between
-> zero and twice aCWmin × aSlotTime,
-> 
-> wouldn't that mean that cwmin for the beacon queue should be 0 and cwmax
-> should be 2x cwmin * slot time?
-> 
-> if the beacon queue cwmin is higher than the best effort queue, it would
-> mean that the best effort queue gets precedence over beacon transmissions.
-> but we want beacons to get sent out in any case.
->
-> also, what is the rationale behind using the best effort queue as a
-> reference for cwmin/cwmax?
+From: Juuso Oikarinen <juuso.oikarinen@nokia.com>
 
-I'm following up my own message since I just stumbled across that paragraph, 
-which IMHO would imply that the beacon queue should be based on AC_VO instead 
-of AC_BE, if anything.
+It is possible that the op_remove_interface function  is invoked exactly at
+the same time has hw recovery is started. In this case it is possible for the
+interface to be already removed in the op_remove_interface call, which
+currently leads to a kernel warning and a subsequent kernel crash.
 
-[9.2.4.2 HCF contention-based channel access (EDCA):
-Management frames shall be sent using the access category AC_VO
-without being restricted by admission control procedures. A QoS STA shall also 
-send management frames using the access category AC_VO before associating with 
-any BSS, even if there is no QoS facility available in that BSS.]
+Fix this by ignoring the op_remove_interface call if the interface is already
+down at that point.
 
-Also I still doubt that 4*qi_be.tqi_cwmin is correct concerning the standard 
-paragraph which i quoted before. Did I miss something?
+Signed-off-by: Juuso Oikarinen <juuso.oikarinen@nokia.com>
+---
+ drivers/net/wireless/wl12xx/main.c |   12 +++++++++---
+ 1 files changed, 9 insertions(+), 3 deletions(-)
 
-Bruno
+diff --git a/drivers/net/wireless/wl12xx/main.c b/drivers/net/wireless/wl12xx/main.c
+index 31f0e2f..11b0477 100644
+--- a/drivers/net/wireless/wl12xx/main.c
++++ b/drivers/net/wireless/wl12xx/main.c
+@@ -1157,10 +1157,16 @@ static void wl1271_op_remove_interface(struct ieee80211_hw *hw,
+ 	struct wl1271 *wl = hw->priv;
+ 
+ 	mutex_lock(&wl->mutex);
+-	WARN_ON(wl->vif != vif);
+-	__wl1271_op_remove_interface(wl);
+-	mutex_unlock(&wl->mutex);
++	/*
++	 * wl->vif can be null here if someone shuts down the interface
++	 * just when hardware recovery has been started.
++	 */
++	if (wl->vif) {
++		WARN_ON(wl->vif != vif);
++		__wl1271_op_remove_interface(wl);
++	}
+ 
++	mutex_unlock(&wl->mutex);
+ 	cancel_work_sync(&wl->recovery_work);
+ }
+ 
+-- 
+1.7.1
+
