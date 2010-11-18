@@ -1,40 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.perches.com ([173.55.12.10]:1892 "EHLO mail.perches.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751824Ab0K1JFy (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 28 Nov 2010 04:05:54 -0500
-From: Joe Perches <joe@perches.com>
-To: Daniel Drake <dsd@gentoo.org>, Ulrich Kunitz <kune@deine-taler.de>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: [PATCH 4/4] zd1211rw: remove unnecessary [kv][mcz]alloc casts
-Date: Sun, 28 Nov 2010 01:05:46 -0800
-Message-Id: <704bdd89d630b364043ac7a9ec0a110d311a17a2.1290934782.git.joe@perches.com>
-In-Reply-To: <cover.1290934782.git.joe@perches.com>
-References: <cover.1290934782.git.joe@perches.com>
+Received: from rcsinet10.oracle.com ([148.87.113.121]:46160 "EHLO
+	rcsinet10.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756494Ab0KRT4m (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 18 Nov 2010 14:56:42 -0500
+Message-ID: <4CE5849D.1060705@oracle.com>
+Date: Thu, 18 Nov 2010 11:55:09 -0800
+From: Randy Dunlap <randy.dunlap@oracle.com>
+MIME-Version: 1.0
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: "John W. Linville" <linville@tuxdriver.com>,
+	"Guy, Wey-Yi" <wey-yi.w.guy@intel.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: iwlwifi: fix modular legacy build errors
+References: <1290011797.12056.255.camel@wwguy-huron>	 <1290012580.3777.1.camel@jlt3.sipsolutions.net>	 <4CE40CF9.8090404@oracle.com> <1290013876.12056.260.camel@wwguy-huron>	 <20101118091138.80875baf.randy.dunlap@oracle.com>	 <1290101760.6131.1.camel@wwguy-ubuntu>	 <20101118175434.GC2468@tuxdriver.com>  <4CE57EB3.5070902@oracle.com> <1290109607.3801.8.camel@jlt3.sipsolutions.net>
+In-Reply-To: <1290109607.3801.8.camel@jlt3.sipsolutions.net>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Joe Perches <joe@perches.com>
----
- drivers/net/wireless/zd1211rw/zd_chip.c |    3 +--
- 1 files changed, 1 insertions(+), 2 deletions(-)
+On 11/18/10 11:46, Johannes Berg wrote:
+> On Thu, 2010-11-18 at 11:29 -0800, Randy Dunlap wrote:
+> 
+>> It's listed as being part of the linux-next pull, so I guess that there is still
+>> some sort of config/build problem.
+>>
+>> Same linker errors as above.  Here is today's config file that causes the error (attached).
+>>
+>>
+>> CONFIG_IWLWIFI=m
+>> CONFIG_IWLWIFI_DEBUG=y
+>> # CONFIG_IWLWIFI_DEBUG_EXPERIMENTAL_UCODE is not set
+>> # CONFIG_IWLAGN is not set
+>> CONFIG_IWL3945=m
+> 
+> Yeah, it's a bit confusing .. I'm pretty sure I tried all this when
+> doing the non-5000+ patch. Can you try adding
+> 
+> iwlcore-objs += $(iwlcore-m)
+> 
+> to your Makefile after the iwl-legacy lines and see if that helps for
+> you as well? It seems that the reason is that iwl-legacy never gets
 
-diff --git a/drivers/net/wireless/zd1211rw/zd_chip.c b/drivers/net/wireless/zd1211rw/zd_chip.c
-index 87a95bc..dfcebed 100644
---- a/drivers/net/wireless/zd1211rw/zd_chip.c
-+++ b/drivers/net/wireless/zd1211rw/zd_chip.c
-@@ -117,8 +117,7 @@ int zd_ioread32v_locked(struct zd_chip *chip, u32 *values, const zd_addr_t *addr
- 
- 	/* Allocate a single memory block for values and addresses. */
- 	count16 = 2*count;
--	a16 = (zd_addr_t *) kmalloc(count16 * (sizeof(zd_addr_t) + sizeof(u16)),
--		                   GFP_KERNEL);
-+	a16 = kmalloc(count16 * (sizeof(zd_addr_t) + sizeof(u16)), GFP_KERNEL);
- 	if (!a16) {
- 		dev_dbg_f(zd_chip_dev(chip),
- 			  "error ENOMEM in allocation of a16\n");
+Yes, that builds fine.
+
+> added because it's -m?
+
+Seems so.
+
+> But then why did iwlagn-$(CONFIG_IWL4965) and iwl3945-$(CONFIG_IWL3945)
+> work for you? That bit confuses me completely. It looks like this should
+> be working? I mean -- why doesn't iwl-legacy.c now get compiled, but
+> does if you move it to agn like you did here:
+> 
+> 
+> -iwlagn-$(CONFIG_IWL4965) += iwl-4965.o
+> +iwlagn-$(CONFIG_IWL4965) += iwl-4965.o iwl-legacy.o
+> 
+> Why does that work, but not iwlcore-$(CONFIG_IWL4965)??
+
+I dunno, but I only tested my erroneous patch when building as loadable
+modules, not builtin.  Testing error on my part.
+
 -- 
-1.7.3.2.245.g03276.dirty
-
+~Randy
+*** Remember to use Documentation/SubmitChecklist when testing your code ***
