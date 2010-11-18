@@ -1,91 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:42793 "EHLO nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753758Ab0K3Pfq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 30 Nov 2010 10:35:46 -0500
-From: Felix Fietkau <nbd@openwrt.org>
-To: linux-wireless@vger.kernel.org
-Cc: linville@tuxdriver.com, lrodriguez@atheros.com
-Subject: [PATCH 2.6.37 v2 2/2] ath9k_hw: fix more bitfield related endian issues
-Date: Tue, 30 Nov 2010 16:35:38 +0100
-Message-Id: <1291131338-93870-2-git-send-email-nbd@openwrt.org>
-In-Reply-To: <1291131338-93870-1-git-send-email-nbd@openwrt.org>
-References: <1291131338-93870-1-git-send-email-nbd@openwrt.org>
+Received: from mail-yx0-f174.google.com ([209.85.213.174]:60424 "EHLO
+	mail-yx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753461Ab0KRS4E convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 18 Nov 2010 13:56:04 -0500
+Received: by yxf34 with SMTP id 34so2077847yxf.19
+        for <linux-wireless@vger.kernel.org>; Thu, 18 Nov 2010 10:56:03 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <AANLkTikb0-VUh5LfHC9T47c=shNSdtF40ZZzYN3KkAYN@mail.gmail.com>
+References: <1290059169-2468-1-git-send-email-lrodriguez@atheros.com>
+ <AANLkTikACJ35YFDCS5NucXjhNDFyT7VU9FeYUGY9hMmo@mail.gmail.com>
+ <AANLkTim28M7aRPSS1W71dEQ0a7PxS8QxKHAZ8jhx7C+2@mail.gmail.com> <AANLkTikb0-VUh5LfHC9T47c=shNSdtF40ZZzYN3KkAYN@mail.gmail.com>
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Date: Thu, 18 Nov 2010 10:55:41 -0800
+Message-ID: <AANLkTins+HeRPAcXWNLGw_4asTGor_LeTfcrpVjUpqCg@mail.gmail.com>
+Subject: Re: [PATCH 0/4] cfg80211: fix bug with multiple cards and a CRDA delay
+To: Mark Mentovai <mark@moxienet.com>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-A few LNA control related flags were also specified as a bitfields, however
-for some strange reason they were written in big-endian order this time.
-Fix this by using flags instead.
+On Thu, Nov 18, 2010 at 10:52 AM, Mark Mentovai <mark@moxienet.com> wrote:
+> Luis R. Rodriguez wrote:
+>> I did but did not see any difference in your comments.
+>
+> “whether or not this requests has already” — request, not requests.
+> “currently regulatory domain set” — should be “currently set regulatory domain”.
+> “When a the last request” — no a, just the.
 
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
----
- drivers/net/wireless/ath/ath9k/eeprom.h     |   14 ++++++++++----
- drivers/net/wireless/ath/ath9k/eeprom_def.c |   11 ++++++-----
- 2 files changed, 16 insertions(+), 9 deletions(-)
+Don't get it, please send a patch on top of this :)
 
-diff --git a/drivers/net/wireless/ath/ath9k/eeprom.h b/drivers/net/wireless/ath/ath9k/eeprom.h
-index 5766ce9..8a644fc 100644
---- a/drivers/net/wireless/ath/ath9k/eeprom.h
-+++ b/drivers/net/wireless/ath/ath9k/eeprom.h
-@@ -236,6 +236,15 @@
- #define CTL_EDGE_TPOWER(_ctl) ((_ctl) & 0x3f)
- #define CTL_EDGE_FLAGS(_ctl) (((_ctl) >> 6) & 0x03)
- 
-+#define LNA_CTL_BUF_MODE	BIT(0)
-+#define LNA_CTL_ISEL_LO		BIT(1)
-+#define LNA_CTL_ISEL_HI		BIT(2)
-+#define LNA_CTL_BUF_IN		BIT(3)
-+#define LNA_CTL_FEM_BAND	BIT(4)
-+#define LNA_CTL_LOCAL_BIAS	BIT(5)
-+#define LNA_CTL_FORCE_XPA	BIT(6)
-+#define LNA_CTL_USE_ANT1	BIT(7)
-+
- enum eeprom_param {
- 	EEP_NFTHRESH_5,
- 	EEP_NFTHRESH_2,
-@@ -381,10 +390,7 @@ struct modal_eep_header {
- 	u8 xatten2Margin[AR5416_MAX_CHAINS];
- 	u8 ob_ch1;
- 	u8 db_ch1;
--	u8 useAnt1:1,
--	    force_xpaon:1,
--	    local_bias:1,
--	    femBandSelectUsed:1, xlnabufin:1, xlnaisel:2, xlnabufmode:1;
-+	u8 lna_ctl;
- 	u8 miscBits;
- 	u16 xpaBiasLvlFreq[3];
- 	u8 futureModal[6];
-diff --git a/drivers/net/wireless/ath/ath9k/eeprom_def.c b/drivers/net/wireless/ath/ath9k/eeprom_def.c
-index e94216e..45f70b2 100644
---- a/drivers/net/wireless/ath/ath9k/eeprom_def.c
-+++ b/drivers/net/wireless/ath/ath9k/eeprom_def.c
-@@ -451,9 +451,10 @@ static void ath9k_hw_def_set_board_values(struct ath_hw *ah,
- 		ath9k_hw_analog_shift_rmw(ah, AR_AN_TOP2,
- 					  AR_AN_TOP2_LOCALBIAS,
- 					  AR_AN_TOP2_LOCALBIAS_S,
--					  pModal->local_bias);
-+					  !!(pModal->lna_ctl &
-+					     LNA_CTL_LOCAL_BIAS));
- 		REG_RMW_FIELD(ah, AR_PHY_XPA_CFG, AR_PHY_FORCE_XPA_CFG,
--			      pModal->force_xpaon);
-+			      !!(pModal->lna_ctl & LNA_CTL_FORCE_XPA));
- 	}
- 
- 	REG_RMW_FIELD(ah, AR_PHY_SETTLING, AR_PHY_SETTLING_SWITCH,
-@@ -1435,9 +1436,9 @@ static u8 ath9k_hw_def_get_num_ant_config(struct ath_hw *ah,
- 
- 	num_ant_config = 1;
- 
--	if (pBase->version >= 0x0E0D)
--		if (pModal->useAnt1)
--			num_ant_config += 1;
-+	if (pBase->version >= 0x0E0D &&
-+	    (pModal->lna_ctl & LNA_CTL_USE_ANT1))
-+		num_ant_config += 1;
- 
- 	return num_ant_config;
- }
--- 
-1.7.3.2
+>> Tesed-by: foo would be good.
+>
+> Sure!
+>
+> Tested-by: Mark Mentovai <mark@moxienet.com>
 
+Thanks,
+
+  Luis
