@@ -1,41 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([192.100.105.134]:31564 "EHLO
-	mgw-mx09.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754618Ab0KETpj (ORCPT
+Received: from mail-fx0-f46.google.com ([209.85.161.46]:42074 "EHLO
+	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750915Ab0KRLc4 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 5 Nov 2010 15:45:39 -0400
-Subject: Re: [RFC 07/15] cfg80211: add periodic scan results handler
-From: Luciano Coelho <luciano.coelho@nokia.com>
-To: ext Johannes Berg <johannes@sipsolutions.net>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <1288885676.3659.5.camel@jlt3.sipsolutions.net>
-References: <1288612336-2830-1-git-send-email-luciano.coelho@nokia.com>
-	 <1288612336-2830-8-git-send-email-luciano.coelho@nokia.com>
-	 <1288885676.3659.5.camel@jlt3.sipsolutions.net>
-Content-Type: text/plain; charset="UTF-8"
-Date: Fri, 05 Nov 2010 22:00:20 +0200
-Message-ID: <1288987220.25600.16.camel@powerslave>
-Mime-Version: 1.0
+	Thu, 18 Nov 2010 06:32:56 -0500
+Received: by mail-fx0-f46.google.com with SMTP id 6so1460042fxm.19
+        for <linux-wireless@vger.kernel.org>; Thu, 18 Nov 2010 03:32:56 -0800 (PST)
+From: Arik Nemtsov <arik@wizery.com>
+To: <linux-wireless@vger.kernel.org>
+Cc: Luciano Coelho <luciano.coelho@nokia.com>,
+	Arik Nemtsov <arik@wizery.com>
+Subject: [PATCH 11/18] wl1271: AP mode - change filter config
+Date: Thu, 18 Nov 2010 13:32:24 +0200
+Message-Id: <1290079951-16793-12-git-send-email-arik@wizery.com>
+In-Reply-To: <1290079951-16793-1-git-send-email-arik@wizery.com>
+References: <1290079951-16793-1-git-send-email-arik@wizery.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2010-11-04 at 16:47 +0100, ext Johannes Berg wrote:
-> On Mon, 2010-11-01 at 13:52 +0200, Luciano Coelho wrote:
-> 
-> > +void cfg80211_periodic_results(struct cfg80211_periodic_request *req)
-> > +{
-> > +	WARN_ON(req != wiphy_to_dev(req->wiphy)->periodic_req);
-> > +
-> > +	queue_work(cfg80211_wq, &wiphy_to_dev(req->wiphy)->periodic_wk);
-> > +}
-> 
-> why even pass it in?
+Do not configure a group address table in AP mode
 
-Yeah, I'll recheck this.  Probably remove this periodic_req in local
-entirely.
+Signed-off-by: Arik Nemtsov <arik@wizery.com>
+---
+ drivers/net/wireless/wl12xx/main.c |   22 ++++++++++++----------
+ 1 files changed, 12 insertions(+), 10 deletions(-)
 
-
+diff --git a/drivers/net/wireless/wl12xx/main.c b/drivers/net/wireless/wl12xx/main.c
+index 30d7a77..ee866d2 100644
+--- a/drivers/net/wireless/wl12xx/main.c
++++ b/drivers/net/wireless/wl12xx/main.c
+@@ -1591,7 +1591,8 @@ static void wl1271_op_configure_filter(struct ieee80211_hw *hw,
+ 	struct wl1271 *wl = hw->priv;
+ 	int ret;
+ 
+-	wl1271_debug(DEBUG_MAC80211, "mac80211 configure filter");
++	wl1271_debug(DEBUG_MAC80211, "mac80211 configure filter changed %x"
++		     " total %x", changed, *total);
+ 
+ 	mutex_lock(&wl->mutex);
+ 
+@@ -1605,15 +1606,16 @@ static void wl1271_op_configure_filter(struct ieee80211_hw *hw,
+ 	if (ret < 0)
+ 		goto out;
+ 
+-
+-	if (*total & FIF_ALLMULTI)
+-		ret = wl1271_acx_group_address_tbl(wl, false, NULL, 0);
+-	else if (fp)
+-		ret = wl1271_acx_group_address_tbl(wl, fp->enabled,
+-						   fp->mc_list,
+-						   fp->mc_list_length);
+-	if (ret < 0)
+-		goto out_sleep;
++	if (wl->bss_type != BSS_TYPE_AP_BSS) {
++		if (*total & FIF_ALLMULTI)
++			ret = wl1271_acx_group_address_tbl(wl, false, NULL, 0);
++		else if (fp)
++			ret = wl1271_acx_group_address_tbl(wl, fp->enabled,
++							   fp->mc_list,
++							   fp->mc_list_length);
++		if (ret < 0)
++			goto out_sleep;
++	}
+ 
+ 	/* determine, whether supported filter values have changed */
+ 	if (changed == 0)
 -- 
-Cheers,
-Luca.
+1.7.1
 
