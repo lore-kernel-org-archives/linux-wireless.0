@@ -1,51 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wy0-f174.google.com ([74.125.82.174]:52089 "EHLO
-	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755747Ab0KVWDa (ORCPT
+Received: from mail-fx0-f46.google.com ([209.85.161.46]:42074 "EHLO
+	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754065Ab0KRLdJ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 22 Nov 2010 17:03:30 -0500
-Date: Mon, 22 Nov 2010 23:03:22 +0100
-From: Johan Hedberg <johan.hedberg@gmail.com>
-To: "Gustavo F. Padovan" <padovan@profusion.mobi>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, linux-bluetooth@vger.kernel.org
-Subject: Re: pull request: bluetooth-2.6 2010-11-22
-Message-ID: <20101122220322.GA15543@jh-x301>
-References: <20101122181411.GD23109@vigoh>
- <20101122193029.GE2117@tuxdriver.com>
- <20101122201330.GE23109@vigoh>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20101122201330.GE23109@vigoh>
+	Thu, 18 Nov 2010 06:33:09 -0500
+Received: by mail-fx0-f46.google.com with SMTP id 6so1460042fxm.19
+        for <linux-wireless@vger.kernel.org>; Thu, 18 Nov 2010 03:33:08 -0800 (PST)
+From: Arik Nemtsov <arik@wizery.com>
+To: <linux-wireless@vger.kernel.org>
+Cc: Luciano Coelho <luciano.coelho@nokia.com>,
+	Arik Nemtsov <arik@wizery.com>
+Subject: [PATCH 17/18] wl1271: Read MAC address from NVS file on HW startup
+Date: Thu, 18 Nov 2010 13:32:30 +0200
+Message-Id: <1290079951-16793-18-git-send-email-arik@wizery.com>
+In-Reply-To: <1290079951-16793-1-git-send-email-arik@wizery.com>
+References: <1290079951-16793-1-git-send-email-arik@wizery.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+Try to read the MAC address from the on-disk NVS file.
+A non-zero MAC address is required to add an AP interface.
 
-On Mon, Nov 22, 2010, Gustavo F. Padovan wrote:
-> > The other fixes are larger than I would like to see.  What is the
-> > effect of the bug?  Does the Bluetooth controller stop completely?
-> > Does it cause a crash?
-> > 
-> > Is this a newly-introduced bug?  Or one that has been around for
-> > a while?
-> 
-> No, it is not serious like that. By not having this patch we won't have
-> the remote name request command during connection setup, The remote name
-> request was done by bluetoothd, but we already removed it from
-> userspace. It is not a really big problem once we also cache the remote
-> devices names in bluetoothd.
-> So I'm seeing no way to convince you tou pull this patch (actually I'm
-> now also covinced to queue this to bluetooth-next).  I'll sent a new
-> pull request soon, after wait some time for new patches.
+Signed-off-by: Arik Nemtsov <arik@wizery.com>
+---
+ drivers/net/wireless/wl12xx/main.c |   12 ++++++++++++
+ 1 files changed, 12 insertions(+), 0 deletions(-)
 
-IIRC the symptom that prompted the initial investigation was the failure
-to properly connect to one specific Bluetooth headset. After discussions
-with Marcel the conculsion was to move more control of these commands to
-the kernel side. OTOH, this is certainly not the first time a BT
-controller chokes up when receiving too many commands at the same time
-(I've seen this several times during the last 8 years or so that I've
-been involved with Bluetooth). Anyway, I agree that this might be better
-suited for bluetooth-next.
+diff --git a/drivers/net/wireless/wl12xx/main.c b/drivers/net/wireless/wl12xx/main.c
+index 708b699..e5fbbb6 100644
+--- a/drivers/net/wireless/wl12xx/main.c
++++ b/drivers/net/wireless/wl12xx/main.c
+@@ -2987,6 +2987,18 @@ int wl1271_register_hw(struct wl1271 *wl)
+ 	if (wl->mac80211_registered)
+ 		return 0;
+ 
++	ret = wl1271_fetch_nvs(wl);
++	if (ret == 0) {
++		u8 *nvs_ptr = (u8 *)wl->nvs->nvs;
++
++		wl->mac_addr[0] = nvs_ptr[11];
++		wl->mac_addr[1] = nvs_ptr[10];
++		wl->mac_addr[2] = nvs_ptr[6];
++		wl->mac_addr[3] = nvs_ptr[5];
++		wl->mac_addr[4] = nvs_ptr[4];
++		wl->mac_addr[5] = nvs_ptr[3];
++	}
++
+ 	SET_IEEE80211_PERM_ADDR(wl->hw, wl->mac_addr);
+ 
+ 	ret = ieee80211_register_hw(wl->hw);
+-- 
+1.7.1
 
-Johan
