@@ -1,56 +1,28 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ey0-f174.google.com ([209.85.215.174]:59008 "EHLO
-	mail-ey0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752709Ab0KDTnr (ORCPT
+Received: from mail-iw0-f174.google.com ([209.85.214.174]:39865 "EHLO
+	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753607Ab0KRHwS (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 4 Nov 2010 15:43:47 -0400
-Received: by mail-ey0-f174.google.com with SMTP id 27so1320245eye.19
-        for <linux-wireless@vger.kernel.org>; Thu, 04 Nov 2010 12:43:46 -0700 (PDT)
-From: Ivo van Doorn <ivdoorn@gmail.com>
-To: linux-wireless@vger.kernel.org
-Subject: [PATCH 06/13] rt2x00: Optimize rt2x00debug_dump_frame when frame dumping is not active
-Date: Thu, 4 Nov 2010 20:38:56 +0100
-Cc: Helmut Schaa <helmut.schaa@googlemail.com>
-References: <201011042037.00178.IvDoorn@gmail.com> <201011042038.16312.IvDoorn@gmail.com> <201011042038.35919.IvDoorn@gmail.com>
-In-Reply-To: <201011042038.35919.IvDoorn@gmail.com>
+	Thu, 18 Nov 2010 02:52:18 -0500
+Received: by iwn35 with SMTP id 35so3177614iwn.19
+        for <linux-wireless@vger.kernel.org>; Wed, 17 Nov 2010 23:52:18 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Message-Id: <201011042038.57061.IvDoorn@gmail.com>
+In-Reply-To: <1290030773-2486-1-git-send-email-hauke@hauke-m.de>
+References: <1290030773-2486-1-git-send-email-hauke@hauke-m.de>
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Date: Wed, 17 Nov 2010 23:45:05 -0800
+Message-ID: <AANLkTik-esWvL3kqWzFKy8JmHuDaLOXyo9w=2oYAdAMh@mail.gmail.com>
+Subject: Re: [PATCH] compat-wireless: make patches apply again
+To: Hauke Mehrtens <hauke@hauke-m.de>
+Cc: linux-wireless@vger.kernel.org, mcgrof@infradead.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Helmut Schaa <helmut.schaa@googlemail.com>
+On Wed, Nov 17, 2010 at 1:52 PM, Hauke Mehrtens <hauke@hauke-m.de> wrote:
+>
+> Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
 
-When rt2x00 is compiled with debugging but frame dumping is currently
-not active we can avoid the call to do_gettimeofday. Furthermore,
-frame dumping is not the default case, mark it as unlikely.
+Applied and pushed, thanks!
 
-Signed-off-by: Helmut Schaa <helmut.schaa@googlemail.com>
-Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
----
- drivers/net/wireless/rt2x00/rt2x00debug.c |    6 +++---
- 1 files changed, 3 insertions(+), 3 deletions(-)
-
-diff --git a/drivers/net/wireless/rt2x00/rt2x00debug.c b/drivers/net/wireless/rt2x00/rt2x00debug.c
-index fcdb6b0..8296a9d 100644
---- a/drivers/net/wireless/rt2x00/rt2x00debug.c
-+++ b/drivers/net/wireless/rt2x00/rt2x00debug.c
-@@ -162,11 +162,11 @@ void rt2x00debug_dump_frame(struct rt2x00_dev *rt2x00dev,
- 	struct timeval timestamp;
- 	u32 data_len;
- 
--	do_gettimeofday(&timestamp);
--
--	if (!test_bit(FRAME_DUMP_FILE_OPEN, &intf->frame_dump_flags))
-+	if (likely(!test_bit(FRAME_DUMP_FILE_OPEN, &intf->frame_dump_flags)))
- 		return;
- 
-+	do_gettimeofday(&timestamp);
-+
- 	if (skb_queue_len(&intf->frame_dump_skbqueue) > 20) {
- 		DEBUG(rt2x00dev, "txrx dump queue length exceeded.\n");
- 		return;
--- 
-1.7.2.3
-
+  Luis
