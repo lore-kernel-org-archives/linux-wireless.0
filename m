@@ -1,59 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wy0-f174.google.com ([74.125.82.174]:45820 "EHLO
-	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751889Ab0KDAUB convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 3 Nov 2010 20:20:01 -0400
-Received: by wyf28 with SMTP id 28so1274674wyf.19
-        for <linux-wireless@vger.kernel.org>; Wed, 03 Nov 2010 17:20:00 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <20101102083035.GM1733@mail.wantstofly.org>
-References: <1288659351-22313-1-git-send-email-brian@cozybit.com>
- <1288659351-22313-6-git-send-email-brian@cozybit.com> <20101102083035.GM1733@mail.wantstofly.org>
-From: Brian Cavagnolo <brian@cozybit.com>
-Date: Wed, 3 Nov 2010 17:19:39 -0700
-Message-ID: <AANLkTim3x5dNtdKuyQBqB5edtb+REuc90CVEAoyyLgRP@mail.gmail.com>
-Subject: Re: [PATCH 6/7] mwl8k: choose proper firmware image as directed by user
-To: Lennert Buytenhek <buytenh@wantstofly.org>
+Received: from smtp.nokia.com ([147.243.128.26]:34209 "EHLO mgw-da02.nokia.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752100Ab0KRF1q (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 18 Nov 2010 00:27:46 -0500
+Received: from nokia.com (localhost [127.0.0.1])
+	by mgw-da02.nokia.com (Switch-3.4.3/Switch-3.4.3) with ESMTP id oAI5RiXH010486
+	for <linux-wireless@vger.kernel.org>; Thu, 18 Nov 2010 07:27:44 +0200
+Subject: Re: [PATCH] wl12xx: Unset bssid filter, ssid and bssid from
+ firmware on disassoc
+From: Juuso Oikarinen <juuso.oikarinen@nokia.com>
+To: Luciano Coelho <luciano.coelho@nokia.com>
 Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+In-Reply-To: <1290008460.12140.64.camel@chilepepper>
+References: <1290000541-17828-1-git-send-email-juuso.oikarinen@nokia.com>
+	 <1290008460.12140.64.camel@chilepepper>
+Content-Type: text/plain; charset="UTF-8"
+Date: Thu, 18 Nov 2010 07:27:33 +0200
+Message-ID: <1290058053.2522.186.camel@wimaxnb.nmp.nokia.com>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Nov 2, 2010 at 1:30 AM, Lennert Buytenhek
-<buytenh@wantstofly.org> wrote:
-> On Mon, Nov 01, 2010 at 05:55:50PM -0700, Brian Cavagnolo wrote:
->
->> The mwl8k can operate in AP or STA mode, depending on the
->> firmware image that is loaded.  Allow the user to specify
->> the desired firmware image at module load time.
->
-> Strong NAK on selecting firmware image type with a module parameter,
-> that's so wrong it's not even funny.
->
-> Just use the STA image before ->add_interface() has been called if
-> it is available.
+On Wed, 2010-11-17 at 17:41 +0200, Luciano Coelho wrote:
+> On Wed, 2010-11-17 at 15:29 +0200, juuso.oikarinen@nokia.com wrote:
+> > From: Juuso Oikarinen <juuso.oikarinen@nokia.com>
+> > 
+> > On the disassociation event from the mac80211, the wl12xx driver does not
+> > clear the chipset configuration related to the AP - i.e. it does not perform
+> > a DISCONNECT and then a JOIN with zero SSID and dummy BSSID. Also, it does not
+> > unset the BSSID filter.
+> > 
+> > Often this is not a problem, as the above is performed upon entering idle
+> > state. But if a scenario arises where a new association is attempted without
+> > cycling through idle state, the new association will fail.
+> > 
+> > Fix this by resetting the firmware state on disassociation.
+> > 
+> > Signed-off-by: Juuso Oikarinen <juuso.oikarinen@nokia.com>
+> > ---
+> >  drivers/net/wireless/wl12xx/main.c |    4 ++++
+> >  1 files changed, 4 insertions(+), 0 deletions(-)
+> > 
+> > diff --git a/drivers/net/wireless/wl12xx/main.c b/drivers/net/wireless/wl12xx/main.c
+> > index 31f0e2f..c523778 100644
+> > --- a/drivers/net/wireless/wl12xx/main.c
+> > +++ b/drivers/net/wireless/wl12xx/main.c
+> > @@ -2012,6 +2012,10 @@ static void wl1271_op_bss_info_changed(struct ieee80211_hw *hw,
+> >  			/* Disable the keep-alive feature */
+> >  			ret = wl1271_acx_keep_alive_mode(wl, false);
+> >  
+> > +			/* restore the bssid filter and go to dummy bssid */
+> > +			wl1271_handle_idle(wl, true);
+> > +			wl1271_handle_idle(wl, false);
+> > +
+> 
+> Hmmm... This looks quite hacky.  Can 't you create functions with that
+> "restore the bssid" and "go to dummy bssid" and call them instead? If
+> you do so, you don't have to artificially go to idle and leave idle
+> immediately...
+> 
 
-The intention here is to save users who wish to only operate in AP
-mode from sustaining an unnecessary firmware re-load.  Can you
-elaborate on why it is unacceptable to achieve this with a module
-parameter?  Perhaps just calling it ap_mode instead of want_ap_fw
-makes more sense?
+We can, but their content will be the same. Here we are not
+"artificially" entering/leaving idle, we're just performing the same
+steps towards the firmware as we would on idle entry and idle exit.
 
-> And please switch to async firmware loading while you're at it.
+If you like, we can rename the handle_idle function to something more
+generic.
 
-Okay.
+-Juuso
 
->> Also, the firmware image can be swapped to meet the user's
->> add_interface request.  For example, suppose the STA
->> firmware is loaded, no STA interface has been added, and the
->> user adds an AP interface.  In this case, the AP firmware
->> will be loaded to meet the request.
->>
->> Based on a patch from Pradeep Nemavat <pnemavat@marvell.com>
->
-> Which was suggested by Lennert Buytenhek -- please give credit where
-> it is due.
->
-
-My apologies.  Understood.
