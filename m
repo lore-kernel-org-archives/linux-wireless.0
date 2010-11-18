@@ -1,31 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:33367 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754618Ab0KKRvq (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 11 Nov 2010 12:51:46 -0500
-Subject: Re: Overload Probe Request to send data
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Cassiano Tartari <cassianotartari@gmail.com>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <AANLkTinDJxnMHEbQjUwWjT2MnW5r7gcxoZW7bZetT7a9@mail.gmail.com>
-References: <AANLkTinDJxnMHEbQjUwWjT2MnW5r7gcxoZW7bZetT7a9@mail.gmail.com>
+Received: from 80-190-117-144.ip-home.de ([80.190.117.144]:59433 "EHLO
+	bu3sch.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756767Ab0KRQrt (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 18 Nov 2010 11:47:49 -0500
+Subject: Re: [PATCH] ssb: fail registration for unknown SPROM revision
+From: Michael =?ISO-8859-1?Q?B=FCsch?= <mb@bu3sch.de>
+To: =?UTF-8?Q?Rafa=C5=82_Mi=C5=82ecki?= <zajec5@gmail.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, b43-dev@lists.infradead.org
+In-Reply-To: <AANLkTimh_8X1uRPudmQLDOTeA_X0ciR9BbDgyahLDMSs@mail.gmail.com> (sfid-20101118_174421_892253_3B53C8D3)
+References: <1288823326-9686-1-git-send-email-zajec5@gmail.com>
+	 <1288823326-9686-2-git-send-email-zajec5@gmail.com>
+	 <20101116212321.GF10774@tuxdriver.com> <1290013976.2513.14.camel@maggie>
+	 <20101118162748.GB2468@tuxdriver.com> <1290098156.12596.2.camel@maggie>
+	 <AANLkTimh_8X1uRPudmQLDOTeA_X0ciR9BbDgyahLDMSs@mail.gmail.com>
+	 (sfid-20101118_174421_892253_3B53C8D3)
 Content-Type: text/plain; charset="UTF-8"
-Date: Thu, 11 Nov 2010 09:53:08 -0800
-Message-ID: <1289497988.3695.3.camel@jlt3.sipsolutions.net>
+Date: Thu, 18 Nov 2010 17:47:45 +0100
+Message-ID: <1290098865.12596.6.camel@maggie>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2010-11-11 at 13:35 -0200, Cassiano Tartari wrote:
-> Hi,
+On Thu, 2010-11-18 at 17:44 +0100, Rafał Miłecki wrote: 
+> 2010/11/18 Michael Büsch <mb@bu3sch.de>:
+> >> [ 1036.293865] ssb: Unsupported SPROM  revision 255 detected. Will extract v1
+> >
+> > So what about specialcasing 255 instead of defaulting to 1 in general?
+> >
+> > if (rev == 255)
+> > rev = 1;
+> >
+> > 255 basically means "Vendor forgot to set this field". So it would only
+> > default to 1 for those broken sproms.
 > 
->     I'd like to know if somebody could help me giving a way to modify
-> the iwlwifi driver to overload the Probe Requests to send data? Which
-> file I need to modify, for what word I need search for...
+> Will work as long as there won't appear new vendor who will forget to
+> set this and will use new SPROM...
 
-Just give the data to iw in a vendor specific IE and iwlwifi will send
-it out. Don't modify the kernel at all.
+The old code will break for that, too.
 
-johannes
+> But hopefully it won't happen and it should not hurt too much to
+> register device with incorrectly parsed SPROM.
+
+If it would really succeed to initialize the device, this would be a
+regulatory issue, because the sprom contains various power amplifier
+calibration data. I think it should rather fail and be fixed correctly
+instead of incorrectly using rev1 in that case.
+
+-- 
+Greetings Michael.
 
