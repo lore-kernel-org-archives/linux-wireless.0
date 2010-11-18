@@ -1,35 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:40197 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752373Ab0KETzF (ORCPT
+Received: from mail-ey0-f174.google.com ([209.85.215.174]:33596 "EHLO
+	mail-ey0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750859Ab0KRM1F (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 5 Nov 2010 15:55:05 -0400
-To: Luciano Coelho <luciano.coelho@nokia.com>
-Subject: Re: [RFC 06/15] mac80211: add support for HW periodic scan
+	Thu, 18 Nov 2010 07:27:05 -0500
+Received: by mail-ey0-f174.google.com with SMTP id 27so1855656eye.19
+        for <linux-wireless@vger.kernel.org>; Thu, 18 Nov 2010 04:27:04 -0800 (PST)
+From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+To: linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>
+Cc: b43-dev@lists.infradead.org,
+	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+Subject: [PATCH 4/4] b43: N-PHY: init BPHY when needed
+Date: Thu, 18 Nov 2010 13:28:00 +0100
+Message-Id: <1290083280-13550-4-git-send-email-zajec5@gmail.com>
+In-Reply-To: <1290083280-13550-1-git-send-email-zajec5@gmail.com>
+References: <1290083280-13550-1-git-send-email-zajec5@gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
-Date: Fri, 05 Nov 2010 20:55:03 +0100
-From: Johannes Berg <johannes@sipsolutions.net>
-Cc: <linux-wireless@vger.kernel.org>
-In-Reply-To: <1288987177.25600.15.camel@powerslave>
-References: <1288612336-2830-1-git-send-email-luciano.coelho@nokia.com> <1288612336-2830-7-git-send-email-luciano.coelho@nokia.com> <1288885537.3659.4.camel@jlt3.sipsolutions.net> <1288987177.25600.15.camel@powerslave>
-Message-ID: <03639d1a6cc12b36b036145a8c31da33@localhost>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
+---
+ drivers/net/wireless/b43/phy_n.c |    4 ++++
+ 1 files changed, 4 insertions(+), 0 deletions(-)
 
-On Fri, 05 Nov 2010 21:59:37 +0200, Luciano Coelho
-<luciano.coelho@nokia.com> wrote:
-> I think the idea of using background is good.  Something like bg_scan or
-> something.  The original idea was to call it background scan, but since
-> wl1271 doesn't support this while connected, I thought calling it
-> periodic scan would be slightly clearer about that.  Background scan
-> sounds like you do it while connected (to me at least).
+diff --git a/drivers/net/wireless/b43/phy_n.c b/drivers/net/wireless/b43/phy_n.c
+index bea7dab..2c60793 100644
+--- a/drivers/net/wireless/b43/phy_n.c
++++ b/drivers/net/wireless/b43/phy_n.c
+@@ -1572,6 +1572,7 @@ static void b43_nphy_rf_control_intc_override(struct b43_wldev *dev, u8 field,
+ 	}
+ }
+ 
++/* http://bcm-v4.sipsolutions.net/802.11/PHY/N/BPHYInit */
+ static void b43_nphy_bphy_init(struct b43_wldev *dev)
+ {
+ 	unsigned int i;
+@@ -3239,6 +3240,9 @@ int b43_phy_initn(struct b43_wldev *dev)
+ 
+ 	b43_nphy_classifier(dev, 0, 0);
+ 	b43_nphy_read_clip_detection(dev, clip);
++	if (b43_current_band(dev->wl) == IEEE80211_BAND_2GHZ)
++		b43_nphy_bphy_init(dev);
++
+ 	tx_pwr_state = nphy->txpwrctrl;
+ 	/* TODO N PHY TX power control with argument 0
+ 		(turning off power control) */
+-- 
+1.7.1
 
-Come to think of it though, we also call what we do when connected
-and trigger a scan manually a "background scan", so that's probably
-not a good name here.
-
-Not sure ... don't really have a good idea right now.
-
-johannes
