@@ -1,96 +1,169 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.19.149.2]:30408 "EHLO mail.atheros.com"
+Received: from mail.atheros.com ([12.19.149.2]:30515 "EHLO mail.atheros.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932661Ab0KLU1g convert rfc822-to-8bit (ORCPT
+	id S1754617Ab0KSPOb convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 12 Nov 2010 15:27:36 -0500
-Received: from mail.atheros.com ([10.10.20.105])
+	Fri, 19 Nov 2010 10:14:31 -0500
+Received: from mail.atheros.com ([10.10.20.108])
 	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Fri, 12 Nov 2010 12:27:23 -0800
-Date: Fri, 12 Nov 2010 12:27:32 -0800
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: Mark Mentovai <mark@moxienet.com>
-CC: Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
-	"linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"stable@kernel.org" <stable@kernel.org>,
-	Johannes Berg <johannes@sipsolutions.net>
-Subject: Re: [PATCH] cfg80211: Fix regulatory bug with multiple cards with
- a delayed CRDA response
-Message-ID: <20101112202732.GI25089@tux>
-References: <1289528843-21982-1-git-send-email-lrodriguez@atheros.com>
- <AANLkTimKdqoWx2FtvJ9HG3Yj0ofROMDNo30=FJv1vVGG@mail.gmail.com>
+	for <linux-wireless@vger.kernel.org>; Fri, 19 Nov 2010 07:14:17 -0800
+From: Michael Green <Michael.Green@Atheros.com>
+To: Kurt Garloff <garloff@suse.de>,
+	"John W. Linville" <linville@tuxdriver.com>
+CC: "Luis R. Rodriguez" <mcgrof@gmail.com>,
+	"wireless-regdb@lists.infradead.org"
+	<wireless-regdb@lists.infradead.org>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Date: Fri, 19 Nov 2010 07:14:28 -0800
+Subject: RE: [PATCH] wireless-regdb: update rules for DE
+Message-ID: <93781E992CBA7843962D8B0E7D683F3C16334843DD@SC1EXMB-MBCL.global.atheros.com>
+References: <20100525151429.GC6342@tpkurt2.garloff.de>
+ <1290029817-711-1-git-send-email-linville@tuxdriver.com>
+ <AANLkTimDkoqNbkFWDsU2HgFK3926gRpcBbokX_GL5sSc@mail.gmail.com>
+ <93781E992CBA7843962D8B0E7D683F3C163340D5AE@SC1EXMB-MBCL.global.atheros.com>
+ <20101119020414.GB2512@tuxdriver.com>
+ <20101119091450.GD12228@tpkurt2.nue.garloff.de>
+In-Reply-To: <20101119091450.GD12228@tpkurt2.nue.garloff.de>
+Content-Type: text/plain; charset="iso-8859-1"
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-In-Reply-To: <AANLkTimKdqoWx2FtvJ9HG3Yj0ofROMDNo30=FJv1vVGG@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Nov 11, 2010 at 10:05:21PM -0800, Mark Mentovai wrote:
-> Luis R. Rodriguez wrote:
-> > When two cards are connected with the same regulatory domain
-> > if CRDA had a delayed response then cfg80211's own set regulatory
-> > domain would still be the world regulatory domain. There was a bug
-> > on cfg80211's ignore_request() when analyzing incoming driver
-> > regulatory hints as it was only checking against the currently
-> > set cfg80211 regulatory domain and not for any other new
-> > pending requests. This is easily fixed by also checking against
-> > the pending request.
-> 
-> Luis, thanks for taking a look at this bug.
-> 
-> Capsule summary: youâ€™ve overloaded -EALREADY, which until now seemed
-> to mean â€œthatâ€™s the regdomain Iâ€™m already using,â€ to now also mean
-> â€œIâ€™m going to be using that regdomain soon but Iâ€™m waiting on CRDA.â€
-> The two cases need to be handled differently.
-> 
-> In my case, this patch makes things a little bit worse. I tested it
-> with compat_wireless 20101110. Iâ€™ve included what I see after boot
-> below the explanation.
-> 
-> Your patch changes things so that, according to the steps in my
-> original message, steps 3 and 4 become:
-> 
-> 3. The second cardâ€™s driver calls regulatory_hint to provide US as a
-> driver hint. ignore_request sees that the last request came from a
-> driver and that the current and last request sought to set the same
-> hint, so it returns -EALREADY. This triggers the â€œif the regulatory
-> domain being requested by the driverâ€ block, which calls reg_copy_regd
-> on the apparent assumption that cfg80211_regdomain contains the
-> regdomain that the wiphy actually wants, although it doesnâ€™t, and itâ€™s
-> very wrong to do this copy. cfg80211_regdomain is still on 00, because
-> CRDA hasnâ€™t responded to the first cardâ€™s request yet.
-> 
-> 4. When CRDA finally responds to the first cardâ€™s request from #2, it
-> gets plumbed to set_regdom, which calls __set_regdom. __set_regdom
-> sees that itâ€™s not intersecting, and enters the block where it would
-> normally copy reg_copy_regd to set the wiphyâ€™s regd, but the wiphy it
-> uses is the one saved from last_request (in step 3), and it already
-> had something copied to it (also in step 3). Since __set_regdom checks
-> for this and bails out with -EALREADY in the â€œuserspace could have
-> sent two replies with only one kernel requestâ€ case. Because
-> __set_regdom fails, set_regdom returns early and never makes it to the
-> update_all_wiphy_regulatory or print_regdomain steps. The regdomain
-> remains unchanged. Iâ€™m still stuck at 00.
-> 
-> What about using something other than -EALREADY to signal â€œthat
-> request is already pending?â€ On its face, this works, but I think
-> thereâ€™s a deeper flaw that also needs to be addressed. Iâ€™m concerned
-> that the wiphys that fall into this state wonâ€™t see a reg_copy_regd
-> call at all. The idea is that any such wiphy shouldnâ€™t really be
-> ignored, but it should be joined to a group of wiphys waiting on the
-> pending request, and when the request is satisfied, the regd field
-> should be populated for each of them.
+Is the issue that the regdb currently limits DK to 2.4GHz operation (5GHz is disabled)?
 
-Thanks for testing and your review.
+If I understand this email string, then clearly DK should be corrected to enable 5GHz operation.
 
-We need to address a queue of requests with the associated wiphys,
-as I originally had developed, I'll go ahead and add this and
-treat these, it should take care of even multiple cards with
-different regulatory hints. I expect the amount of code will be
-a bit to large for stable though so likely we may only be able
-to fix this for new kernels.
+I believe DK should be set to the same 5GHz channel and power settings per the Harmonized standard EN301 893. This is true of all countries that accept CE Marking.
 
-I'll take a stab at this now.
+If this patch/issue is about something else, then please let me know.
 
-  Luis
+tks,
+
+Michael Green
+Atheros Communications, Inc.
+mgreen@atheros.com
+Desk:   +1-781-400-1491
+Mobile: +1-508-380-4921
+
+-----Original Message-----
+From: Kurt Garloff [mailto:garloff@suse.de] 
+Sent: Friday, November 19, 2010 4:15 AM
+To: John W. Linville
+Cc: Michael Green; Luis R. Rodriguez; wireless-regdb@lists.infradead.org; Johannes Berg; linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] wireless-regdb: update rules for DE
+
+John,
+
+enjoy your birthday!
+
+Michael,
+
+enjoy vacation!
+
+I submitted this change 6 months ago.
+I was surprised that my ath9k device would not do anything in the 5GHz band unlike all neighour countries, found out that this is due to the regulatory DB and started studying the regulations to see whether it's justified.
+
+A few days certainly don't make a difference here. Review carefully when you can get to it next week.
+
+Best,
+--
+Kurt Garloff, VP OPS Partner Engineering -- Novell Inc.
+SUSE: Supporting Linux since 1992.
+
+On Thu, Nov 18, 2010 at 09:04:14PM -0500, John W. Linville wrote:
+> FWIW, I'm out on Friday anyway -- it's my birthday! :-)
+> 
+> On Thu, Nov 18, 2010 at 01:23:42PM -0800, Michael Green wrote:
+> > Hi guys,
+> > 
+> > I am on PTO until Monday. Do I need to read this now and respond or can it wait?  I am not asking you to hold anything up due to me. But if you want me to give feedback on something, pls let me know if it can wait until Mon.
+> > 
+> > Michael Green
+> > Atheros Communications, Inc.
+> > mgreen@atheros.com
+> > Desk:   +1-781-400-1491
+> > Mobile: +1-508-380-4921
+> > -----Original Message-----
+> > From: Luis R. Rodriguez [mailto:mcgrof@gmail.com]
+> > Sent: Thursday, November 18, 2010 1:29 PM
+> > To: John W. Linville; Michael Green
+> > Cc: wireless-regdb@lists.infradead.org; Johannes Berg; Kurt Garloff; 
+> > linux-wireless@vger.kernel.org
+> > Subject: Re: [PATCH] wireless-regdb: update rules for DE
+> > 
+> > On Wed, Nov 17, 2010 at 1:36 PM, John W. Linville 
+> > <linville@tuxdriver.com> wrote:
+> > > From: Kurt Garloff <garloff@suse.de>
+> > >
+> > > http://marc.info/?l=linux-wireless&m=127480075306482&w=2
+> > >
+> > > Cc: "Luis R. Rodriguez" <mcgrof@gmail.com>
+> > > Acked-by: Johannes Berg <johannes@sipsolutions.net>
+> > > Signed-off-by: John W. Linville <linville@tuxdriver.com>
+> > > ---
+> > > Time to clear the logjam...
+> > 
+> > Michael, are you subscribed to wireless-regdb now? Did you get this e-mail? ACK?
+> > 
+> >   Luis
+> > 
+> > >  db.txt |   24 +++++++++++++++++-------
+> > >  1 files changed, 17 insertions(+), 7 deletions(-)
+> > >
+> > > diff --git a/db.txt b/db.txt
+> > > index e63a43e..40a8bbc 100644
+> > > --- a/db.txt
+> > > +++ b/db.txt
+> > > @@ -176,17 +176,27 @@ country CZ:
+> > >        (5250 - 5350 @ 40), (N/A, 200 mW), NO-OUTDOOR, DFS
+> > >        (5470 - 5725 @ 40), (N/A, 1000 mW), DFS
+> > >
+> > > -# Data from "Frequenznutzungsplan" (as published in April 2008), 
+> > > -# downloaded from 
+> > > http://www.bundesnetzagentur.de/media/archive/13358.pdf
+> > > -# Also applicable is 
+> > > http://www.bundesnetzagentur.de/media/archive/5009.pdf
+> > > -# On the 5 GHz ranges TX power can be doubled if TPC is implemented.
+> > > +# Data from "Frequenznutzungsplan" (as published in April 2008), 
+> > > +downloaded from # 
+> > > +http://www.bundesnetzagentur.de/cae/servlet/contentblob/38448/pub
+> > > +licationFile/2659/Frequenznutzungsplan2008_Id17448pdf.pdf
+> > > +# For the 5GHz range also see
+> > > +# 
+> > > +http://www.bundesnetzagentur.de/cae/servlet/contentblob/38216/pub
+> > > +licationFile/6579/WLAN5GHzVfg7_2010_28042010pdf.pdf
+> > > +# The values have been reduced by a factor of 2 (3db) for non TPC 
+> > > +devices # (in other words: devices with TPC can use twice the tx power of this table).
+> > > +# Note that the docs do not require TPC for 5150--5250; the 
+> > > +reduction to # 100mW thus is not strictly required -- however the 
+> > > +conservative 100mW # limit is used here as the non-interference 
+> > > +with radar and satellite # apps relies on the attenuation by the 
+> > > +building walls only in the # absence of DFS; the neighbour countries have 100mW limit here as well.
+> > > +
+> > >  country DE:
+> > >        # entries 279004 and 280006
+> > >        (2400 - 2483.5 @ 40), (N/A, 100 mW)
+> > > -       # entries 303005, 304002 and 305002
+> > > -       (5150 - 5350 @ 40), (N/A, 100 mW), NO-OUTDOOR, DFS
+> > > +       # entry 303005
+> > > +       (5150 - 5250 @ 40), (N/A, 100 mW), NO-OUTDOOR
+> > > +       # entries 304002 and 305002
+> > > +       (5250 - 5350 @ 40), (N/A, 100 mW), NO-OUTDOOR, DFS
+> > >        # entries 308002, 309001 and 310003
+> > > -       (5470 - 5725 @ 40), (N/A, 500 mW), NO-OUTDOOR, DFS
+> > > +       (5470 - 5725 @ 40), (N/A, 500 mW), DFS
+> > >
+> > >  country DK:
+> > >        (2402 - 2482 @ 40), (N/A, 20)
+> > > --
+> > > 1.7.3.2
+> > >
+> > >
+> 
+> --
+> John W. Linville                Someday the world will need a hero, 
+> and you linville@tuxdriver.com                  might be all we have.  Be ready.
+> 
+
+
