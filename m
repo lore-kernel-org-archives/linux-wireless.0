@@ -1,36 +1,85 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qw0-f46.google.com ([209.85.216.46]:52492 "EHLO
-	mail-qw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751399Ab0KEHwC convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 5 Nov 2010 03:52:02 -0400
-Received: by qwb8 with SMTP id 8so215472qwb.19
-        for <linux-wireless@vger.kernel.org>; Fri, 05 Nov 2010 00:52:01 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <201011050823.48982.helmut.schaa@googlemail.com>
-References: <201011042037.00178.IvDoorn@gmail.com>
-	<201011042038.35919.IvDoorn@gmail.com>
-	<AANLkTi=1eHFOX5S6H_ZETWoXz_8nm5Xd+hExrRWX7go8@mail.gmail.com>
-	<201011050823.48982.helmut.schaa@googlemail.com>
-Date: Fri, 5 Nov 2010 08:52:01 +0100
-Message-ID: <AANLkTik145p=rQraC1pGHM6Rrs2hOjPiSQqq6hN3o7Wt@mail.gmail.com>
-Subject: Re: [PATCH 05/13] rt2x00: Add unlikely to skb allocation failure check
-From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-To: Helmut Schaa <helmut.schaa@googlemail.com>
-Cc: Christian Lamparter <chunkeey@googlemail.com>,
-	Ivo van Doorn <ivdoorn@gmail.com>,
-	linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+Received: from nbd.name ([46.4.11.11]:35166 "EHLO nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754241Ab0KSVzt (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 19 Nov 2010 16:55:49 -0500
+From: Felix Fietkau <nbd@openwrt.org>
+To: linux-wireless@vger.kernel.org
+Cc: linville@tuxdriver.com, johannes@sipsolutions.net
+Subject: [PATCH 2/4] mac80211: calculate beacon loss time accurately
+Date: Fri, 19 Nov 2010 22:55:38 +0100
+Message-Id: <1290203740-57124-2-git-send-email-nbd@openwrt.org>
+In-Reply-To: <1290203740-57124-1-git-send-email-nbd@openwrt.org>
+References: <1290203740-57124-1-git-send-email-nbd@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2010/11/5 Helmut Schaa <helmut.schaa@googlemail.com>:
-> Interesting, didn't know that. I've just given it a try and the MIPS assembly
-> indeed stays the same with and without the unlikely. Nevertheless, I've found
-> quite a number of unlikely(!x) checks throughout the net stack ...
+Instead of using a fixed 2 second timeout, calculate beacon loss interval
+from the advertised beacon interval and a frame count.  With this beacon
+loss happens after N (default 7) consecutive frames are missed which
+for a typical setup (100TU beacon interval) is ~700ms (or ~1/3 previous).
 
-What do you mean by x? AFAIU gcc optimization is only for pointers. If
-x is some int (bool), it still has affect.
+Signed-off-by: Sam Leffler <sleffler@chromium.org>
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+---
+ net/mac80211/ieee80211_i.h |    1 +
+ net/mac80211/mlme.c        |   16 ++++++++++++----
+ 2 files changed, 13 insertions(+), 4 deletions(-)
 
+diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+index 7bb9a62..5bc0745 100644
+--- a/net/mac80211/ieee80211_i.h
++++ b/net/mac80211/ieee80211_i.h
+@@ -349,6 +349,7 @@ struct ieee80211_if_managed {
+ 	struct work_struct chswitch_work;
+ 	struct work_struct beacon_connection_loss_work;
+ 
++	unsigned long beacon_timeout;
+ 	unsigned long probe_timeout;
+ 	int probe_send_count;
+ 
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+index 7e24c3e..f2b414b 100644
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -32,10 +32,15 @@
+ #define IEEE80211_MAX_PROBE_TRIES 5
+ 
+ /*
+- * beacon loss detection timeout
+- * XXX: should depend on beacon interval
++ * Beacon loss timeout is calculated as N frames times the
++ * advertised beacon interval.  This may need to be somewhat
++ * higher than what hardware might detect to account for
++ * delays in the host processing frames. But since we also
++ * probe on beacon miss before declaring the connection lost
++ * default to what we want.
+  */
+-#define IEEE80211_BEACON_LOSS_TIME	(2 * HZ)
++#define IEEE80211_BEACON_LOSS_COUNT	7
++
+ /*
+  * Time the connection can be idle before we probe
+  * it to see if we can still talk to the AP.
+@@ -122,7 +127,7 @@ void ieee80211_sta_reset_beacon_monitor(struct ieee80211_sub_if_data *sdata)
+ 		return;
+ 
+ 	mod_timer(&sdata->u.mgd.bcn_mon_timer,
+-		  round_jiffies_up(jiffies + IEEE80211_BEACON_LOSS_TIME));
++		  round_jiffies_up(jiffies + sdata->u.mgd.beacon_timeout));
+ }
+ 
+ void ieee80211_sta_reset_conn_monitor(struct ieee80211_sub_if_data *sdata)
+@@ -872,6 +877,9 @@ static void ieee80211_set_associated(struct ieee80211_sub_if_data *sdata,
+ 	bss_info_changed |= ieee80211_handle_bss_capability(sdata,
+ 		cbss->capability, bss->has_erp_value, bss->erp_value);
+ 
++	sdata->u.mgd.beacon_timeout = usecs_to_jiffies(ieee80211_tu_to_usec(
++		IEEE80211_BEACON_LOSS_COUNT * bss_conf->beacon_int));
++
+ 	sdata->u.mgd.associated = cbss;
+ 	memcpy(sdata->u.mgd.bssid, cbss->bssid, ETH_ALEN);
+ 
 -- 
-Rafał
+1.7.3.2
+
