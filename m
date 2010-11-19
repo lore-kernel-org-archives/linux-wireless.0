@@ -1,152 +1,112 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ey0-f174.google.com ([209.85.215.174]:49942 "EHLO
-	mail-ey0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754593Ab0KWThh (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:56639 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751042Ab0KSCFx (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 23 Nov 2010 14:37:37 -0500
-Received: by eye27 with SMTP id 27so4899367eye.19
-        for <linux-wireless@vger.kernel.org>; Tue, 23 Nov 2010 11:37:36 -0800 (PST)
-Date: Tue, 23 Nov 2010 21:37:30 +0200
-From: Nick Kossifidis <mickflemm@gmail.com>
-To: ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org
-Cc: linville@tuxdriver.com, me@bobcopeland.com, mcgrof@gmail.com,
-	jirislaby@gmail.com, nbd@openwrt.org, br1@einfach.org
-Subject: [PATCH 22/30] ath5k: Skip powertable setting when we are on the same
- channel
-Message-ID: <20101123193730.GV4303@makis.mantri>
+	Thu, 18 Nov 2010 21:05:53 -0500
+Date: Thu, 18 Nov 2010 21:04:14 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Michael Green <Michael.Green@Atheros.com>
+Cc: "Luis R. Rodriguez" <mcgrof@gmail.com>,
+	"wireless-regdb@lists.infradead.org"
+	<wireless-regdb@lists.infradead.org>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Kurt Garloff <garloff@suse.de>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH] wireless-regdb: update rules for DE
+Message-ID: <20101119020414.GB2512@tuxdriver.com>
+References: <20100525151429.GC6342@tpkurt2.garloff.de>
+ <1290029817-711-1-git-send-email-linville@tuxdriver.com>
+ <AANLkTimDkoqNbkFWDsU2HgFK3926gRpcBbokX_GL5sSc@mail.gmail.com>
+ <93781E992CBA7843962D8B0E7D683F3C163340D5AE@SC1EXMB-MBCL.global.atheros.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=iso-8859-1
+In-Reply-To: <93781E992CBA7843962D8B0E7D683F3C163340D5AE@SC1EXMB-MBCL.global.atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
- * Only set power table if we are changing channel/mode
- there is no need to recalculate and reset the power table
- all the time.
+FWIW, I'm out on Friday anyway -- it's my birthday! :-)
 
- Signed-off-by: Nick Kossifidis <mickflemm@gmail.com>
----
- drivers/net/wireless/ath/ath5k/phy.c |   65 ++++++++++++++++++++++------------
- 1 files changed, 42 insertions(+), 23 deletions(-)
+On Thu, Nov 18, 2010 at 01:23:42PM -0800, Michael Green wrote:
+> Hi guys,
+> 
+> I am on PTO until Monday. Do I need to read this now and respond or can it wait?  I am not asking you to hold anything up due to me. But if you want me to give feedback on something, pls let me know if it can wait until Mon.
+> 
+> Michael Green
+> Atheros Communications, Inc.
+> mgreen@atheros.com
+> Desk:   +1-781-400-1491
+> Mobile: +1-508-380-4921
+> -----Original Message-----
+> From: Luis R. Rodriguez [mailto:mcgrof@gmail.com] 
+> Sent: Thursday, November 18, 2010 1:29 PM
+> To: John W. Linville; Michael Green
+> Cc: wireless-regdb@lists.infradead.org; Johannes Berg; Kurt Garloff; linux-wireless@vger.kernel.org
+> Subject: Re: [PATCH] wireless-regdb: update rules for DE
+> 
+> On Wed, Nov 17, 2010 at 1:36 PM, John W. Linville
+> <linville@tuxdriver.com> wrote:
+> > From: Kurt Garloff <garloff@suse.de>
+> >
+> > http://marc.info/?l=linux-wireless&m=127480075306482&w=2
+> >
+> > Cc: "Luis R. Rodriguez" <mcgrof@gmail.com>
+> > Acked-by: Johannes Berg <johannes@sipsolutions.net>
+> > Signed-off-by: John W. Linville <linville@tuxdriver.com>
+> > ---
+> > Time to clear the logjam...
+> 
+> Michael, are you subscribed to wireless-regdb now? Did you get this e-mail? ACK?
+> 
+>   Luis
+> 
+> >  db.txt |   24 +++++++++++++++++-------
+> >  1 files changed, 17 insertions(+), 7 deletions(-)
+> >
+> > diff --git a/db.txt b/db.txt
+> > index e63a43e..40a8bbc 100644
+> > --- a/db.txt
+> > +++ b/db.txt
+> > @@ -176,17 +176,27 @@ country CZ:
+> >        (5250 - 5350 @ 40), (N/A, 200 mW), NO-OUTDOOR, DFS
+> >        (5470 - 5725 @ 40), (N/A, 1000 mW), DFS
+> >
+> > -# Data from "Frequenznutzungsplan" (as published in April 2008),
+> > -# downloaded from http://www.bundesnetzagentur.de/media/archive/13358.pdf
+> > -# Also applicable is http://www.bundesnetzagentur.de/media/archive/5009.pdf
+> > -# On the 5 GHz ranges TX power can be doubled if TPC is implemented.
+> > +# Data from "Frequenznutzungsplan" (as published in April 2008), downloaded from
+> > +# http://www.bundesnetzagentur.de/cae/servlet/contentblob/38448/publicationFile/2659/Frequenznutzungsplan2008_Id17448pdf.pdf
+> > +# For the 5GHz range also see
+> > +# http://www.bundesnetzagentur.de/cae/servlet/contentblob/38216/publicationFile/6579/WLAN5GHzVfg7_2010_28042010pdf.pdf
+> > +# The values have been reduced by a factor of 2 (3db) for non TPC devices
+> > +# (in other words: devices with TPC can use twice the tx power of this table).
+> > +# Note that the docs do not require TPC for 5150--5250; the reduction to
+> > +# 100mW thus is not strictly required -- however the conservative 100mW
+> > +# limit is used here as the non-interference with radar and satellite
+> > +# apps relies on the attenuation by the building walls only in the
+> > +# absence of DFS; the neighbour countries have 100mW limit here as well.
+> > +
+> >  country DE:
+> >        # entries 279004 and 280006
+> >        (2400 - 2483.5 @ 40), (N/A, 100 mW)
+> > -       # entries 303005, 304002 and 305002
+> > -       (5150 - 5350 @ 40), (N/A, 100 mW), NO-OUTDOOR, DFS
+> > +       # entry 303005
+> > +       (5150 - 5250 @ 40), (N/A, 100 mW), NO-OUTDOOR
+> > +       # entries 304002 and 305002
+> > +       (5250 - 5350 @ 40), (N/A, 100 mW), NO-OUTDOOR, DFS
+> >        # entries 308002, 309001 and 310003
+> > -       (5470 - 5725 @ 40), (N/A, 500 mW), NO-OUTDOOR, DFS
+> > +       (5470 - 5725 @ 40), (N/A, 500 mW), DFS
+> >
+> >  country DK:
+> >        (2402 - 2482 @ 40), (N/A, 20)
+> > --
+> > 1.7.3.2
+> >
+> >
 
-diff --git a/drivers/net/wireless/ath/ath5k/phy.c b/drivers/net/wireless/ath/ath5k/phy.c
-index b908915..9392320 100644
---- a/drivers/net/wireless/ath/ath5k/phy.c
-+++ b/drivers/net/wireless/ath/ath5k/phy.c
-@@ -3090,7 +3090,7 @@ ath5k_setup_rate_powertable(struct ath5k_hw *ah, u16 max_pwr,
-  */
- static int
- ath5k_hw_txpower(struct ath5k_hw *ah, struct ieee80211_channel *channel,
--		u8 ee_mode, u8 txpower)
-+		u8 ee_mode, u8 txpower, bool fast)
- {
- 	struct ath5k_rate_pcal_info rate_info;
- 	u8 type;
-@@ -3126,10 +3126,15 @@ ath5k_hw_txpower(struct ath5k_hw *ah, struct ieee80211_channel *channel,
- 		return -EINVAL;
- 	}
- 
--	/* FIXME: Only on channel/mode change */
--	ret = ath5k_setup_channel_powertable(ah, channel, ee_mode, type);
--	if (ret)
--		return ret;
-+	/* If fast is set it means we are on the same channel/mode
-+	 * so there is no need to recalculate the powertable, we 'll
-+	 * just use the cached one */
-+	if (!fast) {
-+		ret = ath5k_setup_channel_powertable(ah, channel,
-+							ee_mode, type);
-+			if (ret)
-+				return ret;
-+	}
- 
- 	/* Limit max power if we have a CTL available */
- 	ath5k_get_max_ctl_power(ah, channel);
-@@ -3210,7 +3215,7 @@ int ath5k_hw_set_txpower_limit(struct ath5k_hw *ah, u8 txpower)
- 	ATH5K_DBG(ah->ah_sc, ATH5K_DEBUG_TXPOWER,
- 		"changing txpower to %d\n", txpower);
- 
--	return ath5k_hw_txpower(ah, channel, ee_mode, txpower);
-+	return ath5k_hw_txpower(ah, channel, ee_mode, txpower, true);
- }
- 
- /*************\
-@@ -3220,13 +3225,42 @@ int ath5k_hw_set_txpower_limit(struct ath5k_hw *ah, u8 txpower)
- int ath5k_hw_phy_init(struct ath5k_hw *ah, struct ieee80211_channel *channel,
- 						u8 mode, u8 ee_mode, u8 freq)
- {
-+	struct ieee80211_channel *curr_channel;
- 	int ret, i;
- 	u32 phy_tst1;
--
-+	bool fast_txp;
- 	ret = 0;
- 
- 	/*
--	 * 5211/5212 Specific
-+	 * If we don't change channel/mode skip
-+	 * tx powertable calculation and use the
-+	 * cached one.
-+	 */
-+	curr_channel = ah->ah_current_channel;
-+	if ((channel->hw_value == curr_channel->hw_value) &&
-+	(channel->center_freq == curr_channel->center_freq))
-+		fast_txp = true;
-+	else
-+		fast_txp = false;
-+
-+	/*
-+	 * Set TX power
-+	 *
-+	 * Note: We need to do that before we set
-+	 * RF buffer settings on 5211/5212+ so that we
-+	 * properly set curve indices.
-+	 */
-+	ret = ath5k_hw_txpower(ah, channel, ee_mode,
-+				ah->ah_txpower.txp_max_pwr / 2,
-+				fast_txp);
-+	if (ret)
-+		return ret;
-+
-+	/*
-+	 * For 5210 we do all initialization using
-+	 * initvals, so we don't have to modify
-+	 * any settings (5210 also only supports
-+	 * a/aturbo modes)
- 	 */
- 	if (ah->ah_version != AR5K_AR5210) {
- 
-@@ -3241,21 +3275,12 @@ int ath5k_hw_phy_init(struct ath5k_hw *ah, struct ieee80211_channel *channel,
- 		mdelay(1);
- 
- 		/*
--		 * Set TX power
--		 */
--		ret = ath5k_hw_txpower(ah, channel, ee_mode,
--					ah->ah_txpower.txp_max_pwr / 2);
--		if (ret)
--			return ret;
--
--		/*
- 		 * Write RF buffer
- 		 */
- 		ret = ath5k_hw_rfregs_init(ah, channel, mode);
- 		if (ret)
- 			return ret;
- 
--
- 		/* Write OFDM timings on 5212*/
- 		if (ah->ah_version == AR5K_AR5212 &&
- 			channel->hw_value & CHANNEL_OFDM) {
-@@ -3284,12 +3309,6 @@ int ath5k_hw_phy_init(struct ath5k_hw *ah, struct ieee80211_channel *channel,
- 		}
- 
- 	} else {
--		/*
--		 * For 5210 we do all initialization using
--		 * initvals, so we don't have to modify
--		 * any settings (5210 also only supports
--		 * a/aturbo modes)
--		 */
- 		mdelay(1);
- 		/* Disable phy and wait */
- 		ath5k_hw_reg_write(ah, AR5K_PHY_ACT_DISABLE, AR5K_PHY_ACT);
+-- 
+John W. Linville                Someday the world will need a hero, and you
+linville@tuxdriver.com                  might be all we have.  Be ready.
