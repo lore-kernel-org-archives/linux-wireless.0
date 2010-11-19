@@ -1,37 +1,169 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:38687
-	"EHLO sunset.davemloft.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751535Ab0KKGPi (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 11 Nov 2010 01:15:38 -0500
-Date: Wed, 10 Nov 2010 22:16:02 -0800 (PST)
-Message-Id: <20101110.221602.112602821.davem@davemloft.net>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: pull request: wireless-2.6 2010-11-10
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <20101110185843.GC2714@tuxdriver.com>
-References: <20101110185843.GC2714@tuxdriver.com>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+Received: from nbd.name ([46.4.11.11]:38767 "EHLO nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754778Ab0KSPVF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 19 Nov 2010 10:21:05 -0500
+From: Felix Fietkau <nbd@openwrt.org>
+To: linux-wireless@vger.kernel.org
+Cc: linville@tuxdriver.com, johannes@sipsolutions.net
+Subject: [PATCH v2 1/2] mac80211: use nullfunc instead of probe request for connection monitoring
+Date: Fri, 19 Nov 2010 16:20:58 +0100
+Message-Id: <1290180059-43536-1-git-send-email-nbd@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: "John W. Linville" <linville@tuxdriver.com>
-Date: Wed, 10 Nov 2010 13:58:43 -0500
+nullfunc frames are better for connection monitoring, because probe requests
+are answered even if the AP has already dropped the connection, whereas
+nullfunc frames from an unassociated station will trigger a disassoc/deauth
+frame from the AP (WLAN_REASON_CLASS3_FRAME_FROM_NONASSOC_STA), which allows
+the station to reconnect immediately instead of waiting until it attempts to
+transmit the next unicast frame.
 
-> Here is a batch of fixes intended for 2.6.37.  Also mixed-in are a few
-> device ID updates.  I think the changelog entries are reasonably
-> documentary of the issues being fixed, so I won't belabor them. ;-)
-> 
-> This also includes a round of Bluetooth fixes from Gustavo:
-> 
-> "The following batch contains some bugfixes for 2.6.37. A fix for unaligned
-> access in L2CAP, a Kconfig error, two fixes related to security of
-> the Bluetooth links, and support for the a MacBook Air Bluetooth device.
-> There is also a one line patch from Matthew Garret, that enables USB
-> autosuspend for btusb module, which shall be completely safe. Please
-> pull, thanks."
+This only works on hardware with reliable tx ACK reporting, any other hardware
+needs to fall back to the probe request method.
 
-Pulled, thanks.
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+---
+ net/mac80211/ieee80211_i.h |    2 +
+ net/mac80211/mlme.c        |   82 ++++++++++++++++++++++++++++++-------------
+ net/mac80211/status.c      |    4 ++
+ 3 files changed, 63 insertions(+), 25 deletions(-)
+
+diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+index 3598abf..7bb9a62 100644
+--- a/net/mac80211/ieee80211_i.h
++++ b/net/mac80211/ieee80211_i.h
+@@ -1264,6 +1264,8 @@ void ieee80211_send_nullfunc(struct ieee80211_local *local,
+ 			     int powersave);
+ void ieee80211_sta_rx_notify(struct ieee80211_sub_if_data *sdata,
+ 			     struct ieee80211_hdr *hdr);
++void ieee80211_sta_tx_notify(struct ieee80211_sub_if_data *sdata,
++			     struct ieee80211_hdr *hdr);
+ void ieee80211_beacon_connection_loss_work(struct work_struct *work);
+ 
+ void ieee80211_wake_queues_by_reason(struct ieee80211_hw *hw,
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+index dfc4a31..b24e51f 100644
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -1026,6 +1026,48 @@ void ieee80211_sta_rx_notify(struct ieee80211_sub_if_data *sdata,
+ 	ieee80211_sta_reset_conn_monitor(sdata);
+ }
+ 
++static void ieee80211_reset_ap_probe(struct ieee80211_sub_if_data *sdata)
++{
++	struct ieee80211_if_managed *ifmgd = &sdata->u.mgd;
++
++	if (!(ifmgd->flags & (IEEE80211_STA_BEACON_POLL |
++			      IEEE80211_STA_CONNECTION_POLL)))
++	    return;
++
++	ifmgd->flags &= ~(IEEE80211_STA_CONNECTION_POLL |
++			  IEEE80211_STA_BEACON_POLL);
++	mutex_lock(&sdata->local->iflist_mtx);
++	ieee80211_recalc_ps(sdata->local, -1);
++	mutex_unlock(&sdata->local->iflist_mtx);
++
++	if (sdata->local->hw.flags & IEEE80211_HW_CONNECTION_MONITOR)
++		return;
++
++	/*
++	 * We've received a probe response, but are not sure whether
++	 * we have or will be receiving any beacons or data, so let's
++	 * schedule the timers again, just in case.
++	 */
++	ieee80211_sta_reset_beacon_monitor(sdata);
++
++	mod_timer(&ifmgd->conn_mon_timer,
++		  round_jiffies_up(jiffies +
++				   IEEE80211_CONNECTION_IDLE_TIME));
++}
++
++void ieee80211_sta_tx_notify(struct ieee80211_sub_if_data *sdata,
++			     struct ieee80211_hdr *hdr)
++{
++	if (!ieee80211_is_data(hdr->frame_control) &&
++	    !ieee80211_is_nullfunc(hdr->frame_control))
++	    return;
++
++	ieee80211_sta_reset_conn_monitor(sdata);
++
++	if (ieee80211_is_nullfunc(hdr->frame_control))
++		ieee80211_reset_ap_probe(sdata);
++}
++
+ static void ieee80211_mgd_probe_ap_send(struct ieee80211_sub_if_data *sdata)
+ {
+ 	struct ieee80211_if_managed *ifmgd = &sdata->u.mgd;
+@@ -1041,8 +1083,19 @@ static void ieee80211_mgd_probe_ap_send(struct ieee80211_sub_if_data *sdata)
+ 	if (ifmgd->probe_send_count >= unicast_limit)
+ 		dst = NULL;
+ 
+-	ssid = ieee80211_bss_get_ie(ifmgd->associated, WLAN_EID_SSID);
+-	ieee80211_send_probe_req(sdata, dst, ssid + 2, ssid[1], NULL, 0);
++	/*
++	 * When the hardware reports an accurate Tx ACK status, it's
++	 * better to send a nullfunc frame instead of a probe request,
++	 * as it will kick us off the AP quickly if we aren't associated
++	 * anymore. The timeout will be reset if the frame is ACKed by
++	 * the AP.
++	 */
++	if (sdata->local->hw.flags & IEEE80211_HW_REPORTS_TX_ACK_STATUS)
++		ieee80211_send_nullfunc(sdata->local, sdata, 0);
++	else {
++		ssid = ieee80211_bss_get_ie(ifmgd->associated, WLAN_EID_SSID);
++		ieee80211_send_probe_req(sdata, dst, ssid + 2, ssid[1], NULL, 0);
++	}
+ 
+ 	ifmgd->probe_send_count++;
+ 	ifmgd->probe_timeout = jiffies + IEEE80211_PROBE_WAIT;
+@@ -1509,29 +1562,8 @@ static void ieee80211_rx_mgmt_probe_resp(struct ieee80211_sub_if_data *sdata,
+ 	ieee80211_rx_bss_info(sdata, mgmt, len, rx_status, &elems, false);
+ 
+ 	if (ifmgd->associated &&
+-	    memcmp(mgmt->bssid, ifmgd->associated->bssid, ETH_ALEN) == 0 &&
+-	    ifmgd->flags & (IEEE80211_STA_BEACON_POLL |
+-			    IEEE80211_STA_CONNECTION_POLL)) {
+-		ifmgd->flags &= ~(IEEE80211_STA_CONNECTION_POLL |
+-				  IEEE80211_STA_BEACON_POLL);
+-		mutex_lock(&sdata->local->iflist_mtx);
+-		ieee80211_recalc_ps(sdata->local, -1);
+-		mutex_unlock(&sdata->local->iflist_mtx);
+-
+-		if (sdata->local->hw.flags & IEEE80211_HW_CONNECTION_MONITOR)
+-			return;
+-
+-		/*
+-		 * We've received a probe response, but are not sure whether
+-		 * we have or will be receiving any beacons or data, so let's
+-		 * schedule the timers again, just in case.
+-		 */
+-		ieee80211_sta_reset_beacon_monitor(sdata);
+-
+-		mod_timer(&ifmgd->conn_mon_timer,
+-			  round_jiffies_up(jiffies +
+-					   IEEE80211_CONNECTION_IDLE_TIME));
+-	}
++	    memcmp(mgmt->bssid, ifmgd->associated->bssid, ETH_ALEN) == 0)
++		ieee80211_reset_ap_probe(sdata);
+ }
+ 
+ /*
+diff --git a/net/mac80211/status.c b/net/mac80211/status.c
+index 3153c19..8695cd1 100644
+--- a/net/mac80211/status.c
++++ b/net/mac80211/status.c
+@@ -155,6 +155,10 @@ static void ieee80211_frame_acked(struct sta_info *sta, struct sk_buff *skb)
+ 
+ 		ieee80211_queue_work(&local->hw, &local->recalc_smps);
+ 	}
++
++	if ((sdata->vif.type == NL80211_IFTYPE_STATION) &&
++	    (local->hw.flags & IEEE80211_HW_REPORTS_TX_ACK_STATUS))
++		ieee80211_sta_tx_notify(sdata, (void *) skb->data);
+ }
+ 
+ void ieee80211_tx_status(struct ieee80211_hw *hw, struct sk_buff *skb)
+-- 
+1.7.3.2
+
