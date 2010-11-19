@@ -1,59 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:40274 "EHLO
+Received: from he.sipsolutions.net ([78.46.109.217]:43798 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750934Ab0K3F0o (ORCPT
+	with ESMTP id S1755585Ab0KSBVZ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 30 Nov 2010 00:26:44 -0500
-Subject: Re: [PATCH] mac80211: Fix frame injection using non-AP vif
+	Thu, 18 Nov 2010 20:21:25 -0500
+To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Subject: Re: [RFC] mac80211: disable aggregatin for voice traffic
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Date: Fri, 19 Nov 2010 02:21:24 +0100
 From: Johannes Berg <johannes@sipsolutions.net>
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Cc: Jouni Malinen <jouni.malinen@atheros.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <AANLkTi=D5ynvBGNLQnTJmpuBQHySVdudTkM9LughnT-o@mail.gmail.com>
-References: <20101126184155.GA2689@jm.kir.nu>
-	 <AANLkTi=D5ynvBGNLQnTJmpuBQHySVdudTkM9LughnT-o@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Tue, 30 Nov 2010 06:26:39 +0100
-Message-ID: <1291094799.3624.0.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+Cc: <linux-wireless@vger.kernel.org>,
+	Matt Smith <matt.smith@atheros.com>,
+	Senthil Balasubramanian <senthilkumar@atheros.com>
+In-Reply-To: <1290129534-21785-1-git-send-email-lrodriguez@atheros.com>
+References: <1290129534-21785-1-git-send-email-lrodriguez@atheros.com>
+Message-ID: <8e66f390eb4591841e22b8f5f2188e5d@localhost>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2010-11-29 at 13:49 -0800, Luis R. Rodriguez wrote:
-> On Fri, Nov 26, 2010 at 10:41 AM, Jouni Malinen
-> <jouni.malinen@atheros.com> wrote:
-> > In order for frame injection to work properly for some use cases
-> > (e.g., finding the station entry and keys for encryption), mac80211
-> > needs to find the correct sdata entry. This works when the main vif
-> > is in AP mode, but commit a2c1e3dad516618cb0fbfb1a62c36d0b0744573a
-> > broke this particular use case for station main vif. While this type of
-> > injection is quite unusual operation, it has some uses and we should fix
-> > it. Do this by changing the monitor vif sdata selection to allow station
-> > vif to be selected instead of limiting it to just AP vifs. We still need
-> > to skip some iftypes to avoid selecting unsuitable vif for injection.
-> >
-> > Signed-off-by: Jouni Malinen <jouni.malinen@atheros.com>
-> >
-> > ---
-> >  net/mac80211/tx.c |    7 ++++++-
-> >  1 file changed, 6 insertions(+), 1 deletion(-)
-> >
-> > --- wireless-testing.orig/net/mac80211/tx.c     2010-11-26 20:21:02.000000000 +0200
-> > +++ wireless-testing/net/mac80211/tx.c  2010-11-26 20:36:22.000000000 +0200
-> > @@ -1595,7 +1595,12 @@ static void ieee80211_xmit(struct ieee80
-> >                                                list) {
-> >                                if (!ieee80211_sdata_running(tmp_sdata))
-> >                                        continue;
-> > -                               if (tmp_sdata->vif.type != NL80211_IFTYPE_AP)
-> > +                               if (tmp_sdata->vif.type ==
-> > +                                   NL80211_IFTYPE_MONITOR ||
+On Thu, 18 Nov 2010 17:18:54 -0800, "Luis R. Rodriguez"
+<lrodriguez@atheros.com> wrote:
+> This should help with latency issues which can happen when
+> using aggregation.
 > 
-> Ah, for some reason I thought we were able to push frames as a monitor
-> all along, no wonder packetspammer didn't work, or should it?
+> Cc: Matt Smith <matt.smith@atheros.com>
+> Cc: Senthil Balasubramanian <senthilkumar@atheros.com>
+> Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+> ---
+> 
+> We discussed this a while ago but never to around to it.
+> 
+>  net/mac80211/tx.c |    3 ++-
+>  1 files changed, 2 insertions(+), 1 deletions(-)
+> 
+> diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
+> index e694836..405ddc9 100644
+> --- a/net/mac80211/tx.c
+> +++ b/net/mac80211/tx.c
+> @@ -1225,7 +1225,8 @@ ieee80211_tx_prepare(struct ieee80211_sub_if_data
+> *sdata,
+>  		tx->sta = sta_info_get(sdata, hdr->addr1);
+>  
+>  	if (tx->sta && ieee80211_is_data_qos(hdr->frame_control) &&
+> -	    (local->hw.flags & IEEE80211_HW_AMPDU_AGGREGATION)) {
+> +	    (local->hw.flags & IEEE80211_HW_AMPDU_AGGREGATION) &&
+> +	    (ieee802_1d_to_ac[skb->priority] != IEEE80211_AC_VO)) {
 
-That'll still work -- it just won't encrypt the frames correctly where
-necessary for a primary *station* interface.
+wtf? total NACK. You're setting up an aggregation session and then not
+using it? That's totally deluded ... just don't set up the session!!
 
 johannes
-
