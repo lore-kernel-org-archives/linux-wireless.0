@@ -1,55 +1,83 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from hrndva-omtalb.mail.rr.com ([71.74.56.124]:53853 "EHLO
-	hrndva-omtalb.mail.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751152Ab0KUC0E (ORCPT
+Received: from mail-pw0-f46.google.com ([209.85.160.46]:38236 "EHLO
+	mail-pw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754347Ab0KSRAN convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 20 Nov 2010 21:26:04 -0500
-Date: Sat, 20 Nov 2010 20:25:56 -0600
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: John W Linville <linville@tuxdriver.com>
-Cc: chaoming_li@realsil.com.cn, linux-wireless@vger.kernel.org
-Subject: [RFC PATCH 23/23] rtl8192ce: Introduce new driver
-Message-ID: <4ce88334.xoHPgnhpyE2s6KW7%Larry.Finger@lwfinger.net>
+	Fri, 19 Nov 2010 12:00:13 -0500
+Received: by pwj1 with SMTP id 1so758249pwj.19
+        for <linux-wireless@vger.kernel.org>; Fri, 19 Nov 2010 09:00:13 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1290184873.23033.3.camel@maggie>
+References: <1290028477-6462-1-git-send-email-zajec5@gmail.com>
+ <AANLkTikXqg9boY1H_OPAvs7WPd6SXUt8DpykRHuRxB6E@mail.gmail.com> <1290184873.23033.3.camel@maggie>
+From: =?ISO-8859-1?Q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>
+Date: Fri, 19 Nov 2010 17:59:52 +0100
+Message-ID: <AANLkTimFQ9UYWKtHpjXBTS0PPJcB_vPD7kawfffY_c+-@mail.gmail.com>
+Subject: Re: [PATCH V2] b43: rfkill: use HI enabled bit for all devices
+To: =?ISO-8859-1?Q?Michael_B=FCsch?= <mb@bu3sch.de>
+Cc: =?ISO-8859-2?Q?Rafa=B3_Mi=B3ecki?= <zajec5@gmail.com>,
+	linux-wireless@vger.kernel.org, b43-dev@lists.infradead.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
->From 7137ad1e1b6c9e1d8ac5a62b0d18ed9f715bc7c3 Mon Sep 17 00:00:00 2001
-From: Larry Finger <Larry.Finger@lwfinger.net>
-Date: Sat, 20 Nov 2010 19:25:12 -0600
-Subject: [PATCH 23/23] rtl8192ce: rtlwifi: Modify Kconfig and Makefile for new driver
+On Fri, Nov 19, 2010 at 5:41 PM, Michael Büsch <mb@bu3sch.de> wrote:
+> On Fri, 2010-11-19 at 17:12 +0100, Gábor Stefanik wrote:
+>> 2010/11/17 Rafał Miłecki <zajec5@gmail.com>:
+>> > Devices which use LO enabled bit are covered by b43legacy
+>> >
+>> > Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
+>> > ---
+>> > V2: Dropped some not needed stuff as pointed by Michael, thanks!
+>> >
+>> > John: it's .38 ofc.
+>> > ---
+>> >  drivers/net/wireless/b43/rfkill.c |   19 ++-----------------
+>> >  1 files changed, 2 insertions(+), 17 deletions(-)
+>> >
+>> > diff --git a/drivers/net/wireless/b43/rfkill.c b/drivers/net/wireless/b43/rfkill.c
+>> > index 78016ae..86bc0a0 100644
+>> > --- a/drivers/net/wireless/b43/rfkill.c
+>> > +++ b/drivers/net/wireless/b43/rfkill.c
+>> > @@ -28,23 +28,8 @@
+>> >  /* Returns TRUE, if the radio is enabled in hardware. */
+>> >  bool b43_is_hw_radio_enabled(struct b43_wldev *dev)
+>> >  {
+>> > -       if (dev->phy.rev >= 3 || dev->phy.type == B43_PHYTYPE_LP) {
+>> > -               if (!(b43_read32(dev, B43_MMIO_RADIO_HWENABLED_HI)
+>> > -                     & B43_MMIO_RADIO_HWENABLED_HI_MASK))
+>> > -                       return 1;
+>> > -       } else {
+>> > -               /* To prevent CPU fault on PPC, do not read a register
+>> > -                * unless the interface is started; however, on resume
+>> > -                * for hibernation, this routine is entered early. When
+>> > -                * that happens, unconditionally return TRUE.
+>> > -                */
+>> > -               if (b43_status(dev) < B43_STAT_STARTED)
+>> > -                       return 1;
+>> > -               if (b43_read16(dev, B43_MMIO_RADIO_HWENABLED_LO)
+>> > -                   & B43_MMIO_RADIO_HWENABLED_LO_MASK)
+>> > -                       return 1;
+>> > -       }
+>> > -       return 0;
+>>
+>> Is there any reason why this bool originally returned 1 or 0 instead
+>> of true or false?
+>
+> There's no difference.
+> (int)0 implicitly casts to false and anything else to true.
 
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
----
- drivers/net/wireless/Kconfig  |    1 +
- drivers/net/wireless/Makefile |    1 +
- 2 files changed, 2 insertions(+), 0 deletions(-)
+I know, just for the sake of coding style. Same as initializing
+pointers to NULL, not 0 (though AFAIK there are platforms where 0x0 is
+a valid memory address, so using NULL is more than just coding style).
 
-diff --git a/drivers/net/wireless/Kconfig b/drivers/net/wireless/Kconfig
-index 4de4410..b4338f3 100644
---- a/drivers/net/wireless/Kconfig
-+++ b/drivers/net/wireless/Kconfig
-@@ -279,6 +279,7 @@ source "drivers/net/wireless/libertas/Kconfig"
- source "drivers/net/wireless/orinoco/Kconfig"
- source "drivers/net/wireless/p54/Kconfig"
- source "drivers/net/wireless/rt2x00/Kconfig"
-+source "drivers/net/wireless/rtlwifi/Kconfig"
- source "drivers/net/wireless/wl1251/Kconfig"
- source "drivers/net/wireless/wl12xx/Kconfig"
- source "drivers/net/wireless/zd1211rw/Kconfig"
-diff --git a/drivers/net/wireless/Makefile b/drivers/net/wireless/Makefile
-index 06f8ca2..9760561 100644
---- a/drivers/net/wireless/Makefile
-+++ b/drivers/net/wireless/Makefile
-@@ -24,6 +24,7 @@ obj-$(CONFIG_B43LEGACY)		+= b43legacy/
- obj-$(CONFIG_ZD1211RW)		+= zd1211rw/
- obj-$(CONFIG_RTL8180)		+= rtl818x/
- obj-$(CONFIG_RTL8187)		+= rtl818x/
-+obj-$(CONFIG_RTL8192CE)		+= rtlwifi/
- 
- # 16-bit wireless PCMCIA client drivers
- obj-$(CONFIG_PCMCIA_RAYCS)	+= ray_cs.o
+>
+> --
+> Greetings Michael.
+>
+>
+
+
+
 -- 
-1.7.1
-
+Vista: [V]iruses, [I]ntruders, [S]pyware, [T]rojans and [A]dware. :-)
