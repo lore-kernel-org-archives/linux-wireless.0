@@ -1,120 +1,88 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from arroyo.ext.ti.com ([192.94.94.40]:59932 "EHLO arroyo.ext.ti.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752850Ab0KCLqo (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 3 Nov 2010 07:46:44 -0400
-Message-ID: <4CD14B9D.1070305@ti.com>
-Date: Wed, 03 Nov 2010 13:46:37 +0200
-From: Shahar Levi <shahar_levi@ti.com>
-MIME-Version: 1.0
-To: Luciano Coelho <luciano.coelho@nokia.com>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH v2] wl1271: Change wl12xx Files Names
-References: <1288505649-28733-1-git-send-email-shahar_levi@ti.com> <1288772739.1164.10.camel@chilepepper>
-In-Reply-To: <1288772739.1164.10.camel@chilepepper>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Received: from he.sipsolutions.net ([78.46.109.217]:33020 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756041Ab0KSRwj (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 19 Nov 2010 12:52:39 -0500
+Subject: Re: [PATCH] mac80211: use nullfunc instead of probe request for
+ connection monitoring
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Felix Fietkau <nbd@openwrt.org>
+Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com
+In-Reply-To: <4CE670FA.50704@openwrt.org>
+References: <1290141756-37252-1-git-send-email-nbd@openwrt.org>
+	 <b18357d5d26e318178407a9133214709@localhost>  <4CE670FA.50704@openwrt.org>
+Content-Type: text/plain; charset="UTF-8"
+Date: Fri, 19 Nov 2010 09:54:14 -0800
+Message-ID: <1290189254.3768.2.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 11/03/2010 10:25 AM, Luciano Coelho wrote:
-> On Sun, 2010-10-31 at 07:14 +0100, ext Shahar Levi wrote:
->> All files name prefix removed due to the fuct that wl12xx driver supports
->> wl1271 and wl1273.
->> Also the definition in Kconfig and header files changed respectively.
->>
->> Signed-off-by: Shahar Levi<shahar_levi@ti.com>
->> ---
->
-> Some more comments.
-Hi,
+On Fri, 2010-11-19 at 13:43 +0100, Felix Fietkau wrote:
+> On 2010-11-19 6:58 AM, Johannes Berg wrote:
+> > On Fri, 19 Nov 2010 05:42:36 +0100, Felix Fietkau <nbd@openwrt.org> wrote:
+> >> +	if (sdata->local->hw.flags & IEEE80211_HW_REPORTS_TX_ACK_STATUS)
+> >> +		ieee80211_send_nullfunc(sdata->local, sdata, 0);
+> > 
+> > Hmm, should that really be 0 always? Could it be racy either way?
+> > I think that probably needs some analysis.
+> Yes, it should be 0. While it's probing the AP,
+> IEEE80211_STA_CONNECTION_POLL or IEEE80211_STA_BEACON_POLL is set, and
+> before sending the first probe request or nullfunc frame,
+> ieee80211_recalc_ps is called. That effectively pulls us out of
+> powersave mode, so sending a nullfunc frame that indicates that we're
+> awake should be safe.
 
->> diff --git a/drivers/net/wireless/wl12xx/Kconfig b/drivers/net/wireless/wl12xx/Kconfig
->> index 1b3b7bd..6941618 100644
->> --- a/drivers/net/wireless/wl12xx/Kconfig
->> +++ b/drivers/net/wireless/wl12xx/Kconfig
->> @@ -1,56 +1,57 @@
->> -menuconfig WL12XX
->> +menuconfig WL12XX_MENU
->
-> Actually we don't have WL1251 here anymore, so maybe this could be
-> removed instead? But that can go in a separate patch.
-OK, i will implement separate patch after that one will apply.
+Ah yes, and the same should be true for devices like iwlwifi or wl1271
+that handle more of it in firmware. Unless there's a PS-poll mode
+implemented in firmware, but I guess that's unlikely. Might be worth
+adding a comment for though.
 
->> -config WL1271_SPI
->> -       tristate "TI wl1271 SPI support"
->> -       depends on WL1271&&  SPI_MASTER
->> +config WL12XX_SPI
->> +       tristate "TI wl12xx SPI support"
->> +       depends on WL12XX&&  SPI_MASTER
->>          ---help---
->>            This module adds support for the SPI interface of adapters using
->> -         TI wl1271 chipset.  Select this if your platform is using
->> -         the SPI bus.
->> +         TI wl12xx chipsets.  Select this if your platform is using
->> +         the wl12xx_spi bus.
->
-> Change wl12xx_spi bus back to SPI bus.
-Will be fix on v3.
+> >> +	else {
+> >> +		ssid = ieee80211_bss_get_ie(ifmgd->associated, WLAN_EID_SSID);
+> >> +		ieee80211_send_probe_req(sdata, dst, ssid + 2, ssid[1], NULL, 0);
+> >> +	}
+> >>  
+> >>  	ifmgd->probe_send_count++;
+> >>  	ifmgd->probe_timeout = jiffies + IEEE80211_PROBE_WAIT;
+> >> @@ -1509,29 +1562,8 @@ static void ieee80211_rx_mgmt_probe_resp(struct
+> >> ieee80211_sub_if_data *sdata,
+> >>  	ieee80211_rx_bss_info(sdata, mgmt, len, rx_status, &elems, false);
+> >>  
+> >>  	if (ifmgd->associated &&
+> >> -	    memcmp(mgmt->bssid, ifmgd->associated->bssid, ETH_ALEN) == 0 &&
+> >> -	    ifmgd->flags & (IEEE80211_STA_BEACON_POLL |
+> >> -			    IEEE80211_STA_CONNECTION_POLL)) {
+> >> -		ifmgd->flags &= ~(IEEE80211_STA_CONNECTION_POLL |
+> >> -				  IEEE80211_STA_BEACON_POLL);
+> >> -		mutex_lock(&sdata->local->iflist_mtx);
+> >> -		ieee80211_recalc_ps(sdata->local, -1);
+> >> -		mutex_unlock(&sdata->local->iflist_mtx);
+> >> -
+> >> -		if (sdata->local->hw.flags & IEEE80211_HW_CONNECTION_MONITOR)
+> >> -			return;
+> >> -
+> >> -		/*
+> >> -		 * We've received a probe response, but are not sure whether
+> >> -		 * we have or will be receiving any beacons or data, so let's
+> >> -		 * schedule the timers again, just in case.
+> >> -		 */
+> >> -		ieee80211_sta_reset_beacon_monitor(sdata);
+> >> -
+> >> -		mod_timer(&ifmgd->conn_mon_timer,
+> >> -			  round_jiffies_up(jiffies +
+> >> -					   IEEE80211_CONNECTION_IDLE_TIME));
+> >> -	}
+> >> +	    memcmp(mgmt->bssid, ifmgd->associated->bssid, ETH_ALEN) == 0)
+> >> +		ieee80211_reset_ap_probe(sdata);
+> > 
+> > Not sure I get this part...
+> I just moved most of this code up to to the ieee80211_reset_ap_probe
+> function to avoid duplicating it (since it's called from
+> ieee80211_sta_tx_notify as well).
 
->> -         If you choose to build a module, it'll be called wl1251_spi.
->> +         If you choose to build a module, it'll be called spi.
->
-> "it will be called wl1271_spi".
-Will be fix on v3.
+Oops, not paying attention, sorry.
 
->> -config WL1271_SDIO
->> -       tristate "TI wl1271 SDIO support"
->> -       depends on WL1271&&  MMC
->> +config WL12XX_SDIO
->> +       tristate "TI wl12xx SDIO support"
->> +       depends on WL12XX&&  MMC
->>          ---help---
->>            This module adds support for the SDIO interface of adapters using
->> -         TI wl1271 chipset.  Select this if your platform is using
->> -         the SDIO bus.
->> +         TI wl12xx chipsets.  Select this if your platform is using
->> +         the wl12xx_sdio bus.
->
-> Change back to SDIO bus.
-Will be fix on v3.
-
->> -         If you choose to build a module, it'll be called
->> -         wl1271_sdio. Say N if unsure.
->> +         If you choose to build a module, it'll be called sdio.
->> +         Say N if unsure.
->
-> "it will be called wl12xx_sdio".
-Will be fix on v3.
-
-> I'm also getting two checkpatch warnings:
->
-> WARNING: please, no space for starting a line,
-> 				excluding comments
-> #669: FILE: drivers/net/wireless/wl12xx/main.c:2227:
-> +       .ht_cap = WL12XX_HT_CAP,$
-This is weird. In order to find those warning i ran:
-"./scripts/checkpatch.pl 
-wl12xx-files-prefix-v2/0001-wl1271-Change-wl12xx-Files-Names.patch
-total: 0 errors, 0 warnings, 598 lines checked
-
-wl12xx-files-prefix-v2/0001-wl1271-Change-wl12xx-Files-Names.patch has 
-no obvious style problems and is ready for submission."
-
-On that patch it didn't find warning.
-Is there more efficient way to validate those issue?
-
-> WARNING: please, no space for starting a line,
-> 				excluding comments
-> #678: FILE: drivers/net/wireless/wl12xx/main.c:2342:
-> +       .ht_cap = WL12XX_HT_CAP,$
-the same as above
-
-> And due to other changes in the code, this patch doesn't apply cleanly
-> anymore.  Can you please rebase it on the latest wl12xx code?
-No problem, i will rebase  it to latest.
-
-I greatly appreciate your review and help.
-Shahar
-
-
+johannes
 
