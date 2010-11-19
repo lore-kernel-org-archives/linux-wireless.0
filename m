@@ -1,71 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:39460 "EHLO mga01.intel.com"
+Received: from mail.atheros.com ([12.19.149.2]:20826 "EHLO mail.atheros.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751054Ab0KYHxF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 25 Nov 2010 02:53:05 -0500
-Date: Thu, 25 Nov 2010 15:05:39 -0500
-From: Youquan Song <youquan.song@linux.intel.com>
-To: lrodriguez@atheros.com
-Cc: linux-wireless@vger.kernel.org, hui.xiao@intel.com,
-	youquan.song@intel.com
-Subject: [PATCH] compat-wireless:Fix interface redefine when backport to
-	2.6.32
-Message-ID: <20101125200539.GA31878@linux-youquan.bj.intel.com>
+	id S1752502Ab0KSKTs (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 19 Nov 2010 05:19:48 -0500
+Received: from mail.atheros.com ([10.10.20.105])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Fri, 19 Nov 2010 02:19:35 -0800
+Date: Fri, 19 Nov 2010 15:57:25 +0530
+From: Rajkumar Manoharan <rmanoharan@atheros.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: Rajkumar Manoharan <Rajkumar.Manoharan@Atheros.com>,
+	"Luis R. Rodriguez" <mcgrof@gmail.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: module unloading busted ?
+Message-ID: <20101119102725.GA3126@vmraj-lnx.users.atheros.com>
+References: <AANLkTim775JXAkrvVjn-TmwD5B6-MYCRw6ah=rVF8Opk@mail.gmail.com>
+ <20101118093725.GA3388@vmraj-lnx.users.atheros.com>
+ <1290106515.3801.4.camel@jlt3.sipsolutions.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <1290106515.3801.4.camel@jlt3.sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Netdev_alloc_skb_ip_align already define at 2.6.32 kernel, so only < 2.6.32 
-kernel needs it, so when backport latest compat-wirelss to 2.6.32, it report
-redefine the interface.
+On Fri, Nov 19, 2010 at 12:25:15AM +0530, Johannes Berg wrote:
+> On Thu, 2010-11-18 at 15:07 +0530, Rajkumar Manoharan wrote:
+> > On Thu, Nov 18, 2010 at 12:56:00PM +0530, Luis R. Rodriguez wrote:
+> > > 05:33 < mcgrof> so module unload on ath9k no longer works
+> > > 06:11 < vmraj> mcgrof: module unload is not working for intel cards too
+> > > 06:15 < vmraj> it can be reproduced by rmmod on active connection
+> > > 
+> > > I haven't yet figured out why. Anyone else with other modules experiencing this?
+> > > 
+> > cfg80211_netdev_notifier_call invokes dev_hold on NETDEV_DOWN which increments
+> > Usage count. hence unregister_netdevice fails.
+> 
+> The cleanup_work should fix that up -- but I can see this being a corner
+> case that the network stack no longer likes us for ...
+>
+Yes cleanup_work releases the device. By disabling ipv6 solves the issue.
+Somewhere in ipv6 module, failed to release device.
 
-This patch fix the above issue.
-
-Signed-off-by: Youquan Song <youquan.song@intel.com>
-Signed-off-by: Hui Xiao <hui.xiao@intel.com>
----
+sysctl -w net.ipv6.conf.all.disable_ipv6=1 solves the module unload problem.
 
 
-diff --git a/include/linux/compat-2.6.32.h b/include/linux/compat-2.6.32.h
-index 321a89a..164aa6c 100644
---- a/include/linux/compat-2.6.32.h
-+++ b/include/linux/compat-2.6.32.h
-@@ -96,6 +96,16 @@ struct dev_pm_ops name = { \
- 
- #define lockdep_assert_held(l)			do { } while (0)
- 
-+static inline struct sk_buff *netdev_alloc_skb_ip_align(struct net_device *dev,
-+		unsigned int length)
-+{
-+	struct sk_buff *skb = netdev_alloc_skb(dev, length + NET_IP_ALIGN);
-+
-+	if (NET_IP_ALIGN && skb)
-+		skb_reserve(skb, NET_IP_ALIGN);
-+	return skb;
-+}
-+
- #endif /* (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,32)) */
- 
- #endif /* LINUX_26_32_COMPAT_H */
-diff --git a/include/linux/compat-2.6.33.h b/include/linux/compat-2.6.33.h
-index c2dbc1b..4646d28 100644
---- a/include/linux/compat-2.6.33.h
-+++ b/include/linux/compat-2.6.33.h
-@@ -55,16 +55,6 @@ static inline void compat_release_firmware(const struct firmware *fw)
- /* this will never happen on older kernels */
- #define NETDEV_POST_INIT 0xffff
- 
--static inline struct sk_buff *netdev_alloc_skb_ip_align(struct net_device *dev,
--                unsigned int length)
--{
--	struct sk_buff *skb = netdev_alloc_skb(dev, length + NET_IP_ALIGN);
--
--	if (NET_IP_ALIGN && skb)
--		skb_reserve(skb, NET_IP_ALIGN);
--	return skb;
--}
--
- #if defined(CONFIG_PCCARD) || defined(CONFIG_PCCARD_MODULE)
- 
- #if defined(CONFIG_PCMCIA) || defined(CONFIG_PCMCIA_MODULE)
+--
+Rajkumar
