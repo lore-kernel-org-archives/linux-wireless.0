@@ -1,67 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rcsinet10.oracle.com ([148.87.113.121]:46160 "EHLO
-	rcsinet10.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756494Ab0KRT4m (ORCPT
+Received: from mail30g.wh2.ocn.ne.jp ([220.111.41.239]:38318 "HELO
+	mail30g.wh2.ocn.ne.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1751970Ab0KSJGq (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 18 Nov 2010 14:56:42 -0500
-Message-ID: <4CE5849D.1060705@oracle.com>
-Date: Thu, 18 Nov 2010 11:55:09 -0800
-From: Randy Dunlap <randy.dunlap@oracle.com>
+	Fri, 19 Nov 2010 04:06:46 -0500
+Received: from vs3002.wh2.ocn.ne.jp (125.206.180.165)
+	by mail30g.wh2.ocn.ne.jp (RS ver 1.0.95vs) with SMTP id 1-0146127603
+	for <linux-wireless@vger.kernel.org>; Fri, 19 Nov 2010 18:06:44 +0900 (JST)
+From: Bruno Randolf <br1@einfach.org>
+To: Bob Copeland <me@bobcopeland.com>
+Subject: Re: [PATCH v7 3/3] nl80211/mac80211: Report signal average
+Date: Fri, 19 Nov 2010 18:07:05 +0900
+Cc: Johannes Berg <johannes@sipsolutions.net>, Jouni Malinen <j@w1.fi>,
+	linville@tuxdriver.com, randy.dunlap@oracle.com,
+	peterz@infradead.org, blp@cs.stanford.edu,
+	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Lars_Ericsson@telia.com, stefanr@s5r6.in-berlin.de,
+	kosaki.motohiro@jp.fujitsu.com, akpm@linux-foundation.org,
+	kevin.granade@gmail.com
+References: <20101112024901.28522.21895.stgit@localhost6.localdomain6> <1290010595.3777.0.camel@jlt3.sipsolutions.net> <AANLkTimoogSLAipNy=njGtHypqBQSk=usDmXut=KN9TM@mail.gmail.com>
+In-Reply-To: <AANLkTimoogSLAipNy=njGtHypqBQSk=usDmXut=KN9TM@mail.gmail.com>
 MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: "John W. Linville" <linville@tuxdriver.com>,
-	"Guy, Wey-Yi" <wey-yi.w.guy@intel.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: iwlwifi: fix modular legacy build errors
-References: <1290011797.12056.255.camel@wwguy-huron>	 <1290012580.3777.1.camel@jlt3.sipsolutions.net>	 <4CE40CF9.8090404@oracle.com> <1290013876.12056.260.camel@wwguy-huron>	 <20101118091138.80875baf.randy.dunlap@oracle.com>	 <1290101760.6131.1.camel@wwguy-ubuntu>	 <20101118175434.GC2468@tuxdriver.com>  <4CE57EB3.5070902@oracle.com> <1290109607.3801.8.camel@jlt3.sipsolutions.net>
-In-Reply-To: <1290109607.3801.8.camel@jlt3.sipsolutions.net>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Message-Id: <201011191807.06013.br1@einfach.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 11/18/10 11:46, Johannes Berg wrote:
-> On Thu, 2010-11-18 at 11:29 -0800, Randy Dunlap wrote:
+On Thu November 18 2010 08:11:18 Bob Copeland wrote:
+> On Wed, Nov 17, 2010 at 11:16 AM, Johannes Berg
 > 
->> It's listed as being part of the linux-next pull, so I guess that there is still
->> some sort of config/build problem.
->>
->> Same linker errors as above.  Here is today's config file that causes the error (attached).
->>
->>
->> CONFIG_IWLWIFI=m
->> CONFIG_IWLWIFI_DEBUG=y
->> # CONFIG_IWLWIFI_DEBUG_EXPERIMENTAL_UCODE is not set
->> # CONFIG_IWLAGN is not set
->> CONFIG_IWL3945=m
+> <johannes@sipsolutions.net> wrote:
+> > On Wed, 2010-11-17 at 17:28 +0900, Bruno Randolf wrote:
+> >> I understand that this could be more efficient, but if it matters or not
+> >> - honestly, I don't know. Can a more knowledgeable person than me
+> >> comment on this?
+> > 
+> > Yes, it does matter -- think of an embedded MIPS board running at 500MHz
+> > and trying to push 11n speeds.
 > 
-> Yeah, it's a bit confusing .. I'm pretty sure I tried all this when
-> doing the non-5000+ patch. Can you try adding
-> 
-> iwlcore-objs += $(iwlcore-m)
-> 
-> to your Makefile after the iwl-legacy lines and see if that helps for
-> you as well? It seems that the reason is that iwl-legacy never gets
+> I assume the number of samples (weight) is the more
+> important tunable.  One option is you can require factor
+> to be a power of two that is much larger than weight,
+> then at least you can store factor/weight precomputed
+> and multiply by it instead of doing a divide in ewma_add.
+> Then ewma_get can also just be a shift as well.
 
-Yes, that builds fine.
+Hmm, maybe I suck in mathemathics, but I don't see a way to do that given the 
+formula:
 
-> added because it's -m?
+(((internal * (weight - 1)) + (val * factor)) / weight
 
-Seems so.
-
-> But then why did iwlagn-$(CONFIG_IWL4965) and iwl3945-$(CONFIG_IWL3945)
-> work for you? That bit confuses me completely. It looks like this should
-> be working? I mean -- why doesn't iwl-legacy.c now get compiled, but
-> does if you move it to agn like you did here:
-> 
-> 
-> -iwlagn-$(CONFIG_IWL4965) += iwl-4965.o
-> +iwlagn-$(CONFIG_IWL4965) += iwl-4965.o iwl-legacy.o
-> 
-> Why does that work, but not iwlcore-$(CONFIG_IWL4965)??
-
-I dunno, but I only tested my erroneous patch when building as loadable
-modules, not builtin.  Testing error on my part.
-
--- 
-~Randy
-*** Remember to use Documentation/SubmitChecklist when testing your code ***
+bruno
