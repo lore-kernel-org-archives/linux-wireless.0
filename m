@@ -1,234 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:53211 "EHLO nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752680Ab0K1MFT (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 28 Nov 2010 07:05:19 -0500
-From: Felix Fietkau <nbd@openwrt.org>
-To: linux-wireless@vger.kernel.org
-Cc: lrodriguez@atheros.com
-Subject: [PATCH] compat: backport LED class software blinking
-Date: Sun, 28 Nov 2010 13:05:16 +0100
-Message-Id: <1290945916-95814-1-git-send-email-nbd@openwrt.org>
+Received: from he.sipsolutions.net ([78.46.109.217]:56518 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756136Ab0KSR4B (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 19 Nov 2010 12:56:01 -0500
+Subject: Re: [PATCH] mac80211:  Fix deadlock in ieee80211_do_stop.
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Tejun Heo <tj@kernel.org>
+Cc: Ben Greear <greearb@candelatech.com>,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <4CE68AF4.8060507@kernel.org>
+References: <1289592426-5367-1-git-send-email-greearb@candelatech.com>
+	 <1289594998.3736.11.camel@jlt3.sipsolutions.net>
+	 <4CDDAA3B.9090007@candelatech.com>
+	 <1289596096.3736.13.camel@jlt3.sipsolutions.net>
+	 <4CDE699B.70401@kernel.org> <4CE1A344.7040201@candelatech.com>
+	 <4CE292F7.4090200@kernel.org>
+	 <1289929258.3673.1.camel@jlt3.sipsolutions.net>
+	 <4CE396A9.1050908@kernel.org>
+	 <1290020005.3777.6.camel@jlt3.sipsolutions.net>
+	 <4CE4C8DD.6010806@kernel.org> <51f5dd53c39a77fff4efc1a99b189725@localhost>
+	 <4CE4D41F.1080005@kernel.org>
+	 <1290099585.3801.1.camel@jlt3.sipsolutions.net>
+	 <4CE68AF4.8060507@kernel.org>
+Content-Type: text/plain; charset="UTF-8"
+Date: Fri, 19 Nov 2010 09:57:32 -0800
+Message-ID: <1290189452.3768.3.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
----
- compat/compat-2.6.37.c        |  172 +++++++++++++++++++++++++++++++++++++++++
- include/linux/compat-2.6.37.h |   13 +++
- 2 files changed, 185 insertions(+), 0 deletions(-)
+On Fri, 2010-11-19 at 15:34 +0100, Tejun Heo wrote:
 
-diff --git a/compat/compat-2.6.37.c b/compat/compat-2.6.37.c
-index 81f466f..669402d 100644
---- a/compat/compat-2.6.37.c
-+++ b/compat/compat-2.6.37.c
-@@ -152,3 +152,175 @@ int compat_genl_unregister_family(struct genl_family *family)
- }
- EXPORT_SYMBOL(compat_genl_unregister_family);
- 
-+#ifdef CONFIG_LEDS_CLASS
-+
-+#undef led_brightness_set
-+#undef led_classdev_unregister
-+
-+spinlock_t led_lock;
-+static LIST_HEAD(led_timers);
-+
-+struct led_timer {
-+	struct list_head list;
-+	struct led_classdev *cdev;
-+	struct timer_list blink_timer;
-+	unsigned long blink_delay_on;
-+	unsigned long blink_delay_off;
-+	int blink_brightness;
-+};
-+
-+static void led_brightness_set(struct led_classdev *led_cdev,
-+			       enum led_brightness brightness)
-+{
-+	led_cdev->brightness = brightness;
-+	led_cdev->brightness_set(led_cdev, brightness);
-+}
-+
-+static struct led_timer *led_get_timer(struct led_classdev *led_cdev)
-+{
-+	struct led_timer *p;
-+	unsigned long flags;
-+
-+	spin_lock_irqsave(&led_lock, flags);
-+	list_for_each_entry(p, &led_timers, list) {
-+		if (p->cdev == led_cdev)
-+			goto found;
-+	}
-+	p = NULL;
-+found:
-+	spin_unlock_irqrestore(&led_lock, flags);
-+	return p;
-+}
-+
-+static void led_stop_software_blink(struct led_timer *led)
-+{
-+	del_timer_sync(&led->blink_timer);
-+	led->blink_delay_on = 0;
-+	led->blink_delay_off = 0;
-+}
-+
-+static void led_timer_function(unsigned long data)
-+{
-+	struct led_timer *led = (struct led_timer *)data;
-+	unsigned long brightness;
-+	unsigned long delay;
-+
-+	if (!led->blink_delay_on || !led->blink_delay_off) {
-+		led->cdev->brightness_set(led->cdev, LED_OFF);
-+		return;
-+	}
-+
-+	brightness = led->cdev->brightness;
-+	if (!brightness) {
-+		/* Time to switch the LED on. */
-+		brightness = led->blink_brightness;
-+		delay = led->blink_delay_on;
-+	} else {
-+		/* Store the current brightness value to be able
-+		 * to restore it when the delay_off period is over.
-+		 */
-+		led->blink_brightness = brightness;
-+		brightness = LED_OFF;
-+		delay = led->blink_delay_off;
-+	}
-+
-+	led_brightness_set(led->cdev, brightness);
-+	mod_timer(&led->blink_timer, jiffies + msecs_to_jiffies(delay));
-+}
-+
-+static struct led_timer *led_new_timer(struct led_classdev *led_cdev)
-+{
-+	struct led_timer *led;
-+	unsigned long flags;
-+
-+	led = kzalloc(sizeof(struct led_timer), GFP_ATOMIC);
-+	if (!led)
-+		return NULL;
-+
-+	led->cdev = led_cdev;
-+	init_timer(&led->blink_timer);
-+	led->blink_timer.function = led_timer_function;
-+	led->blink_timer.data = (unsigned long) led;
-+
-+	spin_lock_irqsave(&led_lock, flags);
-+	list_add(&led->list, &led_timers);
-+	spin_unlock_irqrestore(&led_lock, flags);
-+
-+	return led;
-+}
-+
-+void led_blink_set(struct led_classdev *led_cdev,
-+		   unsigned long *delay_on,
-+		   unsigned long *delay_off)
-+{
-+	struct led_timer *led = led_get_timer(led_cdev);
-+	int current_brightness;
-+
-+	if (!led) {
-+		led = led_new_timer(led_cdev);
-+		if (!led)
-+			return;
-+	}
-+
-+	/* blink with 1 Hz as default if nothing specified */
-+	if (!*delay_on && !*delay_off)
-+		*delay_on = *delay_off = 500;
-+
-+	if (led->blink_delay_on == *delay_on &&
-+	    led->blink_delay_off == *delay_off)
-+		return;
-+
-+	current_brightness = led_cdev->brightness;
-+	if (current_brightness)
-+		led->blink_brightness = current_brightness;
-+	if (!led->blink_brightness)
-+		led->blink_brightness = led_cdev->max_brightness;
-+
-+	led_stop_software_blink(led);
-+	led->blink_delay_on = *delay_on;
-+	led->blink_delay_off = *delay_off;
-+
-+	/* never on - don't blink */
-+	if (!*delay_on)
-+		return;
-+
-+	/* never off - just set to brightness */
-+	if (!*delay_off) {
-+		led_brightness_set(led_cdev, led->blink_brightness);
-+		return;
-+	}
-+
-+	mod_timer(&led->blink_timer, jiffies + 1);
-+}
-+EXPORT_SYMBOL(led_blink_set);
-+
-+void compat_led_brightness_set(struct led_classdev *led_cdev,
-+			       enum led_brightness brightness)
-+{
-+	struct led_timer *led = led_get_timer(led_cdev);
-+
-+	if (led)
-+		led_stop_software_blink(led);
-+
-+	return led_cdev->brightness_set(led_cdev, brightness);
-+}
-+EXPORT_SYMBOL(compat_led_brightness_set);
-+
-+void compat_led_classdev_unregister(struct led_classdev *led_cdev)
-+{
-+	struct led_timer *led = led_get_timer(led_cdev);
-+	unsigned long flags;
-+
-+	if (led) {
-+		del_timer_sync(&led->blink_timer);
-+		spin_lock_irqsave(&led_lock, flags);
-+		list_del(&led->list);
-+		spin_unlock_irqrestore(&led_lock, flags);
-+		kfree(led);
-+	}
-+
-+	led_classdev_unregister(led_cdev);
-+}
-+EXPORT_SYMBOL(compat_led_classdev_unregister);
-+
-+#endif
-diff --git a/include/linux/compat-2.6.37.h b/include/linux/compat-2.6.37.h
-index 6c026a3..502d2b1 100644
---- a/include/linux/compat-2.6.37.h
-+++ b/include/linux/compat-2.6.37.h
-@@ -6,6 +6,7 @@
- #if (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,37))
- 
- #include <linux/skbuff.h>
-+#include <linux/leds.h>
- 
- #define SDIO_CLASS_BT_AMP	0x09	/* Type-A Bluetooth AMP interface */
- 
-@@ -93,6 +94,18 @@ int genl_unregister_family(struct genl_family *family);
- #define genl_register_mc_group(_fam, _grp) genl_register_mc_group(&(_fam)->family, _grp)
- #define genl_unregister_mc_group(_fam, _grp) genl_unregister_mc_group(&(_fam)->family, _grp)
- 
-+
-+extern void led_blink_set(struct led_classdev *led_cdev,
-+			  unsigned long *delay_on,
-+			  unsigned long *delay_off);
-+
-+#define led_classdev_unregister compat_led_classdev_unregister
-+extern void compat_led_classdev_unregister(struct led_classdev *led_cdev);
-+
-+#define led_brightness_set compat_led_brightness_set
-+extern void compat_led_brightness_set(struct led_classdev *led_cdev,
-+				      enum led_brightness brightness);
-+
- #endif /* (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,37)) */
- 
- #endif /* LINUX_26_37_COMPAT_H */
--- 
-1.7.3.2
+> Awesome.  :-)
+> 
+> Ben, if you have trouble generating full trace, please let me know if
+> there's something I can buy which isn't too expensive to reproduce the
+> problem.  I would be happy to track it down myself.
+
+Maybe you can try Ben's setup in kvm (or directly on your box if you
+like) with mac80211_hwsim. From a mac80211 POV it should be almost
+equivalent, although it'll do different memory allocation patterns etc.
+
+johannes
 
