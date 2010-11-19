@@ -1,59 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f46.google.com ([209.85.214.46]:43075 "EHLO
-	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755717Ab0K3LTr (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 30 Nov 2010 06:19:47 -0500
-Received: by bwz15 with SMTP id 15so4896601bwz.19
-        for <linux-wireless@vger.kernel.org>; Tue, 30 Nov 2010 03:19:46 -0800 (PST)
-From: Helmut Schaa <helmut.schaa@googlemail.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org,
-	Helmut Schaa <helmut.schaa@googlemail.com>,
-	Johannes Berg <johannes@sipsolutions.net>
-Subject: [PATCH] mac80211: Minor optimization in ieee80211_rx_h_data
-Date: Tue, 30 Nov 2010 12:19:34 +0100
-Message-Id: <1291115974-4878-1-git-send-email-helmut.schaa@googlemail.com>
+Received: from mail.atheros.com ([12.19.149.2]:63350 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754730Ab0KSBS5 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 18 Nov 2010 20:18:57 -0500
+Received: from mail.atheros.com ([10.10.20.108])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Thu, 18 Nov 2010 17:18:44 -0800
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: <johannes@sipsolutions.net>
+CC: <linux-wireless@vger.kernel.org>,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	Matt Smith <matt.smith@atheros.com>,
+	Senthil Balasubramanian <senthilkumar@atheros.com>
+Subject: [RFC] mac80211: disable aggregatin for voice traffic
+Date: Thu, 18 Nov 2010 17:18:54 -0800
+Message-ID: <1290129534-21785-1-git-send-email-lrodriguez@atheros.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Remove a superfluous ieee80211_is_data check as that was checked a few
-lines before already and we wont't get here for non-data frames at all.
+This should help with latency issues which can happen when
+using aggregation.
 
-Second, the frame was already converted to 802.3 header format and
-reading the fc and addr1 fields was only possible because the 802.3
-header is short enough and didn't overwrite the relevant parts of the
-802.11 header. Make the code more obvious by checking the ethernet
-header's h_dest field.
-
-Furthermore reorder the conditions to reduce the number of checks
-when dynamic powersave is not needed (AP mode for example).
-
-Cc: Johannes Berg <johannes@sipsolutions.net>
-Signed-off-by: Helmut Schaa <helmut.schaa@googlemail.com>
+Cc: Matt Smith <matt.smith@atheros.com>
+Cc: Senthil Balasubramanian <senthilkumar@atheros.com>
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
 ---
 
-Found via code review, compile tested only.
+We discussed this a while ago but never to around to it.
 
- net/mac80211/rx.c |    5 ++---
- 1 files changed, 2 insertions(+), 3 deletions(-)
+ net/mac80211/tx.c |    3 ++-
+ 1 files changed, 2 insertions(+), 1 deletions(-)
 
-diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
-index 9dd60a7..9e44fbf 100644
---- a/net/mac80211/rx.c
-+++ b/net/mac80211/rx.c
-@@ -1871,9 +1871,8 @@ ieee80211_rx_h_data(struct ieee80211_rx_data *rx)
- 	dev->stats.rx_packets++;
- 	dev->stats.rx_bytes += rx->skb->len;
+diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
+index e694836..405ddc9 100644
+--- a/net/mac80211/tx.c
++++ b/net/mac80211/tx.c
+@@ -1225,7 +1225,8 @@ ieee80211_tx_prepare(struct ieee80211_sub_if_data *sdata,
+ 		tx->sta = sta_info_get(sdata, hdr->addr1);
  
--	if (ieee80211_is_data(hdr->frame_control) &&
--	    !is_multicast_ether_addr(hdr->addr1) &&
--	    local->hw.conf.dynamic_ps_timeout > 0 && local->ps_sdata) {
-+	if (local->ps_sdata && local->hw.conf.dynamic_ps_timeout > 0 && 
-+	    !is_multicast_ether_addr(((struct ethhdr *)rx->skb->data)->h_dest)) {
- 			mod_timer(&local->dynamic_ps_timer, jiffies +
- 			 msecs_to_jiffies(local->hw.conf.dynamic_ps_timeout));
- 	}
+ 	if (tx->sta && ieee80211_is_data_qos(hdr->frame_control) &&
+-	    (local->hw.flags & IEEE80211_HW_AMPDU_AGGREGATION)) {
++	    (local->hw.flags & IEEE80211_HW_AMPDU_AGGREGATION) &&
++	    (ieee802_1d_to_ac[skb->priority] != IEEE80211_AC_VO)) {
+ 		struct tid_ampdu_tx *tid_tx;
+ 
+ 		qc = ieee80211_get_qos_ctl(hdr);
 -- 
-1.7.1
+1.7.3.2.90.gd4c43
 
