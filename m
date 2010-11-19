@@ -1,41 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:57771 "EHLO mx1.redhat.com"
+Received: from nbd.name ([46.4.11.11]:44449 "EHLO nbd.name"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750969Ab0KXOMI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 24 Nov 2010 09:12:08 -0500
-Date: Wed, 24 Nov 2010 15:11:33 +0100
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Wey-Yi Guy <wey-yi.w.guy@intel.com>,
-	Intel Linux Wireless <ilw@linux.intel.com>,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] iwlwifi: avoid "Error sending TX power (-5)"
-Message-ID: <20101124141133.GA2983@redhat.com>
-References: <1290595069-3878-1-git-send-email-sgruszka@redhat.com>
- <1290595452.3790.13.camel@jlt3.sipsolutions.net>
- <20101124130403.GA2446@redhat.com>
+	id S1752011Ab0KSMnk (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 19 Nov 2010 07:43:40 -0500
+Message-ID: <4CE670FA.50704@openwrt.org>
+Date: Fri, 19 Nov 2010 13:43:38 +0100
+From: Felix Fietkau <nbd@openwrt.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20101124130403.GA2446@redhat.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: linux-wireless@vger.kernel.org, linville@tuxdriver.com
+Subject: Re: [PATCH] mac80211: use nullfunc instead of probe request for connection
+ monitoring
+References: <1290141756-37252-1-git-send-email-nbd@openwrt.org> <b18357d5d26e318178407a9133214709@localhost>
+In-Reply-To: <b18357d5d26e318178407a9133214709@localhost>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Nov 24, 2010 at 02:04:03PM +0100, Stanislaw Gruszka wrote:
-> On Wed, Nov 24, 2010 at 11:44:12AM +0100, Johannes Berg wrote:
-> > On Wed, 2010-11-24 at 11:37 +0100, Stanislaw Gruszka wrote:
-> > > We can have this error message when loading or unloading module, when
-> > > device is not marked as ready, but we want to set tx power from
-> > > commit_rxon. Perhaps something better should be done like call
-> > > lib->send_tx_power() directly from commit_rxon, but for now just
-> > > do not return error.
-> > 
-> > I think this actually fixes it, as opposed to hiding it:
-> > 
-> > http://git.kernel.org/?p=linux/kernel/git/iwlwifi/iwlwifi-2.6.git;a=commitdiff;h=9e2e7422d059f9b98c3a0810df92a1ff660ade2f
+On 2010-11-19 6:58 AM, Johannes Berg wrote:
+> On Fri, 19 Nov 2010 05:42:36 +0100, Felix Fietkau <nbd@openwrt.org> wrote:
+>> +	if (sdata->local->hw.flags & IEEE80211_HW_REPORTS_TX_ACK_STATUS)
+>> +		ieee80211_send_nullfunc(sdata->local, sdata, 0);
 > 
-> Yes.
+> Hmm, should that really be 0 always? Could it be racy either way?
+> I think that probably needs some analysis.
+Yes, it should be 0. While it's probing the AP,
+IEEE80211_STA_CONNECTION_POLL or IEEE80211_STA_BEACON_POLL is set, and
+before sending the first probe request or nullfunc frame,
+ieee80211_recalc_ps is called. That effectively pulls us out of
+powersave mode, so sending a nullfunc frame that indicates that we're
+awake should be safe.
 
-Not fully, message disappears at start, but not when module
-is unloaded.
+>> +	else {
+>> +		ssid = ieee80211_bss_get_ie(ifmgd->associated, WLAN_EID_SSID);
+>> +		ieee80211_send_probe_req(sdata, dst, ssid + 2, ssid[1], NULL, 0);
+>> +	}
+>>  
+>>  	ifmgd->probe_send_count++;
+>>  	ifmgd->probe_timeout = jiffies + IEEE80211_PROBE_WAIT;
+>> @@ -1509,29 +1562,8 @@ static void ieee80211_rx_mgmt_probe_resp(struct
+>> ieee80211_sub_if_data *sdata,
+>>  	ieee80211_rx_bss_info(sdata, mgmt, len, rx_status, &elems, false);
+>>  
+>>  	if (ifmgd->associated &&
+>> -	    memcmp(mgmt->bssid, ifmgd->associated->bssid, ETH_ALEN) == 0 &&
+>> -	    ifmgd->flags & (IEEE80211_STA_BEACON_POLL |
+>> -			    IEEE80211_STA_CONNECTION_POLL)) {
+>> -		ifmgd->flags &= ~(IEEE80211_STA_CONNECTION_POLL |
+>> -				  IEEE80211_STA_BEACON_POLL);
+>> -		mutex_lock(&sdata->local->iflist_mtx);
+>> -		ieee80211_recalc_ps(sdata->local, -1);
+>> -		mutex_unlock(&sdata->local->iflist_mtx);
+>> -
+>> -		if (sdata->local->hw.flags & IEEE80211_HW_CONNECTION_MONITOR)
+>> -			return;
+>> -
+>> -		/*
+>> -		 * We've received a probe response, but are not sure whether
+>> -		 * we have or will be receiving any beacons or data, so let's
+>> -		 * schedule the timers again, just in case.
+>> -		 */
+>> -		ieee80211_sta_reset_beacon_monitor(sdata);
+>> -
+>> -		mod_timer(&ifmgd->conn_mon_timer,
+>> -			  round_jiffies_up(jiffies +
+>> -					   IEEE80211_CONNECTION_IDLE_TIME));
+>> -	}
+>> +	    memcmp(mgmt->bssid, ifmgd->associated->bssid, ETH_ALEN) == 0)
+>> +		ieee80211_reset_ap_probe(sdata);
+> 
+> Not sure I get this part...
+I just moved most of this code up to to the ieee80211_reset_ap_probe
+function to avoid duplicating it (since it's called from
+ieee80211_sta_tx_notify as well).
 
-Stanislaw 
+- Felix
