@@ -1,55 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:40369 "EHLO nbd.name"
-	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1756002Ab0KKTbP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 11 Nov 2010 14:31:15 -0500
-Message-ID: <4CDC4480.8050206@openwrt.org>
-Date: Thu, 11 Nov 2010 20:31:12 +0100
-From: Felix Fietkau <nbd@openwrt.org>
-MIME-Version: 1.0
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-CC: Mark Mentovai <mark@moxienet.com>, linux-wireless@vger.kernel.org
-Subject: Re: ath9k max_power question
-References: <AANLkTikjg+jY6XYhJjRPydwveW0xr+8tLv-Oypsks4ay@mail.gmail.com> <AANLkTimVEm7=c-fof_niToJqy1t+C5fk_JYH_=x1+p5r@mail.gmail.com>
-In-Reply-To: <AANLkTimVEm7=c-fof_niToJqy1t+C5fk_JYH_=x1+p5r@mail.gmail.com>
-Content-Type: text/plain; charset=UTF-8
+Received: from einhorn.in-berlin.de ([192.109.42.8]:33490 "EHLO
+	einhorn.in-berlin.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754478Ab0KSOF7 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 19 Nov 2010 09:05:59 -0500
+Date: Fri, 19 Nov 2010 15:04:51 +0100
+From: Stefan Richter <stefanr@s5r6.in-berlin.de>
+To: Bruno Randolf <br1@einfach.org>
+Cc: Bob Copeland <me@bobcopeland.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Jouni Malinen <j@w1.fi>, linville@tuxdriver.com,
+	randy.dunlap@oracle.com, peterz@infradead.org, blp@cs.stanford.edu,
+	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Lars_Ericsson@telia.com, kosaki.motohiro@jp.fujitsu.com,
+	akpm@linux-foundation.org, kevin.granade@gmail.com
+Subject: Re: [PATCH v7 3/3] nl80211/mac80211: Report signal average
+Message-ID: <20101119150451.1c0d273f@stein>
+In-Reply-To: <201011191749.31974.br1@einfach.org>
+References: <20101112024901.28522.21895.stgit@localhost6.localdomain6>
+	<1290010595.3777.0.camel@jlt3.sipsolutions.net>
+	<AANLkTimoogSLAipNy=njGtHypqBQSk=usDmXut=KN9TM@mail.gmail.com>
+	<201011191749.31974.br1@einfach.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2010-11-11 8:22 PM, Luis R. Rodriguez wrote:
-> On Thu, Nov 11, 2010 at 11:15 AM, Mark Mentovai <mark@moxienet.com> wrote:
->> In drivers/net/wireless/ath/ath9k/init.c, both CHAN2G and CHAN5G set
->> .max_power to 20, represented in dBm. I’m wondering how this number
->> was chosen. Is it simply a safe generic value? I’m dealing with a
->> device on which the vendor’s madwifi-based binary driver would show
->> 23dBm for 2.4GHz and 18dBm for 5GHz (although only when I asked it for
->> 26dBm and 24dBm respectively, so I’m not sure which set of numbers to
->> believe.)
->>
->> I noticed that in ath9k, if these .max_power limits are raised, the
->> driver is happy to set a somewhat higher transmit power. In this case,
->> it will max out at 25dBm for 2.4GHz and 21dBm for 5GHz. These are
->> still below the relevant regulatory limits. These values seem to be
->> computed by routines in eeprom_*.c, so I’m wondering if they’re based
->> on the card’s own data and safe to use without fear of burning the
->> radios.
-> 
-> The values are just some safe value to use as defaults but will
-> quickly be replaced by the max regulatory allowed and then upon
-> further inspection also capped to the lower value of the regulatory
-> limit, the max allowed device limit (where things start becoming
-> unreliable), and the CTL indexed limit which is calibrated
-> specifically for the card you use, so this will vary. You can read
-> more about it here:
-> 
-> http://wireless.kernel.org/en/users/Drivers/ath
-That should have already been taken care of by this commit (w-t):
+On Nov 19 Bruno Randolf wrote:
+> Here are the results of iperf -u -c IP -b 30M -t 120
 
-commit 6cdd07721180145b7ef46bd63f1eee636983f0e6
-Author: Felix Fietkau <nbd@openwrt.org>
-Date:   Wed Oct 20 02:09:46 2010 +0200
-
-ath9k: initialize per-channel tx power limits instead of hardcoding them
-
-
-- Felix
+You only showed that CPU utilization is not so high that an effect on
+network throughput can be seen.  You did not measure what the increase
+in CPU utilization actually was. :-)
+-- 
+Stefan Richter
+-=====-==-=- =-== =--==
+http://arcgraph.de/sr/
