@@ -1,84 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iw0-f174.google.com ([209.85.214.174]:57424 "EHLO
-	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755838Ab0KUVrr (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:49531 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754202Ab0KSS5Q (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 21 Nov 2010 16:47:47 -0500
-MIME-Version: 1.0
-In-Reply-To: <20101121203124.1ba8212e@lxorguk.ukuu.org.uk>
-References: <AANLkTim4jVaZxYp8nSgJyy28iwxcxbPeNUzxTfoHAX4S@mail.gmail.com>
- <F46C52ED-8DB8-4347-957D-B9D84406D53F@mit.edu> <AANLkTinyafwe9MyXhSSe5vxEKnTUeLV0AZDWY_uXsu8f@mail.gmail.com>
- <20101121130236.GE23423@thunk.org> <20101121172906.GD3703@kroah.com>
- <AANLkTik6MQjYTCQ4wtyRpOGb94uyUTA+juvX-8UsP95J@mail.gmail.com> <20101121203124.1ba8212e@lxorguk.ukuu.org.uk>
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Date: Sun, 21 Nov 2010 13:47:26 -0800
-Message-ID: <AANLkTi==VRvn2XjNf3EWZf8jAXwFTrRz8uyFSnnYVi8c@mail.gmail.com>
-Subject: Re: Challenges with doing hardware bring up with Linux first
-To: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Cc: Greg KH <greg@kroah.com>, "Ted Ts'o" <tytso@mit.edu>,
-	linux-kernel@vger.kernel.org,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	David Miller <davem@davemloft.net>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Stephen Hemminger <shemminger@vyatta.com>,
-	"Perez-Gonzalez, Inaky" <inaky.perez-gonzalez@intel.com>,
-	Charles Marker <Charles.Marker@atheros.com>,
-	Jouni Malinen <Jouni.Malinen@atheros.com>,
-	Kevin Hayes <kevin@atheros.com>,
-	Zhifeng Cai <zhifeng.cai@atheros.com>,
-	Don Breslin <Don.Breslin@atheros.com>,
-	Doug Dahlby <Doug.Dahlby@atheros.com>,
-	Julia Lawall <julia@diku.dk>
-Content-Type: text/plain; charset=UTF-8
+	Fri, 19 Nov 2010 13:57:16 -0500
+Subject: Re: [PATCH v7 3/3] nl80211/mac80211: Report signal average
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Jouni Malinen <j@w1.fi>
+Cc: Bruno Randolf <br1@einfach.org>, linville@tuxdriver.com,
+	randy.dunlap@oracle.com, br1@thinktube.com, peterz@infradead.org,
+	blp@cs.stanford.edu, linux-wireless@vger.kernel.org,
+	linux-kernel@vger.kernel.org, Lars_Ericsson@telia.com,
+	stefanr@s5r6.in-berlin.de, kosaki.motohiro@jp.fujitsu.com,
+	akpm@linux-foundation.org, kevin.granade@gmail.com
+In-Reply-To: <20101116093743.GA21872@jm.kir.nu>
+References: <20101112024901.28522.21895.stgit@localhost6.localdomain6>
+	 <20101112030035.28522.75318.stgit@localhost6.localdomain6>
+	 <20101116093743.GA21872@jm.kir.nu>
+Content-Type: text/plain; charset="UTF-8"
+Date: Fri, 19 Nov 2010 10:58:36 -0800
+Message-ID: <1290193116.3768.8.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, Nov 21, 2010 at 12:31 PM, Alan Cox <alan@lxorguk.ukuu.org.uk> wrote:
->> Right -- which is why ideally I think it'd be nice to have an open
->> permissive stack people shared. My preference would be to just pick up
->
-> Which we know in practice they won't. They'll sit on fixes (often
-> security fixes) and tweak and add private copies of features. In turn the
-> Linux one could then only keep up by adding features itself - which would
-> have to be GPL to stop the same abuse continuing.
->
-> It's a nice idea but the corporations exist to make money and adding
-> proprietary custom stack add-ons is clearly a good move on their part to
-> do that.
+On Tue, 2010-11-16 at 11:37 +0200, Jouni Malinen wrote:
+> On Fri, Nov 12, 2010 at 12:00:35PM +0900, Bruno Randolf wrote:
+> > Extend nl80211 to report an exponential weighted moving average (EWMA) of the
+> > signal value. Since the signal value usually fluctuates between different
+> > packets, an average can be more useful than the value of the last packet.
+> > 
+> > This uses the recently added generic EWMA library function.
+> 
+> Isn't that generic EWMA library function making this much more CPU
+> intensive than necessary?
 
-I agree completely with you. Its up to companies to decide whether or
-not they want to do that and ultimately traditionally companies have
-preferred not to. I actually think there is more to it than not
-wanting though... As I see it without people upstream working for some
-of these companies its really hard for them to get these ideas and
-actually believe in the possibility of it and the benefits. I'm
-voicing this publicly to our own managers and lkml because I'd like to
-see that companies get the message because realistically I really
-don't expect anything like this has been *seriously* considered
-before. When I ask people about it, I often hear people say they think
-it'd be nice, but that's about it. Nothing more. No push, no action.
-Its to the industry's best interest IMHO. Even if a common 802.11
-stack was shared, if it was permissive licensed companies could still
-go on and hack their own proprietary crap on top if they so wish, so
-that would still be an option.
+John, is there any reason you completely ignored Jouni's feedback here?
+This wasn't addressed in v8.
 
-My point with all this thread is this: companies tend to not think out
-of the proprietary box they have been put in by old driver development
-habits, and driver development should not be so hard and tedious. They
-should start considering working on more open solutions even for
-proprietary operating systems, under a permissive license. I suspect
-this will help out with resources considerations, bug fix propagation
-and coordination between supporting different Operating Systems. We
-also stand to gain from this on Linux too, after all a driver bug fix
-for hardware sensitive code will need to be propagated to other OSes
-anyway.
+johannes
 
-I can surely ignore the other OSes and their IMHO their terrible
-software practices but I can't because although it only affects Linux
-in a tedious way I think we can do better and strive for that. If
-sharing an 802.11 stack seems like a pipe dream oh well, at least I
-think we should consider opening up the code for the other OSes and
-let communities help with that crap for our company. Let it evolve
-naturally. The benefits of FOSS cannot just only benefit Linux.
-
-  Luis
