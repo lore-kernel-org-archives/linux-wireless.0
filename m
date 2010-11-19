@@ -1,30 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from hrndva-omtalb.mail.rr.com ([71.74.56.123]:50952 "EHLO
-	hrndva-omtalb.mail.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750969Ab0KUCSf (ORCPT
+Received: from mail.deathmatch.net ([72.66.92.28]:2105 "EHLO
+	mail.deathmatch.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757161Ab0KSWoK (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 20 Nov 2010 21:18:35 -0500
-Date: Sat, 20 Nov 2010 20:18:24 -0600
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: John W Linville <linville@tuxdriver.com>
-Cc: chaoming_li@realsil.com.cn, linux-wireless@vger.kernel.org
-Subject: [RFC PATCH 00/23] rtl8192ce: Introduce new driver
-Message-ID: <4ce88170.VCtqm4WJU1N+oeT7%Larry.Finger@lwfinger.net>
+	Fri, 19 Nov 2010 17:44:10 -0500
+Date: Fri, 19 Nov 2010 17:28:46 -0500
+From: Bob Copeland <me@bobcopeland.com>
+To: Bruno Randolf <br1@einfach.org>
+Cc: Johannes Berg <johannes@sipsolutions.net>, Jouni Malinen <j@w1.fi>,
+	linville@tuxdriver.com, randy.dunlap@oracle.com,
+	peterz@infradead.org, blp@cs.stanford.edu,
+	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Lars_Ericsson@telia.com, stefanr@s5r6.in-berlin.de,
+	kosaki.motohiro@jp.fujitsu.com, akpm@linux-foundation.org,
+	kevin.granade@gmail.com
+Subject: Re: [PATCH v7 3/3] nl80211/mac80211: Report signal average
+Message-ID: <20101119222846.GA26592@hash.localnet>
+References: <20101112024901.28522.21895.stgit@localhost6.localdomain6> <1290010595.3777.0.camel@jlt3.sipsolutions.net> <AANLkTimoogSLAipNy=njGtHypqBQSk=usDmXut=KN9TM@mail.gmail.com> <201011191807.06013.br1@einfach.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <201011191807.06013.br1@einfach.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch bomb contains the initial upload of a new Realtek driver for
-the 802.11n wireless device in PCIe format with PCI IDs of 0x10ec:{0x8176,
-0x8177, 0x8178, and 0x8191}. None of these devices have been previously
-supported.
+On Fri, Nov 19, 2010 at 06:07:05PM +0900, Bruno Randolf wrote:
+> Hmm, maybe I suck in mathemathics, but I don't see a way to do that given the 
+> formula:
+> 
+> (((internal * (weight - 1)) + (val * factor)) / weight
 
-The bulk of the driver is as I got it from Realtek. My main contribution
-has been to clean up the driver and take care of checkpatch and sparse
-warnings and errors.
+I was thinking something along the lines of:
 
-The firmware for this device is already in linux-firmware.
+round = (1 << n) - 1;
+(((internal * (weight - 1) + round) >> n) + val) * ((1 << n) / weight)
 
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+where (1 << n) is the factor and ((1 << n) / weight) can be precomputed.
+If you think about it, this is just reciprocal multiplication in fixed-
+point math with n bits of decimal resolution. 
+
+The problem is the shift of the older terms introduces roundoff error, but
+there are some tricks you can do to maintain bounded error, e.g. shifting
+by some smaller factor of n and scaling other terms -- in the limit you
+reinvent floating point and then it's slower than division :)
+
+-- 
+Bob Copeland %% www.bobcopeland.com
 
