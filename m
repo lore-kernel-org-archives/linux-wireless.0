@@ -1,44 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:38812 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751206Ab0KXJt5 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 24 Nov 2010 04:49:57 -0500
-Subject: Re: [PATCH] wl1271: use debugfs_remove_recursive
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Eliad Peller <eliad@wizery.com>
-Cc: Luciano Coelho <luciano.coelho@nokia.com>,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <1290591333-30453-1-git-send-email-eliad@wizery.com>
-References: <1290591333-30453-1-git-send-email-eliad@wizery.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Wed, 24 Nov 2010 10:49:52 +0100
-Message-ID: <1290592192.3790.11.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+Received: from nbd.name ([46.4.11.11]:35167 "EHLO nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754247Ab0KSVzt (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 19 Nov 2010 16:55:49 -0500
+From: Felix Fietkau <nbd@openwrt.org>
+To: linux-wireless@vger.kernel.org
+Cc: linville@tuxdriver.com, johannes@sipsolutions.net
+Subject: [PATCH 4/4] mac80211: reduce the probe response timeout after beacon loss
+Date: Fri, 19 Nov 2010 22:55:40 +0100
+Message-Id: <1290203740-57124-4-git-send-email-nbd@openwrt.org>
+In-Reply-To: <1290203740-57124-3-git-send-email-nbd@openwrt.org>
+References: <1290203740-57124-1-git-send-email-nbd@openwrt.org>
+ <1290203740-57124-2-git-send-email-nbd@openwrt.org>
+ <1290203740-57124-3-git-send-email-nbd@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2010-11-24 at 11:35 +0200, Eliad Peller wrote:
+Waiting for 500 ms after sending a probe request seems a bit excessive,
+especially when doing 5 attempts. If the connection is bad enough to make
+multiple requests time out, then user space should try to quickly find a
+new AP.
 
-> @@ -524,23 +423,14 @@ int wl1271_debugfs_init(struct wl1271 *wl)
->  {
->  	int ret;
->  
-> -	wl->debugfs.rootdir = debugfs_create_dir(KBUILD_MODNAME, NULL);
-> +	wl->rootdir = debugfs_create_dir(KBUILD_MODNAME, NULL);
->  
-> -	if (IS_ERR(wl->debugfs.rootdir)) {
-> -		ret = PTR_ERR(wl->debugfs.rootdir);
-> -		wl->debugfs.rootdir = NULL;
-> +	if (IS_ERR(wl->rootdir)) {
-> +		ret = PTR_ERR(wl->rootdir);
-> +		wl->rootdir = NULL;
->  		goto err;
->  	}
+Signed-off-by: Paul Stewart <pstew@google.com>
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+---
+ net/mac80211/mlme.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-This looks problematic if you ever have more than one device ... I
-suggest moving to using the wiphy's debugfs dir as the parent for the
-rootdir.
-
-johannes
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+index ae99c0b..a64bb92 100644
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -51,7 +51,7 @@
+  * a probe request because of beacon loss or for
+  * checking the connection still works.
+  */
+-#define IEEE80211_PROBE_WAIT		(HZ / 2)
++#define IEEE80211_PROBE_WAIT		(HZ / 5)
+ 
+ /*
+  * Weight given to the latest Beacon frame when calculating average signal
+-- 
+1.7.3.2
 
