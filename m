@@ -1,151 +1,203 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bar.sig21.net ([80.81.252.164]:59330 "EHLO bar.sig21.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751288Ab0K3Ptc (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 30 Nov 2010 10:49:32 -0500
-Date: Tue, 30 Nov 2010 16:49:23 +0100
-From: Johannes Stezenbach <js@sig21.net>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org, Ivo van Doorn <IvDoorn@gmail.com>,
-	Gertjan van Wingerde <gwingerde@gmail.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Helmut Schaa <helmut.schaa@googlemail.com>
-Subject: [PATCH v4] mac80211/rt2x00: add ieee80211_tx_status_ni()
-Message-ID: <20101130154923.GA4618@sig21.net>
-References: <20101129145439.GA31910@sig21.net>
- <1291043349.3532.4.camel@jlt3.sipsolutions.net>
- <20101129152735.GA32319@sig21.net>
- <1291045056.3532.5.camel@jlt3.sipsolutions.net>
- <20101129155126.GA32482@sig21.net>
- <1291046320.3532.6.camel@jlt3.sipsolutions.net>
- <20101129161316.GA32760@sig21.net>
+Received: from mail-iw0-f174.google.com ([209.85.214.174]:55121 "EHLO
+	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753301Ab0KSRNR convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 19 Nov 2010 12:13:17 -0500
+Received: by iwn7 with SMTP id 7so1969iwn.19
+        for <linux-wireless@vger.kernel.org>; Fri, 19 Nov 2010 09:13:16 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20101129161316.GA32760@sig21.net>
+In-Reply-To: <93781E992CBA7843962D8B0E7D683F3C16334843DD@SC1EXMB-MBCL.global.atheros.com>
+References: <20100525151429.GC6342@tpkurt2.garloff.de> <1290029817-711-1-git-send-email-linville@tuxdriver.com>
+ <AANLkTimDkoqNbkFWDsU2HgFK3926gRpcBbokX_GL5sSc@mail.gmail.com>
+ <93781E992CBA7843962D8B0E7D683F3C163340D5AE@SC1EXMB-MBCL.global.atheros.com>
+ <20101119020414.GB2512@tuxdriver.com> <20101119091450.GD12228@tpkurt2.nue.garloff.de>
+ <93781E992CBA7843962D8B0E7D683F3C16334843DD@SC1EXMB-MBCL.global.atheros.com>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Fri, 19 Nov 2010 09:12:55 -0800
+Message-ID: <AANLkTi=ySDQtw+M6ATV47HszkJN7vfR7q+FOC6-OBqjk@mail.gmail.com>
+Subject: Re: [PATCH] wireless-regdb: update rules for DE
+To: Michael Green <Michael.Green@atheros.com>
+Cc: Kurt Garloff <garloff@suse.de>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	"wireless-regdb@lists.infradead.org"
+	<wireless-regdb@lists.infradead.org>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-All rt2x00 drivers except rt2800pci call ieee80211_tx_status() from
-a workqueue, which causes "NOHZ: local_softirq_pending 08" messages.
+No Michael, let me review the patch with you and I'll comment on each
+change it makes to make it clear to you. The lines with no - or + on
+the left mean that the line is left intact, its present just for
+reference. The lines with - mean that the line is being removed. The
+lines with + mean that the line is being added. So we have:
 
-To fix it, add ieee80211_tx_status_ni() similar to ieee80211_rx_ni()
-which can be called from process context, and call it from
-rt2x00lib_txdone().  For the rt2800pci special case a driver
-flag is introduced.
+       # entries 279004 and 280006
+       (2400 - 2483.5 @ 40), (N/A, 100 mW)
+-       # entries 303005, 304002 and 305002
+-       (5150 - 5350 @ 40), (N/A, 100 mW), NO-OUTDOOR, DFS
++       # entry 303005
++       (5150 - 5250 @ 40), (N/A, 100 mW), NO-OUTDOOR
 
-Signed-off-by: Johannes Stezenbach <js@sig21.net>
----
-v2: add ieee80211_tx_status_ni()
-v3: simplify accorindg to review
-v4: add rt2x00 as first user of ieee80211_tx_status_ni()
+So the 5150 - 5350 range is being reduced to 5150 - 5250 and removing
+DFS as a requirement for that range.
 
-The DRIVER_REQUIRE_TASKLET_CONTEXT flag may seem ugly, but there is
-a pending rewrite of the rt2800pci irq handling code by
-Helmut, so we decided to use this easy solution.
++       # entries 304002 and 305002
++       (5250 - 5350 @ 40), (N/A, 100 mW), NO-OUTDOOR, DFS
 
-Note: Only tested with rt2800usb.
+The removed bit of frequency gets added back but with DFS left as a requirement.
 
- drivers/net/wireless/rt2x00/rt2800pci.c |    1 +
- drivers/net/wireless/rt2x00/rt2x00.h    |    1 +
- drivers/net/wireless/rt2x00/rt2x00dev.c |    9 ++++++---
- include/net/mac80211.h                  |   28 ++++++++++++++++++++++++----
- 4 files changed, 32 insertions(+), 7 deletions(-)
+       # entries 308002, 309001 and 310003
+-       (5470 - 5725 @ 40), (N/A, 500 mW), NO-OUTDOOR, DFS
++       (5470 - 5725 @ 40), (N/A, 500 mW), DFS
 
-diff --git a/drivers/net/wireless/rt2x00/rt2800pci.c b/drivers/net/wireless/rt2x00/rt2800pci.c
-index b48d2d3..3ef0228 100644
---- a/drivers/net/wireless/rt2x00/rt2800pci.c
-+++ b/drivers/net/wireless/rt2x00/rt2800pci.c
-@@ -932,6 +932,7 @@ static int rt2800pci_probe_hw(struct rt2x00_dev *rt2x00dev)
- 	__set_bit(DRIVER_REQUIRE_DMA, &rt2x00dev->flags);
- 	__set_bit(DRIVER_REQUIRE_L2PAD, &rt2x00dev->flags);
- 	__set_bit(DRIVER_REQUIRE_TXSTATUS_FIFO, &rt2x00dev->flags);
-+	__set_bit(DRIVER_REQUIRE_TASKLET_CONTEXT, &rt2x00dev->flags);
- 	if (!modparam_nohwcrypt)
- 		__set_bit(CONFIG_SUPPORT_HW_CRYPTO, &rt2x00dev->flags);
- 	__set_bit(DRIVER_SUPPORT_LINK_TUNING, &rt2x00dev->flags);
-diff --git a/drivers/net/wireless/rt2x00/rt2x00.h b/drivers/net/wireless/rt2x00/rt2x00.h
-index 556b744..28ea59a 100644
---- a/drivers/net/wireless/rt2x00/rt2x00.h
-+++ b/drivers/net/wireless/rt2x00/rt2x00.h
-@@ -670,6 +670,7 @@ enum rt2x00_flags {
- 	DRIVER_REQUIRE_COPY_IV,
- 	DRIVER_REQUIRE_L2PAD,
- 	DRIVER_REQUIRE_TXSTATUS_FIFO,
-+	DRIVER_REQUIRE_TASKLET_CONTEXT,
- 
- 	/*
- 	 * Driver features
-diff --git a/drivers/net/wireless/rt2x00/rt2x00dev.c b/drivers/net/wireless/rt2x00/rt2x00dev.c
-index 87a421b..fa74acd 100644
---- a/drivers/net/wireless/rt2x00/rt2x00dev.c
-+++ b/drivers/net/wireless/rt2x00/rt2x00dev.c
-@@ -376,9 +376,12 @@ void rt2x00lib_txdone(struct queue_entry *entry,
- 	 * through a mac80211 library call (RTS/CTS) then we should not
- 	 * send the status report back.
- 	 */
--	if (!(skbdesc_flags & SKBDESC_NOT_MAC80211))
--		ieee80211_tx_status(rt2x00dev->hw, entry->skb);
--	else
-+	if (!(skbdesc_flags & SKBDESC_NOT_MAC80211)) {
-+		if (test_bit(DRIVER_REQUIRE_TASKLET_CONTEXT, &rt2x00dev->flags))
-+			ieee80211_tx_status(rt2x00dev->hw, entry->skb);
-+		else
-+			ieee80211_tx_status_ni(rt2x00dev->hw, entry->skb);
-+	} else
- 		dev_kfree_skb_any(entry->skb);
- 
- 	/*
-diff --git a/include/net/mac80211.h b/include/net/mac80211.h
-index eaa4aff..e411cf8 100644
---- a/include/net/mac80211.h
-+++ b/include/net/mac80211.h
-@@ -2055,8 +2055,8 @@ static inline void ieee80211_rx_ni(struct ieee80211_hw *hw,
-  *
-  * This function may not be called in IRQ context. Calls to this function
-  * for a single hardware must be synchronized against each other. Calls
-- * to this function and ieee80211_tx_status_irqsafe() may not be mixed
-- * for a single hardware.
-+ * to this function, ieee80211_tx_status_ni() and ieee80211_tx_status_irqsafe()
-+ * may not be mixed for a single hardware.
-  *
-  * @hw: the hardware the frame was transmitted by
-  * @skb: the frame that was transmitted, owned by mac80211 after this call
-@@ -2065,13 +2065,33 @@ void ieee80211_tx_status(struct ieee80211_hw *hw,
- 			 struct sk_buff *skb);
- 
- /**
-+ * ieee80211_tx_status_ni - transmit status callback (in process context)
-+ *
-+ * Like ieee80211_tx_status() but can be called in process context.
-+ *
-+ * Calls to this function, ieee80211_tx_status() and
-+ * ieee80211_tx_status_irqsafe() may not be mixed
-+ * for a single hardware.
-+ *
-+ * @hw: the hardware the frame was transmitted by
-+ * @skb: the frame that was transmitted, owned by mac80211 after this call
-+ */
-+static inline void ieee80211_tx_status_ni(struct ieee80211_hw *hw,
-+					  struct sk_buff *skb)
-+{
-+	local_bh_disable();
-+	ieee80211_tx_status(hw, skb);
-+	local_bh_enable();
-+}
-+
-+/**
-  * ieee80211_tx_status_irqsafe - IRQ-safe transmit status callback
-  *
-  * Like ieee80211_tx_status() but can be called in IRQ context
-  * (internally defers to a tasklet.)
-  *
-- * Calls to this function and ieee80211_tx_status() may not be mixed for a
-- * single hardware.
-+ * Calls to this function, ieee80211_tx_status() and
-+ * ieee80211_tx_status_ni() may not be mixed for a single hardware.
-  *
-  * @hw: the hardware the frame was transmitted by
-  * @skb: the frame that was transmitted, owned by mac80211 after this call
--- 
-1.7.2.3
+And finally, the 5470 - 5725 range now is being changed to allow
+outdoor operation.
 
+Let me know if this makes things clearer.
+
+  Luis
+
+
+On Fri, Nov 19, 2010 at 7:14 AM, Michael Green
+<Michael.Green@atheros.com> wrote:
+> Is the issue that the regdb currently limits DK to 2.4GHz operation (5GHz is disabled)?
+>
+> If I understand this email string, then clearly DK should be corrected to enable 5GHz operation.
+>
+> I believe DK should be set to the same 5GHz channel and power settings per the Harmonized standard EN301 893. This is true of all countries that accept CE Marking.
+>
+> If this patch/issue is about something else, then please let me know.
+>
+> tks,
+>
+> Michael Green
+> Atheros Communications, Inc.
+> mgreen@atheros.com
+> Desk:   +1-781-400-1491
+> Mobile: +1-508-380-4921
+>
+> -----Original Message-----
+> From: Kurt Garloff [mailto:garloff@suse.de]
+> Sent: Friday, November 19, 2010 4:15 AM
+> To: John W. Linville
+> Cc: Michael Green; Luis R. Rodriguez; wireless-regdb@lists.infradead.org; Johannes Berg; linux-wireless@vger.kernel.org
+> Subject: Re: [PATCH] wireless-regdb: update rules for DE
+>
+> John,
+>
+> enjoy your birthday!
+>
+> Michael,
+>
+> enjoy vacation!
+>
+> I submitted this change 6 months ago.
+> I was surprised that my ath9k device would not do anything in the 5GHz band unlike all neighour countries, found out that this is due to the regulatory DB and started studying the regulations to see whether it's justified.
+>
+> A few days certainly don't make a difference here. Review carefully when you can get to it next week.
+>
+> Best,
+> --
+> Kurt Garloff, VP OPS Partner Engineering -- Novell Inc.
+> SUSE: Supporting Linux since 1992.
+>
+> On Thu, Nov 18, 2010 at 09:04:14PM -0500, John W. Linville wrote:
+>> FWIW, I'm out on Friday anyway -- it's my birthday! :-)
+>>
+>> On Thu, Nov 18, 2010 at 01:23:42PM -0800, Michael Green wrote:
+>> > Hi guys,
+>> >
+>> > I am on PTO until Monday. Do I need to read this now and respond or can it wait?  I am not asking you to hold anything up due to me. But if you want me to give feedback on something, pls let me know if it can wait until Mon.
+>> >
+>> > Michael Green
+>> > Atheros Communications, Inc.
+>> > mgreen@atheros.com
+>> > Desk:   +1-781-400-1491
+>> > Mobile: +1-508-380-4921
+>> > -----Original Message-----
+>> > From: Luis R. Rodriguez [mailto:mcgrof@gmail.com]
+>> > Sent: Thursday, November 18, 2010 1:29 PM
+>> > To: John W. Linville; Michael Green
+>> > Cc: wireless-regdb@lists.infradead.org; Johannes Berg; Kurt Garloff;
+>> > linux-wireless@vger.kernel.org
+>> > Subject: Re: [PATCH] wireless-regdb: update rules for DE
+>> >
+>> > On Wed, Nov 17, 2010 at 1:36 PM, John W. Linville
+>> > <linville@tuxdriver.com> wrote:
+>> > > From: Kurt Garloff <garloff@suse.de>
+>> > >
+>> > > http://marc.info/?l=linux-wireless&m=127480075306482&w=2
+>> > >
+>> > > Cc: "Luis R. Rodriguez" <mcgrof@gmail.com>
+>> > > Acked-by: Johannes Berg <johannes@sipsolutions.net>
+>> > > Signed-off-by: John W. Linville <linville@tuxdriver.com>
+>> > > ---
+>> > > Time to clear the logjam...
+>> >
+>> > Michael, are you subscribed to wireless-regdb now? Did you get this e-mail? ACK?
+>> >
+>> >   Luis
+>> >
+>> > >  db.txt |   24 +++++++++++++++++-------
+>> > >  1 files changed, 17 insertions(+), 7 deletions(-)
+>> > >
+>> > > diff --git a/db.txt b/db.txt
+>> > > index e63a43e..40a8bbc 100644
+>> > > --- a/db.txt
+>> > > +++ b/db.txt
+>> > > @@ -176,17 +176,27 @@ country CZ:
+>> > >        (5250 - 5350 @ 40), (N/A, 200 mW), NO-OUTDOOR, DFS
+>> > >        (5470 - 5725 @ 40), (N/A, 1000 mW), DFS
+>> > >
+>> > > -# Data from "Frequenznutzungsplan" (as published in April 2008),
+>> > > -# downloaded from
+>> > > http://www.bundesnetzagentur.de/media/archive/13358.pdf
+>> > > -# Also applicable is
+>> > > http://www.bundesnetzagentur.de/media/archive/5009.pdf
+>> > > -# On the 5 GHz ranges TX power can be doubled if TPC is implemented.
+>> > > +# Data from "Frequenznutzungsplan" (as published in April 2008),
+>> > > +downloaded from #
+>> > > +http://www.bundesnetzagentur.de/cae/servlet/contentblob/38448/pub
+>> > > +licationFile/2659/Frequenznutzungsplan2008_Id17448pdf.pdf
+>> > > +# For the 5GHz range also see
+>> > > +#
+>> > > +http://www.bundesnetzagentur.de/cae/servlet/contentblob/38216/pub
+>> > > +licationFile/6579/WLAN5GHzVfg7_2010_28042010pdf.pdf
+>> > > +# The values have been reduced by a factor of 2 (3db) for non TPC
+>> > > +devices # (in other words: devices with TPC can use twice the tx power of this table).
+>> > > +# Note that the docs do not require TPC for 5150--5250; the
+>> > > +reduction to # 100mW thus is not strictly required -- however the
+>> > > +conservative 100mW # limit is used here as the non-interference
+>> > > +with radar and satellite # apps relies on the attenuation by the
+>> > > +building walls only in the # absence of DFS; the neighbour countries have 100mW limit here as well.
+>> > > +
+>> > >  country DE:
+>> > >        # entries 279004 and 280006
+>> > >        (2400 - 2483.5 @ 40), (N/A, 100 mW)
+>> > > -       # entries 303005, 304002 and 305002
+>> > > -       (5150 - 5350 @ 40), (N/A, 100 mW), NO-OUTDOOR, DFS
+>> > > +       # entry 303005
+>> > > +       (5150 - 5250 @ 40), (N/A, 100 mW), NO-OUTDOOR
+>> > > +       # entries 304002 and 305002
+>> > > +       (5250 - 5350 @ 40), (N/A, 100 mW), NO-OUTDOOR, DFS
+>> > >        # entries 308002, 309001 and 310003
+>> > > -       (5470 - 5725 @ 40), (N/A, 500 mW), NO-OUTDOOR, DFS
+>> > > +       (5470 - 5725 @ 40), (N/A, 500 mW), DFS
+>> > >
+>> > >  country DK:
+>> > >        (2402 - 2482 @ 40), (N/A, 20)
+>> > > --
+>> > > 1.7.3.2
+>> > >
+>> > >
+>>
+>> --
+>> John W. Linville                Someday the world will need a hero,
+>> and you linville@tuxdriver.com                  might be all we have.  Be ready.
+>>
+>
+>
+>
