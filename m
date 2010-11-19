@@ -1,48 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([147.243.1.47]:56908 "EHLO mgw-sa01.nokia.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750742Ab0K2KGR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 29 Nov 2010 05:06:17 -0500
-Received: from nokia.com (localhost [127.0.0.1])
-	by mgw-sa01.nokia.com (Switch-3.4.3/Switch-3.4.3) with ESMTP id oATA6Fd0028861
-	for <linux-wireless@vger.kernel.org>; Mon, 29 Nov 2010 12:06:15 +0200
-From: juuso.oikarinen@nokia.com
-To: luciano.coelho@nokia.com
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH] wl12xx: Remove 11j channels from the supported channels list.
-Date: Mon, 29 Nov 2010 12:05:53 +0200
-Message-Id: <1291025153-17570-1-git-send-email-juuso.oikarinen@nokia.com>
+Received: from mail-bw0-f46.google.com ([209.85.214.46]:65219 "EHLO
+	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753543Ab0KSLkq (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 19 Nov 2010 06:40:46 -0500
+Received: by mail-bw0-f46.google.com with SMTP id 15so3773153bwz.19
+        for <linux-wireless@vger.kernel.org>; Fri, 19 Nov 2010 03:40:46 -0800 (PST)
+From: Helmut Schaa <helmut.schaa@googlemail.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org,
+	Helmut Schaa <helmut.schaa@googlemail.com>,
+	Johannes Berg <johannes@sipsolutions.net>
+Subject: [PATCH 2/2] mac80211: Apply ht_opmode changes in ieee80211_change_bss
+Date: Fri, 19 Nov 2010 12:40:26 +0100
+Message-Id: <1290166826-27063-2-git-send-email-helmut.schaa@googlemail.com>
+In-Reply-To: <1290166826-27063-1-git-send-email-helmut.schaa@googlemail.com>
+References: <1290166826-27063-1-git-send-email-helmut.schaa@googlemail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Juuso Oikarinen <juuso.oikarinen@nokia.com>
 
-Because we don't support them at this stage.
-
-Signed-off-by: Juuso Oikarinen <juuso.oikarinen@nokia.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>
+Signed-off-by: Helmut Schaa <helmut.schaa@googlemail.com>
 ---
- drivers/net/wireless/wl12xx/main.c |    8 --------
- 1 files changed, 0 insertions(+), 8 deletions(-)
+ net/mac80211/cfg.c |    6 ++++++
+ 1 files changed, 6 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/net/wireless/wl12xx/main.c b/drivers/net/wireless/wl12xx/main.c
-index 7fecefe..dc3a093 100644
---- a/drivers/net/wireless/wl12xx/main.c
-+++ b/drivers/net/wireless/wl12xx/main.c
-@@ -2374,14 +2374,6 @@ static struct ieee80211_rate wl1271_rates_5ghz[] = {
+diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
+index 0c54407..e907604 100644
+--- a/net/mac80211/cfg.c
++++ b/net/mac80211/cfg.c
+@@ -1108,6 +1108,12 @@ static int ieee80211_change_bss(struct wiphy *wiphy,
+ 			sdata->flags &= ~IEEE80211_SDATA_DONT_BRIDGE_PACKETS;
+ 	}
  
- /* 5 GHz band channels for WL1273 */
- static struct ieee80211_channel wl1271_channels_5ghz[] = {
--	{ .hw_value = 183, .center_freq = 4915},
--	{ .hw_value = 184, .center_freq = 4920},
--	{ .hw_value = 185, .center_freq = 4925},
--	{ .hw_value = 187, .center_freq = 4935},
--	{ .hw_value = 188, .center_freq = 4940},
--	{ .hw_value = 189, .center_freq = 4945},
--	{ .hw_value = 192, .center_freq = 4960},
--	{ .hw_value = 196, .center_freq = 4980},
- 	{ .hw_value = 7, .center_freq = 5035},
- 	{ .hw_value = 8, .center_freq = 5040},
- 	{ .hw_value = 9, .center_freq = 5045},
++	if (params->ht_opmode >= 0) {
++		sdata->vif.bss_conf.ht_operation_mode =
++			(u16) params->ht_opmode;
++		changed |= BSS_CHANGED_HT;
++	}
++
+ 	ieee80211_bss_info_change_notify(sdata, changed);
+ 
+ 	return 0;
 -- 
 1.7.1
 
