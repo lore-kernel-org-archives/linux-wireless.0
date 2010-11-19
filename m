@@ -1,45 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:52394 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751873Ab0KYUuL (ORCPT
+Received: from ironport2-out.teksavvy.com ([206.248.154.181]:7798 "EHLO
+	ironport2-out.pppoe.ca" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1756907Ab0KSXQW (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 25 Nov 2010 15:50:11 -0500
-Message-ID: <4CEECBF3.3070202@candelatech.com>
-Date: Thu, 25 Nov 2010 12:49:55 -0800
-From: Ben Greear <greearb@candelatech.com>
+	Fri, 19 Nov 2010 18:16:22 -0500
+Message-ID: <4CE70543.2000206@teksavvy.com>
+Date: Fri, 19 Nov 2010 18:16:19 -0500
+From: Mark Lord <kernel@teksavvy.com>
 MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: John Linville <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 1/2] nl80211/cfg80211: extend mgmt-tx API for off-channel
-References: <20101125090228.087298683@sipsolutions.net>	 <20101125090254.456149961@sipsolutions.net>	 <4CEE962C.8060203@candelatech.com> <1290708300.3770.4.camel@jlt3.sipsolutions.net>
-In-Reply-To: <1290708300.3770.4.camel@jlt3.sipsolutions.net>
+To: Alex Deucher <alexdeucher@gmail.com>
+CC: "Rafael J. Wysocki" <rjw@sisk.pl>,
+	Linux SCSI List <linux-scsi@vger.kernel.org>,
+	Linux ACPI <linux-acpi@vger.kernel.org>,
+	Network Development <netdev@vger.kernel.org>,
+	Linux Wireless List <linux-wireless@vger.kernel.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	DRI <dri-devel@lists.freedesktop.org>,
+	Florian Mickler <florian@mickler.org>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Kernel Testers List <kernel-testers@vger.kernel.org>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	Linux PM List <linux-pm@lists.linux-foundation.org>,
+	Maciej Rutecki <maciej.rutecki@gmail.com>
+Subject: Re: 2.6.37-rc2-git4: Reported regressions 2.6.35 -> 2.6.36
+References: <tTUH_XeInOH.A.dMF.c3b5MB@chimera>	<4CE5C919.7090504@teksavvy.com>	<AANLkTi=8G7pNA7QTxaXDWKrWrCERPfmKU+nLJWCA=JUH@mail.gmail.com>	<4CE7006E.4040102@teksavvy.com> <AANLkTim9aXi1_EJyh2f-+X4HnNWJ3uk2z=P6m1hQso5a@mail.gmail.com>
+In-Reply-To: <AANLkTim9aXi1_EJyh2f-+X4HnNWJ3uk2z=P6m1hQso5a@mail.gmail.com>
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 11/25/2010 10:05 AM, Johannes Berg wrote:
-> On Thu, 2010-11-25 at 09:00 -0800, Ben Greear wrote:
->> What are the units for DURATION?  It seems the code is treating
->> that as jiffies, but surely user-space should specify in msecs
->> or similar and have the kernel do the conversion?
+On 10-11-19 05:58 PM, Alex Deucher wrote:
+> On Fri, Nov 19, 2010 at 5:55 PM, Mark Lord<kernel@teksavvy.com>  wrote:
 >
-> This code isn't even using them at all, and the nl80211 API specifies
-> milliseconds. Where do you see it look like jiffies?
-
-Sorry, the code looks right, I was mis-reading this part from the
-next patch:
-
-  static enum work_action __must_check
-+ieee80211_offchannel_tx(struct ieee80211_work *wk)
-+{
-+	if (!wk->started) {
-+		wk->timeout = jiffies + msecs_to_jiffies(wk->offchan_tx.wait);
-
+>> It now comes back at resume time.
 >
-> johannes
+> So that patch helped?
 
+I think so.  It didn't used to resume from suspend with 2.6.36, and now it does.
 
--- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+>> But suffers long delays (also sometimes with 2.6.35) doing this:
+>>
+>> [drm:atom_op_jump] *ERROR* atombios stuck in loop for more than 5secs
+>> aborting
+>> [drm:atom_execute_table_locked] *ERROR* atombios stuck executing E576 (len
+>> 105, WS 12, PS 8) @ 0xE5C4
+>> [drm:atom_op_jump] *ERROR* atombios stuck in loop for more than 5secs
+>> aborting
+>> [drm:atom_execute_table_locked] *ERROR* atombios stuck executing ECD2 (len
+>> 86, WS 4, PS 0) @ 0xED05
+>> [drm:atom_op_jump] *ERROR* atombios stuck in loop for more than 5secs
+>> aborting
+>> [drm:atom_execute_table_locked] *ERROR* atombios stuck executing E576 (len
+>> 105, WS 12, PS 8) @ 0xE5C4
+>> PM: resume of devices complete after 15718.253 msecs
+>>
+>
+> It's be nice if you could bisect to track down when those started.
+
+It'd be even nicer if they hadn't started.  :)
+
+What kernel release first had that atom/ops table in it?  I'll try that.
