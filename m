@@ -1,43 +1,95 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iw0-f174.google.com ([209.85.214.174]:52707 "EHLO
-	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755075Ab0KIVO6 (ORCPT
+Received: from mail-fx0-f46.google.com ([209.85.161.46]:45795 "EHLO
+	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755329Ab0KSQj3 convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 9 Nov 2010 16:14:58 -0500
-Received: by mail-iw0-f174.google.com with SMTP id 10so1757935iwn.19
-        for <linux-wireless@vger.kernel.org>; Tue, 09 Nov 2010 13:14:58 -0800 (PST)
+	Fri, 19 Nov 2010 11:39:29 -0500
 MIME-Version: 1.0
-In-Reply-To: <33010.82.131.221.21.1289337099.squirrel@webmail.inf.u-szeged.hu>
-References: <33010.82.131.221.21.1289337099.squirrel@webmail.inf.u-szeged.hu>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Tue, 9 Nov 2010 13:14:35 -0800
-Message-ID: <AANLkTimwoTBazrsEBmbrW36DOy5bkvuJQnS9VcczO=Wq@mail.gmail.com>
-Subject: Re: [Fwd: connecting ieee80211_hw and net_device]
-To: Zoltan Herczeg <zherczeg@inf.u-szeged.hu>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+In-Reply-To: <4CE5C919.7090504@teksavvy.com>
+References: <tTUH_XeInOH.A.dMF.c3b5MB@chimera>
+	<4CE5C919.7090504@teksavvy.com>
+Date: Fri, 19 Nov 2010 11:39:26 -0500
+Message-ID: <AANLkTi=8G7pNA7QTxaXDWKrWrCERPfmKU+nLJWCA=JUH@mail.gmail.com>
+Subject: Re: 2.6.37-rc2-git4: Reported regressions 2.6.35 -> 2.6.36
+From: Alex Deucher <alexdeucher@gmail.com>
+To: Mark Lord <kernel@teksavvy.com>
+Cc: "Rafael J. Wysocki" <rjw@sisk.pl>,
+	Linux SCSI List <linux-scsi@vger.kernel.org>,
+	Linux ACPI <linux-acpi@vger.kernel.org>,
+	Network Development <netdev@vger.kernel.org>,
+	Linux Wireless List <linux-wireless@vger.kernel.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	DRI <dri-devel@lists.freedesktop.org>,
+	Florian Mickler <florian@mickler.org>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Kernel Testers List <kernel-testers@vger.kernel.org>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	Linux PM List <linux-pm@lists.linux-foundation.org>,
+	Maciej Rutecki <maciej.rutecki@gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Nov 9, 2010 at 1:11 PM, Zoltan Herczeg <zherczeg@inf.u-szeged.hu> wrote:
-> Hi,
+On Thu, Nov 18, 2010 at 7:47 PM, Mark Lord <kernel@teksavvy.com> wrote:
+> On 10-11-18 06:50 PM, Rafael J. Wysocki wrote:
+>>
+>> This message contains a list of some post-2.6.35 regressions introduced
+>> before
+>> 2.6.36, for which there are no fixes in the mainline known to the tracking
+>> team.
+>> If any of them have been fixed already, please let us know.
+>>
+>> If you know of any other unresolved post-2.6.35 regressions, please let us
+>> know
+>> either and we'll add them to the list.  Also, please let us know if any
+>> of the entries below are invalid.
 >
-> I am developing a wireless driver for a cycle accurate energy simulator,
-> and cannot solve the following issue:
+>> Bug-Entry       : http://bugzilla.kernel.org/show_bug.cgi?id=21652
+>> Subject         : several problems with intel graphics since 2.6.36
+>> Submitter       : Norbert Preining<preining@logic.at>
+>> Date            : 2010-10-27 14:32 (23 days old)
+>> Message-ID      :<20101027143252.GA8676@gamma.logic.tuwien.ac.at>
+>> References      : http://marc.info/?l=linux-kernel&m=128818998630241&w=2
 >
-> I can allocate a "wlan0" and "wlan1" platform device with
-> ieee80211_alloc_hw, and can initialize it in Ad-Hoc mode. However, I
-> realized this is not enough to have a wireless interface, since it has no
-> receive operation, only transfer. Looking at the other drivers, I found
-> that they allocate a net_device with the common alloc_etherdev.
-> Unfortunately the register_netdev registers a new eth interface in my
-> case, and this interface is not connected to the wlan interface. I set
-> wireless_handlers and ieee80211_ptr for this device, still it is totally
-> independent from the wlan interface.
+> That one is interesting to me.. I suspect it may be the same cause
+> as for https://bugzilla.kernel.org/show_bug.cgi?id=21952
 >
-> Am I missing something? (Sorry if this is a trivial question, I tried
-> google but no luck so far)
+> I have one of those Samsung (N210) Netbooks here: works fine with 2.6.34 and
+> earlier,
+> but fails to come out of suspend on 2.6.35/2.6.36 (haven't tried 2.6.37).
+>
+> So perhaps add 21952 to the list, or link it to the 21652
+> (kind of amusing how similar the bug numbers are..).
+>
+>
+> My non-Intel graphics notebook (has ATI X1400 graphics) also has a resume
+> regression with 2.6.36.  But it does work fine with 2.6.35 (and earlier,
+> back many years).  As a result, I'm stuck with 2.6.35 for the time being,
+> and lack the time for a concerted debug effort on 2.6.36+ right now.
+>
 
-Have you looked at mac80211_hwsim under drivers/net/wireless ?
+Can you bisect?  Does this patch help?
 
- Luis
+diff --git a/drivers/gpu/drm/radeon/atom.c b/drivers/gpu/drm/radeon/atom.c
+index 8e421f6..05efb5b 100644
+--- a/drivers/gpu/drm/radeon/atom.c
++++ b/drivers/gpu/drm/radeon/atom.c
+@@ -112,6 +112,7 @@ static uint32_t atom_iio_execute(struct
+atom_context *ctx, int base,
+                        base += 3;
+                        break;
+                case ATOM_IIO_WRITE:
++                       (void)ctx->card->ioreg_read(ctx->card, CU16(base + 1));
+                        ctx->card->ioreg_write(ctx->card, CU16(base + 1), temp);
+                        base += 3;
+                        break;
+
+
+Alex
+
+> Cheers
+> _______________________________________________
+> dri-devel mailing list
+> dri-devel@lists.freedesktop.org
+> http://lists.freedesktop.org/mailman/listinfo/dri-devel
+>
