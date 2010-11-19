@@ -1,28 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iw0-f174.google.com ([209.85.214.174]:60603 "EHLO
-	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757285Ab0KJXEd (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:33011 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755989Ab0KSRvi (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 10 Nov 2010 18:04:33 -0500
-Received: by iwn10 with SMTP id 10so1362146iwn.19
-        for <linux-wireless@vger.kernel.org>; Wed, 10 Nov 2010 15:04:33 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <4CDB2411.1060502@openwrt.org>
-References: <4CDB2411.1060502@openwrt.org>
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Date: Wed, 10 Nov 2010 15:04:13 -0800
-Message-ID: <AANLkTi=kiRDpxt761nRjoNL0ZYm31d3oqEoHgSztqiVj@mail.gmail.com>
-Subject: Re: [PATCH] compat: backport pm_qos_request
-To: Felix Fietkau <nbd@openwrt.org>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+	Fri, 19 Nov 2010 12:51:38 -0500
+Subject: Re: [PATCH v7 3/3] nl80211/mac80211: Report signal average
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Bruno Randolf <br1@einfach.org>
+Cc: Bob Copeland <me@bobcopeland.com>, Jouni Malinen <j@w1.fi>,
+	linville@tuxdriver.com, randy.dunlap@oracle.com,
+	peterz@infradead.org, blp@cs.stanford.edu,
+	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Lars_Ericsson@telia.com, stefanr@s5r6.in-berlin.de,
+	kosaki.motohiro@jp.fujitsu.com, akpm@linux-foundation.org,
+	kevin.granade@gmail.com
+In-Reply-To: <201011191749.31974.br1@einfach.org>
+References: <20101112024901.28522.21895.stgit@localhost6.localdomain6>
+	 <1290010595.3777.0.camel@jlt3.sipsolutions.net>
+	 <AANLkTimoogSLAipNy=njGtHypqBQSk=usDmXut=KN9TM@mail.gmail.com>
+	 <201011191749.31974.br1@einfach.org>
+Content-Type: text/plain; charset="UTF-8"
+Date: Fri, 19 Nov 2010 09:52:31 -0800
+Message-ID: <1290189151.3768.0.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Nov 10, 2010 at 3:00 PM, Felix Fietkau <nbd@openwrt.org> wrote:
-> Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+On Fri, 2010-11-19 at 17:49 +0900, Bruno Randolf wrote:
 
-Thanks, I also removed 28-pm-qos-params.patch from compat-wireless now
-and pushed both this and the respective compat-wireless patch out.
+> OK, I have done tests with a 266MHz x86 board, pushing 30Mbps UDP thru it. It 
+> can handle maximum around 18Mbps thuput in both cases, with and without the 
 
-  Luis
+That sounds like you're limited by 11g, not by the CPU ...
+
+johannes
+
