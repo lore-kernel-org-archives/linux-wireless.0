@@ -1,48 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from perninha.conectiva.com.br ([187.115.55.249]:47836 "EHLO
-	perninha.conectiva.com.br" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753156Ab0KBBAM (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 1 Nov 2010 21:00:12 -0400
-From: Herton Ronaldo Krzesinski <herton@mandriva.com.br>
-To: linux-wireless@vger.kernel.org
-Cc: Larry Finger <Larry.Finger@lwfinger.net>,
-	Hin-Tak Leung <htl10@users.sourceforge.net>,
-	John W Linville <linville@tuxdriver.com>,
-	Herton Ronaldo Krzesinski <herton@mandriva.com.br>
-Subject: [PATCH 6/9] rtl8187: don't set RTL818X_CONFIG3_GNT_SELECT flag on 8187B
-Date: Mon,  1 Nov 2010 22:59:36 -0200
-Message-Id: <1288659579-4986-7-git-send-email-herton@mandriva.com.br>
-In-Reply-To: <1288659579-4986-1-git-send-email-herton@mandriva.com.br>
-References: <1288659579-4986-1-git-send-email-herton@mandriva.com.br>
+Received: from mailout-de.gmx.net ([213.165.64.23]:36450 "HELO mail.gmx.net"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with SMTP
+	id S1754325Ab0KTQte (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 20 Nov 2010 11:49:34 -0500
+Message-ID: <4CE7FC1A.3070709@gmx.net>
+Date: Sat, 20 Nov 2010 17:49:30 +0100
+From: Wolfgang Breyha <wbreyha@gmx.net>
+MIME-Version: 1.0
+To: Helmut Schaa <helmut.schaa@googlemail.com>
+CC: Jouni Malinen <j@w1.fi>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: Linux Client vs. CISCO AP with band select
+References: <4CE6EA98.3020300@gmx.net> <20101120112753.GA12225@jm.kir.nu> <201011201304.48821.helmut.schaa@googlemail.com>
+In-Reply-To: <201011201304.48821.helmut.schaa@googlemail.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The GNTSel bit should only concern pci devices by looking at RTL8180
-spec, which is not the case of 8187B. Also testing shows that trying to
-set this bit fails, a subsequent read from the register after trying to
-set it shows that the bit isn't set, seems the hardware ignores it,
-which makes sense. This setting was a left over from Realtek sources.
+On 2010-11-20 13:04, Helmut Schaa wrote:
+> If the Cisco APs would reply to direct probes we could (as a workaround) just
+> send an additional direct probe here. I agree with Jouni that the AP behavior
+> is just stupid but the users will blame Linux for not being able to connect
+> and not the AP vendor.
 
-Signed-off-by: Herton Ronaldo Krzesinski <herton@mandriva.com.br>
-Acked-by: Larry Finger <Larry.Finger@lwfinger.net>
----
- drivers/net/wireless/rtl818x/rtl8187_dev.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+Suddenly the term "<whatever working protocol> fixup" comes to mind reading
+your and Jounis answers;-) I agree with you, too. But I'm not the one
+administrating the APs here at the university. Maybe I can convince my
+college, but as long as you want to find a solution for Linux as long I'll
+try to give you remote hands;-)
 
-diff --git a/drivers/net/wireless/rtl818x/rtl8187_dev.c b/drivers/net/wireless/rtl818x/rtl8187_dev.c
-index 2b4ee26..d7ea5d1 100644
---- a/drivers/net/wireless/rtl818x/rtl8187_dev.c
-+++ b/drivers/net/wireless/rtl818x/rtl8187_dev.c
-@@ -743,7 +743,7 @@ static int rtl8187b_init_hw(struct ieee80211_hw *dev)
- 	rtl818x_iowrite8(priv, &priv->map->EEPROM_CMD,
- 			 RTL818X_EEPROM_CMD_CONFIG);
- 	reg = rtl818x_ioread8(priv, &priv->map->CONFIG3);
--	reg |= RTL818X_CONFIG3_ANAPARAM_WRITE | RTL818X_CONFIG3_GNT_SELECT;
-+	reg |= RTL818X_CONFIG3_ANAPARAM_WRITE;
- 	rtl818x_iowrite8(priv, &priv->map->CONFIG3, reg);
- 	rtl818x_iowrite32(priv, &priv->map->ANAPARAM2,
- 			  RTL8187B_RTL8225_ANAPARAM2_ON);
+We tried to deactivate "band select" already and my laptop was able to
+connect instantly to the nearest 2.4GHz AP. But that's the point where the
+second "feature" kicks in. "load balancing" is then used by the APs to kick
+stations trying to push them to an other AP. At this point Linux clients
+have troubles again to get a stable connection.
+
+> Wolfgang, could you please try the (untested) patch below if it makes any
+> difference?
+
+Sure, I'll try as soon as I'm back at the office on Monday. And I'll try to
+get the logs and packet traces for Jouni, too.
+
+Greetings,
+Wolfgang
 -- 
-1.7.3.2
-
+Wolfgang Breyha <wbreyha@gmx.net> | http://www.blafasel.at/
+Vienna University Computer Center | Austria
