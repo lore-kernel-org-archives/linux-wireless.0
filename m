@@ -1,142 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f46.google.com ([209.85.161.46]:42074 "EHLO
-	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753925Ab0KRLdD (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 18 Nov 2010 06:33:03 -0500
-Received: by mail-fx0-f46.google.com with SMTP id 6so1460042fxm.19
-        for <linux-wireless@vger.kernel.org>; Thu, 18 Nov 2010 03:33:02 -0800 (PST)
-From: Arik Nemtsov <arik@wizery.com>
-To: <linux-wireless@vger.kernel.org>
-Cc: Luciano Coelho <luciano.coelho@nokia.com>,
-	Arik Nemtsov <arik@wizery.com>
-Subject: [PATCH 14/18] wl1271: AP mode - record TX configuration settings
-Date: Thu, 18 Nov 2010 13:32:27 +0200
-Message-Id: <1290079951-16793-15-git-send-email-arik@wizery.com>
-In-Reply-To: <1290079951-16793-1-git-send-email-arik@wizery.com>
-References: <1290079951-16793-1-git-send-email-arik@wizery.com>
+Received: from nbd.name ([46.4.11.11]:39442 "EHLO nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756329Ab0KTCIx (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 19 Nov 2010 21:08:53 -0500
+From: Felix Fietkau <nbd@openwrt.org>
+To: linux-wireless@vger.kernel.org
+Cc: linville@tuxdriver.com, lrodriguez@atheros.com
+Subject: [PATCH 2/3] ath9k: fix timeout on stopping rx dma
+Date: Sat, 20 Nov 2010 03:08:47 +0100
+Message-Id: <1290218928-87475-2-git-send-email-nbd@openwrt.org>
+In-Reply-To: <1290218928-87475-1-git-send-email-nbd@openwrt.org>
+References: <1290218928-87475-1-git-send-email-nbd@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Record TX configuration settings in the "conf" member of our global
-structure (struct wl1271) if conf_tx is called when the firmware is
-not loaded.
+It seems that using ath9k_hw_stoppcurecv to stop rx dma is not enough.
+When it's time to stop DMA, the PCU is still busy, so the rx enable
+bit never clears.
+Using ath9k_hw_abortpcurecv helps with getting rx stopped much faster,
+with this change, I cannot reproduce the rx stop related WARN_ON anymore.
 
-Later on when the firmware is loaded, we apply the tx conf as part of
-the init sequence.
-
-Important for AP mode since conf_tx is called before add_interface
-(where the firmware is initialized).
-
-Signed-off-by: Arik Nemtsov <arik@wizery.com>
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+Cc: stable@kernel.org
 ---
- drivers/net/wireless/wl12xx/main.c |   74 ++++++++++++++++++++++++------------
- 1 files changed, 50 insertions(+), 24 deletions(-)
+ drivers/net/wireless/ath/ath9k/recv.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-diff --git a/drivers/net/wireless/wl12xx/main.c b/drivers/net/wireless/wl12xx/main.c
-index 7e7b392..91bbb72 100644
---- a/drivers/net/wireless/wl12xx/main.c
-+++ b/drivers/net/wireless/wl12xx/main.c
-@@ -1442,6 +1442,8 @@ static int wl1271_op_config(struct ieee80211_hw *hw, u32 changed)
- 		goto out;
- 	}
+diff --git a/drivers/net/wireless/ath/ath9k/recv.c b/drivers/net/wireless/ath/ath9k/recv.c
+index c5c8076..262c815 100644
+--- a/drivers/net/wireless/ath/ath9k/recv.c
++++ b/drivers/net/wireless/ath/ath9k/recv.c
+@@ -518,7 +518,7 @@ bool ath_stoprecv(struct ath_softc *sc)
+ 	bool stopped;
  
-+	is_ap = (wl->bss_type == BSS_TYPE_AP_BSS);
-+
- 	ret = wl1271_ps_elp_wakeup(wl, false);
- 	if (ret < 0)
- 		goto out;
-@@ -2216,42 +2218,66 @@ static int wl1271_op_conf_tx(struct ieee80211_hw *hw, u16 queue,
- {
- 	struct wl1271 *wl = hw->priv;
- 	u8 ps_scheme;
--	int ret;
-+	int ret = 0;
+ 	spin_lock_bh(&sc->rx.rxbuflock);
+-	ath9k_hw_stoppcurecv(ah);
++	ath9k_hw_abortpcurecv(ah);
+ 	ath9k_hw_setrxfilter(ah, 0);
+ 	stopped = ath9k_hw_stopdmarecv(ah);
  
- 	mutex_lock(&wl->mutex);
- 
- 	wl1271_debug(DEBUG_MAC80211, "mac80211 conf tx %d", queue);
- 
--	if (unlikely(wl->state == WL1271_STATE_OFF)) {
--		ret = -EAGAIN;
--		goto out;
--	}
--
--	ret = wl1271_ps_elp_wakeup(wl, false);
--	if (ret < 0)
--		goto out;
--
--	/* the txop is confed in units of 32us by the mac80211, we need us */
--	ret = wl1271_acx_ac_cfg(wl, wl1271_tx_get_queue(queue),
--				params->cw_min, params->cw_max,
--				params->aifs, params->txop << 5);
--	if (ret < 0)
--		goto out_sleep;
--
- 	if (params->uapsd)
- 		ps_scheme = CONF_PS_SCHEME_UPSD_TRIGGER;
- 	else
- 		ps_scheme = CONF_PS_SCHEME_LEGACY;
- 
--	ret = wl1271_acx_tid_cfg(wl, wl1271_tx_get_queue(queue),
--				 CONF_CHANNEL_TYPE_EDCF,
--				 wl1271_tx_get_queue(queue),
--				 ps_scheme, CONF_ACK_POLICY_LEGACY, 0, 0);
--	if (ret < 0)
--		goto out_sleep;
-+	if (wl->state == WL1271_STATE_OFF) {
-+		/*
-+		 * If the state is off, the parameters will be recorded and
-+		 * configured on init. This happens in AP-mode.
-+		 */
-+		struct conf_tx_ac_category *conf_ac =
-+			&wl->conf.tx.ac_conf[wl1271_tx_get_queue(queue)];
-+		struct conf_tx_tid *conf_tid =
-+			&wl->conf.tx.tid_conf[wl1271_tx_get_queue(queue)];
-+
-+		conf_ac->ac = wl1271_tx_get_queue(queue);
-+		conf_ac->cw_min = (u8)params->cw_min;
-+		conf_ac->cw_max = params->cw_max;
-+		conf_ac->aifsn = params->aifs;
-+		conf_ac->tx_op_limit = params->txop << 5;
-+
-+		conf_tid->queue_id = wl1271_tx_get_queue(queue);
-+		conf_tid->channel_type = CONF_CHANNEL_TYPE_EDCF;
-+		conf_tid->tsid = wl1271_tx_get_queue(queue);
-+		conf_tid->ps_scheme = ps_scheme;
-+		conf_tid->ack_policy = CONF_ACK_POLICY_LEGACY;
-+		conf_tid->apsd_conf[0] = 0;
-+		conf_tid->apsd_conf[1] = 0;
-+	} else {
-+		ret = wl1271_ps_elp_wakeup(wl, false);
-+		if (ret < 0)
-+			goto out;
-+
-+		/*
-+		 * the txop is confed in units of 32us by the mac80211,
-+		 * we need us
-+		 */
-+		ret = wl1271_acx_ac_cfg(wl, wl1271_tx_get_queue(queue),
-+					params->cw_min, params->cw_max,
-+					params->aifs, params->txop << 5);
-+		if (ret < 0)
-+			goto out_sleep;
-+
-+		ret = wl1271_acx_tid_cfg(wl, wl1271_tx_get_queue(queue),
-+					 CONF_CHANNEL_TYPE_EDCF,
-+					 wl1271_tx_get_queue(queue),
-+					 ps_scheme, CONF_ACK_POLICY_LEGACY,
-+					 0, 0);
-+		if (ret < 0)
-+			goto out_sleep;
- 
- out_sleep:
--	wl1271_ps_elp_sleep(wl);
-+		wl1271_ps_elp_sleep(wl);
-+	}
- 
- out:
- 	mutex_unlock(&wl->mutex);
 -- 
-1.7.1
+1.7.3.2
 
