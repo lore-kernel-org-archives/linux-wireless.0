@@ -1,63 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:58396 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751251Ab0K2TwY (ORCPT
+Received: from mail-qy0-f174.google.com ([209.85.216.174]:37616 "EHLO
+	mail-qy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750895Ab0KTOS5 convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 29 Nov 2010 14:52:24 -0500
-Date: Mon, 29 Nov 2010 14:50:38 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Felix Fietkau <nbd@openwrt.org>
-Cc: linux-wireless@vger.kernel.org, lrodriguez@atheros.com
-Subject: Re: [PATCH] ath9k_hw: fix endian issues with CTLs on AR9003
-Message-ID: <20101129195038.GD8199@tuxdriver.com>
-References: <1290279018-29716-1-git-send-email-nbd@openwrt.org>
- <20101122201511.GG2117@tuxdriver.com>
- <4CEAD7FA.1060107@openwrt.org>
+	Sat, 20 Nov 2010 09:18:57 -0500
+Received: by qyk33 with SMTP id 33so3828qyk.19
+        for <linux-wireless@vger.kernel.org>; Sat, 20 Nov 2010 06:18:56 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <4CEAD7FA.1060107@openwrt.org>
+In-Reply-To: <AANLkTimZnnjBMYUDM1pACYv8fHtu0xe-F_C0RJ8_ay_o@mail.gmail.com>
+References: <AANLkTik_4HRwUUYnFLR6BwevQi6W+FK2rNN7Kph+dAWk@mail.gmail.com>
+	<AANLkTikda-CP42-_wnNtEpCJGc3kwNXvT0KgXjOOL+Bc@mail.gmail.com>
+	<AANLkTimZnnjBMYUDM1pACYv8fHtu0xe-F_C0RJ8_ay_o@mail.gmail.com>
+Date: Sat, 20 Nov 2010 09:18:54 -0500
+Message-ID: <AANLkTimEMtt1JJerTzG4-X_Ez83MxtU_52wVQ_xJC8N3@mail.gmail.com>
+Subject: Re: Unloading ath5k fails
+From: Bob Copeland <me@bobcopeland.com>
+To: Jonathan Guerin <jonathan@guerin.id.au>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	ath5k-devel <ath5k-devel@lists.ath5k.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Nov 22, 2010 at 09:52:10PM +0100, Felix Fietkau wrote:
-> On 2010-11-22 9:15 PM, John W. Linville wrote:
-> > On Sat, Nov 20, 2010 at 07:50:18PM +0100, Felix Fietkau wrote:
-> >> Parsing data using bitfields is messy, because it makes endian handling
-> >> much harder. AR9002 and earlier got it right, AR9003 got it wrong.
-> >> Fix it by getting rid of the CTL related bitfields entirely and use
-> >> masks instead.
-> >> 
-> >> Signed-off-by: Felix Fietkau <nbd@openwrt.org>
-> >> Cc: stable@kernel.org
-> > 
-> > Why does this merit stable consideration?
-> It's a simple fix and I would like it to make it to stable releases,
-> because this bug might possibly cause the tx power to be too high in
-> some instances (when running on big-endian systems), violating
-> regulatory limits.
+On Wed, Nov 17, 2010 at 8:01 PM, Jonathan Guerin <jonathan@guerin.id.au> wrote:
+>> Hmm.. I just ran some tests myself on wireless-testing, with ath5k
+>> connected and not connected and didn't have any problems.  Are you
+>> doing anything special when bringing up the interface?  Can you
+>> post your kernel config?
+>
+> The interface is being set to IBSS. All that's been done is this:
+> iw reg set AU
+> iw dev wlan0 set type ibss
+> rmmod ath5k
 
-After being chided for having an excessive number of patches in -next
-with "Cc: stable@kernel.org", I would prefer to avoid (or strongly
-limit) merging such patches that way.
+I don't know if you saw the other linux-wireless thread on this
+topic, but it seems related to ipv6 and not any particular driver,
+which explains why I didn't see it (I currently compile ipv6 out).
 
-Patches intended for stable are supposed to be fixes.  Fixes are
-supposed to go to the current release, even if that means that patches
-need to be refactored to separate real fixes from other bits.
-
-Now, what constitutes a fix is that part that can sometimes be subject
-to debate.  Fixes should be small and obvious if possible, and they
-should address significant bug and/or a regression, and be documented
-with bug reports, tested by users, etc.  The later in the release,
-the stricter we must adhere to such definitions.
-
-So...I guess what I am asking is if this is a fix, can you document
-the effects of the bug?  Can you retarget the patch against 2.6.37?
-
-Otherwise, can we omit the Cc?
-
-Thanks!
-
-John
 -- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+Bob Copeland %% www.bobcopeland.com
