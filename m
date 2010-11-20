@@ -1,149 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:51638 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1759062Ab0KQVxF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 17 Nov 2010 16:53:05 -0500
-From: Hauke Mehrtens <hauke@hauke-m.de>
-To: lrodriguez@atheros.com
-Cc: linux-wireless@vger.kernel.org, mcgrof@infradead.org,
-	Hauke Mehrtens <hauke@hauke-m.de>
-Subject: [PATCH] compat-wireless: make patches apply again
-Date: Wed, 17 Nov 2010 22:52:53 +0100
-Message-Id: <1290030773-2486-1-git-send-email-hauke@hauke-m.de>
+Received: from mail-iw0-f174.google.com ([209.85.214.174]:33922 "EHLO
+	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756404Ab0KTCZr convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 19 Nov 2010 21:25:47 -0500
+Received: by iwn34 with SMTP id 34so264890iwn.19
+        for <linux-wireless@vger.kernel.org>; Fri, 19 Nov 2010 18:25:46 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <4CE720A1.3090408@candelatech.com>
+References: <4CE720A1.3090408@candelatech.com>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Fri, 19 Nov 2010 18:25:25 -0800
+Message-ID: <AANLkTikybBepddauBrtJzPmdRB1E7Qqsy9y+Xxz08k6+@mail.gmail.com>
+Subject: Re: ath9k very unstable and kills file-system.
+To: Ben Greear <greearb@candelatech.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Fri, Nov 19, 2010 at 5:13 PM, Ben Greear <greearb@candelatech.com> wrote:
+> It's been another frustrating week for using ath9k.
+>
+> With a patched wpa_supplicant (found here:
+> https://github.com/greearb/hostap-ct/tree/)
+> I can reliably cause ath9k to spew all sorts of DMA warnings
+> and evidently crash the hard-drive controller and/or corrupt the
+> file system so bad that fsck cannot fix it.  (Back up anything you
+> want to keep before attempting to reproduce this.)
+>
+> The test case is simply create 30 or so STA interfaces, run one instance
+> of the patched wpa_supplicant to control the 30 interfaces, and send
+> a bit of traffic across the interfaces.  It's not even needed to send
+> any significant data...probably just the supplicant associate logic
+> is enough.
+>
+> You'll want the xmit locking patch Felix posted or it will likely spew
+> lockdep warnings and/or lockup before it gets a chance to crash your
+> hard drive.
+>
+> There are no other /n NICs that can do virtual stations, so I must
+> either get ath9k functional or give up on that feature set entirely.
+>
+> If anyone wants to help with this and cannot easily reproduce it,
+> please let me know and I'll furnish scripts etc to make it easier
+> to reproduce.
+>
+> I'm also happy to help test patches.
 
-Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
----
- crap/0002-ath9k-Add-pktlog-support.patch |   34 +++++++++++++++--------------
- 1 files changed, 18 insertions(+), 16 deletions(-)
+If you can provide scripts it will help. The easier it is to reproduce
+the easier it can get fixed.
 
-diff --git a/crap/0002-ath9k-Add-pktlog-support.patch b/crap/0002-ath9k-Add-pktlog-support.patch
-index 89b0074..775be74 100644
---- a/crap/0002-ath9k-Add-pktlog-support.patch
-+++ b/crap/0002-ath9k-Add-pktlog-support.patch
-@@ -105,7 +105,7 @@ Signed-off-by: Vasanthakumar Thiagarajan <vasanth@atheros.com>
-  
-  /*
-   * Header for the ath9k.ko driver core *only* -- hw code nor any other driver
--@@ -559,6 +560,7 @@ struct ath_ant_comb {
-+@@ -544,6 +545,7 @@ struct ath_ant_comb {
-  #define SC_OP_BT_PRIORITY_DETECTED   BIT(12)
-  #define SC_OP_BT_SCAN		     BIT(13)
-  #define SC_OP_ANI_RUN		     BIT(14)
-@@ -113,7 +113,7 @@ Signed-off-by: Vasanthakumar Thiagarajan <vasanth@atheros.com>
-  
-  /* Powersave flags */
-  #define PS_WAIT_FOR_BEACON        BIT(0)
--@@ -635,6 +637,10 @@ struct ath_softc {
-+@@ -621,6 +623,10 @@ struct ath_softc {
-  #ifdef CONFIG_ATH9K_DEBUGFS
-  	struct ath9k_debug debug;
-  #endif
-@@ -161,7 +161,7 @@ Signed-off-by: Vasanthakumar Thiagarajan <vasanth@atheros.com>
-  static inline void ath9k_hw_set11n_txdesc(struct ath_hw *ah, void *ds,
- --- a/drivers/net/wireless/ath/ath9k/hw.c
- +++ b/drivers/net/wireless/ath/ath9k/hw.c
--@@ -2140,7 +2140,7 @@ void ath9k_hw_setrxfilter(struct ath_hw
-+@@ -2143,7 +2143,7 @@ void ath9k_hw_setrxfilter(struct ath_hw
-  		phybits |= AR_PHY_ERR_RADAR;
-  	if (bits & ATH9K_RX_FILTER_PHYERR)
-  		phybits |= AR_PHY_ERR_OFDM_TIMING | AR_PHY_ERR_CCK_TIMING;
-@@ -172,7 +172,7 @@ Signed-off-by: Vasanthakumar Thiagarajan <vasanth@atheros.com>
-  		REG_WRITE(ah, AR_RXCFG,
- --- a/drivers/net/wireless/ath/ath9k/hw.h
- +++ b/drivers/net/wireless/ath/ath9k/hw.h
--@@ -580,7 +580,7 @@ struct ath_hw_ops {
-+@@ -616,7 +616,7 @@ struct ath_hw_ops {
-  			    const void *ds0, dma_addr_t buf_addr,
-  			    unsigned int qcu);
-  	int (*proc_txdesc)(struct ath_hw *ah, void *ds,
-@@ -181,10 +181,10 @@ Signed-off-by: Vasanthakumar Thiagarajan <vasanth@atheros.com>
-  	void (*set11n_txdesc)(struct ath_hw *ah, void *ds,
-  			      u32 pktLen, enum ath9k_pkt_type type,
-  			      u32 txPower, u32 keyIx,
--@@ -804,6 +804,8 @@ struct ath_hw {
-- 	 * this register when in sleep states.
-- 	 */
-- 	u32 WARegVal;
-+@@ -845,6 +845,8 @@ struct ath_hw {
-+ 
-+ 	/* Enterprise mode cap */
-+ 	u32 ent_mode;
- +
- +	bool is_pkt_logging;
-  };
-@@ -1298,7 +1298,7 @@ Signed-off-by: Vasanthakumar Thiagarajan <vasanth@atheros.com>
-  }
-  
-  static const
--@@ -1374,7 +1381,8 @@ static void ath_tx_status(void *priv, st
-+@@ -1358,7 +1365,8 @@ static void ath_tx_status(void *priv, st
-  		tx_status = 1;
-  
-  	ath_rc_tx_status(sc, ath_rc_priv, tx_info, final_ts_idx, tx_status,
-@@ -1346,7 +1346,7 @@ Signed-off-by: Vasanthakumar Thiagarajan <vasanth@atheros.com>
-  		bf->bf_buf_addr = dma_map_single(sc->dev, requeue_skb->data,
- --- a/drivers/net/wireless/ath/ath9k/xmit.c
- +++ b/drivers/net/wireless/ath/ath9k/xmit.c
--@@ -436,6 +436,8 @@ static void ath_tx_complete_aggr(struct
-+@@ -476,6 +476,8 @@ static void ath_tx_complete_aggr(struct
-  			list_move_tail(&bf->list, &bf_head);
-  		}
-  
-@@ -1355,7 +1355,7 @@ Signed-off-by: Vasanthakumar Thiagarajan <vasanth@atheros.com>
-  		if (!txpending || (tid->state & AGGR_CLEANUP)) {
-  			/*
-  			 * complete the acked-ones/xretried ones; update
--@@ -2069,7 +2071,7 @@ static void ath_tx_processq(struct ath_s
-+@@ -2004,7 +2006,7 @@ static void ath_tx_processq(struct ath_s
-  		ds = lastbf->bf_desc;
-  
-  		memset(&ts, 0, sizeof(ts));
-@@ -1364,13 +1364,14 @@ Signed-off-by: Vasanthakumar Thiagarajan <vasanth@atheros.com>
-  		if (status == -EINPROGRESS) {
-  			spin_unlock_bh(&txq->axq_lock);
-  			break;
--@@ -2108,10 +2110,14 @@ static void ath_tx_processq(struct ath_s
-+@@ -2043,11 +2045,15 @@ static void ath_tx_processq(struct ath_s
-  
-  		qnum = skb_get_queue_mapping(bf->bf_mpdu);
-  
- -		if (bf_isampdu(bf))
- +		if (bf_isampdu(bf)) {
-- 			ath_tx_complete_aggr(sc, txq, bf, &bf_head, &ts, txok);
-+ 			ath_tx_complete_aggr(sc, txq, bf, &bf_head, &ts, txok,
-+ 					     true);
- -		else
- +		} else {
- +			ath9k_pktlog_txctrl(sc, &bf_head, lastbf);
-@@ -1381,7 +1382,7 @@ Signed-off-by: Vasanthakumar Thiagarajan <vasanth@atheros.com>
-  
-  		if (txq == sc->tx.txq_map[qnum])
-  			ath_wake_mac80211_queue(sc, qnum);
--@@ -2185,9 +2191,11 @@ void ath_tx_edma_tasklet(struct ath_soft
-+@@ -2121,9 +2127,11 @@ void ath_tx_edma_tasklet(struct ath_soft
-  	int status;
-  	int txok;
-  	int qnum;
-@@ -1394,13 +1395,14 @@ Signed-off-by: Vasanthakumar Thiagarajan <vasanth@atheros.com>
-  		if (status == -EINPROGRESS)
-  			break;
-  		if (status == -EIO) {
--@@ -2230,15 +2238,19 @@ void ath_tx_edma_tasklet(struct ath_soft
-+@@ -2166,16 +2174,20 @@ void ath_tx_edma_tasklet(struct ath_soft
-  
-  		qnum = skb_get_queue_mapping(bf->bf_mpdu);
-  
- -		if (bf_isampdu(bf))
- +		if (bf_isampdu(bf)) {
-- 			ath_tx_complete_aggr(sc, txq, bf, &bf_head, &txs, txok);
-+ 			ath_tx_complete_aggr(sc, txq, bf, &bf_head, &txs,
-+ 					     txok, true);
- -		else
- +		} else {
- +			ath9k_pktlog_txctrl(sc, &bf_head, lastbf);
--- 
-1.7.1
-
+ Luis
