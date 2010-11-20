@@ -1,70 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bear.ext.ti.com ([192.94.94.41]:40269 "EHLO bear.ext.ti.com"
+Received: from nbd.name ([46.4.11.11]:36198 "EHLO nbd.name"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754544Ab0KRCOA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 17 Nov 2010 21:14:00 -0500
-From: "Gabay, Benzy" <benzyg@ti.com>
-To: Luciano Coelho <luciano.coelho@nokia.com>
-CC: =?utf-8?B?ZXh0IEfDoWJvciBTdGVmYW5paw==?= <netrolller.3d@gmail.com>,
-	ext Grazvydas Ignotas <notasas@gmail.com>,
-	"Levi, Shahar" <shahar_levi@ti.com>, Kalle Valo <kvalo@adurom.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Date: Wed, 17 Nov 2010 20:13:47 -0600
-Subject: RE: [PATCH v4] wl1271: Change wl12xx Files Names
-Message-ID: <676FD6AA0F002F49B89E70F0C5EFD22C136DEA102C@dlee04.ent.ti.com>
-References: <1288883257-30060-1-git-send-email-shahar_levi@ti.com>
-	 <AANLkTincpxdpmf5J38LiGsF-d9dG7sG9-bjbkH-B8Ld0@mail.gmail.com>
-	 <1288891196.17643.6.camel@powerslave>
-	 <AANLkTi=Luv2+5Hys2PcrH+G8jmc4vwz8PM0LFKm+fTt8@mail.gmail.com>
-	 <1288907555.17643.14.camel@powerslave>
-	 <676FD6AA0F002F49B89E70F0C5EFD22C136DEA0A14@dlee04.ent.ti.com>
- <1290019712.28892.5.camel@powerslave>
-In-Reply-To: <1290019712.28892.5.camel@powerslave>
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
+	id S1756387Ab0KTByg (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 19 Nov 2010 20:54:36 -0500
+From: Felix Fietkau <nbd@openwrt.org>
+To: linux-wireless@vger.kernel.org
+Cc: linville@tuxdriver.com, johannes@sipsolutions.net
+Subject: [PATCH v3 2/2] mac80211: reduce the number of retries for nullfunc probing
+Date: Sat, 20 Nov 2010 02:54:29 +0100
+Message-Id: <1290218069-85434-2-git-send-email-nbd@openwrt.org>
+In-Reply-To: <1290218069-85434-1-git-send-email-nbd@openwrt.org>
+References: <1290218069-85434-1-git-send-email-nbd@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-THVjYSwNCg0KPiANCj4gT24gV2VkLCAyMDEwLTExLTE3IGF0IDEyOjA4IC0wNjAwLCBleHQgR2Fi
-YXksIEJlbnp5IHdyb3RlOg0KPiA+IEhpIEFsbCwNCj4gDQo+IEhpIEJlbnp5LA0KPiANCj4gDQo+
-ID4gPiA+IFdoYXQgYWJvdXQgd2wxMjUxIHZzLiB3bDEyYWduIChvciB3bDEyYmduIGlmIG5vIC4x
-MWEgc3VwcG9ydCksDQo+IGxpa2UNCj4gPiA+IGl3bHdpZmk/DQo+ID4gPg0KPiA+ID4gSG1tbS4u
-LiB3bDEyNTEgc3VwcG9ydHMgYmcuICB3bDEyeHggc3VwcG9ydHMgYWJnbi4gIEkgZG9uJ3QgcmVh
-bGx5DQo+IHNlZQ0KPiA+ID4gdGhlIGxvZ2ljIGluIHRoaXM/IFdoYXQgZGlmZmVyZW5jZSBkb2Vz
-IGl0IG1ha2UgY29tcGFyaW5nIHRvDQo+IGNhbGxpbmcgaXQNCj4gPiA+IHdsMTJ4eD8gRnJvbSB3
-bDEyYWduIHRoZSB1c2VyIHN0aWxsIGRvZXNuJ3Qga25vdyB3aGV0aGVyIHdsMTI1MSBpcw0KPiA+
-ID4gc3VwcG9ydGVkIG9yIG5vdC4NCj4gPg0KPiA+IEkgaGF2ZSBhbm90aGVyIGlkZWEgZm9yIG5h
-bWluZyBjb252ZW50aW9uIGhlcmUuDQo+ID4gQnV0IGZpcnN0IHRvIGFsaWduIGV2ZXJ5b25lIG9u
-IHRoZSBUSSBjaGlwIGNvbnZlbnRpb25zOg0KPiA+IDEyeDEgPT0gc3VwcG9ydCBmb3IgMi40R2h6
-DQo+ID4gMTJ4MyA9PSBzdXBwb3J0cyBib3RoIDIuNEdoeiBhbmQgNS4wR2h6Lg0KPiA+DQo+ID4g
-VGhlIFRJIHByb2plY3QgbmFtaW5nIGNvbnZlbnRpb24gcGVyIGNoaXAgaXMgYXMgZm9sbG93Og0K
-PiA+DQo+ID4gd2lsaW5rNCA9PSAxMjUxIGFuZCAxMjUzDQo+ID4gd2lsaW5rNiA9PSAxMjcxIGFu
-ZCAxMjczDQo+ID4gd2lsaW5rNyA9PSAxMjgxIGFuZCAxMjgxDQo+ID4NCj4gPiBTbyBJIHByb3Bv
-c2UgdG8gdXNlIHRoZSBwcm9qZWN0IG5hbWUgaW5zdGVhZCBvZiB1c2luZyB0aGUgY2hpcCBuYW1l
-Lg0KPiA+IGUuZy46DQo+ID4gZm9yIHdsMTI1eCB3ZSBjYW4gdXNlOiB3bDQgb3Igd2lsaW5rNC4g
-SWYgd2Ugd2FudCB0byBpbXBseSB0aGUgYmFuZA0KPiBzdXBwb3J0OiB3bDRfYWJnIGFuZCB3bDRf
-YmcNCj4gPiBmb3Igd2wxMjd4IHdlIGNhbiB1c2U6IHdsNiBvciB3aWxpbms2LiBJZiB3ZSB3YW50
-IHRvIGltcGx5IHRoZSBiYW5kDQo+IGFuZCBjYXBhYmlsaXR5IHN1cHBvcnQ6IHdsNl9hYmduIGFu
-ZCB3bDRfYmduDQo+ID4NCj4gPiBldGMnDQo+ID4NCj4gPiBXaGF0IHNheT8NCj4gDQo+IERvZXNu
-J3QgaGVscCBtdWNoLiAgVGhlIHByb2JsZW0gaXMgdGhhdCB0aGUgZHJpdmVyIHdoaWNoIGlzIG5v
-dyBjYWxsZWQNCj4gd2wxMnh4IGFscmVhZHkgc3VwcG9ydCB3bDEyNzEgYW5kIHdsMTI3My4gIElu
-IHRoZSBuZWFyIGZ1dHVyZSwgaXQgd2lsbA0KPiBhbHNvIHN1cHBvcnQgd2wxMjgxIGFuZCB3bDEy
-ODMsIHNvIHRoZSB3bDYgb3Igd2lsaW5rNiBzY2hlbWUgd291bGQNCj4gYnJlYWsNCj4gYWxyZWFk
-eS4NCj4gDQo+IFRoZSB3bDEyNTEgZHJpdmVyLCBhdCBsZWFzdCBhdCB0aGUgbW9tZW50LCBvbmx5
-IHN1cHBvcnRzIHdsMTI1MSwgaXQNCj4gZG9lc24ndCBoYXZlIHRoZSAxMWEgaW1wbGVtZW50YXRp
-b24uICBJZiBpbiB0aGUgZnV0dXJlIHNvbWVvbmUgYWRkcw0KPiBzdXBwb3J0IGZvciB3bDEyNTMs
-IGl0IGNvdWxkIGJlIHJlbmFtZWQgdG8gd2wxMjV4Lg0KPiANCj4gSW4gYW55IGNhc2UsIEkgdGhp
-bmsgdGhlIG5hbWUgb2YgdGhlIGRyaXZlciBpcyBub3QgdGhhdCBpbXBvcnRhbnQsIGFzDQo+IGxv
-bmcgYXMgd2UncmUgY2xlYXIgYWJvdXQgd2hpY2ggY2hpcHMgZWFjaCBvbmUgb2YgdGhlbSBzdXBw
-b3J0cyBpbiB0aGUNCj4gS2NvbmZpZyBkZXNjcmlwdGlvbi4NCj4gDQo+IFJlbmFtaW5nIHRoZSBk
-cml2ZXIgYWxsIHRoZSB0aW1lICh3ZSBhbHJlYWR5IGRpZCBpdCB0d2ljZSksIGVuZHMgdXANCj4g
-Y29uZnVzaW5nIG1vcmUgdGhhbiBjbGFyaWZ5aW5nIHRoaW5ncy4NCj4gDQo+IC0tDQo+IENoZWVy
-cywNCj4gTHVjYS4NCg0KbW1tLi4uDQoNCkluIHRoYXQgY2FzZSwgYW5vdGhlciBpZGVhOg0KMS4g
-d2h5IG5vdCBjcmVhdGUgbmV3IGRyaXZlciBzb3VyY2UgY29kZSB3aGljaCB3aWxsIGRlc2lnbmF0
-ZWQgZm9yIDEyOHguDQoyLiBJZiB3ZSBoYXZlIGEgcHJvYmxlbSB3aXRoIHVuaWZpZWQgMTJ4eCB0
-aGVuIGxldHMgZGl2ZWQgaXQgY29tcGxldGVseSB0byBzdWIgZHJpdmVycyBhbmQgaGF2ZSBvbmx5
-IGNvbW1vbiBwYXJ0IGFzIGEgdW5pZmllZCBkcml2ZXIuIFRoYXQgd2F5IHlvdSBnZXQgdG8ga2Vl
-cCB0aGUgb2xkIG5hbWVzIGFuZCBqdXN0IGRpdmlkZSB0aGUgZmlsZXMgY29udGVudCB0byBhIG5l
-dyBmaWxlIG5hbWUgd2wxMnh4LmMuDQoNCmUuZzoNCndsMTI1MS5jIHdsMTI1My5jICBjb21tb24g
-cGFydA0Kd2wxMjcxLmMgd2wxMjczLmMgIC0tLS0tLS0tLS0+ICB3bDEyeHguYyANCndsMTI4MS5j
-IHdsMTI4My5jDQoNCg0KQmVueg0KDQo=
+Since nullfunc frames are transmitted as unicast frames, they're more
+reliable than the broadcast probe requests, so we need fewer retries
+to figure out whether the AP is really gone.
+
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+---
+ net/mac80211/mlme.c |    9 ++++++++-
+ 1 files changed, 8 insertions(+), 1 deletions(-)
+
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+index 18c0e42..0c0f9fa 100644
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -28,6 +28,7 @@
+ #include "rate.h"
+ #include "led.h"
+ 
++#define IEEE80211_MAX_NULLFUNC_TRIES 2
+ #define IEEE80211_MAX_PROBE_TRIES 5
+ 
+ /*
+@@ -1915,16 +1916,22 @@ void ieee80211_sta_work(struct ieee80211_sub_if_data *sdata)
+ 			    IEEE80211_STA_CONNECTION_POLL) &&
+ 	    ifmgd->associated) {
+ 		u8 bssid[ETH_ALEN];
++		int max_tries;
+ 
+ 		/* ACK received for nullfunc probing frame */
+ 		if (!ifmgd->probe_send_count)
+ 			ieee80211_reset_ap_probe(sdata);
+ 
++		if (local->hw.flags & IEEE80211_HW_REPORTS_TX_ACK_STATUS)
++			max_tries = IEEE80211_MAX_NULLFUNC_TRIES;
++		else
++			max_tries = IEEE80211_MAX_PROBE_TRIES;
++
+ 		memcpy(bssid, ifmgd->associated->bssid, ETH_ALEN);
+ 		if (time_is_after_jiffies(ifmgd->probe_timeout))
+ 			run_again(ifmgd, ifmgd->probe_timeout);
+ 
+-		else if (ifmgd->probe_send_count < IEEE80211_MAX_PROBE_TRIES) {
++		else if (ifmgd->probe_send_count < max_tries) {
+ #ifdef CONFIG_MAC80211_VERBOSE_DEBUG
+ 			wiphy_debug(local->hw.wiphy,
+ 				    "%s: No probe response from AP %pM"
+-- 
+1.7.3.2
+
