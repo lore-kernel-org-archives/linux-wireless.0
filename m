@@ -1,33 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pz0-f46.google.com ([209.85.210.46]:50524 "EHLO
-	mail-pz0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755181Ab0KVTgS convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 22 Nov 2010 14:36:18 -0500
-Received: by pzk6 with SMTP id 6so230383pzk.19
-        for <linux-wireless@vger.kernel.org>; Mon, 22 Nov 2010 11:36:18 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <93781E992CBA7843962D8B0E7D683F3C1633484F57@SC1EXMB-MBCL.global.atheros.com>
-References: <20100525151429.GC6342@tpkurt2.garloff.de> <1290029817-711-1-git-send-email-linville@tuxdriver.com>
- <AANLkTimDkoqNbkFWDsU2HgFK3926gRpcBbokX_GL5sSc@mail.gmail.com>
- <93781E992CBA7843962D8B0E7D683F3C163340D5AE@SC1EXMB-MBCL.global.atheros.com>
- <20101119020414.GB2512@tuxdriver.com> <20101119091450.GD12228@tpkurt2.nue.garloff.de>
- <93781E992CBA7843962D8B0E7D683F3C16334843DD@SC1EXMB-MBCL.global.atheros.com>
- <AANLkTi=ySDQtw+M6ATV47HszkJN7vfR7q+FOC6-OBqjk@mail.gmail.com> <93781E992CBA7843962D8B0E7D683F3C1633484F57@SC1EXMB-MBCL.global.atheros.com>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Mon, 22 Nov 2010 11:35:56 -0800
-Message-ID: <AANLkTimbCzK6RPCnc0T117D0X+Yvi8S3j3L9aG74L=Jg@mail.gmail.com>
-Subject: Re: [PATCH] wireless-regdb: update rules for DE
-To: Michael Green <Michael.Green@atheros.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Received: from nbd.name ([46.4.11.11]:39440 "EHLO nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756303Ab0KTCIw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 19 Nov 2010 21:08:52 -0500
+From: Felix Fietkau <nbd@openwrt.org>
+To: linux-wireless@vger.kernel.org
+Cc: linville@tuxdriver.com, lrodriguez@atheros.com
+Subject: [PATCH 1/3] ath9k: fix recursive locking in the tx flush path
+Date: Sat, 20 Nov 2010 03:08:46 +0100
+Message-Id: <1290218928-87475-1-git-send-email-nbd@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Nov 22, 2010 at 11:00 AM, Michael Green
-<Michael.Green@atheros.com> wrote:
-> Thanks.  I understand/agree with that. But a dumb question...are all other EU countries set the same way now?
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+Tested-by: Ben Greear <greearb@candelatech.com>
+---
+ drivers/net/wireless/ath/ath9k/xmit.c |    2 ++
+ 1 files changed, 2 insertions(+), 0 deletions(-)
 
-Hey Michael, no they are not, each patch addresses just one country at a time.
+diff --git a/drivers/net/wireless/ath/ath9k/xmit.c b/drivers/net/wireless/ath/ath9k/xmit.c
+index c63e283..495432e 100644
+--- a/drivers/net/wireless/ath/ath9k/xmit.c
++++ b/drivers/net/wireless/ath/ath9k/xmit.c
+@@ -163,6 +163,7 @@ static void ath_tx_flush_tid(struct ath_softc *sc, struct ath_atx_tid *tid)
+ 		bf = list_first_entry(&tid->buf_q, struct ath_buf, list);
+ 		list_move_tail(&bf->list, &bf_head);
+ 
++		spin_unlock_bh(&txq->axq_lock);
+ 		fi = get_frame_info(bf->bf_mpdu);
+ 		if (fi->retries) {
+ 			ath_tx_update_baw(sc, tid, fi->seqno);
+@@ -170,6 +171,7 @@ static void ath_tx_flush_tid(struct ath_softc *sc, struct ath_atx_tid *tid)
+ 		} else {
+ 			ath_tx_send_normal(sc, txq, tid, &bf_head);
+ 		}
++		spin_lock_bh(&txq->axq_lock);
+ 	}
+ 
+ 	spin_unlock_bh(&txq->axq_lock);
+-- 
+1.7.3.2
 
-  Luis
