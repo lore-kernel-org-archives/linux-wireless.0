@@ -1,100 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ww0-f44.google.com ([74.125.82.44]:51442 "EHLO
-	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756155Ab0KCVHP (ORCPT
+Received: from mail-fx0-f46.google.com ([209.85.161.46]:43225 "EHLO
+	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752167Ab0KTPTN convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 3 Nov 2010 17:07:15 -0400
-Received: by wwe15 with SMTP id 15so1190931wwe.1
-        for <linux-wireless@vger.kernel.org>; Wed, 03 Nov 2010 14:07:13 -0700 (PDT)
-From: =?utf-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-To: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-Cc: b43-dev@lists.infradead.org,
-	=?utf-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-Subject: [PATCH] ssb: workarounds: be verbose about hacking SPROM revision, don't duplicate code
-Date: Wed,  3 Nov 2010 22:06:26 +0100
-Message-Id: <1288818386-25073-1-git-send-email-zajec5@gmail.com>
+	Sat, 20 Nov 2010 10:19:13 -0500
+Received: by fxm13 with SMTP id 13so1513242fxm.19
+        for <linux-wireless@vger.kernel.org>; Sat, 20 Nov 2010 07:19:12 -0800 (PST)
+From: Christian Lamparter <chunkeey@googlemail.com>
+To: linux-wireless@vger.kernel.org
+Subject: [PATCH] carl9170: fix init-self regression
+Date: Sat, 20 Nov 2010 16:53:26 +0100
+Cc: linville@tuxdriver.com
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: Text/Plain;
+  charset="utf-8"
+Message-Id: <201011201653.26634.chunkeey@googlemail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
+The commit: "carl9170: tx path review" introduced a regression.
+
+gcc (with -Winit-self):
+tx.c:1264: warning: ‘super’ is used uninitialized in this function
+
+Signed-off-by: Christian Lamparter <chunkeey@googlemail.com>
 ---
-This changes code flow the way even if workaround is needed, standard extracing
-calls are used. Additionaly if user wants to know SPROM version (enabled
-debugging) we really should let know also about hacking it!
-
-John: this is 2.6.38 material. Is this OK to submit this via wireless tree?
+for wireless-next/wireless-testing.git
 ---
- drivers/ssb/pci.c |   45 +++++++++++++++++++++++----------------------
- 1 files changed, 23 insertions(+), 22 deletions(-)
-
-diff --git a/drivers/ssb/pci.c b/drivers/ssb/pci.c
-index 6e88d2b..3226832 100644
---- a/drivers/ssb/pci.c
-+++ b/drivers/ssb/pci.c
-@@ -573,37 +573,38 @@ static int sprom_extract(struct ssb_bus *bus, struct ssb_sprom *out,
- 	ssb_dprintk(KERN_DEBUG PFX "SPROM revision %d detected.\n", out->revision);
- 	memset(out->et0mac, 0xFF, 6);		/* preset et0 and et1 mac */
- 	memset(out->et1mac, 0xFF, 6);
-+
- 	if ((bus->chip_id & 0xFF00) == 0x4400) {
- 		/* Workaround: The BCM44XX chip has a stupid revision
- 		 * number stored in the SPROM.
- 		 * Always extract r1. */
- 		out->revision = 1;
--		sprom_extract_r123(out, in);
-+		ssb_dprintk(KERN_DEBUG PFX "SPROM treated as revision %d\n", out->revision);
- 	} else if (bus->chip_id == 0x4321) {
- 		/* the BCM4328 has a chipid == 0x4321 and a rev 4 SPROM */
- 		out->revision = 4;
-+		ssb_dprintk(KERN_DEBUG PFX "SPROM treated as revision %d\n", out->revision);
-+	}
-+
-+	switch (out->revision) {
-+	case 1:
-+	case 2:
-+	case 3:
-+		sprom_extract_r123(out, in);
-+		break;
-+	case 4:
-+	case 5:
- 		sprom_extract_r45(out, in);
--	} else {
--		switch (out->revision) {
--		case 1:
--		case 2:
--		case 3:
--			sprom_extract_r123(out, in);
--			break;
--		case 4:
--		case 5:
--			sprom_extract_r45(out, in);
--			break;
--		case 8:
--			sprom_extract_r8(out, in);
--			break;
--		default:
--			ssb_printk(KERN_WARNING PFX "Unsupported SPROM"
--				   "  revision %d detected. Will extract"
--				   " v1\n", out->revision);
--			out->revision = 1;
--			sprom_extract_r123(out, in);
--		}
-+		break;
-+	case 8:
-+		sprom_extract_r8(out, in);
-+		break;
-+	default:
-+		ssb_printk(KERN_WARNING PFX "Unsupported SPROM"
-+			   "  revision %d detected. Will extract"
-+			   " v1\n", out->revision);
-+		out->revision = 1;
-+		sprom_extract_r123(out, in);
- 	}
- 
- 	if (out->boardflags_lo == 0xFFFF)
--- 
-1.6.0.4
-
+diff --git a/drivers/net/wireless/ath/carl9170/tx.c b/drivers/net/wireless/ath/carl9170/tx.c
+index 688eede..aee5c9d 100644
+--- a/drivers/net/wireless/ath/carl9170/tx.c
++++ b/drivers/net/wireless/ath/carl9170/tx.c
+@@ -1261,7 +1261,7 @@ static void carl9170_tx(struct ar9170 *ar)
+ static bool carl9170_tx_ampdu_queue(struct ar9170 *ar,
+ 	struct ieee80211_sta *sta, struct sk_buff *skb)
+ {
+-	struct _carl9170_tx_superframe *super = (void *) super;
++	struct _carl9170_tx_superframe *super = (void *) skb->data;
+ 	struct carl9170_sta_info *sta_info;
+ 	struct carl9170_sta_tid *agg;
+ 	struct sk_buff *iter;
