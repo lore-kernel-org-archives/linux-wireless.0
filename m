@@ -1,37 +1,700 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bar.sig21.net ([80.81.252.164]:43027 "EHLO bar.sig21.net"
+Received: from nbd.name ([46.4.11.11]:42518 "EHLO nbd.name"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755261Ab0KCPIv (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 3 Nov 2010 11:08:51 -0400
-Date: Wed, 3 Nov 2010 16:08:46 +0100
-From: Johannes Stezenbach <js@sig21.net>
-To: Ivo Van Doorn <ivdoorn@gmail.com>
-Cc: Helmut Schaa <helmut.schaa@googlemail.com>,
-	Lee <lee-in-berlin@web.de>,
-	Gertjan van Wingerde <gwingerde@gmail.com>,
-	linux-wireless@vger.kernel.org
-Subject: Re: [regression]AP with hostapd 0.7.3 can't receive packets beyond
- authentication (2.6.36, rt73usb)
-Message-ID: <20101103150846.GB5798@sig21.net>
-References: <4CC0D0F6.4080507@web.de>
- <201010290017.13174.helmut.schaa@googlemail.com>
- <4CCB3F24.1030701@web.de>
- <201010301430.15868.helmut.schaa@googlemail.com>
- <20101102125007.GA30000@sig21.net>
- <20101103141413.GA5364@sig21.net>
- <AANLkTimR8aGZs3AMWGFzMwKvvaTTEQt9ovL7yS7DTi9A@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <AANLkTimR8aGZs3AMWGFzMwKvvaTTEQt9ovL7yS7DTi9A@mail.gmail.com>
+	id S1754762Ab0KTSu1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 20 Nov 2010 13:50:27 -0500
+From: Felix Fietkau <nbd@openwrt.org>
+To: linux-wireless@vger.kernel.org
+Cc: linville@tuxdriver.com, lrodriguez@atheros.com
+Subject: [PATCH] ath9k_hw: fix endian issues with CTLs on AR9003
+Date: Sat, 20 Nov 2010 19:50:18 +0100
+Message-Id: <1290279018-29716-1-git-send-email-nbd@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Nov 03, 2010 at 03:50:20PM +0100, Ivo Van Doorn wrote:
-> 
-> Absolutely true, I committed a patch for that 1 or 2 weeks ago,
-> so that should be visible in compat-wireless by now.
+Parsing data using bitfields is messy, because it makes endian handling
+much harder. AR9002 and earlier got it right, AR9003 got it wrong.
+Fix it by getting rid of the CTL related bitfields entirely and use
+masks instead.
 
-grmbl, I was looking at wireless-testing updated on Monday, and it
-seems I got an outdated tree due to the hera server fuckup :-(
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+Cc: stable@kernel.org
+---
+ drivers/net/wireless/ath/ath9k/ar9003_eeprom.c |  314 ++++++++++++------------
+ drivers/net/wireless/ath/ath9k/ar9003_eeprom.h |    9 +-
+ drivers/net/wireless/ath/ath9k/eeprom.c        |    6 +-
+ drivers/net/wireless/ath/ath9k/eeprom.h        |   13 +-
+ 4 files changed, 167 insertions(+), 175 deletions(-)
 
-Johannes
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
+index 9a7e151..9182a9c 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
++++ b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
+@@ -57,6 +57,8 @@
+ #define SUB_NUM_CTL_MODES_AT_5G_40 2    /* excluding HT40, EXT-OFDM */
+ #define SUB_NUM_CTL_MODES_AT_2G_40 3    /* excluding HT40, EXT-OFDM, EXT-CCK */
+ 
++#define CTL(_tpower, _flag) ((_tpower) | ((_flag) << 6))
++
+ static int ar9003_hw_power_interpolate(int32_t x,
+ 				       int32_t *px, int32_t *py, u_int16_t np);
+ static const struct ar9300_eeprom ar9300_default = {
+@@ -296,21 +298,21 @@ static const struct ar9300_eeprom ar9300_default = {
+ 		}
+ 	 },
+ 	.ctlPowerData_2G = {
+-		 { { {60, 0}, {60, 1}, {60, 0}, {60, 0} } },
+-		 { { {60, 0}, {60, 1}, {60, 0}, {60, 0} } },
+-		 { { {60, 1}, {60, 0}, {60, 0}, {60, 1} } },
++		 { { CTL(60, 0), CTL(60, 1), CTL(60, 0), CTL(60, 0) } },
++		 { { CTL(60, 0), CTL(60, 1), CTL(60, 0), CTL(60, 0) } },
++		 { { CTL(60, 1), CTL(60, 0), CTL(60, 0), CTL(60, 1) } },
+ 
+-		 { { {60, 1}, {60, 0}, {0, 0}, {0, 0} } },
+-		 { { {60, 0}, {60, 1}, {60, 0}, {60, 0} } },
+-		 { { {60, 0}, {60, 1}, {60, 0}, {60, 0} } },
++		 { { CTL(60, 1), CTL(60, 0), CTL(0, 0), CTL(0, 0) } },
++		 { { CTL(60, 0), CTL(60, 1), CTL(60, 0), CTL(60, 0) } },
++		 { { CTL(60, 0), CTL(60, 1), CTL(60, 0), CTL(60, 0) } },
+ 
+-		 { { {60, 0}, {60, 1}, {60, 1}, {60, 0} } },
+-		 { { {60, 0}, {60, 1}, {60, 0}, {60, 0} } },
+-		 { { {60, 0}, {60, 1}, {60, 0}, {60, 0} } },
++		 { { CTL(60, 0), CTL(60, 1), CTL(60, 1), CTL(60, 0) } },
++		 { { CTL(60, 0), CTL(60, 1), CTL(60, 0), CTL(60, 0) } },
++		 { { CTL(60, 0), CTL(60, 1), CTL(60, 0), CTL(60, 0) } },
+ 
+-		 { { {60, 0}, {60, 1}, {60, 0}, {60, 0} } },
+-		 { { {60, 0}, {60, 1}, {60, 1}, {60, 1} } },
+-		 { { {60, 0}, {60, 1}, {60, 1}, {60, 1} } },
++		 { { CTL(60, 0), CTL(60, 1), CTL(60, 0), CTL(60, 0) } },
++		 { { CTL(60, 0), CTL(60, 1), CTL(60, 1), CTL(60, 1) } },
++		 { { CTL(60, 0), CTL(60, 1), CTL(60, 1), CTL(60, 1) } },
+ 	 },
+ 	.modalHeader5G = {
+ 		/* 4 idle,t1,t2,b (4 bits per setting) */
+@@ -582,56 +584,56 @@ static const struct ar9300_eeprom ar9300_default = {
+ 	.ctlPowerData_5G = {
+ 		{
+ 			{
+-				{60, 1}, {60, 1}, {60, 1}, {60, 1},
+-				{60, 1}, {60, 1}, {60, 1}, {60, 0},
++				CTL(60, 1), CTL(60, 1), CTL(60, 1), CTL(60, 1),
++				CTL(60, 1), CTL(60, 1), CTL(60, 1), CTL(60, 0),
+ 			}
+ 		},
+ 		{
+ 			{
+-				{60, 1}, {60, 1}, {60, 1}, {60, 1},
+-				{60, 1}, {60, 1}, {60, 1}, {60, 0},
++				CTL(60, 1), CTL(60, 1), CTL(60, 1), CTL(60, 1),
++				CTL(60, 1), CTL(60, 1), CTL(60, 1), CTL(60, 0),
+ 			}
+ 		},
+ 		{
+ 			{
+-				{60, 0}, {60, 1}, {60, 0}, {60, 1},
+-				{60, 1}, {60, 1}, {60, 1}, {60, 1},
++				CTL(60, 0), CTL(60, 1), CTL(60, 0), CTL(60, 1),
++				CTL(60, 1), CTL(60, 1), CTL(60, 1), CTL(60, 1),
+ 			}
+ 		},
+ 		{
+ 			{
+-				{60, 0}, {60, 1}, {60, 1}, {60, 0},
+-				{60, 1}, {60, 0}, {60, 0}, {60, 0},
++				CTL(60, 0), CTL(60, 1), CTL(60, 1), CTL(60, 0),
++				CTL(60, 1), CTL(60, 0), CTL(60, 0), CTL(60, 0),
+ 			}
+ 		},
+ 		{
+ 			{
+-				{60, 1}, {60, 1}, {60, 1}, {60, 0},
+-				{60, 0}, {60, 0}, {60, 0}, {60, 0},
++				CTL(60, 1), CTL(60, 1), CTL(60, 1), CTL(60, 0),
++				CTL(60, 0), CTL(60, 0), CTL(60, 0), CTL(60, 0),
+ 			}
+ 		},
+ 		{
+ 			{
+-				{60, 1}, {60, 1}, {60, 1}, {60, 1},
+-				{60, 1}, {60, 0}, {60, 0}, {60, 0},
++				CTL(60, 1), CTL(60, 1), CTL(60, 1), CTL(60, 1),
++				CTL(60, 1), CTL(60, 0), CTL(60, 0), CTL(60, 0),
+ 			}
+ 		},
+ 		{
+ 			{
+-				{60, 1}, {60, 1}, {60, 1}, {60, 1},
+-				{60, 1}, {60, 1}, {60, 1}, {60, 1},
++				CTL(60, 1), CTL(60, 1), CTL(60, 1), CTL(60, 1),
++				CTL(60, 1), CTL(60, 1), CTL(60, 1), CTL(60, 1),
+ 			}
+ 		},
+ 		{
+ 			{
+-				{60, 1}, {60, 1}, {60, 0}, {60, 1},
+-				{60, 1}, {60, 1}, {60, 1}, {60, 0},
++				CTL(60, 1), CTL(60, 1), CTL(60, 0), CTL(60, 1),
++				CTL(60, 1), CTL(60, 1), CTL(60, 1), CTL(60, 0),
+ 			}
+ 		},
+ 		{
+ 			{
+-				{60, 1}, {60, 0}, {60, 1}, {60, 1},
+-				{60, 1}, {60, 1}, {60, 0}, {60, 1},
++				CTL(60, 1), CTL(60, 0), CTL(60, 1), CTL(60, 1),
++				CTL(60, 1), CTL(60, 1), CTL(60, 0), CTL(60, 1),
+ 			}
+ 		},
+ 	 }
+@@ -873,21 +875,21 @@ static const struct ar9300_eeprom ar9300_x113 = {
+ 		}
+ 	 },
+ 	.ctlPowerData_2G = {
+-		 { { {60, 0}, {60, 1}, {60, 0}, {60, 0} } },
+-		 { { {60, 0}, {60, 1}, {60, 0}, {60, 0} } },
+-		 { { {60, 1}, {60, 0}, {60, 0}, {60, 1} } },
++		 { { CTL(60, 0), CTL(60, 1), CTL(60, 0), CTL(60, 0) } },
++		 { { CTL(60, 0), CTL(60, 1), CTL(60, 0), CTL(60, 0) } },
++		 { { CTL(60, 1), CTL(60, 0), CTL(60, 0), CTL(60, 1) } },
+ 
+-		 { { {60, 1}, {60, 0}, {0, 0}, {0, 0} } },
+-		 { { {60, 0}, {60, 1}, {60, 0}, {60, 0} } },
+-		 { { {60, 0}, {60, 1}, {60, 0}, {60, 0} } },
++		 { { CTL(60, 1), CTL(60, 0), CTL(0, 0), CTL(0, 0) } },
++		 { { CTL(60, 0), CTL(60, 1), CTL(60, 0), CTL(60, 0) } },
++		 { { CTL(60, 0), CTL(60, 1), CTL(60, 0), CTL(60, 0) } },
+ 
+-		 { { {60, 0}, {60, 1}, {60, 1}, {60, 0} } },
+-		 { { {60, 0}, {60, 1}, {60, 0}, {60, 0} } },
+-		 { { {60, 0}, {60, 1}, {60, 0}, {60, 0} } },
++		 { { CTL(60, 0), CTL(60, 1), CTL(60, 1), CTL(60, 0) } },
++		 { { CTL(60, 0), CTL(60, 1), CTL(60, 0), CTL(60, 0) } },
++		 { { CTL(60, 0), CTL(60, 1), CTL(60, 0), CTL(60, 0) } },
+ 
+-		 { { {60, 0}, {60, 1}, {60, 0}, {60, 0} } },
+-		 { { {60, 0}, {60, 1}, {60, 1}, {60, 1} } },
+-		 { { {60, 0}, {60, 1}, {60, 1}, {60, 1} } },
++		 { { CTL(60, 0), CTL(60, 1), CTL(60, 0), CTL(60, 0) } },
++		 { { CTL(60, 0), CTL(60, 1), CTL(60, 1), CTL(60, 1) } },
++		 { { CTL(60, 0), CTL(60, 1), CTL(60, 1), CTL(60, 1) } },
+ 	 },
+ 	.modalHeader5G = {
+ 		/* 4 idle,t1,t2,b (4 bits per setting) */
+@@ -1159,56 +1161,56 @@ static const struct ar9300_eeprom ar9300_x113 = {
+ 	.ctlPowerData_5G = {
+ 		{
+ 			{
+-				{60, 1}, {60, 1}, {60, 1}, {60, 1},
+-				{60, 1}, {60, 1}, {60, 1}, {60, 0},
++				CTL(60, 1), CTL(60, 1), CTL(60, 1), CTL(60, 1),
++				CTL(60, 1), CTL(60, 1), CTL(60, 1), CTL(60, 0),
+ 			}
+ 		},
+ 		{
+ 			{
+-				{60, 1}, {60, 1}, {60, 1}, {60, 1},
+-				{60, 1}, {60, 1}, {60, 1}, {60, 0},
++				CTL(60, 1), CTL(60, 1), CTL(60, 1), CTL(60, 1),
++				CTL(60, 1), CTL(60, 1), CTL(60, 1), CTL(60, 0),
+ 			}
+ 		},
+ 		{
+ 			{
+-				{60, 0}, {60, 1}, {60, 0}, {60, 1},
+-				{60, 1}, {60, 1}, {60, 1}, {60, 1},
++				CTL(60, 0), CTL(60, 1), CTL(60, 0), CTL(60, 1),
++				CTL(60, 1), CTL(60, 1), CTL(60, 1), CTL(60, 1),
+ 			}
+ 		},
+ 		{
+ 			{
+-				{60, 0}, {60, 1}, {60, 1}, {60, 0},
+-				{60, 1}, {60, 0}, {60, 0}, {60, 0},
++				CTL(60, 0), CTL(60, 1), CTL(60, 1), CTL(60, 0),
++				CTL(60, 1), CTL(60, 0), CTL(60, 0), CTL(60, 0),
+ 			}
+ 		},
+ 		{
+ 			{
+-				{60, 1}, {60, 1}, {60, 1}, {60, 0},
+-				{60, 0}, {60, 0}, {60, 0}, {60, 0},
++				CTL(60, 1), CTL(60, 1), CTL(60, 1), CTL(60, 0),
++				CTL(60, 0), CTL(60, 0), CTL(60, 0), CTL(60, 0),
+ 			}
+ 		},
+ 		{
+ 			{
+-				{60, 1}, {60, 1}, {60, 1}, {60, 1},
+-				{60, 1}, {60, 0}, {60, 0}, {60, 0},
++				CTL(60, 1), CTL(60, 1), CTL(60, 1), CTL(60, 1),
++				CTL(60, 1), CTL(60, 0), CTL(60, 0), CTL(60, 0),
+ 			}
+ 		},
+ 		{
+ 			{
+-				{60, 1}, {60, 1}, {60, 1}, {60, 1},
+-				{60, 1}, {60, 1}, {60, 1}, {60, 1},
++				CTL(60, 1), CTL(60, 1), CTL(60, 1), CTL(60, 1),
++				CTL(60, 1), CTL(60, 1), CTL(60, 1), CTL(60, 1),
+ 			}
+ 		},
+ 		{
+ 			{
+-				{60, 1}, {60, 1}, {60, 0}, {60, 1},
+-				{60, 1}, {60, 1}, {60, 1}, {60, 0},
++				CTL(60, 1), CTL(60, 1), CTL(60, 0), CTL(60, 1),
++				CTL(60, 1), CTL(60, 1), CTL(60, 1), CTL(60, 0),
+ 			}
+ 		},
+ 		{
+ 			{
+-				{60, 1}, {60, 0}, {60, 1}, {60, 1},
+-				{60, 1}, {60, 1}, {60, 0}, {60, 1},
++				CTL(60, 1), CTL(60, 0), CTL(60, 1), CTL(60, 1),
++				CTL(60, 1), CTL(60, 1), CTL(60, 0), CTL(60, 1),
+ 			}
+ 		},
+ 	 }
+@@ -1451,21 +1453,21 @@ static const struct ar9300_eeprom ar9300_h112 = {
+ 		}
+ 	},
+ 	.ctlPowerData_2G = {
+-		{ { {60, 0}, {60, 1}, {60, 0}, {60, 0} } },
+-		{ { {60, 0}, {60, 1}, {60, 0}, {60, 0} } },
+-		{ { {60, 1}, {60, 0}, {60, 0}, {60, 1} } },
++		{ { CTL(60, 0), CTL(60, 1), CTL(60, 0), CTL(60, 0) } },
++		{ { CTL(60, 0), CTL(60, 1), CTL(60, 0), CTL(60, 0) } },
++		{ { CTL(60, 1), CTL(60, 0), CTL(60, 0), CTL(60, 1) } },
+ 
+-		{ { {60, 1}, {60, 0}, {0, 0}, {0, 0} } },
+-		{ { {60, 0}, {60, 1}, {60, 0}, {60, 0} } },
+-		{ { {60, 0}, {60, 1}, {60, 0}, {60, 0} } },
++		{ { CTL(60, 1), CTL(60, 0), CTL(0, 0), CTL(0, 0) } },
++		{ { CTL(60, 0), CTL(60, 1), CTL(60, 0), CTL(60, 0) } },
++		{ { CTL(60, 0), CTL(60, 1), CTL(60, 0), CTL(60, 0) } },
+ 
+-		{ { {60, 0}, {60, 1}, {60, 1}, {60, 0} } },
+-		{ { {60, 0}, {60, 1}, {60, 0}, {60, 0} } },
+-		{ { {60, 0}, {60, 1}, {60, 0}, {60, 0} } },
++		{ { CTL(60, 0), CTL(60, 1), CTL(60, 1), CTL(60, 0) } },
++		{ { CTL(60, 0), CTL(60, 1), CTL(60, 0), CTL(60, 0) } },
++		{ { CTL(60, 0), CTL(60, 1), CTL(60, 0), CTL(60, 0) } },
+ 
+-		{ { {60, 0}, {60, 1}, {60, 0}, {60, 0} } },
+-		{ { {60, 0}, {60, 1}, {60, 1}, {60, 1} } },
+-		{ { {60, 0}, {60, 1}, {60, 1}, {60, 1} } },
++		{ { CTL(60, 0), CTL(60, 1), CTL(60, 0), CTL(60, 0) } },
++		{ { CTL(60, 0), CTL(60, 1), CTL(60, 1), CTL(60, 1) } },
++		{ { CTL(60, 0), CTL(60, 1), CTL(60, 1), CTL(60, 1) } },
+ 	},
+ 	.modalHeader5G = {
+ 		/* 4 idle,t1,t2,b (4 bits per setting) */
+@@ -1737,56 +1739,56 @@ static const struct ar9300_eeprom ar9300_h112 = {
+ 	.ctlPowerData_5G = {
+ 		{
+ 			{
+-				{60, 1}, {60, 1}, {60, 1}, {60, 1},
+-				{60, 1}, {60, 1}, {60, 1}, {60, 0},
++				CTL(60, 1), CTL(60, 1), CTL(60, 1), CTL(60, 1),
++				CTL(60, 1), CTL(60, 1), CTL(60, 1), CTL(60, 0),
+ 			}
+ 		},
+ 		{
+ 			{
+-				{60, 1}, {60, 1}, {60, 1}, {60, 1},
+-				{60, 1}, {60, 1}, {60, 1}, {60, 0},
++				CTL(60, 1), CTL(60, 1), CTL(60, 1), CTL(60, 1),
++				CTL(60, 1), CTL(60, 1), CTL(60, 1), CTL(60, 0),
+ 			}
+ 		},
+ 		{
+ 			{
+-				{60, 0}, {60, 1}, {60, 0}, {60, 1},
+-				{60, 1}, {60, 1}, {60, 1}, {60, 1},
++				CTL(60, 0), CTL(60, 1), CTL(60, 0), CTL(60, 1),
++				CTL(60, 1), CTL(60, 1), CTL(60, 1), CTL(60, 1),
+ 			}
+ 		},
+ 		{
+ 			{
+-				{60, 0}, {60, 1}, {60, 1}, {60, 0},
+-				{60, 1}, {60, 0}, {60, 0}, {60, 0},
++				CTL(60, 0), CTL(60, 1), CTL(60, 1), CTL(60, 0),
++				CTL(60, 1), CTL(60, 0), CTL(60, 0), CTL(60, 0),
+ 			}
+ 		},
+ 		{
+ 			{
+-				{60, 1}, {60, 1}, {60, 1}, {60, 0},
+-				{60, 0}, {60, 0}, {60, 0}, {60, 0},
++				CTL(60, 1), CTL(60, 1), CTL(60, 1), CTL(60, 0),
++				CTL(60, 0), CTL(60, 0), CTL(60, 0), CTL(60, 0),
+ 			}
+ 		},
+ 		{
+ 			{
+-				{60, 1}, {60, 1}, {60, 1}, {60, 1},
+-				{60, 1}, {60, 0}, {60, 0}, {60, 0},
++				CTL(60, 1), CTL(60, 1), CTL(60, 1), CTL(60, 1),
++				CTL(60, 1), CTL(60, 0), CTL(60, 0), CTL(60, 0),
+ 			}
+ 		},
+ 		{
+ 			{
+-				{60, 1}, {60, 1}, {60, 1}, {60, 1},
+-				{60, 1}, {60, 1}, {60, 1}, {60, 1},
++				CTL(60, 1), CTL(60, 1), CTL(60, 1), CTL(60, 1),
++				CTL(60, 1), CTL(60, 1), CTL(60, 1), CTL(60, 1),
+ 			}
+ 		},
+ 		{
+ 			{
+-				{60, 1}, {60, 1}, {60, 0}, {60, 1},
+-				{60, 1}, {60, 1}, {60, 1}, {60, 0},
++				CTL(60, 1), CTL(60, 1), CTL(60, 0), CTL(60, 1),
++				CTL(60, 1), CTL(60, 1), CTL(60, 1), CTL(60, 0),
+ 			}
+ 		},
+ 		{
+ 			{
+-				{60, 1}, {60, 0}, {60, 1}, {60, 1},
+-				{60, 1}, {60, 1}, {60, 0}, {60, 1},
++				CTL(60, 1), CTL(60, 0), CTL(60, 1), CTL(60, 1),
++				CTL(60, 1), CTL(60, 1), CTL(60, 0), CTL(60, 1),
+ 			}
+ 		},
+ 	}
+@@ -2029,21 +2031,21 @@ static const struct ar9300_eeprom ar9300_x112 = {
+ 		}
+ 	},
+ 	.ctlPowerData_2G = {
+-		{ { {60, 0}, {60, 1}, {60, 0}, {60, 0} } },
+-		{ { {60, 0}, {60, 1}, {60, 0}, {60, 0} } },
+-		{ { {60, 1}, {60, 0}, {60, 0}, {60, 1} } },
++		{ { CTL(60, 0), CTL(60, 1), CTL(60, 0), CTL(60, 0) } },
++		{ { CTL(60, 0), CTL(60, 1), CTL(60, 0), CTL(60, 0) } },
++		{ { CTL(60, 1), CTL(60, 0), CTL(60, 0), CTL(60, 1) } },
+ 
+-		{ { {60, 1}, {60, 0}, {0, 0}, {0, 0} } },
+-		{ { {60, 0}, {60, 1}, {60, 0}, {60, 0} } },
+-		{ { {60, 0}, {60, 1}, {60, 0}, {60, 0} } },
++		{ { CTL(60, 1), CTL(60, 0), CTL(0, 0), CTL(0, 0) } },
++		{ { CTL(60, 0), CTL(60, 1), CTL(60, 0), CTL(60, 0) } },
++		{ { CTL(60, 0), CTL(60, 1), CTL(60, 0), CTL(60, 0) } },
+ 
+-		{ { {60, 0}, {60, 1}, {60, 1}, {60, 0} } },
+-		{ { {60, 0}, {60, 1}, {60, 0}, {60, 0} } },
+-		{ { {60, 0}, {60, 1}, {60, 0}, {60, 0} } },
++		{ { CTL(60, 0), CTL(60, 1), CTL(60, 1), CTL(60, 0) } },
++		{ { CTL(60, 0), CTL(60, 1), CTL(60, 0), CTL(60, 0) } },
++		{ { CTL(60, 0), CTL(60, 1), CTL(60, 0), CTL(60, 0) } },
+ 
+-		{ { {60, 0}, {60, 1}, {60, 0}, {60, 0} } },
+-		{ { {60, 0}, {60, 1}, {60, 1}, {60, 1} } },
+-		{ { {60, 0}, {60, 1}, {60, 1}, {60, 1} } },
++		{ { CTL(60, 0), CTL(60, 1), CTL(60, 0), CTL(60, 0) } },
++		{ { CTL(60, 0), CTL(60, 1), CTL(60, 1), CTL(60, 1) } },
++		{ { CTL(60, 0), CTL(60, 1), CTL(60, 1), CTL(60, 1) } },
+ 	},
+ 	.modalHeader5G = {
+ 		/* 4 idle,t1,t2,b (4 bits per setting) */
+@@ -2315,56 +2317,56 @@ static const struct ar9300_eeprom ar9300_x112 = {
+ 	.ctlPowerData_5G = {
+ 		{
+ 			{
+-				{60, 1}, {60, 1}, {60, 1}, {60, 1},
+-				{60, 1}, {60, 1}, {60, 1}, {60, 0},
++				CTL(60, 1), CTL(60, 1), CTL(60, 1), CTL(60, 1),
++				CTL(60, 1), CTL(60, 1), CTL(60, 1), CTL(60, 0),
+ 			}
+ 		},
+ 		{
+ 			{
+-				{60, 1}, {60, 1}, {60, 1}, {60, 1},
+-				{60, 1}, {60, 1}, {60, 1}, {60, 0},
++				CTL(60, 1), CTL(60, 1), CTL(60, 1), CTL(60, 1),
++				CTL(60, 1), CTL(60, 1), CTL(60, 1), CTL(60, 0),
+ 			}
+ 		},
+ 		{
+ 			{
+-				{60, 0}, {60, 1}, {60, 0}, {60, 1},
+-				{60, 1}, {60, 1}, {60, 1}, {60, 1},
++				CTL(60, 0), CTL(60, 1), CTL(60, 0), CTL(60, 1),
++				CTL(60, 1), CTL(60, 1), CTL(60, 1), CTL(60, 1),
+ 			}
+ 		},
+ 		{
+ 			{
+-				{60, 0}, {60, 1}, {60, 1}, {60, 0},
+-				{60, 1}, {60, 0}, {60, 0}, {60, 0},
++				CTL(60, 0), CTL(60, 1), CTL(60, 1), CTL(60, 0),
++				CTL(60, 1), CTL(60, 0), CTL(60, 0), CTL(60, 0),
+ 			}
+ 		},
+ 		{
+ 			{
+-				{60, 1}, {60, 1}, {60, 1}, {60, 0},
+-				{60, 0}, {60, 0}, {60, 0}, {60, 0},
++				CTL(60, 1), CTL(60, 1), CTL(60, 1), CTL(60, 0),
++				CTL(60, 0), CTL(60, 0), CTL(60, 0), CTL(60, 0),
+ 			}
+ 		},
+ 		{
+ 			{
+-				{60, 1}, {60, 1}, {60, 1}, {60, 1},
+-				{60, 1}, {60, 0}, {60, 0}, {60, 0},
++				CTL(60, 1), CTL(60, 1), CTL(60, 1), CTL(60, 1),
++				CTL(60, 1), CTL(60, 0), CTL(60, 0), CTL(60, 0),
+ 			}
+ 		},
+ 		{
+ 			{
+-				{60, 1}, {60, 1}, {60, 1}, {60, 1},
+-				{60, 1}, {60, 1}, {60, 1}, {60, 1},
++				CTL(60, 1), CTL(60, 1), CTL(60, 1), CTL(60, 1),
++				CTL(60, 1), CTL(60, 1), CTL(60, 1), CTL(60, 1),
+ 			}
+ 		},
+ 		{
+ 			{
+-				{60, 1}, {60, 1}, {60, 0}, {60, 1},
+-				{60, 1}, {60, 1}, {60, 1}, {60, 0},
++				CTL(60, 1), CTL(60, 1), CTL(60, 0), CTL(60, 1),
++				CTL(60, 1), CTL(60, 1), CTL(60, 1), CTL(60, 0),
+ 			}
+ 		},
+ 		{
+ 			{
+-				{60, 1}, {60, 0}, {60, 1}, {60, 1},
+-				{60, 1}, {60, 1}, {60, 0}, {60, 1},
++				CTL(60, 1), CTL(60, 0), CTL(60, 1), CTL(60, 1),
++				CTL(60, 1), CTL(60, 1), CTL(60, 0), CTL(60, 1),
+ 			}
+ 		},
+ 	}
+@@ -2606,21 +2608,21 @@ static const struct ar9300_eeprom ar9300_h116 = {
+ 		}
+ 	 },
+ 	.ctlPowerData_2G = {
+-		 { { {60, 0}, {60, 1}, {60, 0}, {60, 0} } },
+-		 { { {60, 0}, {60, 1}, {60, 0}, {60, 0} } },
+-		 { { {60, 1}, {60, 0}, {60, 0}, {60, 1} } },
++		 { { CTL(60, 0), CTL(60, 1), CTL(60, 0), CTL(60, 0) } },
++		 { { CTL(60, 0), CTL(60, 1), CTL(60, 0), CTL(60, 0) } },
++		 { { CTL(60, 1), CTL(60, 0), CTL(60, 0), CTL(60, 1) } },
+ 
+-		 { { {60, 1}, {60, 0}, {0, 0}, {0, 0} } },
+-		 { { {60, 0}, {60, 1}, {60, 0}, {60, 0} } },
+-		 { { {60, 0}, {60, 1}, {60, 0}, {60, 0} } },
++		 { { CTL(60, 1), CTL(60, 0), CTL(0, 0), CTL(0, 0) } },
++		 { { CTL(60, 0), CTL(60, 1), CTL(60, 0), CTL(60, 0) } },
++		 { { CTL(60, 0), CTL(60, 1), CTL(60, 0), CTL(60, 0) } },
+ 
+-		 { { {60, 0}, {60, 1}, {60, 1}, {60, 0} } },
+-		 { { {60, 0}, {60, 1}, {60, 0}, {60, 0} } },
+-		 { { {60, 0}, {60, 1}, {60, 0}, {60, 0} } },
++		 { { CTL(60, 0), CTL(60, 1), CTL(60, 1), CTL(60, 0) } },
++		 { { CTL(60, 0), CTL(60, 1), CTL(60, 0), CTL(60, 0) } },
++		 { { CTL(60, 0), CTL(60, 1), CTL(60, 0), CTL(60, 0) } },
+ 
+-		 { { {60, 0}, {60, 1}, {60, 0}, {60, 0} } },
+-		 { { {60, 0}, {60, 1}, {60, 1}, {60, 1} } },
+-		 { { {60, 0}, {60, 1}, {60, 1}, {60, 1} } },
++		 { { CTL(60, 0), CTL(60, 1), CTL(60, 0), CTL(60, 0) } },
++		 { { CTL(60, 0), CTL(60, 1), CTL(60, 1), CTL(60, 1) } },
++		 { { CTL(60, 0), CTL(60, 1), CTL(60, 1), CTL(60, 1) } },
+ 	 },
+ 	.modalHeader5G = {
+ 		/* 4 idle,t1,t2,b (4 bits per setting) */
+@@ -2892,56 +2894,56 @@ static const struct ar9300_eeprom ar9300_h116 = {
+ 	.ctlPowerData_5G = {
+ 		{
+ 			{
+-				{60, 1}, {60, 1}, {60, 1}, {60, 1},
+-				{60, 1}, {60, 1}, {60, 1}, {60, 0},
++				CTL(60, 1), CTL(60, 1), CTL(60, 1), CTL(60, 1),
++				CTL(60, 1), CTL(60, 1), CTL(60, 1), CTL(60, 0),
+ 			}
+ 		},
+ 		{
+ 			{
+-				{60, 1}, {60, 1}, {60, 1}, {60, 1},
+-				{60, 1}, {60, 1}, {60, 1}, {60, 0},
++				CTL(60, 1), CTL(60, 1), CTL(60, 1), CTL(60, 1),
++				CTL(60, 1), CTL(60, 1), CTL(60, 1), CTL(60, 0),
+ 			}
+ 		},
+ 		{
+ 			{
+-				{60, 0}, {60, 1}, {60, 0}, {60, 1},
+-				{60, 1}, {60, 1}, {60, 1}, {60, 1},
++				CTL(60, 0), CTL(60, 1), CTL(60, 0), CTL(60, 1),
++				CTL(60, 1), CTL(60, 1), CTL(60, 1), CTL(60, 1),
+ 			}
+ 		},
+ 		{
+ 			{
+-				{60, 0}, {60, 1}, {60, 1}, {60, 0},
+-				{60, 1}, {60, 0}, {60, 0}, {60, 0},
++				CTL(60, 0), CTL(60, 1), CTL(60, 1), CTL(60, 0),
++				CTL(60, 1), CTL(60, 0), CTL(60, 0), CTL(60, 0),
+ 			}
+ 		},
+ 		{
+ 			{
+-				{60, 1}, {60, 1}, {60, 1}, {60, 0},
+-				{60, 0}, {60, 0}, {60, 0}, {60, 0},
++				CTL(60, 1), CTL(60, 1), CTL(60, 1), CTL(60, 0),
++				CTL(60, 0), CTL(60, 0), CTL(60, 0), CTL(60, 0),
+ 			}
+ 		},
+ 		{
+ 			{
+-				{60, 1}, {60, 1}, {60, 1}, {60, 1},
+-				{60, 1}, {60, 0}, {60, 0}, {60, 0},
++				CTL(60, 1), CTL(60, 1), CTL(60, 1), CTL(60, 1),
++				CTL(60, 1), CTL(60, 0), CTL(60, 0), CTL(60, 0),
+ 			}
+ 		},
+ 		{
+ 			{
+-				{60, 1}, {60, 1}, {60, 1}, {60, 1},
+-				{60, 1}, {60, 1}, {60, 1}, {60, 1},
++				CTL(60, 1), CTL(60, 1), CTL(60, 1), CTL(60, 1),
++				CTL(60, 1), CTL(60, 1), CTL(60, 1), CTL(60, 1),
+ 			}
+ 		},
+ 		{
+ 			{
+-				{60, 1}, {60, 1}, {60, 0}, {60, 1},
+-				{60, 1}, {60, 1}, {60, 1}, {60, 0},
++				CTL(60, 1), CTL(60, 1), CTL(60, 0), CTL(60, 1),
++				CTL(60, 1), CTL(60, 1), CTL(60, 1), CTL(60, 0),
+ 			}
+ 		},
+ 		{
+ 			{
+-				{60, 1}, {60, 0}, {60, 1}, {60, 1},
+-				{60, 1}, {60, 1}, {60, 0}, {60, 1},
++				CTL(60, 1), CTL(60, 0), CTL(60, 1), CTL(60, 1),
++				CTL(60, 1), CTL(60, 1), CTL(60, 0), CTL(60, 1),
+ 			}
+ 		},
+ 	 }
+@@ -4363,9 +4365,9 @@ static u16 ar9003_hw_get_direct_edge_power(struct ar9300_eeprom *eep,
+ 	struct cal_ctl_data_5g *ctl_5g = eep->ctlPowerData_5G;
+ 
+ 	if (is2GHz)
+-		return ctl_2g[idx].ctlEdges[edge].tPower;
++		return CTL_EDGE_TPOWER(ctl_2g[idx].ctlEdges[edge]);
+ 	else
+-		return ctl_5g[idx].ctlEdges[edge].tPower;
++		return CTL_EDGE_TPOWER(ctl_5g[idx].ctlEdges[edge]);
+ }
+ 
+ static u16 ar9003_hw_get_indirect_edge_power(struct ar9300_eeprom *eep,
+@@ -4383,12 +4385,12 @@ static u16 ar9003_hw_get_indirect_edge_power(struct ar9300_eeprom *eep,
+ 
+ 	if (is2GHz) {
+ 		if (ath9k_hw_fbin2freq(ctl_freqbin[edge - 1], 1) < freq &&
+-		    ctl_2g[idx].ctlEdges[edge - 1].flag)
+-			return ctl_2g[idx].ctlEdges[edge - 1].tPower;
++		    CTL_EDGE_FLAGS(ctl_2g[idx].ctlEdges[edge - 1]))
++			return CTL_EDGE_TPOWER(ctl_2g[idx].ctlEdges[edge - 1]);
+ 	} else {
+ 		if (ath9k_hw_fbin2freq(ctl_freqbin[edge - 1], 0) < freq &&
+-		    ctl_5g[idx].ctlEdges[edge - 1].flag)
+-			return ctl_5g[idx].ctlEdges[edge - 1].tPower;
++		    CTL_EDGE_FLAGS(ctl_5g[idx].ctlEdges[edge - 1]))
++			return CTL_EDGE_TPOWER(ctl_5g[idx].ctlEdges[edge - 1]);
+ 	}
+ 
+ 	return AR9300_MAX_RATE_POWER;
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.h b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.h
+index 57f64db..9c14633 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.h
++++ b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.h
+@@ -270,17 +270,12 @@ struct cal_tgt_pow_ht {
+ 	u8 tPow2x[14];
+ } __packed;
+ 
+-struct cal_ctl_edge_pwr {
+-	u8 tPower:6,
+-	   flag:2;
+-} __packed;
+-
+ struct cal_ctl_data_2g {
+-	struct cal_ctl_edge_pwr ctlEdges[AR9300_NUM_BAND_EDGES_2G];
++	u8 ctlEdges[AR9300_NUM_BAND_EDGES_2G];
+ } __packed;
+ 
+ struct cal_ctl_data_5g {
+-	struct cal_ctl_edge_pwr ctlEdges[AR9300_NUM_BAND_EDGES_5G];
++	u8 ctlEdges[AR9300_NUM_BAND_EDGES_5G];
+ } __packed;
+ 
+ struct ar9300_BaseExtension_1 {
+diff --git a/drivers/net/wireless/ath/ath9k/eeprom.c b/drivers/net/wireless/ath/ath9k/eeprom.c
+index 1266333..2bbf94d 100644
+--- a/drivers/net/wireless/ath/ath9k/eeprom.c
++++ b/drivers/net/wireless/ath/ath9k/eeprom.c
+@@ -240,16 +240,16 @@ u16 ath9k_hw_get_max_edge_power(u16 freq, struct cal_ctl_edges *pRdEdgesPower,
+ 	for (i = 0; (i < num_band_edges) &&
+ 		     (pRdEdgesPower[i].bChannel != AR5416_BCHAN_UNUSED); i++) {
+ 		if (freq == ath9k_hw_fbin2freq(pRdEdgesPower[i].bChannel, is2GHz)) {
+-			twiceMaxEdgePower = pRdEdgesPower[i].tPower;
++			twiceMaxEdgePower = CTL_EDGE_TPOWER(pRdEdgesPower[i].ctl);
+ 			break;
+ 		} else if ((i > 0) &&
+ 			   (freq < ath9k_hw_fbin2freq(pRdEdgesPower[i].bChannel,
+ 						      is2GHz))) {
+ 			if (ath9k_hw_fbin2freq(pRdEdgesPower[i - 1].bChannel,
+ 					       is2GHz) < freq &&
+-			    pRdEdgesPower[i - 1].flag) {
++			    CTL_EDGE_FLAGS(pRdEdgesPower[i - 1].ctl)) {
+ 				twiceMaxEdgePower =
+-					pRdEdgesPower[i - 1].tPower;
++					CTL_EDGE_TPOWER(pRdEdgesPower[i - 1].ctl);
+ 			}
+ 			break;
+ 		}
+diff --git a/drivers/net/wireless/ath/ath9k/eeprom.h b/drivers/net/wireless/ath/ath9k/eeprom.h
+index 3c99830..5766ce9 100644
+--- a/drivers/net/wireless/ath/ath9k/eeprom.h
++++ b/drivers/net/wireless/ath/ath9k/eeprom.h
+@@ -233,6 +233,9 @@
+ 
+ #define AR9287_CHECKSUM_LOCATION (AR9287_EEP_START_LOC + 1)
+ 
++#define CTL_EDGE_TPOWER(_ctl) ((_ctl) & 0x3f)
++#define CTL_EDGE_FLAGS(_ctl) (((_ctl) >> 6) & 0x03)
++
+ enum eeprom_param {
+ 	EEP_NFTHRESH_5,
+ 	EEP_NFTHRESH_2,
+@@ -535,18 +538,10 @@ struct cal_target_power_ht {
+ 	u8 tPow2x[8];
+ } __packed;
+ 
+-
+-#ifdef __BIG_ENDIAN_BITFIELD
+-struct cal_ctl_edges {
+-	u8 bChannel;
+-	u8 flag:2, tPower:6;
+-} __packed;
+-#else
+ struct cal_ctl_edges {
+ 	u8 bChannel;
+-	u8 tPower:6, flag:2;
++	u8 ctl;
+ } __packed;
+-#endif
+ 
+ struct cal_data_op_loop_ar9287 {
+ 	u8 pwrPdg[2][5];
+-- 
+1.7.3.2
+
