@@ -1,124 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ey0-f174.google.com ([209.85.215.174]:55849 "EHLO
-	mail-ey0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755079Ab0KWS4U (ORCPT
+Received: from mail.candelatech.com ([208.74.158.172]:34439 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755894Ab0KTBNH (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 23 Nov 2010 13:56:20 -0500
-Received: by eye27 with SMTP id 27so4871674eye.19
-        for <linux-wireless@vger.kernel.org>; Tue, 23 Nov 2010 10:56:19 -0800 (PST)
-Date: Tue, 23 Nov 2010 20:55:17 +0200
-From: Nick Kossifidis <mickflemm@gmail.com>
-To: ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org
-Cc: linville@tuxdriver.com, me@bobcopeland.com, mcgrof@gmail.com,
-	jirislaby@gmail.com, nbd@openwrt.org, br1@einfach.org
-Subject: [PATCH 08/30] ath5k: Use new function to stop beacon queue
-Message-ID: <20101123185517.GH4303@makis.mantri>
+	Fri, 19 Nov 2010 20:13:07 -0500
+Received: from [192.168.100.195] (firewall.candelatech.com [70.89.124.249])
+	(authenticated bits=0)
+	by ns3.lanforge.com (8.14.2/8.14.2) with ESMTP id oAK1D5u6021355
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
+	for <linux-wireless@vger.kernel.org>; Fri, 19 Nov 2010 17:13:06 -0800
+Message-ID: <4CE720A1.3090408@candelatech.com>
+Date: Fri, 19 Nov 2010 17:13:05 -0800
+From: Ben Greear <greearb@candelatech.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: ath9k very unstable and kills file-system.
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
- * Since we only use ath5k_hw_stop_tx_dma to stop the beacon
- queue, introduce a new function ath5k_hw_stop_beacon_queue so
- that we can use that instead and have better control. In the future
- we can add more beacon queue specific stuff there (maybe tweak
- beacon timers or something), for now just call ath5k_hw_stop_tx_dma.
+It's been another frustrating week for using ath9k.
 
- * Also since we don't call ath5k_hw_stop_rx/tx_dma from outside
- dma.c, make them static.
+With a patched wpa_supplicant (found here:
+https://github.com/greearb/hostap-ct/tree/)
+I can reliably cause ath9k to spew all sorts of DMA warnings
+and evidently crash the hard-drive controller and/or corrupt the
+file system so bad that fsck cannot fix it.  (Back up anything you
+want to keep before attempting to reproduce this.)
 
- Signed-off-by: Nick Kossifidis <mickflemm@gmail.com>
----
- drivers/net/wireless/ath/ath5k/ath5k.h |    3 +--
- drivers/net/wireless/ath/ath5k/base.c  |    4 ++--
- drivers/net/wireless/ath/ath5k/dma.c   |   24 ++++++++++++++++++++++--
- 3 files changed, 25 insertions(+), 6 deletions(-)
+The test case is simply create 30 or so STA interfaces, run one instance
+of the patched wpa_supplicant to control the 30 interfaces, and send
+a bit of traffic across the interfaces.  It's not even needed to send
+any significant data...probably just the supplicant associate logic
+is enough.
 
-diff --git a/drivers/net/wireless/ath/ath5k/ath5k.h b/drivers/net/wireless/ath/ath5k/ath5k.h
-index b36d3a5..66359dc 100644
---- a/drivers/net/wireless/ath/ath5k/ath5k.h
-+++ b/drivers/net/wireless/ath/ath5k/ath5k.h
-@@ -1166,11 +1166,10 @@ void ath5k_hw_set_clockrate(struct ath5k_hw *ah);
- 
- /* DMA Related Functions */
- void ath5k_hw_start_rx_dma(struct ath5k_hw *ah);
--int ath5k_hw_stop_rx_dma(struct ath5k_hw *ah);
- u32 ath5k_hw_get_rxdp(struct ath5k_hw *ah);
- int ath5k_hw_set_rxdp(struct ath5k_hw *ah, u32 phys_addr);
- int ath5k_hw_start_tx_dma(struct ath5k_hw *ah, unsigned int queue);
--int ath5k_hw_stop_tx_dma(struct ath5k_hw *ah, unsigned int queue);
-+int ath5k_hw_stop_beacon_queue(struct ath5k_hw *ah, unsigned int queue);
- u32 ath5k_hw_get_txdp(struct ath5k_hw *ah, unsigned int queue);
- int ath5k_hw_set_txdp(struct ath5k_hw *ah, unsigned int queue,
- 				u32 phys_addr);
-diff --git a/drivers/net/wireless/ath/ath5k/base.c b/drivers/net/wireless/ath/ath5k/base.c
-index eea5879..9af7e46 100644
---- a/drivers/net/wireless/ath/ath5k/base.c
-+++ b/drivers/net/wireless/ath/ath5k/base.c
-@@ -1922,7 +1922,7 @@ ath5k_beacon_send(struct ath5k_softc *sc)
- 	 * This should never fail since we check above that no frames
- 	 * are still pending on the queue.
- 	 */
--	if (unlikely(ath5k_hw_stop_tx_dma(ah, sc->bhalq))) {
-+	if (unlikely(ath5k_hw_stop_beacon_queue(ah, sc->bhalq))) {
- 		ATH5K_WARN(sc, "beacon queue %u didn't start/stop ?\n", sc->bhalq);
- 		/* NB: hw still stops DMA, so proceed */
- 	}
-@@ -2091,7 +2091,7 @@ ath5k_beacon_config(struct ath5k_softc *sc)
- 		} else
- 			ath5k_beacon_update_timers(sc, -1);
- 	} else {
--		ath5k_hw_stop_tx_dma(sc->ah, sc->bhalq);
-+		ath5k_hw_stop_beacon_queue(sc->ah, sc->bhalq);
- 	}
- 
- 	ath5k_hw_set_imr(ah, sc->imask);
-diff --git a/drivers/net/wireless/ath/ath5k/dma.c b/drivers/net/wireless/ath/ath5k/dma.c
-index 3fe634f..82541fe 100644
---- a/drivers/net/wireless/ath/ath5k/dma.c
-+++ b/drivers/net/wireless/ath/ath5k/dma.c
-@@ -58,7 +58,7 @@ void ath5k_hw_start_rx_dma(struct ath5k_hw *ah)
-  *
-  * @ah:	The &struct ath5k_hw
-  */
--int ath5k_hw_stop_rx_dma(struct ath5k_hw *ah)
-+static int ath5k_hw_stop_rx_dma(struct ath5k_hw *ah)
- {
- 	unsigned int i;
- 
-@@ -188,7 +188,7 @@ int ath5k_hw_start_tx_dma(struct ath5k_hw *ah, unsigned int queue)
-  * -EINVAL if queue number is out of range or inactive.
-  *
-  */
--int ath5k_hw_stop_tx_dma(struct ath5k_hw *ah, unsigned int queue)
-+static int ath5k_hw_stop_tx_dma(struct ath5k_hw *ah, unsigned int queue)
- {
- 	unsigned int i = 40;
- 	u32 tx_queue, pending;
-@@ -321,6 +321,26 @@ int ath5k_hw_stop_tx_dma(struct ath5k_hw *ah, unsigned int queue)
- }
- 
- /**
-+ * ath5k_hw_stop_beacon_queue - Stop beacon queue
-+ *
-+ * @ah The &struct ath5k_hw
-+ * @queue The queue number
-+ *
-+ * Returns -EIO if queue didn't stop
-+ */
-+int ath5k_hw_stop_beacon_queue(struct ath5k_hw *ah, unsigned int queue)
-+{
-+	int ret;
-+	ret = ath5k_hw_stop_tx_dma(ah, queue);
-+	if (ret) {
-+		ATH5K_DBG(ah->ah_sc, ATH5K_DEBUG_DMA,
-+				"beacon queue didn't stop !\n");
-+		return -EIO;
-+	}
-+	return 0;
-+}
-+
-+/**
-  * ath5k_hw_get_txdp - Get TX Descriptor's address for a specific queue
-  *
-  * @ah: The &struct ath5k_hw
+You'll want the xmit locking patch Felix posted or it will likely spew
+lockdep warnings and/or lockup before it gets a chance to crash your
+hard drive.
+
+There are no other /n NICs that can do virtual stations, so I must
+either get ath9k functional or give up on that feature set entirely.
+
+If anyone wants to help with this and cannot easily reproduce it,
+please let me know and I'll furnish scripts etc to make it easier
+to reproduce.
+
+I'm also happy to help test patches.
+
+Thanks,
+Ben
+
+-- 
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
+
