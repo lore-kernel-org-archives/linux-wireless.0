@@ -1,73 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f46.google.com ([209.85.215.46]:46441 "EHLO
-	mail-ew0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754094Ab0K3Iff (ORCPT
+Received: from mail-vw0-f46.google.com ([209.85.212.46]:54122 "EHLO
+	mail-vw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755413Ab0KTXFy convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 30 Nov 2010 03:35:35 -0500
-Received: by ewy5 with SMTP id 5so2557460ewy.19
-        for <linux-wireless@vger.kernel.org>; Tue, 30 Nov 2010 00:35:34 -0800 (PST)
-Subject: wireless.kernel.org update
-From: Thomas Novin <thomas@xyz.pp.se>
-Reply-To: thomas@xyz.pp.se
-To: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset="ISO-8859-15"
-Date: Tue, 30 Nov 2010 09:35:22 +0100
-Message-ID: <1291106122.13696.0.camel@thonov-ubuntu>
-Mime-Version: 1.0
+	Sat, 20 Nov 2010 18:05:54 -0500
+Received: by vws13 with SMTP id 13so2988798vws.19
+        for <linux-wireless@vger.kernel.org>; Sat, 20 Nov 2010 15:05:53 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <AANLkTimEMtt1JJerTzG4-X_Ez83MxtU_52wVQ_xJC8N3@mail.gmail.com>
+References: <AANLkTik_4HRwUUYnFLR6BwevQi6W+FK2rNN7Kph+dAWk@mail.gmail.com>
+ <AANLkTikda-CP42-_wnNtEpCJGc3kwNXvT0KgXjOOL+Bc@mail.gmail.com>
+ <AANLkTimZnnjBMYUDM1pACYv8fHtu0xe-F_C0RJ8_ay_o@mail.gmail.com> <AANLkTimEMtt1JJerTzG4-X_Ez83MxtU_52wVQ_xJC8N3@mail.gmail.com>
+From: Jonathan Guerin <jonathan@guerin.id.au>
+Date: Sun, 21 Nov 2010 09:05:36 +1000
+Message-ID: <AANLkTimJtXrhubvXUWSEsFy=knAs6CZDwTBA4d9xo8+E@mail.gmail.com>
+Subject: Re: Unloading ath5k fails
+To: Bob Copeland <me@bobcopeland.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	ath5k-devel <ath5k-devel@lists.ath5k.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello
+On Sun, Nov 21, 2010 at 12:18 AM, Bob Copeland <me@bobcopeland.com> wrote:
+> On Wed, Nov 17, 2010 at 8:01 PM, Jonathan Guerin <jonathan@guerin.id.au> wrote:
+>>> Hmm.. I just ran some tests myself on wireless-testing, with ath5k
+>>> connected and not connected and didn't have any problems.  Are you
+>>> doing anything special when bringing up the interface?  Can you
+>>> post your kernel config?
+>>
+>> The interface is being set to IBSS. All that's been done is this:
+>> iw reg set AU
+>> iw dev wlan0 set type ibss
+>> rmmod ath5k
+>
+> I don't know if you saw the other linux-wireless thread on this
+> topic, but it seems related to ipv6 and not any particular driver,
+> which explains why I didn't see it (I currently compile ipv6 out).
 
-This page,
-http://wireless.kernel.org/en/users/Download#Getting_compat-wireless_on_Ubuntu, should be updated to include Maverick/10.10.
+Ahhh I'm not going crazy! Thanks, I'll change the config and try again.
 
-If I just try to install as instructed for other versions:
+Cheers,
 
-sudo apt-get install linux-backports-modules-wireless-lucid-generic
+Jonathan
 
-I get:
-
-E: Unable to locate package
-linux-backports-modules-wireless-lucid-generic
-
-If I search backports*modules*wireless I find:
-
-linux-backports-modules-wireless-2.6.35-22-generic - compat-wireless
-Linux modules for version 2.6.35 on x86/x86_64
-linux-backports-modules-wireless-2.6.35-22-generic-pae - compat-wireless
-Linux modules for version 2.6.35 on x86
-linux-backports-modules-compat-wireless-2.6.36-2.6.35-23-generic -
-compat-wireless Linux modules for version 2.6.35 on x86/x86_64
-linux-backports-modules-compat-wireless-2.6.36-2.6.35-23-generic-pae -
-compat-wireless Linux modules for version 2.6.35 on x86
-linux-backports-modules-wireless-maverick-generic - Backported wireless
-drivers for generic kernel image
-linux-backports-modules-wireless-maverick-generic-pae - Backported
-wireless drivers for generic kernel image
-
-So the only package good for installing without having to re-install
-every kernel change is
-linux-backports-modules-wireless-maverick-generic, however that package
-is not installable.
-
-$ sudo apt-get install linux-backports-modules-wireless-maverick-generic
-Reading package lists... Done
-Building dependency tree       
-Reading state information... Done
-Some packages could not be installed. This may mean that you have
-requested an impossible situation or if you are using the unstable
-distribution that some required packages have not yet been created
-or been moved out of Incoming.
-The following information may help to resolve the situation:
-
-The following packages have unmet dependencies:
- linux-backports-modules-wireless-maverick-generic : Depends:
-linux-backports-modules-wireless-2.6.35-23-generic but it is not
-installable
-E: Broken packages
-
-Something is broken in Ubuntu it seems?
-
-Rgds
-
+>
+> --
+> Bob Copeland %% www.bobcopeland.com
+>
