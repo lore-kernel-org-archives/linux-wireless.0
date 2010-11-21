@@ -1,57 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.deathmatch.net ([72.66.92.28]:4990 "EHLO
-	mail.deathmatch.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754292Ab0KOPTr (ORCPT
+Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:38409
+	"EHLO sunset.davemloft.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751349Ab0KUEue (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 15 Nov 2010 10:19:47 -0500
-Date: Mon, 15 Nov 2010 10:07:02 -0500
-From: Bob Copeland <me@bobcopeland.com>
-To: Wojciech Dubowik <dubowoj@neratec.com>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	Felix Fietkau <nbd@openwrt.org>
-Subject: Re: [PATCH 8/9] ath5k: AHB port. Add AHB bus support.
-Message-ID: <20101115150702.GA30935@hash.localnet>
-References: <16168765.161289826231239.JavaMail.wlan@CHBU500181> <1785288.181289826959653.JavaMail.wlan@CHBU500181>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1785288.181289826959653.JavaMail.wlan@CHBU500181>
+	Sat, 20 Nov 2010 23:50:34 -0500
+Date: Sat, 20 Nov 2010 20:50:59 -0800 (PST)
+Message-Id: <20101120.205059.193725921.davem@davemloft.net>
+To: joe@perches.com
+Cc: netdev@vger.kernel.org, e1000-devel@lists.sourceforge.net,
+	linux-usb@vger.kernel.org, linux-wireless@vger.kernel.org,
+	ath5k-devel@lists.ath5k.org, ath9k-devel@lists.ath9k.org,
+	libertas-dev@lists.infradead.org, users@rt2x00.serialmonkey.com,
+	linux-kernel@vger.kernel.org, socketcan-core@lists.berlios.de
+Subject: Re: [PATCH 00/62] drivers/net: Use static const
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <cover.1290305773.git.joe@perches.com>
+References: <cover.1290305773.git.joe@perches.com>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Nov 15, 2010 at 02:16:06PM +0100, Wojciech Dubowik wrote:
-> What about such changes compared to original patch? It's then possible to
-> compile both modules at the same time. Of course linking won't work because
-> I would need to separate functions like in ath9k.
+From: Joe Perches <joe@perches.com>
+Date: Sat, 20 Nov 2010 18:38:01 -0800
 
-Is there a plan to add a config entry for ATHEROS_AR231X (or did
-I miss it?)  Someone will one day run their Kconfig checker and
-report it missing.
+> Using static const generally increases object text and decreases data size.
+> It also generally decreases overall object size.
 
-> --- a/drivers/net/wireless/ath/ath5k/Kconfig
-> +++ b/drivers/net/wireless/ath/ath5k/Kconfig
-> @@ -1,9 +1,11 @@
->  config ATH5K
->         tristate "Atheros 5xxx wireless cards support"
-> -       depends on PCI && MAC80211
-> +       depends on (PCI || ATHEROS_AR231X) && MAC80211
->         select MAC80211_LEDS
->         select LEDS_CLASS
->         select NEW_LEDS
-> +       select ATH5K_AHB if ATHEROS_AR231X
-> +       select ATH5K_PCI if PCI
+Joe, I'm going to be frank and say that I'm not going to review and
+apply such a large chunk of networking patches.
 
-I like this better, but there probably needs to be a mutual
-exclusion so that randconfig builds don't break.  Then you don't
-get to build both still, but the resulting Makefile is a bit more
-normal.  And then if someone shows up saying that they really do
-have some AR231X device with PCI, then it's more obvious what they
-need to do to fix it (i.e. separate bus interfaces from core).
+Seperation is cool, splitting up patches is cool to make review
+perhaps easier and more distributed.
 
-Something like?
-select ATH5K_PCI if (PCI && !ATHEROS_AR231X)
-or
-depends on ((PCI && !ATHEROS_AR231X) || (!PCI && ATHEROS_AR231X)) ...
+But in the end _I_ have to purge through these things and submitting
+so many patches at a time, multiple times per release cycle, abuses me
+as a resource.
 
--- 
-Bob Copeland %% www.bobcopeland.com
+Yes, Linus has to deal with perhaps a hundred patches, or more, at a
+time from Andrew Morton during the merge window.  But he has to do
+that _ONE_ time each release.  You crap large sets of patches on me
+multiple times per release cycle.
 
+This cannot continue, my sanity depends upon it.
+
+You therefore cannot funnel 40, 50, 60, or more patches at me at a
+time, multiple times per release.  It severely negatively effects my
+mood, because it makes me feel like me head is below water again
+_RIGHT_ after I've worked all damn week to finally made the networking
+patch backlog sane again.
+
+You also make this more difficult for me by not using GIT.  Even
+with patchwork helping me significantly, it's still a lot of work
+to apply large sets of patches.  If I had to take in John Linville's
+wireless stuff without GIT I'd be banging my head on a wall.
+
+And these incessant huge patch bombs also take time away from me for
+the things I'd like to at least occiasionally work on that involve
+more intellect than monkeying around with such mindless patches.
+
+Thanks for your understanding.  Feel free to submit this stuff in
+smaller chunks, say ~10 patches at a time.
