@@ -1,106 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qy0-f181.google.com ([209.85.216.181]:36265 "EHLO
-	mail-qy0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754938Ab0KJCVf (ORCPT
+Received: from mail-iw0-f174.google.com ([209.85.214.174]:64158 "EHLO
+	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755980Ab0KUVtw convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 9 Nov 2010 21:21:35 -0500
-Received: by mail-qy0-f181.google.com with SMTP id 31so159944qyk.19
-        for <linux-wireless@vger.kernel.org>; Tue, 09 Nov 2010 18:21:35 -0800 (PST)
-From: Arnaud Lacombe <lacombar@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: lrodriguez@atheros.com, Arnaud Lacombe <lacombar@gmail.com>
-Subject: [PATCH 28/44] compat: avoid using `#include_next' directive in compat headers
-Date: Tue,  9 Nov 2010 21:20:10 -0500
-Message-Id: <1289355626-25373-29-git-send-email-lacombar@gmail.com>
-In-Reply-To: <1289355626-25373-1-git-send-email-lacombar@gmail.com>
-References: <1289355626-25373-1-git-send-email-lacombar@gmail.com>
+	Sun, 21 Nov 2010 16:49:52 -0500
+MIME-Version: 1.0
+In-Reply-To: <20101121214407.GH23423@thunk.org>
+References: <AANLkTim4jVaZxYp8nSgJyy28iwxcxbPeNUzxTfoHAX4S@mail.gmail.com>
+ <F46C52ED-8DB8-4347-957D-B9D84406D53F@mit.edu> <AANLkTinyafwe9MyXhSSe5vxEKnTUeLV0AZDWY_uXsu8f@mail.gmail.com>
+ <20101121130236.GE23423@thunk.org> <20101121172906.GD3703@kroah.com>
+ <AANLkTik6MQjYTCQ4wtyRpOGb94uyUTA+juvX-8UsP95J@mail.gmail.com>
+ <20101121203124.1ba8212e@lxorguk.ukuu.org.uk> <20101121214407.GH23423@thunk.org>
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Date: Sun, 21 Nov 2010 13:49:31 -0800
+Message-ID: <AANLkTim8QWoubzBvjW4bAyRpk60cjKErNqXwNXGD-mKY@mail.gmail.com>
+Subject: Re: Challenges with doing hardware bring up with Linux first
+To: "Ted Ts'o" <tytso@mit.edu>, Alan Cox <alan@lxorguk.ukuu.org.uk>,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	Greg KH <greg@kroah.com>, linux-kernel@vger.kernel.org,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	David Miller <davem@davemloft.net>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Stephen Hemminger <shemminger@vyatta.com>,
+	"Perez-Gonzalez, Inaky" <inaky.perez-gonzalez@intel.com>,
+	Charles Marker <Charles.Marker@atheros.com>,
+	Jouni Malinen <Jouni.Malinen@atheros.com>,
+	Kevin Hayes <kevin@atheros.com>,
+	Zhifeng Cai <zhifeng.cai@atheros.com>,
+	Don Breslin <Don.Breslin@atheros.com>,
+	Doug Dahlby <Doug.Dahlby@atheros.com>,
+	Julia Lawall <julia@diku.dk>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Arnaud Lacombe <lacombar@gmail.com>
----
- include/linux/pm_qos_params.h |    7 +++----
- include/linux/tracepoint.h    |   14 +++++++-------
- include/net/net_namespace.h   |   14 +++++++-------
- include/trace/define_trace.h  |    5 -----
- 4 files changed, 17 insertions(+), 23 deletions(-)
+On Sun, Nov 21, 2010 at 1:44 PM, Ted Ts'o <tytso@mit.edu> wrote:
+> On Sun, Nov 21, 2010 at 08:31:24PM +0000, Alan Cox wrote:
+>>
+>> Which we know in practice they won't. They'll sit on fixes (often
+>> security fixes) and tweak and add private copies of features. In turn the
+>> Linux one could then only keep up by adding features itself - which would
+>> have to be GPL to stop the same abuse continuing.
+>>
+>> It's a nice idea but the corporations exist to make money and adding
+>> proprietary custom stack add-ons is clearly a good move on their part to
+>> do that.
+>
+> Hence my recommendation that if someone is going to do the work to
+> create a 802.11 layer that has shims that work on multiple operating
+> systems, it be GPL with explicit exceptions to allow said layer to
+> work on legacy operating systems like QNX, et. al.  That way it forces
+> the hardware specific code to be released under the GPL --- if they
+> want to take advantage of the "write onces, work on multiple operating
+> systems" feature.
+>
+> If someone is going to go through all of this work to make it possible
+> --- particularly if it's at a company such as Luis's employer, or any
+> other wifi chipset provider --- why should it allow their competitors
+> to do closed source drivers?  Better to structure the driver licensing
+> such that (a) there is benefit for companies to make a Linux driver by
+> using this common stack, and (b) but in exchange, it forces them to
+> make a driver which is guaranteed to be usable by Linux by virtual of
+> the fact that (1) the native interface is Linux's wireless stack, and
+> (2) the license forces them to GPL their driver.
 
-diff --git a/include/linux/pm_qos_params.h b/include/linux/pm_qos_params.h
-index e1f083c..8c69ab2 100644
---- a/include/linux/pm_qos_params.h
-+++ b/include/linux/pm_qos_params.h
-@@ -1,8 +1,7 @@
- #include <linux/version.h>
- 
--#if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,25))
--#include_next <linux/pm_qos_params.h>
--#else
-+#if (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,25))
-+
- /* interface for the pm_qos_power infrastructure of the linux kernel.
-  *
-  * Mark Gross <mgross@linux.intel.com>
-@@ -28,5 +27,5 @@ int pm_qos_requirement(int qos);
- 
- int pm_qos_add_notifier(int qos, struct notifier_block *notifier);
- int pm_qos_remove_notifier(int qos, struct notifier_block *notifier);
--#endif /* (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,25)) */
- 
-+#endif /* (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,25)) */
-diff --git a/include/linux/tracepoint.h b/include/linux/tracepoint.h
-index 9f5add1..4619247 100644
---- a/include/linux/tracepoint.h
-+++ b/include/linux/tracepoint.h
-@@ -1,10 +1,10 @@
--#ifndef _COMPAT_LINUX_TRACEPOINT_H
--#define _COMPAT_LINUX_TRACEPOINT_H 1
--
- #include <linux/version.h>
- 
--#if (LINUX_VERSION_CODE > KERNEL_VERSION(2,6,27))
--#include_next <linux/tracepoint.h>
--#endif /* (LINUX_VERSION_CODE > KERNEL_VERSION(2,6,27)) */
-+#if (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,28))
-+
-+#ifndef _LINUX_TRACEPOINT_H
-+#define _LINUX_TRACEPOINT_H
-+
-+#endif /* _LINUX_TRACEPOINT_H */
- 
--#endif	/* _COMPAT_LINUX_TRACEPOINT_H */
-+#endif /* (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,28)) */
-diff --git a/include/net/net_namespace.h b/include/net/net_namespace.h
-index 0f74944..23a517a 100644
---- a/include/net/net_namespace.h
-+++ b/include/net/net_namespace.h
-@@ -1,10 +1,10 @@
--#ifndef _COMPAT_NET_NET_NAMESPACE_H
--#define _COMPAT_NET_NET_NAMESPACE_H 1
--
- #include <linux/version.h>
- 
--#if (LINUX_VERSION_CODE > KERNEL_VERSION(2,6,23))
--#include_next <net/net_namespace.h>
--#endif /* (LINUX_VERSION_CODE > KERNEL_VERSION(2,6,23)) */
-+#if (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,24))
-+
-+#ifndef __NET_NET_NAMESPACE_H
-+#define __NET_NET_NAMESPACE_H
-+
-+#endif /* __NET_NET_NAMESPACE_H */
- 
--#endif	/* _COMPAT_NET_NET_NAMESPACE_H */
-+#endif /* (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,24)) */
-diff --git a/include/trace/define_trace.h b/include/trace/define_trace.h
-index 7d03ccf..e69de29 100644
---- a/include/trace/define_trace.h
-+++ b/include/trace/define_trace.h
-@@ -1,5 +0,0 @@
--#include <linux/version.h>
--
--#if (LINUX_VERSION_CODE > KERNEL_VERSION(2,6,30))
--#include_next <trace/define_trace.h>
--#endif /* (LINUX_VERSION_CODE > KERNEL_VERSION(2,6,30)) */
--- 
-1.7.2.30.gc37d7.dirty
+Great points indeed however the GPL code cannot be used by the BSDs,
+well it can but they don't wan it. So the only thing we can have is a
+completely permissive licensed solution.
 
+ Luis
