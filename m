@@ -1,54 +1,232 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iw0-f174.google.com ([209.85.214.174]:33922 "EHLO
-	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756404Ab0KTCZr convert rfc822-to-8bit (ORCPT
+Received: from hrndva-omtalb.mail.rr.com ([71.74.56.125]:43095 "EHLO
+	hrndva-omtalb.mail.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751082Ab0KUCYo (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 19 Nov 2010 21:25:47 -0500
-Received: by iwn34 with SMTP id 34so264890iwn.19
-        for <linux-wireless@vger.kernel.org>; Fri, 19 Nov 2010 18:25:46 -0800 (PST)
+	Sat, 20 Nov 2010 21:24:44 -0500
+Date: Sat, 20 Nov 2010 20:24:36 -0600
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: John W Linville <linville@tuxdriver.com>
+Cc: chaoming_li@realsil.com.cn, linux-wireless@vger.kernel.org
+Subject: [RFC PATCH 15/23] rtl8192ce: Introduce new driver
+Message-ID: <4ce882e4.O56DUGFU/vKFXWM0%Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-In-Reply-To: <4CE720A1.3090408@candelatech.com>
-References: <4CE720A1.3090408@candelatech.com>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Fri, 19 Nov 2010 18:25:25 -0800
-Message-ID: <AANLkTikybBepddauBrtJzPmdRB1E7Qqsy9y+Xxz08k6+@mail.gmail.com>
-Subject: Re: ath9k very unstable and kills file-system.
-To: Ben Greear <greearb@candelatech.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Nov 19, 2010 at 5:13 PM, Ben Greear <greearb@candelatech.com> wrote:
-> It's been another frustrating week for using ath9k.
->
-> With a patched wpa_supplicant (found here:
-> https://github.com/greearb/hostap-ct/tree/)
-> I can reliably cause ath9k to spew all sorts of DMA warnings
-> and evidently crash the hard-drive controller and/or corrupt the
-> file system so bad that fsck cannot fix it.  (Back up anything you
-> want to keep before attempting to reproduce this.)
->
-> The test case is simply create 30 or so STA interfaces, run one instance
-> of the patched wpa_supplicant to control the 30 interfaces, and send
-> a bit of traffic across the interfaces.  It's not even needed to send
-> any significant data...probably just the supplicant associate logic
-> is enough.
->
-> You'll want the xmit locking patch Felix posted or it will likely spew
-> lockdep warnings and/or lockup before it gets a chance to crash your
-> hard drive.
->
-> There are no other /n NICs that can do virtual stations, so I must
-> either get ath9k functional or give up on that feature set entirely.
->
-> If anyone wants to help with this and cannot easily reproduce it,
-> please let me know and I'll furnish scripts etc to make it easier
-> to reproduce.
->
-> I'm also happy to help test patches.
+>From b49a4771af7f3abe21e9ddf54615efe325568b40 Mon Sep 17 00:00:00 2001
+From: Larry Finger <Larry.Finger@lwfinger.net>
+Date: Sat, 20 Nov 2010 19:00:58 -0600
+Subject: [PATCH 15/23] rtl8192ce: Add files to rtl8192ce.ko Part 5
 
-If you can provide scripts it will help. The easier it is to reproduce
-the easier it can get fixed.
+Add files rtl8192c/rtl8192c-led.{c,h}
 
- Luis
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+---
+ .../net/wireless/rtlwifi/rtl8192c/rtl8192c-led.c   |  144 ++++++++++++++++++++
+ .../net/wireless/rtlwifi/rtl8192c/rtl8192c-led.h   |   41 ++++++
+ 2 files changed, 185 insertions(+), 0 deletions(-)
+ create mode 100644 drivers/net/wireless/rtlwifi/rtl8192c/rtl8192c-led.c
+ create mode 100644 drivers/net/wireless/rtlwifi/rtl8192c/rtl8192c-led.h
+
+diff --git a/drivers/net/wireless/rtlwifi/rtl8192c/rtl8192c-led.c b/drivers/net/wireless/rtlwifi/rtl8192c/rtl8192c-led.c
+new file mode 100644
+index 0000000..6091084
+--- /dev/null
++++ b/drivers/net/wireless/rtlwifi/rtl8192c/rtl8192c-led.c
+@@ -0,0 +1,144 @@
++/******************************************************************************
++ *
++ * Copyright(c) 2009-2010  Realtek Corporation.
++ *
++ * This program is free software; you can redistribute it and/or modify it
++ * under the terms of version 2 of the GNU General Public License as
++ * published by the Free Software Foundation.
++ *
++ * This program is distributed in the hope that it will be useful, but WITHOUT
++ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
++ * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
++ * more details.
++ *
++ * You should have received a copy of the GNU General Public License along with
++ * this program; if not, write to the Free Software Foundation, Inc.,
++ * 51 Franklin Street, Fifth Floor, Boston, MA 02110, USA
++ *
++ * The full GNU General Public License is included in this distribution in the
++ * file called LICENSE.
++ *
++ * Contact Information:
++ * wlanfae <wlanfae@realtek.com>
++ * Realtek Corporation, No. 2, Innovation Road II, Hsinchu Science Park,
++ * Hsinchu 300, Taiwan.
++ *
++ * Larry Finger <Larry.Finger@lwfinger.net>
++ *
++ *****************************************************************************/
++
++#include "../wifi.h"
++#include "../pci.h"
++#include "rtl8192c-reg.h"
++#include "rtl8192c-led.h"
++
++void rtl92ce_sw_led_on(struct ieee80211_hw *hw, struct rtl_led *pled)
++{
++	u8 ledcfg;
++	struct rtl_priv *rtlpriv = rtl_priv(hw);
++
++	RT_TRACE(rtlpriv, COMP_LED, DBG_LOUD,
++		 ("LedAddr:%X ledpin=%d\n", REG_LEDCFG2, pled->ledpin));
++
++	ledcfg = rtl_read_byte(rtlpriv, REG_LEDCFG2);
++
++	switch (pled->ledpin) {
++	case LED_PIN_GPIO0:
++		break;
++	case LED_PIN_LED0:
++		rtl_write_byte(rtlpriv,
++			       REG_LEDCFG2, (ledcfg & 0xf0) | BIT(5) | BIT(6));
++		break;
++	case LED_PIN_LED1:
++		rtl_write_byte(rtlpriv, REG_LEDCFG2, (ledcfg & 0x0f) | BIT(5));
++		break;
++	default:
++		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
++			 ("switch case not process\n"));
++		break;
++	}
++	pled->b_ledon = true;
++}
++
++void rtl92ce_sw_led_off(struct ieee80211_hw *hw, struct rtl_led *pled)
++{
++	struct rtl_priv *rtlpriv = rtl_priv(hw);
++	struct rtl_pci_priv *pcipriv = rtl_pcipriv(hw);
++	u8 ledcfg;
++
++	RT_TRACE(rtlpriv, COMP_LED, DBG_LOUD,
++		 ("LedAddr:%X ledpin=%d\n", REG_LEDCFG2, pled->ledpin));
++
++	ledcfg = rtl_read_byte(rtlpriv, REG_LEDCFG2);
++
++	switch (pled->ledpin) {
++	case LED_PIN_GPIO0:
++		break;
++	case LED_PIN_LED0:
++		ledcfg &= 0xf0;
++		if (pcipriv->ledctl.bled_opendrain == true)
++			rtl_write_byte(rtlpriv, REG_LEDCFG2,
++				       (ledcfg | BIT(1) | BIT(5) | BIT(6)));
++		else
++			rtl_write_byte(rtlpriv, REG_LEDCFG2,
++				       (ledcfg | BIT(3) | BIT(5) | BIT(6)));
++		break;
++	case LED_PIN_LED1:
++		ledcfg &= 0x0f;
++		rtl_write_byte(rtlpriv, REG_LEDCFG2, (ledcfg | BIT(3)));
++		break;
++	default:
++		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
++			 ("switch case not process\n"));
++		break;
++	}
++	pled->b_ledon = false;
++}
++
++void rtl92ce_init_sw_leds(struct ieee80211_hw *hw)
++{
++}
++
++void rtl92ce_deinit_sw_leds(struct ieee80211_hw *hw)
++{
++}
++
++void _rtl92ce_sw_led_control(struct ieee80211_hw *hw,
++				    enum led_ctl_mode ledaction)
++{
++	struct rtl_pci_priv *pcipriv = rtl_pcipriv(hw);
++	struct rtl_led *pLed0 = &(pcipriv->ledctl.sw_led0);
++	switch (ledaction) {
++	case LED_CTL_POWER_ON:
++	case LED_CTL_LINK:
++	case LED_CTL_NO_LINK:
++		rtl92ce_sw_led_on(hw, pLed0);
++		break;
++	case LED_CTL_POWER_OFF:
++		rtl92ce_sw_led_off(hw, pLed0);
++		break;
++	default:
++		break;
++	}
++}
++
++void rtl92ce_led_control(struct ieee80211_hw *hw,
++			enum led_ctl_mode ledaction)
++{
++	struct rtl_priv *rtlpriv = rtl_priv(hw);
++	struct rtl_ps_ctl *ppsc = rtl_psc(rtl_priv(hw));
++
++	if ((ppsc->rfoff_reason > RF_CHANGE_BY_PS) &&
++	    (ledaction == LED_CTL_TX ||
++	     ledaction == LED_CTL_RX ||
++	     ledaction == LED_CTL_SITE_SURVEY ||
++	     ledaction == LED_CTL_LINK ||
++	     ledaction == LED_CTL_NO_LINK ||
++	     ledaction == LED_CTL_START_TO_LINK ||
++	     ledaction == LED_CTL_POWER_ON)) {
++		return;
++	}
++	RT_TRACE(rtlpriv, COMP_LED, DBG_LOUD, ("ledaction %d,\n",
++				ledaction));
++	_rtl92ce_sw_led_control(hw, ledaction);
++}
+diff --git a/drivers/net/wireless/rtlwifi/rtl8192c/rtl8192c-led.h b/drivers/net/wireless/rtlwifi/rtl8192c/rtl8192c-led.h
+new file mode 100644
+index 0000000..10da301
+--- /dev/null
++++ b/drivers/net/wireless/rtlwifi/rtl8192c/rtl8192c-led.h
+@@ -0,0 +1,41 @@
++/******************************************************************************
++ *
++ * Copyright(c) 2009-2010  Realtek Corporation.
++ *
++ * This program is free software; you can redistribute it and/or modify it
++ * under the terms of version 2 of the GNU General Public License as
++ * published by the Free Software Foundation.
++ *
++ * This program is distributed in the hope that it will be useful, but WITHOUT
++ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
++ * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
++ * more details.
++ *
++ * You should have received a copy of the GNU General Public License along with
++ * this program; if not, write to the Free Software Foundation, Inc.,
++ * 51 Franklin Street, Fifth Floor, Boston, MA 02110, USA
++ *
++ * The full GNU General Public License is included in this distribution in the
++ * file called LICENSE.
++ *
++ * Contact Information:
++ * wlanfae <wlanfae@realtek.com>
++ * Realtek Corporation, No. 2, Innovation Road II, Hsinchu Science Park,
++ * Hsinchu 300, Taiwan.
++ *
++ * Larry Finger <Larry.Finger@lwfinger.net>
++ *
++ *****************************************************************************/
++
++#ifndef __RTL92CE_LED_H__
++#define __RTL92CE_LED_H__
++
++void rtl92ce_init_sw_leds(struct ieee80211_hw *hw);
++void rtl92ce_deinit_sw_leds(struct ieee80211_hw *hw);
++void rtl92ce_sw_led_on(struct ieee80211_hw *hw, struct rtl_led *pled);
++void rtl92ce_sw_led_off(struct ieee80211_hw *hw, struct rtl_led *pled);
++void rtl92ce_led_control(struct ieee80211_hw *hw, enum led_ctl_mode ledaction);
++void _rtl92ce_sw_led_control(struct ieee80211_hw *hw,
++				    enum led_ctl_mode ledaction);
++
++#endif
+-- 
+1.7.1
+
