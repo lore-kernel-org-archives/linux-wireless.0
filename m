@@ -1,87 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.19.149.2]:34104 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752089Ab0KDLlX convert rfc822-to-8bit (ORCPT
+Received: from mail-wy0-f174.google.com ([74.125.82.174]:44161 "EHLO
+	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751920Ab0KUHL0 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 4 Nov 2010 07:41:23 -0400
-Received: from mail.atheros.com ([10.10.20.108])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Thu, 04 Nov 2010 04:41:11 -0700
-From: Rajkumar Manoharan <Rajkumar.Manoharan@Atheros.com>
-To: Bruno Randolf <br1@einfach.org>,
-	Luis Rodriguez <Luis.Rodriguez@Atheros.com>
-CC: "linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Felix Fietkau <nbd@openwrt.org>
-Date: Thu, 4 Nov 2010 17:11:18 +0530
-Subject: RE: [PATCH v2] ath9k_htc: Fix beacon distribution in IBSS mode
-Message-ID: <44EE5C37ADC36343B0625A05DD408C4850DAB4D6CB@CHEXMB-01.global.atheros.com>
-References: <1285054089-6707-1-git-send-email-rmanoharan@atheros.com>
- <201009271018.42232.br1@einfach.org>,<201011041905.26464.br1@einfach.org>
-In-Reply-To: <201011041905.26464.br1@einfach.org>
-Content-Type: text/plain; charset="iso-8859-1"
+	Sun, 21 Nov 2010 02:11:26 -0500
 MIME-Version: 1.0
+In-Reply-To: <AANLkTinfF6yN_9YJ4=1u_O_3-c+aptLuuK=Z=g67fBsa@mail.gmail.com>
+References: <AANLkTim4jVaZxYp8nSgJyy28iwxcxbPeNUzxTfoHAX4S@mail.gmail.com>
+	<20101118164552.GC2855@kroah.com>
+	<AANLkTing6JkfH=n2GfWtW+2=5oB40FDM-TYPvzd+PPkH@mail.gmail.com>
+	<AANLkTi=QdfdhVcK2tddsaLYzatJEr6KRRoU5pMqKZwte@mail.gmail.com>
+	<AANLkTinfF6yN_9YJ4=1u_O_3-c+aptLuuK=Z=g67fBsa@mail.gmail.com>
+Date: Sun, 21 Nov 2010 15:11:24 +0800
+Message-ID: <AANLkTimc3wfC3m9Z8Ssbxgo_N72PY8VVhnwK8ExvMhCq@mail.gmail.com>
+Subject: Re: Challenges with doing hardware bring up with Linux first
+From: Adrian Chadd <adrian@freebsd.org>
+To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Cc: Greg KH <greg@kroah.com>, linux-kernel@vger.kernel.org,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	David Miller <davem@davemloft.net>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Stephen Hemminger <shemminger@vyatta.com>,
+	"Perez-Gonzalez, Inaky" <inaky.perez-gonzalez@intel.com>,
+	Charles Marker <Charles.Marker@atheros.com>,
+	Jouni Malinen <Jouni.Malinen@atheros.com>,
+	Kevin Hayes <kevin@atheros.com>,
+	Zhifeng Cai <zhifeng.cai@atheros.com>,
+	Don Breslin <Don.Breslin@atheros.com>,
+	Doug Dahlby <Doug.Dahlby@atheros.com>,
+	Julia Lawall <julia@diku.dk>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
->> > -   qi.tqi_cwmin = 4*qi_be.tqi_cwmin;
->> > +   /* For WIFI Beacon Distribution
->> > +    * Long slot time  : 2x cwmin
->> > +    * Short slot time : 4x cwmin
->> > +    */
->> > +   if (ah->slottime == ATH9K_SLOT_TIME_20)
->> > +           qi.tqi_cwmin = 2*qi_be.tqi_cwmin;
->> > +   else
->> > +           qi.tqi_cwmin = 4*qi_be.tqi_cwmin;
->> >
->> >     qi.tqi_cwmax = qi_be.tqi_cwmax;
->> >
->> >     if (!ath9k_hw_set_txq_props(ah, priv->beaconq, &qi)) {
->>
->> i am wondering - how does this relate to what i read in IEEE802.11-2007:
->>
->>    11.1.2.2 Beacon generation in an IBSS
->>
->>    b) Calculate a random delay uniformly distributed in the range between
->> zero and twice aCWmin × aSlotTime,
->>
->> wouldn't that mean that cwmin for the beacon queue should be 0 and cwmax
->> should be 2x cwmin * slot time?
->>
->> if the beacon queue cwmin is higher than the best effort queue, it would
->> mean that the best effort queue gets precedence over beacon transmissions.
->> but we want beacons to get sent out in any case.
->>
-> also, what is the rationale behind using the best effort queue as a
-> reference for cwmin/cwmax?
+On 21 November 2010 13:53, Luis R. Rodriguez <lrodriguez@atheros.com> wrote:
+
+>> * decoupling the hardware twiddling stuff from OS/802.11 stack
+>> specific stuff is helpful;
 >
->I'm following up my own message since I just stumbled across that paragraph,
->which IMHO would imply that the beacon queue should be based on AC_VO instead
->of AC_BE, if anything.
->
->[9.2.4.2 HCF contention-based channel access (EDCA):
->Management frames shall be sent using the access category AC_VO
->without being restricted by admission control procedures. A QoS STA shall also
->send management frames using the access category AC_VO before associating with
->any BSS, even if there is no QoS facility available in that BSS.]
->
->Also I still doubt that 4*qi_be.tqi_cwmin is correct concerning the standard
->paragraph which i quoted before. Did I miss something?
+> ath9k_hw mostly is 802.11 stack independent except band enum usage,
+> and maybe one other variable we stuffed in there to help clean out
+> code more.
 
-Hi Bruno,
+Yup, I saw that.
 
-Sorry for long gap. somehow I missed your mail. During our Interop Testing, we
-observed that ath9k based cards utilized the channel more frequently that others.
-To ensure fair beacon distribution, BE queue parameters were set to beacon queue.
 
-But still I couldn't find specific WMM parameters for beacon queue except
-hostap.conf which stats that
+> Agreed. Thanks for your feedback.
 
-tx_queue_beacon_aifs=2
-tx_queue_beacon_cwmin=3
-tx_queue_beacon_cwmax=7
-tx_queue_beacon_burst=1.5
+No worries. You'll get more feedback when I come to actually trying to
+port the AR9003 hwops code over.
+As I said, I'll have a bit of a practice run soon with some of the
+kite/merlin calibration stuff that isn't yet in FreeBSD.
 
-With these parameter we need to test again :) Any comments are welcome.
 
-- Rajkumar
+Adrian
