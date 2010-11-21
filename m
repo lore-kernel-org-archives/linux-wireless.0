@@ -1,64 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-px0-f174.google.com ([209.85.212.174]:50204 "EHLO
-	mail-px0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750967Ab0KDX7n (ORCPT
+Received: from aurora.create-net.org ([193.206.22.116]:53977 "EHLO
+	aurora.create-net.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751376Ab0KUKr7 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 4 Nov 2010 19:59:43 -0400
-Received: by pxi15 with SMTP id 15so373926pxi.19
-        for <linux-wireless@vger.kernel.org>; Thu, 04 Nov 2010 16:59:43 -0700 (PDT)
-From: Brian Cavagnolo <brian@cozybit.com>
-To: linux-wireless@vger.kernel.org,
-	Johannes Berg <johannes@sipsolutions.net>
-Cc: Brian Cavagnolo <brian@cozybit.com>
-Subject: [PATCH] mac80211: unset SDATA_STATE_OFFCHANNEL when cancelling a scan
-Date: Thu,  4 Nov 2010 16:59:28 -0700
-Message-Id: <1288915168-12804-1-git-send-email-brian@cozybit.com>
-In-Reply-To: <1288885952.3659.9.camel@jlt3.sipsolutions.net>
-References: <1288885952.3659.9.camel@jlt3.sipsolutions.net>
+	Sun, 21 Nov 2010 05:47:59 -0500
+Received: from localhost (localhost.localdomain [127.0.0.1])
+	by aurora.create-net.org (Postfix) with ESMTP id 943D238363
+	for <linux-wireless@vger.kernel.org>; Sun, 21 Nov 2010 11:47:57 +0100 (CET)
+Received: from aurora.create-net.org ([127.0.0.1])
+	by localhost (aurora.create-net.org [127.0.0.1]) (amavisd-new, port 10024)
+	with ESMTP id zNOeCXRJ+cnL for <linux-wireless@vger.kernel.org>;
+	Sun, 21 Nov 2010 11:47:56 +0100 (CET)
+Received: from [192.168.1.220] (unknown [95.237.107.36])
+	by aurora.create-net.org (Postfix) with ESMTPSA id 5D03F38326
+	for <linux-wireless@vger.kernel.org>; Sun, 21 Nov 2010 11:47:56 +0100 (CET)
+Message-ID: <4CE8F8D9.1020201@create-net.org>
+Date: Sun, 21 Nov 2010 11:47:53 +0100
+From: Roberto Riggio <roberto.riggio@create-net.org>
+MIME-Version: 1.0
+To: linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Use case for the radiotap rate patch
+Content-Type: text/plain; charset=ISO-8859-15; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-For client STA interfaces, ieee80211_do_stop unsets the relevant
-interface's SDATA_STATE_RUNNING state bit prior to cancelling an
-interrupted scan.  When ieee80211_offchannel_return is invoked as
-part of cancelling the scan, it doesn't bother unsetting the
-SDATA_STATE_OFFCHANNEL bit because it sees that the interface is
-down.  Normally this doesn't matter because when the client STA
-interface is brought back up, it will probably issue a scan.  But
-in some cases (e.g., the user changes the interface type while it
-is down), the SDATA_STATE_OFFCHANNEL bit will remain set.  This
-prevents the interface queues from being started.  So we
-cancel the scan before unsetting the SDATA_STATE_RUNNING bit.
+In the following thread Pavel was sacking for an use case for his patch to
+support the radiotap rate field;
 
-Signed-off-by: Brian Cavagnolo <brian@cozybit.com>
----
- net/mac80211/iface.c |    6 +++---
- 1 files changed, 3 insertions(+), 3 deletions(-)
+http://thread.gmane.org/gmane.linux.kernel.wireless.general/52229/focus=52265
 
-diff --git a/net/mac80211/iface.c b/net/mac80211/iface.c
-index f9163b1..7aa8559 100644
---- a/net/mac80211/iface.c
-+++ b/net/mac80211/iface.c
-@@ -391,6 +391,9 @@ static void ieee80211_do_stop(struct ieee80211_sub_if_data *sdata,
- 	u32 hw_reconf_flags = 0;
- 	int i;
- 
-+	if (local->scan_sdata == sdata)
-+		ieee80211_scan_cancel(local);
-+
- 	clear_bit(SDATA_STATE_RUNNING, &sdata->state);
- 
- 	/*
-@@ -523,9 +526,6 @@ static void ieee80211_do_stop(struct ieee80211_sub_if_data *sdata,
- 		synchronize_rcu();
- 		skb_queue_purge(&sdata->skb_queue);
- 
--		if (local->scan_sdata == sdata)
--			ieee80211_scan_cancel(local);
--
- 		/*
- 		 * Disable beaconing here for mesh only, AP and IBSS
- 		 * are already taken care of.
--- 
-1.7.1.1
+I'm currently using the patch in a custom routing protocol for wireless mesh
+networking (www.wing-project.org). The protocol uses broadcast frames sent
+at rates different from the baserate in order to implement its routing 
+metric
+(WCETT). Without the patch I would be forced to sample each neighbor using
+unicast frames making the metric implementation not scalable with the number
+of nodes.
 
+Also, which would be the way to support the multi-rate retry chain from 
+user-space?
+I'm currently playing with some custom RC algorithms in users space 
+using the
+click modular router, but I cannot take advantage of the mrr.
+
+thanks
+R.
