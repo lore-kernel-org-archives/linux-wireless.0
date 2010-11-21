@@ -1,82 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.klingt.org ([86.59.21.178]:50447 "EHLO klingt.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757582Ab0KLQD4 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 12 Nov 2010 11:03:56 -0500
-From: Tim Blechmann <tim@klingt.org>
-To: Helmut Schaa <helmut.schaa@googlemail.com>
-Subject: Re: rt61pci issue
-Date: Fri, 12 Nov 2010 17:03:48 +0100
-Cc: linux-wireless@vger.kernel.org
-References: <ibgpgg$a5m$1@dough.gmane.org> <201011121449.27414.helmut.schaa@googlemail.com>
-In-Reply-To: <201011121449.27414.helmut.schaa@googlemail.com>
+Received: from mail-iw0-f174.google.com ([209.85.214.174]:43536 "EHLO
+	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755129Ab0KUTv7 convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 21 Nov 2010 14:51:59 -0500
 MIME-Version: 1.0
-Content-Type: multipart/signed;
-  boundary="nextPart1560168.1nHHKyXj6D";
-  protocol="application/pgp-signature";
-  micalg=pgp-sha1
-Message-Id: <201011121703.51017.tim@klingt.org>
+In-Reply-To: <20101121172906.GD3703@kroah.com>
+References: <AANLkTim4jVaZxYp8nSgJyy28iwxcxbPeNUzxTfoHAX4S@mail.gmail.com>
+ <F46C52ED-8DB8-4347-957D-B9D84406D53F@mit.edu> <AANLkTinyafwe9MyXhSSe5vxEKnTUeLV0AZDWY_uXsu8f@mail.gmail.com>
+ <20101121130236.GE23423@thunk.org> <20101121172906.GD3703@kroah.com>
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Date: Sun, 21 Nov 2010 11:51:39 -0800
+Message-ID: <AANLkTik6MQjYTCQ4wtyRpOGb94uyUTA+juvX-8UsP95J@mail.gmail.com>
+Subject: Re: Challenges with doing hardware bring up with Linux first
+To: Greg KH <greg@kroah.com>
+Cc: "Ted Ts'o" <tytso@mit.edu>, linux-kernel@vger.kernel.org,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	David Miller <davem@davemloft.net>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Stephen Hemminger <shemminger@vyatta.com>,
+	"Perez-Gonzalez, Inaky" <inaky.perez-gonzalez@intel.com>,
+	Charles Marker <Charles.Marker@atheros.com>,
+	Jouni Malinen <Jouni.Malinen@atheros.com>,
+	Kevin Hayes <kevin@atheros.com>,
+	Zhifeng Cai <zhifeng.cai@atheros.com>,
+	Don Breslin <Don.Breslin@atheros.com>,
+	Doug Dahlby <Doug.Dahlby@atheros.com>,
+	Julia Lawall <julia@diku.dk>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---nextPart1560168.1nHHKyXj6D
-Content-Type: Text/Plain;
-  charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
+On Sun, Nov 21, 2010 at 9:29 AM, Greg KH <greg@kroah.com> wrote:
+> On Sun, Nov 21, 2010 at 08:02:36AM -0500, Ted Ts'o wrote:
+>> On Thu, Nov 18, 2010 at 08:46:11AM -0800, Luis R. Rodriguez wrote:
+>> > > What this provides for is a wonderful leverage for hardware
+>> > > vendors. ? If they provide GPL'ed code for their core hardware
+>> > > drivers that link against the Linux 802.11 layer, at one fell
+>> > > swoop they also get Windows 7 and Mac OS X drivers for free!
+>> >
+>> > Yes, indeed ! That would be ideal indeed, but we'd need then an 802.11
+>> > stack which is also permissive licensed and then make APIs for that
+>> > 802.11 stack to match mac80211's or cfg80211's or bridges between
+>> > then. Because ultimately you will still need some 802.11 stack for
+>> > some OSes that don't have one.
+>>
+>> I wonder how much this is true.  Yes, at the moment we still need to
+>> worry about those OS's that don't have one; but how much longer will
+>> hardware vendors need to support Windows XP?  If Linux, Windows 7, and
+>> Mac OS X all have an 802.11 stack, what other OS's do the hardware
+>> vendors need to support?
+>
+> After visiting with a number of hardware companies that make wireless
+> chips, they mentioned that they still need to support, and they still
+> get new design wins for both eCos and vxworks, as well as some even
+> more obscure embedded operating systems that their customers use.
+>
+> So unfortunatly, I don't see the ability for some of these vendors to
+> drop their own internal wifi stacks any year soon, if they still wish to
+> sell into some very large markets.
+>
+> sorry,
 
-> > cat /proc/interrupts |grep 16\: && sleep 1 && cat /proc/interrupts | gr=
-ep=20
-16\:
-> >   16:          0    5140126          0          0   IO-APIC-fasteoi
-> >=20
-> > uhci_hcd:usb3, ahci, 0000:08:00.0
-> >=20
-> >   16:          0    5140357          0          0   IO-APIC-fasteoi
-> >=20
-> > uhci_hcd:usb3, ahci, 0000:08:00.0
->=20
-> Ehm, one more thing: are you sure irq 16 is used for rt61pci. At least
-> that part of /proc/interrupts suggests that irq 16 is somehow USB related.
->=20
-> Could you check which irq is assigned to rt61pci?
-> Can you reproduce the hangs without rt61pci as well?
+Right -- which is why ideally I think it'd be nice to have an open
+permissive stack people shared. My preference would be to just pick up
+what FreeBSD has and stick to it as it would then also take care of
+FreeBSD. But companies would have to really want to do this and want
+to share code.
 
-it is irq 16: 0000:08:00.0
-from lspci:
-08:00.0 Network controller: RaLink RT2561/RT61 rev B 802.11g
-
-the audio dropouts are somehow in sync with the network access. i actually=
-=20
-changed one thing today, increasing the timer frequency from 100 to 1000 hz=
-, and=20
-after 8 hours of uptime, the machine still works nicely. i will try to comp=
-ile a=20
-100hz kernel with your patch, but since from my experience, it takes some t=
-ime=20
-to show the behavior and i haven't found a way to trigger it consistently, =
-it=20
-may take some time ...
-
-thanks, tim
-
-=2D-=20
-tim@klingt.org
-http://tim.klingt.org
-
-After one look at this planet any visitor from outer space would say
-"I want to see the manager."
-  William S. Burroughs
-
---nextPart1560168.1nHHKyXj6D
-Content-Type: application/pgp-signature; name=signature.asc 
-Content-Description: This is a digitally signed message part.
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.10 (GNU/Linux)
-
-iEYEABECAAYFAkzdZWQACgkQg0On+TFEWzxE9gCfY/DXbapn3rF4iICyszJukmi6
-JVQAn2T2Q8wjp9eVq7x2xM7vGY6KBWWu
-=/ikS
------END PGP SIGNATURE-----
-
---nextPart1560168.1nHHKyXj6D--
+  Luis
