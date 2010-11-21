@@ -1,63 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:38409
-	"EHLO sunset.davemloft.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751349Ab0KUEue (ORCPT
+Received: from earthlight.etchedpixels.co.uk ([81.2.110.250]:59636 "EHLO
+	www.etchedpixels.co.uk" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1755531Ab0KUUd2 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 20 Nov 2010 23:50:34 -0500
-Date: Sat, 20 Nov 2010 20:50:59 -0800 (PST)
-Message-Id: <20101120.205059.193725921.davem@davemloft.net>
-To: joe@perches.com
-Cc: netdev@vger.kernel.org, e1000-devel@lists.sourceforge.net,
-	linux-usb@vger.kernel.org, linux-wireless@vger.kernel.org,
-	ath5k-devel@lists.ath5k.org, ath9k-devel@lists.ath9k.org,
-	libertas-dev@lists.infradead.org, users@rt2x00.serialmonkey.com,
-	linux-kernel@vger.kernel.org, socketcan-core@lists.berlios.de
-Subject: Re: [PATCH 00/62] drivers/net: Use static const
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <cover.1290305773.git.joe@perches.com>
-References: <cover.1290305773.git.joe@perches.com>
+	Sun, 21 Nov 2010 15:33:28 -0500
+Date: Sun, 21 Nov 2010 20:31:24 +0000
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Cc: Greg KH <greg@kroah.com>, "Ted Ts'o" <tytso@mit.edu>,
+	linux-kernel@vger.kernel.org,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	David Miller <davem@davemloft.net>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Stephen Hemminger <shemminger@vyatta.com>,
+	"Perez-Gonzalez, Inaky" <inaky.perez-gonzalez@intel.com>,
+	Charles Marker <Charles.Marker@atheros.com>,
+	Jouni Malinen <Jouni.Malinen@atheros.com>,
+	Kevin Hayes <kevin@atheros.com>,
+	Zhifeng Cai <zhifeng.cai@atheros.com>,
+	Don Breslin <Don.Breslin@atheros.com>,
+	Doug Dahlby <Doug.Dahlby@atheros.com>,
+	Julia Lawall <julia@diku.dk>
+Subject: Re: Challenges with doing hardware bring up with Linux first
+Message-ID: <20101121203124.1ba8212e@lxorguk.ukuu.org.uk>
+In-Reply-To: <AANLkTik6MQjYTCQ4wtyRpOGb94uyUTA+juvX-8UsP95J@mail.gmail.com>
+References: <AANLkTim4jVaZxYp8nSgJyy28iwxcxbPeNUzxTfoHAX4S@mail.gmail.com>
+	<F46C52ED-8DB8-4347-957D-B9D84406D53F@mit.edu>
+	<AANLkTinyafwe9MyXhSSe5vxEKnTUeLV0AZDWY_uXsu8f@mail.gmail.com>
+	<20101121130236.GE23423@thunk.org>
+	<20101121172906.GD3703@kroah.com>
+	<AANLkTik6MQjYTCQ4wtyRpOGb94uyUTA+juvX-8UsP95J@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Joe Perches <joe@perches.com>
-Date: Sat, 20 Nov 2010 18:38:01 -0800
+> Right -- which is why ideally I think it'd be nice to have an open
+> permissive stack people shared. My preference would be to just pick up
 
-> Using static const generally increases object text and decreases data size.
-> It also generally decreases overall object size.
+Which we know in practice they won't. They'll sit on fixes (often
+security fixes) and tweak and add private copies of features. In turn the
+Linux one could then only keep up by adding features itself - which would
+have to be GPL to stop the same abuse continuing.
 
-Joe, I'm going to be frank and say that I'm not going to review and
-apply such a large chunk of networking patches.
+It's a nice idea but the corporations exist to make money and adding
+proprietary custom stack add-ons is clearly a good move on their part to
+do that.
 
-Seperation is cool, splitting up patches is cool to make review
-perhaps easier and more distributed.
-
-But in the end _I_ have to purge through these things and submitting
-so many patches at a time, multiple times per release cycle, abuses me
-as a resource.
-
-Yes, Linus has to deal with perhaps a hundred patches, or more, at a
-time from Andrew Morton during the merge window.  But he has to do
-that _ONE_ time each release.  You crap large sets of patches on me
-multiple times per release cycle.
-
-This cannot continue, my sanity depends upon it.
-
-You therefore cannot funnel 40, 50, 60, or more patches at me at a
-time, multiple times per release.  It severely negatively effects my
-mood, because it makes me feel like me head is below water again
-_RIGHT_ after I've worked all damn week to finally made the networking
-patch backlog sane again.
-
-You also make this more difficult for me by not using GIT.  Even
-with patchwork helping me significantly, it's still a lot of work
-to apply large sets of patches.  If I had to take in John Linville's
-wireless stuff without GIT I'd be banging my head on a wall.
-
-And these incessant huge patch bombs also take time away from me for
-the things I'd like to at least occiasionally work on that involve
-more intellect than monkeying around with such mindless patches.
-
-Thanks for your understanding.  Feel free to submit this stuff in
-smaller chunks, say ~10 patches at a time.
+Alan
