@@ -1,250 +1,1118 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ww0-f44.google.com ([74.125.82.44]:46273 "EHLO
-	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757689Ab0KMBZz convert rfc822-to-8bit (ORCPT
+Received: from hrndva-omtalb.mail.rr.com ([71.74.56.123]:40619 "EHLO
+	hrndva-omtalb.mail.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755871Ab0KUCSj (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 12 Nov 2010 20:25:55 -0500
-Received: by wwb22 with SMTP id 22so492216wwb.1
-        for <linux-wireless@vger.kernel.org>; Fri, 12 Nov 2010 17:25:54 -0800 (PST)
+	Sat, 20 Nov 2010 21:18:39 -0500
+Date: Sat, 20 Nov 2010 20:18:24 -0600
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: John W Linville <linville@tuxdriver.com>
+Cc: chaoming_li@realsil.com.cn, linux-wireless@vger.kernel.org
+Subject: [RFC PATCH 03/23] rtl8192ce: Introduce new driver
+Message-ID: <4ce88170.tVJKs62ta7eX1Kcg%Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-In-Reply-To: <1289611433-5119-5-git-send-email-brian@cozybit.com>
-References: <1288659351-22313-1-git-send-email-brian@cozybit.com> <1289611433-5119-5-git-send-email-brian@cozybit.com>
-From: Brian Cavagnolo <brian@cozybit.com>
-Date: Fri, 12 Nov 2010 17:25:33 -0800
-Message-ID: <AANLkTinkkjbswe-tG4dJU62hWRtQMx0tuBCgx1+AmQSo@mail.gmail.com>
-Subject: Re: [PATCH V2 4/7] mwl8k: choose proper firmware image as directed by user
-To: linux-wireless@vger.kernel.org
-Cc: buytenh@wantstofly.org, Brian Cavagnolo <brian@cozybit.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-My apologies.  This is the V2 patch despite the subject.
+>From cba4fc0978f82652b26e3c1f89a0121d5215cb13 Mon Sep 17 00:00:00 2001
+From: Larry Finger <Larry.Finger@lwfinger.net>
+Date: Sat, 20 Nov 2010 18:23:52 -0600
+Subject: [PATCH 03/23] rtl8192ce: rtlwifi: Add files to rtlwifi.ko, Part 3
 
-On Fri, Nov 12, 2010 at 5:23 PM, Brian Cavagnolo <brian@cozybit.com> wrote:
-> The mwl8k can operate in AP or STA mode, depending on the
-> firmware image that is loaded.  By default, STA firmware is
-> loaded.  Allow the user to override this default mode at
-> module load time.  This saves an unnecessary firmware reload
-> for users only interested in AP mode.
->
-> Also, the firmware image can be swapped to meet the user's
-> add_interface request.  For example, suppose the STA
-> firmware is loaded, no STA interface has been added, and the
-> user adds an AP interface.  In this case, the AP firmware
-> will be loaded to meet the request.
->
-> Based on contributions from Pradeep Nemavat <pnemavat@marvell.com>,
-> Yogesh Powar <yogeshp@marvell.com>, and
-> Lennert Buytenhek <buytenh@wantstofly.org>.
->
-> Signed-off-by: Brian Cavagnolo <brian@cozybit.com>
-> ---
->  drivers/net/wireless/mwl8k.c |   78 +++++++++++++++++++++++++++++++++++------
->  1 files changed, 66 insertions(+), 12 deletions(-)
->
-> diff --git a/drivers/net/wireless/mwl8k.c b/drivers/net/wireless/mwl8k.c
-> index 7bd8615..cbf7271 100644
-> --- a/drivers/net/wireless/mwl8k.c
-> +++ b/drivers/net/wireless/mwl8k.c
-> @@ -29,6 +29,12 @@
->  #define MWL8K_NAME     KBUILD_MODNAME
->  #define MWL8K_VERSION  "0.12"
->
-> +/* Module parameters */
-> +static unsigned ap_mode_default;
-> +module_param(ap_mode_default, bool, 0);
-> +MODULE_PARM_DESC(ap_mode_default,
-> +                "Set to 1 to make ap mode the default instead of sta mode");
-> +
->  /* Register definitions */
->  #define MWL8K_HIU_GEN_PTR                      0x00000c10
->  #define  MWL8K_MODE_STA                                 0x0000005a
-> @@ -92,7 +98,8 @@ struct rxd_ops {
->  struct mwl8k_device_info {
->        char *part_name;
->        char *helper_image;
-> -       char *fw_image;
-> +       char *fw_image_sta;
-> +       char *fw_image_ap;
->        struct rxd_ops *ap_rxd_ops;
->  };
->
-> @@ -210,6 +217,12 @@ struct mwl8k_priv {
->
->        /* Most recently reported noise in dBm */
->        s8 noise;
-> +
-> +       /*
-> +        * preserve the queue configurations so they can be restored if/when
-> +        * the firmware image is swapped.
-> +        */
-> +       struct ieee80211_tx_queue_params wmm_params[MWL8K_TX_QUEUES];
->  };
->
->  /* Per interface specific private data */
-> @@ -401,7 +414,7 @@ static int mwl8k_request_fw(struct mwl8k_priv *priv,
->                                fname, &priv->pdev->dev);
->  }
->
-> -static int mwl8k_request_firmware(struct mwl8k_priv *priv)
-> +static int mwl8k_request_firmware(struct mwl8k_priv *priv, char *fw_image)
->  {
->        struct mwl8k_device_info *di = priv->device_info;
->        int rc;
-> @@ -416,10 +429,10 @@ static int mwl8k_request_firmware(struct mwl8k_priv *priv)
->                }
->        }
->
-> -       rc = mwl8k_request_fw(priv, di->fw_image, &priv->fw_ucode);
-> +       rc = mwl8k_request_fw(priv, fw_image, &priv->fw_ucode);
->        if (rc) {
->                printk(KERN_ERR "%s: Error requesting firmware file %s\n",
-> -                      pci_name(priv->pdev), di->fw_image);
-> +                      pci_name(priv->pdev), fw_image);
->                mwl8k_release_fw(&priv->fw_helper);
->                return rc;
->        }
-> @@ -3345,13 +3358,16 @@ static void mwl8k_stop(struct ieee80211_hw *hw)
->                mwl8k_txq_reclaim(hw, i, INT_MAX, 1);
->  }
->
-> +static int mwl8k_reload_firmware(struct ieee80211_hw *hw, char *fw_image);
-> +
->  static int mwl8k_add_interface(struct ieee80211_hw *hw,
->                               struct ieee80211_vif *vif)
->  {
->        struct mwl8k_priv *priv = hw->priv;
->        struct mwl8k_vif *mwl8k_vif;
->        u32 macids_supported;
-> -       int macid;
-> +       int macid, rc;
-> +       struct mwl8k_device_info *di;
->
->        /*
->         * Reject interface creation if sniffer mode is active, as
-> @@ -3364,12 +3380,28 @@ static int mwl8k_add_interface(struct ieee80211_hw *hw,
->                return -EINVAL;
->        }
->
-> -
-> +       di = priv->device_info;
->        switch (vif->type) {
->        case NL80211_IFTYPE_AP:
-> +               if (!priv->ap_fw && di->fw_image_ap) {
-> +                       /* we must load the ap fw to meet this request */
-> +                       if (!list_empty(&priv->vif_list))
-> +                               return -EBUSY;
-> +                       rc = mwl8k_reload_firmware(hw, di->fw_image_ap);
-> +                       if (rc)
-> +                               return rc;
-> +               }
->                macids_supported = priv->ap_macids_supported;
->                break;
->        case NL80211_IFTYPE_STATION:
-> +               if (priv->ap_fw && di->fw_image_sta) {
-> +                       /* we must load the sta fw to meet this request */
-> +                       if (!list_empty(&priv->vif_list))
-> +                               return -EBUSY;
-> +                       rc = mwl8k_reload_firmware(hw, di->fw_image_sta);
-> +                       if (rc)
-> +                               return rc;
-> +               }
->                macids_supported = priv->sta_macids_supported;
->                break;
->        default:
-> @@ -3805,6 +3837,9 @@ static int mwl8k_conf_tx(struct ieee80211_hw *hw, u16 queue,
->
->        rc = mwl8k_fw_lock(hw);
->        if (!rc) {
-> +               BUG_ON(queue > MWL8K_TX_QUEUES - 1);
-> +               memcpy(&priv->wmm_params[queue], params, sizeof(*params));
-> +
->                if (!priv->wmm_enabled)
->                        rc = mwl8k_cmd_set_wmm_mode(hw, 1);
->
-> @@ -3908,17 +3943,18 @@ static struct mwl8k_device_info mwl8k_info_tbl[] __devinitdata = {
->        [MWL8363] = {
->                .part_name      = "88w8363",
->                .helper_image   = "mwl8k/helper_8363.fw",
-> -               .fw_image       = "mwl8k/fmimage_8363.fw",
-> +               .fw_image_sta   = "mwl8k/fmimage_8363.fw",
->        },
->        [MWL8687] = {
->                .part_name      = "88w8687",
->                .helper_image   = "mwl8k/helper_8687.fw",
-> -               .fw_image       = "mwl8k/fmimage_8687.fw",
-> +               .fw_image_sta   = "mwl8k/fmimage_8687.fw",
->        },
->        [MWL8366] = {
->                .part_name      = "88w8366",
->                .helper_image   = "mwl8k/helper_8366.fw",
-> -               .fw_image       = "mwl8k/fmimage_8366.fw",
-> +               .fw_image_sta   = "mwl8k/fmimage_8366.fw",
-> +               .fw_image_ap    = "mwl8k/fmimage_8366_ap-1.fw",
->                .ap_rxd_ops     = &rxd_8366_ap_ops,
->        },
->  };
-> @@ -3929,6 +3965,7 @@ MODULE_FIRMWARE("mwl8k/helper_8687.fw");
->  MODULE_FIRMWARE("mwl8k/fmimage_8687.fw");
->  MODULE_FIRMWARE("mwl8k/helper_8366.fw");
->  MODULE_FIRMWARE("mwl8k/fmimage_8366.fw");
-> +MODULE_FIRMWARE("mwl8k/fmimage_8366_ap-1.fw");
->
->  static DEFINE_PCI_DEVICE_TABLE(mwl8k_pci_id_table) = {
->        { PCI_VDEVICE(MARVELL, 0x2a0a), .driver_data = MWL8363, },
-> @@ -3942,7 +3979,7 @@ static DEFINE_PCI_DEVICE_TABLE(mwl8k_pci_id_table) = {
->  };
->  MODULE_DEVICE_TABLE(pci, mwl8k_pci_id_table);
->
-> -static int mwl8k_init_firmware(struct ieee80211_hw *hw)
-> +static int mwl8k_init_firmware(struct ieee80211_hw *hw, char *fw_image)
->  {
->        struct mwl8k_priv *priv = hw->priv;
->        int rc;
-> @@ -3951,7 +3988,7 @@ static int mwl8k_init_firmware(struct ieee80211_hw *hw)
->        mwl8k_hw_reset(priv);
->
->        /* Ask userland hotplug daemon for the device firmware */
-> -       rc = mwl8k_request_firmware(priv);
-> +       rc = mwl8k_request_firmware(priv, fw_image);
->        if (rc) {
->                wiphy_err(hw->wiphy, "Firmware files not found\n");
->                return rc;
-> @@ -4207,6 +4244,7 @@ static int __devinit mwl8k_probe(struct pci_dev *pdev,
->        static int printed_version;
->        struct ieee80211_hw *hw;
->        struct mwl8k_priv *priv;
-> +       struct mwl8k_device_info *di;
->        int rc;
->
->        if (!printed_version) {
-> @@ -4267,7 +4305,23 @@ static int __devinit mwl8k_probe(struct pci_dev *pdev,
->                }
->        }
->
-> -       rc = mwl8k_init_firmware(hw);
-> +       /*
-> +        * Choose the initial fw image depending on user input and availability
-> +        * of images.
-> +        */
-> +       di = priv->device_info;
-> +       if (ap_mode_default && di->fw_image_ap)
-> +               rc = mwl8k_init_firmware(hw, di->fw_image_ap);
-> +       else if (!ap_mode_default && di->fw_image_sta)
-> +               rc = mwl8k_init_firmware(hw, di->fw_image_sta);
-> +       else if (ap_mode_default && !di->fw_image_ap && di->fw_image_sta) {
-> +               printk(KERN_WARNING "AP fw is unavailable.  Using STA fw.");
-> +               rc = mwl8k_init_firmware(hw, di->fw_image_sta);
-> +       } else if (!ap_mode_default && !di->fw_image_sta && di->fw_image_ap) {
-> +               printk(KERN_WARNING "STA fw is unavailable.  Using AP fw.");
-> +               rc = mwl8k_init_firmware(hw, di->fw_image_ap);
-> +       } else
-> +               rc = mwl8k_init_firmware(hw, di->fw_image_sta);
->        if (rc)
->                goto err_stop_firmware;
->
-> --
-> 1.7.1.1
->
->
+Add files core.{c,h}
+
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+---
+ drivers/net/wireless/rtlwifi/core.c | 1029 +++++++++++++++++++++++++++++++++++
+ drivers/net/wireless/rtlwifi/core.h |   42 ++
+ 2 files changed, 1071 insertions(+), 0 deletions(-)
+ create mode 100644 drivers/net/wireless/rtlwifi/core.c
+ create mode 100644 drivers/net/wireless/rtlwifi/core.h
+
+diff --git a/drivers/net/wireless/rtlwifi/core.c b/drivers/net/wireless/rtlwifi/core.c
+new file mode 100644
+index 0000000..81b290f
+--- /dev/null
++++ b/drivers/net/wireless/rtlwifi/core.c
+@@ -0,0 +1,1029 @@
++/******************************************************************************
++ *
++ * Copyright(c) 2009-2010  Realtek Corporation.
++ *
++ * This program is free software; you can redistribute it and/or modify it
++ * under the terms of version 2 of the GNU General Public License as
++ * published by the Free Software Foundation.
++ *
++ * This program is distributed in the hope that it will be useful, but WITHOUT
++ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
++ * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
++ * more details.
++ *
++ * You should have received a copy of the GNU General Public License along with
++ * this program; if not, write to the Free Software Foundation, Inc.,
++ * 51 Franklin Street, Fifth Floor, Boston, MA 02110, USA
++ *
++ * The full GNU General Public License is included in this distribution in the
++ * file called LICENSE.
++ *
++ * Contact Information:
++ * wlanfae <wlanfae@realtek.com>
++ * Realtek Corporation, No. 2, Innovation Road II, Hsinchu Science Park,
++ * Hsinchu 300, Taiwan.
++ *
++ * Larry Finger <Larry.Finger@lwfinger.net>
++ *****************************************************************************/
++
++#include "wifi.h"
++#include "core.h"
++#include "cam.h"
++#include "base.h"
++#include "ps.h"
++
++/*mutex for start & stop is must here. */
++static int rtl_op_start(struct ieee80211_hw *hw)
++{
++	int err = 0;
++	struct rtl_priv *rtlpriv = rtl_priv(hw);
++	struct rtl_hal *rtlhal = rtl_hal(rtl_priv(hw));
++
++	if (!is_hal_stop(rtlhal))
++		return 0;
++	if (!test_bit(RTL_STATUS_INTERFACE_START, &rtlpriv->status))
++		return 0;
++	down(&rtlpriv->locks.conf_sem);
++	err = rtlpriv->intf_ops->adapter_start(hw);
++	if (err)
++		goto out;
++	rtl_watch_dog_timer_callback((unsigned long)hw);
++out:
++	up(&rtlpriv->locks.conf_sem);
++	return err;
++}
++
++static void rtl_op_stop(struct ieee80211_hw *hw)
++{
++	struct rtl_priv *rtlpriv = rtl_priv(hw);
++	struct rtl_mac *mac = rtl_mac(rtl_priv(hw));
++	struct rtl_hal *rtlhal = rtl_hal(rtl_priv(hw));
++	struct rtl_ps_ctl *ppsc = rtl_psc(rtl_priv(hw));
++
++	if (is_hal_stop(rtlhal))
++		return;
++
++	if (unlikely(ppsc->rfpwr_state == ERFOFF)) {
++		rtl_ips_nic_on(hw);
++		mdelay(1);
++	}
++
++	down(&rtlpriv->locks.conf_sem);
++
++	mac->link_state = MAC80211_NOLINK;
++	memset(mac->bssid, 0, 6);
++
++	/*reset sec info */
++	rtl_cam_reset_sec_info(hw);
++
++	rtl_deinit_deferred_work(hw);
++	rtlpriv->intf_ops->adapter_stop(hw);
++
++	up(&rtlpriv->locks.conf_sem);
++}
++
++static int rtl_op_tx(struct ieee80211_hw *hw, struct sk_buff *skb)
++{
++	struct rtl_priv *rtlpriv = rtl_priv(hw);
++	struct rtl_hal *rtlhal = rtl_hal(rtl_priv(hw));
++	struct rtl_ps_ctl *ppsc = rtl_psc(rtl_priv(hw));
++
++	if (unlikely(is_hal_stop(rtlhal) || ppsc->rfpwr_state != ERFON))
++		goto err_free;
++
++	if (!test_bit(RTL_STATUS_INTERFACE_START, &rtlpriv->status))
++		goto err_free;
++
++
++	rtlpriv->intf_ops->adapter_tx(hw, skb);
++
++	return NETDEV_TX_OK;
++
++err_free:
++	dev_kfree_skb_any(skb);
++	return NETDEV_TX_OK;
++}
++
++static int rtl_op_add_interface(struct ieee80211_hw *hw,
++		struct ieee80211_vif *vif)
++{
++	struct rtl_priv *rtlpriv = rtl_priv(hw);
++	struct rtl_mac *mac = rtl_mac(rtl_priv(hw));
++	int err = 0;
++
++	if (mac->vif) {
++		RT_TRACE(rtlpriv, COMP_ERR, DBG_WARNING,
++			 ("vif has been set!! mac->vif = 0x%p\n", mac->vif));
++		return -EOPNOTSUPP;
++	}
++
++	rtl_ips_nic_on(hw);
++
++	down(&rtlpriv->locks.conf_sem);
++	switch (vif->type) {
++	case NL80211_IFTYPE_STATION:
++		if (mac->beacon_enabled == 1) {
++			RT_TRACE(rtlpriv, COMP_MAC80211, DBG_LOUD,
++				 ("NL80211_IFTYPE_STATION\n"));
++			mac->beacon_enabled = 0;
++			rtlpriv->cfg->ops->update_interrupt_mask(hw, 0,
++					rtlpriv->cfg->maps
++					[RTL_IBSS_INT_MASKS]);
++		}
++		break;
++	case NL80211_IFTYPE_ADHOC:
++		RT_TRACE(rtlpriv, COMP_MAC80211, DBG_LOUD,
++			 ("NL80211_IFTYPE_ADHOC\n"));
++
++		mac->link_state = MAC80211_LINKED;
++		rtlpriv->cfg->ops->set_bcn_reg(hw);
++		break;
++	case NL80211_IFTYPE_AP:
++		RT_TRACE(rtlpriv, COMP_MAC80211, DBG_LOUD,
++			 ("NL80211_IFTYPE_AP\n"));
++		break;
++	default:
++		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
++			 ("operation mode %d is not support!\n", vif->type));
++		err = -EOPNOTSUPP;
++		goto out;
++	}
++
++	mac->vif = vif;
++	mac->opmode = vif->type;
++	rtlpriv->cfg->ops->set_network_type(hw, vif->type);
++	memcpy(mac->mac_addr, vif->addr, ETH_ALEN);
++	rtlpriv->cfg->ops->set_hw_reg(hw, HW_VAR_ETHER_ADDR, mac->mac_addr);
++
++out:
++	up(&rtlpriv->locks.conf_sem);
++	return err;
++}
++
++static void rtl_op_remove_interface(struct ieee80211_hw *hw,
++		struct ieee80211_vif *vif)
++{
++	struct rtl_priv *rtlpriv = rtl_priv(hw);
++	struct rtl_mac *mac = rtl_mac(rtl_priv(hw));
++
++	down(&rtlpriv->locks.conf_sem);
++
++	/* Free beacon resources */
++	if ((mac->opmode == NL80211_IFTYPE_AP) ||
++	    (mac->opmode == NL80211_IFTYPE_ADHOC) ||
++	    (mac->opmode == NL80211_IFTYPE_MESH_POINT)) {
++		if (mac->beacon_enabled == 1) {
++			mac->beacon_enabled = 0;
++			rtlpriv->cfg->ops->update_interrupt_mask(hw, 0,
++					rtlpriv->cfg->maps
++					[RTL_IBSS_INT_MASKS]);
++		}
++	}
++
++	/*
++	 *Note: We assume NL80211_IFTYPE_UNSPECIFIED as
++	 *NO LINK for our hardware.
++	 */
++	mac->vif = NULL;
++	mac->link_state = MAC80211_NOLINK;
++	memset(mac->bssid, 0, 6);
++	mac->opmode = NL80211_IFTYPE_UNSPECIFIED;
++	rtlpriv->cfg->ops->set_network_type(hw, mac->opmode);
++
++	up(&rtlpriv->locks.conf_sem);
++}
++
++
++static int rtl_op_config(struct ieee80211_hw *hw, u32 changed)
++{
++	struct rtl_priv *rtlpriv = rtl_priv(hw);
++	struct rtl_phy *rtlphy = &(rtlpriv->phy);
++	struct rtl_mac *mac = rtl_mac(rtl_priv(hw));
++	struct rtl_ps_ctl *ppsc = rtl_psc(rtl_priv(hw));
++	struct ieee80211_conf *conf = &hw->conf;
++
++	down(&rtlpriv->locks.conf_sem);
++	if (changed & IEEE80211_CONF_CHANGE_LISTEN_INTERVAL) {	/*BIT(2)*/
++		RT_TRACE(rtlpriv, COMP_MAC80211, DBG_LOUD,
++			 ("IEEE80211_CONF_CHANGE_LISTEN_INTERVAL\n"));
++	}
++
++	/*For IPS */
++	if (changed & IEEE80211_CONF_CHANGE_IDLE) {
++		if (hw->conf.flags & IEEE80211_CONF_IDLE)
++			rtl_ips_nic_off(hw);
++		else
++			rtl_ips_nic_on(hw);
++	} else {
++		/*
++		 *although rfoff may not cause by ips, but we will
++		 *check the reason in set_rf_power_state function
++		 */
++		if (unlikely(ppsc->rfpwr_state == ERFOFF))
++			rtl_ips_nic_on(hw);
++	}
++
++	/*For LPS */
++	if (changed & IEEE80211_CONF_CHANGE_PS) {
++		if (conf->flags & IEEE80211_CONF_PS)
++			rtl_lps_enter(hw);
++		else
++			rtl_lps_leave(hw);
++	}
++
++	if (changed & IEEE80211_CONF_CHANGE_RETRY_LIMITS) {
++		RT_TRACE(rtlpriv, COMP_MAC80211, DBG_LOUD,
++			 ("IEEE80211_CONF_CHANGE_RETRY_LIMITS %x\n",
++			  hw->conf.long_frame_max_tx_count));
++		mac->retry_long = hw->conf.long_frame_max_tx_count;
++		mac->retry_short = hw->conf.long_frame_max_tx_count;
++		rtlpriv->cfg->ops->set_hw_reg(hw, HW_VAR_RETRY_LIMIT,
++					      (u8 *) (&hw->conf.
++						      long_frame_max_tx_count));
++	}
++
++	if (changed & IEEE80211_CONF_CHANGE_CHANNEL) {
++		struct ieee80211_channel *channel = hw->conf.channel;
++		u8 wide_chan = (u8) channel->hw_value;
++
++		/*
++		 *because we should back channel to
++		 *current_network.chan in in scanning,
++		 *So if set_chan == current_network.chan
++		 *we should set it.
++		 *because mac80211 tell us wrong bw40
++		 *info for cisco1253 bw20, so we modify
++		 *it here based on UPPER & LOWER
++		 */
++		switch (hw->conf.channel_type) {
++		case NL80211_CHAN_HT20:
++		case NL80211_CHAN_NO_HT:
++			/* SC */
++			mac->cur_40_prime_sc =
++			    PRIME_CHNL_OFFSET_DONT_CARE;
++			rtlphy->current_chan_bw = HT_CHANNEL_WIDTH_20;
++			mac->bw_40 = false;
++			break;
++		case NL80211_CHAN_HT40MINUS:
++			/* SC */
++			mac->cur_40_prime_sc = PRIME_CHNL_OFFSET_UPPER;
++			rtlphy->current_chan_bw =
++			    HT_CHANNEL_WIDTH_20_40;
++			mac->bw_40 = true;
++
++			/*wide channel */
++			wide_chan -= 2;
++
++			break;
++		case NL80211_CHAN_HT40PLUS:
++			/* SC */
++			mac->cur_40_prime_sc = PRIME_CHNL_OFFSET_LOWER;
++			rtlphy->current_chan_bw =
++			    HT_CHANNEL_WIDTH_20_40;
++			mac->bw_40 = true;
++
++			/*wide channel */
++			wide_chan += 2;
++
++			break;
++		default:
++			mac->bw_40 = false;
++			RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
++				 ("switch case not processed\n"));
++			break;
++		}
++
++		if (wide_chan <= 0)
++			wide_chan = 1;
++		rtlphy->current_channel = wide_chan;
++
++		rtlpriv->cfg->ops->set_channel_access(hw);
++		rtlpriv->cfg->ops->switch_channel(hw);
++		rtlpriv->cfg->ops->set_bw_mode(hw,
++					       hw->conf.channel_type);
++	}
++
++	up(&rtlpriv->locks.conf_sem);
++
++	return 0;
++}
++
++static void rtl_op_configure_filter(struct ieee80211_hw *hw,
++			     unsigned int changed_flags,
++			     unsigned int *new_flags, u64 multicast)
++{
++	struct rtl_priv *rtlpriv = rtl_priv(hw);
++	struct rtl_mac *mac = rtl_mac(rtl_priv(hw));
++
++	*new_flags &= RTL_SUPPORTED_FILTERS;
++	if (!changed_flags)
++		return;
++
++	/*TODO: we disable broadcase now, so enable here */
++	if (changed_flags & FIF_ALLMULTI) {
++		if (*new_flags & FIF_ALLMULTI) {
++			mac->rx_conf |= rtlpriv->cfg->maps[MAC_RCR_AM] |
++			    rtlpriv->cfg->maps[MAC_RCR_AB];
++			RT_TRACE(rtlpriv, COMP_MAC80211, DBG_LOUD,
++				 ("Enable receive multicast frame.\n"));
++		} else {
++			mac->rx_conf &= ~(rtlpriv->cfg->maps[MAC_RCR_AM] |
++					  rtlpriv->cfg->maps[MAC_RCR_AB]);
++			RT_TRACE(rtlpriv, COMP_MAC80211, DBG_LOUD,
++				 ("Disable receive multicast frame.\n"));
++		}
++	}
++
++	if (changed_flags & FIF_FCSFAIL) {
++		if (*new_flags & FIF_FCSFAIL) {
++			mac->rx_conf |= rtlpriv->cfg->maps[MAC_RCR_ACRC32];
++			RT_TRACE(rtlpriv, COMP_MAC80211, DBG_LOUD,
++				 ("Enable receive FCS error frame.\n"));
++		} else {
++			mac->rx_conf &= ~rtlpriv->cfg->maps[MAC_RCR_ACRC32];
++			RT_TRACE(rtlpriv, COMP_MAC80211, DBG_LOUD,
++				 ("Disable receive FCS error frame.\n"));
++		}
++	}
++
++	if (changed_flags & FIF_BCN_PRBRESP_PROMISC) {
++		/*
++		 *TODO: BIT(5) is probe response BIT(8) is beacon
++		 *TODO: Use define for BIT(5) and BIT(8)
++		 */
++		if (*new_flags & FIF_BCN_PRBRESP_PROMISC)
++			mac->rx_mgt_filter |= (BIT(5) | BIT(8));
++		else
++			mac->rx_mgt_filter &= ~(BIT(5) | BIT(8));
++	}
++
++	if (changed_flags & FIF_CONTROL) {
++		if (*new_flags & FIF_CONTROL) {
++			mac->rx_conf |= rtlpriv->cfg->maps[MAC_RCR_ACF];
++			mac->rx_ctrl_filter |= RTL_SUPPORTED_CTRL_FILTER;
++
++			RT_TRACE(rtlpriv, COMP_MAC80211, DBG_LOUD,
++				 ("Enable receive control frame.\n"));
++		} else {
++			mac->rx_conf &= ~rtlpriv->cfg->maps[MAC_RCR_ACF];
++			mac->rx_ctrl_filter &= ~RTL_SUPPORTED_CTRL_FILTER;
++			RT_TRACE(rtlpriv, COMP_MAC80211, DBG_LOUD,
++				 ("Disable receive control frame.\n"));
++		}
++	}
++
++	if (changed_flags & FIF_OTHER_BSS) {
++		if (*new_flags & FIF_OTHER_BSS) {
++			mac->rx_conf |= rtlpriv->cfg->maps[MAC_RCR_AAP];
++			RT_TRACE(rtlpriv, COMP_MAC80211, DBG_LOUD,
++				 ("Enable receive other BSS's frame.\n"));
++		} else {
++			mac->rx_conf &= ~rtlpriv->cfg->maps[MAC_RCR_AAP];
++			RT_TRACE(rtlpriv, COMP_MAC80211, DBG_LOUD,
++				 ("Disable receive other BSS's frame.\n"));
++		}
++	}
++
++	rtlpriv->cfg->ops->set_hw_reg(hw, HW_VAR_RCR, (u8 *) (&mac->rx_conf));
++	rtlpriv->cfg->ops->set_hw_reg(hw, HW_VAR_MGT_FILTER,
++				      (u8 *) (&mac->rx_mgt_filter));
++	rtlpriv->cfg->ops->set_hw_reg(hw, HW_VAR_CTRL_FILTER,
++				      (u8 *) (&mac->rx_ctrl_filter));
++}
++
++static int _rtl_get_hal_qnum(u16 queue)
++{
++	int qnum;
++
++	switch (queue) {
++	case 0:
++		qnum = AC3_VO;
++		break;
++	case 1:
++		qnum = AC2_VI;
++		break;
++	case 2:
++		qnum = AC0_BE;
++		break;
++	case 3:
++		qnum = AC1_BK;
++		break;
++	default:
++		qnum = AC0_BE;
++		break;
++	}
++	return qnum;
++}
++
++/*
++ *for mac80211 VO=0, VI=1, BE=2, BK=3
++ *for rtl819x  BE=0, BK=1, VI=2, VO=3
++ */
++static int rtl_op_conf_tx(struct ieee80211_hw *hw, u16 queue,
++		   const struct ieee80211_tx_queue_params *param)
++{
++	struct rtl_priv *rtlpriv = rtl_priv(hw);
++	struct rtl_mac *mac = rtl_mac(rtl_priv(hw));
++	int aci;
++
++	if (queue >= AC_MAX) {
++		RT_TRACE(rtlpriv, COMP_ERR, DBG_WARNING,
++			 ("queue number %d is incorrect!\n", queue));
++		return -EINVAL;
++	}
++
++	aci = _rtl_get_hal_qnum(queue);
++	mac->ac[aci].aifs = param->aifs;
++	mac->ac[aci].cw_min = param->cw_min;
++	mac->ac[aci].cw_max = param->cw_max;
++	mac->ac[aci].tx_op = param->txop;
++	memcpy(&mac->edca_param[aci], param, sizeof(*param));
++	rtlpriv->cfg->ops->set_qos(hw, aci);
++	return 0;
++}
++
++static void rtl_op_bss_info_changed(struct ieee80211_hw *hw,
++			     struct ieee80211_vif *vif,
++			     struct ieee80211_bss_conf *bss_conf, u32 changed)
++{
++	struct rtl_priv *rtlpriv = rtl_priv(hw);
++	struct rtl_mac *mac = rtl_mac(rtl_priv(hw));
++	struct rtl_ps_ctl *ppsc = rtl_psc(rtl_priv(hw));
++
++	down(&rtlpriv->locks.conf_sem);
++
++	if ((vif->type == NL80211_IFTYPE_ADHOC) ||
++	    (vif->type == NL80211_IFTYPE_AP) ||
++	    (vif->type == NL80211_IFTYPE_MESH_POINT)) {
++
++		if ((changed & BSS_CHANGED_BEACON) ||
++		    (changed & BSS_CHANGED_BEACON_ENABLED &&
++		     bss_conf->enable_beacon)) {
++
++			if (mac->beacon_enabled == 0) {
++				RT_TRACE(rtlpriv, COMP_MAC80211, DBG_DMESG,
++					 ("BSS_CHANGED_BEACON_ENABLED\n"));
++
++				/*start hw beacon interrupt. */
++				/*rtlpriv->cfg->ops->set_bcn_reg(hw); */
++				mac->beacon_enabled = 1;
++				rtlpriv->cfg->ops->update_interrupt_mask(hw,
++						rtlpriv->cfg->maps
++						[RTL_IBSS_INT_MASKS],
++						0);
++			}
++		} else {
++			if (mac->beacon_enabled == 1) {
++				RT_TRACE(rtlpriv, COMP_MAC80211, DBG_DMESG,
++					 ("ADHOC DISABLE BEACON\n"));
++
++				mac->beacon_enabled = 0;
++				rtlpriv->cfg->ops->update_interrupt_mask(hw, 0,
++						rtlpriv->cfg->maps
++						[RTL_IBSS_INT_MASKS]);
++			}
++		}
++
++		if (changed & BSS_CHANGED_BEACON_INT) {
++			RT_TRACE(rtlpriv, COMP_BEACON, DBG_TRACE,
++				 ("BSS_CHANGED_BEACON_INT\n"));
++			mac->beacon_interval = bss_conf->beacon_int;
++			rtlpriv->cfg->ops->set_bcn_intv(hw);
++		}
++	}
++
++	/*TODO: reference to enum ieee80211_bss_change */
++	if (changed & BSS_CHANGED_ASSOC) {
++		if (bss_conf->assoc) {
++			mac->link_state = MAC80211_LINKED;
++			mac->cnt_after_linked = 0;
++			mac->assoc_id = bss_conf->aid;
++			memcpy(mac->bssid, bss_conf->bssid, 6);
++
++			RT_TRACE(rtlpriv, COMP_MAC80211, DBG_DMESG,
++				 ("BSS_CHANGED_ASSOC\n"));
++		} else {
++			if (mac->link_state == MAC80211_LINKED)
++				rtl_lps_leave(hw);
++
++			mac->link_state = MAC80211_NOLINK;
++			memset(mac->bssid, 0, 6);
++
++			/* reset sec info */
++			rtl_cam_reset_sec_info(hw);
++
++			RT_TRACE(rtlpriv, COMP_MAC80211, DBG_DMESG,
++				 ("BSS_CHANGED_UN_ASSOC\n"));
++		}
++	}
++
++	if (changed & BSS_CHANGED_ERP_CTS_PROT) {
++		RT_TRACE(rtlpriv, COMP_MAC80211, DBG_TRACE,
++			 ("BSS_CHANGED_ERP_CTS_PROT\n"));
++		mac->use_cts_protect = bss_conf->use_cts_prot;
++	}
++
++	if (changed & BSS_CHANGED_ERP_PREAMBLE) {
++		RT_TRACE(rtlpriv, COMP_MAC80211, DBG_LOUD,
++			 ("BSS_CHANGED_ERP_PREAMBLE use short preamble:%x\n",
++			  bss_conf->use_short_preamble));
++
++		mac->short_preamble = bss_conf->use_short_preamble;
++		rtlpriv->cfg->ops->set_hw_reg(hw, HW_VAR_ACK_PREAMBLE,
++					      (u8 *) (&mac->short_preamble));
++	}
++
++	if (changed & BSS_CHANGED_ERP_SLOT) {
++		RT_TRACE(rtlpriv, COMP_MAC80211, DBG_TRACE,
++			 ("BSS_CHANGED_ERP_SLOT\n"));
++
++		if (bss_conf->use_short_slot)
++			mac->slot_time = RTL_SLOT_TIME_9;
++		else
++			mac->slot_time = RTL_SLOT_TIME_20;
++
++		rtlpriv->cfg->ops->set_hw_reg(hw, HW_VAR_SLOT_TIME,
++					      (u8 *) (&mac->slot_time));
++	}
++
++	if (changed & BSS_CHANGED_HT) {
++		struct ieee80211_sta *sta = NULL;
++
++		RT_TRACE(rtlpriv, COMP_MAC80211, DBG_TRACE,
++			 ("BSS_CHANGED_HT\n"));
++
++		sta = ieee80211_find_sta(mac->vif, mac->bssid);
++
++		if (sta) {
++			if (sta->ht_cap.ampdu_density >
++			    mac->current_ampdu_density)
++				mac->current_ampdu_density =
++				    sta->ht_cap.ampdu_density;
++			if (sta->ht_cap.ampdu_factor <
++			    mac->current_ampdu_factor)
++				mac->current_ampdu_factor =
++				    sta->ht_cap.ampdu_factor;
++		}
++
++		rtlpriv->cfg->ops->set_hw_reg(hw, HW_VAR_SHORTGI_DENSITY,
++					      (u8 *) (&mac->max_mss_density));
++		rtlpriv->cfg->ops->set_hw_reg(hw, HW_VAR_AMPDU_FACTOR,
++					      &mac->current_ampdu_factor);
++		rtlpriv->cfg->ops->set_hw_reg(hw, HW_VAR_AMPDU_MIN_SPACE,
++					      &mac->current_ampdu_density);
++	}
++
++	if (changed & BSS_CHANGED_BSSID) {
++		struct ieee80211_sta *sta = NULL;
++		u32 basic_rates;
++		u8 i;
++
++		rtlpriv->cfg->ops->set_hw_reg(hw, HW_VAR_BSSID,
++					      (u8 *) bss_conf->bssid);
++
++		RT_TRACE(rtlpriv, COMP_MAC80211, DBG_DMESG,
++			 (MAC_FMT "\n", MAC_ARG(bss_conf->bssid)));
++
++		memcpy(mac->bssid, bss_conf->bssid, 6);
++		if (is_valid_ether_addr(bss_conf->bssid)) {
++			switch (vif->type) {
++			case NL80211_IFTYPE_UNSPECIFIED:
++				break;
++			case NL80211_IFTYPE_ADHOC:
++				break;
++			case NL80211_IFTYPE_STATION:
++				break;
++			case NL80211_IFTYPE_AP:
++				break;
++			default:
++				RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
++					 ("switch case not process\n"));
++				break;
++			}
++			rtlpriv->cfg->ops->set_network_type(hw, vif->type);
++		} else
++			rtlpriv->cfg->ops->set_network_type(hw,
++					NL80211_IFTYPE_UNSPECIFIED);
++
++		memset(mac->mcs, 0, 16);
++		mac->ht_enable = false;
++		mac->sgi_40 = false;
++		mac->sgi_20 = false;
++
++		if (!bss_conf->use_short_slot)
++			mac->mode = WIRELESS_MODE_B;
++		else
++			mac->mode = WIRELESS_MODE_G;
++
++		sta = ieee80211_find_sta(mac->vif, mac->bssid);
++
++		if (sta) {
++			if (sta->ht_cap.ht_supported) {
++				mac->mode = WIRELESS_MODE_N_24G;
++				mac->ht_enable = true;
++			}
++
++			if (mac->ht_enable) {
++				u16 ht_cap = sta->ht_cap.cap;
++				memcpy(mac->mcs, (u8 *) (&sta->ht_cap.mcs), 16);
++
++				for (i = 0; i < 16; i++)
++					RT_TRACE(rtlpriv, COMP_MAC80211,
++						 DBG_LOUD, ("%x ",
++							    mac->mcs[i]));
++				RT_TRACE(rtlpriv, COMP_MAC80211, DBG_LOUD,
++					 ("\n"));
++
++				if (ht_cap & IEEE80211_HT_CAP_SGI_40)
++					mac->sgi_40 = true;
++
++				if (ht_cap & IEEE80211_HT_CAP_SGI_20)
++					mac->sgi_20 = true;
++
++				/*
++				 * for cisco 1252 bw20 it's wrong
++				 * if (ht_cap &
++				 *     IEEE80211_HT_CAP_SUP_WIDTH_20_40) {
++				 *	mac->bw_40 = true;
++				 * }
++				 */
++			}
++		}
++
++		/*mac80211 just give us CCK rates any time
++		 *So we add G rate in basic rates when
++		 not in B mode*/
++		if (changed & BSS_CHANGED_BASIC_RATES) {
++			if (mac->mode == WIRELESS_MODE_B)
++				basic_rates = bss_conf->basic_rates | 0x00f;
++			else
++				basic_rates = bss_conf->basic_rates | 0xff0;
++
++			if (!vif)
++				goto out;
++
++			mac->basic_rates = basic_rates;
++			rtlpriv->cfg->ops->set_hw_reg(hw, HW_VAR_BASIC_RATE,
++					(u8 *) (&basic_rates));
++
++			if (rtlpriv->dm.b_useramask)
++				rtlpriv->cfg->ops->update_rate_mask(hw, 0);
++			else
++				rtlpriv->cfg->ops->update_rate_table(hw);
++
++		}
++	}
++
++	/*
++	 * For FW LPS:
++	 * To tell firmware we have connected
++	 * to an AP. For 92SE/CE power save v2.
++	 */
++	if (changed & BSS_CHANGED_ASSOC) {
++		if (bss_conf->assoc) {
++			if (ppsc->b_fwctrl_lps) {
++				u8 mstatus = RT_MEDIA_CONNECT;
++				rtlpriv->cfg->ops->set_hw_reg(hw,
++						      HW_VAR_H2C_FW_JOINBSSRPT,
++						      (u8 *) (&mstatus));
++				ppsc->report_linked = true;
++			}
++		} else {
++			if (ppsc->b_fwctrl_lps) {
++				u8 mstatus = RT_MEDIA_DISCONNECT;
++				rtlpriv->cfg->ops->set_hw_reg(hw,
++						      HW_VAR_H2C_FW_JOINBSSRPT,
++						      (u8 *)(&mstatus));
++				ppsc->report_linked = false;
++			}
++		}
++	}
++
++out:
++	up(&rtlpriv->locks.conf_sem);
++}
++
++static u64 rtl_op_get_tsf(struct ieee80211_hw *hw)
++{
++	struct rtl_priv *rtlpriv = rtl_priv(hw);
++	u64 tsf;
++
++	rtlpriv->cfg->ops->get_hw_reg(hw, HW_VAR_CORRECT_TSF, (u8 *) (&tsf));
++	return tsf;
++}
++
++static void rtl_op_set_tsf(struct ieee80211_hw *hw, u64 tsf)
++{
++	struct rtl_priv *rtlpriv = rtl_priv(hw);
++	struct rtl_mac *mac = rtl_mac(rtl_priv(hw));
++	u8 bibss = (mac->opmode == NL80211_IFTYPE_ADHOC) ? 1 : 0;;
++
++	mac->tsf = tsf;
++	rtlpriv->cfg->ops->set_hw_reg(hw, HW_VAR_CORRECT_TSF, (u8 *) (&bibss));
++}
++
++static void rtl_op_reset_tsf(struct ieee80211_hw *hw)
++{
++	struct rtl_priv *rtlpriv = rtl_priv(hw);
++	u8 tmp = 0;
++
++	rtlpriv->cfg->ops->set_hw_reg(hw, HW_VAR_DUAL_TSF_RST, (u8 *) (&tmp));
++}
++
++static void rtl_op_sta_notify(struct ieee80211_hw *hw,
++			      struct ieee80211_vif *vif,
++			      enum sta_notify_cmd cmd,
++			      struct ieee80211_sta *sta)
++{
++	switch (cmd) {
++	case STA_NOTIFY_SLEEP:
++		break;
++	case STA_NOTIFY_AWAKE:
++		break;
++	default:
++		break;
++	}
++}
++
++static int rtl_op_ampdu_action(struct ieee80211_hw *hw,
++			       struct ieee80211_vif *vif,
++			       enum ieee80211_ampdu_mlme_action action,
++			       struct ieee80211_sta *sta, u16 tid, u16 * ssn)
++{
++	struct rtl_priv *rtlpriv = rtl_priv(hw);
++
++	switch (action) {
++	case IEEE80211_AMPDU_TX_START:
++		RT_TRACE(rtlpriv, COMP_MAC80211, DBG_TRACE,
++			 ("IEEE80211_AMPDU_TX_START: TID:%d\n", tid));
++		return rtl_tx_agg_start(hw, sta->addr, tid, ssn);
++		break;
++	case IEEE80211_AMPDU_TX_STOP:
++		RT_TRACE(rtlpriv, COMP_MAC80211, DBG_TRACE,
++			 ("IEEE80211_AMPDU_TX_STOP: TID:%d\n", tid));
++		return rtl_tx_agg_stop(hw, sta->addr, tid);
++		break;
++	case IEEE80211_AMPDU_TX_OPERATIONAL:
++		RT_TRACE(rtlpriv, COMP_MAC80211, DBG_TRACE,
++			 ("IEEE80211_AMPDU_TX_OPERATIONAL:TID:%d\n", tid));
++		break;
++	case IEEE80211_AMPDU_RX_START:
++		RT_TRACE(rtlpriv, COMP_MAC80211, DBG_TRACE,
++			 ("IEEE80211_AMPDU_RX_START:TID:%d\n", tid));
++		break;
++	case IEEE80211_AMPDU_RX_STOP:
++		RT_TRACE(rtlpriv, COMP_MAC80211, DBG_TRACE,
++			 ("IEEE80211_AMPDU_RX_STOP:TID:%d\n", tid));
++		break;
++	default:
++		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
++			 ("IEEE80211_AMPDU_ERR!!!!:\n"));
++		return -EOPNOTSUPP;
++	}
++	return 0;
++}
++
++static void rtl_op_sw_scan_start(struct ieee80211_hw *hw)
++{
++	struct rtl_priv *rtlpriv = rtl_priv(hw);
++	struct rtl_mac *mac = rtl_mac(rtl_priv(hw));
++
++	mac->act_scanning = true;
++
++	RT_TRACE(rtlpriv, COMP_MAC80211, DBG_LOUD, ("\n"));
++
++	if (mac->link_state == MAC80211_LINKED) {
++		rtl_lps_leave(hw);
++		mac->link_state = MAC80211_LINKED_SCANNING;
++	} else
++		rtl_ips_nic_on(hw);
++
++	rtlpriv->cfg->ops->led_control(hw, LED_CTL_SITE_SURVEY);
++	rtlpriv->cfg->ops->scan_operation_backup(hw, SCAN_OPT_BACKUP);
++}
++
++static void rtl_op_sw_scan_complete(struct ieee80211_hw *hw)
++{
++	struct rtl_priv *rtlpriv = rtl_priv(hw);
++	struct rtl_mac *mac = rtl_mac(rtl_priv(hw));
++
++	RT_TRACE(rtlpriv, COMP_MAC80211, DBG_LOUD, ("\n"));
++
++	rtlpriv->cfg->ops->scan_operation_backup(hw, SCAN_OPT_RESTORE);
++	mac->act_scanning = false;
++	if (mac->link_state == MAC80211_LINKED_SCANNING) {
++		mac->link_state = MAC80211_LINKED;
++
++		/* fix fwlps issue */
++		rtlpriv->cfg->ops->set_network_type(hw, mac->opmode);
++
++		if (rtlpriv->dm.b_useramask)
++			rtlpriv->cfg->ops->update_rate_mask(hw, 0);
++		else
++			rtlpriv->cfg->ops->update_rate_table(hw);
++
++	}
++
++}
++
++static int rtl_op_set_key(struct ieee80211_hw *hw, enum set_key_cmd cmd,
++			  struct ieee80211_vif *vif, struct ieee80211_sta *sta,
++			  struct ieee80211_key_conf *key)
++{
++	struct rtl_priv *rtlpriv = rtl_priv(hw);
++	struct rtl_mac *mac = rtl_mac(rtl_priv(hw));
++	u8 key_type = NO_ENCRYPTION;
++	u8 key_idx;
++	bool group_key = false;
++	bool wep_only = false;
++	int err = 0;
++	u8 mac_addr[ETH_ALEN];
++	u8 bcast_addr[ETH_ALEN] = { 0xff, 0xff, 0xff, 0xff, 0xff, 0xff };
++	u8 zero_addr[ETH_ALEN] = { 0 };
++
++	if (rtlpriv->cfg->mod_params->sw_crypto || rtlpriv->sec.use_sw_sec) {
++		RT_TRACE(rtlpriv, COMP_ERR, DBG_WARNING,
++			 ("not open hw encryption\n"));
++		return -ENOSPC;	/*User disabled HW-crypto */
++	}
++	RT_TRACE(rtlpriv, COMP_SEC, DBG_DMESG,
++		 ("%s hardware based encryption for keyidx: %d, mac: %pM\n",
++		  cmd == SET_KEY ? "Using" : "Disabling", key->keyidx,
++		  sta ? sta->addr : bcast_addr));
++	rtlpriv->sec.being_setkey = true;
++	rtl_ips_nic_on(hw);
++	down(&rtlpriv->locks.conf_sem);
++	/* <1> get encryption alg */
++	switch (key->cipher) {
++	case WLAN_CIPHER_SUITE_WEP40:
++		key_type = WEP40_ENCRYPTION;
++		RT_TRACE(rtlpriv, COMP_SEC, DBG_DMESG, ("alg:WEP40\n"));
++		rtlpriv->sec.use_defaultkey = true;
++		break;
++	case WLAN_CIPHER_SUITE_WEP104:
++		RT_TRACE(rtlpriv, COMP_SEC, DBG_DMESG,
++			 ("alg:WEP104\n"));
++		key_type = WEP104_ENCRYPTION;
++		rtlpriv->sec.use_defaultkey = true;
++		break;
++	case WLAN_CIPHER_SUITE_TKIP:
++		key_type = TKIP_ENCRYPTION;
++		RT_TRACE(rtlpriv, COMP_SEC, DBG_DMESG, ("alg:TKIP\n"));
++		if (mac->opmode == NL80211_IFTYPE_ADHOC)
++			rtlpriv->sec.use_defaultkey = true;
++		break;
++	case WLAN_CIPHER_SUITE_CCMP:
++		key_type = AESCCMP_ENCRYPTION;
++		RT_TRACE(rtlpriv, COMP_SEC, DBG_DMESG, ("alg:CCMP\n"));
++		if (mac->opmode == NL80211_IFTYPE_ADHOC)
++			rtlpriv->sec.use_defaultkey = true;
++		break;
++	default:
++		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
++			 ("alg_err:%x!!!!:\n", key->cipher));
++		goto out_unlock;
++	}
++	/* <2> get key_idx */
++	key_idx = (u8) (key->keyidx);
++	if (key_idx > 3)
++		goto out_unlock;
++	/* <3> if pairwise key enable_hw_sec */
++	group_key = !(key->flags & IEEE80211_KEY_FLAG_PAIRWISE);
++	if ((!group_key) || (mac->opmode == NL80211_IFTYPE_ADHOC) ||
++	    rtlpriv->sec.pairwise_enc_algorithm == NO_ENCRYPTION) {
++		if (rtlpriv->sec.pairwise_enc_algorithm == NO_ENCRYPTION &&
++		    (key_type == WEP40_ENCRYPTION ||
++		     key_type == WEP104_ENCRYPTION))
++			wep_only = true;
++		rtlpriv->sec.pairwise_enc_algorithm = key_type;
++		rtlpriv->cfg->ops->enable_hw_sec(hw);
++	}
++	/* <4> set key based on cmd */
++	switch (cmd) {
++	case SET_KEY:
++		if (wep_only) {
++			RT_TRACE(rtlpriv, COMP_SEC, DBG_DMESG,
++				 ("set WEP(group/pairwise) key\n"));
++			/* Pairwise key with an assigned MAC address. */
++			rtlpriv->sec.pairwise_enc_algorithm = key_type;
++			rtlpriv->sec.group_enc_algorithm = key_type;
++			/*set local buf about wep key. */
++			memcpy(rtlpriv->sec.key_buf[key_idx],
++			       key->key, key->keylen);
++			rtlpriv->sec.key_len[key_idx] = key->keylen;
++			memcpy(mac_addr, zero_addr, ETH_ALEN);
++		} else if (group_key) {	/* group key */
++			RT_TRACE(rtlpriv, COMP_SEC, DBG_DMESG,
++				 ("set group key\n"));
++			/* group key */
++			rtlpriv->sec.group_enc_algorithm = key_type;
++			/*set local buf about group key. */
++			memcpy(rtlpriv->sec.key_buf[key_idx],
++			       key->key, key->keylen);
++			rtlpriv->sec.key_len[key_idx] = key->keylen;
++			memcpy(mac_addr, bcast_addr, ETH_ALEN);
++		} else {	/* pairwise key */
++			RT_TRACE(rtlpriv, COMP_SEC, DBG_DMESG,
++				 ("set pairwise key\n"));
++			if (!sta) {
++				RT_ASSERT(false, ("pairwise key withnot"
++						  "mac_addr\n"));
++				err = -EOPNOTSUPP;
++				goto out_unlock;
++			}
++			/* Pairwise key with an assigned MAC address. */
++			rtlpriv->sec.pairwise_enc_algorithm = key_type;
++			/*set local buf about pairwise key. */
++			memcpy(rtlpriv->sec.key_buf[PAIRWISE_KEYIDX],
++			       key->key, key->keylen);
++			rtlpriv->sec.key_len[PAIRWISE_KEYIDX] = key->keylen;
++			rtlpriv->sec.pairwise_key =
++			    rtlpriv->sec.key_buf[PAIRWISE_KEYIDX];
++			memcpy(mac_addr, sta->addr, ETH_ALEN);
++		}
++		rtlpriv->cfg->ops->set_key(hw, key_idx, mac_addr,
++					   group_key, key_type, wep_only,
++					   false);
++		/* <5> tell mac80211 do something: */
++		/*must use sw generate IV, or can not work !!!!. */
++		key->flags |= IEEE80211_KEY_FLAG_GENERATE_IV;
++		key->hw_key_idx = key_idx;
++		if (key_type == TKIP_ENCRYPTION)
++			key->flags |= IEEE80211_KEY_FLAG_GENERATE_MMIC;
++		break;
++	case DISABLE_KEY:
++		RT_TRACE(rtlpriv, COMP_SEC, DBG_DMESG,
++			 ("disable key delete one entry\n"));
++		/*set local buf about wep key. */
++		memset(rtlpriv->sec.key_buf[key_idx], 0, key->keylen);
++		rtlpriv->sec.key_len[key_idx] = 0;
++		memcpy(mac_addr, zero_addr, ETH_ALEN);
++		/*
++		 *mac80211 will delete entrys one by one,
++		 *so don't use rtl_cam_reset_all_entry
++		 *or clear all entry here.
++		 */
++		rtl_cam_delete_one_entry(hw, mac_addr, key_idx);
++		break;
++	default:
++		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
++			 ("cmd_err:%x!!!!:\n", cmd));
++	}
++out_unlock:
++	up(&rtlpriv->locks.conf_sem);
++	rtlpriv->sec.being_setkey = false;
++	return err;
++}
++
++static void rtl_op_rfkill_poll(struct ieee80211_hw *hw)
++{
++	struct rtl_priv *rtlpriv = rtl_priv(hw);
++
++	bool radio_state;
++	bool blocked;
++	u8 valid = 0;
++
++	if (!test_bit(RTL_STATUS_INTERFACE_START, &rtlpriv->status))
++		return;
++
++	down(&rtlpriv->locks.conf_sem);
++
++	/*if Radio On return true here */
++	radio_state = rtlpriv->cfg->ops->radio_onoff_checking(hw, &valid);
++
++	if (valid) {
++		if (unlikely(radio_state != rtlpriv->rfkill.rfkill_state)) {
++			rtlpriv->rfkill.rfkill_state = radio_state;
++
++			RT_TRACE(rtlpriv, COMP_RF, DBG_DMESG,
++				 (KERN_INFO "wireless radio switch turned %s\n",
++				  radio_state ? "on" : "off"));
++
++			blocked = (rtlpriv->rfkill.rfkill_state == 1) ? 0 : 1;
++			wiphy_rfkill_set_hw_state(hw->wiphy, blocked);
++		}
++	}
++
++	up(&rtlpriv->locks.conf_sem);
++}
++
++const struct ieee80211_ops rtl_ops = {
++	.start = rtl_op_start,
++	.stop = rtl_op_stop,
++	.tx = rtl_op_tx,
++	.add_interface = rtl_op_add_interface,
++	.remove_interface = rtl_op_remove_interface,
++	.config = rtl_op_config,
++	.configure_filter = rtl_op_configure_filter,
++	.set_key = rtl_op_set_key,
++	.conf_tx = rtl_op_conf_tx,
++	.bss_info_changed = rtl_op_bss_info_changed,
++	.get_tsf = rtl_op_get_tsf,
++	.set_tsf = rtl_op_set_tsf,
++	.reset_tsf = rtl_op_reset_tsf,
++	.sta_notify = rtl_op_sta_notify,
++	.ampdu_action = rtl_op_ampdu_action,
++	.sw_scan_start = rtl_op_sw_scan_start,
++	.sw_scan_complete = rtl_op_sw_scan_complete,
++	.rfkill_poll = rtl_op_rfkill_poll,
++};
+diff --git a/drivers/net/wireless/rtlwifi/core.h b/drivers/net/wireless/rtlwifi/core.h
+new file mode 100644
+index 0000000..0ef31c3
+--- /dev/null
++++ b/drivers/net/wireless/rtlwifi/core.h
+@@ -0,0 +1,42 @@
++/******************************************************************************
++ *
++ * Copyright(c) 2009-2010  Realtek Corporation.
++ *
++ * Tmis program is free software; you can redistribute it and/or modify it
++ * under the terms of version 2 of the GNU General Public License as
++ * published by the Free Software Foundation.
++ *
++ * Tmis program is distributed in the hope that it will be useful, but WITHOUT
++ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
++ * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
++ * more details.
++ *
++ * You should have received a copy of the GNU General Public License along with
++ * tmis program; if not, write to the Free Software Foundation, Inc.,
++ * 51 Franklin Street, Fifth Floor, Boston, MA 02110, USA
++ *
++ * Tme full GNU General Public License is included in this distribution in the
++ * file called LICENSE.
++ *
++ * Contact Information:
++ * wlanfae <wlanfae@realtek.com>
++ * Realtek Corporation, No. 2, Innovation Road II, Hsinchu Science Park,
++ * Hsinchu 300, Taiwan.
++ *
++ * Larry Finger <Larry.Finger@lwfinger.net>
++ *****************************************************************************/
++
++#ifndef __RTL_CORE_H__
++#define __RTL_CORE_H__
++
++#define RTL_SUPPORTED_FILTERS		\
++	(FIF_PROMISC_IN_BSS | \
++	FIF_ALLMULTI | FIF_CONTROL | \
++	FIF_OTHER_BSS | \
++	FIF_FCSFAIL | \
++	FIF_BCN_PRBRESP_PROMISC)
++
++#define RTL_SUPPORTED_CTRL_FILTER	0xFF
++
++extern const struct ieee80211_ops rtl_ops;
++#endif
+-- 
+1.7.1
+
