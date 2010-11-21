@@ -1,49 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ey0-f174.google.com ([209.85.215.174]:48659 "EHLO
-	mail-ey0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752065Ab0KEAHX convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 4 Nov 2010 20:07:23 -0400
-Received: by eye27 with SMTP id 27so1470048eye.19
-        for <linux-wireless@vger.kernel.org>; Thu, 04 Nov 2010 17:07:21 -0700 (PDT)
+Received: from thunk.org ([69.25.196.29]:41398 "EHLO thunker.thunk.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755838Ab0KUVoe (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 21 Nov 2010 16:44:34 -0500
+Date: Sun, 21 Nov 2010 16:44:07 -0500
+From: Ted Ts'o <tytso@mit.edu>
+To: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Cc: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	Greg KH <greg@kroah.com>, linux-kernel@vger.kernel.org,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	David Miller <davem@davemloft.net>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Stephen Hemminger <shemminger@vyatta.com>,
+	"Perez-Gonzalez, Inaky" <inaky.perez-gonzalez@intel.com>,
+	Charles Marker <Charles.Marker@atheros.com>,
+	Jouni Malinen <Jouni.Malinen@atheros.com>,
+	Kevin Hayes <kevin@atheros.com>,
+	Zhifeng Cai <zhifeng.cai@atheros.com>,
+	Don Breslin <Don.Breslin@atheros.com>,
+	Doug Dahlby <Doug.Dahlby@atheros.com>,
+	Julia Lawall <julia@diku.dk>
+Subject: Re: Challenges with doing hardware bring up with Linux first
+Message-ID: <20101121214407.GH23423@thunk.org>
+References: <AANLkTim4jVaZxYp8nSgJyy28iwxcxbPeNUzxTfoHAX4S@mail.gmail.com>
+ <F46C52ED-8DB8-4347-957D-B9D84406D53F@mit.edu>
+ <AANLkTinyafwe9MyXhSSe5vxEKnTUeLV0AZDWY_uXsu8f@mail.gmail.com>
+ <20101121130236.GE23423@thunk.org>
+ <20101121172906.GD3703@kroah.com>
+ <AANLkTik6MQjYTCQ4wtyRpOGb94uyUTA+juvX-8UsP95J@mail.gmail.com>
+ <20101121203124.1ba8212e@lxorguk.ukuu.org.uk>
 MIME-Version: 1.0
-In-Reply-To: <AANLkTinrhE9oOwYP8-ujeJ_YS97AP8=mwgmQ09gd1B6u@mail.gmail.com>
-References: <201011042037.00178.IvDoorn@gmail.com>
-	<201011042040.12419.IvDoorn@gmail.com>
-	<201011042040.47235.IvDoorn@gmail.com>
-	<201011042041.06812.IvDoorn@gmail.com>
-	<AANLkTinrhE9oOwYP8-ujeJ_YS97AP8=mwgmQ09gd1B6u@mail.gmail.com>
-Date: Thu, 4 Nov 2010 17:07:21 -0700
-Message-ID: <AANLkTi=CM9EQxQ7kFmRhiPRzC+dxyb67Xk=m8=U8-CDX@mail.gmail.com>
-Subject: Re: [PATCH 11/13] rt2x00: Fix crash on USB unplug
-From: Blaise Gassend <blaise@willowgarage.com>
-To: Julian Calaby <julian.calaby@gmail.com>
-Cc: Ivo van Doorn <ivdoorn@gmail.com>, linux-wireless@vger.kernel.org,
-	Helmut Schaa <helmut.schaa@googlemail.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20101121203124.1ba8212e@lxorguk.ukuu.org.uk>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
->> Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
->> Acked-by: Gertjan van Wingerde <gwingerde@gmail.com>
->> ---
->> diff --git a/drivers/net/wireless/rt2x00/rt2x00dev.c b/drivers/net/wireless/rt2x00/rt2x00dev.c
->> index a5c7a4f..b6822cd 100644
->> --- a/drivers/net/wireless/rt2x00/rt2x00dev.c
->> +++ b/drivers/net/wireless/rt2x00/rt2x00dev.c
->> @@ -483,6 +483,10 @@ void rt2x00lib_rxdone(struct queue_entry *entry)
->>        unsigned int header_length;
->>        int rate_idx;
->>
->> +       if (!test_bit(DEVICE_STATE_PRESENT, &rt2x00dev->flags) ||
->> +           !test_bit(DEVICE_STATE_ENABLED_RADIO, &rt2x00dev->flags))
->> +               goto submit_entry;
->> +
->>        if (test_bit(ENTRY_DATA_IO_FAILED, &entry->flags))
->>                goto submit_entry;
->>
->
-> Could these two if statements be combined?
+On Sun, Nov 21, 2010 at 08:31:24PM +0000, Alan Cox wrote:
+> 
+> Which we know in practice they won't. They'll sit on fixes (often
+> security fixes) and tweak and add private copies of features. In turn the
+> Linux one could then only keep up by adding features itself - which would
+> have to be GPL to stop the same abuse continuing.
+> 
+> It's a nice idea but the corporations exist to make money and adding
+> proprietary custom stack add-ons is clearly a good move on their part to
+> do that.
 
-I'm also worried that the crash may still happen when the second if
-causes a jump. So far I am still getting crashes with this patch in.
+Hence my recommendation that if someone is going to do the work to
+create a 802.11 layer that has shims that work on multiple operating
+systems, it be GPL with explicit exceptions to allow said layer to
+work on legacy operating systems like QNX, et. al.  That way it forces
+the hardware specific code to be released under the GPL --- if they
+want to take advantage of the "write onces, work on multiple operating
+systems" feature.
+
+If someone is going to go through all of this work to make it possible
+--- particularly if it's at a company such as Luis's employer, or any
+other wifi chipset provider --- why should it allow their competitors
+to do closed source drivers?  Better to structure the driver licensing
+such that (a) there is benefit for companies to make a Linux driver by
+using this common stack, and (b) but in exchange, it forces them to
+make a driver which is guaranteed to be usable by Linux by virtual of
+the fact that (1) the native interface is Linux's wireless stack, and
+(2) the license forces them to GPL their driver. 
+
+    		       	       	   - Ted
