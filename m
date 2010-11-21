@@ -1,76 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from hrndva-omtalb.mail.rr.com ([71.74.56.123]:61618 "EHLO
-	hrndva-omtalb.mail.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755013Ab0KKRnw (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 11 Nov 2010 12:43:52 -0500
-Date: Thu, 11 Nov 2010 11:44:32 -0600
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: John W Linville <linville@tuxdriver.com>
-Cc: b43-dev@lists.infradead.org, linux-wireless@vger.kernel.org,
-	arnd@arndnet.de
-Subject: [PATCH] b43legacy: Fix compile on ARM architecture
-Message-ID: <4cdc2b80.RuMMb1PuVmklU3JJ%Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: from mail.perches.com ([173.55.12.10]:1759 "EHLO mail.perches.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756972Ab0KUCkr (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 20 Nov 2010 21:40:47 -0500
+From: Joe Perches <joe@perches.com>
+To: Ivo van Doorn <IvDoorn@gmail.com>,
+	Gertjan van Wingerde <gwingerde@gmail.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com,
+	netdev@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: [PATCH 60/62] rt2x00: Use static const
+Date: Sat, 20 Nov 2010 18:39:01 -0800
+Message-Id: <d8bfaded20da2265673391a81536d63b0e81dc7f.1290305776.git.joe@perches.com>
+In-Reply-To: <cover.1290305773.git.joe@perches.com>
+References: <cover.1290305773.git.joe@perches.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Arnd Hannemann <arnd@arndnet.de>
+Using static const generally increases object text and decreases data size.
+It also generally decreases overall object size.
 
-When b43legacy is compiled on the arm platform, the following errors are seen:
+   text	   data	    bss	    dec	    hex	filename
+  40197	     56	   8336	  48589	   bdcd	drivers/net/wireless/rt2x00/rt2800lib.o.new
+  40205	     56	   8336	  48597	   bdd5	drivers/net/wireless/rt2x00/rt2800lib.o.old
 
-  CC [M]  drivers/net/wireless/b43legacy/xmit.o
-In file included from include/net/dst.h:11,
-from drivers/net/wireless/b43legacy/xmit.c:31:
-include/net/dst_ops.h:28: error: expected ':', ',', ';', '}' or '__attribute__'
-   before '____cacheline_aligned_in_smp'
-include/net/dst_ops.h: In function 'dst_entries_get_fast':
-include/net/dst_ops.h:33: error: 'struct dst_ops' has no member named
-   'pcpuc_entries'
-include/net/dst_ops.h: In function 'dst_entries_get_slow':
-include/net/dst_ops.h:41: error: 'struct dst_ops' has no member named
-   'pcpuc_entries'
-include/net/dst_ops.h: In function 'dst_entries_add':
-include/net/dst_ops.h:49: error: 'struct dst_ops' has no member named
-   'pcpuc_entries'
-include/net/dst_ops.h: In function 'dst_entries_init':
-include/net/dst_ops.h:55: error: 'struct dst_ops' has no member named
-   'pcpuc_entries'
-include/net/dst_ops.h: In function 'dst_entries_destroy':
-include/net/dst_ops.h:60: error: 'struct dst_ops' has no member named
-   'pcpuc_entries'
-make[4]: *** [drivers/net/wireless/b43legacy/xmit.o] Error 1
-make[3]: *** [drivers/net/wireless/b43legacy] Error 2
-make[2]: *** [drivers/net/wireless] Error 2
-make[1]: *** [drivers/net] Error 2
-make: *** [drivers] Error 2
-
-The cause is a missing include of <linux/cache.h>, which is present for
-i386 and x86_64 architectures, but not for arm.
-
-Signed-off-by: Arnd Hannemann <arnd@arndnet.de>
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Stable <stable@kernel.org>
+Signed-off-by: Joe Perches <joe@perches.com>
 ---
+ drivers/net/wireless/rt2x00/rt2800lib.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-John,
-
-Once I get the ability to cross-compile ARM architecture, I will check to
-see if the equivalent patch is needed for b43.
-
-Larry
----
-
-Index: linux-2.6/include/net/dst_ops.h
-===================================================================
---- linux-2.6.orig/include/net/dst_ops.h
-+++ linux-2.6/include/net/dst_ops.h
-@@ -2,6 +2,7 @@
- #define _NET_DST_OPS_H
- #include <linux/types.h>
- #include <linux/percpu_counter.h>
-+#include <linux/cache.h>
+diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
+index ce8df66..7563161 100644
+--- a/drivers/net/wireless/rt2x00/rt2800lib.c
++++ b/drivers/net/wireless/rt2x00/rt2800lib.c
+@@ -2166,7 +2166,7 @@ static int rt2800_init_registers(struct rt2x00_dev *rt2x00dev)
+ 					 SHARED_KEY_MODE_ENTRY(i), 0);
  
- struct dst_entry;
- struct kmem_cachep;
+ 	for (i = 0; i < 256; i++) {
+-		u32 wcid[2] = { 0xffffffff, 0x00ffffff };
++		static const u32 wcid[2] = { 0xffffffff, 0x00ffffff };
+ 		rt2800_register_multiwrite(rt2x00dev, MAC_WCID_ENTRY(i),
+ 					      wcid, sizeof(wcid));
+ 
+-- 
+1.7.3.2.245.g03276.dirty
+
