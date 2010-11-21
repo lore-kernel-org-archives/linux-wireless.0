@@ -1,40 +1,83 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yx0-f174.google.com ([209.85.213.174]:58998 "EHLO
-	mail-yx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755999Ab0KBHFo convert rfc822-to-8bit (ORCPT
+Received: from mail-qy0-f174.google.com ([209.85.216.174]:50979 "EHLO
+	mail-qy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755838Ab0KUVsO convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 2 Nov 2010 03:05:44 -0400
-Received: by yxk8 with SMTP id 8so3455727yxk.19
-        for <linux-wireless@vger.kernel.org>; Tue, 02 Nov 2010 00:05:43 -0700 (PDT)
+	Sun, 21 Nov 2010 16:48:14 -0500
 MIME-Version: 1.0
-In-Reply-To: <1288647745.21112.76.camel@powerslave>
-References: <1288181398-2358-1-git-send-email-eliad@wizery.com>
-	<1288181398-2358-2-git-send-email-eliad@wizery.com>
-	<1288617893.20937.10.camel@chilepepper>
-	<AANLkTi=jyGZ+LLZ2cDiF7CFC1h_WbzwmOOLQkSpOaLAz@mail.gmail.com>
-	<AANLkTin+RQ8zjbQKFcZJjoVcT=GkuMYTYEbt47TFuAC6@mail.gmail.com>
-	<1288647745.21112.76.camel@powerslave>
-Date: Tue, 2 Nov 2010 09:05:43 +0200
-Message-ID: <AANLkTiny9BHyk0_g7gfuZtjNYa4LXG0UKOsyoxMm0_pV@mail.gmail.com>
-Subject: Re: [PATCH 2/2] wl1271: add recover testmode command
-From: Eliad Peller <eliad@wizery.com>
-To: Luciano Coelho <luciano.coelho@nokia.com>
-Cc: =?ISO-8859-1?Q?ext_G=E1bor_Stefanik?= <netrolller.3d@gmail.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <20101121214407.GH23423@thunk.org>
+References: <AANLkTim4jVaZxYp8nSgJyy28iwxcxbPeNUzxTfoHAX4S@mail.gmail.com>
+ <F46C52ED-8DB8-4347-957D-B9D84406D53F@mit.edu> <AANLkTinyafwe9MyXhSSe5vxEKnTUeLV0AZDWY_uXsu8f@mail.gmail.com>
+ <20101121130236.GE23423@thunk.org> <20101121172906.GD3703@kroah.com>
+ <AANLkTik6MQjYTCQ4wtyRpOGb94uyUTA+juvX-8UsP95J@mail.gmail.com>
+ <20101121203124.1ba8212e@lxorguk.ukuu.org.uk> <20101121214407.GH23423@thunk.org>
+From: =?ISO-8859-1?Q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>
+Date: Sun, 21 Nov 2010 22:47:53 +0100
+Message-ID: <AANLkTinEm1mLAtPZdEp2sHRfKPeV6qYP8f9Dbbr92_JD@mail.gmail.com>
+Subject: Re: Challenges with doing hardware bring up with Linux first
+To: "Ted Ts'o" <tytso@mit.edu>, Alan Cox <alan@lxorguk.ukuu.org.uk>,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	Greg KH <greg@kroah.com>, linux-kernel@vger.kernel.org,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	David Miller <davem@davemloft.net>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Stephen Hemminger <shemminger@vyatta.com>,
+	"Perez-Gonzalez, Inaky" <inaky.perez-gonzalez@intel.com>,
+	Charles Marker <Charles.Marker@atheros.com>,
+	Jouni Malinen <Jouni.Malinen@atheros.com>,
+	Kevin Hayes <kevin@atheros.com>,
+	Zhifeng Cai <zhifeng.cai@atheros.com>,
+	Don Breslin <Don.Breslin@atheros.com>,
+	Doug Dahlby <Doug.Dahlby@atheros.com>,
+	Julia Lawall <julia@diku.dk>
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Nov 1, 2010 at 11:42 PM, Luciano Coelho
-<luciano.coelho@nokia.com> wrote:
+On Sun, Nov 21, 2010 at 10:44 PM, Ted Ts'o <tytso@mit.edu> wrote:
+> On Sun, Nov 21, 2010 at 08:31:24PM +0000, Alan Cox wrote:
+>>
+>> Which we know in practice they won't. They'll sit on fixes (often
+>> security fixes) and tweak and add private copies of features. In turn the
+>> Linux one could then only keep up by adding features itself - which would
+>> have to be GPL to stop the same abuse continuing.
+>>
+>> It's a nice idea but the corporations exist to make money and adding
+>> proprietary custom stack add-ons is clearly a good move on their part to
+>> do that.
 >
-> In any case, I'm not sure I really like this idea of a HW recovery test
-> command.  This should really be done automatically by the driver and,
-> with Juuso's implementation plus the watchdog, we shouldn't really need
-> it.
+> Hence my recommendation that if someone is going to do the work to
+> create a 802.11 layer that has shims that work on multiple operating
+> systems, it be GPL with explicit exceptions to allow said layer to
+> work on legacy operating systems like QNX, et. al.  That way it forces
+> the hardware specific code to be released under the GPL --- if they
+> want to take advantage of the "write onces, work on multiple operating
+> systems" feature.
 >
-as i wrote before - it's mainly for testing purposes.
-that's why adding it as a testcmd made sense to me (i guess we do want
-some easy way to trigger and test the recovery sequence).
+> If someone is going to go through all of this work to make it possible
+> --- particularly if it's at a company such as Luis's employer, or any
+> other wifi chipset provider --- why should it allow their competitors
+> to do closed source drivers?  Better to structure the driver licensing
+> such that (a) there is benefit for companies to make a Linux driver by
+> using this common stack, and (b) but in exchange, it forces them to
+> make a driver which is guaranteed to be usable by Linux by virtual of
+> the fact that (1) the native interface is Linux's wireless stack, and
+> (2) the license forces them to GPL their driver.
 
-Eliad.
+By forcing the driver to be GPL, you automatically exclude Windows
+from the list of platforms supported by such a cross-OS driver, as the
+Windows NDIS headers are AFAIK under a GPL-incompatible license, so no
+GPL driver can be written for Windows.
+
+>
+>                                   - Ted
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
+
+
+
+-- 
+Vista: [V]iruses, [I]ntruders, [S]pyware, [T]rojans and [A]dware. :-)
