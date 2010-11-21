@@ -1,66 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-vw0-f46.google.com ([209.85.212.46]:48209 "EHLO
-	mail-vw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759428Ab0KRQoM convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 18 Nov 2010 11:44:12 -0500
-Received: by vws13 with SMTP id 13so1778350vws.19
-        for <linux-wireless@vger.kernel.org>; Thu, 18 Nov 2010 08:44:12 -0800 (PST)
+Received: from thunk.org ([69.25.196.29]:54625 "EHLO thunker.thunk.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751935Ab0KUNDD (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 21 Nov 2010 08:03:03 -0500
+Date: Sun, 21 Nov 2010 08:02:36 -0500
+From: Ted Ts'o <tytso@mit.edu>
+To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Cc: linux-kernel@vger.kernel.org,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Greg KH <greg@kroah.com>, David Miller <davem@davemloft.net>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Stephen Hemminger <shemminger@vyatta.com>,
+	"Perez-Gonzalez, Inaky" <inaky.perez-gonzalez@intel.com>,
+	Charles Marker <Charles.Marker@atheros.com>,
+	Jouni Malinen <Jouni.Malinen@atheros.com>,
+	Kevin Hayes <kevin@atheros.com>,
+	Zhifeng Cai <zhifeng.cai@atheros.com>,
+	Don Breslin <Don.Breslin@atheros.com>,
+	Doug Dahlby <Doug.Dahlby@atheros.com>,
+	Julia Lawall <julia@diku.dk>
+Subject: Re: Challenges with doing hardware bring up with Linux first
+Message-ID: <20101121130236.GE23423@thunk.org>
+References: <AANLkTim4jVaZxYp8nSgJyy28iwxcxbPeNUzxTfoHAX4S@mail.gmail.com>
+ <F46C52ED-8DB8-4347-957D-B9D84406D53F@mit.edu>
+ <AANLkTinyafwe9MyXhSSe5vxEKnTUeLV0AZDWY_uXsu8f@mail.gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <1290098156.12596.2.camel@maggie>
-References: <1288823326-9686-1-git-send-email-zajec5@gmail.com>
-	<1288823326-9686-2-git-send-email-zajec5@gmail.com>
-	<20101116212321.GF10774@tuxdriver.com>
-	<1290013976.2513.14.camel@maggie>
-	<20101118162748.GB2468@tuxdriver.com>
-	<1290098156.12596.2.camel@maggie>
-Date: Thu, 18 Nov 2010 17:44:12 +0100
-Message-ID: <AANLkTimh_8X1uRPudmQLDOTeA_X0ciR9BbDgyahLDMSs@mail.gmail.com>
-Subject: Re: [PATCH] ssb: fail registration for unknown SPROM revision
-From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-To: =?UTF-8?Q?Michael_B=C3=BCsch?= <mb@bu3sch.de>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, b43-dev@lists.infradead.org
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=iso-8859-1
+In-Reply-To: <AANLkTinyafwe9MyXhSSe5vxEKnTUeLV0AZDWY_uXsu8f@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2010/11/18 Michael Büsch <mb@bu3sch.de>:
-> On Thu, 2010-11-18 at 11:27 -0500, John W. Linville wrote:
->> On Wed, Nov 17, 2010 at 06:12:56PM +0100, Michael Büsch wrote:
->> > On Tue, 2010-11-16 at 16:23 -0500, John W. Linville wrote:
->> > > > -               ssb_printk(KERN_WARNING PFX "Unsupported SPROM"
->> > > > -                          "  revision %d detected. Will extract"
->> > > > -                          " v1\n", out->revision);
->> > > > -               out->revision = 1;
->> > > > -               sprom_extract_r123(out, in);
->> > > > +               ssb_printk(KERN_ERR PFX "Unsupported SPROM revision %d"
->> > > > +                          " detected\n", out->revision);
->> > > > +               return -EINVAL;
->> > > >         }
->> > > >
->> > > >         if (out->boardflags_lo == 0xFFFF)
->> > >
->> > > I think this is going to make my b43 PCI-E card not work...I'll try
->> > > it and get back to you...
->> >
->> > Hm, what version does it report?
->
->> [ 1036.293865] ssb: Unsupported SPROM  revision 255 detected. Will extract v1
->
-> So what about specialcasing 255 instead of defaulting to 1 in general?
->
-> if (rev == 255)
-> rev = 1;
->
-> 255 basically means "Vendor forgot to set this field". So it would only
-> default to 1 for those broken sproms.
+On Thu, Nov 18, 2010 at 08:46:11AM -0800, Luis R. Rodriguez wrote:
+> > What this provides for is a wonderful leverage for hardware
+> > vendors. � If they provide GPL'ed code for their core hardware
+> > drivers that link against the Linux 802.11 layer, at one fell
+> > swoop they also get Windows 7 and Mac OS X drivers for free!
+> 
+> Yes, indeed ! That would be ideal indeed, but we'd need then an 802.11
+> stack which is also permissive licensed and then make APIs for that
+> 802.11 stack to match mac80211's or cfg80211's or bridges between
+> then. Because ultimately you will still need some 802.11 stack for
+> some OSes that don't have one.
 
-Will work as long as there won't appear new vendor who will forget to
-set this and will use new SPROM...
+I wonder how much this is true.  Yes, at the moment we still need to
+worry about those OS's that don't have one; but how much longer will
+hardware vendors need to support Windows XP?  If Linux, Windows 7, and
+Mac OS X all have an 802.11 stack, what other OS's do the hardware
+vendors need to support?
 
-But hopefully it won't happen and it should not hurt too much to
-register device with incorrectly parsed SPROM.
-
--- 
-Rafał
+						- Ted
