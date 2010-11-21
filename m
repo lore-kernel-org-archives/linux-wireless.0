@@ -1,51 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bar.sig21.net ([80.81.252.164]:56685 "EHLO bar.sig21.net"
+Received: from mail.perches.com ([173.55.12.10]:1736 "EHLO mail.perches.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753977Ab0KPQxR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 16 Nov 2010 11:53:17 -0500
-Date: Tue, 16 Nov 2010 17:53:02 +0100
-From: Johannes Stezenbach <js@sig21.net>
-To: Helmut Schaa <helmut.schaa@googlemail.com>
-Cc: Walter Goldens <goldenstranger@yahoo.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Ivo van Doorn <ivdoorn@gmail.com>, jay_hung@ralinktech.com,
-	linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com
-Subject: Re: [PATCH 7/9] rt2x00: Fix rt2800 USB TX Path DMA issue
-Message-ID: <20101116165302.GA29570@sig21.net>
-References: <201011131911.47346.IvDoorn@gmail.com>
- <201011161711.51581.helmut.schaa@googlemail.com>
- <20101116163434.GA29414@sig21.net>
- <201011161742.08503.helmut.schaa@googlemail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <201011161742.08503.helmut.schaa@googlemail.com>
+	id S1757142Ab0KUCkj (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 20 Nov 2010 21:40:39 -0500
+From: Joe Perches <joe@perches.com>
+To: Simon Kelley <simon@thekelleys.org.uk>,
+	"John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: [PATCH 54/62] atmel: Use static const
+Date: Sat, 20 Nov 2010 18:38:55 -0800
+Message-Id: <d9d7c32e0b5e38388ba25facf1350caa4abe8f3b.1290305776.git.joe@perches.com>
+In-Reply-To: <cover.1290305773.git.joe@perches.com>
+References: <cover.1290305773.git.joe@perches.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Nov 16, 2010 at 05:42:08PM +0100, Helmut Schaa wrote:
-> Am Dienstag 16 November 2010 schrieb Johannes Stezenbach:
-> > 
-> > Hm, yes, rt2x00mac_conf_tx() has the same issue that it calls
-> > rt2x00queue_get_queue() with an argument which is a mac80211 AC,
-> > but expects an enum data_queue_qid.  So one could says one
-> > bug cancels the other out.
-> 
-> Right. We could of course add a mac80211-queue <-> rt2x00-queue mapping in
-> the appropriate places or rename the QID_* identifiers accordingly. Not sure
-> if it's worth it ...
+Using static const generally increases object text and decreases data size.
+It also generally decreases overall object size.
 
-Hm, reducing confusion enhances maintainability.
+   text	   data	    bss	    dec	    hex	filename
+  42578	    720	   8528	  51826	   ca72	drivers/net/wireless/atmel.o.old
+  42578	    720	   8528	  51826	   ca72	drivers/net/wireless/atmel.o.new
 
-> > > And btw. queue 0 is used for managment frames as well.
-> > 
-> > Queue 0 means QID_AC_BE?  Or AC_VI?
-> 
-> It's AC_VO.
+Signed-off-by: Joe Perches <joe@perches.com>
+---
+ drivers/net/wireless/atmel.c |    6 ++++--
+ 1 files changed, 4 insertions(+), 2 deletions(-)
 
-Ah, right got it now.  This explains the output of
-/sys/kernel/debug/ieee80211/phy0/rt2800usb/queue/queue,
-qid 0 is used by management frames and queue 2 for BE data.
+diff --git a/drivers/net/wireless/atmel.c b/drivers/net/wireless/atmel.c
+index c8f7090..46e382e 100644
+--- a/drivers/net/wireless/atmel.c
++++ b/drivers/net/wireless/atmel.c
+@@ -1161,7 +1161,7 @@ static irqreturn_t service_interrupt(int irq, void *dev_id)
+ 	struct atmel_private *priv = netdev_priv(dev);
+ 	u8 isr;
+ 	int i = -1;
+-	static u8 irq_order[] = {
++	static const u8 irq_order[] = {
+ 		ISR_OUT_OF_RANGE,
+ 		ISR_RxCOMPLETE,
+ 		ISR_TxCOMPLETE,
+@@ -3771,7 +3771,9 @@ static int probe_atmel_card(struct net_device *dev)
+ 
+ 	if (rc) {
+ 		if (dev->dev_addr[0] == 0xFF) {
+-			u8 default_mac[] = {0x00, 0x04, 0x25, 0x00, 0x00, 0x00};
++			static const u8 default_mac[] = {
++				0x00, 0x04, 0x25, 0x00, 0x00, 0x00
++			};
+ 			printk(KERN_ALERT "%s: *** Invalid MAC address. UPGRADE Firmware ****\n", dev->name);
+ 			memcpy(dev->dev_addr, default_mac, 6);
+ 		}
+-- 
+1.7.3.2.245.g03276.dirty
 
-
-Thanks,
-Johannes
