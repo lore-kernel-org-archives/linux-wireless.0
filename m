@@ -1,37 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:50449 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753799Ab0KUUsJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 21 Nov 2010 15:48:09 -0500
-From: Hauke Mehrtens <hauke@hauke-m.de>
-To: lrodriguez@atheros.com
-Cc: linux-wireless@vger.kernel.org, mcgrof@infradead.org,
-	Hauke Mehrtens <hauke@hauke-m.de>
-Subject: [PATCH] compat-wireless: generate CONFIG_COMPAT_KERNEL_38
-Date: Sun, 21 Nov 2010 21:48:01 +0100
-Message-Id: <1290372481-6737-1-git-send-email-hauke@hauke-m.de>
+Received: from mail.perches.com ([173.55.12.10]:1751 "EHLO mail.perches.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757195Ab0KUCkp (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 20 Nov 2010 21:40:45 -0500
+From: Joe Perches <joe@perches.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: [PATCH 58/62] ray_cs: Use static const
+Date: Sat, 20 Nov 2010 18:38:59 -0800
+Message-Id: <e530e506090e3de049ea79098ccaa7665575db52.1290305776.git.joe@perches.com>
+In-Reply-To: <cover.1290305773.git.joe@perches.com>
+References: <cover.1290305773.git.joe@perches.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Using static const generally increases object text and decreases data size.
+It also generally decreases overall object size.
 
-Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+   text	   data	    bss	    dec	    hex	filename
+  42607	   3581	   8536	  54724	   d5c4	drivers/net/wireless/ray_cs.o.new
+  42603	   3585	   8536	  54724	   d5c4	drivers/net/wireless/ray_cs.o.old
+
+Signed-off-by: Joe Perches <joe@perches.com>
 ---
- config.mk |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+ drivers/net/wireless/ray_cs.c |    4 ++--
+ 1 files changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/config.mk b/config.mk
-index 4ddf26e..81cbf31 100644
---- a/config.mk
-+++ b/config.mk
-@@ -20,7 +20,7 @@ endif
- # as I suspect all users of this package want 802.11e (WME) and
- # 802.11n (HT) support.
- ifneq ($(wildcard $(KLIB_BUILD)/Makefile),)
--COMPAT_LATEST_VERSION = 37
-+COMPAT_LATEST_VERSION = 38
- KERNEL_SUBLEVEL := $(shell $(MAKE) -C $(KLIB_BUILD) kernelversion | sed -n 's/^2\.6\.\([0-9]\+\).*/\1/p')
- COMPAT_VERSIONS := $(shell I=$(COMPAT_LATEST_VERSION); while [ "$$I" -gt $(KERNEL_SUBLEVEL) ]; do echo $$I; I=$$(($$I - 1)); done)
- $(foreach ver,$(COMPAT_VERSIONS),$(eval CONFIG_COMPAT_KERNEL_$(ver)=y))
+diff --git a/drivers/net/wireless/ray_cs.c b/drivers/net/wireless/ray_cs.c
+index 97007d9..2b1cbba 100644
+--- a/drivers/net/wireless/ray_cs.c
++++ b/drivers/net/wireless/ray_cs.c
+@@ -2286,8 +2286,8 @@ static void untranslate(ray_dev_t *local, struct sk_buff *skb, int len)
+ 	struct ethhdr *peth;
+ 	UCHAR srcaddr[ADDRLEN];
+ 	UCHAR destaddr[ADDRLEN];
+-	static UCHAR org_bridge[3] = { 0, 0, 0xf8 };
+-	static UCHAR org_1042[3] = { 0, 0, 0 };
++	static const UCHAR org_bridge[3] = { 0, 0, 0xf8 };
++	static const UCHAR org_1042[3] = { 0, 0, 0 };
+ 
+ 	memcpy(destaddr, ieee80211_get_DA(pmac), ADDRLEN);
+ 	memcpy(srcaddr, ieee80211_get_SA(pmac), ADDRLEN);
 -- 
-1.7.1
+1.7.3.2.245.g03276.dirty
 
