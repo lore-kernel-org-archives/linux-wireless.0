@@ -1,79 +1,508 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms3.broadcom.com ([216.31.210.19]:3387 "EHLO MMS3.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S935047Ab0KQWdC convert rfc822-to-8bit (ORCPT
+Received: from hrndva-omtalb.mail.rr.com ([71.74.56.123]:59992 "EHLO
+	hrndva-omtalb.mail.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755836Ab0KUCSh (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 17 Nov 2010 17:33:02 -0500
-From: "Brett Rudley" <brudley@broadcom.com>
-To: "Greg KH" <gregkh@suse.de>,
-	"Mike Rapoport" <mike.rapoport@gmail.com>
-cc: "Greg KH" <greg@kroah.com>,
-	"Henry Ptasinski" <henryp@broadcom.com>,
-	"Dowan Kim" <dowan@broadcom.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Date: Wed, 17 Nov 2010 14:32:49 -0800
-Subject: RE: [PATCH 2/4] staging: brcm80211: brcmfmac: remove PCI SDIO
- controller binding
-Message-ID: <7A94256FD72B884D9E7C55586C3CBCEE13842932BE@SJEXCHCCR01.corp.ad.broadcom.com>
-References: <20101116200420.GA10793@kroah.com>
- <1289980726-28706-1-git-send-email-mike.rapoport@gmail.com>
- <20101117211035.GA2442@kroah.com>
- <AANLkTi=p_iH32zads+9RwQGY+m7JK+FTmhBTth_x9ouK@mail.gmail.com>
- <20101117221127.GB3851@suse.de>
-In-Reply-To: <20101117221127.GB3851@suse.de>
+	Sat, 20 Nov 2010 21:18:37 -0500
+Date: Sat, 20 Nov 2010 20:18:24 -0600
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: John W Linville <linville@tuxdriver.com>
+Cc: chaoming_li@realsil.com.cn, linux-wireless@vger.kernel.org
+Subject: [RFC PATCH 09/23] rtl8192ce: Introduce new driver
+Message-ID: <4ce88170./DVNYVDJcW5+eH1C%Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: text/plain;
- charset=iso-8859-1
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I'm not familiar with the fullmac code so I am getting someone from fullmac team to answer...hang on just a little.
+>From 5cb2adfc5b02e88cbebd76037c40f53194e15b88 Mon Sep 17 00:00:00 2001
+From: Larry Finger <Larry.Finger@lwfinger.net>
+Date: Sat, 20 Nov 2010 18:34:40 -0600
+Subject: [PATCH 09/23] rtl8192ce: rtlwifi: Add files to rtlwifi.ko, Part 9
 
-In the meantime Mike, does the driver still work with all your patches?
+Add files regd.{c,h}
 
-Thanks
-Brett
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+---
+ drivers/net/wireless/rtlwifi/regd.c |  400 +++++++++++++++++++++++++++++++++++
+ drivers/net/wireless/rtlwifi/regd.h |   61 ++++++
+ 2 files changed, 461 insertions(+), 0 deletions(-)
+ create mode 100644 drivers/net/wireless/rtlwifi/regd.c
+ create mode 100644 drivers/net/wireless/rtlwifi/regd.h
 
-> -----Original Message-----
-> From: Greg KH [mailto:gregkh@suse.de]
-> Sent: Wednesday, November 17, 2010 2:11 PM
-> To: Mike Rapoport
-> Cc: Greg KH; Brett Rudley; Henry Ptasinski; Dowan Kim; linux-
-> wireless@vger.kernel.org
-> Subject: Re: [PATCH 2/4] staging: brcm80211: brcmfmac: remove PCI SDIO
-> controller binding
-> 
-> On Thu, Nov 18, 2010 at 12:00:16AM +0200, Mike Rapoport wrote:
-> > On Wed, Nov 17, 2010 at 11:10 PM, Greg KH <greg@kroah.com> wrote:
-> > > On Wed, Nov 17, 2010 at 09:58:46AM +0200, Mike Rapoport wrote:
-> > >> Signed-off-by: Mike Rapoport <mike.rapoport@gmail.com>
-> > >> ---
-> > >>  drivers/staging/brcm80211/brcmfmac/bcmsdh_linux.c |  229 ----------
-> -----------
-> > >>  1 files changed, 0 insertions(+), 229 deletions(-)
-> > >
-> > > Wait, is this really ok code to be removing from the driver?
-> > >
-> > > Brett and Henry, any objections to this?
-> > >
-> > > Mike, why do you think this is ok to remove?  Is it because no one is
-> > > ever calling this even for both types of config for this driver?
-> >
-> > There's a lot of code in the brcmfmac part of the driver that tries to
-> > re-implement SDIO stack. In particular, the code removed by this patch
-> > registers a pci_driver for SDIO controller and then the brcmfmac
-> > driver accesses the WiFi device attached to that SDIO controller by
-> > means of custom re-implementation of SDHC.
-> 
-> Ok, so even with this patch, it will still work properly in the SDIO
-> mode?
-> 
-> Have you been able to test this?
-> 
-> Brett, Henry, I would like to get your ack on this before applying it.
-> 
-> thanks,
-> 
-> greg k-h
-
+diff --git a/drivers/net/wireless/rtlwifi/regd.c b/drivers/net/wireless/rtlwifi/regd.c
+new file mode 100644
+index 0000000..3336ca9
+--- /dev/null
++++ b/drivers/net/wireless/rtlwifi/regd.c
+@@ -0,0 +1,400 @@
++/******************************************************************************
++ *
++ * Copyright(c) 2009-2010  Realtek Corporation.
++ *
++ * This program is free software; you can redistribute it and/or modify it
++ * under the terms of version 2 of the GNU General Public License as
++ * published by the Free Software Foundation.
++ *
++ * This program is distributed in the hope that it will be useful, but WITHOUT
++ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
++ * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
++ * more details.
++ *
++ * You should have received a copy of the GNU General Public License along with
++ * this program; if not, write to the Free Software Foundation, Inc.,
++ * 51 Franklin Street, Fifth Floor, Boston, MA 02110, USA
++ *
++ * The full GNU General Public License is included in this distribution in the
++ * file called LICENSE.
++ *
++ * Contact Information:
++ * wlanfae <wlanfae@realtek.com>
++ * Realtek Corporation, No. 2, Innovation Road II, Hsinchu Science Park,
++ * Hsinchu 300, Taiwan.
++ *
++ * Larry Finger <Larry.Finger@lwfinger.net>
++ *
++ *****************************************************************************/
++
++#include "wifi.h"
++#include "regd.h"
++
++static struct country_code_to_enum_rd allCountries[] = {
++	{COUNTRY_CODE_FCC, "US"},
++	{COUNTRY_CODE_IC, "US"},
++	{COUNTRY_CODE_ETSI, "EC"},
++	{COUNTRY_CODE_SPAIN, "EC"},
++	{COUNTRY_CODE_FRANCE, "EC"},
++	{COUNTRY_CODE_MKK, "JP"},
++	{COUNTRY_CODE_MKK1, "JP"},
++	{COUNTRY_CODE_ISRAEL, "EC"},
++	{COUNTRY_CODE_TELEC, "JP"},
++	{COUNTRY_CODE_MIC, "JP"},
++	{COUNTRY_CODE_GLOBAL_DOMAIN, "JP"},
++	{COUNTRY_CODE_WORLD_WIDE_13, "EC"},
++	{COUNTRY_CODE_TELEC_NETGEAR, "EC"},
++};
++
++/*
++ *Only these channels all allow active
++ *scan on all world regulatory domains
++ */
++#define RTL819x_2GHZ_CH01_11	\
++	REG_RULE(2412-10, 2462+10, 40, 0, 20, 0)
++
++/*
++ *We enable active scan on these a case
++ *by case basis by regulatory domain
++ */
++#define RTL819x_2GHZ_CH12_13	\
++	REG_RULE(2467-10, 2472+10, 40, 0, 20,\
++	NL80211_RRF_PASSIVE_SCAN)
++
++#define RTL819x_2GHZ_CH14	\
++	REG_RULE(2484-10, 2484+10, 40, 0, 20, \
++	NL80211_RRF_PASSIVE_SCAN | \
++	NL80211_RRF_NO_OFDM)
++
++static const struct ieee80211_regdomain rtl_regdom_11 = {
++	.n_reg_rules = 1,
++	.alpha2 = "99",
++	.reg_rules = {
++		      RTL819x_2GHZ_CH01_11,
++	}
++};
++
++static const struct ieee80211_regdomain rtl_regdom_global = {
++	.n_reg_rules = 3,
++	.alpha2 = "99",
++	.reg_rules = {
++		      RTL819x_2GHZ_CH01_11,
++		      RTL819x_2GHZ_CH12_13,
++		      RTL819x_2GHZ_CH14,
++	}
++};
++
++static const struct ieee80211_regdomain rtl_regdom_world = {
++	.n_reg_rules = 2,
++	.alpha2 = "99",
++	.reg_rules = {
++		      RTL819x_2GHZ_CH01_11,
++		      RTL819x_2GHZ_CH12_13,
++	}
++};
++
++static bool _rtl_is_radar_freq(u16 center_freq)
++{
++	return (center_freq >= 5260 && center_freq <= 5700);
++}
++
++static void _rtl_reg_apply_beaconing_flags(struct wiphy *wiphy,
++					   enum nl80211_reg_initiator initiator)
++{
++	enum ieee80211_band band;
++	struct ieee80211_supported_band *sband;
++	const struct ieee80211_reg_rule *reg_rule;
++	struct ieee80211_channel *ch;
++	unsigned int i;
++	u32 bandwidth = 0;
++	int r;
++
++	for (band = 0; band < IEEE80211_NUM_BANDS; band++) {
++
++		if (!wiphy->bands[band])
++			continue;
++
++		sband = wiphy->bands[band];
++
++		for (i = 0; i < sband->n_channels; i++) {
++			ch = &sband->channels[i];
++			if (_rtl_is_radar_freq(ch->center_freq) ||
++			    (ch->flags & IEEE80211_CHAN_RADAR))
++				continue;
++			if (initiator == NL80211_REGDOM_SET_BY_COUNTRY_IE) {
++				r = freq_reg_info(wiphy, ch->center_freq,
++						  bandwidth, &reg_rule);
++				if (r)
++					continue;
++
++				/*
++				 *If 11d had a rule for this channel ensure
++				 *we enable adhoc/beaconing if it allows us to
++				 *use it. Note that we would have disabled it
++				 *by applying our static world regdomain by
++				 *default during init, prior to calling our
++				 *regulatory_hint().
++				 */
++
++				if (!(reg_rule->flags & NL80211_RRF_NO_IBSS))
++					ch->flags &= ~IEEE80211_CHAN_NO_IBSS;
++				if (!(reg_rule->
++				     flags & NL80211_RRF_PASSIVE_SCAN))
++					ch->flags &=
++					    ~IEEE80211_CHAN_PASSIVE_SCAN;
++			} else {
++				if (ch->beacon_found)
++					ch->flags &= ~(IEEE80211_CHAN_NO_IBSS |
++						  IEEE80211_CHAN_PASSIVE_SCAN);
++			}
++		}
++	}
++}
++
++/* Allows active scan scan on Ch 12 and 13 */
++static void _rtl_reg_apply_active_scan_flags(struct wiphy *wiphy,
++					     enum nl80211_reg_initiator
++					     initiator)
++{
++	struct ieee80211_supported_band *sband;
++	struct ieee80211_channel *ch;
++	const struct ieee80211_reg_rule *reg_rule;
++	u32 bandwidth = 0;
++	int r;
++
++	sband = wiphy->bands[IEEE80211_BAND_2GHZ];
++
++	/*
++	 *If no country IE has been received always enable active scan
++	 *on these channels. This is only done for specific regulatory SKUs
++	 */
++	if (initiator != NL80211_REGDOM_SET_BY_COUNTRY_IE) {
++		ch = &sband->channels[11];	/* CH 12 */
++		if (ch->flags & IEEE80211_CHAN_PASSIVE_SCAN)
++			ch->flags &= ~IEEE80211_CHAN_PASSIVE_SCAN;
++		ch = &sband->channels[12];	/* CH 13 */
++		if (ch->flags & IEEE80211_CHAN_PASSIVE_SCAN)
++			ch->flags &= ~IEEE80211_CHAN_PASSIVE_SCAN;
++		return;
++	}
++
++	/*
++	 *If a country IE has been recieved check its rule for this
++	 *channel first before enabling active scan. The passive scan
++	 *would have been enforced by the initial processing of our
++	 *custom regulatory domain.
++	 */
++
++	ch = &sband->channels[11];	/* CH 12 */
++	r = freq_reg_info(wiphy, ch->center_freq, bandwidth, &reg_rule);
++	if (!r) {
++		if (!(reg_rule->flags & NL80211_RRF_PASSIVE_SCAN))
++			if (ch->flags & IEEE80211_CHAN_PASSIVE_SCAN)
++				ch->flags &= ~IEEE80211_CHAN_PASSIVE_SCAN;
++	}
++
++	ch = &sband->channels[12];	/* CH 13 */
++	r = freq_reg_info(wiphy, ch->center_freq, bandwidth, &reg_rule);
++	if (!r) {
++		if (!(reg_rule->flags & NL80211_RRF_PASSIVE_SCAN))
++			if (ch->flags & IEEE80211_CHAN_PASSIVE_SCAN)
++				ch->flags &= ~IEEE80211_CHAN_PASSIVE_SCAN;
++	}
++}
++
++/*
++ *Always apply Radar/DFS rules on
++ *freq range 5260 MHz - 5700 MHz
++ */
++static void _rtl_reg_apply_radar_flags(struct wiphy *wiphy)
++{
++	struct ieee80211_supported_band *sband;
++	struct ieee80211_channel *ch;
++	unsigned int i;
++
++	if (!wiphy->bands[IEEE80211_BAND_5GHZ])
++		return;
++
++	sband = wiphy->bands[IEEE80211_BAND_5GHZ];
++
++	for (i = 0; i < sband->n_channels; i++) {
++		ch = &sband->channels[i];
++		if (!_rtl_is_radar_freq(ch->center_freq))
++			continue;
++
++		/*
++		 *We always enable radar detection/DFS on this
++		 *frequency range. Additionally we also apply on
++		 *this frequency range:
++		 *- If STA mode does not yet have DFS supports disable
++		 * active scanning
++		 *- If adhoc mode does not support DFS yet then disable
++		 * adhoc in the frequency.
++		 *- If AP mode does not yet support radar detection/DFS
++		 *do not allow AP mode
++		 */
++		if (!(ch->flags & IEEE80211_CHAN_DISABLED))
++			ch->flags |= IEEE80211_CHAN_RADAR |
++			    IEEE80211_CHAN_NO_IBSS |
++			    IEEE80211_CHAN_PASSIVE_SCAN;
++	}
++}
++
++static void _rtl_reg_apply_world_flags(struct wiphy *wiphy,
++				       enum nl80211_reg_initiator initiator,
++				       struct rtl_regulatory *reg)
++{
++	_rtl_reg_apply_beaconing_flags(wiphy, initiator);
++	_rtl_reg_apply_active_scan_flags(wiphy, initiator);
++	return;
++}
++
++static void _rtl_dump_channel_map(struct wiphy *wiphy)
++{
++	enum ieee80211_band band;
++	struct ieee80211_supported_band *sband;
++	struct ieee80211_channel *ch;
++	unsigned int i;
++
++	for (band = 0; band < IEEE80211_NUM_BANDS; band++) {
++		if (!wiphy->bands[band])
++			continue;
++		sband = wiphy->bands[band];
++		for (i = 0; i < sband->n_channels; i++)
++			ch = &sband->channels[i];
++	}
++}
++
++static int _rtl_reg_notifier_apply(struct wiphy *wiphy,
++				   struct regulatory_request *request,
++				   struct rtl_regulatory *reg)
++{
++	/* We always apply this */
++	_rtl_reg_apply_radar_flags(wiphy);
++
++	switch (request->initiator) {
++	case NL80211_REGDOM_SET_BY_DRIVER:
++	case NL80211_REGDOM_SET_BY_CORE:
++	case NL80211_REGDOM_SET_BY_USER:
++		break;
++	case NL80211_REGDOM_SET_BY_COUNTRY_IE:
++		_rtl_reg_apply_world_flags(wiphy, request->initiator, reg);
++		break;
++	}
++
++	_rtl_dump_channel_map(wiphy);
++
++	return 0;
++}
++
++static const struct ieee80211_regdomain *_rtl_regdomain_select(
++					       struct rtl_regulatory *reg)
++{
++	switch (reg->country_code) {
++	case COUNTRY_CODE_FCC:
++	case COUNTRY_CODE_IC:
++		return &rtl_regdom_11;
++	case COUNTRY_CODE_ETSI:
++	case COUNTRY_CODE_SPAIN:
++	case COUNTRY_CODE_FRANCE:
++	case COUNTRY_CODE_ISRAEL:
++	case COUNTRY_CODE_TELEC_NETGEAR:
++		return &rtl_regdom_world;
++	case COUNTRY_CODE_MKK:
++	case COUNTRY_CODE_MKK1:
++	case COUNTRY_CODE_TELEC:
++	case COUNTRY_CODE_MIC:
++		return &rtl_regdom_global;
++	case COUNTRY_CODE_GLOBAL_DOMAIN:
++		return &rtl_regdom_global;
++	case COUNTRY_CODE_WORLD_WIDE_13:
++		return &rtl_regdom_world;
++	default:
++		return &rtl_regdom_world;
++	}
++}
++
++static int _rtl_regd_init_wiphy(struct rtl_regulatory *reg,
++				struct wiphy *wiphy,
++				int (*reg_notifier) (struct wiphy *wiphy,
++						     struct regulatory_request *
++						     request))
++{
++	const struct ieee80211_regdomain *regd;
++
++	wiphy->reg_notifier = reg_notifier;
++	wiphy->flags |= WIPHY_FLAG_CUSTOM_REGULATORY;
++	wiphy->flags &= ~WIPHY_FLAG_STRICT_REGULATORY;
++	wiphy->flags &= ~WIPHY_FLAG_DISABLE_BEACON_HINTS;
++	regd = _rtl_regdomain_select(reg);
++	wiphy_apply_custom_regulatory(wiphy, regd);
++	_rtl_reg_apply_radar_flags(wiphy);
++	_rtl_reg_apply_world_flags(wiphy, NL80211_REGDOM_SET_BY_DRIVER, reg);
++	return 0;
++}
++
++static struct country_code_to_enum_rd *_rtl_regd_find_country(u16 countrycode)
++{
++	int i;
++
++	for (i = 0; i < ARRAY_SIZE(allCountries); i++) {
++		if (allCountries[i].countrycode == countrycode)
++			return &allCountries[i];
++	}
++	return NULL;
++}
++
++int rtl_regd_init(struct ieee80211_hw *hw,
++		  int (*reg_notifier) (struct wiphy *wiphy,
++				       struct regulatory_request *request))
++{
++	struct rtl_priv *rtlpriv = rtl_priv(hw);
++	struct wiphy *wiphy = hw->wiphy;
++	struct country_code_to_enum_rd *country = NULL;
++
++	if (wiphy == NULL || &rtlpriv->regd == NULL)
++		return -EINVAL;
++
++	/* force the channel plan to world wide 13 */
++	rtlpriv->regd.country_code = COUNTRY_CODE_WORLD_WIDE_13;
++
++	RT_TRACE(rtlpriv, COMP_REGD, DBG_TRACE,
++		 (KERN_DEBUG "rtl: EEPROM regdomain: 0x%0x\n",
++		  rtlpriv->regd.country_code));
++
++	if (rtlpriv->regd.country_code >= COUNTRY_CODE_MAX) {
++		RT_TRACE(rtlpriv, COMP_REGD, DBG_DMESG,
++			 (KERN_DEBUG "rtl: EEPROM indicates invalid contry code"
++			  "world wide 13 should be used\n"));
++
++		rtlpriv->regd.country_code = COUNTRY_CODE_WORLD_WIDE_13;
++	}
++
++	country = _rtl_regd_find_country(rtlpriv->regd.country_code);
++
++	if (country) {
++		rtlpriv->regd.alpha2[0] = country->isoName[0];
++		rtlpriv->regd.alpha2[1] = country->isoName[1];
++	} else {
++		rtlpriv->regd.alpha2[0] = '0';
++		rtlpriv->regd.alpha2[1] = '0';
++	}
++
++	RT_TRACE(rtlpriv, COMP_REGD, DBG_TRACE,
++		 (KERN_DEBUG "rtl: Country alpha2 being used: %c%c\n",
++		  rtlpriv->regd.alpha2[0], rtlpriv->regd.alpha2[1]));
++
++	_rtl_regd_init_wiphy(&rtlpriv->regd, wiphy, reg_notifier);
++
++	return 0;
++}
++
++int rtl_reg_notifier(struct wiphy *wiphy, struct regulatory_request *request)
++{
++	struct ieee80211_hw *hw = wiphy_to_ieee80211_hw(wiphy);
++	struct rtl_priv *rtlpriv = rtl_priv(hw);
++
++	RT_TRACE(rtlpriv, COMP_REGD, DBG_LOUD, ("\n"));
++
++	return _rtl_reg_notifier_apply(wiphy, request, &rtlpriv->regd);
++}
+diff --git a/drivers/net/wireless/rtlwifi/regd.h b/drivers/net/wireless/rtlwifi/regd.h
+new file mode 100644
+index 0000000..4cdbc4a
+--- /dev/null
++++ b/drivers/net/wireless/rtlwifi/regd.h
+@@ -0,0 +1,61 @@
++/******************************************************************************
++ *
++ * Copyright(c) 2009-2010  Realtek Corporation.
++ *
++ * This program is free software; you can redistribute it and/or modify it
++ * under the terms of version 2 of the GNU General Public License as
++ * published by the Free Software Foundation.
++ *
++ * This program is distributed in the hope that it will be useful, but WITHOUT
++ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
++ * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
++ * more details.
++ *
++ * You should have received a copy of the GNU General Public License along with
++ * this program; if not, write to the Free Software Foundation, Inc.,
++ * 51 Franklin Street, Fifth Floor, Boston, MA 02110, USA
++ *
++ * The full GNU General Public License is included in this distribution in the
++ * file called LICENSE.
++ *
++ * Contact Information:
++ * wlanfae <wlanfae@realtek.com>
++ * Realtek Corporation, No. 2, Innovation Road II, Hsinchu Science Park,
++ * Hsinchu 300, Taiwan.
++ *
++ * Larry Finger <Larry.Finger@lwfinger.net>
++ *
++ *****************************************************************************/
++
++#ifndef __RTL_REGD_H__
++#define __RTL_REGD_H__
++
++struct country_code_to_enum_rd {
++	u16 countrycode;
++	const char *isoName;
++};
++
++enum country_code_type_t {
++	COUNTRY_CODE_FCC = 0,
++	COUNTRY_CODE_IC = 1,
++	COUNTRY_CODE_ETSI = 2,
++	COUNTRY_CODE_SPAIN = 3,
++	COUNTRY_CODE_FRANCE = 4,
++	COUNTRY_CODE_MKK = 5,
++	COUNTRY_CODE_MKK1 = 6,
++	COUNTRY_CODE_ISRAEL = 7,
++	COUNTRY_CODE_TELEC = 8,
++	COUNTRY_CODE_MIC = 9,
++	COUNTRY_CODE_GLOBAL_DOMAIN = 10,
++	COUNTRY_CODE_WORLD_WIDE_13 = 11,
++	COUNTRY_CODE_TELEC_NETGEAR = 12,
++
++	/*add new channel plan above this line */
++	COUNTRY_CODE_MAX
++};
++
++int rtl_regd_init(struct ieee80211_hw *hw,
++		  int (*reg_notifier) (struct wiphy *wiphy,
++				       struct regulatory_request *request));
++int rtl_reg_notifier(struct wiphy *wiphy, struct regulatory_request *request);
++#endif
+-- 
+1.7.1
 
