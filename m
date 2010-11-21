@@ -1,94 +1,129 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iw0-f174.google.com ([209.85.214.174]:59334 "EHLO
-	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750707Ab0KXF0X convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 24 Nov 2010 00:26:23 -0500
-MIME-Version: 1.0
-In-Reply-To: <1290575460.18917.3.camel@dcbw.foobar.com>
-References: <AANLkTim0=ds3EhQOEfHdrKt2dSnEqUgf5CLOPHNyW=jE@mail.gmail.com>
- <1290569516.3074.41.camel@dcbw.foobar.com> <AANLkTi=ioGgpAQ-rx_abCHcOmOezXwJFfbKWc7=tGAJ5@mail.gmail.com>
- <1290571986.3074.64.camel@dcbw.foobar.com> <AANLkTi=0ocvsR185Qib3VoT43ziTUa_3oRDnmU65pYjv@mail.gmail.com>
- <1290575460.18917.3.camel@dcbw.foobar.com>
-From: Julian Calaby <julian.calaby@gmail.com>
-Date: Wed, 24 Nov 2010 16:26:02 +1100
-Message-ID: <AANLkTiks65oAvVEu0Df4yeHNJm=cVnSfFeo=enxt-gpn@mail.gmail.com>
-Subject: Re: Re-distributable 88w8335 Firmware?
-To: Dan Williams <dcbw@redhat.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	David.Woodhouse@intel.com, Greg KH <greg@kroah.com>,
-	linux-kernel@vger.kernel.org,
-	Lennert Buytenhek <buytenh@wantstofly.org>,
-	Holger Schurig <holgerschurig@googlemail.com>,
-	Markus Becker <mab@comnets.uni-bremen.de>,
-	andreamrl@tiscali.it, Denis Kirjanov <kirjanov@gmail.com>,
-	dwmw2@infradead.org
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from mail.perches.com ([173.55.12.10]:1744 "EHLO mail.perches.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757190Ab0KUCkm (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 20 Nov 2010 21:40:42 -0500
+From: Joe Perches <joe@perches.com>
+To: Stefano Brivio <stefano.brivio@polimi.it>,
+	Reinette Chatre <reinette.chatre@intel.com>,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>,
+	Intel Linux Wireless <ilw@linux.intel.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: [PATCH 56/62] iwlwifi: Use static const
+Date: Sat, 20 Nov 2010 18:38:57 -0800
+Message-Id: <2773a20a26f4e326f0849e8ae8fb4f347d6a6ecb.1290305776.git.joe@perches.com>
+In-Reply-To: <cover.1290305773.git.joe@perches.com>
+References: <cover.1290305773.git.joe@perches.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Nov 24, 2010 at 16:10, Dan Williams <dcbw@redhat.com> wrote:
-> On Wed, 2010-11-24 at 15:48 +1100, Julian Calaby wrote:
->> On Wed, Nov 24, 2010 at 15:13, Dan Williams <dcbw@redhat.com> wrote:
->> > Malo supports the PCMCIA/CF variant of the 8385; not a PCI variant
->> > AFAICT.  I know of no PCI variant for the 8385, just CF, SDIO, and GSPI.
->> > But I find it curious that malo supports 8335+8385, given that the
->> > firmware interface of the 8385 and the 8335 are so different.  Unless
->> > they have special firmware, the 8385 is a fullmac device, while the 8335
->> > is a softmac device.  Enough differences exist that I'd expect them to
->> > be driven by separate drivers, otherwise the code would be quite ugly.
->> > Which is why we didn't try to shoehorn the 8335 or TopDog stuff into
->> > libertas.
->>
->> You clearly know a hell of a lot more about the ins and outs of Marvel
->> chipsets that I do. =)
->
-> Eh, *some* of the chipsets :)  Others (Lennert) know a lot more about
-> later versions than I do.  But I never know everything or even enough of
-> anything :)
+Using static const generally increases object text and decreases data size.
+It also generally decreases overall object size.
 
-I know exactly how you feel. =)
+   text	   data	    bss	    dec	    hex	filename
+  48644	     57	  12120	  60821	   ed95	drivers/net/wireless/b43/phy_n.o.new
+  48661	     57	  12120	  60838	   eda6	drivers/net/wireless/b43/phy_n.o.old
+  37906	     86	   7904	  45896	   b348	drivers/net/wireless/iwlwifi/iwl-agn-lib.o.new
+  37937	     86	   7904	  45927	   b367	drivers/net/wireless/iwlwifi/iwl-agn-lib.o.old
+  37781	    523	   6752	  45056	   b000	drivers/net/wireless/iwlwifi/iwl-3945.o.new
+  37781	    523	   6752	  45056	   b000	drivers/net/wireless/iwlwifi/iwl-3945.o.old
 
->> I stand corrected.
->>
->> So, to amend my previous request: We're after firmware for the softmac
->> 88w8335 chipset *only*.
->>
->> Though it may be nicer if Marvell were to bless Malo's firmware
->> package (linked above) as this contains firmware for the PCI 88w8335,
->> USB 88w8338 and a file which claims to be for the PCMCIA/CF 88w8385.
->
-> Yeah, though honestly I'd rather have the duplex firmware from MSSII for
-> the 8335, since it can do AP mode too.  That does leave the 8338 (USB?)
+Changed b43_nphy_write_clip_detection to take a const u16 *
 
-Me too - and it'd mean that we don't have to do AP-mode firmware
-loading tricks like in mw8k. But if we can't get that then some
-firmware is better than none.
+Signed-off-by: Joe Perches <joe@perches.com>
+---
+ drivers/net/wireless/b43/phy_n.c           |    9 +++++----
+ drivers/net/wireless/iwlwifi/iwl-3945.c    |    2 +-
+ drivers/net/wireless/iwlwifi/iwl-agn-lib.c |    6 +++---
+ 3 files changed, 9 insertions(+), 8 deletions(-)
 
-> of course but we can probably get clarification on that too.  As with
-> the 8335, I only have access to a 8335 Windows driver, but if we had a
-> firmware extractor tool, I believe the Marvell Extranet firmware license
-> covers embedded firmware from Windows .sys files too.
-
-I think I may have a simple firmware extractor at home that I pulled
-from *somewhere* when I was working on this last time. We can see if
-it does anything with those files. I believe I have at least two
-different Windows drivers at home - IIRC, one of them is *just* the
-files needed for this extractor.
-
-> And I think I might actually have a usb8338 too somewhere...
-
-Nice!
-
-Out of curiosity, what brand and model number is it? I might see if I
-can obtain one for testing / development or whatever. (Not that I
-really have time to write a driver, but I can test at the very least)
-
-Thanks,
-
+diff --git a/drivers/net/wireless/b43/phy_n.c b/drivers/net/wireless/b43/phy_n.c
+index 6facb8a..afbfdf0 100644
+--- a/drivers/net/wireless/b43/phy_n.c
++++ b/drivers/net/wireless/b43/phy_n.c
+@@ -655,7 +655,8 @@ static void b43_nphy_tx_iq_workaround(struct b43_wldev *dev)
+ }
+ 
+ /* http://bcm-v4.sipsolutions.net/802.11/PHY/N/clip-detection */
+-static void b43_nphy_write_clip_detection(struct b43_wldev *dev, u16 *clip_st)
++static void b43_nphy_write_clip_detection(struct b43_wldev *dev,
++					  const u16 *clip_st)
+ {
+ 	b43_phy_write(dev, B43_NPHY_C1_CLIP1THRES, clip_st[0]);
+ 	b43_phy_write(dev, B43_NPHY_C2_CLIP1THRES, clip_st[1]);
+@@ -731,7 +732,7 @@ static void b43_nphy_stay_in_carrier_search(struct b43_wldev *dev, bool enable)
+ 	struct b43_phy_n *nphy = phy->n;
+ 
+ 	if (enable) {
+-		u16 clip[] = { 0xFFFF, 0xFFFF };
++		static const u16 clip[] = { 0xFFFF, 0xFFFF };
+ 		if (nphy->deaf_count++ == 0) {
+ 			nphy->classifier_state = b43_nphy_classifier(dev, 0, 0);
+ 			b43_nphy_classifier(dev, 0x7, 0);
+@@ -843,7 +844,7 @@ static void b43_nphy_adjust_lna_gain_table(struct b43_wldev *dev)
+ 	u16 data[4];
+ 	s16 gain[2];
+ 	u16 minmax[2];
+-	u16 lna_gain[4] = { -2, 10, 19, 25 };
++	static const u16 lna_gain[4] = { -2, 10, 19, 25 };
+ 
+ 	if (nphy->hang_avoid)
+ 		b43_nphy_stay_in_carrier_search(dev, 1);
+@@ -2299,7 +2300,7 @@ static void b43_nphy_int_pa_set_tx_dig_filters(struct b43_wldev *dev)
+ {
+ 	int i, j;
+ 	/* B43_NPHY_TXF_20CO_S0A1, B43_NPHY_TXF_40CO_S0A1, unknown */
+-	u16 offset[] = { 0x186, 0x195, 0x2C5 };
++	static const u16 offset[] = { 0x186, 0x195, 0x2C5 };
+ 
+ 	for (i = 0; i < 3; i++)
+ 		for (j = 0; j < 15; j++)
+diff --git a/drivers/net/wireless/iwlwifi/iwl-3945.c b/drivers/net/wireless/iwlwifi/iwl-3945.c
+index ebac04b..013c5a9 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-3945.c
++++ b/drivers/net/wireless/iwlwifi/iwl-3945.c
+@@ -116,7 +116,7 @@ void iwl3945_disable_events(struct iwl_priv *priv)
+ 	u32 base;		/* SRAM address of event log header */
+ 	u32 disable_ptr;	/* SRAM address of event-disable bitmap array */
+ 	u32 array_size;		/* # of u32 entries in array */
+-	u32 evt_disable[IWL_EVT_DISABLE_SIZE] = {
++	static const u32 evt_disable[IWL_EVT_DISABLE_SIZE] = {
+ 		0x00000000,	/*   31 -    0  Event id numbers */
+ 		0x00000000,	/*   63 -   32 */
+ 		0x00000000,	/*   95 -   64 */
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-lib.c b/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
+index ca3530c..75e808f 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
+@@ -2001,7 +2001,7 @@ static void iwlagn_set_kill_ack_msk(struct iwl_priv *priv,
+ 				     struct iwl_bt_uart_msg *uart_msg)
+ {
+ 	u8 kill_ack_msk;
+-	__le32 bt_kill_ack_msg[2] = {
++	static const __le32 bt_kill_ack_msg[2] = {
+ 			cpu_to_le32(0xFFFFFFF), cpu_to_le32(0xFFFFFC00) };
+ 
+ 	kill_ack_msk = (((BT_UART_MSG_FRAME3A2DP_MSK |
+@@ -2287,7 +2287,7 @@ static const char *get_csr_string(int cmd)
+ void iwl_dump_csr(struct iwl_priv *priv)
+ {
+ 	int i;
+-	u32 csr_tbl[] = {
++	static const u32 csr_tbl[] = {
+ 		CSR_HW_IF_CONFIG_REG,
+ 		CSR_INT_COALESCING,
+ 		CSR_INT,
+@@ -2346,7 +2346,7 @@ int iwl_dump_fh(struct iwl_priv *priv, char **buf, bool display)
+ 	int pos = 0;
+ 	size_t bufsz = 0;
+ #endif
+-	u32 fh_tbl[] = {
++	static const u32 fh_tbl[] = {
+ 		FH_RSCSR_CHNL0_STTS_WPTR_REG,
+ 		FH_RSCSR_CHNL0_RBDCB_BASE_REG,
+ 		FH_RSCSR_CHNL0_WPTR,
 -- 
-Julian Calaby
+1.7.3.2.245.g03276.dirty
 
-Email: julian.calaby@gmail.com
-Profile: http://www.google.com/profiles/julian.calaby/
-.Plan: http://sites.google.com/site/juliancalaby/
