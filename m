@@ -1,74 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f46.google.com ([209.85.161.46]:32881 "EHLO
-	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752580Ab0KEJ45 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 5 Nov 2010 05:56:57 -0400
-Received: by fxm16 with SMTP id 16so2175365fxm.19
-        for <linux-wireless@vger.kernel.org>; Fri, 05 Nov 2010 02:56:56 -0700 (PDT)
-From: Helmut Schaa <helmut.schaa@googlemail.com>
-To: Ivo Van Doorn <ivdoorn@gmail.com>
-Subject: Re: [PATCH 03/13] rt2x00: Wait up to one second on rt2800 for WPDMA to be ready
-Date: Fri, 5 Nov 2010 10:56:03 +0100
-Cc: linux-wireless@vger.kernel.org
-References: <201011042037.00178.IvDoorn@gmail.com> <201011051044.37167.helmut.schaa@googlemail.com> <AANLkTinDwi_77iVS-bOTSX_4zs76nyttoEsdfpV0_F2g@mail.gmail.com>
-In-Reply-To: <AANLkTinDwi_77iVS-bOTSX_4zs76nyttoEsdfpV0_F2g@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="us-ascii"
-Message-Id: <201011051056.03700.helmut.schaa@googlemail.com>
+Received: from mail.perches.com ([173.55.12.10]:1753 "EHLO mail.perches.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757210Ab0KUCkq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 20 Nov 2010 21:40:46 -0500
+From: Joe Perches <joe@perches.com>
+To: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>,
+	"John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: [PATCH 59/62] rndis_wlan: Use static const
+Date: Sat, 20 Nov 2010 18:39:00 -0800
+Message-Id: <0b953a3dc6bb044f9aee4033caeb1693ac0796fc.1290305776.git.joe@perches.com>
+In-Reply-To: <cover.1290305773.git.joe@perches.com>
+References: <cover.1290305773.git.joe@perches.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Am Freitag 05 November 2010 schrieb Ivo Van Doorn:
-> Hi,
-> 
-> On Fri, Nov 5, 2010 at 10:44 AM, Helmut Schaa
-> <helmut.schaa@googlemail.com> wrote:
-> > Hi,
-> >
-> > Am Donnerstag 04 November 2010 schrieb Ivo van Doorn:
-> >> From: Helmut Schaa <helmut.schaa@googlemail.com>
-> >>
-> >> At least some devices need such a long time to inititalize WPDMA. This
-> >> only increases the maximum wait time and shouldn't affect devices that
-> >> have been working before.
-> >>
-> >> Reported-by: Joshua Smith <jesmith@kaon.com>
-> >> Signed-off-by: Helmut Schaa <helmut.schaa@googlemail.com>
-> >> Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
-> >> ---
-> >
-> > Ivo, the patch context looks different then in the version I've send to you.
-> >
-> > The
-> >        for (i = 0; i < REGISTER_BUSY_COUNT; i++) {
-> > should be
-> >        for (i = 0; i < 100; i++) {
-> >
-> > Otherwise we don't wait up to one second as in the comment but just 50ms :P
-> >
-> > However, that change was part of a previous patch that was already merged into
-> > the rt2x00 git tree. Seems like that change got lost during the merge ...
-> 
-> I'll try to find the patch which changed the REGISTER_BUSY_COUNT behavior.
+Using static const generally increases object text and decreases data size.
+It also generally decreases overall object size.
 
-I'm not sure but I guess I haven't sent that one as separate [PATCH] but it
-was inlined in the mail traffic with Joshua ("Question about starting up an
-AP").
+   text	   data	    bss	    dec	    hex	filename
+  41757	   2205	   9896	  53858	   d262	drivers/net/wireless/rndis_wlan.o.old
+  41653	   2205	   9880	  53738	   d1ea	drivers/net/wireless/rndis_wlan.o.new
 
-> I'm almost worried that more patches have somehow gotten lost (I already noticed
-> that there were a bunch of patches which were send upstream had disappeared
-> from rt2x00.git, but those fortunately reappeared during the last
-> update from wireless-testing).
+Changed functions rndis_set_oid and set_bssid to take const *'s.
 
-I haven't noticed any other missing patches till now.
+Signed-off-by: Joe Perches <joe@perches.com>
+---
+ drivers/net/wireless/rndis_wlan.c |    9 ++++++---
+ 1 files changed, 6 insertions(+), 3 deletions(-)
 
-> Ivo
-> 
-> Ivo
+diff --git a/drivers/net/wireless/rndis_wlan.c b/drivers/net/wireless/rndis_wlan.c
+index ee08bca..19f3d56 100644
+--- a/drivers/net/wireless/rndis_wlan.c
++++ b/drivers/net/wireless/rndis_wlan.c
+@@ -817,7 +817,8 @@ exit_unlock:
+ 	return ret;
+ }
+ 
+-static int rndis_set_oid(struct usbnet *dev, __le32 oid, void *data, int len)
++static int rndis_set_oid(struct usbnet *dev, __le32 oid, const void *data,
++			 int len)
+ {
+ 	struct rndis_wlan_private *priv = get_rndis_wlan_priv(dev);
+ 	union {
+@@ -1033,7 +1034,7 @@ static int set_essid(struct usbnet *usbdev, struct ndis_80211_ssid *ssid)
+ 	return ret;
+ }
+ 
+-static int set_bssid(struct usbnet *usbdev, u8 bssid[ETH_ALEN])
++static int set_bssid(struct usbnet *usbdev, const u8 *bssid)
+ {
+ 	int ret;
+ 
+@@ -1049,7 +1050,9 @@ static int set_bssid(struct usbnet *usbdev, u8 bssid[ETH_ALEN])
+ 
+ static int clear_bssid(struct usbnet *usbdev)
+ {
+-	u8 broadcast_mac[ETH_ALEN] = {0xff, 0xff, 0xff, 0xff, 0xff, 0xff};
++	static const u8 broadcast_mac[ETH_ALEN] = {
++		0xff, 0xff, 0xff, 0xff, 0xff, 0xff
++	};
+ 
+ 	return set_bssid(usbdev, broadcast_mac);
+ }
+-- 
+1.7.3.2.245.g03276.dirty
 
-So, you finally decided to clone yourself?
-
-Thanks,
-Helmut
