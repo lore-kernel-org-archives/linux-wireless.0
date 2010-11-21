@@ -1,66 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.sysgo.com ([195.145.229.155]:42412 "EHLO mail.sysgo.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752035Ab0KZIb1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 26 Nov 2010 03:31:27 -0500
-Date: Fri, 26 Nov 2010 09:31:25 +0100
-From: Pavel Machek <pma@sysgo.com>
-To: Larry Finger <Larry.Finger@lwfinger.net>,
-	ath9k-devel@venema.h4ckr.net
-Cc: kernel list <linux-kernel@vger.kernel.org>,
-	chunkeey@googlemail.com, linux-wireless@vger.kernel.org,
-	rudolf.marek@sysgo.com, cko@sysgo.com, mfa@sysgo.com, anl@sysgo.com
-Subject: ath9k_htc vs. powerpc (was Re: working usb wifi card, that is
- still possible to buy)
-Message-ID: <20101126083125.GA28982@pma.sysgo.com>
-References: <20101103092431.GA21138@pma.sysgo.com>
- <20101124081616.GA30595@pma.sysgo.com>
- <20101124131320.GA2611@pma.sysgo.com>
- <4CED33E0.5040000@lwfinger.net>
+Received: from mail-iw0-f174.google.com ([209.85.214.174]:46925 "EHLO
+	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754297Ab0KUVuv convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 21 Nov 2010 16:50:51 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <4CED33E0.5040000@lwfinger.net>
+In-Reply-To: <AANLkTinEm1mLAtPZdEp2sHRfKPeV6qYP8f9Dbbr92_JD@mail.gmail.com>
+References: <AANLkTim4jVaZxYp8nSgJyy28iwxcxbPeNUzxTfoHAX4S@mail.gmail.com>
+ <F46C52ED-8DB8-4347-957D-B9D84406D53F@mit.edu> <AANLkTinyafwe9MyXhSSe5vxEKnTUeLV0AZDWY_uXsu8f@mail.gmail.com>
+ <20101121130236.GE23423@thunk.org> <20101121172906.GD3703@kroah.com>
+ <AANLkTik6MQjYTCQ4wtyRpOGb94uyUTA+juvX-8UsP95J@mail.gmail.com>
+ <20101121203124.1ba8212e@lxorguk.ukuu.org.uk> <20101121214407.GH23423@thunk.org>
+ <AANLkTinEm1mLAtPZdEp2sHRfKPeV6qYP8f9Dbbr92_JD@mail.gmail.com>
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Date: Sun, 21 Nov 2010 13:50:30 -0800
+Message-ID: <AANLkTikVdm5bnXhGeg9rYsacWJsf_2s6A+b3iKJQeisD@mail.gmail.com>
+Subject: Re: Challenges with doing hardware bring up with Linux first
+To: =?UTF-8?Q?G=C3=A1bor_Stefanik?= <netrolller.3d@gmail.com>
+Cc: "Ted Ts'o" <tytso@mit.edu>, Alan Cox <alan@lxorguk.ukuu.org.uk>,
+	Greg KH <greg@kroah.com>, linux-kernel@vger.kernel.org,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	David Miller <davem@davemloft.net>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Stephen Hemminger <shemminger@vyatta.com>,
+	"Perez-Gonzalez, Inaky" <inaky.perez-gonzalez@intel.com>,
+	Charles Marker <Charles.Marker@atheros.com>,
+	Jouni Malinen <Jouni.Malinen@atheros.com>,
+	Kevin Hayes <kevin@atheros.com>,
+	Zhifeng Cai <zhifeng.cai@atheros.com>,
+	Don Breslin <Don.Breslin@atheros.com>,
+	Doug Dahlby <Doug.Dahlby@atheros.com>,
+	Julia Lawall <julia@diku.dk>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi!
+2010/11/21 Gábor Stefanik <netrolller.3d@gmail.com>:
+> On Sun, Nov 21, 2010 at 10:44 PM, Ted Ts'o <tytso@mit.edu> wrote:
+>> On Sun, Nov 21, 2010 at 08:31:24PM +0000, Alan Cox wrote:
+>>>
+>>> Which we know in practice they won't. They'll sit on fixes (often
+>>> security fixes) and tweak and add private copies of features. In turn the
+>>> Linux one could then only keep up by adding features itself - which would
+>>> have to be GPL to stop the same abuse continuing.
+>>>
+>>> It's a nice idea but the corporations exist to make money and adding
+>>> proprietary custom stack add-ons is clearly a good move on their part to
+>>> do that.
+>>
+>> Hence my recommendation that if someone is going to do the work to
+>> create a 802.11 layer that has shims that work on multiple operating
+>> systems, it be GPL with explicit exceptions to allow said layer to
+>> work on legacy operating systems like QNX, et. al.  That way it forces
+>> the hardware specific code to be released under the GPL --- if they
+>> want to take advantage of the "write onces, work on multiple operating
+>> systems" feature.
+>>
+>> If someone is going to go through all of this work to make it possible
+>> --- particularly if it's at a company such as Luis's employer, or any
+>> other wifi chipset provider --- why should it allow their competitors
+>> to do closed source drivers?  Better to structure the driver licensing
+>> such that (a) there is benefit for companies to make a Linux driver by
+>> using this common stack, and (b) but in exchange, it forces them to
+>> make a driver which is guaranteed to be usable by Linux by virtual of
+>> the fact that (1) the native interface is Linux's wireless stack, and
+>> (2) the license forces them to GPL their driver.
+>
+> By forcing the driver to be GPL, you automatically exclude Windows
+> from the list of platforms supported by such a cross-OS driver, as the
+> Windows NDIS headers are AFAIK under a GPL-incompatible license, so no
+> GPL driver can be written for Windows.
 
-> > | D-Link DWA-131            | 07d1:3303 | realtek?            |                                          |              
-> 
-> This one should work with driver r8712u in staging in kernel 2.6.37-rcX. I don't
-> have this model for testing, but the DWA-130 is rock solid with that driver.
+I've actually have been told GPL drivers for windows are possible with
+some hard work. I have yet to investigate further on what that "hard
+work" means. But yes, that is a good example.
 
-Thanks... Yes, it works, but staging scares me.
-
-I found card compatible with ath9k_htc driver, that works well on PC,
-and is even listed as supported by atheros. Good.
-
-Unfortunately, it does not work that well on powerpc mpc5200b. (I'm
-using recent wireless-testing tree).
-
-I can do scan just fine, but can not actually asocciate with the
-accesspoint. Nothing too useful in dmesg, only:
-
-Freeing unused kernel memory: 176k init                                         
-warning: `named' uses 32-bit capabilities (legacy support in use)               
-process `named' is using obsolete setsockopt SO_BSDCOMPAT                       
-ieee80211 phy0: device now idle                                                 
-ieee80211 phy0: device no longer idle - scanning                                
-ieee80211 phy0: device now idle                                                 
-ieee80211 phy0: device no longer idle - scanning                                
-wlan0: direct probe to 00:23:f8:5d:76:93 (try 1)                                
-wlan0: direct probe to 00:23:f8:5d:76:93 (try 2)                                
-wlan0: direct probe to 00:23:f8:5d:76:93 (try 3)                                
-wlan0: direct probe to 00:23:f8:5d:76:93 timed out                              
-ieee80211 phy0: device now idle                                                 
--/bin/sh-3.00# 
-
-Any ideas how to get more verbose debugging?
-
-Diffences to the mpc5200b board are:
-
-a) it is PowerPC, thus big-endian board
-
-b) it only has USB1.1 controller.
-
-								Pavel
+  Luis
