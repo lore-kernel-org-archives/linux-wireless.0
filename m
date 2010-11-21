@@ -1,119 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from shadbolt.e.decadent.org.uk ([88.96.1.126]:55450 "EHLO
-	shadbolt.e.decadent.org.uk" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752121Ab0KGRWt convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 7 Nov 2010 12:22:49 -0500
-From: Ben Hutchings <ben@decadent.org.uk>
-To: Greg Kroah-Hartman <gregkh@suse.de>
-Cc: Brett Rudley <brudley@broadcom.com>,
-	Henry Ptasinski <henryp@broadcom.com>,
-	Nohee Ko <noheek@broadcom.com>,
-	Johannes Berg <johannes.berg@intel.com>,
-	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org
-Content-Type: text/plain; charset="UTF-8"
-Date: Sun, 07 Nov 2010 17:22:41 +0000
-Message-ID: <1289150561.2816.75.camel@localhost>
-Mime-Version: 1.0
-Subject: [PATCH 3/5] Staging: Update parameters for cfg80211 key management
- operation
+Received: from mail.perches.com ([173.55.12.10]:1762 "EHLO mail.perches.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757237Ab0KUCks (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 20 Nov 2010 21:40:48 -0500
+From: Joe Perches <joe@perches.com>
+To: Luciano Coelho <luciano.coelho@nokia.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: [PATCH 61/62] wl12xx: Use static const
+Date: Sat, 20 Nov 2010 18:39:02 -0800
+Message-Id: <dd2fadcc20f85cb3da9e11db69353f67cb8ef064.1290305776.git.joe@perches.com>
+In-Reply-To: <cover.1290305773.git.joe@perches.com>
+References: <cover.1290305773.git.joe@perches.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Commit e31b82136d1adc7a599b6e99d3321e5831841f5a ("cfg80211/mac80211:
-allow per-station GTKs") changed the signatures of these operations
-but did not update the staging drivers.
+Using static const generally increases object text and decreases data size.
+It also generally decreases overall object size.
 
-Signed-off-by: Ben Hutchings <ben@decadent.org.uk>
+   text	   data	    bss	    dec	    hex	filename
+  13071	     56	   2880	  16007	   3e87	drivers/net/wireless/wl12xx/wl1271_acx.o.old
+  13071	     56	   2880	  16007	   3e87	drivers/net/wireless/wl12xx/wl1271_acx.o.new
+
+Signed-off-by: Joe Perches <joe@perches.com>
 ---
-Compile-tested only.  This should be 2.6.37 material.
+ drivers/net/wireless/wl12xx/wl1271_acx.c |    4 +++-
+ 1 files changed, 3 insertions(+), 1 deletions(-)
 
-Ben.
-
- drivers/staging/brcm80211/brcmfmac/wl_cfg80211.c |   12 ++++++------
- drivers/staging/wlan-ng/cfg80211.c               |    6 +++---
- 2 files changed, 9 insertions(+), 9 deletions(-)
-
-diff --git a/drivers/staging/brcm80211/brcmfmac/wl_cfg80211.c b/drivers/staging/brcm80211/brcmfmac/wl_cfg80211.c
-index 3f29488..ea08252 100644
---- a/drivers/staging/brcm80211/brcmfmac/wl_cfg80211.c
-+++ b/drivers/staging/brcm80211/brcmfmac/wl_cfg80211.c
-@@ -95,12 +95,12 @@ static s32 wl_cfg80211_config_default_key(struct wiphy *wiphy,
- 					    struct net_device *dev,
- 					    u8 key_idx);
- static s32 wl_cfg80211_add_key(struct wiphy *wiphy, struct net_device *dev,
--				 u8 key_idx, const u8 *mac_addr,
-+				 u8 key_idx, bool pairwise, const u8 *mac_addr,
- 				 struct key_params *params);
- static s32 wl_cfg80211_del_key(struct wiphy *wiphy, struct net_device *dev,
--				 u8 key_idx, const u8 *mac_addr);
-+				 u8 key_idx, bool pairwise, const u8 *mac_addr);
- static s32 wl_cfg80211_get_key(struct wiphy *wiphy, struct net_device *dev,
--				 u8 key_idx, const u8 *mac_addr,
-+				 u8 key_idx, bool pairwise, const u8 *mac_addr,
- 				 void *cookie, void (*callback) (void *cookie,
- 								 struct
- 								 key_params *
-@@ -1615,7 +1615,7 @@ wl_add_keyext(struct wiphy *wiphy, struct net_device *dev,
- 
- static s32
- wl_cfg80211_add_key(struct wiphy *wiphy, struct net_device *dev,
--		    u8 key_idx, const u8 *mac_addr,
-+		    u8 key_idx, bool pairwise, const u8 *mac_addr,
- 		    struct key_params *params)
+diff --git a/drivers/net/wireless/wl12xx/wl1271_acx.c b/drivers/net/wireless/wl12xx/wl1271_acx.c
+index bd7f95f..c688471 100644
+--- a/drivers/net/wireless/wl12xx/wl1271_acx.c
++++ b/drivers/net/wireless/wl12xx/wl1271_acx.c
+@@ -1231,7 +1231,9 @@ int wl1271_acx_set_ht_capabilities(struct wl1271 *wl,
+ 				    bool allow_ht_operation)
  {
- 	struct wl_wsec_key key;
-@@ -1700,7 +1700,7 @@ wl_cfg80211_add_key(struct wiphy *wiphy, struct net_device *dev,
+ 	struct wl1271_acx_ht_capabilities *acx;
+-	u8 mac_address[ETH_ALEN] = {0xff, 0xff, 0xff, 0xff, 0xff, 0xff};
++	static const u8 mac_address[ETH_ALEN] = {
++		0xff, 0xff, 0xff, 0xff, 0xff, 0xff
++	};
+ 	int ret = 0;
  
- static s32
- wl_cfg80211_del_key(struct wiphy *wiphy, struct net_device *dev,
--		    u8 key_idx, const u8 *mac_addr)
-+		    u8 key_idx, bool pairwise, const u8 *mac_addr)
- {
- 	struct wl_wsec_key key;
- 	s32 err = 0;
-@@ -1756,7 +1756,7 @@ wl_cfg80211_del_key(struct wiphy *wiphy, struct net_device *dev,
- 
- static s32
- wl_cfg80211_get_key(struct wiphy *wiphy, struct net_device *dev,
--		    u8 key_idx, const u8 *mac_addr, void *cookie,
-+		    u8 key_idx, bool pairwise, const u8 *mac_addr, void *cookie,
- 		    void (*callback) (void *cookie, struct key_params * params))
- {
- 	struct key_params params;
-diff --git a/drivers/staging/wlan-ng/cfg80211.c b/drivers/staging/wlan-ng/cfg80211.c
-index 4af83d5..6a71f52 100644
---- a/drivers/staging/wlan-ng/cfg80211.c
-+++ b/drivers/staging/wlan-ng/cfg80211.c
-@@ -139,7 +139,7 @@ exit:
- }
- 
- int prism2_add_key(struct wiphy *wiphy, struct net_device *dev,
--		   u8 key_index, const u8 *mac_addr,
-+		   u8 key_index, bool pairwise, const u8 *mac_addr,
- 		   struct key_params *params)
- {
- 	wlandevice_t *wlandev = dev->ml_priv;
-@@ -198,7 +198,7 @@ exit:
- }
- 
- int prism2_get_key(struct wiphy *wiphy, struct net_device *dev,
--		   u8 key_index, const u8 *mac_addr, void *cookie,
-+		   u8 key_index, bool pairwise, const u8 *mac_addr, void *cookie,
- 		   void (*callback)(void *cookie, struct key_params*))
- {
- 	wlandevice_t *wlandev = dev->ml_priv;
-@@ -227,7 +227,7 @@ int prism2_get_key(struct wiphy *wiphy, struct net_device *dev,
- }
- 
- int prism2_del_key(struct wiphy *wiphy, struct net_device *dev,
--		   u8 key_index, const u8 *mac_addr)
-+		   u8 key_index, bool pairwise, const u8 *mac_addr)
- {
- 	wlandevice_t *wlandev = dev->ml_priv;
- 	u32 did;
+ 	wl1271_debug(DEBUG_ACX, "acx ht capabilities setting");
 -- 
-1.7.2.3
-
-
+1.7.3.2.245.g03276.dirty
 
