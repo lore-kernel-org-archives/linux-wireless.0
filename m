@@ -1,30 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:39384 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754290Ab0KXROt (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 24 Nov 2010 12:14:49 -0500
-Received: from uucp by smtp.tuxdriver.com with local-rmail (Exim 4.63)
-	(envelope-from <linville@tuxdriver.com>)
-	id 1PLIvd-0000tD-D4
-	for linux-wireless@vger.kernel.org; Wed, 24 Nov 2010 12:14:45 -0500
-Received: from linville-8530p.local (localhost.localdomain [127.0.0.1])
-	by linville-8530p.local (8.14.4/8.14.4) with ESMTP id oAOH9uPx015969
-	for <linux-wireless@vger.kernel.org>; Wed, 24 Nov 2010 12:09:57 -0500
-Received: (from linville@localhost)
-	by linville-8530p.local (8.14.4/8.14.4/Submit) id oAOH9u3V015967
-	for linux-wireless@vger.kernel.org; Wed, 24 Nov 2010 12:09:56 -0500
-Date: Wed, 24 Nov 2010 12:09:56 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: linux-wireless@vger.kernel.org
-Subject: wireless-next-2.6 rebased 2010-11-24
-Message-ID: <20101124170956.GE7435@tuxdriver.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: from mail.perches.com ([173.55.12.10]:1749 "EHLO mail.perches.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757121Ab0KUCko (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 20 Nov 2010 21:40:44 -0500
+From: Joe Perches <joe@perches.com>
+To: Dan Williams <dcbw@redhat.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	libertas-dev@lists.infradead.org, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: [PATCH 57/62] libertas: Use static const
+Date: Sat, 20 Nov 2010 18:38:58 -0800
+Message-Id: <0faf86e7288c88cc96902b01bfd06ef81d399e65.1290305776.git.joe@perches.com>
+In-Reply-To: <cover.1290305773.git.joe@perches.com>
+References: <cover.1290305773.git.joe@perches.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Rebased to drop a problematic patch -- FYI!
+Using static const generally increases object text and decreases data size.
+It also generally decreases overall object size.
+
+   text	   data	    bss	    dec	    hex	filename
+   3650	     56	    704	   4410	   113a	drivers/net/wireless/libertas/rx.o.new
+   3695	     56	    704	   4455	   1167	drivers/net/wireless/libertas/rx.o.old
+  27328	    964	   5240	  33532	   82fc	drivers/net/wireless/libertas/cfg.o.new
+  27328	    964	   5240	  33532	   82fc	drivers/net/wireless/libertas/cfg.o.old
+
+Signed-off-by: Joe Perches <joe@perches.com>
+---
+ drivers/net/wireless/libertas/cfg.c |    2 +-
+ drivers/net/wireless/libertas/rx.c  |    4 +++-
+ 2 files changed, 4 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/net/wireless/libertas/cfg.c b/drivers/net/wireless/libertas/cfg.c
+index 373930a..3f21fcb 100644
+--- a/drivers/net/wireless/libertas/cfg.c
++++ b/drivers/net/wireless/libertas/cfg.c
+@@ -2062,7 +2062,7 @@ static void lbs_cfg_set_regulatory_hint(struct lbs_private *priv)
+ 	};
+ 
+ 	/* Section 5.17.2 */
+-	static struct region_code_mapping regmap[] = {
++	static const struct region_code_mapping regmap[] = {
+ 		{"US ", 0x10}, /* US FCC */
+ 		{"CA ", 0x20}, /* Canada */
+ 		{"EU ", 0x30}, /* ETSI   */
+diff --git a/drivers/net/wireless/libertas/rx.c b/drivers/net/wireless/libertas/rx.c
+index a4d0bca..a2b1df2 100644
+--- a/drivers/net/wireless/libertas/rx.c
++++ b/drivers/net/wireless/libertas/rx.c
+@@ -55,7 +55,9 @@ int lbs_process_rxed_packet(struct lbs_private *priv, struct sk_buff *skb)
+ 	struct rxpd *p_rx_pd;
+ 	int hdrchop;
+ 	struct ethhdr *p_ethhdr;
+-	const u8 rfc1042_eth_hdr[] = { 0xaa, 0xaa, 0x03, 0x00, 0x00, 0x00 };
++	static const u8 rfc1042_eth_hdr[] = {
++		0xaa, 0xaa, 0x03, 0x00, 0x00, 0x00
++	};
+ 
+ 	lbs_deb_enter(LBS_DEB_RX);
+ 
 -- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+1.7.3.2.245.g03276.dirty
+
