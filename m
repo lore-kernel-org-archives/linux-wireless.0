@@ -1,434 +1,952 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.19.149.2]:25291 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755650Ab0KJMXz (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 10 Nov 2010 07:23:55 -0500
-Received: from mail.atheros.com ([10.10.20.108])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Wed, 10 Nov 2010 04:23:42 -0800
-From: Vivek Natarajan <vnatarajan@atheros.com>
-To: <linux-wireless@vger.kernel.org>
-Subject: [RFC 1/5] mac80211: Add support for transmit beam forming.
-Date: Wed, 10 Nov 2010 17:53:45 +0530
-Message-ID: <1289391829-8577-1-git-send-email-vnatarajan@atheros.com>
+Received: from hrndva-omtalb.mail.rr.com ([71.74.56.122]:42420 "EHLO
+	hrndva-omtalb.mail.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751102Ab0KUCYZ (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 20 Nov 2010 21:24:25 -0500
+Date: Sat, 20 Nov 2010 20:24:16 -0600
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: John W Linville <linville@tuxdriver.com>
+Cc: chaoming_li@realsil.com.cn, linux-wireless@vger.kernel.org
+Subject: [RFC PATCH 13/23] rtl8192ce: Introduce new driver
+Message-ID: <4ce882d0.T9Rn7Ar7ItCqS/L2%Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Enable beamforming if the driver and the AP are capable of sending 
-and receiving beam-formed frames.
+>From 2e1b49815affe824fc0b7c04c2999a67d40b66e9 Mon Sep 17 00:00:00 2001
+From: Larry Finger <Larry.Finger@lwfinger.net>
+Date: Sat, 20 Nov 2010 18:59:20 -0600
+Subject: [PATCH 13/23] rtl8192ce: Add files to rtl8192ce.ko Part 3
 
-Signed-off-by: Vivek Natarajan <vnatarajan@atheros.com>
+Add files rtl8192c/rtl8192c-fw.{c,h}
+
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
 ---
- include/linux/ieee80211.h  |   41 ++++++++++++++++++++++++++++++++++++++++-
- include/net/cfg80211.h     |    6 ++++++
- include/net/mac80211.h     |    9 +++++++--
- net/mac80211/cfg.c         |    7 +++++++
- net/mac80211/ht.c          |   18 ++++++++++++++++++
- net/mac80211/ieee80211_i.h |    1 +
- net/mac80211/mlme.c        |   19 +++++++++++++++++++
- net/mac80211/rx.c          |   10 ++++++++++
- net/mac80211/sta_info.c    |    2 ++
- net/mac80211/sta_info.h    |    6 ++++++
- net/mac80211/status.c      |   19 +++++++++++++++++++
- net/mac80211/tx.c          |   27 ++++++++++++++++++++++++---
- net/mac80211/work.c        |    1 +
- 13 files changed, 160 insertions(+), 6 deletions(-)
+ .../net/wireless/rtlwifi/rtl8192c/rtl8192c-fw.c    |  807 ++++++++++++++++++++
+ .../net/wireless/rtlwifi/rtl8192c/rtl8192c-fw.h    |   98 +++
+ 2 files changed, 905 insertions(+), 0 deletions(-)
+ create mode 100644 drivers/net/wireless/rtlwifi/rtl8192c/rtl8192c-fw.c
+ create mode 100644 drivers/net/wireless/rtlwifi/rtl8192c/rtl8192c-fw.h
 
-diff --git a/include/linux/ieee80211.h b/include/linux/ieee80211.h
-index ed5a03c..ba92b73 100644
---- a/include/linux/ieee80211.h
-+++ b/include/linux/ieee80211.h
-@@ -120,6 +120,8 @@
- #define IEEE80211_QOS_CTL_TID_MASK	0x000F
- #define IEEE80211_QOS_CTL_TAG1D_MASK	0x0007
- 
-+#define IEEE80211_QOS_HTC_LEN		4
+diff --git a/drivers/net/wireless/rtlwifi/rtl8192c/rtl8192c-fw.c b/drivers/net/wireless/rtlwifi/rtl8192c/rtl8192c-fw.c
+new file mode 100644
+index 0000000..c37836d
+--- /dev/null
++++ b/drivers/net/wireless/rtlwifi/rtl8192c/rtl8192c-fw.c
+@@ -0,0 +1,807 @@
++/******************************************************************************
++ *
++ * Copyright(c) 2009-2010  Realtek Corporation.
++ *
++ * This program is free software; you can redistribute it and/or modify it
++ * under the terms of version 2 of the GNU General Public License as
++ * published by the Free Software Foundation.
++ *
++ * This program is distributed in the hope that it will be useful, but WITHOUT
++ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
++ * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
++ * more details.
++ *
++ * You should have received a copy of the GNU General Public License along with
++ * this program; if not, write to the Free Software Foundation, Inc.,
++ * 51 Franklin Street, Fifth Floor, Boston, MA 02110, USA
++ *
++ * The full GNU General Public License is included in this distribution in the
++ * file called LICENSE.
++ *
++ * Contact Information:
++ * wlanfae <wlanfae@realtek.com>
++ * Realtek Corporation, No. 2, Innovation Road II, Hsinchu Science Park,
++ * Hsinchu 300, Taiwan.
++ *
++ * Larry Finger <Larry.Finger@lwfinger.net>
++ *
++ *****************************************************************************/
 +
- /* U-APSD queue for WMM IEs sent by AP */
- #define IEEE80211_WMM_IE_AP_QOSINFO_UAPSD	(1<<7)
- 
-@@ -140,6 +142,9 @@
- 
- #define IEEE80211_HT_CTL_LEN		4
- 
-+#define IEEE80211_HTC2_CSI_NONCOMP_BF       0x00800000
-+#define IEEE80211_HTC2_CSI_COMP_BF          0x00c00000
++#include <linux/firmware.h>
++#include "../wifi.h"
++#include "../pci.h"
++#include "../base.h"
++#include "rtl8192c-reg.h"
++#include "rtl8192c-def.h"
++#include "rtl8192c-fw.h"
++#include "rtl8192c-table.h"
 +
- struct ieee80211_hdr {
- 	__le16 frame_control;
- 	__le16 duration_id;
-@@ -169,6 +174,17 @@ struct ieee80211_qos_hdr {
- 	__le16 qos_ctrl;
- } __attribute__ ((packed));
- 
-+struct ieee80211_qos_htc_hdr {
-+	__le16 frame_control;
-+	__le16 duration_id;
-+	u8 addr1[6];
-+	u8 addr2[6];
-+	u8 addr3[6];
-+	__le16 seq_ctrl;
-+	__le16 qos_ctrl;
-+	__le32 htc;
-+} __attribute__ ((packed));
-+
- /**
-  * ieee80211_has_tods - check if IEEE80211_FCTL_TODS is set
-  * @fc: frame control bytes in little-endian byteorder
-@@ -827,6 +843,29 @@ struct ieee80211_mcs_info {
- 	u8 reserved[3];
- } __attribute__((packed));
- 
-+struct ieee80211_txbf_caps {
-+	u32 implicit_rx_capable:1,
-+	    rx_staggered_sounding:1,
-+	    tx_staggered_sounding:1,
-+	    rx_ndp_capable:1,
-+	    tx_ndp_capable:1,
-+	    implicit_txbf_capable:1,
-+	    calibration:2,
-+	    explicit_csi_txbf_capable:1,
-+	    explicit_noncomp_steering:1,
-+	    explicit_comp_steering:1,
-+	    explicit_csi_feedback:2,
-+	    explicit_noncomp_bf:2,
-+	    explicit_comp_bf:2,
-+	    minimal_grouping:2,
-+	    csi_bfer_antennas:2,
-+	    noncomp_bfer_antennas:2,
-+	    comp_bfer_antennas:2,
-+	    csi_max_rows_bfer:2,
-+	    channel_estimation_cap:2,
-+	    reserved:3;
-+};
-+
- /* 802.11n HT capability MSC set */
- #define IEEE80211_HT_MCS_RX_HIGHEST_MASK	0x3ff
- #define IEEE80211_HT_MCS_TX_DEFINED		0x01
-@@ -862,7 +901,7 @@ struct ieee80211_ht_cap {
- 	struct ieee80211_mcs_info mcs;
- 
- 	__le16 extended_ht_cap_info;
--	__le32 tx_BF_cap_info;
-+	struct ieee80211_txbf_caps tx_BF_cap_info;
- 	u8 antenna_selection_info;
- } __attribute__ ((packed));
- 
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index e5702f5..23b120a 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -210,6 +210,12 @@ struct ieee80211_sta_ht_cap {
- 	u8 ampdu_factor;
- 	u8 ampdu_density;
- 	struct ieee80211_mcs_info mcs;
-+	struct ieee80211_txbf_caps txbf;
-+	bool explicit_compbf;
-+	bool explicit_noncompbf;
-+	bool implicit_bf;
-+	bool staggered_sounding;
-+	u8 channel_estimation_cap;
- };
- 
- /**
-diff --git a/include/net/mac80211.h b/include/net/mac80211.h
-index 9fdf982..0818c58 100644
---- a/include/net/mac80211.h
-+++ b/include/net/mac80211.h
-@@ -321,6 +321,8 @@ struct ieee80211_bss_conf {
-  * @IEEE80211_TX_CTL_LDPC: tells the driver to use LDPC for this frame
-  * @IEEE80211_TX_CTL_STBC: Enables Space-Time Block Coding (STBC) for this
-  *	frame and selects the maximum number of streams that it can use.
-+ * @IEEE80211_TX_CTL_TXBF_UPDATE: Channel information needs to be updated
-+ *    for beamforming of Tx frames.
-  *
-  * Note: If you have to add new flags to the enumeration, then don't
-  *	 forget to update %IEEE80211_TX_TEMPORARY_FLAGS when necessary.
-@@ -349,6 +351,8 @@ enum mac80211_tx_control_flags {
- 	IEEE80211_TX_INTFL_NL80211_FRAME_TX	= BIT(21),
- 	IEEE80211_TX_CTL_LDPC			= BIT(22),
- 	IEEE80211_TX_CTL_STBC			= BIT(23) | BIT(24),
-+	IEEE80211_TX_CTL_TXBF_UPDATE		= BIT(25),
-+	IEEE80211_TX_CTL_STAG_SOUND		= BIT(26),
- };
- 
- #define IEEE80211_TX_CTL_STBC_SHIFT		23
-@@ -364,7 +368,7 @@ enum mac80211_tx_control_flags {
- 	IEEE80211_TX_STAT_AMPDU | IEEE80211_TX_STAT_AMPDU_NO_BACK |	      \
- 	IEEE80211_TX_CTL_RATE_CTRL_PROBE | IEEE80211_TX_CTL_PSPOLL_RESPONSE | \
- 	IEEE80211_TX_CTL_MORE_FRAMES | IEEE80211_TX_CTL_LDPC |		      \
--	IEEE80211_TX_CTL_STBC)
-+	IEEE80211_TX_CTL_STBC | IEEE80211_TX_CTL_TXBF_UPDATE)
- 
- /**
-  * enum mac80211_rate_control_flags - per-rate flags set by the
-@@ -900,7 +904,8 @@ struct ieee80211_sta {
- 	u8 addr[ETH_ALEN];
- 	u16 aid;
- 	struct ieee80211_sta_ht_cap ht_cap;
--
-+	bool txbf;
-+	u8 channel_estimation_cap;
- 	/* must be last */
- 	u8 drv_priv[0] __attribute__((__aligned__(sizeof(void *))));
- };
-diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
-index 18bd0e5..926cc8d 100644
---- a/net/mac80211/cfg.c
-+++ b/net/mac80211/cfg.c
-@@ -698,6 +698,13 @@ static void sta_apply_parameters(struct ieee80211_local *local,
- 						  params->ht_capa,
- 						  &sta->sta.ht_cap);
- 
-+	if (sta->sta.ht_cap.explicit_compbf ||
-+	    sta->sta.ht_cap.explicit_noncompbf ||
-+	    sta->sta.ht_cap.implicit_bf) {
-+		sta->sta.txbf = true;
-+		sta->bf_update_cv = true;
-+	}
-+
- 	if (ieee80211_vif_is_mesh(&sdata->vif) && params->plink_action) {
- 		switch (params->plink_action) {
- 		case PLINK_ACTION_OPEN:
-diff --git a/net/mac80211/ht.c b/net/mac80211/ht.c
-index 75d679d..5223ea7 100644
---- a/net/mac80211/ht.c
-+++ b/net/mac80211/ht.c
-@@ -24,6 +24,7 @@ void ieee80211_ht_cap_ie_to_sta_ht_cap(struct ieee80211_supported_band *sband,
- {
- 	u8 ampdu_info, tx_mcs_set_cap;
- 	int i, max_tx_streams;
-+	struct ieee80211_txbf_caps bfee, bfmr;
- 
- 	BUG_ON(!ht_cap);
- 
-@@ -99,6 +100,23 @@ void ieee80211_ht_cap_ie_to_sta_ht_cap(struct ieee80211_supported_band *sband,
- 	/* handle MCS rate 32 too */
- 	if (sband->ht_cap.mcs.rx_mask[32/8] & ht_cap_ie->mcs.rx_mask[32/8] & 1)
- 		ht_cap->mcs.rx_mask[32/8] |= 1;
-+
-+	bfee = ht_cap_ie->tx_BF_cap_info;
-+	bfmr = sband->ht_cap.txbf;
-+
-+	if (bfmr.explicit_comp_steering && (bfee.explicit_comp_bf != 0))
-+		ht_cap->explicit_compbf = true;
-+
-+	if (bfmr.explicit_noncomp_steering && (bfee.explicit_noncomp_bf != 0))
-+		ht_cap->explicit_noncompbf = true;
-+
-+	if (bfmr.implicit_txbf_capable && bfee.implicit_rx_capable)
-+		ht_cap->implicit_bf = true;
-+
-+	if (bfmr.tx_staggered_sounding && bfee.rx_staggered_sounding)
-+		ht_cap->staggered_sounding = true;
-+
-+	ht_cap->channel_estimation_cap = bfee.channel_estimation_cap;
- }
- 
- void ieee80211_sta_tear_down_BA_sessions(struct sta_info *sta, bool tx)
-diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
-index b80c386..e0eecbf 100644
---- a/net/mac80211/ieee80211_i.h
-+++ b/net/mac80211/ieee80211_i.h
-@@ -1202,6 +1202,7 @@ void ieee80211_stop_tx_ba_cb(struct ieee80211_vif *vif, u8 *ra, u8 tid);
- void ieee80211_ba_session_work(struct work_struct *work);
- void ieee80211_tx_ba_session_handle_start(struct sta_info *sta, int tid);
- void ieee80211_release_reorder_timeout(struct sta_info *sta, int tid);
-+void ieee80211_txbf_cv_work(struct work_struct *work);
- 
- /* Spectrum management */
- void ieee80211_process_measurement_req(struct ieee80211_sub_if_data *sdata,
-diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index a3a9421..0ee85f9 100644
---- a/net/mac80211/mlme.c
-+++ b/net/mac80211/mlme.c
-@@ -63,6 +63,8 @@
- #define TMR_RUNNING_TIMER	0
- #define TMR_RUNNING_CHANSW	1
- 
-+#define TXBF_CV_TIMER		1000
-+
- /*
-  * All cfg80211 functions have to be called outside a locked
-  * section so that they can acquire a lock themselves... This
-@@ -1237,6 +1239,17 @@ ieee80211_rx_mgmt_disassoc(struct ieee80211_sub_if_data *sdata,
- }
- 
- 
-+void ieee80211_txbf_cv_work(struct work_struct *work)
++static void _rtl92c_enable_fw_download(struct ieee80211_hw *hw, bool enable)
 +{
-+	struct sta_info *sta =
-+		container_of(work, struct sta_info, txbf_cv_work.work);
-+	struct ieee80211_local *local = sta->local;
++	struct rtl_priv *rtlpriv = rtl_priv(hw);
++	struct rtl_hal *rtlhal = rtl_hal(rtl_priv(hw));
 +
-+	sta->bf_update_cv = true;
-+	ieee80211_queue_delayed_work(&local->hw,
-+				     &sta->txbf_cv_work, TXBF_CV_TIMER);
++	if (rtlhal->hw_type == HARDWARE_TYPE_RTL8192CU) {
++		u32 value32 = rtl_read_dword(rtlpriv, REG_MCUFWDL);
++		if (enable)
++			value32 |= MCUFWDL_EN;
++		else
++			value32 &= ~MCUFWDL_EN;
++		rtl_write_dword(rtlpriv, REG_MCUFWDL, value32);
++	} else if (rtlhal->hw_type == HARDWARE_TYPE_RTL8192CE) {
++		u8 tmp;
++		if (enable) {
++
++			tmp = rtl_read_byte(rtlpriv, REG_SYS_FUNC_EN + 1);
++			rtl_write_byte(rtlpriv, REG_SYS_FUNC_EN + 1,
++				       tmp | 0x04);
++
++			tmp = rtl_read_byte(rtlpriv, REG_MCUFWDL);
++			rtl_write_byte(rtlpriv, REG_MCUFWDL, tmp | 0x01);
++
++			tmp = rtl_read_byte(rtlpriv, REG_MCUFWDL + 2);
++			rtl_write_byte(rtlpriv, REG_MCUFWDL + 2, tmp & 0xf7);
++		} else {
++
++			tmp = rtl_read_byte(rtlpriv, REG_MCUFWDL);
++			rtl_write_byte(rtlpriv, REG_MCUFWDL, tmp & 0xfe);
++
++			rtl_write_byte(rtlpriv, REG_MCUFWDL + 1, 0x00);
++		}
++	}
 +}
 +
- static bool ieee80211_assoc_success(struct ieee80211_work *wk,
- 				    struct ieee80211_mgmt *mgmt, size_t len)
- {
-@@ -1343,6 +1356,12 @@ static bool ieee80211_assoc_success(struct ieee80211_work *wk,
- 
- 	ap_ht_cap_flags = sta->sta.ht_cap.cap;
- 
-+	if (sta->sta.ht_cap.explicit_compbf ||
-+	    sta->sta.ht_cap.explicit_noncompbf ||
-+	    sta->sta.ht_cap.implicit_bf) {
-+		sta->sta.txbf = true;
-+		sta->bf_update_cv = true;
-+	}
- 	rate_control_rate_init(sta);
- 
- 	if (ifmgd->flags & IEEE80211_STA_MFP_ENABLED)
-diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
-index 902b03e..a012fb6 100644
---- a/net/mac80211/rx.c
-+++ b/net/mac80211/rx.c
-@@ -1455,6 +1455,16 @@ ieee80211_rx_h_remove_qos_control(struct ieee80211_rx_data *rx)
- 	if (!ieee80211_is_data_qos(hdr->frame_control))
- 		return RX_CONTINUE;
- 
-+	/* Qos frame with Order bit set indicates an HTC frame */
-+	if (ieee80211_has_order(hdr->frame_control)) {
-+		memmove(data + IEEE80211_QOS_HTC_LEN, data,
-+			       ieee80211_hdrlen(hdr->frame_control) -
-+			       IEEE80211_QOS_HTC_LEN);
-+		hdr = (struct ieee80211_hdr *)skb_pull(rx->skb,
-+						       IEEE80211_QOS_HTC_LEN);
-+		hdr->frame_control &= ~cpu_to_le16(IEEE80211_FCTL_ORDER);
++static void _rtl92c_fw_block_write(struct ieee80211_hw *hw,
++				   const u8 *buffer, u32 size)
++{
++	struct rtl_priv *rtlpriv = rtl_priv(hw);
++	u32 blockSize = sizeof(u32);
++	u8 *bufferPtr = (u8 *) buffer;
++	u32 *pu4BytePtr = (u32 *) buffer;
++	u32 i, offset, blockCount, remainSize;
++
++	blockCount = size / blockSize;
++	remainSize = size % blockSize;
++
++	for (i = 0; i < blockCount; i++) {
++		offset = i * blockSize;
++		rtl_write_dword(rtlpriv, (FW_8192C_START_ADDRESS + offset),
++				*(pu4BytePtr + i));
 +	}
 +
- 	/* remove the qos control field, update frame type and meta-data */
- 	memmove(data + IEEE80211_QOS_CTL_LEN, data,
- 		ieee80211_hdrlen(hdr->frame_control) - IEEE80211_QOS_CTL_LEN);
-diff --git a/net/mac80211/sta_info.c b/net/mac80211/sta_info.c
-index 6d8f897..829398e 100644
---- a/net/mac80211/sta_info.c
-+++ b/net/mac80211/sta_info.c
-@@ -235,6 +235,7 @@ struct sta_info *sta_info_alloc(struct ieee80211_sub_if_data *sdata,
- 	spin_lock_init(&sta->flaglock);
- 	INIT_WORK(&sta->drv_unblock_wk, sta_unblock);
- 	INIT_WORK(&sta->ampdu_mlme.work, ieee80211_ba_session_work);
-+	INIT_DELAYED_WORK(&sta->txbf_cv_work, ieee80211_txbf_cv_work);
- 	mutex_init(&sta->ampdu_mlme.mtx);
- 
- 	memcpy(sta->sta.addr, addr, ETH_ALEN);
-@@ -691,6 +692,7 @@ static int __must_check __sta_info_destroy(struct sta_info *sta)
- 	wiphy_debug(local->hw.wiphy, "Removed STA %pM\n", sta->sta.addr);
- #endif /* CONFIG_MAC80211_VERBOSE_DEBUG */
- 	cancel_work_sync(&sta->drv_unblock_wk);
-+	cancel_delayed_work_sync(&sta->txbf_cv_work);
- 
- 	rate_control_remove_sta_debugfs(sta);
- 	ieee80211_sta_debugfs_remove(sta);
-diff --git a/net/mac80211/sta_info.h b/net/mac80211/sta_info.h
-index 9265aca..61631e3 100644
---- a/net/mac80211/sta_info.h
-+++ b/net/mac80211/sta_info.h
-@@ -312,6 +312,12 @@ struct sta_info {
- 	struct sta_ampdu_mlme ampdu_mlme;
- 	u8 timer_to_tid[STA_TID_NUM];
- 
-+	bool txbf;
-+	bool bf_update_cv;
-+	bool bf_sound_pending;
-+	bool allow_cv_update;
-+	struct delayed_work txbf_cv_work;
++	if (remainSize) {
++		offset = blockCount * blockSize;
++		bufferPtr += offset;
++		for (i = 0; i < remainSize; i++) {
++			rtl_write_byte(rtlpriv, (FW_8192C_START_ADDRESS +
++						 offset + i), *(bufferPtr + i));
++		}
++	}
++}
 +
- #ifdef CONFIG_MAC80211_MESH
- 	/*
- 	 * Mesh peer link attributes
-diff --git a/net/mac80211/status.c b/net/mac80211/status.c
-index 3153c19..b0447ca 100644
---- a/net/mac80211/status.c
-+++ b/net/mac80211/status.c
-@@ -209,6 +209,25 @@ void ieee80211_tx_status(struct ieee80211_hw *hw, struct sk_buff *skb)
- 			return;
- 		}
- 
-+		if (ieee80211_has_order(fc)) {
-+			if ((info->flags & IEEE80211_TX_STAT_ACK) &&
-+			    (sta->bf_sound_pending)) {
-+				sta->bf_sound_pending = false;
-+				ieee80211_queue_delayed_work(&local->hw,
-+						&sta->txbf_cv_work, 1000);
-+			} else
-+				sta->bf_update_cv = true;
++static void _rtl92c_fw_page_write(struct ieee80211_hw *hw,
++				  u32 page, const u8 *buffer, u32 size)
++{
++	struct rtl_priv *rtlpriv = rtl_priv(hw);
++	u8 value8;
++	u8 u8page = (u8) (page & 0x07);
++
++	value8 = (rtl_read_byte(rtlpriv, REG_MCUFWDL + 2) & 0xF8) | u8page;
++
++	rtl_write_byte(rtlpriv, (REG_MCUFWDL + 2), value8);
++	_rtl92c_fw_block_write(hw, buffer, size);
++}
++
++static void _rtl92c_fill_dummy(u8 *pfwbuf, u32 *pfwlen)
++{
++	u32 fwlen = *pfwlen;
++	u8 remain = (u8) (fwlen % 4);
++
++	remain = (remain == 0) ? 0 : (4 - remain);
++
++	while (remain > 0) {
++		pfwbuf[fwlen] = 0;
++		fwlen++;
++		remain--;
++	}
++
++	*pfwlen = fwlen;
++}
++
++static void _rtl92c_write_fw(struct ieee80211_hw *hw,
++			     enum version_8192c version, u8 *buffer, u32 size)
++{
++	struct rtl_priv *rtlpriv = rtl_priv(hw);
++	struct rtl_hal *rtlhal = rtl_hal(rtl_priv(hw));
++	bool is_version_b;
++	u8 *bufferPtr = (u8 *) buffer;
++
++	RT_TRACE(rtlpriv, COMP_FW, DBG_TRACE, ("FW size is %d bytes,\n", size));
++
++	is_version_b = IS_CHIP_VER_B(version);
++	if (is_version_b) {
++		u32 pageNums, remainSize;
++		u32 page, offset;
++
++		if (rtlhal->hw_type == HARDWARE_TYPE_RTL8192CE)
++			_rtl92c_fill_dummy(bufferPtr, &size);
++
++		pageNums = size / FW_8192C_PAGE_SIZE;
++		remainSize = size % FW_8192C_PAGE_SIZE;
++
++		if (pageNums > 4) {
++			RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
++				 ("Page numbers should not greater then 4\n"));
 +		}
 +
-+
-+		if ((info->flags & IEEE80211_TX_CTL_TXBF_UPDATE) &&
-+		    !(sta->bf_sound_pending)) {
-+			if (sta->sta.ht_cap.explicit_compbf ||
-+			    sta->sta.ht_cap.explicit_noncompbf ||
-+			    sta->sta.ht_cap.implicit_bf)
-+				sta->bf_update_cv = true;
++		for (page = 0; page < pageNums; page++) {
++			offset = page * FW_8192C_PAGE_SIZE;
++			_rtl92c_fw_page_write(hw, page, (bufferPtr + offset),
++					      FW_8192C_PAGE_SIZE);
 +		}
 +
- 		if ((local->hw.flags & IEEE80211_HW_HAS_RATE_CONTROL) &&
- 		    (rates_idx != -1))
- 			sta->last_tx_rate = info->status.rates[rates_idx];
-diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
-index 96c5943..5900cf2 100644
---- a/net/mac80211/tx.c
-+++ b/net/mac80211/tx.c
-@@ -1888,6 +1888,8 @@ netdev_tx_t ieee80211_subif_start_xmit(struct sk_buff *skb,
- 	if ((sta_flags & WLAN_STA_WME) && local->hw.queues >= 4) {
- 		fc |= cpu_to_le16(IEEE80211_STYPE_QOS_DATA);
- 		hdrlen += 2;
-+	if (sta->bf_update_cv)
-+		hdrlen += 4;
- 	}
- 
- 	/*
-@@ -1973,9 +1975,28 @@ netdev_tx_t ieee80211_subif_start_xmit(struct sk_buff *skb,
- 
- 	if (ieee80211_is_data_qos(fc)) {
- 		__le16 *qos_control;
--
--		qos_control = (__le16*) skb_push(skb, 2);
--		memcpy(skb_push(skb, hdrlen - 2), &hdr, hdrlen - 2);
-+		__le32 *htc;
++		if (remainSize) {
++			offset = pageNums * FW_8192C_PAGE_SIZE;
++			page = pageNums;
++			_rtl92c_fw_page_write(hw, page, (bufferPtr + offset),
++					      remainSize);
++		}
++	} else {
++		_rtl92c_fw_block_write(hw, buffer, size);
++	}
++}
 +
-+		if (sta->bf_update_cv) {
-+			hdr.frame_control |= cpu_to_le16(IEEE80211_FCTL_ORDER);
-+			htc = (__le32 *) skb_push(skb, 4);
-+			sta->bf_sound_pending = true;
-+			*htc = 0;
-+			sta->bf_update_cv = false;
++static int _rtl92c_fw_free_to_go(struct ieee80211_hw *hw)
++{
++	struct rtl_priv *rtlpriv = rtl_priv(hw);
++	int err = -EIO;
++	u32 counter = 0;
++	u32 value32;
 +
-+			if (sta->sta.ht_cap.explicit_compbf)
-+				*htc |= IEEE80211_HTC2_CSI_COMP_BF;
-+			else if (sta->sta.ht_cap.explicit_noncompbf)
-+				*htc |= IEEE80211_HTC2_CSI_NONCOMP_BF;
++	do {
++		value32 = rtl_read_dword(rtlpriv, REG_MCUFWDL);
++	} while ((counter++ < FW_8192C_POLLING_TIMEOUT_COUNT) &&
++		 (!(value32 & FWDL_ChkSum_rpt)));
 +
-+			ieee80211_queue_delayed_work(&local->hw,
-+					&sta->txbf_cv_work, 1000);
-+			qos_control = (__le16 *) skb_push(skb, 2);
-+			memcpy(skb_push(skb, hdrlen - 6), &hdr, hdrlen - 6);
++	if (counter >= FW_8192C_POLLING_TIMEOUT_COUNT) {
++		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
++			 ("chksum report faill ! REG_MCUFWDL:0x%08x .\n",
++			  value32));
++		goto exit;
++	}
++
++	RT_TRACE(rtlpriv, COMP_FW, DBG_TRACE,
++		 ("Checksum report OK ! REG_MCUFWDL:0x%08x .\n", value32));
++
++	value32 = rtl_read_dword(rtlpriv, REG_MCUFWDL);
++	value32 |= MCUFWDL_RDY;
++	value32 &= ~WINTINI_RDY;
++	rtl_write_dword(rtlpriv, REG_MCUFWDL, value32);
++
++	counter = 0;
++
++	do {
++		value32 = rtl_read_dword(rtlpriv, REG_MCUFWDL);
++		if (value32 & WINTINI_RDY) {
++			RT_TRACE(rtlpriv, COMP_FW, DBG_TRACE,
++				 ("Polling FW ready success!!"
++				 " REG_MCUFWDL:0x%08x .\n",
++				 value32));
++			err = 0;
++			goto exit;
++		}
++
++		mdelay(FW_8192C_POLLING_DELAY);
++
++	} while (counter++ < FW_8192C_POLLING_TIMEOUT_COUNT);
++
++	RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
++		 ("Polling FW ready fail!! REG_MCUFWDL:0x%08x .\n", value32));
++
++exit:
++	return err;
++}
++
++int rtl92c_download_fw(struct ieee80211_hw *hw)
++{
++	struct rtl_priv *rtlpriv = rtl_priv(hw);
++	struct rtl_hal *rtlhal = rtl_hal(rtl_priv(hw));
++	struct rtl92c_firmware_header *pfwheader;
++	u8 *pfwdata;
++	u32 fwsize;
++	int err;
++	enum version_8192c version = rtlhal->version;
++
++	const struct firmware *firmware = NULL;
++
++	err = request_firmware(&firmware, rtlpriv->cfg->fw_name,
++			       rtlpriv->io.dev);
++	if (err) {
++		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
++			 ("Failed to request firmware!\n"));
++		return 1;
++	}
++
++	if (firmware->size > 0x4000) {
++		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
++			 ("Firmware is too big!\n"));
++		release_firmware(firmware);
++		return 1;
++	}
++
++	memcpy(rtlhal->pfirmware, firmware->data, firmware->size);
++	fwsize = firmware->size;
++	release_firmware(firmware);
++
++	pfwheader = (struct rtl92c_firmware_header *)rtlhal->pfirmware;
++	pfwdata = (u8 *) rtlhal->pfirmware;
++
++	if (IS_FW_HEADER_EXIST(pfwheader)) {
++		RT_TRACE(rtlpriv, COMP_FW, DBG_DMESG,
++			 ("Firmware Version(%d), Signature(%#x),Size(%d)\n",
++			  pfwheader->version, pfwheader->signature,
++			  (uint)sizeof(struct rtl92c_firmware_header)));
++
++		pfwdata = pfwdata + sizeof(struct rtl92c_firmware_header);
++		fwsize = fwsize - sizeof(struct rtl92c_firmware_header);
++	}
++
++	_rtl92c_enable_fw_download(hw, true);
++	_rtl92c_write_fw(hw, version, pfwdata, fwsize);
++	_rtl92c_enable_fw_download(hw, false);
++
++	err = _rtl92c_fw_free_to_go(hw);
++	if (err) {
++		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
++			 ("Firmware is not ready to run!\n"));
++	} else {
++		RT_TRACE(rtlpriv, COMP_FW, DBG_TRACE,
++			 ("Firmware is ready to run!\n"));
++	}
++
++	return 0;
++}
++
++static bool _rtl92c_check_fw_read_last_h2c(struct ieee80211_hw *hw, u8 boxnum)
++{
++	struct rtl_priv *rtlpriv = rtl_priv(hw);
++	u8 val_hmetfr, val_mcutst_1;
++	bool result = false;
++
++	val_hmetfr = rtl_read_byte(rtlpriv, REG_HMETFR);
++	val_mcutst_1 = rtl_read_byte(rtlpriv, (REG_MCUTST_1 + boxnum));
++
++	if (((val_hmetfr >> boxnum) & BIT(0)) == 0 && val_mcutst_1 == 0)
++		result = true;
++	return result;
++}
++
++static void _rtl92c_fill_h2c_command(struct ieee80211_hw *hw,
++			      u8 element_id, u32 cmd_len, u8 *p_cmdbuffer)
++{
++	struct rtl_priv *rtlpriv = rtl_priv(hw);
++	struct rtl_hal *rtlhal = rtl_hal(rtl_priv(hw));
++	u8 boxnum;
++	u16 box_reg, box_extreg;
++	u8 u1b_tmp;
++	bool isfw_read = false;
++	u8 buf_index;
++	bool bwrite_sucess = false;
++	u8 wait_h2c_limmit = 100;
++	u8 wait_writeh2c_limmit = 100;
++	u8 boxcontent[4], boxextcontent[2];
++	u32 h2c_waitcounter = 0;
++	unsigned long flag;
++	u8 idx;
++
++	RT_TRACE(rtlpriv, COMP_CMD, DBG_LOUD, ("come in\n"));
++
++	while (true) {
++		spin_lock_irqsave(&rtlpriv->locks.h2c_lock, flag);
++		if (rtlhal->b_h2c_setinprogress) {
++			RT_TRACE(rtlpriv, COMP_CMD, DBG_LOUD,
++				 ("H2C set in progress! Wait to set.."
++				  "element_id(%d).\n", element_id));
++
++			while (rtlhal->b_h2c_setinprogress) {
++				spin_unlock_irqrestore(&rtlpriv->locks.h2c_lock,
++						       flag);
++				h2c_waitcounter++;
++				RT_TRACE(rtlpriv, COMP_CMD, DBG_LOUD,
++					 ("Wait 100 us (%d times)...\n",
++					  h2c_waitcounter));
++				udelay(100);
++
++				if (h2c_waitcounter > 1000)
++					return;
++				spin_lock_irqsave(&rtlpriv->locks.h2c_lock,
++						  flag);
++			}
++			spin_unlock_irqrestore(&rtlpriv->locks.h2c_lock, flag);
 +		} else {
-+			qos_control = (__le16 *) skb_push(skb, 2);
-+			memcpy(skb_push(skb, hdrlen - 2), &hdr, hdrlen - 2);
-+		};
- 		/*
- 		 * Maybe we could actually set some fields here, for now just
- 		 * initialise to zero to indicate no special operation.
-diff --git a/net/mac80211/work.c b/net/mac80211/work.c
-index ae344d1..7676567 100644
---- a/net/mac80211/work.c
-+++ b/net/mac80211/work.c
-@@ -190,6 +190,7 @@ static void ieee80211_add_ht_ie(struct sk_buff *skb, const u8 *ht_info_ie,
- 
- 	/* extended capabilities */
- 	pos += sizeof(__le16);
-+	memcpy(pos, &sband->ht_cap.txbf, sizeof(sband->ht_cap.txbf));
- 
- 	/* BF capabilities */
- 	pos += sizeof(__le32);
++			rtlhal->b_h2c_setinprogress = true;
++			spin_unlock_irqrestore(&rtlpriv->locks.h2c_lock, flag);
++			break;
++		}
++	}
++
++	while (!bwrite_sucess) {
++		wait_writeh2c_limmit--;
++		if (wait_writeh2c_limmit == 0) {
++			RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
++				 ("Write H2C fail because no trigger "
++				  "for FW INT!\n"));
++			break;
++		}
++
++		boxnum = rtlhal->last_hmeboxnum;
++		switch (boxnum) {
++		case 0:
++			box_reg = REG_HMEBOX_0;
++			box_extreg = REG_HMEBOX_EXT_0;
++			break;
++		case 1:
++			box_reg = REG_HMEBOX_1;
++			box_extreg = REG_HMEBOX_EXT_1;
++			break;
++		case 2:
++			box_reg = REG_HMEBOX_2;
++			box_extreg = REG_HMEBOX_EXT_2;
++			break;
++		case 3:
++			box_reg = REG_HMEBOX_3;
++			box_extreg = REG_HMEBOX_EXT_3;
++			break;
++		default:
++			RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
++				 ("switch case not process\n"));
++			break;
++		}
++
++		isfw_read = _rtl92c_check_fw_read_last_h2c(hw, boxnum);
++		while (!isfw_read) {
++
++			wait_h2c_limmit--;
++			if (wait_h2c_limmit == 0) {
++				RT_TRACE(rtlpriv, COMP_CMD, DBG_LOUD,
++					 ("Wating too long for FW read "
++					  "clear HMEBox(%d)!\n", boxnum));
++				break;
++			}
++
++			udelay(10);
++
++			isfw_read = _rtl92c_check_fw_read_last_h2c(hw, boxnum);
++			u1b_tmp = rtl_read_byte(rtlpriv, 0x1BF);
++			RT_TRACE(rtlpriv, COMP_CMD, DBG_LOUD,
++				 ("Wating for FW read clear HMEBox(%d)!!! "
++				  "0x1BF = %2x\n", boxnum, u1b_tmp));
++		}
++
++		if (!isfw_read) {
++			RT_TRACE(rtlpriv, COMP_CMD, DBG_LOUD,
++				 ("Write H2C register BOX[%d] fail!!!!! "
++				  "Fw do not read.\n", boxnum));
++			break;
++		}
++
++		memset(boxcontent, 0, sizeof(boxcontent));
++		memset(boxextcontent, 0, sizeof(boxextcontent));
++		boxcontent[0] = element_id;
++		RT_TRACE(rtlpriv, COMP_CMD, DBG_LOUD,
++			 ("Write element_id box_reg(%4x) = %2x\n",
++			  box_reg, element_id));
++
++		switch (cmd_len) {
++		case 1:
++			boxcontent[0] &= ~(BIT(7));
++			memcpy((u8 *) (boxcontent) + 1,
++			       p_cmdbuffer + buf_index, 1);
++
++			for (idx = 0; idx < 4; idx++) {
++				rtl_write_byte(rtlpriv, box_reg + idx,
++					       boxcontent[idx]);
++			}
++			break;
++		case 2:
++			boxcontent[0] &= ~(BIT(7));
++			memcpy((u8 *) (boxcontent) + 1,
++			       p_cmdbuffer + buf_index, 2);
++
++			for (idx = 0; idx < 4; idx++) {
++				rtl_write_byte(rtlpriv, box_reg + idx,
++					       boxcontent[idx]);
++			}
++			break;
++		case 3:
++			boxcontent[0] &= ~(BIT(7));
++			memcpy((u8 *) (boxcontent) + 1,
++			       p_cmdbuffer + buf_index, 3);
++
++			for (idx = 0; idx < 4; idx++) {
++				rtl_write_byte(rtlpriv, box_reg + idx,
++					       boxcontent[idx]);
++			}
++			break;
++		case 4:
++			boxcontent[0] |= (BIT(7));
++			memcpy((u8 *) (boxextcontent),
++			       p_cmdbuffer + buf_index, 2);
++			memcpy((u8 *) (boxcontent) + 1,
++			       p_cmdbuffer + buf_index + 2, 2);
++
++			for (idx = 0; idx < 2; idx++) {
++				rtl_write_byte(rtlpriv, box_extreg + idx,
++					       boxextcontent[idx]);
++			}
++
++			for (idx = 0; idx < 4; idx++) {
++				rtl_write_byte(rtlpriv, box_reg + idx,
++					       boxcontent[idx]);
++			}
++			break;
++		case 5:
++			boxcontent[0] |= (BIT(7));
++			memcpy((u8 *) (boxextcontent),
++			       p_cmdbuffer + buf_index, 2);
++			memcpy((u8 *) (boxcontent) + 1,
++			       p_cmdbuffer + buf_index + 2, 3);
++
++			for (idx = 0; idx < 2; idx++) {
++				rtl_write_byte(rtlpriv, box_extreg + idx,
++					       boxextcontent[idx]);
++			}
++
++			for (idx = 0; idx < 4; idx++) {
++				rtl_write_byte(rtlpriv, box_reg + idx,
++					       boxcontent[idx]);
++			}
++			break;
++		default:
++			RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
++				 ("switch case not process\n"));
++			break;
++		}
++
++		bwrite_sucess = true;
++
++		rtlhal->last_hmeboxnum = boxnum + 1;
++		if (rtlhal->last_hmeboxnum == 4)
++			rtlhal->last_hmeboxnum = 0;
++
++		RT_TRACE(rtlpriv, COMP_CMD, DBG_LOUD,
++			 ("pHalData->last_hmeboxnum  = %d\n",
++			  rtlhal->last_hmeboxnum));
++	}
++
++	spin_lock_irqsave(&rtlpriv->locks.h2c_lock, flag);
++	rtlhal->b_h2c_setinprogress = false;
++	spin_unlock_irqrestore(&rtlpriv->locks.h2c_lock, flag);
++
++	RT_TRACE(rtlpriv, COMP_CMD, DBG_LOUD, ("go out\n"));
++}
++
++void rtl92c_fill_h2c_cmd(struct ieee80211_hw *hw,
++			 u8 element_id, u32 cmd_len, u8 *p_cmdbuffer)
++{
++	struct rtl_hal *rtlhal = rtl_hal(rtl_priv(hw));
++	u32 tmp_cmdbuf[2];
++
++	if (rtlhal->bfw_ready == false) {
++		RT_ASSERT(false, ("return H2C cmd because of Fw "
++				  "download fail!!!\n"));
++		return;
++	}
++
++	memset(tmp_cmdbuf, 0, 8);
++	memcpy(tmp_cmdbuf, p_cmdbuffer, cmd_len);
++	_rtl92c_fill_h2c_command(hw, element_id, cmd_len, (u8 *)&tmp_cmdbuf);
++
++	return;
++}
++
++void rtl92c_firmware_selfreset(struct ieee80211_hw *hw)
++{
++	u8 u1b_tmp;
++	u8 delay = 100;
++	struct rtl_priv *rtlpriv = rtl_priv(hw);
++
++	mutex_lock(&rtlpriv->io.bb_mutex);
++	rtl_write_byte(rtlpriv, REG_HMETFR + 3, 0x20);
++	u1b_tmp = rtl_read_byte(rtlpriv, REG_SYS_FUNC_EN + 1);
++
++	while (u1b_tmp & BIT(2)) {
++		delay--;
++		if (delay == 0) {
++			RT_ASSERT(false, ("8051 reset fail.\n"));
++			break;
++		}
++		udelay(50);
++		u1b_tmp = rtl_read_byte(rtlpriv, REG_SYS_FUNC_EN + 1);
++	}
++	mutex_unlock(&rtlpriv->io.bb_mutex);
++
++}
++
++void rtl92c_set_fw_pwrmode_cmd(struct ieee80211_hw *hw, u8 mode)
++{
++	struct rtl_priv *rtlpriv = rtl_priv(hw);
++	u8 u1_h2c_set_pwrmode[3] = {0};
++	struct rtl_ps_ctl *ppsc = rtl_psc(rtl_priv(hw));
++
++	RT_TRACE(rtlpriv, COMP_POWER, DBG_LOUD, ("FW LPS mode = %d\n", mode));
++
++	SET_H2CCMD_PWRMODE_PARM_MODE(u1_h2c_set_pwrmode, mode);
++	SET_H2CCMD_PWRMODE_PARM_SMART_PS(u1_h2c_set_pwrmode, 1);
++	SET_H2CCMD_PWRMODE_PARM_BCN_PASS_TIME(u1_h2c_set_pwrmode,
++					      ppsc->reg_max_lps_awakeintvl);
++
++	RT_PRINT_DATA(rtlpriv, COMP_CMD, DBG_DMESG,
++		      "rtl92c_set_fw_rsvdpagepkt(): u1_h2c_set_pwrmode\n",
++		      u1_h2c_set_pwrmode, 3);
++	rtl92c_fill_h2c_cmd(hw, H2C_SETPWRMODE, 3, u1_h2c_set_pwrmode);
++
++}
++
++static bool _rtl92c_cmd_send_packet(struct ieee80211_hw *hw,
++				    struct sk_buff *skb)
++{
++	struct rtl_priv *rtlpriv = rtl_priv(hw);
++	struct rtl_pci *rtlpci = rtl_pcidev(rtl_pcipriv(hw));
++	struct rtl8192_tx_ring *ring;
++	struct rtl_tx_desc *pdesc;
++	u8 own;
++	unsigned long flags;
++	struct sk_buff *pskb = NULL;
++
++	ring = &rtlpci->tx_ring[BEACON_QUEUE];
++
++	pskb = __skb_dequeue(&ring->queue);
++	if (pskb)
++		kfree_skb(pskb);
++
++	spin_lock_irqsave(&rtlpriv->locks.irq_th_lock, flags);
++
++	pdesc = &ring->desc[0];
++	own = (u8) rtlpriv->cfg->ops->get_desc((u8 *) pdesc, true, HW_DESC_OWN);
++
++	rtlpriv->cfg->ops->fill_tx_cmddesc(hw, (u8 *) pdesc, 1, 1, skb);
++
++	__skb_queue_tail(&ring->queue, skb);
++
++	spin_unlock_irqrestore(&rtlpriv->locks.irq_th_lock, flags);
++
++	rtlpriv->cfg->ops->tx_polling(hw, BEACON_QUEUE);
++
++	return true;
++}
++
++#define BEACON_PG		0 /*->1*/
++#define PSPOLL_PG		2
++#define NULL_PG			3
++#define PROBERSP_PG		4 /*->5*/
++
++#define TOTAL_RESERVED_PKT_LEN	768
++
++static u8 reserved_page_packet[TOTAL_RESERVED_PKT_LEN] = {
++	/* page 0 beacon */
++	0x80, 0x00, 0x00, 0x00, 0xFF, 0xFF, 0xFF, 0xFF,
++	0xFF, 0xFF, 0x00, 0xE0, 0x4C, 0x76, 0x00, 0x42,
++	0x00, 0x40, 0x10, 0x10, 0x00, 0x03, 0x50, 0x08,
++	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
++	0x64, 0x00, 0x00, 0x04, 0x00, 0x0C, 0x6C, 0x69,
++	0x6E, 0x6B, 0x73, 0x79, 0x73, 0x5F, 0x77, 0x6C,
++	0x61, 0x6E, 0x01, 0x04, 0x82, 0x84, 0x8B, 0x96,
++	0x03, 0x01, 0x01, 0x06, 0x02, 0x00, 0x00, 0x2A,
++	0x01, 0x00, 0x32, 0x08, 0x24, 0x30, 0x48, 0x6C,
++	0x0C, 0x12, 0x18, 0x60, 0x2D, 0x1A, 0x6C, 0x18,
++	0x03, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
++	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
++	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
++	0x3D, 0x00, 0xDD, 0x06, 0x00, 0xE0, 0x4C, 0x02,
++	0x01, 0x70, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
++	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
++
++	/* page 1 beacon */
++	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
++	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
++	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
++	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
++	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
++	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
++	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
++	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
++	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
++	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
++	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
++	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
++	0x10, 0x00, 0x20, 0x8C, 0x00, 0x12, 0x10, 0x00,
++	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
++	0x00, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
++	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
++
++	/* page 2  ps-poll */
++	0xA4, 0x10, 0x01, 0xC0, 0x00, 0x40, 0x10, 0x10,
++	0x00, 0x03, 0x00, 0xE0, 0x4C, 0x76, 0x00, 0x42,
++	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
++	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
++	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
++	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
++	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
++	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
++	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
++	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
++	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
++	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
++	0x18, 0x00, 0x20, 0x8C, 0x00, 0x12, 0x00, 0x00,
++	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x80,
++	0x80, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
++	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
++
++	/* page 3  null */
++	0x48, 0x01, 0x00, 0x00, 0x00, 0x40, 0x10, 0x10,
++	0x00, 0x03, 0x00, 0xE0, 0x4C, 0x76, 0x00, 0x42,
++	0x00, 0x40, 0x10, 0x10, 0x00, 0x03, 0x00, 0x00,
++	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
++	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
++	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
++	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
++	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
++	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
++	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
++	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
++	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
++	0x72, 0x00, 0x20, 0x8C, 0x00, 0x12, 0x00, 0x00,
++	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x80,
++	0x80, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
++	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
++
++	/* page 4  probe_resp */
++	0x50, 0x00, 0x00, 0x00, 0x00, 0x40, 0x10, 0x10,
++	0x00, 0x03, 0x00, 0xE0, 0x4C, 0x76, 0x00, 0x42,
++	0x00, 0x40, 0x10, 0x10, 0x00, 0x03, 0x00, 0x00,
++	0x9E, 0x46, 0x15, 0x32, 0x27, 0xF2, 0x2D, 0x00,
++	0x64, 0x00, 0x00, 0x04, 0x00, 0x0C, 0x6C, 0x69,
++	0x6E, 0x6B, 0x73, 0x79, 0x73, 0x5F, 0x77, 0x6C,
++	0x61, 0x6E, 0x01, 0x04, 0x82, 0x84, 0x8B, 0x96,
++	0x03, 0x01, 0x01, 0x06, 0x02, 0x00, 0x00, 0x2A,
++	0x01, 0x00, 0x32, 0x08, 0x24, 0x30, 0x48, 0x6C,
++	0x0C, 0x12, 0x18, 0x60, 0x2D, 0x1A, 0x6C, 0x18,
++	0x03, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
++	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
++	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
++	0x3D, 0x00, 0xDD, 0x06, 0x00, 0xE0, 0x4C, 0x02,
++	0x01, 0x70, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
++	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
++
++	/* page 5  probe_resp */
++	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
++	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
++	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
++	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
++	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
++	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
++	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
++	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
++	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
++	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
++	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
++	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
++	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
++	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
++	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
++	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
++};
++
++void rtl92c_set_fw_rsvdpagepkt(struct ieee80211_hw *hw, bool b_dl_finished)
++{
++	struct rtl_priv *rtlpriv = rtl_priv(hw);
++	struct rtl_mac *mac = rtl_mac(rtl_priv(hw));
++	struct sk_buff *skb = NULL;
++
++	u32 totalpacketlen;
++	bool rtstatus;
++	u8 u1RsvdPageLoc[3] = {0};
++	bool b_dlok = false;
++
++	u8 *beacon;
++	u8 *p_pspoll;
++	u8 *nullfunc;
++	u8 *p_probersp;
++	/*---------------------------------------------------------
++				(1) beacon
++	---------------------------------------------------------*/
++	beacon = &reserved_page_packet[BEACON_PG * 128];
++	SET_80211_HDR_ADDRESS2(beacon, mac->mac_addr);
++	SET_80211_HDR_ADDRESS3(beacon, mac->bssid);
++
++	/*-------------------------------------------------------
++				(2) ps-poll
++	--------------------------------------------------------*/
++	p_pspoll = &reserved_page_packet[PSPOLL_PG * 128];
++	SET_80211_PS_POLL_AID(p_pspoll, (mac->assoc_id | 0xc000));
++	SET_80211_PS_POLL_BSSID(p_pspoll, mac->bssid);
++	SET_80211_PS_POLL_TA(p_pspoll, mac->mac_addr);
++
++	SET_H2CCMD_RSVDPAGE_LOC_PSPOLL(u1RsvdPageLoc, PSPOLL_PG);
++
++	/*--------------------------------------------------------
++				(3) null data
++	---------------------------------------------------------*/
++	nullfunc = &reserved_page_packet[NULL_PG * 128];
++	SET_80211_HDR_ADDRESS1(nullfunc, mac->bssid);
++	SET_80211_HDR_ADDRESS2(nullfunc, mac->mac_addr);
++	SET_80211_HDR_ADDRESS3(nullfunc, mac->bssid);
++
++	SET_H2CCMD_RSVDPAGE_LOC_NULL_DATA(u1RsvdPageLoc, NULL_PG);
++
++	/*---------------------------------------------------------
++				(4) probe response
++	----------------------------------------------------------*/
++	p_probersp = &reserved_page_packet[PROBERSP_PG * 128];
++	SET_80211_HDR_ADDRESS1(p_probersp, mac->bssid);
++	SET_80211_HDR_ADDRESS2(p_probersp, mac->mac_addr);
++	SET_80211_HDR_ADDRESS3(p_probersp, mac->bssid);
++
++	SET_H2CCMD_RSVDPAGE_LOC_PROBE_RSP(u1RsvdPageLoc, PROBERSP_PG);
++
++	totalpacketlen = TOTAL_RESERVED_PKT_LEN;
++
++	RT_PRINT_DATA(rtlpriv, COMP_CMD, DBG_LOUD,
++		      "rtl92c_set_fw_rsvdpagepkt(): HW_VAR_SET_TX_CMD: ALL\n",
++		      &reserved_page_packet[0], totalpacketlen);
++	RT_PRINT_DATA(rtlpriv, COMP_CMD, DBG_DMESG,
++		      "rtl92c_set_fw_rsvdpagepkt(): HW_VAR_SET_TX_CMD: ALL\n",
++		      u1RsvdPageLoc, 3);
++
++
++	skb = dev_alloc_skb(totalpacketlen);
++	memcpy((u8 *) skb_put(skb, totalpacketlen),
++	       &reserved_page_packet, totalpacketlen);
++
++	rtstatus = _rtl92c_cmd_send_packet(hw, skb);
++
++	if (rtstatus)
++		b_dlok = true;
++
++	if (b_dlok) {
++		RT_TRACE(rtlpriv, COMP_POWER, DBG_LOUD,
++			 ("Set RSVD page location to Fw.\n"));
++		RT_PRINT_DATA(rtlpriv, COMP_CMD, DBG_DMESG,
++				"H2C_RSVDPAGE:\n",
++				u1RsvdPageLoc, 3);
++		rtl92c_fill_h2c_cmd(hw, H2C_RSVDPAGE,
++				    sizeof(u1RsvdPageLoc), u1RsvdPageLoc);
++	} else
++		RT_TRACE(rtlpriv, COMP_ERR, DBG_WARNING,
++			 ("Set RSVD page location to Fw FAIL!!!!!!.\n"));
++}
++
++void rtl92c_set_fw_joinbss_report_cmd(struct ieee80211_hw *hw, u8 mstatus)
++{
++	u8 u1_joinbssrpt_parm[1] = {0};
++
++	SET_H2CCMD_JOINBSSRPT_PARM_OPMODE(u1_joinbssrpt_parm, mstatus);
++
++	rtl92c_fill_h2c_cmd(hw, H2C_JOINBSSRPT, 1, u1_joinbssrpt_parm);
++}
+diff --git a/drivers/net/wireless/rtlwifi/rtl8192c/rtl8192c-fw.h b/drivers/net/wireless/rtlwifi/rtl8192c/rtl8192c-fw.h
+new file mode 100644
+index 0000000..3db33bd
+--- /dev/null
++++ b/drivers/net/wireless/rtlwifi/rtl8192c/rtl8192c-fw.h
+@@ -0,0 +1,98 @@
++/******************************************************************************
++ *
++ * Copyright(c) 2009-2010  Realtek Corporation.
++ *
++ * This program is free software; you can redistribute it and/or modify it
++ * under the terms of version 2 of the GNU General Public License as
++ * published by the Free Software Foundation.
++ *
++ * This program is distributed in the hope that it will be useful, but WITHOUT
++ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
++ * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
++ * more details.
++ *
++ * You should have received a copy of the GNU General Public License along with
++ * this program; if not, write to the Free Software Foundation, Inc.,
++ * 51 Franklin Street, Fifth Floor, Boston, MA 02110, USA
++ *
++ * The full GNU General Public License is included in this distribution in the
++ * file called LICENSE.
++ *
++ * Contact Information:
++ * wlanfae <wlanfae@realtek.com>
++ * Realtek Corporation, No. 2, Innovation Road II, Hsinchu Science Park,
++ * Hsinchu 300, Taiwan.
++ *
++ * Larry Finger <Larry.Finger@lwfinger.net>
++ *
++ *****************************************************************************/
++
++#ifndef __RTL92C__FW__H__
++#define __RTL92C__FW__H__
++
++#define FW_8192C_SIZE				0x3000
++#define FW_8192C_START_ADDRESS			0x1000
++#define FW_8192C_END_ADDRESS			0x3FFF
++#define FW_8192C_PAGE_SIZE			4096
++#define FW_8192C_POLLING_DELAY			5
++#define FW_8192C_POLLING_TIMEOUT_COUNT		100
++
++#define IS_FW_HEADER_EXIST(_pfwhdr)	\
++	((_pfwhdr->signature&0xFFF0) == 0x92C0 ||\
++	(_pfwhdr->signature&0xFFF0) == 0x88C0)
++
++struct rtl92c_firmware_header {
++	u16 signature;
++	u8 category;
++	u8 function;
++	u16 version;
++	u8 subversion;
++	u8 rsvd1;
++	u8 month;
++	u8 date;
++	u8 hour;
++	u8 minute;
++	u16 ramcodeSize;
++	u16 rsvd2;
++	u32 svnindex;
++	u32 rsvd3;
++	u32 rsvd4;
++	u32 rsvd5;
++};
++
++enum rtl8192c_h2c_cmd {
++	H2C_AP_OFFLOAD = 0,
++	H2C_SETPWRMODE = 1,
++	H2C_JOINBSSRPT = 2,
++	H2C_RSVDPAGE = 3,
++	H2C_RSSI_REPORT = 5,
++	H2C_RA_MASK = 6,
++	MAX_H2CCMD
++};
++
++#define pagenum_128(_len)	(u32)(((_len)>>7) + ((_len)&0x7F ? 1 : 0))
++
++#define SET_H2CCMD_PWRMODE_PARM_MODE(__ph2ccmd, __val)			\
++	SET_BITS_TO_LE_1BYTE(__ph2ccmd, 0, 8, __val)
++#define SET_H2CCMD_PWRMODE_PARM_SMART_PS(__ph2ccmd, __val)		\
++	SET_BITS_TO_LE_1BYTE((__ph2ccmd)+1, 0, 8, __val)
++#define SET_H2CCMD_PWRMODE_PARM_BCN_PASS_TIME(__ph2ccmd, __val)	\
++	SET_BITS_TO_LE_1BYTE((__ph2ccmd)+2, 0, 8, __val)
++#define SET_H2CCMD_JOINBSSRPT_PARM_OPMODE(__ph2ccmd, __val)		\
++	SET_BITS_TO_LE_1BYTE(__ph2ccmd, 0, 8, __val)
++#define SET_H2CCMD_RSVDPAGE_LOC_PROBE_RSP(__ph2ccmd, __val)		\
++	SET_BITS_TO_LE_1BYTE(__ph2ccmd, 0, 8, __val)
++#define SET_H2CCMD_RSVDPAGE_LOC_PSPOLL(__ph2ccmd, __val)		\
++	SET_BITS_TO_LE_1BYTE((__ph2ccmd)+1, 0, 8, __val)
++#define SET_H2CCMD_RSVDPAGE_LOC_NULL_DATA(__ph2ccmd, __val)		\
++	SET_BITS_TO_LE_1BYTE((__ph2ccmd)+2, 0, 8, __val)
++
++int rtl92c_download_fw(struct ieee80211_hw *hw);
++void rtl92c_fill_h2c_cmd(struct ieee80211_hw *hw, u8 element_id,
++			 u32 cmd_len, u8 *p_cmdbuffer);
++void rtl92c_firmware_selfreset(struct ieee80211_hw *hw);
++void rtl92c_set_fw_pwrmode_cmd(struct ieee80211_hw *hw, u8 mode);
++void rtl92c_set_fw_rsvdpagepkt(struct ieee80211_hw *hw, bool b_dl_finished);
++void rtl92c_set_fw_joinbss_report_cmd(struct ieee80211_hw *hw, u8 mstatus);
++
++#endif
 -- 
-1.6.3.3
+1.7.1
 
