@@ -1,130 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gx0-f174.google.com ([209.85.161.174]:36282 "EHLO
-	mail-gx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932153Ab0KSVui (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 19 Nov 2010 16:50:38 -0500
-Received: by gxk23 with SMTP id 23so3034004gxk.19
-        for <linux-wireless@vger.kernel.org>; Fri, 19 Nov 2010 13:50:37 -0800 (PST)
+Received: from kroah.org ([198.145.64.141]:59091 "EHLO coco.kroah.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754857Ab0KUR2Z (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 21 Nov 2010 12:28:25 -0500
+Date: Sun, 21 Nov 2010 09:29:06 -0800
+From: Greg KH <greg@kroah.com>
+To: Ted Ts'o <tytso@mit.edu>,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	linux-kernel@vger.kernel.org,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	David Miller <davem@davemloft.net>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Stephen Hemminger <shemminger@vyatta.com>,
+	"Perez-Gonzalez, Inaky" <inaky.perez-gonzalez@intel.com>,
+	Charles Marker <Charles.Marker@atheros.com>,
+	Jouni Malinen <Jouni.Malinen@atheros.com>,
+	Kevin Hayes <kevin@atheros.com>,
+	Zhifeng Cai <zhifeng.cai@atheros.com>,
+	Don Breslin <Don.Breslin@atheros.com>,
+	Doug Dahlby <Doug.Dahlby@atheros.com>,
+	Julia Lawall <julia@diku.dk>
+Subject: Re: Challenges with doing hardware bring up with Linux first
+Message-ID: <20101121172906.GD3703@kroah.com>
+References: <AANLkTim4jVaZxYp8nSgJyy28iwxcxbPeNUzxTfoHAX4S@mail.gmail.com> <F46C52ED-8DB8-4347-957D-B9D84406D53F@mit.edu> <AANLkTinyafwe9MyXhSSe5vxEKnTUeLV0AZDWY_uXsu8f@mail.gmail.com> <20101121130236.GE23423@thunk.org>
 MIME-Version: 1.0
-In-Reply-To: <AANLkTi=6s5bivn=6tySopOSXy8eFnsxCustQML7uZbCz@mail.gmail.com>
-References: <AANLkTi=6s5bivn=6tySopOSXy8eFnsxCustQML7uZbCz@mail.gmail.com>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Fri, 19 Nov 2010 13:50:16 -0800
-Message-ID: <AANLkTinveqmsy06wv4GY5STfeTu7ESVN4rjAVC4pa0Vw@mail.gmail.com>
-Subject: Re: computing average signal strength tshark
-To: Vinod Kone <vinodkone@gmail.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20101121130236.GE23423@thunk.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Nov 19, 2010 at 11:22 AM, Vinod Kone <vinodkone@gmail.com> wrote:
-> Hi Luis,
-> I saw that you posted a message a year ago about tshark's average
-> computation of signal strength being off. I am facing the same error, and
-> was wondering what your fix was.
+On Sun, Nov 21, 2010 at 08:02:36AM -0500, Ted Ts'o wrote:
+> On Thu, Nov 18, 2010 at 08:46:11AM -0800, Luis R. Rodriguez wrote:
+> > > What this provides for is a wonderful leverage for hardware
+> > > vendors. ? If they provide GPL'ed code for their core hardware
+> > > drivers that link against the Linux 802.11 layer, at one fell
+> > > swoop they also get Windows 7 and Mac OS X drivers for free!
+> > 
+> > Yes, indeed ! That would be ideal indeed, but we'd need then an 802.11
+> > stack which is also permissive licensed and then make APIs for that
+> > 802.11 stack to match mac80211's or cfg80211's or bridges between
+> > then. Because ultimately you will still need some 802.11 stack for
+> > some OSes that don't have one.
+> 
+> I wonder how much this is true.  Yes, at the moment we still need to
+> worry about those OS's that don't have one; but how much longer will
+> hardware vendors need to support Windows XP?  If Linux, Windows 7, and
+> Mac OS X all have an 802.11 stack, what other OS's do the hardware
+> vendors need to support?
 
-I have no fix, but the bug was likely in tshark.
+After visiting with a number of hardware companies that make wireless
+chips, they mentioned that they still need to support, and they still
+get new design wins for both eCos and vxworks, as well as some even
+more obscure embedded operating systems that their customers use.
 
-  Luis
+So unfortunatly, I don't see the ability for some of these vendors to
+drop their own internal wifi stacks any year soon, if they still wish to
+sell into some very large markets.
 
-> From: "Luis R. Rodriguez" <mcgrof@xxxxxxxxx>
-> Date: Fri, 19 Jun 2009 17:49:45 -0700
->
->
-> Using tshark from svn (today) with ath5k from wireless-testing (today)
-> I'm noticing some reporting of a signal value which is completely off
-> when using the statistics feature (io,stat). At first I though it was
-> ath5k so I went to verify we don't report huge signal values and we
-> don't. Right before we hand of the skb to mac80211 I added checked the
-> signal value and in all cases it was negative and with in reasonable
-> range -- my awk script says -55.219, for instance.
->
-> Now if I apply the same awk scrip to the output of 'tshark -V -i moni0
->> dump' and then grep for "SSI Signal" I get a reasonable average.
-> This at least allows me to rule out a driver issue.
->
-> Instead of running awk scripts I'd like to just use tshark to compute this.
->
-> tshark -i moni0 -q -z
-> "io,stat,1,AVG(radiotap.dbm_antsignal)radiotap.dbm_antsignal,AVG(radiotap.datarate)radiotap.datarate"
->
-> This prints the average signal and rate every second, if you use it
-> you'll see the first column is gross:
->
-> Capturing on moni0
-> ^C1355 packets captured
->
-> ===================================================================
-> IO Statistics
-> Interval: 1.000 secs
-> Column #0: AVG(radiotap.dbm_antsignal)radiotap.dbm_antsignal
-> Column #1: AVG(radiotap.datarate)radiotap.datarate
->                 |   Column #0    |   Column #1
-> Time            |            AVG |            AVG
-> 000.000-001.000          14035780                4
-> 001.000-002.000          16085960                4
-> 002.000-003.000          16976095                5
-> 003.000-004.000          19088682                5
-> 004.000-005.000          19792417                5
-> 005.000-006.000          49367380                5
->
->
-> If I decrease the interval to 0.001 I get more reasonable values:
->
-> tshark -i moni0 -q -z
-> "io,stat,0.001,AVG(radiotap.dbm_antsignal)radiotap.dbm_antsignal,AVG(radiotap.datarate)radiotap.datarate"
->
-> 5 packets captured
->
-> ===================================================================
-> IO Statistics
-> Interval: 0.001 secs
-> Column #0: AVG(radiotap.dbm_antsignal)radiotap.dbm_antsignal
-> Column #1: AVG(radiotap.datarate)radiotap.datarate
->                 |   Column #0    |   Column #1
-> Time            |            AVG |            AVG
-> 000.000-000.001               -40                2
-> 000.001-000.002               -41                2
-> 000.002-000.003                 0                0
-> 000.003-000.004          2147483602                3
-> 000.004-000.005                 0                0
-> 000.005-000.006                 0                0
-> 000.006-000.007                 0                0
-> 000.007-000.008                 0                0
-> 000.008-000.009                 0                0
-> 000.009-000.010                 0                0
-> 000.010-000.011                 0                0
-> 000.011-000.012                 0                0
-> 000.012-000.013                 0                0
-> 000.013-000.014                 0                0
-> 000.014-000.015                 0                0
-> 000.015-000.016                 0                0
-> 000.016-000.017                 0                0
-> 000.017-000.018                 0                0
-> 000.018-000.019                 0                0
-> 000.019-000.020                 0                0
-> 000.020-000.021                 0                0
-> 000.021-000.022                 0                0
-> 000.022-000.023                 0                0
-> 000.023-000.024                 0                0
-> 000.024-000.025                 0                0
-> 000.025-000.026                 0                0
-> 000.026-000.027                 0                0
-> 000.027-000.028               -64                2
-> ===================================================================
->
-> But notice that big fat 2147483602. And this is just 5 packets, if you
-> let it sit for a few seconds you'll see a lot of these spread out and
-> that ruins the average computation.
->
-> I'd send a patch but I'm not yet sure where to poke. If you are aware
-> where to look at let me know and I'll check it out. I'd like to fix
-> this or see this fixed.
->
->   Luis
->
-> Thanks,
-> -- Vinod
->
+sorry,
+
+greg k-h
