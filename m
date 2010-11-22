@@ -1,85 +1,86 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms3.broadcom.com ([216.31.210.19]:4216 "EHLO MMS3.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757379Ab0KVUI5 convert rfc822-to-8bit (ORCPT
+Received: from mail-px0-f174.google.com ([209.85.212.174]:55656 "EHLO
+	mail-px0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753631Ab0KVTNs convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 22 Nov 2010 15:08:57 -0500
-From: "Arend Van Spriel" <arend@broadcom.com>
-To: "Greg KH" <gregkh@suse.de>,
-	"Zimny Lech" <napohybelskurwysynom2010@gmail.com>
-cc: "Stephen Rothwell" <sfr@canb.auug.org.au>,
-	"linux-next@vger.kernel.org" <linux-next@vger.kernel.org>,
-	LKML <linux-kernel@vger.kernel.org>,
-	"Brett Rudley" <brudley@broadcom.com>,
-	"Henry Ptasinski" <henryp@broadcom.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Date: Mon, 22 Nov 2010 12:08:28 -0800
-Subject: RE: linux-next: Tree for November 22
-Message-ID: <400C43189542CE41BC0A5B252FC90136952F05944A@SJEXCHCCR02.corp.ad.broadcom.com>
-References: <20101122134911.b7e106f9.sfr@canb.auug.org.au>
- <AANLkTi=QeU_vb6+XRei0pqz7GSfp2E4TC3oTJYy9adv4@mail.gmail.com>,<20101122194643.GB21985@suse.de>
-In-Reply-To: <20101122194643.GB21985@suse.de>
+	Mon, 22 Nov 2010 14:13:48 -0500
+Received: by pxi15 with SMTP id 15so1619352pxi.19
+        for <linux-wireless@vger.kernel.org>; Mon, 22 Nov 2010 11:13:48 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain;
- charset=us-ascii
+In-Reply-To: <370521.43644.qm@web29514.mail.ird.yahoo.com>
+References: <4CEA9903.6070604@lwfinger.net> <370521.43644.qm@web29514.mail.ird.yahoo.com>
+From: Klaas De Craemer <klaasdc@gmail.com>
+Date: Mon, 22 Nov 2010 20:13:26 +0100
+Message-ID: <AANLkTimd0EDGtZFcrhknyacoCQQZNMEKe-kvYNA9z_Bo@mail.gmail.com>
+Subject: Re: RTL8187L: Can only "enable" hw radio switch after Windows boot
+To: htl10@users.sourceforge.net
+Cc: Larry Finger <Larry.Finger@lwfinger.net>,
+	linux-wireless@vger.kernel.org,
+	Herton Ronaldo Krzesinski <herton@mandriva.com.br>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Greg, Stephen,
-
-The file wl_iw.c declare a struct semaphore variable and uses semaphore function, but there is no explicit inclusion of <linux/semaphore.h>. I hit this problem last week when trying a minimal kernel configuration for my development system. Normally we build and test against kernel configuration similar to Ubuntu configuration and we got the semaphore definitions for free. Expect a patch soon.
-
-Gr. AvS
-________________________________________
-From: linux-wireless-owner@vger.kernel.org [linux-wireless-owner@vger.kernel.org] On Behalf Of Greg KH [gregkh@suse.de]
-Sent: Monday, November 22, 2010 8:46 PM
-To: Zimny Lech
-Cc: Stephen Rothwell; linux-next@vger.kernel.org; LKML; Brett Rudley; Henry Ptasinski; linux-wireless@vger.kernel.org
-Subject: Re: linux-next: Tree for November 22
-
-On Mon, Nov 22, 2010 at 04:37:57PM +0100, Zimny Lech wrote:
-> Salve
+On Mon, Nov 22, 2010 at 17:40, Hin-Tak Leung
+<htl10@users.sourceforge.net> wrote:
+> --- On Mon, 22/11/10, Larry Finger <Larry.Finger@lwfinger.net> wrote:
 >
-> 2010/11/22 Stephen Rothwell <sfr@canb.auug.org.au>:
-> > Hi all,
-> >
-> > Changes since 20101119:
-> >
+>> Date: Monday, 22 November, 2010, 16:23
+>> On 11/22/2010 02:59 AM, Klaas De
+>> Craemer wrote:
+>> >
+>> > Sorry, I meant I get a few errors in the form of
+>> "SIOCSIFFLAGS:
+>> > Unknown error 132" on the stdout when trying to bring
+>> up the blocked
+>> > interface.
+>>
+>> Do those errors also occur when it works, or just when it
+>> is blocked?
+
+The errors only occur when blocked. As Sven-Haegar Koch remarked, this
+behaviour is similar to the iwlagn driver for example with the switch
+turned off.
+
+>>
+>> Is it possible to keep the box in a warm place to see if it
+>> is temperature
+>> related? The problem of it working with Windows is still
+>> puzzling. As your Atom
+
+Not sure if you meant this, but the box itself is inside (warm), only
+the transceiver is outside.
+Just to be sure, I skipped trying it in Linux first today and
+immediately plugged it in my Windows laptop: instant connection. Next
+I plugged it in Linux and it works fine. This way the device had no
+time to "warm up" because of first being powered in Linux.
+
+I cannot easily take it inside without unscrewing the antenna (a dish
+with biquad feeder). So I'll try it without antenna tomorrow.
+
+>> is 32 bit, there is the possibility of trying ndiswrapper
+>> with the Windows XP
+>> driver. Oh it hurts to write that, but that would isolate
+>> the problem to rtl8187.
+
+That is going to be a bit difficult as the box is currently headless,
+runs from a 4GB SSD and has no CD drive. But I'll see what I can do.
+Would the results also be meaningful if I just ran plain/native
+Windows XP on it to test the drivers?
+
+>
+> I was going to comment if the problem is warm-reboot/cool-reboot related. I had an impression at some point in the past that the windows driver messes with the internal state of the 8187B device, such that it does not work under linux after a warm-boot from windows (i.e. you need to do "shutdown" in windows and presses the power-switch to go into linux, rather than "reboot", and select "linux" at the boot-loader prompt). Although I don't think this is the current situation - I don't often warm-reboot, and in any case, seldomly use wireless under windows - I think the in-kernel driver these days reset the device's state on start-up better or something, so my impression may not be valid; but if you are using a slightly older in-kernel driver, in combination with rebooting to windows, etc, that might be the case.
+>
+
+I'm not rebooting the Atom machine to Windows, just unplugging and
+plugging the usb cable into a Windows laptop. I guess that counts as a
+cold-boot.
+
+
+Thanks for your input so far!
+Klaas
+
 >
 >
->   CC [M]  drivers/staging/brcm80211/brcmfmac/wl_iw.o
-> /home/test/linux-2.6/drivers/staging/brcm80211/brcmfmac/wl_iw.c:130:19:
-> error: field 'sysioc_sem' has incomplete type
-> /home/test/linux-2.6/drivers/staging/brcm80211/brcmfmac/wl_iw.c: In
-> function 'wl_iw_timerfunc':
-> /home/test/linux-2.6/drivers/staging/brcm80211/brcmfmac/wl_iw.c:1070:4:
-> error: implicit declaration of function 'up'
-> /home/test/linux-2.6/drivers/staging/brcm80211/brcmfmac/wl_iw.c: In
-> function '_iscan_sysioc_thread':
-> /home/test/linux-2.6/drivers/staging/brcm80211/brcmfmac/wl_iw.c:1181:2:
-> error: implicit declaration of function 'down_interruptible'
-> /home/test/linux-2.6/drivers/staging/brcm80211/brcmfmac/wl_iw.c: In
-> function 'wl_iw_attach':
-> /home/test/linux-2.6/drivers/staging/brcm80211/brcmfmac/wl_iw.c:3708:2:
-> error: implicit declaration of function 'sema_init'
-> make[5]: *** [drivers/staging/brcm80211/brcmfmac/wl_iw.o] Error 1
-> make[4]: *** [drivers/staging/brcm80211/brcmfmac] Error 2
-> make[3]: *** [drivers/staging/brcm80211] Error 2
-> make[2]: *** [drivers/staging] Error 2
-> make[1]: *** [drivers] Error 2
-> make: *** [sub-make] Error 2
 >
-
-Ick, not good.
-
-Henry, Brett, any ideas?
-
-thanks,
-
-greg k-h
---
-To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
-
-
+>
