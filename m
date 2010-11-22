@@ -1,47 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:57995 "EHLO nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752114Ab0KRAh7 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 17 Nov 2010 19:37:59 -0500
-Message-ID: <4CE47563.2090803@openwrt.org>
-Date: Thu, 18 Nov 2010 01:37:55 +0100
-From: Felix Fietkau <nbd@openwrt.org>
+Received: from mail-bw0-f46.google.com ([209.85.214.46]:55483 "EHLO
+	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752594Ab0KVP5E (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 22 Nov 2010 10:57:04 -0500
+Received: by mail-bw0-f46.google.com with SMTP id 15so6251666bwz.19
+        for <linux-wireless@vger.kernel.org>; Mon, 22 Nov 2010 07:57:04 -0800 (PST)
 MIME-Version: 1.0
-To: Ben Greear <greearb@candelatech.com>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: recursive locking on wireless-testing.
-References: <4CE446E3.3090604@candelatech.com>
-In-Reply-To: <4CE446E3.3090604@candelatech.com>
+Date: Mon, 22 Nov 2010 10:56:55 -0500
+Message-ID: <AANLkTinu+xPRZyWT0_rzDXi3Z6p6BoTpLVTLdK=5yKee@mail.gmail.com>
+Subject: Issue with ath9k driver
+From: Martin Dubuc <martind1111@gmail.com>
+To: linux-wireless@vger.kernel.org
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2010-11-17 10:19 PM, Ben Greear wrote:
-> I found this while testing wpa_supplicant that shares scan results.
-> The kernel has no scan-sharing hacks in it..just a few patches
-> I've been using for a while (and the deadlock prevention patch
-> previously mentioned in other threads).
-> 
-> 
-> Nov 17 13:16:25 ath9k kernel: ieee80211 wiphy0: Removed STA 00:14:d1:c6:d2:54
-> Nov 17 13:16:25 ath9k kernel: ieee80211 wiphy0: Destroyed STA 00:14:d1:c6:d2:54
-> 
-> =============================================
-> [ INFO: possible recursive locking detected ]
-> 2.6.37-rc1-wl+ #48
-> ---------------------------------------------
-This should fix it. ath_tx_complete is already called with the txq locked.
+I have found an issue with the ath9k driver that first appeared in
+Fedora 13 kernel and also found in latest Fedora 14 kernel
+(2.6.35.6-48). I do not know if this issue was already raised and a
+fix has already been identified.
 
---- a/drivers/net/wireless/ath/ath9k/xmit.c
-+++ b/drivers/net/wireless/ath/ath9k/xmit.c
-@@ -1830,10 +1830,8 @@ static void ath_tx_complete(struct ath_s
- 	else {
- 		q = skb_get_queue_mapping(skb);
- 		if (txq == sc->tx.txq_map[q]) {
--			spin_lock_bh(&txq->axq_lock);
- 			if (WARN_ON(--txq->pending_frames < 0))
- 				txq->pending_frames = 0;
--			spin_unlock_bh(&txq->axq_lock);
- 		}
+When a system scans multiple channels on an ath9k interface for an
+extended period of time and an application like kismet or tcpdump
+monitors the interface, at some point, the application will stop
+receiving packets. The period of time ranges from 30 minutes to a few
+hours (generally less than 4 hours). To reproduce the problem, one can
+run kismet on the interface. After a while (30 minutes to a few
+hours), the interface will not receive any more packets.
 
- 		ieee80211_tx_status(hw, skb);
+The ath5k driver had similar issue in Fedora 13, but the problem was
+solved in Fedora 14 kernel.
+
+Martin
