@@ -1,66 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ey0-f174.google.com ([209.85.215.174]:59008 "EHLO
-	mail-ey0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752522Ab0KDTny (ORCPT
+Received: from mail-iw0-f174.google.com ([209.85.214.174]:63306 "EHLO
+	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754879Ab0KVBgR convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 4 Nov 2010 15:43:54 -0400
-Received: by mail-ey0-f174.google.com with SMTP id 27so1320245eye.19
-        for <linux-wireless@vger.kernel.org>; Thu, 04 Nov 2010 12:43:54 -0700 (PDT)
-From: Ivo van Doorn <ivdoorn@gmail.com>
-To: linux-wireless@vger.kernel.org
-Subject: [PATCH 08/13] rt2x00: Remove failsave from rt2x00usb_watchdog_tx_dma
-Date: Thu, 4 Nov 2010 20:39:48 +0100
-Cc: Helmut Schaa <helmut.schaa@googlemail.com>
-References: <201011042037.00178.IvDoorn@gmail.com> <201011042038.57061.IvDoorn@gmail.com> <201011042039.24768.IvDoorn@gmail.com>
-In-Reply-To: <201011042039.24768.IvDoorn@gmail.com>
+	Sun, 21 Nov 2010 20:36:17 -0500
+Received: by iwn34 with SMTP id 34so2239216iwn.19
+        for <linux-wireless@vger.kernel.org>; Sun, 21 Nov 2010 17:36:17 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Message-Id: <201011042039.49521.IvDoorn@gmail.com>
+In-Reply-To: <20101110222448.GG4667@tux>
+References: <1289355626-25373-1-git-send-email-lacombar@gmail.com>
+	<1289355626-25373-29-git-send-email-lacombar@gmail.com>
+	<20101110222448.GG4667@tux>
+Date: Sun, 21 Nov 2010 20:36:17 -0500
+Message-ID: <AANLkTikh2XJ1ONjD3PaYcw-yV9EkNZMX4Td3jAi9dGvs@mail.gmail.com>
+Subject: Re: [PATCH 28/44] compat: avoid using `#include_next' directive in
+ compat headers
+From: Arnaud Lacombe <lacombar@gmail.com>
+To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Luis Rodriguez <Luis.Rodriguez@atheros.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ivo van Doorn <IvDoorn@gmail.com>
+Hi,
 
-When the TX status handler failed to clear the queue
-in rt2x00usb_watchdog_tx_dma() we shouldn't use a failsave
-to use the rt2x00usb txdone handler.
+On Wed, Nov 10, 2010 at 5:24 PM, Luis R. Rodriguez
+<lrodriguez@atheros.com> wrote:
+> On Tue, Nov 09, 2010 at 06:20:10PM -0800, Arnaud Lacombe wrote:
+>> Signed-off-by: Arnaud Lacombe <lacombar@gmail.com>
+>> ---
+>>  include/linux/pm_qos_params.h |    7 +++----
+>>  include/linux/tracepoint.h    |   14 +++++++-------
+>>  include/net/net_namespace.h   |   14 +++++++-------
+>>  include/trace/define_trace.h  |    5 -----
+>>  4 files changed, 17 insertions(+), 23 deletions(-)
+>>
+>> diff --git a/include/linux/pm_qos_params.h b/include/linux/pm_qos_params.h
+>> index e1f083c..8c69ab2 100644
+>> --- a/include/linux/pm_qos_params.h
+>> +++ b/include/linux/pm_qos_params.h
+>> @@ -1,8 +1,7 @@
+>>  #include <linux/version.h>
+>>
+>> -#if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,25))
+>> -#include_next <linux/pm_qos_params.h>
+>> -#else
+>> +#if (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,25))
+>> +
+>
+> But will the kernels' own pm_qos_params.h be included for kernels >= 2.6.25?
+>
+The compat headers should be at the end of the include list, so that
+the kernel headers get included first, and the compat one will only be
+when the kernel does not provide the header. This is the only sane way
+to override kernel provided stuff. That said, there is certainly a
+use-case I missed.
 
-If a driver has overriden the txdone handler it must make
-sure the txdone handler is capable of cleaning up the queue itself.
-
-Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
-Acked-by: Gertjan van Wingerde <gwingerde@gmail.com>
----
- drivers/net/wireless/rt2x00/rt2x00usb.c |   15 ---------------
- 1 files changed, 0 insertions(+), 15 deletions(-)
-
-diff --git a/drivers/net/wireless/rt2x00/rt2x00usb.c b/drivers/net/wireless/rt2x00/rt2x00usb.c
-index 88995d5..6dd9619 100644
---- a/drivers/net/wireless/rt2x00/rt2x00usb.c
-+++ b/drivers/net/wireless/rt2x00/rt2x00usb.c
-@@ -323,21 +323,6 @@ static void rt2x00usb_watchdog_tx_dma(struct data_queue *queue)
- 	rt2x00dev->txdone_work.func(&rt2x00dev->txdone_work);
- 
- 	/*
--	 * Security measure: if the driver did override the
--	 * txdone_work function, and the hardware did arrive
--	 * in a state which causes it to malfunction, it is
--	 * possible that the driver couldn't handle the txdone
--	 * event correctly. So after giving the driver the
--	 * chance to cleanup, we now force a cleanup of any
--	 * leftovers.
--	 */
--	if (!rt2x00queue_empty(queue)) {
--		WARNING(queue->rt2x00dev, "TX queue %d DMA timed out,"
--			" status handling failed, invoke hard reset", queue->qid);
--		rt2x00usb_work_txdone(&rt2x00dev->txdone_work);
--	}
--
--	/*
- 	 * The queue has been reset, and mac80211 is allowed to use the
- 	 * queue again.
- 	 */
--- 
-1.7.2.3
-
+ - Arnaud
