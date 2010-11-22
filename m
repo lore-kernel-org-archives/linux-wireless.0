@@ -1,73 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([147.243.1.48]:17261 "EHLO mgw-sa02.nokia.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750967Ab0KVGBl (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 22 Nov 2010 01:01:41 -0500
-Subject: Re: [PATCH 2/2] Revert "wl1271: Change supported channel order for
- a more optimal scan"
-From: Juuso Oikarinen <juuso.oikarinen@nokia.com>
-To: "geryk@ti.com" <geryk@ti.com>
-Cc: "Coelho Luciano (Nokia-MS/Helsinki)" <Luciano.Coelho@nokia.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <4CDA83BD.2000306@ti.com>
-References: <1289384840-28305-1-git-send-email-juuso.oikarinen@nokia.com>
-	 <1289384840-28305-2-git-send-email-juuso.oikarinen@nokia.com>
-	 <4CDA7F7A.4000705@ti.com> <1289388086.2522.72.camel@wimaxnb.nmp.nokia.com>
-	 <4CDA83BD.2000306@ti.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Wed, 10 Nov 2010 13:42:58 +0200
-Message-ID: <1289389378.2522.78.camel@wimaxnb.nmp.nokia.com>
-Mime-Version: 1.0
+Received: from mail-iw0-f174.google.com ([209.85.214.174]:50943 "EHLO
+	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756634Ab0KVSJa convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 22 Nov 2010 13:09:30 -0500
+Received: by iwn38 with SMTP id 38so261746iwn.19
+        for <linux-wireless@vger.kernel.org>; Mon, 22 Nov 2010 10:09:30 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <AANLkTikh2XJ1ONjD3PaYcw-yV9EkNZMX4Td3jAi9dGvs@mail.gmail.com>
+References: <1289355626-25373-1-git-send-email-lacombar@gmail.com>
+ <1289355626-25373-29-git-send-email-lacombar@gmail.com> <20101110222448.GG4667@tux>
+ <AANLkTikh2XJ1ONjD3PaYcw-yV9EkNZMX4Td3jAi9dGvs@mail.gmail.com>
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Date: Mon, 22 Nov 2010 10:09:10 -0800
+Message-ID: <AANLkTinWrnugirPczxp5dMwMTvYn_HOaPtVw88YqXEmZ@mail.gmail.com>
+Subject: Re: [PATCH 28/44] compat: avoid using `#include_next' directive in
+ compat headers
+To: Arnaud Lacombe <lacombar@gmail.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Luis Rodriguez <Luis.Rodriguez@atheros.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2010-11-10 at 12:36 +0100, ext Gery Kahn wrote:
-> On 11/10/2010 01:21 PM, Juuso Oikarinen wrote:
-> > On Wed, 2010-11-10 at 12:18 +0100, ext Gery Kahn wrote:
-> >> On 11/10/2010 12:27 PM, juuso.oikarinen@nokia.com wrote:
-> >>> From: Juuso Oikarinen<juuso.oikarinen@nokia.com>
-> >>>
-> >>> This reverts commit fa21c7a9e4be439e217fe72edbd39b643b643791.
-> >>>
-> >>> The reverted patch caused more harm than benefit.
-> >>>
-> >>> Signed-off-by: Juuso Oikarinen<juuso.oikarinen@nokia.com>
-> >>>
-> >> Just couple words what harm it was?
-> >
-> > The harm is that the supported channels are reported to user-space in
-> > the order they are registered in the driver. The result of that is quite
-> > messy in userspace PoV.
-> >
-> > -Juuso
-> >
-> Thank you for answer.
-> 
-> The reason of doing such channel sorting was channel overlapping.
-> 
-> Let's say for 11a (bandwidth 20MHz) it is not a problem.
-> While 11g, preferred channel sorting would be 1,6,11,...
-> 
-> Gery
+On Sun, Nov 21, 2010 at 5:36 PM, Arnaud Lacombe <lacombar@gmail.com> wrote:
+> Hi,
+>
+> On Wed, Nov 10, 2010 at 5:24 PM, Luis R. Rodriguez
+> <lrodriguez@atheros.com> wrote:
+>> On Tue, Nov 09, 2010 at 06:20:10PM -0800, Arnaud Lacombe wrote:
+>>> Signed-off-by: Arnaud Lacombe <lacombar@gmail.com>
+>>> ---
+>>>  include/linux/pm_qos_params.h |    7 +++----
+>>>  include/linux/tracepoint.h    |   14 +++++++-------
+>>>  include/net/net_namespace.h   |   14 +++++++-------
+>>>  include/trace/define_trace.h  |    5 -----
+>>>  4 files changed, 17 insertions(+), 23 deletions(-)
+>>>
+>>> diff --git a/include/linux/pm_qos_params.h b/include/linux/pm_qos_params.h
+>>> index e1f083c..8c69ab2 100644
+>>> --- a/include/linux/pm_qos_params.h
+>>> +++ b/include/linux/pm_qos_params.h
+>>> @@ -1,8 +1,7 @@
+>>>  #include <linux/version.h>
+>>>
+>>> -#if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,25))
+>>> -#include_next <linux/pm_qos_params.h>
+>>> -#else
+>>> +#if (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,25))
+>>> +
+>>
+>> But will the kernels' own pm_qos_params.h be included for kernels >= 2.6.25?
+>>
+> The compat headers should be at the end of the include list, so that
+> the kernel headers get included first, and the compat one will only be
+> when the kernel does not provide the header. This is the only sane way
+> to override kernel provided stuff. That said, there is certainly a
+> use-case I missed.
 
-Yes, this is why we had this reordering in the first place.
+Agreed, but you are missing the purpose of the trick used here. The
+purpose of the include_next was so that we can name our own
+<linux/pm_qos_params.h> which is part of compat and these directories
+*will* get a priority over the kernel's so that way we can avoid
+ifdef'ing all includes for the same file on the upstream code. Without
+an include_next we'd simply skip including the kernel's own original
+header file.
 
-One benefit of sorting channels would be to get faster results for the
-whole band, as there are responses from the overlapping channels too.
-
-Currently the the scanning code however waits for all channels to be
-scanned before sending results to userspace, so this benefit is not
-utilized, and removing this patch makes no difference in that sense.
-
-To take advantage of channel reordering, some other changes are needed
-too. And the reordering needs to be performed in the mac80211/cfg80211
-level (I actually earlier submitted a RFC patch doing just this.)
-
--Juuso
-
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-
-
+  Luis
