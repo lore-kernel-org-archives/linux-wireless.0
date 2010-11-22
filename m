@@ -1,36 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iw0-f174.google.com ([209.85.214.174]:53509 "EHLO
-	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756366Ab0KNQwh (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:39392 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754424Ab0KVTAh (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 14 Nov 2010 11:52:37 -0500
-Received: by iwn10 with SMTP id 10so5710676iwn.19
-        for <linux-wireless@vger.kernel.org>; Sun, 14 Nov 2010 08:52:37 -0800 (PST)
+	Mon, 22 Nov 2010 14:00:37 -0500
+Date: Mon, 22 Nov 2010 13:46:34 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Jouni Malinen <j@w1.fi>, Bruno Randolf <br1@einfach.org>,
+	randy.dunlap@oracle.com, br1@thinktube.com, peterz@infradead.org,
+	blp@cs.stanford.edu, linux-wireless@vger.kernel.org,
+	linux-kernel@vger.kernel.org, Lars_Ericsson@telia.com,
+	stefanr@s5r6.in-berlin.de, kosaki.motohiro@jp.fujitsu.com,
+	akpm@linux-foundation.org, kevin.granade@gmail.com
+Subject: Re: [PATCH v7 3/3] nl80211/mac80211: Report signal average
+Message-ID: <20101122184633.GD2117@tuxdriver.com>
+References: <20101112024901.28522.21895.stgit@localhost6.localdomain6>
+ <20101112030035.28522.75318.stgit@localhost6.localdomain6>
+ <20101116093743.GA21872@jm.kir.nu>
+ <1290193116.3768.8.camel@jlt3.sipsolutions.net>
 MIME-Version: 1.0
-In-Reply-To: <AANLkTikxUedowJOW=u1ObXjd02gppHX_wnq1uTkJuhZ2@mail.gmail.com>
-References: <AANLkTim5a_oFXqjMrcbcUipG5FijbUoFkYF6ri6zO7wg@mail.gmail.com>
-	<4CD9474C.5010003@lwfinger.net>
-	<AANLkTikxUedowJOW=u1ObXjd02gppHX_wnq1uTkJuhZ2@mail.gmail.com>
-Date: Sun, 14 Nov 2010 14:52:36 -0200
-Message-ID: <AANLkTikFogi+NAFdCpJ4kHFHKAhFJGnhjKQMCV8Fxd8R@mail.gmail.com>
-Subject: Re: RTL8187/8189
-From: Yermandu Patapitafious <yermandu.dev@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: Rogerio Luz Coelho <rogluz.news@gmail.com>, herton@mandriva.com
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1290193116.3768.8.camel@jlt3.sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi everybody i update the kernel to 2.6.37-rc1-wl+,
-So i tried again, the new updates makes magics :-) , finally we get a
-connection with good speed. Apparently the connection isnt stable, i
-dont make much tests, but now we can connect to AP using wap2.
+On Fri, Nov 19, 2010 at 10:58:36AM -0800, Johannes Berg wrote:
+> On Tue, 2010-11-16 at 11:37 +0200, Jouni Malinen wrote:
+> > On Fri, Nov 12, 2010 at 12:00:35PM +0900, Bruno Randolf wrote:
+> > > Extend nl80211 to report an exponential weighted moving average (EWMA) of the
+> > > signal value. Since the signal value usually fluctuates between different
+> > > packets, an average can be more useful than the value of the last packet.
+> > > 
+> > > This uses the recently added generic EWMA library function.
+> > 
+> > Isn't that generic EWMA library function making this much more CPU
+> > intensive than necessary?
+> 
+> John, is there any reason you completely ignored Jouni's feedback here?
+> This wasn't addressed in v8.
 
-Finally,
+Well, I confess that I didn't fully appreciate Jouni's point.
 
-We really appreciate the team's efforts. Good Luck to all.
+Is there any reason to presume that Bruno cannot (or will not) improve
+the performance from here?  Do you have any measurement of the actual
+performance impact?
 
-Hugs
-
---
-yermandu
+John
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
