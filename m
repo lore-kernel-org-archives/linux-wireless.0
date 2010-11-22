@@ -1,59 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from lo.gmane.org ([80.91.229.12]:34697 "EHLO lo.gmane.org"
+Received: from smtp.nokia.com ([147.243.128.26]:50109 "EHLO mgw-da02.nokia.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755332Ab0KNMW6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 14 Nov 2010 07:22:58 -0500
-Received: from list by lo.gmane.org with local (Exim 4.69)
-	(envelope-from <glkwg-linux-wireless@m.gmane.org>)
-	id 1PHbbj-0005hH-1u
-	for linux-wireless@vger.kernel.org; Sun, 14 Nov 2010 13:22:55 +0100
-Received: from cpc7-aztw22-2-0-cust235.aztw.cable.virginmedia.com ([94.171.255.236])
-        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Sun, 14 Nov 2010 13:22:55 +0100
-Received: from james.c.womack by cpc7-aztw22-2-0-cust235.aztw.cable.virginmedia.com with local (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Sun, 14 Nov 2010 13:22:55 +0100
-To: linux-wireless@vger.kernel.org
-From: James Womack <james.c.womack@gmail.com>
-Subject: Re: r8187se panic
-Date: Sun, 14 Nov 2010 12:22:16 +0000
-Message-ID: <ibokag$481$1@dough.gmane.org>
-References: <slrnidp3ae.79c.rb-oss-3@mal.justgohome.co.uk> <4CDC9FA5.10002@lwfinger.net> <slrnidq7u0.9ic.rb-oss-3@mal.justgohome.co.uk> <4CDD3BC4.7070102@lwfinger.net> <slrnidqorp.dlr.rb-oss-3@mal.justgohome.co.uk> <4CDD66C4.10603@lwfinger.net> <slrnidqsld.dlr.rb-oss-3@mal.justgohome.co.uk> <4CDD7945.70005@lwfinger.net> <slrnidqv0k.g21.rb-oss-3@mal.justgohome.co.uk> <loom.20101113T191727-421@post.gmane.org> <4CDEDC74.3040902@lwfinger.net> <ibmosc$4au$1@dough.gmane.org> <4CDEEEE4.80801@lwfinger.net>
+	id S1754583Ab0KVNXA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 22 Nov 2010 08:23:00 -0500
+Received: from nokia.com (localhost [127.0.0.1])
+	by mgw-da02.nokia.com (Switch-3.4.3/Switch-3.4.3) with ESMTP id oAMDMxbX032221
+	for <linux-wireless@vger.kernel.org>; Mon, 22 Nov 2010 15:22:59 +0200
+Subject: Re: [PATCHv3] wl12xx: Unset bssid filter, ssid and bssid from
+ firmware on disassoc
+From: Luciano Coelho <luciano.coelho@nokia.com>
+To: "ext juuso.oikarinen@nokia.com" <juuso.oikarinen@nokia.com>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <1290423548-29861-1-git-send-email-juuso.oikarinen@nokia.com>
+References: <1290423548-29861-1-git-send-email-juuso.oikarinen@nokia.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Mon, 22 Nov 2010 15:22:36 +0200
+Message-ID: <1290432156.3322.20.camel@chilepepper>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-In-Reply-To: <4CDEEEE4.80801@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 13/11/10 20:02, Larry Finger wrote:
-> On 11/13/2010 01:27 PM, James Womack wrote:
->> If building a kernel is as simple as building other programs from source
->> (i.e. configure, make, make install), I could do that. I'm using Debian
->> at the moment. Presumably I'd need a compiler of some kind, which I
->> could obtain from the repos. I am not sure how one would apply patches
->> to the kernel, however. Would I be able to compile a modified kernel and
->> add this to grub whilst retaining the ability to boot in the unmodified
->> kernel?
->
-> It is similar to the process used with other programs. My distro is openSUSE and
-> the steps are to get the kernel source, the kernel development package, and the
-> patch utility using YaST. Other distros use emerge, apt-get, or similar
-> utilities. The easiest way to configure the kernel is to match the current one
-> using the compressed version in /proc/config.gz. You should end up with an
-> additional kernel in the GRUB menu that can be selected at boot time.
->
-> Larry
->
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
-Okay, I've downloaded the necessary tools and extracted the kernel 
-source. I have a tutorial on how to patch and build the kernel. Where 
-should I apply your patches?
+On Mon, 2010-11-22 at 12:59 +0200, ext juuso.oikarinen@nokia.com wrote:
+> From: Juuso Oikarinen <juuso.oikarinen@nokia.com>
+> 
+> On the disassociation event from the mac80211, the wl12xx driver does not
+> clear the chipset configuration related to the AP - i.e. it does not perform
+> a DISCONNECT and then a JOIN with zero SSID and dummy BSSID. Also, it does not
+> unset the BSSID filter.
+> 
+> Often this is not a problem, as the above is performed upon entering idle
+> state. But if a scenario arises where a new association is attempted without
+> cycling through idle state, the new association will fail.
+> 
+> Fix this by resetting the firmware state on disassociation.
+> 
+> Signed-off-by: Juuso Oikarinen <juuso.oikarinen@nokia.com>
+> ---
 
-James
+Reviewed-by: Luciano Coelho <luciano.coelho@nokia.com>
+
+This looks good now.  Applied.
+
+-- 
+Cheers,
+Luca.
 
