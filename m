@@ -1,55 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:51348 "EHLO nbd.name"
-	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1755817Ab0KJMrd (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 10 Nov 2010 07:47:33 -0500
-Message-ID: <4CDA9463.2090003@openwrt.org>
-Date: Wed, 10 Nov 2010 13:47:31 +0100
-From: Felix Fietkau <nbd@openwrt.org>
+Received: from mail-pz0-f46.google.com ([209.85.210.46]:50524 "EHLO
+	mail-pz0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755181Ab0KVTgS convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 22 Nov 2010 14:36:18 -0500
+Received: by pzk6 with SMTP id 6so230383pzk.19
+        for <linux-wireless@vger.kernel.org>; Mon, 22 Nov 2010 11:36:18 -0800 (PST)
 MIME-Version: 1.0
-To: Vivek Natarajan <vnatarajan@atheros.com>
-CC: linux-wireless@vger.kernel.org
-Subject: Re: [RFC 2/5] ath: Add a keycache entry if beamforming is enabled.
-References: <1289391829-8577-1-git-send-email-vnatarajan@atheros.com> <1289391829-8577-2-git-send-email-vnatarajan@atheros.com>
-In-Reply-To: <1289391829-8577-2-git-send-email-vnatarajan@atheros.com>
-Content-Type: text/plain; charset=ISO-8859-1
+In-Reply-To: <93781E992CBA7843962D8B0E7D683F3C1633484F57@SC1EXMB-MBCL.global.atheros.com>
+References: <20100525151429.GC6342@tpkurt2.garloff.de> <1290029817-711-1-git-send-email-linville@tuxdriver.com>
+ <AANLkTimDkoqNbkFWDsU2HgFK3926gRpcBbokX_GL5sSc@mail.gmail.com>
+ <93781E992CBA7843962D8B0E7D683F3C163340D5AE@SC1EXMB-MBCL.global.atheros.com>
+ <20101119020414.GB2512@tuxdriver.com> <20101119091450.GD12228@tpkurt2.nue.garloff.de>
+ <93781E992CBA7843962D8B0E7D683F3C16334843DD@SC1EXMB-MBCL.global.atheros.com>
+ <AANLkTi=ySDQtw+M6ATV47HszkJN7vfR7q+FOC6-OBqjk@mail.gmail.com> <93781E992CBA7843962D8B0E7D683F3C1633484F57@SC1EXMB-MBCL.global.atheros.com>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Mon, 22 Nov 2010 11:35:56 -0800
+Message-ID: <AANLkTimbCzK6RPCnc0T117D0X+Yvi8S3j3L9aG74L=Jg@mail.gmail.com>
+Subject: Re: [PATCH] wireless-regdb: update rules for DE
+To: Michael Green <Michael.Green@atheros.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2010-11-10 1:23 PM, Vivek Natarajan wrote:
-> Keycache entry for a sta has the details of the negotiated
-> beamforming parameters which is to be used by the hardware
-> while trasmitting to that specific sta.
-> 
-> Signed-off-by: Vivek Natarajan <vnatarajan@atheros.com>
-> ---
->  drivers/net/wireless/ath/ath.h |    2 ++
->  drivers/net/wireless/ath/key.c |   29 +++++++++++++++++++++++++++++
->  2 files changed, 31 insertions(+), 0 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/ath/key.c b/drivers/net/wireless/ath/key.c
-> index 62e3dac..11f562e 100644
-> --- a/drivers/net/wireless/ath/key.c
-> +++ b/drivers/net/wireless/ath/key.c
-> @@ -115,6 +115,7 @@ static bool ath_hw_set_keycache_entry(struct ath_common *common, u16 entry,
->  	void *ah = common->ah;
->  	u32 key0, key1, key2, key3, key4;
->  	u32 keyType;
-> +	u32 txbf = 0;
->  
->  	if (entry >= common->keymax) {
->  		ath_print(common, ATH_DBG_FATAL,
-> @@ -199,6 +200,9 @@ static bool ath_hw_set_keycache_entry(struct ath_common *common, u16 entry,
->  		REG_WRITE(ah, AR_KEYTABLE_KEY4(entry), key4);
->  		REG_WRITE(ah, AR_KEYTABLE_TYPE(entry), keyType);
->  
-> +		REG_WRITE(ah, AR_KEYTABLE_TYPE(entry),
-> +				keyType | txbf);
-> +
->  		/* Write MAC address for the entry */
->  		(void) ath_hw_keysetmac(common, entry, mac);
->  
-What's the point of this change, if txbf is always zero?
-And why duplicate the REG_WRITE?
+On Mon, Nov 22, 2010 at 11:00 AM, Michael Green
+<Michael.Green@atheros.com> wrote:
+> Thanks.  I understand/agree with that. But a dumb question...are all other EU countries set the same way now?
 
-- Felix
+Hey Michael, no they are not, each patch addresses just one country at a time.
+
+  Luis
