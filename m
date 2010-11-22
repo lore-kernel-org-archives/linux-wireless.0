@@ -1,53 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([147.243.128.26]:29268 "EHLO mgw-da02.nokia.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757404Ab0KQN3U (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 17 Nov 2010 08:29:20 -0500
-Received: from nokia.com (localhost [127.0.0.1])
-	by mgw-da02.nokia.com (Switch-3.4.3/Switch-3.4.3) with ESMTP id oAHDTJqO015002
-	for <linux-wireless@vger.kernel.org>; Wed, 17 Nov 2010 15:29:19 +0200
-From: juuso.oikarinen@nokia.com
-To: luciano.coelho@nokia.com
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH] wl12xx: Unset bssid filter, ssid and bssid from firmware on disassoc
-Date: Wed, 17 Nov 2010 15:29:01 +0200
-Message-Id: <1290000541-17828-1-git-send-email-juuso.oikarinen@nokia.com>
+Received: from mail-vw0-f46.google.com ([209.85.212.46]:41522 "EHLO
+	mail-vw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755961Ab0KVUOP (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 22 Nov 2010 15:14:15 -0500
+Date: Mon, 22 Nov 2010 18:13:31 -0200
+From: "Gustavo F. Padovan" <padovan@profusion.mobi>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org, linux-bluetooth@vger.kernel.org
+Subject: Re: pull request: bluetooth-2.6 2010-11-22
+Message-ID: <20101122201330.GE23109@vigoh>
+References: <20101122181411.GD23109@vigoh>
+ <20101122193029.GE2117@tuxdriver.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20101122193029.GE2117@tuxdriver.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Juuso Oikarinen <juuso.oikarinen@nokia.com>
+* John W. Linville <linville@tuxdriver.com> [2010-11-22 14:30:30 -0500]:
 
-On the disassociation event from the mac80211, the wl12xx driver does not
-clear the chipset configuration related to the AP - i.e. it does not perform
-a DISCONNECT and then a JOIN with zero SSID and dummy BSSID. Also, it does not
-unset the BSSID filter.
+> On Mon, Nov 22, 2010 at 04:14:11PM -0200, Gustavo F. Padovan wrote:
+> > Hi John,
+> > 
+> > Following batch is intended to 2.6.37, it includes a very trivial return
+> > err fix from myself and an remote name request fix from Johan Hedberg.
+> > This fix move the remote name request (during the connection creation
+> > process) to the kernelspace. In addition we have removed this operation
+> > from BlueZ in userspace. Quoting part of Johan's patch which already
+> > explain the change:
+> > 
+> >    "So far userspace has been responsible for this extra name request but
+> >     tighter control is needed in order not to flood Bluetooth controllers
+> >     with two many commands during connection creation. It has been shown
+> >     that some controllers simply fail to function correctly if they get too
+> >     many (almost) simultaneous commands during connection creation. The
+> >     simplest way to acheive better control of these commands is to move
+> >     their sending completely to the kernel side."
+> > 
+> > As side effect, we have a clean up patch in preparation to this fix.
+> > 
+> > Please pull, or let me know any problems you find here. Thanks.
+> 
+> The return code fix seems reasonable -- small and obvious, etc.
+> 
+> The other fixes are larger than I would like to see.  What is the
+> effect of the bug?  Does the Bluetooth controller stop completely?
+> Does it cause a crash?
+> 
+> Is this a newly-introduced bug?  Or one that has been around for
+> a while?
 
-Often this is not a problem, as the above is performed upon entering idle
-state. But if a scenario arises where a new association is attempted without
-cycling through idle state, the new association will fail.
+No, it is not serious like that. By not having this patch we won't have
+the remote name request command during connection setup, The remote name
+request was done by bluetoothd, but we already removed it from
+userspace. It is not a really big problem once we also cache the remote
+devices names in bluetoothd.
+So I'm seeing no way to convince you tou pull this patch (actually I'm
+now also covinced to queue this to bluetooth-next).  I'll sent a new
+pull request soon, after wait some time for new patches.
 
-Fix this by resetting the firmware state on disassociation.
-
-Signed-off-by: Juuso Oikarinen <juuso.oikarinen@nokia.com>
----
- drivers/net/wireless/wl12xx/main.c |    4 ++++
- 1 files changed, 4 insertions(+), 0 deletions(-)
-
-diff --git a/drivers/net/wireless/wl12xx/main.c b/drivers/net/wireless/wl12xx/main.c
-index 31f0e2f..c523778 100644
---- a/drivers/net/wireless/wl12xx/main.c
-+++ b/drivers/net/wireless/wl12xx/main.c
-@@ -2012,6 +2012,10 @@ static void wl1271_op_bss_info_changed(struct ieee80211_hw *hw,
- 			/* Disable the keep-alive feature */
- 			ret = wl1271_acx_keep_alive_mode(wl, false);
- 
-+			/* restore the bssid filter and go to dummy bssid */
-+			wl1271_handle_idle(wl, true);
-+			wl1271_handle_idle(wl, false);
-+
- 			if (ret < 0)
- 				goto out_sleep;
- 		}
 -- 
-1.7.1
-
+Gustavo F. Padovan
+http://profusion.mobi
