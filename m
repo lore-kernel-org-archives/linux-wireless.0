@@ -1,193 +1,88 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.19.149.2]:44625 "EHLO mail.atheros.com"
+Received: from cantor2.suse.de ([195.135.220.15]:59309 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754035Ab0KRFzF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 18 Nov 2010 00:55:05 -0500
-Received: from mail.atheros.com ([10.10.20.105])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Wed, 17 Nov 2010 21:54:52 -0800
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: <linville@tuxdriver.com>
-CC: <mark@moxienet.com>, <linux-wireless@vger.kernel.org>,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>
-Subject: [PATCH 4/4] cfg80211: Fix regulatory bug with multiple cards and delays
-Date: Wed, 17 Nov 2010 21:55:02 -0800
-Message-ID: <1290059702-2679-1-git-send-email-lrodriguez@atheros.com>
+	id S1754248Ab0KVKno (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 22 Nov 2010 05:43:44 -0500
+Date: Mon, 22 Nov 2010 11:43:41 +0100
+From: Michal Hocko <mhocko@suse.cz>
+To: linux-wireless@vger.kernel.org
+Cc: Reinette Chatre <reinette.chatre@intel.com>,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>,
+	Intel Linux Wireless <ilw@linux.intel.com>,
+	LKML <linux-kernel@vger.kernel.org>
+Subject: iwl3945: regression - unregister_netdevice: waiting for wlan0 to
+ become free. Usage count = 1
+Message-ID: <20101122104341.GA3897@tiehlicka.suse.cz>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-When two cards are connected with the same regulatory domain
-if CRDA had a delayed response then cfg80211's own set regulatory
-domain would still be the world regulatory domain. There was a bug
-on cfg80211's logic such that it assumed that once you pegged a
-request as the last request it was already the currently set
-regulatory domain. This would mean we would race setting a stale
-regulatory domain to secondary cards which had the same regulatory
-domain since the alpha2 would match.
+Hi,
+I am experiencing iwl3945 driver reference counting problem with the current
+2.6.37-rc2 kernel release. 
 
-We fix this by processing each regulatory request atomically,
-and only move on to the next one once we get it fully processed.
-In the case CRDA is not present we will simply world roam.
+The problem can be easily reproduced by associating to an AP (I have
+tried only wep and wpa based auth) and then rmmod iw3945 which gets
+stuck in unregister_netdevice (in the endless loop as there is no way -
+I guess - to decrease the reference count to 0) spitting the following
+message:
 
-This issue is only present when you have a slow system and the
-CRDA processing is delayed. Because of this it is not a known
-regression.
+unregister_netdevice: waiting for wlan0 to become free. Usage count = 1
 
-Without this fix when a delay is present with CRDA the second card
-would end up with an intersected regulatory domain and not allow it
-to use the channels it really is designed for. When two cards with
-two different regulatory domains were inserted you'd end up
-rejecting the second card's regulatory domain request.
-This fails with mac80211_hswim's regtest=2 (two requests, same alpha2)
-and regtest=3 (two requests, different alpha2) module parameter
-options.
+The situation is even worse as the rmmod process sits on the CPU and
+cannot be killed and the loop never ends so the only solution is
+rebooting.
 
-This was reproduced and tested against mac80211_hwsim using this
-CRDA delayer:
+2.6.37-rc1 looks good. I have tried to bisect to the culprit but I am
+failing to boot some of the kernels on the way (due to some unrelated
+issue which is already fixed in rc2). This is a partial bisect log
+(maybe it helps to narrow down the range of commits):
 
-       #!/bin/bash
-       echo $COUNTRY >> /tmp/log
-       sleep 2
-       /sbin/crda.orig
+$ git bisect log
+git bisect start
+# bad: [e53beacd23d9cb47590da6a7a7f6d417b941a994] Linux 2.6.37-rc2
+git bisect bad e53beacd23d9cb47590da6a7a7f6d417b941a994
+# good: [151f52f09c5728ecfdd0c289da1a4b30bb416f2c] ipw2x00: remove the right /proc/net entry
+git bisect good 151f52f09c5728ecfdd0c289da1a4b30bb416f2c
+# good: [891cbd30ef456664e50bbd28436ef3006a81cf7c] Merge branch 'upstream/core' of git://git.kernel.org/pub/scm/linux/kernel/git/jeremy/xen
+git bisect good 891cbd30ef456664e50bbd28436ef3006a81cf7c
+# good: [80ef913f5e6a84551545016cea709f5e96d0cda6] Merge branch 'upstream-linus' of git://git.kernel.org/pub/scm/linux/kernel/git/jgarzik/libata-dev
+git bisect good 80ef913f5e6a84551545016cea709f5e96d0cda6
+# bad: [c22cff08db00ef0411be088956d7934681a1f988] Merge branch 'v4l_for_linus' of git://git.kernel.org/pub/scm/linux/kernel/git/mchehab/linux-2.6
+git bisect bad c22cff08db00ef0411be088956d7934681a1f988
+# skip: [8877870f8a8127b653f8c9a55c6b4de9f96f639b] Merge branch 'master' of git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-2.6
+git bisect skip 8877870f8a8127b653f8c9a55c6b4de9f96f639b
+# skip: [75e6047431872dadd0b13503b374e48ccd71a507] ucc_geth: Fix deadlock
+git bisect skip 75e6047431872dadd0b13503b374e48ccd71a507
+# skip: [18943d292facbc70e6a36fc62399ae833f64671b] inet: fix ip_mc_drop_socket()
+git bisect skip 18943d292facbc70e6a36fc62399ae833f64671b
+[Here I gave up]
 
-And these regulatory tests:
+skipped steps are non-bootable kernels. From the log it looks like the last
+good commit is 80ef913f5e6a845.
 
-       modprobe mac80211_hwsim regtest=2
-       modprobe mac80211_hwsim regtest=3
+There is only one patch in that range for iwlwifi drivers:
+$ git shortlog 80ef913f5e6a845..v2.6.37-rc2 -- drivers/net/wireless/iwlwifi/
+Wey-Yi Guy (1):
+      iwlwifi: dont use pci_dev before it being assign
 
-Cc: Mark Mentovai <mark@moxienet.com>
-Reported-by: Mark Mentovai <mark@moxienet.com>
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
----
- include/net/regulatory.h |    7 ++++++
- net/wireless/reg.c       |   52 ++++++++++++++++++++++++++++++++++++++--------
- 2 files changed, 50 insertions(+), 9 deletions(-)
+and this one doesn't look to manipulate the reference counting so I
+guess this is more general problem.
 
-diff --git a/include/net/regulatory.h b/include/net/regulatory.h
-index 9e103a4..356d6e3 100644
---- a/include/net/regulatory.h
-+++ b/include/net/regulatory.h
-@@ -43,6 +43,12 @@ enum environment_cap {
-  * @intersect: indicates whether the wireless core should intersect
-  * 	the requested regulatory domain with the presently set regulatory
-  * 	domain.
-+ * @processed: indicates whether or not this requests has already been
-+ *	processed. When the last request is processed it means that the
-+ *	currently regulatory domain set on cfg80211 is updated from
-+ *	CRDA and can be used by other regulatory requests. When a
-+ *	the last request is not yet processed we must yield until it
-+ *	is processed before processing any new requests.
-  * @country_ie_checksum: checksum of the last processed and accepted
-  * 	country IE
-  * @country_ie_env: lets us know if the AP is telling us we are outdoor,
-@@ -54,6 +60,7 @@ struct regulatory_request {
- 	enum nl80211_reg_initiator initiator;
- 	char alpha2[2];
- 	bool intersect;
-+	bool processed;
- 	enum environment_cap country_ie_env;
- 	struct list_head list;
- };
-diff --git a/net/wireless/reg.c b/net/wireless/reg.c
-index b522c46..bc14caa 100644
---- a/net/wireless/reg.c
-+++ b/net/wireless/reg.c
-@@ -1320,6 +1320,21 @@ static int ignore_request(struct wiphy *wiphy,
- 	return -EINVAL;
- }
- 
-+static void reg_set_request_processed(void)
-+{
-+	bool need_more_processing = false;
-+
-+	last_request->processed = true;
-+
-+	spin_lock(&reg_requests_lock);
-+	if (!list_empty(&reg_requests_list))
-+		need_more_processing = true;
-+	spin_unlock(&reg_requests_lock);
-+
-+	if (need_more_processing)
-+		schedule_work(&reg_work);
-+}
-+
- /**
-  * __regulatory_hint - hint to the wireless core a regulatory domain
-  * @wiphy: if the hint comes from country information from an AP, this
-@@ -1395,8 +1410,10 @@ new_request:
- 		 * have applied the requested regulatory domain before we just
- 		 * inform userspace we have processed the request
- 		 */
--		if (r == -EALREADY)
-+		if (r == -EALREADY) {
- 			nl80211_send_reg_change_event(last_request);
-+			reg_set_request_processed();
-+		}
- 		return r;
- 	}
- 
-@@ -1428,7 +1445,11 @@ static void reg_process_hint(struct regulatory_request *reg_request)
- 		wiphy_update_regulatory(wiphy, initiator);
- }
- 
--/* Processes regulatory hints, this is all the NL80211_REGDOM_SET_BY_* */
-+/*
-+ * Processes regulatory hints, this is all the NL80211_REGDOM_SET_BY_*
-+ * Regulatory hints come on a first come first serve basis and we
-+ * must process each one atomically.
-+ */
- static void reg_process_pending_hints(void)
- {
- 	struct regulatory_request *reg_request;
-@@ -1436,19 +1457,30 @@ static void reg_process_pending_hints(void)
- 	mutex_lock(&cfg80211_mutex);
- 	mutex_lock(&reg_mutex);
- 
-+	/* When last_request->processed becomes true this will be rescheduled */
-+	if (last_request && !last_request->processed) {
-+		REG_DBG_PRINT("Pending regulatory request, waiting "
-+			      "for it to be processed...");
-+		goto out;
-+	}
-+
- 	spin_lock(&reg_requests_lock);
--	while (!list_empty(&reg_requests_list)) {
--		reg_request = list_first_entry(&reg_requests_list,
--					       struct regulatory_request,
--					       list);
--		list_del_init(&reg_request->list);
- 
-+	if (list_empty(&reg_requests_list)) {
- 		spin_unlock(&reg_requests_lock);
--		reg_process_hint(reg_request);
--		spin_lock(&reg_requests_lock);
-+		goto out;
- 	}
-+
-+	reg_request = list_first_entry(&reg_requests_list,
-+				       struct regulatory_request,
-+				       list);
-+	list_del_init(&reg_request->list);
-+
- 	spin_unlock(&reg_requests_lock);
- 
-+	reg_process_hint(reg_request);
-+
-+out:
- 	mutex_unlock(&reg_mutex);
- 	mutex_unlock(&cfg80211_mutex);
- }
-@@ -2057,6 +2089,8 @@ int set_regdom(const struct ieee80211_regdomain *rd)
- 
- 	nl80211_send_reg_change_event(last_request);
- 
-+	reg_set_request_processed();
-+
- 	mutex_unlock(&reg_mutex);
- 
- 	return r;
+$ git shortlog 80ef913f5e6a845..v2.6.37-rc2 -- net/wireless/
+Felix Fietkau (1):
+      cfg80211: fix a crash in dev lookup on dump commands
+
+Doesn't look to be the culprit as well, though. Btw. I am getting the
+same patches also in the v2.6.37-rc1..v2.6.37-rc2 range.
+
+Please let me know if you need any further information.
+Thanks!
 -- 
-1.7.3.2.90.gd4c43
-
+Michal Hocko
+L3 team 
+SUSE LINUX s.r.o.
+Lihovarska 1060/12
+190 00 Praha 9    
+Czech Republic
