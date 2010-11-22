@@ -1,76 +1,27 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f46.google.com ([209.85.161.46]:61417 "EHLO
-	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S934945Ab0KQQmS (ORCPT
+Received: from mail-pz0-f46.google.com ([209.85.210.46]:62846 "EHLO
+	mail-pz0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753438Ab0KVSBe (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 17 Nov 2010 11:42:18 -0500
-Received: by fxm6 with SMTP id 6so714690fxm.19
-        for <linux-wireless@vger.kernel.org>; Wed, 17 Nov 2010 08:42:17 -0800 (PST)
-From: Helmut Schaa <helmut.schaa@googlemail.com>
-To: Gertjan van Wingerde <gwingerde@gmail.com>
-Subject: Re: [PATCH 9/9] rt2x00: Modify rt2x00queue_remove_l2pad to make skb->data two-byte alignment
-Date: Wed, 17 Nov 2010 17:41:15 +0100
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	"RA-Jay Hung" <Jay_Hung@ralinktech.com>,
-	Ivo van Doorn <ivdoorn@gmail.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"users@rt2x00.serialmonkey.com" <users@rt2x00.serialmonkey.com>
-References: <201011131908.15595.IvDoorn@gmail.com> <20101117150721.GD2639@tuxdriver.com> <AANLkTimCzzgMavoLNhWTE-bZNTMimg++VKKft5f8sDQG@mail.gmail.com>
-In-Reply-To: <AANLkTimCzzgMavoLNhWTE-bZNTMimg++VKKft5f8sDQG@mail.gmail.com>
+	Mon, 22 Nov 2010 13:01:34 -0500
+Received: by pzk6 with SMTP id 6so168533pzk.19
+        for <linux-wireless@vger.kernel.org>; Mon, 22 Nov 2010 10:01:34 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="us-ascii"
-Message-Id: <201011171741.15796.helmut.schaa@googlemail.com>
+In-Reply-To: <1290389406-29852-1-git-send-email-lacombar@gmail.com>
+References: <AANLkTi=BQckk2sXtR1VJ2khoK37YE=4t6k+wPb-CHhaw@mail.gmail.com> <1290389406-29852-1-git-send-email-lacombar@gmail.com>
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Date: Mon, 22 Nov 2010 10:01:12 -0800
+Message-ID: <AANLkTimGO=HH4nxgmCidXfGcLdwnkYQxr+i10eNzefgH@mail.gmail.com>
+Subject: Re: [PATCH] compat/2.6.22: limit namespace pollution
+To: Arnaud Lacombe <lacombar@gmail.com>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Am Mittwoch 17 November 2010 schrieb Gertjan van Wingerde:
-> On Wed, Nov 17, 2010 at 4:07 PM, John W. Linville
-> <linville@tuxdriver.com> wrote:
-> > On Wed, Nov 17, 2010 at 11:48:04AM +0100, Helmut Schaa wrote:
-> >
-> >> John, should I send a follow-up (with a nice description why it this is needed)
-> >> or are you simply reverting this one?
-> >
-> > Is there no chance for a fix in short order?
+On Sun, Nov 21, 2010 at 5:30 PM, Arnaud Lacombe <lacombar@gmail.com> wrote:
+> Signed-off-by: Arnaud Lacombe <lacombar@gmail.com>
 
-I don't have a clever idea on how to fix that without reverting this commit.
-IMO this patch is just not correct as it passes the skb back to mac80211 with
-reduced headroom (due to the header & payload alignment) which causes trouble
-when mac80211 requeues the frame. Of course just requesting 4 additional bytes
-headroom would "fix" the symptoms but sounds like a hack to me.
+Was this test compiled on all supported kernels?
 
-> I may have an idea on how we can fix this, without incurring the
-> performance penalty.
-
-I'm still not convinced that this is really the root cause for the
-performance issues Jay noticed. AFAIK mac80211 doesn't access the payload
-anymore when reporting the frame back (with some exceptions like monitor
-interfaces).
-
-Jay, could you please run a few more performance tests with and without this
-patch to track down if this issue is really the cause for the performance
-degradation?
-
-> Basic idea is to no longer work on the original skb that mac80211
-> supplied us, but to
-> use a copy of that skb. This would prevent us from having to undo any
-> changes we did,
-> as we can simply return the original skb to mac80211 (which wasn't
-> modified in the first
-> place).
-> I'm not sure how this would impact performance, but it would allow us
-> a lot less copying
-> around to undo the changes done before uploading to the HW.
-
-But cloning the skb would double the amount of memory needed to transmit each
-frame. Not sure though if that behaves better or not. Might be worth a try.
-
-> However, I won't be able to look into that opportunity before the weekend.
-> 
-> Helmut, can you wait that long and hold off reverting until then?
-
-Sure.
-
-Thanks,
-Helmut
+  Luis
