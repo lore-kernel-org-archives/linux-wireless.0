@@ -1,232 +1,137 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from hrndva-omtalb.mail.rr.com ([71.74.56.125]:43095 "EHLO
-	hrndva-omtalb.mail.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751082Ab0KUCYo (ORCPT
+Received: from mail-qw0-f46.google.com ([209.85.216.46]:65173 "EHLO
+	mail-qw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752431Ab0KVJFV convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 20 Nov 2010 21:24:44 -0500
-Date: Sat, 20 Nov 2010 20:24:36 -0600
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: John W Linville <linville@tuxdriver.com>
-Cc: chaoming_li@realsil.com.cn, linux-wireless@vger.kernel.org
-Subject: [RFC PATCH 15/23] rtl8192ce: Introduce new driver
-Message-ID: <4ce882e4.O56DUGFU/vKFXWM0%Larry.Finger@lwfinger.net>
+	Mon, 22 Nov 2010 04:05:21 -0500
+Received: by qwc9 with SMTP id 9so546948qwc.19
+        for <linux-wireless@vger.kernel.org>; Mon, 22 Nov 2010 01:05:20 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <4CE997E3.9080706@lwfinger.net>
+References: <AANLkTi=gzBDd6AZAzUKpLyTxtOgkwUkB5STeaU45=OFB@mail.gmail.com> <4CE997E3.9080706@lwfinger.net>
+From: Klaas De Craemer <klaasdc@gmail.com>
+Date: Mon, 22 Nov 2010 09:59:28 +0100
+Message-ID: <AANLkTi=kF956KYU393jmZhMagX=mz6dZcf1xwMaqPJ3Q@mail.gmail.com>
+Subject: Re: RTL8187L: Can only "enable" hw radio switch after Windows boot
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: linux-wireless@vger.kernel.org,
+	Herton Ronaldo Krzesinski <herton@mandriva.com.br>,
+	Hin-Tak Leung <htl10@users.sourceforge.net>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
->From b49a4771af7f3abe21e9ddf54615efe325568b40 Mon Sep 17 00:00:00 2001
-From: Larry Finger <Larry.Finger@lwfinger.net>
-Date: Sat, 20 Nov 2010 19:00:58 -0600
-Subject: [PATCH 15/23] rtl8192ce: Add files to rtl8192ce.ko Part 5
+On Sun, Nov 21, 2010 at 23:06, Larry Finger <Larry.Finger@lwfinger.net> wrote:
+> On 11/21/2010 01:05 PM, Klaas De Craemer wrote:
+>> Hello all,
+>>
+>> I'm using an Alfa AWUS036H adapter for a long range outdoor wireless
+>> link (+5km) connected to an Intel Atom board running kernel
+>> 2.6.32-5-amd64. Since a few weeks, the system cannot connect to the
+>> remote AP anymore after booting: trying to bring up the interface
+>> wlan0 gives an SCIO error and rfkill reports a hw block is present on
+>> the device... Repeatedly inserting and removing the device does not
+>> change this.
+>>
+>> The only way to make the card work is to plug it into a Windows
+>> computer in which it then connects immediately to the AP. Then I can
+>> plug it back into the linux box and the connection works (hw block
+>> gone, yes, magic...). The connection is then stable (it is usually up
+>> for about 8 hours). In the evening the hardware is turned off so in
+>> the morning the same problem arises again.
+>>
+>> Below is some dmesg output. If I can add some more specific debug
+>> output, please let me know.
+>>
+>> Klaas De Craemer
+>>
+>> ----------------
+>> dmesg output after initially plugging the device in is:
+>>
+>> [  617.720045] usb 1-8: new high speed USB device using ehci_hcd and address 4
+>> [  617.852402] usb 1-8: New USB device found, idVendor=0409, idProduct=005a
+>> [  617.852511] usb 1-8: New USB device strings: Mfr=0, Product=0, SerialNumber=0
+>> [  617.853147] usb 1-8: configuration #1 chosen from 1 choice
+>> [  617.853730] hub 1-8:1.0: USB hub found
+>> [  617.854023] hub 1-8:1.0: 4 ports detected
+>> [  618.140174] usb 1-8.1: new high speed USB device using ehci_hcd and address 5
+>> [  618.254772] usb 1-8.1: New USB device found, idVendor=0bda, idProduct=8187
+>> [  618.254882] usb 1-8.1: New USB device strings: Mfr=1, Product=2,
+>> SerialNumber=3
+>> [  618.255016] usb 1-8.1: Product: RTL8187_Wireless
+>> [  618.255105] usb 1-8.1: Manufacturer: Manufacturer_Realtek_RTL8187_
+>> [  618.255202] usb 1-8.1: SerialNumber: 00C0CA3F9517
+>> [  618.257166] usb 1-8.1: configuration #1 chosen from 1 choice
+>> [  618.505617] phy6: Selected rate control algorithm 'minstrel'
+>> [  618.508755] phy6: hwaddr 00:c0:ca:3f:95:17, RTL8187vB (default) V1
+>> + rtl8225z2, rfkill mask 2
+>> [  618.525401] rtl8187: Customer ID is 0xFF
+>> [  618.526749] Registered led device: rtl8187-phy6::tx
+>> [  618.528126] Registered led device: rtl8187-phy6::rx
+>> [  618.529030] rtl8187: wireless switch is on
+>> [  618.529364] usbcore: registered new interface driver rtl8187
+>> [  623.780644] rtl8187: wireless radio switch turned off
+>
+> Interesting. I do not have a data sheet for the RTL8187L, but I do for the
+> RTL8187B, which is very similar. On the chip, there is a GPIO0 line that has the
+> state of the radio. For an external device like yours, I would not expect a
+> switch connected to this line, thus it should be wired high.
+>
+> Note that when the device is not yet brought up at 618 seconds, the radio enable
+> bit is high, yet at 623 seconds, it is low. One thing that happened is that the
+> radio was actually turned on, and the device is now drawing a lot more power.
+> Either that power is low, or the read of GPIO0 is failing and returning 0.
+>
+>> After having it connected in Windows this will be added:
+>>
+>> [  762.904044] usb 1-8: new high speed USB device using ehci_hcd and address 6
+>> [  763.036384] usb 1-8: New USB device found, idVendor=0409, idProduct=005a
+>> [  763.036491] usb 1-8: New USB device strings: Mfr=0, Product=0, SerialNumber=0
+>> [  763.037793] usb 1-8: configuration #1 chosen from 1 choice
+>> [  763.038501] hub 1-8:1.0: USB hub found
+>> [  763.038759] hub 1-8:1.0: 4 ports detected
+>> [  763.324155] usb 1-8.1: new high speed USB device using ehci_hcd and address 7
+>> [  763.438628] usb 1-8.1: New USB device found, idVendor=0bda, idProduct=8187
+>> [  763.438737] usb 1-8.1: New USB device strings: Mfr=1, Product=2,
+>> SerialNumber=3
+>> [  763.438872] usb 1-8.1: Product: RTL8187_Wireless
+>> [  763.438961] usb 1-8.1: Manufacturer: Manufacturer_Realtek_RTL8187_
+>> [  763.439057] usb 1-8.1: SerialNumber: 00C0CA3F9517
+>> [  763.439707] usb 1-8.1: configuration #1 chosen from 1 choice
+>> [  763.672336] phy7: Selected rate control algorithm 'minstrel'
+>> [  763.675556] phy7: hwaddr 00:c0:ca:3f:95:17, RTL8187vB (default) V1
+>> + rtl8225z2, rfkill mask 2
+>> [  763.692505] rtl8187: Customer ID is 0xFF
+>> [  763.692885] Registered led device: rtl8187-phy7::tx
+>> [  763.693125] Registered led device: rtl8187-phy7::rx
+>> [  763.693752] rtl8187: wireless switch is on
+>
+> Any idea what is inside your box besides the RTL8187L chip and the radio
+> transceiver? Does lsusb show a hub? Run the command with the device unplugged
+> and again with it plugged in.
 
-Add files rtl8192c/rtl8192c-led.{c,h}
+The box consists of a Gigabyte GA-D510UD motherboard with an Intel
+Atom D510. The antenna and usb-transceiver equipment is a few meters
+away and connected using an active USB extender cable. I believe this
+is where the "usb hub found" messages come from.
+I'll run the lsusb command this evening when I'm back.
 
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
----
- .../net/wireless/rtlwifi/rtl8192c/rtl8192c-led.c   |  144 ++++++++++++++++++++
- .../net/wireless/rtlwifi/rtl8192c/rtl8192c-led.h   |   41 ++++++
- 2 files changed, 185 insertions(+), 0 deletions(-)
- create mode 100644 drivers/net/wireless/rtlwifi/rtl8192c/rtl8192c-led.c
- create mode 100644 drivers/net/wireless/rtlwifi/rtl8192c/rtl8192c-led.h
+Not sure if it's useful, but the AWUS036H transceiver is the 1W
+version (I run it at much lower power though). The pcb is shown on the
+right in http://4.bp.blogspot.com/_yKAih5N2U8Y/S1MSczALYRI/AAAAAAAAACg/IhiVakqDhWE/s400/pcbalfa.jpg
 
-diff --git a/drivers/net/wireless/rtlwifi/rtl8192c/rtl8192c-led.c b/drivers/net/wireless/rtlwifi/rtl8192c/rtl8192c-led.c
-new file mode 100644
-index 0000000..6091084
---- /dev/null
-+++ b/drivers/net/wireless/rtlwifi/rtl8192c/rtl8192c-led.c
-@@ -0,0 +1,144 @@
-+/******************************************************************************
-+ *
-+ * Copyright(c) 2009-2010  Realtek Corporation.
-+ *
-+ * This program is free software; you can redistribute it and/or modify it
-+ * under the terms of version 2 of the GNU General Public License as
-+ * published by the Free Software Foundation.
-+ *
-+ * This program is distributed in the hope that it will be useful, but WITHOUT
-+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
-+ * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
-+ * more details.
-+ *
-+ * You should have received a copy of the GNU General Public License along with
-+ * this program; if not, write to the Free Software Foundation, Inc.,
-+ * 51 Franklin Street, Fifth Floor, Boston, MA 02110, USA
-+ *
-+ * The full GNU General Public License is included in this distribution in the
-+ * file called LICENSE.
-+ *
-+ * Contact Information:
-+ * wlanfae <wlanfae@realtek.com>
-+ * Realtek Corporation, No. 2, Innovation Road II, Hsinchu Science Park,
-+ * Hsinchu 300, Taiwan.
-+ *
-+ * Larry Finger <Larry.Finger@lwfinger.net>
-+ *
-+ *****************************************************************************/
-+
-+#include "../wifi.h"
-+#include "../pci.h"
-+#include "rtl8192c-reg.h"
-+#include "rtl8192c-led.h"
-+
-+void rtl92ce_sw_led_on(struct ieee80211_hw *hw, struct rtl_led *pled)
-+{
-+	u8 ledcfg;
-+	struct rtl_priv *rtlpriv = rtl_priv(hw);
-+
-+	RT_TRACE(rtlpriv, COMP_LED, DBG_LOUD,
-+		 ("LedAddr:%X ledpin=%d\n", REG_LEDCFG2, pled->ledpin));
-+
-+	ledcfg = rtl_read_byte(rtlpriv, REG_LEDCFG2);
-+
-+	switch (pled->ledpin) {
-+	case LED_PIN_GPIO0:
-+		break;
-+	case LED_PIN_LED0:
-+		rtl_write_byte(rtlpriv,
-+			       REG_LEDCFG2, (ledcfg & 0xf0) | BIT(5) | BIT(6));
-+		break;
-+	case LED_PIN_LED1:
-+		rtl_write_byte(rtlpriv, REG_LEDCFG2, (ledcfg & 0x0f) | BIT(5));
-+		break;
-+	default:
-+		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
-+			 ("switch case not process\n"));
-+		break;
-+	}
-+	pled->b_ledon = true;
-+}
-+
-+void rtl92ce_sw_led_off(struct ieee80211_hw *hw, struct rtl_led *pled)
-+{
-+	struct rtl_priv *rtlpriv = rtl_priv(hw);
-+	struct rtl_pci_priv *pcipriv = rtl_pcipriv(hw);
-+	u8 ledcfg;
-+
-+	RT_TRACE(rtlpriv, COMP_LED, DBG_LOUD,
-+		 ("LedAddr:%X ledpin=%d\n", REG_LEDCFG2, pled->ledpin));
-+
-+	ledcfg = rtl_read_byte(rtlpriv, REG_LEDCFG2);
-+
-+	switch (pled->ledpin) {
-+	case LED_PIN_GPIO0:
-+		break;
-+	case LED_PIN_LED0:
-+		ledcfg &= 0xf0;
-+		if (pcipriv->ledctl.bled_opendrain == true)
-+			rtl_write_byte(rtlpriv, REG_LEDCFG2,
-+				       (ledcfg | BIT(1) | BIT(5) | BIT(6)));
-+		else
-+			rtl_write_byte(rtlpriv, REG_LEDCFG2,
-+				       (ledcfg | BIT(3) | BIT(5) | BIT(6)));
-+		break;
-+	case LED_PIN_LED1:
-+		ledcfg &= 0x0f;
-+		rtl_write_byte(rtlpriv, REG_LEDCFG2, (ledcfg | BIT(3)));
-+		break;
-+	default:
-+		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
-+			 ("switch case not process\n"));
-+		break;
-+	}
-+	pled->b_ledon = false;
-+}
-+
-+void rtl92ce_init_sw_leds(struct ieee80211_hw *hw)
-+{
-+}
-+
-+void rtl92ce_deinit_sw_leds(struct ieee80211_hw *hw)
-+{
-+}
-+
-+void _rtl92ce_sw_led_control(struct ieee80211_hw *hw,
-+				    enum led_ctl_mode ledaction)
-+{
-+	struct rtl_pci_priv *pcipriv = rtl_pcipriv(hw);
-+	struct rtl_led *pLed0 = &(pcipriv->ledctl.sw_led0);
-+	switch (ledaction) {
-+	case LED_CTL_POWER_ON:
-+	case LED_CTL_LINK:
-+	case LED_CTL_NO_LINK:
-+		rtl92ce_sw_led_on(hw, pLed0);
-+		break;
-+	case LED_CTL_POWER_OFF:
-+		rtl92ce_sw_led_off(hw, pLed0);
-+		break;
-+	default:
-+		break;
-+	}
-+}
-+
-+void rtl92ce_led_control(struct ieee80211_hw *hw,
-+			enum led_ctl_mode ledaction)
-+{
-+	struct rtl_priv *rtlpriv = rtl_priv(hw);
-+	struct rtl_ps_ctl *ppsc = rtl_psc(rtl_priv(hw));
-+
-+	if ((ppsc->rfoff_reason > RF_CHANGE_BY_PS) &&
-+	    (ledaction == LED_CTL_TX ||
-+	     ledaction == LED_CTL_RX ||
-+	     ledaction == LED_CTL_SITE_SURVEY ||
-+	     ledaction == LED_CTL_LINK ||
-+	     ledaction == LED_CTL_NO_LINK ||
-+	     ledaction == LED_CTL_START_TO_LINK ||
-+	     ledaction == LED_CTL_POWER_ON)) {
-+		return;
-+	}
-+	RT_TRACE(rtlpriv, COMP_LED, DBG_LOUD, ("ledaction %d,\n",
-+				ledaction));
-+	_rtl92ce_sw_led_control(hw, ledaction);
-+}
-diff --git a/drivers/net/wireless/rtlwifi/rtl8192c/rtl8192c-led.h b/drivers/net/wireless/rtlwifi/rtl8192c/rtl8192c-led.h
-new file mode 100644
-index 0000000..10da301
---- /dev/null
-+++ b/drivers/net/wireless/rtlwifi/rtl8192c/rtl8192c-led.h
-@@ -0,0 +1,41 @@
-+/******************************************************************************
-+ *
-+ * Copyright(c) 2009-2010  Realtek Corporation.
-+ *
-+ * This program is free software; you can redistribute it and/or modify it
-+ * under the terms of version 2 of the GNU General Public License as
-+ * published by the Free Software Foundation.
-+ *
-+ * This program is distributed in the hope that it will be useful, but WITHOUT
-+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
-+ * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
-+ * more details.
-+ *
-+ * You should have received a copy of the GNU General Public License along with
-+ * this program; if not, write to the Free Software Foundation, Inc.,
-+ * 51 Franklin Street, Fifth Floor, Boston, MA 02110, USA
-+ *
-+ * The full GNU General Public License is included in this distribution in the
-+ * file called LICENSE.
-+ *
-+ * Contact Information:
-+ * wlanfae <wlanfae@realtek.com>
-+ * Realtek Corporation, No. 2, Innovation Road II, Hsinchu Science Park,
-+ * Hsinchu 300, Taiwan.
-+ *
-+ * Larry Finger <Larry.Finger@lwfinger.net>
-+ *
-+ *****************************************************************************/
-+
-+#ifndef __RTL92CE_LED_H__
-+#define __RTL92CE_LED_H__
-+
-+void rtl92ce_init_sw_leds(struct ieee80211_hw *hw);
-+void rtl92ce_deinit_sw_leds(struct ieee80211_hw *hw);
-+void rtl92ce_sw_led_on(struct ieee80211_hw *hw, struct rtl_led *pled);
-+void rtl92ce_sw_led_off(struct ieee80211_hw *hw, struct rtl_led *pled);
-+void rtl92ce_led_control(struct ieee80211_hw *hw, enum led_ctl_mode ledaction);
-+void _rtl92ce_sw_led_control(struct ieee80211_hw *hw,
-+				    enum led_ctl_mode ledaction);
-+
-+#endif
--- 
-1.7.1
+Also, I believe the problem has come up since the outside temperature
+has dropped to about 4-5 °C, so I don't exclude a hardware problem.
+Even so, the fact that it then would still work in Windows is strange.
 
+> What does the acronym SCIO mean? I'm not familiar with that one? Where does the
+> SCIO read failure message get logged?
+
+Sorry, I meant I get a few errors in the form of "SIOCSIFFLAGS:
+Unknown error 132" on the stdout when trying to bring up the blocked
+interface.
+
+Klaas
+
+> Larry
+>
