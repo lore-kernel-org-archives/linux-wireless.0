@@ -1,35 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from external1.orbit-lab.org ([128.6.192.131]:32939 "HELO
-	external1.orbit-lab.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1750982Ab0K1UCy (ORCPT
+Received: from mail-fx0-f46.google.com ([209.85.161.46]:36577 "EHLO
+	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754424Ab0KVVdt (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 28 Nov 2010 15:02:54 -0500
-Received: from repository3.orbit-lab.org (repository3.orbit-lab.org [10.50.0.41])
-	by external1.orbit-lab.org (Postfix) with ESMTP id 75391418D8
-	for <linux-wireless@vger.kernel.org>; Sun, 28 Nov 2010 14:57:56 -0500 (EST)
-Subject: Compat-wireless release for 2010-11-28 is baked
-To: <linux-wireless@vger.kernel.org>
-Message-Id: <20101128200252.94EF140F97@repository3.orbit-lab.org>
-Date: Sun, 28 Nov 2010 15:02:52 -0500 (EST)
-From: compat@orbit-lab.org (Compat-wireless cronjob account)
+	Mon, 22 Nov 2010 16:33:49 -0500
+Received: by fxm13 with SMTP id 13so3089015fxm.19
+        for <linux-wireless@vger.kernel.org>; Mon, 22 Nov 2010 13:33:48 -0800 (PST)
+From: Christian Lamparter <chunkeey@googlemail.com>
+To: Bob Copeland <me@bobcopeland.com>
+Subject: Re: [PATCH 1/4] ath: Add a driver_info bitmask field
+Date: Mon, 22 Nov 2010 22:33:30 +0100
+Cc: Rajkumar Manoharan <rmanoharan@atheros.com>,
+	linville@tuxdriver.com, linux-wireless@vger.kernel.org
+References: <1290165802-3566-1-git-send-email-rmanoharan@atheros.com> <AANLkTimTGAr5aA-CkuvezH4FXTs2SD4MnYTmWo7Ru44p@mail.gmail.com>
+In-Reply-To: <AANLkTimTGAr5aA-CkuvezH4FXTs2SD4MnYTmWo7Ru44p@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Message-Id: <201011222233.31346.chunkeey@googlemail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Monday 22 November 2010 22:23:36 Bob Copeland wrote:
+> On Fri, Nov 19, 2010 at 6:23 AM, Rajkumar Manoharan
+> <rmanoharan@atheros.com> wrote:
+> > The driver_info stores the device category information which
+> > is used to load appropriate device firmware, select firmware offset
+> > and eeprom starting location. The driver_info is accessed across
+> > ath9k_htc and ath9k_hw. Hence placed under common structure.
+> 
+> >  /**
+> >  * struct ath_ops - Register read/write operations
+> >  *
+> > @@ -147,6 +152,7 @@ struct ath_common {
+> >        u8 rx_chainmask;
+> >
+> >        u32 rx_bufsize;
+> > +       u32 driver_info;
+> 
+> 
+> u32 for 2 bits?
+ 
+well, if you take in account that mod_devicetable.h specifies
+driver_info to be kernel_ulong_t... (to store pointers of course)
 
-compat-wireless code metrics
+I would say we need "even" more.
 
-    749168 - Total upstream lines of code being pulled
-      2201 - backport code changes
-      1939 - backport code additions
-       262 - backport code deletions
-      6441 - backport from compat module
-      8642 - total backport code
-    1.1535 - % of code consists of backport work
-      1534 - Crap changes not yet posted
-      1491 - Crap additions not yet posted
-        43 - Crap deletions not yet posted
-    0.2048 - % of crap code
-
-Base tree: linux-next.git
-Base tree version: next-20101126
-compat-wireless release: compat-wireless-2010-11-23-6-gefeeae7-pc
+Best regards,
+	Chr
