@@ -1,46 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iw0-f174.google.com ([209.85.214.174]:46144 "EHLO
-	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751228Ab0KGKZ4 convert rfc822-to-8bit (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:33794 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753280Ab0KVToq (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 7 Nov 2010 05:25:56 -0500
-Received: by iwn41 with SMTP id 41so2752941iwn.19
-        for <linux-wireless@vger.kernel.org>; Sun, 07 Nov 2010 02:25:56 -0800 (PST)
+	Mon, 22 Nov 2010 14:44:46 -0500
+Date: Mon, 22 Nov 2010 14:30:30 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: "Gustavo F. Padovan" <padovan@profusion.mobi>
+Cc: linux-wireless@vger.kernel.org, linux-bluetooth@vger.kernel.org
+Subject: Re: pull request: bluetooth-2.6 2010-11-22
+Message-ID: <20101122193029.GE2117@tuxdriver.com>
+References: <20101122181411.GD23109@vigoh>
 MIME-Version: 1.0
-In-Reply-To: <87d3qhzbb6.fsf@purkki.adurom.net>
-References: <1288822429-24541-1-git-send-email-notasas@gmail.com>
- <1288822429-24541-3-git-send-email-notasas@gmail.com> <87d3qhzbb6.fsf@purkki.adurom.net>
-From: Ohad Ben-Cohen <ohad@wizery.com>
-Date: Sun, 7 Nov 2010 12:25:35 +0200
-Message-ID: <AANLkTinqr6iJdQcWGSjaf4F9i8+2MvjavgKUT8R0bsHK@mail.gmail.com>
-Subject: Re: [PATCH 2/3] wl1251: add runtime PM support for SDIO
-To: Kalle Valo <kvalo@adurom.com>
-Cc: Grazvydas Ignotas <notasas@gmail.com>,
-	linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20101122181411.GD23109@vigoh>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, Nov 7, 2010 at 12:18 PM, Kalle Valo <kvalo@adurom.com> wrote:
->> +static int wl1251_suspend(struct device *dev)
->> +{
->> +     /*
->> +      * Tell MMC/SDIO core it's OK to power down the card
->> +      * (if it isn't already), but not to remove it completely
->> +      */
->> +     return 0;
->> +}
->
-> Sorry, I'm not familiar with pm_ops and I don't fully understand the
-> comment above. Does the comment mean that by returning 0 we can
-> accomplish all that?
+On Mon, Nov 22, 2010 at 04:14:11PM -0200, Gustavo F. Padovan wrote:
+> Hi John,
+> 
+> Following batch is intended to 2.6.37, it includes a very trivial return
+> err fix from myself and an remote name request fix from Johan Hedberg.
+> This fix move the remote name request (during the connection creation
+> process) to the kernelspace. In addition we have removed this operation
+> from BlueZ in userspace. Quoting part of Johan's patch which already
+> explain the change:
+> 
+>    "So far userspace has been responsible for this extra name request but
+>     tighter control is needed in order not to flood Bluetooth controllers
+>     with two many commands during connection creation. It has been shown
+>     that some controllers simply fail to function correctly if they get too
+>     many (almost) simultaneous commands during connection creation. The
+>     simplest way to acheive better control of these commands is to move
+>     their sending completely to the kernel side."
+> 
+> As side effect, we have a clean up patch in preparation to this fix.
+> 
+> Please pull, or let me know any problems you find here. Thanks.
 
-Yes. By returning 0 we let the MMC core power down our card, but not remove it.
+The return code fix seems reasonable -- small and obvious, etc.
 
-> Or instead is it a fixme comment that we should
-> do that, but it's not implemented yet?
->
-> --
-> Kalle Valo
->
+The other fixes are larger than I would like to see.  What is the
+effect of the bug?  Does the Bluetooth controller stop completely?
+Does it cause a crash?
+
+Is this a newly-introduced bug?  Or one that has been around for
+a while?
+
+John
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
