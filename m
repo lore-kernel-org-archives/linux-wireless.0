@@ -1,42 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:35163 "EHLO nbd.name"
+Received: from nbd.name ([46.4.11.11]:32914 "EHLO nbd.name"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753210Ab0KSVzp (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 19 Nov 2010 16:55:45 -0500
+	id S1757515Ab0KVUwN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 22 Nov 2010 15:52:13 -0500
+Message-ID: <4CEAD7FA.1060107@openwrt.org>
+Date: Mon, 22 Nov 2010 21:52:10 +0100
 From: Felix Fietkau <nbd@openwrt.org>
-To: linux-wireless@vger.kernel.org
-Cc: linville@tuxdriver.com, johannes@sipsolutions.net
-Subject: [PATCH 3/4] mac80211: probe the AP when resuming
-Date: Fri, 19 Nov 2010 22:55:39 +0100
-Message-Id: <1290203740-57124-3-git-send-email-nbd@openwrt.org>
-In-Reply-To: <1290203740-57124-2-git-send-email-nbd@openwrt.org>
-References: <1290203740-57124-1-git-send-email-nbd@openwrt.org>
- <1290203740-57124-2-git-send-email-nbd@openwrt.org>
+MIME-Version: 1.0
+To: "John W. Linville" <linville@tuxdriver.com>
+CC: linux-wireless@vger.kernel.org, lrodriguez@atheros.com
+Subject: Re: [PATCH] ath9k_hw: fix endian issues with CTLs on AR9003
+References: <1290279018-29716-1-git-send-email-nbd@openwrt.org> <20101122201511.GG2117@tuxdriver.com>
+In-Reply-To: <20101122201511.GG2117@tuxdriver.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Send a nullfunc packet on resume as a fast probe of whether we're still
-associated to the AP. If the association expired, the AP will send a
-disassoc/deauth, allowing the station to reconnect immediately.
+On 2010-11-22 9:15 PM, John W. Linville wrote:
+> On Sat, Nov 20, 2010 at 07:50:18PM +0100, Felix Fietkau wrote:
+>> Parsing data using bitfields is messy, because it makes endian handling
+>> much harder. AR9002 and earlier got it right, AR9003 got it wrong.
+>> Fix it by getting rid of the CTL related bitfields entirely and use
+>> masks instead.
+>> 
+>> Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+>> Cc: stable@kernel.org
+> 
+> Why does this merit stable consideration?
+It's a simple fix and I would like it to make it to stable releases,
+because this bug might possibly cause the tx power to be too high in
+some instances (when running on big-endian systems), violating
+regulatory limits.
 
-Signed-off-by: Nathan Williams <njw@google.com>
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
----
- net/mac80211/mlme.c |    1 +
- 1 files changed, 1 insertions(+), 0 deletions(-)
-
-diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index f2b414b..ae99c0b 100644
---- a/net/mac80211/mlme.c
-+++ b/net/mac80211/mlme.c
-@@ -2060,6 +2060,7 @@ void ieee80211_sta_restart(struct ieee80211_sub_if_data *sdata)
- 	if (test_and_clear_bit(TMR_RUNNING_CHANSW, &ifmgd->timers_running))
- 		add_timer(&ifmgd->chswitch_timer);
- 	ieee80211_sta_reset_beacon_monitor(sdata);
-+	ieee80211_send_nullfunc(sdata->local, sdata, 0);
- }
- #endif
- 
--- 
-1.7.3.2
-
+- Felix
