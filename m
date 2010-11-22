@@ -1,70 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qy0-f174.google.com ([209.85.216.174]:43962 "EHLO
-	mail-qy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751695Ab0KDOhp convert rfc822-to-8bit (ORCPT
+Received: from mail-bw0-f46.google.com ([209.85.214.46]:57827 "EHLO
+	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753444Ab0KVKXM (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 4 Nov 2010 10:37:45 -0400
-Received: by qyk12 with SMTP id 12so1485313qyk.19
-        for <linux-wireless@vger.kernel.org>; Thu, 04 Nov 2010 07:37:44 -0700 (PDT)
+	Mon, 22 Nov 2010 05:23:12 -0500
+Received: by bwz15 with SMTP id 15so5942506bwz.19
+        for <linux-wireless@vger.kernel.org>; Mon, 22 Nov 2010 02:23:11 -0800 (PST)
+From: Helmut Schaa <helmut.schaa@googlemail.com>
+To: Gertjan van Wingerde <gwingerde@gmail.com>
+Subject: Re: [PATCH 9/9] rt2x00: Modify rt2x00queue_remove_l2pad to make skb->data two-byte alignment
+Date: Mon, 22 Nov 2010 11:22:08 +0100
+Cc: "RA-Jay Hung" <Jay_Hung@ralinktech.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Ivo van Doorn <ivdoorn@gmail.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"users@rt2x00.serialmonkey.com" <users@rt2x00.serialmonkey.com>
+References: <201011131908.15595.IvDoorn@gmail.com> <B7288B2B5878D747BA031EF4B170D7F6BC824E@TWHCMBS01.tw.ralinktech.ad> <AANLkTimYWLMgQ_RNZJ5B6a-vA68ez1Wcc702MrdS0QzW@mail.gmail.com>
+In-Reply-To: <AANLkTimYWLMgQ_RNZJ5B6a-vA68ez1Wcc702MrdS0QzW@mail.gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <AANLkTimfXO9r=DTW3CAiVswmsoKES2qxEiYz4JBOTGu_@mail.gmail.com>
-References: <1288822429-24541-1-git-send-email-notasas@gmail.com>
-	<1288822429-24541-3-git-send-email-notasas@gmail.com>
-	<AANLkTimfXO9r=DTW3CAiVswmsoKES2qxEiYz4JBOTGu_@mail.gmail.com>
-Date: Thu, 4 Nov 2010 16:37:44 +0200
-Message-ID: <AANLkTik0tawXfer2DMSKFXZwFbjYWLoG3nRBYMAMO8WL@mail.gmail.com>
-Subject: Re: [PATCH 2/3] wl1251: add runtime PM support for SDIO
-From: Grazvydas Ignotas <notasas@gmail.com>
-To: Ohad Ben-Cohen <ohad@wizery.com>
-Cc: linux-wireless@vger.kernel.org, Kalle Valo <kvalo@adurom.com>,
-	"John W. Linville" <linville@tuxdriver.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: Text/Plain;
+  charset="us-ascii"
+Message-Id: <201011221122.08277.helmut.schaa@googlemail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Nov 4, 2010 at 3:51 PM, Ohad Ben-Cohen <ohad@wizery.com> wrote:
-> On Wed, Nov 3, 2010 at 6:13 PM, Grazvydas Ignotas <notasas@gmail.com> wrote:
->> Add runtime PM support, similar to how it's done for wl1271.
->> This allows to power down the card when the driver is loaded but
->> network is not in use.
->>
->> CC: Ohad Ben-Cohen <ohad@wizery.com>
->> Signed-off-by: Grazvydas Ignotas <notasas@gmail.com>
->> ---
->>  drivers/net/wireless/wl1251/sdio.c |   62 ++++++++++++++++++++++++++++++++++--
->>  1 files changed, 59 insertions(+), 3 deletions(-)
->>
->> diff --git a/drivers/net/wireless/wl1251/sdio.c b/drivers/net/wireless/wl1251/sdio.c
->> index 0285190..0a5db21 100644
->> --- a/drivers/net/wireless/wl1251/sdio.c
->> +++ b/drivers/net/wireless/wl1251/sdio.c
->> @@ -26,6 +26,7 @@
->>  #include <linux/platform_device.h>
->>  #include <linux/wl12xx.h>
->>  #include <linux/irq.h>
->> +#include <linux/pm_runtime.h>
->>
->>  #include "wl1251.h"
->>
->> @@ -173,10 +174,36 @@ static void wl1251_disable_line_irq(struct wl1251 *wl)
->>
->>  static int wl1251_sdio_set_power(struct wl1251 *wl, bool enable)
->>  {
->> -       if (wl->set_power)
->> -               wl->set_power(enable);
->> +       struct sdio_func *func = wl_to_func(wl);
->> +       int ret;
->>
->> -       return 0;
->> +       if (enable) {
->> +               /* Power up the card */
->> +               if (wl->set_power)
->> +                       wl->set_power(true);
->
-> Why do you still need that ->set_power() handler ?
+Hi,
 
-On pandora besides power, we also have a GPIO to control clock buffer
-for wl1251, so I thought I could enable it here. Perhaps it could be
-set up as regulator too, but I'm not sure how to set it up so that
-clock is enabled before main power. Also it's not really a power
-supply so it somehow felt wrong to set up regulator for it.
+Am Montag 22 November 2010 schrieb Gertjan van Wingerde:
+> On Mon, Nov 22, 2010 at 9:14 AM, RA-Jay Hung <Jay_Hung@ralinktech.com> wrote:
+> >> > Jay, could you please run a few more performance tests with and without this
+> >> > patch to track down if this issue is really the cause for the performance
+> >> > degradation?
+> >
+> > I check sniffer and mac80211 code, I think bad TX throughput should be my
+> > environment has a lot APs and more packets will collides because of without
+> > protection in TX direction. So the patch is not related to this issue.
+> > Helmut, We can revert this patch. Sorry for inconvenience.
+
+Great, thanks for double-checking Jay.
+
+> >> OK. Find attached the patch I cooked up. AFAICS the driver still works correctly,
+> >> but unfortunately I am unable to test performance and throughput of the driver
+> >> with this patch.
+> >>
+> >> Jay and Helmut, can you test this patch before I submit it?
+> >>
+> > I think original code should recover the original skb state, so I think we do not need to copy again to send back to mac80211, and one more thing. Could you submit below
+> > patch you send us before to rt2x00.git. I think it is more correct in payload = 0 case.
+> >
+> >  void rt2x00queue_remove_l2pad(struct sk_buff *skb, unsigned int header_length)
+> >  {
+> > -       unsigned int l2pad = L2PAD_SIZE(header_length);
+> > +       unsigned int payload_length = skb->len - header_length;
+> > +       unsigned int l2pad = payload_length ? L2PAD_SIZE(header_length) : 0;
+> >
+> >        if (!l2pad)
+> >                return;
+> >
+> 
+> OK. Indeed if you feel we can simply revert the patch then that will
+> be better. I'll send a patch tonight that reverts it together with the
+> update update.
+
+Sounds good to me,
+Helmut
