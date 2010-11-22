@@ -1,32 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qy0-f174.google.com ([209.85.216.174]:50958 "EHLO
-	mail-qy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751558Ab0KLTmo (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 12 Nov 2010 14:42:44 -0500
-Received: by qyk12 with SMTP id 12so1463022qyk.19
-        for <linux-wireless@vger.kernel.org>; Fri, 12 Nov 2010 11:42:44 -0800 (PST)
+Received: from cantor.suse.de ([195.135.220.2]:58986 "EHLO mx1.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755747Ab0KVVcU (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 22 Nov 2010 16:32:20 -0500
+Date: Mon, 22 Nov 2010 13:31:22 -0800
+From: Greg KH <gregkh@suse.de>
+To: Arend Van Spriel <arend@broadcom.com>
+Cc: Zimny Lech <napohybelskurwysynom2010@gmail.com>,
+	Stephen Rothwell <sfr@canb.auug.org.au>,
+	"linux-next@vger.kernel.org" <linux-next@vger.kernel.org>,
+	LKML <linux-kernel@vger.kernel.org>,
+	Brett Rudley <brudley@broadcom.com>,
+	Henry Ptasinski <henryp@broadcom.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: linux-next: Tree for November 22
+Message-ID: <20101122213122.GA2881@suse.de>
+References: <20101122134911.b7e106f9.sfr@canb.auug.org.au>
+ <AANLkTi=QeU_vb6+XRei0pqz7GSfp2E4TC3oTJYy9adv4@mail.gmail.com>
+ <20101122194643.GB21985@suse.de>
+ <400C43189542CE41BC0A5B252FC90136952F05944A@SJEXCHCCR02.corp.ad.broadcom.com>
 MIME-Version: 1.0
-In-Reply-To: <20828465.1051289487469083.JavaMail.wlan@CHBU500181>
-References: <21800237.971289487370894.JavaMail.wlan@CHBU500181>
-	<20828465.1051289487469083.JavaMail.wlan@CHBU500181>
-Date: Fri, 12 Nov 2010 14:42:43 -0500
-Message-ID: <AANLkTik02b8C5emXJrPhme3nBTgpVwP5dzpek4YZrrfM@mail.gmail.com>
-Subject: Re: [PATCH 3/9] ath5k: AHB port. Move pci related functions to
- separate file.
-From: Bob Copeland <me@bobcopeland.com>
-To: Wojciech Dubowik <dubowoj@neratec.com>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <400C43189542CE41BC0A5B252FC90136952F05944A@SJEXCHCCR02.corp.ad.broadcom.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Nov 11, 2010 at 9:57 AM, Wojciech Dubowik <dubowoj@neratec.com> wrote:
-> Separate PCI related functions from base into own file.
->
-> Signed-off-by: Wojciech Dubowik <Wojciech.Dubowik@neratec.com>
+On Mon, Nov 22, 2010 at 12:08:28PM -0800, Arend Van Spriel wrote:
+> Hi Greg, Stephen,
+> 
+> The file wl_iw.c declare a struct semaphore variable and uses
+> semaphore function, but there is no explicit inclusion of
+> <linux/semaphore.h>. I hit this problem last week when trying a
+> minimal kernel configuration for my development system. Normally we
+> build and test against kernel configuration similar to Ubuntu
+> configuration and we got the semaphore definitions for free. Expect a
+> patch soon.
 
-Acked-by: Bob Copeland <me@bobcopeland.com>
+Ok, sounds good.
 
--- 
-Bob Copeland %% www.bobcopeland.com
+greg k-h
