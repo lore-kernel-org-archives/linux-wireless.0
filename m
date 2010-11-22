@@ -1,85 +1,115 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:35166 "EHLO nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754241Ab0KSVzt (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 19 Nov 2010 16:55:49 -0500
-From: Felix Fietkau <nbd@openwrt.org>
-To: linux-wireless@vger.kernel.org
-Cc: linville@tuxdriver.com, johannes@sipsolutions.net
-Subject: [PATCH 2/4] mac80211: calculate beacon loss time accurately
-Date: Fri, 19 Nov 2010 22:55:38 +0100
-Message-Id: <1290203740-57124-2-git-send-email-nbd@openwrt.org>
-In-Reply-To: <1290203740-57124-1-git-send-email-nbd@openwrt.org>
-References: <1290203740-57124-1-git-send-email-nbd@openwrt.org>
+Received: from mail-pz0-f46.google.com ([209.85.210.46]:64139 "EHLO
+	mail-pz0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753438Ab0KVSAQ convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 22 Nov 2010 13:00:16 -0500
+Received: by pzk6 with SMTP id 6so167454pzk.19
+        for <linux-wireless@vger.kernel.org>; Mon, 22 Nov 2010 10:00:15 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <AANLkTi=BQckk2sXtR1VJ2khoK37YE=4t6k+wPb-CHhaw@mail.gmail.com>
+References: <AANLkTi=BQckk2sXtR1VJ2khoK37YE=4t6k+wPb-CHhaw@mail.gmail.com>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Mon, 22 Nov 2010 09:59:53 -0800
+Message-ID: <AANLkTimHRp+1y44cQEgR5KPPioP=sXUvOnhLxd_A_xzE@mail.gmail.com>
+Subject: Re: [COMPAT] Preventing namespace pollution
+To: Arnaud Lacombe <lacombar@gmail.com>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Instead of using a fixed 2 second timeout, calculate beacon loss interval
-from the advertised beacon interval and a frame count.  With this beacon
-loss happens after N (default 7) consecutive frames are missed which
-for a typical setup (100TU beacon interval) is ~700ms (or ~1/3 previous).
+On Sun, Nov 21, 2010 at 5:29 PM, Arnaud Lacombe <lacombar@gmail.com> wrote:
+> Hi folks,
+>
+> The second part of the changes I made as part of my work on the
+> compatibility headers concerned namespace pollution.
+>
+> The problem was the following. My module is doing relatively high
+> level stuff in the kernel. It interracts with the network stack,
+> netfilter, the socket layer, etc. It does not deals with low-level
+> driver stuff. The issue was that including <linux/compat.h> bring a
+> _huge_ quantity of dependency with it, interrupt, thread, sysfs...
+> This is problematic as for some compilation unit, I should include as
+> few Linux header as possible (understand: if I don't include
+> <linux/tcp.h>, I don't want it included behind my back).
+>
+> In order to workaround the problem, I simply wrapped every accessors
+> and struct definition within #ifdef checking if the parent header is
+> in use or not.
+>
+> Considering the following exemple:
+>
+> 2.6.22:
+>  static inline unsigned char *
+>  skb_network_header(const struct sk_buff *skb)
+>  {
+>        return skb->nh.raw;
+>  }
+>
+>  [...]
+>
+>  static inline struct iphdr *
+>  ip_hdr(const struct sk_buff *skb)
+>  {
+>        return (struct iphdr *)skb_network_header(skb);
+>  }
+>
+>  static inline unsigned int
+>  ip_hdrlen(const struct sk_buff *skb)
+>  {
+>        return ip_hdr(skb)->ihl * 4;
+>  }
+>
+> Every compilation unit would need to have both <linux/skbuff.h>,
+> <linux/ip.h> and <net/ip.h> included. If the useful code does not
+> deals about networking, that's just pollution.
+>
+> The solution I propose would transform this to:
+>
+> 2.6.22:
+>  /* <linux/skbuff.h> */
+>  #ifdef _LINUX_SKBUFF_H
+>  static inline unsigned char *
+>  skb_network_header(const struct sk_buff *skb)
+>  {
+>        return skb->nh.raw;
+>  }
+>  #endif
+>
+>  [...]
+>
+>  /* <linux/ip.h> */
+>  #ifdef _LINUX_IP_H
+>  static inline struct iphdr *
+>  ip_hdr(const struct sk_buff *skb)
+>  {
+>        return (struct iphdr *)skb_network_header(skb);
+>  }
+>  #endif
+>
+>  /* <net/ip.h> */
+>  #ifdef _IP_H
+>  static inline unsigned int
+>  ip_hdrlen(const struct sk_buff *skb)
+>  {
+>        return ip_hdr(skb)->ihl * 4;
+>  }
+>  #endif
+>
+> That way, if the original code did not include the headers, it will
+> just not get the compat definition. The macro checked is the one used
+> as re-inclusion guard from the parent header which should be stable,
+> but even if it changes, supporting the new is trivial. With this
+> solution, the compat headers no longer needs to import all the headers
+> it is providing compatibililty to, but just let the original source
+> tells it what it needs compatibility for.
+>
+> I will send as answer to mail a proof of concept for 2.6.22
 
-Signed-off-by: Sam Leffler <sleffler@chromium.org>
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
----
- net/mac80211/ieee80211_i.h |    1 +
- net/mac80211/mlme.c        |   16 ++++++++++++----
- 2 files changed, 13 insertions(+), 4 deletions(-)
+I suspect we'll find a case where headers are required to be included
+for some older kernel where it was not required for newer ones but we
+can find out. Just please be sure to test compile your patches against
+each supported kernel and I think we'll be good!
 
-diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
-index 7bb9a62..5bc0745 100644
---- a/net/mac80211/ieee80211_i.h
-+++ b/net/mac80211/ieee80211_i.h
-@@ -349,6 +349,7 @@ struct ieee80211_if_managed {
- 	struct work_struct chswitch_work;
- 	struct work_struct beacon_connection_loss_work;
- 
-+	unsigned long beacon_timeout;
- 	unsigned long probe_timeout;
- 	int probe_send_count;
- 
-diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index 7e24c3e..f2b414b 100644
---- a/net/mac80211/mlme.c
-+++ b/net/mac80211/mlme.c
-@@ -32,10 +32,15 @@
- #define IEEE80211_MAX_PROBE_TRIES 5
- 
- /*
-- * beacon loss detection timeout
-- * XXX: should depend on beacon interval
-+ * Beacon loss timeout is calculated as N frames times the
-+ * advertised beacon interval.  This may need to be somewhat
-+ * higher than what hardware might detect to account for
-+ * delays in the host processing frames. But since we also
-+ * probe on beacon miss before declaring the connection lost
-+ * default to what we want.
-  */
--#define IEEE80211_BEACON_LOSS_TIME	(2 * HZ)
-+#define IEEE80211_BEACON_LOSS_COUNT	7
-+
- /*
-  * Time the connection can be idle before we probe
-  * it to see if we can still talk to the AP.
-@@ -122,7 +127,7 @@ void ieee80211_sta_reset_beacon_monitor(struct ieee80211_sub_if_data *sdata)
- 		return;
- 
- 	mod_timer(&sdata->u.mgd.bcn_mon_timer,
--		  round_jiffies_up(jiffies + IEEE80211_BEACON_LOSS_TIME));
-+		  round_jiffies_up(jiffies + sdata->u.mgd.beacon_timeout));
- }
- 
- void ieee80211_sta_reset_conn_monitor(struct ieee80211_sub_if_data *sdata)
-@@ -872,6 +877,9 @@ static void ieee80211_set_associated(struct ieee80211_sub_if_data *sdata,
- 	bss_info_changed |= ieee80211_handle_bss_capability(sdata,
- 		cbss->capability, bss->has_erp_value, bss->erp_value);
- 
-+	sdata->u.mgd.beacon_timeout = usecs_to_jiffies(ieee80211_tu_to_usec(
-+		IEEE80211_BEACON_LOSS_COUNT * bss_conf->beacon_int));
-+
- 	sdata->u.mgd.associated = cbss;
- 	memcpy(sdata->u.mgd.bssid, cbss->bssid, ETH_ALEN);
- 
--- 
-1.7.3.2
-
+  Luis
