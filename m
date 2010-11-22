@@ -1,38 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mailout-de.gmx.net ([213.165.64.22]:59397 "HELO mail.gmx.net"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with SMTP
-	id S1753777Ab0KWQKS (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 23 Nov 2010 11:10:18 -0500
-Date: Tue, 23 Nov 2010 17:10:24 +0100 (CET)
-From: Guennadi Liakhovetski <g.liakhovetski@gmx.de>
+Received: from nbd.name ([46.4.11.11]:50085 "EHLO nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755972Ab0KVOjt (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 22 Nov 2010 09:39:49 -0500
+From: Felix Fietkau <nbd@openwrt.org>
 To: linux-wireless@vger.kernel.org
-cc: Stefano Brivio <stefano.brivio@polimi.it>
-Subject: [PATCH] wireless: b43: fix error path in SDIO
-Message-ID: <Pine.LNX.4.64.1011231709380.25676@axis700.grange>
-MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Cc: linville@tuxdriver.com, lrodriguez@atheros.com
+Subject: [PATCH] ath9k_hw: fix A-MPDU key search issues on AR9003
+Date: Mon, 22 Nov 2010 15:39:39 +0100
+Message-Id: <1290436779-85434-1-git-send-email-nbd@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Fix unbalanced call to sdio_release_host() on the error path.
+Under load, a large number of frames can produce decryption errors, even when
+no key cache update is being done. Performing a key search for every single
+frame in an A-MPDU improves reliability.
 
-Signed-off-by: Guennadi Liakhovetski <g.liakhovetski@gmx.de>
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
 ---
- drivers/net/wireless/b43/sdio.c |    1 +
- 1 files changed, 1 insertions(+), 0 deletions(-)
+ drivers/net/wireless/ath/ath9k/hw.c  |    4 ++++
+ drivers/net/wireless/ath/ath9k/reg.h |    1 +
+ 2 files changed, 5 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/net/wireless/b43/sdio.c b/drivers/net/wireless/b43/sdio.c
-index 9a55338..09e2dfd 100644
---- a/drivers/net/wireless/b43/sdio.c
-+++ b/drivers/net/wireless/b43/sdio.c
-@@ -163,6 +163,7 @@ static int b43_sdio_probe(struct sdio_func *func,
- err_free_ssb:
- 	kfree(sdio);
- err_disable_func:
-+	sdio_claim_host(func);
- 	sdio_disable_func(func);
- err_release_host:
- 	sdio_release_host(func);
+diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
+index 1dbe53b..3b69046 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.c
++++ b/drivers/net/wireless/ath/ath9k/hw.c
+@@ -1829,6 +1829,10 @@ int ath9k_hw_fill_cap_info(struct ath_hw *ah)
+ 
+ 	ah->misc_mode |= AR_PCU_MIC_NEW_LOC_ENA;
+ 
++	/* enable key search for every frame in an aggregate */
++	if (AR_SREV_9300_20_OR_LATER(ah))
++		ah->misc_mode |= AR_PCU_ALWAYS_PERFORM_KEYSEARCH;
++
+ 	pCap->low_2ghz_chan = 2312;
+ 	pCap->high_2ghz_chan = 2732;
+ 
+diff --git a/drivers/net/wireless/ath/ath9k/reg.h b/drivers/net/wireless/ath/ath9k/reg.h
+index 443407d..f1bbc75 100644
+--- a/drivers/net/wireless/ath/ath9k/reg.h
++++ b/drivers/net/wireless/ath/ath9k/reg.h
+@@ -1575,6 +1575,7 @@ enum {
+ #define AR_PCU_TBTT_PROTECT        0x00200000
+ #define AR_PCU_CLEAR_VMF           0x01000000
+ #define AR_PCU_CLEAR_BA_VALID      0x04000000
++#define AR_PCU_ALWAYS_PERFORM_KEYSEARCH 0x10000000
+ 
+ #define AR_PCU_BT_ANT_PREVENT_RX   0x00100000
+ #define AR_PCU_BT_ANT_PREVENT_RX_S 20
 -- 
-1.7.2.3
+1.7.3.2
 
