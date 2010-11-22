@@ -1,43 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from foo.birdnet.se ([213.88.146.6]:59364 "HELO foo.birdnet.se"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
-	id S1751355Ab0KAXMW (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 1 Nov 2010 19:12:22 -0400
-Message-ID: <20101101231220.8591.qmail@stuge.se>
-Date: Tue, 2 Nov 2010 00:12:20 +0100
-From: Peter Stuge <peter@stuge.se>
-To: =?utf-8?B?QmrDtnJu?= Smedman <bjorn.smedman@venatech.se>
-Cc: Ben Gamari <bgamari@gmail.com>, ath9k-devel@lists.ath9k.org,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: [ath9k-devel] ath9k: race conditions in dma
-References: <AANLkTik=LvRZja13SGOpicVjbyf6chRtTD-RkvSm2VcE@mail.gmail.com> <8762whrqvm.fsf@gmail.com> <AANLkTins=0vM=+qpdDB2-KvMBq6J5vwUjn6Ni76GyQst@mail.gmail.com>
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:53483 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753921Ab0KVUop (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 22 Nov 2010 15:44:45 -0500
+Date: Mon, 22 Nov 2010 15:35:34 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: =?utf-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: caught-up on merging for 2.6.38 -next wireless bits
+Message-ID: <20101122203534.GI2117@tuxdriver.com>
+References: <20101116220804.GA21198@tuxdriver.com>
+ <AANLkTim29vnizC-yTC4DS3pfCcKt+du1U5aqzEuS6-Rf@mail.gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=utf-8
-In-Reply-To: <AANLkTins=0vM=+qpdDB2-KvMBq6J5vwUjn6Ni76GyQst@mail.gmail.com>
+In-Reply-To: <AANLkTim29vnizC-yTC4DS3pfCcKt+du1U5aqzEuS6-Rf@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Björn Smedman wrote:
-> >> 1. TX DMA hangs under simultaneous high RX and TX load
-> >> 2. TX is completely hung but chip is never reset
-> >
-> > I have also observed both of these behaviors with just a standard
-> > hostapd single VIF configuration.
+On Thu, Nov 18, 2010 at 09:02:48AM +0100, Rafał Miłecki wrote:
+> 2010/11/16 John W. Linville <linville@tuxdriver.com>:
+> > I have finally (more-or-less) cleared my patch queue for 2.6.38 -next
+> > bits.  If you are waiting to see patches posted prior to last week
+> > show-up in wireless-testing then you may want to ping me about them.
 > 
-> Thanx Ben, it's a relief to know I'm not the only one suffering
-> from this.
+> There is one patch missing for b43. It was submitted as
+> [PATCH 3/3] b43: N-PHY: add 2056 radio channels tables
+> however due to big size I linked it instead of attaching.
+> 
+> http://files.zajec.net/0003-b43-N-PHY-add-2056-radio-channels-tables.patch
+> 
+> Would you like me to resend it and attach inline?
 
-Just a note to confirm that I have also seen many different failures
-related to this. The lasting impression is that it's a big mess.
+Thanks for the reminder -- got it now.
 
-I bought my first ath9k hardware roughly a year ago. That was totally
-useless as STA up until kernels a few months ago. I am now using an
-AR9280 card and for the very first time ath9k hardware and driver is
-actually working at all for me, but there are still issues as I noted
-in the other email.
-
-Unfortunately they're the kind of issues which can't be debugged much
-lacking strong knowledge of device internals.
-
-
-//Peter
+John
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
