@@ -1,41 +1,32 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gx0-f174.google.com ([209.85.161.174]:39361 "EHLO
-	mail-gx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751755Ab0KAU7x (ORCPT
+Received: from mail-iw0-f174.google.com ([209.85.214.174]:32954 "EHLO
+	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754879Ab0KVBcX (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 1 Nov 2010 16:59:53 -0400
-Received: by gxk23 with SMTP id 23so3548562gxk.19
-        for <linux-wireless@vger.kernel.org>; Mon, 01 Nov 2010 13:59:52 -0700 (PDT)
+	Sun, 21 Nov 2010 20:32:23 -0500
+Received: by iwn34 with SMTP id 34so2235884iwn.19
+        for <linux-wireless@vger.kernel.org>; Sun, 21 Nov 2010 17:32:23 -0800 (PST)
 MIME-Version: 1.0
-In-Reply-To: <1288617893.20937.10.camel@chilepepper>
-References: <1288181398-2358-1-git-send-email-eliad@wizery.com>
-	<1288181398-2358-2-git-send-email-eliad@wizery.com>
-	<1288617893.20937.10.camel@chilepepper>
-Date: Mon, 1 Nov 2010 22:59:51 +0200
-Message-ID: <AANLkTi=jyGZ+LLZ2cDiF7CFC1h_WbzwmOOLQkSpOaLAz@mail.gmail.com>
-Subject: Re: [PATCH 2/2] wl1271: add recover testmode command
-From: Eliad Peller <eliad@wizery.com>
-To: Luciano Coelho <luciano.coelho@nokia.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+In-Reply-To: <1290372517-6777-1-git-send-email-hauke@hauke-m.de>
+References: <1290372517-6777-1-git-send-email-hauke@hauke-m.de>
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Date: Sun, 21 Nov 2010 17:32:02 -0800
+Message-ID: <AANLkTime_MPWoTkoHRt-MZuboXOzFAXpV29JVy4nt-Gn@mail.gmail.com>
+Subject: Re: [PATCH 1/2] compat: backport Generic exponentially weighted
+ moving average (EWMA)
+To: Hauke Mehrtens <hauke@hauke-m.de>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org, mcgrof@infradead.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
->> add RECOVER testmode command.
->> this command triggers a recovery sequence (by enqueueing a recovery_work).
->>
->> Signed-off-by: Eliad Peller <eliad@wizery.com>
->> ---
+On Sun, Nov 21, 2010 at 12:48 PM, Hauke Mehrtens <hauke@hauke-m.de> wrote:
 >
-> So, the point of this patch is to allow hardware recovery from the
-> userspace? In what kind of scenario do you need this?
->
+> Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
 
-yes.
-it's mainly for testing (or if we want to recover manually for some reason).
-this is why i implemented it as a testmode command.
+Thanks Hauke! John, are you going to revert EWMA stuff? If so maybe I
+should wait to merge this.
 
-i added it after observing some recovery issues (until applying
-Juuso's "wl1271: Check interface state in op_* functions" :) )
-
-Eliad.
+  Luis
