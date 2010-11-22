@@ -1,69 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server4.hostdango.com ([70.86.37.74]:52224 "EHLO
-	server4.hostdango.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751224Ab0KNCrZ (ORCPT
+Received: from external1.orbit-lab.org ([128.6.192.131]:55742 "HELO
+	external1.orbit-lab.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1757454Ab0KVUDt (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 13 Nov 2010 21:47:25 -0500
-Message-ID: <4CDF4DBB.60909@krellan.com>
-Date: Sat, 13 Nov 2010 18:47:23 -0800
-From: Josh Lehan <krellan@krellan.com>
-MIME-Version: 1.0
-To: Jouni Malinen <j@w1.fi>
-CC: linux-wireless@vger.kernel.org
-Subject: Re: Distinguishing wrong password from other failure to connect?
-References: <4CDCEBE9.8060905@krellan.com> <20101113103457.GA5166@jm.kir.nu>
-In-Reply-To: <20101113103457.GA5166@jm.kir.nu>
-Content-Type: text/plain; charset=ISO-8859-1
+	Mon, 22 Nov 2010 15:03:49 -0500
+Received: from repository3.orbit-lab.org (repository3.orbit-lab.org [10.50.0.41])
+	by external1.orbit-lab.org (Postfix) with ESMTP id 04C8F418D8
+	for <linux-wireless@vger.kernel.org>; Mon, 22 Nov 2010 14:59:08 -0500 (EST)
+Subject: Compat-wireless release for 2010-11-22 is baked
+To: <linux-wireless@vger.kernel.org>
+Message-Id: <20101122200347.F255E40F97@repository3.orbit-lab.org>
+Date: Mon, 22 Nov 2010 15:03:47 -0500 (EST)
+From: compat@orbit-lab.org (Compat-wireless cronjob account)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 11/13/2010 02:34 AM, Jouni Malinen wrote:
-> That depends on which security mode you are using.. With
-> WPA/WPA2-Personal, there is no explicit indication that the connection
-> failed because of incorrect passphrase because the AP will silently drop
-> the message in which the wrong passphrase was used. In other words, the
-> protocol does not provide means for the AP to indicate that connection
-> failed because of incorrect key.
+>From git://git.kernel.org/pub/scm/linux/kernel/git/mcgrof/compat-wireless-2.6
+   ec8c9fe..4738a49  linux-2.6.37.y -> origin/linux-2.6.37.y
+   b131f33..67146a0  master     -> origin/master
+>From git://git.kernel.org/pub/scm/linux/kernel/git/mcgrof/compat
+   6f82007..5b6e5a5  master     -> origin/master
+>From git://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next
+   15d9489..f357063  history    -> origin/history
+ + 406a306...37cc740 master     -> origin/master  (forced update)
+   589136b..3561d43  stable     -> origin/stable
+ * [new tag]         next-20101122 -> next-20101122
+ * [new tag]         v2.6.37-rc3 -> v2.6.37-rc3
 
-That makes sense, to do a silent drop, because of security (you don't
-want to give positive feedback to a hacker that the password was
-rejected, that would only make it faster for them to loop through a
-dictionary of passwords).
+compat-wireless code metrics
 
-It's a shame from a UI point of view, though.  I don't want to accuse my
-user of entering the wrong password when in reality it was the network's
-fault, and vice versa.
+    742732 - Total upstream lines of code being pulled
+      2187 - backport code changes
+      1930 - backport code additions
+       257 - backport code deletions
+      6439 - backport from compat module
+      8626 - total backport code
+    1.1614 - % of code consists of backport work
+      1534 - Crap changes not yet posted
+      1491 - Crap additions not yet posted
+        43 - Crap deletions not yet posted
+    0.2065 - % of crap code
 
-> Well, the starting problem is that the protocol does not provide such
-> information (sometimes by design). The best you can do is to assume
-> things and hope that the most likely reason for an error was the cause
-> of the problem this time. For example, with WPA/WPA2-Personal, we may
-> assume that the passphrase was incorrect if we complete association
-> successfully, receive EAPOL-Key 1/4, send EAPOL-Key 2/4 and get it
-> acknowledged by the AP, but never see EAPOL-Key 3/4. This does not
-> guarantee that the reason for incorrect passphrase, but that is one of
-> the most likely reasons for this.
-
-Very clever idea.  It would be great to have visibility into the
-authentication/EAPOL state machine, instead of just getting final states
-like "ASSOCIATED".  Is this information available outside wpa_supplicant
-in any standard way, or will I have to patch wpa_supplicant to find a
-way to publish this information to my UI?
-
-> Asking for a passphrase again (and even worse, dropping the previously
-> stored passphrase based on this) is bad UI design in my opinion for many
-> of these cases. It should not really done unless we are pretty confident
-> that the reason was indeed in wrong passphrase. Especially the
-> forgetting of stored information should really never be done unless we
-> are very confident on this being caused by wrong passphrase (e.g., never
-> do that if we have successfully completed even one connection with
-> WPA/WPA2-Personal).
-
-I'm glad I'm not the only one who is irritated by this design decision
-of NetworkManager!  I keep wishing for a checkbox that says "I KNOW my
-password is correct, please keep trying with it, and stop bugging me".
-Oftentimes I'll walk my laptop out of range, then come back into range,
-only to have my laptop fail to automatically connect because it's just
-sitting there stuck at the NetworkManager password prompt.
-
-Josh
+Base tree: linux-next.git
+Base tree version: next-20101122
+compat-wireless release: compat-wireless-2010-11-10-12-g67146a0-pc
