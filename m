@@ -1,73 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([147.243.128.26]:43838 "EHLO mgw-da02.nokia.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752464Ab0K3GLr (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 30 Nov 2010 01:11:47 -0500
-Subject: Re: [PATCH v4 ] wl12xx: BA Initiator support
-From: Luciano Coelho <luciano.coelho@nokia.com>
-To: ext Ohad Ben-Cohen <ohad@wizery.com>
-Cc: Shahar Levi <shahar_levi@ti.com>, linux-wireless@vger.kernel.org
-In-Reply-To: <AANLkTikUOfQbk-TEE2=EejXOTr_t-LXvTim-Sc1OVwKG@mail.gmail.com>
-References: <1291038135-20672-1-git-send-email-shahar_levi@ti.com>
-	 <AANLkTikUOfQbk-TEE2=EejXOTr_t-LXvTim-Sc1OVwKG@mail.gmail.com>
+Received: from he.sipsolutions.net ([78.46.109.217]:34221 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754599Ab0KVUfc (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 22 Nov 2010 15:35:32 -0500
+Subject: Re: [PATCH] wireless-regdb: update rules for DE
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Michael Green <Michael.Green@Atheros.com>
+Cc: "Luis R. Rodriguez" <mcgrof@gmail.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <93781E992CBA7843962D8B0E7D683F3C1633485053@SC1EXMB-MBCL.global.atheros.com>
+References: <20100525151429.GC6342@tpkurt2.garloff.de>
+	 <1290029817-711-1-git-send-email-linville@tuxdriver.com>
+	 <AANLkTimDkoqNbkFWDsU2HgFK3926gRpcBbokX_GL5sSc@mail.gmail.com>
+	 <93781E992CBA7843962D8B0E7D683F3C163340D5AE@SC1EXMB-MBCL.global.atheros.com>
+	 <20101119020414.GB2512@tuxdriver.com>
+	 <20101119091450.GD12228@tpkurt2.nue.garloff.de>
+	 <93781E992CBA7843962D8B0E7D683F3C16334843DD@SC1EXMB-MBCL.global.atheros.com>
+	 <AANLkTi=ySDQtw+M6ATV47HszkJN7vfR7q+FOC6-OBqjk@mail.gmail.com>
+	 <93781E992CBA7843962D8B0E7D683F3C1633484F57@SC1EXMB-MBCL.global.atheros.com>
+	 <AANLkTimbCzK6RPCnc0T117D0X+Yvi8S3j3L9aG74L=Jg@mail.gmail.com>
+	 <93781E992CBA7843962D8B0E7D683F3C1633485053@SC1EXMB-MBCL.global.atheros.com>
 Content-Type: text/plain; charset="UTF-8"
-Date: Tue, 30 Nov 2010 08:11:40 +0200
-Message-ID: <1291097500.1673.100.camel@powerslave>
+Date: Mon, 22 Nov 2010 21:35:10 +0100
+Message-ID: <1290458110.5718.7.camel@jlt3.sipsolutions.net>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2010-11-29 at 16:44 -0800, ext Ohad Ben-Cohen wrote:
-> Hi Shahar,
-> 
-> On Mon, Nov 29, 2010 at 5:42 AM, Shahar Levi <shahar_levi@ti.com> wrote:
-> ...
-> > -#define WL1271_FW_NAME "wl1271-fw.bin"
-> > +#define WL1271_FW_NAME "wl1271-fw-2.bin"
-> 
-> Changing the firmware's major version involves usability and
-> maintainability pain to the entire wl12xx community, especially if
-> done repeatedly, and therefore should be generally avoided.
+On Mon, 2010-11-22 at 12:22 -0800, Michael Green wrote:
 
-Yes, I was thinking about the same thing yesterday.  Then I had to
-leave, so I'm still not sure whether this is really needed.
+> The issue is that some EU countries state some differences in spectrum
+> allocation rules, but all WLAN products must comply with the
+> harmonized conformance standard (EN301 839) which specifies the same
+> set of rules, that I believe all WLAN products should be set to.
 
+Any idea where that is stated? I thought EN301 839 was basically
+something you could comply with to be legal, but some countries allowed
+using more spectrum or different usages beyond that.
 
-> When the firmware API changes, and the old driver can't work with it
-> anymore, then you have no choice but changing the name.
-
-In theory the API *has* changed, not just extended.  Check this:
-
--       ACX_BA_SESSION_RESPONDER_POLICY = 0x0055,
--       ACX_BA_SESSION_INITIATOR_POLICY = 0x0056,
-+       ACX_BA_SESSION_POLICY_CFG   = 0x0055,
-+       ACX_BA_SESSION_RX_SETUP     = 0x0056,
-
-But in practice, this doesn't matter, because we were not using the
-RESPONDER/INITIATOR commands before...
-
-
-> But if it's just a small API extension enabling new driver
-> functionality, you should really avoid bumping the firmware version,
-> and instead try to dynamically detect it from the driver and act
-> appropriately.
-> 
-> Please explain what has exactly been changed in the firmware and let's
-> try to find a clean solution.
-
-It's basically just those two extra commands that were added.  And one
-new event that is part of a future patch.
-
-In theory, we could check the firmware revision after boot and bail out
-if the version doesn't match.  Maybe we should add a small
-infrastructure for that kind of check.
-
-This new firmware is only required if 11n is enabled too, so at least we
-should not have the driver fail whe the new fw version is not there,
-unless 11n is enabled.
-
-
--- 
-Cheers,
-Luca.
+johannes
 
