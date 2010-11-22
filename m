@@ -1,33 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:43097 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755765Ab0KVU3p (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 22 Nov 2010 15:29:45 -0500
-Date: Mon, 22 Nov 2010 15:15:11 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Felix Fietkau <nbd@openwrt.org>
-Cc: linux-wireless@vger.kernel.org, lrodriguez@atheros.com
-Subject: Re: [PATCH] ath9k_hw: fix endian issues with CTLs on AR9003
-Message-ID: <20101122201511.GG2117@tuxdriver.com>
-References: <1290279018-29716-1-git-send-email-nbd@openwrt.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1290279018-29716-1-git-send-email-nbd@openwrt.org>
+Received: from mga02.intel.com ([134.134.136.20]:22502 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752254Ab0KVPiB (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 22 Nov 2010 10:38:01 -0500
+Subject: Re: [PATCH 56/62] iwlwifi: Use static const
+From: "Guy, Wey-Yi" <wey-yi.w.guy@intel.com>
+To: Joe Perches <joe@perches.com>
+Cc: Stefano Brivio <stefano.brivio@polimi.it>,
+	"Chatre, Reinette" <reinette.chatre@intel.com>,
+	Intel Linux Wireless <ilw@linux.intel.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+In-Reply-To: <2773a20a26f4e326f0849e8ae8fb4f347d6a6ecb.1290305776.git.joe@perches.com>
+References: <cover.1290305773.git.joe@perches.com>
+	 <2773a20a26f4e326f0849e8ae8fb4f347d6a6ecb.1290305776.git.joe@perches.com>
+Content-Type: text/plain
+Date: Mon, 22 Nov 2010 07:37:03 -0800
+Message-Id: <1290440223.7946.0.camel@wwguy-ubuntu>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, Nov 20, 2010 at 07:50:18PM +0100, Felix Fietkau wrote:
-> Parsing data using bitfields is messy, because it makes endian handling
-> much harder. AR9002 and earlier got it right, AR9003 got it wrong.
-> Fix it by getting rid of the CTL related bitfields entirely and use
-> masks instead.
+Hi Joe,
+
+On Sat, 2010-11-20 at 18:38 -0800, Joe Perches wrote:
+> Using static const generally increases object text and decreases data size.
+> It also generally decreases overall object size.
 > 
-> Signed-off-by: Felix Fietkau <nbd@openwrt.org>
-> Cc: stable@kernel.org
+>    text	   data	    bss	    dec	    hex	filename
+>   48644	     57	  12120	  60821	   ed95	drivers/net/wireless/b43/phy_n.o.new
+>   48661	     57	  12120	  60838	   eda6	drivers/net/wireless/b43/phy_n.o.old
+>   37906	     86	   7904	  45896	   b348	drivers/net/wireless/iwlwifi/iwl-agn-lib.o.new
+>   37937	     86	   7904	  45927	   b367	drivers/net/wireless/iwlwifi/iwl-agn-lib.o.old
+>   37781	    523	   6752	  45056	   b000	drivers/net/wireless/iwlwifi/iwl-3945.o.new
+>   37781	    523	   6752	  45056	   b000	drivers/net/wireless/iwlwifi/iwl-3945.o.old
+> 
+> Changed b43_nphy_write_clip_detection to take a const u16 *
+> 
+> Signed-off-by: Joe Perches <joe@perches.com>
+> ---
 
-Why does this merit stable consideration?
+I don't see size difference on 3945, otherwise the patch looks ok to me
 
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+Wey
+
+
+
