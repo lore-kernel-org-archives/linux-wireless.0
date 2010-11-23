@@ -1,78 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gy0-f174.google.com ([209.85.160.174]:36145 "EHLO
-	mail-gy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755170Ab0KHVHJ convert rfc822-to-8bit (ORCPT
+Received: from mail-ew0-f46.google.com ([209.85.215.46]:41002 "EHLO
+	mail-ew0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750810Ab0KWTsz (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 8 Nov 2010 16:07:09 -0500
+	Tue, 23 Nov 2010 14:48:55 -0500
+Received: by ewy5 with SMTP id 5so2684055ewy.19
+        for <linux-wireless@vger.kernel.org>; Tue, 23 Nov 2010 11:48:54 -0800 (PST)
+Date: Tue, 23 Nov 2010 21:48:32 +0200
+From: Nick Kossifidis <mickflemm@gmail.com>
+To: ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org
+Cc: linville@tuxdriver.com, me@bobcopeland.com, mcgrof@gmail.com,
+	jirislaby@gmail.com, nbd@openwrt.org, br1@einfach.org
+Subject: [PATCH 27/30] ath5k: Use correct clock when setting ofdm timings
+Message-ID: <20101123194832.GA4303@makis.mantri>
 MIME-Version: 1.0
-In-Reply-To: <201011082147.14170.rjw@sisk.pl>
-References: <201011052150.02245.rjw@sisk.pl> <20101105211931.GA1921@tux> <201011082147.14170.rjw@sisk.pl>
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Date: Mon, 8 Nov 2010 13:06:47 -0800
-Message-ID: <AANLkTikhQrk3aMJLLeeTmy9KJHd-H3xxFPNdUT9uJoD8@mail.gmail.com>
-Subject: Re: [Regression, post-2.6.35] ath9k occasionally drops out of PCI
- config space
-To: "Rafael J. Wysocki" <rjw@sisk.pl>
-Cc: Luis Rodriguez <Luis.Rodriguez@atheros.com>,
-	Felix Fietkau <nbd@openwrt.org>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	LKML <linux-kernel@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Nov 8, 2010 at 12:47 PM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
-> On Friday, November 05, 2010, Luis R. Rodriguez wrote:
->> On Fri, Nov 05, 2010 at 01:50:02PM -0700, Rafael J. Wysocki wrote:
->> > Hi,
->> >
->> > For some time I've been experiencing a regression associated with ath9k
->> > that occasionally it drops the connection with the AP and goes into a state
->> > in which reading from its PCI config registers (as done by lspci) return all
->> > ones.
->> >
->> > It may be sort of brought back to life by a suspend/resume afterwards, but
->> > then the driver cannot really handle it and realoding the driver doesn't help
->> > (probe fails).  Basically, full machine reboot is needed to revive the adapter.
->> >
->> > The device is:
->> >
->> > 09:00.0 Network controller: Atheros Communications Inc. AR928X Wireless Network Adapter (PCI-Express) (rev 01)
->> >         Subsystem: Foxconn International, Inc. Device e01f
->> >
->> > and the kernel says:
->> >
->> > [    9.623217] ath9k 0000:09:00.0: PCI INT A -> GSI 19 (level, low) -> IRQ 19
->> > [    9.631518] ath9k 0000:09:00.0: setting latency timer to 64
->> > [   10.071497] ath: EEPROM regdomain: 0x65
->> > [   10.071502] ath: EEPROM indicates we should expect a direct regpair map
->> > [   10.071510] ath: Country alpha2 being used: 00
->> > [   10.071514] ath: Regpair used: 0x65
->> > [   10.096025] phy0: Selected rate control algorithm 'ath9k_rate_control'
->> > [   10.097803] Registered led device: ath9k-phy0::radio
->> > [   10.098035] Registered led device: ath9k-phy0::assoc
->> > [   10.098249] Registered led device: ath9k-phy0::tx
->> > [   10.098483] Registered led device: ath9k-phy0::rx
->> > [   10.098496] phy0: Atheros AR9280 Rev:2 mem=0xffffc900017e0000, irq=19
->> >
->> > The issue is not really bisectable, because I'm unable to trigger it on demand
->> > and it occurs approx. 1-2 times a day.  So, if you have any ideas what to test,
->> > please let me know.
->> >
->> > It is not reproducible with the 2.6.35 kernel.
->>
->> Please try this patch.
->
-> It _appears_ to help.  At least I haven't been able to reproduce the problem
-> since I applied it, which was on Saturday early in the morning.
->
-> Still, I also haven't used wireless a lot since that time, because I've been
-> traveling mostly.
+ * Use correct clock value when setting OFDM timings on
+ non-default bwmodes.
 
-Thanks, please let us know when you are satisfied with this as a fix.
-Its going upstream so either way if you find you hit the issue just
-let us know.
+ Signed-off-by: Nick Kossifidis <mickflemm@gmail.com>
+---
+ drivers/net/wireless/ath/ath5k/phy.c |   16 ++++++++++++++--
+ 1 files changed, 14 insertions(+), 2 deletions(-)
 
-  Luis
+diff --git a/drivers/net/wireless/ath/ath5k/phy.c b/drivers/net/wireless/ath/ath5k/phy.c
+index 31239ab..95b602b 100644
+--- a/drivers/net/wireless/ath/ath5k/phy.c
++++ b/drivers/net/wireless/ath/ath5k/phy.c
+@@ -228,8 +228,20 @@ static inline int ath5k_hw_write_ofdm_timings(struct ath5k_hw *ah,
+ 	 * ALGO: coef = (5 * clock / carrier_freq) / 2
+ 	 * we scale coef by shifting clock value by 24 for
+ 	 * better precision since we use integers */
+-	/* TODO: Half/quarter rate */
+-	clock =  (channel->hw_value & CHANNEL_TURBO) ? 80 : 40;
++	switch (ah->ah_bwmode) {
++	case AR5K_BWMODE_40MHZ:
++		clock = 40 * 2;
++		break;
++	case AR5K_BWMODE_10MHZ:
++		clock = 40 / 2;
++		break;
++	case AR5K_BWMODE_5MHZ:
++		clock = 40 / 4;
++		break;
++	default:
++		clock = 40;
++		break;
++	}
+ 	coef_scaled = ((5 * (clock << 24)) / 2) / channel->center_freq;
+ 
+ 	/* Get exponent
