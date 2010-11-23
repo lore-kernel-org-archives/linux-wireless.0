@@ -1,72 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:54972 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754883Ab0KRQ35 (ORCPT
+Received: from mail-ey0-f174.google.com ([209.85.215.174]:45591 "EHLO
+	mail-ey0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754235Ab0KWSws (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 18 Nov 2010 11:29:57 -0500
-Date: Thu, 18 Nov 2010 11:27:48 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Michael =?iso-8859-1?Q?B=FCsch?= <mb@bu3sch.de>
-Cc: =?utf-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
-	linux-wireless@vger.kernel.org, b43-dev@lists.infradead.org
-Subject: Re: [PATCH] ssb: fail registration for unknown SPROM revision
-Message-ID: <20101118162748.GB2468@tuxdriver.com>
-References: <1288823326-9686-1-git-send-email-zajec5@gmail.com>
- <1288823326-9686-2-git-send-email-zajec5@gmail.com>
- <20101116212321.GF10774@tuxdriver.com>
- <1290013976.2513.14.camel@maggie>
+	Tue, 23 Nov 2010 13:52:48 -0500
+Received: by eye27 with SMTP id 27so4869103eye.19
+        for <linux-wireless@vger.kernel.org>; Tue, 23 Nov 2010 10:52:47 -0800 (PST)
+Date: Tue, 23 Nov 2010 20:52:24 +0200
+From: Nick Kossifidis <mickflemm@gmail.com>
+To: ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org
+Cc: linville@tuxdriver.com, me@bobcopeland.com, mcgrof@gmail.com,
+	jirislaby@gmail.com, nbd@openwrt.org, br1@einfach.org
+Subject: [PATCH 07/30] ath5k: Check RXE when setting RXDP
+Message-ID: <20101123185224.GG4303@makis.mantri>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-In-Reply-To: <1290013976.2513.14.camel@maggie>
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Nov 17, 2010 at 06:12:56PM +0100, Michael Büsch wrote:
-> On Tue, 2010-11-16 at 16:23 -0500, John W. Linville wrote: 
-> > > -		ssb_printk(KERN_WARNING PFX "Unsupported SPROM"
-> > > -			   "  revision %d detected. Will extract"
-> > > -			   " v1\n", out->revision);
-> > > -		out->revision = 1;
-> > > -		sprom_extract_r123(out, in);
-> > > +		ssb_printk(KERN_ERR PFX "Unsupported SPROM revision %d"
-> > > +			   " detected\n", out->revision);
-> > > +		return -EINVAL;
-> > >  	}
-> > >  
-> > >  	if (out->boardflags_lo == 0xFFFF)
-> > 
-> > I think this is going to make my b43 PCI-E card not work...I'll try
-> > it and get back to you...
-> 
-> Hm, what version does it report?
+ * Make sure we are not trying to set RXDP while RX is active,
+ for now ignore the return value.
 
-This is what I see in dmesg (w/o the patch):
+ Signed-off-by: Nick Kossifidis <mickflemm@gmail.com>
+---
+ drivers/net/wireless/ath/ath5k/ath5k.h |    2 +-
+ drivers/net/wireless/ath/ath5k/dma.c   |   11 +++++++++--
+ 2 files changed, 10 insertions(+), 3 deletions(-)
 
-[ 1036.277235] ssb: Core 0 found: ChipCommon (cc 0x800, rev 0x11, vendor 0x4243)
-[ 1036.277249] ssb: Core 1 found: IEEE 802.11 (cc 0x812, rev 0x0A, vendor 0x4243)
-[ 1036.277267] ssb: Core 2 found: USB 1.1 Host (cc 0x817, rev 0x03, vendor 0x4243)
-[ 1036.277277] ssb: Core 3 found: PCI-E (cc 0x820, rev 0x01, vendor 0x4243)
-[ 1036.293856] ssb: WARNING: Invalid SPROM CRC (corrupt SPROM)
-[ 1036.293865] ssb: Unsupported SPROM  revision 255 detected. Will extract v1
-[ 1036.301254] ssb: Sonics Silicon Backplane found on PCI device 0000:04:00.0
-[ 1036.420643] b43-phy1: Broadcom 4311 WLAN found (core revision 10)
-[ 1036.435060] b43-phy1 debug: Found PHY: Analog 4, Type 2, Revision 8
-[ 1036.435082] b43-phy1 debug: Found Radio: Manuf 0x17F, Version 0x2050, Revision 2
-[ 1036.445105] ieee80211 phy1: Selected rate control algorithm 'minstrel_ht'
-[ 1036.450914] Registered led device: b43-phy1::tx
-[ 1036.451466] Registered led device: b43-phy1::rx
-[ 1036.451890] Registered led device: b43-phy1::radio
-[ 1036.452226] Broadcom 43xx driver loaded [ Features: PMLS, Firmware-ID: FW13 ]
-[ 1036.480736] udev[2440]: renamed network interface wlan1 to wlan2
-[ 1036.513712] cfg80211: Calling CRDA for country: US
-[ 1036.623061] b43-phy1: Loading OpenSource firmware version 410.31754
-[ 1036.623075] b43-phy1: Hardware crypto acceleration not supported by firmware
-[ 1036.623083] b43-phy1: QoS not supported by firmware
-[ 1036.656362] b43-phy1 debug: Chip initialized
-[ 1036.661477] b43-phy1 debug: 32-bit DMA initialized
-[ 1036.661499] b43-phy1 debug: QoS disabled
-[ 1036.672035] b43-phy1 debug: Wireless interface started
-[ 1036.674628] b43-phy1 debug: Adding Interface type 2
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+diff --git a/drivers/net/wireless/ath/ath5k/ath5k.h b/drivers/net/wireless/ath/ath5k/ath5k.h
+index 629a5ee..b36d3a5 100644
+--- a/drivers/net/wireless/ath/ath5k/ath5k.h
++++ b/drivers/net/wireless/ath/ath5k/ath5k.h
+@@ -1168,7 +1168,7 @@ void ath5k_hw_set_clockrate(struct ath5k_hw *ah);
+ void ath5k_hw_start_rx_dma(struct ath5k_hw *ah);
+ int ath5k_hw_stop_rx_dma(struct ath5k_hw *ah);
+ u32 ath5k_hw_get_rxdp(struct ath5k_hw *ah);
+-void ath5k_hw_set_rxdp(struct ath5k_hw *ah, u32 phys_addr);
++int ath5k_hw_set_rxdp(struct ath5k_hw *ah, u32 phys_addr);
+ int ath5k_hw_start_tx_dma(struct ath5k_hw *ah, unsigned int queue);
+ int ath5k_hw_stop_tx_dma(struct ath5k_hw *ah, unsigned int queue);
+ u32 ath5k_hw_get_txdp(struct ath5k_hw *ah, unsigned int queue);
+diff --git a/drivers/net/wireless/ath/ath5k/dma.c b/drivers/net/wireless/ath/ath5k/dma.c
+index bfdfcff..3fe634f 100644
+--- a/drivers/net/wireless/ath/ath5k/dma.c
++++ b/drivers/net/wireless/ath/ath5k/dma.c
+@@ -95,11 +95,18 @@ u32 ath5k_hw_get_rxdp(struct ath5k_hw *ah)
+  * @ah: The &struct ath5k_hw
+  * @phys_addr: RX descriptor address
+  *
+- * XXX: Should we check if rx is enabled before setting rxdp ?
++ * Returns -EIO if rx is active
+  */
+-void ath5k_hw_set_rxdp(struct ath5k_hw *ah, u32 phys_addr)
++int ath5k_hw_set_rxdp(struct ath5k_hw *ah, u32 phys_addr)
+ {
++	if (ath5k_hw_reg_read(ah, AR5K_CR) & AR5K_CR_RXE) {
++		ATH5K_DBG(ah->ah_sc, ATH5K_DEBUG_DMA,
++				"tried to set RXDP while rx was active !\n");
++		return -EIO;
++	}
++
+ 	ath5k_hw_reg_write(ah, phys_addr, AR5K_RXDP);
++	return 0;
+ }
+ 
+ 
