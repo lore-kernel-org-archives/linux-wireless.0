@@ -1,76 +1,81 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wy0-f174.google.com ([74.125.82.174]:38369 "EHLO
-	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753032Ab0KUAcJ convert rfc822-to-8bit (ORCPT
+Received: from mail-qy0-f174.google.com ([209.85.216.174]:34201 "EHLO
+	mail-qy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751094Ab0KWVGn convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 20 Nov 2010 19:32:09 -0500
+	Tue, 23 Nov 2010 16:06:43 -0500
+Received: by qyk11 with SMTP id 11so2744770qyk.19
+        for <linux-wireless@vger.kernel.org>; Tue, 23 Nov 2010 13:06:42 -0800 (PST)
 MIME-Version: 1.0
-In-Reply-To: <AANLkTing6JkfH=n2GfWtW+2=5oB40FDM-TYPvzd+PPkH@mail.gmail.com>
-References: <AANLkTim4jVaZxYp8nSgJyy28iwxcxbPeNUzxTfoHAX4S@mail.gmail.com>
-	<20101118164552.GC2855@kroah.com>
-	<AANLkTing6JkfH=n2GfWtW+2=5oB40FDM-TYPvzd+PPkH@mail.gmail.com>
-Date: Sun, 21 Nov 2010 08:32:05 +0800
-Message-ID: <AANLkTi=QdfdhVcK2tddsaLYzatJEr6KRRoU5pMqKZwte@mail.gmail.com>
-Subject: Re: Challenges with doing hardware bring up with Linux first
-From: Adrian Chadd <adrian@freebsd.org>
-To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Cc: Greg KH <greg@kroah.com>, linux-kernel@vger.kernel.org,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	David Miller <davem@davemloft.net>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Stephen Hemminger <shemminger@vyatta.com>,
-	"Perez-Gonzalez, Inaky" <inaky.perez-gonzalez@intel.com>,
-	Charles Marker <Charles.Marker@atheros.com>,
-	Jouni Malinen <Jouni.Malinen@atheros.com>,
-	Kevin Hayes <kevin@atheros.com>,
-	Zhifeng Cai <zhifeng.cai@atheros.com>,
-	Don Breslin <Don.Breslin@atheros.com>,
-	Doug Dahlby <Doug.Dahlby@atheros.com>,
-	Julia Lawall <julia@diku.dk>
-Content-Type: text/plain; charset=ISO-8859-1
+In-Reply-To: <4CEC2292.1030808@lwfinger.net>
+References: <4CEA9903.6070604@lwfinger.net> <370521.43644.qm@web29514.mail.ird.yahoo.com>
+ <AANLkTimd0EDGtZFcrhknyacoCQQZNMEKe-kvYNA9z_Bo@mail.gmail.com>
+ <4CEAC868.9040402@lwfinger.net> <AANLkTim_O8SJ5xA4TWfOa2q7NXDG95-PDoXCqosiaGz3@mail.gmail.com>
+ <4CEC2292.1030808@lwfinger.net>
+From: Klaas De Craemer <klaasdc@gmail.com>
+Date: Tue, 23 Nov 2010 22:06:22 +0100
+Message-ID: <AANLkTi=2rXEGLh+89AhPe_SAP=oH7_=D1GmrCVFRL2uT@mail.gmail.com>
+Subject: Re: RTL8187L: Can only "enable" hw radio switch after Windows boot
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: htl10@users.sourceforge.net, linux-wireless@vger.kernel.org,
+	Herton Ronaldo Krzesinski <herton@mandriva.com.br>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 19 November 2010 00:53, Luis R. Rodriguez <lrodriguez@atheros.com> wrote:
-
->> Also, please review the past multi-os driver initiatives that have
->> sprung up over the years (about 1 every 10 years it seems). �Please
->> learn from the past as to why those have failed every single time, and
->> why we don't want to even try to do that again.
+On Tue, Nov 23, 2010 at 21:22, Larry Finger <Larry.Finger@lwfinger.net> wrote:
+> On 11/23/2010 01:26 PM, Klaas De Craemer wrote:
+>>
+>> This morning I put the transceiver inside. I just connected it to the
+>> Atom box without antenna and it reported no wireless block:
+>>
+>> [  382.312044] usb 1-3: new high speed USB device using ehci_hcd and address 2
+>> [  382.450722] usb 1-3: New USB device found, idVendor=0bda, idProduct=8187
+>> [  382.450835] usb 1-3: New USB device strings: Mfr=1, Product=2, SerialNumber=3
+>> [  382.450939] usb 1-3: Product: RTL8187_Wireless
+>> [  382.451027] usb 1-3: Manufacturer: Manufacturer_Realtek_RTL8187_
+>> [  382.451122] usb 1-3: SerialNumber: 00C0CA3F9517
+>> [  382.451822] usb 1-3: configuration #1 chosen from 1 choice
+>> [  382.743060] phy1: Selected rate control algorithm 'minstrel'
+>> [  382.746490] phy1: hwaddr 00:c0:ca:3f:95:17, RTL8187vB (default) V1
+>> + rtl8225z2, rfkill mask 2
+>> [  382.764106] rtl8187: Customer ID is 0xFF
+>> [  382.764344] Registered led device: rtl8187-phy1::tx
+>> [  382.764554] Registered led device: rtl8187-phy1::rx
+>> [  382.765254] rtl8187: wireless switch is on
+>> [  382.765594] usbcore: registered new interface driver rtl8187
+>>
+>> Then I put it back onto the antenna outside and it connected just fine.
+>>
+>> I'm really confused now. Does this mean that it might be both a hard-
+>> & software problem? I guess I should also check if it works fine
+>> "warm" + immediately connecting it to the antenna. If temperature is
+>> such a problem I might put a heating resistor inside the transceiver
+>> housing...
 >
-> :-) thanks, just testing waters to see what's possible and what
-> direction to focus more on.
+> I think we do have both a hardware problem in that your device is getting a
+> false hardware block reading when cold, and that the Linux driver is missing
+> some operation that compensates for this hardware error.
+>
+>> The Windows driver is 6.1316.1209.2009 for Windows 7 64bit. It comes
+>> with a GUI from Alfa Networks that says version 700.1604.108.201.
+>
+> The only Windows 7 system here belongs to my wife, and any requests to use it
+> for testing are not well received. In addition, the USB capture code I have only
+> works on XP. I will try to get that driver, or as close as I can.
+>
+> A heating element of some sort might be the best bet. As winter comes, the
+> device might not generate enough heat to keep working. I don't know how cold it
+> gets where you are located, but if it is 4-5 now, I would expect at least -20 later.
+>
+> Larry
+>
 
-Being involved atm in the "re-multi-OS'ing" of ath code (ie, merging
-some ath9k bits and pieces back into FreeBSD's HAL), I really
-appreciate how the bulk of the hardware-fiddling bits are OS agnostic.
-There's some messiness surrounding the 802.11 stack flags (which the
-FreeBSD HAL "indirects" via HAL flags, hiding away some of the
-net80211 internals) but a lot of the net80211 stuff is still tightly
-integrated with the HAL. There's some platform specific stuff in
-hardware twiddling functions (eg "am I a 40mhz channel? Am i a 2ghz
-channel") but so far it's been straightforward to translate the
-macros.
+Don't worry, I live in Belgium and temperatures in winter rarely get
+below -10 °C. I might just jam an USB cup heater in the enclosure...
 
-Now that I've just begun testing (what seems like!) functioning 11n
-TX/RX in my HAL, I plan on starting to merge in more ath9k related
-driver code in. I'll provide some more feedback to the ath9k-devel
-list as I do this. I'm hoping that large chunks of the hardware
-related code (eg AR9002 calibration) can be thrown in with very minor
-changes.
+If you think there is anything I can help you with, please let me
+know. For now I'll try some more test variations to see if I can find
+more clues.
 
-But so far, I have this to say:
-
-* decoupling the hardware twiddling stuff from OS/802.11 stack
-specific stuff is helpful;
-* some of the base types are different (eg integer type layout, bool,
-etc), but that's relatively straightforward to merge over;
-* keeping the bits that need locking in "higher level" files (ie,
-separate from hardware twiddling as much as possible) is also helpful.
-* trying to make the actual interface related code (eg "if_ath.c" in
-FreeBSD; it's been broken out in ath9k) platform agnostic is likely
-very difficult and a path to the parent posters "fail."
-
-
-
-Adrian
+Klaas
