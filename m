@@ -1,60 +1,124 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iw0-f174.google.com ([209.85.214.174]:46431 "EHLO
-	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752991Ab0KWWaI convert rfc822-to-8bit (ORCPT
+Received: from mail-ey0-f174.google.com ([209.85.215.174]:55849 "EHLO
+	mail-ey0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755079Ab0KWS4U (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 23 Nov 2010 17:30:08 -0500
-Received: by iwn33 with SMTP id 33so634980iwn.19
-        for <linux-wireless@vger.kernel.org>; Tue, 23 Nov 2010 14:30:07 -0800 (PST)
+	Tue, 23 Nov 2010 13:56:20 -0500
+Received: by eye27 with SMTP id 27so4871674eye.19
+        for <linux-wireless@vger.kernel.org>; Tue, 23 Nov 2010 10:56:19 -0800 (PST)
+Date: Tue, 23 Nov 2010 20:55:17 +0200
+From: Nick Kossifidis <mickflemm@gmail.com>
+To: ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org
+Cc: linville@tuxdriver.com, me@bobcopeland.com, mcgrof@gmail.com,
+	jirislaby@gmail.com, nbd@openwrt.org, br1@einfach.org
+Subject: [PATCH 08/30] ath5k: Use new function to stop beacon queue
+Message-ID: <20101123185517.GH4303@makis.mantri>
 MIME-Version: 1.0
-In-Reply-To: <alpine.DEB.2.02.1011232127490.21566@aurora.sdinet.de>
-References: <alpine.DEB.2.02.1011232127490.21566@aurora.sdinet.de>
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Date: Tue, 23 Nov 2010 14:29:46 -0800
-Message-ID: <AANLkTim751ys8=U7cBvXzkiFoe=SLWMra9Pxwgmq8-oG@mail.gmail.com>
-Subject: Re: [PATCH] compat-wireless: fix activesync devices
-To: Sven-Haegar Koch <haegar@sdinet.de>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Nov 23, 2010 at 12:39 PM, Sven-Haegar Koch <haegar@sdinet.de> wrote:
->
-> Compiling support for ActiveSync devices in compat-wireless depends
-> on USB_NET_CDCETHER to be set in main kernel.
->
-> But USB_NET_CDCETHER can also be a module, in which case
-> CONFIG_USB_NET_CDCETHER will not be defined inside compat_autoconf.h and
-> the compat-wireless cdc_ether.ko will miss the support for it.
->
-> So check also for CONFIG_USB_NET_CDCETHER_MODULE in config.mk to be safe
-> in both cases.
->
-> Signed-off-by: Sven-Haegar Koch <haegar@sdinet.de>
-> ---
->
-> I needed to also use an old windows mobile device (Palm Treo 750)
-> connected over USB with my laptop which otherwise uses compat-wireless.
->
-> But after connecting it I only got:
->        usb 2-1: bad CDC descriptors
->
-> This happens when in drivers/net/usb/cdc_ether.c
-> CONFIG_USB_NET_COMPAT_RNDIS_HOST and
-> CONFIG_USB_NET_COMPAT_RNDIS_HOST_MODULE both are not defined, because it
-> stubs out the rndis_host support.
->
-> Perhaps not the most visually pleasing solution to just include the
-> ifdef block in config.mk twice, but everything else would have needed a
-> much deeper surgery - and as this is the only usage of ifdef in
-> compat.mk where the symbol can also be a module I did not find it to be
-> worth the additional complexity.
->
-> Tested with compat-wireless-2.6.36-5-spn.tar.bz2, but also happened with
-> earlier versions and should also apply to newer.
+ * Since we only use ath5k_hw_stop_tx_dma to stop the beacon
+ queue, introduce a new function ath5k_hw_stop_beacon_queue so
+ that we can use that instead and have better control. In the future
+ we can add more beacon queue specific stuff there (maybe tweak
+ beacon timers or something), for now just call ath5k_hw_stop_tx_dma.
 
-Thanks applied to the latest (always first) and will later push out a
-new release for 2.6.36.
+ * Also since we don't call ath5k_hw_stop_rx/tx_dma from outside
+ dma.c, make them static.
 
-  Luis
+ Signed-off-by: Nick Kossifidis <mickflemm@gmail.com>
+---
+ drivers/net/wireless/ath/ath5k/ath5k.h |    3 +--
+ drivers/net/wireless/ath/ath5k/base.c  |    4 ++--
+ drivers/net/wireless/ath/ath5k/dma.c   |   24 ++++++++++++++++++++++--
+ 3 files changed, 25 insertions(+), 6 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath5k/ath5k.h b/drivers/net/wireless/ath/ath5k/ath5k.h
+index b36d3a5..66359dc 100644
+--- a/drivers/net/wireless/ath/ath5k/ath5k.h
++++ b/drivers/net/wireless/ath/ath5k/ath5k.h
+@@ -1166,11 +1166,10 @@ void ath5k_hw_set_clockrate(struct ath5k_hw *ah);
+ 
+ /* DMA Related Functions */
+ void ath5k_hw_start_rx_dma(struct ath5k_hw *ah);
+-int ath5k_hw_stop_rx_dma(struct ath5k_hw *ah);
+ u32 ath5k_hw_get_rxdp(struct ath5k_hw *ah);
+ int ath5k_hw_set_rxdp(struct ath5k_hw *ah, u32 phys_addr);
+ int ath5k_hw_start_tx_dma(struct ath5k_hw *ah, unsigned int queue);
+-int ath5k_hw_stop_tx_dma(struct ath5k_hw *ah, unsigned int queue);
++int ath5k_hw_stop_beacon_queue(struct ath5k_hw *ah, unsigned int queue);
+ u32 ath5k_hw_get_txdp(struct ath5k_hw *ah, unsigned int queue);
+ int ath5k_hw_set_txdp(struct ath5k_hw *ah, unsigned int queue,
+ 				u32 phys_addr);
+diff --git a/drivers/net/wireless/ath/ath5k/base.c b/drivers/net/wireless/ath/ath5k/base.c
+index eea5879..9af7e46 100644
+--- a/drivers/net/wireless/ath/ath5k/base.c
++++ b/drivers/net/wireless/ath/ath5k/base.c
+@@ -1922,7 +1922,7 @@ ath5k_beacon_send(struct ath5k_softc *sc)
+ 	 * This should never fail since we check above that no frames
+ 	 * are still pending on the queue.
+ 	 */
+-	if (unlikely(ath5k_hw_stop_tx_dma(ah, sc->bhalq))) {
++	if (unlikely(ath5k_hw_stop_beacon_queue(ah, sc->bhalq))) {
+ 		ATH5K_WARN(sc, "beacon queue %u didn't start/stop ?\n", sc->bhalq);
+ 		/* NB: hw still stops DMA, so proceed */
+ 	}
+@@ -2091,7 +2091,7 @@ ath5k_beacon_config(struct ath5k_softc *sc)
+ 		} else
+ 			ath5k_beacon_update_timers(sc, -1);
+ 	} else {
+-		ath5k_hw_stop_tx_dma(sc->ah, sc->bhalq);
++		ath5k_hw_stop_beacon_queue(sc->ah, sc->bhalq);
+ 	}
+ 
+ 	ath5k_hw_set_imr(ah, sc->imask);
+diff --git a/drivers/net/wireless/ath/ath5k/dma.c b/drivers/net/wireless/ath/ath5k/dma.c
+index 3fe634f..82541fe 100644
+--- a/drivers/net/wireless/ath/ath5k/dma.c
++++ b/drivers/net/wireless/ath/ath5k/dma.c
+@@ -58,7 +58,7 @@ void ath5k_hw_start_rx_dma(struct ath5k_hw *ah)
+  *
+  * @ah:	The &struct ath5k_hw
+  */
+-int ath5k_hw_stop_rx_dma(struct ath5k_hw *ah)
++static int ath5k_hw_stop_rx_dma(struct ath5k_hw *ah)
+ {
+ 	unsigned int i;
+ 
+@@ -188,7 +188,7 @@ int ath5k_hw_start_tx_dma(struct ath5k_hw *ah, unsigned int queue)
+  * -EINVAL if queue number is out of range or inactive.
+  *
+  */
+-int ath5k_hw_stop_tx_dma(struct ath5k_hw *ah, unsigned int queue)
++static int ath5k_hw_stop_tx_dma(struct ath5k_hw *ah, unsigned int queue)
+ {
+ 	unsigned int i = 40;
+ 	u32 tx_queue, pending;
+@@ -321,6 +321,26 @@ int ath5k_hw_stop_tx_dma(struct ath5k_hw *ah, unsigned int queue)
+ }
+ 
+ /**
++ * ath5k_hw_stop_beacon_queue - Stop beacon queue
++ *
++ * @ah The &struct ath5k_hw
++ * @queue The queue number
++ *
++ * Returns -EIO if queue didn't stop
++ */
++int ath5k_hw_stop_beacon_queue(struct ath5k_hw *ah, unsigned int queue)
++{
++	int ret;
++	ret = ath5k_hw_stop_tx_dma(ah, queue);
++	if (ret) {
++		ATH5K_DBG(ah->ah_sc, ATH5K_DEBUG_DMA,
++				"beacon queue didn't stop !\n");
++		return -EIO;
++	}
++	return 0;
++}
++
++/**
+  * ath5k_hw_get_txdp - Get TX Descriptor's address for a specific queue
+  *
+  * @ah: The &struct ath5k_hw
