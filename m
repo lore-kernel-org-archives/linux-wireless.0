@@ -1,35 +1,28 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:33334 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755447Ab0KXQ7p (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 24 Nov 2010 11:59:45 -0500
-Date: Wed, 24 Nov 2010 11:46:31 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Wojciech Dubowik <dubowoj@neratec.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 1/9] ath5k: AHB port. Use generic DMA instead of PCI API.
-Message-ID: <20101124164631.GC7435@tuxdriver.com>
-References: <17888045.991289487433290.JavaMail.wlan@CHBU500181>
- <23232015.1011289487455461.JavaMail.wlan@CHBU500181>
+Received: from mail.atheros.com ([12.19.149.2]:48973 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754408Ab0KWTVX (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 23 Nov 2010 14:21:23 -0500
+Received: from mail.atheros.com ([10.10.20.108])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Tue, 23 Nov 2010 11:21:09 -0800
+Date: Tue, 23 Nov 2010 11:21:19 -0800
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: <ath5k-devel@lists.ath5k.org>, <linux-wireless@vger.kernel.org>,
+	<linville@tuxdriver.com>, <me@bobcopeland.com>, <mcgrof@gmail.com>,
+	<jirislaby@gmail.com>, <nbd@openwrt.org>, <br1@einfach.org>
+Subject: Re: [ath5k-devel] [PATCH 12/30] ath5k: Increase PHY settling
+ parameters for turo mode
+Message-ID: <20101123192119.GP29396@tux>
+References: <20101123190359.GL4303@makis.mantri>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <23232015.1011289487455461.JavaMail.wlan@CHBU500181>
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <20101123190359.GL4303@makis.mantri>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Nov 11, 2010 at 03:57:36PM +0100, Wojciech Dubowik wrote:
-> General comments for AHB bus support in ath5k:
->  - most of the original patches came from Felix Fetikau. I have used them as a reference and ported to current git tree
->  - tried with access point functionality with WPA2 and without encryption
->  - tested on AR5312 for AHB and AR5414 and AR5212 for PCI
->  - compat wireless from openwrt was used for testing these patches
->  - last two patches have to be applied together because otherwise hardware will crash on reset if
->   only number 9 is committed. I have kept them separated for better visibility
+On Tue, Nov 23, 2010 at 11:04:43AM -0800, Nick Kossifidis wrote:
 
-Are we going to see a repost of this series?
+Are you willing to deal with *all* bug reports for this?
 
-John
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+  Luis
