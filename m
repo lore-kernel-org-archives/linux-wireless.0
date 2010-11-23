@@ -1,50 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:17196 "EHLO mga09.intel.com"
+Received: from mail.atheros.com ([12.19.149.2]:60495 "EHLO mail.atheros.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754533Ab0KPQGo (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 16 Nov 2010 11:06:44 -0500
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Subject: [PATCH 18/18] iwlwifi: set STATUS_READY before commit_rxon
-Date: Tue, 16 Nov 2010 08:01:51 -0800
-Message-Id: <1289923311-14920-19-git-send-email-wey-yi.w.guy@intel.com>
-In-Reply-To: <1289923311-14920-1-git-send-email-wey-yi.w.guy@intel.com>
-References: <1289923311-14920-1-git-send-email-wey-yi.w.guy@intel.com>
+	id S932440Ab0KWBXK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 22 Nov 2010 20:23:10 -0500
+Received: from mail.atheros.com ([10.10.20.105])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Mon, 22 Nov 2010 17:22:57 -0800
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: <johannes@sipsolutions.net>
+CC: <linux-wireless@vger.kernel.org>,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	Matt Smith <matt.smith@atheros.com>,
+	Senthil Balasubramanian <senthilkumar@atheros.com>
+Subject: [PATCH 2/3] ath9k: avoid aggregation for VO traffic
+Date: Mon, 22 Nov 2010 17:23:02 -0800
+Message-ID: <1290475383-26911-2-git-send-email-lrodriguez@atheros.com>
+In-Reply-To: <1290475383-26911-1-git-send-email-lrodriguez@atheros.com>
+References: <1290475383-26911-1-git-send-email-lrodriguez@atheros.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Have the STATUS_READY bit set before commit_rxon call to avoid fail
-to send tx power to uCode.
+This should help with latency issues which can happen when
+using aggregation.
 
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Cc: Matt Smith <matt.smith@atheros.com>
+Cc: Senthil Balasubramanian <senthilkumar@atheros.com>
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
 ---
- drivers/net/wireless/iwlwifi/iwl-agn.c |    3 ++-
+ drivers/net/wireless/ath/ath9k/rc.c |    3 ++-
  1 files changed, 2 insertions(+), 1 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
-index c6e455e..5b96b0d 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
-@@ -2717,6 +2717,8 @@ static void iwl_alive_start(struct iwl_priv *priv)
+diff --git a/drivers/net/wireless/ath/ath9k/rc.c b/drivers/net/wireless/ath/ath9k/rc.c
+index 33bb33b..f1c1a93 100644
+--- a/drivers/net/wireless/ath/ath9k/rc.c
++++ b/drivers/net/wireless/ath/ath9k/rc.c
+@@ -1363,7 +1363,8 @@ static void ath_tx_status(void *priv, struct ieee80211_supported_band *sband,
+ 	/* Check if aggregation has to be enabled for this tid */
+ 	if (conf_is_ht(&sc->hw->conf) &&
+ 	    !(skb->protocol == cpu_to_be16(ETH_P_PAE))) {
+-		if (ieee80211_is_data_qos(fc)) {
++		if (ieee80211_is_data_qos(fc) &&
++		    (ieee802_1d_to_ac[skb->priority] != IEEE80211_AC_VO)) {
+ 			u8 *qc, tid;
+ 			struct ath_node *an;
  
- 	iwl_reset_run_time_calib(priv);
- 
-+	set_bit(STATUS_READY, &priv->status);
-+
- 	/* Configure the adapter for unassociated operation */
- 	iwlcore_commit_rxon(priv, ctx);
- 
-@@ -2726,7 +2728,6 @@ static void iwl_alive_start(struct iwl_priv *priv)
- 	iwl_leds_init(priv);
- 
- 	IWL_DEBUG_INFO(priv, "ALIVE processing complete.\n");
--	set_bit(STATUS_READY, &priv->status);
- 	wake_up_interruptible(&priv->wait_command_queue);
- 
- 	iwl_power_update_mode(priv, true);
 -- 
-1.7.0.4
+1.7.3.2.90.gd4c43
 
