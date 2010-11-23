@@ -1,47 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.19.149.2]:26482 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754283Ab0KJNDf (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 10 Nov 2010 08:03:35 -0500
-Received: from mail.atheros.com ([10.10.20.105])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Wed, 10 Nov 2010 05:03:22 -0800
-From: Vasanthakumar Thiagarajan <vasanth@atheros.com>
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>,
-	Senthil Balasubramanian <senthilkumar@atheros.com>
-Subject: [PATCH 03/11] ath9k_hw: Initialize 2GHz CTL properly.
-Date: Wed, 10 Nov 2010 05:03:08 -0800
-Message-ID: <1289394196-3465-3-git-send-email-vasanth@atheros.com>
-In-Reply-To: <1289394196-3465-1-git-send-email-vasanth@atheros.com>
-References: <1289394196-3465-1-git-send-email-vasanth@atheros.com>
+Received: from devils.ext.ti.com ([198.47.26.153]:44312 "EHLO
+	devils.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753994Ab0KWQ0M (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 23 Nov 2010 11:26:12 -0500
+From: "Levi, Shahar" <shahar_levi@ti.com>
+To: Josh Watts <JWatts@d3engineering.com>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Date: Tue, 23 Nov 2010 17:25:35 +0100
+Subject: RE: No scan results from wl1271-sdio
+Message-ID: <AC090B9732AB2B4DB7FF476E907FE660012AF3E788@dnce02.ent.ti.com>
+References: <AB927C5B3615784183753F31BCC83EA38C58FE29@AD.d3.local>
+In-Reply-To: <AB927C5B3615784183753F31BCC83EA38C58FE29@AD.d3.local>
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Senthil Balasubramanian <senthilkumar@atheros.com>
-
-The last 2GHz CTL was not being initialized, so power was being
-set to 0 instead of 30dbm. Initialize to 30 like other CTLs.
-
-Signed-off-by: Senthil Balasubramanian <senthilkumar@atheros.com>
----
- drivers/net/wireless/ath/ath9k/ar9003_eeprom.c |    1 +
- 1 files changed, 1 insertions(+), 0 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
-index bc3f49c..b33fb5b 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
-@@ -306,6 +306,7 @@ static const struct ar9300_eeprom ar9300_default = {
- 
- 		 { { {60, 0}, {60, 1}, {60, 0}, {60, 0} } },
- 		 { { {60, 0}, {60, 1}, {60, 1}, {60, 1} } },
-+		 { { {60, 0}, {60, 1}, {60, 1}, {60, 1} } },
- 	 },
- 	.modalHeader5G = {
- 		/* 4 idle,t1,t2,b (4 bits per setting) */
--- 
-1.7.0.4
-
+PiAtLS0tLU9yaWdpbmFsIE1lc3NhZ2UtLS0tLQ0KPiBGcm9tOiBsaW51eC13aXJlbGVzcy1vd25l
+ckB2Z2VyLmtlcm5lbC5vcmcgW21haWx0bzpsaW51eC13aXJlbGVzcy0NCj4gb3duZXJAdmdlci5r
+ZXJuZWwub3JnXSBPbiBCZWhhbGYgT2YgSm9zaCBXYXR0cw0KPiBTZW50OiBUdWVzZGF5LCBOb3Zl
+bWJlciAyMywgMjAxMCA1OjM0IFBNDQo+IFRvOiBsaW51eC13aXJlbGVzc0B2Z2VyLmtlcm5lbC5v
+cmcNCj4gU3ViamVjdDogTm8gc2NhbiByZXN1bHRzIGZyb20gd2wxMjcxLXNkaW8NCj4gDQo+IEkn
+dmUgYmVlbiB0cnlpbmcgdG8gZ2V0IHRoZSB3bDEyNzEtc2RpbyBkcml2ZXIgdG8gd29yaywgYW5k
+IHNvIGZhciBJJ3ZlDQo+IG1hbmFnZWQgdG8gZ2V0IHRoZSBkZXZpY2UgdG8gc3RhcnQgdXAsIGJ1
+dCBhbSB1bmFibGUgdG8gc2VlIGFueSBhY2Nlc3MNCj4gcG9pbnRzLiBJJ20gdXNpbmcgdGhlIGxh
+dGVzdCBoZWFkIGZyb20gTHVjaWFubydzIHdsMTJ4eCB0cmVlLCBhbmQgZm9yDQo+IGZpcm13YXJl
+IEknbSB1c2luZyB0aGUgZmlsZXMgY29tbWl0dGVkIHRvIGxpbnV4LWZpcm13YXJlIGJ5IFNoYWhh
+ciBMZXZpDQo+ICh3bDEyNzEtZncuYmluIHZlcnNpb24gNi4xLjAuMC4zNDMpLiBJJ20gd29uZGVy
+aW5nIGlmIHRoZXJlJ3MgbWF5YmUNCj4gc29tZQ0KPiBtaW5vciBjb21wb25lbnQgb3Igc2V0dGlu
+ZyB0aGF0IEknbSBtaXNzaW5nIChsaWtlIHJhZGlvLWVuYWJsZSwgb3INCj4gcGVyaGFwcyBsaW1p
+dCB0byA4MDIuMTFhLCBldGMpPw0KPiANCj4gV2l0aCBhbGwgZGVidWcgaW5mb3JtYXRpb24gdHVy
+bmVkIG9uIGluIHRoZSBkcml2ZXIsIEkgc2VlIHBsZW50eSBvZg0KPiBjb21tdW5pY2F0aW9uIGdv
+aW5nIGJhY2sgYW5kIGZvcnRoIHcvbyBhbnkgKG5vdGljZWFibGUpIGVycm9ycywgYnV0IEkNCj4g
+ZG9uJ3Qgc2VlIGFueSBzaWduIG9mIG1hZ2ljIHN0cmluZ3Mgc3VjaCBhcyBhbnkgb2YgdGhlIEVT
+U0lEcyBJIGV4cGVjdA0KPiB0byBzZWUgaW4gdGhlIGFyZWEuDQo+IA0KPiAtLQ0KPiBKb3NoIFdh
+dHRzDQpJIHdvdWxkIGJlIGRlbGlnaHRlZCB0byBsb29rIG9uIGRlYnVnIGxvZyBpbiBvcmRlciB0
+byBoZWxwLiBTZW5kIG1lIGRpcmVjdGx5IGEgbG9nIGFuZCBJIHdpbGwgbG9vayBvbiB0aGF0Lg0K
+Q2hlZXJzLA0KU2hhaGFyDQoNCg==
