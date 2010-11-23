@@ -1,46 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-vw0-f46.google.com ([209.85.212.46]:57373 "EHLO
-	mail-vw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754083Ab0KBCpp (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 1 Nov 2010 22:45:45 -0400
-Received: by vws13 with SMTP id 13so4381646vws.19
-        for <linux-wireless@vger.kernel.org>; Mon, 01 Nov 2010 19:45:45 -0700 (PDT)
-Message-ID: <4CCF7B73.7040906@lwfinger.net>
-Date: Mon, 01 Nov 2010 21:46:11 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-To: htl10@users.sourceforge.net
-CC: linux-wireless@vger.kernel.org,
-	Herton Ronaldo Krzesinski <herton@mandriva.com.br>,
-	John W Linville <linville@tuxdriver.com>
-Subject: Re: [PATCH 3/9] rtl8187: fix wrong register initialization in 8187B
-References: <309278.75116.qm@web29520.mail.ird.yahoo.com>
-In-Reply-To: <309278.75116.qm@web29520.mail.ird.yahoo.com>
-Content-Type: text/plain; charset=UTF-8
+Received: from smtp.nokia.com ([147.243.1.47]:29541 "EHLO mgw-sa01.nokia.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751502Ab0KWTOr (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 23 Nov 2010 14:14:47 -0500
+Subject: Re: No scan results from wl1271-sdio
+From: Luciano Coelho <luciano.coelho@nokia.com>
+To: ext Josh Watts <JWatts@d3engineering.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"shahar_levi@ti.com" <shahar_levi@ti.com>
+In-Reply-To: <AB927C5B3615784183753F31BCC83EA38C58FE30@AD.d3.local>
+References: <AB927C5B3615784183753F31BCC83EA38C58FE29@AD.d3.local>
+	 <1290534680.5617.11.camel@powerslave>
+	 <AB927C5B3615784183753F31BCC83EA38C58FE30@AD.d3.local>
+Content-Type: text/plain; charset="UTF-8"
+Date: Tue, 23 Nov 2010 21:14:39 +0200
+Message-ID: <1290539679.5617.21.camel@powerslave>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 11/01/2010 09:42 PM, Hin-Tak Leung wrote:
-> 
-> --- On Tue, 2/11/10, Herton Ronaldo Krzesinski <herton@mandriva.com.br> wrote:
-> 
->> We were using wrong address for BRSR
->> (Basic Rate Set Register) while
->> initializing its value, comparing with Realtek sources, for
->> 8187B case.
->>
->> Also, the same register is initialized in
->> rtl8187b_reg_table, so remove
->> the duplicate initialization from the table.
->>
->> Signed-off-by: Herton Ronaldo Krzesinski <herton@mandriva.com.br>
->> Acked-by: Larry Finger <Larry.Finger@lwfinger.net>
-> 
-> Acked-by: Hin-Tak Leung <htl10@users.sourceforge.net>
-> 
-> ANAPARAM* stands for "anonymous parameters", right?  One of these days we should give them some meaningful names. 
+On Tue, 2010-11-23 at 13:51 -0500, ext Josh Watts wrote:
+> See attached (wlan0.log.20101123_1317 201.4KiB) for the debug log
+> (copy of /var/log/messages) sans DEBUG_SDIO. 
 
-I have always thought it was for "analog parameter". Am I wrong?
+According to the logs, everything seems to go well, including the probe
+requests seem to be configure correctly before the scan.  But I don't
+see any RX interrupts...
 
-Larry
+Do you have a sniffer or a device that can be put into monitor mode to
+use with wireshark? If you do, an airlog of this scenario will probably
+give us more clues...
+
+
+-- 
+Cheers,
+Luca.
+
