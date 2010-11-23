@@ -1,202 +1,90 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:26170 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754498Ab0KPQGn (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 16 Nov 2010 11:06:43 -0500
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Johannes Berg <johannes.berg@intel.com>,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Subject: [PATCH 13/18] iwlagn: reprogram AP STA after assoc
-Date: Tue, 16 Nov 2010 08:01:46 -0800
-Message-Id: <1289923311-14920-14-git-send-email-wey-yi.w.guy@intel.com>
-In-Reply-To: <1289923311-14920-1-git-send-email-wey-yi.w.guy@intel.com>
-References: <1289923311-14920-1-git-send-email-wey-yi.w.guy@intel.com>
+Received: from mail-ew0-f46.google.com ([209.85.215.46]:44375 "EHLO
+	mail-ew0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753777Ab0KWTd7 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 23 Nov 2010 14:33:59 -0500
+Received: by ewy5 with SMTP id 5so2675108ewy.19
+        for <linux-wireless@vger.kernel.org>; Tue, 23 Nov 2010 11:33:58 -0800 (PST)
+Date: Tue, 23 Nov 2010 21:33:22 +0200
+From: Nick Kossifidis <mickflemm@gmail.com>
+To: ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org
+Cc: linville@tuxdriver.com, me@bobcopeland.com, mcgrof@gmail.com,
+	jirislaby@gmail.com, nbd@openwrt.org, br1@einfach.org
+Subject: [PATCH 21/30] ath5k: Update PLL programming for turbo/half/quarter
+Message-ID: <20101123193322.GU4303@makis.mantri>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+ * Set correct PLL settings for each bwmode
 
-Instead of unconditionally sending unassoc RXON,
-before any assoc RXON, re-send only the AP STA
-entry which is required after the BSSID has been
-programmed into the device to set up internal
-filters in the microcode properly.
-
-This fixes some issues that we correlated with
-sending a lot of RXON commands to the device.
-
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+ Signed-off-by: Nick Kossifidis <mickflemm@gmail.com>
 ---
- drivers/net/wireless/iwlwifi/iwl-agn-rxon.c |   39 +++++++++++---------
- drivers/net/wireless/iwlwifi/iwl-sta.c      |   51 ++++++++++++++++++++++++---
- drivers/net/wireless/iwlwifi/iwl-sta.h      |    1 +
- 3 files changed, 69 insertions(+), 22 deletions(-)
+ drivers/net/wireless/ath/ath5k/reset.c |   28 +++++++++++++++++++++++-----
+ 1 files changed, 23 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-rxon.c b/drivers/net/wireless/iwlwifi/iwl-agn-rxon.c
-index fbaa8d2..9db3924 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn-rxon.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn-rxon.c
-@@ -97,6 +97,7 @@ int iwlagn_commit_rxon(struct iwl_priv *priv, struct iwl_rxon_context *ctx)
- 	/* cast away the const for active_rxon in this function */
- 	struct iwl_rxon_cmd *active = (void *)&ctx->active;
- 	bool new_assoc = !!(ctx->staging.filter_flags & RXON_FILTER_ASSOC_MSK);
-+	bool old_assoc = !!(ctx->active.filter_flags & RXON_FILTER_ASSOC_MSK);
- 	int ret;
+diff --git a/drivers/net/wireless/ath/ath5k/reset.c b/drivers/net/wireless/ath/ath5k/reset.c
+index ee605cd..ef57bce 100644
+--- a/drivers/net/wireless/ath/ath5k/reset.c
++++ b/drivers/net/wireless/ath/ath5k/reset.c
+@@ -500,7 +500,6 @@ int ath5k_hw_on_hold(struct ath5k_hw *ah)
  
- 	lockdep_assert_held(&priv->mutex);
-@@ -176,25 +177,27 @@ int iwlagn_commit_rxon(struct iwl_priv *priv, struct iwl_rxon_context *ctx)
- 	 * AP station must be done after the BSSID is set to correctly
- 	 * set up filters in the device.
- 	 */
--	if (ctx->ctxid == IWL_RXON_CTX_BSS)
--		ret = iwlagn_disable_bss(priv, ctx, &ctx->staging);
--	else
--		ret = iwlagn_disable_pan(priv, ctx, &ctx->staging);
--	if (ret)
--		return ret;
-+	if ((old_assoc && new_assoc) || !new_assoc) {
-+		if (ctx->ctxid == IWL_RXON_CTX_BSS)
-+			ret = iwlagn_disable_bss(priv, ctx, &ctx->staging);
-+		else
-+			ret = iwlagn_disable_pan(priv, ctx, &ctx->staging);
-+		if (ret)
-+			return ret;
+ /*
+  * Bring up MAC + PHY Chips and program PLL
+- * TODO: Half/Quarter rate support
+  */
+ int ath5k_hw_nic_wakeup(struct ath5k_hw *ah, int flags, bool initial)
+ {
+@@ -588,7 +587,8 @@ int ath5k_hw_nic_wakeup(struct ath5k_hw *ah, int flags, bool initial)
+ 				 * CCK headers) operation. We need to test
+ 				 * this, 5211 might support ofdm-only g after
+ 				 * all, there are also initial register values
+-				 * in the code for g mode (see initvals.c). */
++				 * in the code for g mode (see initvals.c).
++				 */
+ 				if (ah->ah_version == AR5K_AR5211)
+ 					mode |= AR5K_PHY_MODE_MOD_OFDM;
+ 				else
+@@ -601,6 +601,7 @@ int ath5k_hw_nic_wakeup(struct ath5k_hw *ah, int flags, bool initial)
+ 		} else if (flags & CHANNEL_5GHZ) {
+ 			mode |= AR5K_PHY_MODE_FREQ_5GHZ;
  
--	memcpy(active, &ctx->staging, sizeof(*active));
-+		memcpy(active, &ctx->staging, sizeof(*active));
- 
--	/*
--	 * Un-assoc RXON clears the station table and WEP
--	 * keys, so we have to restore those afterwards.
--	 */
--	iwl_clear_ucode_stations(priv, ctx);
--	iwl_restore_stations(priv, ctx);
--	ret = iwl_restore_default_wep_keys(priv, ctx);
--	if (ret) {
--		IWL_ERR(priv, "Failed to restore WEP keys (%d)\n", ret);
--		return ret;
-+		/*
-+		 * Un-assoc RXON clears the station table and WEP
-+		 * keys, so we have to restore those afterwards.
-+		 */
-+		iwl_clear_ucode_stations(priv, ctx);
-+		iwl_restore_stations(priv, ctx);
-+		ret = iwl_restore_default_wep_keys(priv, ctx);
-+		if (ret) {
-+			IWL_ERR(priv, "Failed to restore WEP keys (%d)\n", ret);
-+			return ret;
-+		}
- 	}
- 
- 	/* RXON timing must be before associated RXON */
-@@ -235,6 +238,8 @@ int iwlagn_commit_rxon(struct iwl_priv *priv, struct iwl_rxon_context *ctx)
++			/* Different PLL setting for 5413 */
+ 			if (ah->ah_radio == AR5K_RF5413)
+ 				clock = AR5K_PHY_PLL_40MHZ_5413;
+ 			else
+@@ -618,12 +619,29 @@ int ath5k_hw_nic_wakeup(struct ath5k_hw *ah, int flags, bool initial)
+ 			return -EINVAL;
  		}
- 		memcpy(active, &ctx->staging, sizeof(*active));
  
-+		iwl_reprogram_ap_sta(priv, ctx);
-+
- 		/* IBSS beacon needs to be sent after setting assoc */
- 		if (ctx->vif && (ctx->vif->type == NL80211_IFTYPE_ADHOC))
- 			if (iwlagn_update_beacon(priv, ctx->vif))
-diff --git a/drivers/net/wireless/iwlwifi/iwl-sta.c b/drivers/net/wireless/iwlwifi/iwl-sta.c
-index 7c7f7dc..0a67b2f 100644
---- a/drivers/net/wireless/iwlwifi/iwl-sta.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-sta.c
-@@ -400,7 +400,8 @@ static void iwl_sta_ucode_deactivate(struct iwl_priv *priv, u8 sta_id)
- }
- 
- static int iwl_send_remove_station(struct iwl_priv *priv,
--				   const u8 *addr, int sta_id)
-+				   const u8 *addr, int sta_id,
-+				   bool temporary)
- {
- 	struct iwl_rx_packet *pkt;
- 	int ret;
-@@ -436,9 +437,11 @@ static int iwl_send_remove_station(struct iwl_priv *priv,
- 	if (!ret) {
- 		switch (pkt->u.rem_sta.status) {
- 		case REM_STA_SUCCESS_MSK:
--			spin_lock_irqsave(&priv->sta_lock, flags_spin);
--			iwl_sta_ucode_deactivate(priv, sta_id);
--			spin_unlock_irqrestore(&priv->sta_lock, flags_spin);
-+			if (!temporary) {
-+				spin_lock_irqsave(&priv->sta_lock, flags_spin);
-+				iwl_sta_ucode_deactivate(priv, sta_id);
-+				spin_unlock_irqrestore(&priv->sta_lock, flags_spin);
+-		if (flags & CHANNEL_TURBO)
+-			turbo = AR5K_PHY_TURBO_MODE | AR5K_PHY_TURBO_SHORT;
++		/*XXX: Can bwmode be used with dynamic mode ?
++		 * (I don't think it supports 44MHz) */
++		/* On 2425 initvals TURBO_SHORT is not pressent */
++		if (ah->ah_bwmode == AR5K_BWMODE_40MHZ) {
++			turbo = AR5K_PHY_TURBO_MODE |
++				(ah->ah_radio == AR5K_RF2425) ? 0 :
++				AR5K_PHY_TURBO_SHORT;
++		} else if (ah->ah_bwmode != AR5K_BWMODE_DEFAULT) {
++			if (ah->ah_radio == AR5K_RF5413) {
++				mode |= (ah->ah_bwmode == AR5K_BWMODE_10MHZ) ?
++					AR5K_PHY_MODE_HALF_RATE :
++					AR5K_PHY_MODE_QUARTER_RATE;
++			} else if (ah->ah_version == AR5K_AR5212) {
++				clock |= (ah->ah_bwmode == AR5K_BWMODE_10MHZ) ?
++					AR5K_PHY_PLL_HALF_RATE :
++					AR5K_PHY_PLL_QUARTER_RATE;
 +			}
- 			IWL_DEBUG_ASSOC(priv, "REPLY_REMOVE_STA PASSED\n");
- 			break;
- 		default:
-@@ -505,7 +508,7 @@ int iwl_remove_station(struct iwl_priv *priv, const u8 sta_id,
- 
- 	spin_unlock_irqrestore(&priv->sta_lock, flags);
- 
--	return iwl_send_remove_station(priv, addr, sta_id);
-+	return iwl_send_remove_station(priv, addr, sta_id, false);
- out_err:
- 	spin_unlock_irqrestore(&priv->sta_lock, flags);
- 	return -EINVAL;
-@@ -624,6 +627,44 @@ void iwl_restore_stations(struct iwl_priv *priv, struct iwl_rxon_context *ctx)
- }
- EXPORT_SYMBOL(iwl_restore_stations);
- 
-+void iwl_reprogram_ap_sta(struct iwl_priv *priv, struct iwl_rxon_context *ctx)
-+{
-+	unsigned long flags;
-+	int sta_id = ctx->ap_sta_id;
-+	int ret;
-+	struct iwl_addsta_cmd sta_cmd;
-+	struct iwl_link_quality_cmd lq;
-+	bool active;
++		}
 +
-+	spin_lock_irqsave(&priv->sta_lock, flags);
-+	if (!(priv->stations[sta_id].used & IWL_STA_DRIVER_ACTIVE)) {
-+		spin_unlock_irqrestore(&priv->sta_lock, flags);
-+		return;
-+	}
-+
-+	memcpy(&sta_cmd, &priv->stations[sta_id].sta, sizeof(sta_cmd));
-+	sta_cmd.mode = 0;
-+	memcpy(&lq, priv->stations[sta_id].lq, sizeof(lq));
-+
-+	active = priv->stations[sta_id].used & IWL_STA_UCODE_ACTIVE;
-+	spin_unlock_irqrestore(&priv->sta_lock, flags);
-+
-+	if (active) {
-+		ret = iwl_send_remove_station(
-+			priv, priv->stations[sta_id].sta.sta.addr,
-+			sta_id, true);
-+		if (ret)
-+			IWL_ERR(priv, "failed to remove STA %pM (%d)\n",
-+				priv->stations[sta_id].sta.sta.addr, ret);
-+	}
-+	ret = iwl_send_add_sta(priv, &sta_cmd, CMD_SYNC);
-+	if (ret)
-+		IWL_ERR(priv, "failed to re-add STA %pM (%d)\n",
-+			priv->stations[sta_id].sta.sta.addr, ret);
-+	iwl_send_lq_cmd(priv, ctx, &lq, CMD_SYNC, true);
-+}
-+EXPORT_SYMBOL(iwl_reprogram_ap_sta);
-+
- int iwl_get_free_ucode_key_index(struct iwl_priv *priv)
- {
- 	int i;
-diff --git a/drivers/net/wireless/iwlwifi/iwl-sta.h b/drivers/net/wireless/iwlwifi/iwl-sta.h
-index 0647587..206f1e1 100644
---- a/drivers/net/wireless/iwlwifi/iwl-sta.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-sta.h
-@@ -63,6 +63,7 @@ u8 iwl_prep_station(struct iwl_priv *priv, struct iwl_rxon_context *ctx,
+ 	} else { /* Reset the device */
  
- int iwl_send_lq_cmd(struct iwl_priv *priv, struct iwl_rxon_context *ctx,
- 		    struct iwl_link_quality_cmd *lq, u8 flags, bool init);
-+void iwl_reprogram_ap_sta(struct iwl_priv *priv, struct iwl_rxon_context *ctx);
- 
- /**
-  * iwl_clear_driver_stations - clear knowledge of all stations from driver
--- 
-1.7.0.4
-
+ 		/* ...enable Atheros turbo mode if requested */
+-		if (flags & CHANNEL_TURBO)
++		if (ah->ah_bwmode == AR5K_BWMODE_40MHZ)
+ 			ath5k_hw_reg_write(ah, AR5K_PHY_TURBO_MODE,
+ 					AR5K_PHY_TURBO);
+ 	}
