@@ -1,29 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iw0-f174.google.com ([209.85.214.174]:59698 "EHLO
-	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751008Ab0KLTtN (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 12 Nov 2010 14:49:13 -0500
-Received: by iwn10 with SMTP id 10so3839957iwn.19
-        for <linux-wireless@vger.kernel.org>; Fri, 12 Nov 2010 11:49:12 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <1289589685-16372-2-git-send-email-hauke@hauke-m.de>
-References: <1289589685-16372-1-git-send-email-hauke@hauke-m.de> <1289589685-16372-2-git-send-email-hauke@hauke-m.de>
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Date: Fri, 12 Nov 2010 11:48:52 -0800
-Message-ID: <AANLkTimhMFtyYkf=sn0sfdQ7G0N3xa0BTNeWS6OC7Z1e@mail.gmail.com>
-Subject: Re: [PATCH 2/2] compat-wireless: fix compile error with iwl
-To: Hauke Mehrtens <hauke@hauke-m.de>
-Cc: linux-wireless@vger.kernel.org, mcgrof@infradead.org
-Content-Type: text/plain; charset=UTF-8
+Received: from mga09.intel.com ([134.134.136.24]:2765 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756448Ab0KWTE3 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 23 Nov 2010 14:04:29 -0500
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Subject: [PATCH 1/5] iwlagn: name change for BT config flag
+Date: Tue, 23 Nov 2010 10:58:52 -0800
+Message-Id: <1290538736-10816-2-git-send-email-wey-yi.w.guy@intel.com>
+In-Reply-To: <1290538736-10816-1-git-send-email-wey-yi.w.guy@intel.com>
+References: <1290538736-10816-1-git-send-email-wey-yi.w.guy@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Nov 12, 2010 at 11:21 AM, Hauke Mehrtens <hauke@hauke-m.de> wrote:
-> The header file declares the const.
->
-> Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+Bit 7 of BT config flag is used to enable/disable PSPoll sync.
+Make the name to match it.
 
-Applied and pushed, thanks!
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-commands.h |    5 +++--
+ 1 files changed, 3 insertions(+), 2 deletions(-)
 
- Luis
+diff --git a/drivers/net/wireless/iwlwifi/iwl-commands.h b/drivers/net/wireless/iwlwifi/iwl-commands.h
+index 9c1b7fb..4028ed3 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-commands.h
++++ b/drivers/net/wireless/iwlwifi/iwl-commands.h
+@@ -2439,8 +2439,9 @@ struct iwl_bt_cmd {
+ #define IWLAGN_BT_FLAG_COEX_MODE_3W		2
+ #define IWLAGN_BT_FLAG_COEX_MODE_4W		3
+ 
+-#define IWLAGN_BT_FLAG_UCODE_DEFAULT	BIT(6)
+-#define IWLAGN_BT_FLAG_NOCOEX_NOTIF	BIT(7)
++#define IWLAGN_BT_FLAG_UCODE_DEFAULT		BIT(6)
++/* Disable Sync PSPoll on SCO/eSCO */
++#define IWLAGN_BT_FLAG_SYNC_2_BT_DISABLE	BIT(7)
+ 
+ #define IWLAGN_BT_PRIO_BOOST_MAX	0xFF
+ #define IWLAGN_BT_PRIO_BOOST_MIN	0x00
+-- 
+1.7.0.4
+
