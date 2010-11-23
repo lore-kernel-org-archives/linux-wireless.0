@@ -1,42 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:49531 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754202Ab0KSS5Q (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 19 Nov 2010 13:57:16 -0500
-Subject: Re: [PATCH v7 3/3] nl80211/mac80211: Report signal average
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Jouni Malinen <j@w1.fi>
-Cc: Bruno Randolf <br1@einfach.org>, linville@tuxdriver.com,
-	randy.dunlap@oracle.com, br1@thinktube.com, peterz@infradead.org,
-	blp@cs.stanford.edu, linux-wireless@vger.kernel.org,
-	linux-kernel@vger.kernel.org, Lars_Ericsson@telia.com,
-	stefanr@s5r6.in-berlin.de, kosaki.motohiro@jp.fujitsu.com,
-	akpm@linux-foundation.org, kevin.granade@gmail.com
-In-Reply-To: <20101116093743.GA21872@jm.kir.nu>
-References: <20101112024901.28522.21895.stgit@localhost6.localdomain6>
-	 <20101112030035.28522.75318.stgit@localhost6.localdomain6>
-	 <20101116093743.GA21872@jm.kir.nu>
-Content-Type: text/plain; charset="UTF-8"
-Date: Fri, 19 Nov 2010 10:58:36 -0800
-Message-ID: <1290193116.3768.8.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+Received: from mail.sdinet.de ([78.47.32.153]:43404 "EHLO mail.sdinet.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751214Ab0KWUkb (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 23 Nov 2010 15:40:31 -0500
+Date: Tue, 23 Nov 2010 21:39:06 +0100 (CET)
+From: Sven-Haegar Koch <haegar@sdinet.de>
+To: lrodriguez@atheros.com
+cc: linux-wireless@vger.kernel.org
+Subject: [PATCH] compat-wireless: fix activesync devices
+Message-ID: <alpine.DEB.2.02.1011232127490.21566@aurora.sdinet.de>
+MIME-Version: 1.0
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2010-11-16 at 11:37 +0200, Jouni Malinen wrote:
-> On Fri, Nov 12, 2010 at 12:00:35PM +0900, Bruno Randolf wrote:
-> > Extend nl80211 to report an exponential weighted moving average (EWMA) of the
-> > signal value. Since the signal value usually fluctuates between different
-> > packets, an average can be more useful than the value of the last packet.
-> > 
-> > This uses the recently added generic EWMA library function.
-> 
-> Isn't that generic EWMA library function making this much more CPU
-> intensive than necessary?
 
-John, is there any reason you completely ignored Jouni's feedback here?
-This wasn't addressed in v8.
+Compiling support for ActiveSync devices in compat-wireless depends
+on USB_NET_CDCETHER to be set in main kernel.
 
-johannes
+But USB_NET_CDCETHER can also be a module, in which case 
+CONFIG_USB_NET_CDCETHER will not be defined inside compat_autoconf.h and 
+the compat-wireless cdc_ether.ko will miss the support for it.
 
+So check also for CONFIG_USB_NET_CDCETHER_MODULE in config.mk to be safe 
+in both cases.
+
+Signed-off-by: Sven-Haegar Koch <haegar@sdinet.de>
+---
+
+I needed to also use an old windows mobile device (Palm Treo 750) 
+connected over USB with my laptop which otherwise uses compat-wireless.
+
+But after connecting it I only got:
+	usb 2-1: bad CDC descriptors
+
+This happens when in drivers/net/usb/cdc_ether.c 
+CONFIG_USB_NET_COMPAT_RNDIS_HOST and 
+CONFIG_USB_NET_COMPAT_RNDIS_HOST_MODULE both are not defined, because it 
+stubs out the rndis_host support.
+
+Perhaps not the most visually pleasing solution to just include the 
+ifdef block in config.mk twice, but everything else would have needed a 
+much deeper surgery - and as this is the only usage of ifdef in 
+compat.mk where the symbol can also be a module I did not find it to be 
+worth the additional complexity.
+
+Tested with compat-wireless-2.6.36-5-spn.tar.bz2, but also happened with
+earlier versions and should also apply to newer.
+
+c'ya
+sven-haegar
+
+Index: linux/compat-wireless/config.mk
+===================================================================
+--- compat-wireless.orig/config.mk
++++ compat-wireless/config.mk
+@@ -383,6 +383,10 @@ ifdef CONFIG_USB_NET_CDCETHER
+ CONFIG_USB_NET_COMPAT_RNDIS_HOST=m
+ CONFIG_USB_NET_COMPAT_RNDIS_WLAN=m
+ endif #CONFIG_USB_NET_CDCETHER
++ifdef CONFIG_USB_NET_CDCETHER_MODULE
++CONFIG_USB_NET_COMPAT_RNDIS_HOST=m
++CONFIG_USB_NET_COMPAT_RNDIS_WLAN=m
++endif #CONFIG_USB_NET_CDCETHER
+ CONFIG_USB_NET_COMPAT_CDCETHER=m
+ endif #CONFIG_COMPAT_KERNEL_29
+ 
