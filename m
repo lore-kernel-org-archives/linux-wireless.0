@@ -1,331 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.19.149.2]:22586 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753136Ab0KSLQc (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 19 Nov 2010 06:16:32 -0500
-Received: from mail.atheros.com ([10.10.20.105])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Fri, 19 Nov 2010 03:16:19 -0800
-From: Rajkumar Manoharan <rmanoharan@atheros.com>
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>,
-	Rajkumar Manoharan <rmanoharan@atheros.com>
-Subject: [PATCH 4/4] ath9k_htc: Identify devices using driver_info
-Date: Fri, 19 Nov 2010 16:53:22 +0530
-Message-ID: <1290165802-3566-4-git-send-email-rmanoharan@atheros.com>
-In-Reply-To: <1290165802-3566-1-git-send-email-rmanoharan@atheros.com>
-References: <1290165802-3566-1-git-send-email-rmanoharan@atheros.com>
+Received: from mail-ew0-f46.google.com ([209.85.215.46]:45938 "EHLO
+	mail-ew0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751322Ab0KWToI (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 23 Nov 2010 14:44:08 -0500
+Received: by ewy5 with SMTP id 5so2681338ewy.19
+        for <linux-wireless@vger.kernel.org>; Tue, 23 Nov 2010 11:44:07 -0800 (PST)
+Date: Tue, 23 Nov 2010 21:44:02 +0200
+From: Nick Kossifidis <mickflemm@gmail.com>
+To: ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org
+Cc: linville@tuxdriver.com, me@bobcopeland.com, mcgrof@gmail.com,
+	jirislaby@gmail.com, nbd@openwrt.org, br1@einfach.org
+Subject: [PATCH 25/30] ath5k: Tweak phy activate to rx start delay based on
+ bwmode
+Message-ID: <20101123194402.GY4303@makis.mantri>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Categorize AR7010 & AR9287 devices based on driver_info
-of usb_device_id, instead of PIDs. This avoids per-device cases
-and minimize code changes for new device addition.
+ * Tweak phy activation -> rx delay for different bwmodes
 
-Signed-off-by: Rajkumar Manoharan <rmanoharan@atheros.com>
+ Signed-off-by: Nick Kossifidis <mickflemm@gmail.com>
 ---
- drivers/net/wireless/ath/ath9k/hif_usb.c      |   41 ++++++++----------------
- drivers/net/wireless/ath/ath9k/htc.h          |    2 +-
- drivers/net/wireless/ath/ath9k/htc_drv_init.c |   35 ++++++++++-----------
- drivers/net/wireless/ath/ath9k/htc_hst.c      |    5 ++-
- drivers/net/wireless/ath/ath9k/htc_hst.h      |    3 +-
- drivers/net/wireless/ath/ath9k/reg.h          |    6 +---
- 6 files changed, 37 insertions(+), 55 deletions(-)
+ drivers/net/wireless/ath/ath5k/phy.c |   11 +++++++----
+ 1 files changed, 7 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/hif_usb.c b/drivers/net/wireless/ath/ath9k/hif_usb.c
-index 6a0dbd1..ae842db 100644
---- a/drivers/net/wireless/ath/ath9k/hif_usb.c
-+++ b/drivers/net/wireless/ath/ath9k/hif_usb.c
-@@ -786,7 +786,8 @@ static void ath9k_hif_usb_dealloc_urbs(struct hif_device_usb *hif_dev)
- 	ath9k_hif_usb_dealloc_rx_urbs(hif_dev);
- }
- 
--static int ath9k_hif_usb_download_fw(struct hif_device_usb *hif_dev)
-+static int ath9k_hif_usb_download_fw(struct hif_device_usb *hif_dev,
-+				     u32 drv_info)
- {
- 	int transfer, err;
- 	const void *data = hif_dev->firmware->data;
-@@ -817,18 +818,10 @@ static int ath9k_hif_usb_download_fw(struct hif_device_usb *hif_dev)
- 	}
- 	kfree(buf);
- 
--	switch (hif_dev->device_id) {
--	case 0x7010:
--	case 0x7015:
--	case 0x9018:
--	case 0xA704:
--	case 0x1200:
-+	if (drv_info & AR7010_DEVICE)
- 		firm_offset = AR7010_FIRMWARE_TEXT;
--		break;
--	default:
-+	else
- 		firm_offset = AR9271_FIRMWARE_TEXT;
--		break;
--	}
- 
+diff --git a/drivers/net/wireless/ath/ath5k/phy.c b/drivers/net/wireless/ath/ath5k/phy.c
+index 1b6fcf9..8790f0a 100644
+--- a/drivers/net/wireless/ath/ath5k/phy.c
++++ b/drivers/net/wireless/ath/ath5k/phy.c
+@@ -3356,8 +3356,6 @@ int ath5k_hw_phy_init(struct ath5k_hw *ah, struct ieee80211_channel *channel,
  	/*
- 	 * Issue FW download complete command to firmware.
-@@ -846,7 +839,7 @@ static int ath9k_hif_usb_download_fw(struct hif_device_usb *hif_dev)
- 	return 0;
- }
- 
--static int ath9k_hif_usb_dev_init(struct hif_device_usb *hif_dev)
-+static int ath9k_hif_usb_dev_init(struct hif_device_usb *hif_dev, u32 drv_info)
- {
- 	int ret, idx;
- 	struct usb_host_interface *alt = &hif_dev->interface->altsetting[0];
-@@ -862,7 +855,7 @@ static int ath9k_hif_usb_dev_init(struct hif_device_usb *hif_dev)
- 	}
- 
- 	/* Download firmware */
--	ret = ath9k_hif_usb_download_fw(hif_dev);
-+	ret = ath9k_hif_usb_download_fw(hif_dev, drv_info);
- 	if (ret) {
- 		dev_err(&hif_dev->udev->dev,
- 			"ath9k_htc: Firmware - %s download failed\n",
-@@ -941,23 +934,15 @@ static int ath9k_hif_usb_probe(struct usb_interface *interface,
- 
- 	/* Find out which firmware to load */
- 
--	switch(hif_dev->device_id) {
--	case 0x7010:
--	case 0x7015:
--	case 0x9018:
--	case 0xA704:
--	case 0x1200:
-+	if (id->driver_info & AR7010_DEVICE)
- 		if (le16_to_cpu(udev->descriptor.bcdDevice) == 0x0202)
- 			hif_dev->fw_name = FIRMWARE_AR7010_1_1;
- 		else
- 			hif_dev->fw_name = FIRMWARE_AR7010;
--		break;
--	default:
-+	else
- 		hif_dev->fw_name = FIRMWARE_AR9271;
--		break;
--	}
- 
--	ret = ath9k_hif_usb_dev_init(hif_dev);
-+	ret = ath9k_hif_usb_dev_init(hif_dev, id->driver_info);
- 	if (ret) {
- 		ret = -EINVAL;
- 		goto err_hif_init_usb;
-@@ -965,7 +950,7 @@ static int ath9k_hif_usb_probe(struct usb_interface *interface,
- 
- 	ret = ath9k_htc_hw_init(hif_dev->htc_handle,
- 				&hif_dev->udev->dev, hif_dev->device_id,
--				hif_dev->udev->product);
-+				hif_dev->udev->product, id->driver_info);
- 	if (ret) {
- 		ret = -EINVAL;
- 		goto err_htc_hw_init;
-@@ -1043,6 +1028,7 @@ static int ath9k_hif_usb_resume(struct usb_interface *interface)
- {
- 	struct hif_device_usb *hif_dev =
- 		(struct hif_device_usb *) usb_get_intfdata(interface);
-+	struct htc_target *htc_handle = hif_dev->htc_handle;
- 	int ret;
- 
- 	ret = ath9k_hif_usb_alloc_urbs(hif_dev);
-@@ -1050,7 +1036,8 @@ static int ath9k_hif_usb_resume(struct usb_interface *interface)
- 		return ret;
- 
- 	if (hif_dev->firmware) {
--		ret = ath9k_hif_usb_download_fw(hif_dev);
-+		ret = ath9k_hif_usb_download_fw(hif_dev,
-+				htc_handle->drv_priv->ah->common.driver_info);
- 		if (ret)
- 			goto fail_resume;
- 	} else {
-@@ -1060,7 +1047,7 @@ static int ath9k_hif_usb_resume(struct usb_interface *interface)
- 
- 	mdelay(100);
- 
--	ret = ath9k_htc_resume(hif_dev->htc_handle);
-+	ret = ath9k_htc_resume(htc_handle);
- 
- 	if (ret)
- 		goto fail_resume;
-diff --git a/drivers/net/wireless/ath/ath9k/htc.h b/drivers/net/wireless/ath/ath9k/htc.h
-index db00289..afe39a9 100644
---- a/drivers/net/wireless/ath/ath9k/htc.h
-+++ b/drivers/net/wireless/ath/ath9k/htc.h
-@@ -461,7 +461,7 @@ void ath9k_init_leds(struct ath9k_htc_priv *priv);
- void ath9k_deinit_leds(struct ath9k_htc_priv *priv);
- 
- int ath9k_htc_probe_device(struct htc_target *htc_handle, struct device *dev,
--			   u16 devid, char *product);
-+			   u16 devid, char *product, u32 drv_info);
- void ath9k_htc_disconnect_device(struct htc_target *htc_handle, bool hotunplug);
- #ifdef CONFIG_PM
- int ath9k_htc_resume(struct htc_target *htc_handle);
-diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_init.c b/drivers/net/wireless/ath/ath9k/htc_drv_init.c
-index 7c8a38d..8e6a9a8 100644
---- a/drivers/net/wireless/ath/ath9k/htc_drv_init.c
-+++ b/drivers/net/wireless/ath/ath9k/htc_drv_init.c
-@@ -181,7 +181,8 @@ static inline int ath9k_htc_connect_svc(struct ath9k_htc_priv *priv,
- 	return htc_connect_service(priv->htc, &req, ep_id);
- }
- 
--static int ath9k_init_htc_services(struct ath9k_htc_priv *priv, u16 devid)
-+static int ath9k_init_htc_services(struct ath9k_htc_priv *priv, u16 devid,
-+				   u32 drv_info)
- {
- 	int ret;
- 
-@@ -245,17 +246,10 @@ static int ath9k_init_htc_services(struct ath9k_htc_priv *priv, u16 devid)
- 	 * the HIF layer, shouldn't matter much.
+ 	 * On 5211+ read activation -> rx delay
+ 	 * and use it.
+-	 *
+-	 * TODO: Half/quarter rate support
  	 */
- 
--	switch(devid) {
--	case 0x7010:
--	case 0x7015:
--	case 0x9018:
--	case 0xA704:
--	case 0x1200:
-+	if (drv_info & AR7010_DEVICE)
- 		priv->htc->credits = 45;
--		break;
--	default:
-+	else
- 		priv->htc->credits = 33;
--	}
- 
- 	ret = htc_init(priv->htc);
- 	if (ret)
-@@ -627,7 +621,8 @@ static void ath9k_init_btcoex(struct ath9k_htc_priv *priv)
- }
- 
- static int ath9k_init_priv(struct ath9k_htc_priv *priv,
--			   u16 devid, char *product)
-+			   u16 devid, char *product,
-+			   u32 drv_info)
- {
- 	struct ath_hw *ah = NULL;
- 	struct ath_common *common;
-@@ -650,6 +645,7 @@ static int ath9k_init_priv(struct ath9k_htc_priv *priv,
- 	common->hw = priv->hw;
- 	common->priv = priv;
- 	common->debug_mask = ath9k_debug;
-+	common->driver_info = drv_info;
- 
- 	spin_lock_init(&priv->wmi->wmi_lock);
- 	spin_lock_init(&priv->beacon_lock);
-@@ -762,7 +758,7 @@ static void ath9k_set_hw_capab(struct ath9k_htc_priv *priv,
- }
- 
- static int ath9k_init_device(struct ath9k_htc_priv *priv,
--			     u16 devid, char *product)
-+			     u16 devid, char *product, u32 drv_info)
- {
- 	struct ieee80211_hw *hw = priv->hw;
- 	struct ath_common *common;
-@@ -771,7 +767,7 @@ static int ath9k_init_device(struct ath9k_htc_priv *priv,
- 	struct ath_regulatory *reg;
- 
- 	/* Bring up device */
--	error = ath9k_init_priv(priv, devid, product);
-+	error = ath9k_init_priv(priv, devid, product, drv_info);
- 	if (error != 0)
- 		goto err_init;
- 
-@@ -829,7 +825,7 @@ err_init:
- }
- 
- int ath9k_htc_probe_device(struct htc_target *htc_handle, struct device *dev,
--			   u16 devid, char *product)
-+			   u16 devid, char *product, u32 drv_info)
- {
- 	struct ieee80211_hw *hw;
- 	struct ath9k_htc_priv *priv;
-@@ -856,14 +852,14 @@ int ath9k_htc_probe_device(struct htc_target *htc_handle, struct device *dev,
- 		goto err_free;
+ 	if (ah->ah_version != AR5K_AR5210) {
+ 		u32 delay;
+@@ -3365,8 +3363,13 @@ int ath5k_hw_phy_init(struct ath5k_hw *ah, struct ieee80211_channel *channel,
+ 			AR5K_PHY_RX_DELAY_M;
+ 		delay = (channel->hw_value & CHANNEL_CCK) ?
+ 			((delay << 2) / 22) : (delay / 10);
+-
+-		udelay(100 + (2 * delay));
++		if (ah->ah_bwmode == AR5K_BWMODE_10MHZ)
++			delay = delay << 1;
++		if (ah->ah_bwmode == AR5K_BWMODE_5MHZ)
++			delay = delay << 2;
++		/* XXX: /2 on turbo ? Let's be safe
++		 * for now */
++		udelay(100 + delay);
+ 	} else {
+ 		mdelay(1);
  	}
- 
--	ret = ath9k_init_htc_services(priv, devid);
-+	ret = ath9k_init_htc_services(priv, devid, drv_info);
- 	if (ret)
- 		goto err_init;
- 
- 	/* The device may have been unplugged earlier. */
- 	priv->op_flags &= ~OP_UNPLUGGED;
- 
--	ret = ath9k_init_device(priv, devid, product);
-+	ret = ath9k_init_device(priv, devid, product, drv_info);
- 	if (ret)
- 		goto err_init;
- 
-@@ -893,14 +889,15 @@ void ath9k_htc_disconnect_device(struct htc_target *htc_handle, bool hotunplug)
- #ifdef CONFIG_PM
- int ath9k_htc_resume(struct htc_target *htc_handle)
- {
-+	struct ath9k_htc_priv *priv = htc_handle->drv_priv;
- 	int ret;
- 
--	ret = ath9k_htc_wait_for_target(htc_handle->drv_priv);
-+	ret = ath9k_htc_wait_for_target(priv);
- 	if (ret)
- 		return ret;
- 
--	ret = ath9k_init_htc_services(htc_handle->drv_priv,
--			      htc_handle->drv_priv->ah->hw_version.devid);
-+	ret = ath9k_init_htc_services(priv, priv->ah->hw_version.devid,
-+				      priv->ah->common.driver_info);
- 	return ret;
- }
- #endif
-diff --git a/drivers/net/wireless/ath/ath9k/htc_hst.c b/drivers/net/wireless/ath/ath9k/htc_hst.c
-index 861ec92..c41ab8c 100644
---- a/drivers/net/wireless/ath/ath9k/htc_hst.c
-+++ b/drivers/net/wireless/ath/ath9k/htc_hst.c
-@@ -462,9 +462,10 @@ void ath9k_htc_hw_free(struct htc_target *htc)
- }
- 
- int ath9k_htc_hw_init(struct htc_target *target,
--		      struct device *dev, u16 devid, char *product)
-+		      struct device *dev, u16 devid,
-+		      char *product, u32 drv_info)
- {
--	if (ath9k_htc_probe_device(target, dev, devid, product)) {
-+	if (ath9k_htc_probe_device(target, dev, devid, product, drv_info)) {
- 		printk(KERN_ERR "Failed to initialize the device\n");
- 		return -ENODEV;
- 	}
-diff --git a/drivers/net/wireless/ath/ath9k/htc_hst.h b/drivers/net/wireless/ath/ath9k/htc_hst.h
-index 07b6509..6fc1b21 100644
---- a/drivers/net/wireless/ath/ath9k/htc_hst.h
-+++ b/drivers/net/wireless/ath/ath9k/htc_hst.h
-@@ -239,7 +239,8 @@ struct htc_target *ath9k_htc_hw_alloc(void *hif_handle,
- 				      struct device *dev);
- void ath9k_htc_hw_free(struct htc_target *htc);
- int ath9k_htc_hw_init(struct htc_target *target,
--		      struct device *dev, u16 devid, char *product);
-+		      struct device *dev, u16 devid, char *product,
-+		      u32 drv_info);
- void ath9k_htc_hw_deinit(struct htc_target *target, bool hot_unplug);
- 
- #endif /* HTC_HST_H */
-diff --git a/drivers/net/wireless/ath/ath9k/reg.h b/drivers/net/wireless/ath/ath9k/reg.h
-index f444a37..556e2ca 100644
---- a/drivers/net/wireless/ath/ath9k/reg.h
-+++ b/drivers/net/wireless/ath/ath9k/reg.h
-@@ -864,11 +864,7 @@
-      ((REG_READ(_ah, AR_AN_SYNTH9) & 0x7) == 0x1))
- 
- #define AR_DEVID_7010(_ah) \
--	(((_ah)->hw_version.devid == 0x7010) || \
--	 ((_ah)->hw_version.devid == 0x7015) || \
--	 ((_ah)->hw_version.devid == 0x9018) || \
--	 ((_ah)->hw_version.devid == 0xA704) || \
--	 ((_ah)->hw_version.devid == 0x1200))
-+	((_ah)->common.driver_info & AR7010_DEVICE)
- 
- #define AR_RADIO_SREV_MAJOR                   0xf0
- #define AR_RAD5133_SREV_MAJOR                 0xc0
--- 
-1.7.3.2
-
