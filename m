@@ -1,117 +1,164 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qy0-f174.google.com ([209.85.216.174]:47672 "EHLO
-	mail-qy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754983Ab0KJCVv (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:59059 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750808Ab0KWI2i (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 9 Nov 2010 21:21:51 -0500
-Received: by mail-qy0-f174.google.com with SMTP id 12so2500227qyk.19
-        for <linux-wireless@vger.kernel.org>; Tue, 09 Nov 2010 18:21:51 -0800 (PST)
-From: Arnaud Lacombe <lacombar@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: lrodriguez@atheros.com, Arnaud Lacombe <lacombar@gmail.com>
-Subject: [PATCH 34/44] compat/2.6.24: move 'struct net' to its own compat header
-Date: Tue,  9 Nov 2010 21:20:16 -0500
-Message-Id: <1289355626-25373-35-git-send-email-lacombar@gmail.com>
-In-Reply-To: <1289355626-25373-1-git-send-email-lacombar@gmail.com>
-References: <1289355626-25373-1-git-send-email-lacombar@gmail.com>
+	Tue, 23 Nov 2010 03:28:38 -0500
+Subject: Re: [PATCH] iw: Resolve namespace clash between station plink and
+ vlan commands
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Javier Cardona <javier@cozybit.com>
+Cc: nbd@openwrt.org, linux-wireless@vger.kernel.org
+In-Reply-To: <AANLkTimFe7uo28u3Sx4rc9uYJms7Ggh=yW9UMDDWgQce@mail.gmail.com>
+References: <1289867251-21559-1-git-send-email-javier@cozybit.com>
+	 <1289946246.3673.12.camel@jlt3.sipsolutions.net>
+	 <AANLkTimuW8wTVUW4dH1t+J6jhoEkFHZ7v5t78tXe050O@mail.gmail.com>
+	 <1289959503.29119.2.camel@jlt3.sipsolutions.net>
+	 <AANLkTimFe7uo28u3Sx4rc9uYJms7Ggh=yW9UMDDWgQce@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Tue, 23 Nov 2010 09:28:35 +0100
+Message-ID: <1290500915.3674.1.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Arnaud Lacombe <lacombar@gmail.com>
----
- include/linux/compat-2.6.24.h |   31 -------------------------------
- include/net/net_namespace.h   |   36 ++++++++++++++++++++++++++++++++++++
- 2 files changed, 36 insertions(+), 31 deletions(-)
+On Tue, 2010-11-16 at 20:41 -0800, Javier Cardona wrote:
 
-diff --git a/include/linux/compat-2.6.24.h b/include/linux/compat-2.6.24.h
-index 6d5dce5..4c1231f 100644
---- a/include/linux/compat-2.6.24.h
-+++ b/include/linux/compat-2.6.24.h
-@@ -21,37 +21,6 @@
+> > Actually, I won't have time today, but it looks like they can be shared
+> > in some way? Maybe by sharing the same callback function or something? I
+> > mean -- it should be possible to do two things on set... not sure now,
+> > I'll take a look later. Maybe you can work with an older iw version
+> > until then?
+> 
+> We tried that at first but could not get the usage message right in
+> case of missing parameters.  If you can suggest a solution to this,
+> we'll be happy to implement it.
+
+Try this please?
+
+johannes
+
+diff --git a/info.c b/info.c
+index d842c26..0783701 100644
+--- a/info.c
++++ b/info.c
+@@ -223,7 +223,7 @@ static int handle_info(struct nl80211_state *state,
+ 	return 0;
+ }
+ __COMMAND(NULL, info, "info", NULL, NL80211_CMD_GET_WIPHY, 0, 0, CIB_PHY, handle_info,
+-	 "Show capabilities for the specified wireless device.");
++	 "Show capabilities for the specified wireless device.", NULL);
+ TOPLEVEL(list, NULL, NL80211_CMD_GET_WIPHY, NLM_F_DUMP, CIB_NONE, handle_info,
+ 	 "List all wireless devices and their capabilities.");
+ TOPLEVEL(phy, NULL, NL80211_CMD_GET_WIPHY, NLM_F_DUMP, CIB_NONE, handle_info, NULL);
+diff --git a/iw.c b/iw.c
+index 562f17b..2593481 100644
+--- a/iw.c
++++ b/iw.c
+@@ -358,6 +358,12 @@ static int __handle_cmd(struct nl80211_state *state, enum id_input idby,
+ 			return 1;
+ 	}
  
- #define DMA_BIT_MASK(n) (((n) == 64) ? ~0ULL : ((1ULL<<(n))-1))
++	if (cmd->selector) {
++		cmd = cmd->selector(argc, argv);
++		if (!cmd)
++			return 1;
++	}
++
+ 	if (cmdout)
+ 		*cmdout = cmd;
  
--struct proc_dir_entry;
--struct net_device;
--struct net {
--	atomic_t		count;		/* To decided when the network
--						 *  namespace should be freed.
--						 */
--	atomic_t		use_count;	/* To track references we
--						 * destroy on demand
--						 */
--	struct list_head	list;		/* list of network namespaces */
--	struct work_struct	work;		/* work struct for freeing */
--
--	struct proc_dir_entry 	*proc_net;
--	struct proc_dir_entry 	*proc_net_stat;
--	struct proc_dir_entry 	*proc_net_root;
--
--	struct net_device       *loopback_dev;          /* The loopback */
--
--	struct list_head 	dev_base_head;
--	struct hlist_head 	*dev_name_head;
--	struct hlist_head	*dev_index_head;
--};
--
--#ifdef CONFIG_NET
--/* Init's network namespace */
--extern struct net init_net;
--#define INIT_NET_NS(net_ns) .net_ns = &init_net,
--#else
--#define INIT_NET_NS(net_ns)
--#endif
--
- /* Added on 2.6.24 in include/linux/types.h by Al viro on commit 142956af */
- typedef unsigned long               uintptr_t;
+diff --git a/iw.h b/iw.h
+index 5eb9083..b0bc489 100644
+--- a/iw.h
++++ b/iw.h
+@@ -51,12 +51,13 @@ struct cmd {
+ 		       struct nl_cb *cb,
+ 		       struct nl_msg *msg,
+ 		       int argc, char **argv);
++	const struct cmd *(*selector)(int argc, char **argv);
+ 	const struct cmd *parent;
+ };
  
-diff --git a/include/net/net_namespace.h b/include/net/net_namespace.h
-index 23a517a..250fea2 100644
---- a/include/net/net_namespace.h
-+++ b/include/net/net_namespace.h
-@@ -5,6 +5,42 @@
- #ifndef __NET_NET_NAMESPACE_H
- #define __NET_NET_NAMESPACE_H
+ #define ARRAY_SIZE(ar) (sizeof(ar)/sizeof(ar[0]))
  
-+#include <linux/list.h>
-+#include <linux/workqueue.h>
-+
-+#include <asm/atomic.h>
-+
-+struct proc_dir_entry;
-+struct net_device;
-+struct net {
-+	atomic_t		count;		/* To decided when the network
-+						 *  namespace should be freed.
-+						 */
-+	atomic_t		use_count;	/* To track references we
-+						 * destroy on demand
-+						 */
-+	struct list_head	list;		/* list of network namespaces */
-+	struct work_struct	work;		/* work struct for freeing */
-+
-+	struct proc_dir_entry 	*proc_net;
-+	struct proc_dir_entry 	*proc_net_stat;
-+	struct proc_dir_entry 	*proc_net_root;
-+
-+	struct net_device       *loopback_dev;          /* The loopback */
-+
-+	struct list_head 	dev_base_head;
-+	struct hlist_head 	*dev_name_head;
-+	struct hlist_head	*dev_index_head;
-+};
-+
-+#ifdef CONFIG_NET
-+/* Init's network namespace */
-+extern struct net init_net;
-+#define INIT_NET_NS(net_ns) .net_ns = &init_net,
-+#else
-+#define INIT_NET_NS(net_ns)
-+#endif
-+
- #endif /* __NET_NET_NAMESPACE_H */
+-#define __COMMAND(_section, _symname, _name, _args, _nlcmd, _flags, _hidden, _idby, _handler, _help)\
++#define __COMMAND(_section, _symname, _name, _args, _nlcmd, _flags, _hidden, _idby, _handler, _help, _sel)\
+ 	static struct cmd						\
+ 	__cmd ## _ ## _symname ## _ ## _handler ## _ ## _nlcmd ## _ ## _idby ## _ ## _hidden\
+ 	__attribute__((used)) __attribute__((section("__cmd")))	= {	\
+@@ -69,11 +70,17 @@ struct cmd {
+ 		.handler = (_handler),					\
+ 		.help = (_help),					\
+ 		.parent = _section,					\
+-	 }
++		.selector = (_sel),					\
++	}
++#define __ACMD(_section, _symname, _name, _args, _nlcmd, _flags, _hidden, _idby, _handler, _help, _sel, _alias)\
++	__COMMAND(_section, _symname, _name, _args, _nlcmd, _flags, _hidden, _idby, _handler, _help, _sel);\
++	static const struct cmd *_alias = &__cmd ## _ ## _symname ## _ ## _handler ## _ ## _nlcmd ## _ ## _idby ## _ ## _hidden
+ #define COMMAND(section, name, args, cmd, flags, idby, handler, help)	\
+-	__COMMAND(&(__section ## _ ## section), name, #name, args, cmd, flags, 0, idby, handler, help)
++	__COMMAND(&(__section ## _ ## section), name, #name, args, cmd, flags, 0, idby, handler, help, NULL)
++#define COMMAND_ALIAS(section, name, args, cmd, flags, idby, handler, help, selector, alias)\
++	__ACMD(&(__section ## _ ## section), name, #name, args, cmd, flags, 0, idby, handler, help, selector, alias)
+ #define HIDDEN(section, name, args, cmd, flags, idby, handler)		\
+-	__COMMAND(&(__section ## _ ## section), name, #name, args, cmd, flags, 1, idby, handler, NULL)
++	__COMMAND(&(__section ## _ ## section), name, #name, args, cmd, flags, 1, idby, handler, NULL, NULL)
  
- #endif /* (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,24)) */
--- 
-1.7.2.30.gc37d7.dirty
+ #define TOPLEVEL(_name, _args, _nlcmd, _flags, _idby, _handler, _help)	\
+ 	struct cmd							\
+diff --git a/station.c b/station.c
+index 7639553..bfcc5d1 100644
+--- a/station.c
++++ b/station.c
+@@ -204,6 +204,21 @@ COMMAND(station, del, "<MAC address>",
+ 	NL80211_CMD_DEL_STATION, 0, CIB_NETDEV, handle_station_get,
+ 	"Remove the given station entry (use with caution!)");
+ 
++static const struct cmd *station_set_plink;
++static const struct cmd *station_set_vlan;
++
++static const struct cmd *select_station_cmd(int argc, char **argv)
++{
++	if (argc < 2)
++		return NULL;
++	if (strcmp(argv[1], "plink_action") == 0)
++		return station_set_plink;
++	if (strcmp(argv[1], "vlan") == 0)
++		return station_set_vlan;
++	return NULL;
++}
++
++
+ static int handle_station_set_plink(struct nl80211_state *state,
+ 			      struct nl_cb *cb,
+ 			      struct nl_msg *msg,
+@@ -248,9 +263,10 @@ static int handle_station_set_plink(struct nl80211_state *state,
+  nla_put_failure:
+ 	return -ENOBUFS;
+ }
+-COMMAND(station, set, "<MAC address> plink_action <open|block>",
++COMMAND_ALIAS(station, set, "<MAC address> plink_action <open|block>",
+ 	NL80211_CMD_SET_STATION, 0, CIB_NETDEV, handle_station_set_plink,
+-	"Set mesh peer link action for this station (peer).");
++	"Set mesh peer link action for this station (peer).",
++	select_station_cmd, station_set_plink);
+ 
+ static int handle_station_set_vlan(struct nl80211_state *state,
+ 			      struct nl_cb *cb,
+@@ -294,9 +310,10 @@ static int handle_station_set_vlan(struct nl80211_state *state,
+  nla_put_failure:
+ 	return -ENOBUFS;
+ }
+-COMMAND(station, set, "<MAC address> vlan <ifindex>",
++COMMAND_ALIAS(station, set, "<MAC address> vlan <ifindex>",
+ 	NL80211_CMD_SET_STATION, 0, CIB_NETDEV, handle_station_set_vlan,
+-	"Set an AP VLAN for this station.");
++	"Set an AP VLAN for this station.",
++	select_station_cmd, station_set_vlan);
+ 
+ 
+ static int handle_station_dump(struct nl80211_state *state,
+
 
