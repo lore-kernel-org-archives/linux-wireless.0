@@ -1,54 +1,96 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail30g.wh2.ocn.ne.jp ([220.111.41.239]:38318 "HELO
-	mail30g.wh2.ocn.ne.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1751970Ab0KSJGq (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 19 Nov 2010 04:06:46 -0500
-Received: from vs3002.wh2.ocn.ne.jp (125.206.180.165)
-	by mail30g.wh2.ocn.ne.jp (RS ver 1.0.95vs) with SMTP id 1-0146127603
-	for <linux-wireless@vger.kernel.org>; Fri, 19 Nov 2010 18:06:44 +0900 (JST)
-From: Bruno Randolf <br1@einfach.org>
-To: Bob Copeland <me@bobcopeland.com>
-Subject: Re: [PATCH v7 3/3] nl80211/mac80211: Report signal average
-Date: Fri, 19 Nov 2010 18:07:05 +0900
-Cc: Johannes Berg <johannes@sipsolutions.net>, Jouni Malinen <j@w1.fi>,
-	linville@tuxdriver.com, randy.dunlap@oracle.com,
-	peterz@infradead.org, blp@cs.stanford.edu,
-	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Lars_Ericsson@telia.com, stefanr@s5r6.in-berlin.de,
-	kosaki.motohiro@jp.fujitsu.com, akpm@linux-foundation.org,
-	kevin.granade@gmail.com
-References: <20101112024901.28522.21895.stgit@localhost6.localdomain6> <1290010595.3777.0.camel@jlt3.sipsolutions.net> <AANLkTimoogSLAipNy=njGtHypqBQSk=usDmXut=KN9TM@mail.gmail.com>
-In-Reply-To: <AANLkTimoogSLAipNy=njGtHypqBQSk=usDmXut=KN9TM@mail.gmail.com>
+Received: from mail.atheros.com ([12.19.149.2]:60491 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932395Ab0KWBXI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 22 Nov 2010 20:23:08 -0500
+Received: from mail.atheros.com ([10.10.20.108])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Mon, 22 Nov 2010 17:22:55 -0800
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: <johannes@sipsolutions.net>
+CC: <linux-wireless@vger.kernel.org>,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>
+Subject: [PATCH 1/3] mac80211: make ieee802_1d_to_ac avilable to drivers
+Date: Mon, 22 Nov 2010 17:23:01 -0800
+Message-ID: <1290475383-26911-1-git-send-email-lrodriguez@atheros.com>
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Message-Id: <201011191807.06013.br1@einfach.org>
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu November 18 2010 08:11:18 Bob Copeland wrote:
-> On Wed, Nov 17, 2010 at 11:16 AM, Johannes Berg
-> 
-> <johannes@sipsolutions.net> wrote:
-> > On Wed, 2010-11-17 at 17:28 +0900, Bruno Randolf wrote:
-> >> I understand that this could be more efficient, but if it matters or not
-> >> - honestly, I don't know. Can a more knowledgeable person than me
-> >> comment on this?
-> > 
-> > Yes, it does matter -- think of an embedded MIPS board running at 500MHz
-> > and trying to push 11n speeds.
-> 
-> I assume the number of samples (weight) is the more
-> important tunable.  One option is you can require factor
-> to be a power of two that is much larger than weight,
-> then at least you can store factor/weight precomputed
-> and multiply by it instead of doing a divide in ewma_add.
-> Then ewma_get can also just be a shift as well.
+This will be used by ath9k's RC next.
 
-Hmm, maybe I suck in mathemathics, but I don't see a way to do that given the 
-formula:
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+---
+ include/net/mac80211.h |   15 +++++++++++++++
+ net/mac80211/wme.c     |   14 --------------
+ net/mac80211/wme.h     |    2 --
+ 3 files changed, 15 insertions(+), 16 deletions(-)
 
-(((internal * (weight - 1)) + (val * factor)) / weight
+diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+index 5b0fff2..209c858 100644
+--- a/include/net/mac80211.h
++++ b/include/net/mac80211.h
+@@ -110,6 +110,21 @@ enum ieee80211_ac_numbers {
+ 	IEEE80211_AC_BK		= 3,
+ };
+ 
++/*
++ * Default mapping in classifier to work with default
++ * queue setup.
++ */
++static const int ieee802_1d_to_ac[8] = {
++	IEEE80211_AC_BE,
++	IEEE80211_AC_BK,
++	IEEE80211_AC_BK,
++	IEEE80211_AC_BE,
++	IEEE80211_AC_VI,
++	IEEE80211_AC_VI,
++	IEEE80211_AC_VO,
++	IEEE80211_AC_VO
++};
++
+ /**
+  * struct ieee80211_tx_queue_params - transmit queue configuration
+  *
+diff --git a/net/mac80211/wme.c b/net/mac80211/wme.c
+index 58e75bb..43d9a0e 100644
+--- a/net/mac80211/wme.c
++++ b/net/mac80211/wme.c
+@@ -18,20 +18,6 @@
+ #include "ieee80211_i.h"
+ #include "wme.h"
+ 
+-/* Default mapping in classifier to work with default
+- * queue setup.
+- */
+-const int ieee802_1d_to_ac[8] = {
+-	IEEE80211_AC_BE,
+-	IEEE80211_AC_BK,
+-	IEEE80211_AC_BK,
+-	IEEE80211_AC_BE,
+-	IEEE80211_AC_VI,
+-	IEEE80211_AC_VI,
+-	IEEE80211_AC_VO,
+-	IEEE80211_AC_VO
+-};
+-
+ static int wme_downgrade_ac(struct sk_buff *skb)
+ {
+ 	switch (skb->priority) {
+diff --git a/net/mac80211/wme.h b/net/mac80211/wme.h
+index 6053b1c..c5501b5 100644
+--- a/net/mac80211/wme.h
++++ b/net/mac80211/wme.h
+@@ -18,8 +18,6 @@
+ 
+ #define QOS_CONTROL_ACK_POLICY_SHIFT 5
+ 
+-extern const int ieee802_1d_to_ac[8];
+-
+ u16 ieee80211_select_queue(struct ieee80211_sub_if_data *sdata,
+ 			   struct sk_buff *skb);
+ void ieee80211_set_qos_hdr(struct ieee80211_local *local, struct sk_buff *skb);
+-- 
+1.7.3.2.90.gd4c43
 
-bruno
