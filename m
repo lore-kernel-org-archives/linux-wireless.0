@@ -1,39 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.perches.com ([173.55.12.10]:1796 "EHLO mail.perches.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757289Ab0KVWkH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 22 Nov 2010 17:40:07 -0500
-Subject: Re: [PATCH 00/62] drivers/net: Use static const
-From: Joe Perches <joe@perches.com>
-To: David Miller <davem@davemloft.net>
-Cc: netdev@vger.kernel.org, e1000-devel@lists.sourceforge.net,
-	linux-usb@vger.kernel.org, linux-wireless@vger.kernel.org,
-	ath5k-devel@lists.ath5k.org, ath9k-devel@lists.ath9k.org,
-	libertas-dev@lists.infradead.org, users@rt2x00.serialmonkey.com,
-	linux-kernel@vger.kernel.org, socketcan-core@lists.berlios.de
-In-Reply-To: <20101122.141939.226774888.davem@davemloft.net>
-References: <cover.1290305773.git.joe@perches.com>
-	 <20101120.205059.193725921.davem@davemloft.net>
-	 <1290463846.27683.36.camel@Joe-Laptop>
-	 <20101122.141939.226774888.davem@davemloft.net>
-Content-Type: text/plain; charset="UTF-8"
-Date: Mon, 22 Nov 2010 14:40:05 -0800
-Message-ID: <1290465605.27683.52.camel@Joe-Laptop>
-Mime-Version: 1.0
+Received: from mailout-de.gmx.net ([213.165.64.22]:59397 "HELO mail.gmx.net"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with SMTP
+	id S1753777Ab0KWQKS (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 23 Nov 2010 11:10:18 -0500
+Date: Tue, 23 Nov 2010 17:10:24 +0100 (CET)
+From: Guennadi Liakhovetski <g.liakhovetski@gmx.de>
+To: linux-wireless@vger.kernel.org
+cc: Stefano Brivio <stefano.brivio@polimi.it>
+Subject: [PATCH] wireless: b43: fix error path in SDIO
+Message-ID: <Pine.LNX.4.64.1011231709380.25676@axis700.grange>
+MIME-Version: 1.0
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2010-11-22 at 14:19 -0800, David Miller wrote:
-> From: Joe Perches <joe@perches.com>
-> Date: Mon, 22 Nov 2010 14:10:46 -0800
-> > Do let me know if you'd consider pulling these sorts of
-> > changes from me.
-> Expand your horizon beyond drivers/net/ and into places like net/
-> and you'll see I also pull from people like Patrick McHardy, for
-> example.
+Fix unbalanced call to sdio_release_host() on the error path.
 
-I'll see who picks up or acks what and send a pull request to
-you for the remainder of these patches mid December or so.
+Signed-off-by: Guennadi Liakhovetski <g.liakhovetski@gmx.de>
+---
+ drivers/net/wireless/b43/sdio.c |    1 +
+ 1 files changed, 1 insertions(+), 0 deletions(-)
 
-Do you want micro patches or a single patch?
+diff --git a/drivers/net/wireless/b43/sdio.c b/drivers/net/wireless/b43/sdio.c
+index 9a55338..09e2dfd 100644
+--- a/drivers/net/wireless/b43/sdio.c
++++ b/drivers/net/wireless/b43/sdio.c
+@@ -163,6 +163,7 @@ static int b43_sdio_probe(struct sdio_func *func,
+ err_free_ssb:
+ 	kfree(sdio);
+ err_disable_func:
++	sdio_claim_host(func);
+ 	sdio_disable_func(func);
+ err_release_host:
+ 	sdio_release_host(func);
+-- 
+1.7.2.3
 
