@@ -1,36 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:35887 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751444Ab0KPW0T (ORCPT
+Received: from mail-ew0-f46.google.com ([209.85.215.46]:51935 "EHLO
+	mail-ew0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756335Ab0KWTWy (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 16 Nov 2010 17:26:19 -0500
-Subject: Re: [PATCH 2/2] mac80211: add support for setting the ad-hoc
- multicast rate
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Felix Fietkau <nbd@openwrt.org>
-Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com
-In-Reply-To: <1289484443-96326-2-git-send-email-nbd@openwrt.org>
-References: <1289484443-96326-1-git-send-email-nbd@openwrt.org>
-	 <1289484443-96326-2-git-send-email-nbd@openwrt.org>
-Content-Type: text/plain; charset="UTF-8"
-Date: Tue, 16 Nov 2010 14:27:51 -0800
-Message-ID: <1289946471.3673.14.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+	Tue, 23 Nov 2010 14:22:54 -0500
+Received: by ewy5 with SMTP id 5so2667633ewy.19
+        for <linux-wireless@vger.kernel.org>; Tue, 23 Nov 2010 11:22:53 -0800 (PST)
+Date: Tue, 23 Nov 2010 21:21:50 +0200
+From: Nick Kossifidis <mickflemm@gmail.com>
+To: ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org
+Cc: linville@tuxdriver.com, me@bobcopeland.com, mcgrof@gmail.com,
+	jirislaby@gmail.com, nbd@openwrt.org, br1@einfach.org
+Subject: [PATCH 17/30] ath5k: Use turbo flag on DCU
+Message-ID: <20101123192150.GQ4303@makis.mantri>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2010-11-11 at 15:07 +0100, Felix Fietkau wrote:
+ * Set AR5K_DCU_GBL_IFS_MISC_TURBO_MODE flag on DCU when operating
+ on 40MHz
 
-> +	if (mcast_rate) {
-> +		for (i = 0; i < sband->n_bitrates; i++) {
-> +			if (sband->bitrates[i].bitrate == mcast_rate) {
-> +				*idx = i;
-> +				return;
-> +			}
-> +		}
-> +	}
+ Signed-off-by: Nick Kossifidis <mickflemm@gmail.com>
+---
+ drivers/net/wireless/ath/ath5k/qcu.c |    5 +++++
+ 1 files changed, 5 insertions(+), 0 deletions(-)
 
-That conversion loop really shouldn't be in the hotpath.
-
-johannes
-
+diff --git a/drivers/net/wireless/ath/ath5k/qcu.c b/drivers/net/wireless/ath/ath5k/qcu.c
+index e13142a..69bff04 100644
+--- a/drivers/net/wireless/ath/ath5k/qcu.c
++++ b/drivers/net/wireless/ath/ath5k/qcu.c
+@@ -647,5 +647,10 @@ int ath5k_hw_init_queues(struct ath5k_hw *ah)
+ 		 * on ath5k_hw_set_ifs_intervals */
+ 		ath5k_hw_set_tx_retry_limits(ah, 0);
+ 
++	/* Set the turbo flag when operating on 40MHz */
++	if (ah->ah_bwmode == AR5K_BWMODE_40MHZ)
++		AR5K_REG_ENABLE_BITS(ah, AR5K_DCU_GBL_IFS_MISC,
++				AR5K_DCU_GBL_IFS_MISC_TURBO_MODE);
++
+ 	return 0;
+ }
