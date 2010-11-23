@@ -1,109 +1,156 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mgw-da01.nokia.com ([147.243.128.24]:26102 "EHLO
-	mgw-da01.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757412Ab0KAMZ7 (ORCPT
+Received: from mail-ew0-f46.google.com ([209.85.215.46]:53229 "EHLO
+	mail-ew0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756363Ab0KWSlZ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 1 Nov 2010 08:25:59 -0400
-Received: from localhost.localdomain (chilepepper.research.nokia.com [172.21.50.167])
-	by mgw-da01.nokia.com (Switch-3.4.3/Switch-3.4.3) with ESMTP id oA1BqGcK020116
-	for <linux-wireless@vger.kernel.org>; Mon, 1 Nov 2010 13:52:24 +0200
-From: Luciano Coelho <luciano.coelho@nokia.com>
-To: linux-wireless@vger.kernel.org
-Subject: [RFC 08/15] nl80211: report periodic scan results
-Date: Mon,  1 Nov 2010 13:52:09 +0200
-Message-Id: <1288612336-2830-9-git-send-email-luciano.coelho@nokia.com>
-In-Reply-To: <1288612336-2830-1-git-send-email-luciano.coelho@nokia.com>
-References: <1288612336-2830-1-git-send-email-luciano.coelho@nokia.com>
+	Tue, 23 Nov 2010 13:41:25 -0500
+Received: by ewy5 with SMTP id 5so2636287ewy.19
+        for <linux-wireless@vger.kernel.org>; Tue, 23 Nov 2010 10:41:23 -0800 (PST)
+Date: Tue, 23 Nov 2010 20:41:15 +0200
+From: Nick Kossifidis <mickflemm@gmail.com>
+To: ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org
+Cc: linville@tuxdriver.com, me@bobcopeland.com, mcgrof@gmail.com,
+	jirislaby@gmail.com, nbd@openwrt.org, br1@einfach.org
+Subject: [PATCH 02/30] ath5k: Add new function to stop rx/tx DMA
+Message-ID: <20101123184115.GB4303@makis.mantri>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Add code to report periodic scan results whenever they are available.  This
-adds NL80211_CMD_PERIODIC_RESULTS to the API.
+ * Add a new function to stop rx/tx dma and use in when reset starts
 
-Signed-off-by: Luciano Coelho <luciano.coelho@nokia.com>
+ Signed-off-by: Nick Kossifidis <mickflemm@gmail.com>
 ---
- include/linux/nl80211.h |    2 ++
- net/wireless/nl80211.c  |   19 +++++++++++++++++++
- net/wireless/nl80211.h  |    2 ++
- net/wireless/scan.c     |    2 +-
- 4 files changed, 24 insertions(+), 1 deletions(-)
+ drivers/net/wireless/ath/ath5k/ath5k.h |    3 +-
+ drivers/net/wireless/ath/ath5k/dma.c   |   52 ++++++++++++++++++++++++++++++--
+ drivers/net/wireless/ath/ath5k/reset.c |   13 +++++---
+ 3 files changed, 59 insertions(+), 9 deletions(-)
 
-diff --git a/include/linux/nl80211.h b/include/linux/nl80211.h
-index b3d1306..3206b8f 100644
---- a/include/linux/nl80211.h
-+++ b/include/linux/nl80211.h
-@@ -201,6 +201,7 @@
+diff --git a/drivers/net/wireless/ath/ath5k/ath5k.h b/drivers/net/wireless/ath/ath5k/ath5k.h
+index 85ff822..629a5ee 100644
+--- a/drivers/net/wireless/ath/ath5k/ath5k.h
++++ b/drivers/net/wireless/ath/ath5k/ath5k.h
+@@ -1180,8 +1180,9 @@ bool ath5k_hw_is_intr_pending(struct ath5k_hw *ah);
+ int ath5k_hw_get_isr(struct ath5k_hw *ah, enum ath5k_int *interrupt_mask);
+ enum ath5k_int ath5k_hw_set_imr(struct ath5k_hw *ah, enum ath5k_int new_mask);
+ void ath5k_hw_update_mib_counters(struct ath5k_hw *ah);
+-/* Init function */
++/* Init/Stop functions */
+ void ath5k_hw_dma_init(struct ath5k_hw *ah);
++int ath5k_hw_dma_stop(struct ath5k_hw *ah);
+ 
+ /* EEPROM access functions */
+ int ath5k_eeprom_init(struct ath5k_hw *ah);
+diff --git a/drivers/net/wireless/ath/ath5k/dma.c b/drivers/net/wireless/ath/ath5k/dma.c
+index b991b05..ca0467e 100644
+--- a/drivers/net/wireless/ath/ath5k/dma.c
++++ b/drivers/net/wireless/ath/ath5k/dma.c
+@@ -126,7 +126,7 @@ int ath5k_hw_start_tx_dma(struct ath5k_hw *ah, unsigned int queue)
+ 
+ 	/* Return if queue is declared inactive */
+ 	if (ah->ah_txq[queue].tqi_type == AR5K_TX_QUEUE_INACTIVE)
+-		return -EIO;
++		return -EINVAL;
+ 
+ 	if (ah->ah_version == AR5K_AR5210) {
+ 		tx_queue = ath5k_hw_reg_read(ah, AR5K_CR);
+@@ -174,7 +174,7 @@ int ath5k_hw_start_tx_dma(struct ath5k_hw *ah, unsigned int queue)
   *
-  * @NL80211_CMD_START_PERIODIC_SCAN: start a periodic scan
-  * @NL80211_CMD_STOP_PERIODIC_SCAN: stop a periodic scan
-+ * @NL80211_CMD_PERIODIC_RESULTS: there are periodic scan results available.
+  * Stop DMA transmit on a specific hw queue and drain queue so we don't
+  * have any pending frames. Returns -EBUSY if we still have pending frames,
+- * -EINVAL if queue number is out of range.
++ * -EINVAL if queue number is out of range or inactive.
   *
-  * @NL80211_CMD_GET_SURVEY: get survey resuls, e.g. channel occupation
-  *      or noise level
-@@ -448,6 +449,7 @@ enum nl80211_commands {
+  */
+ int ath5k_hw_stop_tx_dma(struct ath5k_hw *ah, unsigned int queue)
+@@ -186,7 +186,7 @@ int ath5k_hw_stop_tx_dma(struct ath5k_hw *ah, unsigned int queue)
  
- 	NL80211_CMD_START_PERIODIC_SCAN,
- 	NL80211_CMD_STOP_PERIODIC_SCAN,
-+	NL80211_CMD_PERIODIC_RESULTS,
+ 	/* Return if queue is declared inactive */
+ 	if (ah->ah_txq[queue].tqi_type == AR5K_TX_QUEUE_INACTIVE)
+-		return -EIO;
++		return -EINVAL;
  
- 	NL80211_CMD_REG_CHANGE,
+ 	if (ah->ah_version == AR5K_AR5210) {
+ 		tx_queue = ath5k_hw_reg_read(ah, AR5K_CR);
+@@ -733,3 +733,49 @@ void ath5k_hw_dma_init(struct ath5k_hw *ah)
+ 		ath5k_hw_set_imr(ah, ah->ah_imr);
  
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index fd50186..e1d7ab2 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -5151,6 +5151,25 @@ void nl80211_send_scan_aborted(struct cfg80211_registered_device *rdev,
- 				nl80211_scan_mcgrp.id, GFP_KERNEL);
  }
- 
-+void nl80211_send_periodic_results(struct cfg80211_registered_device *rdev,
-+				   struct net_device *netdev)
++
++/**
++ * ath5k_hw_dma_stop - stop DMA unit
++ *
++ * @ah: The &struct ath5k_hw
++ *
++ * Stop tx/rx DMA and interrupts. Returns
++ * -EBUSY if tx or rx dma failed to stop.
++ *
++ * XXX: Sometimes DMA unit hangs and we have
++ * stuck frames on tx queues, only a reset
++ * can fix that.
++ */
++int ath5k_hw_dma_stop(struct ath5k_hw *ah)
 +{
-+	struct sk_buff *msg;
++	int i, qmax, err;
++	err = 0;
 +
-+	msg = nlmsg_new(NLMSG_DEFAULT_SIZE, GFP_KERNEL);
-+	if (!msg)
-+		return;
++	/* Disable interrupts */
++	ath5k_hw_set_imr(ah, 0);
 +
-+	if (nl80211_send_periodic_msg(msg, rdev, netdev, 0, 0, 0,
-+				      NL80211_CMD_PERIODIC_RESULTS) < 0) {
-+		nlmsg_free(msg);
-+		return;
++	/* Stop rx dma */
++	err = ath5k_hw_stop_rx_dma(ah);
++	if (err)
++		return err;
++
++	/* Clear any pending interrupts
++	 * and disable tx dma */
++	if (ah->ah_version != AR5K_AR5210) {
++		ath5k_hw_reg_write(ah, 0xffffffff, AR5K_PISR);
++		qmax = AR5K_NUM_TX_QUEUES;
++	} else {
++		/* PISR/SISR Not available on 5210 */
++		ath5k_hw_reg_read(ah, AR5K_ISR);
++		qmax = AR5K_NUM_TX_QUEUES_NOQCU;
 +	}
 +
-+	genlmsg_multicast_netns(wiphy_net(&rdev->wiphy), msg, 0,
-+				nl80211_scan_mcgrp.id, GFP_KERNEL);
-+}
++	for (i = 0; i < qmax; i++) {
++		err = ath5k_hw_stop_tx_dma(ah, i);
++		/* -EINVAL -> queue inactive */
++		if (err != -EINVAL)
++			return err;
++	}
 +
- void nl80211_send_periodic(struct cfg80211_registered_device *rdev,
- 			   struct net_device *netdev, u32 cmd)
- {
-diff --git a/net/wireless/nl80211.h b/net/wireless/nl80211.h
-index 435d452..586fd1f 100644
---- a/net/wireless/nl80211.h
-+++ b/net/wireless/nl80211.h
-@@ -14,6 +14,8 @@ void nl80211_send_scan_aborted(struct cfg80211_registered_device *rdev,
- 			       struct net_device *netdev);
- void nl80211_send_periodic(struct cfg80211_registered_device *rdev,
- 			   struct net_device *netdev, u32 cmd);
-+void nl80211_send_periodic_results(struct cfg80211_registered_device *rdev,
-+				   struct net_device *netdev);
- void nl80211_send_reg_change_event(struct regulatory_request *request);
- void nl80211_send_rx_auth(struct cfg80211_registered_device *rdev,
- 			  struct net_device *netdev,
-diff --git a/net/wireless/scan.c b/net/wireless/scan.c
-index 300876b..925bdfb 100644
---- a/net/wireless/scan.c
-+++ b/net/wireless/scan.c
-@@ -101,7 +101,7 @@ void __cfg80211_periodic_results(struct work_struct *wk)
- 			    periodic_wk);
++	return err;
++}
+diff --git a/drivers/net/wireless/ath/ath5k/reset.c b/drivers/net/wireless/ath/ath5k/reset.c
+index 9dd5792..4f94a60 100644
+--- a/drivers/net/wireless/ath/ath5k/reset.c
++++ b/drivers/net/wireless/ath/ath5k/reset.c
+@@ -823,6 +823,14 @@ int ath5k_hw_reset(struct ath5k_hw *ah, enum nl80211_iftype op_mode,
+ 	mode = 0;
  
- 	cfg80211_lock_rdev(rdev);
--	nl80211_send_scan_done(rdev, rdev->periodic_req->dev);
-+	nl80211_send_periodic_results(rdev, rdev->periodic_req->dev);
- 	cfg80211_unlock_rdev(rdev);
- }
+ 	/*
++	 * Stop DMA
++	 *
++	 * Note: If DMA didn't stop continue
++	 * since only a reset will fix it.
++	 */
++	ath5k_hw_dma_stop(ah);
++
++	/*
+ 	 * Save some registers before a reset
+ 	 */
+ 	/*DCU/Antenna selection not available on 5210*/
+@@ -1015,11 +1023,6 @@ int ath5k_hw_reset(struct ath5k_hw *ah, enum nl80211_iftype op_mode,
+ 	 */
+ 	ath5k_hw_pcu_init(ah, op_mode, mode);
  
--- 
-1.7.0.4
-
+-	/* Clear any pending interrupts
+-	 * PISR/SISR Not available on 5210 */
+-	if (ah->ah_version != AR5K_AR5210)
+-		ath5k_hw_reg_write(ah, 0xffffffff, AR5K_PISR);
+-
+ 	/*
+ 	 * Initialize PHY
+ 	 */
