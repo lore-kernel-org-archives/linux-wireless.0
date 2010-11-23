@@ -1,38 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bar.sig21.net ([80.81.252.164]:51569 "EHLO bar.sig21.net"
+Received: from nbd.name ([46.4.11.11]:52027 "EHLO nbd.name"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751649Ab0KBPtT (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 2 Nov 2010 11:49:19 -0400
-Date: Tue, 2 Nov 2010 16:49:12 +0100
-From: Johannes Stezenbach <js@sig21.net>
-To: Helmut Schaa <helmut.schaa@googlemail.com>
-Cc: Ivo Van Doorn <ivdoorn@gmail.com>, Lee <lee-in-berlin@web.de>,
-	Gertjan van Wingerde <gwingerde@gmail.com>,
-	linux-wireless@vger.kernel.org
-Subject: Re: [regression]AP with hostapd 0.7.3 can't receive packets beyond
- authentication (2.6.36, rt73usb)
-Message-ID: <20101102154911.GA593@sig21.net>
-References: <4CC0D0F6.4080507@web.de>
- <20101102144625.GA32002@sig21.net>
- <AANLkTikYDHBSVuMEnUsR7WpPPo8rK0+OBm_Rd-H0znHT@mail.gmail.com>
- <201011021605.37137.helmut.schaa@googlemail.com>
+	id S1754449Ab0KWT2H (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 23 Nov 2010 14:28:07 -0500
+Message-ID: <4CEC15C3.2010901@openwrt.org>
+Date: Tue, 23 Nov 2010 20:28:03 +0100
+From: Felix Fietkau <nbd@openwrt.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <201011021605.37137.helmut.schaa@googlemail.com>
+To: linux-wireless@vger.kernel.org
+CC: linville@tuxdriver.com, johannes@sipsolutions.net,
+	Paul Stewart <pstew@google.com>
+Subject: [PATCH v2 3/4] mac80211: probe the AP when resuming
+References: <1290203740-57124-1-git-send-email-nbd@openwrt.org> <1290203740-57124-2-git-send-email-nbd@openwrt.org> <1290203740-57124-3-git-send-email-nbd@openwrt.org>
+In-Reply-To: <1290203740-57124-3-git-send-email-nbd@openwrt.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Nov 02, 2010 at 04:05:36PM +0100, Helmut Schaa wrote:
-> Am Dienstag 02 November 2010 schrieb Ivo Van Doorn:
-> > 
-> > The legacy drivers from Ralink configure the BSSID, same as rt2x00 driver do,
-> > when we start the association procedure. This complies with the 802.11 standard
-> > for filtering the data frames.
-> 
-> Yep, Ivo is correct.
+Check the connection by probing the AP (either using nullfunc or a
+probe request). If nullfunc probing is supported and the assoc is no
+longer valid, the AP will send a disassoc/deauth immediately.
 
-Ah, I see.  I missed the call in rt2x00mac_bss_info_changed().
-Sorry for the noise and thanks for your comments.
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+---
+ net/mac80211/mlme.c |    1 +
+ 1 files changed, 1 insertions(+), 0 deletions(-)
 
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -2068,6 +2068,7 @@ void ieee80211_sta_restart(struct ieee80211_sub_if_data *sdata)
+ 	if (test_and_clear_bit(TMR_RUNNING_CHANSW, &ifmgd->timers_running))
+ 		add_timer(&ifmgd->chswitch_timer);
+ 	ieee80211_sta_reset_beacon_monitor(sdata);
++	ieee80211_restart_sta_timer(sdata);
+ }
+ #endif
+  
 
-Johannes
