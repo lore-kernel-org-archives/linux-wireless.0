@@ -1,57 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.neratec.ch ([80.75.119.105]:46452 "EHLO mail.neratec.ch"
+Received: from nbd.name ([46.4.11.11]:35783 "EHLO nbd.name"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754981Ab0KLTvw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 12 Nov 2010 14:51:52 -0500
-Date: Fri, 12 Nov 2010 20:51:45 +0100 (CET)
-From: Wojciech Dubowik <dubowoj@neratec.com>
-To: Bob Copeland <me@bobcopeland.com>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	Felix Fietkau <nbd@openwrt.org>
-Message-ID: <1298013311.4723.1289591505420.JavaMail.root@idefix>
-In-Reply-To: <4CDD9753.80909@openwrt.org>
-Subject: Re: [PATCH 8/9] ath5k: AHB port. Add AHB bus support.
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+	id S1750786Ab0KWCKl (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 22 Nov 2010 21:10:41 -0500
+From: Felix Fietkau <nbd@openwrt.org>
+To: linux-wireless@vger.kernel.org
+Cc: linville@tuxdriver.com, johannes@sipsolutions.net, pstew@google.com
+Subject: [PATCH v4 2/2] mac80211: reduce the number of retries for nullfunc probing
+Date: Tue, 23 Nov 2010 03:10:32 +0100
+Message-Id: <1290478232-87912-2-git-send-email-nbd@openwrt.org>
+In-Reply-To: <1290478232-87912-1-git-send-email-nbd@openwrt.org>
+References: <1290478232-87912-1-git-send-email-nbd@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> From: "Felix Fietkau" <nbd@openwrt.org>
-> To: "Bob Copeland" <me@bobcopeland.com>
-> Cc: "Wojciech Dubowik" <dubowoj@neratec.com>, linville@tuxdriver.com, linux-wireless@vger.kernel.org
-> Sent: Freitag, 12. November 2010 20:36:51
-> Subject: Re: [PATCH 8/9] ath5k: AHB port. Add AHB bus support.
-> On 2010-11-12 8:26 PM, Bob Copeland wrote:
-> > On Thu, Nov 11, 2010 at 9:58 AM, Wojciech Dubowik
-> > <dubowoj@neratec.com> wrote:
-> >>
-> >> AHB specific functions are now in ahb.c file. There is no common
-> >> init functions which tries first pci and then ahb becasue on some
-> >
-> > 'because'
-> >
-> >> --- a/drivers/net/wireless/ath/ath5k/Makefile
-> >> +++ b/drivers/net/wireless/ath/ath5k/Makefile
-> >> @@ -15,5 +15,5 @@ ath5k-y += rfkill.o
-> >>  ath5k-y += ani.o
-> >>  ath5k-y += sysfs.o
-> >>  ath5k-$(CONFIG_ATH5K_DEBUG) += debug.o
-> >> -ath5k-y += pci.o
-> >> +ath5k-y += $(if $(CONFIG_ATHEROS_AR231X),ahb,pci).o
-> >>  obj-$(CONFIG_ATH5K) += ath5k.o
-> >
-> > This is not the right way.. what if someone wants both in one
-> > kernel?
-> Having both in the kernel is completely pointless. There are no
-> devices
-> that can support both, nor will there ever be.
-> 
-> - Felix
+Since nullfunc frames are transmitted as unicast frames, they're more
+reliable than the broadcast probe requests, so we need fewer retries
+to figure out whether the AP is really gone.
 
-I agree. The only advantage would be that some of the typos and missing
-functions in either of the files would be detected during compile time.
-My AR5312 board crashes when I enable PCI. I guess it's fixable but it's
-out of the scope of the ath5k driver...
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+---
+ net/mac80211/mlme.c |    9 ++++++++-
+ 1 files changed, 8 insertions(+), 1 deletions(-)
 
-br,
-Wojtek
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+index 109ad8b..7d658e5 100644
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -28,6 +28,7 @@
+ #include "rate.h"
+ #include "led.h"
+ 
++#define IEEE80211_MAX_NULLFUNC_TRIES 2
+ #define IEEE80211_MAX_PROBE_TRIES 5
+ 
+ /*
+@@ -1916,9 +1917,15 @@ void ieee80211_sta_work(struct ieee80211_sub_if_data *sdata)
+ 			    IEEE80211_STA_CONNECTION_POLL) &&
+ 	    ifmgd->associated) {
+ 		u8 bssid[ETH_ALEN];
++		int max_tries;
+ 
+ 		memcpy(bssid, ifmgd->associated->bssid, ETH_ALEN);
+ 
++		if (local->hw.flags & IEEE80211_HW_REPORTS_TX_ACK_STATUS)
++			max_tries = IEEE80211_MAX_NULLFUNC_TRIES;
++		else
++			max_tries = IEEE80211_MAX_PROBE_TRIES;
++
+ 		/* ACK received for nullfunc probing frame */
+ 		if (!ifmgd->probe_send_count)
+ 			ieee80211_reset_ap_probe(sdata);
+@@ -1926,7 +1933,7 @@ void ieee80211_sta_work(struct ieee80211_sub_if_data *sdata)
+ 		else if (time_is_after_jiffies(ifmgd->probe_timeout))
+ 			run_again(ifmgd, ifmgd->probe_timeout);
+ 
+-		else if (ifmgd->probe_send_count < IEEE80211_MAX_PROBE_TRIES) {
++		else if (ifmgd->probe_send_count < max_tries) {
+ #ifdef CONFIG_MAC80211_VERBOSE_DEBUG
+ 			wiphy_debug(local->hw.wiphy,
+ 				    "%s: No probe response from AP %pM"
+-- 
+1.7.3.2
+
