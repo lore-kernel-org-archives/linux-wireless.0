@@ -1,77 +1,152 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from lo.gmane.org ([80.91.229.12]:57390 "EHLO lo.gmane.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755061Ab0KMT23 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 13 Nov 2010 14:28:29 -0500
-Received: from list by lo.gmane.org with local (Exim 4.69)
-	(envelope-from <glkwg-linux-wireless@m.gmane.org>)
-	id 1PHLly-0004yR-KE
-	for linux-wireless@vger.kernel.org; Sat, 13 Nov 2010 20:28:26 +0100
-Received: from cpc7-aztw22-2-0-cust235.aztw.cable.virginmedia.com ([94.171.255.236])
-        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Sat, 13 Nov 2010 20:28:26 +0100
-Received: from james.c.womack by cpc7-aztw22-2-0-cust235.aztw.cable.virginmedia.com with local (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Sat, 13 Nov 2010 20:28:26 +0100
-To: linux-wireless@vger.kernel.org
-From: James Womack <james.c.womack@gmail.com>
-Subject: Re: r8187se panic
-Date: Sat, 13 Nov 2010 19:27:54 +0000
-Message-ID: <ibmosc$4au$1@dough.gmane.org>
-References: <slrnidp3ae.79c.rb-oss-3@mal.justgohome.co.uk> <4CDC9FA5.10002@lwfinger.net> <slrnidq7u0.9ic.rb-oss-3@mal.justgohome.co.uk> <4CDD3BC4.7070102@lwfinger.net> <slrnidqorp.dlr.rb-oss-3@mal.justgohome.co.uk> <4CDD66C4.10603@lwfinger.net> <slrnidqsld.dlr.rb-oss-3@mal.justgohome.co.uk> <4CDD7945.70005@lwfinger.net> <slrnidqv0k.g21.rb-oss-3@mal.justgohome.co.uk> <loom.20101113T191727-421@post.gmane.org> <4CDEDC74.3040902@lwfinger.net>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-In-Reply-To: <4CDEDC74.3040902@lwfinger.net>
+Received: from mail-ey0-f174.google.com ([209.85.215.174]:49942 "EHLO
+	mail-ey0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754593Ab0KWThh (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 23 Nov 2010 14:37:37 -0500
+Received: by eye27 with SMTP id 27so4899367eye.19
+        for <linux-wireless@vger.kernel.org>; Tue, 23 Nov 2010 11:37:36 -0800 (PST)
+Date: Tue, 23 Nov 2010 21:37:30 +0200
+From: Nick Kossifidis <mickflemm@gmail.com>
+To: ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org
+Cc: linville@tuxdriver.com, me@bobcopeland.com, mcgrof@gmail.com,
+	jirislaby@gmail.com, nbd@openwrt.org, br1@einfach.org
+Subject: [PATCH 22/30] ath5k: Skip powertable setting when we are on the same
+ channel
+Message-ID: <20101123193730.GV4303@makis.mantri>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 13/11/10 18:44, Larry Finger wrote:
-> On 11/13/2010 12:18 PM, James Womack wrote:
->>
->> It's good to see that this problem is being examined closely. I have been living
->> with this issue on my EeePC 701SD for some time and it has been very
->> frustrating. I can confirm that the same issue Robie describes occur for my
->> 701SD with r8187se wireless card (Fn+F2 causes a kernel panic when turning the
->> wireless card off -- this doesn't seem to occur when turning it on if the
->> netbook starts up with the wireless adapter off). This has occured in Ubuntu
->> versions 9.04 through to 10.10. I recently switched to Debian Squeeze (testing,
->> beta1), currently running 2.6.32-5-686 kernel and am experiencing an identical
->> problem. I'm not experienced in debugging this type of issue myself, but would
->> be happy to test any suggested fixes for the issue and report back results
->> (though you would need to advise as to how to do this and what to include in
->> replies).
->
-> Testing would require that you have kernel source, apply the patches, and build
-> a new kernel with those included. On some distros, these steps are easier than
-> for others. Is your skill set up to this?
->
-> I will push the patch that changes the panic/crash into a simple warning with
-> the request that this be applied to stable. If/when this happens, you will have
-> that fix in your standard kernel. How long it takes will depend on the distro.
->
-> It is strange that I was not aware of this problem until Robie recently posted
-> in this list. Running the RTL8187SE on my computer has been a pain as the BIOS
-> in my computer does not have that device in its whitelist of approved devices.
-> As such, rebooting with it required that I shut down, remove the card, boot to
-> GRUB, and then hot-plug the card while being careful not to short it. That
-> changed in the past 2 days as I now have an ExpressCard to mini PCIe extender
-> that allows me to boot with the card installed. Unfortunately, I do not yet know
-> how to change the RFKILL setting with this device.
->
-> Larry
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
-If building a kernel is as simple as building other programs from source 
-(i.e. configure, make, make install), I could do that. I'm using Debian 
-at the moment. Presumably I'd need a compiler of some kind, which I 
-could obtain from the repos. I am not sure how one would apply patches 
-to the kernel, however. Would I be able to compile a modified kernel and 
-add this to grub whilst retaining the ability to boot in the unmodified 
-kernel?
+ * Only set power table if we are changing channel/mode
+ there is no need to recalculate and reset the power table
+ all the time.
 
-James
+ Signed-off-by: Nick Kossifidis <mickflemm@gmail.com>
+---
+ drivers/net/wireless/ath/ath5k/phy.c |   65 ++++++++++++++++++++++------------
+ 1 files changed, 42 insertions(+), 23 deletions(-)
 
+diff --git a/drivers/net/wireless/ath/ath5k/phy.c b/drivers/net/wireless/ath/ath5k/phy.c
+index b908915..9392320 100644
+--- a/drivers/net/wireless/ath/ath5k/phy.c
++++ b/drivers/net/wireless/ath/ath5k/phy.c
+@@ -3090,7 +3090,7 @@ ath5k_setup_rate_powertable(struct ath5k_hw *ah, u16 max_pwr,
+  */
+ static int
+ ath5k_hw_txpower(struct ath5k_hw *ah, struct ieee80211_channel *channel,
+-		u8 ee_mode, u8 txpower)
++		u8 ee_mode, u8 txpower, bool fast)
+ {
+ 	struct ath5k_rate_pcal_info rate_info;
+ 	u8 type;
+@@ -3126,10 +3126,15 @@ ath5k_hw_txpower(struct ath5k_hw *ah, struct ieee80211_channel *channel,
+ 		return -EINVAL;
+ 	}
+ 
+-	/* FIXME: Only on channel/mode change */
+-	ret = ath5k_setup_channel_powertable(ah, channel, ee_mode, type);
+-	if (ret)
+-		return ret;
++	/* If fast is set it means we are on the same channel/mode
++	 * so there is no need to recalculate the powertable, we 'll
++	 * just use the cached one */
++	if (!fast) {
++		ret = ath5k_setup_channel_powertable(ah, channel,
++							ee_mode, type);
++			if (ret)
++				return ret;
++	}
+ 
+ 	/* Limit max power if we have a CTL available */
+ 	ath5k_get_max_ctl_power(ah, channel);
+@@ -3210,7 +3215,7 @@ int ath5k_hw_set_txpower_limit(struct ath5k_hw *ah, u8 txpower)
+ 	ATH5K_DBG(ah->ah_sc, ATH5K_DEBUG_TXPOWER,
+ 		"changing txpower to %d\n", txpower);
+ 
+-	return ath5k_hw_txpower(ah, channel, ee_mode, txpower);
++	return ath5k_hw_txpower(ah, channel, ee_mode, txpower, true);
+ }
+ 
+ /*************\
+@@ -3220,13 +3225,42 @@ int ath5k_hw_set_txpower_limit(struct ath5k_hw *ah, u8 txpower)
+ int ath5k_hw_phy_init(struct ath5k_hw *ah, struct ieee80211_channel *channel,
+ 						u8 mode, u8 ee_mode, u8 freq)
+ {
++	struct ieee80211_channel *curr_channel;
+ 	int ret, i;
+ 	u32 phy_tst1;
+-
++	bool fast_txp;
+ 	ret = 0;
+ 
+ 	/*
+-	 * 5211/5212 Specific
++	 * If we don't change channel/mode skip
++	 * tx powertable calculation and use the
++	 * cached one.
++	 */
++	curr_channel = ah->ah_current_channel;
++	if ((channel->hw_value == curr_channel->hw_value) &&
++	(channel->center_freq == curr_channel->center_freq))
++		fast_txp = true;
++	else
++		fast_txp = false;
++
++	/*
++	 * Set TX power
++	 *
++	 * Note: We need to do that before we set
++	 * RF buffer settings on 5211/5212+ so that we
++	 * properly set curve indices.
++	 */
++	ret = ath5k_hw_txpower(ah, channel, ee_mode,
++				ah->ah_txpower.txp_max_pwr / 2,
++				fast_txp);
++	if (ret)
++		return ret;
++
++	/*
++	 * For 5210 we do all initialization using
++	 * initvals, so we don't have to modify
++	 * any settings (5210 also only supports
++	 * a/aturbo modes)
+ 	 */
+ 	if (ah->ah_version != AR5K_AR5210) {
+ 
+@@ -3241,21 +3275,12 @@ int ath5k_hw_phy_init(struct ath5k_hw *ah, struct ieee80211_channel *channel,
+ 		mdelay(1);
+ 
+ 		/*
+-		 * Set TX power
+-		 */
+-		ret = ath5k_hw_txpower(ah, channel, ee_mode,
+-					ah->ah_txpower.txp_max_pwr / 2);
+-		if (ret)
+-			return ret;
+-
+-		/*
+ 		 * Write RF buffer
+ 		 */
+ 		ret = ath5k_hw_rfregs_init(ah, channel, mode);
+ 		if (ret)
+ 			return ret;
+ 
+-
+ 		/* Write OFDM timings on 5212*/
+ 		if (ah->ah_version == AR5K_AR5212 &&
+ 			channel->hw_value & CHANNEL_OFDM) {
+@@ -3284,12 +3309,6 @@ int ath5k_hw_phy_init(struct ath5k_hw *ah, struct ieee80211_channel *channel,
+ 		}
+ 
+ 	} else {
+-		/*
+-		 * For 5210 we do all initialization using
+-		 * initvals, so we don't have to modify
+-		 * any settings (5210 also only supports
+-		 * a/aturbo modes)
+-		 */
+ 		mdelay(1);
+ 		/* Disable phy and wait */
+ 		ath5k_hw_reg_write(ah, AR5K_PHY_ACT_DISABLE, AR5K_PHY_ACT);
