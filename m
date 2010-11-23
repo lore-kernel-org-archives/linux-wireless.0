@@ -1,162 +1,585 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:37320 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750868Ab0KXHN1 (ORCPT
+Received: from mail-ew0-f46.google.com ([209.85.215.46]:46096 "EHLO
+	mail-ew0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750794Ab0KWTjj (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 24 Nov 2010 02:13:27 -0500
-Message-Id: <20101124071042.770832639@sipsolutions.net>
-Date: Wed, 24 Nov 2010 08:10:05 +0100
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH 1/2] cfg80211: allow using CQM event to notify packet loss
-References: <20101124071004.597318320@sipsolutions.net>
-Mime-Version: 1.0
+	Tue, 23 Nov 2010 14:39:39 -0500
+Received: by ewy5 with SMTP id 5so2678674ewy.19
+        for <linux-wireless@vger.kernel.org>; Tue, 23 Nov 2010 11:39:37 -0800 (PST)
+Date: Tue, 23 Nov 2010 21:39:28 +0200
+From: Nick Kossifidis <mickflemm@gmail.com>
+To: ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org
+Cc: linville@tuxdriver.com, me@bobcopeland.com, mcgrof@gmail.com,
+	jirislaby@gmail.com, nbd@openwrt.org, br1@einfach.org
+Subject: [PATCH 23/30] ath5k: Support synth-only channel change for
+ AR2413/AR5413
+Message-ID: <20101123193928.GW4303@makis.mantri>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+ * Add synth-only channel change for AR2413/5413. When we call
+ ath5k_reset with a channel ath5k_hw_reset will first try to
+ set channel on PHY while PHY is running instead of doing a normal
+ full reset. To do this phy_init has to change to implement this
+ functionality.
 
-This adds the ability for drivers to use CQM events
-to notify about packet loss for specific stations
-(which could be the AP for the managed mode case).
-Since the threshold might be determined by the
-driver (it isn't passed in right now) it will be
-passed out of the driver to userspace in the event.
+ * Clean up change_channel flag, what it really did was skip PCU
+ registers when setting initvals. This is done because on reset
+ PCU registers are not affected (except the registers we set
+ in pcu init and -due to hw problems- TSF). Use a new skip_pcu
+ flag that's not misleading instead. In the future we might use
+ that to also skip PCU reset and save us the TSF etc problems
+ (needs testing because standard practice is to reset everything).
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+ * Use fast channel change only when setting channel, and set skip_pcu
+ to false only on init. When we reset the card due to DMA or PHY
+ problems skip pcu but never do a fast channel change.
+
+ Signed-off-by: Nick Kossifidis <mickflemm@gmail.com>
 ---
- include/linux/nl80211.h |    3 +++
- include/net/cfg80211.h  |   12 ++++++++++++
- net/wireless/mlme.c     |   12 ++++++++++++
- net/wireless/nl80211.c  |   45 +++++++++++++++++++++++++++++++++++++++++++++
- net/wireless/nl80211.h  |    4 ++++
- 5 files changed, 76 insertions(+)
+ drivers/net/wireless/ath/ath5k/ath5k.h |    4 +-
+ drivers/net/wireless/ath/ath5k/base.c  |   17 ++-
+ drivers/net/wireless/ath/ath5k/phy.c   |   64 ++++++--
+ drivers/net/wireless/ath/ath5k/reset.c |  271 +++++++++++++++++++-------------
+ 4 files changed, 220 insertions(+), 136 deletions(-)
 
---- wireless-testing.orig/include/linux/nl80211.h	2010-11-23 10:36:12.000000000 +0100
-+++ wireless-testing/include/linux/nl80211.h	2010-11-24 08:09:22.000000000 +0100
-@@ -1821,6 +1821,8 @@ enum nl80211_ps_state {
-  *	the minimum amount the RSSI level must change after an event before a
-  *	new event may be issued (to reduce effects of RSSI oscillation).
-  * @NL80211_ATTR_CQM_RSSI_THRESHOLD_EVENT: RSSI threshold event
-+ * @NL80211_ATTR_CQM_PKT_LOSS_EVENT: a u32 value indicating that this many
-+ *	consecutive packets were not acknowledged by the peer
-  * @__NL80211_ATTR_CQM_AFTER_LAST: internal
-  * @NL80211_ATTR_CQM_MAX: highest key attribute
+diff --git a/drivers/net/wireless/ath/ath5k/ath5k.h b/drivers/net/wireless/ath/ath5k/ath5k.h
+index e258830..385b919 100644
+--- a/drivers/net/wireless/ath/ath5k/ath5k.h
++++ b/drivers/net/wireless/ath/ath5k/ath5k.h
+@@ -1183,7 +1183,7 @@ void ath5k_unregister_leds(struct ath5k_softc *sc);
+ int ath5k_hw_nic_wakeup(struct ath5k_hw *ah, int flags, bool initial);
+ int ath5k_hw_on_hold(struct ath5k_hw *ah);
+ int ath5k_hw_reset(struct ath5k_hw *ah, enum nl80211_iftype op_mode,
+-		   struct ieee80211_channel *channel, bool change_channel);
++	   struct ieee80211_channel *channel, bool fast, bool skip_pcu);
+ int ath5k_hw_register_timeout(struct ath5k_hw *ah, u32 reg, u32 flag, u32 val,
+ 			      bool is_set);
+ /* Power management functions */
+@@ -1324,7 +1324,7 @@ void ath5k_hw_set_antenna_switch(struct ath5k_hw *ah, u8 ee_mode);
+ int ath5k_hw_set_txpower_limit(struct ath5k_hw *ah, u8 txpower);
+ /* Init function */
+ int ath5k_hw_phy_init(struct ath5k_hw *ah, struct ieee80211_channel *channel,
+-						u8 mode, u8 ee_mode, u8 freq);
++				u8 mode, u8 ee_mode, u8 freq, bool fast);
+ 
+ /*
+  * Functions used internaly
+diff --git a/drivers/net/wireless/ath/ath5k/base.c b/drivers/net/wireless/ath/ath5k/base.c
+index 526d8bc..33cd1bc 100644
+--- a/drivers/net/wireless/ath/ath5k/base.c
++++ b/drivers/net/wireless/ath/ath5k/base.c
+@@ -80,7 +80,8 @@ MODULE_SUPPORTED_DEVICE("Atheros 5xxx WLAN cards");
+ MODULE_LICENSE("Dual BSD/GPL");
+ MODULE_VERSION("0.6.0 (EXPERIMENTAL)");
+ 
+-static int ath5k_reset(struct ath5k_softc *sc, struct ieee80211_channel *chan);
++static int ath5k_reset(struct ath5k_softc *sc, struct ieee80211_channel *chan,
++								bool skip_pcu);
+ static int ath5k_beacon_update(struct ieee80211_hw *hw,
+ 		struct ieee80211_vif *vif);
+ static void ath5k_beacon_update_timers(struct ath5k_softc *sc, u64 bc_tsf);
+@@ -496,7 +497,7 @@ ath5k_chan_set(struct ath5k_softc *sc, struct ieee80211_channel *chan)
+ 	 * hardware at the new frequency, and then re-enable
+ 	 * the relevant bits of the h/w.
+ 	 */
+-	return ath5k_reset(sc, chan);
++	return ath5k_reset(sc, chan, true);
+ }
+ 
+ static void
+@@ -2327,7 +2328,7 @@ ath5k_tx_complete_poll_work(struct work_struct *work)
+ 	if (needreset) {
+ 		ATH5K_DBG(sc, ATH5K_DEBUG_RESET,
+ 			  "TX queues stuck, resetting\n");
+-		ath5k_reset(sc, sc->curchan);
++		ath5k_reset(sc, NULL, true);
+ 	}
+ 
+ 	ieee80211_queue_delayed_work(sc->hw, &sc->tx_complete_work,
+@@ -2407,7 +2408,7 @@ ath5k_init(struct ath5k_softc *sc)
+ 		AR5K_INT_RXORN | AR5K_INT_TXDESC | AR5K_INT_TXEOL |
+ 		AR5K_INT_FATAL | AR5K_INT_GLOBAL | AR5K_INT_MIB;
+ 
+-	ret = ath5k_reset(sc, NULL);
++	ret = ath5k_reset(sc, NULL, false);
+ 	if (ret)
+ 		goto done;
+ 
+@@ -2506,7 +2507,8 @@ ath5k_stop_hw(struct ath5k_softc *sc)
+  * This should be called with sc->lock.
   */
-@@ -1829,6 +1831,7 @@ enum nl80211_attr_cqm {
- 	NL80211_ATTR_CQM_RSSI_THOLD,
- 	NL80211_ATTR_CQM_RSSI_HYST,
- 	NL80211_ATTR_CQM_RSSI_THRESHOLD_EVENT,
-+	NL80211_ATTR_CQM_PKT_LOSS_EVENT,
+ static int
+-ath5k_reset(struct ath5k_softc *sc, struct ieee80211_channel *chan)
++ath5k_reset(struct ath5k_softc *sc, struct ieee80211_channel *chan,
++							bool skip_pcu)
+ {
+ 	struct ath5k_hw *ah = sc->ah;
+ 	int ret;
+@@ -2523,7 +2525,8 @@ ath5k_reset(struct ath5k_softc *sc, struct ieee80211_channel *chan)
+ 		sc->curchan = chan;
+ 		sc->curband = &sc->sbands[chan->band];
+ 	}
+-	ret = ath5k_hw_reset(ah, sc->opmode, sc->curchan, chan != NULL);
++	ret = ath5k_hw_reset(ah, sc->opmode, sc->curchan, chan != NULL,
++								skip_pcu);
+ 	if (ret) {
+ 		ATH5K_ERR(sc, "can't reset hardware (%d)\n", ret);
+ 		goto err;
+@@ -2569,7 +2572,7 @@ static void ath5k_reset_work(struct work_struct *work)
+ 		reset_work);
  
- 	/* keep last */
- 	__NL80211_ATTR_CQM_AFTER_LAST,
---- wireless-testing.orig/net/wireless/mlme.c	2010-11-23 10:36:12.000000000 +0100
-+++ wireless-testing/net/wireless/mlme.c	2010-11-24 08:09:22.000000000 +0100
-@@ -1028,3 +1028,15 @@ void cfg80211_cqm_rssi_notify(struct net
- 	nl80211_send_cqm_rssi_notify(rdev, dev, rssi_event, gfp);
- }
- EXPORT_SYMBOL(cfg80211_cqm_rssi_notify);
-+
-+void cfg80211_cqm_pktloss_notify(struct net_device *dev,
-+				 const u8 *peer, u32 num_packets, gfp_t gfp)
-+{
-+	struct wireless_dev *wdev = dev->ieee80211_ptr;
-+	struct wiphy *wiphy = wdev->wiphy;
-+	struct cfg80211_registered_device *rdev = wiphy_to_dev(wiphy);
-+
-+	/* Indicate roaming trigger event to user space */
-+	nl80211_send_cqm_pktloss_notify(rdev, dev, peer, num_packets, gfp);
-+}
-+EXPORT_SYMBOL(cfg80211_cqm_pktloss_notify);
---- wireless-testing.orig/net/wireless/nl80211.c	2010-11-23 10:36:12.000000000 +0100
-+++ wireless-testing/net/wireless/nl80211.c	2010-11-24 08:09:22.000000000 +0100
-@@ -5688,6 +5688,51 @@ nl80211_send_cqm_rssi_notify(struct cfg8
- 	nlmsg_free(msg);
+ 	mutex_lock(&sc->lock);
+-	ath5k_reset(sc, sc->curchan);
++	ath5k_reset(sc, NULL, true);
+ 	mutex_unlock(&sc->lock);
  }
  
-+void
-+nl80211_send_cqm_pktloss_notify(struct cfg80211_registered_device *rdev,
-+				struct net_device *netdev, const u8 *peer,
-+				u32 num_packets, gfp_t gfp)
-+{
-+	struct sk_buff *msg;
-+	struct nlattr *pinfoattr;
-+	void *hdr;
+diff --git a/drivers/net/wireless/ath/ath5k/phy.c b/drivers/net/wireless/ath/ath5k/phy.c
+index 9392320..1b6fcf9 100644
+--- a/drivers/net/wireless/ath/ath5k/phy.c
++++ b/drivers/net/wireless/ath/ath5k/phy.c
+@@ -3223,7 +3223,7 @@ int ath5k_hw_set_txpower_limit(struct ath5k_hw *ah, u8 txpower)
+ \*************/
+ 
+ int ath5k_hw_phy_init(struct ath5k_hw *ah, struct ieee80211_channel *channel,
+-						u8 mode, u8 ee_mode, u8 freq)
++				u8 mode, u8 ee_mode, u8 freq, bool fast)
+ {
+ 	struct ieee80211_channel *curr_channel;
+ 	int ret, i;
+@@ -3232,11 +3232,37 @@ int ath5k_hw_phy_init(struct ath5k_hw *ah, struct ieee80211_channel *channel,
+ 	ret = 0;
+ 
+ 	/*
++	 * Sanity check for fast flag
++	 * Don't try fast channel change when changing modulation
++	 * mode/band. We check for chip compatibility on
++	 * ath5k_hw_reset.
++	 */
++	curr_channel = ah->ah_current_channel;
++	if (fast && (channel->hw_value != curr_channel->hw_value))
++		return -EINVAL;
 +
-+	msg = nlmsg_new(NLMSG_GOODSIZE, gfp);
-+	if (!msg)
-+		return;
-+
-+	hdr = nl80211hdr_put(msg, 0, 0, 0, NL80211_CMD_NOTIFY_CQM);
-+	if (!hdr) {
-+		nlmsg_free(msg);
-+		return;
++	/*
++	 * On fast channel change we only set the synth parameters
++	 * while PHY is running, enable calibration and skip the rest.
++	 */
++	if (fast) {
++		AR5K_REG_ENABLE_BITS(ah, AR5K_PHY_RFBUS_REQ,
++				    AR5K_PHY_RFBUS_REQ_REQUEST);
++		for (i = 0; i < 100; i++) {
++			if (ath5k_hw_reg_read(ah, AR5K_PHY_RFBUS_GRANT))
++				break;
++			udelay(5);
++		}
++		/* Failed */
++		if (i >= 100)
++			return -EIO;
 +	}
 +
-+	NLA_PUT_U32(msg, NL80211_ATTR_WIPHY, rdev->wiphy_idx);
-+	NLA_PUT_U32(msg, NL80211_ATTR_IFINDEX, netdev->ifindex);
-+	NLA_PUT(msg, NL80211_ATTR_MAC, ETH_ALEN, peer);
++	/*
+ 	 * If we don't change channel/mode skip
+ 	 * tx powertable calculation and use the
+ 	 * cached one.
+ 	 */
+-	curr_channel = ah->ah_current_channel;
+ 	if ((channel->hw_value == curr_channel->hw_value) &&
+ 	(channel->center_freq == curr_channel->center_freq))
+ 		fast_txp = true;
+@@ -3262,7 +3288,7 @@ int ath5k_hw_phy_init(struct ath5k_hw *ah, struct ieee80211_channel *channel,
+ 	 * any settings (5210 also only supports
+ 	 * a/aturbo modes)
+ 	 */
+-	if (ah->ah_version != AR5K_AR5210) {
++	if ((ah->ah_version != AR5K_AR5210) && !fast) {
+ 
+ 		/*
+ 		 * Write initial RF gain settings
+@@ -3308,7 +3334,7 @@ int ath5k_hw_phy_init(struct ath5k_hw *ah, struct ieee80211_channel *channel,
+ 				    AR5K_TXCFG_B_MODE);
+ 		}
+ 
+-	} else {
++	} else if (ah->ah_version == AR5K_AR5210) {
+ 		mdelay(1);
+ 		/* Disable phy and wait */
+ 		ath5k_hw_reg_write(ah, AR5K_PHY_ACT_DISABLE, AR5K_PHY_ACT);
+@@ -3345,18 +3371,26 @@ int ath5k_hw_phy_init(struct ath5k_hw *ah, struct ieee80211_channel *channel,
+ 		mdelay(1);
+ 	}
+ 
+-	/*
+-	 * Perform ADC test to see if baseband is ready
+-	 * Set TX hold and check ADC test register
+-	 */
+-	phy_tst1 = ath5k_hw_reg_read(ah, AR5K_PHY_TST1);
+-	ath5k_hw_reg_write(ah, AR5K_PHY_TST1_TXHOLD, AR5K_PHY_TST1);
+-	for (i = 0; i <= 20; i++) {
+-		if (!(ath5k_hw_reg_read(ah, AR5K_PHY_ADC_TEST) & 0x10))
+-			break;
+-		udelay(200);
++	if (fast)
++		/*
++		 * Release RF Bus grant
++		 */
++		AR5K_REG_DISABLE_BITS(ah, AR5K_PHY_RFBUS_REQ,
++				    AR5K_PHY_RFBUS_REQ_REQUEST);
++	else {
++		/*
++		 * Perform ADC test to see if baseband is ready
++		 * Set tx hold and check adc test register
++		 */
++		phy_tst1 = ath5k_hw_reg_read(ah, AR5K_PHY_TST1);
++		ath5k_hw_reg_write(ah, AR5K_PHY_TST1_TXHOLD, AR5K_PHY_TST1);
++		for (i = 0; i <= 20; i++) {
++			if (!(ath5k_hw_reg_read(ah, AR5K_PHY_ADC_TEST) & 0x10))
++				break;
++			udelay(200);
++		}
++		ath5k_hw_reg_write(ah, phy_tst1, AR5K_PHY_TST1);
+ 	}
+-	ath5k_hw_reg_write(ah, phy_tst1, AR5K_PHY_TST1);
+ 
+ 	/*
+ 	 * Start automatic gain control calibration
+diff --git a/drivers/net/wireless/ath/ath5k/reset.c b/drivers/net/wireless/ath/ath5k/reset.c
+index ef57bce..f92f7bb 100644
+--- a/drivers/net/wireless/ath/ath5k/reset.c
++++ b/drivers/net/wireless/ath/ath5k/reset.c
+@@ -938,7 +938,7 @@ static void ath5k_hw_commit_eeprom_settings(struct ath5k_hw *ah,
+ \*********************/
+ 
+ int ath5k_hw_reset(struct ath5k_hw *ah, enum nl80211_iftype op_mode,
+-	struct ieee80211_channel *channel, bool change_channel)
++		struct ieee80211_channel *channel, bool fast, bool skip_pcu)
+ {
+ 	struct ath_common *common = ath5k_hw_common(ah);
+ 	u32 s_seq[10], s_led[3], staid1_flags, tsf_up, tsf_lo;
+@@ -952,6 +952,20 @@ int ath5k_hw_reset(struct ath5k_hw *ah, enum nl80211_iftype op_mode,
+ 	freq = 0;
+ 	mode = 0;
+ 
++	/*
++	 * Sanity check for fast flag
++	 * Fast channel change only available
++	 * on AR2413/AR5413.
++	 */
++	if (fast && (ah->ah_radio != AR5K_RF2413) &&
++	(ah->ah_radio != AR5K_RF5413))
++		fast = 0;
 +
-+	pinfoattr = nla_nest_start(msg, NL80211_ATTR_CQM);
-+	if (!pinfoattr)
-+		goto nla_put_failure;
++	/* Disable sleep clock operation
++	 * to avoid register access delay on certain
++	 * PHY registers */
++	if (ah->ah_version == AR5K_AR5212)
++		ath5k_hw_set_sleep_clock(ah, false);
+ 
+ 	/*
+ 	 * Stop PCU
+@@ -964,111 +978,137 @@ int ath5k_hw_reset(struct ath5k_hw *ah, enum nl80211_iftype op_mode,
+ 	 * Mote: If DMA didn't stop continue
+ 	 * since only a reset will fix it.
+ 	 */
+-	ath5k_hw_dma_stop(ah);
++	ret = ath5k_hw_dma_stop(ah);
 +
-+	NLA_PUT_U32(msg, NL80211_ATTR_CQM_PKT_LOSS_EVENT, num_packets);
-+
-+	nla_nest_end(msg, pinfoattr);
-+
-+	if (genlmsg_end(msg, hdr) < 0) {
-+		nlmsg_free(msg);
-+		return;
++	/* RF Bus grant won't work if we have pending
++	 * frames */
++	if (ret && fast) {
++		ATH5K_DBG(ah->ah_sc, ATH5K_DEBUG_RESET,
++			"DMA didn't stop, falling back to normal reset\n");
++		fast = 0;
++		/* Non fatal, just continue with
++		 * normal reset */
++		ret = 0;
 +	}
 +
-+	genlmsg_multicast_netns(wiphy_net(&rdev->wiphy), msg, 0,
-+				nl80211_mlme_mcgrp.id, gfp);
-+	return;
++	switch (channel->hw_value & CHANNEL_MODES) {
++	case CHANNEL_A:
++		mode = AR5K_MODE_11A;
++		freq = AR5K_INI_RFGAIN_5GHZ;
++		ee_mode = AR5K_EEPROM_MODE_11A;
++		break;
++	case CHANNEL_G:
 +
-+ nla_put_failure:
-+	genlmsg_cancel(msg, hdr);
-+	nlmsg_free(msg);
-+}
++		if (ah->ah_version <= AR5K_AR5211) {
++			ATH5K_ERR(ah->ah_sc,
++				"G mode not available on 5210/5211");
++			return -EINVAL;
++		}
 +
- static int nl80211_netlink_notify(struct notifier_block * nb,
- 				  unsigned long state,
- 				  void *_notify)
---- wireless-testing.orig/net/wireless/nl80211.h	2010-11-23 10:36:12.000000000 +0100
-+++ wireless-testing/net/wireless/nl80211.h	2010-11-24 08:09:22.000000000 +0100
-@@ -87,5 +87,9 @@ nl80211_send_cqm_rssi_notify(struct cfg8
- 			     struct net_device *netdev,
- 			     enum nl80211_cqm_rssi_threshold_event rssi_event,
- 			     gfp_t gfp);
-+void
-+nl80211_send_cqm_pktloss_notify(struct cfg80211_registered_device *rdev,
-+				struct net_device *netdev, const u8 *peer,
-+				u32 num_packets, gfp_t gfp);
- 
- #endif /* __NET_WIRELESS_NL80211_H */
---- wireless-testing.orig/include/net/cfg80211.h	2010-11-23 10:36:12.000000000 +0100
-+++ wireless-testing/include/net/cfg80211.h	2010-11-24 08:09:22.000000000 +0100
-@@ -2605,6 +2605,18 @@ void cfg80211_cqm_rssi_notify(struct net
- 			      enum nl80211_cqm_rssi_threshold_event rssi_event,
- 			      gfp_t gfp);
- 
-+/**
-+ * cfg80211_cqm_pktloss_notify - notify userspace about packetloss to peer
-+ * @dev: network device
-+ * @peer: peer's MAC address
-+ * @num_packets: how many packets were lost -- should be a fixed threshold
-+ *	but probably no less than maybe 50, or maybe a throughput dependent
-+ *	threshold (to account for temporary interference)
-+ * @gfp: context flags
-+ */
-+void cfg80211_cqm_pktloss_notify(struct net_device *dev,
-+				 const u8 *peer, u32 num_packets, gfp_t gfp);
++		mode = AR5K_MODE_11G;
++		freq = AR5K_INI_RFGAIN_2GHZ;
++		ee_mode = AR5K_EEPROM_MODE_11G;
++		break;
++	case CHANNEL_B:
 +
- /* Logging, debugging and troubleshooting/diagnostic helpers. */
++		if (ah->ah_version < AR5K_AR5211) {
++			ATH5K_ERR(ah->ah_sc,
++				"B mode not available on 5210");
++			return -EINVAL;
++		}
++
++		mode = AR5K_MODE_11B;
++		freq = AR5K_INI_RFGAIN_2GHZ;
++		ee_mode = AR5K_EEPROM_MODE_11B;
++		break;
++	case CHANNEL_T:
++		mode = AR5K_MODE_11A_TURBO;
++		freq = AR5K_INI_RFGAIN_5GHZ;
++		ee_mode = AR5K_EEPROM_MODE_11A;
++		break;
++	case CHANNEL_TG:
++		if (ah->ah_version == AR5K_AR5211) {
++			ATH5K_ERR(ah->ah_sc,
++				"TurboG mode not available on 5211");
++			return -EINVAL;
++		}
++		mode = AR5K_MODE_11G_TURBO;
++		freq = AR5K_INI_RFGAIN_2GHZ;
++		ee_mode = AR5K_EEPROM_MODE_11G;
++		break;
++	case CHANNEL_XR:
++		if (ah->ah_version == AR5K_AR5211) {
++			ATH5K_ERR(ah->ah_sc,
++				"XR mode not available on 5211");
++			return -EINVAL;
++		}
++		mode = AR5K_MODE_XR;
++		freq = AR5K_INI_RFGAIN_5GHZ;
++		ee_mode = AR5K_EEPROM_MODE_11A;
++		break;
++	default:
++		ATH5K_ERR(ah->ah_sc,
++			"invalid channel: %d\n", channel->center_freq);
++		return -EINVAL;
++	}
++
++	/*
++	 * If driver requested fast channel change and DMA has stopped
++	 * go on. If it fails continue with a normal reset.
++	 */
++	if (fast) {
++		ret = ath5k_hw_phy_init(ah, channel, mode,
++					ee_mode, freq, true);
++		if (ret) {
++			ATH5K_DBG(ah->ah_sc, ATH5K_DEBUG_RESET,
++				"fast chan change failed, falling back to normal reset\n");
++			/* Non fatal, can happen eg.
++			 * on mode change */
++			ret = 0;
++		} else
++			return 0;
++	}
  
- /* wiphy_printk helpers, similar to dev_printk */
-
-
+ 	/*
+ 	 * Save some registers before a reset
+ 	 */
+-	/*DCU/Antenna selection not available on 5210*/
+ 	if (ah->ah_version != AR5K_AR5210) {
++		/*
++		 * Save frame sequence count
++		 * For revs. after Oahu, only save
++		 * seq num for DCU 0 (Global seq num)
++		 */
++		if (ah->ah_mac_srev < AR5K_SREV_AR5211) {
+ 
+-		switch (channel->hw_value & CHANNEL_MODES) {
+-		case CHANNEL_A:
+-			mode = AR5K_MODE_11A;
+-			freq = AR5K_INI_RFGAIN_5GHZ;
+-			ee_mode = AR5K_EEPROM_MODE_11A;
+-			break;
+-		case CHANNEL_G:
+-			mode = AR5K_MODE_11G;
+-			freq = AR5K_INI_RFGAIN_2GHZ;
+-			ee_mode = AR5K_EEPROM_MODE_11G;
+-			break;
+-		case CHANNEL_B:
+-			mode = AR5K_MODE_11B;
+-			freq = AR5K_INI_RFGAIN_2GHZ;
+-			ee_mode = AR5K_EEPROM_MODE_11B;
+-			break;
+-		case CHANNEL_T:
+-			mode = AR5K_MODE_11A_TURBO;
+-			freq = AR5K_INI_RFGAIN_5GHZ;
+-			ee_mode = AR5K_EEPROM_MODE_11A;
+-			break;
+-		case CHANNEL_TG:
+-			if (ah->ah_version == AR5K_AR5211) {
+-				ATH5K_ERR(ah->ah_sc,
+-					"TurboG mode not available on 5211");
+-				return -EINVAL;
+-			}
+-			mode = AR5K_MODE_11G_TURBO;
+-			freq = AR5K_INI_RFGAIN_2GHZ;
+-			ee_mode = AR5K_EEPROM_MODE_11G;
+-			break;
+-		case CHANNEL_XR:
+-			if (ah->ah_version == AR5K_AR5211) {
+-				ATH5K_ERR(ah->ah_sc,
+-					"XR mode not available on 5211");
+-				return -EINVAL;
+-			}
+-			mode = AR5K_MODE_XR;
+-			freq = AR5K_INI_RFGAIN_5GHZ;
+-			ee_mode = AR5K_EEPROM_MODE_11A;
+-			break;
+-		default:
+-			ATH5K_ERR(ah->ah_sc,
+-				"invalid channel: %d\n", channel->center_freq);
+-			return -EINVAL;
+-		}
+-
+-		if (change_channel) {
+-			/*
+-			 * Save frame sequence count
+-			 * For revs. after Oahu, only save
+-			 * seq num for DCU 0 (Global seq num)
+-			 */
+-			if (ah->ah_mac_srev < AR5K_SREV_AR5211) {
+-
+-				for (i = 0; i < 10; i++)
+-					s_seq[i] = ath5k_hw_reg_read(ah,
+-						AR5K_QUEUE_DCU_SEQNUM(i));
++			for (i = 0; i < 10; i++)
++				s_seq[i] = ath5k_hw_reg_read(ah,
++					AR5K_QUEUE_DCU_SEQNUM(i));
+ 
+-			} else {
+-				s_seq[0] = ath5k_hw_reg_read(ah,
+-						AR5K_QUEUE_DCU_SEQNUM(0));
+-			}
+-
+-			/* TSF accelerates on AR5211 during reset
+-			 * As a workaround save it here and restore
+-			 * it later so that it's back in time after
+-			 * reset. This way it'll get re-synced on the
+-			 * next beacon without breaking ad-hoc.
+-			 *
+-			 * On AR5212 TSF is almost preserved across a
+-			 * reset so it stays back in time anyway and
+-			 * we don't have to save/restore it.
+-			 *
+-			 * XXX: Since this breaks power saving we have
+-			 * to disable power saving until we receive the
+-			 * next beacon, so we can resync beacon timers */
+-			if (ah->ah_version == AR5K_AR5211) {
+-				tsf_up = ath5k_hw_reg_read(ah, AR5K_TSF_U32);
+-				tsf_lo = ath5k_hw_reg_read(ah, AR5K_TSF_L32);
+-			}
++		} else {
++			s_seq[0] = ath5k_hw_reg_read(ah,
++					AR5K_QUEUE_DCU_SEQNUM(0));
+ 		}
+ 
+-		if (ah->ah_version == AR5K_AR5212) {
+-			/* Restore normal 32/40MHz clock operation
+-			 * to avoid register access delay on certain
+-			 * PHY registers */
+-			ath5k_hw_set_sleep_clock(ah, false);
+-
+-			/* Since we are going to write rf buffer
+-			 * check if we have any pending gain_F
+-			 * optimization settings */
+-			if (change_channel && ah->ah_rf_banks != NULL)
+-				ath5k_hw_gainf_calibrate(ah);
++		/* TSF accelerates on AR5211 during reset
++		 * As a workaround save it here and restore
++		 * it later so that it's back in time after
++		 * reset. This way it'll get re-synced on the
++		 * next beacon without breaking ad-hoc.
++		 *
++		 * On AR5212 TSF is almost preserved across a
++		 * reset so it stays back in time anyway and
++		 * we don't have to save/restore it.
++		 *
++		 * XXX: Since this breaks power saving we have
++		 * to disable power saving until we receive the
++		 * next beacon, so we can resync beacon timers */
++		if (ah->ah_version == AR5K_AR5211) {
++			tsf_up = ath5k_hw_reg_read(ah, AR5K_TSF_U32);
++			tsf_lo = ath5k_hw_reg_read(ah, AR5K_TSF_L32);
+ 		}
+ 	}
+ 
++
+ 	/*GPIOs*/
+ 	s_led[0] = ath5k_hw_reg_read(ah, AR5K_PCICFG) &
+ 					AR5K_PCICFG_LEDSTATE;
+@@ -1085,6 +1125,17 @@ int ath5k_hw_reset(struct ath5k_hw *ah, enum nl80211_iftype op_mode,
+ 			AR5K_STA_ID1_BASE_RATE_11B |
+ 			AR5K_STA_ID1_SELFGEN_DEF_ANT);
+ 
++	/*
++	 * Since we are going to write rf buffer
++	 * check if we have any pending gain_F
++	 * optimization settings
++	 */
++	if (ah->ah_version == AR5K_AR5212 &&
++	(ah->ah_radio <= AR5K_RF5112)) {
++		if (!fast && ah->ah_rf_banks != NULL)
++				ath5k_hw_gainf_calibrate(ah);
++	}
++
+ 	/* Wakeup the device */
+ 	ret = ath5k_hw_nic_wakeup(ah, channel->hw_value, false);
+ 	if (ret)
+@@ -1098,7 +1149,7 @@ int ath5k_hw_reset(struct ath5k_hw *ah, enum nl80211_iftype op_mode,
+ 							AR5K_PHY(0));
+ 
+ 	/* Write initial settings */
+-	ret = ath5k_hw_write_initvals(ah, mode, change_channel);
++	ret = ath5k_hw_write_initvals(ah, mode, skip_pcu);
+ 	if (ret)
+ 		return ret;
+ 
+@@ -1120,24 +1171,20 @@ int ath5k_hw_reset(struct ath5k_hw *ah, enum nl80211_iftype op_mode,
+ 	 * Restore saved values
+ 	 */
+ 
+-	/*DCU/Antenna selection not available on 5210*/
++	/* Seqnum, TSF */
+ 	if (ah->ah_version != AR5K_AR5210) {
++		if (ah->ah_mac_srev < AR5K_SREV_AR5211) {
++			for (i = 0; i < 10; i++)
++				ath5k_hw_reg_write(ah, s_seq[i],
++					AR5K_QUEUE_DCU_SEQNUM(i));
++		} else {
++			ath5k_hw_reg_write(ah, s_seq[0],
++				AR5K_QUEUE_DCU_SEQNUM(0));
++		}
+ 
+-		if (change_channel) {
+-			if (ah->ah_mac_srev < AR5K_SREV_AR5211) {
+-				for (i = 0; i < 10; i++)
+-					ath5k_hw_reg_write(ah, s_seq[i],
+-						AR5K_QUEUE_DCU_SEQNUM(i));
+-			} else {
+-				ath5k_hw_reg_write(ah, s_seq[0],
+-					AR5K_QUEUE_DCU_SEQNUM(0));
+-			}
+-
+-
+-			if (ah->ah_version == AR5K_AR5211) {
+-				ath5k_hw_reg_write(ah, tsf_up, AR5K_TSF_U32);
+-				ath5k_hw_reg_write(ah, tsf_lo, AR5K_TSF_L32);
+-			}
++		if (ah->ah_version == AR5K_AR5211) {
++			ath5k_hw_reg_write(ah, tsf_up, AR5K_TSF_U32);
++			ath5k_hw_reg_write(ah, tsf_lo, AR5K_TSF_L32);
+ 		}
+ 	}
+ 
+@@ -1165,7 +1212,7 @@ int ath5k_hw_reset(struct ath5k_hw *ah, enum nl80211_iftype op_mode,
+ 	/*
+ 	 * Initialize PHY
+ 	 */
+-	ret = ath5k_hw_phy_init(ah, channel, mode, ee_mode, freq);
++	ret = ath5k_hw_phy_init(ah, channel, mode, ee_mode, freq, false);
+ 	if (ret) {
+ 		ATH5K_ERR(ah->ah_sc,
+ 			"failed to initialize PHY (%i) !\n", ret);
