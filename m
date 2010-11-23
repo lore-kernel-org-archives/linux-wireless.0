@@ -1,38 +1,29 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw0-f46.google.com ([74.125.83.46]:35083 "EHLO
-	mail-gw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753402Ab0K3PeU (ORCPT
+Received: from static-173-84-111-222.sdsl01.roch.ny.frontiernet.net ([173.84.111.222]:3326
+	"EHLO remote.d3engineering.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753581Ab0KWPjl (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 30 Nov 2010 10:34:20 -0500
-Received: by gwj20 with SMTP id 20so2757178gwj.19
-        for <linux-wireless@vger.kernel.org>; Tue, 30 Nov 2010 07:34:19 -0800 (PST)
+	Tue, 23 Nov 2010 10:39:41 -0500
+From: Josh Watts <JWatts@d3engineering.com>
+To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Date: Tue, 23 Nov 2010 10:34:14 -0500
+Subject: No scan results from wl1271-sdio
+Message-ID: <AB927C5B3615784183753F31BCC83EA38C58FE29@AD.d3.local>
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-In-Reply-To: <1291116244.3624.10.camel@jlt3.sipsolutions.net>
-References: <1291111467-10531-1-git-send-email-eliad@wizery.com>
-	<1291116244.3624.10.camel@jlt3.sipsolutions.net>
-Date: Tue, 30 Nov 2010 17:34:19 +0200
-Message-ID: <AANLkTinrF_ZGeuLBJMr4xBXM4kHQ8u3LV400Q2mYELAy@mail.gmail.com>
-Subject: Re: [PATCH] nl80211: add NL80211_ATTR_PS_TIMEOUT attribute
-From: Eliad Peller <eliad@wizery.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Nov 30, 2010 at 1:24 PM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
-> On Tue, 2010-11-30 at 12:04 +0200, Eliad Peller wrote:
->> with this attribute we can control the timeout in dynamic ps
->> (similar to "iwconfig wlan0 power timeout" command).
->
-> I don't really like this -- what's the point? What user is going to have
-> a good idea of how to set this? We are currently setting this depending
-> on the QoS requirements in mac80211, I believe, which seems smarter.
->
-
-we looked for a way to customize the dynamic ps.
-I missed the pm-qos stuff.
-thanks for pointing out!
-
-Eliad.
+SSd2ZSBiZWVuIHRyeWluZyB0byBnZXQgdGhlIHdsMTI3MS1zZGlvIGRyaXZlciB0byB3b3JrLCBh
+bmQgc28gZmFyIEkndmUKbWFuYWdlZCB0byBnZXQgdGhlIGRldmljZSB0byBzdGFydCB1cCwgYnV0
+IGFtIHVuYWJsZSB0byBzZWUgYW55IGFjY2Vzcwpwb2ludHMuIEknbSB1c2luZyB0aGUgbGF0ZXN0
+IGhlYWQgZnJvbSBMdWNpYW5vJ3Mgd2wxMnh4IHRyZWUsIGFuZCBmb3IKZmlybXdhcmUgSSdtIHVz
+aW5nIHRoZSBmaWxlcyBjb21taXR0ZWQgdG8gbGludXgtZmlybXdhcmUgYnkgU2hhaGFyIExldmkK
+KHdsMTI3MS1mdy5iaW4gdmVyc2lvbiA2LjEuMC4wLjM0MykuIEknbSB3b25kZXJpbmcgaWYgdGhl
+cmUncyBtYXliZSBzb21lCm1pbm9yIGNvbXBvbmVudCBvciBzZXR0aW5nIHRoYXQgSSdtIG1pc3Np
+bmcgKGxpa2UgcmFkaW8tZW5hYmxlLCBvcgpwZXJoYXBzIGxpbWl0IHRvIDgwMi4xMWEsIGV0Yyk/
+CgpXaXRoIGFsbCBkZWJ1ZyBpbmZvcm1hdGlvbiB0dXJuZWQgb24gaW4gdGhlIGRyaXZlciwgSSBz
+ZWUgcGxlbnR5IG9mCmNvbW11bmljYXRpb24gZ29pbmcgYmFjayBhbmQgZm9ydGggdy9vIGFueSAo
+bm90aWNlYWJsZSkgZXJyb3JzLCBidXQgSQpkb24ndCBzZWUgYW55IHNpZ24gb2YgbWFnaWMgc3Ry
+aW5ncyBzdWNoIGFzIGFueSBvZiB0aGUgRVNTSURzIEkgZXhwZWN0CnRvIHNlZSBpbiB0aGUgYXJl
+YS4KCi0tCkpvc2ggV2F0dHMK
