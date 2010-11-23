@@ -1,409 +1,105 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:41311 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752727Ab0K1M0N (ORCPT
+Received: from mail-ey0-f174.google.com ([209.85.215.174]:64487 "EHLO
+	mail-ey0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754449Ab0KWT22 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 28 Nov 2010 07:26:13 -0500
-Subject: [PATCH 2/2 v3] mac80211: add throughput based LED blink trigger
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <1290885648.3700.4.camel@jlt3.sipsolutions.net>
-References: <1290884614.3700.3.camel@jlt3.sipsolutions.net>
-	 <1290885648.3700.4.camel@jlt3.sipsolutions.net>
-Content-Type: text/plain; charset="UTF-8"
-Date: Sun, 28 Nov 2010 13:26:11 +0100
-Message-ID: <1290947171.3467.7.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+	Tue, 23 Nov 2010 14:28:28 -0500
+Received: by eye27 with SMTP id 27so4893631eye.19
+        for <linux-wireless@vger.kernel.org>; Tue, 23 Nov 2010 11:28:27 -0800 (PST)
+Date: Tue, 23 Nov 2010 21:28:15 +0200
+From: Nick Kossifidis <mickflemm@gmail.com>
+To: ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org
+Cc: linville@tuxdriver.com, me@bobcopeland.com, mcgrof@gmail.com,
+	jirislaby@gmail.com, nbd@openwrt.org, br1@einfach.org
+Subject: [PATCH 20/30] ath5k: Update spur mitigation filter for
+ turbo/half/quarter
+Message-ID: <20101123192815.GT4303@makis.mantri>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+ * Add spur mitigation filter support for half/quarter and turbo.
 
-iwlwifi and other drivers like to blink their LED
-based on throughput. Implement this generically in
-mac80211, based on a throughput table the driver
-specifies. That way, drivers can set the blink
-frequencies depending on their desired behaviour
-and max throughput.
-
-All the drivers need to do is provide an LED class
-device, best with blink hardware offload.
-
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+ Signed-off-by: Nick Kossifidis <mickflemm@gmail.com>
 ---
-v2: turn off LED when turning off radio
-v3: - use only data frames
-    - fix update frequency to 1 second
-    - use DIV_ROUND_UP
+ drivers/net/wireless/ath/ath5k/phy.c |   53 ++++++++++++++++++++-------------
+ 1 files changed, 32 insertions(+), 21 deletions(-)
 
- include/net/mac80211.h     |   38 ++++++++++++++
- net/mac80211/ieee80211_i.h |   13 ++++
- net/mac80211/iface.c       |    1 
- net/mac80211/led.c         |  119 +++++++++++++++++++++++++++++++++++++++++++++
- net/mac80211/led.h         |   44 +++++++++++++---
- net/mac80211/rx.c          |    3 +
- net/mac80211/tx.c          |    3 +
- net/mac80211/util.c        |    2 
- 8 files changed, 214 insertions(+), 9 deletions(-)
-
---- wireless-testing.orig/include/net/mac80211.h	2010-11-28 12:44:29.000000000 +0100
-+++ wireless-testing/include/net/mac80211.h	2010-11-28 12:44:30.000000000 +0100
-@@ -1852,11 +1852,26 @@ struct ieee80211_hw *ieee80211_alloc_hw(
-  */
- int ieee80211_register_hw(struct ieee80211_hw *hw);
+diff --git a/drivers/net/wireless/ath/ath5k/phy.c b/drivers/net/wireless/ath/ath5k/phy.c
+index 6913a52..b908915 100644
+--- a/drivers/net/wireless/ath/ath5k/phy.c
++++ b/drivers/net/wireless/ath/ath5k/phy.c
+@@ -1622,7 +1622,7 @@ ath5k_hw_set_spur_mitigation_filter(struct ath5k_hw *ah,
+ 	spur_chan_fbin = AR5K_EEPROM_NO_SPUR;
+ 	spur_detection_window = AR5K_SPUR_CHAN_WIDTH;
+ 	/* XXX: Half/Quarter channels ?*/
+-	if (channel->hw_value & CHANNEL_TURBO)
++	if (ah->ah_bwmode == AR5K_BWMODE_40MHZ)
+ 		spur_detection_window *= 2;
  
-+/**
-+ * struct ieee80211_tpt_blink - throughput blink description
-+ * @throughput: throughput in Kbit/sec
-+ * @blink_time: blink time in milliseconds
-+ *	(full cycle, ie. one off + one on period)
-+ */
-+struct ieee80211_tpt_blink {
-+	int throughput;
-+	int blink_time;
-+};
-+
- #ifdef CONFIG_MAC80211_LEDS
- extern char *__ieee80211_get_tx_led_name(struct ieee80211_hw *hw);
- extern char *__ieee80211_get_rx_led_name(struct ieee80211_hw *hw);
- extern char *__ieee80211_get_assoc_led_name(struct ieee80211_hw *hw);
- extern char *__ieee80211_get_radio_led_name(struct ieee80211_hw *hw);
-+extern char *__ieee80211_create_tpt_led_trigger(
-+				struct ieee80211_hw *hw,
-+				const struct ieee80211_tpt_blink *blink_table,
-+				unsigned int blink_table_len);
- #endif
- /**
-  * ieee80211_get_tx_led_name - get name of TX LED
-@@ -1932,6 +1947,29 @@ static inline char *ieee80211_get_radio_
- #else
- 	return NULL;
- #endif
-+}
-+
-+/**
-+ * ieee80211_create_tpt_led_trigger - create throughput LED trigger
-+ * @hw: the hardware to create the trigger for
-+ * @blink_table: the blink table -- needs to be ordered by throughput
-+ * @blink_table_len: size of the blink table
-+ *
-+ * This function returns %NULL (in case of error, or if no LED
-+ * triggers are configured) or the name of the new trigger.
-+ * This function must be called before ieee80211_register_hw().
-+ */
-+static inline char *
-+ieee80211_create_tpt_led_trigger(struct ieee80211_hw *hw,
-+				 const struct ieee80211_tpt_blink *blink_table,
-+				 unsigned int blink_table_len)
-+{
-+#ifdef CONFIG_MAC80211_LEDS
-+	return __ieee80211_create_tpt_led_trigger(hw, blink_table,
-+						  blink_table_len);
-+#else
-+	return NULL;
-+#endif
- }
- 
- /**
---- wireless-testing.orig/net/mac80211/ieee80211_i.h	2010-11-28 12:44:29.000000000 +0100
-+++ wireless-testing/net/mac80211/ieee80211_i.h	2010-11-28 12:44:30.000000000 +0100
-@@ -23,6 +23,7 @@
- #include <linux/types.h>
- #include <linux/spinlock.h>
- #include <linux/etherdevice.h>
-+#include <linux/leds.h>
- #include <net/ieee80211_radiotap.h>
- #include <net/cfg80211.h>
- #include <net/mac80211.h>
-@@ -636,6 +637,17 @@ enum queue_stop_reason {
- 	IEEE80211_QUEUE_STOP_REASON_SKB_ADD,
- };
- 
-+struct tpt_led_trigger {
-+	struct led_trigger trig;
-+	char name[32];
-+	const struct ieee80211_tpt_blink *blink_table;
-+	unsigned int blink_table_len;
-+	struct timer_list timer;
-+	bool running;
-+	unsigned long prev_traffic;
-+	unsigned long tx_bytes, rx_bytes;
-+};
-+
- /**
-  * mac80211 scan flags - currently active scan mode
-  *
-@@ -844,6 +856,7 @@ struct ieee80211_local {
- #ifdef CONFIG_MAC80211_LEDS
- 	int tx_led_counter, rx_led_counter;
- 	struct led_trigger *tx_led, *rx_led, *assoc_led, *radio_led;
-+	struct tpt_led_trigger *tpt_led_trigger;
- 	char tx_led_name[32], rx_led_name[32],
- 	     assoc_led_name[32], radio_led_name[32];
- #endif
---- wireless-testing.orig/net/mac80211/led.c	2010-11-28 12:44:29.000000000 +0100
-+++ wireless-testing/net/mac80211/led.c	2010-11-28 12:44:30.000000000 +0100
-@@ -103,6 +103,13 @@ void ieee80211_led_init(struct ieee80211
- 			local->radio_led = NULL;
- 		}
- 	}
-+
-+	if (local->tpt_led_trigger) {
-+		if (led_trigger_register(&local->tpt_led_trigger->trig)) {
-+			kfree(local->tpt_led_trigger);
-+			local->tpt_led_trigger = NULL;
-+		}
-+	}
- }
- 
- void ieee80211_led_exit(struct ieee80211_local *local)
-@@ -123,6 +130,11 @@ void ieee80211_led_exit(struct ieee80211
- 		led_trigger_unregister(local->rx_led);
- 		kfree(local->rx_led);
- 	}
-+
-+	if (local->tpt_led_trigger) {
-+		led_trigger_unregister(&local->tpt_led_trigger->trig);
-+		kfree(local->tpt_led_trigger);
-+	}
- }
- 
- char *__ieee80211_get_radio_led_name(struct ieee80211_hw *hw)
-@@ -156,3 +168,110 @@ char *__ieee80211_get_rx_led_name(struct
- 	return local->rx_led_name;
- }
- EXPORT_SYMBOL(__ieee80211_get_rx_led_name);
-+
-+static unsigned long tpt_trig_traffic(struct ieee80211_local *local,
-+				      struct tpt_led_trigger *tpt_trig)
-+{
-+	unsigned long traffic, delta;
-+
-+	traffic = tpt_trig->tx_bytes + tpt_trig->rx_bytes;
-+
-+	delta = traffic - tpt_trig->prev_traffic;
-+	tpt_trig->prev_traffic = traffic;
-+	return DIV_ROUND_UP(delta, 1024 / 8);
-+}
-+
-+static void tpt_trig_timer(unsigned long data)
-+{
-+	struct ieee80211_local *local = (void *)data;
-+	struct tpt_led_trigger *tpt_trig = local->tpt_led_trigger;
-+	struct led_classdev *led_cdev;
-+	unsigned long on, off, tpt;
-+	int i;
-+
-+	if (!tpt_trig->running)
-+		return;
-+
-+	mod_timer(&tpt_trig->timer, round_jiffies(jiffies + HZ));
-+
-+	tpt = tpt_trig_traffic(local, tpt_trig);
-+
-+	/* default to just solid on */
-+	on = 1;
-+	off = 0;
-+
-+	for (i = tpt_trig->blink_table_len - 1; i >= 0; i--) {
-+		if (tpt > tpt_trig->blink_table[i].throughput) {
-+			off = tpt_trig->blink_table[i].blink_time / 2;
-+			on = tpt_trig->blink_table[i].blink_time - off;
+ 	for (i = 0; i < AR5K_EEPROM_N_SPUR_CHANS; i++) {
+@@ -1651,32 +1651,43 @@ ath5k_hw_set_spur_mitigation_filter(struct ath5k_hw *ah,
+ 		 * Calculate deltas:
+ 		 * spur_freq_sigma_delta -> spur_offset / sample_freq << 21
+ 		 * spur_delta_phase -> spur_offset / chip_freq << 11
+-		 * Note: Both values have 100KHz resolution
++		 * Note: Both values have 100Hz resolution
+ 		 */
+-		/* XXX: Half/Quarter rate channels ? */
+-		switch (channel->hw_value) {
+-		case CHANNEL_A:
+-			/* Both sample_freq and chip_freq are 40MHz */
+-			spur_delta_phase = (spur_offset << 17) / 25;
+-			spur_freq_sigma_delta = (spur_delta_phase >> 10);
+-			symbol_width = AR5K_SPUR_SYMBOL_WIDTH_BASE_100Hz;
+-			break;
+-		case CHANNEL_G:
+-			/* sample_freq -> 40MHz chip_freq -> 44MHz
+-			 * (for b compatibility) */
+-			spur_freq_sigma_delta = (spur_offset << 8) / 55;
+-			spur_delta_phase = (spur_offset << 17) / 25;
+-			symbol_width = AR5K_SPUR_SYMBOL_WIDTH_BASE_100Hz;
+-			break;
+-		case CHANNEL_T:
+-		case CHANNEL_TG:
++		switch (ah->ah_bwmode) {
++		case AR5K_BWMODE_40MHZ:
+ 			/* Both sample_freq and chip_freq are 80MHz */
+ 			spur_delta_phase = (spur_offset << 16) / 25;
+ 			spur_freq_sigma_delta = (spur_delta_phase >> 10);
+-			symbol_width = AR5K_SPUR_SYMBOL_WIDTH_TURBO_100Hz;
++			symbol_width = AR5K_SPUR_SYMBOL_WIDTH_BASE_100Hz * 2;
+ 			break;
++		case AR5K_BWMODE_10MHZ:
++			/* Both sample_freq and chip_freq are 20MHz (?) */
++			spur_delta_phase = (spur_offset << 18) / 25;
++			spur_freq_sigma_delta = (spur_delta_phase >> 10);
++			symbol_width = AR5K_SPUR_SYMBOL_WIDTH_BASE_100Hz / 2;
++		case AR5K_BWMODE_5MHZ:
++			/* Both sample_freq and chip_freq are 10MHz (?) */
++			spur_delta_phase = (spur_offset << 19) / 25;
++			spur_freq_sigma_delta = (spur_delta_phase >> 10);
++			symbol_width = AR5K_SPUR_SYMBOL_WIDTH_BASE_100Hz / 4;
+ 		default:
+-			return;
++			if (channel->hw_value == CHANNEL_A) {
++				/* Both sample_freq and chip_freq are 40MHz */
++				spur_delta_phase = (spur_offset << 17) / 25;
++				spur_freq_sigma_delta =
++						(spur_delta_phase >> 10);
++				symbol_width =
++					AR5K_SPUR_SYMBOL_WIDTH_BASE_100Hz;
++			} else {
++				/* sample_freq -> 40MHz chip_freq -> 44MHz
++				 * (for b compatibility) */
++				spur_delta_phase = (spur_offset << 17) / 25;
++				spur_freq_sigma_delta =
++						(spur_offset << 8) / 55;
++				symbol_width =
++					AR5K_SPUR_SYMBOL_WIDTH_BASE_100Hz;
++			}
 +			break;
-+		}
-+	}
-+
-+	read_lock(&tpt_trig->trig.leddev_list_lock);
-+	list_for_each_entry(led_cdev, &tpt_trig->trig.led_cdevs, trig_list)
-+		led_blink_set(led_cdev, &on, &off);
-+	read_unlock(&tpt_trig->trig.leddev_list_lock);
-+}
-+
-+extern char *__ieee80211_create_tpt_led_trigger(
-+				struct ieee80211_hw *hw,
-+				const struct ieee80211_tpt_blink *blink_table,
-+				unsigned int blink_table_len)
-+{
-+	struct ieee80211_local *local = hw_to_local(hw);
-+	struct tpt_led_trigger *tpt_trig;
-+
-+	if (WARN_ON(local->tpt_led_trigger))
-+		return NULL;
-+
-+	tpt_trig = kzalloc(sizeof(struct tpt_led_trigger), GFP_KERNEL);
-+	if (!tpt_trig)
-+		return NULL;
-+
-+	snprintf(tpt_trig->name, sizeof(tpt_trig->name),
-+		 "%stpt", wiphy_name(local->hw.wiphy));
-+
-+	tpt_trig->trig.name = tpt_trig->name;
-+
-+	tpt_trig->blink_table = blink_table;
-+	tpt_trig->blink_table_len = blink_table_len;
-+
-+	setup_timer(&tpt_trig->timer, tpt_trig_timer, (unsigned long)local);
-+
-+	local->tpt_led_trigger = tpt_trig;
-+
-+	return tpt_trig->name;
-+}
-+EXPORT_SYMBOL(__ieee80211_create_tpt_led_trigger);
-+
-+void ieee80211_start_tpt_led_trig(struct ieee80211_local *local)
-+{
-+	struct tpt_led_trigger *tpt_trig = local->tpt_led_trigger;
-+
-+	if (!tpt_trig)
-+		return;
-+
-+	/* reset traffic */
-+	tpt_trig_traffic(local, tpt_trig);
-+	tpt_trig->running = true;
-+
-+	mod_timer(&tpt_trig->timer, round_jiffies(jiffies + HZ));
-+}
-+
-+void ieee80211_stop_tpt_led_trig(struct ieee80211_local *local)
-+{
-+	struct tpt_led_trigger *tpt_trig = local->tpt_led_trigger;
-+	struct led_classdev *led_cdev;
-+
-+	if (!tpt_trig)
-+		return;
-+
-+	tpt_trig->running = false;
-+	del_timer_sync(&tpt_trig->timer);
-+
-+	read_lock(&tpt_trig->trig.leddev_list_lock);
-+	list_for_each_entry(led_cdev, &tpt_trig->trig.led_cdevs, trig_list)
-+		led_brightness_set(led_cdev, LED_OFF);
-+	read_unlock(&tpt_trig->trig.leddev_list_lock);
-+}
---- wireless-testing.orig/net/mac80211/led.h	2010-11-28 12:44:29.000000000 +0100
-+++ wireless-testing/net/mac80211/led.h	2010-11-28 12:44:30.000000000 +0100
-@@ -12,15 +12,17 @@
- #include "ieee80211_i.h"
- 
- #ifdef CONFIG_MAC80211_LEDS
--extern void ieee80211_led_rx(struct ieee80211_local *local);
--extern void ieee80211_led_tx(struct ieee80211_local *local, int q);
--extern void ieee80211_led_assoc(struct ieee80211_local *local,
--				bool associated);
--extern void ieee80211_led_radio(struct ieee80211_local *local,
--				bool enabled);
--extern void ieee80211_led_names(struct ieee80211_local *local);
--extern void ieee80211_led_init(struct ieee80211_local *local);
--extern void ieee80211_led_exit(struct ieee80211_local *local);
-+void ieee80211_led_rx(struct ieee80211_local *local);
-+void ieee80211_led_tx(struct ieee80211_local *local, int q);
-+void ieee80211_led_assoc(struct ieee80211_local *local,
-+			 bool associated);
-+void ieee80211_led_radio(struct ieee80211_local *local,
-+			 bool enabled);
-+void ieee80211_led_names(struct ieee80211_local *local);
-+void ieee80211_led_init(struct ieee80211_local *local);
-+void ieee80211_led_exit(struct ieee80211_local *local);
-+void ieee80211_start_tpt_led_trig(struct ieee80211_local *local);
-+void ieee80211_stop_tpt_led_trig(struct ieee80211_local *local);
- #else
- static inline void ieee80211_led_rx(struct ieee80211_local *local)
- {
-@@ -45,4 +47,28 @@ static inline void ieee80211_led_init(st
- static inline void ieee80211_led_exit(struct ieee80211_local *local)
- {
- }
-+static inline void ieee80211_start_tpt_led_trig(struct ieee80211_local *local)
-+{
-+}
-+static inline void ieee80211_stop_tpt_led_trig(struct ieee80211_local *local)
-+{
-+}
-+#endif
-+
-+static inline void
-+ieee80211_tpt_led_trig_tx(struct ieee80211_local *local, __le16 fc, int bytes)
-+{
-+#ifdef CONFIG_MAC80211_LEDS
-+	if (local->tpt_led_trigger && ieee80211_is_data(fc))
-+		local->tpt_led_trigger->tx_bytes += bytes;
- #endif
-+}
-+
-+static inline void
-+ieee80211_tpt_led_trig_rx(struct ieee80211_local *local, __le16 fc, int bytes)
-+{
-+#ifdef CONFIG_MAC80211_LEDS
-+	if (local->tpt_led_trigger && ieee80211_is_data(fc))
-+		local->tpt_led_trigger->rx_bytes += bytes;
-+#endif
-+}
---- wireless-testing.orig/net/mac80211/iface.c	2010-11-28 12:44:29.000000000 +0100
-+++ wireless-testing/net/mac80211/iface.c	2010-11-28 12:44:30.000000000 +0100
-@@ -225,6 +225,7 @@ static int ieee80211_do_open(struct net_
- 		/* we're brought up, everything changes */
- 		hw_reconf_flags = ~0;
- 		ieee80211_led_radio(local, true);
-+		ieee80211_start_tpt_led_trig(local);
- 	}
- 
- 	/*
---- wireless-testing.orig/net/mac80211/util.c	2010-11-28 12:44:29.000000000 +0100
-+++ wireless-testing/net/mac80211/util.c	2010-11-28 12:44:30.000000000 +0100
-@@ -1116,6 +1116,7 @@ u32 ieee80211_sta_get_rates(struct ieee8
- void ieee80211_stop_device(struct ieee80211_local *local)
- {
- 	ieee80211_led_radio(local, false);
-+	ieee80211_stop_tpt_led_trig(local);
- 
- 	cancel_work_sync(&local->reconfig_filter);
- 
-@@ -1150,6 +1151,7 @@ int ieee80211_reconfig(struct ieee80211_
  		}
  
- 		ieee80211_led_radio(local, true);
-+		ieee80211_start_tpt_led_trig(local);
- 	}
- 
- 	/* add interfaces */
---- wireless-testing.orig/net/mac80211/rx.c	2010-11-28 12:44:29.000000000 +0100
-+++ wireless-testing/net/mac80211/rx.c	2010-11-28 12:44:30.000000000 +0100
-@@ -2873,6 +2873,9 @@ void ieee80211_rx(struct ieee80211_hw *h
- 		return;
- 	}
- 
-+	ieee80211_tpt_led_trig_rx(local,
-+			((struct ieee80211_hdr *)skb->data)->frame_control,
-+			skb->len);
- 	__ieee80211_rx_handle_packet(hw, skb);
- 
- 	rcu_read_unlock();
---- wireless-testing.orig/net/mac80211/tx.c	2010-11-28 12:44:29.000000000 +0100
-+++ wireless-testing/net/mac80211/tx.c	2010-11-28 12:44:30.000000000 +0100
-@@ -1292,6 +1292,7 @@ static int __ieee80211_tx(struct ieee802
- 
- 	while (skb) {
- 		int q = skb_get_queue_mapping(skb);
-+		__le16 fc;
- 
- 		spin_lock_irqsave(&local->queue_stop_reason_lock, flags);
- 		ret = IEEE80211_TX_OK;
-@@ -1334,6 +1335,7 @@ static int __ieee80211_tx(struct ieee802
- 		else
- 			info->control.sta = NULL;
- 
-+		fc = ((struct ieee80211_hdr *)skb->data)->frame_control;
- 		ret = drv_tx(local, skb);
- 		if (WARN_ON(ret != NETDEV_TX_OK && skb->len != len)) {
- 			dev_kfree_skb(skb);
-@@ -1344,6 +1346,7 @@ static int __ieee80211_tx(struct ieee802
- 			return IEEE80211_TX_AGAIN;
- 		}
- 
-+		ieee80211_tpt_led_trig_tx(local, fc, len);
- 		*skbp = skb = next;
- 		ieee80211_led_tx(local, 1);
- 		fragm = true;
-
-
+ 		/* Calculate pilot and magnitude masks */
