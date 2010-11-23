@@ -1,45 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qy0-f174.google.com ([209.85.216.174]:58695 "EHLO
-	mail-qy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933940Ab0KQBrs convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 16 Nov 2010 20:47:48 -0500
-Received: by qyk12 with SMTP id 12so5765510qyk.19
-        for <linux-wireless@vger.kernel.org>; Tue, 16 Nov 2010 17:47:47 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <1289946246.3673.12.camel@jlt3.sipsolutions.net>
-References: <1289867251-21559-1-git-send-email-javier@cozybit.com> <1289946246.3673.12.camel@jlt3.sipsolutions.net>
-From: Javier Cardona <javier@cozybit.com>
-Date: Tue, 16 Nov 2010 17:41:34 -0800
-Message-ID: <AANLkTimuW8wTVUW4dH1t+J6jhoEkFHZ7v5t78tXe050O@mail.gmail.com>
-Subject: Re: [PATCH] iw: Resolve namespace clash between station plink and
- vlan commands
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: nbd@openwrt.org, linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from mga09.intel.com ([134.134.136.24]:2765 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756448Ab0KWTEa (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 23 Nov 2010 14:04:30 -0500
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Subject: [PATCH 4/5] iwlwifi: power management checking for shadow register
+Date: Tue, 23 Nov 2010 10:58:55 -0800
+Message-Id: <1290538736-10816-5-git-send-email-wey-yi.w.guy@intel.com>
+In-Reply-To: <1290538736-10816-1-git-send-email-wey-yi.w.guy@intel.com>
+References: <1290538736-10816-1-git-send-email-wey-yi.w.guy@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Johannes,
+If shadow register is enable, modify the power management
+command to inform uCode
 
-On Tue, Nov 16, 2010 at 2:24 PM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
-> On Mon, 2010-11-15 at 16:27 -0800, Javier Cardona wrote:
->> This patch: http://osdir.com/ml/linux-wireless/2009-11/msg00981.html
->> kicked the command to manage mesh plinks into non-existence.  Here we
->> bring it back under a different name.
->
-> I'll happily take this, but would you prefer to have the other one
-> backed out instead?
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-power.c |   10 ++++++++++
+ 1 files changed, 10 insertions(+), 0 deletions(-)
 
-That would save us and some of our clients from having to change a
-bunch of scripts, yes.
-
-Thanks,
-
-Javier
-
+diff --git a/drivers/net/wireless/iwlwifi/iwl-power.c b/drivers/net/wireless/iwlwifi/iwl-power.c
+index 306c852..21c5e6a 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-power.c
++++ b/drivers/net/wireless/iwlwifi/iwl-power.c
+@@ -163,6 +163,11 @@ static void iwl_static_sleep_cmd(struct iwl_priv *priv,
+ 	else
+ 		cmd->flags &= ~IWL_POWER_SLEEP_OVER_DTIM_MSK;
+ 
++	if (priv->cfg->base_params->shadow_reg_enable)
++		cmd->flags |= IWL_POWER_SHADOW_REG_ENA;
++	else
++		cmd->flags &= ~IWL_POWER_SHADOW_REG_ENA;
++
+ 	if (priv->cfg->bt_params &&
+ 	    priv->cfg->bt_params->advanced_bt_coexist) {
+ 		if (!priv->cfg->bt_params->bt_sco_disable)
+@@ -245,6 +250,11 @@ static void iwl_power_fill_sleep_cmd(struct iwl_priv *priv,
+ 	if (priv->power_data.pci_pm)
+ 		cmd->flags |= IWL_POWER_PCI_PM_MSK;
+ 
++	if (priv->cfg->base_params->shadow_reg_enable)
++		cmd->flags |= IWL_POWER_SHADOW_REG_ENA;
++	else
++		cmd->flags &= ~IWL_POWER_SHADOW_REG_ENA;
++
+ 	if (priv->cfg->bt_params &&
+ 	    priv->cfg->bt_params->advanced_bt_coexist) {
+ 		if (!priv->cfg->bt_params->bt_sco_disable)
 -- 
-Javier Cardona
-cozybit Inc.
-http://www.cozybit.com
+1.7.0.4
+
