@@ -1,195 +1,89 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail30s.wh2.ocn.ne.jp ([125.206.180.198]:49726 "HELO
-	mail30s.wh2.ocn.ne.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1759160Ab0KPB6a (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 15 Nov 2010 20:58:30 -0500
-Received: from vs3003.wh2.ocn.ne.jp (125.206.180.231)
-	by mail30s.wh2.ocn.ne.jp (RS ver 1.0.95vs) with SMTP id 4-0111772708
-	for <linux-wireless@vger.kernel.org>; Tue, 16 Nov 2010 10:58:29 +0900 (JST)
-Subject: [PATCH v8 3/3] nl80211/mac80211: Report signal average
-To: linville@tuxdriver.com
-From: Bruno Randolf <br1@einfach.org>
-Cc: randy.dunlap@oracle.com, br1@thinktube.com, peterz@infradead.org,
-	blp@cs.stanford.edu, linux-wireless@vger.kernel.org,
-	linux-kernel@vger.kernel.org, Lars_Ericsson@telia.com,
-	stefanr@s5r6.in-berlin.de, kosaki.motohiro@jp.fujitsu.com,
-	akpm@linux-foundation.org, kevin.granade@gmail.com
-Date: Tue, 16 Nov 2010 10:58:48 +0900
-Message-ID: <20101116015848.21081.60180.stgit@localhost6.localdomain6>
-In-Reply-To: <20101116015837.21081.79264.stgit@localhost6.localdomain6>
-References: <20101116015837.21081.79264.stgit@localhost6.localdomain6>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Received: from smtp.nokia.com ([147.243.128.26]:65130 "EHLO mgw-da02.nokia.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751707Ab0KWIrf (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 23 Nov 2010 03:47:35 -0500
+Received: from nokia.com (localhost [127.0.0.1])
+	by mgw-da02.nokia.com (Switch-3.4.3/Switch-3.4.3) with ESMTP id oAN8l4ZE026614
+	for <linux-wireless@vger.kernel.org>; Tue, 23 Nov 2010 10:47:34 +0200
+Subject: Re: [PATCH] wl12xx: Fix kernel crash related to hw recovery and
+ interface shutdown
+From: Luciano Coelho <luciano.coelho@nokia.com>
+To: Juuso Oikarinen <juuso.oikarinen@nokia.com>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <1290491470.4284.9.camel@wimaxnb.nmp.nokia.com>
+References: <1290086342-12015-1-git-send-email-juuso.oikarinen@nokia.com>
+	 <1290430346.3322.4.camel@chilepepper>
+	 <1290491470.4284.9.camel@wimaxnb.nmp.nokia.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Tue, 23 Nov 2010 10:47:37 +0200
+Message-ID: <1290502057.10621.32.camel@chilepepper>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Extend nl80211 to report an exponential weighted moving average (EWMA) of the
-signal value. Since the signal value usually fluctuates between different
-packets, an average can be more useful than the value of the last packet.
+On Tue, 2010-11-23 at 07:51 +0200, Juuso Oikarinen wrote:
+> On Mon, 2010-11-22 at 14:52 +0200, Luciano Coelho wrote:
+> > On Thu, 2010-11-18 at 15:19 +0200, juuso.oikarinen@nokia.com wrote:
+> > > From: Juuso Oikarinen <juuso.oikarinen@nokia.com>
+> > > 
+> > > It is possible that the op_remove_interface function  is invoked exactly at
+> > > the same time has hw recovery is started. In this case it is possible for the
+> > > interface to be already removed in the op_remove_interface call, which
+> > > currently leads to a kernel warning and a subsequent kernel crash.
+> > > 
+> > > Fix this by ignoring the op_remove_interface call if the interface is already
+> > > down at that point.
+> > > 
+> > > Signed-off-by: Juuso Oikarinen <juuso.oikarinen@nokia.com>
+> > > ---
+> > 
+> > [...]
+> > 
+> > > diff --git a/drivers/net/wireless/wl12xx/main.c b/drivers/net/wireless/wl12xx/main.c
+> > > index 31f0e2f..11b0477 100644
+> > > --- a/drivers/net/wireless/wl12xx/main.c
+> > > +++ b/drivers/net/wireless/wl12xx/main.c
+> > > @@ -1157,10 +1157,16 @@ static void wl1271_op_remove_interface(struct ieee80211_hw *hw,
+> > >  	struct wl1271 *wl = hw->priv;
+> > >  
+> > >  	mutex_lock(&wl->mutex);
+> > > -	WARN_ON(wl->vif != vif);
+> > > -	__wl1271_op_remove_interface(wl);
+> > > -	mutex_unlock(&wl->mutex);
+> > > +	/*
+> > > +	 * wl->vif can be null here if someone shuts down the interface
+> > > +	 * just when hardware recovery has been started.
+> > > +	 */
+> > > +	if (wl->vif) {
+> > > +		WARN_ON(wl->vif != vif);
+> > > +		__wl1271_op_remove_interface(wl);
+> > > +	}
+> > 
+> > Should you still remove the interface if the vif you received is wrong?
+> > Surely, something is totally wrong if you get a different vif, but maybe
+> > removing the interface here will just confuse things even more?
+> 
+> Dunno if it would be better to remove or leave unremoved - probably does
+> not matter. If the vif is wrong, there is some serious bug somewhere,
+> and probably the result is serious instability anyway.
+> 
+> The WARN_ON is there just to validate the assumption the driver makes
+> about the vif, and this function call. If there is a bug somewhere, or
+> the assumption somehow changes, the warning will be a clear indication
+> of it.
 
-This uses the recently added generic EWMA library function.
+Yep, it's okay like this.  And it was like that earlier anyway.  I was
+just wondering if it would be possible for a similar thing as wl->vif
+being NULL (which your patch addresses) happen, such as wl->vif changing
+before we had the chance to fully remove the interface.  It will
+probably not happen and, as you say, the WARN_ON will be a good
+indication that something went wrong.
 
-Signed-off-by: Bruno Randolf <br1@einfach.org>
----
- include/linux/nl80211.h |    2 ++
- include/net/cfg80211.h  |    4 ++++
- net/mac80211/Kconfig    |    1 +
- net/mac80211/cfg.c      |    3 ++-
- net/mac80211/rx.c       |    1 +
- net/mac80211/sta_info.c |    2 ++
- net/mac80211/sta_info.h |    3 +++
- net/wireless/nl80211.c  |    3 +++
- 8 files changed, 18 insertions(+), 1 deletions(-)
+Applied to wl12xx/master.  Thanks!
 
-diff --git a/include/linux/nl80211.h b/include/linux/nl80211.h
-index fb877b5..0ceb552 100644
---- a/include/linux/nl80211.h
-+++ b/include/linux/nl80211.h
-@@ -1132,6 +1132,7 @@ enum nl80211_rate_info {
-  * @__NL80211_STA_INFO_AFTER_LAST: internal
-  * @NL80211_STA_INFO_MAX: highest possible station info attribute
-  * @NL80211_STA_INFO_SIGNAL: signal strength of last received PPDU (u8, dBm)
-+ * @NL80211_STA_INFO_SIGNAL_AVG: signal strength average (u8, dBm)
-  * @NL80211_STA_INFO_TX_BITRATE: current unicast tx rate, nested attribute
-  * 	containing info as possible, see &enum nl80211_sta_info_txrate.
-  * @NL80211_STA_INFO_RX_PACKETS: total received packet (u32, from this station)
-@@ -1149,6 +1150,7 @@ enum nl80211_sta_info {
- 	NL80211_STA_INFO_PLID,
- 	NL80211_STA_INFO_PLINK_STATE,
- 	NL80211_STA_INFO_SIGNAL,
-+	NL80211_STA_INFO_SIGNAL_AVG,
- 	NL80211_STA_INFO_TX_BITRATE,
- 	NL80211_STA_INFO_RX_PACKETS,
- 	NL80211_STA_INFO_TX_PACKETS,
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index e5702f5..f21f701 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -424,6 +424,7 @@ struct station_parameters {
-  * @STATION_INFO_TX_RETRIES: @tx_retries filled
-  * @STATION_INFO_TX_FAILED: @tx_failed filled
-  * @STATION_INFO_RX_DROP_MISC: @rx_dropped_misc filled
-+ * @STATION_INFO_SIGNAL_AVG: @signal_avg filled
-  */
- enum station_info_flags {
- 	STATION_INFO_INACTIVE_TIME	= 1<<0,
-@@ -439,6 +440,7 @@ enum station_info_flags {
- 	STATION_INFO_TX_RETRIES		= 1<<10,
- 	STATION_INFO_TX_FAILED		= 1<<11,
- 	STATION_INFO_RX_DROP_MISC	= 1<<12,
-+	STATION_INFO_SIGNAL_AVG		= 1<<13,
- };
- 
- /**
-@@ -485,6 +487,7 @@ struct rate_info {
-  * @plid: mesh peer link id
-  * @plink_state: mesh peer link state
-  * @signal: signal strength of last received packet in dBm
-+ * @signal_avg: signal strength average in dBm
-  * @txrate: current unicast bitrate to this station
-  * @rx_packets: packets received from this station
-  * @tx_packets: packets transmitted to this station
-@@ -505,6 +508,7 @@ struct station_info {
- 	u16 plid;
- 	u8 plink_state;
- 	s8 signal;
-+	s8 signal_avg;
- 	struct rate_info txrate;
- 	u32 rx_packets;
- 	u32 tx_packets;
-diff --git a/net/mac80211/Kconfig b/net/mac80211/Kconfig
-index 4d6f865..798d9b9 100644
---- a/net/mac80211/Kconfig
-+++ b/net/mac80211/Kconfig
-@@ -6,6 +6,7 @@ config MAC80211
- 	select CRYPTO_ARC4
- 	select CRYPTO_AES
- 	select CRC32
-+	select AVERAGE
- 	---help---
- 	  This option enables the hardware independent IEEE 802.11
- 	  networking stack.
-diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
-index 18bd0e5..0b74c05 100644
---- a/net/mac80211/cfg.c
-+++ b/net/mac80211/cfg.c
-@@ -343,8 +343,9 @@ static void sta_set_sinfo(struct sta_info *sta, struct station_info *sinfo)
- 
- 	if ((sta->local->hw.flags & IEEE80211_HW_SIGNAL_DBM) ||
- 	    (sta->local->hw.flags & IEEE80211_HW_SIGNAL_UNSPEC)) {
--		sinfo->filled |= STATION_INFO_SIGNAL;
-+		sinfo->filled |= STATION_INFO_SIGNAL | STATION_INFO_SIGNAL_AVG;
- 		sinfo->signal = (s8)sta->last_signal;
-+		sinfo->signal_avg = (s8) -ewma_read(&sta->avg_signal);
- 	}
- 
- 	sinfo->txrate.flags = 0;
-diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
-index 902b03e..34bcc84 100644
---- a/net/mac80211/rx.c
-+++ b/net/mac80211/rx.c
-@@ -1158,6 +1158,7 @@ ieee80211_rx_h_sta_process(struct ieee80211_rx_data *rx)
- 	sta->rx_fragments++;
- 	sta->rx_bytes += rx->skb->len;
- 	sta->last_signal = status->signal;
-+	ewma_add(&sta->avg_signal, -status->signal);
- 
- 	/*
- 	 * Change STA power saving mode only at the end of a frame
-diff --git a/net/mac80211/sta_info.c b/net/mac80211/sta_info.c
-index 6d8f897..bed23e1 100644
---- a/net/mac80211/sta_info.c
-+++ b/net/mac80211/sta_info.c
-@@ -241,6 +241,8 @@ struct sta_info *sta_info_alloc(struct ieee80211_sub_if_data *sdata,
- 	sta->local = local;
- 	sta->sdata = sdata;
- 
-+	ewma_init(&sta->avg_signal, 1000, 8);
-+
- 	if (sta_prepare_rate_control(local, sta, gfp)) {
- 		kfree(sta);
- 		return NULL;
-diff --git a/net/mac80211/sta_info.h b/net/mac80211/sta_info.h
-index 9265aca..84062e2 100644
---- a/net/mac80211/sta_info.h
-+++ b/net/mac80211/sta_info.h
-@@ -13,6 +13,7 @@
- #include <linux/types.h>
- #include <linux/if_ether.h>
- #include <linux/workqueue.h>
-+#include <linux/average.h>
- #include "key.h"
- 
- /**
-@@ -224,6 +225,7 @@ enum plink_state {
-  * @rx_fragments: number of received MPDUs
-  * @rx_dropped: number of dropped MPDUs from this STA
-  * @last_signal: signal of last received frame from this STA
-+ * @avg_signal: moving average of signal of received frames from this STA
-  * @last_seq_ctrl: last received seq/frag number from this STA (per RX queue)
-  * @tx_filtered_count: number of frames the hardware filtered for this STA
-  * @tx_retry_failed: number of frames that failed retry
-@@ -291,6 +293,7 @@ struct sta_info {
- 	unsigned long rx_fragments;
- 	unsigned long rx_dropped;
- 	int last_signal;
-+	struct ewma avg_signal;
- 	__le16 last_seq_ctrl[NUM_RX_DATA_QUEUES];
- 
- 	/* Updated from TX status path only, no locking requirements */
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index 4e78e3f..660987d 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -1841,6 +1841,9 @@ static int nl80211_send_station(struct sk_buff *msg, u32 pid, u32 seq,
- 	if (sinfo->filled & STATION_INFO_SIGNAL)
- 		NLA_PUT_U8(msg, NL80211_STA_INFO_SIGNAL,
- 			   sinfo->signal);
-+	if (sinfo->filled & STATION_INFO_SIGNAL_AVG)
-+		NLA_PUT_U8(msg, NL80211_STA_INFO_SIGNAL_AVG,
-+			   sinfo->signal_avg);
- 	if (sinfo->filled & STATION_INFO_TX_BITRATE) {
- 		txrate = nla_nest_start(msg, NL80211_STA_INFO_TX_BITRATE);
- 		if (!txrate)
+
+-- 
+Cheers,
+Luca.
 
