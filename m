@@ -1,52 +1,28 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from perninha.conectiva.com.br ([187.115.55.249]:52164 "EHLO
-	perninha.conectiva.com.br" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755424Ab0KBDBd (ORCPT
+Received: from mail-ew0-f46.google.com ([209.85.215.46]:48594 "EHLO
+	mail-ew0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751447Ab0KWOi5 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 1 Nov 2010 23:01:33 -0400
-Message-ID: <4CCF7EFC.1050000@mandriva.com.br>
-Date: Tue, 02 Nov 2010 01:01:16 -0200
-From: Herton Ronaldo Krzesinski <herton@mandriva.com.br>
+	Tue, 23 Nov 2010 09:38:57 -0500
+Received: by ewy5 with SMTP id 5so2458158ewy.19
+        for <linux-wireless@vger.kernel.org>; Tue, 23 Nov 2010 06:38:56 -0800 (PST)
+Message-ID: <4CEBD1F3.4030007@gmail.com>
+Date: Tue, 23 Nov 2010 16:38:43 +0200
+From: Sleijeri <sleijeri@gmail.com>
 MIME-Version: 1.0
-To: Larry Finger <Larry.Finger@lwfinger.net>
-CC: htl10@users.sourceforge.net, linux-wireless@vger.kernel.org,
-	John W Linville <linville@tuxdriver.com>
-Subject: Re: [PATCH 3/9] rtl8187: fix wrong register initialization in 8187B
-References: <309278.75116.qm@web29520.mail.ird.yahoo.com> <4CCF7B73.7040906@lwfinger.net>
-In-Reply-To: <4CCF7B73.7040906@lwfinger.net>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+To: linux-wireless@vger.kernel.org
+Subject: ar9170usb broken partly 2.6.36
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 02-11-2010 00:46, Larry Finger wrote:
-> On 11/01/2010 09:42 PM, Hin-Tak Leung wrote:
->>
->> --- On Tue, 2/11/10, Herton Ronaldo Krzesinski<herton@mandriva.com.br>  wrote:
->>
->>> We were using wrong address for BRSR
->>> (Basic Rate Set Register) while
->>> initializing its value, comparing with Realtek sources, for
->>> 8187B case.
->>>
->>> Also, the same register is initialized in
->>> rtl8187b_reg_table, so remove
->>> the duplicate initialization from the table.
->>>
->>> Signed-off-by: Herton Ronaldo Krzesinski<herton@mandriva.com.br>
->>> Acked-by: Larry Finger<Larry.Finger@lwfinger.net>
->>
->> Acked-by: Hin-Tak Leung<htl10@users.sourceforge.net>
->>
->> ANAPARAM* stands for "anonymous parameters", right?  One of these days we should give them some meaningful names.
->
-> I have always thought it was for "analog parameter". Am I wrong?
-
-Nope, you're right, its listed description is "analog parameter" in 8180 
-spec.
-
->
-> Larry
-
---
-[]'s
-Herton
+It appears to me that latest Arch linux kernel26-2.6.36-x and my atheros 
+based card Dlink DWA-160A (ar9170usb) have a little problems with 
+connection. iwconfig appeared to show 300Mb/s-1Mb/s speed. As what i 
+have read about the driver ar9170usb doesn't yet support 802.11n ? But 
+if there is upgrade its not working right for me. My connection is very 
+unstable and very slow due this. Connection speed to router and so forth 
+is around 1kb/s - 27kb/s ping is between 200 - 10000. Problem appears to 
+be greater during the load of network.
+Problem disappeared while dropped kernel to verion 2.6.35.8-1 (arch 
+linux kernel). Dmesg is clear of errors.
