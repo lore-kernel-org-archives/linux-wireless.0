@@ -1,75 +1,158 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:15150 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1759929Ab0KRRhP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 18 Nov 2010 12:37:15 -0500
-Subject: Re: iwlwifi: fix modular legacy build errors
-From: "Guy, Wey-Yi" <wey-yi.w.guy@intel.com>
-To: "linville@tuxdriver.com" <linville@tuxdriver.com>
-Cc: Randy Dunlap <randy.dunlap@oracle.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <20101118091138.80875baf.randy.dunlap@oracle.com>
-References: <1290011797.12056.255.camel@wwguy-huron>
-	 <1290012580.3777.1.camel@jlt3.sipsolutions.net>
-	 <4CE40CF9.8090404@oracle.com>	<1290013876.12056.260.camel@wwguy-huron>
-	 <20101118091138.80875baf.randy.dunlap@oracle.com>
-Content-Type: text/plain
-Date: Thu, 18 Nov 2010 09:36:00 -0800
-Message-Id: <1290101760.6131.1.camel@wwguy-ubuntu>
-Mime-Version: 1.0
+Received: from outbound.icp-qv1-irony-out5.iinet.net.au ([203.59.1.105]:49473
+	"EHLO outbound.icp-qv1-irony-out5.iinet.net.au" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1750889Ab0KXCut (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 23 Nov 2010 21:50:49 -0500
+Date: Wed, 24 Nov 2010 13:41:22 +1100
+From: Daniel Dalton <d.dalton@iinet.net.au>
+To: linux-wireless@vger.kernel.org
+Subject: Problems connecting to WPA2 networks (possibly atheros drivers)
+Message-ID: <20101124024122.GA26665@gwsc.vic.edu.au>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-John,
 
-On Thu, 2010-11-18 at 09:11 -0800, Randy Dunlap wrote:
-> On Wed, 17 Nov 2010 09:11:16 -0800 Guy, Wey-Yi wrote:
-> 
-> > Hi Randy,
-> > 
-> > On Wed, 2010-11-17 at 09:12 -0800, Randy Dunlap wrote:
-> > > On 11/17/10 08:49, Johannes Berg wrote:
-> > > > On Wed, 2010-11-17 at 08:36 -0800, Guy, Wey-Yi wrote:
-> > > >> Hi Randy,
-> > > >>
-> > > >> the "iwlwifi: fix modular legacy build errors" patch cause the following
-> > > >> WARNING when compile 
-> > > > 
-> > > > I thought we already had had a fix for that issue anyway?
-> > > 
-> > > Not that I know of.  I reported a different build error and
-> > > included a patch, which is now causing problems, so I asked
-> > > John to drop/revert my patch.
-> > > 
-> > > Here is part of the patch description that I sent:
-> > > 
-> > > 
-> > > With CONFIG_IWLWIFI=m, CONFIG_IWLAGN=m, and CONFIG_IWL3945=m,
-> > > a kernel build has errors as below.  Changing a few lines in the
-> > > Makefile is one possible fix for these build errors.
-> > > 
-> > > ERROR: "iwl_legacy_mac_config" [drivers/net/wireless/iwlwifi/iwl3945.ko] undefined!
-> > > ERROR: "iwl_isr_legacy" [drivers/net/wireless/iwlwifi/iwl3945.ko] undefined!
-> > > ERROR: "iwl_legacy_tx_cmd_protection" [drivers/net/wireless/iwlwifi/iwl3945.ko] undefined!
-> > > ERROR: "iwl_legacy_mac_bss_info_changed" [drivers/net/wireless/iwlwifi/iwl3945.ko] undefined!
-> > > ERROR: "iwl_legacy_mac_reset_tsf" [drivers/net/wireless/iwlwifi/iwl3945.ko] undefined!
-> > > 
-> > > 
-> > > So John can revert my patch and then let the iwlwifi maintainers fix this problem,
-> > > please.
-> > > 
-> > 
-> > "iwlagn: fix non-5000+ build" send by Johannes should have this problem
-> > addressed.
-> 
-> 
-> Can we get this patch into linux-next, please?
-> linux-next of 2010.1118 is still having these build errors.
-> 
+Hi, 
 
-Could you help?
+I'm having difficulty connecting to a WPA2 enterprise network. The
+system is fine connecting to standard WPA and open networks, but refuses
+to connect to my school's WPA2 network. 
+We tried with another machine using different wireless chipset and that
+works fine. 
+When connecting my syslog fills with the following messages:
 
-Thanks
-Wey
+Oct  4 08:14:40 debian-eeepc kernel: [  265.678837] wlan0: direct probe
+to AP c4:7d:4f:8a:3b:40 (try 1)
+Oct  4 08:14:40 debian-eeepc kernel: [  265.876159] wlan0: direct probe
+to AP c4:7d:4f:8a:3b:40 (try 2)
+Oct  4 08:14:40 debian-eeepc kernel: [  265.882235] wlan0: direct probe
+responded
+Oct  4 08:14:40 debian-eeepc kernel: [  265.882249] wlan0: authenticate
+with AP c4:7d:4f:8a:3b:40 (try 1)
+Oct  4 08:14:40 debian-eeepc kernel: [  265.884259] wlan0: authenticated
+Oct  4 08:14:40 debian-eeepc kernel: [  265.884326] wlan0: associate
+with AP c4:7d:4f:8a:3b:40 (try 1)
+Oct  4 08:14:40 debian-eeepc kernel: [  265.886698] wlan0: RX AssocResp
+from c4:7d:4f:8a:3b:40 (capab=0x431 status=13 aid=0)
+Oct  4 08:14:40 debian-eeepc kernel: [  265.886709] wlan0: AP denied
+association (code=13)
+Oct  4 08:14:40 debian-eeepc kernel: [  265.886748] wlan0:
+deauthenticating from c4:7d:4f:8a:3b:40 by local choice (reason=3)
 
+Regarding the wireless network device inside my netbook, here is output
+of lspci:
+01:00.0 Network controller: Atheros Communications Inc. AR9285 Wireless
+Network Adapter (PCI-Express) (rev 01)
+
+When I google Atheros Ar9285 with WPA2 I learn that there are problems
+with this device. I came across the following link:
+http://ubuntuforums.org/showthread.php?t=1244686
+
+I should also say that I tested this machine with a live version of
+ubuntu off the cd, with kernel 2.6.35 and experienced exactly the same
+problems. I'm using wpasupplicant to connect, as well as tried with the
+gui on ubuntu. No luck with any. 
+
+I'm running debian Testing (Squeeze), and kernel version:
+Linux debian-eeepc 2.6.32-5-686 #1 SMP Sat Oct 30 22:47:19 UTC 2010 i686
+GNU/Linux
+
+I believe a possible solution is to use backports as suggested by the
+page I pasted I believe. Is this the best solution? If so how can I
+apply it to a debian system? 
+Does it look like there is a problem with the atheros drivers for this
+device...?
+
+Finally, if required below my name is my Wpa_supplicant configuration
+along with my /etc/network/interfaces file.
+
+If anyone can assist me with this issue I'd greatly appreciate it!
+
+Cheers, 
+Dan
+
+# /etc/network/interfaces:
+# This file describes the network interfaces available on your system
+# and how to activate them. For more information, see interfaces(5).
+
+# The loopback network interface
+auto lo
+iface lo inet loopback
+# eth0
+allow-hotplug eth0
+iface eth0 inet dhcp
+#  address 192.168.2.2
+#  netmask 255.255.255.0
+#  network 192.168.2.1
+#  broadcast 192.168.2.255
+#  gateway 192.168.2.1
+#  dns-search lan
+#  dns-nameservers 203.0.178.191
+
+  post-up /sbin/fw-start.sh # firewall 
+
+allow-hotplug wlan0
+iface wlan0 inet manual
+        wpa-driver wext
+       wpa-roam /etc/wpa_supplicant/wpa_supplicant.conf
+#  post-up /sbin/fw-start.sh
+# no id_str, 'default' is used as the fallback mapping target
+iface default inet dhcp
+iface school inet dhcp
+
+# id_str="home"
+iface home inet static
+  address 192.168.2.11
+  netmask 255.255.255.0
+  network 192.168.2.1
+  broadcast 192.168.2.255
+  gateway 192.168.2.1
+  dns-search lan
+  dns-nameservers 203.0.178.191
+ 
+# /etc/wpa_supplicant/wpa_supplicant.conf 
+
+ctrl_interface=/var/run/wpa_supplicant
+ctrl_interface_group=root
+
+# Default behaviour is to associate with any open access point, further
+# networks can be configured with wpa_cli/wpa_gui.
+#
+ fast_reauth=1
+network={
+        key_mgmt=NONE
+}
+
+# This is the network I'm having trouble connecting to
+ network={
+      ssid="ssid_of_school_network"
+      key_mgmt=IEEE8021X
+      eap=TLS
+      identity="eepc" #(name of the certificate/zipfile)
+ client_cert="/home/daniel/network/certs/usercert.pem"
+      ca_cert="/home/daniel/network/certs/root.pem"
+      private_key="/home/daniel/network/certs/userkey.pem"
+      private_key_passwd="psk"
+      eapol_flags=3
+#       id_str="school"
+ }
+
+# Wep
+ #network={
+#       ssid="Example WEP Network"
+#       key_mgmt=NONE
+#       wep_key0=6162636465
+#       wep_tx_keyidx=0
+#       id_str="johns_house"
+#}
+
+# the following works fine
+network={
+       ssid="home_ssid"
+       psk="PSK_for_home_network"
+       id_str="home"
+}
+ 
