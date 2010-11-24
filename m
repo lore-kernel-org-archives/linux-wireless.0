@@ -1,86 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from slowhand.arndnet.de ([88.198.19.76]:54585 "EHLO mail.unitix.de"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1754329Ab0KKRsv (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 11 Nov 2010 12:48:51 -0500
-Message-ID: <4CDC2C80.6030807@arndnet.de>
-Date: Thu, 11 Nov 2010 18:48:48 +0100
-From: Arnd Hannemann <arnd@arndnet.de>
-MIME-Version: 1.0
-To: Larry Finger <Larry.Finger@lwfinger.net>
-CC: John W Linville <linville@tuxdriver.com>,
-	b43-dev@lists.infradead.org, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] b43legacy: Fix compile on ARM architecture
-References: <4cdc2b80.RuMMb1PuVmklU3JJ%Larry.Finger@lwfinger.net>
-In-Reply-To: <4cdc2b80.RuMMb1PuVmklU3JJ%Larry.Finger@lwfinger.net>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from he.sipsolutions.net ([78.46.109.217]:57409 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750744Ab0KXHVc (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 24 Nov 2010 02:21:32 -0500
+Subject: Re: [PATCH 1/2] cfg80211: Add new BSS attribute ht_opmode
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Helmut Schaa <helmut.schaa@googlemail.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, Jouni Malinen <j@w1.fi>
+In-Reply-To: <1290166826-27063-1-git-send-email-helmut.schaa@googlemail.com>
+References: <1290166826-27063-1-git-send-email-helmut.schaa@googlemail.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Wed, 24 Nov 2010 08:21:29 +0100
+Message-ID: <1290583289.3790.4.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Am 11.11.2010 18:44, schrieb Larry Finger:
-> From: Arnd Hannemann <arnd@arndnet.de>
+On Fri, 2010-11-19 at 12:40 +0100, Helmut Schaa wrote:
+> Add a new BSS attribute to allow hostapd to set the current HT opmode.
+> Otherwise drivers won't be able to set up protection for HT rates in
+> AP mode.
 > 
-> When b43legacy is compiled on the arm platform, the following errors are seen:
-> 
->   CC [M]  drivers/net/wireless/b43legacy/xmit.o
-> In file included from include/net/dst.h:11,
-> from drivers/net/wireless/b43legacy/xmit.c:31:
-> include/net/dst_ops.h:28: error: expected ':', ',', ';', '}' or '__attribute__'
->    before '____cacheline_aligned_in_smp'
-> include/net/dst_ops.h: In function 'dst_entries_get_fast':
-> include/net/dst_ops.h:33: error: 'struct dst_ops' has no member named
->    'pcpuc_entries'
-> include/net/dst_ops.h: In function 'dst_entries_get_slow':
-> include/net/dst_ops.h:41: error: 'struct dst_ops' has no member named
->    'pcpuc_entries'
-> include/net/dst_ops.h: In function 'dst_entries_add':
-> include/net/dst_ops.h:49: error: 'struct dst_ops' has no member named
->    'pcpuc_entries'
-> include/net/dst_ops.h: In function 'dst_entries_init':
-> include/net/dst_ops.h:55: error: 'struct dst_ops' has no member named
->    'pcpuc_entries'
-> include/net/dst_ops.h: In function 'dst_entries_destroy':
-> include/net/dst_ops.h:60: error: 'struct dst_ops' has no member named
->    'pcpuc_entries'
-> make[4]: *** [drivers/net/wireless/b43legacy/xmit.o] Error 1
-> make[3]: *** [drivers/net/wireless/b43legacy] Error 2
-> make[2]: *** [drivers/net/wireless] Error 2
-> make[1]: *** [drivers/net] Error 2
-> make: *** [drivers] Error 2
-> 
-> The cause is a missing include of <linux/cache.h>, which is present for
-> i386 and x86_64 architectures, but not for arm.
-> 
-> Signed-off-by: Arnd Hannemann <arnd@arndnet.de>
-> Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-> Cc: Stable <stable@kernel.org>
+> Cc: Johannes Berg <johannes@sipsolutions.net>
+> Signed-off-by: Helmut Schaa <helmut.schaa@googlemail.com>
 > ---
 > 
-> John,
+> Not sure if we also want to pass in some other parts of the HT Operation
+> IE or maybe the whole IE?
 > 
-> Once I get the ability to cross-compile ARM architecture, I will check to
-> see if the equivalent patch is needed for b43.
+> At the moment the HT opmode is sufficient but in the future we might
+> want to support STBC beaconing and so on. Passing the whole IE would
+> not require any new interfaces later but also makes the interface less
+> nice IMO :)
+> 
+> I'll send a patch for hostapd as soon as the interface is agreed on.
 
-b43 compiles fine for me for the same target.
+This seems fine to me. Any opinion from Jouni?
 
-Thanks,
-Arnd
+johannes
 
-> 
-> Larry
-> ---
-> 
-> Index: linux-2.6/include/net/dst_ops.h
-> ===================================================================
-> --- linux-2.6.orig/include/net/dst_ops.h
-> +++ linux-2.6/include/net/dst_ops.h
-> @@ -2,6 +2,7 @@
->  #define _NET_DST_OPS_H
->  #include <linux/types.h>
->  #include <linux/percpu_counter.h>
-> +#include <linux/cache.h>
->  
->  struct dst_entry;
->  struct kmem_cachep;
-> 
 
