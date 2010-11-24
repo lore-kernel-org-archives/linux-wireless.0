@@ -1,325 +1,120 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:48839 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752441Ab0KPAWd (ORCPT
+Received: from mail-wy0-f174.google.com ([74.125.82.174]:55080 "EHLO
+	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753281Ab0KXUda (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 15 Nov 2010 19:22:33 -0500
-Message-ID: <4CE1CEC6.2050103@candelatech.com>
-Date: Mon, 15 Nov 2010 16:22:30 -0800
-From: Ben Greear <greearb@candelatech.com>
-MIME-Version: 1.0
-To: hostap@lists.shmoo.com,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: RFC/PATCH:  Allow wpa_supplicant to share scan results.
-Content-Type: multipart/mixed;
- boundary="------------030608030703070201060902"
+	Wed, 24 Nov 2010 15:33:30 -0500
+Received: by wyb28 with SMTP id 28so131322wyb.19
+        for <linux-wireless@vger.kernel.org>; Wed, 24 Nov 2010 12:33:29 -0800 (PST)
+From: David Kilroy <kilroyd@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: comes@naic.edu, David Kilroy <kilroyd@googlemail.com>
+Subject: [PATCH] orinoco: abort scan on interface down
+Date: Wed, 24 Nov 2010 20:33:02 +0000
+Message-Id: <1290630782-11095-1-git-send-email-kilroyd@googlemail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is a multi-part message in MIME format.
---------------030608030703070201060902
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+This fixes the problem causing the following trace:
 
+------------[ cut here ]------------
+WARNING: at linux-2.6.34/net/wireless/core.c:633 wdev_cleanup_work+0xb7/0xe0 [cfg80211]()
+Hardware name: Latitude C840
+Pid: 707, comm: cfg80211 Not tainted 2.6.34.7-0.5-desktop #1
+Call Trace:
+ [<c02065c3>] try_stack_unwind+0x173/0x190
+ [<c02051cf>] dump_trace+0x3f/0xe0
+ [<c020662b>] show_trace_log_lvl+0x4b/0x60
+ [<c0206658>] show_trace+0x18/0x20
+ [<c064e0b3>] dump_stack+0x6d/0x72
+ [<c02443ae>] warn_slowpath_common+0x6e/0xb0
+ [<c0244403>] warn_slowpath_null+0x13/0x20
+ [<e2db5497>] wdev_cleanup_work+0xb7/0xe0 [cfg80211]
+ [<c025cfa9>] run_workqueue+0x79/0x170
+ [<c025d123>] worker_thread+0x83/0xe0
+ [<c025fef4>] kthread+0x74/0x80
+ [<c0203826>] kernel_thread_helper+0x6/0x10
+---[ end trace 3f0348b3b0c6f4ff ]---
 
-The attached (and inline) patch allows wpa_supplicant to share scan results
-between all VIFS on the same radio (phy).  This patch is a bit rough, but
-it does appear to do what I was hoping for.
+Reported by: Giacomo Comes <comes@naic.edu>
+Signed-off-by: David Kilroy <kilroyd@googlemail.com>
+---
 
-Please let me know if this has any chance and upstream inclusion.
+This patch has only been compile tested. Given the trace, I've
+guessed that cfg80211 would prefer that orinoco abort the scan on
+interface down.
 
-I know I need to at least strip out some of the debug code, and make
-this optional via the global config file, but I was hoping early feedback
-might save more work later...
+---
+ drivers/net/wireless/orinoco/main.c |   12 +++++-------
+ drivers/net/wireless/orinoco/scan.c |    8 ++++++++
+ drivers/net/wireless/orinoco/scan.h |    1 +
+ 3 files changed, 14 insertions(+), 7 deletions(-)
 
-Thanks,
-Ben
-
-
-diff --git a/wpa_supplicant/events.c b/wpa_supplicant/events.c
-index 39ac33b..6c2617a 100644
---- a/wpa_supplicant/events.c
-+++ b/wpa_supplicant/events.c
-@@ -44,6 +44,11 @@
-  #include "mlme.h"
-  #include "scan.h"
-
-+#ifdef __linux__
-+#include <sys/types.h>
-+#include <sys/stat.h>
-+#include <fcntl.h>
-+#endif
-
-  static int wpa_supplicant_select_config(struct wpa_supplicant *wpa_s)
-  {
-@@ -810,8 +815,7 @@ static int wpa_supplicant_need_to_roam(struct wpa_supplicant *wpa_s,
-  	return 1;
-  }
-
--
--static void wpa_supplicant_event_scan_results(struct wpa_supplicant *wpa_s,
-+static void _wpa_supplicant_event_scan_results(struct wpa_supplicant *wpa_s,
-  					      union wpa_event_data *data)
-  {
-  	struct wpa_bss *selected;
-@@ -851,7 +855,7 @@ static void wpa_supplicant_event_scan_results(struct wpa_supplicant *wpa_s,
-  		return;
-  	}
-
--	wpa_printf(MSG_DEBUG, "New scan results available");
-+	wpa_printf(MSG_DEBUG, "%s: New scan results available", wpa_s->ifname);
-  	wpa_msg_ctrl(wpa_s, MSG_INFO, WPA_EVENT_SCAN_RESULTS);
-  	wpas_notify_scan_results(wpa_s);
-
-@@ -910,6 +914,85 @@ static void wpa_supplicant_event_scan_results(struct wpa_supplicant *wpa_s,
-  		}
-  	}
-  }
-+
-+static void wpa_supplicant_event_scan_results(struct wpa_supplicant *wpa_s,
-+					      union wpa_event_data *data)
-+{
-+	_wpa_supplicant_event_scan_results(wpa_s, data);
-+	
-+#ifdef __linux__
-+	{
-+		char buf[90];
-+		char phyname[30];
-+		char phyname2[30];
-+		int f;
-+		int rv;
-+		struct wpa_supplicant *ifs;
-+
-+		wpa_printf(MSG_DEBUG, "%s: Checking for peer VIFS in event_scan_results.\n",
-+			   wpa_s->ifname);
-+
-+		snprintf(buf, sizeof(buf) - 1, "/sys/class/net/%s/phy80211/name", wpa_s->ifname);
-+		f = open(buf, O_RDONLY);
-+		if (f < 0) {
-+			wpa_printf(MSG_DEBUG, "Could not open file: %s, error: %s",
-+				   buf, strerror(errno));
-+			return;
-+		}
-+
-+		rv = read(f, phyname, sizeof(phyname) - 1);
-+		close(f);
-+		if (rv < 0) {
-+			wpa_printf(MSG_DEBUG, "Could not read file: %s  error: %s",
-+				   buf, strerror(errno));
-+			return;
-+		}
-+		phyname[rv] = 0;
-+		wpa_printf(MSG_DEBUG, "%s: Found phy name: %s", wpa_s->ifname, phyname);
-+
-+		/* Ok, we know our phy...now check other interfaces to see if they have the
-+		 * same phy.  If so, they get updated with this same scan info.
-+		 */
-+		ifs = wpa_s->global->ifaces;
-+		while (ifs) {
-+			if (ifs == wpa_s)
-+				ifs = ifs->next;
-+			else {
-+				snprintf(buf, sizeof(buf) - 1, "/sys/class/net/%s/phy80211/name",
-+					 ifs->ifname);
-+				wpa_printf(MSG_DEBUG, "Opening: %s", buf);
-+				f = open(buf, O_RDONLY);
-+				if (f < 0) {
-+					wpa_printf(MSG_DEBUG, "Could not open file: %s, error: %s",
-+						   buf, strerror(errno));
-+					ifs = ifs->next;
-+					continue;
-+				}
-+
-+				rv = read(f, phyname2, sizeof(phyname2) - 1);
-+				close(f);
-+				if (rv < 0) {
-+					wpa_printf(MSG_DEBUG, "Could not read file: %s  error: %s",
-+						   buf, strerror(errno));
-+					ifs = ifs->next;
-+					continue;
-+				}
-+				phyname2[rv] = 0;
-+				wpa_printf(MSG_DEBUG, "%s: Found phy name: %s",
-+					   ifs->ifname, phyname2);
-+				if (strcmp(phyname2, phyname) == 0) {
-+					wpa_printf(MSG_DEBUG, "%s: Updating scan results from peer.",
-+						   ifs->ifname);
-+					/* Got a winner! */
-+					_wpa_supplicant_event_scan_results(ifs, data);
-+				}
-+				ifs = ifs->next;
-+			}
-+		}
-+	}
-+#endif
-+}
-+
-  #endif /* CONFIG_NO_SCAN_PROCESSING */
-
-
-diff --git a/wpa_supplicant/wpa_supplicant.c b/wpa_supplicant/wpa_supplicant.c
-index 0a603af..64f0ef5 100644
---- a/wpa_supplicant/wpa_supplicant.c
-+++ b/wpa_supplicant/wpa_supplicant.c
-@@ -530,8 +530,8 @@ void wpa_supplicant_set_state(struct wpa_supplicant *wpa_s,
-  {
-  	enum wpa_states old_state = wpa_s->wpa_state;
-
--	wpa_printf(MSG_DEBUG, "State: %s -> %s",
--		   wpa_supplicant_state_txt(wpa_s->wpa_state),
-+	wpa_printf(MSG_DEBUG, "%s: State: %s -> %s",
-+		   wpa_s->ifname, wpa_supplicant_state_txt(wpa_s->wpa_state),
-  		   wpa_supplicant_state_txt(state));
-
-  	if (state != WPA_SCANNING)
-
--- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
-
-
---------------030608030703070201060902
-Content-Type: text/plain;
- name="supplicant_share_scan_results.patch"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: attachment;
- filename="supplicant_share_scan_results.patch"
-
-diff --git a/wpa_supplicant/events.c b/wpa_supplicant/events.c
-index 39ac33b..6c2617a 100644
---- a/wpa_supplicant/events.c
-+++ b/wpa_supplicant/events.c
-@@ -44,6 +44,11 @@
- #include "mlme.h"
- #include "scan.h"
+diff --git a/drivers/net/wireless/orinoco/main.c b/drivers/net/wireless/orinoco/main.c
+index e8e2d0f..fa0cf74 100644
+--- a/drivers/net/wireless/orinoco/main.c
++++ b/drivers/net/wireless/orinoco/main.c
+@@ -1392,10 +1392,9 @@ static void orinoco_process_scan_results(struct work_struct *work)
+ 				orinoco_add_hostscan_results(priv, buf, len);
  
-+#ifdef __linux__
-+#include <sys/types.h>
-+#include <sys/stat.h>
-+#include <fcntl.h>
-+#endif
- 
- static int wpa_supplicant_select_config(struct wpa_supplicant *wpa_s)
- {
-@@ -810,8 +815,7 @@ static int wpa_supplicant_need_to_roam(struct wpa_supplicant *wpa_s,
- 	return 1;
- }
- 
--
--static void wpa_supplicant_event_scan_results(struct wpa_supplicant *wpa_s,
-+static void _wpa_supplicant_event_scan_results(struct wpa_supplicant *wpa_s,
- 					      union wpa_event_data *data)
- {
- 	struct wpa_bss *selected;
-@@ -851,7 +855,7 @@ static void wpa_supplicant_event_scan_results(struct wpa_supplicant *wpa_s,
- 		return;
- 	}
- 
--	wpa_printf(MSG_DEBUG, "New scan results available");
-+	wpa_printf(MSG_DEBUG, "%s: New scan results available", wpa_s->ifname);
- 	wpa_msg_ctrl(wpa_s, MSG_INFO, WPA_EVENT_SCAN_RESULTS);
- 	wpas_notify_scan_results(wpa_s);
- 
-@@ -910,6 +914,85 @@ static void wpa_supplicant_event_scan_results(struct wpa_supplicant *wpa_s,
+ 			kfree(buf);
+-		} else if (priv->scan_request) {
++		} else {
+ 			/* Either abort or complete the scan */
+-			cfg80211_scan_done(priv->scan_request, (len < 0));
+-			priv->scan_request = NULL;
++			orinoco_scan_done(priv, (len < 0));
  		}
+ 
+ 		spin_lock_irqsave(&priv->scan_lock, flags);
+@@ -1684,6 +1683,8 @@ static int __orinoco_down(struct orinoco_private *priv)
+ 		hermes_write_regn(hw, EVACK, 0xffff);
+ 	}
+ 
++	orinoco_scan_done(priv, true);
++
+ 	/* firmware will have to reassociate */
+ 	netif_carrier_off(dev);
+ 	priv->last_linkstatus = 0xffff;
+@@ -1762,10 +1763,7 @@ void orinoco_reset(struct work_struct *work)
+ 	orinoco_unlock(priv, &flags);
+ 
+ 	/* Scanning support: Notify scan cancellation */
+-	if (priv->scan_request) {
+-		cfg80211_scan_done(priv->scan_request, 1);
+-		priv->scan_request = NULL;
+-	}
++	orinoco_scan_done(priv, true);
+ 
+ 	if (priv->hard_reset) {
+ 		err = (*priv->hard_reset)(priv);
+diff --git a/drivers/net/wireless/orinoco/scan.c b/drivers/net/wireless/orinoco/scan.c
+index 4300d9d..86cb54c 100644
+--- a/drivers/net/wireless/orinoco/scan.c
++++ b/drivers/net/wireless/orinoco/scan.c
+@@ -229,3 +229,11 @@ void orinoco_add_hostscan_results(struct orinoco_private *priv,
+ 		priv->scan_request = NULL;
  	}
  }
 +
-+static void wpa_supplicant_event_scan_results(struct wpa_supplicant *wpa_s,
-+					      union wpa_event_data *data)
++void orinoco_scan_done(struct orinoco_private *priv, bool abort)
 +{
-+	_wpa_supplicant_event_scan_results(wpa_s, data);
-+	
-+#ifdef __linux__
-+	{
-+		char buf[90];
-+		char phyname[30];
-+		char phyname2[30];
-+		int f;
-+		int rv;
-+		struct wpa_supplicant *ifs;
-+
-+		wpa_printf(MSG_DEBUG, "%s: Checking for peer VIFS in event_scan_results.\n",
-+			   wpa_s->ifname);
-+
-+		snprintf(buf, sizeof(buf) - 1, "/sys/class/net/%s/phy80211/name", wpa_s->ifname);
-+		f = open(buf, O_RDONLY);
-+		if (f < 0) {
-+			wpa_printf(MSG_DEBUG, "Could not open file: %s, error: %s",
-+				   buf, strerror(errno));
-+			return;
-+		}
-+
-+		rv = read(f, phyname, sizeof(phyname) - 1);
-+		close(f);
-+		if (rv < 0) {
-+			wpa_printf(MSG_DEBUG, "Could not read file: %s  error: %s",
-+				   buf, strerror(errno));
-+			return;
-+		}
-+		phyname[rv] = 0;
-+		wpa_printf(MSG_DEBUG, "%s: Found phy name: %s", wpa_s->ifname, phyname);
-+
-+		/* Ok, we know our phy...now check other interfaces to see if they have the
-+		 * same phy.  If so, they get updated with this same scan info.
-+		 */
-+		ifs = wpa_s->global->ifaces;
-+		while (ifs) {
-+			if (ifs == wpa_s)
-+				ifs = ifs->next;
-+			else {
-+				snprintf(buf, sizeof(buf) - 1, "/sys/class/net/%s/phy80211/name",
-+					 ifs->ifname);
-+				wpa_printf(MSG_DEBUG, "Opening: %s", buf);
-+				f = open(buf, O_RDONLY);
-+				if (f < 0) {
-+					wpa_printf(MSG_DEBUG, "Could not open file: %s, error: %s",
-+						   buf, strerror(errno));
-+					ifs = ifs->next;
-+					continue;
-+				}
-+
-+				rv = read(f, phyname2, sizeof(phyname2) - 1);
-+				close(f);
-+				if (rv < 0) {
-+					wpa_printf(MSG_DEBUG, "Could not read file: %s  error: %s",
-+						   buf, strerror(errno));
-+					ifs = ifs->next;
-+					continue;
-+				}
-+				phyname2[rv] = 0;
-+				wpa_printf(MSG_DEBUG, "%s: Found phy name: %s",
-+					   ifs->ifname, phyname2);
-+				if (strcmp(phyname2, phyname) == 0) {
-+					wpa_printf(MSG_DEBUG, "%s: Updating scan results from peer.",
-+						   ifs->ifname);
-+					/* Got a winner! */
-+					_wpa_supplicant_event_scan_results(ifs, data);
-+				}
-+				ifs = ifs->next;
-+			}
-+		}
++	if (priv->scan_request) {
++		cfg80211_scan_done(priv->scan_request, abort);
++		priv->scan_request = NULL;
 +	}
-+#endif
 +}
-+
- #endif /* CONFIG_NO_SCAN_PROCESSING */
+diff --git a/drivers/net/wireless/orinoco/scan.h b/drivers/net/wireless/orinoco/scan.h
+index 2dc4e04..27281fb 100644
+--- a/drivers/net/wireless/orinoco/scan.h
++++ b/drivers/net/wireless/orinoco/scan.h
+@@ -16,5 +16,6 @@ void orinoco_add_extscan_result(struct orinoco_private *priv,
+ void orinoco_add_hostscan_results(struct orinoco_private *dev,
+ 				  unsigned char *buf,
+ 				  size_t len);
++void orinoco_scan_done(struct orinoco_private *priv, bool abort);
  
- 
-diff --git a/wpa_supplicant/wpa_supplicant.c b/wpa_supplicant/wpa_supplicant.c
-index 0a603af..64f0ef5 100644
---- a/wpa_supplicant/wpa_supplicant.c
-+++ b/wpa_supplicant/wpa_supplicant.c
-@@ -530,8 +530,8 @@ void wpa_supplicant_set_state(struct wpa_supplicant *wpa_s,
- {
- 	enum wpa_states old_state = wpa_s->wpa_state;
- 
--	wpa_printf(MSG_DEBUG, "State: %s -> %s",
--		   wpa_supplicant_state_txt(wpa_s->wpa_state),
-+	wpa_printf(MSG_DEBUG, "%s: State: %s -> %s",
-+		   wpa_s->ifname, wpa_supplicant_state_txt(wpa_s->wpa_state),
- 		   wpa_supplicant_state_txt(state));
- 
- 	if (state != WPA_SCANNING)
+ #endif /* _ORINOCO_SCAN_H_ */
+-- 
+1.7.2.2
 
---------------030608030703070201060902--
