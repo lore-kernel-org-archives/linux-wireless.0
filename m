@@ -1,46 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ogre.sisk.pl ([217.79.144.158]:38121 "EHLO ogre.sisk.pl"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754797Ab0KSU23 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 19 Nov 2010 15:28:29 -0500
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
-To: Jesse Gross <jesse@nicira.com>
-Subject: Re: 2.6.37-rc2-git4: Reported regressions 2.6.35 -> 2.6.36
-Date: Fri, 19 Nov 2010 21:27:30 +0100
-Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	Maciej Rutecki <maciej.rutecki@gmail.com>,
-	Florian Mickler <florian@mickler.org>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	Kernel Testers List <kernel-testers@vger.kernel.org>,
-	Network Development <netdev@vger.kernel.org>,
-	Linux ACPI <linux-acpi@vger.kernel.org>,
-	Linux PM List <linux-pm@lists.linux-foundation.org>,
-	Linux SCSI List <linux-scsi@vger.kernel.org>,
-	Linux Wireless List <linux-wireless@vger.kernel.org>,
-	DRI <dri-devel@lists.freedesktop.org>
-References: <tTUH_XeInOH.A.dMF.c3b5MB@chimera> <AANLkTinzHyWcfS++R_d+yqR9JQu7W51h0XRr-ikd_6y1@mail.gmail.com>
-In-Reply-To: <AANLkTinzHyWcfS++R_d+yqR9JQu7W51h0XRr-ikd_6y1@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Message-Id: <201011192127.30556.rjw@sisk.pl>
+Received: from he.sipsolutions.net ([78.46.109.217]:49476 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752724Ab0KXJva (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 24 Nov 2010 04:51:30 -0500
+Subject: Re: [PATCH] wl1271: use debugfs_remove_recursive
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Eliad Peller <eliad@wizery.com>
+Cc: Luciano Coelho <luciano.coelho@nokia.com>,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <1290592192.3790.11.camel@jlt3.sipsolutions.net>
+References: <1290591333-30453-1-git-send-email-eliad@wizery.com>
+	 <1290592192.3790.11.camel@jlt3.sipsolutions.net>
+Content-Type: text/plain; charset="UTF-8"
+Date: Wed, 24 Nov 2010 10:51:28 +0100
+Message-ID: <1290592288.3790.12.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Friday, November 19, 2010, Jesse Gross wrote:
-> On Thu, Nov 18, 2010 at 3:50 PM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
-> > Bug-Entry       : http://bugzilla.kernel.org/show_bug.cgi?id=20462
-> > Subject         : 2.6.36-rc7-git2 - panic/GPF: e1000e/vlans?
-> > Submitter       : Nikola Ciprich <extmaillist@linuxbox.cz>
-> > Date            : 2010-10-15 7:10 (35 days old)
-> > Message-ID      : <20101015071008.GA8714@pcnci.linuxbox.cz>
-> > References      : http://marc.info/?l=linux-kernel&m=128712984831303&w=2
+On Wed, 2010-11-24 at 10:49 +0100, Johannes Berg wrote:
+> On Wed, 2010-11-24 at 11:35 +0200, Eliad Peller wrote:
 > 
-> A fix for this has been sent to -stable:
-> http://www.spinics.net/lists/netdev/msg146227.html
+> > @@ -524,23 +423,14 @@ int wl1271_debugfs_init(struct wl1271 *wl)
+> >  {
+> >  	int ret;
+> >  
+> > -	wl->debugfs.rootdir = debugfs_create_dir(KBUILD_MODNAME, NULL);
+> > +	wl->rootdir = debugfs_create_dir(KBUILD_MODNAME, NULL);
+> >  
+> > -	if (IS_ERR(wl->debugfs.rootdir)) {
+> > -		ret = PTR_ERR(wl->debugfs.rootdir);
+> > -		wl->debugfs.rootdir = NULL;
+> > +	if (IS_ERR(wl->rootdir)) {
+> > +		ret = PTR_ERR(wl->rootdir);
+> > +		wl->rootdir = NULL;
+> >  		goto err;
+> >  	}
+> 
+> This looks problematic if you ever have more than one device ... I
+> suggest moving to using the wiphy's debugfs dir as the parent for the
+> rootdir.
 
-OK, status updated.
+But of course, that comment is entirely unrelated to _this_ patch.
 
-Thanks,
-Rafael
+johannes
+
