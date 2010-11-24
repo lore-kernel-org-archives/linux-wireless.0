@@ -1,76 +1,94 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.19.149.2]:36875 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752479Ab0KZOKQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 26 Nov 2010 09:10:16 -0500
-Received: from mail.atheros.com ([10.10.20.105])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Fri, 26 Nov 2010 06:10:02 -0800
-From: Vasanthakumar Thiagarajan <vasanth@atheros.com>
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>
-Subject: [PATCH 2/2] ath9k: Remove code which enables btcoex based on subsys id
-Date: Fri, 26 Nov 2010 06:10:07 -0800
-Message-ID: <1290780607-2582-2-git-send-email-vasanth@atheros.com>
-In-Reply-To: <1290780607-2582-1-git-send-email-vasanth@atheros.com>
-References: <1290780607-2582-1-git-send-email-vasanth@atheros.com>
+Received: from mail-iw0-f174.google.com ([209.85.214.174]:59334 "EHLO
+	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750707Ab0KXF0X convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 24 Nov 2010 00:26:23 -0500
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <1290575460.18917.3.camel@dcbw.foobar.com>
+References: <AANLkTim0=ds3EhQOEfHdrKt2dSnEqUgf5CLOPHNyW=jE@mail.gmail.com>
+ <1290569516.3074.41.camel@dcbw.foobar.com> <AANLkTi=ioGgpAQ-rx_abCHcOmOezXwJFfbKWc7=tGAJ5@mail.gmail.com>
+ <1290571986.3074.64.camel@dcbw.foobar.com> <AANLkTi=0ocvsR185Qib3VoT43ziTUa_3oRDnmU65pYjv@mail.gmail.com>
+ <1290575460.18917.3.camel@dcbw.foobar.com>
+From: Julian Calaby <julian.calaby@gmail.com>
+Date: Wed, 24 Nov 2010 16:26:02 +1100
+Message-ID: <AANLkTiks65oAvVEu0Df4yeHNJm=cVnSfFeo=enxt-gpn@mail.gmail.com>
+Subject: Re: Re-distributable 88w8335 Firmware?
+To: Dan Williams <dcbw@redhat.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	David.Woodhouse@intel.com, Greg KH <greg@kroah.com>,
+	linux-kernel@vger.kernel.org,
+	Lennert Buytenhek <buytenh@wantstofly.org>,
+	Holger Schurig <holgerschurig@googlemail.com>,
+	Markus Becker <mab@comnets.uni-bremen.de>,
+	andreamrl@tiscali.it, Denis Kirjanov <kirjanov@gmail.com>,
+	dwmw2@infradead.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Vasanthakumar Thiagarajan <vasanth@atheros.com>
----
- drivers/net/wireless/ath/ath9k/btcoex.c |   23 -----------------------
- drivers/net/wireless/ath/ath9k/btcoex.h |    1 -
- 2 files changed, 0 insertions(+), 24 deletions(-)
+On Wed, Nov 24, 2010 at 16:10, Dan Williams <dcbw@redhat.com> wrote:
+> On Wed, 2010-11-24 at 15:48 +1100, Julian Calaby wrote:
+>> On Wed, Nov 24, 2010 at 15:13, Dan Williams <dcbw@redhat.com> wrote:
+>> > Malo supports the PCMCIA/CF variant of the 8385; not a PCI variant
+>> > AFAICT.  I know of no PCI variant for the 8385, just CF, SDIO, and GSPI.
+>> > But I find it curious that malo supports 8335+8385, given that the
+>> > firmware interface of the 8385 and the 8335 are so different.  Unless
+>> > they have special firmware, the 8385 is a fullmac device, while the 8335
+>> > is a softmac device.  Enough differences exist that I'd expect them to
+>> > be driven by separate drivers, otherwise the code would be quite ugly.
+>> > Which is why we didn't try to shoehorn the 8335 or TopDog stuff into
+>> > libertas.
+>>
+>> You clearly know a hell of a lot more about the ins and outs of Marvel
+>> chipsets that I do. =)
+>
+> Eh, *some* of the chipsets :)  Others (Lennert) know a lot more about
+> later versions than I do.  But I never know everything or even enough of
+> anything :)
 
-diff --git a/drivers/net/wireless/ath/ath9k/btcoex.c b/drivers/net/wireless/ath/ath9k/btcoex.c
-index 6a92e57..d33bf20 100644
---- a/drivers/net/wireless/ath/ath9k/btcoex.c
-+++ b/drivers/net/wireless/ath/ath9k/btcoex.c
-@@ -35,29 +35,6 @@ struct ath_btcoex_config {
- 	bool bt_hold_rx_clear;
- };
- 
--static const u16 ath_subsysid_tbl[] = {
--	AR9280_COEX2WIRE_SUBSYSID,
--	AT9285_COEX3WIRE_SA_SUBSYSID,
--	AT9285_COEX3WIRE_DA_SUBSYSID
--};
--
--/*
-- * Checks the subsystem id of the device to see if it
-- * supports btcoex
-- */
--bool ath9k_hw_btcoex_supported(struct ath_hw *ah)
--{
--	int i;
--
--	if (!ah->hw_version.subsysid)
--		return false;
--
--	for (i = 0; i < ARRAY_SIZE(ath_subsysid_tbl); i++)
--		if (ah->hw_version.subsysid == ath_subsysid_tbl[i])
--			return true;
--
--	return false;
--}
- 
- void ath9k_hw_init_btcoex_hw(struct ath_hw *ah, int qnum)
- {
-diff --git a/drivers/net/wireless/ath/ath9k/btcoex.h b/drivers/net/wireless/ath/ath9k/btcoex.h
-index 1ee5a15..588dfd4 100644
---- a/drivers/net/wireless/ath/ath9k/btcoex.h
-+++ b/drivers/net/wireless/ath/ath9k/btcoex.h
-@@ -49,7 +49,6 @@ struct ath_btcoex_hw {
- 	u32 bt_coex_mode2; 	/* Register setting for AR_BT_COEX_MODE2 */
- };
- 
--bool ath9k_hw_btcoex_supported(struct ath_hw *ah);
- void ath9k_hw_btcoex_init_2wire(struct ath_hw *ah);
- void ath9k_hw_btcoex_init_3wire(struct ath_hw *ah);
- void ath9k_hw_init_btcoex_hw(struct ath_hw *ah, int qnum);
+I know exactly how you feel. =)
+
+>> I stand corrected.
+>>
+>> So, to amend my previous request: We're after firmware for the softmac
+>> 88w8335 chipset *only*.
+>>
+>> Though it may be nicer if Marvell were to bless Malo's firmware
+>> package (linked above) as this contains firmware for the PCI 88w8335,
+>> USB 88w8338 and a file which claims to be for the PCMCIA/CF 88w8385.
+>
+> Yeah, though honestly I'd rather have the duplex firmware from MSSII for
+> the 8335, since it can do AP mode too.  That does leave the 8338 (USB?)
+
+Me too - and it'd mean that we don't have to do AP-mode firmware
+loading tricks like in mw8k. But if we can't get that then some
+firmware is better than none.
+
+> of course but we can probably get clarification on that too.  As with
+> the 8335, I only have access to a 8335 Windows driver, but if we had a
+> firmware extractor tool, I believe the Marvell Extranet firmware license
+> covers embedded firmware from Windows .sys files too.
+
+I think I may have a simple firmware extractor at home that I pulled
+from *somewhere* when I was working on this last time. We can see if
+it does anything with those files. I believe I have at least two
+different Windows drivers at home - IIRC, one of them is *just* the
+files needed for this extractor.
+
+> And I think I might actually have a usb8338 too somewhere...
+
+Nice!
+
+Out of curiosity, what brand and model number is it? I might see if I
+can obtain one for testing / development or whatever. (Not that I
+really have time to write a driver, but I can test at the very least)
+
+Thanks,
+
 -- 
-1.7.0.4
+Julian Calaby
 
+Email: julian.calaby@gmail.com
+Profile: http://www.google.com/profiles/julian.calaby/
+.Plan: http://sites.google.com/site/juliancalaby/
