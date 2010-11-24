@@ -1,230 +1,163 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([88.198.39.176]:56239 "EHLO ds10.nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753795Ab0KCLxf (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 3 Nov 2010 07:53:35 -0400
-Message-ID: <4CD14D39.5020401@openwrt.org>
-Date: Wed, 03 Nov 2010 12:53:29 +0100
-From: Felix Fietkau <nbd@openwrt.org>
+Received: from mail-fx0-f46.google.com ([209.85.161.46]:64677 "EHLO
+	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754587Ab0KXTGN convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 24 Nov 2010 14:06:13 -0500
+Received: by fxm13 with SMTP id 13so67845fxm.19
+        for <linux-wireless@vger.kernel.org>; Wed, 24 Nov 2010 11:06:12 -0800 (PST)
 MIME-Version: 1.0
-To: =?ISO-8859-1?Q?Bj=F6rn_Smedman?= <bjorn.smedman@venatech.se>
-CC: ath9k-devel@lists.ath9k.org,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: [ath9k-devel] [RFC] ath9k: fix tx queue selection
-References: <alpine.DEB.2.00.1011021655080.23045@vtdt3>	<4CD046D2.4080703@openwrt.org>	<4CD04C61.4070007@openwrt.org>	<AANLkTikUUue=Nt0iFPcQC68kDCh=EeEpeBT9xnhW6bf+@mail.gmail.com>	<4CD05E49.70701@openwrt.org>	<AANLkTinBSeUSGR_9P-e5ZgKSeLfp36JfUbJOk73hpnQ2@mail.gmail.com>	<4CD08C86.9030202@openwrt.org> <AANLkTi=zzGv7Vagb18Rpby=Xo_+g2yuVoFvAejU1KEud@mail.gmail.com>
-In-Reply-To: <AANLkTi=zzGv7Vagb18Rpby=Xo_+g2yuVoFvAejU1KEud@mail.gmail.com>
+In-Reply-To: <20101122024208.GA13377@monopoli.naic.edu>
+References: <20101122024208.GA13377@monopoli.naic.edu>
+Date: Wed, 24 Nov 2010 19:06:12 +0000
+Message-ID: <AANLkTikc9w+w8o=ZQBTnTD1=C0+yDVfq=jSfEFQ16dbm@mail.gmail.com>
+Subject: Re: orinoco_cs module and WPA not working
+From: Dave Kilroy <kilroyd@gmail.com>
+To: Giacomo Comes <comes@naic.edu>
+Cc: linux-wireless@vger.kernel.org
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2010-11-03 12:35 PM, Björn Smedman wrote:
-> This is one good looking patch. :) And I agree, looking at the header
-> qos is good to avoid.
-> 
-> But there is still the risk of queue selection mismatch as I see it...
-> See comments below.
-> 
-> /Björn
+On Mon, Nov 22, 2010 at 2:42 AM, Giacomo Comes <comes@naic.edu> wrote:
+> I'm having trouble with a wireless card using the orinoco driver.
+>
+> The card is (pccardctl ident output):
+>
+> Socket 2:
+>  product info: "Dell", "TrueMobile 1150 Series PC Card", "Version 01.01", ""
+>  manfid: 0x0156, 0x0002
+>  function: 6 (network)
 
->> -
->>  /* XXX: Remove me once we don't depend on ath9k_channel for all
->>  * this redundant data */
->>  void ath9k_update_ichannel(struct ath_softc *sc, struct ieee80211_hw *hw,
->> @@ -1244,7 +1193,6 @@ static int ath9k_tx(struct ieee80211_hw
->>        struct ath_tx_control txctl;
->>        int padpos, padsize;
->>        struct ieee80211_hdr *hdr = (struct ieee80211_hdr *) skb->data;
->> -       int qnum;
->>
->>        if (aphy->state != ATH_WIPHY_ACTIVE && aphy->state != ATH_WIPHY_SCAN) {
->>                ath_print(common, ATH_DBG_XMIT,
->> @@ -1317,8 +1265,7 @@ static int ath9k_tx(struct ieee80211_hw
->>                memmove(skb->data, skb->data + padsize, padpos);
->>        }
->>
->> -       qnum = ath_get_hal_qnum(skb_get_queue_mapping(skb), sc);
->> -       txctl.txq = &sc->tx.txq[qnum];
->> +       txctl.txq = sc->tx.txq_map[skb_get_queue_mapping(skb)];
-> 
-> Could we be indexing txq_map[] out of bounds here? I guess this
-> question is the fundamental one: can we be sure that
-> skb_get_queue_mapping(skb) will return an AC i.e. range 0-3? Not only
-> now but forever? Or do we need a comment in mac80211 saying driver
-> will crash if anything else is returned?
-mac80211 already makes the same assumption in several places. It should
-never be out of bounds unless something in the network stack is broken.
-And if there is a need for a defensive check for this, then ath9k is
-definitely not the right place for it.
+This is the same card I used to develop the WPA functionality in orinoco.
 
->> @@ -1756,8 +1744,9 @@ int ath_tx_start(struct ieee80211_hw *hw
->>                 * we will at least have to run TX completionon one buffer
->>                 * on the queue */
->>                spin_lock_bh(&txq->axq_lock);
->> -               if (!txq->stopped && txq->axq_depth > 1) {
->> -                       ath_mac80211_stop_queue(sc, skb_get_queue_mapping(skb));
->> +               if (txq == sc->tx.txq_map[q] && !txq->stopped &&
->> +                   txq->axq_depth > 1) {
->> +                       ath_mac80211_stop_queue(sc, q);
-> 
-> Again, possible index out of bounds, no? Also, what happens if txq !=
-> sc->tx.txq_map[q]? I guess that's less catastrophic but still;
-> meaningful code will not execute.
-I added that check primarily for the case where buffered frames go
-through the cabq.
+> I'm running suse 11.3 with kernel 2.6.34.7
 
->>                        txq->stopped = 1;
->>                }
->>                spin_unlock_bh(&txq->axq_lock);
->> @@ -1767,13 +1756,10 @@ int ath_tx_start(struct ieee80211_hw *hw
->>                return r;
->>        }
->>
->> -       q = skb_get_queue_mapping(skb);
->> -       if (q >= 4)
->> -               q = 0;
->> -
->>        spin_lock_bh(&txq->axq_lock);
->> -       if (++sc->tx.pending_frames[q] > ATH_MAX_QDEPTH && !txq->stopped) {
->> -               ath_mac80211_stop_queue(sc, skb_get_queue_mapping(skb));
->> +       if (txq == sc->tx.txq_map[q] &&
->> +           ++txq->pending_frames > ATH_MAX_QDEPTH && !txq->stopped) {
->> +               ath_mac80211_stop_queue(sc, q);
-> 
-> Same as above.
-> 
->>                txq->stopped = 1;
->>        }
->>        spin_unlock_bh(&txq->axq_lock);
->> @@ -1887,12 +1873,12 @@ static void ath_tx_complete(struct ath_s
->>        if (unlikely(tx_info->pad[0] & ATH_TX_INFO_FRAME_TYPE_INTERNAL))
->>                ath9k_tx_status(hw, skb);
->>        else {
->> -               q = skb_get_queue_mapping(skb);
->> -               if (q >= 4)
->> -                       q = 0;
->> +               struct ath_txq *txq;
->>
->> -               if (--sc->tx.pending_frames[q] < 0)
->> -                       sc->tx.pending_frames[q] = 0;
->> +               q = skb_get_queue_mapping(skb);
->> +               txq = sc->tx.txq_map[q];
->> +               if (--txq->pending_frames < 0)
->> +                       txq->pending_frames = 0;
-> 
-> This is off topic, cut do we really need this? Where do those missing
-> frames go? :) I would much prefer a BUG_ON(txq->pending_frames < 0).
-BUG_ON is not a good idea, it's only supposed to be used for cases with
-potentially severe side effects, things like random memory corruption.
-A counting imbalance here would be completely harmless, so at most we
-should have a WARN_ON_ONCE here.
+> [   14.498825] orinoco_cs 0.15 (David Gibson <hermes@gibson.dropbear.id.au>, Pavel Roskin <proski@gnu.org>, et al)
+> [   14.587767] orinoco_cs 2.0: Hardware identity 0005:0004:0005:0000
+> [   14.587897] orinoco_cs 2.0: Station identity  001f:0001:0008:000a
+> [   14.587906] orinoco_cs 2.0: Firmware determined as Lucent/Agere 8.10
+> [   14.587915] orinoco_cs 2.0: firmware: requesting agere_sta_fw.bin
+> [   14.698324] orinoco_cs 2.0: Hardware identity 0005:0004:0005:0000
+> [   14.698457] orinoco_cs 2.0: Station identity  001f:0002:0009:0030
+> [   14.698466] orinoco_cs 2.0: Firmware determined as Lucent/Agere 9.48
+> [   14.698472] orinoco_cs 2.0: Ad-hoc demo mode supported
+> [   14.698478] orinoco_cs 2.0: IEEE standard IBSS ad-hoc mode supported
+> [   14.698483] orinoco_cs 2.0: WEP supported, 104-bit key
+> [   14.698489] orinoco_cs 2.0: WPA-PSK supported
 
->>                spin_lock_bh(&txq->axq_lock);
->>                if (!list_empty(&txq->txq_fifo_pending)) {
->> @@ -2375,7 +2366,7 @@ void ath_tx_node_init(struct ath_softc *
->>        for (acno = 0, ac = &an->ac[acno];
->>             acno < WME_NUM_AC; acno++, ac++) {
->>                ac->sched    = false;
->> -               ac->qnum = sc->tx.hwq_map[acno];
->> +               ac->txq = sc->tx.txq_map[acno];
->>                INIT_LIST_HEAD(&ac->tid_q);
->>        }
->>  }
->> @@ -2385,17 +2376,13 @@ void ath_tx_node_cleanup(struct ath_soft
->>        struct ath_atx_ac *ac;
->>        struct ath_atx_tid *tid;
->>        struct ath_txq *txq;
->> -       int i, tidno;
->> +       int tidno;
->>
->>        for (tidno = 0, tid = &an->tid[tidno];
->>             tidno < WME_NUM_TID; tidno++, tid++) {
->> -               i = tid->ac->qnum;
->> -
->> -               if (!ATH_TXQ_SETUP(sc, i))
->> -                       continue;
->>
->> -               txq = &sc->tx.txq[i];
->>                ac = tid->ac;
->> +               txq = ac->txq;
-> 
-> This is where it gets interesting... Since we do select the tid by
-> looking at the header qos and the tid maps to an ac, we implicitly
-> select the txq by looking at the header qos, no?
-> 
-> This means that when we get to ath_tx_start_dma() we lock the txq
-> selected by looking at the skb queue mapping (i.e. txctl->txq), but we
-> then procede into ath_tx_send_ampdu() where the packet is queued to a
-> tid selected by looking at the header qos field. Later that packet
-> will be transmitted on the txq corresponding to that tid (tid ->ac
-> ->txq).
-> 
-> It comes down to this: either we look at the header qos when we select
-> the queue (so the above cannot happen) or we relay on mac80211 to set
-> the header qos and the skb queue mapping in a certain way. If we
-> choose the later I vote for a BUG_ON(txctl->txq != tid->ac->txq) in
-> ath_tx_send_ampdu().
-For regular QoS data frames (and no other frames ever hit the
-aggregation code) there is only one possible way to map tid -> ac ->
-queue. I did review those code paths, and I believe them to be safe.
-If you want, we can add a WARN_ON_ONCE later, but definitely no BUG_ON.
+This means the driver should have been setup appropriately.
 
->> @@ -423,59 +424,18 @@ static int ath9k_init_btcoex(struct ath_
->>
->>  static int ath9k_init_queues(struct ath_softc *sc)
->>  {
->> -       struct ath_common *common = ath9k_hw_common(sc->sc_ah);
->>        int i = 0;
->>
->> -       for (i = 0; i < ARRAY_SIZE(sc->tx.hwq_map); i++)
->> -               sc->tx.hwq_map[i] = -1;
->> -
->>        sc->beacon.beaconq = ath9k_hw_beaconq_setup(sc->sc_ah);
->> -       if (sc->beacon.beaconq == -1) {
->> -               ath_print(common, ATH_DBG_FATAL,
->> -                         "Unable to setup a beacon xmit queue\n");
->> -               goto err;
->> -       }
->> -
->>        sc->beacon.cabq = ath_txq_setup(sc, ATH9K_TX_QUEUE_CAB, 0);
->> -       if (sc->beacon.cabq == NULL) {
->> -               ath_print(common, ATH_DBG_FATAL,
->> -                         "Unable to setup CAB xmit queue\n");
->> -               goto err;
->> -       }
->>
->>        sc->config.cabqReadytime = ATH_CABQ_READY_TIME;
->>        ath_cabq_update(sc);
->>
->> -       if (!ath_tx_setup(sc, WME_AC_BK)) {
->> -               ath_print(common, ATH_DBG_FATAL,
->> -                         "Unable to setup xmit queue for BK traffic\n");
->> -               goto err;
->> -       }
->> -
->> -       if (!ath_tx_setup(sc, WME_AC_BE)) {
->> -               ath_print(common, ATH_DBG_FATAL,
->> -                         "Unable to setup xmit queue for BE traffic\n");
->> -               goto err;
->> -       }
->> -       if (!ath_tx_setup(sc, WME_AC_VI)) {
->> -               ath_print(common, ATH_DBG_FATAL,
->> -                         "Unable to setup xmit queue for VI traffic\n");
->> -               goto err;
->> -       }
->> -       if (!ath_tx_setup(sc, WME_AC_VO)) {
->> -               ath_print(common, ATH_DBG_FATAL,
->> -                         "Unable to setup xmit queue for VO traffic\n");
->> -               goto err;
->> -       }
->> +       for (i = 0; i < WME_NUM_AC; i++)
->> +               sc->tx.txq_map[i] = ath_txq_setup(sc, ATH9K_TX_QUEUE_DATA, i);
-> 
-> Can we be sure that ath_txq_setup() will always return a distinct txq
-> on each call? Otherwise I suggest an inner loop of BUG_ON() to make
-> sure no two elements of txq_map are the same.
-Yes, we can be sure. I reviewed the entire code path that this runs
-through and there is no way that this can fail. There are way too many
-layers of useless defensive code in ath9k, and I think we should start
-getting rid of them one by one ;)
+> [...]
+> [   32.967560] ADDRCONF(NETDEV_UP): eth1: link is not ready
+>
+>
+> NetworkManager is not able to connect to an AP and /var/log/messages contains:
+>
+> Nov 12 18:55:22 rescue kernel: [  388.982388] ------------[ cut here ]------------
+> Nov 12 18:55:22 rescue kernel: [  388.982427] WARNING: at /usr/src/packages/BUILD/kernel-desktop-2.6.34.7/linux-2.6.34/net/wireless/core.c:633 wdev_cleanup_work+0xb7/0xe0 [cfg80211]()
+> Nov 12 18:55:22 rescue kernel: [  388.982432] Hardware name: Latitude C840
+> Nov 12 18:55:22 rescue kernel: [  388.982435] Modules linked in: fuse ip6t_LOG xt_tcpudp xt_pkttype ipt_LOG xt_limit af_packet snd_pcm_oss snd_mixer_oss snd_seq snd_seq_device edd cpufreq_conservative cpufreq_userspace cpufreq_powersave speedstep_ich speedstep_lib mperf ip6t_REJECT nf_conntrack_ipv6 ip6table_raw xt_NOTRACK ipt_REJECT xt_state iptable_raw iptable_filter ip6table_mangle nf_conntrack_netbios_ns nf_conntrack_ipv4 nf_conntrack nf_defrag_ipv4 ip_tables ip6table_filter ip6_tables x_tables loop dm_mod michael_mic orinoco_cs orinoco cfg80211 rfkill firewire_ohci firewire_core snd_intel8x0m pcmcia crc_itu_t snd_intel8x0 snd_ac97_codec ppdev ac97_bus iTCO_wdt sr_mod snd_pcm parport_pc ohci1394 yenta_socket rsrc_nonstatic dcdbas pcmcia_core ieee1394 3c59x video parport floppy snd_timer sg cdrom iTCO_vendor_support snd battery ac pcspkr joydev soundcore snd_page_alloc shpchp pci_hotplug ext4 jbd2 crc16 nouveau ttm drm_kms_helper drm i2c_algo_bit button intel_agp fan processor ata_generic thermal thermal_sys
+> Nov 12 18:55:22 rescue kernel: [  388.982543] Pid: 707, comm: cfg80211 Not tainted 2.6.34.7-0.5-desktop #1
+> Nov 12 18:55:22 rescue kernel: [  388.982546] Call Trace:
+> Nov 12 18:55:22 rescue kernel: [  388.982570]  [<c02065c3>] try_stack_unwind+0x173/0x190
+> Nov 12 18:55:22 rescue kernel: [  388.982580]  [<c02051cf>] dump_trace+0x3f/0xe0
+> Nov 12 18:55:22 rescue kernel: [  388.982589]  [<c020662b>] show_trace_log_lvl+0x4b/0x60
+> Nov 12 18:55:22 rescue kernel: [  388.982595]  [<c0206658>] show_trace+0x18/0x20
+> Nov 12 18:55:22 rescue kernel: [  388.982607]  [<c064e0b3>] dump_stack+0x6d/0x72
+> Nov 12 18:55:22 rescue kernel: [  388.982616]  [<c02443ae>] warn_slowpath_common+0x6e/0xb0
+> Nov 12 18:55:22 rescue kernel: [  388.982623]  [<c0244403>] warn_slowpath_null+0x13/0x20
+> Nov 12 18:55:22 rescue kernel: [  388.982635]  [<e2db5497>] wdev_cleanup_work+0xb7/0xe0 [cfg80211]
+> Nov 12 18:55:22 rescue kernel: [  388.982657]  [<c025cfa9>] run_workqueue+0x79/0x170
+> Nov 12 18:55:22 rescue kernel: [  388.982665]  [<c025d123>] worker_thread+0x83/0xe0
+> Nov 12 18:55:22 rescue kernel: [  388.982673]  [<c025fef4>] kthread+0x74/0x80
+> Nov 12 18:55:22 rescue kernel: [  388.982681]  [<c0203826>] kernel_thread_helper+0x6/0x10
+> Nov 12 18:55:22 rescue kernel: [  388.982688] ---[ end trace 3f0348b3b0c6f4ff ]---
+> Nov 12 18:55:25 rescue dhcpcd[6700]: eth1: dhcpcd not running
 
-- Felix
+I've never seen this before. It looks like a scan is in progress when
+cfg80211 tries to do some cleanup - while bringing the interface down.
+
+> Instead of using NetworkManager, I tryed the wireless connection using
+> the traditional method with ifup. This time /var/log/messages contains:
+
+<snip ifdown> This log shows the same.
+
+> Nov 14 21:31:21 rescue ifup:     eth1      device: Dell
+> Nov 14 21:31:21 rescue ifup: TrueMobile 1150 Series PC Card
+> Nov 14 21:31:21 rescue ifup: Version 01.01
+> Nov 14 21:31:21 rescue ifup:     eth1      is controlled by ifplugd
+> Nov 14 21:31:21 rescue ifup:     eth1      device: Dell
+> Nov 14 21:31:21 rescue ifup: TrueMobile 1150 Series PC Card
+> Nov 14 21:31:21 rescue ifup: Version 01.01
+> Nov 14 21:31:21 rescue ifup-wireless:     eth1      warning: WPA configured, but is untested
+> Nov 14 21:31:21 rescue ifup-wireless:     eth1      warning: with this device
+> Nov 14 21:31:21 rescue ifup-wireless:     eth1      starting wpa_supplicant
+> Nov 14 21:31:21 rescue kernel: [   39.199513] ADDRCONF(NETDEV_UP): eth1: link is not ready
+> Nov 14 21:31:22 rescue ifup-dhcp: Starting DHCP4 client on eth1
+> Nov 14 21:31:22 rescue dhcpcd[3584]: eth1: dhcpcd 3.2.3 starting
+> Nov 14 21:31:22 rescue dhcpcd[3584]: eth1: hardware address = 00:02:2d:70:31:3b
+> Nov 14 21:31:22 rescue dhcpcd[3584]: eth1: broadcasting for a lease
+> Nov 14 21:31:22 rescue ifup-dhcp: .
+
+<snip dhcp log> This isn't interesting. If wpa_supplicant hasn't
+connected you to an AP, dhcpcd isn't going to find anything.
+
+> It first tryes to connect to an AP using WPA, but it fails.
+> Thereafter it connects to a second AP using WEP.
+
+Can you provide wpa_supplicant logs? With a reasonable amount of
+debug. -dd should do.
+
+> I have also used the latest compat-wireless tarball configured with
+> the options:
+> CONFIG_MAC80211_HT_DEBUG=y
+> CONFIG_MAC80211_VERBOSE_PS_DEBUG=y
+> CONFIG_MAC80211_VERBOSE_DEBUG=y
+
+orinoco does not use mac80211.
+
+> My question is:
+> Does orinoco_cs really support WPA or not?
+
+Yes.
+
+> Is the problem really with the orinoco_cs module or with something else
+> (may be wpa_supplicant)?
+
+Probably a wpa_supplicant configuration issue.
+
+> Another issue I have with the the orinoco_cs module is the following:
+> During suspend and resume there is a two minutes timeout period.
+
+> More precisely, after I start to suspend the laptop the screen
+> goes black, the message
+>             s2disk: snapshotting the system
+> appears and then there is a two minutes period where the screen stays black
+> and nothing happens. After the two minutes, the messages snapshot ready
+> appears, the snapshot image is saved to the disk and the laptop turns off.
+> On resume, the kernel founds the snapshot image, loads it and then
+> stays two minutes doing nothing. After the two minutes, the text
+>                 s2disk: returned to userspace
+> appears on screen, there is some disk activity and then the sistem is back.
+>
+> If I blacklist the orinoco_cs module, then suspend and resume work properly.
+>
+> I have no idea if the two problems are related or not. If any of the issues
+> has been already discussed, please point me where I can find such discussion.
+
+This is new. Depending on your kernel config, orinoco will either try
+to keep a copy of firmware which it re-flashes on resume, or try read
+the firmware on suspend, which is freed on resume. Both worked circa
+2.6.32.
+
+> If you need more informations or you want me to test some code let me know.
+
+A wpa_supplicant log please. Note that the laptop I used to develop
+for (and on) has moved on, so there's only a limited number of things
+I can do to debug the issue.
+
+
+Regards,
+
+Dave.
