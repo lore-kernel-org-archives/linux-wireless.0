@@ -1,53 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ey0-f174.google.com ([209.85.215.174]:33596 "EHLO
-	mail-ey0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750859Ab0KRM1F (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 18 Nov 2010 07:27:05 -0500
-Received: by mail-ey0-f174.google.com with SMTP id 27so1855656eye.19
-        for <linux-wireless@vger.kernel.org>; Thu, 18 Nov 2010 04:27:04 -0800 (PST)
-From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-To: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-Cc: b43-dev@lists.infradead.org,
-	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-Subject: [PATCH 4/4] b43: N-PHY: init BPHY when needed
-Date: Thu, 18 Nov 2010 13:28:00 +0100
-Message-Id: <1290083280-13550-4-git-send-email-zajec5@gmail.com>
-In-Reply-To: <1290083280-13550-1-git-send-email-zajec5@gmail.com>
-References: <1290083280-13550-1-git-send-email-zajec5@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Received: from mx1.redhat.com ([209.132.183.28]:40309 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750862Ab0KXD2O (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 23 Nov 2010 22:28:14 -0500
+Subject: Re: Re-distributable 88w8335 Firmware?
+From: Dan Williams <dcbw@redhat.com>
+To: Julian Calaby <julian.calaby@gmail.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Denis Kirjanov <kirjanov@gmail.com>
+Date: Tue, 23 Nov 2010 21:27:30 -0600
+In-Reply-To: <AANLkTim0=ds3EhQOEfHdrKt2dSnEqUgf5CLOPHNyW=jE@mail.gmail.com>
+References: <AANLkTim0=ds3EhQOEfHdrKt2dSnEqUgf5CLOPHNyW=jE@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Message-ID: <1290569251.3074.37.camel@dcbw.foobar.com>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
----
- drivers/net/wireless/b43/phy_n.c |    4 ++++
- 1 files changed, 4 insertions(+), 0 deletions(-)
+On Sat, 2010-11-20 at 11:29 +1100, Julian Calaby wrote:
+> Hi all,
+> 
+> Once again, someone is trying to build a working driver for the Marvel
+> 88w8335 chipset, and is once again hampered by a lack of
+> re-distributable or official firmware. (See:
+> http://marc.info/?l=linux-wireless&m=128923265210125&w=2 )
 
-diff --git a/drivers/net/wireless/b43/phy_n.c b/drivers/net/wireless/b43/phy_n.c
-index bea7dab..2c60793 100644
---- a/drivers/net/wireless/b43/phy_n.c
-+++ b/drivers/net/wireless/b43/phy_n.c
-@@ -1572,6 +1572,7 @@ static void b43_nphy_rf_control_intc_override(struct b43_wldev *dev, u8 field,
- 	}
- }
- 
-+/* http://bcm-v4.sipsolutions.net/802.11/PHY/N/BPHYInit */
- static void b43_nphy_bphy_init(struct b43_wldev *dev)
- {
- 	unsigned int i;
-@@ -3239,6 +3240,9 @@ int b43_phy_initn(struct b43_wldev *dev)
- 
- 	b43_nphy_classifier(dev, 0, 0);
- 	b43_nphy_read_clip_detection(dev, clip);
-+	if (b43_current_band(dev->wl) == IEEE80211_BAND_2GHZ)
-+		b43_nphy_bphy_init(dev);
-+
- 	tx_pwr_state = nphy->txpwrctrl;
- 	/* TODO N PHY TX power control with argument 0
- 		(turning off power control) */
--- 
-1.7.1
+I've sent a mail to a contact at Marvell, we'll see where it goes. I'm
+hopeful given that Marvell has generally been pretty good with firmware
+licensing in the past.  I'd have already pushed firmware from their
+Extranet for the 8335, but all I have access to are Vista drivers.  I
+did try to extract STA firmware from the Vista drivers about 2 years
+ago, but the resulting firmware failed to work correctly with mwl8k so I
+gave up on it.  Plus I'd  much rather have the duplex firmware from the
+MSSII sources instead of STA-only.
+
+Dan
+
+> As such, on Denis's behalf, I'm asking if anyone knows of anyone at
+> Marvel that they can poke in an attempt to get a re-distributable
+> firmware for this chipset released for eventual inclusion into
+> linux-firmware.
+> 
+> I believe that this chipset is pretty much obsolete (being only an
+> 802.11g part) so I cannot see any reasonable reason not to release the
+> firmware, especially given that newer chipsets ("TopDog" - see the
+> mwl8k driver) have had re-distributable firmware released along with
+> open source Linux drivers for some time now.
+> 
+> If we cannot obtain proper firmware files, the very least Marvel could
+> do would be to bless the *BSD Malo driver's firmware files (obtainable
+> here: http://www.nazgul.ch/malo/malo-firmware-1.4.tgz - see
+> http://www.unix.com/man-page/freebsd/4/MALO/ for more info) with a
+> proper re-distributable license.
+> 
+> In terms of the actual chipsets in question, I'm referring to the
+> 88w8335, 88w8338, and 88w8385 chipsets. I believe Marvel refers to
+> them as being part of the "Libertas" family of chipsets - however they
+> don't have the fancy mesh stuff that the chips the libertas driver
+> talks to have - and are also PCI.
+> 
+> A previous effort in 2008 is viewable here:
+> http://lwn.net/Articles/275719/ and searching for "mrv8k" reveals the
+> remnants of that effort which mostly happened before my involvement in
+> this.
+> 
+> A proper "official" set of firmware files would smooth one of the
+> bumps in getting proper support for this driver into the Linux Kernel.
+> (as well as helping the BSD folks with the Malo driver) Marvel has
+> shown that they are willing to provide some support for the open
+> source community with the TopDog driver, as well as the driver for the
+> SAS chipset. Hopefully they can continue their support with what would
+> be a small gesture in support of our efforts to write a driver for
+> this old chipset.
+> 
+> Thanks,
+> 
+
 
