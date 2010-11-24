@@ -1,50 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw0-f46.google.com ([74.125.83.46]:38209 "EHLO
-	mail-gw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754520Ab0KXQ7J convert rfc822-to-8bit (ORCPT
+Received: from mail30s.wh2.ocn.ne.jp ([125.206.180.198]:35724 "HELO
+	mail30s.wh2.ocn.ne.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1754328Ab0KXBpF (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 24 Nov 2010 11:59:09 -0500
-Received: by gwj20 with SMTP id 20so911304gwj.19
-        for <linux-wireless@vger.kernel.org>; Wed, 24 Nov 2010 08:59:08 -0800 (PST)
+	Tue, 23 Nov 2010 20:45:05 -0500
+Received: from vs3017.wh2.ocn.ne.jp (125.206.180.250)
+	by mail30s.wh2.ocn.ne.jp (RS ver 1.0.95vs) with SMTP id 3-0242773103
+	for <linux-wireless@vger.kernel.org>; Wed, 24 Nov 2010 10:45:03 +0900 (JST)
+From: Bruno Randolf <br1@einfach.org>
+To: Johannes Berg <johannes@sipsolutions.net>
+Subject: Re: [PATCH v7 1/3] cfg80211: Add nl80211 antenna configuration
+Date: Wed, 24 Nov 2010 10:45:05 +0900
+Cc: linville@tuxdriver.com, nbd@openwrt.org, mcgrof@gmail.com,
+	linux-wireless@vger.kernel.org
+References: <20101110035050.23721.15617.stgit@localhost6.localdomain6> <201011221133.36594.br1@einfach.org> <1290439881.5718.0.camel@jlt3.sipsolutions.net>
+In-Reply-To: <1290439881.5718.0.camel@jlt3.sipsolutions.net>
 MIME-Version: 1.0
-In-Reply-To: <1290592410.25710.4.camel@chilepepper>
-References: <1290438027-20179-1-git-send-email-luciano.coelho@nokia.com>
- <1290438027-20179-2-git-send-email-luciano.coelho@nokia.com>
- <AANLkTinrKyw-EHKrt5WKbHjbiQUM7Vhz3MR3n8OdWpzf@mail.gmail.com> <1290592410.25710.4.camel@chilepepper>
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Date: Wed, 24 Nov 2010 08:58:48 -0800
-Message-ID: <AANLkTi=pPT84kCOzEbUX+5nTwn4tM=Z-kmYae9Nirv-1@mail.gmail.com>
-Subject: Re: [PATCH 1/1] compat-wireless: apply changes needed after
- wl1271->wl12xx renaming
-To: Luciano Coelho <luciano.coelho@nokia.com>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+Content-Type: Text/Plain;
+  charset="utf-8"
+Message-Id: <201011241045.05708.br1@einfach.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Nov 24, 2010 at 1:53 AM, Luciano Coelho
-<luciano.coelho@nokia.com> wrote:
-> Hi Luis,
->
->
-> On Mon, 2010-11-22 at 10:13 -0800, ext Luis R. Rodriguez wrote:
->> On Mon, Nov 22, 2010 at 7:00 AM,  <luciano.coelho@nokia.com> wrote:
->> > From: Luciano Coelho <luciano.coelho@nokia.com>
->> >
->> > This patch changes the occurrences of wl1271 in the Makefile, README and in
->> > the scripts to wl12xx, since the driver has been renamed.
->> >
->> > Also remove the wl1271_ prefix from the filenames.
->> >
->> > Signed-off-by: Luciano Coelho <luciano.coelho@nokia.com>
->>
->> Applied and pushed, thanks!
->
-> It seems that the wl12xx file name changes are now in linux-next.  I
-> guess it's okay to include this patch in compat-wireless now.
->
-> Sorry for the trouble!
+On Tue November 23 2010 00:31:21 Johannes Berg wrote:
+> On Mon, 2010-11-22 at 11:33 +0900, Bruno Randolf wrote:
+> > On Sat November 20 2010 03:45:37 Johannes Berg wrote:
+> > > You'll need to provide documentation updates for this ASAP.
+> > 
+> > What do you mean? There is lots of kerneldoc in my patch. Is it not
+> > enough?
+> 
+> Not for the cfg80211 ops afaict, or did I just miss that?
 
-Its already there, thanks!
+True. Sorry. I will add it.
 
-  Luis
+bruno
