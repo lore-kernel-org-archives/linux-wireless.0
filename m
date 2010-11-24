@@ -1,74 +1,128 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f46.google.com ([209.85.214.46]:40494 "EHLO
-	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755435Ab0K2Shp (ORCPT
+Received: from mail-ww0-f44.google.com ([74.125.82.44]:57912 "EHLO
+	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754624Ab0KXBEu convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 29 Nov 2010 13:37:45 -0500
-Received: by bwz15 with SMTP id 15so4195446bwz.19
-        for <linux-wireless@vger.kernel.org>; Mon, 29 Nov 2010 10:37:43 -0800 (PST)
-From: Christian Lamparter <chunkeey@googlemail.com>
-To: Saqeb Akhter <saqeb.akhter@gmail.com>
-Subject: [PATCH for-2.6.37?] mac80211: ignore non-bcast mcast managment frames
-Date: Mon, 29 Nov 2010 19:37:24 +0100
-Cc: linux-wireless@vger.kernel.org,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Jouni Malinen <j@w1.fi>, linville@tuxdriver.com
-References: <AANLkTimN3X_e4fZhUSoTs-GmQ9kmaJUrgnxAu8=W2dT_@mail.gmail.com> <201010021332.09809.chunkeey@googlemail.com> <201011291814.58230.chunkeey@googlemail.com>
-In-Reply-To: <201011291814.58230.chunkeey@googlemail.com>
+	Tue, 23 Nov 2010 20:04:50 -0500
+Received: by wwa36 with SMTP id 36so9352798wwa.1
+        for <linux-wireless@vger.kernel.org>; Tue, 23 Nov 2010 17:04:49 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Message-Id: <201011291937.25195.chunkeey@googlemail.com>
+In-Reply-To: <AANLkTi=B32GVseEr-GAkp-kiTUsy0cgU1BHO-7Tim1Sm@mail.gmail.com>
+References: <20101123190911.GN4303@makis.mantri>
+	<AANLkTimnRS1Mh4KtjFNJOcUEb-JNDs+B8vqFbkh-EybL@mail.gmail.com>
+	<AANLkTi=B32GVseEr-GAkp-kiTUsy0cgU1BHO-7Tim1Sm@mail.gmail.com>
+Date: Wed, 24 Nov 2010 03:04:47 +0200
+Message-ID: <AANLkTi=KbeAs3nD5rcLM0GtzYbxGn3vxmmHVtY+uaH94@mail.gmail.com>
+Subject: Re: [ath5k-devel] [PATCH 14/30] ath5k: Extend get_default_sifs/slot_time
+From: Nick Kossifidis <mickflemm@gmail.com>
+To: Jonathan Guerin <jonathan@guerin.id.au>
+Cc: ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org,
+	linville@tuxdriver.com, me@bobcopeland.com, mcgrof@gmail.com,
+	jirislaby@gmail.com, nbd@openwrt.org, br1@einfach.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch fixes an curious issue due to insufficient
-rx frame filtering.
+2010/11/24 Nick Kossifidis <mickflemm@gmail.com>:
+> 2010/11/24 Jonathan Guerin <jonathan@guerin.id.au>:
+>> On Wed, Nov 24, 2010 at 5:09 AM, Nick Kossifidis <mickflemm@gmail.com> wrote:
+>>>  * Extend get_default_sifs/slot_time to include timings for turbo
+>>>  half and quarter rate modes.
+>>>
+>>>  * AR5210 code for now uses timings already on core clock units
+>>>  instead of usecs so rename them (we 'll clean it up later).
+>>>
+>>>  Signed-off-by: Nick Kossifidis <mickflemm@gmail.com>
+>>> ---
+>>>  drivers/net/wireless/ath/ath5k/ath5k.h |   24 ++++++++++++--
+>>>  drivers/net/wireless/ath/ath5k/pcu.c   |   52 ++++++++++++++++++++++++--------
+>>>  drivers/net/wireless/ath/ath5k/qcu.c   |   16 +++++----
+>>>  3 files changed, 68 insertions(+), 24 deletions(-)
+>>>
+>>> diff --git a/drivers/net/wireless/ath/ath5k/ath5k.h b/drivers/net/wireless/ath/ath5k/ath5k.h
+>>> index 005cad0..e11fc8f 100644
+>>> --- a/drivers/net/wireless/ath/ath5k/ath5k.h
+>>> +++ b/drivers/net/wireless/ath/ath5k/ath5k.h
+>>> @@ -226,16 +226,16 @@
+>>>  #define AR5K_INIT_USEC                         39
+>>>  #define AR5K_INIT_USEC_TURBO                   79
+>>>  #define AR5K_INIT_USEC_32                      31
+>>> -#define AR5K_INIT_SLOT_TIME                    396
+>>> -#define AR5K_INIT_SLOT_TIME_TURBO              480
+>>> +#define AR5K_INIT_SLOT_TIME_CLOCK              396
+>>
+>> This comes out as 9.9us (with a clock multiplier of 40), rather than 9
+>> - should be 360?
+>>
+>>> +#define AR5K_INIT_SLOT_TIME_TURBO_CLOCK                480
+>>>  #define AR5K_INIT_ACK_CTS_TIMEOUT              1024
+>>
+>> From a previous post I'd made:
+>>
+>> According to the 802.11-2007 spec document, the ACKTimeout value is
+>> (Section 9.2.8 ACK procedure):
+>> ACKTimeout = aSIFSTime + aSlotTime + aPHY-RX-START-Delay
+>>
+>> From Table 17-15—OFDM PHY characteristics, the values are:
+>> aSIFSTime = 16
+>> aSlotTime = 9
+>> aPHY-RX-START-Delay = 25
+>>
+>> Therefore, ACKTimeout = 50
+>>
+>> With a value of 1024, the ACKTIMEOUT is actually 25.
+>>
+>>>  #define AR5K_INIT_ACK_CTS_TIMEOUT_TURBO                0x08000800
+>>>  #define AR5K_INIT_PROG_IFS                     920
+>>>  #define AR5K_INIT_PROG_IFS_TURBO               960
+>>>  #define AR5K_INIT_EIFS                         3440
+>>
+>> From the 802.11-2007 Spec (9.2.10 DCF timing relations):
+>> The EIFS is derived from the SIFS and the DIFS and the length of time
+>> it takes to transmit an ACK Control frame at the lowest PHY mandatory
+>> rate by the following equation:
+>> EIFS = aSIFSTime + DIFS + ACKTxTime
+>> where ACKTxTime is the time expressed in microseconds required to
+>> transmit an ACK frame, including
+>> preamble, PLCP header and any additional PHY dependent information, at
+>> the lowest PHY mandatory rate.
+>>
+>> So, EIFS = 16 + 32 + 44 (ACKTX @ 24Mbps) = 92
+>> or 16 + 32 + 60 (ACKTX @ 6Mbps) = 108
+>>
+>> The current value is 86, which I guess is a nice midpoint, but is
+>> there any reasoning for this value? It should really be set to the
+>> longest value of 108, as an EIFS is only used when we have no
+>> information about a frame because it failed the checksum.
+>>
+>>>  #define AR5K_INIT_EIFS_TURBO                   6880
+>>> -#define AR5K_INIT_SIFS                         560
+>>> -#define AR5K_INIT_SIFS_TURBO                   480
+>>> +#define AR5K_INIT_SIFS_CLOCK                   560
+>>
+>> This is wrong, when you divide by the clock rate, you get a SIFS of 14, not 16.
+>>
+>> Cheers,
+>>
+>> Jonathan
+>>
+>
+> All _CLOCK variables are left here temporarily until we clean up
+> AR5210 stuff later, i know it's wrong ;-)
+> Check out patch 16 that adds the new set_ifs_intervals, there we set
+> them property, i just left them here so that code can still compile.
+>
 
-Saqeb Akhter reported frequent disconnects while streaming
-videos over samba:
-> [ 1166.512087] wlan1: deauthenticated from 30:46:9a:10:49:f7 (Reason: 7)
-> [ 1526.059997] wlan1: deauthenticated from 30:46:9a:10:49:f7 (Reason: 7)
-> [ 2125.324356] wlan1: deauthenticated from 30:46:9a:10:49:f7 (Reason: 7)
-> [...]
+Also have in mind that clock on g is not 40 but 44 (for b
+compatibility) so 396 is correct here (396/44 = 9).
 
-The reason is that the device generates frames with slightly
-bogus SA/TA addresses.
+Anyway we clean it up + these are only for AR5210 that we still don't
+support, i just put a _CLOCK prefix so that they don't get mixed up
+with the correct definitions. Check out patch 16, it should be fine
+;-)
 
-e.g.:
- [ 2314.402316] Ignore 9f:1f:31:f8:64:ff
- [ 2314.402321] Ignore 9f:1f:31:f8:64:ff
- [ 2352.453804] Ignore 0d:1f:31:f8:64:ff
- [ 2352.453808] Ignore 0d:1f:31:f8:64:ff
- 					   ^^ the group-address flag is set!
- (the correct SA/TA would be: 00:1f:31:f8:64:ff)
- 
-Since the AP does not know from where the frame comes from it
-generates a DEAUTH response. This mcast mgmt frame confuses
-the stack because the broadcast flag are not filtered and the
-stack thinks we haven been kicked by the AP.
 
-This patch fixes the problem simply by ignoring
-non-broadcast group-addressed management frames.
-
-Cc: <stable@kernel.org>
-Cc: Jouni Malinen <j@w1.fi>
-Cc: Johannes Berg <johannes@sipsolutions.net>
-Reported-by: Saqeb Akhter <saqeb.akhter@gmail.com>
-Signed-off-by: Christian Lamparter <chunkeey@googlemail.com>
----
-diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
-index d2fcd22..3dbf79c 100644
---- a/net/mac80211/rx.c
-+++ b/net/mac80211/rx.c
-@@ -1999,6 +1999,10 @@ ieee80211_rx_h_mgmt_check(struct ieee80211_rx_data *rx)
- 	if (!ieee80211_is_mgmt(mgmt->frame_control))
- 		return RX_DROP_MONITOR;
- 
-+	if (is_multicast_ether_addr(mgmt->da) &&
-+	    !is_broadcast_ether_addr(mgmt->da))
-+		return RX_DROP_MONITOR;
-+
- 	if (!(status->rx_flags & IEEE80211_RX_RA_MATCH))
- 		return RX_DROP_MONITOR;
- 
+-- 
+GPG ID: 0xD21DB2DB
+As you read this post global entropy rises. Have Fun ;-)
+Nick
