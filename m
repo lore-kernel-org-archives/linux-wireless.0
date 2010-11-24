@@ -1,42 +1,30 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wy0-f174.google.com ([74.125.82.174]:65079 "EHLO
-	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753102Ab0KDUxr convert rfc822-to-8bit (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:34870 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752352Ab0KXIml (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 4 Nov 2010 16:53:47 -0400
-Received: by wyb36 with SMTP id 36so352876wyb.19
-        for <linux-wireless@vger.kernel.org>; Thu, 04 Nov 2010 13:53:46 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1288884993.3517.1.camel@jlt3.sipsolutions.net>
-References: <1288659351-22313-1-git-send-email-brian@cozybit.com>
- <20101102082254.GL1733@mail.wantstofly.org> <AANLkTi=iQgc+cMTrwGWyriHvOCGhAZ7TU+41ytBRYtea@mail.gmail.com>
- <1288884993.3517.1.camel@jlt3.sipsolutions.net>
-From: Brian Cavagnolo <brian@cozybit.com>
-Date: Thu, 4 Nov 2010 13:53:25 -0700
-Message-ID: <AANLkTik9GDfbqggpf+o2LSog8VwrH4FtdhvWeoKLNzjw@mail.gmail.com>
-Subject: Re: [PATCH 1/7] mwl8k: add firmware files for 8366
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Lennert Buytenhek <buytenh@wantstofly.org>,
-	linux-wireless@vger.kernel.org,
-	Nishant Sarmukadam <nishants@marvell.com>
-Content-Type: text/plain; charset=ISO-8859-1
+	Wed, 24 Nov 2010 03:42:41 -0500
+Subject: Re: working usb wifi card, that is still possible to buy
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Pavel Machek <pma@sysgo.com>
+Cc: kernel list <linux-kernel@vger.kernel.org>,
+	chunkeey@googlemail.com, linux-wireless@vger.kernel.org
+In-Reply-To: <20101124081616.GA30595@pma.sysgo.com>
+References: <20101103092431.GA21138@pma.sysgo.com>
+	 <20101124081616.GA30595@pma.sysgo.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Wed, 24 Nov 2010 09:42:38 +0100
+Message-ID: <1290588158.3790.6.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Nov 4, 2010 at 8:36 AM, Johannes Berg <johannes@sipsolutions.net> wrote:
-> On Wed, 2010-11-03 at 17:19 -0700, Brian Cavagnolo wrote:
->
->> Well, patches containing hundreds of kB of binary firmware do pass
->> through this mailing list.  However, a closer inspection reveals that
->> these were destined for the linux-firmware with linux-wireless CC'd.
->> My bad.  When I resubmit I'll do it that way.
->
-> Before you do that though, you really really need to fix this patch to
-> not add the firmware to the _kernel_ tree, but to the _firmware_ tree.
-> Including a proper license for them, of course, and not as ihex crap,
-> etc.
+On Wed, 2010-11-24 at 09:16 +0100, Pavel Machek wrote:
 
-Understood.  This is underway.
+> http://linuxwireless.org/en/users/Devices/USB
 
-Ciao,
-Brian
+You have to edit the driver pages, like
+http://linuxwireless.org/en/users/Drivers/p54/devices
+
+johannes
+
