@@ -1,65 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:35783 "EHLO nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750786Ab0KWCKl (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 22 Nov 2010 21:10:41 -0500
-From: Felix Fietkau <nbd@openwrt.org>
-To: linux-wireless@vger.kernel.org
-Cc: linville@tuxdriver.com, johannes@sipsolutions.net, pstew@google.com
-Subject: [PATCH v4 2/2] mac80211: reduce the number of retries for nullfunc probing
-Date: Tue, 23 Nov 2010 03:10:32 +0100
-Message-Id: <1290478232-87912-2-git-send-email-nbd@openwrt.org>
-In-Reply-To: <1290478232-87912-1-git-send-email-nbd@openwrt.org>
-References: <1290478232-87912-1-git-send-email-nbd@openwrt.org>
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:39385 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754006Ab0KXROt (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 24 Nov 2010 12:14:49 -0500
+Date: Wed, 24 Nov 2010 12:06:40 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Thomas =?iso-8859-1?Q?B=E4chler?= <thomas@archlinux.org>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: [ANN] wireless-regdb: master-2010-11-22
+Message-ID: <20101124170639.GD7435@tuxdriver.com>
+References: <E1PKkCh-0005Ay-R2@sipsolutions.net>
+ <4CED4464.2000106@archlinux.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=iso-8859-1
+In-Reply-To: <4CED4464.2000106@archlinux.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Since nullfunc frames are transmitted as unicast frames, they're more
-reliable than the broadcast probe requests, so we need fewer retries
-to figure out whether the AP is really gone.
+On Wed, Nov 24, 2010 at 05:59:16PM +0100, Thomas Bächler wrote:
+> Am 23.11.2010 05:10, schrieb
+> wireless-cdvu00un1VgdHxzADdlk8Q@public.gmane.org:
+> > A new release of wireless-regdb (master-2010-11-22) is available at:
+> > 
+> > http://wireless.kernel.org/download/wireless-regdb/wireless-regdb-2010.11.22.tar.bz2
+> > 
+> > SHA1 sum: d0b008b4d32105cf6a87860b5a69e8066b03baaa
+> > 
+> > 
+> > For your convenience the individual regulatory.bin file can be downloaded from:
+> > 
+> > http://wireless.kernel.org/download/wireless-regdb/regulatory.bins/2010.11.22-regulatory.bin
+> > 
+> > SHA1 sum d7e558216ebe4d5ad01ccb0029c64456f740b9fd
+> 
+> Hello,
+> 
+> the binary does not work for me:
+> 
+> $ sha1sum 2010.11.22-regulatory.bin
+> d7e558216ebe4d5ad01ccb0029c64456f740b9fd  2010.11.22-regulatory.bin
+> $ regdbdump ./2010.11.22-regulatory.bin
+> Database signature verification failed.
+> 
+> The old 2009.11.25-regulatory.bin works fine.
 
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
----
- net/mac80211/mlme.c |    9 ++++++++-
- 1 files changed, 8 insertions(+), 1 deletions(-)
+It seems to be working for me, even on a freshly installed RHEL6 box
+(so no random keys scattered about).
 
-diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index 109ad8b..7d658e5 100644
---- a/net/mac80211/mlme.c
-+++ b/net/mac80211/mlme.c
-@@ -28,6 +28,7 @@
- #include "rate.h"
- #include "led.h"
- 
-+#define IEEE80211_MAX_NULLFUNC_TRIES 2
- #define IEEE80211_MAX_PROBE_TRIES 5
- 
- /*
-@@ -1916,9 +1917,15 @@ void ieee80211_sta_work(struct ieee80211_sub_if_data *sdata)
- 			    IEEE80211_STA_CONNECTION_POLL) &&
- 	    ifmgd->associated) {
- 		u8 bssid[ETH_ALEN];
-+		int max_tries;
- 
- 		memcpy(bssid, ifmgd->associated->bssid, ETH_ALEN);
- 
-+		if (local->hw.flags & IEEE80211_HW_REPORTS_TX_ACK_STATUS)
-+			max_tries = IEEE80211_MAX_NULLFUNC_TRIES;
-+		else
-+			max_tries = IEEE80211_MAX_PROBE_TRIES;
-+
- 		/* ACK received for nullfunc probing frame */
- 		if (!ifmgd->probe_send_count)
- 			ieee80211_reset_ap_probe(sdata);
-@@ -1926,7 +1933,7 @@ void ieee80211_sta_work(struct ieee80211_sub_if_data *sdata)
- 		else if (time_is_after_jiffies(ifmgd->probe_timeout))
- 			run_again(ifmgd, ifmgd->probe_timeout);
- 
--		else if (ifmgd->probe_send_count < IEEE80211_MAX_PROBE_TRIES) {
-+		else if (ifmgd->probe_send_count < max_tries) {
- #ifdef CONFIG_MAC80211_VERBOSE_DEBUG
- 			wiphy_debug(local->hw.wiphy,
- 				    "%s: No probe response from AP %pM"
+Anyone else seeing this issue?  I seem to remember that we had a
+similar problem some time back...?
+
+John
 -- 
-1.7.3.2
-
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
