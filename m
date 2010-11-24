@@ -1,70 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:54476 "EHLO nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751410Ab0K3Cnn (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 29 Nov 2010 21:43:43 -0500
-Message-ID: <4CF464D6.2020507@openwrt.org>
-Date: Tue, 30 Nov 2010 03:43:34 +0100
-From: Felix Fietkau <nbd@openwrt.org>
-MIME-Version: 1.0
-To: Joe Perches <joe@perches.com>
-CC: peter@stuge.se, ath9k-devel@lists.ath9k.org,
-	linux-kernel@vger.kernel.org,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: [ath9k-devel] [PATCH wireless-next] ath: Rename ath_print to
- ath_debug
-References: <5febb0e1fba0ec2bb77f6ade8b251ba0edf4614c.1290988277.git.joe@perches.com>	 <AANLkTinc251WbwuLqFbOZ5ipNGZW7=wub3DoWwy42=+e@mail.gmail.com>	 <20101129060732.5130.qmail@stuge.se>  <4CF42C17.2070500@openwrt.org> <1291081185.16349.133.camel@Joe-Laptop>
-In-Reply-To: <1291081185.16349.133.camel@Joe-Laptop>
-Content-Type: text/plain; charset=UTF-8
+Received: from mail-fx0-f46.google.com ([209.85.161.46]:56012 "EHLO
+	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753011Ab0KXHBZ convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 24 Nov 2010 02:01:25 -0500
+Received: by fxm13 with SMTP id 13so4684648fxm.19
+        for <linux-wireless@vger.kernel.org>; Tue, 23 Nov 2010 23:01:23 -0800 (PST)
+References: <AB927C5B3615784183753F31BCC83EA38C58FE29@AD.d3.local> <20101123191338.GG3245@WorkStation> <AB927C5B3615784183753F31BCC83EA38C58FE32@AD.d3.local> <AB927C5B3615784183753F31BCC83EA38C58FE34@AD.d3.local>
+In-Reply-To: <AB927C5B3615784183753F31BCC83EA38C58FE34@AD.d3.local>
+Mime-Version: 1.0 (iPhone Mail 8A293)
+Content-Type: text/plain;
+	charset=utf-8
+Message-Id: <44125D8E-793F-49B1-AEE5-52A3265EC6F5@wizery.com>
+Cc: "ido@wizery.com" <ido@wizery.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+From: Ohad Ben-Cohen <ohad@wizery.com>
+Subject: Re: No scan results from wl1271-sdio
+Date: Wed, 24 Nov 2010 09:02:37 +0200
+To: Josh Watts <JWatts@d3engineering.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2010-11-30 2:39 AM, Joe Perches wrote:
-> On Mon, 2010-11-29 at 23:41 +0100, Felix Fietkau wrote:
->> On 2010-11-29 7:07 AM, Peter Stuge wrote:
->> > Luis R. Rodriguez wrote:
->> >> On Sun, Nov 28, 2010 at 3:53 PM, Joe Perches <joe@perches.com> wrote:
->> >> > Make the function name match the function purpose.
->> >> > ath_debug is a debug only facility.
->> >> > ath_print seems too generic a name for a debug only use.
->> >> Nack, I don't see the point.
->> > 
->> > The point is to improve readability. I like the patch.
->> And how exactly does this improve readability? Don't get me wrong, I
->> generally like to see more cleanups merged to the ath/ath9k drivers
->> (they do need it, after all).
-> 
-> It's considered polite to cc the patch author.
-Sorry, I forgot to add you back. The Cc list was cleared somewhere in
-this thread and I added a few entries back, but apparently accidentally
-dropped some of them again.
+On 23 בנוב 2010, at 23:35, Josh Watts <JWatts@d3engineering.com> wrote:
 
-> print is generic, debug is specific.
-> This function has a specific use for debugging
-> not a generic use all for logging.
-> 
-> If it was ath_print(level, etc) with KERN_<level>
-> passed as the first argument that'd be similar
-> to other kernel calls.  As is, it's not.
-> 
->> But in my opinion, simple renaming churn like this does nothing but
->> annoy people who want to get other work done at the same time.
-> 
-> This sort of thing can be done when other changes have
-> just been merged to minimize conflicts.
-> 
->> Consider the large number of lines touched (and the potential merge
->> conflicts with other code because of that), relative to the microscopic
->> aesthetic gain (if any).
+> On Tue, 2010-11-23 at 16:30 -0500, Josh Watts wrote:
+>> On Tue, 2010-11-23 at 21:13 +0200, Ido Yariv wrote:
+>>> On Tue, Nov 23, 2010 at 10:34:14AM -0500, Josh Watts wrote:
+>>>> I'm wondering if there's maybe some
+>>>> minor component or setting that I'm missing (like radio-enable, or
+>>>> perhaps limit to 802.11a, etc)?
+>>> Hi Josh,
+>>> 
+>>> These kind of problems could be caused by using a wrong reference clock
+>>> value. Could you please double check that the reference clock
+>>> (board_ref_clock) matches the reference clock connected to the wl1271?
+>>> 
+>>> Regards,
+>>> Ido.
 >> 
->> Instead I'd like to see more cleanups that go beyond trivial function
->> renames.
+>> Does board_ref_clock refer to the SLOW_CLK signal fed to the TiWi board?
 > 
-> I gauge my willingness to spend time on subsystems on
-> the maintainers willingness to merge things that improve
-> readability and correctness.
-I'm not trying to discourage you from spending time on improving this
-code, just doubting the usefulness of such simple function renames.
+> Oops, I see now I was confused on this point. It appears board_ref_clock
+> refers to the SDIO clock line, correct?
 
-- Felix
+No, it's an external clock source hardwired to the 1271 device. You have no control of it, you just need to let the driver know its frequency.
+
+So you can either consult with your module maker, or just try each of the possible options one by one, and see if any of these fix the issue :)
+
+
+> It appears that my MMC/SDIO
+> interface is auto-configuring itself to 25MHz. Is this close enough to
+> 26MHz, or do you think I should look into adjusting/forcing the
+> interface to operate at one of the rates listed in wl12xx/boot.c?
+> 
+> --
+> Josh Watts
