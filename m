@@ -1,39 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from static-173-84-111-222.sdsl01.roch.ny.frontiernet.net ([173.84.111.222]:2670
-	"EHLO remote.d3engineering.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753199Ab0KWVnx (ORCPT
+Received: from mail-iw0-f174.google.com ([209.85.214.174]:49378 "EHLO
+	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751293Ab0KXD4M (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 23 Nov 2010 16:43:53 -0500
-From: Josh Watts <JWatts@d3engineering.com>
-To: "luciano.coelho@nokia.com" <luciano.coelho@nokia.com>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Date: Tue, 23 Nov 2010 16:43:51 -0500
-Subject: Re: No scan results from wl1271-sdio
-Message-ID: <AB927C5B3615784183753F31BCC83EA38C58FE35@AD.d3.local>
-References: <AB927C5B3615784183753F31BCC83EA38C58FE29@AD.d3.local>
- <1290534680.5617.11.camel@powerslave>
- <AB927C5B3615784183753F31BCC83EA38C58FE30@AD.d3.local>
- <1290539679.5617.21.camel@powerslave>
-In-Reply-To: <1290539679.5617.21.camel@powerslave>
-Content-Type: text/plain; charset="utf-8"
+	Tue, 23 Nov 2010 22:56:12 -0500
 MIME-Version: 1.0
+In-Reply-To: <1290569516.3074.41.camel@dcbw.foobar.com>
+References: <AANLkTim0=ds3EhQOEfHdrKt2dSnEqUgf5CLOPHNyW=jE@mail.gmail.com> <1290569516.3074.41.camel@dcbw.foobar.com>
+From: Julian Calaby <julian.calaby@gmail.com>
+Date: Wed, 24 Nov 2010 14:55:50 +1100
+Message-ID: <AANLkTi=ioGgpAQ-rx_abCHcOmOezXwJFfbKWc7=tGAJ5@mail.gmail.com>
+Subject: Re: Re-distributable 88w8335 Firmware?
+To: Dan Williams <dcbw@redhat.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	David.Woodhouse@intel.com, Greg KH <greg@kroah.com>,
+	linux-kernel@vger.kernel.org,
+	Lennert Buytenhek <buytenh@wantstofly.org>,
+	Holger Schurig <holgerschurig@googlemail.com>,
+	Markus Becker <mab@comnets.uni-bremen.de>,
+	andreamrl@tiscali.it, Denis Kirjanov <kirjanov@gmail.com>,
+	dwmw2@infradead.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-T24gVHVlLCAyMDEwLTExLTIzIGF0IDIxOjE0ICswMjAwLCBMdWNpYW5vIENvZWxobyB3cm90ZToK
-PiBPbiBUdWUsIDIwMTAtMTEtMjMgYXQgMTM6NTEgLTA1MDAsIGV4dCBKb3NoIFdhdHRzIHdyb3Rl
-Ogo+ID4gU2VlIGF0dGFjaGVkICh3bGFuMC5sb2cuMjAxMDExMjNfMTMxNyAyMDEuNEtpQikgZm9y
-IHRoZSBkZWJ1ZyBsb2cKPiA+IChjb3B5IG9mIC92YXIvbG9nL21lc3NhZ2VzKSBzYW5zIERFQlVH
-X1NESU8uIAo+IAo+IEFjY29yZGluZyB0byB0aGUgbG9ncywgZXZlcnl0aGluZyBzZWVtcyB0byBn
-byB3ZWxsLCBpbmNsdWRpbmcgdGhlIHByb2JlCj4gcmVxdWVzdHMgc2VlbSB0byBiZSBjb25maWd1
-cmUgY29ycmVjdGx5IGJlZm9yZSB0aGUgc2Nhbi4gIEJ1dCBJIGRvbid0Cj4gc2VlIGFueSBSWCBp
-bnRlcnJ1cHRzLi4uCj4gCj4gRG8geW91IGhhdmUgYSBzbmlmZmVyIG9yIGEgZGV2aWNlIHRoYXQg
-Y2FuIGJlIHB1dCBpbnRvIG1vbml0b3IgbW9kZSB0bwo+IHVzZSB3aXRoIHdpcmVzaGFyaz8gSWYg
-eW91IGRvLCBhbiBhaXJsb2cgb2YgdGhpcyBzY2VuYXJpbyB3aWxsIHByb2JhYmx5Cj4gZ2l2ZSB1
-cyBtb3JlIGNsdWVzLi4uCgpJIGRvbid0IGhhdmUgYW55IHNuaWZmaW5nIHNvZnR3YXJlIG9uIHRo
-ZSBkZXZpY2UgYXQgdGhlIG1vbWVudCwgYnV0IEknbGwKZ2l2ZSB0aGF0IGEgc2hvdCBhcyBzb29u
-IGFzIHdpcmVzaGFyayBmaW5pc2hlcyBiaXRiYWtpbmcuCgpJIHRyaWVkIHVzaW5nIG15IGxhcHRv
-cCB0byB0cnkgYW5kIHNuaWZmaW5nIGZvciBhbnl0aGluZyBjb21pbmcgZnJvbSB0aGUKV0wxMjcx
-LCBidXQgSSBkaWRuJ3Qgc2VlIGFueXRoaW5nIHdoZW4gbGltaXRpbmcgdG8gdGhlIE1BQyBhZGRy
-ZXNzIG9mIG15CldMMTI3MS4KCldpbGwgZ2V0IGJhY2sgdG8geW91IGlmIEkgbWFuYWdlIHRvIGZp
-bmQgYW55dGhpbmcKCi0tCkpvc2ggV2F0dHMK
+On Wed, Nov 24, 2010 at 14:31, Dan Williams <dcbw@redhat.com> wrote:
+> On Sat, 2010-11-20 at 11:29 +1100, Julian Calaby wrote:
+>> If we cannot obtain proper firmware files, the very least Marvel could
+>> do would be to bless the *BSD Malo driver's firmware files (obtainable
+>> here: http://www.nazgul.ch/malo/malo-firmware-1.4.tgz - see
+>> http://www.unix.com/man-page/freebsd/4/MALO/ for more info) with a
+>> proper re-distributable license.
+>>
+>> In terms of the actual chipsets in question, I'm referring to the
+>> 88w8335, 88w8338, and 88w8385 chipsets. I believe Marvel refers to
+>
+> Note that the 8385 shouldn't be included in this list, since it's a
+> FullMAC chip, is handled already by the 'libertas' kernel driver, and
+> we've already got firmware for its CF & SDIO variants in linux-firmware
+> along with the 8388, 8682, 8686, and 8688.
+
+That'll teach me to not do all the research on this =)
+
+I pulled that number from the Malo firmware archive linked above.
+(Malo claims to only work with 8335s, but yeah) I'm guessing that if
+that firmware file is used, it'd be for a PCI variant of the 8385
+chipset (given that such a thing exists) and that isn't supported by
+the "libertas" driver.
+
+Either way, having the firmware for the 833x chipsets would be more
+than enough =)
+
+And thanks for reaching out to your contact. Hopefully we'll get
+something useful out of this.
+
+Thanks,
+
+-- 
+Julian Calaby
+
+Email: julian.calaby@gmail.com
+Profile: http://www.google.com/profiles/julian.calaby/
+.Plan: http://sites.google.com/site/juliancalaby/
