@@ -1,57 +1,89 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-vw0-f46.google.com ([209.85.212.46]:39947 "EHLO
-	mail-vw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754253Ab0KENO5 (ORCPT
+Received: from mail-qy0-f181.google.com ([209.85.216.181]:49198 "EHLO
+	mail-qy0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750744Ab0KXIy3 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 5 Nov 2010 09:14:57 -0400
-Received: by vws13 with SMTP id 13so1423855vws.19
-        for <linux-wireless@vger.kernel.org>; Fri, 05 Nov 2010 06:14:56 -0700 (PDT)
-Message-ID: <4CD4036E.9090300@lwfinger.net>
-Date: Fri, 05 Nov 2010 08:15:26 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
+	Wed, 24 Nov 2010 03:54:29 -0500
 MIME-Version: 1.0
-To: Josh Lehan <krellan@krellan.com>
-CC: Pavel Machek <pma@sysgo.com>, linux-wireless@vger.kernel.org
-Subject: Re: working usb wifi card, that is still possible to buy
-References: <20101103092431.GA21138@pma.sysgo.com> <4CD3CDB1.2090508@krellan.com>
-In-Reply-To: <4CD3CDB1.2090508@krellan.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Reply-To: sedat.dilek@gmail.com
+In-Reply-To: <1290579285.3790.1.camel@jlt3.sipsolutions.net>
+References: <AANLkTinVUkgZKbAkQ3_27Jw3cXJ7qySxm1UMFSReujfp@mail.gmail.com>
+	<1290579285.3790.1.camel@jlt3.sipsolutions.net>
+Date: Wed, 24 Nov 2010 09:54:23 +0100
+Message-ID: <AANLkTi=Bf3avTORbP23K7LJfR_T8i5hRm9xVvKGyDRPp@mail.gmail.com>
+Subject: Re: linux-next: Tree for November 24 (iwlwifi-fix)
+From: Sedat Dilek <sedat.dilek@googlemail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: LKML <linux-kernel@vger.kernel.org>,
+	wireless <linux-wireless@vger.kernel.org>, sfr@canb.auug.org.au,
+	Randy Dunlap <randy.dunlap@oracle.com>,
+	John Linville <linville@tuxdriver.com>,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 11/05/2010 04:26 AM, Josh Lehan wrote:
-> On 11/03/2010 02:24 AM, Pavel Machek wrote:
->> Hi!
->>
->> Is there an USB wifi card that can still be bought in reasonable
->> ammount (like 1000 pieces) and is well supported by Linux?
->>
->> So far I tried carl9170 (as seen by previous mails) and
->> rt2x00usb. carl9170 is not really usable; rt2x00usb works a bit
->> better, but also fails after some time:
-> 
-> I would like to know as well.  This would be for ARM, though, not
-> PowerPC.  It's tough finding reliable USB Wi-Fi adapters that work under
-> Linux these days.  It seems the development focus has shifted to
-> PCI-based chipsets, unfortunately.
-> 
-> I've had mixed success with the VIA VT6656.  These drivers are only at
-> "staging" quality within the mainline kernel, though.  There are
-> separate drivers that can be downloaded directly from the vendor, though.
-> 
-> Anybody else have a good suggestion?
+On Wed, Nov 24, 2010 at 7:14 AM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
+> On Wed, 2010-11-24 at 07:09 +0100, Sedat Dilek wrote:
+>
+>> Is that fix still required? Fixed in wireless-next-2.6?
+>
+> That patch was causing that problem, but I fixed the original problem
+> since.
+>
+> johannes
+>
 
-The Realtek RTL8712 (aka RTL8192U) and found in the D-Link DWA 130, has a driver
-in 2.6.37 (r8712u). Although not based on mac80211, thus found in staging, the
-driver is extremely stable - my connection never drops out. With an 802.11n
-router, I get transmission throughput of up to 70 Mb/s. The D-Link site has
-these available for about $55, although I bought mine new on E-bay for a lot
-less than that.
+Thanks for the quick reply.
 
-Realtek has recently supplied me with a mac80211-based driver for the RTL8192CE,
-which has the same wireless chip with a PCIe interface. As soon as I receive my
-sample cards, that driver will be submitted to wireless testing, and it will be
-the template for conversion of r8712u. As a result, the current staging driver
-should be converted into mainline within the next few months.
+I dropped that patch in my series and it looks good now (compile-tested):
 
-Larry
+$ grep iwl build_linux-next_next20101124.dileks.1.log
+  LD      drivers/net/wireless/iwlwifi/built-in.o
+  CC [M]  drivers/net/wireless/iwlwifi/iwl3945-base.o
+  CC [M]  drivers/net/wireless/iwlwifi/iwl-3945.o
+  CC [M]  drivers/net/wireless/iwlwifi/iwl-3945-rs.o
+  CC [M]  drivers/net/wireless/iwlwifi/iwl-3945-led.o
+  CC [M]  drivers/net/wireless/iwlwifi/iwl-agn.o
+  CC [M]  drivers/net/wireless/iwlwifi/iwl-agn-rs.o
+  CC [M]  drivers/net/wireless/iwlwifi/iwl-agn-led.o
+  CC [M]  drivers/net/wireless/iwlwifi/iwl-agn-ucode.o
+  CC [M]  drivers/net/wireless/iwlwifi/iwl-agn-tx.o
+  CC [M]  drivers/net/wireless/iwlwifi/iwl-agn-lib.o
+  CC [M]  drivers/net/wireless/iwlwifi/iwl-agn-rx.o
+  CC [M]  drivers/net/wireless/iwlwifi/iwl-agn-calib.o
+  CC [M]  drivers/net/wireless/iwlwifi/iwl-agn-tt.o
+  CC [M]  drivers/net/wireless/iwlwifi/iwl-agn-sta.o
+  CC [M]  drivers/net/wireless/iwlwifi/iwl-agn-eeprom.o
+  CC [M]  drivers/net/wireless/iwlwifi/iwl-4965.o
+  CC [M]  drivers/net/wireless/iwlwifi/iwl-agn-rxon.o
+  CC [M]  drivers/net/wireless/iwlwifi/iwl-agn-hcmd.o
+  CC [M]  drivers/net/wireless/iwlwifi/iwl-agn-ict.o
+  CC [M]  drivers/net/wireless/iwlwifi/iwl-5000.o
+  CC [M]  drivers/net/wireless/iwlwifi/iwl-6000.o
+  CC [M]  drivers/net/wireless/iwlwifi/iwl-1000.o
+  CC [M]  drivers/net/wireless/iwlwifi/iwl-core.o
+  CC [M]  drivers/net/wireless/iwlwifi/iwl-eeprom.o
+  CC [M]  drivers/net/wireless/iwlwifi/iwl-hcmd.o
+  CC [M]  drivers/net/wireless/iwlwifi/iwl-power.o
+  CC [M]  drivers/net/wireless/iwlwifi/iwl-rx.o
+  CC [M]  drivers/net/wireless/iwlwifi/iwl-tx.o
+  CC [M]  drivers/net/wireless/iwlwifi/iwl-sta.o
+  CC [M]  drivers/net/wireless/iwlwifi/iwl-scan.o
+  CC [M]  drivers/net/wireless/iwlwifi/iwl-led.o
+  CC [M]  drivers/net/wireless/iwlwifi/iwl-legacy.o
+  LD [M]  drivers/net/wireless/iwlwifi/iwlcore.o
+  LD [M]  drivers/net/wireless/iwlwifi/iwlagn.o
+  LD [M]  drivers/net/wireless/iwlwifi/iwl3945.o
+  CC      drivers/net/wireless/iwlwifi/iwl3945.mod.o
+  CC      drivers/net/wireless/iwlwifi/iwlagn.mod.o
+  CC      drivers/net/wireless/iwlwifi/iwlcore.mod.o
+  LD [M]  drivers/net/wireless/iwlwifi/iwl3945.ko
+  LD [M]  drivers/net/wireless/iwlwifi/iwlagn.ko
+  LD [M]  drivers/net/wireless/iwlwifi/iwlcore.ko
+  INSTALL drivers/net/wireless/iwlwifi/iwl3945.ko
+  INSTALL drivers/net/wireless/iwlwifi/iwlagn.ko
+  INSTALL drivers/net/wireless/iwlwifi/iwlcore.ko
+
+- Sedat -
