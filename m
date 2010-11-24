@@ -1,47 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mgw-da01.nokia.com ([147.243.128.24]:18197 "EHLO
-	mgw-da01.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750941Ab0KATPN (ORCPT
+Received: from gerolde.archlinux.org ([66.211.214.132]:36170 "EHLO
+	archlinux.org" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1753800Ab0KXRFq (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 1 Nov 2010 15:15:13 -0400
-Subject: Re: [PATCH 2/2] wl1271: refactor debugfs function generation code
-From: Luciano Coelho <luciano.coelho@nokia.com>
-To: ext Eliad Peller <eliad@wizery.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <1288184310-6781-2-git-send-email-eliad@wizery.com>
-References: <1288184310-6781-1-git-send-email-eliad@wizery.com>
-	 <1288184310-6781-2-git-send-email-eliad@wizery.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Mon, 01 Nov 2010 21:23:23 +0200
-Message-ID: <1288639403.21112.50.camel@powerslave>
-Mime-Version: 1.0
+	Wed, 24 Nov 2010 12:05:46 -0500
+Message-ID: <4CED4464.2000106@archlinux.org>
+Date: Wed, 24 Nov 2010 17:59:16 +0100
+From: =?ISO-8859-15?Q?Thomas_B=E4chler?= <thomas@archlinux.org>
+MIME-Version: 1.0
+To: linux-wireless@vger.kernel.org
+CC: "John W. Linville" <linville@tuxdriver.com>
+Subject: Re: [ANN] wireless-regdb: master-2010-11-22
+References: <E1PKkCh-0005Ay-R2@sipsolutions.net>
+In-Reply-To: <E1PKkCh-0005Ay-R2@sipsolutions.net>
+Content-Type: text/plain; charset=ISO-8859-15
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2010-10-27 at 14:58 +0200, ext Eliad Peller wrote:
-> refactor wl1271_debugfs by using a format&copy function, instead of
-> duplicating the code for each generated function.
+Am 23.11.2010 05:10, schrieb
+wireless-cdvu00un1VgdHxzADdlk8Q@public.gmane.org:
+> A new release of wireless-regdb (master-2010-11-22) is available at:
 > 
-> this change reduces about 3Kb from wl1271.ko
+> http://wireless.kernel.org/download/wireless-regdb/wireless-regdb-2010.11.22.tar.bz2
 > 
-> Signed-off-by: Eliad Peller <eliad@wizery.com>
-> ---
+> SHA1 sum: d0b008b4d32105cf6a87860b5a69e8066b03baaa
+> 
+> 
+> For your convenience the individual regulatory.bin file can be downloaded from:
+> 
+> http://wireless.kernel.org/download/wireless-regdb/regulatory.bins/2010.11.22-regulatory.bin
+> 
+> SHA1 sum d7e558216ebe4d5ad01ccb0029c64456f740b9fd
 
-Looks good, thanks!
+Hello,
 
-Reviewed-by: Luciano Coelho <luciano.coelho@nokia.com>
+the binary does not work for me:
 
-I have applied this patch, but I won't apply the one for mac80211 [1/2],
-because patches for mac80211 go directly to linux-wireless.
+$ sha1sum 2010.11.22-regulatory.bin
+d7e558216ebe4d5ad01ccb0029c64456f740b9fd  2010.11.22-regulatory.bin
+$ regdbdump ./2010.11.22-regulatory.bin
+Database signature verification failed.
 
-John, can you apply patch [1/2], the mac80211 part, separately on your
-tree? If Johannes agrees, of course.  This one I'll send together with
-my next pull request.  
-
-PS: I have fixed a couple of whitespace checkpatch warnings.
-
--- 
-Cheers,
-Luca.
-
+The old 2009.11.25-regulatory.bin works fine.
