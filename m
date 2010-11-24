@@ -1,113 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:49520 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753186Ab0KET1N (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 5 Nov 2010 15:27:13 -0400
-From: Hauke Mehrtens <hauke@hauke-m.de>
-To: lrodriguez@atheros.com
-Cc: linux-wireless@vger.kernel.org, mcgrof@infradead.org,
-	Hauke Mehrtens <hauke@hauke-m.de>
-Subject: [PATCH 1/2] compat: fix build with kernel 2.6.37rc1
-Date: Fri,  5 Nov 2010 20:27:02 +0100
-Message-Id: <1288985223-30264-1-git-send-email-hauke@hauke-m.de>
+Received: from mail-gw0-f46.google.com ([74.125.83.46]:36456 "EHLO
+	mail-gw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752951Ab0KXKSp convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 24 Nov 2010 05:18:45 -0500
+Received: by gwj20 with SMTP id 20so658901gwj.19
+        for <linux-wireless@vger.kernel.org>; Wed, 24 Nov 2010 02:18:44 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <1290592288.3790.12.camel@jlt3.sipsolutions.net>
+References: <1290591333-30453-1-git-send-email-eliad@wizery.com>
+	<1290592192.3790.11.camel@jlt3.sipsolutions.net>
+	<1290592288.3790.12.camel@jlt3.sipsolutions.net>
+Date: Wed, 24 Nov 2010 12:18:44 +0200
+Message-ID: <AANLkTinAEN=OUpXP3V0exw_EuU+cq8Vm_G0F_zdHEMzV@mail.gmail.com>
+Subject: Re: [PATCH] wl1271: use debugfs_remove_recursive
+From: Eliad Peller <eliad@wizery.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Luciano Coelho <luciano.coelho@nokia.com>,
+	linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Some backports are also needed when compiling against kernel 2.6.37.
+On Wed, Nov 24, 2010 at 11:51 AM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
+> On Wed, 2010-11-24 at 10:49 +0100, Johannes Berg wrote:
+>> On Wed, 2010-11-24 at 11:35 +0200, Eliad Peller wrote:
+>>
+>> > @@ -524,23 +423,14 @@ int wl1271_debugfs_init(struct wl1271 *wl)
+>> >  {
+>> >     int ret;
+>> >
+>> > -   wl->debugfs.rootdir = debugfs_create_dir(KBUILD_MODNAME, NULL);
+>> > +   wl->rootdir = debugfs_create_dir(KBUILD_MODNAME, NULL);
+>> >
+>> > -   if (IS_ERR(wl->debugfs.rootdir)) {
+>> > -           ret = PTR_ERR(wl->debugfs.rootdir);
+>> > -           wl->debugfs.rootdir = NULL;
+>> > +   if (IS_ERR(wl->rootdir)) {
+>> > +           ret = PTR_ERR(wl->rootdir);
+>> > +           wl->rootdir = NULL;
+>> >             goto err;
+>> >     }
+>>
+>> This looks problematic if you ever have more than one device ... I
+>> suggest moving to using the wiphy's debugfs dir as the parent for the
+>> rootdir.
+>
+> But of course, that comment is entirely unrelated to _this_ patch.
+>
+good point.
+i'll take care of it and send it as a new patch series.
 
-Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
----
- include/linux/compat-2.6.37.h |   20 --------------------
- include/linux/compat-2.6.38.h |   30 ++++++++++++++++++++++++++++++
- include/linux/compat-2.6.h    |    1 +
- 3 files changed, 31 insertions(+), 20 deletions(-)
- create mode 100644 include/linux/compat-2.6.38.h
-
-diff --git a/include/linux/compat-2.6.37.h b/include/linux/compat-2.6.37.h
-index 716f528..6c026a3 100644
---- a/include/linux/compat-2.6.37.h
-+++ b/include/linux/compat-2.6.37.h
-@@ -7,23 +7,6 @@
- 
- #include <linux/skbuff.h>
- 
--/*
-- * This is not part of The 2.6.37 kernel yet but we
-- * we use it to optimize the backport code we
-- * need to implement. Instead of using ifdefs
-- * to check what version of the check we use
-- * we just replace all checks on current code
-- * with this. I'll submit this upstream too, that
-- * way all we'd have to do is to implement this
-- * for older kernels, then we would not have to
-- * edit the upstrema code for backport efforts.
-- */
--#if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,36))
--#define br_port_exists(dev)	(dev->priv_flags & IFF_BRIDGE_PORT)
--#else
--#define br_port_exists(dev)	(dev->br_port)
--#endif
--
- #define SDIO_CLASS_BT_AMP	0x09	/* Type-A Bluetooth AMP interface */
- 
- extern struct kobj_ns_type_operations net_ns_type_operations;
-@@ -110,9 +93,6 @@ int genl_unregister_family(struct genl_family *family);
- #define genl_register_mc_group(_fam, _grp) genl_register_mc_group(&(_fam)->family, _grp)
- #define genl_unregister_mc_group(_fam, _grp) genl_unregister_mc_group(&(_fam)->family, _grp)
- 
--/* rename member in struct mmc_host in include/linux/mmc/host.h */
--#define max_segs	max_hw_segs
--
- #endif /* (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,37)) */
- 
- #endif /* LINUX_26_37_COMPAT_H */
-diff --git a/include/linux/compat-2.6.38.h b/include/linux/compat-2.6.38.h
-new file mode 100644
-index 0000000..fa77a89
---- /dev/null
-+++ b/include/linux/compat-2.6.38.h
-@@ -0,0 +1,30 @@
-+#ifndef LINUX_26_38_COMPAT_H
-+#define LINUX_26_38_COMPAT_H
-+
-+#include <linux/version.h>
-+
-+#if (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,38))
-+
-+/*
-+ * This is not part of The 2.6.37 kernel yet but we
-+ * we use it to optimize the backport code we
-+ * need to implement. Instead of using ifdefs
-+ * to check what version of the check we use
-+ * we just replace all checks on current code
-+ * with this. I'll submit this upstream too, that
-+ * way all we'd have to do is to implement this
-+ * for older kernels, then we would not have to
-+ * edit the upstrema code for backport efforts.
-+ */
-+#if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,36))
-+#define br_port_exists(dev)	(dev->priv_flags & IFF_BRIDGE_PORT)
-+#else
-+#define br_port_exists(dev)	(dev->br_port)
-+#endif
-+
-+/* rename member in struct mmc_host in include/linux/mmc/host.h */
-+#define max_segs	max_hw_segs
-+
-+#endif /* (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,38)) */
-+
-+#endif /* LINUX_26_38_COMPAT_H */
-diff --git a/include/linux/compat-2.6.h b/include/linux/compat-2.6.h
-index 25490f2..2706797 100644
---- a/include/linux/compat-2.6.h
-+++ b/include/linux/compat-2.6.h
-@@ -30,5 +30,6 @@
- #include <linux/compat-2.6.35.h>
- #include <linux/compat-2.6.36.h>
- #include <linux/compat-2.6.37.h>
-+#include <linux/compat-2.6.38.h>
- 
- #endif /* LINUX_26_COMPAT_H */
--- 
-1.7.1
-
+Eliad.
