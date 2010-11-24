@@ -1,68 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.sdinet.de ([78.47.32.153]:43404 "EHLO mail.sdinet.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751214Ab0KWUkb (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 23 Nov 2010 15:40:31 -0500
-Date: Tue, 23 Nov 2010 21:39:06 +0100 (CET)
-From: Sven-Haegar Koch <haegar@sdinet.de>
-To: lrodriguez@atheros.com
-cc: linux-wireless@vger.kernel.org
-Subject: [PATCH] compat-wireless: fix activesync devices
-Message-ID: <alpine.DEB.2.02.1011232127490.21566@aurora.sdinet.de>
+Received: from mail.candelatech.com ([208.74.158.172]:52576 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754083Ab0KXTGN (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 24 Nov 2010 14:06:13 -0500
+Message-ID: <4CED6212.4070500@candelatech.com>
+Date: Wed, 24 Nov 2010 11:05:54 -0800
+From: Ben Greear <greearb@candelatech.com>
 MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: Bruno Randolf <br1@einfach.org>, linville@tuxdriver.com,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH v7 3/3] nl80211/mac80211: Report signal average
+References: <20101112024901.28522.21895.stgit@localhost6.localdomain6>	 <20101112030035.28522.75318.stgit@localhost6.localdomain6> <1290615890.3790.14.camel@jlt3.sipsolutions.net>
+In-Reply-To: <1290615890.3790.14.camel@jlt3.sipsolutions.net>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On 11/24/2010 08:24 AM, Johannes Berg wrote:
+> On Fri, 2010-11-12 at 12:00 +0900, Bruno Randolf wrote:
+>> Extend nl80211 to report an exponential weighted moving average (EWMA) of the
+>> signal value. Since the signal value usually fluctuates between different
+>> packets, an average can be more useful than the value of the last packet.
+>>
+>> This uses the recently added generic EWMA library function.
+>
+> John, please revert this patch ASAP -- it completely messed up some ABI,
+> and the performance discussion is also not over yet.
 
-Compiling support for ActiveSync devices in compat-wireless depends
-on USB_NET_CDCETHER to be set in main kernel.
+Just so I understand:  Is the ABI issue because the netlink enum
+was added in the middle, or are there other ABI problems?
 
-But USB_NET_CDCETHER can also be a module, in which case 
-CONFIG_USB_NET_CDCETHER will not be defined inside compat_autoconf.h and 
-the compat-wireless cdc_ether.ko will miss the support for it.
+Thanks,
+Ben
 
-So check also for CONFIG_USB_NET_CDCETHER_MODULE in config.mk to be safe 
-in both cases.
-
-Signed-off-by: Sven-Haegar Koch <haegar@sdinet.de>
----
-
-I needed to also use an old windows mobile device (Palm Treo 750) 
-connected over USB with my laptop which otherwise uses compat-wireless.
-
-But after connecting it I only got:
-	usb 2-1: bad CDC descriptors
-
-This happens when in drivers/net/usb/cdc_ether.c 
-CONFIG_USB_NET_COMPAT_RNDIS_HOST and 
-CONFIG_USB_NET_COMPAT_RNDIS_HOST_MODULE both are not defined, because it 
-stubs out the rndis_host support.
-
-Perhaps not the most visually pleasing solution to just include the 
-ifdef block in config.mk twice, but everything else would have needed a 
-much deeper surgery - and as this is the only usage of ifdef in 
-compat.mk where the symbol can also be a module I did not find it to be 
-worth the additional complexity.
-
-Tested with compat-wireless-2.6.36-5-spn.tar.bz2, but also happened with
-earlier versions and should also apply to newer.
-
-c'ya
-sven-haegar
-
-Index: linux/compat-wireless/config.mk
-===================================================================
---- compat-wireless.orig/config.mk
-+++ compat-wireless/config.mk
-@@ -383,6 +383,10 @@ ifdef CONFIG_USB_NET_CDCETHER
- CONFIG_USB_NET_COMPAT_RNDIS_HOST=m
- CONFIG_USB_NET_COMPAT_RNDIS_WLAN=m
- endif #CONFIG_USB_NET_CDCETHER
-+ifdef CONFIG_USB_NET_CDCETHER_MODULE
-+CONFIG_USB_NET_COMPAT_RNDIS_HOST=m
-+CONFIG_USB_NET_COMPAT_RNDIS_WLAN=m
-+endif #CONFIG_USB_NET_CDCETHER
- CONFIG_USB_NET_COMPAT_CDCETHER=m
- endif #CONFIG_COMPAT_KERNEL_29
- 
+-- 
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
