@@ -1,71 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from swampdragon.chaosbits.net ([90.184.90.115]:27220 "EHLO
-	swampdragon.chaosbits.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750725Ab0KDWKw (ORCPT
+Received: from mail-gw0-f46.google.com ([74.125.83.46]:38209 "EHLO
+	mail-gw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754520Ab0KXQ7J convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 4 Nov 2010 18:10:52 -0400
-Date: Thu, 4 Nov 2010 22:59:56 +0100 (CET)
-From: Jesper Juhl <jj@chaosbits.net>
-To: linux-kernel@vger.kernel.org
-cc: "John W. Linville" <linville@tuxdriver.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	"David S. Miller" <davem@davemloft.net>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH] mac80211: Remove redundant checks for NULL before calls to
- crypto_free_cipher()
-Message-ID: <alpine.LNX.2.00.1011042251520.16015@swampdragon.chaosbits.net>
+	Wed, 24 Nov 2010 11:59:09 -0500
+Received: by gwj20 with SMTP id 20so911304gwj.19
+        for <linux-wireless@vger.kernel.org>; Wed, 24 Nov 2010 08:59:08 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+In-Reply-To: <1290592410.25710.4.camel@chilepepper>
+References: <1290438027-20179-1-git-send-email-luciano.coelho@nokia.com>
+ <1290438027-20179-2-git-send-email-luciano.coelho@nokia.com>
+ <AANLkTinrKyw-EHKrt5WKbHjbiQUM7Vhz3MR3n8OdWpzf@mail.gmail.com> <1290592410.25710.4.camel@chilepepper>
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Date: Wed, 24 Nov 2010 08:58:48 -0800
+Message-ID: <AANLkTi=pPT84kCOzEbUX+5nTwn4tM=Z-kmYae9Nirv-1@mail.gmail.com>
+Subject: Re: [PATCH 1/1] compat-wireless: apply changes needed after
+ wl1271->wl12xx renaming
+To: Luciano Coelho <luciano.coelho@nokia.com>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello,
+On Wed, Nov 24, 2010 at 1:53 AM, Luciano Coelho
+<luciano.coelho@nokia.com> wrote:
+> Hi Luis,
+>
+>
+> On Mon, 2010-11-22 at 10:13 -0800, ext Luis R. Rodriguez wrote:
+>> On Mon, Nov 22, 2010 at 7:00 AM,  <luciano.coelho@nokia.com> wrote:
+>> > From: Luciano Coelho <luciano.coelho@nokia.com>
+>> >
+>> > This patch changes the occurrences of wl1271 in the Makefile, README and in
+>> > the scripts to wl12xx, since the driver has been renamed.
+>> >
+>> > Also remove the wl1271_ prefix from the filenames.
+>> >
+>> > Signed-off-by: Luciano Coelho <luciano.coelho@nokia.com>
+>>
+>> Applied and pushed, thanks!
+>
+> It seems that the wl12xx file name changes are now in linux-next.  I
+> guess it's okay to include this patch in compat-wireless now.
+>
+> Sorry for the trouble!
 
-crypto_free_cipher() is a wrapper around crypto_free_tfm() which is a 
-wrapper around crypto_destroy_tfm() and the latter can handle being passed 
-a NULL pointer, so checking for NULL in the 
-ieee80211_aes_key_free()/ieee80211_aes_cmac_key_free() wrappers around 
-crypto_free_cipher() is pointless and just increase object code size 
-needlesly and makes us execute extra test/branch instructions that we 
-don't need.
-Btw; don't we have to many wrappers around wrappers ad nauseam here?
-Anyway, this patch removes the redundant conditionals.
+Its already there, thanks!
 
-Signed-off-by: Jesper Juhl <jj@chaosbits.net>
----
- aes_ccm.c  |    3 +--
- aes_cmac.c |    3 +--
- 2 files changed, 2 insertions(+), 4 deletions(-)
-
-diff --git a/net/mac80211/aes_ccm.c b/net/mac80211/aes_ccm.c
-index d2b03e0..4bd6ef0 100644
---- a/net/mac80211/aes_ccm.c
-+++ b/net/mac80211/aes_ccm.c
-@@ -147,6 +147,5 @@ struct crypto_cipher *ieee80211_aes_key_setup_encrypt(const u8 key[])
- 
- void ieee80211_aes_key_free(struct crypto_cipher *tfm)
- {
--	if (tfm)
--		crypto_free_cipher(tfm);
-+	crypto_free_cipher(tfm);
- }
-diff --git a/net/mac80211/aes_cmac.c b/net/mac80211/aes_cmac.c
-index b4d66cc..d502b26 100644
---- a/net/mac80211/aes_cmac.c
-+++ b/net/mac80211/aes_cmac.c
-@@ -128,6 +128,5 @@ struct crypto_cipher * ieee80211_aes_cmac_key_setup(const u8 key[])
- 
- void ieee80211_aes_cmac_key_free(struct crypto_cipher *tfm)
- {
--	if (tfm)
--		crypto_free_cipher(tfm);
-+	crypto_free_cipher(tfm);
- }
-
-
-
--- 
-Jesper Juhl <jj@chaosbits.net>             http://www.chaosbits.net/
-Plain text mails only, please      http://www.expita.com/nomime.html
-Don't top-post  http://www.catb.org/~esr/jargon/html/T/top-post.html
-
+  Luis
