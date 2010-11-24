@@ -1,56 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yw0-f46.google.com ([209.85.213.46]:42917 "EHLO
-	mail-yw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754150Ab0KDFeR convert rfc822-to-8bit (ORCPT
+Received: from mail-qw0-f46.google.com ([209.85.216.46]:61444 "EHLO
+	mail-qw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754641Ab0KXRd7 convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 4 Nov 2010 01:34:17 -0400
-Received: by ywc21 with SMTP id 21so1076295ywc.19
-        for <linux-wireless@vger.kernel.org>; Wed, 03 Nov 2010 22:34:17 -0700 (PDT)
+	Wed, 24 Nov 2010 12:33:59 -0500
+Received: by qwb7 with SMTP id 7so1093355qwb.19
+        for <linux-wireless@vger.kernel.org>; Wed, 24 Nov 2010 09:33:58 -0800 (PST)
 MIME-Version: 1.0
-In-Reply-To: <1288836908.4083.2.camel@jlt3.sipsolutions.net>
-References: <1288821053-19013-1-git-send-email-arik@wizery.com>
- <1288821053-19013-4-git-send-email-arik@wizery.com> <1288836908.4083.2.camel@jlt3.sipsolutions.net>
-From: Arik Nemtsov <arik@wizery.com>
-Date: Thu, 4 Nov 2010 07:34:01 +0200
-Message-ID: <AANLkTimXwopqOUcBWxwAmEH1tJbtLQisW7dmm+XDWHPe@mail.gmail.com>
-Subject: Re: [PATCH 3/4] mac80211: don't fragment packets when
- HW-fragmentation is on
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org,
-	Luciano Coelho <luciano.coelho@nokia.com>
-Content-Type: text/plain; charset=ISO-8859-1
+In-Reply-To: <20101124170639.GD7435@tuxdriver.com>
+References: <E1PKkCh-0005Ay-R2@sipsolutions.net> <4CED4464.2000106@archlinux.org>
+ <20101124170639.GD7435@tuxdriver.com>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Wed, 24 Nov 2010 09:33:36 -0800
+Message-ID: <AANLkTin2n7ofZ0oom_aD+V4aFZ3dti1P77Mh6bpZOE6Z@mail.gmail.com>
+Subject: Re: [ANN] wireless-regdb: master-2010-11-22
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: =?UTF-8?Q?Thomas_B=C3=A4chler?= <thomas@archlinux.org>,
+	linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Nov 4, 2010 at 04:15, Johannes Berg <johannes@sipsolutions.net> wrote:
+On Wed, Nov 24, 2010 at 9:06 AM, John W. Linville
+<linville@tuxdriver.com> wrote:
+> On Wed, Nov 24, 2010 at 05:59:16PM +0100, Thomas BÃ¤chler wrote:
+>> Am 23.11.2010 05:10, schrieb
+>> wireless-cdvu00un1VgdHxzADdlk8Q@public.gmane.org:
+>> > A new release of wireless-regdb (master-2010-11-22) is available at:
+>> >
+>> > http://wireless.kernel.org/download/wireless-regdb/wireless-regdb-2010.11.22.tar.bz2
+>> >
+>> > SHA1 sum: d0b008b4d32105cf6a87860b5a69e8066b03baaa
+>> >
+>> >
+>> > For your convenience the individual regulatory.bin file can be downloaded from:
+>> >
+>> > http://wireless.kernel.org/download/wireless-regdb/regulatory.bins/2010.11.22-regulatory.bin
+>> >
+>> > SHA1 sum d7e558216ebe4d5ad01ccb0029c64456f740b9fd
+>>
+>> Hello,
+>>
+>> the binary does not work for me:
+>>
+>> $ sha1sum 2010.11.22-regulatory.bin
+>> d7e558216ebe4d5ad01ccb0029c64456f740b9fd Â 2010.11.22-regulatory.bin
+>> $ regdbdump ./2010.11.22-regulatory.bin
+>> Database signature verification failed.
+>>
+>> The old 2009.11.25-regulatory.bin works fine.
 >
-> On Wed, 2010-11-03 at 23:50 +0200, Arik Nemtsov wrote:
-> > If the driver supports hardware TX fragmentation, don't fragment
-> > packets in the stack.
+> It seems to be working for me, even on a freshly installed RHEL6 box
+> (so no random keys scattered about).
 >
-> I'm not sure why you have three patches? Seems like it could all be a
-> single mac80211 patch.
+> Anyone else seeing this issue? Â I seem to remember that we had a
+> similar problem some time back...?
 
-Sure. I'll send a v2 with the mac80211 patches bundled into a single one.
+I see the same issue:
 
->
-> > @@ -1181,8 +1183,10 @@ ieee80211_tx_prepare(struct ieee80211_sub_if_data *sdata,
-> >       /*
-> >        * Set this flag (used below to indicate "automatic fragmentation"),
-> >        * it will be cleared/left by radiotap as desired.
-> > +      * Only valid when fragmentation is done by the stack.
-> >        */
-> > -     tx->flags |= IEEE80211_TX_FRAGMENTED;
-> > +     if (!(local->hw.flags & IEEE80211_HW_TX_FRAGMENTATION))
-> > +             tx->flags |= IEEE80211_TX_FRAGMENTED;
->
-> Do we really need the hw flag? Couldn't we go off the callback, like we
-> used to? I'm not really sure which one would perform better though, I
-> guess the flag might ...
+mcgrof@tux ~/devel/crda (git::master)$ ./regdbdump
+/home/mcgrof/2010.11.22-regulatory.bin
+Database signature verification failed.
 
-I think the flag may be less confusing for new driver writers.
-Someone can implement the callback as a no-op and have a bug in his
-code as a result.
-
-Regards,
-Arik
+  Luis
