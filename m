@@ -1,61 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gy0-f174.google.com ([209.85.160.174]:50273 "EHLO
-	mail-gy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754152Ab0K2Guj convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 29 Nov 2010 01:50:39 -0500
-Received: by gyb11 with SMTP id 11so1829907gyb.19
-        for <linux-wireless@vger.kernel.org>; Sun, 28 Nov 2010 22:50:38 -0800 (PST)
+Received: from mail.sysgo.com ([195.145.229.155]:58871 "EHLO mail.sysgo.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751546Ab0KXIPW (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 24 Nov 2010 03:15:22 -0500
+Date: Wed, 24 Nov 2010 09:16:16 +0100
+From: Pavel Machek <pma@sysgo.com>
+To: kernel list <linux-kernel@vger.kernel.org>,
+	chunkeey@googlemail.com, linux-wireless@vger.kernel.org
+Subject: Re: working usb wifi card, that is still possible to buy
+Message-ID: <20101124081616.GA30595@pma.sysgo.com>
+References: <20101103092431.GA21138@pma.sysgo.com>
 MIME-Version: 1.0
-In-Reply-To: <1290759315.15341.2.camel@chilepepper>
-References: <1290079951-16793-1-git-send-email-arik@wizery.com> <1290759315.15341.2.camel@chilepepper>
-From: Arik Nemtsov <arik@wizery.com>
-Date: Mon, 29 Nov 2010 08:50:23 +0200
-Message-ID: <AANLkTinD06Py==U5V2Lx2x1M_EZ0Lr1M_RuQ1hKRLrRR@mail.gmail.com>
-Subject: Re: [PATCH 00/18] AP mode support for wl12xx
-To: Luciano Coelho <luciano.coelho@nokia.com>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20101103092431.GA21138@pma.sysgo.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hey Luca,
+Hi!
 
->
-> Unfortunately I didn't have much time to look into your AP patches yet.
-> We need to review this very carefully.  It touches so many parts of the
-> code that I'm a bit worried that this would break normal STA
-> functionality.
+So we shopped around a bit, and got following cards:
 
-Most of the patches add AP related functionality without touching the
-flow in STA mode.
-In fact the only patch that touches STA is "[PATCH 06/18] wl1271: AP
-mode - init sequence". The init sequence has been modified to unify
-the STA and AP common parts and separate the different parts into
-different functions.
-For STA mode this means a slight change in the order of initialization.
+TP-LINK TL-WN321G, 148f:2070, ralink?
+PEGATRON WL166N11, 1d4d:000c, ralink?
+Tenda w311U, 148f:3070, ralink?
+Netgear WPN111, 1385:5f01, atheros?
+edimax ew-7711UMn, 7392:7711, ralink?
+Canyon CNP-WF518N2, 0bda:8171, realtek? 
+EMTEC Wi350, 0bda:8172, realtek?
+MSI WLAN 11N US300EX Lite, 148f:3070, ralink?
+AirLive Wl-1600 USB, 1b75:8187, rtl8187 driver, works out of the box
+on 2.6.27.25-78.2.56.fc9.i686 kernel
+Netgear wg111, 05e3:4260, rtl8187 driver, works out of the box on
+2.6.27.25-78.2.56.fc9.i686 kernel
+D-Link DWA-131, 07d1:3303, realtek?
+TP-Link TL-WN721N, 0cf3:9271, atheros?
+TP-Link TL-WN322G, 0cf3:1006, atheros?
 
-Other changes are basically:
-1. STA function renames
-2. removing STA functionality when operating in AP mode by protecting
-code segments with "if (!is_ap)"
-3. adding AP mode only functionality. This includes code segments with
-"if (is_ap)" in common STA/AP code.
+I'd update database at linuxwireless.org, but have not figured out how
+to do that. I do have an account, but "edit" button on 
 
->
-> How well have you tested these patches in STA mode? Do you think there
-> would be any possibility of making this Kconfigurable so that there
-> would be no (or very little) binary difference in the code if AP is not
-> enabled?
+http://linuxwireless.org/en/users/Devices/USB
 
-We have performed extensive stress tests on the init sequence part
-(constant on/off for several days). Basic throughput and stress tests
-were performed for STA mode operation (as well as AP mode operation).
-A third kind of test was a stress test of the switch between STA and AP modes.
+does not exactly do anything useful :-(.
 
-We feel making the AP mode Kconfigurable will make the code uglier and
-hurt maintainability. We were hoping we could avoid it by structuring
-the code as it is.
-
-Regards,
-Arik
+								Pavel
