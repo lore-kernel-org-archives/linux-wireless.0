@@ -1,71 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ey0-f174.google.com ([209.85.215.174]:50386 "EHLO
-	mail-ey0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752221Ab0KPPqP (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 16 Nov 2010 10:46:15 -0500
-Received: by eye27 with SMTP id 27so356909eye.19
-        for <linux-wireless@vger.kernel.org>; Tue, 16 Nov 2010 07:46:14 -0800 (PST)
-From: Helmut Schaa <helmut.schaa@googlemail.com>
-To: Ivo van Doorn <ivdoorn@gmail.com>
-Subject: Re: [PATCH 9/9] rt2x00: Modify rt2x00queue_remove_l2pad to make skb->data two-byte alignment
-Date: Tue, 16 Nov 2010 16:45:14 +0100
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com,
-	"RA-Jay Hung" <jay_hung@ralinktech.com>
-References: <201011131908.15595.IvDoorn@gmail.com> <201011131912.55384.IvDoorn@gmail.com> <201011131913.55169.IvDoorn@gmail.com>
-In-Reply-To: <201011131913.55169.IvDoorn@gmail.com>
-MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="us-ascii"
-Message-Id: <201011161645.15018.helmut.schaa@googlemail.com>
+Received: from mga09.intel.com ([134.134.136.24]:43856 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751056Ab0KXPmW (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 24 Nov 2010 10:42:22 -0500
+Subject: Re: [PATCH] iwlwifi: avoid "Error sending TX power (-5)"
+From: "Guy, Wey-Yi" <wey-yi.w.guy@intel.com>
+To: Stanislaw Gruszka <sgruszka@redhat.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	Intel Linux Wireless <ilw@linux.intel.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <20101124141133.GA2983@redhat.com>
+References: <1290595069-3878-1-git-send-email-sgruszka@redhat.com>
+	 <1290595452.3790.13.camel@jlt3.sipsolutions.net>
+	 <20101124130403.GA2446@redhat.com>  <20101124141133.GA2983@redhat.com>
+Content-Type: text/plain
+Date: Wed, 24 Nov 2010 07:41:20 -0800
+Message-Id: <1290613280.28345.6.camel@wwguy-ubuntu>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Am Samstag 13 November 2010 schrieb Ivo van Doorn:
-> From: RA-Jay Hung <Jay_Hung@ralinktech.com>
+Hi Stanislaw,
+
+On Wed, 2010-11-24 at 06:11 -0800, Stanislaw Gruszka wrote:
+> On Wed, Nov 24, 2010 at 02:04:03PM +0100, Stanislaw Gruszka wrote:
+> > On Wed, Nov 24, 2010 at 11:44:12AM +0100, Johannes Berg wrote:
+> > > On Wed, 2010-11-24 at 11:37 +0100, Stanislaw Gruszka wrote:
+> > > > We can have this error message when loading or unloading module, when
+> > > > device is not marked as ready, but we want to set tx power from
+> > > > commit_rxon. Perhaps something better should be done like call
+> > > > lib->send_tx_power() directly from commit_rxon, but for now just
+> > > > do not return error.
+> > > 
+> > > I think this actually fixes it, as opposed to hiding it:
+> > > 
+> > > http://git.kernel.org/?p=linux/kernel/git/iwlwifi/iwlwifi-2.6.git;a=commitdiff;h=9e2e7422d059f9b98c3a0810df92a1ff660ade2f
+> > 
+> > Yes.
 > 
-> When send out skb data to mac80211, orignal code will cause mac80211
-> unaligned access, so modify code to make mac80211 can natural access.
-
-And this introduces the same panic again :(
-
-The problem is the following:
-
-We don't pass the skb in the same state back to mac80211 as we got it.
-
-When inserting the l2pad we're moving the header and thus reduce headroom.
-This patch modifies the bahavior during l2pad removal to not move the header
-back into its old position but instead moves the payload. Thus the skb keeps
-the reduced headroom. If this skb gets requeued into rt2x00 (which can happen
-when the frame wasn't acked and the according STA is known to e in powersave
-mode) the header and payload get aligned again further reducing headroom which
-results in a too small headroom for the TXWI and thus a skb_under_panic.
-
-Helmut
-
-> Signed-off-by: RA-Jay Hung <jay_hung@ralinktech.com>
-> Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
-> ---
->  drivers/net/wireless/rt2x00/rt2x00queue.c |    6 ++++--
->  1 files changed, 4 insertions(+), 2 deletions(-)
+> Not fully, message disappears at start, but not when module
+> is unloaded.
 > 
-> diff --git a/drivers/net/wireless/rt2x00/rt2x00queue.c b/drivers/net/wireless/rt2x00/rt2x00queue.c
-> index dc54317..a3d79c7 100644
-> --- a/drivers/net/wireless/rt2x00/rt2x00queue.c
-> +++ b/drivers/net/wireless/rt2x00/rt2x00queue.c
-> @@ -204,8 +204,10 @@ void rt2x00queue_remove_l2pad(struct sk_buff *skb, unsigned int header_length)
->  	if (!l2pad)
->  		return;
->  
-> -	memmove(skb->data + l2pad, skb->data, header_length);
-> -	skb_pull(skb, l2pad);
-> +	memmove(skb->data + header_length, skb->data + header_length + l2pad,
-> +				skb->len - header_length - l2pad);
-> +
-> +	skb_trim(skb, skb->len - l2pad);
->  }
->  
->  static void rt2x00queue_create_tx_descriptor_seq(struct queue_entry *entry,
-> 
+you are correct, I miss that. Would you like to address that? or I can
+fix it
+
+Thanks
+Wey
 
