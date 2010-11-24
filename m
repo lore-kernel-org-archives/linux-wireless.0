@@ -1,245 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.neratec.ch ([80.75.119.105]:56708 "EHLO mail.neratec.ch"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756659Ab0KKO63 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 11 Nov 2010 09:58:29 -0500
-Date: Thu, 11 Nov 2010 15:58:26 +0100 (CET)
-From: Wojciech Dubowik <dubowoj@neratec.com>
-To: linville@tuxdriver.com
+Received: from mail30t.wh2.ocn.ne.jp ([125.206.180.136]:45317 "HELO
+	mail30t.wh2.ocn.ne.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1751955Ab0KXDE5 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 23 Nov 2010 22:04:57 -0500
+Received: from vs3005.wh2.ocn.ne.jp (125.206.180.233)
+	by mail30t.wh2.ocn.ne.jp (RS ver 1.0.95vs) with SMTP id 0-0273547894
+	for <linux-wireless@vger.kernel.org>; Wed, 24 Nov 2010 12:04:55 +0900 (JST)
+Subject: [PATCH] cfg80211: Add documentation for antenna ops
+To: johannes@sipsolutions.net, linville@tuxdriver.com
+From: Bruno Randolf <br1@einfach.org>
 Cc: linux-wireless@vger.kernel.org
-Message-ID: <12495562.1171289487502962.JavaMail.wlan@CHBU500181>
-In-Reply-To: <5575430.811289486702581.JavaMail.wlan@CHBU500181>
-Subject: [PATCH 9/9] ath5k: AHB port. Fix reset and interrupts for AHB type
- of devices.
+Date: Wed, 24 Nov 2010 12:04:57 +0900
+Message-ID: <20101124030457.19018.33023.stgit@localhost6.localdomain6>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On WiSoc we cannot access mac register before it is resetted.
-Otherwise it will crash hardware.
 
-Signed-off-by: Wojciech Dubowik <Wojciech.Dubowik@neratec.com>
 ---
- drivers/net/wireless/ath/ath5k/base.c  |    7 ++-
- drivers/net/wireless/ath/ath5k/reset.c |  113 ++++++++++++++++++++++++-------
- 2 files changed, 93 insertions(+), 27 deletions(-)
+ include/net/mac80211.h |    7 +++++++
+ 1 files changed, 7 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath5k/base.c b/drivers/net/wireless/ath/ath5k/base.c
-index 13d5da5..00ebb81 100644
---- a/drivers/net/wireless/ath/ath5k/base.c
-+++ b/drivers/net/wireless/ath/ath5k/base.c
-@@ -2175,7 +2175,8 @@ ath5k_intr(int irq, void *dev_id)
- 	unsigned int counter = 1000;
- 
- 	if (unlikely(test_bit(ATH_STAT_INVALID, sc->status) ||
--				!ath5k_hw_is_intr_pending(ah)))
-+		((ath5k_get_bus_type(ah) != ATH_AHB) &&
-+				!ath5k_hw_is_intr_pending(ah))))
- 		return IRQ_NONE;
- 
- 	do {
-@@ -2241,6 +2242,10 @@ ath5k_intr(int irq, void *dev_id)
- 				tasklet_schedule(&sc->rf_kill.toggleq);
- 
- 		}
-+
-+		if(ath5k_get_bus_type(ah) == ATH_AHB)
-+			break;
-+
- 	} while (ath5k_hw_is_intr_pending(ah) && --counter > 0);
- 
- 	if (unlikely(!counter))
-diff --git a/drivers/net/wireless/ath/ath5k/reset.c b/drivers/net/wireless/ath/ath5k/reset.c
-index 198a146..05bf536 100644
---- a/drivers/net/wireless/ath/ath5k/reset.c
-+++ b/drivers/net/wireless/ath/ath5k/reset.c
-@@ -27,6 +27,7 @@
- 
- #include <linux/pci.h> 		/* To determine if a card is pci-e */
- #include <linux/log2.h>
-+#include <linux/platform_device.h>
- #include "ath5k.h"
- #include "reg.h"
- #include "base.h"
-@@ -198,31 +199,73 @@ static inline void ath5k_hw_write_rate_duration(struct ath5k_hw *ah,
+diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+index 5b0fff2..08e4db6 100644
+--- a/include/net/mac80211.h
++++ b/include/net/mac80211.h
+@@ -1745,6 +1745,13 @@ enum ieee80211_ampdu_mlme_action {
+  *	completion of the channel switch.
+  *
+  * @napi_poll: Poll Rx queue for incoming data frames.
++ *
++ * @set_antenna: Set antenna configuration (tx_ant, rx_ant) on the device.
++ *	Parameters are bitmaps of allowed antennas to use for TX/RX. Drivers may
++ *	reject TX/RX mask combinations they cannot support by returning -EINVAL
++ *	(also see nl80211.h @NL80211_ATTR_WIPHY_ANTENNA_TX).
++ *
++ * @get_antenna: Get current antenna configuration from device (tx_ant, rx_ant).
   */
- static int ath5k_hw_nic_reset(struct ath5k_hw *ah, u32 val)
- {
--	int ret;
-+	int ret = 0;
- 	u32 mask = val ? val : ~0U;
- 
- 	/* Read-and-clear RX Descriptor Pointer*/
--	ath5k_hw_reg_read(ah, AR5K_RXDP);
-+	if(!(mask & AR5K_RESET_CTL_MAC))
-+		ath5k_hw_reg_read(ah, AR5K_RXDP);
- 
- 	/*
- 	 * Reset the device and wait until success
- 	 */
--	ath5k_hw_reg_write(ah, val, AR5K_RESET_CTL);
-+	if(ath5k_get_bus_type(ah) == ATH_AHB) {
-+		volatile u32 *reg;
-+		u32 regval;
-+		val = 0;
-+
-+		/* ah->ah_mac_srev is not available at this point yet */
-+		if (ah->ah_sc->devid >= AR5K_SREV_AR2315_R6) {
-+			reg = (u32 *) AR5K_AR2315_RESET;
-+			if (mask & AR5K_RESET_CTL_MAC)
-+				val |= AR5K_AR2315_RESET_WMAC;
-+			if (mask & AR5K_RESET_CTL_BASEBAND)
-+				val |= AR5K_AR2315_RESET_BB_WARM;
-+		} else {
-+			reg = (u32 *) AR5K_AR5312_RESET;
-+			if (to_platform_device(ah->ah_sc->dev)->id == 0) {
-+				if (mask & AR5K_RESET_CTL_MAC)
-+					val |= AR5K_AR5312_RESET_WMAC0;
-+				if (mask & AR5K_RESET_CTL_BASEBAND)
-+					val |= AR5K_AR5312_RESET_BB0_COLD |
-+					       AR5K_AR5312_RESET_BB0_WARM;
-+			} else {
-+				if (mask & AR5K_RESET_CTL_MAC)
-+					val |= AR5K_AR5312_RESET_WMAC1;
-+				if (mask & AR5K_RESET_CTL_BASEBAND)
-+					val |= AR5K_AR5312_RESET_BB1_COLD |
-+					       AR5K_AR5312_RESET_BB1_WARM;
-+			}
-+		}
- 
--	/* Wait at least 128 PCI clocks */
--	udelay(15);
-+		/* Put BB/MAC into reset */
-+		regval = __raw_readl(reg);
-+		__raw_writel(regval | val, reg);
-+		regval = __raw_readl(reg);
-+		udelay(100);
- 
--	if (ah->ah_version == AR5K_AR5210) {
--		val &= AR5K_RESET_CTL_PCU | AR5K_RESET_CTL_DMA
--			| AR5K_RESET_CTL_MAC | AR5K_RESET_CTL_PHY;
--		mask &= AR5K_RESET_CTL_PCU | AR5K_RESET_CTL_DMA
--			| AR5K_RESET_CTL_MAC | AR5K_RESET_CTL_PHY;
-+		/* Bring BB/MAC out of reset */
-+		__raw_writel(regval & ~val, reg);
-+		regval = __raw_readl(reg);
- 	} else {
--		val &= AR5K_RESET_CTL_PCU | AR5K_RESET_CTL_BASEBAND;
--		mask &= AR5K_RESET_CTL_PCU | AR5K_RESET_CTL_BASEBAND;
--	}
- 
--	ret = ath5k_hw_register_timeout(ah, AR5K_RESET_CTL, mask, val, false);
-+		ath5k_hw_reg_write(ah, val, AR5K_RESET_CTL);
-+
-+		/* Wait at least 128 PCI clocks */
-+		udelay(15);
-+
-+		if (ah->ah_version == AR5K_AR5210) {
-+			val &= AR5K_RESET_CTL_PCU | AR5K_RESET_CTL_DMA
-+				| AR5K_RESET_CTL_MAC | AR5K_RESET_CTL_PHY;
-+			mask &= AR5K_RESET_CTL_PCU | AR5K_RESET_CTL_DMA
-+				| AR5K_RESET_CTL_MAC | AR5K_RESET_CTL_PHY;
-+		} else {
-+			val &= AR5K_RESET_CTL_PCU | AR5K_RESET_CTL_BASEBAND;
-+			mask &= AR5K_RESET_CTL_PCU | AR5K_RESET_CTL_BASEBAND;
-+		}
-+
-+		ret = ath5k_hw_register_timeout(ah, AR5K_RESET_CTL, mask, val, false);
-+	}
- 
- 	/*
- 	 * Reset configuration register (for hw byte-swap). Note that this
-@@ -334,6 +377,9 @@ int ath5k_hw_on_hold(struct ath5k_hw *ah)
- 	u32 bus_flags;
- 	int ret;
- 
-+	if(ath5k_get_bus_type(ah) == ATH_AHB)
-+		return 0;
-+
- 	/* Make sure device is awake */
- 	ret = ath5k_hw_set_power(ah, AR5K_PM_AWAKE, true, 0);
- 	if (ret) {
-@@ -390,22 +436,30 @@ int ath5k_hw_nic_wakeup(struct ath5k_hw *ah, int flags, bool initial)
- 	mode = 0;
- 	clock = 0;
- 
--	/* Wakeup the device */
--	ret = ath5k_hw_set_power(ah, AR5K_PM_AWAKE, true, 0);
--	if (ret) {
--		ATH5K_ERR(ah->ah_sc, "failed to wakeup the MAC Chip\n");
--		return ret;
-+	if(ath5k_get_bus_type(ah) == ATH_AHB && !initial){
-+		/* Wakeup the device */
-+		ret = ath5k_hw_set_power(ah, AR5K_PM_AWAKE, true, 0);
-+		if (ret) {
-+			ATH5K_ERR(ah->ah_sc, "failed to wakeup the MAC Chip\n");
-+			return ret;
-+		}
- 	}
- 
- 	/*
- 	 * Put chipset on warm reset...
- 	 *
--	 * Note: putting PCI core on warm reset on PCI-E cards
--	 * results card to hang and always return 0xffff... so
--	 * we ingore that flag for PCI-E cards. On PCI cards
--	 * this flag gets cleared after 64 PCI clocks.
- 	 */
--	bus_flags = (pdev && pdev->is_pcie) ? 0 : AR5K_RESET_CTL_PCI;
-+	if(ath5k_get_bus_type(ah) == ATH_AHB){
-+		/* Reset MAC on WiSoc devices */
-+		bus_flags = (initial) ? AR5K_RESET_CTL_MAC : 0;
-+	} else {
-+		/* Note: putting PCI core on warm reset on PCI-E cards
-+		 * results card to hang and always return 0xffff... so
-+		 * we ingore that flag for PCI-E cards. On PCI cards
-+		 * this flag gets cleared after 64 PCI clocks.
-+		 */
-+		bus_flags = (pdev && pdev->is_pcie) ? 0 : AR5K_RESET_CTL_PCI;
-+	}
- 
- 	if (ah->ah_version == AR5K_AR5210) {
- 		ret = ath5k_hw_nic_reset(ah, AR5K_RESET_CTL_PCU |
-@@ -536,6 +590,9 @@ static void ath5k_hw_set_sleep_clock(struct ath5k_hw *ah, bool enable)
- 	struct ath5k_eeprom_info *ee = &ah->ah_capabilities.cap_eeprom;
- 	u32 scal, spending, usec32;
- 
-+	if(ath5k_get_bus_type(ah) == ATH_AHB)
-+		enable = false;
-+
- 	/* Only set 32KHz settings if we have an external
- 	 * 32KHz crystal present */
- 	if ((AR5K_EEPROM_HAS32KHZCRYSTAL(ee->ee_misc1) ||
-@@ -607,6 +664,7 @@ static void ath5k_hw_set_sleep_clock(struct ath5k_hw *ah, bool enable)
- 
- 		if ((ah->ah_radio == AR5K_RF5112) ||
- 		(ah->ah_radio == AR5K_RF5413) ||
-+		(ah->ah_radio == AR5K_RF2316) ||
- 		(ah->ah_mac_version == (AR5K_SREV_AR2417 >> 4)))
- 			spending = 0x14;
- 		else
-@@ -614,7 +672,9 @@ static void ath5k_hw_set_sleep_clock(struct ath5k_hw *ah, bool enable)
- 		ath5k_hw_reg_write(ah, spending, AR5K_PHY_SPENDING);
- 
- 		if ((ah->ah_radio == AR5K_RF5112) ||
--		(ah->ah_radio == AR5K_RF5413))
-+		(ah->ah_radio == AR5K_RF5413) ||
-+		(ah->ah_radio == AR5K_RF2316) ||
-+		(ah->ah_radio == AR5K_RF2317))
- 			usec32 = 39;
- 		else
- 			usec32 = 31;
-@@ -678,7 +738,8 @@ static void ath5k_hw_tweak_initval_settings(struct ath5k_hw *ah,
- 
- 	/* Set fast ADC */
- 	if ((ah->ah_radio == AR5K_RF5413) ||
--	(ah->ah_mac_version == (AR5K_SREV_AR2417 >> 4))) {
-+		(ah->ah_radio == AR5K_RF2317) ||
-+		(ah->ah_mac_version == (AR5K_SREV_AR2417 >> 4))) {
- 		u32 fast_adc = true;
- 
- 		if (channel->center_freq == 2462 ||
--- 
-1.7.1
+ struct ieee80211_ops {
+ 	int (*tx)(struct ieee80211_hw *hw, struct sk_buff *skb);
 
