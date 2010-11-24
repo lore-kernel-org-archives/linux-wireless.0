@@ -1,155 +1,290 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from phoenix3.szarvasnet.hu ([87.101.127.16]:59508 "EHLO
-	phoenix3.szarvasnet.hu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753103Ab0KYRg7 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 25 Nov 2010 12:36:59 -0500
-From: Gabor Juhos <juhosg@openwrt.org>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: Vivek Natarajan <vnatarajan@atheros.com>,
-	linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
-	Gabor Juhos <juhosg@openwrt.org>
-Subject: [PATCH] ath9k: use per-device struct for pm_qos_* operations
-Date: Thu, 25 Nov 2010 18:26:07 +0100
-Message-Id: <1290705967-21129-1-git-send-email-juhosg@openwrt.org>
+Received: from arroyo.ext.ti.com ([192.94.94.40]:54145 "EHLO arroyo.ext.ti.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753812Ab0KXQ36 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 24 Nov 2010 11:29:58 -0500
+From: Shahar Levi <shahar_levi@ti.com>
+To: <linux-wireless@vger.kernel.org>
+Cc: Luciano Coelho <luciano.coelho@nokia.com>
+Subject: [PATCH v3] wl12xx: BA Initiator support
+Date: Wed, 24 Nov 2010 18:29:40 +0200
+Message-Id: <1290616180-16473-1-git-send-email-shahar_levi@ti.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The ath9k driver uses a shared pm_qos_request_list structure for all
-devices. This causes the following warning if more than one device is
-present in the system:
+Add 80211n BA initiator session support wl1271 driver.
+BA initiator session management included in FW independently.
 
-WARNING: at kernel/pm_qos_params.c:234 ath9k_init_device+0x5e8/0x6b0()
-pm_qos_add_request() called for already added request
-Modules linked in:
-Call Trace:
-[<802b1cdc>] dump_stack+0x8/0x34
-[<8007dd90>] warn_slowpath_common+0x78/0xa4
-[<8007de44>] warn_slowpath_fmt+0x2c/0x38
-[<801b0828>] ath9k_init_device+0x5e8/0x6b0
-[<801bc508>] ath_pci_probe+0x2dc/0x39c
-[<80176254>] pci_device_probe+0x64/0xa4
-[<8019471c>] driver_probe_device+0xbc/0x188
-[<80194854>] __driver_attach+0x6c/0xa4
-[<80193e20>] bus_for_each_dev+0x60/0xb0
-[<80193580>] bus_add_driver+0xcc/0x268
-[<80194c08>] driver_register+0xe0/0x198
-[<801764e0>] __pci_register_driver+0x50/0xe0
-[<80365f48>] ath9k_init+0x3c/0x6c
-[<8006050c>] do_one_initcall+0xfc/0x1d8
-[<80355340>] kernel_init+0xd4/0x174
-[<800639a4>] kernel_thread_helper+0x10/0x18
-
----[ end trace 5345fc6f870564a6 ]---
-
-This patch fixes that warning by using a separate pm_qos_request_list
-sructure for each device.
-
-Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
+Signed-off-by: Shahar Levi <shahar_levi@ti.com>
 ---
- drivers/net/wireless/ath/ath9k/ath9k.h |    4 +++-
- drivers/net/wireless/ath/ath9k/init.c  |    7 ++-----
- drivers/net/wireless/ath/ath9k/main.c  |    5 ++---
- 3 files changed, 7 insertions(+), 9 deletions(-)
+ Limitation:
+- For now only one BA per direction is supported
+- BA receiver session not supported in that Series
 
-diff --git a/drivers/net/wireless/ath/ath9k/ath9k.h b/drivers/net/wireless/ath/ath9k/ath9k.h
-index 6f90acc..0b4b470 100644
---- a/drivers/net/wireless/ath/ath9k/ath9k.h
-+++ b/drivers/net/wireless/ath/ath9k/ath9k.h
-@@ -21,6 +21,7 @@
- #include <linux/device.h>
- #include <linux/leds.h>
- #include <linux/completion.h>
-+#include <linux/pm_qos_params.h>
- 
- #include "debug.h"
- #include "common.h"
-@@ -628,6 +629,8 @@ struct ath_softc {
- 	struct ath_descdma txsdma;
- 
- 	struct ath_ant_comb ant_comb;
-+
-+	struct pm_qos_request_list pm_qos_req;
- };
- 
- struct ath_wiphy {
-@@ -657,7 +660,6 @@ static inline void ath_read_cachesize(struct ath_common *common, int *csz)
+Changes from v1:
+- Remove wl1271_op_ampdu_action()
+- set CONF_BA_INACTIVITY_TIMEOUT as configurable value
+- Clean to Linux code style.
+
+Changes from v2:
+- Two new ACX commands ACX_BA_SESSION_POLICY_CFG & ACX_BA_SESSION_RX_SETUP
+- New struct wl1271_acx_ba_session_policy
+- Calling wl1271_set_ba_policies() once in init
+- Use ieee80211_back_parties
+- Rebase to latest
+
+
+ drivers/net/wireless/wl12xx/acx.c    |   50 ++++++++++++++++++++++++++++++++++
+ drivers/net/wireless/wl12xx/acx.h    |   41 ++++++++++++++++++++++++++-
+ drivers/net/wireless/wl12xx/conf.h   |    7 +++++
+ drivers/net/wireless/wl12xx/init.c   |   25 +++++++++++++++++
+ drivers/net/wireless/wl12xx/main.c   |    8 ++++-
+ drivers/net/wireless/wl12xx/wl12xx.h |    4 +++
+ 6 files changed, 131 insertions(+), 4 deletions(-)
+
+diff --git a/drivers/net/wireless/wl12xx/acx.c b/drivers/net/wireless/wl12xx/acx.c
+index 7cbaeb6..6c433b7 100644
+--- a/drivers/net/wireless/wl12xx/acx.c
++++ b/drivers/net/wireless/wl12xx/acx.c
+@@ -1309,6 +1309,56 @@ out:
+ 	return ret;
  }
  
- extern struct ieee80211_ops ath9k_ops;
--extern struct pm_qos_request_list ath9k_pm_qos_req;
- extern int modparam_nohwcrypt;
- extern int led_blink;
++/* Configure BA session initiator\receiver parameters setting in the FW. */
++int wl1271_acx_set_ba_session(struct wl1271 *wl,
++			      enum ieee80211_back_parties direction,
++			      u8 tid_index, u8 policy)
++{
++	struct wl1271_acx_ba_session_policy *acx;
++	int ret;
++
++	wl1271_debug(DEBUG_ACX, "acx ba session setting");
++
++	acx = kzalloc(sizeof(*acx), GFP_KERNEL);
++	if (!acx) {
++		ret = -ENOMEM;
++		goto out;
++	}
++
++	/* ANY role */
++	acx->role_id = 0xff;
++	acx->tid = tid_index;
++	acx->enable = policy;
++	acx->win_size = BA_RECEIVER_WIN_SIZE;
++	acx->ba_direction = direction;
++
++	switch (direction) {
++	case WLAN_BACK_INITIATOR:
++		acx->inactivity_timeout = wl->conf.ht.inactivity_timeout;
++		break;
++	case WLAN_BACK_RECIPIENT:
++		acx->inactivity_timeout = 0;
++		break;
++	default:
++		wl1271_error("Incorrect acx command id=%x\n", direction);
++		ret = -EINVAL;
++		goto out;
++	}
++
++	ret = wl1271_cmd_configure(wl,
++				   ACX_BA_SESSION_POLICY_CFG,
++				   acx,
++				   sizeof(*acx));
++	if (ret < 0) {
++		wl1271_warning("acx ba session setting failed: %d", ret);
++		goto out;
++	}
++
++out:
++	kfree(acx);
++	return ret;
++}
++
+ int wl1271_acx_tsf_info(struct wl1271 *wl, u64 *mactime)
+ {
+ 	struct wl1271_acx_fw_tsf_information *tsf_info;
+diff --git a/drivers/net/wireless/wl12xx/acx.h b/drivers/net/wireless/wl12xx/acx.h
+index 75a6306..c511dce 100644
+--- a/drivers/net/wireless/wl12xx/acx.h
++++ b/drivers/net/wireless/wl12xx/acx.h
+@@ -1046,6 +1046,40 @@ struct wl1271_acx_ht_information {
+ 	u8 padding[3];
+ } __packed;
  
-diff --git a/drivers/net/wireless/ath/ath9k/init.c b/drivers/net/wireless/ath/ath9k/init.c
-index 7eef1fa..edb1fdf 100644
---- a/drivers/net/wireless/ath/ath9k/init.c
-+++ b/drivers/net/wireless/ath/ath9k/init.c
-@@ -15,7 +15,6 @@
-  */
++#define BA_RECEIVER_WIN_SIZE 8
++
++struct wl1271_acx_ba_session_policy {
++	struct acx_header header;
++	/*
++	 * Specifies role Id, Range 0-7, 0xFF means ANY role.
++	 * Future use. For now this field is irrelevant
++	 */
++	u8 role_id;
++	/*
++	 * Specifies Link Id, Range 0-31, 0xFF means ANY  Link Id.
++	 * Not applicable if Role Id is set to ANY.
++	 */
++	u8 link_id;
++
++	u8 tid;
++
++	u8 enable;
++
++	/* Windows size in number of packets */
++	u16 win_size;
++
++	/*
++	 * As initiator inactivity timeout in time units(TU) of 1024us.
++	 * As receiver reserved
++	 */
++	u16 inactivity_timeout;
++
++	/* Initiator = 1/Receiver = 0 */
++	u8 ba_direction;
++
++	u8 padding[3];
++} __packed;
++
+ struct wl1271_acx_fw_tsf_information {
+ 	struct acx_header header;
  
- #include <linux/slab.h>
--#include <linux/pm_qos_params.h>
+@@ -1108,8 +1142,8 @@ enum {
+ 	ACX_RSSI_SNR_WEIGHTS        = 0x0052,
+ 	ACX_KEEP_ALIVE_MODE         = 0x0053,
+ 	ACX_SET_KEEP_ALIVE_CONFIG   = 0x0054,
+-	ACX_BA_SESSION_RESPONDER_POLICY = 0x0055,
+-	ACX_BA_SESSION_INITIATOR_POLICY = 0x0056,
++	ACX_BA_SESSION_POLICY_CFG   = 0x0055,
++	ACX_BA_SESSION_RX_SETUP     = 0x0056,
+ 	ACX_PEER_HT_CAP             = 0x0057,
+ 	ACX_HT_BSS_OPERATION        = 0x0058,
+ 	ACX_COEX_ACTIVITY           = 0x0059,
+@@ -1180,6 +1214,9 @@ int wl1271_acx_set_ht_capabilities(struct wl1271 *wl,
+ 				    bool allow_ht_operation);
+ int wl1271_acx_set_ht_information(struct wl1271 *wl,
+ 				   u16 ht_operation_mode);
++int wl1271_acx_set_ba_session(struct wl1271 *wl,
++			      enum ieee80211_back_parties direction,
++			      u8 tid_index, u8 policy);
+ int wl1271_acx_tsf_info(struct wl1271 *wl, u64 *mactime);
  
- #include "ath9k.h"
- 
-@@ -180,8 +179,6 @@ static const struct ath_ops ath9k_common_ops = {
- 	.write = ath9k_iowrite32,
+ #endif /* __WL1271_ACX_H__ */
+diff --git a/drivers/net/wireless/wl12xx/conf.h b/drivers/net/wireless/wl12xx/conf.h
+index a16b361..41df771 100644
+--- a/drivers/net/wireless/wl12xx/conf.h
++++ b/drivers/net/wireless/wl12xx/conf.h
+@@ -1090,6 +1090,12 @@ struct conf_rf_settings {
+ 	u8 tx_per_channel_power_compensation_5[CONF_TX_PWR_COMPENSATION_LEN_5];
  };
  
--struct pm_qos_request_list ath9k_pm_qos_req;
--
- /**************************/
- /*     Initialization     */
- /**************************/
-@@ -756,7 +753,7 @@ int ath9k_init_device(u16 devid, struct ath_softc *sc, u16 subsysid,
- 	ath_init_leds(sc);
- 	ath_start_rfkill_poll(sc);
++#define CONF_BA_INACTIVITY_TIMEOUT 10000
++
++struct conf_ht_setting {
++	u16 inactivity_timeout;
++};
++
+ struct conf_drv_settings {
+ 	struct conf_sg_settings sg;
+ 	struct conf_rx_settings rx;
+@@ -1100,6 +1106,7 @@ struct conf_drv_settings {
+ 	struct conf_roam_trigger_settings roam_trigger;
+ 	struct conf_scan_settings scan;
+ 	struct conf_rf_settings rf;
++	struct conf_ht_setting ht;
+ };
  
--	pm_qos_add_request(&ath9k_pm_qos_req, PM_QOS_CPU_DMA_LATENCY,
-+	pm_qos_add_request(&sc->pm_qos_req, PM_QOS_CPU_DMA_LATENCY,
- 			   PM_QOS_DEFAULT_VALUE);
- 
+ #endif
+diff --git a/drivers/net/wireless/wl12xx/init.c b/drivers/net/wireless/wl12xx/init.c
+index 7949d34..adc27c0 100644
+--- a/drivers/net/wireless/wl12xx/init.c
++++ b/drivers/net/wireless/wl12xx/init.c
+@@ -208,6 +208,26 @@ static int wl1271_init_beacon_broadcast(struct wl1271 *wl)
  	return 0;
-@@ -827,7 +824,7 @@ void ath9k_deinit_device(struct ath_softc *sc)
- 	}
+ }
  
- 	ieee80211_unregister_hw(hw);
--	pm_qos_remove_request(&ath9k_pm_qos_req);
-+	pm_qos_remove_request(&sc->pm_qos_req);
- 	ath_rx_cleanup(sc);
- 	ath_tx_cleanup(sc);
- 	ath9k_deinit_softc(sc);
-diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
-index 50bdb5d..3bada71 100644
---- a/drivers/net/wireless/ath/ath9k/main.c
-+++ b/drivers/net/wireless/ath/ath9k/main.c
-@@ -15,7 +15,6 @@
-  */
++static int wl1271_set_ba_policies(struct wl1271 *wl)
++{
++	u8 tid_index;
++	u8 ret;
++
++	/* Reset the BA RX indicators */
++	wl->ba_allowed = true;
++	wl->ba_rx_bitmap = 0;
++
++	/* 802.11n initiator BA session setting */
++	for (tid_index = 0; tid_index < CONF_TX_MAX_TID_COUNT; ++tid_index) {
++		ret = wl1271_acx_set_ba_session(wl, WLAN_BACK_INITIATOR,
++						tid_index, true);
++		if (ret < 0)
++			break;
++	}
++
++	return ret;
++}
++
+ int wl1271_hw_init(struct wl1271 *wl)
+ {
+ 	struct conf_tx_ac_category *conf_ac;
+@@ -359,6 +379,11 @@ int wl1271_hw_init(struct wl1271 *wl)
+ 	if (ret < 0)
+ 		goto out_free_memmap;
  
- #include <linux/nl80211.h>
--#include <linux/pm_qos_params.h>
- #include "ath9k.h"
- #include "btcoex.h"
++	/* Configure initiator BA sessions policies */
++	ret = wl1271_set_ba_policies(wl);
++	if (ret < 0)
++		goto out_free_memmap;
++
+ 	return 0;
  
-@@ -1184,7 +1183,7 @@ static int ath9k_start(struct ieee80211_hw *hw)
- 			ath9k_btcoex_timer_resume(sc);
- 	}
+  out_free_memmap:
+diff --git a/drivers/net/wireless/wl12xx/main.c b/drivers/net/wireless/wl12xx/main.c
+index 31f0e2f..b8c42d7 100644
+--- a/drivers/net/wireless/wl12xx/main.c
++++ b/drivers/net/wireless/wl12xx/main.c
+@@ -233,7 +233,7 @@ static struct conf_drv_settings default_conf = {
+ 		.avg_weight_rssi_beacon       = 20,
+ 		.avg_weight_rssi_data         = 10,
+ 		.avg_weight_snr_beacon        = 20,
+-		.avg_weight_snr_data          = 10
++		.avg_weight_snr_data          = 10,
+ 	},
+ 	.scan = {
+ 		.min_dwell_time_active        = 7500,
+@@ -252,6 +252,9 @@ static struct conf_drv_settings default_conf = {
+ 			0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+ 		},
+ 	},
++	.ht = {
++		.inactivity_timeout = CONF_BA_INACTIVITY_TIMEOUT,
++	},
+ };
  
--	pm_qos_update_request(&ath9k_pm_qos_req, 55);
-+	pm_qos_update_request(&sc->pm_qos_req, 55);
+ static void __wl1271_op_remove_interface(struct wl1271 *wl);
+@@ -2059,7 +2062,8 @@ static void wl1271_op_bss_info_changed(struct ieee80211_hw *hw,
+ 			wl1271_warning("Set ht cap true failed %d", ret);
+ 			goto out_sleep;
+ 		}
+-			ret = wl1271_acx_set_ht_information(wl,
++
++		ret = wl1271_acx_set_ht_information(wl,
+ 				bss_conf->ht_operation_mode);
+ 		if (ret < 0) {
+ 			wl1271_warning("Set ht information failed %d", ret);
+diff --git a/drivers/net/wireless/wl12xx/wl12xx.h b/drivers/net/wireless/wl12xx/wl12xx.h
+index 3c836e6..807ac7a 100644
+--- a/drivers/net/wireless/wl12xx/wl12xx.h
++++ b/drivers/net/wireless/wl12xx/wl12xx.h
+@@ -497,6 +497,10 @@ struct wl1271 {
  
- mutex_unlock:
- 	mutex_unlock(&sc->mutex);
-@@ -1339,7 +1338,7 @@ static void ath9k_stop(struct ieee80211_hw *hw)
+ 	/* Most recently reported noise in dBm */
+ 	s8 noise;
++
++	/* RX BA constraint value */
++	u8 ba_allowed;
++	u8 ba_rx_bitmap;
+ };
  
- 	sc->sc_flags |= SC_OP_INVALID;
- 
--	pm_qos_update_request(&ath9k_pm_qos_req, PM_QOS_DEFAULT_VALUE);
-+	pm_qos_update_request(&sc->pm_qos_req, PM_QOS_DEFAULT_VALUE);
- 
- 	mutex_unlock(&sc->mutex);
- 
+ int wl1271_plt_start(struct wl1271 *wl);
 -- 
-1.7.2.1
+1.7.0.4
 
