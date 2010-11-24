@@ -1,59 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yx0-f174.google.com ([209.85.213.174]:60366 "EHLO
-	mail-yx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756169Ab0KQPeq (ORCPT
+Received: from mail-qy0-f174.google.com ([209.85.216.174]:57964 "EHLO
+	mail-qy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751261Ab0KXGJa (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 17 Nov 2010 10:34:46 -0500
-Received: by yxf34 with SMTP id 34so1135869yxf.19
-        for <linux-wireless@vger.kernel.org>; Wed, 17 Nov 2010 07:34:45 -0800 (PST)
+	Wed, 24 Nov 2010 01:09:30 -0500
 MIME-Version: 1.0
-In-Reply-To: <20101117150721.GD2639@tuxdriver.com>
-References: <201011131908.15595.IvDoorn@gmail.com>
-	<201011170946.04629.helmut.schaa@googlemail.com>
-	<B7288B2B5878D747BA031EF4B170D7F6BC5C60@TWHCMBS01.tw.ralinktech.ad>
-	<201011171148.04286.helmut.schaa@googlemail.com>
-	<20101117150721.GD2639@tuxdriver.com>
-Date: Wed, 17 Nov 2010 16:34:45 +0100
-Message-ID: <AANLkTimCzzgMavoLNhWTE-bZNTMimg++VKKft5f8sDQG@mail.gmail.com>
-Subject: Re: [PATCH 9/9] rt2x00: Modify rt2x00queue_remove_l2pad to make
- skb->data two-byte alignment
-From: Gertjan van Wingerde <gwingerde@gmail.com>
-To: "John W. Linville" <linville@tuxdriver.com>,
-	Helmut Schaa <helmut.schaa@googlemail.com>
-Cc: RA-Jay Hung <Jay_Hung@ralinktech.com>,
-	Ivo van Doorn <ivdoorn@gmail.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"users@rt2x00.serialmonkey.com" <users@rt2x00.serialmonkey.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Reply-To: sedat.dilek@gmail.com
+Date: Wed, 24 Nov 2010 07:09:28 +0100
+Message-ID: <AANLkTinVUkgZKbAkQ3_27Jw3cXJ7qySxm1UMFSReujfp@mail.gmail.com>
+Subject: Re: linux-next: Tree for November 24 (iwlwifi-fix)
+From: Sedat Dilek <sedat.dilek@googlemail.com>
+To: LKML <linux-kernel@vger.kernel.org>,
+	wireless <linux-wireless@vger.kernel.org>
+Cc: sfr@canb.auug.org.au, Randy Dunlap <randy.dunlap@oracle.com>,
+	John Linville <linville@tuxdriver.com>,
+	Johannes Berg <johannes.berg@intel.com>,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Nov 17, 2010 at 4:07 PM, John W. Linville
-<linville@tuxdriver.com> wrote:
-> On Wed, Nov 17, 2010 at 11:48:04AM +0100, Helmut Schaa wrote:
->
->> John, should I send a follow-up (with a nice description why it this is needed)
->> or are you simply reverting this one?
->
-> Is there no chance for a fix in short order?
->
+Hi,
 
-I may have an idea on how we can fix this, without incurring the
-performance penalty.
-Basic idea is to no longer work on the original skb that mac80211
-supplied us, but to
-use a copy of that skb. This would prevent us from having to undo any
-changes we did,
-as we can simply return the original skb to mac80211 (which wasn't
-modified in the first
-place).
-I'm not sure how this would impact performance, but it would allow us
-a lot less copying
-around to undo the changes done before uploading to the HW.
+the patch from Randy from [1] still applies, but my build-log from
+yesterday's linux-next shows:
 
-However, I won't be able to look into that opportunity before the weekend.
+$ grep ^WARNING build_linux-next_next20101123.dileks.1.log | grep iwl
+WARNING: drivers/net/wireless/iwlwifi/iwlagn:
+'iwl_legacy_tx_cmd_protection' exported twice. Previous export was in
+drivers/net/wireless/iwlwifi/iwl3945.ko
+WARNING: drivers/net/wireless/iwlwifi/iwlagn: 'iwl_isr_legacy'
+exported twice. Previous export was in
+drivers/net/wireless/iwlwifi/iwl3945.ko
+WARNING: drivers/net/wireless/iwlwifi/iwlagn:
+'iwl_legacy_mac_bss_info_changed' exported twice. Previous export was
+in drivers/net/wireless/iwlwifi/iwl3945.ko
+WARNING: drivers/net/wireless/iwlwifi/iwlagn:
+'iwl_legacy_mac_reset_tsf' exported twice. Previous export was in
+drivers/net/wireless/iwlwifi/iwl3945.ko
+WARNING: drivers/net/wireless/iwlwifi/iwlagn: 'iwl_legacy_mac_config'
+exported twice. Previous export was in
+drivers/net/wireless/iwlwifi/iwl3945.ko
 
-Helmut, can you wait that long and hold off reverting until then?
+The fix is doing:
 
----
-Gertjan
+[ drivers/net/wireless/iwlwifi/Makefile ]
+...
+-iwlcore-$(CONFIG_IWL3945) += iwl-legacy.o
+-iwlcore-$(CONFIG_IWL4965) += iwl-legacy.o
+...
+-iwlagn-$(CONFIG_IWL4965) += iwl-4965.o
++iwlagn-$(CONFIG_IWL4965) += iwl-4965.o iwl-legacy.o
+...
+-iwl3945-objs		:= iwl3945-base.o iwl-3945.o iwl-3945-rs.o iwl-3945-led.o
++iwl3945-objs		:= iwl3945-base.o iwl-3945.o iwl-3945-rs.o
+iwl-3945-led.o iwl-legacy.o
+
+So why do I see warnings in iwl3945.ko but not in iwl-4965.ko?
+
+Is that fix still required? Fixed in wireless-next-2.6?
+
+Regards,
+- Sedat -
+
+[1] https://patchwork.kernel.org/patch/322492/
