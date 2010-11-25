@@ -1,115 +1,261 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f46.google.com ([209.85.214.46]:39484 "EHLO
-	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751585Ab0K2RPS (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:48414 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751874Ab0KYJDg (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 29 Nov 2010 12:15:18 -0500
-Received: by bwz15 with SMTP id 15so4111746bwz.19
-        for <linux-wireless@vger.kernel.org>; Mon, 29 Nov 2010 09:15:16 -0800 (PST)
-From: Christian Lamparter <chunkeey@googlemail.com>
-To: Saqeb Akhter <saqeb.akhter@gmail.com>
-Subject: [RFC] mac80211: filter multicast rx (was: Re: carl9170: wnda3100 only 54MB/s)
-Date: Mon, 29 Nov 2010 18:14:57 +0100
+	Thu, 25 Nov 2010 04:03:36 -0500
+Message-Id: <20101125090254.644357121@sipsolutions.net>
+Date: Thu, 25 Nov 2010 10:02:30 +0100
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
 Cc: linux-wireless@vger.kernel.org,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Jouni Malinen <j@w1.fi>
-References: <AANLkTimN3X_e4fZhUSoTs-GmQ9kmaJUrgnxAu8=W2dT_@mail.gmail.com> <AANLkTimXGQLnSaU6ASeRPkw1YThF18_zC7peu_uCeGKU@mail.gmail.com> <201010021332.09809.chunkeey@googlemail.com>
-In-Reply-To: <201010021332.09809.chunkeey@googlemail.com>
-MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Message-Id: <201011291814.58230.chunkeey@googlemail.com>
+	Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH 2/2] mac80211: implement off-channel mgmt TX
+References: <20101125090228.087298683@sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Saturday 02 October 2010 13:32:09 Christian Lamparter wrote:
-> On Saturday 02 October 2010 08:18:07 Saqeb Akhter wrote:
-> > I guess you were right about it being unstable - almost unusable for
-> > video streaming.
-> Video streaming? Does your application use QoS AC_VI(deo) for streaming,
-> or just bulk data (AC_BE(st effort))?
-> 
-> > sakhter@sakhter-laptop:~$ dmesg | grep Reason
-> > [ 1166.512087] wlan1: deauthenticated from 30:46:9a:10:49:f7 (Reason: 7)
-> > [ 1526.059997] wlan1: deauthenticated from 30:46:9a:10:49:f7 (Reason: 7)
-> > [ 2125.324356] wlan1: deauthenticated from 30:46:9a:10:49:f7 (Reason: 7)
-> > [ 2845.783011] wlan1: deauthenticated from 30:46:9a:10:49:f7 (Reason: 7)
-> > [ 3565.994832] wlan1: deauthenticated from 30:46:9a:10:49:f7 (Reason: 7)
-> > [ 5128.903576] wlan1: deauthenticated from 30:46:9a:10:49:f7 (Reason: 7)
-> > [ 5726.046230] wlan1: deauthenticated from 30:46:9a:10:49:f7 (Reason: 7)
-> > [ 6326.042938] wlan1: deauthenticated from 30:46:9a:10:49:f7 (Reason: 7)
-> > [ 6835.689445] wlan1: deauthenticated from 30:46:9a:10:49:f7 (Reason: 7)
-> > [ 7197.337060] wlan1: deauthenticated from 30:46:9a:10:49:f7 (Reason: 7)
-> > 
-> > Seems to disconnect quite frequently. Even tried uninstalling networkmanager.
-> Reason 7 is: [AP received a] class 3 (data) frame from non-associated STA.
-> This can happen when your are "actively" disassociating from the AP (unlikely),
-> when the AP thinks you are out-of-reach(unlikely, since your signal seems to
-> be strong and PSM isn't enabled by default) or when the AP crashes and resets.
-> 
-I think I found the reason. Apparently, there's something wrong with the AES
-engine. As you may know, as soon as the hwcrypto is disabled, the problem
-"magically" disappears... It looks like carl9170 (and otus?) is generating
-frames with slightly bogus SA/TA addresses.
+From: Johannes Berg <johannes.berg@intel.com>
 
-e.g.:
+This implements the new off-channel TX API
+in mac80211 with a new work item type. The
+operation doesn't add a new work item when
+we're on the right channel and there's no
+wait time so that for example p2p probe
+responses will be transmitted without delay.
 
-(the correct SA/TA would be: 00:1f:31:f8:64:ff)
-[ 2314.402316] Ignore 9f:1f:31:f8:64:ff
-[ 2314.402321] Ignore 9f:1f:31:f8:64:ff
-[ 2352.453804] Ignore 0d:1f:31:f8:64:ff
-[ 2352.453808] Ignore 0d:1f:31:f8:64:ff
-					   ^ notice: the group address flag!
-
-Since the AP doesn't know from where the frame comes from, it creates
-a valid DEAUTH (with the correct reason: 7). Because the RA/DA looks
-too similar for the hardware/software filters to discard, the stack
-thinks it was kicked by the AP...
-
-The attached patch -for now- only "enhances" mac80211's rx frame filter
-when operating as a station (what about mesh, adhoc?). The filter takes
-a closer look at each multicast frame and verifies that the group
-address is listed in the multicast list before processing it.
-
-Best regards,
-	Christian
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
-diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
-index d2fcd22..fe99d66 100644
---- a/net/mac80211/rx.c
-+++ b/net/mac80211/rx.c
-@@ -2543,8 +2543,21 @@ void ieee80211_release_reorder_timeout(struct sta_info *sta, int tid)
- 	ieee80211_rx_handlers(&rx, &frames);
+ net/mac80211/cfg.c         |   93 ++++++++++++++++++++++++++++++++++++++++++---
+ net/mac80211/ieee80211_i.h |    5 ++
+ net/mac80211/status.c      |   15 ++++++-
+ net/mac80211/work.c        |   22 ++++++++++
+ 4 files changed, 129 insertions(+), 6 deletions(-)
+
+--- wireless-testing.orig/net/mac80211/cfg.c	2010-11-25 09:52:21.000000000 +0100
++++ wireless-testing/net/mac80211/cfg.c	2010-11-25 09:53:59.000000000 +0100
+@@ -1551,6 +1551,28 @@ static int ieee80211_cancel_remain_on_ch
+ 	return ieee80211_wk_cancel_remain_on_channel(sdata, cookie);
  }
  
--/* main receive path */
-+static bool check_mc_group(struct ieee80211_local *local,
-+			   u8 *da)
++static enum work_done_result
++ieee80211_offchan_tx_done(struct ieee80211_work *wk, struct sk_buff *skb)
 +{
-+	struct netdev_hw_addr *ha;
-+	if (is_broadcast_ether_addr(da))
-+		return true;
- 
-+	netdev_hw_addr_list_for_each(ha, &local->mc_list) {
-+		if (compare_ether_addr(ha->addr, da) == 0)
-+			return true;
-+	}
-+	return false;
++	/*
++	 * Use the data embedded in the work struct for reporting
++	 * here so if the driver mangled the SKB before dropping
++	 * it (which is the only way we really should get here)
++	 * then we don't report mangled data.
++	 *
++	 * If there was no wait time, then by the time we get here
++	 * the driver will likely not have reported the status yet,
++	 * so in that case userspace will have to deal with it.
++	 */
++
++	if (wk->offchan_tx.wait && wk->offchan_tx.frame)
++		cfg80211_mgmt_tx_status(wk->sdata->dev,
++					(unsigned long) wk->offchan_tx.frame,
++					wk->ie, wk->ie_len, false, GFP_KERNEL);
++
++	return WORK_DONE_DESTROY;
 +}
 +
-+/* main receive path */
- static int prepare_for_handlers(struct ieee80211_rx_data *rx,
- 				struct ieee80211_hdr *hdr)
+ static int ieee80211_mgmt_tx(struct wiphy *wiphy, struct net_device *dev,
+ 			     struct ieee80211_channel *chan, bool offchan,
+ 			     enum nl80211_channel_type channel_type,
+@@ -1561,20 +1583,22 @@ static int ieee80211_mgmt_tx(struct wiph
+ 	struct ieee80211_local *local = sdata->local;
+ 	struct sk_buff *skb;
+ 	struct sta_info *sta;
++	struct ieee80211_work *wk;
+ 	const struct ieee80211_mgmt *mgmt = (void *)buf;
+ 	u32 flags = IEEE80211_TX_INTFL_NL80211_FRAME_TX |
+ 		    IEEE80211_TX_CTL_REQ_TX_STATUS;
+-
+-	if (offchan)
+-		return -EOPNOTSUPP;
++	bool is_offchan = false;
+ 
+ 	/* Check that we are on the requested channel for transmission */
+ 	if (chan != local->tmp_channel &&
+ 	    chan != local->oper_channel)
+-		return -EBUSY;
++		is_offchan = true;
+ 	if (channel_type_valid &&
+ 	    (channel_type != local->tmp_channel_type &&
+ 	     channel_type != local->_oper_channel_type))
++		is_offchan = true;
++
++	if (is_offchan && !offchan)
+ 		return -EBUSY;
+ 
+ 	switch (sdata->vif.type) {
+@@ -1608,12 +1632,70 @@ static int ieee80211_mgmt_tx(struct wiph
+ 	IEEE80211_SKB_CB(skb)->flags = flags;
+ 
+ 	skb->dev = sdata->dev;
+-	ieee80211_tx_skb(sdata, skb);
+ 
+ 	*cookie = (unsigned long) skb;
++
++	/*
++	 * Can transmit right away if the channel was the
++	 * right one and there's no wait involved... If a
++	 * wait is involved, we might otherwise not be on
++	 * the right channel for long enough!
++	 */
++	if (!is_offchan && !wait && !sdata->vif.bss_conf.idle) {
++		ieee80211_tx_skb(sdata, skb);
++		return 0;
++	}
++
++	wk = kzalloc(sizeof(*wk) + len, GFP_KERNEL);
++	if (!wk) {
++		kfree_skb(skb);
++		return -ENOMEM;
++	}
++
++	wk->type = IEEE80211_WORK_OFFCHANNEL_TX;
++	wk->chan = chan;
++	wk->sdata = sdata;
++	wk->done = ieee80211_offchan_tx_done;
++	wk->offchan_tx.frame = skb;
++	wk->offchan_tx.wait = wait;
++	wk->ie_len = len;
++	memcpy(wk->ie, buf, len);
++
++	ieee80211_add_work(wk);
+ 	return 0;
+ }
+ 
++static int ieee80211_mgmt_tx_cancel_wait(struct wiphy *wiphy,
++					 struct net_device *dev,
++					 u64 cookie)
++{
++	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
++	struct ieee80211_local *local = sdata->local;
++	struct ieee80211_work *wk;
++	int ret = -ENOENT;
++
++	mutex_lock(&local->mtx);
++	list_for_each_entry(wk, &local->work_list, list) {
++		if (wk->sdata != sdata)
++			continue;
++
++		if (wk->type != IEEE80211_WORK_OFFCHANNEL_TX)
++			continue;
++
++		if (cookie != (unsigned long) wk->offchan_tx.frame)
++			continue;
++
++		wk->timeout = jiffies;
++
++		ieee80211_queue_work(&local->hw, &local->work_work);
++		ret = 0;
++		break;
++	}
++	mutex_unlock(&local->mtx);
++
++	return ret;
++}
++
+ static void ieee80211_mgmt_frame_register(struct wiphy *wiphy,
+ 					  struct net_device *dev,
+ 					  u16 frame_type, bool reg)
+@@ -1698,6 +1780,7 @@ struct cfg80211_ops mac80211_config_ops
+ 	.remain_on_channel = ieee80211_remain_on_channel,
+ 	.cancel_remain_on_channel = ieee80211_cancel_remain_on_channel,
+ 	.mgmt_tx = ieee80211_mgmt_tx,
++	.mgmt_tx_cancel_wait = ieee80211_mgmt_tx_cancel_wait,
+ 	.set_cqm_rssi_config = ieee80211_set_cqm_rssi_config,
+ 	.mgmt_frame_register = ieee80211_mgmt_frame_register,
+ 	.set_antenna = ieee80211_set_antenna,
+--- wireless-testing.orig/net/mac80211/ieee80211_i.h	2010-11-25 09:52:22.000000000 +0100
++++ wireless-testing/net/mac80211/ieee80211_i.h	2010-11-25 09:53:59.000000000 +0100
+@@ -260,6 +260,7 @@ enum ieee80211_work_type {
+ 	IEEE80211_WORK_ASSOC_BEACON_WAIT,
+ 	IEEE80211_WORK_ASSOC,
+ 	IEEE80211_WORK_REMAIN_ON_CHANNEL,
++	IEEE80211_WORK_OFFCHANNEL_TX,
+ };
+ 
+ /**
+@@ -320,6 +321,10 @@ struct ieee80211_work {
+ 		struct {
+ 			u32 duration;
+ 		} remain;
++		struct {
++			struct sk_buff *frame;
++			u32 wait;
++		} offchan_tx;
+ 	};
+ 
+ 	int ie_len;
+--- wireless-testing.orig/net/mac80211/work.c	2010-11-25 09:52:22.000000000 +0100
++++ wireless-testing/net/mac80211/work.c	2010-11-25 09:53:59.000000000 +0100
+@@ -561,6 +561,25 @@ ieee80211_remain_on_channel_timeout(stru
+ }
+ 
+ static enum work_action __must_check
++ieee80211_offchannel_tx(struct ieee80211_work *wk)
++{
++	if (!wk->started) {
++		wk->timeout = jiffies + msecs_to_jiffies(wk->offchan_tx.wait);
++
++		/*
++		 * After this, offchan_tx.frame remains but now is no
++		 * longer a valid pointer -- we still need it as the
++		 * cookie for canceling this work.
++		 */
++		ieee80211_tx_skb(wk->sdata, wk->offchan_tx.frame);
++
++		return WORK_ACT_NONE;
++	}
++
++	return WORK_ACT_TIMEOUT;
++}
++
++static enum work_action __must_check
+ ieee80211_assoc_beacon_wait(struct ieee80211_work *wk)
  {
-@@ -2558,8 +2571,9 @@ static int prepare_for_handlers(struct ieee80211_rx_data *rx,
- 	case NL80211_IFTYPE_STATION:
- 		if (!bssid && !sdata->u.mgd.use_4addr)
- 			return 0;
--		if (!multicast &&
--		    compare_ether_addr(sdata->vif.addr, hdr->addr1) != 0) {
-+		if ((!multicast &&
-+		    compare_ether_addr(sdata->vif.addr, hdr->addr1) != 0) ||
-+		    (multicast && !check_mc_group(rx->local, hdr->addr1))) {
- 			if (!(sdata->dev->flags & IFF_PROMISC))
- 				return 0;
- 			status->rx_flags &= ~IEEE80211_RX_RA_MATCH;
+ 	if (wk->started)
+@@ -955,6 +974,9 @@ static void ieee80211_work_work(struct w
+ 		case IEEE80211_WORK_REMAIN_ON_CHANNEL:
+ 			rma = ieee80211_remain_on_channel_timeout(wk);
+ 			break;
++		case IEEE80211_WORK_OFFCHANNEL_TX:
++			rma = ieee80211_offchannel_tx(wk);
++			break;
+ 		case IEEE80211_WORK_ASSOC_BEACON_WAIT:
+ 			rma = ieee80211_assoc_beacon_wait(wk);
+ 			break;
+--- wireless-testing.orig/net/mac80211/status.c	2010-11-25 09:52:21.000000000 +0100
++++ wireless-testing/net/mac80211/status.c	2010-11-25 09:53:59.000000000 +0100
+@@ -321,10 +321,23 @@ void ieee80211_tx_status(struct ieee8021
+ 					msecs_to_jiffies(10));
+ 	}
+ 
+-	if (info->flags & IEEE80211_TX_INTFL_NL80211_FRAME_TX)
++	if (info->flags & IEEE80211_TX_INTFL_NL80211_FRAME_TX) {
++		struct ieee80211_work *wk;
++
++		rcu_read_lock();
++		list_for_each_entry_rcu(wk, &local->work_list, list) {
++			if (wk->type != IEEE80211_WORK_OFFCHANNEL_TX)
++				continue;
++			if (wk->offchan_tx.frame != skb)
++				continue;
++			wk->offchan_tx.frame = NULL;
++			break;
++		}
++		rcu_read_unlock();
+ 		cfg80211_mgmt_tx_status(
+ 			skb->dev, (unsigned long) skb, skb->data, skb->len,
+ 			!!(info->flags & IEEE80211_TX_STAT_ACK), GFP_ATOMIC);
++	}
+ 
+ 	/* this was a transmitted frame, but now we want to reuse it */
+ 	skb_orphan(skb);
+
+
