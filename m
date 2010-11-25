@@ -1,28 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 128-177-27-249.ip.openhosting.com ([128.177.27.249]:56212 "EHLO
-	jmalinen.user.openhosting.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751399Ab0KZVcE (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 26 Nov 2010 16:32:04 -0500
-Date: Fri, 26 Nov 2010 23:31:53 +0200
-From: Jouni Malinen <j@w1.fi>
-To: Ben Greear <greearb@candelatech.com>
-Cc: hostap@lists.shmoo.com, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] supplicant:  Enable sharing of scan results.
-Message-ID: <20101126213153.GB2462@jm.kir.nu>
-References: <1289950756-18452-1-git-send-email-greearb@candelatech.com>
- <20101126205002.GA4302@jm.kir.nu>
- <4CF02226.2030403@candelatech.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <4CF02226.2030403@candelatech.com>
+Received: from server19320154104.serverpool.info ([193.201.54.104]:52963 "EHLO
+	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753185Ab0KYOsu (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 25 Nov 2010 09:48:50 -0500
+From: Hauke Mehrtens <hauke@hauke-m.de>
+To: lrodriguez@atheros.com
+Cc: linux-wireless@vger.kernel.org, mcgrof@infradead.org,
+	Hauke Mehrtens <hauke@hauke-m.de>
+Subject: [PATCH 4/5] compat-wireless: fix CONFIG_BRCM80211 config option
+Date: Thu, 25 Nov 2010 15:48:36 +0100
+Message-Id: <1290696517-20437-4-git-send-email-hauke@hauke-m.de>
+In-Reply-To: <1290696517-20437-1-git-send-email-hauke@hauke-m.de>
+References: <1290696517-20437-1-git-send-email-hauke@hauke-m.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Nov 26, 2010 at 01:09:58PM -0800, Ben Greear wrote:
-> Was this an ath5k or ath9k NIC (or something else?)
+CONFIG_BRCM80211 Does not need CONFIG_WIRELESS_EXT, so we can build it
+also if this is not available. Add commented out CONFIG_BRCMFMAC
+option. This only build if CONFIG_BRCM80211_PCI is not build as module.
 
-ath9k both on the station and AP.
+Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+---
+ config.mk |    9 +++++++--
+ 1 files changed, 7 insertions(+), 2 deletions(-)
 
+diff --git a/config.mk b/config.mk
+index ad597cb..38477b8 100644
+--- a/config.mk
++++ b/config.mk
+@@ -516,6 +516,10 @@ CONFIG_BT_HCIBTSDIO=m
+ CONFIG_BT_MRVL_SDIO=m
+ 
+ ifneq ($(CONFIG_COMPAT_STAGING),)
++
++CONFIG_BRCM80211=m
++CONFIG_BRCM80211_PCI=y
++
+ ifdef CONFIG_WIRELESS_EXT
+ CONFIG_ATH6KL_CFG80211=y
+ CONFIG_ATH6KL_DEBUG=y
+@@ -529,8 +533,9 @@ CONFIG_ATH6KL_ENABLE_TARGET_DEBUG_PRINTS=y
+ CONFIG_ATH6KL_VIRTUAL_SCATTER_GATHER=y
+ CONFIG_ATH6K_LEGACY=m
+ 
+-CONFIG_BRCM80211=m
+-CONFIG_BRCM80211_PCI=y
++# It is not possible to compile CONFIG_BRCM80211 and CONFIG_BRCMFMAC as
++# module at the same time
++# CONFIG_BRCMFMAC=y
+ 
+ endif #CONFIG_WIRELESS_EXT
+ endif #CONFIG_MMC
 -- 
-Jouni Malinen                                            PGP id EFC895FA
+1.7.1
+
