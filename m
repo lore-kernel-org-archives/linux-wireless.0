@@ -1,65 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx51.mymxserver.com ([188.94.250.25]:49773 "EHLO
-	mx51.mymxserver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754408Ab0KPQ0r convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 16 Nov 2010 11:26:47 -0500
-From: Holger Schurig <holgerschurig@gmail.com>
-To: Elvis Dowson <elvis.dowson@mac.com>
-Subject: Re: Android 2.2/2.2.1 wifi not working after restart with driver-awext
-Date: Tue, 16 Nov 2010 17:26:44 +0100
-Cc: Linux Wireless Mailing List <linux-wireless@vger.kernel.org>
-References: <0604E650-C4CD-40FF-ACC6-262E555C8194@mac.com> <201011161304.26637.holgerschurig@gmail.com> <873543BB-F827-4B21-BEA0-F538015CDA9A@mac.com>
-In-Reply-To: <873543BB-F827-4B21-BEA0-F538015CDA9A@mac.com>
-MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="us-ascii"
-Message-Id: <201011161726.44815.holgerschurig@gmail.com>
+Received: from mga02.intel.com ([134.134.136.20]:50878 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756478Ab0KYBib (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 24 Nov 2010 20:38:31 -0500
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Subject: [PATCH 12/12] iwlagn: minor change in bt coex normal LUT
+Date: Wed, 24 Nov 2010 17:32:48 -0800
+Message-Id: <1290648768-10075-13-git-send-email-wey-yi.w.guy@intel.com>
+In-Reply-To: <1290648768-10075-1-git-send-email-wey-yi.w.guy@intel.com>
+References: <1290648768-10075-1-git-send-email-wey-yi.w.guy@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> This is not true. You probably read the last few sections of the log file.
-> On first start and connect, wifi works and I'm able to use the wlan0
-> interface and browse the internet. 
-> 
-> After turning off wifi and turning it back on from the control panel, it
-> doesnt connect, and you see the following message.
+Minor changes in LUT
 
-Oh, I stand corrected.
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-agn-lib.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-
-BTW: one of the problems of Android is that no-one turns off useless debug
-messages. Your log is full of stuff that isn't really important here that it's
-certainly not easy to see what is important. I'd say more than 70% of all
-lines in your log are completely unrelated or nonsensical.
-
-
-
->From the rest, I gather that the scan didn't work as expected:
-
-
-I/wpa_supplicant( 1397): CTRL-EVCntlOidSsidProc():CNTL - 0 BSS of 1 BSS match the desire ENT-STATE-CHANGE id=-1 state=2
-I/wpa_supplicant( 1397): CTRL-EVCntlOidSsidProc():CNTL - No matching BSS, start a new scan
-
-and later:
-
-SCAN done, resume MSDU transmission ...
-CntlOidSsidProc():CNTL - 0 BSS of 0 BSS match the desire (8)SSID - Olympus2
-CntlOidSsidProc():CNTL - No matching BSS, start a new scan
-
-
-Maybe some upper-levels want's to scan for this specific SSID, but
-the driver doesn't allow this?
-
-Maybe it's so borked that a "rmmod rt3070sta" after downing the
-interface would help?
-
-Also, it's not clear to me why wpa_supplicant says that no BSSID
-matched, but then two lines later it says:
-
-"Trying to assortiate with 68:7f:74:1c:e4:7c"
-
-
-
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-lib.c b/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
+index 3342513..407f0bb 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
+@@ -1778,7 +1778,7 @@ static const __le32 iwlagn_def_3w_lookup[12] = {
+ 	cpu_to_le32(0xc0004000),
+ 	cpu_to_le32(0x00004000),
+ 	cpu_to_le32(0xf0005000),
+-	cpu_to_le32(0xf0004000),
++	cpu_to_le32(0xf0005000),
+ };
+ 
+ static const __le32 iwlagn_concurrent_lookup[12] = {
 -- 
-Homepage: http://www.holgerschurig.de
+1.7.0.4
+
