@@ -1,80 +1,94 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:49756 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751293Ab0KSF6H (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 19 Nov 2010 00:58:07 -0500
-To: Felix Fietkau <nbd@openwrt.org>
-Subject: Re: [PATCH] mac80211: use nullfunc instead of probe request for connection
- monitoring
+Received: from bear.ext.ti.com ([192.94.94.41]:34444 "EHLO bear.ext.ti.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752877Ab0KYLtf (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 25 Nov 2010 06:49:35 -0500
+Message-ID: <4CEE4D3A.3000606@ti.com>
+Date: Thu, 25 Nov 2010 13:49:14 +0200
+From: Shahar Levi <shahar_levi@ti.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Date: Fri, 19 Nov 2010 06:58:03 +0100
-From: Johannes Berg <johannes@sipsolutions.net>
-Cc: <linux-wireless@vger.kernel.org>, <linville@tuxdriver.com>
-In-Reply-To: <1290141756-37252-1-git-send-email-nbd@openwrt.org>
-References: <1290141756-37252-1-git-send-email-nbd@openwrt.org>
-Message-ID: <b18357d5d26e318178407a9133214709@localhost>
+To: Juuso Oikarinen <juuso.oikarinen@nokia.com>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Luciano Coelho <luciano.coelho@nokia.com>
+Subject: Re: [PATCH ] wl12xx: BA receiver support
+References: <1290616392-16532-1-git-send-email-shahar_levi@ti.com> <1290678776.4284.67.camel@wimaxnb.nmp.nokia.com>
+In-Reply-To: <1290678776.4284.67.camel@wimaxnb.nmp.nokia.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 19 Nov 2010 05:42:36 +0100, Felix Fietkau <nbd@openwrt.org> wrote:
-> +	if (!(ifmgd->flags & (IEEE80211_STA_BEACON_POLL |
-> +			     IEEE80211_STA_CONNECTION_POLL)))
-> +	    return;
+On 11/25/2010 11:52 AM, Juuso Oikarinen wrote:
+> On Wed, 2010-11-24 at 18:33 +0200, ext Shahar Levi wrote:
+>> Add new ampdu_action ops to support receiver BA.
+>> The BA initiator session management in FW independently.
+>>
+>> Signed-off-by: Shahar Levi<shahar_levi@ti.com>
+>> ---
+>>
+>> +int wl1271_op_ampdu_action(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
+>> +			   enum ieee80211_ampdu_mlme_action action,
+>> +			   struct ieee80211_sta *sta, u16 tid, u16 *ssn)
+>> +{
+>> +	struct wl1271 *wl = hw->priv;
+>> +	int ret;
+>> +
+>> +	ret = wl1271_ps_elp_wakeup(wl, false);
+>> +	if (ret<  0)
+>> +		goto out;
+>> +
+>> +	switch (action) {
+>> +	case IEEE80211_AMPDU_RX_START:
+>> +		if (wl->ba_allowed) {
+>> +			ret = wl1271_acx_set_ba_receiver_session(wl, tid, ssn,
+>> +								 true);
+>> +			if (!ret)
+>> +				wl->ba_rx_bitmap |= (u8)(BIT(0)<<  tid);
+>> +		} else
+>> +			ret = -EPERM;
+>> +		break;
+>> +
+>> +	case IEEE80211_AMPDU_RX_STOP:
+>> +		ret = wl1271_acx_set_ba_receiver_session(wl, tid, ssn, false);
+>> +		if (!ret)
+>> +			wl->ba_rx_bitmap&= ~(u8)(BIT(0)<<  tid);
+>> +		break;
+>> +
+>> +	/*
+>> +	 * The BA initiator session management in FW independently.
+>> +	 * Falling break here on purpose for all TX APDU commands.
+>> +	 */
+>> +	case IEEE80211_AMPDU_TX_START:
+>> +	case IEEE80211_AMPDU_TX_STOP:
+>> +	case IEEE80211_AMPDU_TX_OPERATIONAL:
+>> +		ret = -EINVAL;
+>> +		break;
+>> +
+>> +	default:
+>> +		wl1271_error("Incorrect ampdu action id=%x\n", action);
+>> +		ret = -ENODEV;
+>> +	}
+>> +
+>> +	wl1271_ps_elp_sleep(wl);
+>> +
+>> +out:
+>> +	return ret;
+>> +}
+>> +
+>
+> Seems to me that locking of the wl1271 mutex is missing here.
+You right. will be fix on v2
 
-Some whitespace issues here and some other places?
+>
+> Also, I think it would be good to add checking for interface status
+> (wl->state == WL1271_STATE_OFF) here too. In normal cases this would not
+> be needed, but there are at least some hardware recovery scenarios where
+> this could be called while the firmware is off, causing all types of odd
+> behavior.
+it seems that it is good protraction. the setting of WL1271_STATE_OFF is 
+in wl1271_alloc_hw() and __wl1271_op_remove_interface(). i was expect 
+that in static void wl1271_recovery_work() after validate (wl->state != 
+WL1271_STATE_ON) we will set it to WL1271_STATE_OFF.
 
-> +	if (sdata->local->hw.flags & IEEE80211_HW_REPORTS_TX_ACK_STATUS)
-> +		ieee80211_send_nullfunc(sdata->local, sdata, 0);
+> -Juuso
+>
 
-Hmm, should that really be 0 always? Could it be racy either way?
-I think that probably needs some analysis.
-
-> +	else {
-> +		ssid = ieee80211_bss_get_ie(ifmgd->associated, WLAN_EID_SSID);
-> +		ieee80211_send_probe_req(sdata, dst, ssid + 2, ssid[1], NULL, 0);
-> +	}
->  
->  	ifmgd->probe_send_count++;
->  	ifmgd->probe_timeout = jiffies + IEEE80211_PROBE_WAIT;
-> @@ -1509,29 +1562,8 @@ static void ieee80211_rx_mgmt_probe_resp(struct
-> ieee80211_sub_if_data *sdata,
->  	ieee80211_rx_bss_info(sdata, mgmt, len, rx_status, &elems, false);
->  
->  	if (ifmgd->associated &&
-> -	    memcmp(mgmt->bssid, ifmgd->associated->bssid, ETH_ALEN) == 0 &&
-> -	    ifmgd->flags & (IEEE80211_STA_BEACON_POLL |
-> -			    IEEE80211_STA_CONNECTION_POLL)) {
-> -		ifmgd->flags &= ~(IEEE80211_STA_CONNECTION_POLL |
-> -				  IEEE80211_STA_BEACON_POLL);
-> -		mutex_lock(&sdata->local->iflist_mtx);
-> -		ieee80211_recalc_ps(sdata->local, -1);
-> -		mutex_unlock(&sdata->local->iflist_mtx);
-> -
-> -		if (sdata->local->hw.flags & IEEE80211_HW_CONNECTION_MONITOR)
-> -			return;
-> -
-> -		/*
-> -		 * We've received a probe response, but are not sure whether
-> -		 * we have or will be receiving any beacons or data, so let's
-> -		 * schedule the timers again, just in case.
-> -		 */
-> -		ieee80211_sta_reset_beacon_monitor(sdata);
-> -
-> -		mod_timer(&ifmgd->conn_mon_timer,
-> -			  round_jiffies_up(jiffies +
-> -					   IEEE80211_CONNECTION_IDLE_TIME));
-> -	}
-> +	    memcmp(mgmt->bssid, ifmgd->associated->bssid, ETH_ALEN) == 0)
-> +		ieee80211_reset_ap_probe(sdata);
-
-Not sure I get this part...
-
-> +	if ((sdata->vif.type == NL80211_IFTYPE_STATION) &&
-> +		(local->hw.flags & IEEE80211_HW_REPORTS_TX_ACK_STATUS))
-> +		ieee80211_sta_tx_notify(sdata, (void *) skb->data);
-
-more whitespace weirdness
-
-johannes
