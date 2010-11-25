@@ -1,169 +1,88 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:59660 "EHLO nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750955Ab0KSEmm (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 18 Nov 2010 23:42:42 -0500
-From: Felix Fietkau <nbd@openwrt.org>
-To: linux-wireless@vger.kernel.org
-Cc: linville@tuxdriver.com, johannes@sipsolutions.net
-Subject: [PATCH] mac80211: use nullfunc instead of probe request for connection monitoring
-Date: Fri, 19 Nov 2010 05:42:36 +0100
-Message-Id: <1290141756-37252-1-git-send-email-nbd@openwrt.org>
+Received: from server19320154104.serverpool.info ([193.201.54.104]:52950 "EHLO
+	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753185Ab0KYOsp (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 25 Nov 2010 09:48:45 -0500
+From: Hauke Mehrtens <hauke@hauke-m.de>
+To: lrodriguez@atheros.com
+Cc: linux-wireless@vger.kernel.org, mcgrof@infradead.org,
+	Hauke Mehrtens <hauke@hauke-m.de>
+Subject: [PATCH 1/5] compat-wireless: make BRCMFMAC compile
+Date: Thu, 25 Nov 2010 15:48:33 +0100
+Message-Id: <1290696517-20437-1-git-send-email-hauke@hauke-m.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-nullfunc frames are better for connection monitoring, because probe requests
-are answered even if the AP has already dropped the connection, whereas
-nullfunc frames from an unassociated station will trigger a disassoc/deauth
-frame from the AP (WLAN_REASON_CLASS3_FRAME_FROM_NONASSOC_STA), which allows
-the station to reconnect immediately instead of waiting until it attempts to
-transmit the next unicast frame.
+This patch fixes some compile problems when Broadcom IEEE802.11n
+embedded FullMAC WLAN driver is selected.
 
-This only works on hardware with reliable tx ACK reporting, any other hardware
-needs to fall back to the probe request method.
-
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
 ---
- net/mac80211/ieee80211_i.h |    2 +
- net/mac80211/mlme.c        |   82 ++++++++++++++++++++++++++++++-------------
- net/mac80211/status.c      |    4 ++
- 3 files changed, 63 insertions(+), 25 deletions(-)
+ patches/25-multicast-list_head.patch         |   18 ++++++++++++++++--
+ patches/35-backport-brcm80211-Makefile.patch |   15 +++++++++++++++
+ 2 files changed, 31 insertions(+), 2 deletions(-)
 
-diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
-index 3598abf..7bb9a62 100644
---- a/net/mac80211/ieee80211_i.h
-+++ b/net/mac80211/ieee80211_i.h
-@@ -1264,6 +1264,8 @@ void ieee80211_send_nullfunc(struct ieee80211_local *local,
- 			     int powersave);
- void ieee80211_sta_rx_notify(struct ieee80211_sub_if_data *sdata,
- 			     struct ieee80211_hdr *hdr);
-+void ieee80211_sta_tx_notify(struct ieee80211_sub_if_data *sdata,
-+			     struct ieee80211_hdr *hdr);
- void ieee80211_beacon_connection_loss_work(struct work_struct *work);
- 
- void ieee80211_wake_queues_by_reason(struct ieee80211_hw *hw,
-diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index dfc4a31..ccea1a1 100644
---- a/net/mac80211/mlme.c
-+++ b/net/mac80211/mlme.c
-@@ -1026,6 +1026,48 @@ void ieee80211_sta_rx_notify(struct ieee80211_sub_if_data *sdata,
- 	ieee80211_sta_reset_conn_monitor(sdata);
- }
- 
-+static void ieee80211_reset_ap_probe(struct ieee80211_sub_if_data *sdata)
-+{
-+	struct ieee80211_if_managed *ifmgd = &sdata->u.mgd;
-+
-+	if (!(ifmgd->flags & (IEEE80211_STA_BEACON_POLL |
-+			     IEEE80211_STA_CONNECTION_POLL)))
-+	    return;
-+
-+	ifmgd->flags &= ~(IEEE80211_STA_CONNECTION_POLL |
-+			  IEEE80211_STA_BEACON_POLL);
-+	mutex_lock(&sdata->local->iflist_mtx);
-+	ieee80211_recalc_ps(sdata->local, -1);
-+	mutex_unlock(&sdata->local->iflist_mtx);
-+
-+	if (sdata->local->hw.flags & IEEE80211_HW_CONNECTION_MONITOR)
-+		return;
-+
-+	/*
-+	 * We've received a probe response, but are not sure whether
-+	 * we have or will be receiving any beacons or data, so let's
-+	 * schedule the timers again, just in case.
-+	 */
-+	ieee80211_sta_reset_beacon_monitor(sdata);
-+
-+	mod_timer(&ifmgd->conn_mon_timer,
-+		  round_jiffies_up(jiffies +
-+				   IEEE80211_CONNECTION_IDLE_TIME));
-+}
-+
-+void ieee80211_sta_tx_notify(struct ieee80211_sub_if_data *sdata,
-+			     struct ieee80211_hdr *hdr)
-+{
-+	if (!ieee80211_is_data(hdr->frame_control) &&
-+	    !ieee80211_is_nullfunc(hdr->frame_control))
-+	    return;
-+
-+	ieee80211_sta_reset_conn_monitor(sdata);
-+
-+	if (ieee80211_is_nullfunc(hdr->frame_control))
-+		ieee80211_reset_ap_probe(sdata);
-+}
-+
- static void ieee80211_mgd_probe_ap_send(struct ieee80211_sub_if_data *sdata)
- {
- 	struct ieee80211_if_managed *ifmgd = &sdata->u.mgd;
-@@ -1041,8 +1083,19 @@ static void ieee80211_mgd_probe_ap_send(struct ieee80211_sub_if_data *sdata)
- 	if (ifmgd->probe_send_count >= unicast_limit)
- 		dst = NULL;
- 
--	ssid = ieee80211_bss_get_ie(ifmgd->associated, WLAN_EID_SSID);
--	ieee80211_send_probe_req(sdata, dst, ssid + 2, ssid[1], NULL, 0);
-+	/*
-+	 * When the hardware reports an accurate Tx ACK status, it's
-+	 * better to send a nullfunc frame instead of a probe request,
-+	 * as it will kick us off the AP quickly if we aren't associated
-+	 * anymore. The timeout will be reset if the frame is ACKed by
-+	 * the AP.
-+	 */
-+	if (sdata->local->hw.flags & IEEE80211_HW_REPORTS_TX_ACK_STATUS)
-+		ieee80211_send_nullfunc(sdata->local, sdata, 0);
-+	else {
-+		ssid = ieee80211_bss_get_ie(ifmgd->associated, WLAN_EID_SSID);
-+		ieee80211_send_probe_req(sdata, dst, ssid + 2, ssid[1], NULL, 0);
-+	}
- 
- 	ifmgd->probe_send_count++;
- 	ifmgd->probe_timeout = jiffies + IEEE80211_PROBE_WAIT;
-@@ -1509,29 +1562,8 @@ static void ieee80211_rx_mgmt_probe_resp(struct ieee80211_sub_if_data *sdata,
- 	ieee80211_rx_bss_info(sdata, mgmt, len, rx_status, &elems, false);
- 
- 	if (ifmgd->associated &&
--	    memcmp(mgmt->bssid, ifmgd->associated->bssid, ETH_ALEN) == 0 &&
--	    ifmgd->flags & (IEEE80211_STA_BEACON_POLL |
--			    IEEE80211_STA_CONNECTION_POLL)) {
--		ifmgd->flags &= ~(IEEE80211_STA_CONNECTION_POLL |
--				  IEEE80211_STA_BEACON_POLL);
--		mutex_lock(&sdata->local->iflist_mtx);
--		ieee80211_recalc_ps(sdata->local, -1);
--		mutex_unlock(&sdata->local->iflist_mtx);
--
--		if (sdata->local->hw.flags & IEEE80211_HW_CONNECTION_MONITOR)
--			return;
--
--		/*
--		 * We've received a probe response, but are not sure whether
--		 * we have or will be receiving any beacons or data, so let's
--		 * schedule the timers again, just in case.
--		 */
--		ieee80211_sta_reset_beacon_monitor(sdata);
--
--		mod_timer(&ifmgd->conn_mon_timer,
--			  round_jiffies_up(jiffies +
--					   IEEE80211_CONNECTION_IDLE_TIME));
--	}
-+	    memcmp(mgmt->bssid, ifmgd->associated->bssid, ETH_ALEN) == 0)
-+		ieee80211_reset_ap_probe(sdata);
- }
- 
- /*
-diff --git a/net/mac80211/status.c b/net/mac80211/status.c
-index 3153c19..a6dd792 100644
---- a/net/mac80211/status.c
-+++ b/net/mac80211/status.c
-@@ -155,6 +155,10 @@ static void ieee80211_frame_acked(struct sta_info *sta, struct sk_buff *skb)
- 
- 		ieee80211_queue_work(&local->hw, &local->recalc_smps);
- 	}
-+
-+	if ((sdata->vif.type == NL80211_IFTYPE_STATION) &&
-+		(local->hw.flags & IEEE80211_HW_REPORTS_TX_ACK_STATUS))
-+		ieee80211_sta_tx_notify(sdata, (void *) skb->data);
- }
- 
- void ieee80211_tx_status(struct ieee80211_hw *hw, struct sk_buff *skb)
+diff --git a/patches/25-multicast-list_head.patch b/patches/25-multicast-list_head.patch
+index cd70bf3..48daec4 100644
+--- a/patches/25-multicast-list_head.patch
++++ b/patches/25-multicast-list_head.patch
+@@ -600,9 +600,23 @@ This also backport commit 2f787b0b76bf5de2eaa3ca3a29d89123ae03c856
+  	}
+  
+  	return hash.low | ((u64)hash.high << 32);
++--- a/drivers/staging/brcm80211/brcmfmac/dhd_linux.c
+++++ b/drivers/staging/brcm80211/brcmfmac/dhd_linux.c
++@@ -726,7 +726,11 @@ static void _dhd_set_multicast_list(dhd_
++ 	netdev_for_each_mc_addr(ha, dev) {
++ 		if (!cnt)
++ 			break;
+++#if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,35))
++ 		memcpy(bufp, ha->addr, ETHER_ADDR_LEN);
+++#else
+++		memcpy(bufp, ha->dmi_addr, ETHER_ADDR_LEN);
+++#endif
++ 		bufp += ETHER_ADDR_LEN;
++ 		cnt--;
++ 	}
+ --- a/include/net/mac80211.h
+ +++ b/include/net/mac80211.h
+-@@ -1763,7 +1763,11 @@ struct ieee80211_ops {
++@@ -1770,7 +1770,11 @@ struct ieee80211_ops {
+  				 struct ieee80211_bss_conf *info,
+  				 u32 changed);
+  	u64 (*prepare_multicast)(struct ieee80211_hw *hw,
+@@ -663,7 +677,7 @@ This also backport commit 2f787b0b76bf5de2eaa3ca3a29d89123ae03c856
+  
+ --- a/net/mac80211/ieee80211_i.h
+ +++ b/net/mac80211/ieee80211_i.h
+-@@ -724,7 +724,12 @@ struct ieee80211_local {
++@@ -725,7 +725,12 @@ struct ieee80211_local {
+  	struct work_struct recalc_smps;
+  
+  	/* aggregated multicast list */
+diff --git a/patches/35-backport-brcm80211-Makefile.patch b/patches/35-backport-brcm80211-Makefile.patch
+index ee15121..bc57367 100644
+--- a/patches/35-backport-brcm80211-Makefile.patch
++++ b/patches/35-backport-brcm80211-Makefile.patch
+@@ -15,3 +15,18 @@
+  
+  PCI_CFLAGS := -DWLC_LOW
+  
++--- a/drivers/staging/brcm80211/brcmfmac/Makefile
+++++ b/drivers/staging/brcm80211/brcmfmac/Makefile
++@@ -33,9 +33,9 @@ ccflags-y :=			\
++ 	-DPKT_FILTER_SUPPORT	\
++ 	-DSHOW_EVENTS		\
++ 	-DTOE			\
++-	-Idrivers/staging/brcm80211/brcmfmac		\
++-	-Idrivers/staging/brcm80211/include		\
++-	-Idrivers/staging/brcm80211/util
+++	-I$(obj)		\
+++	-I$(obj)/../include		\
+++	-I$(obj)/../util
++ 
++ DHDOFILES = dhd_linux.o ../util/linux_osl.o ../util/bcmutils.o dhd_common.o dhd_custom_gpio.o	\
++ 	wl_iw.o wl_cfg80211.o ../util/siutils.o ../util/sbutils.o ../util/aiutils.o ../util/hndpmu.o ../util/bcmwifi.o dhd_sdio.o	\
 -- 
-1.7.3.2
+1.7.1
 
