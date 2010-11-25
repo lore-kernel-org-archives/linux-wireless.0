@@ -1,45 +1,28 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nm2.bullet.mail.ird.yahoo.com ([77.238.189.59]:26716 "HELO
-	nm2.bullet.mail.ird.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1756042Ab0KXUZA convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 24 Nov 2010 15:25:00 -0500
-Message-ID: <435994.23277.qm@web29503.mail.ird.yahoo.com>
-Date: Wed, 24 Nov 2010 20:24:58 +0000 (GMT)
-From: Hin-Tak Leung <htl10@users.sourceforge.net>
-Reply-To: htl10@users.sourceforge.net
-Subject: Re: RTL8187L: Can only "enable" hw radio switch after Windows boot
-To: Larry Finger <Larry.Finger@lwfinger.net>,
-	Dan Williams <dcbw@redhat.com>
-Cc: Klaas De Craemer <klaasdc@gmail.com>,
-	linux-wireless@vger.kernel.org,
-	Herton Ronaldo Krzesinski <herton@mandriva.com.br>
-In-Reply-To: <1290567756.3074.25.camel@dcbw.foobar.com>
+Received: from mail-iw0-f174.google.com ([209.85.214.174]:42343 "EHLO
+	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751569Ab0KYS0Y (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 25 Nov 2010 13:26:24 -0500
+Received: by iwn33 with SMTP id 33so208983iwn.19
+        for <linux-wireless@vger.kernel.org>; Thu, 25 Nov 2010 10:26:24 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
+In-Reply-To: <1290696544-20483-1-git-send-email-hauke@hauke-m.de>
+References: <1290696544-20483-1-git-send-email-hauke@hauke-m.de>
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Date: Thu, 25 Nov 2010 10:26:03 -0800
+Message-ID: <AANLkTimYOi6b517e+wH_xfo6O4mU13VtCyCMfvyu=0Bt@mail.gmail.com>
+Subject: Re: [PATCH] compat: backport pr_warn
+To: Hauke Mehrtens <hauke@hauke-m.de>
+Cc: linux-wireless@vger.kernel.org, mcgrof@infradead.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Thu, Nov 25, 2010 at 6:49 AM, Hauke Mehrtens <hauke@hauke-m.de> wrote:
+>
+> Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
 
---- On Wed, 24/11/10, Dan Williams <dcbw@redhat.com> wrote:
+Applied, and pushed, thanks!
 
-<snipped>
-> > The only Windows 7 system here belongs to my wife, and
-> any requests to use it
-> > for testing are not well received. In addition, the
-> USB capture code I have only
-> > works on XP. I will try to get that driver, or as
-> close as I can.
-> 
-> Snoopy Pro perhaps?  I do wish there was a free
-> sniffer that worked on
-> Vista and Win7, would help sniffing 3G dongles.  The
-> best one I can find
-> is USBlyzer (non-free) which is a 30 day free trial but
-> otherwise works
-> pretty well.
-
-Yes, somebody ported snoopy Pro to XP, and for a while it says also support Vista but apparently not - my experience is that it locks up Vista. (for an USB scanner rather than Realtek wireless). It was quite useful under win98, but my last win98 box died :-(.
-
-
-      
+  Luis
