@@ -1,53 +1,82 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:37893 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758229Ab0KRUBs (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 18 Nov 2010 15:01:48 -0500
-Subject: Re: iwlwifi: fix modular legacy build errors
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Randy Dunlap <randy.dunlap@oracle.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	"Guy, Wey-Yi" <wey-yi.w.guy@intel.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <4CE5849D.1060705@oracle.com>
-References: <1290011797.12056.255.camel@wwguy-huron>
-	 <1290012580.3777.1.camel@jlt3.sipsolutions.net>
-	 <4CE40CF9.8090404@oracle.com> <1290013876.12056.260.camel@wwguy-huron>
-	 <20101118091138.80875baf.randy.dunlap@oracle.com>
-	 <1290101760.6131.1.camel@wwguy-ubuntu>
-	 <20101118175434.GC2468@tuxdriver.com>  <4CE57EB3.5070902@oracle.com>
-	 <1290109607.3801.8.camel@jlt3.sipsolutions.net>
-	 <4CE5849D.1060705@oracle.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Thu, 18 Nov 2010 12:03:17 -0800
-Message-ID: <1290110597.3801.10.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+Received: from mail.klingt.org ([86.59.21.178]:43085 "EHLO klingt.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751490Ab0KYRTR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 25 Nov 2010 12:19:17 -0500
+From: Tim Blechmann <tim@klingt.org>
+To: Helmut Schaa <helmut.schaa@googlemail.com>
+Subject: Re: rt61pci issue
+Date: Thu, 25 Nov 2010 18:19:12 +0100
+Cc: linux-wireless@vger.kernel.org
+References: <ibgpgg$a5m$1@dough.gmane.org> <201011120747.28837.helmut.schaa@googlemail.com> <201011120803.32721.helmut.schaa@googlemail.com>
+In-Reply-To: <201011120803.32721.helmut.schaa@googlemail.com>
+MIME-Version: 1.0
+Content-Type: multipart/signed;
+  boundary="nextPart1319825.39h4M4g8ea";
+  protocol="application/pgp-signature";
+  micalg=pgp-sha1
+Message-Id: <201011251819.12913.tim@klingt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2010-11-18 at 11:55 -0800, Randy Dunlap wrote:
+--nextPart1319825.39h4M4g8ea
+Content-Type: Text/Plain;
+  charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
 
-> > iwlcore-objs += $(iwlcore-m)
-> > 
-> > to your Makefile after the iwl-legacy lines and see if that helps for
-> > you as well? It seems that the reason is that iwl-legacy never gets
-> 
-> Yes, that builds fine.
+> > > >> Mind to put a (maybe rate limited) printk into the interrupt thread
+> > > >> that prints out "reg"
+> > > >> and "reg_mcu" so that we can see which interrupts get triggered?
+> > > >=20
+> > > > log attached, generated with:
+> > > Thanks. Unfortunately nothing special in there. Mostly RX and TX
+> > > interrupts. So there must be something else ...
+> >=20
+> > Tim, is this on x86 hw? Or something else?
+>=20
+> I don't know if this will do any good or harm but it could be worth a try
+> as the spec for rt61pci says something like: "Don't enable interrupt
+> mitigation in the same write as releasing the other masks.". Since we
+> always write a mitigation period of 0xff =3D=3D "No mitigation period" we=
+ can
+> simply leave interrupt mitigation disabled.
+>=20
+> I really don't have any clue if this will fix anything but it might be
+> worth a try.
 
-Ok, thanks. I think I'll just not worry about it and add that then.
+i have been running this patch for a few days and i haven't experienced the=
+=20
+problem again.
 
-> > -iwlagn-$(CONFIG_IWL4965) += iwl-4965.o
-> > +iwlagn-$(CONFIG_IWL4965) += iwl-4965.o iwl-legacy.o
-> > 
-> > Why does that work, but not iwlcore-$(CONFIG_IWL4965)??
-> 
-> I dunno, but I only tested my erroneous patch when building as loadable
-> modules, not builtin.  Testing error on my part.
+according to `top', the kernel thread `irq/16-0000:08:' still is the kernel=
+=20
+thread, that is using the most cpu time (after an uptime of 8 hours) it is =
+about=20
+50 seconds, while the second most expensive kernel thread (`kworker/2:1') t=
+akes=20
+below 5 seconds of cpu time.
 
-Actually, I get it -- 4965 cannot be modular. And then I probably never
-tested 3945 _only_, but maybe only 4965 _only_ ... oh well. I'll go fix
-it.
+cheers, tim
 
-johannes
+=2D-=20
+tim@klingt.org
+http://tim.klingt.org
 
+Cheat your landlord if you can and must, but do not try to shortchange
+the Muse. It cannot be done. You can't fake quality any more than you
+can fake a good meal.
+  William S. Burroughs
+
+--nextPart1319825.39h4M4g8ea
+Content-Type: application/pgp-signature; name=signature.asc 
+Content-Description: This is a digitally signed message part.
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.10 (GNU/Linux)
+
+iEYEABECAAYFAkzumpAACgkQg0On+TFEWzz38QCfevBIz/V6R18kSGdrdMXDBm0v
+LaYAn2sFLtMG1/JEnNX28rfb6r1uYyGb
+=wtXx
+-----END PGP SIGNATURE-----
+
+--nextPart1319825.39h4M4g8ea--
