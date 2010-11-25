@@ -1,57 +1,88 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f46.google.com ([209.85.161.46]:63436 "EHLO
-	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752711Ab0KLR2s (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 12 Nov 2010 12:28:48 -0500
-Received: by fxm6 with SMTP id 6so302168fxm.19
-        for <linux-wireless@vger.kernel.org>; Fri, 12 Nov 2010 09:28:47 -0800 (PST)
-Message-ID: <4CDD7945.70005@lwfinger.net>
-Date: Fri, 12 Nov 2010 11:28:37 -0600
-From: Larry Finger <Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-To: Robie Basak <rb-oss-3@justgohome.co.uk>
-CC: linux-wireless@vger.kernel.org
-Subject: Re: r8187se panic
-References: <slrnidp3ae.79c.rb-oss-3@mal.justgohome.co.uk> <4CDC9FA5.10002@lwfinger.net> <slrnidq7u0.9ic.rb-oss-3@mal.justgohome.co.uk> <4CDD3BC4.7070102@lwfinger.net> <slrnidqorp.dlr.rb-oss-3@mal.justgohome.co.uk> <4CDD66C4.10603@lwfinger.net> <slrnidqsld.dlr.rb-oss-3@mal.justgohome.co.uk>
-In-Reply-To: <slrnidqsld.dlr.rb-oss-3@mal.justgohome.co.uk>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from mga02.intel.com ([134.134.136.20]:32698 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754448Ab0KYBia (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 24 Nov 2010 20:38:30 -0500
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Subject: [PATCH 09/12] iwlagn: Offical name for 6000g2b device
+Date: Wed, 24 Nov 2010 17:32:45 -0800
+Message-Id: <1290648768-10075-10-git-send-email-wey-yi.w.guy@intel.com>
+In-Reply-To: <1290648768-10075-1-git-send-email-wey-yi.w.guy@intel.com>
+References: <1290648768-10075-1-git-send-email-wey-yi.w.guy@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 11/12/2010 11:00 AM, Robie Basak wrote:
-> On 2010-11-12, Larry Finger <Larry.Finger@lwfinger.net> wrote:
->> Apply the new patch and the "change panic to warning" patch and redo your case
->> B. Send me the dmesg output and a description of what happened. That data you
->> can send directly. No need to spam the list with the lengthy dmesg output.
-> 
-> OK this is with change_panic_to_warn and fix_proc_entry_warning. I
-> forgot to mention that I'm applying all these patches to Ubuntu's stock
-> 10.10 kernel, since module symbols etc. come with the build - and then
-> just compiling the one kernel module and copying it over (not much space
-> or CPU power on the netbook and the keyboard is tiny!).
-> 
-> Behaviour is the same as case B from before. To clarify, after step 3 in
-> case B, wireless has always reconnected no problem. It is after a few
-> seconds after removing AC power that it loses connection (or perhaps it
-> takes a few seconds for Network Manager to notice). Once it has lost
-> connection it does seem to occasionally associate and then loses it
-> again (according to Network Manager).
-> 
-> Reloading the kernel module doesn't fix it, but then toggling the
-> wireless switch after the reload does.
-> 
-> I reproduced it a second time, this time not reloading the module but
-> just toggling the wireless switch afterwards. This seemed to fix it as
-> well, so it seems that reloading the module is not required.
+Change to offical name for 6000g2b devices:
+   "Intel(R) Centrino(R) Wireless-N 1030"
+   "Intel(R) Centrino(R) Advanced-N 6230"
 
-What does the following log entry signify?
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-6000.c |   12 ++++++------
+ 1 files changed, 6 insertions(+), 6 deletions(-)
 
-Nov 12 16:29:03 tiny kernel: [  160.306731]
-=>>>>>>>>>>=============================>set power:0,0!
+diff --git a/drivers/net/wireless/iwlwifi/iwl-6000.c b/drivers/net/wireless/iwlwifi/iwl-6000.c
+index d087cb5..3591dc8 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-6000.c
++++ b/drivers/net/wireless/iwlwifi/iwl-6000.c
+@@ -599,7 +599,7 @@ struct iwl_cfg iwl6000g2a_2bg_cfg = {
+ };
+ 
+ struct iwl_cfg iwl6000g2b_2agn_cfg = {
+-	.name = "6000 Series 2x2 AGN Gen2b",
++	.name = "Intel(R) Centrino(R) Advanced-N 6230 AGN",
+ 	.fw_name_pre = IWL6000G2B_FW_PRE,
+ 	.ucode_api_max = IWL6000G2_UCODE_API_MAX,
+ 	.ucode_api_min = IWL6000G2_UCODE_API_MIN,
+@@ -619,7 +619,7 @@ struct iwl_cfg iwl6000g2b_2agn_cfg = {
+ };
+ 
+ struct iwl_cfg iwl6000g2b_2abg_cfg = {
+-	.name = "6000 Series 2x2 ABG Gen2b",
++	.name = "Intel(R) Centrino(R) Advanced-N 6230 ABG",
+ 	.fw_name_pre = IWL6000G2B_FW_PRE,
+ 	.ucode_api_max = IWL6000G2_UCODE_API_MAX,
+ 	.ucode_api_min = IWL6000G2_UCODE_API_MIN,
+@@ -638,7 +638,7 @@ struct iwl_cfg iwl6000g2b_2abg_cfg = {
+ };
+ 
+ struct iwl_cfg iwl6000g2b_2bgn_cfg = {
+-	.name = "6000 Series 2x2 BGN Gen2b",
++	.name = "Intel(R) Centrino(R) Advanced-N 6230 BGN",
+ 	.fw_name_pre = IWL6000G2B_FW_PRE,
+ 	.ucode_api_max = IWL6000G2_UCODE_API_MAX,
+ 	.ucode_api_min = IWL6000G2_UCODE_API_MIN,
+@@ -658,7 +658,7 @@ struct iwl_cfg iwl6000g2b_2bgn_cfg = {
+ };
+ 
+ struct iwl_cfg iwl6000g2b_2bg_cfg = {
+-	.name = "6000 Series 2x2 BG Gen2b",
++	.name = "Intel(R) Centrino(R) Advanced-N 6230 BG",
+ 	.fw_name_pre = IWL6000G2B_FW_PRE,
+ 	.ucode_api_max = IWL6000G2_UCODE_API_MAX,
+ 	.ucode_api_min = IWL6000G2_UCODE_API_MIN,
+@@ -677,7 +677,7 @@ struct iwl_cfg iwl6000g2b_2bg_cfg = {
+ };
+ 
+ struct iwl_cfg iwl6000g2b_bgn_cfg = {
+-	.name = "6000 Series 1x2 BGN Gen2b",
++	.name = "Intel(R) Centrino(R) Wireless-N 1030 BGN",
+ 	.fw_name_pre = IWL6000G2B_FW_PRE,
+ 	.ucode_api_max = IWL6000G2_UCODE_API_MAX,
+ 	.ucode_api_min = IWL6000G2_UCODE_API_MIN,
+@@ -697,7 +697,7 @@ struct iwl_cfg iwl6000g2b_bgn_cfg = {
+ };
+ 
+ struct iwl_cfg iwl6000g2b_bg_cfg = {
+-	.name = "6000 Series 1x2 BG Gen2b",
++	.name = "Intel(R) Centrino(R) Wireless-N 1030 BG",
+ 	.fw_name_pre = IWL6000G2B_FW_PRE,
+ 	.ucode_api_max = IWL6000G2_UCODE_API_MAX,
+ 	.ucode_api_min = IWL6000G2_UCODE_API_MIN,
+-- 
+1.7.0.4
 
-On my system, switching to battery does not affect the rtl8187se at all.
-
-I will be working on a patch that improves the error handling of the read routines.
-
-Larry
