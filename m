@@ -1,39 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from external1.orbit-lab.org ([128.6.192.131]:46645 "HELO
-	external1.orbit-lab.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1751067Ab0KZUDo (ORCPT
+Received: from 128-177-27-249.ip.openhosting.com ([128.177.27.249]:46395 "EHLO
+	jmalinen.user.openhosting.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751648Ab0KYRut (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 26 Nov 2010 15:03:44 -0500
-Received: from repository3.orbit-lab.org (repository3.orbit-lab.org [10.50.0.41])
-	by external1.orbit-lab.org (Postfix) with ESMTP id 6FDB8418D8
-	for <linux-wireless@vger.kernel.org>; Fri, 26 Nov 2010 14:58:52 -0500 (EST)
-Subject: Compat-wireless release for 2010-11-26 is baked
-To: <linux-wireless@vger.kernel.org>
-Message-Id: <20101126200343.2C53640F97@repository3.orbit-lab.org>
-Date: Fri, 26 Nov 2010 15:03:43 -0500 (EST)
-From: compat@orbit-lab.org (Compat-wireless cronjob account)
+	Thu, 25 Nov 2010 12:50:49 -0500
+Date: Thu, 25 Nov 2010 19:50:43 +0200
+From: Jouni Malinen <j@w1.fi>
+To: Wolfgang Breyha <wbreyha@gmx.net>
+Cc: Helmut Schaa <helmut.schaa@googlemail.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: Linux Client vs. CISCO AP with band select
+Message-ID: <20101125175043.GA6907@jm.kir.nu>
+References: <4CE6EA98.3020300@gmx.net>
+ <20101120112753.GA12225@jm.kir.nu>
+ <201011201304.48821.helmut.schaa@googlemail.com>
+ <4CEBE834.9000303@gmx.net>
+ <4CED27A0.70001@gmx.net>
+ <20101125164724.GA6269@jm.kir.nu>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20101125164724.GA6269@jm.kir.nu>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
->From git://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next
-   608a411..75ca055  history    -> origin/history
- + 63b6a58...927f20b master     -> origin/master  (forced update)
- * [new tag]         next-20101126 -> next-20101126
+On Thu, Nov 25, 2010 at 06:47:24PM +0200, Jouni Malinen wrote:
+> Interestingly enough, that seems to be exactly what the current
+> wireless-testing.git snapshot is doing.. I was trying to reproduce this
+> issue by modifying my AP not to reply to Probe Request frames on 2.4 GHz
+> band and did not see any problems in getting connected. The station saw
+> both the 2.4 and 5 GHz BSSes from the AP and the 2.4 GHz BSS was
+> selected based on signal strength. mac80211 went through the
+> authentication and association frame exchanges without any problems (and
+> without sending out a directed Probe Request frame). Whether this change
+> was done by design is another question, but at least this seems to be
+> the current behavior.
 
-compat-wireless code metrics
+Well, maybe not. I could not reproduce that after adding more debug code
+to mac80211. In other words, the Probe Request is still there before
+authentication is attempted. Anyway, with this, I did get to reproduce
+the problem that shows up wpa_supplicant blacklisting not working
+properly in this case at least with -Dnl80211.
 
-    749168 - Total upstream lines of code being pulled
-      2201 - backport code changes
-      1939 - backport code additions
-       262 - backport code deletions
-      6441 - backport from compat module
-      8642 - total backport code
-    1.1535 - % of code consists of backport work
-      1534 - Crap changes not yet posted
-      1491 - Crap additions not yet posted
-        43 - Crap deletions not yet posted
-    0.2048 - % of crap code
-
-Base tree: linux-next.git
-Base tree version: next-20101126
-compat-wireless release: compat-wireless-2010-11-23-6-gefeeae7-pc
+-- 
+Jouni Malinen                                            PGP id EFC895FA
