@@ -1,95 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:35756 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S935193Ab0KQRhc (ORCPT
+Received: from 128-177-27-249.ip.openhosting.com ([128.177.27.249]:58371 "EHLO
+	jmalinen.user.openhosting.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753834Ab0KYQra (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 17 Nov 2010 12:37:32 -0500
-Message-ID: <4CE412D4.7030406@candelatech.com>
-Date: Wed, 17 Nov 2010 09:37:24 -0800
-From: Ben Greear <greearb@candelatech.com>
+	Thu, 25 Nov 2010 11:47:30 -0500
+Date: Thu, 25 Nov 2010 18:47:24 +0200
+From: Jouni Malinen <j@w1.fi>
+To: Wolfgang Breyha <wbreyha@gmx.net>
+Cc: Helmut Schaa <helmut.schaa@googlemail.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: Linux Client vs. CISCO AP with band select
+Message-ID: <20101125164724.GA6269@jm.kir.nu>
+References: <4CE6EA98.3020300@gmx.net>
+ <20101120112753.GA12225@jm.kir.nu>
+ <201011201304.48821.helmut.schaa@googlemail.com>
+ <4CEBE834.9000303@gmx.net>
+ <4CED27A0.70001@gmx.net>
 MIME-Version: 1.0
-To: Tejun Heo <tj@kernel.org>
-CC: Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] mac80211:  Fix deadlock in ieee80211_do_stop.
-References: <1289592426-5367-1-git-send-email-greearb@candelatech.com>	 <1289594998.3736.11.camel@jlt3.sipsolutions.net>	 <4CDDAA3B.9090007@candelatech.com> <1289596096.3736.13.camel@jlt3.sipsolutions.net> <4CDE699B.70401@kernel.org> <4CE1A344.7040201@candelatech.com> <4CE292F7.4090200@kernel.org> <4CE2B6A0.8020709@candelatech.com> <4CE39892.2070306@kernel.org>
-In-Reply-To: <4CE39892.2070306@kernel.org>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <4CED27A0.70001@gmx.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 11/17/2010 12:55 AM, Tejun Heo wrote:
-> Hello,
->
-> On 11/16/2010 05:51 PM, Ben Greear wrote:
->>> 1. Try to capture the full dump.  Usually serial console works best.
->>
->> This was from serial console, and I grabbed everything it printed
->> to the screen.  I'll look in /var/log/messages in case there is more
->> there.
->
-> Yeah, weird.  It doesn't look like it's missing random lines but it
-> definitely doesn't contain all the tasks.
->
->> If you have a system with an ath5k nic, I should be able to show you
->> how to reproduce it, if you're interested.
->
-> Unfortunately, I don't have ath5k.  I can order one if it's not too
-> expensive.  Anything you can recommend?
->
->>> 2. Does adding WQ_MEM_RECLAIM to alloc_ordered_workqueue() call in
->>>      ieee80211_register_hw() make any difference?
->>>
->>> 3. What if you replace it with the following?
->>>
->>>      alloc_workqueue(wiphy_name(local->hw.wiphy), WQ_NON_REENTRANT, 0)
->>
->> I can try these things..hopefully today.
->>
->> Can you explain briefly how this is supposed to work?  I'm certain that some
->> workers can be blocked attempting to get rtnl.  When we call flush_work(),
->> how is a worker chosen/created to flush that work?
->
-> They might not be solutions themselves but they should point where the
-> problem is.  flush_work() only flushes the target work.  It waits the
-> currently pending or executing work to finish execution.  Ordered
-> workqueue can execute only single work at any given time, so if
-> another work is taking a long time to finish, everything queued to the
-> workqueue will be delayed.  This is why I asked for the full dump so
+On Wed, Nov 24, 2010 at 03:56:32PM +0100, Wolfgang Breyha wrote:
+> I have proof now, that the APs respond to authentication requests regardless
+> of a successful probe before. Simply skipping the direct probe is sufficient
+> to connect successfully.
 
-Well, from the lockdep and stack traces, we can be certain at least one
-of the workers is blocked trying to lock RTNL.  That worker is certainly
-blocked and will never finish until the flush_work() completes since the
-flush_work() caller already owns RTNL.  If
-the flush-work() is waiting on that worker to finish, then it's
-a deadlock.
+Interestingly enough, that seems to be exactly what the current
+wireless-testing.git snapshot is doing.. I was trying to reproduce this
+issue by modifying my AP not to reply to Probe Request frames on 2.4 GHz
+band and did not see any problems in getting connected. The station saw
+both the 2.4 and 5 GHz BSSes from the AP and the 2.4 GHz BSS was
+selected based on signal strength. mac80211 went through the
+authentication and association frame exchanges without any problems (and
+without sending out a directed Probe Request frame). Whether this change
+was done by design is another question, but at least this seems to be
+the current behavior.
 
-> that we can find out who's holding the queue.  The other reason a work
-> execution can be delayed is if there is no execution resource
-> available due to high memory pressure.  This again will be
-> distinguishible from task dump as rescue workers would be active and
-> manager worker would be in worker creation path.
-
-I have plenty of memory available when this problem starts.
-(I doubled memory to 2GB of low-memory and the problem persists.)
-
-> The two suggested changes modify the workqueue behavior such that each
-> resolves one of the two issues.  If you set WQ_MEM_RECLAIM, workqueue
-> allocates a dedicated worker to use under memory pressure, so
-> execution resource is guaranteed to be there.  If you use
-> WQ_NON_REENTRANT, workqueue would execute multiple works in parallel
-> and a single work which takes a long time to finish won't delay other
-> works queued to the same workqueue.
-
- From your description, REENTRANT appears that it could fix the problem.
-Johannes:  Any idea if that would be proper behaviour for this work-queue,
-or would that add out-of-order and locking issues of it's own?
-
-Thanks,
-Ben
-
+There may still be some issues in wpa_supplicant blacklist handling
+which I will try to reproduce in some other way since the station should
+have actually managed to follow the not so polite hint from the AP and
+try to use the 5 GHz band here.
 
 -- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
-
+Jouni Malinen                                            PGP id EFC895FA
