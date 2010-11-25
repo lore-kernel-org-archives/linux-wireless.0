@@ -1,36 +1,30 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from vms173003pub.verizon.net ([206.46.173.3]:59063 "EHLO
-	vms173003pub.verizon.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753078Ab0KISTV (ORCPT
+Received: from mail-iw0-f174.google.com ([209.85.214.174]:42343 "EHLO
+	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751581Ab0KYS0y (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 9 Nov 2010 13:19:21 -0500
-Received: from [192.168.1.6] ([unknown] [173.66.155.143])
- by vms173003.mailsrvcs.net
- (Sun Java(tm) System Messaging Server 7u2-7.02 32bit (built Apr 16 2009))
- with ESMTPA id <0LBM00II5QVRA3A0@vms173003.mailsrvcs.net> for
- linux-wireless@vger.kernel.org; Tue, 09 Nov 2010 12:19:03 -0600 (CST)
-Message-id: <4CD99096.5020105@verizon.net>
-Date: Tue, 09 Nov 2010 13:19:02 -0500
-From: Clyde McPherson <ccmcphe@verizon.net>
-MIME-version: 1.0
-To: linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Wireless and RFKILL
-Content-type: text/plain; charset=ISO-8859-1; format=flowed
+	Thu, 25 Nov 2010 13:26:54 -0500
+Received: by mail-iw0-f174.google.com with SMTP id 33so208983iwn.19
+        for <linux-wireless@vger.kernel.org>; Thu, 25 Nov 2010 10:26:53 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <1290696517-20437-1-git-send-email-hauke@hauke-m.de>
+References: <1290696517-20437-1-git-send-email-hauke@hauke-m.de>
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Date: Thu, 25 Nov 2010 10:26:32 -0800
+Message-ID: <AANLkTimJAAqxFj2Jd77Y268muM4uJEFmHqjP5Ys-S1cz@mail.gmail.com>
+Subject: Re: [PATCH 1/5] compat-wireless: make BRCMFMAC compile
+To: Hauke Mehrtens <hauke@hauke-m.de>
+Cc: linux-wireless@vger.kernel.org, mcgrof@infradead.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+On Thu, Nov 25, 2010 at 6:48 AM, Hauke Mehrtens <hauke@hauke-m.de> wrote:
+> This patch fixes some compile problems when Broadcom IEEE802.11n
+> embedded FullMAC WLAN driver is selected.
+>
+> Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
 
-I build and use the compat-wireless source for use with SBC 
-applications, and I have a question about the wireless portion of the 
-code. Our SBCs do not have RFKILL capabilities, and since we use 
-wireless we are forced to include it in our kernel due to the depends in 
-wireless. What are the chances of adding #ifdef's for CONFIG_RFKILL on 
-the code segments that require RFKILL, this way integrators like myself 
-would not need to load and/or build the rfkill modules? This would also 
-save us memory and storage that is limited on a SBC system.
+Applied and pushed, thanks!
 
-
-Thanks much
-Tex
-
+  Luis
