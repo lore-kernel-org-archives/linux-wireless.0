@@ -1,169 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wy0-f174.google.com ([74.125.82.174]:57205 "EHLO
-	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751824Ab0K1JkB (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 28 Nov 2010 04:40:01 -0500
-Received: by wyb28 with SMTP id 28so3370149wyb.19
-        for <linux-wireless@vger.kernel.org>; Sun, 28 Nov 2010 01:39:59 -0800 (PST)
-From: =?utf-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-To: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-Cc: b43-dev@lists.infradead.org,
-	=?utf-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-Subject: [PATCH][RFC] ssb: extract indexes for power tables
-Date: Sun, 28 Nov 2010 10:39:35 +0100
-Message-Id: <1290937176-13510-1-git-send-email-zajec5@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Received: from mga09.intel.com ([134.134.136.24]:52347 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754332Ab0KYBi2 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 24 Nov 2010 20:38:28 -0500
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Subject: [PATCH 01/12] iwlwifi: remove unused define
+Date: Wed, 24 Nov 2010 17:32:37 -0800
+Message-Id: <1290648768-10075-2-git-send-email-wey-yi.w.guy@intel.com>
+In-Reply-To: <1290648768-10075-1-git-send-email-wey-yi.w.guy@intel.com>
+References: <1290648768-10075-1-git-send-email-wey-yi.w.guy@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
----
-This patch adds a lot of similar definitions. Like masks and shifts being the
-same for every frequency. Is that OK?
----
- drivers/ssb/pci.c            |   44 ++++++++++++++++++++++++++++++++++++++++++
- include/linux/ssb/ssb.h      |    4 +++
- include/linux/ssb/ssb_regs.h |   40 ++++++++++++++++++++++++++++++++++++++
- 3 files changed, 88 insertions(+), 0 deletions(-)
+was not used, remove it
 
-diff --git a/drivers/ssb/pci.c b/drivers/ssb/pci.c
-index f529663..158449e 100644
---- a/drivers/ssb/pci.c
-+++ b/drivers/ssb/pci.c
-@@ -406,6 +406,46 @@ static void sprom_extract_r123(struct ssb_sprom *out, const u16 *in)
- 	out->antenna_gain.ghz5.a3 = gain;
- }
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-eeprom.h |    1 -
+ 1 files changed, 0 insertions(+), 1 deletions(-)
+
+diff --git a/drivers/net/wireless/iwlwifi/iwl-eeprom.h b/drivers/net/wireless/iwlwifi/iwl-eeprom.h
+index e87be1e..583916d 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-eeprom.h
++++ b/drivers/net/wireless/iwlwifi/iwl-eeprom.h
+@@ -410,7 +410,6 @@ struct iwl_eeprom_calib_info {
+ #define EEPROM_OEM_MODE                     (2*0x46)	/* 2  bytes */
+ #define EEPROM_WOWLAN_MODE                  (2*0x47)	/* 2  bytes */
+ #define EEPROM_RADIO_CONFIG                 (2*0x48)	/* 2  bytes */
+-#define EEPROM_3945_M_VERSION               (2*0x4A)	/* 1  bytes */
+ #define EEPROM_NUM_MAC_ADDRESS              (2*0x4C)	/* 2  bytes */
  
-+/* Revs 4 5 and 8 have partially shared layout */
-+static void sprom_extract_r458(struct ssb_sprom *out, const u16 *in)
-+{
-+	SPEX(txpid2g[0], SSB_SPROM4_TXPID2G01,
-+	     SSB_SPROM4_TXPID2G0, SSB_SPROM4_TXPID2G0_SHIFT);
-+	SPEX(txpid2g[1], SSB_SPROM4_TXPID2G01,
-+	     SSB_SPROM4_TXPID2G1, SSB_SPROM4_TXPID2G1_SHIFT);
-+	SPEX(txpid2g[2], SSB_SPROM4_TXPID2G23,
-+	     SSB_SPROM4_TXPID2G2, SSB_SPROM4_TXPID2G2_SHIFT);
-+	SPEX(txpid2g[3], SSB_SPROM4_TXPID2G23,
-+	     SSB_SPROM4_TXPID2G3, SSB_SPROM4_TXPID2G3_SHIFT);
-+
-+	SPEX(txpid5gl[0], SSB_SPROM4_TXPID5GL01,
-+	     SSB_SPROM4_TXPID5GL0, SSB_SPROM4_TXPID5GL0_SHIFT);
-+	SPEX(txpid5gl[1], SSB_SPROM4_TXPID5GL01,
-+	     SSB_SPROM4_TXPID5GL1, SSB_SPROM4_TXPID5GL1_SHIFT);
-+	SPEX(txpid5gl[2], SSB_SPROM4_TXPID5GL23,
-+	     SSB_SPROM4_TXPID5GL2, SSB_SPROM4_TXPID5GL2_SHIFT);
-+	SPEX(txpid5gl[3], SSB_SPROM4_TXPID5GL23,
-+	     SSB_SPROM4_TXPID5GL3, SSB_SPROM4_TXPID5GL3_SHIFT);
-+
-+	SPEX(txpid5g[0], SSB_SPROM4_TXPID5G01,
-+	     SSB_SPROM4_TXPID5G0, SSB_SPROM4_TXPID5G0_SHIFT);
-+	SPEX(txpid5g[1], SSB_SPROM4_TXPID5G01,
-+	     SSB_SPROM4_TXPID5G1, SSB_SPROM4_TXPID5G1_SHIFT);
-+	SPEX(txpid5g[2], SSB_SPROM4_TXPID5G23,
-+	     SSB_SPROM4_TXPID5G2, SSB_SPROM4_TXPID5G2_SHIFT);
-+	SPEX(txpid5g[3], SSB_SPROM4_TXPID5G23,
-+	     SSB_SPROM4_TXPID5G3, SSB_SPROM4_TXPID5G3_SHIFT);
-+
-+	SPEX(txpid5gh[0], SSB_SPROM4_TXPID5GH01,
-+	     SSB_SPROM4_TXPID5GH0, SSB_SPROM4_TXPID5GH0_SHIFT);
-+	SPEX(txpid5gh[1], SSB_SPROM4_TXPID5GH01,
-+	     SSB_SPROM4_TXPID5GH1, SSB_SPROM4_TXPID5GH1_SHIFT);
-+	SPEX(txpid5gh[2], SSB_SPROM4_TXPID5GH23,
-+	     SSB_SPROM4_TXPID5GH2, SSB_SPROM4_TXPID5GH2_SHIFT);
-+	SPEX(txpid5gh[3], SSB_SPROM4_TXPID5GH23,
-+	     SSB_SPROM4_TXPID5GH3, SSB_SPROM4_TXPID5GH3_SHIFT);
-+}
-+
- static void sprom_extract_r45(struct ssb_sprom *out, const u16 *in)
- {
- 	int i;
-@@ -471,6 +511,8 @@ static void sprom_extract_r45(struct ssb_sprom *out, const u16 *in)
- 	memcpy(&out->antenna_gain.ghz5, &out->antenna_gain.ghz24,
- 	       sizeof(out->antenna_gain.ghz5));
- 
-+	sprom_extract_r458(out, in);
-+
- 	/* TODO - get remaining rev 4 stuff needed */
- }
- 
-@@ -561,6 +603,8 @@ static void sprom_extract_r8(struct ssb_sprom *out, const u16 *in)
- 	memcpy(&out->antenna_gain.ghz5, &out->antenna_gain.ghz24,
- 	       sizeof(out->antenna_gain.ghz5));
- 
-+	sprom_extract_r458(out, in);
-+
- 	/* TODO - get remaining rev 8 stuff needed */
- }
- 
-diff --git a/include/linux/ssb/ssb.h b/include/linux/ssb/ssb.h
-index 623b704..9659eff 100644
---- a/include/linux/ssb/ssb.h
-+++ b/include/linux/ssb/ssb.h
-@@ -55,6 +55,10 @@ struct ssb_sprom {
- 	u8 tri5gl;		/* 5.2GHz TX isolation */
- 	u8 tri5g;		/* 5.3GHz TX isolation */
- 	u8 tri5gh;		/* 5.8GHz TX isolation */
-+	u8 txpid2g[4];		/* 2GHz TX power index */
-+	u8 txpid5gl[4];		/* 4.9 - 5.1GHz TX power index */
-+	u8 txpid5g[4];		/* 5.1 - 5.5GHz TX power index */
-+	u8 txpid5gh[4];		/* 5.5 - ...GHz TX power index */
- 	u8 rxpo2g;		/* 2GHz RX power offset */
- 	u8 rxpo5g;		/* 5GHz RX power offset */
- 	u8 rssisav2g;		/* 2GHz RSSI params */
-diff --git a/include/linux/ssb/ssb_regs.h b/include/linux/ssb/ssb_regs.h
-index 11daf9c..489f7b6 100644
---- a/include/linux/ssb/ssb_regs.h
-+++ b/include/linux/ssb/ssb_regs.h
-@@ -299,6 +299,46 @@
- #define  SSB_SPROM4_AGAIN2_SHIFT	0
- #define  SSB_SPROM4_AGAIN3		0xFF00	/* Antenna 3 */
- #define  SSB_SPROM4_AGAIN3_SHIFT	8
-+#define SSB_SPROM4_TXPID2G01		0x0062 	/* TX Power Index 2GHz */
-+#define  SSB_SPROM4_TXPID2G0		0x00FF
-+#define  SSB_SPROM4_TXPID2G0_SHIFT	0
-+#define  SSB_SPROM4_TXPID2G1		0xFF00
-+#define  SSB_SPROM4_TXPID2G1_SHIFT	8
-+#define SSB_SPROM4_TXPID2G23		0x0064 	/* TX Power Index 2GHz */
-+#define  SSB_SPROM4_TXPID2G2		0x00FF
-+#define  SSB_SPROM4_TXPID2G2_SHIFT	0
-+#define  SSB_SPROM4_TXPID2G3		0xFF00
-+#define  SSB_SPROM4_TXPID2G3_SHIFT	8
-+#define SSB_SPROM4_TXPID5G01		0x0066 	/* TX Power Index 5GHz middle subband */
-+#define  SSB_SPROM4_TXPID5G0		0x00FF
-+#define  SSB_SPROM4_TXPID5G0_SHIFT	0
-+#define  SSB_SPROM4_TXPID5G1		0xFF00
-+#define  SSB_SPROM4_TXPID5G1_SHIFT	8
-+#define SSB_SPROM4_TXPID5G23		0x0068 	/* TX Power Index 5GHz middle subband */
-+#define  SSB_SPROM4_TXPID5G2		0x00FF
-+#define  SSB_SPROM4_TXPID5G2_SHIFT	0
-+#define  SSB_SPROM4_TXPID5G3		0xFF00
-+#define  SSB_SPROM4_TXPID5G3_SHIFT	8
-+#define SSB_SPROM4_TXPID5GL01		0x006A 	/* TX Power Index 5GHz low subband */
-+#define  SSB_SPROM4_TXPID5GL0		0x00FF
-+#define  SSB_SPROM4_TXPID5GL0_SHIFT	0
-+#define  SSB_SPROM4_TXPID5GL1		0xFF00
-+#define  SSB_SPROM4_TXPID5GL1_SHIFT	8
-+#define SSB_SPROM4_TXPID5GL23		0x006C 	/* TX Power Index 5GHz low subband */
-+#define  SSB_SPROM4_TXPID5GL2		0x00FF
-+#define  SSB_SPROM4_TXPID5GL2_SHIFT	0
-+#define  SSB_SPROM4_TXPID5GL3		0xFF00
-+#define  SSB_SPROM4_TXPID5GL3_SHIFT	8
-+#define SSB_SPROM4_TXPID5GH01		0x006E 	/* TX Power Index 5GHz high subband */
-+#define  SSB_SPROM4_TXPID5GH0		0x00FF
-+#define  SSB_SPROM4_TXPID5GH0_SHIFT	0
-+#define  SSB_SPROM4_TXPID5GH1		0xFF00
-+#define  SSB_SPROM4_TXPID5GH1_SHIFT	8
-+#define SSB_SPROM4_TXPID5GH23		0x0070 	/* TX Power Index 5GHz high subband */
-+#define  SSB_SPROM4_TXPID5GH2		0x00FF
-+#define  SSB_SPROM4_TXPID5GH2_SHIFT	0
-+#define  SSB_SPROM4_TXPID5GH3		0xFF00
-+#define  SSB_SPROM4_TXPID5GH3_SHIFT	8
- #define SSB_SPROM4_MAXP_BG		0x0080  /* Max Power BG in path 1 */
- #define  SSB_SPROM4_MAXP_BG_MASK	0x00FF  /* Mask for Max Power BG */
- #define  SSB_SPROM4_ITSSI_BG		0xFF00	/* Mask for path 1 itssi_bg */
+ /* The following masks are to be applied on EEPROM_RADIO_CONFIG */
 -- 
-1.6.3.3
+1.7.0.4
 
