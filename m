@@ -1,65 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bar.sig21.net ([80.81.252.164]:54505 "EHLO bar.sig21.net"
+Received: from smtp.nokia.com ([147.243.128.24]:35130 "EHLO mgw-da01.nokia.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754605Ab0KPQeu (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 16 Nov 2010 11:34:50 -0500
-Date: Tue, 16 Nov 2010 17:34:34 +0100
-From: Johannes Stezenbach <js@sig21.net>
-To: Helmut Schaa <helmut.schaa@googlemail.com>
-Cc: Walter Goldens <goldenstranger@yahoo.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Ivo van Doorn <ivdoorn@gmail.com>, jay_hung@ralinktech.com,
-	linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com
-Subject: Re: [PATCH 7/9] rt2x00: Fix rt2800 USB TX Path DMA issue
-Message-ID: <20101116163434.GA29414@sig21.net>
-References: <201011131911.47346.IvDoorn@gmail.com>
- <310488.65157.qm@web56802.mail.re3.yahoo.com>
- <20101116155951.GA21461@sig21.net>
- <201011161711.51581.helmut.schaa@googlemail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <201011161711.51581.helmut.schaa@googlemail.com>
+	id S1754035Ab0KZNn4 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 26 Nov 2010 08:43:56 -0500
+Received: from nokia.com (localhost [127.0.0.1])
+	by mgw-da01.nokia.com (Switch-3.4.3/Switch-3.4.3) with ESMTP id oAQDhtPc000727
+	for <linux-wireless@vger.kernel.org>; Fri, 26 Nov 2010 15:43:55 +0200
+Subject: Re: [PATCH] wl1271: Fix setting of the hardware connection
+ monitoring probe-req template
+From: Luciano Coelho <luciano.coelho@nokia.com>
+To: juuso.oikarinen@nokia.com
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <1290579417-1382-2-git-send-email-juuso.oikarinen@nokia.com>
+References: <1290579417-1382-1-git-send-email-juuso.oikarinen@nokia.com>
+	 <1290579417-1382-2-git-send-email-juuso.oikarinen@nokia.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Fri, 26 Nov 2010 15:44:06 +0200
+Message-ID: <1290779046.15341.14.camel@chilepepper>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Nov 16, 2010 at 05:11:51PM +0100, Helmut Schaa wrote:
-> Am Dienstag 16 November 2010 schrieb Johannes Stezenbach:
-> > 
-> > I wonder why it is using TX queue 2?  Isn't this QID_AC_VI, i.e.
-> > it should only be used when some programs uses setsockopt SO_PRIORITY
-> > to request QoS for video data?
-> > 
-> > 
-> > Lokking through the code, in rt2x00mac_tx():
-> > 	enum data_queue_qid qid = skb_get_queue_mapping(skb);
-> > is passed to rt2x00queue_get_queue() which uses
-> > enum data_queue_qid has 2 == QID_AC_VI, but net/core/dev.c dev_pick_tx()
-> > calls skb_set_queue_mapping() with 2 == BE
-> > (from ieee802_1d_to_ac, return by ieee80211_netdev_select_queue())
-> > 
-> > Maybe I'm just confused?
+On Wed, 2010-11-24 at 08:16 +0200, juuso.oikarinen@nokia.com wrote:
+> From: Juuso Oikarinen <juuso.oikarinen@nokia.com>
 > 
-> Yep, it is indeed confusing. If you compiled rt2x00 with debug output have a
-> look at the queue setup in dmesg:
+> The probe-request template used in the hardware connection monitoring feature
+> thus far has been an empty one, without the SSID IE and without supported rate
+> IEs. This causes problems with some AP's.
 > 
-> [   47.590000] phy0 -> rt2x00mac_conf_tx: Info - Configured TX queue 0 - CWmin: 3, CWmax: 4, Aifs: 2, TXop: 102.
-> [   47.590000] phy0 -> rt2x00mac_conf_tx: Info - Configured TX queue 1 - CWmin: 4, CWmax: 5, Aifs: 2, TXop: 188.
-> [   47.590000] phy0 -> rt2x00mac_conf_tx: Info - Configured TX queue 2 - CWmin: 5, CWmax: 10, Aifs: 3, TXop: 0.
-> [   47.590000] phy0 -> rt2x00mac_conf_tx: Info - Configured TX queue 3 - CWmin: 5, CWmax: 10, Aifs: 7, TXop: 0.
+> Additionally, after connected scans, the template for connection maintenance
+> would remain to be the one last used for scanning - potentially incorrect.
 > 
-> As you can see queue 2 gets the parameters for AC_BE assigned whereas queue 0
-> gets AC_VO assigned. So the naming within rt2x00 is not consitent with the
-> numbering within mac80211. However, since we configure the queue parameters
-> this should really just be a naming issue.
+> Fix these by getting a pre-filled directed probe-request template for the
+> associated-to AP from mac80211.
+> 
+> Signed-off-by: Juuso Oikarinen <juuso.oikarinen@nokia.com>
+> ---
 
-Hm, yes, rt2x00mac_conf_tx() has the same issue that it calls
-rt2x00queue_get_queue() with an argument which is a mac80211 AC,
-but expects an enum data_queue_qid.  So one could says one
-bug cancels the other out.
-
-> And btw. queue 0 is used for managment frames as well.
-
-Queue 0 means QID_AC_BE?  Or AC_VI?
+Applied and pushed, thanks!
 
 
-Johannes
+-- 
+Cheers,
+Luca.
+
