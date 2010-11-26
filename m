@@ -1,37 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail30s.wh2.ocn.ne.jp ([125.206.180.198]:6407 "HELO
-	mail30s.wh2.ocn.ne.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1752777Ab0KVJxZ (ORCPT
+Received: from mail-qw0-f46.google.com ([209.85.216.46]:50440 "EHLO
+	mail-qw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751203Ab0KZPyn (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 22 Nov 2010 04:53:25 -0500
-Received: from vs3002.wh2.ocn.ne.jp (125.206.180.165)
-	by mail30s.wh2.ocn.ne.jp (RS ver 1.0.95vs) with SMTP id 4-0275069602
-	for <linux-wireless@vger.kernel.org>; Mon, 22 Nov 2010 18:53:23 +0900 (JST)
-From: Bruno Randolf <br1@einfach.org>
-To: Johannes Berg <johannes@sipsolutions.net>
-Subject: Re: [PATCH v7 1/3] cfg80211: Add nl80211 antenna configuration
-Date: Mon, 22 Nov 2010 18:53:22 +0900
-Cc: linville@tuxdriver.com, nbd@openwrt.org, mcgrof@gmail.com,
-	linux-wireless@vger.kernel.org
-References: <20101110035050.23721.15617.stgit@localhost6.localdomain6> <1290192337.3768.6.camel@jlt3.sipsolutions.net> <1290192578.3768.7.camel@jlt3.sipsolutions.net>
-In-Reply-To: <1290192578.3768.7.camel@jlt3.sipsolutions.net>
+	Fri, 26 Nov 2010 10:54:43 -0500
+Received: by mail-qw0-f46.google.com with SMTP id 7so2189640qwb.19
+        for <linux-wireless@vger.kernel.org>; Fri, 26 Nov 2010 07:54:43 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="utf-8"
-Message-Id: <201011221853.22590.br1@einfach.org>
+In-Reply-To: <AANLkTikCQPq-HVUJhDet-ZbA97nt+1uYTKgtzvK2cyd7@mail.gmail.com>
+References: <AANLkTikCQPq-HVUJhDet-ZbA97nt+1uYTKgtzvK2cyd7@mail.gmail.com>
+Date: Fri, 26 Nov 2010 10:54:41 -0500
+Message-ID: <AANLkTikgkBZPEVOuZQHeJSXiiwBsVgMOGxRwOu315Vn4@mail.gmail.com>
+Subject: Re: help with ath5k --- wlan0 no private ioctls
+From: Bob Copeland <me@bobcopeland.com>
+To: Octav Chipara <ochipara@gmail.com>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat November 20 2010 03:49:38 Johannes Berg wrote:
-> On Fri, 2010-11-19 at 10:45 -0800, Johannes Berg wrote:
-> > You'll need to provide documentation updates for this ASAP.
-> 
-> I also expect a patch that adds discoverability of the availability of
-> these commands, using a flag through mac80211 so that the commands are
-> only discovered as available when the _driver_ implements them, not just
-> if _mac80211_ implements them. Also with checking that the flag is set
-> and rejecting them if not in the nl80211 functions.
+On Thu, Nov 25, 2010 at 12:43 AM, Octav Chipara <ochipara@gmail.com> wrote:
+> Hi,
+>
+> I'm having some problems properly configuring ath5k. I'm trying to set
+> the retransmission count so that the card will not perform more than a
+> transmission:
+>
+> iwconfig wlan0 retry 1
 
-Ok. Will do, but I need some time.
+Hmm, someone can correct me if I'm wrong, but according to my
+reading of the code, minstrel only uses hw->max_rate_tries
+and not wiphy->retry_{short,long}.  Also it looks like the only
+drivers that poke at these values only use it for failure
+indication when they don't support accurate tx status reporting.
 
-bruno
+You can try the pid controller for now, it directly uses these
+settings.
+
+> I tried to set the value directly using iwpriv and I
+> get wlan0 no private ioctls.
+
+Unlearn iwpriv -- ath5k will never support it.
+
+-- 
+Bob Copeland %% www.bobcopeland.com
