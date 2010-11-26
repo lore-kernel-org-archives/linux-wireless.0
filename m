@@ -1,40 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:52576 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754083Ab0KXTGN (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:43316 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753909Ab0KZSsI (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 24 Nov 2010 14:06:13 -0500
-Message-ID: <4CED6212.4070500@candelatech.com>
-Date: Wed, 24 Nov 2010 11:05:54 -0800
-From: Ben Greear <greearb@candelatech.com>
-MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: Bruno Randolf <br1@einfach.org>, linville@tuxdriver.com,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH v7 3/3] nl80211/mac80211: Report signal average
-References: <20101112024901.28522.21895.stgit@localhost6.localdomain6>	 <20101112030035.28522.75318.stgit@localhost6.localdomain6> <1290615890.3790.14.camel@jlt3.sipsolutions.net>
-In-Reply-To: <1290615890.3790.14.camel@jlt3.sipsolutions.net>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+	Fri, 26 Nov 2010 13:48:08 -0500
+Subject: Re: [PATCH 2/3] ath9k: Add change_interface callback
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Rajkumar Manoharan <rmanoharan@atheros.com>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
+In-Reply-To: <1290794073-5309-2-git-send-email-rmanoharan@atheros.com>
+References: <1290794073-5309-1-git-send-email-rmanoharan@atheros.com>
+	 <1290794073-5309-2-git-send-email-rmanoharan@atheros.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Fri, 26 Nov 2010 19:48:05 +0100
+Message-ID: <1290797285.3531.23.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 11/24/2010 08:24 AM, Johannes Berg wrote:
-> On Fri, 2010-11-12 at 12:00 +0900, Bruno Randolf wrote:
->> Extend nl80211 to report an exponential weighted moving average (EWMA) of the
->> signal value. Since the signal value usually fluctuates between different
->> packets, an average can be more useful than the value of the last packet.
->>
->> This uses the recently added generic EWMA library function.
->
-> John, please revert this patch ASAP -- it completely messed up some ABI,
-> and the performance discussion is also not over yet.
+On Fri, 2010-11-26 at 23:24 +0530, Rajkumar Manoharan wrote:
 
-Just so I understand:  Is the ABI issue because the netlink enum
-was added in the middle, or are there other ABI problems?
+> +static int ath9k_change_interface(struct ieee80211_hw *hw,
+> +				  struct ieee80211_vif *vif,
+> +				  enum nl80211_iftype new_type,
+> +				  bool p2p)
+> +{
+> +	struct ath_wiphy *aphy = hw->priv;
+> +	struct ath_softc *sc = aphy->sc;
+> +	struct ath_common *common = ath9k_hw_common(sc->sc_ah);
+> +
+> +	ath_print(common, ATH_DBG_CONFIG, "Change Interface\n");
+> +	mutex_lock(&sc->mutex);
+> +
+> +	new_type = ieee80211_iftype_p2p(new_type, p2p);
 
-Thanks,
-Ben
+I'm pretty sure you won't want that, and will just use new_type directly
+because you don't care about P2P or non-P2P as of now.
 
--- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+johannes
+
