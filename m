@@ -1,44 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:2765 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756455Ab0KWTEa (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 23 Nov 2010 14:04:30 -0500
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Subject: [PATCH 2/5] iwlwifi: add more power management flags
-Date: Tue, 23 Nov 2010 10:58:53 -0800
-Message-Id: <1290538736-10816-3-git-send-email-wey-yi.w.guy@intel.com>
-In-Reply-To: <1290538736-10816-1-git-send-email-wey-yi.w.guy@intel.com>
-References: <1290538736-10816-1-git-send-email-wey-yi.w.guy@intel.com>
+Received: from he.sipsolutions.net ([78.46.109.217]:34464 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752108Ab0KZEKG (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 25 Nov 2010 23:10:06 -0500
+Received: from wireless by sipsolutions.net with local (Exim 4.72)
+	(envelope-from <wireless@sipsolutions.net>)
+	id 1PLpdL-0001Ul-2J
+	for linux-wireless@vger.kernel.org; Fri, 26 Nov 2010 05:10:03 +0100
+Date: Fri, 26 Nov 2010 05:10:03 +0100
+Message-Id: <E1PLpdL-0001Ul-2J@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Subject: [ANN] wireless-regdb: master-2010-11-24
+Reply-to: linux-wireless@vger.kernel.org
+From: wireless@sipsolutions.net
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Adding additional power management option available for the device.
 
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-commands.h |    5 +++++
- 1 files changed, 5 insertions(+), 0 deletions(-)
+A new release of wireless-regdb (master-2010-11-24) is available at:
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-commands.h b/drivers/net/wireless/iwlwifi/iwl-commands.h
-index 4028ed3..f9e7fa4 100644
---- a/drivers/net/wireless/iwlwifi/iwl-commands.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-commands.h
-@@ -2671,6 +2671,11 @@ struct iwl_spectrum_notification {
- #define IWL_POWER_SLEEP_OVER_DTIM_MSK		cpu_to_le16(BIT(2))
- #define IWL_POWER_PCI_PM_MSK			cpu_to_le16(BIT(3))
- #define IWL_POWER_FAST_PD			cpu_to_le16(BIT(4))
-+#define IWL_POWER_BEACON_FILTERING		cpu_to_le16(BIT(5))
-+#define IWL_POWER_SHADOW_REG_ENA		cpu_to_le16(BIT(6))
-+#define IWL_POWER_CT_KILL_SET			cpu_to_le16(BIT(7))
-+#define IWL_POWER_BT_SCO_ENA			cpu_to_le16(BIT(8))
-+#define IWL_POWER_ADVANCE_PM_ENA		cpu_to_le16(BIT(9))
- 
- struct iwl3945_powertable_cmd {
- 	__le16 flags;
--- 
-1.7.0.4
+http://wireless.kernel.org/download/wireless-regdb/wireless-regdb-2010.11.24.tar.bz2
+
+SHA1 sum: 3c24c4ba247308b442c2eceab644e78d67638a2d
+
+
+For your convenience the individual regulatory.bin file can be downloaded from:
+
+http://wireless.kernel.org/download/wireless-regdb/regulatory.bins/2010.11.24-regulatory.bin
+
+SHA1 sum e6b45f9eac8d811b248722a6ad9ce30791bf7fa3
+
+Here is the short log of the changes included in this 
+release:
+
+John W. Linville (1):
+      wireless-regdb: _correctly_ update regulatory.bin based on preceding changes
 
