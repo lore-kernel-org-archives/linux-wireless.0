@@ -1,40 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qw0-f46.google.com ([209.85.216.46]:35338 "EHLO
-	mail-qw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751849Ab0KDTdd convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 4 Nov 2010 15:33:33 -0400
-Received: by qwf7 with SMTP id 7so1598360qwf.19
-        for <linux-wireless@vger.kernel.org>; Thu, 04 Nov 2010 12:33:32 -0700 (PDT)
+Received: from arroyo.ext.ti.com ([192.94.94.40]:48021 "EHLO arroyo.ext.ti.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752030Ab0KZQhN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 26 Nov 2010 11:37:13 -0500
+From: "Levi, Shahar" <shahar_levi@ti.com>
+To: Juuso Oikarinen <juuso.oikarinen@nokia.com>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Luciano Coelho <luciano.coelho@nokia.com>
+Date: Fri, 26 Nov 2010 17:37:04 +0100
+Subject: RE: [PATCH ] wl12xx: BA receiver support
+Message-ID: <AC090B9732AB2B4DB7FF476E907FE660012AFF6D90@dnce02.ent.ti.com>
+References: <1290616392-16532-1-git-send-email-shahar_levi@ti.com>
+ <1290765417.4284.101.camel@wimaxnb.nmp.nokia.com>
+In-Reply-To: <1290765417.4284.101.camel@wimaxnb.nmp.nokia.com>
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-In-Reply-To: <4CD2C8F4.5000309@lwfinger.net>
-References: <4CD2B6E9.9080303@lwfinger.net>
-	<1288878640.10023.2.camel@Nokia-N900-51-1>
-	<4CD2C8F4.5000309@lwfinger.net>
-Date: Thu, 4 Nov 2010 20:33:32 +0100
-Message-ID: <AANLkTikqsZyyOWcODScuo63a+B60QvkWO=f39cS8j4Ey@mail.gmail.com>
-Subject: Re: Question about wireless configuration
-From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2010/11/4 Larry Finger <Larry.Finger@lwfinger.net>:
-> On 11/04/2010 08:50 AM, Johannes Berg wrote:
->>> I am trying to test the latest Realtek driver for the RTL8187L. In order
->>> for the driver to be able to scan, CONFIG_WIRELESS_EXT must be set to
->>> "y". I could find no way to do that with the kernel configuration
->>> utilities until I made the following patch. I know it is wrong, but I
->>> would like to know the correct way.
->>
->> There is no correct way, drivers that need it will select it in kconfig which obviously doesn't work for out-of-tree drivers.
->
-> Thanks. I selected ZD1201 in the configuration, and WIRELESS_EXT is there.
-
-Done the same for wl :) I think I just used ipw2200 driver, not ZD1201.
-
--- 
-Rafał
+PiAtLS0tLU9yaWdpbmFsIE1lc3NhZ2UtLS0tLQ0KPiBGcm9tOiBKdXVzbyBPaWthcmluZW4gW21h
+aWx0bzpqdXVzby5vaWthcmluZW5Abm9raWEuY29tXQ0KPiBTZW50OiBGcmlkYXksIE5vdmVtYmVy
+IDI2LCAyMDEwIDExOjU3IEFNDQo+IFRvOiBMZXZpLCBTaGFoYXINCj4gQ2M6IGxpbnV4LXdpcmVs
+ZXNzQHZnZXIua2VybmVsLm9yZzsgTHVjaWFubyBDb2VsaG8NCj4gU3ViamVjdDogUmU6IFtQQVRD
+SCBdIHdsMTJ4eDogQkEgcmVjZWl2ZXIgc3VwcG9ydA0KPiANCj4gT24gV2VkLCAyMDEwLTExLTI0
+IGF0IDE4OjMzICswMjAwLCBleHQgU2hhaGFyIExldmkgd3JvdGU6DQo+ID4NCj4gPiAraW50IHds
+MTI3MV9vcF9hbXBkdV9hY3Rpb24oc3RydWN0IGllZWU4MDIxMV9odyAqaHcsIHN0cnVjdA0KPiBp
+ZWVlODAyMTFfdmlmICp2aWYsDQo+ID4gKwkJCSAgIGVudW0gaWVlZTgwMjExX2FtcGR1X21sbWVf
+YWN0aW9uIGFjdGlvbiwNCj4gPiArCQkJICAgc3RydWN0IGllZWU4MDIxMV9zdGEgKnN0YSwgdTE2
+IHRpZCwgdTE2ICpzc24pDQo+ID4gK3sNCj4gPiArCXN0cnVjdCB3bDEyNzEgKndsID0gaHctPnBy
+aXY7DQo+ID4gKwlpbnQgcmV0Ow0KPiA+ICsNCj4gPiArCXJldCA9IHdsMTI3MV9wc19lbHBfd2Fr
+ZXVwKHdsLCBmYWxzZSk7DQo+ID4gKwlpZiAocmV0IDwgMCkNCj4gPiArCQlnb3RvIG91dDsNCj4g
+PiArDQo+ID4gKwlzd2l0Y2ggKGFjdGlvbikgew0KPiA+ICsJY2FzZSBJRUVFODAyMTFfQU1QRFVf
+UlhfU1RBUlQ6DQo+ID4gKwkJaWYgKHdsLT5iYV9hbGxvd2VkKSB7DQo+ID4gKwkJCXJldCA9IHds
+MTI3MV9hY3hfc2V0X2JhX3JlY2VpdmVyX3Nlc3Npb24od2wsIHRpZCwNCj4gc3NuLA0KPiA+ICsJ
+CQkJCQkJCSB0cnVlKTsNCj4gPiArCQkJaWYgKCFyZXQpDQo+ID4gKwkJCQl3bC0+YmFfcnhfYml0
+bWFwIHw9ICh1OCkoQklUKDApIDw8IHRpZCk7DQo+ID4gKwkJfSBlbHNlDQo+ID4gKwkJCXJldCA9
+IC1FUEVSTTsNCj4gPiArCQlicmVhazsNCj4gPiArDQo+ID4gKwljYXNlIElFRUU4MDIxMV9BTVBE
+VV9SWF9TVE9QOg0KPiA+ICsJCXJldCA9IHdsMTI3MV9hY3hfc2V0X2JhX3JlY2VpdmVyX3Nlc3Np
+b24od2wsIHRpZCwgc3NuLA0KPiBmYWxzZSk7DQo+ID4gKwkJaWYgKCFyZXQpDQo+ID4gKwkJCXds
+LT5iYV9yeF9iaXRtYXAgJj0gfih1OCkoQklUKDApIDw8IHRpZCk7DQo+ID4gKwkJYnJlYWs7DQo+
+ID4gKw0KPiA+ICsJLyoNCj4gDQo+IFRoZXNlICJCSVQoMCkgPDwgdGlkIiB0aGluZ2llcyBsb29r
+IHdlaXJkLiBXaHkgbm90IEJJVCh0aWQpID8NCj4gDQo+IC1KdXVzbw0KR29vZCBjYXRjaC4gV2ls
+bCBiZSBmaXggb24gdjIuDQpUaGFua3MsDQpTaGFoYXINCg0K
