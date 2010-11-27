@@ -1,94 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f46.google.com ([209.85.161.46]:43695 "EHLO
-	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753298Ab0KKSCU (ORCPT
+Received: from mail-qy0-f181.google.com ([209.85.216.181]:43780 "EHLO
+	mail-qy0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750939Ab0K0HgM convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 11 Nov 2010 13:02:20 -0500
-Received: by fxm16 with SMTP id 16so1558406fxm.19
-        for <linux-wireless@vger.kernel.org>; Thu, 11 Nov 2010 10:02:19 -0800 (PST)
-Message-ID: <4CDC2FCF.9020902@lwfinger.net>
-Date: Thu, 11 Nov 2010 12:02:55 -0600
-From: Larry Finger <Larry.Finger@lwfinger.net>
+	Sat, 27 Nov 2010 02:36:12 -0500
+Received: by qyk12 with SMTP id 12so4283161qyk.19
+        for <linux-wireless@vger.kernel.org>; Fri, 26 Nov 2010 23:36:11 -0800 (PST)
 MIME-Version: 1.0
-To: Arnd Hannemann <arnd@arndnet.de>
-CC: John W Linville <linville@tuxdriver.com>,
-	b43-dev@lists.infradead.org, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] b43legacy: Fix compile on ARM architecture
-References: <4cdc2b80.RuMMb1PuVmklU3JJ%Larry.Finger@lwfinger.net> <4CDC2C80.6030807@arndnet.de>
-In-Reply-To: <4CDC2C80.6030807@arndnet.de>
-Content-Type: text/plain; charset=ISO-8859-1
+In-Reply-To: <201011270257.09456.8an@praha12.net>
+References: <20101123191533.GP4303@makis.mantri> <AANLkTi=QquDgSAYn4HS+vupdNUTNSngt03ZKuakYu6Fd@mail.gmail.com>
+ <AANLkTinC4-N7ACt4_ijTi2rs8TtQkARR1-vcaiSSaH3O@mail.gmail.com> <201011270257.09456.8an@praha12.net>
+From: Jonathan Guerin <jonathan@guerin.id.au>
+Date: Sat, 27 Nov 2010 17:35:55 +1000
+Message-ID: <AANLkTimj1dS98Mo_pFdJ47JDXDYN7xtW11k=ZPLNuHuY@mail.gmail.com>
+Subject: Re: [ath5k-devel] [PATCH 16/30] ath5k: Set all IFS intervals, not
+ just slot time
+To: =?UTF-8?B?THVrw6HFoSBUdXJlaw==?= <8an@praha12.net>
+Cc: ath5k-devel@lists.ath5k.org, Nick Kossifidis <mickflemm@gmail.com>,
+	jirislaby@gmail.com, br1@einfach.org,
+	linux-wireless@vger.kernel.org, linville@tuxdriver.com
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 11/11/2010 11:48 AM, Arnd Hannemann wrote:
-> Am 11.11.2010 18:44, schrieb Larry Finger:
->> From: Arnd Hannemann <arnd@arndnet.de>
->>
->> When b43legacy is compiled on the arm platform, the following errors are seen:
->>
->>   CC [M]  drivers/net/wireless/b43legacy/xmit.o
->> In file included from include/net/dst.h:11,
->> from drivers/net/wireless/b43legacy/xmit.c:31:
->> include/net/dst_ops.h:28: error: expected ':', ',', ';', '}' or '__attribute__'
->>    before '____cacheline_aligned_in_smp'
->> include/net/dst_ops.h: In function 'dst_entries_get_fast':
->> include/net/dst_ops.h:33: error: 'struct dst_ops' has no member named
->>    'pcpuc_entries'
->> include/net/dst_ops.h: In function 'dst_entries_get_slow':
->> include/net/dst_ops.h:41: error: 'struct dst_ops' has no member named
->>    'pcpuc_entries'
->> include/net/dst_ops.h: In function 'dst_entries_add':
->> include/net/dst_ops.h:49: error: 'struct dst_ops' has no member named
->>    'pcpuc_entries'
->> include/net/dst_ops.h: In function 'dst_entries_init':
->> include/net/dst_ops.h:55: error: 'struct dst_ops' has no member named
->>    'pcpuc_entries'
->> include/net/dst_ops.h: In function 'dst_entries_destroy':
->> include/net/dst_ops.h:60: error: 'struct dst_ops' has no member named
->>    'pcpuc_entries'
->> make[4]: *** [drivers/net/wireless/b43legacy/xmit.o] Error 1
->> make[3]: *** [drivers/net/wireless/b43legacy] Error 2
->> make[2]: *** [drivers/net/wireless] Error 2
->> make[1]: *** [drivers/net] Error 2
->> make: *** [drivers] Error 2
->>
->> The cause is a missing include of <linux/cache.h>, which is present for
->> i386 and x86_64 architectures, but not for arm.
->>
->> Signed-off-by: Arnd Hannemann <arnd@arndnet.de>
->> Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
->> Cc: Stable <stable@kernel.org>
->> ---
->>
->> John,
->>
->> Once I get the ability to cross-compile ARM architecture, I will check to
->> see if the equivalent patch is needed for b43.
-> 
-> b43 compiles fine for me for the same target.
-> 
-> Thanks,
-> Arnd
-> 
->>
->> Larry
->> ---
->>
->> Index: linux-2.6/include/net/dst_ops.h
->> ===================================================================
->> --- linux-2.6.orig/include/net/dst_ops.h
->> +++ linux-2.6/include/net/dst_ops.h
->> @@ -2,6 +2,7 @@
->>  #define _NET_DST_OPS_H
->>  #include <linux/types.h>
->>  #include <linux/percpu_counter.h>
->> +#include <linux/cache.h>
->>  
->>  struct dst_entry;
->>  struct kmem_cachep;
+On Sat, Nov 27, 2010 at 11:57 AM, Lukáš Turek <8an@praha12.net> wrote:
+> On Saturday 27 November 2010 02:31:53 Nick Kossifidis wrote:
+>> When we convert to core clock units it's what we should do, all
+>> timings should change the same way. I don't know what this
+>> aPHY-RX-START-Delay is but if it changes that way we can use absolute
+>> values as we do for slot time and sifs.
+>
+> Although aPHY-RX-START-Delay is specified in the standard, it's not needed on
+> Atheros hardware, probably the hardware starts the timeout countdown after it
+> switches to RX mode (so aPHY-RX-START-Delay is added implicitly). See my
+> discussion with Felix Fietkau a year ago, starting here:
+> http://www.mail-archive.com/ath5k-devel@lists.ath5k.org/msg02810.html
+>
+> The calculation used in set_coverage_class is also the same as the one in
+> Madwifi driver. When I wrote that code, I intentionally kept the old initvals
+> when no coverage class was set to prevent regressions (the ACK timeout in
+> initivals is larger than the one for coverage class 0, so a long distance link
+> that worked before would break). Maybe I was too careful.
 
-After I sent this, it occurs to me that the extra include might be in
-b43legacy/xmit.c, not in include/dst_ops.h. Any thoughts and or suggestions? If
-that is the case, then b43 would likely break too.
+I'm going to be ashamed to admit that this is going way beyond my
+understanding. You guys understand the hardware way more than I can.
+Once registers don't exactly map to an 802.11 value, I'm honestly out
+of my league. I hope I've helped find the correct values for
+parameters that are lifted straight out of the standard, but I'm don't
+want to make any comments when I don't know the full picture.
 
-Larry
+Cheers,
+
+Jonathan
+>
+> Lukas Turek
+>
