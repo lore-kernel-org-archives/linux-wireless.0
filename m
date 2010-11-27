@@ -1,38 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from einhorn.in-berlin.de ([192.109.42.8]:33490 "EHLO
-	einhorn.in-berlin.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754478Ab0KSOF7 (ORCPT
+Received: from mail-pw0-f46.google.com ([209.85.160.46]:49140 "EHLO
+	mail-pw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751074Ab0K0HrU (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 19 Nov 2010 09:05:59 -0500
-Date: Fri, 19 Nov 2010 15:04:51 +0100
-From: Stefan Richter <stefanr@s5r6.in-berlin.de>
-To: Bruno Randolf <br1@einfach.org>
-Cc: Bob Copeland <me@bobcopeland.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Jouni Malinen <j@w1.fi>, linville@tuxdriver.com,
-	randy.dunlap@oracle.com, peterz@infradead.org, blp@cs.stanford.edu,
-	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Lars_Ericsson@telia.com, kosaki.motohiro@jp.fujitsu.com,
-	akpm@linux-foundation.org, kevin.granade@gmail.com
-Subject: Re: [PATCH v7 3/3] nl80211/mac80211: Report signal average
-Message-ID: <20101119150451.1c0d273f@stein>
-In-Reply-To: <201011191749.31974.br1@einfach.org>
-References: <20101112024901.28522.21895.stgit@localhost6.localdomain6>
-	<1290010595.3777.0.camel@jlt3.sipsolutions.net>
-	<AANLkTimoogSLAipNy=njGtHypqBQSk=usDmXut=KN9TM@mail.gmail.com>
-	<201011191749.31974.br1@einfach.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+	Sat, 27 Nov 2010 02:47:20 -0500
+Message-ID: <4CF0B781.2080209@gmail.com>
+Date: Fri, 26 Nov 2010 23:47:13 -0800
+From: "Justin P. Mattock" <justinmattock@gmail.com>
+MIME-Version: 1.0
+To: dedekind1@gmail.com
+CC: trivial@kernel.org, linux-rdma@vger.kernel.org,
+	linux-ide@vger.kernel.org, linux-mtd@lists.infradead.org,
+	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [RFC 0/9] Change the copyright info.
+References: <1290838879-11038-1-git-send-email-justinmattock@gmail.com> <1290843702.2379.1.camel@koala>
+In-Reply-To: <1290843702.2379.1.camel@koala>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Nov 19 Bruno Randolf wrote:
-> Here are the results of iperf -u -c IP -b 30M -t 120
+On 11/26/2010 11:41 PM, Artem Bityutskiy wrote:
+> On Fri, 2010-11-26 at 22:21 -0800, Justin P. Mattock wrote:
+>>
+>
+>> Below you will find a set of patches, that update the copyright info from
+>> Sun Microsystems to Oracle.
+>
+> Shouldn't @oracle.com e-mail used for such patches?
+>
 
-You only showed that CPU utilization is not so high that an effect on
-network throughput can be seen.  You did not measure what the increase
-in CPU utilization actually was. :-)
--- 
-Stefan Richter
--=====-==-=- =-== =--==
-http://arcgraph.de/sr/
+yeah was looking at all the @oracle addresses, but thought to just focus 
+on this part, then later send out something for the addresses
+
+Justin P. Mattock
