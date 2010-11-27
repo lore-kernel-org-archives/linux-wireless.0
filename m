@@ -1,41 +1,147 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from hera.kernel.org ([140.211.167.34]:36736 "EHLO hera.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932549Ab0KRSEe (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 18 Nov 2010 13:04:34 -0500
-Message-ID: <4CE56AAB.7080507@kernel.org>
-Date: Thu, 18 Nov 2010 19:04:27 +0100
-From: Tejun Heo <tj@kernel.org>
-MIME-Version: 1.0
-To: Ben Greear <greearb@candelatech.com>
-CC: Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] mac80211:  Fix deadlock in ieee80211_do_stop.
-References: <1289592426-5367-1-git-send-email-greearb@candelatech.com>	 <1289594998.3736.11.camel@jlt3.sipsolutions.net>	 <4CDDAA3B.9090007@candelatech.com>	 <1289596096.3736.13.camel@jlt3.sipsolutions.net>	 <4CDE699B.70401@kernel.org> <4CE1A344.7040201@candelatech.com>	 <4CE292F7.4090200@kernel.org>	 <1289929258.3673.1.camel@jlt3.sipsolutions.net>	 <4CE396A9.1050908@kernel.org> <1290020005.3777.6.camel@jlt3.sipsolutions.net> <4CE4C8DD.6010806@kernel.org> <51f5dd53c39a77fff4efc1a99b189725@localhost> <4CE4D41F.1080005@kernel.org> <4CE56892.9090606@candelatech.com>
-In-Reply-To: <4CE56892.9090606@candelatech.com>
-Content-Type: text/plain; charset=UTF-8
+Received: from mail-gx0-f174.google.com ([209.85.161.174]:43979 "EHLO
+	mail-gx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752322Ab0K0GWL (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 27 Nov 2010 01:22:11 -0500
+From: "Justin P. Mattock" <justinmattock@gmail.com>
+To: trivial@kernel.org
+Cc: linux-rdma@vger.kernel.org, linux-ide@vger.kernel.org,
+	linux-mtd@lists.infradead.org, linux-wireless@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	"Justin P. Mattock" <justinmattock@gmail.com>
+Subject: [RFC 8/9]drivers:net Change the copyright info.
+Date: Fri, 26 Nov 2010 22:21:18 -0800
+Message-Id: <1290838879-11038-9-git-send-email-justinmattock@gmail.com>
+In-Reply-To: <1290838879-11038-1-git-send-email-justinmattock@gmail.com>
+References: <1290838879-11038-1-git-send-email-justinmattock@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello, Ben.
+Change the copyright info from Sun Microsystems to Oracle since Oracle now owns them.
 
-On 11/18/2010 06:55 PM, Ben Greear wrote:
-> I understand your desire for a stack dump, but it appears that sysrq-t
-> isn't getting everything you want, for whatever reason.
+Signed-off-by: Justin P. Mattock <justinmattock@gmail.com>
 
-Can you please try again and investigate why it's not working?  If
-task dump is not working as expected, there is a much more serious
-problem than wireless locking up.
+---
+ drivers/net/cassini.c   |    2 +-
+ drivers/net/cassini.h   |    4 ++--
+ drivers/net/mlx4/cq.c   |    2 +-
+ drivers/net/mlx4/main.c |    2 +-
+ drivers/net/mlx4/mlx4.h |    2 +-
+ drivers/net/natsemi.c   |    2 +-
+ drivers/net/tg3.c       |    2 +-
+ drivers/net/tg3.h       |    2 +-
+ 8 files changed, 9 insertions(+), 9 deletions(-)
 
-> Does my explanation of the rtnl deadlock that I posted near the beginning
-> of this thread (with some backtraces to back that up) make sense, or
-> are my assumptions invalid?
-
-Yes, it makes sense.  At this point, I'm fairly sure that something is
-holding the workqueue but I really can't tell anything without proper
-stack dump.
-
-Thanks.
-
+diff --git a/drivers/net/cassini.c b/drivers/net/cassini.c
+index d6b6d6a..f09f544 100644
+--- a/drivers/net/cassini.c
++++ b/drivers/net/cassini.c
+@@ -1,6 +1,6 @@
+ /* cassini.c: Sun Microsystems Cassini(+) ethernet driver.
+  *
+- * Copyright (C) 2004 Sun Microsystems Inc.
++ * Copyright (C) 2004 Oracle and/or its affiliates. 
+  * Copyright (C) 2003 Adrian Sun (asun@darksunrising.com)
+  *
+  * This program is free software; you can redistribute it and/or
+diff --git a/drivers/net/cassini.h b/drivers/net/cassini.h
+index dbc4787..30c760c 100644
+--- a/drivers/net/cassini.h
++++ b/drivers/net/cassini.h
+@@ -1,7 +1,7 @@
+ /* $Id: cassini.h,v 1.16 2004/08/17 21:15:16 zaumen Exp $
+  * cassini.h: Definitions for Sun Microsystems Cassini(+) ethernet driver.
+  *
+- * Copyright (C) 2004 Sun Microsystems Inc.
++ * Copyright (C) 2004 Oracle and/or its affiliates. 
+  * Copyright (c) 2003 Adrian Sun (asun@darksunrising.com)
+  *
+  * This program is free software; you can redistribute it and/or
+@@ -19,7 +19,7 @@
+  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA
+  * 02111-1307, USA.
+  *
+- * vendor id: 0x108E (Sun Microsystems, Inc.)
++ * vendor id: 0x108E (Oracle and/or its affiliates.)
+  * device id: 0xabba (Cassini)
+  * revision ids: 0x01 = Cassini
+  *               0x02 = Cassini rev 2
+diff --git a/drivers/net/mlx4/cq.c b/drivers/net/mlx4/cq.c
+index 7cd34e9..d730de4 100644
+--- a/drivers/net/mlx4/cq.c
++++ b/drivers/net/mlx4/cq.c
+@@ -1,6 +1,6 @@
+ /*
+  * Copyright (c) 2004, 2005 Topspin Communications.  All rights reserved.
+- * Copyright (c) 2005 Sun Microsystems, Inc. All rights reserved.
++ * Copyright (c) 2005 Oracle and/or its affiliates. All rights reserved.
+  * Copyright (c) 2005, 2006, 2007 Cisco Systems, Inc. All rights reserved.
+  * Copyright (c) 2005, 2006, 2007, 2008 Mellanox Technologies. All rights reserved.
+  * Copyright (c) 2004 Voltaire, Inc. All rights reserved.
+diff --git a/drivers/net/mlx4/main.c b/drivers/net/mlx4/main.c
+index 782f11d..4e711e3 100644
+--- a/drivers/net/mlx4/main.c
++++ b/drivers/net/mlx4/main.c
+@@ -1,6 +1,6 @@
+ /*
+  * Copyright (c) 2004, 2005 Topspin Communications.  All rights reserved.
+- * Copyright (c) 2005 Sun Microsystems, Inc. All rights reserved.
++ * Copyright (c) 2005 Oracle and/or its affiliates. All rights reserved.
+  * Copyright (c) 2005, 2006, 2007, 2008 Mellanox Technologies. All rights reserved.
+  * Copyright (c) 2006, 2007 Cisco Systems, Inc. All rights reserved.
+  *
+diff --git a/drivers/net/mlx4/mlx4.h b/drivers/net/mlx4/mlx4.h
+index 0da5bb7..4fc154c 100644
+--- a/drivers/net/mlx4/mlx4.h
++++ b/drivers/net/mlx4/mlx4.h
+@@ -1,6 +1,6 @@
+ /*
+  * Copyright (c) 2004, 2005 Topspin Communications.  All rights reserved.
+- * Copyright (c) 2005 Sun Microsystems, Inc. All rights reserved.
++ * Copyright (c) 2005 Oracle and/or its affiliates. All rights reserved.
+  * Copyright (c) 2005, 2006, 2007 Cisco Systems.  All rights reserved.
+  * Copyright (c) 2005, 2006, 2007, 2008 Mellanox Technologies. All rights reserved.
+  * Copyright (c) 2004 Voltaire, Inc. All rights reserved.
+diff --git a/drivers/net/natsemi.c b/drivers/net/natsemi.c
+index 2fd3963..406f43a 100644
+--- a/drivers/net/natsemi.c
++++ b/drivers/net/natsemi.c
+@@ -1,7 +1,7 @@
+ /* natsemi.c: A Linux PCI Ethernet driver for the NatSemi DP8381x series. */
+ /*
+ 	Written/copyright 1999-2001 by Donald Becker.
+-	Portions copyright (c) 2001,2002 Sun Microsystems (thockin@sun.com)
++	Portions copyright (c) 2001,2002 Oracle and/or its affiliates. (thockin@sun.com)
+ 	Portions copyright 2001,2002 Manfred Spraul (manfred@colorfullife.com)
+ 	Portions copyright 2004 Harald Welte <laforge@gnumonks.org>
+ 
+diff --git a/drivers/net/tg3.c b/drivers/net/tg3.c
+index 30ccbb6..337850a 100644
+--- a/drivers/net/tg3.c
++++ b/drivers/net/tg3.c
+@@ -3,7 +3,7 @@
+  *
+  * Copyright (C) 2001, 2002, 2003, 2004 David S. Miller (davem@redhat.com)
+  * Copyright (C) 2001, 2002, 2003 Jeff Garzik (jgarzik@pobox.com)
+- * Copyright (C) 2004 Sun Microsystems Inc.
++ * Copyright (C) 2004 Oracle and/or its affiliates. 
+  * Copyright (C) 2005-2010 Broadcom Corporation.
+  *
+  * Firmware is:
+diff --git a/drivers/net/tg3.h b/drivers/net/tg3.h
+index 4a19748..f8d7210 100644
+--- a/drivers/net/tg3.h
++++ b/drivers/net/tg3.h
+@@ -3,7 +3,7 @@
+  *
+  * Copyright (C) 2001, 2002, 2003, 2004 David S. Miller (davem@redhat.com)
+  * Copyright (C) 2001 Jeff Garzik (jgarzik@pobox.com)
+- * Copyright (C) 2004 Sun Microsystems Inc.
++ * Copyright (C) 2004 Oracle and/or its affiliates. 
+  * Copyright (C) 2007-2010 Broadcom Corporation.
+  */
+ 
 -- 
-tejun
+1.7.1
+
