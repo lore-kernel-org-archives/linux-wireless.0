@@ -1,53 +1,134 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qy0-f174.google.com ([209.85.216.174]:53680 "EHLO
-	mail-qy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932950Ab0KQEmS (ORCPT
+Received: from mail-wy0-f174.google.com ([74.125.82.174]:35930 "EHLO
+	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751625Ab0K0Anl convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 16 Nov 2010 23:42:18 -0500
-Received: by qyk12 with SMTP id 12so5913382qyk.19
-        for <linux-wireless@vger.kernel.org>; Tue, 16 Nov 2010 20:42:17 -0800 (PST)
+	Fri, 26 Nov 2010 19:43:41 -0500
+Received: by wyb28 with SMTP id 28so2486637wyb.19
+        for <linux-wireless@vger.kernel.org>; Fri, 26 Nov 2010 16:43:40 -0800 (PST)
 MIME-Version: 1.0
-In-Reply-To: <1289959503.29119.2.camel@jlt3.sipsolutions.net>
-References: <1289867251-21559-1-git-send-email-javier@cozybit.com>
- <1289946246.3673.12.camel@jlt3.sipsolutions.net> <AANLkTimuW8wTVUW4dH1t+J6jhoEkFHZ7v5t78tXe050O@mail.gmail.com>
- <1289959503.29119.2.camel@jlt3.sipsolutions.net>
-From: Javier Cardona <javier@cozybit.com>
-Date: Tue, 16 Nov 2010 20:41:57 -0800
-Message-ID: <AANLkTimFe7uo28u3Sx4rc9uYJms7Ggh=yW9UMDDWgQce@mail.gmail.com>
-Subject: Re: [PATCH] iw: Resolve namespace clash between station plink and
- vlan commands
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: nbd@openwrt.org, linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+In-Reply-To: <AANLkTin5Q51UVoNVLbneDqVWFKqn1dJOtAu-Ochr95e-@mail.gmail.com>
+References: <8993750.301290765190311.JavaMail.wlan@CHBU500181>
+	<12054859.501290765425878.JavaMail.wlan@CHBU500181>
+	<AANLkTin5Q51UVoNVLbneDqVWFKqn1dJOtAu-Ochr95e-@mail.gmail.com>
+Date: Sat, 27 Nov 2010 02:43:39 +0200
+Message-ID: <AANLkTimursYYTXTjLj4Mi2p3NEi4f7NOF=C_GGR=PL8K@mail.gmail.com>
+Subject: Re: [PATCH v6 6/9] ath5k: Add a function to read chipset's MAC revision
+From: Nick Kossifidis <mickflemm@gmail.com>
+To: Wojciech Dubowik <dubowoj@neratec.com>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	nbd@openwrt.org, ath5k-devel@lists.ath5k.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Nov 16, 2010 at 6:05 PM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
-> On Tue, 2010-11-16 at 17:41 -0800, Javier Cardona wrote:
->
->> > I'll happily take this, but would you prefer to have the other one
->> > backed out instead?
+2010/11/27 Nick Kossifidis <mickflemm@gmail.com>:
+> 2010/11/26 Wojciech Dubowik <dubowoj@neratec.com>:
+>> From: Felix Fietkau <nbd@openwrt.org>
 >>
->> That would save us and some of our clients from having to change a
->> bunch of scripts, yes.
+>> Add bus dependent revision read function which is used to
+>> determine chipset's MAC before hardware is initialized.
+>>
+>> Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+>> Signed-off-by: Wojciech Dubowik <Wojciech.Dubowik@neratec.com>
+>> ---
+>>  drivers/net/wireless/ath/ath5k/ath5k.h  |    5 +++--
+>>  drivers/net/wireless/ath/ath5k/attach.c |   11 +++++++----
+>>  drivers/net/wireless/ath/ath5k/pci.c    |    6 ++++++
+>>  3 files changed, 16 insertions(+), 6 deletions(-)
+>>
+>> diff --git a/drivers/net/wireless/ath/ath5k/ath5k.h b/drivers/net/wireless/ath/ath5k/ath5k.h
+>> index 946e54a..917deb4 100644
+>> --- a/drivers/net/wireless/ath/ath5k/ath5k.h
+>> +++ b/drivers/net/wireless/ath/ath5k/ath5k.h
+>> @@ -1035,6 +1035,7 @@ struct ath5k_hw {
+>>        u32                     ah_phy;
+>>        u32                     ah_mac_srev;
+>>        u16                     ah_mac_version;
+>> +       u16                     ah_mac_revision;
+>>        u16                     ah_phy_revision;
+>>        u16                     ah_radio_5ghz_revision;
+>>        u16                     ah_radio_2ghz_revision;
+>> @@ -1143,9 +1144,9 @@ void ath5k_hw_deinit(struct ath5k_hw *ah);
+>>  int ath5k_sysfs_register(struct ath5k_softc *sc);
+>>  void ath5k_sysfs_unregister(struct ath5k_softc *sc);
+>>
+>> -/*Chip id helper function */
+>> +/*Chip id helper functions */
+>>  const char *ath5k_chip_name(enum ath5k_srev_type type, u_int16_t val);
+>> -
+>> +int ath5k_bus_read_srev(struct ath5k_hw *ah);
+>>
+>>  /* LED functions */
+>>  int ath5k_init_leds(struct ath5k_softc *sc);
+>> diff --git a/drivers/net/wireless/ath/ath5k/attach.c b/drivers/net/wireless/ath/ath5k/attach.c
+>> index fe7e6f1..9b5f6e4 100644
+>> --- a/drivers/net/wireless/ath/ath5k/attach.c
+>> +++ b/drivers/net/wireless/ath/ath5k/attach.c
+>> @@ -128,7 +128,8 @@ int ath5k_hw_init(struct ath5k_softc *sc)
+>>        /*
+>>         * Find the mac version
+>>         */
+>> -       srev = ath5k_hw_reg_read(ah, AR5K_SREV);
+>> +       ath5k_bus_read_srev(ah);
+>> +       srev = ah->ah_mac_srev;
+>>        if (srev < AR5K_SREV_AR5311)
+>>                ah->ah_version = AR5K_AR5210;
+>>        else if (srev < AR5K_SREV_AR5212)
+>> @@ -136,6 +137,10 @@ int ath5k_hw_init(struct ath5k_softc *sc)
+>>        else
+>>                ah->ah_version = AR5K_AR5212;
+>>
+>> +       /* Get the MAC revision */
+>> +       ah->ah_mac_version = AR5K_REG_MS(srev, AR5K_SREV_VER);
+>> +       ah->ah_mac_revision = AR5K_REG_MS(srev, AR5K_SREV_REV);
+>> +
+>>        /* Fill the ath5k_hw struct with the needed functions */
+>>        ret = ath5k_hw_init_desc_functions(ah);
+>>        if (ret)
+>> @@ -146,9 +151,7 @@ int ath5k_hw_init(struct ath5k_softc *sc)
+>>        if (ret)
+>>                goto err;
+>>
+>> -       /* Get MAC, PHY and RADIO revisions */
+>> -       ah->ah_mac_srev = srev;
+>> -       ah->ah_mac_version = AR5K_REG_MS(srev, AR5K_SREV_VER);
+>> +       /* Get PHY and RADIO revisions */
+>>        ah->ah_phy_revision = ath5k_hw_reg_read(ah, AR5K_PHY_CHIP_ID) &
+>>                        0xffffffff;
+>>        ah->ah_radio_5ghz_revision = ath5k_hw_radio_revision(ah,
+>> diff --git a/drivers/net/wireless/ath/ath5k/pci.c b/drivers/net/wireless/ath/ath5k/pci.c
+>> index 3f26cf2..4eff891 100644
+>> --- a/drivers/net/wireless/ath/ath5k/pci.c
+>> +++ b/drivers/net/wireless/ath/ath5k/pci.c
+>> @@ -100,6 +100,12 @@ bool ath5k_pci_eeprom_read(struct ath_common *common, u32 offset, u16 *data)
+>>        return -ETIMEDOUT;
+>>  }
+>>
+>> +int ath5k_bus_read_srev(struct ath5k_hw *ah)
+>> +{
+>> +       ah->ah_mac_srev = ath5k_hw_reg_read(ah, AR5K_SREV);
+>> +       return 0;
+>> +}
+>> +
+>>  /* Common ath_bus_opts structure */
+>>  static const struct ath_bus_ops ath_pci_bus_ops = {
+>>        .ath_bus_type = ATH_PCI,
+>> --
+>> 1.7.1
+>>
 >
-> Actually, I won't have time today, but it looks like they can be shared
-> in some way? Maybe by sharing the same callback function or something? I
-> mean -- it should be possible to do two things on set... not sure now,
-> I'll take a look later. Maybe you can work with an older iw version
-> until then?
+> Why not naming that ath5k_hw_read_srev_pci and the other one
+> ath5k_hw_read_srev_ahb and name both ath5k_bus_read_srev ? Also please
+> at least follow the naming scheme, all hw related functions are
+> ath5k_hw_*.
+>
 
-We tried that at first but could not get the usage message right in
-case of missing parameters.  If you can suggest a solution to this,
-we'll be happy to implement it.
-
-Cheers,
-
-Javier
+Or at least make them all ath5k_<bus type>_* eg ath5k_ahb_read_srev
+and ath5k_pci_read_srev, let's keep it clean...
 
 
 -- 
-Javier Cardona
-cozybit Inc.
-http://www.cozybit.com
+GPG ID: 0xD21DB2DB
+As you read this post global entropy rises. Have Fun ;-)
+Nick
