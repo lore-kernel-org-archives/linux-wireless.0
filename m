@@ -1,57 +1,121 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pv0-f174.google.com ([74.125.83.174]:47464 "EHLO
-	mail-pv0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751703Ab0KHQKu (ORCPT
+Received: from mail-yw0-f46.google.com ([209.85.213.46]:37842 "EHLO
+	mail-yw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751039Ab0K0GVk (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 8 Nov 2010 11:10:50 -0500
-Received: by pvb32 with SMTP id 32so1273414pvb.19
-        for <linux-wireless@vger.kernel.org>; Mon, 08 Nov 2010 08:10:50 -0800 (PST)
-MIME-Version: 1.0
-Date: Mon, 8 Nov 2010 19:10:49 +0300
-Message-ID: <AANLkTik+BWQdU4hhKN7yfgOdJuQXopvYr4Z59RTntqSW@mail.gmail.com>
-Subject: Bringing up Marvell 88W8300
-From: Denis Kirjanov <kirjanov@gmail.com>
-To: andreamrl@tiscali.it
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	dwmw2@infradead.org
-Content-Type: text/plain; charset=ISO-8859-1
+	Sat, 27 Nov 2010 01:21:40 -0500
+From: "Justin P. Mattock" <justinmattock@gmail.com>
+To: trivial@kernel.org
+Cc: linux-rdma@vger.kernel.org, linux-ide@vger.kernel.org,
+	linux-mtd@lists.infradead.org, linux-wireless@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	"Justin P. Mattock" <justinmattock@gmail.com>
+Subject: [RFC 1/9]drivers:infiniband:hw:mthca Change the copyright info.
+Date: Fri, 26 Nov 2010 22:21:11 -0800
+Message-Id: <1290838879-11038-2-git-send-email-justinmattock@gmail.com>
+In-Reply-To: <1290838879-11038-1-git-send-email-justinmattock@gmail.com>
+References: <1290838879-11038-1-git-send-email-justinmattock@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Andrea and wireless folks!
+Change the copyright info from Sun Microsystems to Oracle since Oracle now owns them.
 
-I'm trying to bring up my WiFi card under Linux. I've found the code
-for the mac80211 (mrv8kng).
-My card is Asus Wi-Fi-Tv card (integrated tv capturing+WiFi adapter:
-01:0f.0 Ethernet controller: Marvell Technology Group Ltd. 88W8335
-[Libertas] 802.11b/g Wireless (rev 43).
+Signed-off-by: Justin P. Mattock <justinmattock@gmail.com>
 
+---
+ drivers/infiniband/hw/amso1100/c2_cq.c       |    2 +-
+ drivers/infiniband/hw/mthca/mthca_av.c       |    2 +-
+ drivers/infiniband/hw/mthca/mthca_cq.c       |    2 +-
+ drivers/infiniband/hw/mthca/mthca_dev.h      |    2 +-
+ drivers/infiniband/hw/mthca/mthca_doorbell.h |    2 +-
+ drivers/infiniband/hw/mthca/mthca_main.c     |    2 +-
+ drivers/infiniband/hw/mthca/mthca_provider.c |    2 +-
+ 7 files changed, 7 insertions(+), 7 deletions(-)
 
-My current problem is that I can't load the firmware on the chip.
-There are two files (Win drivers) on the Asus CDROM:
-
-denis@denis-desktop:~/Downloads$ ls -al CB55N50.sys CB55N51.sys
--rw-r--r-- 1 denis denis 297856 2005-04-16 13:27 CB55N50.sys
--rw-r--r-- 1 denis denis 297856 2005-04-16 13:26 CB55N51.sys
-
-The FW cutter can't find the the main FW:
-denis@denis-desktop:~/Downloads$ ./mrv8k_extract_fw CB55N51.sys
-Bootloader found at 282088
-Firmware not found
-
-I also tried the firmware from the *BSD (malo firmware), but also
-without success.
-
-Current problem that after loading the 'main' firmware the
-MRV_REG_STATUS register is not
-equal to MRV_FW_SIGNATURE.
-
-
-PS: Looks like that this tree no longer available
-git://git.infradead.org/mrv8k.git :/
-
-Thanks in advance.
-
+diff --git a/drivers/infiniband/hw/amso1100/c2_cq.c b/drivers/infiniband/hw/amso1100/c2_cq.c
+index 49e0e85..2235d43 100644
+--- a/drivers/infiniband/hw/amso1100/c2_cq.c
++++ b/drivers/infiniband/hw/amso1100/c2_cq.c
+@@ -1,6 +1,6 @@
+ /*
+  * Copyright (c) 2004, 2005 Topspin Communications.  All rights reserved.
+- * Copyright (c) 2005 Sun Microsystems, Inc. All rights reserved.
++ * Copyright (c) 2005 Oracle and/or its affiliates. All rights reserved.
+  * Copyright (c) 2005 Cisco Systems, Inc. All rights reserved.
+  * Copyright (c) 2005 Mellanox Technologies. All rights reserved.
+  * Copyright (c) 2004 Voltaire, Inc. All rights reserved.
+diff --git a/drivers/infiniband/hw/mthca/mthca_av.c b/drivers/infiniband/hw/mthca/mthca_av.c
+index 32f6c63..e882071 100644
+--- a/drivers/infiniband/hw/mthca/mthca_av.c
++++ b/drivers/infiniband/hw/mthca/mthca_av.c
+@@ -1,6 +1,6 @@
+ /*
+  * Copyright (c) 2004 Topspin Communications.  All rights reserved.
+- * Copyright (c) 2005 Sun Microsystems, Inc. All rights reserved.
++ * Copyright (c) 2005 Oracle and/or its affiliates. All rights reserved.
+  *
+  * This software is available to you under a choice of one of two
+  * licenses.  You may choose to be licensed under the terms of the GNU
+diff --git a/drivers/infiniband/hw/mthca/mthca_cq.c b/drivers/infiniband/hw/mthca/mthca_cq.c
+index 18ee3fa..3a68bdc 100644
+--- a/drivers/infiniband/hw/mthca/mthca_cq.c
++++ b/drivers/infiniband/hw/mthca/mthca_cq.c
+@@ -1,6 +1,6 @@
+ /*
+  * Copyright (c) 2004, 2005 Topspin Communications.  All rights reserved.
+- * Copyright (c) 2005 Sun Microsystems, Inc. All rights reserved.
++ * Copyright (c) 2005 Oracle and/or its affiliates. All rights reserved.
+  * Copyright (c) 2005, 2006 Cisco Systems, Inc. All rights reserved.
+  * Copyright (c) 2005 Mellanox Technologies. All rights reserved.
+  * Copyright (c) 2004 Voltaire, Inc. All rights reserved.
+diff --git a/drivers/infiniband/hw/mthca/mthca_dev.h b/drivers/infiniband/hw/mthca/mthca_dev.h
+index 7e6a6d6..2af6812 100644
+--- a/drivers/infiniband/hw/mthca/mthca_dev.h
++++ b/drivers/infiniband/hw/mthca/mthca_dev.h
+@@ -1,6 +1,6 @@
+ /*
+  * Copyright (c) 2004, 2005 Topspin Communications.  All rights reserved.
+- * Copyright (c) 2005 Sun Microsystems, Inc. All rights reserved.
++ * Copyright (c) 2005 Oracle and/or its affiliates. All rights reserved.
+  * Copyright (c) 2005, 2006 Cisco Systems.  All rights reserved.
+  * Copyright (c) 2005 Mellanox Technologies. All rights reserved.
+  * Copyright (c) 2004 Voltaire, Inc. All rights reserved.
+diff --git a/drivers/infiniband/hw/mthca/mthca_doorbell.h b/drivers/infiniband/hw/mthca/mthca_doorbell.h
+index 14f51ef..c139265 100644
+--- a/drivers/infiniband/hw/mthca/mthca_doorbell.h
++++ b/drivers/infiniband/hw/mthca/mthca_doorbell.h
+@@ -1,6 +1,6 @@
+ /*
+  * Copyright (c) 2004 Topspin Communications.  All rights reserved.
+- * Copyright (c) 2005 Sun Microsystems, Inc. All rights reserved.
++ * Copyright (c) 2005 Oracle and/or its affiliates. All rights reserved.
+  * Copyright (c) 2005 Mellanox Technologies. All rights reserved.
+  *
+  * This software is available to you under a choice of one of two
+diff --git a/drivers/infiniband/hw/mthca/mthca_main.c b/drivers/infiniband/hw/mthca/mthca_main.c
+index 5eee666..7ff36b0 100644
+--- a/drivers/infiniband/hw/mthca/mthca_main.c
++++ b/drivers/infiniband/hw/mthca/mthca_main.c
+@@ -1,6 +1,6 @@
+ /*
+  * Copyright (c) 2004, 2005 Topspin Communications.  All rights reserved.
+- * Copyright (c) 2005 Sun Microsystems, Inc. All rights reserved.
++ * Copyright (c) 2005 Oracle and/or its affiliates. All rights reserved.
+  * Copyright (c) 2005 Mellanox Technologies. All rights reserved.
+  *
+  * This software is available to you under a choice of one of two
+diff --git a/drivers/infiniband/hw/mthca/mthca_provider.c b/drivers/infiniband/hw/mthca/mthca_provider.c
+index 1e0b4b6..7fb8b4f 100644
+--- a/drivers/infiniband/hw/mthca/mthca_provider.c
++++ b/drivers/infiniband/hw/mthca/mthca_provider.c
+@@ -1,6 +1,6 @@
+ /*
+  * Copyright (c) 2004, 2005 Topspin Communications.  All rights reserved.
+- * Copyright (c) 2005 Sun Microsystems, Inc. All rights reserved.
++ * Copyright (c) 2005 Oracle and/or its affiliates. All rights reserved.
+  * Copyright (c) 2005, 2006 Cisco Systems.  All rights reserved.
+  * Copyright (c) 2005 Mellanox Technologies. All rights reserved.
+  * Copyright (c) 2004 Voltaire, Inc. All rights reserved.
 -- 
-Regards,
-Denis
+1.7.1
+
