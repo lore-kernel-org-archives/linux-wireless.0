@@ -1,34 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qy0-f181.google.com ([209.85.216.181]:38939 "EHLO
-	mail-qy0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754730Ab0K2ENP (ORCPT
+Received: from mail-fx0-f46.google.com ([209.85.161.46]:55719 "EHLO
+	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750939Ab0K0Hlt (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 28 Nov 2010 23:13:15 -0500
-Received: by qyk12 with SMTP id 12so5801184qyk.19
-        for <linux-wireless@vger.kernel.org>; Sun, 28 Nov 2010 20:13:15 -0800 (PST)
-MIME-Version: 1.0
-Date: Mon, 29 Nov 2010 15:13:14 +1100
-Message-ID: <AANLkTinS5M3YBj4f97F2+hiDTaxRbs-RM7D8q=M_T4qW@mail.gmail.com>
-Subject: Hostapd + wpa_supplicant
-From: linux newbie <linux.newbie79@gmail.com>
-To: hostap@lists.shmoo.com, linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+	Sat, 27 Nov 2010 02:41:49 -0500
+Subject: Re: [RFC 0/9] Change the copyright info.
+From: Artem Bityutskiy <dedekind1@gmail.com>
+Reply-To: dedekind1@gmail.com
+To: "Justin P. Mattock" <justinmattock@gmail.com>
+Cc: trivial@kernel.org, linux-rdma@vger.kernel.org,
+	linux-ide@vger.kernel.org, linux-mtd@lists.infradead.org,
+	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
+In-Reply-To: <1290838879-11038-1-git-send-email-justinmattock@gmail.com>
+References: <1290838879-11038-1-git-send-email-justinmattock@gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Sat, 27 Nov 2010 09:41:42 +0200
+Message-ID: <1290843702.2379.1.camel@koala>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+On Fri, 2010-11-26 at 22:21 -0800, Justin P. Mattock wrote:
+> 
 
-* On my embedded target, I am running rt73 based usb wireless adapter.
-* tested hostapd and wpa_supplicant individually and it is working fine.
-* bothe hostapd and wpa_supplicant are latest 0.7.3 versions with
-libnl_1.1 version & kernel 2.6.35
+> Below you will find a set of patches, that update the copyright info from
+> Sun Microsystems to Oracle.
 
-If I run both wpa_supplicant and hostapd I am having issue.
+Shouldn't @oracle.com e-mail used for such patches?
 
-Reason for running hostapd and wpa_supplicant on same terminal is we
-have multiple wireless terminals and if one of them can't access the
-AP (due to coverage issue) , then it will bind to Hostapd on some
-other terminal. I am not sure, if I can able to configure my terminals
-to use both hostapd & wpa_supplicant and need your expert advice.
+-- 
+Best Regards,
+Artem Bityutskiy (Битюцкий Артём)
 
-Thanks
