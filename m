@@ -1,56 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([147.243.1.48]:32337 "EHLO mgw-sa02.nokia.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753282Ab0KVK1i (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 22 Nov 2010 05:27:38 -0500
-Received: from nokia.com (localhost [127.0.0.1])
-	by mgw-sa02.nokia.com (Switch-3.4.3/Switch-3.4.3) with ESMTP id oAMAR64c031619
-	for <linux-wireless@vger.kernel.org>; Mon, 22 Nov 2010 12:27:37 +0200
-From: juuso.oikarinen@nokia.com
-To: luciano.coelho@nokia.com
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCHv3] wl12xx: Unset bssid filter, ssid and bssid from firmware on disassoc
-Date: Mon, 22 Nov 2010 12:27:22 +0200
-Message-Id: <1290421642-8709-1-git-send-email-juuso.oikarinen@nokia.com>
+Received: from external1.orbit-lab.org ([128.6.192.131]:37006 "HELO
+	external1.orbit-lab.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1753097Ab0K0UCx (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 27 Nov 2010 15:02:53 -0500
+Received: from repository3.orbit-lab.org (repository3.orbit-lab.org [10.50.0.41])
+	by external1.orbit-lab.org (Postfix) with ESMTP id 1801E418D8
+	for <linux-wireless@vger.kernel.org>; Sat, 27 Nov 2010 14:57:59 -0500 (EST)
+Subject: Compat-wireless release for 2010-11-27 is baked
+To: <linux-wireless@vger.kernel.org>
+Message-Id: <20101127200252.8B37940F97@repository3.orbit-lab.org>
+Date: Sat, 27 Nov 2010 15:02:52 -0500 (EST)
+From: compat@orbit-lab.org (Compat-wireless cronjob account)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Juuso Oikarinen <juuso.oikarinen@nokia.com>
 
-On the disassociation event from the mac80211, the wl12xx driver does not
-clear the chipset configuration related to the AP - i.e. it does not perform
-a DISCONNECT and then a JOIN with zero SSID and dummy BSSID. Also, it does not
-unset the BSSID filter.
+compat-wireless code metrics
 
-Often this is not a problem, as the above is performed upon entering idle
-state. But if a scenario arises where a new association is attempted without
-cycling through idle state, the new association will fail.
+    749168 - Total upstream lines of code being pulled
+      2201 - backport code changes
+      1939 - backport code additions
+       262 - backport code deletions
+      6441 - backport from compat module
+      8642 - total backport code
+    1.1535 - % of code consists of backport work
+      1534 - Crap changes not yet posted
+      1491 - Crap additions not yet posted
+        43 - Crap deletions not yet posted
+    0.2048 - % of crap code
 
-Fix this by resetting the firmware state on disassociation.
-
-Signed-off-by: Juuso Oikarinen <juuso.oikarinen@nokia.com>
----
-v2: Changed the function calls to ones with a bit narrower scope
-v3: Moved the function calls slightly forward, no functional change
-
- drivers/net/wireless/wl12xx/main.c |    4 ++++
- 1 files changed, 4 insertions(+), 0 deletions(-)
-
-diff --git a/drivers/net/wireless/wl12xx/main.c b/drivers/net/wireless/wl12xx/main.c
-index 31f0e2f..c0071f2 100644
---- a/drivers/net/wireless/wl12xx/main.c
-+++ b/drivers/net/wireless/wl12xx/main.c
-@@ -2012,6 +2012,10 @@ static void wl1271_op_bss_info_changed(struct ieee80211_hw *hw,
- 			/* Disable the keep-alive feature */
- 			ret = wl1271_acx_keep_alive_mode(wl, false);
- 
-+			/* restore the bssid filter and go to dummy bssid */
-+			wl1271_unjoin(wl);
-+			wl1271_dummy_join(wl);
-+
- 			if (ret < 0)
- 				goto out_sleep;
- 		}
--- 
-1.7.1
-
+Base tree: linux-next.git
+Base tree version: next-20101126
+compat-wireless release: compat-wireless-2010-11-23-6-gefeeae7-pc
