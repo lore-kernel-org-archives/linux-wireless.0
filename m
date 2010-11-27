@@ -1,52 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:39392 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754424Ab0KVTAh (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 22 Nov 2010 14:00:37 -0500
-Date: Mon, 22 Nov 2010 13:46:34 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Jouni Malinen <j@w1.fi>, Bruno Randolf <br1@einfach.org>,
-	randy.dunlap@oracle.com, br1@thinktube.com, peterz@infradead.org,
-	blp@cs.stanford.edu, linux-wireless@vger.kernel.org,
-	linux-kernel@vger.kernel.org, Lars_Ericsson@telia.com,
-	stefanr@s5r6.in-berlin.de, kosaki.motohiro@jp.fujitsu.com,
-	akpm@linux-foundation.org, kevin.granade@gmail.com
-Subject: Re: [PATCH v7 3/3] nl80211/mac80211: Report signal average
-Message-ID: <20101122184633.GD2117@tuxdriver.com>
-References: <20101112024901.28522.21895.stgit@localhost6.localdomain6>
- <20101112030035.28522.75318.stgit@localhost6.localdomain6>
- <20101116093743.GA21872@jm.kir.nu>
- <1290193116.3768.8.camel@jlt3.sipsolutions.net>
+Received: from cantor.suse.de ([195.135.220.2]:57255 "EHLO mx1.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750991Ab0K0Kxu (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 27 Nov 2010 05:53:50 -0500
+Date: Sat, 27 Nov 2010 11:53:43 +0100 (CET)
+From: Jiri Kosina <jkosina@suse.cz>
+To: "Justin P. Mattock" <justinmattock@gmail.com>
+Cc: linux-rdma@vger.kernel.org, linux-ide@vger.kernel.org,
+	linux-mtd@lists.infradead.org, linux-wireless@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: [RFC 0/9] Change the copyright info. 
+In-Reply-To: <1290838879-11038-1-git-send-email-justinmattock@gmail.com>
+Message-ID: <alpine.LNX.2.00.1011271152350.981@pobox.suse.cz>
+References: <1290838879-11038-1-git-send-email-justinmattock@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1290193116.3768.8.camel@jlt3.sipsolutions.net>
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Nov 19, 2010 at 10:58:36AM -0800, Johannes Berg wrote:
-> On Tue, 2010-11-16 at 11:37 +0200, Jouni Malinen wrote:
-> > On Fri, Nov 12, 2010 at 12:00:35PM +0900, Bruno Randolf wrote:
-> > > Extend nl80211 to report an exponential weighted moving average (EWMA) of the
-> > > signal value. Since the signal value usually fluctuates between different
-> > > packets, an average can be more useful than the value of the last packet.
-> > > 
-> > > This uses the recently added generic EWMA library function.
-> > 
-> > Isn't that generic EWMA library function making this much more CPU
-> > intensive than necessary?
+On Fri, 26 Nov 2010, Justin P. Mattock wrote:
+
+> Below you will find a set of patches, that update the copyright info from
+> Sun Microsystems to Oracle.
 > 
-> John, is there any reason you completely ignored Jouni's feedback here?
-> This wasn't addressed in v8.
+> Please let me know if I missed anything and/or should make changes..
 
-Well, I confess that I didn't fully appreciate Jouni's point.
+Most importantly -- are you actually Oracle employee? Do you know what 
+exactly happened to the copyrights after the acquisition?
 
-Is there any reason to presume that Bruno cannot (or will not) improve
-the performance from here?  Do you have any measurement of the actual
-performance impact?
-
-John
 -- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+Jiri Kosina
+SUSE Labs, Novell Inc.
