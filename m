@@ -1,37 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.19.149.2]:32347 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752883Ab0KIVfa (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 9 Nov 2010 16:35:30 -0500
-Received: from mail.atheros.com ([10.10.20.107])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Tue, 09 Nov 2010 13:35:18 -0800
-From: David Quan <David.Quan@Atheros.com>
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>,
-	Larry Finger <Larry.Finger@lwfinger.net>
-CC: wireless <linux-wireless@vger.kernel.org>
-Date: Tue, 9 Nov 2010 13:35:28 -0800
-Subject: RE: What kind of Atheros device is this?
-Message-ID: <93781E992CBA7843962D8B0E7D683F3C16331A1E0D@SC1EXMB-MBCL.global.atheros.com>
-References: <4CD8A71E.6040604@lwfinger.net>
- <AANLkTi=sxSRLFEF6-kBtb_94ViyaKCmP3ra099X3G44H@mail.gmail.com>
-In-Reply-To: <AANLkTi=sxSRLFEF6-kBtb_94ViyaKCmP3ra099X3G44H@mail.gmail.com>
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
+Received: from mail-yw0-f46.google.com ([209.85.213.46]:45765 "EHLO
+	mail-yw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752377Ab0K0GWP (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 27 Nov 2010 01:22:15 -0500
+From: "Justin P. Mattock" <justinmattock@gmail.com>
+To: trivial@kernel.org
+Cc: linux-rdma@vger.kernel.org, linux-ide@vger.kernel.org,
+	linux-mtd@lists.infradead.org, linux-wireless@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	"Justin P. Mattock" <justinmattock@gmail.com>
+Subject: [RFC 9/9]include:linux Change the copyright info.
+Date: Fri, 26 Nov 2010 22:21:19 -0800
+Message-Id: <1290838879-11038-10-git-send-email-justinmattock@gmail.com>
+In-Reply-To: <1290838879-11038-1-git-send-email-justinmattock@gmail.com>
+References: <1290838879-11038-1-git-send-email-justinmattock@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-DQoiQXRoZXJvcyBBUjI0MjcgV2lyZWxlc3MgTmV0d29yayBBZGFwdGVyIg0KDQpMZWdhY3kgMTFi
-L2cgMi40R2h6LiANCg0KDQotLS0tLU9yaWdpbmFsIE1lc3NhZ2UtLS0tLQ0KRnJvbTogTHVpcyBS
-LiBSb2RyaWd1ZXogW21haWx0bzptY2dyb2ZAZ21haWwuY29tXSANClNlbnQ6IFR1ZXNkYXksIE5v
-dmVtYmVyIDA5LCAyMDEwIDE6MTQgUE0NClRvOiBMYXJyeSBGaW5nZXINCkNjOiB3aXJlbGVzczsg
-RGF2aWQgUXVhbg0KU3ViamVjdDogUmU6IFdoYXQga2luZCBvZiBBdGhlcm9zIGRldmljZSBpcyB0
-aGlzPw0KDQpPbiBNb24sIE5vdiA4LCAyMDEwIGF0IDU6NDIgUE0sIExhcnJ5IEZpbmdlciA8TGFy
-cnkuRmluZ2VyQGx3ZmluZ2VyLm5ldD4gd3JvdGU6DQo+IE9uIHRoZSBvcGVuU1VTRSBmb3J1bSwg
-b25lIG9mIHRoZSBwb3N0ZXJzIGdvdCB0aGlzIG91dHB1dCBmcm9tIGxzcGNpIC1ubms6DQo+DQo+
-IDAyOjAwLjAgTmV0d29yayBjb250cm9sbGVyIFswMjgwXTogQXRoZXJvcyBDb21tdW5pY2F0aW9u
-cyBJbmMuIERldmljZQ0KPiBbMTY4YzowMDJjXSAocmV2IDAxKQ0KPiDCoCDCoCDCoCDCoFN1YnN5
-c3RlbTogRGV2aWNlIFsxYTNiOjExMTJdDQo+DQo+IEkgZGlkIG5vdCBmaW5kIHRoZXNlIFBDSSBJ
-RHMgZm9yIGFueSBkZXZpY2UgaW4gd2lyZWxlc3Mgb3Igc3RhZ2luZy4gV2hhdCBpcyBpdCwNCj4g
-YW5kIHdoYXQgZHJpdmVyIHNob3VsZCBpdCB1c2U/DQoNCkhtLCBub3Qgc3VyZSwgRGF2aWQsIGhh
-dmUgeW91IGV2ZXIgaGVhcmQgb2YgdGhpcz8NCg0KIEx1aXMNCg==
+Change the copyright info from Sun Microsystems to Oracle since Oracle now owns them.
+
+Signed-off-by: Justin P. Mattock <justinmattock@gmail.com>
+
+---
+ include/linux/ethtool.h       |    4 ++--
+ include/linux/mlx4/doorbell.h |    2 +-
+ 2 files changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/include/linux/ethtool.h b/include/linux/ethtool.h
+index 6628a50..2d895be 100644
+--- a/include/linux/ethtool.h
++++ b/include/linux/ethtool.h
+@@ -3,11 +3,11 @@
+  *
+  * Copyright (C) 1998 David S. Miller (davem@redhat.com)
+  * Copyright 2001 Jeff Garzik <jgarzik@pobox.com>
+- * Portions Copyright 2001 Sun Microsystems (thockin@sun.com)
++ * Portions Copyright 2001 Oracle and/or its affiliates. (thockin@sun.com)
+  * Portions Copyright 2002 Intel (eli.kupermann@intel.com,
+  *                                christopher.leech@intel.com,
+  *                                scott.feldman@intel.com)
+- * Portions Copyright (C) Sun Microsystems 2008
++ * Portions Copyright (C) 2008 Oracle and/or its affiliates. 
+  */
+ 
+ #ifndef _LINUX_ETHTOOL_H
+diff --git a/include/linux/mlx4/doorbell.h b/include/linux/mlx4/doorbell.h
+index f31bba2..d251ee8 100644
+--- a/include/linux/mlx4/doorbell.h
++++ b/include/linux/mlx4/doorbell.h
+@@ -1,6 +1,6 @@
+ /*
+  * Copyright (c) 2004 Topspin Communications.  All rights reserved.
+- * Copyright (c) 2005 Sun Microsystems, Inc. All rights reserved.
++ * Copyright (c) 2005 Oracle and/or its affiliates. All rights reserved.
+  * Copyright (c) 2005 Mellanox Technologies. All rights reserved.
+  *
+  * This software is available to you under a choice of one of two
+-- 
+1.7.1
+
