@@ -1,66 +1,133 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iw0-f174.google.com ([209.85.214.174]:34486 "EHLO
-	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752045Ab0KBTQi convert rfc822-to-8bit (ORCPT
+Received: from mail-ww0-f44.google.com ([74.125.82.44]:55884 "EHLO
+	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753278Ab0K0Bbz convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 2 Nov 2010 15:16:38 -0400
-Received: by iwn10 with SMTP id 10so8714568iwn.19
-        for <linux-wireless@vger.kernel.org>; Tue, 02 Nov 2010 12:16:38 -0700 (PDT)
+	Fri, 26 Nov 2010 20:31:55 -0500
+Received: by wwa36 with SMTP id 36so2676959wwa.1
+        for <linux-wireless@vger.kernel.org>; Fri, 26 Nov 2010 17:31:54 -0800 (PST)
 MIME-Version: 1.0
-In-Reply-To: <4CD05E49.70701@openwrt.org>
-References: <alpine.DEB.2.00.1011021655080.23045@vtdt3>
-	<4CD046D2.4080703@openwrt.org>
-	<4CD04C61.4070007@openwrt.org>
-	<AANLkTikUUue=Nt0iFPcQC68kDCh=EeEpeBT9xnhW6bf+@mail.gmail.com>
-	<4CD05E49.70701@openwrt.org>
-Date: Tue, 2 Nov 2010 20:16:38 +0100
-Message-ID: <AANLkTinBSeUSGR_9P-e5ZgKSeLfp36JfUbJOk73hpnQ2@mail.gmail.com>
-Subject: Re: [ath9k-devel] [RFC] ath9k: fix tx queue selection
-From: =?ISO-8859-1?Q?Bj=F6rn_Smedman?= <bjorn.smedman@venatech.se>
-To: Felix Fietkau <nbd@openwrt.org>
-Cc: ath9k-devel@lists.ath9k.org,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+In-Reply-To: <AANLkTi=QquDgSAYn4HS+vupdNUTNSngt03ZKuakYu6Fd@mail.gmail.com>
+References: <20101123191533.GP4303@makis.mantri>
+	<AANLkTi=YLPnqRzzfXaeghQ-w5vDgfCX5v59tGbgSp8zA@mail.gmail.com>
+	<AANLkTimEZnDrXYa4WOKn=9VvL0qwYUTbABy1WgmSqe4m@mail.gmail.com>
+	<AANLkTim6G7rO852RCma7qg=LqTwNav6E_OdqwLD7esCP@mail.gmail.com>
+	<AANLkTi=QquDgSAYn4HS+vupdNUTNSngt03ZKuakYu6Fd@mail.gmail.com>
+Date: Sat, 27 Nov 2010 03:31:53 +0200
+Message-ID: <AANLkTinC4-N7ACt4_ijTi2rs8TtQkARR1-vcaiSSaH3O@mail.gmail.com>
+Subject: Re: [ath5k-devel] [PATCH 16/30] ath5k: Set all IFS intervals, not
+ just slot time
+From: Nick Kossifidis <mickflemm@gmail.com>
+To: Jonathan Guerin <jonathan@guerin.id.au>
+Cc: ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org,
+	linville@tuxdriver.com, me@bobcopeland.com, mcgrof@gmail.com,
+	jirislaby@gmail.com, nbd@openwrt.org, br1@einfach.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2010/11/2 Felix Fietkau <nbd@openwrt.org>:
-> On 2010-11-02 7:20 PM, Bjˆrn Smedman wrote:
->> 2010/11/2 Felix Fietkau <nbd@openwrt.org>:
->>> + † † † q = ath_get_mac80211_qnum(txq->axq_class, sc);
->>> † † † †r = ath_tx_setup_buffer(hw, bf, skb, txctl);
->>> † † † †if (unlikely(r)) {
->>> † † † † † † † †ath_print(common, ATH_DBG_FATAL, "TX mem alloc failure\n");
->>> @@ -1756,8 +1757,8 @@ int ath_tx_start(struct ieee80211_hw *hw
->>> † † † † † † † † * we will at least have to run TX completionon one buffer
->>> † † † † † † † † * on the queue */
->>> † † † † † † † †spin_lock_bh(&txq->axq_lock);
->>> - † † † † † † † if (!txq->stopped && txq->axq_depth > 1) {
->>> - † † † † † † † † † † † ath_mac80211_stop_queue(sc, skb_get_queue_mapping(skb));
->>> + † † † † † † † if (q >= 0 && !txq->stopped && txq->axq_depth > 1) {
->>> + † † † † † † † † † † † ath_mac80211_stop_queue(sc, q);
->>> † † † † † † † † † † † †txq->stopped = 1;
->>> † † † † † † † †}
+Œ£œÑŒπœÇ 26 ŒùŒøŒµŒºŒ≤œÅŒØŒøœÖ 2010 2:54 œÄ.Œº., Œø œáœÅŒÆœÉœÑŒ∑œÇ Jonathan Guerin
+<jonathan@guerin.id.au> Œ≠Œ≥œÅŒ±œàŒµ:
+> On Thu, Nov 25, 2010 at 8:41 AM, Jonathan Guerin <jonathan@guerin.id.au> wrote:
+>> On Wed, Nov 24, 2010 at 10:55 PM, Nick Kossifidis <mickflemm@gmail.com> wrote:
+>>> 2010/11/24 Jonathan Guerin <jonathan@guerin.id.au>:
+>>>>
+>>>>> diff --git a/drivers/net/wireless/ath/ath5k/pcu.c b/drivers/net/wireless/ath/ath5k/pcu.c
+>>>>> index e691378..4556f29 100644
+>>>>> --- a/drivers/net/wireless/ath/ath5k/pcu.c
+>>>>> +++ b/drivers/net/wireless/ath/ath5k/pcu.c
+>>>>> @@ -763,7 +763,7 @@ ath5k_hw_check_beacon_timers(struct ath5k_hw *ah, int intval)
+>>>>> ¬†* @ah: The &struct ath5k_hw
+>>>>> ¬†* @coverage_class: IEEE 802.11 coverage class number
+>>>>> ¬†*
+>>>>> - * Sets slot time, ACK timeout and CTS timeout for given coverage class.
+>>>>> + * Sets IFS intervals and ACK/CTS timeouts for given coverage class.
+>>>>> ¬†*/
+>>>>> ¬†void ath5k_hw_set_coverage_class(struct ath5k_hw *ah, u8 coverage_class)
+>>>>> ¬†{
+>>>>> @@ -772,7 +772,7 @@ void ath5k_hw_set_coverage_class(struct ath5k_hw *ah, u8 coverage_class)
+>>>>> ¬† ¬† ¬† ¬†int ack_timeout = ath5k_hw_get_default_sifs(ah) + slot_time;
+>>>>
+>>>> This is not quite right:
+>>>>
+>>>> According to the 802.11-2007 spec document, the ACKTimeout value is
+>>>> (Section 9.2.8 ACK procedure):
+>>>> ACKTimeout = aSIFSTime + aSlotTime + aPHY-RX-START-Delay
+>>>>
+>>>> From Table 17-15--OFDM PHY characteristics, the values are:
+>>>> aSIFSTime = 16
+>>>> aSlotTime = 9
+>>>> aPHY-RX-START-Delay = 25
+>>>>
+>>>> Therefore, ACKTimeout = 50
+>>>>
+>>>> Ignoring my uniformed comments from before, this is the only thing I
+>>>> can see that's wrong.
+>>>>
+>>>> Cheers,
+>>>>
+>>>> Jonathan
+>>>
+>>> Hmm I didn't mess with set_coverage_class so i didn't look up for ack
+>>> timeout. That phy-rx-start-delay is standard value or hw specific ?
+>>> Also does it change with clockrate (bwmodes) ? We already have a phy
+>>> activation -> rx start delay (check patch 25). It's 10.000 on RF5111
+>>> and 2.000 on RF5112 and later, if we divide by A clock it's 250 on
+>>> RF5111 and 50 on RF5112 and later. Do you think it's related ?
 >>
->> You cannot be sure that you are stopping the queue that the skb
->> actually came in on here since mac80211 queues are mapped to hw queues
->> by ath_get_hal_qnum() and that mapping is not reversible (due to the
->> default statement):
-> How does the default statement matter here? The queue number always
-> comes from an index of the ieee802_1d_to_ac[] array, which only contains
-> numbers from 0 to 3. That should make the conversion reversible.
+>> The phy-rx-start-delay is set in the standard. I'll find you the
+>> relevant pages soon.
+>
+> The aPHY-RX-START-Delay value is specific per PHY. In the case of
+> OFDM, you can find the relevant timings at:
+>
+> Table 17-15--OFDM PHY characteristics
+> aPHY-RX-START-Delay 25 Œºs (20MHz) 49 Œºs (10MHz) 97 Œºs (5MHz)
+>
+>>
+>> I'll look up the others tomorrow. I'm feeling pretty sick today, so
+>> not sure if I'll get a chance.
+>
+> I just a quick look at the code. The first thing that pops to mind and
+> that is apparent in the Table mentioned above, you can't just multiply
+> by 2 every time you halve the channel - the value is actually slightly
+> shorter than this.
+>
 
-True, but then you have a functional dependency on that data/code
-(with catastrophic consequences if it ever changes). I understand the
-name of that array suggests that it will be fixed forever but I don't
-think we can be sure that a queue mapping will always be an AC. I
-think it may be very reasonable to expand it to be a TID (0-7) or even
-a separate queue per RA and TID. Are you prepared to put a BUG_ON()
-under that default? If so that's a start.
+When we convert to core clock units it's what we should do, all
+timings should change the same way. I don't know what this
+aPHY-RX-START-Delay is but if it changes that way we can use absolute
+values as we do for slot time and sifs. Maybe we can add a function
+ath5k_hw_get_default_ack_timeout that gets default sifs + default slot
+time + the needed aPHY-RX-START-Delay based on the standard (but what
+about turbo mode -40MHz-, do you think that using a value of 25/2
+would be ok ?) and returns the total ack timeout in usecs. Or we can
+do that on set_coverage_class (I prefer the first option).
 
-But it's not only the default statement that may make that mapping
-non-reversible. It could also be that e.g. sc->tx.hwq_map[WME_AC_VI]
-== sc->tx.hwq_map[WME_AC_VO]. You need some BUG_ONs there too and you
-better not try to support a chipset with less than 4 hw queues.
+> Secondly, I'm assuming that the AR5K_PHY_RX_DELAY register refers to
+> the aPHY-RX-START-Delay value from the standard. It would make sense
+> that the card require this value, as it is necessary in resetting the
+> NAV (9.2.5.4 Setting and resetting the NAV), for CTS timeouts (9.2.5.7
+> CTS procedure), & ACK Timeouts (9.2.8 ACK procedure). The first 2
+> cases both refer to station behaviour after an RTS frame, but are
+> slightly different in that one is from an overhearing station, whereas
+> the the second is from the sending station. In the driver, which case
+> is the CTSTimeout value used for?
+>
+> Cheers,
+>
+> Jonathan
+>
 
-/Bjˆrn
+I just remembered that this register value is in /100ns units
+(according to what we have so far -check comments, remember, no
+documentation on PHY registers-) so 10000 * 100ns = 1000us = 1ms for
+RF5111 and 2000 * 100ns = 200us = 0.2ms for RF5112+ So it can't be
+related. If it was related we (and HAL) would write this back on hw
+for different bwmodes.
+
+
+-- 
+GPG ID: 0xD21DB2DB
+As you read this post global entropy rises. Have Fun ;-)
+Nick
