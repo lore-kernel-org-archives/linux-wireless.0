@@ -1,301 +1,208 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from comal.ext.ti.com ([198.47.26.152]:41637 "EHLO comal.ext.ti.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753822Ab0K2NmA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 29 Nov 2010 08:42:00 -0500
-From: Shahar Levi <shahar_levi@ti.com>
-To: <linux-wireless@vger.kernel.org>
-Cc: Luciano Coelho <luciano.coelho@nokia.com>
-Subject: [PATCH v4 ] wl12xx: BA Initiator support
-Date: Mon, 29 Nov 2010 15:42:15 +0200
-Message-Id: <1291038135-20672-1-git-send-email-shahar_levi@ti.com>
+Received: from mail-gy0-f174.google.com ([209.85.160.174]:54639 "EHLO
+	mail-gy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751223Ab0K0GVm (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 27 Nov 2010 01:21:42 -0500
+From: "Justin P. Mattock" <justinmattock@gmail.com>
+To: trivial@kernel.org
+Cc: linux-rdma@vger.kernel.org, linux-ide@vger.kernel.org,
+	linux-mtd@lists.infradead.org, linux-wireless@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	"Justin P. Mattock" <justinmattock@gmail.com>
+Subject: [RFC 2/9]drivers:infiniband:core Change the copyright info.
+Date: Fri, 26 Nov 2010 22:21:12 -0800
+Message-Id: <1290838879-11038-3-git-send-email-justinmattock@gmail.com>
+In-Reply-To: <1290838879-11038-1-git-send-email-justinmattock@gmail.com>
+References: <1290838879-11038-1-git-send-email-justinmattock@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Add 80211n BA initiator session support wl1271 driver.
-BA initiator session management included in FW independently.
+Change the copyright info from Sun Microsystems to Oracle since Oracle now owns them.
 
-Signed-off-by: Shahar Levi <shahar_levi@ti.com>
+Signed-off-by: Justin P. Mattock <justinmattock@gmail.com>
+
 ---
-Limitation:
-- For now only one BA per direction is supported
-- BA receiver session not supported in that patch
+ drivers/infiniband/core/agent.c     |    2 +-
+ drivers/infiniband/core/cache.c     |    2 +-
+ drivers/infiniband/core/cm.c        |    2 +-
+ drivers/infiniband/core/device.c    |    2 +-
+ drivers/infiniband/core/fmr_pool.c  |    2 +-
+ drivers/infiniband/core/iwcm.c      |    2 +-
+ drivers/infiniband/core/mad_priv.h  |    2 +-
+ drivers/infiniband/core/packer.c    |    2 +-
+ drivers/infiniband/core/smi.c       |    2 +-
+ drivers/infiniband/core/sysfs.c     |    2 +-
+ drivers/infiniband/core/ud_header.c |    2 +-
+ drivers/infiniband/core/user_mad.c  |    2 +-
+ drivers/infiniband/core/verbs.c     |    2 +-
+ 13 files changed, 13 insertions(+), 13 deletions(-)
 
-Changes from v1:
-- Remove wl1271_op_ampdu_action()
-- set CONF_BA_INACTIVITY_TIMEOUT as configurable value
-- Clean to Linux code style.
-
-Changes from v2:
-- Two new ACX commands ACX_BA_SESSION_POLICY_CFG & ACX_BA_SESSION_RX_SETUP
-- New struct wl1271_acx_ba_session_policy
-- Calling wl1271_set_ba_policies() once in init
-- Use ieee80211_back_parties
-- Rebase to latest
-
-Changes from v3:
-- New FW file name due to new FW API
-
- drivers/net/wireless/wl12xx/acx.c    |   50 ++++++++++++++++++++++++++++++++++
- drivers/net/wireless/wl12xx/acx.h    |   41 ++++++++++++++++++++++++++-
- drivers/net/wireless/wl12xx/conf.h   |    7 +++++
- drivers/net/wireless/wl12xx/init.c   |   25 +++++++++++++++++
- drivers/net/wireless/wl12xx/main.c   |    8 ++++-
- drivers/net/wireless/wl12xx/wl12xx.h |    6 +++-
- 6 files changed, 132 insertions(+), 5 deletions(-)
-
-diff --git a/drivers/net/wireless/wl12xx/acx.c b/drivers/net/wireless/wl12xx/acx.c
-index 7cbaeb6..6c433b7 100644
---- a/drivers/net/wireless/wl12xx/acx.c
-+++ b/drivers/net/wireless/wl12xx/acx.c
-@@ -1309,6 +1309,56 @@ out:
- 	return ret;
- }
- 
-+/* Configure BA session initiator\receiver parameters setting in the FW. */
-+int wl1271_acx_set_ba_session(struct wl1271 *wl,
-+			      enum ieee80211_back_parties direction,
-+			      u8 tid_index, u8 policy)
-+{
-+	struct wl1271_acx_ba_session_policy *acx;
-+	int ret;
-+
-+	wl1271_debug(DEBUG_ACX, "acx ba session setting");
-+
-+	acx = kzalloc(sizeof(*acx), GFP_KERNEL);
-+	if (!acx) {
-+		ret = -ENOMEM;
-+		goto out;
-+	}
-+
-+	/* ANY role */
-+	acx->role_id = 0xff;
-+	acx->tid = tid_index;
-+	acx->enable = policy;
-+	acx->win_size = BA_WIN_SIZE;
-+	acx->ba_direction = direction;
-+
-+	switch (direction) {
-+	case WLAN_BACK_INITIATOR:
-+		acx->inactivity_timeout = wl->conf.ht.inactivity_timeout;
-+		break;
-+	case WLAN_BACK_RECIPIENT:
-+		acx->inactivity_timeout = 0;
-+		break;
-+	default:
-+		wl1271_error("Incorrect acx command id=%x\n", direction);
-+		ret = -EINVAL;
-+		goto out;
-+	}
-+
-+	ret = wl1271_cmd_configure(wl,
-+				   ACX_BA_SESSION_POLICY_CFG,
-+				   acx,
-+				   sizeof(*acx));
-+	if (ret < 0) {
-+		wl1271_warning("acx ba session setting failed: %d", ret);
-+		goto out;
-+	}
-+
-+out:
-+	kfree(acx);
-+	return ret;
-+}
-+
- int wl1271_acx_tsf_info(struct wl1271 *wl, u64 *mactime)
- {
- 	struct wl1271_acx_fw_tsf_information *tsf_info;
-diff --git a/drivers/net/wireless/wl12xx/acx.h b/drivers/net/wireless/wl12xx/acx.h
-index 75a6306..c511dce 100644
---- a/drivers/net/wireless/wl12xx/acx.h
-+++ b/drivers/net/wireless/wl12xx/acx.h
-@@ -1046,6 +1046,40 @@ struct wl1271_acx_ht_information {
- 	u8 padding[3];
- } __packed;
- 
-+#define BA_WIN_SIZE 8
-+
-+struct wl1271_acx_ba_session_policy {
-+	struct acx_header header;
-+	/*
-+	 * Specifies role Id, Range 0-7, 0xFF means ANY role.
-+	 * Future use. For now this field is irrelevant
-+	 */
-+	u8 role_id;
-+	/*
-+	 * Specifies Link Id, Range 0-31, 0xFF means ANY  Link Id.
-+	 * Not applicable if Role Id is set to ANY.
-+	 */
-+	u8 link_id;
-+
-+	u8 tid;
-+
-+	u8 enable;
-+
-+	/* Windows size in number of packets */
-+	u16 win_size;
-+
-+	/*
-+	 * As initiator inactivity timeout in time units(TU) of 1024us.
-+	 * As receiver reserved
-+	 */
-+	u16 inactivity_timeout;
-+
-+	/* Initiator = 1/Receiver = 0 */
-+	u8 ba_direction;
-+
-+	u8 padding[3];
-+} __packed;
-+
- struct wl1271_acx_fw_tsf_information {
- 	struct acx_header header;
- 
-@@ -1108,8 +1142,8 @@ enum {
- 	ACX_RSSI_SNR_WEIGHTS        = 0x0052,
- 	ACX_KEEP_ALIVE_MODE         = 0x0053,
- 	ACX_SET_KEEP_ALIVE_CONFIG   = 0x0054,
--	ACX_BA_SESSION_RESPONDER_POLICY = 0x0055,
--	ACX_BA_SESSION_INITIATOR_POLICY = 0x0056,
-+	ACX_BA_SESSION_POLICY_CFG   = 0x0055,
-+	ACX_BA_SESSION_RX_SETUP     = 0x0056,
- 	ACX_PEER_HT_CAP             = 0x0057,
- 	ACX_HT_BSS_OPERATION        = 0x0058,
- 	ACX_COEX_ACTIVITY           = 0x0059,
-@@ -1180,6 +1214,9 @@ int wl1271_acx_set_ht_capabilities(struct wl1271 *wl,
- 				    bool allow_ht_operation);
- int wl1271_acx_set_ht_information(struct wl1271 *wl,
- 				   u16 ht_operation_mode);
-+int wl1271_acx_set_ba_session(struct wl1271 *wl,
-+			      enum ieee80211_back_parties direction,
-+			      u8 tid_index, u8 policy);
- int wl1271_acx_tsf_info(struct wl1271 *wl, u64 *mactime);
- 
- #endif /* __WL1271_ACX_H__ */
-diff --git a/drivers/net/wireless/wl12xx/conf.h b/drivers/net/wireless/wl12xx/conf.h
-index a16b361..41df771 100644
---- a/drivers/net/wireless/wl12xx/conf.h
-+++ b/drivers/net/wireless/wl12xx/conf.h
-@@ -1090,6 +1090,12 @@ struct conf_rf_settings {
- 	u8 tx_per_channel_power_compensation_5[CONF_TX_PWR_COMPENSATION_LEN_5];
- };
- 
-+#define CONF_BA_INACTIVITY_TIMEOUT 10000
-+
-+struct conf_ht_setting {
-+	u16 inactivity_timeout;
-+};
-+
- struct conf_drv_settings {
- 	struct conf_sg_settings sg;
- 	struct conf_rx_settings rx;
-@@ -1100,6 +1106,7 @@ struct conf_drv_settings {
- 	struct conf_roam_trigger_settings roam_trigger;
- 	struct conf_scan_settings scan;
- 	struct conf_rf_settings rf;
-+	struct conf_ht_setting ht;
- };
- 
- #endif
-diff --git a/drivers/net/wireless/wl12xx/init.c b/drivers/net/wireless/wl12xx/init.c
-index 7949d34..7419ac5 100644
---- a/drivers/net/wireless/wl12xx/init.c
-+++ b/drivers/net/wireless/wl12xx/init.c
-@@ -208,6 +208,26 @@ static int wl1271_init_beacon_broadcast(struct wl1271 *wl)
- 	return 0;
- }
- 
-+static int wl1271_set_ba_policies(struct wl1271 *wl)
-+{
-+	u8 tid_index;
-+	u8 ret;
-+
-+	/* Reset the BA RX indicators */
-+	wl->ba_allowed = true;
-+	wl->ba_rx_bitmap = 0;
-+
-+	/* 802.11n initiator BA session setting */
-+	for (tid_index = 0; tid_index < CONF_TX_MAX_TID_COUNT; ++tid_index) {
-+		ret = wl1271_acx_set_ba_session(wl, WLAN_BACK_INITIATOR,
-+						tid_index, true);
-+		if (ret < 0)
-+			break;
-+	}
-+
-+	return ret;
-+}
-+
- int wl1271_hw_init(struct wl1271 *wl)
- {
- 	struct conf_tx_ac_category *conf_ac;
-@@ -359,6 +379,11 @@ int wl1271_hw_init(struct wl1271 *wl)
- 	if (ret < 0)
- 		goto out_free_memmap;
- 
-+	/* Configure initiator BA sessions policies */
-+	ret = wl1271_set_ba_policies(wl);
-+	if (ret < 0)
-+		goto out_free_memmap;
-+
- 	return 0;
- 
-  out_free_memmap:
-diff --git a/drivers/net/wireless/wl12xx/main.c b/drivers/net/wireless/wl12xx/main.c
-index 7fecefe..c1812c8 100644
---- a/drivers/net/wireless/wl12xx/main.c
-+++ b/drivers/net/wireless/wl12xx/main.c
-@@ -233,7 +233,7 @@ static struct conf_drv_settings default_conf = {
- 		.avg_weight_rssi_beacon       = 20,
- 		.avg_weight_rssi_data         = 10,
- 		.avg_weight_snr_beacon        = 20,
--		.avg_weight_snr_data          = 10
-+		.avg_weight_snr_data          = 10,
- 	},
- 	.scan = {
- 		.min_dwell_time_active        = 7500,
-@@ -252,6 +252,9 @@ static struct conf_drv_settings default_conf = {
- 			0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
- 		},
- 	},
-+	.ht = {
-+		.inactivity_timeout = CONF_BA_INACTIVITY_TIMEOUT,
-+	},
- };
- 
- static void __wl1271_op_remove_interface(struct wl1271 *wl);
-@@ -2083,7 +2086,8 @@ static void wl1271_op_bss_info_changed(struct ieee80211_hw *hw,
- 			wl1271_warning("Set ht cap true failed %d", ret);
- 			goto out_sleep;
- 		}
--			ret = wl1271_acx_set_ht_information(wl,
-+
-+		ret = wl1271_acx_set_ht_information(wl,
- 				bss_conf->ht_operation_mode);
- 		if (ret < 0) {
- 			wl1271_warning("Set ht information failed %d", ret);
-diff --git a/drivers/net/wireless/wl12xx/wl12xx.h b/drivers/net/wireless/wl12xx/wl12xx.h
-index e904c72..0cf07cd 100644
---- a/drivers/net/wireless/wl12xx/wl12xx.h
-+++ b/drivers/net/wireless/wl12xx/wl12xx.h
-@@ -111,7 +111,7 @@ enum {
- 				  CFG_RX_CTL_EN | CFG_RX_BCN_EN |     \
- 				  CFG_RX_AUTH_EN | CFG_RX_ASSOC_EN)
- 
--#define WL1271_FW_NAME "wl1271-fw.bin"
-+#define WL1271_FW_NAME "wl1271-fw-2.bin"
- #define WL1271_NVS_NAME "wl1271-nvs.bin"
- 
- #define WL1271_TX_SECURITY_LO16(s) ((u16)((s) & 0xffff))
-@@ -398,6 +398,10 @@ struct wl1271 {
- 
- 	/* Most recently reported noise in dBm */
- 	s8 noise;
-+
-+	/* RX BA constraint value */
-+	u8 ba_allowed;
-+	u8 ba_rx_bitmap;
- };
- 
- int wl1271_plt_start(struct wl1271 *wl);
+diff --git a/drivers/infiniband/core/agent.c b/drivers/infiniband/core/agent.c
+index 91916a8..5152553 100644
+--- a/drivers/infiniband/core/agent.c
++++ b/drivers/infiniband/core/agent.c
+@@ -4,7 +4,7 @@
+  * Copyright (c) 2004, 2005 Intel Corporation.  All rights reserved.
+  * Copyright (c) 2004, 2005 Topspin Corporation.  All rights reserved.
+  * Copyright (c) 2004-2007 Voltaire Corporation.  All rights reserved.
+- * Copyright (c) 2005 Sun Microsystems, Inc. All rights reserved.
++ * Copyright (c) 2005 Oracle and/or its affiliates. All rights reserved.
+  *
+  * This software is available to you under a choice of one of two
+  * licenses.  You may choose to be licensed under the terms of the GNU
+diff --git a/drivers/infiniband/core/cache.c b/drivers/infiniband/core/cache.c
+index 6888356..dcf17a1 100644
+--- a/drivers/infiniband/core/cache.c
++++ b/drivers/infiniband/core/cache.c
+@@ -1,7 +1,7 @@
+ /*
+  * Copyright (c) 2004 Topspin Communications.  All rights reserved.
+  * Copyright (c) 2005 Intel Corporation. All rights reserved.
+- * Copyright (c) 2005 Sun Microsystems, Inc. All rights reserved.
++ * Copyright (c) 2005 Oracle and/or its affiliates. All rights reserved.
+  * Copyright (c) 2005 Voltaire, Inc. All rights reserved.
+  *
+  * This software is available to you under a choice of one of two
+diff --git a/drivers/infiniband/core/cm.c b/drivers/infiniband/core/cm.c
+index 64e0903..d0f37d5 100644
+--- a/drivers/infiniband/core/cm.c
++++ b/drivers/infiniband/core/cm.c
+@@ -2,7 +2,7 @@
+  * Copyright (c) 2004-2007 Intel Corporation.  All rights reserved.
+  * Copyright (c) 2004 Topspin Corporation.  All rights reserved.
+  * Copyright (c) 2004, 2005 Voltaire Corporation.  All rights reserved.
+- * Copyright (c) 2005 Sun Microsystems, Inc. All rights reserved.
++ * Copyright (c) 2005 Oracle and/or its affiliates. All rights reserved.
+  *
+  * This software is available to you under a choice of one of two
+  * licenses.  You may choose to be licensed under the terms of the GNU
+diff --git a/drivers/infiniband/core/device.c b/drivers/infiniband/core/device.c
+index a19effa..73cab4c 100644
+--- a/drivers/infiniband/core/device.c
++++ b/drivers/infiniband/core/device.c
+@@ -1,6 +1,6 @@
+ /*
+  * Copyright (c) 2004 Topspin Communications.  All rights reserved.
+- * Copyright (c) 2005 Sun Microsystems, Inc. All rights reserved.
++ * Copyright (c) 2005 Oracle and/or its affiliates. All rights reserved.
+  *
+  * This software is available to you under a choice of one of two
+  * licenses.  You may choose to be licensed under the terms of the GNU
+diff --git a/drivers/infiniband/core/fmr_pool.c b/drivers/infiniband/core/fmr_pool.c
+index 4507043..44eac01 100644
+--- a/drivers/infiniband/core/fmr_pool.c
++++ b/drivers/infiniband/core/fmr_pool.c
+@@ -1,6 +1,6 @@
+ /*
+  * Copyright (c) 2004 Topspin Communications.  All rights reserved.
+- * Copyright (c) 2005 Sun Microsystems, Inc. All rights reserved.
++ * Copyright (c) 2005 Oracle and/or its affiliates. All rights reserved.
+  *
+  * This software is available to you under a choice of one of two
+  * licenses.  You may choose to be licensed under the terms of the GNU
+diff --git a/drivers/infiniband/core/iwcm.c b/drivers/infiniband/core/iwcm.c
+index 2a1e9ae..8cc6f01 100644
+--- a/drivers/infiniband/core/iwcm.c
++++ b/drivers/infiniband/core/iwcm.c
+@@ -2,7 +2,7 @@
+  * Copyright (c) 2004, 2005 Intel Corporation.  All rights reserved.
+  * Copyright (c) 2004 Topspin Corporation.  All rights reserved.
+  * Copyright (c) 2004, 2005 Voltaire Corporation.  All rights reserved.
+- * Copyright (c) 2005 Sun Microsystems, Inc. All rights reserved.
++ * Copyright (c) 2005 Oracle and/or its affiliates. All rights reserved.
+  * Copyright (c) 2005 Open Grid Computing, Inc. All rights reserved.
+  * Copyright (c) 2005 Network Appliance, Inc. All rights reserved.
+  *
+diff --git a/drivers/infiniband/core/mad_priv.h b/drivers/infiniband/core/mad_priv.h
+index 9430ab4..ec30aea 100644
+--- a/drivers/infiniband/core/mad_priv.h
++++ b/drivers/infiniband/core/mad_priv.h
+@@ -1,7 +1,7 @@
+ /*
+  * Copyright (c) 2004, 2005, Voltaire, Inc. All rights reserved.
+  * Copyright (c) 2005 Intel Corporation. All rights reserved.
+- * Copyright (c) 2005 Sun Microsystems, Inc. All rights reserved.
++ * Copyright (c) 2005 Oracle and/or its affiliates. All rights reserved.
+  * Copyright (c) 2009 HNR Consulting. All rights reserved.
+  *
+  * This software is available to you under a choice of one of two
+diff --git a/drivers/infiniband/core/packer.c b/drivers/infiniband/core/packer.c
+index 019bd4b..32754d2 100644
+--- a/drivers/infiniband/core/packer.c
++++ b/drivers/infiniband/core/packer.c
+@@ -1,6 +1,6 @@
+ /*
+  * Copyright (c) 2004 Topspin Corporation.  All rights reserved.
+- * Copyright (c) 2005 Sun Microsystems, Inc. All rights reserved.
++ * Copyright (c) 2005 Oracle and/or its affiliates. All rights reserved.
+  *
+  * This software is available to you under a choice of one of two
+  * licenses.  You may choose to be licensed under the terms of the GNU
+diff --git a/drivers/infiniband/core/smi.c b/drivers/infiniband/core/smi.c
+index 5855e44..9687b80 100644
+--- a/drivers/infiniband/core/smi.c
++++ b/drivers/infiniband/core/smi.c
+@@ -4,7 +4,7 @@
+  * Copyright (c) 2004, 2005 Intel Corporation.  All rights reserved.
+  * Copyright (c) 2004, 2005 Topspin Corporation.  All rights reserved.
+  * Copyright (c) 2004-2007 Voltaire Corporation.  All rights reserved.
+- * Copyright (c) 2005 Sun Microsystems, Inc. All rights reserved.
++ * Copyright (c) 2005 Oracle and/or its affiliates. All rights reserved.
+  *
+  * This software is available to you under a choice of one of two
+  * licenses.  You may choose to be licensed under the terms of the GNU
+diff --git a/drivers/infiniband/core/sysfs.c b/drivers/infiniband/core/sysfs.c
+index 9ab5df7..010ea2d 100644
+--- a/drivers/infiniband/core/sysfs.c
++++ b/drivers/infiniband/core/sysfs.c
+@@ -1,7 +1,7 @@
+ /*
+  * Copyright (c) 2004, 2005 Topspin Communications.  All rights reserved.
+  * Copyright (c) 2005 Mellanox Technologies Ltd.  All rights reserved.
+- * Copyright (c) 2005 Sun Microsystems, Inc. All rights reserved.
++ * Copyright (c) 2005 Oracle and/or its affiliates. All rights reserved.
+  *
+  * This software is available to you under a choice of one of two
+  * licenses.  You may choose to be licensed under the terms of the GNU
+diff --git a/drivers/infiniband/core/ud_header.c b/drivers/infiniband/core/ud_header.c
+index bb7e192..50f7b56 100644
+--- a/drivers/infiniband/core/ud_header.c
++++ b/drivers/infiniband/core/ud_header.c
+@@ -1,6 +1,6 @@
+ /*
+  * Copyright (c) 2004 Topspin Corporation.  All rights reserved.
+- * Copyright (c) 2005 Sun Microsystems, Inc. All rights reserved.
++ * Copyright (c) 2005 Oracle and/or its affiliates. All rights reserved.
+  *
+  * This software is available to you under a choice of one of two
+  * licenses.  You may choose to be licensed under the terms of the GNU
+diff --git a/drivers/infiniband/core/user_mad.c b/drivers/infiniband/core/user_mad.c
+index cd1996d..5ec2937 100644
+--- a/drivers/infiniband/core/user_mad.c
++++ b/drivers/infiniband/core/user_mad.c
+@@ -1,7 +1,7 @@
+ /*
+  * Copyright (c) 2004 Topspin Communications.  All rights reserved.
+  * Copyright (c) 2005 Voltaire, Inc. All rights reserved.
+- * Copyright (c) 2005 Sun Microsystems, Inc. All rights reserved.
++ * Copyright (c) 2005 Oracle and/or its affiliates. All rights reserved.
+  * Copyright (c) 2008 Cisco. All rights reserved.
+  *
+  * This software is available to you under a choice of one of two
+diff --git a/drivers/infiniband/core/verbs.c b/drivers/infiniband/core/verbs.c
+index af7a8b0..02d9581 100644
+--- a/drivers/infiniband/core/verbs.c
++++ b/drivers/infiniband/core/verbs.c
+@@ -4,7 +4,7 @@
+  * Copyright (c) 2004 Intel Corporation.  All rights reserved.
+  * Copyright (c) 2004 Topspin Corporation.  All rights reserved.
+  * Copyright (c) 2004 Voltaire Corporation.  All rights reserved.
+- * Copyright (c) 2005 Sun Microsystems, Inc. All rights reserved.
++ * Copyright (c) 2005 Oracle and/or its affiliates. All rights reserved.
+  * Copyright (c) 2005, 2006 Cisco Systems.  All rights reserved.
+  *
+  * This software is available to you under a choice of one of two
 -- 
-1.7.0.4
+1.7.1
 
