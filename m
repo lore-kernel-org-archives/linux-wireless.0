@@ -1,60 +1,86 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:32698 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751621Ab0KYBi3 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 24 Nov 2010 20:38:29 -0500
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Subject: [PATCH 08/12] iwlagn: Offical name for 6000g2a device
-Date: Wed, 24 Nov 2010 17:32:44 -0800
-Message-Id: <1290648768-10075-9-git-send-email-wey-yi.w.guy@intel.com>
-In-Reply-To: <1290648768-10075-1-git-send-email-wey-yi.w.guy@intel.com>
-References: <1290648768-10075-1-git-send-email-wey-yi.w.guy@intel.com>
+Received: from mail-gw0-f46.google.com ([74.125.83.46]:60399 "EHLO
+	mail-gw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752205Ab0K0GWH (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 27 Nov 2010 01:22:07 -0500
+From: "Justin P. Mattock" <justinmattock@gmail.com>
+To: trivial@kernel.org
+Cc: linux-rdma@vger.kernel.org, linux-ide@vger.kernel.org,
+	linux-mtd@lists.infradead.org, linux-wireless@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	"Justin P. Mattock" <justinmattock@gmail.com>
+Subject: [RFC 7/9]drivers:ata Change the copyright info.
+Date: Fri, 26 Nov 2010 22:21:17 -0800
+Message-Id: <1290838879-11038-8-git-send-email-justinmattock@gmail.com>
+In-Reply-To: <1290838879-11038-1-git-send-email-justinmattock@gmail.com>
+References: <1290838879-11038-1-git-send-email-justinmattock@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Change to offical name for 6000g2a devices:
-   "Intel(R) Centrino(R) Advanced-N 6205"
+Change the copyright info from Sun Microsystems to Oracle since Oracle now owns them.
 
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Signed-off-by: Justin P. Mattock <justinmattock@gmail.com>
+
 ---
- drivers/net/wireless/iwlwifi/iwl-6000.c |    6 +++---
- 1 files changed, 3 insertions(+), 3 deletions(-)
+ drivers/ata/pata_hpt366.c      |    2 +-
+ drivers/ata/pata_hpt37x.c      |    2 +-
+ drivers/ata/pata_hpt3x2n.c     |    2 +-
+ drivers/ata/pata_serverworks.c |    2 +-
+ 4 files changed, 4 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-6000.c b/drivers/net/wireless/iwlwifi/iwl-6000.c
-index 43eb99b..d087cb5 100644
---- a/drivers/net/wireless/iwlwifi/iwl-6000.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-6000.c
-@@ -553,7 +553,7 @@ static struct iwl_bt_params iwl6000_bt_params = {
- };
- 
- struct iwl_cfg iwl6000g2a_2agn_cfg = {
--	.name = "6000 Series 2x2 AGN Gen2a",
-+	.name = "Intel(R) Centrino(R) Advanced-N 6205 AGN",
- 	.fw_name_pre = IWL6000G2A_FW_PRE,
- 	.ucode_api_max = IWL6000G2_UCODE_API_MAX,
- 	.ucode_api_min = IWL6000G2_UCODE_API_MIN,
-@@ -569,7 +569,7 @@ struct iwl_cfg iwl6000g2a_2agn_cfg = {
- };
- 
- struct iwl_cfg iwl6000g2a_2abg_cfg = {
--	.name = "6000 Series 2x2 ABG Gen2a",
-+	.name = "Intel(R) Centrino(R) Advanced-N 6205 ABG",
- 	.fw_name_pre = IWL6000G2A_FW_PRE,
- 	.ucode_api_max = IWL6000G2_UCODE_API_MAX,
- 	.ucode_api_min = IWL6000G2_UCODE_API_MIN,
-@@ -584,7 +584,7 @@ struct iwl_cfg iwl6000g2a_2abg_cfg = {
- };
- 
- struct iwl_cfg iwl6000g2a_2bg_cfg = {
--	.name = "6000 Series 2x2 BG Gen2a",
-+	.name = "Intel(R) Centrino(R) Advanced-N 6205 BG",
- 	.fw_name_pre = IWL6000G2A_FW_PRE,
- 	.ucode_api_max = IWL6000G2_UCODE_API_MAX,
- 	.ucode_api_min = IWL6000G2_UCODE_API_MIN,
+diff --git a/drivers/ata/pata_hpt366.c b/drivers/ata/pata_hpt366.c
+index 7688868..bd52749 100644
+--- a/drivers/ata/pata_hpt366.c
++++ b/drivers/ata/pata_hpt366.c
+@@ -6,7 +6,7 @@
+  * linux/drivers/ide/pci/hpt366.c		Version 0.36	April 25, 2003
+  *
+  * Copyright (C) 1999-2003		Andre Hedrick <andre@linux-ide.org>
+- * Portions Copyright (C) 2001	        Sun Microsystems, Inc.
++ * Portions Copyright (C) 2001	        Oracle and/or its affiliates. 
+  * Portions Copyright (C) 2003		Red Hat Inc
+  *
+  *
+diff --git a/drivers/ata/pata_hpt37x.c b/drivers/ata/pata_hpt37x.c
+index 9ae4c08..442575e 100644
+--- a/drivers/ata/pata_hpt37x.c
++++ b/drivers/ata/pata_hpt37x.c
+@@ -6,7 +6,7 @@
+  * linux/drivers/ide/pci/hpt366.c		Version 0.36	April 25, 2003
+  *
+  * Copyright (C) 1999-2003		Andre Hedrick <andre@linux-ide.org>
+- * Portions Copyright (C) 2001	        Sun Microsystems, Inc.
++ * Portions Copyright (C) 2001	        Oracle and/or its affiliates. 
+  * Portions Copyright (C) 2003		Red Hat Inc
+  * Portions Copyright (C) 2005-2009	MontaVista Software, Inc.
+  *
+diff --git a/drivers/ata/pata_hpt3x2n.c b/drivers/ata/pata_hpt3x2n.c
+index 32f3463..d0780c8 100644
+--- a/drivers/ata/pata_hpt3x2n.c
++++ b/drivers/ata/pata_hpt3x2n.c
+@@ -6,7 +6,7 @@
+  * linux/drivers/ide/pci/hpt366.c		Version 0.36	April 25, 2003
+  *
+  * Copyright (C) 1999-2003		Andre Hedrick <andre@linux-ide.org>
+- * Portions Copyright (C) 2001	        Sun Microsystems, Inc.
++ * Portions Copyright (C) 2001	        Oracle and/or its affiliates. 
+  * Portions Copyright (C) 2003		Red Hat Inc
+  * Portions Copyright (C) 2005-2009	MontaVista Software, Inc.
+  *
+diff --git a/drivers/ata/pata_serverworks.c b/drivers/ata/pata_serverworks.c
+index 86dd714..a8dd665 100644
+--- a/drivers/ata/pata_serverworks.c
++++ b/drivers/ata/pata_serverworks.c
+@@ -10,7 +10,7 @@
+  * Copyright (C) 1998-2000 Michel Aubry
+  * Copyright (C) 1998-2000 Andrzej Krzysztofowicz
+  * Copyright (C) 1998-2000 Andre Hedrick <andre@linux-ide.org>
+- * Portions copyright (c) 2001 Sun Microsystems
++ * Portions copyright (c) 2001 Oracle and/or its affiliates. 
+  *
+  *
+  * RCC/ServerWorks IDE driver for Linux
 -- 
-1.7.0.4
+1.7.1
 
