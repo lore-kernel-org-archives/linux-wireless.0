@@ -1,51 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f46.google.com ([209.85.215.46]:44208 "EHLO
-	mail-ew0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754892Ab0KFOtz (ORCPT
+Received: from mail-yx0-f174.google.com ([209.85.213.174]:33249 "EHLO
+	mail-yx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750768Ab0K0GVi (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 6 Nov 2010 10:49:55 -0400
-Received: by mail-ew0-f46.google.com with SMTP id 7so2253925ewy.19
-        for <linux-wireless@vger.kernel.org>; Sat, 06 Nov 2010 07:49:54 -0700 (PDT)
-From: Ivo van Doorn <ivdoorn@gmail.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Subject: [PATCH 13/18] rt2x00: checkpatch.pl error fixes for rt2x00queue.c
-Date: Sat, 6 Nov 2010 15:47:25 +0100
-Cc: linux-wireless@vger.kernel.org
-References: <201011061544.00876.IvDoorn@gmail.com> <201011061546.53938.IvDoorn@gmail.com> <201011061547.09763.IvDoorn@gmail.com>
-In-Reply-To: <201011061547.09763.IvDoorn@gmail.com>
-MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Message-Id: <201011061547.26776.IvDoorn@gmail.com>
+	Sat, 27 Nov 2010 01:21:38 -0500
+From: "Justin P. Mattock" <justinmattock@gmail.com>
+To: trivial@kernel.org
+Cc: linux-rdma@vger.kernel.org, linux-ide@vger.kernel.org,
+	linux-mtd@lists.infradead.org, linux-wireless@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: [RFC 0/9] Change the copyright info. 
+Date: Fri, 26 Nov 2010 22:21:10 -0800
+Message-Id: <1290838879-11038-1-git-send-email-justinmattock@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Mark Einon <mark.einon@gmail.com>
 
-rt2x00queue.c:804: ERROR: space prohibited after that open parenthesis '('
-rt2x00queue.c:805: ERROR: space prohibited before that close parenthesis ')'
 
-Signed-off-by: Mark Einon <mark.einon@gmail.com>
-Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
----
- drivers/net/wireless/rt2x00/rt2x00queue.c |    4 ++--
- 1 files changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/rt2x00/rt2x00queue.c b/drivers/net/wireless/rt2x00/rt2x00queue.c
-index 4e2a8c2..32d6a17 100644
---- a/drivers/net/wireless/rt2x00/rt2x00queue.c
-+++ b/drivers/net/wireless/rt2x00/rt2x00queue.c
-@@ -801,8 +801,8 @@ static int rt2x00queue_alloc_entries(struct data_queue *queue,
- 		return -ENOMEM;
- 
- #define QUEUE_ENTRY_PRIV_OFFSET(__base, __index, __limit, __esize, __psize) \
--	( ((char *)(__base)) + ((__limit) * (__esize)) + \
--	    ((__index) * (__psize)) )
-+	(((char *)(__base)) + ((__limit) * (__esize)) + \
-+	    ((__index) * (__psize)))
- 
- 	for (i = 0; i < queue->limit; i++) {
- 		entries[i].flags = 0;
--- 
-1.7.2.3
 
+
+
+
+Below you will find a set of patches, that update the copyright info from
+Sun Microsystems to Oracle.
+
+Please let me know if I missed anything and/or should make changes..
+
+
+ drivers/ata/pata_hpt366.c                      |    2 +-
+ drivers/ata/pata_hpt37x.c                      |    2 +-
+ drivers/ata/pata_hpt3x2n.c                     |    2 +-
+ drivers/ata/pata_serverworks.c                 |    2 +-
+ drivers/char/nvram.c                           |    2 +-
+ drivers/ide/hpt366.c                           |    2 +-
+ drivers/ide/serverworks.c                      |    2 +-
+ drivers/infiniband/core/agent.c                |    2 +-
+ drivers/infiniband/core/cache.c                |    2 +-
+ drivers/infiniband/core/cm.c                   |    2 +-
+ drivers/infiniband/core/device.c               |    2 +-
+ drivers/infiniband/core/fmr_pool.c             |    2 +-
+ drivers/infiniband/core/iwcm.c                 |    2 +-
+ drivers/infiniband/core/mad_priv.h             |    2 +-
+ drivers/infiniband/core/packer.c               |    2 +-
+ drivers/infiniband/core/smi.c                  |    2 +-
+ drivers/infiniband/core/sysfs.c                |    2 +-
+ drivers/infiniband/core/ud_header.c            |    2 +-
+ drivers/infiniband/core/user_mad.c             |    2 +-
+ drivers/infiniband/core/verbs.c                |    2 +-
+ drivers/infiniband/hw/amso1100/c2_cq.c         |    2 +-
+ drivers/infiniband/hw/mthca/mthca_av.c         |    2 +-
+ drivers/infiniband/hw/mthca/mthca_cq.c         |    2 +-
+ drivers/infiniband/hw/mthca/mthca_dev.h        |    2 +-
+ drivers/infiniband/hw/mthca/mthca_doorbell.h   |    2 +-
+ drivers/infiniband/hw/mthca/mthca_main.c       |    2 +-
+ drivers/infiniband/hw/mthca/mthca_provider.c   |    2 +-
+ drivers/infiniband/ulp/ipoib/ipoib.h           |    2 +-
+ drivers/infiniband/ulp/ipoib/ipoib_ib.c        |    2 +-
+ drivers/infiniband/ulp/ipoib/ipoib_main.c      |    2 +-
+ drivers/infiniband/ulp/ipoib/ipoib_multicast.c |    2 +-
+ drivers/mtd/maps/scb2_flash.c                  |    2 +-
+ drivers/net/cassini.c                          |    2 +-
+ drivers/net/cassini.h                          |    4 ++--
+ drivers/net/mlx4/cq.c                          |    2 +-
+ drivers/net/mlx4/main.c                        |    2 +-
+ drivers/net/mlx4/mlx4.h                        |    2 +-
+ drivers/net/natsemi.c                          |    2 +-
+ drivers/net/tg3.c                              |    2 +-
+ drivers/net/tg3.h                              |    2 +-
+ include/linux/ethtool.h                        |    4 ++--
+ include/linux/mlx4/doorbell.h                  |    2 +-
+ include/rdma/ib_cache.h                        |    2 +-
+ include/rdma/ib_cm.h                           |    2 +-
+ include/rdma/ib_fmr_pool.h                     |    2 +-
+ include/rdma/ib_verbs.h                        |    2 +-
+ 46 files changed, 48 insertions(+), 48 deletions(-)
+
+
+Justin P. Mattock
