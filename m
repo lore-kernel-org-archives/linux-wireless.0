@@ -1,182 +1,30 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:40808 "EHLO nbd.name"
-	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1756510Ab0KPSUh (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 16 Nov 2010 13:20:37 -0500
-From: Felix Fietkau <nbd@openwrt.org>
-To: linux-wireless@vger.kernel.org
-Cc: linville@tuxdriver.com, lrodriguez@atheros.com
-Subject: [PATCH] ath9k_hw: add support for reading EEPROM data from the internal OTP ROM
-Date: Tue, 16 Nov 2010 19:20:28 +0100
-Message-Id: <1289931628-83869-1-git-send-email-nbd@openwrt.org>
+Received: from sj-iport-5.cisco.com ([171.68.10.87]:23042 "EHLO
+	sj-iport-5.cisco.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753495Ab0K0VRf (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 27 Nov 2010 16:17:35 -0500
+From: Roland Dreier <rdreier@cisco.com>
+To: "Justin P. Mattock" <justinmattock@gmail.com>
+Cc: trivial@kernel.org, linux-rdma@vger.kernel.org,
+	linux-ide@vger.kernel.org, linux-mtd@lists.infradead.org,
+	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [RFC 0/9] Change the copyright info.
+References: <1290838879-11038-1-git-send-email-justinmattock@gmail.com>
+Date: Sat, 27 Nov 2010 13:17:30 -0800
+In-Reply-To: <1290838879-11038-1-git-send-email-justinmattock@gmail.com>
+	(Justin P. Mattock's message of "Fri, 26 Nov 2010 22:21:10 -0800")
+Message-ID: <adaoc9afout.fsf@cisco.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Some of the new AR9003 cards do not come with an external EEPROM chip
-anymore. Calibration data on these cards is stored in the OTP ROM on
-the chip.
-This patch adds support for reading this data, and also adds support
-for different EEPROM chip sizes (512 bytes instead of 1K).
+ > Below you will find a set of patches, that update the copyright info from
+ > Sun Microsystems to Oracle.
 
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
----
- drivers/net/wireless/ath/ath9k/ar9003_eeprom.c |   90 ++++++++++++++++++++++--
- drivers/net/wireless/ath/ath9k/ar9003_eeprom.h |    9 +++
- 2 files changed, 93 insertions(+), 6 deletions(-)
+Are you working for Oracle?  If so I would like to see these patches
+with an @oracle.com signed-off-by address.  If not let's let the
+companies involved sort out the copyrights.
 
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
-index a88fe0d..edc686f 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
-@@ -748,6 +748,36 @@ error:
- 	return false;
- }
- 
-+static bool ar9300_otp_read_word(struct ath_hw *ah, int addr, u32 *data)
-+{
-+	REG_READ(ah, AR9300_OTP_BASE + (4 * addr));
-+
-+	if (!ath9k_hw_wait(ah, AR9300_OTP_STATUS, AR9300_OTP_STATUS_TYPE,
-+			   AR9300_OTP_STATUS_VALID, 1000))
-+		return false;
-+
-+	*data = REG_READ(ah, AR9300_OTP_READ_DATA);
-+	return true;
-+}
-+
-+static bool ar9300_read_otp(struct ath_hw *ah, int address, u8 *buffer,
-+			    int count)
-+{
-+	u32 data;
-+	int i;
-+
-+	for (i = 0; i < count; i++) {
-+		int offset = 8 * ((address - i) % 4);
-+		if (!ar9300_otp_read_word(ah, (address - i) / 4, &data))
-+			return false;
-+
-+		buffer[i] = (data >> offset) & 0xff;
-+	}
-+
-+	return true;
-+}
-+
-+
- static void ar9300_comp_hdr_unpack(u8 *best, int *code, int *reference,
- 				   int *length, int *major, int *minor)
- {
-@@ -863,6 +893,26 @@ static int ar9300_compress_decision(struct ath_hw *ah,
- 	return 0;
- }
- 
-+typedef bool (*eeprom_read_op)(struct ath_hw *ah, int address, u8 *buffer,
-+			       int count);
-+
-+static bool ar9300_check_header(void *data)
-+{
-+	u32 *word = data;
-+	return !(*word == 0 || *word == ~0);
-+}
-+
-+static bool ar9300_check_eeprom_header(struct ath_hw *ah, eeprom_read_op read,
-+				       int base_addr)
-+{
-+	u8 header[4];
-+
-+	if (!read(ah, base_addr, header, 4))
-+		return false;
-+
-+	return ar9300_check_header(header);
-+}
-+
- /*
-  * Read the configuration data from the eeprom.
-  * The data can be put in any specified memory buffer.
-@@ -883,6 +933,7 @@ static int ar9300_eeprom_restore_internal(struct ath_hw *ah,
- 	int it;
- 	u16 checksum, mchecksum;
- 	struct ath_common *common = ath9k_hw_common(ah);
-+	eeprom_read_op read;
- 
- 	word = kzalloc(2048, GFP_KERNEL);
- 	if (!word)
-@@ -890,14 +941,42 @@ static int ar9300_eeprom_restore_internal(struct ath_hw *ah,
- 
- 	memcpy(mptr, &ar9300_default, mdata_size);
- 
-+	read = ar9300_read_eeprom;
- 	cptr = AR9300_BASE_ADDR;
-+	ath_print(common, ATH_DBG_EEPROM,
-+		"Trying EEPROM accesss at Address 0x%04x\n", cptr);
-+	if (ar9300_check_eeprom_header(ah, read, cptr))
-+		goto found;
-+
-+	cptr = AR9300_BASE_ADDR_512;
-+	ath_print(common, ATH_DBG_EEPROM,
-+		"Trying EEPROM accesss at Address 0x%04x\n", cptr);
-+	if (ar9300_check_eeprom_header(ah, read, cptr))
-+		goto found;
-+
-+	read = ar9300_read_otp;
-+	cptr = AR9300_BASE_ADDR;
-+	ath_print(common, ATH_DBG_EEPROM,
-+		"Trying OTP accesss at Address 0x%04x\n", cptr);
-+	if (ar9300_check_eeprom_header(ah, read, cptr))
-+		goto found;
-+
-+	cptr = AR9300_BASE_ADDR_512;
-+	ath_print(common, ATH_DBG_EEPROM,
-+		"Trying OTP accesss at Address 0x%04x\n", cptr);
-+	if (ar9300_check_eeprom_header(ah, read, cptr))
-+		goto found;
-+
-+	goto fail;
-+
-+found:
-+	ath_print(common, ATH_DBG_EEPROM, "Found valid EEPROM data");
-+
- 	for (it = 0; it < MSTATE; it++) {
--		if (!ar9300_read_eeprom(ah, cptr, word, COMP_HDR_LEN))
-+		if (!read(ah, cptr, word, COMP_HDR_LEN))
- 			goto fail;
- 
--		if ((word[0] == 0 && word[1] == 0 && word[2] == 0 &&
--		     word[3] == 0) || (word[0] == 0xff && word[1] == 0xff
--				       && word[2] == 0xff && word[3] == 0xff))
-+		if (!ar9300_check_header(word))
- 			break;
- 
- 		ar9300_comp_hdr_unpack(word, &code, &reference,
-@@ -914,8 +993,7 @@ static int ar9300_eeprom_restore_internal(struct ath_hw *ah,
- 		}
- 
- 		osize = length;
--		ar9300_read_eeprom(ah, cptr, word,
--				   COMP_HDR_LEN + osize + COMP_CKSUM_LEN);
-+		read(ah, cptr, word, COMP_HDR_LEN + osize + COMP_CKSUM_LEN);
- 		checksum = ar9300_comp_cksum(&word[COMP_HDR_LEN], length);
- 		mchecksum = word[COMP_HDR_LEN + osize] |
- 		    (word[COMP_HDR_LEN + osize + 1] << 8);
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.h b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.h
-index 3c533bb..9a21845 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.h
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.h
-@@ -79,6 +79,15 @@
- #define FIXED_CCA_THRESHOLD 15
- 
- #define AR9300_BASE_ADDR 0x3ff
-+#define AR9300_BASE_ADDR_512 0x1ff
-+
-+#define AR9300_OTP_BASE			0x14000
-+#define AR9300_OTP_STATUS		0x15f18
-+#define AR9300_OTP_STATUS_TYPE		0x7
-+#define AR9300_OTP_STATUS_VALID		0x4
-+#define AR9300_OTP_STATUS_ACCESS_BUSY	0x2
-+#define AR9300_OTP_STATUS_SM_BUSY	0x1
-+#define AR9300_OTP_READ_DATA		0x15f1c
- 
- enum targetPowerHTRates {
- 	HT_TARGET_RATE_0_8_16,
--- 
-1.7.3.2
-
+ - R.
