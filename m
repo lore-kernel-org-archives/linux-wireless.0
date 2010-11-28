@@ -1,72 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:58406 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751498Ab0KXR7p (ORCPT
+Received: from external1.orbit-lab.org ([128.6.192.131]:32939 "HELO
+	external1.orbit-lab.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1750982Ab0K1UCy (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 24 Nov 2010 12:59:45 -0500
-Date: Wed, 24 Nov 2010 12:50:36 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Cc: Thomas =?iso-8859-1?Q?B=E4chler?= <thomas@archlinux.org>,
-	linux-wireless@vger.kernel.org
-Subject: Re: [ANN] wireless-regdb: master-2010-11-22
-Message-ID: <20101124175035.GG7435@tuxdriver.com>
-References: <E1PKkCh-0005Ay-R2@sipsolutions.net>
- <4CED4464.2000106@archlinux.org>
- <20101124170639.GD7435@tuxdriver.com>
- <AANLkTin2n7ofZ0oom_aD+V4aFZ3dti1P77Mh6bpZOE6Z@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-In-Reply-To: <AANLkTin2n7ofZ0oom_aD+V4aFZ3dti1P77Mh6bpZOE6Z@mail.gmail.com>
+	Sun, 28 Nov 2010 15:02:54 -0500
+Received: from repository3.orbit-lab.org (repository3.orbit-lab.org [10.50.0.41])
+	by external1.orbit-lab.org (Postfix) with ESMTP id 75391418D8
+	for <linux-wireless@vger.kernel.org>; Sun, 28 Nov 2010 14:57:56 -0500 (EST)
+Subject: Compat-wireless release for 2010-11-28 is baked
+To: <linux-wireless@vger.kernel.org>
+Message-Id: <20101128200252.94EF140F97@repository3.orbit-lab.org>
+Date: Sun, 28 Nov 2010 15:02:52 -0500 (EST)
+From: compat@orbit-lab.org (Compat-wireless cronjob account)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Nov 24, 2010 at 09:33:36AM -0800, Luis R. Rodriguez wrote:
-> On Wed, Nov 24, 2010 at 9:06 AM, John W. Linville
-> <linville@tuxdriver.com> wrote:
-> > On Wed, Nov 24, 2010 at 05:59:16PM +0100, Thomas Bächler wrote:
-> >> Am 23.11.2010 05:10, schrieb
-> >> wireless-cdvu00un1VgdHxzADdlk8Q@public.gmane.org:
-> >> > A new release of wireless-regdb (master-2010-11-22) is available at:
-> >> >
-> >> > http://wireless.kernel.org/download/wireless-regdb/wireless-regdb-2010.11.22.tar.bz2
-> >> >
-> >> > SHA1 sum: d0b008b4d32105cf6a87860b5a69e8066b03baaa
-> >> >
-> >> >
-> >> > For your convenience the individual regulatory.bin file can be downloaded from:
-> >> >
-> >> > http://wireless.kernel.org/download/wireless-regdb/regulatory.bins/2010.11.22-regulatory.bin
-> >> >
-> >> > SHA1 sum d7e558216ebe4d5ad01ccb0029c64456f740b9fd
-> >>
-> >> Hello,
-> >>
-> >> the binary does not work for me:
-> >>
-> >> $ sha1sum 2010.11.22-regulatory.bin
-> >> d7e558216ebe4d5ad01ccb0029c64456f740b9fd  2010.11.22-regulatory.bin
-> >> $ regdbdump ./2010.11.22-regulatory.bin
-> >> Database signature verification failed.
-> >>
-> >> The old 2009.11.25-regulatory.bin works fine.
-> >
-> > It seems to be working for me, even on a freshly installed RHEL6 box
-> > (so no random keys scattered about).
-> >
-> > Anyone else seeing this issue?  I seem to remember that we had a
-> > similar problem some time back...?
-> 
-> I see the same issue:
-> 
-> mcgrof@tux ~/devel/crda (git::master)$ ./regdbdump
-> /home/mcgrof/2010.11.22-regulatory.bin
-> Database signature verification failed.
 
-Alright, looks like I mislocated a key file when I switched laptops.
-I think it is corrected now...give it a try?
+compat-wireless code metrics
 
-John
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+    749168 - Total upstream lines of code being pulled
+      2201 - backport code changes
+      1939 - backport code additions
+       262 - backport code deletions
+      6441 - backport from compat module
+      8642 - total backport code
+    1.1535 - % of code consists of backport work
+      1534 - Crap changes not yet posted
+      1491 - Crap additions not yet posted
+        43 - Crap deletions not yet posted
+    0.2048 - % of crap code
+
+Base tree: linux-next.git
+Base tree version: next-20101126
+compat-wireless release: compat-wireless-2010-11-23-6-gefeeae7-pc
