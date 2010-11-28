@@ -1,48 +1,169 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.perches.com ([173.55.12.10]:1762 "EHLO mail.perches.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757237Ab0KUCks (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 20 Nov 2010 21:40:48 -0500
-From: Joe Perches <joe@perches.com>
-To: Luciano Coelho <luciano.coelho@nokia.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: [PATCH 61/62] wl12xx: Use static const
-Date: Sat, 20 Nov 2010 18:39:02 -0800
-Message-Id: <dd2fadcc20f85cb3da9e11db69353f67cb8ef064.1290305776.git.joe@perches.com>
-In-Reply-To: <cover.1290305773.git.joe@perches.com>
-References: <cover.1290305773.git.joe@perches.com>
+Received: from mail-wy0-f174.google.com ([74.125.82.174]:57205 "EHLO
+	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751824Ab0K1JkB (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 28 Nov 2010 04:40:01 -0500
+Received: by wyb28 with SMTP id 28so3370149wyb.19
+        for <linux-wireless@vger.kernel.org>; Sun, 28 Nov 2010 01:39:59 -0800 (PST)
+From: =?utf-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+To: linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>
+Cc: b43-dev@lists.infradead.org,
+	=?utf-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+Subject: [PATCH][RFC] ssb: extract indexes for power tables
+Date: Sun, 28 Nov 2010 10:39:35 +0100
+Message-Id: <1290937176-13510-1-git-send-email-zajec5@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Using static const generally increases object text and decreases data size.
-It also generally decreases overall object size.
-
-   text	   data	    bss	    dec	    hex	filename
-  13071	     56	   2880	  16007	   3e87	drivers/net/wireless/wl12xx/wl1271_acx.o.old
-  13071	     56	   2880	  16007	   3e87	drivers/net/wireless/wl12xx/wl1271_acx.o.new
-
-Signed-off-by: Joe Perches <joe@perches.com>
+Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
 ---
- drivers/net/wireless/wl12xx/wl1271_acx.c |    4 +++-
- 1 files changed, 3 insertions(+), 1 deletions(-)
+This patch adds a lot of similar definitions. Like masks and shifts being the
+same for every frequency. Is that OK?
+---
+ drivers/ssb/pci.c            |   44 ++++++++++++++++++++++++++++++++++++++++++
+ include/linux/ssb/ssb.h      |    4 +++
+ include/linux/ssb/ssb_regs.h |   40 ++++++++++++++++++++++++++++++++++++++
+ 3 files changed, 88 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/net/wireless/wl12xx/wl1271_acx.c b/drivers/net/wireless/wl12xx/wl1271_acx.c
-index bd7f95f..c688471 100644
---- a/drivers/net/wireless/wl12xx/wl1271_acx.c
-+++ b/drivers/net/wireless/wl12xx/wl1271_acx.c
-@@ -1231,7 +1231,9 @@ int wl1271_acx_set_ht_capabilities(struct wl1271 *wl,
- 				    bool allow_ht_operation)
- {
- 	struct wl1271_acx_ht_capabilities *acx;
--	u8 mac_address[ETH_ALEN] = {0xff, 0xff, 0xff, 0xff, 0xff, 0xff};
-+	static const u8 mac_address[ETH_ALEN] = {
-+		0xff, 0xff, 0xff, 0xff, 0xff, 0xff
-+	};
- 	int ret = 0;
+diff --git a/drivers/ssb/pci.c b/drivers/ssb/pci.c
+index f529663..158449e 100644
+--- a/drivers/ssb/pci.c
++++ b/drivers/ssb/pci.c
+@@ -406,6 +406,46 @@ static void sprom_extract_r123(struct ssb_sprom *out, const u16 *in)
+ 	out->antenna_gain.ghz5.a3 = gain;
+ }
  
- 	wl1271_debug(DEBUG_ACX, "acx ht capabilities setting");
++/* Revs 4 5 and 8 have partially shared layout */
++static void sprom_extract_r458(struct ssb_sprom *out, const u16 *in)
++{
++	SPEX(txpid2g[0], SSB_SPROM4_TXPID2G01,
++	     SSB_SPROM4_TXPID2G0, SSB_SPROM4_TXPID2G0_SHIFT);
++	SPEX(txpid2g[1], SSB_SPROM4_TXPID2G01,
++	     SSB_SPROM4_TXPID2G1, SSB_SPROM4_TXPID2G1_SHIFT);
++	SPEX(txpid2g[2], SSB_SPROM4_TXPID2G23,
++	     SSB_SPROM4_TXPID2G2, SSB_SPROM4_TXPID2G2_SHIFT);
++	SPEX(txpid2g[3], SSB_SPROM4_TXPID2G23,
++	     SSB_SPROM4_TXPID2G3, SSB_SPROM4_TXPID2G3_SHIFT);
++
++	SPEX(txpid5gl[0], SSB_SPROM4_TXPID5GL01,
++	     SSB_SPROM4_TXPID5GL0, SSB_SPROM4_TXPID5GL0_SHIFT);
++	SPEX(txpid5gl[1], SSB_SPROM4_TXPID5GL01,
++	     SSB_SPROM4_TXPID5GL1, SSB_SPROM4_TXPID5GL1_SHIFT);
++	SPEX(txpid5gl[2], SSB_SPROM4_TXPID5GL23,
++	     SSB_SPROM4_TXPID5GL2, SSB_SPROM4_TXPID5GL2_SHIFT);
++	SPEX(txpid5gl[3], SSB_SPROM4_TXPID5GL23,
++	     SSB_SPROM4_TXPID5GL3, SSB_SPROM4_TXPID5GL3_SHIFT);
++
++	SPEX(txpid5g[0], SSB_SPROM4_TXPID5G01,
++	     SSB_SPROM4_TXPID5G0, SSB_SPROM4_TXPID5G0_SHIFT);
++	SPEX(txpid5g[1], SSB_SPROM4_TXPID5G01,
++	     SSB_SPROM4_TXPID5G1, SSB_SPROM4_TXPID5G1_SHIFT);
++	SPEX(txpid5g[2], SSB_SPROM4_TXPID5G23,
++	     SSB_SPROM4_TXPID5G2, SSB_SPROM4_TXPID5G2_SHIFT);
++	SPEX(txpid5g[3], SSB_SPROM4_TXPID5G23,
++	     SSB_SPROM4_TXPID5G3, SSB_SPROM4_TXPID5G3_SHIFT);
++
++	SPEX(txpid5gh[0], SSB_SPROM4_TXPID5GH01,
++	     SSB_SPROM4_TXPID5GH0, SSB_SPROM4_TXPID5GH0_SHIFT);
++	SPEX(txpid5gh[1], SSB_SPROM4_TXPID5GH01,
++	     SSB_SPROM4_TXPID5GH1, SSB_SPROM4_TXPID5GH1_SHIFT);
++	SPEX(txpid5gh[2], SSB_SPROM4_TXPID5GH23,
++	     SSB_SPROM4_TXPID5GH2, SSB_SPROM4_TXPID5GH2_SHIFT);
++	SPEX(txpid5gh[3], SSB_SPROM4_TXPID5GH23,
++	     SSB_SPROM4_TXPID5GH3, SSB_SPROM4_TXPID5GH3_SHIFT);
++}
++
+ static void sprom_extract_r45(struct ssb_sprom *out, const u16 *in)
+ {
+ 	int i;
+@@ -471,6 +511,8 @@ static void sprom_extract_r45(struct ssb_sprom *out, const u16 *in)
+ 	memcpy(&out->antenna_gain.ghz5, &out->antenna_gain.ghz24,
+ 	       sizeof(out->antenna_gain.ghz5));
+ 
++	sprom_extract_r458(out, in);
++
+ 	/* TODO - get remaining rev 4 stuff needed */
+ }
+ 
+@@ -561,6 +603,8 @@ static void sprom_extract_r8(struct ssb_sprom *out, const u16 *in)
+ 	memcpy(&out->antenna_gain.ghz5, &out->antenna_gain.ghz24,
+ 	       sizeof(out->antenna_gain.ghz5));
+ 
++	sprom_extract_r458(out, in);
++
+ 	/* TODO - get remaining rev 8 stuff needed */
+ }
+ 
+diff --git a/include/linux/ssb/ssb.h b/include/linux/ssb/ssb.h
+index 623b704..9659eff 100644
+--- a/include/linux/ssb/ssb.h
++++ b/include/linux/ssb/ssb.h
+@@ -55,6 +55,10 @@ struct ssb_sprom {
+ 	u8 tri5gl;		/* 5.2GHz TX isolation */
+ 	u8 tri5g;		/* 5.3GHz TX isolation */
+ 	u8 tri5gh;		/* 5.8GHz TX isolation */
++	u8 txpid2g[4];		/* 2GHz TX power index */
++	u8 txpid5gl[4];		/* 4.9 - 5.1GHz TX power index */
++	u8 txpid5g[4];		/* 5.1 - 5.5GHz TX power index */
++	u8 txpid5gh[4];		/* 5.5 - ...GHz TX power index */
+ 	u8 rxpo2g;		/* 2GHz RX power offset */
+ 	u8 rxpo5g;		/* 5GHz RX power offset */
+ 	u8 rssisav2g;		/* 2GHz RSSI params */
+diff --git a/include/linux/ssb/ssb_regs.h b/include/linux/ssb/ssb_regs.h
+index 11daf9c..489f7b6 100644
+--- a/include/linux/ssb/ssb_regs.h
++++ b/include/linux/ssb/ssb_regs.h
+@@ -299,6 +299,46 @@
+ #define  SSB_SPROM4_AGAIN2_SHIFT	0
+ #define  SSB_SPROM4_AGAIN3		0xFF00	/* Antenna 3 */
+ #define  SSB_SPROM4_AGAIN3_SHIFT	8
++#define SSB_SPROM4_TXPID2G01		0x0062 	/* TX Power Index 2GHz */
++#define  SSB_SPROM4_TXPID2G0		0x00FF
++#define  SSB_SPROM4_TXPID2G0_SHIFT	0
++#define  SSB_SPROM4_TXPID2G1		0xFF00
++#define  SSB_SPROM4_TXPID2G1_SHIFT	8
++#define SSB_SPROM4_TXPID2G23		0x0064 	/* TX Power Index 2GHz */
++#define  SSB_SPROM4_TXPID2G2		0x00FF
++#define  SSB_SPROM4_TXPID2G2_SHIFT	0
++#define  SSB_SPROM4_TXPID2G3		0xFF00
++#define  SSB_SPROM4_TXPID2G3_SHIFT	8
++#define SSB_SPROM4_TXPID5G01		0x0066 	/* TX Power Index 5GHz middle subband */
++#define  SSB_SPROM4_TXPID5G0		0x00FF
++#define  SSB_SPROM4_TXPID5G0_SHIFT	0
++#define  SSB_SPROM4_TXPID5G1		0xFF00
++#define  SSB_SPROM4_TXPID5G1_SHIFT	8
++#define SSB_SPROM4_TXPID5G23		0x0068 	/* TX Power Index 5GHz middle subband */
++#define  SSB_SPROM4_TXPID5G2		0x00FF
++#define  SSB_SPROM4_TXPID5G2_SHIFT	0
++#define  SSB_SPROM4_TXPID5G3		0xFF00
++#define  SSB_SPROM4_TXPID5G3_SHIFT	8
++#define SSB_SPROM4_TXPID5GL01		0x006A 	/* TX Power Index 5GHz low subband */
++#define  SSB_SPROM4_TXPID5GL0		0x00FF
++#define  SSB_SPROM4_TXPID5GL0_SHIFT	0
++#define  SSB_SPROM4_TXPID5GL1		0xFF00
++#define  SSB_SPROM4_TXPID5GL1_SHIFT	8
++#define SSB_SPROM4_TXPID5GL23		0x006C 	/* TX Power Index 5GHz low subband */
++#define  SSB_SPROM4_TXPID5GL2		0x00FF
++#define  SSB_SPROM4_TXPID5GL2_SHIFT	0
++#define  SSB_SPROM4_TXPID5GL3		0xFF00
++#define  SSB_SPROM4_TXPID5GL3_SHIFT	8
++#define SSB_SPROM4_TXPID5GH01		0x006E 	/* TX Power Index 5GHz high subband */
++#define  SSB_SPROM4_TXPID5GH0		0x00FF
++#define  SSB_SPROM4_TXPID5GH0_SHIFT	0
++#define  SSB_SPROM4_TXPID5GH1		0xFF00
++#define  SSB_SPROM4_TXPID5GH1_SHIFT	8
++#define SSB_SPROM4_TXPID5GH23		0x0070 	/* TX Power Index 5GHz high subband */
++#define  SSB_SPROM4_TXPID5GH2		0x00FF
++#define  SSB_SPROM4_TXPID5GH2_SHIFT	0
++#define  SSB_SPROM4_TXPID5GH3		0xFF00
++#define  SSB_SPROM4_TXPID5GH3_SHIFT	8
+ #define SSB_SPROM4_MAXP_BG		0x0080  /* Max Power BG in path 1 */
+ #define  SSB_SPROM4_MAXP_BG_MASK	0x00FF  /* Mask for Max Power BG */
+ #define  SSB_SPROM4_ITSSI_BG		0xFF00	/* Mask for path 1 itssi_bg */
 -- 
-1.7.3.2.245.g03276.dirty
+1.6.3.3
 
