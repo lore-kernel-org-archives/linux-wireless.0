@@ -1,49 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bear.ext.ti.com ([192.94.94.41]:60606 "EHLO bear.ext.ti.com"
+Received: from mail.perches.com ([173.55.12.10]:1918 "EHLO mail.perches.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751072Ab0KJLge (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 10 Nov 2010 06:36:34 -0500
-Message-ID: <4CDA83BD.2000306@ti.com>
-Date: Wed, 10 Nov 2010 13:36:29 +0200
-From: Gery Kahn <geryk@ti.com>
-Reply-To: geryk@ti.com
-MIME-Version: 1.0
-To: Juuso Oikarinen <juuso.oikarinen@nokia.com>
-CC: "Coelho Luciano (Nokia-MS/Helsinki)" <Luciano.Coelho@nokia.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH 2/2] Revert "wl1271: Change supported channel order for
- a more optimal scan"
-References: <1289384840-28305-1-git-send-email-juuso.oikarinen@nokia.com>	 <1289384840-28305-2-git-send-email-juuso.oikarinen@nokia.com>	 <4CDA7F7A.4000705@ti.com> <1289388086.2522.72.camel@wimaxnb.nmp.nokia.com>
-In-Reply-To: <1289388086.2522.72.camel@wimaxnb.nmp.nokia.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+	id S1750982Ab0K1KNy (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 28 Nov 2010 05:13:54 -0500
+Subject: Re: [PATCH 4/4] zd1211rw: remove unnecessary [kv][mcz]alloc casts
+From: Joe Perches <joe@perches.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Daniel Drake <dsd@gentoo.org>, Ulrich Kunitz <kune@deine-taler.de>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, netdev <netdev@vger.kernel.org>,
+	LKML <linux-kernel@vger.kernel.org>
+In-Reply-To: <1290938527.3467.5.camel@jlt3.sipsolutions.net>
+References: <cover.1290934782.git.joe@perches.com>
+	 <704bdd89d630b364043ac7a9ec0a110d311a17a2.1290934782.git.joe@perches.com>
+	 <1290935566.3467.0.camel@jlt3.sipsolutions.net>
+	 <1290936047.16349.13.camel@Joe-Laptop>
+	 <1290936606.3467.2.camel@jlt3.sipsolutions.net>
+	 <1290937845.16349.16.camel@Joe-Laptop>
+	 <1290938527.3467.5.camel@jlt3.sipsolutions.net>
+Content-Type: text/plain; charset="UTF-8"
+Date: Sun, 28 Nov 2010 02:13:52 -0800
+Message-ID: <1290939232.16349.32.camel@Joe-Laptop>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 11/10/2010 01:21 PM, Juuso Oikarinen wrote:
-> On Wed, 2010-11-10 at 12:18 +0100, ext Gery Kahn wrote:
->> On 11/10/2010 12:27 PM, juuso.oikarinen@nokia.com wrote:
->>> From: Juuso Oikarinen<juuso.oikarinen@nokia.com>
->>>
->>> This reverts commit fa21c7a9e4be439e217fe72edbd39b643b643791.
->>>
->>> The reverted patch caused more harm than benefit.
->>>
->>> Signed-off-by: Juuso Oikarinen<juuso.oikarinen@nokia.com>
->>>
->> Just couple words what harm it was?
->
-> The harm is that the supported channels are reported to user-space in
-> the order they are registered in the driver. The result of that is quite
-> messy in userspace PoV.
->
-> -Juuso
->
-Thank you for answer.
+On Sun, 2010-11-28 at 11:02 +0100, Johannes Berg wrote:
+> On Sun, 2010-11-28 at 01:50 -0800, Joe Perches wrote:
+> > Good memory you have Johannes...
+> > http://marc.info/?l=linux-netdev&m=117113743902549&w=3
+> I, err, not really, all this isn't making a whole lot of sense to me
+> right now :-)
+> The only thing I remembered was that there was something weird with
+> zd_addr_t ...
 
-The reason of doing such channel sorting was channel overlapping.
+Yes.  It's marked __nocast.
 
-Let's say for 11a (bandwidth 20MHz) it is not a problem.
-While 11g, preferred channel sorting would be 1,6,11,...
+> Did sparse become more reliable in face of errors?
 
-Gery
+Apparently not.
+
+If the kmalloc cast in zd_chip is removed:
+
+$ make C=1 drivers/net/wireless/zd1211rw/zd_chip.o
+  CHK     include/linux/version.h
+  CHK     include/generated/utsrelease.h
+  CALL    scripts/checksyscalls.sh
+  CHECK   drivers/net/wireless/zd1211rw/zd_chip.c
+arch/x86/include/asm/uaccess_32.h:197:9: error: attribute 'error': unknown attribute
+  CC      drivers/net/wireless/zd1211rw/zd_chip.o
+$
+
+If the __compiletime_<foo> uses in uaccess_32.h are removed,
+and the kmalloc cast in zd_chip is also removed:
+
+$ make C=1 drivers/net/wireless/zd1211rw/zd_chip.o
+  CHK     include/linux/version.h
+  CHK     include/generated/utsrelease.h
+  CC      arch/x86/kernel/asm-offsets.s
+  GEN     include/generated/asm-offsets.h
+  CALL    scripts/checksyscalls.sh
+  CHECK   drivers/net/wireless/zd1211rw/zd_chip.c
+drivers/net/wireless/zd1211rw/zd_chip.c:121:22: warning: implicit cast to nocast type
+  CC      drivers/net/wireless/zd1211rw/zd_chip.o
+$
 
