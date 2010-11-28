@@ -1,38 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:33694 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752447Ab0KBSAL (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 2 Nov 2010 14:00:11 -0400
-Received: from uucp by smtp.tuxdriver.com with local-rmail (Exim 4.63)
-	(envelope-from <linville@tuxdriver.com>)
-	id 1PDL9W-0007cn-Ed
-	for linux-wireless@vger.kernel.org; Tue, 02 Nov 2010 14:00:10 -0400
-Received: from linville-8530p.local (localhost.localdomain [127.0.0.1])
-	by linville-8530p.local (8.14.4/8.14.4) with ESMTP id oA2HtTZn006936
-	for <linux-wireless@vger.kernel.org>; Tue, 2 Nov 2010 13:55:30 -0400
-Received: (from linville@localhost)
-	by linville-8530p.local (8.14.4/8.14.4/Submit) id oA2HtTI3006935
-	for linux-wireless@vger.kernel.org; Tue, 2 Nov 2010 13:55:29 -0400
-Date: Tue, 2 Nov 2010 13:55:28 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: linux-wireless@vger.kernel.org
-Subject: tree borkage on git.kernel.org
-Message-ID: <20101102175528.GC2425@tuxdriver.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: from mail.perches.com ([173.55.12.10]:1892 "EHLO mail.perches.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751824Ab0K1JFy (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 28 Nov 2010 04:05:54 -0500
+From: Joe Perches <joe@perches.com>
+To: Daniel Drake <dsd@gentoo.org>, Ulrich Kunitz <kune@deine-taler.de>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: [PATCH 4/4] zd1211rw: remove unnecessary [kv][mcz]alloc casts
+Date: Sun, 28 Nov 2010 01:05:46 -0800
+Message-Id: <704bdd89d630b364043ac7a9ec0a110d311a17a2.1290934782.git.joe@perches.com>
+In-Reply-To: <cover.1290934782.git.joe@perches.com>
+References: <cover.1290934782.git.joe@perches.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-There was some sort of IT hiccup on kernel.org overnight, and at
-least the wireless trees (and probably others) there got restored
-from several days prior.  If you cloned or pulled the wireless trees
-in the last 48 hours or so, you should consider doing it again now.
+Signed-off-by: Joe Perches <joe@perches.com>
+---
+ drivers/net/wireless/zd1211rw/zd_chip.c |    3 +--
+ 1 files changed, 1 insertions(+), 2 deletions(-)
 
-In particular, you might also note that wireless-testing has been
-rebased on 2.6.37-rc1...
-
-John
+diff --git a/drivers/net/wireless/zd1211rw/zd_chip.c b/drivers/net/wireless/zd1211rw/zd_chip.c
+index 87a95bc..dfcebed 100644
+--- a/drivers/net/wireless/zd1211rw/zd_chip.c
++++ b/drivers/net/wireless/zd1211rw/zd_chip.c
+@@ -117,8 +117,7 @@ int zd_ioread32v_locked(struct zd_chip *chip, u32 *values, const zd_addr_t *addr
+ 
+ 	/* Allocate a single memory block for values and addresses. */
+ 	count16 = 2*count;
+-	a16 = (zd_addr_t *) kmalloc(count16 * (sizeof(zd_addr_t) + sizeof(u16)),
+-		                   GFP_KERNEL);
++	a16 = kmalloc(count16 * (sizeof(zd_addr_t) + sizeof(u16)), GFP_KERNEL);
+ 	if (!a16) {
+ 		dev_dbg_f(zd_chip_dev(chip),
+ 			  "error ENOMEM in allocation of a16\n");
 -- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+1.7.3.2.245.g03276.dirty
+
