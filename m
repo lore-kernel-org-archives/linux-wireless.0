@@ -1,59 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iw0-f174.google.com ([209.85.214.174]:46660 "EHLO
-	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750857Ab0KJVkS convert rfc822-to-8bit (ORCPT
+Received: from mail-bw0-f46.google.com ([209.85.214.46]:52247 "EHLO
+	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753866Ab0K1TPV (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 10 Nov 2010 16:40:18 -0500
-Received: by iwn10 with SMTP id 10so1279759iwn.19
-        for <linux-wireless@vger.kernel.org>; Wed, 10 Nov 2010 13:40:17 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <AANLkTikgUi-22TRWeQYUOsMAHR47_nAxjcs-jrrrWJ=r@mail.gmail.com>
-References: <AANLkTikVZT-hQvr83bTkuVENe8jPSG=LNMw5NTwUXCp1@mail.gmail.com>
- <AANLkTinT72TE_z2JW1x+pMHNys6jVEeGfkQZFAW_f+48@mail.gmail.com>
- <AANLkTikRLBYHjKzRZeo7+zuELv+tMgDKLmrmNjYL7GxU@mail.gmail.com>
- <AANLkTikx=wmDbQEz8bAsLKmjx88mQYsBjFctpntV3ex1@mail.gmail.com> <AANLkTikgUi-22TRWeQYUOsMAHR47_nAxjcs-jrrrWJ=r@mail.gmail.com>
-From: Ohad Ben-Cohen <ohad@wizery.com>
-Date: Wed, 10 Nov 2010 23:39:49 +0200
-Message-ID: <AANLkTinFuksTu02dXQiTTA_G48Zo8vajpedBoc8pmzG3@mail.gmail.com>
-Subject: Re: wl1271 sdio timeouts on omap3
-To: Joerie de Gram <j.de.gram@gmail.com>
+	Sun, 28 Nov 2010 14:15:21 -0500
+Received: by bwz15 with SMTP id 15so3283629bwz.19
+        for <linux-wireless@vger.kernel.org>; Sun, 28 Nov 2010 11:15:19 -0800 (PST)
+From: Helmut Schaa <helmut.schaa@googlemail.com>
+To: Tim Blechmann <tim@klingt.org>
+Subject: Re: rt61pci issue
+Date: Sun, 28 Nov 2010 20:14:12 +0100
 Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+References: <ibgpgg$a5m$1@dough.gmane.org> <201011120803.32721.helmut.schaa@googlemail.com> <201011251819.12913.tim@klingt.org>
+In-Reply-To: <201011251819.12913.tim@klingt.org>
+MIME-Version: 1.0
+Content-Type: Text/Plain;
+  charset="us-ascii"
+Message-Id: <201011282014.12465.helmut.schaa@googlemail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Nov 10, 2010 at 11:24 PM, Joerie de Gram <j.de.gram@gmail.com> wrote:
-> clock:          25000000 Hz
-> vdd:            7 (1.65 - 1.95 V)
-> bus mode:       2 (push-pull)
-> chip select:    0 (don't care)
-> power mode:     2 (on)
-> bus width:      2 (4 bits)
-> timing spec:    0 (legacy)
+Am Donnerstag 25 November 2010 schrieb Tim Blechmann:
+> > > > >> Mind to put a (maybe rate limited) printk into the interrupt thread
+> > > > >> that prints out "reg"
+> > > > >> and "reg_mcu" so that we can see which interrupts get triggered?
+> > > > > 
+> > > > > log attached, generated with:
+> > > > Thanks. Unfortunately nothing special in there. Mostly RX and TX
+> > > > interrupts. So there must be something else ...
+> > > 
+> > > Tim, is this on x86 hw? Or something else?
+> > 
+> > I don't know if this will do any good or harm but it could be worth a try
+> > as the spec for rt61pci says something like: "Don't enable interrupt
+> > mitigation in the same write as releasing the other masks.". Since we
+> > always write a mitigation period of 0xff == "No mitigation period" we can
+> > simply leave interrupt mitigation disabled.
+> > 
+> > I really don't have any clue if this will fix anything but it might be
+> > worth a try.
+> 
+> i have been running this patch for a few days and i haven't experienced the 
+> problem again.
 
-seems good...
+Ok, I'll officially submit the patch soon ...
 
-> It's a samsung GT-i8320 smartphone. Supposedly assembled correctly..
+> according to `top', the kernel thread `irq/16-0000:08:' still is the kernel 
+> thread, that is using the most cpu time (after an uptime of 8 hours) it is about 
+> 50 seconds, while the second most expensive kernel thread (`kworker/2:1') takes 
+> below 5 seconds of cpu time.
 
-heh. yeah.
+No idea :(
 
-> If I stop it from setting maximum clock speed, it appears to run at
-> 400 KHz and subsequently it (usually) manages to bring up the
-> interface. AP scans seem to complete just fine too (although they
-> yield no result, which is a different problem). It's still not
-> entirely stable though (bringing the interface down and back up again
-> results in another timeout).
-
-Assuming that the hw is good (and if the proprietary driver runs ok
-then it is) leaves us with mmc pins misconfiguration. Are you sure the
-lines are pulled up ?
-
-> Peeking at /dev/mem with the proprietary driver running suggests it
-> runs at a (usual) 24 MHz mmc clock.
-
-Yeah. but after passing the host controller divisor, it's exactly the
-same as the 25Mhz you see with the the mainline driver.
-
->
-> Joerie
->
+Helmut
