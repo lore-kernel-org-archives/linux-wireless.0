@@ -1,45 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iw0-f174.google.com ([209.85.214.174]:61214 "EHLO
-	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754179Ab0KKSTH convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 11 Nov 2010 13:19:07 -0500
-Received: by iwn10 with SMTP id 10so2456320iwn.19
-        for <linux-wireless@vger.kernel.org>; Thu, 11 Nov 2010 10:19:07 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <23232015.1011289487455461.JavaMail.wlan@CHBU500181>
-References: <17888045.991289487433290.JavaMail.wlan@CHBU500181> <23232015.1011289487455461.JavaMail.wlan@CHBU500181>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Thu, 11 Nov 2010 10:18:47 -0800
-Message-ID: <AANLkTinpan-k4J2Z-gB3vcRMHKpwtg0-Ra42S9WuS9Rr@mail.gmail.com>
-Subject: Re: [PATCH 1/9] ath5k: AHB port. Use generic DMA instead of PCI API.
-To: Wojciech Dubowik <dubowoj@neratec.com>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+Received: from mail.perches.com ([173.55.12.10]:1913 "EHLO mail.perches.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750779Ab0K1KDB (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 28 Nov 2010 05:03:01 -0500
+Subject: [PATCH V2 4/4] zd1211rw: document need for kmalloc cast
+From: Joe Perches <joe@perches.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Daniel Drake <dsd@gentoo.org>, Ulrich Kunitz <kune@deine-taler.de>,
+	linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-kernel@vger.kernel.org, netdev <netdev@vger.kernel.org>
+In-Reply-To: <1290936606.3467.2.camel@jlt3.sipsolutions.net>
+References: <cover.1290934782.git.joe@perches.com>
+	 <704bdd89d630b364043ac7a9ec0a110d311a17a2.1290934782.git.joe@perches.com>
+	 <1290935566.3467.0.camel@jlt3.sipsolutions.net>
+	 <1290936047.16349.13.camel@Joe-Laptop>
+	 <1290936606.3467.2.camel@jlt3.sipsolutions.net>
+Content-Type: text/plain; charset="UTF-8"
+Date: Sun, 28 Nov 2010 02:02:59 -0800
+Message-ID: <1290938579.16349.19.camel@Joe-Laptop>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Nov 11, 2010 at 6:57 AM, Wojciech Dubowik <dubowoj@neratec.com> wrote:
-> General comments for AHB bus support in ath5k:
->  - most of the original patches came from Felix Fetikau. I have used them as a reference and ported to current git tree
->  - tried with access point functionality with WPA2 and without encryption
->  - tested on AR5312 for AHB and AR5414 and AR5212 for PCI
->  - compat wireless from openwrt was used for testing these patches
->  - last two patches have to be applied together because otherwise hardware will crash on reset if
->  only number 9 is committed. I have kept them separated for better visibility
->
->
->
-> Generic DMA is needed for AHB support.
->
-> Signed-off-by: Wojciech Dubowik <Wojciech.Dubowik@neratec.com>
+Signed-off-by: Joe Perches <joe@perches.com>
+---
 
-Nice! You want to send these patches in a series as you have but use a
-cover letter to introduce and explain the series. This patch's commit
-log should only note that this uses the Generic DMA APIs in order to
-later support AHB. You can get yourself a cover letter using git
-format-patch --cover-letter. For more elaborate examples check out:
+V2: Just document the need for the cast
 
-http://wireless.kernel.org/en/developers/Documentation/git-guide
+diff --git a/drivers/net/wireless/zd1211rw/zd_chip.c b/drivers/net/wireless/zd1211rw/zd_chip.c
+index 87a95bc..dd0bb0c 100644
+--- a/drivers/net/wireless/zd1211rw/zd_chip.c
++++ b/drivers/net/wireless/zd1211rw/zd_chip.c
+@@ -117,6 +117,7 @@ int zd_ioread32v_locked(struct zd_chip *chip, u32 *values, const zd_addr_t *addr
+ 
+ 	/* Allocate a single memory block for values and addresses. */
+ 	count16 = 2*count;
++	/* zd_addr_t is __nocast, so the kmalloc needs an explicit cast */
+ 	a16 = (zd_addr_t *) kmalloc(count16 * (sizeof(zd_addr_t) + sizeof(u16)),
+ 		                   GFP_KERNEL);
+ 	if (!a16) {
 
-  Luis
+
