@@ -1,60 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:40709 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754938Ab0KJSBG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 10 Nov 2010 13:01:06 -0500
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Johannes Berg <johannes.berg@intel.com>,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Subject: [PATCH 12/16] iwlagn: re-enable calibration
-Date: Wed, 10 Nov 2010 09:56:46 -0800
-Message-Id: <1289411810-23093-13-git-send-email-wey-yi.w.guy@intel.com>
-In-Reply-To: <1289411810-23093-1-git-send-email-wey-yi.w.guy@intel.com>
-References: <1289411810-23093-1-git-send-email-wey-yi.w.guy@intel.com>
+Received: from he.sipsolutions.net ([78.46.109.217]:48532 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750779Ab0K1KCO (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 28 Nov 2010 05:02:14 -0500
+Subject: Re: [PATCH 4/4] zd1211rw: remove unnecessary [kv][mcz]alloc casts
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Joe Perches <joe@perches.com>
+Cc: Daniel Drake <dsd@gentoo.org>, Ulrich Kunitz <kune@deine-taler.de>,
+	linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-kernel@vger.kernel.org, netdev <netdev@vger.kernel.org>
+In-Reply-To: <1290937845.16349.16.camel@Joe-Laptop>
+References: <cover.1290934782.git.joe@perches.com>
+	 <704bdd89d630b364043ac7a9ec0a110d311a17a2.1290934782.git.joe@perches.com>
+	 <1290935566.3467.0.camel@jlt3.sipsolutions.net>
+	 <1290936047.16349.13.camel@Joe-Laptop>
+	 <1290936606.3467.2.camel@jlt3.sipsolutions.net>
+	 <1290937845.16349.16.camel@Joe-Laptop>
+Content-Type: text/plain; charset="UTF-8"
+Date: Sun, 28 Nov 2010 11:02:07 +0100
+Message-ID: <1290938527.3467.5.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+On Sun, 2010-11-28 at 01:50 -0800, Joe Perches wrote:
+> On Sun, 2010-11-28 at 10:30 +0100, Johannes Berg wrote:
+> > On Sun, 2010-11-28 at 01:20 -0800, Joe Perches wrote:
+> > > On Sun, 2010-11-28 at 10:12 +0100, Johannes Berg wrote:
+> > > > On Sun, 2010-11-28 at 01:05 -0800, Joe Perches wrote:
+> > > > > diff --git a/drivers/net/wireless/zd1211rw/zd_chip.c b/drivers/net/wireless/zd1211rw/zd_chip.c
+> > > > > @@ -117,8 +117,7 @@ int zd_ioread32v_locked(struct zd_chip *chip, u32 *values, const zd_addr_t *addr
+> > > > >  	/* Allocate a single memory block for values and addresses. */
+> > > > >  	count16 = 2*count;
+> > > > > -	a16 = (zd_addr_t *) kmalloc(count16 * (sizeof(zd_addr_t) + sizeof(u16)),
+> > > > > -		                   GFP_KERNEL);
+> > > > > +	a16 = kmalloc(count16 * (sizeof(zd_addr_t) + sizeof(u16)), GFP_KERNEL);
+> > > > I believe this is on purpose for sparse.
+> > > Perhaps in a previous version, but not now.
+> > How do you know? I thought sparse was pretty much not reliable after the
+> > first error it prints.
+> 
+> Good memory you have Johannes...
+> 
+> http://marc.info/?l=linux-netdev&m=117113743902549&w=3
 
-During the RXON rewrite, this code got lost.
-When we've just associated, we need to enable
-all calibrations and see if some were already
-finished. Add back the missing code.
+I, err, not really, all this isn't making a whole lot of sense to me
+right now :-)
+The only thing I remembered was that there was something weird with
+zd_addr_t ...
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-agn-rxon.c |   14 ++++++++++++++
- 1 files changed, 14 insertions(+), 0 deletions(-)
+Did sparse become more reliable in face of errors?
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-rxon.c b/drivers/net/wireless/iwlwifi/iwl-agn-rxon.c
-index d594a16..d9d617f 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn-rxon.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn-rxon.c
-@@ -569,6 +569,20 @@ void iwlagn_bss_info_changed(struct ieee80211_hw *hw,
- 	if (force || memcmp(&ctx->staging, &ctx->active, sizeof(ctx->staging)))
- 		iwlagn_commit_rxon(priv, ctx);
- 
-+	if (changes & BSS_CHANGED_ASSOC && bss_conf->assoc) {
-+		/*
-+		 * The chain noise calibration will enable PM upon
-+		 * completion. If calibration has already been run
-+		 * then we need to enable power management here.
-+		 */
-+		if (priv->chain_noise_data.state == IWL_CHAIN_NOISE_DONE)
-+			iwl_power_update_mode(priv, false);
-+
-+		/* Enable RX differential gain and sensitivity calibrations */
-+		iwl_chain_noise_reset(priv);
-+		priv->start_calib = 1;
-+	}
-+
- 	if (changes & BSS_CHANGED_IBSS) {
- 		ret = iwlagn_manage_ibss_station(priv, vif,
- 						 bss_conf->ibss_joined);
--- 
-1.7.0.4
+johannes
 
