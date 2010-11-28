@@ -1,40 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:52347 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754332Ab0KYBi2 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 24 Nov 2010 20:38:28 -0500
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Subject: [PATCH 01/12] iwlwifi: remove unused define
-Date: Wed, 24 Nov 2010 17:32:37 -0800
-Message-Id: <1290648768-10075-2-git-send-email-wey-yi.w.guy@intel.com>
-In-Reply-To: <1290648768-10075-1-git-send-email-wey-yi.w.guy@intel.com>
-References: <1290648768-10075-1-git-send-email-wey-yi.w.guy@intel.com>
+Received: from he.sipsolutions.net ([78.46.109.217]:33487 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751797Ab0K1JaM (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 28 Nov 2010 04:30:12 -0500
+Subject: Re: [PATCH 4/4] zd1211rw: remove unnecessary [kv][mcz]alloc casts
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Joe Perches <joe@perches.com>
+Cc: Daniel Drake <dsd@gentoo.org>, Ulrich Kunitz <kune@deine-taler.de>,
+	linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-kernel@vger.kernel.org, netdev <netdev@vger.kernel.org>
+In-Reply-To: <1290936047.16349.13.camel@Joe-Laptop>
+References: <cover.1290934782.git.joe@perches.com>
+	 <704bdd89d630b364043ac7a9ec0a110d311a17a2.1290934782.git.joe@perches.com>
+	 <1290935566.3467.0.camel@jlt3.sipsolutions.net>
+	 <1290936047.16349.13.camel@Joe-Laptop>
+Content-Type: text/plain; charset="UTF-8"
+Date: Sun, 28 Nov 2010 10:30:06 +0100
+Message-ID: <1290936606.3467.2.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-was not used, remove it
+On Sun, 2010-11-28 at 01:20 -0800, Joe Perches wrote:
+> On Sun, 2010-11-28 at 10:12 +0100, Johannes Berg wrote:
+> > On Sun, 2010-11-28 at 01:05 -0800, Joe Perches wrote:
+> > > diff --git a/drivers/net/wireless/zd1211rw/zd_chip.c b/drivers/net/wireless/zd1211rw/zd_chip.c
+> > > @@ -117,8 +117,7 @@ int zd_ioread32v_locked(struct zd_chip *chip, u32 *values, const zd_addr_t *addr
+> > >  
+> > >  	/* Allocate a single memory block for values and addresses. */
+> > >  	count16 = 2*count;
+> > > -	a16 = (zd_addr_t *) kmalloc(count16 * (sizeof(zd_addr_t) + sizeof(u16)),
+> > > -		                   GFP_KERNEL);
+> > > +	a16 = kmalloc(count16 * (sizeof(zd_addr_t) + sizeof(u16)), GFP_KERNEL);
+> > I believe this is on purpose for sparse.
+> 
+> Perhaps in a previous version, but not now.
+> 
+> $ make C=1 drivers/net/wireless/zd1211rw/zd_chip.o
+>   CHK     include/linux/version.h
+>   CHK     include/generated/utsrelease.h
+>   CALL    scripts/checksyscalls.sh
+>   CHECK   drivers/net/wireless/zd1211rw/zd_chip.c
+> include/trace/events/kmem.h:45:1: error: Expected ( after asm
+> include/trace/events/kmem.h:45:1: error: got goto
 
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-eeprom.h |    1 -
- 1 files changed, 0 insertions(+), 1 deletions(-)
+How do you know? I thought sparse was pretty much not reliable after the
+first error it prints.
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-eeprom.h b/drivers/net/wireless/iwlwifi/iwl-eeprom.h
-index e87be1e..583916d 100644
---- a/drivers/net/wireless/iwlwifi/iwl-eeprom.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-eeprom.h
-@@ -410,7 +410,6 @@ struct iwl_eeprom_calib_info {
- #define EEPROM_OEM_MODE                     (2*0x46)	/* 2  bytes */
- #define EEPROM_WOWLAN_MODE                  (2*0x47)	/* 2  bytes */
- #define EEPROM_RADIO_CONFIG                 (2*0x48)	/* 2  bytes */
--#define EEPROM_3945_M_VERSION               (2*0x4A)	/* 1  bytes */
- #define EEPROM_NUM_MAC_ADDRESS              (2*0x4C)	/* 2  bytes */
- 
- /* The following masks are to be applied on EEPROM_RADIO_CONFIG */
--- 
-1.7.0.4
+johannes
 
