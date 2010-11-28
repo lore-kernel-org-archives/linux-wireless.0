@@ -1,56 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 80-190-117-144.ip-home.de ([80.190.117.144]:50230 "EHLO
-	bu3sch.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932154Ab0KRQgD (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 18 Nov 2010 11:36:03 -0500
-Subject: Re: [PATCH] ssb: fail registration for unknown SPROM revision
-From: Michael =?ISO-8859-1?Q?B=FCsch?= <mb@bu3sch.de>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: =?UTF-8?Q?Rafa=C5=82_Mi=C5=82ecki?= <zajec5@gmail.com>,
-	linux-wireless@vger.kernel.org, b43-dev@lists.infradead.org
-In-Reply-To: <20101118162748.GB2468@tuxdriver.com> (sfid-20101118_173004_541609_FFFFFFFFBFBD5E1E)
-References: <1288823326-9686-1-git-send-email-zajec5@gmail.com>
-	 <1288823326-9686-2-git-send-email-zajec5@gmail.com>
-	 <20101116212321.GF10774@tuxdriver.com> <1290013976.2513.14.camel@maggie>
-	 <20101118162748.GB2468@tuxdriver.com>
-	 (sfid-20101118_173004_541609_FFFFFFFFBFBD5E1E)
-Content-Type: text/plain; charset="UTF-8"
-Date: Thu, 18 Nov 2010 17:35:56 +0100
-Message-ID: <1290098156.12596.2.camel@maggie>
-Mime-Version: 1.0
+Received: from mail-qy0-f174.google.com ([209.85.216.174]:50010 "EHLO
+	mail-qy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752693Ab0K1MBo convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 28 Nov 2010 07:01:44 -0500
+Received: by qyk11 with SMTP id 11so9725318qyk.19
+        for <linux-wireless@vger.kernel.org>; Sun, 28 Nov 2010 04:01:43 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <1290945585-20864-3-git-send-email-zajec5@gmail.com>
+References: <1290945585-20864-1-git-send-email-zajec5@gmail.com>
+	<1290945585-20864-3-git-send-email-zajec5@gmail.com>
+Date: Sun, 28 Nov 2010 13:01:43 +0100
+Message-ID: <AANLkTinwpM_GkhA9=ScaghnXdjV+-+U67aBgpewho1=0@mail.gmail.com>
+Subject: Re: [PATCH 3/4] b43: N-PHY: initialize perical variable, add missing
+ call to CCA reset
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+To: linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>
+Cc: b43-dev@lists.infradead.org,
+	=?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2010-11-18 at 11:27 -0500, John W. Linville wrote: 
-> On Wed, Nov 17, 2010 at 06:12:56PM +0100, Michael Büsch wrote:
-> > On Tue, 2010-11-16 at 16:23 -0500, John W. Linville wrote: 
-> > > > -		ssb_printk(KERN_WARNING PFX "Unsupported SPROM"
-> > > > -			   "  revision %d detected. Will extract"
-> > > > -			   " v1\n", out->revision);
-> > > > -		out->revision = 1;
-> > > > -		sprom_extract_r123(out, in);
-> > > > +		ssb_printk(KERN_ERR PFX "Unsupported SPROM revision %d"
-> > > > +			   " detected\n", out->revision);
-> > > > +		return -EINVAL;
-> > > >  	}
-> > > >  
-> > > >  	if (out->boardflags_lo == 0xFFFF)
-> > > 
-> > > I think this is going to make my b43 PCI-E card not work...I'll try
-> > > it and get back to you...
-> > 
-> > Hm, what version does it report?
+W dniu 28 listopada 2010 12:59 użytkownik Rafał Miłecki
+<zajec5@gmail.com> napisał:
+> +       /* Specs don't say about reset here, but it makes wl and b43 dumps
+> +          identical, it really seems wl performs this */
+> +       b43_nphy_reset_cca(dev);
 
-> [ 1036.293865] ssb: Unsupported SPROM  revision 255 detected. Will extract v1
-
-So what about specialcasing 255 instead of defaulting to 1 in general?
-
-if (rev == 255)
-rev = 1;
-
-255 basically means "Vendor forgot to set this field". So it would only
-default to 1 for those broken sproms.
+If someone is interested in tools, dumps, let me know.
 
 -- 
-Greetings Michael.
-
+Rafał
