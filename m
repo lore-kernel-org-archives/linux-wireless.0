@@ -1,56 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from hrndva-omtalb.mail.rr.com ([71.74.56.123]:34577 "EHLO
-	hrndva-omtalb.mail.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754502Ab0KTDZ1 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 19 Nov 2010 22:25:27 -0500
-Date: Fri, 19 Nov 2010 21:25:21 -0600
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: John W Linville <linville@tuxdriver.com>,
-	Michael Buesch <mb@bu3sch.de>
-Cc: danielklaffenbach@gmail.com, b43-dev@lists.infradead.org,
-	linux-wireless@vger.kernel.org
-Subject: [PATCH] ssb: b43-pci-bridge: Add new vendor for BCM4318
-Message-ID: <4ce73fa1.GbdqTWKHqw8VpIT4%Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: from smtp.nokia.com ([147.243.128.26]:39063 "EHLO mgw-da02.nokia.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750939Ab0K2UKc (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 29 Nov 2010 15:10:32 -0500
+Subject: Re: [PATCH] wl12xx: Remove 11j channels from the supported
+ channels list.
+From: Luciano Coelho <luciano.coelho@nokia.com>
+To: geryk@ti.com
+Cc: "juuso.oikarinen@nokia.com" <juuso.oikarinen@nokia.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <4CF39DBA.2020004@ti.com>
+References: <1291025153-17570-1-git-send-email-juuso.oikarinen@nokia.com>
+	 <4CF39DBA.2020004@ti.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Mon, 29 Nov 2010 22:10:07 +0200
+Message-ID: <1291061407.1673.78.camel@powerslave>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Daniel Klaffenbach <danielklaffenbach@gmail.com>
+On Mon, 2010-11-29 at 14:34 +0200, ext Gery Kahn wrote:
+> On 11/29/2010 12:05 PM, juuso.oikarinen@nokia.com wrote:
+> > From: Juuso Oikarinen<juuso.oikarinen@nokia.com>
+> >
+> > Because we don't support them at this stage.
+> >
+> > Signed-off-by: Juuso Oikarinen<juuso.oikarinen@nokia.com>
+> > ---
+> >   drivers/net/wireless/wl12xx/main.c |    8 --------
+> >   1 files changed, 0 insertions(+), 8 deletions(-)
+> >
+> > diff --git a/drivers/net/wireless/wl12xx/main.c b/drivers/net/wireless/wl12xx/main.c
+> > index 7fecefe..dc3a093 100644
+> > --- a/drivers/net/wireless/wl12xx/main.c
+> > +++ b/drivers/net/wireless/wl12xx/main.c
+> > @@ -2374,14 +2374,6 @@ static struct ieee80211_rate wl1271_rates_5ghz[] = {
+> >
+> >   /* 5 GHz band channels for WL1273 */
+> >   static struct ieee80211_channel wl1271_channels_5ghz[] = {
+> > -	{ .hw_value = 183, .center_freq = 4915},
+> > -	{ .hw_value = 184, .center_freq = 4920},
+> > -	{ .hw_value = 185, .center_freq = 4925},
+> > -	{ .hw_value = 187, .center_freq = 4935},
+> > -	{ .hw_value = 188, .center_freq = 4940},
+> > -	{ .hw_value = 189, .center_freq = 4945},
+> > -	{ .hw_value = 192, .center_freq = 4960},
+> > -	{ .hw_value = 196, .center_freq = 4980},
+> >   	{ .hw_value = 7, .center_freq = 5035},
+> >   	{ .hw_value = 8, .center_freq = 5040},
+> >   	{ .hw_value = 9, .center_freq = 5045},
+> Our firmware do supports Japan channels, so why to remove them?
 
-Add new vendor for Broadcom 4318.
+We experienced some problems with it (at least).  Juuso reported that
+some strange things were happening, like probe_reqs were going to 2.4GHz
+channels with 11a IEs when these 11j channels were scanned.
 
-Signed-off-by: Daniel Klaffenbach <danielklaffenbach@gmail.com>
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Stable <stable@kernel.org>
----
+Have you actively tried to use 11j channels? Did you have any problems?
 
-John - for 2.6.37
+-- 
+Cheers,
+Luca.
 
-Larry
-
-Index: wireless-testing/drivers/ssb/b43_pci_bridge.c
-===================================================================
---- wireless-testing.orig/drivers/ssb/b43_pci_bridge.c
-+++ wireless-testing/drivers/ssb/b43_pci_bridge.c
-@@ -24,6 +24,7 @@ static const struct pci_device_id b43_pc
- 	{ PCI_DEVICE(PCI_VENDOR_ID_BROADCOM, 0x4312) },
- 	{ PCI_DEVICE(PCI_VENDOR_ID_BROADCOM, 0x4315) },
- 	{ PCI_DEVICE(PCI_VENDOR_ID_BROADCOM, 0x4318) },
-+	{ PCI_DEVICE(PCI_VENDOR_ID_BCM_GVC,  0x4318) },
- 	{ PCI_DEVICE(PCI_VENDOR_ID_BROADCOM, 0x4319) },
- 	{ PCI_DEVICE(PCI_VENDOR_ID_BROADCOM, 0x4320) },
- 	{ PCI_DEVICE(PCI_VENDOR_ID_BROADCOM, 0x4321) },
-Index: wireless-testing/include/linux/pci_ids.h
-===================================================================
---- wireless-testing.orig/include/linux/pci_ids.h
-+++ wireless-testing/include/linux/pci_ids.h
-@@ -2047,6 +2047,7 @@
- #define PCI_DEVICE_ID_AFAVLAB_P030	0x2182
- #define PCI_SUBDEVICE_ID_AFAVLAB_P061		0x2150
- 
-+#define PCI_VENDOR_ID_BCM_GVC          0x14a4
- #define PCI_VENDOR_ID_BROADCOM		0x14e4
- #define PCI_DEVICE_ID_TIGON3_5752	0x1600
- #define PCI_DEVICE_ID_TIGON3_5752M	0x1601
