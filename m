@@ -1,58 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qw0-f46.google.com ([209.85.216.46]:65142 "EHLO
-	mail-qw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754940Ab0KJCVl (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 9 Nov 2010 21:21:41 -0500
-Received: by mail-qw0-f46.google.com with SMTP id 5so5749qwh.19
-        for <linux-wireless@vger.kernel.org>; Tue, 09 Nov 2010 18:21:41 -0800 (PST)
-From: Arnaud Lacombe <lacombar@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: lrodriguez@atheros.com, Arnaud Lacombe <lacombar@gmail.com>
-Subject: [PATCH 31/44] compat/2.6.22: add compat for couple of TCP accessors
-Date: Tue,  9 Nov 2010 21:20:13 -0500
-Message-Id: <1289355626-25373-32-git-send-email-lacombar@gmail.com>
-In-Reply-To: <1289355626-25373-1-git-send-email-lacombar@gmail.com>
-References: <1289355626-25373-1-git-send-email-lacombar@gmail.com>
+Received: from smtp.nokia.com ([147.243.1.48]:43970 "EHLO mgw-sa02.nokia.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752153Ab0K2Jww (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 29 Nov 2010 04:52:52 -0500
+Subject: Re: [PATCH ] wl12xx: BA receiver support
+From: Luciano Coelho <luciano.coelho@nokia.com>
+To: ext Shahar Levi <shahar_levi@ti.com>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <1290616392-16532-1-git-send-email-shahar_levi@ti.com>
+References: <1290616392-16532-1-git-send-email-shahar_levi@ti.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Mon, 29 Nov 2010 11:52:46 +0200
+Message-ID: <1291024366.1673.1.camel@powerslave>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Arnaud Lacombe <lacombar@gmail.com>
----
- include/linux/compat-2.6.22.h |   20 ++++++++++++++++++++
- 1 files changed, 20 insertions(+), 0 deletions(-)
+On Wed, 2010-11-24 at 18:33 +0200, ext Shahar Levi wrote:
+> Add new ampdu_action ops to support receiver BA.
+> The BA initiator session management in FW independently.
+> 
+> Signed-off-by: Shahar Levi <shahar_levi@ti.com>
+> ---
 
-diff --git a/include/linux/compat-2.6.22.h b/include/linux/compat-2.6.22.h
-index e0cdab2..73dbbb6 100644
---- a/include/linux/compat-2.6.22.h
-+++ b/include/linux/compat-2.6.22.h
-@@ -80,6 +80,26 @@ static inline void skb_copy_from_linear_data_offset(const struct sk_buff *skb,
- 	memcpy(to, skb->data + offset, len);
- }
- 
-+static inline struct iphdr *ip_hdr(const struct sk_buff *skb)
-+{
-+	return (struct iphdr *)skb_network_header(skb);
-+}
-+
-+static inline struct tcphdr *tcp_hdr(const struct sk_buff *skb)
-+{
-+	return (struct tcphdr *)skb_transport_header(skb);
-+}
-+
-+static inline unsigned int tcp_hdrlen(const struct sk_buff *skb)
-+{
-+	return tcp_hdr(skb)->doff * 4;
-+}
-+
-+static inline unsigned int tcp_optlen(const struct sk_buff *skb)
-+{
-+	return (tcp_hdr(skb)->doff - 5) * 4;
-+}
-+
- #if defined(__GNUC__)
- #define __maybe_unused		__attribute__((unused))
- #define uninitialized_var(x)	x = x
+[...]
+
+> diff --git a/drivers/net/wireless/wl12xx/event.c b/drivers/net/wireless/wl12xx/event.c
+> index f9146f5..4e053ff 100644
+> --- a/drivers/net/wireless/wl12xx/event.c
+> +++ b/drivers/net/wireless/wl12xx/event.c
+> @@ -241,6 +241,9 @@ static int wl1271_event_process(struct wl1271 *wl, struct event_mailbox *mbox)
+>  			wl1271_event_rssi_trigger(wl, mbox);
+>  	}
+>  
+> +	if (vector & BA_SESSION_RX_CONSTRAINT_EVENT_ID)
+> +		wl1271_debug(DEBUG_EVENT, "BA_SESSION_RX_CONSTRAINT_EVENT_ID");
+> +
+>  	if (wl->vif && beacon_loss)
+>  		ieee80211_connection_loss(wl->vif);
+>  
+> diff --git a/drivers/net/wireless/wl12xx/event.h b/drivers/net/wireless/wl12xx/event.h
+> index 6cce014..4c697d7 100644
+> --- a/drivers/net/wireless/wl12xx/event.h
+> +++ b/drivers/net/wireless/wl12xx/event.h
+> @@ -67,7 +67,7 @@ enum {
+>  	HEALTH_CHECK_REPLY_EVENT_ID		 = BIT(27),
+>  	PERIODIC_SCAN_COMPLETE_EVENT_ID		 = BIT(28),
+>  	PERIODIC_SCAN_REPORT_EVENT_ID		 = BIT(29),
+> -	BA_SESSION_TEAR_DOWN_EVENT_ID		 = BIT(30),
+> +	BA_SESSION_RX_CONSTRAINT_EVENT_ID	 = BIT(30),
+>  	EVENT_MBOX_ALL_EVENT_ID			 = 0x7fffffff,
+>  };
+
+BA_SESSION_RX_CONSTRAING_EVENT_ID is not really used in this patch.
+Please move it to the "wl12xx: Stop BA session event from device", where
+it makes more sense.
+
 -- 
-1.7.2.30.gc37d7.dirty
+Cheers,
+Luca.
 
