@@ -1,47 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.perches.com ([173.55.12.10]:1759 "EHLO mail.perches.com"
+Received: from smtp.nokia.com ([147.243.128.24]:43148 "EHLO mgw-da01.nokia.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756972Ab0KUCkr (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 20 Nov 2010 21:40:47 -0500
-From: Joe Perches <joe@perches.com>
-To: Ivo van Doorn <IvDoorn@gmail.com>,
-	Gertjan van Wingerde <gwingerde@gmail.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com,
-	netdev@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH 60/62] rt2x00: Use static const
-Date: Sat, 20 Nov 2010 18:39:01 -0800
-Message-Id: <d8bfaded20da2265673391a81536d63b0e81dc7f.1290305776.git.joe@perches.com>
-In-Reply-To: <cover.1290305773.git.joe@perches.com>
-References: <cover.1290305773.git.joe@perches.com>
+	id S1750939Ab0K2UKw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 29 Nov 2010 15:10:52 -0500
+Subject: Re: [PATCH] wl12xx: Remove 11j channels from the supported
+ channels list.
+From: Luciano Coelho <luciano.coelho@nokia.com>
+To: geryk@ti.com
+Cc: ext =?ISO-8859-1?Q?G=E1bor?= Stefanik <netrolller.3d@gmail.com>,
+	"juuso.oikarinen@nokia.com" <juuso.oikarinen@nokia.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <4CF39F79.7070306@ti.com>
+References: <1291025153-17570-1-git-send-email-juuso.oikarinen@nokia.com>
+	 <AANLkTikqg4+ERD6V+7P=2R_H2Q9bWuW3Jz6F=Kp4YKSC@mail.gmail.com>
+	 <1291033587.1673.39.camel@powerslave>  <4CF39F79.7070306@ti.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Mon, 29 Nov 2010 22:10:40 +0200
+Message-ID: <1291061440.1673.79.camel@powerslave>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Using static const generally increases object text and decreases data size.
-It also generally decreases overall object size.
+On Mon, 2010-11-29 at 14:41 +0200, ext Gery Kahn wrote:
+> > We changed the file names and the module names already, but we
+> haven't
+> > changed the function and structure names yet.  At some point someone
+> > will s/wl1271/wl12xx/.  Yes, it is confusing as it is right now, so
+> > hopefully the renaming will happen soon.  Volunteers? ;)
+> >
+> is there enable_11a to use for? 
 
-   text	   data	    bss	    dec	    hex	filename
-  40197	     56	   8336	  48589	   bdcd	drivers/net/wireless/rt2x00/rt2800lib.o.new
-  40205	     56	   8336	  48597	   bdd5	drivers/net/wireless/rt2x00/rt2800lib.o.old
+Sorry, I don't understand your question...
 
-Signed-off-by: Joe Perches <joe@perches.com>
----
- drivers/net/wireless/rt2x00/rt2800lib.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
-
-diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
-index ce8df66..7563161 100644
---- a/drivers/net/wireless/rt2x00/rt2800lib.c
-+++ b/drivers/net/wireless/rt2x00/rt2800lib.c
-@@ -2166,7 +2166,7 @@ static int rt2800_init_registers(struct rt2x00_dev *rt2x00dev)
- 					 SHARED_KEY_MODE_ENTRY(i), 0);
- 
- 	for (i = 0; i < 256; i++) {
--		u32 wcid[2] = { 0xffffffff, 0x00ffffff };
-+		static const u32 wcid[2] = { 0xffffffff, 0x00ffffff };
- 		rt2800_register_multiwrite(rt2x00dev, MAC_WCID_ENTRY(i),
- 					      wcid, sizeof(wcid));
- 
 -- 
-1.7.3.2.245.g03276.dirty
+Cheers,
+Luca.
 
