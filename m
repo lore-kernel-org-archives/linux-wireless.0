@@ -1,52 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f46.google.com ([209.85.214.46]:64731 "EHLO
-	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755119Ab0KJUBX (ORCPT
+Received: from devils.ext.ti.com ([198.47.26.153]:51373 "EHLO
+	devils.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753752Ab0K2MzO (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 10 Nov 2010 15:01:23 -0500
-Received: by bwz15 with SMTP id 15so1122956bwz.19
-        for <linux-wireless@vger.kernel.org>; Wed, 10 Nov 2010 12:01:21 -0800 (PST)
-From: Christian Lamparter <chunkeey@googlemail.com>
-To: Ben Greear <greearb@candelatech.com>
-Subject: Re: [mac80211] mac80211:  Support multiple VIFS per AP in debugfs.
-Date: Wed, 10 Nov 2010 21:01:01 +0100
-Cc: linux-wireless@vger.kernel.org
-References: <1285212541-6834-1-git-send-email-greearb@candelatech.com> <201010162100.02477.chunkeey@googlemail.com> <4CDAF182.4030409@candelatech.com>
-In-Reply-To: <4CDAF182.4030409@candelatech.com>
+	Mon, 29 Nov 2010 07:55:14 -0500
+Message-ID: <4CF3A2BE.8040305@ti.com>
+Date: Mon, 29 Nov 2010 14:55:26 +0200
+From: Shahar Levi <shahar_levi@ti.com>
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="utf-8"
-Message-Id: <201011102101.02263.chunkeey@googlemail.com>
+To: Luciano Coelho <luciano.coelho@nokia.com>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [RFC 2/2] wl12xx: Stop BA session event from device
+References: <1290695964-4208-1-git-send-email-shahar_levi@ti.com>	 <1290695964-4208-2-git-send-email-shahar_levi@ti.com> <1291035211.1673.68.camel@powerslave>
+In-Reply-To: <1291035211.1673.68.camel@powerslave>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wednesday 10 November 2010 20:24:50 Ben Greear wrote:
-> On 10/16/2010 12:00 PM, Christian Lamparter wrote:
-> > On Thursday 23 September 2010 10:36:58 Johannes Berg wrote:
-> >> On Wed, 2010-09-22 at 20:29 -0700, greearb@gmail.com wrote:
-> >>> From: Ben Greear<greearb@candelatech.com>
-> >>>
-> >>> Create 'stations' sub-directory under each netdev:[vif-name]
-> >>> directory to hold all stations for that network device.
-> >>>
-> >>> Signed-off-by: Ben Greear<greearb@candelatech.com>
-> >>
-> >> Acked-by: Johannes Berg<johannes@sipsolutions.net>
-> >
-> > ieee80211_debugfs_key_add needs to be updated (debugfs_key.c).
-> > Either the "station" symlink has to go, or we need to loop up
-> > to which interface the sta belongs. currently it's hard-coded to
-> > "sprintf(buf, "../../stations/%pM", sta->sta.addr);"
-> > (something which no longer exists)
-> 
-> To reproduce this problem, do I need to be using WEP, or should
-> WPA do the trick?  Or something else?
-well, STAs are involved. So you want an encryption which needs/generates
-per-station keys. And the setup of choice would be to go with WPA/RSN.
+On 11/29/2010 02:53 PM, Luciano Coelho wrote:
+> On Thu, 2010-11-25 at 16:39 +0200, ext Shahar Levi wrote:
+>> Adding new event that close RX BA session in case of periodic BT activity
+>> limiting WLAN activity.
+>>
+>> Signed-off-by: Shahar Levi<shahar_levi@ti.com>
+>> ---
+>
+> [...]
+>
+>> diff --git a/drivers/net/wireless/wl12xx/event.c b/drivers/net/wireless/wl12xx/event.c
+>> index 9815b7b..7cbeb2b 100644
+>> --- a/drivers/net/wireless/wl12xx/event.c
+>> +++ b/drivers/net/wireless/wl12xx/event.c
+>> @@ -174,6 +174,25 @@ static void wl1271_event_rssi_trigger(struct wl1271 *wl,
+>>   	wl->last_rssi_event = event;
+>>   }
+>>
+>> +static void wl1271_event_ba_rx_constraint(struct wl1271 *wl,
+>> +					  struct event_mailbox *mbox)
+>> +{
+>> +	u8 tid_index = 0;
+>> +
+>> +	wl1271_debug(DEBUG_EVENT, "BA RX constraint event. ba_allowed = %d",
+>> +		     mbox->ba_allowed);
+>> +
+>> +	wl->ba_allowed = mbox->ba_allowed;
+>> +
+>> +	if (!wl->ba_rx_bitmap)
+>> +		return;
+>> +
+>> +	for (tid_index = 0; tid_index<  CONF_TX_MAX_TID_COUNT; ++tid_index)
+>
+> Please use the more classic tid_index++ instead.
+OK, will be fix on v2.
+Thanks
 
-> Are the keys supposed to show up only in STA mode, or also when
-> acting as an AP?
-They will show up in STA and AP mode.
-
-Regards,
-	Chr
