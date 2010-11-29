@@ -1,42 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qy0-f181.google.com ([209.85.216.181]:36265 "EHLO
-	mail-qy0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754837Ab0KJCVc (ORCPT
+Received: from mail-px0-f174.google.com ([209.85.212.174]:48364 "EHLO
+	mail-px0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753474Ab0K2MQQ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 9 Nov 2010 21:21:32 -0500
-Received: by mail-qy0-f181.google.com with SMTP id 31so159944qyk.19
-        for <linux-wireless@vger.kernel.org>; Tue, 09 Nov 2010 18:21:32 -0800 (PST)
-From: Arnaud Lacombe <lacombar@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: lrodriguez@atheros.com, Arnaud Lacombe <lacombar@gmail.com>
-Subject: [PATCH 27/44] compat/2.6.33: remove macro not in mainline
-Date: Tue,  9 Nov 2010 21:20:09 -0500
-Message-Id: <1289355626-25373-28-git-send-email-lacombar@gmail.com>
-In-Reply-To: <1289355626-25373-1-git-send-email-lacombar@gmail.com>
-References: <1289355626-25373-1-git-send-email-lacombar@gmail.com>
+	Mon, 29 Nov 2010 07:16:16 -0500
+From: Sujith <m.sujith@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Message-ID: <19699.39300.972745.297319@gargle.gargle.HOWL>
+Date: Mon, 29 Nov 2010 17:46:04 +0530
+To: Pavel Machek <pma@sysgo.com>
+Cc: Sujith <Sujith.Manoharan@atheros.com>,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	"ath9k-devel@venema.h4ckr.net" <ath9k-devel@venema.h4ckr.net>,
+	kernel list <linux-kernel@vger.kernel.org>,
+	"chunkeey@googlemail.com" <chunkeey@googlemail.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"rudolf.marek@sysgo.com" <rudolf.marek@sysgo.com>,
+	"cko@sysgo.com" <cko@sysgo.com>, "mfa@sysgo.com" <mfa@sysgo.com>,
+	"anl@sysgo.com" <anl@sysgo.com>
+Subject: Re: ath9k_htc vs. powerpc (was Re: working usb wifi card, that is still possible to buy)
+In-Reply-To: <20101126123706.GA19755@pma.sysgo.com>
+References: <20101103092431.GA21138@pma.sysgo.com>
+	<20101124081616.GA30595@pma.sysgo.com>
+	<20101124131320.GA2611@pma.sysgo.com>
+	<4CED33E0.5040000@lwfinger.net>
+	<20101126083125.GA28982@pma.sysgo.com>
+	<20101126102026.GA11857@pma.sysgo.com>
+	<20101126112737.GB11857@pma.sysgo.com>
+	<19695.40541.335361.81396@gargle.gargle.HOWL>
+	<20101126123706.GA19755@pma.sysgo.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Arnaud Lacombe <lacombar@gmail.com>
----
- include/linux/compat-2.6.23.h |    4 ----
- 1 files changed, 0 insertions(+), 4 deletions(-)
+Pavel Machek wrote:
+> Hi!
+> 
+> > > Sujith, I see you fought with endianness issues on ath9k_htc
+> > > driver. Was you able to test it on actual hardware? Should I try the
+> > > version just after your commit?
+> > 
+> > No, I never had a chance to test the driver on a big-endian system.
+> > I assume you are referring to this commit: "ath9k_htc: Fix sparse endian warnings" ?
+> 
+> Yes.
+> 
+> > Does using latest wireless-testing help ?
+> 
+> I updated to wireless-testing from today, and still same results.
 
-diff --git a/include/linux/compat-2.6.23.h b/include/linux/compat-2.6.23.h
-index 5dd6301..1a486ab 100644
---- a/include/linux/compat-2.6.23.h
-+++ b/include/linux/compat-2.6.23.h
-@@ -84,10 +84,6 @@ static inline void tcf_destroy_chain_compat(struct tcf_proto **fl)
- #define da_users	dmi_users
- #define da_gusers	dmi_gusers
- 
--/* dev_set_promiscuity() was moved to __dev_set_promiscuity() on 2.6.23 and
-- * dev_set_promiscuity() became a wrapper. */
--#define __dev_set_promiscuity dev_set_promiscuity
--
- /* Our own 2.6.22 port on compat.c */
- extern void	dev_mc_unsync(struct net_device *to, struct net_device *from);
- extern int	dev_mc_sync(struct net_device *to, struct net_device *from);
--- 
-1.7.2.30.gc37d7.dirty
+A lot of structures in htc.h are not handled in an endian-safe manner.
+I'll send a patch fixing them and maybe things will improve.
 
+Sujith
