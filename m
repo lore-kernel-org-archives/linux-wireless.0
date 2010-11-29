@@ -1,35 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from external1.orbit-lab.org ([128.6.192.131]:51667 "HELO
-	external1.orbit-lab.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1754805Ab0KTUDs (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 20 Nov 2010 15:03:48 -0500
-Received: from repository3.orbit-lab.org (repository3.orbit-lab.org [10.50.0.41])
-	by external1.orbit-lab.org (Postfix) with ESMTP id 1D0A1418D8
-	for <linux-wireless@vger.kernel.org>; Sat, 20 Nov 2010 14:59:12 -0500 (EST)
-Subject: Compat-wireless release for 2010-11-20 is baked
-To: <linux-wireless@vger.kernel.org>
-Message-Id: <20101120200346.B533140F97@repository3.orbit-lab.org>
-Date: Sat, 20 Nov 2010 15:03:46 -0500 (EST)
-From: compat@orbit-lab.org (Compat-wireless cronjob account)
+Received: from mail.sysgo.com ([195.145.229.155]:52313 "EHLO mail.sysgo.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752796Ab0K2KBw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 29 Nov 2010 05:01:52 -0500
+Date: Mon, 29 Nov 2010 11:01:59 +0100
+From: Pavel Machek <pma@sysgo.com>
+To: Sujith <Sujith.Manoharan@atheros.com>
+Cc: Larry Finger <Larry.Finger@lwfinger.net>,
+	"ath9k-devel@venema.h4ckr.net" <ath9k-devel@venema.h4ckr.net>,
+	kernel list <linux-kernel@vger.kernel.org>,
+	"chunkeey@googlemail.com" <chunkeey@googlemail.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"rudolf.marek@sysgo.com" <rudolf.marek@sysgo.com>,
+	"cko@sysgo.com" <cko@sysgo.com>, "mfa@sysgo.com" <mfa@sysgo.com>,
+	"anl@sysgo.com" <anl@sysgo.com>
+Subject: Re: ath9k_htc vs. powerpc (was Re: working usb wifi card, that is
+ still possible to buy)
+Message-ID: <20101129100159.GC28833@pma.sysgo.com>
+References: <20101103092431.GA21138@pma.sysgo.com>
+ <20101124081616.GA30595@pma.sysgo.com>
+ <20101124131320.GA2611@pma.sysgo.com>
+ <4CED33E0.5040000@lwfinger.net>
+ <20101126083125.GA28982@pma.sysgo.com>
+ <20101126102026.GA11857@pma.sysgo.com>
+ <20101126112737.GB11857@pma.sysgo.com>
+ <19695.40541.335361.81396@gargle.gargle.HOWL>
+ <20101126123706.GA19755@pma.sysgo.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20101126123706.GA19755@pma.sysgo.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Hi!
 
-compat-wireless code metrics
+> > > Sujith, I see you fought with endianness issues on ath9k_htc
+> > > driver. Was you able to test it on actual hardware? Should I try the
+> > > version just after your commit?
+> > 
+> > No, I never had a chance to test the driver on a big-endian system.
+> > I assume you are referring to this commit: "ath9k_htc: Fix sparse endian warnings" ?
+> 
+> Yes.
+> 
+> > Does using latest wireless-testing help ?
+> 
+> I updated to wireless-testing from today, and still same results.
+> 
+> > Or you can try compat-wireless to get the latest code.
+> 
+> wireless-testing is actually easier to be.
 
-    745325 - Total upstream lines of code being pulled
-      2187 - backport code changes
-      1930 - backport code additions
-       257 - backport code deletions
-      6360 - backport from compat module
-      8547 - total backport code
-    1.1467 - % of code consists of backport work
-      1534 - Crap changes not yet posted
-      1491 - Crap additions not yet posted
-        43 - Crap deletions not yet posted
-    0.2058 - % of crap code
-
-Base tree: linux-next.git
-Base tree version: next-20101119
-compat-wireless release: compat-wireless-2010-11-10-9-gb131f33-pc
+...so I indentified two endianness problems in eeprom, but even with
+both fixed, it still will not associate. Is there some way to dump USB
+packets, then compare them between PC and PowerPC versions? Should I
+expect them to match?
+								Pavel
