@@ -1,41 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qy0-f174.google.com ([209.85.216.174]:37616 "EHLO
-	mail-qy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750895Ab0KTOS5 convert rfc822-to-8bit (ORCPT
+Received: from mail-bw0-f46.google.com ([209.85.214.46]:33957 "EHLO
+	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754130Ab0K2OBb (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 20 Nov 2010 09:18:57 -0500
-Received: by qyk33 with SMTP id 33so3828qyk.19
-        for <linux-wireless@vger.kernel.org>; Sat, 20 Nov 2010 06:18:56 -0800 (PST)
+	Mon, 29 Nov 2010 09:01:31 -0500
+Received: by bwz15 with SMTP id 15so3922112bwz.19
+        for <linux-wireless@vger.kernel.org>; Mon, 29 Nov 2010 06:01:30 -0800 (PST)
+From: Christian Lamparter <chunkeey@googlemail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Subject: Re: [PATCH] mac80211: fix RX aggregation locking
+Date: Mon, 29 Nov 2010 15:01:11 +0100
+Cc: John Linville <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+References: <1291025356.3532.1.camel@jlt3.sipsolutions.net>
+In-Reply-To: <1291025356.3532.1.camel@jlt3.sipsolutions.net>
 MIME-Version: 1.0
-In-Reply-To: <AANLkTimZnnjBMYUDM1pACYv8fHtu0xe-F_C0RJ8_ay_o@mail.gmail.com>
-References: <AANLkTik_4HRwUUYnFLR6BwevQi6W+FK2rNN7Kph+dAWk@mail.gmail.com>
-	<AANLkTikda-CP42-_wnNtEpCJGc3kwNXvT0KgXjOOL+Bc@mail.gmail.com>
-	<AANLkTimZnnjBMYUDM1pACYv8fHtu0xe-F_C0RJ8_ay_o@mail.gmail.com>
-Date: Sat, 20 Nov 2010 09:18:54 -0500
-Message-ID: <AANLkTimEMtt1JJerTzG4-X_Ez83MxtU_52wVQ_xJC8N3@mail.gmail.com>
-Subject: Re: Unloading ath5k fails
-From: Bob Copeland <me@bobcopeland.com>
-To: Jonathan Guerin <jonathan@guerin.id.au>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	ath5k-devel <ath5k-devel@lists.ath5k.org>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: Text/Plain;
+  charset="utf-8"
+Message-Id: <201011291501.12293.chunkeey@googlemail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Nov 17, 2010 at 8:01 PM, Jonathan Guerin <jonathan@guerin.id.au> wrote:
->> Hmm.. I just ran some tests myself on wireless-testing, with ath5k
->> connected and not connected and didn't have any problems.  Are you
->> doing anything special when bringing up the interface?  Can you
->> post your kernel config?
->
-> The interface is being set to IBSS. All that's been done is this:
-> iw reg set AU
-> iw dev wlan0 set type ibss
-> rmmod ath5k
+On Monday 29 November 2010 11:09:16 Johannes Berg wrote:
+> From: Johannes Berg <johannes.berg@intel.com>
+> 
+> The RX aggregation locking documentation was
+> wrong, which led Christian to also code the
+> timer timeout handling for it somewhat wrongly.
+> 
+> Fix the documentation, the two places that
+> need to hold the reorder lock across accesses
+> to the structure, and the debugfs code that
+> should just use RCU.
+> 
+> Also, remove acquiring the sta->lock across
+> reorder timeouts since it isn't necessary, and
+> change a few places to GFP_KERNEL because the
+> code path here doesn't need atomic allocations
+> as I noticed when reviewing all this.
+> 
+> Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Acked-by: Christian Lamparter <chunkeey@googlemail.com>
+> ---
+> Christian, do you remember what else we needed to do here?
 
-I don't know if you saw the other linux-wireless thread on this
-topic, but it seems related to ipv6 and not any particular driver,
-which explains why I didn't see it (I currently compile ipv6 out).
+Sure, I put a "helpful" comment in commit 15943a72c:
+"mac80211: temporarily disable reorder release timer"
 
--- 
-Bob Copeland %% www.bobcopeland.com
+including a "list" of things that need to be considered:
+
+http://marc.info/?l=linux-wireless&m=128656352920957
+
+But, one thing, I think I finally found out why the
+device keeps disconnecting for some users:
+http://www.spinics.net/lists/linux-wireless/msg56678.html
+
+and I need to fix that first :(
+
+Best regards,
+	Chr
