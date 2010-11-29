@@ -1,62 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 80-190-117-144.ip-home.de ([80.190.117.144]:34650 "EHLO
-	bu3sch.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752781Ab0KCWgL (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 3 Nov 2010 18:36:11 -0400
-Subject: Re: [PATCH] ssb: fail registration for unknown SPROM revision
-From: Michael =?ISO-8859-1?Q?B=FCsch?= <mb@bu3sch.de>
-To: =?UTF-8?Q?Rafa=C5=82_Mi=C5=82ecki?= <zajec5@gmail.com>
-Cc: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>,
-	b43-dev@lists.infradead.org
-In-Reply-To: <1288823326-9686-2-git-send-email-zajec5@gmail.com> (sfid-20101103_232940_908175_FFFFFFFF9E534A4F)
-References: <1288823326-9686-1-git-send-email-zajec5@gmail.com>
-	 <1288823326-9686-2-git-send-email-zajec5@gmail.com>
-	 (sfid-20101103_232940_908175_FFFFFFFF9E534A4F)
-Content-Type: text/plain; charset="UTF-8"
-Date: Wed, 03 Nov 2010 23:36:06 +0100
-Message-ID: <1288823766.7368.120.camel@maggie>
-Mime-Version: 1.0
+Received: from mail-yx0-f174.google.com ([209.85.213.174]:53222 "EHLO
+	mail-yx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753523Ab0K2N3M (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 29 Nov 2010 08:29:12 -0500
+From: Sujith <m.sujith@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Message-ID: <19699.43671.455291.972969@gargle.gargle.HOWL>
+Date: Mon, 29 Nov 2010 18:58:55 +0530
+To: Pavel Machek <pma@sysgo.com>
+Cc: Larry Finger <Larry.Finger@lwfinger.net>,
+	"ath9k-devel@venema.h4ckr.net" <ath9k-devel@venema.h4ckr.net>,
+	kernel list <linux-kernel@vger.kernel.org>,
+	"chunkeey@googlemail.com" <chunkeey@googlemail.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"rudolf.marek@sysgo.com" <rudolf.marek@sysgo.com>,
+	"cko@sysgo.com" <cko@sysgo.com>, "mfa@sysgo.com" <mfa@sysgo.com>,
+	"anl@sysgo.com" <anl@sysgo.com>
+Subject: Re: ath9k_htc vs. powerpc (was Re: working usb wifi card, that is still possible to buy)
+In-Reply-To: <20101129125705.GB31518@pma.sysgo.com>
+References: <20101124081616.GA30595@pma.sysgo.com>
+	<20101124131320.GA2611@pma.sysgo.com>
+	<4CED33E0.5040000@lwfinger.net>
+	<20101126083125.GA28982@pma.sysgo.com>
+	<20101126102026.GA11857@pma.sysgo.com>
+	<20101126112737.GB11857@pma.sysgo.com>
+	<19695.40541.335361.81396@gargle.gargle.HOWL>
+	<20101126123706.GA19755@pma.sysgo.com>
+	<20101129100159.GC28833@pma.sysgo.com>
+	<19699.40557.302196.832862@gargle.gargle.HOWL>
+	<20101129125705.GB31518@pma.sysgo.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2010-11-03 at 23:28 +0100, Rafał Miłecki wrote: 
-> Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
-> ---
-> As noticed my Michael we have this left from old times of limited amount of
-> revisions. It's not reliable to treat unknown as rev1.
-> 
-> Michael: would you like to add Reported-by?
+Pavel Machek wrote:
+> We know the code currently works on PC; but this adds conversions that
+> are nop on PowerPC and do something on PC... so they should have no
+> effect on PowerPC and could break PC...?
 
-Isn't that only for bugs? This isn't a bug.
-But you can add my acked-by, if that's desired.
+Well, I tested the patch on x86 and it seemed to work okay.
+But yeah, it needs to be tested well.
 
-> John: it's for 2.6.38.
-> ---
->  drivers/ssb/pci.c |    8 +++-----
->  1 files changed, 3 insertions(+), 5 deletions(-)
-> 
-> diff --git a/drivers/ssb/pci.c b/drivers/ssb/pci.c
-> index b5343ac..41a7337 100644
-> --- a/drivers/ssb/pci.c
-> +++ b/drivers/ssb/pci.c
-> @@ -600,11 +600,9 @@ static int sprom_extract(struct ssb_bus *bus, struct ssb_sprom *out,
->  		sprom_extract_r8(out, in);
->  		break;
->  	default:
-> -		ssb_printk(KERN_WARNING PFX "Unsupported SPROM"
-> -			   "  revision %d detected. Will extract"
-> -			   " v1\n", out->revision);
-> -		out->revision = 1;
-> -		sprom_extract_r123(out, in);
-> +		ssb_printk(KERN_ERR PFX "Unsupported SPROM revision %d"
-> +			   " detected\n", out->revision);
-> +		return -EINVAL;
->  	}
->  
->  	if (out->boardflags_lo == 0xFFFF)
-
-
--- 
-Greetings Michael.
-
+Sujith
