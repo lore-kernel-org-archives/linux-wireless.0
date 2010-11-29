@@ -1,35 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from external1.orbit-lab.org ([128.6.192.131]:37006 "HELO
-	external1.orbit-lab.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1753097Ab0K0UCx (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 27 Nov 2010 15:02:53 -0500
-Received: from repository3.orbit-lab.org (repository3.orbit-lab.org [10.50.0.41])
-	by external1.orbit-lab.org (Postfix) with ESMTP id 1801E418D8
-	for <linux-wireless@vger.kernel.org>; Sat, 27 Nov 2010 14:57:59 -0500 (EST)
-Subject: Compat-wireless release for 2010-11-27 is baked
-To: <linux-wireless@vger.kernel.org>
-Message-Id: <20101127200252.8B37940F97@repository3.orbit-lab.org>
-Date: Sat, 27 Nov 2010 15:02:52 -0500 (EST)
-From: compat@orbit-lab.org (Compat-wireless cronjob account)
+Received: from smtp.nokia.com ([147.243.1.47]:65351 "EHLO mgw-sa01.nokia.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753752Ab0K2Mxh (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 29 Nov 2010 07:53:37 -0500
+Subject: Re: [RFC 2/2] wl12xx: Stop BA session event from device
+From: Luciano Coelho <luciano.coelho@nokia.com>
+To: ext Shahar Levi <shahar_levi@ti.com>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <1290695964-4208-2-git-send-email-shahar_levi@ti.com>
+References: <1290695964-4208-1-git-send-email-shahar_levi@ti.com>
+	 <1290695964-4208-2-git-send-email-shahar_levi@ti.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Mon, 29 Nov 2010 14:53:31 +0200
+Message-ID: <1291035211.1673.68.camel@powerslave>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Thu, 2010-11-25 at 16:39 +0200, ext Shahar Levi wrote:
+> Adding new event that close RX BA session in case of periodic BT activity
+> limiting WLAN activity.
+> 
+> Signed-off-by: Shahar Levi <shahar_levi@ti.com>
+> ---
 
-compat-wireless code metrics
+[...]
 
-    749168 - Total upstream lines of code being pulled
-      2201 - backport code changes
-      1939 - backport code additions
-       262 - backport code deletions
-      6441 - backport from compat module
-      8642 - total backport code
-    1.1535 - % of code consists of backport work
-      1534 - Crap changes not yet posted
-      1491 - Crap additions not yet posted
-        43 - Crap deletions not yet posted
-    0.2048 - % of crap code
+> diff --git a/drivers/net/wireless/wl12xx/event.c b/drivers/net/wireless/wl12xx/event.c
+> index 9815b7b..7cbeb2b 100644
+> --- a/drivers/net/wireless/wl12xx/event.c
+> +++ b/drivers/net/wireless/wl12xx/event.c
+> @@ -174,6 +174,25 @@ static void wl1271_event_rssi_trigger(struct wl1271 *wl,
+>  	wl->last_rssi_event = event;
+>  }
+>  
+> +static void wl1271_event_ba_rx_constraint(struct wl1271 *wl,
+> +					  struct event_mailbox *mbox)
+> +{
+> +	u8 tid_index = 0;
+> +
+> +	wl1271_debug(DEBUG_EVENT, "BA RX constraint event. ba_allowed = %d",
+> +		     mbox->ba_allowed);
+> +
+> +	wl->ba_allowed = mbox->ba_allowed;
+> +
+> +	if (!wl->ba_rx_bitmap)
+> +		return;
+> +
+> +	for (tid_index = 0; tid_index < CONF_TX_MAX_TID_COUNT; ++tid_index)
 
-Base tree: linux-next.git
-Base tree version: next-20101126
-compat-wireless release: compat-wireless-2010-11-23-6-gefeeae7-pc
+Please use the more classic tid_index++ instead.
+
+
+-- 
+Cheers,
+Luca.
+
