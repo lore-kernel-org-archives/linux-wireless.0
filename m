@@ -1,64 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw0-f46.google.com ([74.125.83.46]:58487 "EHLO
-	mail-gw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751356Ab0KID0j (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:60216 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754990Ab0K2QvD (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 8 Nov 2010 22:26:39 -0500
-Date: Tue, 9 Nov 2010 01:26:51 -0200
-From: "Gustavo F. Padovan" <padovan@profusion.mobi>
-To: linville@tuxdriver.com
-Cc: linux-bluetooth@vger.kernel.org, linux-wireless@vger.kernel.org
-Subject: pull request: bluetooth-2.6 2010-11-09
-Message-ID: <20101109032651.GB27554@vigoh>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+	Mon, 29 Nov 2010 11:51:03 -0500
+Subject: Re: [PATCH 2/2 v3] mac80211: add throughput based LED blink trigger
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "Guy, Wey-Yi" <wey-yi.w.guy@intel.com>
+Cc: John Linville <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <1291047211.26829.17.camel@wwguy-ubuntu>
+References: <1290884614.3700.3.camel@jlt3.sipsolutions.net>
+	 <1290885648.3700.4.camel@jlt3.sipsolutions.net>
+	 <1290947171.3467.7.camel@jlt3.sipsolutions.net>
+	 <1291047211.26829.17.camel@wwguy-ubuntu>
+Content-Type: text/plain; charset="UTF-8"
+Date: Mon, 29 Nov 2010 17:50:58 +0100
+Message-ID: <1291049458.3532.7.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi John,
+On Mon, 2010-11-29 at 08:13 -0800, Guy, Wey-Yi wrote:
 
-The following batch contains some bugfixes for 2.6.37. A fix for unaligned
-access in L2CAP, a Kconfig error, two fixes related to security of
-the Bluetooth links, and support for the a MacBook Air Bluetooth device.
-There is also a one line patch from Matthew Garret, that enables USB
-autosuspend for btusb module, which shall be completely safe. Please
-pull, thanks.
+> Do not see how it work for different hardware has different requirement,
+> for example, in iwlwifi, different device has different blink time
+> compensation.
 
-The following changes since commit 48a7c3df14d0cda850337a9b3f9e667a0b12a996:
+Well you haven't seen the iwlwifi patch for it yet :-)
 
-  ath9k_hw: Fix memory leak on ath9k_hw_rf_alloc_ext_banks failure (2010-11-08 16:53:48 -0500)
+Blink compensation is applied to the values. So if the trigger says
+"blink for 167ms on and 167ms off", blink compensation will be applied
+to the value 167.
 
-are available in the git repository at:
-  git://git.kernel.org/pub/scm/linux/kernel/git/padovan/bluetooth-2.6.git master
+johannes
 
-Edgar (gimli) Hucek (1):
-      Bluetooth: Add MacBookAir3,1(2) support
-
-Gustavo F. Padovan (1):
-      Bluetooth: fix endianness conversion in L2CAP
-
-Johan Hedberg (1):
-      Bluetooth: Fix non-SSP auth request for HIGH security level sockets
-
-Luiz Augusto von Dentz (1):
-      Bluetooth: fix not setting security level when creating a rfcomm session
-
-Matthew Garrett (1):
-      Bluetooth: Enable USB autosuspend by default on btusb
-
-Randy Dunlap (1):
-      Bluetooth: fix hidp kconfig dependency warning
-
-steven miao (1):
-      Bluetooth: fix unaligned access to l2cap conf data
-
- drivers/bluetooth/btusb.c   |    5 +++++
- net/bluetooth/hci_event.c   |    6 ++++++
- net/bluetooth/hidp/Kconfig  |    2 +-
- net/bluetooth/l2cap.c       |    8 ++++----
- net/bluetooth/rfcomm/core.c |   13 ++++++++++---
- 5 files changed, 26 insertions(+), 8 deletions(-)
-
--- 
-Gustavo F. Padovan
-ProFUSION embedded systems - http://profusion.mobi
