@@ -1,65 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from casper.infradead.org ([85.118.1.10]:51427 "EHLO
-	casper.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932330Ab0KSXCe convert rfc822-to-8bit (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:58877 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751436Ab0K2T3r (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 19 Nov 2010 18:02:34 -0500
-Subject: Re: [PATCH v7 3/3] nl80211/mac80211: Report signal average
-From: Peter Zijlstra <peterz@infradead.org>
-To: Bob Copeland <me@bobcopeland.com>
-Cc: Bruno Randolf <br1@einfach.org>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Jouni Malinen <j@w1.fi>, linville@tuxdriver.com,
-	randy.dunlap@oracle.com, blp@cs.stanford.edu,
-	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Lars_Ericsson@telia.com, stefanr@s5r6.in-berlin.de,
-	kosaki.motohiro@jp.fujitsu.com, akpm@linux-foundation.org,
-	kevin.granade@gmail.com
-In-Reply-To: <20101119222846.GA26592@hash.localnet>
-References: <20101112024901.28522.21895.stgit@localhost6.localdomain6>
-	 <1290010595.3777.0.camel@jlt3.sipsolutions.net>
-	 <AANLkTimoogSLAipNy=njGtHypqBQSk=usDmXut=KN9TM@mail.gmail.com>
-	 <201011191807.06013.br1@einfach.org> <20101119222846.GA26592@hash.localnet>
-Content-Type: text/plain; charset="UTF-8"
-Date: Sat, 20 Nov 2010 00:01:55 +0100
-Message-ID: <1290207715.2114.10.camel@laptop>
-Mime-Version: 1.0
+	Mon, 29 Nov 2010 14:29:47 -0500
+Date: Mon, 29 Nov 2010 14:26:29 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: David Kilroy <kilroyd@gmail.com>
+Cc: linux-wireless@vger.kernel.org, comes@naic.edu,
+	David Kilroy <kilroyd@googlemail.com>
+Subject: Re: [PATCH] orinoco: abort scan on interface down
+Message-ID: <20101129192628.GC8199@tuxdriver.com>
+References: <1290630782-11095-1-git-send-email-kilroyd@googlemail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1290630782-11095-1-git-send-email-kilroyd@googlemail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2010-11-19 at 17:28 -0500, Bob Copeland wrote:
-> On Fri, Nov 19, 2010 at 06:07:05PM +0900, Bruno Randolf wrote:
-> > Hmm, maybe I suck in mathemathics, but I don't see a way to do that given the 
-> > formula:
-> > 
-> > (((internal * (weight - 1)) + (val * factor)) / weight
+On Wed, Nov 24, 2010 at 08:33:02PM +0000, David Kilroy wrote:
+> This fixes the problem causing the following trace:
 > 
-> I was thinking something along the lines of:
+> ------------[ cut here ]------------
+> WARNING: at linux-2.6.34/net/wireless/core.c:633 wdev_cleanup_work+0xb7/0xe0 [cfg80211]()
+> Hardware name: Latitude C840
+> Pid: 707, comm: cfg80211 Not tainted 2.6.34.7-0.5-desktop #1
+> Call Trace:
+>  [<c02065c3>] try_stack_unwind+0x173/0x190
+>  [<c02051cf>] dump_trace+0x3f/0xe0
+>  [<c020662b>] show_trace_log_lvl+0x4b/0x60
+>  [<c0206658>] show_trace+0x18/0x20
+>  [<c064e0b3>] dump_stack+0x6d/0x72
+>  [<c02443ae>] warn_slowpath_common+0x6e/0xb0
+>  [<c0244403>] warn_slowpath_null+0x13/0x20
+>  [<e2db5497>] wdev_cleanup_work+0xb7/0xe0 [cfg80211]
+>  [<c025cfa9>] run_workqueue+0x79/0x170
+>  [<c025d123>] worker_thread+0x83/0xe0
+>  [<c025fef4>] kthread+0x74/0x80
+>  [<c0203826>] kernel_thread_helper+0x6/0x10
+> ---[ end trace 3f0348b3b0c6f4ff ]---
 > 
-> round = (1 << n) - 1;
-> (((internal * (weight - 1) + round) >> n) + val) * ((1 << n) / weight)
+> Reported by: Giacomo Comes <comes@naic.edu>
+> Signed-off-by: David Kilroy <kilroyd@googlemail.com>
+> ---
 > 
-> where (1 << n) is the factor and ((1 << n) / weight) can be precomputed.
-> If you think about it, this is just reciprocal multiplication in fixed-
-> point math with n bits of decimal resolution. 
-> 
-> The problem is the shift of the older terms introduces roundoff error, but
-> there are some tricks you can do to maintain bounded error, e.g. shifting
-> by some smaller factor of n and scaling other terms -- in the limit you
-> reinvent floating point and then it's slower than division :)
+> This patch has only been compile tested. Given the trace, I've
+> guessed that cfg80211 would prefer that orinoco abort the scan on
+> interface down.
 
-Sure, x/y := x/z * z/y, and by picking z := 2^n, we can pre-compute z/y
-and write x/z using a shift. The problem however is always range vs
-granularity, you chose to first /z and then *z/y, this avoids some
-overflow issues but truncates the lower n bits of x.
+Any chance we can get a Tested-by on this one, so I can feel good
+about sending it for 2.6.37?
 
-If you first *z/y and then /z you keep your low bits but risk loosing
-the top bits to an overflow.
-
-I guess the question is do we really need weights outside of 2^n? If
-not, you can use the weight := 2^n version. If you do, you get to pick
-either of the previously mentioned options.
-
-Sadly gcc doesn't sanely support a u128 type, which would be very useful
-to avoid some of these overflow issues (like we used to use u64 mults
-for u32 fixed points mults).
+John
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
