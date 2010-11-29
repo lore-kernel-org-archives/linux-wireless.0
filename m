@@ -1,77 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:54621 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753181Ab0KLRTD (ORCPT
+Received: from mail-iw0-f174.google.com ([209.85.214.174]:53699 "EHLO
+	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752428Ab0K2VTk convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 12 Nov 2010 12:19:03 -0500
-Message-ID: <4CDD76FF.7060307@candelatech.com>
-Date: Fri, 12 Nov 2010 09:18:55 -0800
-From: Ben Greear <greearb@candelatech.com>
+	Mon, 29 Nov 2010 16:19:40 -0500
+Received: by iwn5 with SMTP id 5so595947iwn.19
+        for <linux-wireless@vger.kernel.org>; Mon, 29 Nov 2010 13:19:39 -0800 (PST)
 MIME-Version: 1.0
-To: Tejun Heo <tj@kernel.org>
-CC: Johannes Berg <johannes@sipsolutions.net>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: ath5k/mac80211:  Reproducible deadlock with 64-stations.
-References: <4CDB2488.4040802@candelatech.com> <1289437356.3748.25.camel@jlt3.sipsolutions.net> <4CDBB716.7020802@kernel.org> <4CDC2016.8020200@candelatech.com> <4CDC354C.2060503@candelatech.com> <4CDC7860.3070307@candelatech.com> <4CDD12BD.7030208@kernel.org>
-In-Reply-To: <4CDD12BD.7030208@kernel.org>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+In-Reply-To: <20101129195038.GD8199@tuxdriver.com>
+References: <1290279018-29716-1-git-send-email-nbd@openwrt.org>
+ <20101122201511.GG2117@tuxdriver.com> <4CEAD7FA.1060107@openwrt.org> <20101129195038.GD8199@tuxdriver.com>
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Date: Mon, 29 Nov 2010 13:19:19 -0800
+Message-ID: <AANLkTimS1hsfoOe9bdgad7kkUPPcMVjd_kB_Ru8kbqt8@mail.gmail.com>
+Subject: Re: [PATCH] ath9k_hw: fix endian issues with CTLs on AR9003
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: Felix Fietkau <nbd@openwrt.org>, linux-wireless@vger.kernel.org,
+	Greg KH <greg@kroah.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 11/12/2010 02:11 AM, Tejun Heo wrote:
-> Hello,
+On Mon, Nov 29, 2010 at 11:50 AM, John W. Linville
+<linville@tuxdriver.com> wrote:
+> On Mon, Nov 22, 2010 at 09:52:10PM +0100, Felix Fietkau wrote:
+>> On 2010-11-22 9:15 PM, John W. Linville wrote:
+>> > On Sat, Nov 20, 2010 at 07:50:18PM +0100, Felix Fietkau wrote:
+>> >> Parsing data using bitfields is messy, because it makes endian handling
+>> >> much harder. AR9002 and earlier got it right, AR9003 got it wrong.
+>> >> Fix it by getting rid of the CTL related bitfields entirely and use
+>> >> masks instead.
+>> >>
+>> >> Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+>> >> Cc: stable@kernel.org
+>> >
+>> > Why does this merit stable consideration?
+>> It's a simple fix and I would like it to make it to stable releases,
+>> because this bug might possibly cause the tx power to be too high in
+>> some instances (when running on big-endian systems), violating
+>> regulatory limits.
 >
-> On 11/12/2010 12:12 AM, Ben Greear wrote:
->> The lockup (or extreme slowdown?) happens before the
->> serious memory pressure.
->>
->> One thing I noticed is that at one point near (at?) the beginning
->> of the slowdown, it took 36-seconds to complete the
->> flush_work() call in ieee80211_do_stop in iface.c
->>
->>  From some printk's I added:
->>
->> Nov 11 14:58:13 localhost kernel: do_stop: sta14 flushing work: e51298b4
->> Nov 11 14:58:49 localhost kernel: do_stop: sta14 flushed.
->>
->> It is holding RTNL for this entire time, which of course stops
->> a large number of other useful processes from making
->> progress.
->>
->> Is there any good reason for the flush to take so long?
+> After being chided for having an excessive number of patches in -next
+> with "Cc: stable@kernel.org", I would prefer to avoid (or strongly
+> limit) merging such patches that way.
+
+Is this a bad thing?
+
+> Patches intended for stable are supposed to be fixes.  Fixes are
+> supposed to go to the current release, even if that means that patches
+> need to be refactored to separate real fixes from other bits.
 >
-> It depends on what the work being flushed was doing.  Which one is it
-> trying to flush?  Also, if the memory pressure is high enough, due to
-
-It's trying to flush sdata->work.  I have no idea which worker..how
-can I tell?
-
-I can reproduce this every time, and I don't mind adding debugging
-code, so please let me know if there is something I can do to get
-you better information.
-
-> the dynamic nature of workqueue, processing of works can be delayed
-> while trying to create new workers to process them.  Situations like
-> that usually don't happen often as it's likely that workers get freed
-> up as other works finish; however, if workers are piling up on
-> rtnl_lock, there really isn't much it can do.  If there's work user
-> which can behave like that, it would be a good idea to restrict its
-> maximum concurrency using a separate workqueue.
-
-In my case, it seems that memory is OK, but as the deadlock happens
-the system runs slow for a bit and then goes OOM.  I compiled with 2G/2G split
-so that I have extra low-memory and it runs a bit longer before locking
-up completely (or just endlessly spewing allocation-failed messages).
-
-Thanks,
-Ben
-
+> Now, what constitutes a fix is that part that can sometimes be subject
+> to debate.  Fixes should be small and obvious if possible, and they
+> should address significant bug and/or a regression, and be documented
+> with bug reports, tested by users, etc.  The later in the release,
+> the stricter we must adhere to such definitions.
 >
-> Thanks.
+> So...I guess what I am asking is if this is a fix, can you document
+> the effects of the bug?  Can you retarget the patch against 2.6.37?
 >
+> Otherwise, can we omit the Cc?
 
+I just wanted to point out that last thing I heard on this topic was I
+suggested I'd just take the patch and apply it to compat-wireless on
+the linux-next-pending/ directory if some of these sort of patches do
+not get merged as stable. After that Greg said he's be just happy
+taking them, so this is what pushed us to just go ahead and send these
+more grey-area fixes as stable fixes.
 
--- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+Come to think of it we didn't get OTP patches in for 2.6.36 so I am
+not considering we should just disable AR9003 from the PCI ID list for
+ath9k as all cards sold should have it so in that case this patch
+would just need to go to 2.6.37 and not 2.6.36.
 
+  Luis
