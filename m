@@ -1,127 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:7639 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755305Ab0KLRvy (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 12 Nov 2010 12:51:54 -0500
-Subject: Re: [PATCH 2/3] iwlagn: simplify iwlagn_tx_skb
-From: "Guy, Wey-Yi" <wey-yi.w.guy@intel.com>
-To: Stanislaw Gruszka <sgruszka@redhat.com>
-Cc: Intel Linux Wireless <ilw@linux.intel.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <20101112164620.GA10877@redhat.com>
-References: <1289548027-3383-1-git-send-email-sgruszka@redhat.com>
-	 <1289548027-3383-2-git-send-email-sgruszka@redhat.com>
-	 <1289577125.16178.7.camel@wwguy-ubuntu> <20101112164620.GA10877@redhat.com>
-Content-Type: text/plain
-Date: Fri, 12 Nov 2010 09:51:02 -0800
-Message-Id: <1289584262.1935.0.camel@wwguy-ubuntu>
-Mime-Version: 1.0
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:58396 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751251Ab0K2TwY (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 29 Nov 2010 14:52:24 -0500
+Date: Mon, 29 Nov 2010 14:50:38 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Felix Fietkau <nbd@openwrt.org>
+Cc: linux-wireless@vger.kernel.org, lrodriguez@atheros.com
+Subject: Re: [PATCH] ath9k_hw: fix endian issues with CTLs on AR9003
+Message-ID: <20101129195038.GD8199@tuxdriver.com>
+References: <1290279018-29716-1-git-send-email-nbd@openwrt.org>
+ <20101122201511.GG2117@tuxdriver.com>
+ <4CEAD7FA.1060107@openwrt.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <4CEAD7FA.1060107@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2010-11-12 at 08:46 -0800, Stanislaw Gruszka wrote:
-> Hi,
-> 
-> On Fri, Nov 12, 2010 at 07:52:05AM -0800, Guy, Wey-Yi wrote:
-> > On Thu, 2010-11-11 at 23:47 -0800, Stanislaw Gruszka wrote:
-> > > We can simplify length calculation in iwlagn_tx_skb, that function
-> > > is enough complex, without fuzz it more than necessary.
-> > > 
-> > > Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
-> > > ---
-> > >  drivers/net/wireless/iwlwifi/iwl-agn-tx.c |   33 ++++++++++------------------
-> > >  1 files changed, 12 insertions(+), 21 deletions(-)
-> > > 
-> > > diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-tx.c b/drivers/net/wireless/iwlwifi/iwl-agn-tx.c
-> > > index 2b078a9..1205cec 100644
-> > > --- a/drivers/net/wireless/iwlwifi/iwl-agn-tx.c
-> > > +++ b/drivers/net/wireless/iwlwifi/iwl-agn-tx.c
-> > > @@ -522,7 +522,7 @@ int iwlagn_tx_skb(struct iwl_priv *priv, struct sk_buff *skb)
-> > >  	dma_addr_t phys_addr;
-> > >  	dma_addr_t txcmd_phys;
-> > >  	dma_addr_t scratch_phys;
-> > > -	u16 len, len_org, firstlen, secondlen;
-> > > +	u16 len, firstlen, secondlen;
-> > >  	u16 seq_number = 0;
-> > >  	__le16 fc;
-> > >  	u8 hdr_len;
-> > > @@ -687,30 +687,23 @@ int iwlagn_tx_skb(struct iwl_priv *priv, struct sk_buff *skb)
-> > >  	 */
-> > >  	len = sizeof(struct iwl_tx_cmd) +
-> > >  		sizeof(struct iwl_cmd_header) + hdr_len;
-> > > -
-> > > -	len_org = len;
-> > > -	firstlen = len = (len + 3) & ~3;
-> > > -
-> > > -	if (len_org != len)
-> > > -		len_org = 1;
-> > > -	else
-> > > -		len_org = 0;
-> > > +	firstlen = (len + 3) & ~3;
-> > >  
-> > >  	/* Tell NIC about any 2-byte padding after MAC header */
-> > > -	if (len_org)
-> > > +	if (firstlen != len)
-> > >  		tx_cmd->tx_flags |= TX_CMD_FLG_MH_PAD_MSK;
-> > >  
-> > >  	/* Physical address of this Tx command's header (not MAC header!),
-> > >  	 * within command buffer array. */
-> > >  	txcmd_phys = pci_map_single(priv->pci_dev,
-> > > -				    &out_cmd->hdr, len,
-> > > +				    &out_cmd->hdr, firstlen,
-> > >  				    PCI_DMA_BIDIRECTIONAL);
-> > >  	dma_unmap_addr_set(out_meta, mapping, txcmd_phys);
-> > > -	dma_unmap_len_set(out_meta, len, len);
-> > > +	dma_unmap_len_set(out_meta, len, firstlen);
+On Mon, Nov 22, 2010 at 09:52:10PM +0100, Felix Fietkau wrote:
+> On 2010-11-22 9:15 PM, John W. Linville wrote:
+> > On Sat, Nov 20, 2010 at 07:50:18PM +0100, Felix Fietkau wrote:
+> >> Parsing data using bitfields is messy, because it makes endian handling
+> >> much harder. AR9002 and earlier got it right, AR9003 got it wrong.
+> >> Fix it by getting rid of the CTL related bitfields entirely and use
+> >> masks instead.
+> >> 
+> >> Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+> >> Cc: stable@kernel.org
 > > 
-> > it is possible len != firstlen, right?
-> 
-> Yes it is, firstlen is aligned up to 4 byes value, txcmd_phys dma map
-> size is firstlen and in consequence I use it every time with txcmd_phys.
-> 
-> > >  	/* Add buffer containing Tx command and MAC(!) header to TFD's
-> > >  	 * first entry */
-> > >  	priv->cfg->ops->lib->txq_attach_buf_to_tfd(priv, txq,
-> > > -						   txcmd_phys, len, 1, 0);
-> > > +						   txcmd_phys, firstlen, 1, 0);
-> > >  
-> > >  	if (!ieee80211_has_morefrags(hdr->frame_control)) {
-> > >  		txq->need_update = 1;
-> > > @@ -721,23 +714,21 @@ int iwlagn_tx_skb(struct iwl_priv *priv, struct sk_buff *skb)
-> > >  
-> > >  	/* Set up TFD's 2nd entry to point directly to remainder of skb,
-> > >  	 * if any (802.11 null frames have no payload). */
-> > > -	secondlen = len = skb->len - hdr_len;
-> > > -	if (len) {
-> > > +	secondlen = skb->len - hdr_len;
-> > > +	if (secondlen > 0) {
-> > >  		phys_addr = pci_map_single(priv->pci_dev, skb->data + hdr_len,
-> > > -					   len, PCI_DMA_TODEVICE);
-> > > +					   secondlen, PCI_DMA_TODEVICE);
-> > >  		priv->cfg->ops->lib->txq_attach_buf_to_tfd(priv, txq,
-> > > -							   phys_addr, len,
-> > > +							   phys_addr, secondlen,
-> > >  							   0, 0);
-> > >  	}
-> > >  
-> > >  	scratch_phys = txcmd_phys + sizeof(struct iwl_cmd_header) +
-> > >  				offsetof(struct iwl_tx_cmd, scratch);
-> > >  
-> > > -	len = sizeof(struct iwl_tx_cmd) +
-> > > -		sizeof(struct iwl_cmd_header) + hdr_len;
-> > >  	/* take back ownership of DMA buffer to enable update */
-> > >  	pci_dma_sync_single_for_cpu(priv->pci_dev, txcmd_phys,
-> > > -				    len, PCI_DMA_BIDIRECTIONAL);
-> > > +				    firstlen, PCI_DMA_BIDIRECTIONAL);
-> > 
-> > same here, "firstlen" not necessary equal "len"
-> 
-> I guess its enough to sync just "len" but I prefer to use the
-> size we used to map dma.
-> 
-ok, it make sense
+> > Why does this merit stable consideration?
+> It's a simple fix and I would like it to make it to stable releases,
+> because this bug might possibly cause the tx power to be too high in
+> some instances (when running on big-endian systems), violating
+> regulatory limits.
 
-Acked-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+After being chided for having an excessive number of patches in -next
+with "Cc: stable@kernel.org", I would prefer to avoid (or strongly
+limit) merging such patches that way.
 
+Patches intended for stable are supposed to be fixes.  Fixes are
+supposed to go to the current release, even if that means that patches
+need to be refactored to separate real fixes from other bits.
 
+Now, what constitutes a fix is that part that can sometimes be subject
+to debate.  Fixes should be small and obvious if possible, and they
+should address significant bug and/or a regression, and be documented
+with bug reports, tested by users, etc.  The later in the release,
+the stricter we must adhere to such definitions.
 
+So...I guess what I am asking is if this is a fix, can you document
+the effects of the bug?  Can you retarget the patch against 2.6.37?
+
+Otherwise, can we omit the Cc?
+
+Thanks!
+
+John
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
