@@ -1,48 +1,82 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:56013 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754390Ab0KPQGo (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 16 Nov 2010 11:06:44 -0500
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Shanyu Zhao <shanyu.zhao@intel.com>,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Subject: [PATCH 17/18] iwlagn: check change before commit RXON cmd
-Date: Tue, 16 Nov 2010 08:01:50 -0800
-Message-Id: <1289923311-14920-18-git-send-email-wey-yi.w.guy@intel.com>
-In-Reply-To: <1289923311-14920-1-git-send-email-wey-yi.w.guy@intel.com>
-References: <1289923311-14920-1-git-send-email-wey-yi.w.guy@intel.com>
+Received: from mail-iw0-f174.google.com ([209.85.214.174]:37900 "EHLO
+	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751860Ab0K2MGZ convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 29 Nov 2010 07:06:25 -0500
+Received: by iwn5 with SMTP id 5so73652iwn.19
+        for <linux-wireless@vger.kernel.org>; Mon, 29 Nov 2010 04:06:24 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <1290794073-5309-2-git-send-email-rmanoharan@atheros.com>
+References: <1290794073-5309-1-git-send-email-rmanoharan@atheros.com>
+	<1290794073-5309-2-git-send-email-rmanoharan@atheros.com>
+Date: Mon, 29 Nov 2010 13:06:23 +0100
+Message-ID: <AANLkTikdE_L+4Zxv7qT32P_AmzJ1RHRLRQjftUVpwOUk@mail.gmail.com>
+Subject: Re: [PATCH 2/3] ath9k: Add change_interface callback
+From: =?ISO-8859-1?Q?Bj=F6rn_Smedman?= <bjorn.smedman@venatech.se>
+To: Rajkumar Manoharan <rmanoharan@atheros.com>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Shanyu Zhao <shanyu.zhao@intel.com>
+On Fri, Nov 26, 2010 at 6:54 PM, Rajkumar Manoharan
+<rmanoharan@atheros.com> wrote:
+> Add support to change interface type
+> without bringing down the interface.
+>
+> Signed-off-by: Rajkumar Manoharan <rmanoharan@atheros.com>
+> ---
+[snip]
+> +static int ath9k_change_interface(struct ieee80211_hw *hw,
+> +                                 struct ieee80211_vif *vif,
+> +                                 enum nl80211_iftype new_type,
+> +                                 bool p2p)
+> +{
+> +       struct ath_wiphy *aphy = hw->priv;
+> +       struct ath_softc *sc = aphy->sc;
+> +       struct ath_common *common = ath9k_hw_common(sc->sc_ah);
+> +
+> +       ath_print(common, ATH_DBG_CONFIG, "Change Interface\n");
+> +       mutex_lock(&sc->mutex);
+> +
+> +       new_type = ieee80211_iftype_p2p(new_type, p2p);
+> +
+> +       switch (new_type) {
+> +       case NL80211_IFTYPE_AP:
+> +       case NL80211_IFTYPE_ADHOC:
+> +               break;
 
-When setting rxon chain and filter, no need to commit RXON when the
-chain flag is not changed. This reduces the number of RXON commands
-we send down to uCode.
+If you have to reclaim beacon in the case where you go from AP -> STA
+(replicate remove_interface), don't you have to replicate what
+add_interface does in this case, e.g. the check below etc?
 
-Signed-off-by: Shanyu Zhao <shanyu.zhao@intel.com>
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-agn.c |    3 ++-
- 1 files changed, 2 insertions(+), 1 deletions(-)
+                if (sc->nbcnvifs >= ATH_BCBUF) {
+                        ret = -ENOBUFS;
+                        goto out;
+                }
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
-index 59af06d..c6e455e 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
-@@ -97,7 +97,8 @@ void iwl_update_chain_flags(struct iwl_priv *priv)
- 	if (priv->cfg->ops->hcmd->set_rxon_chain) {
- 		for_each_context(priv, ctx) {
- 			priv->cfg->ops->hcmd->set_rxon_chain(priv, ctx);
--			iwlcore_commit_rxon(priv, ctx);
-+			if (ctx->active.rx_chain != ctx->staging.rx_chain)
-+				iwlcore_commit_rxon(priv, ctx);
- 		}
- 	}
- }
--- 
-1.7.0.4
+> +       case NL80211_IFTYPE_STATION:
+> +               /* Stop ANI */
+> +               sc->sc_flags &= ~SC_OP_ANI_RUN;
+> +               del_timer_sync(&common->ani.timer);
+> +               if ((vif->type == NL80211_IFTYPE_AP) ||
+> +                   (vif->type == NL80211_IFTYPE_ADHOC))
+> +                       ath9k_reclaim_beacon(sc, vif);
+> +               break;
+> +       default:
+> +               ath_print(common, ATH_DBG_FATAL,
+> +                       "Interface type %d not yet supported\n", vif->type);
+> +               mutex_unlock(&sc->mutex);
+> +               return -ENOTSUPP;
+> +       }
+> +       vif->type = new_type;
+> +
+> +       mutex_unlock(&sc->mutex);
+> +       return 0;
+> +}
 
+Also, doesn't this patch introduce yet another race condition between
+configuration change in process context and bcn_tasklet?
+
+/Björn
