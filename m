@@ -1,101 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mgw-da01.ext.nokia.com ([147.243.128.24]:26101 "EHLO
-	mgw-da01.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757382Ab0KAMZ7 (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:50166 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751689Ab0K2V3o (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 1 Nov 2010 08:25:59 -0400
-Received: from localhost.localdomain (chilepepper.research.nokia.com [172.21.50.167])
-	by mgw-da01.nokia.com (Switch-3.4.3/Switch-3.4.3) with ESMTP id oA1BqGcN020116
-	for <linux-wireless@vger.kernel.org>; Mon, 1 Nov 2010 13:52:27 +0200
-From: Luciano Coelho <luciano.coelho@nokia.com>
-To: linux-wireless@vger.kernel.org
-Subject: [RFC 11/15] mac80211: pass cfg80211 periodic scan request structure down to the driver
-Date: Mon,  1 Nov 2010 13:52:12 +0200
-Message-Id: <1288612336-2830-12-git-send-email-luciano.coelho@nokia.com>
-In-Reply-To: <1288612336-2830-1-git-send-email-luciano.coelho@nokia.com>
-References: <1288612336-2830-1-git-send-email-luciano.coelho@nokia.com>
+	Mon, 29 Nov 2010 16:29:44 -0500
+Date: Mon, 29 Nov 2010 16:27:08 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Cc: Felix Fietkau <nbd@openwrt.org>, linux-wireless@vger.kernel.org,
+	Greg KH <greg@kroah.com>
+Subject: Re: [PATCH] ath9k_hw: fix endian issues with CTLs on AR9003
+Message-ID: <20101129212707.GG8199@tuxdriver.com>
+References: <1290279018-29716-1-git-send-email-nbd@openwrt.org>
+ <20101122201511.GG2117@tuxdriver.com>
+ <4CEAD7FA.1060107@openwrt.org>
+ <20101129195038.GD8199@tuxdriver.com>
+ <AANLkTimS1hsfoOe9bdgad7kkUPPcMVjd_kB_Ru8kbqt8@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <AANLkTimS1hsfoOe9bdgad7kkUPPcMVjd_kB_Ru8kbqt8@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Pass the cfg80211_periodic_request structure down to the driver.  This
-structure contains the channel information (and will have SSID and IE
-information) to be passed to the driver.
+On Mon, Nov 29, 2010 at 01:19:19PM -0800, Luis R. Rodriguez wrote:
+> On Mon, Nov 29, 2010 at 11:50 AM, John W. Linville
+> <linville@tuxdriver.com> wrote:
 
-Signed-off-by: Luciano Coelho <luciano.coelho@nokia.com>
----
- include/net/mac80211.h      |    3 ++-
- net/mac80211/driver-ops.h   |    7 ++++---
- net/mac80211/driver-trace.h |    5 +++--
- net/mac80211/scan.c         |    2 +-
- 4 files changed, 10 insertions(+), 7 deletions(-)
+> > After being chided for having an excessive number of patches in -next
+> > with "Cc: stable@kernel.org", I would prefer to avoid (or strongly
+> > limit) merging such patches that way.
+> 
+> Is this a bad thing?
 
-diff --git a/include/net/mac80211.h b/include/net/mac80211.h
-index 6b50780..901debb 100644
---- a/include/net/mac80211.h
-+++ b/include/net/mac80211.h
-@@ -1760,7 +1760,8 @@ struct ieee80211_ops {
- 	int (*hw_scan)(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
- 		       struct cfg80211_scan_request *req);
- 	int (*periodic_start)(struct ieee80211_hw *hw,
--			      struct ieee80211_vif *vif);
-+			      struct ieee80211_vif *vif,
-+			      struct cfg80211_periodic_request *req);
- 	int (*periodic_stop)(struct ieee80211_hw *hw,
- 			      struct ieee80211_vif *vif);
- 	void (*sw_scan_start)(struct ieee80211_hw *hw);
-diff --git a/net/mac80211/driver-ops.h b/net/mac80211/driver-ops.h
-index c425e1c..88b5f90 100644
---- a/net/mac80211/driver-ops.h
-+++ b/net/mac80211/driver-ops.h
-@@ -192,14 +192,15 @@ static inline int drv_hw_scan(struct ieee80211_local *local,
- }
- 
- static inline int drv_periodic_start(struct ieee80211_local *local,
--				     struct ieee80211_sub_if_data *sdata)
-+				     struct ieee80211_sub_if_data *sdata,
-+				     struct cfg80211_periodic_request *req)
- {
- 	int ret;
- 
- 	might_sleep();
- 
--	trace_drv_periodic_start(local, sdata);
--	ret = local->ops->periodic_start(&local->hw, &sdata->vif);
-+	trace_drv_periodic_start(local, sdata, req);
-+	ret = local->ops->periodic_start(&local->hw, &sdata->vif, req);
- 	trace_drv_return_int(local, ret);
- 	return ret;
- }
-diff --git a/net/mac80211/driver-trace.h b/net/mac80211/driver-trace.h
-index 2acdc43..8d6c7e6 100644
---- a/net/mac80211/driver-trace.h
-+++ b/net/mac80211/driver-trace.h
-@@ -441,9 +441,10 @@ TRACE_EVENT(drv_hw_scan,
- 
- TRACE_EVENT(drv_periodic_start,
- 	TP_PROTO(struct ieee80211_local *local,
--		 struct ieee80211_sub_if_data *sdata),
-+		 struct ieee80211_sub_if_data *sdata,
-+		 struct cfg80211_periodic_request *req),
- 
--	TP_ARGS(local, sdata),
-+	    TP_ARGS(local, sdata, req),
- 
- 	TP_STRUCT__entry(
- 		LOCAL_ENTRY
-diff --git a/net/mac80211/scan.c b/net/mac80211/scan.c
-index 9273ab0..fda8d41 100644
---- a/net/mac80211/scan.c
-+++ b/net/mac80211/scan.c
-@@ -846,7 +846,7 @@ int ieee80211_request_periodic_start(struct ieee80211_sub_if_data *sdata,
- 
- 	local->periodic_req = req;
- 
--	ret = drv_periodic_start(local, sdata);
-+	ret = drv_periodic_start(local, sdata, req);
- 	if (!ret)
- 		__set_bit(SCAN_PERIODIC_SCANNING, &local->scanning);
- 	else
+The point was that if it was a fix worth of consideration for stable
+then it generally ought to be worth of consideration for the current
+release.
+
+> Come to think of it we didn't get OTP patches in for 2.6.36 so I am
+> not considering we should just disable AR9003 from the PCI ID list for
+> ath9k as all cards sold should have it so in that case this patch
+> would just need to go to 2.6.37 and not 2.6.36.
+
+Do you perhaps mean "need to go to 2.6.38 and not 2.6.37"?
+
+John
 -- 
-1.7.0.4
-
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
