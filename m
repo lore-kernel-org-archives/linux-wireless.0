@@ -1,1125 +1,196 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from hrndva-omtalb.mail.rr.com ([71.74.56.123]:59992 "EHLO
-	hrndva-omtalb.mail.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755875Ab0KUCSj (ORCPT
+Received: from mail-px0-f174.google.com ([209.85.212.174]:35058 "EHLO
+	mail-px0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753474Ab0K2MhO (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 20 Nov 2010 21:18:39 -0500
-Date: Sat, 20 Nov 2010 20:18:24 -0600
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: John W Linville <linville@tuxdriver.com>
-Cc: chaoming_li@realsil.com.cn, linux-wireless@vger.kernel.org
-Subject: [RFC PATCH 01/23] rtl8192ce: Introduce new driver
-Message-ID: <4ce88170.1kjUZGKfKV4MKlVz%Larry.Finger@lwfinger.net>
+	Mon, 29 Nov 2010 07:37:14 -0500
+From: Sujith <m.sujith@gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
+Message-ID: <19699.40557.302196.832862@gargle.gargle.HOWL>
+Date: Mon, 29 Nov 2010 18:07:01 +0530
+To: Pavel Machek <pma@sysgo.com>
+Cc: Larry Finger <Larry.Finger@lwfinger.net>,
+	"ath9k-devel@venema.h4ckr.net" <ath9k-devel@venema.h4ckr.net>,
+	kernel list <linux-kernel@vger.kernel.org>,
+	"chunkeey@googlemail.com" <chunkeey@googlemail.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"rudolf.marek@sysgo.com" <rudolf.marek@sysgo.com>,
+	"cko@sysgo.com" <cko@sysgo.com>, "mfa@sysgo.com" <mfa@sysgo.com>,
+	"anl@sysgo.com" <anl@sysgo.com>
+Subject: Re: ath9k_htc vs. powerpc (was Re: working usb wifi card, that is still possible to buy)
+In-Reply-To: <20101129100159.GC28833@pma.sysgo.com>
+References: <20101103092431.GA21138@pma.sysgo.com>
+	<20101124081616.GA30595@pma.sysgo.com>
+	<20101124131320.GA2611@pma.sysgo.com>
+	<4CED33E0.5040000@lwfinger.net>
+	<20101126083125.GA28982@pma.sysgo.com>
+	<20101126102026.GA11857@pma.sysgo.com>
+	<20101126112737.GB11857@pma.sysgo.com>
+	<19695.40541.335361.81396@gargle.gargle.HOWL>
+	<20101126123706.GA19755@pma.sysgo.com>
+	<20101129100159.GC28833@pma.sysgo.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
->From 3d1613f502f31515e8c614bdffa5061eefc2011e Mon Sep 17 00:00:00 2001
-From: Larry Finger <Larry.Finger@lwfinger.net>
-Date: Sat, 20 Nov 2010 18:20:34 -0600
-Subject: [PATCH 01/23] rtl8192ce: rtlwifi: Add files to rtlwifi.ko,Part 1
+Pavel Machek wrote:
+> ...so I indentified two endianness problems in eeprom, but even with
+> both fixed, it still will not associate. Is there some way to dump USB
+> packets, then compare them between PC and PowerPC versions? Should I
+> expect them to match?
 
-Add files base.{c,h}
+Does this patch help ?
 
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
----
- drivers/net/wireless/rtlwifi/base.c |  958 +++++++++++++++++++++++++++++++++++
- drivers/net/wireless/rtlwifi/base.h |  120 +++++
- 2 files changed, 1078 insertions(+), 0 deletions(-)
- create mode 100644 drivers/net/wireless/rtlwifi/base.c
- create mode 100644 drivers/net/wireless/rtlwifi/base.h
-
-diff --git a/drivers/net/wireless/rtlwifi/base.c b/drivers/net/wireless/rtlwifi/base.c
-new file mode 100644
-index 0000000..851b42f
---- /dev/null
-+++ b/drivers/net/wireless/rtlwifi/base.c
-@@ -0,0 +1,958 @@
-+/******************************************************************************
-+ *
-+ * Copyright(c) 2009-2010  Realtek Corporation.
-+ *
-+ * This program is free software; you can redistribute it and/or modify it
-+ * under the terms of version 2 of the GNU General Public License as
-+ * published by the Free Software Foundation.
-+ *
-+ * This program is distributed in the hope that it will be useful, but WITHOUT
-+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
-+ * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
-+ * more details.
-+ *
-+ * You should have received a copy of the GNU General Public License along with
-+ * this program; if not, write to the Free Software Foundation, Inc.,
-+ * 51 Franklin Street, Fifth Floor, Boston, MA 02110, USA
-+ *
-+ * The full GNU General Public License is included in this distribution in the
-+ * file called LICENSE.
-+ *
-+ * Contact Information:
-+ * wlanfae <wlanfae@realtek.com>
-+ * Realtek Corporation, No. 2, Innovation Road II, Hsinchu Science Park,
-+ * Hsinchu 300, Taiwan.
-+ *
-+ * Larry Finger <Larry.Finger@lwfinger.net>
-+ *
-+ *****************************************************************************/
-+
-+#include <linux/ip.h>
-+#include "wifi.h"
-+#include "rc.h"
-+#include "base.h"
-+#include "efuse.h"
-+#include "cam.h"
-+#include "ps.h"
-+#include "regd.h"
-+
-+/*
-+ *NOTICE!!!: This file will be very big, we hsould
-+ *keep it clear under follwing roles:
-+ *
-+ *This file include follwing part, so, if you add new
-+ *functions into this file, please check which part it
-+ *should includes. or check if you should add new part
-+ *for this file:
-+ *
-+ *1) mac80211 init functions
-+ *2) tx information functions
-+ *3) functions called by core.c
-+ *4) wq & timer callback functions
-+ *5) frame process functions
-+ *6) sysfs functions
-+ *7) ...
-+ */
-+
-+/*********************************************************
-+ *
-+ * mac80211 init functions
-+ *
-+ *********************************************************/
-+static struct ieee80211_channel rtl_channeltable[] = {
-+	{.center_freq = 2412, .hw_value = 1,},
-+	{.center_freq = 2417, .hw_value = 2,},
-+	{.center_freq = 2422, .hw_value = 3,},
-+	{.center_freq = 2427, .hw_value = 4,},
-+	{.center_freq = 2432, .hw_value = 5,},
-+	{.center_freq = 2437, .hw_value = 6,},
-+	{.center_freq = 2442, .hw_value = 7,},
-+	{.center_freq = 2447, .hw_value = 8,},
-+	{.center_freq = 2452, .hw_value = 9,},
-+	{.center_freq = 2457, .hw_value = 10,},
-+	{.center_freq = 2462, .hw_value = 11,},
-+	{.center_freq = 2467, .hw_value = 12,},
-+	{.center_freq = 2472, .hw_value = 13,},
-+	{.center_freq = 2484, .hw_value = 14,},
-+};
-+
-+static struct ieee80211_rate rtl_ratetable[] = {
-+	{.bitrate = 10, .hw_value = 0x00,},
-+	{.bitrate = 20, .hw_value = 0x01,},
-+	{.bitrate = 55, .hw_value = 0x02,},
-+	{.bitrate = 110, .hw_value = 0x03,},
-+	{.bitrate = 60, .hw_value = 0x04,},
-+	{.bitrate = 90, .hw_value = 0x05,},
-+	{.bitrate = 120, .hw_value = 0x06,},
-+	{.bitrate = 180, .hw_value = 0x07,},
-+	{.bitrate = 240, .hw_value = 0x08,},
-+	{.bitrate = 360, .hw_value = 0x09,},
-+	{.bitrate = 480, .hw_value = 0x0a,},
-+	{.bitrate = 540, .hw_value = 0x0b,},
-+};
-+
-+static struct ieee80211_supported_band rtl_band_2ghz = {
-+	.band = IEEE80211_BAND_2GHZ,
-+
-+	.channels = rtl_channeltable,
-+	.n_channels = ARRAY_SIZE(rtl_channeltable),
-+
-+	.bitrates = rtl_ratetable,
-+	.n_bitrates = ARRAY_SIZE(rtl_ratetable),
-+
-+	.ht_cap = {0},
-+};
-+
-+static void _rtl_init_hw_ht_capab(struct ieee80211_hw *hw,
-+				  struct ieee80211_sta_ht_cap *ht_cap)
-+{
-+	struct rtl_priv *rtlpriv = rtl_priv(hw);
-+	struct rtl_phy *rtlphy = &(rtlpriv->phy);
-+
-+	ht_cap->ht_supported = true;
-+	ht_cap->cap = IEEE80211_HT_CAP_SUP_WIDTH_20_40 |
-+	    IEEE80211_HT_CAP_SGI_40 |
-+	    IEEE80211_HT_CAP_SGI_20 |
-+	    IEEE80211_HT_CAP_DSSSCCK40 | IEEE80211_HT_CAP_MAX_AMSDU;
-+
-+	/*
-+	 *Maximum length of AMPDU that the STA can receive.
-+	 *Length = 2 ^ (13 + max_ampdu_length_exp) - 1 (octets)
-+	 */
-+	ht_cap->ampdu_factor = IEEE80211_HT_MAX_AMPDU_64K;
-+
-+	/*Minimum MPDU start spacing , */
-+	ht_cap->ampdu_density = IEEE80211_HT_MPDU_DENSITY_16;
-+
-+	ht_cap->mcs.tx_params = IEEE80211_HT_MCS_TX_DEFINED;
-+
-+	/*
-+	 *hw->wiphy->bands[IEEE80211_BAND_2GHZ]
-+	 *base on ant_num
-+	 *rx_mask: RX mask
-+	 *if rx_ant =1 rx_mask[0]=0xff;==>MCS0-MCS7
-+	 *if rx_ant =2 rx_mask[1]=0xff;==>MCS8-MCS15
-+	 *if rx_ant >=3 rx_mask[2]=0xff;
-+	 *if BW_40 rx_mask[4]=0x01;
-+	 *highest supported RX rate
-+	 */
-+	if (get_rf_type(rtlphy) == RF_1T2R || get_rf_type(rtlphy) == RF_2T2R) {
-+
-+		RT_TRACE(rtlpriv, COMP_INIT, DBG_DMESG, ("1T2R or 2T2R\n"));
-+
-+		ht_cap->mcs.rx_mask[0] = 0xFF;
-+		ht_cap->mcs.rx_mask[1] = 0xFF;
-+		ht_cap->mcs.rx_mask[4] = 0x01;
-+
-+		ht_cap->mcs.rx_highest = MAX_BIT_RATE_40MHZ_MCS15;
-+	} else if (get_rf_type(rtlphy) == RF_1T1R) {
-+
-+		RT_TRACE(rtlpriv, COMP_INIT, DBG_DMESG, ("1T1R\n"));
-+
-+		ht_cap->mcs.rx_mask[0] = 0xFF;
-+		ht_cap->mcs.rx_mask[1] = 0x00;
-+		ht_cap->mcs.rx_mask[4] = 0x01;
-+
-+		ht_cap->mcs.rx_highest = MAX_BIT_RATE_40MHZ_MCS7;
-+	}
-+}
-+
-+static void _rtl_init_mac80211(struct ieee80211_hw *hw)
-+{
-+	struct rtl_mac *rtlmac = rtl_mac(rtl_priv(hw));
-+	struct rtl_efuse *rtlefuse = rtl_efuse(rtl_priv(hw));
-+	struct ieee80211_supported_band *sband;
-+
-+	/* <1> use  mac->bands as mem for hw->wiphy->bands */
-+	sband = &(rtlmac->bands[IEEE80211_BAND_2GHZ]);
-+
-+	/*
-+	 * <2> set hw->wiphy->bands[IEEE80211_BAND_2GHZ]
-+	 * to default value(1T1R)
-+	 */
-+	memcpy(&(rtlmac->bands[IEEE80211_BAND_2GHZ]), &rtl_band_2ghz,
-+	       sizeof(struct ieee80211_supported_band));
-+
-+	/* <3> init ht cap base on ant_num */
-+	_rtl_init_hw_ht_capab(hw, &sband->ht_cap);
-+
-+	/* <4> set mac->sband to wiphy->sband */
-+	hw->wiphy->bands[IEEE80211_BAND_2GHZ] = sband;
-+
-+	/* <5> set hw caps */
-+	hw->flags = IEEE80211_HW_SIGNAL_DBM |
-+	    IEEE80211_HW_RX_INCLUDES_FCS |
-+	    IEEE80211_HW_BEACON_FILTER | IEEE80211_HW_AMPDU_AGGREGATION | /*PS*/
-+	    /*IEEE80211_HW_SUPPORTS_PS | */
-+	    /*IEEE80211_HW_PS_NULLFUNC_STACK | */
-+	    /*IEEE80211_HW_SUPPORTS_DYNAMIC_PS | */
-+	    IEEE80211_HW_REPORTS_TX_ACK_STATUS | 0;
-+
-+	hw->wiphy->interface_modes =
-+	    BIT(NL80211_IFTYPE_STATION) | BIT(NL80211_IFTYPE_ADHOC);
-+
-+	hw->wiphy->rts_threshold = 2347;
-+
-+	hw->queues = AC_MAX;
-+	hw->extra_tx_headroom = RTL_TX_HEADER_SIZE;
-+
-+	/* TODO: Correct this value for our hw */
-+	/* TODO: define these hard code value */
-+	hw->channel_change_time = 100;
-+	hw->max_listen_interval = 5;
-+	hw->max_rate_tries = 4;
-+	/* hw->max_rates = 1; */
-+
-+	/* <6> mac address */
-+	if (is_valid_ether_addr(rtlefuse->dev_addr)) {
-+		SET_IEEE80211_PERM_ADDR(hw, rtlefuse->dev_addr);
-+	} else {
-+		u8 rtlmac[] = { 0x00, 0xe0, 0x4c, 0x81, 0x92, 0x00 };
-+		get_random_bytes((rtlmac + (ETH_ALEN - 1)), 1);
-+		SET_IEEE80211_PERM_ADDR(hw, rtlmac);
-+	}
-+
-+}
-+
-+static void _rtl_init_deferred_work(struct ieee80211_hw *hw)
-+{
-+	struct rtl_priv *rtlpriv = rtl_priv(hw);
-+
-+	/* <1> timer */
-+	init_timer(&rtlpriv->works.watchdog_timer);
-+	setup_timer(&rtlpriv->works.watchdog_timer,
-+		    rtl_watch_dog_timer_callback, (unsigned long)hw);
-+
-+	/* <2> work queue */
-+	rtlpriv->works.hw = hw;
-+	rtlpriv->works.rtl_wq = create_workqueue(rtlpriv->cfg->name);
-+	INIT_DELAYED_WORK(&rtlpriv->works.watchdog_wq,
-+			  (void *)rtl_watchdog_wq_callback);
-+	INIT_DELAYED_WORK(&rtlpriv->works.ips_nic_off_wq,
-+			  (void *)rtl_ips_nic_off_wq_callback);
-+
-+}
-+
-+void rtl_deinit_deferred_work(struct ieee80211_hw *hw)
-+{
-+	struct rtl_priv *rtlpriv = rtl_priv(hw);
-+
-+	del_timer_sync(&rtlpriv->works.watchdog_timer);
-+
-+	cancel_delayed_work(&rtlpriv->works.watchdog_wq);
-+	cancel_delayed_work(&rtlpriv->works.ips_nic_off_wq);
-+}
-+
-+void rtl_init_rfkill(struct ieee80211_hw *hw)
-+{
-+	struct rtl_priv *rtlpriv = rtl_priv(hw);
-+
-+	bool radio_state;
-+	bool blocked;
-+	u8 valid = 0;
-+
-+	/*set init state to rf on */
-+	rtlpriv->rfkill.rfkill_state = 1;
-+
-+	radio_state = rtlpriv->cfg->ops->radio_onoff_checking(hw, &valid);
-+
-+	if (valid) {
-+		RT_TRACE(rtlpriv, COMP_RF, DBG_DMESG,
-+			 (KERN_INFO "wireless switch is %s\n",
-+			  rtlpriv->rfkill.rfkill_state ? "on" : "off"));
-+
-+		rtlpriv->rfkill.rfkill_state = radio_state;
-+
-+		blocked = (rtlpriv->rfkill.rfkill_state == 1) ? 0 : 1;
-+		wiphy_rfkill_set_hw_state(hw->wiphy, blocked);
-+	}
-+
-+	wiphy_rfkill_start_polling(hw->wiphy);
-+}
-+
-+void rtl_deinit_rfkill(struct ieee80211_hw *hw)
-+{
-+	wiphy_rfkill_stop_polling(hw->wiphy);
-+}
-+
-+int rtl_init_core(struct ieee80211_hw *hw)
-+{
-+	struct rtl_priv *rtlpriv = rtl_priv(hw);
-+	struct rtl_mac *rtlmac = rtl_mac(rtl_priv(hw));
-+
-+	/* <1> init mac80211 */
-+	_rtl_init_mac80211(hw);
-+	rtlmac->hw = hw;
-+
-+	/* <2> rate control register */
-+	if (rtl_rate_control_register()) {
-+		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
-+			 ("rtl: Unable to register rtl_rc,"
-+			  "use default RC !!\n"));
-+	} else {
-+		hw->rate_control_algorithm = "rtl_rc";
-+	}
-+
-+	/*
-+	 * <3> init CRDA must come after init
-+	 * mac80211 hw  in _rtl_init_mac80211.
-+	 */
-+	if (rtl_regd_init(hw, rtl_reg_notifier)) {
-+		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG, ("REGD init failed\n"));
-+		return 1;
-+	} else {
-+		/* CRDA regd hint must after init CRDA */
-+		if (regulatory_hint(hw->wiphy, rtlpriv->regd.alpha2)) {
-+			RT_TRACE(rtlpriv, COMP_ERR, DBG_WARNING,
-+				 ("regulatory_hint fail\n"));
-+		}
-+	}
-+
-+	/* <4> locks */
-+	sema_init(&rtlpriv->locks.ips_sem, 1);
-+	sema_init(&rtlpriv->locks.conf_sem, 1);
-+	spin_lock_init(&rtlpriv->locks.irq_th_lock);
-+	spin_lock_init(&rtlpriv->locks.h2c_lock);
-+	spin_lock_init(&rtlpriv->locks.rf_ps_lock);
-+	spin_lock_init(&rtlpriv->locks.rf_lock);
-+	spin_lock_init(&rtlpriv->locks.lps_lock);
-+
-+	rtlmac->link_state = MAC80211_NOLINK;
-+
-+	/* <5> init deferred work */
-+	_rtl_init_deferred_work(hw);
-+
-+	return 0;
-+}
-+
-+void rtl_deinit_core(struct ieee80211_hw *hw)
-+{
-+	 /*RC*/
-+	rtl_rate_control_unregister();
-+}
-+
-+void rtl_init_rx_config(struct ieee80211_hw *hw)
-+{
-+	struct rtl_priv *rtlpriv = rtl_priv(hw);
-+	struct rtl_mac *mac = rtl_mac(rtl_priv(hw));
-+
-+	rtlpriv->cfg->ops->get_hw_reg(hw, HW_VAR_RCR, (u8 *) (&mac->rx_conf));
-+	rtlpriv->cfg->ops->get_hw_reg(hw, HW_VAR_MGT_FILTER,
-+				      (u8 *) (&mac->rx_mgt_filter));
-+	rtlpriv->cfg->ops->get_hw_reg(hw, HW_VAR_CTRL_FILTER,
-+				      (u8 *) (&mac->rx_ctrl_filter));
-+	rtlpriv->cfg->ops->get_hw_reg(hw, HW_VAR_DATA_FILTER,
-+				      (u8 *) (&mac->rx_data_filter));
-+}
-+
-+/*********************************************************
-+ *
-+ * tx information functions
-+ *
-+ *********************************************************/
-+static void _rtl_qurey_shortpreamble_mode(struct ieee80211_hw *hw,
-+					  struct rtl_tcb_desc *tcb_desc,
-+					  struct ieee80211_tx_info *info)
-+{
-+	struct rtl_priv *rtlpriv = rtl_priv(hw);
-+	u8 rate_flag = info->control.rates[0].flags;
-+
-+	tcb_desc->use_shortpreamble = false;
-+
-+	/* 1M can only use Long Preamble. 11B spec */
-+	if (tcb_desc->hw_rate == rtlpriv->cfg->maps[RTL_RC_CCK_RATE1M])
-+		return;
-+	else if (rate_flag & IEEE80211_TX_RC_USE_SHORT_PREAMBLE)
-+		tcb_desc->use_shortpreamble = true;
-+
-+	return;
-+}
-+
-+static void _rtl_query_shortgi(struct ieee80211_hw *hw,
-+			       struct rtl_tcb_desc *tcb_desc,
-+			       struct ieee80211_tx_info *info)
-+{
-+	struct rtl_mac *mac = rtl_mac(rtl_priv(hw));
-+	u8 rate_flag = info->control.rates[0].flags;
-+
-+	tcb_desc->use_shortgi = false;
-+
-+	if (!mac->ht_enable)
-+		return;
-+
-+	if (!mac->sgi_40 && !mac->sgi_20)
-+		return;
-+
-+	if ((mac->bw_40 == true) && mac->sgi_40)
-+		tcb_desc->use_shortgi = true;
-+	else if ((mac->bw_40 == false) && mac->sgi_20)
-+		tcb_desc->use_shortgi = true;
-+
-+	if (!(rate_flag & IEEE80211_TX_RC_SHORT_GI))
-+		tcb_desc->use_shortgi = false;
-+
-+}
-+
-+static void _rtl_query_protection_mode(struct ieee80211_hw *hw,
-+				       struct rtl_tcb_desc *tcb_desc,
-+				       struct ieee80211_tx_info *info)
-+{
-+	struct rtl_priv *rtlpriv = rtl_priv(hw);
-+	u8 rate_flag = info->control.rates[0].flags;
-+
-+	/* Common Settings */
-+	tcb_desc->b_rts_stbc = false;
-+	tcb_desc->b_cts_enable = false;
-+	tcb_desc->rts_sc = 0;
-+	tcb_desc->b_rts_bw = false;
-+	tcb_desc->b_rts_use_shortpreamble = false;
-+	tcb_desc->b_rts_use_shortgi = false;
-+
-+	if (rate_flag & IEEE80211_TX_RC_USE_CTS_PROTECT) {
-+		/* Use CTS-to-SELF in protection mode. */
-+		tcb_desc->b_rts_enable = true;
-+		tcb_desc->b_cts_enable = true;
-+		tcb_desc->rts_rate = rtlpriv->cfg->maps[RTL_RC_OFDM_RATE24M];
-+	} else if (rate_flag & IEEE80211_TX_RC_USE_RTS_CTS) {
-+		/* Use RTS-CTS in protection mode. */
-+		tcb_desc->b_rts_enable = true;
-+		tcb_desc->rts_rate = rtlpriv->cfg->maps[RTL_RC_OFDM_RATE24M];
-+	}
-+
-+}
-+
-+static void _rtl_txrate_selectmode(struct ieee80211_hw *hw,
-+				   struct rtl_tcb_desc *tcb_desc)
-+{
-+	struct rtl_priv *rtlpriv = rtl_priv(hw);
-+	struct rtl_mac *mac = rtl_mac(rtl_priv(hw));
-+
-+	if (!tcb_desc->disable_ratefallback || !tcb_desc->use_driver_rate) {
-+		if (mac->opmode == NL80211_IFTYPE_STATION)
-+			tcb_desc->ratr_index = 0;
-+		else if (mac->opmode == NL80211_IFTYPE_ADHOC) {
-+			if (tcb_desc->b_multicast || tcb_desc->b_broadcast) {
-+				tcb_desc->hw_rate =
-+				    rtlpriv->cfg->maps[RTL_RC_CCK_RATE2M];
-+				tcb_desc->use_driver_rate = 1;
-+			} else {
-+				/* TODO */
-+			}
-+		}
-+	}
-+
-+	if (rtlpriv->dm.b_useramask) {
-+		/* TODO we will differentiate adhoc and station futrue  */
-+		tcb_desc->mac_id = 0;
-+
-+		if ((mac->mode == WIRELESS_MODE_N_24G) ||
-+		    (mac->mode == WIRELESS_MODE_N_5G)) {
-+			tcb_desc->ratr_index = RATR_INX_WIRELESS_NGB;
-+		} else if (mac->mode & WIRELESS_MODE_G) {
-+			tcb_desc->ratr_index = RATR_INX_WIRELESS_GB;
-+		} else if (mac->mode & WIRELESS_MODE_B) {
-+			tcb_desc->ratr_index = RATR_INX_WIRELESS_B;
-+		}
-+	}
-+
-+}
-+
-+static void _rtl_query_bandwidth_mode(struct ieee80211_hw *hw,
-+				      struct rtl_tcb_desc *tcb_desc)
-+{
-+	struct rtl_priv *rtlpriv = rtl_priv(hw);
-+	struct rtl_mac *mac = rtl_mac(rtl_priv(hw));
-+
-+	tcb_desc->b_packet_bw = false;
-+
-+	if (!mac->bw_40 || !mac->ht_enable)
-+		return;
-+
-+	if (tcb_desc->b_multicast || tcb_desc->b_broadcast)
-+		return;
-+
-+	/*use legency rate, shall use 20MHz */
-+	if (tcb_desc->hw_rate <= rtlpriv->cfg->maps[RTL_RC_OFDM_RATE54M])
-+		return;
-+
-+	tcb_desc->b_packet_bw = true;
-+}
-+
-+static u8 _rtl_get_highest_n_rate(struct ieee80211_hw *hw)
-+{
-+	struct rtl_priv *rtlpriv = rtl_priv(hw);
-+	struct rtl_phy *rtlphy = &(rtlpriv->phy);
-+	u8 hw_rate;
-+
-+	if (get_rf_type(rtlphy) == RF_2T2R)
-+		hw_rate = rtlpriv->cfg->maps[RTL_RC_HT_RATEMCS15];
-+	else
-+		hw_rate = rtlpriv->cfg->maps[RTL_RC_HT_RATEMCS7];
-+
-+	return hw_rate;
-+}
-+
-+void rtl_get_tcb_desc(struct ieee80211_hw *hw,
-+		      struct ieee80211_tx_info *info,
-+		      struct sk_buff *skb, struct rtl_tcb_desc *tcb_desc)
-+{
-+	struct rtl_priv *rtlpriv = rtl_priv(hw);
-+	struct rtl_mac *rtlmac = rtl_mac(rtl_priv(hw));
-+	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *)(skb->data);
-+	struct ieee80211_rate *txrate;
-+	u16 fc = le16_to_cpu(hdr->frame_control);
-+
-+	memset(tcb_desc, 0, sizeof(struct rtl_tcb_desc));
-+
-+	if (ieee80211_is_data(fc)) {
-+		txrate = ieee80211_get_tx_rate(hw, info);
-+		tcb_desc->hw_rate = txrate->hw_value;
-+
-+		/*
-+		 *we set data rate RTL_RC_CCK_RATE1M
-+		 *in rtl_rc.c   if skb is special data or
-+		 *mgt which need low data rate.
-+		 */
-+
-+		/*
-+		 *So tcb_desc->hw_rate is just used for
-+		 *special data and mgt frames
-+		 */
-+		if (tcb_desc->hw_rate < rtlpriv->cfg->maps[RTL_RC_CCK_RATE11M]) {
-+			tcb_desc->use_driver_rate = true;
-+			tcb_desc->ratr_index = 7;
-+
-+			tcb_desc->hw_rate =
-+			    rtlpriv->cfg->maps[RTL_RC_CCK_RATE1M];
-+			tcb_desc->disable_ratefallback = 1;
-+		} else {
-+			/*
-+			 *because hw will nerver use hw_rate
-+			 *when tcb_desc->use_driver_rate = false
-+			 *so we never set highest N rate here,
-+			 *and N rate will all be controled by FW
-+			 *when tcb_desc->use_driver_rate = false
-+			 */
-+			if (rtlmac->ht_enable) {
-+				tcb_desc->hw_rate = _rtl_get_highest_n_rate(hw);
-+			} else {
-+				if (rtlmac->mode == WIRELESS_MODE_B) {
-+					tcb_desc->hw_rate =
-+					   rtlpriv->cfg->maps[RTL_RC_CCK_RATE11M];
-+				} else {
-+					tcb_desc->hw_rate =
-+					   rtlpriv->cfg->maps[RTL_RC_OFDM_RATE54M];
-+				}
-+			}
-+		}
-+
-+		if (is_multicast_ether_addr(ieee80211_get_DA(hdr)))
-+			tcb_desc->b_multicast = 1;
-+		else if (is_broadcast_ether_addr(ieee80211_get_DA(hdr)))
-+			tcb_desc->b_broadcast = 1;
-+
-+		_rtl_txrate_selectmode(hw, tcb_desc);
-+		_rtl_query_bandwidth_mode(hw, tcb_desc);
-+		_rtl_qurey_shortpreamble_mode(hw, tcb_desc, info);
-+		_rtl_query_shortgi(hw, tcb_desc, info);
-+		_rtl_query_protection_mode(hw, tcb_desc, info);
-+	} else {
-+		tcb_desc->use_driver_rate = true;
-+		tcb_desc->ratr_index = 7;
-+		tcb_desc->disable_ratefallback = 1;
-+		tcb_desc->mac_id = 0;
-+
-+		tcb_desc->hw_rate = rtlpriv->cfg->maps[RTL_RC_CCK_RATE1M];
-+	}
-+}
-+EXPORT_SYMBOL(rtl_get_tcb_desc);
-+
-+bool rtl_tx_mgmt_proc(struct ieee80211_hw *hw, struct sk_buff *skb)
-+{
-+	struct rtl_mac *mac = rtl_mac(rtl_priv(hw));
-+	struct rtl_priv *rtlpriv = rtl_priv(hw);
-+	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *)(skb->data);
-+	u16 fc = le16_to_cpu(hdr->frame_control);
-+
-+	if (ieee80211_is_auth(fc)) {
-+		RT_TRACE(rtlpriv, COMP_SEND, DBG_DMESG, ("MAC80211_LINKING\n"));
-+		rtl_ips_nic_on(hw);
-+
-+		mac->link_state = MAC80211_LINKING;
-+	}
-+
-+	return true;
-+}
-+
-+bool rtl_action_proc(struct ieee80211_hw *hw, struct sk_buff *skb, u8 is_tx)
-+{
-+	struct rtl_mac *mac = rtl_mac(rtl_priv(hw));
-+	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *)(skb->data);
-+	struct rtl_priv *rtlpriv = rtl_priv(hw);
-+	u16 fc = le16_to_cpu(hdr->frame_control);
-+	u8 *act = (u8 *) (((u8 *) skb->data + MAC80211_3ADDR_LEN));
-+	u8 category;
-+
-+	if (!ieee80211_is_action(fc))
-+		return true;
-+
-+	category = *act;
-+	act++;
-+	switch (category) {
-+	case ACT_CAT_BA:
-+		switch (*act) {
-+		case ACT_ADDBAREQ:
-+			if (mac->act_scanning)
-+				return false;
-+
-+			RT_TRACE(rtlpriv, (COMP_SEND | COMP_RECV), DBG_DMESG,
-+				 ("%s ACT_ADDBAREQ From :" MAC_FMT "\n",
-+				  is_tx ? "Tx" : "Rx", MAC_ARG(hdr->addr2)));
-+			break;
-+		case ACT_ADDBARSP:
-+			RT_TRACE(rtlpriv, (COMP_SEND | COMP_RECV), DBG_DMESG,
-+				 ("%s ACT_ADDBARSP From :" MAC_FMT "\n",
-+				  is_tx ? "Tx" : "Rx", MAC_ARG(hdr->addr2)));
-+			break;
-+		case ACT_DELBA:
-+			RT_TRACE(rtlpriv, (COMP_SEND | COMP_RECV), DBG_DMESG,
-+				 ("ACT_ADDBADEL From :" MAC_FMT "\n",
-+				  MAC_ARG(hdr->addr2)));
-+			break;
-+		}
-+		break;
-+	default:
-+		break;
-+	}
-+
-+	return true;
-+}
-+
-+/*should call before software enc*/
-+u8 rtl_is_special_data(struct ieee80211_hw *hw, struct sk_buff *skb, u8 is_tx)
-+{
-+	struct rtl_priv *rtlpriv = rtl_priv(hw);
-+	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *)(skb->data);
-+	struct rtl_ps_ctl *ppsc = rtl_psc(rtl_priv(hw));
-+	u16 fc = le16_to_cpu(hdr->frame_control);
-+	u16 ether_type;
-+	u8 mac_hdr_len = ieee80211_get_hdrlen_from_skb(skb);
-+	const struct iphdr *ip;
-+
-+	if (!ieee80211_is_data(fc))
-+		goto end;
-+
-+	if (ieee80211_is_nullfunc(fc))
-+		return true;
-+
-+	ip = (struct iphdr *)((u8 *) skb->data + mac_hdr_len +
-+			      SNAP_SIZE + PROTOC_TYPE_SIZE);
-+	ether_type = *(u16 *) ((u8 *) skb->data + mac_hdr_len + SNAP_SIZE);
-+	ether_type = ntohs(ether_type);
-+
-+	if (ETH_P_IP == ether_type) {
-+		if (IPPROTO_UDP == ip->protocol) {
-+			struct udphdr *udp = (struct udphdr *)((u8 *) ip +
-+							       (ip->ihl << 2));
-+			if (((((u8 *) udp)[1] == 68) &&
-+			     (((u8 *) udp)[3] == 67)) ||
-+			    ((((u8 *) udp)[1] == 67) &&
-+			     (((u8 *) udp)[3] == 68))) {
-+				/*
-+				 * 68 : UDP BOOTP client
-+				 * 67 : UDP BOOTP server
-+				 */
-+				RT_TRACE(rtlpriv, (COMP_SEND | COMP_RECV),
-+					 DBG_DMESG, ("dhcp %s !!\n",
-+						     (is_tx) ? "Tx" : "Rx"));
-+
-+				if (is_tx) {
-+					rtl_lps_leave(hw);
-+					ppsc->last_delaylps_stamp_jiffies =
-+					    jiffies;
-+				}
-+
-+				return true;
-+			}
-+		}
-+	} else if (ETH_P_ARP == ether_type) {
-+		if (is_tx) {
-+			rtl_lps_leave(hw);
-+			ppsc->last_delaylps_stamp_jiffies = jiffies;
-+		}
-+
-+		return true;
-+	} else if (ETH_P_PAE == ether_type) {
-+		RT_TRACE(rtlpriv, (COMP_SEND | COMP_RECV), DBG_DMESG,
-+			 ("802.1X %s EAPOL pkt!!\n", (is_tx) ? "Tx" : "Rx"));
-+
-+		if (is_tx) {
-+			rtl_lps_leave(hw);
-+			ppsc->last_delaylps_stamp_jiffies = jiffies;
-+		}
-+
-+		return true;
-+	} else if (0x86DD == ether_type) {
-+		return true;
-+	}
-+
-+end:
-+	return false;
-+}
-+
-+/*********************************************************
-+ *
-+ * functions called by core.c
-+ *
-+ *********************************************************/
-+int rtl_tx_agg_start(struct ieee80211_hw *hw, const u8 *ra, u16 tid, u16 *ssn)
-+{
-+	struct rtl_priv *rtlpriv = rtl_priv(hw);
-+	struct rtl_tid_data *tid_data;
-+	struct rtl_mac *mac = rtl_mac(rtl_priv(hw));
-+
-+	RT_TRACE(rtlpriv, COMP_SEND, DBG_DMESG,
-+		 ("on ra = %pM tid = %d\n", ra, tid));
-+
-+	if (unlikely(tid >= MAX_TID_COUNT))
-+		return -EINVAL;
-+
-+	if (mac->tids[tid].agg.agg_state != RTL_AGG_OFF) {
-+		RT_TRACE(rtlpriv, COMP_ERR, DBG_WARNING,
-+			 ("Start AGG when state is not RTL_AGG_OFF !\n"));
-+		return -ENXIO;
-+	}
-+
-+	tid_data = &mac->tids[tid];
-+	*ssn = SEQ_TO_SN(tid_data->seq_number);
-+
-+	RT_TRACE(rtlpriv, COMP_SEND, DBG_DMESG,
-+		 ("HW queue is empty tid:%d\n", tid));
-+	tid_data->agg.agg_state = RTL_AGG_ON;
-+
-+	ieee80211_start_tx_ba_cb_irqsafe(mac->vif, ra, tid);
-+
-+	return 0;
-+}
-+
-+int rtl_tx_agg_stop(struct ieee80211_hw *hw, const u8 * ra, u16 tid)
-+{
-+	int ssn = -1;
-+	struct rtl_priv *rtlpriv = rtl_priv(hw);
-+	struct rtl_mac *mac = rtl_mac(rtl_priv(hw));
-+	struct rtl_tid_data *tid_data;
-+
-+	if (!ra) {
-+		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG, ("ra = NULL\n"));
-+		return -EINVAL;
-+	}
-+
-+	if (unlikely(tid >= MAX_TID_COUNT))
-+		return -EINVAL;
-+
-+	if (mac->tids[tid].agg.agg_state != RTL_AGG_ON)
-+		RT_TRACE(rtlpriv, COMP_ERR, DBG_WARNING,
-+			 ("Stopping AGG while state not ON or starting\n"));
-+
-+	tid_data = &mac->tids[tid];
-+	ssn = (tid_data->seq_number & IEEE80211_SCTL_SEQ) >> 4;
-+
-+	mac->tids[tid].agg.agg_state = RTL_AGG_OFF;
-+
-+	ieee80211_stop_tx_ba_cb_irqsafe(mac->vif, ra, tid);
-+
-+	return 0;
-+}
-+
-+/*********************************************************
-+ *
-+ * wq & timer callback functions
-+ *
-+ *********************************************************/
-+void rtl_watchdog_wq_callback(void *data)
-+{
-+	struct rtl_works *rtlworks = container_of_dwork_rtl(data,
-+							    struct rtl_works,
-+							    watchdog_wq);
-+	struct ieee80211_hw *hw = rtlworks->hw;
-+	struct rtl_priv *rtlpriv = rtl_priv(hw);
-+	struct rtl_hal *rtlhal = rtl_hal(rtl_priv(hw));
-+	struct rtl_mac *mac = rtl_mac(rtl_priv(hw));
-+
-+	bool b_busytraffic = false;
-+	bool b_higher_busytraffic = false;
-+	bool b_higher_busyrxtraffic = false;
-+	bool b_higher_busytxtraffic = false;
-+
-+	u8 idx = 0;
-+	u32 rx_cnt_inp4eriod = 0;
-+	u32 tx_cnt_inp4eriod = 0;
-+	u32 aver_rx_cnt_inperiod = 0;
-+	u32 aver_tx_cnt_inperiod = 0;
-+
-+	bool benter_ps = false;
-+
-+	if (is_hal_stop(rtlhal))
-+		return;
-+
-+	/* <1> Determine if action frame is allowed */
-+	if (mac->link_state > MAC80211_NOLINK) {
-+		if (mac->cnt_after_linked < 20)
-+			mac->cnt_after_linked++;
-+	} else {
-+		mac->cnt_after_linked = 0;
-+	}
-+
-+	/* <2> DM */
-+	rtlpriv->cfg->ops->dm_watchdog(hw);
-+
-+	/*
-+	 *<3> to check if traffic busy, if
-+	 * busytraffic we don't change channel
-+	 */
-+	if (mac->link_state >= MAC80211_LINKED) {
-+
-+		/* (1) get aver_rx_cnt_inperiod & aver_tx_cnt_inperiod */
-+		for (idx = 0; idx <= 2; idx++) {
-+			rtlpriv->link_info.num_rx_in4period[idx] =
-+			    rtlpriv->link_info.num_rx_in4period[idx + 1];
-+			rtlpriv->link_info.num_tx_in4period[idx] =
-+			    rtlpriv->link_info.num_tx_in4period[idx + 1];
-+		}
-+		rtlpriv->link_info.num_rx_in4period[3] =
-+		    rtlpriv->link_info.num_rx_inperiod;
-+		rtlpriv->link_info.num_tx_in4period[3] =
-+		    rtlpriv->link_info.num_tx_inperiod;
-+		for (idx = 0; idx <= 3; idx++) {
-+			rx_cnt_inp4eriod +=
-+			    rtlpriv->link_info.num_rx_in4period[idx];
-+			tx_cnt_inp4eriod +=
-+			    rtlpriv->link_info.num_tx_in4period[idx];
-+		}
-+		aver_rx_cnt_inperiod = rx_cnt_inp4eriod / 4;
-+		aver_tx_cnt_inperiod = tx_cnt_inp4eriod / 4;
-+
-+		/* (2) check traffic busy */
-+		if (aver_rx_cnt_inperiod > 100 || aver_tx_cnt_inperiod > 100)
-+			b_busytraffic = true;
-+
-+		/* Higher Tx/Rx data. */
-+		if (aver_rx_cnt_inperiod > 4000 ||
-+		    aver_tx_cnt_inperiod > 4000) {
-+			b_higher_busytraffic = true;
-+
-+			/* Extremely high Rx data. */
-+			if (aver_rx_cnt_inperiod > 5000)
-+				b_higher_busyrxtraffic = true;
-+			else
-+				b_higher_busytxtraffic = false;
-+		}
-+
-+		if (((rtlpriv->link_info.num_rx_inperiod +
-+		      rtlpriv->link_info.num_tx_inperiod) > 8) ||
-+		    (rtlpriv->link_info.num_rx_inperiod > 2))
-+			benter_ps = false;
-+		else
-+			benter_ps = true;
-+
-+		/* LeisurePS only work in infra mode. */
-+		if (benter_ps)
-+			rtl_lps_enter(hw);
-+		else
-+			rtl_lps_leave(hw);
-+	}
-+
-+	rtlpriv->link_info.num_rx_inperiod = 0;
-+	rtlpriv->link_info.num_tx_inperiod = 0;
-+
-+	rtlpriv->link_info.b_busytraffic = b_busytraffic;
-+	rtlpriv->link_info.b_higher_busytraffic = b_higher_busytraffic;
-+	rtlpriv->link_info.b_higher_busyrxtraffic = b_higher_busyrxtraffic;
-+
-+}
-+
-+void rtl_watch_dog_timer_callback(unsigned long data)
-+{
-+	struct ieee80211_hw *hw = (struct ieee80211_hw *)data;
-+	struct rtl_priv *rtlpriv = rtl_priv(hw);
-+
-+	queue_delayed_work(rtlpriv->works.rtl_wq,
-+			   &rtlpriv->works.watchdog_wq, 0);
-+
-+	mod_timer(&rtlpriv->works.watchdog_timer,
-+		  jiffies + MSECS(RTL_WATCH_DOG_TIME));
-+}
-+
-+/*********************************************************
-+ *
-+ * sysfs functions
-+ *
-+ *********************************************************/
-+static ssize_t rtl_show_debug_level(struct device *d,
-+				    struct device_attribute *attr, char *buf)
-+{
-+	struct ieee80211_hw *hw = dev_get_drvdata(d);
-+	struct rtl_priv *rtlpriv = rtl_priv(hw);
-+
-+	return sprintf(buf, "0x%08X\n", rtlpriv->dbg.global_debuglevel);
-+}
-+
-+static ssize_t rtl_store_debug_level(struct device *d,
-+				     struct device_attribute *attr,
-+				     const char *buf, size_t count)
-+{
-+	struct ieee80211_hw *hw = dev_get_drvdata(d);
-+	struct rtl_priv *rtlpriv = rtl_priv(hw);
-+	unsigned long val;
-+	int ret;
-+
-+	ret = strict_strtoul(buf, 0, &val);
-+	if (ret) {
-+		printk(KERN_DEBUG "%s is not in hex or decimal form.\n", buf);
-+	} else {
-+		rtlpriv->dbg.global_debuglevel = val;
-+		printk(KERN_DEBUG "debuglevel:%x\n",
-+		       rtlpriv->dbg.global_debuglevel);
-+	}
-+
-+	return strnlen(buf, count);
-+}
-+
-+static DEVICE_ATTR(debug_level, S_IWUSR | S_IRUGO,
-+		   rtl_show_debug_level, rtl_store_debug_level);
-+
-+static struct attribute *rtl_sysfs_entries[] = {
-+
-+	&dev_attr_debug_level.attr,
-+
-+	NULL
-+};
-+
-+/*
-+ * "name" is folder name witch will be
-+ * put in device directory like :
-+ * sys/devices/pci0000:00/0000:00:1c.4/
-+ * 0000:06:00.0/rtl_sysfs
-+ */
-+struct attribute_group rtl_attribute_group = {
-+	.name = "rtlsysfs",
-+	.attrs = rtl_sysfs_entries,
-+};
-+
-+MODULE_AUTHOR("lizhaoming	<chaoming_li@realsil.com.cn>");
-+MODULE_AUTHOR("Realtek WlanFAE	<wlanfae@realtek.com>");
-+MODULE_AUTHOR("Larry Finger	<Larry.FInger@lwfinger.net>");
-+MODULE_LICENSE("GPL");
-+MODULE_DESCRIPTION("Realtek 802.11n PCI wireless core");
-+
-+static int __init rtl_core_module_init(void)
-+{
-+	return 0;
-+}
-+
-+static void __exit rtl_core_module_exit(void)
-+{
-+}
-+
-+module_init(rtl_core_module_init);
-+module_exit(rtl_core_module_exit);
-diff --git a/drivers/net/wireless/rtlwifi/base.h b/drivers/net/wireless/rtlwifi/base.h
-new file mode 100644
-index 0000000..3de5a14
---- /dev/null
-+++ b/drivers/net/wireless/rtlwifi/base.h
-@@ -0,0 +1,120 @@
-+/******************************************************************************
-+ *
-+ * Copyright(c) 2009-2010  Realtek Corporation.
-+ *
-+ * This program is free software; you can redistribute it and/or modify it
-+ * under the terms of version 2 of the GNU General Public License as
-+ * published by the Free Software Foundation.
-+ *
-+ * This program is distributed in the hope that it will be useful, but WITHOUT
-+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
-+ * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
-+ * more details.
-+ *
-+ * You should have received a copy of the GNU General Public License along with
-+ * this program; if not, write to the Free Software Foundation, Inc.,
-+ * 51 Franklin Street, Fifth Floor, Boston, MA 02110, USA
-+ *
-+ * The full GNU General Public License is included in this distribution in the
-+ * file called LICENSE.
-+ *
-+ * Contact Information:
-+ * wlanfae <wlanfae@realtek.com>
-+ * Realtek Corporation, No. 2, Innovation Road II, Hsinchu Science Park,
-+ * Hsinchu 300, Taiwan.
-+ *
-+ * Larry Finger <Larry.Finger@lwfinger.net>
-+ *****************************************************************************/
-+
-+#ifndef __RTL_BASE_H__
-+#define __RTL_BASE_H__
-+
-+#define RTL_DUMMY_OFFSET	0
-+#define RTL_DUMMY_UNIT		8
-+#define RTL_TX_DUMMY_SIZE	(RTL_DUMMY_OFFSET * RTL_DUMMY_UNIT)
-+#define RTL_TX_DESC_SIZE	32
-+#define RTL_TX_HEADER_SIZE	(RTL_TX_DESC_SIZE + RTL_TX_DUMMY_SIZE)
-+
-+#define HT_AMSDU_SIZE_4K	3839
-+#define HT_AMSDU_SIZE_8K	7935
-+
-+#define MAX_BIT_RATE_40MHZ_MCS15	300	/* Mbps */
-+#define MAX_BIT_RATE_40MHZ_MCS7		150	/* Mbps */
-+
-+#define RTL_RATE_COUNT_LEGACY		12
-+#define RTL_CHANNEL_COUNT		14
-+
-+#define FRAME_OFFSET_FRAME_CONTROL	0
-+#define FRAME_OFFSET_DURATION		2
-+#define FRAME_OFFSET_ADDRESS1		4
-+#define FRAME_OFFSET_ADDRESS2		10
-+#define FRAME_OFFSET_ADDRESS3		16
-+#define FRAME_OFFSET_SEQUENCE		22
-+#define FRAME_OFFSET_ADDRESS4		24
-+
-+#define SET_80211_HDR_FRAME_CONTROL(_hdr, _val)		\
-+	WRITEEF2BYTE(_hdr, _val)
-+#define SET_80211_HDR_TYPE_AND_SUBTYPE(_hdr, _val)	\
-+	WRITEEF1BYTE(_hdr, _val)
-+#define SET_80211_HDR_PWR_MGNT(_hdr, _val)		\
-+	SET_BITS_TO_LE_2BYTE(_hdr, 12, 1, _val)
-+#define SET_80211_HDR_TO_DS(_hdr, _val)			\
-+	SET_BITS_TO_LE_2BYTE(_hdr, 8, 1, _val)
-+
-+#define SET_80211_PS_POLL_AID(_hdr, _val)		\
-+	WRITEEF2BYTE(((u8 *)(_hdr)) + 2, _val)
-+#define SET_80211_PS_POLL_BSSID(_hdr, _val)		\
-+	CP_MACADDR(((u8 *)(_hdr)) + 4, (u8 *)(_val))
-+#define SET_80211_PS_POLL_TA(_hdr, _val)		\
-+	CP_MACADDR(((u8 *)(_hdr)) + 10, (u8 *)(_val))
-+
-+#define SET_80211_HDR_DURATION(_hdr, _val)	\
-+	WRITEEF2BYTE((u8 *)(_hdr)+FRAME_OFFSET_DURATION, _val)
-+#define SET_80211_HDR_ADDRESS1(_hdr, _val)	\
-+	CP_MACADDR((u8 *)(_hdr)+FRAME_OFFSET_ADDRESS1, (u8*)(_val))
-+#define SET_80211_HDR_ADDRESS2(_hdr, _val)	\
-+	CP_MACADDR((u8 *)(_hdr) + FRAME_OFFSET_ADDRESS2, (u8 *)(_val))
-+#define SET_80211_HDR_ADDRESS3(_hdr, _val)	\
-+	CP_MACADDR((u8 *)(_hdr)+FRAME_OFFSET_ADDRESS3, (u8 *)(_val))
-+#define SET_80211_HDR_FRAGMENT_SEQUENCE(_hdr, _val)  \
-+	WRITEEF2BYTE((u8 *)(_hdr)+FRAME_OFFSET_SEQUENCE, _val)
-+
-+#define SET_BEACON_PROBE_RSP_TIME_STAMP_LOW(__phdr, __val)	\
-+	WRITEEF4BYTE(((u8 *)(__phdr)) + 24, __val)
-+#define SET_BEACON_PROBE_RSP_TIME_STAMP_HIGH(__phdr, __val) \
-+	WRITEEF4BYTE(((u8 *)(__phdr)) + 28, __val)
-+#define SET_BEACON_PROBE_RSP_BEACON_INTERVAL(__phdr, __val) \
-+	WRITEEF2BYTE(((u8 *)(__phdr)) + 32, __val)
-+#define GET_BEACON_PROBE_RSP_CAPABILITY_INFO(__phdr)	\
-+	READEF2BYTE(((u8 *)(__phdr)) + 34)
-+#define SET_BEACON_PROBE_RSP_CAPABILITY_INFO(__phdr, __val) \
-+	WRITEEF2BYTE(((u8 *)(__phdr)) + 34, __val)
-+#define MASK_BEACON_PROBE_RSP_CAPABILITY_INFO(__phdr, __val) \
-+	SET_BEACON_PROBE_RSP_CAPABILITY_INFO(__phdr, \
-+	(GET_BEACON_PROBE_RSP_CAPABILITY_INFO(__phdr) & (~(__val))))
-+
-+int rtl_init_core(struct ieee80211_hw *hw);
-+void rtl_deinit_core(struct ieee80211_hw *hw);
-+void rtl_init_rx_config(struct ieee80211_hw *hw);
-+void rtl_init_rfkill(struct ieee80211_hw *hw);
-+void rtl_deinit_rfkill(struct ieee80211_hw *hw);
-+
-+void rtl_watch_dog_timer_callback(unsigned long data);
-+void rtl_deinit_deferred_work(struct ieee80211_hw *hw);
-+
-+bool rtl_action_proc(struct ieee80211_hw *hw, struct sk_buff *skb, u8 is_tx);
-+bool rtl_tx_mgmt_proc(struct ieee80211_hw *hw, struct sk_buff *skb);
-+u8 rtl_is_special_data(struct ieee80211_hw *hw, struct sk_buff *skb, u8 is_tx);
-+
-+void rtl_watch_dog_timer_callback(unsigned long data);
-+int rtl_tx_agg_start(struct ieee80211_hw *hw, const u8 *ra,
-+		     u16 tid, u16 *ssn);
-+int rtl_tx_agg_stop(struct ieee80211_hw *hw, const u8 *ra, u16 tid);
-+void rtl_watchdog_wq_callback(void *data);
-+
-+void rtl_get_tcb_desc(struct ieee80211_hw *hw,
-+		      struct ieee80211_tx_info *info,
-+		      struct sk_buff *skb, struct rtl_tcb_desc *tcb_desc);
-+
-+extern struct attribute_group rtl_attribute_group;
-+#endif
--- 
-1.7.1
-
+diff --git a/drivers/net/wireless/ath/ath9k/htc.h b/drivers/net/wireless/ath/ath9k/htc.h
+index afe39a9..b04a25a 100644
+--- a/drivers/net/wireless/ath/ath9k/htc.h
++++ b/drivers/net/wireless/ath/ath9k/htc.h
+@@ -78,7 +78,7 @@ struct tx_frame_hdr {
+ 	u8 node_idx;
+ 	u8 vif_idx;
+ 	u8 tidno;
+-	u32 flags; /* ATH9K_HTC_TX_* */
++	__be32 flags; /* ATH9K_HTC_TX_* */
+ 	u8 key_type;
+ 	u8 keyix;
+ 	u8 reserved[26];
+@@ -91,30 +91,19 @@ struct tx_mgmt_hdr {
+ 	u8 flags;
+ 	u8 key_type;
+ 	u8 keyix;
+-	u16 reserved;
++	__be16 reserved;
+ } __packed;
+ 
+ struct tx_beacon_header {
+ 	u8 len_changed;
+ 	u8 vif_index;
+-	u16 rev;
+-} __packed;
+-
+-struct ath9k_htc_target_hw {
+-	u32 flags;
+-	u32 flags_ext;
+-	u32 ampdu_limit;
+-	u8 ampdu_subframes;
+-	u8 tx_chainmask;
+-	u8 tx_chainmask_legacy;
+-	u8 rtscts_ratecode;
+-	u8 protmode;
++	__be16 rev;
+ } __packed;
+ 
+ struct ath9k_htc_cap_target {
+-	u32 flags;
+-	u32 flags_ext;
+-	u32 ampdu_limit;
++	__be32 flags;
++	__be32 flags_ext;
++	__be32 ampdu_limit;
+ 	u8 ampdu_subframes;
+ 	u8 tx_chainmask;
+ 	u8 tx_chainmask_legacy;
+@@ -128,9 +117,9 @@ struct ath9k_htc_target_vif {
+ 	__be32 opmode;
+ 	u8 myaddr[ETH_ALEN];
+ 	u8 bssid[ETH_ALEN];
+-	u32 flags;
+-	u32 flags_ext;
+-	u16 ps_sta;
++	__be32 flags;
++	__be32 flags_ext;
++	__be16 ps_sta;
+ 	__be16 rtsthreshold;
+ 	u8 ath_cap;
+ 	u8 node;
+@@ -144,25 +133,25 @@ struct ath9k_htc_target_vif {
+ 
+ /* FIXME: UAPSD variables */
+ struct ath9k_htc_target_sta {
+-	u16 associd;
+-	u16 txpower;
+-	u32 ucastkey;
++	__be16 associd;
++	__be16 txpower;
++	__be32 ucastkey;
+ 	u8 macaddr[ETH_ALEN];
+ 	u8 bssid[ETH_ALEN];
+ 	u8 sta_index;
+ 	u8 vif_index;
+ 	u8 vif_sta;
+ 	__be16 flags; /* ATH_HTC_STA_* */
+-	u16 htcap;
++	__be16 htcap;
+ 	u8 valid;
+-	u16 capinfo;
+-	struct ath9k_htc_target_hw *hw;
++	__be16 capinfo;
++	struct ath9k_htc_cap_target *hw;
+ 	struct ath9k_htc_target_vif *vif;
+-	u16 txseqmgmt;
++	__be16 txseqmgmt;
+ 	u8 is_vif_sta;
+-	u16 maxampdu;
+-	u16 iv16;
+-	u32 iv32;
++	__be16 maxampdu;
++	__be16 iv16;
++	__be32 iv32;
+ } __packed;
+ 
+ struct ath9k_htc_target_aggr {
+diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_main.c b/drivers/net/wireless/ath/ath9k/htc_drv_main.c
+index e9761c2..1b435d4 100644
+--- a/drivers/net/wireless/ath/ath9k/htc_drv_main.c
++++ b/drivers/net/wireless/ath/ath9k/htc_drv_main.c
+@@ -204,7 +204,7 @@ static int ath9k_htc_add_station(struct ath9k_htc_priv *priv,
+ 		ista = (struct ath9k_htc_sta *) sta->drv_priv;
+ 		memcpy(&tsta.macaddr, sta->addr, ETH_ALEN);
+ 		memcpy(&tsta.bssid, common->curbssid, ETH_ALEN);
+-		tsta.associd = common->curaid;
++		tsta.associd = cpu_to_be16(common->curaid);
+ 		tsta.is_vif_sta = 0;
+ 		tsta.valid = true;
+ 		ista->index = priv->nstations;
+@@ -215,7 +215,7 @@ static int ath9k_htc_add_station(struct ath9k_htc_priv *priv,
+ 
+ 	tsta.sta_index = priv->nstations;
+ 	tsta.vif_index = avp->index;
+-	tsta.maxampdu = 0xffff;
++	tsta.maxampdu = cpu_to_be16(0xffff);
+ 	if (sta && sta->ht_cap.ht_supported)
+ 		tsta.flags = cpu_to_be16(ATH_HTC_STA_HT);
+ 
+@@ -279,9 +279,9 @@ static int ath9k_htc_update_cap_target(struct ath9k_htc_priv *priv)
+ 	memset(&tcap, 0, sizeof(struct ath9k_htc_cap_target));
+ 
+ 	/* FIXME: Values are hardcoded */
+-	tcap.flags = 0x240c40;
+-	tcap.flags_ext = 0x80601000;
+-	tcap.ampdu_limit = 0xffff0000;
++	tcap.flags = cpu_to_be32(0x240c40);
++	tcap.flags_ext = cpu_to_be32(0x80601000);
++	tcap.ampdu_limit = cpu_to_be32(0xffff0000);
+ 	tcap.ampdu_subframes = 20;
+ 	tcap.tx_chainmask_legacy = priv->ah->caps.tx_chainmask;
+ 	tcap.protmode = 1;
+diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_txrx.c b/drivers/net/wireless/ath/ath9k/htc_drv_txrx.c
+index 7795867..9902ec7 100644
+--- a/drivers/net/wireless/ath/ath9k/htc_drv_txrx.c
++++ b/drivers/net/wireless/ath/ath9k/htc_drv_txrx.c
+@@ -136,12 +136,12 @@ int ath9k_htc_tx_start(struct ath9k_htc_priv *priv, struct sk_buff *skb)
+ 		/* Check for RTS protection */
+ 		if (priv->hw->wiphy->rts_threshold != (u32) -1)
+ 			if (skb->len > priv->hw->wiphy->rts_threshold)
+-				tx_hdr.flags |= ATH9K_HTC_TX_RTSCTS;
++				tx_hdr.flags |= cpu_to_be32(ATH9K_HTC_TX_RTSCTS);
+ 
+ 		/* CTS-to-self */
+-		if (!(tx_hdr.flags & ATH9K_HTC_TX_RTSCTS) &&
++		if (!(tx_hdr.flags & cpu_to_be32(ATH9K_HTC_TX_RTSCTS)) &&
+ 		    (priv->op_flags & OP_PROTECT_ENABLE))
+-			tx_hdr.flags |= ATH9K_HTC_TX_CTSONLY;
++			tx_hdr.flags |= cpu_to_be32(ATH9K_HTC_TX_CTSONLY);
+ 
+ 		tx_hdr.key_type = ath9k_cmn_get_hw_crypto_keytype(skb);
+ 		if (tx_hdr.key_type == ATH9K_KEY_TYPE_CLEAR)
