@@ -1,91 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from devils.ext.ti.com ([198.47.26.153]:59631 "EHLO
-	devils.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752322Ab0KYOjq (ORCPT
+Received: from mail-bw0-f46.google.com ([209.85.214.46]:48796 "EHLO
+	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751220Ab0K2Txo (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 25 Nov 2010 09:39:46 -0500
-From: Shahar Levi <shahar_levi@ti.com>
-To: <linux-wireless@vger.kernel.org>
-Cc: Luciano Coelho <luciano.coelho@nokia.com>
-Subject: [RFC 2/2] wl12xx: Stop BA session event from device
-Date: Thu, 25 Nov 2010 16:39:24 +0200
-Message-Id: <1290695964-4208-2-git-send-email-shahar_levi@ti.com>
-In-Reply-To: <1290695964-4208-1-git-send-email-shahar_levi@ti.com>
-References: <1290695964-4208-1-git-send-email-shahar_levi@ti.com>
+	Mon, 29 Nov 2010 14:53:44 -0500
+Received: by bwz15 with SMTP id 15so4263426bwz.19
+        for <linux-wireless@vger.kernel.org>; Mon, 29 Nov 2010 11:53:43 -0800 (PST)
+From: Christian Lamparter <chunkeey@googlemail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Subject: [PATCH for-2.6.37 v2] mac80211: ignore non-bcast mcast deauth/disassoc franes
+Date: Mon, 29 Nov 2010 20:53:23 +0100
+Cc: Saqeb Akhter <saqeb.akhter@gmail.com>,
+	linux-wireless@vger.kernel.org, Jouni Malinen <j@w1.fi>,
+	linville@tuxdriver.com
+References: <AANLkTimN3X_e4fZhUSoTs-GmQ9kmaJUrgnxAu8=W2dT_@mail.gmail.com> <201011291937.25195.chunkeey@googlemail.com> <1291056330.3532.8.camel@jlt3.sipsolutions.net>
+In-Reply-To: <1291056330.3532.8.camel@jlt3.sipsolutions.net>
+MIME-Version: 1.0
+Content-Type: Text/Plain;
+  charset="utf-8"
+Message-Id: <201011292053.24717.chunkeey@googlemail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Adding new event that close RX BA session in case of periodic BT activity
-limiting WLAN activity.
+This patch fixes an curious issue due to insufficient
+rx frame filtering.
 
-Signed-off-by: Shahar Levi <shahar_levi@ti.com>
+Saqeb Akhter reported frequent disconnects while streaming
+videos over samba: <http://marc.info/?m=128600031109136>
+> [ 1166.512087] wlan1: deauthenticated from 30:46:9a:10:49:f7 (Reason: 7)
+> [ 1526.059997] wlan1: deauthenticated from 30:46:9a:10:49:f7 (Reason: 7)
+> [ 2125.324356] wlan1: deauthenticated from 30:46:9a:10:49:f7 (Reason: 7)
+> [...]
+
+The reason is that the device generates frames with slightly
+bogus SA/TA addresses.
+
+e.g.:
+ [ 2314.402316] Ignore 9f:1f:31:f8:64:ff
+ [ 2314.402321] Ignore 9f:1f:31:f8:64:ff
+ [ 2352.453804] Ignore 0d:1f:31:f8:64:ff
+ [ 2352.453808] Ignore 0d:1f:31:f8:64:ff
+ 					   ^^ the group-address flag is set!
+ (the correct SA/TA would be: 00:1f:31:f8:64:ff)
+ 
+Since the AP does not know from where the frames come, it
+generates a DEAUTH response for the (invalid) mcast address.
+This mcast deauth frame then passes through all filters and
+tricks the stack into thinking that the AP brutally kicked
+us!
+
+This patch fixes the problem by simply ignoring
+non-broadcast, group-addressed deauth/disassoc frames.
+
+Cc: Jouni Malinen <j@w1.fi>
+Cc: Johannes Berg <johannes@sipsolutions.net>
+Reported-by: Saqeb Akhter <saqeb.akhter@gmail.com>
+Signed-off-by: Christian Lamparter <chunkeey@googlemail.com>
 ---
-Dependencies:
-- BA Initiator patches have a runtime dependency on commit
-   "[PATCH v3] wl12xx: BA Initiator support" and
-   "[PATCH ] wl12xx: BA receiver support"
-
- drivers/net/wireless/wl12xx/boot.c  |    3 ++-
- drivers/net/wireless/wl12xx/event.c |   24 +++++++++++++++++++++++-
- 2 files changed, 25 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/net/wireless/wl12xx/boot.c b/drivers/net/wireless/wl12xx/boot.c
-index 1eafb81..1270f5d 100644
---- a/drivers/net/wireless/wl12xx/boot.c
-+++ b/drivers/net/wireless/wl12xx/boot.c
-@@ -430,7 +430,8 @@ static int wl1271_boot_run_firmware(struct wl1271 *wl)
- 		DISCONNECT_EVENT_COMPLETE_ID |
- 		RSSI_SNR_TRIGGER_0_EVENT_ID |
- 		PSPOLL_DELIVERY_FAILURE_EVENT_ID |
--		SOFT_GEMINI_SENSE_EVENT_ID;
-+		SOFT_GEMINI_SENSE_EVENT_ID |
-+		BA_SESSION_RX_CONSTRAINT_EVENT_ID;
- 
- 	ret = wl1271_event_unmask(wl);
- 	if (ret < 0) {
-diff --git a/drivers/net/wireless/wl12xx/event.c b/drivers/net/wireless/wl12xx/event.c
-index 9815b7b..7cbeb2b 100644
---- a/drivers/net/wireless/wl12xx/event.c
-+++ b/drivers/net/wireless/wl12xx/event.c
-@@ -174,6 +174,25 @@ static void wl1271_event_rssi_trigger(struct wl1271 *wl,
- 	wl->last_rssi_event = event;
- }
- 
-+static void wl1271_event_ba_rx_constraint(struct wl1271 *wl,
-+					  struct event_mailbox *mbox)
-+{
-+	u8 tid_index = 0;
+v1 -> v2:
+	* johannes pointed out that nl80211 might want
+	  group-addressed action frames.
+---
+diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
+index d2fcd22..73973d6 100644
+--- a/net/mac80211/rx.c
++++ b/net/mac80211/rx.c
+@@ -2245,6 +2245,10 @@ ieee80211_rx_h_mgmt(struct ieee80211_rx_data *rx)
+ 		break;
+ 	case cpu_to_le16(IEEE80211_STYPE_DEAUTH):
+ 	case cpu_to_le16(IEEE80211_STYPE_DISASSOC):
++		if (is_multicast_ether_addr(mgmt->da) &&
++		    !is_broadcast_ether_addr(mgmt->da))
++			return RX_DROP_MONITOR;
 +
-+	wl1271_debug(DEBUG_EVENT, "BA RX constraint event. ba_allowed = %d",
-+		     mbox->ba_allowed);
-+
-+	wl->ba_allowed = mbox->ba_allowed;
-+
-+	if (!wl->ba_rx_bitmap)
-+		return;
-+
-+	for (tid_index = 0; tid_index < CONF_TX_MAX_TID_COUNT; ++tid_index)
-+		if (wl->ba_rx_bitmap & (BIT(0) << tid_index))
-+			ieee80211_stop_rx_ba_session(wl->vif, tid_index,
-+						     wl->bssid);
-+}
-+
- static void wl1271_event_mbox_dump(struct event_mailbox *mbox)
- {
- 	wl1271_debug(DEBUG_EVENT, "MBOX DUMP:");
-@@ -241,8 +260,11 @@ static int wl1271_event_process(struct wl1271 *wl, struct event_mailbox *mbox)
- 			wl1271_event_rssi_trigger(wl, mbox);
- 	}
- 
--	if (vector & BA_SESSION_RX_CONSTRAINT_EVENT_ID)
-+	if (vector & BA_SESSION_RX_CONSTRAINT_EVENT_ID) {
- 		wl1271_debug(DEBUG_EVENT, "BA_SESSION_RX_CONSTRAINT_EVENT_ID");
-+		if (wl->vif)
-+			wl1271_event_ba_rx_constraint(wl, mbox);
-+	}
- 
- 	if (wl->vif && beacon_loss)
- 		ieee80211_connection_loss(wl->vif);
--- 
-1.7.0.4
-
+ 		/* process only for station */
+ 		if (sdata->vif.type != NL80211_IFTYPE_STATION)
+ 			return RX_DROP_MONITOR;
