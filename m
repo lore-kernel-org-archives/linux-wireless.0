@@ -1,80 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga14.intel.com ([143.182.124.37]:31659 "EHLO mga14.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S934939Ab0KQRLW (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 17 Nov 2010 12:11:22 -0500
-Subject: Please revert "iwlwifi: fix modular legacy build errors" patch
-From: "Guy, Wey-Yi" <wey-yi.w.guy@intel.com>
-To: "randy.dunlap@oracle.com" <randy.dunlap@oracle.com>
-Cc: "linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <1290011797.12056.255.camel@wwguy-huron>
-References: <1290011797.12056.255.camel@wwguy-huron>
-Content-Type: text/plain; charset="UTF-8"
-Date: Wed, 17 Nov 2010 09:06:28 -0800
-Message-ID: <1290013588.12056.258.camel@wwguy-huron>
-Mime-Version: 1.0
+Received: from mail-gy0-f174.google.com ([209.85.160.174]:50273 "EHLO
+	mail-gy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754152Ab0K2Guj convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 29 Nov 2010 01:50:39 -0500
+Received: by gyb11 with SMTP id 11so1829907gyb.19
+        for <linux-wireless@vger.kernel.org>; Sun, 28 Nov 2010 22:50:38 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <1290759315.15341.2.camel@chilepepper>
+References: <1290079951-16793-1-git-send-email-arik@wizery.com> <1290759315.15341.2.camel@chilepepper>
+From: Arik Nemtsov <arik@wizery.com>
+Date: Mon, 29 Nov 2010 08:50:23 +0200
+Message-ID: <AANLkTinD06Py==U5V2Lx2x1M_EZ0Lr1M_RuQ1hKRLrRR@mail.gmail.com>
+Subject: Re: [PATCH 00/18] AP mode support for wl12xx
+To: Luciano Coelho <luciano.coelho@nokia.com>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-John,
+Hey Luca,
 
-iwlwifi should compile after
+>
+> Unfortunately I didn't have much time to look into your AP patches yet.
+> We need to review this very carefully.  It touches so many parts of the
+> code that I'm a bit worried that this would break normal STA
+> functionality.
 
-commit ae79d23d0b2c16998e60f49a16dae53521c76a45
-Author: Johannes Berg <johannes.berg@intel.com>
-Date:   Wed Nov 10 09:56:38 2010 -0800
+Most of the patches add AP related functionality without touching the
+flow in STA mode.
+In fact the only patch that touches STA is "[PATCH 06/18] wl1271: AP
+mode - init sequence". The init sequence has been modified to unify
+the STA and AP common parts and separate the different parts into
+different functions.
+For STA mode this means a slight change in the order of initialization.
 
-    iwlagn: fix non-5000+ build
+Other changes are basically:
+1. STA function renames
+2. removing STA functionality when operating in AP mode by protecting
+code segments with "if (!is_ap)"
+3. adding AP mode only functionality. This includes code segments with
+"if (is_ap)" in common STA/AP code.
 
+>
+> How well have you tested these patches in STA mode? Do you think there
+> would be any possibility of making this Kconfigurable so that there
+> would be no (or very little) binary difference in the code if AP is not
+> enabled?
 
-Please revert "dd0dd411f7178a20ea93a3cfa39123f078a07e25 iwlwifi: fix
-modular legacy build errors"
+We have performed extensive stress tests on the init sequence part
+(constant on/off for several days). Basic throughput and stress tests
+were performed for STA mode operation (as well as AP mode operation).
+A third kind of test was a stress test of the switch between STA and AP modes.
 
-Thanks
-Wey
+We feel making the AP mode Kconfigurable will make the code uglier and
+hurt maintainability. We were hoping we could avoid it by structuring
+the code as it is.
 
-
-On Wed, 2010-11-17 at 08:36 -0800, Guy, Wey-Yi wrote:
-> Hi Randy,
-> 
-> the "iwlwifi: fix modular legacy build errors" patch cause the following
-> WARNING when compile 
-> 
-> WARNING: drivers/net/wireless/iwlwifi/iwlagn:
-> 'iwl_legacy_tx_cmd_protection' exported twice. Previous export was in
-> drivers/net/wireless/iwlwifi/iwl3945.ko
-> WARNING: drivers/net/wireless/iwlwifi/iwlagn: 'iwl_isr_legacy' exported
-> twice. Previous export was in drivers/net/wireless/iwlwifi/iwl3945.ko
-> WARNING: drivers/net/wireless/iwlwifi/iwlagn:
-> 'iwl_legacy_mac_bss_info_changed' exported twice. Previous export was in
-> drivers/net/wireless/iwlwifi/iwl3945.ko
-> WARNING: drivers/net/wireless/iwlwifi/iwlagn: 'iwl_legacy_mac_reset_tsf'
-> exported twice. Previous export was in
-> drivers/net/wireless/iwlwifi/iwl3945.ko
-> WARNING: drivers/net/wireless/iwlwifi/iwlagn: 'iwl_legacy_mac_config'
-> exported twice. Previous export was in
-> drivers/net/wireless/iwlwifi/iwl3945.ko
-> 
-> The .config option are
-> 
-> #
-> # Debugging Options
-> #
-> CONFIG_IWLWIFI_DEBUG=y
-> CONFIG_IWLWIFI_DEBUGFS=y
-> CONFIG_IWLWIFI_DEVICE_TRACING=y
-> CONFIG_IWLAGN=m
-> CONFIG_IWL4965=y
-> CONFIG_IWL5000=y
-> CONFIG_IWL3945=m
-> 
-> Wey
-> 
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-
-
+Regards,
+Arik
