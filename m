@@ -1,40 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:44993 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752104Ab0KJAZa (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 9 Nov 2010 19:25:30 -0500
-Subject: Re: connecting ieee80211_hw and net_device
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Zoltan Herczeg <zherczeg@inf.u-szeged.hu>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <32995.82.131.221.21.1289334684.squirrel@webmail.inf.u-szeged.hu>
-References: <32995.82.131.221.21.1289334684.squirrel@webmail.inf.u-szeged.hu>
-Content-Type: text/plain; charset="UTF-8"
-Date: Tue, 09 Nov 2010 16:26:51 -0800
-Message-ID: <1289348811.3660.4.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+Received: from mail.atheros.com ([12.19.149.2]:56229 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752710Ab0K2P2F (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 29 Nov 2010 10:28:05 -0500
+Received: from mail.atheros.com ([10.10.20.108])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Mon, 29 Nov 2010 07:27:51 -0800
+From: Mohammed Shafi Shajakhan <mshajakhan@atheros.com>
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>, <lrodriguez@atheros.com>,
+	Mohammed Shafi Shajakhan <mshajakhan@atheros.com>
+Subject: [PATCH] ath9k: Properly use unlikely check macro
+Date: Mon, 29 Nov 2010 20:57:57 +0530
+Message-ID: <1291044477-2317-1-git-send-email-mshajakhan@atheros.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2010-11-09 at 21:31 +0100, Zoltan Herczeg wrote:
+From: Mohammed Shafi Shajakhan <mshajakhan@atheros.com>
 
-> I can allocate a "wlan0" and "wlan1" platform device with
-> ieee80211_alloc_hw, and can initialize it in Ad-Hoc mode. However, I
-> realized this is not enough to have a wireless interface, since it has no
-> receive operation, only transfer. Looking at the other drivers, I found
-> that they allocate a net_device with the common alloc_etherdev.
-> Unfortunately the register_netdev registers a new eth interface in my
-> case, and this interface is not connected to the wlan interface. I set
-> wireless_handlers and ieee80211_ptr for this device, still it is totally
-> independent from the wlan interface.
-> 
-> Am I missing something? (Sorry if this is a trivial question, I tried
-> google but no luck so far)
+AUTOSLEEP feature is enabled only AR9003 and later chips.So unlikely
+macro should be used only to check whether auto-sleep feature is enabled
 
-Your question doesn't make any sense. You never need wlan0/1, you only
-need alloc_hw/register_hw and then the interfaces will be managed by
-mac80211. You should post the code so people can help you.
+Signed-off-by: Mohammed Shafi Shajakhan <mshajakhan@atheros.com>
+---
+ drivers/net/wireless/ath/ath9k/recv.c |    6 +++---
+ 1 files changed, 3 insertions(+), 3 deletions(-)
 
-johannes
+diff --git a/drivers/net/wireless/ath/ath9k/recv.c b/drivers/net/wireless/ath/ath9k/recv.c
+index 262c815..751ee1b 100644
+--- a/drivers/net/wireless/ath/ath9k/recv.c
++++ b/drivers/net/wireless/ath/ath9k/recv.c
+@@ -1743,10 +1743,10 @@ int ath_rx_tasklet(struct ath_softc *sc, int flush, bool hp)
+ 		}
+ 
+ 		spin_lock_irqsave(&sc->sc_pm_lock, flags);
+-		if (unlikely(ath9k_check_auto_sleep(sc) ||
+-			     (sc->ps_flags & (PS_WAIT_FOR_BEACON |
++		if ((sc->ps_flags & (PS_WAIT_FOR_BEACON |
+ 					      PS_WAIT_FOR_CAB |
+-					      PS_WAIT_FOR_PSPOLL_DATA))))
++					      PS_WAIT_FOR_PSPOLL_DATA)) ||
++				unlikely(ath9k_hw_check_auto_sleep(sc)))
+ 			ath_rx_ps(sc, skb);
+ 		spin_unlock_irqrestore(&sc->sc_pm_lock, flags);
+ 
+-- 
+1.7.0.4
 
