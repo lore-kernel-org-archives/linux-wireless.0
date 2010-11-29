@@ -1,46 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.perches.com ([173.55.12.10]:1733 "EHLO mail.perches.com"
+Received: from mga14.intel.com ([143.182.124.37]:64160 "EHLO mga14.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757121Ab0KUCki (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 20 Nov 2010 21:40:38 -0500
-From: Joe Perches <joe@perches.com>
-To: Christian Lamparter <chunkeey@googlemail.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: [PATCH 53/62] carl9170: Use static const
-Date: Sat, 20 Nov 2010 18:38:54 -0800
-Message-Id: <d94b7e1a273107e3b04709615cbf31ef1b92d87a.1290305776.git.joe@perches.com>
-In-Reply-To: <cover.1290305773.git.joe@perches.com>
-References: <cover.1290305773.git.joe@perches.com>
+	id S1754641Ab0K2RJS (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 29 Nov 2010 12:09:18 -0500
+Subject: Re: [PATCH 2/2 v3] mac80211: add throughput based LED blink trigger
+From: "Guy, Wey-Yi" <wey-yi.w.guy@intel.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: John Linville <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <1291049458.3532.7.camel@jlt3.sipsolutions.net>
+References: <1290884614.3700.3.camel@jlt3.sipsolutions.net>
+	 <1290885648.3700.4.camel@jlt3.sipsolutions.net>
+	 <1290947171.3467.7.camel@jlt3.sipsolutions.net>
+	 <1291047211.26829.17.camel@wwguy-ubuntu>
+	 <1291049458.3532.7.camel@jlt3.sipsolutions.net>
+Content-Type: text/plain
+Date: Mon, 29 Nov 2010 09:08:09 -0800
+Message-Id: <1291050489.26829.21.camel@wwguy-ubuntu>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Using static const generally increases object text and decreases data size.
-It also generally decreases overall object size.
+HiJohannes,
 
-   text	   data	    bss	    dec	    hex	filename
-   1897	     56	    672	   2625	    a41	drivers/net/wireless/ath/carl9170/cmd.o.new
-   1897	     56	    672	   2625	    a41	drivers/net/wireless/ath/carl9170/cmd.o.old
+On Mon, 2010-11-29 at 08:50 -0800, Johannes Berg wrote:
+> On Mon, 2010-11-29 at 08:13 -0800, Guy, Wey-Yi wrote:
+> 
+> > Do not see how it work for different hardware has different requirement,
+> > for example, in iwlwifi, different device has different blink time
+> > compensation.
+> 
+> Well you haven't seen the iwlwifi patch for it yet :-)
+> 
+> Blink compensation is applied to the values. So if the trigger says
+> "blink for 167ms on and 167ms off", blink compensation will be applied
+> to the value 167.
+> 
+fair enough, I will wait :-)
 
-Signed-off-by: Joe Perches <joe@perches.com>
----
- drivers/net/wireless/ath/carl9170/cmd.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/carl9170/cmd.c b/drivers/net/wireless/ath/carl9170/cmd.c
-index c21f336..cdfc94c 100644
---- a/drivers/net/wireless/ath/carl9170/cmd.c
-+++ b/drivers/net/wireless/ath/carl9170/cmd.c
-@@ -41,7 +41,7 @@
- 
- int carl9170_write_reg(struct ar9170 *ar, const u32 reg, const u32 val)
- {
--	__le32 buf[2] = {
-+	const __le32 buf[2] = {
- 		cpu_to_le32(reg),
- 		cpu_to_le32(val),
- 	};
--- 
-1.7.3.2.245.g03276.dirty
+Wey
+> 
 
