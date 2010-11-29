@@ -1,55 +1,83 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:43353 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755747Ab0KSUzS (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 19 Nov 2010 15:55:18 -0500
-Message-ID: <4CE6E430.6080804@candelatech.com>
-Date: Fri, 19 Nov 2010 12:55:12 -0800
-From: Ben Greear <greearb@candelatech.com>
+Received: from mail.sysgo.com ([195.145.229.155]:47991 "EHLO mail.sysgo.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753720Ab0K2MHh (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 29 Nov 2010 07:07:37 -0500
+Date: Mon, 29 Nov 2010 13:07:45 +0100
+From: Pavel Machek <pma@sysgo.com>
+To: Felix Fietkau <nbd@openwrt.org>
+Cc: Sujith <Sujith.Manoharan@atheros.com>,
+	"ath9k-devel@venema.h4ckr.net" <ath9k-devel@venema.h4ckr.net>,
+	"cko@sysgo.com" <cko@sysgo.com>, "anl@sysgo.com" <anl@sysgo.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	kernel list <linux-kernel@vger.kernel.org>,
+	"mfa@sysgo.com" <mfa@sysgo.com>,
+	"chunkeey@googlemail.com" <chunkeey@googlemail.com>,
+	"rudolf.marek@sysgo.com" <rudolf.marek@sysgo.com>,
+	Larry Finger <Larry.Finger@lwfinger.net>
+Subject: Re: [ath9k-devel] [PATCH] fix endianity on ath9k_htc
+Message-ID: <20101129120745.GA30031@pma.sysgo.com>
+References: <20101124081616.GA30595@pma.sysgo.com>
+ <20101124131320.GA2611@pma.sysgo.com>
+ <4CED33E0.5040000@lwfinger.net>
+ <20101126083125.GA28982@pma.sysgo.com>
+ <20101126102026.GA11857@pma.sysgo.com>
+ <20101126112737.GB11857@pma.sysgo.com>
+ <19695.40541.335361.81396@gargle.gargle.HOWL>
+ <20101126123706.GA19755@pma.sysgo.com>
+ <20101129095801.GA28833@pma.sysgo.com>
+ <4CF3929E.9020702@openwrt.org>
 MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: Tejun Heo <tj@kernel.org>, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] mac80211:  Fix deadlock in ieee80211_do_stop.
-References: <1289592426-5367-1-git-send-email-greearb@candelatech.com>	 <1289594998.3736.11.camel@jlt3.sipsolutions.net>	 <4CDDAA3B.9090007@candelatech.com>	 <1289596096.3736.13.camel@jlt3.sipsolutions.net>	 <4CDE699B.70401@kernel.org> <4CE1A344.7040201@candelatech.com>	 <4CE292F7.4090200@kernel.org>	 <1289929258.3673.1.camel@jlt3.sipsolutions.net>	 <4CE396A9.1050908@kernel.org>	 <1290020005.3777.6.camel@jlt3.sipsolutions.net>	 <4CE4C8DD.6010806@kernel.org> <51f5dd53c39a77fff4efc1a99b189725@localhost>	 <4CE4D41F.1080005@kernel.org>	 <1290099585.3801.1.camel@jlt3.sipsolutions.net>	 <4CE68AF4.8060507@kernel.org> <1290189452.3768.3.camel@jlt3.sipsolutions.net>
-In-Reply-To: <1290189452.3768.3.camel@jlt3.sipsolutions.net>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <4CF3929E.9020702@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 11/19/2010 09:57 AM, Johannes Berg wrote:
-> On Fri, 2010-11-19 at 15:34 +0100, Tejun Heo wrote:
->
->> Awesome.  :-)
->>
->> Ben, if you have trouble generating full trace, please let me know if
->> there's something I can buy which isn't too expensive to reproduce the
->> problem.  I would be happy to track it down myself.
->
-> Maybe you can try Ben's setup in kvm (or directly on your box if you
-> like) with mac80211_hwsim. From a mac80211 POV it should be almost
-> equivalent, although it'll do different memory allocation patterns etc.
+Hi!
 
-I tried manually backing out my patch, and now I can no longer reproduce
-the problem.  Maybe something in -rc2 fixed it, or maybe some changes
-to my environment just made it harder to hit.
+> > It seems struct eep_header lacks proper #ifdef BIG_ENDIAN_BITFIELD
+> > markup. eep_4k_header has proper markup, but two fields were swapped.
+> > 
+> > Signed-off-by: Pavel Machek <pma@sysgo.com>
+> > 
+> > diff --git a/drivers/net/wireless/ath/ath9k/eeprom.h b/drivers/net/wireless/ath/ath9k/eeprom.h
+> > index 3c99830..022589d 100644
+> > --- a/drivers/net/wireless/ath/ath9k/eeprom.h
+> > +++ b/drivers/net/wireless/ath/ath9k/eeprom.h
+> > @@ -378,10 +374,14 @@ struct modal_eep_header {
+> >  	u8 xatten2Margin[AR5416_MAX_CHAINS];
+> >  	u8 ob_ch1;
+> >  	u8 db_ch1;
+> > -	u8 useAnt1:1,
+> > -	    force_xpaon:1,
+> > -	    local_bias:1,
+> > +#ifndef __BIG_ENDIAN_BITFIELD
+> > +	u8 useAnt1:1, force_xpaon:1, local_bias:1,
+> >  	    femBandSelectUsed:1, xlnabufin:1, xlnaisel:2, xlnabufmode:1;
+> > +#else
+> > +	u8 xlnabufmode:1, xlnaisel:2, xlnabufin:1, 
+> > +	    femBandSelectUsed:1, local_bias:1, force_xpaon:1, useAnt1:1;
+> > +#endif
+> > +
+> >  	u8 miscBits;
+> >  	u16 xpaBiasLvlFreq[3];
+> >  	u8 futureModal[6];
+> I already sent a different fix for this part. See
+> '[PATCH] ath9k_hw: fix more bitfield related endian issues'
 
-If you see no logical reason why calling flush_work with RTNL held
-would cause trouble, then I guess we can just leave the code as is
-for now.
+Thanks, your patch is obviously better.
 
-If you do want to play with this yourself, I think any ath5k type adapter
-with 64+ virtual stations configured would be a valid test case.  My
-application calls ifdown/ifup on them a few times after being created
-and then generates traffic (and gathers stats, calls 'iwconfig', etc).
-As configured in the original scenario that reproduced the problem,
-the STAs had no encryption and were all associating with a single AP.
-wpa_supplicant was not being used.
+> > @@ -443,7 +444,7 @@ struct modal_eep_4k_header {
+> >  	u8 antdiv_ctl1:4, ob_4:4;
+> >  	u8 db1_3:4, db1_2:4;
+> >  	u8 antdiv_ctl2:4, db1_4:4;
+> > -	u8 db2_2:4, db2_3:4;
+> > +	u8 db2_3:4, db2_2:4;
+> >  	u8 reserved:4, db2_4:4;
+> >  #else
+> >  	u8 ob_2:4, ob_3:4;
+> Looks good.
 
-Thanks,
-Ben
-
--- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
-
+Yep, but it does not help :-(. Were you able to get the driver to work
+on big-endian machine?
+								Pavel
