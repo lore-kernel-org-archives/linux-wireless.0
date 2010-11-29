@@ -1,48 +1,102 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gx0-f174.google.com ([209.85.161.174]:45860 "EHLO
-	mail-gx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755654Ab0KHUk6 convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 8 Nov 2010 15:40:58 -0500
-Received: by gxk23 with SMTP id 23so3717945gxk.19
-        for <linux-wireless@vger.kernel.org>; Mon, 08 Nov 2010 12:40:58 -0800 (PST)
+Received: from bar.sig21.net ([80.81.252.164]:54107 "EHLO bar.sig21.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754865Ab0K2QNZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 29 Nov 2010 11:13:25 -0500
+Date: Mon, 29 Nov 2010 17:13:16 +0100
+From: Johannes Stezenbach <js@sig21.net>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org, Ivo van Doorn <IvDoorn@gmail.com>,
+	Gertjan van Wingerde <gwingerde@gmail.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Helmut Schaa <helmut.schaa@googlemail.com>
+Subject: [PATCH v3 RFC] mac80211: add ieee80211_tx_status_ni()
+Message-ID: <20101129161316.GA32760@sig21.net>
+References: <20101129145439.GA31910@sig21.net>
+ <1291043349.3532.4.camel@jlt3.sipsolutions.net>
+ <20101129152735.GA32319@sig21.net>
+ <1291045056.3532.5.camel@jlt3.sipsolutions.net>
+ <20101129155126.GA32482@sig21.net>
+ <1291046320.3532.6.camel@jlt3.sipsolutions.net>
 MIME-Version: 1.0
-In-Reply-To: <alpine.DEB.2.00.1011031743550.21873@bigbill>
-References: <alpine.DEB.2.00.1011031743550.21873@bigbill>
-Date: Mon, 8 Nov 2010 21:40:57 +0100
-Message-ID: <AANLkTin6AiuCn6e1+sCpWaSTm3sY+hRrcr9O1-0dX+gG@mail.gmail.com>
-Subject: Re: [RFC] ath9k: fix beacon race conditions
-From: =?ISO-8859-1?Q?Bj=F6rn_Smedman?= <bjorn.smedman@venatech.se>
-To: ath9k-devel@lists.ath9k.org,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1291046320.3532.6.camel@jlt3.sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2010/11/3 Björn Smedman <bjorn.smedman@venatech.se>
-> Hi all,
->
-> The beacon processing in ath9k is done in a tasklet. This tasklet may race
-> against beacon allocation/deallocation in process context. The patch below
-> is an attempt to point out / avoid these race conditions. My hope is that
-> this will stabilize ath9k in a use-case I'm interested in where ap vif
-> interfaces are added and removed quite often.
->
-> This is purely an RFC, and it's probably synchronizing a bit too much. I'm
-> currently testing this patch with no obvious problems so far (except for
-> the part in xmit.c which I've commented out). More testing is necessary
-> but so is a rewrite of the patch anyway.
->
-> Any thoughts?
+ieee80211_tx_status() documentation says "This function may not be
+called in IRQ context", and it is called by rt2800usb
+from a workqueue context.  However, ieee80211_tx_status() is
+meant to be called from tasklets and thus uses netif_rx().
+Add a new ieee80211_tx_status_ni() which does the same
+thing but is safe to be called from process context.
 
-Anybody?
+Using ieee80211_tx_status_ni() for rt2800usb fixes the
+"NOHZ: local_softirq_pending 08" messages I've been getting.
 
-In principle at least, don't you agree it's a bad idea letting the
-beacon tasklet race against the beacon allocation/deallocation?
+Signed-off-by: Johannes Stezenbach <js@sig21.net>
+---
+v2: add ieee80211_tx_status_ni()
+v3: simplify accorindg to review
 
-Do you think it's a good idea to disable the tasklet, or should we add
-some spin_lock_bh's instead?
+Note: the patch is now incomplete, rt2x00lib_txdone() is used by
+several drivers, rt2800usb calls it from a workqueue while
+e.g. while rt2800pci calls it from a tasklet
+(rt2800pci_txstatus_tasklet).  I need to sort this out with
+the rt2x00 developers.
 
-Best regards,
 
-Björn
+ include/net/mac80211.h |   28 ++++++++++++++++++++++++----
+ 1 files changed, 24 insertions(+), 4 deletions(-)
+
+diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+index eaa4aff..e411cf8 100644
+--- a/include/net/mac80211.h
++++ b/include/net/mac80211.h
+@@ -2055,8 +2055,8 @@ static inline void ieee80211_rx_ni(struct ieee80211_hw *hw,
+  *
+  * This function may not be called in IRQ context. Calls to this function
+  * for a single hardware must be synchronized against each other. Calls
+- * to this function and ieee80211_tx_status_irqsafe() may not be mixed
+- * for a single hardware.
++ * to this function, ieee80211_tx_status_ni() and ieee80211_tx_status_irqsafe()
++ * may not be mixed for a single hardware.
+  *
+  * @hw: the hardware the frame was transmitted by
+  * @skb: the frame that was transmitted, owned by mac80211 after this call
+@@ -2065,13 +2065,33 @@ void ieee80211_tx_status(struct ieee80211_hw *hw,
+ 			 struct sk_buff *skb);
+ 
+ /**
++ * ieee80211_tx_status_ni - transmit status callback (in process context)
++ *
++ * Like ieee80211_tx_status() but can be called in process context.
++ *
++ * Calls to this function, ieee80211_tx_status() and
++ * ieee80211_tx_status_irqsafe() may not be mixed
++ * for a single hardware.
++ *
++ * @hw: the hardware the frame was transmitted by
++ * @skb: the frame that was transmitted, owned by mac80211 after this call
++ */
++static inline void ieee80211_tx_status_ni(struct ieee80211_hw *hw,
++					  struct sk_buff *skb)
++{
++	local_bh_disable();
++	ieee80211_tx_status(hw, skb);
++	local_bh_enable();
++}
++
++/**
+  * ieee80211_tx_status_irqsafe - IRQ-safe transmit status callback
+  *
+  * Like ieee80211_tx_status() but can be called in IRQ context
+  * (internally defers to a tasklet.)
+  *
+- * Calls to this function and ieee80211_tx_status() may not be mixed for a
+- * single hardware.
++ * Calls to this function, ieee80211_tx_status() and
++ * ieee80211_tx_status_ni() may not be mixed for a single hardware.
+  *
+  * @hw: the hardware the frame was transmitted by
+  * @skb: the frame that was transmitted, owned by mac80211 after this call
