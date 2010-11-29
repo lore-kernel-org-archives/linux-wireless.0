@@ -1,47 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from foo.birdnet.se ([213.88.146.6]:49384 "HELO foo.birdnet.se"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
-	id S1751183Ab0KAWwP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 1 Nov 2010 18:52:15 -0400
-Message-ID: <20101101224533.5647.qmail@stuge.se>
-Date: Mon, 1 Nov 2010 23:45:33 +0100
-From: Peter Stuge <peter@stuge.se>
-To: =?utf-8?B?QmrDtnJu?= Smedman <bjorn.smedman@venatech.se>
-Cc: Bob Copeland <me@bobcopeland.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	"ath9k-devel@venema.h4ckr.net" <ath9k-devel@venema.h4ckr.net>
-Subject: Re: [ath9k-devel] [RFC] ath9k: Insert wmb before linking dma
-	descriptors
-References: <20101005131744.GB4074@tuxdriver.com> <20101005195039.GD11831@tux> <AANLkTikxayNdakE-MrCQWS10nZ3ZQk1pnEcHC+sMck1p@mail.gmail.com> <4CB0890D.3050208@openwrt.org> <4CCA0908.6000105@candelatech.com> <4CCA0B26.5010008@openwrt.org> <AANLkTinu4_EcvzgS6AhxRYtSg=y=iwfcFtk0AhgOK-bS@mail.gmail.com> <AANLkTi=+L+R1HowfmcLc7fTP+p0=u0T8bcYcob-TNyNb@mail.gmail.com> <AANLkTinVu-DPdS43rMjDc0MMVDXMPHvKtbVfQJE8Ny=C@mail.gmail.com> <AANLkTikqw5oVTd66DeQGrPgyPAqh66dm6jCvNFSeHpQi@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <AANLkTikqw5oVTd66DeQGrPgyPAqh66dm6jCvNFSeHpQi@mail.gmail.com>
+Received: from he.sipsolutions.net ([78.46.109.217]:58693 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754711Ab0K2P6m (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 29 Nov 2010 10:58:42 -0500
+Subject: Re: [PATCH v2 RFC] mac80211: fix "NOHZ: local_softirq_pending 08"
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Johannes Stezenbach <js@sig21.net>
+Cc: linux-wireless@vger.kernel.org, Ivo van Doorn <IvDoorn@gmail.com>,
+	Gertjan van Wingerde <gwingerde@gmail.com>,
+	"John W. Linville" <linville@tuxdriver.com>
+In-Reply-To: <20101129155126.GA32482@sig21.net>
+References: <20101129145439.GA31910@sig21.net>
+	 <1291043349.3532.4.camel@jlt3.sipsolutions.net>
+	 <20101129152735.GA32319@sig21.net>
+	 <1291045056.3532.5.camel@jlt3.sipsolutions.net>
+	 <20101129155126.GA32482@sig21.net>
+Content-Type: text/plain; charset="UTF-8"
+Date: Mon, 29 Nov 2010 16:58:40 +0100
+Message-ID: <1291046320.3532.6.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Björn Smedman wrote:
-> long and unwanted weekend of debugging ath9k DMA errors
-
-Yeah, I've seen those as well, especially with AR5008 but also AR9002.
-
-I have severe intermittent issues with PCI functionality of an AR9280
-card. It locks up in a state where it either returns absolute garbage
-so severe that the kernel plain rejects it, or just mildly garbage
-data so that it reports corrupt PCI ids. It can fix itself in a
-running system, so that a later lspci shows the correct device ids
-and the driver actually loads and runs.
-
-I typically get PCI fatal interrupts after resurrecting the card
-(that takes a couple of power cycles including removing the laptop
-battery). I don't suppose anyone can explain *in detail* what causee
-these issues and what could be done to fix them?
-
-Finally I've also experienced complete system lockup after a
-previously working system was left on but idle overnight.
-
-All this fun with commit 2d10d8737ccdba752d60106abbc6ed4f37404923 but
-I believe these problems are nothing new.
+On Mon, 2010-11-29 at 16:51 +0100, Johannes Stezenbach wrote:
 
 
-//Peter
+> -void ieee80211_tx_status(struct ieee80211_hw *hw, struct sk_buff *skb)
+> +void __ieee80211_tx_status(struct ieee80211_hw *hw, struct sk_buff *skb,
+> +			   int (*netif_rx_func)(struct sk_buff *skb))
+
+This seems weird to me -- why not just do
+
+static inline void ieee80211_tx_status_ni(...)
+{
+	local_bh_disable();
+	ieee80211_tx_status(...);
+	local_bh_enable();
+}
+
+johannes
+
