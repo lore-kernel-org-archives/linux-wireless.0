@@ -1,43 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mgw-da01.nokia.com ([147.243.128.24]:26081 "EHLO
-	mgw-da01.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755421Ab0KAMZ7 (ORCPT
+Received: from ksp.mff.cuni.cz ([195.113.26.206]:57590 "EHLO
+	atrey.karlin.mff.cuni.cz" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1752228Ab0K3UA2 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 1 Nov 2010 08:25:59 -0400
-Received: from localhost.localdomain (chilepepper.research.nokia.com [172.21.50.167])
-	by mgw-da01.nokia.com (Switch-3.4.3/Switch-3.4.3) with ESMTP id oA1BqGcQ020116
-	for <linux-wireless@vger.kernel.org>; Mon, 1 Nov 2010 13:52:30 +0200
-From: Luciano Coelho <luciano.coelho@nokia.com>
-To: linux-wireless@vger.kernel.org
-Subject: [RFC 14/15] cfg80211: add ie support for periodic scans
-Date: Mon,  1 Nov 2010 13:52:15 +0200
-Message-Id: <1288612336-2830-15-git-send-email-luciano.coelho@nokia.com>
-In-Reply-To: <1288612336-2830-1-git-send-email-luciano.coelho@nokia.com>
-References: <1288612336-2830-1-git-send-email-luciano.coelho@nokia.com>
+	Tue, 30 Nov 2010 15:00:28 -0500
+Date: Tue, 30 Nov 2010 21:00:19 +0100
+From: Pavel Machek <pavel@ucw.cz>
+To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Cc: bkuhn@ebb.org, Alan Cox <alan@lxorguk.ukuu.org.uk>,
+	linux-kernel@vger.kernel.org,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Greg KH <greg@kroah.com>, David Miller <davem@davemloft.net>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Stephen Hemminger <shemminger@vyatta.com>,
+	"Perez-Gonzalez, Inaky" <inaky.perez-gonzalez@intel.com>,
+	Charles Marker <Charles.Marker@atheros.com>,
+	Jouni Malinen <Jouni.Malinen@atheros.com>,
+	Kevin Hayes <kevin@atheros.com>,
+	Zhifeng Cai <zhifeng.cai@atheros.com>,
+	Don Breslin <Don.Breslin@atheros.com>,
+	Doug Dahlby <Doug.Dahlby@atheros.com>,
+	Julia Lawall <julia@diku.dk>
+Subject: Re: Challenges with doing hardware bring up with Linux first
+Message-ID: <20101130200019.GA28735@elf.ucw.cz>
+References: <AANLkTim4jVaZxYp8nSgJyy28iwxcxbPeNUzxTfoHAX4S@mail.gmail.com>
+ <20101118113441.74fcdc21@lxorguk.ukuu.org.uk>
+ <AANLkTikOZbtyhsk0OBb4OdUi6qj-7k_hU-aW_Pkhfpq0@mail.gmail.com>
+ <20101130192648.GA1623@ucw.cz>
+ <AANLkTinMyAeVJJc7Lc-vt_Ywr+vcSf-GAiQwggTGbqh8@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <AANLkTinMyAeVJJc7Lc-vt_Ywr+vcSf-GAiQwggTGbqh8@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Add an array of pointers to ie (one element for each band) and the respective
-array of ie lengths.
+On Tue 2010-11-30 11:30:18, Luis R. Rodriguez wrote:
+> On Tue, Nov 30, 2010 at 11:26 AM, Pavel Machek <pavel@ucw.cz> wrote:
+> > Hi!
+> >
+> >> >> everything else can be independent code. For ath9k in particular this
+> >> >> means we keep ath9k_hw shared between our Operating Systems and that's
+> >> >> it. In addition to this I believe opening up the common drivers for
+> >> >
+> >> > The Linux copy needs to be GPL,
+> >>
+> >> GPL-Compatible you mean, right. I mean we have ath9k_hw with
+> >> permissive licensed files.
+> >
+> > GPL-compatible is not right word. It has to be either GPL, or so
+> > permissive that anyone is allowed to turn it into GPL.
+> 
+> Oh?
 
-Signed-off-by: Luciano Coelho <luciano.coelho@nokia.com>
----
- include/net/cfg80211.h |    2 ++
- 1 files changed, 2 insertions(+), 0 deletions(-)
+Kernel is GPL. Dual BSD/GPL is ok. Just BSD... I don't think so.
 
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index 3ac6fc9..fdc6b31 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -732,6 +732,8 @@ struct cfg80211_periodic_request {
- 	struct cfg80211_ssid *ssids;
- 	int n_ssids;
- 	u32 n_channels;
-+	const u8 *ie[IEEE80211_NUM_BANDS];
-+	size_t ie_len[IEEE80211_NUM_BANDS];
- 
- 	/* internal */
- 	struct wiphy *wiphy;
+/*
+ * Copyright (c) 2008 Atheros Communications Inc.
+ *
+ * Permission to use, copy, modify, and/or distribute this software
+for any
+ * purpose with or without fee is hereby granted, provided that the
+above
+ * copyright notice and this permission notice appear in all copies.
+ *
+
+...but I need permission to relicense it under GPL, and I'm not sure I
+have it.
+							Pavel
+
 -- 
-1.7.0.4
-
+(english) http://www.livejournal.com/~pavelmachek
+(cesky, pictures) http://atrey.karlin.mff.cuni.cz/~pavel/picture/horses/blog.html
