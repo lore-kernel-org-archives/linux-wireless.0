@@ -1,79 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-px0-f174.google.com ([209.85.212.174]:49528 "EHLO
-	mail-px0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751409Ab0KXSFM convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 24 Nov 2010 13:05:12 -0500
-Received: by pxi15 with SMTP id 15so7506pxi.19
-        for <linux-wireless@vger.kernel.org>; Wed, 24 Nov 2010 10:05:12 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <20101124175035.GG7435@tuxdriver.com>
-References: <E1PKkCh-0005Ay-R2@sipsolutions.net> <4CED4464.2000106@archlinux.org>
- <20101124170639.GD7435@tuxdriver.com> <AANLkTin2n7ofZ0oom_aD+V4aFZ3dti1P77Mh6bpZOE6Z@mail.gmail.com>
- <20101124175035.GG7435@tuxdriver.com>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Wed, 24 Nov 2010 10:04:50 -0800
-Message-ID: <AANLkTi=BBw=T98eq2SXuvaLsQ=g8M9H4uLaCxOT0Ju44@mail.gmail.com>
-Subject: Re: [ANN] wireless-regdb: master-2010-11-22
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: =?UTF-8?Q?Thomas_B=C3=A4chler?= <thomas@archlinux.org>,
-	linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+Received: from smtp.nokia.com ([147.243.128.26]:43838 "EHLO mgw-da02.nokia.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752464Ab0K3GLr (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 30 Nov 2010 01:11:47 -0500
+Subject: Re: [PATCH v4 ] wl12xx: BA Initiator support
+From: Luciano Coelho <luciano.coelho@nokia.com>
+To: ext Ohad Ben-Cohen <ohad@wizery.com>
+Cc: Shahar Levi <shahar_levi@ti.com>, linux-wireless@vger.kernel.org
+In-Reply-To: <AANLkTikUOfQbk-TEE2=EejXOTr_t-LXvTim-Sc1OVwKG@mail.gmail.com>
+References: <1291038135-20672-1-git-send-email-shahar_levi@ti.com>
+	 <AANLkTikUOfQbk-TEE2=EejXOTr_t-LXvTim-Sc1OVwKG@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Tue, 30 Nov 2010 08:11:40 +0200
+Message-ID: <1291097500.1673.100.camel@powerslave>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Nov 24, 2010 at 9:50 AM, John W. Linville
-<linville@tuxdriver.com> wrote:
-> On Wed, Nov 24, 2010 at 09:33:36AM -0800, Luis R. Rodriguez wrote:
->> On Wed, Nov 24, 2010 at 9:06 AM, John W. Linville
->> <linville@tuxdriver.com> wrote:
->> > On Wed, Nov 24, 2010 at 05:59:16PM +0100, Thomas Bächler wrote:
->> >> Am 23.11.2010 05:10, schrieb
->> >> wireless-cdvu00un1VgdHxzADdlk8Q@public.gmane.org:
->> >> > A new release of wireless-regdb (master-2010-11-22) is available at:
->> >> >
->> >> > http://wireless.kernel.org/download/wireless-regdb/wireless-regdb-2010.11.22.tar.bz2
->> >> >
->> >> > SHA1 sum: d0b008b4d32105cf6a87860b5a69e8066b03baaa
->> >> >
->> >> >
->> >> > For your convenience the individual regulatory.bin file can be downloaded from:
->> >> >
->> >> > http://wireless.kernel.org/download/wireless-regdb/regulatory.bins/2010.11.22-regulatory.bin
->> >> >
->> >> > SHA1 sum d7e558216ebe4d5ad01ccb0029c64456f740b9fd
->> >>
->> >> Hello,
->> >>
->> >> the binary does not work for me:
->> >>
->> >> $ sha1sum 2010.11.22-regulatory.bin
->> >> d7e558216ebe4d5ad01ccb0029c64456f740b9fd  2010.11.22-regulatory.bin
->> >> $ regdbdump ./2010.11.22-regulatory.bin
->> >> Database signature verification failed.
->> >>
->> >> The old 2009.11.25-regulatory.bin works fine.
->> >
->> > It seems to be working for me, even on a freshly installed RHEL6 box
->> > (so no random keys scattered about).
->> >
->> > Anyone else seeing this issue?  I seem to remember that we had a
->> > similar problem some time back...?
->>
->> I see the same issue:
->>
->> mcgrof@tux ~/devel/crda (git::master)$ ./regdbdump
->> /home/mcgrof/2010.11.22-regulatory.bin
->> Database signature verification failed.
->
-> Alright, looks like I mislocated a key file when I switched laptops.
-> I think it is corrected now...give it a try?
+On Mon, 2010-11-29 at 16:44 -0800, ext Ohad Ben-Cohen wrote:
+> Hi Shahar,
+> 
+> On Mon, Nov 29, 2010 at 5:42 AM, Shahar Levi <shahar_levi@ti.com> wrote:
+> ...
+> > -#define WL1271_FW_NAME "wl1271-fw.bin"
+> > +#define WL1271_FW_NAME "wl1271-fw-2.bin"
+> 
+> Changing the firmware's major version involves usability and
+> maintainability pain to the entire wl12xx community, especially if
+> done repeatedly, and therefore should be generally avoided.
 
-What's the URL?
+Yes, I was thinking about the same thing yesterday.  Then I had to
+leave, so I'm still not sure whether this is really needed.
 
-mcgrof@tux ~/devel/crda (git::master)$ ./regdbdump 2010.11.22-regulatory.bin
-Database signature verification failed.
-mcgrof@tux ~/devel/crda (git::master)$ sha1sum 2010.11.22-regulatory.bin
-d7e558216ebe4d5ad01ccb0029c64456f740b9fd  2010.11.22-regulatory.bin
 
-  Luis
+> When the firmware API changes, and the old driver can't work with it
+> anymore, then you have no choice but changing the name.
+
+In theory the API *has* changed, not just extended.  Check this:
+
+-       ACX_BA_SESSION_RESPONDER_POLICY = 0x0055,
+-       ACX_BA_SESSION_INITIATOR_POLICY = 0x0056,
++       ACX_BA_SESSION_POLICY_CFG   = 0x0055,
++       ACX_BA_SESSION_RX_SETUP     = 0x0056,
+
+But in practice, this doesn't matter, because we were not using the
+RESPONDER/INITIATOR commands before...
+
+
+> But if it's just a small API extension enabling new driver
+> functionality, you should really avoid bumping the firmware version,
+> and instead try to dynamically detect it from the driver and act
+> appropriately.
+> 
+> Please explain what has exactly been changed in the firmware and let's
+> try to find a clean solution.
+
+It's basically just those two extra commands that were added.  And one
+new event that is part of a future patch.
+
+In theory, we could check the firmware revision after boot and bail out
+if the version doesn't match.  Maybe we should add a small
+infrastructure for that kind of check.
+
+This new firmware is only required if 11n is enabled too, so at least we
+should not have the driver fail whe the new fw version is not there,
+unless 11n is enabled.
+
+
+-- 
+Cheers,
+Luca.
+
