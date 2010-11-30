@@ -1,93 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:48059 "EHLO nbd.name"
-	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1755724Ab0KNOUW (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 14 Nov 2010 09:20:22 -0500
-From: Felix Fietkau <nbd@openwrt.org>
-To: linux-wireless@vger.kernel.org
-Cc: linville@tuxdriver.com, lrodriguez@atheros.com
-Subject: [PATCH 04/13] ath9k: remove bfs_paprd_timestamp from struct ath_buf_state
-Date: Sun, 14 Nov 2010 15:20:04 +0100
-Message-Id: <1289744413-20789-4-git-send-email-nbd@openwrt.org>
-In-Reply-To: <1289744413-20789-3-git-send-email-nbd@openwrt.org>
-References: <1289744413-20789-1-git-send-email-nbd@openwrt.org>
- <1289744413-20789-2-git-send-email-nbd@openwrt.org>
- <1289744413-20789-3-git-send-email-nbd@openwrt.org>
+Received: from mail.tpi.com ([70.99.223.143]:3971 "EHLO mail.tpi.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750828Ab0K3Vrn (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 30 Nov 2010 16:47:43 -0500
+Message-ID: <4CF56AB8.7040901@canonical.com>
+Date: Tue, 30 Nov 2010 14:20:56 -0700
+From: Tim Gardner <tim.gardner@canonical.com>
+Reply-To: tim.gardner@canonical.com
+MIME-Version: 1.0
+To: Hauke Mehrtens <hauke@hauke-m.de>
+CC: thomas@xyz.pp.se, linux-wireless@vger.kernel.org
+Subject: Re: wireless.kernel.org update
+References: <1291106122.13696.0.camel@thonov-ubuntu> <4CF54B97.40604@hauke-m.de>
+In-Reply-To: <4CF54B97.40604@hauke-m.de>
+Content-Type: text/plain; charset=ISO-8859-15; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
----
- drivers/net/wireless/ath/ath9k/ath9k.h |    2 +-
- drivers/net/wireless/ath/ath9k/main.c  |    2 ++
- drivers/net/wireless/ath/ath9k/xmit.c  |    7 +------
- 3 files changed, 4 insertions(+), 7 deletions(-)
+On 11/30/2010 12:08 PM, Hauke Mehrtens wrote:
+> On 11/30/2010 09:35 AM, Thomas Novin wrote:
+>> Hello
+>>
+>> This page,
+>> http://wireless.kernel.org/en/users/Download#Getting_compat-wireless_on_Ubuntu, should be updated to include Maverick/10.10.
+>>
+>> If I just try to install as instructed for other versions:
+>>
+>> sudo apt-get install linux-backports-modules-wireless-lucid-generic
+>>
+>> I get:
+>>
+>> E: Unable to locate package
+>> linux-backports-modules-wireless-lucid-generic
+>
+> I added the package names for Ubuntu 10.10 into the wiki. The Ubuntu
+> guys changed the name of the package but the meta package is still
+> depending on the old names, this is a Ubuntu bug. (see:
+> https://bugs.launchpad.net/ubuntu/+source/linux-meta/+bug/681727 )
+>
+> Hauke
+> --
 
-diff --git a/drivers/net/wireless/ath/ath9k/ath9k.h b/drivers/net/wireless/ath/ath9k/ath9k.h
-index 7316459..9106d41 100644
---- a/drivers/net/wireless/ath/ath9k/ath9k.h
-+++ b/drivers/net/wireless/ath/ath9k/ath9k.h
-@@ -221,7 +221,6 @@ struct ath_buf_state {
- 	int bfs_retries;
- 	u8 bf_type;
- 	u8 bfs_paprd;
--	unsigned long bfs_paprd_timestamp;
- 	u32 bfs_keyix;
- 	enum ath9k_internal_frame_type bfs_ftype;
- };
-@@ -598,6 +597,7 @@ struct ath_softc {
- 	struct work_struct paprd_work;
- 	struct work_struct hw_check_work;
- 	struct completion paprd_complete;
-+	bool paprd_pending;
- 
- 	u32 intrstatus;
- 	u32 sc_flags; /* SC_OP_* */
-diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
-index f8c811a..611797a 100644
---- a/drivers/net/wireless/ath/ath9k/main.c
-+++ b/drivers/net/wireless/ath/ath9k/main.c
-@@ -380,6 +380,7 @@ void ath_paprd_calibrate(struct work_struct *work)
- 		}
- 
- 		init_completion(&sc->paprd_complete);
-+		sc->paprd_pending = true;
- 		ar9003_paprd_setup_gain_table(ah, chain);
- 		txctl.paprd = BIT(chain);
- 		if (ath_tx_start(hw, skb, &txctl) != 0)
-@@ -387,6 +388,7 @@ void ath_paprd_calibrate(struct work_struct *work)
- 
- 		time_left = wait_for_completion_timeout(&sc->paprd_complete,
- 				msecs_to_jiffies(ATH_PAPRD_TIMEOUT));
-+		sc->paprd_pending = false;
- 		if (!time_left) {
- 			ath_print(ath9k_hw_common(ah), ATH_DBG_CALIBRATE,
- 				  "Timeout waiting for paprd training on "
-diff --git a/drivers/net/wireless/ath/ath9k/xmit.c b/drivers/net/wireless/ath/ath9k/xmit.c
-index 6e0467c..9f3d23a 100644
---- a/drivers/net/wireless/ath/ath9k/xmit.c
-+++ b/drivers/net/wireless/ath/ath9k/xmit.c
-@@ -1698,9 +1698,6 @@ static void ath_tx_start_dma(struct ath_softc *sc, struct ath_buf *bf,
- 		if (bf->bf_state.bfs_paprd)
- 			ar9003_hw_set_paprd_txdesc(ah, ds, bf->bf_state.bfs_paprd);
- 
--		if (txctl->paprd)
--			bf->bf_state.bfs_paprd_timestamp = jiffies;
--
- 		ath_tx_send_normal(sc, txctl->txq, NULL, &bf_head);
- 	}
- 
-@@ -1874,9 +1871,7 @@ static void ath_tx_complete_buf(struct ath_softc *sc, struct ath_buf *bf,
- 	bf->bf_buf_addr = 0;
- 
- 	if (bf->bf_state.bfs_paprd) {
--		if (time_after(jiffies,
--			       bf->bf_state.bfs_paprd_timestamp +
--			       msecs_to_jiffies(ATH_PAPRD_TIMEOUT)))
-+		if (!sc->paprd_pending)
- 			dev_kfree_skb_any(skb);
- 		else
- 			complete(&sc->paprd_complete);
+Should have it fixed soon. It was a bit of a goof because we're going to 
+offer multiple versions of the compat-wireless package which in turn 
+required some package name changes.
+
+rtg
 -- 
-1.7.3.2
-
+Tim Gardner tim.gardner@canonical.com
