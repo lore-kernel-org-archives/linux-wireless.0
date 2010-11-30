@@ -1,48 +1,86 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.19.149.2]:20826 "EHLO mail.atheros.com"
+Received: from mail.lang.hm ([64.81.33.126]:36627 "EHLO bifrost.lang.hm"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752502Ab0KSKTs (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 19 Nov 2010 05:19:48 -0500
-Received: from mail.atheros.com ([10.10.20.105])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Fri, 19 Nov 2010 02:19:35 -0800
-Date: Fri, 19 Nov 2010 15:57:25 +0530
-From: Rajkumar Manoharan <rmanoharan@atheros.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: Rajkumar Manoharan <Rajkumar.Manoharan@Atheros.com>,
-	"Luis R. Rodriguez" <mcgrof@gmail.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: module unloading busted ?
-Message-ID: <20101119102725.GA3126@vmraj-lnx.users.atheros.com>
-References: <AANLkTim775JXAkrvVjn-TmwD5B6-MYCRw6ah=rVF8Opk@mail.gmail.com>
- <20101118093725.GA3388@vmraj-lnx.users.atheros.com>
- <1290106515.3801.4.camel@jlt3.sipsolutions.net>
+	id S1751468Ab0K3U3C (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 30 Nov 2010 15:29:02 -0500
+Date: Tue, 30 Nov 2010 12:13:05 -0800 (PST)
+From: david@lang.hm
+To: Pavel Machek <pavel@ucw.cz>
+cc: "Luis R. Rodriguez" <lrodriguez@atheros.com>, bkuhn@ebb.org,
+	Alan Cox <alan@lxorguk.ukuu.org.uk>,
+	linux-kernel@vger.kernel.org,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Greg KH <greg@kroah.com>, David Miller <davem@davemloft.net>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Stephen Hemminger <shemminger@vyatta.com>,
+	"Perez-Gonzalez, Inaky" <inaky.perez-gonzalez@intel.com>,
+	Charles Marker <Charles.Marker@atheros.com>,
+	Jouni Malinen <Jouni.Malinen@atheros.com>,
+	Kevin Hayes <kevin@atheros.com>,
+	Zhifeng Cai <zhifeng.cai@atheros.com>,
+	Don Breslin <Don.Breslin@atheros.com>,
+	Doug Dahlby <Doug.Dahlby@atheros.com>,
+	Julia Lawall <julia@diku.dk>
+Subject: Re: Challenges with doing hardware bring up with Linux first
+In-Reply-To: <20101130200019.GA28735@elf.ucw.cz>
+Message-ID: <alpine.DEB.2.00.1011301209090.423@asgard.lang.hm>
+References: <AANLkTim4jVaZxYp8nSgJyy28iwxcxbPeNUzxTfoHAX4S@mail.gmail.com> <20101118113441.74fcdc21@lxorguk.ukuu.org.uk> <AANLkTikOZbtyhsk0OBb4OdUi6qj-7k_hU-aW_Pkhfpq0@mail.gmail.com> <20101130192648.GA1623@ucw.cz> <AANLkTinMyAeVJJc7Lc-vt_Ywr+vcSf-GAiQwggTGbqh8@mail.gmail.com>
+ <20101130200019.GA28735@elf.ucw.cz>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <1290106515.3801.4.camel@jlt3.sipsolutions.net>
+Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Nov 19, 2010 at 12:25:15AM +0530, Johannes Berg wrote:
-> On Thu, 2010-11-18 at 15:07 +0530, Rajkumar Manoharan wrote:
-> > On Thu, Nov 18, 2010 at 12:56:00PM +0530, Luis R. Rodriguez wrote:
-> > > 05:33 < mcgrof> so module unload on ath9k no longer works
-> > > 06:11 < vmraj> mcgrof: module unload is not working for intel cards too
-> > > 06:15 < vmraj> it can be reproduced by rmmod on active connection
-> > > 
-> > > I haven't yet figured out why. Anyone else with other modules experiencing this?
-> > > 
-> > cfg80211_netdev_notifier_call invokes dev_hold on NETDEV_DOWN which increments
-> > Usage count. hence unregister_netdevice fails.
-> 
-> The cleanup_work should fix that up -- but I can see this being a corner
-> case that the network stack no longer likes us for ...
+On Tue, 30 Nov 2010, Pavel Machek wrote:
+
+> On Tue 2010-11-30 11:30:18, Luis R. Rodriguez wrote:
+>> On Tue, Nov 30, 2010 at 11:26 AM, Pavel Machek <pavel@ucw.cz> wrote:
+>>> Hi!
+>>>
+>>>>>> everything else can be independent code. For ath9k in particular this
+>>>>>> means we keep ath9k_hw shared between our Operating Systems and that's
+>>>>>> it. In addition to this I believe opening up the common drivers for
+>>>>>
+>>>>> The Linux copy needs to be GPL,
+>>>>
+>>>> GPL-Compatible you mean, right. I mean we have ath9k_hw with
+>>>> permissive licensed files.
+>>>
+>>> GPL-compatible is not right word. It has to be either GPL, or so
+>>> permissive that anyone is allowed to turn it into GPL.
+>>
+>> Oh?
 >
-Yes cleanup_work releases the device. By disabling ipv6 solves the issue.
-Somewhere in ipv6 module, failed to release device.
+> Kernel is GPL. Dual BSD/GPL is ok. Just BSD... I don't think so.
+>
+> /*
+> * Copyright (c) 2008 Atheros Communications Inc.
+> *
+> * Permission to use, copy, modify, and/or distribute this software
+> for any
+> * purpose with or without fee is hereby granted, provided that the
+> above
+> * copyright notice and this permission notice appear in all copies.
+> *
+>
+> ...but I need permission to relicense it under GPL, and I'm not sure I
+> have it.
+> 							Pavel
 
-sysctl -w net.ipv6.conf.all.disable_ipv6=1 solves the module unload problem.
+unless it's the old 4-clause BSD license (with the advertising clause, 
+which almost nobody used anymore), the BSD code can be relicensed as 
+anything (including proprietary), as long as the notices in the file are 
+maintained.
 
+it doesn't take more explicit permission to re-license something as GPL 
+than it does to make it closed-source.
 
---
-Rajkumar
+However,
+   there are quite a few files in the kernel that are BSD licensed, when 
+combined with other GPL code, the only way you can re-distribute the 
+result is under the GPL, so it is effectivly 'converted' when you compile, 
+but by leaving the file BSD, improvements to it can be shared back with 
+the original authors and put into their main codebase, so it's actually 
+more polite to leave the license as-is for this file.
+
+David Lang
