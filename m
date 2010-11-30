@@ -1,88 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:52950 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753185Ab0KYOsp (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 25 Nov 2010 09:48:45 -0500
-From: Hauke Mehrtens <hauke@hauke-m.de>
-To: lrodriguez@atheros.com
-Cc: linux-wireless@vger.kernel.org, mcgrof@infradead.org,
-	Hauke Mehrtens <hauke@hauke-m.de>
-Subject: [PATCH 1/5] compat-wireless: make BRCMFMAC compile
-Date: Thu, 25 Nov 2010 15:48:33 +0100
-Message-Id: <1290696517-20437-1-git-send-email-hauke@hauke-m.de>
+Received: from mail-bw0-f46.google.com ([209.85.214.46]:44869 "EHLO
+	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754465Ab0K3IiR (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 30 Nov 2010 03:38:17 -0500
+Received: by bwz15 with SMTP id 15so4781575bwz.19
+        for <linux-wireless@vger.kernel.org>; Tue, 30 Nov 2010 00:38:16 -0800 (PST)
+Message-ID: <4CF4B7F3.7060601@googlemail.com>
+Date: Tue, 30 Nov 2010 09:38:11 +0100
+From: Dennis Borgmann <dennis.borgmann@googlemail.com>
+MIME-Version: 1.0
+To: linux newbie <linux.newbie79@gmail.com>
+CC: hostap@lists.shmoo.com, linux-wireless@vger.kernel.org
+Subject: Re: Hostapd + wpa_supplicant
+References: <AANLkTinS5M3YBj4f97F2+hiDTaxRbs-RM7D8q=M_T4qW@mail.gmail.com> <AANLkTi=6x1xXHmm3XyoqiV_NV6-+r8rXVMOBATULm4KO@mail.gmail.com>
+In-Reply-To: <AANLkTi=6x1xXHmm3XyoqiV_NV6-+r8rXVMOBATULm4KO@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch fixes some compile problems when Broadcom IEEE802.11n
-embedded FullMAC WLAN driver is selected.
+Hello linux newbie!
 
-Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
----
- patches/25-multicast-list_head.patch         |   18 ++++++++++++++++--
- patches/35-backport-brcm80211-Makefile.patch |   15 +++++++++++++++
- 2 files changed, 31 insertions(+), 2 deletions(-)
+It is not quite clear from your message, what you would like to do. Are
+you running only one wireless device within your embedded target? If so,
+it is not possible to run hostapd and wpa_supplicant at the same time,
+since the wireless card can only work in either AP or station mode. Both
+at the same time is not possible. So what you would need to do is write
+scripts, that kill the station mode, create an AP mode or the other way
+around depending on what you need at a defined point of time.
 
-diff --git a/patches/25-multicast-list_head.patch b/patches/25-multicast-list_head.patch
-index cd70bf3..48daec4 100644
---- a/patches/25-multicast-list_head.patch
-+++ b/patches/25-multicast-list_head.patch
-@@ -600,9 +600,23 @@ This also backport commit 2f787b0b76bf5de2eaa3ca3a29d89123ae03c856
-  	}
-  
-  	return hash.low | ((u64)hash.high << 32);
-+--- a/drivers/staging/brcm80211/brcmfmac/dhd_linux.c
-++++ b/drivers/staging/brcm80211/brcmfmac/dhd_linux.c
-+@@ -726,7 +726,11 @@ static void _dhd_set_multicast_list(dhd_
-+ 	netdev_for_each_mc_addr(ha, dev) {
-+ 		if (!cnt)
-+ 			break;
-++#if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,35))
-+ 		memcpy(bufp, ha->addr, ETHER_ADDR_LEN);
-++#else
-++		memcpy(bufp, ha->dmi_addr, ETHER_ADDR_LEN);
-++#endif
-+ 		bufp += ETHER_ADDR_LEN;
-+ 		cnt--;
-+ 	}
- --- a/include/net/mac80211.h
- +++ b/include/net/mac80211.h
--@@ -1763,7 +1763,11 @@ struct ieee80211_ops {
-+@@ -1770,7 +1770,11 @@ struct ieee80211_ops {
-  				 struct ieee80211_bss_conf *info,
-  				 u32 changed);
-  	u64 (*prepare_multicast)(struct ieee80211_hw *hw,
-@@ -663,7 +677,7 @@ This also backport commit 2f787b0b76bf5de2eaa3ca3a29d89123ae03c856
-  
- --- a/net/mac80211/ieee80211_i.h
- +++ b/net/mac80211/ieee80211_i.h
--@@ -724,7 +724,12 @@ struct ieee80211_local {
-+@@ -725,7 +725,12 @@ struct ieee80211_local {
-  	struct work_struct recalc_smps;
-  
-  	/* aggregated multicast list */
-diff --git a/patches/35-backport-brcm80211-Makefile.patch b/patches/35-backport-brcm80211-Makefile.patch
-index ee15121..bc57367 100644
---- a/patches/35-backport-brcm80211-Makefile.patch
-+++ b/patches/35-backport-brcm80211-Makefile.patch
-@@ -15,3 +15,18 @@
-  
-  PCI_CFLAGS := -DWLC_LOW
-  
-+--- a/drivers/staging/brcm80211/brcmfmac/Makefile
-++++ b/drivers/staging/brcm80211/brcmfmac/Makefile
-+@@ -33,9 +33,9 @@ ccflags-y :=			\
-+ 	-DPKT_FILTER_SUPPORT	\
-+ 	-DSHOW_EVENTS		\
-+ 	-DTOE			\
-+-	-Idrivers/staging/brcm80211/brcmfmac		\
-+-	-Idrivers/staging/brcm80211/include		\
-+-	-Idrivers/staging/brcm80211/util
-++	-I$(obj)		\
-++	-I$(obj)/../include		\
-++	-I$(obj)/../util
-+ 
-+ DHDOFILES = dhd_linux.o ../util/linux_osl.o ../util/bcmutils.o dhd_common.o dhd_custom_gpio.o	\
-+ 	wl_iw.o wl_cfg80211.o ../util/siutils.o ../util/sbutils.o ../util/aiutils.o ../util/hndpmu.o ../util/bcmwifi.o dhd_sdio.o	\
--- 
-1.7.1
+If you want to run hostapd and wpa_supplicant at the very same time, for
+your embedded target to be an AP and a station at the very same moment,
+you will need to run two wireless interfaces on your target.
+
+HTH,
+Dennis Borgmann
+
+linux newbie schrieb:
+> Hi,
+>
+> Any suggestion?
+>
+> Thanks
+>
+> On Mon, Nov 29, 2010 at 3:13 PM, linux newbie <linux.newbie79@gmail.com> wrote:
+>   
+>> Hi,
+>>
+>> * On my embedded target, I am running rt73 based usb wireless adapter.
+>> * tested hostapd and wpa_supplicant individually and it is working fine.
+>> * bothe hostapd and wpa_supplicant are latest 0.7.3 versions with
+>> libnl_1.1 version & kernel 2.6.35
+>>
+>> If I run both wpa_supplicant and hostapd I am having issue.
+>>
+>> Reason for running hostapd and wpa_supplicant on same terminal is we
+>> have multiple wireless terminals and if one of them can't access the
+>> AP (due to coverage issue) , then it will bind to Hostapd on some
+>> other terminal. I am not sure, if I can able to configure my terminals
+>> to use both hostapd & wpa_supplicant and need your expert advice.
+>>
+>> Thanks
+>>
+>>     
+> _______________________________________________
+> HostAP mailing list
+> HostAP@lists.shmoo.com
+> http://lists.shmoo.com/mailman/listinfo/hostap
+>   
 
