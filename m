@@ -1,42 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iw0-f172.google.com ([209.85.214.172]:42390 "EHLO
-	mail-iw0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757540Ab0LJBIn (ORCPT
+Received: from mail-qw0-f46.google.com ([209.85.216.46]:61515 "EHLO
+	mail-qw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751677Ab0K3Xa4 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 9 Dec 2010 20:08:43 -0500
+	Tue, 30 Nov 2010 18:30:56 -0500
+Received: by qwb7 with SMTP id 7so6376187qwb.19
+        for <linux-wireless@vger.kernel.org>; Tue, 30 Nov 2010 15:30:55 -0800 (PST)
 MIME-Version: 1.0
-In-Reply-To: <AANLkTim5HQGNL-vSapeQw_-dJue89pYz7zc8eiShma8j@mail.gmail.com>
-References: <AANLkTim5HQGNL-vSapeQw_-dJue89pYz7zc8eiShma8j@mail.gmail.com>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Thu, 9 Dec 2010 17:08:22 -0800
-Message-ID: <AANLkTikFnb=ErjA0VeS6oekExHxT1-Mh5_wa28UqEZZ4@mail.gmail.com>
-Subject: Re: compat-wireless-2.6.37-rc5 released
-To: linux-wireless <linux-wireless@vger.kernel.org>
-Cc: linux-kernel@vger.kernel.org,
-	linux-bluetooth <linux-bluetooth@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+In-Reply-To: <AANLkTinMBx=5J4ZAaO7qkmJAxp4xbjoJxq+m+Bjz+K1e@mail.gmail.com>
+References: <AANLkTi=6NGw3GTnX+vEqx_iHcDb4SUmPc5vvndyMc=5s@mail.gmail.com> <AANLkTinMBx=5J4ZAaO7qkmJAxp4xbjoJxq+m+Bjz+K1e@mail.gmail.com>
+From: Joerie de Gram <j.de.gram@gmail.com>
+Date: Wed, 1 Dec 2010 00:30:35 +0100
+Message-ID: <AANLkTimUpxb+qaCerwgxqcz5iOmFz7MaZFhFPSOxJd1M@mail.gmail.com>
+Subject: Re: wl1271: power down/up sequence
+To: Ohad Ben-Cohen <ohad@wizery.com>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Dec 8, 2010 at 4:15 PM, Luis R. Rodriguez <mcgrof@gmail.com> wrote:
-> In later releases we will have to consider if we want to cherry pick
-> anything extra or leave them as is. These few patches seem tempting to
-> suck in:
->
-> 01-ath9k-OTP.patch
-> 03-ath9k-no-aggr-VO.patch
-> 04-mac80211-no-aggr-VO.patch
-> 05-ath9k-Reintroduce-modparam-to-enable-btcoex.patch
-> 06-ath9k_hw-fix-A-MPDU-key-search-issues-on-AR9003.patch
->
-> Particularly it is now known AR9003 devices will only ship with OTP
-> so..
+Hi Ohad,
 
-So it turns out this is inaccurate, AR9003 devices can ship with
-EEPROM only or with OTP, it will vary, so while 2.6.36 and 2.6.37 will
-not support only OTP based devices 2.6.38 will support both. What we
-can do is cherry pick the OTP patches to the 2.6.36 and 2.6.37
-compat-wireless releases but those two older stock kernels won't have
-support for these.
+On Tue, Nov 30, 2010 at 10:59 PM, Ohad Ben-Cohen <ohad@wizery.com> wrote:
+> Make sure you have CONFIG_REGULATOR_FIXED_VOLTAGE enabled, and please
+> send us a full terminal log from boot to first error after applying
+> the following patch:
 
- Luis
+The regulator is only enabled once. Equally, the MMC interface is
+initialised only at boot, and remains untouched afterwards. It's
+config doesn't change:
+
+clock:		25000000 Hz
+vdd:		7 (1.65 - 1.95 V)
+bus mode:	2 (push-pull)
+chip select:	0 (don't care)
+power mode:	2 (on)
+bus width:	2 (4 bits)
+timing spec:	0 (legacy)
+
+Full kernel log (rather large): http://130.89.163.61/dmesg
+
+What concerns me is the regulator config - most boards seem to call
+the fixed regulator vmmc, but I require VSIM as well to power the card
+(which requires it to be labeled vmmc for the mmc subsystem?).
+
+Joerie
