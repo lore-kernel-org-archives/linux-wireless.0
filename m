@@ -1,40 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.19.149.2]:39090 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751683Ab0KRCkM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 17 Nov 2010 21:40:12 -0500
-Received: from mail.atheros.com ([10.10.20.105])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Wed, 17 Nov 2010 18:39:59 -0800
-Date: Wed, 17 Nov 2010 18:40:08 -0800
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: Mark Mentovai <mark@moxienet.com>, <linville@tuxdriver.com>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"stable@kernel.org" <stable@kernel.org>,
-	Luis Rodriguez <Luis.Rodriguez@Atheros.com>
-Subject: Re: [PATCH] cfg80211: fix can_beacon_sec_chan, reenable HT40
-Message-ID: <20101118024008.GA2009@tux>
-References: <AANLkTi=Z+60nkSv4umXyDdSp0_SUR84he5GYTZLO9=5E@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <AANLkTi=Z+60nkSv4umXyDdSp0_SUR84he5GYTZLO9=5E@mail.gmail.com>
+Received: from he.sipsolutions.net ([78.46.109.217]:33067 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755679Ab0K3LZ4 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 30 Nov 2010 06:25:56 -0500
+Subject: Re: [PATCH] mac80211: Minor optimization in ieee80211_rx_h_data
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Helmut Schaa <helmut.schaa@googlemail.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <1291115974-4878-1-git-send-email-helmut.schaa@googlemail.com>
+References: <1291115974-4878-1-git-send-email-helmut.schaa@googlemail.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Tue, 30 Nov 2010 12:25:51 +0100
+Message-ID: <1291116351.3624.12.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Nov 17, 2010 at 01:34:37PM -0800, Mark Mentovai wrote:
-> This follows wireless-testing 9236d838c920e90708570d9bbd7bb82d30a38130
-> ("cfg80211: fix extension channel checks to initiate communication") and
-> fixes accidental case fall-through. Without this fix, HT40 is entirely
-> blocked.
+On Tue, 2010-11-30 at 12:19 +0100, Helmut Schaa wrote:
+> Remove a superfluous ieee80211_is_data check as that was checked a few
+> lines before already and we wont't get here for non-data frames at all.
 > 
-> Cc: stable@kernel.org
-> Cc: Luis R. Rodriguez <lrodriguez@atheros.com>
-> Signed-off-by: Mark Mentovai <mark@moxienet.com>
+> Second, the frame was already converted to 802.3 header format and
+> reading the fc and addr1 fields was only possible because the 802.3
+> header is short enough and didn't overwrite the relevant parts of the
+> 802.11 header. Make the code more obvious by checking the ethernet
+> header's h_dest field.
+> 
+> Furthermore reorder the conditions to reduce the number of checks
+> when dynamic powersave is not needed (AP mode for example).
+> 
+> Cc: Johannes Berg <johannes@sipsolutions.net>
+> Signed-off-by: Helmut Schaa <helmut.schaa@googlemail.com>
 
-Thanks,
+Looks sane to me. Indeed if the check was required it should use the
+"fc" variable, but clearly it's pointless. Must be some code that got
+moved during PS code restructuring...
 
-Acked-by: Luis R. Rodriguez <lrodriguez@atheros.com
+Reviewed-by: Johannes Berg <johannes@sipsolutions.net>
 
-On your next patch please address John.
+> ---
+> 
+> Found via code review, compile tested only.
+> 
+>  net/mac80211/rx.c |    5 ++---
+>  1 files changed, 2 insertions(+), 3 deletions(-)
+> 
+> diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
+> index 9dd60a7..9e44fbf 100644
+> --- a/net/mac80211/rx.c
+> +++ b/net/mac80211/rx.c
+> @@ -1871,9 +1871,8 @@ ieee80211_rx_h_data(struct ieee80211_rx_data *rx)
+>  	dev->stats.rx_packets++;
+>  	dev->stats.rx_bytes += rx->skb->len;
+>  
+> -	if (ieee80211_is_data(hdr->frame_control) &&
+> -	    !is_multicast_ether_addr(hdr->addr1) &&
+> -	    local->hw.conf.dynamic_ps_timeout > 0 && local->ps_sdata) {
+> +	if (local->ps_sdata && local->hw.conf.dynamic_ps_timeout > 0 && 
+> +	    !is_multicast_ether_addr(((struct ethhdr *)rx->skb->data)->h_dest)) {
+>  			mod_timer(&local->dynamic_ps_timer, jiffies +
+>  			 msecs_to_jiffies(local->hw.conf.dynamic_ps_timeout));
+>  	}
 
-  Luis
+
