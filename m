@@ -1,78 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp-out.google.com ([216.239.44.51]:57459 "EHLO
-	smtp-out.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754753Ab0KTTdx convert rfc822-to-8bit (ORCPT
+Received: from mail.candelatech.com ([208.74.158.172]:56049 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754391Ab0K3Awh (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 20 Nov 2010 14:33:53 -0500
-Received: from kpbe15.cbf.corp.google.com (kpbe15.cbf.corp.google.com [172.25.105.79])
-	by smtp-out.google.com with ESMTP id oAKJXpJl019373
-	for <linux-wireless@vger.kernel.org>; Sat, 20 Nov 2010 11:33:52 -0800
-Received: from iwn5 (iwn5.prod.google.com [10.241.68.69])
-	by kpbe15.cbf.corp.google.com with ESMTP id oAKJXoxJ023664
-	for <linux-wireless@vger.kernel.org>; Sat, 20 Nov 2010 11:33:50 -0800
-Received: by iwn5 with SMTP id 5so1425068iwn.32
-        for <linux-wireless@vger.kernel.org>; Sat, 20 Nov 2010 11:33:50 -0800 (PST)
+	Mon, 29 Nov 2010 19:52:37 -0500
+Message-ID: <4CF44AD3.4020607@candelatech.com>
+Date: Mon, 29 Nov 2010 16:52:35 -0800
+From: Ben Greear <greearb@candelatech.com>
 MIME-Version: 1.0
-In-Reply-To: <1290218069-85434-1-git-send-email-nbd@openwrt.org>
-References: <1290218069-85434-1-git-send-email-nbd@openwrt.org>
-Date: Sat, 20 Nov 2010 11:33:49 -0800
-Message-ID: <AANLkTi=3dgOAgYy7W42pU+sGwYswx0kJVD-Wbcyy_Tom@mail.gmail.com>
-Subject: Re: [PATCH v3 1/2] mac80211: use nullfunc instead of probe request
- for connection monitoring
-From: Paul Stewart <pstew@google.com>
-To: Felix Fietkau <nbd@openwrt.org>
-Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com,
-	johannes@sipsolutions.net
-Content-Type: text/plain; charset=ISO-8859-1
+To: "Luis R. Rodriguez" <lrodriguez@Atheros.com>
+CC: "ath9k-devel@lists.ath9k.org" <ath9k-devel@venema.h4ckr.net>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [ath9k-devel] Script to crash ath9k with DMA errors.
+References: <4CF44543.9070605@candelatech.com> <20101130004424.GC1901@tux>
+In-Reply-To: <20101130004424.GC1901@tux>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-A couple of issues here, I think.
+On 11/29/2010 04:44 PM, Luis R. Rodriguez wrote:
+> On Mon, Nov 29, 2010 at 04:28:51PM -0800, Ben Greear wrote:
+>> Here is a script that reliably crashes my ath9k box.
+>> A second box with completely different hardware (except
+>> for ath9k) experiences similar problems.
 
-On Fri, Nov 19, 2010 at 5:54 PM, Felix Fietkau <nbd@openwrt.org> wrote:
-> --- a/net/mac80211/mlme.c
-> +++ b/net/mac80211/mlme.c
-[...]
-> +void ieee80211_sta_tx_notify(struct ieee80211_sub_if_data *sdata,
-> +                            struct ieee80211_hdr *hdr)
-> +{
-> +       if (!ieee80211_is_data(hdr->frame_control) &&
-> +           !ieee80211_is_nullfunc(hdr->frame_control))
-> +           return;
-> +
-> +       ieee80211_sta_reset_conn_monitor(sdata);
-> +
-> +       if (ieee80211_is_nullfunc(hdr->frame_control)) {
-
-Could you also add a "&& sdata->u.mgd.probe_send_count = 0" condition
-here, or the BEACON/CONNECTION poll test to reduce the number of times
-we queue work here?  Or should this work be done on every ACKed
-nullfunc?
-
-> +               sdata->u.mgd.probe_send_count = 0;
-> +               ieee80211_queue_work(&sdata->local->hw, &sdata->work);
-> +       }
-> +}
-> +
->  static void ieee80211_mgd_probe_ap_send(struct ieee80211_sub_if_data *sdata)
->  {
->        struct ieee80211_if_managed *ifmgd = &sdata->u.mgd;
-> @@ -1882,6 +1916,10 @@ void ieee80211_sta_work(struct ieee80211_sub_if_data *sdata)
->            ifmgd->associated) {
->                u8 bssid[ETH_ALEN];
+>> BUG: unable to handle kernel NULL pointer dereference at 00000040
+>> IP: [<f933470a>] ath_tx_start+0x461/0x5ef [ath9k]
+>> *pde = 00000000
+>> Oops: 0000 [#1] SMP DEBUG_PAGEALLOC
+>> last sysfs file: /sys/devices/pci0000:00/0000:00:1e.0/0000:08:01.0/irq
+>> Modules linked in: aes_i586 aes_generic fuse nfs lockd fscache nfs_acl auth_rpcgss sunrpc ipv6 uinput arc4 ecb ath9k mac80211 ath9k_common ath9k_hw mi]
+>>
+>> Pid: 38, comm: kworker/u:1 Tainted: G        W   2.6.37-rc3-wl+ #53 PDSBM/PDSBM
+>> EIP: 0060:[<f933470a>] EFLAGS: 00010246 CPU: 1
+>> EIP is at ath_tx_start+0x461/0x5ef [ath9k]
 >
-> +               /* ACK received for nullfunc probing frame */
-> +               if (!ifmgd->probe_send_count)
-> +                       ieee80211_reset_ap_probe(sdata);
-> +
+> Please use
+>
+> gdb drivers/net/wireless/ath/ath9k/
+> l *(ath_tx_start+0x461)
 
-Yeah, but then it looks like we'd end up falling through to the
-"ifmgd->probe_send_count < IEEE80211_MAX_PROBE_TRIES" case later in
-this block, and send another probe!  Not good.
+Usually the machine locks pretty hard with irq errors reported from wired NICs
+and/or the hard-drive.  I'm not sure that the ath_tx_start
+issue is real, or maybe just some un-lucky side-affect of earlier
+bugs in this trace.
 
->                memcpy(bssid, ifmgd->associated->bssid, ETH_ALEN);
->                if (time_is_after_jiffies(ifmgd->probe_timeout))
->                        run_again(ifmgd, ifmgd->probe_timeout);
+Reading symbols from /home/greearb/kernel/2.6/wireless-testing-dbg.p4s/drivers/net/wireless/ath/ath9k/ath9k.ko...done.
+(gdb) l *(ath_tx_start+0x461)
+0x972e is in ath_tx_start (/home/greearb/git/linux.wireless-testing/drivers/net/wireless/ath/ath9k/xmit.c:1691).
+1686		if ((tx_info->flags & IEEE80211_TX_CTL_AMPDU) && txctl->an) {
+1687			tidno = ieee80211_get_qos_ctl(hdr)[0] &
+1688				IEEE80211_QOS_CTL_TID_MASK;
+1689			tid = ATH_AN_2_TID(txctl->an, tidno);
+1690	
+1691			WARN_ON(tid->ac->txq != txctl->txq);
+1692			/*
+1693			 * Try aggregation if it's a unicast data frame
+1694			 * and the destination is HT capable.
+1695			 */
 
---
-Paul
+
+Thanks,
+Ben
+
+>
+>    Luis
+
+
+-- 
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
+
