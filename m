@@ -1,43 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga14.intel.com ([143.182.124.37]:64160 "EHLO mga14.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754641Ab0K2RJS (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 29 Nov 2010 12:09:18 -0500
-Subject: Re: [PATCH 2/2 v3] mac80211: add throughput based LED blink trigger
-From: "Guy, Wey-Yi" <wey-yi.w.guy@intel.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: John Linville <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <1291049458.3532.7.camel@jlt3.sipsolutions.net>
-References: <1290884614.3700.3.camel@jlt3.sipsolutions.net>
-	 <1290885648.3700.4.camel@jlt3.sipsolutions.net>
-	 <1290947171.3467.7.camel@jlt3.sipsolutions.net>
-	 <1291047211.26829.17.camel@wwguy-ubuntu>
-	 <1291049458.3532.7.camel@jlt3.sipsolutions.net>
-Content-Type: text/plain
-Date: Mon, 29 Nov 2010 09:08:09 -0800
-Message-Id: <1291050489.26829.21.camel@wwguy-ubuntu>
-Mime-Version: 1.0
+Received: from ksp.mff.cuni.cz ([195.113.26.206]:60365 "EHLO
+	atrey.karlin.mff.cuni.cz" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1756199Ab0K3T1H (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 30 Nov 2010 14:27:07 -0500
+Date: Tue, 30 Nov 2010 20:26:48 +0100
+From: Pavel Machek <pavel@ucw.cz>
+To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, linux-kernel@vger.kernel.org,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Greg KH <greg@kroah.com>, David Miller <davem@davemloft.net>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Stephen Hemminger <shemminger@vyatta.com>,
+	"Perez-Gonzalez, Inaky" <inaky.perez-gonzalez@intel.com>,
+	Charles Marker <Charles.Marker@atheros.com>,
+	Jouni Malinen <Jouni.Malinen@atheros.com>,
+	Kevin Hayes <kevin@atheros.com>,
+	Zhifeng Cai <zhifeng.cai@atheros.com>,
+	Don Breslin <Don.Breslin@atheros.com>,
+	Doug Dahlby <Doug.Dahlby@atheros.com>,
+	Julia Lawall <julia@diku.dk>
+Subject: Re: Challenges with doing hardware bring up with Linux first
+Message-ID: <20101130192648.GA1623@ucw.cz>
+References: <AANLkTim4jVaZxYp8nSgJyy28iwxcxbPeNUzxTfoHAX4S@mail.gmail.com>
+ <20101118113441.74fcdc21@lxorguk.ukuu.org.uk>
+ <AANLkTikOZbtyhsk0OBb4OdUi6qj-7k_hU-aW_Pkhfpq0@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <AANLkTikOZbtyhsk0OBb4OdUi6qj-7k_hU-aW_Pkhfpq0@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-HiJohannes,
+Hi!
 
-On Mon, 2010-11-29 at 08:50 -0800, Johannes Berg wrote:
-> On Mon, 2010-11-29 at 08:13 -0800, Guy, Wey-Yi wrote:
+> >> everything else can be independent code. For ath9k in particular this
+> >> means we keep ath9k_hw shared between our Operating Systems and that's
+> >> it. In addition to this I believe opening up the common drivers for
+> >
+> > The Linux copy needs to be GPL,
 > 
-> > Do not see how it work for different hardware has different requirement,
-> > for example, in iwlwifi, different device has different blink time
-> > compensation.
-> 
-> Well you haven't seen the iwlwifi patch for it yet :-)
-> 
-> Blink compensation is applied to the values. So if the trigger says
-> "blink for 167ms on and 167ms off", blink compensation will be applied
-> to the value 167.
-> 
-fair enough, I will wait :-)
+> GPL-Compatible you mean, right. I mean we have ath9k_hw with
+> permissive licensed files.
 
-Wey
-> 
+GPL-compatible is not right word. It has to be either GPL, or so
+permissive that anyone is allowed to turn it into GPL.
 
+-- 
+(english) http://www.livejournal.com/~pavelmachek
+(cesky, pictures) http://atrey.karlin.mff.cuni.cz/~pavel/picture/horses/blog.html
