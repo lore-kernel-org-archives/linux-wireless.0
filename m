@@ -1,78 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:54986 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932150Ab0KRQaA (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 18 Nov 2010 11:30:00 -0500
-Date: Thu, 18 Nov 2010 11:26:18 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: =?utf-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-Cc: linux-wireless@vger.kernel.org,
-	Michael =?iso-8859-1?Q?B=FCsch?= <mb@bu3sch.de>,
-	b43-dev@lists.infradead.org
-Subject: Re: [PATCH] ssb: fail registration for unknown SPROM revision
-Message-ID: <20101118162617.GA2468@tuxdriver.com>
-References: <1288823326-9686-1-git-send-email-zajec5@gmail.com>
- <1288823326-9686-2-git-send-email-zajec5@gmail.com>
- <20101116212321.GF10774@tuxdriver.com>
+Received: from mx1.redhat.com ([209.132.183.28]:64544 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750925Ab0K3NBx (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 30 Nov 2010 08:01:53 -0500
+Date: Tue, 30 Nov 2010 14:01:49 +0100
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Cc: Intel Linux Wireless <ilw@linux.intel.com>,
+	linux-wireless@vger.kernel.org
+Subject: Microcode SW error detected on current wireless-testing
+Message-ID: <20101130130148.GA3074@redhat.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <20101116212321.GF10774@tuxdriver.com>
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Nov 16, 2010 at 04:23:21PM -0500, John W. Linville wrote:
-> On Wed, Nov 03, 2010 at 11:28:46PM +0100, Rafał Miłecki wrote:
-> > Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
-> > ---
-> > As noticed my Michael we have this left from old times of limited amount of
-> > revisions. It's not reliable to treat unknown as rev1.
-> > 
-> > Michael: would you like to add Reported-by?
-> > 
-> > John: it's for 2.6.38.
-> > ---
-> >  drivers/ssb/pci.c |    8 +++-----
-> >  1 files changed, 3 insertions(+), 5 deletions(-)
-> > 
-> > diff --git a/drivers/ssb/pci.c b/drivers/ssb/pci.c
-> > index b5343ac..41a7337 100644
-> > --- a/drivers/ssb/pci.c
-> > +++ b/drivers/ssb/pci.c
-> > @@ -600,11 +600,9 @@ static int sprom_extract(struct ssb_bus *bus, struct ssb_sprom *out,
-> >  		sprom_extract_r8(out, in);
-> >  		break;
-> >  	default:
-> > -		ssb_printk(KERN_WARNING PFX "Unsupported SPROM"
-> > -			   "  revision %d detected. Will extract"
-> > -			   " v1\n", out->revision);
-> > -		out->revision = 1;
-> > -		sprom_extract_r123(out, in);
-> > +		ssb_printk(KERN_ERR PFX "Unsupported SPROM revision %d"
-> > +			   " detected\n", out->revision);
-> > +		return -EINVAL;
-> >  	}
-> >  
-> >  	if (out->boardflags_lo == 0xFFFF)
-> 
-> I think this is going to make my b43 PCI-E card not work...I'll try
-> it and get back to you...
+Hi
 
-Yeah...
+Today pull on wireless testing caused this on my 4965 device (100%
+reproducible on my system, yesterday w-t does not have this).
 
-[  125.520348] b43-pci-bridge 0000:04:00.0: enabling device (0000 -> 0002)
-[  125.520359] b43-pci-bridge 0000:04:00.0: PCI INT A -> GSI 18 (level, low) -> IRQ 18
-[  125.520373] b43-pci-bridge 0000:04:00.0: setting latency timer to 64
-[  125.529241] ssb: Core 0 found: ChipCommon (cc 0x800, rev 0x11, vendor 0x4243)
-[  125.529255] ssb: Core 1 found: IEEE 802.11 (cc 0x812, rev 0x0A, vendor 0x4243)
-[  125.529268] ssb: Core 2 found: USB 1.1 Host (cc 0x817, rev 0x03, vendor 0x4243)
-[  125.529280] ssb: Core 3 found: PCI-E (cc 0x820, rev 0x01, vendor 0x4243)
-[  125.545750] ssb: WARNING: Invalid SPROM CRC (corrupt SPROM)
-[  125.545752] ssb: Unsupported SPROM revision 255 detected
-[  125.545797] ssb: Failed to register PCI version of SSB with error -22
-[  125.545810] b43-pci-bridge 0000:04:00.0: PCI INT A disabled
-[  125.545827] b43-pci-bridge: probe of 0000:04:00.0 failed with error -22
+iwlagn 0000:40:00.0: Microcode SW error detected.  Restarting 0x82000000.
+iwlagn 0000:40:00.0: Loaded firmware version: 228.61.2.24
+iwlagn 0000:40:00.0: Start IWL Error Log Dump:
+iwlagn 0000:40:00.0: Status: 0x0002B3E4, count: 5
+iwlagn 0000:40:00.0: Desc                                  Time       data1      data2      line
+iwlagn 0000:40:00.0: SYSASSERT                    (0x0005) 0000851408 0x000000FF 0x00000000 578
+iwlagn 0000:40:00.0: pc      blink1  blink2  ilink1  ilink2  hcmd
+iwlagn 0000:40:00.0: 0x13AC0 0x13A36 0x13AD6 0x006DE 0x00000 0x44140080
+iwlagn 0000:40:00.0: FH register values:
+iwlagn 0000:40:00.0:         FH_RSCSR_CHNL0_STTS_WPTR_REG: 0X11a7cd00
+iwlagn 0000:40:00.0:        FH_RSCSR_CHNL0_RBDCB_BASE_REG: 0X0119e720
+iwlagn 0000:40:00.0:                  FH_RSCSR_CHNL0_WPTR: 0X00000060
+iwlagn 0000:40:00.0:         FH_MEM_RCSR_CHNL0_CONFIG_REG: 0X80819004
+iwlagn 0000:40:00.0:          FH_MEM_RSSR_SHARED_CTRL_REG: 0X0000003c
+iwlagn 0000:40:00.0:            FH_MEM_RSSR_RX_STATUS_REG: 0X07030000
+iwlagn 0000:40:00.0:    FH_MEM_RSSR_RX_ENABLE_ERR_IRQ2DRV: 0X00000000
+iwlagn 0000:40:00.0:                FH_TSSR_TX_STATUS_REG: 0X07ff0002
+iwlagn 0000:40:00.0:                 FH_TSSR_TX_ERROR_REG: 0X00000000
+iwlagn 0000:40:00.0: Start IWL Event Log Dump: display last 20 entries
+iwlagn 0000:40:00.0: EVT_LOGT:0000851099:0x781c3b6e:0450
+iwlagn 0000:40:00.0: EVT_LOGT:0000851103:0x7c233b6e:0450
+iwlagn 0000:40:00.0: EVT_LOGT:0000851105:0x7c1b3b6e:0450
+iwlagn 0000:40:00.0: EVT_LOGT:0000851109:0x80223b6e:0450
+iwlagn 0000:40:00.0: EVT_LOGT:0000851111:0x801b3b6e:0450
+iwlagn 0000:40:00.0: EVT_LOGT:0000851115:0x84213b6e:0450
+iwlagn 0000:40:00.0: EVT_LOGT:0000851117:0x841b3b6e:0450
+iwlagn 0000:40:00.0: EVT_LOGT:0000851121:0x88223b6e:0450
+iwlagn 0000:40:00.0: EVT_LOGT:0000851123:0x881a3b6e:0450
+iwlagn 0000:40:00.0: EVT_LOGT:0000851128:0x8c213b6e:0450
+iwlagn 0000:40:00.0: EVT_LOGT:0000851130:0x8c193b6e:0450
+iwlagn 0000:40:00.0: EVT_LOGT:0000851132:0x0000007f:0601
+iwlagn 0000:40:00.0: EVT_LOGT:0000851138:0x00000100:0706
+iwlagn 0000:40:00.0: EVT_LOGT:0000851140:0x00000000:0708
+iwlagn 0000:40:00.0: EVT_LOGT:0000851143:0x01000300:0706
+iwlagn 0000:40:00.0: EVT_LOGT:0000851145:0x01000300:0725
+iwlagn 0000:40:00.0: EVT_LOGT:0000851146:0x00000000:0710
+iwlagn 0000:40:00.0: EVT_LOGT:0000851148:0x00000024:0729
+iwlagn 0000:40:00.0: EVT_LOGT:0000851149:0x000cfccc:0729
+iwlagn 0000:40:00.0: EVT_LOGT:0000851411:0x00000000:0125
+iwlagn 0000:40:00.0: Command REPLY_SCAN_CMD failed: FW Error
 
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+Is Intel aware of that problem? Should I bisect it?
+
+Stanislaw
