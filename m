@@ -1,146 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f46.google.com ([209.85.161.46]:42074 "EHLO
-	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752460Ab0KRLcv (ORCPT
+Received: from external1.orbit-lab.org ([128.6.192.131]:37372 "HELO
+	external1.orbit-lab.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1753572Ab0K3UEn (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 18 Nov 2010 06:32:51 -0500
-Received: by mail-fx0-f46.google.com with SMTP id 6so1460042fxm.19
-        for <linux-wireless@vger.kernel.org>; Thu, 18 Nov 2010 03:32:50 -0800 (PST)
-From: Arik Nemtsov <arik@wizery.com>
+	Tue, 30 Nov 2010 15:04:43 -0500
+Received: from repository3.orbit-lab.org (repository3.orbit-lab.org [10.50.0.41])
+	by external1.orbit-lab.org (Postfix) with ESMTP id EA145418D8
+	for <linux-wireless@vger.kernel.org>; Tue, 30 Nov 2010 14:59:40 -0500 (EST)
+Subject: Compat-wireless release for 2010-11-30 is baked
 To: <linux-wireless@vger.kernel.org>
-Cc: Luciano Coelho <luciano.coelho@nokia.com>,
-	Arik Nemtsov <arik@wizery.com>
-Subject: [PATCH 08/18] wl1271: Add AP related definitions to HOST-FW interface
-Date: Thu, 18 Nov 2010 13:32:21 +0200
-Message-Id: <1290079951-16793-9-git-send-email-arik@wizery.com>
-In-Reply-To: <1290079951-16793-1-git-send-email-arik@wizery.com>
-References: <1290079951-16793-1-git-send-email-arik@wizery.com>
+Message-Id: <20101130200442.670A140F97@repository3.orbit-lab.org>
+Date: Tue, 30 Nov 2010 15:04:41 -0500 (EST)
+From: compat@orbit-lab.org (Compat-wireless cronjob account)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Change structures in a non-destructive manner. This means no
-changes in size or location of existing members used by STA.
+>From git://git.kernel.org/pub/scm/linux/kernel/git/mcgrof/compat
+   34dd5d5..53f0279  master     -> origin/master
+>From git://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next
+   18771db..206c290  history    -> origin/history
+ + 4c8394b...c966c49 master     -> origin/master  (forced update)
+   c66fb34..7208364  stable     -> origin/stable
+ * [new tag]         next-20101130 -> next-20101130
 
-Signed-off-by: Arik Nemtsov <arik@wizery.com>
----
- drivers/net/wireless/wl12xx/event.h  |    7 ++++++-
- drivers/net/wireless/wl12xx/rx.h     |   12 ++++++++----
- drivers/net/wireless/wl12xx/tx.h     |    9 +++++++--
- drivers/net/wireless/wl12xx/wl12xx.h |   18 +++++++++++++++++-
- 4 files changed, 38 insertions(+), 8 deletions(-)
+compat-wireless code metrics
 
-diff --git a/drivers/net/wireless/wl12xx/event.h b/drivers/net/wireless/wl12xx/event.h
-index fd955f3..1d5ef67 100644
---- a/drivers/net/wireless/wl12xx/event.h
-+++ b/drivers/net/wireless/wl12xx/event.h
-@@ -116,7 +116,12 @@ struct event_mailbox {
- 	u8 scheduled_scan_status;
- 	u8 ps_status;
- 
--	u8 reserved_5[29];
-+	/* AP FW only */
-+	u8 hlid_removed;
-+	__le16 sta_aging_status;
-+	__le16 sta_tx_retry_exceeded;
-+
-+	u8 reserved_5[24];
- } __packed;
- 
- int wl1271_event_unmask(struct wl1271 *wl);
-diff --git a/drivers/net/wireless/wl12xx/rx.h b/drivers/net/wireless/wl12xx/rx.h
-index 3abb26f..19fd591 100644
---- a/drivers/net/wireless/wl12xx/rx.h
-+++ b/drivers/net/wireless/wl12xx/rx.h
-@@ -86,10 +86,11 @@
- /*
-  * RX Descriptor status
-  *
-- * Bits 0-2 - status
-- * Bits 3-7 - reserved
-+ * Bits 0-2 - error code
-+ * Bits 3-5 - process_id tag (AP mode FW)
-+ * Bits 6-7 - reserved
-  */
--#define WL1271_RX_DESC_STATUS_MASK      0x07
-+#define WL1271_RX_DESC_STATUS_MASK      0x03
- 
- #define WL1271_RX_DESC_SUCCESS          0x00
- #define WL1271_RX_DESC_DECRYPT_FAIL     0x01
-@@ -110,7 +111,10 @@ struct wl1271_rx_descriptor {
- 	u8  snr;
- 	__le32 timestamp;
- 	u8  packet_class;
--	u8  process_id;
-+	union {
-+		u8  process_id; /* STA FW */
-+		u8  hlid; /* AP FW */
-+	} __packed;
- 	u8  pad_len;
- 	u8  reserved;
- } __packed;
-diff --git a/drivers/net/wireless/wl12xx/tx.h b/drivers/net/wireless/wl12xx/tx.h
-index 903e5dc..0662b19 100644
---- a/drivers/net/wireless/wl12xx/tx.h
-+++ b/drivers/net/wireless/wl12xx/tx.h
-@@ -29,6 +29,7 @@
- #define TX_HW_BLOCK_SIZE                 252
- 
- #define TX_HW_MGMT_PKT_LIFETIME_TU       2000
-+#define TX_HW_AP_MODE_PKT_LIFETIME_TU    8000
- /* The chipset reference driver states, that the "aid" value 1
-  * is for infra-BSS, but is still always used */
- #define TX_HW_DEFAULT_AID                1
-@@ -77,8 +78,12 @@ struct wl1271_tx_hw_descr {
- 	u8 id;
- 	/* The packet TID value (as User-Priority) */
- 	u8 tid;
--	/* Identifier of the remote STA in IBSS, 1 in infra-BSS */
--	u8 aid;
-+	union {
-+		/* STA - Identifier of the remote STA in IBSS, 1 in infra-BSS */
-+		u8 aid;
-+		/* AP - host link ID (HLID) */
-+		u8 hlid;
-+	} __packed;
- 	u8 reserved;
- } __packed;
- 
-diff --git a/drivers/net/wireless/wl12xx/wl12xx.h b/drivers/net/wireless/wl12xx/wl12xx.h
-index cbad378..ee357c4 100644
---- a/drivers/net/wireless/wl12xx/wl12xx.h
-+++ b/drivers/net/wireless/wl12xx/wl12xx.h
-@@ -296,6 +296,11 @@ struct wl1271_debugfs {
- #define NUM_TX_QUEUES              4
- #define NUM_RX_PKT_DESC            8
- 
-+#define AP_MAX_STATIONS            5
-+
-+/* Broadcast and Global links + links to stations */
-+#define AP_MAX_LINKS               (AP_MAX_STATIONS + 2)
-+
- /* FW status registers */
- struct wl1271_fw_status {
- 	__le32 intr;
-@@ -306,7 +311,18 @@ struct wl1271_fw_status {
- 	__le32 rx_pkt_descs[NUM_RX_PKT_DESC];
- 	__le32 tx_released_blks[NUM_TX_QUEUES];
- 	__le32 fw_localtime;
--	__le32 padding[2];
-+
-+	/* Next fields valid only in AP FW */
-+
-+	/*
-+	 * A bitmap (where each bit represents a single HLID)
-+	 * to indicate if the station is in PS mode.
-+	 */
-+	__le32 link_ps_bitmap;
-+
-+	/* Number of freed MBs per HLID */
-+	u8 tx_lnk_free_blks[AP_MAX_LINKS];
-+	u8 padding_1[1];
- } __packed;
- 
- struct wl1271_rx_mem_pool_addr {
--- 
-1.7.1
+    749385 - Total upstream lines of code being pulled
+      2201 - backport code changes
+      1939 - backport code additions
+       262 - backport code deletions
+      6633 - backport from compat module
+      8834 - total backport code
+    1.1788 - % of code consists of backport work
+      1534 - Crap changes not yet posted
+      1491 - Crap additions not yet posted
+        43 - Crap deletions not yet posted
+    0.2047 - % of crap code
 
+Base tree: linux-next.git
+Base tree version: next-20101130
+compat-wireless release: compat-wireless-2010-11-23-6-gefeeae7-pc
