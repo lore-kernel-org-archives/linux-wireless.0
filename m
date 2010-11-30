@@ -1,31 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:45155 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757401Ab0KKBCM (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 10 Nov 2010 20:02:12 -0500
-Subject: Re: ath5k/mac80211:  Reproducible deadlock with 64-stations.
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Ben Greear <greearb@candelatech.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <4CDB3F7E.1000107@candelatech.com>
-References: <4CDB2488.4040802@candelatech.com>
-	 <4CDB3F7E.1000107@candelatech.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Wed, 10 Nov 2010 17:03:35 -0800
-Message-ID: <1289437415.3748.26.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+Received: from nbd.name ([46.4.11.11]:54476 "EHLO nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751410Ab0K3Cnn (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 29 Nov 2010 21:43:43 -0500
+Message-ID: <4CF464D6.2020507@openwrt.org>
+Date: Tue, 30 Nov 2010 03:43:34 +0100
+From: Felix Fietkau <nbd@openwrt.org>
+MIME-Version: 1.0
+To: Joe Perches <joe@perches.com>
+CC: peter@stuge.se, ath9k-devel@lists.ath9k.org,
+	linux-kernel@vger.kernel.org,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: [ath9k-devel] [PATCH wireless-next] ath: Rename ath_print to
+ ath_debug
+References: <5febb0e1fba0ec2bb77f6ade8b251ba0edf4614c.1290988277.git.joe@perches.com>	 <AANLkTinc251WbwuLqFbOZ5ipNGZW7=wub3DoWwy42=+e@mail.gmail.com>	 <20101129060732.5130.qmail@stuge.se>  <4CF42C17.2070500@openwrt.org> <1291081185.16349.133.camel@Joe-Laptop>
+In-Reply-To: <1291081185.16349.133.camel@Joe-Laptop>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2010-11-10 at 16:57 -0800, Ben Greear wrote:
+On 2010-11-30 2:39 AM, Joe Perches wrote:
+> On Mon, 2010-11-29 at 23:41 +0100, Felix Fietkau wrote:
+>> On 2010-11-29 7:07 AM, Peter Stuge wrote:
+>> > Luis R. Rodriguez wrote:
+>> >> On Sun, Nov 28, 2010 at 3:53 PM, Joe Perches <joe@perches.com> wrote:
+>> >> > Make the function name match the function purpose.
+>> >> > ath_debug is a debug only facility.
+>> >> > ath_print seems too generic a name for a debug only use.
+>> >> Nack, I don't see the point.
+>> > 
+>> > The point is to improve readability. I like the patch.
+>> And how exactly does this improve readability? Don't get me wrong, I
+>> generally like to see more cleanups merged to the ath/ath9k drivers
+>> (they do need it, after all).
+> 
+> It's considered polite to cc the patch author.
+Sorry, I forgot to add you back. The Cc list was cleared somewhere in
+this thread and I added a few entries back, but apparently accidentally
+dropped some of them again.
 
-> I think the attached trace might be more useful.  It shows
-> the blocked tasks spammage that we saw in an earlier
-> run.
+> print is generic, debug is specific.
+> This function has a specific use for debugging
+> not a generic use all for logging.
+> 
+> If it was ath_print(level, etc) with KERN_<level>
+> passed as the first argument that'd be similar
+> to other kernel calls.  As is, it's not.
+> 
+>> But in my opinion, simple renaming churn like this does nothing but
+>> annoy people who want to get other work done at the same time.
+> 
+> This sort of thing can be done when other changes have
+> just been merged to minimize conflicts.
+> 
+>> Consider the large number of lines touched (and the potential merge
+>> conflicts with other code because of that), relative to the microscopic
+>> aesthetic gain (if any).
+>> 
+>> Instead I'd like to see more cleanups that go beyond trivial function
+>> renames.
+> 
+> I gauge my willingness to spend time on subsystems on
+> the maintainers willingness to merge things that improve
+> readability and correctness.
+I'm not trying to discourage you from spending time on improving this
+code, just doubting the usefulness of such simple function renames.
 
-Yeah but we already knew that these tasks were blocking, and where ...
-nothing really new here. I don't see it, yet anyway.
-
-johannes
-
+- Felix
