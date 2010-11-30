@@ -1,190 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f46.google.com ([209.85.161.46]:42074 "EHLO
-	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750915Ab0KRLc6 (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:43154 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751222Ab0K3Som (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 18 Nov 2010 06:32:58 -0500
-Received: by mail-fx0-f46.google.com with SMTP id 6so1460042fxm.19
-        for <linux-wireless@vger.kernel.org>; Thu, 18 Nov 2010 03:32:58 -0800 (PST)
-From: Arik Nemtsov <arik@wizery.com>
-To: <linux-wireless@vger.kernel.org>
-Cc: Luciano Coelho <luciano.coelho@nokia.com>,
-	Arik Nemtsov <arik@wizery.com>
-Subject: [PATCH 12/18] wl1271: AP mode - add STA add/remove ops
-Date: Thu, 18 Nov 2010 13:32:25 +0200
-Message-Id: <1290079951-16793-13-git-send-email-arik@wizery.com>
-In-Reply-To: <1290079951-16793-1-git-send-email-arik@wizery.com>
-References: <1290079951-16793-1-git-send-email-arik@wizery.com>
+	Tue, 30 Nov 2010 13:44:42 -0500
+Date: Tue, 30 Nov 2010 13:38:35 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Johannes Stezenbach <js@sig21.net>, linux-wireless@vger.kernel.org,
+	Ivo van Doorn <IvDoorn@gmail.com>,
+	Gertjan van Wingerde <gwingerde@gmail.com>,
+	Helmut Schaa <helmut.schaa@googlemail.com>
+Subject: Re: [PATCH v4] mac80211/rt2x00: add ieee80211_tx_status_ni()
+Message-ID: <20101130183835.GE2341@tuxdriver.com>
+References: <1291043349.3532.4.camel@jlt3.sipsolutions.net>
+ <20101129152735.GA32319@sig21.net>
+ <1291045056.3532.5.camel@jlt3.sipsolutions.net>
+ <20101129155126.GA32482@sig21.net>
+ <1291046320.3532.6.camel@jlt3.sipsolutions.net>
+ <20101129161316.GA32760@sig21.net>
+ <20101130154923.GA4618@sig21.net>
+ <1291132380.3624.22.camel@jlt3.sipsolutions.net>
+ <20101130163457.GA4647@sig21.net>
+ <1291134958.3624.23.camel@jlt3.sipsolutions.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1291134958.3624.23.camel@jlt3.sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Allocate and free host link IDs (HLIDs) for each link. A per-STA
-data structure keeps the HLID of each STA.
+On Tue, Nov 30, 2010 at 05:35:58PM +0100, Johannes Berg wrote:
+> On Tue, 2010-11-30 at 17:34 +0100, Johannes Stezenbach wrote:
+> > On Tue, Nov 30, 2010 at 04:53:00PM +0100, Johannes Berg wrote:
+> > > On Tue, 2010-11-30 at 16:49 +0100, Johannes Stezenbach wrote:
+> > > 
+> > > >   * This function may not be called in IRQ context. Calls to this function
+> > > >   * for a single hardware must be synchronized against each other. Calls
+> > > > - * to this function and ieee80211_tx_status_irqsafe() may not be mixed
+> > > > - * for a single hardware.
+> > > > + * to this function, ieee80211_tx_status_ni() and ieee80211_tx_status_irqsafe()
+> > > > + * may not be mixed for a single hardware.
+> > > 
+> > > I'm ok with this, although technically you can mix
+> > > ieee80211_tx_status_ni() and ieee80211_tx_status(), just not either or
+> > > both of them with _irqsafe().
+> > 
+> > I copied these from ieee80211_rx() etc. since I wasn't sure if there's
+> > not some subtlety I didn't get.  One can mix ieee80211_rx() and
+> > ieee80211_rx_ni(), too, right?
+> 
+> Yes. Note that all this doesn't make any sense though, since you must
+> never call them concurrently. And it's hard to imagine a situation where
+> a single driver calls _ni and non-_ni versions, while making sure they
+> can't both happen at the same time ...
 
-Signed-off-by: Arik Nemtsov <arik@wizery.com>
----
- drivers/net/wireless/wl12xx/main.c   |  108 ++++++++++++++++++++++++++++++++++
- drivers/net/wireless/wl12xx/wl12xx.h |    7 ++
- 2 files changed, 115 insertions(+), 0 deletions(-)
+Maybe someone can clarify the wording of the comments and send a follow-on patch?
 
-diff --git a/drivers/net/wireless/wl12xx/main.c b/drivers/net/wireless/wl12xx/main.c
-index ee866d2..c901051 100644
---- a/drivers/net/wireless/wl12xx/main.c
-+++ b/drivers/net/wireless/wl12xx/main.c
-@@ -1178,6 +1178,7 @@ static void __wl1271_op_remove_interface(struct wl1271 *wl)
- 	wl->flags = 0;
- 	wl->vif = NULL;
- 	wl->filters = 0;
-+	memset(wl->ap_hlid_map, 0, sizeof(wl->ap_hlid_map));
- 
- 	for (i = 0; i < NUM_TX_QUEUES; i++)
- 		wl->tx_blocks_freed[i] = 0;
-@@ -2303,6 +2304,109 @@ static int wl1271_op_get_survey(struct ieee80211_hw *hw, int idx,
- 	return 0;
- }
- 
-+static int wl1271_allocate_hlid(struct wl1271 *wl,
-+			     struct ieee80211_sta *sta,
-+			     u8 *hlid)
-+{
-+	struct wl1271_station *wl_sta;
-+	int id;
-+
-+	id = find_first_zero_bit(wl->ap_hlid_map, AP_MAX_STATIONS);
-+	if (id >= AP_MAX_STATIONS) {
-+		wl1271_warning("could not allocate HLID - too much stations");
-+		return -EBUSY;
-+	}
-+
-+	wl_sta = (struct wl1271_station *)sta->drv_priv;
-+
-+	__set_bit(id, wl->ap_hlid_map);
-+	wl_sta->hlid = WL1271_AP_STA_HLID_START + id;
-+	*hlid = wl_sta->hlid;
-+	return 0;
-+}
-+
-+static void wl1271_free_hlid(struct wl1271 *wl, u8 hlid)
-+{
-+	int id = hlid - WL1271_AP_STA_HLID_START;
-+
-+	__clear_bit(id, wl->ap_hlid_map);
-+}
-+
-+static int wl1271_op_sta_add(struct ieee80211_hw *hw,
-+			     struct ieee80211_vif *vif,
-+			     struct ieee80211_sta *sta)
-+{
-+	struct wl1271 *wl = hw->priv;
-+	int ret = 0;
-+	u8 hlid;
-+
-+	mutex_lock(&wl->mutex);
-+
-+	if (unlikely(wl->state == WL1271_STATE_OFF))
-+		goto out;
-+
-+	if (wl->bss_type != BSS_TYPE_AP_BSS)
-+		goto out;
-+
-+	wl1271_debug(DEBUG_MAC80211, "mac80211 add sta %d", (int)sta->aid);
-+
-+	ret = wl1271_allocate_hlid(wl, sta, &hlid);
-+	if (ret < 0)
-+		goto out;
-+
-+	ret = wl1271_ps_elp_wakeup(wl, false);
-+	if (ret < 0)
-+		goto out;
-+
-+	ret = wl1271_cmd_add_sta(wl, sta, hlid);
-+	if (ret < 0)
-+		goto out_sleep;
-+
-+out_sleep:
-+	wl1271_ps_elp_sleep(wl);
-+
-+out:
-+	mutex_unlock(&wl->mutex);
-+	return ret;
-+}
-+
-+static int wl1271_op_sta_remove(struct ieee80211_hw *hw,
-+				struct ieee80211_vif *vif,
-+				struct ieee80211_sta *sta)
-+{
-+	struct wl1271 *wl = hw->priv;
-+	struct wl1271_station *wl_sta;
-+	int ret = 0;
-+
-+	mutex_lock(&wl->mutex);
-+
-+	if (unlikely(wl->state == WL1271_STATE_OFF))
-+		goto out;
-+
-+	if (wl->bss_type != BSS_TYPE_AP_BSS)
-+		goto out;
-+
-+	wl1271_debug(DEBUG_MAC80211, "mac80211 remove sta %d", (int)sta->aid);
-+
-+	ret = wl1271_ps_elp_wakeup(wl, false);
-+	if (ret < 0)
-+		goto out;
-+
-+	wl_sta = (struct wl1271_station *)sta->drv_priv;
-+	ret = wl1271_cmd_remove_sta(wl, wl_sta->hlid);
-+	if (ret < 0)
-+		goto out_sleep;
-+
-+	wl1271_free_hlid(wl, wl_sta->hlid);
-+
-+out_sleep:
-+	wl1271_ps_elp_sleep(wl);
-+
-+out:
-+	mutex_unlock(&wl->mutex);
-+	return ret;
-+}
-+
- /* can't be const, mac80211 writes to this */
- static struct ieee80211_rate wl1271_rates[] = {
- 	{ .bitrate = 10,
-@@ -2557,6 +2661,8 @@ static const struct ieee80211_ops wl1271_ops = {
- 	.conf_tx = wl1271_op_conf_tx,
- 	.get_tsf = wl1271_op_get_tsf,
- 	.get_survey = wl1271_op_get_survey,
-+	.sta_add = wl1271_op_sta_add,
-+	.sta_remove = wl1271_op_sta_remove,
- 	CFG80211_TESTMODE_CMD(wl1271_tm_cmd)
- };
- 
-@@ -2741,6 +2847,8 @@ int wl1271_init_ieee80211(struct wl1271 *wl)
- 
- 	SET_IEEE80211_DEV(wl->hw, wl1271_wl_to_dev(wl));
- 
-+	wl->hw->sta_data_size = sizeof(struct wl1271_station);
-+
- 	return 0;
- }
- EXPORT_SYMBOL_GPL(wl1271_init_ieee80211);
-diff --git a/drivers/net/wireless/wl12xx/wl12xx.h b/drivers/net/wireless/wl12xx/wl12xx.h
-index cc654dd..c8a0f1d 100644
---- a/drivers/net/wireless/wl12xx/wl12xx.h
-+++ b/drivers/net/wireless/wl12xx/wl12xx.h
-@@ -533,6 +533,13 @@ struct wl1271 {
- 
- 	/* Most recently reported noise in dBm */
- 	s8 noise;
-+
-+	/* map for HLIDs of associated stations - when operating in AP mode */
-+	unsigned long ap_hlid_map[BITS_TO_LONGS(AP_MAX_STATIONS)];
-+};
-+
-+struct wl1271_station {
-+	u8 hlid;
- };
- 
- int wl1271_plt_start(struct wl1271 *wl);
+Thanks,
+
+John
 -- 
-1.7.1
-
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
