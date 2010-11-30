@@ -1,43 +1,163 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:48798 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752221Ab0KKOO4 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 11 Nov 2010 09:14:56 -0500
-Date: Thu, 11 Nov 2010 09:12:39 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Blaise Gassend <blaise@willowgarage.com>
-Cc: linville@redhat.com, linux-wireless@vger.kernel.org,
-	Jouni Malinen <j@w1.fi>
-Subject: Re: [PATCH] mac80211_hwsim: Incorporate txpower into rssi
-Message-ID: <20101111141239.GA2310@tuxdriver.com>
-References: <AANLkTi=t-rEsFKMv-V7Q3cyY6A_+LiBBYW2WbwXzg50b@mail.gmail.com>
- <20101109212422.GE2374@tuxdriver.com>
- <AANLkTi=jZFzwO-uzgyYCrJNrS_M2aNvZ1YuUOnBXz0Ge@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-In-Reply-To: <AANLkTi=jZFzwO-uzgyYCrJNrS_M2aNvZ1YuUOnBXz0Ge@mail.gmail.com>
+Received: from mail.perches.com ([173.55.12.10]:2024 "EHLO mail.perches.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751905Ab0K3UTO (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 30 Nov 2010 15:19:14 -0500
+From: Joe Perches <joe@perches.com>
+To: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	Jouni Malinen <jmalinen@atheros.com>,
+	Vasanthakumar Thiagarajan <vasanth@atheros.com>,
+	Senthil Balasubramanian <senthilkumar@atheros.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
+	netdev@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: [PATCH] ath9k: hif_usb: Reduce indent 1 column
+Date: Tue, 30 Nov 2010 12:19:11 -0800
+Message-Id: <75c6310f61e2df007dfe87c4cafbfeb0482ae569.1291148304.git.joe@perches.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Nov 10, 2010 at 10:58:37PM -0800, Blaise Gassend wrote:
-> > This patch seems to be whitespace-damaged.  Also, you should have a
-> > space around the "-" operator.
-> 
-> Do you need me to recreate the patch?
-> 
-> > Any comments on this patch from the mac80211_hwsim users?
-> 
-> To reply to Jouni's comments, I agree that a more complete model of
-> RSSI would be nice, but I think that whatever more complete model
-> emerges will have txpower as an additive term when determining rssi.
-> So this is a step in the right direction. I'm using this to test an
-> RSSI-based roaming code, so this little addition serves my purposes
-> great for now.
- 
-I merged the patch yesterday.
+Invert test and return early.
+Move variable declarations to local scope.
+Don't initialize variables to 0 unnecessarily.
 
-John
+Signed-off-by: Joe Perches <joe@perches.com>
+---
+ drivers/net/wireless/ath/ath9k/hif_usb.c |  106 +++++++++++++++---------------
+ 1 files changed, 53 insertions(+), 53 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath9k/hif_usb.c b/drivers/net/wireless/ath/ath9k/hif_usb.c
+index ae842db..63bf9a7 100644
+--- a/drivers/net/wireless/ath/ath9k/hif_usb.c
++++ b/drivers/net/wireless/ath/ath9k/hif_usb.c
+@@ -363,9 +363,9 @@ static void ath9k_hif_usb_rx_stream(struct hif_device_usb *hif_dev,
+ 				    struct sk_buff *skb)
+ {
+ 	struct sk_buff *nskb, *skb_pool[MAX_PKT_NUM_IN_TRANSFER];
+-	int index = 0, i = 0, chk_idx, len = skb->len;
+-	int rx_remain_len = 0, rx_pkt_len = 0;
+-	u16 pkt_len, pkt_tag, pool_index = 0;
++	int index = 0, i = 0, len = skb->len;
++	int rx_remain_len, rx_pkt_len;
++	u16 pool_index = 0;
+ 	u8 *ptr;
+ 
+ 	spin_lock(&hif_dev->rx_lock);
+@@ -399,64 +399,64 @@ static void ath9k_hif_usb_rx_stream(struct hif_device_usb *hif_dev,
+ 	spin_unlock(&hif_dev->rx_lock);
+ 
+ 	while (index < len) {
++		u16 pkt_len;
++		u16 pkt_tag;
++		u16 pad_len;
++		int chk_idx;
++
+ 		ptr = (u8 *) skb->data;
+ 
+ 		pkt_len = ptr[index] + (ptr[index+1] << 8);
+ 		pkt_tag = ptr[index+2] + (ptr[index+3] << 8);
+ 
+-		if (pkt_tag == ATH_USB_RX_STREAM_MODE_TAG) {
+-			u16 pad_len;
+-
+-			pad_len = 4 - (pkt_len & 0x3);
+-			if (pad_len == 4)
+-				pad_len = 0;
+-
+-			chk_idx = index;
+-			index = index + 4 + pkt_len + pad_len;
+-
+-			if (index > MAX_RX_BUF_SIZE) {
+-				spin_lock(&hif_dev->rx_lock);
+-				hif_dev->rx_remain_len = index - MAX_RX_BUF_SIZE;
+-				hif_dev->rx_transfer_len =
+-					MAX_RX_BUF_SIZE - chk_idx - 4;
+-				hif_dev->rx_pad_len = pad_len;
+-
+-				nskb = __dev_alloc_skb(pkt_len + 32,
+-						       GFP_ATOMIC);
+-				if (!nskb) {
+-					dev_err(&hif_dev->udev->dev,
+-					"ath9k_htc: RX memory allocation"
+-					" error\n");
+-					spin_unlock(&hif_dev->rx_lock);
+-					goto err;
+-				}
+-				skb_reserve(nskb, 32);
+-				RX_STAT_INC(skb_allocated);
+-
+-				memcpy(nskb->data, &(skb->data[chk_idx+4]),
+-				       hif_dev->rx_transfer_len);
+-
+-				/* Record the buffer pointer */
+-				hif_dev->remain_skb = nskb;
++		if (pkt_tag != ATH_USB_RX_STREAM_MODE_TAG) {
++			RX_STAT_INC(skb_dropped);
++			return;
++		}
++
++		pad_len = 4 - (pkt_len & 0x3);
++		if (pad_len == 4)
++			pad_len = 0;
++
++		chk_idx = index;
++		index = index + 4 + pkt_len + pad_len;
++
++		if (index > MAX_RX_BUF_SIZE) {
++			spin_lock(&hif_dev->rx_lock);
++			hif_dev->rx_remain_len = index - MAX_RX_BUF_SIZE;
++			hif_dev->rx_transfer_len =
++				MAX_RX_BUF_SIZE - chk_idx - 4;
++			hif_dev->rx_pad_len = pad_len;
++
++			nskb = __dev_alloc_skb(pkt_len + 32, GFP_ATOMIC);
++			if (!nskb) {
++				dev_err(&hif_dev->udev->dev,
++					"ath9k_htc: RX memory allocation error\n");
+ 				spin_unlock(&hif_dev->rx_lock);
+-			} else {
+-				nskb = __dev_alloc_skb(pkt_len + 32, GFP_ATOMIC);
+-				if (!nskb) {
+-					dev_err(&hif_dev->udev->dev,
+-					"ath9k_htc: RX memory allocation"
+-					" error\n");
+-					goto err;
+-				}
+-				skb_reserve(nskb, 32);
+-				RX_STAT_INC(skb_allocated);
+-
+-				memcpy(nskb->data, &(skb->data[chk_idx+4]), pkt_len);
+-				skb_put(nskb, pkt_len);
+-				skb_pool[pool_index++] = nskb;
++				goto err;
+ 			}
++			skb_reserve(nskb, 32);
++			RX_STAT_INC(skb_allocated);
++
++			memcpy(nskb->data, &(skb->data[chk_idx+4]),
++			       hif_dev->rx_transfer_len);
++
++			/* Record the buffer pointer */
++			hif_dev->remain_skb = nskb;
++			spin_unlock(&hif_dev->rx_lock);
+ 		} else {
+-			RX_STAT_INC(skb_dropped);
+-			return;
++			nskb = __dev_alloc_skb(pkt_len + 32, GFP_ATOMIC);
++			if (!nskb) {
++				dev_err(&hif_dev->udev->dev,
++					"ath9k_htc: RX memory allocation error\n");
++				goto err;
++			}
++			skb_reserve(nskb, 32);
++			RX_STAT_INC(skb_allocated);
++
++			memcpy(nskb->data, &(skb->data[chk_idx+4]), pkt_len);
++			skb_put(nskb, pkt_len);
++			skb_pool[pool_index++] = nskb;
+ 		}
+ 	}
+ 
 -- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+1.7.3.2.245.g03276.dirty
+
