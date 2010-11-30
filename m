@@ -1,45 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:43658 "EHLO nbd.name"
+Received: from mail.perches.com ([173.55.12.10]:2028 "EHLO mail.perches.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753429Ab0K1Shz (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 28 Nov 2010 13:37:55 -0500
-From: Felix Fietkau <nbd@openwrt.org>
-To: linux-wireless@vger.kernel.org
-Cc: linville@tuxdriver.com, lrodriguez@atheros.com
-Subject: [PATCH] ath9k: fix software retry counter tracking
-Date: Sun, 28 Nov 2010 19:37:48 +0100
-Message-Id: <1290969468-13733-1-git-send-email-nbd@openwrt.org>
+	id S1756512Ab0K3UTh (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 30 Nov 2010 15:19:37 -0500
+Subject: Re: [ath9k-devel] [PATCH wireless-next] ath: Rename ath_print to
+ ath_debug
+From: Joe Perches <joe@perches.com>
+To: Felix Fietkau <nbd@openwrt.org>
+Cc: peter@stuge.se, ath9k-devel@lists.ath9k.org,
+	linux-kernel@vger.kernel.org,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <4CF464D6.2020507@openwrt.org>
+References: <5febb0e1fba0ec2bb77f6ade8b251ba0edf4614c.1290988277.git.joe@perches.com>
+	 <AANLkTinc251WbwuLqFbOZ5ipNGZW7=wub3DoWwy42=+e@mail.gmail.com>
+	 <20101129060732.5130.qmail@stuge.se>  <4CF42C17.2070500@openwrt.org>
+	 <1291081185.16349.133.camel@Joe-Laptop>  <4CF464D6.2020507@openwrt.org>
+Content-Type: text/plain; charset="UTF-8"
+Date: Tue, 30 Nov 2010 12:19:35 -0800
+Message-ID: <1291148375.18026.342.camel@Joe-Laptop>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The recent tx path cleanups moved the software retry count tracking
-from the ath_buf to the skb cb, however the actual counter update
-referred to the wrong location, confusing block-ack window tracking.
-Fix this by using the retries counter in the struct ath_frame_info.
+On Tue, 2010-11-30 at 03:43 +0100, Felix Fietkau wrote:
+> On 2010-11-30 2:39 AM, Joe Perches wrote:
+> > I gauge my willingness to spend time on subsystems on
+> > the maintainers willingness to merge things that improve
+> > readability and correctness.
+> I'm not trying to discourage you from spending time on improving this
+> code, just doubting the usefulness of such simple function renames.
 
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
----
- drivers/net/wireless/ath/ath9k/xmit.c |    4 ++--
- 1 files changed, 2 insertions(+), 2 deletions(-)
+Poor function naming is just that.
+It reduces readability and the uses are counter expectation.
 
-diff --git a/drivers/net/wireless/ath/ath9k/xmit.c b/drivers/net/wireless/ath/ath9k/xmit.c
-index 495432e..177a7b1 100644
---- a/drivers/net/wireless/ath/ath9k/xmit.c
-+++ b/drivers/net/wireless/ath/ath9k/xmit.c
-@@ -250,11 +250,11 @@ static void ath_tid_drain(struct ath_softc *sc, struct ath_txq *txq,
- static void ath_tx_set_retry(struct ath_softc *sc, struct ath_txq *txq,
- 			     struct sk_buff *skb)
- {
--	struct ieee80211_tx_info *tx_info = IEEE80211_SKB_CB(skb);
-+	struct ath_frame_info *fi = get_frame_info(skb);
- 	struct ieee80211_hdr *hdr;
- 
- 	TX_STAT_INC(txq->axq_qnum, a_retries);
--	if (tx_info->control.rates[4].count++ > 0)
-+	if (fi->retries++ > 0)
- 		return;
- 
- 	hdr = (struct ieee80211_hdr *)skb->data;
--- 
-1.7.3.2
+
 
