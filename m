@@ -1,70 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iw0-f174.google.com ([209.85.214.174]:63149 "EHLO
-	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932527Ab0KSW2J convert rfc822-to-8bit (ORCPT
+Received: from mail-gy0-f174.google.com ([209.85.160.174]:61037 "EHLO
+	mail-gy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751117Ab0K3WQj convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 19 Nov 2010 17:28:09 -0500
-Received: by iwn34 with SMTP id 34so67020iwn.19
-        for <linux-wireless@vger.kernel.org>; Fri, 19 Nov 2010 14:28:08 -0800 (PST)
+	Tue, 30 Nov 2010 17:16:39 -0500
+Received: by gyb11 with SMTP id 11so3041242gyb.19
+        for <linux-wireless@vger.kernel.org>; Tue, 30 Nov 2010 14:16:38 -0800 (PST)
 MIME-Version: 1.0
-In-Reply-To: <4CE6E430.6080804@candelatech.com>
-References: <1289592426-5367-1-git-send-email-greearb@candelatech.com>
- <1289594998.3736.11.camel@jlt3.sipsolutions.net> <4CDDAA3B.9090007@candelatech.com>
- <1289596096.3736.13.camel@jlt3.sipsolutions.net> <4CDE699B.70401@kernel.org>
- <4CE1A344.7040201@candelatech.com> <4CE292F7.4090200@kernel.org>
- <1289929258.3673.1.camel@jlt3.sipsolutions.net> <4CE396A9.1050908@kernel.org>
- <1290020005.3777.6.camel@jlt3.sipsolutions.net> <4CE4C8DD.6010806@kernel.org>
- <51f5dd53c39a77fff4efc1a99b189725@localhost> <4CE4D41F.1080005@kernel.org>
- <1290099585.3801.1.camel@jlt3.sipsolutions.net> <4CE68AF4.8060507@kernel.org>
- <1290189452.3768.3.camel@jlt3.sipsolutions.net> <4CE6E430.6080804@candelatech.com>
+In-Reply-To: <1D6034426110564DA0DEA9EE9793B38357E35E4823@NBE-MBX01.americas.swk.pri>
+References: <1D6034426110564DA0DEA9EE9793B38357E35E4823@NBE-MBX01.americas.swk.pri>
 From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Fri, 19 Nov 2010 14:27:48 -0800
-Message-ID: <AANLkTimf9D-HP8i99ReVrTqcDHrWchT=HSeTywe_=as0@mail.gmail.com>
-Subject: Re: [PATCH] mac80211: Fix deadlock in ieee80211_do_stop.
-To: Ben Greear <greearb@candelatech.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	Tejun Heo <tj@kernel.org>, linux-wireless@vger.kernel.org
+Date: Tue, 30 Nov 2010 14:16:17 -0800
+Message-ID: <AANLkTimXDZLm7CAn7VyRPxQscTfHwTNALbDOh3LpjSQc@mail.gmail.com>
+Subject: Re: wireless in linux
+To: "Heyendal, Carl" <CHeyendal@stanleyworks.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Nov 19, 2010 at 12:55 PM, Ben Greear <greearb@candelatech.com> wrote:
-> On 11/19/2010 09:57 AM, Johannes Berg wrote:
->>
->> On Fri, 2010-11-19 at 15:34 +0100, Tejun Heo wrote:
->>
->>> Awesome.  :-)
->>>
->>> Ben, if you have trouble generating full trace, please let me know if
->>> there's something I can buy which isn't too expensive to reproduce the
->>> problem.  I would be happy to track it down myself.
->>
->> Maybe you can try Ben's setup in kvm (or directly on your box if you
->> like) with mac80211_hwsim. From a mac80211 POV it should be almost
->> equivalent, although it'll do different memory allocation patterns etc.
+On Tue, Nov 30, 2010 at 2:05 PM, Heyendal, Carl
+<CHeyendal@stanleyworks.com> wrote:
 >
-> I tried manually backing out my patch, and now I can no longer reproduce
-> the problem.  Maybe something in -rc2 fixed it, or maybe some changes
-> to my environment just made it harder to hit.
+> I'm a somewhat of a newbie to Linux. So far I have been impressed with the information that I have been able to readily find to get things done in Linux amongst all the reference books, on-line tutorials, and various Linux communities. However wireless in Linux has been a different story.
 >
-> If you see no logical reason why calling flush_work with RTNL held
-> would cause trouble, then I guess we can just leave the code as is
-> for now.
+> A few weeks ago I was asked to provide wireless functionality for an embedded system. A simple USB wireless adapter to connect to an access point was all. I thought it shouldn't be too much of a challenge. However adding wireless capability has truly been a formidable challenge. I'm still not there yet. I'm staring right now at the latest wpa_supplicant readme with all the choices that I need to make. I'll be lucky if it works. It's really been a piece-meal effort so far.
 >
-> If you do want to play with this yourself, I think any ath5k type adapter
-> with 64+ virtual stations configured would be a valid test case.  My
-> application calls ifdown/ifup on them a few times after being created
-> and then generates traffic (and gathers stats, calls 'iwconfig', etc).
-> As configured in the original scenario that reproduced the problem,
-> the STAs had no encryption and were all associating with a single AP.
-> wpa_supplicant was not being used.
+> The only information I can find is very limited to it's context and is geared to individuals who have intimate knowledge of Linux wireless. How does one get up to speed with wireless-linux with the apparent lack of good general information regarding what's needed in a wireless linux kernel?
+>
+> Are there any reference books, tutorials, howto's, wireless enabled kernels...anything that someone can point me to that would help?
 
-FWIW, I had to do similar tests before and Ben offered up a perl
-script to do something similar to what his proprietary app does upon
-device bring up. I've modified it just a bit and you can find it here:
-
-http://www.kernel.org/pub/linux/kernel/people/mcgrof/scripts/poo.pl
-
-  Luis
+http://lmgtfy.com/?q=Linux+wireless
 
   Luis
