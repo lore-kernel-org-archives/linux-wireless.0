@@ -1,75 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ey0-f174.google.com ([209.85.215.174]:33441 "EHLO
-	mail-ey0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754933Ab0KFOt7 (ORCPT
+Received: from mail-bw0-f46.google.com ([209.85.214.46]:43075 "EHLO
+	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755717Ab0K3LTr (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 6 Nov 2010 10:49:59 -0400
-Received: by mail-ey0-f174.google.com with SMTP id 27so2216256eye.19
-        for <linux-wireless@vger.kernel.org>; Sat, 06 Nov 2010 07:49:58 -0700 (PDT)
-From: Ivo van Doorn <ivdoorn@gmail.com>
+	Tue, 30 Nov 2010 06:19:47 -0500
+Received: by bwz15 with SMTP id 15so4896601bwz.19
+        for <linux-wireless@vger.kernel.org>; Tue, 30 Nov 2010 03:19:46 -0800 (PST)
+From: Helmut Schaa <helmut.schaa@googlemail.com>
 To: "John W. Linville" <linville@tuxdriver.com>
-Subject: [PATCH 16/18] rt2x00: Fix rt2x00queue_kick_tx_queue arguments
-Date: Sat, 6 Nov 2010 15:48:23 +0100
-Cc: linux-wireless@vger.kernel.org
-References: <201011061544.00876.IvDoorn@gmail.com> <201011061547.46948.IvDoorn@gmail.com> <201011061548.06660.IvDoorn@gmail.com>
-In-Reply-To: <201011061548.06660.IvDoorn@gmail.com>
-MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Message-Id: <201011061548.24450.IvDoorn@gmail.com>
+Cc: linux-wireless@vger.kernel.org,
+	Helmut Schaa <helmut.schaa@googlemail.com>,
+	Johannes Berg <johannes@sipsolutions.net>
+Subject: [PATCH] mac80211: Minor optimization in ieee80211_rx_h_data
+Date: Tue, 30 Nov 2010 12:19:34 +0100
+Message-Id: <1291115974-4878-1-git-send-email-helmut.schaa@googlemail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ivo van Doorn <IvDoorn@gmail.com>
+Remove a superfluous ieee80211_is_data check as that was checked a few
+lines before already and we wont't get here for non-data frames at all.
 
-The queue_entry argument to rt2x00queue_kick_tx_queue,
-doesn't make sense due to the function name (it is called
-kick QUEUE)... But neither do we need the queue_entry, since
-we need the data_queue.
+Second, the frame was already converted to 802.3 header format and
+reading the fc and addr1 fields was only possible because the 802.3
+header is short enough and didn't overwrite the relevant parts of the
+802.11 header. Make the code more obvious by checking the ethernet
+header's h_dest field.
 
-Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
-Acked-by: Helmut Schaa <helmut.schaa@googlemail.com>
-Acked-by: Gertjan van Wingerde <gwingerde@gmail.com>
+Furthermore reorder the conditions to reduce the number of checks
+when dynamic powersave is not needed (AP mode for example).
+
+Cc: Johannes Berg <johannes@sipsolutions.net>
+Signed-off-by: Helmut Schaa <helmut.schaa@googlemail.com>
 ---
- drivers/net/wireless/rt2x00/rt2x00queue.c |    9 +++------
- 1 files changed, 3 insertions(+), 6 deletions(-)
 
-diff --git a/drivers/net/wireless/rt2x00/rt2x00queue.c b/drivers/net/wireless/rt2x00/rt2x00queue.c
-index aa4c8f2..dc54317 100644
---- a/drivers/net/wireless/rt2x00/rt2x00queue.c
-+++ b/drivers/net/wireless/rt2x00/rt2x00queue.c
-@@ -452,12 +452,9 @@ static void rt2x00queue_write_tx_descriptor(struct queue_entry *entry,
- 	rt2x00debug_dump_frame(queue->rt2x00dev, DUMP_FRAME_TX, entry->skb);
- }
+Found via code review, compile tested only.
+
+ net/mac80211/rx.c |    5 ++---
+ 1 files changed, 2 insertions(+), 3 deletions(-)
+
+diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
+index 9dd60a7..9e44fbf 100644
+--- a/net/mac80211/rx.c
++++ b/net/mac80211/rx.c
+@@ -1871,9 +1871,8 @@ ieee80211_rx_h_data(struct ieee80211_rx_data *rx)
+ 	dev->stats.rx_packets++;
+ 	dev->stats.rx_bytes += rx->skb->len;
  
--static void rt2x00queue_kick_tx_queue(struct queue_entry *entry,
-+static void rt2x00queue_kick_tx_queue(struct data_queue *queue,
- 				      struct txentry_desc *txdesc)
- {
--	struct data_queue *queue = entry->queue;
--	struct rt2x00_dev *rt2x00dev = queue->rt2x00dev;
--
- 	/*
- 	 * Check if we need to kick the queue, there are however a few rules
- 	 *	1) Don't kick unless this is the last in frame in a burst.
-@@ -469,7 +466,7 @@ static void rt2x00queue_kick_tx_queue(struct queue_entry *entry,
- 	 */
- 	if (rt2x00queue_threshold(queue) ||
- 	    !test_bit(ENTRY_TXD_BURST, &txdesc->flags))
--		rt2x00dev->ops->lib->kick_tx_queue(queue);
-+		queue->rt2x00dev->ops->lib->kick_tx_queue(queue);
- }
- 
- int rt2x00queue_write_tx_frame(struct data_queue *queue, struct sk_buff *skb,
-@@ -559,7 +556,7 @@ int rt2x00queue_write_tx_frame(struct data_queue *queue, struct sk_buff *skb,
- 
- 	rt2x00queue_index_inc(queue, Q_INDEX);
- 	rt2x00queue_write_tx_descriptor(entry, &txdesc);
--	rt2x00queue_kick_tx_queue(entry, &txdesc);
-+	rt2x00queue_kick_tx_queue(queue, &txdesc);
- 
- 	return 0;
- }
+-	if (ieee80211_is_data(hdr->frame_control) &&
+-	    !is_multicast_ether_addr(hdr->addr1) &&
+-	    local->hw.conf.dynamic_ps_timeout > 0 && local->ps_sdata) {
++	if (local->ps_sdata && local->hw.conf.dynamic_ps_timeout > 0 && 
++	    !is_multicast_ether_addr(((struct ethhdr *)rx->skb->data)->h_dest)) {
+ 			mod_timer(&local->dynamic_ps_timer, jiffies +
+ 			 msecs_to_jiffies(local->hw.conf.dynamic_ps_timeout));
+ 	}
 -- 
-1.7.2.3
+1.7.1
 
