@@ -1,41 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qy0-f174.google.com ([209.85.216.174]:39368 "EHLO
-	mail-qy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754837Ab0KJCVP (ORCPT
+Received: from mail-yw0-f46.google.com ([209.85.213.46]:54553 "EHLO
+	mail-yw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753941Ab0K3Tak (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 9 Nov 2010 21:21:15 -0500
-Received: by mail-qy0-f174.google.com with SMTP id 12so2500250qyk.19
-        for <linux-wireless@vger.kernel.org>; Tue, 09 Nov 2010 18:21:15 -0800 (PST)
-From: Arnaud Lacombe <lacombar@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: lrodriguez@atheros.com, Arnaud Lacombe <lacombar@gmail.com>
-Subject: [PATCH 17/44] compat/2.6.29: const'ify compat inline to dev_get_stats()
-Date: Tue,  9 Nov 2010 21:19:59 -0500
-Message-Id: <1289355626-25373-18-git-send-email-lacombar@gmail.com>
-In-Reply-To: <1289355626-25373-1-git-send-email-lacombar@gmail.com>
-References: <1289355626-25373-1-git-send-email-lacombar@gmail.com>
+	Tue, 30 Nov 2010 14:30:40 -0500
+MIME-Version: 1.0
+In-Reply-To: <20101130192648.GA1623@ucw.cz>
+References: <AANLkTim4jVaZxYp8nSgJyy28iwxcxbPeNUzxTfoHAX4S@mail.gmail.com>
+ <20101118113441.74fcdc21@lxorguk.ukuu.org.uk> <AANLkTikOZbtyhsk0OBb4OdUi6qj-7k_hU-aW_Pkhfpq0@mail.gmail.com>
+ <20101130192648.GA1623@ucw.cz>
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Date: Tue, 30 Nov 2010 11:30:18 -0800
+Message-ID: <AANLkTinMyAeVJJc7Lc-vt_Ywr+vcSf-GAiQwggTGbqh8@mail.gmail.com>
+Subject: Re: Challenges with doing hardware bring up with Linux first
+To: Pavel Machek <pavel@ucw.cz>, bkuhn@ebb.org
+Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, linux-kernel@vger.kernel.org,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Greg KH <greg@kroah.com>, David Miller <davem@davemloft.net>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Stephen Hemminger <shemminger@vyatta.com>,
+	"Perez-Gonzalez, Inaky" <inaky.perez-gonzalez@intel.com>,
+	Charles Marker <Charles.Marker@atheros.com>,
+	Jouni Malinen <Jouni.Malinen@atheros.com>,
+	Kevin Hayes <kevin@atheros.com>,
+	Zhifeng Cai <zhifeng.cai@atheros.com>,
+	Don Breslin <Don.Breslin@atheros.com>,
+	Doug Dahlby <Doug.Dahlby@atheros.com>,
+	Julia Lawall <julia@diku.dk>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Arnaud Lacombe <lacombar@gmail.com>
----
- include/linux/compat-2.6.29.h |    3 ++-
- 1 files changed, 2 insertions(+), 1 deletions(-)
+On Tue, Nov 30, 2010 at 11:26 AM, Pavel Machek <pavel@ucw.cz> wrote:
+> Hi!
+>
+>> >> everything else can be independent code. For ath9k in particular this
+>> >> means we keep ath9k_hw shared between our Operating Systems and that's
+>> >> it. In addition to this I believe opening up the common drivers for
+>> >
+>> > The Linux copy needs to be GPL,
+>>
+>> GPL-Compatible you mean, right. I mean we have ath9k_hw with
+>> permissive licensed files.
+>
+> GPL-compatible is not right word. It has to be either GPL, or so
+> permissive that anyone is allowed to turn it into GPL.
 
-diff --git a/include/linux/compat-2.6.29.h b/include/linux/compat-2.6.29.h
-index ef40d00..bd112d0 100644
---- a/include/linux/compat-2.6.29.h
-+++ b/include/linux/compat-2.6.29.h
-@@ -229,7 +229,8 @@ static inline struct sk_buff *skb_queue_prev(const struct sk_buff_head *list,
- }
- 
- 
--static inline struct net_device_stats *dev_get_stats(struct net_device *dev)
-+static inline const struct net_device_stats *
-+dev_get_stats(struct net_device *dev)
- {
- 	return dev->get_stats(dev);
- }
--- 
-1.7.2.30.gc37d7.dirty
+Oh?
 
+  Luis
