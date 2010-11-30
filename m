@@ -1,28 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from perninha.conectiva.com.br ([187.115.55.249]:47828 "EHLO
-	perninha.conectiva.com.br" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752896Ab0KBBAL (ORCPT
+Received: from mail-wy0-f174.google.com ([74.125.82.174]:38839 "EHLO
+	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751825Ab0K3Vqa (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 1 Nov 2010 21:00:11 -0400
-From: Herton Ronaldo Krzesinski <herton@mandriva.com.br>
+	Tue, 30 Nov 2010 16:46:30 -0500
+Received: by wyb28 with SMTP id 28so6177461wyb.19
+        for <linux-wireless@vger.kernel.org>; Tue, 30 Nov 2010 13:46:29 -0800 (PST)
+Subject: Re: wireless.kernel.org update
+From: Thomas Novin <thomas@xyz.pp.se>
+Reply-To: thomas@xyz.pp.se
 To: linux-wireless@vger.kernel.org
-Cc: Larry Finger <Larry.Finger@lwfinger.net>,
-	Hin-Tak Leung <htl10@users.sourceforge.net>,
-	John W Linville <linville@tuxdriver.com>,
-	Herton Ronaldo Krzesinski <herton@mandriva.com.br>
-Subject: [PATCH 0/9] rtl8187: start cleanup/revisiting code
-Date: Mon,  1 Nov 2010 22:59:30 -0200
-Message-Id: <1288659579-4986-1-git-send-email-herton@mandriva.com.br>
+In-Reply-To: <4CF56AB8.7040901@canonical.com>
+References: <1291106122.13696.0.camel@thonov-ubuntu>
+	 <4CF54B97.40604@hauke-m.de> <4CF56AB8.7040901@canonical.com>
+Content-Type: text/plain; charset="ISO-8859-15"
+Date: Tue, 30 Nov 2010 22:46:25 +0100
+Message-ID: <1291153585.20061.1.camel@thonov-ubuntu>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+On Tue, Nov 30, 2010 at 10:20 PM, Tim Gardner
+<tim.gardner@canonical.com> wrote:
+        
+        On 11/30/2010 12:08 PM, Hauke Mehrtens wrote:
+                I added the package names for Ubuntu 10.10 into the
+                wiki. The Ubuntu
+                guys changed the name of the package but the meta
+                package is still
+                depending on the old names, this is a Ubuntu bug. (see:
+                https://bugs.launchpad.net/ubuntu/+source/linux-meta/+bug/681727 )
+                
+                Hauke
+                
+                --
+        
+        Should have it fixed soon. It was a bit of a goof because we're
+        going to offer multiple versions of the compat-wireless package
+        which in turn required some package name changes.
+        
+        rtg
+        -- 
+        Tim Gardner tim.gardner@canonical.com
 
-While looking at rtl8187 driver I noticed possible cleanups and found 2
-bugs (last 2 patches in the series). This series presents the changes.
-I didn't finished revisiting everything, so there are more cleanups
-possible, but for now the 2 bug fixes are worth the initial submit.
+Can someone please explain or point to documentation which describes the
+difference between these packages (linux-backports-modules-wireless-* /
+linux-backports-modules-compat-wireless-*). I have often problems in
+Ubuntu with unstable wireless network so that's why I'm looking for a
+more recent and hopefully better version.
 
---
-[]'s
-Herton
+
+Rgds,
+
+
+Thomas
+
+
+Ps. Please keep me on CC as I'm not on the list.
+
+
