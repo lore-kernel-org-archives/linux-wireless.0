@@ -1,111 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.sysgo.com ([195.145.229.155]:36825 "EHLO mail.sysgo.com"
+Received: from smtp.nokia.com ([147.243.1.48]:37373 "EHLO mgw-sa02.nokia.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753007Ab0KZLhD (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 26 Nov 2010 06:37:03 -0500
-Date: Fri, 26 Nov 2010 12:37:00 +0100
-From: Pavel Machek <pma@sysgo.com>
-To: Larry Finger <Larry.Finger@lwfinger.net>,
-	ath9k-devel@venema.h4ckr.net, Sujith.Manoharan@atheros.com
-Cc: kernel list <linux-kernel@vger.kernel.org>,
-	chunkeey@googlemail.com, linux-wireless@vger.kernel.org,
-	rudolf.marek@sysgo.com, cko@sysgo.com, mfa@sysgo.com, anl@sysgo.com
-Subject: [PATCH?] do structures need to be packed? [was Re: ath9k_htc vs.
- powerpc (was Re: working usb wifi card, that is still possible to buy)]
-Message-ID: <20101126113700.GB28137@pma.sysgo.com>
-References: <20101103092431.GA21138@pma.sysgo.com>
- <20101124081616.GA30595@pma.sysgo.com>
- <20101124131320.GA2611@pma.sysgo.com>
- <4CED33E0.5040000@lwfinger.net>
- <20101126083125.GA28982@pma.sysgo.com>
- <20101126102026.GA11857@pma.sysgo.com>
- <20101126112737.GB11857@pma.sysgo.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20101126112737.GB11857@pma.sysgo.com>
+	id S1753716Ab0K3HP6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 30 Nov 2010 02:15:58 -0500
+Subject: Re: [PATCH v4 ] wl12xx: BA Initiator support
+From: Luciano Coelho <luciano.coelho@nokia.com>
+To: ext Ohad Ben-Cohen <ohad@wizery.com>
+Cc: Shahar Levi <shahar_levi@ti.com>, linux-wireless@vger.kernel.org
+In-Reply-To: <AANLkTi=y38YDVFQxS--2074FpQNsDD7iWqVjF77Gg_dg@mail.gmail.com>
+References: <1291038135-20672-1-git-send-email-shahar_levi@ti.com>
+	 <AANLkTikUOfQbk-TEE2=EejXOTr_t-LXvTim-Sc1OVwKG@mail.gmail.com>
+	 <1291097500.1673.100.camel@powerslave>
+	 <AANLkTi=y38YDVFQxS--2074FpQNsDD7iWqVjF77Gg_dg@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Tue, 30 Nov 2010 09:15:52 +0200
+Message-ID: <1291101352.1673.112.camel@powerslave>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi!
+On Mon, 2010-11-29 at 23:07 -0800, ext Ohad Ben-Cohen wrote:
+> On Mon, Nov 29, 2010 at 10:11 PM, Luciano Coelho
+> <luciano.coelho@nokia.com> wrote:
+> ...
+> > In theory the API *has* changed, not just extended.  Check this:
+> >
+> > -       ACX_BA_SESSION_RESPONDER_POLICY = 0x0055,
+> > -       ACX_BA_SESSION_INITIATOR_POLICY = 0x0056,
+> > +       ACX_BA_SESSION_POLICY_CFG   = 0x0055,
+> > +       ACX_BA_SESSION_RX_SETUP     = 0x0056,
+> >
+> > But in practice, this doesn't matter, because we were not using the
+> > RESPONDER/INITIATOR commands before...
+> 
+> Right.  So an old driver will still work with this new firmware.
+> 
+> > It's basically just those two extra commands that were added.  And one
+> > new event that is part of a future patch.
+> >
+> > In theory, we could check the firmware revision after boot and bail out
+> > if the version doesn't match.
+> 
+> Why not just disable BA sessions in this case (and keep that new event
+> masked), and let the driver keep running (just like it does today) ?
+> 
+> This way the new driver will work even with the old firmware (yes,
+> with degraded functionality, but most random ppl will just not care),
+> and of course, the old driver will keep working with the new firmware.
+> 
+> For us developers who lurk in linux-wireless it seems like a trivial
+> change, but if we consider the growing size of the 12xx community, and
+> the long period of time for which such a change will be effective (ppl
+> upgrading to latest compat, ppl that will one day upgrade to 2.6.38,
+> future ppl that will bisect and cross this firmware name change,
+> etc...), it's actually a lot of accumulated pain.
+> 
+> To keep our community happy, I vote to eliminate this pain when not necessary.
 
-I'm not sure if all the structures shared with hardware are properly
-marked as packed. In particular, htc_rx_status contains big endian
-data, so it might need packing...? Not sure about others.
+Hear, hear!
 
-...you probably do not want to apply all of this...
+Shahar, can you fix that?
 
-Unfortunately, it does not solve the problem on powerpc...
-								Pavel
-Signed-off-by: Pavel Machek <pma@sysgo.com>
+-- 
+Cheers,
+Luca.
 
-diff --git a/drivers/net/wireless/ath/ath9k/htc_hst.h b/drivers/net/wireless/ath/ath9k/htc_hst.h
-index 07b6509..79ef4e7 100644
---- a/drivers/net/wireless/ath/ath9k/htc_hst.h
-+++ b/drivers/net/wireless/ath/ath9k/htc_hst.h
-@@ -89,7 +89,7 @@ struct htc_packet {
- 
- 	void *context;
- 	u32 reserved;
--};
-+} __packed;
- 
- struct htc_ep_callbacks {
- 	void *priv;
-diff --git a/drivers/net/wireless/ath/ath9k/mac.h b/drivers/net/wireless/ath/ath9k/mac.h
-index 7c1a34d..2afbfc0 100644
---- a/drivers/net/wireless/ath/ath9k/mac.h
-+++ b/drivers/net/wireless/ath/ath9k/mac.h
-@@ -127,7 +127,7 @@ struct ath_tx_status {
- 	u32 evm0;
- 	u32 evm1;
- 	u32 evm2;
--};
-+} __packed;
- 
- struct ath_rx_status {
- 	u32 rs_tstamp;
-@@ -154,7 +154,7 @@ struct ath_rx_status {
- 	u32 evm2;
- 	u32 evm3;
- 	u32 evm4;
--};
-+} __packed;
- 
- struct ath_htc_rx_status {
- 	__be64 rs_tstamp;
-@@ -180,7 +180,7 @@ struct ath_htc_rx_status {
- 	__be32 evm0;
- 	__be32 evm1;
- 	__be32 evm2;
--};
-+} __packed;
- 
- #define ATH9K_RXERR_CRC           0x01
- #define ATH9K_RXERR_PHY           0x02
-@@ -297,7 +297,7 @@ struct ar5416_desc {
- 			u32 status7;
- 			u32 status8;
- 			u32 status9;
--		} tx;
-+		} __packed tx;
- 		struct {
- 			u32 status0;
- 			u32 status1;
-@@ -308,7 +308,7 @@ struct ar5416_desc {
- 			u32 status6;
- 			u32 status7;
- 			u32 status8;
--		} rx;
-+		} __packed rx;
- 	} u;
- } __packed;
- 
-@@ -658,7 +658,7 @@ struct ath9k_11n_rate_series {
- 	u32 PktDuration;
- 	u32 ChSel;
- 	u32 RateFlags;
--};
-+} __packed;
- 
- enum ath9k_key_type {
- 	ATH9K_KEY_TYPE_CLEAR,
