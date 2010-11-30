@@ -1,50 +1,28 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:49059 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754490Ab0KIVO5 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 9 Nov 2010 16:14:57 -0500
-Date: Tue, 9 Nov 2010 16:12:09 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Cc: linux-wireless@vger.kernel.org, ipw3945-devel@lists.sourceforge.net
-Subject: Re: [PATCH 0/8]  update for 2.6.38
-Message-ID: <20101109211209.GD2374@tuxdriver.com>
-References: <1287850546-23500-1-git-send-email-wey-yi.w.guy@intel.com>
+Received: from nbd.name ([46.4.11.11]:39896 "EHLO nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755168Ab0K3SrA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 30 Nov 2010 13:47:00 -0500
+Message-ID: <4CF546A1.1060904@openwrt.org>
+Date: Tue, 30 Nov 2010 19:46:57 +0100
+From: Felix Fietkau <nbd@openwrt.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1287850546-23500-1-git-send-email-wey-yi.w.guy@intel.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+CC: linux-wireless@vger.kernel.org, lrodriguez@atheros.com
+Subject: Re: [PATCH 2.6.37 v2 1/2] ath9k_hw: fix endian issues with CTLs on
+ AR9003
+References: <1291131338-93870-1-git-send-email-nbd@openwrt.org> <20101130182715.GD2341@tuxdriver.com>
+In-Reply-To: <20101130182715.GD2341@tuxdriver.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, Oct 23, 2010 at 09:15:38AM -0700, Wey-Yi Guy wrote:
-> We make number of changes to prepare upcoming P2P supports
-> We also turn on dynamic smps to improve WiFi rx throughput
-> for WiFi/BT coex case.
-> We also change the new 130 series devices to using 6000g2b uCode
-> 
-> Johannes Berg (5):
->   iwlwifi: make mac80211 ops a device config
->   iwlagn: don't resent RXON timing
->   iwlagn: new RXON processing for modern devices
->   iwlwifi: fix IBSS beaconing
->   iwlwifi: implement switching iftype while up
-> 
-> Wey-Yi Guy (3):
->   iwlagn: turn dynamic smps on while BT is on
->   iwlwifi: add new devices to Kconfig
->   iwlagn: use 6000g2b uCode for 130 series devices
-> 
-> these patches are also available from wireless-next-2.6 branch on
->  git://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi-2.6.git
-
-I figured-out what happened with that other pull request -- you put
-that patch on the wireless-next-2.6 branch instead of the wireless-2.6
-branch. :-(
-
-I'll apply these manually to wireless-next-2.6...
-
-John
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+On 2010-11-30 7:27 PM, John W. Linville wrote:
+> On Tue, Nov 30, 2010 at 04:35:37PM +0100, Felix Fietkau wrote:
+>> Parsing data using bitfields is messy, because it makes endian handling
+>> much harder. AR9002 and earlier got it right, AR9003 got it wrong.
+>> This might lead to either using too high or too low tx power values,
+>> depending on frequency and eeprom settings.
+>> Fix it by getting rid of the CTL related bitfields entirely and use
+>> masks instead.
+Oh, sorry, sent it from the wrong tree. Will resend...
