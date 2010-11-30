@@ -1,73 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bear.ext.ti.com ([192.94.94.41]:44675 "EHLO bear.ext.ti.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754152Ab0KKTrh (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 11 Nov 2010 14:47:37 -0500
-Message-ID: <4CDC4851.8080005@ti.com>
-Date: Thu, 11 Nov 2010 21:47:29 +0200
+Received: from devils.ext.ti.com ([198.47.26.153]:33281 "EHLO
+	devils.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750902Ab0K3TB3 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 30 Nov 2010 14:01:29 -0500
+Message-ID: <4CF54A03.2090104@ti.com>
+Date: Tue, 30 Nov 2010 21:01:23 +0200
 From: Gery Kahn <geryk@ti.com>
 MIME-Version: 1.0
-To: Juuso Oikarinen <juuso.oikarinen@nokia.com>
-CC: "Coelho Luciano (Nokia-MS/Helsinki)" <Luciano.Coelho@nokia.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH 2/2] Revert "wl1271: Change supported channel order for
- a more optimal scan"
-References: <1289384840-28305-1-git-send-email-juuso.oikarinen@nokia.com>	 <1289384840-28305-2-git-send-email-juuso.oikarinen@nokia.com>	 <4CDA7F7A.4000705@ti.com> <1289388086.2522.72.camel@wimaxnb.nmp.nokia.com>	 <4CDA83BD.2000306@ti.com> <1289389378.2522.78.camel@wimaxnb.nmp.nokia.com>
-In-Reply-To: <1289389378.2522.78.camel@wimaxnb.nmp.nokia.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+To: Arik Nemtsov <arik@wizery.com>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Luciano Coelho <luciano.coelho@nokia.com>
+Subject: Re: [PATCH 17/18] wl1271: Read MAC address from NVS file on HW startup
+References: <1290079951-16793-1-git-send-email-arik@wizery.com> <1290079951-16793-18-git-send-email-arik@wizery.com> <4CF51CE8.9090809@ti.com> <AANLkTimtk2qXYOVPo+WRyV1Jhe-Fk-7hvoctuAF35ik7@mail.gmail.com>
+In-Reply-To: <AANLkTimtk2qXYOVPo+WRyV1Jhe-Fk-7hvoctuAF35ik7@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 11/10/2010 1:42 PM, Juuso Oikarinen wrote:
-> On Wed, 2010-11-10 at 12:36 +0100, ext Gery Kahn wrote:
->> On 11/10/2010 01:21 PM, Juuso Oikarinen wrote:
->>> On Wed, 2010-11-10 at 12:18 +0100, ext Gery Kahn wrote:
->>>> On 11/10/2010 12:27 PM, juuso.oikarinen@nokia.com wrote:
->>>>> From: Juuso Oikarinen<juuso.oikarinen@nokia.com>
->>>>>
->>>>> This reverts commit fa21c7a9e4be439e217fe72edbd39b643b643791.
->>>>>
->>>>> The reverted patch caused more harm than benefit.
->>>>>
->>>>> Signed-off-by: Juuso Oikarinen<juuso.oikarinen@nokia.com>
->>>>>
->>>> Just couple words what harm it was?
->>> The harm is that the supported channels are reported to user-space in
->>> the order they are registered in the driver. The result of that is quite
->>> messy in userspace PoV.
->>>
->>> -Juuso
->>>
->> Thank you for answer.
->>
->> The reason of doing such channel sorting was channel overlapping.
->>
->> Let's say for 11a (bandwidth 20MHz) it is not a problem.
->> While 11g, preferred channel sorting would be 1,6,11,...
->>
->> Gery
-> Yes, this is why we had this reordering in the first place.
+On 30.Nov.10 18:04, Arik Nemtsov wrote:
+>> The code flow of the add if (wl1271_op_add_interface) overwrites it from
+>> vif.
+> Thats the point of the patch. The MAC can be overwritten at any point
+> between HW initialization and add_interface(). Either by a TESTMODE
+> cmd or even by "ifconfig wlan0 hw ether xx:xx:xx:xx:xx:xx". The patch
+> makes sure the MAC address is set (the default value is in the NVS)
+> when the hardware is initialized.
 >
-> One benefit of sorting channels would be to get faster results for the
-> whole band, as there are responses from the overlapping channels too.
+> This allows the creation of monitor interfaces for instance. These are
+> created without calling the driver's add_interface() and require a
+> valid MAC address to be set. Such a monitor interface is added by
+> hostapd when creating an AP (which explains why this patch is included
+> in the AP-support patch-set).
 >
-Another benefit is to have max band coverage with minimum prob reqs.
-The overlapping answers have collisions, which discard all packets and 
-if timeout scan -
-no responce from AP or even silence in channel.
-> Currently the the scanning code however waits for all channels to be
-> scanned before sending results to userspace, so this benefit is not
-> utilized, and removing this patch makes no difference in that sense.
+> When this patch is applied one should be careful to not set the mac
+> twice with different MAC addresses, as this might cause problems for
+> the upper layers.
 >
-> To take advantage of channel reordering, some other changes are needed
-> too. And the reordering needs to be performed in the mac80211/cfg80211
-> level (I actually earlier submitted a RFC patch doing just this.)
->
-> -Juuso
->
->> --
->> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
+> Regards,
+> Arik
+The idea is to eliminate the situation where anyone "should be careful 
+to not set the
+MAC twice".
+If there is MAC from NVS, make it system wide, w/o need to care about 
+it. On the other hand,
+if MAC set by `ifconfig' same story, make it system wide.
 
+Best regards,
+Gery
