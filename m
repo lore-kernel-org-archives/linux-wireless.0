@@ -1,43 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qy0-f174.google.com ([209.85.216.174]:47672 "EHLO
-	mail-qy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754780Ab0KJCVH (ORCPT
+Received: from devils.ext.ti.com ([198.47.26.153]:57143 "EHLO
+	devils.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753835Ab0K3JF4 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 9 Nov 2010 21:21:07 -0500
-Received: by mail-qy0-f174.google.com with SMTP id 12so2500227qyk.19
-        for <linux-wireless@vger.kernel.org>; Tue, 09 Nov 2010 18:21:06 -0800 (PST)
-From: Arnaud Lacombe <lacombar@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: lrodriguez@atheros.com, Arnaud Lacombe <lacombar@gmail.com>
-Subject: [PATCH 12/44] compat/2.6.25: don't include <linux/hw_random.h> prior to 2.6.18
-Date: Tue,  9 Nov 2010 21:19:54 -0500
-Message-Id: <1289355626-25373-13-git-send-email-lacombar@gmail.com>
-In-Reply-To: <1289355626-25373-1-git-send-email-lacombar@gmail.com>
-References: <1289355626-25373-1-git-send-email-lacombar@gmail.com>
+	Tue, 30 Nov 2010 04:05:56 -0500
+Message-ID: <4CF4BE87.5060307@ti.com>
+Date: Tue, 30 Nov 2010 11:06:15 +0200
+From: Shahar Levi <shahar_levi@ti.com>
+MIME-Version: 1.0
+To: Luciano Coelho <luciano.coelho@nokia.com>
+CC: ext Ohad Ben-Cohen <ohad@wizery.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH v4 ] wl12xx: BA Initiator support
+References: <1291038135-20672-1-git-send-email-shahar_levi@ti.com>	 <AANLkTikUOfQbk-TEE2=EejXOTr_t-LXvTim-Sc1OVwKG@mail.gmail.com>	 <1291097500.1673.100.camel@powerslave>	 <AANLkTi=y38YDVFQxS--2074FpQNsDD7iWqVjF77Gg_dg@mail.gmail.com> <1291101352.1673.112.camel@powerslave>
+In-Reply-To: <1291101352.1673.112.camel@powerslave>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Arnaud Lacombe <lacombar@gmail.com>
----
- include/linux/compat-2.6.25.h |    4 +++-
- 1 files changed, 3 insertions(+), 1 deletions(-)
+On 11/30/2010 09:15 AM, Luciano Coelho wrote:
+> On Mon, 2010-11-29 at 23:07 -0800, ext Ohad Ben-Cohen wrote:
+>> On Mon, Nov 29, 2010 at 10:11 PM, Luciano Coelho
+>> <luciano.coelho@nokia.com>  wrote:
+>> ...
+>>> In theory the API *has* changed, not just extended.  Check this:
+>>>
+>>> -       ACX_BA_SESSION_RESPONDER_POLICY = 0x0055,
+>>> -       ACX_BA_SESSION_INITIATOR_POLICY = 0x0056,
+>>> +       ACX_BA_SESSION_POLICY_CFG   = 0x0055,
+>>> +       ACX_BA_SESSION_RX_SETUP     = 0x0056,
+>>>
+>>> But in practice, this doesn't matter, because we were not using the
+>>> RESPONDER/INITIATOR commands before...
+>>
+>> Right.  So an old driver will still work with this new firmware.
+>>
+>>> It's basically just those two extra commands that were added.  And one
+>>> new event that is part of a future patch.
+>>>
+>>> In theory, we could check the firmware revision after boot and bail out
+>>> if the version doesn't match.
+>>
+>> Why not just disable BA sessions in this case (and keep that new event
+>> masked), and let the driver keep running (just like it does today) ?
+>>
+>> This way the new driver will work even with the old firmware (yes,
+>> with degraded functionality, but most random ppl will just not care),
+>> and of course, the old driver will keep working with the new firmware.
+>>
+>> For us developers who lurk in linux-wireless it seems like a trivial
+>> change, but if we consider the growing size of the 12xx community, and
+>> the long period of time for which such a change will be effective (ppl
+>> upgrading to latest compat, ppl that will one day upgrade to 2.6.38,
+>> future ppl that will bisect and cross this firmware name change,
+>> etc...), it's actually a lot of accumulated pain.
+>>
+>> To keep our community happy, I vote to eliminate this pain when not necessary.
+>
+> Hear, hear!
+>
+> Shahar, can you fix that?
+Yes, will do.
+Shahar
 
-diff --git a/include/linux/compat-2.6.25.h b/include/linux/compat-2.6.25.h
-index ad3220a..641fbde 100644
---- a/include/linux/compat-2.6.25.h
-+++ b/include/linux/compat-2.6.25.h
-@@ -8,8 +8,10 @@
- 
- #include <linux/types.h>
- #include <linux/io.h>
--#include <linux/hw_random.h>
- #include <linux/leds.h>
-+#if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,18))
-+#include <linux/hw_random.h>
-+#endif
- #include <linux/kernel.h>
- #include <linux/netdevice.h>
- #include <linux/pm.h>
--- 
-1.7.2.30.gc37d7.dirty
 
