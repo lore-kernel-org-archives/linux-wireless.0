@@ -1,94 +1,91 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:23224 "EHLO mx1.redhat.com"
+Received: from nbd.name ([46.4.11.11]:42793 "EHLO nbd.name"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751261Ab0KXFLx (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 24 Nov 2010 00:11:53 -0500
-Subject: Re: Re-distributable 88w8335 Firmware?
-From: Dan Williams <dcbw@redhat.com>
-To: Julian Calaby <julian.calaby@gmail.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	David.Woodhouse@intel.com, Greg KH <greg@kroah.com>,
-	linux-kernel@vger.kernel.org,
-	Lennert Buytenhek <buytenh@wantstofly.org>,
-	Holger Schurig <holgerschurig@googlemail.com>,
-	Markus Becker <mab@comnets.uni-bremen.de>,
-	andreamrl@tiscali.it, Denis Kirjanov <kirjanov@gmail.com>,
-	dwmw2@infradead.org
-Date: Tue, 23 Nov 2010 23:10:56 -0600
-In-Reply-To: <AANLkTi=0ocvsR185Qib3VoT43ziTUa_3oRDnmU65pYjv@mail.gmail.com>
-References: <AANLkTim0=ds3EhQOEfHdrKt2dSnEqUgf5CLOPHNyW=jE@mail.gmail.com>
-	 <1290569516.3074.41.camel@dcbw.foobar.com>
-	 <AANLkTi=ioGgpAQ-rx_abCHcOmOezXwJFfbKWc7=tGAJ5@mail.gmail.com>
-	 <1290571986.3074.64.camel@dcbw.foobar.com>
-	 <AANLkTi=0ocvsR185Qib3VoT43ziTUa_3oRDnmU65pYjv@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Message-ID: <1290575460.18917.3.camel@dcbw.foobar.com>
-Mime-Version: 1.0
+	id S1753758Ab0K3Pfq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 30 Nov 2010 10:35:46 -0500
+From: Felix Fietkau <nbd@openwrt.org>
+To: linux-wireless@vger.kernel.org
+Cc: linville@tuxdriver.com, lrodriguez@atheros.com
+Subject: [PATCH 2.6.37 v2 2/2] ath9k_hw: fix more bitfield related endian issues
+Date: Tue, 30 Nov 2010 16:35:38 +0100
+Message-Id: <1291131338-93870-2-git-send-email-nbd@openwrt.org>
+In-Reply-To: <1291131338-93870-1-git-send-email-nbd@openwrt.org>
+References: <1291131338-93870-1-git-send-email-nbd@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2010-11-24 at 15:48 +1100, Julian Calaby wrote:
-> On Wed, Nov 24, 2010 at 15:13, Dan Williams <dcbw@redhat.com> wrote:
-> > On Wed, 2010-11-24 at 14:55 +1100, Julian Calaby wrote:
-> >> On Wed, Nov 24, 2010 at 14:31, Dan Williams <dcbw@redhat.com> wrote:
-> >> > On Sat, 2010-11-20 at 11:29 +1100, Julian Calaby wrote:
-> >> >> If we cannot obtain proper firmware files, the very least Marvel could
-> >> >> do would be to bless the *BSD Malo driver's firmware files (obtainable
-> >> >> here: http://www.nazgul.ch/malo/malo-firmware-1.4.tgz - see
-> >> >> http://www.unix.com/man-page/freebsd/4/MALO/ for more info) with a
-> >> >> proper re-distributable license.
-> >> >>
-> >> >> In terms of the actual chipsets in question, I'm referring to the
-> >> >> 88w8335, 88w8338, and 88w8385 chipsets. I believe Marvel refers to
-> >> >
-> >> > Note that the 8385 shouldn't be included in this list, since it's a
-> >> > FullMAC chip, is handled already by the 'libertas' kernel driver, and
-> >> > we've already got firmware for its CF & SDIO variants in linux-firmware
-> >> > along with the 8388, 8682, 8686, and 8688.
-> >>
-> >> That'll teach me to not do all the research on this =)
-> >>
-> >> I pulled that number from the Malo firmware archive linked above.
-> >> (Malo claims to only work with 8335s, but yeah) I'm guessing that if
-> >> that firmware file is used, it'd be for a PCI variant of the 8385
-> >> chipset (given that such a thing exists) and that isn't supported by
-> >> the "libertas" driver.
-> >
-> > Malo supports the PCMCIA/CF variant of the 8385; not a PCI variant
-> > AFAICT.  I know of no PCI variant for the 8385, just CF, SDIO, and GSPI.
-> > But I find it curious that malo supports 8335+8385, given that the
-> > firmware interface of the 8385 and the 8335 are so different.  Unless
-> > they have special firmware, the 8385 is a fullmac device, while the 8335
-> > is a softmac device.  Enough differences exist that I'd expect them to
-> > be driven by separate drivers, otherwise the code would be quite ugly.
-> > Which is why we didn't try to shoehorn the 8335 or TopDog stuff into
-> > libertas.
-> 
-> You clearly know a hell of a lot more about the ins and outs of Marvel
-> chipsets that I do. =)
+A few LNA control related flags were also specified as a bitfields, however
+for some strange reason they were written in big-endian order this time.
+Fix this by using flags instead.
 
-Eh, *some* of the chipsets :)  Others (Lennert) know a lot more about
-later versions than I do.  But I never know everything or even enough of
-anything :)
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+---
+ drivers/net/wireless/ath/ath9k/eeprom.h     |   14 ++++++++++----
+ drivers/net/wireless/ath/ath9k/eeprom_def.c |   11 ++++++-----
+ 2 files changed, 16 insertions(+), 9 deletions(-)
 
-> I stand corrected.
-> 
-> So, to amend my previous request: We're after firmware for the softmac
-> 88w8335 chipset *only*.
-> 
-> Though it may be nicer if Marvell were to bless Malo's firmware
-> package (linked above) as this contains firmware for the PCI 88w8335,
-> USB 88w8338 and a file which claims to be for the PCMCIA/CF 88w8385.
-
-Yeah, though honestly I'd rather have the duplex firmware from MSSII for
-the 8335, since it can do AP mode too.  That does leave the 8338 (USB?)
-of course but we can probably get clarification on that too.  As with
-the 8335, I only have access to a 8335 Windows driver, but if we had a
-firmware extractor tool, I believe the Marvell Extranet firmware license
-covers embedded firmware from Windows .sys files too.
-
-And I think I might actually have a usb8338 too somewhere...
-
-Dan
-
+diff --git a/drivers/net/wireless/ath/ath9k/eeprom.h b/drivers/net/wireless/ath/ath9k/eeprom.h
+index 5766ce9..8a644fc 100644
+--- a/drivers/net/wireless/ath/ath9k/eeprom.h
++++ b/drivers/net/wireless/ath/ath9k/eeprom.h
+@@ -236,6 +236,15 @@
+ #define CTL_EDGE_TPOWER(_ctl) ((_ctl) & 0x3f)
+ #define CTL_EDGE_FLAGS(_ctl) (((_ctl) >> 6) & 0x03)
+ 
++#define LNA_CTL_BUF_MODE	BIT(0)
++#define LNA_CTL_ISEL_LO		BIT(1)
++#define LNA_CTL_ISEL_HI		BIT(2)
++#define LNA_CTL_BUF_IN		BIT(3)
++#define LNA_CTL_FEM_BAND	BIT(4)
++#define LNA_CTL_LOCAL_BIAS	BIT(5)
++#define LNA_CTL_FORCE_XPA	BIT(6)
++#define LNA_CTL_USE_ANT1	BIT(7)
++
+ enum eeprom_param {
+ 	EEP_NFTHRESH_5,
+ 	EEP_NFTHRESH_2,
+@@ -381,10 +390,7 @@ struct modal_eep_header {
+ 	u8 xatten2Margin[AR5416_MAX_CHAINS];
+ 	u8 ob_ch1;
+ 	u8 db_ch1;
+-	u8 useAnt1:1,
+-	    force_xpaon:1,
+-	    local_bias:1,
+-	    femBandSelectUsed:1, xlnabufin:1, xlnaisel:2, xlnabufmode:1;
++	u8 lna_ctl;
+ 	u8 miscBits;
+ 	u16 xpaBiasLvlFreq[3];
+ 	u8 futureModal[6];
+diff --git a/drivers/net/wireless/ath/ath9k/eeprom_def.c b/drivers/net/wireless/ath/ath9k/eeprom_def.c
+index e94216e..45f70b2 100644
+--- a/drivers/net/wireless/ath/ath9k/eeprom_def.c
++++ b/drivers/net/wireless/ath/ath9k/eeprom_def.c
+@@ -451,9 +451,10 @@ static void ath9k_hw_def_set_board_values(struct ath_hw *ah,
+ 		ath9k_hw_analog_shift_rmw(ah, AR_AN_TOP2,
+ 					  AR_AN_TOP2_LOCALBIAS,
+ 					  AR_AN_TOP2_LOCALBIAS_S,
+-					  pModal->local_bias);
++					  !!(pModal->lna_ctl &
++					     LNA_CTL_LOCAL_BIAS));
+ 		REG_RMW_FIELD(ah, AR_PHY_XPA_CFG, AR_PHY_FORCE_XPA_CFG,
+-			      pModal->force_xpaon);
++			      !!(pModal->lna_ctl & LNA_CTL_FORCE_XPA));
+ 	}
+ 
+ 	REG_RMW_FIELD(ah, AR_PHY_SETTLING, AR_PHY_SETTLING_SWITCH,
+@@ -1435,9 +1436,9 @@ static u8 ath9k_hw_def_get_num_ant_config(struct ath_hw *ah,
+ 
+ 	num_ant_config = 1;
+ 
+-	if (pBase->version >= 0x0E0D)
+-		if (pModal->useAnt1)
+-			num_ant_config += 1;
++	if (pBase->version >= 0x0E0D &&
++	    (pModal->lna_ctl & LNA_CTL_USE_ANT1))
++		num_ant_config += 1;
+ 
+ 	return num_ant_config;
+ }
+-- 
+1.7.3.2
 
