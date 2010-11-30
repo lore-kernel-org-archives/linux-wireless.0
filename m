@@ -1,41 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f46.google.com ([209.85.161.46]:59342 "EHLO
-	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756270Ab0KJPcL (ORCPT
+Received: from mail-gw0-f46.google.com ([74.125.83.46]:35301 "EHLO
+	mail-gw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751308Ab0K3VXt (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 10 Nov 2010 10:32:11 -0500
-Received: by fxm16 with SMTP id 16so450611fxm.19
-        for <linux-wireless@vger.kernel.org>; Wed, 10 Nov 2010 07:32:09 -0800 (PST)
-Message-ID: <4CDAB99D.7030100@lwfinger.net>
-Date: Wed, 10 Nov 2010 09:26:21 -0600
-From: Larry Finger <Larry.Finger@lwfinger.net>
+	Tue, 30 Nov 2010 16:23:49 -0500
+Received: by gwj20 with SMTP id 20so3010465gwj.19
+        for <linux-wireless@vger.kernel.org>; Tue, 30 Nov 2010 13:23:48 -0800 (PST)
 MIME-Version: 1.0
-To: "miloofr@gmail.com" <miloofr@gmail.com>
-CC: linux-wireless@vger.kernel.org
-Subject: Re: Question about Edimax 7811Un
-References: <AANLkTi=+0BOUaTs73jRMnJ=9qyNkqnBvMuKVTG4od9_+@mail.gmail.com>	<0022152d6729673f6a0494b1f2e6@google.com> <AANLkTi=PYCwTtNmt9Baw=mYPqzyUQsiBNDOBXGic++5_@mail.gmail.com>
-In-Reply-To: <AANLkTi=PYCwTtNmt9Baw=mYPqzyUQsiBNDOBXGic++5_@mail.gmail.com>
+In-Reply-To: <4CF55231.5000205@ti.com>
+References: <1290079951-16793-1-git-send-email-arik@wizery.com>
+ <1290079951-16793-18-git-send-email-arik@wizery.com> <4CF51CE8.9090809@ti.com>
+ <AANLkTimtk2qXYOVPo+WRyV1Jhe-Fk-7hvoctuAF35ik7@mail.gmail.com>
+ <4CF54A03.2090104@ti.com> <AANLkTinbFBXi9J5up65tV2Hp-5-0jDbbLuuCEn6ts2nJ@mail.gmail.com>
+ <4CF55231.5000205@ti.com>
+From: Arik Nemtsov <arik@wizery.com>
+Date: Tue, 30 Nov 2010 23:23:32 +0200
+Message-ID: <AANLkTi=72kjeJ5L9dUHmYuS1T8E-kKiGzB3t68gs7hWy@mail.gmail.com>
+Subject: Re: [PATCH 17/18] wl1271: Read MAC address from NVS file on HW startup
+To: Gery Kahn <geryk@ti.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Luciano Coelho <luciano.coelho@nokia.com>
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 11/10/2010 06:25 AM, miloofr@gmail.com wrote:
-> Hi,
-> I would want to know what is the current state of the 8191su wireless
-> driver. I have a wifi USB stick from EDIMAX, the 7811Un model, which is
-> supposed to have a 8192su chip inside.
-> It is not recognized neither from latest Ubuntu 10.10 nor openSUSE
-> 11.3 . However I have been able to make it work by compiling the
-> drivers proposed on the EDIMAX website, but this is only available for
-> 32 bits systems/kernels.
-> I saw that there were some discussion 2 months ago about this port
-> from 32 to 64 bits, what is the current state today?
+> Fully agree. Just set vif where u set wl and the solution would be synced
+> for your flow.
 
-What are the USB IDs for this device as shown by lsusb?
+There is no way to set the vif addr from wl1271_register_hw() since no
+vif has been created yet. The hardware was only just initialized..
 
-If the numbers are 0x7392:0x7611, 0x7392:0x7612, or 0x7392:0x7622, the device is
-supported by the r8712u driver in staging and is present in mainline kernel
-2.6.37-rc1. I can assure you that the driver works for both 32- and 64-bit systems.
+The vif addr is set from the perm address before add_interface is
+called (see ieee80211_if_add()). This means the last to write the MAC
+address effectively sets the vif addr.
 
-Larry
-
+Regards,
+Arik
