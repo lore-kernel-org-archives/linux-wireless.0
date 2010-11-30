@@ -1,32 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:48248 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751810Ab0KVPjp (ORCPT
+Received: from mail-ew0-f46.google.com ([209.85.215.46]:46441 "EHLO
+	mail-ew0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754094Ab0K3Iff (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 22 Nov 2010 10:39:45 -0500
-Subject: Re: Use case for the radiotap rate patch
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Roberto Riggio <roberto.riggio@create-net.org>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <4CE8F8D9.1020201@create-net.org>
-References: <4CE8F8D9.1020201@create-net.org>
-Content-Type: text/plain; charset="UTF-8"
-Date: Mon, 22 Nov 2010 07:39:43 -0800
-Message-ID: <1290440383.5718.2.camel@jlt3.sipsolutions.net>
+	Tue, 30 Nov 2010 03:35:35 -0500
+Received: by ewy5 with SMTP id 5so2557460ewy.19
+        for <linux-wireless@vger.kernel.org>; Tue, 30 Nov 2010 00:35:34 -0800 (PST)
+Subject: wireless.kernel.org update
+From: Thomas Novin <thomas@xyz.pp.se>
+Reply-To: thomas@xyz.pp.se
+To: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset="ISO-8859-15"
+Date: Tue, 30 Nov 2010 09:35:22 +0100
+Message-ID: <1291106122.13696.0.camel@thonov-ubuntu>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, 2010-11-21 at 11:47 +0100, Roberto Riggio wrote:
+Hello
 
-> Also, which would be the way to support the multi-rate retry chain from 
-> user-space?
-> I'm currently playing with some custom RC algorithms in users space 
-> using the
-> click modular router, but I cannot take advantage of the mrr.
+This page,
+http://wireless.kernel.org/en/users/Download#Getting_compat-wireless_on_Ubuntu, should be updated to include Maverick/10.10.
 
-radiotap now has a way to specify one attribute multiple times, so that
-should be used for MRR
+If I just try to install as instructed for other versions:
 
-johannes
+sudo apt-get install linux-backports-modules-wireless-lucid-generic
+
+I get:
+
+E: Unable to locate package
+linux-backports-modules-wireless-lucid-generic
+
+If I search backports*modules*wireless I find:
+
+linux-backports-modules-wireless-2.6.35-22-generic - compat-wireless
+Linux modules for version 2.6.35 on x86/x86_64
+linux-backports-modules-wireless-2.6.35-22-generic-pae - compat-wireless
+Linux modules for version 2.6.35 on x86
+linux-backports-modules-compat-wireless-2.6.36-2.6.35-23-generic -
+compat-wireless Linux modules for version 2.6.35 on x86/x86_64
+linux-backports-modules-compat-wireless-2.6.36-2.6.35-23-generic-pae -
+compat-wireless Linux modules for version 2.6.35 on x86
+linux-backports-modules-wireless-maverick-generic - Backported wireless
+drivers for generic kernel image
+linux-backports-modules-wireless-maverick-generic-pae - Backported
+wireless drivers for generic kernel image
+
+So the only package good for installing without having to re-install
+every kernel change is
+linux-backports-modules-wireless-maverick-generic, however that package
+is not installable.
+
+$ sudo apt-get install linux-backports-modules-wireless-maverick-generic
+Reading package lists... Done
+Building dependency tree       
+Reading state information... Done
+Some packages could not be installed. This may mean that you have
+requested an impossible situation or if you are using the unstable
+distribution that some required packages have not yet been created
+or been moved out of Incoming.
+The following information may help to resolve the situation:
+
+The following packages have unmet dependencies:
+ linux-backports-modules-wireless-maverick-generic : Depends:
+linux-backports-modules-wireless-2.6.35-23-generic but it is not
+installable
+E: Broken packages
+
+Something is broken in Ubuntu it seems?
+
+Rgds
 
