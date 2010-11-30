@@ -1,35 +1,27 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:47542 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752818Ab0KHRtI (ORCPT
+Received: from notes.denso-diam.com ([12.171.88.16]:1578 "EHLO
+	domino.denso-diam.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1752212Ab0K3Cvt (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 8 Nov 2010 12:49:08 -0500
-To: <sowani@gmail.com>
-Subject: Re: [PATCH 2.6.36 1/1] mac80211: fix for tx.c compiler warnings.
+	Mon, 29 Nov 2010 21:51:49 -0500
+To: linux-wireless@vger.kernel.org
+Subject: What is heavy clip?
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Date: Mon, 08 Nov 2010 18:49:06 +0100
-From: Johannes Berg <johannes@sipsolutions.net>
-Cc: <linux-wireless@vger.kernel.org>, <linux-kernel@vger.kernel.org>
-In-Reply-To: <4CD81EDD.1000309@gmail.com>
-References: <4CD81EDD.1000309@gmail.com>
-Message-ID: <7383627c9e4034d3837bec0475bf62e6@localhost>
+Message-ID: <OFE8C924C6.FACBA9CC-ON882577EB.000FA1CF-882577EB.000FB7A0@denso-diam.com>
+Date: Mon, 29 Nov 2010 18:51:22 -0800
+From: VICTOR_ROLLINGER@denso-diam.com
+Content-Type: text/plain; charset="US-ASCII"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 08 Nov 2010 21:31:33 +0530, Atul Sowani <sowani@gmail.com> wrote:
-> Added conditional compilation with CONFIG_MAC80211_MESH to avoid compile
-> time
-> warning about declared but unused variable.
+I have noticed that there is something called heavy clip which can be 
+enabled or disabled on an Atheros chipset  for certain channels, and is 
+never enabled for MKK or ETSI. However, I can't find out any other 
+information. 
 
-2.6.36? Really? a trivial warning fix for the stable tree? I don't think
-so...
+Can someone explain to me what heavy clip is, and what it's used for? 
 
+Thanks. 
 
-> +#ifdef CONFIG_MAC80211_MESH
->  	struct ieee80211s_hdr mesh_hdr;
-> +#endif
+Victor 
 
-Besides, it should be __maybe_unused.
-
-johannes
