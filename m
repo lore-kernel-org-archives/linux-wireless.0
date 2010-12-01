@@ -1,60 +1,116 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f46.google.com ([209.85.161.46]:54840 "EHLO
-	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756216Ab0LCAQY (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 2 Dec 2010 19:16:24 -0500
-Received: by fxm20 with SMTP id 20so1707877fxm.19
-        for <linux-wireless@vger.kernel.org>; Thu, 02 Dec 2010 16:16:23 -0800 (PST)
-From: Eliad Peller <eliad@wizery.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: <linux-wireless@vger.kernel.org>
-Subject: [PATCH v2] mac80211: fix dynamic-ps/pm_qos magic numbers
-Date: Fri,  3 Dec 2010 02:16:23 +0200
-Message-Id: <1291335383-17239-1-git-send-email-eliad@wizery.com>
+Received: from mail.atheros.com ([12.19.149.2]:13838 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751517Ab0LAHd7 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 1 Dec 2010 02:33:59 -0500
+Received: from mail.atheros.com ([10.10.20.105])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Tue, 30 Nov 2010 23:33:45 -0800
+From: Vasanthakumar Thiagarajan <vasanth@atheros.com>
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>
+Subject: [PATCH 09/26] ath9k: Enable extended synch for AR9485 to fix L0s recovery issue
+Date: Tue, 30 Nov 2010 23:32:38 -0800
+Message-ID: <1291188775-13707-10-git-send-email-vasanth@atheros.com>
+In-Reply-To: <1291188775-13707-1-git-send-email-vasanth@atheros.com>
+References: <1291188775-13707-1-git-send-email-vasanth@atheros.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-mac80211 uses pm_qos (/dev/network_latency) in order to determine the
-dynamic ps timeout (or disable the dynamic-ps at all in some cases).
-
-commit ff616381 added a comparison for the current network_latency
-against one high value (1900ms), and against the default value
-(2000sec, rather than the commented 2sec).
-
-however, the representation of 1900ms was incorrect:
-1900ms = 1900000us ( != 1900000000 )
-
-fix it by using USEC_TO_MSEC/SEC consts.
-
-Signed-off-by: Eliad Peller <eliad@wizery.com>
+Signed-off-by: Vasanthakumar Thiagarajan <vasanth@atheros.com>
 ---
-v1->2: better commit msg
+ drivers/net/wireless/ath/ath.h        |    1 +
+ drivers/net/wireless/ath/ath9k/hw.c   |    5 +++++
+ drivers/net/wireless/ath/ath9k/hw.h   |    2 ++
+ drivers/net/wireless/ath/ath9k/main.c |    3 +++
+ drivers/net/wireless/ath/ath9k/pci.c  |   12 ++++++++++++
+ 5 files changed, 23 insertions(+), 0 deletions(-)
 
- net/mac80211/mlme.c |    9 +++++----
- 1 files changed, 5 insertions(+), 4 deletions(-)
-
-diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index dfc4a31..e01d6fb 100644
---- a/net/mac80211/mlme.c
-+++ b/net/mac80211/mlme.c
-@@ -619,11 +619,12 @@ void ieee80211_recalc_ps(struct ieee80211_local *local, s32 latency)
- 			/*
- 			 * Go to full PSM if the user configures a very low
- 			 * latency requirement.
--			 * The 2 second value is there for compatibility until
--			 * the PM_QOS_NETWORK_LATENCY is configured with real
--			 * values.
-+			 * The 2000 second value is there for compatibility
-+			 * until the PM_QOS_NETWORK_LATENCY is configured
-+			 * with real values.
- 			 */
--			if (latency > 1900000000 && latency != 2000000000)
-+			if (latency > (1900 * USEC_PER_MSEC) &&
-+			    latency != (2000 * USEC_PER_SEC))
- 				timeout = 0;
- 			else
- 				timeout = 100;
+diff --git a/drivers/net/wireless/ath/ath.h b/drivers/net/wireless/ath/ath.h
+index 26bdbee..f913db4 100644
+--- a/drivers/net/wireless/ath/ath.h
++++ b/drivers/net/wireless/ath/ath.h
+@@ -131,6 +131,7 @@ struct ath_bus_ops {
+ 	void (*read_cachesize)(struct ath_common *common, int *csz);
+ 	bool (*eeprom_read)(struct ath_common *common, u32 off, u16 *data);
+ 	void (*bt_coex_prep)(struct ath_common *common);
++	void (*extn_synch_en)(struct ath_common *common);
+ };
+ 
+ struct ath_common {
+diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
+index 513ae64..b1d3c1e 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.c
++++ b/drivers/net/wireless/ath/ath9k/hw.c
+@@ -1984,6 +1984,11 @@ int ath9k_hw_fill_cap_info(struct ath_hw *ah)
+ 
+ 
+ 
++	if (AR_SREV_9485_10(ah)) {
++		pCap->pcie_lcr_extsync_en = true;
++		pCap->pcie_lcr_offset = 0x80;
++	}
++
+ 	return 0;
+ }
+ 
+diff --git a/drivers/net/wireless/ath/ath9k/hw.h b/drivers/net/wireless/ath/ath9k/hw.h
+index bde1df3..1eb6a14 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.h
++++ b/drivers/net/wireless/ath/ath9k/hw.h
+@@ -210,6 +210,8 @@ struct ath9k_hw_capabilities {
+ 	u8 rx_status_len;
+ 	u8 tx_desc_len;
+ 	u8 txs_len;
++	u16 pcie_lcr_offset;
++	bool pcie_lcr_extsync_en;
+ };
+ 
+ struct ath9k_ops_config {
+diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
+index f026a03..581dbd7 100644
+--- a/drivers/net/wireless/ath/ath9k/main.c
++++ b/drivers/net/wireless/ath/ath9k/main.c
+@@ -1188,6 +1188,9 @@ static int ath9k_start(struct ieee80211_hw *hw)
+ 
+ 	pm_qos_update_request(&sc->pm_qos_req, 55);
+ 
++	if (ah->caps.pcie_lcr_extsync_en && common->bus_ops->extn_synch_en)
++		common->bus_ops->extn_synch_en(common);
++
+ mutex_unlock:
+ 	mutex_unlock(&sc->mutex);
+ 
+diff --git a/drivers/net/wireless/ath/ath9k/pci.c b/drivers/net/wireless/ath/ath9k/pci.c
+index 09f69a9..c5a523d 100644
+--- a/drivers/net/wireless/ath/ath9k/pci.c
++++ b/drivers/net/wireless/ath/ath9k/pci.c
+@@ -104,11 +104,23 @@ static void ath_pci_bt_coex_prep(struct ath_common *common)
+ 	pci_write_config_byte(pdev, ATH_PCIE_CAP_LINK_CTRL, aspm);
+ }
+ 
++static void ath_pci_extn_synch_enable(struct ath_common *common)
++{
++	struct ath_softc *sc = (struct ath_softc *) common->priv;
++	struct pci_dev *pdev = to_pci_dev(sc->dev);
++	u8 lnkctl;
++
++	pci_read_config_byte(pdev, sc->sc_ah->caps.pcie_lcr_offset, &lnkctl);
++	lnkctl |= PCI_EXP_LNKCTL_ES;
++	pci_write_config_byte(pdev, sc->sc_ah->caps.pcie_lcr_offset, lnkctl);
++}
++
+ static const struct ath_bus_ops ath_pci_bus_ops = {
+ 	.ath_bus_type = ATH_PCI,
+ 	.read_cachesize = ath_pci_read_cachesize,
+ 	.eeprom_read = ath_pci_eeprom_read,
+ 	.bt_coex_prep = ath_pci_bt_coex_prep,
++	.extn_synch_en = ath_pci_extn_synch_enable,
+ };
+ 
+ static int ath_pci_probe(struct pci_dev *pdev, const struct pci_device_id *id)
 -- 
 1.7.0.4
 
