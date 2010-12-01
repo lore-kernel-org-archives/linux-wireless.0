@@ -1,39 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yx0-f174.google.com ([209.85.213.174]:35009 "EHLO
-	mail-yx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754715Ab0LTOyn (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 20 Dec 2010 09:54:43 -0500
-Received: by yxt3 with SMTP id 3so1328996yxt.19
-        for <linux-wireless@vger.kernel.org>; Mon, 20 Dec 2010 06:54:42 -0800 (PST)
-From: Sujith <m.sujith@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Message-ID: <19727.28131.342814.867320@gargle.gargle.HOWL>
-Date: Mon, 20 Dec 2010 20:23:23 +0530
-To: "Jonas H." <jonas@lophus.org>
-Cc: linux-wireless@vger.kernel.org
-Subject: Recent suspend/resume fix for which devices?
-In-Reply-To: <4D0E19EB.3070802@lophus.org>
-References: <4D0E19EB.3070802@lophus.org>
+Received: from mail.perches.com ([173.55.12.10]:2053 "EHLO mail.perches.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751630Ab0LAR2T (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 1 Dec 2010 12:28:19 -0500
+Subject: Re: [ath9k-devel] [PATCH wireless-next] ath: Rename ath_print to
+ ath_debug
+From: Joe Perches <joe@perches.com>
+To: Felix Fietkau <nbd@openwrt.org>
+Cc: "Luis R. Rodriguez" <mcgrof@gmail.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	ath9k-devel@lists.ath9k.org, peter@stuge.se,
+	linux-kernel@vger.kernel.org
+In-Reply-To: <1291223825.1845.170.camel@Joe-Laptop>
+References: <5febb0e1fba0ec2bb77f6ade8b251ba0edf4614c.1290988277.git.joe@perches.com>
+	 <AANLkTinc251WbwuLqFbOZ5ipNGZW7=wub3DoWwy42=+e@mail.gmail.com>
+	 <20101129060732.5130.qmail@stuge.se> <4CF42C17.2070500@openwrt.org>
+	 <1291081185.16349.133.camel@Joe-Laptop> <4CF464D6.2020507@openwrt.org>
+	 <1291148375.18026.342.camel@Joe-Laptop>
+	 <AANLkTik2qtGUgkZYSjcEH9jHHsevKnxOvz4s6On94U9o@mail.gmail.com>
+	 <1291213675.1845.12.camel@Joe-Laptop>  <4CF65DB9.3050007@openwrt.org>
+	 <1291223825.1845.170.camel@Joe-Laptop>
+Content-Type: text/plain; charset="UTF-8"
+Date: Wed, 01 Dec 2010 09:28:17 -0800
+Message-ID: <1291224497.1845.172.camel@Joe-Laptop>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Jonas H. wrote:
-> Hello!
-> 
-> My AR9285 wireless card, used with the ath9k driver, stops working after 
-> supsend/resume - I have to reboot to make it work again.
-> 
-> Trying to figure out whether this is fixed for 2.6.37 I noticed commit 
-> f933ebed (in Linus' tree) "ath9k_htc: Fix suspend/resume. 
-> The HW has to be set to FULLSLEEP mode during suspend, ...".
-> 
-> My question is: Does that fix also apply to my card? I realize the patch 
-> only applies to ath9k_htc but I couldn't figure what "htc" stands for in 
-> this context.
+> +#define ath_emerg(common, fmt, ...)				\
+> +	ath_printk(KERN_EMERG, common, fmt, ##__VA_ARGS)
 
-Nope, that commit is not relevant for ath9k, which is the driver for your card.
-ath9k_htc is a different driver.
+Sorry, that patch is defective. (and an old version)
 
-Sujith
+That's what I get for not using git format-patch to send it.
+I'll resend it appropriately.
+
