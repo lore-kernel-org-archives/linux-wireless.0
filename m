@@ -1,73 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iw0-f174.google.com ([209.85.214.174]:45437 "EHLO
-	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757358Ab0LBM3v convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 2 Dec 2010 07:29:51 -0500
-Received: by iwn42 with SMTP id 42so900524iwn.19
-        for <linux-wireless@vger.kernel.org>; Thu, 02 Dec 2010 04:29:51 -0800 (PST)
+Received: from va3ehsobe006.messaging.microsoft.com ([216.32.180.16]:1218 "EHLO
+	VA3EHSOBE009.bigfish.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1750990Ab0LAQ54 convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 1 Dec 2010 11:57:56 -0500
+From: "Heyendal, Carl" <CHeyendal@stanleyworks.com>
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Date: Wed, 1 Dec 2010 11:55:02 -0500
+Subject: RE: wireless in linux
+Message-ID: <1D6034426110564DA0DEA9EE9793B38357E3663A92@NBE-MBX01.americas.swk.pri>
+References: <1D6034426110564DA0DEA9EE9793B38357E35E4823@NBE-MBX01.americas.swk.pri>
+ <AANLkTimXDZLm7CAn7VyRPxQscTfHwTNALbDOh3LpjSQc@mail.gmail.com>
+In-Reply-To: <AANLkTimXDZLm7CAn7VyRPxQscTfHwTNALbDOh3LpjSQc@mail.gmail.com>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-In-Reply-To: <20101202122147.GN12908@vasanth-laptop>
-References: <1291288031-3409-1-git-send-email-vasanth@atheros.com>
- <1291288031-3409-17-git-send-email-vasanth@atheros.com> <AANLkTi=Fb0HA1DbaRp21kOS3x4-s_Oh+UZok2jNK3-PG@mail.gmail.com>
- <20101202120925.GM12908@vasanth-laptop> <AANLkTimmHLG8PU=1AweKqcPnyF4=6q3QNmA2nVeV00fh@mail.gmail.com>
- <20101202122147.GN12908@vasanth-laptop>
-From: Julian Calaby <julian.calaby@gmail.com>
-Date: Thu, 2 Dec 2010 23:29:30 +1100
-Message-ID: <AANLkTinJy1rgPrGzYggctjMf7qqtq9Zjz-ahj4CEyRgM@mail.gmail.com>
-Subject: Re: [PATCH V2 16/27] ath9k_hw: Read and configure antenna diversity
- control for AR9485
-To: Vasanthakumar Thiagarajan <vasanth@atheros.com>
-Cc: Vasanth Thiagarajan <Vasanth.Thiagarajan@atheros.com>,
-	"linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Dec 2, 2010 at 23:21, Vasanthakumar Thiagarajan
-<vasanth@atheros.com> wrote:
-> On Thu, Dec 02, 2010 at 05:46:05PM +0530, Julian Calaby wrote:
->> On Thu, Dec 2, 2010 at 23:09, Vasanthakumar Thiagarajan
->> <vasanth@atheros.com> wrote:
->> > No, these are to separate things.
->>
->> Are you sure? you seem to be doing:
->>
->> if (!AR_SREV_9485(ah)) {
->>     // CODE
->> }
->>
->> if (AR_SREV_9485(ah)) {
->>     // MORE CODE
->> }
->>
->> which I'm certain can be simlified as:
->>
->> if (!AR_SREV_9485(ah)) {
->>     // CODE
->> } else {
->>     // MORE CODE
->> }
->>
->> unless you're telling me that the value of AR_SREV_9485(ah) can change
->> in the course of the first statement.
->
-> I mean the register configuration. In one case, chain 1 and chain 2
-> are irrelevant for AR9485. The second is antenna diversity is
-> enabled only for AR9485. Putting them in if..else would be
-> misleading, though is can be in if..else.
+ 
 
-Ah, fair enough then.
+> -----Original Message-----
+> From: Luis R. Rodriguez [mailto:mcgrof@gmail.com] 
+> Sent: Tuesday, November 30, 2010 5:16 PM
+> To: Heyendal, Carl
+> Cc: linux-wireless@vger.kernel.org
+> Subject: Re: wireless in linux
+> 
+> On Tue, Nov 30, 2010 at 2:05 PM, Heyendal, Carl 
+> <CHeyendal@stanleyworks.com> wrote:
+> >
+> > I'm a somewhat of a newbie to Linux. So far I have been 
+> impressed with the information that I have been able to 
+> readily find to get things done in Linux amongst all the 
+> reference books, on-line tutorials, and various Linux 
+> communities. However wireless in Linux has been a different story.
+> >
+> > A few weeks ago I was asked to provide wireless 
+> functionality for an embedded system. A simple USB wireless 
+> adapter to connect to an access point was all. I thought it 
+> shouldn't be too much of a challenge. However adding wireless 
+> capability has truly been a formidable challenge. I'm still 
+> not there yet. I'm staring right now at the latest 
+> wpa_supplicant readme with all the choices that I need to 
+> make. I'll be lucky if it works. It's really been a 
+> piece-meal effort so far.
+> >
+> > The only information I can find is very limited to it's 
+> context and is geared to individuals who have intimate 
+> knowledge of Linux wireless. How does one get up to speed 
+> with wireless-linux with the apparent lack of good general 
+> information regarding what's needed in a wireless linux kernel?
+> >
+> > Are there any reference books, tutorials, howto's, wireless 
+> enabled kernels...anything that someone can point me to that 
+> would help?
+> 
+> http://lmgtfy.com/?q=Linux+wireless
+> 
+>   Luis
+> 
+> 
 
-I was just thinking that this would save a check, though I'm guessing
-this is setup code so it's not that time sensitive.
+This is more what I was complaining about.
 
-Thanks,
+http://lmgtfy.com/?q=%22linux%20wireless%20for%20newbs%22
 
--- 
-Julian Calaby
+;-)
 
-Email: julian.calaby@gmail.com
-Profile: http://www.google.com/profiles/julian.calaby/
-.Plan: http://sites.google.com/site/juliancalaby/
+
