@@ -1,58 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw0-f46.google.com ([74.125.83.46]:62050 "EHLO
-	mail-gw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752269Ab0LWHva convert rfc822-to-8bit (ORCPT
+Received: from mail-fx0-f46.google.com ([209.85.161.46]:38406 "EHLO
+	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750990Ab0LAQzK (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 23 Dec 2010 02:51:30 -0500
-Received: by gwj20 with SMTP id 20so3442102gwj.19
-        for <linux-wireless@vger.kernel.org>; Wed, 22 Dec 2010 23:51:29 -0800 (PST)
+	Wed, 1 Dec 2010 11:55:10 -0500
+Received: by fxm20 with SMTP id 20so248832fxm.19
+        for <linux-wireless@vger.kernel.org>; Wed, 01 Dec 2010 08:55:08 -0800 (PST)
+Message-ID: <4CF67DE3.7090204@lwfinger.net>
+Date: Wed, 01 Dec 2010 10:54:59 -0600
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-In-Reply-To: <1293052778.14423.43.camel@powerslave>
-References: <1293028057-6212-1-git-send-email-arik@wizery.com>
- <1293028057-6212-6-git-send-email-arik@wizery.com> <1293052778.14423.43.camel@powerslave>
-From: Arik Nemtsov <arik@wizery.com>
-Date: Thu, 23 Dec 2010 09:51:14 +0200
-Message-ID: <AANLkTi=32V_O+vDgUq2Z_UhLZArFxAnqzFe3oq8AoJgj@mail.gmail.com>
-Subject: Re: [PATCH v2 05/18] wl1271: AP mode - workaround for FW bug on
- station remove
-To: Luciano Coelho <luciano.coelho@nokia.com>
-Cc: linux-wireless@vger.kernel.org
+To: Helmut Schaa <helmut.schaa@googlemail.com>
+CC: Mohammed Shafi <shafi.wireless@gmail.com>,
+	linux-wireless@vger.kernel.org, johannes@sipsolutions.net
+Subject: Re: [PATCH] mac80211: Update last_tx_rate only for data frames
+References: <1291202302-9698-1-git-send-email-helmut.schaa@googlemail.com> <AANLkTi=_61HVmSBR-9v3ukVw-mpouoaFwYE8cpfa96wH@mail.gmail.com> <201012011540.45031.helmut.schaa@googlemail.com>
+In-Reply-To: <201012011540.45031.helmut.schaa@googlemail.com>
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Dec 22, 2010 at 23:19, Luciano Coelho <luciano.coelho@nokia.com> wrote:
-> On Wed, 2010-12-22 at 16:27 +0200, ext Arik Nemtsov wrote:
->> Sometimes an event indicating station removal is not sent up by
->> firmware. We work around this by always indicating success in when
->> a wait for the event timeouts.
+On 12/01/2010 08:40 AM, Helmut Schaa wrote:
+> Hi,
+> 
+> Am Mittwoch 01 Dezember 2010 schrieb Mohammed Shafi:
+>> On Wed, Dec 1, 2010 at 4:48 PM, Helmut Schaa
+>> <helmut.schaa@googlemail.com> wrote:
+>>> The last_tx_rate field was also updated for non-data frames that are
+>>> often sent with a lower rate (for example management frames at 1 Mbps).
+>>> This is confusing when the data rate is actually much higher.
+>>>
+>>> Hence, only update the last_tx_rate field with tx rate information
+>>> gathered from the last data frames.
 >>
->> Temporary workaround until a FW fix is introduced.
->>
->> Signed-off-by: Arik Nemtsov <arik@wizery.com>
->> ---
->
-> [...]
->
->> @@ -1108,9 +1122,11 @@ int wl1271_cmd_remove_sta(struct wl1271 *wl, u8 hlid)
->>               goto out_free;
->>       }
->>
->> -     ret = wl1271_cmd_wait_for_event(wl, STA_REMOVE_COMPLETE_EVENT_ID);
->> -     if (ret < 0)
->> -             wl1271_error("cmd remove sta event completion error");
->> +     /*
->> +      * We are ok with a timeout here. The event is sometimes not sent
->> +      * due to a firmware bug.
->> +      */
->> +     wl1271_cmd_wait_for_event_or_timeout(wl, STA_REMOVE_COMPLETE_EVENT_ID);
->
-> Why wait for the event at all then?
->
+>> Hi Helmut,
+>>             I have a doubt,ideally should not this be taken care by the driver ?
+> 
+> Sorry, I don't get your point. How should that be handled by the driver? Could
+> you please elaborate?
+> 
+> last_tx_rate is part of the sta_info struct and is documented as:
+> 
+> 207  * @last_tx_rate: rate used for last transmit, to report to userspace as
+> 208  *      "the" transmit rate
+> 
+> So, the fields sole purpose is to report the "current" tx rate to user space.
+> A normal user (IMO) would like to see the current tx rate that is used for
+> data frames and not occasionally a 1Mbps because a management frame was the
+> last sent frame.
 
-Well the bug is pretty rare (something like 1 in 100). Most of the
-time we get the event immediately. This way a station can reconnect
-very quickly in most cases.
-
-Regards,
-Arik
+In the openSUSE forums, we occasionally get a confused user that says "the
+wireless only runs at 1 Mb/s" because that is what iwconfig says. On inspection,
+the throughput is much higher. I vote for reporting the last data frame rate and
+ignore management frames.
