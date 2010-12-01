@@ -1,49 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:43686 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750759Ab0LNHvy (ORCPT
+Received: from mail-yx0-f174.google.com ([209.85.213.174]:58926 "EHLO
+	mail-yx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753684Ab0LACTS (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 14 Dec 2010 02:51:54 -0500
-Subject: Re: [PATCH] nl80211: Add notification for dropped Deauth/Disassoc
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Jouni Malinen <j@w1.fi>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <20101213220048.GA24752@jm.kir.nu>
-References: <20101213220048.GA24752@jm.kir.nu>
-Content-Type: text/plain; charset="UTF-8"
-Date: Tue, 14 Dec 2010 08:51:51 +0100
-Message-ID: <1292313111.3569.7.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+	Tue, 30 Nov 2010 21:19:18 -0500
+Received: by mail-yx0-f174.google.com with SMTP id 3so2622320yxt.19
+        for <linux-wireless@vger.kernel.org>; Tue, 30 Nov 2010 18:19:18 -0800 (PST)
+From: Javier Cardona <javier@cozybit.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: Javier Cardona <javier@cozybit.com>,
+	Steve Derosier <steve@cozybit.com>, devel@lists.open80211s.org,
+	linux-wireless@vger.kernel.org, Jiri Slaby <jirislaby@gmail.com>,
+	Nick Kossifidis <mickflemm@gmail.com>,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	Bob Copeland <me@bobcopeland.com>
+Subject: [PATCH 3/3] ath5k: Put the right tsf value in mesh beacons
+Date: Tue, 30 Nov 2010 18:18:39 -0800
+Message-Id: <1291169919-3867-4-git-send-email-javier@cozybit.com>
+In-Reply-To: <1291169919-3867-1-git-send-email-javier@cozybit.com>
+References: <1291169919-3867-1-git-send-email-javier@cozybit.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2010-12-14 at 00:00 +0200, Jouni Malinen wrote:
+---
+ drivers/net/wireless/ath/ath5k/base.c |    3 ++-
+ 1 files changed, 2 insertions(+), 1 deletions(-)
 
-> @@ -1539,12 +1539,30 @@ ieee80211_drop_unencrypted_mgmt(struct i
->  	if (rx->sta && test_sta_flags(rx->sta, WLAN_STA_MFP)) {
->  		if (unlikely(!ieee80211_has_protected(fc) &&
->  			     ieee80211_is_unicast_robust_mgmt_frame(rx->skb) &&
-> -			     rx->key))
-> +			     rx->key)) {
-> +			if (ieee80211_is_deauth(fc))
-> +				cfg80211_send_unprot_deauth(rx->sdata->dev,
-> +							    rx->skb->data,
-> +							    rx->skb->len);
-
-This is the RX path.
-
-> +void cfg80211_send_unprot_disassoc(struct net_device *dev, const u8 *buf,
-> +				   size_t len)
-> +{
-> +	struct wireless_dev *wdev = dev->ieee80211_ptr;
-> +	struct wiphy *wiphy = wdev->wiphy;
-> +	struct cfg80211_registered_device *rdev = wiphy_to_dev(wiphy);
-> +
-> +	wdev_lock(wdev);
-> +	nl80211_send_unprot_disassoc(rdev, dev, buf, len, GFP_KERNEL);
-
-And this uses GFP_KERNEL. Surely that can't be right?
-
-johannes
+diff --git a/drivers/net/wireless/ath/ath5k/base.c b/drivers/net/wireless/ath/ath5k/base.c
+index 44f3050..6b06754 100644
+--- a/drivers/net/wireless/ath/ath5k/base.c
++++ b/drivers/net/wireless/ath/ath5k/base.c
+@@ -1889,7 +1889,8 @@ ath5k_beacon_send(struct ath5k_softc *sc)
+ 		sc->bmisscount = 0;
+ 	}
+ 
+-	if (sc->opmode == NL80211_IFTYPE_AP && sc->num_ap_vifs > 1) {
++	if ((sc->opmode == NL80211_IFTYPE_AP && sc->num_ap_vifs > 1) ||
++			sc->opmode == NL80211_IFTYPE_MESH_POINT) {
+ 		u64 tsf = ath5k_hw_get_tsf64(ah);
+ 		u32 tsftu = TSF_TO_TU(tsf);
+ 		int slot = ((tsftu % sc->bintval) * ATH_BCBUF) / sc->bintval;
+-- 
+1.7.1
 
