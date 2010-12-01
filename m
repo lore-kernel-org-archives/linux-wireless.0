@@ -1,72 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.19.149.2]:13835 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751517Ab0LAHdi (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 1 Dec 2010 02:33:38 -0500
-Received: from mail.atheros.com ([10.10.20.105])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Tue, 30 Nov 2010 23:33:24 -0800
-From: Vasanthakumar Thiagarajan <vasanth@atheros.com>
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>
-Subject: [PATCH 06/26] ath9k_hw: Eeeprom changes for AR9485
-Date: Tue, 30 Nov 2010 23:32:35 -0800
-Message-ID: <1291188775-13707-7-git-send-email-vasanth@atheros.com>
-In-Reply-To: <1291188775-13707-1-git-send-email-vasanth@atheros.com>
-References: <1291188775-13707-1-git-send-email-vasanth@atheros.com>
+Received: from mail-qy0-f181.google.com ([209.85.216.181]:52582 "EHLO
+	mail-qy0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754240Ab0LANRB convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 1 Dec 2010 08:17:01 -0500
+Received: by qyk12 with SMTP id 12so9007962qyk.19
+        for <linux-wireless@vger.kernel.org>; Wed, 01 Dec 2010 05:17:01 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <1291169919-3867-2-git-send-email-javier@cozybit.com>
+References: <1291169919-3867-1-git-send-email-javier@cozybit.com>
+	<1291169919-3867-2-git-send-email-javier@cozybit.com>
+Date: Wed, 1 Dec 2010 08:16:58 -0500
+Message-ID: <AANLkTin3G2=T_qMSQdvXgUShtVSpg+MeH4EZX10QU9OQ@mail.gmail.com>
+Subject: Re: [PATCH 1/3] ath5k: Fix beaconing in mesh mode
+From: Bob Copeland <me@bobcopeland.com>
+To: Javier Cardona <javier@cozybit.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	Steve Derosier <steve@cozybit.com>, devel@lists.open80211s.org,
+	linux-wireless@vger.kernel.org, Jiri Slaby <jirislaby@gmail.com>,
+	Nick Kossifidis <mickflemm@gmail.com>,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Calibration data are stored at 4k address (0xfff). The cal data
-for AR9485 is not compressed so its lengh can exceed 1024 limit,
-take care of that.
+On Tue, Nov 30, 2010 at 9:18 PM, Javier Cardona <javier@cozybit.com> wrote:
+> This patch fixes the oops below when attempting to bring up a mesh
+> interface on ath5k hardware.
+>
+> [  128.933099] kernel BUG at drivers/net/wireless/ath/ath5k/base.c:197!
+> [  128.933099] invalid opcode: 0000 [#1]
+> (...)
+> [  128.933099] Call Trace:
+> [  128.933099]  [<c83b77fa>] ? ath5k_beacon_update+0x57/0x1f8 [ath5k]
+> [  128.933099]  [<c02d9a40>] ? __sysfs_add_one+0x28/0x76
+> [  128.933099]  [<c83b830e>] ? ath5k_bss_info_changed+0x13f/0x173
+> [ath5k]
+> [  128.933099]  [<c82ff629>] ? ieee80211_config_beacon+0xc0/0x17e
+> [mac80211]
+> [  128.933099]  [<c82f073e>] ?
+> ieee80211_bss_info_change_notify+0x182/0x18b [mac80211]
+> [  128.933099]  [<c83b81cf>] ? ath5k_bss_info_changed+0x0/0x173 [ath5k]
+> [  128.933099]  [<c82ff6d6>] ? ieee80211_config_beacon+0x16d/0x17e
+> [mac80211]
+> [  128.933099]  [<c82ff753>] ? ieee80211_add_beacon+0x34/0x39 [mac80211]
+> [  128.933099]  [<c830a4ed>] ? ieee80211s_init+0xf8/0x10f [mac80211]
+> [  128.933099]  [<c830a5df>] ? ieee80211_mesh_init_sdata+0xdb/0x154 [mac80211]
+> ---
+>  drivers/net/wireless/ath/ath5k/base.c |    8 +++++---
+>  1 files changed, 5 insertions(+), 3 deletions(-)
+>
+> diff --git a/drivers/net/wireless/ath/ath5k/base.c b/drivers/net/wireless/ath/ath5k/base.c
+> index a8d380a..73c7118 100644
+> --- a/drivers/net/wireless/ath/ath5k/base.c
+> +++ b/drivers/net/wireless/ath/ath5k/base.c
+> @@ -1921,8 +1921,9 @@ ath5k_beacon_send(struct ath5k_softc *sc)
+>                /* NB: hw still stops DMA, so proceed */
+>        }
+>
+> -       /* refresh the beacon for AP mode */
+> -       if (sc->opmode == NL80211_IFTYPE_AP)
+> +       /* refresh the beacon for AP or MESH mode */
+> +       if (sc->opmode == NL80211_IFTYPE_AP ||
+> +                       sc->opmode == NL80211_IFTYPE_MESH_POINT)
+>                ath5k_beacon_update(sc->hw, vif);
 
-Signed-off-by: Vasanthakumar Thiagarajan <vasanth@atheros.com>
----
- drivers/net/wireless/ath/ath9k/ar9003_eeprom.c |    8 ++++++--
- drivers/net/wireless/ath/ath9k/ar9003_eeprom.h |    1 +
- 2 files changed, 7 insertions(+), 2 deletions(-)
+Do you need to update the beacon this often or just once?
+Adhoc doesn't need to do this, for example, because it doesn't
+need the TIM; I don't know about mesh.
 
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
-index 4aecc10..6cbfbfa 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
-@@ -3317,7 +3317,10 @@ static int ar9300_eeprom_restore_internal(struct ath_hw *ah,
- 	memcpy(mptr, &ar9300_default, mdata_size);
- 
- 	read = ar9300_read_eeprom;
--	cptr = AR9300_BASE_ADDR;
-+	if (AR_SREV_9485(ah))
-+		cptr = AR9300_BASE_ADDR_4K;
-+	else
-+		cptr = AR9300_BASE_ADDR;
- 	ath_print(common, ATH_DBG_EEPROM,
- 		"Trying EEPROM accesss at Address 0x%04x\n", cptr);
- 	if (ar9300_check_eeprom_header(ah, read, cptr))
-@@ -3360,7 +3363,8 @@ found:
- 			  "Found block at %x: code=%d ref=%d"
- 			  "length=%d major=%d minor=%d\n", cptr, code,
- 			  reference, length, major, minor);
--		if (length >= 1024) {
-+		if ((!AR_SREV_9485(ah) && length >= 1024) ||
-+		    (AR_SREV_9485(ah) && length >= (4 * 1024))) {
- 			ath_print(common, ATH_DBG_EEPROM,
- 				  "Skipping bad header\n");
- 			cptr -= COMP_HDR_LEN;
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.h b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.h
-index 57f64db..d189c87 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.h
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.h
-@@ -78,6 +78,7 @@
- #define AR9300_EEPROM_SIZE (16*1024)
- #define FIXED_CCA_THRESHOLD 15
- 
-+#define AR9300_BASE_ADDR_4K 0xfff
- #define AR9300_BASE_ADDR 0x3ff
- #define AR9300_BASE_ADDR_512 0x1ff
- 
 -- 
-1.7.0.4
-
+Bob Copeland %% www.bobcopeland.com
