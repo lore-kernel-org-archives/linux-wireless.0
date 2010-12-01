@@ -1,58 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qy0-f181.google.com ([209.85.216.181]:47937 "EHLO
-	mail-qy0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752964Ab0LGW5w convert rfc822-to-8bit (ORCPT
+Received: from mail-fx0-f46.google.com ([209.85.161.46]:53200 "EHLO
+	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753385Ab0LAPPP (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 7 Dec 2010 17:57:52 -0500
-Received: by qyk12 with SMTP id 12so477783qyk.19
-        for <linux-wireless@vger.kernel.org>; Tue, 07 Dec 2010 14:57:52 -0800 (PST)
+	Wed, 1 Dec 2010 10:15:15 -0500
+Received: by fxm20 with SMTP id 20so151544fxm.19
+        for <linux-wireless@vger.kernel.org>; Wed, 01 Dec 2010 07:15:14 -0800 (PST)
+From: Helmut Schaa <helmut.schaa@googlemail.com>
+To: Mohammed Shafi <shafi.wireless@gmail.com>
+Subject: Re: [PATCH] mac80211: Update last_tx_rate only for data frames
+Date: Wed, 1 Dec 2010 16:14:06 +0100
+Cc: linux-wireless@vger.kernel.org, johannes@sipsolutions.net,
+	"John W. Linville" <linville@tuxdriver.com>
+References: <1291202302-9698-1-git-send-email-helmut.schaa@googlemail.com> <AANLkTi=_61HVmSBR-9v3ukVw-mpouoaFwYE8cpfa96wH@mail.gmail.com> <201012011540.45031.helmut.schaa@googlemail.com>
+In-Reply-To: <201012011540.45031.helmut.schaa@googlemail.com>
 MIME-Version: 1.0
-In-Reply-To: <1291755360-21570-1-git-send-email-zajec5@gmail.com>
-References: <1291755360-21570-1-git-send-email-zajec5@gmail.com>
-From: =?ISO-8859-1?Q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>
-Date: Tue, 7 Dec 2010 23:57:31 +0100
-Message-ID: <AANLkTikp9ErFopLZVmXMjN3tXF2L62SwEEcujKeOBLYC@mail.gmail.com>
-Subject: Re: [PATCH 0/4] Make N-PHY support experimental
-To: =?ISO-8859-2?Q?Rafa=B3_Mi=B3ecki?= <zajec5@gmail.com>
-Cc: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>,
-	b43-dev@lists.infradead.org
-Content-Type: text/plain; charset=UTF-8
+Content-Type: Text/Plain;
+  charset="us-ascii"
+Message-Id: <201012011614.07163.helmut.schaa@googlemail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2010/12/7 Rafał Miłecki <zajec5@gmail.com>:
-> Finally, thanks for Larry and Francesco I got b43 working with BCM4328 chipset!
+Am Mittwoch 01 Dezember 2010 schrieb Helmut Schaa:
+> Am Mittwoch 01 Dezember 2010 schrieb Mohammed Shafi:
+> > On Wed, Dec 1, 2010 at 4:48 PM, Helmut Schaa
+> > <helmut.schaa@googlemail.com> wrote:
+> > > The last_tx_rate field was also updated for non-data frames that are
+> > > often sent with a lower rate (for example management frames at 1 Mbps).
+> > > This is confusing when the data rate is actually much higher.
+> > >
+> > > Hence, only update the last_tx_rate field with tx rate information
+> > > gathered from the last data frames.
+> >
+> > Hi Helmut,
+> >             I have a doubt,ideally should not this be taken care by the driver ?
+> 
+> Sorry, I don't get your point. How should that be handled by the driver? Could
+> you please elaborate?
 
-Do you mean BCM4321 (14e4:4328)? BCM4328 is AFAIK handled by brcmfmac.
+Ahh, did you mean that should be taken care of by the rate control algorithm?
 
->
-> It's not perfectly stable yet, but scanning and associating to open network
-> works! It has to be tested, improved, there are some PHY errors from time to
-> time, but generally it works :)
->
-> Rafał Miłecki (4):
->  b43: N-PHY: silence warnings
->  b43: set TMS to work with current band width for N-PHY
->  b43: fix split of N-PHY devices into supported and not (based on PHY
->    rev)
->  b43: rename config option for N-PHY, drop BROKEN
->
->  drivers/net/wireless/b43/Kconfig      |   13 +++++++------
->  drivers/net/wireless/b43/Makefile     |    8 ++++----
->  drivers/net/wireless/b43/main.c       |   12 +++++++++---
->  drivers/net/wireless/b43/phy_common.c |    9 ++++++++-
->  drivers/net/wireless/b43/phy_common.h |    2 ++
->  drivers/net/wireless/b43/phy_n.c      |   16 ++++++----------
->  6 files changed, 36 insertions(+), 24 deletions(-)
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
+I agree, if the rate control algortihm returns a rate via txrc.reported_rate
+we should just use that without further validation.
 
+Nevertheless, if the rate control algortihm doesn't fill in txrc.reported_rate
+we should only account data frames.
 
+Will send an updated patch.
 
--- 
-Vista: [V]iruses, [I]ntruders, [S]pyware, [T]rojans and [A]dware. :-)
+Helmut
