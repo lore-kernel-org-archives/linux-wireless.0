@@ -1,97 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ey0-f174.google.com ([209.85.215.174]:57549 "EHLO
-	mail-ey0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754492Ab0L2XcZ (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 29 Dec 2010 18:32:25 -0500
-Received: by mail-ey0-f174.google.com with SMTP id 27so4753430eye.19
-        for <linux-wireless@vger.kernel.org>; Wed, 29 Dec 2010 15:32:24 -0800 (PST)
-From: Arik Nemtsov <arik@wizery.com>
-To: <linux-wireless@vger.kernel.org>
-Cc: Luciano Coelho <luciano.coelho@nokia.com>,
-	Arik Nemtsov <arik@wizery.com>
-Subject: [PATCH v4 03/18] wl1271: AP mode - add AP specific event
-Date: Thu, 30 Dec 2010 01:31:58 +0200
-Message-Id: <1293665533-7599-4-git-send-email-arik@wizery.com>
-In-Reply-To: <1293665533-7599-1-git-send-email-arik@wizery.com>
-References: <1293665533-7599-1-git-send-email-arik@wizery.com>
+Received: from nbd.name ([46.4.11.11]:33747 "EHLO nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752345Ab0LAOhw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 1 Dec 2010 09:37:52 -0500
+Message-ID: <4CF65DB9.3050007@openwrt.org>
+Date: Wed, 01 Dec 2010 15:37:45 +0100
+From: Felix Fietkau <nbd@openwrt.org>
+MIME-Version: 1.0
+To: Joe Perches <joe@perches.com>
+CC: "Luis R. Rodriguez" <mcgrof@gmail.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	ath9k-devel@lists.ath9k.org, peter@stuge.se,
+	linux-kernel@vger.kernel.org
+Subject: Re: [ath9k-devel] [PATCH wireless-next] ath: Rename ath_print to
+ ath_debug
+References: <5febb0e1fba0ec2bb77f6ade8b251ba0edf4614c.1290988277.git.joe@perches.com>	 <AANLkTinc251WbwuLqFbOZ5ipNGZW7=wub3DoWwy42=+e@mail.gmail.com>	 <20101129060732.5130.qmail@stuge.se> <4CF42C17.2070500@openwrt.org>	 <1291081185.16349.133.camel@Joe-Laptop> <4CF464D6.2020507@openwrt.org>	 <1291148375.18026.342.camel@Joe-Laptop>	 <AANLkTik2qtGUgkZYSjcEH9jHHsevKnxOvz4s6On94U9o@mail.gmail.com> <1291213675.1845.12.camel@Joe-Laptop>
+In-Reply-To: <1291213675.1845.12.camel@Joe-Laptop>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Add STA-remove completion event. Unmask it during boot if operating in
-AP-mode.
-Ignore unrelated events in AP-mode.
+On 2010-12-01 3:27 PM, Joe Perches wrote:
+> On Tue, 2010-11-30 at 23:56 -0800, Luis R. Rodriguez wrote:
+>> On Tue, Nov 30, 2010 at 12:19 PM, Joe Perches <joe@perches.com> wrote:
+>> > Poor function naming is just that.
+>> > It reduces readability and the uses are counter expectation.
+>> The name is perfect, we use it to print anything, even non-debugging stuff.
+> 
+> 'fraid not.
+> 
+> ath/debug.h
+> 
+> #ifdef CONFIG_ATH_DEBUG
+> void ath_print(struct ath_common *common, int dbg_mask, const char *fmt, ...)
+> 	__attribute__ ((format (printf, 3, 4)));
+> #else
+> static inline void __attribute__ ((format (printf, 3, 4)))
+> ath_print(struct ath_common *common, int dbg_mask, const char *fmt, ...)
+> {
+> }
+> #endif /* CONFIG_ATH_DEBUG */
+Now we're getting closer to something worth fixing. IMHO we should
+change the code so that ath_print(common, ATH_DBG_FATAL, ...) prints
+something even with CONFIG_ATH_DEBUG unset. To get this done, some
+renaming would make sense here.
 
-Signed-off-by: Arik Nemtsov <arik@wizery.com>
----
- drivers/net/wireless/wl12xx/boot.c  |    3 +++
- drivers/net/wireless/wl12xx/event.c |    7 ++++---
- drivers/net/wireless/wl12xx/event.h |    1 +
- 3 files changed, 8 insertions(+), 3 deletions(-)
-
-diff --git a/drivers/net/wireless/wl12xx/boot.c b/drivers/net/wireless/wl12xx/boot.c
-index 4a9f929..bb4f283 100644
---- a/drivers/net/wireless/wl12xx/boot.c
-+++ b/drivers/net/wireless/wl12xx/boot.c
-@@ -432,6 +432,9 @@ static int wl1271_boot_run_firmware(struct wl1271 *wl)
- 		PSPOLL_DELIVERY_FAILURE_EVENT_ID |
- 		SOFT_GEMINI_SENSE_EVENT_ID;
- 
-+	if (wl->bss_type == BSS_TYPE_AP_BSS)
-+		wl->event_mask |= STA_REMOVE_COMPLETE_EVENT_ID;
-+
- 	ret = wl1271_event_unmask(wl);
- 	if (ret < 0) {
- 		wl1271_error("EVENT mask setting failed");
-diff --git a/drivers/net/wireless/wl12xx/event.c b/drivers/net/wireless/wl12xx/event.c
-index f9146f5..3376a5d 100644
---- a/drivers/net/wireless/wl12xx/event.c
-+++ b/drivers/net/wireless/wl12xx/event.c
-@@ -186,6 +186,7 @@ static int wl1271_event_process(struct wl1271 *wl, struct event_mailbox *mbox)
- 	int ret;
- 	u32 vector;
- 	bool beacon_loss = false;
-+	bool is_ap = (wl->bss_type == BSS_TYPE_AP_BSS);
- 
- 	wl1271_event_mbox_dump(mbox);
- 
-@@ -218,21 +219,21 @@ static int wl1271_event_process(struct wl1271 *wl, struct event_mailbox *mbox)
- 	 * BSS_LOSE_EVENT, beacon loss has to be reported to the stack.
- 	 *
- 	 */
--	if (vector & BSS_LOSE_EVENT_ID) {
-+	if ((vector & BSS_LOSE_EVENT_ID) && !is_ap) {
- 		wl1271_info("Beacon loss detected.");
- 
- 		/* indicate to the stack, that beacons have been lost */
- 		beacon_loss = true;
- 	}
- 
--	if (vector & PS_REPORT_EVENT_ID) {
-+	if ((vector & PS_REPORT_EVENT_ID) && !is_ap) {
- 		wl1271_debug(DEBUG_EVENT, "PS_REPORT_EVENT");
- 		ret = wl1271_event_ps_report(wl, mbox, &beacon_loss);
- 		if (ret < 0)
- 			return ret;
- 	}
- 
--	if (vector & PSPOLL_DELIVERY_FAILURE_EVENT_ID)
-+	if ((vector & PSPOLL_DELIVERY_FAILURE_EVENT_ID) && !is_ap)
- 		wl1271_event_pspoll_delivery_fail(wl);
- 
- 	if (vector & RSSI_SNR_TRIGGER_0_EVENT_ID) {
-diff --git a/drivers/net/wireless/wl12xx/event.h b/drivers/net/wireless/wl12xx/event.h
-index 6cce014..fd955f3 100644
---- a/drivers/net/wireless/wl12xx/event.h
-+++ b/drivers/net/wireless/wl12xx/event.h
-@@ -59,6 +59,7 @@ enum {
- 	BSS_LOSE_EVENT_ID			 = BIT(18),
- 	REGAINED_BSS_EVENT_ID			 = BIT(19),
- 	ROAMING_TRIGGER_MAX_TX_RETRY_EVENT_ID	 = BIT(20),
-+	STA_REMOVE_COMPLETE_EVENT_ID		 = BIT(21), /* AP */
- 	SOFT_GEMINI_SENSE_EVENT_ID		 = BIT(22),
- 	SOFT_GEMINI_PREDICTION_EVENT_ID		 = BIT(23),
- 	SOFT_GEMINI_AVALANCHE_EVENT_ID		 = BIT(24),
--- 
-1.7.1
-
+- Felix
