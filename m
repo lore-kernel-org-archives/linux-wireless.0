@@ -1,83 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([147.243.1.47]:65249 "EHLO mgw-sa01.nokia.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750828Ab0LVUWR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 22 Dec 2010 15:22:17 -0500
-Subject: Re: [PATCH v2 01/18] wl1271: Add AP related configuration to
- conf_drv_settings
-From: Luciano Coelho <luciano.coelho@nokia.com>
-To: ext Arik Nemtsov <arik@wizery.com>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <1293028057-6212-2-git-send-email-arik@wizery.com>
-References: <1293028057-6212-1-git-send-email-arik@wizery.com>
-	 <1293028057-6212-2-git-send-email-arik@wizery.com>
+Received: from he.sipsolutions.net ([78.46.109.217]:48847 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755632Ab0LAUTN (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 1 Dec 2010 15:19:13 -0500
+Subject: Re: [PATCH] mac80211: Support beacon configuration via nl80211 for
+ mesh interfaces
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Javier Cardona <javier@cozybit.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	Steve Derosier <steve@cozybit.com>, devel@lists.open80211s.org,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <AANLkTimgfRvqp=-CDU=G8o-ZfD4fVbf3j-AdXCVtoM6c@mail.gmail.com>
+References: <1291168735-3423-1-git-send-email-javier@cozybit.com>
+	 <1291184383.4199.4.camel@jlt3.sipsolutions.net>
+	 <AANLkTikMex0A91Qy=5EwPAEfVWKDVz4_mneWnCvy3soR@mail.gmail.com>
+	 <1291229642.4199.11.camel@jlt3.sipsolutions.net>
+	 <1291232151.4199.12.camel@jlt3.sipsolutions.net>
+	 <AANLkTimgfRvqp=-CDU=G8o-ZfD4fVbf3j-AdXCVtoM6c@mail.gmail.com>
 Content-Type: text/plain; charset="UTF-8"
-Date: Wed, 22 Dec 2010 22:22:14 +0200
-Message-ID: <1293049334.14423.1.camel@powerslave>
+Date: Wed, 01 Dec 2010 21:19:11 +0100
+Message-ID: <1291234751.4199.13.camel@jlt3.sipsolutions.net>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2010-12-22 at 16:27 +0200, ext Arik Nemtsov wrote:
-> Rate class configuration has been split up for AP and STA modes.
-> Template related configuration likewise separated.
-> 
-> Signed-off-by: Arik Nemtsov <arik@wizery.com>
-> ---
+On Wed, 2010-12-01 at 12:09 -0800, Javier Cardona wrote:
 
-[...]
+> It is convenient to be able to change things like the ttl or the auto
+> peering without having to bring down the interface.  People might also
+> want to tune from userspace the different mesh timeouts in response to
+> changes in operating conditions (e.g. mesh density).
 
-> @@ -153,6 +153,45 @@ static struct conf_drv_settings default_conf = {
->  				.tx_op_limit = 1504,
->  			},
->  		},
-> +		.ap_rc_conf                  = {
-> +			[0] = {
-> +				.enabled_rates = 0x1EFF,
-> +				.short_retry_limit = 10,
-> +				.long_retry_limit = 10,
-> +				.aflags      = 0,
-> +			},
-> +			[1] = {
-> +				.enabled_rates = 0x1EFF,
-> +				.short_retry_limit = 10,
-> +				.long_retry_limit = 10,
-> +				.aflags      = 0,
-> +			},
-> +			[2] = {
-> +				.enabled_rates = 0x1EFF,
-> +				.short_retry_limit = 10,
-> +				.long_retry_limit = 10,
-> +				.aflags      = 0,
-> +			},
-> +			[3] = {
-> +				.enabled_rates = 0x1EFF,
-> +				.short_retry_limit = 10,
-> +				.long_retry_limit = 10,
-> +				.aflags      = 0,
-> +			},
-> +		},
-> +		.ap_mgmt_conf = {
-> +			.enabled_rates       = 0x7,
-> +			.short_retry_limit   = 10,
-> +			.long_retry_limit    = 10,
-> +			.aflags              = 0,
-> +		},
-> +		.ap_bcst_conf = {
-> +			.enabled_rates       = 0x1,
-> +			.short_retry_limit   = 10,
-> +			.long_retry_limit    = 10,
-> +			.aflags              = 0,
-> +		},
-> +
+Makes sense.
 
-All the enabled_rates values here look quite magic.  Is there any way
-these could be changed to macros or something more descriptive?
+> But right now the only parameter that needs the mesh to be active is
+> plink_action:  one can only block or manually initiate peering after a
+> beacon has been received from a suitable neighbor.
 
-Also, how do you deal with the different basic rates used by 11bg and
-11a?
+It looks like one can modify the mesh ID on the fly right now -- that
+I'm going to remove, the other things can stay for all I care :-)
 
--- 
-Cheers,
-Luca.
+johannes
 
