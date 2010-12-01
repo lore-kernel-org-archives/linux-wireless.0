@@ -1,29 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yx0-f174.google.com ([209.85.213.174]:38628 "EHLO
-	mail-yx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757965Ab0LBRzq (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:50023 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752366Ab0LASyH (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 2 Dec 2010 12:55:46 -0500
-Received: by yxt3 with SMTP id 3so3773714yxt.19
-        for <linux-wireless@vger.kernel.org>; Thu, 02 Dec 2010 09:55:45 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <4cf7cb25.SwkH7gALTG7E00Zb%Larry.Finger@lwfinger.net>
-References: <4cf7cb25.SwkH7gALTG7E00Zb%Larry.Finger@lwfinger.net>
-Date: Thu, 2 Dec 2010 18:55:45 +0100
-Message-ID: <AANLkTi=eFis8_Z6f2VXsuB2ojhygtkEFYnrr8ZXbyNwF@mail.gmail.com>
-Subject: Re: [RFC/RFT] ssb: Attempt to recover from SPROM CRC error
-From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: John W Linville <linville@tuxdriver.com>,
-	Michael Buesch <mb@bu3sch.de>, b43-dev@lists.infradead.org,
+	Wed, 1 Dec 2010 13:54:07 -0500
+Subject: Re: [PATCH] mac80211: Support beacon configuration via nl80211 for
+ mesh interfaces
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Javier Cardona <javier@cozybit.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	Steve Derosier <steve@cozybit.com>, devel@lists.open80211s.org,
 	linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+In-Reply-To: <AANLkTikMex0A91Qy=5EwPAEfVWKDVz4_mneWnCvy3soR@mail.gmail.com>
+References: <1291168735-3423-1-git-send-email-javier@cozybit.com>
+	 <1291184383.4199.4.camel@jlt3.sipsolutions.net>
+	 <AANLkTikMex0A91Qy=5EwPAEfVWKDVz4_mneWnCvy3soR@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Wed, 01 Dec 2010 19:54:02 +0100
+Message-ID: <1291229642.4199.11.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-MjAxMC8xMi8yIExhcnJ5IEZpbmdlciA8TGFycnkuRmluZ2VyQGx3ZmluZ2VyLm5ldD46Cj4gKyDC
-oCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCBpZiAoYnVmW1NTQl9T
-UFJPTTRfU0lHID4+IDFdID09IDB4NTM3MikKPiArIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKg
-IMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIHNwcm9tLT5yZXZpc2lvbiA9IHJldmlzaW9u
-OwoKUGxlYXNlIHVzZSBTUE9GRiBtYWNybyBmb3IgZGV0ZXJtaW5pbmcgb2Zmc2V0IGluIGJ1Zi4K
-Ci0tIApSYWZhxYIK
+On Wed, 2010-12-01 at 10:45 -0800, Javier Cardona wrote:
+
+> > I'm not convinced that letting userspace set the *entire* beacon is the
+> > right way to do it? Wouldn't it make more sense to allow it to specify
+> > vendor-specific IEs (like IBSS), and the fact that vendor selection
+> > protocol is used? It seems to me that somebody may want to have vendor
+> > IEs while using the default protocols?
+> 
+> Yes, agreed.  We'll investigate a way to provide a protocol switch
+> (maybe a new NL80211_CMD_SET_MESH_PARAMS) + a vendor specific IE
+> (NL80211_CMD_SET_MGMT_EXTRA_IE would have been ideal, but I see it's
+> gone).
+
+If we had a 'start mesh' command, like 'join IBSS', then it'd be natural
+to have just more attributes in it. Maybe it's time to start thinking
+about that again, although backward compatibility could be interesting.
+
+johannes
+
