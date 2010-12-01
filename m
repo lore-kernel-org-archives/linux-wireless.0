@@ -1,71 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms3.broadcom.com ([216.31.210.19]:1717 "EHLO MMS3.broadcom.com"
+Received: from mail.atheros.com ([12.19.149.2]:13861 "EHLO mail.atheros.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751232Ab0LHXfg convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 8 Dec 2010 18:35:36 -0500
-Date: Wed, 8 Dec 2010 15:35:27 -0800
-From: "Henry Ptasinski" <henryp@broadcom.com>
-To: "Greg KH" <greg@kroah.com>
-cc: =?utf-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
-	"David Woodhouse" <dwmw2@infradead.org>,
-	"devel@linuxdriverproject.org" <devel@linuxdriverproject.org>,
-	"Brett Rudley" <brudley@broadcom.com>,
-	"grundler@google.com" <grundler@google.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"Roland Vossen" <rvossen@broadcom.com>,
-	"Dowan Kim" <dowan@broadcom.com>,
-	"Arend Van Spriel" <arend@broadcom.com>, dcbw@redhat.com
-Subject: Re: [PATCH v2] linux-firmware: brcm: Removed codeversion from
- firmware filenames.
-Message-ID: <20101208233527.GA2148@broadcom.com>
-References: <20101019233520.GA12510@kroah.com>
- <FD96C117992C584DBC47231B1EB6F5568206D859DC@SJEXCHCCR02.corp.ad.broadcom.com>
- <20101020004743.GB31965@kroah.com>
- <20101020005546.GL10832@broadcom.com> <20101020010320.GA370@kroah.com>
- <20101021170810.GA15357@broadcom.com>
- <1288621739.26983.32.camel@macbook.infradead.org>
- <20101208205000.GA30861@broadcom.com>
- <AANLkTin70oBFYq8LMJYw6zc7oVF9-UXv=nn_ophx+L2S@mail.gmail.com>
- <20101208222349.GA31641@kroah.com>
+	id S1753086Ab0LAHf0 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 1 Dec 2010 02:35:26 -0500
+Received: from mail.atheros.com ([10.10.20.105])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Tue, 30 Nov 2010 23:35:12 -0800
+From: Vasanthakumar Thiagarajan <vasanth@atheros.com>
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>
+Subject: [PATCH 23/26] ath9k_hw: Program appropriate register for temperature compensation cal for AR9485
+Date: Tue, 30 Nov 2010 23:32:52 -0800
+Message-ID: <1291188775-13707-24-git-send-email-vasanth@atheros.com>
+In-Reply-To: <1291188775-13707-1-git-send-email-vasanth@atheros.com>
+References: <1291188775-13707-1-git-send-email-vasanth@atheros.com>
 MIME-Version: 1.0
-In-Reply-To: <20101208222349.GA31641@kroah.com>
-Content-Type: text/plain;
- charset=utf-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Dec 08, 2010 at 02:23:49PM -0800, Greg KH wrote:
-> On Wed, Dec 08, 2010 at 11:07:53PM +0100, Rafał Miłecki wrote:
-> > 2010/12/8 Henry Ptasinski <henryp@broadcom.com>:
-> > > Second attempt at cleaning up firmware filenames.
-> > >
-> > > The basename-apiversion-codeversion construction for firmware filenames is not
-> > > used by most other firmware files, adds complexity, and is not providing any
-> > > value.  Renamed the firmware files using just basename-apiversion.  Also, fixed
-> > > WHENCE to have correct path to brcmfmac files.
-> > >
-> > > Signed-off-by: Henry Ptasinski <henryp@broadcom.com>
-> > 
-> > Henry, I believe we got report that Red Hat can not include your
-> > firmware anyway because of licensing. Can you change license to some
-> > common one which allows providing your firmware with distributions?
-> 
-> That's news to me, what specific licensing issue have you heard about
-> here?  Last I saw, the issues were resolved and everyone could
-> redistribute this firmware.
+Signed-off-by: Vasanthakumar Thiagarajan <vasanth@atheros.com>
+---
+ drivers/net/wireless/ath/ath9k/ar9003_phy.h |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-On a thread about other firmware, Dan Williams wrote:
-
-> There's an existing Broadcom license in linux-firmware.git, and it *may*
-> be OK, but it's really, really long and given that other major companies
-> adopted the "shorter is better" approach, it's hard to believe that all
-> the existing Broadcom license text is actually needed.
-
-I'm not sure that translates to "can not include your firmware". Regardless, I
-am trying to get our license simplified.  Obviously that's taking some time,
-and I don't have any resolution yet, but I'll keep working on it.
-
-- Henry
-
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_phy.h b/drivers/net/wireless/ath/ath9k/ar9003_phy.h
+index 74e0da9..00cd3e5 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_phy.h
++++ b/drivers/net/wireless/ath/ath9k/ar9003_phy.h
+@@ -586,7 +586,7 @@
+ #define AR_PHY_65NM_CH0_BIAS2       0x160c4
+ #define AR_PHY_65NM_CH0_BIAS4       0x160cc
+ #define AR_PHY_65NM_CH0_RXTX4       0x1610c
+-#define AR_PHY_65NM_CH0_THERM       0x16290
++#define AR_PHY_65NM_CH0_THERM       (AR_SREV_9485(ah) ? 0x1628c : 0x16290)
+ 
+ #define AR_PHY_65NM_CH0_THERM_LOCAL   0x80000000
+ #define AR_PHY_65NM_CH0_THERM_LOCAL_S 31
+-- 
+1.7.0.4
 
