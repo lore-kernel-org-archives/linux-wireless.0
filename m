@@ -1,52 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qw0-f46.google.com ([209.85.216.46]:46704 "EHLO
-	mail-qw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751137Ab0LYTeo (ORCPT
+Received: from mail-iw0-f174.google.com ([209.85.214.174]:33247 "EHLO
+	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753271Ab0LABhS (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 25 Dec 2010 14:34:44 -0500
-Received: by qwa26 with SMTP id 26so7701862qwa.19
-        for <linux-wireless@vger.kernel.org>; Sat, 25 Dec 2010 11:34:43 -0800 (PST)
+	Tue, 30 Nov 2010 20:37:18 -0500
+Received: by iwn10 with SMTP id 10so442363iwn.19
+        for <linux-wireless@vger.kernel.org>; Tue, 30 Nov 2010 17:37:17 -0800 (PST)
 MIME-Version: 1.0
-Date: Sat, 25 Dec 2010 14:34:43 -0500
-Message-ID: <AANLkTin27fmd-4JU07j+O9Wg0sq1H4hpzsTXyHKj9YZP@mail.gmail.com>
-Subject: [PATCH] ath9k: fix spur mitigation no-spur case for AR9002
-From: Brian Prodoehl <bprodoehl@gmail.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, mcgrof@gmail.com
+In-Reply-To: <AANLkTimUpxb+qaCerwgxqcz5iOmFz7MaZFhFPSOxJd1M@mail.gmail.com>
+References: <AANLkTi=6NGw3GTnX+vEqx_iHcDb4SUmPc5vvndyMc=5s@mail.gmail.com>
+ <AANLkTinMBx=5J4ZAaO7qkmJAxp4xbjoJxq+m+Bjz+K1e@mail.gmail.com> <AANLkTimUpxb+qaCerwgxqcz5iOmFz7MaZFhFPSOxJd1M@mail.gmail.com>
+From: Ohad Ben-Cohen <ohad@wizery.com>
+Date: Tue, 30 Nov 2010 17:36:57 -0800
+Message-ID: <AANLkTikCrcpbyNEL94Jo9OsvcaEguKfN6-9nheZ=Sa8Q@mail.gmail.com>
+Subject: Re: wl1271: power down/up sequence
+To: Joerie de Gram <j.de.gram@gmail.com>
+Cc: linux-wireless@vger.kernel.org
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-For the AR9002, the spur frequency read from the EEPROM is mangled
-before being compared against AR_NO_SPUR.  This results in the driver
-trying to set up the spur mitigation for bogus spurs, rather than
-cleanly breaking out.
+On Tue, Nov 30, 2010 at 3:30 PM, Joerie de Gram <j.de.gram@gmail.com> wrote:
+> The regulator is only enabled once. Equally, the MMC interface is
+> initialised only at boot, and remains untouched afterwards.
 
-Signed-off-by: Brian Prodoehl <bprodoehl@nomadio.net>
----
+Even if the wl12xx sdio driver is still not loaded ?
 
- drivers/net/wireless/ath/ath9k/ar9002_phy.c |    5 +++--
- 1 files changed, 3 insertions(+), 2 deletions(-)
+Can you pls send me your drivers/mmc/core/sdio.c to have a look ? Or
+probably better, can you share the entire kernel ? and your .config ?
 
-diff --git a/drivers/net/wireless/ath/ath9k/ar9002_phy.c
-b/drivers/net/wireless/ath/ath9k/ar9002_phy.c
-index 7ae66a8..7d68d61 100644
---- a/drivers/net/wireless/ath/ath9k/ar9002_phy.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9002_phy.c
-@@ -203,13 +203,14 @@ static void ar9002_hw_spur_mitigate(struct ath_hw *ah,
- 	for (i = 0; i < AR_EEPROM_MODAL_SPURS; i++) {
- 		cur_bb_spur = ah->eep_ops->get_spur_channel(ah, i, is2GHz);
-
-+		if (AR_NO_SPUR == cur_bb_spur)
-+			break;
-+
- 		if (is2GHz)
- 			cur_bb_spur = (cur_bb_spur / 10) + AR_BASE_FREQ_2GHZ;
- 		else
- 			cur_bb_spur = (cur_bb_spur / 10) + AR_BASE_FREQ_5GHZ;
-
--		if (AR_NO_SPUR == cur_bb_spur)
--			break;
- 		cur_bb_spur = cur_bb_spur - freq;
-
- 		if (IS_CHAN_HT40(chan)) {
+Thanks,
+Ohad.
