@@ -1,96 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ww0-f44.google.com ([74.125.82.44]:64201 "EHLO
-	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753842Ab0L0OIQ (ORCPT
+Received: from mail-bw0-f46.google.com ([209.85.214.46]:34802 "EHLO
+	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752745Ab0LALSh (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 27 Dec 2010 09:08:16 -0500
-Received: by mail-ww0-f44.google.com with SMTP id 36so9024113wwa.1
-        for <linux-wireless@vger.kernel.org>; Mon, 27 Dec 2010 06:08:15 -0800 (PST)
-From: Ivo van Doorn <ivdoorn@gmail.com>
+	Wed, 1 Dec 2010 06:18:37 -0500
+Received: by bwz15 with SMTP id 15so5996245bwz.19
+        for <linux-wireless@vger.kernel.org>; Wed, 01 Dec 2010 03:18:36 -0800 (PST)
+From: Helmut Schaa <helmut.schaa@googlemail.com>
 To: "John W. Linville" <linville@tuxdriver.com>
-Subject: [PATCH 05/10] rt2x00: Fix pointer errors.
-Date: Mon, 27 Dec 2010 15:05:55 +0100
-Cc: linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com
-References: <201012271504.30848.IvDoorn@gmail.com> <201012271505.15849.IvDoorn@gmail.com> <201012271505.36104.IvDoorn@gmail.com>
-In-Reply-To: <201012271505.36104.IvDoorn@gmail.com>
-MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Message-Id: <201012271505.56572.IvDoorn@gmail.com>
+Cc: linux-wireless@vger.kernel.org,
+	Helmut Schaa <helmut.schaa@googlemail.com>,
+	Johannes Berg <johannes@sipsolutions.net>
+Subject: [PATCH] mac80211: Update last_tx_rate only for data frames
+Date: Wed,  1 Dec 2010 12:18:22 +0100
+Message-Id: <1291202302-9698-1-git-send-email-helmut.schaa@googlemail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Gertjan van Wingerde <gwingerde@gmail.com>
+The last_tx_rate field was also updated for non-data frames that are
+often sent with a lower rate (for example management frames at 1 Mbps).
+This is confusing when the data rate is actually much higher.
 
-Fix some pointer errors in the various calls to memcpy, memset and memmove.
+Hence, only update the last_tx_rate field with tx rate information
+gathered from the last data frames.
 
-Although none of these errors are fatal (the expression used now results in
-the same pointer value) it is better to use the proper expression.
-All errors are having to deal with arrays.
-
-Signed-off-by: Gertjan van Wingerde <gwingerde@gmail.com>
-Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>
+Signed-off-by: Helmut Schaa <helmut.schaa@googlemail.com>
 ---
- drivers/net/wireless/rt2x00/rt2x00config.c |    8 ++++----
- drivers/net/wireless/rt2x00/rt2x00mac.c    |    8 ++++----
- 2 files changed, 8 insertions(+), 8 deletions(-)
 
-diff --git a/drivers/net/wireless/rt2x00/rt2x00config.c b/drivers/net/wireless/rt2x00/rt2x00config.c
-index 70ca937..e7f67d5 100644
---- a/drivers/net/wireless/rt2x00/rt2x00config.c
-+++ b/drivers/net/wireless/rt2x00/rt2x00config.c
-@@ -62,13 +62,13 @@ void rt2x00lib_config_intf(struct rt2x00_dev *rt2x00dev,
- 	 * This will prevent the device being confused when it wants
- 	 * to ACK frames or consideres itself associated.
- 	 */
--	memset(&conf.mac, 0, sizeof(conf.mac));
-+	memset(conf.mac, 0, sizeof(conf.mac));
- 	if (mac)
--		memcpy(&conf.mac, mac, ETH_ALEN);
-+		memcpy(conf.mac, mac, ETH_ALEN);
+Not sure if there are any reasons why somebody would like to see the "real"
+last tx rate including management frames?
+
+ net/mac80211/tx.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
+
+diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
+index e694836..f753081 100644
+--- a/net/mac80211/tx.c
++++ b/net/mac80211/tx.c
+@@ -669,7 +669,7 @@ ieee80211_tx_h_rate_ctrl(struct ieee80211_tx_data *tx)
+ 	if (txrc.reported_rate.idx < 0)
+ 		txrc.reported_rate = info->control.rates[0];
  
--	memset(&conf.bssid, 0, sizeof(conf.bssid));
-+	memset(conf.bssid, 0, sizeof(conf.bssid));
- 	if (bssid)
--		memcpy(&conf.bssid, bssid, ETH_ALEN);
-+		memcpy(conf.bssid, bssid, ETH_ALEN);
+-	if (tx->sta)
++	if (tx->sta && ieee80211_is_data(hdr->frame_control))
+ 		tx->sta->last_tx_rate = txrc.reported_rate;
  
- 	flags |= CONFIG_UPDATE_TYPE;
- 	if (mac || (!rt2x00dev->intf_ap_count && !rt2x00dev->intf_sta_count))
-diff --git a/drivers/net/wireless/rt2x00/rt2x00mac.c b/drivers/net/wireless/rt2x00/rt2x00mac.c
-index f8775c4..a2266c7 100644
---- a/drivers/net/wireless/rt2x00/rt2x00mac.c
-+++ b/drivers/net/wireless/rt2x00/rt2x00mac.c
-@@ -471,17 +471,17 @@ EXPORT_SYMBOL_GPL(rt2x00mac_set_tim);
- static void memcpy_tkip(struct rt2x00lib_crypto *crypto, u8 *key, u8 key_len)
- {
- 	if (key_len > NL80211_TKIP_DATA_OFFSET_ENCR_KEY)
--		memcpy(&crypto->key,
-+		memcpy(crypto->key,
- 		       &key[NL80211_TKIP_DATA_OFFSET_ENCR_KEY],
- 		       sizeof(crypto->key));
- 
- 	if (key_len > NL80211_TKIP_DATA_OFFSET_TX_MIC_KEY)
--		memcpy(&crypto->tx_mic,
-+		memcpy(crypto->tx_mic,
- 		       &key[NL80211_TKIP_DATA_OFFSET_TX_MIC_KEY],
- 		       sizeof(crypto->tx_mic));
- 
- 	if (key_len > NL80211_TKIP_DATA_OFFSET_RX_MIC_KEY)
--		memcpy(&crypto->rx_mic,
-+		memcpy(crypto->rx_mic,
- 		       &key[NL80211_TKIP_DATA_OFFSET_RX_MIC_KEY],
- 		       sizeof(crypto->rx_mic));
- }
-@@ -532,7 +532,7 @@ int rt2x00mac_set_key(struct ieee80211_hw *hw, enum set_key_cmd cmd,
- 	if (crypto.cipher == CIPHER_TKIP)
- 		memcpy_tkip(&crypto, &key->key[0], key->keylen);
- 	else
--		memcpy(&crypto.key, &key->key[0], key->keylen);
-+		memcpy(crypto.key, &key->key[0], key->keylen);
- 	/*
- 	 * Each BSS has a maximum of 4 shared keys.
- 	 * Shared key index values:
+ 	if (unlikely(!info->control.rates[0].count))
 -- 
-1.7.2.3
+1.7.1
 
