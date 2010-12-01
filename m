@@ -1,88 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:1027 "EHLO mx1.redhat.com"
+Received: from catholic.ebb.org ([67.207.139.67]:54807 "EHLO catholic.ebb.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751872Ab0LIAOG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 8 Dec 2010 19:14:06 -0500
-Subject: Re: Re-distributable 88w8335 Firmware?
-From: Dan Williams <dcbw@redhat.com>
-To: Julian Calaby <julian.calaby@gmail.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	David.Woodhouse@intel.com, Greg KH <greg@kroah.com>,
+	id S1755178Ab0LAQmF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 1 Dec 2010 11:42:05 -0500
+From: "Bradley M. Kuhn" <bkuhn@ebb.org>
+To: david@lang.hm
+Cc: Pavel Machek <pavel@ucw.cz>,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	Alan Cox <alan@lxorguk.ukuu.org.uk>,
 	linux-kernel@vger.kernel.org,
-	Lennert Buytenhek <buytenh@wantstofly.org>,
-	Holger Schurig <holgerschurig@googlemail.com>,
-	Markus Becker <mab@comnets.uni-bremen.de>,
-	andreamrl@tiscali.it, Denis Kirjanov <kirjanov@gmail.com>,
-	dwmw2@infradead.org
-Date: Wed, 08 Dec 2010 18:13:33 -0600
-In-Reply-To: <AANLkTiks65oAvVEu0Df4yeHNJm=cVnSfFeo=enxt-gpn@mail.gmail.com>
-References: <AANLkTim0=ds3EhQOEfHdrKt2dSnEqUgf5CLOPHNyW=jE@mail.gmail.com>
-	 <1290569516.3074.41.camel@dcbw.foobar.com>
-	 <AANLkTi=ioGgpAQ-rx_abCHcOmOezXwJFfbKWc7=tGAJ5@mail.gmail.com>
-	 <1290571986.3074.64.camel@dcbw.foobar.com>
-	 <AANLkTi=0ocvsR185Qib3VoT43ziTUa_3oRDnmU65pYjv@mail.gmail.com>
-	 <1290575460.18917.3.camel@dcbw.foobar.com>
-	 <AANLkTiks65oAvVEu0Df4yeHNJm=cVnSfFeo=enxt-gpn@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Message-ID: <1291853616.16839.10.camel@dcbw.foobar.com>
-Mime-Version: 1.0
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Greg KH <greg@kroah.com>, David Miller <davem@davemloft.net>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Stephen Hemminger <shemminger@vyatta.com>,
+	"Perez-Gonzalez\, Inaky" <inaky.perez-gonzalez@intel.com>,
+	Charles Marker <Charles.Marker@atheros.com>,
+	Jouni Malinen <Jouni.Malinen@atheros.com>,
+	Kevin Hayes <kevin@atheros.com>,
+	Zhifeng Cai <zhifeng.cai@atheros.com>,
+	Don Breslin <Don.Breslin@atheros.com>,
+	Doug Dahlby <Doug.Dahlby@atheros.com>,
+	Julia Lawall <julia@diku.dk>
+Subject: Re: Challenges with doing hardware bring up with Linux first
+References: <AANLkTim4jVaZxYp8nSgJyy28iwxcxbPeNUzxTfoHAX4S@mail.gmail.com>
+	<20101118113441.74fcdc21@lxorguk.ukuu.org.uk>
+	<AANLkTikOZbtyhsk0OBb4OdUi6qj-7k_hU-aW_Pkhfpq0@mail.gmail.com>
+	<20101130192648.GA1623@ucw.cz>
+	<AANLkTinMyAeVJJc7Lc-vt_Ywr+vcSf-GAiQwggTGbqh8@mail.gmail.com>
+	<20101130200019.GA28735@elf.ucw.cz>
+	<alpine.DEB.2.00.1011301209090.423@asgard.lang.hm>
+Date: Wed, 01 Dec 2010 11:02:52 -0500
+In-Reply-To: <alpine.DEB.2.00.1011301209090.423@asgard.lang.hm>
+	(david@lang.hm's message of "Tue, 30 Nov 2010 12:13:05 -0800 (PST)")
+Message-ID: <87hbex1nwz.fsf@ebb.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2010-11-24 at 16:26 +1100, Julian Calaby wrote:
-> On Wed, Nov 24, 2010 at 16:10, Dan Williams <dcbw@redhat.com> wrote:
-> > On Wed, 2010-11-24 at 15:48 +1100, Julian Calaby wrote:
-> >> On Wed, Nov 24, 2010 at 15:13, Dan Williams <dcbw@redhat.com> wrote:
-> >> > Malo supports the PCMCIA/CF variant of the 8385; not a PCI variant
-> >> > AFAICT.  I know of no PCI variant for the 8385, just CF, SDIO, and GSPI.
-> >> > But I find it curious that malo supports 8335+8385, given that the
-> >> > firmware interface of the 8385 and the 8335 are so different.  Unless
-> >> > they have special firmware, the 8385 is a fullmac device, while the 8335
-> >> > is a softmac device.  Enough differences exist that I'd expect them to
-> >> > be driven by separate drivers, otherwise the code would be quite ugly.
-> >> > Which is why we didn't try to shoehorn the 8335 or TopDog stuff into
-> >> > libertas.
-> >>
-> >> You clearly know a hell of a lot more about the ins and outs of Marvel
-> >> chipsets that I do. =)
-> >
-> > Eh, *some* of the chipsets :)  Others (Lennert) know a lot more about
-> > later versions than I do.  But I never know everything or even enough of
-> > anything :)
-> 
-> I know exactly how you feel. =)
-> 
-> >> I stand corrected.
-> >>
-> >> So, to amend my previous request: We're after firmware for the softmac
-> >> 88w8335 chipset *only*.
-> >>
-> >> Though it may be nicer if Marvell were to bless Malo's firmware
-> >> package (linked above) as this contains firmware for the PCI 88w8335,
-> >> USB 88w8338 and a file which claims to be for the PCMCIA/CF 88w8385.
-> >
-> > Yeah, though honestly I'd rather have the duplex firmware from MSSII for
-> > the 8335, since it can do AP mode too.  That does leave the 8338 (USB?)
-> 
-> Me too - and it'd mean that we don't have to do AP-mode firmware
-> loading tricks like in mw8k. But if we can't get that then some
-> firmware is better than none.
-> 
-> > of course but we can probably get clarification on that too.  As with
-> > the 8335, I only have access to a 8335 Windows driver, but if we had a
-> > firmware extractor tool, I believe the Marvell Extranet firmware license
-> > covers embedded firmware from Windows .sys files too.
-> 
-> I think I may have a simple firmware extractor at home that I pulled
-> from *somewhere* when I was working on this last time. We can see if
-> it does anything with those files. I believe I have at least two
-> different Windows drivers at home - IIRC, one of them is *just* the
-> files needed for this extractor.
+I assume someone started cc'ing me on this thread to get my opinion as a
+non-lawyer GPL geek.
 
-I've converted the cb35 duplex firmware to binary and uploaded it to
-linux-firmware after receiving permission from Marvell to do so.  Now
-lets get a driver :)
+david@lang.hm wrote:
+> However, there are quite a few files in the kernel that are BSD
+> licensed, when combined with other GPL code, the only way you can
+> re-distribute the result is under the GPL, so it is effectivly
+> 'converted' when you compile, but by leaving the file BSD,
+> improvements to it can be shared back with the original authors and
+> put into their main codebase, so it's actually more polite to leave
+> the license as-is for this file.
 
-Dan
-
-
+FWIW, I agree more or less completely with the above.  I think the
+implications are the same for ISC as well, as Luis points out elsewhere
+in the thread.
+-- 
+   -- bkuhn
