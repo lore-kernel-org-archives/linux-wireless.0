@@ -1,81 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from lo.gmane.org ([80.91.229.12]:49088 "EHLO lo.gmane.org"
+Received: from mail.atheros.com ([12.19.149.2]:13825 "EHLO mail.atheros.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752577Ab0L0SKJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 27 Dec 2010 13:10:09 -0500
-Received: from list by lo.gmane.org with local (Exim 4.69)
-	(envelope-from <glkwg-linux-wireless@m.gmane.org>)
-	id 1PXHWH-0008LL-9J
-	for linux-wireless@vger.kernel.org; Mon, 27 Dec 2010 19:10:05 +0100
-Received: from devbox.leverton.org ([217.155.219.12])
-        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Mon, 27 Dec 2010 19:10:05 +0100
-Received: from nick by devbox.leverton.org with local (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Mon, 27 Dec 2010 19:10:05 +0100
-To: linux-wireless@vger.kernel.org
-From: Nick Leverton <nick@leverton.org>
-Subject: printk %pV compatibility in b43 and ath for compat-wireless
-Date: Mon, 27 Dec 2010 18:05:54 +0000 (UTC)
-Message-ID: <loom.20101227T190514-850@post.gmane.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+	id S1751517Ab0LAHc5 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 1 Dec 2010 02:32:57 -0500
+Received: from mail.atheros.com ([10.10.20.105])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Tue, 30 Nov 2010 23:32:43 -0800
+From: Vasanthakumar Thiagarajan <vasanth@atheros.com>
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>
+Subject: [PATCH 00/26] Add support for AR9485 
+Date: Tue, 30 Nov 2010 23:32:29 -0800
+Message-ID: <1291188775-13707-1-git-send-email-vasanth@atheros.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+John,
 
-I'm using compat-wireless with Debian 2.6.32 (kernel for forthcoming Debian 6.0 
-release).  It mostly works well but one thing that has crept in recently is the 
-use of new printk features such as %pV which old kernels don't support.  I 
-noticed this whilst trying the new b43 n-phy code (for which much thanks to 
-everyone involved), as I get kernel messages printed of the following form:
+	This patch series add support for a new chipset of AR9003 family.
+This chip(AR9485) is an 1x1 and 2.4Ghz band only.
 
-Dec 23 21:10:46 nickl kernel: [688182.007780] Broadcom 43xx driver loaded [ 
-Features: PMNLS, Firmware-ID: FW13 ]
-Dec 23 21:10:50 nickl kernel: [688186.100195] b43-phy0: f535bb54
-Dec 23 21:10:50 nickl kernel: [688186.198711] ADDRCONF(NETDEV_UP): wlan0: link 
-is not ready
-Dec 23 21:11:09 nickl kernel: [688205.048054] b43-phy0: f4a3bb54
-Dec 23 21:11:09 nickl kernel: [688205.145589] ADDRCONF(NETDEV_UP): wlan0: link 
-is not ready
-Dec 23 21:11:20 nickl kernel: [688216.484744] ADDRCONF(NETDEV_CHANGE): wlan0: 
-link becomes ready
-Dec 23 21:11:31 nickl kernel: [688225.667842] b43-phy0 ERROR: f56a5f34
-Dec 23 21:12:14 nickl kernel: [688235.585265] b43-phy0 ERROR: f56a5f34
-Dec 23 21:12:50 nickl kernel: [688270.140937] b43-phy0 ERROR: f56a5f34
-Dec 23 21:13:11 nickl kernel: [688306.427195] b43-phy0 ERROR: f56a5f34
-Dec 23 21:14:05 nickl kernel: [688327.492370] b43-phy0 ERROR: f56a5f34
-Dec 23 21:16:23 nickl kernel: [688381.712250] b43-phy0 ERROR: f56a5f34
-Dec 23 21:22:59 nickl kernel: [688518.942314] b43-phy0 ERROR: f56a5f34
-Dec 23 21:23:00 nickl kernel: [688529.935161] b43-phy0 ERROR: f56a5f34
+Vasanth
 
-As of 20101223, the following code uses %pV, some of which can be seen above:
+Vasanthakumar Thiagarajan (26):
+  ath9k_hw: Define hw version macros for AR9485
+  ath9k_hw: Add initvals.h for AR9485
+  ath9k_hw: Enable hw initialization for AR9485
+  ath9k_hw: Initialize mode registers for AR9485
+  ath9k_hw: Initialize tx/rx gain table from initvals.h for AR9485
+  ath9k_hw: Eeeprom changes for AR9485
+  ath9k_hw: Disable LDPC for AR9485
+  ath9k: Disable TX STBC for AR9485
+  ath9k: Enable extended synch for AR9485 to fix L0s recovery issue
+  ath9k: Configure pll control for AR9485
+  ath9k_hw: Find chansel of AR_PHY_65NM_CH0_SYNTH7 from an array for
+    AR9485
+  ath9k_hw: Add a helper function to get spur channel pointer from cal
+    data for AR9003 family
+  ath9k: Read spur channel information from eeprom for AR9485
+  ath9k_hw: Configure xpa bias level for AR9485
+  ath9k_hw: Read and configure antenna diversity control for AR9485
+  ath9k_hw: Configure attenuation control only for chain 0 on AR9485
+  ath9k_hw: Configure internal regulator for AR9485
+  ath9k_hw: Read and configure turnning caps to regulate freq accuracy
+  ath9k_hw: Configure power control only for chain 0 on AR9485
+  ath9k_hw: Program appropriate chianmask for AR9485 before starting
+    AGC/IQ cal
+  ath9k_hw: Define IQcal correction coefficient registers using index
+  ath9k_hw: Add IQ cal changes for AR9485
+  ath9k_hw: Program appropriate register for temperature compensation
+    cal for AR9485
+  ath9k_hw: Setup paprd only for chain 0 on AR9485
+  ath9k_hw: Disable MRC CCK for AR9485
+  ath9k: Add device id of AR9485 to pci table
 
-./drivers/net/wireless/b43/main.c:      printk(KERN_INFO "b43-%s: %pV",
-./drivers/net/wireless/b43/main.c:      printk(KERN_ERR "b43-%s ERROR: %pV",
-./drivers/net/wireless/b43/main.c:      printk(KERN_WARNING "b43-%s 
-warning: %pV",
-./drivers/net/wireless/b43/main.c:      printk(KERN_DEBUG "b43-%s debug: %pV",
-./drivers/net/wireless/ath/main.c:      rtn = printk("%sath: %pV", level, 
-&vaf);
-./drivers/net/wireless/b43legacy/main.c:        
-printk(KERN_INFO "b43legacy-%s: %pV",
-./drivers/net/wireless/b43legacy/main.c:        printk(KERN_ERR "b43legacy-%s 
-ERROR: %pV",
-./drivers/net/wireless/b43legacy/main.c:        
-printk(KERN_WARNING "b43legacy-%s warning: %pV",
-./drivers/net/wireless/b43legacy/main.c:        printk(KERN_DEBUG "b43legacy-%s 
-debug: %pV",
-
-It would be useful to know the error message behind the vararg !
-
-I tried applying the patches which introduced %pV to kernel.org, but 2.6.32 is 
-too old.  Could this be fixed either in the compat b43 driver or in a compat 
-back-feature, please ?
-
-Thankyou
-
-Nick
+ drivers/net/wireless/ath/ath.h                   |    1 +
+ drivers/net/wireless/ath/ath9k/ani.c             |    2 +-
+ drivers/net/wireless/ath/ath9k/ar9003_calib.c    |  256 ++++++-
+ drivers/net/wireless/ath/ath9k/ar9003_eeprom.c   |  193 ++++-
+ drivers/net/wireless/ath/ath9k/ar9003_eeprom.h   |    2 +
+ drivers/net/wireless/ath/ath9k/ar9003_hw.c       |  278 +++++--
+ drivers/net/wireless/ath/ath9k/ar9003_paprd.c    |   40 +-
+ drivers/net/wireless/ath/ath9k/ar9003_phy.c      |   76 ++-
+ drivers/net/wireless/ath/ath9k/ar9003_phy.h      |   70 ++-
+ drivers/net/wireless/ath/ath9k/ar9485_initvals.h |  943 ++++++++++++++++++++++
+ drivers/net/wireless/ath/ath9k/hw.c              |   19 +-
+ drivers/net/wireless/ath/ath9k/hw.h              |    3 +
+ drivers/net/wireless/ath/ath9k/init.c            |    4 +-
+ drivers/net/wireless/ath/ath9k/main.c            |    3 +
+ drivers/net/wireless/ath/ath9k/pci.c             |   13 +
+ drivers/net/wireless/ath/ath9k/reg.h             |   10 +
+ 16 files changed, 1745 insertions(+), 168 deletions(-)
+ create mode 100644 drivers/net/wireless/ath/ath9k/ar9485_initvals.h
 
