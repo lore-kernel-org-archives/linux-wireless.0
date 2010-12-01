@@ -1,65 +1,82 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:50818 "EHLO nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753151Ab0LLNeq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 12 Dec 2010 08:34:46 -0500
-From: Felix Fietkau <nbd@openwrt.org>
-To: linux-wireless@vger.kernel.org
-Cc: linville@tuxdriver.com, lrodriguez@atheros.com,
-	Felix Fietkau <nbd@openwrt.org>
-Subject: [PATCH 4/7] ath9k_hw: fix the PA predistortion rate mask
-Date: Sun, 12 Dec 2010 14:34:34 +0100
-Message-Id: <1292160877-50618-4-git-send-email-nbd@openwrt.org>
-In-Reply-To: <1292160877-50618-3-git-send-email-nbd@openwrt.org>
-References: <1292160877-50618-1-git-send-email-nbd@openwrt.org>
- <1292160877-50618-2-git-send-email-nbd@openwrt.org>
- <1292160877-50618-3-git-send-email-nbd@openwrt.org>
+Received: from he.sipsolutions.net ([78.46.109.217]:53389 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756841Ab0LAUcJ (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 1 Dec 2010 15:32:09 -0500
+Subject: [PATCH/RFC v2] mac80211: use configured mesh TTL
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Javier Cardona <javier@cozybit.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	Steve Derosier <steve@cozybit.com>, devel@lists.open80211s.org,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <1291235337.4199.14.camel@jlt3.sipsolutions.net>
+References: <1291168735-3423-1-git-send-email-javier@cozybit.com>
+	 <1291184383.4199.4.camel@jlt3.sipsolutions.net>
+	 <AANLkTikMex0A91Qy=5EwPAEfVWKDVz4_mneWnCvy3soR@mail.gmail.com>
+	 <1291229642.4199.11.camel@jlt3.sipsolutions.net>
+	 <1291232151.4199.12.camel@jlt3.sipsolutions.net>
+	 <AANLkTimgfRvqp=-CDU=G8o-ZfD4fVbf3j-AdXCVtoM6c@mail.gmail.com>
+	 <1291235337.4199.14.camel@jlt3.sipsolutions.net>
+Content-Type: text/plain; charset="UTF-8"
+Date: Wed, 01 Dec 2010 21:32:08 +0100
+Message-ID: <1291235528.4199.15.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The EEPROM PAPRD rate mask fields only contain mask values for actual
-rates in the low 25 bits. The upper bits are reserved for tx power
-scale values. Add the proper mask definitions and use them before
-writing the values to the register.
+From: Johannes Berg <johannes.berg@intel.com>
 
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+It seems the configured mesh TTL should be used,
+not the default value.
+
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- drivers/net/wireless/ath/ath9k/ar9003_eeprom.h |    6 ++++++
- drivers/net/wireless/ath/ath9k/ar9003_paprd.c  |    4 ++--
- 2 files changed, 8 insertions(+), 2 deletions(-)
+ net/mac80211/mesh_hwmp.c    |    5 +++--
+ net/mac80211/mesh_pathtbl.c |    7 ++++---
+ 2 files changed, 7 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.h b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.h
-index 620821e..efb6a02 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.h
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.h
-@@ -31,6 +31,12 @@
- #define AR9300_ANT_16S               25
- #define AR9300_FUTURE_MODAL_SZ       6
+--- wireless-testing.orig/net/mac80211/mesh_pathtbl.c	2010-12-01 21:26:47.000000000 +0100
++++ wireless-testing/net/mac80211/mesh_pathtbl.c	2010-12-01 21:27:42.000000000 +0100
+@@ -467,8 +467,8 @@ void mesh_plink_broken(struct sta_info *
+ 			mpath->flags &= ~MESH_PATH_ACTIVE;
+ 			++mpath->sn;
+ 			spin_unlock_bh(&mpath->state_lock);
+-			mesh_path_error_tx(MESH_TTL, mpath->dst,
+-					cpu_to_le32(mpath->sn),
++			mesh_path_error_tx(sdata->u.mesh.mshcfg.dot11MeshTTL,
++					mpath->dst, cpu_to_le32(mpath->sn),
+ 					cpu_to_le16(PERR_RCODE_DEST_UNREACH),
+ 					bcast, sdata);
+ 		} else
+@@ -614,7 +614,8 @@ void mesh_path_discard_frame(struct sk_b
+ 		mpath = mesh_path_lookup(da, sdata);
+ 		if (mpath)
+ 			sn = ++mpath->sn;
+-		mesh_path_error_tx(MESH_TTL, skb->data, cpu_to_le32(sn),
++		mesh_path_error_tx(sdata->u.mesh.mshcfg.dot11MeshTTL, skb->data,
++				   cpu_to_le32(sn),
+ 				   cpu_to_le16(PERR_RCODE_NO_ROUTE), ra, sdata);
+ 	}
  
-+#define AR9300_PAPRD_RATE_MASK		0x01ffffff
-+#define AR9300_PAPRD_SCALE_1		0x0e000000
-+#define AR9300_PAPRD_SCALE_1_S		25
-+#define AR9300_PAPRD_SCALE_2		0x70000000
-+#define AR9300_PAPRD_SCALE_2_S		28
-+
- /* Delta from which to start power to pdadc table */
- /* This offset is used in both open loop and closed loop power control
-  * schemes. In open loop power control, it is not really needed, but for
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_paprd.c b/drivers/net/wireless/ath/ath9k/ar9003_paprd.c
-index 74cff43..cdca4c3 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_paprd.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_paprd.c
-@@ -52,8 +52,8 @@ static void ar9003_paprd_setup_single_table(struct ath_hw *ah)
- 	else
- 		hdr = &eep->modalHeader2G;
- 
--	am_mask = le32_to_cpu(hdr->papdRateMaskHt20);
--	ht40_mask = le32_to_cpu(hdr->papdRateMaskHt40);
-+	am_mask = le32_to_cpu(hdr->papdRateMaskHt20) & AR9300_PAPRD_RATE_MASK;
-+	ht40_mask = le32_to_cpu(hdr->papdRateMaskHt40) & AR9300_PAPRD_RATE_MASK;
- 
- 	REG_RMW_FIELD(ah, AR_PHY_PAPRD_AM2AM, AR_PHY_PAPRD_AM2AM_MASK, am_mask);
- 	REG_RMW_FIELD(ah, AR_PHY_PAPRD_AM2PM, AR_PHY_PAPRD_AM2PM_MASK, am_mask);
--- 
-1.7.3.2
+--- wireless-testing.orig/net/mac80211/mesh_hwmp.c	2010-12-01 21:31:01.000000000 +0100
++++ wireless-testing/net/mac80211/mesh_hwmp.c	2010-12-01 21:31:30.000000000 +0100
+@@ -232,7 +232,7 @@ int mesh_path_error_tx(u8 ttl, u8 *targe
+ 	*pos++ = WLAN_EID_PERR;
+ 	*pos++ = ie_len;
+ 	/* ttl */
+-	*pos++ = MESH_TTL;
++	*pos++ = ttl;
+ 	/* number of destinations */
+ 	*pos++ = 1;
+ 	/*
+@@ -1013,5 +1013,6 @@ mesh_path_tx_root_frame(struct ieee80211
+ 	mesh_path_sel_frame_tx(MPATH_RANN, 0, sdata->vif.addr,
+ 			       cpu_to_le32(++ifmsh->sn),
+ 			       0, NULL, 0, broadcast_addr,
+-			       0, MESH_TTL, 0, 0, 0, sdata);
++			       0, sdata->u.mesh.mshcfg.dot11MeshTTL,
++			       0, 0, 0, sdata);
+ }
+
 
