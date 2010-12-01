@@ -1,53 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:36936 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755145Ab0LGVAM (ORCPT
+Received: from mail-iw0-f174.google.com ([209.85.214.174]:34174 "EHLO
+	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751971Ab0LAH44 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 7 Dec 2010 16:00:12 -0500
-Date: Tue, 7 Dec 2010 15:57:51 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Javier Cardona <javier@cozybit.com>
-Cc: Steve Derosier <steve@cozybit.com>, devel@lists.open80211s.org,
-	linux-wireless@vger.kernel.org, Jiri Slaby <jirislaby@gmail.com>,
-	Nick Kossifidis <mickflemm@gmail.com>,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	Bob Copeland <me@bobcopeland.com>
-Subject: Re: [PATCH 3/3] ath5k: Put the right tsf value in mesh beacons
-Message-ID: <20101207205751.GJ2700@tuxdriver.com>
-References: <1291169919-3867-1-git-send-email-javier@cozybit.com>
- <1291169919-3867-4-git-send-email-javier@cozybit.com>
+	Wed, 1 Dec 2010 02:56:56 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1291169919-3867-4-git-send-email-javier@cozybit.com>
+In-Reply-To: <1291148375.18026.342.camel@Joe-Laptop>
+References: <5febb0e1fba0ec2bb77f6ade8b251ba0edf4614c.1290988277.git.joe@perches.com>
+ <AANLkTinc251WbwuLqFbOZ5ipNGZW7=wub3DoWwy42=+e@mail.gmail.com>
+ <20101129060732.5130.qmail@stuge.se> <4CF42C17.2070500@openwrt.org>
+ <1291081185.16349.133.camel@Joe-Laptop> <4CF464D6.2020507@openwrt.org> <1291148375.18026.342.camel@Joe-Laptop>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Tue, 30 Nov 2010 23:56:35 -0800
+Message-ID: <AANLkTik2qtGUgkZYSjcEH9jHHsevKnxOvz4s6On94U9o@mail.gmail.com>
+Subject: Re: [ath9k-devel] [PATCH wireless-next] ath: Rename ath_print to ath_debug
+To: Joe Perches <joe@perches.com>
+Cc: Felix Fietkau <nbd@openwrt.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	ath9k-devel@lists.ath9k.org, peter@stuge.se,
+	linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Missing Signed-off-by...
+On Tue, Nov 30, 2010 at 12:19 PM, Joe Perches <joe@perches.com> wrote:
+> On Tue, 2010-11-30 at 03:43 +0100, Felix Fietkau wrote:
+>> On 2010-11-30 2:39 AM, Joe Perches wrote:
+>> > I gauge my willingness to spend time on subsystems on
+>> > the maintainers willingness to merge things that improve
+>> > readability and correctness.
+>> I'm not trying to discourage you from spending time on improving this
+>> code, just doubting the usefulness of such simple function renames.
+>
+> Poor function naming is just that.
+> It reduces readability and the uses are counter expectation.
 
-On Tue, Nov 30, 2010 at 06:18:39PM -0800, Javier Cardona wrote:
-> ---
->  drivers/net/wireless/ath/ath5k/base.c |    3 ++-
->  1 files changed, 2 insertions(+), 1 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/ath/ath5k/base.c b/drivers/net/wireless/ath/ath5k/base.c
-> index 44f3050..6b06754 100644
-> --- a/drivers/net/wireless/ath/ath5k/base.c
-> +++ b/drivers/net/wireless/ath/ath5k/base.c
-> @@ -1889,7 +1889,8 @@ ath5k_beacon_send(struct ath5k_softc *sc)
->  		sc->bmisscount = 0;
->  	}
->  
-> -	if (sc->opmode == NL80211_IFTYPE_AP && sc->num_ap_vifs > 1) {
-> +	if ((sc->opmode == NL80211_IFTYPE_AP && sc->num_ap_vifs > 1) ||
-> +			sc->opmode == NL80211_IFTYPE_MESH_POINT) {
->  		u64 tsf = ath5k_hw_get_tsf64(ah);
->  		u32 tsftu = TSF_TO_TU(tsf);
->  		int slot = ((tsftu % sc->bintval) * ATH_BCBUF) / sc->bintval;
-> -- 
-> 1.7.1
-> 
-> 
+The name is perfect, we use it to print anything, even non-debugging stuff.
 
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+  Luis
