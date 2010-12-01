@@ -1,96 +1,113 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.19.149.2]:36141 "EHLO mail.atheros.com"
+Received: from mail.atheros.com ([12.19.149.2]:16514 "EHLO mail.atheros.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752352Ab0LFMcN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 6 Dec 2010 07:32:13 -0500
-Received: from mail.atheros.com ([10.10.20.105])
+	id S1752162Ab0LALAT (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 1 Dec 2010 06:00:19 -0500
+Received: from mail.atheros.com ([10.10.20.108])
 	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Mon, 06 Dec 2010 04:31:59 -0800
-From: Vasanthakumar Thiagarajan <vasanth@atheros.com>
+	for <linux-wireless@vger.kernel.org>; Wed, 01 Dec 2010 03:00:05 -0800
+From: Senthil Balasubramanian <senthilkumar@atheros.com>
 To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>
-Subject: [PATCH V3 22/27] ath9k_hw: Define IQcal correction coefficient registers using index
-Date: Mon, 6 Dec 2010 04:27:55 -0800
-Message-ID: <1291638480-8950-23-git-send-email-vasanth@atheros.com>
-In-Reply-To: <1291638480-8950-1-git-send-email-vasanth@atheros.com>
-References: <1291638480-8950-1-git-send-email-vasanth@atheros.com>
+CC: <linux-wireless@vger.kernel.org>,
+	Senthil Balasubramanian <senthilkumar@atheros.com>,
+	Stable <stable@kernel.org>,
+	Kyungwan Nam <Kyungwan.Nam@Atheros.com>
+Subject: [PATCH v2 2/2] ath9k: Fix STA disconnect issue due to received MIC failed bcast frames
+Date: Wed, 1 Dec 2010 16:30:05 +0530
+Message-ID: <1291201205-1541-1-git-send-email-senthilkumar@atheros.com>
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Vasanthakumar Thiagarajan <vasanth@atheros.com>
----
- drivers/net/wireless/ath/ath9k/ar9003_calib.c |   10 +++++-----
- drivers/net/wireless/ath/ath9k/ar9003_phy.h   |    8 +++++---
- 2 files changed, 10 insertions(+), 8 deletions(-)
+AR_RxKeyIdxValid will not be set for bcast/mcast frames and so relying
+this status for MIC failed frames is buggy.
 
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_calib.c b/drivers/net/wireless/ath/ath9k/ar9003_calib.c
-index f218613..c3867cd 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_calib.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_calib.c
-@@ -608,11 +608,6 @@ static void ar9003_hw_tx_iq_cal(struct ath_hw *ah)
- 		AR_PHY_TX_IQCAL_STATUS_B1,
- 		AR_PHY_TX_IQCAL_STATUS_B2,
- 	};
--	static const u32 tx_corr_coeff[AR9300_MAX_CHAINS] = {
--		AR_PHY_TX_IQCAL_CORR_COEFF_01_B0,
--		AR_PHY_TX_IQCAL_CORR_COEFF_01_B1,
--		AR_PHY_TX_IQCAL_CORR_COEFF_01_B2,
--	};
- 	static const u32 rx_corr[AR9300_MAX_CHAINS] = {
- 		AR_PHY_RX_IQCAL_CORR_B0,
- 		AR_PHY_RX_IQCAL_CORR_B1,
-@@ -623,11 +618,16 @@ static void ar9003_hw_tx_iq_cal(struct ath_hw *ah)
- 		AR_PHY_CHAN_INFO_TAB_1,
- 		AR_PHY_CHAN_INFO_TAB_2,
- 	};
-+	u32 tx_corr_coeff[AR9300_MAX_CHAINS];
- 	s32 iq_res[6];
- 	s32 iqc_coeff[2];
- 	s32 i, j;
- 	u32 num_chains = 0;
- 
-+	tx_corr_coeff[0] = AR_PHY_TX_IQCAL_CORR_COEFF_B0(0);
-+	tx_corr_coeff[1] = AR_PHY_TX_IQCAL_CORR_COEFF_B1(0);
-+	tx_corr_coeff[2] = AR_PHY_TX_IQCAL_CORR_COEFF_B2(0);
+Due to this, MIC failure events for broadcast frames are not sent to
+supplicant resulted in AP disconnecting the STA.
+
+Able to pass Wifi Test case 5.2.18 with this fix.
+
+Cc: Stable <stable@kernel.org> (2.6.36+)
+Cc: Kyungwan Nam <Kyungwan.Nam@Atheros.com>
+Signed-off-by: Senthil Balasubramanian <senthilkumar@atheros.com>
+---
+v2 -- addressed invalid keyix overrun in tkip_keymap.
+
+ drivers/net/wireless/ath/ath9k/mac.c  |    3 +--
+ drivers/net/wireless/ath/ath9k/recv.c |   13 +++++++++++--
+ 2 files changed, 12 insertions(+), 4 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath9k/mac.c b/drivers/net/wireless/ath/ath9k/mac.c
+index b04b37b..7978b27 100644
+--- a/drivers/net/wireless/ath/ath9k/mac.c
++++ b/drivers/net/wireless/ath/ath9k/mac.c
+@@ -702,8 +702,7 @@ int ath9k_hw_rxprocdesc(struct ath_hw *ah, struct ath_desc *ds,
+ 			rs->rs_phyerr = phyerr;
+ 		} else if (ads.ds_rxstatus8 & AR_DecryptCRCErr)
+ 			rs->rs_status |= ATH9K_RXERR_DECRYPT;
+-		else if ((ads.ds_rxstatus8 & AR_MichaelErr) &&
+-		         rs->rs_keyix != ATH9K_RXKEYIX_INVALID)
++		else if (ads.ds_rxstatus8 & AR_MichaelErr)
+ 			rs->rs_status |= ATH9K_RXERR_MIC;
+ 		else if (ads.ds_rxstatus8 & AR_KeyMiss)
+ 			rs->rs_status |= ATH9K_RXERR_DECRYPT;
+diff --git a/drivers/net/wireless/ath/ath9k/recv.c b/drivers/net/wireless/ath/ath9k/recv.c
+index 262c815..6c0c796 100644
+--- a/drivers/net/wireless/ath/ath9k/recv.c
++++ b/drivers/net/wireless/ath/ath9k/recv.c
+@@ -840,6 +840,10 @@ static bool ath9k_rx_accept(struct ath_common *common,
+ 			    struct ath_rx_status *rx_stats,
+ 			    bool *decrypt_error)
+ {
++#define is_mc_or_valid_tkip_keyix ((is_mc ||			\
++		(rx_stats->rs_keyix != ATH9K_RXKEYIX_INVALID && \
++		test_bit(rx_stats->rs_keyix, common->tkip_keymap))))
 +
- 	for (i = 0; i < AR9300_MAX_CHAINS; i++) {
- 		if (ah->txchainmask & (1 << i))
- 			num_chains++;
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_phy.h b/drivers/net/wireless/ath/ath9k/ar9003_phy.h
-index 4c64eb1..abb4ec1 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_phy.h
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_phy.h
-@@ -549,7 +549,9 @@
- #define AR_PHY_TX_IQCAL_CONTROL_1   (AR_SM_BASE + 0x448)
- #define AR_PHY_TX_IQCAL_START       (AR_SM_BASE + 0x440)
- #define AR_PHY_TX_IQCAL_STATUS_B0   (AR_SM_BASE + 0x48c)
--#define AR_PHY_TX_IQCAL_CORR_COEFF_01_B0    (AR_SM_BASE + 0x450)
-+#define AR_PHY_TX_IQCAL_CORR_COEFF_B0(_i)    (AR_SM_BASE + \
-+					     (AR_SREV_9485(ah) ? \
-+					      0x3d0 : 0x450) + ((_i) << 2))
+ 	struct ath_hw *ah = common->ah;
+ 	__le16 fc;
+ 	u8 rx_status_len = ah->caps.rx_status_len;
+@@ -881,15 +885,18 @@ static bool ath9k_rx_accept(struct ath_common *common,
+ 		if (rx_stats->rs_status & ATH9K_RXERR_DECRYPT) {
+ 			*decrypt_error = true;
+ 		} else if (rx_stats->rs_status & ATH9K_RXERR_MIC) {
++			bool is_mc;
+ 			/*
+ 			 * The MIC error bit is only valid if the frame
+ 			 * is not a control frame or fragment, and it was
+ 			 * decrypted using a valid TKIP key.
+ 			 */
++			is_mc = !!is_multicast_ether_addr(hdr->addr1);
++
+ 			if (!ieee80211_is_ctl(fc) &&
+ 			    !ieee80211_has_morefrags(fc) &&
+ 			    !(le16_to_cpu(hdr->seq_ctrl) & IEEE80211_SCTL_FRAG) &&
+-			    test_bit(rx_stats->rs_keyix, common->tkip_keymap))
++			    is_mc_or_valid_tkip_keyix)
+ 				rxs->flag |= RX_FLAG_MMIC_ERROR;
+ 			else
+ 				rx_stats->rs_status &= ~ATH9K_RXERR_MIC;
+@@ -1037,9 +1044,11 @@ static void ath9k_rx_skb_postprocess(struct ath_common *common,
+ 	int hdrlen, padpos, padsize;
+ 	u8 keyix;
+ 	__le16 fc;
++	bool is_mc;
  
- #define AR_PHY_WATCHDOG_STATUS      (AR_SM_BASE + 0x5c0)
- #define AR_PHY_WATCHDOG_CTL_1       (AR_SM_BASE + 0x5c4)
-@@ -813,7 +815,7 @@
- #define AR_PHY_TPC_11_B1         (AR_SM1_BASE + 0x220)
- #define AR_PHY_PDADC_TAB_1       (AR_SM1_BASE + 0x240)
- #define AR_PHY_TX_IQCAL_STATUS_B1   (AR_SM1_BASE + 0x48c)
--#define AR_PHY_TX_IQCAL_CORR_COEFF_01_B1    (AR_SM1_BASE + 0x450)
-+#define AR_PHY_TX_IQCAL_CORR_COEFF_B1(_i)    (AR_SM_BASE + 0x450 + ((_i) << 2))
+ 	/* see if any padding is done by the hw and remove it */
+ 	hdr = (struct ieee80211_hdr *) skb->data;
++	is_mc = !!is_multicast_ether_addr(hdr->addr1);
+ 	hdrlen = ieee80211_get_hdrlen_from_skb(skb);
+ 	fc = hdr->frame_control;
+ 	padpos = ath9k_cmn_padpos(hdr->frame_control);
+@@ -1060,7 +1069,7 @@ static void ath9k_rx_skb_postprocess(struct ath_common *common,
  
- /*
-  * Channel 2 Register Map
-@@ -866,7 +868,7 @@
- #define AR_PHY_TPC_11_B2         (AR_SM2_BASE + 0x220)
- #define AR_PHY_PDADC_TAB_2       (AR_SM2_BASE + 0x240)
- #define AR_PHY_TX_IQCAL_STATUS_B2   (AR_SM2_BASE + 0x48c)
--#define AR_PHY_TX_IQCAL_CORR_COEFF_01_B2    (AR_SM2_BASE + 0x450)
-+#define AR_PHY_TX_IQCAL_CORR_COEFF_B2(_i)    (AR_SM2_BASE + 0x450 + ((_i) << 2))
+ 	keyix = rx_stats->rs_keyix;
  
- #define AR_PHY_TX_IQCAL_STATUS_B2_FAILED    0x00000001
- 
+-	if (!(keyix == ATH9K_RXKEYIX_INVALID) && !decrypt_error &&
++	if ((is_mc || !(keyix == ATH9K_RXKEYIX_INVALID)) && !decrypt_error &&
+ 	    ieee80211_has_protected(fc)) {
+ 		rxs->flag |= RX_FLAG_DECRYPTED;
+ 	} else if (ieee80211_has_protected(fc)
 -- 
-1.7.0.4
+1.7.2.1
 
