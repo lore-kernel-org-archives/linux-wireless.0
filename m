@@ -1,80 +1,91 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from asmtpout028.mac.com ([17.148.16.103]:52996 "EHLO
-	asmtpout028.mac.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752076Ab0LUTkS (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 21 Dec 2010 14:40:18 -0500
-MIME-version: 1.0
-Content-type: text/plain; CHARSET=US-ASCII
-Received: from [192.168.1.30] ([87.201.169.175])
- by asmtp028.mac.com (Oracle Communications Messaging Exchange Server 7u4-20.01
- 64bit (built Nov 21 2010)) with ESMTPSA id <0LDS00BHNMMW2Y80@asmtp028.mac.com>
- for linux-wireless@vger.kernel.org; Tue, 21 Dec 2010 11:40:12 -0800 (PST)
-Subject: Re: WL1271
-From: Elvis Dowson <elvis.dowson@mac.com>
-In-reply-to: <1292957433.20560.109.camel@t-dhlii>
-Date: Tue, 21 Dec 2010 23:39:54 +0400
-Cc: linux-wireless@vger.kernel.org
-Message-id: <A285AB50-982B-478D-A8A1-9153560175BD@mac.com>
-References: <0826983CC0CB074798C42E77D8ACD07F01AE4A@pdtms1.pdt.com>
- <1292843841.13129.9.camel@chilepepper>
- <0826983CC0CB074798C42E77D8ACD07F01AEA8@pdtms1.pdt.com>
- <1292879085.20560.6.camel@t-dhlii>
- <4CC0832C-93B4-4212-BB5C-1901BB6A63D7@mac.com>
- <1292957433.20560.109.camel@t-dhlii>
-To: "David Lynch Jr." <dhlii@dlasys.net>
+Received: from mail.atheros.com ([12.19.149.2]:13839 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752736Ab0LAHeH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 1 Dec 2010 02:34:07 -0500
+Received: from mail.atheros.com ([10.10.20.105])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Tue, 30 Nov 2010 23:33:53 -0800
+From: Vasanthakumar Thiagarajan <vasanth@atheros.com>
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>
+Subject: [PATCH 10/26] ath9k: Configure pll control for AR9485
+Date: Tue, 30 Nov 2010 23:32:39 -0800
+Message-ID: <1291188775-13707-11-git-send-email-vasanth@atheros.com>
+In-Reply-To: <1291188775-13707-1-git-send-email-vasanth@atheros.com>
+References: <1291188775-13707-1-git-send-email-vasanth@atheros.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+Signed-off-by: Vasanthakumar Thiagarajan <vasanth@atheros.com>
+---
+ drivers/net/wireless/ath/ath9k/ar9003_phy.c |   16 ++++++++++------
+ drivers/net/wireless/ath/ath9k/hw.c         |    7 ++++++-
+ drivers/net/wireless/ath/ath9k/reg.h        |    2 ++
+ 3 files changed, 18 insertions(+), 7 deletions(-)
 
-On Dec 21, 2010, at 10:50 PM, David Lynch Jr. wrote:
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_phy.c b/drivers/net/wireless/ath/ath9k/ar9003_phy.c
+index b34a9e9..4e35bda 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_phy.c
++++ b/drivers/net/wireless/ath/ath9k/ar9003_phy.c
+@@ -390,14 +390,18 @@ static u32 ar9003_hw_compute_pll_control(struct ath_hw *ah,
+ {
+ 	u32 pll;
+ 
+-	pll = SM(0x5, AR_RTC_9300_PLL_REFDIV);
++	if (AR_SREV_9485(ah))
++		pll = 0x142c;
++	else {
++		pll = SM(0x5, AR_RTC_9300_PLL_REFDIV);
+ 
+-	if (chan && IS_CHAN_HALF_RATE(chan))
+-		pll |= SM(0x1, AR_RTC_9300_PLL_CLKSEL);
+-	else if (chan && IS_CHAN_QUARTER_RATE(chan))
+-		pll |= SM(0x2, AR_RTC_9300_PLL_CLKSEL);
++		if (chan && IS_CHAN_HALF_RATE(chan))
++			pll |= SM(0x1, AR_RTC_9300_PLL_CLKSEL);
++		else if (chan && IS_CHAN_QUARTER_RATE(chan))
++			pll |= SM(0x2, AR_RTC_9300_PLL_CLKSEL);
+ 
+-	pll |= SM(0x2c, AR_RTC_9300_PLL_DIV);
++		pll |= SM(0x2c, AR_RTC_9300_PLL_DIV);
++	}
+ 
+ 	return pll;
+ }
+diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
+index b1d3c1e..79a4e70 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.c
++++ b/drivers/net/wireless/ath/ath9k/hw.c
+@@ -676,7 +676,12 @@ static void ath9k_hw_init_qos(struct ath_hw *ah)
+ static void ath9k_hw_init_pll(struct ath_hw *ah,
+ 			      struct ath9k_channel *chan)
+ {
+-	u32 pll = ath9k_hw_compute_pll_control(ah, chan);
++	u32 pll;
++
++	if (AR_SREV_9485(ah))
++		REG_WRITE(ah, AR_RTC_PLL_CONTROL2, 0x886666);
++
++	pll = ath9k_hw_compute_pll_control(ah, chan);
+ 
+ 	REG_WRITE(ah, AR_RTC_PLL_CONTROL, pll);
+ 
+diff --git a/drivers/net/wireless/ath/ath9k/reg.h b/drivers/net/wireless/ath/ath9k/reg.h
+index 0153ba1..d3257f7 100644
+--- a/drivers/net/wireless/ath/ath9k/reg.h
++++ b/drivers/net/wireless/ath/ath9k/reg.h
+@@ -1114,6 +1114,8 @@ enum {
+ #define AR_RTC_PLL_CONTROL \
+ 	((AR_SREV_9100(ah)) ? (AR_RTC_BASE + 0x0014) : 0x7014)
+ 
++#define AR_RTC_PLL_CONTROL2	0x703c
++
+ #define AR_RTC_PLL_DIV          0x0000001f
+ #define AR_RTC_PLL_DIV_S        0
+ #define AR_RTC_PLL_DIV2         0x00000020
+-- 
+1.7.0.4
 
-> 	I am essentially doing exactly the same thing as you are - but I am a
-> few days behind you. I noted a post of yours about 10 days ago in
-> linux-omap that you were having voltage/SDIO detection problems. I am
-> having exactly that problem at this moment.  
-> 	How did you work arround it ?
-> 	The WL1271 is attached to MMC2 on my system. All the examples in the
-> linux wireless tree are on SPI or MMC3. But I think I managed changing
-> things correctly - except that the error reports are mmc1:
-> 	Also the comments suggest that the WL1271 has its own internal voltage
-> regulation. 
-> 	That and a CY8CTMG-200 touch screen are the only major items I need
-> working to polish off this project. 
-
-If you could send me the schematics, I could comment on it.
-
-There were a couple of hardware related problems that prevented the device from
-booting up. 
-
-Here are some of the key things to watch out for:
-
-a. You need a slow clock (SYS 32K signal from the omap processor) to the wlan module
-
-b. You need to ensure that you have a 26Mhz TXCO signal coming in for the fast clock.
-
-This would be controlled by a fixed voltage regulator. The wlan module asserts a WL_CLK_REQ
-signal high, which is a signal sent to the LDO to turn on the 26MHz TXCO.
-
-c. You need to probe MMC2 CLK signals to ensure that a 24MHz signal is being generated at the 
-output, when the MMC2 controller is initialized.
-
-d. You need to update the mux settings to ensure that the MMC2 CMD, CLK, DAT 0 to DAT3, plus
-GPIO pins for WLAN_EN and WLAN_IRQ are muxed correctly.
-
-This should take care of it. 
-
-The SDIO detection problems occured because the 26MHZ TXCO was not being turn on.
-
-You should also be aware of the TI WL1271 power up sequence, which is 10ms pulse high, 64us low,
-and then asserted high for atleast 64ms. This is taken care of in the driver code.
-
-Also use the linux-2.6.37-rc6 kernel patch, and apply the patch to read the MAC address from the nvs file.
-
-Also put the firmware and nvs file in /lib/firmware folder, and configure wpa_supplicant.conf to connect
-to a secured access point.
-
-Best regards,
-
-Elvis
