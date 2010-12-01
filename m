@@ -1,40 +1,89 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qw0-f46.google.com ([209.85.216.46]:42047 "EHLO
-	mail-qw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751913Ab0LMMgu convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 13 Dec 2010 07:36:50 -0500
-Received: by qwa26 with SMTP id 26so6177227qwa.19
-        for <linux-wireless@vger.kernel.org>; Mon, 13 Dec 2010 04:36:50 -0800 (PST)
+Received: from mail.atheros.com ([12.19.149.2]:13845 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752896Ab0LAHeZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 1 Dec 2010 02:34:25 -0500
+Received: from mail.atheros.com ([10.10.20.105])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Tue, 30 Nov 2010 23:34:10 -0800
+From: Vasanthakumar Thiagarajan <vasanth@atheros.com>
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>
+Subject: [PATCH 13/26] ath9k: Read spur channel information from eeprom for AR9485
+Date: Tue, 30 Nov 2010 23:32:42 -0800
+Message-ID: <1291188775-13707-14-git-send-email-vasanth@atheros.com>
+In-Reply-To: <1291188775-13707-1-git-send-email-vasanth@atheros.com>
+References: <1291188775-13707-1-git-send-email-vasanth@atheros.com>
 MIME-Version: 1.0
-In-Reply-To: <688860.58781.qm@web56806.mail.re3.yahoo.com>
-References: <201012131232.50201.IvDoorn@gmail.com>
-	<688860.58781.qm@web56806.mail.re3.yahoo.com>
-Date: Mon, 13 Dec 2010 13:36:49 +0100
-Message-ID: <AANLkTi=fp3yiFYKBjkMvis4TAdMAc27J-0d=n2VhQMUB@mail.gmail.com>
-Subject: Re: [PATCH 04/17] rt2x00: fix hang when unplugging USB device in use
-From: Ivo Van Doorn <ivdoorn@gmail.com>
-To: Walter Goldens <goldenstranger@yahoo.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>, js@sig21.net,
-	linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+Also spur channel count and range is different for AR9485.
 
-> I have two issues to report regarding system hangs. The system would either freeze entirely, prompting me to hard-reset it, or it would freeze certain parts of the system like, no shell commands execution. These occurrences manifest themselves sporadically, when I'm switching between modes (ad-hoc, monitor etc.), also when I try to rmmod the rt2xxx stuff or when unplugging the USB chip. I have to "ifconcfig wlanx down" the device first in order to not hang my box. My question is, will this patch fix all of that, or only parts of it? Here's log I managed to dig out.
+Signed-off-by: Vasanthakumar Thiagarajan <vasanth@atheros.com>
+---
+ drivers/net/wireless/ath/ath9k/ar9003_phy.c |   35 ++++++++++++++++++++++++--
+ 1 files changed, 32 insertions(+), 3 deletions(-)
 
-This patch, but also the queue refactoring patches in this series
-should resolve all unplug and rmmod bugs.
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_phy.c b/drivers/net/wireless/ath/ath9k/ar9003_phy.c
+index 4739af1..e461723 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_phy.c
++++ b/drivers/net/wireless/ath/ath9k/ar9003_phy.c
+@@ -154,21 +154,50 @@ static void ar9003_hw_spur_mitigate_mrc_cck(struct ath_hw *ah,
+ 	static const u32 spur_freq[4] = { 2420, 2440, 2464, 2480 };
+ 	int cur_bb_spur, negative = 0, cck_spur_freq;
+ 	int i;
++	int range, max_spur_cnts, synth_freq;
++	u8 *spur_fbin_ptr = NULL;
+ 
+ 	/*
+ 	 * Need to verify range +/- 10 MHz in control channel, otherwise spur
+ 	 * is out-of-band and can be ignored.
+ 	 */
+ 
+-	for (i = 0; i < 4; i++) {
++	if (AR_SREV_9485(ah)) {
++		spur_fbin_ptr = ar9003_get_spur_chan_ptr(ah,
++							 IS_CHAN_2GHZ(chan));
++		if (spur_fbin_ptr[0] == 0) /* No spur */
++			return;
++		max_spur_cnts = 5;
++		if (IS_CHAN_HT40(chan)) {
++			range = 19;
++			if (REG_READ_FIELD(ah, AR_PHY_GEN_CTRL,
++					   AR_PHY_GC_DYN2040_PRI_CH) == 0)
++				synth_freq = chan->channel + 10;
++			else
++				synth_freq = chan->channel - 10;
++		} else {
++			range = 10;
++			synth_freq = chan->channel;
++		}
++	} else {
++		range = 10;
++		max_spur_cnts = 4;
++		synth_freq = chan->channel;
++	}
++
++	for (i = 0; i < max_spur_cnts; i++) {
+ 		negative = 0;
+-		cur_bb_spur = spur_freq[i] - chan->channel;
++		if (AR_SREV_9485(ah))
++			cur_bb_spur = FBIN2FREQ(spur_fbin_ptr[i],
++					IS_CHAN_2GHZ(chan)) - synth_freq;
++		else
++			cur_bb_spur = spur_freq[i] - synth_freq;
+ 
+ 		if (cur_bb_spur < 0) {
+ 			negative = 1;
+ 			cur_bb_spur = -cur_bb_spur;
+ 		}
+-		if (cur_bb_spur < 10) {
++		if (cur_bb_spur < range) {
+ 			cck_spur_freq = (int)((cur_bb_spur << 19) / 11);
+ 
+ 			if (negative == 1)
+-- 
+1.7.0.4
 
-> My second question pertains to the STA drivers - rt3070sta. It is not possible to switch between the rt2800usb and rt3070sta without having to unplug the device and plugging it back again followed by loading manually the desired driver.
-> I'm not sure but I think this might have  something to do withe voltage settings or the firmware. But it really is annoying to physically unplug the USB chip every time I switch between the two modules.
-> Is it possible to enable switching between rt3070sta/rt2800usb without unplugging/plugging the USB chip?
-
-It should be possible, but what are the exact problems that you encounter?
-Is there a difference between going from rt3070sta to rt2800usb and vice versa?
-(Please note that the rt2x00 project doesn't maintain the rt3070sta
-driver in the staging directory).
-
-Ivo
