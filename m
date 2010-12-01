@@ -1,41 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail30t.wh2.ocn.ne.jp ([125.206.180.136]:41337 "HELO
-	mail30t.wh2.ocn.ne.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1756060Ab0LBKiY (ORCPT
+Received: from mail-bw0-f46.google.com ([209.85.214.46]:39816 "EHLO
+	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755427Ab0LAOlx (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 2 Dec 2010 05:38:24 -0500
-Received: from vs3001.wh2.ocn.ne.jp (125.206.180.229)
-	by mail30t.wh2.ocn.ne.jp (RS ver 1.0.95vs) with SMTP id 4-0717256302
-	for <linux-wireless@vger.kernel.org>; Thu,  2 Dec 2010 19:38:23 +0900 (JST)
-From: Bruno Randolf <br1@einfach.org>
-To: Johannes Berg <johannes@sipsolutions.net>
-Subject: Re: [PATCH 2/3] lib: Improve EWMA efficiency by using bitshifts
-Date: Thu, 2 Dec 2010 19:37:44 +0900
-Cc: linville@tuxdriver.com, randy.dunlap@oracle.com,
-	peterz@infradead.org, blp@cs.stanford.edu,
-	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Lars_Ericsson@telia.com, j@w1.fi, stefanr@s5r6.in-berlin.de,
-	kosaki.motohiro@jp.fujitsu.com, akpm@linux-foundation.org,
-	kevin.granade@gmail.com
-References: <20101202101231.22988.33396.stgit@localhost6.localdomain6> <20101202101236.22988.1691.stgit@localhost6.localdomain6> <1291285222.3481.45.camel@jlt3.sipsolutions.net>
-In-Reply-To: <1291285222.3481.45.camel@jlt3.sipsolutions.net>
+	Wed, 1 Dec 2010 09:41:53 -0500
+Received: by bwz15 with SMTP id 15so6180806bwz.19
+        for <linux-wireless@vger.kernel.org>; Wed, 01 Dec 2010 06:41:51 -0800 (PST)
+From: Helmut Schaa <helmut.schaa@googlemail.com>
+To: Mohammed Shafi <shafi.wireless@gmail.com>
+Subject: Re: [PATCH] mac80211: Update last_tx_rate only for data frames
+Date: Wed, 1 Dec 2010 15:40:44 +0100
+Cc: linux-wireless@vger.kernel.org, johannes@sipsolutions.net
+References: <1291202302-9698-1-git-send-email-helmut.schaa@googlemail.com> <AANLkTi=_61HVmSBR-9v3ukVw-mpouoaFwYE8cpfa96wH@mail.gmail.com>
+In-Reply-To: <AANLkTi=_61HVmSBR-9v3ukVw-mpouoaFwYE8cpfa96wH@mail.gmail.com>
 MIME-Version: 1.0
 Content-Type: Text/Plain;
-  charset="utf-8"
-Message-Id: <201012021937.44368.br1@einfach.org>
+  charset="us-ascii"
+Message-Id: <201012011540.45031.helmut.schaa@googlemail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu December 2 2010 19:20:22 Johannes Berg wrote:
-> On Thu, 2010-12-02 at 19:12 +0900, Bruno Randolf wrote:
-> > +	/* get bitshift for weight */
-> > +	for (n = 0; !(weight & 1); n++)
-> > +		weight = weight >> 1;
-> > +	WARN_ON(weight > 1 || n < 1);
-> 
-> I'm sure there's something like log2() (and is_power_of_2() for the
-> warning) in the kernel already -- no need to reimplement it...
+Hi,
 
-Ah, thanks for that! Will resend an improved version.
+Am Mittwoch 01 Dezember 2010 schrieb Mohammed Shafi:
+> On Wed, Dec 1, 2010 at 4:48 PM, Helmut Schaa
+> <helmut.schaa@googlemail.com> wrote:
+> > The last_tx_rate field was also updated for non-data frames that are
+> > often sent with a lower rate (for example management frames at 1 Mbps).
+> > This is confusing when the data rate is actually much higher.
+> >
+> > Hence, only update the last_tx_rate field with tx rate information
+> > gathered from the last data frames.
+>
+> Hi Helmut,
+>             I have a doubt,ideally should not this be taken care by the driver ?
 
-bruno
+Sorry, I don't get your point. How should that be handled by the driver? Could
+you please elaborate?
+
+last_tx_rate is part of the sta_info struct and is documented as:
+
+207  * @last_tx_rate: rate used for last transmit, to report to userspace as
+208  *      "the" transmit rate
+
+So, the fields sole purpose is to report the "current" tx rate to user space.
+A normal user (IMO) would like to see the current tx rate that is used for
+data frames and not occasionally a 1Mbps because a management frame was the
+last sent frame.
+
+Helmut
