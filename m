@@ -1,56 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.19.149.2]:61720 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753358Ab0LBMW3 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 2 Dec 2010 07:22:29 -0500
-Received: from mail.atheros.com ([10.10.20.105])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Thu, 02 Dec 2010 04:22:14 -0800
-Date: Thu, 2 Dec 2010 17:51:47 +0530
-From: Vasanthakumar Thiagarajan <vasanth@atheros.com>
-To: Julian Calaby <julian.calaby@gmail.com>
-CC: Vasanth Thiagarajan <Vasanth.Thiagarajan@Atheros.com>,
-	"linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH V2 16/27] ath9k_hw: Read and configure antenna
-	diversity control for AR9485
-Message-ID: <20101202122147.GN12908@vasanth-laptop>
-References: <1291288031-3409-1-git-send-email-vasanth@atheros.com> <1291288031-3409-17-git-send-email-vasanth@atheros.com> <AANLkTi=Fb0HA1DbaRp21kOS3x4-s_Oh+UZok2jNK3-PG@mail.gmail.com> <20101202120925.GM12908@vasanth-laptop> <AANLkTimmHLG8PU=1AweKqcPnyF4=6q3QNmA2nVeV00fh@mail.gmail.com>
+Received: from mail-iw0-f174.google.com ([209.85.214.174]:43374 "EHLO
+	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754097Ab0LAHwd convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 1 Dec 2010 02:52:33 -0500
+Received: by iwn10 with SMTP id 10so792296iwn.19
+        for <linux-wireless@vger.kernel.org>; Tue, 30 Nov 2010 23:52:32 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <AANLkTimmHLG8PU=1AweKqcPnyF4=6q3QNmA2nVeV00fh@mail.gmail.com>
+In-Reply-To: <1291188775-13707-1-git-send-email-vasanth@atheros.com>
+References: <1291188775-13707-1-git-send-email-vasanth@atheros.com>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Tue, 30 Nov 2010 23:52:12 -0800
+Message-ID: <AANLkTi=9y+BfLGxSqofYkeMZEXA8QDrsaPG0yLtYNEi2@mail.gmail.com>
+Subject: Re: [PATCH 00/26] Add support for AR9485
+To: Vasanthakumar Thiagarajan <vasanth@atheros.com>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Dec 02, 2010 at 05:46:05PM +0530, Julian Calaby wrote:
-> On Thu, Dec 2, 2010 at 23:09, Vasanthakumar Thiagarajan
-> <vasanth@atheros.com> wrote:
-> > No, these are to separate things.
-> 
-> Are you sure? you seem to be doing:
-> 
-> if (!AR_SREV_9485(ah)) {
->     // CODE
-> }
-> 
-> if (AR_SREV_9485(ah)) {
->     // MORE CODE
-> }
-> 
-> which I'm certain can be simlified as:
-> 
-> if (!AR_SREV_9485(ah)) {
->     // CODE
-> } else {
->     // MORE CODE
-> }
-> 
-> unless you're telling me that the value of AR_SREV_9485(ah) can change
-> in the course of the first statement.
+On Tue, Nov 30, 2010 at 11:32 PM, Vasanthakumar Thiagarajan
+<vasanth@atheros.com> wrote:
+> John,
+>
+>        This patch series add support for a new chipset of AR9003 family.
+> This chip(AR9485) is an 1x1 and 2.4Ghz band only.
 
-I mean the register configuration. In one case, chain 1 and chain 2
-are irrelevant for AR9485. The second is antenna diversity is
-enabled only for AR9485. Putting them in if..else would be
-misleading, though is can be in if..else.
+Very nice Vasanth, good stuff! If these are all checkpatch.pl and sparse tested:
 
-Vasanth
+Acked-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+
+  Luis
