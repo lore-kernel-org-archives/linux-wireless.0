@@ -1,55 +1,135 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ogre.sisk.pl ([217.79.144.158]:52582 "EHLO ogre.sisk.pl"
+Received: from mail.atheros.com ([12.19.149.2]:13831 "EHLO mail.atheros.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752325Ab0LZSho (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 26 Dec 2010 13:37:44 -0500
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
-To: "Ohad Ben-Cohen" <ohad@wizery.com>
-Subject: Re: [linux-pm] subtle pm_runtime_put_sync race and sdio functions
-Date: Sun, 26 Dec 2010 19:37:21 +0100
-Cc: Alan Stern <stern@rowland.harvard.edu>,
-	linux-pm@lists.linux-foundation.org,
-	Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless@vger.kernel.org, linux-mmc@vger.kernel.org,
-	Ido Yariv <ido@wizery.com>,
-	Kevin Hilman <khilman@deeprootsystems.com>
-References: <AANLkTimj0E3Rz_8WQrU4wGg3ONyXzkUT9+U3Xqz7Cq0X@mail.gmail.com> <201012261245.29680.rjw@sisk.pl> <AANLkTinvBD6NhHY7PMw9NSJNBW77-Gah8Vcow6t1aiCT@mail.gmail.com>
-In-Reply-To: <AANLkTinvBD6NhHY7PMw9NSJNBW77-Gah8Vcow6t1aiCT@mail.gmail.com>
+	id S1752736Ab0LAHdb (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 1 Dec 2010 02:33:31 -0500
+Received: from mail.atheros.com ([10.10.20.105])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Tue, 30 Nov 2010 23:33:17 -0800
+From: Vasanthakumar Thiagarajan <vasanth@atheros.com>
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>
+Subject: [PATCH 05/26] ath9k_hw: Initialize tx/rx gain table from initvals.h for AR9485
+Date: Tue, 30 Nov 2010 23:32:34 -0800
+Message-ID: <1291188775-13707-6-git-send-email-vasanth@atheros.com>
+In-Reply-To: <1291188775-13707-1-git-send-email-vasanth@atheros.com>
+References: <1291188775-13707-1-git-send-email-vasanth@atheros.com>
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Message-Id: <201012261937.21256.rjw@sisk.pl>
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sunday, December 26, 2010, Ohad Ben-Cohen wrote:
-> On Sun, Dec 26, 2010 at 1:45 PM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
-> > (It still is not a race, though.)
-> 
-> Thread 1
-> =======
-> 
-> suspend_handler_of_a_random_device()
-> {
->     return failure;
-> }
-> 
-> Thread 2
-> =======
-> 
-> suspend_handler_of_our_mmc_host_controller()
-> {
->     invoke our sdio suspend handler and power down the card (directly);
->     return success;
-> }
-> 
-> If thread 2 wins => everything is cool
-> If thread 1 wins => our driver will not be able to resume
-> 
-> The race begins after mac80211 invokes our driver's power off handler,
-> which is using pm_runtime_put_sync().
+Signed-off-by: Vasanthakumar Thiagarajan <vasanth@atheros.com>
+---
+ drivers/net/wireless/ath/ath9k/ar9003_hw.c |   82 +++++++++++++++++++++-------
+ 1 files changed, 62 insertions(+), 20 deletions(-)
 
-So, it only happens during asynchronous suspend?  In other words, if suspend
-is synchronous, everything should be fine, right?
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_hw.c b/drivers/net/wireless/ath/ath9k/ar9003_hw.c
+index f01c289..21a5bfe 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_hw.c
++++ b/drivers/net/wireless/ath/ath9k/ar9003_hw.c
+@@ -175,22 +175,52 @@ static void ar9003_tx_gain_table_apply(struct ath_hw *ah)
+ 	switch (ar9003_hw_get_tx_gain_idx(ah)) {
+ 	case 0:
+ 	default:
+-		INIT_INI_ARRAY(&ah->iniModesTxGain,
+-			       ar9300Modes_lowest_ob_db_tx_gain_table_2p2,
+-			       ARRAY_SIZE(ar9300Modes_lowest_ob_db_tx_gain_table_2p2),
+-			       5);
++		if (AR_SREV_9485(ah))
++			INIT_INI_ARRAY(&ah->iniModesTxGain,
++				       ar9485Modes_lowest_ob_db_tx_gain_1_0,
++				       ARRAY_SIZE(ar9485Modes_lowest_ob_db_tx_gain_1_0),
++				       5);
++		else
++			INIT_INI_ARRAY(&ah->iniModesTxGain,
++				       ar9300Modes_lowest_ob_db_tx_gain_table_2p2,
++				       ARRAY_SIZE(ar9300Modes_lowest_ob_db_tx_gain_table_2p2),
++				       5);
+ 		break;
+ 	case 1:
+-		INIT_INI_ARRAY(&ah->iniModesTxGain,
+-			       ar9300Modes_high_ob_db_tx_gain_table_2p2,
+-			       ARRAY_SIZE(ar9300Modes_high_ob_db_tx_gain_table_2p2),
+-			       5);
++		if (AR_SREV_9485(ah))
++			INIT_INI_ARRAY(&ah->iniModesTxGain,
++				       ar9485Modes_high_ob_db_tx_gain_1_0,
++				       ARRAY_SIZE(ar9485Modes_lowest_ob_db_tx_gain_1_0),
++				       5);
++		else
++			INIT_INI_ARRAY(&ah->iniModesTxGain,
++				       ar9300Modes_high_ob_db_tx_gain_table_2p2,
++				       ARRAY_SIZE(ar9300Modes_high_ob_db_tx_gain_table_2p2),
++				       5);
+ 		break;
+ 	case 2:
+-		INIT_INI_ARRAY(&ah->iniModesTxGain,
+-			       ar9300Modes_low_ob_db_tx_gain_table_2p2,
+-			       ARRAY_SIZE(ar9300Modes_low_ob_db_tx_gain_table_2p2),
+-			       5);
++		if (AR_SREV_9485(ah))
++			INIT_INI_ARRAY(&ah->iniModesTxGain,
++				       ar9485Modes_low_ob_db_tx_gain_1_0,
++				       ARRAY_SIZE(ar9485Modes_lowest_ob_db_tx_gain_1_0),
++				       5);
++		else
++			INIT_INI_ARRAY(&ah->iniModesTxGain,
++				       ar9300Modes_low_ob_db_tx_gain_table_2p2,
++				       ARRAY_SIZE(ar9300Modes_low_ob_db_tx_gain_table_2p2),
++				       5);
++		break;
++	case 3:
++		if (AR_SREV_9485(ah))
++			INIT_INI_ARRAY(&ah->iniModesTxGain,
++				       ar9485Modes_high_power_tx_gain_1_0,
++				       ARRAY_SIZE(ar9485Modes_high_power_tx_gain_1_0),
++				       5);
++		else
++			INIT_INI_ARRAY(&ah->iniModesTxGain,
++				       ar9300Modes_high_power_tx_gain_table_2p2,
++				       ARRAY_SIZE(ar9300Modes_high_power_tx_gain_table_2p2),
++				       5);
+ 		break;
+ 	}
+ }
+@@ -200,16 +230,28 @@ static void ar9003_rx_gain_table_apply(struct ath_hw *ah)
+ 	switch (ar9003_hw_get_rx_gain_idx(ah)) {
+ 	case 0:
+ 	default:
+-		INIT_INI_ARRAY(&ah->iniModesRxGain,
+-			       ar9300Common_rx_gain_table_2p2,
+-			       ARRAY_SIZE(ar9300Common_rx_gain_table_2p2),
+-			       2);
++		if (AR_SREV_9485(ah))
++			INIT_INI_ARRAY(&ah->iniModesRxGain,
++				       ar9485Common_rx_gain_1_0,
++				       ARRAY_SIZE(ar9485Common_rx_gain_1_0),
++				       2);
++		else
++			INIT_INI_ARRAY(&ah->iniModesRxGain,
++				       ar9300Common_rx_gain_table_2p2,
++				       ARRAY_SIZE(ar9300Common_rx_gain_table_2p2),
++				       2);
+ 		break;
+ 	case 1:
+-		INIT_INI_ARRAY(&ah->iniModesRxGain,
+-			       ar9300Common_wo_xlna_rx_gain_table_2p2,
+-			       ARRAY_SIZE(ar9300Common_wo_xlna_rx_gain_table_2p2),
+-			       2);
++		if (AR_SREV_9485(ah))
++			INIT_INI_ARRAY(&ah->iniModesRxGain,
++				       ar9485Common_wo_xlna_rx_gain_1_0,
++				       ARRAY_SIZE(ar9485Common_wo_xlna_rx_gain_1_0),
++				       2);
++		else
++			INIT_INI_ARRAY(&ah->iniModesRxGain,
++				       ar9300Common_wo_xlna_rx_gain_table_2p2,
++				       ARRAY_SIZE(ar9300Common_wo_xlna_rx_gain_table_2p2),
++				       2);
+ 		break;
+ 	}
+ }
+-- 
+1.7.0.4
 
-Rafael
