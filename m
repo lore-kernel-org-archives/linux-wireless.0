@@ -1,219 +1,340 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 128-177-27-249.ip.openhosting.com ([128.177.27.249]:48060 "EHLO
-	jmalinen.user.openhosting.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751691Ab0LOWwr (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 15 Dec 2010 17:52:47 -0500
-Date: Thu, 16 Dec 2010 00:52:40 +0200
-From: Jouni Malinen <j@w1.fi>
-To: "John W. Linville" <linville@tuxdriver.com>,
-	Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH v3] nl80211: Add notification for dropped Deauth/Disassoc
-Message-ID: <20101215225240.GB19473@jm.kir.nu>
-References: <20101213220048.GA24752@jm.kir.nu>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20101213220048.GA24752@jm.kir.nu>
+Received: from mail.perches.com ([173.55.12.10]:2048 "EHLO mail.perches.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754972Ab0LARRH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 1 Dec 2010 12:17:07 -0500
+Subject: Re: [ath9k-devel] [PATCH wireless-next] ath: Rename ath_print to
+ ath_debug
+From: Joe Perches <joe@perches.com>
+To: Felix Fietkau <nbd@openwrt.org>
+Cc: "Luis R. Rodriguez" <mcgrof@gmail.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	ath9k-devel@lists.ath9k.org, peter@stuge.se,
+	linux-kernel@vger.kernel.org
+In-Reply-To: <4CF65DB9.3050007@openwrt.org>
+References: <5febb0e1fba0ec2bb77f6ade8b251ba0edf4614c.1290988277.git.joe@perches.com>
+	 <AANLkTinc251WbwuLqFbOZ5ipNGZW7=wub3DoWwy42=+e@mail.gmail.com>
+	 <20101129060732.5130.qmail@stuge.se> <4CF42C17.2070500@openwrt.org>
+	 <1291081185.16349.133.camel@Joe-Laptop> <4CF464D6.2020507@openwrt.org>
+	 <1291148375.18026.342.camel@Joe-Laptop>
+	 <AANLkTik2qtGUgkZYSjcEH9jHHsevKnxOvz4s6On94U9o@mail.gmail.com>
+	 <1291213675.1845.12.camel@Joe-Laptop>  <4CF65DB9.3050007@openwrt.org>
+Content-Type: text/plain; charset="UTF-8"
+Date: Wed, 01 Dec 2010 09:17:05 -0800
+Message-ID: <1291223825.1845.170.camel@Joe-Laptop>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Add a new notification to indicate that a received, unprotected
-Deauthentication or Disassociation frame was dropped due to
-management frame protection being in use. This notification is
-needed to allow user space (e.g., wpa_supplicant) to implement
-SA Query procedure to recover from association state mismatch
-between an AP and STA.
+On Wed, 2010-12-01 at 15:37 +0100, Felix Fietkau wrote:
+> On 2010-12-01 3:27 PM, Joe Perches wrote:
+> > On Tue, 2010-11-30 at 23:56 -0800, Luis R. Rodriguez wrote:
+> >> On Tue, Nov 30, 2010 at 12:19 PM, Joe Perches <joe@perches.com> wrote:
+> >> > Poor function naming is just that.
+> >> > It reduces readability and the uses are counter expectation.
+> >> The name is perfect, we use it to print anything, even non-debugging stuff.
+> > 
+> > 'fraid not.
+> > 
+> > ath/debug.h
+> > 
+> > #ifdef CONFIG_ATH_DEBUG
+> > void ath_print(struct ath_common *common, int dbg_mask, const char *fmt, ...)
+> > 	__attribute__ ((format (printf, 3, 4)));
+> > #else
+> > static inline void __attribute__ ((format (printf, 3, 4)))
+> > ath_print(struct ath_common *common, int dbg_mask, const char *fmt, ...)
+> > {
+> > }
+> > #endif /* CONFIG_ATH_DEBUG */
+> Now we're getting closer to something worth fixing. IMHO we should
+> change the code so that ath_print(common, ATH_DBG_FATAL, ...) prints
+> something even with CONFIG_ATH_DEBUG unset. To get this done, some
+> renaming would make sense here.
 
-This is needed to avoid getting stuck in non-working state when MFP
-(IEEE 802.11w) is used and a protected Deauthentication or
-Disassociation frame is dropped for any reason. After that, the
-station would silently discard any unprotected Deauthentication or
-Disassociation frame that could be indicating that the AP does not
-have association for the STA (when the Reason Code would be 6 or 7).
-IEEE Std 802.11w-2009, 11.13 describes this recovery mechanism.
+Perhaps the function name is bad after all
+if Luis believed it be be always active.
 
-Signed-off-by: Jouni Malinen <j@w1.fi>
+If there are going to be other non-debug uses,
+I suggest adding the more standard styles of
+ath_printk and ath_<level> similar to
+dev_printk and dev_<level> from device.h
+
+Something like this for a start, then a more
+gradual rename of ath_print to ath_dbg (or
+ath_debug) as the original patch suggested.
+
+This basically removes debug.h leaving
+only an #define ath_printk ath_dbg
+there and moving all the ATH_DBG_<foo>
+enums to ath.h
+
+I do not think there's much purpose for struct
+ath_common * being passed to the ath_printk
+functions, but perhaps there might be.
+
+Signed-off-by: Joe Perches <joe@perches.com>
 
 ---
- include/linux/nl80211.h |   10 ++++++++++
- include/net/cfg80211.h  |   26 ++++++++++++++++++++++++++
- net/mac80211/rx.c       |   22 ++++++++++++++++++++--
- net/wireless/mlme.c     |   22 ++++++++++++++++++++++
- net/wireless/nl80211.c  |   16 ++++++++++++++++
- net/wireless/nl80211.h  |    6 ++++++
- 6 files changed, 100 insertions(+), 2 deletions(-)
 
-v3: Include the forgotten include/net/cfg80211.h changes
+ drivers/net/wireless/ath/ath.h   |  103 ++++++++++++++++++++++++++++++++++++++
+ drivers/net/wireless/ath/debug.c |   20 -------
+ drivers/net/wireless/ath/debug.h |   72 +--------------------------
+ drivers/net/wireless/ath/main.c  |   20 +++++++
+ 4 files changed, 124 insertions(+), 91 deletions(-)
 
-
---- wireless-testing.orig/include/linux/nl80211.h	2010-12-16 00:45:15.000000000 +0200
-+++ wireless-testing/include/linux/nl80211.h	2010-12-16 00:45:18.000000000 +0200
-@@ -394,6 +394,13 @@
-  *
-  * @NL80211_CMD_SET_WDS_PEER: Set the MAC address of the peer on a WDS interface.
-  *
-+ * @NL80211_CMD_UNPROT_DEAUTHENTICATE: Unprotected deauthentication frame
-+ *	notification. This event is used to indicate that an unprotected
-+ *	deauthentication frame was dropped when MFP is in use.
-+ * @NL80211_CMD_UNPROT_DISASSOCIATE: Unprotected disassociation frame
-+ *	notification. This event is used to indicate that an unprotected
-+ *	disassociation frame was dropped when MFP is in use.
+diff --git a/drivers/net/wireless/ath/ath.h b/drivers/net/wireless/ath/ath.h
+index 26bdbee..5a598b9 100644
+--- a/drivers/net/wireless/ath/ath.h
++++ b/drivers/net/wireless/ath/ath.h
+@@ -186,4 +186,107 @@ bool ath_hw_keyreset(struct ath_common *common, u16 entry);
+ void ath_hw_cycle_counters_update(struct ath_common *common);
+ int32_t ath_hw_get_listen_time(struct ath_common *common);
+ 
++extern __attribute__ ((format (printf, 3, 4))) int
++ath_printk(const char *level, struct ath_common *common, const char *fmt, ...);
++
++#define ath_emerg(common, fmt, ...)				\
++	ath_printk(KERN_EMERG, common, fmt, ##__VA_ARGS)
++#define ath_alert(common, fmt, ...)				\
++	ath_printk(KERN_ALERT, common, fmt, ##__VA_ARGS)
++#define ath_crit(common, fmt, ...)				\
++	ath_printk(KERN_CRIT, common, fmt, ##__VA_ARGS)
++#define ath_err(common, fmt, ...)				\
++	ath_printk(KERN_ERR, common, fmt, ##__VA_ARGS)
++#define ath_warn(common, fmt, ...)				\
++	ath_printk(KERN_WARNING, common, fmt, ##__VA_ARGS)
++#define ath_notice(common, fmt, ...)				\
++	ath_printk(KERN_NOTICE, common, fmt, ##__VA_ARGS)
++#define ath_info(common, fmt, ...)				\
++	ath_printk(KERN_INFO, common, fmt, ##__VA_ARGS)
++
++/**
++ * enum ath_debug_level - atheros wireless debug level
 + *
-  * @NL80211_CMD_MAX: highest used command number
-  * @__NL80211_CMD_AFTER_LAST: internal use
++ * @ATH_DBG_RESET: reset processing
++ * @ATH_DBG_QUEUE: hardware queue management
++ * @ATH_DBG_EEPROM: eeprom processing
++ * @ATH_DBG_CALIBRATE: periodic calibration
++ * @ATH_DBG_INTERRUPT: interrupt processing
++ * @ATH_DBG_REGULATORY: regulatory processing
++ * @ATH_DBG_ANI: adaptive noise immunitive processing
++ * @ATH_DBG_XMIT: basic xmit operation
++ * @ATH_DBG_BEACON: beacon handling
++ * @ATH_DBG_CONFIG: configuration of the hardware
++ * @ATH_DBG_FATAL: fatal errors, this is the default, DBG_DEFAULT
++ * @ATH_DBG_PS: power save processing
++ * @ATH_DBG_HWTIMER: hardware timer handling
++ * @ATH_DBG_BTCOEX: bluetooth coexistance
++ * @ATH_DBG_BSTUCK: stuck beacons
++ * @ATH_DBG_ANY: enable all debugging
++ *
++ * The debug level is used to control the amount and type of debugging output
++ * we want to see. Each driver has its own method for enabling debugging and
++ * modifying debug level states -- but this is typically done through a
++ * module parameter 'debug' along with a respective 'debug' debugfs file
++ * entry.
++ */
++enum ATH_DEBUG {
++	ATH_DBG_RESET		= 0x00000001,
++	ATH_DBG_QUEUE		= 0x00000002,
++	ATH_DBG_EEPROM		= 0x00000004,
++	ATH_DBG_CALIBRATE	= 0x00000008,
++	ATH_DBG_INTERRUPT	= 0x00000010,
++	ATH_DBG_REGULATORY	= 0x00000020,
++	ATH_DBG_ANI		= 0x00000040,
++	ATH_DBG_XMIT		= 0x00000080,
++	ATH_DBG_BEACON		= 0x00000100,
++	ATH_DBG_CONFIG		= 0x00000200,
++	ATH_DBG_FATAL		= 0x00000400,
++	ATH_DBG_PS		= 0x00000800,
++	ATH_DBG_HWTIMER		= 0x00001000,
++	ATH_DBG_BTCOEX		= 0x00002000,
++	ATH_DBG_WMI		= 0x00004000,
++	ATH_DBG_BSTUCK		= 0x00008000,
++	ATH_DBG_ANY		= 0xffffffff
++};
++
++#define ATH_DBG_DEFAULT (ATH_DBG_FATAL)
++
++#ifdef CONFIG_ATH_DEBUG
++
++#define ath_dbg(common, dbg_mask, fmt, ...)			\
++({								\
++	int rtn;						\
++	if ((common)->debug_mask & dbg_mask)			\
++		rtn = ath_printk(KERN_DEBUG, common, fmt,	\
++				 ##__VA_ARGS__);		\
++	else							\
++		rtn = 0;					\
++								\
++	rtn;							\
++})
++#define ATH_DBG_WARN(foo, arg...) WARN(foo, arg)
++
++#else
++
++static inline  __attribute__ ((format (printf, 3, 4))) int
++ath_dbg(struct ath_common *common, enum ATH_DEBUG dbg_mask,
++	const char *fmt, ...)
++{
++	return 0;
++}
++#define ATH_DBG_WARN(foo, arg) do {} while (0)
++
++#endif /* CONFIG_ATH_DEBUG */
++
++/** Returns string describing opmode, or NULL if unknown mode. */
++#ifdef CONFIG_ATH_DEBUG
++const char *ath_opmode_to_string(enum nl80211_iftype opmode);
++#else
++static inline const char *ath_opmode_to_string(enum nl80211_iftype opmode)
++{
++	return "UNKNOWN";
++}
++#endif
++
+ #endif /* ATH_H */
+diff --git a/drivers/net/wireless/ath/debug.c b/drivers/net/wireless/ath/debug.c
+index a9600ba..5367b10 100644
+--- a/drivers/net/wireless/ath/debug.c
++++ b/drivers/net/wireless/ath/debug.c
+@@ -15,26 +15,6 @@
   */
-@@ -500,6 +507,9 @@ enum nl80211_commands {
  
- 	NL80211_CMD_FRAME_WAIT_CANCEL,
+ #include "ath.h"
+-#include "debug.h"
+-
+-void ath_print(struct ath_common *common, int dbg_mask, const char *fmt, ...)
+-{
+-	struct va_format vaf;
+-	va_list args;
+-
+-	if (likely(!(common->debug_mask & dbg_mask)))
+-		return;
+-
+-	va_start(args, fmt);
+-
+-	vaf.fmt = fmt;
+-	vaf.va = &args;
+-
+-	printk(KERN_DEBUG "ath: %pV", &vaf);
+-
+-	va_end(args);
+-}
+-EXPORT_SYMBOL(ath_print);
  
-+	NL80211_CMD_UNPROT_DEAUTHENTICATE,
-+	NL80211_CMD_UNPROT_DISASSOCIATE,
-+
- 	/* add new commands above here */
- 
- 	/* used to define NL80211_CMD_MAX below */
---- wireless-testing.orig/net/mac80211/rx.c	2010-12-16 00:44:31.000000000 +0200
-+++ wireless-testing/net/mac80211/rx.c	2010-12-16 00:45:18.000000000 +0200
-@@ -1539,12 +1539,30 @@ ieee80211_drop_unencrypted_mgmt(struct i
- 	if (rx->sta && test_sta_flags(rx->sta, WLAN_STA_MFP)) {
- 		if (unlikely(!ieee80211_has_protected(fc) &&
- 			     ieee80211_is_unicast_robust_mgmt_frame(rx->skb) &&
--			     rx->key))
-+			     rx->key)) {
-+			if (ieee80211_is_deauth(fc))
-+				cfg80211_send_unprot_deauth(rx->sdata->dev,
-+							    rx->skb->data,
-+							    rx->skb->len);
-+			else if (ieee80211_is_disassoc(fc))
-+				cfg80211_send_unprot_disassoc(rx->sdata->dev,
-+							      rx->skb->data,
-+							      rx->skb->len);
- 			return -EACCES;
-+		}
- 		/* BIP does not use Protected field, so need to check MMIE */
- 		if (unlikely(ieee80211_is_multicast_robust_mgmt_frame(rx->skb) &&
--			     ieee80211_get_mmie_keyidx(rx->skb) < 0))
-+			     ieee80211_get_mmie_keyidx(rx->skb) < 0)) {
-+			if (ieee80211_is_deauth(fc))
-+				cfg80211_send_unprot_deauth(rx->sdata->dev,
-+							    rx->skb->data,
-+							    rx->skb->len);
-+			else if (ieee80211_is_disassoc(fc))
-+				cfg80211_send_unprot_disassoc(rx->sdata->dev,
-+							      rx->skb->data,
-+							      rx->skb->len);
- 			return -EACCES;
-+		}
- 		/*
- 		 * When using MFP, Action frames are not allowed prior to
- 		 * having configured keys.
---- wireless-testing.orig/net/wireless/mlme.c	2010-12-16 00:44:31.000000000 +0200
-+++ wireless-testing/net/wireless/mlme.c	2010-12-16 00:45:18.000000000 +0200
-@@ -263,6 +263,28 @@ void cfg80211_send_disassoc(struct net_d
- }
- EXPORT_SYMBOL(cfg80211_send_disassoc);
- 
-+void cfg80211_send_unprot_deauth(struct net_device *dev, const u8 *buf,
-+				 size_t len)
-+{
-+	struct wireless_dev *wdev = dev->ieee80211_ptr;
-+	struct wiphy *wiphy = wdev->wiphy;
-+	struct cfg80211_registered_device *rdev = wiphy_to_dev(wiphy);
-+
-+	nl80211_send_unprot_deauth(rdev, dev, buf, len, GFP_ATOMIC);
-+}
-+EXPORT_SYMBOL(cfg80211_send_unprot_deauth);
-+
-+void cfg80211_send_unprot_disassoc(struct net_device *dev, const u8 *buf,
-+				   size_t len)
-+{
-+	struct wireless_dev *wdev = dev->ieee80211_ptr;
-+	struct wiphy *wiphy = wdev->wiphy;
-+	struct cfg80211_registered_device *rdev = wiphy_to_dev(wiphy);
-+
-+	nl80211_send_unprot_disassoc(rdev, dev, buf, len, GFP_ATOMIC);
-+}
-+EXPORT_SYMBOL(cfg80211_send_unprot_disassoc);
-+
- static void __cfg80211_auth_remove(struct wireless_dev *wdev, const u8 *addr)
+ const char *ath_opmode_to_string(enum nl80211_iftype opmode)
  {
- 	int i;
---- wireless-testing.orig/net/wireless/nl80211.c	2010-12-16 00:45:15.000000000 +0200
-+++ wireless-testing/net/wireless/nl80211.c	2010-12-16 00:45:18.000000000 +0200
-@@ -5333,6 +5333,22 @@ void nl80211_send_disassoc(struct cfg802
- 				NL80211_CMD_DISASSOCIATE, gfp);
+diff --git a/drivers/net/wireless/ath/debug.h b/drivers/net/wireless/ath/debug.h
+index f207007..cec951c 100644
+--- a/drivers/net/wireless/ath/debug.h
++++ b/drivers/net/wireless/ath/debug.h
+@@ -17,76 +17,6 @@
+ #ifndef ATH_DEBUG_H
+ #define ATH_DEBUG_H
+ 
+-#include "ath.h"
+-
+-/**
+- * enum ath_debug_level - atheros wireless debug level
+- *
+- * @ATH_DBG_RESET: reset processing
+- * @ATH_DBG_QUEUE: hardware queue management
+- * @ATH_DBG_EEPROM: eeprom processing
+- * @ATH_DBG_CALIBRATE: periodic calibration
+- * @ATH_DBG_INTERRUPT: interrupt processing
+- * @ATH_DBG_REGULATORY: regulatory processing
+- * @ATH_DBG_ANI: adaptive noise immunitive processing
+- * @ATH_DBG_XMIT: basic xmit operation
+- * @ATH_DBG_BEACON: beacon handling
+- * @ATH_DBG_CONFIG: configuration of the hardware
+- * @ATH_DBG_FATAL: fatal errors, this is the default, DBG_DEFAULT
+- * @ATH_DBG_PS: power save processing
+- * @ATH_DBG_HWTIMER: hardware timer handling
+- * @ATH_DBG_BTCOEX: bluetooth coexistance
+- * @ATH_DBG_BSTUCK: stuck beacons
+- * @ATH_DBG_ANY: enable all debugging
+- *
+- * The debug level is used to control the amount and type of debugging output
+- * we want to see. Each driver has its own method for enabling debugging and
+- * modifying debug level states -- but this is typically done through a
+- * module parameter 'debug' along with a respective 'debug' debugfs file
+- * entry.
+- */
+-enum ATH_DEBUG {
+-	ATH_DBG_RESET		= 0x00000001,
+-	ATH_DBG_QUEUE		= 0x00000002,
+-	ATH_DBG_EEPROM		= 0x00000004,
+-	ATH_DBG_CALIBRATE	= 0x00000008,
+-	ATH_DBG_INTERRUPT	= 0x00000010,
+-	ATH_DBG_REGULATORY	= 0x00000020,
+-	ATH_DBG_ANI		= 0x00000040,
+-	ATH_DBG_XMIT		= 0x00000080,
+-	ATH_DBG_BEACON		= 0x00000100,
+-	ATH_DBG_CONFIG		= 0x00000200,
+-	ATH_DBG_FATAL		= 0x00000400,
+-	ATH_DBG_PS		= 0x00000800,
+-	ATH_DBG_HWTIMER		= 0x00001000,
+-	ATH_DBG_BTCOEX		= 0x00002000,
+-	ATH_DBG_WMI		= 0x00004000,
+-	ATH_DBG_BSTUCK		= 0x00008000,
+-	ATH_DBG_ANY		= 0xffffffff
+-};
+-
+-#define ATH_DBG_DEFAULT (ATH_DBG_FATAL)
+-
+-#ifdef CONFIG_ATH_DEBUG
+-void ath_print(struct ath_common *common, int dbg_mask, const char *fmt, ...)
+-	__attribute__ ((format (printf, 3, 4)));
+-#define ATH_DBG_WARN(foo, arg...) WARN(foo, arg)
+-#else
+-static inline void __attribute__ ((format (printf, 3, 4)))
+-ath_print(struct ath_common *common, int dbg_mask, const char *fmt, ...)
+-{
+-}
+-#define ATH_DBG_WARN(foo, arg)
+-#endif /* CONFIG_ATH_DEBUG */
+-
+-/** Returns string describing opmode, or NULL if unknown mode. */
+-#ifdef CONFIG_ATH_DEBUG
+-const char *ath_opmode_to_string(enum nl80211_iftype opmode);
+-#else
+-static inline const char *ath_opmode_to_string(enum nl80211_iftype opmode)
+-{
+-	return "UNKNOWN";
+-}
+-#endif
++#define ath_print ath_dbg
+ 
+ #endif /* ATH_DEBUG_H */
+diff --git a/drivers/net/wireless/ath/main.c b/drivers/net/wireless/ath/main.c
+index 487193f..c325202 100644
+--- a/drivers/net/wireless/ath/main.c
++++ b/drivers/net/wireless/ath/main.c
+@@ -56,3 +56,23 @@ struct sk_buff *ath_rxbuf_alloc(struct ath_common *common,
+ 	return skb;
  }
- 
-+void nl80211_send_unprot_deauth(struct cfg80211_registered_device *rdev,
-+				struct net_device *netdev, const u8 *buf,
-+				size_t len, gfp_t gfp)
+ EXPORT_SYMBOL(ath_rxbuf_alloc);
++
++int ath_printk(const char *level, struct ath_common *common,
++	       const char *fmt, ...)
 +{
-+	nl80211_send_mlme_event(rdev, netdev, buf, len,
-+				NL80211_CMD_UNPROT_DEAUTHENTICATE, gfp);
++	struct va_format vaf;
++	va_list args;
++	int rtn;
++
++	va_start(args, fmt);
++
++	vaf.fmt = fmt;
++	vaf.va = &args;
++
++	rtn = printk("%sath: %pV", level, &vaf);
++
++	va_end(args);
++
++	return rtn;
 +}
-+
-+void nl80211_send_unprot_disassoc(struct cfg80211_registered_device *rdev,
-+				  struct net_device *netdev, const u8 *buf,
-+				  size_t len, gfp_t gfp)
-+{
-+	nl80211_send_mlme_event(rdev, netdev, buf, len,
-+				NL80211_CMD_UNPROT_DISASSOCIATE, gfp);
-+}
-+
- static void nl80211_send_mlme_timeout(struct cfg80211_registered_device *rdev,
- 				      struct net_device *netdev, int cmd,
- 				      const u8 *addr, gfp_t gfp)
---- wireless-testing.orig/net/wireless/nl80211.h	2010-12-16 00:44:31.000000000 +0200
-+++ wireless-testing/net/wireless/nl80211.h	2010-12-16 00:45:18.000000000 +0200
-@@ -25,6 +25,12 @@ void nl80211_send_deauth(struct cfg80211
- void nl80211_send_disassoc(struct cfg80211_registered_device *rdev,
- 			   struct net_device *netdev,
- 			   const u8 *buf, size_t len, gfp_t gfp);
-+void nl80211_send_unprot_deauth(struct cfg80211_registered_device *rdev,
-+				struct net_device *netdev,
-+				const u8 *buf, size_t len, gfp_t gfp);
-+void nl80211_send_unprot_disassoc(struct cfg80211_registered_device *rdev,
-+				  struct net_device *netdev,
-+				  const u8 *buf, size_t len, gfp_t gfp);
- void nl80211_send_auth_timeout(struct cfg80211_registered_device *rdev,
- 			       struct net_device *netdev,
- 			       const u8 *addr, gfp_t gfp);
---- wireless-testing.orig/include/net/cfg80211.h	2010-12-16 00:45:15.000000000 +0200
-+++ wireless-testing/include/net/cfg80211.h	2010-12-16 00:45:18.000000000 +0200
-@@ -2318,6 +2318,32 @@ void __cfg80211_send_disassoc(struct net
- 	size_t len);
- 
- /**
-+ * cfg80211_send_unprot_deauth - notification of unprotected deauthentication
-+ * @dev: network device
-+ * @buf: deauthentication frame (header + body)
-+ * @len: length of the frame data
-+ *
-+ * This function is called whenever a received Deauthentication frame has been
-+ * dropped in station mode because of MFP being used but the Deauthentication
-+ * frame was not protected. This function may sleep.
-+ */
-+void cfg80211_send_unprot_deauth(struct net_device *dev, const u8 *buf,
-+				 size_t len);
-+
-+/**
-+ * cfg80211_send_unprot_disassoc - notification of unprotected disassociation
-+ * @dev: network device
-+ * @buf: disassociation frame (header + body)
-+ * @len: length of the frame data
-+ *
-+ * This function is called whenever a received Disassociation frame has been
-+ * dropped in station mode because of MFP being used but the Disassociation
-+ * frame was not protected. This function may sleep.
-+ */
-+void cfg80211_send_unprot_disassoc(struct net_device *dev, const u8 *buf,
-+				   size_t len);
-+
-+/**
-  * cfg80211_michael_mic_failure - notification of Michael MIC failure (TKIP)
-  * @dev: network device
-  * @addr: The source MAC address of the frame
- 
--- 
-Jouni Malinen                                            PGP id EFC895FA
++EXPORT_SYMBOL(ath_printk);
+
+
