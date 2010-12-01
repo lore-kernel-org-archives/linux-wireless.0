@@ -1,82 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yw0-f46.google.com ([209.85.213.46]:43344 "EHLO
-	mail-yw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750837Ab0L2B2P (ORCPT
+Received: from mail-iw0-f174.google.com ([209.85.214.174]:41407 "EHLO
+	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755840Ab0LAUSv convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 28 Dec 2010 20:28:15 -0500
-Received: by ywl5 with SMTP id 5so4050517ywl.19
-        for <linux-wireless@vger.kernel.org>; Tue, 28 Dec 2010 17:28:15 -0800 (PST)
-Message-ID: <4D1A8EAB.2010405@gmail.com>
-Date: Tue, 28 Dec 2010 19:28:11 -0600
-From: Joel A Fernandes <agnel.joel@gmail.com>
+	Wed, 1 Dec 2010 15:18:51 -0500
 MIME-Version: 1.0
-To: "John W. Linville" <linville@tuxdriver.com>
-CC: linux-wireless@vger.kernel.org, devel@lists.open80211s.org,
-	Johannes Berg <johannes@sipsolutions.net>
-Subject: [PATCHv2 1/1] mac80211: Fix mesh portal communication with other
- mesh nodes.
-Content-Type: text/plain; charset=ISO-8859-1
+In-Reply-To: <1291234615.1845.196.camel@Joe-Laptop>
+References: <5febb0e1fba0ec2bb77f6ade8b251ba0edf4614c.1290988277.git.joe@perches.com>
+ <AANLkTinc251WbwuLqFbOZ5ipNGZW7=wub3DoWwy42=+e@mail.gmail.com>
+ <20101129060732.5130.qmail@stuge.se> <4CF42C17.2070500@openwrt.org>
+ <1291081185.16349.133.camel@Joe-Laptop> <4CF464D6.2020507@openwrt.org>
+ <1291148375.18026.342.camel@Joe-Laptop> <AANLkTik2qtGUgkZYSjcEH9jHHsevKnxOvz4s6On94U9o@mail.gmail.com>
+ <1291225075.1845.177.camel@Joe-Laptop> <AANLkTinU+jWBXUdW2v9WSL2SZWQn8FHai4+=dAPTASe6@mail.gmail.com>
+ <1291234615.1845.196.camel@Joe-Laptop>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Wed, 1 Dec 2010 12:18:30 -0800
+Message-ID: <AANLkTim+ayPBhBiKtuhgxKt645YT_o=5w_ckrq71j-ES@mail.gmail.com>
+Subject: Re: [PATCH wireless-next] MAINTAINERS: Add ATH GENERIC UTILITIES
+To: Joe Perches <joe@perches.com>
+Cc: Andrew Morton <akpm@linux-foundation.org>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Felix Fietkau <nbd@openwrt.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	ath9k-devel@lists.ath9k.org, peter@stuge.se,
+	linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Fixed a bug where if a mesh interface has a different MAC address from its bridge
-interface, then it would not be able to send data traffic to any other mesh node.
-This also adds support for communication between mesh nodes and external bridged
-nodes by using a 6 address format if the source is a node within the mesh and the
-destination is an external node proxied by a mesh portal.
+On Wed, Dec 1, 2010 at 12:16 PM, Joe Perches <joe@perches.com> wrote:
+> On Wed, 2010-12-01 at 11:46 -0800, Luis R. Rodriguez wrote:
+>> On Wed, Dec 1, 2010 at 9:37 AM, Joe Perches <joe@perches.com> wrote:
+>> > This file pattern is not currently shown as maintained
+>> > by atheros.  Perhaps it should be?
+>> > Signed-off-by: Joe Perches <joe@perches.com>
+>> Sure but its maintained by the community and Atheros hackers, not just me.
+>
+> No doubt.
+>
+> $ git log next-20101130 -- drivers/net/wireless/ath/*.[ch] | \
+>        grep -P "(^Author)" | cut -f2- -d":" | sort | uniq -c | sort -rn | head
+>     27  Luis R. Rodriguez <lrodriguez@atheros.com>
+>      6  Felix Fietkau <nbd@openwrt.org>
+>      4  Bruno Randolf <br1@einfach.org>
+>      3  Sujith <Sujith.Manoharan@atheros.com>
+>      3  John W. Linville <linville@tuxdriver.com>
+>      3  Joe Perches <joe@perches.com>
+>      3  Bob Copeland <me@bobcopeland.com>
+>      2  Pavel Roskin <proski@gnu.org>
+>      2  Johannes Berg <johannes@sipsolutions.net>
+>      2  David S. Miller <davem@davemloft.net>
+>
+> Without any sort of MAINTAINERS entry, the results
+> for files in that directory are like this:
+>
+> $ ./scripts/get_maintainer.pl -f --rolestats drivers/net/wireless/ath/main.c
+> "John W. Linville" <linville@tuxdriver.com> (maintainer:NETWORKING [WIREL...)
+> linux-wireless@vger.kernel.org (open list:NETWORKING [WIREL...)
+> netdev@vger.kernel.org (open list:NETWORKING DRIVERS)
+> linux-kernel@vger.kernel.org (open list)
+>
+> Perhaps you want to be cc'd?
+> Perhaps there are atheros lists that should be cc'd?
+> If cc'ing linux-wireless is good enough,
+> that's good enough for me too.
 
-Signed-off-by: Joel A Fernandes <agnel.joel@gmail.com>
----
-Sorry I added the mailing list and maintainer email addresses to the "To" field
-the last time I sent this patch. I apologise for any confusion. Thank you.
----
- net/mac80211/tx.c |   14 ++++++++++----
- 1 files changed, 10 insertions(+), 4 deletions(-)
+OK you're patch is fine then.
 
-diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
-index ad5bc90..8f78a26 100644
---- a/net/mac80211/tx.c
-+++ b/net/mac80211/tx.c
-@@ -1751,6 +1751,7 @@ netdev_tx_t ieee80211_subif_start_xmit(struct sk_buff *skb,
- 	__le16 fc;
- 	struct ieee80211_hdr hdr;
- 	struct ieee80211s_hdr mesh_hdr __maybe_unused;
-+	struct mesh_path *mppath = NULL;
- 	const u8 *encaps_data;
- 	int encaps_len, skip_header_bytes;
- 	int nh_pos, h_pos;
-@@ -1811,16 +1812,23 @@ netdev_tx_t ieee80211_subif_start_xmit(struct sk_buff *skb,
- 			ret = NETDEV_TX_OK;
- 			goto fail;
- 		}
-+		if (!is_multicast_ether_addr(skb->data))
-+			mppath = mpp_path_lookup(skb->data, sdata);
- 
-+		/*
-+		 * Do not use address extension, if it is a packet from
-+		 * the same interface and the destination is not being
-+		 * proxied by any other mest point.
-+		 */
- 		if (compare_ether_addr(sdata->vif.addr,
--				       skb->data + ETH_ALEN) == 0) {
-+				       skb->data + ETH_ALEN) == 0 &&
-+		    (!mppath || !compare_ether_addr(mppath->mpp, skb->data))) {
- 			hdrlen = ieee80211_fill_mesh_addresses(&hdr, &fc,
- 					skb->data, skb->data + ETH_ALEN);
- 			meshhdrlen = ieee80211_new_mesh_header(&mesh_hdr,
- 					sdata, NULL, NULL);
- 		} else {
- 			/* packet from other interface */
--			struct mesh_path *mppath;
- 			int is_mesh_mcast = 1;
- 			const u8 *mesh_da;
- 
-@@ -1831,8 +1839,6 @@ netdev_tx_t ieee80211_subif_start_xmit(struct sk_buff *skb,
- 			else {
- 				static const u8 bcast[ETH_ALEN] =
- 					{ 0xff, 0xff, 0xff, 0xff, 0xff, 0xff };
--
--				mppath = mpp_path_lookup(skb->data, sdata);
- 				if (mppath) {
- 					/* RA TA mDA mSA AE:DA SA */
- 					mesh_da = mppath->mpp;
+  Luis
