@@ -1,43 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:40439 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755005Ab0LIPZo (ORCPT
+Received: from mail.atheros.com ([12.19.149.2]:14355 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753040Ab0LAIhA convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 9 Dec 2010 10:25:44 -0500
-Subject: Re: [PATCH 0/4] Make N-PHY support experimental
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: =?UTF-8?Q?Rafa=C5=82_Mi=C5=82ecki?= <zajec5@gmail.com>,
-	=?ISO-8859-1?Q?G=E1bor?= Stefanik <netrolller.3d@gmail.com>,
-	linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>,
-	b43-dev@lists.infradead.org
-In-Reply-To: <4D00F3C3.6040801@lwfinger.net>
-References: <1291755360-21570-1-git-send-email-zajec5@gmail.com>
-	 <AANLkTikp9ErFopLZVmXMjN3tXF2L62SwEEcujKeOBLYC@mail.gmail.com>
-	 <4CFEFD8D.1080808@lwfinger.net>
-	 <AANLkTi=mDh9wkp+u3ebuXqF8Q-rTW_YCtee3CmCBdWTh@mail.gmail.com>
-	 <4D00F3C3.6040801@lwfinger.net>
-Content-Type: text/plain; charset="UTF-8"
-Date: Thu, 09 Dec 2010 16:25:38 +0100
-Message-ID: <1291908338.3540.16.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+	Wed, 1 Dec 2010 03:37:00 -0500
+Received: from mail.atheros.com ([10.10.20.105])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Wed, 01 Dec 2010 00:36:46 -0800
+Date: Wed, 1 Dec 2010 14:06:42 +0530
+From: Vasanthakumar Thiagarajan <vasanth@atheros.com>
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+CC: Vasanth Thiagarajan <Vasanth.Thiagarajan@Atheros.com>,
+	"linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH 00/26] Add support for AR9485
+Message-ID: <20101201083641.GH12908@vasanth-laptop>
+References: <1291188775-13707-1-git-send-email-vasanth@atheros.com> <AANLkTi=9y+BfLGxSqofYkeMZEXA8QDrsaPG0yLtYNEi2@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="iso-8859-1"
+In-Reply-To: <AANLkTi=9y+BfLGxSqofYkeMZEXA8QDrsaPG0yLtYNEi2@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2010-12-09 at 09:20 -0600, Larry Finger wrote:
-
-> It has a rev 2 PHY, and a rev 4 0x2055 radio.
+On Wed, Dec 01, 2010 at 01:22:12PM +0530, Luis R. Rodriguez wrote:
+> On Tue, Nov 30, 2010 at 11:32 PM, Vasanthakumar Thiagarajan
+> <vasanth@atheros.com> wrote:
+> > John,
+> >
+> >        This patch series add support for a new chipset of AR9003 family.
+> > This chip(AR9485) is an 1x1 and 2.4Ghz band only.
 > 
-> I am willing to buy a higher PHY rev device for testing. Any idea what is in a
-> 4324A-BRCM1036?
+> Very nice Vasanth, good stuff! If these are all checkpatch.pl and sparse tested:
 
-It says BCM94322 on the image, and if that's any indication, I have a
-4322 with pci ID 14e4:432b (but it's an Apple build):
+Yes, sparse and checkpatch.pl tested, got some checkpatch.pl
+warnings for being over 80 char, but that should be fine.
+Thanks for the review.
 
-b43-phy0: Broadcom 4322 WLAN found (core revision 16)
-b43-phy0 debug: Found PHY: Analog 8, Type 4, Revision 4
-b43-phy0 debug: Found Radio: Manuf 0x17F, Version 0x2056, Revision 3
-
-johannes
-
+Vasanth
