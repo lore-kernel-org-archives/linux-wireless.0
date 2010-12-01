@@ -1,68 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:48548 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753205Ab0LISwJ (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 9 Dec 2010 13:52:09 -0500
-Message-Id: <20101209185002.570182039@sipsolutions.net>
-Date: Thu, 09 Dec 2010 19:49:00 +0100
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH 1/3] mac80211: clean up RX key checks
-References: <20101209184859.155955840@sipsolutions.net>
-Mime-Version: 1.0
+Received: from mail.atheros.com ([12.19.149.2]:20952 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755078Ab0LAN03 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 1 Dec 2010 08:26:29 -0500
+Received: from mail.atheros.com ([10.10.20.108])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Wed, 01 Dec 2010 05:26:15 -0800
+From: Mohammed Shafi Shajakhan <mshajakhan@atheros.com>
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>, <lrodriguez@atheros.com>,
+	Mohammed Shafi Shajakhan <mshajakhan@atheros.com>
+Subject: [PATCH 1/1] ath9k: Remove dead code in recv.c
+Date: Wed, 1 Dec 2010 18:55:57 +0530
+Message-ID: <1291209957-3645-1-git-send-email-mshajakhan@atheros.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+From: Mohammed Shafi Shajakhan <mshajakhan@atheros.com>
 
-Using the default key for "any key set" isn't
-quite what we should do. It works, but with the
-upcoming changes it makes life unnecessarily
-complex, so do something better here and really
-check for "any key".
+The structure struct ieee80211_rx_status *rxs is no longer needed to be
+passed to ath_rx_send_to_mac80211 function
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Mohammed Shafi Shajakhan <mshajakhan@atheros.com>
 ---
- net/mac80211/rx.c |   23 +++++++++++++++++++++--
- 1 file changed, 21 insertions(+), 2 deletions(-)
+ drivers/net/wireless/ath/ath9k/recv.c |    7 +++----
+ 1 files changed, 3 insertions(+), 4 deletions(-)
 
---- wireless-testing.orig/net/mac80211/rx.c	2010-12-05 18:09:51.000000000 +0100
-+++ wireless-testing/net/mac80211/rx.c	2010-12-05 18:09:52.000000000 +0100
-@@ -955,12 +955,31 @@ ieee80211_rx_h_decrypt(struct ieee80211_
- 		 * have been expected.
- 		 */
- 		struct ieee80211_key *key = NULL;
-+		struct ieee80211_sub_if_data *sdata = rx->sdata;
-+		int i;
-+
- 		if (ieee80211_is_mgmt(fc) &&
- 		    is_multicast_ether_addr(hdr->addr1) &&
- 		    (key = rcu_dereference(rx->sdata->default_mgmt_key)))
- 			rx->key = key;
--		else if ((key = rcu_dereference(rx->sdata->default_key)))
--			rx->key = key;
-+		else {
-+			if (rx->sta) {
-+				for (i = 0; i < NUM_DEFAULT_KEYS; i++) {
-+					key = rcu_dereference(rx->sta->gtk[i]);
-+					if (key)
-+						break;
-+				}
-+			}
-+			if (!key) {
-+				for (i = 0; i < NUM_DEFAULT_KEYS; i++) {
-+					key = rcu_dereference(sdata->keys[i]);
-+					if (key)
-+						break;
-+				}
-+			}
-+			if (key)
-+				rx->key = key;
-+		}
- 		return RX_CONTINUE;
- 	} else {
- 		u8 keyid;
-
+diff --git a/drivers/net/wireless/ath/ath9k/recv.c b/drivers/net/wireless/ath/ath9k/recv.c
+index 429fa81..1ff08ef 100644
+--- a/drivers/net/wireless/ath/ath9k/recv.c
++++ b/drivers/net/wireless/ath/ath9k/recv.c
+@@ -660,8 +660,7 @@ static void ath_rx_ps(struct ath_softc *sc, struct sk_buff *skb)
+ }
+ 
+ static void ath_rx_send_to_mac80211(struct ieee80211_hw *hw,
+-				    struct ath_softc *sc, struct sk_buff *skb,
+-				    struct ieee80211_rx_status *rxs)
++				    struct ath_softc *sc, struct sk_buff *skb)
+ {
+ 	struct ieee80211_hdr *hdr;
+ 
+@@ -1729,7 +1728,7 @@ int ath_rx_tasklet(struct ath_softc *sc, int flush, bool hp)
+ 			bf->bf_buf_addr = 0;
+ 			ath_print(common, ATH_DBG_FATAL,
+ 				  "dma_mapping_error() on RX\n");
+-			ath_rx_send_to_mac80211(hw, sc, skb, rxs);
++			ath_rx_send_to_mac80211(hw, sc, skb);
+ 			break;
+ 		}
+ 
+@@ -1755,7 +1754,7 @@ int ath_rx_tasklet(struct ath_softc *sc, int flush, bool hp)
+ 		if (ah->caps.hw_caps & ATH9K_HW_CAP_ANT_DIV_COMB)
+ 			ath_ant_comb_scan(sc, &rs);
+ 
+-		ath_rx_send_to_mac80211(hw, sc, skb, rxs);
++		ath_rx_send_to_mac80211(hw, sc, skb);
+ 
+ requeue:
+ 		if (edma) {
+-- 
+1.7.0.4
 
