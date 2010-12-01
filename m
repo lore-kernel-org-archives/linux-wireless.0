@@ -1,39 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:40036
-	"EHLO sunset.davemloft.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1756855Ab0LJUwY (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:57217 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751167Ab0LAGTt (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 10 Dec 2010 15:52:24 -0500
-Date: Fri, 10 Dec 2010 12:52:52 -0800 (PST)
-Message-Id: <20101210.125252.212677124.davem@davemloft.net>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: pull request: wireless-2.6 2010-12-10
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <20101210202902.GG4296@tuxdriver.com>
-References: <20101210202902.GG4296@tuxdriver.com>
+	Wed, 1 Dec 2010 01:19:49 -0500
+Subject: Re: [PATCH] mac80211: Support beacon configuration via nl80211 for
+ mesh interfaces
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Javier Cardona <javier@cozybit.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	Steve Derosier <steve@cozybit.com>, devel@lists.open80211s.org,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <1291168735-3423-1-git-send-email-javier@cozybit.com>
+References: <1291168735-3423-1-git-send-email-javier@cozybit.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Wed, 01 Dec 2010 07:19:43 +0100
+Message-ID: <1291184383.4199.4.camel@jlt3.sipsolutions.net>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: "John W. Linville" <linville@tuxdriver.com>
-Date: Fri, 10 Dec 2010 15:29:03 -0500
+On Tue, 2010-11-30 at 17:58 -0800, Javier Cardona wrote:
+> This patch adds the capability to the mesh stack to receive vendor
+> specific information elements from userspace.  When a vendor specific
+> IE is set via nl80211, the mesh stack will configure the mesh beacon to
+> advertise that a vendor specific path selection and metric is in use.
+> This is accordance with the Extensible Path Selection Framework
+> specified in version 7.0 of the 802.11s draft.
 
-> Here is the latest round of wireless bits intended for 2.6.37...
-> 
-> Included are some orinoco fixes, one to avoid the crash in bug 23932 and
-> two others that render TKIP countermeasures ineffective (i.e. decreased
-> security).  Helmut has provided us a fix to avoid a BUG when using
-> shared skbs.  The ath9k team gives us a fix for failed resumes on
-> ath9k_htc, a fix for detecting broadcast frames with a MIC failure, a
-> fix for a null pointer access when generating beacons, and a DMA issue
-> that can lead to memory corruption.  Matteo Croce pitches-in with a fix
-> to prevent transmitting with too much power.  Finally,  Javier Cardona
-> provides a trio of ath5k fixes that restore mesh function on those
-> devices.
-> 
-> Please let me know if there are problems!
+> @@ -1709,6 +1709,7 @@ static int nl80211_addset_beacon(struct sk_buff *skb, struct genl_info *info)
+>  		return -EINVAL;
+>  
+>  	if (dev->ieee80211_ptr->iftype != NL80211_IFTYPE_AP &&
+> +	    dev->ieee80211_ptr->iftype != NL80211_IFTYPE_MESH_POINT &&
+>  	    dev->ieee80211_ptr->iftype != NL80211_IFTYPE_P2P_GO)
+>  		return -EOPNOTSUPP;
 
-Pulled, thanks John.
+I'm not convinced that letting userspace set the *entire* beacon is the
+right way to do it? Wouldn't it make more sense to allow it to specify
+vendor-specific IEs (like IBSS), and the fact that vendor selection
+protocol is used? It seems to me that somebody may want to have vendor
+IEs while using the default protocols?
+
+johannes
+
