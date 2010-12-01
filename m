@@ -1,103 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail30s.wh2.ocn.ne.jp ([125.206.180.198]:9561 "HELO
-	mail30s.wh2.ocn.ne.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1753572Ab0LHDpA (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 7 Dec 2010 22:45:00 -0500
-Received: from vs3002.wh2.ocn.ne.jp (125.206.180.165)
-	by mail30s.wh2.ocn.ne.jp (RS ver 1.0.95vs) with SMTP id 3-0327619897
-	for <linux-wireless@vger.kernel.org>; Wed,  8 Dec 2010 12:44:58 +0900 (JST)
-Subject: [PATCH v2] cfg80211: Add antenna availability information
-To: johannes@sipsolutions.net, linville@tuxdriver.com
-From: Bruno Randolf <br1@einfach.org>
-Cc: linux-wireless@vger.kernel.org
-Date: Wed, 08 Dec 2010 12:44:29 +0900
-Message-ID: <20101208034429.24218.50707.stgit@localhost6.localdomain6>
+Received: from mail.atheros.com ([12.19.149.2]:13826 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751833Ab0LAHdF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 1 Dec 2010 02:33:05 -0500
+Received: from mail.atheros.com ([10.10.20.105])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Tue, 30 Nov 2010 23:32:50 -0800
+From: Vasanthakumar Thiagarajan <vasanth@atheros.com>
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>
+Subject: [PATCH 01/26] ath9k_hw: Define hw version macros for AR9485
+Date: Tue, 30 Nov 2010 23:32:30 -0800
+Message-ID: <1291188775-13707-2-git-send-email-vasanth@atheros.com>
+In-Reply-To: <1291188775-13707-1-git-send-email-vasanth@atheros.com>
+References: <1291188775-13707-1-git-send-email-vasanth@atheros.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Add a field to wiphy for the hardware to report the availble antennas for
-configuration. Only if this is set to something bigger than zero, will the
-anntenna configuration ops be executed.
+AR9485 is a single chain and single band (2.4 Ghz) chip.
 
-Allthough this could be a simple number of antennas, I defined it as a bitmap
-of antennas which are available for configuration, since it's more consistent
-with the rest of the antenna API and there could be cases where the
-hardware allows only configuration of certain antennas. As it does not make
-much of a difference in size or normal usage, I think it's better to be able to
-support this, in case the need arises.
-
-The antenna configuration is now also checked against the availabe antennas and
-rejected if it does not match.
-
-Signed-off-by: Bruno Randolf <br1@einfach.org>
-
-v2:	reject antenna configurations which don't match the available antennas
+Signed-off-by: Vasanthakumar Thiagarajan <vasanth@atheros.com>
 ---
- include/net/cfg80211.h |    5 +++++
- net/wireless/nl80211.c |   12 ++++++++++--
- 2 files changed, 15 insertions(+), 2 deletions(-)
+ drivers/net/wireless/ath/ath9k/reg.h |    8 ++++++++
+ 1 files changed, 8 insertions(+), 0 deletions(-)
 
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index 8764c9a..ef6f15d 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -1465,6 +1465,9 @@ struct ieee80211_txrx_stypes {
-  * @mgmt_stypes: bitmasks of frame subtypes that can be subscribed to or
-  *	transmitted through nl80211, points to an array indexed by interface
-  *	type
-+ *
-+ * @available_antennas: bitmap of antennas which are available to configure.
-+ *	antenna configuration commands will be rejected unless this is set.
-  */
- struct wiphy {
- 	/* assign these fields before you register the wiphy */
-@@ -1504,6 +1507,8 @@ struct wiphy {
+diff --git a/drivers/net/wireless/ath/ath9k/reg.h b/drivers/net/wireless/ath/ath9k/reg.h
+index c2472ed..0153ba1 100644
+--- a/drivers/net/wireless/ath/ath9k/reg.h
++++ b/drivers/net/wireless/ath/ath9k/reg.h
+@@ -787,6 +787,8 @@
+ #define AR_SREV_REVISION_9271_11	1
+ #define AR_SREV_VERSION_9300		0x1c0
+ #define AR_SREV_REVISION_9300_20	2 /* 2.0 and 2.1 */
++#define AR_SREV_VERSION_9485		0x240
++#define AR_SREV_REVISION_9485_10	0
  
- 	u8 max_num_pmkids;
+ #define AR_SREV_5416(_ah) \
+ 	(((_ah)->hw_version.macVersion == AR_SREV_VERSION_5416_PCI) || \
+@@ -859,6 +861,12 @@
+ 	 (((_ah)->hw_version.macVersion == AR_SREV_VERSION_9300) && \
+ 	  ((_ah)->hw_version.macRev >= AR_SREV_REVISION_9300_20)))
  
-+	u32 available_antennas;
++#define AR_SREV_9485(_ah) \
++	(((_ah)->hw_version.macVersion == AR_SREV_VERSION_9485))
++#define AR_SREV_9485_10(_ah) \
++	(AR_SREV_9485(_ah) && \
++	 ((_ah)->hw_version.macRev == AR_SREV_REVISION_9485_10))
 +
- 	/* If multiple wiphys are registered and you're handed e.g.
- 	 * a regular netdev with assigned ieee80211_ptr, you won't
- 	 * know whether it points to a wiphy your driver has registered
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index 2cf0333..4f6ff31 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -547,7 +547,7 @@ static int nl80211_send_wiphy(struct sk_buff *msg, u32 pid, u32 seq, int flags,
- 	if (dev->wiphy.flags & WIPHY_FLAG_CONTROL_PORT_PROTOCOL)
- 		NLA_PUT_FLAG(msg, NL80211_ATTR_CONTROL_PORT_ETHERTYPE);
- 
--	if (dev->ops->get_antenna) {
-+	if (dev->wiphy.available_antennas && dev->ops->get_antenna) {
- 		u32 tx_ant = 0, rx_ant = 0;
- 		int res;
- 		res = dev->ops->get_antenna(&dev->wiphy, &tx_ant, &rx_ant);
-@@ -1045,7 +1045,7 @@ static int nl80211_set_wiphy(struct sk_buff *skb, struct genl_info *info)
- 	if (info->attrs[NL80211_ATTR_WIPHY_ANTENNA_TX] &&
- 	    info->attrs[NL80211_ATTR_WIPHY_ANTENNA_RX]) {
- 		u32 tx_ant, rx_ant;
--		if (!rdev->ops->set_antenna) {
-+		if (!rdev->wiphy.available_antennas || !rdev->ops->set_antenna) {
- 			result = -EOPNOTSUPP;
- 			goto bad_res;
- 		}
-@@ -1053,6 +1053,14 @@ static int nl80211_set_wiphy(struct sk_buff *skb, struct genl_info *info)
- 		tx_ant = nla_get_u32(info->attrs[NL80211_ATTR_WIPHY_ANTENNA_TX]);
- 		rx_ant = nla_get_u32(info->attrs[NL80211_ATTR_WIPHY_ANTENNA_RX]);
- 
-+		/* reject antenna configurations which don't match the
-+		 * available antenna mask, except for the "all" mask */
-+		if ((~tx_ant && (tx_ant & ~rdev->wiphy.available_antennas)) ||
-+		    (~rx_ant && (rx_ant & ~rdev->wiphy.available_antennas))) {
-+			result = -EINVAL;
-+			goto bad_res;
-+		}
-+
- 		result = rdev->ops->set_antenna(&rdev->wiphy, tx_ant, rx_ant);
- 		if (result)
- 			goto bad_res;
+ #define AR_SREV_9285E_20(_ah) \
+     (AR_SREV_9285_12_OR_LATER(_ah) && \
+      ((REG_READ(_ah, AR_AN_SYNTH9) & 0x7) == 0x1))
+-- 
+1.7.0.4
 
