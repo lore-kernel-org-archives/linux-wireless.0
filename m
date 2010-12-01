@@ -1,78 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.19.149.2]:36070 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751694Ab0LFMak (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 6 Dec 2010 07:30:40 -0500
-Received: from mail.atheros.com ([10.10.20.105])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Mon, 06 Dec 2010 04:30:26 -0800
-From: Vasanthakumar Thiagarajan <vasanth@atheros.com>
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>
-Subject: [PATCH V3 10/27] ath9k_hw: Find the maximum number of chains that hw supports
-Date: Mon, 6 Dec 2010 04:27:43 -0800
-Message-ID: <1291638480-8950-11-git-send-email-vasanth@atheros.com>
-In-Reply-To: <1291638480-8950-1-git-send-email-vasanth@atheros.com>
-References: <1291638480-8950-1-git-send-email-vasanth@atheros.com>
+Received: from mail-iw0-f174.google.com ([209.85.214.174]:45147 "EHLO
+	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751993Ab0LAH7g (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 1 Dec 2010 02:59:36 -0500
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <AANLkTik2qtGUgkZYSjcEH9jHHsevKnxOvz4s6On94U9o@mail.gmail.com>
+References: <5febb0e1fba0ec2bb77f6ade8b251ba0edf4614c.1290988277.git.joe@perches.com>
+ <AANLkTinc251WbwuLqFbOZ5ipNGZW7=wub3DoWwy42=+e@mail.gmail.com>
+ <20101129060732.5130.qmail@stuge.se> <4CF42C17.2070500@openwrt.org>
+ <1291081185.16349.133.camel@Joe-Laptop> <4CF464D6.2020507@openwrt.org>
+ <1291148375.18026.342.camel@Joe-Laptop> <AANLkTik2qtGUgkZYSjcEH9jHHsevKnxOvz4s6On94U9o@mail.gmail.com>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Tue, 30 Nov 2010 23:59:15 -0800
+Message-ID: <AANLkTinuVWuiVpKrz_oEAFKt6Hgxu4kU13iKthj8E0m1@mail.gmail.com>
+Subject: Re: [ath9k-devel] [PATCH wireless-next] ath: Rename ath_print to ath_debug
+To: Joe Perches <joe@perches.com>
+Cc: Felix Fietkau <nbd@openwrt.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	ath9k-devel@lists.ath9k.org, peter@stuge.se,
+	linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Have it in ah->caps. This will be used during various
-calibrations.
+On Tue, Nov 30, 2010 at 11:56 PM, Luis R. Rodriguez <mcgrof@gmail.com> wrote:
+> On Tue, Nov 30, 2010 at 12:19 PM, Joe Perches <joe@perches.com> wrote:
+>> On Tue, 2010-11-30 at 03:43 +0100, Felix Fietkau wrote:
+>>> On 2010-11-30 2:39 AM, Joe Perches wrote:
+>>> > I gauge my willingness to spend time on subsystems on
+>>> > the maintainers willingness to merge things that improve
+>>> > readability and correctness.
+>>> I'm not trying to discourage you from spending time on improving this
+>>> code, just doubting the usefulness of such simple function renames.
+>>
+>> Poor function naming is just that.
+>> It reduces readability and the uses are counter expectation.
+>
+> The name is perfect, we use it to print anything, even non-debugging stuff.
 
-Signed-off-by: Vasanthakumar Thiagarajan <vasanth@atheros.com>
----
- drivers/net/wireless/ath/ath9k/hw.c |   14 +++++++++++++-
- drivers/net/wireless/ath/ath9k/hw.h |    2 ++
- 2 files changed, 15 insertions(+), 1 deletions(-)
+If you are writing trivial patches please be ready to accept trivial
+NACKs for them as well. IMHO its best if the large diffstat trivial
+patches had more purpose than just scratch a small tiny itch.
 
-diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
-index b1d3c1e..ddbd6fb 100644
---- a/drivers/net/wireless/ath/ath9k/hw.c
-+++ b/drivers/net/wireless/ath/ath9k/hw.c
-@@ -1777,7 +1777,7 @@ int ath9k_hw_fill_cap_info(struct ath_hw *ah)
- 	struct ath_btcoex_hw *btcoex_hw = &ah->btcoex_hw;
- 
- 	u16 capField = 0, eeval;
--	u8 ant_div_ctl1;
-+	u8 ant_div_ctl1, tx_chainmask, rx_chainmask;
- 
- 	eeval = ah->eep_ops->get_eeprom(ah, EEP_REG_0);
- 	regulatory->current_rd = eeval;
-@@ -1989,6 +1989,18 @@ int ath9k_hw_fill_cap_info(struct ath_hw *ah)
- 		pCap->pcie_lcr_offset = 0x80;
- 	}
- 
-+	tx_chainmask = pCap->tx_chainmask;
-+	rx_chainmask = pCap->rx_chainmask;
-+	while (tx_chainmask || rx_chainmask) {
-+		if (tx_chainmask & BIT(0))
-+			pCap->max_txchains++;
-+		if (rx_chainmask & BIT(0))
-+			pCap->max_rxchains++;
-+
-+		tx_chainmask >>= 1;
-+		rx_chainmask >>= 1;
-+	}
-+
- 	return 0;
- }
- 
-diff --git a/drivers/net/wireless/ath/ath9k/hw.h b/drivers/net/wireless/ath/ath9k/hw.h
-index 1eb6a14..bd0717e 100644
---- a/drivers/net/wireless/ath/ath9k/hw.h
-+++ b/drivers/net/wireless/ath/ath9k/hw.h
-@@ -200,6 +200,8 @@ struct ath9k_hw_capabilities {
- 	u16 rts_aggr_limit;
- 	u8 tx_chainmask;
- 	u8 rx_chainmask;
-+	u8 max_txchains;
-+	u8 max_rxchains;
- 	u16 tx_triglevel_max;
- 	u16 reg_cap;
- 	u8 num_gpio_pins;
--- 
-1.7.0.4
-
+  Luis
