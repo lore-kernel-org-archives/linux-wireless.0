@@ -1,61 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pw0-f46.google.com ([209.85.160.46]:35992 "EHLO
-	mail-pw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753335Ab0LHIMs convert rfc822-to-8bit (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:51570 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751925Ab0LAItO (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 8 Dec 2010 03:12:48 -0500
-Received: by pwj3 with SMTP id 3so215593pwj.19
-        for <linux-wireless@vger.kernel.org>; Wed, 08 Dec 2010 00:12:48 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <201012081706.54459.br1@einfach.org>
-References: <AANLkTimDF3kofO=kiuOsz+WrTGROdOL8-3eNvKd5NrD3@mail.gmail.com>
- <AANLkTiky-Q6DLxXSKf-+UU6avpaVikRgtt5078+Ui7Uh@mail.gmail.com>
- <AANLkTimS03cqqG8TCN1MTGF0DRQ51hrFkSPrbah2Z4gO@mail.gmail.com> <201012081706.54459.br1@einfach.org>
-From: Jonathan Guerin <jonathan@guerin.id.au>
-Date: Wed, 8 Dec 2010 18:12:33 +1000
-Message-ID: <AANLkTim+pOE1pCszaRWvzNmZ9e7RtdVbY7jPquby5OHV@mail.gmail.com>
-Subject: Re: [ath5k-devel] ath5k: Weird Retransmission Behaviour
+	Wed, 1 Dec 2010 03:49:14 -0500
+Subject: Re: [PATCH v7 1/3] cfg80211: Add nl80211 antenna configuration
+From: Johannes Berg <johannes@sipsolutions.net>
 To: Bruno Randolf <br1@einfach.org>
-Cc: Nick Kossifidis <mickflemm@gmail.com>,
-	ath5k-devel <ath5k-devel@lists.ath5k.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	bjorn.smedman@venatech.se, nbd@openwrt.org
-Content-Type: text/plain; charset=ISO-8859-1
+Cc: linville@tuxdriver.com, nbd@openwrt.org, mcgrof@gmail.com,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <1291186468.4199.6.camel@jlt3.sipsolutions.net>
+References: <20101110035050.23721.15617.stgit@localhost6.localdomain6>
+	 <201011241045.05708.br1@einfach.org>
+	 <1291185817.4199.5.camel@jlt3.sipsolutions.net>
+	 <201012011547.48339.br1@einfach.org>
+	 <1291186468.4199.6.camel@jlt3.sipsolutions.net>
+Content-Type: text/plain; charset="UTF-8"
+Date: Wed, 01 Dec 2010 09:48:57 +0100
+Message-ID: <1291193337.4199.7.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Dec 8, 2010 at 6:06 PM, Bruno Randolf <br1@einfach.org> wrote:
->> > When ath5k doesn't get retry limits from above it uses the following
->> > defaults on dcu.
->> > For now i don't think we use local->hw.conf.short_frame_max_tx_count
->> > for that so the
->> > default is ah_limit_tx_retries (AR5K_INIT_TX_RETRY) but seems it's
->> > wrong and we should
->> > fix it...
->> >
->> > /* Tx retry limits */
->> > #define AR5K_INIT_SH_RETRY                      10
->> > #define AR5K_INIT_LG_RETRY                      AR5K_INIT_SH_RETRY
->> > /* For station mode */
->> > #define AR5K_INIT_SSH_RETRY                     32
->> > #define AR5K_INIT_SLG_RETRY                     AR5K_INIT_SSH_RETRY
->> > #define AR5K_INIT_TX_RETRY                      10
->
-> I just sent a patch cleaning up this mess. Could you please check it?
-> Unfortunately i didn't find way to really test re-transmissions, yet.
-> Jonathan, could you give it a try in your test setup with my patch, and play
-> with the numbers (just hardcode them in ath5k_hw_set_tx_retry_limits) to see
-> if they actually have an effect?
+On Wed, 2010-12-01 at 07:54 +0100, Johannes Berg wrote:
+> On Wed, 2010-12-01 at 15:47 +0900, Bruno Randolf wrote:
+> 
+> > Already merged.
+> > 
+> > git show 79b1c460a0b55e55981c25c56597c4d5d2872de3
+> 
+> Oops, sorry -- was on iwlwifi tree which didn't merge yet and got
+> confused thinking it was mac80211 only.
 
-Added to my todo for tomorrow - I'll try to do it if I have some spare time!
+Actually, I take that back. The patch *was* for mac80211 even though it
+claimed to be for cfg80211, and you still need to do the cfg80211
+versions.
 
-Cheers,
+johannes
 
-Jonathan
-
->
-> As noted in my patch, this does not change the high number of retries we get
-> from the rate control. That's a separate issue.
->
-> bruno
->
