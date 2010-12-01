@@ -1,32 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:33868 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756066Ab0LJTxX (ORCPT
+Received: from mail30t.wh2.ocn.ne.jp ([125.206.180.136]:22202 "HELO
+	mail30t.wh2.ocn.ne.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1752296Ab0LAGsP (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 10 Dec 2010 14:53:23 -0500
-Subject: Re: [RFC v2 0/2] implementation of scheduled scan
-From: Johannes Berg <johannes@sipsolutions.net>
-To: luciano.coelho@nokia.com
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <1291993632-6921-1-git-send-email-luciano.coelho@nokia.com>
-References: <1291993632-6921-1-git-send-email-luciano.coelho@nokia.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Fri, 10 Dec 2010 20:53:22 +0100
-Message-ID: <1292010802.3531.6.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+	Wed, 1 Dec 2010 01:48:15 -0500
+Received: from vs3011.wh2.ocn.ne.jp (125.206.180.239)
+	by mail30t.wh2.ocn.ne.jp (RS ver 1.0.95vs) with SMTP id 3-0818066089
+	for <linux-wireless@vger.kernel.org>; Wed,  1 Dec 2010 15:48:12 +0900 (JST)
+From: Bruno Randolf <br1@einfach.org>
+To: Johannes Berg <johannes@sipsolutions.net>
+Subject: Re: [PATCH v7 1/3] cfg80211: Add nl80211 antenna configuration
+Date: Wed, 1 Dec 2010 15:47:48 +0900
+Cc: linville@tuxdriver.com, nbd@openwrt.org, mcgrof@gmail.com,
+	linux-wireless@vger.kernel.org
+References: <20101110035050.23721.15617.stgit@localhost6.localdomain6> <201011241045.05708.br1@einfach.org> <1291185817.4199.5.camel@jlt3.sipsolutions.net>
+In-Reply-To: <1291185817.4199.5.camel@jlt3.sipsolutions.net>
+MIME-Version: 1.0
+Content-Type: Text/Plain;
+  charset="utf-8"
+Message-Id: <201012011547.48339.br1@einfach.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2010-12-10 at 17:07 +0200, luciano.coelho@nokia.com wrote:
+On Wed December 1 2010 15:43:37 Johannes Berg wrote:
+> On Wed, 2010-11-24 at 10:45 +0900, Bruno Randolf wrote:
+> > On Tue November 23 2010 00:31:21 Johannes Berg wrote:
+> > > On Mon, 2010-11-22 at 11:33 +0900, Bruno Randolf wrote:
+> > > > On Sat November 20 2010 03:45:37 Johannes Berg wrote:
+> > > > > You'll need to provide documentation updates for this ASAP.
+> > > > 
+> > > > What do you mean? There is lots of kerneldoc in my patch. Is it not
+> > > > enough?
+> > > 
+> > > Not for the cfg80211 ops afaict, or did I just miss that?
+> > 
+> > True. Sorry. I will add it.
+> 
+> Ping.
 
-> * I kept the return value in the sched_scan_stop chain, because, at least with
->   wl12xx, the call can fail (due to OOM for instance).  I think it's cleaner
->   this way.
+Already merged.
 
-What's going to happen then though? Would it make sense to pre-allocate
-this at start() time, so it can cleanly stop regardless of what's going
-on? I can see start() failing, but stop() failing seems a bit hard to
-work with in wpa_supplicant?
-
-johannes
-
+git show 79b1c460a0b55e55981c25c56597c4d5d2872de3
