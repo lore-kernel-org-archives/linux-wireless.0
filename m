@@ -1,32 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from external1.orbit-lab.org ([128.6.192.131]:57180 "HELO
-	external1.orbit-lab.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S932083Ab0LRUDx (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 18 Dec 2010 15:03:53 -0500
-Received: from repository3.orbit-lab.org (repository3.orbit-lab.org [10.50.0.41])
-	by external1.orbit-lab.org (Postfix) with ESMTP id 690094061C
-	for <linux-wireless@vger.kernel.org>; Sat, 18 Dec 2010 15:04:02 -0500 (EST)
-Subject: Compat-wireless release for 2010-12-18 is baked
-To: <linux-wireless@vger.kernel.org>
-Message-Id: <20101218200352.1193E40F97@repository3.orbit-lab.org>
-Date: Sat, 18 Dec 2010 15:03:51 -0500 (EST)
-From: compat@orbit-lab.org (Compat-wireless cronjob account)
+Received: from mail.atheros.com ([12.19.149.2]:13835 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751517Ab0LAHdi (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 1 Dec 2010 02:33:38 -0500
+Received: from mail.atheros.com ([10.10.20.105])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Tue, 30 Nov 2010 23:33:24 -0800
+From: Vasanthakumar Thiagarajan <vasanth@atheros.com>
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>
+Subject: [PATCH 06/26] ath9k_hw: Eeeprom changes for AR9485
+Date: Tue, 30 Nov 2010 23:32:35 -0800
+Message-ID: <1291188775-13707-7-git-send-email-vasanth@atheros.com>
+In-Reply-To: <1291188775-13707-1-git-send-email-vasanth@atheros.com>
+References: <1291188775-13707-1-git-send-email-vasanth@atheros.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-cat: /var/opt/compat/compat-wireless-2.6/compat_version: No such file or directory
-cat: compat_base_tree: No such file or directory
-cat: compat_base_tree_version: No such file or directory
-cat: compat_version: No such file or directory
-cat: /var/opt/compat/compat-wireless-2.6/compat_version: No such file or directory
-scripts/Makefile.clean:17: /var/opt/compat/compat-wireless-2.6/drivers/net/wireless/hostap/Makefile: No such file or directory
-make[4]: *** No rule to make target `/var/opt/compat/compat-wireless-2.6/drivers/net/wireless/hostap/Makefile'.  Stop.
-make[3]: *** [/var/opt/compat/compat-wireless-2.6/drivers/net/wireless/hostap] Error 2
-make[2]: *** [/var/opt/compat/compat-wireless-2.6/drivers/net/wireless] Error 2
-make[1]: *** [_clean_/var/opt/compat/compat-wireless-2.6] Error 2
-make: *** [clean] Error 2
+Calibration data are stored at 4k address (0xfff). The cal data
+for AR9485 is not compressed so its lengh can exceed 1024 limit,
+take care of that.
 
-compat-wireless code metrics
+Signed-off-by: Vasanthakumar Thiagarajan <vasanth@atheros.com>
+---
+ drivers/net/wireless/ath/ath9k/ar9003_eeprom.c |    8 ++++++--
+ drivers/net/wireless/ath/ath9k/ar9003_eeprom.h |    1 +
+ 2 files changed, 7 insertions(+), 2 deletions(-)
 
-    753675 - Total upstream lines of code being pulled
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
+index 4aecc10..6cbfbfa 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
++++ b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
+@@ -3317,7 +3317,10 @@ static int ar9300_eeprom_restore_internal(struct ath_hw *ah,
+ 	memcpy(mptr, &ar9300_default, mdata_size);
+ 
+ 	read = ar9300_read_eeprom;
+-	cptr = AR9300_BASE_ADDR;
++	if (AR_SREV_9485(ah))
++		cptr = AR9300_BASE_ADDR_4K;
++	else
++		cptr = AR9300_BASE_ADDR;
+ 	ath_print(common, ATH_DBG_EEPROM,
+ 		"Trying EEPROM accesss at Address 0x%04x\n", cptr);
+ 	if (ar9300_check_eeprom_header(ah, read, cptr))
+@@ -3360,7 +3363,8 @@ found:
+ 			  "Found block at %x: code=%d ref=%d"
+ 			  "length=%d major=%d minor=%d\n", cptr, code,
+ 			  reference, length, major, minor);
+-		if (length >= 1024) {
++		if ((!AR_SREV_9485(ah) && length >= 1024) ||
++		    (AR_SREV_9485(ah) && length >= (4 * 1024))) {
+ 			ath_print(common, ATH_DBG_EEPROM,
+ 				  "Skipping bad header\n");
+ 			cptr -= COMP_HDR_LEN;
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.h b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.h
+index 57f64db..d189c87 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.h
++++ b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.h
+@@ -78,6 +78,7 @@
+ #define AR9300_EEPROM_SIZE (16*1024)
+ #define FIXED_CCA_THRESHOLD 15
+ 
++#define AR9300_BASE_ADDR_4K 0xfff
+ #define AR9300_BASE_ADDR 0x3ff
+ #define AR9300_BASE_ADDR_512 0x1ff
+ 
+-- 
+1.7.0.4
+
