@@ -1,114 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from tulikuusama.dnainternet.net ([83.102.40.132]:45304 "EHLO
-	tulikuusama.dnainternet.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751985Ab0LTH7Z (ORCPT
+Received: from mail.candelatech.com ([208.74.158.172]:40436 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751469Ab0LAS6G (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 20 Dec 2010 02:59:25 -0500
-Message-ID: <20101220095921.115835vajhv6kv8k@hayate.sektori.org>
-Date: Mon, 20 Dec 2010 09:59:21 +0200
-From: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] rndis_wlan: scanning, workaround device returning
- incorrect bssid-list item count.
-References: <20101218145929.13559.78929.stgit@fate.lan>
-In-Reply-To: <20101218145929.13559.78929.stgit@fate.lan>
+	Wed, 1 Dec 2010 13:58:06 -0500
+Received: from [192.168.100.195] (firewall.candelatech.com [70.89.124.249])
+	(authenticated bits=0)
+	by ns3.lanforge.com (8.14.2/8.14.2) with ESMTP id oB1Iw5Zl004833
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
+	for <linux-wireless@vger.kernel.org>; Wed, 1 Dec 2010 10:58:06 -0800
+Message-ID: <4CF69ABD.1060204@candelatech.com>
+Date: Wed, 01 Dec 2010 10:58:05 -0800
+From: Ben Greear <greearb@candelatech.com>
 MIME-Version: 1.0
-Content-Type: text/plain;
- charset=UTF-8;
- DelSp="Yes";
- format="flowed"
+To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: ath9k:  DMA error without scan optimization.
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Quoting Jussi Kivilinna <jussi.kivilinna@mbnet.fi>:
+As a work-around, I disabled the scan optimization by running one
+wpa-supplicant per interface.  This makes the system much more stable,
+and it ran overnight with 30 STA interfaces at low speed (64kbps
+tx + rx for each STA).
 
-> Sometimes device returns wrong number of items in bssid-list.  
-> Appears that some specific beacons
-> trigger this problem and leads to very poor scanning results.  
-> Workaround by ignoring num_items
-> received from device and walkthrough full bssid-list buffer.
->
+This morning, I bumped speed to 384Kbps, and it ran fine for 30
+minutes or so.  Then, I noticed this error on the console.
 
-Please, don't take patch. It causes oops with other user, that I have to
-solve first.
+The system seems OK still, but I figure it's a matter of time.
 
--Jussi
+Any suggestions for working around this error?  Maybe try
+stopping DMA several times in a loop?
 
-> Signed-off-by: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
-> ---
->  drivers/net/wireless/rndis_wlan.c |   22 ++++++++++++++--------
->  1 files changed, 14 insertions(+), 8 deletions(-)
->
-> diff --git a/drivers/net/wireless/rndis_wlan.c  
-> b/drivers/net/wireless/rndis_wlan.c
-> index 4a4f005..8db8333 100644
-> --- a/drivers/net/wireless/rndis_wlan.c
-> +++ b/drivers/net/wireless/rndis_wlan.c
-> @@ -1967,8 +1967,8 @@ static struct cfg80211_bss  
-> *rndis_bss_info_update(struct usbnet *usbdev,
->  	int ie_len, bssid_len;
->  	u8 *ie;
->
-> -	netdev_dbg(usbdev->net, " found bssid: '%.32s' [%pM]\n",
-> -		   bssid->ssid.essid, bssid->mac);
-> +	netdev_dbg(usbdev->net, " found bssid: '%.32s' [%pM], len: %d\n",
-> +		   bssid->ssid.essid, bssid->mac, le32_to_cpu(bssid->length));
->
->  	/* parse bssid structure */
->  	bssid_len = le32_to_cpu(bssid->length);
-> @@ -2008,10 +2008,10 @@ static int rndis_check_bssid_list(struct  
-> usbnet *usbdev, u8 *match_bssid,
->  	void *buf = NULL;
->  	struct ndis_80211_bssid_list_ex *bssid_list;
->  	struct ndis_80211_bssid_ex *bssid;
-> -	int ret = -EINVAL, len, count, bssid_len;
-> +	int ret = -EINVAL, len, count, bssid_len, real_count;
->  	bool resized = false;
->
-> -	netdev_dbg(usbdev->net, "check_bssid_list\n");
-> +	netdev_dbg(usbdev->net, "%s\n", __func__);
->
->  	len = CONTROL_BUFFER_SIZE;
->  resize_buf:
-> @@ -2035,10 +2035,13 @@ resize_buf:
->  	bssid = bssid_list->bssid;
->  	bssid_len = le32_to_cpu(bssid->length);
->  	count = le32_to_cpu(bssid_list->num_items);
-> -	netdev_dbg(usbdev->net, "check_bssid_list: %d BSSIDs found (buflen: %d)\n",
-> -		   count, len);
-> +	real_count = 0;
-> +	netdev_dbg(usbdev->net, "%s, buflen: %d\n", __func__, len);
->
-> -	while (count && ((void *)bssid + bssid_len) <= (buf + len)) {
-> +	/* Device returns incorrect 'num_items'. Workaround by ignoring the
-> +	 * received 'num_items' and walking through full bssid buffer instead.
-> +	 */
-> +	while (bssid_len > 0 && ((void *)bssid + bssid_len) <= (buf + len)) {
->  		if (rndis_bss_info_update(usbdev, bssid) && match_bssid &&
->  		    matched) {
->  			if (compare_ether_addr(bssid->mac, match_bssid))
-> @@ -2047,9 +2050,12 @@ resize_buf:
->
->  		bssid = (void *)bssid + bssid_len;
->  		bssid_len = le32_to_cpu(bssid->length);
-> -		count--;
-> +		real_count++;
->  	}
->
-> +	netdev_dbg(usbdev->net, "%s, num_items from device: %d, really found: "
-> +				"%d\n", __func__, count, real_count);
-> +
->  out:
->  	kfree(buf);
->  	return ret;
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
->
+sta7: detected beacon loss from AP - sending probe request
+ath: DMA failed to stop in 10 ms AR_CR=0x00000024 AR_DIAG_SW=0x42000020
+------------[ cut here ]------------
+WARNING: at /home/greearb/git/linux.wireless-testing/drivers/net/wireless/ath/ath9k/recv.c:532 ath_stoprecv+0x90/0x9a [ath9k]()
+Hardware name: PDSBM
+Could not stop RX, we could be confusing the DMA engine when we start RX up
+Modules linked in: michael_mic aes_i586 aes_generic 8021q garp stp llc macvlan pktgen fuse nfs lockd fscache nfs_acl auth_rpcgss sunrpc ipv6 uinput arc4 ecb 
+ath9k mac80211 ath9k_common ath9k_hw microcode ath e1000e cfg80211 iTCO_wdt iTCO_vendor_support pcspkr i2c_i801 i915 drm_kms_helper drm i2c_algo_bit i2c_core 
+video output [last unloaded: ipt_addrtype]
+Pid: 24656, comm: kworker/u:2 Tainted: G        W   2.6.37-rc3-wl+ #53
+Call Trace:
+  [<78436fe9>] warn_slowpath_common+0x77/0x8c
+  [<f8f6c19e>] ? ath_stoprecv+0x90/0x9a [ath9k]
+  [<f8f6c19e>] ? ath_stoprecv+0x90/0x9a [ath9k]
+  [<7843707a>] warn_slowpath_fmt+0x2e/0x30
+  [<f8f6c19e>] ath_stoprecv+0x90/0x9a [ath9k]
+  [<f8f6a495>] ath_reset+0x55/0x163 [ath9k]
+  [<7844090e>] ? process_timeout+0x0/0xa
+  [<f8f6b9c9>] ath_hw_check+0x3f/0x4a [ath9k]
+  [<78447000>] process_one_work+0x1af/0x2bf
+  [<78446f8f>] ? process_one_work+0x13e/0x2bf
+  [<f8f6b98a>] ? ath_hw_check+0x0/0x4a [ath9k]
+  [<7844874e>] worker_thread+0xf9/0x1bf
+  [<78448655>] ? worker_thread+0x0/0x1bf
+  [<7844b27e>] kthread+0x62/0x67
+  [<7844b21c>] ? kthread+0x0/0x67
+  [<784036c6>] kernel_thread_helper+0x6/0x1a
+---[ end trace c9b5512870bdacf6 ]---
+ath: DMA failed to stop in 10 ms AR_CR=0x00000024 AR_DIAG_SW=0x42000020
 
-
+-- 
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
 
