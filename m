@@ -1,37 +1,83 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from jaguar.aricent.com ([180.151.2.24]:55621 "EHLO
-	jaguar.aricent.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751119Ab0LPGvv convert rfc822-to-8bit (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:43159 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932150Ab0LAVDM (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 16 Dec 2010 01:51:51 -0500
-Received: from jaguar.aricent.com (localhost [127.0.0.1])
-	by postfix.imss71 (Postfix) with ESMTP id 3918136B30
-	for <linux-wireless@vger.kernel.org>; Thu, 16 Dec 2010 10:58:52 +0530 (IST)
-Received: from GUREXHT02.ASIAN.AD.ARICENT.COM (gurexht02.asian.ad.aricent.com [10.203.171.138])
-	by jaguar.aricent.com (Postfix) with ESMTP id 237B336B2D
-	for <linux-wireless@vger.kernel.org>; Thu, 16 Dec 2010 10:58:52 +0530 (IST)
-From: Saurabh8 Jain <saurabh8.jain@aricent.com>
-To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Date: Thu, 16 Dec 2010 11:01:07 +0530
-Subject: Netlink Memory Leak Issue
-Message-ID: <B659B0EE7F1D5A499E4A4BEB0BECBA2518292B3D21@GUREXMB01.ASIAN.AD.ARICENT.COM>
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
+	Wed, 1 Dec 2010 16:03:12 -0500
+Message-Id: <20101201210225.338244440@sipsolutions.net>
+Date: Wed, 01 Dec 2010 21:59:40 +0100
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: Javier Cardona <javier@cozybit.com>,
+	Steve Derosier <steve@cozybit.com>, devel@lists.open80211s.org
+Subject: [RFC 1/5] mac80211: use configured mesh TTL
+References: <20101201205939.009530439@sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+From: Johannes Berg <johannes.berg@intel.com>
 
-I would like to know the memory usage that happens between user space and kernel space communication. Communication happens via generic netlink library and we need to register doit and dump functions.
+It seems the configured mesh TTL should be used,
+not the default value.
 
-I was going through function "nl80211_set_mesh_params" in "net/wireless/nl80211.c" which receives values of mesh parameters. In this function skb is passed but it is never used and the skb is not freed. I saw other functions also which receives messages from user space but no memory is released for skb.
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ net/mac80211/mesh.h         |    2 ++
+ net/mac80211/mesh_hwmp.c    |    5 +++--
+ net/mac80211/mesh_pathtbl.c |    5 +++--
+ 3 files changed, 8 insertions(+), 4 deletions(-)
 
-Where is this memory getting free? Do I need to free this memory?
+--- wireless-testing.orig/net/mac80211/mesh_pathtbl.c	2010-12-01 21:46:30.000000000 +0100
++++ wireless-testing/net/mac80211/mesh_pathtbl.c	2010-12-01 21:58:56.000000000 +0100
+@@ -467,7 +467,7 @@ void mesh_plink_broken(struct sta_info *
+ 			mpath->flags &= ~MESH_PATH_ACTIVE;
+ 			++mpath->sn;
+ 			spin_unlock_bh(&mpath->state_lock);
+-			mesh_path_error_tx(MESH_TTL, mpath->dst,
++			mesh_path_error_tx(MESH_DEFAULT_ELEMENT_TTL, mpath->dst,
+ 					cpu_to_le32(mpath->sn),
+ 					cpu_to_le16(PERR_RCODE_DEST_UNREACH),
+ 					bcast, sdata);
+@@ -614,7 +614,8 @@ void mesh_path_discard_frame(struct sk_b
+ 		mpath = mesh_path_lookup(da, sdata);
+ 		if (mpath)
+ 			sn = ++mpath->sn;
+-		mesh_path_error_tx(MESH_TTL, skb->data, cpu_to_le32(sn),
++		mesh_path_error_tx(MESH_DEFAULT_ELEMENT_TTL, skb->data,
++				   cpu_to_le32(sn),
+ 				   cpu_to_le16(PERR_RCODE_NO_ROUTE), ra, sdata);
+ 	}
+ 
+--- wireless-testing.orig/net/mac80211/mesh_hwmp.c	2010-12-01 21:46:30.000000000 +0100
++++ wireless-testing/net/mac80211/mesh_hwmp.c	2010-12-01 21:49:23.000000000 +0100
+@@ -232,7 +232,7 @@ int mesh_path_error_tx(u8 ttl, u8 *targe
+ 	*pos++ = WLAN_EID_PERR;
+ 	*pos++ = ie_len;
+ 	/* ttl */
+-	*pos++ = MESH_TTL;
++	*pos++ = ttl;
+ 	/* number of destinations */
+ 	*pos++ = 1;
+ 	/*
+@@ -1013,5 +1013,6 @@ mesh_path_tx_root_frame(struct ieee80211
+ 	mesh_path_sel_frame_tx(MPATH_RANN, 0, sdata->vif.addr,
+ 			       cpu_to_le32(++ifmsh->sn),
+ 			       0, NULL, 0, broadcast_addr,
+-			       0, MESH_TTL, 0, 0, 0, sdata);
++			       0, sdata->u.mesh.mshcfg.dot11MeshTTL,
++			       0, 0, 0, sdata);
+ }
+--- wireless-testing.orig/net/mac80211/mesh.h	2010-12-01 21:57:44.000000000 +0100
++++ wireless-testing/net/mac80211/mesh.h	2010-12-01 21:58:01.000000000 +0100
+@@ -216,6 +216,8 @@ struct mesh_rmc {
+ #define PERR_RCODE_NO_ROUTE     12
+ #define PERR_RCODE_DEST_UNREACH 13
+ 
++#define MESH_DEFAULT_ELEMENT_TTL 31
++
+ /* Public interfaces */
+ /* Various */
+ int ieee80211_fill_mesh_addresses(struct ieee80211_hdr *hdr, __le16 *fc,
 
-When I executed iw commands to set few values in loop.  I saw there is drop in free memory of "top" command. I am working on compatwireless-2010-06-27.
 
-
-Thanks,
-Saurabh Jain
-
-"DISCLAIMER: This message is proprietary to Aricent and is intended solely for the use of the individual to whom it is addressed. It may contain privileged or confidential information and should not be circulated or used for any purpose other than for what it is intended. If you have received this message in error, please notify the originator immediately. If you are not the intended recipient, you are notified that you are strictly prohibited from using, copying, altering, or disclosing the contents of this message. Aricent accepts no responsibility for loss or damage arising from the use of the information transmitted by this email including damage from virus."
