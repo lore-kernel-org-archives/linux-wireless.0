@@ -1,54 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.19.149.2]:63483 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751073Ab0L1IY1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 28 Dec 2010 03:24:27 -0500
-Received: from mail.atheros.com ([10.10.20.105])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Tue, 28 Dec 2010 00:24:10 -0800
-Date: Tue, 28 Dec 2010 13:53:56 +0530
-From: Vasanthakumar Thiagarajan <vasanth@atheros.com>
-To: Sujith <m.sujith@gmail.com>
-CC: "linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Sujith Manoharan <Sujith.Manoharan@Atheros.com>
-Subject: Re: [PATCH 3/5] ath9k_htc: Handle FATAL events
-Message-ID: <20101228082356.GB31274@vasanth-laptop>
-References: <19737.39891.227133.163154@gargle.gargle.HOWL>
+Received: from mail-ww0-f44.google.com ([74.125.82.44]:45307 "EHLO
+	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752844Ab0LAWUj (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 1 Dec 2010 17:20:39 -0500
+Received: by wwa36 with SMTP id 36so7937007wwa.1
+        for <linux-wireless@vger.kernel.org>; Wed, 01 Dec 2010 14:20:38 -0800 (PST)
+Message-ID: <4CF6CA2F.5050704@openwrt.org>
+Date: Wed, 01 Dec 2010 23:20:31 +0100
+From: Florian Fainelli <florian@openwrt.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <19737.39891.227133.163154@gargle.gargle.HOWL>
+To: =?UTF-8?B?TWljaGFlbCBCw7xzY2g=?= <mb@bu3sch.de>
+CC: Larry Finger <Larry.Finger@lwfinger.net>,
+	John Linville <linville@tuxdriver.com>,
+	=?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
+	=?UTF-8?B?R8OhYm9yIA==?= =?UTF-8?B?U3RlZmFuaWs=?=
+	<netrolller.3d@gmail.com>, b43-dev <b43-dev@lists.infradead.org>,
+	wireless <linux-wireless@vger.kernel.org>
+Subject: Re: RFC - removal of SPROM fallback
+References: <4CF69ED1.1070406@lwfinger.net>	 (sfid-20101201_201546_954964_FFFFFFFFC298F049) <1291240619.1960.3.camel@maggie>
+In-Reply-To: <1291240619.1960.3.camel@maggie>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Dec 28, 2010 at 01:42:03PM +0530, Sujith wrote:
-> From: Sujith Manoharan <Sujith.Manoharan@atheros.com>
-> 
-> The device has to be reset when a FATAL event is received.
-> Not doing so would leave the card in a non-working state.
-> 
-> Signed-off-by: Sujith Manoharan <Sujith.Manoharan@atheros.com>
-> ---
->  drivers/net/wireless/ath/ath9k/htc.h          |    6 ++-
->  drivers/net/wireless/ath/ath9k/htc_drv_init.c |    8 ++-
->  drivers/net/wireless/ath/ath9k/htc_drv_main.c |   57 ++++++++++++++++++++++++-
->  drivers/net/wireless/ath/ath9k/wmi.c          |   18 +++++++-
->  drivers/net/wireless/ath/ath9k/wmi.h          |    3 +-
->  5 files changed, 84 insertions(+), 8 deletions(-)
-> 
-> +void ath9k_htc_reset(struct ath9k_htc_priv *priv)
-> +{
-> +	struct ath_hw *ah = priv->ah;
-> +	struct ath_common *common = ath9k_hw_common(ah);
-> +	struct ieee80211_channel *channel = priv->hw->conf.channel;
-> +	struct ath9k_hw_cal_data *caldata;
-> +	enum htc_phymode mode;
-> +	__be16 htc_mode;
-> +	u8 cmd_rsp;
-> +	int ret;
-> +
-> +	mutex_lock(&priv->mutex);
+Hello,
 
-This will result in a deadlock with the one in ath9k_htc_stop().
+Le 01/12/2010 22:56, Michael Büsch a écrit :
+> On Wed, 2010-12-01 at 13:15 -0600, Larry Finger wrote:
+>> At one time, we thought that we had found BCM43xx devices with no SPROM. In the
+>> one case that I remember, it was because the SPROM had been relocated.
+>>
+>> I now have the data from John's device that needs the revision fixup and I know
+>> what is wrong - it is rev 2 with corrupted CRC. The defaulting to rev 1 is
+>> getting almost everything wrong, including MAC address and vendor. My plan is to
+>> write a better fixup routine.
+>>
+>> At the moment, we have some SPROM fallback code that has not been fully
+>> implemented, and is probably not needed. Are there any objections to stripping
+>> this code out of drivers/ssb/pci.c and drivers/ssb/sprom.c?
+>
+> Yes. The code is needed for bcm63xx embedded devices. The code that uses
+> it currently is not in mainline, though. It can be found in the OpenWRT
+> repositories.
 
-Vasanth
+It actually is mainline and used.
+
+>
+> But I still think that the SPROM fallback mechanism should be replaced
+> by a "platform data" based mechanism, or similar. Just removing it
+> without replacement is not an option, because bcm63xx embedded really
+> does not have an SPROM.
+
+Correct. The rationale behind this is that if you have a big flash for 
+your system, you do not want to afford the cost for another flash chip 
+storing the SPROM. Whichever mechanism works for your, I will do the 
+required changes in the bcm63xx architecture code.
+
+>
+> The bcm63xx was the reason the fallback mechanism was implemented in
+> the first place. See git logs for more details.
+>
+
