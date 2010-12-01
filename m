@@ -1,50 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qy0-f174.google.com ([209.85.216.174]:33424 "EHLO
-	mail-qy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752181Ab0LaKXx (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 31 Dec 2010 05:23:53 -0500
-Message-ID: <4D1DAF2D.5070604@gmail.com>
-Date: Fri, 31 Dec 2010 08:23:41 -0200
-From: Mauro Carvalho Chehab <maurochehab@gmail.com>
-MIME-Version: 1.0
-To: "Justin P. Mattock" <justinmattock@gmail.com>
-CC: trivial@kernel.org, linux-m68k@lists.linux-m68k.org,
-	linux-kernel@vger.kernel.org, netdev@vger.kernel.org,
-	ivtv-devel@ivtvdriver.org, linux-media@vger.kernel.org,
-	linux-wireless@vger.kernel.org, linux-scsi@vger.kernel.org,
-	spi-devel-general@lists.sourceforge.net,
-	devel@driverdev.osuosl.org, linux-usb@vger.kernel.org
-Subject: Re: [PATCH 11/15]drivers:media:video:cx18:cx23418.h Typo change diable
- to disable.
-References: <1293750484-1161-1-git-send-email-justinmattock@gmail.com> <1293750484-1161-2-git-send-email-justinmattock@gmail.com> <1293750484-1161-3-git-send-email-justinmattock@gmail.com> <1293750484-1161-4-git-send-email-justinmattock@gmail.com> <1293750484-1161-5-git-send-email-justinmattock@gmail.com> <1293750484-1161-6-git-send-email-justinmattock@gmail.com> <1293750484-1161-7-git-send-email-justinmattock@gmail.com> <1293750484-1161-8-git-send-email-justinmattock@gmail.com> <1293750484-1161-9-git-send-email-justinmattock@gmail.com> <1293750484-1161-10-git-send-email-justinmattock@gmail.com> <1293750484-1161-11-git-send-email-justinmattock@gmail.com>
-In-Reply-To: <1293750484-1161-11-git-send-email-justinmattock@gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from mail.perches.com ([173.55.12.10]:2043 "EHLO mail.perches.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753175Ab0LAO14 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 1 Dec 2010 09:27:56 -0500
+Subject: Re: [ath9k-devel] [PATCH wireless-next] ath: Rename ath_print to
+ ath_debug
+From: Joe Perches <joe@perches.com>
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Cc: Felix Fietkau <nbd@openwrt.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	ath9k-devel@lists.ath9k.org, peter@stuge.se,
+	linux-kernel@vger.kernel.org
+In-Reply-To: <AANLkTik2qtGUgkZYSjcEH9jHHsevKnxOvz4s6On94U9o@mail.gmail.com>
+References: <5febb0e1fba0ec2bb77f6ade8b251ba0edf4614c.1290988277.git.joe@perches.com>
+	 <AANLkTinc251WbwuLqFbOZ5ipNGZW7=wub3DoWwy42=+e@mail.gmail.com>
+	 <20101129060732.5130.qmail@stuge.se> <4CF42C17.2070500@openwrt.org>
+	 <1291081185.16349.133.camel@Joe-Laptop> <4CF464D6.2020507@openwrt.org>
+	 <1291148375.18026.342.camel@Joe-Laptop>
+	 <AANLkTik2qtGUgkZYSjcEH9jHHsevKnxOvz4s6On94U9o@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Wed, 01 Dec 2010 06:27:55 -0800
+Message-ID: <1291213675.1845.12.camel@Joe-Laptop>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Em 30-12-2010 21:08, Justin P. Mattock escreveu:
-> The below patch fixes a typo "diable" to "disable". Please let me know if this 
-> is correct or not.
-> 
-> Signed-off-by: Justin P. Mattock <justinmattock@gmail.com>
-Acked-by: Mauro Carvalho Chehab <mchehab@redhat.com>
-> 
-> ---
->  drivers/media/video/cx18/cx23418.h |    2 +-
->  1 files changed, 1 insertions(+), 1 deletions(-)
-> 
-> diff --git a/drivers/media/video/cx18/cx23418.h b/drivers/media/video/cx18/cx23418.h
-> index 2c00980..7e40035 100644
-> --- a/drivers/media/video/cx18/cx23418.h
-> +++ b/drivers/media/video/cx18/cx23418.h
-> @@ -177,7 +177,7 @@
->     IN[0] - Task handle.
->     IN[1] - luma type: 0 = disable, 1 = 1D horizontal only, 2 = 1D vertical only,
->  		      3 = 2D H/V separable, 4 = 2D symmetric non-separable
-> -   IN[2] - chroma type: 0 - diable, 1 = 1D horizontal
-> +   IN[2] - chroma type: 0 - disable, 1 = 1D horizontal
->     ReturnCode - One of the ERR_CAPTURE_... */
->  #define CX18_CPU_SET_SPATIAL_FILTER_TYPE     	(CPU_CMD_MASK_CAPTURE | 0x000C)
->  
+On Tue, 2010-11-30 at 23:56 -0800, Luis R. Rodriguez wrote:
+> On Tue, Nov 30, 2010 at 12:19 PM, Joe Perches <joe@perches.com> wrote:
+> > Poor function naming is just that.
+> > It reduces readability and the uses are counter expectation.
+> The name is perfect, we use it to print anything, even non-debugging stuff.
+
+'fraid not.
+
+ath/debug.h
+
+#ifdef CONFIG_ATH_DEBUG
+void ath_print(struct ath_common *common, int dbg_mask, const char *fmt, ...)
+	__attribute__ ((format (printf, 3, 4)));
+#else
+static inline void __attribute__ ((format (printf, 3, 4)))
+ath_print(struct ath_common *common, int dbg_mask, const char *fmt, ...)
+{
+}
+#endif /* CONFIG_ATH_DEBUG */
+
 
