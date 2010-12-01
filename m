@@ -1,273 +1,91 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:50801 "EHLO nbd.name"
+Received: from nbd.name ([46.4.11.11]:57104 "EHLO nbd.name"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752834Ab0LLNem (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 12 Dec 2010 08:34:42 -0500
+	id S1753235Ab0LASHy (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 1 Dec 2010 13:07:54 -0500
 From: Felix Fietkau <nbd@openwrt.org>
 To: linux-wireless@vger.kernel.org
-Cc: linville@tuxdriver.com, lrodriguez@atheros.com,
-	Felix Fietkau <nbd@openwrt.org>
-Subject: [PATCH 5/7] ath9k_hw: fix PA predistortion training power selection
-Date: Sun, 12 Dec 2010 14:34:35 +0100
-Message-Id: <1292160877-50618-5-git-send-email-nbd@openwrt.org>
-In-Reply-To: <1292160877-50618-4-git-send-email-nbd@openwrt.org>
-References: <1292160877-50618-1-git-send-email-nbd@openwrt.org>
- <1292160877-50618-2-git-send-email-nbd@openwrt.org>
- <1292160877-50618-3-git-send-email-nbd@openwrt.org>
- <1292160877-50618-4-git-send-email-nbd@openwrt.org>
+Cc: linville@tuxdriver.com, lrodriguez@atheros.com
+Subject: [PATCH 2.6.37 v3 2/2] ath9k_hw: fix more bitfield related endian issues
+Date: Wed,  1 Dec 2010 19:07:47 +0100
+Message-Id: <1291226867-97857-2-git-send-email-nbd@openwrt.org>
+In-Reply-To: <1291226867-97857-1-git-send-email-nbd@openwrt.org>
+References: <1291226867-97857-1-git-send-email-nbd@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The EEPROM contains scale factors for the tx power, which define
-the range of allowable difference between target power and training
-power. If the difference is too big, PA predistortion cannot be used.
-For 2.4 GHz there is only one scale factor, for 5 GHz there are
-three, depending on the specific frequency range.
+A few LNA control related flags were also specified as a bitfields, however
+for some strange reason they were written in big-endian order this time.
+Fix this by using flags instead.
 
 Signed-off-by: Felix Fietkau <nbd@openwrt.org>
 ---
- drivers/net/wireless/ath/ath9k/ar9003_eeprom.c |    8 ++
- drivers/net/wireless/ath/ath9k/ar9003_paprd.c  |   99 ++++++++++++++++++++----
- drivers/net/wireless/ath/ath9k/ar9003_phy.h    |    8 ++
- drivers/net/wireless/ath/ath9k/hw.h            |    2 +
- drivers/net/wireless/ath/ath9k/main.c          |    4 +-
- 5 files changed, 104 insertions(+), 17 deletions(-)
+ drivers/net/wireless/ath/ath9k/eeprom.h     |   14 ++++++++++----
+ drivers/net/wireless/ath/ath9k/eeprom_def.c |   11 ++++++-----
+ 2 files changed, 16 insertions(+), 9 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
-index 5ad37d0..ff03b42 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
-@@ -4798,6 +4798,14 @@ static void ath9k_hw_ar9300_set_txpower(struct ath_hw *ah,
- 	/* Write target power array to registers */
- 	ar9003_hw_tx_power_regwrite(ah, targetPowerValT2);
- 	ar9003_hw_calibration_apply(ah, chan->channel);
+diff --git a/drivers/net/wireless/ath/ath9k/eeprom.h b/drivers/net/wireless/ath/ath9k/eeprom.h
+index 41ad1fe..dd59f09 100644
+--- a/drivers/net/wireless/ath/ath9k/eeprom.h
++++ b/drivers/net/wireless/ath/ath9k/eeprom.h
+@@ -236,6 +236,15 @@
+ #define CTL_EDGE_TPOWER(_ctl) ((_ctl) & 0x3f)
+ #define CTL_EDGE_FLAGS(_ctl) (((_ctl) >> 6) & 0x03)
+ 
++#define LNA_CTL_BUF_MODE	BIT(0)
++#define LNA_CTL_ISEL_LO		BIT(1)
++#define LNA_CTL_ISEL_HI		BIT(2)
++#define LNA_CTL_BUF_IN		BIT(3)
++#define LNA_CTL_FEM_BAND	BIT(4)
++#define LNA_CTL_LOCAL_BIAS	BIT(5)
++#define LNA_CTL_FORCE_XPA	BIT(6)
++#define LNA_CTL_USE_ANT1	BIT(7)
 +
-+	if (IS_CHAN_2GHZ(chan))
-+		i = ALL_TARGET_HT20_0_8_16;
-+	else if (IS_CHAN_HT40(chan))
-+		i = ALL_TARGET_HT40_7;
-+	else
-+		i = ALL_TARGET_HT20_7;
-+	ah->paprd_target_power = targetPowerValT2[i];
+ enum eeprom_param {
+ 	EEP_NFTHRESH_5,
+ 	EEP_NFTHRESH_2,
+@@ -381,10 +390,7 @@ struct modal_eep_header {
+ 	u8 xatten2Margin[AR5416_MAX_CHAINS];
+ 	u8 ob_ch1;
+ 	u8 db_ch1;
+-	u8 useAnt1:1,
+-	    force_xpaon:1,
+-	    local_bias:1,
+-	    femBandSelectUsed:1, xlnabufin:1, xlnaisel:2, xlnabufmode:1;
++	u8 lna_ctl;
+ 	u8 miscBits;
+ 	u16 xpaBiasLvlFreq[3];
+ 	u8 futureModal[6];
+diff --git a/drivers/net/wireless/ath/ath9k/eeprom_def.c b/drivers/net/wireless/ath/ath9k/eeprom_def.c
+index 76b4d65..526d7c9 100644
+--- a/drivers/net/wireless/ath/ath9k/eeprom_def.c
++++ b/drivers/net/wireless/ath/ath9k/eeprom_def.c
+@@ -451,9 +451,10 @@ static void ath9k_hw_def_set_board_values(struct ath_hw *ah,
+ 		ath9k_hw_analog_shift_rmw(ah, AR_AN_TOP2,
+ 					  AR_AN_TOP2_LOCALBIAS,
+ 					  AR_AN_TOP2_LOCALBIAS_S,
+-					  pModal->local_bias);
++					  !!(pModal->lna_ctl &
++					     LNA_CTL_LOCAL_BIAS));
+ 		REG_RMW_FIELD(ah, AR_PHY_XPA_CFG, AR_PHY_FORCE_XPA_CFG,
+-			      pModal->force_xpaon);
++			      !!(pModal->lna_ctl & LNA_CTL_FORCE_XPA));
+ 	}
+ 
+ 	REG_RMW_FIELD(ah, AR_PHY_SETTLING, AR_PHY_SETTLING_SWITCH,
+@@ -1428,9 +1429,9 @@ static u8 ath9k_hw_def_get_num_ant_config(struct ath_hw *ah,
+ 
+ 	num_ant_config = 1;
+ 
+-	if (pBase->version >= 0x0E0D)
+-		if (pModal->useAnt1)
+-			num_ant_config += 1;
++	if (pBase->version >= 0x0E0D &&
++	    (pModal->lna_ctl & LNA_CTL_USE_ANT1))
++		num_ant_config += 1;
+ 
+ 	return num_ant_config;
  }
- 
- static u16 ath9k_hw_ar9300_get_spur_channel(struct ath_hw *ah,
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_paprd.c b/drivers/net/wireless/ath/ath9k/ar9003_paprd.c
-index cdca4c3..dd6057b 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_paprd.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_paprd.c
-@@ -30,9 +30,66 @@ void ar9003_paprd_enable(struct ath_hw *ah, bool val)
- }
- EXPORT_SYMBOL(ar9003_paprd_enable);
- 
--static void ar9003_paprd_setup_single_table(struct ath_hw *ah)
-+static int ar9003_get_training_power_2g(struct ath_hw *ah)
- {
- 	struct ar9300_eeprom *eep = &ah->eeprom.ar9300_eep;
-+	struct ar9300_modal_eep_header *hdr = &eep->modalHeader2G;
-+	unsigned int power, scale, delta;
-+
-+	scale = MS(hdr->papdRateMaskHt20, AR9300_PAPRD_SCALE_1);
-+	power = REG_READ_FIELD(ah, AR_PHY_POWERTX_RATE5,
-+			       AR_PHY_POWERTX_RATE5_POWERTXHT20_0);
-+
-+	delta = abs((int) ah->paprd_target_power - (int) power);
-+	if (delta > scale)
-+		return -1;
-+
-+	if (delta < 4)
-+		power -= 4 - delta;
-+
-+	return power;
-+}
-+
-+static int get_streams(int mask)
-+{
-+	return !!(mask & BIT(0)) + !!(mask & BIT(1)) + !!(mask & BIT(2));
-+}
-+
-+static int ar9003_get_training_power_5g(struct ath_hw *ah)
-+{
-+	struct ath_common *common = ath9k_hw_common(ah);
-+	struct ar9300_eeprom *eep = &ah->eeprom.ar9300_eep;
-+	struct ar9300_modal_eep_header *hdr = &eep->modalHeader5G;
-+	struct ath9k_channel *chan = ah->curchan;
-+	unsigned int power, scale, delta;
-+
-+	if (chan->channel >= 5700)
-+		scale = MS(hdr->papdRateMaskHt20, AR9300_PAPRD_SCALE_1);
-+	else if (chan->channel >= 5400)
-+		scale = MS(hdr->papdRateMaskHt40, AR9300_PAPRD_SCALE_2);
-+	else
-+		scale = MS(hdr->papdRateMaskHt40, AR9300_PAPRD_SCALE_1);
-+
-+	if (IS_CHAN_HT40(chan))
-+		power = REG_READ_FIELD(ah, AR_PHY_POWERTX_RATE8,
-+			AR_PHY_POWERTX_RATE8_POWERTXHT40_5);
-+	else
-+		power = REG_READ_FIELD(ah, AR_PHY_POWERTX_RATE6,
-+			AR_PHY_POWERTX_RATE6_POWERTXHT20_5);
-+
-+	power += scale;
-+	delta = abs((int) ah->paprd_target_power - (int) power);
-+	if (delta > scale)
-+		return -1;
-+
-+	power += 2 * get_streams(common->tx_chainmask);
-+	return power;
-+}
-+
-+static int ar9003_paprd_setup_single_table(struct ath_hw *ah)
-+{
-+	struct ath_common *common = ath9k_hw_common(ah);
-+	struct ar9300_eeprom *eep = &ah->eeprom.ar9300_eep;
- 	struct ar9300_modal_eep_header *hdr;
- 	static const u32 ctrl0[3] = {
- 		AR_PHY_PAPRD_CTRL0_B0,
-@@ -45,6 +102,7 @@ static void ar9003_paprd_setup_single_table(struct ath_hw *ah)
- 		AR_PHY_PAPRD_CTRL1_B2
- 	};
- 	u32 am_mask, ht40_mask;
-+	int training_power;
- 	int i;
- 
- 	if (ah->curchan && IS_CHAN_5GHZ(ah->curchan))
-@@ -55,11 +113,25 @@ static void ar9003_paprd_setup_single_table(struct ath_hw *ah)
- 	am_mask = le32_to_cpu(hdr->papdRateMaskHt20) & AR9300_PAPRD_RATE_MASK;
- 	ht40_mask = le32_to_cpu(hdr->papdRateMaskHt40) & AR9300_PAPRD_RATE_MASK;
- 
-+	if (IS_CHAN_2GHZ(ah->curchan))
-+		training_power = ar9003_get_training_power_2g(ah);
-+	else
-+		training_power = ar9003_get_training_power_5g(ah);
-+
-+	if (training_power < 0) {
-+		ath_dbg(common, ATH_DBG_CALIBRATE,
-+			"PAPRD target power delta out of range");
-+		return -ERANGE;
-+	}
-+	ah->paprd_training_power = training_power;
-+	ath_dbg(common, ATH_DBG_CALIBRATE,
-+		"Training power: %d, Target power: %d\n",
-+		ah->paprd_training_power, ah->paprd_target_power);
-+
- 	REG_RMW_FIELD(ah, AR_PHY_PAPRD_AM2AM, AR_PHY_PAPRD_AM2AM_MASK, am_mask);
- 	REG_RMW_FIELD(ah, AR_PHY_PAPRD_AM2PM, AR_PHY_PAPRD_AM2PM_MASK, am_mask);
- 	REG_RMW_FIELD(ah, AR_PHY_PAPRD_HT40, AR_PHY_PAPRD_HT40_MASK, ht40_mask);
- 
--
- 	for (i = 0; i < ah->caps.max_txchains; i++) {
- 		REG_RMW_FIELD(ah, ctrl0[i],
- 			      AR_PHY_PAPRD_CTRL0_USE_SINGLE_TABLE_MASK, 1);
-@@ -141,6 +213,7 @@ static void ar9003_paprd_setup_single_table(struct ath_hw *ah)
- 		      AR_PHY_PAPRD_PRE_POST_SCALING, 185706);
- 	REG_RMW_FIELD(ah, AR_PHY_PAPRD_PRE_POST_SCALE_7_B0,
- 		      AR_PHY_PAPRD_PRE_POST_SCALING, 175487);
-+	return 0;
- }
- 
- static void ar9003_paprd_get_gain_table(struct ath_hw *ah)
-@@ -595,15 +668,10 @@ void ar9003_paprd_populate_single_table(struct ath_hw *ah,
- {
- 	u32 *paprd_table_val = caldata->pa_table[chain];
- 	u32 small_signal_gain = caldata->small_signal_gain[chain];
--	u32 training_power;
-+	u32 training_power = ah->paprd_training_power;
- 	u32 reg = 0;
- 	int i;
- 
--	training_power =
--	    REG_READ_FIELD(ah, AR_PHY_POWERTX_RATE5,
--			   AR_PHY_POWERTX_RATE5_POWERTXHT20_0);
--	training_power -= 4;
--
- 	if (chain == 0)
- 		reg = AR_PHY_PAPRD_MEM_TAB_B0;
- 	else if (chain == 1)
-@@ -643,14 +711,8 @@ EXPORT_SYMBOL(ar9003_paprd_populate_single_table);
- 
- int ar9003_paprd_setup_gain_table(struct ath_hw *ah, int chain)
- {
--
- 	unsigned int i, desired_gain, gain_index;
--	unsigned int train_power;
--
--	train_power = REG_READ_FIELD(ah, AR_PHY_POWERTX_RATE5,
--				     AR_PHY_POWERTX_RATE5_POWERTXHT20_0);
--
--	train_power = train_power - 4;
-+	unsigned int train_power = ah->paprd_training_power;
- 
- 	desired_gain = ar9003_get_desired_gain(ah, chain, train_power);
- 
-@@ -716,7 +778,12 @@ EXPORT_SYMBOL(ar9003_paprd_create_curve);
- 
- int ar9003_paprd_init_table(struct ath_hw *ah)
- {
--	ar9003_paprd_setup_single_table(ah);
-+	int ret;
-+
-+	ret = ar9003_paprd_setup_single_table(ah);
-+	if (ret < 0)
-+	    return ret;
-+
- 	ar9003_paprd_get_gain_table(ah);
- 	return 0;
- }
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_phy.h b/drivers/net/wireless/ath/ath9k/ar9003_phy.h
-index 6f811c7..59bab6b 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_phy.h
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_phy.h
-@@ -1090,6 +1090,14 @@
- #define AR_PHY_POWERTX_RATE5_POWERTXHT20_0	0x3F
- #define AR_PHY_POWERTX_RATE5_POWERTXHT20_0_S	0
- 
-+#define AR_PHY_POWERTX_RATE6			(AR_SM_BASE + 0x1d4)
-+#define AR_PHY_POWERTX_RATE6_POWERTXHT20_5	0x3F00
-+#define AR_PHY_POWERTX_RATE6_POWERTXHT20_5_S	8
-+
-+#define AR_PHY_POWERTX_RATE8			(AR_SM_BASE + 0x1dc)
-+#define AR_PHY_POWERTX_RATE8_POWERTXHT40_5	0x3F00
-+#define AR_PHY_POWERTX_RATE8_POWERTXHT40_5_S	8
-+
- void ar9003_hw_set_chain_masks(struct ath_hw *ah, u8 rx, u8 tx);
- 
- #endif  /* AR9003_PHY_H */
-diff --git a/drivers/net/wireless/ath/ath9k/hw.h b/drivers/net/wireless/ath/ath9k/hw.h
-index c20e047..97f22c4 100644
---- a/drivers/net/wireless/ath/ath9k/hw.h
-+++ b/drivers/net/wireless/ath/ath9k/hw.h
-@@ -833,6 +833,8 @@ struct ath_hw {
- 	u32 bb_watchdog_last_status;
- 	u32 bb_watchdog_timeout_ms; /* in ms, 0 to disable */
- 
-+	unsigned int paprd_target_power;
-+	unsigned int paprd_training_power;
- 	u32 paprd_gain_table_entries[PAPRD_GAIN_TABLE_ENTRIES];
- 	u8 paprd_gain_table_index[PAPRD_GAIN_TABLE_ENTRIES];
- 	/*
-diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
-index bcadf9c..378485b 100644
---- a/drivers/net/wireless/ath/ath9k/main.c
-+++ b/drivers/net/wireless/ath/ath9k/main.c
-@@ -373,6 +373,9 @@ void ath_paprd_calibrate(struct work_struct *work)
- 	if (!caldata)
- 		return;
- 
-+	if (ar9003_paprd_init_table(ah) < 0)
-+		return;
-+
- 	skb = alloc_skb(len, GFP_KERNEL);
- 	if (!skb)
- 		return;
-@@ -388,7 +391,6 @@ void ath_paprd_calibrate(struct work_struct *work)
- 	memcpy(hdr->addr3, hw->wiphy->perm_addr, ETH_ALEN);
- 
- 	ath9k_ps_wakeup(sc);
--	ar9003_paprd_init_table(ah);
- 	for (chain = 0; chain < AR9300_MAX_CHAINS; chain++) {
- 		if (!(common->tx_chainmask & BIT(chain)))
- 			continue;
 -- 
 1.7.3.2
 
