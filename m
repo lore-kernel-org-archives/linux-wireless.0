@@ -1,96 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.vyatta.com ([76.74.103.46]:58560 "EHLO mail.vyatta.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751808Ab0L3XGZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 30 Dec 2010 18:06:25 -0500
-Date: Thu, 30 Dec 2010 15:06:16 -0800
-Subject: RE: [PATCH net-2.6] bridge: fix br_multicast_ipv6_rcv for paged
- skbs
-Message-ID: <9mk4bme8o97ir27xi8a9fbsd.1293750376929@email.android.com>
-From: Stephen Hemminger <stephen.hemminger@vyatta.com>
-To: "Winkler, Tomas" <tomas.winkler@intel.com>,
-	Stephen Hemminger <shemminger@vyatta.com>,
-	Johannes Berg <johannes@sipsolutions.net>
-Cc: "davem@davemloft.net" <davem@davemloft.net>,
-	"netdev@vger.kernel.org " <netdev@vger.kernel.org>,
-	"linux-wireless@vger.kernel.org " <linux-wireless@vger.kernel.org>
+Received: from mail-ww0-f44.google.com ([74.125.82.44]:34989 "EHLO
+	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753068Ab0LAPVt convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 1 Dec 2010 10:21:49 -0500
+Received: by wwa36 with SMTP id 36so7505119wwa.1
+        for <linux-wireless@vger.kernel.org>; Wed, 01 Dec 2010 07:21:48 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+In-Reply-To: <201012011614.07163.helmut.schaa@googlemail.com>
+References: <1291202302-9698-1-git-send-email-helmut.schaa@googlemail.com>
+	<AANLkTi=_61HVmSBR-9v3ukVw-mpouoaFwYE8cpfa96wH@mail.gmail.com>
+	<201012011540.45031.helmut.schaa@googlemail.com>
+	<201012011614.07163.helmut.schaa@googlemail.com>
+Date: Wed, 1 Dec 2010 20:51:46 +0530
+Message-ID: <AANLkTimEimLN_3_sKaAm8W3aop2+yh+gGugJRfrjquB6@mail.gmail.com>
+Subject: Re: [PATCH] mac80211: Update last_tx_rate only for data frames
+From: Mohammed Shafi <shafi.wireless@gmail.com>
+To: Helmut Schaa <helmut.schaa@googlemail.com>
+Cc: linux-wireless@vger.kernel.org, johannes@sipsolutions.net,
+	"John W. Linville" <linville@tuxdriver.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-QWx0aG91Z2ggY29weSBpcyBzbG93ZXIgZm9yIGxhcmdlIHBhY2tldHMsIHRoaXMgaXMgYSBub24g
-cGVyZm9ybWFuY2UgcGF0aC4gVGhlIGNvZGUgaW4gcXVlc3Rpb24gaXMgZm9yIGJyaWRnZWQgbXVs
-dGljYXN0IElwdjYgSUNNUCBwYWNrZXRzLiBUaGlzIGNhc2UgaXMgc28gdW5jcml0aWNhbCBpdCBj
-b3VsZCBiZSBkb25lIGluIEJBU0lDIGFuZCBubyBvbmUgY291bGQgcG9zc2libHkgY2FyZSEKCiJX
-aW5rbGVyLCBUb21hcyIgPHRvbWFzLndpbmtsZXJAaW50ZWwuY29tPiB3cm90ZToKCj4KPgo+PiAt
-LS0tLU9yaWdpbmFsIE1lc3NhZ2UtLS0tLQo+PiBGcm9tOiBTdGVwaGVuIEhlbW1pbmdlciBbbWFp
-bHRvOnNoZW1taW5nZXJAdnlhdHRhLmNvbV0KPj4gU2VudDogVGh1cnNkYXksIERlY2VtYmVyIDMw
-LCAyMDEwIDk6MDYgUE0KPj4gVG86IEpvaGFubmVzIEJlcmcKPj4gQ2M6IFdpbmtsZXIsIFRvbWFz
-OyBkYXZlbUBkYXZlbWxvZnQubmV0OyBuZXRkZXZAdmdlci5rZXJuZWwub3JnOyBsaW51eC0KPj4g
-d2lyZWxlc3NAdmdlci5rZXJuZWwub3JnCj4+IFN1YmplY3Q6IFJlOiBbUEFUQ0ggbmV0LTIuNl0g
-YnJpZGdlOiBmaXggYnJfbXVsdGljYXN0X2lwdjZfcmN2IGZvciBwYWdlZAo+PiBza2JzCj4+IAo+
-PiBPbiBUaHUsIDMwIERlYyAyMDEwIDE5OjUyOjE0ICswMTAwCj4+IEpvaGFubmVzIEJlcmcgPGpv
-aGFubmVzQHNpcHNvbHV0aW9ucy5uZXQ+IHdyb3RlOgo+PiAKPj4gPiBPbiBUaHUsIDIwMTAtMTIt
-MzAgYXQgMTA6NDYgLTA4MDAsIFN0ZXBoZW4gSGVtbWluZ2VyIHdyb3RlOgo+PiA+Cj4+ID4gPiBU
-aGlzIGRvZXNuJ3QgbG9vayBjb3JyZWN0LiBUaGUgY2FsY3VsYXRpb24gb2YgdGhlIG9mZnNldCBk
-b2Vzbid0IGxvb2sKPj4gY29ycmVjdC4KPj4gPiA+IEp1c3QgZm9sbG93aW5nIHRoZSBza2JfY2xv
-bmUoKSwgdGhlIHNrYl9wdWxsIHZhbHVlIGlzICJvZmZzZXQiLgo+PiA+ID4gQWxzbywgdGhlIG90
-aGVyIGNoZWNrcyByZXR1cm4gLUVJTlZBTCBmb3IgaW5jb3JyZWN0bHkgZm9ybWVkIHBhY2tldC4K
-Pj4gPiA+Cj4+ID4gPiAtLS0gYS9uZXQvYnJpZGdlL2JyX211bHRpY2FzdC5jCTIwMTAtMTItMzAg
-MTA6Mjk6NTguNTc5NTEwNDg4IC0wODAwCj4+ID4gPiArKysgYi9uZXQvYnJpZGdlL2JyX211bHRp
-Y2FzdC5jCTIwMTAtMTItMzAgMTA6NDM6MjcuMjczMzg2NjkxIC0wODAwCj4+ID4gPiBAQCAtMTQ2
-NCw2ICsxNDY0LDkgQEAgc3RhdGljIGludCBicl9tdWx0aWNhc3RfaXB2Nl9yY3Yoc3RydWN0Cj4+
-ID4gPiAgCWlmIChvZmZzZXQgPCAwIHx8IG5leHRoZHIgIT0gSVBQUk9UT19JQ01QVjYpCj4+ID4g
-PiAgCQlyZXR1cm4gMDsKPj4gPiA+Cj4+ID4gPiArCWlmICghcHNrYl9tYXlfcHVsbChza2IsIG9m
-ZnNldCkpCj4+ID4gPiArCQlyZXR1cm4gLUVJTlZBTDsKPj4gPiA+ICsKPj4gPiA+ICAJLyogT2th
-eSwgd2UgZm91bmQgSUNNUHY2IGhlYWRlciAqLwo+PiA+ID4gIAlza2IyID0gc2tiX2Nsb25lKHNr
-YiwgR0ZQX0FUT01JQyk7Cj4+ID4gPiAgCWlmICghc2tiMikKPj4gPgo+PiA+IFdvdWxkbid0IHRo
-YXQgbWFrZSBtb3JlIHNlbnNlIGFmdGVyIHRoZSBjbG9uZSBhbnl3YXk/IEJ1dCBpZiB5b3UgbG9v
-ayBhdAo+PiA+IG15IGVtYWlsLCB5b3UnbGwgZmluZCB0aGF0IHRoZXJlJ3MgcG90ZW50aWFsbHks
-IGFuZCBjb25kaXRpb25hbGx5LCBtb3JlCj4+ID4gc3R1ZmYgdGhhdCB3aWxsIGJlIHJlYWQgZnJv
-bSB0aGUgc2tiJ3MgaGVhZGVyLCB3aGljaCBoYXNuJ3QgbmVjZXNzYXJpbHkKPj4gPiBiZWVuIHB1
-bGxlZCBpbiwgc28gSSB0aGluayB0aGlzIHN0aWxsIHdvbid0IGZpeCBhbGwgdGhlIGlzc3Vlcy4K
-Pj4gPgo+PiA+IFNlZWluZyBob3cgdGhpcyBvbmx5IGFmZmVjdHMgc29tZSBJQ01QdjYgcGFja2V0
-cywgbWF5YmUgd2Ugc2hvdWxkIGp1c3QKPj4gPiB1c2Ugc2tiX2NvcHkoKSBpbnN0ZWFkPwo+PiAK
-Pj4gSXQgY29tZXMgb3V0IGNsZWFuZXIsIGFuZCB0aGUgY2hlY2sgY2FuIGJlIHNpbXBsaWZpZWQu
-Cj4+IAo+PiAtLS0gYS9uZXQvYnJpZGdlL2JyX211bHRpY2FzdC5jCTIwMTAtMTItMzAgMTA6NDc6
-MTIuMDMxNzMzODU1IC0wODAwCj4+ICsrKyBiL25ldC9icmlkZ2UvYnJfbXVsdGljYXN0LmMJMjAx
-MC0xMi0zMCAxMTowMDoxMi4xMzU4MDEyNjYgLTA4MDAKPj4gQEAgLTE0NjUsMTkgKzE0NjUsMTkg
-QEAgc3RhdGljIGludCBicl9tdWx0aWNhc3RfaXB2Nl9yY3Yoc3RydWN0Cj4+ICAJCXJldHVybiAw
-Owo+PiAKPj4gIAkvKiBPa2F5LCB3ZSBmb3VuZCBJQ01QdjYgaGVhZGVyICovCj4+IC0Jc2tiMiA9
-IHNrYl9jbG9uZShza2IsIEdGUF9BVE9NSUMpOwo+PiArCXNrYjIgPSBza2JfY29weShza2IsIEdG
-UF9BVE9NSUMpOwo+PiAgCWlmICghc2tiMikKPj4gIAkJcmV0dXJuIC1FTk9NRU07Cj4+IAo+PiAr
-CWVyciA9IC1FSU5WQUw7Cj4+ICsJaWYgKHNrYjItPmxlbiA8IG9mZnNldCArIHNpemVvZigqaWNt
-cDZoKSkKPj4gKwkJZ290byBvdXQ7Cj4+ICsKPj4gIAlsZW4gLT0gb2Zmc2V0IC0gc2tiX25ldHdv
-cmtfb2Zmc2V0KHNrYjIpOwo+PiAKPj4gIAlfX3NrYl9wdWxsKHNrYjIsIG9mZnNldCk7Cj4+ICAJ
-c2tiX3Jlc2V0X3RyYW5zcG9ydF9oZWFkZXIoc2tiMik7Cj4+IAo+PiAtCWVyciA9IC1FSU5WQUw7
-Cj4+IC0JaWYgKCFwc2tiX21heV9wdWxsKHNrYjIsIHNpemVvZigqaWNtcDZoKSkpCj4+IC0JCWdv
-dG8gb3V0Owo+PiAtCj4+ICAJaWNtcDZoID0gaWNtcDZfaGRyKHNrYjIpOwo+PiAKPj4gIAlzd2l0
-Y2ggKGljbXA2aC0+aWNtcDZfdHlwZSkgewo+PiAKPj4KPlNvcnJ5IGZvciBkdW1wIHF1ZXN0aW9u
-IGJ1dCBpc24ndCB0aGVyZSBwZXJmb3JtYW5jZSBwZW5hbHR5IG9uIHVzaW5nIHNrYl9jb3B5IHZz
-LiBza2JfY2xvbmU/Cj4KPkFueWhvdyBCZWxvdyBpcyBhIGNvZGUgc25pcHBldCBmcm9tIGlwNl9p
-bnB1dC5jIHNvIHlvdSBwcm9iYWJseSB3b3VsZCB3YW50IHRvIGZpeCBpdCBhbGwgb3Zlci4gCj5C
-VFcgb2Zmc2V0IGFuZCB0aGUgcG9pbnRlciBhcml0aG1ldGljIHJlYWxseSBnaXZlcyB0aGUgc2Ft
-ZSBudW1iZXIgKzEsIEknbSBub3Qgc3VybHkgd2h5IHRoZSBvcmlnaW5hbCBhdXRob3Igd291bGQg
-dGhvdWdodCBpdCBiZSBzYWZlciB0aGFuIGp1c3QgdXNpbmcgb2Zmc2V0Lgo+Cj4JCQkJCW9mZnNl
-dCA9IGlwdjZfc2tpcF9leHRoZHIoc2tiLCBzaXplb2YoKmhkciksCj4gICAgICAgICAgICAgICAg
-ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgJm5leHRoZHIpOwo+ICAg
-ICAgICAgICAgICAgICAgICAgICAgICAgICAgICBpZiAob2Zmc2V0IDwgMCkKPiAgICAgICAgICAg
-ICAgICAgICAgICAgICAgICAgICAgICAgICAgICBnb3RvIG91dDsKPiAKPiAgICAgICAgICAgICAg
-ICAgICAgICAgICAgICAgICAgaWYgKG5leHRoZHIgIT0gSVBQUk9UT19JQ01QVjYpCj4gICAgICAg
-ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgZ290byBvdXQ7Cj4gCj4gICAgICAgICAg
-ICAgICAgICAgICAgICAgICAgICAgIGlmICghcHNrYl9tYXlfcHVsbChza2IsIChza2JfbmV0d29y
-a19oZWFkZXIoc2tiKSArCj4gICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAg
-ICAgICAgICAgICBvZmZzZXQgKyAxIC0gc2tiLT5kYXRhKSkpCj4gICAgICAgICAgICAgICAgICAg
-ICAgICAgICAgICAgICAgICAgICAgZ290byBvdXQ7Cj4gCj4gICAgICAgICAgICAgICAgICAgICAg
-ICAgICAgICAgIGljbXA2ID0gKHN0cnVjdCBpY21wNmhkciAqKShza2JfbmV0d29ya19oZWFkZXIo
-c2tiKSArIG9mZnNldCk7Cj4KPgo+Cj5UaGFua3MKPlRvbWFzCj4KPgo+LS0tLS0tLS0tLS0tLS0t
-LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tCj5J
-bnRlbCBJc3JhZWwgKDc0KSBMaW1pdGVkCj4KPlRoaXMgZS1tYWlsIGFuZCBhbnkgYXR0YWNobWVu
-dHMgbWF5IGNvbnRhaW4gY29uZmlkZW50aWFsIG1hdGVyaWFsIGZvcgo+dGhlIHNvbGUgdXNlIG9m
-IHRoZSBpbnRlbmRlZCByZWNpcGllbnQocykuIEFueSByZXZpZXcgb3IgZGlzdHJpYnV0aW9uCj5i
-eSBvdGhlcnMgaXMgc3RyaWN0bHkgcHJvaGliaXRlZC4gSWYgeW91IGFyZSBub3QgdGhlIGludGVu
-ZGVkCj5yZWNpcGllbnQsIHBsZWFzZSBjb250YWN0IHRoZSBzZW5kZXIgYW5kIGRlbGV0ZSBhbGwg
-Y29waWVzLgo+Cg==
+On Wed, Dec 1, 2010 at 8:44 PM, Helmut Schaa
+<helmut.schaa@googlemail.com> wrote:
+> Am Mittwoch 01 Dezember 2010 schrieb Helmut Schaa:
+>> Am Mittwoch 01 Dezember 2010 schrieb Mohammed Shafi:
+>> > On Wed, Dec 1, 2010 at 4:48 PM, Helmut Schaa
+>> > <helmut.schaa@googlemail.com> wrote:
+>> > > The last_tx_rate field was also updated for non-data frames that are
+>> > > often sent with a lower rate (for example management frames at 1 Mbps).
+>> > > This is confusing when the data rate is actually much higher.
+>> > >
+>> > > Hence, only update the last_tx_rate field with tx rate information
+>> > > gathered from the last data frames.
+>> >
+>> > Hi Helmut,
+>> >             I have a doubt,ideally should not this be taken care by the driver ?
+>>
+>> Sorry, I don't get your point. How should that be handled by the driver? Could
+>> you please elaborate?
+>
+> Ahh, did you mean that should be taken care of by the rate control algorithm?
+>
+I think so but not sure..(for ex: if ministrel is used)
 
+> I agree, if the rate control algortihm returns a rate via txrc.reported_rate
+> we should just use that without further validation.
+>
+> Nevertheless, if the rate control algortihm doesn't fill in txrc.reported_rate
+> we should only account data frames.
+
+I agree.
+
+>
+> Will send an updated patch.
+>
+> Helmut
+>
