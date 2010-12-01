@@ -1,96 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.19.149.2]:13858 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753062Ab0LAHfP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 1 Dec 2010 02:35:15 -0500
-Received: from mail.atheros.com ([10.10.20.105])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Tue, 30 Nov 2010 23:35:00 -0800
-From: Vasanthakumar Thiagarajan <vasanth@atheros.com>
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>
-Subject: [PATCH 21/26] ath9k_hw: Define IQcal correction coefficient registers using index
-Date: Tue, 30 Nov 2010 23:32:50 -0800
-Message-ID: <1291188775-13707-22-git-send-email-vasanth@atheros.com>
-In-Reply-To: <1291188775-13707-1-git-send-email-vasanth@atheros.com>
-References: <1291188775-13707-1-git-send-email-vasanth@atheros.com>
+Received: from mail-qy0-f174.google.com ([209.85.216.174]:41761 "EHLO
+	mail-qy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753052Ab0LASpw convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 1 Dec 2010 13:45:52 -0500
+Received: by qyk11 with SMTP id 11so2918835qyk.19
+        for <linux-wireless@vger.kernel.org>; Wed, 01 Dec 2010 10:45:51 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <1291184383.4199.4.camel@jlt3.sipsolutions.net>
+References: <1291168735-3423-1-git-send-email-javier@cozybit.com> <1291184383.4199.4.camel@jlt3.sipsolutions.net>
+From: Javier Cardona <javier@cozybit.com>
+Date: Wed, 1 Dec 2010 10:45:30 -0800
+Message-ID: <AANLkTikMex0A91Qy=5EwPAEfVWKDVz4_mneWnCvy3soR@mail.gmail.com>
+Subject: Re: [PATCH] mac80211: Support beacon configuration via nl80211 for
+ mesh interfaces
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	Steve Derosier <steve@cozybit.com>, devel@lists.open80211s.org,
+	linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Vasanthakumar Thiagarajan <vasanth@atheros.com>
----
- drivers/net/wireless/ath/ath9k/ar9003_calib.c |   10 +++++-----
- drivers/net/wireless/ath/ath9k/ar9003_phy.h   |    8 +++++---
- 2 files changed, 10 insertions(+), 8 deletions(-)
+Johannes,
 
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_calib.c b/drivers/net/wireless/ath/ath9k/ar9003_calib.c
-index f218613..c3867cd 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_calib.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_calib.c
-@@ -608,11 +608,6 @@ static void ar9003_hw_tx_iq_cal(struct ath_hw *ah)
- 		AR_PHY_TX_IQCAL_STATUS_B1,
- 		AR_PHY_TX_IQCAL_STATUS_B2,
- 	};
--	static const u32 tx_corr_coeff[AR9300_MAX_CHAINS] = {
--		AR_PHY_TX_IQCAL_CORR_COEFF_01_B0,
--		AR_PHY_TX_IQCAL_CORR_COEFF_01_B1,
--		AR_PHY_TX_IQCAL_CORR_COEFF_01_B2,
--	};
- 	static const u32 rx_corr[AR9300_MAX_CHAINS] = {
- 		AR_PHY_RX_IQCAL_CORR_B0,
- 		AR_PHY_RX_IQCAL_CORR_B1,
-@@ -623,11 +618,16 @@ static void ar9003_hw_tx_iq_cal(struct ath_hw *ah)
- 		AR_PHY_CHAN_INFO_TAB_1,
- 		AR_PHY_CHAN_INFO_TAB_2,
- 	};
-+	u32 tx_corr_coeff[AR9300_MAX_CHAINS];
- 	s32 iq_res[6];
- 	s32 iqc_coeff[2];
- 	s32 i, j;
- 	u32 num_chains = 0;
- 
-+	tx_corr_coeff[0] = AR_PHY_TX_IQCAL_CORR_COEFF_B0(0);
-+	tx_corr_coeff[1] = AR_PHY_TX_IQCAL_CORR_COEFF_B1(0);
-+	tx_corr_coeff[2] = AR_PHY_TX_IQCAL_CORR_COEFF_B2(0);
-+
- 	for (i = 0; i < AR9300_MAX_CHAINS; i++) {
- 		if (ah->txchainmask & (1 << i))
- 			num_chains++;
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_phy.h b/drivers/net/wireless/ath/ath9k/ar9003_phy.h
-index 4c64eb1..abb4ec1 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_phy.h
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_phy.h
-@@ -549,7 +549,9 @@
- #define AR_PHY_TX_IQCAL_CONTROL_1   (AR_SM_BASE + 0x448)
- #define AR_PHY_TX_IQCAL_START       (AR_SM_BASE + 0x440)
- #define AR_PHY_TX_IQCAL_STATUS_B0   (AR_SM_BASE + 0x48c)
--#define AR_PHY_TX_IQCAL_CORR_COEFF_01_B0    (AR_SM_BASE + 0x450)
-+#define AR_PHY_TX_IQCAL_CORR_COEFF_B0(_i)    (AR_SM_BASE + \
-+					     (AR_SREV_9485(ah) ? \
-+					      0x3d0 : 0x450) + ((_i) << 2))
- 
- #define AR_PHY_WATCHDOG_STATUS      (AR_SM_BASE + 0x5c0)
- #define AR_PHY_WATCHDOG_CTL_1       (AR_SM_BASE + 0x5c4)
-@@ -813,7 +815,7 @@
- #define AR_PHY_TPC_11_B1         (AR_SM1_BASE + 0x220)
- #define AR_PHY_PDADC_TAB_1       (AR_SM1_BASE + 0x240)
- #define AR_PHY_TX_IQCAL_STATUS_B1   (AR_SM1_BASE + 0x48c)
--#define AR_PHY_TX_IQCAL_CORR_COEFF_01_B1    (AR_SM1_BASE + 0x450)
-+#define AR_PHY_TX_IQCAL_CORR_COEFF_B1(_i)    (AR_SM_BASE + 0x450 + ((_i) << 2))
- 
- /*
-  * Channel 2 Register Map
-@@ -866,7 +868,7 @@
- #define AR_PHY_TPC_11_B2         (AR_SM2_BASE + 0x220)
- #define AR_PHY_PDADC_TAB_2       (AR_SM2_BASE + 0x240)
- #define AR_PHY_TX_IQCAL_STATUS_B2   (AR_SM2_BASE + 0x48c)
--#define AR_PHY_TX_IQCAL_CORR_COEFF_01_B2    (AR_SM2_BASE + 0x450)
-+#define AR_PHY_TX_IQCAL_CORR_COEFF_B2(_i)    (AR_SM2_BASE + 0x450 + ((_i) << 2))
- 
- #define AR_PHY_TX_IQCAL_STATUS_B2_FAILED    0x00000001
- 
+On Tue, Nov 30, 2010 at 10:19 PM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
+> On Tue, 2010-11-30 at 17:58 -0800, Javier Cardona wrote:
+>> This patch adds the capability to the mesh stack to receive vendor
+>> specific information elements from userspace.  When a vendor specific
+>> IE is set via nl80211, the mesh stack will configure the mesh beacon to
+>> advertise that a vendor specific path selection and metric is in use.
+>> This is accordance with the Extensible Path Selection Framework
+>> specified in version 7.0 of the 802.11s draft.
+>
+>> @@ -1709,6 +1709,7 @@ static int nl80211_addset_beacon(struct sk_buff *skb, struct genl_info *info)
+>>               return -EINVAL;
+>>
+>>       if (dev->ieee80211_ptr->iftype != NL80211_IFTYPE_AP &&
+>> +         dev->ieee80211_ptr->iftype != NL80211_IFTYPE_MESH_POINT &&
+>>           dev->ieee80211_ptr->iftype != NL80211_IFTYPE_P2P_GO)
+>>               return -EOPNOTSUPP;
+>
+> I'm not convinced that letting userspace set the *entire* beacon is the
+> right way to do it? Wouldn't it make more sense to allow it to specify
+> vendor-specific IEs (like IBSS), and the fact that vendor selection
+> protocol is used? It seems to me that somebody may want to have vendor
+> IEs while using the default protocols?
+
+Yes, agreed.  We'll investigate a way to provide a protocol switch
+(maybe a new NL80211_CMD_SET_MESH_PARAMS) + a vendor specific IE
+(NL80211_CMD_SET_MGMT_EXTRA_IE would have been ideal, but I see it's
+gone).
+
+Thanks!
+
+Javier
+
 -- 
-1.7.0.4
-
+Javier Cardona
+cozybit Inc.
+http://www.cozybit.com
