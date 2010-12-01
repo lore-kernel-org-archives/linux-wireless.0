@@ -1,38 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:42064 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752393Ab0LFLvq (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 6 Dec 2010 06:51:46 -0500
-Subject: Re: [PATCH V2 12/27] ath9k_hw: Find chansel of
- AR_PHY_65NM_CH0_SYNTH7 from an array for AR9485
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Vasanthakumar Thiagarajan <vasanth@atheros.com>
-Cc: Felix Fietkau <nbd@openwrt.org>,
-	Vasanth Thiagarajan <Vasanth.Thiagarajan@Atheros.com>,
-	"linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <20101206114401.GT12908@vasanth-laptop>
-References: <1291288031-3409-1-git-send-email-vasanth@atheros.com>
-	 <1291288031-3409-13-git-send-email-vasanth@atheros.com>
-	 <4CF84BB8.8090007@openwrt.org> <20101203045054.GP12908@vasanth-laptop>
-	 <4CF8DF08.2060307@openwrt.org> <20101203124050.GR12908@vasanth-laptop>
-	 <4CF8E718.9070207@openwrt.org> <20101206060310.GS12908@vasanth-laptop>
-	 <4CFCBE04.7070509@openwrt.org>  <20101206114401.GT12908@vasanth-laptop>
-Content-Type: text/plain; charset="UTF-8"
-Date: Mon, 06 Dec 2010 12:51:40 +0100
-Message-ID: <1291636300.3506.14.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+Received: from mail.atheros.com ([12.19.149.2]:13836 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751517Ab0LAHdp (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 1 Dec 2010 02:33:45 -0500
+Received: from mail.atheros.com ([10.10.20.105])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Tue, 30 Nov 2010 23:33:31 -0800
+From: Vasanthakumar Thiagarajan <vasanth@atheros.com>
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>
+Subject: [PATCH 07/26] ath9k_hw: Disable LDPC for AR9485
+Date: Tue, 30 Nov 2010 23:32:36 -0800
+Message-ID: <1291188775-13707-8-git-send-email-vasanth@atheros.com>
+In-Reply-To: <1291188775-13707-1-git-send-email-vasanth@atheros.com>
+References: <1291188775-13707-1-git-send-email-vasanth@atheros.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2010-12-06 at 17:14 +0530, Vasanthakumar Thiagarajan wrote:
+Signed-off-by: Vasanthakumar Thiagarajan <vasanth@atheros.com>
+---
+ drivers/net/wireless/ath/ath9k/hw.c |    6 ++++--
+ 1 files changed, 4 insertions(+), 2 deletions(-)
 
-> #define CHANSEL_2G_9485(_freq) ((((freq) * 0x10000) - 215) / CHANSEL_DIV)
->  for (i = 0; i < 14; i++) {
->                freq = 2412 + (i * 5);
-
-This is not correct for channel 14.
-
-johannes
+diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
+index f533aad..513ae64 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.c
++++ b/drivers/net/wireless/ath/ath9k/hw.c
+@@ -1941,8 +1941,10 @@ int ath9k_hw_fill_cap_info(struct ath_hw *ah)
+ 	}
+ 
+ 	if (AR_SREV_9300_20_OR_LATER(ah)) {
+-		pCap->hw_caps |= ATH9K_HW_CAP_EDMA | ATH9K_HW_CAP_LDPC |
+-				 ATH9K_HW_CAP_FASTCLOCK;
++		pCap->hw_caps |= ATH9K_HW_CAP_EDMA | ATH9K_HW_CAP_FASTCLOCK;
++		if (!AR_SREV_9485(ah))
++			pCap->hw_caps |= ATH9K_HW_CAP_LDPC;
++
+ 		pCap->rx_hp_qdepth = ATH9K_HW_RX_HP_QDEPTH;
+ 		pCap->rx_lp_qdepth = ATH9K_HW_RX_LP_QDEPTH;
+ 		pCap->rx_status_len = sizeof(struct ar9003_rxs);
+-- 
+1.7.0.4
 
