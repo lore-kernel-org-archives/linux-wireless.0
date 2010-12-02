@@ -1,66 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.19.149.2]:16702 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751632Ab0LHFSK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 8 Dec 2010 00:18:10 -0500
-Received: from mail.atheros.com ([10.10.20.105])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Tue, 07 Dec 2010 21:17:55 -0800
-Date: Wed, 8 Dec 2010 10:47:45 +0530
-From: Vasanthakumar Thiagarajan <vasanth@atheros.com>
-To: Ben Greear <greearb@candelatech.com>
-CC: Vasanth Thiagarajan <Vasanth.Thiagarajan@Atheros.com>,
-	"Luis R. Rodriguez" <mcgrof@gmail.com>,
-	"greearb@gmail.com" <greearb@gmail.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"ath9k-devel@venema.h4ckr.net" <ath9k-devel@venema.h4ckr.net>
-Subject: Re: [PATCH] ath9k: Check for NULL sta in ath_tx_start
-Message-ID: <20101208051745.GA24465@vasanth-laptop>
-References: <1291698829-22765-1-git-send-email-greearb@candelatech.com> <AANLkTik20SkL0Y5gK_ysYpW46gvb73m4h3SDcGb+d_LA@mail.gmail.com> <4CFDC7D8.3080100@candelatech.com> <20101207074237.GA2179@vasanth-laptop> <4CFDE702.3020301@candelatech.com> <20101207083147.GA19720@vasanth-laptop> <4CFE6B42.8000806@candelatech.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <4CFE6B42.8000806@candelatech.com>
+Received: from he.sipsolutions.net ([78.46.109.217]:48236 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752892Ab0LBViO (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 2 Dec 2010 16:38:14 -0500
+Subject: Re: [RFC 5/5 v2] cfg80211/mac80211: add mesh join/leave commands
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Javier Cardona <javier@cozybit.com>
+Cc: linux-wireless@vger.kernel.org, Steve Derosier <steve@cozybit.com>,
+	devel@lists.open80211s.org
+In-Reply-To: <AANLkTi=8yikvhvbUS86FZabM5qXbZ1LNHeT+2JQGU+QS@mail.gmail.com>
+References: <20101201205939.009530439@sipsolutions.net>
+	 <20101201210226.159495600@sipsolutions.net>
+	 <1291279510.3481.17.camel@jlt3.sipsolutions.net>
+	 <AANLkTik_C90v-313Pq_dPY7fE1OFG2X0uv8Ys+uGQFRt@mail.gmail.com>
+	 <1291320849.3481.55.camel@jlt3.sipsolutions.net>
+	 <AANLkTi=8yikvhvbUS86FZabM5qXbZ1LNHeT+2JQGU+QS@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Thu, 02 Dec 2010 22:38:13 +0100
+Message-ID: <1291325893.3481.56.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Dec 07, 2010 at 10:43:38PM +0530, Ben Greear wrote:
-> On 12/07/2010 12:31 AM, Vasanthakumar Thiagarajan wrote:
-> > On Tue, Dec 07, 2010 at 01:19:22PM +0530, Ben Greear wrote:
-> >> On 12/06/2010 11:42 PM, Vasanthakumar Thiagarajan wrote:
-> >>> On Tue, Dec 07, 2010 at 11:06:24AM +0530, Ben Greear wrote:
-> >>>> On 12/06/2010 09:21 PM, Luis R. Rodriguez wrote:
-> >>>>> On Mon, Dec 6, 2010 at 9:13 PM,<greearb@gmail.com>    wrote:
-> >>>>>> From: Ben Greear<greearb@candelatech.com>
-> >>>>>>
-> >>>>>> It can be NULL according to docs, and logging showed it
-> >>>>>> to be NULL in practice.
-> >>>>>>
-> >>>>>> Signed-off-by: Ben Greear<greearb@candelatech.com>
-> >>>>>
-> >>>>> Does this fix an oops? If so can you explain and provide the trace and
-> >>>>> resubmit and cc stable in the commit log?
-> >>>>
-> >>>> I think it fixes the TID corruption I posted about earlier.  It seems
-> >>>> so obvious though, that I'm curious why no one else sees problems,
-> >>>> and why I didn't see more crashes in my setup.
-> >>>>
-> >>>> (The paprd code appears to send with null STA, for instance, and my
-> >>>> printks showed lots of NULL stas in my 16-sta test setup, though I
-> >>>> don't think I'm using the paprd code path.)
-> >>>
-> >>> paprd is used only with>= AR9003.
-> >>
-> >> Whoever coded it up hopefully had that hardware...so why didn't
-> >> they see lots of crashes?
-> >
-> > I myself tested it lot of times, but did not see any crash, weird.
+On Thu, 2010-12-02 at 13:24 -0800, Javier Cardona wrote:
+> Johannes,
 > 
-> Looks like the offending change when in recently (11/4/10, one of Felix's
-> patches).
-> 
-> That is probably why no one else is hitting this yet, and it
-> isn't needed for stable I'm guessing....
+> Thanks for reviewing.  You were right: scanning did stop beaconing
+> forever and your suggested fix resolved that.  So the patch is now:
 
-Nice, care to send a patch?. Yeah, it is not needed for stable.
+Thanks for that.
 
-Vasanth
+> We have not run our full suite but we tested legacy interface mesh up,
+> joining, leaving and rejoining different meshes and all seems to work.
+
+Great.
+
+>  Feel free to add my tested-by or signoff tags.
+
+So you're happy with the 1/5 patch as well now?
+
+johannes
+
