@@ -1,58 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f43.google.com ([209.85.161.43]:58789 "EHLO
-	mail-fx0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755660Ab0LIPUR (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:34968 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757171Ab0LBRWF (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 9 Dec 2010 10:20:17 -0500
-Received: by fxm18 with SMTP id 18so2511520fxm.2
-        for <linux-wireless@vger.kernel.org>; Thu, 09 Dec 2010 07:20:16 -0800 (PST)
-Message-ID: <4D00F3C3.6040801@lwfinger.net>
-Date: Thu, 09 Dec 2010 09:20:35 -0600
-From: Larry Finger <Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-To: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-CC: =?UTF-8?B?R8OhYm9yIFN0ZWZhbmlr?= <netrolller.3d@gmail.com>,
-	linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>,
-	b43-dev@lists.infradead.org
-Subject: Re: [PATCH 0/4] Make N-PHY support experimental
-References: <1291755360-21570-1-git-send-email-zajec5@gmail.com>	<AANLkTikp9ErFopLZVmXMjN3tXF2L62SwEEcujKeOBLYC@mail.gmail.com>	<4CFEFD8D.1080808@lwfinger.net> <AANLkTi=mDh9wkp+u3ebuXqF8Q-rTW_YCtee3CmCBdWTh@mail.gmail.com>
-In-Reply-To: <AANLkTi=mDh9wkp+u3ebuXqF8Q-rTW_YCtee3CmCBdWTh@mail.gmail.com>
-Content-Type: text/plain; charset=UTF-8
+	Thu, 2 Dec 2010 12:22:05 -0500
+Subject: Re: "Kernel bug detected" when using pktgen together with
+ mac80211_hwsim
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Helmut Schaa <helmut.schaa@googlemail.com>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <201012021809.41623.helmut.schaa@googlemail.com>
+References: <201012021731.09440.helmut.schaa@googlemail.com>
+	 <1291307938.3481.48.camel@jlt3.sipsolutions.net>
+	 <201012021809.41623.helmut.schaa@googlemail.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Thu, 02 Dec 2010 18:22:04 +0100
+Message-ID: <1291310525.3481.49.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 12/09/2010 08:11 AM, Rafał Miłecki wrote:
-> 2010/12/8 Larry Finger <Larry.Finger@lwfinger.net>:
->> I have a bit more info regarding the problem with WPA2 encryption on an N PHY.
->> As shown in the NetworkManager log attached, Authentication is successful, but
->> DHCP fails. Either the transmit data is improperly encrypted, or the decryption
->> fails. I will use wireshark to sort that out. Note: Using software encryption
->> makes no difference.
+On Thu, 2010-12-02 at 18:09 +0100, Helmut Schaa wrote:
+> Am Donnerstag 02 Dezember 2010 schrieb Johannes Berg:
+> > On Thu, 2010-12-02 at 17:31 +0100, Helmut Schaa wrote:
+> > 
+> > > Unfortunately pktgen keeps a reference to the skb and thus pskb_expand_head
+> > > triggers a BUG when called from mac80211. I worked around that issue by adding
+> > > a skb_copy for shared skbs.
+> > > 
+> > > Maybe, someone else has a better idea on how to fix that?
+> > 
+> > Oops! That seems like the right way to fix it though.
 > 
-> Hm, I expected software encryption to work, that's weird. I don't
-> really have nice access to my development machine, so some tests would
-> be great.
+> Ok, thanks, I'll send a patch then. I guess we cannot use pskb_copy due to
+> (for example) our own fragmenation list usage, right?
 
-Actually, when I got wireshark all setup on my netbook and tried again, WPA2
-worked with hardware encryption. I'm not sure what the problem was the first time.
+Not sure, we can't cope with non-linear SKBs right now...
 
-I still have no idea why OFDM rates are failing. Any thoughts?
+johannes
 
-My device lists the following:
-
-Network controller [0280]: Broadcom Corporation BCM4321 802.11a/b/g/n
-[14e4:4328] (rev 03)
-ssb: Core 0 found: ChipCommon (cc 0x800, rev 0x13, vendor 0x4243)
-ssb: Core 1 found: IEEE 802.11 (cc 0x812, rev 0x0C, vendor 0x4243)
-ssb: Core 2 found: PCI-E (cc 0x820, rev 0x04, vendor 0x4243)
-ssb: Core 3 found: PCI (cc 0x804, rev 0x0D, vendor 0x4243)
-ssb: Core 4 found: USB 1.1 Host (cc 0x817, rev 0x04, vendor 0x4243)
-
-It has a rev 2 PHY, and a rev 4 0x2055 radio.
-
-I am willing to buy a higher PHY rev device for testing. Any idea what is in a
-4324A-BRCM1036? See
-http://cgi.ebay.com/Broadcom-Mini-PCI-e-802-11-a-b-g-n-Wireless-Card-/190477425068?pt=LH_DefaultDomain_0&hash=item2c5956d9ac.
-
-Larry
