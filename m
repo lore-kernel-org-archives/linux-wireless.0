@@ -1,63 +1,28 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from hrndva-omtalb.mail.rr.com ([71.74.56.124]:44229 "EHLO
-	hrndva-omtalb.mail.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751943Ab0LVQ4B (ORCPT
+Received: from mail-iw0-f174.google.com ([209.85.214.174]:53634 "EHLO
+	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753581Ab0LBBN2 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 22 Dec 2010 11:56:01 -0500
-Date: Wed, 22 Dec 2010 10:56:02 -0600
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: John W Linville <linville@tuxdriver.com>
-Cc: chaoming_li@realsil.com.cn, linux-wireless@vger.kernel.org
-Subject: [PATCH] rtlwifi: Fix large packet issue
-Message-ID: <4d122da2.JR/KEqgZBBb8QjT4%Larry.Finger@lwfinger.net>
+	Wed, 1 Dec 2010 20:13:28 -0500
+Received: by iwn42 with SMTP id 42so279394iwn.19
+        for <linux-wireless@vger.kernel.org>; Wed, 01 Dec 2010 17:13:27 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1291215851-1186-1-git-send-email-hauke@hauke-m.de>
+References: <1291215851-1186-1-git-send-email-hauke@hauke-m.de>
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Date: Wed, 1 Dec 2010 17:13:07 -0800
+Message-ID: <AANLkTin18fCmt7Z9BQHSFJ9QQVPG2YBeVpmPQ-RDHH-m@mail.gmail.com>
+Subject: Re: [PATCH] compat-wireless: make patches apply again
+To: Hauke Mehrtens <hauke@hauke-m.de>
+Cc: linux-wireless@vger.kernel.org, mcgrof@infradead.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Chaoming Li <chaoming_li@realsil.com.cn>
+On Wed, Dec 1, 2010 at 7:04 AM, Hauke Mehrtens <hauke@hauke-m.de> wrote:
+>
+> Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
 
-An RX buffer is set to 9100 bytes to receive 8K AMSDU; however, an skb
-of this size fails in the kernel.
+Applied this and your compat patches too, thanks!
 
-Signed-off-by: Chaoming Li <chaoming_li@realsil.com.cn>
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
----
-
-John,
-
-This fix should be in 2.6.38.
-
-Larry
----
-
-Index: wireless-testing/drivers/net/wireless/rtlwifi/pci.c
-===================================================================
---- wireless-testing.orig/drivers/net/wireless/rtlwifi/pci.c
-+++ wireless-testing/drivers/net/wireless/rtlwifi/pci.c
-@@ -612,10 +612,22 @@ static void _rtl_pci_rx_interrupt(struct
- 						    num_rx_inperiod++;
- 				}
- 
--				if (unlikely(!rtl_action_proc(hw, skb, false)))
-+				if (unlikely(!rtl_action_proc(hw, skb,
-+				    false))) {
- 					dev_kfree_skb_any(skb);
--				else
--					ieee80211_rx_irqsafe(hw, skb);
-+				} else {
-+					struct sk_buff *uskb = NULL;
-+					u8 *pdata;
-+					uskb = dev_alloc_skb(skb->len + 128);
-+					memcpy(IEEE80211_SKB_RXCB(uskb),
-+							&rx_status,
-+							sizeof(rx_status));
-+					pdata = (u8 *)skb_put(uskb, skb->len);
-+					memcpy(pdata, skb->data, skb->len);
-+					dev_kfree_skb_any(skb);
-+
-+					ieee80211_rx_irqsafe(hw, uskb);
-+				}
- 			} else {
- 				dev_kfree_skb_any(skb);
- 			}
+  Luis
