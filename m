@@ -1,77 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:26537 "EHLO mga09.intel.com"
+Received: from mail.atheros.com ([12.19.149.2]:59102 "EHLO mail.atheros.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751076Ab0LURaH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 21 Dec 2010 12:30:07 -0500
-Subject: Re: [PATCH] iwlagn: fix scan tx antenna setting on 5Ghz band
-From: "Guy, Wey-Yi" <wey-yi.w.guy@intel.com>
-To: Stanislaw Gruszka <sgruszka@redhat.com>
-Cc: Intel Linux Wireless <ilw@linux.intel.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <20101221120511.GA2287@redhat.com>
-References: <1292864713-2756-1-git-send-email-sgruszka@redhat.com>
-	 <1292868816.22230.45.camel@wwguy-ubuntu> <20101221120511.GA2287@redhat.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Tue, 21 Dec 2010 09:21:48 -0800
-Message-ID: <1292952108.3997.39.camel@wwguy-huron>
-Mime-Version: 1.0
+	id S1755394Ab0LBLKR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 2 Dec 2010 06:10:17 -0500
+Received: from mail.atheros.com ([10.10.20.105])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Thu, 02 Dec 2010 03:10:03 -0800
+From: Vasanthakumar Thiagarajan <vasanth@atheros.com>
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>
+Subject: [PATCH V2 07/27] ath9k_hw: Disable LDPC for AR9485
+Date: Thu, 2 Dec 2010 03:06:51 -0800
+Message-ID: <1291288031-3409-8-git-send-email-vasanth@atheros.com>
+In-Reply-To: <1291288031-3409-1-git-send-email-vasanth@atheros.com>
+References: <1291288031-3409-1-git-send-email-vasanth@atheros.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Stanislaw,
+Signed-off-by: Vasanthakumar Thiagarajan <vasanth@atheros.com>
+---
+ drivers/net/wireless/ath/ath9k/hw.c |    6 ++++--
+ 1 files changed, 4 insertions(+), 2 deletions(-)
 
-On Tue, 2010-12-21 at 04:05 -0800, Stanislaw Gruszka wrote:
-> Hi Wey
-> 
-> On Mon, Dec 20, 2010 at 10:13:36AM -0800, Guy, Wey-Yi wrote:
-> > On Mon, 2010-12-20 at 09:05 -0800, Stanislaw Gruszka wrote:
-> > > Looks that we do not set correctly antennas when scanning
-> > > on 5Ghz band and when bluetooth is enabled, because
-> > > priv->cfg->scan_tx_antennas[band] is only defined for
-> > > IEEE80211_BAND_2GHZ. This fix choose first valid antenna.
-> > > 
-> > > Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
-> > > ---
-> > >  drivers/net/wireless/iwlwifi/iwl-agn-lib.c |    3 +--
-> > >  1 files changed, 1 insertions(+), 2 deletions(-)
-> > > 
-> > > diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-lib.c b/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
-> > > index 4bc82fc..099039c 100644
-> > > --- a/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
-> > > +++ b/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
-> > > @@ -1499,8 +1499,7 @@ int iwlagn_request_scan(struct iwl_priv *priv, struct ieee80211_vif *vif)
-> > >  	    priv->cfg->bt_params->advanced_bt_coexist &&
-> > >  	    priv->bt_full_concurrent) {
-> > >  		/* operated as 1x1 in full concurrency mode */
-> > > -		scan_tx_antennas = first_antenna(
-> > > -			priv->cfg->scan_tx_antennas[band]);
-> > > +		scan_tx_antennas = first_antenna(scan_tx_antennas);
-> > 
-> > If its is 2.4, we need to use the correct tx antenna, I think we can
-> > remove this block of code all together since check already done above.
-> > 
-> >   if (priv->cfg->scan_tx_antennas[band])
-> >   	scan_tx_antennas = priv->cfg->scan_tx_antennas[band];
-> 
-> Is correct to use all antennas on 5GHz when blutooth is enabled?
-> For me, more logical would be limiting to one antenna no matter of band,
-> since antennas are used anyway, only frequencies differ.
-> 
-> For rx_ant, we do not check the band, only limit to first one
-> when bluetooth is used.
-
-there is no BT coex if 5GHz is used because there is not interference
-between 2.4 and 5GHz, so both antenna can be used. WiFi should operated
-in normal condition.
-
-For 2.4GHz, we also can use both antenna if there is not high traffic
-load on BT side.
-
-but you have a good catch, driver need to check band before use it
-(scan_tx_antenna[band])
+diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
+index f533aad..513ae64 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.c
++++ b/drivers/net/wireless/ath/ath9k/hw.c
+@@ -1941,8 +1941,10 @@ int ath9k_hw_fill_cap_info(struct ath_hw *ah)
+ 	}
  
-Thanks
-Wey
-
+ 	if (AR_SREV_9300_20_OR_LATER(ah)) {
+-		pCap->hw_caps |= ATH9K_HW_CAP_EDMA | ATH9K_HW_CAP_LDPC |
+-				 ATH9K_HW_CAP_FASTCLOCK;
++		pCap->hw_caps |= ATH9K_HW_CAP_EDMA | ATH9K_HW_CAP_FASTCLOCK;
++		if (!AR_SREV_9485(ah))
++			pCap->hw_caps |= ATH9K_HW_CAP_LDPC;
++
+ 		pCap->rx_hp_qdepth = ATH9K_HW_RX_HP_QDEPTH;
+ 		pCap->rx_lp_qdepth = ATH9K_HW_RX_LP_QDEPTH;
+ 		pCap->rx_status_len = sizeof(struct ar9003_rxs);
+-- 
+1.7.0.4
 
