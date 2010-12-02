@@ -1,32 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:33988 "EHLO
+Received: from he.sipsolutions.net ([78.46.109.217]:41487 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752853Ab0LJUFP (ORCPT
+	with ESMTP id S1758025Ab0LBT64 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 10 Dec 2010 15:05:15 -0500
-Subject: Re: [RFC v2 1/2] cfg80211/nl80211: add support for scheduled scans
+	Thu, 2 Dec 2010 14:58:56 -0500
+Subject: Re: [PATCH 00/31] wireless: Marvell mwifiex driver for SD8787
 From: Johannes Berg <johannes@sipsolutions.net>
-To: luciano.coelho@nokia.com
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <1291993632-6921-2-git-send-email-luciano.coelho@nokia.com>
-References: <1291993632-6921-1-git-send-email-luciano.coelho@nokia.com>
-	 <1291993632-6921-2-git-send-email-luciano.coelho@nokia.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: Bing Zhao <bzhao@marvell.com>, linux-wireless@vger.kernel.org,
+	Dan Williams <dcbw@redhat.com>,
+	David Woodhouse <dwmw2@infradead.org>,
+	Amitkumar Karwar <akarwar@marvell.com>,
+	Kiran Divekar <dkiran@marvell.com>
+In-Reply-To: <20101202193317.GD2358@tuxdriver.com>
+References: <1291253516-17815-1-git-send-email-bzhao@marvell.com>
+	 <20101202193317.GD2358@tuxdriver.com>
 Content-Type: text/plain; charset="UTF-8"
-Date: Fri, 10 Dec 2010 21:05:14 +0100
-Message-ID: <1292011514.3531.19.camel@jlt3.sipsolutions.net>
+Date: Thu, 02 Dec 2010 20:58:52 +0100
+Message-ID: <1291319932.3481.53.camel@jlt3.sipsolutions.net>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2010-12-10 at 17:07 +0200, luciano.coelho@nokia.com wrote:
+On Thu, 2010-12-02 at 14:33 -0500, John W. Linville wrote:
 
-> Add NL80211_CMD_START_SCHED_SCAN and NL80211_CMD_STOP_SCHED_SCAN
-> commands to the nl80211 interface.  When results are available they are
-> reported by NL80211_CMD_SCHED_SCAN_RESULTS events.
+> I would like to merge this in this cycle.  If you are interested in
+> reviewing this driver, please do so soon.
 
-Oh, also, I think you should check the wiphy flag in the commands,
-because otherwise somebody will invariably end up writing a driver that
-doesn't set the flag, but still expect it to be working :-)
+I know there's a Norwegian bus stop or town or something called "Hell"
+that's shown frozen on google maps, but still, no way!
+
+This thing ships a whole bunch of private wext stuff, and a whole load
+of other junk.
 
 johannes
 
