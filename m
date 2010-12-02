@@ -1,39 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from swampdragon.chaosbits.net ([90.184.90.115]:14136 "EHLO
-	swampdragon.chaosbits.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752261Ab0LIWhs (ORCPT
+Received: from mail-fx0-f46.google.com ([209.85.161.46]:38822 "EHLO
+	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752844Ab0LBRqz convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 9 Dec 2010 17:37:48 -0500
-Date: Thu, 9 Dec 2010 23:31:09 +0100 (CET)
-From: Jesper Juhl <jj@chaosbits.net>
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	linux-kernel@vger.kernel.org,
-	linux-bluetooth <linux-bluetooth@vger.kernel.org>
-Subject: Re: Start dropping PCMCIA from compat-wireless for 2.6.38+
-In-Reply-To: <AANLkTik4W+UxgyPjVyHDeEFTRCkXdDBQ9obgPkpnhzGW@mail.gmail.com>
-Message-ID: <alpine.LNX.2.00.1012092329480.25880@swampdragon.chaosbits.net>
-References: <AANLkTik4W+UxgyPjVyHDeEFTRCkXdDBQ9obgPkpnhzGW@mail.gmail.com>
+	Thu, 2 Dec 2010 12:46:55 -0500
+Received: by fxm20 with SMTP id 20so1375688fxm.19
+        for <linux-wireless@vger.kernel.org>; Thu, 02 Dec 2010 09:46:54 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+In-Reply-To: <20101202002234.GA30670@monopoli.naic.edu>
+References: <20101122024208.GA13377@monopoli.naic.edu>
+	<AANLkTikc9w+w8o=ZQBTnTD1=C0+yDVfq=jSfEFQ16dbm@mail.gmail.com>
+	<20101125014511.GA1683@monopoli.naic.edu>
+	<AANLkTi=nkayyyzECi6MO87ZO-CUpZeNP007_hMp8LiPV@mail.gmail.com>
+	<20101126040742.GA5238@monopoli.naic.edu>
+	<AANLkTim=P+QejCObCH1=5cPBDR6BpEXxuqHGZj3JBKbE@mail.gmail.com>
+	<20101130021911.GA18971@monopoli.naic.edu>
+	<AANLkTi=1PXk4u37mPd6=F6mjYWLqo=wg7trVmmpfV_WV@mail.gmail.com>
+	<20101202002234.GA30670@monopoli.naic.edu>
+Date: Thu, 2 Dec 2010 17:46:54 +0000
+Message-ID: <AANLkTi=YT1V-kr-tAmNfSBPPEGk39H37RoNkx5txhnD7@mail.gmail.com>
+Subject: Re: orinoco_cs module and WPA not working
+From: Dave Kilroy <kilroyd@gmail.com>
+To: Giacomo Comes <comes@naic.edu>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 9 Dec 2010, Luis R. Rodriguez wrote:
+On Thu, Dec 2, 2010 at 12:22 AM, Giacomo Comes <comes@naic.edu> wrote:
+> On Wed, Dec 01, 2010 at 09:52:15PM +0000, Dave Kilroy wrote:
+>> On Tue, Nov 30, 2010 at 2:19 AM, Giacomo Comes <comes@naic.edu> wrote:
+>> wpa_supplicant log indicates it is continuously timing out the scans.
+>> I don't know what is going on there.
+>>
+>> What you can try is to turn off wpa_supplicant roaming, and force
+>> wpa_supplicant to connect to the AP with highest priority in your
+>> config. Set ap_scan=2 in wpa_supplicant.conf, and set
+>>
+>> group=TKIP
+>> pairwise=TKIP
+>>
+>> in the network block.
+>>
+>> This also prevents wpa_supplicant trying to connect to an AP using
+>> BSSID, which the agere cards don't support.
+>
+> Running:
+> wpa_supplicant -ieth1 -c wpa_supplicant.conf -f wpa_supplicant.log -dd
+>
+> wpa_supplicant.conf content:
+> ctrl_interface=/var/run/wpa_supplicant
+> ctrl_interface_group=0
+> ap_scan=2
+>
+> network={
+>        ssid="Comes"
+>        psk="<password>"
+>        key_mgmt=WPA-PSK
+>        priority=5
+>        proto=WPA
+>
+>        group=TKIP
+>        pairwise=TKIP
+> }
 
-> I'm going to start dropping PCMCIA stuff from compat-wireless as I
-> don't think we have any users of it nor interest to keep backporting
-> it. This entails dropping drivers like orinoco, b43 PCMCIA support,
-> libertas, as well as bluetooth bluecard_cs, bluecard_cs, dtl1_cs,
-> bt3c_cs and of course CONFIG_SSB_PCMCIAHOST. If you are a user please
-> yell now.
-> 
-Yelling.
-While I'm not personally a user, my mother is. She still has an old IBM 
-Thinkpad 600 laptop with a PCMCIA card in it that uses the orinoco driver.
+OK, looks like you're using a newer wpa_supplicant that tries to use
+IW_AUTH_MFP which orinoco doesn't know about. I can modify the driver
+to silently pass these calls through, but it would be nice if
+wpa_supplicant didn't fail because a driver didn't support a
+particular option.
 
--- 
-Jesper Juhl <jj@chaosbits.net>            http://www.chaosbits.net/
-Don't top-post http://www.catb.org/~esr/jargon/html/T/top-post.html
-Plain text mails only, please.
+I'll put together a patch to accept an IW_AUTH_MFP call set to NONE or
+DISABLED, and fail on REQUIRED. In the meantime you could try use an
+older wpa_supplicant. I think I was using 0.7.2 before, but I can't be
+sure.
 
+
+Dave.
