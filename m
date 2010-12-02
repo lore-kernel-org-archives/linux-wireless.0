@@ -1,54 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.19.149.2]:24205 "EHLO mail.atheros.com"
+Received: from mga11.intel.com ([192.55.52.93]:31379 "EHLO mga11.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S933382Ab0LUJmk (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 21 Dec 2010 04:42:40 -0500
-Received: from mail.atheros.com ([10.10.20.105])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Tue, 21 Dec 2010 01:42:24 -0800
-From: Vasanthakumar Thiagarajan <vasanth@atheros.com>
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>
-Subject: [PATCH] ath9k_hw: Fix bug in eeprom data length validation for AR9485
-Date: Tue, 21 Dec 2010 01:42:43 -0800
-Message-ID: <1292924563-3339-1-git-send-email-vasanth@atheros.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	id S1752662Ab0LBQ5w (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 2 Dec 2010 11:57:52 -0500
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Subject: [PATCH 0/5] update for 2.6.38
+Date: Thu,  2 Dec 2010 08:51:19 -0800
+Message-Id: <1291308684-3279-1-git-send-email-wey-yi.w.guy@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The size of the eeprom data is 1088 bytes for AR9485. But
-a sanity check is done against 4K which would result in a
-'potential read past the end of the buffer' smatch complaint.
+We enable PCI L1 state after uCode load to improve device power
+consumption
+We also fix the error when sending rxon command to uCode while the
+device is on the way to shutdown
 
-Reported-by: Dan Carpenter <error27@gmail.com>
-Signed-off-by: Vasanthakumar Thiagarajan <vasanth@atheros.com>
----
- drivers/net/wireless/ath/ath9k/ar9003_eeprom.c |    4 +++-
- 1 files changed, 3 insertions(+), 1 deletions(-)
+Grumbach, Emmanuel (1):
+  iwlagn: Enable PCI L1 ACTIVE state after uCode has been loaded
 
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
-index f80ec74..579a033 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
-@@ -59,6 +59,8 @@
- 
- #define CTL(_tpower, _flag) ((_tpower) | ((_flag) << 6))
- 
-+#define EEPROM_DATA_LEN_9485	1088
-+
- static int ar9003_hw_power_interpolate(int32_t x,
- 				       int32_t *px, int32_t *py, u_int16_t np);
- 
-@@ -3367,7 +3369,7 @@ found:
- 			"Found block at %x: code=%d ref=%d length=%d major=%d minor=%d\n",
- 			cptr, code, reference, length, major, minor);
- 		if ((!AR_SREV_9485(ah) && length >= 1024) ||
--		    (AR_SREV_9485(ah) && length >= (4 * 1024))) {
-+		    (AR_SREV_9485(ah) && length > EEPROM_DATA_LEN_9485)) {
- 			ath_dbg(common, ATH_DBG_EEPROM,
- 				"Skipping bad header\n");
- 			cptr -= COMP_HDR_LEN;
--- 
-1.7.0.4
+Wey-Yi Guy (4):
+  iwlagn: fix race condition when reprogram sta
+  iwlagn: remove structure name reference to gen2
+  iwlwifi: check for STATUS_EXIT_PENDING when send RXON command
+  iwlagn: name change for bt_ch_announce module parameter
+
+these patches are also available from wireless-next-2.6 branch on
+ git://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi-2.6.git
+
+ drivers/net/wireless/iwlwifi/iwl-3945.c      |    3 +
+ drivers/net/wireless/iwlwifi/iwl-6000.c      |   20 ++++----
+ drivers/net/wireless/iwlwifi/iwl-agn-rxon.c  |    3 +
+ drivers/net/wireless/iwlwifi/iwl-agn-ucode.c |    4 ++
+ drivers/net/wireless/iwlwifi/iwl-agn.c       |   70 +++++++++++++------------
+ drivers/net/wireless/iwlwifi/iwl-agn.h       |   20 ++++----
+ drivers/net/wireless/iwlwifi/iwl-sta.c       |   13 +++++
+ 7 files changed, 79 insertions(+), 54 deletions(-)
 
