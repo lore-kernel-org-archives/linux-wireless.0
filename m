@@ -1,153 +1,162 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:51651 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750788Ab0LEFS7 (ORCPT
+Received: from mail-fx0-f46.google.com ([209.85.161.46]:49111 "EHLO
+	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755547Ab0LBUp4 convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 5 Dec 2010 00:18:59 -0500
-Message-ID: <4CFB20BA.5090300@candelatech.com>
-Date: Sat, 04 Dec 2010 21:18:50 -0800
-From: Ben Greear <greearb@candelatech.com>
+	Thu, 2 Dec 2010 15:45:56 -0500
+Received: by fxm20 with SMTP id 20so1546539fxm.19
+        for <linux-wireless@vger.kernel.org>; Thu, 02 Dec 2010 12:45:55 -0800 (PST)
 MIME-Version: 1.0
-To: Felix Fietkau <nbd@openwrt.org>
-CC: "Luis R. Rodriguez" <lrodriguez@Atheros.com>,
-	"ath9k-devel@lists.ath9k.org" <ath9k-devel@venema.h4ckr.net>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [ath9k-devel] Script to crash ath9k with DMA errors.
-References: <4CF44543.9070605@candelatech.com> <20101130004424.GC1901@tux> <4CF6D8C8.2000308@candelatech.com> <4CF8A6DE.4020804@candelatech.com> <4CFAFBE1.3080505@openwrt.org>
-In-Reply-To: <4CFAFBE1.3080505@openwrt.org>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+In-Reply-To: <AANLkTim4w0F4CS-yR_=EhSbPEDvWLN=7hu0VdQwegsgC@mail.gmail.com>
+References: <AANLkTim4w0F4CS-yR_=EhSbPEDvWLN=7hu0VdQwegsgC@mail.gmail.com>
+From: Joshua Boyd <boydjd@jbip.net>
+Date: Thu, 2 Dec 2010 15:45:34 -0500
+Message-ID: <AANLkTimNkq6p2PmRM2Dx+Syk1-YOu4dkKp7rtFRzR0Bd@mail.gmail.com>
+Subject: Kernel oops on loading of iwlagn on 2.6.34.7-61.fc13.x86_64 #1 SMP
+To: linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 12/04/2010 06:41 PM, Felix Fietkau wrote:
-> On 2010-12-03 9:14 AM, Ben Greear wrote:
->> On 12/01/2010 03:22 PM, Ben Greear wrote:
->>> On 11/29/2010 04:44 PM, Luis R. Rodriguez wrote:
->>>> On Mon, Nov 29, 2010 at 04:28:51PM -0800, Ben Greear wrote:
->>>
->>>>> BUG: unable to handle kernel NULL pointer dereference at 00000040
->>>>> IP: [<f933470a>] ath_tx_start+0x461/0x5ef [ath9k]
->>>>> *pde = 00000000
->>>>> Oops: 0000 [#1] SMP DEBUG_PAGEALLOC
->>>>> last sysfs file: /sys/devices/pci0000:00/0000:00:1e.0/0000:08:01.0/irq
->>>>> Modules linked in: aes_i586 aes_generic fuse nfs lockd fscache nfs_acl auth_rpcgss sunrpc ipv6 uinput arc4 ecb ath9k mac80211 ath9k_common ath9k_hw mi]
->>>>>
->>>>> Pid: 38, comm: kworker/u:1 Tainted: G        W   2.6.37-rc3-wl+ #53 PDSBM/PDSBM
->>>>> EIP: 0060:[<f933470a>] EFLAGS: 00010246 CPU: 1
->>>>> EIP is at ath_tx_start+0x461/0x5ef [ath9k]
->>>>
->>>> Please use
->>>>
->>>> gdb drivers/net/wireless/ath/ath9k/
->>>> l *(ath_tx_start+0x461)
->>>>
->>>>      Luis
->>>
->>> I managed to hit that ath_tx_start crash again, and this time there were no obvious
->>> DMA or irq errors immediately preceding it.  So, it might be a real bug
->>> after all.  I'll add some extra checks to see if tid->ac is NULL.
->>
->> I've made some small progress on this general issue.
->>
->> First, I added all sorts of debugging to try to figure out ath_tx_start crash.
->> As best as I can tell, 'tid' is not NULL, but also is not a valid pointer,
->> and probably something close to 0x0.  I've added yet more debugging, but haven't
->> hit the problem again.
->>
->> I also tried stopping DMA in a loop up to 5 times if it failed to stop
->> previously in the loop.  This did not appear to help at all.
->>
->> I also managed to make both the ath_tx_start crash and the DMA errors very hard to reproduce
->> (I dare not say fixed, yet).
->>
->> It appears that this small patch (and possibly, the fact that I set debugging to 0x600
->> instead of 0x400) makes the problems go away.  This makes me wonder if a root cause is
->> something to do with repeatedly resetting the hardware too fast, as setting channels rapidly
->> would tend to do that, and channels are set on association by supplicant, it appears.
-> Please try this patch while leaving the unnecessary resets in place.
-> I found that when ath_drain_all_txq finds tx dma not stopped, it will
-> issue a reset at a point in time where it is both useless (since it's
-> right before a reset anyway) and dangerous (since the rx dma engine
-> isn't even disabled yet), so IMHO the right thing to do is to drop
-> this extra reset.
->
-> --- a/drivers/net/wireless/ath/ath9k/xmit.c
-> +++ b/drivers/net/wireless/ath/ath9k/xmit.c
-> @@ -1194,18 +1194,8 @@ void ath_drain_all_txq(struct ath_softc
->   		}
->   	}
->
-> -	if (npend) {
-> -		int r;
-> -
-> -		ath_print(common, ATH_DBG_FATAL,
-> -			  "Failed to stop TX DMA. Resetting hardware!\n");
-> -
-> -		r = ath9k_hw_reset(ah, sc->sc_ah->curchan, ah->caldata, false);
-> -		if (r)
-> -			ath_print(common, ATH_DBG_FATAL,
-> -				  "Unable to reset hardware; reset status %d\n",
-> -				  r);
-> -	}
-> +	if (npend)
-> +		ath_print(common, ATH_DBG_FATAL,  "Failed to stop TX DMA!\n");
->
->   	for (i = 0; i<  ATH9K_NUM_TX_QUEUES; i++) {
->   		if (ATH_TXQ_SETUP(sc, i))
-
-
-I applied this on top of all my patches, and on top of the 4 that Luis recently
-posted.
-
-I'm trying this on a different system than normal..happens to be configured
-with 115 stations.  It was getting this fail-to-stop-RX warning even with my
-channel-change mitigation patch, so I left it in.  I can still test w/it removed
-if you want.
-
-None of my interfaces are using WPA (or supplicant)..just un-encrypted
-association to an AP 3 feet away.
-
-The recent success I had on Friday was on a different system entirely,
-with only 84 STAs, and using wpa-supplicant with 30 or so stations
-using WPA and the other 55 on a different AP un-encrypted (still using
-wpa_supplicant for all of these).
-
-So, can't compare my previous reports directly with this one.
-
-I'm going to re-configure this one to have smaller numbers of
-stations and use wpa_supplicant..will see how that goes.
-
-Even with all these warnings in the logs..system is basically stable and
-a few interfaces are able to associate, at least for a short time.
-
-WARNING: at /home/greearb/git/linux.wireless-testing/drivers/net/wireless/ath/ath9k/recv.c:538 ath_stoprecv+0xcd/0xd7 [ath9k]()
-Hardware name: 945GM
-Could not stop RX, we could be confusing the DMA engine when we start RX up
-Modules linked in: 8021q garp stp llc michael_mic macvlan pktgen iscsi_tcp libiscsi_tcp libiscsi scsi_transport_iscsi nfs lockd fscache nfs_acl auth_rpcgss 
-sunrpc p4_clockmod ipv6 uinput arc4 ecb ath9k mac80211 snd_intel8x0 snd_ac97_codec ath9k_common ac97_bus snd_seq snd_seq_device ath9k_hw ath snd_pcm pcspkr 
-i2c_i801 serio_raw cfg80211 iTCO_wdt iTCO_vendor_support microcode snd_timer snd soundcore e1000e snd_page_alloc yenta_socket floppy i915 drm_kms_helper drm 
-i2c_algo_bit i2c_core video output [last unloaded: ipt_addrtype]
-Pid: 5, comm: kworker/u:0 Tainted: G        W   2.6.37-rc4-wl+ #16
+I get the following kernel oops using an Intel 5300 AGN when trying
+compat-wireless-2010-12-02:
+Compat-wireless backport release: compat-wireless-2010-11-23-7-g813c0e6
+Backport based on linux-next.git next-20101202
+cfg80211: Calling CRDA to update world regulatory domain
+cfg80211: World regulatory domain updated:
+cfg80211:     (start_freq - end_freq @ bandwidth), (max_antenna_gain, max_eirp)
+cfg80211:     (2402000 KHz - 2472000 KHz @ 40000 KHz), (300 mBi, 2000 mBm)
+cfg80211:     (2457000 KHz - 2482000 KHz @ 20000 KHz), (300 mBi, 2000 mBm)
+cfg80211:     (2474000 KHz - 2494000 KHz @ 20000 KHz), (300 mBi, 2000 mBm)
+cfg80211:     (5170000 KHz - 5250000 KHz @ 40000 KHz), (300 mBi, 2000 mBm)
+cfg80211:     (5735000 KHz - 5835000 KHz @ 40000 KHz), (300 mBi, 2000 mBm)
+iwlagn: Intel(R) Wireless WiFi Link AGN driver for Linux, in-tree:d
+iwlagn: Copyright(c) 2003-2010 Intel Corporation
+------------[ cut here ]------------
+kernel BUG at /root/compat-wireless-2010-12-02/net/mac80211/main.c:540!
+invalid opcode: 0000 [#1] SMP
+last sysfs file: /sys/module/rfkill/initstate
+CPU 1
+Modules linked in: iwlagn(+) iwlcore mac80211 cfg80211 compat fuse
+deflate zlib_deflate ctr camellia cast5 rmd160 crypto_null ccm serpent
+blowfish twofish_x86_64 twofish_common xcbc cbc sha256_generic
+sha512_generic des_generic aes_x86_64 aes_generic ah6 ah4 esp6 esp4
+xfrm4_mode_beet xfrm4_tunnel tunnel4 xfrm4_mode_tunnel
+xfrm4_mode_transport xfrm6_mode_transport xfrm6_mode_ro
+xfrm6_mode_beet xfrm6_mode_tunnel ipcomp ipcomp6 xfrm_ipcomp
+xfrm6_tunnel tunnel6 af_key vboxnetadp vboxnetflt vboxdrv sunrpc
+cpufreq_ondemand acpi_cpufreq freq_table ip6t_REJECT nf_conntrack_ipv6
+ip6table_filter ip6_tables be2iscsi bnx2i cnic uio cxgb3i cxgb3 mdio
+ib_iser rdma_cm ib_cm iw_cm ib_sa ib_mad ib_core ib_addr ipv6
+iscsi_tcp libiscsi_tcp libiscsi scsi_transport_iscsi uinput arc4 ecb
+snd_hda_codec_conexant snd_hda_intel snd_hda_codec snd_hwdep snd_seq
+snd_seq_device snd_pcm snd_timer thinkpad_acpi microcode joydev snd
+rfkill iTCO_wdt e1000e i2c_i801 iTCO_vendor_support soundcore wmi
+snd_page_alloc firewire_ohci yenta_socket rsrc_nonstatic firewire_core
+crc_itu_t ata_generic pata_acpi i915 drm_kms_helper drm i2c_algo_bit
+i2c_core video output [last unloaded: bluetooth]
+Pid: 15140, comm: modprobe Not tainted 2.6.34.7-61.fc13.x86_64 #1
+2765T6U/2765T6U
+RIP: 0010:[<ffffffffa07b824f>]  [<ffffffffa07b824f>]
+ieee80211_alloc_hw+0xba/0x3b6 [mac80211]
+RSP: 0018:ffff8802317edc78  EFLAGS: 00010246
+RAX: ffff8801bb041ae0 RBX: ffff8801bb040460 RCX: 0000000000000000
+RDX: ffff8801ea733188 RSI: ffffffffa07ae93c RDI: ffff8801bb0400c0
+RBP: ffff8802317edc98 R08: ffff8801bb040000 R09: 0000ffffffffff0a
+R10: 0000000000000000 R11: ffff8802317edbf8 R12: ffff8801bb040180
+R13: ffffffffa084fca0 R14: 00000000ffffffff R15: ffffffffa08509a0
+FS:  00007f3fae5ed700(0000) GS:ffff880002080000(0000) knlGS:0000000000000000
+CS:  0010 DS: 0000 ES: 0000 CR0: 000000008005003b
+CR2: 00007f3fae3a500f CR3: 000000020b019000 CR4: 00000000000006e0
+DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
+DR3: 0000000000000000 DR6: 00000000ffff0ff0 DR7: 0000000000000400
+Process modprobe (pid: 15140, threadinfo ffff8802317ec000, task
+ffff880209665dc0)
+Stack:
+ ffff8802317edc98 ffff880232e41000 ffffffffa08509a0 ffff880232e41000
+<0> ffff8802317edcb8 ffffffffa07fa71e ffff880232e41000 00000000fffffff4
+<0> ffff8802317edd18 ffffffffa0838e34 ffff880232e52558 ffff880232e410a0
 Call Trace:
-  [<78436fbd>] warn_slowpath_common+0x77/0x8c
-  [<f946028f>] ? ath_stoprecv+0xcd/0xd7 [ath9k]
-  [<f946028f>] ? ath_stoprecv+0xcd/0xd7 [ath9k]
-  [<7843704e>] warn_slowpath_fmt+0x2e/0x30
-  [<f946028f>] ath_stoprecv+0xcd/0xd7 [ath9k]
-  [<f945e4bb>] ath_reset+0x55/0x163 [ath9k]
-  [<7845a68d>] ? trace_hardirqs_on+0xb/0xd
-  [<f9462830>] ath_tx_complete_poll_work+0x90/0xdf [ath9k]
-  [<78446fd4>] process_one_work+0x1af/0x2bf
-  [<78446f63>] ? process_one_work+0x13e/0x2bf
-  [<f94627a0>] ? ath_tx_complete_poll_work+0x0/0xdf [ath9k]
-  [<78448722>] worker_thread+0xf9/0x1bf
-  [<78448629>] ? worker_thread+0x0/0x1bf
-  [<7844b252>] kthread+0x62/0x67
-  [<7844b1f0>] ? kthread+0x0/0x67
-  [<784036c6>] kernel_thread_helper+0x6/0x1a
+ [<ffffffffa07fa71e>] iwl_alloc_all+0x19/0x44 [iwlcore]
+ [<ffffffffa0838e34>] iwl_pci_probe+0x77/0xcb4 [iwlagn]
+ [<ffffffff8120d6ad>] ? kobject_get+0x1a/0x22
+ [<ffffffff8122412d>] local_pci_probe+0x17/0x1b
+ [<ffffffff812250a0>] pci_device_probe+0xcd/0xfd
+ [<ffffffff812c3aaf>] ? driver_sysfs_add+0x4c/0x71
+ [<ffffffff812c3c7e>] driver_probe_device+0xea/0x217
+ [<ffffffff812c3e08>] __driver_attach+0x5d/0x81
+ [<ffffffff812c3dab>] ? __driver_attach+0x0/0x81
+ [<ffffffff812c30a4>] bus_for_each_dev+0x53/0x88
+ [<ffffffff812c3a0e>] driver_attach+0x1e/0x20
+ [<ffffffff812c33a2>] bus_add_driver+0x11d/0x282
+ [<ffffffff812c4109>] driver_register+0x9e/0x10f
+ [<ffffffff812252cc>] __pci_register_driver+0x58/0xc8
+ [<ffffffffa03a9000>] ? iwl_init+0x0/0x7b [iwlagn]
+ [<ffffffffa03a905c>] iwl_init+0x5c/0x7b [iwlagn]
+ [<ffffffffa03a9000>] ? iwl_init+0x0/0x7b [iwlagn]
+ [<ffffffff81002069>] do_one_initcall+0x5e/0x159
+ [<ffffffff8107cfff>] sys_init_module+0xd6/0x237
+ [<ffffffff81009c72>] system_call_fastpath+0x16/0x1b
+Code: 0b eb fe 49 83 7d 30 00 75 04 0f 0b eb fe 49 83 7d 18 00 75 04
+0f 0b eb fe 49 83 7d 28 00 75 04 0f 0b eb fe 49 83 7d 48 00 75 04 <0f>
+0b eb fe 4c 89 6b 60 66 c7 43 58 01 00 49 8d bc 24 88 0e 00
+RIP  [<ffffffffa07b824f>] ieee80211_alloc_hw+0xba/0x3b6 [mac80211]
+ RSP <ffff8802317edc78>
+---[ end trace d39ed8c7a9907b0a ]---
+[jdb@carbine ~]$ uname -ar
+Linux carbine 2.6.34.7-61.fc13.x86_64 #1 SMP Tue Oct 19 04:06:30 UTC
+2010 x86_64 x86_64 x86_64 GNU/Linux
+Run after removing the offending new iwlagn:
+[jdb@carbine ~]$ su -c 'lspci -vvv -s 03:00.0'
+Password:
+03:00.0 Network controller: Intel Corporation Ultimate N WiFi Link 5300
+Subsystem: Intel Corporation Device 1011
+Physical Slot: 1
+Control: I/O- Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr-
+Stepping- SERR+ FastB2B- DisINTx-
+Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast >TAbort-
+<TAbort- <MAbort- >SERR- <PERR- INTx-
+Latency: 0, Cache Line Size: 64 bytes
+Interrupt: pin A routed to IRQ 35
+Region 0: Memory at f4300000 (64-bit, non-prefetchable) [size=8K]
+Capabilities: [c8] Power Management version 3
+Flags: PMEClk- DSI+ D1- D2- AuxCurrent=0mA PME(D0+,D1-,D2-,D3hot+,D3cold+)
+Status: D0 NoSoftRst- PME-Enable- DSel=0 DScale=0 PME-
+Capabilities: [d0] MSI: Enable+ Count=1/1 Maskable- 64bit+
+Address: 00000000fee0300c  Data: 4122
+Capabilities: [e0] Express (v1) Endpoint, MSI 00
+DevCap: MaxPayload 128 bytes, PhantFunc 0, Latency L0s <512ns, L1 unlimited
+ExtTag- AttnBtn- AttnInd- PwrInd- RBE+ FLReset+
+DevCtl: Report errors: Correctable- Non-Fatal- Fatal- Unsupported-
+RlxdOrd+ ExtTag- PhantFunc- AuxPwr- NoSnoop+ FLReset-
+MaxPayload 128 bytes, MaxReadReq 128 bytes
+DevSta: CorrErr+ UncorrErr- FatalErr- UnsuppReq+ AuxPwr+ TransPend-
+LnkCap: Port #0, Speed 2.5GT/s, Width x1, ASPM L0s L1, Latency L0
+<128ns, L1 <32us
+ClockPM+ Surprise- LLActRep- BwNot-
+LnkCtl: ASPM L0s L1 Enabled; RCB 64 bytes Disabled- Retrain- CommClk+
+ExtSynch- ClockPM+ AutWidDis- BWInt- AutBWInt-
+LnkSta: Speed 2.5GT/s, Width x1, TrErr- Train- SlotClk+ DLActive-
+BWMgmt- ABWMgmt-
+Capabilities: [100 v1] Advanced Error Reporting
+UESta: DLP- SDES- TLP- FCP- CmpltTO- CmpltAbrt- UnxCmplt- RxOF-
+MalfTLP- ECRC- UnsupReq- ACSViol-
+UEMsk: DLP- SDES- TLP- FCP- CmpltTO- CmpltAbrt- UnxCmplt- RxOF-
+MalfTLP- ECRC- UnsupReq- ACSViol-
+UESvrt: DLP+ SDES- TLP- FCP+ CmpltTO- CmpltAbrt- UnxCmplt- RxOF+
+MalfTLP+ ECRC- UnsupReq- ACSViol-
+CESta: RxErr- BadTLP- BadDLLP- Rollover- Timeout- NonFatalErr+
+CEMsk: RxErr- BadTLP- BadDLLP- Rollover- Timeout- NonFatalErr+
+AERCap: First Error Pointer: 00, GenCap- CGenEn- ChkCap- ChkEn-
+Capabilities: [140 v1] Device Serial Number 00-21-6a-ff-ff-0e-07-94
+Kernel driver in use: iwlagn
+Kernel modules: iwlagn
 
 
+--
+Joshua Boyd
+JBipNet
 
--- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+E-mail: boydjd@jbip.net
+
+http://www.jbip.net
