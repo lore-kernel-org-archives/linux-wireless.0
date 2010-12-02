@@ -1,62 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gy0-f174.google.com ([209.85.160.174]:40562 "EHLO
-	mail-gy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758251Ab0LCBZ3 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 2 Dec 2010 20:25:29 -0500
-Received: by gyb11 with SMTP id 11so4515823gyb.19
-        for <linux-wireless@vger.kernel.org>; Thu, 02 Dec 2010 17:25:28 -0800 (PST)
+Received: from mail.neratec.ch ([80.75.119.105]:53024 "EHLO mail.neratec.ch"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755937Ab0LBJ1N (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 2 Dec 2010 04:27:13 -0500
+Date: Thu, 2 Dec 2010 10:27:11 +0100 (CET)
+From: Wojciech Dubowik <dubowoj@neratec.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, nbd@openwrt.org,
+	ath5k-devel@lists.ath5k.org, mickflemm@gmail.com
+Message-ID: <4831928.1481291282029559.JavaMail.wlan@CHBU500181>
+In-Reply-To: <1705686.1261291281873611.JavaMail.wlan@CHBU500181>
+Subject: [PATCH v7 7/9] ath5k: Add initial registers values for radio RF2317
+ chip.
 MIME-Version: 1.0
-In-Reply-To: <20101202235155.GN7399@tux>
-References: <AANLkTim0L7e+RZ1v6B3+s_Z7pOZ6KAgvZ_tZEQJnMHET@mail.gmail.com>
- <AANLkTikq7h3hwVBQBWv+Avhzc6KZLxRC3OkxjpbgwQ8M@mail.gmail.com>
- <AANLkTinY5Ook3Jk=P8KW34djuAzK1sVJgPds9mZkU4sk@mail.gmail.com> <20101202235155.GN7399@tux>
-From: Matteo Croce <technoboy85@gmail.com>
-Date: Fri, 3 Dec 2010 02:25:08 +0100
-Message-ID: <AANLkTi=vvytewRJt2it+tgdTSaT2tpVvCs77NjN71vX2@mail.gmail.com>
-Subject: Re: [ath9k-devel] [PATCH]: ath9k: fix bug in tx power
-To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Cc: "Luis R. Rodriguez" <mcgrof@gmail.com>,
-	"ath9k-devel@lists.ath9k.org" <ath9k-devel@lists.ath9k.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"John W. Linville" <linville@tuxdriver.com>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The ath9k driver subtracts 3 dBm to the txpower as with two radios the
-signal power is doubled.
-The resulting value is assigned in an u16 which overflows and makes
-the card work at full power.
+From: Felix Fietkau <nbd@openwrt.org>
 
-Cc: stable@kernel.org
-Signed-off-by: Matteo Croce <matteo@openwrt.org>
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+Signed-off-by: Wojciech Dubowik <Wojciech.Dubowik@neratec.com>
+---
+ drivers/net/wireless/ath/ath5k/initvals.c |   23 +++++++++++++++++++++++
+ 1 files changed, 23 insertions(+), 0 deletions(-)
 
---- a/drivers/net/wireless/ath/ath9k/eeprom_def.c	2010-12-02
-22:39:58.982020001 +0100
-+++ b/drivers/net/wireless/ath/ath9k/eeprom_def.c	2010-12-03
-00:36:23.637799002 +0100
-@@ -1065,15 +1065,19 @@
- 	case 1:
- 		break;
- 	case 2:
--		scaledPower -= REDUCE_SCALED_POWER_BY_TWO_CHAIN;
-+		if (scaledPower > REDUCE_SCALED_POWER_BY_TWO_CHAIN)
-+			scaledPower -= REDUCE_SCALED_POWER_BY_TWO_CHAIN;
-+		else
-+			scaledPower = 0;
- 		break;
- 	case 3:
--		scaledPower -= REDUCE_SCALED_POWER_BY_THREE_CHAIN;
-+		if (scaledPower > REDUCE_SCALED_POWER_BY_THREE_CHAIN)
-+			scaledPower -= REDUCE_SCALED_POWER_BY_THREE_CHAIN;
-+		else
-+			scaledPower = 0;
- 		break;
- 	}
+diff --git a/drivers/net/wireless/ath/ath5k/initvals.c b/drivers/net/wireless/ath/ath5k/initvals.c
+index 905e4fd..e49340d 100644
+--- a/drivers/net/wireless/ath/ath5k/initvals.c
++++ b/drivers/net/wireless/ath/ath5k/initvals.c
+@@ -1495,6 +1495,29 @@ int ath5k_hw_write_initvals(struct ath5k_hw *ah, u8 mode, bool skip_pcu)
+ 					rf5112_ini_bbgain, skip_pcu);
+ 			break;
+ 		case AR5K_RF2317:
++
++			ath5k_hw_ini_mode_registers(ah,
++					ARRAY_SIZE(rf2413_ini_mode_end),
++					rf2413_ini_mode_end, mode);
++
++			ath5k_hw_ini_registers(ah,
++					ARRAY_SIZE(rf2425_ini_common_end),
++					rf2425_ini_common_end, skip_pcu);
++
++			/* Override settings from rf2413_ini_mode_end */
++			ath5k_hw_reg_write(ah, 0x00180a65, AR5K_PHY_GAIN);
++
++			/* Override settings from rf2413_ini_common_end */
++			ath5k_hw_reg_write(ah, 0x00004000, AR5K_PHY_AGC);
++			AR5K_REG_WRITE_BITS(ah, AR5K_PHY_TPC_RG5,
++				AR5K_PHY_TPC_RG5_PD_GAIN_OVERLAP, 0xa);
++			ath5k_hw_reg_write(ah, 0x800000a8, 0x8140);
++			ath5k_hw_reg_write(ah, 0x000000ff, 0x9958);
++
++			ath5k_hw_ini_registers(ah,
++					ARRAY_SIZE(rf5112_ini_bbgain),
++					rf5112_ini_bbgain, skip_pcu);
++			break;
+ 		case AR5K_RF2425:
+ 
+ 			ath5k_hw_ini_mode_registers(ah,
+-- 
+1.7.1
 
--	scaledPower = max((u16)0, scaledPower);
--
- 	if (IS_CHAN_2GHZ(chan)) {
- 		numCtlModes = ARRAY_SIZE(ctlModesFor11g) -
- 			SUB_NUM_CTL_MODES_AT_2G_40;
