@@ -1,41 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:40808 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756513Ab0LPPaG (ORCPT
+Received: from mail30t.wh2.ocn.ne.jp ([125.206.180.136]:41337 "HELO
+	mail30t.wh2.ocn.ne.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1756060Ab0LBKiY (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 16 Dec 2010 10:30:06 -0500
-Date: Thu, 16 Dec 2010 10:21:21 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] rtlwifi: convert to __packed notation
-Message-ID: <20101216152121.GB2413@tuxdriver.com>
-References: <1292510088-7449-1-git-send-email-linville@tuxdriver.com>
- <4D0A2AA8.5060808@lwfinger.net>
+	Thu, 2 Dec 2010 05:38:24 -0500
+Received: from vs3001.wh2.ocn.ne.jp (125.206.180.229)
+	by mail30t.wh2.ocn.ne.jp (RS ver 1.0.95vs) with SMTP id 4-0717256302
+	for <linux-wireless@vger.kernel.org>; Thu,  2 Dec 2010 19:38:23 +0900 (JST)
+From: Bruno Randolf <br1@einfach.org>
+To: Johannes Berg <johannes@sipsolutions.net>
+Subject: Re: [PATCH 2/3] lib: Improve EWMA efficiency by using bitshifts
+Date: Thu, 2 Dec 2010 19:37:44 +0900
+Cc: linville@tuxdriver.com, randy.dunlap@oracle.com,
+	peterz@infradead.org, blp@cs.stanford.edu,
+	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Lars_Ericsson@telia.com, j@w1.fi, stefanr@s5r6.in-berlin.de,
+	kosaki.motohiro@jp.fujitsu.com, akpm@linux-foundation.org,
+	kevin.granade@gmail.com
+References: <20101202101231.22988.33396.stgit@localhost6.localdomain6> <20101202101236.22988.1691.stgit@localhost6.localdomain6> <1291285222.3481.45.camel@jlt3.sipsolutions.net>
+In-Reply-To: <1291285222.3481.45.camel@jlt3.sipsolutions.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <4D0A2AA8.5060808@lwfinger.net>
+Content-Type: Text/Plain;
+  charset="utf-8"
+Message-Id: <201012021937.44368.br1@einfach.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Dec 16, 2010 at 09:05:12AM -0600, Larry Finger wrote:
-> On 12/16/2010 08:34 AM, John W. Linville wrote:
-> > Use "__packed" instead of "__attribute__ ((packed))"...
-> > 
-> > Signed-off-by: John W. Linville <linville@tuxdriver.com>
- 
-> ACK.
+On Thu December 2 2010 19:20:22 Johannes Berg wrote:
+> On Thu, 2010-12-02 at 19:12 +0900, Bruno Randolf wrote:
+> > +	/* get bitshift for weight */
+> > +	for (n = 0; !(weight & 1); n++)
+> > +		weight = weight >> 1;
+> > +	WARN_ON(weight > 1 || n < 1);
 > 
-> As a point of interest, is this the "new" recommended way? The reason I ask is
-> that the Linux headers are mostly in the attribute form.
+> I'm sure there's something like log2() (and is_power_of_2() for the
+> warning) in the kernel already -- no need to reimplement it...
 
-AIUI, "__packed" is the one true way.  I think this facilitates
-compling the kernel with compilers other than GCC.
+Ah, thanks for that! Will resend an improved version.
 
-At any rate, Dave Miller threatened to injure me if I kept sending him stuff using 
-"__attribute__ ((packed))"... :-)
-
-John
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+bruno
