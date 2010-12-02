@@ -1,81 +1,89 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wy0-f174.google.com ([74.125.82.174]:38767 "EHLO
-	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753822Ab0L0OII (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 27 Dec 2010 09:08:08 -0500
-Received: by wyb28 with SMTP id 28so8482816wyb.19
-        for <linux-wireless@vger.kernel.org>; Mon, 27 Dec 2010 06:08:06 -0800 (PST)
-From: Ivo van Doorn <ivdoorn@gmail.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Subject: [PATCH 01/10] rt2x00: simplify txstatus_fifo handling
-Date: Mon, 27 Dec 2010 15:04:29 +0100
-Cc: linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com
+Received: from mail.atheros.com ([12.19.149.2]:59183 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755394Ab0LBLMs (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 2 Dec 2010 06:12:48 -0500
+Received: from mail.atheros.com ([10.10.20.105])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Thu, 02 Dec 2010 03:12:34 -0800
+From: Vasanthakumar Thiagarajan <vasanth@atheros.com>
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>
+Subject: [PATCH V2 14/27] ath9k_hw: Read spur channel information from eeprom for AR9485
+Date: Thu, 2 Dec 2010 03:06:58 -0800
+Message-ID: <1291288031-3409-15-git-send-email-vasanth@atheros.com>
+In-Reply-To: <1291288031-3409-1-git-send-email-vasanth@atheros.com>
+References: <1291288031-3409-1-git-send-email-vasanth@atheros.com>
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="us-ascii"
-Message-Id: <201012271504.30848.IvDoorn@gmail.com>
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Stezenbach <js@sig21.net>
+Also spur channel count and range is different for AR9485.
 
-Signed-off-by: Johannes Stezenbach <js@sig21.net>
-Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
+Signed-off-by: Vasanthakumar Thiagarajan <vasanth@atheros.com>
 ---
- drivers/net/wireless/rt2x00/rt2800pci.c |   18 ++----------------
- drivers/net/wireless/rt2x00/rt2x00.h    |    2 +-
- 2 files changed, 3 insertions(+), 17 deletions(-)
+ drivers/net/wireless/ath/ath9k/ar9003_phy.c |   35 ++++++++++++++++++++++++--
+ 1 files changed, 32 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/net/wireless/rt2x00/rt2800pci.c b/drivers/net/wireless/rt2x00/rt2800pci.c
-index baa1468..aa97971 100644
---- a/drivers/net/wireless/rt2x00/rt2800pci.c
-+++ b/drivers/net/wireless/rt2x00/rt2800pci.c
-@@ -688,14 +688,7 @@ static void rt2800pci_txdone(struct rt2x00_dev *rt2x00dev)
- 	u32 status;
- 	u8 qid;
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_phy.c b/drivers/net/wireless/ath/ath9k/ar9003_phy.c
+index 136e64a..bf686ac 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_phy.c
++++ b/drivers/net/wireless/ath/ath9k/ar9003_phy.c
+@@ -154,21 +154,50 @@ static void ar9003_hw_spur_mitigate_mrc_cck(struct ath_hw *ah,
+ 	static const u32 spur_freq[4] = { 2420, 2440, 2464, 2480 };
+ 	int cur_bb_spur, negative = 0, cck_spur_freq;
+ 	int i;
++	int range, max_spur_cnts, synth_freq;
++	u8 *spur_fbin_ptr = NULL;
  
--	while (!kfifo_is_empty(&rt2x00dev->txstatus_fifo)) {
--		/* Now remove the tx status from the FIFO */
--		if (kfifo_out(&rt2x00dev->txstatus_fifo, &status,
--			      sizeof(status)) != sizeof(status)) {
--			WARN_ON(1);
--			break;
--		}
--
-+	while (kfifo_get(&rt2x00dev->txstatus_fifo, &status)) {
- 		qid = rt2x00_get_field32(status, TX_STA_FIFO_PID_QUEUE);
- 		if (qid >= QID_RX) {
- 			/*
-@@ -803,14 +796,7 @@ static void rt2800pci_txstatus_interrupt(struct rt2x00_dev *rt2x00dev)
- 		if (!rt2x00_get_field32(status, TX_STA_FIFO_VALID))
- 			break;
- 
--		if (kfifo_is_full(&rt2x00dev->txstatus_fifo)) {
--			WARNING(rt2x00dev, "TX status FIFO overrun,"
--				" drop tx status report.\n");
--			break;
--		}
--
--		if (kfifo_in(&rt2x00dev->txstatus_fifo, &status,
--			     sizeof(status)) != sizeof(status)) {
-+		if (!kfifo_put(&rt2x00dev->txstatus_fifo, &status)) {
- 			WARNING(rt2x00dev, "TX status FIFO overrun,"
- 				"drop tx status report.\n");
- 			break;
-diff --git a/drivers/net/wireless/rt2x00/rt2x00.h b/drivers/net/wireless/rt2x00/rt2x00.h
-index c254d5a..af1d3ef 100644
---- a/drivers/net/wireless/rt2x00/rt2x00.h
-+++ b/drivers/net/wireless/rt2x00/rt2x00.h
-@@ -908,7 +908,7 @@ struct rt2x00_dev {
  	/*
- 	 * FIFO for storing tx status reports between isr and tasklet.
+ 	 * Need to verify range +/- 10 MHz in control channel, otherwise spur
+ 	 * is out-of-band and can be ignored.
  	 */
--	struct kfifo txstatus_fifo;
-+	DECLARE_KFIFO_PTR(txstatus_fifo, u32);
  
- 	/*
- 	 * Tasklet for processing tx status reports (rt2800pci).
+-	for (i = 0; i < 4; i++) {
++	if (AR_SREV_9485(ah)) {
++		spur_fbin_ptr = ar9003_get_spur_chan_ptr(ah,
++							 IS_CHAN_2GHZ(chan));
++		if (spur_fbin_ptr[0] == 0) /* No spur */
++			return;
++		max_spur_cnts = 5;
++		if (IS_CHAN_HT40(chan)) {
++			range = 19;
++			if (REG_READ_FIELD(ah, AR_PHY_GEN_CTRL,
++					   AR_PHY_GC_DYN2040_PRI_CH) == 0)
++				synth_freq = chan->channel + 10;
++			else
++				synth_freq = chan->channel - 10;
++		} else {
++			range = 10;
++			synth_freq = chan->channel;
++		}
++	} else {
++		range = 10;
++		max_spur_cnts = 4;
++		synth_freq = chan->channel;
++	}
++
++	for (i = 0; i < max_spur_cnts; i++) {
+ 		negative = 0;
+-		cur_bb_spur = spur_freq[i] - chan->channel;
++		if (AR_SREV_9485(ah))
++			cur_bb_spur = FBIN2FREQ(spur_fbin_ptr[i],
++					IS_CHAN_2GHZ(chan)) - synth_freq;
++		else
++			cur_bb_spur = spur_freq[i] - synth_freq;
+ 
+ 		if (cur_bb_spur < 0) {
+ 			negative = 1;
+ 			cur_bb_spur = -cur_bb_spur;
+ 		}
+-		if (cur_bb_spur < 10) {
++		if (cur_bb_spur < range) {
+ 			cck_spur_freq = (int)((cur_bb_spur << 19) / 11);
+ 
+ 			if (negative == 1)
 -- 
-1.7.2.3
+1.7.0.4
 
