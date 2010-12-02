@@ -1,55 +1,116 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qw0-f46.google.com ([209.85.216.46]:55276 "EHLO
-	mail-qw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754123Ab0LPT6r convert rfc822-to-8bit (ORCPT
+Received: from mail30f.wh2.ocn.ne.jp ([220.111.41.203]:28654 "HELO
+	mail30f.wh2.ocn.ne.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1751748Ab0LBKNU (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 16 Dec 2010 14:58:47 -0500
-Received: by qwa26 with SMTP id 26so3619405qwa.19
-        for <linux-wireless@vger.kernel.org>; Thu, 16 Dec 2010 11:58:47 -0800 (PST)
+	Thu, 2 Dec 2010 05:13:20 -0500
+Received: from vs3016.wh2.ocn.ne.jp (125.206.180.189)
+	by mail30f.wh2.ocn.ne.jp (RS ver 1.0.95vs) with SMTP id 3-0980344795
+	for <linux-wireless@vger.kernel.org>; Thu,  2 Dec 2010 19:13:17 +0900 (JST)
+Subject: [PATCH 2/3] lib: Improve EWMA efficiency by using bitshifts
+To: linville@tuxdriver.com
+From: Bruno Randolf <br1@einfach.org>
+Cc: randy.dunlap@oracle.com, br1@thinktube.com, peterz@infradead.org,
+	blp@cs.stanford.edu, linux-wireless@vger.kernel.org,
+	linux-kernel@vger.kernel.org, Lars_Ericsson@telia.com, j@w1.fi,
+	stefanr@s5r6.in-berlin.de, kosaki.motohiro@jp.fujitsu.com,
+	akpm@linux-foundation.org, kevin.granade@gmail.com,
+	johannes@sipsolutions.net
+Date: Thu, 02 Dec 2010 19:12:36 +0900
+Message-ID: <20101202101236.22988.1691.stgit@localhost6.localdomain6>
+In-Reply-To: <20101202101231.22988.33396.stgit@localhost6.localdomain6>
+References: <20101202101231.22988.33396.stgit@localhost6.localdomain6>
 MIME-Version: 1.0
-In-Reply-To: <1292525806.3612.31.camel@jlt3.sipsolutions.net>
-References: <1292524241-14837-1-git-send-email-javier@cozybit.com> <1292525806.3612.31.camel@jlt3.sipsolutions.net>
-From: Javier Cardona <javier@cozybit.com>
-Date: Thu, 16 Dec 2010 11:58:24 -0800
-Message-ID: <AANLkTimpmCdAx_8OqfqALwbWkX3NVaP98FzbxS4yJUFm@mail.gmail.com>
-Subject: Re: [PATCH] mac80211: Remove unused third address from mesh address
- extension header.
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	Steve Derosier <steve@cozybit.com>, devel@lists.open80211s.org,
-	linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Johannes,
+Using bitshifts instead of division and multiplication should improve
+performance. That requires weight and factor to be powers of two, but i think
+this is something we can live with.
 
-On Thu, Dec 16, 2010 at 10:56 AM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
-> On Thu, 2010-12-16 at 10:30 -0800, Javier Cardona wrote:
->> The Mesh Control header only includes 0, 1 or 2 addresses. If there is
->> one address, it should be interpreted as Address 4.  If there are 2,
->> they are interpreted as Addresses 5 and 6 (Address 4 being the 4th
->> address in the 802.11 header).
->
-> Is this a draft change? Not sure I understand.
+Thanks to Peter Zijlstra for the improved formula!
 
-Yes, the address extension used to hold up to 3 addresses instead of
-the current 2.  I don't recall the draft version when this changed,
-but it is very unlikely that it will change again.  See section
-7.1.3.6.3 in current draft (8.0).
+Signed-off-by: Bruno Randolf <br1@einfach.org>
+---
+ include/linux/average.h |    4 +---
+ lib/average.c           |   29 +++++++++++++++++++++--------
+ 2 files changed, 22 insertions(+), 11 deletions(-)
 
-Also, note that the extra address that I'm removing was not being
-used.  I thought I better remove it before someone does start using
-it.
+diff --git a/include/linux/average.h b/include/linux/average.h
+index 7706e40..c6028fd 100644
+--- a/include/linux/average.h
++++ b/include/linux/average.h
+@@ -1,8 +1,6 @@
+ #ifndef _LINUX_AVERAGE_H
+ #define _LINUX_AVERAGE_H
+ 
+-#include <linux/kernel.h>
+-
+ /* Exponentially weighted moving average (EWMA) */
+ 
+ /* For more documentation see lib/average.c */
+@@ -26,7 +24,7 @@ extern struct ewma *ewma_add(struct ewma *avg, unsigned long val);
+  */
+ static inline unsigned long ewma_read(const struct ewma *avg)
+ {
+-	return DIV_ROUND_CLOSEST(avg->internal, avg->factor);
++	return avg->internal >> avg->factor;
+ }
+ 
+ #endif /* _LINUX_AVERAGE_H */
+diff --git a/lib/average.c b/lib/average.c
+index f1d1b46..f438b40 100644
+--- a/lib/average.c
++++ b/lib/average.c
+@@ -24,18 +24,31 @@
+  * ewma_init() - Initialize EWMA parameters
+  * @avg: Average structure
+  * @factor: Factor to use for the scaled up internal value. The maximum value
+- *	of averages can be ULONG_MAX/(factor*weight).
++ *	of averages can be ULONG_MAX/(factor*weight). For performance reasons
++ *	factor has to be a power of 2.
+  * @weight: Exponential weight, or decay rate. This defines how fast the
+- *	influence of older values decreases. Has to be bigger than 1.
++ *	influence of older values decreases. For performance reasons weight has
++ *	to be a power of 2.
+  *
+  * Initialize the EWMA parameters for a given struct ewma @avg.
+  */
+ void ewma_init(struct ewma *avg, unsigned long factor, unsigned long weight)
+ {
+-	WARN_ON(weight <= 1 || factor == 0);
++	int n;
++
++	/* get bitshift for weight */
++	for (n = 0; !(weight & 1); n++)
++		weight = weight >> 1;
++	WARN_ON(weight > 1 || n < 1);
++	avg->weight = n;
++
++	/* get bitshift for factor */
++	for (n = 0; !(factor & 1); n++)
++		factor = factor >> 1;
++	WARN_ON(factor > 1);
++	avg->factor = n;
++
+ 	avg->internal = 0;
+-	avg->weight = weight;
+-	avg->factor = factor;
+ }
+ EXPORT_SYMBOL(ewma_init);
+ 
+@@ -49,9 +62,9 @@ EXPORT_SYMBOL(ewma_init);
+ struct ewma *ewma_add(struct ewma *avg, unsigned long val)
+ {
+ 	avg->internal = avg->internal  ?
+-		(((avg->internal * (avg->weight - 1)) +
+-			(val * avg->factor)) / avg->weight) :
+-		(val * avg->factor);
++		(((avg->internal << avg->weight) - avg->internal) +
++			(val << avg->factor)) >> avg->weight :
++		(val << avg->factor);
+ 	return avg;
+ }
+ EXPORT_SYMBOL(ewma_add);
 
-Cheers,
-
-Javier
-
-
-
--- 
-Javier Cardona
-cozybit Inc.
-http://www.cozybit.com
