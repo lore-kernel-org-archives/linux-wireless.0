@@ -1,92 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f46.google.com ([209.85.214.46]:56302 "EHLO
-	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752613Ab0LZT5H (ORCPT
+Received: from mail-gy0-f174.google.com ([209.85.160.174]:37778 "EHLO
+	mail-gy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757782Ab0LBXcL (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 26 Dec 2010 14:57:07 -0500
-Received: by bwz15 with SMTP id 15so9183392bwz.19
-        for <linux-wireless@vger.kernel.org>; Sun, 26 Dec 2010 11:57:05 -0800 (PST)
-Message-Id: <E1PWwiD-0003TF-Oo@debian64.daheim>
-Subject: [RFC] mac80211: ignore PSM bit of reordered frames
-To: linux-wireless@vger.kernel.org
-From: Christian Lamparter <chunkeey@googlemail.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>
-Date: Sun, 26 Dec 2010 20:56:15 +0100
+	Thu, 2 Dec 2010 18:32:11 -0500
+Received: by gyb11 with SMTP id 11so4474432gyb.19
+        for <linux-wireless@vger.kernel.org>; Thu, 02 Dec 2010 15:32:10 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="us-ascii"
+In-Reply-To: <4CF7AC31.2020206@gmx.net>
+References: <4CF66912.8050302@gmx.net>
+	<4CF7AC31.2020206@gmx.net>
+Date: Fri, 3 Dec 2010 01:32:08 +0200
+Message-ID: <AANLkTi=z9uhX-ZU-gn3X_3UKhPb4KRaia-TzHiXF4fOe@mail.gmail.com>
+Subject: Re: EAP Identity Response dropped on 5GHz
+From: Eliad Peller <eliad@wizery.com>
+To: Wolfgang Breyha <wbreyha@gmx.net>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch tackles one of the problems of my
-reorder release timer patch from August.
+hi Wolfgang,
 
-<http://www.spinics.net/lists/linux-wireless/msg57214.html>
-=>
-What if the reorder release triggers and ap_sta_ps_end
-(called by ieee80211_rx_h_sta_process) accidentally clears
-the WLAN_STA_PS_STA flag, because 100ms ago - when the STA
-was still active - frames were put into the reorder buffer.
+On Thu, Dec 2, 2010 at 4:24 PM, Wolfgang Breyha <wbreyha@gmx.net> wrote:
+> But introducing a usleep(100000) in
+> wpa_supplicant/src/eap_peer/eap.c:136, or in other words....
+>> wpa_supplicant logs:
+>>
+>>> 1291215721.998646: Process pending EAPOL frame that was received just before association notification
+>>> 1291215721.998677: RX EAPOL from 00:26:cb:xx:xx:xx
+>>> 1291215721.998713: Setting authentication timeout: 70 sec 0 usec
+>>> 1291215721.998747: EAPOL: Received EAP-Packet frame
+>>> 1291215721.998778: EAPOL: SUPP_PAE entering state RESTART
+>>> 1291215721.998806: EAP: EAP entering state INITIALIZE
+> ............ HERE ................
+>>> 1291215721.998835: EAP: EAP entering state IDLE
+>>> 1291215721.998865: EAPOL: SUPP_PAE entering state AUTHENTICATING
+>>> 1291215721.998895: EAPOL: SUPP_BE entering state REQUEST
+>>> 1291215721.998924: EAPOL: getSuppRsp
+>>> 1291215721.998952: EAP: EAP entering state RECEIVED
 
-Signed-off-by: Christian Lamparter <chunkeey@googlemail.com>
----
-Alternatively, we could flush the per-tid STA reorder buffer
-content in ap_sta_ps_start, so the buffer is empty.
+>
+> I haven't found the source of this race condition which causes this. The
+> reason why it only happens on 5GHz channels is unknown as well.
+>
 
----
- net/mac80211/ieee80211_i.h |    2 ++
- net/mac80211/rx.c          |    4 ++++
- 2 files changed, 6 insertions(+), 0 deletions(-)
+sounds a bit similar to another case i've encountered:
+http://lists.shmoo.com/pipermail/hostap/2010-November/021940.html
 
-diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
-index a0cf5ab..bb71fe3 100644
---- a/net/mac80211/ieee80211_i.h
-+++ b/net/mac80211/ieee80211_i.h
-@@ -168,6 +168,7 @@ typedef unsigned __bitwise__ ieee80211_rx_result;
-  * @IEEE80211_RX_FRAGMENTED: fragmented frame
-  * @IEEE80211_RX_AMSDU: a-MSDU packet
-  * @IEEE80211_RX_MALFORMED_ACTION_FRM: action frame is malformed
-+ * @IEEE80211_RX_DEFERED_RELEASE: frame was subjected to receive reordering
-  *
-  * These are per-frame flags that are attached to a frame in the
-  * @rx_flags field of &struct ieee80211_rx_status.
-@@ -178,6 +179,7 @@ enum ieee80211_packet_rx_flags {
- 	IEEE80211_RX_FRAGMENTED			= BIT(2),
- 	IEEE80211_RX_AMSDU			= BIT(3),
- 	IEEE80211_RX_MALFORMED_ACTION_FRM	= BIT(4),
-+	IEEE80211_RX_DEFERED_RELEASE		= BIT(5),
- };
- 
- /**
-diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
-index b6c2a30..e612805 100644
---- a/net/mac80211/rx.c
-+++ b/net/mac80211/rx.c
-@@ -537,6 +537,7 @@ static void ieee80211_release_reorder_frame(struct ieee80211_hw *hw,
- 					    struct sk_buff_head *frames)
- {
- 	struct sk_buff *skb = tid_agg_rx->reorder_buf[index];
-+	struct ieee80211_rx_status *status;
- 
- 	lockdep_assert_held(&tid_agg_rx->reorder_lock);
- 
-@@ -546,6 +547,8 @@ static void ieee80211_release_reorder_frame(struct ieee80211_hw *hw,
- 	/* release the frame from the reorder ring buffer */
- 	tid_agg_rx->stored_mpdu_num--;
- 	tid_agg_rx->reorder_buf[index] = NULL;
-+	status = IEEE80211_SKB_RXCB(skb);
-+	status->rx_flags |= IEEE80211_RX_DEFERED_RELEASE;
- 	__skb_queue_tail(frames, skb);
- 
- no_frame:
-@@ -1185,6 +1188,7 @@ ieee80211_rx_h_sta_process(struct ieee80211_rx_data *rx)
- 	 * exchange sequence.
- 	 */
- 	if (!ieee80211_has_morefrags(hdr->frame_control) &&
-+	    !(status->rx_flags & IEEE80211_RX_DEFERED_RELEASE) &&
- 	    (rx->sdata->vif.type == NL80211_IFTYPE_AP ||
- 	     rx->sdata->vif.type == NL80211_IFTYPE_AP_VLAN)) {
- 		if (test_sta_flags(sta, WLAN_STA_PS_STA)) {
--- 
-1.7.2.3
-
+Eliad.
