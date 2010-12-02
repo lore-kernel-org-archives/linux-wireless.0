@@ -1,66 +1,116 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wy0-f174.google.com ([74.125.82.174]:62173 "EHLO
-	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752541Ab0LVO1q (ORCPT
+Received: from mail30t.wh2.ocn.ne.jp ([125.206.180.136]:47313 "HELO
+	mail30t.wh2.ocn.ne.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1751748Ab0LBKvR (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 22 Dec 2010 09:27:46 -0500
-Received: by wyb28 with SMTP id 28so5082982wyb.19
-        for <linux-wireless@vger.kernel.org>; Wed, 22 Dec 2010 06:27:44 -0800 (PST)
-From: Arik Nemtsov <arik@wizery.com>
-To: <linux-wireless@vger.kernel.org>
-Cc: Luciano Coelho <luciano.coelho@nokia.com>,
-	Arik Nemtsov <arik@wizery.com>
-Subject: [PATCH v2 00/18] AP mode support for wl12xx
-Date: Wed, 22 Dec 2010 16:27:19 +0200
-Message-Id: <1293028057-6212-1-git-send-email-arik@wizery.com>
+	Thu, 2 Dec 2010 05:51:17 -0500
+Received: from vs3014.wh2.ocn.ne.jp (125.206.180.187)
+	by mail30t.wh2.ocn.ne.jp (RS ver 1.0.95vs) with SMTP id 3-0773857075
+	for <linux-wireless@vger.kernel.org>; Thu,  2 Dec 2010 19:51:16 +0900 (JST)
+Subject: [PATCH v2] lib: Improve EWMA efficiency by using bitshifts
+To: linville@tuxdriver.com
+From: Bruno Randolf <br1@einfach.org>
+Cc: randy.dunlap@oracle.com, br1@thinktube.com, peterz@infradead.org,
+	blp@cs.stanford.edu, linux-wireless@vger.kernel.org,
+	linux-kernel@vger.kernel.org, Lars_Ericsson@telia.com, j@w1.fi,
+	stefanr@s5r6.in-berlin.de, kosaki.motohiro@jp.fujitsu.com,
+	akpm@linux-foundation.org, kevin.granade@gmail.com,
+	johannes@sipsolutions.net
+Date: Thu, 02 Dec 2010 19:50:37 +0900
+Message-ID: <20101202105037.5654.62835.stgit@localhost6.localdomain6>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-These patches add access point mode support to the wl12xx driver.
-This mode uses a separate firmware and has a different initialization
-sequence.
+Using bitshifts instead of division and multiplication should improve
+performance. That requires weight and factor to be powers of two, but i think
+this is something we can live with.
 
-In all instances, the flow has been split according to the operating
-mode of the driver (AP/STA), so as not to affect STA mode functionality.
+Thanks to Peter Zijlstra for the improved formula!
 
-v1->2: rebased on latest wl12xx tree
+Signed-off-by: Bruno Randolf <br1@einfach.org>
 
-Arik Nemtsov (18):
-  wl1271: Add AP related configuration to conf_drv_settings
-  wl1271: AP mode - AP specific CMD_CONFIGURE sub-commands
-  wl1271: AP mode - add AP specific event
-  wl1271: AP-mode high level commands
-  wl1271: AP mode - workaround for FW bug on station remove
-  wl1271: AP mode - init sequence
-  wl1271: AP specific RX filter configuration
-  wl1271: Add AP related definitions to HOST-FW interface
-  wl1271: Configure AP on BSS info change
-  wl1271: AP mode config in ieee80211_ops.config
-  wl1271: AP mode - change filter config
-  wl1271: AP mode - add STA add/remove ops
-  wl1271: AP mode - changes in TX path
-  wl1271: AP mode - record TX configuration settings
-  wl1271: AP mode - encryption support
-  wl1271: AP mode - fetch appropriate firmware for AP
-  wl1271: Read MAC address from NVS file on HW startup
-  wl1271: Enable AP-mode
+--
 
- drivers/net/wireless/wl12xx/acx.c          |   62 +++-
- drivers/net/wireless/wl12xx/acx.h          |   31 ++-
- drivers/net/wireless/wl12xx/boot.c         |    6 +-
- drivers/net/wireless/wl12xx/boot.h         |    3 +
- drivers/net/wireless/wl12xx/cmd.c          |  300 +++++++++++-
- drivers/net/wireless/wl12xx/cmd.h          |  143 +++++-
- drivers/net/wireless/wl12xx/conf.h         |   26 +-
- drivers/net/wireless/wl12xx/event.c        |    7 +-
- drivers/net/wireless/wl12xx/event.h        |    8 +-
- drivers/net/wireless/wl12xx/init.c         |  352 ++++++++++---
- drivers/net/wireless/wl12xx/init.h         |    5 +-
- drivers/net/wireless/wl12xx/main.c         |  752 ++++++++++++++++++++++------
- drivers/net/wireless/wl12xx/rx.h           |   12 +-
- drivers/net/wireless/wl12xx/tx.c           |   70 ++-
- drivers/net/wireless/wl12xx/tx.h           |   13 +-
- drivers/net/wireless/wl12xx/wl12xx.h       |   68 +++-
- drivers/net/wireless/wl12xx/wl12xx_80211.h |    5 +
- 17 files changed, 1582 insertions(+), 281 deletions(-)
+v2:	use log2.h functions
+---
+ include/linux/average.h |    4 +---
+ lib/average.c           |   20 ++++++++++++--------
+ 2 files changed, 13 insertions(+), 11 deletions(-)
+
+diff --git a/include/linux/average.h b/include/linux/average.h
+index 7706e40..c6028fd 100644
+--- a/include/linux/average.h
++++ b/include/linux/average.h
+@@ -1,8 +1,6 @@
+ #ifndef _LINUX_AVERAGE_H
+ #define _LINUX_AVERAGE_H
+ 
+-#include <linux/kernel.h>
+-
+ /* Exponentially weighted moving average (EWMA) */
+ 
+ /* For more documentation see lib/average.c */
+@@ -26,7 +24,7 @@ extern struct ewma *ewma_add(struct ewma *avg, unsigned long val);
+  */
+ static inline unsigned long ewma_read(const struct ewma *avg)
+ {
+-	return DIV_ROUND_CLOSEST(avg->internal, avg->factor);
++	return avg->internal >> avg->factor;
+ }
+ 
+ #endif /* _LINUX_AVERAGE_H */
+diff --git a/lib/average.c b/lib/average.c
+index f1d1b46..5576c28 100644
+--- a/lib/average.c
++++ b/lib/average.c
+@@ -8,6 +8,7 @@
+ #include <linux/module.h>
+ #include <linux/average.h>
+ #include <linux/bug.h>
++#include <linux/log2.h>
+ 
+ /**
+  * DOC: Exponentially Weighted Moving Average (EWMA)
+@@ -24,18 +25,21 @@
+  * ewma_init() - Initialize EWMA parameters
+  * @avg: Average structure
+  * @factor: Factor to use for the scaled up internal value. The maximum value
+- *	of averages can be ULONG_MAX/(factor*weight).
++ *	of averages can be ULONG_MAX/(factor*weight). For performance reasons
++ *	factor has to be a power of 2.
+  * @weight: Exponential weight, or decay rate. This defines how fast the
+- *	influence of older values decreases. Has to be bigger than 1.
++ *	influence of older values decreases. For performance reasons weight has
++ *	to be a power of 2.
+  *
+  * Initialize the EWMA parameters for a given struct ewma @avg.
+  */
+ void ewma_init(struct ewma *avg, unsigned long factor, unsigned long weight)
+ {
+-	WARN_ON(weight <= 1 || factor == 0);
++	WARN_ON(!is_power_of_2(weight) || !is_power_of_2(factor));
++
++	avg->weight = ilog2(weight);
++	avg->factor = ilog2(factor);
+ 	avg->internal = 0;
+-	avg->weight = weight;
+-	avg->factor = factor;
+ }
+ EXPORT_SYMBOL(ewma_init);
+ 
+@@ -49,9 +53,9 @@ EXPORT_SYMBOL(ewma_init);
+ struct ewma *ewma_add(struct ewma *avg, unsigned long val)
+ {
+ 	avg->internal = avg->internal  ?
+-		(((avg->internal * (avg->weight - 1)) +
+-			(val * avg->factor)) / avg->weight) :
+-		(val * avg->factor);
++		(((avg->internal << avg->weight) - avg->internal) +
++			(val << avg->factor)) >> avg->weight :
++		(val << avg->factor);
+ 	return avg;
+ }
+ EXPORT_SYMBOL(ewma_add);
 
