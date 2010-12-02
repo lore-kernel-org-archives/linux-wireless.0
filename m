@@ -1,173 +1,98 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f46.google.com ([209.85.161.46]:62179 "EHLO
-	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752904Ab0LGJqw (ORCPT
+Received: from mail.candelatech.com ([208.74.158.172]:60701 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757895Ab0LBXxv (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 7 Dec 2010 04:46:52 -0500
-Received: by fxm20 with SMTP id 20so5139428fxm.19
-        for <linux-wireless@vger.kernel.org>; Tue, 07 Dec 2010 01:46:51 -0800 (PST)
-From: Helmut Schaa <helmut.schaa@googlemail.com>
-To: linux-wireless@vger.kernel.org
-Cc: Helmut Schaa <helmut.schaa@googlemail.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>
-Subject: [RFC] cfg80211: Make NL80211_CMD_SET_REG synchronous
-Date: Tue,  7 Dec 2010 10:45:26 +0100
-Message-Id: <1291715126-7652-1-git-send-email-helmut.schaa@googlemail.com>
+	Thu, 2 Dec 2010 18:53:51 -0500
+Received: from [192.168.100.195] (firewall.candelatech.com [70.89.124.249])
+	(authenticated bits=0)
+	by ns3.lanforge.com (8.14.2/8.14.2) with ESMTP id oB2NrmuT014520
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
+	for <linux-wireless@vger.kernel.org>; Thu, 2 Dec 2010 15:53:49 -0800
+Message-ID: <4CF8318C.3040407@candelatech.com>
+Date: Thu, 02 Dec 2010 15:53:48 -0800
+From: Ben Greear <greearb@candelatech.com>
+MIME-Version: 1.0
+To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: ath9k:  Crash in ieee80211_rx on module remove.
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-A user space caller of NL80211_CMD_SET_REG previously had no chance to
-verify if the regulatory domain change it requested already happened.
-Listening to NL80211_CMD_REG_CHANGE is not enough since it won't be
-triggered when the regulatory domain didn't change (for example because
-it was already the same before).
+Here's a new one.  Happened on 'rmmod ath9k', had maybe 80
+STAs configured.
 
-Fix this by making NL80211_CMD_SET_REG synchronous by adding a
-completion struct to the regulatory_hint_user function and wait for the
-completion of the regulatory request before returning.
+(gdb) l *(ieee80211_rx+0x781)
+0x147cb is in ieee80211_rx (/home/greearb/git/linux.wireless-testing/arch/x86/include/asm/processor.h:837).
+832	 * It's not worth to care about 3dnow prefetches for the K6
+833	 * because they are microcoded there and very slow.
+834	 */
+835	static inline void prefetch(const void *x)
+836	{
+837		alternative_input(BASE_PREFETCH,
+838				  "prefetchnta (%1)",
+839				  X86_FEATURE_XMM,
+840				  "r" (x));
+841	}
+(gdb)
 
-This fixes a problem with hostapd setting the regulatory domain but
-reading the channel list directly after NL80211_CMD_SET_REG returned
-which resulted in an incorrect channel list and thus prohibited the use
-of channels allowed within the new regulatory domain. This applies at
-least to drivers not enforcing their own regulatory domain (for example
-rt2x00).
 
-Cc: Johannes Berg <johannes@sipsolutions.net>
-Cc: "Luis R. Rodriguez" <lrodriguez@atheros.com> 
-Signed-off-by: Helmut Schaa <helmut.schaa@googlemail.com>
----
+BUG: unable to handle kernel paging request at 00100100
+IP: [<f91a87a7>] ieee80211_rx+0x781/0x826 [mac80211]
+*pde = 00000000
+Oops: 0000 [#1] SMP DEBUG_PAGEALLOC
+last sysfs file: /sys/devices/pci0000:00/0000:00:1e.0/0000:08:01.0/ieee80211/wiphy0/index
+Modules linked in: aes_i586 aes_generic 8021q garp stp llc michael_mic macvlan pktgen fuse nfs lockd fscache nfs_acl auth_rpcgss sunrpc ipv6 uinput ar]
 
-Based on a user report in the rt2x00 forums.
+Pid: 5, comm: kworker/u:0 Tainted: P            2.6.37-rc4-wl+ #54 PDSBM/PDSBM
+EIP: 0060:[<f91a87a7>] EFLAGS: 00010246 CPU: 1
+EIP is at ieee80211_rx+0x781/0x826 [mac80211]
+EAX: 00000000 EBX: 00100100 ECX: e04a98bc EDX: 00000003
+ESI: e04aa560 EDI: f50a9e5c EBP: f50a9e6c ESP: f50a9e04
+  DS: 007b ES: 007b FS: 00d8 GS: 0000 SS: 0068
+Process kworker/u:0 (pid: 5, ti=f50a8000 task=f506a9c0 task.ti=f507e000)
+Stack:
+  00000002 00000001 00000000 f91a8124 f8e22025 00000020 f5002e00 e0f68000
+  f8f7ae44 f3448c34 dcbf3500 dc898040 dc89804a f4a03700 f3448460 e04a9540
+  00000000 00000000 00000000 00000010 00000000 00000000 00100100 dcbf3500
+Call Trace:
+  [<f91a8124>] ? ieee80211_rx+0xfe/0x826 [mac80211]
+  [<f8e22025>] ? ath_rxbuf_alloc+0x25/0x7c [ath]
+  [<f8f6cf3e>] ? ath_rx_send_to_mac80211+0x5a/0x60 [ath9k]
+  [<f8f6e883>] ? ath_rx_tasklet+0x12dd/0x1377 [ath9k]
+  [<f8f69a29>] ? ath9k_ioread32+0x25/0x5b [ath9k]
+  [<7845a68d>] ? trace_hardirqs_on+0xb/0xd
+  [<f8f6c921>] ? ath9k_tasklet+0x98/0x127 [ath9k]
+  [<7843bba5>] ? tasklet_action+0x88/0xe3
+  [<7843c121>] ? __do_softirq+0x85/0x142
+  [<7843c09c>] ? __do_softirq+0x0/0x142
+  <IRQ>
+  [<7843bf43>] ? irq_exit+0x35/0x69
+  [<78404245>] ? do_IRQ+0x8e/0xa2
+  [<784036ae>] ? common_interrupt+0x2e/0x40
+  [<784b007b>] ? hugetlb_change_protection+0x12b/0x137
+  [<784b6a9b>] ? kfree+0xd2/0xde
+  [<786ed1b0>] ? skb_release_data+0x89/0x8d
+  [<786ed1b0>] ? skb_release_data+0x89/0x8d
+  [<786ed1b0>] ? skb_release_data+0x89/0x8d
+  [<786ecea6>] ? __kfree_skb+0x12/0x6d
+  [<786ecf57>] ? kfree_skb+0x2a/0x2c
+  [<f91a1e57>] ? ieee80211_iface_work+0x23a/0x282 [mac80211]
+  [<78446fd4>] ? process_one_work+0x1af/0x2bf
+  [<78446f63>] ? process_one_work+0x13e/0x2bf
+  [<f91a1c1d>] ? ieee80211_iface_work+0x0/0x282 [mac80211]
+  [<78448722>] ? worker_thread+0xf9/0x1bf
+  [<78448629>] ? worker_thread+0x0/0x1bf
+  [<7844b252>] ? kthread+0x62/0x67
+  [<7844b1f0>] ? kthread+0x0/0x67
+  [<784036c6>] ? kernel_thread_helper+0x6/0x1a
+Code: ff 8b 55 c0 31 c9 89 75 d4 89 45 d8 8d 45 cc e8 61 ef ff ff 89 de 8b 03 89 45 f0 8b 1f e8 96 0c 2a 7f 85 c0 74 05 e8 57 d0 ff ff <8b> 03 0f 18 0
+EIP: [<f91a87a7>] ieee80211_rx+0x781/0x826 [mac80211] SS:ESP 0068:f50a9e04
+CR2: 0000000000100100
+---[ end trace d95cac017068c370 ]---
+sta32: no IPv6 routers present
 
-Any better ideas? Any objections?
-
-Thanks,
-Helmut
-
- include/net/regulatory.h |    1 +
- net/wireless/nl80211.c   |    5 ++++-
- net/wireless/reg.c       |   15 +++++++++++----
- net/wireless/reg.h       |    2 +-
- 4 files changed, 17 insertions(+), 6 deletions(-)
-
-diff --git a/include/net/regulatory.h b/include/net/regulatory.h
-index 356d6e3..e58a744 100644
---- a/include/net/regulatory.h
-+++ b/include/net/regulatory.h
-@@ -62,6 +62,7 @@ struct regulatory_request {
- 	bool intersect;
- 	bool processed;
- 	enum environment_cap country_ie_env;
-+	struct completion *completion;
- 	struct list_head list;
- };
- 
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index 56508d4..8e76a63 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -2535,6 +2535,7 @@ static int parse_reg_rule(struct nlattr *tb[],
- 
- static int nl80211_req_set_reg(struct sk_buff *skb, struct genl_info *info)
- {
-+	DECLARE_COMPLETION_ONSTACK(completion);
- 	int r;
- 	char *data = NULL;
- 
-@@ -2556,7 +2557,9 @@ static int nl80211_req_set_reg(struct sk_buff *skb, struct genl_info *info)
- 
- 	data = nla_data(info->attrs[NL80211_ATTR_REG_ALPHA2]);
- 
--	r = regulatory_hint_user(data);
-+	r = regulatory_hint_user(data, &completion);
-+
-+	wait_for_completion_interruptible(&completion);
- 
- 	return r;
- }
-diff --git a/net/wireless/reg.c b/net/wireless/reg.c
-index 5ed615f..84787e3 100644
---- a/net/wireless/reg.c
-+++ b/net/wireless/reg.c
-@@ -1428,6 +1428,7 @@ static void reg_process_hint(struct regulatory_request *reg_request)
- 	int r = 0;
- 	struct wiphy *wiphy = NULL;
- 	enum nl80211_reg_initiator initiator = reg_request->initiator;
-+	struct completion *completion = reg_request->completion;
- 
- 	BUG_ON(!reg_request->alpha2);
- 
-@@ -1437,7 +1438,7 @@ static void reg_process_hint(struct regulatory_request *reg_request)
- 	if (reg_request->initiator == NL80211_REGDOM_SET_BY_DRIVER &&
- 	    !wiphy) {
- 		kfree(reg_request);
--		return;
-+		goto out;
- 	}
- 
- 	r = __regulatory_hint(wiphy, reg_request);
-@@ -1445,6 +1446,11 @@ static void reg_process_hint(struct regulatory_request *reg_request)
- 	if (r == -EALREADY && wiphy &&
- 	    wiphy->flags & WIPHY_FLAG_STRICT_REGULATORY)
- 		wiphy_update_regulatory(wiphy, initiator);
-+
-+out:
-+	/* Mark this reg request done */
-+	if (completion)
-+		complete_all(completion);
- }
- 
- /*
-@@ -1571,7 +1577,7 @@ static int regulatory_hint_core(const char *alpha2)
- }
- 
- /* User hints */
--int regulatory_hint_user(const char *alpha2)
-+int regulatory_hint_user(const char *alpha2, struct completion *completion)
- {
- 	struct regulatory_request *request;
- 
-@@ -1585,6 +1591,7 @@ int regulatory_hint_user(const char *alpha2)
- 	request->alpha2[0] = alpha2[0];
- 	request->alpha2[1] = alpha2[1];
- 	request->initiator = NL80211_REGDOM_SET_BY_USER;
-+	request->completion = completion;
- 
- 	queue_regulatory_request(request);
- 
-@@ -1787,7 +1794,7 @@ static void restore_regulatory_settings(bool reset_user)
- 	 * settings, user regulatory settings takes precedence.
- 	 */
- 	if (is_an_alpha2(alpha2))
--		regulatory_hint_user(user_alpha2);
-+		regulatory_hint_user(user_alpha2, NULL);
- }
- 
- 
-@@ -2149,7 +2156,7 @@ int __init regulatory_init(void)
- 	 * as a user hint.
- 	 */
- 	if (!is_world_regdom(ieee80211_regdom))
--		regulatory_hint_user(ieee80211_regdom);
-+		regulatory_hint_user(ieee80211_regdom, NULL);
- 
- 	return 0;
- }
-diff --git a/net/wireless/reg.h b/net/wireless/reg.h
-index c4695d0..8be4d42 100644
---- a/net/wireless/reg.h
-+++ b/net/wireless/reg.h
-@@ -6,7 +6,7 @@ extern const struct ieee80211_regdomain *cfg80211_regdomain;
- bool is_world_regdom(const char *alpha2);
- bool reg_is_valid_request(const char *alpha2);
- 
--int regulatory_hint_user(const char *alpha2);
-+int regulatory_hint_user(const char *alpha2, struct completion *completion);
- 
- void reg_device_remove(struct wiphy *wiphy);
- 
 -- 
-1.7.1
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
 
