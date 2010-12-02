@@ -1,53 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from netrider.rowland.org ([192.131.102.5]:38155 "HELO
-	netrider.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1757288Ab0LUA5u (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 20 Dec 2010 19:57:50 -0500
-Date: Mon, 20 Dec 2010 19:57:48 -0500 (EST)
-From: Alan Stern <stern@rowland.harvard.edu>
-To: "Rafael J. Wysocki" <rjw@sisk.pl>
-cc: Ohad Ben-Cohen <ohad@wizery.com>,
-	<linux-pm@lists.linux-foundation.org>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	<linux-wireless@vger.kernel.org>, <linux-mmc@vger.kernel.org>,
-	Ido Yariv <ido@wizery.com>,
-	Kevin Hilman <khilman@deeprootsystems.com>
-Subject: Re: [linux-pm] subtle pm_runtime_put_sync race and sdio functions
-In-Reply-To: <201012202217.09374.rjw@sisk.pl>
-Message-ID: <Pine.LNX.4.44L0.1012201946330.19558-100000@netrider.rowland.org>
+Received: from mail.atheros.com ([12.19.149.2]:59021 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755440Ab0LBLHz (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 2 Dec 2010 06:07:55 -0500
+Received: from mail.atheros.com ([10.10.20.105])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Thu, 02 Dec 2010 03:07:41 -0800
+From: Vasanthakumar Thiagarajan <vasanth@atheros.com>
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>
+Subject: [PATCH V2 01/27] ath9k_hw: Define hw version macros for AR9485
+Date: Thu, 2 Dec 2010 03:06:45 -0800
+Message-ID: <1291288031-3409-2-git-send-email-vasanth@atheros.com>
+In-Reply-To: <1291288031-3409-1-git-send-email-vasanth@atheros.com>
+References: <1291288031-3409-1-git-send-email-vasanth@atheros.com>
 MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 20 Dec 2010, Rafael J. Wysocki wrote:
+AR9485 is a single chain and single band (2.4 Ghz) chip.
 
-> > > In that case, if a device if flagged as "runtime only", we can avoid
-> > > calling pm_runtime_get_noirq() for it in dpm_prepare() and, analogously,
-> > > calling pm_runtime_put_sync() for it in dpm_complete().  However, we will have
-> > > to fail system suspend (or hibernation) if a "runtime only" device has the
-> > > power.runtime_auto flag unset.
-> > 
-> > Or more generally, if pm_runtime_suspended() doesn't return 'true' for 
-> > the device.
-> 
-> That's not necessary, because the device may be suspended using
-> pm_runtime_suspend() later than we check pm_runtime_suspended().
+Signed-off-by: Vasanthakumar Thiagarajan <vasanth@atheros.com>
+---
+ drivers/net/wireless/ath/ath9k/reg.h |    8 ++++++++
+ 1 files changed, 8 insertions(+), 0 deletions(-)
 
-What if the device has a child in the RPM_ACTIVE state?  Then 
-pm_runtime_suspend() won't do anything, even if the child really is 
-dpm-suspended.
-
-> I'd use the "runtime only" (or perhaps better "no_dpm") flag as a declaration
-> (if set) that the device is going to be suspended with the help of "runtime"
-> callbacks and the driver takes the responsibility for getting things right.
-
-I'm still not sure about this; the design isn't clear.  Are these
-runtime callbacks going to come from the PM core or from the driver?  
-If from the driver, how will the driver know when to issue them?  What
-about coordinating async suspends (the device must be suspended after
-its children and before its parent)?
-
-Alan Stern
+diff --git a/drivers/net/wireless/ath/ath9k/reg.h b/drivers/net/wireless/ath/ath9k/reg.h
+index c2472ed..0153ba1 100644
+--- a/drivers/net/wireless/ath/ath9k/reg.h
++++ b/drivers/net/wireless/ath/ath9k/reg.h
+@@ -787,6 +787,8 @@
+ #define AR_SREV_REVISION_9271_11	1
+ #define AR_SREV_VERSION_9300		0x1c0
+ #define AR_SREV_REVISION_9300_20	2 /* 2.0 and 2.1 */
++#define AR_SREV_VERSION_9485		0x240
++#define AR_SREV_REVISION_9485_10	0
+ 
+ #define AR_SREV_5416(_ah) \
+ 	(((_ah)->hw_version.macVersion == AR_SREV_VERSION_5416_PCI) || \
+@@ -859,6 +861,12 @@
+ 	 (((_ah)->hw_version.macVersion == AR_SREV_VERSION_9300) && \
+ 	  ((_ah)->hw_version.macRev >= AR_SREV_REVISION_9300_20)))
+ 
++#define AR_SREV_9485(_ah) \
++	(((_ah)->hw_version.macVersion == AR_SREV_VERSION_9485))
++#define AR_SREV_9485_10(_ah) \
++	(AR_SREV_9485(_ah) && \
++	 ((_ah)->hw_version.macRev == AR_SREV_REVISION_9485_10))
++
+ #define AR_SREV_9285E_20(_ah) \
+     (AR_SREV_9285_12_OR_LATER(_ah) && \
+      ((REG_READ(_ah, AR_AN_SYNTH9) & 0x7) == 0x1))
+-- 
+1.7.0.4
 
