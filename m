@@ -1,47 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from pdtms1.pdt.com ([207.18.22.4]:53183 "EHLO mail.pdt.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S932676Ab0LTRRV (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 20 Dec 2010 12:17:21 -0500
-From: "Brzezowski, Karen" <Karen.Brzezowski@pdt.com>
-To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-CC: "Brzezowski, Karen" <Karen.Brzezowski@pdt.com>
-Subject: WL1271 chip
-Date: Mon, 20 Dec 2010 17:12:06 +0000
-Message-ID: <0826983CC0CB074798C42E77D8ACD07F01AEA8@pdtms1.pdt.com>
-References: <0826983CC0CB074798C42E77D8ACD07F01AE4A@pdtms1.pdt.com>
- <1292843841.13129.9.camel@chilepepper>
-In-Reply-To: <1292843841.13129.9.camel@chilepepper>
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
+Received: from 80-190-117-144.ip-home.de ([80.190.117.144]:32949 "EHLO
+	bu3sch.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757199Ab0LBWQN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 2 Dec 2010 17:16:13 -0500
+Subject: Re: [RFC/RFT] ssb: Attempt to recover from SPROM CRC error
+From: Michael =?ISO-8859-1?Q?B=FCsch?= <mb@bu3sch.de>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: John W Linville <linville@tuxdriver.com>,
+	b43-dev@lists.infradead.org, linux-wireless@vger.kernel.org
+In-Reply-To: <4cf7cb25.SwkH7gALTG7E00Zb%Larry.Finger@lwfinger.net> (sfid-20101202_173713_192185_FFFFFFFF949EBC0D)
+References: <4cf7cb25.SwkH7gALTG7E00Zb%Larry.Finger@lwfinger.net>
+	 (sfid-20101202_173713_192185_FFFFFFFF949EBC0D)
+Content-Type: text/plain; charset="UTF-8"
+Date: Thu, 02 Dec 2010 23:15:54 +0100
+Message-ID: <1291328154.13801.0.camel@maggie>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-SGkhDQpMdWNhIHN1Z2dlc3RlZCB0aGF0IEkgc2VuZCB0aGlzIHRvIGFsbCBvZiB5b3UhDQoNCkkg
-bG9va2VkIGF0IGFyY2gvYXJtL21hY2gtb21hcDIvYm9hcmQtem9vbS1wZXJpcGhlcmFscy5jIGZp
-bGUuLg0KSSBkaWRuJ3Qgc2VlIGFueXRoaW5nIHNwZWNpZmljIHRvIFNESU8uLg0KDQpJIHdhcyBs
-b29raW5nIGF0IGxpbnV4LTIuNi4zNi4yLi4NCklzIHRoaXMgdGhlIGNvcnJlY3QgdmVyc2lvbiB0
-byBsb29rIGF0Pw0KDQpQbGVhc2UgcmVhZCBiZWxvdyBmb3Igb3JpZ2luYWwgcXVlc3Rpb24uDQpU
-SEFOSyB5b3UgZXZlcnlvbmUgZm9yIEFOWSBoZWxwIHlvdSBjYW4gZ2l2ZSBtZSENCkthcmVuDQoN
-Ci0tLS0tT3JpZ2luYWwgTWVzc2FnZS0tLS0tDQpIaSBLYXJlbiwNCg0KDQo+IEhpIEx1Y2lhbm8s
-DQo+ICANCj4gSeKAmW0gdmVyeSBzb3JyeSB0byBlbWFpbCAgeW91IGRpcmVjdGx5Lg0KDQpObyBw
-cm9ibGVtLiAgQnV0IGl0IGlzIGFsd2F5cyBiZXR0ZXIgdG8gZW1haWwgdGhlIGxpbnV4LXdpcmVs
-ZXNzQHZnZXIua2VybmVsLm9yZyBtYWlsaW5nIGxpc3QgdG9vLCBiZWNhdXNlIHRoZXJlIGFyZSBs
-b3RzIG9mIG90aGVyIHBlb3BsZSB3aG8gY2FuIGhlbHAgeW91IHRoZXJlLg0KDQoNCj4gSSBhbSB2
-ZXJ5IG5ldyB0byBwb3J0aW5nIGRyaXZlcnPigKYNCj4gDQo+IEkgaGF2ZSB0byBpbnRlZ3JhdGUv
-cG9ydCBhIFdMMTI3MSBjaGlwIChJIHRoaW5rIGl04oCZcyBnb2luZyB0byBiZSB0aGUgDQo+IG9u
-ZQ0KPiANCj4gbWFudWZhY3R1cmVkIGJ5IE11cmF0YSkuDQo+IA0KPiBJIHNlZSB0aGF0IHlvdSBt
-YWludGFpbiB0aGUgd2wxMnh4IGRyaXZlcnMgb24gbGludXgtd2lyZWxlc3MgDQo+IGtlcm5lbC5v
-cmcuDQo+IA0KPiAgDQo+IA0KPiBUaGUgcHJvY2Vzc29yIGlzIGlNWDIzMywgT1MgaXMgQW5kcm9p
-ZCAoTGludXgpLg0KPiANCj4gIA0KPiANCj4gSSB3b3VsZCBiZSB2ZXJ5IGFwcHJlY2lhdGl2ZSBp
-ZiB5b3UgY291bGQgZ2l2ZSBtZSBzb21lIA0KPiBhZHZpY2UvaW5zdHJ1Y3Rpb25zL2RvY3VtZW50
-YXRpb24NCj4gDQo+IHRoYXQgd291bGQgaGVscCBtZSBvbiB1bmRlcnN0YW5kL3N0YXJ0L2NvbXBs
-ZXRlIHRoaXMgdGFzay4NCg0KV2VsbCwgdGhlIHdsMTJ4eCBkcml2ZXIgc2hvdWxkIHdvcmsgbW9y
-ZSBvciBsZXNzIG91dC1vZi10aGUtYm94LiAgVGhlIG9ubHkgdGhpbmcgeW91IG5lZWQgdG8gZG8g
-aXMgdG8gc2V0IHVwIHRoZSBTRElPIGNvbm5lY3Rpb24gdG8geW91ciBjYXJkIChhc3N1bWluZyB0
-aGF0IHlvdSdyZSB1c2luZyB0aGUgU0RJTyBidXMgdG8gY29ubmVjdCBpdCkuICBJJ20gbm90IGZh
-bWlsaWFyIHdpdGggdGhlIGlNWDIzMywgYnV0IHdpdGggT01BUCwgaXQncyBwcmV0dHkgc2ltcGxl
-LiAgWW91IGNhbiBzZWUgdGhlIGFyY2gvYXJtL21hY2gtb21hcDIvYm9hcmQtem9vbS1wZXJpcGhl
-cmFscy5jIGZpbGUgaW4gdGhlIExpbnV4IGtlcm5lbCBmb3IgYW4gZXhhbXBsZSBvbiBob3cgdG8g
-c2V0IGl0IHVwIGZvciB0aGUgWm9vbSBib2FyZCAoT01BUC1iYXNlZCkuDQoNCg0KLS0NCkNoZWVy
-cywNCkx1Y2EuDQoNCg0K
+On Thu, 2010-12-02 at 10:36 -0600, Larry Finger wrote: 
+> Current code defaults to SPROM revision 1 if there is a CRC error. In at
+> least one known case, most of the corrupt contents are reasonable and
+> it is possible to extract the correct MAC address and TX power settings
+> from what is read. With this patch, an attempt is made to match the
+> apparent revision number with certain SPROM signatures. For those revisions
+> without such a feature, a reasonable guess is made. If the apparent
+> revision is invalid, or if the signature does not match, the previous
+> behavior is kept.
+> 
+> Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+> ---
+> 
+> John,
+> 
+> Could you please test this patch with your card?
+> 
+> Thanks,
+> 
+> Larry
+> ---
+> 
+> Index: linux-2.6/drivers/ssb/pci.c
+> ===================================================================
+> --- linux-2.6.orig/drivers/ssb/pci.c
+> +++ linux-2.6/drivers/ssb/pci.c
+> @@ -620,6 +620,7 @@ static int ssb_pci_sprom_get(struct ssb_
+>  	const struct ssb_sprom *fallback;
+>  	int err = -ENOMEM;
+>  	u16 *buf;
+> +	u16 revision;
+>  
+>  	if (!ssb_is_sprom_available(bus)) {
+>  		ssb_printk(KERN_ERR PFX "No SPROM available!\n");
+> @@ -671,6 +672,50 @@ static int ssb_pci_sprom_get(struct ssb_
+>  			}
+>  			ssb_printk(KERN_WARNING PFX "WARNING: Invalid"
+>  				   " SPROM CRC (corrupt SPROM)\n");
+> +			/* At this point, we have a faulty SPROM image.
+> +			 * In case only part of it is corrupt, try to
+> +			 * determine what rev we might have */
+> +			revision = buf[SSB_SPROMSIZE_WORDS_R4 - 1] & 0x00FF;
+
+I think this could possibly overrun the buffer, or did I get something
+wrong?
+
+-- 
+Greetings Michael.
+
