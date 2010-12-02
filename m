@@ -1,36 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from lo.gmane.org ([80.91.229.12]:41713 "EHLO lo.gmane.org"
+Received: from smtp.nokia.com ([147.243.128.26]:56498 "EHLO mgw-da02.nokia.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751149Ab0LWGUH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 23 Dec 2010 01:20:07 -0500
-Received: from list by lo.gmane.org with local (Exim 4.69)
-	(envelope-from <glkwg-linux-wireless@m.gmane.org>)
-	id 1PVeWy-00075f-Tt
-	for linux-wireless@vger.kernel.org; Thu, 23 Dec 2010 07:20:05 +0100
-Received: from ool-4a5955a5.dyn.optonline.net ([74.89.85.165])
-        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Thu, 23 Dec 2010 07:20:04 +0100
-Received: from erappleman by ool-4a5955a5.dyn.optonline.net with local (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Thu, 23 Dec 2010 07:20:04 +0100
+	id S932123Ab0LBOh2 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 2 Dec 2010 09:37:28 -0500
+Received: from nokia.com (localhost [127.0.0.1])
+	by mgw-da02.nokia.com (Switch-3.4.3/Switch-3.4.3) with ESMTP id oB2EbRJ2019518
+	for <linux-wireless@vger.kernel.org>; Thu, 2 Dec 2010 16:37:27 +0200
+Subject: Re: [PATCH] wl1271: Add wl1271_load_firmware() and export some
+ functions
+From: Luciano Coelho <luciano.coelho@nokia.com>
 To: linux-wireless@vger.kernel.org
-From: Eric Appleman <erappleman@gmail.com>
-Subject: iwlwifi: Intel 3945ABG speed issues finally identified. 
-Date: Thu, 23 Dec 2010 06:15:18 +0000 (UTC)
-Message-ID: <loom.20101223T071403-99@post.gmane.org>
+Cc: Roger Quadros <roger.quadros@nokia.com>
+In-Reply-To: <1291146748-8565-1-git-send-email-luciano.coelho@nokia.com>
+References: <1291146748-8565-1-git-send-email-luciano.coelho@nokia.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Thu, 02 Dec 2010 16:38:09 +0200
+Message-ID: <1291300689.16140.4.camel@chilepepper>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I spent most of the day bisecting and testing numerous kernels and my work has
-finally paid off.
+On Tue, 2010-11-30 at 21:52 +0200, luciano.coelho@nokia.com wrote:
+> From: Roger Quadros <roger.quadros@nokia.com>
+> 
+> For the SDIO testing module we need to load the firmware but not
+> boot it. wl1271_load_firmware() is meant to do just the firmware loading part.
+> 
+> We also export some functions so they are usable in the testing module.
+> 
+> Signed-off-by: Roger Quadros <roger.quadros@nokia.com>
+> Signed-off-by: Luciano Coelho <luciano.coelho@nokia.com>
+> ---
 
-I've found 2 candidate commits.
+Applied and pushed to wl12xx.
 
-a6866ac93e6cb68091326e80b4fa4619a5957644
-1402364162afbaac1b8a74ee21aeb013e817ac7d
 
-iwl3945 definitely broke between 2.6.35-rc2 and -rc3.
+-- 
+Cheers,
+Luca.
 
