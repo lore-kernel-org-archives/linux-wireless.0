@@ -1,106 +1,134 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from vwp2514.webpack.hosteurope.de ([87.230.42.24]:43527 "EHLO
-	vwp2514.webpack.hosteurope.de" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1755978Ab0LINRY (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:38100 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751517Ab0LBIej (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 9 Dec 2010 08:17:24 -0500
-Subject: Re: [PATCH] cfg80211: update information elements in cached BSS
- struct
-From: Sven Neumann <s.neumann@raumfeld.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <1291898876.3540.4.camel@jlt3.sipsolutions.net>
-References: <1291891690-26118-1-git-send-email-s.neumann@raumfeld.com>
-	 <1291898876.3540.4.camel@jlt3.sipsolutions.net>
+	Thu, 2 Dec 2010 03:34:39 -0500
+Subject: [RFC 4/5 v2] nl80211: refactor mesh parameter parsing
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: Javier Cardona <javier@cozybit.com>,
+	Steve Derosier <steve@cozybit.com>, devel@lists.open80211s.org
+In-Reply-To: <20101201210225.939307280@sipsolutions.net>
+References: <20101201205939.009530439@sipsolutions.net>
+	 <20101201210225.939307280@sipsolutions.net>
 Content-Type: text/plain; charset="UTF-8"
-Date: Thu, 09 Dec 2010 14:17:20 +0100
-Message-ID: <1291900640.1924.33.camel@sven>
+Date: Thu, 02 Dec 2010 09:34:37 +0100
+Message-ID: <1291278877.3481.5.camel@jlt3.sipsolutions.net>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+From: Johannes Berg <johannes.berg@intel.com>
 
-On Thu, 2010-12-09 at 13:47 +0100, Johannes Berg wrote:
-> On Thu, 2010-12-09 at 11:48 +0100, Sven Neumann wrote:
-> > When a cached BSS struct is updated because a new beacon was received,
-> > the code replaces the cached information elements by the IEs from the
-> > new beacon. However it did not update the pub.information_elements
-> > and pub.len_information_elements fields leaving them either pointing
-> > to the old beacon IEs or in an inconsistent state where the data is
-> > replaced by the new beacon IEs but len_information_elements still has
-> > its value from the first beacon.
-> > 
-> > Fix this by updating the information elements fields if they are
-> > pointing to beacon IEs.
-> 
-> Err, no, this is intentional -- we want data from probe responses to
-> "win" and be displayed preferentially. If you look at the code that
-> dumps them out, that's what will happen.
+I'm going to need this in a new place later.
 
-As far as I can see my patch does not break this behavior. The
-information elements fields are only updated if they are currently
-pointing to beacon IEs. If there's ever a probe response frame, then it
-will win and the information elements fields won't be changed for
-beacons arriving later.
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+v2: - reduce scope of macro
 
-> If you need the most up-to-date beacon IEs, use (the equivalent of) "iw
-> wlan0 scan dump -b".
+ net/wireless/nl80211.c |   61 ++++++++++++++++++++++++++++++-------------------
+ 1 file changed, 38 insertions(+), 23 deletions(-)
 
-What my patch is fixing are the following situations (and yes, this
-happened in real life, it is reproducable and it is reproducably fixed
-by the patch that I've submitted):
+--- wireless-testing.orig/net/wireless/nl80211.c	2010-12-02 08:19:44.000000000 +0100
++++ wireless-testing/net/wireless/nl80211.c	2010-12-02 09:12:45.000000000 +0100
+@@ -2611,14 +2611,6 @@ static int nl80211_get_mesh_params(struc
+ 	return -ENOBUFS;
+ }
+ 
+-#define FILL_IN_MESH_PARAM_IF_SET(table, cfg, param, mask, attr_num, nla_fn) \
+-do {\
+-	if (table[attr_num]) {\
+-		cfg.param = nla_fn(table[attr_num]); \
+-		mask |= (1 << (attr_num - 1)); \
+-	} \
+-} while (0);\
+-
+ static const struct nla_policy nl80211_meshconf_params_policy[NL80211_MESHCONF_ATTR_MAX+1] = {
+ 	[NL80211_MESHCONF_RETRY_TIMEOUT] = { .type = NLA_U16 },
+ 	[NL80211_MESHCONF_CONFIRM_TIMEOUT] = { .type = NLA_U16 },
+@@ -2636,31 +2628,34 @@ static const struct nla_policy nl80211_m
+ 	[NL80211_MESHCONF_HWMP_NET_DIAM_TRVS_TIME] = { .type = NLA_U16 },
+ };
+ 
+-static int nl80211_set_mesh_params(struct sk_buff *skb, struct genl_info *info)
++static int nl80211_parse_mesh_params(struct genl_info *info,
++				     struct mesh_config *cfg,
++				     u32 *mask_out)
+ {
+-	u32 mask;
+-	struct cfg80211_registered_device *rdev = info->user_ptr[0];
+-	struct net_device *dev = info->user_ptr[1];
+-	struct mesh_config cfg;
+ 	struct nlattr *tb[NL80211_MESHCONF_ATTR_MAX + 1];
+-	struct nlattr *parent_attr;
++	u32 mask = 0;
++
++#define FILL_IN_MESH_PARAM_IF_SET(table, cfg, param, mask, attr_num, nla_fn) \
++do {\
++	if (table[attr_num]) {\
++		cfg->param = nla_fn(table[attr_num]); \
++		mask |= (1 << (attr_num - 1)); \
++	} \
++} while (0);\
++
+ 
+-	parent_attr = info->attrs[NL80211_ATTR_MESH_PARAMS];
+-	if (!parent_attr)
++	if (!info->attrs[NL80211_ATTR_MESH_PARAMS])
+ 		return -EINVAL;
+ 	if (nla_parse_nested(tb, NL80211_MESHCONF_ATTR_MAX,
+-			parent_attr, nl80211_meshconf_params_policy))
++			     info->attrs[NL80211_ATTR_MESH_PARAMS],
++			     nl80211_meshconf_params_policy))
+ 		return -EINVAL;
+ 
+-	if (!rdev->ops->set_mesh_params)
+-		return -EOPNOTSUPP;
+-
+ 	/* This makes sure that there aren't more than 32 mesh config
+ 	 * parameters (otherwise our bitfield scheme would not work.) */
+ 	BUILD_BUG_ON(NL80211_MESHCONF_ATTR_MAX > 32);
+ 
+ 	/* Fill in the params struct */
+-	mask = 0;
+ 	FILL_IN_MESH_PARAM_IF_SET(tb, cfg, dot11MeshRetryTimeout,
+ 			mask, NL80211_MESHCONF_RETRY_TIMEOUT, nla_get_u16);
+ 	FILL_IN_MESH_PARAM_IF_SET(tb, cfg, dot11MeshConfirmTimeout,
+@@ -2698,12 +2693,32 @@ static int nl80211_set_mesh_params(struc
+ 			NL80211_MESHCONF_HWMP_ROOTMODE,
+ 			nla_get_u8);
+ 
++	if (mask_out)
++		*mask_out = mask;
++	return 0;
++
++#undef FILL_IN_MESH_PARAM_IF_SET
++}
++
++static int nl80211_set_mesh_params(struct sk_buff *skb, struct genl_info *info)
++{
++	struct cfg80211_registered_device *rdev = info->user_ptr[0];
++	struct net_device *dev = info->user_ptr[1];
++	struct mesh_config cfg;
++	u32 mask;
++	int err;
++
++	if (!rdev->ops->set_mesh_params)
++		return -EOPNOTSUPP;
++
++	err = nl80211_parse_mesh_params(info, &cfg, &mask);
++	if (err)
++		return err;
++
+ 	/* Apply changes */
+ 	return rdev->ops->set_mesh_params(&rdev->wiphy, dev, &cfg, mask);
+ }
+ 
+-#undef FILL_IN_MESH_PARAM_IF_SET
+-
+ static int nl80211_get_reg(struct sk_buff *skb, struct genl_info *info)
+ {
+ 	struct sk_buff *msg;
 
- AP sends a beacon without RSN IE. This is the first beacon received
- and the station with IEs is added to the BSS cache.
- pub.information_elements now points to pub.beacon_ies and
- pub.len_information_elements has the value of pub.len_beacon_ies.
-
- AP sends another beacon, this time it includes RSN IE. As there's
- not enough place for the larger IEs, memory is allocated for it
- and the pub.beacon_ies pointer is changed to point to this newly
- allocated memory. Now pub.information_elements still points to
- the old value.
-
- User-space asks for scan results and will receive the IEs from the
- first beacon because even though the data from subsequent beacons
- has been added to the cache, pub.information_elements still points
- to the old data.
-
- As a result user-space looking for a WPA enabled access-point will
- skip the AP and never associate with it. This situation will only
- ever fix itself if you are lucky enough that so few beacons are
- arriving that the cached RSS expires at some point.
-
-And there are even worse scenarios:
-
- If the second beacon is smaller than the first or only slightly larger
- (so that it fits into the allocated memory which has some padding),
- then no new memory will be allocated for the IEs. Instead the data
- in pub.beacon_ies will be changed and pub.len_beacon_ies will be
- updated. Now pub.information_elements points to the new data
- but pub.len_information_elements still holds the old value. Data
- and length have become inconsistent. As a result invalid IEs are
- returned to user-space when it asks for scan results.
-
-As you can see this is all without any probe response frames. Our driver
-(libertas) doesn't do any active scanning and thus there are no probe
-response frames received. I still tried to write the patch in a way that
-should not break things if probe response frames are received.
-
-Please review this patch again. I am pretty sure that there's something
-broken. Perhaps my fix is not totally correct, but it fixes a
-reproducable association problem for us.
-
-
-Regards,
-Sven
-
-
--- 
-Sven Neumann
-Head of Software Development
-
-RAUMFELD GmbH | Reichenberger Str. 124 | 10999 Berlin | Germany
-Tel: +49.30.340.60.98.0 | Fax: +49.30.340.60.98.99 | s.neumann@raumfeld.com
 
