@@ -1,72 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f46.google.com ([209.85.215.46]:41257 "EHLO
-	mail-ew0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754700Ab0L2Xc5 (ORCPT
+Received: from dakia2.marvell.com ([65.219.4.35]:58401 "EHLO
+	dakia2.marvell.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753928Ab0LBBb5 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 29 Dec 2010 18:32:57 -0500
-Received: by mail-ew0-f46.google.com with SMTP id 5so4915990ewy.19
-        for <linux-wireless@vger.kernel.org>; Wed, 29 Dec 2010 15:32:56 -0800 (PST)
-From: Arik Nemtsov <arik@wizery.com>
-To: <linux-wireless@vger.kernel.org>
-Cc: Luciano Coelho <luciano.coelho@nokia.com>,
-	Arik Nemtsov <arik@wizery.com>
-Subject: [PATCH v4 18/18] wl1271: Enable AP-mode
-Date: Thu, 30 Dec 2010 01:32:13 +0200
-Message-Id: <1293665533-7599-19-git-send-email-arik@wizery.com>
-In-Reply-To: <1293665533-7599-1-git-send-email-arik@wizery.com>
-References: <1293665533-7599-1-git-send-email-arik@wizery.com>
+	Wed, 1 Dec 2010 20:31:57 -0500
+From: Bing Zhao <bzhao@marvell.com>
+To: linux-wireless@vger.kernel.org
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	Dan Williams <dcbw@redhat.com>,
+	David Woodhouse <dwmw2@infradead.org>,
+	Amitkumar Karwar <akarwar@marvell.com>,
+	Kiran Divekar <dkiran@marvell.com>,
+	Bing Zhao <bzhao@marvell.com>
+Subject: [PATCH 00/31] wireless: Marvell mwifiex driver for SD8787
+Date: Wed,  1 Dec 2010 17:31:56 -0800
+Message-Id: <1291253516-17815-1-git-send-email-bzhao@marvell.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Indicate support for the NL80211_IFTYPE_AP interface mode to enable AP
-mode operation.
+The mwifiex driver for Marvell 802.11n chipset SD8787 is available at
+git://git.marvell.com/mwifiex.git. Both STA mode and Mobile hotspot
+mode are supported.
 
-Disable 11a when operating in AP-mode (unsupported for now).
+git pull git://git.marvell.com/mwifiex.git master
 
-Signed-off-by: Arik Nemtsov <arik@wizery.com>
+
+The firmware image for SD8787 is also available at:
+git://git.marvell.com/mwifiex-firmware.git
+
 ---
- drivers/net/wireless/wl12xx/boot.c |    4 +++-
- drivers/net/wireless/wl12xx/main.c |    5 ++++-
- 2 files changed, 7 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/wl12xx/boot.c b/drivers/net/wireless/wl12xx/boot.c
-index b2f0f64..f2a3513 100644
---- a/drivers/net/wireless/wl12xx/boot.c
-+++ b/drivers/net/wireless/wl12xx/boot.c
-@@ -233,7 +233,9 @@ static int wl1271_boot_upload_nvs(struct wl1271 *wl)
- 	 */
- 	if (wl->nvs_len == sizeof(struct wl1271_nvs_file) ||
- 	    wl->nvs_len == WL1271_INI_LEGACY_NVS_FILE_SIZE) {
--		if (wl->nvs->general_params.dual_mode_select)
-+		/* for now 11a is unsupported in AP mode */
-+		if (wl->bss_type != BSS_TYPE_AP_BSS &&
-+		    wl->nvs->general_params.dual_mode_select)
- 			wl->enable_11a = true;
- 	}
- 
-diff --git a/drivers/net/wireless/wl12xx/main.c b/drivers/net/wireless/wl12xx/main.c
-index 78d6155..8a35491 100644
---- a/drivers/net/wireless/wl12xx/main.c
-+++ b/drivers/net/wireless/wl12xx/main.c
-@@ -1073,6 +1073,9 @@ static int wl1271_op_add_interface(struct ieee80211_hw *hw,
- 		wl->bss_type = BSS_TYPE_IBSS;
- 		wl->set_bss_type = BSS_TYPE_STA_BSS;
- 		break;
-+	case NL80211_IFTYPE_AP:
-+		wl->bss_type = BSS_TYPE_AP_BSS;
-+		break;
- 	default:
- 		ret = -EOPNOTSUPP;
- 		goto out;
-@@ -3136,7 +3139,7 @@ int wl1271_init_ieee80211(struct wl1271 *wl)
- 	wl->hw->wiphy->n_cipher_suites = ARRAY_SIZE(cipher_suites);
- 
- 	wl->hw->wiphy->interface_modes = BIT(NL80211_IFTYPE_STATION) |
--		BIT(NL80211_IFTYPE_ADHOC);
-+		BIT(NL80211_IFTYPE_ADHOC) | BIT(NL80211_IFTYPE_AP);
- 	wl->hw->wiphy->max_scan_ssids = 1;
- 	/*
- 	 * Maximum length of elements in scanning probe request templates
--- 
-1.7.1
+The following changes since commit 56174316 or tag "master-2010-11-30":
+
+Amitkumar Karwar (17):
+  mwifiex: move netdev init code out of _cfg80211
+  mwifiex: uAP: bring up uAP interface
+  mwifiex: uAP: add basic uAP support
+  mwifiex: uAP: add data path support
+  mwifiex: uAP: fix kernel crash while loading the driver
+  mwifiex: do not hold off cfg80211 callback for scan
+  mwifiex: make tx_buf_size alignment
+  mwifiex: correct short_time_slot setting for B-only mode
+  mwifiex: catch failure status in cmd response handler
+  mwifiex: change default settings of aggrpriotbl
+  mwifiex: fill in HT cap info correctly
+  mwifiex: correct WEP status setting
+  mwifiex: update copyright descriptions
+  mwifiex: improve re-transmit handling
+  mwifiex: prevent spurious error messages
+  mwifiex: accept hex values for debugfs command drvdbg
+  mwifiex: fix errors found by checkpatch.pl
+
+Bing Zhao (12):
+  wireless: mwifiex: initial commit for Marvell mwifiex driver
+  mwifiex: fix error and warning after rebased to 2.6.37-rc1
+  mwifiex: add WPS support
+  mwifiex: fix coding style warning: suspect code indent
+  mwifiex: handle error cases if init commands fail
+  mwifiex: move re-order table cleanup out of TX spinlock
+  mwifiex: fix warm-reset crash issue
+  mwifiex: get power save status in STA-AP mode
+  mwifiex: set sysfs physical device reference for netdev
+  mwifiex: fix checkpatch.pl warning
+  mwifiex: remove MWIFIEX_PACK_START
+  mwifiex: remove mwifiex_ prefix from the filenames
+
+Kiran Divekar (2):
+  mwifiex: handle erroneous response of sleep confirm
+  mwifiex: set card quirk MMC_QUIRK_BLKSZ_FOR_BYTE_MODE
 
