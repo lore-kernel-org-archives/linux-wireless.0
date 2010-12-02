@@ -1,63 +1,82 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-vw0-f46.google.com ([209.85.212.46]:40867 "EHLO
-	mail-vw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755257Ab0LHRuU convert rfc822-to-8bit (ORCPT
+Received: from mail-wy0-f174.google.com ([74.125.82.174]:65221 "EHLO
+	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751262Ab0LBFJW convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 8 Dec 2010 12:50:20 -0500
-Received: by vws16 with SMTP id 16so1243257vws.19
-        for <linux-wireless@vger.kernel.org>; Wed, 08 Dec 2010 09:50:19 -0800 (PST)
+	Thu, 2 Dec 2010 00:09:22 -0500
+Received: by wyb28 with SMTP id 28so7780605wyb.19
+        for <linux-wireless@vger.kernel.org>; Wed, 01 Dec 2010 21:09:21 -0800 (PST)
 MIME-Version: 1.0
-Reply-To: sedat.dilek@gmail.com
-In-Reply-To: <AANLkTi=5a=LBTUcjyi0je3XYNG+=xsbA_MjtDU_dZat_@mail.gmail.com>
-References: <AANLkTimDF3kofO=kiuOsz+WrTGROdOL8-3eNvKd5NrD3@mail.gmail.com>
-	<201012061714.15863.br1@einfach.org>
-	<AANLkTi=+bZbsZXR2v1AUKLEEAWGLpq-uNJXQ13t-Bf+D@mail.gmail.com>
-	<AANLkTi=95mO085Y1PJ3brMMpHa=QvkxSB3SUpQysvKr+@mail.gmail.com>
-	<20101208165607.GE2423@tuxdriver.com>
-	<AANLkTikmZZuD1h45RkX3QE2xAQLfoZzwSecDXvojSw5=@mail.gmail.com>
-	<AANLkTi=5a=LBTUcjyi0je3XYNG+=xsbA_MjtDU_dZat_@mail.gmail.com>
-Date: Wed, 8 Dec 2010 18:50:18 +0100
-Message-ID: <AANLkTim2RMaqh-7sYhGLwWV8OK-RH74H3YGm_TV6pVKs@mail.gmail.com>
-Subject: Re: ath5k: Weird Retransmission Behaviour
-From: Sedat Dilek <sedat.dilek@googlemail.com>
-To: Bob Copeland <me@bobcopeland.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	Bruno Randolf <br1@einfach.org>,
-	Jonathan Guerin <jonathan@guerin.id.au>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	ath5k-devel <ath5k-devel@venema.h4ckr.net>, nbd@openwrt.org
-Content-Type: text/plain; charset=UTF-8
+In-Reply-To: <4CF6A8FD.6020508@candelatech.com>
+References: <1291201205-1541-1-git-send-email-senthilkumar@atheros.com>
+	<4CF6A8FD.6020508@candelatech.com>
+Date: Thu, 2 Dec 2010 10:39:19 +0530
+Message-ID: <AANLkTik7L-Ybcq6N=3daQefbycV3h9+=YtFV8_c3JW24@mail.gmail.com>
+Subject: Re: [PATCH v2 2/2] ath9k: Fix STA disconnect issue due to received
+ MIC failed bcast frames
+From: Mohammed Shafi <shafi.wireless@gmail.com>
+To: Ben Greear <greearb@candelatech.com>
+Cc: Senthil Balasubramanian <senthilkumar@atheros.com>,
+	linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Dec 8, 2010 at 6:11 PM, Bob Copeland <me@bobcopeland.com> wrote:
-> On Wed, Dec 8, 2010 at 12:06 PM, Bob Copeland <me@bobcopeland.com> wrote:
->> On Wed, Dec 8, 2010 at 11:56 AM, John W. Linville
->> <linville@tuxdriver.com> wrote:
->>>> Found the patch:
->>>>
->>>> https://patchwork.kernel.org/patch/359722/
->>>
->>> Are you posting that for merging? Â Or just for testing?
+On Thu, Dec 2, 2010 at 1:28 AM, Ben Greear <greearb@candelatech.com> wrote:
+> On 12/01/2010 03:00 AM, Senthil Balasubramanian wrote:
 >>
->> Testing -- I only compile tested it but it seemed relevant
->> to this thread.
+>> AR_RxKeyIdxValid will not be set for bcast/mcast frames and so relying
+>> this status for MIC failed frames is buggy.
+>>
+>> Due to this, MIC failure events for broadcast frames are not sent to
+>> supplicant resulted in AP disconnecting the STA.
+>>
+>> Able to pass Wifi Test case 5.2.18 with this fix.
 >
-> Also, I should note that the retry limits are fixed at
-> minstrel initialization time; I don't know if that's the
-> right time to take the config parameters into account
-> or if it should be done later (and if later, how that fits in
-> with minstrel's MRR strategy).
+> Please do not apply this yet.  As far as I can tell, either
+> of these patches breaks multiple VIF scenarios.  I'm not
+> sure exactly why, but I had to revert this to get any
+> of my interfaces to associate.
+
+Ben can you please give some more information(or just point out some
+link) regarding your test case,I can try it out.
+thanks,
+shafi
+>
+> I'm using software encryption in case that matters.
+>
+> Senthil:  Any chance you could test with a few VIFS to
+> see if you see the same problem?
+>
+> Here is a dmesg snippet from wireless-testing with the v1 reverted
+> and v2 applied:
+>
+> sta9: authenticate with 00:14:d1:c6:d2:54 (try 1)
+> sta9: authenticated
+> sta9: associate with 00:14:d1:c6:d2:54 (try 1)
+> sta9: RX AssocResp from 00:14:d1:c6:d2:54 (capab=0x431 status=1 aid=0)
+> sta9: 00:14:d1:c6:d2:54 denied association (code=1)
+> sta9: deauthenticating from 00:14:d1:c6:d2:54 by local choice (reason=3)
+> ieee80211 wiphy0: device now idle
+> ieee80211 wiphy0: device no longer idle - scanning
+> ieee80211 wiphy0: device now idle
+> ieee80211 wiphy0: device no longer idle - working
+> sta10: authenticate with 00:14:d1:c6:d2:54 (try 1)
+> sta10: authenticated
+> sta10: associate with 00:14:d1:c6:d2:54 (try 1)
+> sta10: RX AssocResp from 00:14:d1:c6:d2:54 (capab=0x431 status=1 aid=0)
+> sta10: 00:14:d1:c6:d2:54 denied association (code=1)
+> sta10: deauthenticating from 00:14:d1:c6:d2:54 by local choice (reason=3)
+>
+> Thanks,
+> Ben
 >
 > --
-> Bob Copeland %% www.bobcopeland.com
+> Ben Greear <greearb@candelatech.com>
+> Candela Technologies Inc  http://www.candelatech.com
+>
 > --
 > To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
 > the body of a message to majordomo@vger.kernel.org
-> More majordomo info at Â http://vger.kernel.org/majordomo-info.html
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 >
-
-I have applied, compiled and loaded new mac80211 kernel-module.
-What could be a good test-case?
-
-- Sedat -
