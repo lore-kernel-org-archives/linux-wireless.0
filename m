@@ -1,43 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yx0-f174.google.com ([209.85.213.174]:55130 "EHLO
-	mail-yx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754449Ab0LIQoT (ORCPT
+Received: from mail-iw0-f174.google.com ([209.85.214.174]:33416 "EHLO
+	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757782Ab0LBXcM (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 9 Dec 2010 11:44:19 -0500
-Received: by yxt3 with SMTP id 3so1483939yxt.19
-        for <linux-wireless@vger.kernel.org>; Thu, 09 Dec 2010 08:44:18 -0800 (PST)
-From: Tim Harvey <harvey.tim@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: Tim Harvey <harvey.tim@gmail.com>
-Subject: [PATCH] mac80211: Fix NULL-pointer deference on ibss merge when not ready
-Date: Thu,  9 Dec 2010 08:43:59 -0800
-Message-Id: <1291913039-20801-1-git-send-email-harvey.tim@gmail.com>
+	Thu, 2 Dec 2010 18:32:12 -0500
+Received: by iwn42 with SMTP id 42so1515761iwn.19
+        for <linux-wireless@vger.kernel.org>; Thu, 02 Dec 2010 15:32:11 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <AANLkTim0L7e+RZ1v6B3+s_Z7pOZ6KAgvZ_tZEQJnMHET@mail.gmail.com>
+References: <AANLkTim0L7e+RZ1v6B3+s_Z7pOZ6KAgvZ_tZEQJnMHET@mail.gmail.com>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Thu, 2 Dec 2010 15:31:51 -0800
+Message-ID: <AANLkTikq7h3hwVBQBWv+Avhzc6KZLxRC3OkxjpbgwQ8M@mail.gmail.com>
+Subject: Re: [PATCH]: ath9k: fix bug in tx power
+To: Matteo Croce <technoboy85@gmail.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	ath9k-devel@lists.ath9k.org, linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-dev_open will eventually call ieee80211_ibss_join which sets up the
-skb used for beacons/probe-responses however it is possible to
-receive beacons that attempt to merge before this occurs causing
-a null pointer dereference.
+On Thu, Dec 2, 2010 at 3:24 PM, Matteo Croce <technoboy85@gmail.com> wrote:
+> The ath9k driver subtracts 3 dBm to the txpower as with two radios the
+> signal power is doubled.
+> The resulting value is assigned in an u16 which overflows and makes
+> the card to work at full power.
 
-This occurs quite easily in the presence of adhoc nodes with hidden SSID's
----
- net/mac80211/ibss.c |    2 ++
- 1 files changed, 2 insertions(+), 0 deletions(-)
+Thanks for the patch Matteo, can you please reword a bit better and
+resubmit by first using checkpatch.pl against the patch? The branch
+should be separated by a space.
 
-diff --git a/net/mac80211/ibss.c b/net/mac80211/ibss.c
-index 410d104..24e2482 100644
---- a/net/mac80211/ibss.c
-+++ b/net/mac80211/ibss.c
-@@ -86,6 +86,8 @@ static void __ieee80211_sta_join_ibss(struct ieee80211_sub_if_data *sdata,
- 	drv_reset_tsf(local);
- 
- 	skb = ifibss->skb;
-+	if (!skb)
-+		return; /* not ready to merge yet */
- 	rcu_assign_pointer(ifibss->presp, NULL);
- 	synchronize_rcu();
- 	skb->data = skb->head;
--- 
-1.7.0.4
-
+  Luis
