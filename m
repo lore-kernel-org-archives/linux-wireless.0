@@ -1,41 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.19.149.2]:59376 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757372Ab0LBLRR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 2 Dec 2010 06:17:17 -0500
-Received: from mail.atheros.com ([10.10.20.105])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Thu, 02 Dec 2010 03:17:03 -0800
-From: Vasanthakumar Thiagarajan <vasanth@atheros.com>
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>
-Subject: [PATCH V2 27/27] ath9k: Add device id of AR9485 to pci table
-Date: Thu, 2 Dec 2010 03:07:11 -0800
-Message-ID: <1291288031-3409-28-git-send-email-vasanth@atheros.com>
-In-Reply-To: <1291288031-3409-1-git-send-email-vasanth@atheros.com>
-References: <1291288031-3409-1-git-send-email-vasanth@atheros.com>
+Received: from mail-wy0-f174.google.com ([74.125.82.174]:43238 "EHLO
+	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753614Ab0LBGB3 convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 2 Dec 2010 01:01:29 -0500
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <1291268087.1761.3.camel@Joe-Laptop>
+References: <276469c602c402565b49f99521ea19757429e81e.1291266731.git.joe@perches.com>
+	<a345e995a816576a4c2c39aec43716c18011475b.1291266731.git.joe@perches.com>
+	<20101202053055.19479.qmail@stuge.se>
+	<1291268087.1761.3.camel@Joe-Laptop>
+Date: Thu, 2 Dec 2010 08:01:26 +0200
+Message-ID: <AANLkTimimyhHT2=xT1T8vJ=3WZB4h85ur=yvEfT2Wv-p@mail.gmail.com>
+Subject: Re: [ath9k-devel] [PATCH 2/2] ath: Fix logging message typos
+From: Nick Kossifidis <mickflemm@gmail.com>
+To: Joe Perches <joe@perches.com>
+Cc: Peter Stuge <peter@stuge.se>, Jiri Slaby <jirislaby@gmail.com>,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	Bob Copeland <me@bobcopeland.com>,
+	Jouni Malinen <jmalinen@atheros.com>,
+	Vasanthakumar Thiagarajan <vasanth@atheros.com>,
+	Senthil Balasubramanian <senthilkumar@atheros.com>,
+	netdev@vger.kernel.org, ath5k-devel@lists.ath5k.org,
+	linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-kernel@vger.kernel.org, ath9k-devel@lists.ath9k.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Vasanthakumar Thiagarajan <vasanth@atheros.com>
----
- drivers/net/wireless/ath/ath9k/pci.c |    1 +
- 1 files changed, 1 insertions(+), 0 deletions(-)
+2010/12/2 Joe Perches <joe@perches.com>:
+> On Thu, 2010-12-02 at 06:30 +0100, Peter Stuge wrote:
+>> Joe Perches wrote:
+>> > +++ b/drivers/net/wireless/ath/ath9k/ar9002_calib.c
+>> ..
+>> > @@ -734,7 +734,7 @@ static bool ar9285_hw_cl_cal(struct ath_hw *ah, struct ath9k_channel *chan)
+>> >     if (!ath9k_hw_wait(ah, AR_PHY_AGC_CONTROL, AR_PHY_AGC_CONTROL_CAL,
+>> >                       0, AH_WAIT_TIMEOUT)) {
+>> >             ath_dbg(common, ATH_DBG_CALIBRATE,
+>> > -                   "offset calibration failed to complete in 1ms; noisy ??\n");
+>> > +                   "offset calibration failed to complete in 1ms; noisy enfironment?\n");
+>>
+>> enfironment? :)
+>
+> Umm, what's a typo fix patch without more typos?
+> Correct?  How dull...
+>
+>> >     ath_dbg(common, ATH_DBG_ANI,
+>> > -           "Getting spur idx %d is2Ghz. %d val %x\n",
+>> > +           "Getting spur idx:%d is2Ghz:%d val:%x\n",
+>> >             i, is2GHz, ah->config.spurchans[i][is2GHz]);
+>>
+>> Is this short for "spurious" ?
+>
+> Likely.  Anyone want to change it to a whole word?
+>
+>
 
-diff --git a/drivers/net/wireless/ath/ath9k/pci.c b/drivers/net/wireless/ath/ath9k/pci.c
-index c5a523d..842c38d 100644
---- a/drivers/net/wireless/ath/ath9k/pci.c
-+++ b/drivers/net/wireless/ath/ath9k/pci.c
-@@ -30,6 +30,7 @@ static DEFINE_PCI_DEVICE_TABLE(ath_pci_id_table) = {
- 	{ PCI_VDEVICE(ATHEROS, 0x002D) }, /* PCI   */
- 	{ PCI_VDEVICE(ATHEROS, 0x002E) }, /* PCI-E */
- 	{ PCI_VDEVICE(ATHEROS, 0x0030) }, /* PCI-E  AR9300 */
-+	{ PCI_VDEVICE(ATHEROS, 0x0032) }, /* PCI-E  AR9485 */
- 	{ 0 }
- };
- 
+Nope it stands for spur noise (harmonics)
+http://www.patentgenius.com/patent/7835456.html
+
+(I have to add that link to the comments, it's new ;-))
+
 -- 
-1.7.0.4
-
+GPG ID: 0xD21DB2DB
+As you read this post global entropy rises. Have Fun ;-)
+Nick
