@@ -1,65 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from lo.gmane.org ([80.91.229.12]:34498 "EHLO lo.gmane.org"
+Received: from mail.atheros.com ([12.19.149.2]:59149 "EHLO mail.atheros.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753444Ab0LLRsS (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 12 Dec 2010 12:48:18 -0500
-Received: from list by lo.gmane.org with local (Exim 4.69)
-	(envelope-from <glkwg-linux-wireless@m.gmane.org>)
-	id 1PRq1v-0003C8-J4
-	for linux-wireless@vger.kernel.org; Sun, 12 Dec 2010 18:48:15 +0100
-Received: from 194.48.133.8 ([194.48.133.8])
-        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Sun, 12 Dec 2010 18:48:15 +0100
-Received: from messier31 by 194.48.133.8 with local (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Sun, 12 Dec 2010 18:48:15 +0100
-To: linux-wireless@vger.kernel.org
-From: Thomas <messier31@gmx.net>
-Subject: Re: carl9170 802.11n-AP
-Date: Sun, 12 Dec 2010 18:47:56 +0100
-Message-ID: <ie31sg$rqv$1@dough.gmane.org>
-References: <loom.20101212T101545-636@post.gmane.org> <loom.20101212T110657-413@post.gmane.org> <AANLkTimiNLZ8EFPEwbKW3UA7FMSxmJOV-B9pWY4h9c34@mail.gmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="ISO-8859-1"
+	id S1755394Ab0LBLLv (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 2 Dec 2010 06:11:51 -0500
+Received: from mail.atheros.com ([10.10.20.105])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Thu, 02 Dec 2010 03:11:37 -0800
+From: Vasanthakumar Thiagarajan <vasanth@atheros.com>
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>
+Subject: [PATCH V2 11/27] ath9k_hw: Configure pll control for AR9485
+Date: Thu, 2 Dec 2010 03:06:55 -0800
+Message-ID: <1291288031-3409-12-git-send-email-vasanth@atheros.com>
+In-Reply-To: <1291288031-3409-1-git-send-email-vasanth@atheros.com>
+References: <1291288031-3409-1-git-send-email-vasanth@atheros.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+Signed-off-by: Vasanthakumar Thiagarajan <vasanth@atheros.com>
+---
+ drivers/net/wireless/ath/ath9k/hw.c  |    7 ++++++-
+ drivers/net/wireless/ath/ath9k/reg.h |    2 ++
+ 2 files changed, 8 insertions(+), 1 deletions(-)
 
-thanks for your answer.
-I am afraid I am too much of a linux noob to solve this on my own.
-Its not the Intel driver that crashes but carl9170. But I am going to test 
-this with other wifi cards as well and then post the results here.
-
-Get well soon! (for carl9170 sake :D)
-
-Regards,
-
-Thomas
-
-Christian Lamparter wrote:
-
-> On Sun, Dec 12, 2010 at 11:14 AM, thomas
-> <messier31@gmx.net> wrote:
->> I just saw that there could be "aggregation stalls" with "any Intel N
->> Wifi Link".
->> I am using Intel Wifi Link 5100 and the driver frequently restarts under
->> heavy load.
-> 
-> see Intel's bugzilla, lots of angry posts there:
-> http://bugzilla.intellinuxwireless.org/show_bug.cgi?id=2214#c19 (etc...)
-> 
-> I am ill, so you'll have to do the research on iwlwifi vs. carl9170 on
-> your own, but it's all there just take a look at the original vendor
-> driver(otus)+firmware(ar9170fw).
-> 
-> Regards,
->    Chr
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless"
-> in the body of a message to
-> majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-
+diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
+index ddbd6fb..e3b6ad3 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.c
++++ b/drivers/net/wireless/ath/ath9k/hw.c
+@@ -676,7 +676,12 @@ static void ath9k_hw_init_qos(struct ath_hw *ah)
+ static void ath9k_hw_init_pll(struct ath_hw *ah,
+ 			      struct ath9k_channel *chan)
+ {
+-	u32 pll = ath9k_hw_compute_pll_control(ah, chan);
++	u32 pll;
++
++	if (AR_SREV_9485(ah))
++		REG_WRITE(ah, AR_RTC_PLL_CONTROL2, 0x886666);
++
++	pll = ath9k_hw_compute_pll_control(ah, chan);
+ 
+ 	REG_WRITE(ah, AR_RTC_PLL_CONTROL, pll);
+ 
+diff --git a/drivers/net/wireless/ath/ath9k/reg.h b/drivers/net/wireless/ath/ath9k/reg.h
+index 0153ba1..d3257f7 100644
+--- a/drivers/net/wireless/ath/ath9k/reg.h
++++ b/drivers/net/wireless/ath/ath9k/reg.h
+@@ -1114,6 +1114,8 @@ enum {
+ #define AR_RTC_PLL_CONTROL \
+ 	((AR_SREV_9100(ah)) ? (AR_RTC_BASE + 0x0014) : 0x7014)
+ 
++#define AR_RTC_PLL_CONTROL2	0x703c
++
+ #define AR_RTC_PLL_DIV          0x0000001f
+ #define AR_RTC_PLL_DIV_S        0
+ #define AR_RTC_PLL_DIV2         0x00000020
+-- 
+1.7.0.4
 
