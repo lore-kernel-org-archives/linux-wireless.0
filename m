@@ -1,61 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:37836 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751680Ab0LBFop (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 2 Dec 2010 00:44:45 -0500
-Message-ID: <4CF73249.3040203@candelatech.com>
-Date: Wed, 01 Dec 2010 21:44:41 -0800
-From: Ben Greear <greearb@candelatech.com>
+Received: from foo.stuge.se ([213.88.146.6]:40286 "HELO foo.stuge.se"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
+	id S1751680Ab0LBFa6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 2 Dec 2010 00:30:58 -0500
+Message-ID: <20101202053055.19479.qmail@stuge.se>
+Date: Thu, 2 Dec 2010 06:30:54 +0100
+From: Peter Stuge <peter@stuge.se>
+To: Joe Perches <joe@perches.com>
+Cc: Jiri Slaby <jirislaby@gmail.com>,
+	Nick Kossifidis <mickflemm@gmail.com>,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	Bob Copeland <me@bobcopeland.com>,
+	Jouni Malinen <jmalinen@atheros.com>,
+	Vasanthakumar Thiagarajan <vasanth@atheros.com>,
+	Senthil Balasubramanian <senthilkumar@atheros.com>,
+	netdev@vger.kernel.org, ath5k-devel@lists.ath5k.org,
+	linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-kernel@vger.kernel.org, ath9k-devel@lists.ath9k.org
+Subject: Re: [ath9k-devel] [PATCH 2/2] ath: Fix logging message typos
+References: <276469c602c402565b49f99521ea19757429e81e.1291266731.git.joe@perches.com> <a345e995a816576a4c2c39aec43716c18011475b.1291266731.git.joe@perches.com>
 MIME-Version: 1.0
-To: Mohammed Shafi <shafi.wireless@gmail.com>
-CC: Senthil Balasubramanian <senthilkumar@atheros.com>,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH v2 2/2] ath9k: Fix STA disconnect issue due to received
- MIC failed bcast frames
-References: <1291201205-1541-1-git-send-email-senthilkumar@atheros.com>	<4CF6A8FD.6020508@candelatech.com> <AANLkTik7L-Ybcq6N=3daQefbycV3h9+=YtFV8_c3JW24@mail.gmail.com>
-In-Reply-To: <AANLkTik7L-Ybcq6N=3daQefbycV3h9+=YtFV8_c3JW24@mail.gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <a345e995a816576a4c2c39aec43716c18011475b.1291266731.git.joe@perches.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 12/01/2010 09:09 PM, Mohammed Shafi wrote:
-> On Thu, Dec 2, 2010 at 1:28 AM, Ben Greear<greearb@candelatech.com>  wrote:
->> On 12/01/2010 03:00 AM, Senthil Balasubramanian wrote:
->>>
->>> AR_RxKeyIdxValid will not be set for bcast/mcast frames and so relying
->>> this status for MIC failed frames is buggy.
->>>
->>> Due to this, MIC failure events for broadcast frames are not sent to
->>> supplicant resulted in AP disconnecting the STA.
->>>
->>> Able to pass Wifi Test case 5.2.18 with this fix.
->>
->> Please do not apply this yet.  As far as I can tell, either
->> of these patches breaks multiple VIF scenarios.  I'm not
->> sure exactly why, but I had to revert this to get any
->> of my interfaces to associate.
->
-> Ben can you please give some more information(or just point out some
-> link) regarding your test case,I can try it out.
-> thanks,
-> shafi
+Joe Perches wrote:
+> +++ b/drivers/net/wireless/ath/ath9k/ar9002_calib.c
+..
+> @@ -734,7 +734,7 @@ static bool ar9285_hw_cl_cal(struct ath_hw *ah, struct ath9k_channel *chan)
+>  	if (!ath9k_hw_wait(ah, AR_PHY_AGC_CONTROL, AR_PHY_AGC_CONTROL_CAL,
+>  			  0, AH_WAIT_TIMEOUT)) {
+>  		ath_dbg(common, ATH_DBG_CALIBRATE,
+> -			"offset calibration failed to complete in 1ms; noisy ??\n");
+> +			"offset calibration failed to complete in 1ms; noisy enfironment?\n");
 
-Try this script, or something like it:
+enfironment? :)
 
-http://www.spinics.net/lists/linux-wireless/msg60126.html
 
-Edit 'max' to create a small number of STA interfaces or you will probably have
-worse issues than them just not associating!
+> +++ b/drivers/net/wireless/ath/ath9k/eeprom_4k.c
+..
+> @@ -1178,7 +1178,7 @@ static u16 ath9k_hw_4k_get_spur_channel(struct ath_hw *ah, u16 i, bool is2GHz)
+>  	u16 spur_val = AR_NO_SPUR;
+>  
+>  	ath_dbg(common, ATH_DBG_ANI,
+> -		"Getting spur idx %d is2Ghz. %d val %x\n",
+> +		"Getting spur idx:%d is2Ghz:%d val:%x\n",
+>  		i, is2GHz, ah->config.spurchans[i][is2GHz]);
 
-You have to enable the nohwcrypt module option.
+Is this short for "spurious" ?
 
-Let me know if that doesn't work and I can probably put together something
-more specific.
 
-Thanks,
-Ben
-
--- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+//Peter
