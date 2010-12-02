@@ -1,85 +1,139 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wy0-f174.google.com ([74.125.82.174]:51391 "EHLO
+Received: from mail-wy0-f174.google.com ([74.125.82.174]:43978 "EHLO
 	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754063Ab0LQTkG (ORCPT
+	with ESMTP id S1752662Ab0LBR4s convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 17 Dec 2010 14:40:06 -0500
-Received: by wyb28 with SMTP id 28so1015255wyb.19
-        for <linux-wireless@vger.kernel.org>; Fri, 17 Dec 2010 11:40:04 -0800 (PST)
+	Thu, 2 Dec 2010 12:56:48 -0500
+Received: by wyb28 with SMTP id 28so8478055wyb.19
+        for <linux-wireless@vger.kernel.org>; Thu, 02 Dec 2010 09:56:47 -0800 (PST)
 MIME-Version: 1.0
-In-Reply-To: <4D0BADBE.40101@lwfinger.net>
-References: <AANLkTikKtc4uiXN+oHwDr8sPFXZCe3HvTfYSvgZ8uYx0@mail.gmail.com>
-	<4D0BADBE.40101@lwfinger.net>
-Date: Fri, 17 Dec 2010 14:40:04 -0500
-Message-ID: <AANLkTimvazto71m6SPMYtSAGuQkNpab+kMZcF4buNqYa@mail.gmail.com>
-Subject: Re: rtl8192 does not see N networks in my building
-From: Amos Blanton <amos.blanton@gmail.com>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+In-Reply-To: <AANLkTimcV+pHp8ui-hExnsBfuQ2PtGA2aZidCYSFsQnh@mail.gmail.com>
+References: <AANLkTi=_F0orXPY79ojoPKEqn4ohQjV5Rj5Qb3H7CR8f@mail.gmail.com>
+	<201012011921.11151.br1@einfach.org>
+	<AANLkTimcV+pHp8ui-hExnsBfuQ2PtGA2aZidCYSFsQnh@mail.gmail.com>
+Date: Thu, 2 Dec 2010 19:56:46 +0200
+Message-ID: <AANLkTinvV-6FqMni86MEYrBN6q0255M6cFjBOpR9vdP2@mail.gmail.com>
+Subject: Re: [linux-next] next-20101201: ath5k permanently disconnecting
+From: Nick Kossifidis <mickflemm@gmail.com>
+To: sedat.dilek@gmail.com
+Cc: Bruno Randolf <br1@einfach.org>,
+	wireless <linux-wireless@vger.kernel.org>,
+	John Linville <linville@tuxdriver.com>,
+	Stephen Rothwell <sfr@canb.auug.org.au>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Here's lspci output:
-
-$ lspci -nn | grep Realtek
-01:00.0 Network controller [0280]: Realtek Semiconductor Co., Ltd.
-RTL8191SEvB Wireless LAN Controller [10ec:8172] (rev 10)
-02:00.0 Ethernet controller [0200]: Realtek Semiconductor Co., Ltd.
-RTL8111/8168B PCI Express Gigabit Ethernet controller [10ec:8168] (rev
-03)
-03:00.0 Ethernet controller [0200]: Realtek Semiconductor Co., Ltd.
-RTL8111/8168B PCI Express Gigabit Ethernet controller [10ec:8168] (rev
-06)
-lightnin@Buford:~$
-
-iwlist:
-lightnin@Buford:~$ iwlist scan
-lo        Interface doesn't support scanning.
-
-eth1      Interface doesn't support scanning.
-
-eth0      Interface doesn't support scanning.
-
-wlan0     No scan results
-
-Here's iwconfig output, in case that is helpful:
-wlan0     802.11bgn  Nickname:"rtl8191SEVA2"
-          Mode:Managed  Frequency=2.462 GHz  Access Point: Not-Associated
-          Bit Rate:300 Mb/s
-          Retry:on   RTS thr:off   Fragment thr:off
-          Power Management:off
-          Link Quality=10/100  Signal level=0 dBm  Noise level=-100 dBm
-          Rx invalid nwid:0  Rx invalid crypt:0  Rx invalid frag:0
-          Tx excessive retries:0  Invalid misc:0   Missed beacon:0
-
-
-
-On Fri, Dec 17, 2010 at 1:36 PM, Larry Finger <Larry.Finger@lwfinger.net> wrote:
-> On 12/17/2010 11:20 AM, Amos Blanton wrote:
->> Greetings. I have a rtl8192 in a Strata 13 laptop from Zareason
->> running Ubuntu 10.10, and I work in an environment with many Wifi
->> networks. With my previous laptop I was often able to see and
->> sometimes login to a local un-encrypted N network, the best we have
->> around here, but this one doesn't seem to find and display that
->> network via Network Manager.
->> I'm told my office has cisco ap1252s running the latest 7.0 code
->> release. There are B/G as well as N networks here, at least 10 that
->> Network manager will recognize.
+2010/12/2 Sedat Dilek <sedat.dilek@googlemail.com>:
+> On Wed, Dec 1, 2010 at 11:21 AM, Bruno Randolf <br1@einfach.org> wrote:
+>> On Wed December 1 2010 19:09:03 Sedat Dilek wrote:
+>>> Hi,
+>>>
+>>> I have built today a linux-next (next-20101201) kernel which includes
+>>> wireless-next-2.6 up to master-2010-11-30.
+> [...]
+>>> Unfortunately, my wlan network connection is totally unstable.
+> [...]
+>> 1.) For identification of the chipset, please:
+>> dmesg |grep "ath5.*chip"
 >>
->> Sorry, I'm not sure what the relevant DMSG info is, so I'll include
->> the latest swath. Please let me know if I should get additional info,
->> and if this is the right place to report these issues.
->> Thanks to everyone here who helps make Linux wireless work!
+>> 2.) Is there a problem when you don't use encryption?
+>>
+>> 3.) git bisect might help track it down.
+>>
+>> bruno
 >
-> This is the right place to ask. The driver you are using is from staging, and I
-> don't know much about it, but let's see what we can do.
+> OK, I did not a "classic" git-bisect, I created from linux-next
+> (next-20101202) GIT tree a revert-ath5k patchset (30 in total).
 >
-> Please provide the output of the command '/sbin/lspci -nn | grep Realtek'.
+> [1] VERY GOOD: Revertiing all 30 patches
 >
-> In addition, please post the output of the command 'sudo /usr/sbin/iwlist scan'.
-> I'm guessing at the location of iwlist on your distro. If the command is not
-> found, then the patch is wrong - change it to match your system.
+> ...leads to a stable system.
 >
-> Larry
+> [2] REDUCED DISCONNECTIONS DROPS: Reverting 0001..0008
 >
+> This stabilizes the system, but... listening to a radio
+> broadcast-stream with VLC is a pain in the ass... permanent audio
+> dropouts. I had only 2 disconnections in the first 10mins when system
+> was up (normally I can see disconnects after loggin into my KDE
+> desktop).
+>
+> [3] GOOD AUDIO STREAMING: Reverting 0001..0014
+>
+> This is just fine, system like I am used to.
+>
+> [4] CONCLUSION
+>
+> So I played a bit with my revert-patchset.
+>
+> Reverting 0001..0008 + a refreshed v2 of
+> 0014-Revert-ath5k-Use-turbo-flag-on-DCU.patch (patch attached) is
+> doing the job here.
+>
+> Having a closer look into 0008 (parts of
+> drivers/net/wireless/ath/ath5k/reset.c):
+>
+> $ grep AR5212 patches/revert-wireless-patches/0008-Revert-ath5k-Support-synth-only-channel-change-for-A.patch
+> -       if (ah->ah_version == AR5K_AR5212)
+> +                        * On AR5212 TSF is almost preserved across a
+> -                * On AR5212 TSF is almost preserved across a
+> +               if (ah->ah_version == AR5K_AR5212) {
+> -       if (ah->ah_version == AR5K_AR5212 &&
+>
+> As I mentionned I have a AR5212 wlan device!
+> What to do with that parts?
+> Any idea?
+>
+> Kind Regards,
+> - Sedat -
+>
+> P.S.: I have added a list containing all commit-ids (chronological)
+> and a script how I reverted (documenting for myself).
+>
+> $ ls patches/revert-wireless-patches/00*.patch
+> patches/revert-wireless-patches/0001-Revert-ath5k-Set-turbo-bit-on-rf-bank-2.patch
+> patches/revert-wireless-patches/0002-Revert-ath5k-Clean-up-turbo-mode-initvals-rfregs.patch
+> patches/revert-wireless-patches/0003-Revert-ath5k-Cleanup-turbo-channel-flags.patch
+> patches/revert-wireless-patches/0004-Revert-ath5k-Use-correct-clock-when-setting-ofdm-tim.patch
+> patches/revert-wireless-patches/0005-Revert-ath5k-Skip-tx-power-setting-on-AR5210-for-now.patch
+> patches/revert-wireless-patches/0006-Revert-ath5k-Tweak-phy-activate-to-rx-start-delay-ba.patch
+> patches/revert-wireless-patches/0007-Revert-ath5k-No-need-to-save-restore-staid-flags-on-.patch
+> patches/revert-wireless-patches/0008-Revert-ath5k-Support-synth-only-channel-change-for-A.patch
+> patches/revert-wireless-patches/0009-Revert-ath5k-Skip-powertable-setting-when-we-are-on-.patch
+> patches/revert-wireless-patches/0010-Revert-ath5k-Update-PLL-programming-for-turbo-half-q.patch
+> patches/revert-wireless-patches/0011-Revert-ath5k-Update-spur-mitigation-filter-for-turbo.patch
+> patches/revert-wireless-patches/0012-Revert-ath5k-Tweak-power-detector-delays-on-RF5111-R.patch
+> patches/revert-wireless-patches/0013-Revert-ath5k-Always-set-IFS-intervals-on-reset.patch
+> patches/revert-wireless-patches/0014-Revert-ath5k-Use-turbo-flag-on-DCU.patch
+> patches/revert-wireless-patches/0015-Revert-ath5k-Set-all-IFS-intervals-not-just-slot-tim.patch
+> patches/revert-wireless-patches/0016-Revert-ath5k-Extend-rate_duration.patch
+> patches/revert-wireless-patches/0017-Revert-ath5k-Extend-get_default_sifs-slot_time.patch
+> patches/revert-wireless-patches/0018-Revert-ath5k-Move-tx-retries-setting-outside-reset_t.patch
+> patches/revert-wireless-patches/0019-Revert-ath5k-Increase-PHY-settling-parameters-for-tu.patch
+> patches/revert-wireless-patches/0020-Revert-ath5k-Small-cleanup-on-tweak_initvals.patch
+> patches/revert-wireless-patches/0021-Revert-ath5k-Put-core-clock-initialization-on-a-new-.patch
+> patches/revert-wireless-patches/0022-Revert-ath5k-Add-new-field-on-ath5k_hw-to-track-band.patch
+> patches/revert-wireless-patches/0023-Revert-ath5k-Use-new-function-to-stop-beacon-queue.patch
+> patches/revert-wireless-patches/0024-Revert-ath5k-Check-RXE-when-setting-RXDP.patch
+> patches/revert-wireless-patches/0025-Revert-ath5k-Use-DCU-early-termination-correctly.patch
+> patches/revert-wireless-patches/0026-Revert-ath5k-Debug-DMA-timeouts.patch
+> patches/revert-wireless-patches/0027-Revert-ath5k-Use-new-dma_stop-function-on-base.c.patch
+> patches/revert-wireless-patches/0028-Revert-ath5k-Stop-PCU-on-reset.patch
+> patches/revert-wireless-patches/0029-Revert-ath5k-Add-new-function-to-stop-rx-tx-DMA.patch
+> patches/revert-wireless-patches/0030-Revert-ath5k-Reset-cleanup-and-generic-cleanup.patch
+>
+
+OK this doesn't make any sense, based on your logs you have an
+AR5212+RF5111+RF2111 combination, synth-only channel change (0008) is
+only executed on AR2413 and AR5413 so you don't even run that code,
+setting turbo flag on DCU (0014) is also unrelated since we never
+enable turbo mode and if we did you wouldn't be able to receive
+anything non-turbo.
+
+I am going to test 2 cards like yours a CM6 and an older one from
+Atheros and come back to you ASAP...
+
+-- 
+GPG ID: 0xD21DB2DB
+As you read this post global entropy rises. Have Fun ;-)
+Nick
