@@ -1,60 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pz0-f66.google.com ([209.85.210.66]:51243 "EHLO
-	mail-pz0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753721Ab0LaR67 (ORCPT
+Received: from mail30t.wh2.ocn.ne.jp ([125.206.180.136]:6084 "HELO
+	mail30t.wh2.ocn.ne.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1751335Ab0LBBRI (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 31 Dec 2010 12:58:59 -0500
-Message-ID: <4D1E19F7.6000608@gmail.com>
-Date: Fri, 31 Dec 2010 09:59:19 -0800
-From: "Justin P. Mattock" <justinmattock@gmail.com>
+	Wed, 1 Dec 2010 20:17:08 -0500
+Received: from vs3016.wh2.ocn.ne.jp (125.206.180.189)
+	by mail30t.wh2.ocn.ne.jp (RS ver 1.0.95vs) with SMTP id 3-0387122623
+	for <linux-wireless@vger.kernel.org>; Thu,  2 Dec 2010 10:17:06 +0900 (JST)
+From: Bruno Randolf <br1@einfach.org>
+To: Javier Cardona <javier@cozybit.com>
+Subject: Re: [PATCH 1/3] ath5k: Fix beaconing in mesh mode
+Date: Thu, 2 Dec 2010 10:16:31 +0900
+Cc: Bob Copeland <me@bobcopeland.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Steve Derosier <steve@cozybit.com>, devel@lists.open80211s.org,
+	linux-wireless@vger.kernel.org, Jiri Slaby <jirislaby@gmail.com>,
+	Nick Kossifidis <mickflemm@gmail.com>,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>
+References: <1291169919-3867-1-git-send-email-javier@cozybit.com> <AANLkTin3G2=T_qMSQdvXgUShtVSpg+MeH4EZX10QU9OQ@mail.gmail.com> <AANLkTikNQitSrcj4Zn++BRAKp46hYTFb0tw61oD_bGVx@mail.gmail.com>
+In-Reply-To: <AANLkTikNQitSrcj4Zn++BRAKp46hYTFb0tw61oD_bGVx@mail.gmail.com>
 MIME-Version: 1.0
-To: Dan Carpenter <error27@gmail.com>,
-	Grant Likely <grant.likely@secretlab.ca>, trivial@kernel.org,
-	devel@driverdev.osuosl.org, linux-scsi@vger.kernel.org,
-	netdev@vger.kernel.org, linux-usb@vger.kernel.org,
-	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
-	ivtv-devel@ivtvdriver.org, linux-m68k@lists.linux-m68k.org,
-	spi-devel-general@lists.sourceforge.net,
-	linux-media@vger.kernel.org
-Subject: Re: [PATCH 02/15]drivers:spi:dw_spi.c Typo change diable to disable.
-References: <1293750484-1161-1-git-send-email-justinmattock@gmail.com> <1293750484-1161-2-git-send-email-justinmattock@gmail.com> <20101231064515.GC3733@angua.secretlab.ca> <4D1D7DAE.7060504@gmail.com> <20101231091136.GC1886@bicker> <4D1DE616.7010105@gmail.com> <20101231174100.GF1886@bicker>
-In-Reply-To: <20101231174100.GF1886@bicker>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Message-Id: <201012021016.31876.br1@einfach.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 12/31/2010 09:41 AM, Dan Carpenter wrote:
-> On Fri, Dec 31, 2010 at 06:17:58AM -0800, Justin P. Mattock wrote:
->>> Wrong:  [PATCH 02/15]drivers:spi:dw_spi.c Typo change diable to disable.
->>>
->>> Right:  [PATCH 02/15] spi/dw_spi: Typo change diable to disable
->>>
->>> regards,
->>> dan carpenter
->>>
->>
->> alright.. so having the backlash is alright for the subject
->
-> Well really my point is not so much about backslashes vs colons, it's
-> about getting the *one* correct prefix.  This stuff is probably
-> scriptable most of the time, but you may still be required to think a
-> little on the corner cases.
->
-> Here is a script to get you started.
->
-> git log --format="%s" drivers/spi/dw_spi.c | \
-> 	head -n 20 |                         \
-> 	perl -ne 's/(.*):.*/$1/; print' |    \
-> 	sort | uniq -c | sort -rn |          \
-> 	perl -ne 's/^\W+\d+ //; print' |     \
-> 	head -n 1
->
-> regards,
-> dan carpenter
->
+On Thu December 2 2010 03:23:07 Javier Cardona wrote:
+> > Do you need to update the beacon this often or just once?
+> > Adhoc doesn't need to do this, for example, because it doesn't
+> > need the TIM; I don't know about mesh.
+> 
+> Currently power save mode is not implemented for mesh interfaces, so
+> the TIM is not really updated or used.  But yes, in principle mesh
+> beacons should include the TIM.  So it's better to use AP style
+> beaconing to pave the way for someone implementing proper traffic info
+> maps and power save for mesh.
 
-thats a nice little script there(just ran it) any way you want to add 
-this into to getmaintainers.pl or something? (this way people get the 
-maintainers address plus a subject line in the mix)
+I have been thinking the same. Using the same style beaconing for AP, ad-hoc 
+and mesh mode could simplify the code, and make it easier to implement TIM or 
+DFS later.
 
-Justin P. Mattock
+bruno
