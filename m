@@ -1,43 +1,85 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.19.149.2]:12231 "EHLO mail.atheros.com"
+Received: from mail.atheros.com ([12.19.149.2]:32544 "EHLO mail.atheros.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753604Ab0LDBU5 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 3 Dec 2010 20:20:57 -0500
+	id S1757199Ab0LBTCn (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 2 Dec 2010 14:02:43 -0500
 Received: from mail.atheros.com ([10.10.20.108])
 	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Fri, 03 Dec 2010 17:20:43 -0800
+	for <linux-wireless@vger.kernel.org>; Thu, 02 Dec 2010 11:02:28 -0800
+Date: Thu, 2 Dec 2010 11:02:39 -0800
 From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: <johannes@sipsolutions.net>
-CC: <linux-wireless@vger.kernel.org>, <amod.bodas@atheros.com>,
-	<pstew@google.com>, "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Subject: [RFC 0/3] ath9k: sleep paranoia series
-Date: Fri, 3 Dec 2010 17:20:50 -0800
-Message-ID: <1291425653-2884-1-git-send-email-lrodriguez@atheros.com>
+To: Joe Perches <joe@perches.com>
+CC: Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
+	Jouni Malinen <Jouni.Malinen@Atheros.com>,
+	Vasanth Thiagarajan <Vasanth.Thiagarajan@Atheros.com>,
+	Senthilkumar Balasubramanian
+	<Senthilkumar.Balasubramanian@Atheros.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"ath9k-devel@lists.ath9k.org" <ath9k-devel@lists.ath9k.org>,
+	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH 1/2] ath: Fix ath_dbg uses missing newlines and access
+ beyond array bound
+Message-ID: <20101202190239.GE7399@tux>
+References: <276469c602c402565b49f99521ea19757429e81e.1291266731.git.joe@perches.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <276469c602c402565b49f99521ea19757429e81e.1291266731.git.joe@perches.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-We need to ensure the device is in full sleep when going to
-suspend, otherwise the device becomes completely unresponsive
-upon resume. This series has one fix on a theoretical imbalance
-which would leave the device awake all the time, and some two
-paranoia warnings which we should look out for. Hitting any
-of these warnings should be investigated.
+On Wed, Dec 01, 2010 at 09:13:32PM -0800, Joe Perches wrote:
+> Add missing newlines to ath_dbg uses
+> ar9300RateSize is not a power of 4, fix to print array line by line.
+> 
+> Signed-off-by: Joe Perches <joe@perches.com>
+> ---
+>  drivers/net/wireless/ath/ath9k/ar9003_eeprom.c |   29 ++---------------------
+>  drivers/net/wireless/ath/ath9k/calib.c         |    4 +-
+>  drivers/net/wireless/ath/ath9k/gpio.c          |    6 ++--
+>  drivers/net/wireless/ath/ath9k/htc_drv_gpio.c  |    7 ++---
+>  drivers/net/wireless/ath/ath9k/htc_drv_main.c  |    2 +-
+>  5 files changed, 12 insertions(+), 36 deletions(-)
+> 
+> diff --git a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
+> index e6ae62b..beb3e87 100644
+> --- a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
+> +++ b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
+> @@ -3342,7 +3342,7 @@ static int ar9300_eeprom_restore_internal(struct ath_hw *ah,
+>  	goto fail;
+>  
+>  found:
+> -	ath_dbg(common, ATH_DBG_EEPROM, "Found valid EEPROM data");
+> +	ath_dbg(common, ATH_DBG_EEPROM, "Found valid EEPROM data\n");
+>  
+>  	for (it = 0; it < MSTATE; it++) {
+>  		if (!read(ah, cptr, word, COMP_HDR_LEN))
+> @@ -4084,22 +4084,9 @@ static void ar9003_hw_set_target_power_eeprom(struct ath_hw *ah, u16 freq,
+>  	    ar9003_hw_eeprom_get_ht40_tgt_pwr(ah, HT_TARGET_RATE_23, freq,
+>  					      is2GHz) + ht40PowerIncForPdadc;
+>  
+> -	while (i < ar9300RateSize) {
+> -		ath_dbg(common, ATH_DBG_EEPROM,
+> -			"TPC[%02d] 0x%08x ", i, targetPowerValT2[i]);
+> -		i++;
+> -
+> -		ath_dbg(common, ATH_DBG_EEPROM,
+> -			"TPC[%02d] 0x%08x ", i, targetPowerValT2[i]);
+> -		i++;
+> -
+> -		ath_dbg(common, ATH_DBG_EEPROM,
+> -			"TPC[%02d] 0x%08x ", i, targetPowerValT2[i]);
+> -		i++;
+> -
+> +	for (i = 0; i < ar9300RateSize; i++) {
+>  		ath_dbg(common, ATH_DBG_EEPROM,
+>  			"TPC[%02d] 0x%08x\n", i, targetPowerValT2[i]);
+> -		i++;
+>  	}
+>  }
 
-I'm marking only one patch as a ready patch, the two others
-are RFCs as I'd like more wider testing first. At least with
-my AR9280 I get no warnings.
+Please send this hunk on a separate patch.
 
-Luis R. Rodriguez (3):
-  ath9k: warn when we get a ATH9K_INT_TIM_TIMER and are idle
-  ath9k: Fix power save count imbalance on ath_radio_enable()
-  ath9k_hw: warn if we cannot change the power to the chip
-
- drivers/net/wireless/ath/ath9k/hw.c   |    2 ++
- drivers/net/wireless/ath/ath9k/main.c |    5 +++--
- 2 files changed, 5 insertions(+), 2 deletions(-)
-
--- 
-1.7.3.2.90.gd4c43
-
+  Luis
+ 
