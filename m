@@ -1,52 +1,156 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail30f.wh2.ocn.ne.jp ([220.111.41.203]:17517 "HELO
-	mail30f.wh2.ocn.ne.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1751557Ab0LHIHe (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 8 Dec 2010 03:07:34 -0500
-Received: from vs3003.wh2.ocn.ne.jp (125.206.180.231)
-	by mail30f.wh2.ocn.ne.jp (RS ver 1.0.95vs) with SMTP id 2-0828135646
-	for <linux-wireless@vger.kernel.org>; Wed,  8 Dec 2010 17:07:28 +0900 (JST)
-From: Bruno Randolf <br1@einfach.org>
-To: Jonathan Guerin <jonathan@guerin.id.au>
-Subject: Re: [ath5k-devel] ath5k: Weird Retransmission Behaviour
-Date: Wed, 8 Dec 2010 17:06:54 +0900
-Cc: Nick Kossifidis <mickflemm@gmail.com>,
-	"ath5k-devel" <ath5k-devel@lists.ath5k.org>,
-	"linux-wireless" <linux-wireless@vger.kernel.org>,
-	bjorn.smedman@venatech.se, nbd@openwrt.org
-References: <AANLkTimDF3kofO=kiuOsz+WrTGROdOL8-3eNvKd5NrD3@mail.gmail.com> <AANLkTiky-Q6DLxXSKf-+UU6avpaVikRgtt5078+Ui7Uh@mail.gmail.com> <AANLkTimS03cqqG8TCN1MTGF0DRQ51hrFkSPrbah2Z4gO@mail.gmail.com>
-In-Reply-To: <AANLkTimS03cqqG8TCN1MTGF0DRQ51hrFkSPrbah2Z4gO@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Message-Id: <201012081706.54459.br1@einfach.org>
+Received: from mail.perches.com ([173.55.12.10]:2115 "EHLO mail.perches.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753672Ab0LBFNk (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 2 Dec 2010 00:13:40 -0500
+From: Joe Perches <joe@perches.com>
+To: Jiri Slaby <jirislaby@gmail.com>,
+	Nick Kossifidis <mickflemm@gmail.com>,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	Bob Copeland <me@bobcopeland.com>,
+	Jouni Malinen <jmalinen@atheros.com>,
+	Vasanthakumar Thiagarajan <vasanth@atheros.com>,
+	Senthil Balasubramanian <senthilkumar@atheros.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, ath5k-devel@lists.ath5k.org,
+	netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
+	ath9k-devel@lists.ath9k.org
+Subject: [PATCH 2/2] ath: Fix logging message typos
+Date: Wed,  1 Dec 2010 21:13:33 -0800
+Message-Id: <a345e995a816576a4c2c39aec43716c18011475b.1291266731.git.joe@perches.com>
+In-Reply-To: <276469c602c402565b49f99521ea19757429e81e.1291266731.git.joe@perches.com>
+References: <276469c602c402565b49f99521ea19757429e81e.1291266731.git.joe@perches.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> > When ath5k doesn't get retry limits from above it uses the following
-> > defaults on dcu.
-> > For now i don't think we use local->hw.conf.short_frame_max_tx_count
-> > for that so the
-> > default is ah_limit_tx_retries (AR5K_INIT_TX_RETRY) but seems it's
-> > wrong and we should
-> > fix it...
-> > 
-> > /* Tx retry limits */
-> > #define AR5K_INIT_SH_RETRY                      10
-> > #define AR5K_INIT_LG_RETRY                      AR5K_INIT_SH_RETRY
-> > /* For station mode */
-> > #define AR5K_INIT_SSH_RETRY                     32
-> > #define AR5K_INIT_SLG_RETRY                     AR5K_INIT_SSH_RETRY
-> > #define AR5K_INIT_TX_RETRY                      10
+Fix immunity misspelling.
+Standardize strings from multiple modules.
+Add spaces between words of concatenated strings.
 
-I just sent a patch cleaning up this mess. Could you please check it? 
-Unfortunately i didn't find way to really test re-transmissions, yet. 
-Jonathan, could you give it a try in your test setup with my patch, and play 
-with the numbers (just hardcode them in ath5k_hw_set_tx_retry_limits) to see 
-if they actually have an effect?
+Signed-off-by: Joe Perches <joe@perches.com>
+---
+ drivers/net/wireless/ath/ath5k/ani.c          |    2 +-
+ drivers/net/wireless/ath/ath9k/ar9002_calib.c |    4 ++--
+ drivers/net/wireless/ath/ath9k/eeprom_4k.c    |    4 ++--
+ drivers/net/wireless/ath/ath9k/eeprom_9287.c  |    2 +-
+ drivers/net/wireless/ath/ath9k/eeprom_def.c   |    2 +-
+ drivers/net/wireless/ath/ath9k/htc_hst.c      |    6 +++---
+ 6 files changed, 10 insertions(+), 10 deletions(-)
 
-As noted in my patch, this does not change the high number of retries we get 
-from the rate control. That's a separate issue.
+diff --git a/drivers/net/wireless/ath/ath5k/ani.c b/drivers/net/wireless/ath/ath5k/ani.c
+index 6b75b22..9c41881 100644
+--- a/drivers/net/wireless/ath/ath5k/ani.c
++++ b/drivers/net/wireless/ath/ath5k/ani.c
+@@ -74,7 +74,7 @@ ath5k_ani_set_noise_immunity_level(struct ath5k_hw *ah, int level)
+ 	static const s8 fr[] = { -78, -80 };
+ #endif
+ 	if (level < 0 || level >= ARRAY_SIZE(sz)) {
+-		ATH5K_ERR(ah->ah_sc, "noise immuniy level %d out of range",
++		ATH5K_ERR(ah->ah_sc, "noise immunity level %d out of range",
+ 			  level);
+ 		return;
+ 	}
+diff --git a/drivers/net/wireless/ath/ath9k/ar9002_calib.c b/drivers/net/wireless/ath/ath9k/ar9002_calib.c
+index a7705e7..199131e 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9002_calib.c
++++ b/drivers/net/wireless/ath/ath9k/ar9002_calib.c
+@@ -720,7 +720,7 @@ static bool ar9285_hw_cl_cal(struct ath_hw *ah, struct ath9k_channel *chan)
+ 		if (!ath9k_hw_wait(ah, AR_PHY_AGC_CONTROL,
+ 				  AR_PHY_AGC_CONTROL_CAL, 0, AH_WAIT_TIMEOUT)) {
+ 			ath_dbg(common, ATH_DBG_CALIBRATE,
+-				"offset calibration failed to complete in 1ms; noisy ??\n");
++				"offset calibration failed to complete in 1ms; noisy environment?\n");
+ 			return false;
+ 		}
+ 		REG_CLR_BIT(ah, AR_PHY_TURBO, AR_PHY_FC_DYN2040_EN);
+@@ -734,7 +734,7 @@ static bool ar9285_hw_cl_cal(struct ath_hw *ah, struct ath9k_channel *chan)
+ 	if (!ath9k_hw_wait(ah, AR_PHY_AGC_CONTROL, AR_PHY_AGC_CONTROL_CAL,
+ 			  0, AH_WAIT_TIMEOUT)) {
+ 		ath_dbg(common, ATH_DBG_CALIBRATE,
+-			"offset calibration failed to complete in 1ms; noisy ??\n");
++			"offset calibration failed to complete in 1ms; noisy enfironment?\n");
+ 		return false;
+ 	}
+ 
+diff --git a/drivers/net/wireless/ath/ath9k/eeprom_4k.c b/drivers/net/wireless/ath/ath9k/eeprom_4k.c
+index 35b1a8c..939fc7a 100644
+--- a/drivers/net/wireless/ath/ath9k/eeprom_4k.c
++++ b/drivers/net/wireless/ath/ath9k/eeprom_4k.c
+@@ -90,7 +90,7 @@ static int ath9k_hw_4k_check_eeprom(struct ath_hw *ah)
+ 				}
+ 			} else {
+ 				ath_err(common,
+-					"Invalid EEPROM Magic. endianness mismatch.\n");
++					"Invalid EEPROM Magic. Endianness mismatch.\n");
+ 				return -EINVAL;
+ 			}
+ 		}
+@@ -1178,7 +1178,7 @@ static u16 ath9k_hw_4k_get_spur_channel(struct ath_hw *ah, u16 i, bool is2GHz)
+ 	u16 spur_val = AR_NO_SPUR;
+ 
+ 	ath_dbg(common, ATH_DBG_ANI,
+-		"Getting spur idx %d is2Ghz. %d val %x\n",
++		"Getting spur idx:%d is2Ghz:%d val:%x\n",
+ 		i, is2GHz, ah->config.spurchans[i][is2GHz]);
+ 
+ 	switch (ah->config.spurmode) {
+diff --git a/drivers/net/wireless/ath/ath9k/eeprom_9287.c b/drivers/net/wireless/ath/ath9k/eeprom_9287.c
+index 0be5351..9ec4bc8 100644
+--- a/drivers/net/wireless/ath/ath9k/eeprom_9287.c
++++ b/drivers/net/wireless/ath/ath9k/eeprom_9287.c
+@@ -1150,7 +1150,7 @@ static u16 ath9k_hw_ar9287_get_spur_channel(struct ath_hw *ah,
+ 	u16 spur_val = AR_NO_SPUR;
+ 
+ 	ath_dbg(common, ATH_DBG_ANI,
+-		"Getting spur idx %d is2Ghz. %d val %x\n",
++		"Getting spur idx:%d is2Ghz:%d val:%x\n",
+ 		i, is2GHz, ah->config.spurchans[i][is2GHz]);
+ 
+ 	switch (ah->config.spurmode) {
+diff --git a/drivers/net/wireless/ath/ath9k/eeprom_def.c b/drivers/net/wireless/ath/ath9k/eeprom_def.c
+index 91722fb..9aa31aa 100644
+--- a/drivers/net/wireless/ath/ath9k/eeprom_def.c
++++ b/drivers/net/wireless/ath/ath9k/eeprom_def.c
+@@ -1458,7 +1458,7 @@ static u16 ath9k_hw_def_get_spur_channel(struct ath_hw *ah, u16 i, bool is2GHz)
+ 	u16 spur_val = AR_NO_SPUR;
+ 
+ 	ath_dbg(common, ATH_DBG_ANI,
+-		"Getting spur idx %d is2Ghz. %d val %x\n",
++		"Getting spur idx:%d is2Ghz:%d val:%x\n",
+ 		i, is2GHz, ah->config.spurchans[i][is2GHz]);
+ 
+ 	switch (ah->config.spurmode) {
+diff --git a/drivers/net/wireless/ath/ath9k/htc_hst.c b/drivers/net/wireless/ath/ath9k/htc_hst.c
+index c41ab8c..69b6aca 100644
+--- a/drivers/net/wireless/ath/ath9k/htc_hst.c
++++ b/drivers/net/wireless/ath/ath9k/htc_hst.c
+@@ -239,7 +239,7 @@ int htc_connect_service(struct htc_target *target,
+ 	/* Find an available endpoint */
+ 	endpoint = get_next_avail_ep(target->endpoint);
+ 	if (!endpoint) {
+-		dev_err(target->dev, "Endpoint is not available for"
++		dev_err(target->dev, "Endpoint is not available for "
+ 			"service %d\n", service_connreq->service_id);
+ 		return -EINVAL;
+ 	}
+@@ -253,7 +253,7 @@ int htc_connect_service(struct htc_target *target,
+ 	skb = alloc_skb(sizeof(struct htc_conn_svc_msg) +
+ 			    sizeof(struct htc_frame_hdr), GFP_ATOMIC);
+ 	if (!skb) {
+-		dev_err(target->dev, "Failed to allocate buf to send"
++		dev_err(target->dev, "Failed to allocate buf to send "
+ 			"service connect req\n");
+ 		return -ENOMEM;
+ 	}
+@@ -434,7 +434,7 @@ struct htc_target *ath9k_htc_hw_alloc(void *hif_handle,
+ 
+ 	target = kzalloc(sizeof(struct htc_target), GFP_KERNEL);
+ 	if (!target) {
+-		printk(KERN_ERR "Unable to allocate memory for"
++		printk(KERN_ERR "Unable to allocate memory for "
+ 			"target device\n");
+ 		return NULL;
+ 	}
+-- 
+1.7.3.2.245.g03276.dirty
 
-bruno
