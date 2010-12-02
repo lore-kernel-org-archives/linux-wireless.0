@@ -1,42 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-vw0-f46.google.com ([209.85.212.46]:33506 "EHLO
-	mail-vw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758234Ab0LTWWH (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:51041 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751043Ab0LBKUl (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 20 Dec 2010 17:22:07 -0500
-Received: by vws16 with SMTP id 16so1513346vws.19
-        for <linux-wireless@vger.kernel.org>; Mon, 20 Dec 2010 14:22:07 -0800 (PST)
-Message-ID: <4D0FD710.8070103@lwfinger.net>
-Date: Mon, 20 Dec 2010 16:22:08 -0600
-From: Larry Finger <Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-To: htl10@users.sourceforge.net
-CC: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-Subject: Re: [PATCH] rtl818x: move rtl8180 and rtl8187 to separate subdirectories
-References: <22404.31613.qm@web29501.mail.ird.yahoo.com>
-In-Reply-To: <22404.31613.qm@web29501.mail.ird.yahoo.com>
-Content-Type: text/plain; charset=ISO-8859-1
+	Thu, 2 Dec 2010 05:20:41 -0500
+Subject: Re: [PATCH 2/3] lib: Improve EWMA efficiency by using bitshifts
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Bruno Randolf <br1@einfach.org>
+Cc: linville@tuxdriver.com, randy.dunlap@oracle.com, br1@thinktube.com,
+	peterz@infradead.org, blp@cs.stanford.edu,
+	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Lars_Ericsson@telia.com, j@w1.fi, stefanr@s5r6.in-berlin.de,
+	kosaki.motohiro@jp.fujitsu.com, akpm@linux-foundation.org,
+	kevin.granade@gmail.com
+In-Reply-To: <20101202101236.22988.1691.stgit@localhost6.localdomain6>
+References: <20101202101231.22988.33396.stgit@localhost6.localdomain6>
+	 <20101202101236.22988.1691.stgit@localhost6.localdomain6>
+Content-Type: text/plain; charset="UTF-8"
+Date: Thu, 02 Dec 2010 11:20:22 +0100
+Message-ID: <1291285222.3481.45.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 12/20/2010 03:34 PM, Hin-Tak Leung wrote:
-> --- On Mon, 20/12/10, John W. Linville <linville@tuxdriver.com> wrote:
-> 
->> These drivers share one header file,
->> but nothing else.  Worse, both
->> drivers use the rtl8225 part with different register
->> settings.  The
->> results has been some ugly naming -- let's simplify that.
->>
->> Signed-off-by: John W. Linville <linville@tuxdriver.com>
-> 
-> Acked-by: Hin-Tak Leung <htl10@users.sourceforge.net>
-> 
-> 
-> Seems reasonable.
+On Thu, 2010-12-02 at 19:12 +0900, Bruno Randolf wrote:
 
-To me as well. In fact, this should cure a buglet that I have noticed in that
-rtl8180 was rebuilt whenever rtl8187 was changed.
+> +	/* get bitshift for weight */
+> +	for (n = 0; !(weight & 1); n++)
+> +		weight = weight >> 1;
+> +	WARN_ON(weight > 1 || n < 1);
 
-Larry
+I'm sure there's something like log2() (and is_power_of_2() for the
+warning) in the kernel already -- no need to reimplement it...
+
+johannes
+
