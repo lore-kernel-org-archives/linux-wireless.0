@@ -1,66 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from kroah.org ([198.145.64.141]:45502 "EHLO coco.kroah.org"
+Received: from mail.atheros.com ([12.19.149.2]:53553 "EHLO mail.atheros.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751240Ab0LOVOt (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 15 Dec 2010 16:14:49 -0500
-Date: Wed, 15 Dec 2010 13:14:33 -0800
-From: Greg KH <greg@kroah.com>
-To: Vipin Mehta <Vipin.Mehta@Atheros.com>
-Cc: Joe Perches <joe@perches.com>,
-	"Luis R. Rodriguez" <mcgrof@gmail.com>,
-	"devel@driverdev.osuosl.org" <devel@driverdev.osuosl.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: pull request:  staging: ath6kl: linux kernel style cleanups
-Message-ID: <20101215211433.GA932@kroah.com>
-References: <AANLkTimfPFeLy5sfDDS5fXiK8X8UT2x8dhzZ+_FEjrTo@mail.gmail.com>
- <1292363199.26726.34.camel@Joe-Laptop>
- <AANLkTikD440S8AWcOdib7BfTR5a7CaTuYjkysi43oaQZ@mail.gmail.com>
- <35B17FE5076C7040809188FBE7913F98406D8912FE@SC1EXMB-MBCL.global.atheros.com>
- <1292402343.26726.155.camel@Joe-Laptop>
- <35B17FE5076C7040809188FBE7913F98406D966A13@SC1EXMB-MBCL.global.atheros.com>
+	id S1755207Ab0LBFN6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 2 Dec 2010 00:13:58 -0500
+Received: from mail.atheros.com ([10.10.20.105])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Wed, 01 Dec 2010 21:13:44 -0800
+Date: Thu, 2 Dec 2010 10:43:23 +0530
+From: Vasanthakumar Thiagarajan <vasanth@atheros.com>
+To: Felix Fietkau <nbd@openwrt.org>
+CC: Vasanth Thiagarajan <Vasanth.Thiagarajan@Atheros.com>,
+	"linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH 16/26] ath9k_hw: Configure attenuation control only for
+	chain 0 on AR9485
+Message-ID: <20101202051323.GK12908@vasanth-laptop>
+References: <1291188775-13707-1-git-send-email-vasanth@atheros.com> <1291188775-13707-17-git-send-email-vasanth@atheros.com> <4CF67CEA.5000305@openwrt.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <35B17FE5076C7040809188FBE7913F98406D966A13@SC1EXMB-MBCL.global.atheros.com>
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <4CF67CEA.5000305@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Dec 15, 2010 at 12:47:42PM -0800, Vipin Mehta wrote:
-> 
-> -----Original Message-----
-> From: Joe Perches [mailto:joe@perches.com] 
-> Sent: Wednesday, December 15, 2010 12:39 AM
-> To: Vipin Mehta
-> Cc: Luis R. Rodriguez; devel@driverdev.osuosl.org; linux-wireless
-> Subject: pull request: staging: ath6kl: linux kernel style cleanups
-> 
-> A too-large-to-post (~2MB) changeset to ath6kl, sent separately to Vipin and Luis.
-> 
-> Mostly done mechanically.  Compile tested only.
-> 
-> The following changes since commit e3d7018ee7b5205a80b1011f5a86432de40ce74a:
-> 
->   Add linux-next specific files for 20101215 (2010-12-15 14:37:00 +1100)
-> 
-> are available in the git repository at:
->   git://repo.or.cz/linux-2.6/trivial-mods.git 20101215-ath6kl
-> 
-> LGTM.
-> 
-> Greg,
-> Can you kindly pull in these changes into ath6kl?
+On Wed, Dec 01, 2010 at 10:20:50PM +0530, Felix Fietkau wrote:
+> On 2010-12-01 8:32 AM, Vasanthakumar Thiagarajan wrote:
+> > Signed-off-by: Vasanthakumar Thiagarajan <vasanth@atheros.com>
+> > ---
+> >  drivers/net/wireless/ath/ath9k/ar9003_eeprom.c |    6 +++++-
+> >  1 files changed, 5 insertions(+), 1 deletions(-)
+> > 
+> > diff --git a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
+> > index 9ce6846..71316ec 100644
+> > --- a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
+> > +++ b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
+> > @@ -3639,9 +3639,13 @@ static void ar9003_hw_atten_apply(struct ath_hw *ah, struct ath9k_channel *chan)
+> >  					  AR_PHY_EXT_ATTEN_CTL_1,
+> >  					  AR_PHY_EXT_ATTEN_CTL_2,
+> >  					 };
+> > +	u8 max_chains = AR9300_MAX_CHAINS;
+> > +
+> > +	if (AR_SREV_9485(ah))
+> > +		max_chains = 1;
+> >  
+> >  	/* Test value. if 0 then attenuation is unused. Don't load anything. */
+> > -	for (i = 0; i < 3; i++) {
+> > +	for (i = 0; i < max_chains; i++) {
+> >  		value = ar9003_hw_atten_chain_get(ah, i, chan);
+> >  		REG_RMW_FIELD(ah, ext_atten_reg[i],
+> >  			      AR_PHY_EXT_ATTEN_CTL_XATTEN1_DB, value);
+> Since the issue of having second/third chain registers unimplemented in
+> certain chips is going to be the same on AR9344 and other WiSoC chips as
+> well, how about adding an ath9k_hw variable max_hw_chains and using that
+> wherever extended chain registers would be accessed.
+> That would save us from having to throw around new SREV checks over and
+> over again for the same issue.
 
-Please send them to me in patch form so that I can apply them.  You need
-to provide your ack on them as well.
+makes sense.
 
-> Also, would you know
-> what kind of changes can be migrated to Linus's 2.6.37 kernel. Is it
-> only limited to bug fixes or code cleanup can also be a part of it?
-
-At this point in the release cycle, what do you think?
-
-If you are unsure of how the release cycle works, please read
-Documentation/development_process/
-
-thanks,
-
-greg k-h
+Vasanth
