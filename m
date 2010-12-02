@@ -1,56 +1,179 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qy0-f174.google.com ([209.85.216.174]:49159 "EHLO
-	mail-qy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752079Ab0LaK1M (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 31 Dec 2010 05:27:12 -0500
-Message-ID: <4D1DAFF5.3090108@gmail.com>
-Date: Fri, 31 Dec 2010 08:27:01 -0200
-From: Mauro Carvalho Chehab <maurochehab@gmail.com>
-MIME-Version: 1.0
-To: "Justin P. Mattock" <justinmattock@gmail.com>
-CC: trivial@kernel.org, linux-m68k@lists.linux-m68k.org,
-	linux-kernel@vger.kernel.org, netdev@vger.kernel.org,
-	ivtv-devel@ivtvdriver.org, linux-media@vger.kernel.org,
-	linux-wireless@vger.kernel.org, linux-scsi@vger.kernel.org,
-	spi-devel-general@lists.sourceforge.net,
-	devel@driverdev.osuosl.org, linux-usb@vger.kernel.org
-Subject: Re: [PATCH 14/15]include:media:davinci:vpss.h Typo change diable
- to disable.
-References: <1293750484-1161-1-git-send-email-justinmattock@gmail.com> <1293750484-1161-2-git-send-email-justinmattock@gmail.com> <1293750484-1161-3-git-send-email-justinmattock@gmail.com> <1293750484-1161-4-git-send-email-justinmattock@gmail.com> <1293750484-1161-5-git-send-email-justinmattock@gmail.com> <1293750484-1161-6-git-send-email-justinmattock@gmail.com> <1293750484-1161-7-git-send-email-justinmattock@gmail.com> <1293750484-1161-8-git-send-email-justinmattock@gmail.com> <1293750484-1161-9-git-send-email-justinmattock@gmail.com> <1293750484-1161-10-git-send-email-justinmattock@gmail.com> <1293750484-1161-11-git-send-email-justinmattock@gmail.com> <1293750484-1161-12-git-send-email-justinmattock@gmail.com> <1293750484-1161-13-git-send-email-justinmattock@gmail.com> <1293750484-1161-14-git-send-email-justinmattock@gmail.com>
-In-Reply-To: <1293750484-1161-14-git-send-email-justinmattock@gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from mail.perches.com ([173.55.12.10]:2109 "EHLO mail.perches.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751646Ab0LBFNh (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 2 Dec 2010 00:13:37 -0500
+From: Joe Perches <joe@perches.com>
+To: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	Jouni Malinen <jmalinen@atheros.com>,
+	Vasanthakumar Thiagarajan <vasanth@atheros.com>,
+	Senthil Balasubramanian <senthilkumar@atheros.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
+	netdev@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: [PATCH 1/2] ath: Fix ath_dbg uses missing newlines and access beyond array bound
+Date: Wed,  1 Dec 2010 21:13:32 -0800
+Message-Id: <276469c602c402565b49f99521ea19757429e81e.1291266731.git.joe@perches.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Em 30-12-2010 21:08, Justin P. Mattock escreveu:
-> The below patch fixes a typo "diable" to "disable". Please let me know if this 
-> is correct or not.
-> 
-> Signed-off-by: Justin P. Mattock <justinmattock@gmail.com>
-Acked-by: Mauro Carvalho Chehab <mchehab@redhat.com>
+Add missing newlines to ath_dbg uses
+ar9300RateSize is not a power of 4, fix to print array line by line.
 
-PS.: Next time, please c/c linux-media ONLY on patches related to media
-drivers (/drivers/video and the corresponding include files). Having to
-dig into a series of 15 patches to just actually look on 3 patches 
-is not nice.
+Signed-off-by: Joe Perches <joe@perches.com>
+---
+ drivers/net/wireless/ath/ath9k/ar9003_eeprom.c |   29 ++---------------------
+ drivers/net/wireless/ath/ath9k/calib.c         |    4 +-
+ drivers/net/wireless/ath/ath9k/gpio.c          |    6 ++--
+ drivers/net/wireless/ath/ath9k/htc_drv_gpio.c  |    7 ++---
+ drivers/net/wireless/ath/ath9k/htc_drv_main.c  |    2 +-
+ 5 files changed, 12 insertions(+), 36 deletions(-)
 
-> 
-> ---
->  include/media/davinci/vpss.h |    2 +-
->  1 files changed, 1 insertions(+), 1 deletions(-)
-> 
-> diff --git a/include/media/davinci/vpss.h b/include/media/davinci/vpss.h
-> index c59cc02..b586495 100644
-> --- a/include/media/davinci/vpss.h
-> +++ b/include/media/davinci/vpss.h
-> @@ -44,7 +44,7 @@ struct vpss_pg_frame_size {
->  	short pplen;
->  };
->  
-> -/* Used for enable/diable VPSS Clock */
-> +/* Used for enable/disable VPSS Clock */
->  enum vpss_clock_sel {
->  	/* DM355/DM365 */
->  	VPSS_CCDC_CLOCK,
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
+index e6ae62b..beb3e87 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
++++ b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
+@@ -3342,7 +3342,7 @@ static int ar9300_eeprom_restore_internal(struct ath_hw *ah,
+ 	goto fail;
+ 
+ found:
+-	ath_dbg(common, ATH_DBG_EEPROM, "Found valid EEPROM data");
++	ath_dbg(common, ATH_DBG_EEPROM, "Found valid EEPROM data\n");
+ 
+ 	for (it = 0; it < MSTATE; it++) {
+ 		if (!read(ah, cptr, word, COMP_HDR_LEN))
+@@ -4084,22 +4084,9 @@ static void ar9003_hw_set_target_power_eeprom(struct ath_hw *ah, u16 freq,
+ 	    ar9003_hw_eeprom_get_ht40_tgt_pwr(ah, HT_TARGET_RATE_23, freq,
+ 					      is2GHz) + ht40PowerIncForPdadc;
+ 
+-	while (i < ar9300RateSize) {
+-		ath_dbg(common, ATH_DBG_EEPROM,
+-			"TPC[%02d] 0x%08x ", i, targetPowerValT2[i]);
+-		i++;
+-
+-		ath_dbg(common, ATH_DBG_EEPROM,
+-			"TPC[%02d] 0x%08x ", i, targetPowerValT2[i]);
+-		i++;
+-
+-		ath_dbg(common, ATH_DBG_EEPROM,
+-			"TPC[%02d] 0x%08x ", i, targetPowerValT2[i]);
+-		i++;
+-
++	for (i = 0; i < ar9300RateSize; i++) {
+ 		ath_dbg(common, ATH_DBG_EEPROM,
+ 			"TPC[%02d] 0x%08x\n", i, targetPowerValT2[i]);
+-		i++;
+ 	}
+ }
+ 
+@@ -4687,17 +4674,7 @@ static void ath9k_hw_ar9300_set_txpower(struct ath_hw *ah,
+ 
+ 	for (i = 0; i < ar9300RateSize; i++) {
+ 		ath_dbg(common, ATH_DBG_EEPROM,
+-			"TPC[%02d] 0x%08x ", i, targetPowerValT2[i]);
+-		i++;
+-		ath_dbg(common, ATH_DBG_EEPROM,
+-			"TPC[%02d] 0x%08x ", i, targetPowerValT2[i]);
+-		i++;
+-		ath_dbg(common, ATH_DBG_EEPROM,
+-			"TPC[%02d] 0x%08x ", i, targetPowerValT2[i]);
+-		i++;
+-		ath_dbg(common, ATH_DBG_EEPROM,
+-			"TPC[%02d] 0x%08x\n\n", i, targetPowerValT2[i]);
+-		i++;
++			"TPC[%02d] 0x%08x\n", i, targetPowerValT2[i]);
+ 	}
+ 
+ 	/*
+diff --git a/drivers/net/wireless/ath/ath9k/calib.c b/drivers/net/wireless/ath/ath9k/calib.c
+index 0b6c623..b68a1ac 100644
+--- a/drivers/net/wireless/ath/ath9k/calib.c
++++ b/drivers/net/wireless/ath/ath9k/calib.c
+@@ -324,12 +324,12 @@ static void ath9k_hw_nf_sanitize(struct ath_hw *ah, s16 *nf)
+ 
+ 		if (nf[i] > ATH9K_NF_TOO_HIGH) {
+ 			ath_dbg(common, ATH_DBG_CALIBRATE,
+-				"NF[%d] (%d) > MAX (%d), correcting to MAX",
++				"NF[%d] (%d) > MAX (%d), correcting to MAX\n",
+ 				i, nf[i], ATH9K_NF_TOO_HIGH);
+ 			nf[i] = limit->max;
+ 		} else if (nf[i] < limit->min) {
+ 			ath_dbg(common, ATH_DBG_CALIBRATE,
+-				"NF[%d] (%d) < MIN (%d), correcting to NOM",
++				"NF[%d] (%d) < MIN (%d), correcting to NOM\n",
+ 				i, nf[i], limit->min);
+ 			nf[i] = limit->nominal;
+ 		}
+diff --git a/drivers/net/wireless/ath/ath9k/gpio.c b/drivers/net/wireless/ath/ath9k/gpio.c
+index 60b2fb7..1337640 100644
+--- a/drivers/net/wireless/ath/ath9k/gpio.c
++++ b/drivers/net/wireless/ath/ath9k/gpio.c
+@@ -237,12 +237,12 @@ static void ath_detect_bt_priority(struct ath_softc *sc)
+ 		/* Detect if colocated bt started scanning */
+ 		if (btcoex->bt_priority_cnt >= ATH_BT_CNT_SCAN_THRESHOLD) {
+ 			ath_dbg(ath9k_hw_common(sc->sc_ah), ATH_DBG_BTCOEX,
+-				"BT scan detected");
++				"BT scan detected\n");
+ 			sc->sc_flags |= (SC_OP_BT_SCAN |
+ 					 SC_OP_BT_PRIORITY_DETECTED);
+ 		} else if (btcoex->bt_priority_cnt >= ATH_BT_CNT_THRESHOLD) {
+ 			ath_dbg(ath9k_hw_common(sc->sc_ah), ATH_DBG_BTCOEX,
+-				"BT priority traffic detected");
++				"BT priority traffic detected\n");
+ 			sc->sc_flags |= SC_OP_BT_PRIORITY_DETECTED;
+ 		}
+ 
+@@ -379,7 +379,7 @@ void ath9k_btcoex_timer_resume(struct ath_softc *sc)
+ 	struct ath_hw *ah = sc->sc_ah;
+ 
+ 	ath_dbg(ath9k_hw_common(ah), ATH_DBG_BTCOEX,
+-		"Starting btcoex timers");
++		"Starting btcoex timers\n");
+ 
+ 	/* make sure duty cycle timer is also stopped when resuming */
+ 	if (btcoex->hw_timer_enabled)
+diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_gpio.c b/drivers/net/wireless/ath/ath9k/htc_drv_gpio.c
+index d8685f0..283ff97 100644
+--- a/drivers/net/wireless/ath/ath9k/htc_drv_gpio.c
++++ b/drivers/net/wireless/ath/ath9k/htc_drv_gpio.c
+@@ -21,12 +21,12 @@ static void ath_detect_bt_priority(struct ath9k_htc_priv *priv)
+ 		/* Detect if colocated bt started scanning */
+ 		if (btcoex->bt_priority_cnt >= ATH_BT_CNT_SCAN_THRESHOLD) {
+ 			ath_dbg(ath9k_hw_common(ah), ATH_DBG_BTCOEX,
+-				"BT scan detected");
++				"BT scan detected\n");
+ 			priv->op_flags |= (OP_BT_SCAN |
+ 					 OP_BT_PRIORITY_DETECTED);
+ 		} else if (btcoex->bt_priority_cnt >= ATH_BT_CNT_THRESHOLD) {
+ 			ath_dbg(ath9k_hw_common(ah), ATH_DBG_BTCOEX,
+-				"BT priority traffic detected");
++				"BT priority traffic detected\n");
+ 			priv->op_flags |= OP_BT_PRIORITY_DETECTED;
+ 		}
+ 
+@@ -114,8 +114,7 @@ void ath_htc_resume_btcoex_work(struct ath9k_htc_priv *priv)
+ 	struct ath_btcoex *btcoex = &priv->btcoex;
+ 	struct ath_hw *ah = priv->ah;
+ 
+-	ath_dbg(ath9k_hw_common(ah), ATH_DBG_BTCOEX,
+-		"Starting btcoex work");
++	ath_dbg(ath9k_hw_common(ah), ATH_DBG_BTCOEX, "Starting btcoex work\n");
+ 
+ 	btcoex->bt_priority_cnt = 0;
+ 	btcoex->bt_priority_time = jiffies;
+diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_main.c b/drivers/net/wireless/ath/ath9k/htc_drv_main.c
+index 1af31b5..87731c2 100644
+--- a/drivers/net/wireless/ath/ath9k/htc_drv_main.c
++++ b/drivers/net/wireless/ath/ath9k/htc_drv_main.c
+@@ -1133,7 +1133,7 @@ static int ath9k_htc_tx(struct ieee80211_hw *hw, struct sk_buff *skb)
+ 			spin_unlock_bh(&priv->tx_lock);
+ 		} else {
+ 			ath_dbg(ath9k_hw_common(priv->ah), ATH_DBG_XMIT,
+-				"Tx failed");
++				"Tx failed\n");
+ 		}
+ 		goto fail_tx;
+ 	}
+-- 
+1.7.3.2.245.g03276.dirty
 
