@@ -1,72 +1,87 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.19.149.2]:13840 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752880Ab0LAHeN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 1 Dec 2010 02:34:13 -0500
-Received: from mail.atheros.com ([10.10.20.105])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Tue, 30 Nov 2010 23:33:59 -0800
-From: Vasanthakumar Thiagarajan <vasanth@atheros.com>
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>
-Subject: [PATCH 11/26] ath9k_hw: Find chansel of AR_PHY_65NM_CH0_SYNTH7 from an array for AR9485
-Date: Tue, 30 Nov 2010 23:32:40 -0800
-Message-ID: <1291188775-13707-12-git-send-email-vasanth@atheros.com>
-In-Reply-To: <1291188775-13707-1-git-send-email-vasanth@atheros.com>
-References: <1291188775-13707-1-git-send-email-vasanth@atheros.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from he.sipsolutions.net ([78.46.109.217]:55907 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753614Ab0LBG5b (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 2 Dec 2010 01:57:31 -0500
+Subject: Re: [RFC 5/5] cfg80211/mac80211: add mesh join/leave commands
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Javier Cardona <javier@cozybit.com>
+Cc: linux-wireless@vger.kernel.org, Steve Derosier <steve@cozybit.com>,
+	devel@lists.open80211s.org
+In-Reply-To: <AANLkTin==aJjY4Sctu1+g7bitDsd6S14SKRymrNW_WLy@mail.gmail.com>
+References: <20101201205939.009530439@sipsolutions.net>
+	 <20101201210226.159495600@sipsolutions.net>
+	 <AANLkTin==aJjY4Sctu1+g7bitDsd6S14SKRymrNW_WLy@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Thu, 02 Dec 2010 07:57:27 +0100
+Message-ID: <1291273047.3481.3.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Vasanthakumar Thiagarajan <vasanth@atheros.com>
----
- drivers/net/wireless/ath/ath9k/ar9003_phy.c |   25 ++++++++++++++++++++++++-
- 1 files changed, 24 insertions(+), 1 deletions(-)
+On Wed, 2010-12-01 at 16:23 -0800, Javier Cardona wrote:
 
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_phy.c b/drivers/net/wireless/ath/ath9k/ar9003_phy.c
-index 4e35bda..4739af1 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_phy.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_phy.c
-@@ -25,6 +25,24 @@ static const int cycpwrThr1_table[] =
- /* level:  0   1   2   3   4   5   6   7   8  */
- 	{ -6, -4, -2,  0,  2,  4,  6,  8 };     /* lvl 0-7, default 3 */
- 
-+/* Chansel table used by ar9485 */
-+static const u32 ar9003_chansel_xtal_40M[] = {
-+	0xa0ccbe,
-+	0xa12213,
-+	0xa17769,
-+	0xa1ccbe,
-+	0xa22213,
-+	0xa27769,
-+	0xa2ccbe,
-+	0xa32213,
-+	0xa37769,
-+	0xa3ccbe,
-+	0xa42213,
-+	0xa47769,
-+	0xa4ccbe,
-+	0xa5998b,
-+};
-+
- /*
-  * register values to turn OFDM weak signal detection OFF
-  */
-@@ -75,7 +93,12 @@ static int ar9003_hw_set_channel(struct ath_hw *ah, struct ath9k_channel *chan)
- 	freq = centers.synth_center;
- 
- 	if (freq < 4800) {     /* 2 GHz, fractional mode */
--		channelSel = CHANSEL_2G(freq);
-+		if (AR_SREV_9485(ah)) {
-+			int ichan = ieee80211_frequency_to_channel(freq);
-+
-+			channelSel = ar9003_chansel_xtal_40M[ichan - 1];
-+		} else
-+			channelSel = CHANSEL_2G(freq);
- 		/* Set to 2G mode */
- 		bMode = 1;
- 	} else {
--- 
-1.7.0.4
+> +static int nl80211_join_mesh(struct sk_buff *skb, struct genl_info *info)
+> +{
+> +       struct cfg80211_registered_device *rdev = info->user_ptr[0];
+> +       struct net_device *dev = info->user_ptr[1];
+> +       struct mesh_config cfg;
+> +       int err;
+> +
+> +       /* start with default */
+> +       memcpy(&cfg, &default_mesh_config, sizeof(cfg));
+> +
+> +       /* and parse other given info */
+> +       err = nl80211_parse_mesh_params(info, &cfg, NULL);
+> +       if (err)
+> +               return err;
+> 
+> Only the mesh id should be mandatory for starting the mesh, and none
+> of the other mesh parameters.  Therefore I would change the above to:
+> 
+
+> +       if (info->attrs[NL80211_ATTR_MESH_PARAMS]) {
+> +               err = nl80211_parse_mesh_params(info, &cfg, NULL);
+> +               if (err)
+> +                       return err;
+> +       }
+
+Good point.
+
+> +               case NL80211_IFTYPE_MESH_POINT:
+> +                       /* backward compat code ... */
+> +                       if (wdev->ssid_len)
+> +                               __cfg80211_join_mesh(rdev, dev, wdev->ssid,
+> +                                                    wdev->ssid_len, NULL);
+> +
+> 
+> This doesn't quite work:  when mesh interfaces are created with a mesh
+> id you set wdev->ssid_len.
+> Later, when the interface is brought up, the mesh won't start because
+> of the last check below:
+
+Oops, good catch.
+
+> If you want to keep working on this we'll be happy to test it again,
+> or if you want we can take it from here and finish this.
+> Let me know.
+
+I'll finish it, shouldn't be too much.
+
+> > I just noticed that this will lose mesh parameters when you leave the
+> > mesh, unlike previously where they would be kept.
+> 
+> ...I don't think there's an issue.  I'll ask around.
+
+Ok, I'll leave it as is for now.
+
+Regarding this I also noticed something else: there's a bug still in the
+patch -- if you attempt to set mesh parameters on an interface that's
+down it'll go through to mac80211, but then the parameters will just be
+overwritten upon joining. Clearly, that's not desirable, but I'm not
+sure whether we need the ability to update mesh parameters while the
+interface isn't joined to a mesh?
+
+johannes
 
