@@ -1,23 +1,31 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:44778 "EHLO nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755216Ab0LAQwq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 1 Dec 2010 11:52:46 -0500
-Message-ID: <4CF67D5B.3020407@openwrt.org>
-Date: Wed, 01 Dec 2010 17:52:43 +0100
-From: Felix Fietkau <nbd@openwrt.org>
+Received: from forward7.mail.yandex.net ([77.88.61.37]:56889 "EHLO
+	forward7.mail.yandex.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757073Ab0LBLtP (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 2 Dec 2010 06:49:15 -0500
+From: Misha Shnurapet <shnurapet@fedoraproject.org>
+To: Mohammed Shafi <shafi.wireless@gmail.com>
+Cc: rajkumar.manoharan@atheros.com, linux-wireless@vger.kernel.org
+In-Reply-To: <183971291283028@web55.yandex.ru>
+References: <740581291208091@web69.yandex.ru>
+	<AANLkTimupT+zROY0-LB5i8MoVj+72cE14L-R2wEEdif9@mail.gmail.com>
+	<20101201162107.GA16381@vmraj-lnx.users.atheros.com> <AANLkTin+DzagZ7OhkbGoxR2bJyYcYSoEnz2FavD6VR=P@mail.gmail.com> <183971291283028@web55.yandex.ru>
+Subject: Re: [ath9k-devel] Netgear WNA1100 and master mode
 MIME-Version: 1.0
-To: Vasanthakumar Thiagarajan <vasanth@atheros.com>
-CC: linville@tuxdriver.com, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 24/26] ath9k_hw: Setup paprd only for chain 0 on AR9485
-References: <1291188775-13707-1-git-send-email-vasanth@atheros.com> <1291188775-13707-25-git-send-email-vasanth@atheros.com>
-In-Reply-To: <1291188775-13707-25-git-send-email-vasanth@atheros.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Message-Id: <14551291290193@web88.yandex.ru>
+Date: Thu, 02 Dec 2010 19:43:13 +0800
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2010-12-01 8:32 AM, Vasanthakumar Thiagarajan wrote:
-> Signed-off-by: Vasanthakumar Thiagarajan <vasanth@atheros.com>
-Same here as with the other two chain register related patches.
+02.12.2010, 17:43, "Misha Shnurapet" <shnurapet@fedoraproject.org>:
+> If there is a Bugzilla thread for me to subscribe to watch the issue, I would appreciate the link.
 
-- Felix
+Will subscribe to the wireless.kernel.org page, sorry.
+
+-- 
+Best regards,
+Misha Shnurapet, Fedora Project Contributor
+http://fedoraproject.org/wiki/User:Shnurapet
+shnurapet AT fedoraproject.org, GPG: 00217306
