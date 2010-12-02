@@ -1,121 +1,116 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.19.149.2]:17670 "EHLO mail.atheros.com"
+Received: from mail.atheros.com ([12.19.149.2]:59125 "EHLO mail.atheros.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754156Ab0LGCtL (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 6 Dec 2010 21:49:11 -0500
-Received: from mail.atheros.com ([10.10.20.108])
+	id S1751517Ab0LBLLF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 2 Dec 2010 06:11:05 -0500
+Received: from mail.atheros.com ([10.10.20.105])
 	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Mon, 06 Dec 2010 18:48:56 -0800
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+	for <linux-wireless@vger.kernel.org>; Thu, 02 Dec 2010 03:10:51 -0800
+From: Vasanthakumar Thiagarajan <vasanth@atheros.com>
 To: <linville@tuxdriver.com>
-CC: <johannes@sipsolutions.net>, <linux-wireless@vger.kernel.org>,
-	<amod.bodas@atheros.com>, <pstew@google.com>,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>, <stable@kernel.org>,
-	Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH 4/5] mac80211: fix idle change notifications upon device stop
-Date: Mon, 6 Dec 2010 18:48:54 -0800
-Message-ID: <1291690135-4535-5-git-send-email-lrodriguez@atheros.com>
-In-Reply-To: <1291690135-4535-1-git-send-email-lrodriguez@atheros.com>
-References: <1291690135-4535-1-git-send-email-lrodriguez@atheros.com>
+CC: <linux-wireless@vger.kernel.org>
+Subject: [PATCH V2 09/27] ath9k: Enable extended synch for AR9485 to fix L0s recovery issue
+Date: Thu, 2 Dec 2010 03:06:53 -0800
+Message-ID: <1291288031-3409-10-git-send-email-vasanth@atheros.com>
+In-Reply-To: <1291288031-3409-1-git-send-email-vasanth@atheros.com>
+References: <1291288031-3409-1-git-send-email-vasanth@atheros.com>
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Drivers that depend on tuning their devices to disable the radio
-completely and properly through mac80211' idle state change
-were being left with the radio turned on once a device interface
-is stopped, the reason is that we first were checking for the open
-count prior to issuing any further config changes. For some devices
-this could mean breaking suspend and resume completely as they were
-under the impression that the idle state change to idle would be
-issued either during or after the stop callback. Fix this by
-allowing state changes through upon the device stop.
-
-This fixes suspend and resume on ath9k and likely a few other
-drivers.
-
-Cc: stable@kernel.org
-Cc: Paul Stewart <pstew@google.com>
-Cc: Amod Bodas <amod.bodas@atheros.com>
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+Signed-off-by: Vasanthakumar Thiagarajan <vasanth@atheros.com>
 ---
- net/mac80211/ieee80211_i.h |    9 ++++++++-
- net/mac80211/iface.c       |    9 ++-------
- net/mac80211/main.c        |    4 ++--
- 3 files changed, 12 insertions(+), 10 deletions(-)
+ drivers/net/wireless/ath/ath.h        |    1 +
+ drivers/net/wireless/ath/ath9k/hw.c   |    5 +++++
+ drivers/net/wireless/ath/ath9k/hw.h   |    2 ++
+ drivers/net/wireless/ath/ath9k/main.c |    3 +++
+ drivers/net/wireless/ath/ath9k/pci.c  |   12 ++++++++++++
+ 5 files changed, 23 insertions(+), 0 deletions(-)
 
-diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
-index 72499fe..ae32349 100644
---- a/net/mac80211/ieee80211_i.h
-+++ b/net/mac80211/ieee80211_i.h
-@@ -1023,8 +1023,15 @@ static inline int ieee80211_bssid_match(const u8 *raddr, const u8 *addr)
- 	       is_broadcast_ether_addr(raddr);
+diff --git a/drivers/net/wireless/ath/ath.h b/drivers/net/wireless/ath/ath.h
+index 26bdbee..f913db4 100644
+--- a/drivers/net/wireless/ath/ath.h
++++ b/drivers/net/wireless/ath/ath.h
+@@ -131,6 +131,7 @@ struct ath_bus_ops {
+ 	void (*read_cachesize)(struct ath_common *common, int *csz);
+ 	bool (*eeprom_read)(struct ath_common *common, u32 off, u16 *data);
+ 	void (*bt_coex_prep)(struct ath_common *common);
++	void (*extn_synch_en)(struct ath_common *common);
+ };
+ 
+ struct ath_common {
+diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
+index 513ae64..b1d3c1e 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.c
++++ b/drivers/net/wireless/ath/ath9k/hw.c
+@@ -1984,6 +1984,11 @@ int ath9k_hw_fill_cap_info(struct ath_hw *ah)
+ 
+ 
+ 
++	if (AR_SREV_9485_10(ah)) {
++		pCap->pcie_lcr_extsync_en = true;
++		pCap->pcie_lcr_offset = 0x80;
++	}
++
+ 	return 0;
  }
  
-+int __ieee80211_hw_config(struct ieee80211_local *local,
-+			  u32 changed, bool nocheck);
+diff --git a/drivers/net/wireless/ath/ath9k/hw.h b/drivers/net/wireless/ath/ath9k/hw.h
+index bde1df3..1eb6a14 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.h
++++ b/drivers/net/wireless/ath/ath9k/hw.h
+@@ -210,6 +210,8 @@ struct ath9k_hw_capabilities {
+ 	u8 rx_status_len;
+ 	u8 tx_desc_len;
+ 	u8 txs_len;
++	u16 pcie_lcr_offset;
++	bool pcie_lcr_extsync_en;
+ };
+ 
+ struct ath9k_ops_config {
+diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
+index f026a03..581dbd7 100644
+--- a/drivers/net/wireless/ath/ath9k/main.c
++++ b/drivers/net/wireless/ath/ath9k/main.c
+@@ -1188,6 +1188,9 @@ static int ath9k_start(struct ieee80211_hw *hw)
+ 
+ 	pm_qos_update_request(&sc->pm_qos_req, 55);
+ 
++	if (ah->caps.pcie_lcr_extsync_en && common->bus_ops->extn_synch_en)
++		common->bus_ops->extn_synch_en(common);
 +
-+static inline int ieee80211_hw_config(struct ieee80211_local *local,
-+				      u32 changed)
+ mutex_unlock:
+ 	mutex_unlock(&sc->mutex);
+ 
+diff --git a/drivers/net/wireless/ath/ath9k/pci.c b/drivers/net/wireless/ath/ath9k/pci.c
+index 09f69a9..c5a523d 100644
+--- a/drivers/net/wireless/ath/ath9k/pci.c
++++ b/drivers/net/wireless/ath/ath9k/pci.c
+@@ -104,11 +104,23 @@ static void ath_pci_bt_coex_prep(struct ath_common *common)
+ 	pci_write_config_byte(pdev, ATH_PCIE_CAP_LINK_CTRL, aspm);
+ }
+ 
++static void ath_pci_extn_synch_enable(struct ath_common *common)
 +{
-+	return __ieee80211_hw_config(local, changed, false);
-+}
- 
--int ieee80211_hw_config(struct ieee80211_local *local, u32 changed);
- void ieee80211_tx_set_protected(struct ieee80211_tx_data *tx);
- void ieee80211_bss_info_change_notify(struct ieee80211_sub_if_data *sdata,
- 				      u32 changed);
-diff --git a/net/mac80211/iface.c b/net/mac80211/iface.c
-index f0f11bb..36b7000 100644
---- a/net/mac80211/iface.c
-+++ b/net/mac80211/iface.c
-@@ -530,20 +530,15 @@ static void ieee80211_do_stop(struct ieee80211_sub_if_data *sdata,
- 
- 	ieee80211_recalc_ps(local, -1);
- 
-+	__ieee80211_hw_config(local, hw_reconf_flags, true);
++	struct ath_softc *sc = (struct ath_softc *) common->priv;
++	struct pci_dev *pdev = to_pci_dev(sc->dev);
++	u8 lnkctl;
 +
- 	if (local->open_count == 0) {
- 		if (local->ops->napi_poll)
- 			napi_disable(&local->napi);
- 		ieee80211_clear_tx_pending(local);
- 		ieee80211_stop_device(local);
--
--		/* no reconfiguring after stop! */
--		hw_reconf_flags = 0;
- 	}
++	pci_read_config_byte(pdev, sc->sc_ah->caps.pcie_lcr_offset, &lnkctl);
++	lnkctl |= PCI_EXP_LNKCTL_ES;
++	pci_write_config_byte(pdev, sc->sc_ah->caps.pcie_lcr_offset, lnkctl);
++}
++
+ static const struct ath_bus_ops ath_pci_bus_ops = {
+ 	.ath_bus_type = ATH_PCI,
+ 	.read_cachesize = ath_pci_read_cachesize,
+ 	.eeprom_read = ath_pci_eeprom_read,
+ 	.bt_coex_prep = ath_pci_bt_coex_prep,
++	.extn_synch_en = ath_pci_extn_synch_enable,
+ };
  
--	/* do after stop to avoid reconfiguring when we stop anyway */
--	if (hw_reconf_flags)
--		ieee80211_hw_config(local, hw_reconf_flags);
--
- 	spin_lock_irqsave(&local->queue_stop_reason_lock, flags);
- 	for (i = 0; i < IEEE80211_MAX_QUEUES; i++) {
- 		skb_queue_walk_safe(&local->pending[i], skb, tmp) {
-diff --git a/net/mac80211/main.c b/net/mac80211/main.c
-index 2de6976..45d6f21 100644
---- a/net/mac80211/main.c
-+++ b/net/mac80211/main.c
-@@ -96,7 +96,7 @@ static void ieee80211_reconfig_filter(struct work_struct *work)
- 	ieee80211_configure_filter(local);
- }
- 
--int ieee80211_hw_config(struct ieee80211_local *local, u32 changed)
-+int __ieee80211_hw_config(struct ieee80211_local *local, u32 changed, bool nocheck)
- {
- 	struct ieee80211_channel *chan, *scan_chan;
- 	int ret = 0;
-@@ -159,7 +159,7 @@ int ieee80211_hw_config(struct ieee80211_local *local, u32 changed)
- 		local->hw.conf.power_level = power;
- 	}
- 
--	if (changed && local->open_count) {
-+	if (changed && (nocheck || local->open_count)) {
- 		ret = drv_config(local, changed);
- 		/*
- 		 * Goal:
+ static int ath_pci_probe(struct pci_dev *pdev, const struct pci_device_id *id)
 -- 
-1.7.3.2.90.gd4c43
+1.7.0.4
 
