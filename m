@@ -1,56 +1,199 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga14.intel.com ([143.182.124.37]:40286 "EHLO mga14.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752578Ab0LQWbn (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 17 Dec 2010 17:31:43 -0500
-Subject: Re: new iwlwifi 6030 uCode available
-From: "Guy, Wey-Yi" <wey-yi.w.guy@intel.com>
-To: Daniel Halperin <dhalperi@cs.washington.edu>
-Cc: =?UTF-8?Q?Rafa=C5=82_Mi=C5=82ecki?= <zajec5@gmail.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"ipw3945-devel@lists.sourceforge.net"
-	<ipw3945-devel@lists.sourceforge.net>
-In-Reply-To: <AANLkTi=LmzQVzUruEQAjcSOEjy+x3U_9DqF4tLHENAcU@mail.gmail.com>
-References: <1292620126.22230.12.camel@wwguy-ubuntu>
-	 <AANLkTinWma9xFSUe9ShdVWWRYsFtDVcAoacZAg4RMXA+@mail.gmail.com>
-	 <AANLkTi=LmzQVzUruEQAjcSOEjy+x3U_9DqF4tLHENAcU@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Fri, 17 Dec 2010 14:30:36 -0800
-Message-Id: <1292625036.22230.21.camel@wwguy-ubuntu>
-Mime-Version: 1.0
+Received: from mail30t.wh2.ocn.ne.jp ([125.206.180.136]:45043 "HELO
+	mail30t.wh2.ocn.ne.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1757407Ab0LBKNW (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 2 Dec 2010 05:13:22 -0500
+Received: from vs3009.wh2.ocn.ne.jp (125.206.180.237)
+	by mail30t.wh2.ocn.ne.jp (RS ver 1.0.95vs) with SMTP id 2-0613174800
+	for <linux-wireless@vger.kernel.org>; Thu,  2 Dec 2010 19:13:20 +0900 (JST)
+Subject: [PATCH 3/3] nl80211/mac80211: Report signal average
+To: linville@tuxdriver.com
+From: Bruno Randolf <br1@einfach.org>
+Cc: randy.dunlap@oracle.com, br1@thinktube.com, peterz@infradead.org,
+	blp@cs.stanford.edu, linux-wireless@vger.kernel.org,
+	linux-kernel@vger.kernel.org, Lars_Ericsson@telia.com, j@w1.fi,
+	stefanr@s5r6.in-berlin.de, kosaki.motohiro@jp.fujitsu.com,
+	akpm@linux-foundation.org, kevin.granade@gmail.com,
+	johannes@sipsolutions.net
+Date: Thu, 02 Dec 2010 19:12:43 +0900
+Message-ID: <20101202101242.22988.56087.stgit@localhost6.localdomain6>
+In-Reply-To: <20101202101231.22988.33396.stgit@localhost6.localdomain6>
+References: <20101202101231.22988.33396.stgit@localhost6.localdomain6>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Daniel,
+Extend nl80211 to report an exponential weighted moving average (EWMA) of the
+signal value. Since the signal value usually fluctuates between different
+packets, an average can be more useful than the value of the last packet.
 
-On Fri, 2010-12-17 at 14:19 -0800, Daniel Halperin wrote:
-> 2010/12/17 Rafał Miłecki <zajec5@gmail.com>:
-> > 2010/12/17 Guy, Wey-Yi <wey-yi.w.guy@intel.com>:
-> >> Version 17.168.5.1 of uCode for Intel Intel@ 6030 Series Wi-Fi Adapters
-> >> is now available for download from
-> >> http://intellinuxwireless.org/?n=Downloads
-> >
-> > I want uCode for 5100 to resolve
-> > http://bugzilla.intellinuxwireless.org/show_bug.cgi?id=2214 !
-> >
-> > Damn, do you want us to RE Intel's firmware or what? Is that your policy?
-> 
-> Hi Wey-Yi,
-> 
-> I noticed from this bug report that the workaround is to disable
-> 802.11n.  Is it not possible to instead force-stop all queues, restart
-> the firmware and driver similar to when uCode crashes?  This might
-> tide Rafal over for a little while.  It looks like he's not planning
-> to stop trolling every few days despite your giving the same answer
-> that the issue is out of your control.
-> 
-> Alternatively, Rafal, you might try to implement this type of fix.
-> 
-I thought about that and I even have the patch for it, but it works
-sometime and not the other and it is not stable, that is why I did not
-push upstream, I might need to spend more time to figure out what is
-going on there. Just don't have much time in the past few weeks/months.
+This uses the recently added generic EWMA library function.
 
-Thank
-Wey
+--
+v2:	fix ABI breakage and change factor to be a power of 2.
+
+Signed-off-by: Bruno Randolf <br1@einfach.org>
+---
+ include/linux/nl80211.h |    2 ++
+ include/net/cfg80211.h  |    4 ++++
+ net/mac80211/Kconfig    |    1 +
+ net/mac80211/cfg.c      |    3 ++-
+ net/mac80211/rx.c       |    1 +
+ net/mac80211/sta_info.c |    2 ++
+ net/mac80211/sta_info.h |    3 +++
+ net/wireless/nl80211.c  |    3 +++
+ 8 files changed, 18 insertions(+), 1 deletions(-)
+
+diff --git a/include/linux/nl80211.h b/include/linux/nl80211.h
+index 5cfa579..68fc25f 100644
+--- a/include/linux/nl80211.h
++++ b/include/linux/nl80211.h
+@@ -1183,6 +1183,7 @@ enum nl80211_rate_info {
+  *	station)
+  * @NL80211_STA_INFO_TX_RETRIES: total retries (u32, to this station)
+  * @NL80211_STA_INFO_TX_FAILED: total failed packets (u32, to this station)
++ * @NL80211_STA_INFO_SIGNAL_AVG: signal strength average (u8, dBm)
+  */
+ enum nl80211_sta_info {
+ 	__NL80211_STA_INFO_INVALID,
+@@ -1198,6 +1199,7 @@ enum nl80211_sta_info {
+ 	NL80211_STA_INFO_TX_PACKETS,
+ 	NL80211_STA_INFO_TX_RETRIES,
+ 	NL80211_STA_INFO_TX_FAILED,
++	NL80211_STA_INFO_SIGNAL_AVG,
+ 
+ 	/* keep last */
+ 	__NL80211_STA_INFO_AFTER_LAST,
+diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+index 6b2af7a..589c4b1 100644
+--- a/include/net/cfg80211.h
++++ b/include/net/cfg80211.h
+@@ -424,6 +424,7 @@ struct station_parameters {
+  * @STATION_INFO_TX_RETRIES: @tx_retries filled
+  * @STATION_INFO_TX_FAILED: @tx_failed filled
+  * @STATION_INFO_RX_DROP_MISC: @rx_dropped_misc filled
++ * @STATION_INFO_SIGNAL_AVG: @signal_avg filled
+  */
+ enum station_info_flags {
+ 	STATION_INFO_INACTIVE_TIME	= 1<<0,
+@@ -439,6 +440,7 @@ enum station_info_flags {
+ 	STATION_INFO_TX_RETRIES		= 1<<10,
+ 	STATION_INFO_TX_FAILED		= 1<<11,
+ 	STATION_INFO_RX_DROP_MISC	= 1<<12,
++	STATION_INFO_SIGNAL_AVG		= 1<<13,
+ };
+ 
+ /**
+@@ -485,6 +487,7 @@ struct rate_info {
+  * @plid: mesh peer link id
+  * @plink_state: mesh peer link state
+  * @signal: signal strength of last received packet in dBm
++ * @signal_avg: signal strength average in dBm
+  * @txrate: current unicast bitrate to this station
+  * @rx_packets: packets received from this station
+  * @tx_packets: packets transmitted to this station
+@@ -505,6 +508,7 @@ struct station_info {
+ 	u16 plid;
+ 	u8 plink_state;
+ 	s8 signal;
++	s8 signal_avg;
+ 	struct rate_info txrate;
+ 	u32 rx_packets;
+ 	u32 tx_packets;
+diff --git a/net/mac80211/Kconfig b/net/mac80211/Kconfig
+index 4d6f865..798d9b9 100644
+--- a/net/mac80211/Kconfig
++++ b/net/mac80211/Kconfig
+@@ -6,6 +6,7 @@ config MAC80211
+ 	select CRYPTO_ARC4
+ 	select CRYPTO_AES
+ 	select CRC32
++	select AVERAGE
+ 	---help---
+ 	  This option enables the hardware independent IEEE 802.11
+ 	  networking stack.
+diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
+index db134b5..b0e0f6c 100644
+--- a/net/mac80211/cfg.c
++++ b/net/mac80211/cfg.c
+@@ -343,8 +343,9 @@ static void sta_set_sinfo(struct sta_info *sta, struct station_info *sinfo)
+ 
+ 	if ((sta->local->hw.flags & IEEE80211_HW_SIGNAL_DBM) ||
+ 	    (sta->local->hw.flags & IEEE80211_HW_SIGNAL_UNSPEC)) {
+-		sinfo->filled |= STATION_INFO_SIGNAL;
++		sinfo->filled |= STATION_INFO_SIGNAL | STATION_INFO_SIGNAL_AVG;
+ 		sinfo->signal = (s8)sta->last_signal;
++		sinfo->signal_avg = (s8) -ewma_read(&sta->avg_signal);
+ 	}
+ 
+ 	sinfo->txrate.flags = 0;
+diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
+index 6289525..2fe8f5f 100644
+--- a/net/mac80211/rx.c
++++ b/net/mac80211/rx.c
+@@ -1163,6 +1163,7 @@ ieee80211_rx_h_sta_process(struct ieee80211_rx_data *rx)
+ 	sta->rx_fragments++;
+ 	sta->rx_bytes += rx->skb->len;
+ 	sta->last_signal = status->signal;
++	ewma_add(&sta->avg_signal, -status->signal);
+ 
+ 	/*
+ 	 * Change STA power saving mode only at the end of a frame
+diff --git a/net/mac80211/sta_info.c b/net/mac80211/sta_info.c
+index eff5857..c426504 100644
+--- a/net/mac80211/sta_info.c
++++ b/net/mac80211/sta_info.c
+@@ -244,6 +244,8 @@ struct sta_info *sta_info_alloc(struct ieee80211_sub_if_data *sdata,
+ 	sta->local = local;
+ 	sta->sdata = sdata;
+ 
++	ewma_init(&sta->avg_signal, 1024, 8);
++
+ 	if (sta_prepare_rate_control(local, sta, gfp)) {
+ 		kfree(sta);
+ 		return NULL;
+diff --git a/net/mac80211/sta_info.h b/net/mac80211/sta_info.h
+index 05f1130..fdca52c 100644
+--- a/net/mac80211/sta_info.h
++++ b/net/mac80211/sta_info.h
+@@ -13,6 +13,7 @@
+ #include <linux/types.h>
+ #include <linux/if_ether.h>
+ #include <linux/workqueue.h>
++#include <linux/average.h>
+ #include "key.h"
+ 
+ /**
+@@ -223,6 +224,7 @@ enum plink_state {
+  * @rx_fragments: number of received MPDUs
+  * @rx_dropped: number of dropped MPDUs from this STA
+  * @last_signal: signal of last received frame from this STA
++ * @avg_signal: moving average of signal of received frames from this STA
+  * @last_seq_ctrl: last received seq/frag number from this STA (per RX queue)
+  * @tx_filtered_count: number of frames the hardware filtered for this STA
+  * @tx_retry_failed: number of frames that failed retry
+@@ -291,6 +293,7 @@ struct sta_info {
+ 	unsigned long rx_fragments;
+ 	unsigned long rx_dropped;
+ 	int last_signal;
++	struct ewma avg_signal;
+ 	__le16 last_seq_ctrl[NUM_RX_DATA_QUEUES];
+ 
+ 	/* Updated from TX status path only, no locking requirements */
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index 960be4e..45fe06d 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -1874,6 +1874,9 @@ static int nl80211_send_station(struct sk_buff *msg, u32 pid, u32 seq,
+ 	if (sinfo->filled & STATION_INFO_SIGNAL)
+ 		NLA_PUT_U8(msg, NL80211_STA_INFO_SIGNAL,
+ 			   sinfo->signal);
++	if (sinfo->filled & STATION_INFO_SIGNAL_AVG)
++		NLA_PUT_U8(msg, NL80211_STA_INFO_SIGNAL_AVG,
++			   sinfo->signal_avg);
+ 	if (sinfo->filled & STATION_INFO_TX_BITRATE) {
+ 		txrate = nla_nest_start(msg, NL80211_STA_INFO_TX_BITRATE);
+ 		if (!txrate)
 
