@@ -1,27 +1,133 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gx0-f174.google.com ([209.85.161.174]:41300 "EHLO
-	mail-gx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753441Ab0LACTD (ORCPT
+Received: from mail-bw0-f46.google.com ([209.85.214.46]:56974 "EHLO
+	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752662Ab0LBRoX (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 30 Nov 2010 21:19:03 -0500
-Received: by gxk1 with SMTP id 1so184110gxk.19
-        for <linux-wireless@vger.kernel.org>; Tue, 30 Nov 2010 18:19:03 -0800 (PST)
-From: Javier Cardona <javier@cozybit.com>
+	Thu, 2 Dec 2010 12:44:23 -0500
+Received: by bwz15 with SMTP id 15so7481997bwz.19
+        for <linux-wireless@vger.kernel.org>; Thu, 02 Dec 2010 09:44:21 -0800 (PST)
+From: Helmut Schaa <helmut.schaa@googlemail.com>
 To: "John W. Linville" <linville@tuxdriver.com>
-Cc: Steve Derosier <steve@cozybit.com>, devel@lists.open80211s.org,
-	linux-wireless@vger.kernel.org, Jiri Slaby <jirislaby@gmail.com>,
-	Nick Kossifidis <mickflemm@gmail.com>,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	Bob Copeland <me@bobcopeland.com>
-Subject: ath5k: Fixes for mesh operation
-Date: Tue, 30 Nov 2010 18:18:36 -0800
-Message-Id: <1291169919-3867-1-git-send-email-javier@cozybit.com>
+Cc: linux-wireless@vger.kernel.org,
+	Helmut Schaa <helmut.schaa@googlemail.com>,
+	Johannes Berg <johannes@sipsolutions.net>
+Subject: [PATCH] mac80211: Fix BUG in pskb_expand_head when transmitting shared skbs
+Date: Thu,  2 Dec 2010 18:44:09 +0100
+Message-Id: <1291311849-13086-1-git-send-email-helmut.schaa@googlemail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-After applying these fixes we were able to successfully bring up mesh
-interfaces and establish peer links with ath9k devices.  
+mac80211 doesn't handle shared skbs correctly at the moment. As a result
+a possible resize can trigger a BUG in pskb_expand_head.
 
-One issue still looms with both athX drivers:  you have to issue a scan to get
-mesh beaconing started.  Keep that in mind if you try and test these fixes.
+[  676.030000] Kernel bug detected[#1]:
+[  676.030000] Cpu 0
+[  676.030000] $ 0   : 00000000 00000000 819662ff 00000002
+[  676.030000] $ 4   : 81966200 00000020 00000000 00000020
+[  676.030000] $ 8   : 819662e0 800043c0 00000002 00020000
+[  676.030000] $12   : 3b9aca00 00000000 00000000 00470000
+[  676.030000] $16   : 80ea2000 00000000 00000000 00000000
+[  676.030000] $20   : 818aa200 80ea2018 80ea2000 00000008
+[  676.030000] $24   : 00000002 800ace5c                  
+[  676.030000] $28   : 8199a000 8199bd20 81938f88 80f180d4
+[  676.030000] Hi    : 0000026e
+[  676.030000] Lo    : 0000757e
+[  676.030000] epc   : 801245e4 pskb_expand_head+0x44/0x1d8
+[  676.030000]     Not tainted
+[  676.030000] ra    : 80f180d4 ieee80211_skb_resize+0xb0/0x114 [mac80211]
+[  676.030000] Status: 1000a403    KERNEL EXL IE 
+[  676.030000] Cause : 10800024
+[  676.030000] PrId  : 0001964c (MIPS 24Kc)
+[  676.030000] Modules linked in: mac80211_hwsim rt2800lib rt2x00soc rt2x00pci rt2x00lib mac80211 crc_itu_t crc_ccitt cfg80211 compat arc4 aes_generic deflate ecb cbc [last unloaded: rt2800pci]
+[  676.030000] Process kpktgend_0 (pid: 97, threadinfo=8199a000, task=81879f48, tls=00000000)
+[  676.030000] Stack : ffffffff 00000000 00000000 00000014 00000004 80ea2000 00000000 00000000
+[  676.030000]         818aa200 80f180d4 ffffffff 0000000a 81879f78 81879f48 81879f48 00000018
+[  676.030000]         81966246 80ea2000 818432e0 80f1a420 80203050 81814d98 00000001 81879f48
+[  676.030000]         81879f48 00000018 81966246 818432e0 0000001a 8199bdd4 0000001c 80f1b72c
+[  676.030000]         80203020 8001292c 80ef4aa2 7f10b55d 801ab5b8 81879f48 00000188 80005c90
+[  676.030000]         ...
+[  676.030000] Call Trace:
+[  676.030000] [<801245e4>] pskb_expand_head+0x44/0x1d8
+[  676.030000] [<80f180d4>] ieee80211_skb_resize+0xb0/0x114 [mac80211]
+[  676.030000] [<80f1a420>] ieee80211_xmit+0x150/0x22c [mac80211]
+[  676.030000] [<80f1b72c>] ieee80211_subif_start_xmit+0x6f4/0x73c [mac80211]
+[  676.030000] [<8014361c>] pktgen_thread_worker+0xfac/0x16f8
+[  676.030000] [<8002ebe8>] kthread+0x7c/0x88
+[  676.030000] [<80008e0c>] kernel_thread_helper+0x10/0x18
+[  676.030000] 
+[  676.030000] 
+[  676.030000] Code: 24020001  10620005  2502001f <0200000d> 0804917a  00000000  2502001f  00441023  00531021 
+
+Fix this by making a local copy of shared skbs prior to mangeling them.
+To avoid copying the skb unnecessarily move the skb_copy call below the
+checks that don't need write access to the skb.
+
+Also, move the assignment of nh_pos and h_pos below the skb_copy to point
+to the correct skb.
+
+It would be possible to avoid another resize of the copied skb by using
+skb_copy_expand instead of skb_copy but that would make the patch more
+complex. Also, shared skbs are a corner case right now, so the resize
+shouldn't matter much.
+
+Cc: Johannes Berg <johannes@sipsolutions.net>
+Signed-off-by: Helmut Schaa <helmut.schaa@googlemail.com>
+---
+ net/mac80211/tx.c |   21 ++++++++++++++++++---
+ 1 files changed, 18 insertions(+), 3 deletions(-)
+
+diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
+index 41bfbbf..99fa95b 100644
+--- a/net/mac80211/tx.c
++++ b/net/mac80211/tx.c
+@@ -1741,15 +1741,13 @@ netdev_tx_t ieee80211_subif_start_xmit(struct sk_buff *skb,
+ 	int nh_pos, h_pos;
+ 	struct sta_info *sta = NULL;
+ 	u32 sta_flags = 0;
++	struct sk_buff *tmp_skb;
+ 
+ 	if (unlikely(skb->len < ETH_HLEN)) {
+ 		ret = NETDEV_TX_OK;
+ 		goto fail;
+ 	}
+ 
+-	nh_pos = skb_network_header(skb) - skb->data;
+-	h_pos = skb_transport_header(skb) - skb->data;
+-
+ 	/* convert Ethernet header to proper 802.11 header (based on
+ 	 * operation mode) */
+ 	ethertype = (skb->data[12] << 8) | skb->data[13];
+@@ -1922,6 +1920,20 @@ netdev_tx_t ieee80211_subif_start_xmit(struct sk_buff *skb,
+ 		goto fail;
+ 	}
+ 
++	/*
++	 * If the skb is shared we need to obtain our own copy.
++	 */
++	if (skb_shared(skb)) {
++		tmp_skb = skb;
++		skb = skb_copy(skb, GFP_ATOMIC);
++		kfree_skb(tmp_skb);
++
++		if (!skb) {
++			ret = NETDEV_TX_OK;
++			goto fail;
++		}
++	}
++
+ 	hdr.frame_control = fc;
+ 	hdr.duration_id = 0;
+ 	hdr.seq_ctrl = 0;
+@@ -1940,6 +1952,9 @@ netdev_tx_t ieee80211_subif_start_xmit(struct sk_buff *skb,
+ 		encaps_len = 0;
+ 	}
+ 
++	nh_pos = skb_network_header(skb) - skb->data;
++	h_pos = skb_transport_header(skb) - skb->data;
++
+ 	skb_pull(skb, skip_header_bytes);
+ 	nh_pos -= skip_header_bytes;
+ 	h_pos -= skip_header_bytes;
+-- 
+1.7.1
 
