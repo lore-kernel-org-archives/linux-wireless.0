@@ -1,62 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pw0-f46.google.com ([209.85.160.46]:37629 "EHLO
-	mail-pw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752462Ab0L1Is5 (ORCPT
+Received: from mail30f.wh2.ocn.ne.jp ([220.111.41.203]:16261 "HELO
+	mail30f.wh2.ocn.ne.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1753581Ab0LBHXn (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 28 Dec 2010 03:48:57 -0500
-Received: by pwj3 with SMTP id 3so1000480pwj.19
-        for <linux-wireless@vger.kernel.org>; Tue, 28 Dec 2010 00:48:57 -0800 (PST)
-From: Sujith <m.sujith@gmail.com>
+	Thu, 2 Dec 2010 02:23:43 -0500
+Received: from vs3016.wh2.ocn.ne.jp (125.206.180.189)
+	by mail30f.wh2.ocn.ne.jp (RS ver 1.0.95vs) with SMTP id 4-0905014620
+	for <linux-wireless@vger.kernel.org>; Thu,  2 Dec 2010 16:23:41 +0900 (JST)
+From: Bruno Randolf <br1@einfach.org>
+To: Johannes Berg <johannes@sipsolutions.net>
+Subject: Re: [PATCH v7 1/3] cfg80211: Add nl80211 antenna configuration
+Date: Thu, 2 Dec 2010 16:23:05 +0900
+Cc: linville@tuxdriver.com, nbd@openwrt.org, mcgrof@gmail.com,
+	linux-wireless@vger.kernel.org
+References: <20101110035050.23721.15617.stgit@localhost6.localdomain6> <1291186468.4199.6.camel@jlt3.sipsolutions.net> <1291193337.4199.7.camel@jlt3.sipsolutions.net>
+In-Reply-To: <1291193337.4199.7.camel@jlt3.sipsolutions.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Message-ID: <19737.42080.713574.605350@gargle.gargle.HOWL>
-Date: Tue, 28 Dec 2010 14:18:32 +0530
-To: Vasanthakumar Thiagarajan <vasanth@atheros.com>
-Cc: "linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Sujith Manoharan <Sujith.Manoharan@Atheros.com>
-Subject: Re: [PATCH 3/5] ath9k_htc: Handle FATAL events
-In-Reply-To: <20101228082356.GB31274@vasanth-laptop>
-References: <19737.39891.227133.163154@gargle.gargle.HOWL>
-	<20101228082356.GB31274@vasanth-laptop>
+Content-Type: Text/Plain;
+  charset="utf-8"
+Message-Id: <201012021623.05381.br1@einfach.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Vasanthakumar Thiagarajan wrote:
-> On Tue, Dec 28, 2010 at 01:42:03PM +0530, Sujith wrote:
-> > From: Sujith Manoharan <Sujith.Manoharan@atheros.com>
+On Wed December 1 2010 17:48:57 Johannes Berg wrote:
+> On Wed, 2010-12-01 at 07:54 +0100, Johannes Berg wrote:
+> > On Wed, 2010-12-01 at 15:47 +0900, Bruno Randolf wrote:
+> > > Already merged.
+> > > 
+> > > git show 79b1c460a0b55e55981c25c56597c4d5d2872de3
 > > 
-> > The device has to be reset when a FATAL event is received.
-> > Not doing so would leave the card in a non-working state.
-> > 
-> > Signed-off-by: Sujith Manoharan <Sujith.Manoharan@atheros.com>
-> > ---
-> >  drivers/net/wireless/ath/ath9k/htc.h          |    6 ++-
-> >  drivers/net/wireless/ath/ath9k/htc_drv_init.c |    8 ++-
-> >  drivers/net/wireless/ath/ath9k/htc_drv_main.c |   57 ++++++++++++++++++++++++-
-> >  drivers/net/wireless/ath/ath9k/wmi.c          |   18 +++++++-
-> >  drivers/net/wireless/ath/ath9k/wmi.h          |    3 +-
-> >  5 files changed, 84 insertions(+), 8 deletions(-)
-> > 
-> > +void ath9k_htc_reset(struct ath9k_htc_priv *priv)
-> > +{
-> > +	struct ath_hw *ah = priv->ah;
-> > +	struct ath_common *common = ath9k_hw_common(ah);
-> > +	struct ieee80211_channel *channel = priv->hw->conf.channel;
-> > +	struct ath9k_hw_cal_data *caldata;
-> > +	enum htc_phymode mode;
-> > +	__be16 htc_mode;
-> > +	u8 cmd_rsp;
-> > +	int ret;
-> > +
-> > +	mutex_lock(&priv->mutex);
+> > Oops, sorry -- was on iwlwifi tree which didn't merge yet and got
+> > confused thinking it was mac80211 only.
 > 
-> This will result in a deadlock with the one in ath9k_htc_stop().
+> Actually, I take that back. The patch *was* for mac80211 even though it
+> claimed to be for cfg80211, and you still need to do the cfg80211
+> versions.
 
-Indeed yes, nice catch.
-There is no need to lock the cancellation stuff anyway,
-I'll just move them outside the lock.
+Oh, sorry! So many interfaces... ;)
+Patch on the way...
 
-Thanks for the review.
-
-Sujith
+bruno
