@@ -1,50 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([147.243.1.48]:30572 "EHLO mgw-sa02.nokia.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754399Ab0LOOqY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 15 Dec 2010 09:46:24 -0500
-Received: from nokia.com (localhost [127.0.0.1])
-	by mgw-sa02.nokia.com (Switch-3.4.3/Switch-3.4.3) with ESMTP id oBFEkMtK004522
-	for <linux-wireless@vger.kernel.org>; Wed, 15 Dec 2010 16:46:22 +0200
-Subject: Re: [PATCH v2] wl12xx_sdio_test: rename files to match current
- style
-From: Luciano Coelho <luciano.coelho@nokia.com>
-To: Roger Quadros <roger.quadros@nokia.com>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <1292423633.32385.9.camel@chilepepper>
-References: <1292423499-5667-1-git-send-email-luciano.coelho@nokia.com>
-	 <1292423633.32385.9.camel@chilepepper>
-Content-Type: text/plain; charset="UTF-8"
-Date: Wed, 15 Dec 2010 16:48:21 +0200
-Message-ID: <1292424501.32385.10.camel@chilepepper>
-Mime-Version: 1.0
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:57118 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757689Ab0LBTaL (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 2 Dec 2010 14:30:11 -0500
+Date: Thu, 2 Dec 2010 14:17:05 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Ben Greear <greearb@candelatech.com>
+Cc: Senthil Balasubramanian <senthilkumar@atheros.com>,
+	linux-wireless@vger.kernel.org, Stable <stable@kernel.org>,
+	Kyungwan Nam <Kyungwan.Nam@atheros.com>
+Subject: Re: [PATCH v2 2/2] ath9k: Fix STA disconnect issue due to received
+ MIC failed bcast frames
+Message-ID: <20101202191705.GB2358@tuxdriver.com>
+References: <1291201205-1541-1-git-send-email-senthilkumar@atheros.com>
+ <4CF6A8FD.6020508@candelatech.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <4CF6A8FD.6020508@candelatech.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2010-12-15 at 16:33 +0200, ext Luciano Coelho wrote:
-> On Wed, 2010-12-15 at 16:31 +0200, luciano.coelho@nokia.com wrote:
-> > From: Luciano Coelho <luciano.coelho@nokia.com>
-> > 
-> > Change some file names and Kconfig settings so that this new module matches
-> > the new way of using wl12xx instead of wl1271.
-> > 
-> > Also fix SDIO power enabling and disabling to match the latest way of doing
-> > it.
-> > 
-> > Cc: Roger Quadros <roger.quadros@nokia.com>
-> > Signed-off-by: Luciano Coelho <luciano.coelho@nokia.com>
-> > ---
+On Wed, Dec 01, 2010 at 11:58:53AM -0800, Ben Greear wrote:
+> On 12/01/2010 03:00 AM, Senthil Balasubramanian wrote:
+> >AR_RxKeyIdxValid will not be set for bcast/mcast frames and so relying
+> >this status for MIC failed frames is buggy.
+> >
+> >Due to this, MIC failure events for broadcast frames are not sent to
+> >supplicant resulted in AP disconnecting the STA.
+> >
+> >Able to pass Wifi Test case 5.2.18 with this fix.
 > 
-> In v2 I used the -M flag (to detect renames, which I stupidly forgot
-> before) and removed the file names from the header of the sdio_test.c
-> file, since it's a bad idea to have it there (thanks Johannes for the
-> comments).
+> Please do not apply this yet.  As far as I can tell, either
+> of these patches breaks multiple VIF scenarios.  I'm not
+> sure exactly why, but I had to revert this to get any
+> of my interfaces to associate.
 
-Roger, I have just compile-tested this module in upstream.  Could you
-run at least some basic tests with it to make sure it works?
+I'm reverting v1 and ignoring v2 on the basis of this report.
 
-
+John
 -- 
-Cheers,
-Luca.
-
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
