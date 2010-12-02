@@ -1,128 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wy0-f174.google.com ([74.125.82.174]:62173 "EHLO
-	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753163Ab0LVO2N (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 22 Dec 2010 09:28:13 -0500
-Received: by mail-wy0-f174.google.com with SMTP id 28so5082982wyb.19
-        for <linux-wireless@vger.kernel.org>; Wed, 22 Dec 2010 06:28:13 -0800 (PST)
-From: Arik Nemtsov <arik@wizery.com>
-To: <linux-wireless@vger.kernel.org>
-Cc: Luciano Coelho <luciano.coelho@nokia.com>,
-	Arik Nemtsov <arik@wizery.com>
-Subject: [PATCH v2 07/18] wl1271: AP specific RX filter configuration
-Date: Wed, 22 Dec 2010 16:27:26 +0200
-Message-Id: <1293028057-6212-8-git-send-email-arik@wizery.com>
-In-Reply-To: <1293028057-6212-1-git-send-email-arik@wizery.com>
-References: <1293028057-6212-1-git-send-email-arik@wizery.com>
+Received: from mail.atheros.com ([12.19.149.2]:61720 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753358Ab0LBMW3 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 2 Dec 2010 07:22:29 -0500
+Received: from mail.atheros.com ([10.10.20.105])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Thu, 02 Dec 2010 04:22:14 -0800
+Date: Thu, 2 Dec 2010 17:51:47 +0530
+From: Vasanthakumar Thiagarajan <vasanth@atheros.com>
+To: Julian Calaby <julian.calaby@gmail.com>
+CC: Vasanth Thiagarajan <Vasanth.Thiagarajan@Atheros.com>,
+	"linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH V2 16/27] ath9k_hw: Read and configure antenna
+	diversity control for AR9485
+Message-ID: <20101202122147.GN12908@vasanth-laptop>
+References: <1291288031-3409-1-git-send-email-vasanth@atheros.com> <1291288031-3409-17-git-send-email-vasanth@atheros.com> <AANLkTi=Fb0HA1DbaRp21kOS3x4-s_Oh+UZok2jNK3-PG@mail.gmail.com> <20101202120925.GM12908@vasanth-laptop> <AANLkTimmHLG8PU=1AweKqcPnyF4=6q3QNmA2nVeV00fh@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <AANLkTimmHLG8PU=1AweKqcPnyF4=6q3QNmA2nVeV00fh@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Set filters according to the mode of operation.
+On Thu, Dec 02, 2010 at 05:46:05PM +0530, Julian Calaby wrote:
+> On Thu, Dec 2, 2010 at 23:09, Vasanthakumar Thiagarajan
+> <vasanth@atheros.com> wrote:
+> > No, these are to separate things.
+> 
+> Are you sure? you seem to be doing:
+> 
+> if (!AR_SREV_9485(ah)) {
+>     // CODE
+> }
+> 
+> if (AR_SREV_9485(ah)) {
+>     // MORE CODE
+> }
+> 
+> which I'm certain can be simlified as:
+> 
+> if (!AR_SREV_9485(ah)) {
+>     // CODE
+> } else {
+>     // MORE CODE
+> }
+> 
+> unless you're telling me that the value of AR_SREV_9485(ah) can change
+> in the course of the first statement.
 
-Signed-off-by: Arik Nemtsov <arik@wizery.com>
----
- drivers/net/wireless/wl12xx/boot.c   |    3 +--
- drivers/net/wireless/wl12xx/boot.h   |    3 +++
- drivers/net/wireless/wl12xx/main.c   |   18 ++++++++++++++----
- drivers/net/wireless/wl12xx/wl12xx.h |   13 +++++++++++--
- 4 files changed, 29 insertions(+), 8 deletions(-)
+I mean the register configuration. In one case, chain 1 and chain 2
+are irrelevant for AR9485. The second is antenna diversity is
+enabled only for AR9485. Putting them in if..else would be
+misleading, though is can be in if..else.
 
-diff --git a/drivers/net/wireless/wl12xx/boot.c b/drivers/net/wireless/wl12xx/boot.c
-index bb4f283..f0c35f2 100644
---- a/drivers/net/wireless/wl12xx/boot.c
-+++ b/drivers/net/wireless/wl12xx/boot.c
-@@ -599,8 +599,7 @@ int wl1271_boot(struct wl1271 *wl)
- 	wl1271_boot_enable_interrupts(wl);
- 
- 	/* set the wl1271 default filters */
--	wl->rx_config = WL1271_DEFAULT_RX_CONFIG;
--	wl->rx_filter = WL1271_DEFAULT_RX_FILTER;
-+	wl1271_set_default_filters(wl);
- 
- 	wl1271_event_mbox_config(wl);
- 
-diff --git a/drivers/net/wireless/wl12xx/boot.h b/drivers/net/wireless/wl12xx/boot.h
-index d67dcff..5f19a40 100644
---- a/drivers/net/wireless/wl12xx/boot.h
-+++ b/drivers/net/wireless/wl12xx/boot.h
-@@ -69,4 +69,7 @@ struct wl1271_static_data {
- #define FREF_CLK_POLARITY_BITS 0xfffff8ff
- #define CLK_REQ_OUTN_SEL       0x700
- 
-+/* Functions from wl1271_main.c */
-+void wl1271_set_default_filters(struct wl1271 *wl);
-+
- #endif
-diff --git a/drivers/net/wireless/wl12xx/main.c b/drivers/net/wireless/wl12xx/main.c
-index 5354190..05adde6 100644
---- a/drivers/net/wireless/wl12xx/main.c
-+++ b/drivers/net/wireless/wl12xx/main.c
-@@ -1225,10 +1225,20 @@ static void wl1271_op_remove_interface(struct ieee80211_hw *hw,
- 	cancel_work_sync(&wl->recovery_work);
- }
- 
-+void wl1271_set_default_filters(struct wl1271 *wl)
-+{
-+	if (wl->bss_type == BSS_TYPE_AP_BSS) {
-+		wl->rx_config = WL1271_DEFAULT_AP_RX_CONFIG;
-+		wl->rx_filter = WL1271_DEFAULT_AP_RX_FILTER;
-+	} else {
-+		wl->rx_config = WL1271_DEFAULT_STA_RX_CONFIG;
-+		wl->rx_filter = WL1271_DEFAULT_STA_RX_FILTER;
-+	}
-+}
-+
- static void wl1271_configure_filters(struct wl1271 *wl, unsigned int filters)
- {
--	wl->rx_config = WL1271_DEFAULT_RX_CONFIG;
--	wl->rx_filter = WL1271_DEFAULT_RX_FILTER;
-+	wl1271_set_default_filters(wl);
- 
- 	/* combine requested filters with current filter config */
- 	filters = wl->filters | filters;
-@@ -2776,8 +2786,8 @@ struct ieee80211_hw *wl1271_alloc_hw(void)
- 	wl->beacon_int = WL1271_DEFAULT_BEACON_INT;
- 	wl->default_key = 0;
- 	wl->rx_counter = 0;
--	wl->rx_config = WL1271_DEFAULT_RX_CONFIG;
--	wl->rx_filter = WL1271_DEFAULT_RX_FILTER;
-+	wl->rx_config = WL1271_DEFAULT_STA_RX_CONFIG;
-+	wl->rx_filter = WL1271_DEFAULT_STA_RX_FILTER;
- 	wl->psm_entry_retry = 0;
- 	wl->power_level = WL1271_DEFAULT_POWER_LEVEL;
- 	wl->basic_rate_set = CONF_TX_RATE_MASK_BASIC;
-diff --git a/drivers/net/wireless/wl12xx/wl12xx.h b/drivers/net/wireless/wl12xx/wl12xx.h
-index aba8f47..136e87b 100644
---- a/drivers/net/wireless/wl12xx/wl12xx.h
-+++ b/drivers/net/wireless/wl12xx/wl12xx.h
-@@ -103,15 +103,24 @@ extern u32 wl12xx_debug_level;
- 				       true);				\
- 	} while (0)
- 
--#define WL1271_DEFAULT_RX_CONFIG (CFG_UNI_FILTER_EN |	\
-+#define WL1271_DEFAULT_STA_RX_CONFIG (CFG_UNI_FILTER_EN |	\
- 				  CFG_BSSID_FILTER_EN | \
- 				  CFG_MC_FILTER_EN)
- 
--#define WL1271_DEFAULT_RX_FILTER (CFG_RX_RCTS_ACK | CFG_RX_PRSP_EN |  \
-+#define WL1271_DEFAULT_STA_RX_FILTER (CFG_RX_RCTS_ACK | CFG_RX_PRSP_EN |  \
- 				  CFG_RX_MGMT_EN | CFG_RX_DATA_EN |   \
- 				  CFG_RX_CTL_EN | CFG_RX_BCN_EN |     \
- 				  CFG_RX_AUTH_EN | CFG_RX_ASSOC_EN)
- 
-+#define WL1271_DEFAULT_AP_RX_CONFIG  0
-+
-+#define WL1271_DEFAULT_AP_RX_FILTER  (CFG_RX_RCTS_ACK | CFG_RX_PREQ_EN | \
-+				  CFG_RX_MGMT_EN | CFG_RX_DATA_EN | \
-+				  CFG_RX_CTL_EN | CFG_RX_AUTH_EN | \
-+				  CFG_RX_ASSOC_EN)
-+
-+
-+
- #define WL1271_FW_NAME "wl1271-fw.bin"
- #define WL1271_NVS_NAME "wl1271-nvs.bin"
- 
--- 
-1.7.1
-
+Vasanth
