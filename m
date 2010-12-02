@@ -1,124 +1,560 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bear.ext.ti.com ([192.94.94.41]:46756 "EHLO bear.ext.ti.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1749667Ab0LQFMB (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 17 Dec 2010 00:12:01 -0500
-Message-ID: <E680F3C4CE6F415E95DCBDA48F0158FC@MINX0125717>
-From: "panduranga" <x0125717@ti.com>
-To: "Elvis Dowson" <elvis.dowson@mac.com>,
-	"Ohad Ben-Cohen" <ohad@wizery.com>
-Cc: "Linux Wireless Mailing List" <linux-wireless@vger.kernel.org>,
-	"Jara, Pedro" <pedrojara@ti.com>
-References: <57CB308D-7237-46D7-9AF8-7093F52682E8@mac.com> <AANLkTikESPwcaxUSDd3B=Oh7kBD-QpndKRHmu9-roDqs@mail.gmail.com> <C77CCCD3-2467-4363-A513-05B68B9F57F6@mac.com>
-Subject: Re: Problem bringing up wlan0 interface up with mainline wl1271 drivers
-Date: Fri, 17 Dec 2010 10:41:46 +0530
-MIME-Version: 1.0
-Content-Type: text/plain;
-	format=flowed;
-	charset="iso-8859-1";
-	reply-type=original
+Received: from mailserver.naic.edu ([192.65.176.45]:48646 "EHLO
+	mailserver.naic.edu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751335Ab0LBAWh (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 1 Dec 2010 19:22:37 -0500
+Date: Wed, 1 Dec 2010 20:22:34 -0400
+From: Giacomo Comes <comes@naic.edu>
+To: Dave Kilroy <kilroyd@gmail.com>
+Cc: Giacomo Comes <comes@naic.edu>, linux-wireless@vger.kernel.org
+Subject: Re: orinoco_cs module and WPA not working
+Message-ID: <20101202002234.GA30670@monopoli.naic.edu>
+References: <20101122024208.GA13377@monopoli.naic.edu> <AANLkTikc9w+w8o=ZQBTnTD1=C0+yDVfq=jSfEFQ16dbm@mail.gmail.com> <20101125014511.GA1683@monopoli.naic.edu> <AANLkTi=nkayyyzECi6MO87ZO-CUpZeNP007_hMp8LiPV@mail.gmail.com> <20101126040742.GA5238@monopoli.naic.edu> <AANLkTim=P+QejCObCH1=5cPBDR6BpEXxuqHGZj3JBKbE@mail.gmail.com> <20101130021911.GA18971@monopoli.naic.edu> <AANLkTi=1PXk4u37mPd6=F6mjYWLqo=wg7trVmmpfV_WV@mail.gmail.com>
+Mime-Version: 1.0
+Content-Type: multipart/mixed; boundary="Qxx1br4bt0+wmkIi"
+In-Reply-To: <AANLkTi=1PXk4u37mPd6=F6mjYWLqo=wg7trVmmpfV_WV@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Elvis,
 
-This because you havent set the mac address for wlan0
+--Qxx1br4bt0+wmkIi
+Content-Type: text/plain; charset=iso-8859-1
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
 
-wlan0     Link encap:Ethernet  HWaddr 00:00:00:00:00:00
+On Wed, Dec 01, 2010 at 09:52:15PM +0000, Dave Kilroy wrote:
+> On Tue, Nov 30, 2010 at 2:19 AM, Giacomo Comes <comes@naic.edu> wrote:
+> > On Sun, Nov 28, 2010 at 04:10:30PM +0000, Dave Kilroy wrote:
+> >>
+> >> Just had a closer look at your log. wpa_supplicant is clearing keys 4
+> >> and 5, which is why you're getting invalid arguments reported. This
+> >> shouldn't affect driver behaviour.
+> >>
+> >> After that, something seems to go wrong with scanning. Try a plain
+> >> scan with wpa_supplicant turned off. Do you get any results?
+> >
+> > After a reboot and without configuring the wireless interface,
+> > iw dev eth1 scan
+> > gives:
+> > command failed: Network is down (-100)
+> 
+> The interface need to be up to scan:
+> 
+> ifconfig eth1 up
 
-You can do by using the following command:
-ifconfig wlan0 hw ether 11:22:33:44:55:66
+Ok, my bad. After I put the interface up the scan works.
 
-OR
+> 
+> > I was trying to associate the wireless card using iwconfig:
+> >    iwconfig eth1 mode managed key <key>
+> >    iwconfig eth1 essid <essid>
+> > but the card does not associate with the AP.
+> > Isn't that supposed to work or am I missing something?
+> 
+> Was that AP using WEP or WPA? The former should work (with the
+> interface up, and all the parameters being set correctly). The latter
+> won't.
 
-add the following patch 
-(http://www.spinics.net/lists/linux-wireless/msg59391.html) by Arik Nemtsov.
+The AP was using WEP, but it didn't associate because I didn't put up 
+the interface. After doing it, it works.
 
-diff --git a/drivers/net/wireless/wl12xx/main.c 
-b/drivers/net/wireless/wl12xx/main.c
-index 708b699..e5fbbb6 100644
---- a/drivers/net/wireless/wl12xx/main.c
-+++ b/drivers/net/wireless/wl12xx/main.c
-@@ -2987,6 +2987,18 @@ int wl1271_register_hw(struct wl1271 *wl)
- 	if (wl->mac80211_registered)
- 		return 0;
+> 
+> > Buy the way, if I configure the wireless interface with yast
+> > using WEP (the only way I can make the truemobile
+> > card work) then iw dev eth1 scan gives:
+> > BSS 00:13:10:aa:89:4b (on eth1)
+> >        TSF: 12179691 usec (0d, 00:00:12)
+> >        freq: 2437
+> >        beacon interval: 100
+> >        capability: ESS Privacy PBCC ShortSlotTime (0x0451)
+> >        signal: -27.00 dBm
+> >        last seen: 48 ms ago
+> >        SSID: ssid2
+> >        Supported rates: 1.0* 2.0* 5.5* 11.0* 22.0
+> >        DS Parameter set: channel 6
+> >        ERP: Barker_Preamble_Mode
+> >        Extended supported rates: 6.0 9.0 12.0 18.0 24.0 36.0 48.0 54.0
+> >        WPA:     * Version: 1
+> >                 * Group cipher: TKIP
+> >                 * Pairwise ciphers: TKIP
+> >                 * Authentication suites: PSK
+> 
+> That's what I wanted to see. So the card is able to scan, but your
+> wpa_supplicant log indicates it is continuously timing out the scans.
+> I don't know what is going on there.
+> 
+> What you can try is to turn off wpa_supplicant roaming, and force
+> wpa_supplicant to connect to the AP with highest priority in your
+> config. Set ap_scan=2 in wpa_supplicant.conf, and set
+> 
+> group=TKIP
+> pairwise=TKIP
+> 
+> in the network block.
+> 
+> This also prevents wpa_supplicant trying to connect to an AP using
+> BSSID, which the agere cards don't support.
+> 
 
-+	ret = wl1271_fetch_nvs(wl);
-+	if (ret == 0) {
-+		u8 *nvs_ptr = (u8 *)wl->nvs->nvs;
-+
-+		wl->mac_addr[0] = nvs_ptr[11];
-+		wl->mac_addr[1] = nvs_ptr[10];
-+		wl->mac_addr[2] = nvs_ptr[6];
-+		wl->mac_addr[3] = nvs_ptr[5];
-+		wl->mac_addr[4] = nvs_ptr[4];
-+		wl->mac_addr[5] = nvs_ptr[3];
-+	}
-+
- 	SET_IEEE80211_PERM_ADDR(wl->hw, wl->mac_addr);
+Running:
+wpa_supplicant -ieth1 -c wpa_supplicant.conf -f wpa_supplicant.log -dd
 
- 	ret = ieee80211_register_hw(wl->hw);
--- 
+wpa_supplicant.conf content:
+ctrl_interface=/var/run/wpa_supplicant
+ctrl_interface_group=0
+ap_scan=2
 
-Regards,
-Pandu.
+network={
+        ssid="Comes"
+        psk="<password>"
+        key_mgmt=WPA-PSK
+        priority=5
+        proto=WPA
 
------ Original Message ----- 
-From: "Elvis Dowson" <elvis.dowson@mac.com>
-To: "Ohad Ben-Cohen" <ohad@wizery.com>
-Cc: "Linux Wireless Mailing List" <linux-wireless@vger.kernel.org>; 
-"Mallireddy, Panduranga" <x0125717@ti.com>; "Jara, Pedro" <pedrojara@ti.com>
-Sent: Friday, December 17, 2010 5:53 AM
-Subject: Problem bringing up wlan0 interface up with mainline wl1271 drivers
+        group=TKIP
+        pairwise=TKIP
+}
 
+wpa_supplicant.log attached.
 
-Hi,
+Giacomo
 
-On Dec 12, 2010, at 1:24 AM, Ohad Ben-Cohen wrote:
+--Qxx1br4bt0+wmkIi
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: attachment; filename="wpa_supplicant.log"
 
->> When I build the TI WiLink drivers from the ti rowboat hardware/ti/wlan 
->> project
->
-> The linux-omap community can help you with mainline drivers, but no so
-> much with proprietary ones. Why don't you use the upstream wl12xx
-> driver ?
+Initializing interface 'eth1' conf 'wpa_supplicant.conf' driver 'default' ctrl_interface 'N/A' bridge 'N/A'
+Configuration file 'wpa_supplicant.conf' -> '/root/wpa_supplicant.conf'
+Reading configuration file '/root/wpa_supplicant.conf'
+ctrl_interface='/var/run/wpa_supplicant'
+ctrl_interface_group='0'
+ap_scan=2
+Line: 5 - start of a new network block
+ssid - hexdump_ascii(len=5):
+     43 6f 6d 65 73                                    Comes           
+PSK (ASCII passphrase) - hexdump_ascii(len=18): [REMOVED]
+key_mgmt: 0x2
+priority=5 (0x5)
+proto: 0x1
+group: 0x8
+pairwise: 0x8
+PSK (from passphrase) - hexdump(len=32): [REMOVED]
+Priority group 5
+   id=0 ssid='Comes'
+WEXT: cfg80211-based driver detected
+SIOCGIWRANGE: WE(compiled)=22 WE(source)=21 enc_capa=0x5
+  capabilities: key_mgmt 0x5 enc 0x7 flags 0x0
+netlink: Operstate: linkmode=1, operstate=5
+Own MAC address: 00:02:2d:7e:fc:cb
+wpa_driver_wext_set_key: alg=0 key_idx=0 set_tx=0 seq_len=0 key_len=0
+wpa_driver_wext_set_key: alg=0 key_idx=1 set_tx=0 seq_len=0 key_len=0
+wpa_driver_wext_set_key: alg=0 key_idx=2 set_tx=0 seq_len=0 key_len=0
+wpa_driver_wext_set_key: alg=0 key_idx=3 set_tx=0 seq_len=0 key_len=0
+wpa_driver_wext_set_key: alg=0 key_idx=4 set_tx=0 seq_len=0 key_len=0
+Driver did not support SIOCSIWENCODEEXT
+wpa_driver_wext_set_key: alg=0 key_idx=5 set_tx=0 seq_len=0 key_len=0
+Driver did not support SIOCSIWENCODEEXT
+wpa_driver_wext_set_countermeasures
+RSN: flushing PMKID list in the driver
+Setting scan request: 0 sec 100000 usec
+WPS: UUID based on MAC address - hexdump(len=16): 85 92 32 af f8 e1 55 09 8a 9c 35 74 b7 fa 7e 0b
+EAPOL: SUPP_PAE entering state DISCONNECTED
+EAPOL: Supplicant port status: Unauthorized
+EAPOL: KEY_RX entering state NO_KEY_RECEIVE
+EAPOL: SUPP_BE entering state INITIALIZE
+EAP: EAP entering state DISABLED
+EAPOL: Supplicant port status: Unauthorized
+EAPOL: Supplicant port status: Unauthorized
+ctrl_interface_group=0
+Added interface eth1
+RTM_NEWLINK: operstate=0 ifi_flags=0x1043 ([UP][RUNNING])
+RTM_NEWLINK, IFLA_IFNAME: Interface 'eth1' added
+RTM_NEWLINK: operstate=0 ifi_flags=0x1043 ([UP][RUNNING])
+RTM_NEWLINK, IFLA_IFNAME: Interface 'eth1' added
+Wireless event: cmd=0x8b06 len=8
+RTM_NEWLINK: operstate=0 ifi_flags=0x1043 ([UP][RUNNING])
+RTM_NEWLINK, IFLA_IFNAME: Interface 'eth1' added
+Wireless event: cmd=0x8b1a len=8
+RTM_NEWLINK: operstate=0 ifi_flags=0x1003 ([UP])
+RTM_NEWLINK, IFLA_IFNAME: Interface 'eth1' added
+State: DISCONNECTED -> SCANNING
+Trying to associate with SSID 'Comes'
+Cancelling scan request
+WPA: clearing own WPA/RSN IE
+Automatic auth_alg selection: 0x1
+WPA: No WPA/RSN IE available from association info
+WPA: Set cipher suites based on configuration
+WPA: Selected cipher suites: group 8 pairwise 8 key_mgmt 2 proto 1
+WPA: clearing AP WPA IE
+WPA: clearing AP RSN IE
+WPA: using GTK TKIP
+WPA: using PTK TKIP
+WPA: using KEY_MGMT WPA-PSK
+WPA: not using MGMT group cipher
+WPA: Set own WPA IE default - hexdump(len=24): dd 16 00 50 f2 01 01 00 00 50 f2 02 01 00 00 50 f2 02 01 00 00 50 f2 02
+No keys have been configured - skip key clearing
+State: SCANNING -> ASSOCIATING
+wpa_driver_wext_set_operstate: operstate 0->0 (DORMANT)
+netlink: Operstate: linkmode=-1, operstate=5
+wpa_driver_wext_associate
+wpa_driver_wext_set_drop_unencrypted
+wpa_driver_wext_set_psk
+wpa_driver_wext_associate: assoc failed because set_auth_param(IW_AUTH_MFP) failed
+Association request to the driver failed
+Setting authentication timeout: 5 sec 0 usec
+EAPOL: External notification - EAP success=0
+EAPOL: Supplicant port status: Unauthorized
+EAPOL: External notification - EAP fail=0
+EAPOL: Supplicant port status: Unauthorized
+EAPOL: External notification - portControl=Auto
+EAPOL: Supplicant port status: Unauthorized
+RTM_NEWLINK: operstate=0 ifi_flags=0x1003 ([UP])
+RTM_NEWLINK, IFLA_IFNAME: Interface 'eth1' added
+Wireless event: cmd=0x8b1a len=8
+RTM_NEWLINK: operstate=0 ifi_flags=0x1003 ([UP])
+RTM_NEWLINK, IFLA_IFNAME: Interface 'eth1' added
+Wireless event: cmd=0x8b06 len=8
+RTM_NEWLINK: operstate=0 ifi_flags=0x1003 ([UP])
+RTM_NEWLINK, IFLA_IFNAME: Interface 'eth1' added
+Wireless event: cmd=0x8b1a len=13
+EAPOL: disable timer tick
+EAPOL: Supplicant port status: Unauthorized
+Authentication with 00:00:00:00:00:00 timed out.
+Added BSSID 00:00:00:00:00:00 into blacklist
+No keys have been configured - skip key clearing
+State: ASSOCIATING -> DISCONNECTED
+wpa_driver_wext_set_operstate: operstate 0->0 (DORMANT)
+netlink: Operstate: linkmode=-1, operstate=5
+EAPOL: External notification - portEnabled=0
+EAPOL: Supplicant port status: Unauthorized
+EAPOL: External notification - portValid=0
+EAPOL: Supplicant port status: Unauthorized
+EAPOL: External notification - EAP success=0
+EAPOL: Supplicant port status: Unauthorized
+Setting scan request: 0 sec 0 usec
+State: DISCONNECTED -> SCANNING
+Trying to associate with SSID 'Comes'
+Cancelling scan request
+WPA: clearing own WPA/RSN IE
+Automatic auth_alg selection: 0x1
+WPA: No WPA/RSN IE available from association info
+WPA: Set cipher suites based on configuration
+WPA: Selected cipher suites: group 8 pairwise 8 key_mgmt 2 proto 1
+WPA: clearing AP WPA IE
+WPA: clearing AP RSN IE
+WPA: using GTK TKIP
+WPA: using PTK TKIP
+WPA: using KEY_MGMT WPA-PSK
+WPA: not using MGMT group cipher
+WPA: Set own WPA IE default - hexdump(len=24): dd 16 00 50 f2 01 01 00 00 50 f2 02 01 00 00 50 f2 02 01 00 00 50 f2 02
+No keys have been configured - skip key clearing
+State: SCANNING -> ASSOCIATING
+wpa_driver_wext_set_operstate: operstate 0->0 (DORMANT)
+netlink: Operstate: linkmode=-1, operstate=5
+wpa_driver_wext_associate
+wpa_driver_wext_set_drop_unencrypted
+wpa_driver_wext_set_psk
+wpa_driver_wext_associate: assoc failed because set_auth_param(IW_AUTH_MFP) failed
+Association request to the driver failed
+Setting authentication timeout: 5 sec 0 usec
+EAPOL: External notification - EAP success=0
+EAPOL: Supplicant port status: Unauthorized
+EAPOL: External notification - EAP fail=0
+EAPOL: Supplicant port status: Unauthorized
+EAPOL: External notification - portControl=Auto
+EAPOL: Supplicant port status: Unauthorized
+RTM_NEWLINK: operstate=0 ifi_flags=0x1003 ([UP])
+RTM_NEWLINK, IFLA_IFNAME: Interface 'eth1' added
+Wireless event: cmd=0x8b1a len=8
+RTM_NEWLINK: operstate=0 ifi_flags=0x1003 ([UP])
+RTM_NEWLINK, IFLA_IFNAME: Interface 'eth1' added
+Wireless event: cmd=0x8b06 len=8
+RTM_NEWLINK: operstate=0 ifi_flags=0x1003 ([UP])
+RTM_NEWLINK, IFLA_IFNAME: Interface 'eth1' added
+Wireless event: cmd=0x8b1a len=13
+Authentication with 00:00:00:00:00:00 timed out.
+BSSID 00:00:00:00:00:00 blacklist count incremented to 2
+No keys have been configured - skip key clearing
+State: ASSOCIATING -> DISCONNECTED
+wpa_driver_wext_set_operstate: operstate 0->0 (DORMANT)
+netlink: Operstate: linkmode=-1, operstate=5
+EAPOL: External notification - portEnabled=0
+EAPOL: Supplicant port status: Unauthorized
+EAPOL: External notification - portValid=0
+EAPOL: Supplicant port status: Unauthorized
+EAPOL: External notification - EAP success=0
+EAPOL: Supplicant port status: Unauthorized
+Setting scan request: 0 sec 0 usec
+State: DISCONNECTED -> SCANNING
+Trying to associate with SSID 'Comes'
+Cancelling scan request
+WPA: clearing own WPA/RSN IE
+Automatic auth_alg selection: 0x1
+WPA: No WPA/RSN IE available from association info
+WPA: Set cipher suites based on configuration
+WPA: Selected cipher suites: group 8 pairwise 8 key_mgmt 2 proto 1
+WPA: clearing AP WPA IE
+WPA: clearing AP RSN IE
+WPA: using GTK TKIP
+WPA: using PTK TKIP
+WPA: using KEY_MGMT WPA-PSK
+WPA: not using MGMT group cipher
+WPA: Set own WPA IE default - hexdump(len=24): dd 16 00 50 f2 01 01 00 00 50 f2 02 01 00 00 50 f2 02 01 00 00 50 f2 02
+No keys have been configured - skip key clearing
+State: SCANNING -> ASSOCIATING
+wpa_driver_wext_set_operstate: operstate 0->0 (DORMANT)
+netlink: Operstate: linkmode=-1, operstate=5
+wpa_driver_wext_associate
+wpa_driver_wext_set_drop_unencrypted
+wpa_driver_wext_set_psk
+wpa_driver_wext_associate: assoc failed because set_auth_param(IW_AUTH_MFP) failed
+Association request to the driver failed
+Setting authentication timeout: 5 sec 0 usec
+EAPOL: External notification - EAP success=0
+EAPOL: Supplicant port status: Unauthorized
+EAPOL: External notification - EAP fail=0
+EAPOL: Supplicant port status: Unauthorized
+EAPOL: External notification - portControl=Auto
+EAPOL: Supplicant port status: Unauthorized
+RTM_NEWLINK: operstate=0 ifi_flags=0x1003 ([UP])
+RTM_NEWLINK, IFLA_IFNAME: Interface 'eth1' added
+Wireless event: cmd=0x8b1a len=8
+RTM_NEWLINK: operstate=0 ifi_flags=0x1003 ([UP])
+RTM_NEWLINK, IFLA_IFNAME: Interface 'eth1' added
+Wireless event: cmd=0x8b06 len=8
+RTM_NEWLINK: operstate=0 ifi_flags=0x1003 ([UP])
+RTM_NEWLINK, IFLA_IFNAME: Interface 'eth1' added
+Wireless event: cmd=0x8b1a len=13
+Authentication with 00:00:00:00:00:00 timed out.
+BSSID 00:00:00:00:00:00 blacklist count incremented to 3
+No keys have been configured - skip key clearing
+State: ASSOCIATING -> DISCONNECTED
+wpa_driver_wext_set_operstate: operstate 0->0 (DORMANT)
+netlink: Operstate: linkmode=-1, operstate=5
+EAPOL: External notification - portEnabled=0
+EAPOL: Supplicant port status: Unauthorized
+EAPOL: External notification - portValid=0
+EAPOL: Supplicant port status: Unauthorized
+EAPOL: External notification - EAP success=0
+EAPOL: Supplicant port status: Unauthorized
+Setting scan request: 0 sec 0 usec
+State: DISCONNECTED -> SCANNING
+Trying to associate with SSID 'Comes'
+Cancelling scan request
+WPA: clearing own WPA/RSN IE
+Automatic auth_alg selection: 0x1
+WPA: No WPA/RSN IE available from association info
+WPA: Set cipher suites based on configuration
+WPA: Selected cipher suites: group 8 pairwise 8 key_mgmt 2 proto 1
+WPA: clearing AP WPA IE
+WPA: clearing AP RSN IE
+WPA: using GTK TKIP
+WPA: using PTK TKIP
+WPA: using KEY_MGMT WPA-PSK
+WPA: not using MGMT group cipher
+WPA: Set own WPA IE default - hexdump(len=24): dd 16 00 50 f2 01 01 00 00 50 f2 02 01 00 00 50 f2 02 01 00 00 50 f2 02
+No keys have been configured - skip key clearing
+State: SCANNING -> ASSOCIATING
+wpa_driver_wext_set_operstate: operstate 0->0 (DORMANT)
+netlink: Operstate: linkmode=-1, operstate=5
+wpa_driver_wext_associate
+wpa_driver_wext_set_drop_unencrypted
+wpa_driver_wext_set_psk
+wpa_driver_wext_associate: assoc failed because set_auth_param(IW_AUTH_MFP) failed
+Association request to the driver failed
+Setting authentication timeout: 5 sec 0 usec
+EAPOL: External notification - EAP success=0
+EAPOL: Supplicant port status: Unauthorized
+EAPOL: External notification - EAP fail=0
+EAPOL: Supplicant port status: Unauthorized
+EAPOL: External notification - portControl=Auto
+EAPOL: Supplicant port status: Unauthorized
+RTM_NEWLINK: operstate=0 ifi_flags=0x1003 ([UP])
+RTM_NEWLINK, IFLA_IFNAME: Interface 'eth1' added
+Wireless event: cmd=0x8b1a len=8
+RTM_NEWLINK: operstate=0 ifi_flags=0x1003 ([UP])
+RTM_NEWLINK, IFLA_IFNAME: Interface 'eth1' added
+Wireless event: cmd=0x8b06 len=8
+RTM_NEWLINK: operstate=0 ifi_flags=0x1003 ([UP])
+RTM_NEWLINK, IFLA_IFNAME: Interface 'eth1' added
+Wireless event: cmd=0x8b1a len=13
+Authentication with 00:00:00:00:00:00 timed out.
+BSSID 00:00:00:00:00:00 blacklist count incremented to 4
+No keys have been configured - skip key clearing
+State: ASSOCIATING -> DISCONNECTED
+wpa_driver_wext_set_operstate: operstate 0->0 (DORMANT)
+netlink: Operstate: linkmode=-1, operstate=5
+EAPOL: External notification - portEnabled=0
+EAPOL: Supplicant port status: Unauthorized
+EAPOL: External notification - portValid=0
+EAPOL: Supplicant port status: Unauthorized
+EAPOL: External notification - EAP success=0
+EAPOL: Supplicant port status: Unauthorized
+Setting scan request: 0 sec 0 usec
+State: DISCONNECTED -> SCANNING
+Trying to associate with SSID 'Comes'
+Cancelling scan request
+WPA: clearing own WPA/RSN IE
+Automatic auth_alg selection: 0x1
+WPA: No WPA/RSN IE available from association info
+WPA: Set cipher suites based on configuration
+WPA: Selected cipher suites: group 8 pairwise 8 key_mgmt 2 proto 1
+WPA: clearing AP WPA IE
+WPA: clearing AP RSN IE
+WPA: using GTK TKIP
+WPA: using PTK TKIP
+WPA: using KEY_MGMT WPA-PSK
+WPA: not using MGMT group cipher
+WPA: Set own WPA IE default - hexdump(len=24): dd 16 00 50 f2 01 01 00 00 50 f2 02 01 00 00 50 f2 02 01 00 00 50 f2 02
+No keys have been configured - skip key clearing
+State: SCANNING -> ASSOCIATING
+wpa_driver_wext_set_operstate: operstate 0->0 (DORMANT)
+netlink: Operstate: linkmode=-1, operstate=5
+wpa_driver_wext_associate
+wpa_driver_wext_set_drop_unencrypted
+wpa_driver_wext_set_psk
+wpa_driver_wext_associate: assoc failed because set_auth_param(IW_AUTH_MFP) failed
+Association request to the driver failed
+Setting authentication timeout: 5 sec 0 usec
+EAPOL: External notification - EAP success=0
+EAPOL: Supplicant port status: Unauthorized
+EAPOL: External notification - EAP fail=0
+EAPOL: Supplicant port status: Unauthorized
+EAPOL: External notification - portControl=Auto
+EAPOL: Supplicant port status: Unauthorized
+RTM_NEWLINK: operstate=0 ifi_flags=0x1003 ([UP])
+RTM_NEWLINK, IFLA_IFNAME: Interface 'eth1' added
+Wireless event: cmd=0x8b1a len=8
+RTM_NEWLINK: operstate=0 ifi_flags=0x1003 ([UP])
+RTM_NEWLINK, IFLA_IFNAME: Interface 'eth1' added
+Wireless event: cmd=0x8b06 len=8
+RTM_NEWLINK: operstate=0 ifi_flags=0x1003 ([UP])
+RTM_NEWLINK, IFLA_IFNAME: Interface 'eth1' added
+Wireless event: cmd=0x8b1a len=13
+Authentication with 00:00:00:00:00:00 timed out.
+BSSID 00:00:00:00:00:00 blacklist count incremented to 5
+No keys have been configured - skip key clearing
+State: ASSOCIATING -> DISCONNECTED
+wpa_driver_wext_set_operstate: operstate 0->0 (DORMANT)
+netlink: Operstate: linkmode=-1, operstate=5
+EAPOL: External notification - portEnabled=0
+EAPOL: Supplicant port status: Unauthorized
+EAPOL: External notification - portValid=0
+EAPOL: Supplicant port status: Unauthorized
+EAPOL: External notification - EAP success=0
+EAPOL: Supplicant port status: Unauthorized
+Setting scan request: 0 sec 0 usec
+State: DISCONNECTED -> SCANNING
+Trying to associate with SSID 'Comes'
+Cancelling scan request
+WPA: clearing own WPA/RSN IE
+Automatic auth_alg selection: 0x1
+WPA: No WPA/RSN IE available from association info
+WPA: Set cipher suites based on configuration
+WPA: Selected cipher suites: group 8 pairwise 8 key_mgmt 2 proto 1
+WPA: clearing AP WPA IE
+WPA: clearing AP RSN IE
+WPA: using GTK TKIP
+WPA: using PTK TKIP
+WPA: using KEY_MGMT WPA-PSK
+WPA: not using MGMT group cipher
+WPA: Set own WPA IE default - hexdump(len=24): dd 16 00 50 f2 01 01 00 00 50 f2 02 01 00 00 50 f2 02 01 00 00 50 f2 02
+No keys have been configured - skip key clearing
+State: SCANNING -> ASSOCIATING
+wpa_driver_wext_set_operstate: operstate 0->0 (DORMANT)
+netlink: Operstate: linkmode=-1, operstate=5
+wpa_driver_wext_associate
+wpa_driver_wext_set_drop_unencrypted
+wpa_driver_wext_set_psk
+wpa_driver_wext_associate: assoc failed because set_auth_param(IW_AUTH_MFP) failed
+Association request to the driver failed
+Setting authentication timeout: 5 sec 0 usec
+EAPOL: External notification - EAP success=0
+EAPOL: Supplicant port status: Unauthorized
+EAPOL: External notification - EAP fail=0
+EAPOL: Supplicant port status: Unauthorized
+EAPOL: External notification - portControl=Auto
+EAPOL: Supplicant port status: Unauthorized
+RTM_NEWLINK: operstate=0 ifi_flags=0x1003 ([UP])
+RTM_NEWLINK, IFLA_IFNAME: Interface 'eth1' added
+Wireless event: cmd=0x8b1a len=8
+RTM_NEWLINK: operstate=0 ifi_flags=0x1003 ([UP])
+RTM_NEWLINK, IFLA_IFNAME: Interface 'eth1' added
+Wireless event: cmd=0x8b06 len=8
+RTM_NEWLINK: operstate=0 ifi_flags=0x1003 ([UP])
+RTM_NEWLINK, IFLA_IFNAME: Interface 'eth1' added
+Wireless event: cmd=0x8b1a len=13
+Authentication with 00:00:00:00:00:00 timed out.
+BSSID 00:00:00:00:00:00 blacklist count incremented to 6
+No keys have been configured - skip key clearing
+State: ASSOCIATING -> DISCONNECTED
+wpa_driver_wext_set_operstate: operstate 0->0 (DORMANT)
+netlink: Operstate: linkmode=-1, operstate=5
+EAPOL: External notification - portEnabled=0
+EAPOL: Supplicant port status: Unauthorized
+EAPOL: External notification - portValid=0
+EAPOL: Supplicant port status: Unauthorized
+EAPOL: External notification - EAP success=0
+EAPOL: Supplicant port status: Unauthorized
+Setting scan request: 0 sec 0 usec
+State: DISCONNECTED -> SCANNING
+Trying to associate with SSID 'Comes'
+Cancelling scan request
+WPA: clearing own WPA/RSN IE
+Automatic auth_alg selection: 0x1
+WPA: No WPA/RSN IE available from association info
+WPA: Set cipher suites based on configuration
+WPA: Selected cipher suites: group 8 pairwise 8 key_mgmt 2 proto 1
+WPA: clearing AP WPA IE
+WPA: clearing AP RSN IE
+WPA: using GTK TKIP
+WPA: using PTK TKIP
+WPA: using KEY_MGMT WPA-PSK
+WPA: not using MGMT group cipher
+WPA: Set own WPA IE default - hexdump(len=24): dd 16 00 50 f2 01 01 00 00 50 f2 02 01 00 00 50 f2 02 01 00 00 50 f2 02
+No keys have been configured - skip key clearing
+State: SCANNING -> ASSOCIATING
+wpa_driver_wext_set_operstate: operstate 0->0 (DORMANT)
+netlink: Operstate: linkmode=-1, operstate=5
+wpa_driver_wext_associate
+wpa_driver_wext_set_drop_unencrypted
+wpa_driver_wext_set_psk
+wpa_driver_wext_associate: assoc failed because set_auth_param(IW_AUTH_MFP) failed
+Association request to the driver failed
+Setting authentication timeout: 5 sec 0 usec
+EAPOL: External notification - EAP success=0
+EAPOL: Supplicant port status: Unauthorized
+EAPOL: External notification - EAP fail=0
+EAPOL: Supplicant port status: Unauthorized
+EAPOL: External notification - portControl=Auto
+EAPOL: Supplicant port status: Unauthorized
+RTM_NEWLINK: operstate=0 ifi_flags=0x1003 ([UP])
+RTM_NEWLINK, IFLA_IFNAME: Interface 'eth1' added
+Wireless event: cmd=0x8b1a len=8
+RTM_NEWLINK: operstate=0 ifi_flags=0x1003 ([UP])
+RTM_NEWLINK, IFLA_IFNAME: Interface 'eth1' added
+Wireless event: cmd=0x8b06 len=8
+RTM_NEWLINK: operstate=0 ifi_flags=0x1003 ([UP])
+RTM_NEWLINK, IFLA_IFNAME: Interface 'eth1' added
+Wireless event: cmd=0x8b1a len=13
+CTRL-EVENT-TERMINATING - signal 2 received
+Removing interface eth1
+No keys have been configured - skip key clearing
+State: ASSOCIATING -> DISCONNECTED
+wpa_driver_wext_set_operstate: operstate 0->0 (DORMANT)
+netlink: Operstate: linkmode=-1, operstate=5
+EAPOL: External notification - portEnabled=0
+EAPOL: Supplicant port status: Unauthorized
+EAPOL: External notification - portValid=0
+EAPOL: Supplicant port status: Unauthorized
+EAPOL: External notification - EAP success=0
+EAPOL: Supplicant port status: Unauthorized
+wpa_driver_wext_set_countermeasures
+No keys have been configured - skip key clearing
+Removed BSSID 00:00:00:00:00:00 from blacklist (clear)
+Cancelling scan request
+Cancelling authentication timeout
+netlink: Operstate: linkmode=0, operstate=6
 
-I've built linux kernel 2.6.37-rc6, and patched board-omap3beagle.c to 
-interface with MMC2 SDIO controller,
-but I'm unable to bring the wlan0 interface up.
-
-Here are the messages during kernel boot:
-
-[    0.000000] wlan_mux_init: Configuring mux settings for wl1271 wlan 
-module
-[    0.077117] regulator: vwl1271: 1850 mV normal standby
-[    2.171813] mmc1: mmc_rescan: trying to init card at 400000 Hz
-[    2.323120] mmc1: card claims to support voltages below the defined 
-range. These will be ignored.
-[    2.368865] mmc1: queuing unknown CIS tuple 0x91 (3 bytes)
-[    2.392150] mmc1: new SDIO card at address 0001
-[    2.787597] wl1271: loaded
-[    2.790802] wl1271: initialized
-
-# ifconfig -a
-lo        Link encap:Local Loopback
-          LOOPBACK  MTU:16436  Metric:1
-          RX packets:0 errors:0 dropped:0 overruns:0 frame:0
-          TX packets:0 errors:0 dropped:0 overruns:0 carrier:0
-          collisions:0 txqueuelen:0
-          RX bytes:0 (0.0 b)  TX bytes:0 (0.0 b)
-
-wlan0     Link encap:Ethernet  HWaddr 00:00:00:00:00:00
-          BROADCAST MULTICAST  MTU:1500  Metric:1
-          RX packets:0 errors:0 dropped:0 overruns:0 frame:0
-          TX packets:0 errors:0 dropped:0 overruns:0 carrier:0
-          collisions:0 txqueuelen:1000
-          RX bytes:0 (0.0 b)  TX bytes:0 (0.0 b)
-
-# ifconfig wlan0 up
-SIOCSIFFLAGS: Cannot assign requested address
-
-What could the reason be?
-
-Elvis Dowson
-
+--Qxx1br4bt0+wmkIi--
