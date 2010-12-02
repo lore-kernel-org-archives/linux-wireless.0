@@ -1,78 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.19.149.2]:58691 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757149Ab0LAUly convert rfc822-to-8bit (ORCPT
+Received: from mail-bw0-f46.google.com ([209.85.214.46]:55707 "EHLO
+	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757178Ab0LBXLP (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 1 Dec 2010 15:41:54 -0500
-Date: Wed, 1 Dec 2010 12:41:49 -0800
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-CC: Joe Perches <joe@perches.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"ath9k-devel@lists.ath9k.org" <ath9k-devel@lists.ath9k.org>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	"peter@stuge.se" <peter@stuge.se>
-Subject: Re: [ath9k-devel] [PATCH wireless-next] MAINTAINERS: Add ATH
- GENERIC UTILITIES
-Message-ID: <20101201204149.GC2359@tux>
-References: <20101129060732.5130.qmail@stuge.se>
- <4CF42C17.2070500@openwrt.org>
- <1291081185.16349.133.camel@Joe-Laptop>
- <4CF464D6.2020507@openwrt.org>
- <1291148375.18026.342.camel@Joe-Laptop>
- <AANLkTik2qtGUgkZYSjcEH9jHHsevKnxOvz4s6On94U9o@mail.gmail.com>
- <1291225075.1845.177.camel@Joe-Laptop>
- <AANLkTinU+jWBXUdW2v9WSL2SZWQn8FHai4+=dAPTASe6@mail.gmail.com>
- <1291234615.1845.196.camel@Joe-Laptop>
- <AANLkTim+ayPBhBiKtuhgxKt645YT_o=5w_ckrq71j-ES@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="iso-8859-1"
-In-Reply-To: <AANLkTim+ayPBhBiKtuhgxKt645YT_o=5w_ckrq71j-ES@mail.gmail.com>
+	Thu, 2 Dec 2010 18:11:15 -0500
+Received: by bwz15 with SMTP id 15so7774142bwz.19
+        for <linux-wireless@vger.kernel.org>; Thu, 02 Dec 2010 15:11:14 -0800 (PST)
+From: Eliad Peller <eliad@wizery.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: <linux-wireless@vger.kernel.org>
+Subject: [PATCH] mac80211: fix pm_qos magic numbers
+Date: Fri,  3 Dec 2010 01:11:14 +0200
+Message-Id: <1291331474-16475-1-git-send-email-eliad@wizery.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Dec 01, 2010 at 12:18:30PM -0800, Luis R. Rodriguez wrote:
-> On Wed, Dec 1, 2010 at 12:16 PM, Joe Perches <joe@perches.com> wrote:
-> > On Wed, 2010-12-01 at 11:46 -0800, Luis R. Rodriguez wrote:
-> >> On Wed, Dec 1, 2010 at 9:37 AM, Joe Perches <joe@perches.com> wrote:
-> >> > This file pattern is not currently shown as maintained
-> >> > by atheros.  Perhaps it should be?
-> >> > Signed-off-by: Joe Perches <joe@perches.com>
-> >> Sure but its maintained by the community and Atheros hackers, not just me.
-> >
-> > No doubt.
-> >
-> > $ git log next-20101130 -- drivers/net/wireless/ath/*.[ch] | \
-> >        grep -P "(^Author)" | cut -f2- -d":" | sort | uniq -c | sort -rn | head
-> >     27  Luis R. Rodriguez <lrodriguez@atheros.com>
-> >      6  Felix Fietkau <nbd@openwrt.org>
-> >      4  Bruno Randolf <br1@einfach.org>
-> >      3  Sujith <Sujith.Manoharan@atheros.com>
-> >      3  John W. Linville <linville@tuxdriver.com>
-> >      3  Joe Perches <joe@perches.com>
-> >      3  Bob Copeland <me@bobcopeland.com>
-> >      2  Pavel Roskin <proski@gnu.org>
-> >      2  Johannes Berg <johannes@sipsolutions.net>
-> >      2  David S. Miller <davem@davemloft.net>
-> >
-> > Without any sort of MAINTAINERS entry, the results
-> > for files in that directory are like this:
-> >
-> > $ ./scripts/get_maintainer.pl -f --rolestats drivers/net/wireless/ath/main.c
-> > "John W. Linville" <linville@tuxdriver.com> (maintainer:NETWORKING [WIREL...)
-> > linux-wireless@vger.kernel.org (open list:NETWORKING [WIREL...)
-> > netdev@vger.kernel.org (open list:NETWORKING DRIVERS)
-> > linux-kernel@vger.kernel.org (open list)
-> >
-> > Perhaps you want to be cc'd?
-> > Perhaps there are atheros lists that should be cc'd?
-> > If cc'ing linux-wireless is good enough,
-> > that's good enough for me too.
-> 
-> OK you're patch is fine then.
+the default /dev/network_latency is 2000s.
+1900ms = 1900000us.
+just use consts.
 
-But you sent it as part of an old thread, not sure if John will see it.
+Signed-off-by: Eliad Peller <eliad@wizery.com>
+---
+ net/mac80211/mlme.c |    9 +++++----
+ 1 files changed, 5 insertions(+), 4 deletions(-)
 
-  Luis
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+index dfc4a31..e01d6fb 100644
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -619,11 +619,12 @@ void ieee80211_recalc_ps(struct ieee80211_local *local, s32 latency)
+ 			/*
+ 			 * Go to full PSM if the user configures a very low
+ 			 * latency requirement.
+-			 * The 2 second value is there for compatibility until
+-			 * the PM_QOS_NETWORK_LATENCY is configured with real
+-			 * values.
++			 * The 2000 second value is there for compatibility
++			 * until the PM_QOS_NETWORK_LATENCY is configured
++			 * with real values.
+ 			 */
+-			if (latency > 1900000000 && latency != 2000000000)
++			if (latency > (1900 * USEC_PER_MSEC) &&
++			    latency != (2000 * USEC_PER_SEC))
+ 				timeout = 0;
+ 			else
+ 				timeout = 100;
+-- 
+1.7.0.4
+
