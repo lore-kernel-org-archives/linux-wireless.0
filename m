@@ -1,32 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:34298 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754887Ab0LPS4f (ORCPT
+Received: from mail-wy0-f174.google.com ([74.125.82.174]:41677 "EHLO
+	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756171Ab0LBSTd (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 16 Dec 2010 13:56:35 -0500
-Subject: Re: [PATCH 3/3 v2] mac80211: Send mesh non-HWMP path selection
- frames to userspace
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Javier Cardona <javier@cozybit.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	Steve Derosier <steve@cozybit.com>, devel@lists.open80211s.org,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <1292524200-14791-3-git-send-email-javier@cozybit.com>
-References: <1292234643.3539.6.camel@jlt3.sipsolutions.net>
-	 <1292524200-14791-3-git-send-email-javier@cozybit.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Thu, 16 Dec 2010 19:56:33 +0100
-Message-ID: <1292525793.3612.30.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+	Thu, 2 Dec 2010 13:19:33 -0500
+Received: by wyb28 with SMTP id 28so8501932wyb.19
+        for <linux-wireless@vger.kernel.org>; Thu, 02 Dec 2010 10:19:32 -0800 (PST)
+From: David Kilroy <kilroyd@googlemail.com>
+To: linux-wireless@vger.kernel.org
+Cc: comes@naic.edu, David Kilroy <kilroyd@googlemail.com>
+Subject: [PATCH] orinoco: allow IW_AUTH_MFP to pass through
+Date: Thu,  2 Dec 2010 18:19:21 +0000
+Message-Id: <1291313961-10692-1-git-send-email-kilroyd@googlemail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2010-12-16 at 10:30 -0800, Javier Cardona wrote:
-> Let path selection frames for protocols other than HWMP be sent to
-> userspace via NL80211_CMD_REGISTER_FRAME.  Also allow userspace to send
-> and receive mesh path selection frames.
+The card doesn't support MFP, so silently accept DISABLED and OPTIONAL
+settings.
 
-Looks fine, thanks.
+This avoids the following failure in wpa_supplicant logs:
 
-johannes
+State: SCANNING -> ASSOCIATING
+wpa_driver_wext_set_operstate: operstate 0->0 (DORMANT)
+netlink: Operstate: linkmode=-1, operstate=5
+wpa_driver_wext_associate
+wpa_driver_wext_set_drop_unencrypted
+wpa_driver_wext_set_psk
+wpa_driver_wext_associate: assoc failed because set_auth_param(IW_AUTH_MFP) failed
+Association request to the driver failed
+
+Signed-off by: David Kilroy <kilroyd@googlemail.com>
+Reported by: Giacomo Comes <comes@naic.edu>
+---
+
+Compile tested. I'm not sure this fixes the issue, because it looks like
+wpa_supplicant is still waiting for authentication to succeed. However,
+it has probably not called the commit handler.
+
+---
+ drivers/net/wireless/orinoco/wext.c |    8 ++++++++
+ 1 files changed, 8 insertions(+), 0 deletions(-)
+
+diff --git a/drivers/net/wireless/orinoco/wext.c b/drivers/net/wireless/orinoco/wext.c
+index cf7be1e..519e01e 100644
+--- a/drivers/net/wireless/orinoco/wext.c
++++ b/drivers/net/wireless/orinoco/wext.c
+@@ -886,6 +886,14 @@ static int orinoco_ioctl_set_auth(struct net_device *dev,
+ 		 */
+ 		break;
+ 
++	case IW_AUTH_MFP:
++		/* Management Frame Protection not supported.
++		 * Only fail if set to required.
++		 */
++		if (param->value == IW_AUTH_MFP_REQUIRED)
++			ret = -EINVAL;
++		break;
++
+ 	case IW_AUTH_KEY_MGMT:
+ 		/* wl_lkm implies value 2 == PSK for Hermes I
+ 		 * which ties in with WEXT
+-- 
+1.7.2.2
 
