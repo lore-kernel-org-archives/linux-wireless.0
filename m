@@ -1,57 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from catholic.ebb.org ([67.207.139.67]:54807 "EHLO catholic.ebb.org"
+Received: from mga01.intel.com ([192.55.52.88]:13247 "EHLO mga01.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755178Ab0LAQmF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 1 Dec 2010 11:42:05 -0500
-From: "Bradley M. Kuhn" <bkuhn@ebb.org>
-To: david@lang.hm
-Cc: Pavel Machek <pavel@ucw.cz>,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	Alan Cox <alan@lxorguk.ukuu.org.uk>,
-	linux-kernel@vger.kernel.org,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Greg KH <greg@kroah.com>, David Miller <davem@davemloft.net>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Stephen Hemminger <shemminger@vyatta.com>,
-	"Perez-Gonzalez\, Inaky" <inaky.perez-gonzalez@intel.com>,
-	Charles Marker <Charles.Marker@atheros.com>,
-	Jouni Malinen <Jouni.Malinen@atheros.com>,
-	Kevin Hayes <kevin@atheros.com>,
-	Zhifeng Cai <zhifeng.cai@atheros.com>,
-	Don Breslin <Don.Breslin@atheros.com>,
-	Doug Dahlby <Doug.Dahlby@atheros.com>,
-	Julia Lawall <julia@diku.dk>
-Subject: Re: Challenges with doing hardware bring up with Linux first
-References: <AANLkTim4jVaZxYp8nSgJyy28iwxcxbPeNUzxTfoHAX4S@mail.gmail.com>
-	<20101118113441.74fcdc21@lxorguk.ukuu.org.uk>
-	<AANLkTikOZbtyhsk0OBb4OdUi6qj-7k_hU-aW_Pkhfpq0@mail.gmail.com>
-	<20101130192648.GA1623@ucw.cz>
-	<AANLkTinMyAeVJJc7Lc-vt_Ywr+vcSf-GAiQwggTGbqh8@mail.gmail.com>
-	<20101130200019.GA28735@elf.ucw.cz>
-	<alpine.DEB.2.00.1011301209090.423@asgard.lang.hm>
-Date: Wed, 01 Dec 2010 11:02:52 -0500
-In-Reply-To: <alpine.DEB.2.00.1011301209090.423@asgard.lang.hm>
-	(david@lang.hm's message of "Tue, 30 Nov 2010 12:13:05 -0800 (PST)")
-Message-ID: <87hbex1nwz.fsf@ebb.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+	id S1752662Ab0LBQ5x (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 2 Dec 2010 11:57:53 -0500
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Subject: [PATCH 4/5] iwlwifi: check for STATUS_EXIT_PENDING when send RXON command
+Date: Thu,  2 Dec 2010 08:51:23 -0800
+Message-Id: <1291308684-3279-5-git-send-email-wey-yi.w.guy@intel.com>
+In-Reply-To: <1291308684-3279-1-git-send-email-wey-yi.w.guy@intel.com>
+References: <1291308684-3279-1-git-send-email-wey-yi.w.guy@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I assume someone started cc'ing me on this thread to get my opinion as a
-non-lawyer GPL geek.
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
 
-david@lang.hm wrote:
-> However, there are quite a few files in the kernel that are BSD
-> licensed, when combined with other GPL code, the only way you can
-> re-distribute the result is under the GPL, so it is effectivly
-> 'converted' when you compile, but by leaving the file BSD,
-> improvements to it can be shared back with the original authors and
-> put into their main codebase, so it's actually more polite to leave
-> the license as-is for this file.
+If driver is on the way down, there is no need to send
+RXON to uCode, check the condition before continuous the process.
 
-FWIW, I agree more or less completely with the above.  I think the
-implications are the same for ISC as well, as Luis points out elsewhere
-in the thread.
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-3945.c     |    3 +++
+ drivers/net/wireless/iwlwifi/iwl-agn-rxon.c |    3 +++
+ 2 files changed, 6 insertions(+), 0 deletions(-)
+
+diff --git a/drivers/net/wireless/iwlwifi/iwl-3945.c b/drivers/net/wireless/iwlwifi/iwl-3945.c
+index d39f449..cac9647 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-3945.c
++++ b/drivers/net/wireless/iwlwifi/iwl-3945.c
+@@ -1784,6 +1784,9 @@ int iwl3945_commit_rxon(struct iwl_priv *priv, struct iwl_rxon_context *ctx)
+ 	int rc = 0;
+ 	bool new_assoc = !!(staging_rxon->filter_flags & RXON_FILTER_ASSOC_MSK);
+ 
++	if (test_bit(STATUS_EXIT_PENDING, &priv->status))
++		return -EINVAL;
++
+ 	if (!iwl_is_alive(priv))
+ 		return -1;
+ 
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-rxon.c b/drivers/net/wireless/iwlwifi/iwl-agn-rxon.c
+index 203ee60..4865b82 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn-rxon.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn-rxon.c
+@@ -130,6 +130,9 @@ int iwlagn_commit_rxon(struct iwl_priv *priv, struct iwl_rxon_context *ctx)
+ 
+ 	lockdep_assert_held(&priv->mutex);
+ 
++	if (test_bit(STATUS_EXIT_PENDING, &priv->status))
++		return -EINVAL;
++
+ 	if (!iwl_is_alive(priv))
+ 		return -EBUSY;
+ 
 -- 
-   -- bkuhn
+1.7.0.4
+
