@@ -1,37 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pv0-f174.google.com ([74.125.83.174]:35314 "EHLO
-	mail-pv0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932262Ab0LICms (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:53146 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752444Ab0LBH2d (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 8 Dec 2010 21:42:48 -0500
-Received: by pva4 with SMTP id 4so406776pva.19
-        for <linux-wireless@vger.kernel.org>; Wed, 08 Dec 2010 18:42:47 -0800 (PST)
-MIME-Version: 1.0
-From: Jonathan Guerin <jonathan@guerin.id.au>
-Date: Thu, 9 Dec 2010 12:36:17 +1000
-Message-ID: <AANLkTin6kK69ZGHyDZWFF=yYk8g2PmAuuPc_U-=U=pL=@mail.gmail.com>
-Subject: ath5k: IBSS Join Fail
-To: linux-wireless <linux-wireless@vger.kernel.org>,
-	ath5k-devel <ath5k-devel@lists.ath5k.org>
-Content-Type: text/plain; charset=ISO-8859-1
+	Thu, 2 Dec 2010 02:28:33 -0500
+Subject: Re: [PATCH v7 1/3] cfg80211: Add nl80211 antenna configuration
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Bruno Randolf <br1@einfach.org>
+Cc: linville@tuxdriver.com, nbd@openwrt.org, mcgrof@gmail.com,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <201012021623.05381.br1@einfach.org>
+References: <20101110035050.23721.15617.stgit@localhost6.localdomain6>
+	 <1291186468.4199.6.camel@jlt3.sipsolutions.net>
+	 <1291193337.4199.7.camel@jlt3.sipsolutions.net>
+	 <201012021623.05381.br1@einfach.org>
+Content-Type: text/plain; charset="UTF-8"
+Date: Thu, 02 Dec 2010 08:28:28 +0100
+Message-ID: <1291274908.3481.4.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+On Thu, 2010-12-02 at 16:23 +0900, Bruno Randolf wrote:
+> On Wed December 1 2010 17:48:57 Johannes Berg wrote:
+> > On Wed, 2010-12-01 at 07:54 +0100, Johannes Berg wrote:
+> > > On Wed, 2010-12-01 at 15:47 +0900, Bruno Randolf wrote:
+> > > > Already merged.
+> > > > 
+> > > > git show 79b1c460a0b55e55981c25c56597c4d5d2872de3
+> > > 
+> > > Oops, sorry -- was on iwlwifi tree which didn't merge yet and got
+> > > confused thinking it was mac80211 only.
+> > 
+> > Actually, I take that back. The patch *was* for mac80211 even though it
+> > claimed to be for cfg80211, and you still need to do the cfg80211
+> > versions.
+> 
+> Oh, sorry! So many interfaces... ;)
+> Patch on the way...
 
-I'm currently running 2 Linux nodes. One is running kernel version
-2.6.37-rc2, the other -rc5. I'm finding that the rc5 node refuses to
-join the IBSS, and simply ignores any probe requests from other
-stations. The card is working fine (i.e. I can see other frames coming
-up on a monitor-mode interface). The rc2 station sends out probe
-requests upon joining the IBSS, but the rc5 station does not.
-Reverting the rc5 station to rc2 means that it joins the IBSS
-correctly. I'm having a look through the commits to see if any changes
-occurred which may affect an IBSS join. I realise I could also bisect,
-but it takes me 40mins to rebuild a kernel, so I'm just wondering if
-anyone can think of something I can start the search on to fix this?
+Thanks!
 
-Cheers,
+johannes
 
--- 
-Jonathan Guerin
