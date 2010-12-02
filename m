@@ -1,46 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iy0-f174.google.com ([209.85.210.174]:58710 "EHLO
-	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751271Ab0LYIF2 (ORCPT
+Received: from mail30g.wh2.ocn.ne.jp ([220.111.41.239]:5562 "HELO
+	mail30g.wh2.ocn.ne.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1751434Ab0LBKNL (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 25 Dec 2010 03:05:28 -0500
-Received: by iyi12 with SMTP id 12so6259758iyi.19
-        for <linux-wireless@vger.kernel.org>; Sat, 25 Dec 2010 00:05:28 -0800 (PST)
+	Thu, 2 Dec 2010 05:13:11 -0500
+Received: from vs3005.wh2.ocn.ne.jp (125.206.180.233)
+	by mail30g.wh2.ocn.ne.jp (RS ver 1.0.95vs) with SMTP id 2-0130894788
+	for <linux-wireless@vger.kernel.org>; Thu,  2 Dec 2010 19:13:09 +0900 (JST)
+Subject: [PATCH 1/3] ath5k: Use EWMA factor of 1024 instead of 1000
+To: linville@tuxdriver.com
+From: Bruno Randolf <br1@einfach.org>
+Cc: randy.dunlap@oracle.com, br1@thinktube.com, peterz@infradead.org,
+	blp@cs.stanford.edu, linux-wireless@vger.kernel.org,
+	linux-kernel@vger.kernel.org, Lars_Ericsson@telia.com, j@w1.fi,
+	stefanr@s5r6.in-berlin.de, kosaki.motohiro@jp.fujitsu.com,
+	akpm@linux-foundation.org, kevin.granade@gmail.com,
+	johannes@sipsolutions.net
+Date: Thu, 02 Dec 2010 19:12:31 +0900
+Message-ID: <20101202101231.22988.33396.stgit@localhost6.localdomain6>
 MIME-Version: 1.0
-In-Reply-To: <FF69470D-9C14-4324-BA8E-F134B2AD9DEE@mac.com>
-References: <1CA1EE34-CB3D-404D-ADEE-612C8783BFCF@mac.com> <AANLkTin8RZwVrWAdNn_Q+_bX8BAHgKreyHiVjznZtMxU@mail.gmail.com>
- <1A56906E-D786-45E6-9C77-C9D600B508B0@mac.com> <AANLkTikhLKuw56BhDkBUMU-nf8ZYF1v5Berj-+qupAtO@mail.gmail.com>
- <E90F18E9-6332-4A7C-97DA-01169E5BB5E1@mac.com> <AANLkTik6m0rabY3ZCseoch7fwxhMksMD83A-ygtN4cVu@mail.gmail.com>
- <F4DFEC94-D5AC-4C12-890D-8F242E757071@mac.com> <AANLkTi=owvDyO3qfahUwRv4MxJrvMK9hjh5NOwRHQuO+@mail.gmail.com>
- <7F14B85B-566C-45A9-BF8B-FE9DED7944D0@mac.com> <AANLkTik7jvW9pA3deanBRXxJh6tLeO7WQgqrkN3xa9LG@mail.gmail.com>
- <4D122B8F.5090302@hauke-m.de> <1813D0B1-5391-48DB-9882-A6586DAB180C@mac.com>
- <AANLkTimMWH63yG2tdu7OHemHs=6OOy_i5fpeEDhhh6O9@mail.gmail.com>
- <4D123FBB.1050801@hauke-m.de> <C7700580-CCBB-498D-9EA5-73E2BF748C68@mac.com>
- <A7C7741B-634A-4C4B-A6F1-EBEA5F2EEED5@mac.com> <4D125B9F.7090503@hauke-m.de>
- <A8ED3E8F-FA2A-46B9-95C6-F2C175581539@mac.com> <4D1266FA.7080305@hauke-m.de>
- <9AD18479-91B8-42DB-8D81-2AF11DD05405@mac.com> <AANLkTinyjZ0x1jvKndotDm-xHf0c192NQfB9y9_BQxFg@mail.gmail.com>
- <FF69470D-9C14-4324-BA8E-F134B2AD9DEE@mac.com>
-From: Ohad Ben-Cohen <ohad@wizery.com>
-Date: Sat, 25 Dec 2010 10:05:07 +0200
-Message-ID: <AANLkTikFoFe5HLWtY3t178BAbPFMO2E284A+1+dtcuSG@mail.gmail.com>
-Subject: Re: Backporting wl1271 driver to kernel-2.6.32 using compat-wireless
-To: Elvis Dowson <elvis.dowson@mac.com>
-Cc: Linux Wireless Mailing List <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Dec 23, 2010 at 11:12 PM, Elvis Dowson <elvis.dowson@mac.com> wrote:
-> Is the SDIO subsystem sufficiently modular so as to allow me to take a few file and use it as a drop in
-> replacement for the 2.6.32 kernel?
+This prepares the only place which uses the EWMA library so far for the
+performance improved implementation coming up, which requires factor and
+weight to be a power of two.
 
-I'm not sure I'm following the question...
+Signed-off-by: Bruno Randolf <br1@einfach.org>
+---
+ drivers/net/wireless/ath/ath5k/base.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-btw, IMHO you don't need to replace any file at all. 2.6.32 has a
-functional SDIO subsystem.
+diff --git a/drivers/net/wireless/ath/ath5k/base.c b/drivers/net/wireless/ath/ath5k/base.c
+index a8d380a..25db9eb 100644
+--- a/drivers/net/wireless/ath/ath5k/base.c
++++ b/drivers/net/wireless/ath/ath5k/base.c
+@@ -2536,7 +2536,7 @@ ath5k_reset(struct ath5k_softc *sc, struct ieee80211_channel *chan,
+ 	ah->ah_cal_next_full = jiffies;
+ 	ah->ah_cal_next_ani = jiffies;
+ 	ah->ah_cal_next_nf = jiffies;
+-	ewma_init(&ah->ah_beacon_rssi_avg, 1000, 8);
++	ewma_init(&ah->ah_beacon_rssi_avg, 1024, 8);
+ 
+ 	/*
+ 	 * Change channels and update the h/w rate map if we're switching;
 
-
->
-> Elvis Dowson
->
->
