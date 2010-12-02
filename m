@@ -1,42 +1,32 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.19.149.2]:36153 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751556Ab0LFMcj (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 6 Dec 2010 07:32:39 -0500
-Received: from mail.atheros.com ([10.10.20.105])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Mon, 06 Dec 2010 04:32:24 -0800
-From: Vasanthakumar Thiagarajan <vasanth@atheros.com>
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>
-Subject: [PATCH V3 26/27] ath9k_hw: Disable MRC CCK for AR9485
-Date: Mon, 6 Dec 2010 04:27:59 -0800
-Message-ID: <1291638480-8950-27-git-send-email-vasanth@atheros.com>
-In-Reply-To: <1291638480-8950-1-git-send-email-vasanth@atheros.com>
-References: <1291638480-8950-1-git-send-email-vasanth@atheros.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from he.sipsolutions.net ([78.46.109.217]:39131 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757295Ab0LBQi7 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 2 Dec 2010 11:38:59 -0500
+Subject: Re: "Kernel bug detected" when using pktgen together with
+ mac80211_hwsim
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Helmut Schaa <helmut.schaa@googlemail.com>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <201012021731.09440.helmut.schaa@googlemail.com>
+References: <201012021731.09440.helmut.schaa@googlemail.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Thu, 02 Dec 2010 17:38:58 +0100
+Message-ID: <1291307938.3481.48.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Vasanthakumar Thiagarajan <vasanth@atheros.com>
----
- drivers/net/wireless/ath/ath9k/ani.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+On Thu, 2010-12-02 at 17:31 +0100, Helmut Schaa wrote:
 
-diff --git a/drivers/net/wireless/ath/ath9k/ani.c b/drivers/net/wireless/ath/ath9k/ani.c
-index 29a045d..990da39 100644
---- a/drivers/net/wireless/ath/ath9k/ani.c
-+++ b/drivers/net/wireless/ath/ath9k/ani.c
-@@ -358,7 +358,7 @@ static void ath9k_hw_set_cck_nil(struct ath_hw *ah, u_int8_t immunityLevel)
- 				     entry_cck->fir_step_level);
- 
- 	/* Skip MRC CCK for pre AR9003 families */
--	if (!AR_SREV_9300_20_OR_LATER(ah))
-+	if (!AR_SREV_9300_20_OR_LATER(ah) || AR_SREV_9485(ah))
- 		return;
- 
- 	if (aniState->mrcCCKOff == entry_cck->mrc_cck_on)
--- 
-1.7.0.4
+> Unfortunately pktgen keeps a reference to the skb and thus pskb_expand_head
+> triggers a BUG when called from mac80211. I worked around that issue by adding
+> a skb_copy for shared skbs.
+> 
+> Maybe, someone else has a better idea on how to fix that?
+
+Oops! That seems like the right way to fix it though.
+
+johannes
 
