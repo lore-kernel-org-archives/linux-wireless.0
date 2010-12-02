@@ -1,37 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:56376 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753403Ab0LGVpj (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 7 Dec 2010 16:45:39 -0500
-Subject: Re: [PATCH 1/2] cfg80211: add some element IDs in enum
- ieee80211_eid
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Bing Zhao <bzhao@marvell.com>
-Cc: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Amitkumar Karwar <akarwar@marvell.com>,
-	Kiran Divekar <dkiran@marvell.com>,
-	Frank Huang <frankh@marvell.com>
-In-Reply-To: <1291758184-649-1-git-send-email-bzhao@marvell.com>
-References: <1291758184-649-1-git-send-email-bzhao@marvell.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Tue, 07 Dec 2010 22:45:36 +0100
-Message-ID: <1291758336.3607.62.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+Received: from mail.atheros.com ([12.19.149.2]:59088 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755394Ab0LBLJw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 2 Dec 2010 06:09:52 -0500
+Received: from mail.atheros.com ([10.10.20.105])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Thu, 02 Dec 2010 03:09:38 -0800
+From: Vasanthakumar Thiagarajan <vasanth@atheros.com>
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>
+Subject: [PATCH V2 06/27] ath9k_hw: Eeeprom changes for AR9485
+Date: Thu, 2 Dec 2010 03:06:50 -0800
+Message-ID: <1291288031-3409-7-git-send-email-vasanth@atheros.com>
+In-Reply-To: <1291288031-3409-1-git-send-email-vasanth@atheros.com>
+References: <1291288031-3409-1-git-send-email-vasanth@atheros.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2010-12-07 at 13:43 -0800, Bing Zhao wrote:
-> From: Amitkumar Karwar <akarwar@marvell.com>
-> 
-> 1)WLAN_EID_BSS_COEX_2040
-> 2)WLAN_EID_OVERLAP_BSS_SCAN_PARAM
-> 3)WLAN_EID_EXT_CAPABILITY
-> 
-> Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
+Calibration data are stored at 4k address (0xfff). The cal data
+for AR9485 is not compressed so its lengh can exceed 1024 limit,
+take care of that.
 
-I believe this patch can go in regardless of mwifiex status.
+Signed-off-by: Vasanthakumar Thiagarajan <vasanth@atheros.com>
+---
+ drivers/net/wireless/ath/ath9k/ar9003_eeprom.c |    8 ++++++--
+ drivers/net/wireless/ath/ath9k/ar9003_eeprom.h |    1 +
+ 2 files changed, 7 insertions(+), 2 deletions(-)
 
-johannes
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
+index 4aecc10..6cbfbfa 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
++++ b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
+@@ -3317,7 +3317,10 @@ static int ar9300_eeprom_restore_internal(struct ath_hw *ah,
+ 	memcpy(mptr, &ar9300_default, mdata_size);
+ 
+ 	read = ar9300_read_eeprom;
+-	cptr = AR9300_BASE_ADDR;
++	if (AR_SREV_9485(ah))
++		cptr = AR9300_BASE_ADDR_4K;
++	else
++		cptr = AR9300_BASE_ADDR;
+ 	ath_print(common, ATH_DBG_EEPROM,
+ 		"Trying EEPROM accesss at Address 0x%04x\n", cptr);
+ 	if (ar9300_check_eeprom_header(ah, read, cptr))
+@@ -3360,7 +3363,8 @@ found:
+ 			  "Found block at %x: code=%d ref=%d"
+ 			  "length=%d major=%d minor=%d\n", cptr, code,
+ 			  reference, length, major, minor);
+-		if (length >= 1024) {
++		if ((!AR_SREV_9485(ah) && length >= 1024) ||
++		    (AR_SREV_9485(ah) && length >= (4 * 1024))) {
+ 			ath_print(common, ATH_DBG_EEPROM,
+ 				  "Skipping bad header\n");
+ 			cptr -= COMP_HDR_LEN;
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.h b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.h
+index 57f64db..d189c87 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.h
++++ b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.h
+@@ -78,6 +78,7 @@
+ #define AR9300_EEPROM_SIZE (16*1024)
+ #define FIXED_CCA_THRESHOLD 15
+ 
++#define AR9300_BASE_ADDR_4K 0xfff
+ #define AR9300_BASE_ADDR 0x3ff
+ #define AR9300_BASE_ADDR_512 0x1ff
+ 
+-- 
+1.7.0.4
 
