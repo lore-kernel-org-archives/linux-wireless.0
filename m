@@ -1,90 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:36937 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755079Ab0LGVAM (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 7 Dec 2010 16:00:12 -0500
-Date: Tue, 7 Dec 2010 15:58:12 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Javier Cardona <javier@cozybit.com>
-Cc: Steve Derosier <steve@cozybit.com>, devel@lists.open80211s.org,
-	linux-wireless@vger.kernel.org, Jiri Slaby <jirislaby@gmail.com>,
-	Nick Kossifidis <mickflemm@gmail.com>,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	Bob Copeland <me@bobcopeland.com>
-Subject: Re: [PATCH 1/3] ath5k: Fix beaconing in mesh mode
-Message-ID: <20101207205812.GK2700@tuxdriver.com>
-References: <1291169919-3867-1-git-send-email-javier@cozybit.com>
- <1291169919-3867-2-git-send-email-javier@cozybit.com>
+Received: from mail.atheros.com ([12.19.149.2]:41649 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751396Ab0LCEoS (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 2 Dec 2010 23:44:18 -0500
+Received: from mail.atheros.com ([10.10.20.108])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Thu, 02 Dec 2010 20:44:03 -0800
+Message-ID: <4CF87597.5080900@atheros.com>
+Date: Fri, 3 Dec 2010 10:14:07 +0530
+From: Mohammed Shafi <mshajakhan@atheros.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1291169919-3867-2-git-send-email-javier@cozybit.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH] ath9k: Properly use unlikely check macro
+References: <1291044477-2317-1-git-send-email-mshajakhan@atheros.com> <20101202202127.GF2358@tuxdriver.com>
+In-Reply-To: <20101202202127.GF2358@tuxdriver.com>
+Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Missing Signed-off-by...
-
-On Tue, Nov 30, 2010 at 06:18:37PM -0800, Javier Cardona wrote:
-> This patch fixes the oops below when attempting to bring up a mesh
-> interface on ath5k hardware.
-> 
-> [  128.933099] kernel BUG at drivers/net/wireless/ath/ath5k/base.c:197!
-> [  128.933099] invalid opcode: 0000 [#1]
-> (...)
-> [  128.933099] Call Trace:
-> [  128.933099]  [<c83b77fa>] ? ath5k_beacon_update+0x57/0x1f8 [ath5k]
-> [  128.933099]  [<c02d9a40>] ? __sysfs_add_one+0x28/0x76
-> [  128.933099]  [<c83b830e>] ? ath5k_bss_info_changed+0x13f/0x173
-> [ath5k]
-> [  128.933099]  [<c82ff629>] ? ieee80211_config_beacon+0xc0/0x17e
-> [mac80211]
-> [  128.933099]  [<c82f073e>] ?
-> ieee80211_bss_info_change_notify+0x182/0x18b [mac80211]
-> [  128.933099]  [<c83b81cf>] ? ath5k_bss_info_changed+0x0/0x173 [ath5k]
-> [  128.933099]  [<c82ff6d6>] ? ieee80211_config_beacon+0x16d/0x17e
-> [mac80211]
-> [  128.933099]  [<c82ff753>] ? ieee80211_add_beacon+0x34/0x39 [mac80211]
-> [  128.933099]  [<c830a4ed>] ? ieee80211s_init+0xf8/0x10f [mac80211]
-> [  128.933099]  [<c830a5df>] ? ieee80211_mesh_init_sdata+0xdb/0x154 [mac80211]
-> ---
->  drivers/net/wireless/ath/ath5k/base.c |    8 +++++---
->  1 files changed, 5 insertions(+), 3 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/ath/ath5k/base.c b/drivers/net/wireless/ath/ath5k/base.c
-> index a8d380a..73c7118 100644
-> --- a/drivers/net/wireless/ath/ath5k/base.c
-> +++ b/drivers/net/wireless/ath/ath5k/base.c
-> @@ -1921,8 +1921,9 @@ ath5k_beacon_send(struct ath5k_softc *sc)
->  		/* NB: hw still stops DMA, so proceed */
->  	}
->  
-> -	/* refresh the beacon for AP mode */
-> -	if (sc->opmode == NL80211_IFTYPE_AP)
-> +	/* refresh the beacon for AP or MESH mode */
-> +	if (sc->opmode == NL80211_IFTYPE_AP ||
-> +			sc->opmode == NL80211_IFTYPE_MESH_POINT)
->  		ath5k_beacon_update(sc->hw, vif);
->  
->  	ath5k_hw_set_txdp(ah, sc->bhalq, bf->daddr);
-> @@ -2826,7 +2827,8 @@ static int ath5k_add_interface(struct ieee80211_hw *hw,
->  
->  	/* Assign the vap/adhoc to a beacon xmit slot. */
->  	if ((avf->opmode == NL80211_IFTYPE_AP) ||
-> -	    (avf->opmode == NL80211_IFTYPE_ADHOC)) {
-> +	    (avf->opmode == NL80211_IFTYPE_ADHOC) ||
-> +	    (avf->opmode == NL80211_IFTYPE_MESH_POINT)) {
->  		int slot;
->  
->  		WARN_ON(list_empty(&sc->bcbuf));
-> -- 
-> 1.7.1
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
-
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+On Friday 03 December 2010 01:51 AM, John W. Linville wrote:
+> On Mon, Nov 29, 2010 at 08:57:57PM +0530, Mohammed Shafi Shajakhan wrote:
+>    
+>> From: Mohammed Shafi Shajakhan<mshajakhan@atheros.com>
+>>
+>> AUTOSLEEP feature is enabled only AR9003 and later chips.So unlikely
+>> macro should be used only to check whether auto-sleep feature is enabled
+>>
+>> Signed-off-by: Mohammed Shafi Shajakhan<mshajakhan@atheros.com>
+>> ---
+>>   drivers/net/wireless/ath/ath9k/recv.c |    6 +++---
+>>   1 files changed, 3 insertions(+), 3 deletions(-)
+>>
+>> diff --git a/drivers/net/wireless/ath/ath9k/recv.c b/drivers/net/wireless/ath/ath9k/recv.c
+>> index 262c815..751ee1b 100644
+>> --- a/drivers/net/wireless/ath/ath9k/recv.c
+>> +++ b/drivers/net/wireless/ath/ath9k/recv.c
+>> @@ -1743,10 +1743,10 @@ int ath_rx_tasklet(struct ath_softc *sc, int flush, bool hp)
+>>   		}
+>>
+>>   		spin_lock_irqsave(&sc->sc_pm_lock, flags);
+>> -		if (unlikely(ath9k_check_auto_sleep(sc) ||
+>> -			     (sc->ps_flags&  (PS_WAIT_FOR_BEACON |
+>> +		if ((sc->ps_flags&  (PS_WAIT_FOR_BEACON |
+>>   					      PS_WAIT_FOR_CAB |
+>> -					      PS_WAIT_FOR_PSPOLL_DATA))))
+>> +					      PS_WAIT_FOR_PSPOLL_DATA)) ||
+>> +				unlikely(ath9k_hw_check_auto_sleep(sc)))
+>>   			ath_rx_ps(sc, skb);
+>>   		spin_unlock_irqrestore(&sc->sc_pm_lock, flags);
+>>      
+> What tree is this against?
+>    
+2.6.37-rc4 ..Any problems in applying.Do I have to resend it based on 
+the latest pull ?
+thanks,
+shafi
