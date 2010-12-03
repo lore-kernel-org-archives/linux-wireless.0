@@ -1,65 +1,131 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iw0-f172.google.com ([209.85.214.172]:36494 "EHLO
-	mail-iw0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754843Ab0LGUzb convert rfc822-to-8bit (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:45562 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758517Ab0LCI1a (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 7 Dec 2010 15:55:31 -0500
-Received: by iwn40 with SMTP id 40so368066iwn.3
-        for <linux-wireless@vger.kernel.org>; Tue, 07 Dec 2010 12:55:31 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <1291745567.3607.52.camel@jlt3.sipsolutions.net>
-References: <1291690135-4535-1-git-send-email-lrodriguez@atheros.com>
- <1291690135-4535-6-git-send-email-lrodriguez@atheros.com> <1291714709.3607.2.camel@jlt3.sipsolutions.net>
- <AANLkTikrLweKeSR-=XziaJ5rqDRf_Ny=mg1OD=jC4nqA@mail.gmail.com>
- <1291736887.3607.47.camel@jlt3.sipsolutions.net> <AANLkTimiw074uXxe3nPTNZ0j+NtZbHJU1bwiGsFUXMJ4@mail.gmail.com>
- <1291737298.3607.48.camel@jlt3.sipsolutions.net> <20101207155916.GA1855@tux>
- <1291743121.3607.50.camel@jlt3.sipsolutions.net> <AANLkTi=Sj7YpKzFHQtf2MdUcRDTzfXszbK7gGg_yup1Y@mail.gmail.com>
- <1291745567.3607.52.camel@jlt3.sipsolutions.net>
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Date: Tue, 7 Dec 2010 12:49:44 -0800
-Message-ID: <AANLkTimfLGj1=BnRGvJVkP_Ge6KYAtCLcDpBsVoj9o_T@mail.gmail.com>
-Subject: Re: [PATCH 5/5] mac80211: fix issuing idle calls when device open
- count is 0
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Luis Rodriguez <Luis.Rodriguez@atheros.com>,
-	"linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Amod Bodas <Amod.Bodas@atheros.com>,
-	"pstew@google.com" <pstew@google.com>,
-	"stable@kernel.org" <stable@kernel.org>
-Content-Type: text/plain; charset=UTF-8
+	Fri, 3 Dec 2010 03:27:30 -0500
+Message-Id: <20101203082348.883873119@sipsolutions.net>
+Date: Fri, 03 Dec 2010 09:20:43 +0100
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: Javier Cardona <javier@cozybit.com>, linux-wireless@vger.kernel.org
+Subject: [PATCH 4/5] nl80211: refactor mesh parameter parsing
+References: <20101203082039.131181927@sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Dec 7, 2010 at 10:12 AM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
-> On Tue, 2010-12-07 at 10:04 -0800, Luis R. Rodriguez wrote:
->> On Tue, Dec 7, 2010 at 9:32 AM, Johannes Berg <johannes@sipsolutions.net> wrote:
->> > On Tue, 2010-12-07 at 07:59 -0800, Luis R. Rodriguez wrote:
->> >
->> >> @@ -301,7 +301,7 @@ static void __ieee80211_scan_completed_finish(struct ieee80211_hw *hw,
->> >>       }
->> >>
->> >>       mutex_lock(&local->mtx);
->> >> -     ieee80211_recalc_idle(local);
->> >> +     ieee80211_recalc_idle_force(local);
->> >>       mutex_unlock(&local->mtx);
->> >
->> > This is the change that I don't think is necessary.
->>
->> Without this resume fails.
->
-> In what situation? When you just suspend while things are up&running, or
-> if you suspend with interfaces down?
+From: Johannes Berg <johannes.berg@intel.com>
 
-I believe Paul was suspending when the interface is up and running.
+I'm going to need this in a new place later.
 
-> It doesn't make sense anyway, so
-> something's going on in the rest of the scan code -- we should be
-> canceling scans properly when going down and when suspending, well
-> before any of this becomes relevant.
+Tested-by: Javier Cardona <javier@cozybit.com>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+v2: - reduce scope of macro
 
-The issue might be we race to stop the device prior to canceling a
-scan. Do you see that being possible?
+ net/wireless/nl80211.c |   61 ++++++++++++++++++++++++++++++-------------------
+ 1 file changed, 38 insertions(+), 23 deletions(-)
 
-  Luis
+--- wireless-testing.orig/net/wireless/nl80211.c	2010-12-03 09:13:49.000000000 +0100
++++ wireless-testing/net/wireless/nl80211.c	2010-12-03 09:13:52.000000000 +0100
+@@ -2613,14 +2613,6 @@ static int nl80211_get_mesh_params(struc
+ 	return -ENOBUFS;
+ }
+ 
+-#define FILL_IN_MESH_PARAM_IF_SET(table, cfg, param, mask, attr_num, nla_fn) \
+-do {\
+-	if (table[attr_num]) {\
+-		cfg.param = nla_fn(table[attr_num]); \
+-		mask |= (1 << (attr_num - 1)); \
+-	} \
+-} while (0);\
+-
+ static const struct nla_policy nl80211_meshconf_params_policy[NL80211_MESHCONF_ATTR_MAX+1] = {
+ 	[NL80211_MESHCONF_RETRY_TIMEOUT] = { .type = NLA_U16 },
+ 	[NL80211_MESHCONF_CONFIRM_TIMEOUT] = { .type = NLA_U16 },
+@@ -2639,31 +2631,34 @@ static const struct nla_policy nl80211_m
+ 	[NL80211_MESHCONF_HWMP_NET_DIAM_TRVS_TIME] = { .type = NLA_U16 },
+ };
+ 
+-static int nl80211_set_mesh_params(struct sk_buff *skb, struct genl_info *info)
++static int nl80211_parse_mesh_params(struct genl_info *info,
++				     struct mesh_config *cfg,
++				     u32 *mask_out)
+ {
+-	u32 mask;
+-	struct cfg80211_registered_device *rdev = info->user_ptr[0];
+-	struct net_device *dev = info->user_ptr[1];
+-	struct mesh_config cfg;
+ 	struct nlattr *tb[NL80211_MESHCONF_ATTR_MAX + 1];
+-	struct nlattr *parent_attr;
++	u32 mask = 0;
++
++#define FILL_IN_MESH_PARAM_IF_SET(table, cfg, param, mask, attr_num, nla_fn) \
++do {\
++	if (table[attr_num]) {\
++		cfg->param = nla_fn(table[attr_num]); \
++		mask |= (1 << (attr_num - 1)); \
++	} \
++} while (0);\
++
+ 
+-	parent_attr = info->attrs[NL80211_ATTR_MESH_PARAMS];
+-	if (!parent_attr)
++	if (!info->attrs[NL80211_ATTR_MESH_PARAMS])
+ 		return -EINVAL;
+ 	if (nla_parse_nested(tb, NL80211_MESHCONF_ATTR_MAX,
+-			parent_attr, nl80211_meshconf_params_policy))
++			     info->attrs[NL80211_ATTR_MESH_PARAMS],
++			     nl80211_meshconf_params_policy))
+ 		return -EINVAL;
+ 
+-	if (!rdev->ops->set_mesh_params)
+-		return -EOPNOTSUPP;
+-
+ 	/* This makes sure that there aren't more than 32 mesh config
+ 	 * parameters (otherwise our bitfield scheme would not work.) */
+ 	BUILD_BUG_ON(NL80211_MESHCONF_ATTR_MAX > 32);
+ 
+ 	/* Fill in the params struct */
+-	mask = 0;
+ 	FILL_IN_MESH_PARAM_IF_SET(tb, cfg, dot11MeshRetryTimeout,
+ 			mask, NL80211_MESHCONF_RETRY_TIMEOUT, nla_get_u16);
+ 	FILL_IN_MESH_PARAM_IF_SET(tb, cfg, dot11MeshConfirmTimeout,
+@@ -2703,12 +2698,32 @@ static int nl80211_set_mesh_params(struc
+ 			NL80211_MESHCONF_HWMP_ROOTMODE,
+ 			nla_get_u8);
+ 
++	if (mask_out)
++		*mask_out = mask;
++	return 0;
++
++#undef FILL_IN_MESH_PARAM_IF_SET
++}
++
++static int nl80211_set_mesh_params(struct sk_buff *skb, struct genl_info *info)
++{
++	struct cfg80211_registered_device *rdev = info->user_ptr[0];
++	struct net_device *dev = info->user_ptr[1];
++	struct mesh_config cfg;
++	u32 mask;
++	int err;
++
++	if (!rdev->ops->set_mesh_params)
++		return -EOPNOTSUPP;
++
++	err = nl80211_parse_mesh_params(info, &cfg, &mask);
++	if (err)
++		return err;
++
+ 	/* Apply changes */
+ 	return rdev->ops->set_mesh_params(&rdev->wiphy, dev, &cfg, mask);
+ }
+ 
+-#undef FILL_IN_MESH_PARAM_IF_SET
+-
+ static int nl80211_get_reg(struct sk_buff *skb, struct genl_info *info)
+ {
+ 	struct sk_buff *msg;
+
+
