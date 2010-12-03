@@ -1,149 +1,83 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ww0-f44.google.com ([74.125.82.44]:57274 "EHLO
-	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751411Ab0LUW6D (ORCPT
+Received: from na3sys009aog101.obsmtp.com ([74.125.149.67]:44400 "HELO
+	na3sys009aog101.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1752006Ab0LCWTn (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 21 Dec 2010 17:58:03 -0500
-Received: by wwa36 with SMTP id 36so4691631wwa.1
-        for <linux-wireless@vger.kernel.org>; Tue, 21 Dec 2010 14:58:01 -0800 (PST)
-From: =?utf-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-To: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-Cc: b43-dev@lists.infradead.org,
-	=?utf-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-Subject: [PATCH 2/2 V2] b43: N-PHY: update 2056 radio on channel switch on rev3+
-Date: Tue, 21 Dec 2010 23:57:48 +0100
-Message-Id: <1292972268-26327-2-git-send-email-zajec5@gmail.com>
-In-Reply-To: <1292972268-26327-1-git-send-email-zajec5@gmail.com>
-References: <1292956819-21166-2-git-send-email-zajec5@gmail.com>
- <1292972268-26327-1-git-send-email-zajec5@gmail.com>
+	Fri, 3 Dec 2010 17:19:43 -0500
+From: Bing Zhao <bzhao@marvell.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Dan Williams <dcbw@redhat.com>,
+	David Woodhouse <dwmw2@infradead.org>,
+	Amitkumar Karwar <akarwar@marvell.com>,
+	Kiran Divekar <dkiran@marvell.com>, Greg KH <greg@kroah.com>,
+	"David S. Miller" <davem@davemloft.net>
+Date: Fri, 3 Dec 2010 14:15:53 -0800
+Subject: RE: [PATCH 00/31] wireless: Marvell mwifiex driver for SD8787
+Message-ID: <477F20668A386D41ADCC57781B1F704307D5C0F9C4@SC-VEXCH1.marvell.com>
+References: <1291253516-17815-1-git-send-email-bzhao@marvell.com>
+ <1291380780.3499.119.camel@jlt3.sipsolutions.net>
+In-Reply-To: <1291380780.3499.119.camel@jlt3.sipsolutions.net>
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
----
-V2: break lines to match 80 chars width
-
-John: not a big problem at all :)
----
- drivers/net/wireless/b43/phy_n.c |   95 +++++++++++++++++++++++++++++++++++++-
- 1 files changed, 94 insertions(+), 1 deletions(-)
-
-diff --git a/drivers/net/wireless/b43/phy_n.c b/drivers/net/wireless/b43/phy_n.c
-index dded231..ab81ed8 100644
---- a/drivers/net/wireless/b43/phy_n.c
-+++ b/drivers/net/wireless/b43/phy_n.c
-@@ -139,6 +139,99 @@ static void b43_chantab_radio_upload(struct b43_wldev *dev,
- 	b43_radio_write(dev, B2055_C2_TX_MXBGTRIM, e->radio_c2_tx_mxbgtrim);
- }
- 
-+static void b43_chantab_radio_2056_upload(struct b43_wldev *dev,
-+				const struct b43_nphy_channeltab_entry_rev3 *e)
-+{
-+	b43_radio_write(dev, B2056_SYN_PLL_VCOCAL1, e->radio_syn_pll_vcocal1);
-+	b43_radio_write(dev, B2056_SYN_PLL_VCOCAL2, e->radio_syn_pll_vcocal2);
-+	b43_radio_write(dev, B2056_SYN_PLL_REFDIV, e->radio_syn_pll_refdiv);
-+	b43_radio_write(dev, B2056_SYN_PLL_MMD2, e->radio_syn_pll_mmd2);
-+	b43_radio_write(dev, B2056_SYN_PLL_MMD1, e->radio_syn_pll_mmd1);
-+	b43_radio_write(dev, B2056_SYN_PLL_LOOPFILTER1,
-+					e->radio_syn_pll_loopfilter1);
-+	b43_radio_write(dev, B2056_SYN_PLL_LOOPFILTER2,
-+					e->radio_syn_pll_loopfilter2);
-+	b43_radio_write(dev, B2056_SYN_PLL_LOOPFILTER3,
-+					e->radio_syn_pll_loopfilter3);
-+	b43_radio_write(dev, B2056_SYN_PLL_LOOPFILTER4,
-+					e->radio_syn_pll_loopfilter4);
-+	b43_radio_write(dev, B2056_SYN_PLL_LOOPFILTER5,
-+					e->radio_syn_pll_loopfilter5);
-+	b43_radio_write(dev, B2056_SYN_RESERVED_ADDR27,
-+					e->radio_syn_reserved_addr27);
-+	b43_radio_write(dev, B2056_SYN_RESERVED_ADDR28,
-+					e->radio_syn_reserved_addr28);
-+	b43_radio_write(dev, B2056_SYN_RESERVED_ADDR29,
-+					e->radio_syn_reserved_addr29);
-+	b43_radio_write(dev, B2056_SYN_LOGEN_VCOBUF1,
-+					e->radio_syn_logen_vcobuf1);
-+	b43_radio_write(dev, B2056_SYN_LOGEN_MIXER2, e->radio_syn_logen_mixer2);
-+	b43_radio_write(dev, B2056_SYN_LOGEN_BUF3, e->radio_syn_logen_buf3);
-+	b43_radio_write(dev, B2056_SYN_LOGEN_BUF4, e->radio_syn_logen_buf4);
-+
-+	b43_radio_write(dev, B2056_RX0 | B2056_RX_LNAA_TUNE,
-+					e->radio_rx0_lnaa_tune);
-+	b43_radio_write(dev, B2056_RX0 | B2056_RX_LNAG_TUNE,
-+					e->radio_rx0_lnag_tune);
-+
-+	b43_radio_write(dev, B2056_TX0 | B2056_TX_INTPAA_BOOST_TUNE,
-+					e->radio_tx0_intpaa_boost_tune);
-+	b43_radio_write(dev, B2056_TX0 | B2056_TX_INTPAG_BOOST_TUNE,
-+					e->radio_tx0_intpag_boost_tune);
-+	b43_radio_write(dev, B2056_TX0 | B2056_TX_PADA_BOOST_TUNE,
-+					e->radio_tx0_pada_boost_tune);
-+	b43_radio_write(dev, B2056_TX0 | B2056_TX_PADG_BOOST_TUNE,
-+					e->radio_tx0_padg_boost_tune);
-+	b43_radio_write(dev, B2056_TX0 | B2056_TX_PGAA_BOOST_TUNE,
-+					e->radio_tx0_pgaa_boost_tune);
-+	b43_radio_write(dev, B2056_TX0 | B2056_TX_PGAG_BOOST_TUNE,
-+					e->radio_tx0_pgag_boost_tune);
-+	b43_radio_write(dev, B2056_TX0 | B2056_TX_MIXA_BOOST_TUNE,
-+					e->radio_tx0_mixa_boost_tune);
-+	b43_radio_write(dev, B2056_TX0 | B2056_TX_MIXG_BOOST_TUNE,
-+					e->radio_tx0_mixg_boost_tune);
-+
-+	b43_radio_write(dev, B2056_RX1 | B2056_RX_LNAA_TUNE,
-+					e->radio_rx1_lnaa_tune);
-+	b43_radio_write(dev, B2056_RX1 | B2056_RX_LNAG_TUNE,
-+					e->radio_rx1_lnag_tune);
-+
-+	b43_radio_write(dev, B2056_TX1 | B2056_TX_INTPAA_BOOST_TUNE,
-+					e->radio_tx1_intpaa_boost_tune);
-+	b43_radio_write(dev, B2056_TX1 | B2056_TX_INTPAG_BOOST_TUNE,
-+					e->radio_tx1_intpag_boost_tune);
-+	b43_radio_write(dev, B2056_TX1 | B2056_TX_PADA_BOOST_TUNE,
-+					e->radio_tx1_pada_boost_tune);
-+	b43_radio_write(dev, B2056_TX1 | B2056_TX_PADG_BOOST_TUNE,
-+					e->radio_tx1_padg_boost_tune);
-+	b43_radio_write(dev, B2056_TX1 | B2056_TX_PGAA_BOOST_TUNE,
-+					e->radio_tx1_pgaa_boost_tune);
-+	b43_radio_write(dev, B2056_TX1 | B2056_TX_PGAG_BOOST_TUNE,
-+					e->radio_tx1_pgag_boost_tune);
-+	b43_radio_write(dev, B2056_TX1 | B2056_TX_MIXA_BOOST_TUNE,
-+					e->radio_tx1_mixa_boost_tune);
-+	b43_radio_write(dev, B2056_TX1 | B2056_TX_MIXG_BOOST_TUNE,
-+					e->radio_tx1_mixg_boost_tune);
-+}
-+
-+/* http://bcm-v4.sipsolutions.net/802.11/PHY/Radio/2056Setup */
-+static void b43_radio_2056_setup(struct b43_wldev *dev,
-+				const struct b43_nphy_channeltab_entry_rev3 *e)
-+{
-+	B43_WARN_ON(dev->phy.rev < 3);
-+
-+	b43_chantab_radio_2056_upload(dev, e);
-+	/* TODO */
-+	udelay(50);
-+	/* VCO calibration */
-+	b43_radio_write(dev, B2056_SYN_PLL_VCOCAL12, 0x00);
-+	b43_radio_write(dev, B2056_TX_INTPAA_PA_MISC, 0x38);
-+	b43_radio_write(dev, B2056_TX_INTPAA_PA_MISC, 0x18);
-+	b43_radio_write(dev, B2056_TX_INTPAA_PA_MISC, 0x38);
-+	b43_radio_write(dev, B2056_TX_INTPAA_PA_MISC, 0x39);
-+	udelay(300);
-+}
-+
- static void b43_chantab_phy_upload(struct b43_wldev *dev,
- 				   const struct b43_phy_n_sfo_cfg *e)
- {
-@@ -3635,7 +3728,7 @@ static int b43_nphy_set_channel(struct b43_wldev *dev,
- 	if (dev->phy.rev >= 3) {
- 		tmp = (channel->band == IEEE80211_BAND_5GHZ) ? 4 : 0;
- 		b43_radio_maskset(dev, 0x08, 0xFFFB, tmp);
--		/* TODO: PHY Radio2056 Setup (dev, tabent_r3); */
-+		b43_radio_2056_setup(dev, tabent_r3);
- 		b43_nphy_channel_setup(dev, &(tabent_r3->phy_regs), channel);
- 	} else {
- 		tmp = (channel->band == IEEE80211_BAND_5GHZ) ? 0x0020 : 0x0050;
--- 
-1.6.3.3
-
+SGkgSm9oYW5uZXMsDQoNCj4gLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCj4gRnJvbTogbGlu
+dXgtd2lyZWxlc3Mtb3duZXJAdmdlci5rZXJuZWwub3JnIFttYWlsdG86bGludXgtd2lyZWxlc3Mt
+b3duZXJAdmdlci5rZXJuZWwub3JnXSBPbiBCZWhhbGYgT2YNCj4gSm9oYW5uZXMgQmVyZw0KPiBT
+ZW50OiBGcmlkYXksIERlY2VtYmVyIDAzLCAyMDEwIDQ6NTMgQU0NCj4gVG86IEJpbmcgWmhhbw0K
+PiBDYzogbGludXgtd2lyZWxlc3NAdmdlci5rZXJuZWwub3JnOyBKb2huIFcuIExpbnZpbGxlOyBE
+YW4gV2lsbGlhbXM7IERhdmlkIFdvb2Rob3VzZTsgQW1pdGt1bWFyIEthcndhcjsNCj4gS2lyYW4g
+RGl2ZWthcjsgR3JlZyBLSDsgRGF2aWQgUy4gTWlsbGVyDQo+IFN1YmplY3Q6IFJlOiBbUEFUQ0gg
+MDAvMzFdIHdpcmVsZXNzOiBNYXJ2ZWxsIG13aWZpZXggZHJpdmVyIGZvciBTRDg3ODcNCj4gDQo+
+IE9uIFdlZCwgMjAxMC0xMi0wMSBhdCAxNzozMSAtMDgwMCwgQmluZyBaaGFvIHdyb3RlOg0KPiA+
+IFRoZSBtd2lmaWV4IGRyaXZlciBmb3IgTWFydmVsbCA4MDIuMTFuIGNoaXBzZXQgU0Q4Nzg3IGlz
+IGF2YWlsYWJsZSBhdA0KPiA+IGdpdDovL2dpdC5tYXJ2ZWxsLmNvbS9td2lmaWV4LmdpdC4gQm90
+aCBTVEEgbW9kZSBhbmQgTW9iaWxlIGhvdHNwb3QNCj4gPiBtb2RlIGFyZSBzdXBwb3J0ZWQuDQo+
+ID4NCj4gPiBnaXQgcHVsbCBnaXQ6Ly9naXQubWFydmVsbC5jb20vbXdpZmlleC5naXQgbWFzdGVy
+DQo+IA0KPiBQbGVhc2UgcG9zdCBwYXRjaGVzLCBub3QgZ2l0IHRyZWVzLg0KPiANCj4gQnV0IHNp
+bmNlIEpvaG4gaXMgaG9sZGluZyB1cyBzb21ld2hhdCBob3N0YWdlIGJ5IHNheWluZyBoZSdsbCBj
+b25zaWRlcg0KPiBtZXJnaW5nIHRoaXMsIGFuZCBhcHBhcmVudGx5IHlvdSBkb24ndCBoYXZlIHRo
+ZSB0YXN0ZSB0byBldmVuIGNvbnNpZGVyDQo+IHRoZSByZXZpZXcgY29tbWVudHMgeW91IGhhdmUg
+Z290dGVuIGJlZm9yZSwgSSB0b29rIGEgYnJpZWYgbG9vayB0bw0KPiAqcHJvdmUqIHRoYXQgdGhp
+cyBkcml2ZXIgY2Fubm90IGJlIG1lcmdlZCBhcyBpcy4NCj4gDQo+IA0KPiBIZXJlJ3MgYSBzaG9y
+dCBsaXN0IG9mIHRoaW5ncyB0byBmaXg6DQo+ICAqIF9fcGFja2VkDQo+ICAqIEVOVEVSL0xFQVZF
+IG11c3QgZ28NCj4gICogZW51bSBtd2lmaWV4X3N0YXR1cyBtdXN0IGdvIC0tIHVzZSBlcnJubw0K
+PiAgKiBwcml2YXRlIGlvY3RscyB3ZXJlIGdyYW5kZmF0aGVyZWQgaW4sDQo+ICAgIGJ1dCBhcmVu
+J3QgYWxsb3dlZCBpbiBuZXcgZHJpdmVycw0KPiAgKiBkbyB5b3UgcmVhbGx5IG5lZWQgeW91ciBv
+d24gY3J5cHRvIG1vZGUgZGVmaW5pdGlvbnM/DQo+ICAqIHlvdXIgcHNldWRvLWtlcm5lbGRvYyBj
+b21tZW50cyAiLyoqIiBkb24ndCBjb25mb3JtDQo+ICAgIHRvIHRoZSByaWdodCBmb3JtYXQNCj4g
+ICogcHJpdmF0ZSBsb2NraW5nIHdyYXBwZXJzIGFyZSBub3QgYWxsb3dlZCAobXdpZmlleF9zcGlu
+X2xvY2sgZXRjKQ0KPiAgKiBwcml2YXRlIGRlYnVnZ2luZyBsaWtlIFBSSU5UTSBpcyBub3QgYWxs
+b3dlZA0KPiAgKiB0aGVyZSdzIGV4YWN0bHkgb25lIHNwYWNlIGFmdGVyICIjaW5jbHVkZSINCj4g
+ICogc3RydWN0IGV0aF84MDNfaGRyPyBhcmUgeW91IHNlcmlvdXM/IGFuZCB5b3UgZXZlbiBoYXZl
+DQo+ICAgIGl0IHR3aWNlOiBzdHJ1Y3QgZXRoX0lJX2hkcg0KPiAgKiBlbnVtIGllZWVfdHlwZXNf
+ZWxlbWVudGlkX2UgbXVzdCBnbw0KPiAgKiBzaW1pbGFybHksIGFsbW9zdCBhbGwgb2YgaWVlZS5o
+DQo+ICAqIG5vIGJpdGZpZWxkcyBhbmQgQklHX0VORElBTl9CSVRGSUVMRCBhbGxvd2VkDQo+ICAq
+IG5vdCBhbGwgYWxsb2NhdGlvbnMgYXJlIEdGUF9BVE9NSUMsIHVzZSB3aXNlbHkgYW5kDQo+ICAg
+IEdGUF9LRVJORUwgaW4gbW9zdCBwbGFjZXMNCj4gICogYSB3aWZpIGRyaXZlciB0aGF0J3MgZG9p
+bmcgc3R1ZmYgd2l0aCBzb2NrZXRzIChubF9zaywgc2tfc29ja2V0KT8NCj4gICAgZXhwbGFpbiwg
+aW4gTVVDSCBkZXRhaWwgKG9yIHByZWZlcmFibHkganVzdCBnZXQgcmlkIG9mIGl0KQ0KPiAgKiB0
+aGVyZSdzIGRlYnVnZnNfcmVtb3ZlX3JlY3Vyc2l2ZQ0KPiAgKiBzb21lIGZ1bmN0aW9ucyBsaWtl
+IG13aWZpZXhfaXNfbmV0d29ya19jb21wYXRpYmxlIG5lZWQgdG8gYmUgYnJva2VuDQo+ICAgIGlu
+dG8gc21hbGxlciBvbmVzIHRvIGF2b2lkIHRoZSBjcmFwIGluZGVudGF0aW9uIHRoZXkgaGF2ZQ0K
+PiAgKiBtd2lmaWV4X3VhcF9hcF9jZmdfcGFyc2VfZGF0YS4gTXVzdCBJIHNheSBtb3JlPw0KPiAg
+KiBzdHJ1Y3QgbXdpZmlleF9idWZmZXIgKm1idWY/IElzIHRoaXMgYSBCU0QgZHJpdmVyPyBXZSBo
+YXZlIFNLQnMsIGdldA0KPiAgICByaWQgb2YgdGhpcy4gKE9oIGFuZCBza2JzIGhhdmUgYSBDQikN
+Cj4gICogbXdpZmlleF9pbml0X2xvY2svbXdpZmlleF9mcmVlX2xvY2sgLS0gSSdkIGxhdWdoIGlu
+IHlvdXIgZ2VuZXJhbA0KPiAgICBkaXJlY3Rpb24gaWYgaXQgd2Fzbid0IHNvIHNhZA0KPiAgKiBt
+d2lmaWV4X3V0aWxfcGVla19saXN0IGV0Yy46IGxlYXJuIGFib3V0IGxpc3QuaA0KPiAgKiBtd2lm
+aWV4X2luaXRfdGltZXIgLS0gc3RpbGwgc2FkLCBkeW5hbWljYWxseSBhbGxvY2F0aW5nIHRpbWVy
+cz8ganVzdA0KPiAgICBsaWtlIHNwaW5sb2NrcywgdGhleSBjYW4gYmUgZW1iZWRkZWQgYW5kIG1h
+a2UgeW91ciBjb2RlIHNpbXBsZXINCg0KVGhhbmsgeW91IHZlcnkgbXVjaCBmb3IgYWxsIHRoZSBk
+ZXRhaWxlZCBjb21tZW50cy4gV2Ugd2lsbCB3b3JrIG9uIHRoZXNlIGl0ZW1zIGFuZCByZS1zdWJt
+aXQgdGhlIHBhdGNoZXMuDQoNClJlZ2FyZHMsDQoNCkJpbmcNCg0KPiANCj4gT2sgZ29vZCBlbm91
+Z2gsIHRoYXQgc2hvdWxkIGtlZXAgeW91IGJ1c3kgZm9yIGEgd2hpbGUuLi4NCj4gDQo+IFRoZSBh
+Ym92ZSBpcyBtaWdodCBiZSBhIGdvb2QgYmFzaXMgZm9yIGEgVE9ETyBmaWxlIGZvciBzdGFnaW5n
+Li4uDQo+IA0KPiBqb2hhbm5lcw0KPiANCj4gLS0NCj4gVG8gdW5zdWJzY3JpYmUgZnJvbSB0aGlz
+IGxpc3Q6IHNlbmQgdGhlIGxpbmUgInVuc3Vic2NyaWJlIGxpbnV4LXdpcmVsZXNzIiBpbg0KPiB0
+aGUgYm9keSBvZiBhIG1lc3NhZ2UgdG8gbWFqb3Jkb21vQHZnZXIua2VybmVsLm9yZw0KPiBNb3Jl
+IG1ham9yZG9tbyBpbmZvIGF0ICBodHRwOi8vdmdlci5rZXJuZWwub3JnL21ham9yZG9tby1pbmZv
+Lmh0bWwNCg==
