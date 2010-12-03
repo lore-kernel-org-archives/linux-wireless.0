@@ -1,84 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:35697 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751721Ab0LVJPP (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:50672 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751689Ab0LCPAH (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 22 Dec 2010 04:15:15 -0500
-Subject: [PATCH] mac80211: cleanup select_queue
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
+	Fri, 3 Dec 2010 10:00:07 -0500
+Date: Fri, 3 Dec 2010 09:59:18 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Mohammed Shafi <mshajakhan@atheros.com>
 Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
-Date: Wed, 22 Dec 2010 10:15:30 +0100
-Message-ID: <1293009330.3531.14.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+Subject: Re: [PATCH] ath9k: Properly use unlikely check macro
+Message-ID: <20101203145918.GC2348@tuxdriver.com>
+References: <1291044477-2317-1-git-send-email-mshajakhan@atheros.com>
+ <20101202202127.GF2358@tuxdriver.com>
+ <4CF87597.5080900@atheros.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <4CF87597.5080900@atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+On Fri, Dec 03, 2010 at 10:14:07AM +0530, Mohammed Shafi wrote:
+> On Friday 03 December 2010 01:51 AM, John W. Linville wrote:
+> >On Mon, Nov 29, 2010 at 08:57:57PM +0530, Mohammed Shafi Shajakhan wrote:
+> >>From: Mohammed Shafi Shajakhan<mshajakhan@atheros.com>
+> >>
+> >>AUTOSLEEP feature is enabled only AR9003 and later chips.So unlikely
+> >>macro should be used only to check whether auto-sleep feature is enabled
+> >>
+> >>Signed-off-by: Mohammed Shafi Shajakhan<mshajakhan@atheros.com>
+> >>---
+> >>  drivers/net/wireless/ath/ath9k/recv.c |    6 +++---
+> >>  1 files changed, 3 insertions(+), 3 deletions(-)
+> >>
+> >>diff --git a/drivers/net/wireless/ath/ath9k/recv.c b/drivers/net/wireless/ath/ath9k/recv.c
+> >>index 262c815..751ee1b 100644
+> >>--- a/drivers/net/wireless/ath/ath9k/recv.c
+> >>+++ b/drivers/net/wireless/ath/ath9k/recv.c
+> >>@@ -1743,10 +1743,10 @@ int ath_rx_tasklet(struct ath_softc *sc, int flush, bool hp)
+> >>  		}
+> >>
+> >>  		spin_lock_irqsave(&sc->sc_pm_lock, flags);
+> >>-		if (unlikely(ath9k_check_auto_sleep(sc) ||
+> >>-			     (sc->ps_flags&  (PS_WAIT_FOR_BEACON |
+> >>+		if ((sc->ps_flags&  (PS_WAIT_FOR_BEACON |
+> >>  					      PS_WAIT_FOR_CAB |
+> >>-					      PS_WAIT_FOR_PSPOLL_DATA))))
+> >>+					      PS_WAIT_FOR_PSPOLL_DATA)) ||
+> >>+				unlikely(ath9k_hw_check_auto_sleep(sc)))
+> >>  			ath_rx_ps(sc, skb);
+> >>  		spin_unlock_irqrestore(&sc->sc_pm_lock, flags);
+> >What tree is this against?
+> 2.6.37-rc4 ..Any problems in applying.Do I have to resend it based
+> on the latest pull ?
 
-There's a redundant rcu_read_lock/unlock pair, a
-redundant variable, and a few redundant accesses
-to the 1d_to_ac array. Fix this to make the code
-neater and easier to follow.
+Did you compile it?
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- net/mac80211/wme.c |   20 ++++++--------------
- 1 file changed, 6 insertions(+), 14 deletions(-)
+/home/linville/git/linux-2.6
+[linville-8530p.local]:> git describe
+v2.6.37-rc4
 
---- wireless-testing.orig/net/mac80211/wme.c	2010-12-22 09:54:06.000000000 +0100
-+++ wireless-testing/net/mac80211/wme.c	2010-12-22 10:00:12.000000000 +0100
-@@ -59,26 +59,22 @@ u16 ieee80211_select_queue(struct ieee80
- {
- 	struct ieee80211_local *local = sdata->local;
- 	struct sta_info *sta = NULL;
--	u32 sta_flags = 0;
- 	const u8 *ra = NULL;
- 	bool qos = false;
- 
- 	if (local->hw.queues < 4 || skb->len < 6) {
- 		skb->priority = 0; /* required for correct WPA/11i MIC */
--		return min_t(u16, local->hw.queues - 1,
--			     ieee802_1d_to_ac[skb->priority]);
-+		return min_t(u16, local->hw.queues - 1, IEEE80211_AC_BE);
- 	}
- 
- 	rcu_read_lock();
- 	switch (sdata->vif.type) {
- 	case NL80211_IFTYPE_AP_VLAN:
--		rcu_read_lock();
- 		sta = rcu_dereference(sdata->u.vlan.sta);
--		if (sta)
--			sta_flags = get_sta_flags(sta);
--		rcu_read_unlock();
--		if (sta)
-+		if (sta) {
-+			qos = get_sta_flags(sta) & WLAN_STA_WME;
- 			break;
-+		}
- 	case NL80211_IFTYPE_AP:
- 		ra = skb->data;
- 		break;
-@@ -107,17 +103,13 @@ u16 ieee80211_select_queue(struct ieee80
- 	if (!sta && ra && !is_multicast_ether_addr(ra)) {
- 		sta = sta_info_get(sdata, ra);
- 		if (sta)
--			sta_flags = get_sta_flags(sta);
-+			qos = get_sta_flags(sta) & WLAN_STA_WME;
- 	}
--
--	if (sta_flags & WLAN_STA_WME)
--		qos = true;
--
- 	rcu_read_unlock();
- 
- 	if (!qos) {
- 		skb->priority = 0; /* required for correct WPA/11i MIC */
--		return ieee802_1d_to_ac[skb->priority];
-+		return IEEE80211_AC_BE;
- 	}
- 
- 	/* use the data classifier to determine what 802.1d tag the
+/home/linville/git/linux-2.6
+[linville-8530p.local]:> grep ath9k_hw_check_auto_sleep drivers/net/wireless/ath/ath9k/*
 
-
+John
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
