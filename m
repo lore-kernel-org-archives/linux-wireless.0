@@ -1,33 +1,105 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:52763
-	"EHLO sunset.davemloft.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1757120Ab0LNTOl (ORCPT
+Received: from mailserver.naic.edu ([192.65.176.45]:51910 "EHLO
+	mailserver.naic.edu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753246Ab0LCUXY (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 14 Dec 2010 14:14:41 -0500
-Date: Tue, 14 Dec 2010 11:15:09 -0800 (PST)
-Message-Id: <20101214.111509.193716738.davem@davemloft.net>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: Re: pull request: wireless-next-2.6 2010-12-14
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <20101214161904.GC2389@tuxdriver.com>
-References: <20101214161904.GC2389@tuxdriver.com>
+	Fri, 3 Dec 2010 15:23:24 -0500
+Date: Fri, 3 Dec 2010 16:23:21 -0400
+From: Giacomo Comes <comes@naic.edu>
+To: Dave Kilroy <kilroyd@googlemail.com>
+Cc: Giacomo Comes <comes@naic.edu>, linux-wireless@vger.kernel.org
+Subject: Re: orinoco_cs module and WPA not working
+Message-ID: <20101203202321.GA21937@monopoli.naic.edu>
+References: <AANLkTi=nkayyyzECi6MO87ZO-CUpZeNP007_hMp8LiPV@mail.gmail.com> <20101126040742.GA5238@monopoli.naic.edu> <AANLkTim=P+QejCObCH1=5cPBDR6BpEXxuqHGZj3JBKbE@mail.gmail.com> <20101130021911.GA18971@monopoli.naic.edu> <AANLkTi=1PXk4u37mPd6=F6mjYWLqo=wg7trVmmpfV_WV@mail.gmail.com> <20101202002234.GA30670@monopoli.naic.edu> <AANLkTi=YT1V-kr-tAmNfSBPPEGk39H37RoNkx5txhnD7@mail.gmail.com> <20101203001052.GA16808@monopoli.naic.edu> <AANLkTinLaa+dOiq67DAt+KYfnxUEkNgWEiE2x1NtT9RE@mail.gmail.com> <AANLkTim-hexpFnV_DfKGM53vWo1-5W6fbK4e+jLnb5fB@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=euc-kr
+Content-Type: text/plain; charset=iso-8859-1
+In-Reply-To: <AANLkTim-hexpFnV_DfKGM53vWo1-5W6fbK4e+jLnb5fB@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: "John W. Linville" <linville@tuxdriver.com>
-Date: Tue, 14 Dec 2010 11:19:05 -0500
-
-> Dave,
+On Fri, Dec 03, 2010 at 05:29:59PM +0000, Dave Kilroy wrote:
+> On Fri, Dec 3, 2010 at 5:23 PM, Dave Kilroy <kilroyd@googlemail.com> wrote:
+> > On Fri, Dec 3, 2010 at 12:10 AM, Giacomo Comes <comes@naic.edu> wrote:
+> >> On Thu, Dec 02, 2010 at 05:46:54PM +0000, Dave Kilroy wrote:
+> >>> On Thu, Dec 2, 2010 at 12:22 AM, Giacomo Comes <comes@naic.edu> wrote:
+> >>> > On Wed, Dec 01, 2010 at 09:52:15PM +0000, Dave Kilroy wrote:
+> >>> >> On Tue, Nov 30, 2010 at 2:19 AM, Giacomo Comes <comes@naic.edu> wrote:
+> >>> >> wpa_supplicant log indicates it is continuously timing out the scans.
+> >>> >> I don't know what is going on there.
+> >>> >>
+> >>> >> What you can try is to turn off wpa_supplicant roaming, and force
+> >>> >> wpa_supplicant to connect to the AP with highest priority in your
+> >>> >> config. Set ap_scan=2 in wpa_supplicant.conf, and set
+> >>> >>
+> >>> >> group=TKIP
+> >>> >> pairwise=TKIP
+> >>> >>
+> >>> >> in the network block.
+> >>> >>
+> >>> >> This also prevents wpa_supplicant trying to connect to an AP using
+> >>> >> BSSID, which the agere cards don't support.
+> >>> >
+> >>> > Running:
+> >>> > wpa_supplicant -ieth1 -c wpa_supplicant.conf -f wpa_supplicant.log -dd
+> >>> >
+> >>> > wpa_supplicant.conf content:
+> >>> > ctrl_interface=/var/run/wpa_supplicant
+> >>> > ctrl_interface_group=0
+> >>> > ap_scan=2
+> >>> >
+> >>> > network={
+> >>> >        ssid="Comes"
+> >>> >        psk="<password>"
+> >>> >        key_mgmt=WPA-PSK
+> >>> >        priority=5
+> >>> >        proto=WPA
+> >>> >
+> >>> >        group=TKIP
+> >>> >        pairwise=TKIP
+> >>> > }
+> >>>
+> >>> OK, looks like you're using a newer wpa_supplicant that tries to use
+> >>> IW_AUTH_MFP which orinoco doesn't know about. I can modify the driver
+> >>> to silently pass these calls through, but it would be nice if
+> >>> wpa_supplicant didn't fail because a driver didn't support a
+> >>> particular option.
+> >>>
+> >>> I'll put together a patch to accept an IW_AUTH_MFP call set to NONE or
+> >>> DISABLED, and fail on REQUIRED. In the meantime you could try use an
+> >>> older wpa_supplicant. I think I was using 0.7.2 before, but I can't be
+> >>> sure.
+> >>
+> >> wpa_supplicant version is 0.7.3. It's the one included in suse 11.3.
+> >>
+> >> About your patch, things are getting better.
+> >>
+> >> I have applied the patch and run wpa_supplicant with the configuration
+> >> showed above. It works, the card associates with the AP.
+> >> The succesful log is attached.
+> >> After I removed from wpa_supplicant.conf the two lines:
+> >> group=TKIP
+> >> pairwise=TKIP
+> >> the association still works.
+> >>
+> >> But after removing the line: ap_scan=2
+> >> the association fails.
+> >> The log is in the second attachment.
+> >>
+> >> Also I have included in the 3rd attachement wpa_supplicant.log when
+> >> NetworkManager is used.
 > 
-> Here is another batch of updates intended for 2.6.38.  This batch
-> includes some mac80211 updates from Johannes Berg, Felix Fietkau,
-> and Helmut Schaa, some ath cleanups from Joe Perches, more b43 N-phy
-> updates from Rafa©© Mi©©ecki, more ath5k updates from Nick Kossifidis,
-> some ath9k bits from the Atheros guys, and a smattering of other bits.
-> This also includes another wireless-2.6 pull to grab some prerequisites
-> for later patches.
+> > The failure and NM case are the same. There is still a problem with
+> > scanning. wpa_supplicant initiates a scan, and it appears to time out.
+> > Without scan results wpa_supplicant is not able to select an
+> > appropriate AP.
+> >
+> > Is the driver reporting any scanning issues in dmesg while
+> > wpa_supplicant is running?
 
-Pulled, thanks John.
+In dmesg there is:
+ADDRCONF(NETDEV_UP): eth1: link is not ready
+
+and on standard error:
+ioctl[SIOCSIWENCODEEXT]: Invalid argument
+
+Giacomo
