@@ -1,105 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw0-f42.google.com ([74.125.83.42]:33098 "EHLO
-	mail-gw0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752786Ab0LLP2a (ORCPT
+Received: from mail-qy0-f181.google.com ([209.85.216.181]:35433 "EHLO
+	mail-qy0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752689Ab0LCGfs convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 12 Dec 2010 10:28:30 -0500
-Received: by gwb20 with SMTP id 20so4401286gwb.1
-        for <linux-wireless@vger.kernel.org>; Sun, 12 Dec 2010 07:28:29 -0800 (PST)
-Message-ID: <4D04EA37.50309@lwfinger.net>
-Date: Sun, 12 Dec 2010 09:28:55 -0600
-From: Larry Finger <Larry.Finger@lwfinger.net>
+	Fri, 3 Dec 2010 01:35:48 -0500
+Received: by qyk12 with SMTP id 12so11299364qyk.19
+        for <linux-wireless@vger.kernel.org>; Thu, 02 Dec 2010 22:35:48 -0800 (PST)
 MIME-Version: 1.0
-To: =?UTF-8?B?TWljaGFlbCBCw7xzY2g=?= <mb@bu3sch.de>
-CC: John W Linville <linville@tuxdriver.com>,
-	b43-dev@lists.infradead.org, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 2/2] ssb: Save sprom image for dump of device at alternate
- location
-References: <4d044307.Ipm73VWEgifFrF0m%Larry.Finger@lwfinger.net>	 (sfid-20101212_043513_712988_FFFFFFFF9320429C) <1292144592.11817.7.camel@maggie>
-In-Reply-To: <1292144592.11817.7.camel@maggie>
+Reply-To: sedat.dilek@gmail.com
+In-Reply-To: <20101203041109.GE2988@makis.mantri>
+References: <20101203041109.GE2988@makis.mantri>
+Date: Fri, 3 Dec 2010 07:35:46 +0100
+Message-ID: <AANLkTi=pUHsMqGppFKJRSmci8FGQQeFaH2Lj0Cyr2CQ9@mail.gmail.com>
+Subject: Re: [PATCH 5/6] ath5k: Update version string
+From: Sedat Dilek <sedat.dilek@googlemail.com>
+To: ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org,
+	linville@tuxdriver.com, me@bobcopeland.com, mcgrof@gmail.com,
+	jirislaby@gmail.com, nbd@openwrt.org, br1@einfach.org,
+	sedat.dilek@googlemail.com
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 12/12/2010 03:03 AM, Michael Büsch wrote:
-> On Sat, 2010-12-11 at 21:35 -0600, Larry Finger wrote: 
->> @@ -1013,6 +1013,7 @@ void ssb_pci_exit(struct ssb_bus *bus)
->>  	if (bus->bustype != SSB_BUSTYPE_PCI)
->>  		return;
->>  
->> +	kfree(bus->sprom_data);
->>  	pdev = bus->host_pci;
->>  	device_remove_file(&pdev->dev, &dev_attr_ssb_sprom);
->>  }
-> 
-> Need to put kfree after removing the sprom file. Otherwise there's
-> a race condition with userspace.
+Tested-by: Sedat Dilek <sedat.dilek@gmail.com>
 
-Will do. Thanks.
-
->> Index: wireless-testing/drivers/ssb/sprom.c
->> ===================================================================
->> --- wireless-testing.orig/drivers/ssb/sprom.c
->> +++ wireless-testing/drivers/ssb/sprom.c
->> @@ -72,24 +72,29 @@ ssize_t ssb_attr_sprom_show(struct ssb_b
->>  	ssize_t count = 0;
->>  	size_t sprom_size_words = bus->sprom_size;
->>  
->> -	sprom = kcalloc(sprom_size_words, sizeof(u16), GFP_KERNEL);
->> -	if (!sprom)
->> -		goto out;
->> -
->> -	/* Use interruptible locking, as the SPROM write might
->> -	 * be holding the lock for several seconds. So allow userspace
->> -	 * to cancel operation. */
->> -	err = -ERESTARTSYS;
->> -	if (mutex_lock_interruptible(&bus->sprom_mutex))
->> -		goto out_kfree;
->> -	err = sprom_read(bus, sprom);
->> -	mutex_unlock(&bus->sprom_mutex);
->> -
->> +	if (bus->sprom_data) {
->> +		sprom = bus->sprom_data;
->> +		err = 0;
->> +	} else {
-> 
-> This branch is dead now, or do I miss something?
-
-I kept it for those devices with SPROMs that are not PCI. If there are none,
-then it can de removed.
-
->> +		sprom = kcalloc(sprom_size_words, sizeof(u16), GFP_KERNEL);
->> +		if (!sprom)
->> +			goto out;
->> +
->> +		/* Use interruptible locking, as the SPROM write might
->> +		 * be holding the lock for several seconds. So allow userspace
->> +		 * to cancel operation. */
->> +		err = -ERESTARTSYS;
->> +		if (mutex_lock_interruptible(&bus->sprom_mutex))
->> +			goto out_kfree;
->> +		err = sprom_read(bus, sprom);
->> +		mutex_unlock(&bus->sprom_mutex);
->> +	}
->>  	if (!err)
->>  		count = sprom2hex(sprom, buf, PAGE_SIZE, sprom_size_words);
->>  
->>  out_kfree:
->> -	kfree(sprom);
->> +	if (!bus->sprom_data)
->> +		kfree(sprom);
->>  out:
->>  	return err ? err : count;
->>  }
-> 
-> I agree that caching the SPROM probably is easier than reading it from
-> the wireless core at sysfs read time. There are a few concurrency issues
-> that are hard to solve with the current ssb-pci MMIO access code.
-> Most notably is that the SPROM read would race with wireless interrupts.
-
-As it was easy and adds very little to the memory footprint, it seems the way to go.
-
-Larry
-
-
-
+On Fri, Dec 3, 2010 at 5:11 AM, Nick Kossifidis <mickflemm@gmail.com> wrote:
+>  * Change version number, we've added various new features lately.
+>  We need to find a way to maintain this, maybe on each kernel release
+>  or something. Also remove "EXPERIMENTAL", we aren't experimental any
+>  more I think ;-)
+>
+>  Signed-off-by: Nick Kossifidis <mickflemm@gmail.com>
+>
+> ---
+>  drivers/net/wireless/ath/ath5k/base.c |    2 +-
+>  1 files changed, 1 insertions(+), 1 deletions(-)
+>
+> diff --git a/drivers/net/wireless/ath/ath5k/base.c b/drivers/net/wireless/ath/ath5k/base.c
+> index 6edfa9f..835ab3a 100644
+> --- a/drivers/net/wireless/ath/ath5k/base.c
+> +++ b/drivers/net/wireless/ath/ath5k/base.c
+> @@ -78,7 +78,7 @@ MODULE_AUTHOR("Nick Kossifidis");
+>  MODULE_DESCRIPTION("Support for 5xxx series of Atheros 802.11 wireless LAN cards.");
+>  MODULE_SUPPORTED_DEVICE("Atheros 5xxx WLAN cards");
+>  MODULE_LICENSE("Dual BSD/GPL");
+> -MODULE_VERSION("0.6.0 (EXPERIMENTAL)");
+> +MODULE_VERSION("0.7.0");
+>
+>  static int ath5k_reset(struct ath5k_softc *sc, struct ieee80211_channel *chan,
+>                                                                bool skip_pcu);
+>
