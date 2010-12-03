@@ -1,67 +1,84 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail30t.wh2.ocn.ne.jp ([125.206.180.136]:7246 "HELO
-	mail30t.wh2.ocn.ne.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1759030Ab0LNCUH (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 13 Dec 2010 21:20:07 -0500
-Received: from vs3009.wh2.ocn.ne.jp (125.206.180.237)
-	by mail30t.wh2.ocn.ne.jp (RS ver 1.0.95vs) with SMTP id 4-082463204
-	for <linux-wireless@vger.kernel.org>; Tue, 14 Dec 2010 11:20:05 +0900 (JST)
-Subject: [PATCH 1/2] nl80211: Export available antennas
-To: johannes@sipsolutions.net, linville@tuxdriver.com
-From: Bruno Randolf <br1@einfach.org>
-Cc: linux-wireless@vger.kernel.org
-Date: Tue, 14 Dec 2010 11:20:18 +0900
-Message-ID: <20101214022018.2343.8216.stgit@localhost6.localdomain6>
+Received: from mail.atheros.com ([12.19.149.2]:45078 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751777Ab0LCIo6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 3 Dec 2010 03:44:58 -0500
+Received: from mail.atheros.com ([10.10.20.108])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Fri, 03 Dec 2010 00:44:44 -0800
+Date: Fri, 3 Dec 2010 14:14:57 +0530
+From: Senthil Balasubramanian <senthilkumar@atheros.com>
+To: Ben Greear <greearb@candelatech.com>
+CC: Senthilkumar Balasubramanian
+	<Senthilkumar.Balasubramanian@Atheros.com>,
+	"linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Stable <stable@kernel.org>,
+	Kyungwan Nam <Kyungwan.Nam@Atheros.com>
+Subject: Re: [PATCH v2 2/2] ath9k: Fix STA disconnect issue due to received
+ MIC failed bcast frames
+Message-ID: <20101203084457.GB4605@senthil-lnx.users.atheros.com>
+References: <1291201205-1541-1-git-send-email-senthilkumar@atheros.com>
+ <4CF6A8FD.6020508@candelatech.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <4CF6A8FD.6020508@candelatech.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Bruno Randolf <br1@einfach.org>
+On Thu, Dec 02, 2010 at 01:28:53AM +0530, Ben Greear wrote:
+> On 12/01/2010 03:00 AM, Senthil Balasubramanian wrote:
+> > AR_RxKeyIdxValid will not be set for bcast/mcast frames and so relying
+> > this status for MIC failed frames is buggy.
+> >
+> > Due to this, MIC failure events for broadcast frames are not sent to
+> > supplicant resulted in AP disconnecting the STA.
+> >
+> > Able to pass Wifi Test case 5.2.18 with this fix.
+> 
+> Please do not apply this yet.  As far as I can tell, either
+> of these patches breaks multiple VIF scenarios.  I'm not
+> sure exactly why, but I had to revert this to get any
+> of my interfaces to associate.
+> 
+> I'm using software encryption in case that matters.
 
----
+Are you saying that you have issues with this patch (either v1 or v2)
+and only when software encryption is used ??? Please confirm.
 
-v2:	rebased
----
- include/linux/nl80211.h |    5 +++++
- net/wireless/nl80211.c  |    2 ++
- 2 files changed, 7 insertions(+), 0 deletions(-)
+This patch fixes a regression which was introduced in 2.6.36 kernel. so
+essentially what this patch does is nothing but what was happening in
+2.6.35 kernel and below. It should not create any new issues from what
+I can see. Anyway let us enable s/w encryption also and verify.
 
-diff --git a/include/linux/nl80211.h b/include/linux/nl80211.h
-index b8fa25d..63b603c 100644
---- a/include/linux/nl80211.h
-+++ b/include/linux/nl80211.h
-@@ -841,6 +841,9 @@ enum nl80211_commands {
-  *	the hardware should not be configured to receive on this antenna.
-  *	For a more detailed descripton see @NL80211_ATTR_WIPHY_ANTENNA_TX.
-  *
-+ * @NL80211_ATTR_WIPHY_ANTENNA_AVAIL: Bitmap of antennas which are available for
-+ *	configuration via the above parameters.
-+ *
-  * @NL80211_ATTR_MCAST_RATE: Multicast tx rate (in 100 kbps) for IBSS
-  *
-  * @NL80211_ATTR_OFFCHANNEL_TX_OK: For management frame TX, the frame may be
-@@ -1035,6 +1038,8 @@ enum nl80211_attrs {
- 
- 	NL80211_ATTR_KEY_DEFAULT_TYPES,
- 
-+	NL80211_ATTR_WIPHY_ANTENNA_AVAIL,
-+
- 	/* add attributes here, update the policy in nl80211.c */
- 
- 	__NL80211_ATTR_AFTER_LAST,
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index 53f0443..87eae15 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -613,6 +613,8 @@ static int nl80211_send_wiphy(struct sk_buff *msg, u32 pid, u32 seq, int flags,
- 			NLA_PUT_U32(msg, NL80211_ATTR_WIPHY_ANTENNA_TX, tx_ant);
- 			NLA_PUT_U32(msg, NL80211_ATTR_WIPHY_ANTENNA_RX, rx_ant);
- 		}
-+		NLA_PUT_U32(msg, NL80211_ATTR_WIPHY_ANTENNA_AVAIL,
-+			    dev->wiphy.available_antennas);
- 	}
- 
- 	nl_modes = nla_nest_start(msg, NL80211_ATTR_SUPPORTED_IFTYPES);
-
+> 
+> Senthil:  Any chance you could test with a few VIFS to
+> see if you see the same problem?
+> 
+> Here is a dmesg snippet from wireless-testing with the v1 reverted
+> and v2 applied:
+> 
+> sta9: authenticate with 00:14:d1:c6:d2:54 (try 1)
+> sta9: authenticated
+> sta9: associate with 00:14:d1:c6:d2:54 (try 1)
+> sta9: RX AssocResp from 00:14:d1:c6:d2:54 (capab=0x431 status=1 aid=0)
+> sta9: 00:14:d1:c6:d2:54 denied association (code=1)
+> sta9: deauthenticating from 00:14:d1:c6:d2:54 by local choice (reason=3)
+> ieee80211 wiphy0: device now idle
+> ieee80211 wiphy0: device no longer idle - scanning
+> ieee80211 wiphy0: device now idle
+> ieee80211 wiphy0: device no longer idle - working
+> sta10: authenticate with 00:14:d1:c6:d2:54 (try 1)
+> sta10: authenticated
+> sta10: associate with 00:14:d1:c6:d2:54 (try 1)
+> sta10: RX AssocResp from 00:14:d1:c6:d2:54 (capab=0x431 status=1 aid=0)
+> sta10: 00:14:d1:c6:d2:54 denied association (code=1)
+> sta10: deauthenticating from 00:14:d1:c6:d2:54 by local choice (reason=3)
+> 
+> Thanks,
+> Ben
+> 
+> -- 
+> Ben Greear <greearb@candelatech.com>
+> Candela Technologies Inc  http://www.candelatech.com
+> 
