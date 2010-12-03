@@ -1,98 +1,85 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp-out.google.com ([216.239.44.51]:40031 "EHLO
-	smtp-out.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754237Ab0LPLR4 convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 16 Dec 2010 06:17:56 -0500
-Received: from kpbe15.cbf.corp.google.com (kpbe15.cbf.corp.google.com [172.25.105.79])
-	by smtp-out.google.com with ESMTP id oBGBHtdg026009
-	for <linux-wireless@vger.kernel.org>; Thu, 16 Dec 2010 03:17:55 -0800
-Received: from iwn3 (iwn3.prod.google.com [10.241.68.67])
-	by kpbe15.cbf.corp.google.com with ESMTP id oBGBHrLd012436
-	(version=TLSv1/SSLv3 cipher=RC4-MD5 bits=128 verify=NOT)
-	for <linux-wireless@vger.kernel.org>; Thu, 16 Dec 2010 03:17:54 -0800
-Received: by iwn3 with SMTP id 3so3580383iwn.26
-        for <linux-wireless@vger.kernel.org>; Thu, 16 Dec 2010 03:17:53 -0800 (PST)
+Received: from nbd.name ([46.4.11.11]:58144 "EHLO nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932355Ab0LCMOI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 3 Dec 2010 07:14:08 -0500
+Message-ID: <4CF8DF08.2060307@openwrt.org>
+Date: Fri, 03 Dec 2010 13:14:00 +0100
+From: Felix Fietkau <nbd@openwrt.org>
 MIME-Version: 1.0
-In-Reply-To: <1292482775.3542.8.camel@jlt3.sipsolutions.net>
-References: <20101215194246.D5FCE204D8@glenhelen.mtv.corp.google.com>
-	<1292482775.3542.8.camel@jlt3.sipsolutions.net>
-Date: Thu, 16 Dec 2010 03:17:53 -0800
-Message-ID: <AANLkTi=pZAnyp5ztSqCo-MEF=_arECfAYg43JJ_j1Gb4@mail.gmail.com>
-Subject: Re: [PATCH] mac80211: Push idle state to driver before stop
-From: Paul Stewart <pstew@google.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org, luis.rodriguez@atheros.com
+To: Vasanthakumar Thiagarajan <vasanth@atheros.com>
+CC: Vasanth Thiagarajan <Vasanth.Thiagarajan@Atheros.com>,
+	"linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH V2 12/27] ath9k_hw: Find chansel of	AR_PHY_65NM_CH0_SYNTH7
+ from an array for AR9485
+References: <1291288031-3409-1-git-send-email-vasanth@atheros.com> <1291288031-3409-13-git-send-email-vasanth@atheros.com> <4CF84BB8.8090007@openwrt.org> <20101203045054.GP12908@vasanth-laptop>
+In-Reply-To: <20101203045054.GP12908@vasanth-laptop>
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Dec 15, 2010 at 10:59 PM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
-> On Wed, 2010-12-15 at 10:54 -0800, Paul Stewart wrote:
->> Sometimes mac80211 doesn't push idle state downwards to the
->> driver.  Specifically, there are times in some functions where
->> the "local->hw.conf.flags & IEEE80211_CONF_IDLE" may change but
->> the equivalent of "drv_config(local, IEEE80211_CONF_CHANGE_IDLE)"
->> does not end up being called.  This is usually not all that
->> problematic except, for example, suspending and resuming an idle
->> ath9k device.  If the device isn't marked idle when
->> ieee80211_stop_device() is called, the device never gets put to
->> sleep, and will end up in an unresponsive state on resume.
->
-> I thought this was solved in ath9k differently? Was that somehow
-> inadequate?
+On 2010-12-03 5:50 AM, Vasanthakumar Thiagarajan wrote:
+> On Fri, Dec 03, 2010 at 07:15:28AM +0530, Felix Fietkau wrote:
+>> On 2010-12-02 12:06 PM, Vasanthakumar Thiagarajan wrote:
+>> > Signed-off-by: Vasanthakumar Thiagarajan <vasanth@atheros.com>
+>> > ---
+>> >  drivers/net/wireless/ath/ath9k/ar9003_phy.c |   25 ++++++++++++++++++++++++-
+>> >  1 files changed, 24 insertions(+), 1 deletions(-)
+>> > 
+>> > diff --git a/drivers/net/wireless/ath/ath9k/ar9003_phy.c b/drivers/net/wireless/ath/ath9k/ar9003_phy.c
+>> > index b34a9e9..136e64a 100644
+>> > --- a/drivers/net/wireless/ath/ath9k/ar9003_phy.c
+>> > +++ b/drivers/net/wireless/ath/ath9k/ar9003_phy.c
+>> > @@ -25,6 +25,24 @@ static const int cycpwrThr1_table[] =
+>> >  /* level:  0   1   2   3   4   5   6   7   8  */
+>> >  	{ -6, -4, -2,  0,  2,  4,  6,  8 };     /* lvl 0-7, default 3 */
+>> >  
+>> > +/* Chansel table used by ar9485 */
+>> > +static const u32 ar9003_chansel_xtal_40M[] = {
+>> > +	0xa0ccbe,
+>> > +	0xa12213,
+>> > +	0xa17769,
+>> > +	0xa1ccbe,
+>> > +	0xa22213,
+>> > +	0xa27769,
+>> > +	0xa2ccbe,
+>> > +	0xa32213,
+>> > +	0xa37769,
+>> > +	0xa3ccbe,
+>> > +	0xa42213,
+>> > +	0xa47769,
+>> > +	0xa4ccbe,
+>> > +	0xa5998b,
+>> > +};
+>> > +
+>> >  /*
+>> >   * register values to turn OFDM weak signal detection OFF
+>> >   */
+>> > @@ -75,7 +93,12 @@ static int ar9003_hw_set_channel(struct ath_hw *ah, struct ath9k_channel *chan)
+>> >  	freq = centers.synth_center;
+>> >  
+>> >  	if (freq < 4800) {     /* 2 GHz, fractional mode */
+>> > -		channelSel = CHANSEL_2G(freq);
+>> > +		if (AR_SREV_9485(ah)) {
+>> > +			int ichan = ieee80211_frequency_to_channel(freq);
+>> > +
+>> > +			channelSel = ar9003_chansel_xtal_40M[ichan - 1];
+>> How about using this formula for AR9485:
+>> 
+>> #define CHANSEL_2G_AR9485(_freq)	(((_freq) * 0x10000 - 215) / CHANSEL_DIV)
+>> 
+>> While I don't know where the 215 comes from (the calculation does not
+>> appear to be documented anywhere and I found it by trial & error),
+>> I do think it's better to have a simple formula than a long table
+>> of hardcoded values.
+> 
+> I don't know, having some arbitrary formula would
+> complicate things especially if we want to integrate
+> changes from internal code base. I prefer the table.
+How would it complicate things? Right now the resulting values are
+exactly the same. If we get a new table from the HAL, I'll either come
+up with a new formula, or we switch to the table then. But in the mean
+time we'll have better code.
 
-Unfortunately previous attempts to solve this problem failed.
-
->> As a precaution, explicitly call drv_config() before
->> ieee80211_stop_device(), which should be a no-op under normal
->> circumstances, but where this problem arises, it will shut down
->> the ath9k where necessary.
->
-> I'm not convinced that this makes a lot of sense. I'm sure you can come
-> up with other scenarios in which we stop a device and expect it to come
-> back. I'm not sure why mac80211 should be responsible for all this?
->
->> One example where this problem occurs is when I down an interface
->> while a scan is in progress on ath9k.  If the device was not shut
->> down correctly and the system suspends and resumes repeatedly with
->> ath9k, I end up with a fatal register read error (0x7000/deadbeef)
->> when trying to bring the interface back up.
->>
->> Signed-off-by: Paul Stewart <pstew@google.com>
->> ---
->>  net/mac80211/iface.c |    1 +
->>  1 files changed, 1 insertions(+), 0 deletions(-)
->>
->> diff --git a/net/mac80211/iface.c b/net/mac80211/iface.c
->> index b6db237..5af5a89 100644
->> --- a/net/mac80211/iface.c
->> +++ b/net/mac80211/iface.c
->> @@ -536,6 +536,7 @@ static void ieee80211_do_stop(struct ieee80211_sub_if_data *sdata,
->>               if (local->ops->napi_poll)
->>                       napi_disable(&local->napi);
->>               ieee80211_clear_tx_pending(local);
->> +             drv_config(local, IEEE80211_CONF_CHANGE_IDLE);
->>               ieee80211_stop_device(local);
->>
->>               /* no reconfiguring after stop! */
->
-> I don't like this anyway -- you're calling a driver callback directly,
-> and there's no guarantee that just that particular change will be used
-> by the driver -- it's free to look at other state given to it in each
-> callback as well. That seems problematic because of all the other logic
-> that we have in ieee80211_hw_config().
->
-> At the very least I think you need to provide a better rationale for
-> this patch and explain why the ath9k change isn't sufficient?
-
-Here's a slightly better rationale, as I'm getting to understand the problem.
-ieee80211_do_stop() decrements "open_count" so early during the function
-that if the device is not idle at this point (e.g, due to scanning),
-drv_config()
-will never be called on the the lower-level driver, since ieee80211_hw_config()
-tests for "open_count > 0" and silently returns no-error.
-
---
-Paul
+- Felix
