@@ -1,33 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([147.243.128.24]:19871 "EHLO mgw-da01.nokia.com"
+Received: from mx1.redhat.com ([209.132.183.28]:38332 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751698Ab0LaIF1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 31 Dec 2010 03:05:27 -0500
-Received: from [10.162.253.158] (essapo-nirac253158.europe.nokia.com [10.162.253.158])
-	by mgw-da01.nokia.com (Switch-3.4.3/Switch-3.4.3) with ESMTP id oBV85PAf029721
-	for <linux-wireless@vger.kernel.org>; Fri, 31 Dec 2010 10:05:26 +0200
-Subject: wl12xx maintainer's email address will change
-From: Luciano Coelho <luciano.coelho@nokia.com>
-To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
-Date: Fri, 31 Dec 2010 10:05:24 +0200
-Message-ID: <1293782724.15791.14.camel@powerslave>
-Mime-Version: 1.0
+	id S1758602Ab0LCOlz (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 3 Dec 2010 09:41:55 -0500
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: Wey-Yi Guy <wey-yi.w.guy@intel.com>,
+	Intel Linux Wireless <ilw@linux.intel.com>
+Cc: linux-wireless@vger.kernel.org,
+	Stanislaw Gruszka <sgruszka@redhat.com>
+Subject: [PATCH 1/2] iwl3945: prevent too frequent firmware resets
+Date: Fri,  3 Dec 2010 15:41:47 +0100
+Message-Id: <1291387308-5829-1-git-send-email-sgruszka@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+Similarly like on iwlagn, initialize reset duration on iwl3945 to prevent
+too frequent firmware resets.
 
-Sorry for the spam for those who are not working with wl12xx.
+Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+---
+ drivers/net/wireless/iwlwifi/iwl3945-base.c |    7 +++++++
+ 1 files changed, 7 insertions(+), 0 deletions(-)
 
-Today is the last day when my current email address
-(luciano.coelho@nokia.com) is valid.  So please send all requests or
-questions that are supposed to reach me to the linux-wireless mailing
-list, so I can still read them.
-
-My new email address will be available by the beginning of next week.
-
+diff --git a/drivers/net/wireless/iwlwifi/iwl3945-base.c b/drivers/net/wireless/iwlwifi/iwl3945-base.c
+index 8eb1393..cc282aa 100644
+--- a/drivers/net/wireless/iwlwifi/iwl3945-base.c
++++ b/drivers/net/wireless/iwlwifi/iwl3945-base.c
+@@ -3861,6 +3861,13 @@ static int iwl3945_init_drv(struct iwl_priv *priv)
+ 	priv->iw_mode = NL80211_IFTYPE_STATION;
+ 	priv->missed_beacon_threshold = IWL_MISSED_BEACON_THRESHOLD_DEF;
+ 
++	/* initialize force reset */
++	priv->force_reset[IWL_RF_RESET].reset_duration =
++		IWL_DELAY_NEXT_FORCE_RF_RESET;
++	priv->force_reset[IWL_FW_RESET].reset_duration =
++		IWL_DELAY_NEXT_FORCE_FW_RELOAD;
++
++
+ 	priv->tx_power_user_lmt = IWL_DEFAULT_TX_POWER;
+ 	priv->tx_power_next = IWL_DEFAULT_TX_POWER;
+ 
 -- 
-Cheers,
-Luca.
+1.7.1
 
