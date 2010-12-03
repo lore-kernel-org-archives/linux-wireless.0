@@ -1,34 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.19.149.2]:55266 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751985Ab0LTIK2 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 20 Dec 2010 03:10:28 -0500
-Received: from mail.atheros.com ([10.10.20.108])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Mon, 20 Dec 2010 00:10:12 -0800
-Date: Mon, 20 Dec 2010 13:40:03 +0530
-From: Rajkumar Manoharan <rmanoharan@atheros.com>
-To: <linville@tuxdriver.com>
-CC: "linville@tuxdriver.com" <linville@tuxdriver.com>,
+Received: from na3sys009aog105.obsmtp.com ([74.125.149.75]:57170 "HELO
+	na3sys009aog105.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1751582Ab0LCWfm convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 3 Dec 2010 17:35:42 -0500
+From: Bing Zhao <bzhao@marvell.com>
+To: "John W. Linville" <linville@tuxdriver.com>,
 	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH 1/2] ath9k: Fix warnings on card removal
-Message-ID: <20101220081003.GA19301@vmraj-lnx.users.atheros.com>
-References: <1292660258-4063-1-git-send-email-rmanoharan@atheros.com>
+Date: Fri, 3 Dec 2010 14:22:57 -0800
+Subject: RE: [PATCH 0/3] mwifiex: remove some stuff...
+Message-ID: <477F20668A386D41ADCC57781B1F704307D5C0F9CB@SC-VEXCH1.marvell.com>
+References: <20101203191130.GD2348@tuxdriver.com>
+ <1291411051-12916-1-git-send-email-linville@tuxdriver.com>
+In-Reply-To: <1291411051-12916-1-git-send-email-linville@tuxdriver.com>
+Content-Type: text/plain; charset=US-ASCII
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <1292660258-4063-1-git-send-email-rmanoharan@atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, Dec 18, 2010 at 01:47:37PM +0530, Rajkumar Manoharan wrote:
-> There is no point in doing register read/write operations
-> when is hardware is not present. This leads to unnecessary
-> warnings on log. This patch resolves the following
-> warnings on card removal.
+Hi John,
+
+> -----Original Message-----
+> From: John W. Linville [mailto:linville@tuxdriver.com]
+> Sent: Friday, December 03, 2010 1:17 PM
+> To: Bing Zhao; linux-wireless@vger.kernel.org
+> Cc: John W. Linville
+> Subject: [PATCH 0/3] mwifiex: remove some stuff...
 > 
-John,
+> This series remvoes lots of stuff -- some bits might even be necessary,
+> but if so it is worth thinking about why that may be.
 
-This patch does not handle module unload case. will send v2 patch.
+Thanks a lot for making changes to the driver.
 
---
-Rajkumar
+> 
+> Not tested...YMMV...
+
+I'll test all the patches you posted. After that, I will start working on the items suggested by Johannes.
+
+Thanks again.
+
+Bing
+
+> 
+> John
