@@ -1,44 +1,87 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qw0-f46.google.com ([209.85.216.46]:64560 "EHLO
-	mail-qw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750828Ab0LUMU6 convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 21 Dec 2010 07:20:58 -0500
-Received: by qwa26 with SMTP id 26so3909140qwa.19
-        for <linux-wireless@vger.kernel.org>; Tue, 21 Dec 2010 04:20:57 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <1292931273.13493.2.camel@maggie>
-References: <1292928622-27651-1-git-send-email-zajec5@gmail.com>
-	<1292928622-27651-2-git-send-email-zajec5@gmail.com>
-	<1292931273.13493.2.camel@maggie>
-Date: Tue, 21 Dec 2010 13:20:57 +0100
-Message-ID: <AANLkTi=--XSasFtDpiq-uXDrMWjQzrK-cnGZVyqFsSif@mail.gmail.com>
-Subject: Re: [PATCH 2/4] b43: N-PHY: implement radio 2056 init steps
-From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-To: =?UTF-8?Q?Michael_B=C3=BCsch?= <mb@bu3sch.de>
-Cc: linux-wireless@vger.kernel.org,
+Received: from mail.perches.com ([173.55.12.10]:2182 "EHLO mail.perches.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932426Ab0LCDNg (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 2 Dec 2010 22:13:36 -0500
+From: Joe Perches <joe@perches.com>
+To: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	Jouni Malinen <jmalinen@atheros.com>,
+	Vasanthakumar Thiagarajan <vasanth@atheros.com>,
+	Senthil Balasubramanian <senthilkumar@atheros.com>
+Cc: Peter Stuge <peter@stuge.se>, Felix Fietkau <nbd@openwrt.org>,
 	"John W. Linville" <linville@tuxdriver.com>,
-	b43-dev@lists.infradead.org
-Content-Type: text/plain; charset=UTF-8
+	linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
+	netdev@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: [PATCH 4/4] ath: Fix ath_dbg access beyond array bound
+Date: Thu,  2 Dec 2010 19:12:38 -0800
+Message-Id: <f27b95daeb152de787dea20e4eefd21e65a7108e.1291333544.git.joe@perches.com>
+In-Reply-To: <20101202190239.GE7399@tux>
+References: <20101202190239.GE7399@tux>
+In-Reply-To: <cover.1291333543.git.joe@perches.com>
+References: <cover.1291333543.git.joe@perches.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-W dniu 21 grudnia 2010 12:34 użytkownik Michael Büsch <mb@bu3sch.de> napisał:
-> On Tue, 2010-12-21 at 11:50 +0100, Rafał Miłecki wrote:
->> +static void b43_radio_init2056_post(struct b43_wldev *dev)
->> +{
->> +     b43_radio_set(dev, B2056_SYN_COM_CTRL, 0xB);
->> +     b43_radio_set(dev, B2056_SYN_COM_PU, 0x2);
->> +     b43_radio_set(dev, B2056_SYN_COM_RESET, 0x2);
->> +     mdelay(1);
->
-> Please don't use mdelay() ever. The driver is fully preemptible.
-> Use msleep() instead.
+ar9300RateSize is not necessarily a power of 4.
 
-So, using "msleep" allows kernel to switch context, while using
-"mdelay" does not?
+Change ar9003_hw_set_target_power_eeprom
+to print the targetPowerValT2 array one per line.
 
-If so, should be convert our longer udelay calls (like 300us) to usleep?
+ath9k_hw_ar9300_set_txpower repeated the output 4 times per line,
+change it to print the targetPowerValT2 value one per line.
 
+Signed-off-by: Joe Perches <joe@perches.com>
+---
+ drivers/net/wireless/ath/ath9k/ar9003_eeprom.c |   27 +----------------------
+ 1 files changed, 2 insertions(+), 25 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
+index 7b13a2e..34d1d7a 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
++++ b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
+@@ -4086,22 +4086,9 @@ static void ar9003_hw_set_target_power_eeprom(struct ath_hw *ah, u16 freq,
+ 	    ar9003_hw_eeprom_get_ht40_tgt_pwr(ah, HT_TARGET_RATE_23, freq,
+ 					      is2GHz) + ht40PowerIncForPdadc;
+ 
+-	while (i < ar9300RateSize) {
+-		ath_dbg(common, ATH_DBG_EEPROM,
+-			"TPC[%02d] 0x%08x ", i, targetPowerValT2[i]);
+-		i++;
+-
+-		ath_dbg(common, ATH_DBG_EEPROM,
+-			"TPC[%02d] 0x%08x ", i, targetPowerValT2[i]);
+-		i++;
+-
+-		ath_dbg(common, ATH_DBG_EEPROM,
+-			"TPC[%02d] 0x%08x ", i, targetPowerValT2[i]);
+-		i++;
+-
++	for (i = 0; i < ar9300RateSize; i++) {
+ 		ath_dbg(common, ATH_DBG_EEPROM,
+ 			"TPC[%02d] 0x%08x\n", i, targetPowerValT2[i]);
+-		i++;
+ 	}
+ }
+ 
+@@ -4689,17 +4676,7 @@ static void ath9k_hw_ar9300_set_txpower(struct ath_hw *ah,
+ 
+ 	for (i = 0; i < ar9300RateSize; i++) {
+ 		ath_dbg(common, ATH_DBG_EEPROM,
+-			"TPC[%02d] 0x%08x ", i, targetPowerValT2[i]);
+-		i++;
+-		ath_dbg(common, ATH_DBG_EEPROM,
+-			"TPC[%02d] 0x%08x ", i, targetPowerValT2[i]);
+-		i++;
+-		ath_dbg(common, ATH_DBG_EEPROM,
+-			"TPC[%02d] 0x%08x ", i, targetPowerValT2[i]);
+-		i++;
+-		ath_dbg(common, ATH_DBG_EEPROM,
+-			"TPC[%02d] 0x%08x\n\n", i, targetPowerValT2[i]);
+-		i++;
++			"TPC[%02d] 0x%08x\n", i, targetPowerValT2[i]);
+ 	}
+ 
+ 	/*
 -- 
-Rafał
+1.7.3.2.245.g03276.dirty
+
