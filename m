@@ -1,162 +1,82 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.19.149.2]:49193 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752591Ab0LVSb7 convert rfc822-to-8bit (ORCPT
+Received: from mail.candelatech.com ([208.74.158.172]:47916 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757192Ab0LCIEv (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 22 Dec 2010 13:31:59 -0500
-Received: from mail.atheros.com ([10.10.20.105])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Wed, 22 Dec 2010 10:31:42 -0800
-Date: Wed, 22 Dec 2010 13:31:55 -0500
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: Hauke Mehrtens <hauke@hauke-m.de>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"mcgrof@infradead.org" <mcgrof@infradead.org>,
-	Luis Rodriguez <Luis.Rodriguez@Atheros.com>
-Subject: Re: [PATCH] compat-wireless: build led support conditionally
-Message-ID: <20101222183155.GB8384@tux>
-References: <1293041434-3594-1-git-send-email-hauke@hauke-m.de>
- <AANLkTik9=gSpE6sRoYZu-RZv3PjeQdtf_Y9hc=X-Z7w=@mail.gmail.com>
+	Fri, 3 Dec 2010 03:04:51 -0500
+Message-ID: <4CF8A49C.2000401@candelatech.com>
+Date: Fri, 03 Dec 2010 00:04:44 -0800
+From: Ben Greear <greearb@candelatech.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="iso-8859-1"
-In-Reply-To: <AANLkTik9=gSpE6sRoYZu-RZv3PjeQdtf_Y9hc=X-Z7w=@mail.gmail.com>
+To: Mohammed Shafi <shafi.wireless@gmail.com>
+CC: Senthil Balasubramanian <senthilkumar@atheros.com>,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH v2 2/2] ath9k: Fix STA disconnect issue due to received
+ MIC failed bcast frames
+References: <1291201205-1541-1-git-send-email-senthilkumar@atheros.com>	<4CF6A8FD.6020508@candelatech.com>	<AANLkTik7L-Ybcq6N=3daQefbycV3h9+=YtFV8_c3JW24@mail.gmail.com>	<4CF73249.3040203@candelatech.com> <AANLkTinrQYN3_GpbfR=4xcJQ-moa32+QJtVorqq6xgR4@mail.gmail.com>
+In-Reply-To: <AANLkTinrQYN3_GpbfR=4xcJQ-moa32+QJtVorqq6xgR4@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Dec 22, 2010 at 10:23:48AM -0800, Luis R. Rodriguez wrote:
-> On Wed, Dec 22, 2010 at 1:10 PM, Hauke Mehrtens <hauke@hauke-m.de> wrote:
-> > diff --git a/config.mk b/config.mk
-> > index 964c646..1f95908 100644
-> > --- a/config.mk
-> > +++ b/config.mk
-> > @@ -133,7 +133,9 @@ CONFIG_COMPAT_MAC80211_RC_DEFAULT=minstrel_ht
-> >  CONFIG_MAC80211_RC_PID=y
-> >  CONFIG_MAC80211_RC_MINSTREL=y
-> >  CONFIG_MAC80211_RC_MINSTREL_HT=y
-> > +ifdef CONFIG_LEDS_TRIGGERS
-> >  CONFIG_MAC80211_LEDS=y
-> > +endif #CONFIG_LEDS_TRIGGERS
-> 
-> Without using a space for the ifdef'd variable the
-> include/linux/compat_autoconf.h will end up still defining it but you
-> should not get it set on the local Makefiles, in this case we want it
-> to not be defined in the compat_autoconf.h as well so how about
-> instead (handing off to my atheros address as I use mutt there, one
-> second)
+On 12/01/2010 11:16 PM, Mohammed Shafi wrote:
+> On Thu, Dec 2, 2010 at 11:14 AM, Ben Greear<greearb@candelatech.com>  wrote:
+>> On 12/01/2010 09:09 PM, Mohammed Shafi wrote:
+>>>
+>>> On Thu, Dec 2, 2010 at 1:28 AM, Ben Greear<greearb@candelatech.com>
+>>>   wrote:
+>>>>
+>>>> On 12/01/2010 03:00 AM, Senthil Balasubramanian wrote:
+>>>>>
+>>>>> AR_RxKeyIdxValid will not be set for bcast/mcast frames and so relying
+>>>>> this status for MIC failed frames is buggy.
+>>>>>
+>>>>> Due to this, MIC failure events for broadcast frames are not sent to
+>>>>> supplicant resulted in AP disconnecting the STA.
+>>>>>
+>>>>> Able to pass Wifi Test case 5.2.18 with this fix.
+>>>>
+>>>> Please do not apply this yet.  As far as I can tell, either
+>>>> of these patches breaks multiple VIF scenarios.  I'm not
+>>>> sure exactly why, but I had to revert this to get any
+>>>> of my interfaces to associate.
+>>>
+>>> Ben can you please give some more information(or just point out some
+>>> link) regarding your test case,I can try it out.
+>>> thanks,
+>>> shafi
+>>
+>> Try this script, or something like it:
+>>
+>> http://www.spinics.net/lists/linux-wireless/msg60126.html
+>>
+>> Edit 'max' to create a small number of STA interfaces or you will probably
+>> have
+>> worse issues than them just not associating!
+>>
+>> You have to enable the nohwcrypt module option.
+>>
+>> Let me know if that doesn't work and I can probably put together something
+>> more specific.
+>
+> thanks Ben.
 
->From 47d9c7d253a7b2a78af69f0d8177ee55df74ea0e Mon Sep 17 00:00:00 2001
-From: Hauke Mehrtens <hauke@hauke-m.de>
-Date: Wed, 22 Dec 2010 19:10:34 +0100
-Subject: [PATCH] compat-wireless: build led support conditionally
+Were you able to reproduce the problem?
 
-Do not build compat-wireless with LED support when the kernel does not
-contain a led subsystem.
-This fixes some compile problems when CONFIG_LEDS_TRIGGERS is not set.
+Thanks,
+Ben
 
-Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
----
- config.mk |   36 +++++++++++++++++++++++++++---------
- 1 files changed, 27 insertions(+), 9 deletions(-)
+>
+>>
+>> Thanks,
+>> Ben
+>>
+>> --
+>> Ben Greear<greearb@candelatech.com>
+>> Candela Technologies Inc  http://www.candelatech.com
+>>
 
-diff --git a/config.mk b/config.mk
-index 964c646..3a38d34 100644
---- a/config.mk
-+++ b/config.mk
-@@ -133,7 +133,9 @@ CONFIG_COMPAT_MAC80211_RC_DEFAULT=minstrel_ht
- CONFIG_MAC80211_RC_PID=y
- CONFIG_MAC80211_RC_MINSTREL=y
- CONFIG_MAC80211_RC_MINSTREL_HT=y
--CONFIG_MAC80211_LEDS=y
-+ifdef CONFIG_LEDS_TRIGGERS
-+ CONFIG_MAC80211_LEDS=y
-+endif #CONFIG_LEDS_TRIGGERS
- 
- # enable mesh networking too
- CONFIG_MAC80211_MESH=y
-@@ -243,7 +245,9 @@ CONFIG_B43_PCI_AUTOSELECT=y
- ifdef CONFIG_PCMCIA
- CONFIG_B43_PCMCIA=y
- endif #CONFIG_PCMCIA
--CONFIG_B43_LEDS=y
-+ifdef CONFIG_MAC80211_LEDS
-+ CONFIG_B43_LEDS=y
-+endif #CONFIG_MAC80211_LEDS
- CONFIG_B43_PHY_LP=y
- CONFIG_B43_PHY_N=y
- # CONFIG_B43_FORCE_PIO=y
-@@ -252,7 +256,9 @@ CONFIG_B43_PHY_N=y
- CONFIG_B43LEGACY=m
- CONFIG_B43LEGACY_HWRNG=y
- CONFIG_B43LEGACY_PCI_AUTOSELECT=y
--CONFIG_B43LEGACY_LEDS=y
-+ifdef CONFIG_MAC80211_LEDS
-+ CONFIG_B43LEGACY_LEDS=y
-+endif #CONFIG_MAC80211_LEDS
- # CONFIG_B43LEGACY_DEBUG=y
- CONFIG_B43LEGACY_DMA=y
- CONFIG_B43LEGACY_PIO=y
-@@ -408,18 +414,24 @@ endif #CONFIG_COMPAT_KERNEL_29
- 
- CONFIG_P54_USB=m
- CONFIG_RTL8187=m
--CONFIG_RTL8187_LEDS=y
-+ifdef CONFIG_MAC80211_LEDS
-+ CONFIG_RTL8187_LEDS=y
-+endif #CONFIG_MAC80211_LEDS
- 
- CONFIG_AT76C50X_USB=m
- 
- ifndef CONFIG_COMPAT_KERNEL_28
- CONFIG_AR9170_USB=m
--CONFIG_AR9170_LEDS=y
-+ifdef CONFIG_MAC80211_LEDS
-+ CONFIG_AR9170_LEDS=y
-+endif #CONFIG_MAC80211_LEDS
- endif #CONFIG_COMPAT_KERNEL_28
- 
- ifndef CONFIG_COMPAT_KERNEL_29
- CONFIG_CARL9170=m
--CONFIG_CARL9170_LEDS=y
-+ifdef CONFIG_MAC80211_LEDS
-+ CONFIG_CARL9170_LEDS=y
-+endif #CONFIG_MAC80211_LEDS
- # CONFIG_CARL9170_DEBUGFS=y
- # CONFIG_CARL9170_WPC=y
- endif #CONFIG_COMPAT_KERNEL_29
-@@ -559,7 +571,9 @@ CONFIG_RT2X00_LIB_CRYPTO=y
- ifdef CONFIG_COMPAT_KERNEL_25
- CONFIG_RT2X00_LIB_LEDS=n
- else #CONFIG_COMPAT_KERNEL_25
--CONFIG_RT2X00_LIB_LEDS=y
-+ifdef CONFIG_LEDS_CLASS
-+ CONFIG_RT2X00_LIB_LEDS=y
-+endif #CONFIG_LEDS_CLASS
- endif #CONFIG_COMPAT_KERNEL_25
- # CONFIG_RT2X00_DEBUG=y
- # CONFIG_RT2X00_LIB_DEBUGFS
-@@ -567,7 +581,9 @@ endif
- 
- # p54
- CONFIG_P54_COMMON=m
--CONFIG_P54_LEDS=y
-+ifdef CONFIG_MAC80211_LEDS
-+ CONFIG_P54_LEDS=y
-+endif #CONFIG_MAC80211_LEDS
- 
- # Atheros
- CONFIG_ATH_COMMON=m
-@@ -594,7 +610,9 @@ endif #CONFIG_COMPAT_KERNEL_27
- # In more recent kernel versions use the in kernel rfkill module.
- ifdef CONFIG_COMPAT_KERNEL_31
- CONFIG_RFKILL_BACKPORT=m
--CONFIG_RFKILL_BACKPORT_LEDS=y
-+ifdef CONFIG_LEDS_TRIGGERS
-+ CONFIG_RFKILL_BACKPORT_LEDS=y
-+endif #CONFIG_LEDS_TRIGGERS
- CONFIG_RFKILL_BACKPORT_INPUT=y
- endif #CONFIG_COMPAT_KERNEL_31
- 
+
 -- 
-1.7.3.2.90.gd4c43
-
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
