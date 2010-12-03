@@ -1,49 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f45.google.com ([209.85.214.45]:59028 "EHLO
-	mail-bw0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752978Ab0LIGur (ORCPT
+Received: from mail-vw0-f46.google.com ([209.85.212.46]:55755 "EHLO
+	mail-vw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753108Ab0LCBJu (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 9 Dec 2010 01:50:47 -0500
-Received: by bwz16 with SMTP id 16so2285319bwz.4
-        for <linux-wireless@vger.kernel.org>; Wed, 08 Dec 2010 22:50:46 -0800 (PST)
-From: Christian Lamparter <chunkeey@googlemail.com>
-To: Wade Fitzpatrick <wade.fitzpatrick@gmail.com>
-Subject: Re: carl9170 connect/disconnect loop
-Date: Thu, 9 Dec 2010 07:50:26 +0100
-Cc: linux-wireless@vger.kernel.org
-References: <AANLkTingL2eooC2+jH6nQVADKZBFemE=6eTQ_Vhx_Swx@mail.gmail.com> <201012070032.23135.chunkeey@googlemail.com> <4D006D31.4000604@gmail.com>
-In-Reply-To: <4D006D31.4000604@gmail.com>
+	Thu, 2 Dec 2010 20:09:50 -0500
+Received: by vws16 with SMTP id 16so1489912vws.19
+        for <linux-wireless@vger.kernel.org>; Thu, 02 Dec 2010 17:09:49 -0800 (PST)
+Message-ID: <4CF84354.1090803@lwfinger.net>
+Date: Thu, 02 Dec 2010 19:09:40 -0600
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="utf-8"
-Message-Id: <201012090750.27563.chunkeey@googlemail.com>
+To: =?UTF-8?B?TWljaGFlbCBCw7xzY2g=?= <mb@bu3sch.de>
+CC: John W Linville <linville@tuxdriver.com>,
+	b43-dev@lists.infradead.org, linux-wireless@vger.kernel.org
+Subject: Re: [RFC/RFT] ssb: Attempt to recover from SPROM CRC error
+References: <4cf7cb25.SwkH7gALTG7E00Zb%Larry.Finger@lwfinger.net>	 (sfid-20101202_173713_192185_FFFFFFFF949EBC0D) <1291328154.13801.0.camel@maggie>
+In-Reply-To: <1291328154.13801.0.camel@maggie>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thursday 09 December 2010 06:46:25 Wade Fitzpatrick wrote:
+On 12/02/2010 04:15 PM, Michael Büsch wrote:
+> On Thu, 2010-12-02 at 10:36 -0600, Larry Finger wrote: 
+>> Current code defaults to SPROM revision 1 if there is a CRC error. In at
+>> least one known case, most of the corrupt contents are reasonable and
+>> it is possible to extract the correct MAC address and TX power settings
+>> from what is read. With this patch, an attempt is made to match the
+>> apparent revision number with certain SPROM signatures. For those revisions
+>> without such a feature, a reasonable guess is made. If the apparent
+>> revision is invalid, or if the signature does not match, the previous
+>> behavior is kept.
+>>
+>> Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+>> ---
+>>
+>> John,
+>>
+>> Could you please test this patch with your card?
+>>
+>> Thanks,
+>>
+>> Larry
+>> ---
+>>
+>> Index: linux-2.6/drivers/ssb/pci.c
+>> ===================================================================
+>> --- linux-2.6.orig/drivers/ssb/pci.c
+>> +++ linux-2.6/drivers/ssb/pci.c
+>> @@ -620,6 +620,7 @@ static int ssb_pci_sprom_get(struct ssb_
+>>  	const struct ssb_sprom *fallback;
+>>  	int err = -ENOMEM;
+>>  	u16 *buf;
+>> +	u16 revision;
+>>  
+>>  	if (!ssb_is_sprom_available(bus)) {
+>>  		ssb_printk(KERN_ERR PFX "No SPROM available!\n");
+>> @@ -671,6 +672,50 @@ static int ssb_pci_sprom_get(struct ssb_
+>>  			}
+>>  			ssb_printk(KERN_WARNING PFX "WARNING: Invalid"
+>>  				   " SPROM CRC (corrupt SPROM)\n");
+>> +			/* At this point, we have a faulty SPROM image.
+>> +			 * In case only part of it is corrupt, try to
+>> +			 * determine what rev we might have */
+>> +			revision = buf[SSB_SPROMSIZE_WORDS_R4 - 1] & 0x00FF;
 > 
-> On 07/12/10 10:32, Christian Lamparter wrote:
-> > mac80211 comes with some powerful debug tools.
-> > Since you get the disconnects fairly quickly, you should
-> > setup a wlan monitor.
-> >
-> > <http://linuxwireless.org/en/users/Documentation/iw#Adding_interfaces_with_iw>
-> >   iw dev wlan1 interface add mon type monitor flags otherbss control
-> >   ifconfig mon up
-> >
-> I'm getting a kernel panic just after bringing up the interface with 
-> ifconfig. It mentions this info:
-> 
-> skb_under_panic ...
-> kernel BUG at net/core/skbuff.c:146!
-> Call Trace:
-> <IRQ>
->    skb_defer_rx_timestamp
->    netif_receive_skb
-never seen this one before, but maybe I was just lucky.
-Because googling the BUG actually gave me this:
+> I think this could possibly overrun the buffer, or did I get something
+> wrong?
 
-http://patchwork.ozlabs.org/patch/73998/ (scroll down to the bottom)
+At this point, we have gotten a CRC error with the small SPROM and expanded the
+memory for the 440 byte size, and gotten a second CRC error. This test will be
+OK here.
 
-Best regards,
-	Christian
+Larry
