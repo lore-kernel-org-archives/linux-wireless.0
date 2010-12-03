@@ -1,74 +1,90 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-vw0-f46.google.com ([209.85.212.46]:57619 "EHLO
-	mail-vw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752241Ab0LOQio convert rfc822-to-8bit (ORCPT
+Received: from mail-qy0-f194.google.com ([209.85.216.194]:59813 "EHLO
+	mail-qy0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751729Ab0LCHXN (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 15 Dec 2010 11:38:44 -0500
-Received: by vws16 with SMTP id 16so860604vws.19
-        for <linux-wireless@vger.kernel.org>; Wed, 15 Dec 2010 08:38:43 -0800 (PST)
+	Fri, 3 Dec 2010 02:23:13 -0500
+Received: by qyk4 with SMTP id 4so2799835qyk.1
+        for <linux-wireless@vger.kernel.org>; Thu, 02 Dec 2010 23:23:12 -0800 (PST)
 MIME-Version: 1.0
-In-Reply-To: <20101214192421.GA11764@sig21.net>
-References: <201012131231.28313.IvDoorn@gmail.com>
-	<201012131236.19791.IvDoorn@gmail.com>
-	<201012131236.39071.IvDoorn@gmail.com>
-	<201012141849.48488.helmut.schaa@googlemail.com>
-	<AANLkTimMGtZsY-ZhbR4Nt7Mh4W8KSAfAhbe3yF07ezaO@mail.gmail.com>
-	<20101214192421.GA11764@sig21.net>
-Date: Wed, 15 Dec 2010 17:38:43 +0100
-Message-ID: <AANLkTimrcNxiVjRHUULLF=Dqc-DxH9To8HbF749eCPQe@mail.gmail.com>
-Subject: Re: [PATCH 14/17] rt2x00: Fix WMM Queue naming
-From: Ivo Van Doorn <ivdoorn@gmail.com>
-To: Johannes Stezenbach <js@sig21.net>
-Cc: Helmut Schaa <helmut.schaa@googlemail.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com,
-	jay.weihung@gmail.com
-Content-Type: text/plain; charset=ISO-8859-1
+Reply-To: sedat.dilek@gmail.com
+In-Reply-To: <20101203041109.GE2988@makis.mantri>
+References: <20101203041109.GE2988@makis.mantri>
+Date: Fri, 3 Dec 2010 08:23:12 +0100
+Message-ID: <AANLkTin-mr1zRY8gxALLFnD6XHg1QEMPq90nXt=iuWkv@mail.gmail.com>
+Subject: Re: [PATCH 5/6] ath5k: Update version string
+From: Sedat Dilek <sedat.dilek@googlemail.com>
+To: ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org,
+	linville@tuxdriver.com, me@bobcopeland.com, mcgrof@gmail.com,
+	jirislaby@gmail.com, nbd@openwrt.org, br1@einfach.org,
+	sedat.dilek@googlemail.com
+Content-Type: multipart/mixed; boundary=00163631020d3c1a3b04967c69d0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+--00163631020d3c1a3b04967c69d0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
 
->> >> The Queue names were incorrectly copied from the legacy drivers,
->> >> as a result the queue names were inversed to what was expected.
->> >>
->> >> This renames the queues using this mapping:
->> >>       QID_AC_BK -> QID_AC_VO (priority 0)
->> >>       QID_AC_BE -> QID_AC_VI (priority 1)
->> >>       QID_AC_VI -> QID_AC_BE (priority 2)
->> >>       QID_AC_VO -> QID_AC_BK (priority 3)
->> >>
->> >> Note that this was a naming problem only, which didn't affect
->> >> the assignment of frames to their respective queues.
->> >>
->> >> Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
->> >
->> > Ivo, due to the latest info from Ralink I'd say we should drop this patch
->> > and instead introduce a mac80211_to_rt2x00_qid mapper that maps from
->> > ieee80211_ac_numbers to data_queue_qid.
->> >
->> > This patch doesn't cause any harm, but we would have to revert it partly
->> > if we introduce the queue mapping as needed by the rt2x00 devices.
->>
->> I don't agree, this patch can safely be applied, since the mapping
->> is in the endpoint assignment, rather the register value usage,
->> I think the more optimal solution is fixing rt2x00usb_assign_endpoints.
->> In there it currently assigns endpoints assuming the first endpoint
->> is the highest priority, while we should be able to simply swap that
->> to invert the logic.
+On Fri, Dec 3, 2010 at 5:11 AM, Nick Kossifidis <mickflemm@gmail.com> wrote=
+:
+> =C2=A0* Change version number, we've added various new features lately.
+> =C2=A0We need to find a way to maintain this, maybe on each kernel releas=
+e
+> =C2=A0or something. Also remove "EXPERIMENTAL", we aren't experimental an=
+y
+> =C2=A0more I think ;-)
 >
-> Inverting is not enough since the first OUT EP (EP1) is AC_BE,
-> while AC_BK (lowest priority) is EP2.  This corresponds to the
-> to the AC -> ACI mapping from 802.11 Table 7-36 in section
-> "7.3.2.29 EDCA Parameter Set element".  Probably the rationale
-> is that ACI value 0 should be the "default" AC.
+> =C2=A0Signed-off-by: Nick Kossifidis <mickflemm@gmail.com>
+>
+> ---
+> =C2=A0drivers/net/wireless/ath/ath5k/base.c | =C2=A0 =C2=A02 +-
+> =C2=A01 files changed, 1 insertions(+), 1 deletions(-)
+>
+> diff --git a/drivers/net/wireless/ath/ath5k/base.c b/drivers/net/wireless=
+/ath/ath5k/base.c
+> index 6edfa9f..835ab3a 100644
+> --- a/drivers/net/wireless/ath/ath5k/base.c
+> +++ b/drivers/net/wireless/ath/ath5k/base.c
+> @@ -78,7 +78,7 @@ MODULE_AUTHOR("Nick Kossifidis");
+> =C2=A0MODULE_DESCRIPTION("Support for 5xxx series of Atheros 802.11 wirel=
+ess LAN cards.");
+> =C2=A0MODULE_SUPPORTED_DEVICE("Atheros 5xxx WLAN cards");
+> =C2=A0MODULE_LICENSE("Dual BSD/GPL");
+> -MODULE_VERSION("0.6.0 (EXPERIMENTAL)");
+> +MODULE_VERSION("0.7.0");
+>
+> =C2=A0static int ath5k_reset(struct ath5k_softc *sc, struct ieee80211_cha=
+nnel *chan,
+> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=
+=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =
+=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=
+=A0bool skip_pcu);
+>
 
-Ok, but that still means that we can apply this logic in the
-assign_endpoints function.
+Against linux-next (next-20101203) this patch needs a refresh (see attached=
+ v2).
+Guess you created your patchset from wireless-testing.
 
-Jay, can you confirm the endpoint assignment is the same
-for rt73usb?
+- Sedat -
 
-Thanks,
+--00163631020d3c1a3b04967c69d0
+Content-Type: plain/text; name="5-6-ath5k-Update-version-string-v2.patch"
+Content-Disposition: attachment;
+	filename="5-6-ath5k-Update-version-string-v2.patch"
+Content-Transfer-Encoding: base64
+X-Attachment-Id: f_gh8qyu3r0
 
-Ivo
+SW5kZXg6IGxpbnV4LW5leHQtMjAxMDEyMDMvZHJpdmVycy9uZXQvd2lyZWxlc3MvYXRoL2F0aDVr
+L2Jhc2UuYwo9PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09
+PT09PT09PT09PT09PT09PT09Ci0tLSBsaW51eC1uZXh0LTIwMTAxMjAzLm9yaWcvZHJpdmVycy9u
+ZXQvd2lyZWxlc3MvYXRoL2F0aDVrL2Jhc2UuYworKysgbGludXgtbmV4dC0yMDEwMTIwMy9kcml2
+ZXJzL25ldC93aXJlbGVzcy9hdGgvYXRoNWsvYmFzZS5jCkBAIC03Niw3ICs3Niw3IEBACiBNT0RV
+TEVfREVTQ1JJUFRJT04oIlN1cHBvcnQgZm9yIDV4eHggc2VyaWVzIG9mIEF0aGVyb3MgODAyLjEx
+IHdpcmVsZXNzIExBTiBjYXJkcy4iKTsKIE1PRFVMRV9TVVBQT1JURURfREVWSUNFKCJBdGhlcm9z
+IDV4eHggV0xBTiBjYXJkcyIpOwogTU9EVUxFX0xJQ0VOU0UoIkR1YWwgQlNEL0dQTCIpOwotTU9E
+VUxFX1ZFUlNJT04oIjAuNi4wIChFWFBFUklNRU5UQUwpIik7CitNT0RVTEVfVkVSU0lPTigiMC43
+LjAiKTsKIAogc3RhdGljIGludCBhdGg1a19pbml0KHN0cnVjdCBpZWVlODAyMTFfaHcgKmh3KTsK
+IHN0YXRpYyBpbnQgYXRoNWtfcmVzZXQoc3RydWN0IGF0aDVrX3NvZnRjICpzYywgc3RydWN0IGll
+ZWU4MDIxMV9jaGFubmVsICpjaGFuLAo=
+--00163631020d3c1a3b04967c69d0--
