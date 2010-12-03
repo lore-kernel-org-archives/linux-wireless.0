@@ -1,54 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iw0-f194.google.com ([209.85.214.194]:33850 "EHLO
-	mail-iw0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753756Ab0LQTwM convert rfc822-to-8bit (ORCPT
+Received: from mail-fx0-f46.google.com ([209.85.161.46]:54840 "EHLO
+	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756216Ab0LCAQY (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 17 Dec 2010 14:52:12 -0500
-Received: by iwn42 with SMTP id 42so512581iwn.1
-        for <linux-wireless@vger.kernel.org>; Fri, 17 Dec 2010 11:52:11 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <1292598876-8242-1-git-send-email-mshajakhan@atheros.com>
-References: <1292598876-8242-1-git-send-email-mshajakhan@atheros.com>
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Date: Fri, 17 Dec 2010 11:51:50 -0800
-Message-ID: <AANLkTiky2ODWt-ocSy_+=9k9_E=7ekvLMLbQtir-cd-r@mail.gmail.com>
-Subject: Re: [PATCH] ath9k: Properly initialize channel table for 2GHz
-To: Mohammed Shafi Shajakhan <mshajakhan@atheros.com>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+	Thu, 2 Dec 2010 19:16:24 -0500
+Received: by fxm20 with SMTP id 20so1707877fxm.19
+        for <linux-wireless@vger.kernel.org>; Thu, 02 Dec 2010 16:16:23 -0800 (PST)
+From: Eliad Peller <eliad@wizery.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: <linux-wireless@vger.kernel.org>
+Subject: [PATCH v2] mac80211: fix dynamic-ps/pm_qos magic numbers
+Date: Fri,  3 Dec 2010 02:16:23 +0200
+Message-Id: <1291335383-17239-1-git-send-email-eliad@wizery.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Dec 17, 2010 at 7:14 AM, Mohammed Shafi Shajakhan
-<mshajakhan@atheros.com> wrote:
-> From: Mohammed Shafi Shajakhan <mshajakhan@atheros.com>
->
-> ath9k channel table for 2Ghz does not seems to initialize the 'band'
-> parameter.Though it does not seems to cause any visible issue it looks
-> odd when we initialize the 'band' parameter for 5Ghz channel table while
-> not so for 2Ghz.
->
-> Signed-off-by: Mohammed Shafi Shajakhan <mshajakhan@atheros.com>
-> ---
->  drivers/net/wireless/ath/ath9k/init.c |    1 +
->  1 files changed, 1 insertions(+), 0 deletions(-)
->
-> diff --git a/drivers/net/wireless/ath/ath9k/init.c b/drivers/net/wireless/ath/ath9k/init.c
-> index 1238795..b0e5e71 100644
-> --- a/drivers/net/wireless/ath/ath9k/init.c
-> +++ b/drivers/net/wireless/ath/ath9k/init.c
-> @@ -48,6 +48,7 @@ MODULE_PARM_DESC(pmqos, "User specified PM-QOS value");
->  /* We use the hw_value as an index into our private channel structure */
->
->  #define CHAN2G(_freq, _idx)  { \
-> +       .band = IEEE80211_BAND_2GHZ, \
->        .center_freq = (_freq), \
->        .hw_value = (_idx), \
->        .max_power = 20, \
+mac80211 uses pm_qos (/dev/network_latency) in order to determine the
+dynamic ps timeout (or disable the dynamic-ps at all in some cases).
 
-That's fine but its not needed at all as the band is already
-kzalloc()'d so it gets zeroed out and the IEEE80211_BAND_2GHZ enum is
-0, so its not required to be explicit and set it. But if it gives you
-the warm fuzzies sure.
+commit ff616381 added a comparison for the current network_latency
+against one high value (1900ms), and against the default value
+(2000sec, rather than the commented 2sec).
 
-  Luis
+however, the representation of 1900ms was incorrect:
+1900ms = 1900000us ( != 1900000000 )
+
+fix it by using USEC_TO_MSEC/SEC consts.
+
+Signed-off-by: Eliad Peller <eliad@wizery.com>
+---
+v1->2: better commit msg
+
+ net/mac80211/mlme.c |    9 +++++----
+ 1 files changed, 5 insertions(+), 4 deletions(-)
+
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+index dfc4a31..e01d6fb 100644
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -619,11 +619,12 @@ void ieee80211_recalc_ps(struct ieee80211_local *local, s32 latency)
+ 			/*
+ 			 * Go to full PSM if the user configures a very low
+ 			 * latency requirement.
+-			 * The 2 second value is there for compatibility until
+-			 * the PM_QOS_NETWORK_LATENCY is configured with real
+-			 * values.
++			 * The 2000 second value is there for compatibility
++			 * until the PM_QOS_NETWORK_LATENCY is configured
++			 * with real values.
+ 			 */
+-			if (latency > 1900000000 && latency != 2000000000)
++			if (latency > (1900 * USEC_PER_MSEC) &&
++			    latency != (2000 * USEC_PER_SEC))
+ 				timeout = 0;
+ 			else
+ 				timeout = 100;
+-- 
+1.7.0.4
+
