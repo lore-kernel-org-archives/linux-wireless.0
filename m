@@ -1,58 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail30t.wh2.ocn.ne.jp ([125.206.180.136]:14285 "HELO
-	mail30t.wh2.ocn.ne.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1752996Ab0LGCXX convert rfc822-to-8bit (ORCPT
+Received: from mail-qy0-f181.google.com ([209.85.216.181]:42157 "EHLO
+	mail-qy0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752717Ab0LCGet convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 6 Dec 2010 21:23:23 -0500
-Received: from vs3014.wh2.ocn.ne.jp (125.206.180.187)
-	by mail30t.wh2.ocn.ne.jp (RS ver 1.0.95vs) with SMTP id 5-0388498597
-	for <linux-wireless@vger.kernel.org>; Tue,  7 Dec 2010 11:23:21 +0900 (JST)
-From: Bruno Randolf <br1@einfach.org>
-To: "linux-wireless" <linux-wireless@vger.kernel.org>
-Subject: build error without  CONFIG_MAC80211_MESH
-Date: Tue, 7 Dec 2010 11:23:03 +0900
-Cc: linville@tuxdriver.com, Johannes Berg <johannes@sipsolutions.net>
+	Fri, 3 Dec 2010 01:34:49 -0500
+Received: by mail-qy0-f181.google.com with SMTP id 12so11298293qyk.19
+        for <linux-wireless@vger.kernel.org>; Thu, 02 Dec 2010 22:34:49 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="utf-8"
-Message-Id: <201012071123.03046.br1@einfach.org>
+Reply-To: sedat.dilek@gmail.com
+In-Reply-To: <20101203040519.GB2988@makis.mantri>
+References: <20101203040519.GB2988@makis.mantri>
+Date: Fri, 3 Dec 2010 07:34:48 +0100
+Message-ID: <AANLkTim7F82Y5qj2kZP=5Jn-3xV3vPnSNci5WVkfuAVs@mail.gmail.com>
+Subject: Re: [PATCH 2/6] ath5k: Always free tx buffers before reset
+From: Sedat Dilek <sedat.dilek@googlemail.com>
+To: ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org,
+	linville@tuxdriver.com, me@bobcopeland.com, mcgrof@gmail.com,
+	jirislaby@gmail.com, nbd@openwrt.org, br1@einfach.org,
+	sedat.dilek@googlemail.com
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi!
+Tested-by: Sedat Dilek <sedat.dilek@gmail.com>
 
-Building current wireless-testing (master-2010-12-06) without the Mesh option 
-is broken:
-
-  CC [M]  net/mac80211/main.o
-/home/br1/ath/wireless-testing/net/mac80211/main.c: In function 
-‘ieee80211_bss_info_change_notify’:
-/home/br1/ath/wireless-testing/net/mac80211/main.c:250: error: ‘union 
-<anonymous>’ has no member named ‘mesh’
-make[3]: *** [net/mac80211/main.o] Error 1
-make[2]: *** [net/mac80211] Error 2
-make[1]: *** [net] Error 2
-make: *** [sub-make] Error 2
-
-It needs something like:
-
-diff --git a/net/mac80211/main.c b/net/mac80211/main.c
-index 40bd12e..3d988ca 100644
---- a/net/mac80211/main.c
-+++ b/net/mac80211/main.c
-@@ -245,10 +245,12 @@ void ieee80211_bss_info_change_notify(struct 
-ieee80211_sub_if_data *sdata,
-                                sdata->vif.bss_conf.enable_beacon =
-                                        !!sdata->u.ibss.presp;
-                                break;
-+#ifdef CONFIG_MAC80211_MESH
-                        case NL80211_IFTYPE_MESH_POINT:
-                                sdata->vif.bss_conf.enable_beacon =
-                                        !!sdata->u.mesh.mesh_id_len;
-                                break;
-+#endif
-                        default:
-                                /* not reached */
-                                WARN_ON(1);
-
-bruno
+On Fri, Dec 3, 2010 at 5:05 AM, Nick Kossifidis <mickflemm@gmail.com> wrote:
+>  * Always free tx buffers before reset, since we also empty hw queues.
+>  If we don't and a queue gets stuck, we'll never decrease txq_len and sw
+>  will keep thinking the queue is still stuck even after reset.
+>
+>  Signed-off-by: Nick Kossifidis <mickflemm@gmail.com>
+>
+> ---
+>  drivers/net/wireless/ath/ath5k/base.c |    6 ++++--
+>  1 files changed, 4 insertions(+), 2 deletions(-)
+>
+> diff --git a/drivers/net/wireless/ath/ath5k/base.c b/drivers/net/wireless/ath/ath5k/base.c
+> index a8d380a..047b2a0 100644
+> --- a/drivers/net/wireless/ath/ath5k/base.c
+> +++ b/drivers/net/wireless/ath/ath5k/base.c
+> @@ -2512,9 +2512,11 @@ ath5k_reset(struct ath5k_softc *sc, struct ieee80211_channel *chan,
+>        synchronize_irq(sc->pdev->irq);
+>        stop_tasklets(sc);
+>
+> +       /* We are going to empty hw queues
+> +        * so we should also free any remaining
+> +        * tx buffers */
+> +       ath5k_drain_tx_buffs(sc);
+>        if (chan) {
+> -               ath5k_drain_tx_buffs(sc);
+> -
+>                sc->curchan = chan;
+>                sc->curband = &sc->sbands[chan->band];
+>        }
+>
