@@ -1,50 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f45.google.com ([209.85.215.45]:47560 "EHLO
-	mail-ew0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754991Ab0LMLkf (ORCPT
+Received: from mail-ey0-f174.google.com ([209.85.215.174]:62183 "EHLO
+	mail-ey0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754003Ab0LCEHf (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 13 Dec 2010 06:40:35 -0500
-Received: by mail-ew0-f45.google.com with SMTP id 10so3803451ewy.4
-        for <linux-wireless@vger.kernel.org>; Mon, 13 Dec 2010 03:40:34 -0800 (PST)
-From: Ivo van Doorn <ivdoorn@gmail.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Subject: [PATCH 15/17] rt2x00: remove stray semicolon
-Date: Mon, 13 Dec 2010 12:38:49 +0100
-Cc: linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com
-References: <201012131231.28313.IvDoorn@gmail.com> <201012131236.19791.IvDoorn@gmail.com> <201012131236.39071.IvDoorn@gmail.com>
-In-Reply-To: <201012131236.39071.IvDoorn@gmail.com>
+	Thu, 2 Dec 2010 23:07:35 -0500
+Received: by eye27 with SMTP id 27so4779063eye.19
+        for <linux-wireless@vger.kernel.org>; Thu, 02 Dec 2010 20:07:33 -0800 (PST)
+Date: Fri, 3 Dec 2010 06:07:13 +0200
+From: Nick Kossifidis <mickflemm@gmail.com>
+To: ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org
+Cc: linville@tuxdriver.com, me@bobcopeland.com, mcgrof@gmail.com,
+	jirislaby@gmail.com, nbd@openwrt.org, br1@einfach.org,
+	sedat.dilek@googlemail.com
+Subject: [PATCH 3/6] ath5k: Disable ANI during reset
+Message-ID: <20101203040713.GC2988@makis.mantri>
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Message-Id: <201012131238.50510.IvDoorn@gmail.com>
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Stezenbach <js@sig21.net>
+ * Stop ANI durring reset to prevent false PHY error reports
 
-The stray semicolon after DEBUG_PRINTK_MSG causes things
-like "if (...) WARNING(...); else {}" to fail with syntax error.
+ Signed-off-by: Nick Kossifidis <mickflemm@gmail.com>
 
-Signed-off-by: Johannes Stezenbach <js@sig21.net>
-Acked-by: Gertjan van Wingerde <gwingerde@gmail.com>
-Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
 ---
- drivers/net/wireless/rt2x00/rt2x00.h |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+ drivers/net/wireless/ath/ath5k/base.c |   10 ++++++++--
+ 1 files changed, 8 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/rt2x00/rt2x00.h b/drivers/net/wireless/rt2x00/rt2x00.h
-index 556b744..5ea62554 100644
---- a/drivers/net/wireless/rt2x00/rt2x00.h
-+++ b/drivers/net/wireless/rt2x00/rt2x00.h
-@@ -66,7 +66,7 @@
+diff --git a/drivers/net/wireless/ath/ath5k/base.c b/drivers/net/wireless/ath/ath5k/base.c
+index 047b2a0..6edfa9f 100644
+--- a/drivers/net/wireless/ath/ath5k/base.c
++++ b/drivers/net/wireless/ath/ath5k/base.c
+@@ -2504,7 +2504,7 @@ ath5k_reset(struct ath5k_softc *sc, struct ieee80211_channel *chan,
+ 							bool skip_pcu)
+ {
+ 	struct ath5k_hw *ah = sc->ah;
+-	int ret;
++	int ret, ani_mode;
  
- #ifdef CONFIG_RT2X00_DEBUG
- #define DEBUG_PRINTK(__dev, __kernlvl, __lvl, __msg, __args...)	\
--	DEBUG_PRINTK_MSG(__dev, __kernlvl, __lvl, __msg, ##__args);
-+	DEBUG_PRINTK_MSG(__dev, __kernlvl, __lvl, __msg, ##__args)
- #else
- #define DEBUG_PRINTK(__dev, __kernlvl, __lvl, __msg, __args...)	\
- 	do { } while (0)
--- 
-1.7.2.3
-
+ 	ATH5K_DBG(sc, ATH5K_DEBUG_RESET, "resetting\n");
+ 
+@@ -2512,6 +2512,12 @@ ath5k_reset(struct ath5k_softc *sc, struct ieee80211_channel *chan,
+ 	synchronize_irq(sc->pdev->irq);
+ 	stop_tasklets(sc);
+ 
++	/* Save ani mode and disable ANI durring
++	 * reset. If we don't we might get false
++	 * PHY error interrupts. */
++	ani_mode = ah->ah_sc->ani_state.ani_mode;
++	ath5k_ani_init(ah, ATH5K_ANI_MODE_OFF);
++
+ 	/* We are going to empty hw queues
+ 	 * so we should also free any remaining
+ 	 * tx buffers */
+@@ -2533,7 +2539,7 @@ ath5k_reset(struct ath5k_softc *sc, struct ieee80211_channel *chan,
+ 		goto err;
+ 	}
+ 
+-	ath5k_ani_init(ah, ah->ah_sc->ani_state.ani_mode);
++	ath5k_ani_init(ah, ani_mode);
+ 
+ 	ah->ah_cal_next_full = jiffies;
+ 	ah->ah_cal_next_ani = jiffies;
