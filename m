@@ -1,51 +1,124 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:50913 "EHLO
+Received: from he.sipsolutions.net ([78.46.109.217]:45559 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752931Ab0LAIon (ORCPT
+	with ESMTP id S1757614Ab0LCI13 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 1 Dec 2010 03:44:43 -0500
-Message-Id: <20101201084348.347508361@sipsolutions.net>
-Date: Wed, 01 Dec 2010 09:43:31 +0100
+	Fri, 3 Dec 2010 03:27:29 -0500
+Message-Id: <20101203082348.687373199@sipsolutions.net>
+Date: Fri, 03 Dec 2010 09:20:42 +0100
 From: Johannes Berg <johannes@sipsolutions.net>
 To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH 5/9] mac80211: publish some rate control docs
-References: <20101201084326.410001080@sipsolutions.net>
+Cc: Javier Cardona <javier@cozybit.com>, linux-wireless@vger.kernel.org
+Subject: [PATCH 3/5] cfg80211: require add_virtual_intf to return new dev
+References: <20101203082039.131181927@sipsolutions.net>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 From: Johannes Berg <johannes.berg@intel.com>
 
-Add an API chapter to the rate control part of
-the mac80211 book and populate it with some
-existing documentation.
+cfg80211 used to do all its bookkeeping in
+the notifier, but some new stuff will have
+to use local variables so make the callback
+return the netdev pointer.
 
+Tested-by: Javier Cardona <javier@cozybit.com>
 Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- Documentation/DocBook/80211.tmpl |   11 +++++++++--
- 1 file changed, 9 insertions(+), 2 deletions(-)
+ include/net/cfg80211.h |   11 +++++++----
+ net/mac80211/cfg.c     |   20 ++++++++++++--------
+ net/wireless/nl80211.c |    7 +++++--
+ 3 files changed, 24 insertions(+), 14 deletions(-)
 
---- wireless-testing.orig/Documentation/DocBook/80211.tmpl	2010-12-01 09:43:18.000000000 +0100
-+++ wireless-testing/Documentation/DocBook/80211.tmpl	2010-12-01 09:43:18.000000000 +0100
-@@ -453,9 +453,16 @@
-          interface and how it relates to mac80211 and drivers.
-         </para>
-       </partintro>
--      <chapter id="dummy">
--        <title>dummy chapter</title>
-+      <chapter id="ratecontrol-api">
-+        <title>Rate Control API</title>
-         <para>TBD</para>
-+!Finclude/net/mac80211.h ieee80211_start_tx_ba_session
-+!Finclude/net/mac80211.h ieee80211_start_tx_ba_cb_irqsafe
-+!Finclude/net/mac80211.h ieee80211_stop_tx_ba_session
-+!Finclude/net/mac80211.h ieee80211_stop_tx_ba_cb_irqsafe
-+!Finclude/net/mac80211.h rate_control_changed
-+!Finclude/net/mac80211.h ieee80211_tx_rate_control
-+!Finclude/net/mac80211.h rate_control_send_low
-       </chapter>
-     </part>
+--- wireless-testing.orig/include/net/cfg80211.h	2010-12-03 09:11:52.000000000 +0100
++++ wireless-testing/include/net/cfg80211.h	2010-12-03 09:13:49.000000000 +0100
+@@ -1033,7 +1033,8 @@ struct cfg80211_pmksa {
+  *
+  * @add_virtual_intf: create a new virtual interface with the given name,
+  *	must set the struct wireless_dev's iftype. Beware: You must create
+- *	the new netdev in the wiphy's network namespace!
++ *	the new netdev in the wiphy's network namespace! Returns the netdev,
++ *	or an ERR_PTR.
+  *
+  * @del_virtual_intf: remove the virtual interface determined by ifindex.
+  *
+@@ -1161,9 +1162,11 @@ struct cfg80211_ops {
+ 	int	(*suspend)(struct wiphy *wiphy);
+ 	int	(*resume)(struct wiphy *wiphy);
  
+-	int	(*add_virtual_intf)(struct wiphy *wiphy, char *name,
+-				    enum nl80211_iftype type, u32 *flags,
+-				    struct vif_params *params);
++	struct net_device * (*add_virtual_intf)(struct wiphy *wiphy,
++						char *name,
++						enum nl80211_iftype type,
++						u32 *flags,
++						struct vif_params *params);
+ 	int	(*del_virtual_intf)(struct wiphy *wiphy, struct net_device *dev);
+ 	int	(*change_virtual_intf)(struct wiphy *wiphy,
+ 				       struct net_device *dev,
+--- wireless-testing.orig/net/mac80211/cfg.c	2010-12-03 09:11:52.000000000 +0100
++++ wireless-testing/net/mac80211/cfg.c	2010-12-03 09:13:49.000000000 +0100
+@@ -19,9 +19,10 @@
+ #include "rate.h"
+ #include "mesh.h"
+ 
+-static int ieee80211_add_iface(struct wiphy *wiphy, char *name,
+-			       enum nl80211_iftype type, u32 *flags,
+-			       struct vif_params *params)
++static struct net_device *ieee80211_add_iface(struct wiphy *wiphy, char *name,
++					      enum nl80211_iftype type,
++					      u32 *flags,
++					      struct vif_params *params)
+ {
+ 	struct ieee80211_local *local = wiphy_priv(wiphy);
+ 	struct net_device *dev;
+@@ -29,12 +30,15 @@ static int ieee80211_add_iface(struct wi
+ 	int err;
+ 
+ 	err = ieee80211_if_add(local, name, &dev, type, params);
+-	if (err || type != NL80211_IFTYPE_MONITOR || !flags)
+-		return err;
++	if (err)
++		return ERR_PTR(err);
+ 
+-	sdata = IEEE80211_DEV_TO_SUB_IF(dev);
+-	sdata->u.mntr_flags = *flags;
+-	return 0;
++	if (type == NL80211_IFTYPE_MONITOR && flags) {
++		sdata = IEEE80211_DEV_TO_SUB_IF(dev);
++		sdata->u.mntr_flags = *flags;
++	}
++
++	return dev;
+ }
+ 
+ static int ieee80211_del_iface(struct wiphy *wiphy, struct net_device *dev)
+--- wireless-testing.orig/net/wireless/nl80211.c	2010-12-03 09:11:52.000000000 +0100
++++ wireless-testing/net/wireless/nl80211.c	2010-12-03 09:13:49.000000000 +0100
+@@ -1368,6 +1368,7 @@ static int nl80211_new_interface(struct
+ {
+ 	struct cfg80211_registered_device *rdev = info->user_ptr[0];
+ 	struct vif_params params;
++	struct net_device *dev;
+ 	int err;
+ 	enum nl80211_iftype type = NL80211_IFTYPE_UNSPECIFIED;
+ 	u32 flags;
+@@ -1403,11 +1404,13 @@ static int nl80211_new_interface(struct
+ 	err = parse_monitor_flags(type == NL80211_IFTYPE_MONITOR ?
+ 				  info->attrs[NL80211_ATTR_MNTR_FLAGS] : NULL,
+ 				  &flags);
+-	err = rdev->ops->add_virtual_intf(&rdev->wiphy,
++	dev = rdev->ops->add_virtual_intf(&rdev->wiphy,
+ 		nla_data(info->attrs[NL80211_ATTR_IFNAME]),
+ 		type, err ? NULL : &flags, &params);
++	if (IS_ERR(dev))
++		return PTR_ERR(dev);
+ 
+-	return err;
++	return 0;
+ }
+ 
+ static int nl80211_del_interface(struct sk_buff *skb, struct genl_info *info)
 
 
