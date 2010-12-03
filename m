@@ -1,257 +1,225 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qy0-f181.google.com ([209.85.216.181]:43058 "EHLO
-	mail-qy0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751200Ab0LFGaR (ORCPT
+Received: from mail-ww0-f44.google.com ([74.125.82.44]:58692 "EHLO
+	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752717Ab0LCGbz convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 6 Dec 2010 01:30:17 -0500
-Received: by qyk12 with SMTP id 12so14074656qyk.19
-        for <linux-wireless@vger.kernel.org>; Sun, 05 Dec 2010 22:30:16 -0800 (PST)
+	Fri, 3 Dec 2010 01:31:55 -0500
+Received: by wwa36 with SMTP id 36so9659771wwa.1
+        for <linux-wireless@vger.kernel.org>; Thu, 02 Dec 2010 22:31:54 -0800 (PST)
 MIME-Version: 1.0
-From: Jonathan Guerin <jonathan@guerin.id.au>
-Date: Mon, 6 Dec 2010 16:30:00 +1000
-Message-ID: <AANLkTimDF3kofO=kiuOsz+WrTGROdOL8-3eNvKd5NrD3@mail.gmail.com>
-Subject: ath5k: Weird Retransmission Behaviour
-To: linux-wireless <linux-wireless@vger.kernel.org>,
-	ath5k-devel <ath5k-devel@lists.ath5k.org>,
-	Bruno Randolf <br1@einfach.org>
-Content-Type: text/plain; charset=ISO-8859-1
+In-Reply-To: <AANLkTin164oGZ1RVj7AuGQyPRKTOzw+6bS5-jH2c35VZ@mail.gmail.com>
+References: <AANLkTi=_F0orXPY79ojoPKEqn4ohQjV5Rj5Qb3H7CR8f@mail.gmail.com>
+	<201012011921.11151.br1@einfach.org>
+	<AANLkTimcV+pHp8ui-hExnsBfuQ2PtGA2aZidCYSFsQnh@mail.gmail.com>
+	<AANLkTinvV-6FqMni86MEYrBN6q0255M6cFjBOpR9vdP2@mail.gmail.com>
+	<AANLkTinpTyikX2xCTJqx45BdqeyeL7C8y92ci+k5n0w0@mail.gmail.com>
+	<AANLkTi=WH6S5zW3abTyFz=bUu7p6USkVz1341W+aPh66@mail.gmail.com>
+	<AANLkTimOuPPn=5MoomN=+3EPRdN1RxNu+Y1fDfK0awcw@mail.gmail.com>
+	<AANLkTi=jSS_e1=z1K+_bnYRhhnBVTQmLjsgKggqsP2L=@mail.gmail.com>
+	<AANLkTimmmnsKdNkw4A-fUQQb+jp5NnnRe16AzW_OO1Aq@mail.gmail.com>
+	<AANLkTin164oGZ1RVj7AuGQyPRKTOzw+6bS5-jH2c35VZ@mail.gmail.com>
+Date: Fri, 3 Dec 2010 08:31:53 +0200
+Message-ID: <AANLkTi=rS+LthN3F+rSXjkRJ5cohTViXRSvCD6rPWrgz@mail.gmail.com>
+Subject: Re: [linux-next] next-20101201: ath5k permanently disconnecting
+From: Nick Kossifidis <mickflemm@gmail.com>
+To: sedat.dilek@gmail.com
+Cc: Bruno Randolf <br1@einfach.org>,
+	wireless <linux-wireless@vger.kernel.org>,
+	John Linville <linville@tuxdriver.com>,
+	Stephen Rothwell <sfr@canb.auug.org.au>,
+	Jonathan Guerin <jonathan@guerin.id.au>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+2010/12/3 Sedat Dilek <sedat.dilek@googlemail.com>:
+> On Fri, Dec 3, 2010 at 5:16 AM, Nick Kossifidis <mickflemm@gmail.com> wrote:
+>> 2010/12/3 Nick Kossifidis <mickflemm@gmail.com>:
+>>> 2010/12/3 Nick Kossifidis <mickflemm@gmail.com>:
+>>>> 2010/12/3 Nick Kossifidis <mickflemm@gmail.com>:
+>>>>> 2010/12/2 Nick Kossifidis <mickflemm@gmail.com>:
+>>>>>> 2010/12/2 Nick Kossifidis <mickflemm@gmail.com>:
+>>>>>>> 2010/12/2 Sedat Dilek <sedat.dilek@googlemail.com>:
+>>>>>>>> On Wed, Dec 1, 2010 at 11:21 AM, Bruno Randolf <br1@einfach.org> wrote:
+>>>>>>>>> On Wed December 1 2010 19:09:03 Sedat Dilek wrote:
+>>>>>>>>>> Hi,
+>>>>>>>>>>
+>>>>>>>>>> I have built today a linux-next (next-20101201) kernel which includes
+>>>>>>>>>> wireless-next-2.6 up to master-2010-11-30.
+>>>>>>>> [...]
+>>>>>>>>>> Unfortunately, my wlan network connection is totally unstable.
+>>>>>>>> [...]
+>>>>>>>>> 1.) For identification of the chipset, please:
+>>>>>>>>> dmesg |grep "ath5.*chip"
+>>>>>>>>>
+>>>>>>>>> 2.) Is there a problem when you don't use encryption?
+>>>>>>>>>
+>>>>>>>>> 3.) git bisect might help track it down.
+>>>>>>>>>
+>>>>>>>>> bruno
+>>>>>>>>
+>>>>>>>> OK, I did not a "classic" git-bisect, I created from linux-next
+>>>>>>>> (next-20101202) GIT tree a revert-ath5k patchset (30 in total).
+>>>>>>>>
+>>>>>>>> [1] VERY GOOD: Revertiing all 30 patches
+>>>>>>>>
+>>>>>>>> ...leads to a stable system.
+>>>>>>>>
+>>>>>>>> [2] REDUCED DISCONNECTIONS DROPS: Reverting 0001..0008
+>>>>>>>>
+>>>>>>>> This stabilizes the system, but... listening to a radio
+>>>>>>>> broadcast-stream with VLC is a pain in the ass... permanent audio
+>>>>>>>> dropouts. I had only 2 disconnections in the first 10mins when system
+>>>>>>>> was up (normally I can see disconnects after loggin into my KDE
+>>>>>>>> desktop).
+>>>>>>>>
+>>>>>>>> [3] GOOD AUDIO STREAMING: Reverting 0001..0014
+>>>>>>>>
+>>>>>>>> This is just fine, system like I am used to.
+>>>>>>>>
+>>>>>>>> [4] CONCLUSION
+>>>>>>>>
+>>>>>>>> So I played a bit with my revert-patchset.
+>>>>>>>>
+>>>>>>>> Reverting 0001..0008 + a refreshed v2 of
+>>>>>>>> 0014-Revert-ath5k-Use-turbo-flag-on-DCU.patch (patch attached) is
+>>>>>>>> doing the job here.
+>>>>>>>>
+>>>>>>>> Having a closer look into 0008 (parts of
+>>>>>>>> drivers/net/wireless/ath/ath5k/reset.c):
+>>>>>>>>
+>>>>>>>> $ grep AR5212 patches/revert-wireless-patches/0008-Revert-ath5k-Support-synth-only-channel-change-for-A.patch
+>>>>>>>> -       if (ah->ah_version == AR5K_AR5212)
+>>>>>>>> +                        * On AR5212 TSF is almost preserved across a
+>>>>>>>> -                * On AR5212 TSF is almost preserved across a
+>>>>>>>> +               if (ah->ah_version == AR5K_AR5212) {
+>>>>>>>> -       if (ah->ah_version == AR5K_AR5212 &&
+>>>>>>>>
+>>>>>>>> As I mentionned I have a AR5212 wlan device!
+>>>>>>>> What to do with that parts?
+>>>>>>>> Any idea?
+>>>>>>>>
+>>>>>>>> Kind Regards,
+>>>>>>>> - Sedat -
+>>>>>>>>
+>>>>>>>> P.S.: I have added a list containing all commit-ids (chronological)
+>>>>>>>> and a script how I reverted (documenting for myself).
+>>>>>>>>
+>>>>>>>> $ ls patches/revert-wireless-patches/00*.patch
+>>>>>>>> patches/revert-wireless-patches/0001-Revert-ath5k-Set-turbo-bit-on-rf-bank-2.patch
+>>>>>>>> patches/revert-wireless-patches/0002-Revert-ath5k-Clean-up-turbo-mode-initvals-rfregs.patch
+>>>>>>>> patches/revert-wireless-patches/0003-Revert-ath5k-Cleanup-turbo-channel-flags.patch
+>>>>>>>> patches/revert-wireless-patches/0004-Revert-ath5k-Use-correct-clock-when-setting-ofdm-tim.patch
+>>>>>>>> patches/revert-wireless-patches/0005-Revert-ath5k-Skip-tx-power-setting-on-AR5210-for-now.patch
+>>>>>>>> patches/revert-wireless-patches/0006-Revert-ath5k-Tweak-phy-activate-to-rx-start-delay-ba.patch
+>>>>>>>> patches/revert-wireless-patches/0007-Revert-ath5k-No-need-to-save-restore-staid-flags-on-.patch
+>>>>>>>> patches/revert-wireless-patches/0008-Revert-ath5k-Support-synth-only-channel-change-for-A.patch
+>>>>>>>> patches/revert-wireless-patches/0009-Revert-ath5k-Skip-powertable-setting-when-we-are-on-.patch
+>>>>>>>> patches/revert-wireless-patches/0010-Revert-ath5k-Update-PLL-programming-for-turbo-half-q.patch
+>>>>>>>> patches/revert-wireless-patches/0011-Revert-ath5k-Update-spur-mitigation-filter-for-turbo.patch
+>>>>>>>> patches/revert-wireless-patches/0012-Revert-ath5k-Tweak-power-detector-delays-on-RF5111-R.patch
+>>>>>>>> patches/revert-wireless-patches/0013-Revert-ath5k-Always-set-IFS-intervals-on-reset.patch
+>>>>>>>> patches/revert-wireless-patches/0014-Revert-ath5k-Use-turbo-flag-on-DCU.patch
+>>>>>>>> patches/revert-wireless-patches/0015-Revert-ath5k-Set-all-IFS-intervals-not-just-slot-tim.patch
+>>>>>>>> patches/revert-wireless-patches/0016-Revert-ath5k-Extend-rate_duration.patch
+>>>>>>>> patches/revert-wireless-patches/0017-Revert-ath5k-Extend-get_default_sifs-slot_time.patch
+>>>>>>>> patches/revert-wireless-patches/0018-Revert-ath5k-Move-tx-retries-setting-outside-reset_t.patch
+>>>>>>>> patches/revert-wireless-patches/0019-Revert-ath5k-Increase-PHY-settling-parameters-for-tu.patch
+>>>>>>>> patches/revert-wireless-patches/0020-Revert-ath5k-Small-cleanup-on-tweak_initvals.patch
+>>>>>>>> patches/revert-wireless-patches/0021-Revert-ath5k-Put-core-clock-initialization-on-a-new-.patch
+>>>>>>>> patches/revert-wireless-patches/0022-Revert-ath5k-Add-new-field-on-ath5k_hw-to-track-band.patch
+>>>>>>>> patches/revert-wireless-patches/0023-Revert-ath5k-Use-new-function-to-stop-beacon-queue.patch
+>>>>>>>> patches/revert-wireless-patches/0024-Revert-ath5k-Check-RXE-when-setting-RXDP.patch
+>>>>>>>> patches/revert-wireless-patches/0025-Revert-ath5k-Use-DCU-early-termination-correctly.patch
+>>>>>>>> patches/revert-wireless-patches/0026-Revert-ath5k-Debug-DMA-timeouts.patch
+>>>>>>>> patches/revert-wireless-patches/0027-Revert-ath5k-Use-new-dma_stop-function-on-base.c.patch
+>>>>>>>> patches/revert-wireless-patches/0028-Revert-ath5k-Stop-PCU-on-reset.patch
+>>>>>>>> patches/revert-wireless-patches/0029-Revert-ath5k-Add-new-function-to-stop-rx-tx-DMA.patch
+>>>>>>>> patches/revert-wireless-patches/0030-Revert-ath5k-Reset-cleanup-and-generic-cleanup.patch
+>>>>>>>>
+>>>>>>>
+>>>>>>> OK this doesn't make any sense, based on your logs you have an
+>>>>>>> AR5212+RF5111+RF2111 combination, synth-only channel change (0008) is
+>>>>>>> only executed on AR2413 and AR5413 so you don't even run that code,
+>>>>>>> setting turbo flag on DCU (0014) is also unrelated since we never
+>>>>>>> enable turbo mode and if we did you wouldn't be able to receive
+>>>>>>> anything non-turbo.
+>>>>>>>
+>>>>>>> I am going to test 2 cards like yours a CM6 and an older one from
+>>>>>>> Atheros and come back to you ASAP...
+>>>>>>>
+>>>>>>
+>>>>>> I just reproduced it on a CM6 and a CM9 (AR5212 + RF5112), problem
+>>>>>> occurs when card is idle (no traffic) that's why my automated test
+>>>>>> didn't catch it I can still run iperf after connecting and leave it
+>>>>>> running without problems, when traffic stops it soon gets
+>>>>>> disconnected. I suspect it's something related to IFS timings/ACK
+>>>>>> timeout (0013 on your reverted series), maybe Jonathan Guerin was
+>>>>>> correct about ACK timeout...
+>>>>>>
+>>>>>> I'll try something and come back to you with code ;-)
+>>>>>>
+>>>>>> Thanks for reporting !
+>>>>>>
+>>>>>
+>>>>> Nope, it's PHY related and only affects RF5111/RF5112, AR2413 and
+>>>>> above work fine...
+>>>>>
+>>>>
+>>>> Got it, patch on the way...
+>>>>
+>>>
+>>> First the problem is with patch 22 (0009), we still need to write the
+>>> power table on hw, that fixes transmission and my CM9 works just fine
+>>> after that. Now my 2 RF5111 based cards seem to also have some problem
+>>> with stuck tx queues, after some time of fine operation (nearly
+>>> 28Mbits with iperf). It might be a hw failure or something but i want
+>>> to try and debug this further in case there is something i can do to
+>>> fix it. I also found some other things, eg. i report RX dma stop
+>>> failure when i shouldn't etc. Anyway back to debuging ;-)
+>>>
+>>>
+>>> --
+>>> GPG ID: 0xD21DB2DB
+>>> As you read this post global entropy rises. Have Fun ;-)
+>>> Nick
+>>>
+>>
+>> Done, works fine for me now, check it out ;-)
+>>
+>> --
+>> GPG ID: 0xD21DB2DB
+>> As you read this post global entropy rises. Have Fun ;-)
+>> Nick
+>>
+>
+> Hi Nick,
+>
+> I have applied the 6 patches you sent to linux-wireless list.
+>
+> $ cd $HOME/src/linux-2.6/linux-2.6.37-rc4/debian/build/source_i386_none
+>
+> $ cat .pc/applied-patches
+> from_nkossifidis/1-6-ath5k-Always-write-tx-powertable-on-hw.patch
+> from_nkossifidis/2-6-ath5k-Always-free-tx-buffers-before-reset.patch
+> from_nkossifidis/3-6-ath5k-Disable-ANI-during-reset.patch
+> from_nkossifidis/4-6-ath5k-Fix-reporting-of-RX-dma-stop-failure.patch
+> from_nkossifidis/5-6-ath5k-Update-version-string.patch
+> from_nkossifidis/6-6-ath5k-Include-tx-ack-reporting-on-hw-flags.patch
+>
+> No more disconnects and no more audio-dropouts when listening to live-radio.
+> A big big big thank you!
+>
+> Shall I add to each of your patches a "Tested-by: Sedat Dilek
+> <sedat.dilek@gmail.com>?
+>
+> Kind Regards,
+> - Sedat -
+>
 
+Sure, again thanks a lot for reporting this and testing ;-)
 
-I've been doing some investigation into the behaviour of contention
-windows and retransmissions.
-
-Firstly, I'll just describe the test scenario and setup that I have. I
-have 3 Via x86 nodes with Atheros AR5001X+ cards. They are tethered to
-each other via coaxial cables, into splitters. They have 20dB of fixed
-attenuation applied to each antenna output, plus a programmable
-variable attenuator on each link. One node acts as a sender, one as a
-receiver, and one simply runs a monitor-mode interface to capture
-packet traces. All 3 are running kernel version 2.6.37-rc2. The sender
-and receiver are configured as IBSS stations and are tuned to 5.18
-GHz.
-
-Here's a really dodgy ASCII diagram of the setup:
-
-S-----[variable attenuator]-----R
-|				          |
-|					  |
-|				          |
-+------------M-------------------------+
-
-where S is the Sender node, R is the Receiver node and M is the
-Monitoring capture node.
-
-
-Secondly, I have written a program which will parse a captured pcap
-file from the Monitoring station. It looks for 'chains' of frames with
-the same sequence number, and where the first frame has the Retry bit
-set to false in the header and all following have it set to true. Any
-deviation from this, and the program drops the current chain without
-including it in its stats, and looks for the next chain matching these
-requirements. It averages the amount of time per transmission number
-(i.e. the average of all transmissions which were the first, second,
-third etc. for a unique sequence number). The transmission time of a
-frame is the amount of time between the end of the frame and the end
-of the previous. It tracks these 'chains' of frames with the same
-sequence number. It considers the last transmission number in each
-chain as the 'final' transmission.
-
-Finally, the link is loaded using a saturated UDP flow, and the data
-rate is fixed to 54M and 36M. This is specified in the output. The
-output is attached below.
-
-The output describes the fixed link data rate, the variable
-attenuator's value, the delivery ratio, and the number of transmitted
-packets/s. I've added a discussion per result set. Each line outputs
-the transmission number, the average transmission time for this
-number, the total number of transmissions, the number of frames which
-ended their transmissions at this number (i.e. where the chain ended
-its final transmission - this is equivalent to the retransmission
-value from the Radiotap header + 1), and the average expected
-transmission time for all that particular transmission number in all
-chains. This is calculated using the airtime calculations from the
-802.11a standard, with the receipt of an ACK frame, as well as a SIFS
-(16us), which is 28us. If the transmission did not receive an ACK, a
-normal ACK timeout is 50 us, but ath5k appears to have this set to 25
-us, so the value shouldn't be too far out what to expect.
-
-The header to each result refers to the rate it was fixed at, as well
-as the variable attenuation being added to it. The link also has a
-fixed 40dB of attenuation both to protect the cards, as well as give
-the necessary range for the variable attenuator to control link
-quality.
-
-==> iperf_33M_rate_36M_att_1dB.pcap.txt <== (good link, 100% delivery)
-Average time per TX No:
-TXNo	Avg			No		Final    	ExpectedAvg
-1		477.604980	10463	10462   	509
-Overall average: 477.604980
-
-[Discussion:] Nothing, appears normal.
-
-
-==> iperf_33M_rate_36M_att_18dB.pcap.txt <== (lossy link, but still
-100% delivery)
-Average time per TX No:
-TXNo	Avg			No		Final   	ExpectedAvg
-1		476.966766	9808		8138   	509
-2		550.320496	1663		1403   	581
-3		697.552917	255		218   	725
-4		1028.756714	37		30		1013
-5		1603.428589	7		7   		1589
-Overall average: 494.514618
-
-[Discussion:] Nothing, appears normal. Contention window appears to
-double normally.
-
-==> iperf_33M_rate_36M_att_19dB.pcap.txt <== (lossy link, but still
-100% delivery)
-Average time per TX No:
-TXNo	Avg			No		Final   	ExpectedAvg
-1		477.510437	14893	8653   	509
-2		546.149048	6205		3624   	581
-3		692.270203	2561		1552   	725
-4		980.565857	1002		596   	1013
-5		1542.079956	400		252   	1589
-6		2758.693848	147		89		2741
-7		4971.500000	56		32   		5045
-8	 	4689.043457	23		15   		5045
-9		4487.856934	7		3   		5045
-10		442.250000	4		3   		5045
-11		488.000000	1		1   		5045
-Overall average: 580.976807
-
-[Discussion:] Contention window appears to double until a plateau from
-7 through 9. Weirdly, the contention window appears to be drop again
-from 10, but
-there are too few frames to draw a conclusion.
-
-==> iperf_33M_rate_36M_att_21dB.pcap.txt <== (lossy link, < 1% delivery)
-TXNo	Avg			No	     	Final   ExpectedAvg
-1		485.390198	1940		3	   509
-2		479.113434	1922		2	   581
-3		479.681824	1914		0   	   725
-4		485.083038	1903		1   	   1013
-5		492.088135	1895		4   	   1589
-6		508.322510	1876		1   	   2741
-7		524.697876	1870		1   	   5045
-8		543.054382	1857		0   	   5045
-9		522.970703	1842		0   	   5045
-10		478.204132	1837		0   	   5045
-11		476.520782	1828		0   	   5045
-12		477.531342	1818		0   	   5045
-13		476.743652	1810		0   	   5045
-14		478.936554	1797		0   	   5045
-15		480.699097	1788		0   	   5045
-16		482.734314	1784		0   	   5045
-17		491.608459	1775		0   	   5045
-18		497.458984	1767		1   	   5045
-19		495.067932	1752		7   	   5045
-20		478.102417	1738		295     5045
-21		475.128845	1436		1402   5045
-22		492.692322	26		0	   5045
-23		471.576935	26		0   	   5045
-24		466.884613	26		0   	   5045
-25		476.269226	26		0   	   5045
-26		462.192322	26		0   	   5045
-27		480.961548	26		1   	   5045
-28		463.600006	25		24   	   5045
-Overall average: 491.068359
-
-[Discussion:] Contention does not appear to increase, and the number
-of transmission per frame is very large. This behaviour is replicated
-with the 54M scenario when a link is extremely lossy.
-
-==> iperf_33M_rate_54M_att_1dB.pcap.txt <== (good link, 2400 packets/s)
-Average time per TX No:
-TXNo	Avg			No		Final   	ExpectedAverage
-1		365.551849	23957	23935   	393
-2		409.571442	21		21   		465
-Overall average: 365.590424
-
-[Discussion: ] Appears relatively normal.
-
-==> iperf_33M_rate_54M_att_10dB.pcap.txt <== (lossy link, but still
-100% delivery, 1500 packets/s)
-Average time per TX No:
-TXNo	Avg			No		Final   	ExpectedAverage
-1		364.501190	10134	5915   	393
-2		434.138000	4196		2461   	465
-3		579.482300	1721		1036   	609
-4		837.005859	682		397   	897
-5		1365.279175	283		155   	1473
-6		2572.007812	128		81 	  	2625
-7		4905.195801	46		27   		4929
-8		4985.947266	19		12   		4929
-9		4627.285645	7		4   		4929
-10		366.000000	3		1   		4929
-11		335.500000	2		2   		4929
-Overall average: 473.477020
-
-[Discussion: ] Appears fine, until transmission 10, which appears to
-drop the contention window back to an equivalent first transmission
-value, but not enough frames at this point to draw a conclusion.
-
-==> iperf_33M_rate_54M_att_11dB.pcap.txt <== (lossy link, but still
-100% delivery, 680 packets/s)
-Average time per TX No:
-TXNo	Avg			No		Final   	ExpectedAverage
-1		362.082825	2149		539   	393
-2		434.672485	1606		368   	465
-3		582.795288	1231		307   	609
-4		820.347107	919		237   	897
-5		1424.753296	673		194   	1473
-6		2626.403320	466		143   	2625
-7		4734.233887	308		83   		4929
-8		4830.244141	217		65   		4929
-9		4449.702637	148		33   		4929
-10		360.114044	114		36   		4929
-11		366.000000	78		20   		4929
-12		460.655182	58		20   		4929
-13		544.184204	38		9   		4929
-14		893.965515	29		7   		4929
-15		1361.409058	22		8   		4929
-16		2675.285645	14		2   		4929
-17		4239.500000	12		5   		4929
-18		3198.142822	7		2   		4929
-19		5111.799805	5		3   		4929
-20		1403.000000	2		1   		4929
-Overall average: 1063.129883
-
-[Discussion: ] Everything appears fine until, once again, transmission
-10, when the contention windows appears to 'restart' - it climbs
-steadily until 17. After this point, there are not enough frames to
-draw any conclusions.
-
-==> iperf_33M_rate_54M_att_12dB.pcap.txt <== (lossy link, 6% delivery,
-400 packets/s)
-Average time per TX No:
-TXNo	Avg			No		Final   	ExpectedAvg
-1		360.460724	4482		14   		393
-2		366.068481	4453		16   		465
-3		360.871735	4413		13   		609
-4		361.535553	4386		18   		897
-5		367.526062	4357		60   		1473
-6		360.003967	4283		3839   	2625
-7		361.778046	419		416   	4929
-Overall average: 362.732910
-
-[Discussion:] This exhibits the same problem as the extremely lossy
-36M link - the contention window does not appear to rise. Even with
-enough frames to draw a good conclusion at transmission 6, the
-transmission time average (360) is way below the expected average
-(2625).
-==> END OF OUTPUT <==
-
-The question here is: why does ath5k/mac80211 send out so many
-transmissions, and why does it vary so much based on link quality?
-Additionally, why does it appear to 'reset' the contention window
-after 9 retransmissions of a frame?
-
-Cheers,
-
-Jonathan
+-- 
+GPG ID: 0xD21DB2DB
+As you read this post global entropy rises. Have Fun ;-)
+Nick
