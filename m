@@ -1,106 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pz0-f46.google.com ([209.85.210.46]:33953 "EHLO
-	mail-pz0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751527Ab0L1IMe (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:38069 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751781Ab0LCINi (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 28 Dec 2010 03:12:34 -0500
-Received: by pzk35 with SMTP id 35so624358pzk.19
-        for <linux-wireless@vger.kernel.org>; Tue, 28 Dec 2010 00:12:34 -0800 (PST)
-From: Sujith <m.sujith@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Message-ID: <19737.39906.948870.27441@gargle.gargle.HOWL>
-Date: Tue, 28 Dec 2010 13:42:18 +0530
-To: linville@tuxdriver.com
-CC: linux-wireless@vger.kernel.org, Sujith.Manoharan@atheros.com
-Subject: [PATCH 4/5] ath9k_htc: Fix fast channel change
+	Fri, 3 Dec 2010 03:13:38 -0500
+Subject: Re: [RFC 5/5 v2] cfg80211/mac80211: add mesh join/leave commands
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Javier Cardona <javier@cozybit.com>
+Cc: linux-wireless@vger.kernel.org, Steve Derosier <steve@cozybit.com>,
+	devel@lists.open80211s.org
+In-Reply-To: <AANLkTi=o08ZBhF6KmYZ-jvAzM7WoMEZztNz+0Fc+WQQi@mail.gmail.com>
+References: <20101201205939.009530439@sipsolutions.net>
+	 <20101201210226.159495600@sipsolutions.net>
+	 <1291279510.3481.17.camel@jlt3.sipsolutions.net>
+	 <AANLkTik_C90v-313Pq_dPY7fE1OFG2X0uv8Ys+uGQFRt@mail.gmail.com>
+	 <1291320849.3481.55.camel@jlt3.sipsolutions.net>
+	 <AANLkTi=8yikvhvbUS86FZabM5qXbZ1LNHeT+2JQGU+QS@mail.gmail.com>
+	 <1291325893.3481.56.camel@jlt3.sipsolutions.net>
+	 <AANLkTi=o08ZBhF6KmYZ-jvAzM7WoMEZztNz+0Fc+WQQi@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Fri, 03 Dec 2010 09:13:35 +0100
+Message-ID: <1291364015.3499.1.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sujith Manoharan <Sujith.Manoharan@atheros.com>
+On Thu, 2010-12-02 at 15:08 -0800, Javier Cardona wrote:
 
-When returning to the operating channel, a full HW
-reset has to be done instead of a fast channel change.
-Since sw_scan_complete() is called after the config() call for the
-home channel, we end up doing a FCC. Fix this issue by checking
-the OFFCHANNEL flag to determine FCC.
+> Not really.  Maybe this as PATCH 1/5 v3?
 
-Signed-off-by: Sujith Manoharan <Sujith.Manoharan@atheros.com>
----
- drivers/net/wireless/ath/ath9k/htc.h          |   19 +++++++++----------
- drivers/net/wireless/ath/ath9k/htc_drv_main.c |    8 ++------
- 2 files changed, 11 insertions(+), 16 deletions(-)
+Sure, looks good.
 
-diff --git a/drivers/net/wireless/ath/ath9k/htc.h b/drivers/net/wireless/ath/ath9k/htc.h
-index 1062274..34456a8 100644
---- a/drivers/net/wireless/ath/ath9k/htc.h
-+++ b/drivers/net/wireless/ath/ath9k/htc.h
-@@ -331,16 +331,15 @@ void ath_htc_cancel_btcoex_work(struct ath9k_htc_priv *priv);
- 
- #define OP_INVALID		   BIT(0)
- #define OP_SCANNING		   BIT(1)
--#define OP_FULL_RESET		   BIT(2)
--#define OP_LED_ASSOCIATED	   BIT(3)
--#define OP_LED_ON		   BIT(4)
--#define OP_PREAMBLE_SHORT	   BIT(5)
--#define OP_PROTECT_ENABLE	   BIT(6)
--#define OP_ASSOCIATED		   BIT(7)
--#define OP_ENABLE_BEACON	   BIT(8)
--#define OP_LED_DEINIT		   BIT(9)
--#define OP_BT_PRIORITY_DETECTED    BIT(10)
--#define OP_BT_SCAN                 BIT(11)
-+#define OP_LED_ASSOCIATED	   BIT(2)
-+#define OP_LED_ON		   BIT(3)
-+#define OP_PREAMBLE_SHORT	   BIT(4)
-+#define OP_PROTECT_ENABLE	   BIT(5)
-+#define OP_ASSOCIATED		   BIT(6)
-+#define OP_ENABLE_BEACON	   BIT(7)
-+#define OP_LED_DEINIT		   BIT(8)
-+#define OP_BT_PRIORITY_DETECTED    BIT(9)
-+#define OP_BT_SCAN                 BIT(10)
- 
- struct ath9k_htc_priv {
- 	struct device *dev;
-diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_main.c b/drivers/net/wireless/ath/ath9k/htc_drv_main.c
-index 1b1be72..d54adeb 100644
---- a/drivers/net/wireless/ath/ath9k/htc_drv_main.c
-+++ b/drivers/net/wireless/ath/ath9k/htc_drv_main.c
-@@ -177,7 +177,7 @@ static int ath9k_htc_set_channel(struct ath9k_htc_priv *priv,
- 	struct ath_hw *ah = priv->ah;
- 	struct ath_common *common = ath9k_hw_common(ah);
- 	struct ieee80211_conf *conf = &common->hw->conf;
--	bool fastcc = true;
-+	bool fastcc;
- 	struct ieee80211_channel *channel = hw->conf.channel;
- 	struct ath9k_hw_cal_data *caldata;
- 	enum htc_phymode mode;
-@@ -188,8 +188,7 @@ static int ath9k_htc_set_channel(struct ath9k_htc_priv *priv,
- 	if (priv->op_flags & OP_INVALID)
- 		return -EIO;
- 
--	if (priv->op_flags & OP_FULL_RESET)
--		fastcc = false;
-+	fastcc = !!(hw->conf.flags & IEEE80211_CONF_OFFCHANNEL);
- 
- 	ath9k_htc_ps_wakeup(priv);
- 	htc_stop(priv->htc);
-@@ -231,8 +230,6 @@ static int ath9k_htc_set_channel(struct ath9k_htc_priv *priv,
- 		goto err;
- 
- 	htc_start(priv->htc);
--
--	priv->op_flags &= ~OP_FULL_RESET;
- err:
- 	ath9k_htc_ps_restore(priv);
- 	return ret;
-@@ -1847,7 +1844,6 @@ static void ath9k_htc_sw_scan_complete(struct ieee80211_hw *hw)
- 	spin_lock_bh(&priv->beacon_lock);
- 	priv->op_flags &= ~OP_SCANNING;
- 	spin_unlock_bh(&priv->beacon_lock);
--	priv->op_flags |= OP_FULL_RESET;
- 	if (priv->op_flags & OP_ASSOCIATED) {
- 		ath9k_htc_beacon_config(priv, priv->vif);
- 		ath_start_ani(priv);
--- 
-1.7.3.4
+> @@ -1585,6 +1588,7 @@ enum nl80211_meshconf_params {
+>  	NL80211_MESHCONF_MAX_PEER_LINKS,
+>  	NL80211_MESHCONF_MAX_RETRIES,
+>  	NL80211_MESHCONF_TTL,
+> +	NL80211_MESHCONF_ELEMENT_TTL,
+>  	NL80211_MESHCONF_AUTO_OPEN_PLINKS,
+>  	NL80211_MESHCONF_HWMP_MAX_PREQ_RETRIES,
+>  	NL80211_MESHCONF_PATH_REFRESH_TIME,
+
+except for this bit of course, it breaks ABI. I've fixed it up.
+
+johannes
 
