@@ -1,55 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yw0-f46.google.com ([209.85.213.46]:42281 "EHLO
-	mail-yw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753242Ab0L1RQg convert rfc822-to-8bit (ORCPT
+Received: from mail-iw0-f174.google.com ([209.85.214.174]:33859 "EHLO
+	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750837Ab0LCVSf (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 28 Dec 2010 12:16:36 -0500
-Received: by ywl5 with SMTP id 5so3931416ywl.19
-        for <linux-wireless@vger.kernel.org>; Tue, 28 Dec 2010 09:16:36 -0800 (PST)
+	Fri, 3 Dec 2010 16:18:35 -0500
+Received: by iwn6 with SMTP id 6so325927iwn.19
+        for <linux-wireless@vger.kernel.org>; Fri, 03 Dec 2010 13:18:35 -0800 (PST)
 MIME-Version: 1.0
-In-Reply-To: <1293537823.24274.18.camel@chilepepper>
-References: <1293028057-6212-1-git-send-email-arik@wizery.com>
- <1293028057-6212-16-git-send-email-arik@wizery.com> <1293537823.24274.18.camel@chilepepper>
-From: Arik Nemtsov <arik@wizery.com>
-Date: Tue, 28 Dec 2010 19:16:17 +0200
-Message-ID: <AANLkTikozSoq+PjM41pPuwjzg4YNByd3BdQ43=7dW4jr@mail.gmail.com>
-Subject: Re: [PATCH v2 15/18] wl1271: AP mode - encryption support
-To: Luciano Coelho <luciano.coelho@nokia.com>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+In-Reply-To: <1291403269-2938-1-git-send-email-hauke@hauke-m.de>
+References: <1291403269-2938-1-git-send-email-hauke@hauke-m.de>
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Date: Fri, 3 Dec 2010 13:18:14 -0800
+Message-ID: <AANLkTikpJnmDHo7h78b9Qajt5gAok7E+i3TwPk9pZ4QV@mail.gmail.com>
+Subject: Re: [PATCH 1/2] compat-wireless: make patches apply again.
+To: Hauke Mehrtens <hauke@hauke-m.de>
+Cc: linux-wireless@vger.kernel.org, mcgrof@infradead.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Dec 28, 2010 at 14:03, Luciano Coelho <luciano.coelho@nokia.com> wrote:
-> On Wed, 2010-12-22 at 16:27 +0200, ext Arik Nemtsov wrote:
->> Encryption key configuration is different for AP/STA modes.
->>
->> AP encryption keys are recorded when the BSS is not started. On BSS
->> start they are propagated to the AP (in wl1271_ap_init_hwenc).
->>
->> Signed-off-by: Arik Nemtsov <arik@wizery.com>
->> ---
+On Fri, Dec 3, 2010 at 11:07 AM, Hauke Mehrtens <hauke@hauke-m.de> wrote:
+> These patches are applying now, but crap/0002-ath9k-tlog-support.patch
+> does not apply any more, some more changes have to be done to make it
+> work again.
 >
-> [...]
->
->> diff --git a/drivers/net/wireless/wl12xx/tx.h b/drivers/net/wireless/wl12xx/tx.h
->> index 0662b19..81ba75d 100644
->> --- a/drivers/net/wireless/wl12xx/tx.h
->> +++ b/drivers/net/wireless/wl12xx/tx.h
->> @@ -152,4 +152,8 @@ void wl1271_tx_flush(struct wl1271 *wl);
->>  u8 wl1271_rate_to_idx(int rate, enum ieee80211_band band);
->>  u32 wl1271_tx_enabled_rates_get(struct wl1271 *wl, u32 rate_set);
->>
->> +/* Functions from wl1271_main.c */
->> +
->> +int wl1271_set_default_wep_key(struct wl1271 *wl, u8 id);
->> +
->>  #endif
->
-> Again, same thing.  Can we put this somewhere else?
->
+> Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
 
-Actually the WEP default key is used for TX, so we can put this in tx.c.
+I applied both but I had some issues with the patches as I forgot to
+push out changes. I adjusted them and hacked up a different change for
+the packet log patch, it was a bit odd.
 
-Regards,
-Arik
+Applied and pushed, thanks!
+
+  Luis
