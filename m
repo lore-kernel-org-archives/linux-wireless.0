@@ -1,46 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga03.intel.com ([143.182.124.21]:11895 "EHLO mga03.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756698Ab0LNP1M (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 14 Dec 2010 10:27:12 -0500
-Subject: Re: [PATCH 03/14] iwlagn: check ready in iwlagn_bss_info_changed()
-From: "Guy, Wey-Yi" <wey-yi.w.guy@intel.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: "linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"ipw3945-devel@lists.sourceforge.net"
-	<ipw3945-devel@lists.sourceforge.net>,
-	"Zhao, Shanyu" <shanyu.zhao@intel.com>
-In-Reply-To: <1292310979.3569.2.camel@jlt3.sipsolutions.net>
-References: <1292285372-11373-1-git-send-email-wey-yi.w.guy@intel.com>
-	 <1292285372-11373-4-git-send-email-wey-yi.w.guy@intel.com>
-	 <1292310979.3569.2.camel@jlt3.sipsolutions.net>
-Content-Type: text/plain
-Date: Tue, 14 Dec 2010 07:26:05 -0800
-Message-Id: <1292340365.9665.4.camel@wwguy-ubuntu>
-Mime-Version: 1.0
+Received: from mail-ew0-f45.google.com ([209.85.215.45]:36635 "EHLO
+	mail-ew0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757496Ab0LCEJj (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 2 Dec 2010 23:09:39 -0500
+Received: by ewy10 with SMTP id 10so5228139ewy.4
+        for <linux-wireless@vger.kernel.org>; Thu, 02 Dec 2010 20:09:38 -0800 (PST)
+Date: Fri, 3 Dec 2010 06:09:38 +0200
+From: Nick Kossifidis <mickflemm@gmail.com>
+To: ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org
+Cc: linville@tuxdriver.com, me@bobcopeland.com, mcgrof@gmail.com,
+	jirislaby@gmail.com, nbd@openwrt.org, br1@einfach.org,
+	sedat.dilek@googlemail.com
+Subject: [PATCH 4/6] ath5k: Fix reporting of RX dma stop failure
+Message-ID: <20101203040938.GD2988@makis.mantri>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Johannes and John,
+ * Correctly report failure to stop RX DMA
 
-On Mon, 2010-12-13 at 23:16 -0800, Johannes Berg wrote:
-> On Mon, 2010-12-13 at 16:09 -0800, Wey-Yi Guy wrote:
-> 
-> > -	if (WARN_ON(!ctx->vif)) {
-> > +	if (unlikely(!iwl_is_ready(priv))) {
-> > +                IWL_DEBUG_MAC80211(priv, "leave - not ready\n");
-> > +                mutex_unlock(&priv->mutex);
-> > +		return;
-> 
-> There appears to be some whitespace damage here.
-> 
+ Signed-off-by: Nick Kossifidis <mickflemm@gmail.com>
 
-my bad did not check before push, I will submit another patch to fix it
-and please merge both
+---
+ drivers/net/wireless/ath/ath5k/dma.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-Thanks
-Wey
-
-> 
-
+diff --git a/drivers/net/wireless/ath/ath5k/dma.c b/drivers/net/wireless/ath/ath5k/dma.c
+index 82541fe..0064be7 100644
+--- a/drivers/net/wireless/ath/ath5k/dma.c
++++ b/drivers/net/wireless/ath/ath5k/dma.c
+@@ -72,7 +72,7 @@ static int ath5k_hw_stop_rx_dma(struct ath5k_hw *ah)
+ 			i--)
+ 		udelay(100);
+ 
+-	if (i)
++	if (!i)
+ 		ATH5K_DBG(ah->ah_sc, ATH5K_DEBUG_DMA,
+ 				"failed to stop RX DMA !\n");
+ 
