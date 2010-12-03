@@ -1,94 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:46544 "EHLO nbd.name"
+Received: from nbd.name ([46.4.11.11]:48524 "EHLO nbd.name"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751973Ab0LEClp (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 4 Dec 2010 21:41:45 -0500
-Message-ID: <4CFAFBE1.3080505@openwrt.org>
-Date: Sun, 05 Dec 2010 03:41:37 +0100
+	id S1758318Ab0LCBpd (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 2 Dec 2010 20:45:33 -0500
+Message-ID: <4CF84BB8.8090007@openwrt.org>
+Date: Fri, 03 Dec 2010 02:45:28 +0100
 From: Felix Fietkau <nbd@openwrt.org>
 MIME-Version: 1.0
-To: Ben Greear <greearb@candelatech.com>
-CC: "Luis R. Rodriguez" <lrodriguez@Atheros.com>,
-	"ath9k-devel@lists.ath9k.org" <ath9k-devel@venema.h4ckr.net>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [ath9k-devel] Script to crash ath9k with DMA errors.
-References: <4CF44543.9070605@candelatech.com> <20101130004424.GC1901@tux> <4CF6D8C8.2000308@candelatech.com> <4CF8A6DE.4020804@candelatech.com>
-In-Reply-To: <4CF8A6DE.4020804@candelatech.com>
+To: Vasanthakumar Thiagarajan <vasanth@atheros.com>
+CC: linville@tuxdriver.com, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH V2 12/27] ath9k_hw: Find chansel of AR_PHY_65NM_CH0_SYNTH7
+ from an array for AR9485
+References: <1291288031-3409-1-git-send-email-vasanth@atheros.com> <1291288031-3409-13-git-send-email-vasanth@atheros.com>
+In-Reply-To: <1291288031-3409-13-git-send-email-vasanth@atheros.com>
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2010-12-03 9:14 AM, Ben Greear wrote:
-> On 12/01/2010 03:22 PM, Ben Greear wrote:
->> On 11/29/2010 04:44 PM, Luis R. Rodriguez wrote:
->>> On Mon, Nov 29, 2010 at 04:28:51PM -0800, Ben Greear wrote:
->>
->>>> BUG: unable to handle kernel NULL pointer dereference at 00000040
->>>> IP: [<f933470a>] ath_tx_start+0x461/0x5ef [ath9k]
->>>> *pde = 00000000
->>>> Oops: 0000 [#1] SMP DEBUG_PAGEALLOC
->>>> last sysfs file: /sys/devices/pci0000:00/0000:00:1e.0/0000:08:01.0/irq
->>>> Modules linked in: aes_i586 aes_generic fuse nfs lockd fscache nfs_acl auth_rpcgss sunrpc ipv6 uinput arc4 ecb ath9k mac80211 ath9k_common ath9k_hw mi]
->>>>
->>>> Pid: 38, comm: kworker/u:1 Tainted: G        W   2.6.37-rc3-wl+ #53 PDSBM/PDSBM
->>>> EIP: 0060:[<f933470a>] EFLAGS: 00010246 CPU: 1
->>>> EIP is at ath_tx_start+0x461/0x5ef [ath9k]
->>>
->>> Please use
->>>
->>> gdb drivers/net/wireless/ath/ath9k/
->>> l *(ath_tx_start+0x461)
->>>
->>>     Luis
->>
->> I managed to hit that ath_tx_start crash again, and this time there were no obvious
->> DMA or irq errors immediately preceding it.  So, it might be a real bug
->> after all.  I'll add some extra checks to see if tid->ac is NULL.
+On 2010-12-02 12:06 PM, Vasanthakumar Thiagarajan wrote:
+> Signed-off-by: Vasanthakumar Thiagarajan <vasanth@atheros.com>
+> ---
+>  drivers/net/wireless/ath/ath9k/ar9003_phy.c |   25 ++++++++++++++++++++++++-
+>  1 files changed, 24 insertions(+), 1 deletions(-)
 > 
-> I've made some small progress on this general issue.
-> 
-> First, I added all sorts of debugging to try to figure out ath_tx_start crash.
-> As best as I can tell, 'tid' is not NULL, but also is not a valid pointer,
-> and probably something close to 0x0.  I've added yet more debugging, but haven't
-> hit the problem again.
-> 
-> I also tried stopping DMA in a loop up to 5 times if it failed to stop
-> previously in the loop.  This did not appear to help at all.
-> 
-> I also managed to make both the ath_tx_start crash and the DMA errors very hard to reproduce
-> (I dare not say fixed, yet).
-> 
-> It appears that this small patch (and possibly, the fact that I set debugging to 0x600
-> instead of 0x400) makes the problems go away.  This makes me wonder if a root cause is
-> something to do with repeatedly resetting the hardware too fast, as setting channels rapidly
-> would tend to do that, and channels are set on association by supplicant, it appears.
-Please try this patch while leaving the unnecessary resets in place.
-I found that when ath_drain_all_txq finds tx dma not stopped, it will
-issue a reset at a point in time where it is both useless (since it's
-right before a reset anyway) and dangerous (since the rx dma engine
-isn't even disabled yet), so IMHO the right thing to do is to drop
-this extra reset.
+> diff --git a/drivers/net/wireless/ath/ath9k/ar9003_phy.c b/drivers/net/wireless/ath/ath9k/ar9003_phy.c
+> index b34a9e9..136e64a 100644
+> --- a/drivers/net/wireless/ath/ath9k/ar9003_phy.c
+> +++ b/drivers/net/wireless/ath/ath9k/ar9003_phy.c
+> @@ -25,6 +25,24 @@ static const int cycpwrThr1_table[] =
+>  /* level:  0   1   2   3   4   5   6   7   8  */
+>  	{ -6, -4, -2,  0,  2,  4,  6,  8 };     /* lvl 0-7, default 3 */
+>  
+> +/* Chansel table used by ar9485 */
+> +static const u32 ar9003_chansel_xtal_40M[] = {
+> +	0xa0ccbe,
+> +	0xa12213,
+> +	0xa17769,
+> +	0xa1ccbe,
+> +	0xa22213,
+> +	0xa27769,
+> +	0xa2ccbe,
+> +	0xa32213,
+> +	0xa37769,
+> +	0xa3ccbe,
+> +	0xa42213,
+> +	0xa47769,
+> +	0xa4ccbe,
+> +	0xa5998b,
+> +};
+> +
+>  /*
+>   * register values to turn OFDM weak signal detection OFF
+>   */
+> @@ -75,7 +93,12 @@ static int ar9003_hw_set_channel(struct ath_hw *ah, struct ath9k_channel *chan)
+>  	freq = centers.synth_center;
+>  
+>  	if (freq < 4800) {     /* 2 GHz, fractional mode */
+> -		channelSel = CHANSEL_2G(freq);
+> +		if (AR_SREV_9485(ah)) {
+> +			int ichan = ieee80211_frequency_to_channel(freq);
+> +
+> +			channelSel = ar9003_chansel_xtal_40M[ichan - 1];
+How about using this formula for AR9485:
 
---- a/drivers/net/wireless/ath/ath9k/xmit.c
-+++ b/drivers/net/wireless/ath/ath9k/xmit.c
-@@ -1194,18 +1194,8 @@ void ath_drain_all_txq(struct ath_softc 
- 		}
- 	}
- 
--	if (npend) {
--		int r;
--
--		ath_print(common, ATH_DBG_FATAL,
--			  "Failed to stop TX DMA. Resetting hardware!\n");
--
--		r = ath9k_hw_reset(ah, sc->sc_ah->curchan, ah->caldata, false);
--		if (r)
--			ath_print(common, ATH_DBG_FATAL,
--				  "Unable to reset hardware; reset status %d\n",
--				  r);
--	}
-+	if (npend)
-+		ath_print(common, ATH_DBG_FATAL,  "Failed to stop TX DMA!\n");
- 
- 	for (i = 0; i < ATH9K_NUM_TX_QUEUES; i++) {
- 		if (ATH_TXQ_SETUP(sc, i))
+#define CHANSEL_2G_AR9485(_freq)	(((_freq) * 0x10000 - 215) / CHANSEL_DIV)
+
+While I don't know where the 215 comes from (the calculation does not
+appear to be documented anywhere and I found it by trial & error),
+I do think it's better to have a simple formula than a long table
+of hardcoded values.
+
+- Felix
