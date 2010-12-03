@@ -1,71 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.19.149.2]:52781 "EHLO mail.atheros.com"
+Received: from mail.atheros.com ([12.19.149.2]:45345 "EHLO mail.atheros.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752259Ab0LVS5X (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 22 Dec 2010 13:57:23 -0500
-Received: from mail.atheros.com ([10.10.20.108])
+	id S1755364Ab0LCJM6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 3 Dec 2010 04:12:58 -0500
+Received: from mail.atheros.com ([10.10.20.105])
 	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Wed, 22 Dec 2010 10:57:07 -0800
-Date: Wed, 22 Dec 2010 13:57:18 -0500
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: Hauke Mehrtens <hauke@hauke-m.de>
-CC: Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"mcgrof@infradead.org" <mcgrof@infradead.org>, <it@atheros.com>
-Subject: Re: [PATCH] compat-wireless: build led support conditionally
-Message-ID: <20101222185718.GE8384@tux>
-References: <1293041434-3594-1-git-send-email-hauke@hauke-m.de>
- <AANLkTik9=gSpE6sRoYZu-RZv3PjeQdtf_Y9hc=X-Z7w=@mail.gmail.com>
- <4D1247C2.6090500@hauke-m.de>
+	for <linux-wireless@vger.kernel.org>; Fri, 03 Dec 2010 01:12:43 -0800
+Date: Fri, 3 Dec 2010 14:42:33 +0530
+From: Rajkumar Manoharan <rmanoharan@atheros.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+CC: Rajkumar Manoharan <Rajkumar.Manoharan@Atheros.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH] ath9k: fix beacon resource related race condition
+Message-ID: <20101203091233.GA17284@vmraj-lnx.users.atheros.com>
+References: <1291115197-10883-1-git-send-email-rmanoharan@atheros.com>
+ <20101202185444.GA2358@tuxdriver.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <4D1247C2.6090500@hauke-m.de>
+In-Reply-To: <20101202185444.GA2358@tuxdriver.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Dec 22, 2010 at 10:47:30AM -0800, Hauke Mehrtens wrote:
-> On 12/22/2010 07:23 PM, Luis R. Rodriguez wrote:
-> > On Wed, Dec 22, 2010 at 1:10 PM, Hauke Mehrtens <hauke@hauke-m.de> wrote:
-> >> diff --git a/config.mk b/config.mk
-> >> index 964c646..1f95908 100644
-> >> --- a/config.mk
-> >> +++ b/config.mk
-> >> @@ -133,7 +133,9 @@ CONFIG_COMPAT_MAC80211_RC_DEFAULT=minstrel_ht
-> >>  CONFIG_MAC80211_RC_PID=y
-> >>  CONFIG_MAC80211_RC_MINSTREL=y
-> >>  CONFIG_MAC80211_RC_MINSTREL_HT=y
-> >> +ifdef CONFIG_LEDS_TRIGGERS
-> >>  CONFIG_MAC80211_LEDS=y
-> >> +endif #CONFIG_LEDS_TRIGGERS
+On Fri, Dec 03, 2010 at 12:24:44AM +0530, John W. Linville wrote:
+> On Tue, Nov 30, 2010 at 04:36:37PM +0530, Rajkumar Manoharan wrote:
+> > While releasing beacon slot, it can be accessed by beacon tasklet.
+> > To avoid concurrency, beacon alert is disabled before
+> > freeing beacon resource and it will be enabled again in the
+> > persence of other beaconing mode interfaces.
 > > 
-> > Without using a space for the ifdef'd variable the
-> > include/linux/compat_autoconf.h will end up still defining it but you
-> > should not get it set on the local Makefiles, in this case we want it
-> > to not be defined in the compat_autoconf.h as well so how about
-> > instead (handing off to my atheros address as I use mutt there, one
-> > second)
+> > Signed-off-by: Rajkumar Manoharan <rmanoharan@atheros.com>
 > 
-> The script generating include/linux/compat_autoconf.h will also add the
-> ifdefs into compat_autoconf.h. The generated entry looks like this:
-> 
-> #if defined(CONFIG_LEDS_TRIGGERS) || defined(CONFIG_LEDS_TRIGGERS_MODULE)
-> #ifndef CONFIG_MAC80211_LEDS
-> #define CONFIG_MAC80211_LEDS 1
-> #endif /* CONFIG_MAC80211_LEDS */
-> #endif /* CONFIG_LEDS_TRIGGERS */
-> 
-> I added this feature some months ago.
+> Is this intended for 2.6.37?  It looks like it could apply there.
 
-Ah neat thanks!
+yes. I missed to mention. Thanks for pointing out.
 
-> Hauke
-> 
-> Your mail server at atheros did not accept my mail, because the IP
-> address I got from my local ISP ( 91.97.249.71 ) is on some blacklist.
-> But this is normal and the mail was sent throught my mail server which
-> IP address is not on that blacklist. Your mail server seams to be mis
-> configured.
+> Could you be more specific about the effect of the bug you are fixing?
 
-Cc'ing our IT.
+The beacon tasklet is accesssing the bslot info for beacon generation.
+Meanwhile the same slot can be freed on interface deletion.
+Actually the remove_interface disables the beacon alert after freeing the slot.
+This may lead to null pointer access.
 
-  Luis
+This patch disables SWBA and kills the beacon tasklet to prevent access
+to the slot to be freed. After releasing the slot, swba will be enabled again
+upon the availablity of beaconing interfaces.
+
+--
+Rajkumar
