@@ -1,57 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yw0-f46.google.com ([209.85.213.46]:58873 "EHLO
-	mail-yw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753213Ab0L3XIn (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:50682 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751728Ab0LCPAL (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 30 Dec 2010 18:08:43 -0500
-From: "Justin P. Mattock" <justinmattock@gmail.com>
-To: trivial@kernel.org
-Cc: linux-m68k@lists.linux-m68k.org, linux-kernel@vger.kernel.org,
-	netdev@vger.kernel.org, ivtv-devel@ivtvdriver.org,
-	linux-media@vger.kernel.org, linux-wireless@vger.kernel.org,
-	linux-scsi@vger.kernel.org,
-	spi-devel-general@lists.sourceforge.net,
-	devel@driverdev.osuosl.org, linux-usb@vger.kernel.org,
-	"Justin P. Mattock" <justinmattock@gmail.com>
-Subject: [PATCH 11/15]drivers:media:video:cx18:cx23418.h Typo change diable to disable.
-Date: Thu, 30 Dec 2010 15:08:00 -0800
-Message-Id: <1293750484-1161-11-git-send-email-justinmattock@gmail.com>
-In-Reply-To: <1293750484-1161-10-git-send-email-justinmattock@gmail.com>
-References: <1293750484-1161-1-git-send-email-justinmattock@gmail.com>
- <1293750484-1161-2-git-send-email-justinmattock@gmail.com>
- <1293750484-1161-3-git-send-email-justinmattock@gmail.com>
- <1293750484-1161-4-git-send-email-justinmattock@gmail.com>
- <1293750484-1161-5-git-send-email-justinmattock@gmail.com>
- <1293750484-1161-6-git-send-email-justinmattock@gmail.com>
- <1293750484-1161-7-git-send-email-justinmattock@gmail.com>
- <1293750484-1161-8-git-send-email-justinmattock@gmail.com>
- <1293750484-1161-9-git-send-email-justinmattock@gmail.com>
- <1293750484-1161-10-git-send-email-justinmattock@gmail.com>
+	Fri, 3 Dec 2010 10:00:11 -0500
+Date: Fri, 3 Dec 2010 09:56:55 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Cc: ath5k-devel@venema.h4ckr.net, linux-wireless@vger.kernel.org,
+	me@bobcopeland.com, jirislaby@gmail.com, nbd@openwrt.org,
+	br1@einfach.org, sedat.dilek@googlemail.com
+Subject: Re: [PATCH 5/6] ath5k: Update version string
+Message-ID: <20101203145654.GB2348@tuxdriver.com>
+References: <20101203041109.GE2988@makis.mantri>
+ <AANLkTi=n0wkMTWxJvvNHHMyjvGA25JSr8awWKMJsAv+g@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=iso-8859-1
+In-Reply-To: <AANLkTi=n0wkMTWxJvvNHHMyjvGA25JSr8awWKMJsAv+g@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The below patch fixes a typo "diable" to "disable". Please let me know if this 
-is correct or not.
+On Thu, Dec 02, 2010 at 08:17:41PM -0800, Luis R. Rodriguez wrote:
+> On Thu, Dec 2, 2010 at 8:11 PM, Nick Kossifidis <mickflemm@gmail.com> wrote:
+> >  * Change version number, we've added various new features lately.
+> >  We need to find a way to maintain this, maybe on each kernel release
+> >  or something. Also remove "EXPERIMENTAL", we aren't experimental any
+> >  more I think ;-)
+> >
+> >  Signed-off-by: Nick Kossifidis <mickflemm@gmail.com>
+> 
+> > +MODULE_VERSION("0.7.0");
+> 
+> How about just remove this all together, the version should go by the
+> kernel or git describe.
 
-Signed-off-by: Justin P. Mattock <justinmattock@gmail.com>
+ACK -- any objections?
 
----
- drivers/media/video/cx18/cx23418.h |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
-
-diff --git a/drivers/media/video/cx18/cx23418.h b/drivers/media/video/cx18/cx23418.h
-index 2c00980..7e40035 100644
---- a/drivers/media/video/cx18/cx23418.h
-+++ b/drivers/media/video/cx18/cx23418.h
-@@ -177,7 +177,7 @@
-    IN[0] - Task handle.
-    IN[1] - luma type: 0 = disable, 1 = 1D horizontal only, 2 = 1D vertical only,
- 		      3 = 2D H/V separable, 4 = 2D symmetric non-separable
--   IN[2] - chroma type: 0 - diable, 1 = 1D horizontal
-+   IN[2] - chroma type: 0 - disable, 1 = 1D horizontal
-    ReturnCode - One of the ERR_CAPTURE_... */
- #define CX18_CPU_SET_SPATIAL_FILTER_TYPE     	(CPU_CMD_MASK_CAPTURE | 0x000C)
- 
+John
 -- 
-1.6.5.2.180.gc5b3e
-
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
