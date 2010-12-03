@@ -1,74 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.19.149.2]:35049 "EHLO mail.atheros.com"
+Received: from smtp.nokia.com ([147.243.128.26]:35522 "EHLO mgw-da02.nokia.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754025Ab0LGPxZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 7 Dec 2010 10:53:25 -0500
-Received: from mail.atheros.com ([10.10.20.108])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Tue, 07 Dec 2010 07:53:11 -0800
-From: Mohammed Shafi Shajakhan <mshajakhan@atheros.com>
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>, <lrodriguez@atheros.com>,
-	Mohammed Shafi Shajakhan <mshajakhan@atheros.com>
-Subject: [PATCH v2] ath9k: Remove dead code in recv.c
-Date: Tue, 7 Dec 2010 21:23:16 +0530
-Message-ID: <1291737196-6341-1-git-send-email-mshajakhan@atheros.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	id S1750998Ab0LCPFA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 3 Dec 2010 10:05:00 -0500
+From: luciano.coelho@nokia.com
+To: linux-wireless@vger.kernel.org
+Cc: luciano.coelho@nokia.com, geryk@ti.com
+Subject: [PATCH] wl12xx: disable 11a channels when wl->enable_11a is known
+Date: Fri,  3 Dec 2010 17:05:40 +0200
+Message-Id: <1291388740-27218-1-git-send-email-luciano.coelho@nokia.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Mohammed Shafi Shajakhan <mshajakhan@atheros.com>
+From: Luciano Coelho <luciano.coelho@nokia.com>
 
-The structure struct ieee80211_rx_status *rxs is no longer needed to be
-passed to ath_rx_send_to_mac80211 function
+Disabling the 11a channels when not supported in the reg_notify function was
+not working as it should, because when the driver is initiailizing (and
+registering itself with mac80211), it would get the reg notification too
+early.  At that point the driver wouldn't have received the NVS yet, so it
+wouldn't know whether 11a was supported.
 
-Signed-off-by: Mohammed Shafi Shajakhan <mshajakhan@atheros.com>
+To fix this, we disable 11a channels when we read the NVS instead.  Also, it
+is easier (and still safe) to set n_channels to zero instead of setting the
+disabled flag on every 11a channel.
+
+Signed-off-by: Luciano Coelho <luciano.coelho@nokia.com>
 ---
- drivers/net/wireless/ath/ath9k/recv.c |    9 ++++-----
- 1 files changed, 4 insertions(+), 5 deletions(-)
+ drivers/net/wireless/wl12xx/main.c |   16 ++++++++++------
+ 1 files changed, 10 insertions(+), 6 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/recv.c b/drivers/net/wireless/ath/ath9k/recv.c
-index 262c815..a14515a 100644
---- a/drivers/net/wireless/ath/ath9k/recv.c
-+++ b/drivers/net/wireless/ath/ath9k/recv.c
-@@ -660,8 +660,7 @@ static void ath_rx_ps(struct ath_softc *sc, struct sk_buff *skb)
- }
- 
- static void ath_rx_send_to_mac80211(struct ieee80211_hw *hw,
--				    struct ath_softc *sc, struct sk_buff *skb,
--				    struct ieee80211_rx_status *rxs)
-+				    struct ath_softc *sc, struct sk_buff *skb)
+diff --git a/drivers/net/wireless/wl12xx/main.c b/drivers/net/wireless/wl12xx/main.c
+index dc3a093..9cdbfde 100644
+--- a/drivers/net/wireless/wl12xx/main.c
++++ b/drivers/net/wireless/wl12xx/main.c
+@@ -338,7 +338,6 @@ out:
+ static int wl1271_reg_notify(struct wiphy *wiphy,
+ 			     struct regulatory_request *request)
  {
- 	struct ieee80211_hdr *hdr;
+-	struct wl1271 *wl = wiphy_to_ieee80211_hw(wiphy)->priv;
+ 	struct ieee80211_supported_band *band;
+ 	struct ieee80211_channel *ch;
+ 	int i;
+@@ -349,11 +348,6 @@ static int wl1271_reg_notify(struct wiphy *wiphy,
+ 		if (ch->flags & IEEE80211_CHAN_DISABLED)
+ 			continue;
  
-@@ -1618,7 +1617,7 @@ int ath_rx_tasklet(struct ath_softc *sc, int flush, bool hp)
- 	struct ath_hw *ah = sc->sc_ah;
- 	struct ath_common *common = ath9k_hw_common(ah);
- 	/*
--	 * The hw can techncically differ from common->hw when using ath9k
-+	 * The hw can technically differ from common->hw when using ath9k
- 	 * virtual wiphy so to account for that we iterate over the active
- 	 * wiphys and find the appropriate wiphy and therefore hw.
- 	 */
-@@ -1727,7 +1726,7 @@ int ath_rx_tasklet(struct ath_softc *sc, int flush, bool hp)
- 			bf->bf_buf_addr = 0;
- 			ath_print(common, ATH_DBG_FATAL,
- 				  "dma_mapping_error() on RX\n");
--			ath_rx_send_to_mac80211(hw, sc, skb, rxs);
-+			ath_rx_send_to_mac80211(hw, sc, skb);
- 			break;
- 		}
+-		if (!wl->enable_11a) {
+-			ch->flags |= IEEE80211_CHAN_DISABLED;
+-			continue;
+-		}
+-
+ 		if (ch->flags & IEEE80211_CHAN_RADAR)
+ 			ch->flags |= IEEE80211_CHAN_NO_IBSS |
+ 				     IEEE80211_CHAN_PASSIVE_SCAN;
+@@ -1071,6 +1065,16 @@ power_off:
+ 	strncpy(wiphy->fw_version, wl->chip.fw_ver,
+ 		sizeof(wiphy->fw_version));
  
-@@ -1753,7 +1752,7 @@ int ath_rx_tasklet(struct ath_softc *sc, int flush, bool hp)
- 		if (ah->caps.hw_caps & ATH9K_HW_CAP_ANT_DIV_COMB)
- 			ath_ant_comb_scan(sc, &rs);
++	/*
++	 * Now we know if 11a is supported (info from the NVS), so disable
++	 * 11a channels if not supported
++	 */
++	if (!wl->enable_11a)
++		wiphy->bands[IEEE80211_BAND_5GHZ]->n_channels = 0;
++
++	wl1271_debug(DEBUG_MAC80211, "11a is %ssupported",
++		     wl->enable_11a ? "":"not ");
++
+ out:
+ 	mutex_unlock(&wl->mutex);
  
--		ath_rx_send_to_mac80211(hw, sc, skb, rxs);
-+		ath_rx_send_to_mac80211(hw, sc, skb);
- 
- requeue:
- 		if (edma) {
 -- 
 1.7.0.4
 
