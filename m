@@ -1,77 +1,89 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ww0-f42.google.com ([74.125.82.42]:43530 "EHLO
-	mail-ww0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754711Ab0LAWFy convert rfc822-to-8bit (ORCPT
+Received: from na3sys009aog113.obsmtp.com ([74.125.149.209]:45455 "HELO
+	na3sys009aog113.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1753671Ab0LDBAC (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 1 Dec 2010 17:05:54 -0500
-Received: by wwb39 with SMTP id 39so288347wwb.1
-        for <linux-wireless@vger.kernel.org>; Wed, 01 Dec 2010 14:05:53 -0800 (PST)
+	Fri, 3 Dec 2010 20:00:02 -0500
+From: Bing Zhao <bzhao@marvell.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Frank Huang <frankh@marvell.com>
+Date: Fri, 3 Dec 2010 16:59:58 -0800
+Subject: RE: [PATCH 00/31] wireless: Marvell mwifiex driver for SD8787
+Message-ID: <477F20668A386D41ADCC57781B1F704307D5C0FA43@SC-VEXCH1.marvell.com>
+References: <1291253516-17815-1-git-send-email-bzhao@marvell.com>
+	 ,<1291380780.3499.119.camel@jlt3.sipsolutions.net>
+	 <477F20668A386D41ADCC57781B1F704307D59F9D6D@SC-VEXCH1.marvell.com>
+	 <77956EDC1B917843AC9B7965A3BD78B058FEF48E24@SC-VEXCH2.marvell.com>
+ <1291401568.3499.142.camel@jlt3.sipsolutions.net>
+In-Reply-To: <1291401568.3499.142.camel@jlt3.sipsolutions.net>
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-In-Reply-To: <AANLkTi=_F0orXPY79ojoPKEqn4ohQjV5Rj5Qb3H7CR8f@mail.gmail.com>
-References: <AANLkTi=_F0orXPY79ojoPKEqn4ohQjV5Rj5Qb3H7CR8f@mail.gmail.com>
-Date: Thu, 2 Dec 2010 00:05:53 +0200
-Message-ID: <AANLkTinUFXCEAXcp6d=riFMtgq4Y-Na6_NJaRiymTOmB@mail.gmail.com>
-Subject: Re: [linux-next] next-20101201: ath5k permanently disconnecting
-From: Nick Kossifidis <mickflemm@gmail.com>
-To: sedat.dilek@gmail.com
-Cc: wireless <linux-wireless@vger.kernel.org>,
-	John Linville <linville@tuxdriver.com>,
-	Stephen Rothwell <sfr@canb.auug.org.au>
-Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2010/12/1 Sedat Dilek <sedat.dilek@googlemail.com>:
-> Hi,
->
-> I have built today a linux-next (next-20101201) kernel which includes
-> wireless-next-2.6 up to master-2010-11-30.
->
-> From tig utility:
-> 2010-11-30 15:33 Stanislaw Gruszka  [wireless-next-2.6] iwlagn: fix
-> microcode error on 4965
-> [main] 61790c5f3c5f158821821a00797d94504531839f - commit 1929 of 226338 (0%)
->
-> Unfortunately, my wlan network connection is totally unstable.
->
-> $ dmesg | grep "RX AssocResp" | wc -l
-> 216
->
-> The block looks like this:
-> [ 4436.504059] ieee80211 phy0: wlan0: No probe response from AP
-> 00:04:0e:e4:00:3d after 500ms, disconnecting.
-> [ 4436.504490] cfg80211: Calling CRDA to update world regulatory domain
-> [ 4440.677020] wlan0: authenticate with 00:04:0e:e4:00:3d (try 1)
-> [ 4440.679096] wlan0: authenticated
-> [ 4440.679158] wlan0: associate with 00:04:0e:e4:00:3d (try 1)
-> [ 4440.684667] wlan0: RX AssocResp from 00:04:0e:e4:00:3d (capab=0x411
-> status=0 aid=1)
-> [ 4440.684673] wlan0: associated
->
-> My wlan device is an ath5k:
->
-> $ lspci -nnvv | grep "Ethernet controller" | grep -i ath
-> 02:02.0 Ethernet controller [0200]: Atheros Communications Inc. AR5212
-> 802.11abg NIC [168c:1014] (rev 01)
->
-> Any idea what's wrong? (Just speculating on the last patch-set from Nick...)
-> How can I help to dig into this problem?
-> Debug-session with wpasupplicant? Which kernel-parameters (debug) to
-> be considered/set?
->
-> Kind Regards,
-> - Sedat -
->
-
-That's weird I tested all patches for connectivity + iperf, maybe
-something else also went on the tree that results such behavior...
-
-1) Are you using NetworkManager ? If so disable it and connect manually.
-2) Can you disable encryption on your AP and see if it works without it ?
-3) Try and enable/disable hw encryption with nohwcrypt module parameter.
-4) What's your signal strength/rate when you connect to the AP ?
-
--- 
-GPG ID: 0xD21DB2DB
-As you read this post global entropy rises. Have Fun ;-)
-Nick
+SGkgSm9oYW5uZXMsDQoNClRoYW5rIHlvdSBzbyBtdWNoIGZvciB5b3VyIGNvbW1lbnRzIQ0KDQo+
+IC0tLS0tT3JpZ2luYWwgTWVzc2FnZS0tLS0tDQo+IEZyb206IEpvaGFubmVzIEJlcmcgW21haWx0
+bzpqb2hhbm5lc0BzaXBzb2x1dGlvbnMubmV0XQ0KPiBTZW50OiBGcmlkYXksIERlY2VtYmVyIDAz
+LCAyMDEwIDEwOjM5IEFNDQo+IFRvOiBGcmFuayBIdWFuZw0KPiBDYzogQmluZyBaaGFvOyBsaW51
+eC13aXJlbGVzc0B2Z2VyLmtlcm5lbC5vcmcNCj4gU3ViamVjdDogUkU6IFtQQVRDSCAwMC8zMV0g
+d2lyZWxlc3M6IE1hcnZlbGwgbXdpZmlleCBkcml2ZXIgZm9yIFNEODc4Nw0KPiANCj4gT24gRnJp
+LCAyMDEwLTEyLTAzIGF0IDA5OjAxIC0wODAwLCBGcmFuayBIdWFuZyB3cm90ZToNCj4gDQo+ID4g
+W3NuaXBdDQo+IA0KPiBNaW5kIHlvdSwgdGhlcmUgd2lsbCBkZWZpbml0ZWx5IGJlIG1vcmUgdGhp
+bmdzIHRvIGNoYW5nZSBpbiB0aGlzDQo+IGRyaXZlciAuLi4gdGhhdCB3YXMganVzdCB0aGUgdGlw
+IG9mIHRoZSBpY2ViZXJnIHJlYWxseS4NCj4gDQo+IEFsc28sIHRoZXJlIGlzIGEgbG90IG9mIHN0
+dWZmIHRhbGtpbmcgb2YgImlvY3RsIi4gSSBpbml0aWFsbHkgd3JvbmdseQ0KPiBhc3N1bWVkIHlv
+dSB3ZXJlIHVzaW5nIHdpcmVsZXNzIGV4dGVuc2lvbnMgb3Igc29tZXRoaW5nIC0tIEkgYXBvbG9n
+aXNlDQo+IGZvciB0aGF0IG1pc2NvbmNlcHRpb24gKGJ1dCB5b3UnbGwgaGF2ZSB0byBhZ3JlZSB0
+aGF0IGl0IHdhcyBhbiBlYXN5DQo+IG1pc3Rha2UgdG8gbWFrZSEpLiBIb3dldmVyLCB0aGUgImlv
+Y3RsIiBsYXllciBpbiB0aGUgZHJpdmVyIG5lZWRzIHRvIGJlDQo+IF9kaXNzb2x2ZWRfIGVudGly
+ZWx5LCB0aGVyZSdzIG5vIHJlYWwgcmVhc29uIHdoeSBmb3IgZXhhbXBsZQ0KPiBtd2lmaWV4X3Nl
+dF9yZl9jaGFubmVsKCkgc2hvdWxkbid0IGRpcmVjdGx5IGNhbGwgaW50byB0aGUgZnVuY3Rpb25z
+IHNldA0KPiB0aGF0IHRoZSBjaGFubmVsLCByYXRoZXIgdGhhbiBhbGxvY2F0aW5nIGFuICJpb2N0
+bCIgcmVxdWVzdCBhbmQgY2FsbGluZw0KPiBpdC4NCj4gDQo+IEEgYmV0dGVyIGV4bWFwbGUgbWln
+aHQgYmUgbXdpZmlleF9zZXRfdHhfcG93ZXIgLS0gaXQgY2FsbHMNCj4gbXdpZmlleF9yZXF1ZXN0
+X2lvY3RsLCB3aGljaCBjYWxscyBtd2lmaWV4X2lvY3RsLCB3aGljaCBjYWxscyBhDQo+IG1vZGUt
+ZGVwZW5kZW50IGlvY3RsIGhhbmRsZXIsIHdoaWNoIGlzLCBzYXksIG13aWZpZXhfb3BzX3N0YV9p
+b2N0bCAtLQ0KPiB3aGljaCB0aGVuIHBhcnNlcyB0aGUgYXJndW1lbnRzIGFuZCBjYWxscyBtd2lm
+aWV4X3Bvd2VyX2lvY3RsLiBUaGlzIGluDQo+IHR1cm4gY2FsbHMgbXdpZmlleF9wb3dlcl9pb2N0
+bF9zZXRfcG93ZXIsIHdoaWNoIGZpbmFsbHkgZG9lcyBzb21ldGhpbmcNCj4gbGlrZSBhbGxvY2F0
+aW5nIGEgY29tbWFuZC4NCj4gDQo+IEFsbW9zdCAqZXZlcnl0aGluZyogZGVzY3JpYmVkIGluIHRo
+YXQgcGFyYWdyYXBoIHNob3VsZCBiZSBkaXNzb2x2ZWQgLS0NCj4gbXdpZmlleF9zZXRfdHhfcG93
+ZXIoKSBzaG91bGQgY2FsbCBhIGZ1bmN0aW9uIHBvaW50ZXIgbGlrZQ0KPiBvcHMuc2V0X3R4X3Bv
+d2VyIHdoaWNoIGlzIHNldCB0byBhIGZ1bmN0aW9uIHNpbWlsYXIgdG8NCj4gbXdpZmlleF9wb3dl
+cl9pb2N0bF9zZXRfcG93ZXIsIGJ1dCB0aGF0IHNpbWlsYXIgZnVuY3Rpb24gc2hvdWxkIHByb2Jh
+Ymx5DQo+IHdhaXQgZm9yIHRoZSBjb21tYW5kIHRvIGJlIHByb2Nlc3NlZCBieSB0aGUgZGV2aWNl
+IGFzIHdlbGwuDQo+IA0KPiBUaGVyZSdzIHJlYWxseSBubyBuZWVkIHRvIG1hcnNoYWwgcGFyYW1l
+dGVycyBhbmQgc2V0dGluZ3MgYSBmZXcgdGltZXMNCj4gYmVmb3JlIHRoZXkgYXJyaXZlIGF0IHRo
+ZSBoYXJkd2FyZSENCg0KWW91IGFyZSByaWdodC4gVGhlc2UgaW9jdGxzIHNob3VsZG4ndCBiZSBu
+ZWNlc3NhcnkuIEkgd2lsbCBwdXQgdGhlbSBvbiBteSBsaXN0Lg0KDQo+IA0KPiBBIG1vcmUgbWlu
+b3IgdGhpbmc6IHRoZXJlIGFyZSBhIGxvdCBvZiBzdGF0aWMgZm9yd2FyZCBkZWNsYXJhdGlvbnMg
+dGhhdA0KPiBhcmVuJ3QgcmVhbGx5IG5lY2Vzc2FyeSBpZiB5b3Ugc2h1ZmZsZSB0aGUgY29kZSBh
+IGJpdCAtLSB0aGF0IHdvdWxkIGJlDQo+IGFwcHJlY2lhdGVkLg0KPg0KDQpZZXMsIHRoaXMgd2ls
+bCBiZSB0YWtlbiBjYXJlIG9mIHRvby4NCiANCj4gDQo+IE9uIGEgYnJvYWRlciB2aWV3LCBJIHdv
+dWxkIHN1Z2dlc3QgdGhhdCB5b3Ugc3RvcCB0aGlua2luZyBvZiB5b3VyIGRyaXZlcg0KPiBhcyBz
+cGVjaWFsLiBDbGVhcmx5LCBpdCBpcyBkZWFyIHRvIHlvdSwgYXMgYXJlIGV2ZXJ5b25lJ3MgZHJp
+dmVycyB0bw0KPiB0aGVtLCBidXQgaW4gdGhlIG92ZXJhbGwgZWNvc3lzdGVtIGl0IHNob3VsZCBm
+aXQgaW4gd2l0aCBhIG1pbmltdW0gb2YNCj4gZnV6eiwgYW5kIG5vdCByZXF1aXJlIHNwZWNpYWwg
+dG9vbHMgb3Igc3BlY2lhbCBwcm9ncmFtbWluZy4gVGhlIGN1c3RvbQ0KPiB3aXJlbGVzcyBldmVu
+dHMsIGZvciBleGFtcGxlLCBhcmUgZW50aXJlbHkgdXNlbGVzcyB0byBleGlzdGluZw0KPiBhcHBs
+aWNhdGlvbnMuIFNpbWlsYXJseSwgTkVUTElOS19NQVJWRUxMIChub3QgdG8gbWVudGlvbiB0aGUg
+YWJ1c2Ugb2YNCj4gdGhlIG5ldGxpbmsgc3lzdGVtIGEgZHJpdmVyIHByZXNlbnRzIHRoYXQgdW5p
+bGF0ZXJhbGx5IGRlY2xhcmVzIHRoYXQgYQ0KPiBnaXZlbiBuZXRsaW5rIElEIGlzIHJlc2VydmVk
+IGZvciBpdCB3aXRob3V0IG1ha2luZyB0aGF0IGtub3duIHRvIHRoZQ0KPiBrZXJuZWwgYXQgbGFy
+Z2UpLg0KDQpKb2huJ3MgcG9zdGVkIHBhdGNoZXMgdGhhdCByZW1vdmUgdGhlIHdpcmVsZXNzIGV2
+ZW50cywgaW5jbHVkaW5nIE5FVExJTktfTUFSVkVMTC4NCg0KPiANCj4gDQo+IEFsbCB0aGlzIHNh
+aWQsIHRob3VnaCwgZG9uJ3QgdGhpbmsgSSdtIGVudGlyZWx5IG5lZ2F0aXZlLiBJJ20gaGFwcHkN
+Cj4gdGhlcmUncyBhIGRyaXZlciwgYW5kIHRoYXQgeW91J3JlIHN0YXJ0aW5nIHRvIGVuZ2FnZSB3
+aXRoIHRoZSBjb21tdW5pdHkNCj4gKGFsdGhvdWdoIEkgZG9uJ3QgcXVpdGUgdW5kZXJzdGFuZCB3
+aHkgeW91ciByZXNwb25zZSB3YXMgcHJpdmF0ZSkuIEFuZA0KPiB0aGUgZHJpdmVyIGNvZGUgaXMg
+YXQgbGVhc3QgY2xlYW4gLS0gSSBtYXkgbm90IGFncmVlIHdpdGggaG93IGl0IHdvcmtzLA0KPiBi
+dXQgYXQgbGVhc3QgSSBkb24ndCBoYXZlIHRvIHJ1biBpdCB0aHJvdWdoIExpbmRlbnQgdG8gcHJv
+dGVjdCBteXNlbGYNCj4gZnJvbSBleWUgY2FuY2VyIDopDQoNClRoYW5rcyEgV2Ugd2lsbCBjb250
+aW51ZSBvdXIgZWZmb3J0cyB0byBtYWtlIHN1cmUgdGhhdCB0aGUgc3VibWl0dGVkIHBhdGNoZXMg
+YXJlIGNsZWFuLg0KDQo+IA0KPiBNaW5kIHlvdSwgSSBoYXZlbid0IGRvbmUgYSBjZmc4MDIxMSBB
+UEkgcmV2aWV3IGF0IGFsbC4gSSdsbCBkbyB0aGF0IHdoZW4NCj4gdGhlIGNvZGUgZmxvdyBpcyBl
+YXNpZXIgdG8gZm9sbG93IGFuZCBub3QgaGlkZGVuIGluIG11bHRpcGxlIGFic3RyYWN0aW9uDQo+
+IGxheWVycyBhbmQgImlvY3RscyIuDQoNCkkgYXBwcmVjaWF0ZSBpdC4gV2Ugd2lsbCBtYWtlIHRo
+ZSBjaGFuZ2VzIGZpcnN0Lg0KDQpCZXN0IHJlZ2FyZHMsDQoNCkJpbmcNCg0KPiANCj4gam9oYW5u
+ZXMNCg0K
