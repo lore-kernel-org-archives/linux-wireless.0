@@ -1,42 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.19.149.2]:13865 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753086Ab0LAHfj (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 1 Dec 2010 02:35:39 -0500
-Received: from mail.atheros.com ([10.10.20.105])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Tue, 30 Nov 2010 23:35:25 -0800
-From: Vasanthakumar Thiagarajan <vasanth@atheros.com>
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>
-Subject: [PATCH 25/26] ath9k_hw: Disable MRC CCK for AR9485
-Date: Tue, 30 Nov 2010 23:32:54 -0800
-Message-ID: <1291188775-13707-26-git-send-email-vasanth@atheros.com>
-In-Reply-To: <1291188775-13707-1-git-send-email-vasanth@atheros.com>
-References: <1291188775-13707-1-git-send-email-vasanth@atheros.com>
+Received: from mail-qy0-f174.google.com ([209.85.216.174]:44500 "EHLO
+	mail-qy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755692Ab0LDVzG (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 4 Dec 2010 16:55:06 -0500
+Received: by qyk11 with SMTP id 11so2285202qyk.19
+        for <linux-wireless@vger.kernel.org>; Sat, 04 Dec 2010 13:55:06 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain
+Reply-To: sedat.dilek@gmail.com
+In-Reply-To: <1291491764-6655-1-git-send-email-kilroyd@googlemail.com>
+References: <1291491764-6655-1-git-send-email-kilroyd@googlemail.com>
+Date: Sat, 4 Dec 2010 22:55:05 +0100
+Message-ID: <AANLkTi=nS+Du=CEk4=zqekJty=XnBjTUAj49L0Njz5BP@mail.gmail.com>
+Subject: Re: [PATCH 1/2] orinoco: fix TKIP countermeasure behaviour
+From: Sedat Dilek <sedat.dilek@googlemail.com>
+To: David Kilroy <kilroyd@googlemail.com>
+Cc: linux-wireless@vger.kernel.org, comes@naic.edu
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Vasanthakumar Thiagarajan <vasanth@atheros.com>
----
- drivers/net/wireless/ath/ath9k/ani.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+On Sat, Dec 4, 2010 at 8:42 PM, David Kilroy <kilroyd@googlemail.com> wrote:
+> Enable the port when disabling countermeasures, and disable it on
+> enabling countermeasures.
+>
+> This bug causes the response of the system to certain attacks to be
+> ineffective.
+>
+> It also prevents wpa_supplicant from getting scan results, as
+> wpa_supplicant disables countermeasures on startup - preventing the
+> hardware from scanning.
+>
+> wpa_supplicant works with ap_mode=2 because the commit handler
+> re-enables to port.
+>
+> The log tends to look like:
+>
+> State: DISCONNECTED -> SCANNING
+> Starting AP scan for wildcard SSID
+> Scan requested (ret=0) - scan timeout 5 seconds
+> EAPOL: disable timer tick
+> EAPOL: Supplicant port status: Unauthorized
+> Scan timeout - try to get results
+> Failed to get scan results
+> Failed to get scan results - try scanning again
+> Setting scan request: 1 sec 0 usec
+> Starting AP scan for wildcard SSID
+> Scan requested (ret=-1) - scan timeout 5 seconds
+> Failed to initiate AP scan.
+>
+> Reported by: Giacomo Comes <comes@naic@edu>
+> Signed-off by: David Kilroy <kilroyd@googlemail.com>
+> ---
+>
 
-diff --git a/drivers/net/wireless/ath/ath9k/ani.c b/drivers/net/wireless/ath/ath9k/ani.c
-index 29a045d..990da39 100644
---- a/drivers/net/wireless/ath/ath9k/ani.c
-+++ b/drivers/net/wireless/ath/ath9k/ani.c
-@@ -358,7 +358,7 @@ static void ath9k_hw_set_cck_nil(struct ath_hw *ah, u_int8_t immunityLevel)
- 				     entry_cck->fir_step_level);
- 
- 	/* Skip MRC CCK for pre AR9003 families */
--	if (!AR_SREV_9300_20_OR_LATER(ah))
-+	if (!AR_SREV_9300_20_OR_LATER(ah) || AR_SREV_9485(ah))
- 		return;
- 
- 	if (aniState->mrcCCKOff == entry_cck->mrc_cck_on)
--- 
-1.7.0.4
+Wrong Email - should be  <comes@naic.edu>?
 
+- Sedat -
