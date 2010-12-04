@@ -1,79 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f46.google.com ([209.85.161.46]:38822 "EHLO
-	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752844Ab0LBRqz convert rfc822-to-8bit (ORCPT
+Received: from mail-ww0-f42.google.com ([74.125.82.42]:37103 "EHLO
+	mail-ww0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750921Ab0LDVhi convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 2 Dec 2010 12:46:55 -0500
-Received: by fxm20 with SMTP id 20so1375688fxm.19
-        for <linux-wireless@vger.kernel.org>; Thu, 02 Dec 2010 09:46:54 -0800 (PST)
+	Sat, 4 Dec 2010 16:37:38 -0500
+Received: by wwe15 with SMTP id 15so2413103wwe.1
+        for <linux-wireless@vger.kernel.org>; Sat, 04 Dec 2010 13:37:36 -0800 (PST)
 MIME-Version: 1.0
-In-Reply-To: <20101202002234.GA30670@monopoli.naic.edu>
-References: <20101122024208.GA13377@monopoli.naic.edu>
-	<AANLkTikc9w+w8o=ZQBTnTD1=C0+yDVfq=jSfEFQ16dbm@mail.gmail.com>
-	<20101125014511.GA1683@monopoli.naic.edu>
-	<AANLkTi=nkayyyzECi6MO87ZO-CUpZeNP007_hMp8LiPV@mail.gmail.com>
-	<20101126040742.GA5238@monopoli.naic.edu>
-	<AANLkTim=P+QejCObCH1=5cPBDR6BpEXxuqHGZj3JBKbE@mail.gmail.com>
-	<20101130021911.GA18971@monopoli.naic.edu>
-	<AANLkTi=1PXk4u37mPd6=F6mjYWLqo=wg7trVmmpfV_WV@mail.gmail.com>
-	<20101202002234.GA30670@monopoli.naic.edu>
-Date: Thu, 2 Dec 2010 17:46:54 +0000
-Message-ID: <AANLkTi=YT1V-kr-tAmNfSBPPEGk39H37RoNkx5txhnD7@mail.gmail.com>
-Subject: Re: orinoco_cs module and WPA not working
-From: Dave Kilroy <kilroyd@gmail.com>
-To: Giacomo Comes <comes@naic.edu>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+In-Reply-To: <AANLkTi=iixqOgRhgGwwuz+oVzO78yXZ7C=Y8uX+3M_VZ@mail.gmail.com>
+References: <20101203040300.GA2988@makis.mantri>
+	<20101203145558.GA2348@tuxdriver.com>
+	<AANLkTi=iixqOgRhgGwwuz+oVzO78yXZ7C=Y8uX+3M_VZ@mail.gmail.com>
+Date: Sat, 4 Dec 2010 23:37:36 +0200
+Message-ID: <AANLkTi=K27-D-4QQe4DYmPDvWnYW1WK48OA+U2C9t5sN@mail.gmail.com>
+Subject: Re: [PATCH 1/6] ath5k: Always write tx powertable on hw
+From: Nick Kossifidis <mickflemm@gmail.com>
+To: Bob Copeland <me@bobcopeland.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	ath5k-devel@venema.h4ckr.net, linux-wireless@vger.kernel.org,
+	mcgrof@gmail.com, jirislaby@gmail.com, nbd@openwrt.org,
+	br1@einfach.org, sedat.dilek@googlemail.com
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Dec 2, 2010 at 12:22 AM, Giacomo Comes <comes@naic.edu> wrote:
-> On Wed, Dec 01, 2010 at 09:52:15PM +0000, Dave Kilroy wrote:
->> On Tue, Nov 30, 2010 at 2:19 AM, Giacomo Comes <comes@naic.edu> wrote:
->> wpa_supplicant log indicates it is continuously timing out the scans.
->> I don't know what is going on there.
+2010/12/4 Bob Copeland <me@bobcopeland.com>:
+> On Fri, Dec 3, 2010 at 9:55 AM, John W. Linville <linville@tuxdriver.com> wrote:
+>> On Fri, Dec 03, 2010 at 06:03:00AM +0200, Nick Kossifidis wrote:
+>>> Â * By skipping tx power table calibration we also skip setting
+>>> Â tx power table on hw. Make sure we always write tx power table
+>>> Â on hw since it gets cleared on reset.
+>>>
+>>> Â Signed-off-by: Nick Kossifidis <mickflemm@gmail.com>
 >>
->> What you can try is to turn off wpa_supplicant roaming, and force
->> wpa_supplicant to connect to the AP with highest priority in your
->> config. Set ap_scan=2 in wpa_supplicant.conf, and set
+>> Hey, Nick -- just a process note...
 >>
->> group=TKIP
->> pairwise=TKIP
->>
->> in the network block.
->>
->> This also prevents wpa_supplicant trying to connect to an AP using
->> BSSID, which the agere cards don't support.
+>> All your patches have " Signed-off-by..." (notice the leading space),
+>> which looks a bit funny. Â Could you figure-out why this is happening
+>> and change it to remove the leading space?
 >
-> Running:
-> wpa_supplicant -ieth1 -c wpa_supplicant.conf -f wpa_supplicant.log -dd
+> Also the "*" thing is a bit weird as kernel commit messages go.
 >
-> wpa_supplicant.conf content:
-> ctrl_interface=/var/run/wpa_supplicant
-> ctrl_interface_group=0
-> ap_scan=2
->
-> network={
->        ssid="Comes"
->        psk="<password>"
->        key_mgmt=WPA-PSK
->        priority=5
->        proto=WPA
->
->        group=TKIP
->        pairwise=TKIP
-> }
 
-OK, looks like you're using a newer wpa_supplicant that tries to use
-IW_AUTH_MFP which orinoco doesn't know about. I can modify the driver
-to silently pass these calls through, but it would be nice if
-wpa_supplicant didn't fail because a driver didn't support a
-particular option.
-
-I'll put together a patch to accept an IW_AUTH_MFP call set to NONE or
-DISABLED, and fail on REQUIRED. In the meantime you could try use an
-older wpa_supplicant. I think I was using 0.7.2 before, but I can't be
-sure.
+Sorry, bad habits, will change that next time ;-)
 
 
-Dave.
+-- 
+GPG ID: 0xD21DB2DB
+As you read this post global entropy rises. Have Fun ;-)
+Nick
