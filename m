@@ -1,61 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:50911 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754147Ab0LAIom (ORCPT
+Received: from mailserver.naic.edu ([192.65.176.45]:52454 "EHLO
+	mailserver.naic.edu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753896Ab0LDDgu (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 1 Dec 2010 03:44:42 -0500
-Message-Id: <20101201084348.134800081@sipsolutions.net>
-Date: Wed, 01 Dec 2010 09:43:30 +0100
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH 4/9] mac80211: publish some misc docs
-References: <20101201084326.410001080@sipsolutions.net>
+	Fri, 3 Dec 2010 22:36:50 -0500
+Date: Fri, 3 Dec 2010 23:36:46 -0400
+From: Giacomo Comes <comes@naic.edu>
+To: Dave Kilroy <kilroyd@googlemail.com>
+Cc: Giacomo Comes <comes@naic.edu>, linux-wireless@vger.kernel.org
+Subject: Re: orinoco_cs module and WPA not working
+Message-ID: <20101204033646.GA22662@monopoli.naic.edu>
+References: <AANLkTim=P+QejCObCH1=5cPBDR6BpEXxuqHGZj3JBKbE@mail.gmail.com> <20101130021911.GA18971@monopoli.naic.edu> <AANLkTi=1PXk4u37mPd6=F6mjYWLqo=wg7trVmmpfV_WV@mail.gmail.com> <20101202002234.GA30670@monopoli.naic.edu> <AANLkTi=YT1V-kr-tAmNfSBPPEGk39H37RoNkx5txhnD7@mail.gmail.com> <20101203001052.GA16808@monopoli.naic.edu> <AANLkTinLaa+dOiq67DAt+KYfnxUEkNgWEiE2x1NtT9RE@mail.gmail.com> <AANLkTim-hexpFnV_DfKGM53vWo1-5W6fbK4e+jLnb5fB@mail.gmail.com> <20101203202321.GA21937@monopoli.naic.edu> <AANLkTi=qvZ-Uj1T=9Xc8LyyxKvgNw4CKV8Zx2fDfo4uH@mail.gmail.com>
 Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <AANLkTi=qvZ-Uj1T=9Xc8LyyxKvgNw4CKV8Zx2fDfo4uH@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+On Fri, Dec 03, 2010 at 10:49:55PM +0000, Dave Kilroy wrote:
+> >> >> But after removing the line: ap_scan=2
+> >> >> the association fails.
+> >> >> The log is in the second attachment.
+> >> >>
+> >> >> Also I have included in the 3rd attachement wpa_supplicant.log when
+> >> >> NetworkManager is used.
+> >>
+> >> > The failure and NM case are the same. There is still a problem with
+> >> > scanning. wpa_supplicant initiates a scan, and it appears to time out.
+> >> > Without scan results wpa_supplicant is not able to select an
+> >> > appropriate AP.
+> >> >
+> >> > Is the driver reporting any scanning issues in dmesg while
+> >> > wpa_supplicant is running?
+> >
+> > In dmesg there is:
+> > ADDRCONF(NETDEV_UP): eth1: link is not ready
+> >
+> > and on standard error:
+> > ioctl[SIOCSIWENCODEEXT]: Invalid argument
+> 
+> Those are expected.
+> 
+> I'm at a loss. I've looked at the wpa_supplicant code, and had another
+> look at the driver. The scan should be a plain wildcard scan - which
+> you've identified works.
+> 
+> Does setting scan_ssid=1 in the wpa_supplicant network block change
+> the behaviour? That's usually only necessary for hidden SSIDs - but
+> I'd like to know if the scan succeeds in this case.
 
-There isn't a clear TX documentation yet, so
-put these into the misc section for now.
+No It doesn't work.
+But I have more informations for you.
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- Documentation/DocBook/80211.tmpl |    8 ++++++++
- 1 file changed, 8 insertions(+)
+I have been testing different versions of wpa_supplicant
+and I have found that if a use wpa_supplicant 0.7.0 or earlier,
+it works. With 0.7.1 or newer it fails.
+wpa_supplicant 0.7.0 works even without applying your patch.
 
---- wireless-testing.orig/Documentation/DocBook/80211.tmpl	2010-12-01 09:43:17.000000000 +0100
-+++ wireless-testing/Documentation/DocBook/80211.tmpl	2010-12-01 09:43:18.000000000 +0100
-@@ -333,7 +333,11 @@
-           <title>functions/definitions</title>
- !Finclude/net/mac80211.h ieee80211_rx_status
- !Finclude/net/mac80211.h mac80211_rx_flags
-+!Finclude/net/mac80211.h mac80211_tx_control_flags
-+!Finclude/net/mac80211.h mac80211_rate_control_flags
-+!Finclude/net/mac80211.h ieee80211_tx_rate
- !Finclude/net/mac80211.h ieee80211_tx_info
-+!Finclude/net/mac80211.h ieee80211_tx_info_clear_status
- !Finclude/net/mac80211.h ieee80211_rx
- !Finclude/net/mac80211.h ieee80211_rx_ni
- !Finclude/net/mac80211.h ieee80211_rx_irqsafe
-@@ -349,6 +353,7 @@
- !Finclude/net/mac80211.h ieee80211_stop_queue
- !Finclude/net/mac80211.h ieee80211_wake_queues
- !Finclude/net/mac80211.h ieee80211_stop_queues
-+!Finclude/net/mac80211.h ieee80211_queue_stopped
-         </sect1>
-       </chapter>
- 
-@@ -384,6 +389,9 @@
- !Finclude/net/mac80211.h set_key_cmd
- !Finclude/net/mac80211.h ieee80211_key_conf
- !Finclude/net/mac80211.h ieee80211_key_flags
-+!Finclude/net/mac80211.h ieee80211_tkip_key_type
-+!Finclude/net/mac80211.h ieee80211_get_tkip_key
-+!Finclude/net/mac80211.h ieee80211_key_removed
-       </chapter>
- 
-       <chapter id="powersave">
-
-
+I hope this helps.
+Giacomo
