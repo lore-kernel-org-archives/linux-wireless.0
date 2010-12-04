@@ -1,43 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cantor.suse.de ([195.135.220.2]:42279 "EHLO mx1.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757311Ab0LIVn4 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 9 Dec 2010 16:43:56 -0500
-Date: Thu, 9 Dec 2010 13:43:47 -0800
-From: Greg KH <gregkh@suse.de>
-To: Dave Hansen <dave@sr71.net>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Brett Rudley <brudley@broadcom.com>,
-	Henry Ptasinski <henryp@broadcom.com>,
-	Nohee Ko <noheek@broadcom.com>,
-	Jason Cooper <jason@lakedaemon.net>,
-	Mike Rapoport <mike.rapoport@gmail.com>,
-	Andy Shevchenko <andy.shevchenko@gmail.com>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	devel@driverdev.osuosl.org,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: Re: brcm80211 hangs when disabling wireless
-Message-ID: <20101209214347.GA15172@suse.de>
-References: <1291930010.7960.30.camel@nimitz>
+Received: from mail-qw0-f46.google.com ([209.85.216.46]:54744 "EHLO
+	mail-qw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755692Ab0LDV4u (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 4 Dec 2010 16:56:50 -0500
+Received: by qwd7 with SMTP id 7so64933qwd.19
+        for <linux-wireless@vger.kernel.org>; Sat, 04 Dec 2010 13:56:50 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1291930010.7960.30.camel@nimitz>
+Reply-To: sedat.dilek@gmail.com
+In-Reply-To: <1291491764-6655-2-git-send-email-kilroyd@googlemail.com>
+References: <1291491764-6655-1-git-send-email-kilroyd@googlemail.com>
+	<1291491764-6655-2-git-send-email-kilroyd@googlemail.com>
+Date: Sat, 4 Dec 2010 22:56:50 +0100
+Message-ID: <AANLkTinPj5XykC-dC7Me+ZgSiHTringgGJEFOKGbkB93@mail.gmail.com>
+Subject: Re: [PATCH 2/2] orinoco: clear countermeasure setting on commit
+From: Sedat Dilek <sedat.dilek@googlemail.com>
+To: David Kilroy <kilroyd@googlemail.com>
+Cc: linux-wireless@vger.kernel.org, comes@naic.edu
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Dec 09, 2010 at 01:26:50PM -0800, Dave Hansen wrote:
-> I've been getting hard hangs when I toggle the wireless on a Lenovo
-> S10-3.  It happens both with the physical switch and the Fn-F5 key
-> combo.  It's quite repeatable.  The system is quite stable when I'm not
-> trying to disable the wireless, though.
+On Sat, Dec 4, 2010 at 8:42 PM, David Kilroy <kilroyd@googlemail.com> wrote:
 
-What kernel version is this?
+Truncated description - looks like missing text?
 
-Linus's latest tree has a known bug when the wireless is suspended and
-then resumed.  Broadcom is working on it but no patch is forthcoming
-yet.  Perhaps this is the same issue.
+> and interface up.
+>
+> In these situations, you are usually trying to connect to a new AP, so
+> keeping TKIP countermeasures active is confusing. This is already how
+> the driver behaves (inadvertently). However, querying SIOCGIWAUTH may
+> tell userspace that countermeasures are active when they aren't.
+>
+> Signed-off by: David Kilroy <kilroyd@googlemail.com>
 
-thanks,
-
-greg k-h
+- Sedat -
