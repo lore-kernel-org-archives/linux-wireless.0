@@ -1,46 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:36846 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751721Ab0LVJPh (ORCPT
+Received: from mail-qw0-f46.google.com ([209.85.216.46]:52619 "EHLO
+	mail-qw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750765Ab0LDQio (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 22 Dec 2010 04:15:37 -0500
-Subject: [PATCH] mac80211: remove stray extern
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
-Date: Wed, 22 Dec 2010 10:15:52 +0100
-Message-ID: <1293009352.3531.15.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+	Sat, 4 Dec 2010 11:38:44 -0500
+Received: by qwb7 with SMTP id 7so10775540qwb.19
+        for <linux-wireless@vger.kernel.org>; Sat, 04 Dec 2010 08:38:43 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <AANLkTikccdMeLE-V2-pATqzj8mg3DKyN7SVCi-RX-vdn@mail.gmail.com>
+References: <AANLkTi=6NGw3GTnX+vEqx_iHcDb4SUmPc5vvndyMc=5s@mail.gmail.com>
+ <AANLkTinMBx=5J4ZAaO7qkmJAxp4xbjoJxq+m+Bjz+K1e@mail.gmail.com>
+ <AANLkTimUpxb+qaCerwgxqcz5iOmFz7MaZFhFPSOxJd1M@mail.gmail.com>
+ <AANLkTikCrcpbyNEL94Jo9OsvcaEguKfN6-9nheZ=Sa8Q@mail.gmail.com>
+ <AANLkTikcngkX=a24r=uQKXgBjABQzZn_Hz3H2bvuiU8e@mail.gmail.com> <AANLkTikccdMeLE-V2-pATqzj8mg3DKyN7SVCi-RX-vdn@mail.gmail.com>
+From: Joerie de Gram <j.de.gram@gmail.com>
+Date: Sat, 4 Dec 2010 17:38:22 +0100
+Message-ID: <AANLkTim8YHX-oHbPCMESV6XjTNwaJNt56irNMVnFQhT0@mail.gmail.com>
+Subject: Re: wl1271: power down/up sequence
+To: Ohad Ben-Cohen <ohad@wizery.com>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+Hi,
 
-Somehow this snuck into my earlier patch, and
-only now did I see a compiler warning:
+On Thu, Dec 2, 2010 at 5:23 PM, Ohad Ben-Cohen <ohad@wizery.com> wrote:
+> You forgot to apply 516d5cc "mmc: add runtime PM handlers":
 
-net/mac80211/led.c:218:13: warning: function '__ieee80211_create_tpt_led_trigger' with external linkage has definition
+Problem solved, it appears to work just fine now. Thanks (again).
 
-Remove the stray extern.
-
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- net/mac80211/led.c |    4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
-
---- wireless-testing.orig/net/mac80211/led.c	2010-12-22 09:57:09.000000000 +0100
-+++ wireless-testing/net/mac80211/led.c	2010-12-22 10:06:05.000000000 +0100
-@@ -215,8 +215,8 @@ static void tpt_trig_timer(unsigned long
- 	read_unlock(&tpt_trig->trig.leddev_list_lock);
- }
- 
--extern char *__ieee80211_create_tpt_led_trigger(
--				struct ieee80211_hw *hw, unsigned int flags,
-+char *__ieee80211_create_tpt_led_trigger(struct ieee80211_hw *hw,
-+				unsigned int flags,
- 				const struct ieee80211_tpt_blink *blink_table,
- 				unsigned int blink_table_len)
- {
-
-
+Joerie
