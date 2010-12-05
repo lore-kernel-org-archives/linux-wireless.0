@@ -1,55 +1,115 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:34989 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932503Ab0LTAGG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 19 Dec 2010 19:06:06 -0500
-Message-ID: <4D0E9DE3.8050100@hauke-m.de>
-Date: Mon, 20 Dec 2010 01:05:55 +0100
-From: Hauke Mehrtens <hauke@hauke-m.de>
-MIME-Version: 1.0
-To: "Rafael J. Wysocki" <rjw@sisk.pl>
-CC: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	LKML <linux-kernel@vger.kernel.org>,
-	Linux-pm mailing list <linux-pm@lists.linux-foundation.org>,
-	linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
-	"John W. Linville" <linville@tuxdriver.com>
-Subject: Re: [PATCH] ath9k: Do not use legacy PCI power management
-References: <201010160036.17653.rjw@sisk.pl> <201012200032.21704.rjw@sisk.pl>
-In-Reply-To: <201012200032.21704.rjw@sisk.pl>
-Content-Type: text/plain; charset=UTF-8
+Received: from nbd.name ([46.4.11.11]:40023 "EHLO nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752898Ab0LETSA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 5 Dec 2010 14:18:00 -0500
+From: Felix Fietkau <nbd@openwrt.org>
+To: linux-wireless@vger.kernel.org
+Cc: linville@tuxdriver.com, lrodriguez@atheros.com
+Subject: [PATCH 2.6.37] ath9k: fix a DMA related race condition on reset
+Date: Sun,  5 Dec 2010 20:17:53 +0100
+Message-Id: <1291576673-1462-1-git-send-email-nbd@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 12/20/2010 12:32 AM, Rafael J. Wysocki wrote:
-> From: Rafael J. Wysocki <rjw@sisk.pl>
-> 
-> The ath9k driver uses legacy PCI power management (system suspend
-> and resume) callbacks, so make it use struct dev_pm_ops callbacks and
-> let the PCI subsystem handle all of the PCI-specific details of
-> system power transitions.
-> 
-> This change has been tested on Acer Ferrari One with the
-> Atheros AR928X PCI Express network adapter (rev. 01).
-> 
-> Signed-off-by: Rafael J. Wysocki <rjw@sisk.pl>
-> ---
-> 
-> Hi,
-> 
-> This patch has been sent already once under a slightly different subject
-> and with a different changelog.  I'm not sure what happened to it that time,
-> so here it goes again.
-> 
-> I'm quite confident it doesn't break things and it simplifies the driver's
-> suspend and resume routines quite a bit, so please apply.
-> 
-> Thanks,
-> Rafael
-> 
-Hi Rafael,
+When ath_drain_all_txq fails to stop DMA, it issues a hw reset. This reset
+happens at a very problematic point in time, when the hardware rx path has
+not been stopped yet. This could lead to memory corruption, hardware hangs
+or other issues.
+To fix these issues, simply remove the reset entirely and check the tx DMA
+stop status to prevent problems with fast channel changes.
 
-Your patch was already applied (see commit
-f0e94b479c987abef17eb18e5c8e0ed178d00cd4 in linux-next) or didn't I got
-your problem?
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+---
+ drivers/net/wireless/ath/ath9k/ath9k.h |    2 +-
+ drivers/net/wireless/ath/ath9k/main.c  |    5 +++--
+ drivers/net/wireless/ath/ath9k/xmit.c  |   22 ++++++----------------
+ 3 files changed, 10 insertions(+), 19 deletions(-)
 
-Hauke
+diff --git a/drivers/net/wireless/ath/ath9k/ath9k.h b/drivers/net/wireless/ath/ath9k/ath9k.h
+index 0d0bec3..0963071 100644
+--- a/drivers/net/wireless/ath/ath9k/ath9k.h
++++ b/drivers/net/wireless/ath/ath9k/ath9k.h
+@@ -329,7 +329,7 @@ int ath_rx_tasklet(struct ath_softc *sc, int flush, bool hp);
+ struct ath_txq *ath_txq_setup(struct ath_softc *sc, int qtype, int subtype);
+ void ath_tx_cleanupq(struct ath_softc *sc, struct ath_txq *txq);
+ int ath_tx_setup(struct ath_softc *sc, int haltype);
+-void ath_drain_all_txq(struct ath_softc *sc, bool retry_tx);
++bool ath_drain_all_txq(struct ath_softc *sc, bool retry_tx);
+ void ath_draintxq(struct ath_softc *sc,
+ 		     struct ath_txq *txq, bool retry_tx);
+ void ath_tx_node_init(struct ath_softc *sc, struct ath_node *an);
+diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
+index dace215..928ef68 100644
+--- a/drivers/net/wireless/ath/ath9k/main.c
++++ b/drivers/net/wireless/ath/ath9k/main.c
+@@ -244,11 +244,12 @@ int ath_set_channel(struct ath_softc *sc, struct ieee80211_hw *hw,
+ 	 * the relevant bits of the h/w.
+ 	 */
+ 	ath9k_hw_set_interrupts(ah, 0);
+-	ath_drain_all_txq(sc, false);
++	stopped = ath_drain_all_txq(sc, false);
+ 
+ 	spin_lock_bh(&sc->rx.pcu_lock);
+ 
+-	stopped = ath_stoprecv(sc);
++	if (!ath_stoprecv(sc))
++		stopped = false;
+ 
+ 	/* XXX: do not flush receive queue here. We don't want
+ 	 * to flush data frames already in queue because of
+diff --git a/drivers/net/wireless/ath/ath9k/xmit.c b/drivers/net/wireless/ath/ath9k/xmit.c
+index f2ade24..aff0478 100644
+--- a/drivers/net/wireless/ath/ath9k/xmit.c
++++ b/drivers/net/wireless/ath/ath9k/xmit.c
+@@ -1120,7 +1120,7 @@ void ath_draintxq(struct ath_softc *sc, struct ath_txq *txq, bool retry_tx)
+ 	}
+ }
+ 
+-void ath_drain_all_txq(struct ath_softc *sc, bool retry_tx)
++bool ath_drain_all_txq(struct ath_softc *sc, bool retry_tx)
+ {
+ 	struct ath_hw *ah = sc->sc_ah;
+ 	struct ath_common *common = ath9k_hw_common(sc->sc_ah);
+@@ -1128,7 +1128,7 @@ void ath_drain_all_txq(struct ath_softc *sc, bool retry_tx)
+ 	int i, npend = 0;
+ 
+ 	if (sc->sc_flags & SC_OP_INVALID)
+-		return;
++		return true;
+ 
+ 	/* Stop beacon queue */
+ 	ath9k_hw_stoptxdma(sc->sc_ah, sc->beacon.beaconq);
+@@ -1142,25 +1142,15 @@ void ath_drain_all_txq(struct ath_softc *sc, bool retry_tx)
+ 		}
+ 	}
+ 
+-	if (npend) {
+-		int r;
+-
+-		ath_print(common, ATH_DBG_FATAL,
+-			  "Failed to stop TX DMA. Resetting hardware!\n");
+-
+-		spin_lock_bh(&sc->sc_resetlock);
+-		r = ath9k_hw_reset(ah, sc->sc_ah->curchan, ah->caldata, false);
+-		if (r)
+-			ath_print(common, ATH_DBG_FATAL,
+-				  "Unable to reset hardware; reset status %d\n",
+-				  r);
+-		spin_unlock_bh(&sc->sc_resetlock);
+-	}
++	if (npend)
++		ath_print(common, ATH_DBG_FATAL, "Failed to stop TX DMA!\n");
+ 
+ 	for (i = 0; i < ATH9K_NUM_TX_QUEUES; i++) {
+ 		if (ATH_TXQ_SETUP(sc, i))
+ 			ath_draintxq(sc, &sc->tx.txq[i], retry_tx);
+ 	}
++
++	return !npend;
+ }
+ 
+ void ath_tx_cleanupq(struct ath_softc *sc, struct ath_txq *txq)
+-- 
+1.7.3.2
+
