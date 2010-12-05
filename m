@@ -1,135 +1,94 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qw0-f46.google.com ([209.85.216.46]:59080 "EHLO
-	mail-qw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755858Ab0LJWD2 convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 10 Dec 2010 17:03:28 -0500
-Received: by qwa26 with SMTP id 26so4351860qwa.19
-        for <linux-wireless@vger.kernel.org>; Fri, 10 Dec 2010 14:03:28 -0800 (PST)
+Received: from nbd.name ([46.4.11.11]:46544 "EHLO nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751973Ab0LEClp (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 4 Dec 2010 21:41:45 -0500
+Message-ID: <4CFAFBE1.3080505@openwrt.org>
+Date: Sun, 05 Dec 2010 03:41:37 +0100
+From: Felix Fietkau <nbd@openwrt.org>
 MIME-Version: 1.0
-In-Reply-To: <21458014.1292018042407.JavaMail.root@elwamui-rubis.atl.sa.earthlink.net>
-References: <21458014.1292018042407.JavaMail.root@elwamui-rubis.atl.sa.earthlink.net>
-Date: Fri, 10 Dec 2010 23:03:27 +0100
-Message-ID: <AANLkTi=Z59Dw_j4PNcPadqy1hFj=sN2sAM0mrnAR7bCw@mail.gmail.com>
-Subject: Re: [PATCH 1/4] b43: N-PHY: update init tables
-From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-To: ikorot@earthlink.net
-Cc: Larry Finger <Larry.Finger@lwfinger.net>,
-	Hauke Mehrtens <hauke@hauke-m.de>,
-	linux-wireless@vger.kernel.org, b43-dev@lists.infradead.org
-Content-Type: text/plain; charset=UTF-8
+To: Ben Greear <greearb@candelatech.com>
+CC: "Luis R. Rodriguez" <lrodriguez@Atheros.com>,
+	"ath9k-devel@lists.ath9k.org" <ath9k-devel@venema.h4ckr.net>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [ath9k-devel] Script to crash ath9k with DMA errors.
+References: <4CF44543.9070605@candelatech.com> <20101130004424.GC1901@tux> <4CF6D8C8.2000308@candelatech.com> <4CF8A6DE.4020804@candelatech.com>
+In-Reply-To: <4CF8A6DE.4020804@candelatech.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-W dniu 10 grudnia 2010 22:54 użytkownik  <ikorot@earthlink.net> napisał:
-> Rafal,
->
->
-> -----Original Message-----
->>From: Rafał Miłecki <zajec5@gmail.com>
->>Sent: Dec 10, 2010 11:33 AM
->>To: ikorot@earthlink.net
->>Cc: Larry Finger <Larry.Finger@lwfinger.net>, Hauke Mehrtens <hauke@hauke-m.de>, linux-wireless@vger.kernel.org, b43-dev@lists.infradead.org
->>Subject: Re: [PATCH 1/4] b43: N-PHY: update init tables
+On 2010-12-03 9:14 AM, Ben Greear wrote:
+> On 12/01/2010 03:22 PM, Ben Greear wrote:
+>> On 11/29/2010 04:44 PM, Luis R. Rodriguez wrote:
+>>> On Mon, Nov 29, 2010 at 04:28:51PM -0800, Ben Greear wrote:
 >>
->>W dniu 10 grudnia 2010 20:09 użytkownik  <ikorot@earthlink.net> napisał:
->>> Rafal,
->>>
->>>
->>> -----Original Message-----
->>>>From: Rafał Miłecki <zajec5@gmail.com>
->>>>Sent: Dec 9, 2010 10:36 PM
->>>>To: ikorot@earthlink.net
->>>>Cc: Larry Finger <Larry.Finger@lwfinger.net>, Hauke Mehrtens <hauke@hauke-m.de>, linux-wireless@vger.kernel.org, b43-dev@lists.infradead.org
->>>>Subject: Re: [PATCH 1/4] b43: N-PHY: update init tables
+>>>> BUG: unable to handle kernel NULL pointer dereference at 00000040
+>>>> IP: [<f933470a>] ath_tx_start+0x461/0x5ef [ath9k]
+>>>> *pde = 00000000
+>>>> Oops: 0000 [#1] SMP DEBUG_PAGEALLOC
+>>>> last sysfs file: /sys/devices/pci0000:00/0000:00:1e.0/0000:08:01.0/irq
+>>>> Modules linked in: aes_i586 aes_generic fuse nfs lockd fscache nfs_acl auth_rpcgss sunrpc ipv6 uinput arc4 ecb ath9k mac80211 ath9k_common ath9k_hw mi]
 >>>>
->>>>W dniu 10 grudnia 2010 03:26 użytkownik  <ikorot@earthlink.net> napisał:
->>>>> -----Original Message-----
->>>>>>From: Rafał Miłecki <zajec5@gmail.com>
->>>>>>Sent: Dec 9, 2010 6:06 AM
->>>>>>To: ikorot@earthlink.net
->>>>>>Cc: Larry Finger <Larry.Finger@lwfinger.net>, Hauke Mehrtens <hauke@hauke-m.de>, linux-wireless@vger.kernel.org, b43-dev@lists.infradead.org
->>>>>>Subject: Re: [PATCH 1/4] b43: N-PHY: update init tables
->>>>>>
->>>>>>2010/12/8  <ikorot@earthlink.net>:
->>>>>>> Larry,
->>>>>>>
->>>>>>>
->>>>>>> -----Original Message-----
->>>>>>>>From: Larry Finger <Larry.Finger@lwfinger.net>
->>>>>>>>Sent: Dec 7, 2010 12:00 PM
->>>>>>>>To: ikorot@earthlink.net
->>>>>>>>Cc: Hauke Mehrtens <hauke@hauke-m.de>, linux-wireless@vger.kernel.org, b43-dev@lists.infradead.org
->>>>>>>>Subject: Re: [PATCH 1/4] b43: N-PHY: update init tables
->>>>>>>>
->>>>>>>>On 12/07/2010 01:49 PM, ikorot@earthlink.net wrote:
->>>>>>>>>> One reason is that these tables changed from non-zero to zero values between
->>>>>>>>>> Broadcom driver 4.174.64.19 and 5.10.56.46. As they might change again, I think
->>>>>>>>>> we should retain the full version.
->>>>>>>>>
->>>>>>>>> Is there a way to check for version of the driver?
->>>>>>>>> This way whoever uses old one won't be screwed...
->>>>>>>>
->>>>>>>>That will not be a problem as no older version of b43 works at all with b43. To
->>>>>>>>help you understand this change, when the 4.174.64.19 Broadcom driver was
->>>>>>>>reverse-engineered, the tables had non-zero values. Rafel later compared the
->>>>>>>>trace dumps of b43 with the latest version of wl and found that the values are
->>>>>>>>now zero. When I rechecked driver 5.10.56.46, I found them to be zero there as
->>>>>>>>well and changed the specs.
->>>>>>>
->>>>>>> Well, it maybe feasible to keep the old values and check
->>>>>>> the version of the driver, since you are saying yourself
->>>>>>> that the value might be changing in the future.
->>>>>>> Maybe for couple of releases only?
->>>>>>
->>>>>>Sorry, but I don't understand that at all. What do you mean by version
->>>>>>of the driver? What driver?
->>>>>
->>>>> #if B43_VERSION <= x.x.x.x
->>>>> // table initialized to some values
->>>>> #else
->>>>> //table initialized to 0's
->>>>> #endif
->>>>
->>>>You want to put condition checking b43 version in... b43 driver? I
->>>>can't follow you.
+>>>> Pid: 38, comm: kworker/u:1 Tainted: G        W   2.6.37-rc3-wl+ #53 PDSBM/PDSBM
+>>>> EIP: 0060:[<f933470a>] EFLAGS: 00010246 CPU: 1
+>>>> EIP is at ath_tx_start+0x461/0x5ef [ath9k]
 >>>
->>> Yes.
->>> And what you can't follow?
+>>> Please use
 >>>
->>> For historical purposes and to better understand the changes and ease the
->>> debugging I proposed this addition.
->>> Besides if for some reason in future versions Broadcom will decide to return to
->>> the same values for init tables, the changes will be very simple.
+>>> gdb drivers/net/wireless/ath/ath9k/
+>>> l *(ath_tx_start+0x461)
+>>>
+>>>     Luis
 >>
->>So I guess you meant using "#if 0" for commenting old values?
->>
->>I guess we could do that instead deleting old values, but fortunately
->>it's git so we always can browse history and restore old values
->>without problems :)
->
-> Well, after 5 or 6 month will you remember the commit that introduced
-> the change?
-> Yes, you can browse the history, but it will be an extra effort to find
-> it.
->
-> I understand that the code will be bigger in size, but if it takes
-> just adding 2 lines of code comparing to looking thru history and
-> then copying the values to sources.
+>> I managed to hit that ath_tx_start crash again, and this time there were no obvious
+>> DMA or irq errors immediately preceding it.  So, it might be a real bug
+>> after all.  I'll add some extra checks to see if tid->ac is NULL.
+> 
+> I've made some small progress on this general issue.
+> 
+> First, I added all sorts of debugging to try to figure out ath_tx_start crash.
+> As best as I can tell, 'tid' is not NULL, but also is not a valid pointer,
+> and probably something close to 0x0.  I've added yet more debugging, but haven't
+> hit the problem again.
+> 
+> I also tried stopping DMA in a loop up to 5 times if it failed to stop
+> previously in the loop.  This did not appear to help at all.
+> 
+> I also managed to make both the ath_tx_start crash and the DMA errors very hard to reproduce
+> (I dare not say fixed, yet).
+> 
+> It appears that this small patch (and possibly, the fact that I set debugging to 0x600
+> instead of 0x400) makes the problems go away.  This makes me wonder if a root cause is
+> something to do with repeatedly resetting the hardware too fast, as setting channels rapidly
+> would tend to do that, and channels are set on association by supplicant, it appears.
+Please try this patch while leaving the unnecessary resets in place.
+I found that when ath_drain_all_txq finds tx dma not stopped, it will
+issue a reset at a point in time where it is both useless (since it's
+right before a reset anyway) and dangerous (since the rx dma engine
+isn't even disabled yet), so IMHO the right thing to do is to drop
+this extra reset.
 
-Yeah, that's the minus of that solution. However wl changes it's
-operations in many places, we would get unreadable code while keeping
-old code commented out. It's matter what do you find more important.
-Maintainable code or browsing through old changes when reverting
-something.
-
-With git you can easily checkout old revision, browse history of
-selected file, bisect and do other tricks. In that situation I decided
-to have easy maintainable code.
-
-You could still argue to have commented code in tables and remove old
-code in init... but that would lead to real chaos. So I'm really for
-keeping the current way for that.
-
--- 
-Rafał
+--- a/drivers/net/wireless/ath/ath9k/xmit.c
++++ b/drivers/net/wireless/ath/ath9k/xmit.c
+@@ -1194,18 +1194,8 @@ void ath_drain_all_txq(struct ath_softc 
+ 		}
+ 	}
+ 
+-	if (npend) {
+-		int r;
+-
+-		ath_print(common, ATH_DBG_FATAL,
+-			  "Failed to stop TX DMA. Resetting hardware!\n");
+-
+-		r = ath9k_hw_reset(ah, sc->sc_ah->curchan, ah->caldata, false);
+-		if (r)
+-			ath_print(common, ATH_DBG_FATAL,
+-				  "Unable to reset hardware; reset status %d\n",
+-				  r);
+-	}
++	if (npend)
++		ath_print(common, ATH_DBG_FATAL,  "Failed to stop TX DMA!\n");
+ 
+ 	for (i = 0; i < ATH9K_NUM_TX_QUEUES; i++) {
+ 		if (ATH_TXQ_SETUP(sc, i))
