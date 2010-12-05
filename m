@@ -1,66 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wy0-f174.google.com ([74.125.82.174]:38767 "EHLO
-	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753873Ab0L0OIY (ORCPT
+Received: from 128-177-27-249.ip.openhosting.com ([128.177.27.249]:51392 "EHLO
+	jmalinen.user.openhosting.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752813Ab0LEEoV (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 27 Dec 2010 09:08:24 -0500
-Received: by mail-wy0-f174.google.com with SMTP id 28so8482816wyb.19
-        for <linux-wireless@vger.kernel.org>; Mon, 27 Dec 2010 06:08:24 -0800 (PST)
-From: Ivo van Doorn <ivdoorn@gmail.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Subject: [PATCH 09/10] rt2x00: Remove unused interface spinlock
-Date: Mon, 27 Dec 2010 15:07:16 +0100
-Cc: linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com
-References: <201012271504.30848.IvDoorn@gmail.com> <201012271506.37080.IvDoorn@gmail.com> <201012271506.58485.IvDoorn@gmail.com>
-In-Reply-To: <201012271506.58485.IvDoorn@gmail.com>
+	Sat, 4 Dec 2010 23:44:21 -0500
+Date: Sat, 4 Dec 2010 20:44:15 -0800
+From: Jouni Malinen <j@w1.fi>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org
+Subject: RSN IBSS and GTK configuration
+Message-ID: <20101205044415.GA12705@jm.kir.nu>
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Message-Id: <201012271507.17065.IvDoorn@gmail.com>
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Helmut Schaa <helmut.schaa@googlemail.com>
+Since mac80211/cfg80211 is now supposed to have more or less everything
+that is needed for RSN IBSS to work, I tried to get the final pieces
+implemented. wpa_supplicant is now using the new STA event to trigger
+4-way handshakes with other STAs in the IBSS (that works fine) and tries
+to configure the per-STA RX GTK (that does not work for some reason).
 
-Since the last user of intf->lock is gone we can safely remove it.
+What should be used as parameters for the new key for this per-STA RX
+GTK? I'm now trying to use an individual address (the peer), non-zero
+key index, and key type set to group. At least this not overriding our
+own TX GTK anymore, but the new key is not set either (EINVAL).
 
-Signed-off-by: Helmut Schaa <helmut.schaa@googlemail.com>
-Acked-by: Gertjan van Wingerde <gwingerde@gmail.com>
-Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
+As far as actually being able to complete the 4-way handshakes is
+concerned, there is an issue in how we select the TX key. In the RSN
+IBSS case, there is a STA entry for the recipient of the EAPOL frame,
+but that STA entry does not have a key. We end up using the default key
+(our TX GTK) and obviously, the peer has no way of processing this frame
+at this point.. I'm currently using the following change to work around
+this. This is not exactly correct, but I did not yet have a chance to
+think through all the cases to figure out if something cleaner would
+cause problems for non-IBSS cases and WEP IBSS cases..
+
+Anyway, with this patch, 4-way handshakes can be completed successfully
+and the PTK works, i.e., I can ping successfully with manually
+configured ARP table.
+
+
 ---
- drivers/net/wireless/rt2x00/rt2x00.h    |    6 ------
- drivers/net/wireless/rt2x00/rt2x00mac.c |    1 -
- 2 files changed, 0 insertions(+), 7 deletions(-)
+ net/mac80211/tx.c |   17 ++++++++++-------
+ 1 file changed, 10 insertions(+), 7 deletions(-)
 
-diff --git a/drivers/net/wireless/rt2x00/rt2x00.h b/drivers/net/wireless/rt2x00/rt2x00.h
-index b3f77d4..84aaf39 100644
---- a/drivers/net/wireless/rt2x00/rt2x00.h
-+++ b/drivers/net/wireless/rt2x00/rt2x00.h
-@@ -358,12 +358,6 @@ enum rt2x00_delayed_flags {
-  */
- struct rt2x00_intf {
- 	/*
--	 * All fields within the rt2x00_intf structure
--	 * must be protected with a spinlock.
--	 */
--	spinlock_t lock;
--
--	/*
- 	 * beacon->skb must be protected with the mutex.
- 	 */
- 	struct mutex beacon_skb_mutex;
-diff --git a/drivers/net/wireless/rt2x00/rt2x00mac.c b/drivers/net/wireless/rt2x00/rt2x00mac.c
-index 297d972..b5dad04 100644
---- a/drivers/net/wireless/rt2x00/rt2x00mac.c
-+++ b/drivers/net/wireless/rt2x00/rt2x00mac.c
-@@ -268,7 +268,6 @@ int rt2x00mac_add_interface(struct ieee80211_hw *hw,
- 	else
- 		rt2x00dev->intf_sta_count++;
- 
--	spin_lock_init(&intf->lock);
- 	spin_lock_init(&intf->seqlock);
- 	mutex_init(&intf->beacon_skb_mutex);
- 	intf->beacon = entry;
+--- wireless-testing.orig/net/mac80211/tx.c	2010-12-04 18:27:39.000000000 -0800
++++ wireless-testing/net/mac80211/tx.c	2010-12-04 18:53:13.000000000 -0800
+@@ -539,14 +539,17 @@ ieee80211_tx_h_select_key(struct ieee802
+ 		 ieee80211_is_robust_mgmt_frame(hdr) &&
+ 		 (key = rcu_dereference(tx->sdata->default_mgmt_key)))
+ 		tx->key = key;
+-	else if ((key = rcu_dereference(tx->sdata->default_key)))
++	else if ((key = rcu_dereference(tx->sdata->default_key))) {
+ 		tx->key = key;
+-	else if (tx->sdata->drop_unencrypted &&
+-		 (tx->skb->protocol != tx->sdata->control_port_protocol) &&
+-		 !(info->flags & IEEE80211_TX_CTL_INJECTED) &&
+-		 (!ieee80211_is_robust_mgmt_frame(hdr) ||
+-		  (ieee80211_is_action(hdr->frame_control) &&
+-		   tx->sta && test_sta_flags(tx->sta, WLAN_STA_MFP)))) {
++		if (tx->sta && tx->sdata->vif.type == NL80211_IFTYPE_ADHOC &&
++		    tx->skb->protocol == tx->sdata->control_port_protocol)
++			tx->key = NULL;
++	} else if (tx->sdata->drop_unencrypted &&
++		   (tx->skb->protocol != tx->sdata->control_port_protocol) &&
++		   !(info->flags & IEEE80211_TX_CTL_INJECTED) &&
++		   (!ieee80211_is_robust_mgmt_frame(hdr) ||
++		    (ieee80211_is_action(hdr->frame_control) &&
++		     tx->sta && test_sta_flags(tx->sta, WLAN_STA_MFP)))) {
+ 		I802_DEBUG_INC(tx->local->tx_handlers_drop_unencrypted);
+ 		return TX_DROP;
+ 	} else
+
 -- 
-1.7.2.3
-
+Jouni Malinen                                            PGP id EFC895FA
