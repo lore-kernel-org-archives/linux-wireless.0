@@ -1,61 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([147.243.128.24]:33791 "EHLO mgw-da01.nokia.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757593Ab0LMQMD (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 13 Dec 2010 11:12:03 -0500
-Subject: Re: [RFC v2 0/2] implementation of scheduled scan
-From: Luciano Coelho <luciano.coelho@nokia.com>
-To: ext Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <1292012223.3531.32.camel@jlt3.sipsolutions.net>
-References: <1291993632-6921-1-git-send-email-luciano.coelho@nokia.com>
-	 <1292010802.3531.6.camel@jlt3.sipsolutions.net>
-	 <1292012223.3531.32.camel@jlt3.sipsolutions.net>
-Content-Type: text/plain; charset="UTF-8"
-Date: Mon, 13 Dec 2010 18:13:34 +0200
-Message-ID: <1292256814.2951.274.camel@chilepepper>
-Mime-Version: 1.0
+Received: from mail-ww0-f44.google.com ([74.125.82.44]:54810 "EHLO
+	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756064Ab0LEPo3 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 5 Dec 2010 10:44:29 -0500
+Received: by wwa36 with SMTP id 36so11925377wwa.1
+        for <linux-wireless@vger.kernel.org>; Sun, 05 Dec 2010 07:44:28 -0800 (PST)
+From: David Kilroy <kilroyd@googlemail.com>
+To: linux-wireless@vger.kernel.org
+Cc: comes@naic.edu, sedat.dilek@googlemail.com,
+	David Kilroy <kilroyd@googlemail.com>
+Subject: [PATCH v2 1/2] orinoco: fix TKIP countermeasure behaviour
+Date: Sun,  5 Dec 2010 15:43:55 +0000
+Message-Id: <1291563835-300-1-git-send-email-kilroyd@googlemail.com>
+In-Reply-To: <AANLkTi=nS+Du=CEk4=zqekJty=XnBjTUAj49L0Njz5BP@mail.gmail.com>
+References: <AANLkTi=nS+Du=CEk4=zqekJty=XnBjTUAj49L0Njz5BP@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2010-12-10 at 21:17 +0100, ext Johannes Berg wrote:
-> On Fri, 2010-12-10 at 20:53 +0100, Johannes Berg wrote:
-> > On Fri, 2010-12-10 at 17:07 +0200, luciano.coelho@nokia.com wrote:
-> > 
-> > > * I kept the return value in the sched_scan_stop chain, because, at least with
-> > >   wl12xx, the call can fail (due to OOM for instance).  I think it's cleaner
-> > >   this way.
-> > 
-> > What's going to happen then though? Would it make sense to pre-allocate
-> > this at start() time, so it can cleanly stop regardless of what's going
-> > on? I can see start() failing, but stop() failing seems a bit hard to
-> > work with in wpa_supplicant?
-> 
-> Actually so the nl80211 interface has to be able to return something
-> like "no such operation in progress" or whatever, but I'm not sure about
-> the driver interface -- -ENOMEM seems like a stupid failure for stopping
-> something, and then the above applies ...
+Enable the port when disabling countermeasures, and disable it on
+enabling countermeasures.
 
-Indeed returning -ENOMEM sounds stupid when trying to clean up
-something...
+This bug causes the response of the system to certain attacks to be
+ineffective.
 
-In wl12xx there are two other ways the operation can fail: the stop
-command can fail, and in this case we start a hw recovery, so there's no
-problem; the stop command can time out, which is not handled.  Maybe the
-timeout should also trigger a hw recovery, but that's a different story.
+It also prevents wpa_supplicant from getting scan results, as
+wpa_supplicant disables countermeasures on startup - preventing the
+hardware from scanning.
 
-So, the only thing remaining is the OOM.  I guess I'll just have to deal
-with it in the driver.  We don't pre-alloc any commands at the moment,
-but maybe it will have to be done in this case... Let's see.
+wpa_supplicant works with ap_mode=2 despite this bug because the commit
+handler re-enables the port.
 
-I'll change the code so that the driver sched_scan stop interface
-returns void.
+The log tends to look like:
 
-Regarding the "no such operation in progress", I actually handle that by
-simply returning with no error.  Do you think I should return an error
-in that case instead?
+State: DISCONNECTED -> SCANNING
+Starting AP scan for wildcard SSID
+Scan requested (ret=0) - scan timeout 5 seconds
+EAPOL: disable timer tick
+EAPOL: Supplicant port status: Unauthorized
+Scan timeout - try to get results
+Failed to get scan results
+Failed to get scan results - try scanning again
+Setting scan request: 1 sec 0 usec
+Starting AP scan for wildcard SSID
+Scan requested (ret=-1) - scan timeout 5 seconds
+Failed to initiate AP scan.
 
+Reported by: Giacomo Comes <comes@naic.edu>
+Signed-off by: David Kilroy <kilroyd@googlemail.com>
+---
+ drivers/net/wireless/orinoco/wext.c |    4 ++--
+ 1 files changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/net/wireless/orinoco/wext.c b/drivers/net/wireless/orinoco/wext.c
+index 519e01e..9caec9f 100644
+--- a/drivers/net/wireless/orinoco/wext.c
++++ b/drivers/net/wireless/orinoco/wext.c
+@@ -912,10 +912,10 @@ static int orinoco_ioctl_set_auth(struct net_device *dev,
+ 		 */
+ 		if (param->value) {
+ 			priv->tkip_cm_active = 1;
+-			ret = hermes_enable_port(hw, 0);
++			ret = hermes_disable_port(hw, 0);
+ 		} else {
+ 			priv->tkip_cm_active = 0;
+-			ret = hermes_disable_port(hw, 0);
++			ret = hermes_enable_port(hw, 0);
+ 		}
+ 		break;
+ 
 -- 
-Cheers,
-Luca.
+1.7.2.2
 
