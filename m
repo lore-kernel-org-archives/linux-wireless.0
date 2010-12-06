@@ -1,64 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:42467 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751588Ab0L1JvH (ORCPT
+Received: from mail.atheros.com ([12.19.149.2]:22941 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753197Ab0LFUmd convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 28 Dec 2010 04:51:07 -0500
-Subject: Re: [PATCH RFC] mac80211: Extend channel to frequency mapping for
- 802.11j
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Bruno Randolf <br1@einfach.org>
-Cc: Dave Kilroy <kilroyd@googlemail.com>, linville@tuxdriver.com,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <201012281843.57453.br1@einfach.org>
-References: <20101224074410.16337.90008.stgit@localhost6.localdomain6>
-	 <AANLkTi=R58EGLrsT5sTk7JTqWvaeJ5caytHMt3VCSOki@mail.gmail.com>
-	 <201012281843.57453.br1@einfach.org>
-Content-Type: text/plain; charset="UTF-8"
-Date: Tue, 28 Dec 2010 10:51:01 +0100
-Message-ID: <1293529861.3526.8.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+	Mon, 6 Dec 2010 15:42:33 -0500
+Received: from mail.atheros.com ([10.10.20.105])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Mon, 06 Dec 2010 12:42:18 -0800
+Date: Mon, 6 Dec 2010 12:42:30 -0800
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: Ben Greear <greearb@candelatech.com>
+CC: =?iso-8859-1?Q?Bj=F6rn?= Smedman <bjorn.smedman@venatech.se>,
+	Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
+	Felix Fietkau <nbd@openwrt.org>,
+	"ath9k-devel@lists.ath9k.org" <ath9k-devel@venema.h4ckr.net>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [ath9k-devel] Script to crash ath9k with DMA errors.
+Message-ID: <20101206204230.GG21442@tux>
+References: <4CF44543.9070605@candelatech.com>
+ <20101130004424.GC1901@tux>
+ <4CF6D8C8.2000308@candelatech.com>
+ <4CF8A6DE.4020804@candelatech.com>
+ <4CFAFBE1.3080505@openwrt.org>
+ <4CFB20BA.5090300@candelatech.com>
+ <20101206193600.GC21442@tux>
+ <4CFD3DE3.4000207@candelatech.com>
+ <AANLkTingy7fPH14hW_mg8_YcotX29pYCu910Gw48grrD@mail.gmail.com>
+ <4CFD4602.1030304@candelatech.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="iso-8859-1"
+In-Reply-To: <4CFD4602.1030304@candelatech.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2010-12-28 at 18:43 +0900, Bruno Randolf wrote:
-
-> > You don't have to use them, but there are a few channel/frequency
-> > conversion routines in include/ieee80211.h which could be reused in
-> > these functions.
+On Mon, Dec 06, 2010 at 12:22:26PM -0800, Ben Greear wrote:
+> On 12/06/2010 12:11 PM, Björn Smedman wrote:
+> > On Mon, Dec 6, 2010 at 8:47 PM, Ben Greear<greearb@candelatech.com>  wrote:
+> >> With 16 properly configured non-encrypted stations, running with
+> >> wpa-supplicant
+> >> with netlink driver&  sharing scan results,  the interfaces quickly
+> >> associate.
+> >>
+> >> However, I do continue to see DMA warnings such as these (I had picked up my
+> >> portable phone, and it knocked all the interfaces offline ..here
+> >> they are coming back up after I hung up the phone).
+> >
+> > Is there some theory as to why using multiple interfaces cause so many
+> > problems with DMA?
 > 
-> Thanks for that info, I didn't know about those functions. I just checked 
-> them and it seems most of them are not used, AFAICT:
+> Seems pretty directly related to channel changes and/or resets, and exacerbated
+> by other interfaces sending data while another is scanning, for instance.
 > 
-> ieee80211_fhss_chan_to_freq - not used
-> ieee80211_freq_to_fhss_chan - not used
-> ieee80211_hr_chan_to_freq - not used
-> ieee80211_freq_to_hr_chan - not used
-> ieee80211_erp_chan_to_freq - not used
-> ieee80211_freq_to_erp_chan - not used
-> ieee80211_ofdm_chan_to_freq - not used
-> ieee80211_freq_to_ofdm_chan - not used
+> Other issues we've found in the past have been various races that you wouldn't
+> normally see with a single VIF.
 
-Cute -- we should probably just remove these.
+Right, there might be some other hot path we need to lock around over.
+Not sure what it could be though we should be locking stopping RX
+over resets already though. These should all be atomic, in fact
+starting TX too IIRC, hence the name change of the lock to be
+specific to the PCU together. There may be other PCU changes
+we may need to contend against.
 
-> The only two which are used are for 2GHz channels:
-> 
-> ieee80211_dsss_chan_to_freq - atmel, airo, wl3501_cs, orinoco, rndis_wlan
-> ieee80211_freq_to_dsss_chan - atmel, airo, orinoco, zd1201
-> 
-> Anyhow i guess it would make sense to have a common channel to frequency 
-> mapping function for mac80211 and other wireless drivers? The problem is now 
-> we have to use enum ieee80211_band which is defined cfg80211.h...
-
-Well, you're a bit wrong -- the function you're modifying is part of
-cfg80211. Therefore, including cfg80211.h makes perfect sense, it's also
-defined in there (therefore, your patch subject should begin with
-"cfg80211:" instead of "mac80211:").
-
-However, of those drivers you list only orinoco and rndis_wlan already
-use cfg80211, so for the others using it would introduce an almost
-"fake" dependency. In any case, it seems like all that should be
-separate patches.
-
-johannes
-
+  Luis
