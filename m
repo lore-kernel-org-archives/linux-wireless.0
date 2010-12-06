@@ -1,71 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from va3ehsobe006.messaging.microsoft.com ([216.32.180.16]:1218 "EHLO
-	VA3EHSOBE009.bigfish.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1750990Ab0LAQ54 convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 1 Dec 2010 11:57:56 -0500
-From: "Heyendal, Carl" <CHeyendal@stanleyworks.com>
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Date: Wed, 1 Dec 2010 11:55:02 -0500
-Subject: RE: wireless in linux
-Message-ID: <1D6034426110564DA0DEA9EE9793B38357E3663A92@NBE-MBX01.americas.swk.pri>
-References: <1D6034426110564DA0DEA9EE9793B38357E35E4823@NBE-MBX01.americas.swk.pri>
- <AANLkTimXDZLm7CAn7VyRPxQscTfHwTNALbDOh3LpjSQc@mail.gmail.com>
-In-Reply-To: <AANLkTimXDZLm7CAn7VyRPxQscTfHwTNALbDOh3LpjSQc@mail.gmail.com>
-Content-Type: text/plain; charset="us-ascii"
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:33027 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753653Ab0LFVAF (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 6 Dec 2010 16:00:05 -0500
+Date: Mon, 6 Dec 2010 15:59:16 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Rajkumar Manoharan <rmanoharan@atheros.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 2/3 v3] ath9k: Add change_interface callback
+Message-ID: <20101206205916.GA21269@tuxdriver.com>
+References: <1291119452-12355-1-git-send-email-rmanoharan@atheros.com>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1291119452-12355-1-git-send-email-rmanoharan@atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
- 
-
-> -----Original Message-----
-> From: Luis R. Rodriguez [mailto:mcgrof@gmail.com] 
-> Sent: Tuesday, November 30, 2010 5:16 PM
-> To: Heyendal, Carl
-> Cc: linux-wireless@vger.kernel.org
-> Subject: Re: wireless in linux
+On Tue, Nov 30, 2010 at 05:47:32PM +0530, Rajkumar Manoharan wrote:
+> Add support to change interface type
+> without bringing down the interface.
 > 
-> On Tue, Nov 30, 2010 at 2:05 PM, Heyendal, Carl 
-> <CHeyendal@stanleyworks.com> wrote:
-> >
-> > I'm a somewhat of a newbie to Linux. So far I have been 
-> impressed with the information that I have been able to 
-> readily find to get things done in Linux amongst all the 
-> reference books, on-line tutorials, and various Linux 
-> communities. However wireless in Linux has been a different story.
-> >
-> > A few weeks ago I was asked to provide wireless 
-> functionality for an embedded system. A simple USB wireless 
-> adapter to connect to an access point was all. I thought it 
-> shouldn't be too much of a challenge. However adding wireless 
-> capability has truly been a formidable challenge. I'm still 
-> not there yet. I'm staring right now at the latest 
-> wpa_supplicant readme with all the choices that I need to 
-> make. I'll be lucky if it works. It's really been a 
-> piece-meal effort so far.
-> >
-> > The only information I can find is very limited to it's 
-> context and is geared to individuals who have intimate 
-> knowledge of Linux wireless. How does one get up to speed 
-> with wireless-linux with the apparent lack of good general 
-> information regarding what's needed in a wireless linux kernel?
-> >
-> > Are there any reference books, tutorials, howto's, wireless 
-> enabled kernels...anything that someone can point me to that 
-> would help?
-> 
-> http://lmgtfy.com/?q=Linux+wireless
-> 
->   Luis
-> 
-> 
+> Signed-off-by: Rajkumar Manoharan <rmanoharan@atheros.com>
+> ---
+> v2: - ieee80211_iftype_p2p not needed
+>     - missed to store p2p value
+> v3: - nbcnvifs has to be checked
+>       while changing to beaconing mode
 
-This is more what I was complaining about.
+This just doesn't seem to apply anymore.  Could you respin it?
 
-http://lmgtfy.com/?q=%22linux%20wireless%20for%20newbs%22
-
-;-)
-
-
+John
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
