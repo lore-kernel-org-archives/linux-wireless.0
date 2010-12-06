@@ -1,51 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qw0-f46.google.com ([209.85.216.46]:33270 "EHLO
-	mail-qw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754322Ab0LGEci convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 6 Dec 2010 23:32:38 -0500
-Received: by qwa26 with SMTP id 26so85458qwa.19
-        for <linux-wireless@vger.kernel.org>; Mon, 06 Dec 2010 20:32:37 -0800 (PST)
+Received: from mail.atheros.com ([12.19.149.2]:36136 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752542Ab0LFMcI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 6 Dec 2010 07:32:08 -0500
+Received: from mail.atheros.com ([10.10.20.105])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Mon, 06 Dec 2010 04:31:53 -0800
+From: Vasanthakumar Thiagarajan <vasanth@atheros.com>
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>
+Subject: [PATCH V3 21/27] ath9k_hw: Program appropriate chianmask for AR9485 before starting AGC/IQ cal
+Date: Mon, 6 Dec 2010 04:27:54 -0800
+Message-ID: <1291638480-8950-22-git-send-email-vasanth@atheros.com>
+In-Reply-To: <1291638480-8950-1-git-send-email-vasanth@atheros.com>
+References: <1291638480-8950-1-git-send-email-vasanth@atheros.com>
 MIME-Version: 1.0
-In-Reply-To: <19709.46740.86437.390791@gargle.gargle.HOWL>
-References: <19701.62091.644444.121284@gargle.gargle.HOWL> <20101202193024.GC2358@tuxdriver.com>
- <19704.23185.565826.890275@gargle.gargle.HOWL> <AANLkTinPLPoAHxauaXj8Sj=zjyHQPyxO0ku342ersZQ4@mail.gmail.com>
- <19709.45926.38551.25130@gargle.gargle.HOWL> <AANLkTinNF2dnacLof_knM3OAf6ADCCPsb8DO1VE6c31U@mail.gmail.com>
- <19709.46740.86437.390791@gargle.gargle.HOWL>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Mon, 6 Dec 2010 20:32:16 -0800
-Message-ID: <AANLkTinJLRMSSvLHgPP1Dw5BXsC3utAudJ=oSAsUUD8T@mail.gmail.com>
-Subject: Re: [PATCH 2/2] ath9k_htc: Fix suspend/resume
-To: Sujith <m.sujith@gmail.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Dec 6, 2010 at 8:22 PM, Sujith <m.sujith@gmail.com> wrote:
-> Luis R. Rodriguez wrote:
->> That's the thing, the device was powered up, lifted from idle, but we
->                    ^^^^^^^^^^^^^^^^^^^^^^^^^
-> Not according to mac80211 - start() wasn't issued, config() with ~CONF_IDLE
-> wasn't issued.
->
-> This is the issue in ath9k_htc:
->
-> * modprobe ath9k_htc
-> * pm-suspend
-> ---
-> * resume
->
-> In this case, as I said above, neither start() nor CONF_IDLE have been notified
-> to the driver by mac80211, since the interface was never brought up.
->
-> But ath9k_htc powers up the device while initialization, immediately when the driver
-> is loaded, not waiting for start() or ~CONF_IDLE. And since the driver maintains
-> internal state with respect to the radio's power status, I think it is up to the
-> driver to clean it properly ...
+Signed-off-by: Vasanthakumar Thiagarajan <vasanth@atheros.com>
+---
+ drivers/net/wireless/ath/ath9k/ar9003_calib.c |    4 +++-
+ 1 files changed, 3 insertions(+), 1 deletions(-)
 
-Oh right, I see. Should we not wait to turn the radio until we get a
-non-idle config() call?
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_calib.c b/drivers/net/wireless/ath/ath9k/ar9003_calib.c
+index 4c94c9e..f218613 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_calib.c
++++ b/drivers/net/wireless/ath/ath9k/ar9003_calib.c
+@@ -723,7 +723,9 @@ static bool ar9003_hw_init_cal(struct ath_hw *ah,
+ 	val = REG_READ(ah, AR_ENT_OTP);
+ 	ath_print(common, ATH_DBG_CALIBRATE, "ath9k: AR_ENT_OTP 0x%x\n", val);
+ 
+-	if (val & AR_ENT_OTP_CHAIN2_DISABLE)
++	if (AR_SREV_9485(ah))
++		ar9003_hw_set_chain_masks(ah, 0x1, 0x1);
++	else if (val & AR_ENT_OTP_CHAIN2_DISABLE)
+ 		ar9003_hw_set_chain_masks(ah, 0x3, 0x3);
+ 	else
+ 		/*
+-- 
+1.7.0.4
 
-  Luis
