@@ -1,57 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sypressi.dnainternet.net ([83.102.40.135]:39654 "EHLO
-	sypressi.dnainternet.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751784Ab0LZLYU (ORCPT
+Received: from mail30g.wh2.ocn.ne.jp ([220.111.41.239]:28638 "HELO
+	mail30g.wh2.ocn.ne.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1752438Ab0LFDpj (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 26 Dec 2010 06:24:20 -0500
-Subject: [RFC PATCH 1/6] zd1211rw: fix beacon interval setup
-To: linux-wireless@vger.kernel.org
-From: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
-Cc: Daniel Drake <dsd@gentoo.org>, zd1211-devs@lists.sourceforge.net,
-	Ulrich Kunitz <kune@deine-taler.de>
-Date: Sun, 26 Dec 2010 13:24:14 +0200
-Message-ID: <20101226112414.31775.62053.stgit@fate.lan>
-In-Reply-To: <20101226112404.31775.77854.stgit@fate.lan>
-References: <20101226112404.31775.77854.stgit@fate.lan>
+	Sun, 5 Dec 2010 22:45:39 -0500
+Received: from vs3007.wh2.ocn.ne.jp (125.206.180.235)
+	by mail30g.wh2.ocn.ne.jp (RS ver 1.0.95vs) with SMTP id 0-0276967136
+	for <linux-wireless@vger.kernel.org>; Mon,  6 Dec 2010 12:45:37 +0900 (JST)
+Subject: [PATCH 2/3] nl80211: Export available antennas
+To: johannes@sipsolutions.net, linville@tuxdriver.com
+From: Bruno Randolf <br1@einfach.org>
+Cc: linux-wireless@vger.kernel.org
+Date: Mon, 06 Dec 2010 12:45:35 +0900
+Message-ID: <20101206034535.11462.70791.stgit@localhost6.localdomain6>
+In-Reply-To: <20101206034529.11462.48097.stgit@localhost6.localdomain6>
+References: <20101206034529.11462.48097.stgit@localhost6.localdomain6>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Vendor driver uses CR_BNC_INTERVAL at various places, one is HW_EnableBeacon()
-that combinies beacon interval with BSS-type flag and DTIM value in upper
-16bit of u32. The other one is HW_UpdateBcnInterval() that set_aw_pt_bi()
-appears to be based on. HW_UpdateBcnInterval() takes interval argument as u16
-and uses that for calculations, set_aw_pt_bi() uses u32 value that has flags
-and dtim in upper part. This clearly seems wrong. Also HW_UpdateBcnInterval()
-updates only lower 16bit part of CR_BNC_INTERVAL.
-
-So make set_aw_pt_bi() do calculations on only lower u16 part of
-s->beacon_interval.
-
-Signed-off-by: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
+Signed-off-by: Bruno Randolf <br1@einfach.org>
 ---
- drivers/net/wireless/zd1211rw/zd_chip.c |    8 +++++---
- 1 files changed, 5 insertions(+), 3 deletions(-)
+ include/linux/nl80211.h |    5 +++++
+ net/wireless/nl80211.c  |    2 ++
+ 2 files changed, 7 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/net/wireless/zd1211rw/zd_chip.c b/drivers/net/wireless/zd1211rw/zd_chip.c
-index 30f8d40..f21cd7e 100644
---- a/drivers/net/wireless/zd1211rw/zd_chip.c
-+++ b/drivers/net/wireless/zd1211rw/zd_chip.c
-@@ -849,10 +849,12 @@ static int set_aw_pt_bi(struct zd_chip *chip, struct aw_pt_bi *s)
- {
- 	struct zd_ioreq32 reqs[3];
+diff --git a/include/linux/nl80211.h b/include/linux/nl80211.h
+index 68fc25f..5f64fd6 100644
+--- a/include/linux/nl80211.h
++++ b/include/linux/nl80211.h
+@@ -833,6 +833,9 @@ enum nl80211_commands {
+  *	the hardware should not be configured to receive on this antenna.
+  *	For a more detailed descripton see @NL80211_ATTR_WIPHY_ANTENNA_TX.
+  *
++ * @NL80211_ATTR_WIPHY_ANTENNA_AVAIL: Bitmap of antennas which are available for
++ *	configuration via the above parameters.
++ *
+  * @NL80211_ATTR_MCAST_RATE: Multicast tx rate (in 100 kbps) for IBSS
+  *
+  * @NL80211_ATTR_OFFCHANNEL_TX_OK: For management frame TX, the frame may be
+@@ -1017,6 +1020,8 @@ enum nl80211_attrs {
  
--	if (s->beacon_interval <= 5)
--		s->beacon_interval = 5;
-+	if ((s->beacon_interval & 0xffff) <= 5) {
-+		s->beacon_interval &= ~0xffff;
-+		s->beacon_interval |= 5;
-+	}
- 	if (s->pre_tbtt < 4 || s->pre_tbtt >= s->beacon_interval)
--		s->pre_tbtt = s->beacon_interval - 1;
-+		s->pre_tbtt = (s->beacon_interval & 0xffff) - 1;
- 	if (s->atim_wnd_period >= s->pre_tbtt)
- 		s->atim_wnd_period = s->pre_tbtt - 1;
+ 	NL80211_ATTR_OFFCHANNEL_TX_OK,
  
++	NL80211_ATTR_WIPHY_ANTENNA_AVAIL,
++
+ 	/* add attributes here, update the policy in nl80211.c */
+ 
+ 	__NL80211_ATTR_AFTER_LAST,
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index 4854df9..1d49d75 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -555,6 +555,8 @@ static int nl80211_send_wiphy(struct sk_buff *msg, u32 pid, u32 seq, int flags,
+ 			NLA_PUT_U32(msg, NL80211_ATTR_WIPHY_ANTENNA_TX, tx_ant);
+ 			NLA_PUT_U32(msg, NL80211_ATTR_WIPHY_ANTENNA_RX, rx_ant);
+ 		}
++		NLA_PUT_U32(msg, NL80211_ATTR_WIPHY_ANTENNA_AVAIL,
++			    dev->wiphy.available_antennas);
+ 	}
+ 
+ 	nl_modes = nla_nest_start(msg, NL80211_ATTR_SUPPORTED_IFTYPES);
 
