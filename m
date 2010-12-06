@@ -1,137 +1,257 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.19.149.2]:12656 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752619Ab0LQDXn (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 16 Dec 2010 22:23:43 -0500
-Received: from mail.atheros.com ([10.10.20.108])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Thu, 16 Dec 2010 19:23:28 -0800
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: <linux-wireless@vger.kernel.org>
-CC: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Subject: [RFC 6/8] iw: synch up nl80211.h
-Date: Thu, 16 Dec 2010 19:23:15 -0800
-Message-ID: <1292556197-4820-7-git-send-email-lrodriguez@atheros.com>
-In-Reply-To: <1292556197-4820-1-git-send-email-lrodriguez@atheros.com>
-References: <1292556197-4820-1-git-send-email-lrodriguez@atheros.com>
+Received: from mail-qy0-f181.google.com ([209.85.216.181]:43058 "EHLO
+	mail-qy0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751200Ab0LFGaR (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 6 Dec 2010 01:30:17 -0500
+Received: by qyk12 with SMTP id 12so14074656qyk.19
+        for <linux-wireless@vger.kernel.org>; Sun, 05 Dec 2010 22:30:16 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain
+From: Jonathan Guerin <jonathan@guerin.id.au>
+Date: Mon, 6 Dec 2010 16:30:00 +1000
+Message-ID: <AANLkTimDF3kofO=kiuOsz+WrTGROdOL8-3eNvKd5NrD3@mail.gmail.com>
+Subject: ath5k: Weird Retransmission Behaviour
+To: linux-wireless <linux-wireless@vger.kernel.org>,
+	ath5k-devel <ath5k-devel@lists.ath5k.org>,
+	Bruno Randolf <br1@einfach.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
----
- nl80211.h |   55 +++++++++++++++++++++++++++++++++++++++++++++++++++++++
- 1 files changed, 55 insertions(+), 0 deletions(-)
+Hi,
 
-diff --git a/nl80211.h b/nl80211.h
-index 3804212..061c9a1 100644
---- a/nl80211.h
-+++ b/nl80211.h
-@@ -773,6 +773,9 @@ enum nl80211_commands {
-  *	cache, a wiphy attribute.
-  *
-  * @NL80211_ATTR_DURATION: Duration of an operation in milliseconds, u32.
-+ * @NL80211_ATTR_MAX_REMAIN_ON_CHANNEL_DURATION: Device attribute that
-+ *	specifies the maximum duration that can be requested with the
-+ *	remain-on-channel operation, in milliseconds, u32.
-  *
-  * @NL80211_ATTR_COOKIE: Generic 64-bit cookie to identify objects.
-  *
-@@ -851,6 +854,13 @@ enum nl80211_commands {
-  *
-  * @NL80211_ATTR_BSS_HTOPMODE: HT operation mode (u16)
-  *
-+ * @NL80211_ATTR_KEY_DEFAULT_TYPES: A nested attribute containing flags
-+ *	attributes, specifying what a key should be set as default as.
-+ *	See &enum nl80211_key_default_types.
-+ *
-+ * @NL80211_ATTR_REG_COUNTRY_FLAGS: Country specific regulatory flags.
-+ *	These are @NL80211_CFLAG_DFS_FCC_*
-+ *
-  * @NL80211_ATTR_MAX: highest attribute number currently defined
-  * @__NL80211_ATTR_AFTER_LAST: internal use
-  */
-@@ -1029,6 +1039,12 @@ enum nl80211_attrs {
- 
- 	NL80211_ATTR_BSS_HT_OPMODE,
- 
-+	NL80211_ATTR_KEY_DEFAULT_TYPES,
-+
-+	NL80211_ATTR_MAX_REMAIN_ON_CHANNEL_DURATION,
-+
-+	NL80211_ATTR_REG_COUNTRY_FLAGS,
-+
- 	/* add attributes here, update the policy in nl80211.c */
- 
- 	__NL80211_ATTR_AFTER_LAST,
-@@ -1466,6 +1482,24 @@ enum nl80211_reg_rule_flags {
- };
- 
- /**
-+ * enum nl80211_cflags - country regulatory flags
-+ *
-+ * @NL80211_CFLAG_DFS_FCC_: Country follows DFS master rules from FCC
-+ * @NL80211_CFLAG_DFS_FCC_: Country follows DFS master rules from ETSI
-+ * @NL80211_CFLAG_DFS_JP_: Country follows DFS master rules from JP/Telec
-+ */
-+enum nl80211_cflags {
-+	NL80211_CFLAG_DFS_FCC		= 1<<0,
-+	NL80211_CFLAG_DFS_ETSI		= 1<<1,
-+	NL80211_CFLAG_DFS_JP		= 1<<2,
-+};
-+
-+#define NL80211_CFLAG_ALL_DFS_FLAGS \
-+	(NL80211_CFLAG_DFS_FCC | \
-+	 NL80211_CFLAG_DFS_ETSI | \
-+	 NL80211_CFLAG_DFS_JP)
-+
-+/**
-  * enum nl80211_survey_info - survey information
-  *
-  * These attribute types are used with %NL80211_ATTR_SURVEY_INFO
-@@ -1775,6 +1809,23 @@ enum nl80211_wpa_versions {
- };
- 
- /**
-+ * enum nl80211_key_default_types - key default types
-+ * @__NL80211_KEY_DEFAULT_TYPE_INVALID: invalid
-+ * @NL80211_KEY_DEFAULT_TYPE_UNICAST: key should be used as default
-+ *	unicast key
-+ * @NL80211_KEY_DEFAULT_TYPE_MULTICAST: key should be used as default
-+ *	multicast key
-+ * @NUM_NL80211_KEY_DEFAULT_TYPES: number of default types
-+ */
-+enum nl80211_key_default_types {
-+	__NL80211_KEY_DEFAULT_TYPE_INVALID,
-+	NL80211_KEY_DEFAULT_TYPE_UNICAST,
-+	NL80211_KEY_DEFAULT_TYPE_MULTICAST,
-+
-+	NUM_NL80211_KEY_DEFAULT_TYPES
-+};
-+
-+/**
-  * enum nl80211_key_attributes - key attributes
-  * @__NL80211_KEY_INVALID: invalid
-  * @NL80211_KEY_DATA: (temporal) key data; for TKIP this consists of
-@@ -1790,6 +1841,9 @@ enum nl80211_wpa_versions {
-  * @NL80211_KEY_TYPE: the key type from enum nl80211_key_type, if not
-  *	specified the default depends on whether a MAC address was
-  *	given with the command using the key or not (u32)
-+ * @NL80211_KEY_DEFAULT_TYPES: A nested attribute containing flags
-+ *	attributes, specifying what a key should be set as default as.
-+ *	See &enum nl80211_key_default_types.
-  * @__NL80211_KEY_AFTER_LAST: internal
-  * @NL80211_KEY_MAX: highest key attribute
-  */
-@@ -1802,6 +1856,7 @@ enum nl80211_key_attributes {
- 	NL80211_KEY_DEFAULT,
- 	NL80211_KEY_DEFAULT_MGMT,
- 	NL80211_KEY_TYPE,
-+	NL80211_KEY_DEFAULT_TYPES,
- 
- 	/* keep last */
- 	__NL80211_KEY_AFTER_LAST,
--- 
-1.7.3.2.90.gd4c43
 
+I've been doing some investigation into the behaviour of contention
+windows and retransmissions.
+
+Firstly, I'll just describe the test scenario and setup that I have. I
+have 3 Via x86 nodes with Atheros AR5001X+ cards. They are tethered to
+each other via coaxial cables, into splitters. They have 20dB of fixed
+attenuation applied to each antenna output, plus a programmable
+variable attenuator on each link. One node acts as a sender, one as a
+receiver, and one simply runs a monitor-mode interface to capture
+packet traces. All 3 are running kernel version 2.6.37-rc2. The sender
+and receiver are configured as IBSS stations and are tuned to 5.18
+GHz.
+
+Here's a really dodgy ASCII diagram of the setup:
+
+S-----[variable attenuator]-----R
+|				          |
+|					  |
+|				          |
++------------M-------------------------+
+
+where S is the Sender node, R is the Receiver node and M is the
+Monitoring capture node.
+
+
+Secondly, I have written a program which will parse a captured pcap
+file from the Monitoring station. It looks for 'chains' of frames with
+the same sequence number, and where the first frame has the Retry bit
+set to false in the header and all following have it set to true. Any
+deviation from this, and the program drops the current chain without
+including it in its stats, and looks for the next chain matching these
+requirements. It averages the amount of time per transmission number
+(i.e. the average of all transmissions which were the first, second,
+third etc. for a unique sequence number). The transmission time of a
+frame is the amount of time between the end of the frame and the end
+of the previous. It tracks these 'chains' of frames with the same
+sequence number. It considers the last transmission number in each
+chain as the 'final' transmission.
+
+Finally, the link is loaded using a saturated UDP flow, and the data
+rate is fixed to 54M and 36M. This is specified in the output. The
+output is attached below.
+
+The output describes the fixed link data rate, the variable
+attenuator's value, the delivery ratio, and the number of transmitted
+packets/s. I've added a discussion per result set. Each line outputs
+the transmission number, the average transmission time for this
+number, the total number of transmissions, the number of frames which
+ended their transmissions at this number (i.e. where the chain ended
+its final transmission - this is equivalent to the retransmission
+value from the Radiotap header + 1), and the average expected
+transmission time for all that particular transmission number in all
+chains. This is calculated using the airtime calculations from the
+802.11a standard, with the receipt of an ACK frame, as well as a SIFS
+(16us), which is 28us. If the transmission did not receive an ACK, a
+normal ACK timeout is 50 us, but ath5k appears to have this set to 25
+us, so the value shouldn't be too far out what to expect.
+
+The header to each result refers to the rate it was fixed at, as well
+as the variable attenuation being added to it. The link also has a
+fixed 40dB of attenuation both to protect the cards, as well as give
+the necessary range for the variable attenuator to control link
+quality.
+
+==> iperf_33M_rate_36M_att_1dB.pcap.txt <== (good link, 100% delivery)
+Average time per TX No:
+TXNo	Avg			No		Final    	ExpectedAvg
+1		477.604980	10463	10462   	509
+Overall average: 477.604980
+
+[Discussion:] Nothing, appears normal.
+
+
+==> iperf_33M_rate_36M_att_18dB.pcap.txt <== (lossy link, but still
+100% delivery)
+Average time per TX No:
+TXNo	Avg			No		Final   	ExpectedAvg
+1		476.966766	9808		8138   	509
+2		550.320496	1663		1403   	581
+3		697.552917	255		218   	725
+4		1028.756714	37		30		1013
+5		1603.428589	7		7   		1589
+Overall average: 494.514618
+
+[Discussion:] Nothing, appears normal. Contention window appears to
+double normally.
+
+==> iperf_33M_rate_36M_att_19dB.pcap.txt <== (lossy link, but still
+100% delivery)
+Average time per TX No:
+TXNo	Avg			No		Final   	ExpectedAvg
+1		477.510437	14893	8653   	509
+2		546.149048	6205		3624   	581
+3		692.270203	2561		1552   	725
+4		980.565857	1002		596   	1013
+5		1542.079956	400		252   	1589
+6		2758.693848	147		89		2741
+7		4971.500000	56		32   		5045
+8	 	4689.043457	23		15   		5045
+9		4487.856934	7		3   		5045
+10		442.250000	4		3   		5045
+11		488.000000	1		1   		5045
+Overall average: 580.976807
+
+[Discussion:] Contention window appears to double until a plateau from
+7 through 9. Weirdly, the contention window appears to be drop again
+from 10, but
+there are too few frames to draw a conclusion.
+
+==> iperf_33M_rate_36M_att_21dB.pcap.txt <== (lossy link, < 1% delivery)
+TXNo	Avg			No	     	Final   ExpectedAvg
+1		485.390198	1940		3	   509
+2		479.113434	1922		2	   581
+3		479.681824	1914		0   	   725
+4		485.083038	1903		1   	   1013
+5		492.088135	1895		4   	   1589
+6		508.322510	1876		1   	   2741
+7		524.697876	1870		1   	   5045
+8		543.054382	1857		0   	   5045
+9		522.970703	1842		0   	   5045
+10		478.204132	1837		0   	   5045
+11		476.520782	1828		0   	   5045
+12		477.531342	1818		0   	   5045
+13		476.743652	1810		0   	   5045
+14		478.936554	1797		0   	   5045
+15		480.699097	1788		0   	   5045
+16		482.734314	1784		0   	   5045
+17		491.608459	1775		0   	   5045
+18		497.458984	1767		1   	   5045
+19		495.067932	1752		7   	   5045
+20		478.102417	1738		295     5045
+21		475.128845	1436		1402   5045
+22		492.692322	26		0	   5045
+23		471.576935	26		0   	   5045
+24		466.884613	26		0   	   5045
+25		476.269226	26		0   	   5045
+26		462.192322	26		0   	   5045
+27		480.961548	26		1   	   5045
+28		463.600006	25		24   	   5045
+Overall average: 491.068359
+
+[Discussion:] Contention does not appear to increase, and the number
+of transmission per frame is very large. This behaviour is replicated
+with the 54M scenario when a link is extremely lossy.
+
+==> iperf_33M_rate_54M_att_1dB.pcap.txt <== (good link, 2400 packets/s)
+Average time per TX No:
+TXNo	Avg			No		Final   	ExpectedAverage
+1		365.551849	23957	23935   	393
+2		409.571442	21		21   		465
+Overall average: 365.590424
+
+[Discussion: ] Appears relatively normal.
+
+==> iperf_33M_rate_54M_att_10dB.pcap.txt <== (lossy link, but still
+100% delivery, 1500 packets/s)
+Average time per TX No:
+TXNo	Avg			No		Final   	ExpectedAverage
+1		364.501190	10134	5915   	393
+2		434.138000	4196		2461   	465
+3		579.482300	1721		1036   	609
+4		837.005859	682		397   	897
+5		1365.279175	283		155   	1473
+6		2572.007812	128		81 	  	2625
+7		4905.195801	46		27   		4929
+8		4985.947266	19		12   		4929
+9		4627.285645	7		4   		4929
+10		366.000000	3		1   		4929
+11		335.500000	2		2   		4929
+Overall average: 473.477020
+
+[Discussion: ] Appears fine, until transmission 10, which appears to
+drop the contention window back to an equivalent first transmission
+value, but not enough frames at this point to draw a conclusion.
+
+==> iperf_33M_rate_54M_att_11dB.pcap.txt <== (lossy link, but still
+100% delivery, 680 packets/s)
+Average time per TX No:
+TXNo	Avg			No		Final   	ExpectedAverage
+1		362.082825	2149		539   	393
+2		434.672485	1606		368   	465
+3		582.795288	1231		307   	609
+4		820.347107	919		237   	897
+5		1424.753296	673		194   	1473
+6		2626.403320	466		143   	2625
+7		4734.233887	308		83   		4929
+8		4830.244141	217		65   		4929
+9		4449.702637	148		33   		4929
+10		360.114044	114		36   		4929
+11		366.000000	78		20   		4929
+12		460.655182	58		20   		4929
+13		544.184204	38		9   		4929
+14		893.965515	29		7   		4929
+15		1361.409058	22		8   		4929
+16		2675.285645	14		2   		4929
+17		4239.500000	12		5   		4929
+18		3198.142822	7		2   		4929
+19		5111.799805	5		3   		4929
+20		1403.000000	2		1   		4929
+Overall average: 1063.129883
+
+[Discussion: ] Everything appears fine until, once again, transmission
+10, when the contention windows appears to 'restart' - it climbs
+steadily until 17. After this point, there are not enough frames to
+draw any conclusions.
+
+==> iperf_33M_rate_54M_att_12dB.pcap.txt <== (lossy link, 6% delivery,
+400 packets/s)
+Average time per TX No:
+TXNo	Avg			No		Final   	ExpectedAvg
+1		360.460724	4482		14   		393
+2		366.068481	4453		16   		465
+3		360.871735	4413		13   		609
+4		361.535553	4386		18   		897
+5		367.526062	4357		60   		1473
+6		360.003967	4283		3839   	2625
+7		361.778046	419		416   	4929
+Overall average: 362.732910
+
+[Discussion:] This exhibits the same problem as the extremely lossy
+36M link - the contention window does not appear to rise. Even with
+enough frames to draw a good conclusion at transmission 6, the
+transmission time average (360) is way below the expected average
+(2625).
+==> END OF OUTPUT <==
+
+The question here is: why does ath5k/mac80211 send out so many
+transmissions, and why does it vary so much based on link quality?
+Additionally, why does it appear to 'reset' the contention window
+after 9 retransmissions of a frame?
+
+Cheers,
+
+Jonathan
