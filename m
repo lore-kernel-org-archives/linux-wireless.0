@@ -1,50 +1,89 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from hrndva-omtalb.mail.rr.com ([71.74.56.124]:59346 "EHLO
-	hrndva-omtalb.mail.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750715Ab0LPEzh (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 15 Dec 2010 23:55:37 -0500
-Date: Wed, 15 Dec 2010 22:55:34 -0600
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: John W Linville <linville@tuxdriver.com>
-Cc: sfr@canb.auug.org.au, linux-wireless@vger.kernel.org
-Subject: [PATCH] rtl8192ce: Fix build on powerpc
-Message-ID: <4d099bc6.A/mmZxu+nz0FW6tP%Larry.Finger@lwfinger.net>
+Received: from mail.atheros.com ([12.19.149.2]:36106 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752043Ab0LFMb2 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 6 Dec 2010 07:31:28 -0500
+Received: from mail.atheros.com ([10.10.20.105])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Mon, 06 Dec 2010 04:31:13 -0800
+From: Vasanthakumar Thiagarajan <vasanth@atheros.com>
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>
+Subject: [PATCH V3 14/27] ath9k: Read spur channel information from eeprom for AR9485
+Date: Mon, 6 Dec 2010 04:27:47 -0800
+Message-ID: <1291638480-8950-15-git-send-email-vasanth@atheros.com>
+In-Reply-To: <1291638480-8950-1-git-send-email-vasanth@atheros.com>
+References: <1291638480-8950-1-git-send-email-vasanth@atheros.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-After merge of the rtl8192ce driver, a powerpc build fails with:
+Also spur channel count and range is different for AR9485.
 
-drivers/net/wireless/rtlwifi/rtl8192ce/rtl8192c-sw.c: In function 'rtl92c_init_sw_vars':
-drivers/net/wireless/rtlwifi/rtl8192ce/rtl8192c-sw.c:76: error: implicit declaration of function 'vmalloc'
-drivers/net/wireless/rtlwifi/rtl8192ce/rtl8192c-sw.c:76: warning: cast to pointer from integer of different size
-drivers/net/wireless/rtlwifi/rtl8192ce/rtl8192c-sw.c: In function 'rtl92c_deinit_sw_vars':
-drivers/net/wireless/rtlwifi/rtl8192ce/rtl8192c-sw.c:91: error: implicit declaration of function 'vfree'
-
-The problem is fixed by explicitly including the appropriate header.
-
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+Signed-off-by: Vasanthakumar Thiagarajan <vasanth@atheros.com>
 ---
+ drivers/net/wireless/ath/ath9k/ar9003_phy.c |   35 ++++++++++++++++++++++++--
+ 1 files changed, 32 insertions(+), 3 deletions(-)
 
-John,
-
-Sorry about this. Too bad the implicit headers are not the same on all platforms.
-
-Larry
----
-
-Index: wireless-testing/drivers/net/wireless/rtlwifi/rtl8192ce/rtl8192c-sw.c
-===================================================================
---- wireless-testing.orig/drivers/net/wireless/rtlwifi/rtl8192ce/rtl8192c-sw.c
-+++ wireless-testing/drivers/net/wireless/rtlwifi/rtl8192ce/rtl8192c-sw.c
-@@ -27,6 +27,8 @@
-  *
-  *****************************************************************************/
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_phy.c b/drivers/net/wireless/ath/ath9k/ar9003_phy.c
+index ae30d98..926f0f0 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_phy.c
++++ b/drivers/net/wireless/ath/ath9k/ar9003_phy.c
+@@ -134,21 +134,50 @@ static void ar9003_hw_spur_mitigate_mrc_cck(struct ath_hw *ah,
+ 	static const u32 spur_freq[4] = { 2420, 2440, 2464, 2480 };
+ 	int cur_bb_spur, negative = 0, cck_spur_freq;
+ 	int i;
++	int range, max_spur_cnts, synth_freq;
++	u8 *spur_fbin_ptr = NULL;
  
-+#include <linux/vmalloc.h>
+ 	/*
+ 	 * Need to verify range +/- 10 MHz in control channel, otherwise spur
+ 	 * is out-of-band and can be ignored.
+ 	 */
+ 
+-	for (i = 0; i < 4; i++) {
++	if (AR_SREV_9485(ah)) {
++		spur_fbin_ptr = ar9003_get_spur_chan_ptr(ah,
++							 IS_CHAN_2GHZ(chan));
++		if (spur_fbin_ptr[0] == 0) /* No spur */
++			return;
++		max_spur_cnts = 5;
++		if (IS_CHAN_HT40(chan)) {
++			range = 19;
++			if (REG_READ_FIELD(ah, AR_PHY_GEN_CTRL,
++					   AR_PHY_GC_DYN2040_PRI_CH) == 0)
++				synth_freq = chan->channel + 10;
++			else
++				synth_freq = chan->channel - 10;
++		} else {
++			range = 10;
++			synth_freq = chan->channel;
++		}
++	} else {
++		range = 10;
++		max_spur_cnts = 4;
++		synth_freq = chan->channel;
++	}
 +
- #include "../wifi.h"
- #include "../core.h"
- #include "../pci.h"
++	for (i = 0; i < max_spur_cnts; i++) {
+ 		negative = 0;
+-		cur_bb_spur = spur_freq[i] - chan->channel;
++		if (AR_SREV_9485(ah))
++			cur_bb_spur = FBIN2FREQ(spur_fbin_ptr[i],
++					IS_CHAN_2GHZ(chan)) - synth_freq;
++		else
++			cur_bb_spur = spur_freq[i] - synth_freq;
+ 
+ 		if (cur_bb_spur < 0) {
+ 			negative = 1;
+ 			cur_bb_spur = -cur_bb_spur;
+ 		}
+-		if (cur_bb_spur < 10) {
++		if (cur_bb_spur < range) {
+ 			cck_spur_freq = (int)((cur_bb_spur << 19) / 11);
+ 
+ 			if (negative == 1)
+-- 
+1.7.0.4
+
