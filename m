@@ -1,110 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ww0-f44.google.com ([74.125.82.44]:43511 "EHLO
-	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754055Ab0LGSvC (ORCPT
+Received: from mail-fx0-f46.google.com ([209.85.161.46]:62979 "EHLO
+	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753795Ab0LFRmS (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 7 Dec 2010 13:51:02 -0500
-Received: by wwa36 with SMTP id 36so233005wwa.1
-        for <linux-wireless@vger.kernel.org>; Tue, 07 Dec 2010 10:51:00 -0800 (PST)
-From: David Kilroy <kilroyd@googlemail.com>
-To: linux-wireless@vger.kernel.org
-Cc: Matt_Domsch@dell.com, David Kilroy <kilroyd@googlemail.com>
-Subject: [PATCH] orinoco: initialise priv->hw before assigning the interrupt
-Date: Tue,  7 Dec 2010 18:50:42 +0000
-Message-Id: <1291747842-5634-1-git-send-email-kilroyd@googlemail.com>
+	Mon, 6 Dec 2010 12:42:18 -0500
+Received: by fxm20 with SMTP id 20so4419240fxm.19
+        for <linux-wireless@vger.kernel.org>; Mon, 06 Dec 2010 09:42:17 -0800 (PST)
+From: Christian Lamparter <chunkeey@googlemail.com>
+To: Wade Fitzpatrick <wade.fitzpatrick@gmail.com>
+Subject: Re: ar9170usb slow / poor performance (SOLVED)
+Date: Mon, 6 Dec 2010 18:41:57 +0100
+Cc: linux-wireless@vger.kernel.org
+References: <AANLkTimMx+LG7ivJ4qpyGGysgHOzZ8ySdTrXG3EbxU=F@mail.gmail.com>
+In-Reply-To: <AANLkTimMx+LG7ivJ4qpyGGysgHOzZ8ySdTrXG3EbxU=F@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Message-Id: <201012061841.58047.chunkeey@googlemail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The interrupt handler takes a lock - but since commit bcad6e80f3f this
-lock goes through an indirection specified in the hermes_t structure.
-We must therefore initialise the structure before setting up the
-interrupt handler.
+On Monday 06 December 2010 17:34:15 Wade Fitzpatrick wrote:
+> I could not get anything sensible from carl9170. I will keep trying though.
+hmm, hard to say what it is? I bet it could be conflicting
+stack/driver modules. (i.e.: the driver is from compact-wireless,
+whereas the mac80211, or cfg80211 is the original module from 2.6.36) 
 
-Fix orinoco_cs and spectrum_cs
+> The Otus message comes from arusb_lnx which was loaded automatically
+> after ar9170usb. Should I remove the arusb_lnx.ko file?
+either that, or add it to the module blacklist (also in /etc/modprobe.d)
 
-<https://bugzilla.kernel.org/show_bug.cgi?id=23932>
+> I did not patch the driver as I am not clear what MCS and minstrel_ht are.
+<http://en.wikipedia.org/wiki/IEEE_802.11n-2009> #Data Rates
 
-Bisected by: Matt Domsch <Matt_Domsch@dell.com>
-Signed-off by: David Kilroy <kilroyd@googlemail.com>
----
+"Data rates up to 600 Mbit/s are achieved only with the maximum of four
+spatial streams using a 40 MHz-wide channel. Various modulation schemes
+and coding rates are defined by the standard and are represented by a
+Modulation and Coding Scheme (MCS) index value."
 
-This patch is based on wireless-testing.
-
-Matt has tested the equivalent fix based on v2.6.35. There have been
-other changes in this area due to pcmcia refactorring.
-
-John, let me know if you'd like a separate version targetted at v2.6.37.
-
----
- drivers/net/wireless/orinoco/orinoco_cs.c  |   14 +++++++-------
- drivers/net/wireless/orinoco/spectrum_cs.c |   14 +++++++-------
- 2 files changed, 14 insertions(+), 14 deletions(-)
-
-diff --git a/drivers/net/wireless/orinoco/orinoco_cs.c b/drivers/net/wireless/orinoco/orinoco_cs.c
-index 71b3d68..32954c4 100644
---- a/drivers/net/wireless/orinoco/orinoco_cs.c
-+++ b/drivers/net/wireless/orinoco/orinoco_cs.c
-@@ -151,20 +151,20 @@ orinoco_cs_config(struct pcmcia_device *link)
- 		goto failed;
- 	}
+minstrel* is mac80211's default rate control algorithm.
+The original minstrel only supports legacy (802.11a/b/g) data rates
+and minstrel_ht only selects 802.11n MCS (index).
  
--	ret = pcmcia_request_irq(link, orinoco_interrupt);
--	if (ret)
--		goto failed;
--
--	/* We initialize the hermes structure before completing PCMCIA
--	 * configuration just in case the interrupt handler gets
--	 * called. */
- 	mem = ioport_map(link->resource[0]->start,
- 			resource_size(link->resource[0]));
- 	if (!mem)
- 		goto failed;
- 
-+	/* We initialize the hermes structure before completing PCMCIA
-+	 * configuration just in case the interrupt handler gets
-+	 * called. */
- 	hermes_struct_init(hw, mem, HERMES_16BIT_REGSPACING);
- 
-+	ret = pcmcia_request_irq(link, orinoco_interrupt);
-+	if (ret)
-+		goto failed;
-+
- 	ret = pcmcia_enable_device(link);
- 	if (ret)
- 		goto failed;
-diff --git a/drivers/net/wireless/orinoco/spectrum_cs.c b/drivers/net/wireless/orinoco/spectrum_cs.c
-index fb859a5..db34c28 100644
---- a/drivers/net/wireless/orinoco/spectrum_cs.c
-+++ b/drivers/net/wireless/orinoco/spectrum_cs.c
-@@ -214,21 +214,21 @@ spectrum_cs_config(struct pcmcia_device *link)
- 		goto failed;
- 	}
- 
--	ret = pcmcia_request_irq(link, orinoco_interrupt);
--	if (ret)
--		goto failed;
--
--	/* We initialize the hermes structure before completing PCMCIA
--	 * configuration just in case the interrupt handler gets
--	 * called. */
- 	mem = ioport_map(link->resource[0]->start,
- 			resource_size(link->resource[0]));
- 	if (!mem)
- 		goto failed;
- 
-+	/* We initialize the hermes structure before completing PCMCIA
-+	 * configuration just in case the interrupt handler gets
-+	 * called. */
- 	hermes_struct_init(hw, mem, HERMES_16BIT_REGSPACING);
- 	hw->eeprom_pda = true;
- 
-+	ret = pcmcia_request_irq(link, orinoco_interrupt);
-+	if (ret)
-+		goto failed;
-+
- 	ret = pcmcia_enable_device(link);
- 	if (ret)
- 		goto failed;
--- 
-1.7.2.2
+> Simply unloading the modules and modprobing them again does not work
+> reliably. I think it must be due to not reloading the firmware
+> properly.
+The ar9170usb, otus and all windows-driver firmware will only be uploaded
+once (on the first time a driver is loaded). All later upload attempts are
+ignored. The problem here is that the firmware program can't be easily
+replaced "in-place" without breaking compatibility or functionality.
 
+> I added the mac80211 options to modprobe.conf and after rebooting,
+> both wireless dongles are stable and ping times are back to normal for
+> the ar9170usb driver.
+no need to reboot, you can unload modules with modprobe -r / rmmod
+[as long as the modules are not in use, or an other loaded module
+depends on it].
+
+> #
+> # /etc/modprobe.d/modprobe.conf (for v2.6 kernels)
+> #
+> options mac80211 ieee80211_default_rc_algo=minstrel
+
+the problem with this is that carl9170 (or any other driver
+that relies on minstrel_ht to supply 802.11n MCS rates)
+are limited to the legacy rates (and physpeeds of 54Mbit)
+
+> BTW - my AP is a Netgear WNR2000v2
+> I can do further testing if you would like me to.
+Well, we had a funny incidents with WNDR3700.
+
+<http://www.spinics.net/lists/linux-wireless/msg56581.html>
+after some initial problems with WMM, he got it sort-of-working.
+This "sort-of" should be fixed now:
+<http://www.spinics.net/lists/linux-wireless/msg60612.html>
+
+Best regards,
+	Christian
