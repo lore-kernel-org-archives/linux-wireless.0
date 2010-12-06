@@ -1,54 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wy0-f174.google.com ([74.125.82.174]:62173 "EHLO
-	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753312Ab0LVO2n (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 22 Dec 2010 09:28:43 -0500
-Received: by mail-wy0-f174.google.com with SMTP id 28so5082982wyb.19
-        for <linux-wireless@vger.kernel.org>; Wed, 22 Dec 2010 06:28:42 -0800 (PST)
-From: Arik Nemtsov <arik@wizery.com>
-To: <linux-wireless@vger.kernel.org>
-Cc: Luciano Coelho <luciano.coelho@nokia.com>,
-	Arik Nemtsov <arik@wizery.com>
-Subject: [PATCH v2 17/18] wl1271: Read MAC address from NVS file on HW startup
-Date: Wed, 22 Dec 2010 16:27:36 +0200
-Message-Id: <1293028057-6212-18-git-send-email-arik@wizery.com>
-In-Reply-To: <1293028057-6212-1-git-send-email-arik@wizery.com>
-References: <1293028057-6212-1-git-send-email-arik@wizery.com>
+Received: from mail.atheros.com ([12.19.149.2]:15411 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753655Ab0LFTxw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 6 Dec 2010 14:53:52 -0500
+Received: from mail.atheros.com ([10.10.20.105])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Mon, 06 Dec 2010 11:53:37 -0800
+Date: Mon, 6 Dec 2010 11:53:48 -0800
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: Luis Rodriguez <Luis.Rodriguez@Atheros.com>
+CC: Ben Greear <greearb@candelatech.com>,
+	Felix Fietkau <nbd@openwrt.org>,
+	"ath9k-devel@lists.ath9k.org" <ath9k-devel@venema.h4ckr.net>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [ath9k-devel] Script to crash ath9k with DMA errors.
+Message-ID: <20101206195348.GF21442@tux>
+References: <4CF44543.9070605@candelatech.com>
+ <20101130004424.GC1901@tux>
+ <4CF6D8C8.2000308@candelatech.com>
+ <4CF8A6DE.4020804@candelatech.com>
+ <4CFAFBE1.3080505@openwrt.org>
+ <4CFB20BA.5090300@candelatech.com>
+ <20101206193600.GC21442@tux>
+ <4CFD3DE3.4000207@candelatech.com>
+ <20101206195313.GE21442@tux>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <20101206195313.GE21442@tux>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Try to read the MAC address from the on-disk NVS file.
-A non-zero MAC address is required to add an AP interface.
+On Mon, Dec 06, 2010 at 11:53:13AM -0800, Luis Rodriguez wrote:
+> On Mon, Dec 06, 2010 at 11:47:47AM -0800, Ben Greear wrote:
+> > On 12/06/2010 11:36 AM, Luis R. Rodriguez wrote:
+> > 
+> > > Can you clarify the status of this issue. It remains unclear to me from
+> > > your above description how things are going. As I read it some things
+> > > look OK now but you still get a warning.
+> > 
+> > Ok, since you asked :)
+> > 
+> > I worked on this over the weekend and this morning.  I had all sorts of
+> > issues until I realized that I had one STA with non-configured SSID.
+> > It sometimes connected to one /a AP and the other STAs attempted to connect
+> > to another /n (on entirely different band) AP.  I basically got zero stations associated for any length
+> > of time due to constant channel switching.  No crashes, but lots of
+> > warnings about DMA failing to stop.
+> > 
+> > Now..I've fixed this configuration issue (and adding steps to help prevent this mis-configuration
+> > again).
+> > 
+> > With 16 properly configured non-encrypted stations, running with wpa-supplicant
+> > with netlink driver & sharing scan results,  the interfaces quickly associate.
+> > 
+> > However, I do continue to see DMA warnings such as these (I had picked up my
+> > portable phone, and it knocked all the interfaces offline ..here
+> > they are coming back up after I hung up the phone).
+> > 
+> > Please note that I ported Felix's 2.6.37 patch he posted this morning
+> > to wireless-testing and have applied it.
+> > 
+> > I'm highly tempted to just make that a WARN_ON_ONCE so at least my logs
+> > aren't spammed so heavily with the recv.c:531 DMA warning.
+> 
+> You can send this change upstream as well.
 
-Signed-off-by: Arik Nemtsov <arik@wizery.com>
----
- drivers/net/wireless/wl12xx/main.c |   12 ++++++++++++
- 1 files changed, 12 insertions(+), 0 deletions(-)
+Also, feel free to limit the number of STAs you can have up
+physically by setting this to a number you bless yourself.
 
-diff --git a/drivers/net/wireless/wl12xx/main.c b/drivers/net/wireless/wl12xx/main.c
-index eb2c3c5..a9f95c6 100644
---- a/drivers/net/wireless/wl12xx/main.c
-+++ b/drivers/net/wireless/wl12xx/main.c
-@@ -3025,6 +3025,18 @@ int wl1271_register_hw(struct wl1271 *wl)
- 	if (wl->mac80211_registered)
- 		return 0;
- 
-+	ret = wl1271_fetch_nvs(wl);
-+	if (ret == 0) {
-+		u8 *nvs_ptr = (u8 *)wl->nvs->nvs;
-+
-+		wl->mac_addr[0] = nvs_ptr[11];
-+		wl->mac_addr[1] = nvs_ptr[10];
-+		wl->mac_addr[2] = nvs_ptr[6];
-+		wl->mac_addr[3] = nvs_ptr[5];
-+		wl->mac_addr[4] = nvs_ptr[4];
-+		wl->mac_addr[5] = nvs_ptr[3];
-+	}
-+
- 	SET_IEEE80211_PERM_ADDR(wl->hw, wl->mac_addr);
- 
- 	ret = ieee80211_register_hw(wl->hw);
--- 
-1.7.1
-
+  Luis
