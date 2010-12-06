@@ -1,98 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iw0-f172.google.com ([209.85.214.172]:52795 "EHLO
-	mail-iw0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755637Ab0LJP46 convert rfc822-to-8bit (ORCPT
+Received: from mailserver.naic.edu ([192.65.176.45]:54119 "EHLO
+	mailserver.naic.edu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751263Ab0LFE2P (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 10 Dec 2010 10:56:58 -0500
-Received: by iwn40 with SMTP id 40so5482506iwn.3
-        for <linux-wireless@vger.kernel.org>; Fri, 10 Dec 2010 07:56:58 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <20101210093258.GA4703@basil.fritz.box>
-References: <20101210093258.GA4703@basil.fritz.box>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Fri, 10 Dec 2010 07:56:37 -0800
-Message-ID: <AANLkTimnfAbDnKQbxLrwOHTD-CFXn1TJh91PuC=2QuUM@mail.gmail.com>
-Subject: Re: [ath9k-devel] .36 ath9k patches for .35-longterm
-To: Andi Kleen <andi@firstfloor.org>
-Cc: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org
-Content-Type: text/plain; charset=UTF-8
+	Sun, 5 Dec 2010 23:28:15 -0500
+Date: Mon, 6 Dec 2010 00:28:12 -0400
+From: Giacomo Comes <comes@naic.edu>
+To: Dave Kilroy <kilroyd@googlemail.com>
+Cc: Giacomo Comes <comes@naic.edu>, linux-wireless@vger.kernel.org
+Subject: Re: orinoco_cs module and WPA not working
+Message-ID: <20101206042812.GB28134@monopoli.naic.edu>
+References: <AANLkTi=YT1V-kr-tAmNfSBPPEGk39H37RoNkx5txhnD7@mail.gmail.com> <20101203001052.GA16808@monopoli.naic.edu> <AANLkTinLaa+dOiq67DAt+KYfnxUEkNgWEiE2x1NtT9RE@mail.gmail.com> <AANLkTim-hexpFnV_DfKGM53vWo1-5W6fbK4e+jLnb5fB@mail.gmail.com> <20101203202321.GA21937@monopoli.naic.edu> <AANLkTi=qvZ-Uj1T=9Xc8LyyxKvgNw4CKV8Zx2fDfo4uH@mail.gmail.com> <20101204033646.GA22662@monopoli.naic.edu> <AANLkTik=nbdNUU7gzO9V17fHWZibc2LjuXDgpeRDztoM@mail.gmail.com> <20101204134732.GA24216@monopoli.naic.edu> <AANLkTinU+Xv+gNSTJnEz_tYPhcXRf=kEfkyyeuN0QPFt@mail.gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <AANLkTinU+Xv+gNSTJnEz_tYPhcXRf=kEfkyyeuN0QPFt@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Dec 10, 2010 at 1:32 AM, Andi Kleen <andi@firstfloor.org> wrote:
-> I sent this to the athk9 maintainers earlier, but it looks like
-> Atheros' mailserver doesn't like my mailserver and I got a bounce.
-> Resending to the lists.
+On Sat, Dec 04, 2010 at 02:40:44PM +0000, Dave Kilroy wrote:
+> On Sat, Dec 4, 2010 at 1:47 PM, Giacomo Comes <comes@naic.edu> wrote:
+> > On Sat, Dec 04, 2010 at 12:01:34PM +0000, Dave Kilroy wrote:
+> >> >> I'm at a loss. I've looked at the wpa_supplicant code, and had another
+> >> >> look at the driver. The scan should be a plain wildcard scan - which
+> >> >> you've identified works.
+> >> >>
+> >> >> Does setting scan_ssid=1 in the wpa_supplicant network block change
+> >> >> the behaviour? That's usually only necessary for hidden SSIDs - but
+> >> >> I'd like to know if the scan succeeds in this case.
+> >> >
+> >> > No It doesn't work.
+> >> > But I have more informations for you.
+> >> >
+> >> > I have been testing different versions of wpa_supplicant
+> >> > and I have found that if a use wpa_supplicant 0.7.0 or earlier,
+> >> > it works. With 0.7.1 or newer it fails.
+> >> > wpa_supplicant 0.7.0 works even without applying your patch.
+> >>
+> >> I've set myself up so I can test with orinoco_usb. I can reproduce the
+> >> issue (or something that looks the same).
+> >>
+> >> After much confusion, I suspect the initial scan is being triggered
+> >> before the hardware is ready. Internally, wpa_supplicant will do an
+> >> 'ifconfig eth1 up' followed by an 'iwlist eth1 scan', and it seems the
+> >> driver/hardware wants more time between them.
+> >>
+> >> Try the following (either in two command prompts, or with
+> >> wpa_supplicant in the background):
+> >>
+> >> prompt1$ wpa_supplicant -dd -ieth1 ....
+> >>
+> >> prompt2$ ifconfig eth1 down
+> >> prompt2$ ifconfig eth1 up
+> >>
+> >> and see what wpa_supplicant is doing. If it has got scan results then
+> >> you're probably seeing what I am.
+> >
+> > You are right. After running ifconfig eth1 down,up on a second terminal,
+> > while wpa_supplicant iis running on the first terminal,
+> > it succesfully associates with the AP.
+> 
+> DOH!
+> 
+> My speculation above was incorrect. There's a really stupid driver bug
+> that's been there ever since I added WPA capability. Patch incoming.
 
-Heh, odd.
+I have been testing your patches and I can confirm that now the orinoco
+driver is working properly for me. Using directly wpa_supplicant and using
+networkmanager.
+Thank you very much for your work.
 
-> -Andi
->
-> ----- Forwarded message from Andi Kleen <andi@firstfloor.org> -----
->
-> Date: Thu, 9 Dec 2010 19:34:12 +0100
-> From: Andi Kleen <andi@firstfloor.org>
-> To: lrodriguez@atheros.com, nbd@openwrt.org, bjorn.smedman@venatech.se,
->        mshajakhan@atheros.com, senthilkumar@atheros.com,
->        vasanth@atheros.com, rmanoharan@atheros.com
-> Cc: stable@kernel.org
-> Subject: .36 ath9k patches for .35-longterm
-> User-Agent: Mutt/1.5.20 (2009-06-14)
->
-> Hi,
->
-> I've been looking at the extremly large number of ath9k patches which are in the
-> 2.6.36 stable queue:
->
-> ath9k-add-locking-for-starting-the-pcu-on-rx.patch
-> ath9k-add-locking-for-stopping-rx.patch
-> ath9k-a-mpdu-rate-control-info-fix.patch
-> ath9k-built-in-rate-control-a-mpdu-fix.patch
-> ath9k-clean-up-fix-aggregation-session-flush.patch
-> ath9k-fix-an-aggregation-start-related-race-condition.patch
-> ath9k-fix-channel-flag-regd-issues-with-multiple-cards.patch
-> ath9k-fix-enabling-ani-tx-monitor-after-bg-scan.patch
-> ath9k-fix-incorrect-access-of-rate-flags-in-rc.patch
-> ath9k-fix-power-save-race-conditions.patch
-> ath9k-fix-regression-on-beacon-loss-after-bgscan.patch
-> ath9k-fix-regression-which-disabled-ps-on-ath9k.patch
-> ath9k-fix-regression-which-prevents-chip-sleep-after-cab-data.patch
-> ath9k-fix-spurious-mic-failure-reports.patch
-> ath9k-fix-timeout-on-stopping-rx-dma.patch
->
-> Some of them apply to .35, but a lot of others do not and I found
-> it difficult to decide which ones are suitable for 2.6.36
+The only issue still not fixed is the suspend/resume timeout.
+Can you help also with that?
 
-You mean for 2.6.35?
-
-> and what
-> their dependencies are.
->
-> Could you guys please indicate:
-> - Which patches are needed for 2.6.35
-> - If they have additional dependencies for .35 please note the upstream
-> commit in the standard format.
-
-Eek, um OK, we'll give this a some good review and get back to you.
-I'd like to also point out we have a few directories in the
-compat-wireless-2.6.36.y branch which are used to add extra patches on
-top of the stable 2.6.36.y kernel release, some of them are dragging
-in pending stable patches (pending-stable/ directory), some are cherry
-picked patches from linux-next (linux-next-cherry-picks/) and some are
-patches posted to linux-wireless which at that time had yet to be
-merged into linux-next (linux-next-pending/ ). The
-compat-wireless-2.6.36-5-spn.tar.bz2 release for example contains all
-of these three patch series. I should not the pending-stable patches
-are *all* pending-stable patches for linux-wireless and bluetooth.
-
-http://git.kernel.org/?p=linux/kernel/git/mcgrof/compat-wireless-2.6.git;a=tree;h=refs/heads/linux-2.6.36.y;hb=refs/heads/linux-2.6.36.y
-
-> Right now I didn't merge any ath9x patches until this is resolved.
-
-This will take a bit of time, as some of these patches may require
-manual backport and as you noted some dependencies. Given that this is
-for long term we will do some work to get this to you. Its too bad we
-can't get AR9003 support in there, that's a huge set of patches
-though.
-
-  Luis
+Giacomo
