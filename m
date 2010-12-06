@@ -1,93 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f45.google.com ([209.85.215.45]:47560 "EHLO
-	mail-ew0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754255Ab0LMLkL (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 13 Dec 2010 06:40:11 -0500
-Received: by mail-ew0-f45.google.com with SMTP id 10so3803451ewy.4
-        for <linux-wireless@vger.kernel.org>; Mon, 13 Dec 2010 03:40:10 -0800 (PST)
-From: Ivo van Doorn <ivdoorn@gmail.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Subject: [PATCH 04/17] rt2x00: fix hang when unplugging USB device in use
-Date: Mon, 13 Dec 2010 12:32:49 +0100
-Cc: linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com
-References: <201012131231.28313.IvDoorn@gmail.com> <201012131231.59890.IvDoorn@gmail.com> <201012131232.23491.IvDoorn@gmail.com>
-In-Reply-To: <201012131232.23491.IvDoorn@gmail.com>
+Received: from mail.atheros.com ([12.19.149.2]:15331 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754170Ab0LFTxP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 6 Dec 2010 14:53:15 -0500
+Received: from mail.atheros.com ([10.10.20.105])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Mon, 06 Dec 2010 11:53:01 -0800
+Date: Mon, 6 Dec 2010 11:53:13 -0800
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: Ben Greear <greearb@candelatech.com>
+CC: Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
+	Felix Fietkau <nbd@openwrt.org>,
+	"ath9k-devel@lists.ath9k.org" <ath9k-devel@venema.h4ckr.net>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [ath9k-devel] Script to crash ath9k with DMA errors.
+Message-ID: <20101206195313.GE21442@tux>
+References: <4CF44543.9070605@candelatech.com>
+ <20101130004424.GC1901@tux>
+ <4CF6D8C8.2000308@candelatech.com>
+ <4CF8A6DE.4020804@candelatech.com>
+ <4CFAFBE1.3080505@openwrt.org>
+ <4CFB20BA.5090300@candelatech.com>
+ <20101206193600.GC21442@tux>
+ <4CFD3DE3.4000207@candelatech.com>
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Message-Id: <201012131232.50201.IvDoorn@gmail.com>
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <4CFD3DE3.4000207@candelatech.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Stezenbach <js@sig21.net>
+On Mon, Dec 06, 2010 at 11:47:47AM -0800, Ben Greear wrote:
+> On 12/06/2010 11:36 AM, Luis R. Rodriguez wrote:
+> 
+> > Can you clarify the status of this issue. It remains unclear to me from
+> > your above description how things are going. As I read it some things
+> > look OK now but you still get a warning.
+> 
+> Ok, since you asked :)
+> 
+> I worked on this over the weekend and this morning.  I had all sorts of
+> issues until I realized that I had one STA with non-configured SSID.
+> It sometimes connected to one /a AP and the other STAs attempted to connect
+> to another /n (on entirely different band) AP.  I basically got zero stations associated for any length
+> of time due to constant channel switching.  No crashes, but lots of
+> warnings about DMA failing to stop.
+> 
+> Now..I've fixed this configuration issue (and adding steps to help prevent this mis-configuration
+> again).
+> 
+> With 16 properly configured non-encrypted stations, running with wpa-supplicant
+> with netlink driver & sharing scan results,  the interfaces quickly associate.
+> 
+> However, I do continue to see DMA warnings such as these (I had picked up my
+> portable phone, and it knocked all the interfaces offline ..here
+> they are coming back up after I hung up the phone).
+> 
+> Please note that I ported Felix's 2.6.37 patch he posted this morning
+> to wireless-testing and have applied it.
+> 
+> I'm highly tempted to just make that a WARN_ON_ONCE so at least my logs
+> aren't spammed so heavily with the recv.c:531 DMA warning.
 
-When an rt2x00 USB device is unplugged while in use, it reliably
-hangs the whole system.  After some time the watchdog prints:
+You can send this change upstream as well.
 
-BUG: soft lockup - CPU#0 stuck for 64s! [kworker/u:0:5]
-...
-[<c01a88d8>] (usb_submit_urb+0x0/0x2ac) from [<bf0e752c>] (rt2x00usb_kick_rx_entry+0xb4/0xe8 [rt2x00usb])
-[<bf0e7478>] (rt2x00usb_kick_rx_entry+0x0/0xe8 [rt2x00usb]) from [<bf0e7588>] (rt2x00usb_clear_entry+x28/0x2c [rt2x00usb])
-[<bf0e7560>] (rt2x00usb_clear_entry+0x0/0x2c [rt2x00usb]) from [<bf0d5bc4>] (rt2x00lib_rxdone+0x2e0/0x2f8 [rt2x00lib])
-[<bf0d58e4>] (rt2x00lib_rxdone+0x0/0x2f8 [rt2x00lib]) from [<bf0e7e00>] (rt2x00usb_work_rxdone+0x54/0x74 [rt2x00usb])
-[<bf0e7dac>] (rt2x00usb_work_rxdone+0x0/0x74 [rt2x00usb]) from [<c00542b4>] (process_one_work+0x20c/0x35c)
-
-Clear the DEVICE_STATE_PRESENT flag when usb_submit_urb()
-returns -ENODEV to fix this.
-
-Signed-off-by: Johannes Stezenbach <js@sig21.net>
-Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
----
- drivers/net/wireless/rt2x00/rt2x00usb.c |   14 ++++++++++++--
- 1 files changed, 12 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/net/wireless/rt2x00/rt2x00usb.c b/drivers/net/wireless/rt2x00/rt2x00usb.c
-index 9ac1459..3a6c83e 100644
---- a/drivers/net/wireless/rt2x00/rt2x00usb.c
-+++ b/drivers/net/wireless/rt2x00/rt2x00usb.c
-@@ -235,6 +235,7 @@ static void rt2x00usb_kick_tx_entry(struct queue_entry *entry)
- 	struct usb_device *usb_dev = to_usb_device_intf(rt2x00dev->dev);
- 	struct queue_entry_priv_usb *entry_priv = entry->priv_data;
- 	u32 length;
-+	int status;
- 
- 	if (!test_and_clear_bit(ENTRY_DATA_PENDING, &entry->flags))
- 		return;
-@@ -251,7 +252,10 @@ static void rt2x00usb_kick_tx_entry(struct queue_entry *entry)
- 			  entry->skb->data, length,
- 			  rt2x00usb_interrupt_txdone, entry);
- 
--	if (usb_submit_urb(entry_priv->urb, GFP_ATOMIC)) {
-+	status = usb_submit_urb(entry_priv->urb, GFP_ATOMIC);
-+	if (status) {
-+		if (status == -ENODEV)
-+			clear_bit(DEVICE_STATE_PRESENT, &rt2x00dev->flags);
- 		set_bit(ENTRY_DATA_IO_FAILED, &entry->flags);
- 		rt2x00lib_dmadone(entry);
- 	}
-@@ -435,6 +439,7 @@ void rt2x00usb_clear_entry(struct queue_entry *entry)
- 	    to_usb_device_intf(entry->queue->rt2x00dev->dev);
- 	struct queue_entry_priv_usb *entry_priv = entry->priv_data;
- 	int pipe;
-+	int status;
- 
- 	entry->flags = 0;
- 
-@@ -445,7 +450,12 @@ void rt2x00usb_clear_entry(struct queue_entry *entry)
- 				rt2x00usb_interrupt_rxdone, entry);
- 
- 		set_bit(ENTRY_OWNER_DEVICE_DATA, &entry->flags);
--		if (usb_submit_urb(entry_priv->urb, GFP_ATOMIC)) {
-+
-+		status = usb_submit_urb(entry_priv->urb, GFP_ATOMIC);
-+		if (status) {
-+			if (status == -ENODEV)
-+				clear_bit(DEVICE_STATE_PRESENT,
-+					  &entry->queue->rt2x00dev->flags);
- 			set_bit(ENTRY_DATA_IO_FAILED, &entry->flags);
- 			rt2x00lib_dmadone(entry);
- 		}
--- 
-1.7.2.3
-
+  Luis
