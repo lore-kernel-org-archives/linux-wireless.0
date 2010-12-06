@@ -1,47 +1,83 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:58113 "EHLO mga01.intel.com"
+Received: from mail.atheros.com ([12.19.149.2]:35996 "EHLO mail.atheros.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1759278Ab0LNPZm (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 14 Dec 2010 10:25:42 -0500
-Subject: Re: [PATCH 06/14] iwlagn: rename enhanced txpower fields
-From: "Guy, Wey-Yi" <wey-yi.w.guy@intel.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: "linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"ipw3945-devel@lists.sourceforge.net"
-	<ipw3945-devel@lists.sourceforge.net>
-In-Reply-To: <1292311038.3569.4.camel@jlt3.sipsolutions.net>
-References: <1292285372-11373-1-git-send-email-wey-yi.w.guy@intel.com>
-	 <1292285372-11373-7-git-send-email-wey-yi.w.guy@intel.com>
-	 <1292311038.3569.4.camel@jlt3.sipsolutions.net>
+	id S1750823Ab0LFM2J (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 6 Dec 2010 07:28:09 -0500
+Received: from mail.atheros.com ([10.10.20.105])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Mon, 06 Dec 2010 04:27:55 -0800
+From: Vasanthakumar Thiagarajan <vasanth@atheros.com>
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>
+Subject: [PATCH V3 00/27] Add support for AR9485
+Date: Mon, 6 Dec 2010 04:27:33 -0800
+Message-ID: <1291638480-8950-1-git-send-email-vasanth@atheros.com>
+MIME-Version: 1.0
 Content-Type: text/plain
-Date: Tue, 14 Dec 2010 07:24:33 -0800
-Message-Id: <1292340273.9665.2.camel@wwguy-ubuntu>
-Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Johannes,
+John,
 
-On Mon, 2010-12-13 at 23:17 -0800, Johannes Berg wrote:
-> On Mon, 2010-12-13 at 16:09 -0800, Wey-Yi Guy wrote:
-> > From: Johannes Berg <johannes.berg@intel.com>
-> > 
-> > Some fields we didn't previously use from the
-> > enhanced TX power structure will be needed in
-> > the next patch, so rename them to their correct
-> > names to be able to use them and change code
-> > reading them accordingly.
-> 
-> Would probably be better to get this and the 7/14 patch by merging
-> wireless-2.6, rather than applying the patch again.
-> 
-THat was my original plan, but the patch apply to wireless-2.6 is not
-exactly the same as the one apply to wireless-next-2.6 since there are
-number of patches apply to the same area. 
+	This patch set adds support for a new chip of AR9003 family.
+This chip is an 1x1 and 2.4Ghz band only.
 
-Also if holding those 2 patches, I am also holding a lot of other
-patches following.
+Vasanth
 
-Wey
+V3 
+---
+* Replaced chansel table with a simple formula (thanks to Felix)
+* Rebased to the top of wireless-testing
+
+Vasanthakumar Thiagarajan (27):
+  ath9k_hw: Define hw version macros for AR9485
+  ath9k_hw: Add initvals.h for AR9485
+  ath9k_hw: Enable hw initialization for AR9485
+  ath9k_hw: Initialize mode registers for AR9485
+  ath9k_hw: Initialize tx/rx gain table from initvals.h for AR9485
+  ath9k_hw: Eeeprom changes for AR9485
+  ath9k_hw: Disable LDPC for AR9485
+  ath9k: Disable TX STBC for AR9485
+  ath9k: Enable extended synch for AR9485 to fix L0s recovery issue
+  ath9k_hw: Find the maximum number of chains that hw supports
+  ath9k: Configure pll control for AR9485
+  ath9k_hw: Find chansel of AR_PHY_65NM_CH0_SYNTH7 from an array for
+    AR9485
+  ath9k_hw: Add a helper function to get spur channel pointer from cal
+    data for AR9003 family
+  ath9k: Read spur channel information from eeprom for AR9485
+  ath9k_hw: Configure xpa bias level for AR9485
+  ath9k_hw: Read and configure antenna diversity control for AR9485
+  ath9k_hw: Configure attenuation control  only for supported chains
+  ath9k_hw: Configure internal regulator for AR9485
+  ath9k_hw: Read and configure turnning caps to regulate freq accuracy
+  ath9k_hw: Configure power control only for the supported chains
+  ath9k_hw: Program appropriate chianmask for AR9485 before starting
+    AGC/IQ cal
+  ath9k_hw: Define IQcal correction coefficient registers using index
+  ath9k_hw: Add IQ cal changes for AR9485
+  ath9k_hw: Program appropriate register for temperature compensation
+    cal for AR9485
+  ath9k_hw: Setup paprd only for supported chains
+  ath9k_hw: Disable MRC CCK for AR9485
+  ath9k: Add device id of AR9485 to pci table
+
+ drivers/net/wireless/ath/ath.h                   |    1 +
+ drivers/net/wireless/ath/ath9k/ani.c             |    2 +-
+ drivers/net/wireless/ath/ath9k/ar9003_calib.c    |  256 ++++++-
+ drivers/net/wireless/ath/ath9k/ar9003_eeprom.c   |  189 ++++-
+ drivers/net/wireless/ath/ath9k/ar9003_eeprom.h   |    2 +
+ drivers/net/wireless/ath/ath9k/ar9003_hw.c       |  278 +++++--
+ drivers/net/wireless/ath/ath9k/ar9003_paprd.c    |   37 +-
+ drivers/net/wireless/ath/ath9k/ar9003_phy.c      |   60 ++-
+ drivers/net/wireless/ath/ath9k/ar9003_phy.h      |   70 ++-
+ drivers/net/wireless/ath/ath9k/ar9485_initvals.h |  943 ++++++++++++++++++++++
+ drivers/net/wireless/ath/ath9k/hw.c              |   33 +-
+ drivers/net/wireless/ath/ath9k/hw.h              |    5 +
+ drivers/net/wireless/ath/ath9k/init.c            |    4 +-
+ drivers/net/wireless/ath/ath9k/main.c            |    3 +
+ drivers/net/wireless/ath/ath9k/pci.c             |   13 +
+ drivers/net/wireless/ath/ath9k/reg.h             |   10 +
+ 16 files changed, 1743 insertions(+), 163 deletions(-)
+ create mode 100644 drivers/net/wireless/ath/ath9k/ar9485_initvals.h
 
