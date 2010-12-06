@@ -1,34 +1,122 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qw0-f46.google.com ([209.85.216.46]:43568 "EHLO
-	mail-qw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752864Ab0LXEPw (ORCPT
+Received: from mail-fx0-f46.google.com ([209.85.161.46]:60492 "EHLO
+	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751821Ab0LFPdK (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 23 Dec 2010 23:15:52 -0500
-Received: by qwa26 with SMTP id 26so6818292qwa.19
-        for <linux-wireless@vger.kernel.org>; Thu, 23 Dec 2010 20:15:51 -0800 (PST)
+	Mon, 6 Dec 2010 10:33:10 -0500
+Received: by fxm20 with SMTP id 20so4292593fxm.19
+        for <linux-wireless@vger.kernel.org>; Mon, 06 Dec 2010 07:33:09 -0800 (PST)
+From: Christian Lamparter <chunkeey@googlemail.com>
+To: Wade Fitzpatrick <wade.fitzpatrick@gmail.com>
+Subject: Re: ar9170usb slow / poor performance
+Date: Mon, 6 Dec 2010 16:32:52 +0100
+Cc: linux-wireless@vger.kernel.org
+References: <4CFCA416.1010505@gmail.com> <201012061414.27159.chunkeey@googlemail.com> <4CFCFD6A.8040700@gmail.com>
+In-Reply-To: <4CFCFD6A.8040700@gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <20101222102032.13401.10967.stgit@localhost6.localdomain6>
-References: <20101222102032.13401.10967.stgit@localhost6.localdomain6>
-Date: Thu, 23 Dec 2010 23:15:50 -0500
-Message-ID: <AANLkTik-gp3CXhM1tR5obgkuMyLBkzDvZA5UVSJGEsu-@mail.gmail.com>
-Subject: Re: [ath5k-devel] [PATCH] ath5k: Move mac80211 functions into new file
-From: Bob Copeland <me@bobcopeland.com>
-To: Bruno Randolf <br1@einfach.org>
-Cc: linville@tuxdriver.com, ath5k-devel@lists.ath5k.org,
-	linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: Text/Plain;
+  charset="iso-8859-15"
+Message-Id: <201012061632.52375.chunkeey@googlemail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Dec 22, 2010 at 5:20 AM, Bruno Randolf <br1@einfach.org> wrote:
-> Move mac80211 functions into new file mac80211-ops.c to have a better
-> separation and to make base.c smaller.
+On Monday 06 December 2010 16:12:42 Wade Fitzpatrick wrote:
+> Thanks for the response, Christian. Here is what I am seeing now, using 
+> ar9170usb from compat-wireless (2010_12_02):
+what happened to carl9170?
 
-Or we could move the non-ops to a different file...
+> usb 2-5: new high speed USB device using ehci_hcd and address 5
+> usb 2-5: reset high speed USB device using ehci_hcd and address 5
+> usbcore: registered new interface driver ar9170usb
+> arusb_lnx: module is from the staging directory, the quality is unknown, 
+> you have been warned.
+> arusb - version 0.0.0.999
+> usbcore: registered new interface driver Otus
+kill otus. Unless you really want it to steal the device.
 
-BTW I just rebased my sta PS code and I'll be working on it this
-holiday week.. I guess I'll re-rebase it whenever I get it
-working.
+> ath: EEPROM regdomain: 0x0
+> ath: EEPROM indicates default country code should be used
+> ath: doing EEPROM country->regdmn map search
+> ath: country maps to regdmn code: 0x3a
+> ath: Country alpha2 being used: US
+> ath: Regpair used: 0x3a
+> ieee80211 phy1: Selected rate control algorithm 'minstrel_ht'
+> Registered led device: ar9170-phy1::tx
+> Registered led device: ar9170-phy1::assoc
+> usb 2-5: Atheros AR9170 is registered as 'phy1'
+> 
+> # iw dev wlan0 link
+> Connected to 00:22:3f:07:42:f3 (on wlan0)
+>          SSID: waddles
+>          freq: 2412
+>          RX: 2627575 bytes (16028 packets)
+>          TX: 127342 bytes (600 packets)
+>          signal: -62 dBm
+>          tx bitrate: 54.0 MBit/s
+> # iw dev wlan1 link
+> Connected to 00:22:3f:07:42:f3 (on wlan1)
+>          SSID: waddles
+>          freq: 2412
+>          RX: 6208 bytes (43 packets)
+>          TX: 522 bytes (5 packets)
+>          signal: -61 dBm
+>          tx bitrate: 6.5 MBit/s MCS 0
+						^^ again MCS.
+	Have you actually patched the driver?
 
--- 
-Bob Copeland %% www.bobcopeland.com
+> # iw event -f
+> wlan1 (phy #1): deauth 00:22:3f:07:42:f3 -> 00:22:3f:8d:7b:05 reason 2: 
+> Previous authentication no longer valid [frame: c0 00 40 01 00 22 3f 8d 
+> 7b 05 00 22 3f 07 42 f3 00 22 3f 07 42 f3 70 00 02 00]
+> wlan1 (phy #1): disconnected (by AP) reason: 2: Previous authentication 
+> no longer valid
+> [...]
+> wlan1 (phy #1): deauth 00:22:3f:07:42:f3 -> 00:22:3f:8d:7b:05 reason 2: 
+> Previous authentication no longer valid [frame: c0 00 40 01 00 22 3f 8d 
+> 7b 05 00 22 3f 07 42 f3 00 22 3f 07 42 f3 70 00 02 00]
+> wlan1 (phy #1): disconnected (by AP) reason: 2: Previous authentication 
+> no longer valid
+and? your ap (what is it btw?) has (silently) kicked you...
+you would need to put one interface into monitor mode and
+sniff what really happens.
+
+> The wlan1 link is unusable. If I create a host route and ping the modem 
+> over wlan1, all I get is 'Destination Host Unreachable' messages.
+> 
+> Note that wlan0 (the RTL8187) also has updated drivers but is stable 
+> throughout this.
+> 
+> Any more suggestions?
+again same as before, patch the driver (or migrate to carl9170).
+If you are unfamiliar with the procedure you could also
+reload mac80211.
+
+modprobe mac80211 ieee80211_default_rc_algo=minstrel
+(note, other drivers might depend on mac80211, you have to unload
+them first.
+	lsmod | grep ^mac80211
+
+will tell you which).
+
+Afterwards, verify that the system really loads the new module.
+Or took the new default_rc settings(see
+/sys/module/mac80211/parameters/ieee80211_default_rc_algo )
+
+Regards,
+	Chr
+---
+> >---
+> > diff --git a/drivers/net/wireless/ath/ar9170/main.c b/drivers/net/wireless/ath/ar9170/main.c
+> > index 32bf79e..cb2d1a7 100644
+> > --- a/drivers/net/wireless/ath/ar9170/main.c
+> > +++ b/drivers/net/wireless/ath/ar9170/main.c
+> > @@ -145,7 +145,7 @@ static struct ieee80211_channel ar9170_5ghz_chantable[] = {
+> >
+> >   #define AR9170_HT_CAP							\
+> >   {									\
+> > -	.ht_supported	= true,						\
+> > +	.ht_supported	= false,					\
+> >   	.cap		= IEEE80211_HT_CAP_MAX_AMSDU |			\
+> >   			  IEEE80211_HT_CAP_SUP_WIDTH_20_40 |		\
+> >   			  IEEE80211_HT_CAP_SGI_40 |			\
+> 
