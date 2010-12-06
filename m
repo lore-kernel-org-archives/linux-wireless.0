@@ -1,52 +1,116 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from asmtpout026.mac.com ([17.148.16.101]:50751 "EHLO
-	asmtpout026.mac.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751660Ab0LVLaX (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 22 Dec 2010 06:30:23 -0500
-MIME-version: 1.0
-Content-type: text/plain; charset=us-ascii
-Received: from [192.168.1.30] ([87.201.169.175])
- by asmtp026.mac.com (Sun Java(tm) System Messaging Server 6.3-7.04 (built Sep
- 26 2008; 64bit)) with ESMTPSA id <0LDT005SWUMH6X60@asmtp026.mac.com> for
- linux-wireless@vger.kernel.org; Wed, 22 Dec 2010 03:30:22 -0800 (PST)
-Subject: Backporting wl1271 driver to kernel-2.6.32 using compat-wireless
-From: Elvis Dowson <elvis.dowson@mac.com>
-In-reply-to: <AANLkTik6m0rabY3ZCseoch7fwxhMksMD83A-ygtN4cVu@mail.gmail.com>
-Date: Wed, 22 Dec 2010 15:30:05 +0400
-Message-id: <F4DFEC94-D5AC-4C12-890D-8F242E757071@mac.com>
-References: <1CA1EE34-CB3D-404D-ADEE-612C8783BFCF@mac.com>
- <AANLkTin8RZwVrWAdNn_Q+_bX8BAHgKreyHiVjznZtMxU@mail.gmail.com>
- <1A56906E-D786-45E6-9C77-C9D600B508B0@mac.com>
- <AANLkTikhLKuw56BhDkBUMU-nf8ZYF1v5Berj-+qupAtO@mail.gmail.com>
- <E90F18E9-6332-4A7C-97DA-01169E5BB5E1@mac.com>
- <AANLkTik6m0rabY3ZCseoch7fwxhMksMD83A-ygtN4cVu@mail.gmail.com>
-To: Linux Wireless Mailing List <linux-wireless@vger.kernel.org>
+Received: from mail.atheros.com ([12.19.149.2]:36063 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751549Ab0LFMa3 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 6 Dec 2010 07:30:29 -0500
+Received: from mail.atheros.com ([10.10.20.105])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Mon, 06 Dec 2010 04:30:15 -0800
+From: Vasanthakumar Thiagarajan <vasanth@atheros.com>
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>
+Subject: [PATCH V3 09/27] ath9k: Enable extended synch for AR9485 to fix L0s recovery issue
+Date: Mon, 6 Dec 2010 04:27:42 -0800
+Message-ID: <1291638480-8950-10-git-send-email-vasanth@atheros.com>
+In-Reply-To: <1291638480-8950-1-git-send-email-vasanth@atheros.com>
+References: <1291638480-8950-1-git-send-email-vasanth@atheros.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
-                  I have a quick question. 
+Signed-off-by: Vasanthakumar Thiagarajan <vasanth@atheros.com>
+---
+ drivers/net/wireless/ath/ath.h        |    1 +
+ drivers/net/wireless/ath/ath9k/hw.c   |    5 +++++
+ drivers/net/wireless/ath/ath9k/hw.h   |    2 ++
+ drivers/net/wireless/ath/ath9k/main.c |    3 +++
+ drivers/net/wireless/ath/ath9k/pci.c  |   12 ++++++++++++
+ 5 files changed, 23 insertions(+), 0 deletions(-)
 
-I downloaded the http://www.orbit-lab.org/kernel/compat-wireless-2.6-stable/v2.6.37/compat-wireless-2.6.37-rc6-3.tar.bz2
-
-The information contained in this link mentions: http://linuxwireless.org/en/users/Download/stable/
-
-"You need kernel headers to compile compat-wireless. Ensure /lib/modules/$(uname -r)/build/ exists and points to the location where the kernel headers are installed. If you do not have them, read your distribution's documentation on getting help."
-
-I have Ubuntu 10.04 as host, but I'm using a cross compiler for the OMAP3530 ARM target, and the kernel directory exists in a separate folder. 
-
-How do I tell the build system to use my cross compiled kernel libraries and headers, and not pick up the host /lib/modules kernel headers? 
-
-i.e. how can I cross compile and build compat-wireless for the ARM target on the host machine? 
-
-cd /path/to/compat-wireless-2.6.32-rc5
-./scripts/driver-select <driver-name>
-make
-sudo make install
-
-
-Best regards,
-
-Elvis Dowson
+diff --git a/drivers/net/wireless/ath/ath.h b/drivers/net/wireless/ath/ath.h
+index 26bdbee..f913db4 100644
+--- a/drivers/net/wireless/ath/ath.h
++++ b/drivers/net/wireless/ath/ath.h
+@@ -131,6 +131,7 @@ struct ath_bus_ops {
+ 	void (*read_cachesize)(struct ath_common *common, int *csz);
+ 	bool (*eeprom_read)(struct ath_common *common, u32 off, u16 *data);
+ 	void (*bt_coex_prep)(struct ath_common *common);
++	void (*extn_synch_en)(struct ath_common *common);
+ };
+ 
+ struct ath_common {
+diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
+index 513ae64..b1d3c1e 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.c
++++ b/drivers/net/wireless/ath/ath9k/hw.c
+@@ -1984,6 +1984,11 @@ int ath9k_hw_fill_cap_info(struct ath_hw *ah)
+ 
+ 
+ 
++	if (AR_SREV_9485_10(ah)) {
++		pCap->pcie_lcr_extsync_en = true;
++		pCap->pcie_lcr_offset = 0x80;
++	}
++
+ 	return 0;
+ }
+ 
+diff --git a/drivers/net/wireless/ath/ath9k/hw.h b/drivers/net/wireless/ath/ath9k/hw.h
+index bde1df3..1eb6a14 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.h
++++ b/drivers/net/wireless/ath/ath9k/hw.h
+@@ -210,6 +210,8 @@ struct ath9k_hw_capabilities {
+ 	u8 rx_status_len;
+ 	u8 tx_desc_len;
+ 	u8 txs_len;
++	u16 pcie_lcr_offset;
++	bool pcie_lcr_extsync_en;
+ };
+ 
+ struct ath9k_ops_config {
+diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
+index f026a03..581dbd7 100644
+--- a/drivers/net/wireless/ath/ath9k/main.c
++++ b/drivers/net/wireless/ath/ath9k/main.c
+@@ -1188,6 +1188,9 @@ static int ath9k_start(struct ieee80211_hw *hw)
+ 
+ 	pm_qos_update_request(&sc->pm_qos_req, 55);
+ 
++	if (ah->caps.pcie_lcr_extsync_en && common->bus_ops->extn_synch_en)
++		common->bus_ops->extn_synch_en(common);
++
+ mutex_unlock:
+ 	mutex_unlock(&sc->mutex);
+ 
+diff --git a/drivers/net/wireless/ath/ath9k/pci.c b/drivers/net/wireless/ath/ath9k/pci.c
+index 09f69a9..c5a523d 100644
+--- a/drivers/net/wireless/ath/ath9k/pci.c
++++ b/drivers/net/wireless/ath/ath9k/pci.c
+@@ -104,11 +104,23 @@ static void ath_pci_bt_coex_prep(struct ath_common *common)
+ 	pci_write_config_byte(pdev, ATH_PCIE_CAP_LINK_CTRL, aspm);
+ }
+ 
++static void ath_pci_extn_synch_enable(struct ath_common *common)
++{
++	struct ath_softc *sc = (struct ath_softc *) common->priv;
++	struct pci_dev *pdev = to_pci_dev(sc->dev);
++	u8 lnkctl;
++
++	pci_read_config_byte(pdev, sc->sc_ah->caps.pcie_lcr_offset, &lnkctl);
++	lnkctl |= PCI_EXP_LNKCTL_ES;
++	pci_write_config_byte(pdev, sc->sc_ah->caps.pcie_lcr_offset, lnkctl);
++}
++
+ static const struct ath_bus_ops ath_pci_bus_ops = {
+ 	.ath_bus_type = ATH_PCI,
+ 	.read_cachesize = ath_pci_read_cachesize,
+ 	.eeprom_read = ath_pci_eeprom_read,
+ 	.bt_coex_prep = ath_pci_bt_coex_prep,
++	.extn_synch_en = ath_pci_extn_synch_enable,
+ };
+ 
+ static int ath_pci_probe(struct pci_dev *pdev, const struct pci_device_id *id)
+-- 
+1.7.0.4
 
