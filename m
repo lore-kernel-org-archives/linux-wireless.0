@@ -1,67 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 80-190-117-144.ip-home.de ([80.190.117.144]:37968 "EHLO
-	bu3sch.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754337Ab0LIOlu (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 9 Dec 2010 09:41:50 -0500
-Subject: Re: [PATCH 2/4] b43: set TMS to work with current band width for
- N-PHY
-From: Michael =?ISO-8859-1?Q?B=FCsch?= <mb@bu3sch.de>
-To: =?UTF-8?Q?Rafa=C5=82_Mi=C5=82ecki?= <zajec5@gmail.com>
-Cc: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>,
-	b43-dev@lists.infradead.org
-In-Reply-To: <AANLkTinJUsKzNO6vO8F9KupxF0uc1h97wffhAgBas1Pe@mail.gmail.com> (sfid-20101209_152344_283295_FFFFFFFFF86E6A27)
-References: <1291755360-21570-1-git-send-email-zajec5@gmail.com>
-	 <1291755360-21570-3-git-send-email-zajec5@gmail.com>
-	 <1291756117.27497.101.camel@maggie>
-	 <AANLkTinN_12RwWiugzxn5dB1he3b6h_y7K3C=8vFPyXO@mail.gmail.com>
-	 <AANLkTin14p=3=SA_4oVj24z+8NuS_y6hWqQmEEiXaSqr@mail.gmail.com>
-	 <1291904384.2905.2.camel@maggie>
-	 <AANLkTinJUsKzNO6vO8F9KupxF0uc1h97wffhAgBas1Pe@mail.gmail.com>
-	 (sfid-20101209_152344_283295_FFFFFFFFF86E6A27)
-Content-Type: text/plain; charset="UTF-8"
-Date: Thu, 09 Dec 2010 15:41:44 +0100
-Message-ID: <1291905704.2905.9.camel@maggie>
-Mime-Version: 1.0
+Received: from mail-vw0-f46.google.com ([209.85.212.46]:33590 "EHLO
+	mail-vw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752399Ab0LFVTC (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 6 Dec 2010 16:19:02 -0500
+Received: by vws16 with SMTP id 16so2941922vws.19
+        for <linux-wireless@vger.kernel.org>; Mon, 06 Dec 2010 13:19:01 -0800 (PST)
+From: greearb@gmail.com
+To: linux-wireless@vger.kernel.org
+Cc: ath9k-devel@venema.h4ckr.net, Ben Greear <greearb@candelatech.com>
+Subject: [PATCH] ath9k:  Make DMA warning in ath_stoprecv WARN_ON_ONCE.
+Date: Mon,  6 Dec 2010 13:13:07 -0800
+Message-Id: <1291669987-23434-1-git-send-email-greearb@candelatech.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2010-12-09 at 15:23 +0100, Rafał Miłecki wrote: 
-> W dniu 9 grudnia 2010 15:19 użytkownik Michael Büsch <mb@bu3sch.de> napisał:
-> > On Thu, 2010-12-09 at 15:13 +0100, Rafał Miłecki wrote:
-> >> W dniu 9 grudnia 2010 15:12 użytkownik Rafał Miłecki <zajec5@gmail.com> napisał:
-> >> > W dniu 7 grudnia 2010 22:08 użytkownik Michael Büsch <mb@bu3sch.de> napisał:
-> >> >> On Tue, 2010-12-07 at 21:55 +0100, Rafał Miłecki wrote:
-> >> >>> Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
-> >> >>> ---
-> >> >>>  drivers/net/wireless/b43/main.c       |    6 ++++++
-> >> >>>  drivers/net/wireless/b43/phy_common.c |    7 +++++++
-> >> >>>  drivers/net/wireless/b43/phy_common.h |    2 ++
-> >> >>>  drivers/net/wireless/b43/phy_n.c      |    7 -------
-> >> >>>  4 files changed, 15 insertions(+), 7 deletions(-)
-> >> >>>
-> >> >>> diff --git a/drivers/net/wireless/b43/main.c b/drivers/net/wireless/b43/main.c
-> >> >>> index fa48803..670fd7b 100644
-> >> >>> --- a/drivers/net/wireless/b43/main.c
-> >> >>> +++ b/drivers/net/wireless/b43/main.c
-> >> >>> @@ -1150,6 +1150,12 @@ void b43_wireless_core_reset(struct b43_wldev *dev, u32 flags)
-> >> >>>
-> >> >>>       flags |= B43_TMSLOW_PHYCLKEN;
-> >> >>>       flags |= B43_TMSLOW_PHYRESET;
-> >> >>> +     if (dev->phy.type == B43_PHYTYPE_N) {
-> >> >>> +             if (b43_channel_type_is_40mhz(dev->phy.channel_type))
-> >> >>
-> >> >> Is channel_type already set at this time?
+From: Ben Greear <greearb@candelatech.com>
 
-The more I think about this, the wronger it looks to me.
-Why do we care about the channel type at reset time anyway?
-I guess the channel type is a parameter that can change any time on an
-operating card. So just unconditionally set B43_TMSLOW_PHYCLKSPEED_80MHZ
-at reset time and set the correct TMSLOW bits later when channel_type is
-actually changed. That seems to be the only sane thing to do.
-I guess we don't want to fully reset the device when channel_type
-changes, do we?
+This decreases spammage in the log.  A single line message
+will still be printed, so users can be aware that problem
+exists.
 
+Signed-off-by: Ben Greear <greearb@candelatech.com>
+---
+:100644 100644 b4417d2... 082b16d... M	drivers/net/wireless/ath/ath9k/recv.c
+:100644 100644 f207007... 10cf682... M	drivers/net/wireless/ath/debug.h
+ drivers/net/wireless/ath/ath9k/recv.c |    8 ++++++--
+ drivers/net/wireless/ath/debug.h      |    2 ++
+ 2 files changed, 8 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath9k/recv.c b/drivers/net/wireless/ath/ath9k/recv.c
+index b4417d2..082b16d 100644
+--- a/drivers/net/wireless/ath/ath9k/recv.c
++++ b/drivers/net/wireless/ath/ath9k/recv.c
+@@ -527,8 +527,12 @@ bool ath_stoprecv(struct ath_softc *sc)
+ 		sc->rx.rxlink = NULL;
+ 	spin_unlock_bh(&sc->rx.rxbuflock);
+ 
+-	ATH_DBG_WARN(!stopped, "Could not stop RX, we could be "
+-		     "confusing the DMA engine when we start RX up\n");
++	if (unlikely(!stopped)) {
++		ath_print(ath9k_hw_common(sc->sc_ah), ATH_DBG_FATAL,
++			  "Could not stop RX, we could be "
++			  "confusing the DMA engine when we start RX up\n");
++		ATH_DBG_WARN_ON_ONCE(!stopped);
++	}
+ 	return stopped;
+ }
+ 
+diff --git a/drivers/net/wireless/ath/debug.h b/drivers/net/wireless/ath/debug.h
+index f207007..10cf682 100644
+--- a/drivers/net/wireless/ath/debug.h
++++ b/drivers/net/wireless/ath/debug.h
+@@ -71,12 +71,14 @@ enum ATH_DEBUG {
+ void ath_print(struct ath_common *common, int dbg_mask, const char *fmt, ...)
+ 	__attribute__ ((format (printf, 3, 4)));
+ #define ATH_DBG_WARN(foo, arg...) WARN(foo, arg)
++#define ATH_DBG_WARN_ON_ONCE(foo) WARN_ON_ONCE(foo)
+ #else
+ static inline void __attribute__ ((format (printf, 3, 4)))
+ ath_print(struct ath_common *common, int dbg_mask, const char *fmt, ...)
+ {
+ }
+ #define ATH_DBG_WARN(foo, arg)
++#define ATH_DBG_WARN_ON_ONCE(foo)
+ #endif /* CONFIG_ATH_DEBUG */
+ 
+ /** Returns string describing opmode, or NULL if unknown mode. */
 -- 
-Greetings Michael.
+1.7.2.3
 
