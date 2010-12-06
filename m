@@ -1,50 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from lo.gmane.org ([80.91.229.12]:51878 "EHLO lo.gmane.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751513Ab0L1HAH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 28 Dec 2010 02:00:07 -0500
-Received: from list by lo.gmane.org with local (Exim 4.69)
-	(envelope-from <glkwg-linux-wireless@m.gmane.org>)
-	id 1PXTXQ-0006lQ-Kr
-	for linux-wireless@vger.kernel.org; Tue, 28 Dec 2010 08:00:05 +0100
-Received: from bas1-woodbridge48-1176129448.dsl.bell.ca ([70.26.79.168])
-        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Tue, 28 Dec 2010 08:00:04 +0100
-Received: from weedy2887 by bas1-woodbridge48-1176129448.dsl.bell.ca with local (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Tue, 28 Dec 2010 08:00:04 +0100
-To: linux-wireless@vger.kernel.org
-From: Weedy <weedy2887@gmail.com>
-Subject: Compile error for the last week inside rtlwifi/base.c
-Date: Tue, 28 Dec 2010 06:58:11 +0000 (UTC)
-Message-ID: <loom.20101228T075242-208@post.gmane.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Received: from mho-02-ewr.mailhop.org ([204.13.248.72]:63437 "EHLO
+	mho-02-ewr.mailhop.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752193Ab0LFXut (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 6 Dec 2010 18:50:49 -0500
+Date: Mon, 6 Dec 2010 15:50:41 -0800
+From: Tony Lindgren <tony@atomide.com>
+To: Chris Ball <cjb@laptop.org>
+Cc: Ohad Ben-Cohen <ohad@wizery.com>, linux-omap@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org, linux-mmc@vger.kernel.org,
+	linux-wireless@vger.kernel.org,
+	Grazvydas Ignotas <notasas@gmail.com>,
+	Luciano Coelho <luciano.coelho@nokia.com>
+Subject: Re: [PATCH] omap: zoom: wl1271 slot is MMC_CAP_POWER_OFF_CARD
+Message-ID: <20101206235041.GT8345@atomide.com>
+References: <1290815964-30088-1-git-send-email-ohad@wizery.com>
+ <20101128023924.GA6019@void.printf.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20101128023924.GA6019@void.printf.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I'm not sure if my kernel is too old or what but since nothing has changed I'm
-going to ask.
+* Chris Ball <cjb@laptop.org> [101127 18:29]:
+> Hi,
+> 
+> On Sat, Nov 27, 2010 at 01:59:24AM +0200, Ohad Ben-Cohen wrote:
+> > This patch complements ed919b0 "mmc: sdio: fix runtime PM anomalies by
+> > introducing MMC_CAP_POWER_OFF_CARD" by declaring MMC_CAP_POWER_OFF_CARD
+> > on the ZOOM's wl1271 mmc slot.
+> > 
+> > This is required in order not to break runtime PM support for the wl1271
+> > sdio driver.
+> > 
+> > Signed-off-by: Ohad Ben-Cohen <ohad@wizery.com>
+> 
+> Looks good.  Tony, feel free to take this for .37 through your tree.
+> 
+> Signed-off-by: Chris Ball <cjb@laptop.org>
 
+OK will merge thanks.
 
-  CC [M] 
-/media/8G_SDcard/compat-wireless-2010-12-26-pc/drivers/net/wireless/rtlwifi/
-base.o
-/media/8G_SDcard/compat-wireless-2010-12-26-pc/drivers/net/wireless/rtlwifi/
-base.c: In function ‘_rtl_init_deferred_work’:
-/media/8G_SDcard/compat-wireless-2010-12-26-pc/drivers/net/wireless/rtlwifi/
-base.c:229: error: implicit declaration of function ‘alloc_workqueue’
-/media/8G_SDcard/compat-wireless-2010-12-26-pc/drivers/net/wireless/rtlwifi/
-base.c:229: warning: assignment makes pointer from integer without a cast
-make[4]: *** [/media/8G_SDcard/compat-wireless-2010-12-26-pc/drivers/net/
-wireless/rtlwifi/base.o] Error 1
-make[3]: *** [/media/8G_SDcard/compat-wireless-2010-12-26-pc/drivers/net/
-wireless/rtlwifi] Error 2
-make[2]: *** [/media/8G_SDcard/compat-wireless-2010-12-26-pc/drivers/net/
-wireless] Error 2
-make[1]: *** [_module_/media/8G_SDcard/compat-wireless-2010-12-26-pc] Error 2
-make[1]: Leaving directory `/usr/src/linux-headers-2.6.35-24-generic-pae'
-make: *** [modules] Error 2
-
-
+Tony
