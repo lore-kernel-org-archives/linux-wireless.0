@@ -1,68 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wy0-f174.google.com ([74.125.82.174]:43238 "EHLO
-	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753614Ab0LBGB3 convert rfc822-to-8bit (ORCPT
+Received: from mail30g.wh2.ocn.ne.jp ([220.111.41.239]:23780 "HELO
+	mail30g.wh2.ocn.ne.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1751209Ab0LFIaW (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 2 Dec 2010 01:01:29 -0500
+	Mon, 6 Dec 2010 03:30:22 -0500
+Received: from vs3005.wh2.ocn.ne.jp (125.206.180.233)
+	by mail30g.wh2.ocn.ne.jp (RS ver 1.0.95vs) with SMTP id 2-057094220
+	for <linux-wireless@vger.kernel.org>; Mon,  6 Dec 2010 17:30:21 +0900 (JST)
+From: Bruno Randolf <br1@einfach.org>
+To: Johannes Berg <johannes@sipsolutions.net>
+Subject: Re: [PATCH 2/3] nl80211: Export available antennas
+Date: Mon, 6 Dec 2010 17:30:16 +0900
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
+References: <20101206034529.11462.48097.stgit@localhost6.localdomain6> <20101206034535.11462.70791.stgit@localhost6.localdomain6> <1291623453.3506.1.camel@jlt3.sipsolutions.net>
+In-Reply-To: <1291623453.3506.1.camel@jlt3.sipsolutions.net>
 MIME-Version: 1.0
-In-Reply-To: <1291268087.1761.3.camel@Joe-Laptop>
-References: <276469c602c402565b49f99521ea19757429e81e.1291266731.git.joe@perches.com>
-	<a345e995a816576a4c2c39aec43716c18011475b.1291266731.git.joe@perches.com>
-	<20101202053055.19479.qmail@stuge.se>
-	<1291268087.1761.3.camel@Joe-Laptop>
-Date: Thu, 2 Dec 2010 08:01:26 +0200
-Message-ID: <AANLkTimimyhHT2=xT1T8vJ=3WZB4h85ur=yvEfT2Wv-p@mail.gmail.com>
-Subject: Re: [ath9k-devel] [PATCH 2/2] ath: Fix logging message typos
-From: Nick Kossifidis <mickflemm@gmail.com>
-To: Joe Perches <joe@perches.com>
-Cc: Peter Stuge <peter@stuge.se>, Jiri Slaby <jirislaby@gmail.com>,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	Bob Copeland <me@bobcopeland.com>,
-	Jouni Malinen <jmalinen@atheros.com>,
-	Vasanthakumar Thiagarajan <vasanth@atheros.com>,
-	Senthil Balasubramanian <senthilkumar@atheros.com>,
-	netdev@vger.kernel.org, ath5k-devel@lists.ath5k.org,
-	linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-kernel@vger.kernel.org, ath9k-devel@lists.ath9k.org
-Content-Type: text/plain; charset=UTF-8
+Content-Type: Text/Plain;
+  charset="utf-8"
+Message-Id: <201012061730.16102.br1@einfach.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2010/12/2 Joe Perches <joe@perches.com>:
-> On Thu, 2010-12-02 at 06:30 +0100, Peter Stuge wrote:
->> Joe Perches wrote:
->> > +++ b/drivers/net/wireless/ath/ath9k/ar9002_calib.c
->> ..
->> > @@ -734,7 +734,7 @@ static bool ar9285_hw_cl_cal(struct ath_hw *ah, struct ath9k_channel *chan)
->> >     if (!ath9k_hw_wait(ah, AR_PHY_AGC_CONTROL, AR_PHY_AGC_CONTROL_CAL,
->> >                       0, AH_WAIT_TIMEOUT)) {
->> >             ath_dbg(common, ATH_DBG_CALIBRATE,
->> > -                   "offset calibration failed to complete in 1ms; noisy ??\n");
->> > +                   "offset calibration failed to complete in 1ms; noisy enfironment?\n");
->>
->> enfironment? :)
->
-> Umm, what's a typo fix patch without more typos?
-> Correct?  How dull...
->
->> >     ath_dbg(common, ATH_DBG_ANI,
->> > -           "Getting spur idx %d is2Ghz. %d val %x\n",
->> > +           "Getting spur idx:%d is2Ghz:%d val:%x\n",
->> >             i, is2GHz, ah->config.spurchans[i][is2GHz]);
->>
->> Is this short for "spurious" ?
->
-> Likely.  Anyone want to change it to a whole word?
->
->
+On Mon December 6 2010 17:17:33 Johannes Berg wrote:
+> On Mon, 2010-12-06 at 12:45 +0900, Bruno Randolf wrote:
+> > +		NLA_PUT_U32(msg, NL80211_ATTR_WIPHY_ANTENNA_AVAIL,
+> > +			    dev->wiphy.available_antennas);
+> 
+> I think you should not advertise this unless it's non-zero, and unless
+> also the set/get callbacks are available.
 
-Nope it stands for spur noise (harmonics)
-http://www.patentgenius.com/patent/7835456.html
+I don't. Please check the context of this patch, esp patch 1. of this series.
 
-(I have to add that link to the comments, it's new ;-))
+> Similarly, I think you shouldn't advertise the set/get CMDs when the
+> available antennas aren't set.
 
--- 
-GPG ID: 0xD21DB2DB
-As you read this post global entropy rises. Have Fun ;-)
-Nick
+There are no set/get commands for antennas since you preferred putting it into 
+wiphy info.
+
+> Finally, you should check for nl80211 that the given tx/rx masks fall
+> into the available antennas mask.
+
+Allright, I can do that. Would you prefer to reject the command in this case 
+or just apply the available mask?
+
+bruno
