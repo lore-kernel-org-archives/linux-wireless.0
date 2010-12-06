@@ -1,53 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gx0-f180.google.com ([209.85.161.180]:60763 "EHLO
-	mail-gx0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751857Ab0LQKMl convert rfc822-to-8bit (ORCPT
+Received: from mail30s.wh2.ocn.ne.jp ([125.206.180.198]:24727 "HELO
+	mail30s.wh2.ocn.ne.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1752438Ab0LFDr2 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 17 Dec 2010 05:12:41 -0500
-Received: by gxk19 with SMTP id 19so294996gxk.11
-        for <linux-wireless@vger.kernel.org>; Fri, 17 Dec 2010 02:12:40 -0800 (PST)
+	Sun, 5 Dec 2010 22:47:28 -0500
+Received: from vs3010.wh2.ocn.ne.jp (125.206.180.173)
+	by mail30s.wh2.ocn.ne.jp (RS ver 1.0.95vs) with SMTP id 2-0807857246
+	for <linux-wireless@vger.kernel.org>; Mon,  6 Dec 2010 12:47:26 +0900 (JST)
+From: Bruno Randolf <br1@einfach.org>
+To: Johannes Berg <johannes@sipsolutions.net>
+Subject: Re: [PATCH v7 1/3] cfg80211: Add nl80211 antenna configuration
+Date: Mon, 6 Dec 2010 12:47:24 +0900
+Cc: linville@tuxdriver.com, nbd@openwrt.org, mcgrof@gmail.com,
+	linux-wireless@vger.kernel.org
+References: <20101110035050.23721.15617.stgit@localhost6.localdomain6> <1290192337.3768.6.camel@jlt3.sipsolutions.net> <1290192578.3768.7.camel@jlt3.sipsolutions.net>
+In-Reply-To: <1290192578.3768.7.camel@jlt3.sipsolutions.net>
 MIME-Version: 1.0
-In-Reply-To: <C4B3622F-ADC4-481E-9340-1819C815184A@mac.com>
-References: <57CB308D-7237-46D7-9AF8-7093F52682E8@mac.com> <AANLkTikESPwcaxUSDd3B=Oh7kBD-QpndKRHmu9-roDqs@mail.gmail.com>
- <C77CCCD3-2467-4363-A513-05B68B9F57F6@mac.com> <E680F3C4CE6F415E95DCBDA48F0158FC@MINX0125717>
- <98BC4735-664C-491E-80CE-356BE32FA2ED@mac.com> <AANLkTinejL9LeocQPzjrqrCFYbrF9wqpD9dSyfEVu8us@mail.gmail.com>
- <C4B3622F-ADC4-481E-9340-1819C815184A@mac.com>
-From: Arik Nemtsov <arik@wizery.com>
-Date: Fri, 17 Dec 2010 12:12:23 +0200
-Message-ID: <AANLkTikvk+AqKRr1VbKv9pSHicy7PAGu8GkdeZuvYwFh@mail.gmail.com>
-Subject: Re: Problem bringing up wlan0 interface up with mainline wl1271 drivers
-To: Elvis Dowson <elvis.dowson@mac.com>
-Cc: panduranga <x0125717@ti.com>, Ohad Ben-Cohen <ohad@wizery.com>,
-	Linux Wireless Mailing List <linux-wireless@vger.kernel.org>,
-	"Jara, Pedro" <pedrojara@ti.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: Text/Plain;
+  charset="utf-8"
+Message-Id: <201012061247.24886.br1@einfach.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Dec 17, 2010 at 11:44, Elvis Dowson <elvis.dowson@mac.com> wrote:
->
-> On Dec 17, 2010, at 12:51 PM, Arik Nemtsov wrote:
->
->> Ethernet addresses with the LSB of the first octet turned on are considered multicast addresses. Please try:
->>
->> ifconfig wlan0 hw ether 00:22:33:44:55:66
->
-> That worked, now the only thing is to put the firmware file in the appropriate place, I guess:
->
-> # ifconfig wlan0 hw ether 00:22:33:44:55:66
->
-> # ifconfig wlan0 up
->
-> [  153.843597] wl1271: ERROR could not get firmware: -2
->
-> Where should the firmware file be located? /etc/firmware ?
->
-> Elvis Dowson
->
+On Sat November 20 2010 03:49:38 Johannes Berg wrote:
+> On Fri, 2010-11-19 at 10:45 -0800, Johannes Berg wrote:
+> > You'll need to provide documentation updates for this ASAP.
+> 
+> I also expect a patch that adds discoverability of the availability of
+> these commands, using a flag through mac80211 so that the commands are
+> only discovered as available when the _driver_ implements them, not just
+> if _mac80211_ implements them. Also with checking that the flag is set
+> and rejecting them if not in the nl80211 functions.
 
-The firmware file should be called wl1271-fw.bin and the nvs file
-should be called wl1271-nvs.bin. Both should reside in /etc/firmware
-(if you're running a standard linux).
+I just mailed a patch implementing this. I don't use a flag but a variable 
+available_antennas in wiphy, just like with the number of queues. I hope this 
+is what you had in mind.
 
-Regards,
-Arik
+bruno
