@@ -1,84 +1,92 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:42905 "EHLO mga09.intel.com"
+Received: from nbd.name ([46.4.11.11]:58782 "EHLO nbd.name"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752829Ab0LBQhx (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 2 Dec 2010 11:37:53 -0500
-Subject: Re: [RFC] iwlwifi: jiffies based tx queues watchdog
-From: "Guy, Wey-Yi" <wey-yi.w.guy@intel.com>
-To: Stanislaw Gruszka <sgruszka@redhat.com>
-Cc: Intel Linux Wireless <ilw@linux.intel.com>,
+	id S1754546Ab0LFUix (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 6 Dec 2010 15:38:53 -0500
+Message-ID: <4CFD49D7.30708@openwrt.org>
+Date: Mon, 06 Dec 2010 21:38:47 +0100
+From: Felix Fietkau <nbd@openwrt.org>
+MIME-Version: 1.0
+To: Ben Greear <greearb@candelatech.com>
+CC: Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
+	"ath9k-devel@lists.ath9k.org" <ath9k-devel@venema.h4ckr.net>,
 	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <20101202163116.GA11331@redhat.com>
-References: <1288191304-6177-1-git-send-email-sgruszka@redhat.com>
-	 <1288192267.12056.75.camel@wwguy-huron> <20101202163116.GA11331@redhat.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Thu, 02 Dec 2010 08:31:29 -0800
-Message-ID: <1291307489.16838.21.camel@wwguy-huron>
-Mime-Version: 1.0
+Subject: Re: [ath9k-devel] Script to crash ath9k with DMA errors.
+References: <4CF44543.9070605@candelatech.com> <20101130004424.GC1901@tux> <4CF6D8C8.2000308@candelatech.com> <4CF8A6DE.4020804@candelatech.com> <4CFAFBE1.3080505@openwrt.org> <4CFB20BA.5090300@candelatech.com> <20101206193600.GC21442@tux> <4CFD3DE3.4000207@candelatech.com> <20101206195313.GE21442@tux> <20101206195348.GF21442@tux> <4CFD4773.6020304@candelatech.com>
+In-Reply-To: <4CFD4773.6020304@candelatech.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Stanislaw,
-
-On Thu, 2010-12-02 at 08:31 -0800, Stanislaw Gruszka wrote:
-> Hi Wey
+On 2010-12-06 9:28 PM, Ben Greear wrote:
+> On 12/06/2010 11:53 AM, Luis R. Rodriguez wrote:
+>> On Mon, Dec 06, 2010 at 11:53:13AM -0800, Luis Rodriguez wrote:
+>>> On Mon, Dec 06, 2010 at 11:47:47AM -0800, Ben Greear wrote:
+>>>> On 12/06/2010 11:36 AM, Luis R. Rodriguez wrote:
+>>>>
+>>>>> Can you clarify the status of this issue. It remains unclear to me from
+>>>>> your above description how things are going. As I read it some things
+>>>>> look OK now but you still get a warning.
+>>>>
+>>>> Ok, since you asked :)
+>>>>
+>>>> I worked on this over the weekend and this morning.  I had all sorts of
+>>>> issues until I realized that I had one STA with non-configured SSID.
+>>>> It sometimes connected to one /a AP and the other STAs attempted to connect
+>>>> to another /n (on entirely different band) AP.  I basically got zero stations associated for any length
+>>>> of time due to constant channel switching.  No crashes, but lots of
+>>>> warnings about DMA failing to stop.
+>>>>
+>>>> Now..I've fixed this configuration issue (and adding steps to help prevent this mis-configuration
+>>>> again).
+>>>>
+>>>> With 16 properly configured non-encrypted stations, running with wpa-supplicant
+>>>> with netlink driver&  sharing scan results,  the interfaces quickly associate.
+>>>>
+>>>> However, I do continue to see DMA warnings such as these (I had picked up my
+>>>> portable phone, and it knocked all the interfaces offline ..here
+>>>> they are coming back up after I hung up the phone).
+>>>>
+>>>> Please note that I ported Felix's 2.6.37 patch he posted this morning
+>>>> to wireless-testing and have applied it.
+>>>>
+>>>> I'm highly tempted to just make that a WARN_ON_ONCE so at least my logs
+>>>> aren't spammed so heavily with the recv.c:531 DMA warning.
+>>>
+>>> You can send this change upstream as well.
+>>
+>> Also, feel free to limit the number of STAs you can have up
+>> physically by setting this to a number you bless yourself.
 > 
-> On Wed, Oct 27, 2010 at 08:11:07AM -0700, Guy, Wey-Yi wrote:
-> > > This patch replace monitor/recover timer by watchdog based on time
-> > > stamp. New code allow to discover hangs more precisely.
-> > > 
-> > > Timeout values are currently doubled monitoring period values of
-> > > previous timer. This have to be tuned based of firmware timing
-> > > capabilities.
-> > > 
-> > > Code was not widely tested jet.
-> > 
-> > > Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
-> > > ---
-> > 
-> > Thanks for the RFC, I will have people here test this patch with the
-> > latest devices still under development. At the meantime, could you also
-> > do some testing on your side with the devices you have since we can not
-> > cover all the older devices already out there.
+> I have a feeling there is no hard limit..but if I do find one,
+> I'll cook up a patch.  Probably not many of us ever going to push
+> anywhere near what I'm trying, and folks like me can limit in
+> user-space if wanted...
 > 
-> I finally get some time to test this patch. I found two issues. 
+> I'll do up the warn-on-once patch shortly.
 > 
-> First problem is oops on 3945, when I set wd_timeout to 10 ms.
-> Frequent resets show a bug when ieee80211_reconfig do call to
-> iwl_send_add_sta, and in parallel, restart code do 
-> iwl3945_down()->iwl3945_hw_txq_ctx_stop() and free txq that
-> iwl_send_add_sta() want to use. This need some better fix
-> and careful review, but adding
+> By the way, would you consider this channel-change suppression
+> patch, or something similar?
 > 
->         /* initialize force reset */
->         priv->force_reset[IWL_RF_RESET].reset_duration =
->                 IWL_DELAY_NEXT_FORCE_RF_RESET;
->         priv->force_reset[IWL_FW_RESET].reset_duration =
->                 IWL_DELAY_NEXT_FORCE_FW_RELOAD;
 > 
-> to iwl3945_init_drv to prevent too frequent reset make bug gone.
+> -------------------- drivers/net/wireless/ath/ath9k/main.c --------------------
+> index f026a03..6c1c43b 100644
+> @@ -1605,6 +1605,16 @@ static int ath9k_config(struct ieee80211_hw *hw, u32 changed)
+>   		else
+>   			sc->sc_flags &= ~SC_OP_OFFCHANNEL;
 > 
-> Second problem I saw, was also when watchdag want to do frequent
-> resets. When reset was not actually performed, because of above
-> reset duration limit, watchdog stays disabled. Keep watchdog
-> running when iwl_force_reset() return error fix that problem.
-> 
-> In general watchdog do the job. I will official patch shortly.
-> 
+> +		/* If channels & HT are the same, then don't actually do anything.
+> +		 */
+> +		if ((sc->sc_ah->curchan == &sc->sc_ah->channels[pos]) &&
+> +		    (aphy->chan_is_ht == conf_is_ht(conf))) {
+> +			ath_print(common, ATH_DBG_CONFIG,
+> +				  "Skip Set channel: %d MHz, already there.\n",
+> +				  curchan->center_freq);
+> +			goto skip_chan_change;
+> +		}
+> +
+I think this needs to check the offchannel flag as well, at least in one
+direction. Skipping on-channel -> off-channel is fine, but the other way
+around might break calibration
 
-Thanks for all the works and testing. Sorry we did not have chance to
-test this patch since we are very busy for the past few weeks.
-
-The patch looks good, what devices you are test with? my only
-consideration is how this perform with newer devices, especially with
-the WiFi/BT combo devices which we are working on now.
-
-Please go ahead and send the official patch, I will try my best to do
-some test next week on the WiFi/BT combo device to make sure it work as
-expected.
-
-Thanks
-Wey
-
-
-
+- Felix
