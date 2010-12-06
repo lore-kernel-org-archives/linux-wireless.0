@@ -1,87 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ww0-f44.google.com ([74.125.82.44]:64201 "EHLO
-	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753860Ab0L0OIO (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 27 Dec 2010 09:08:14 -0500
-Received: by mail-ww0-f44.google.com with SMTP id 36so9024113wwa.1
-        for <linux-wireless@vger.kernel.org>; Mon, 27 Dec 2010 06:08:13 -0800 (PST)
-From: Ivo van Doorn <ivdoorn@gmail.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Subject: [PATCH 04/10] rt2x00: remove intf->mac field.
-Date: Mon, 27 Dec 2010 15:05:35 +0100
-Cc: linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com
-References: <201012271504.30848.IvDoorn@gmail.com> <201012271504.55450.IvDoorn@gmail.com> <201012271505.15849.IvDoorn@gmail.com>
-In-Reply-To: <201012271505.15849.IvDoorn@gmail.com>
+Received: from mail.atheros.com ([12.19.149.2]:36018 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751204Ab0LFM3H (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 6 Dec 2010 07:29:07 -0500
+Received: from mail.atheros.com ([10.10.20.105])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Mon, 06 Dec 2010 04:28:53 -0800
+From: Vasanthakumar Thiagarajan <vasanth@atheros.com>
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>
+Subject: [PATCH V3 03/27] ath9k_hw: Enable hw initialization for AR9485
+Date: Mon, 6 Dec 2010 04:27:36 -0800
+Message-ID: <1291638480-8950-4-git-send-email-vasanth@atheros.com>
+In-Reply-To: <1291638480-8950-1-git-send-email-vasanth@atheros.com>
+References: <1291638480-8950-1-git-send-email-vasanth@atheros.com>
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Message-Id: <201012271505.36104.IvDoorn@gmail.com>
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Gertjan van Wingerde <gwingerde@gmail.com>
+Also make it a supported mac
 
-The mac field of the rt2x00_intf structure is written to once and used
-twice. In both these uses the mac address is available via other means.
-
-Remove this field as it does not appear to be necessary.
-
-Signed-off-by: Gertjan van Wingerde <gwingerde@gmail.com>
-Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
+Signed-off-by: Vasanthakumar Thiagarajan <vasanth@atheros.com>
 ---
- drivers/net/wireless/rt2x00/rt2x00.h    |    5 -----
- drivers/net/wireless/rt2x00/rt2x00mac.c |    6 ++----
- 2 files changed, 2 insertions(+), 9 deletions(-)
+ drivers/net/wireless/ath/ath9k/ar9003_hw.c |    1 +
+ drivers/net/wireless/ath/ath9k/hw.c        |    1 +
+ drivers/net/wireless/ath/ath9k/hw.h        |    1 +
+ 3 files changed, 3 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/net/wireless/rt2x00/rt2x00.h b/drivers/net/wireless/rt2x00/rt2x00.h
-index 5f7f52f..755b723 100644
---- a/drivers/net/wireless/rt2x00/rt2x00.h
-+++ b/drivers/net/wireless/rt2x00/rt2x00.h
-@@ -360,11 +360,6 @@ struct rt2x00_intf {
- 	spinlock_t lock;
- 
- 	/*
--	 * MAC of the device.
--	 */
--	u8 mac[ETH_ALEN];
--
--	/*
- 	 * beacon->skb must be protected with the mutex.
- 	 */
- 	struct mutex beacon_skb_mutex;
-diff --git a/drivers/net/wireless/rt2x00/rt2x00mac.c b/drivers/net/wireless/rt2x00/rt2x00mac.c
-index 23250a5..f8775c4 100644
---- a/drivers/net/wireless/rt2x00/rt2x00mac.c
-+++ b/drivers/net/wireless/rt2x00/rt2x00mac.c
-@@ -282,9 +282,8 @@ int rt2x00mac_add_interface(struct ieee80211_hw *hw,
- 	 * STA interfaces at this time, since this can cause
- 	 * invalid behavior in the device.
- 	 */
--	memcpy(&intf->mac, vif->addr, ETH_ALEN);
- 	rt2x00lib_config_intf(rt2x00dev, intf, vif->type,
--			      intf->mac, NULL);
-+			      vif->addr, NULL);
- 
- 	/*
- 	 * Some filters depend on the current working mode. We can force
-@@ -492,7 +491,6 @@ int rt2x00mac_set_key(struct ieee80211_hw *hw, enum set_key_cmd cmd,
- 		      struct ieee80211_key_conf *key)
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_hw.c b/drivers/net/wireless/ath/ath9k/ar9003_hw.c
+index c2a0571..0e3e259 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_hw.c
++++ b/drivers/net/wireless/ath/ath9k/ar9003_hw.c
+@@ -24,6 +24,7 @@ static bool ar9003_hw_macversion_supported(u32 macversion)
  {
- 	struct rt2x00_dev *rt2x00dev = hw->priv;
--	struct rt2x00_intf *intf = vif_to_intf(vif);
- 	int (*set_key) (struct rt2x00_dev *rt2x00dev,
- 			struct rt2x00lib_crypto *crypto,
- 			struct ieee80211_key_conf *key);
-@@ -516,7 +514,7 @@ int rt2x00mac_set_key(struct ieee80211_hw *hw, enum set_key_cmd cmd,
- 	if (rt2x00dev->intf_sta_count)
- 		crypto.bssidx = 0;
- 	else
--		crypto.bssidx = intf->mac[5] & (rt2x00dev->ops->max_ap_intf - 1);
-+		crypto.bssidx = vif->addr[5] & (rt2x00dev->ops->max_ap_intf - 1);
+ 	switch (macversion) {
+ 	case AR_SREV_VERSION_9300:
++	case AR_SREV_VERSION_9485:
+ 		return true;
+ 	default:
+ 		break;
+diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
+index 9b1ee7f..f533aad 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.c
++++ b/drivers/net/wireless/ath/ath9k/hw.c
+@@ -629,6 +629,7 @@ int ath9k_hw_init(struct ath_hw *ah)
+ 	case AR9287_DEVID_PCIE:
+ 	case AR2427_DEVID_PCIE:
+ 	case AR9300_DEVID_PCIE:
++	case AR9300_DEVID_AR9485_PCIE:
+ 		break;
+ 	default:
+ 		if (common->bus_ops->ath_bus_type == ATH_USB)
+diff --git a/drivers/net/wireless/ath/ath9k/hw.h b/drivers/net/wireless/ath/ath9k/hw.h
+index 5fcfa48..bde1df3 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.h
++++ b/drivers/net/wireless/ath/ath9k/hw.h
+@@ -44,6 +44,7 @@
+ #define AR9287_DEVID_PCI	0x002d
+ #define AR9287_DEVID_PCIE	0x002e
+ #define AR9300_DEVID_PCIE	0x0030
++#define AR9300_DEVID_AR9485_PCIE 0x0032
  
- 	crypto.cipher = rt2x00crypto_key_to_cipher(key);
- 	if (crypto.cipher == CIPHER_NONE)
+ #define AR5416_AR9100_DEVID	0x000b
+ 
 -- 
-1.7.2.3
+1.7.0.4
 
