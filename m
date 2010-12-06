@@ -1,73 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.19.149.2]:28806 "EHLO mail.atheros.com"
+Received: from mail.atheros.com ([12.19.149.2]:36005 "EHLO mail.atheros.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752399Ab0LFVQ1 convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 6 Dec 2010 16:16:27 -0500
+	id S1751135Ab0LFM23 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 6 Dec 2010 07:28:29 -0500
 Received: from mail.atheros.com ([10.10.20.105])
 	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Mon, 06 Dec 2010 13:16:13 -0800
-Date: Mon, 6 Dec 2010 13:16:13 -0800
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: Ben Greear <greearb@candelatech.com>
-CC: Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
-	=?iso-8859-1?Q?Bj=F6rn?= Smedman <bjorn.smedman@venatech.se>,
-	Felix Fietkau <nbd@openwrt.org>,
-	"ath9k-devel@lists.ath9k.org" <ath9k-devel@venema.h4ckr.net>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [ath9k-devel] Script to crash ath9k with DMA errors.
-Message-ID: <20101206211613.GH21442@tux>
-References: <4CF6D8C8.2000308@candelatech.com>
- <4CF8A6DE.4020804@candelatech.com>
- <4CFAFBE1.3080505@openwrt.org>
- <4CFB20BA.5090300@candelatech.com>
- <20101206193600.GC21442@tux>
- <4CFD3DE3.4000207@candelatech.com>
- <AANLkTingy7fPH14hW_mg8_YcotX29pYCu910Gw48grrD@mail.gmail.com>
- <4CFD4602.1030304@candelatech.com>
- <20101206204230.GG21442@tux>
- <4CFD4ED5.20808@candelatech.com>
+	for <linux-wireless@vger.kernel.org>; Mon, 06 Dec 2010 04:28:14 -0800
+From: Vasanthakumar Thiagarajan <vasanth@atheros.com>
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>
+Subject: [PATCH V3 01/27] ath9k_hw: Define hw version macros for AR9485
+Date: Mon, 6 Dec 2010 04:27:34 -0800
+Message-ID: <1291638480-8950-2-git-send-email-vasanth@atheros.com>
+In-Reply-To: <1291638480-8950-1-git-send-email-vasanth@atheros.com>
+References: <1291638480-8950-1-git-send-email-vasanth@atheros.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="iso-8859-1"
-In-Reply-To: <4CFD4ED5.20808@candelatech.com>
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Dec 06, 2010 at 01:00:05PM -0800, Ben Greear wrote:
-> On 12/06/2010 12:42 PM, Luis R. Rodriguez wrote:
-> > On Mon, Dec 06, 2010 at 12:22:26PM -0800, Ben Greear wrote:
-> >> On 12/06/2010 12:11 PM, Björn Smedman wrote:
-> >>> On Mon, Dec 6, 2010 at 8:47 PM, Ben Greear<greearb@candelatech.com>   wrote:
-> >>>> With 16 properly configured non-encrypted stations, running with
-> >>>> wpa-supplicant
-> >>>> with netlink driver&   sharing scan results,  the interfaces quickly
-> >>>> associate.
-> >>>>
-> >>>> However, I do continue to see DMA warnings such as these (I had picked up my
-> >>>> portable phone, and it knocked all the interfaces offline ..here
-> >>>> they are coming back up after I hung up the phone).
-> >>>
-> >>> Is there some theory as to why using multiple interfaces cause so many
-> >>> problems with DMA?
-> >>
-> >> Seems pretty directly related to channel changes and/or resets, and exacerbated
-> >> by other interfaces sending data while another is scanning, for instance.
-> >>
-> >> Other issues we've found in the past have been various races that you wouldn't
-> >> normally see with a single VIF.
-> >
-> > Right, there might be some other hot path we need to lock around over.
-> > Not sure what it could be though we should be locking stopping RX
-> > over resets already though. These should all be atomic, in fact
-> > starting TX too IIRC, hence the name change of the lock to be
-> > specific to the PCU together. There may be other PCU changes
-> > we may need to contend against.
-> 
-> Maybe the hardware/firmware guys could give us some clues as to what
-> types of things can cause stopping RMA to fail?  Maybe that could
-> point us to what might be racing with the attempts to stop RMA?
+AR9485 is a single chain and single band (2.4 Ghz) chip.
 
-We have no firmware, but yeah understanding how the hardware
-blocks would be key here. Good point.
+Signed-off-by: Vasanthakumar Thiagarajan <vasanth@atheros.com>
+---
+ drivers/net/wireless/ath/ath9k/reg.h |    8 ++++++++
+ 1 files changed, 8 insertions(+), 0 deletions(-)
 
- Luis
+diff --git a/drivers/net/wireless/ath/ath9k/reg.h b/drivers/net/wireless/ath/ath9k/reg.h
+index c2472ed..0153ba1 100644
+--- a/drivers/net/wireless/ath/ath9k/reg.h
++++ b/drivers/net/wireless/ath/ath9k/reg.h
+@@ -787,6 +787,8 @@
+ #define AR_SREV_REVISION_9271_11	1
+ #define AR_SREV_VERSION_9300		0x1c0
+ #define AR_SREV_REVISION_9300_20	2 /* 2.0 and 2.1 */
++#define AR_SREV_VERSION_9485		0x240
++#define AR_SREV_REVISION_9485_10	0
+ 
+ #define AR_SREV_5416(_ah) \
+ 	(((_ah)->hw_version.macVersion == AR_SREV_VERSION_5416_PCI) || \
+@@ -859,6 +861,12 @@
+ 	 (((_ah)->hw_version.macVersion == AR_SREV_VERSION_9300) && \
+ 	  ((_ah)->hw_version.macRev >= AR_SREV_REVISION_9300_20)))
+ 
++#define AR_SREV_9485(_ah) \
++	(((_ah)->hw_version.macVersion == AR_SREV_VERSION_9485))
++#define AR_SREV_9485_10(_ah) \
++	(AR_SREV_9485(_ah) && \
++	 ((_ah)->hw_version.macRev == AR_SREV_REVISION_9485_10))
++
+ #define AR_SREV_9285E_20(_ah) \
+     (AR_SREV_9285_12_OR_LATER(_ah) && \
+      ((REG_READ(_ah, AR_AN_SYNTH9) & 0x7) == 0x1))
+-- 
+1.7.0.4
+
