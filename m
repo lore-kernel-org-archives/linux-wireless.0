@@ -1,166 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wy0-f174.google.com ([74.125.82.174]:59417 "EHLO
-	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757481Ab0LBWjp convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 2 Dec 2010 17:39:45 -0500
-Received: by wyb28 with SMTP id 28so8738962wyb.19
-        for <linux-wireless@vger.kernel.org>; Thu, 02 Dec 2010 14:39:44 -0800 (PST)
+Received: from mail.atheros.com ([12.19.149.2]:34668 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751254Ab0LFLo1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 6 Dec 2010 06:44:27 -0500
+Received: from mail.atheros.com ([10.10.20.105])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Mon, 06 Dec 2010 03:44:12 -0800
+Date: Mon, 6 Dec 2010 17:14:02 +0530
+From: Vasanthakumar Thiagarajan <vasanth@atheros.com>
+To: Felix Fietkau <nbd@openwrt.org>
+CC: Vasanth Thiagarajan <Vasanth.Thiagarajan@Atheros.com>,
+	"linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH V2 12/27] ath9k_hw: Find chansel of
+	AR_PHY_65NM_CH0_SYNTH7 from an array for AR9485
+Message-ID: <20101206114401.GT12908@vasanth-laptop>
+References: <1291288031-3409-1-git-send-email-vasanth@atheros.com> <1291288031-3409-13-git-send-email-vasanth@atheros.com> <4CF84BB8.8090007@openwrt.org> <20101203045054.GP12908@vasanth-laptop> <4CF8DF08.2060307@openwrt.org> <20101203124050.GR12908@vasanth-laptop> <4CF8E718.9070207@openwrt.org> <20101206060310.GS12908@vasanth-laptop> <4CFCBE04.7070509@openwrt.org>
 MIME-Version: 1.0
-In-Reply-To: <AANLkTi=WH6S5zW3abTyFz=bUu7p6USkVz1341W+aPh66@mail.gmail.com>
-References: <AANLkTi=_F0orXPY79ojoPKEqn4ohQjV5Rj5Qb3H7CR8f@mail.gmail.com>
-	<201012011921.11151.br1@einfach.org>
-	<AANLkTimcV+pHp8ui-hExnsBfuQ2PtGA2aZidCYSFsQnh@mail.gmail.com>
-	<AANLkTinvV-6FqMni86MEYrBN6q0255M6cFjBOpR9vdP2@mail.gmail.com>
-	<AANLkTinpTyikX2xCTJqx45BdqeyeL7C8y92ci+k5n0w0@mail.gmail.com>
-	<AANLkTi=WH6S5zW3abTyFz=bUu7p6USkVz1341W+aPh66@mail.gmail.com>
-Date: Fri, 3 Dec 2010 00:39:44 +0200
-Message-ID: <AANLkTimOuPPn=5MoomN=+3EPRdN1RxNu+Y1fDfK0awcw@mail.gmail.com>
-Subject: Re: [linux-next] next-20101201: ath5k permanently disconnecting
-From: Nick Kossifidis <mickflemm@gmail.com>
-To: sedat.dilek@gmail.com
-Cc: Bruno Randolf <br1@einfach.org>,
-	wireless <linux-wireless@vger.kernel.org>,
-	John Linville <linville@tuxdriver.com>,
-	Stephen Rothwell <sfr@canb.auug.org.au>,
-	Jonathan Guerin <jonathan@guerin.id.au>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <4CFCBE04.7070509@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2010/12/3 Nick Kossifidis <mickflemm@gmail.com>:
-> 2010/12/2 Nick Kossifidis <mickflemm@gmail.com>:
->> 2010/12/2 Nick Kossifidis <mickflemm@gmail.com>:
->>> 2010/12/2 Sedat Dilek <sedat.dilek@googlemail.com>:
->>>> On Wed, Dec 1, 2010 at 11:21 AM, Bruno Randolf <br1@einfach.org> wrote:
->>>>> On Wed December 1 2010 19:09:03 Sedat Dilek wrote:
->>>>>> Hi,
->>>>>>
->>>>>> I have built today a linux-next (next-20101201) kernel which includes
->>>>>> wireless-next-2.6 up to master-2010-11-30.
->>>> [...]
->>>>>> Unfortunately, my wlan network connection is totally unstable.
->>>> [...]
->>>>> 1.) For identification of the chipset, please:
->>>>> dmesg |grep "ath5.*chip"
->>>>>
->>>>> 2.) Is there a problem when you don't use encryption?
->>>>>
->>>>> 3.) git bisect might help track it down.
->>>>>
->>>>> bruno
->>>>
->>>> OK, I did not a "classic" git-bisect, I created from linux-next
->>>> (next-20101202) GIT tree a revert-ath5k patchset (30 in total).
->>>>
->>>> [1] VERY GOOD: Revertiing all 30 patches
->>>>
->>>> ...leads to a stable system.
->>>>
->>>> [2] REDUCED DISCONNECTIONS DROPS: Reverting 0001..0008
->>>>
->>>> This stabilizes the system, but... listening to a radio
->>>> broadcast-stream with VLC is a pain in the ass... permanent audio
->>>> dropouts. I had only 2 disconnections in the first 10mins when system
->>>> was up (normally I can see disconnects after loggin into my KDE
->>>> desktop).
->>>>
->>>> [3] GOOD AUDIO STREAMING: Reverting 0001..0014
->>>>
->>>> This is just fine, system like I am used to.
->>>>
->>>> [4] CONCLUSION
->>>>
->>>> So I played a bit with my revert-patchset.
->>>>
->>>> Reverting 0001..0008 + a refreshed v2 of
->>>> 0014-Revert-ath5k-Use-turbo-flag-on-DCU.patch (patch attached) is
->>>> doing the job here.
->>>>
->>>> Having a closer look into 0008 (parts of
->>>> drivers/net/wireless/ath/ath5k/reset.c):
->>>>
->>>> $ grep AR5212 patches/revert-wireless-patches/0008-Revert-ath5k-Support-synth-only-channel-change-for-A.patch
->>>> -       if (ah->ah_version == AR5K_AR5212)
->>>> +                        * On AR5212 TSF is almost preserved across a
->>>> -                * On AR5212 TSF is almost preserved across a
->>>> +               if (ah->ah_version == AR5K_AR5212) {
->>>> -       if (ah->ah_version == AR5K_AR5212 &&
->>>>
->>>> As I mentionned I have a AR5212 wlan device!
->>>> What to do with that parts?
->>>> Any idea?
->>>>
->>>> Kind Regards,
->>>> - Sedat -
->>>>
->>>> P.S.: I have added a list containing all commit-ids (chronological)
->>>> and a script how I reverted (documenting for myself).
->>>>
->>>> $ ls patches/revert-wireless-patches/00*.patch
->>>> patches/revert-wireless-patches/0001-Revert-ath5k-Set-turbo-bit-on-rf-bank-2.patch
->>>> patches/revert-wireless-patches/0002-Revert-ath5k-Clean-up-turbo-mode-initvals-rfregs.patch
->>>> patches/revert-wireless-patches/0003-Revert-ath5k-Cleanup-turbo-channel-flags.patch
->>>> patches/revert-wireless-patches/0004-Revert-ath5k-Use-correct-clock-when-setting-ofdm-tim.patch
->>>> patches/revert-wireless-patches/0005-Revert-ath5k-Skip-tx-power-setting-on-AR5210-for-now.patch
->>>> patches/revert-wireless-patches/0006-Revert-ath5k-Tweak-phy-activate-to-rx-start-delay-ba.patch
->>>> patches/revert-wireless-patches/0007-Revert-ath5k-No-need-to-save-restore-staid-flags-on-.patch
->>>> patches/revert-wireless-patches/0008-Revert-ath5k-Support-synth-only-channel-change-for-A.patch
->>>> patches/revert-wireless-patches/0009-Revert-ath5k-Skip-powertable-setting-when-we-are-on-.patch
->>>> patches/revert-wireless-patches/0010-Revert-ath5k-Update-PLL-programming-for-turbo-half-q.patch
->>>> patches/revert-wireless-patches/0011-Revert-ath5k-Update-spur-mitigation-filter-for-turbo.patch
->>>> patches/revert-wireless-patches/0012-Revert-ath5k-Tweak-power-detector-delays-on-RF5111-R.patch
->>>> patches/revert-wireless-patches/0013-Revert-ath5k-Always-set-IFS-intervals-on-reset.patch
->>>> patches/revert-wireless-patches/0014-Revert-ath5k-Use-turbo-flag-on-DCU.patch
->>>> patches/revert-wireless-patches/0015-Revert-ath5k-Set-all-IFS-intervals-not-just-slot-tim.patch
->>>> patches/revert-wireless-patches/0016-Revert-ath5k-Extend-rate_duration.patch
->>>> patches/revert-wireless-patches/0017-Revert-ath5k-Extend-get_default_sifs-slot_time.patch
->>>> patches/revert-wireless-patches/0018-Revert-ath5k-Move-tx-retries-setting-outside-reset_t.patch
->>>> patches/revert-wireless-patches/0019-Revert-ath5k-Increase-PHY-settling-parameters-for-tu.patch
->>>> patches/revert-wireless-patches/0020-Revert-ath5k-Small-cleanup-on-tweak_initvals.patch
->>>> patches/revert-wireless-patches/0021-Revert-ath5k-Put-core-clock-initialization-on-a-new-.patch
->>>> patches/revert-wireless-patches/0022-Revert-ath5k-Add-new-field-on-ath5k_hw-to-track-band.patch
->>>> patches/revert-wireless-patches/0023-Revert-ath5k-Use-new-function-to-stop-beacon-queue.patch
->>>> patches/revert-wireless-patches/0024-Revert-ath5k-Check-RXE-when-setting-RXDP.patch
->>>> patches/revert-wireless-patches/0025-Revert-ath5k-Use-DCU-early-termination-correctly.patch
->>>> patches/revert-wireless-patches/0026-Revert-ath5k-Debug-DMA-timeouts.patch
->>>> patches/revert-wireless-patches/0027-Revert-ath5k-Use-new-dma_stop-function-on-base.c.patch
->>>> patches/revert-wireless-patches/0028-Revert-ath5k-Stop-PCU-on-reset.patch
->>>> patches/revert-wireless-patches/0029-Revert-ath5k-Add-new-function-to-stop-rx-tx-DMA.patch
->>>> patches/revert-wireless-patches/0030-Revert-ath5k-Reset-cleanup-and-generic-cleanup.patch
->>>>
->>>
->>> OK this doesn't make any sense, based on your logs you have an
->>> AR5212+RF5111+RF2111 combination, synth-only channel change (0008) is
->>> only executed on AR2413 and AR5413 so you don't even run that code,
->>> setting turbo flag on DCU (0014) is also unrelated since we never
->>> enable turbo mode and if we did you wouldn't be able to receive
->>> anything non-turbo.
->>>
->>> I am going to test 2 cards like yours a CM6 and an older one from
->>> Atheros and come back to you ASAP...
->>>
->>
->> I just reproduced it on a CM6 and a CM9 (AR5212 + RF5112), problem
->> occurs when card is idle (no traffic) that's why my automated test
->> didn't catch it I can still run iperf after connecting and leave it
->> running without problems, when traffic stops it soon gets
->> disconnected. I suspect it's something related to IFS timings/ACK
->> timeout (0013 on your reverted series), maybe Jonathan Guerin was
->> correct about ACK timeout...
->>
->> I'll try something and come back to you with code ;-)
->>
->> Thanks for reporting !
->>
->
-> Nope, it's PHY related and only affects RF5111/RF5112, AR2413 and
-> above work fine...
->
+> > I don't have any doc for this register yet.
+> I'm pretty sure that the format of the register is still exactly the
+> same. I guess they added a small frequency offset to reduce spur.
+> 
+> >> But how exactly is *one* magic number (and it's even a very small one)
+> >> worse than 14 of them, especially since anybody can verify that the
+> >> generated raw values are exactly the same?
+> > 
+> > Anyway, still this formula gets it wrong for channel 14.
+> > Lets have this table for now, I'll clean this up once I
+> > get the proper doc for this register?.
+> How did you test this? When I put this part into a test program, it
+> generates exactly the same values as the table  all channels,
+> including 14.
 
-Got it, patch on the way...
+I just did the following
 
--- 
-GPG ID: 0xD21DB2DB
-As you read this post global entropy rises. Have Fun ;-)
-Nick
+#define CHANSEL_2G_9485(_freq) ((((freq) * 0x10000) - 215) / CHANSEL_DIV)
+ for (i = 0; i < 14; i++) {
+               freq = 2412 + (i * 5);
+               printk("chan %d : %x \n",i + 1,CHANSEL_2G_9485(freq));
+      }
+
+output:
+
+chan 1 : a0ccbe
+chan 2 : a12213
+chan 3 : a17769
+chan 4 : a1ccbe
+chan 5 : a22213
+chan 6 : a27769
+chan 7 : a2ccbe
+chan 8 : a32213
+chan 9 : a37769
+chan 10 : a3ccbe
+chan 11 : a42213
+chan 12 : a47769
+chan 13 : a4ccbe
+chan 14 : a52213
+
+Vasanth
