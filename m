@@ -1,64 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.19.149.2]:64251 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753401Ab0LOPbH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 15 Dec 2010 10:31:07 -0500
-Received: from mail.atheros.com ([10.10.20.108])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Wed, 15 Dec 2010 07:30:51 -0800
-From: Vasanthakumar Thiagarajan <vasanth@atheros.com>
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>
-Subject: [PATCH 2/7] ath9k_hw: Remove unnecessary Rx IQ cal register configuration in ar9003_hw_tx_iq_cal()
-Date: Wed, 15 Dec 2010 07:30:48 -0800
-Message-ID: <1292427053-5880-2-git-send-email-vasanth@atheros.com>
-In-Reply-To: <1292427053-5880-1-git-send-email-vasanth@atheros.com>
-References: <1292427053-5880-1-git-send-email-vasanth@atheros.com>
+Received: from mail-gw0-f42.google.com ([74.125.83.42]:47959 "EHLO
+	mail-gw0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753258Ab0LFSnF (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 6 Dec 2010 13:43:05 -0500
+Received: by gwb20 with SMTP id 20so6773099gwb.1
+        for <linux-wireless@vger.kernel.org>; Mon, 06 Dec 2010 10:43:05 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <20101206042812.GB28134@monopoli.naic.edu>
+References: <AANLkTi=YT1V-kr-tAmNfSBPPEGk39H37RoNkx5txhnD7@mail.gmail.com>
+	<20101203001052.GA16808@monopoli.naic.edu>
+	<AANLkTinLaa+dOiq67DAt+KYfnxUEkNgWEiE2x1NtT9RE@mail.gmail.com>
+	<AANLkTim-hexpFnV_DfKGM53vWo1-5W6fbK4e+jLnb5fB@mail.gmail.com>
+	<20101203202321.GA21937@monopoli.naic.edu>
+	<AANLkTi=qvZ-Uj1T=9Xc8LyyxKvgNw4CKV8Zx2fDfo4uH@mail.gmail.com>
+	<20101204033646.GA22662@monopoli.naic.edu>
+	<AANLkTik=nbdNUU7gzO9V17fHWZibc2LjuXDgpeRDztoM@mail.gmail.com>
+	<20101204134732.GA24216@monopoli.naic.edu>
+	<AANLkTinU+Xv+gNSTJnEz_tYPhcXRf=kEfkyyeuN0QPFt@mail.gmail.com>
+	<20101206042812.GB28134@monopoli.naic.edu>
+Date: Mon, 6 Dec 2010 18:43:04 +0000
+Message-ID: <AANLkTimC4NkPhpmOUWHvWpCZGvXjM1GkZCUja=Qhr=9N@mail.gmail.com>
+Subject: Re: orinoco_cs module and WPA not working
+From: Dave Kilroy <kilroyd@googlemail.com>
+To: Giacomo Comes <comes@naic.edu>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Vasanthakumar Thiagarajan <vasanth@atheros.com>
----
- drivers/net/wireless/ath/ath9k/ar9003_calib.c |   13 -------------
- 1 files changed, 0 insertions(+), 13 deletions(-)
+> I have been testing your patches and I can confirm that now the orinoco
+> driver is working properly for me. Using directly wpa_supplicant and using
+> networkmanager.
+> Thank you very much for your work.
 
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_calib.c b/drivers/net/wireless/ath/ath9k/ar9003_calib.c
-index 7c3334b..75a1c6e 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_calib.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_calib.c
-@@ -616,11 +616,6 @@ static void ar9003_hw_tx_iq_cal(struct ath_hw *ah)
- 		AR_PHY_TX_IQCAL_STATUS_B1,
- 		AR_PHY_TX_IQCAL_STATUS_B2,
- 	};
--	static const u32 rx_corr[AR9300_MAX_CHAINS] = {
--		AR_PHY_RX_IQCAL_CORR_B0,
--		AR_PHY_RX_IQCAL_CORR_B1,
--		AR_PHY_RX_IQCAL_CORR_B2,
--	};
- 	static const u_int32_t chan_info_tab[] = {
- 		AR_PHY_CHAN_INFO_TAB_0,
- 		AR_PHY_CHAN_INFO_TAB_1,
-@@ -703,18 +698,10 @@ static void ar9003_hw_tx_iq_cal(struct ath_hw *ah)
- 		REG_RMW_FIELD(ah, tx_corr_coeff[i],
- 			      AR_PHY_TX_IQCAL_CORR_COEFF_01_COEFF_TABLE,
- 			      iqc_coeff[0]);
--		REG_RMW_FIELD(ah, rx_corr[i],
--			      AR_PHY_RX_IQCAL_CORR_LOOPBACK_IQCORR_Q_Q_COFF,
--			      iqc_coeff[1] >> 7);
--		REG_RMW_FIELD(ah, rx_corr[i],
--			      AR_PHY_RX_IQCAL_CORR_LOOPBACK_IQCORR_Q_I_COFF,
--			      iqc_coeff[1]);
- 	}
- 
- 	REG_RMW_FIELD(ah, AR_PHY_TX_IQCAL_CONTROL_3,
- 		      AR_PHY_TX_IQCAL_CONTROL_3_IQCORR_EN, 0x1);
--	REG_RMW_FIELD(ah, AR_PHY_RX_IQCAL_CORR_B0,
--		      AR_PHY_RX_IQCAL_CORR_B0_LOOPBACK_IQCORR_EN, 0x1);
- 
- 	return;
- 
--- 
-1.7.0.4
+No problem.
 
+> The only issue still not fixed is the suspend/resume timeout.
+> Can you help also with that?
+
+Absolutely. With the latest patches, please just do a suspend resume,
+and post the dmesg output. Also let me know what the value of
+CONFIG_HERMES_CACHE_FW_ON_INIT is.
