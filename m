@@ -1,59 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:58836 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754431Ab0LGHtc (ORCPT
+Received: from mail-wy0-f174.google.com ([74.125.82.174]:49676 "EHLO
+	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750774Ab0LFXyR convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 7 Dec 2010 02:49:32 -0500
-Message-ID: <4CFDE702.3020301@candelatech.com>
-Date: Mon, 06 Dec 2010 23:49:22 -0800
-From: Ben Greear <greearb@candelatech.com>
+	Mon, 6 Dec 2010 18:54:17 -0500
+Received: by wyb28 with SMTP id 28so12625102wyb.19
+        for <linux-wireless@vger.kernel.org>; Mon, 06 Dec 2010 15:54:15 -0800 (PST)
 MIME-Version: 1.0
-To: Vasanthakumar Thiagarajan <vasanth@Atheros.com>
-CC: "Luis R. Rodriguez" <mcgrof@gmail.com>,
-	"greearb@gmail.com" <greearb@gmail.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"ath9k-devel@venema.h4ckr.net" <ath9k-devel@venema.h4ckr.net>
-Subject: Re: [PATCH] ath9k: Check for NULL sta in ath_tx_start
-References: <1291698829-22765-1-git-send-email-greearb@candelatech.com> <AANLkTik20SkL0Y5gK_ysYpW46gvb73m4h3SDcGb+d_LA@mail.gmail.com> <4CFDC7D8.3080100@candelatech.com> <20101207074237.GA2179@vasanth-laptop>
-In-Reply-To: <20101207074237.GA2179@vasanth-laptop>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+In-Reply-To: <20101203145654.GB2348@tuxdriver.com>
+References: <20101203041109.GE2988@makis.mantri>
+	<AANLkTi=n0wkMTWxJvvNHHMyjvGA25JSr8awWKMJsAv+g@mail.gmail.com>
+	<20101203145654.GB2348@tuxdriver.com>
+Date: Tue, 7 Dec 2010 01:54:13 +0200
+Message-ID: <AANLkTinW-njW6T248ndTT88k-9sBXN8j8UHT5rh_-pLw@mail.gmail.com>
+Subject: Re: [PATCH 5/6] ath5k: Update version string
+From: Nick Kossifidis <mickflemm@gmail.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: "Luis R. Rodriguez" <mcgrof@gmail.com>,
+	ath5k-devel@venema.h4ckr.net, linux-wireless@vger.kernel.org,
+	me@bobcopeland.com, jirislaby@gmail.com, nbd@openwrt.org,
+	br1@einfach.org, sedat.dilek@googlemail.com
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 12/06/2010 11:42 PM, Vasanthakumar Thiagarajan wrote:
-> On Tue, Dec 07, 2010 at 11:06:24AM +0530, Ben Greear wrote:
->> On 12/06/2010 09:21 PM, Luis R. Rodriguez wrote:
->>> On Mon, Dec 6, 2010 at 9:13 PM,<greearb@gmail.com>   wrote:
->>>> From: Ben Greear<greearb@candelatech.com>
->>>>
->>>> It can be NULL according to docs, and logging showed it
->>>> to be NULL in practice.
->>>>
->>>> Signed-off-by: Ben Greear<greearb@candelatech.com>
->>>
->>> Does this fix an oops? If so can you explain and provide the trace and
->>> resubmit and cc stable in the commit log?
+2010/12/3 John W. Linville <linville@tuxdriver.com>:
+> On Thu, Dec 02, 2010 at 08:17:41PM -0800, Luis R. Rodriguez wrote:
+>> On Thu, Dec 2, 2010 at 8:11 PM, Nick Kossifidis <mickflemm@gmail.com> wrote:
+>> >  * Change version number, we've added various new features lately.
+>> >  We need to find a way to maintain this, maybe on each kernel release
+>> >  or something. Also remove "EXPERIMENTAL", we aren't experimental any
+>> >  more I think ;-)
+>> >
+>> >  Signed-off-by: Nick Kossifidis <mickflemm@gmail.com>
 >>
->> I think it fixes the TID corruption I posted about earlier.  It seems
->> so obvious though, that I'm curious why no one else sees problems,
->> and why I didn't see more crashes in my setup.
+>> > +MODULE_VERSION("0.7.0");
 >>
->> (The paprd code appears to send with null STA, for instance, and my
->> printks showed lots of NULL stas in my 16-sta test setup, though I
->> don't think I'm using the paprd code path.)
+>> How about just remove this all together, the version should go by the
+>> kernel or git describe.
 >
-> paprd is used only with>= AR9003.
-
-Whoever coded it up hopefully had that hardware...so why didn't
-they see lots of crashes?
-
-Thanks,
-Ben
-
+> ACK -- any objections?
 >
-> Vasanth
+> John
 
+I'm OK with it, seems reasonable, after all we track changes on the
+wiki page per date with links to commits on git so there is no need to
+maintain the version field...
+http://wireless.kernel.org/en/users/Drivers/ath5k
 
 -- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+GPG ID: 0xD21DB2DB
+As you read this post global entropy rises. Have Fun ;-)
+Nick
