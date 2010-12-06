@@ -1,103 +1,110 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.19.149.2]:36115 "EHLO mail.atheros.com"
+Received: from nbd.name ([46.4.11.11]:34794 "EHLO nbd.name"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751695Ab0LFMbl (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 6 Dec 2010 07:31:41 -0500
-Received: from mail.atheros.com ([10.10.20.105])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Mon, 06 Dec 2010 04:31:27 -0800
-From: Vasanthakumar Thiagarajan <vasanth@atheros.com>
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>
-Subject: [PATCH V3 16/27] ath9k_hw: Read and configure antenna diversity control for AR9485
-Date: Mon, 6 Dec 2010 04:27:49 -0800
-Message-ID: <1291638480-8950-17-git-send-email-vasanth@atheros.com>
-In-Reply-To: <1291638480-8950-1-git-send-email-vasanth@atheros.com>
-References: <1291638480-8950-1-git-send-email-vasanth@atheros.com>
+	id S1751200Ab0LFKmT (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 6 Dec 2010 05:42:19 -0500
+Message-ID: <4CFCBE04.7070509@openwrt.org>
+Date: Mon, 06 Dec 2010 11:42:12 +0100
+From: Felix Fietkau <nbd@openwrt.org>
 MIME-Version: 1.0
-Content-Type: text/plain
+To: Vasanthakumar Thiagarajan <vasanth@atheros.com>
+CC: "linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH V2 12/27] ath9k_hw: Find chansel of	AR_PHY_65NM_CH0_SYNTH7
+ from an array for AR9485
+References: <1291288031-3409-1-git-send-email-vasanth@atheros.com> <1291288031-3409-13-git-send-email-vasanth@atheros.com> <4CF84BB8.8090007@openwrt.org> <20101203045054.GP12908@vasanth-laptop> <4CF8DF08.2060307@openwrt.org> <20101203124050.GR12908@vasanth-laptop> <4CF8E718.9070207@openwrt.org> <20101206060310.GS12908@vasanth-laptop>
+In-Reply-To: <20101206060310.GS12908@vasanth-laptop>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Vasanthakumar Thiagarajan <vasanth@atheros.com>
----
- drivers/net/wireless/ath/ath9k/ar9003_eeprom.c |   24 ++++++++++++++++++++----
- drivers/net/wireless/ath/ath9k/ar9003_phy.h    |   10 ++++++++++
- 2 files changed, 30 insertions(+), 4 deletions(-)
+On 2010-12-06 7:03 AM, Vasanthakumar Thiagarajan wrote:
+> On Fri, Dec 03, 2010 at 06:18:24PM +0530, Felix Fietkau wrote:
+>> On 2010-12-03 1:40 PM, Vasanthakumar Thiagarajan wrote:
+>> > On Fri, Dec 03, 2010 at 05:44:00PM +0530, Felix Fietkau wrote:
+>> >> On 2010-12-03 5:50 AM, Vasanthakumar Thiagarajan wrote:
+>> >> > On Fri, Dec 03, 2010 at 07:15:28AM +0530, Felix Fietkau wrote:
+>> >> >> On 2010-12-02 12:06 PM, Vasanthakumar Thiagarajan wrote:
+>> >> >> > Signed-off-by: Vasanthakumar Thiagarajan <vasanth@atheros.com>
+>> >> >> > ---
+>> >> >> >  drivers/net/wireless/ath/ath9k/ar9003_phy.c |   25 ++++++++++++++++++++++++-
+>> >> >> >  1 files changed, 24 insertions(+), 1 deletions(-)
+>> >> >> > 
+>> >> >> > diff --git a/drivers/net/wireless/ath/ath9k/ar9003_phy.c b/drivers/net/wireless/ath/ath9k/ar9003_phy.c
+>> >> >> > index b34a9e9..136e64a 100644
+>> >> >> > --- a/drivers/net/wireless/ath/ath9k/ar9003_phy.c
+>> >> >> > +++ b/drivers/net/wireless/ath/ath9k/ar9003_phy.c
+>> >> >> > @@ -25,6 +25,24 @@ static const int cycpwrThr1_table[] =
+>> >> >> >  /* level:  0   1   2   3   4   5   6   7   8  */
+>> >> >> >  	{ -6, -4, -2,  0,  2,  4,  6,  8 };     /* lvl 0-7, default 3 */
+>> >> >> >  
+>> >> >> > +/* Chansel table used by ar9485 */
+>> >> >> > +static const u32 ar9003_chansel_xtal_40M[] = {
+>> >> >> > +	0xa0ccbe,
+>> >> >> > +	0xa12213,
+>> >> >> > +	0xa17769,
+>> >> >> > +	0xa1ccbe,
+>> >> >> > +	0xa22213,
+>> >> >> > +	0xa27769,
+>> >> >> > +	0xa2ccbe,
+>> >> >> > +	0xa32213,
+>> >> >> > +	0xa37769,
+>> >> >> > +	0xa3ccbe,
+>> >> >> > +	0xa42213,
+>> >> >> > +	0xa47769,
+>> >> >> > +	0xa4ccbe,
+>> >> >> > +	0xa5998b,
+>> >> >> > +};
+>> >> >> > +
+>> >> >> >  /*
+>> >> >> >   * register values to turn OFDM weak signal detection OFF
+>> >> >> >   */
+>> >> >> > @@ -75,7 +93,12 @@ static int ar9003_hw_set_channel(struct ath_hw *ah, struct ath9k_channel *chan)
+>> >> >> >  	freq = centers.synth_center;
+>> >> >> >  
+>> >> >> >  	if (freq < 4800) {     /* 2 GHz, fractional mode */
+>> >> >> > -		channelSel = CHANSEL_2G(freq);
+>> >> >> > +		if (AR_SREV_9485(ah)) {
+>> >> >> > +			int ichan = ieee80211_frequency_to_channel(freq);
+>> >> >> > +
+>> >> >> > +			channelSel = ar9003_chansel_xtal_40M[ichan - 1];
+>> >> >> How about using this formula for AR9485:
+>> >> >> 
+>> >> >> #define CHANSEL_2G_AR9485(_freq)	(((_freq) * 0x10000 - 215) / CHANSEL_DIV)
+>> >> >> 
+>> >> >> While I don't know where the 215 comes from (the calculation does not
+>> >> >> appear to be documented anywhere and I found it by trial & error),
+>> >> >> I do think it's better to have a simple formula than a long table
+>> >> >> of hardcoded values.
+>> >> > 
+>> >> > I don't know, having some arbitrary formula would
+>> >> > complicate things especially if we want to integrate
+>> >> > changes from internal code base. I prefer the table.
+>> >> How would it complicate things? Right now the resulting values are
+>> >> exactly the same. If we get a new table from the HAL, I'll either come
+>> >> up with a new formula, or we switch to the table then. But in the mean
+>> >> time we'll have better code.
+>> > 
+>> > In that case, I'm not comfortable with the magic number. I'll try to
+>> > ask people about the relation between the older one and the newer
+>> > one.
+>> Yeah, I asked around already and didn't get an answer yet, as the source
+>> of these values does not seem to be documented internally.
+> 
+> I don't have any doc for this register yet.
+I'm pretty sure that the format of the register is still exactly the
+same. I guess they added a small frequency offset to reduce spur.
 
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
-index 53365e7..17d22a2 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
-@@ -3034,6 +3034,8 @@ static u32 ath9k_hw_ar9300_get_eeprom(struct ath_hw *ah,
- 		return !!(pBase->featureEnable & BIT(5));
- 	case EEP_CHAIN_MASK_REDUCE:
- 		return (pBase->miscConfiguration >> 0x3) & 0x1;
-+	case EEP_ANT_DIV_CTL1:
-+		return le32_to_cpu(eep->base_ext1.ant_div_control);
- 	default:
- 		return 0;
- 	}
-@@ -3515,11 +3517,25 @@ static void ar9003_hw_ant_ctrl_apply(struct ath_hw *ah, bool is2ghz)
- 	value = ar9003_hw_ant_ctrl_chain_get(ah, 0, is2ghz);
- 	REG_RMW_FIELD(ah, AR_PHY_SWITCH_CHAIN_0, AR_SWITCH_TABLE_ALL, value);
- 
--	value = ar9003_hw_ant_ctrl_chain_get(ah, 1, is2ghz);
--	REG_RMW_FIELD(ah, AR_PHY_SWITCH_CHAIN_1, AR_SWITCH_TABLE_ALL, value);
-+	if (!AR_SREV_9485(ah)) {
-+		value = ar9003_hw_ant_ctrl_chain_get(ah, 1, is2ghz);
-+		REG_RMW_FIELD(ah, AR_PHY_SWITCH_CHAIN_1, AR_SWITCH_TABLE_ALL,
-+			      value);
- 
--	value = ar9003_hw_ant_ctrl_chain_get(ah, 2, is2ghz);
--	REG_RMW_FIELD(ah, AR_PHY_SWITCH_CHAIN_2, AR_SWITCH_TABLE_ALL, value);
-+		value = ar9003_hw_ant_ctrl_chain_get(ah, 2, is2ghz);
-+		REG_RMW_FIELD(ah, AR_PHY_SWITCH_CHAIN_2, AR_SWITCH_TABLE_ALL,
-+			      value);
-+	}
-+
-+	if (AR_SREV_9485(ah)) {
-+		value = ath9k_hw_ar9300_get_eeprom(ah, EEP_ANT_DIV_CTL1);
-+		REG_RMW_FIELD(ah, AR_PHY_MC_GAIN_CTRL, AR_ANT_DIV_CTRL_ALL,
-+			      value);
-+		REG_RMW_FIELD(ah, AR_PHY_MC_GAIN_CTRL, AR_ANT_DIV_ENABLE,
-+			      value >> 6);
-+		REG_RMW_FIELD(ah, AR_PHY_CCK_DETECT, AR_FAST_DIV_ENABLE,
-+			      value >> 7);
-+	}
- }
- 
- static void ar9003_hw_drive_strength_apply(struct ath_hw *ah)
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_phy.h b/drivers/net/wireless/ath/ath9k/ar9003_phy.h
-index b772081..6e0d4ad 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_phy.h
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_phy.h
-@@ -260,7 +260,13 @@
- #define AR_PHY_CCA_0            (AR_AGC_BASE + 0x1c)
- #define AR_PHY_EXT_CCA0         (AR_AGC_BASE + 0x20)
- #define AR_PHY_RESTART          (AR_AGC_BASE + 0x24)
-+
- #define AR_PHY_MC_GAIN_CTRL     (AR_AGC_BASE + 0x28)
-+#define AR_ANT_DIV_CTRL_ALL	0x7e000000
-+#define AR_ANT_DIV_CTRL_ALL_S	25
-+#define AR_ANT_DIV_ENABLE	0x1000000
-+#define AR_ANT_DIV_ENABLE_S	24
-+
- #define AR_PHY_EXTCHN_PWRTHR1   (AR_AGC_BASE + 0x2c)
- #define AR_PHY_EXT_CHN_WIN      (AR_AGC_BASE + 0x30)
- #define AR_PHY_20_40_DET_THR    (AR_AGC_BASE + 0x34)
-@@ -271,7 +277,11 @@
- #define AR_PHY_RX_GAIN_BOUNDS_2 (AR_AGC_BASE + 0x48)
- #define AR_PHY_RSSI_0           (AR_AGC_BASE + 0x180)
- #define AR_PHY_SPUR_CCK_REP0    (AR_AGC_BASE + 0x184)
-+
- #define AR_PHY_CCK_DETECT       (AR_AGC_BASE + 0x1c0)
-+#define AR_FAST_DIV_ENABLE	0x2000
-+#define AR_FAST_DIV_ENABLE_S	13
-+
- #define AR_PHY_DAG_CTRLCCK      (AR_AGC_BASE + 0x1c4)
- #define AR_PHY_IQCORR_CTRL_CCK  (AR_AGC_BASE + 0x1c8)
- 
--- 
-1.7.0.4
+>> But how exactly is *one* magic number (and it's even a very small one)
+>> worse than 14 of them, especially since anybody can verify that the
+>> generated raw values are exactly the same?
+> 
+> Anyway, still this formula gets it wrong for channel 14.
+> Lets have this table for now, I'll clean this up once I
+> get the proper doc for this register?.
+How did you test this? When I put this part into a test program, it
+generates exactly the same values as the table for all channels,
+including 14.
+
+- Felix
 
