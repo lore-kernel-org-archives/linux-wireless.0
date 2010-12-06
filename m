@@ -1,44 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([147.243.1.47]:41875 "EHLO mgw-sa01.nokia.com"
+Received: from mail.atheros.com ([12.19.149.2]:36057 "EHLO mail.atheros.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752060Ab0LONMD (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 15 Dec 2010 08:12:03 -0500
-Subject: Re: [PATCH] wl1271: fixed problem with WPS IEs in probe requests
-From: Luciano Coelho <luciano.coelho@nokia.com>
-To: ext Guy Eilam <guy@wizery.com>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <1291906499-21141-1-git-send-email-guy@wizery.com>
-References: <1291906499-21141-1-git-send-email-guy@wizery.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Wed, 15 Dec 2010 15:14:09 +0200
-Message-ID: <1292418849.32385.3.camel@chilepepper>
-Mime-Version: 1.0
+	id S1752325Ab0LFMaV (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 6 Dec 2010 07:30:21 -0500
+Received: from mail.atheros.com ([10.10.20.105])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Mon, 06 Dec 2010 04:30:07 -0800
+From: Vasanthakumar Thiagarajan <vasanth@atheros.com>
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>
+Subject: [PATCH V3 08/27] ath9k: Disable TX STBC for AR9485
+Date: Mon, 6 Dec 2010 04:27:41 -0800
+Message-ID: <1291638480-8950-9-git-send-email-vasanth@atheros.com>
+In-Reply-To: <1291638480-8950-1-git-send-email-vasanth@atheros.com>
+References: <1291638480-8950-1-git-send-email-vasanth@atheros.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2010-12-09 at 16:54 +0200, ext Guy Eilam wrote:
-> Inclusion of a WPS IE in probe requests caused a problem
-> in the driver due to the maximum size of the probe request
-> template and the max_scan_ie_len values at initialization.
-> 
-> Increased the size of probe request template
-> to the maximum size allowed by the firmware.
-> Struct wl12xx_probe_req_template, which was only used
-> for calculating the max size of the probe request template,
-> is no longer used and needed.
-> 
-> max_scan_ie_len is used for validating the size of
-> additional IEs in scan requests.
-> Initialized the max_scan_ie_len field to the maximum size
-> of the probe request template minus the ieee80211 header size.
-> 
-> Signed-off-by: Guy Eilam <guy@wizery.com>
-> ---
+Signed-off-by: Vasanthakumar Thiagarajan <vasanth@atheros.com>
+---
+ drivers/net/wireless/ath/ath9k/init.c |    4 +++-
+ 1 files changed, 3 insertions(+), 1 deletions(-)
 
-Applied, thanks!
-
-
+diff --git a/drivers/net/wireless/ath/ath9k/init.c b/drivers/net/wireless/ath/ath9k/init.c
+index 918308a..3ad4347 100644
+--- a/drivers/net/wireless/ath/ath9k/init.c
++++ b/drivers/net/wireless/ath/ath9k/init.c
+@@ -210,7 +210,9 @@ static void setup_ht_cap(struct ath_softc *sc,
+ 	ht_info->ampdu_factor = IEEE80211_HT_MAX_AMPDU_64K;
+ 	ht_info->ampdu_density = IEEE80211_HT_MPDU_DENSITY_8;
+ 
+-	if (AR_SREV_9300_20_OR_LATER(ah))
++	if (AR_SREV_9485(ah))
++		max_streams = 1;
++	else if (AR_SREV_9300_20_OR_LATER(ah))
+ 		max_streams = 3;
+ 	else
+ 		max_streams = 2;
 -- 
-Cheers,
-Luca.
+1.7.0.4
 
