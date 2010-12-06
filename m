@@ -1,93 +1,84 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:18468 "EHLO mx1.redhat.com"
+Received: from mail.atheros.com ([12.19.149.2]:36128 "EHLO mail.atheros.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751739Ab0LWOMo (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 23 Dec 2010 09:12:44 -0500
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: Wey-Yi Guy <wey-yi.w.guy@intel.com>,
-	Intel Linux Wireless <ilw@linux.intel.com>
-Cc: linux-wireless@vger.kernel.org,
-	Stanislaw Gruszka <sgruszka@redhat.com>
-Subject: [PATCH v2] iwlagn: fix scan tx antenna setting on 5Ghz band
-Date: Thu, 23 Dec 2010 15:12:30 +0100
-Message-Id: <1293113550-10977-1-git-send-email-sgruszka@redhat.com>
+	id S1752043Ab0LFMb4 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 6 Dec 2010 07:31:56 -0500
+Received: from mail.atheros.com ([10.10.20.105])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Mon, 06 Dec 2010 04:31:42 -0800
+From: Vasanthakumar Thiagarajan <vasanth@atheros.com>
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>
+Subject: [PATCH V3 19/27] ath9k_hw: Read and configure turnning caps to regulate freq accuracy
+Date: Mon, 6 Dec 2010 04:27:52 -0800
+Message-ID: <1291638480-8950-20-git-send-email-vasanth@atheros.com>
+In-Reply-To: <1291638480-8950-1-git-send-email-vasanth@atheros.com>
+References: <1291638480-8950-1-git-send-email-vasanth@atheros.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Looks that we do not set correctly antennas when scanning
-on 5Ghz band and when bluetooth is enabled, because
-priv->cfg->scan_tx_antennas[band] is only defined for
-IEEE80211_BAND_2GHZ.
+Right now it is done for only AR9485, will be done for ar9003 also
+after proper testing.
 
-To fix we check band before limiting antennas to first one.
-This allow to remove hard coded cfg->scan_tx_antennas[band].
-
-Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+Signed-off-by: Vasanthakumar Thiagarajan <vasanth@atheros.com>
 ---
-v1 -> v2:
-- limit tx scan antennas only on 2GHz band
-- remove not needed struct iwl_cfg field
+ drivers/net/wireless/ath/ath9k/ar9003_eeprom.c |   16 ++++++++++++++++
+ drivers/net/wireless/ath/ath9k/ar9003_phy.h    |    6 ++++++
+ 2 files changed, 22 insertions(+), 0 deletions(-)
 
- drivers/net/wireless/iwlwifi/iwl-6000.c    |    7 +------
- drivers/net/wireless/iwlwifi/iwl-agn-lib.c |   14 +++++---------
- drivers/net/wireless/iwlwifi/iwl-core.h    |    1 -
- 3 files changed, 6 insertions(+), 16 deletions(-)
-
-diff --git a/drivers/net/wireless/iwlwifi/iwl-6000.c b/drivers/net/wireless/iwlwifi/iwl-6000.c
-index f4bec32..af505bc 100644
---- a/drivers/net/wireless/iwlwifi/iwl-6000.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-6000.c
-@@ -596,12 +596,7 @@ struct iwl_cfg iwl6005_2bg_cfg = {
- 	.need_dc_calib = true,					\
- 	.need_temp_offset_calib = true,				\
- 	.led_mode = IWL_LED_RF_STATE,				\
--	.adv_pm = true,						\
--	/*							\
--	 *Due to bluetooth, we transmit 2.4 GHz probes		\
--	 * only on antenna A					\
--	 */							\
--	.scan_tx_antennas[IEEE80211_BAND_2GHZ] = ANT_A
-+	.adv_pm = true						\
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
+index 3e4deb0..7b0ad89 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
++++ b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
+@@ -3739,6 +3739,20 @@ static void ar9003_hw_internal_regulator_apply(struct ath_hw *ah)
  
- struct iwl_cfg iwl6030_2agn_cfg = {
- 	.name = "Intel(R) Centrino(R) Advanced-N 6230 AGN",
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-lib.c b/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
-index 4bc82fc..3dee87e 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
-@@ -1492,15 +1492,11 @@ int iwlagn_request_scan(struct iwl_priv *priv, struct ieee80211_vif *vif)
- 	if (priv->cfg->scan_rx_antennas[band])
- 		rx_ant = priv->cfg->scan_rx_antennas[band];
+ }
  
--	if (priv->cfg->scan_tx_antennas[band])
--		scan_tx_antennas = priv->cfg->scan_tx_antennas[band];
--
--	if (priv->cfg->bt_params &&
--	    priv->cfg->bt_params->advanced_bt_coexist &&
--	    priv->bt_full_concurrent) {
--		/* operated as 1x1 in full concurrency mode */
--		scan_tx_antennas = first_antenna(
--			priv->cfg->scan_tx_antennas[band]);
-+	if (band == IEEE80211_BAND_2GHZ &&
-+	    priv->cfg->bt_params &&
-+	    priv->cfg->bt_params->advanced_bt_coexist) {
-+		/* transmit 2.4 GHz probes only on first antenna */
-+		scan_tx_antennas = first_antenna(scan_tx_antennas);
- 	}
++static void ar9003_hw_apply_tuning_caps(struct ath_hw *ah)
++{
++	struct ar9300_eeprom *eep = &ah->eeprom.ar9300_eep;
++	u8 tuning_caps_param = eep->baseEepHeader.params_for_tuning_caps[0];
++
++	if (eep->baseEepHeader.featureEnable & 0x40) {
++		tuning_caps_param &= 0x7f;
++		REG_RMW_FIELD(ah, AR_CH0_XTAL, AR_CH0_XTAL_CAPINDAC,
++			      tuning_caps_param);
++		REG_RMW_FIELD(ah, AR_CH0_XTAL, AR_CH0_XTAL_CAPOUTDAC,
++			      tuning_caps_param);
++	}
++}
++
+ static void ath9k_hw_ar9300_set_board_values(struct ath_hw *ah,
+ 					     struct ath9k_channel *chan)
+ {
+@@ -3747,6 +3761,8 @@ static void ath9k_hw_ar9300_set_board_values(struct ath_hw *ah,
+ 	ar9003_hw_drive_strength_apply(ah);
+ 	ar9003_hw_atten_apply(ah, chan);
+ 	ar9003_hw_internal_regulator_apply(ah);
++	if (AR_SREV_9485(ah))
++		ar9003_hw_apply_tuning_caps(ah);
+ }
  
- 	priv->scan_tx_ant[band] = iwl_toggle_tx_ant(priv, priv->scan_tx_ant[band],
-diff --git a/drivers/net/wireless/iwlwifi/iwl-core.h b/drivers/net/wireless/iwlwifi/iwl-core.h
-index f80685a..a347437 100644
---- a/drivers/net/wireless/iwlwifi/iwl-core.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-core.h
-@@ -411,7 +411,6 @@ struct iwl_cfg {
- 	const bool need_dc_calib;	  /* if used set to true */
- 	const bool need_temp_offset_calib; /* if used set to true */
- 	u8 scan_rx_antennas[IEEE80211_NUM_BANDS];
--	u8 scan_tx_antennas[IEEE80211_NUM_BANDS];
- 	enum iwl_led_mode led_mode;
- 	const bool adv_pm;
- 	const bool rx_with_siso_diversity;
+ static void ath9k_hw_ar9300_set_addac(struct ath_hw *ah,
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_phy.h b/drivers/net/wireless/ath/ath9k/ar9003_phy.h
+index 8de3ffd..4c64eb1 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_phy.h
++++ b/drivers/net/wireless/ath/ath9k/ar9003_phy.h
+@@ -598,6 +598,12 @@
+ #define AR_CH0_TOP2_XPABIASLVL		0xf000
+ #define AR_CH0_TOP2_XPABIASLVL_S	12
+ 
++#define AR_CH0_XTAL		(AR_SREV_9485(ah) ? 0x16290 : 0x16294)
++#define AR_CH0_XTAL_CAPINDAC	0x7f000000
++#define AR_CH0_XTAL_CAPINDAC_S	24
++#define AR_CH0_XTAL_CAPOUTDAC	0x00fe0000
++#define AR_CH0_XTAL_CAPOUTDAC_S	17
++
+ #define AR_PHY_PMU1		0x16c40
+ #define AR_PHY_PMU1_PWD		0x1
+ #define AR_PHY_PMU1_PWD_S	0
 -- 
-1.7.1
+1.7.0.4
 
