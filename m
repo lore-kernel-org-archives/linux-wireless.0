@@ -1,226 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from hrndva-omtalb.mail.rr.com ([71.74.56.124]:65345 "EHLO
-	hrndva-omtalb.mail.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754653Ab0LPRKn (ORCPT
+Received: from mail.atheros.com ([12.19.149.2]:28806 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752399Ab0LFVQ1 convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 16 Dec 2010 12:10:43 -0500
-Date: Thu, 16 Dec 2010 11:10:40 -0600
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: John W Linville <linville@tuxdriver.com>,
-	Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH] rtlwifi: Switch ;ocking from semaphores to mutexes
-Message-ID: <4d0a4810.D27sZkvOxusWnOXl%Larry.Finger@lwfinger.net>
+	Mon, 6 Dec 2010 16:16:27 -0500
+Received: from mail.atheros.com ([10.10.20.105])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Mon, 06 Dec 2010 13:16:13 -0800
+Date: Mon, 6 Dec 2010 13:16:13 -0800
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: Ben Greear <greearb@candelatech.com>
+CC: Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
+	=?iso-8859-1?Q?Bj=F6rn?= Smedman <bjorn.smedman@venatech.se>,
+	Felix Fietkau <nbd@openwrt.org>,
+	"ath9k-devel@lists.ath9k.org" <ath9k-devel@venema.h4ckr.net>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [ath9k-devel] Script to crash ath9k with DMA errors.
+Message-ID: <20101206211613.GH21442@tux>
+References: <4CF6D8C8.2000308@candelatech.com>
+ <4CF8A6DE.4020804@candelatech.com>
+ <4CFAFBE1.3080505@openwrt.org>
+ <4CFB20BA.5090300@candelatech.com>
+ <20101206193600.GC21442@tux>
+ <4CFD3DE3.4000207@candelatech.com>
+ <AANLkTingy7fPH14hW_mg8_YcotX29pYCu910Gw48grrD@mail.gmail.com>
+ <4CFD4602.1030304@candelatech.com>
+ <20101206204230.GG21442@tux>
+ <4CFD4ED5.20808@candelatech.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="iso-8859-1"
+In-Reply-To: <4CFD4ED5.20808@candelatech.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
----
+On Mon, Dec 06, 2010 at 01:00:05PM -0800, Ben Greear wrote:
+> On 12/06/2010 12:42 PM, Luis R. Rodriguez wrote:
+> > On Mon, Dec 06, 2010 at 12:22:26PM -0800, Ben Greear wrote:
+> >> On 12/06/2010 12:11 PM, Björn Smedman wrote:
+> >>> On Mon, Dec 6, 2010 at 8:47 PM, Ben Greear<greearb@candelatech.com>   wrote:
+> >>>> With 16 properly configured non-encrypted stations, running with
+> >>>> wpa-supplicant
+> >>>> with netlink driver&   sharing scan results,  the interfaces quickly
+> >>>> associate.
+> >>>>
+> >>>> However, I do continue to see DMA warnings such as these (I had picked up my
+> >>>> portable phone, and it knocked all the interfaces offline ..here
+> >>>> they are coming back up after I hung up the phone).
+> >>>
+> >>> Is there some theory as to why using multiple interfaces cause so many
+> >>> problems with DMA?
+> >>
+> >> Seems pretty directly related to channel changes and/or resets, and exacerbated
+> >> by other interfaces sending data while another is scanning, for instance.
+> >>
+> >> Other issues we've found in the past have been various races that you wouldn't
+> >> normally see with a single VIF.
+> >
+> > Right, there might be some other hot path we need to lock around over.
+> > Not sure what it could be though we should be locking stopping RX
+> > over resets already though. These should all be atomic, in fact
+> > starting TX too IIRC, hence the name change of the lock to be
+> > specific to the PCU together. There may be other PCU changes
+> > we may need to contend against.
+> 
+> Maybe the hardware/firmware guys could give us some clues as to what
+> types of things can cause stopping RMA to fail?  Maybe that could
+> point us to what might be racing with the attempts to stop RMA?
 
-John,
+We have no firmware, but yeah understanding how the hardware
+blocks would be key here. Good point.
 
-This change was requested by Johannes.
-
-Larry
----
-
-Index: wireless-testing/drivers/net/wireless/rtlwifi/base.c
-===================================================================
---- wireless-testing.orig/drivers/net/wireless/rtlwifi/base.c
-+++ wireless-testing/drivers/net/wireless/rtlwifi/base.c
-@@ -309,8 +309,8 @@ int rtl_init_core(struct ieee80211_hw *h
- 	}
- 
- 	/* <4> locks */
--	sema_init(&rtlpriv->locks.ips_sem, 1);
--	sema_init(&rtlpriv->locks.conf_sem, 1);
-+	mutex_init(&rtlpriv->locks.ips_mutex);
-+	mutex_init(&rtlpriv->locks.conf_mutex);
- 	spin_lock_init(&rtlpriv->locks.irq_th_lock);
- 	spin_lock_init(&rtlpriv->locks.h2c_lock);
- 	spin_lock_init(&rtlpriv->locks.rf_ps_lock);
-Index: wireless-testing/drivers/net/wireless/rtlwifi/core.c
-===================================================================
---- wireless-testing.orig/drivers/net/wireless/rtlwifi/core.c
-+++ wireless-testing/drivers/net/wireless/rtlwifi/core.c
-@@ -43,13 +43,13 @@ static int rtl_op_start(struct ieee80211
- 		return 0;
- 	if (!test_bit(RTL_STATUS_INTERFACE_START, &rtlpriv->status))
- 		return 0;
--	down(&rtlpriv->locks.conf_sem);
-+	mutex_lock(&rtlpriv->locks.conf_mutex);
- 	err = rtlpriv->intf_ops->adapter_start(hw);
- 	if (err)
- 		goto out;
- 	rtl_watch_dog_timer_callback((unsigned long)hw);
- out:
--	up(&rtlpriv->locks.conf_sem);
-+	mutex_unlock(&rtlpriv->locks.conf_mutex);
- 	return err;
- }
- 
-@@ -68,7 +68,7 @@ static void rtl_op_stop(struct ieee80211
- 		mdelay(1);
- 	}
- 
--	down(&rtlpriv->locks.conf_sem);
-+	mutex_lock(&rtlpriv->locks.conf_mutex);
- 
- 	mac->link_state = MAC80211_NOLINK;
- 	memset(mac->bssid, 0, 6);
-@@ -79,7 +79,7 @@ static void rtl_op_stop(struct ieee80211
- 	rtl_deinit_deferred_work(hw);
- 	rtlpriv->intf_ops->adapter_stop(hw);
- 
--	up(&rtlpriv->locks.conf_sem);
-+	mutex_unlock(&rtlpriv->locks.conf_mutex);
- }
- 
- static int rtl_op_tx(struct ieee80211_hw *hw, struct sk_buff *skb)
-@@ -119,7 +119,7 @@ static int rtl_op_add_interface(struct i
- 
- 	rtl_ips_nic_on(hw);
- 
--	down(&rtlpriv->locks.conf_sem);
-+	mutex_lock(&rtlpriv->locks.conf_mutex);
- 	switch (vif->type) {
- 	case NL80211_IFTYPE_STATION:
- 		if (mac->beacon_enabled == 1) {
-@@ -156,7 +156,7 @@ static int rtl_op_add_interface(struct i
- 	rtlpriv->cfg->ops->set_hw_reg(hw, HW_VAR_ETHER_ADDR, mac->mac_addr);
- 
- out:
--	up(&rtlpriv->locks.conf_sem);
-+	mutex_unlock(&rtlpriv->locks.conf_mutex);
- 	return err;
- }
- 
-@@ -166,7 +166,7 @@ static void rtl_op_remove_interface(stru
- 	struct rtl_priv *rtlpriv = rtl_priv(hw);
- 	struct rtl_mac *mac = rtl_mac(rtl_priv(hw));
- 
--	down(&rtlpriv->locks.conf_sem);
-+	mutex_lock(&rtlpriv->locks.conf_mutex);
- 
- 	/* Free beacon resources */
- 	if ((mac->opmode == NL80211_IFTYPE_AP) ||
-@@ -190,7 +190,7 @@ static void rtl_op_remove_interface(stru
- 	mac->opmode = NL80211_IFTYPE_UNSPECIFIED;
- 	rtlpriv->cfg->ops->set_network_type(hw, mac->opmode);
- 
--	up(&rtlpriv->locks.conf_sem);
-+	mutex_unlock(&rtlpriv->locks.conf_mutex);
- }
- 
- 
-@@ -202,7 +202,7 @@ static int rtl_op_config(struct ieee8021
- 	struct rtl_ps_ctl *ppsc = rtl_psc(rtl_priv(hw));
- 	struct ieee80211_conf *conf = &hw->conf;
- 
--	down(&rtlpriv->locks.conf_sem);
-+	mutex_lock(&rtlpriv->locks.conf_mutex);
- 	if (changed & IEEE80211_CONF_CHANGE_LISTEN_INTERVAL) {	/*BIT(2)*/
- 		RT_TRACE(rtlpriv, COMP_MAC80211, DBG_LOUD,
- 			 ("IEEE80211_CONF_CHANGE_LISTEN_INTERVAL\n"));
-@@ -303,7 +303,7 @@ static int rtl_op_config(struct ieee8021
- 					       hw->conf.channel_type);
- 	}
- 
--	up(&rtlpriv->locks.conf_sem);
-+	mutex_unlock(&rtlpriv->locks.conf_mutex);
- 
- 	return 0;
- }
-@@ -450,7 +450,7 @@ static void rtl_op_bss_info_changed(stru
- 	struct rtl_mac *mac = rtl_mac(rtl_priv(hw));
- 	struct rtl_ps_ctl *ppsc = rtl_psc(rtl_priv(hw));
- 
--	down(&rtlpriv->locks.conf_sem);
-+	mutex_lock(&rtlpriv->locks.conf_mutex);
- 
- 	if ((vif->type == NL80211_IFTYPE_ADHOC) ||
- 	    (vif->type == NL80211_IFTYPE_AP) ||
-@@ -700,7 +700,7 @@ static void rtl_op_bss_info_changed(stru
- 	}
- 
- out:
--	up(&rtlpriv->locks.conf_sem);
-+	mutex_unlock(&rtlpriv->locks.conf_mutex);
- }
- 
- static u64 rtl_op_get_tsf(struct ieee80211_hw *hw)
-@@ -852,7 +852,7 @@ static int rtl_op_set_key(struct ieee802
- 		  sta ? sta->addr : bcast_addr));
- 	rtlpriv->sec.being_setkey = true;
- 	rtl_ips_nic_on(hw);
--	down(&rtlpriv->locks.conf_sem);
-+	mutex_lock(&rtlpriv->locks.conf_mutex);
- 	/* <1> get encryption alg */
- 	switch (key->cipher) {
- 	case WLAN_CIPHER_SUITE_WEP40:
-@@ -970,7 +970,7 @@ static int rtl_op_set_key(struct ieee802
- 			 ("cmd_err:%x!!!!:\n", cmd));
- 	}
- out_unlock:
--	up(&rtlpriv->locks.conf_sem);
-+	mutex_unlock(&rtlpriv->locks.conf_mutex);
- 	rtlpriv->sec.being_setkey = false;
- 	return err;
- }
-@@ -986,7 +986,7 @@ static void rtl_op_rfkill_poll(struct ie
- 	if (!test_bit(RTL_STATUS_INTERFACE_START, &rtlpriv->status))
- 		return;
- 
--	down(&rtlpriv->locks.conf_sem);
-+	mutex_lock(&rtlpriv->locks.conf_mutex);
- 
- 	/*if Radio On return true here */
- 	radio_state = rtlpriv->cfg->ops->radio_onoff_checking(hw, &valid);
-@@ -1004,7 +1004,7 @@ static void rtl_op_rfkill_poll(struct ie
- 		}
- 	}
- 
--	up(&rtlpriv->locks.conf_sem);
-+	mutex_unlock(&rtlpriv->locks.conf_mutex);
- }
- 
- const struct ieee80211_ops rtl_ops = {
-Index: wireless-testing/drivers/net/wireless/rtlwifi/ps.c
-===================================================================
---- wireless-testing.orig/drivers/net/wireless/rtlwifi/ps.c
-+++ wireless-testing/drivers/net/wireless/rtlwifi/ps.c
-@@ -287,7 +287,7 @@ void rtl_ips_nic_on(struct ieee80211_hw
- 	struct rtl_ps_ctl *ppsc = rtl_psc(rtl_priv(hw));
- 	enum rf_pwrstate rtstate;
- 
--	down(&rtlpriv->locks.ips_sem);
-+	mutex_lock(&rtlpriv->locks.ips_mutex);
- 
- 	if (ppsc->b_inactiveps) {
- 		rtstate = ppsc->rfpwr_state;
-@@ -303,7 +303,7 @@ void rtl_ips_nic_on(struct ieee80211_hw
- 		}
- 	}
- 
--	up(&rtlpriv->locks.ips_sem);
-+	mutex_unlock(&rtlpriv->locks.ips_mutex);
- }
- 
- /*for FW LPS*/
-Index: wireless-testing/drivers/net/wireless/rtlwifi/wifi.h
-===================================================================
---- wireless-testing.orig/drivers/net/wireless/rtlwifi/wifi.h
-+++ wireless-testing/drivers/net/wireless/rtlwifi/wifi.h
-@@ -1193,8 +1193,8 @@ struct rtl_hal_cfg {
- 
- struct rtl_locks {
- 	/*sem */
--	struct semaphore ips_sem;
--	struct semaphore conf_sem;
-+	struct mutex ips_mutex;
-+	struct mutex conf_mutex;
- 
- 	/*spin lock */
- 	spinlock_t irq_th_lock;
+ Luis
