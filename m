@@ -1,122 +1,135 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:23358 "EHLO mga01.intel.com"
+Received: from mail.atheros.com ([12.19.149.2]:36039 "EHLO mail.atheros.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751857Ab0LVRGO (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 22 Dec 2010 12:06:14 -0500
-Subject: Re: [PATCH] iwlagn: fix scan tx antenna setting on 5Ghz band
-From: "Guy, Wey-Yi" <wey-yi.w.guy@intel.com>
-To: Stanislaw Gruszka <sgruszka@redhat.com>
-Cc: Intel Linux Wireless <ilw@linux.intel.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <20101222131515.GA2242@redhat.com>
-References: <1292864713-2756-1-git-send-email-sgruszka@redhat.com>
-	 <1292868816.22230.45.camel@wwguy-ubuntu> <20101221120511.GA2287@redhat.com>
-	 <1292952108.3997.39.camel@wwguy-huron>  <20101222131515.GA2242@redhat.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Wed, 22 Dec 2010 08:57:47 -0800
-Message-ID: <1293037067.3997.42.camel@wwguy-huron>
-Mime-Version: 1.0
+	id S1752256Ab0LFM3r (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 6 Dec 2010 07:29:47 -0500
+Received: from mail.atheros.com ([10.10.20.105])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Mon, 06 Dec 2010 04:29:33 -0800
+From: Vasanthakumar Thiagarajan <vasanth@atheros.com>
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>
+Subject: [PATCH V3 05/27] ath9k_hw: Initialize tx/rx gain table from initvals.h for AR9485
+Date: Mon, 6 Dec 2010 04:27:38 -0800
+Message-ID: <1291638480-8950-6-git-send-email-vasanth@atheros.com>
+In-Reply-To: <1291638480-8950-1-git-send-email-vasanth@atheros.com>
+References: <1291638480-8950-1-git-send-email-vasanth@atheros.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Stanislaw,
+Signed-off-by: Vasanthakumar Thiagarajan <vasanth@atheros.com>
+---
+ drivers/net/wireless/ath/ath9k/ar9003_hw.c |   82 +++++++++++++++++++++-------
+ 1 files changed, 62 insertions(+), 20 deletions(-)
 
-On Wed, 2010-12-22 at 05:15 -0800, Stanislaw Gruszka wrote:
-> Hi Wey
-> 
-> > > > If its is 2.4, we need to use the correct tx antenna, I think we can
-> > > > remove this block of code all together since check already done above.
-> > > > 
-> > > >   if (priv->cfg->scan_tx_antennas[band])
-> > > >   	scan_tx_antennas = priv->cfg->scan_tx_antennas[band];
-> > > 
-> > > Is correct to use all antennas on 5GHz when blutooth is enabled?
-> > > For me, more logical would be limiting to one antenna no matter of band,
-> > > since antennas are used anyway, only frequencies differ.
-> > > 
-> > > For rx_ant, we do not check the band, only limit to first one
-> > > when bluetooth is used.
-> > 
-> > there is no BT coex if 5GHz is used because there is not interference
-> > between 2.4 and 5GHz, so both antenna can be used. WiFi should operated
-> > in normal condition.
-> > 
-> > For 2.4GHz, we also can use both antenna if there is not high traffic
-> > load on BT side.
-> > 
-> > but you have a good catch, driver need to check band before use it
-> > (scan_tx_antenna[band])
-> 
-> So how about this patch (rfc only):
-> 
-> From 26d0570ed5cd85097702d0fedb2c3f831dce9714 Mon Sep 17 00:00:00 2001
-> From: Stanislaw Gruszka <sgruszka@redhat.com>
-> Date: Wed, 22 Dec 2010 13:03:31 +0100
-> Subject: [RFC PATCH] iwlagn: fix scan tx antenna setting on 5Ghz band
-> 
-> Looks that we do not set correctly antennas when scanning
-> on 5Ghz band and when bluetooth is enabled, because
-> priv->cfg->scan_tx_antennas[band] is only defined for
-> IEEE80211_BAND_2GHZ.
-> 
-> To fix we check band before limiting antennas to first one.
-> This allow to remove hard coded cfg->scan_tx_antennas[band].
-> 
-> Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
-> ---
->  drivers/net/wireless/iwlwifi/iwl-6000.c    |    7 +------
->  drivers/net/wireless/iwlwifi/iwl-agn-lib.c |    9 +++------
->  drivers/net/wireless/iwlwifi/iwl-core.h    |    1 -
->  3 files changed, 4 insertions(+), 13 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/iwlwifi/iwl-6000.c b/drivers/net/wireless/iwlwifi/iwl-6000.c
-> index f4bec32..af505bc 100644
-> --- a/drivers/net/wireless/iwlwifi/iwl-6000.c
-> +++ b/drivers/net/wireless/iwlwifi/iwl-6000.c
-> @@ -596,12 +596,7 @@ struct iwl_cfg iwl6005_2bg_cfg = {
->  	.need_dc_calib = true,					\
->  	.need_temp_offset_calib = true,				\
->  	.led_mode = IWL_LED_RF_STATE,				\
-> -	.adv_pm = true,						\
-> -	/*							\
-> -	 *Due to bluetooth, we transmit 2.4 GHz probes		\
-> -	 * only on antenna A					\
-> -	 */							\
-> -	.scan_tx_antennas[IEEE80211_BAND_2GHZ] = ANT_A
-> +	.adv_pm = true						\
->  
->  struct iwl_cfg iwl6030_2agn_cfg = {
->  	.name = "Intel(R) Centrino(R) Advanced-N 6230 AGN",
-> diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-lib.c b/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
-> index 4bc82fc..322a2bd 100644
-> --- a/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
-> +++ b/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
-> @@ -1492,15 +1492,12 @@ int iwlagn_request_scan(struct iwl_priv *priv, struct ieee80211_vif *vif)
->  	if (priv->cfg->scan_rx_antennas[band])
->  		rx_ant = priv->cfg->scan_rx_antennas[band];
->  
-> -	if (priv->cfg->scan_tx_antennas[band])
-> -		scan_tx_antennas = priv->cfg->scan_tx_antennas[band];
-> -
-> -	if (priv->cfg->bt_params &&
-> +	if (band == IEEE80211_BAND_2GHZ &&
-> +	    priv->cfg->bt_params &&
->  	    priv->cfg->bt_params->advanced_bt_coexist &&
->  	    priv->bt_full_concurrent) {
->  		/* operated as 1x1 in full concurrency mode */
-> -		scan_tx_antennas = first_antenna(
-> -			priv->cfg->scan_tx_antennas[band]);
-> +		scan_tx_antennas = first_antenna(scan_tx_antennas);
->  	}
-
-Please remove the checking for priv->bt_full_concurrent, so the checking
-will apply to all  scan request if BT coex is there.
-
-otherwise, the patch looks ok
-
-thanks
-Wey
-
-
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_hw.c b/drivers/net/wireless/ath/ath9k/ar9003_hw.c
+index f01c289..21a5bfe 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_hw.c
++++ b/drivers/net/wireless/ath/ath9k/ar9003_hw.c
+@@ -175,22 +175,52 @@ static void ar9003_tx_gain_table_apply(struct ath_hw *ah)
+ 	switch (ar9003_hw_get_tx_gain_idx(ah)) {
+ 	case 0:
+ 	default:
+-		INIT_INI_ARRAY(&ah->iniModesTxGain,
+-			       ar9300Modes_lowest_ob_db_tx_gain_table_2p2,
+-			       ARRAY_SIZE(ar9300Modes_lowest_ob_db_tx_gain_table_2p2),
+-			       5);
++		if (AR_SREV_9485(ah))
++			INIT_INI_ARRAY(&ah->iniModesTxGain,
++				       ar9485Modes_lowest_ob_db_tx_gain_1_0,
++				       ARRAY_SIZE(ar9485Modes_lowest_ob_db_tx_gain_1_0),
++				       5);
++		else
++			INIT_INI_ARRAY(&ah->iniModesTxGain,
++				       ar9300Modes_lowest_ob_db_tx_gain_table_2p2,
++				       ARRAY_SIZE(ar9300Modes_lowest_ob_db_tx_gain_table_2p2),
++				       5);
+ 		break;
+ 	case 1:
+-		INIT_INI_ARRAY(&ah->iniModesTxGain,
+-			       ar9300Modes_high_ob_db_tx_gain_table_2p2,
+-			       ARRAY_SIZE(ar9300Modes_high_ob_db_tx_gain_table_2p2),
+-			       5);
++		if (AR_SREV_9485(ah))
++			INIT_INI_ARRAY(&ah->iniModesTxGain,
++				       ar9485Modes_high_ob_db_tx_gain_1_0,
++				       ARRAY_SIZE(ar9485Modes_lowest_ob_db_tx_gain_1_0),
++				       5);
++		else
++			INIT_INI_ARRAY(&ah->iniModesTxGain,
++				       ar9300Modes_high_ob_db_tx_gain_table_2p2,
++				       ARRAY_SIZE(ar9300Modes_high_ob_db_tx_gain_table_2p2),
++				       5);
+ 		break;
+ 	case 2:
+-		INIT_INI_ARRAY(&ah->iniModesTxGain,
+-			       ar9300Modes_low_ob_db_tx_gain_table_2p2,
+-			       ARRAY_SIZE(ar9300Modes_low_ob_db_tx_gain_table_2p2),
+-			       5);
++		if (AR_SREV_9485(ah))
++			INIT_INI_ARRAY(&ah->iniModesTxGain,
++				       ar9485Modes_low_ob_db_tx_gain_1_0,
++				       ARRAY_SIZE(ar9485Modes_lowest_ob_db_tx_gain_1_0),
++				       5);
++		else
++			INIT_INI_ARRAY(&ah->iniModesTxGain,
++				       ar9300Modes_low_ob_db_tx_gain_table_2p2,
++				       ARRAY_SIZE(ar9300Modes_low_ob_db_tx_gain_table_2p2),
++				       5);
++		break;
++	case 3:
++		if (AR_SREV_9485(ah))
++			INIT_INI_ARRAY(&ah->iniModesTxGain,
++				       ar9485Modes_high_power_tx_gain_1_0,
++				       ARRAY_SIZE(ar9485Modes_high_power_tx_gain_1_0),
++				       5);
++		else
++			INIT_INI_ARRAY(&ah->iniModesTxGain,
++				       ar9300Modes_high_power_tx_gain_table_2p2,
++				       ARRAY_SIZE(ar9300Modes_high_power_tx_gain_table_2p2),
++				       5);
+ 		break;
+ 	}
+ }
+@@ -200,16 +230,28 @@ static void ar9003_rx_gain_table_apply(struct ath_hw *ah)
+ 	switch (ar9003_hw_get_rx_gain_idx(ah)) {
+ 	case 0:
+ 	default:
+-		INIT_INI_ARRAY(&ah->iniModesRxGain,
+-			       ar9300Common_rx_gain_table_2p2,
+-			       ARRAY_SIZE(ar9300Common_rx_gain_table_2p2),
+-			       2);
++		if (AR_SREV_9485(ah))
++			INIT_INI_ARRAY(&ah->iniModesRxGain,
++				       ar9485Common_rx_gain_1_0,
++				       ARRAY_SIZE(ar9485Common_rx_gain_1_0),
++				       2);
++		else
++			INIT_INI_ARRAY(&ah->iniModesRxGain,
++				       ar9300Common_rx_gain_table_2p2,
++				       ARRAY_SIZE(ar9300Common_rx_gain_table_2p2),
++				       2);
+ 		break;
+ 	case 1:
+-		INIT_INI_ARRAY(&ah->iniModesRxGain,
+-			       ar9300Common_wo_xlna_rx_gain_table_2p2,
+-			       ARRAY_SIZE(ar9300Common_wo_xlna_rx_gain_table_2p2),
+-			       2);
++		if (AR_SREV_9485(ah))
++			INIT_INI_ARRAY(&ah->iniModesRxGain,
++				       ar9485Common_wo_xlna_rx_gain_1_0,
++				       ARRAY_SIZE(ar9485Common_wo_xlna_rx_gain_1_0),
++				       2);
++		else
++			INIT_INI_ARRAY(&ah->iniModesRxGain,
++				       ar9300Common_wo_xlna_rx_gain_table_2p2,
++				       ARRAY_SIZE(ar9300Common_wo_xlna_rx_gain_table_2p2),
++				       2);
+ 		break;
+ 	}
+ }
+-- 
+1.7.0.4
 
