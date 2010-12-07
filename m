@@ -1,73 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qy0-f181.google.com ([209.85.216.181]:52582 "EHLO
-	mail-qy0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754240Ab0LANRB convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 1 Dec 2010 08:17:01 -0500
-Received: by qyk12 with SMTP id 12so9007962qyk.19
-        for <linux-wireless@vger.kernel.org>; Wed, 01 Dec 2010 05:17:01 -0800 (PST)
+Received: from mail.atheros.com ([12.19.149.2]:25762 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754963Ab0LGVYT (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 7 Dec 2010 16:24:19 -0500
+Received: from mail.atheros.com ([10.10.20.105])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Tue, 07 Dec 2010 13:24:04 -0800
+Date: Tue, 7 Dec 2010 13:24:16 -0800
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+CC: Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
+	"johannes@sipsolutions.net" <johannes@sipsolutions.net>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Amod Bodas <Amod.Bodas@Atheros.com>,
+	"pstew@google.com" <pstew@google.com>,
+	"stable@kernel.org" <stable@kernel.org>
+Subject: Re: [PATCH 2/3] ath9k: Fix power save count imbalance on
+ ath_radio_enable()
+Message-ID: <20101207212416.GB2582@tux>
+References: <1291425653-2884-1-git-send-email-lrodriguez@atheros.com>
+ <1291425653-2884-3-git-send-email-lrodriguez@atheros.com>
+ <AANLkTimd5ZKCWjDaVQcqx9t=_zoJC+UC5_4nkRQ-Uq8R@mail.gmail.com>
+ <20101207210130.GM2700@tuxdriver.com>
 MIME-Version: 1.0
-In-Reply-To: <1291169919-3867-2-git-send-email-javier@cozybit.com>
-References: <1291169919-3867-1-git-send-email-javier@cozybit.com>
-	<1291169919-3867-2-git-send-email-javier@cozybit.com>
-Date: Wed, 1 Dec 2010 08:16:58 -0500
-Message-ID: <AANLkTin3G2=T_qMSQdvXgUShtVSpg+MeH4EZX10QU9OQ@mail.gmail.com>
-Subject: Re: [PATCH 1/3] ath5k: Fix beaconing in mesh mode
-From: Bob Copeland <me@bobcopeland.com>
-To: Javier Cardona <javier@cozybit.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	Steve Derosier <steve@cozybit.com>, devel@lists.open80211s.org,
-	linux-wireless@vger.kernel.org, Jiri Slaby <jirislaby@gmail.com>,
-	Nick Kossifidis <mickflemm@gmail.com>,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <20101207210130.GM2700@tuxdriver.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Nov 30, 2010 at 9:18 PM, Javier Cardona <javier@cozybit.com> wrote:
-> This patch fixes the oops below when attempting to bring up a mesh
-> interface on ath5k hardware.
->
-> [  128.933099] kernel BUG at drivers/net/wireless/ath/ath5k/base.c:197!
-> [  128.933099] invalid opcode: 0000 [#1]
-> (...)
-> [  128.933099] Call Trace:
-> [  128.933099]  [<c83b77fa>] ? ath5k_beacon_update+0x57/0x1f8 [ath5k]
-> [  128.933099]  [<c02d9a40>] ? __sysfs_add_one+0x28/0x76
-> [  128.933099]  [<c83b830e>] ? ath5k_bss_info_changed+0x13f/0x173
-> [ath5k]
-> [  128.933099]  [<c82ff629>] ? ieee80211_config_beacon+0xc0/0x17e
-> [mac80211]
-> [  128.933099]  [<c82f073e>] ?
-> ieee80211_bss_info_change_notify+0x182/0x18b [mac80211]
-> [  128.933099]  [<c83b81cf>] ? ath5k_bss_info_changed+0x0/0x173 [ath5k]
-> [  128.933099]  [<c82ff6d6>] ? ieee80211_config_beacon+0x16d/0x17e
-> [mac80211]
-> [  128.933099]  [<c82ff753>] ? ieee80211_add_beacon+0x34/0x39 [mac80211]
-> [  128.933099]  [<c830a4ed>] ? ieee80211s_init+0xf8/0x10f [mac80211]
-> [  128.933099]  [<c830a5df>] ? ieee80211_mesh_init_sdata+0xdb/0x154 [mac80211]
-> ---
->  drivers/net/wireless/ath/ath5k/base.c |    8 +++++---
->  1 files changed, 5 insertions(+), 3 deletions(-)
->
-> diff --git a/drivers/net/wireless/ath/ath5k/base.c b/drivers/net/wireless/ath/ath5k/base.c
-> index a8d380a..73c7118 100644
-> --- a/drivers/net/wireless/ath/ath5k/base.c
-> +++ b/drivers/net/wireless/ath/ath5k/base.c
-> @@ -1921,8 +1921,9 @@ ath5k_beacon_send(struct ath5k_softc *sc)
->                /* NB: hw still stops DMA, so proceed */
->        }
->
-> -       /* refresh the beacon for AP mode */
-> -       if (sc->opmode == NL80211_IFTYPE_AP)
-> +       /* refresh the beacon for AP or MESH mode */
-> +       if (sc->opmode == NL80211_IFTYPE_AP ||
-> +                       sc->opmode == NL80211_IFTYPE_MESH_POINT)
->                ath5k_beacon_update(sc->hw, vif);
+On Tue, Dec 07, 2010 at 01:01:30PM -0800, John W. Linville wrote:
+> On Fri, Dec 03, 2010 at 05:34:08PM -0800, Luis R. Rodriguez wrote:
+> > On Fri, Dec 3, 2010 at 5:20 PM, Luis R. Rodriguez
+> > <lrodriguez@atheros.com> wrote:
+> > > Upon a failure we never call ath9k_ps_restore() on ath_radio_enable(),
+> > > this will throw off the sc->ps_usecount. When the sc->ps_usecount
+> > > is > 0 we never put the chip to full sleep. This drains battery,
+> > > and will also make the chip fail upon resume with:
+> > >
+> > > ath: Starting driver with initial channel: 5745 MHz
+> > > ath: timeout (100000 us) on reg 0x7000: 0xdeadbeef & 0x00000003 != 0x00000000
+> > >
+> > > This would make the chip useless upon resume.
+> > >
+> > > I cannot prove this can happen but in theory it is so best to
+> > > avoid this race completely and not have users complain about
+> > > a broken device after resume.
+> > >
+> > > Cc: stable@kernel.org
+> > > Cc: Paul Stewart <pstew@google.com>
+> > > Cc: Amod Bodas <amod.bodas@atheros.com>
+> > > Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+> > 
+> > John, this one is for you, sorry I failed to send it to you. And
+> > Johannes, sorry, I forgot to remove you from my send script :)
+> 
+> So, this is for 2.6.37?
 
-Do you need to update the beacon this often or just once?
-Adhoc doesn't need to do this, for example, because it doesn't
-need the TIM; I don't know about mesh.
+Yes.
 
--- 
-Bob Copeland %% www.bobcopeland.com
+> FWIW, it was the only PATCH in a series of RFCs...
+
+Thanks, yes, I noted this on my PATCH 0 cover letter. If you want
+you can disrecard this though and just consider the PATCH I posted
+in my new series. Its in that series as well, but let me just iron
+out that series first, please ignore that series as well for now.
+
+  Luis
