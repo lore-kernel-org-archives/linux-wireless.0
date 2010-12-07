@@ -1,34 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qy0-f174.google.com ([209.85.216.174]:56656 "EHLO
-	mail-qy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753028Ab0L2WHl (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:51687 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754259Ab0LGTPe (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 29 Dec 2010 17:07:41 -0500
-Received: by qyj19 with SMTP id 19so12625912qyj.19
-        for <linux-wireless@vger.kernel.org>; Wed, 29 Dec 2010 14:07:40 -0800 (PST)
+	Tue, 7 Dec 2010 14:15:34 -0500
+Date: Tue, 7 Dec 2010 14:06:31 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Bruno Randolf <br1@einfach.org>
+Cc: randy.dunlap@oracle.com, br1@thinktube.com, peterz@infradead.org,
+	blp@cs.stanford.edu, linux-wireless@vger.kernel.org,
+	linux-kernel@vger.kernel.org, Lars_Ericsson@telia.com, j@w1.fi,
+	stefanr@s5r6.in-berlin.de, kosaki.motohiro@jp.fujitsu.com,
+	akpm@linux-foundation.org, kevin.granade@gmail.com,
+	johannes@sipsolutions.net
+Subject: Re: [PATCH 3/3] nl80211/mac80211: Report signal average
+Message-ID: <20101207190631.GE2700@tuxdriver.com>
+References: <20101202101231.22988.33396.stgit@localhost6.localdomain6>
+ <20101202101242.22988.56087.stgit@localhost6.localdomain6>
 MIME-Version: 1.0
-In-Reply-To: <1293659584-9249-1-git-send-email-me@bobcopeland.com>
-References: <1293659584-9249-1-git-send-email-me@bobcopeland.com>
-Date: Wed, 29 Dec 2010 17:07:40 -0500
-Message-ID: <AANLkTi=1rVV9cTkkxByLLb_bjMz_jkoRi3Qsu9xQCk6H@mail.gmail.com>
-Subject: Re: # $linville='linville@tuxdriver.com';
-From: Bob Copeland <me@bobcopeland.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20101202101242.22988.56087.stgit@localhost6.localdomain6>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Dec 29, 2010 at 4:53 PM, Bob Copeland <me@bobcopeland.com> wrote:
-> @to = (
-> $linville,
-> );
->
-> @cc = (
-> $wl
-> );
+On Thu, Dec 02, 2010 at 07:12:43PM +0900, Bruno Randolf wrote:
+> Extend nl80211 to report an exponential weighted moving average (EWMA) of the
+> signal value. Since the signal value usually fluctuates between different
+> packets, an average can be more useful than the value of the last packet.
+> 
+> This uses the recently added generic EWMA library function.
+> 
+> --
+> v2:	fix ABI breakage and change factor to be a power of 2.
+> 
+> Signed-off-by: Bruno Randolf <br1@einfach.org>
 
-Heh, wrong args to my mailer script...
+Jouni and Johannes, are you satisfied with this version?
 
+John
 -- 
-Bob Copeland %% www.bobcopeland.com
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
