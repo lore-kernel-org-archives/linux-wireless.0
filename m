@@ -1,160 +1,86 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.19.149.2]:28045 "EHLO mail.atheros.com"
+Received: from mail.atheros.com ([12.19.149.2]:44443 "EHLO mail.atheros.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752566Ab0LGMMu (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 7 Dec 2010 07:12:50 -0500
-Received: from mail.atheros.com ([10.10.20.105])
+	id S1753610Ab0LGXNb (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 7 Dec 2010 18:13:31 -0500
+Received: from mail.atheros.com ([10.10.20.108])
 	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Tue, 07 Dec 2010 04:12:35 -0800
-From: Rajkumar Manoharan <rmanoharan@atheros.com>
+	for <linux-wireless@vger.kernel.org>; Tue, 07 Dec 2010 15:13:16 -0800
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
 To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>,
-	Rajkumar Manoharan <rmanoharan@atheros.com>
-Subject: [PATCH v4 2/2] ath9k: Add change_interface callback
-Date: Tue, 7 Dec 2010 17:42:19 +0530
-Message-ID: <1291723939-19262-2-git-send-email-rmanoharan@atheros.com>
-In-Reply-To: <1291723939-19262-1-git-send-email-rmanoharan@atheros.com>
-References: <1291723939-19262-1-git-send-email-rmanoharan@atheros.com>
+CC: <linux-wireless@vger.kernel.org>, <amod.bodas@atheros.com>,
+	<pstew@google.com>, "Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	<stable@kernel.org>
+Subject: [PATCH v3 2/5] ath9k: fix assumptions for idle calls on suspend/resume
+Date: Tue, 7 Dec 2010 15:13:20 -0800
+Message-ID: <1291763603-26546-3-git-send-email-lrodriguez@atheros.com>
+In-Reply-To: <1291763603-26546-1-git-send-email-lrodriguez@atheros.com>
+References: <1291763603-26546-1-git-send-email-lrodriguez@atheros.com>
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Add support to change interface type
-without bringing down the interface.
+mac80211 will notify drivers when to go idle and ath9k
+assumed that it would get further notifications for idle
+states after a device stop() config call but as per agreed
+semantics the idle state of the radio is left up to driver
+after mac80211 issues the stop() callback. The driver is
+resposnbile for ensuring the device remains idle after
+that even between suspend / resume calls.
 
-Signed-off-by: Rajkumar Manoharan <rmanoharan@atheros.com>
+This fixes suspend/resume when you issue suspend and resume
+twice on ath9k when ath9k_stop() was already called. We need
+to put the radio to full sleep in order for resume to work
+correctly.
+
+What might seem fishy is we are turning the radio off
+after resume. The reason why we do this is because we know
+we should not have anything enabled after a mac80211 tells
+us to stop(), if we resume and never get a start() we won't
+get another stop() by mac80211 so to be safe always bring
+the 802.11 device with the radio disabled after resume,
+this ensures that if we suspend we already have the radio
+disabled and only a start() will ever trigger it on.
+
+Cc: stable@kernel.org
+Cc: Paul Stewart <pstew@google.com>
+Cc: Amod Bodas <amod.bodas@atheros.com>
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
 ---
-v2: - ieee80211_iftype_p2p not needed
-    - missed to store p2p value
-v3:   nbcnvifs has to be checked while changing to beaconing mode
-v4:   rebased
-
- drivers/net/wireless/ath/ath9k/main.c |   91 +++++++++++++++++++++++++--------
- 1 files changed, 70 insertions(+), 21 deletions(-)
+ drivers/net/wireless/ath/ath9k/main.c |    4 ++--
+ drivers/net/wireless/ath/ath9k/pci.c  |    3 +++
+ 2 files changed, 5 insertions(+), 2 deletions(-)
 
 diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
-index 509da8f..775fd13 100644
+index be19b70..669fe6c 100644
 --- a/drivers/net/wireless/ath/ath9k/main.c
 +++ b/drivers/net/wireless/ath/ath9k/main.c
-@@ -1431,13 +1431,79 @@ out:
- 	return ret;
+@@ -1330,8 +1330,8 @@ static void ath9k_stop(struct ieee80211_hw *hw)
+ 
+ 	ath9k_ps_restore(sc);
+ 
+-	/* Finally, put the chip in FULL SLEEP mode */
+-	ath9k_setpower(sc, ATH9K_PM_FULL_SLEEP);
++	sc->ps_idle = true;
++	ath_radio_disable(sc, hw);
+ 
+ 	sc->sc_flags |= SC_OP_INVALID;
+ 
+diff --git a/drivers/net/wireless/ath/ath9k/pci.c b/drivers/net/wireless/ath/ath9k/pci.c
+index 747b287..7ca8499 100644
+--- a/drivers/net/wireless/ath/ath9k/pci.c
++++ b/drivers/net/wireless/ath/ath9k/pci.c
+@@ -309,6 +309,9 @@ static int ath_pci_resume(struct device *device)
+ 			    AR_GPIO_OUTPUT_MUX_AS_OUTPUT);
+ 	ath9k_hw_set_gpio(sc->sc_ah, sc->sc_ah->led_pin, 1);
+ 
++	sc->ps_idle = true;
++	ath_radio_disable(sc, hw);
++
+ 	return 0;
  }
  
-+static void ath9k_reclaim_beacon(struct ath_softc *sc,
-+				 struct ieee80211_vif *vif)
-+{
-+	struct ath_vif *avp = (void *)vif->drv_priv;
-+
-+	/* Disable SWBA interrupt */
-+	sc->sc_ah->imask &= ~ATH9K_INT_SWBA;
-+	ath9k_ps_wakeup(sc);
-+	ath9k_hw_set_interrupts(sc->sc_ah, sc->sc_ah->imask);
-+	ath9k_hw_stoptxdma(sc->sc_ah, sc->beacon.beaconq);
-+	tasklet_kill(&sc->bcon_tasklet);
-+	ath9k_ps_restore(sc);
-+
-+	ath_beacon_return(sc, avp);
-+	sc->sc_flags &= ~SC_OP_BEACONS;
-+
-+	if (sc->nbcnvifs > 0) {
-+		/* Re-enable beaconing */
-+		sc->sc_ah->imask |= ATH9K_INT_SWBA;
-+		ath9k_ps_wakeup(sc);
-+		ath9k_hw_set_interrupts(sc->sc_ah, sc->sc_ah->imask);
-+		ath9k_ps_restore(sc);
-+	}
-+}
-+
-+static int ath9k_change_interface(struct ieee80211_hw *hw,
-+				  struct ieee80211_vif *vif,
-+				  enum nl80211_iftype new_type,
-+				  bool p2p)
-+{
-+	struct ath_wiphy *aphy = hw->priv;
-+	struct ath_softc *sc = aphy->sc;
-+	struct ath_common *common = ath9k_hw_common(sc->sc_ah);
-+
-+	ath_print(common, ATH_DBG_CONFIG, "Change Interface\n");
-+	mutex_lock(&sc->mutex);
-+
-+	switch (new_type) {
-+	case NL80211_IFTYPE_AP:
-+	case NL80211_IFTYPE_ADHOC:
-+		if (sc->nbcnvifs >= ATH_BCBUF) {
-+			ath_print(common, ATH_DBG_FATAL,
-+				"No beacon slot available\n");
-+			return -ENOBUFS;
-+		}
-+		break;
-+	case NL80211_IFTYPE_STATION:
-+		/* Stop ANI */
-+		sc->sc_flags &= ~SC_OP_ANI_RUN;
-+		del_timer_sync(&common->ani.timer);
-+		if ((vif->type == NL80211_IFTYPE_AP) ||
-+		    (vif->type == NL80211_IFTYPE_ADHOC))
-+			ath9k_reclaim_beacon(sc, vif);
-+		break;
-+	default:
-+		ath_print(common, ATH_DBG_FATAL,
-+			"Interface type %d not yet supported\n", vif->type);
-+		mutex_unlock(&sc->mutex);
-+		return -ENOTSUPP;
-+	}
-+	vif->type = new_type;
-+	vif->p2p = p2p;
-+
-+	mutex_unlock(&sc->mutex);
-+	return 0;
-+}
-+
- static void ath9k_remove_interface(struct ieee80211_hw *hw,
- 				   struct ieee80211_vif *vif)
- {
- 	struct ath_wiphy *aphy = hw->priv;
- 	struct ath_softc *sc = aphy->sc;
- 	struct ath_common *common = ath9k_hw_common(sc->sc_ah);
--	struct ath_vif *avp = (void *)vif->drv_priv;
- 
- 	ath_print(common, ATH_DBG_CONFIG, "Detach Interface\n");
- 
-@@ -1450,26 +1516,8 @@ static void ath9k_remove_interface(struct ieee80211_hw *hw,
- 	/* Reclaim beacon resources */
- 	if ((sc->sc_ah->opmode == NL80211_IFTYPE_AP) ||
- 	    (sc->sc_ah->opmode == NL80211_IFTYPE_ADHOC) ||
--	    (sc->sc_ah->opmode == NL80211_IFTYPE_MESH_POINT)) {
--		/* Disable SWBA interrupt */
--		sc->sc_ah->imask &= ~ATH9K_INT_SWBA;
--		ath9k_ps_wakeup(sc);
--		ath9k_hw_set_interrupts(sc->sc_ah, sc->sc_ah->imask);
--		ath9k_hw_stoptxdma(sc->sc_ah, sc->beacon.beaconq);
--		ath9k_ps_restore(sc);
--		tasklet_kill(&sc->bcon_tasklet);
--	}
--
--	ath_beacon_return(sc, avp);
--	sc->sc_flags &= ~SC_OP_BEACONS;
--
--	if (sc->nbcnvifs) {
--		/* Re-enable SWBA interrupt */
--		sc->sc_ah->imask |= ATH9K_INT_SWBA;
--		ath9k_ps_wakeup(sc);
--		ath9k_hw_set_interrupts(sc->sc_ah, sc->sc_ah->imask);
--		ath9k_ps_restore(sc);
--	}
-+	    (sc->sc_ah->opmode == NL80211_IFTYPE_MESH_POINT))
-+		ath9k_reclaim_beacon(sc, vif);
- 
- 	sc->nvifs--;
- 
-@@ -2118,6 +2166,7 @@ struct ieee80211_ops ath9k_ops = {
- 	.start 		    = ath9k_start,
- 	.stop 		    = ath9k_stop,
- 	.add_interface 	    = ath9k_add_interface,
-+	.change_interface   = ath9k_change_interface,
- 	.remove_interface   = ath9k_remove_interface,
- 	.config 	    = ath9k_config,
- 	.configure_filter   = ath9k_configure_filter,
 -- 
-1.7.3.3
+1.7.3.2.90.gd4c43
 
