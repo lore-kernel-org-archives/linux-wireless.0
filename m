@@ -1,34 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:43175 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757253Ab0LBTpP (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 2 Dec 2010 14:45:15 -0500
-Date: Thu, 2 Dec 2010 14:30:24 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Sujith <m.sujith@gmail.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 2/2] ath9k_htc: Fix suspend/resume
-Message-ID: <20101202193024.GC2358@tuxdriver.com>
-References: <19701.62091.644444.121284@gargle.gargle.HOWL>
+Received: from mail.atheros.com ([12.19.149.2]:44460 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753610Ab0LGXNf (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 7 Dec 2010 18:13:35 -0500
+Received: from mail.atheros.com ([10.10.20.105])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Tue, 07 Dec 2010 15:13:21 -0800
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>, <amod.bodas@atheros.com>,
+	<pstew@google.com>, "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Subject: [PATCH v3 5/5] ath9k_hw: warn if we cannot change the power to the chip
+Date: Tue, 7 Dec 2010 15:13:23 -0800
+Message-ID: <1291763603-26546-6-git-send-email-lrodriguez@atheros.com>
+In-Reply-To: <1291763603-26546-1-git-send-email-lrodriguez@atheros.com>
+References: <1291763603-26546-1-git-send-email-lrodriguez@atheros.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <19701.62091.644444.121284@gargle.gargle.HOWL>
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Dec 01, 2010 at 12:30:27PM +0530, Sujith wrote:
-> From: Sujith Manoharan <Sujith.Manoharan@atheros.com>
-> 
-> The HW has to be set to FULLSLEEP mode during suspend,
-> when no interface has been brought up. Not doing this would
-> break resume, as the chip won't be powered up at all.
-> 
-> Signed-off-by: Sujith Manoharan <Sujith.Manoharan@atheros.com>
+Suspend requires the device to be in fullsleep otherwise upon
+resume the device becomes unresponsive. We need to ensure
+that when we want the device to go to sleep it yields to
+the request, otherwise we'll have a useless devices upon
+resume. Warn when changing the power fails as we need
+to look into these issues.
 
-Is this intended for 2.6.37?  It looks like it will apply there.
+Cc: Paul Stewart <pstew@google.com>
+Cc: Amod Bodas <amod.bodas@atheros.com>
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+---
+ drivers/net/wireless/ath/ath9k/hw.c |    7 +++++++
+ 1 files changed, 7 insertions(+), 0 deletions(-)
 
-John
+diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
+index 9f4398c..516227f 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.c
++++ b/drivers/net/wireless/ath/ath9k/hw.c
+@@ -1608,6 +1608,13 @@ bool ath9k_hw_setpower(struct ath_hw *ah, enum ath9k_power_mode mode)
+ 	}
+ 	ah->power_mode = mode;
+ 
++	/*
++	 * XXX: If this warning never comes up after a while then
++	 * simply keep the ATH_DBG_WARN_ON_ONCE() but make
++	 * ath9k_hw_setpower() return type void.
++	 */
++	ATH_DBG_WARN_ON_ONCE(!status);
++
+ 	return status;
+ }
+ EXPORT_SYMBOL(ath9k_hw_setpower);
 -- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+1.7.3.2.90.gd4c43
+
