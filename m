@@ -1,45 +1,28 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog105.obsmtp.com ([74.125.149.75]:57170 "HELO
-	na3sys009aog105.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1751582Ab0LCWfm convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 3 Dec 2010 17:35:42 -0500
-From: Bing Zhao <bzhao@marvell.com>
-To: "John W. Linville" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Date: Fri, 3 Dec 2010 14:22:57 -0800
-Subject: RE: [PATCH 0/3] mwifiex: remove some stuff...
-Message-ID: <477F20668A386D41ADCC57781B1F704307D5C0F9CB@SC-VEXCH1.marvell.com>
-References: <20101203191130.GD2348@tuxdriver.com>
- <1291411051-12916-1-git-send-email-linville@tuxdriver.com>
-In-Reply-To: <1291411051-12916-1-git-send-email-linville@tuxdriver.com>
-Content-Type: text/plain; charset=US-ASCII
+Received: from mail-iw0-f174.google.com ([209.85.214.174]:40193 "EHLO
+	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752493Ab0LGSDj (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 7 Dec 2010 13:03:39 -0500
+Received: by iwn9 with SMTP id 9so158179iwn.19
+        for <linux-wireless@vger.kernel.org>; Tue, 07 Dec 2010 10:03:38 -0800 (PST)
 MIME-Version: 1.0
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Tue, 7 Dec 2010 10:03:15 -0800
+Message-ID: <AANLkTikfsu2EC+5em+ryomd0BHf-4v43iy1PQn=tmy+t@mail.gmail.com>
+Subject: DFS implementation on mac80211
+To: linux-wireless <linux-wireless@vger.kernel.org>
+Cc: Kathy Giori <Kathy.Giori@atheros.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi John,
+Its time to start designing DFS upstream. To kick this off we will
+start pushing some design documentation soon and welcome anyone who is
+interested to join our weekly IRC meetings Tuesdays at 9am PST time on
+irc.freenode.net #linux-wireless. The page which we'll use to dump
+info is:
 
-> -----Original Message-----
-> From: John W. Linville [mailto:linville@tuxdriver.com]
-> Sent: Friday, December 03, 2010 1:17 PM
-> To: Bing Zhao; linux-wireless@vger.kernel.org
-> Cc: John W. Linville
-> Subject: [PATCH 0/3] mwifiex: remove some stuff...
-> 
-> This series remvoes lots of stuff -- some bits might even be necessary,
-> but if so it is worth thinking about why that may be.
+http://wireless.kernel.org/en/developers/DFS
 
-Thanks a lot for making changes to the driver.
-
-> 
-> Not tested...YMMV...
-
-I'll test all the patches you posted. After that, I will start working on the items suggested by Johannes.
-
-Thanks again.
-
-Bing
-
-> 
-> John
+  Luis
