@@ -1,54 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ey0-f174.google.com ([209.85.215.174]:53087 "EHLO
-	mail-ey0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754534Ab0L1Rhm (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:37920 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753879Ab0LGSjT (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 28 Dec 2010 12:37:42 -0500
-Received: by mail-ey0-f174.google.com with SMTP id 27so4306524eye.19
-        for <linux-wireless@vger.kernel.org>; Tue, 28 Dec 2010 09:37:42 -0800 (PST)
-From: Arik Nemtsov <arik@wizery.com>
-To: <linux-wireless@vger.kernel.org>
-Cc: Luciano Coelho <luciano.coelho@nokia.com>,
-	Arik Nemtsov <arik@wizery.com>
-Subject: [PATCH v3 17/18] wl1271: Read MAC address from NVS file on HW startup
-Date: Tue, 28 Dec 2010 19:36:47 +0200
-Message-Id: <1293557808-27068-18-git-send-email-arik@wizery.com>
-In-Reply-To: <1293557808-27068-1-git-send-email-arik@wizery.com>
-References: <1293557808-27068-1-git-send-email-arik@wizery.com>
+	Tue, 7 Dec 2010 13:39:19 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: linux-wireless@vger.kernel.org
+Cc: Javier Cardona <javier@cozybit.com>,
+	Bruno Randolf <br1@einfach.org>,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	Stephen Rothwell <sfr@canb.auug.org.au>,
+	Steve Derosier <steve@cozybit.com>, devel@lists.open80211s.org,
+	"John W. Linville" <linville@tuxdriver.com>
+Subject: [PATCH] cfg80211/mac80211: fix-up mesh join/leave build breakage
+Date: Tue,  7 Dec 2010 13:38:34 -0500
+Message-Id: <1291747114-25476-1-git-send-email-linville@tuxdriver.com>
+In-Reply-To: <1291746592.3607.53.camel@jlt3.sipsolutions.net>
+References: <1291746592.3607.53.camel@jlt3.sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Try to read the MAC address from the on-disk NVS file.
-A non-zero MAC address is required to add an AP interface.
+From: Javier Cardona <javier@cozybit.com>
 
-Signed-off-by: Arik Nemtsov <arik@wizery.com>
+Fix-up build breakage from "cfg80211/mac80211: add mesh join/leave
+commands" (commit 29cbe68c516a48a9a88b3226878570c6cbd83c02).
+
+Signed-off-by: Javier Cardona <javier@cozybit.com>
+Signed-off-by: John W. Linville <linville@tuxdriver.com>
 ---
- drivers/net/wireless/wl12xx/main.c |   12 ++++++++++++
- 1 files changed, 12 insertions(+), 0 deletions(-)
+ net/mac80211/main.c |    2 ++
+ 1 files changed, 2 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/net/wireless/wl12xx/main.c b/drivers/net/wireless/wl12xx/main.c
-index 0751589..ed06aee 100644
---- a/drivers/net/wireless/wl12xx/main.c
-+++ b/drivers/net/wireless/wl12xx/main.c
-@@ -3064,6 +3064,18 @@ int wl1271_register_hw(struct wl1271 *wl)
- 	if (wl->mac80211_registered)
- 		return 0;
- 
-+	ret = wl1271_fetch_nvs(wl);
-+	if (ret == 0) {
-+		u8 *nvs_ptr = (u8 *)wl->nvs->nvs;
-+
-+		wl->mac_addr[0] = nvs_ptr[11];
-+		wl->mac_addr[1] = nvs_ptr[10];
-+		wl->mac_addr[2] = nvs_ptr[6];
-+		wl->mac_addr[3] = nvs_ptr[5];
-+		wl->mac_addr[4] = nvs_ptr[4];
-+		wl->mac_addr[5] = nvs_ptr[3];
-+	}
-+
- 	SET_IEEE80211_PERM_ADDR(wl->hw, wl->mac_addr);
- 
- 	ret = ieee80211_register_hw(wl->hw);
+diff --git a/net/mac80211/main.c b/net/mac80211/main.c
+index 2de6976..973fee9 100644
+--- a/net/mac80211/main.c
++++ b/net/mac80211/main.c
+@@ -245,10 +245,12 @@ void ieee80211_bss_info_change_notify(struct ieee80211_sub_if_data *sdata,
+ 				sdata->vif.bss_conf.enable_beacon =
+ 					!!sdata->u.ibss.presp;
+ 				break;
++#ifdef CONFIG_MAC80211_MESH
+ 			case NL80211_IFTYPE_MESH_POINT:
+ 				sdata->vif.bss_conf.enable_beacon =
+ 					!!sdata->u.mesh.mesh_id_len;
+ 				break;
++#endif
+ 			default:
+ 				/* not reached */
+ 				WARN_ON(1);
 -- 
-1.7.1
+1.7.3.2
 
