@@ -1,89 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog113.obsmtp.com ([74.125.149.209]:45455 "HELO
-	na3sys009aog113.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1753671Ab0LDBAC (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:41479 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753848Ab0LGPzA (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 3 Dec 2010 20:00:02 -0500
-From: Bing Zhao <bzhao@marvell.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Frank Huang <frankh@marvell.com>
-Date: Fri, 3 Dec 2010 16:59:58 -0800
-Subject: RE: [PATCH 00/31] wireless: Marvell mwifiex driver for SD8787
-Message-ID: <477F20668A386D41ADCC57781B1F704307D5C0FA43@SC-VEXCH1.marvell.com>
-References: <1291253516-17815-1-git-send-email-bzhao@marvell.com>
-	 ,<1291380780.3499.119.camel@jlt3.sipsolutions.net>
-	 <477F20668A386D41ADCC57781B1F704307D59F9D6D@SC-VEXCH1.marvell.com>
-	 <77956EDC1B917843AC9B7965A3BD78B058FEF48E24@SC-VEXCH2.marvell.com>
- <1291401568.3499.142.camel@jlt3.sipsolutions.net>
-In-Reply-To: <1291401568.3499.142.camel@jlt3.sipsolutions.net>
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
+	Tue, 7 Dec 2010 10:55:00 -0500
+Subject: Re: [PATCH 5/5] mac80211: fix issuing idle calls when device open
+ count is 0
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	amod.bodas@atheros.com, pstew@google.com, stable@kernel.org
+In-Reply-To: <AANLkTimiw074uXxe3nPTNZ0j+NtZbHJU1bwiGsFUXMJ4@mail.gmail.com>
+References: <1291690135-4535-1-git-send-email-lrodriguez@atheros.com>
+	 <1291690135-4535-6-git-send-email-lrodriguez@atheros.com>
+	 <1291714709.3607.2.camel@jlt3.sipsolutions.net>
+	 <AANLkTikrLweKeSR-=XziaJ5rqDRf_Ny=mg1OD=jC4nqA@mail.gmail.com>
+	 <1291736887.3607.47.camel@jlt3.sipsolutions.net>
+	 <AANLkTimiw074uXxe3nPTNZ0j+NtZbHJU1bwiGsFUXMJ4@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Tue, 07 Dec 2010 16:54:58 +0100
+Message-ID: <1291737298.3607.48.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-SGkgSm9oYW5uZXMsDQoNClRoYW5rIHlvdSBzbyBtdWNoIGZvciB5b3VyIGNvbW1lbnRzIQ0KDQo+
-IC0tLS0tT3JpZ2luYWwgTWVzc2FnZS0tLS0tDQo+IEZyb206IEpvaGFubmVzIEJlcmcgW21haWx0
-bzpqb2hhbm5lc0BzaXBzb2x1dGlvbnMubmV0XQ0KPiBTZW50OiBGcmlkYXksIERlY2VtYmVyIDAz
-LCAyMDEwIDEwOjM5IEFNDQo+IFRvOiBGcmFuayBIdWFuZw0KPiBDYzogQmluZyBaaGFvOyBsaW51
-eC13aXJlbGVzc0B2Z2VyLmtlcm5lbC5vcmcNCj4gU3ViamVjdDogUkU6IFtQQVRDSCAwMC8zMV0g
-d2lyZWxlc3M6IE1hcnZlbGwgbXdpZmlleCBkcml2ZXIgZm9yIFNEODc4Nw0KPiANCj4gT24gRnJp
-LCAyMDEwLTEyLTAzIGF0IDA5OjAxIC0wODAwLCBGcmFuayBIdWFuZyB3cm90ZToNCj4gDQo+ID4g
-W3NuaXBdDQo+IA0KPiBNaW5kIHlvdSwgdGhlcmUgd2lsbCBkZWZpbml0ZWx5IGJlIG1vcmUgdGhp
-bmdzIHRvIGNoYW5nZSBpbiB0aGlzDQo+IGRyaXZlciAuLi4gdGhhdCB3YXMganVzdCB0aGUgdGlw
-IG9mIHRoZSBpY2ViZXJnIHJlYWxseS4NCj4gDQo+IEFsc28sIHRoZXJlIGlzIGEgbG90IG9mIHN0
-dWZmIHRhbGtpbmcgb2YgImlvY3RsIi4gSSBpbml0aWFsbHkgd3JvbmdseQ0KPiBhc3N1bWVkIHlv
-dSB3ZXJlIHVzaW5nIHdpcmVsZXNzIGV4dGVuc2lvbnMgb3Igc29tZXRoaW5nIC0tIEkgYXBvbG9n
-aXNlDQo+IGZvciB0aGF0IG1pc2NvbmNlcHRpb24gKGJ1dCB5b3UnbGwgaGF2ZSB0byBhZ3JlZSB0
-aGF0IGl0IHdhcyBhbiBlYXN5DQo+IG1pc3Rha2UgdG8gbWFrZSEpLiBIb3dldmVyLCB0aGUgImlv
-Y3RsIiBsYXllciBpbiB0aGUgZHJpdmVyIG5lZWRzIHRvIGJlDQo+IF9kaXNzb2x2ZWRfIGVudGly
-ZWx5LCB0aGVyZSdzIG5vIHJlYWwgcmVhc29uIHdoeSBmb3IgZXhhbXBsZQ0KPiBtd2lmaWV4X3Nl
-dF9yZl9jaGFubmVsKCkgc2hvdWxkbid0IGRpcmVjdGx5IGNhbGwgaW50byB0aGUgZnVuY3Rpb25z
-IHNldA0KPiB0aGF0IHRoZSBjaGFubmVsLCByYXRoZXIgdGhhbiBhbGxvY2F0aW5nIGFuICJpb2N0
-bCIgcmVxdWVzdCBhbmQgY2FsbGluZw0KPiBpdC4NCj4gDQo+IEEgYmV0dGVyIGV4bWFwbGUgbWln
-aHQgYmUgbXdpZmlleF9zZXRfdHhfcG93ZXIgLS0gaXQgY2FsbHMNCj4gbXdpZmlleF9yZXF1ZXN0
-X2lvY3RsLCB3aGljaCBjYWxscyBtd2lmaWV4X2lvY3RsLCB3aGljaCBjYWxscyBhDQo+IG1vZGUt
-ZGVwZW5kZW50IGlvY3RsIGhhbmRsZXIsIHdoaWNoIGlzLCBzYXksIG13aWZpZXhfb3BzX3N0YV9p
-b2N0bCAtLQ0KPiB3aGljaCB0aGVuIHBhcnNlcyB0aGUgYXJndW1lbnRzIGFuZCBjYWxscyBtd2lm
-aWV4X3Bvd2VyX2lvY3RsLiBUaGlzIGluDQo+IHR1cm4gY2FsbHMgbXdpZmlleF9wb3dlcl9pb2N0
-bF9zZXRfcG93ZXIsIHdoaWNoIGZpbmFsbHkgZG9lcyBzb21ldGhpbmcNCj4gbGlrZSBhbGxvY2F0
-aW5nIGEgY29tbWFuZC4NCj4gDQo+IEFsbW9zdCAqZXZlcnl0aGluZyogZGVzY3JpYmVkIGluIHRo
-YXQgcGFyYWdyYXBoIHNob3VsZCBiZSBkaXNzb2x2ZWQgLS0NCj4gbXdpZmlleF9zZXRfdHhfcG93
-ZXIoKSBzaG91bGQgY2FsbCBhIGZ1bmN0aW9uIHBvaW50ZXIgbGlrZQ0KPiBvcHMuc2V0X3R4X3Bv
-d2VyIHdoaWNoIGlzIHNldCB0byBhIGZ1bmN0aW9uIHNpbWlsYXIgdG8NCj4gbXdpZmlleF9wb3dl
-cl9pb2N0bF9zZXRfcG93ZXIsIGJ1dCB0aGF0IHNpbWlsYXIgZnVuY3Rpb24gc2hvdWxkIHByb2Jh
-Ymx5DQo+IHdhaXQgZm9yIHRoZSBjb21tYW5kIHRvIGJlIHByb2Nlc3NlZCBieSB0aGUgZGV2aWNl
-IGFzIHdlbGwuDQo+IA0KPiBUaGVyZSdzIHJlYWxseSBubyBuZWVkIHRvIG1hcnNoYWwgcGFyYW1l
-dGVycyBhbmQgc2V0dGluZ3MgYSBmZXcgdGltZXMNCj4gYmVmb3JlIHRoZXkgYXJyaXZlIGF0IHRo
-ZSBoYXJkd2FyZSENCg0KWW91IGFyZSByaWdodC4gVGhlc2UgaW9jdGxzIHNob3VsZG4ndCBiZSBu
-ZWNlc3NhcnkuIEkgd2lsbCBwdXQgdGhlbSBvbiBteSBsaXN0Lg0KDQo+IA0KPiBBIG1vcmUgbWlu
-b3IgdGhpbmc6IHRoZXJlIGFyZSBhIGxvdCBvZiBzdGF0aWMgZm9yd2FyZCBkZWNsYXJhdGlvbnMg
-dGhhdA0KPiBhcmVuJ3QgcmVhbGx5IG5lY2Vzc2FyeSBpZiB5b3Ugc2h1ZmZsZSB0aGUgY29kZSBh
-IGJpdCAtLSB0aGF0IHdvdWxkIGJlDQo+IGFwcHJlY2lhdGVkLg0KPg0KDQpZZXMsIHRoaXMgd2ls
-bCBiZSB0YWtlbiBjYXJlIG9mIHRvby4NCiANCj4gDQo+IE9uIGEgYnJvYWRlciB2aWV3LCBJIHdv
-dWxkIHN1Z2dlc3QgdGhhdCB5b3Ugc3RvcCB0aGlua2luZyBvZiB5b3VyIGRyaXZlcg0KPiBhcyBz
-cGVjaWFsLiBDbGVhcmx5LCBpdCBpcyBkZWFyIHRvIHlvdSwgYXMgYXJlIGV2ZXJ5b25lJ3MgZHJp
-dmVycyB0bw0KPiB0aGVtLCBidXQgaW4gdGhlIG92ZXJhbGwgZWNvc3lzdGVtIGl0IHNob3VsZCBm
-aXQgaW4gd2l0aCBhIG1pbmltdW0gb2YNCj4gZnV6eiwgYW5kIG5vdCByZXF1aXJlIHNwZWNpYWwg
-dG9vbHMgb3Igc3BlY2lhbCBwcm9ncmFtbWluZy4gVGhlIGN1c3RvbQ0KPiB3aXJlbGVzcyBldmVu
-dHMsIGZvciBleGFtcGxlLCBhcmUgZW50aXJlbHkgdXNlbGVzcyB0byBleGlzdGluZw0KPiBhcHBs
-aWNhdGlvbnMuIFNpbWlsYXJseSwgTkVUTElOS19NQVJWRUxMIChub3QgdG8gbWVudGlvbiB0aGUg
-YWJ1c2Ugb2YNCj4gdGhlIG5ldGxpbmsgc3lzdGVtIGEgZHJpdmVyIHByZXNlbnRzIHRoYXQgdW5p
-bGF0ZXJhbGx5IGRlY2xhcmVzIHRoYXQgYQ0KPiBnaXZlbiBuZXRsaW5rIElEIGlzIHJlc2VydmVk
-IGZvciBpdCB3aXRob3V0IG1ha2luZyB0aGF0IGtub3duIHRvIHRoZQ0KPiBrZXJuZWwgYXQgbGFy
-Z2UpLg0KDQpKb2huJ3MgcG9zdGVkIHBhdGNoZXMgdGhhdCByZW1vdmUgdGhlIHdpcmVsZXNzIGV2
-ZW50cywgaW5jbHVkaW5nIE5FVExJTktfTUFSVkVMTC4NCg0KPiANCj4gDQo+IEFsbCB0aGlzIHNh
-aWQsIHRob3VnaCwgZG9uJ3QgdGhpbmsgSSdtIGVudGlyZWx5IG5lZ2F0aXZlLiBJJ20gaGFwcHkN
-Cj4gdGhlcmUncyBhIGRyaXZlciwgYW5kIHRoYXQgeW91J3JlIHN0YXJ0aW5nIHRvIGVuZ2FnZSB3
-aXRoIHRoZSBjb21tdW5pdHkNCj4gKGFsdGhvdWdoIEkgZG9uJ3QgcXVpdGUgdW5kZXJzdGFuZCB3
-aHkgeW91ciByZXNwb25zZSB3YXMgcHJpdmF0ZSkuIEFuZA0KPiB0aGUgZHJpdmVyIGNvZGUgaXMg
-YXQgbGVhc3QgY2xlYW4gLS0gSSBtYXkgbm90IGFncmVlIHdpdGggaG93IGl0IHdvcmtzLA0KPiBi
-dXQgYXQgbGVhc3QgSSBkb24ndCBoYXZlIHRvIHJ1biBpdCB0aHJvdWdoIExpbmRlbnQgdG8gcHJv
-dGVjdCBteXNlbGYNCj4gZnJvbSBleWUgY2FuY2VyIDopDQoNClRoYW5rcyEgV2Ugd2lsbCBjb250
-aW51ZSBvdXIgZWZmb3J0cyB0byBtYWtlIHN1cmUgdGhhdCB0aGUgc3VibWl0dGVkIHBhdGNoZXMg
-YXJlIGNsZWFuLg0KDQo+IA0KPiBNaW5kIHlvdSwgSSBoYXZlbid0IGRvbmUgYSBjZmc4MDIxMSBB
-UEkgcmV2aWV3IGF0IGFsbC4gSSdsbCBkbyB0aGF0IHdoZW4NCj4gdGhlIGNvZGUgZmxvdyBpcyBl
-YXNpZXIgdG8gZm9sbG93IGFuZCBub3QgaGlkZGVuIGluIG11bHRpcGxlIGFic3RyYWN0aW9uDQo+
-IGxheWVycyBhbmQgImlvY3RscyIuDQoNCkkgYXBwcmVjaWF0ZSBpdC4gV2Ugd2lsbCBtYWtlIHRo
-ZSBjaGFuZ2VzIGZpcnN0Lg0KDQpCZXN0IHJlZ2FyZHMsDQoNCkJpbmcNCg0KPiANCj4gam9oYW5u
-ZXMNCg0K
+On Tue, 2010-12-07 at 07:51 -0800, Luis R. Rodriguez wrote:
+
+> >> >>       drv_stop(local);
+> >> >> +     ieee80211_recalc_idle_force(local);
+
+> > Because you can't call into drivers after you stop them? Shouldn't this
+> > be obvious?
+> 
+> That makes sense, but mac80211 is the one who tells the driver when
+> its idle or non-idle, if we stop the device do we want it to handle an
+> idle check itself? This change would only force out an idle change
+> notification, nothing else.
+
+I don't get what you're saying at all. Can you look at the code lines I
+quoted again?
+
+johannes
+
