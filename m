@@ -1,66 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.bugwerft.de ([212.112.241.193]:56862 "EHLO
-	mail.bugwerft.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756860Ab0LIOFl (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 9 Dec 2010 09:05:41 -0500
-From: Sven Neumann <s.neumann@raumfeld.com>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	Sven Neumann <s.neumann@raumfeld.com>
-Subject: [PATCH] cfg80211: update information elements in cached BSS struct
-Date: Thu,  9 Dec 2010 15:05:24 +0100
-Message-Id: <1291903524-8000-1-git-send-email-s.neumann@raumfeld.com>
-In-Reply-To: <1291902830.3540.8.camel@jlt3.sipsolutions.net>
-References: <1291902830.3540.8.camel@jlt3.sipsolutions.net>
+Received: from mail.atheros.com ([12.19.149.2]:23263 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751198Ab0LGHnC (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 7 Dec 2010 02:43:02 -0500
+Received: from mail.atheros.com ([10.10.20.105])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Mon, 06 Dec 2010 23:42:48 -0800
+Date: Tue, 7 Dec 2010 13:12:37 +0530
+From: Vasanthakumar Thiagarajan <vasanth@atheros.com>
+To: Ben Greear <greearb@candelatech.com>
+CC: "Luis R. Rodriguez" <mcgrof@gmail.com>,
+	"greearb@gmail.com" <greearb@gmail.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"ath9k-devel@venema.h4ckr.net" <ath9k-devel@venema.h4ckr.net>
+Subject: Re: [PATCH] ath9k: Check for NULL sta in ath_tx_start
+Message-ID: <20101207074237.GA2179@vasanth-laptop>
+References: <1291698829-22765-1-git-send-email-greearb@candelatech.com> <AANLkTik20SkL0Y5gK_ysYpW46gvb73m4h3SDcGb+d_LA@mail.gmail.com> <4CFDC7D8.3080100@candelatech.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <4CFDC7D8.3080100@candelatech.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-When a cached BSS struct is updated because a new beacon was received,
-the code replaces the cached information elements by the IEs from the
-new beacon. However it did not update the pub.information_elements
-and pub.len_information_elements fields leaving them either pointing
-to the old beacon IEs or in an inconsistent state where the data is
-replaced by the new beacon IEs but len_information_elements still has
-its value from the first beacon.
+On Tue, Dec 07, 2010 at 11:06:24AM +0530, Ben Greear wrote:
+> On 12/06/2010 09:21 PM, Luis R. Rodriguez wrote:
+> > On Mon, Dec 6, 2010 at 9:13 PM,<greearb@gmail.com>  wrote:
+> >> From: Ben Greear<greearb@candelatech.com>
+> >>
+> >> It can be NULL according to docs, and logging showed it
+> >> to be NULL in practice.
+> >>
+> >> Signed-off-by: Ben Greear<greearb@candelatech.com>
+> >
+> > Does this fix an oops? If so can you explain and provide the trace and
+> > resubmit and cc stable in the commit log?
+> 
+> I think it fixes the TID corruption I posted about earlier.  It seems
+> so obvious though, that I'm curious why no one else sees problems,
+> and why I didn't see more crashes in my setup.
+> 
+> (The paprd code appears to send with null STA, for instance, and my
+> printks showed lots of NULL stas in my 16-sta test setup, though I
+> don't think I'm using the paprd code path.)
 
-Fix this by updating the information elements fields if they are
-pointing to beacon IEs.
+paprd is used only with >= AR9003.
 
-Signed-off-by: Sven Neumann <s.neumann@raumfeld.com>
----
- net/wireless/scan.c |   11 +++++++++++
- 1 files changed, 11 insertions(+), 0 deletions(-)
-
-diff --git a/net/wireless/scan.c b/net/wireless/scan.c
-index 503ebb8..ea427f4 100644
---- a/net/wireless/scan.c
-+++ b/net/wireless/scan.c
-@@ -464,6 +464,9 @@ cfg80211_bss_update(struct cfg80211_registered_device *dev,
- 		if (res->pub.beacon_ies) {
- 			size_t used = dev->wiphy.bss_priv_size + sizeof(*res);
- 			size_t ielen = res->pub.len_beacon_ies;
-+			bool information_elements_is_beacon_ies =
-+				(found->pub.information_elements ==
-+				 found->pub.beacon_ies);
- 
- 			if (found->pub.beacon_ies &&
- 			    !found->beacon_ies_allocated &&
-@@ -487,6 +490,14 @@ cfg80211_bss_update(struct cfg80211_registered_device *dev,
- 					found->pub.len_beacon_ies = ielen;
- 				}
- 			}
-+
-+			/* Override IEs if they were from a beacon before */
-+			if (information_elements_is_beacon_ies) {
-+				found->pub.information_elements =
-+					found->pub.beacon_ies;
-+				found->pub.len_information_elements =
-+					found->pub.len_beacon_ies;
-+			}
- 		}
- 
- 		kref_put(&res->ref, bss_release);
--- 
-1.7.1
-
+Vasanth
