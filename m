@@ -1,42 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 128-177-27-249.ip.openhosting.com ([128.177.27.249]:42418 "EHLO
-	jmalinen.user.openhosting.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1756718Ab0LNHrU (ORCPT
+Received: from mail-iw0-f174.google.com ([209.85.214.174]:56093 "EHLO
+	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751549Ab0LGIKn (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 14 Dec 2010 02:47:20 -0500
-Date: Tue, 14 Dec 2010 09:46:53 +0200
-From: Jouni Malinen <j@w1.fi>
-To: Johannes Berg <johannes@sipsolutions.net>
+	Tue, 7 Dec 2010 03:10:43 -0500
+Received: by iwn9 with SMTP id 9so1268530iwn.19
+        for <linux-wireless@vger.kernel.org>; Tue, 07 Dec 2010 00:10:42 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <19709.59888.682471.11803@gargle.gargle.HOWL>
+References: <19701.62091.644444.121284@gargle.gargle.HOWL> <20101202193024.GC2358@tuxdriver.com>
+ <19704.23185.565826.890275@gargle.gargle.HOWL> <AANLkTinPLPoAHxauaXj8Sj=zjyHQPyxO0ku342ersZQ4@mail.gmail.com>
+ <19709.45926.38551.25130@gargle.gargle.HOWL> <AANLkTinNF2dnacLof_knM3OAf6ADCCPsb8DO1VE6c31U@mail.gmail.com>
+ <19709.46740.86437.390791@gargle.gargle.HOWL> <AANLkTinJLRMSSvLHgPP1Dw5BXsC3utAudJ=oSAsUUD8T@mail.gmail.com>
+ <19709.59888.682471.11803@gargle.gargle.HOWL>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Tue, 7 Dec 2010 00:10:21 -0800
+Message-ID: <AANLkTimq7F1UmRV=thdyRy1TozDGc4RbfniDYvBr2KUK@mail.gmail.com>
+Subject: Re: [PATCH 2/2] ath9k_htc: Fix suspend/resume
+To: Sujith <m.sujith@gmail.com>
 Cc: "John W. Linville" <linville@tuxdriver.com>,
 	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] nl80211: Add notification for dropped Deauth/Disassoc
-Message-ID: <20101214074653.GA28072@jm.kir.nu>
-References: <20101213220048.GA24752@jm.kir.nu>
- <1292310907.3569.1.camel@jlt3.sipsolutions.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1292310907.3569.1.camel@jlt3.sipsolutions.net>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Dec 14, 2010 at 08:15:07AM +0100, Johannes Berg wrote:
-> On Tue, 2010-12-14 at 00:00 +0200, Jouni Malinen wrote:
-> > + * @NL80211_CMD_UNPROT_DEAUTHENTICATE: Unprotected deauthentication frame
-> > + * @NL80211_CMD_UNPROT_DISASSOCIATE: Unprotected disassociation frame
-> 
-> I don't mind, but if we add the frame body should we really have two
-> commands? Or should we have just one? Are we likely to need similar
-> functionality for other frames? The only ones I can think of are class 3
-> frames from unassociated stations, but that seems like it should be
-> separate anyway.
+On Tue, Dec 7, 2010 at 12:01 AM, Sujith <m.sujith@gmail.com> wrote:
+> Luis R. Rodriguez wrote:
+>> Oh right, I see. Should we not wait to turn the radio until we get a
+>> non-idle config() call?
+>
+> Ideally, yes. But that would require extensive changes in ath9k_hw.
+> Initialization has to be pruned, powering up the chip has to be deferred ...
+>
+> Which is why I decided to settle for a simple band-aid for now. :)
 
-This one followed the existing example of NL80211_CMD_DEAUTH/DISASSOC,
-but well, those are for both notification and requests, so I can see the
-difference there.. For these notification-only ones, I would be fine
-having a single command if that is desirable. Though, I would probably
-not go as far as merging any other frames to this list since
-deauth/disassoc are special case for the AP starting to send these as
-replies to any Class 2 or 3 frame.
+Hm, well I was thinking more along the lines of what
+ath9k_htc_config() already does with IEEE80211_CONF_CHANGE_IDLE when
+enabling the radio. That seems right.
 
--- 
-Jouni Malinen                                            PGP id EFC895FA
+  Luis
