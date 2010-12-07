@@ -1,112 +1,85 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:43912 "EHLO
+Received: from mail.candelatech.com ([208.74.158.172]:60651 "EHLO
 	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753896Ab0LHS23 (ORCPT
+	with ESMTP id S1751942Ab0LGRNr (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 8 Dec 2010 13:28:29 -0500
-Message-ID: <4CFFCE47.8040305@candelatech.com>
-Date: Wed, 08 Dec 2010 10:28:23 -0800
+	Tue, 7 Dec 2010 12:13:47 -0500
+Message-ID: <4CFE6B42.8000806@candelatech.com>
+Date: Tue, 07 Dec 2010 09:13:38 -0800
 From: Ben Greear <greearb@candelatech.com>
 MIME-Version: 1.0
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-CC: Johannes Berg <johannes@sipsolutions.net>,
-	Tejun Heo <tj@kernel.org>, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] mac80211: Fix deadlock in ieee80211_do_stop.
-References: <1289592426-5367-1-git-send-email-greearb@candelatech.com> <1289594998.3736.11.camel@jlt3.sipsolutions.net> <4CDDAA3B.9090007@candelatech.com> <1289596096.3736.13.camel@jlt3.sipsolutions.net> <4CDE699B.70401@kernel.org> <4CE1A344.7040201@candelatech.com> <4CE292F7.4090200@kernel.org> <1289929258.3673.1.camel@jlt3.sipsolutions.net> <4CE396A9.1050908@kernel.org> <1290020005.3777.6.camel@jlt3.sipsolutions.net> <4CE4C8DD.6010806@kernel.org> <51f5dd53c39a77fff4efc1a99b189725@localhost> <4CE4D41F.1080005@kernel.org> <1290099585.3801.1.camel@jlt3.sipsolutions.net> <4CE68AF4.8060507@kernel.org> <1290189452.3768.3.camel@jlt3.sipsolutions.net> <4CE6E430.6080804@candelatech.com> <AANLkTimf9D-HP8i99ReVrTqcDHrWchT=HSeTywe_=as0@mail.gmail.com> <4CFFC214.6000608@candelatech.com> <4CFFCC31.1050408@candelatech.com>
-In-Reply-To: <4CFFCC31.1050408@candelatech.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+To: Vasanthakumar Thiagarajan <vasanth@atheros.com>
+CC: Vasanth Thiagarajan <Vasanth.Thiagarajan@atheros.com>,
+	"Luis R. Rodriguez" <mcgrof@gmail.com>,
+	"greearb@gmail.com" <greearb@gmail.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"ath9k-devel@venema.h4ckr.net" <ath9k-devel@venema.h4ckr.net>
+Subject: Re: [PATCH] ath9k: Check for NULL sta in ath_tx_start
+References: <1291698829-22765-1-git-send-email-greearb@candelatech.com> <AANLkTik20SkL0Y5gK_ysYpW46gvb73m4h3SDcGb+d_LA@mail.gmail.com> <4CFDC7D8.3080100@candelatech.com> <20101207074237.GA2179@vasanth-laptop> <4CFDE702.3020301@candelatech.com> <20101207083147.GA19720@vasanth-laptop>
+In-Reply-To: <20101207083147.GA19720@vasanth-laptop>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 12/08/2010 10:19 AM, Ben Greear wrote:
-> On 12/08/2010 09:36 AM, Ben Greear wrote:
->> On 11/19/2010 02:27 PM, Luis R. Rodriguez wrote:
->>> On Fri, Nov 19, 2010 at 12:55 PM, Ben Greear<greearb@candelatech.com>
->>> wrote:
->>>> On 11/19/2010 09:57 AM, Johannes Berg wrote:
->>>>>
->>>>> On Fri, 2010-11-19 at 15:34 +0100, Tejun Heo wrote:
->>>>>
->>>>>> Awesome. :-)
+On 12/07/2010 12:31 AM, Vasanthakumar Thiagarajan wrote:
+> On Tue, Dec 07, 2010 at 01:19:22PM +0530, Ben Greear wrote:
+>> On 12/06/2010 11:42 PM, Vasanthakumar Thiagarajan wrote:
+>>> On Tue, Dec 07, 2010 at 11:06:24AM +0530, Ben Greear wrote:
+>>>> On 12/06/2010 09:21 PM, Luis R. Rodriguez wrote:
+>>>>> On Mon, Dec 6, 2010 at 9:13 PM,<greearb@gmail.com>    wrote:
+>>>>>> From: Ben Greear<greearb@candelatech.com>
 >>>>>>
->>>>>> Ben, if you have trouble generating full trace, please let me know if
->>>>>> there's something I can buy which isn't too expensive to reproduce
->>>>>> the
->>>>>> problem. I would be happy to track it down myself.
+>>>>>> It can be NULL according to docs, and logging showed it
+>>>>>> to be NULL in practice.
+>>>>>>
+>>>>>> Signed-off-by: Ben Greear<greearb@candelatech.com>
 >>>>>
->>>>> Maybe you can try Ben's setup in kvm (or directly on your box if you
->>>>> like) with mac80211_hwsim. From a mac80211 POV it should be almost
->>>>> equivalent, although it'll do different memory allocation patterns
->>>>> etc.
+>>>>> Does this fix an oops? If so can you explain and provide the trace and
+>>>>> resubmit and cc stable in the commit log?
 >>>>
->>>> I tried manually backing out my patch, and now I can no longer
->>>> reproduce
->>>> the problem. Maybe something in -rc2 fixed it, or maybe some changes
->>>> to my environment just made it harder to hit.
+>>>> I think it fixes the TID corruption I posted about earlier.  It seems
+>>>> so obvious though, that I'm curious why no one else sees problems,
+>>>> and why I didn't see more crashes in my setup.
 >>>>
->>>> If you see no logical reason why calling flush_work with RTNL held
->>>> would cause trouble, then I guess we can just leave the code as is
->>>> for now.
->>>>
->>>> If you do want to play with this yourself, I think any ath5k type
->>>> adapter
->>>> with 64+ virtual stations configured would be a valid test case. My
->>>> application calls ifdown/ifup on them a few times after being created
->>>> and then generates traffic (and gathers stats, calls 'iwconfig', etc).
->>>> As configured in the original scenario that reproduced the problem,
->>>> the STAs had no encryption and were all associating with a single AP.
->>>> wpa_supplicant was not being used.
+>>>> (The paprd code appears to send with null STA, for instance, and my
+>>>> printks showed lots of NULL stas in my 16-sta test setup, though I
+>>>> don't think I'm using the paprd code path.)
 >>>
->>> FWIW, I had to do similar tests before and Ben offered up a perl
->>> script to do something similar to what his proprietary app does upon
->>> device bring up. I've modified it just a bit and you can find it here:
->>>
->>> http://www.kernel.org/pub/linux/kernel/people/mcgrof/scripts/poo.pl
+>>> paprd is used only with>= AR9003.
 >>
->> Well, I backed out my work-around patch yesterday, and then let
->> the system run overnight. This morning it is mostly dead, spewing
->> OOM errors and with a bunch of 'sh' processes using maximum amount
->> of CPU, blocked on trying to acquire rtnl.
->>
->> There is one 'ip' process that appears to hold rtnl and is trying
->> to call ieee80211_do_stop, which is probably blocked down in
->> the work-queue logic just like last time. Lots of worker processes
->> attempting to grab rtnl (and many other processes as well.)
->>
->> Lockdep was disabled because a proprietary module of mine was attempted
->> to be loaded, but it doesn't actual load due to symbol mismatch
->> (it's compiled against a non-debug kernel).
->>
->> If the lockdep info is critical, I can attempt to reproduce with
->> my module completed removed from the file system so it cannot attempt
->> to load, but it seems like last time the 'sysrq t' was of more interest
->> anyway.
->>
->> I have uploaded what I believe is a full 'sysrq t' output, interspersed
->> with OOM warnings that are constantly spewing to the console,
->> here:
->>
->> http://www.candelatech.com/~greearb/minicom_ath9k_log.txt
+>> Whoever coded it up hopefully had that hardware...so why didn't
+>> they see lots of crashes?
 >
-> And here's a log with lockdep enabled:
->
-> http://www.candelatech.com/~greearb/minicom_ath9k_log2.txt
->
-> The sysrq output starts at line 1346 in this file.
->
-> Seems I have a decent environment for reproducing this today,
-> in case you have any debug you'd like me to add.
+> I myself tested it lot of times, but did not see any crash, weird.
 
-And one more thing:  It seems it doesn't always block forever.
-The system in that last trace actually recovered after a
-minute or two, though it periodically enters the blocked
-state again.
+Looks like the offending change when in recently (11/4/10, one of Felix's
+patches).
 
-I'm going to re-add my hack, but will be happy to remove
-it and test more if you guys want to help debug the problem.
+That is probably why no one else is hitting this yet, and it
+isn't needed for stable I'm guessing....
 
 Thanks,
 Ben
+
+>
+> Vasanth
+>
+>>
+>> Thanks,
+>> Ben
+>>
+>>>
+>>> Vasanth
+>>
+>>
+>> --
+>> Ben Greear<greearb@candelatech.com>
+>> Candela Technologies Inc  http://www.candelatech.com
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
 
 -- 
 Ben Greear <greearb@candelatech.com>
