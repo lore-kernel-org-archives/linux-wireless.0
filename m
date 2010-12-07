@@ -1,65 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.19.149.2]:64252 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753565Ab0LOPbJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 15 Dec 2010 10:31:09 -0500
-Received: from mail.atheros.com ([10.10.20.108])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Wed, 15 Dec 2010 07:30:53 -0800
-From: Vasanthakumar Thiagarajan <vasanth@atheros.com>
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>
-Subject: [PATCH 3/7] ath9k_hw: Move get_streams() to hw.h
-Date: Wed, 15 Dec 2010 07:30:49 -0800
-Message-ID: <1292427053-5880-3-git-send-email-vasanth@atheros.com>
-In-Reply-To: <1292427053-5880-1-git-send-email-vasanth@atheros.com>
-References: <1292427053-5880-1-git-send-email-vasanth@atheros.com>
+Received: from mail-qy0-f174.google.com ([209.85.216.174]:54360 "EHLO
+	mail-qy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754321Ab0LGCfx (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 6 Dec 2010 21:35:53 -0500
+Received: by qyk11 with SMTP id 11so4405781qyk.19
+        for <linux-wireless@vger.kernel.org>; Mon, 06 Dec 2010 18:35:52 -0800 (PST)
+Message-ID: <4CFD9D96.6090003@lwfinger.net>
+Date: Mon, 06 Dec 2010 20:36:06 -0600
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: text/plain
+To: Bruno Randolf <br1@einfach.org>
+CC: linux-wireless <linux-wireless@vger.kernel.org>,
+	linville@tuxdriver.com, Johannes Berg <johannes@sipsolutions.net>
+Subject: Re: build error without  CONFIG_MAC80211_MESH
+References: <201012071123.03046.br1@einfach.org>
+In-Reply-To: <201012071123.03046.br1@einfach.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This helper can be used in multiple places. Also make
-it inline returning u8.
+On 12/06/2010 08:23 PM, Bruno Randolf wrote:
+> Hi!
+> 
+> Building current wireless-testing (master-2010-12-06) without the Mesh option 
+> is broken:
+> 
+>   CC [M]  net/mac80211/main.o
+> /home/br1/ath/wireless-testing/net/mac80211/main.c: In function 
+> ‘ieee80211_bss_info_change_notify’:
+> /home/br1/ath/wireless-testing/net/mac80211/main.c:250: error: ‘union 
+> <anonymous>’ has no member named ‘mesh’
+> make[3]: *** [net/mac80211/main.o] Error 1
+> make[2]: *** [net/mac80211] Error 2
+> make[1]: *** [net] Error 2
+> make: *** [sub-make] Error 2
+> 
+> It needs something like:
+> 
+> diff --git a/net/mac80211/main.c b/net/mac80211/main.c
+> index 40bd12e..3d988ca 100644
+> --- a/net/mac80211/main.c
+> +++ b/net/mac80211/main.c
+> @@ -245,10 +245,12 @@ void ieee80211_bss_info_change_notify(struct 
+> ieee80211_sub_if_data *sdata,
+>                                 sdata->vif.bss_conf.enable_beacon =
+>                                         !!sdata->u.ibss.presp;
+>                                 break;
+> +#ifdef CONFIG_MAC80211_MESH
+>                         case NL80211_IFTYPE_MESH_POINT:
+>                                 sdata->vif.bss_conf.enable_beacon =
+>                                         !!sdata->u.mesh.mesh_id_len;
+>                                 break;
+> +#endif
+>                         default:
+>                                 /* not reached */
+>                                 WARN_ON(1);
 
-Signed-off-by: Vasanthakumar Thiagarajan <vasanth@atheros.com>
----
- drivers/net/wireless/ath/ath9k/ar9003_paprd.c |    5 -----
- drivers/net/wireless/ath/ath9k/hw.h           |    5 +++++
- 2 files changed, 5 insertions(+), 5 deletions(-)
+Happens here too.
 
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_paprd.c b/drivers/net/wireless/ath/ath9k/ar9003_paprd.c
-index 69f7792..4c74479 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_paprd.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_paprd.c
-@@ -50,11 +50,6 @@ static int ar9003_get_training_power_2g(struct ath_hw *ah)
- 	return power;
- }
- 
--static int get_streams(int mask)
--{
--	return !!(mask & BIT(0)) + !!(mask & BIT(1)) + !!(mask & BIT(2));
--}
--
- static int ar9003_get_training_power_5g(struct ath_hw *ah)
- {
- 	struct ath_common *common = ath9k_hw_common(ah);
-diff --git a/drivers/net/wireless/ath/ath9k/hw.h b/drivers/net/wireless/ath/ath9k/hw.h
-index 97f22c4..fb64ab8 100644
---- a/drivers/net/wireless/ath/ath9k/hw.h
-+++ b/drivers/net/wireless/ath/ath9k/hw.h
-@@ -868,6 +868,11 @@ static inline struct ath_hw_ops *ath9k_hw_ops(struct ath_hw *ah)
- 	return &ah->ops;
- }
- 
-+static inline u8 get_streams(int mask)
-+{
-+	return !!(mask & BIT(0)) + !!(mask & BIT(1)) + !!(mask & BIT(2));
-+}
-+
- /* Initialization, Detach, Reset */
- const char *ath9k_hw_probe(u16 vendorid, u16 devid);
- void ath9k_hw_deinit(struct ath_hw *ah);
--- 
-1.7.0.4
-
+Larry
