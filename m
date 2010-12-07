@@ -1,62 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail30t.wh2.ocn.ne.jp ([125.206.180.136]:49443 "HELO
-	mail30t.wh2.ocn.ne.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1750795Ab0LOJwk (ORCPT
+Received: from mail.candelatech.com ([208.74.158.172]:55012 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753919Ab0LGWGp (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 15 Dec 2010 04:52:40 -0500
-Received: from vs3000.wh2.ocn.ne.jp (125.206.180.163)
-	by mail30t.wh2.ocn.ne.jp (RS ver 1.0.95vs) with SMTP id 0-0938406756
-	for <linux-wireless@vger.kernel.org>; Wed, 15 Dec 2010 18:52:38 +0900 (JST)
-From: Bruno Randolf <br1@einfach.org>
-To: Daniel Halperin <dhalperi@cs.washington.edu>
-Subject: Re: [PATCH 1/2] nl80211: Export available antennas
-Date: Wed, 15 Dec 2010 18:53:10 +0900
-Cc: johannes@sipsolutions.net, linville@tuxdriver.com,
-	linux-wireless@vger.kernel.org
-References: <20101214022018.2343.8216.stgit@localhost6.localdomain6> <201012141131.59086.br1@einfach.org> <AANLkTi=6o=tK1fRhOtchT9UPy+EWCcqzhebVYv+8XJP3@mail.gmail.com>
-In-Reply-To: <AANLkTi=6o=tK1fRhOtchT9UPy+EWCcqzhebVYv+8XJP3@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Message-Id: <201012151853.10256.br1@einfach.org>
+	Tue, 7 Dec 2010 17:06:45 -0500
+From: greearb@candelatech.com
+To: linux-wireless@vger.kernel.org
+Cc: Ben Greear <greearb@candelatech.com>
+Subject: [PATCH] wireless: Remove spurious warning in mlme.c
+Date: Tue,  7 Dec 2010 14:06:39 -0800
+Message-Id: <1291759599-14698-1-git-send-email-greearb@candelatech.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue December 14 2010 12:11:52 Daniel Halperin wrote:
-> Several of the Intel ones, I believe.  For instance 4965 can RX with 3
-> antennas but can maybe only TX with A and B?  Intel also has a 1x2
-> (5100 maybe?) chipset.
+From: Ben Greear <greearb@candelatech.com>
 
-A lot of maybees ;) Can anyone else comment? Do we need available antennas 
-separately for RX and TX?
+Seems that we should not be warning if all of the
+authtry_bsses are already NULL.
 
-bruno
+Signed-off-by: Ben Greear <greearb@candelatech.com>
+---
+:100644 100644 d7680f2... 866d016... M	net/wireless/mlme.c
+ net/wireless/mlme.c |    5 +++--
+ 1 files changed, 3 insertions(+), 2 deletions(-)
 
-> On Mon, Dec 13, 2010 at 6:31 PM, Bruno Randolf <br1@einfach.org> wrote:
-> > On Tue December 14 2010 11:23:09 Daniel Halperin wrote:
-> >> > diff --git a/include/linux/nl80211.h b/include/linux/nl80211.h
-> >> > index b8fa25d..63b603c 100644
-> >> > --- a/include/linux/nl80211.h
-> >> > +++ b/include/linux/nl80211.h
-> >> > @@ -841,6 +841,9 @@ enum nl80211_commands {
-> >> >  *     the hardware should not be configured to receive on this
-> >> > antenna. *     For a more detailed descripton see
-> >> > @NL80211_ATTR_WIPHY_ANTENNA_TX. *
-> >> > + * @NL80211_ATTR_WIPHY_ANTENNA_AVAIL: Bitmap of antennas which are
-> >> > available for + *     configuration via the above parameters.
-> >> > + *
-> >> 
-> >> Not clear exactly what the point of this is -- there's no commit
-> >> message -- but should not this API distinguish between TX and RX?
-> >> E.g., several chipsets can only TX from a subset of RX antennas.
-> > 
-> > This is just the nl80211 part of a patch that got merged earlier, the
-> > description of which has more info:
-> > 
-> > https://patchwork.kernel.org/patch/389682/
-> > 
-> > If it's necessary to distinguish between RX and TX it has to be done
-> > there too. Can you give us examples of these chipsets which you
-> > mentioned?
-> > 
-> > bruno
+diff --git a/net/wireless/mlme.c b/net/wireless/mlme.c
+index d7680f2..866d016 100644
+--- a/net/wireless/mlme.c
++++ b/net/wireless/mlme.c
+@@ -266,7 +266,7 @@ EXPORT_SYMBOL(cfg80211_send_disassoc);
+ static void __cfg80211_auth_remove(struct wireless_dev *wdev, const u8 *addr)
+ {
+ 	int i;
+-	bool done = false;
++	bool done = true;
+ 
+ 	ASSERT_WDEV_LOCK(wdev);
+ 
+@@ -277,9 +277,10 @@ static void __cfg80211_auth_remove(struct wireless_dev *wdev, const u8 *addr)
+ 			cfg80211_unhold_bss(wdev->authtry_bsses[i]);
+ 			cfg80211_put_bss(&wdev->authtry_bsses[i]->pub);
+ 			wdev->authtry_bsses[i] = NULL;
+-			done = true;
+ 			break;
+ 		}
++		else if (wdev->authtry_bsses[i])
++			done = false;
+ 	}
+ 
+ 	WARN_ON(!done);
+-- 
+1.7.2.3
+
