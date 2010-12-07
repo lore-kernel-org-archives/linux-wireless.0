@@ -1,75 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.19.149.2]:36962 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932153Ab0LOBRv (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 14 Dec 2010 20:17:51 -0500
-Received: from mail.atheros.com ([10.10.20.108])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Tue, 14 Dec 2010 17:17:36 -0800
-From: Vipin Mehta <vmehta@atheros.com>
-To: <greg@kroah.com>
-CC: <linux-wireless@vger.kernel.org>, <vmehta@atheros.com>,
-	<devel@driverdev.osuosl.org>
-Subject: [PATCH] staging: ath6kl: Fixing device NULL pointer dereference
-Date: Tue, 14 Dec 2010 17:17:59 -0800
-Message-ID: <1292375879-32085-1-git-send-email-vmehta@atheros.com>
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:55120 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754558Ab0LGUAH (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 7 Dec 2010 15:00:07 -0500
+Date: Tue, 7 Dec 2010 14:46:46 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Sujith <m.sujith@gmail.com>
+Cc: "Luis R. Rodriguez" <mcgrof@gmail.com>,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 2/2] ath9k_htc: Fix suspend/resume
+Message-ID: <20101207194646.GG2700@tuxdriver.com>
+References: <19701.62091.644444.121284@gargle.gargle.HOWL>
+ <20101202193024.GC2358@tuxdriver.com>
+ <19704.23185.565826.890275@gargle.gargle.HOWL>
+ <AANLkTinPLPoAHxauaXj8Sj=zjyHQPyxO0ku342ersZQ4@mail.gmail.com>
+ <19709.45926.38551.25130@gargle.gargle.HOWL>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <19709.45926.38551.25130@gargle.gargle.HOWL>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Fixing the device instance being passed to set_wiphy_dev() from
-NULL to the one being returned by the MMC stack probe callback.
+On Tue, Dec 07, 2010 at 09:39:10AM +0530, Sujith wrote:
+> Luis R. Rodriguez wrote:
+> > Just curious, if you revert this patch and apply the ones I just
+> > posted, does it fix it, or is this patch required either way?
+> 
+> Well, I don't see this patch in -testing, -next-2.6 or -2.6.
+> Maybe Linville overlooked this patch.
 
-Signed-off-by: Vipin Mehta <vmehta@atheros.com>
----
- drivers/staging/ath6kl/os/linux/ar6000_drv.c |   19 ++++++++++++-------
- 1 files changed, 12 insertions(+), 7 deletions(-)
+Obviously I didn't overlook it, or I wouldn't have asked about whether
+or not it should go to 2.6.37...
 
-diff --git a/drivers/staging/ath6kl/os/linux/ar6000_drv.c b/drivers/staging/ath6kl/os/linux/ar6000_drv.c
-index a659f70..9f3e928 100644
---- a/drivers/staging/ath6kl/os/linux/ar6000_drv.c
-+++ b/drivers/staging/ath6kl/os/linux/ar6000_drv.c
-@@ -1608,6 +1608,15 @@ ar6000_avail_ev(void *context, void *hif_handle)
-     struct wireless_dev *wdev;
- #endif /* ATH6K_CONFIG_CFG80211 */
-     A_STATUS init_status = A_OK;
-+    HIF_DEVICE_OS_DEVICE_INFO osDevInfo;
-+
-+    A_MEMZERO(&osDevInfo, sizeof(osDevInfo));
-+    if ( A_FAILED( HIFConfigureDevice(hif_handle, HIF_DEVICE_GET_OS_DEVICE,
-+                    &osDevInfo, sizeof(osDevInfo))) )
-+    {
-+        AR_DEBUG_PRINTF(ATH_DEBUG_ERR,("%s: Failed to get OS device instance\n", __func__));
-+        return A_ERROR;
-+    }
- 
-     AR_DEBUG_PRINTF(ATH_DEBUG_INFO,("ar6000_available\n"));
- 
-@@ -1627,7 +1636,8 @@ ar6000_avail_ev(void *context, void *hif_handle)
-     device_index = i;
- 
- #ifdef ATH6K_CONFIG_CFG80211
--    wdev = ar6k_cfg80211_init(NULL);
-+    wdev = ar6k_cfg80211_init(osDevInfo.pOSDevice);
-+
-     if (IS_ERR(wdev)) {
-         AR_DEBUG_PRINTF(ATH_DEBUG_ERR, ("%s: ar6k_cfg80211_init failed\n", __func__));
-         return A_ERROR;
-@@ -1672,12 +1682,7 @@ ar6000_avail_ev(void *context, void *hif_handle)
- 
- #ifdef SET_NETDEV_DEV
-     if (ar_netif) { 
--        HIF_DEVICE_OS_DEVICE_INFO osDevInfo;
--        A_MEMZERO(&osDevInfo, sizeof(osDevInfo));
--        if ( A_SUCCESS( HIFConfigureDevice(hif_handle, HIF_DEVICE_GET_OS_DEVICE,
--                        &osDevInfo, sizeof(osDevInfo))) ) {
--            SET_NETDEV_DEV(dev, osDevInfo.pOSDevice);
--        }
-+        SET_NETDEV_DEV(dev, osDevInfo.pOSDevice);
-     }
- #endif 
- 
+> Applying 4/5 and 5/5 from your series seems to fix the issue though.
+> I am able to suspend/resume without hiccups with UB95.
+
+But now this begs the question of whether this should be applied at all?
+
+John
 -- 
-1.6.3.3
-
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
