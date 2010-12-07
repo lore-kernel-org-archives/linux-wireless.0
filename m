@@ -1,122 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from hrndva-omtalb.mail.rr.com ([71.74.56.124]:64967 "EHLO
-	hrndva-omtalb.mail.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757303Ab0LBQhD (ORCPT
+Received: from na3sys009aog104.obsmtp.com ([74.125.149.73]:39700 "HELO
+	na3sys009aog104.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1754346Ab0LGTeg (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 2 Dec 2010 11:37:03 -0500
-Date: Thu, 02 Dec 2010 10:36:53 -0600
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: John W Linville <linville@tuxdriver.com>,
-	Michael Buesch <mb@bu3sch.de>
-Cc: b43-dev@lists.infradead.org, linux-wireless@vger.kernel.org
-Subject: [RFC/RFT] ssb: Attempt to recover from SPROM CRC error
-Message-ID: <4cf7cb25.SwkH7gALTG7E00Zb%Larry.Finger@lwfinger.net>
+	Tue, 7 Dec 2010 14:34:36 -0500
+From: Bing Zhao <bzhao@marvell.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Amitkumar Karwar <akarwar@marvell.com>,
+	Kiran Divekar <dkiran@marvell.com>,
+	Frank Huang <frankh@marvell.com>
+Date: Tue, 7 Dec 2010 11:32:09 -0800
+Subject: RE: [PATCH] mwifiex: remove some element ID's definitions
+Message-ID: <477F20668A386D41ADCC57781B1F704307D5C10021@SC-VEXCH1.marvell.com>
+References: <1291702585-30285-1-git-send-email-bzhao@marvell.com>
+ <1291714911.3607.6.camel@jlt3.sipsolutions.net>
+In-Reply-To: <1291714911.3607.6.camel@jlt3.sipsolutions.net>
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Current code defaults to SPROM revision 1 if there is a CRC error. In at
-least one known case, most of the corrupt contents are reasonable and
-it is possible to extract the correct MAC address and TX power settings
-from what is read. With this patch, an attempt is made to match the
-apparent revision number with certain SPROM signatures. For those revisions
-without such a feature, a reasonable guess is made. If the apparent
-revision is invalid, or if the signature does not match, the previous
-behavior is kept.
-
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
----
-
-John,
-
-Could you please test this patch with your card?
-
-Thanks,
-
-Larry
----
-
-Index: linux-2.6/drivers/ssb/pci.c
-===================================================================
---- linux-2.6.orig/drivers/ssb/pci.c
-+++ linux-2.6/drivers/ssb/pci.c
-@@ -620,6 +620,7 @@ static int ssb_pci_sprom_get(struct ssb_
- 	const struct ssb_sprom *fallback;
- 	int err = -ENOMEM;
- 	u16 *buf;
-+	u16 revision;
- 
- 	if (!ssb_is_sprom_available(bus)) {
- 		ssb_printk(KERN_ERR PFX "No SPROM available!\n");
-@@ -671,6 +672,50 @@ static int ssb_pci_sprom_get(struct ssb_
- 			}
- 			ssb_printk(KERN_WARNING PFX "WARNING: Invalid"
- 				   " SPROM CRC (corrupt SPROM)\n");
-+			/* At this point, we have a faulty SPROM image.
-+			 * In case only part of it is corrupt, try to
-+			 * determine what rev we might have */
-+			revision = buf[SSB_SPROMSIZE_WORDS_R4 - 1] & 0x00FF;
-+			switch (revision) {
-+			case 4:
-+			case 5:
-+				/* Rev 4 and 5 have 0x5372 at byte offset
-+				 * SSB_SPROM4_SIG */
-+				if (buf[SSB_SPROM4_SIG >> 1] == 0x5372)
-+					sprom->revision = revision;
-+				break;
-+			case 8:
-+				/* Rev has 0x5372 at byte offset
-+				 * SSB_SPROM8_SIG */
-+				if (buf[SSB_SPROM8_SIG >> 1] == 0x5372)
-+					sprom->revision = revision;
-+				break;
-+			default:
-+				/* Try a rev 1, 2, or 3 size. This test will
-+				 * not be robust as these versions have no
-+				 * signature value */
-+				revision = buf[SSB_SPROMSIZE_WORDS_R123 - 1] &
-+					   0x00FF;
-+				switch (revision) {
-+				case 1:
-+					/* Rev 1 will have 0xFFFF in the board
-+					 * flags high position */
-+					if (buf[SSB_SPROM2_BFLHI>>1] == 0xFFFF)
-+						sprom->revision = revision;
-+					break;
-+				case 2:
-+				case 3:
-+					/* Revs 2 and 3 will not have 0xFFFF in
-+					 * the board flags high position */
-+					if (buf[SSB_SPROM2_BFLHI>>1] != 0xFFFF)
-+						sprom->revision = revision;
-+					break;
-+				default:
-+					/* The revision is not reasonable */
-+					break;
-+				}
-+				break;
-+			}
- 		}
- 	}
- 	err = sprom_extract(bus, sprom, buf, bus->sprom_size);
-Index: linux-2.6/include/linux/ssb/ssb_regs.h
-===================================================================
---- linux-2.6.orig/include/linux/ssb/ssb_regs.h
-+++ linux-2.6/include/linux/ssb/ssb_regs.h
-@@ -266,6 +266,7 @@
- #define  SSB_SPROM3_OFDMGPO		0x107A	/* G-PHY OFDM Power Offset (4 bytes, BigEndian) */
- 
- /* SPROM Revision 4 */
-+#define SSB_SPROM4_SIG			0x0040	/* Rev 4/5 signature */
- #define SSB_SPROM4_BFLLO		0x0044	/* Boardflags (low 16 bits) */
- #define SSB_SPROM4_BFLHI		0x0046  /* Board Flags Hi */
- #define SSB_SPROM4_IL0MAC		0x004C	/* 6 byte MAC address for a/b/g/n */
-@@ -329,6 +330,7 @@
- #define  SSB_SPROM5_GPIOB_P3_SHIFT	8
- 
- /* SPROM Revision 8 */
-+#define SSB_SPROM8_SIG			0x0080	/* Rev 8 signature */
- #define SSB_SPROM8_BOARDREV		0x0082	/* Board revision */
- #define SSB_SPROM8_BFLLO		0x0084	/* Board flags (bits 0-15) */
- #define SSB_SPROM8_BFLHI		0x0086	/* Board flags (bits 16-31) */
+SGkgSm9oYW5uZXMsDQoNCj4gLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCj4gRnJvbTogSm9o
+YW5uZXMgQmVyZyBbbWFpbHRvOmpvaGFubmVzQHNpcHNvbHV0aW9ucy5uZXRdDQo+IFNlbnQ6IFR1
+ZXNkYXksIERlY2VtYmVyIDA3LCAyMDEwIDE6NDIgQU0NCj4gVG86IEJpbmcgWmhhbw0KPiBDYzog
+bGludXgtd2lyZWxlc3NAdmdlci5rZXJuZWwub3JnOyBKb2huIFcuIExpbnZpbGxlOyBBbWl0a3Vt
+YXIgS2Fyd2FyOyBLaXJhbiBEaXZla2FyOyBGcmFuayBIdWFuZw0KPiBTdWJqZWN0OiBSZTogW1BB
+VENIXSBtd2lmaWV4OiByZW1vdmUgc29tZSBlbGVtZW50IElEJ3MgZGVmaW5pdGlvbnMNCj4gDQo+
+IE9uIE1vbiwgMjAxMC0xMi0wNiBhdCAyMjoxNiAtMDgwMCwgQmluZyBaaGFvIHdyb3RlOg0KPiA+
+IEZyb206IEFtaXRrdW1hciBLYXJ3YXIgPGFrYXJ3YXJAbWFydmVsbC5jb20+DQo+ID4NCj4gPiBU
+aG9zZSBhcmUgYWxyZWFkeSBkZWZpbmVkIGluIGluY2x1ZGUvbGludXgvaWVlZTgwMjExLmgNCj4g
+PiB1bmRlciAiZW51bSBpZWVlODAyMTFfZWlkIi4NCj4gDQo+IEdvb2QgcGF0Y2ggOikNCj4gDQo+
+ID4gLQllbnVtIGllZWVfdHlwZXNfZWxlbWVudGlkX2UgZWxlbWVudF9pZDsNCj4gPiArCWVudW0g
+aWVlZTgwMjExX2VpZCBlbGVtZW50X2lkOw0KPiANCj4gWW91IHNob3VsZCBwcm9iYWJseSBqdXN0
+IHVzZSBhIHU4LCBzaW5jZSB0aGF0J2xsIG1hdGNoIGJldHRlciB3aGF0IHRoZQ0KPiB2YWx1ZSBy
+ZWFsbHkgaXMsIGl0IGNhbid0IGhhdmUgYW55IG1vcmUgdmFsdWVzIHRoYW4gdGhhdCBhbmQgYW4g
+ZW51bQ0KPiByZWFsbHkgaXMgYW4gImludCIgbm90IGEgInU4Ii4gQWxzbyBsZXRzIHlvdSByZW1v
+dmUgdGhlIHR5cGVjYXN0cyAodGhhdA0KPiBJIGRvbid0IHRoaW5rIGFyZSBuZWNlc3NhcnkgdG8g
+c3RhcnQgd2l0aCkNCj4gDQo+ID4gIGVudW0gaWVlZV90eXBlc19lbGVtZW50aWRfZSB7DQo+IA0K
+PiA+ICAJQlNTQ09fMjA0MCA9IDcyLA0KPiA+ICAJT1ZFUkxBUF9CU1NfU0NBTl9QQVJBTSA9IDc0
+LA0KPiA+ICAJRVhUX0NBUEFCSUxJVFkgPSAxMjcsDQo+IA0KPiBJIHRoaW5rIHlvdSBzaG91bGQg
+YWRkIHRoZXNlIHJlbWFpbmluZyBvbmVzIGludG8gdGhlIFdMQU5fRUlEXyBuYW1lc3BhY2UNCj4g
+aW5zdGVhZCBvZiBrZWVwaW5nIHRoZW0uDQo+IA0KPiA+ICsJV1BTX0lFID0gV0xBTl9FSURfVkVO
+RE9SX1NQRUNJRklDLA0KPiA+ICsJV01NX0lFID0gV0xBTl9FSURfVkVORE9SX1NQRUNJRklDLA0K
+PiANCj4gQW5kIHRoZXNlIHNlZW0ganVzdCBwbGFpbiBtaXNsZWFkaW5nIHNpbmNlIHRoZXkgZG9u
+J3QgaWRlbnRpZnkNCj4gYW55dGhpbmcgLi4uIG9uZSBjb3VsZCBiZSB0ZW1wdGVkIHRvIHVzZSBi
+b3RoIGluIGEgc3dpdGNoKCkgc3RhdGVtZW50DQo+IGZvciBleGFtcGxlLiBJJ2QgcmVwbGFjZSB0
+aGVpciB1c2Ugd2l0aCBqdXN0IHZlbmRvci1zcGVjaWZpYyBJIHRoaW5rDQo+IChhbHRob3VnaCBJ
+J20gYXdhcmUgdGhhdCBzb21lIG9sZGVyIGNvZGUgd2UgaGF2ZSBpbiB0aGUgc3RhY2sgZG9lcyB0
+aGlzDQo+IGFzIHdlbGwsIElJUkMpDQoNClRoYW5rcyBmb3IgeW91ciBjb21tZW50cy4gSSB3aWxs
+IHJlc2VuZCB0aGUgcGF0Y2ggdG8gaW5jb3Jwb3JhdGUgYWxsIG9mIGFib3ZlLg0KDQpSZWdhcmRz
+LA0KDQpCaW5nDQoNCj4gDQo+IGpvaGFubmVzDQoNCg==
