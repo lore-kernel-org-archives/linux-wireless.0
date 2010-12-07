@@ -1,56 +1,117 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qw0-f46.google.com ([209.85.216.46]:39649 "EHLO
-	mail-qw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756281Ab0LAUJo (ORCPT
+Received: from mail-ww0-f44.google.com ([74.125.82.44]:40847 "EHLO
+	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754643Ab0LGU46 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 1 Dec 2010 15:09:44 -0500
-Received: by qwb7 with SMTP id 7so7471951qwb.19
-        for <linux-wireless@vger.kernel.org>; Wed, 01 Dec 2010 12:09:43 -0800 (PST)
+	Tue, 7 Dec 2010 15:56:58 -0500
+Received: by wwa36 with SMTP id 36so369994wwa.1
+        for <linux-wireless@vger.kernel.org>; Tue, 07 Dec 2010 12:56:57 -0800 (PST)
+From: =?utf-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+To: linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>
+Cc: b43-dev@lists.infradead.org,
+	=?utf-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+Subject: [PATCH 4/4] b43: rename config option for N-PHY, drop BROKEN
+Date: Tue,  7 Dec 2010 21:56:00 +0100
+Message-Id: <1291755360-21570-5-git-send-email-zajec5@gmail.com>
+In-Reply-To: <1291755360-21570-1-git-send-email-zajec5@gmail.com>
+References: <1291755360-21570-1-git-send-email-zajec5@gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <1291232151.4199.12.camel@jlt3.sipsolutions.net>
-References: <1291168735-3423-1-git-send-email-javier@cozybit.com>
- <1291184383.4199.4.camel@jlt3.sipsolutions.net> <AANLkTikMex0A91Qy=5EwPAEfVWKDVz4_mneWnCvy3soR@mail.gmail.com>
- <1291229642.4199.11.camel@jlt3.sipsolutions.net> <1291232151.4199.12.camel@jlt3.sipsolutions.net>
-From: Javier Cardona <javier@cozybit.com>
-Date: Wed, 1 Dec 2010 12:09:22 -0800
-Message-ID: <AANLkTimgfRvqp=-CDU=G8o-ZfD4fVbf3j-AdXCVtoM6c@mail.gmail.com>
-Subject: Re: [PATCH] mac80211: Support beacon configuration via nl80211 for
- mesh interfaces
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	Steve Derosier <steve@cozybit.com>, devel@lists.open80211s.org,
-	linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Johannes,
+Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
+---
+ drivers/net/wireless/b43/Kconfig      |   13 +++++++------
+ drivers/net/wireless/b43/Makefile     |    8 ++++----
+ drivers/net/wireless/b43/main.c       |    4 ++--
+ drivers/net/wireless/b43/phy_common.c |    2 +-
+ 4 files changed, 14 insertions(+), 13 deletions(-)
 
-On Wed, Dec 1, 2010 at 11:35 AM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
-> On Wed, 2010-12-01 at 19:54 +0100, Johannes Berg wrote:
->
->> If we had a 'start mesh' command, like 'join IBSS', then it'd be natural
->> to have just more attributes in it. Maybe it's time to start thinking
->> about that again, although backward compatibility could be interesting.
->
-> Ok I started looking at this ...
->
-> I have a feeling I asked this before, but can't remember -- is it
-> necessary to be able to change the mesh config on the fly, while the
-> mesh is active?
-
-It is convenient to be able to change things like the ttl or the auto
-peering without having to bring down the interface.  People might also
-want to tune from userspace the different mesh timeouts in response to
-changes in operating conditions (e.g. mesh density).
-But right now the only parameter that needs the mesh to be active is
-plink_action:  one can only block or manually initiate peering after a
-beacon has been received from a suitable neighbor.
-
-Javier
-
+diff --git a/drivers/net/wireless/b43/Kconfig b/drivers/net/wireless/b43/Kconfig
+index 0a00d42..47033f6 100644
+--- a/drivers/net/wireless/b43/Kconfig
++++ b/drivers/net/wireless/b43/Kconfig
+@@ -86,15 +86,16 @@ config B43_PIO
+ 	select SSB_BLOCKIO
+ 	default y
+ 
+-config B43_NPHY
+-	bool "Pre IEEE 802.11n support (BROKEN)"
+-	depends on B43 && EXPERIMENTAL && BROKEN
++config B43_PHY_N
++	bool "Support for 802.11n (N-PHY) devices (EXPERIMENTAL)"
++	depends on B43 && EXPERIMENTAL
+ 	---help---
+-	  Support for the IEEE 802.11n draft.
++	  Support for the N-PHY.
+ 
+-	  THIS IS BROKEN AND DOES NOT WORK YET.
++	  This enables support for devices with N-PHY revision up to 2.
+ 
+-	  SAY N.
++	  Say N if you expect high stability and performance. Saying Y will not
++	  affect other devices support and may provide support for basic needs.
+ 
+ config B43_PHY_LP
+ 	bool "Support for low-power (LP-PHY) devices (EXPERIMENTAL)"
+diff --git a/drivers/net/wireless/b43/Makefile b/drivers/net/wireless/b43/Makefile
+index 69d4af0..cef334a 100644
+--- a/drivers/net/wireless/b43/Makefile
++++ b/drivers/net/wireless/b43/Makefile
+@@ -1,12 +1,12 @@
+ b43-y				+= main.o
+ b43-y				+= tables.o
+-b43-$(CONFIG_B43_NPHY)		+= tables_nphy.o
+-b43-$(CONFIG_B43_NPHY)		+= radio_2055.o
+-b43-$(CONFIG_B43_NPHY)		+= radio_2056.o
++b43-$(CONFIG_B43_PHY_N)		+= tables_nphy.o
++b43-$(CONFIG_B43_PHY_N)		+= radio_2055.o
++b43-$(CONFIG_B43_PHY_N)		+= radio_2056.o
+ b43-y				+= phy_common.o
+ b43-y				+= phy_g.o
+ b43-y				+= phy_a.o
+-b43-$(CONFIG_B43_NPHY)		+= phy_n.o
++b43-$(CONFIG_B43_PHY_N)		+= phy_n.o
+ b43-$(CONFIG_B43_PHY_LP)	+= phy_lp.o
+ b43-$(CONFIG_B43_PHY_LP)	+= tables_lpphy.o
+ b43-y				+= sysfs.o
+diff --git a/drivers/net/wireless/b43/main.c b/drivers/net/wireless/b43/main.c
+index 4d97aac..9ae3f61 100644
+--- a/drivers/net/wireless/b43/main.c
++++ b/drivers/net/wireless/b43/main.c
+@@ -4052,7 +4052,7 @@ static int b43_phy_versioning(struct b43_wldev *dev)
+ 		if (phy_rev > 9)
+ 			unsupported = 1;
+ 		break;
+-#ifdef CONFIG_B43_NPHY
++#ifdef CONFIG_B43_PHY_N
+ 	case B43_PHYTYPE_N:
+ 		if (phy_rev > 2)
+ 			unsupported = 1;
+@@ -5097,7 +5097,7 @@ static void b43_print_driverinfo(void)
+ #ifdef CONFIG_B43_PCMCIA
+ 	feat_pcmcia = "M";
+ #endif
+-#ifdef CONFIG_B43_NPHY
++#ifdef CONFIG_B43_PHY_N
+ 	feat_nphy = "N";
+ #endif
+ #ifdef CONFIG_B43_LEDS
+diff --git a/drivers/net/wireless/b43/phy_common.c b/drivers/net/wireless/b43/phy_common.c
+index 412f1b6..b5c5ce9 100644
+--- a/drivers/net/wireless/b43/phy_common.c
++++ b/drivers/net/wireless/b43/phy_common.c
+@@ -50,7 +50,7 @@ int b43_phy_allocate(struct b43_wldev *dev)
+ 		phy->ops = &b43_phyops_g;
+ 		break;
+ 	case B43_PHYTYPE_N:
+-#ifdef CONFIG_B43_NPHY
++#ifdef CONFIG_B43_PHY_N
+ 		phy->ops = &b43_phyops_n;
+ #endif
+ 		break;
 -- 
-Javier Cardona
-cozybit Inc.
-http://www.cozybit.com
+1.6.3.3
+
