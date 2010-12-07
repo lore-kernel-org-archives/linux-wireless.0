@@ -1,39 +1,100 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from external1.orbit-lab.org ([128.6.192.131]:54248 "HELO
-	external1.orbit-lab.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1753734Ab0LMUEw (ORCPT
+Received: from mail-ww0-f42.google.com ([74.125.82.42]:46990 "EHLO
+	mail-ww0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754332Ab0LGU4s (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 13 Dec 2010 15:04:52 -0500
-Received: from repository3.orbit-lab.org (repository3.orbit-lab.org [10.50.0.41])
-	by external1.orbit-lab.org (Postfix) with ESMTP id 5A8434061B
-	for <linux-wireless@vger.kernel.org>; Mon, 13 Dec 2010 15:04:51 -0500 (EST)
-Subject: Compat-wireless release for 2010-12-13 is baked
-To: <linux-wireless@vger.kernel.org>
-Message-Id: <20101213200451.2513B40F97@repository3.orbit-lab.org>
-Date: Mon, 13 Dec 2010 15:04:50 -0500 (EST)
-From: compat@orbit-lab.org (Compat-wireless cronjob account)
+	Tue, 7 Dec 2010 15:56:48 -0500
+Received: by wwi17 with SMTP id 17so1365435wwi.1
+        for <linux-wireless@vger.kernel.org>; Tue, 07 Dec 2010 12:56:46 -0800 (PST)
+From: =?utf-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+To: linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>
+Cc: b43-dev@lists.infradead.org,
+	=?utf-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+Subject: [PATCH 2/4] b43: set TMS to work with current band width for N-PHY
+Date: Tue,  7 Dec 2010 21:55:58 +0100
+Message-Id: <1291755360-21570-3-git-send-email-zajec5@gmail.com>
+In-Reply-To: <1291755360-21570-1-git-send-email-zajec5@gmail.com>
+References: <1291755360-21570-1-git-send-email-zajec5@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
->From git://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next
-   d31ffbc..8290618  history    -> origin/history
- + 1b1497f...455b710 master     -> origin/master  (forced update)
- * [new tag]         next-20101213 -> next-20101213
+Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
+---
+ drivers/net/wireless/b43/main.c       |    6 ++++++
+ drivers/net/wireless/b43/phy_common.c |    7 +++++++
+ drivers/net/wireless/b43/phy_common.h |    2 ++
+ drivers/net/wireless/b43/phy_n.c      |    7 -------
+ 4 files changed, 15 insertions(+), 7 deletions(-)
 
-compat-wireless code metrics
+diff --git a/drivers/net/wireless/b43/main.c b/drivers/net/wireless/b43/main.c
+index fa48803..670fd7b 100644
+--- a/drivers/net/wireless/b43/main.c
++++ b/drivers/net/wireless/b43/main.c
+@@ -1150,6 +1150,12 @@ void b43_wireless_core_reset(struct b43_wldev *dev, u32 flags)
+ 
+ 	flags |= B43_TMSLOW_PHYCLKEN;
+ 	flags |= B43_TMSLOW_PHYRESET;
++	if (dev->phy.type == B43_PHYTYPE_N) {
++		if (b43_channel_type_is_40mhz(dev->phy.channel_type))
++			flags |= B43_TMSLOW_PHYCLKSPEED_160MHZ;
++		else
++			flags |= B43_TMSLOW_PHYCLKSPEED_80MHZ;
++	}
+ 	ssb_device_enable(dev->dev, flags);
+ 	msleep(2);		/* Wait for the PLL to turn on. */
+ 
+diff --git a/drivers/net/wireless/b43/phy_common.c b/drivers/net/wireless/b43/phy_common.c
+index 0a91fc3..412f1b6 100644
+--- a/drivers/net/wireless/b43/phy_common.c
++++ b/drivers/net/wireless/b43/phy_common.c
+@@ -429,6 +429,13 @@ void b43_phyop_switch_analog_generic(struct b43_wldev *dev, bool on)
+ 	b43_write16(dev, B43_MMIO_PHY0, on ? 0 : 0xF4);
+ }
+ 
++
++bool b43_channel_type_is_40mhz(enum nl80211_channel_type channel_type)
++{
++	return (channel_type == NL80211_CHAN_HT40MINUS ||
++		channel_type == NL80211_CHAN_HT40PLUS);
++}
++
+ /* http://bcm-v4.sipsolutions.net/802.11/PHY/Cordic */
+ struct b43_c32 b43_cordic(int theta)
+ {
+diff --git a/drivers/net/wireless/b43/phy_common.h b/drivers/net/wireless/b43/phy_common.h
+index 2ed60e5..2401bee 100644
+--- a/drivers/net/wireless/b43/phy_common.h
++++ b/drivers/net/wireless/b43/phy_common.h
+@@ -436,6 +436,8 @@ int b43_phy_shm_tssi_read(struct b43_wldev *dev, u16 shm_offset);
+  */
+ void b43_phyop_switch_analog_generic(struct b43_wldev *dev, bool on);
+ 
++bool b43_channel_type_is_40mhz(enum nl80211_channel_type channel_type);
++
+ struct b43_c32 b43_cordic(int theta);
+ 
+ #endif /* LINUX_B43_PHY_COMMON_H_ */
+diff --git a/drivers/net/wireless/b43/phy_n.c b/drivers/net/wireless/b43/phy_n.c
+index d41da7f..3517341 100644
+--- a/drivers/net/wireless/b43/phy_n.c
++++ b/drivers/net/wireless/b43/phy_n.c
+@@ -88,13 +88,6 @@ static void b43_nphy_rf_control_override(struct b43_wldev *dev, u16 field,
+ static void b43_nphy_rf_control_intc_override(struct b43_wldev *dev, u8 field,
+ 						u16 value, u8 core);
+ 
+-static inline bool b43_channel_type_is_40mhz(
+-					enum nl80211_channel_type channel_type)
+-{
+-	return (channel_type == NL80211_CHAN_HT40MINUS ||
+-		channel_type == NL80211_CHAN_HT40PLUS);
+-}
+-
+ void b43_nphy_set_rxantenna(struct b43_wldev *dev, int antenna)
+ {//TODO
+ }
+-- 
+1.6.3.3
 
-    752626 - Total upstream lines of code being pulled
-      2198 - backport code changes
-      1935 - backport code additions
-       263 - backport code deletions
-      6637 - backport from compat module
-      8835 - total backport code
-    1.1739 - % of code consists of backport work
-      1532 - Crap changes not yet posted
-      1489 - Crap additions not yet posted
-        43 - Crap deletions not yet posted
-    0.2036 - % of crap code
-
-Base tree: linux-next.git
-Base tree version: next-20101213
-compat-wireless release: compat-wireless-2010-12-10-1-gc0f962a-pc
