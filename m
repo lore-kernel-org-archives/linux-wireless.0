@@ -1,61 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ogre.sisk.pl ([217.79.144.158]:37869 "EHLO ogre.sisk.pl"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752483Ab0LRWxH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 18 Dec 2010 17:53:07 -0500
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
-To: "Ohad Ben-Cohen" <ohad@wizery.com>
-Subject: Re: [linux-pm] subtle pm_runtime_put_sync race and sdio functions
-Date: Sat, 18 Dec 2010 23:52:10 +0100
-Cc: "Linux-pm mailing list" <linux-pm@lists.linux-foundation.org>,
-	linux-mmc@vger.kernel.org, Ido Yariv <ido@wizery.com>,
-	linux-wireless@vger.kernel.org,
-	Alan Stern <stern@rowland.harvard.edu>,
-	Johannes Berg <johannes@sipsolutions.net>
-References: <AANLkTikJr+0kVPE4aSwPjZWRfA3gRSNgGwzQdSwRpo_5@mail.gmail.com> <1292690407.3653.2.camel@jlt3.sipsolutions.net> <AANLkTin6zdUb2C-3GU-FySb3Pmk5iHaG5neLNSG38Tdx@mail.gmail.com>
-In-Reply-To: <AANLkTin6zdUb2C-3GU-FySb3Pmk5iHaG5neLNSG38Tdx@mail.gmail.com>
+Received: from mail-qw0-f46.google.com ([209.85.216.46]:44205 "EHLO
+	mail-qw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753974Ab0LGEMg (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 6 Dec 2010 23:12:36 -0500
+Received: by qwa26 with SMTP id 26so69778qwa.19
+        for <linux-wireless@vger.kernel.org>; Mon, 06 Dec 2010 20:12:35 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Message-Id: <201012182352.10765.rjw@sisk.pl>
+In-Reply-To: <19709.45926.38551.25130@gargle.gargle.HOWL>
+References: <19701.62091.644444.121284@gargle.gargle.HOWL> <20101202193024.GC2358@tuxdriver.com>
+ <19704.23185.565826.890275@gargle.gargle.HOWL> <AANLkTinPLPoAHxauaXj8Sj=zjyHQPyxO0ku342ersZQ4@mail.gmail.com>
+ <19709.45926.38551.25130@gargle.gargle.HOWL>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Mon, 6 Dec 2010 20:12:15 -0800
+Message-ID: <AANLkTinNF2dnacLof_knM3OAf6ADCCPsb8DO1VE6c31U@mail.gmail.com>
+Subject: Re: [PATCH 2/2] ath9k_htc: Fix suspend/resume
+To: Sujith <m.sujith@gmail.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Saturday, December 18, 2010, Ohad Ben-Cohen wrote:
-> On Sat, Dec 18, 2010 at 6:40 PM, Johannes Berg
-> <johannes@sipsolutions.net> wrote:
-> > On Sat, 2010-12-18 at 18:00 +0200, Ohad Ben-Cohen wrote:
-> >
-> >> > That's where the problem is.  If there's a difference, from the driver's
-> >> > point of view, between suspend and some other operation, there should be a
-> >> > way to tell the driver what case it actually is dealing with.
-> >>
-> >> Yes, the problem will be solved if the driver would bypass the runtime
-> >> PM framework on system suspend. mac80211 obviously has this
-> >> information, and technically it's very easy to let the driver know
-> >> about it.
-> >>
-> >> But the difference between suspend and normal operation is really
-> >> artificial: in both cases mac80211 just asks the driver to power its
-> >> device down, and the end result is exactly the same (a GPIO line of
-> >> the device is de-asserted in our case). The difference between these
-> >> two scenarios
-> >> exist only because runtime PM is effectively disabled during system
-> >> suspend, and therefore the driver has to look for an alternative way
-> >> to power down the device.
-> >
-> > Sounds to me like the difference isn't really in the driver, but the
-> > core PM subsystem. Why does it care when powering off a device whether
-> > it's during suspend, or during runtime?
-> 
-> Agree.
-> 
-> If we can add a dev_pm_info bit, that would allow using runtime PM API
-> during suspend/resume transitions, the driver will not have to care.
-> 
-> Rafael what do you think ? Is that totally unacceptable ?
+On Mon, Dec 6, 2010 at 8:09 PM, Sujith <m.sujith@gmail.com> wrote:
+> Luis R. Rodriguez wrote:
+>> Just curious, if you revert this patch and apply the ones I just
+>> posted, does it fix it, or is this patch required either way?
+>
+> Well, I don't see this patch in -testing, -next-2.6 or -2.6.
+> Maybe Linville overlooked this patch.
+>
+> Applying 4/5 and 5/5 from your series seems to fix the issue though.
+> I am able to suspend/resume without hiccups with UB95.
+>
+> But, I think this is purely an ath9k issue, mac80211 is probably right in
+> assuming that only devices that have been issued ~IEEE80211_CONF_IDLE
+> would have their radios enabled anyway.
+>
+> ath9k doesn't differentiate between init/start and enables the radio
+> (setting it to AWAKE mode) in the initialization sequence.
+> Why should mac80211 issue a CONF_IDLE notification when the device
+> was never powered up .. ?
 
-Already said.  It is not acceptable at all.
+That's the thing, the device was powered up, lifted from idle, but we
+never got notified we are back in idle, since we stop the device but
+never issue the idle call since the open_count was already 0 after a
+device stop.
 
-Thanks,
-Rafael
+  Luis
