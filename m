@@ -1,46 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw0-f46.google.com ([74.125.83.46]:64019 "EHLO
-	mail-gw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750967Ab0L3XIF (ORCPT
+Received: from mail-qw0-f46.google.com ([209.85.216.46]:33270 "EHLO
+	mail-qw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751137Ab0LGFV2 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 30 Dec 2010 18:08:05 -0500
-From: "Justin P. Mattock" <justinmattock@gmail.com>
-To: trivial@kernel.org
-Cc: linux-m68k@lists.linux-m68k.org, linux-kernel@vger.kernel.org,
-	netdev@vger.kernel.org, ivtv-devel@ivtvdriver.org,
-	linux-media@vger.kernel.org, linux-wireless@vger.kernel.org,
-	linux-scsi@vger.kernel.org,
-	spi-devel-general@lists.sourceforge.net,
-	devel@driverdev.osuosl.org, linux-usb@vger.kernel.org,
-	"Justin P. Mattock" <justinmattock@gmail.com>
-Subject: [PATCH 01/15]arch:m68k:ifpsp060:src:fpsp.S Typo change diable to disable.
-Date: Thu, 30 Dec 2010 15:07:50 -0800
-Message-Id: <1293750484-1161-1-git-send-email-justinmattock@gmail.com>
+	Tue, 7 Dec 2010 00:21:28 -0500
+Received: by qwa26 with SMTP id 26so119167qwa.19
+        for <linux-wireless@vger.kernel.org>; Mon, 06 Dec 2010 21:21:27 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <1291698829-22765-1-git-send-email-greearb@candelatech.com>
+References: <1291698829-22765-1-git-send-email-greearb@candelatech.com>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Mon, 6 Dec 2010 21:21:07 -0800
+Message-ID: <AANLkTik20SkL0Y5gK_ysYpW46gvb73m4h3SDcGb+d_LA@mail.gmail.com>
+Subject: Re: [PATCH] ath9k: Check for NULL sta in ath_tx_start
+To: greearb@gmail.com
+Cc: linux-wireless@vger.kernel.org, ath9k-devel@venema.h4ckr.net,
+	Ben Greear <greearb@candelatech.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The below patch fixes a typo "diable" to "disable". Please let me know if this 
-is correct or not.
+On Mon, Dec 6, 2010 at 9:13 PM,  <greearb@gmail.com> wrote:
+> From: Ben Greear <greearb@candelatech.com>
+>
+> It can be NULL according to docs, and logging showed it
+> to be NULL in practice.
+>
+> Signed-off-by: Ben Greear <greearb@candelatech.com>
 
-Signed-off-by: Justin P. Mattock <justinmattock@gmail.com>
+Does this fix an oops? If so can you explain and provide the trace and
+resubmit and cc stable in the commit log?
 
----
- arch/m68k/ifpsp060/src/fpsp.S |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
-
-diff --git a/arch/m68k/ifpsp060/src/fpsp.S b/arch/m68k/ifpsp060/src/fpsp.S
-index 73613b5..26e85e2 100644
---- a/arch/m68k/ifpsp060/src/fpsp.S
-+++ b/arch/m68k/ifpsp060/src/fpsp.S
-@@ -3881,7 +3881,7 @@ _fpsp_fline:
- # FP Unimplemented Instruction stack frame and jump to that entry
- # point.
- #
--# but, if the FPU is disabled, then we need to jump to the FPU diabled
-+# but, if the FPU is disabled, then we need to jump to the FPU disabled
- # entry point.
- 	movc		%pcr,%d0
- 	btst		&0x1,%d0
--- 
-1.6.5.2.180.gc5b3e
-
+  Luis
