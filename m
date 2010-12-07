@@ -1,45 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.19.149.2]:23275 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752481Ab0LUH34 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 21 Dec 2010 02:29:56 -0500
-Received: from mail.atheros.com ([10.10.20.108])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Mon, 20 Dec 2010 23:29:40 -0800
-Date: Tue, 21 Dec 2010 12:59:43 +0530
-From: Vasanthakumar Thiagarajan <vasanth@atheros.com>
-To: Dan Carpenter <error27@gmail.com>
-CC: Vasanth Thiagarajan <Vasanth.Thiagarajan@Atheros.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"ath9k-devel@lists.ath9k.org" <ath9k-devel@lists.ath9k.org>
-Subject: Re: smatch stuff: potential read past the end of the buffer
-Message-ID: <20101221072943.GA8369@vasanth-laptop>
-References: <20101220083041.GQ1936@bicker>
+Received: from mail30f.wh2.ocn.ne.jp ([220.111.41.203]:31684 "HELO
+	mail30f.wh2.ocn.ne.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1752132Ab0LGC3X (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 6 Dec 2010 21:29:23 -0500
+Received: from vs3016.wh2.ocn.ne.jp (125.206.180.189)
+	by mail30f.wh2.ocn.ne.jp (RS ver 1.0.95vs) with SMTP id 1-0733818959
+	for <linux-wireless@vger.kernel.org>; Tue,  7 Dec 2010 11:29:21 +0900 (JST)
+From: Bruno Randolf <br1@einfach.org>
+To: sedat.dilek@gmail.com
+Subject: Re: [ath5k-devel] ath5k: Weird Retransmission Behaviour
+Date: Tue, 7 Dec 2010 11:29:05 +0900
+Cc: Nick Kossifidis <mickflemm@gmail.com>,
+	Jonathan Guerin <jonathan@guerin.id.au>,
+	"ath5k-devel" <ath5k-devel@lists.ath5k.org>,
+	"linux-wireless" <linux-wireless@vger.kernel.org>
+References: <AANLkTimDF3kofO=kiuOsz+WrTGROdOL8-3eNvKd5NrD3@mail.gmail.com> <AANLkTiky-Q6DLxXSKf-+UU6avpaVikRgtt5078+Ui7Uh@mail.gmail.com> <AANLkTinKuj+e+yEwn_1g268BLPBMt71gKkUmzjbz2a3e@mail.gmail.com>
+In-Reply-To: <AANLkTinKuj+e+yEwn_1g268BLPBMt71gKkUmzjbz2a3e@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <20101220083041.GQ1936@bicker>
+Content-Type: Text/Plain;
+  charset="iso-8859-15"
+Message-Id: <201012071129.05281.br1@einfach.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Dec 20, 2010 at 02:00:41PM +0530, Dan Carpenter wrote:
-> Hello Vasanthakumar,
-> 
-> Smatch complains that in linux-next 60e0c3a7 "ath9k_hw: Eeeprom changes
-> for AR9485" means there is a potential read past the end of the buffer
-> int ar9300_eeprom_restore_internal().
-> 
-> drivers/net/wireless/ath/ath9k/ar9003_eeprom.c +3381
-> 	ar9300_eeprom_restore_internal(81)
-> 	error: buffer overflow 'word' 2048 <= 4099
-> 
-> "word" is allocated with 2048 bytes:
->         word = kzalloc(2048, GFP_KERNEL);
-> 
-> "length" can be up to 4099:
->                 if ((!AR_SREV_9485(ah) && length >= 1024) ||
->                     (AR_SREV_9485(ah) && length >= (4 * 1024))) {
+On Mon December 6 2010 19:53:49 Sedat Dilek wrote:
+> >> But it seems weird that there are so many retransmissions. The default
+> >> maximum numbers of retransmissions should be 7 for short frames and 4
+> >> for long frames (dot11[Short|Long]RetryLimit), and this is what is set
+> >> as defaults in mac80211 (local->hw.conf.short_frame_max_tx_count).
+> >> Seems we are getting many
+> > 
+> >> retransmissions from minstel, i added some debug prints:
+> > When ath5k doesn't get retry limits from above it uses the following
+> > defaults on dcu.
+> > For now i don't think we use local->hw.conf.short_frame_max_tx_count
+> > for that so the
+> > default is ah_limit_tx_retries (AR5K_INIT_TX_RETRY) but seems it's
+> > wrong and we should
+> > fix it...
+> > 
+> > /* Tx retry limits */
+> > #define AR5K_INIT_SH_RETRY                      10
+> > #define AR5K_INIT_LG_RETRY                      AR5K_INIT_SH_RETRY
+> > /* For station mode */
+> > #define AR5K_INIT_SSH_RETRY                     32
+> > #define AR5K_INIT_SLG_RETRY                     AR5K_INIT_SSH_RETRY
+> > #define AR5K_INIT_TX_RETRY                      10
 
-Yeah, this looks buggy, the eeprom data length for AR9485 is 1088
-bytes only, I'll send out a patch, thanks for reporting this.
+> You mean sth. like the attached patch?
 
-Vasanth
+Not quite. We should get the values from mac80211 and use them.
+
+At least this does explain the resetting of the contention window after 10.
+
+bruno
