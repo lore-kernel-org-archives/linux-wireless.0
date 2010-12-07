@@ -1,54 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f46.google.com ([209.85.215.46]:41257 "EHLO
-	mail-ew0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754700Ab0L2Xcz (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:60537 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754068Ab0LGUyl (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 29 Dec 2010 18:32:55 -0500
-Received: by mail-ew0-f46.google.com with SMTP id 5so4915990ewy.19
-        for <linux-wireless@vger.kernel.org>; Wed, 29 Dec 2010 15:32:54 -0800 (PST)
-From: Arik Nemtsov <arik@wizery.com>
-To: <linux-wireless@vger.kernel.org>
-Cc: Luciano Coelho <luciano.coelho@nokia.com>,
-	Arik Nemtsov <arik@wizery.com>
-Subject: [PATCH v4 17/18] wl1271: Read MAC address from NVS file on HW startup
-Date: Thu, 30 Dec 2010 01:32:12 +0200
-Message-Id: <1293665533-7599-18-git-send-email-arik@wizery.com>
-In-Reply-To: <1293665533-7599-1-git-send-email-arik@wizery.com>
-References: <1293665533-7599-1-git-send-email-arik@wizery.com>
+	Tue, 7 Dec 2010 15:54:41 -0500
+Subject: Re: [PATCH 5/5] mac80211: fix issuing idle calls when device open
+ count is 0
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Cc: Luis Rodriguez <Luis.Rodriguez@atheros.com>,
+	"linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Amod Bodas <Amod.Bodas@atheros.com>,
+	"pstew@google.com" <pstew@google.com>,
+	"stable@kernel.org" <stable@kernel.org>
+In-Reply-To: <AANLkTimfLGj1=BnRGvJVkP_Ge6KYAtCLcDpBsVoj9o_T@mail.gmail.com>
+References: <1291690135-4535-1-git-send-email-lrodriguez@atheros.com>
+	 <1291690135-4535-6-git-send-email-lrodriguez@atheros.com>
+	 <1291714709.3607.2.camel@jlt3.sipsolutions.net>
+	 <AANLkTikrLweKeSR-=XziaJ5rqDRf_Ny=mg1OD=jC4nqA@mail.gmail.com>
+	 <1291736887.3607.47.camel@jlt3.sipsolutions.net>
+	 <AANLkTimiw074uXxe3nPTNZ0j+NtZbHJU1bwiGsFUXMJ4@mail.gmail.com>
+	 <1291737298.3607.48.camel@jlt3.sipsolutions.net>
+	 <20101207155916.GA1855@tux>
+	 <1291743121.3607.50.camel@jlt3.sipsolutions.net>
+	 <AANLkTi=Sj7YpKzFHQtf2MdUcRDTzfXszbK7gGg_yup1Y@mail.gmail.com>
+	 <1291745567.3607.52.camel@jlt3.sipsolutions.net>
+	 <AANLkTimfLGj1=BnRGvJVkP_Ge6KYAtCLcDpBsVoj9o_T@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Tue, 07 Dec 2010 21:54:34 +0100
+Message-ID: <1291755274.3607.59.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Try to read the MAC address from the on-disk NVS file.
-A non-zero MAC address is required to add an AP interface.
+On Tue, 2010-12-07 at 12:49 -0800, Luis R. Rodriguez wrote:
 
-Signed-off-by: Arik Nemtsov <arik@wizery.com>
----
- drivers/net/wireless/wl12xx/main.c |   12 ++++++++++++
- 1 files changed, 12 insertions(+), 0 deletions(-)
+> > In what situation? When you just suspend while things are up&running, or
+> > if you suspend with interfaces down?
+> 
+> I believe Paul was suspending when the interface is up and running.
 
-diff --git a/drivers/net/wireless/wl12xx/main.c b/drivers/net/wireless/wl12xx/main.c
-index a6de19a..78d6155 100644
---- a/drivers/net/wireless/wl12xx/main.c
-+++ b/drivers/net/wireless/wl12xx/main.c
-@@ -3064,6 +3064,18 @@ int wl1271_register_hw(struct wl1271 *wl)
- 	if (wl->mac80211_registered)
- 		return 0;
- 
-+	ret = wl1271_fetch_nvs(wl);
-+	if (ret == 0) {
-+		u8 *nvs_ptr = (u8 *)wl->nvs->nvs;
-+
-+		wl->mac_addr[0] = nvs_ptr[11];
-+		wl->mac_addr[1] = nvs_ptr[10];
-+		wl->mac_addr[2] = nvs_ptr[6];
-+		wl->mac_addr[3] = nvs_ptr[5];
-+		wl->mac_addr[4] = nvs_ptr[4];
-+		wl->mac_addr[5] = nvs_ptr[3];
-+	}
-+
- 	SET_IEEE80211_PERM_ADDR(wl->hw, wl->mac_addr);
- 
- 	ret = ieee80211_register_hw(wl->hw);
--- 
-1.7.1
+Ok.
+
+> > It doesn't make sense anyway, so
+> > something's going on in the rest of the scan code -- we should be
+> > canceling scans properly when going down and when suspending, well
+> > before any of this becomes relevant.
+> 
+> The issue might be we race to stop the device prior to canceling a
+> scan. Do you see that being possible?
+
+Not really, since we do scan_cancel() within suspend()... I guess I'd
+like to find out why that doesn't do what I think it does.
+
+johannes
 
