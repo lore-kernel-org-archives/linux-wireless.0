@@ -1,44 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.19.149.2]:59116 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755394Ab0LBLKr (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 2 Dec 2010 06:10:47 -0500
-Received: from mail.atheros.com ([10.10.20.105])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Thu, 02 Dec 2010 03:10:33 -0800
-From: Vasanthakumar Thiagarajan <vasanth@atheros.com>
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>
-Subject: [PATCH V2 08/27] ath9k: Disable TX STBC for AR9485
-Date: Thu, 2 Dec 2010 03:06:52 -0800
-Message-ID: <1291288031-3409-9-git-send-email-vasanth@atheros.com>
-In-Reply-To: <1291288031-3409-1-git-send-email-vasanth@atheros.com>
-References: <1291288031-3409-1-git-send-email-vasanth@atheros.com>
+Received: from mail-iw0-f174.google.com ([209.85.214.174]:53002 "EHLO
+	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753848Ab0LGPvl convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 7 Dec 2010 10:51:41 -0500
+Received: by iwn9 with SMTP id 9so40554iwn.19
+        for <linux-wireless@vger.kernel.org>; Tue, 07 Dec 2010 07:51:41 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <1291736887.3607.47.camel@jlt3.sipsolutions.net>
+References: <1291690135-4535-1-git-send-email-lrodriguez@atheros.com>
+ <1291690135-4535-6-git-send-email-lrodriguez@atheros.com> <1291714709.3607.2.camel@jlt3.sipsolutions.net>
+ <AANLkTikrLweKeSR-=XziaJ5rqDRf_Ny=mg1OD=jC4nqA@mail.gmail.com> <1291736887.3607.47.camel@jlt3.sipsolutions.net>
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Date: Tue, 7 Dec 2010 07:51:21 -0800
+Message-ID: <AANLkTimiw074uXxe3nPTNZ0j+NtZbHJU1bwiGsFUXMJ4@mail.gmail.com>
+Subject: Re: [PATCH 5/5] mac80211: fix issuing idle calls when device open
+ count is 0
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	amod.bodas@atheros.com, pstew@google.com, stable@kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Vasanthakumar Thiagarajan <vasanth@atheros.com>
----
- drivers/net/wireless/ath/ath9k/init.c |    4 +++-
- 1 files changed, 3 insertions(+), 1 deletions(-)
+On Tue, Dec 7, 2010 at 7:48 AM, Johannes Berg <johannes@sipsolutions.net> wrote:
+> On Tue, 2010-12-07 at 07:44 -0800, Luis R. Rodriguez wrote:
+>
+>> >>       drv_stop(local);
+>> >> +     ieee80211_recalc_idle_force(local);
+>> >
+>> > That one definitely can't be after drv_stop().
+>>
+>> OK why though?
+>
+> Because you can't call into drivers after you stop them? Shouldn't this
+> be obvious?
 
-diff --git a/drivers/net/wireless/ath/ath9k/init.c b/drivers/net/wireless/ath/ath9k/init.c
-index 2962ce3..3439fa7 100644
---- a/drivers/net/wireless/ath/ath9k/init.c
-+++ b/drivers/net/wireless/ath/ath9k/init.c
-@@ -210,7 +210,9 @@ static void setup_ht_cap(struct ath_softc *sc,
- 	ht_info->ampdu_factor = IEEE80211_HT_MAX_AMPDU_64K;
- 	ht_info->ampdu_density = IEEE80211_HT_MPDU_DENSITY_8;
- 
--	if (AR_SREV_9300_20_OR_LATER(ah))
-+	if (AR_SREV_9485(ah))
-+		max_streams = 1;
-+	else if (AR_SREV_9300_20_OR_LATER(ah))
- 		max_streams = 3;
- 	else
- 		max_streams = 2;
--- 
-1.7.0.4
+That makes sense, but mac80211 is the one who tells the driver when
+its idle or non-idle, if we stop the device do we want it to handle an
+idle check itself? This change would only force out an idle change
+notification, nothing else.
 
+  Luis
