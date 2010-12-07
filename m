@@ -1,285 +1,929 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ogre.sisk.pl ([217.79.144.158]:38583 "EHLO ogre.sisk.pl"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756073Ab0LSMq3 convert rfc822-to-8bit (ORCPT
+Received: from mail-qw0-f46.google.com ([209.85.216.46]:59435 "EHLO
+	mail-qw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752525Ab0LGSW4 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 19 Dec 2010 07:46:29 -0500
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
-To: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
-Subject: 2.6.37-rc6-git4: Reported regressions 2.6.35 -> 2.6.36
-Cc: Maciej Rutecki <maciej.rutecki@gmail.com>,
-	Florian Mickler <florian@mickler.org>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	Kernel Testers List <kernel-testers@vger.kernel.org>,
-	Network Development <netdev@vger.kernel.org>,
-	Linux ACPI <linux-acpi@vger.kernel.org>,
-	Linux PM List <linux-pm@lists.linux-foundation.org>,
-	Linux SCSI List <linux-scsi@vger.kernel.org>,
-	Linux Wireless List <linux-wireless@vger.kernel.org>,
-	DRI <dri-devel@lists.freedesktop.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Message-ID: <ZRNlsjykcOD.A.b-F.20fDNB@chimera>
-Date: Sun, 19 Dec 2010 13:41:20 +0100 (CET)
+	Tue, 7 Dec 2010 13:22:56 -0500
+Received: by qwa26 with SMTP id 26so197091qwa.19
+        for <linux-wireless@vger.kernel.org>; Tue, 07 Dec 2010 10:22:55 -0800 (PST)
+From: Javier Cardona <javier@cozybit.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: Bruno Randolf <br1@einfach.org>,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	Stephen Rothwell <sfr@canb.auug.org.au>,
+	Johannes Berg <johannes.berg@intel.com>,
+	Javier Cardona <javier@cozybit.com>,
+	Steve Derosier <steve@cozybit.com>, devel@lists.open80211s.org,
+	Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org
+Subject: [PATCH v4] cfg80211/mac80211: add mesh join/leave commands
+Date: Tue,  7 Dec 2010 10:22:37 -0800
+Message-Id: <1291746157-14628-1-git-send-email-javier@cozybit.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This message contains a list of some post-2.6.35 regressions introduced before
-2.6.36, for which there are no fixes in the mainline known to the tracking team.
-If any of them have been fixed already, please let us know.
-
-If you know of any other unresolved post-2.6.35 regressions, please let us know
-either and we'll add them to the list.  Also, please let us know if any
-of the entries below are invalid.
-
-Each entry from the list will be sent additionally in an automatic reply to
-this message with CCs to the people involved in reporting and handling the
-issue.
-
-
-Listed regressions statistics:
-
-  Date          Total  Pending  Unresolved
-  ----------------------------------------
-  2010-12-19       98       28          23
-  2010-12-05       95       34          31
-  2010-11-19       92       38          34
-  2010-10-17       70       27          27
-  2010-10-10       56       16          15
-  2010-10-03       52       16          14
-  2010-09-26       46       15          13
-  2010-09-20       38       15          15
-  2010-09-12       28       14          13
-  2010-08-30       21       16          15
-
-
-Unresolved regressions
-----------------------
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=24752
-Subject		: Random crashes easily reproducible with make -j5 - intel i915 - kernel 2.6.36 on intel/nvidia hybrid graphics machine
-Submitter	: Giacomo <delleceste@gmail.com>
-Date		: 2010-12-10 8:57 (10 days old)
-Message-ID	: <AANLkTimkQM94u9iz7FVVjehB0mwDwfkNwKhF2F2tYq-r@mail.gmail.com>
-References	: http://marc.info/?l=linux-kernel&m=129197146619176&w=2
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=24392
-Subject		: AGP aperture disabled, worked in 2.6.35
-Submitter	: Stephen Kitt <steve@sk2.org>
-Date		: 2010-12-06 06:31 (14 days old)
-First-Bad-Commit: http://git.kernel.org/linus/96576a9e1a0cdb8a43d3af5846be0948f52b4460
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=24202
-Subject		: [830] drm:intel_prepare_page_flip, *ERROR* Prepared flip multiple times
-Submitter	: mkkot <marcin2006@gmail.com>
-Date		: 2010-12-02 14:10 (18 days old)
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=24022
-Subject		: wireless no longer works after 1st update of 10.10 [rtl819xE:ERR in init_firmware()]
-Submitter	: njin <marconifabio@ubuntu-it.org>
-Date		: 2010-11-29 19:49 (21 days old)
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=23812
-Subject		: HAL does not provide battery information on RHEL5 and CentOS-5
-Submitter	: Dag Wieers <dag@wieers.com>
-Date		: 2010-11-26 18:08 (24 days old)
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=23302
-Subject		: alsa stops working after one or more hibernate or suspend cycles
-Submitter	: Werner Lemberg <wl@gnu.org>
-Date		: 2010-11-19 16:21 (31 days old)
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=22842
-Subject		: iwl3945 suddenly stops working
-Submitter	: Felipe Contreras <felipe.contreras@gmail.com>
-Date		: 2010-11-14 11:14 (36 days old)
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=22782
-Subject		: 2.6.36: general protection fault during lockfs lockspace removal
-Submitter	: nik@linuxbox.cz <nik@linuxbox.cz>
-Date		: 2010-11-12 12:05 (38 days old)
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=22172
-Subject		: alsa-util.c: snd_pcm_avail_delay() returned strange values: delay 0 is less than avail 32
-Submitter	: Tobias <devnull@plzk.org>
-Date		: 2010-11-06 09:33 (44 days old)
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=22092
-Subject		: Kernel v2.6.36 trouble on USB disconnect
-Submitter	: Ketil Froyn <ketil@froyn.name>
-Date		: 2010-10-29 8:05 (52 days old)
-Message-ID	: <AANLkTik5qVxkEGVAA1PSOGk2KTW+ekHpSwttsQEWzWj+@mail.gmail.com>
-References	: http://marc.info/?l=linux-kernel&m=128833956503607&w=2
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=21662
-Subject		: 2.6.35->2.6.36 regression, vanilla kernel panic, ppp or hrtimers crashing
-Submitter	: Denys Fedoryshchenko <nuclearcat@nuclearcat.com>
-Date		: 2010-10-25 9:22 (56 days old)
-Message-ID	: <201010251222.37191.nuclearcat@nuclearcat.com>
-References	: http://marc.info/?l=linux-kernel&m=128799855826011&w=2
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=21652
-Subject		: several problems with intel graphics since 2.6.36
-Submitter	: Norbert Preining <preining@logic.at>
-Date		: 2010-10-27 14:32 (54 days old)
-Message-ID	: <20101027143252.GA8676@gamma.logic.tuwien.ac.at>
-References	: http://marc.info/?l=linux-kernel&m=128818998630241&w=2
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=21402
-Subject		: [KVM] Noacpi Windows guest can not boot up on 32bit KVM host
-Submitter	: xudong <xudong.hao@intel.com>
-Date		: 2010-10-29 03:01 (52 days old)
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=20332
-Subject		: [LogFS] [2.6.36-rc7] Kernel BUG at lib/btree.c:465!
-Submitter	: Prasad Joshi <prasadjoshi124@gmail.com>
-Date		: 2010-10-12 18:56 (69 days old)
-Message-ID	: <AANLkTimAbCZNhLQ5nADUiAC+7JpAeJBEmjFwdxyZ-FxO@mail.gmail.com>
-References	: http://marc.info/?l=linux-kernel&m=128690910501830&w=2
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=20322
-Subject		: 2.6.36-rc7: inconsistent lock state: inconsistent {IN-RECLAIM_FS-R} -> {RECLAIM_FS-ON-W} usage.
-Submitter	: Dave Jones <davej@redhat.com>
-Date		: 2010-10-11 20:10 (70 days old)
-Message-ID	: <20101011201007.GA29707@redhat.com>
-References	: http://marc.info/?l=linux-kernel&m=128682782828453&w=2
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=20232
-Subject		: kworker consumes ~100% CPU on HP Elitebook 8540w running 2.6.36_rc6-git4
-Submitter	: Ozan Caglayan <ozan@pardus.org.tr>
-Date		: 2010-10-13 06:13 (68 days old)
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=19632
-Subject		: 2.6.36-rc6: modprobe Not tainted warning
-Submitter	: Heinz Diehl <htd@fritha.org>
-Date		: 2010-09-30 18:25 (81 days old)
-Message-ID	: <20100930182516.GA15089@fritha.org>
-References	: http://marc.info/?l=linux-kernel&m=128587114004680&w=2
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=19392
-Subject		: WARNING: at drivers/net/wireless/ath/ath5k/base.c:3475 ath5k_bss_info_changed+0x44/0x168 [ath5k]()
-Submitter	: Justin Mattock <justinmattock@gmail.com>
-Date		: 2010-09-28 22:30 (83 days old)
-Message-ID	: <<AANLkTim5WCGKPvEkOkO_YnMF9pg8mvLfQoFBNUFpfa_k@mail.gmail.com>>
-References	: http://marc.info/?l=linux-kernel&m=128571307018635&w=2
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=19372
-Subject		: 2.6.36-rc6: WARNING: at drivers/gpu/drm/radeon/radeon_fence.c:235 radeon_fence_wait+0x35a/0x3c0
-Submitter	: Alexey Dobriyan <adobriyan@gmail.com>
-Date		: 2010-09-29 21:29 (82 days old)
-Message-ID	: <20100929212923.GA5578@core2.telecom.by>
-References	: http://marc.info/?l=linux-kernel&m=128579579400315&w=2
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=19052
-Subject		: 2.6.36-rc5-git1 -- [drm:i915_report_and_clear_eir] *ERROR* EIR stuck: 0x00000010, masking
-Submitter	: Miles Lane <miles.lane@gmail.com>
-Date		: 2010-09-22 23:47 (89 days old)
-Message-ID	: <AANLkTikWQjUQjFJU9MO1+XbSLAEE-GARz+S+Dz2Fgu4h@mail.gmail.com>
-References	: http://marc.info/?l=linux-kernel&m=128519926626322&w=2
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=17121
-Subject		: Two blank rectangles more than 10 cm long when booting
-Submitter	: Eric Valette <eric.valette@free.fr>
-Date		: 2010-08-26 17:24 (116 days old)
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=17061
-Subject		: 2.6.36-rc1 on zaurus: bluetooth regression
-Submitter	: Pavel Machek <pavel@ucw.cz>
-Date		: 2010-08-21 15:24 (121 days old)
-Message-ID	: <20100821152445.GA1536@ucw.cz>
-References	: http://marc.info/?l=linux-kernel&m=128240433828087&w=2
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=16951
-Subject		: hackbench regression with 2.6.36-rc1
-Submitter	: Zhang, Yanmin <yanmin_zhang@linux.intel.com>
-Date		: 2010-08-18 6:18 (124 days old)
-Message-ID	: <1282112318.21202.8.camel@ymzhang.sh.intel.com>
-References	: http://marc.info/?l=linux-kernel&m=128211235904910&w=2
-
-
-Regressions with patches
-------------------------
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=21092
-Subject		: Kernel 2.6.36 Bug during quotaon on reiserfs
-Submitter	:  <markus.gapp@gmx.net>
-Date		: 2010-10-24 16:57 (57 days old)
-Handled-By	: Jan Kara <jack@suse.cz>
-Patch		: https://bugzilla.kernel.org/attachment.cgi?id=35292
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=20462
-Subject		: 2.6.36-rc7-git2 - panic/GPF: e1000e/vlans?
-Submitter	: Nikola Ciprich <extmaillist@linuxbox.cz>
-Date		: 2010-10-15 7:10 (66 days old)
-Message-ID	: <20101015071008.GA8714@pcnci.linuxbox.cz>
-References	: http://marc.info/?l=linux-kernel&m=128712984831303&w=2
-Handled-By	: Jesse Gross <jesse@nicira.com>
-Patch		: http://www.spinics.net/lists/netdev/msg146227.html
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=20342
-Subject		: [LogFS] [2.6.36-rc7] Deadlock in logfs_get_wblocks, hold and wait on same lock super->s_write_mutex
-Submitter	: Prasad Joshi <prasadjoshi124@gmail.com>
-Date		: 2010-10-13 9:49 (68 days old)
-Message-ID	: <AANLkTinvsMxTxEbDEFmb5M-6fYjdRvErU==Zs7+qANkV@mail.gmail.com>
-References	: http://marc.info/?l=linux-kernel&m=128696335024718&w=2
-Patch		: https://patchwork.kernel.org/patch/328682/
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=20162
-Subject		: [LogFS][2.6.36.rc7+] Kernel BUG at readwrite.c:1193
-Submitter	: Prasad Joshi <prasadjoshi124@gmail.com>
-Date		: 2010-10-10 17:44 (71 days old)
-Message-ID	: <AANLkTi=JkcuWBPo+X-i+9o-BJFVqjea1J3e=Mr=HvAWF@mail.gmail.com>
-References	: http://marc.info/?l=linux-kernel&m=128673196203340&w=2
-Handled-By	:  Prasad Gajanan Joshi <prasadjoshi124@gmail.com>
-Patch		: https://bugzilla.kernel.org/show_bug.cgi?id=20162#c1
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=16971
-Subject		: qla4xxx compile failure on 32-bit PowerPC: missing readq and writeq
-Submitter	: Meelis Roos <mroos@linux.ee>
-Date		: 2010-08-19 21:03 (123 days old)
-Message-ID	: <<<alpine.SOC.1.00.1008192359310.19654@math.ut.ee>>>
-References	: http://marc.info/?l=linux-kernel&m=128225184900892&w=2
-Patch		: http://marc.info/?l=linux-scsi&m=128590267608876&w=2
-
-
-For details, please visit the bug entries and follow the links given in
-references.
-
-As you can see, there is a Bugzilla entry for each of the listed regressions.
-There also is a Bugzilla entry used for tracking the regressions introduced
-between 2.6.35 and 2.6.36, unresolved as well as resolved, at:
-
-http://bugzilla.kernel.org/show_bug.cgi?id=16444
-
-Please let the tracking team know if there are any Bugzilla entries that
-should be added to the list in there.
-
-Thanks!
+From: Johannes Berg <johannes.berg@intel.com>
+
+Instead of tying mesh activity to interface up,
+add join and leave commands for mesh. Since we
+must be backward compatible, let cfg80211 handle
+joining a mesh if a mesh ID was pre-configured
+when the device goes up.
+
+Note that this therefore must modify mac80211 as
+well since mac80211 needs to lose the logic to
+start the mesh on interface up.
+
+We now allow querying mesh parameters before the
+mesh is connected, which simply returns defaults.
+Setting them (internally renamed to "update") is
+only allowed while connected. Specify them with
+the new mesh join command instead where needed.
+
+In mac80211, beaconing must now also follow the
+mesh enabled/not enabled state, which is done
+by testing the mesh ID.
+
+Signed-off-by: Javier Cardona <javier@cozybit.com>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+v2: - fix join on netdev up (pointed out by Javier)
+    - only require mesh ID (pointed out by Javier)
+    - more sanity checking around get/set_mesh_params
+    - rename set_mesh_params to update_mesh_params,
+      disallow calling it before connected to mesh
+    - add some mesh interface type checks
+    - introduce mesh_setup struct for static config
+v3: - fold in Javier's beaconing patch
+v4: - wrap mesh sections inside CONFIG_MAC80211_MESH to 
+      fix compilation problems reported by Stephen Rothwell,
+      Larry Finger and Bruno Randolf.
+
+ include/linux/nl80211.h    |    8 +++
+ include/net/cfg80211.h     |   38 +++++++++---
+ net/mac80211/cfg.c         |   39 +++++++++---
+ net/mac80211/ieee80211_i.h |   13 ----
+ net/mac80211/iface.c       |   14 +----
+ net/mac80211/main.c        |    5 +-
+ net/mac80211/mesh.c        |   26 ++-------
+ net/mac80211/mesh.h        |   25 --------
+ net/wireless/Makefile      |    2 +-
+ net/wireless/core.c        |   15 ++++-
+ net/wireless/core.h        |   13 ++++
+ net/wireless/mesh.c        |  140 ++++++++++++++++++++++++++++++++++++++++++++
+ net/wireless/nl80211.c     |  137 ++++++++++++++++++++++++++++++++++++-------
+ net/wireless/util.c        |    1 +
+ 14 files changed, 361 insertions(+), 115 deletions(-)
+ create mode 100644 net/wireless/mesh.c
+
+diff --git a/include/linux/nl80211.h b/include/linux/nl80211.h
+index 9e54145..410a06e 100644
+--- a/include/linux/nl80211.h
++++ b/include/linux/nl80211.h
+@@ -394,6 +394,11 @@
+  *
+  * @NL80211_CMD_SET_WDS_PEER: Set the MAC address of the peer on a WDS interface.
+  *
++ * @NL80211_CMD_JOIN_MESH: Join a mesh. The mesh ID must be given, and initial
++ *	mesh config parameters may be given.
++ * @NL80211_CMD_LEAVE_MESH: Leave the mesh network -- no special arguments, the
++ *	network is determined by the network interface.
++ *
+  * @NL80211_CMD_MAX: highest used command number
+  * @__NL80211_CMD_AFTER_LAST: internal use
+  */
+@@ -500,6 +505,9 @@ enum nl80211_commands {
+ 
+ 	NL80211_CMD_FRAME_WAIT_CANCEL,
+ 
++	NL80211_CMD_JOIN_MESH,
++	NL80211_CMD_LEAVE_MESH,
++
+ 	/* add new commands above here */
+ 
+ 	/* used to define NL80211_CMD_MAX below */
+diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+index 902895d..788c398 100644
+--- a/include/net/cfg80211.h
++++ b/include/net/cfg80211.h
+@@ -258,13 +258,9 @@ struct ieee80211_supported_band {
+ 
+ /**
+  * struct vif_params - describes virtual interface parameters
+- * @mesh_id: mesh ID to use
+- * @mesh_id_len: length of the mesh ID
+  * @use_4addr: use 4-address frames
+  */
+ struct vif_params {
+-       u8 *mesh_id;
+-       int mesh_id_len;
+        int use_4addr;
+ };
+ 
+@@ -615,6 +611,11 @@ struct bss_parameters {
+ 	int ap_isolate;
+ };
+ 
++/*
++ * struct mesh_config - 802.11s mesh configuration
++ *
++ * These parameters can be changed while the mesh is active.
++ */
+ struct mesh_config {
+ 	/* Timeouts in ms */
+ 	/* Mesh plink management parameters */
+@@ -638,6 +639,18 @@ struct mesh_config {
+ };
+ 
+ /**
++ * struct mesh_setup - 802.11s mesh setup configuration
++ * @mesh_id: the mesh ID
++ * @mesh_id_len: length of the mesh ID, at least 1 and at most 32 bytes
++ *
++ * These parameters are fixed when the mesh is created.
++ */
++struct mesh_setup {
++	const u8 *mesh_id;
++	u8 mesh_id_len;
++};
++
++/**
+  * struct ieee80211_txq_params - TX queue parameters
+  * @queue: TX queue identifier (NL80211_TXQ_Q_*)
+  * @txop: Maximum burst time in units of 32 usecs, 0 meaning disabled
+@@ -1078,7 +1091,7 @@ struct cfg80211_pmksa {
+  *
+  * @get_mesh_params: Put the current mesh parameters into *params
+  *
+- * @set_mesh_params: Set mesh parameters.
++ * @update_mesh_params: Update mesh parameters on a running mesh.
+  *	The mask is a bitfield which tells us which parameters to
+  *	set, and which to leave alone.
+  *
+@@ -1229,9 +1242,14 @@ struct cfg80211_ops {
+ 	int	(*get_mesh_params)(struct wiphy *wiphy,
+ 				struct net_device *dev,
+ 				struct mesh_config *conf);
+-	int	(*set_mesh_params)(struct wiphy *wiphy,
+-				struct net_device *dev,
+-				const struct mesh_config *nconf, u32 mask);
++	int	(*update_mesh_params)(struct wiphy *wiphy,
++				      struct net_device *dev, u32 mask,
++				      const struct mesh_config *nconf);
++	int	(*join_mesh)(struct wiphy *wiphy, struct net_device *dev,
++			     const struct mesh_config *conf,
++			     const struct mesh_setup *setup);
++	int	(*leave_mesh)(struct wiphy *wiphy, struct net_device *dev);
++
+ 	int	(*change_bss)(struct wiphy *wiphy, struct net_device *dev,
+ 			      struct bss_parameters *params);
+ 
+@@ -1647,6 +1665,8 @@ struct cfg80211_cached_keys;
+  * @bssid: (private) Used by the internal configuration code
+  * @ssid: (private) Used by the internal configuration code
+  * @ssid_len: (private) Used by the internal configuration code
++ * @mesh_id_len: (private) Used by the internal configuration code
++ * @mesh_id_up_len: (private) Used by the internal configuration code
+  * @wext: (private) Used by the internal wireless extensions compat code
+  * @use_4addr: indicates 4addr mode is used on this interface, must be
+  *	set by driver (if supported) on add_interface BEFORE registering the
+@@ -1676,7 +1696,7 @@ struct wireless_dev {
+ 
+ 	/* currently used for IBSS and SME - might be rearranged later */
+ 	u8 ssid[IEEE80211_MAX_SSID_LEN];
+-	u8 ssid_len;
++	u8 ssid_len, mesh_id_len, mesh_id_up_len;
+ 	enum {
+ 		CFG80211_SME_IDLE,
+ 		CFG80211_SME_CONNECTING,
+diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
+index d34c7c3..68329d7 100644
+--- a/net/mac80211/cfg.c
++++ b/net/mac80211/cfg.c
+@@ -60,11 +60,6 @@ static int ieee80211_change_iface(struct wiphy *wiphy,
+ 	if (ret)
+ 		return ret;
+ 
+-	if (ieee80211_vif_is_mesh(&sdata->vif) && params->mesh_id_len)
+-		ieee80211_sdata_set_mesh_id(sdata,
+-					    params->mesh_id_len,
+-					    params->mesh_id);
+-
+ 	if (type == NL80211_IFTYPE_AP_VLAN &&
+ 	    params && params->use_4addr == 0)
+ 		rcu_assign_pointer(sdata->u.vlan.sta, NULL);
+@@ -1003,9 +998,9 @@ static inline bool _chg_mesh_attr(enum nl80211_meshconf_params parm, u32 mask)
+ 	return (mask >> (parm-1)) & 0x1;
+ }
+ 
+-static int ieee80211_set_mesh_params(struct wiphy *wiphy,
+-				struct net_device *dev,
+-				const struct mesh_config *nconf, u32 mask)
++static int ieee80211_update_mesh_params(struct wiphy *wiphy,
++					struct net_device *dev, u32 mask,
++					const struct mesh_config *nconf)
+ {
+ 	struct mesh_config *conf;
+ 	struct ieee80211_sub_if_data *sdata;
+@@ -1056,6 +1051,30 @@ static int ieee80211_set_mesh_params(struct wiphy *wiphy,
+ 	return 0;
+ }
+ 
++static int ieee80211_join_mesh(struct wiphy *wiphy, struct net_device *dev,
++			       const struct mesh_config *conf,
++			       const struct mesh_setup *setup)
++{
++	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
++	struct ieee80211_if_mesh *ifmsh = &sdata->u.mesh;
++
++	memcpy(&sdata->u.mesh.mshcfg, conf, sizeof(struct mesh_config));
++	ifmsh->mesh_id_len = setup->mesh_id_len;
++	memcpy(ifmsh->mesh_id, setup->mesh_id, ifmsh->mesh_id_len);
++
++	ieee80211_start_mesh(sdata);
++
++	return 0;
++}
++
++static int ieee80211_leave_mesh(struct wiphy *wiphy, struct net_device *dev)
++{
++	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
++
++	ieee80211_stop_mesh(sdata);
++
++	return 0;
++}
+ #endif
+ 
+ static int ieee80211_change_bss(struct wiphy *wiphy,
+@@ -1760,8 +1779,10 @@ struct cfg80211_ops mac80211_config_ops = {
+ 	.change_mpath = ieee80211_change_mpath,
+ 	.get_mpath = ieee80211_get_mpath,
+ 	.dump_mpath = ieee80211_dump_mpath,
+-	.set_mesh_params = ieee80211_set_mesh_params,
++	.update_mesh_params = ieee80211_update_mesh_params,
+ 	.get_mesh_params = ieee80211_get_mesh_params,
++	.join_mesh = ieee80211_join_mesh,
++	.leave_mesh = ieee80211_leave_mesh,
+ #endif
+ 	.change_bss = ieee80211_change_bss,
+ 	.set_txq_params = ieee80211_set_txq_params,
+diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+index 66b0b52..e37f0d5 100644
+--- a/net/mac80211/ieee80211_i.h
++++ b/net/mac80211/ieee80211_i.h
+@@ -608,19 +608,6 @@ struct ieee80211_sub_if_data *vif_to_sdata(struct ieee80211_vif *p)
+ 	return container_of(p, struct ieee80211_sub_if_data, vif);
+ }
+ 
+-static inline void
+-ieee80211_sdata_set_mesh_id(struct ieee80211_sub_if_data *sdata,
+-			    u8 mesh_id_len, u8 *mesh_id)
+-{
+-#ifdef CONFIG_MAC80211_MESH
+-	struct ieee80211_if_mesh *ifmsh = &sdata->u.mesh;
+-	ifmsh->mesh_id_len = mesh_id_len;
+-	memcpy(ifmsh->mesh_id, mesh_id, mesh_id_len);
+-#else
+-	WARN_ON(1);
+-#endif
+-}
+-
+ enum sdata_queue_type {
+ 	IEEE80211_SDATA_QUEUE_TYPE_FRAME	= 0,
+ 	IEEE80211_SDATA_QUEUE_AGG_START		= 1,
+diff --git a/net/mac80211/iface.c b/net/mac80211/iface.c
+index 96e27f1..f0f11bb 100644
+--- a/net/mac80211/iface.c
++++ b/net/mac80211/iface.c
+@@ -268,9 +268,7 @@ static int ieee80211_do_open(struct net_device *dev, bool coming_up)
+ 				goto err_stop;
+ 		}
+ 
+-		if (ieee80211_vif_is_mesh(&sdata->vif)) {
+-			ieee80211_start_mesh(sdata);
+-		} else if (sdata->vif.type == NL80211_IFTYPE_AP) {
++		if (sdata->vif.type == NL80211_IFTYPE_AP) {
+ 			local->fif_pspoll++;
+ 			local->fif_probe_req++;
+ 
+@@ -495,10 +493,6 @@ static void ieee80211_do_stop(struct ieee80211_sub_if_data *sdata,
+ 		ieee80211_adjust_monitor_flags(sdata, -1);
+ 		ieee80211_configure_filter(local);
+ 		break;
+-	case NL80211_IFTYPE_MESH_POINT:
+-		if (ieee80211_vif_is_mesh(&sdata->vif))
+-			ieee80211_stop_mesh(sdata);
+-		/* fall through */
+ 	default:
+ 		flush_work(&sdata->work);
+ 		/*
+@@ -1188,12 +1182,6 @@ int ieee80211_if_add(struct ieee80211_local *local, const char *name,
+ 	if (ret)
+ 		goto fail;
+ 
+-	if (ieee80211_vif_is_mesh(&sdata->vif) &&
+-	    params && params->mesh_id_len)
+-		ieee80211_sdata_set_mesh_id(sdata,
+-					    params->mesh_id_len,
+-					    params->mesh_id);
+-
+ 	mutex_lock(&local->iflist_mtx);
+ 	list_add_tail_rcu(&sdata->list, &local->interfaces);
+ 	mutex_unlock(&local->iflist_mtx);
+diff --git a/net/mac80211/main.c b/net/mac80211/main.c
+index 107a0cb..973fee9 100644
+--- a/net/mac80211/main.c
++++ b/net/mac80211/main.c
+@@ -245,9 +245,12 @@ void ieee80211_bss_info_change_notify(struct ieee80211_sub_if_data *sdata,
+ 				sdata->vif.bss_conf.enable_beacon =
+ 					!!sdata->u.ibss.presp;
+ 				break;
++#ifdef CONFIG_MAC80211_MESH
+ 			case NL80211_IFTYPE_MESH_POINT:
+-				sdata->vif.bss_conf.enable_beacon = true;
++				sdata->vif.bss_conf.enable_beacon =
++					!!sdata->u.mesh.mesh_id_len;
+ 				break;
++#endif
+ 			default:
+ 				/* not reached */
+ 				WARN_ON(1);
+diff --git a/net/mac80211/mesh.c b/net/mac80211/mesh.c
+index 0d32348..63e1188 100644
+--- a/net/mac80211/mesh.c
++++ b/net/mac80211/mesh.c
+@@ -530,6 +530,11 @@ void ieee80211_start_mesh(struct ieee80211_sub_if_data *sdata)
+ void ieee80211_stop_mesh(struct ieee80211_sub_if_data *sdata)
+ {
+ 	struct ieee80211_local *local = sdata->local;
++	struct ieee80211_if_mesh *ifmsh = &sdata->u.mesh;
++
++	ifmsh->mesh_id_len = 0;
++	ieee80211_bss_info_change_notify(sdata, BSS_CHANGED_BEACON_ENABLED);
++	sta_info_flush(local, NULL);
+ 
+ 	del_timer_sync(&sdata->u.mesh.housekeeping_timer);
+ 	del_timer_sync(&sdata->u.mesh.mesh_path_root_timer);
+@@ -674,27 +679,6 @@ void ieee80211_mesh_init_sdata(struct ieee80211_sub_if_data *sdata)
+ 		    ieee80211_mesh_housekeeping_timer,
+ 		    (unsigned long) sdata);
+ 
+-	ifmsh->mshcfg.dot11MeshRetryTimeout = MESH_RET_T;
+-	ifmsh->mshcfg.dot11MeshConfirmTimeout = MESH_CONF_T;
+-	ifmsh->mshcfg.dot11MeshHoldingTimeout = MESH_HOLD_T;
+-	ifmsh->mshcfg.dot11MeshMaxRetries = MESH_MAX_RETR;
+-	ifmsh->mshcfg.dot11MeshTTL = MESH_TTL;
+-	ifmsh->mshcfg.element_ttl = MESH_DEFAULT_ELEMENT_TTL;
+-	ifmsh->mshcfg.auto_open_plinks = true;
+-	ifmsh->mshcfg.dot11MeshMaxPeerLinks =
+-		MESH_MAX_ESTAB_PLINKS;
+-	ifmsh->mshcfg.dot11MeshHWMPactivePathTimeout =
+-		MESH_PATH_TIMEOUT;
+-	ifmsh->mshcfg.dot11MeshHWMPpreqMinInterval =
+-		MESH_PREQ_MIN_INT;
+-	ifmsh->mshcfg.dot11MeshHWMPnetDiameterTraversalTime =
+-		MESH_DIAM_TRAVERSAL_TIME;
+-	ifmsh->mshcfg.dot11MeshHWMPmaxPREQretries =
+-		MESH_MAX_PREQ_RETRIES;
+-	ifmsh->mshcfg.path_refresh_time =
+-		MESH_PATH_REFRESH_TIME;
+-	ifmsh->mshcfg.min_discovery_timeout =
+-		MESH_MIN_DISCOVERY_TIMEOUT;
+ 	ifmsh->accepting_plinks = true;
+ 	ifmsh->preq_id = 0;
+ 	ifmsh->sn = 0;
+diff --git a/net/mac80211/mesh.h b/net/mac80211/mesh.h
+index 182942e..039d7fa 100644
+--- a/net/mac80211/mesh.h
++++ b/net/mac80211/mesh.h
+@@ -175,33 +175,10 @@ struct mesh_rmc {
+  */
+ #define MESH_CFG_CMP_LEN 	(IEEE80211_MESH_CONFIG_LEN - 2)
+ 
+-/* Default values, timeouts in ms */
+-#define MESH_TTL 		31
+-#define MESH_MAX_RETR	 	3
+-#define MESH_RET_T 		100
+-#define MESH_CONF_T 		100
+-#define MESH_HOLD_T 		100
+-
+-#define MESH_PATH_TIMEOUT	5000
+-/* Minimum interval between two consecutive PREQs originated by the same
+- * interface
+- */
+-#define MESH_PREQ_MIN_INT	10
+-#define MESH_DIAM_TRAVERSAL_TIME 50
+-/* A path will be refreshed if it is used PATH_REFRESH_TIME milliseconds before
+- * timing out.  This way it will remain ACTIVE and no data frames will be
+- * unnecesarily held in the pending queue.
+- */
+-#define MESH_PATH_REFRESH_TIME			1000
+-#define MESH_MIN_DISCOVERY_TIMEOUT (2 * MESH_DIAM_TRAVERSAL_TIME)
+ #define MESH_DEFAULT_BEACON_INTERVAL		1000 	/* in 1024 us units */
+ 
+-#define MESH_MAX_PREQ_RETRIES 4
+ #define MESH_PATH_EXPIRE (600 * HZ)
+ 
+-/* Default maximum number of established plinks per interface */
+-#define MESH_MAX_ESTAB_PLINKS	32
+-
+ /* Default maximum number of plinks per interface */
+ #define MESH_MAX_PLINKS		256
+ 
+@@ -216,8 +193,6 @@ struct mesh_rmc {
+ #define PERR_RCODE_NO_ROUTE     12
+ #define PERR_RCODE_DEST_UNREACH 13
+ 
+-#define MESH_DEFAULT_ELEMENT_TTL 31
+-
+ /* Public interfaces */
+ /* Various */
+ int ieee80211_fill_mesh_addresses(struct ieee80211_hdr *hdr, __le16 *fc,
+diff --git a/net/wireless/Makefile b/net/wireless/Makefile
+index e77e508..55a28ab 100644
+--- a/net/wireless/Makefile
++++ b/net/wireless/Makefile
+@@ -10,7 +10,7 @@ obj-$(CONFIG_WEXT_SPY) += wext-spy.o
+ obj-$(CONFIG_WEXT_PRIV) += wext-priv.o
+ 
+ cfg80211-y += core.o sysfs.o radiotap.o util.o reg.o scan.o nl80211.o
+-cfg80211-y += mlme.o ibss.o sme.o chan.o ethtool.o
++cfg80211-y += mlme.o ibss.o sme.o chan.o ethtool.o mesh.o
+ cfg80211-$(CONFIG_CFG80211_DEBUGFS) += debugfs.o
+ cfg80211-$(CONFIG_CFG80211_WEXT) += wext-compat.o wext-sme.o
+ cfg80211-$(CONFIG_CFG80211_INTERNAL_REGDB) += regdb.o
+diff --git a/net/wireless/core.c b/net/wireless/core.c
+index 630bcf0..79772fc 100644
+--- a/net/wireless/core.c
++++ b/net/wireless/core.c
+@@ -332,6 +332,7 @@ struct wiphy *wiphy_new(const struct cfg80211_ops *ops, int sizeof_priv)
+ 	WARN_ON(ops->add_virtual_intf && !ops->del_virtual_intf);
+ 	WARN_ON(ops->add_station && !ops->del_station);
+ 	WARN_ON(ops->add_mpath && !ops->del_mpath);
++	WARN_ON(ops->join_mesh && !ops->leave_mesh);
+ 
+ 	alloc_size = sizeof(*rdev) + sizeof_priv;
+ 
+@@ -752,6 +753,9 @@ static int cfg80211_netdev_notifier_call(struct notifier_block * nb,
+ 			cfg80211_mlme_down(rdev, dev);
+ 			wdev_unlock(wdev);
+ 			break;
++		case NL80211_IFTYPE_MESH_POINT:
++			cfg80211_leave_mesh(rdev, dev);
++			break;
+ 		default:
+ 			break;
+ 		}
+@@ -775,20 +779,27 @@ static int cfg80211_netdev_notifier_call(struct notifier_block * nb,
+ 		}
+ 		cfg80211_lock_rdev(rdev);
+ 		mutex_lock(&rdev->devlist_mtx);
+-#ifdef CONFIG_CFG80211_WEXT
+ 		wdev_lock(wdev);
+ 		switch (wdev->iftype) {
++#ifdef CONFIG_CFG80211_WEXT
+ 		case NL80211_IFTYPE_ADHOC:
+ 			cfg80211_ibss_wext_join(rdev, wdev);
+ 			break;
+ 		case NL80211_IFTYPE_STATION:
+ 			cfg80211_mgd_wext_connect(rdev, wdev);
+ 			break;
++#endif
++		case NL80211_IFTYPE_MESH_POINT:
++			/* backward compat code ... */
++			if (wdev->mesh_id_up_len)
++				__cfg80211_join_mesh(rdev, dev, wdev->ssid,
++						     wdev->mesh_id_up_len,
++						     &default_mesh_config);
++			break;
+ 		default:
+ 			break;
+ 		}
+ 		wdev_unlock(wdev);
+-#endif
+ 		rdev->opencount++;
+ 		mutex_unlock(&rdev->devlist_mtx);
+ 		cfg80211_unlock_rdev(rdev);
+diff --git a/net/wireless/core.h b/net/wireless/core.h
+index ee80ad8..743203b 100644
+--- a/net/wireless/core.h
++++ b/net/wireless/core.h
+@@ -285,6 +285,19 @@ void __cfg80211_ibss_joined(struct net_device *dev, const u8 *bssid);
+ int cfg80211_ibss_wext_join(struct cfg80211_registered_device *rdev,
+ 			    struct wireless_dev *wdev);
+ 
++/* mesh */
++extern const struct mesh_config default_mesh_config;
++int __cfg80211_join_mesh(struct cfg80211_registered_device *rdev,
++			 struct net_device *dev,
++			 const u8 *mesh_id, u8 mesh_id_len,
++			 const struct mesh_config *conf);
++int cfg80211_join_mesh(struct cfg80211_registered_device *rdev,
++		       struct net_device *dev,
++		       const u8 *mesh_id, u8 mesh_id_len,
++		       const struct mesh_config *conf);
++int cfg80211_leave_mesh(struct cfg80211_registered_device *rdev,
++			struct net_device *dev);
++
+ /* MLME */
+ int __cfg80211_mlme_auth(struct cfg80211_registered_device *rdev,
+ 			 struct net_device *dev,
+diff --git a/net/wireless/mesh.c b/net/wireless/mesh.c
+new file mode 100644
+index 0000000..e0b9747
+--- /dev/null
++++ b/net/wireless/mesh.c
+@@ -0,0 +1,140 @@
++#include <linux/ieee80211.h>
++#include <net/cfg80211.h>
++#include "core.h"
++
++/* Default values, timeouts in ms */
++#define MESH_TTL 		31
++#define MESH_DEFAULT_ELEMENT_TTL 31
++#define MESH_MAX_RETR	 	3
++#define MESH_RET_T 		100
++#define MESH_CONF_T 		100
++#define MESH_HOLD_T 		100
++
++#define MESH_PATH_TIMEOUT	5000
++
++/*
++ * Minimum interval between two consecutive PREQs originated by the same
++ * interface
++ */
++#define MESH_PREQ_MIN_INT	10
++#define MESH_DIAM_TRAVERSAL_TIME 50
++
++/*
++ * A path will be refreshed if it is used PATH_REFRESH_TIME milliseconds
++ * before timing out.  This way it will remain ACTIVE and no data frames
++ * will be unnecessarily held in the pending queue.
++ */
++#define MESH_PATH_REFRESH_TIME			1000
++#define MESH_MIN_DISCOVERY_TIMEOUT (2 * MESH_DIAM_TRAVERSAL_TIME)
++
++/* Default maximum number of established plinks per interface */
++#define MESH_MAX_ESTAB_PLINKS	32
++
++#define MESH_MAX_PREQ_RETRIES	4
++
++
++const struct mesh_config default_mesh_config = {
++	.dot11MeshRetryTimeout = MESH_RET_T,
++	.dot11MeshConfirmTimeout = MESH_CONF_T,
++	.dot11MeshHoldingTimeout = MESH_HOLD_T,
++	.dot11MeshMaxRetries = MESH_MAX_RETR,
++	.dot11MeshTTL = MESH_TTL,
++	.element_ttl = MESH_DEFAULT_ELEMENT_TTL,
++	.auto_open_plinks = true,
++	.dot11MeshMaxPeerLinks = MESH_MAX_ESTAB_PLINKS,
++	.dot11MeshHWMPactivePathTimeout = MESH_PATH_TIMEOUT,
++	.dot11MeshHWMPpreqMinInterval = MESH_PREQ_MIN_INT,
++	.dot11MeshHWMPnetDiameterTraversalTime = MESH_DIAM_TRAVERSAL_TIME,
++	.dot11MeshHWMPmaxPREQretries = MESH_MAX_PREQ_RETRIES,
++	.path_refresh_time = MESH_PATH_REFRESH_TIME,
++	.min_discovery_timeout = MESH_MIN_DISCOVERY_TIMEOUT,
++};
++
++
++int __cfg80211_join_mesh(struct cfg80211_registered_device *rdev,
++			 struct net_device *dev,
++			 const u8 *mesh_id, u8 mesh_id_len,
++			 const struct mesh_config *conf)
++{
++	struct wireless_dev *wdev = dev->ieee80211_ptr;
++	struct mesh_setup setup = {
++		.mesh_id = mesh_id,
++		.mesh_id_len = mesh_id_len,
++	};
++	int err;
++
++	BUILD_BUG_ON(IEEE80211_MAX_SSID_LEN != IEEE80211_MAX_MESH_ID_LEN);
++
++	ASSERT_WDEV_LOCK(wdev);
++
++	if (dev->ieee80211_ptr->iftype != NL80211_IFTYPE_MESH_POINT)
++		return -EOPNOTSUPP;
++
++	if (wdev->mesh_id_len)
++		return -EALREADY;
++
++	if (!mesh_id_len)
++		return -EINVAL;
++
++	if (!rdev->ops->join_mesh)
++		return -EOPNOTSUPP;
++
++	err = rdev->ops->join_mesh(&rdev->wiphy, dev, conf, &setup);
++	if (!err) {
++		memcpy(wdev->ssid, mesh_id, mesh_id_len);
++		wdev->mesh_id_len = mesh_id_len;
++	}
++
++	return err;
++}
++
++int cfg80211_join_mesh(struct cfg80211_registered_device *rdev,
++		       struct net_device *dev,
++		       const u8 *mesh_id, u8 mesh_id_len,
++		       const struct mesh_config *conf)
++{
++	struct wireless_dev *wdev = dev->ieee80211_ptr;
++	int err;
++
++	wdev_lock(wdev);
++	err = __cfg80211_join_mesh(rdev, dev, mesh_id, mesh_id_len, conf);
++	wdev_unlock(wdev);
++
++	return err;
++}
++
++static int __cfg80211_leave_mesh(struct cfg80211_registered_device *rdev,
++				 struct net_device *dev)
++{
++	struct wireless_dev *wdev = dev->ieee80211_ptr;
++	int err;
++
++	ASSERT_WDEV_LOCK(wdev);
++
++	if (dev->ieee80211_ptr->iftype != NL80211_IFTYPE_MESH_POINT)
++		return -EOPNOTSUPP;
++
++	if (!rdev->ops->leave_mesh)
++		return -EOPNOTSUPP;
++
++	if (!wdev->mesh_id_len)
++		return -ENOTCONN;
++
++	err = rdev->ops->leave_mesh(&rdev->wiphy, dev);
++	if (!err)
++		wdev->mesh_id_len = 0;
++	return err;
++}
++
++int cfg80211_leave_mesh(struct cfg80211_registered_device *rdev,
++			struct net_device *dev)
++{
++	struct wireless_dev *wdev = dev->ieee80211_ptr;
++	int err;
++
++	wdev_lock(wdev);
++	err = __cfg80211_leave_mesh(rdev, dev);
++	wdev_unlock(wdev);
++
++	return err;
++}
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index c8d4d53..56508d4 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -661,13 +661,14 @@ static int nl80211_send_wiphy(struct sk_buff *msg, u32 pid, u32 seq, int flags,
+ 	CMD(add_beacon, NEW_BEACON);
+ 	CMD(add_station, NEW_STATION);
+ 	CMD(add_mpath, NEW_MPATH);
+-	CMD(set_mesh_params, SET_MESH_PARAMS);
++	CMD(update_mesh_params, SET_MESH_PARAMS);
+ 	CMD(change_bss, SET_BSS);
+ 	CMD(auth, AUTHENTICATE);
+ 	CMD(assoc, ASSOCIATE);
+ 	CMD(deauth, DEAUTHENTICATE);
+ 	CMD(disassoc, DISASSOCIATE);
+ 	CMD(join_ibss, JOIN_IBSS);
++	CMD(join_mesh, JOIN_MESH);
+ 	CMD(set_pmksa, SET_PMKSA);
+ 	CMD(del_pmksa, DEL_PMKSA);
+ 	CMD(flush_pmksa, FLUSH_PMKSA);
+@@ -1324,11 +1325,21 @@ static int nl80211_set_interface(struct sk_buff *skb, struct genl_info *info)
+ 	}
+ 
+ 	if (info->attrs[NL80211_ATTR_MESH_ID]) {
++		struct wireless_dev *wdev = dev->ieee80211_ptr;
++
+ 		if (ntype != NL80211_IFTYPE_MESH_POINT)
+ 			return -EINVAL;
+-		params.mesh_id = nla_data(info->attrs[NL80211_ATTR_MESH_ID]);
+-		params.mesh_id_len = nla_len(info->attrs[NL80211_ATTR_MESH_ID]);
+-		change = true;
++		if (netif_running(dev))
++			return -EBUSY;
++
++		wdev_lock(wdev);
++		BUILD_BUG_ON(IEEE80211_MAX_SSID_LEN !=
++			     IEEE80211_MAX_MESH_ID_LEN);
++		wdev->mesh_id_up_len =
++			nla_len(info->attrs[NL80211_ATTR_MESH_ID]);
++		memcpy(wdev->ssid, nla_data(info->attrs[NL80211_ATTR_MESH_ID]),
++		       wdev->mesh_id_up_len);
++		wdev_unlock(wdev);
+ 	}
+ 
+ 	if (info->attrs[NL80211_ATTR_4ADDR]) {
+@@ -1388,12 +1399,6 @@ static int nl80211_new_interface(struct sk_buff *skb, struct genl_info *info)
+ 	    !(rdev->wiphy.interface_modes & (1 << type)))
+ 		return -EOPNOTSUPP;
+ 
+-	if (type == NL80211_IFTYPE_MESH_POINT &&
+-	    info->attrs[NL80211_ATTR_MESH_ID]) {
+-		params.mesh_id = nla_data(info->attrs[NL80211_ATTR_MESH_ID]);
+-		params.mesh_id_len = nla_len(info->attrs[NL80211_ATTR_MESH_ID]);
+-	}
+-
+ 	if (info->attrs[NL80211_ATTR_4ADDR]) {
+ 		params.use_4addr = !!nla_get_u8(info->attrs[NL80211_ATTR_4ADDR]);
+ 		err = nl80211_valid_4addr(rdev, NULL, params.use_4addr, type);
+@@ -1410,6 +1415,20 @@ static int nl80211_new_interface(struct sk_buff *skb, struct genl_info *info)
+ 	if (IS_ERR(dev))
+ 		return PTR_ERR(dev);
+ 
++	if (type == NL80211_IFTYPE_MESH_POINT &&
++	    info->attrs[NL80211_ATTR_MESH_ID]) {
++		struct wireless_dev *wdev = dev->ieee80211_ptr;
++
++		wdev_lock(wdev);
++		BUILD_BUG_ON(IEEE80211_MAX_SSID_LEN !=
++			     IEEE80211_MAX_MESH_ID_LEN);
++		wdev->mesh_id_up_len =
++			nla_len(info->attrs[NL80211_ATTR_MESH_ID]);
++		memcpy(wdev->ssid, nla_data(info->attrs[NL80211_ATTR_MESH_ID]),
++		       wdev->mesh_id_up_len);
++		wdev_unlock(wdev);
++	}
++
+ 	return 0;
+ }
+ 
+@@ -2543,21 +2562,32 @@ static int nl80211_req_set_reg(struct sk_buff *skb, struct genl_info *info)
+ }
+ 
+ static int nl80211_get_mesh_params(struct sk_buff *skb,
+-	struct genl_info *info)
++				   struct genl_info *info)
+ {
+ 	struct cfg80211_registered_device *rdev = info->user_ptr[0];
+-	struct mesh_config cur_params;
+-	int err;
+ 	struct net_device *dev = info->user_ptr[1];
++	struct wireless_dev *wdev = dev->ieee80211_ptr;
++	struct mesh_config cur_params;
++	int err = 0;
+ 	void *hdr;
+ 	struct nlattr *pinfoattr;
+ 	struct sk_buff *msg;
+ 
++	if (wdev->iftype != NL80211_IFTYPE_MESH_POINT)
++		return -EOPNOTSUPP;
++
+ 	if (!rdev->ops->get_mesh_params)
+ 		return -EOPNOTSUPP;
+ 
+-	/* Get the mesh params */
+-	err = rdev->ops->get_mesh_params(&rdev->wiphy, dev, &cur_params);
++	wdev_lock(wdev);
++	/* If not connected, get default parameters */
++	if (!wdev->mesh_id_len)
++		memcpy(&cur_params, &default_mesh_config, sizeof(cur_params));
++	else
++		err = rdev->ops->get_mesh_params(&rdev->wiphy, dev,
++						 &cur_params);
++	wdev_unlock(wdev);
++
+ 	if (err)
+ 		return err;
+ 
+@@ -2705,23 +2735,37 @@ do {\
+ #undef FILL_IN_MESH_PARAM_IF_SET
+ }
+ 
+-static int nl80211_set_mesh_params(struct sk_buff *skb, struct genl_info *info)
++static int nl80211_update_mesh_params(struct sk_buff *skb,
++				      struct genl_info *info)
+ {
+ 	struct cfg80211_registered_device *rdev = info->user_ptr[0];
+ 	struct net_device *dev = info->user_ptr[1];
++	struct wireless_dev *wdev = dev->ieee80211_ptr;
+ 	struct mesh_config cfg;
+ 	u32 mask;
+ 	int err;
+ 
+-	if (!rdev->ops->set_mesh_params)
++	if (wdev->iftype != NL80211_IFTYPE_MESH_POINT)
++		return -EOPNOTSUPP;
++
++	if (!rdev->ops->update_mesh_params)
+ 		return -EOPNOTSUPP;
+ 
+ 	err = nl80211_parse_mesh_params(info, &cfg, &mask);
+ 	if (err)
+ 		return err;
+ 
+-	/* Apply changes */
+-	return rdev->ops->set_mesh_params(&rdev->wiphy, dev, &cfg, mask);
++	wdev_lock(wdev);
++	if (!wdev->mesh_id_len)
++		err = -ENOLINK;
++
++	if (!err)
++		err = rdev->ops->update_mesh_params(&rdev->wiphy, dev,
++						    mask, &cfg);
++
++	wdev_unlock(wdev);
++
++	return err;
+ }
+ 
+ static int nl80211_get_reg(struct sk_buff *skb, struct genl_info *info)
+@@ -4505,6 +4549,41 @@ out:
+ 	return err;
+ }
+ 
++static int nl80211_join_mesh(struct sk_buff *skb, struct genl_info *info)
++{
++	struct cfg80211_registered_device *rdev = info->user_ptr[0];
++	struct net_device *dev = info->user_ptr[1];
++	struct mesh_config cfg;
++	int err;
++
++	/* start with default */
++	memcpy(&cfg, &default_mesh_config, sizeof(cfg));
++
++	if (info->attrs[NL80211_ATTR_MESH_PARAMS]) {
++		/* and parse parameters if given */
++		err = nl80211_parse_mesh_params(info, &cfg, NULL);
++		if (err)
++			return err;
++	}
++
++	if (!info->attrs[NL80211_ATTR_MESH_ID] ||
++	    !nla_len(info->attrs[NL80211_ATTR_MESH_ID]))
++		return -EINVAL;
++
++	return cfg80211_join_mesh(rdev, dev,
++				  nla_data(info->attrs[NL80211_ATTR_MESH_ID]),
++				  nla_len(info->attrs[NL80211_ATTR_MESH_ID]),
++				  &cfg);
++}
++
++static int nl80211_leave_mesh(struct sk_buff *skb, struct genl_info *info)
++{
++	struct cfg80211_registered_device *rdev = info->user_ptr[0];
++	struct net_device *dev = info->user_ptr[1];
++
++	return cfg80211_leave_mesh(rdev, dev);
++}
++
+ #define NL80211_FLAG_NEED_WIPHY		0x01
+ #define NL80211_FLAG_NEED_NETDEV	0x02
+ #define NL80211_FLAG_NEED_RTNL		0x04
+@@ -4769,10 +4848,10 @@ static struct genl_ops nl80211_ops[] = {
+ 	},
+ 	{
+ 		.cmd = NL80211_CMD_SET_MESH_PARAMS,
+-		.doit = nl80211_set_mesh_params,
++		.doit = nl80211_update_mesh_params,
+ 		.policy = nl80211_policy,
+ 		.flags = GENL_ADMIN_PERM,
+-		.internal_flags = NL80211_FLAG_NEED_NETDEV |
++		.internal_flags = NL80211_FLAG_NEED_NETDEV_UP |
+ 				  NL80211_FLAG_NEED_RTNL,
+ 	},
+ 	{
+@@ -4987,6 +5066,22 @@ static struct genl_ops nl80211_ops[] = {
+ 		.internal_flags = NL80211_FLAG_NEED_NETDEV |
+ 				  NL80211_FLAG_NEED_RTNL,
+ 	},
++	{
++		.cmd = NL80211_CMD_JOIN_MESH,
++		.doit = nl80211_join_mesh,
++		.policy = nl80211_policy,
++		.flags = GENL_ADMIN_PERM,
++		.internal_flags = NL80211_FLAG_NEED_NETDEV_UP |
++				  NL80211_FLAG_NEED_RTNL,
++	},
++	{
++		.cmd = NL80211_CMD_LEAVE_MESH,
++		.doit = nl80211_leave_mesh,
++		.policy = nl80211_policy,
++		.flags = GENL_ADMIN_PERM,
++		.internal_flags = NL80211_FLAG_NEED_NETDEV_UP |
++				  NL80211_FLAG_NEED_RTNL,
++	},
+ };
+ 
+ static struct genl_multicast_group nl80211_mlme_mcgrp = {
+diff --git a/net/wireless/util.c b/net/wireless/util.c
+index fee020b..4de624c 100644
+--- a/net/wireless/util.c
++++ b/net/wireless/util.c
+@@ -792,6 +792,7 @@ int cfg80211_change_iface(struct cfg80211_registered_device *rdev,
+ 
+ 	if (ntype != otype) {
+ 		dev->ieee80211_ptr->use_4addr = false;
++		dev->ieee80211_ptr->mesh_id_up_len = 0;
+ 
+ 		switch (otype) {
+ 		case NL80211_IFTYPE_ADHOC:
+-- 
+1.7.1
 
