@@ -1,44 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:60161 "EHLO
+Received: from he.sipsolutions.net ([78.46.109.217]:52037 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753574Ab0LPSv4 (ORCPT
+	with ESMTP id S1752307Ab0LGPXl (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 16 Dec 2010 13:51:56 -0500
-Subject: Re: [PATCH 1/3 v2] mac80211: Rename mesh_params to mesh_config to
- prepare for mesh_setup
+	Tue, 7 Dec 2010 10:23:41 -0500
+Subject: Re: [PATCH 5/5] mac80211: fix issuing idle calls when device open
+ count is 0
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Javier Cardona <javier@cozybit.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	Steve Derosier <steve@cozybit.com>, devel@lists.open80211s.org,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <1292524200-14791-1-git-send-email-javier@cozybit.com>
-References: <1292234643.3539.6.camel@jlt3.sipsolutions.net>
-	 <1292524200-14791-1-git-send-email-javier@cozybit.com>
+To: Paul Stewart <pstew@google.com>
+Cc: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	amod.bodas@atheros.com, stable@kernel.org
+In-Reply-To: <AANLkTinZK_xMJUDaDWzOpW7FXUERUNS3Y0btx=WS9KR1@mail.gmail.com>
+References: <1291690135-4535-1-git-send-email-lrodriguez@atheros.com>
+	 <1291690135-4535-6-git-send-email-lrodriguez@atheros.com>
+	 <1291714709.3607.2.camel@jlt3.sipsolutions.net>
+	 <AANLkTinZK_xMJUDaDWzOpW7FXUERUNS3Y0btx=WS9KR1@mail.gmail.com>
 Content-Type: text/plain; charset="UTF-8"
-Date: Thu, 16 Dec 2010 19:51:53 +0100
-Message-ID: <1292525513.3612.26.camel@jlt3.sipsolutions.net>
+Date: Tue, 07 Dec 2010 16:23:35 +0100
+Message-ID: <1291735415.3607.46.camel@jlt3.sipsolutions.net>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2010-12-16 at 10:29 -0800, Javier Cardona wrote:
+On Tue, 2010-12-07 at 07:20 -0800, Paul Stewart wrote:
+> On Tue, Dec 7, 2010 at 1:38 AM, Johannes Berg <johannes@sipsolutions.net> wrote:
+> > On Mon, 2010-12-06 at 18:48 -0800, Luis R. Rodriguez wrote:
+> >> --- a/net/mac80211/pm.c
+> >> +++ b/net/mac80211/pm.c
+> >> @@ -301,7 +301,7 @@ static void __ieee80211_scan_completed_finish(struct ieee80211_hw *hw,
+> >>       }
+> >>
+> >>       mutex_lock(&local->mtx);
+> >> -     ieee80211_recalc_idle(local);
+> >> +     ieee80211_recalc_idle_force(local);
+> >
+> > Does this really occur afterwards closing interfaces?
+> 
+> It appears possible using wpa_supplicant with nl80211, at least using
+> the new DBus API.
 
-> -	NL80211_CMD_GET_MESH_PARAMS,
-> -	NL80211_CMD_SET_MESH_PARAMS,
-> +	NL80211_CMD_GET_MESH_CONFIG,
-> +	NL80211_CMD_SET_MESH_CONFIG,
->  
->  	NL80211_CMD_SET_MGMT_EXTRA_IE /* reserved; not used */,
->  
-> @@ -912,7 +912,7 @@ enum nl80211_attrs {
->  	NL80211_ATTR_REG_ALPHA2,
->  	NL80211_ATTR_REG_RULES,
->  
-> -	NL80211_ATTR_MESH_PARAMS,
-> +	NL80211_ATTR_MESH_CONFIG,
+Actually I believe it happens _during_ ifdown, but when the running bit
+is already cleared, so I guess this is about right -- although it
+shouldn't matter since the recalc_idle in do_stop should catch it later.
 
-ack, but I think you should add #define's for the old names for backward
-compatibility with existing code like iw?
- 
 johannes
 
