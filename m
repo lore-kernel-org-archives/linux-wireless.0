@@ -1,57 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iy0-f174.google.com ([209.85.210.174]:44131 "EHLO
-	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752802Ab0LNDMN convert rfc822-to-8bit (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:48358 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752707Ab0LGSMt (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 13 Dec 2010 22:12:13 -0500
-Received: by iyi12 with SMTP id 12so89115iyi.19
-        for <linux-wireless@vger.kernel.org>; Mon, 13 Dec 2010 19:12:12 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <201012141131.59086.br1@einfach.org>
-References: <20101214022018.2343.8216.stgit@localhost6.localdomain6>
- <AANLkTinS35SU=RZ+G=b6Q1729Zpfm5cfqjTNOCr6zSe4@mail.gmail.com> <201012141131.59086.br1@einfach.org>
-From: Daniel Halperin <dhalperi@cs.washington.edu>
-Date: Mon, 13 Dec 2010 19:11:52 -0800
-Message-ID: <AANLkTi=6o=tK1fRhOtchT9UPy+EWCcqzhebVYv+8XJP3@mail.gmail.com>
-Subject: Re: [PATCH 1/2] nl80211: Export available antennas
-To: Bruno Randolf <br1@einfach.org>
-Cc: johannes@sipsolutions.net, linville@tuxdriver.com,
-	linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+	Tue, 7 Dec 2010 13:12:49 -0500
+Subject: Re: [PATCH 5/5] mac80211: fix issuing idle calls when device open
+ count is 0
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Cc: Luis Rodriguez <Luis.Rodriguez@atheros.com>,
+	"linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Amod Bodas <Amod.Bodas@atheros.com>,
+	"pstew@google.com" <pstew@google.com>,
+	"stable@kernel.org" <stable@kernel.org>
+In-Reply-To: <AANLkTi=Sj7YpKzFHQtf2MdUcRDTzfXszbK7gGg_yup1Y@mail.gmail.com>
+References: <1291690135-4535-1-git-send-email-lrodriguez@atheros.com>
+	 <1291690135-4535-6-git-send-email-lrodriguez@atheros.com>
+	 <1291714709.3607.2.camel@jlt3.sipsolutions.net>
+	 <AANLkTikrLweKeSR-=XziaJ5rqDRf_Ny=mg1OD=jC4nqA@mail.gmail.com>
+	 <1291736887.3607.47.camel@jlt3.sipsolutions.net>
+	 <AANLkTimiw074uXxe3nPTNZ0j+NtZbHJU1bwiGsFUXMJ4@mail.gmail.com>
+	 <1291737298.3607.48.camel@jlt3.sipsolutions.net>
+	 <20101207155916.GA1855@tux>
+	 <1291743121.3607.50.camel@jlt3.sipsolutions.net>
+	 <AANLkTi=Sj7YpKzFHQtf2MdUcRDTzfXszbK7gGg_yup1Y@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Tue, 07 Dec 2010 19:12:47 +0100
+Message-ID: <1291745567.3607.52.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Several of the Intel ones, I believe.  For instance 4965 can RX with 3
-antennas but can maybe only TX with A and B?  Intel also has a 1x2
-(5100 maybe?) chipset.
+On Tue, 2010-12-07 at 10:04 -0800, Luis R. Rodriguez wrote:
+> On Tue, Dec 7, 2010 at 9:32 AM, Johannes Berg <johannes@sipsolutions.net> wrote:
+> > On Tue, 2010-12-07 at 07:59 -0800, Luis R. Rodriguez wrote:
+> >
+> >> @@ -301,7 +301,7 @@ static void __ieee80211_scan_completed_finish(struct ieee80211_hw *hw,
+> >>       }
+> >>
+> >>       mutex_lock(&local->mtx);
+> >> -     ieee80211_recalc_idle(local);
+> >> +     ieee80211_recalc_idle_force(local);
+> >>       mutex_unlock(&local->mtx);
+> >
+> > This is the change that I don't think is necessary.
+> 
+> Without this resume fails.
 
-Dan
+In what situation? When you just suspend while things are up&running, or
+if you suspend with interfaces down? It doesn't make sense anyway, so
+something's going on in the rest of the scan code -- we should be
+canceling scans properly when going down and when suspending, well
+before any of this becomes relevant.
 
-On Mon, Dec 13, 2010 at 6:31 PM, Bruno Randolf <br1@einfach.org> wrote:
-> On Tue December 14 2010 11:23:09 Daniel Halperin wrote:
->> > diff --git a/include/linux/nl80211.h b/include/linux/nl80211.h
->> > index b8fa25d..63b603c 100644
->> > --- a/include/linux/nl80211.h
->> > +++ b/include/linux/nl80211.h
->> > @@ -841,6 +841,9 @@ enum nl80211_commands {
->> >  *     the hardware should not be configured to receive on this antenna.
->> >  *     For a more detailed descripton see @NL80211_ATTR_WIPHY_ANTENNA_TX.
->> >  *
->> > + * @NL80211_ATTR_WIPHY_ANTENNA_AVAIL: Bitmap of antennas which are
->> > available for + *     configuration via the above parameters.
->> > + *
->>
->> Not clear exactly what the point of this is -- there's no commit
->> message -- but should not this API distinguish between TX and RX?
->> E.g., several chipsets can only TX from a subset of RX antennas.
->
-> This is just the nl80211 part of a patch that got merged earlier, the
-> description of which has more info:
->
-> https://patchwork.kernel.org/patch/389682/
->
-> If it's necessary to distinguish between RX and TX it has to be done there
-> too. Can you give us examples of these chipsets which you mentioned?
->
-> bruno
->
+johannes
+
