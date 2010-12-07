@@ -1,40 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from external1.orbit-lab.org ([128.6.192.131]:38313 "HELO
-	external1.orbit-lab.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1754955Ab0LOUFQ (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 15 Dec 2010 15:05:16 -0500
-Received: from repository3.orbit-lab.org (repository3.orbit-lab.org [10.50.0.41])
-	by external1.orbit-lab.org (Postfix) with ESMTP id 424F44061C
-	for <linux-wireless@vger.kernel.org>; Wed, 15 Dec 2010 15:05:18 -0500 (EST)
-Subject: Compat-wireless release for 2010-12-15 is baked
-To: <linux-wireless@vger.kernel.org>
-Message-Id: <20101215200514.0312A40F97@repository3.orbit-lab.org>
-Date: Wed, 15 Dec 2010 15:05:13 -0500 (EST)
-From: compat@orbit-lab.org (Compat-wireless cronjob account)
+Received: from mail.atheros.com ([12.19.149.2]:61286 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753192Ab0LGT0I (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 7 Dec 2010 14:26:08 -0500
+Date: Tue, 7 Dec 2010 11:26:04 -0800
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+CC: Joe Perches <joe@perches.com>,
+	Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"ath5k-devel@venema.h4ckr.net" <ath5k-devel@venema.h4ckr.net>,
+	"ath9k-devel@venema.h4ckr.net" <ath9k-devel@venema.h4ckr.net>,
+	Peter Stuge <peter@stuge.se>, Felix Fietkau <nbd@openwrt.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"netdev@vger.kernel.org" <netdev@vger.kernel.org>
+Subject: Re: [PATCH 0/4] ath: logging message conversion
+Message-ID: <20101207192604.GA2582@tux>
+References: <20101202190239.GE7399@tux>
+ <cover.1291333543.git.joe@perches.com>
+ <20101207190528.GD2700@tuxdriver.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <20101207190528.GD2700@tuxdriver.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
->From git://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next
-   8d6dedc..1e0e84f  history    -> origin/history
- + cb63550...e3d7018 master     -> origin/master  (forced update)
-   6313e3c..3373c3d  stable     -> origin/stable
- * [new tag]         next-20101215 -> next-20101215
+On Tue, Dec 07, 2010 at 11:05:28AM -0800, John W. Linville wrote:
+> On Thu, Dec 02, 2010 at 07:12:34PM -0800, Joe Perches wrote:
+> > ath_print is misleading as it's only used with CONFIG_ATH_DEBUG.
+> > 
+> > Add and use the more normal <subsystem>_printk and <subsystem>_<level>
+> > printk equivalents. (ath_printk and ath_<level>)
+> > 
+> > Fix various defects in the current uses of ath_print formats
+> > and arguments: Unnecessary casts, missing newlines, multiple
+> > prints, and 1 loop which can exceed array bounds.
+> > 
+> > Bundled and integrated the individual patches into a single patch series.
+> > 
+> > Joe Perches (4):
+> >   ath: Add and use ath_printk and ath_<level>
+> >   ath: Convert ath_print(.., ATH_DBG_FATAL to ath_err
+> >   ath: Convert ath_print to ath_dbg
+> >   ath: Fix ath_dbg access beyond array bound
+> 
+> Is the Atheros crew happy with this series?  They didn't seem to like
+> the original patches very much...
 
-compat-wireless code metrics
+Its fine now that Joe has addressed some more important items.
+But I'd like for the patches to be applied last of all pending
+patches :)
 
-    753302 - Total upstream lines of code being pulled
-      2198 - backport code changes
-      1935 - backport code additions
-       263 - backport code deletions
-      6639 - backport from compat module
-      8837 - total backport code
-    1.1731 - % of code consists of backport work
-      1532 - Crap changes not yet posted
-      1489 - Crap additions not yet posted
-        43 - Crap deletions not yet posted
-    0.2034 - % of crap code
-
-Base tree: linux-next.git
-Base tree version: next-20101215
-compat-wireless release: compat-wireless-2010-12-10-3-g880bb0b-pc
+  Luis
