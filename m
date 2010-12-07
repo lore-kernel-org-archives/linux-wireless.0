@@ -1,44 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:44136 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752752Ab0LAPDo (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 1 Dec 2010 10:03:44 -0500
-From: Hauke Mehrtens <hauke@hauke-m.de>
-To: lrodriguez@atheros.com
-Cc: linux-wireless@vger.kernel.org, mcgrof@infradead.org,
-	Hauke Mehrtens <hauke@hauke-m.de>
-Subject: [PATCH 2/2] compat: fix build for kernel <= 2.6.29
-Date: Wed,  1 Dec 2010 16:03:30 +0100
-Message-Id: <1291215810-1140-2-git-send-email-hauke@hauke-m.de>
-In-Reply-To: <1291215810-1140-1-git-send-email-hauke@hauke-m.de>
-References: <1291215810-1140-1-git-send-email-hauke@hauke-m.de>
+Received: from mail-wy0-f174.google.com ([74.125.82.174]:37488 "EHLO
+	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754332Ab0LGU4f (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 7 Dec 2010 15:56:35 -0500
+Received: by wyb28 with SMTP id 28so336422wyb.19
+        for <linux-wireless@vger.kernel.org>; Tue, 07 Dec 2010 12:56:34 -0800 (PST)
+From: =?utf-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+To: linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>
+Cc: b43-dev@lists.infradead.org,
+	=?utf-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+Subject: [PATCH 0/4] Make N-PHY support experimental
+Date: Tue,  7 Dec 2010 21:55:56 +0100
+Message-Id: <1291755360-21570-1-git-send-email-zajec5@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The max_brightness member in struct led_classdev was added in kernel
-2.6.30, so use LED_FULL for older kernel versions.
+Finally, thanks for Larry and Francesco I got b43 working with BCM4328 chipset!
 
-Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
----
- compat/compat-2.6.37.c |    4 ++++
- 1 files changed, 4 insertions(+), 0 deletions(-)
+It's not perfectly stable yet, but scanning and associating to open network
+works! It has to be tested, improved, there are some PHY errors from time to
+time, but generally it works :)
 
-diff --git a/compat/compat-2.6.37.c b/compat/compat-2.6.37.c
-index a522b4e..8636c65 100644
---- a/compat/compat-2.6.37.c
-+++ b/compat/compat-2.6.37.c
-@@ -281,7 +281,11 @@ void led_blink_set(struct led_classdev *led_cdev,
- 	if (current_brightness)
- 		led->blink_brightness = current_brightness;
- 	if (!led->blink_brightness)
-+#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,30)
- 		led->blink_brightness = led_cdev->max_brightness;
-+#else
-+		led->blink_brightness = LED_FULL;
-+#endif
- 
- 	led_stop_software_blink(led);
- 	led->blink_delay_on = *delay_on;
--- 
-1.7.1
+Rafał Miłecki (4):
+  b43: N-PHY: silence warnings
+  b43: set TMS to work with current band width for N-PHY
+  b43: fix split of N-PHY devices into supported and not (based on PHY
+    rev)
+  b43: rename config option for N-PHY, drop BROKEN
+
+ drivers/net/wireless/b43/Kconfig      |   13 +++++++------
+ drivers/net/wireless/b43/Makefile     |    8 ++++----
+ drivers/net/wireless/b43/main.c       |   12 +++++++++---
+ drivers/net/wireless/b43/phy_common.c |    9 ++++++++-
+ drivers/net/wireless/b43/phy_common.h |    2 ++
+ drivers/net/wireless/b43/phy_n.c      |   16 ++++++----------
+ 6 files changed, 36 insertions(+), 24 deletions(-)
 
