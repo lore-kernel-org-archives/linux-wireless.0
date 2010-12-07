@@ -1,37 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:42153 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757218Ab0LSVgO (ORCPT
+Received: from mail-yx0-f174.google.com ([209.85.213.174]:42691 "EHLO
+	mail-yx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752288Ab0LGViF (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 19 Dec 2010 16:36:14 -0500
-Subject: Re: Wireless channel stuck to -1 on mon0 (fix patch submission)
-From: Johannes Berg <johannes@sipsolutions.net>
-To: =?ISO-8859-1?Q?G=E1bor?= Stefanik <netrolller.3d@gmail.com>
-Cc: CalimeroTeknik <calimeroteknik@free.fr>,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <AANLkTik5uML3gSD5aJE8CPwew8G5shp9BJgGUK608jTp@mail.gmail.com>
-References: <4D0DE870.2050503@free.fr>
-	 <AANLkTik5uML3gSD5aJE8CPwew8G5shp9BJgGUK608jTp@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Sun, 19 Dec 2010 22:36:12 +0100
-Message-ID: <1292794572.8422.0.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+	Tue, 7 Dec 2010 16:38:05 -0500
+Received: by yxt3 with SMTP id 3so277534yxt.19
+        for <linux-wireless@vger.kernel.org>; Tue, 07 Dec 2010 13:38:04 -0800 (PST)
+From: Javier Cardona <javier@cozybit.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: Javier Cardona <javier@cozybit.com>,
+	Steve Derosier <steve@cozybit.com>, devel@lists.open80211s.org,
+	linux-wireless@vger.kernel.org, Jiri Slaby <jirislaby@gmail.com>,
+	Nick Kossifidis <mickflemm@gmail.com>,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	Bob Copeland <me@bobcopeland.com>
+Subject: [PATCH 3/3] ath5k: Put the right tsf value in mesh beacons
+Date: Tue,  7 Dec 2010 13:37:56 -0800
+Message-Id: <1291757876-29936-1-git-send-email-javier@cozybit.com>
+In-Reply-To: <20101207205751.GJ2700@tuxdriver.com>
+References: <20101207205751.GJ2700@tuxdriver.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, 2010-12-19 at 21:58 +0100, Gábor Stefanik wrote:
-> This is a known problem, that has basically been WONTFIXed a while
-> ago. I highly disagree with the reasoning, but the decision ultimately
-> rests on Johannes. In the meantime, check patches.aircrack-ng.org for
-> a workaround.
-> 
-> Johannes: I know that you consider reporting the actual channel of the
-> PHY to be "confusing to users" when running with multiple virtual
-> PHYs, but apparently this is what most users expect. Perhaps it
-> *should* be implemented after all.
 
-In which case it should be implemented properly, not half-baked like all
-the patches we've seen so far.
+Signed-off-by: Javier Cardona <javier@cozybit.com>
+---
+ drivers/net/wireless/ath/ath5k/base.c |    3 ++-
+ 1 files changed, 2 insertions(+), 1 deletions(-)
 
-johannes
+diff --git a/drivers/net/wireless/ath/ath5k/base.c b/drivers/net/wireless/ath/ath5k/base.c
+index 2bf2e28..ac7da50 100644
+--- a/drivers/net/wireless/ath/ath5k/base.c
++++ b/drivers/net/wireless/ath/ath5k/base.c
+@@ -1881,7 +1881,8 @@ ath5k_beacon_send(struct ath5k_softc *sc)
+ 		sc->bmisscount = 0;
+ 	}
+ 
+-	if (sc->opmode == NL80211_IFTYPE_AP && sc->num_ap_vifs > 1) {
++	if ((sc->opmode == NL80211_IFTYPE_AP && sc->num_ap_vifs > 1) ||
++			sc->opmode == NL80211_IFTYPE_MESH_POINT) {
+ 		u64 tsf = ath5k_hw_get_tsf64(ah);
+ 		u32 tsftu = TSF_TO_TU(tsf);
+ 		int slot = ((tsftu % sc->bintval) * ATH_BCBUF) / sc->bintval;
+-- 
+1.7.1
 
