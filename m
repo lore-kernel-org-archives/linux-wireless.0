@@ -1,36 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:50367 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750836Ab0LFIRh (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:54925 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752489Ab0LGVpH (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 6 Dec 2010 03:17:37 -0500
-Subject: Re: [PATCH 2/3] nl80211: Export available antennas
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Bruno Randolf <br1@einfach.org>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
-In-Reply-To: <20101206034535.11462.70791.stgit@localhost6.localdomain6>
-References: <20101206034529.11462.48097.stgit@localhost6.localdomain6>
-	 <20101206034535.11462.70791.stgit@localhost6.localdomain6>
-Content-Type: text/plain; charset="UTF-8"
-Date: Mon, 06 Dec 2010 09:17:33 +0100
-Message-ID: <1291623453.3506.1.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+	Tue, 7 Dec 2010 16:45:07 -0500
+Date: Tue, 7 Dec 2010 16:38:58 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Joe Perches <joe@perches.com>
+Cc: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	linux-kernel@vger.kernel.org, Peter Stuge <peter@stuge.se>,
+	Felix Fietkau <nbd@openwrt.org>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Subject: Re: [PATCH 1/4] ath: Add and use ath_printk and ath_<level>
+Message-ID: <20101207213857.GN2700@tuxdriver.com>
+References: <cover.1291333543.git.joe@perches.com>
+ <241e75c84fdd26bfae1c7b8806fe64fbac5de627.1291333544.git.joe@perches.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <241e75c84fdd26bfae1c7b8806fe64fbac5de627.1291333544.git.joe@perches.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2010-12-06 at 12:45 +0900, Bruno Randolf wrote:
+On Thu, Dec 02, 2010 at 07:12:35PM -0800, Joe Perches wrote:
+> Add ath_printk and ath_<level> similar to
+> dev_printk and dev_<level> from device.h
+> 
+> This allows a more gradual rename of ath_print
+> to to ath_dbg or perhaps ath_debug.
+> 
+> This basically removes debug.h leaving
+> only an #define ath_printk ath_dbg
+> there and moving all the ATH_DBG_<foo>
+> enums to ath.h
+> 
+> I do not think there's much purpose for struct
+> ath_common * being passed to the ath_printk
+> functions, but perhaps there might be.
+> 
+> Signed-off-by: Joe Perches <joe@perches.com>
 
-> +		NLA_PUT_U32(msg, NL80211_ATTR_WIPHY_ANTENNA_AVAIL,
-> +			    dev->wiphy.available_antennas);
+> +#define ATH_DBG_WARN(foo, arg...) WARN(foo, arg)
+> +
+> +#else
+> +
+> +static inline  __attribute__ ((format (printf, 3, 4))) int
+> +ath_dbg(struct ath_common *common, enum ATH_DEBUG dbg_mask,
+> +	const char *fmt, ...)
+> +{
+> +	return 0;
+> +}
+> +#define ATH_DBG_WARN(foo, arg) do {} while (0)
 
-I think you should not advertise this unless it's non-zero, and unless
-also the set/get callbacks are available.
+Missing the "..." after "arg" -- I fixed it up...
 
-Similarly, I think you shouldn't advertise the set/get CMDs when the
-available antennas aren't set.
-
-Finally, you should check for nl80211 that the given tx/rx masks fall
-into the available antennas mask.
-
-johannes
-
+John
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
