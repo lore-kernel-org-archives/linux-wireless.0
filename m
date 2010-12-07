@@ -1,71 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f46.google.com ([209.85.214.46]:63361 "EHLO
-	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752615Ab0LZT5H (ORCPT
+Received: from mail-wy0-f174.google.com ([74.125.82.174]:52584 "EHLO
+	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754208Ab0LGImw (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 26 Dec 2010 14:57:07 -0500
-Received: by bwz15 with SMTP id 15so9183393bwz.19
-        for <linux-wireless@vger.kernel.org>; Sun, 26 Dec 2010 11:57:05 -0800 (PST)
-Message-Id: <E1PWwiD-0003TF-Qt@debian64.daheim>
-Subject: [PATCH 2/3] carl9170: reduce channel change delay
-To: linux-wireless@vger.kernel.org
-Cc: linville@tuxdriver.com, Felix <ic.felix@gmail.com>
-From: Christian Lamparter <chunkeey@googlemail.com>
-Date: Sun, 26 Dec 2010 18:22:16 +0100
+	Tue, 7 Dec 2010 03:42:52 -0500
+Received: by mail-wy0-f174.google.com with SMTP id 28so12976195wyb.19
+        for <linux-wireless@vger.kernel.org>; Tue, 07 Dec 2010 00:42:51 -0800 (PST)
+From: =?utf-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+To: linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>
+Cc: b43-dev@lists.infradead.org,
+	=?utf-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+Subject: [PATCH 3/4] b43: N-PHY: implement own maskset
+Date: Tue,  7 Dec 2010 09:42:06 +0100
+Message-Id: <1291711327-4690-3-git-send-email-zajec5@gmail.com>
+In-Reply-To: <1291711327-4690-1-git-send-email-zajec5@gmail.com>
+References: <1291711327-4690-1-git-send-email-zajec5@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="us-ascii"
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-By removing two "safety" msleeps (and an echo nop), the
-channel change delay is effectively halved. Previously,
-the delay could be as long as 260 ms and the device
-could not go off-channel without risking to miss the
-next DTIM beacon [interval ~307 ms].
+This let us avoid double addressing while still having reg check.
 
-Signed-off-by: Christian Lamparter <chunkeey@googlemail.com>
+Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
 ---
-Hi Felix,
+ drivers/net/wireless/b43/phy_n.c |   10 ++++++++++
+ 1 files changed, 10 insertions(+), 0 deletions(-)
 
-It seems that removing the msleeps doesn't have ANY negative effect
-on the operation. Furthermore ath9k doesn't need the 20ms+ msleeps
-in the phy codepaths either. So, I wonder if this is just some old
-"safety" buffers which survived otus and ar9170usb development
-phases, or is there some merit to them?
-
-Regards,
-	Chr
----
- drivers/net/wireless/ath/carl9170/phy.c |    8 --------
- 1 files changed, 0 insertions(+), 8 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/carl9170/phy.c b/drivers/net/wireless/ath/carl9170/phy.c
-index 122e75e..b6b0de6 100644
---- a/drivers/net/wireless/ath/carl9170/phy.c
-+++ b/drivers/net/wireless/ath/carl9170/phy.c
-@@ -1029,8 +1029,6 @@ static int carl9170_init_rf_bank4_pwr(struct ar9170 *ar, bool band5ghz,
- 	if (err)
- 		return err;
- 
--	msleep(20);
--
- 	return 0;
+diff --git a/drivers/net/wireless/b43/phy_n.c b/drivers/net/wireless/b43/phy_n.c
+index 905f1d7..f78f4e9 100644
+--- a/drivers/net/wireless/b43/phy_n.c
++++ b/drivers/net/wireless/b43/phy_n.c
+@@ -3705,6 +3705,15 @@ static void b43_nphy_op_write(struct b43_wldev *dev, u16 reg, u16 value)
+ 	b43_write16(dev, B43_MMIO_PHY_DATA, value);
  }
  
-@@ -1660,12 +1658,6 @@ int carl9170_set_channel(struct ar9170 *ar, struct ieee80211_channel *channel,
- 			return err;
- 
- 		cmd = CARL9170_CMD_RF_INIT;
--
--		msleep(100);
--
--		err = carl9170_echo_test(ar, 0xaabbccdd);
--		if (err)
--			return err;
- 	} else {
- 		cmd = CARL9170_CMD_FREQUENCY;
- 	}
++static void b43_nphy_op_maskset(struct b43_wldev *dev, u16 reg, u16 mask,
++				 u16 set)
++{
++	check_phyreg(dev, reg);
++	b43_write16(dev, B43_MMIO_PHY_CONTROL, reg);
++	b43_write16(dev, B43_MMIO_PHY_DATA,
++		    (b43_read16(dev, B43_MMIO_PHY_DATA) & mask) | set);
++}
++
+ static u16 b43_nphy_op_radio_read(struct b43_wldev *dev, u16 reg)
+ {
+ 	/* Register 1 is a 32-bit register. */
+@@ -3799,6 +3808,7 @@ const struct b43_phy_operations b43_phyops_n = {
+ 	.init			= b43_nphy_op_init,
+ 	.phy_read		= b43_nphy_op_read,
+ 	.phy_write		= b43_nphy_op_write,
++	.phy_maskset		= b43_nphy_op_maskset,
+ 	.radio_read		= b43_nphy_op_radio_read,
+ 	.radio_write		= b43_nphy_op_radio_write,
+ 	.software_rfkill	= b43_nphy_op_software_rfkill,
 -- 
-1.7.2.3
+1.6.3.3
 
