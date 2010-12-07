@@ -1,71 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:53493 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753744Ab0LaPGQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 31 Dec 2010 10:06:16 -0500
-Subject: Re: [PATCH 02/15]drivers:spi:dw_spi.c Typo change diable to
- disable.
-From: James Bottomley <James.Bottomley@suse.de>
-To: "Justin P. Mattock" <justinmattock@gmail.com>
-Cc: Dan Carpenter <error27@gmail.com>,
-	Grant Likely <grant.likely@secretlab.ca>, trivial@kernel.org,
-	devel@driverdev.osuosl.org, linux-scsi@vger.kernel.org,
-	netdev@vger.kernel.org, linux-usb@vger.kernel.org,
-	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
-	ivtv-devel@ivtvdriver.org, linux-m68k@lists.linux-m68k.org,
-	spi-devel-general@lists.sourceforge.net,
-	linux-media@vger.kernel.org
-In-Reply-To: <4D1DE616.7010105@gmail.com>
-References: <1293750484-1161-1-git-send-email-justinmattock@gmail.com>
-	 <1293750484-1161-2-git-send-email-justinmattock@gmail.com>
-	 <20101231064515.GC3733@angua.secretlab.ca> <4D1D7DAE.7060504@gmail.com>
-	 <20101231091136.GC1886@bicker>  <4D1DE616.7010105@gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Fri, 31 Dec 2010 09:06:08 -0600
-Message-ID: <1293807968.3085.1.camel@mulgrave.site>
-Mime-Version: 1.0
+Received: from mail-bw0-f45.google.com ([209.85.214.45]:54622 "EHLO
+	mail-bw0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752368Ab0LGUAU (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 7 Dec 2010 15:00:20 -0500
+Received: by bwz16 with SMTP id 16so445776bwz.4
+        for <linux-wireless@vger.kernel.org>; Tue, 07 Dec 2010 12:00:18 -0800 (PST)
+Message-ID: <4CFE9263.4060108@lwfinger.net>
+Date: Tue, 07 Dec 2010 14:00:35 -0600
+From: Larry Finger <Larry.Finger@lwfinger.net>
+MIME-Version: 1.0
+To: ikorot@earthlink.net
+CC: Hauke Mehrtens <hauke@hauke-m.de>, linux-wireless@vger.kernel.org,
+	b43-dev@lists.infradead.org
+Subject: Re: [PATCH 1/4] b43: N-PHY: update init tables
+References: <5001512.1291751372533.JavaMail.root@elwamui-cypress.atl.sa.earthlink.net>
+In-Reply-To: <5001512.1291751372533.JavaMail.root@elwamui-cypress.atl.sa.earthlink.net>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2010-12-31 at 06:17 -0800, Justin P. Mattock wrote:
-> On 12/31/2010 01:11 AM, Dan Carpenter wrote:
-> > On Thu, Dec 30, 2010 at 10:52:30PM -0800, Justin P. Mattock wrote:
-> >> On 12/30/2010 10:45 PM, Grant Likely wrote:
-> >>> On Thu, Dec 30, 2010 at 03:07:51PM -0800, Justin P. Mattock wrote:
-> >>>> The below patch fixes a typo "diable" to "disable". Please let me know if this
-> >>>> is correct or not.
-> >>>>
-> >>>> Signed-off-by: Justin P. Mattock<justinmattock@gmail.com>
-> >>>
-> >>> applied, thanks.
-> >>>
-> >>> g.
-> >>
-> >> ahh.. thanks.. just cleared up the left out diabled that I had
-> >> thought I forgotten(ended up separating comments and code and
-> >> forgot)
-> >
-> > This is really just defensiveness and random grumbling and grumpiness on
-> > my part, but one reason I may have missed the first patch is because
-> > your subject lines are crap.
-> >
-> > Wrong:  [PATCH 02/15]drivers:spi:dw_spi.c Typo change diable to disable.
-> >
-> > Right:  [PATCH 02/15] spi/dw_spi: Typo change diable to disable
-> >
-> > regards,
-> > dan carpenter
-> >
+On 12/07/2010 01:49 PM, ikorot@earthlink.net wrote:
+>> One reason is that these tables changed from non-zero to zero values between
+>> Broadcom driver 4.174.64.19 and 5.10.56.46. As they might change again, I think
+>> we should retain the full version.
 > 
-> alright.. so having the backlash is alright for the subject
-> 
-> Thanks for the pointer on this..
+> Is there a way to check for version of the driver?
+> This way whoever uses old one won't be screwed...
 
-There is actually no specific form.  Most of us edit this part of the
-subject line anyway to conform to whatever (nonuniform) conventions we
-use.  I just use <component>: with no scsi or drivers prefix because the
-git tree is tagged [SCSI]; others are different.
+That will not be a problem as no older version of b43 works at all with b43. To
+help you understand this change, when the 4.174.64.19 Broadcom driver was
+reverse-engineered, the tables had non-zero values. Rafel later compared the
+trace dumps of b43 with the latest version of wl and found that the values are
+now zero. When I rechecked driver 5.10.56.46, I found them to be zero there as
+well and changed the specs.
 
-James
-
-
+Larry
