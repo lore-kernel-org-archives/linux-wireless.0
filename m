@@ -1,78 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ww0-f44.google.com ([74.125.82.44]:64025 "EHLO
-	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756186Ab0LPUcP (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 16 Dec 2010 15:32:15 -0500
-Received: by wwa36 with SMTP id 36so2858865wwa.1
-        for <linux-wireless@vger.kernel.org>; Thu, 16 Dec 2010 12:32:14 -0800 (PST)
+Received: from mail.atheros.com ([12.19.149.2]:44438 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753674Ab0LGXN2 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 7 Dec 2010 18:13:28 -0500
+Received: from mail.atheros.com ([10.10.20.105])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Tue, 07 Dec 2010 15:13:14 -0800
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>, <amod.bodas@atheros.com>,
+	<pstew@google.com>, "Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	<stable@kernel.org>
+Subject: [PATCH v3 1/5] ath9k: Fix power save count imbalance on ath_radio_enable()
+Date: Tue, 7 Dec 2010 15:13:19 -0800
+Message-ID: <1291763603-26546-2-git-send-email-lrodriguez@atheros.com>
+In-Reply-To: <1291763603-26546-1-git-send-email-lrodriguez@atheros.com>
+References: <1291763603-26546-1-git-send-email-lrodriguez@atheros.com>
 MIME-Version: 1.0
-Date: Thu, 16 Dec 2010 12:32:14 -0800
-Message-ID: <AANLkTi=fPHdnizvPsDVQU+aMcYmMzdu6thNvXG2YLMuX@mail.gmail.com>
-Subject: Help with Libertas error
-From: Matt Rosenthal <matt@touchrev.com>
-To: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
-If possible can someone help point me in the right direction.  I am
-building an embedded android device.  I am currently using the froyo
-code base on the 2.6.32 Linux kernel.
-My system works well but under some heave wifi loads the wifi stops
-working.  I am using the Marvell 8686 wifi chip connected to a TI
-OMAP3 processor.
+Upon a failure we never call ath9k_ps_restore() on ath_radio_enable(),
+this will throw off the sc->ps_usecount. When the sc->ps_usecount
+is > 0 we never put the chip to full sleep. This drains battery,
+and will also make the chip fail upon resume with:
 
-The way to create the problem is to download large files over wifi or
-continuously stream data over wifi.
+ath: Starting driver with initial channel: 5745 MHz
+ath: timeout (100000 us) on reg 0x7000: 0xdeadbeef & 0x00000003 != 0x00000000
 
-Below is an error message I see on the console.
----------------------------------------------------------------------
-libertas: Excessive timeouts submitting command 0x000b
-libertas: PREP_CMD: command 0x000b failed: -110
-libertas: PREP_CMD: command 0x000b failed: -110
-libertas: requeueing command 0x000b due to timeout (#1)
-libertas: command 0x000b timed out
-libertas: requeueing command 0x000b due to timeout (#2)
-libertas: command 0x000b timed out
-libertas: requeueing command 0x000b due to timeout (#3)
-libertas: command 0x000b timed out
-libertas: Excessive timeouts submitting command 0x000b
-libertas: PREP_CMD: command 0x000b failed: -110
-libertas: command 0x000b timed out
-libertas: requeueing command 0x000b due to timeout (#1)
-libertas: command 0x000b timed out
-libertas: requeueing command 0x000b due to timeout (#2)
-libertas: command 0x000b timed out
-libertas: requeueing command 0x000b due to timeout (#3)
-libertas: command 0x000b timed out
-libertas: Excessive timeouts submitting command 0x000b
-libertas: PREP_CMD: command 0x000b failed: -110
-libertas: command 0x000b timed out
-libertas: requeueing command 0x000b due to timeout (#1)
-libertas: command 0x000b timed out
-libertas: requeueing command 0x000b due to timeout (#2)
-libertas: command 0x000b timed out
-libertas: requeueing command 0x000b due to timeout (#3)
-------------------------------------------------------------------------
+This would make the chip useless upon resume.
 
-After this error message shows up the wifi no longer functions at all.
- Any help is much appreciated.
-Thanks
+I cannot prove this can happen but in theory it is so best to
+avoid this race completely and not have users complain about
+a broken device after resume.
 
-Matt
+Cc: stable@kernel.org
+Cc: Paul Stewart <pstew@google.com>
+Cc: Amod Bodas <amod.bodas@atheros.com>
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+---
+ drivers/net/wireless/ath/ath9k/main.c |    4 ++--
+ 1 files changed, 2 insertions(+), 2 deletions(-)
 
+diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
+index 3e0c8a1..be19b70 100644
+--- a/drivers/net/wireless/ath/ath9k/main.c
++++ b/drivers/net/wireless/ath/ath9k/main.c
+@@ -897,8 +897,7 @@ void ath_radio_enable(struct ath_softc *sc, struct ieee80211_hw *hw)
+ 	ath_update_txpow(sc);
+ 	if (ath_startrecv(sc) != 0) {
+ 		ath_err(common, "Unable to restart recv logic\n");
+-		spin_unlock_bh(&sc->sc_pcu_lock);
+-		return;
++		goto out;
+ 	}
+ 	if (sc->sc_flags & SC_OP_BEACONS)
+ 		ath_beacon_config(sc, NULL);	/* restart beacons */
+@@ -912,6 +911,7 @@ void ath_radio_enable(struct ath_softc *sc, struct ieee80211_hw *hw)
+ 	ath9k_hw_set_gpio(ah, ah->led_pin, 0);
+ 
+ 	ieee80211_wake_queues(hw);
++out:
+ 	spin_unlock_bh(&sc->sc_pcu_lock);
+ 
+ 	ath9k_ps_restore(sc);
 -- 
-Matthew Rosenthal
-TPK USA, LLC
-Touch Revolution BU
+1.7.3.2.90.gd4c43
 
-Confidentiality Disclaimer: This e-mail message and any attachments
-are private communication sent by TPK USA LLC, and may contain
-confidential, legally privileged information meant solely for the
-intended recipient. If you are not the intended recipient, you are
-hereby notified that any use, dissemination, distribution or copying
-of this communication is strictly prohibited. Please notify the sender
-immediately by replying to this message, then delete the e-mail and
-any attachments from your system. Thank you.
