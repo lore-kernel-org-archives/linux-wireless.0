@@ -1,199 +1,126 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail30t.wh2.ocn.ne.jp ([125.206.180.136]:45043 "HELO
-	mail30t.wh2.ocn.ne.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1757407Ab0LBKNW (ORCPT
+Received: from mail-iw0-f174.google.com ([209.85.214.174]:49881 "EHLO
+	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751901Ab0LGPoo convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 2 Dec 2010 05:13:22 -0500
-Received: from vs3009.wh2.ocn.ne.jp (125.206.180.237)
-	by mail30t.wh2.ocn.ne.jp (RS ver 1.0.95vs) with SMTP id 2-0613174800
-	for <linux-wireless@vger.kernel.org>; Thu,  2 Dec 2010 19:13:20 +0900 (JST)
-Subject: [PATCH 3/3] nl80211/mac80211: Report signal average
-To: linville@tuxdriver.com
-From: Bruno Randolf <br1@einfach.org>
-Cc: randy.dunlap@oracle.com, br1@thinktube.com, peterz@infradead.org,
-	blp@cs.stanford.edu, linux-wireless@vger.kernel.org,
-	linux-kernel@vger.kernel.org, Lars_Ericsson@telia.com, j@w1.fi,
-	stefanr@s5r6.in-berlin.de, kosaki.motohiro@jp.fujitsu.com,
-	akpm@linux-foundation.org, kevin.granade@gmail.com,
-	johannes@sipsolutions.net
-Date: Thu, 02 Dec 2010 19:12:43 +0900
-Message-ID: <20101202101242.22988.56087.stgit@localhost6.localdomain6>
-In-Reply-To: <20101202101231.22988.33396.stgit@localhost6.localdomain6>
-References: <20101202101231.22988.33396.stgit@localhost6.localdomain6>
+	Tue, 7 Dec 2010 10:44:44 -0500
+Received: by iwn9 with SMTP id 9so34103iwn.19
+        for <linux-wireless@vger.kernel.org>; Tue, 07 Dec 2010 07:44:43 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+In-Reply-To: <1291714709.3607.2.camel@jlt3.sipsolutions.net>
+References: <1291690135-4535-1-git-send-email-lrodriguez@atheros.com>
+ <1291690135-4535-6-git-send-email-lrodriguez@atheros.com> <1291714709.3607.2.camel@jlt3.sipsolutions.net>
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Date: Tue, 7 Dec 2010 07:44:22 -0800
+Message-ID: <AANLkTikrLweKeSR-=XziaJ5rqDRf_Ny=mg1OD=jC4nqA@mail.gmail.com>
+Subject: Re: [PATCH 5/5] mac80211: fix issuing idle calls when device open
+ count is 0
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	amod.bodas@atheros.com, pstew@google.com, stable@kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Extend nl80211 to report an exponential weighted moving average (EWMA) of the
-signal value. Since the signal value usually fluctuates between different
-packets, an average can be more useful than the value of the last packet.
+On Tue, Dec 7, 2010 at 1:38 AM, Johannes Berg <johannes@sipsolutions.net> wrote:
+> On Mon, 2010-12-06 at 18:48 -0800, Luis R. Rodriguez wrote:
+>> There are a few places where mac80211 may issue a hw config
+>> but the hw config will be ignored and got into a black hole if
+>> the device count is already 0. Further hw config calls will also
+>> be discarded as the device is already marked as idle, in these
+>> cases mac80211 assumes the radio is idle but the driver never
+>> really got the notification. We need to ensure that places that
+>> will call a hw reconfig with open_count set to 0 will send the
+>> notification to the driver. This forces these checks in a few
+>> other key missing places.
+>>
+>> Without this suspend and resume is broken on devices which require
+>> notifying the driver to become idle once the open_count already
+>> has reached 0. This fixes suspend/resume when using new DBus APIs
+>> are used which idle the device in places which had not yet gotten
+>> widely tested.
+>>
+>> Cc: stable@kernel.org
+>> Cc: Paul Stewart <pstew@google.com>
+>> Cc: Amod Bodas <amod.bodas@atheros.com>
+>> Cc: Johannes Berg <johannes.berg@intel.com>
+>> Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+>> ---
+>>  net/mac80211/ieee80211_i.h |    1 +
+>>  net/mac80211/iface.c       |   16 ++++++++++++++--
+>>  net/mac80211/pm.c          |    2 ++
+>>  net/mac80211/scan.c        |    2 +-
+>>  net/mac80211/util.c        |    1 +
+>>  5 files changed, 19 insertions(+), 3 deletions(-)
+>>
+>> diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+>> index ae32349..78ab6ff 100644
+>> --- a/net/mac80211/ieee80211_i.h
+>> +++ b/net/mac80211/ieee80211_i.h
+>> @@ -1211,6 +1211,7 @@ void ieee80211_process_measurement_req(struct ieee80211_sub_if_data *sdata,
+>>
+>>  /* Suspend/resume and hw reconfiguration */
+>>  int ieee80211_reconfig(struct ieee80211_local *local);
+>> +void ieee80211_recalc_idle_force(struct ieee80211_local *local);
+>>  void ieee80211_stop_device(struct ieee80211_local *local);
+>>
+>>  #ifdef CONFIG_PM
+>> diff --git a/net/mac80211/iface.c b/net/mac80211/iface.c
+>> index 36b7000..a590bae 100644
+>> --- a/net/mac80211/iface.c
+>> +++ b/net/mac80211/iface.c
+>> @@ -1320,7 +1320,8 @@ u32 __ieee80211_recalc_idle(struct ieee80211_local *local)
+>>       return 0;
+>>  }
+>>
+>> -void ieee80211_recalc_idle(struct ieee80211_local *local)
+>> +static void ieee80211_recalc_idle_check(struct ieee80211_local *local,
+>> +                                     bool force)
+>>  {
+>>       u32 chg;
+>>
+>> @@ -1328,7 +1329,18 @@ void ieee80211_recalc_idle(struct ieee80211_local *local)
+>>       chg = __ieee80211_recalc_idle(local);
+>>       mutex_unlock(&local->iflist_mtx);
+>>       if (chg)
+>> -             ieee80211_hw_config(local, chg);
+>> +             __ieee80211_hw_config(local, chg, force);
+>> +}
+>> +
+>> +void ieee80211_recalc_idle(struct ieee80211_local *local)
+>> +{
+>> +     ieee80211_recalc_idle_check(local, false);
+>> +}
+>
+> I think I'd probably prefer an inline too.
 
-This uses the recently added generic EWMA library function.
+OK
 
---
-v2:	fix ABI breakage and change factor to be a power of 2.
+>> --- a/net/mac80211/pm.c
+>> +++ b/net/mac80211/pm.c
+>> @@ -98,6 +98,8 @@ int __ieee80211_suspend(struct ieee80211_hw *hw)
+>>       if (local->open_count)
+>>               ieee80211_stop_device(local);
+>>
+>> +     ieee80211_recalc_idle_force(local);
+>
+> Err? You just added a call to stop_device() too,
 
-Signed-off-by: Bruno Randolf <br1@einfach.org>
----
- include/linux/nl80211.h |    2 ++
- include/net/cfg80211.h  |    4 ++++
- net/mac80211/Kconfig    |    1 +
- net/mac80211/cfg.c      |    3 ++-
- net/mac80211/rx.c       |    1 +
- net/mac80211/sta_info.c |    2 ++
- net/mac80211/sta_info.h |    3 +++
- net/wireless/nl80211.c  |    3 +++
- 8 files changed, 18 insertions(+), 1 deletions(-)
+What if open_count is 0?
 
-diff --git a/include/linux/nl80211.h b/include/linux/nl80211.h
-index 5cfa579..68fc25f 100644
---- a/include/linux/nl80211.h
-+++ b/include/linux/nl80211.h
-@@ -1183,6 +1183,7 @@ enum nl80211_rate_info {
-  *	station)
-  * @NL80211_STA_INFO_TX_RETRIES: total retries (u32, to this station)
-  * @NL80211_STA_INFO_TX_FAILED: total failed packets (u32, to this station)
-+ * @NL80211_STA_INFO_SIGNAL_AVG: signal strength average (u8, dBm)
-  */
- enum nl80211_sta_info {
- 	__NL80211_STA_INFO_INVALID,
-@@ -1198,6 +1199,7 @@ enum nl80211_sta_info {
- 	NL80211_STA_INFO_TX_PACKETS,
- 	NL80211_STA_INFO_TX_RETRIES,
- 	NL80211_STA_INFO_TX_FAILED,
-+	NL80211_STA_INFO_SIGNAL_AVG,
- 
- 	/* keep last */
- 	__NL80211_STA_INFO_AFTER_LAST,
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index 6b2af7a..589c4b1 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -424,6 +424,7 @@ struct station_parameters {
-  * @STATION_INFO_TX_RETRIES: @tx_retries filled
-  * @STATION_INFO_TX_FAILED: @tx_failed filled
-  * @STATION_INFO_RX_DROP_MISC: @rx_dropped_misc filled
-+ * @STATION_INFO_SIGNAL_AVG: @signal_avg filled
-  */
- enum station_info_flags {
- 	STATION_INFO_INACTIVE_TIME	= 1<<0,
-@@ -439,6 +440,7 @@ enum station_info_flags {
- 	STATION_INFO_TX_RETRIES		= 1<<10,
- 	STATION_INFO_TX_FAILED		= 1<<11,
- 	STATION_INFO_RX_DROP_MISC	= 1<<12,
-+	STATION_INFO_SIGNAL_AVG		= 1<<13,
- };
- 
- /**
-@@ -485,6 +487,7 @@ struct rate_info {
-  * @plid: mesh peer link id
-  * @plink_state: mesh peer link state
-  * @signal: signal strength of last received packet in dBm
-+ * @signal_avg: signal strength average in dBm
-  * @txrate: current unicast bitrate to this station
-  * @rx_packets: packets received from this station
-  * @tx_packets: packets transmitted to this station
-@@ -505,6 +508,7 @@ struct station_info {
- 	u16 plid;
- 	u8 plink_state;
- 	s8 signal;
-+	s8 signal_avg;
- 	struct rate_info txrate;
- 	u32 rx_packets;
- 	u32 tx_packets;
-diff --git a/net/mac80211/Kconfig b/net/mac80211/Kconfig
-index 4d6f865..798d9b9 100644
---- a/net/mac80211/Kconfig
-+++ b/net/mac80211/Kconfig
-@@ -6,6 +6,7 @@ config MAC80211
- 	select CRYPTO_ARC4
- 	select CRYPTO_AES
- 	select CRC32
-+	select AVERAGE
- 	---help---
- 	  This option enables the hardware independent IEEE 802.11
- 	  networking stack.
-diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
-index db134b5..b0e0f6c 100644
---- a/net/mac80211/cfg.c
-+++ b/net/mac80211/cfg.c
-@@ -343,8 +343,9 @@ static void sta_set_sinfo(struct sta_info *sta, struct station_info *sinfo)
- 
- 	if ((sta->local->hw.flags & IEEE80211_HW_SIGNAL_DBM) ||
- 	    (sta->local->hw.flags & IEEE80211_HW_SIGNAL_UNSPEC)) {
--		sinfo->filled |= STATION_INFO_SIGNAL;
-+		sinfo->filled |= STATION_INFO_SIGNAL | STATION_INFO_SIGNAL_AVG;
- 		sinfo->signal = (s8)sta->last_signal;
-+		sinfo->signal_avg = (s8) -ewma_read(&sta->avg_signal);
- 	}
- 
- 	sinfo->txrate.flags = 0;
-diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
-index 6289525..2fe8f5f 100644
---- a/net/mac80211/rx.c
-+++ b/net/mac80211/rx.c
-@@ -1163,6 +1163,7 @@ ieee80211_rx_h_sta_process(struct ieee80211_rx_data *rx)
- 	sta->rx_fragments++;
- 	sta->rx_bytes += rx->skb->len;
- 	sta->last_signal = status->signal;
-+	ewma_add(&sta->avg_signal, -status->signal);
- 
- 	/*
- 	 * Change STA power saving mode only at the end of a frame
-diff --git a/net/mac80211/sta_info.c b/net/mac80211/sta_info.c
-index eff5857..c426504 100644
---- a/net/mac80211/sta_info.c
-+++ b/net/mac80211/sta_info.c
-@@ -244,6 +244,8 @@ struct sta_info *sta_info_alloc(struct ieee80211_sub_if_data *sdata,
- 	sta->local = local;
- 	sta->sdata = sdata;
- 
-+	ewma_init(&sta->avg_signal, 1024, 8);
-+
- 	if (sta_prepare_rate_control(local, sta, gfp)) {
- 		kfree(sta);
- 		return NULL;
-diff --git a/net/mac80211/sta_info.h b/net/mac80211/sta_info.h
-index 05f1130..fdca52c 100644
---- a/net/mac80211/sta_info.h
-+++ b/net/mac80211/sta_info.h
-@@ -13,6 +13,7 @@
- #include <linux/types.h>
- #include <linux/if_ether.h>
- #include <linux/workqueue.h>
-+#include <linux/average.h>
- #include "key.h"
- 
- /**
-@@ -223,6 +224,7 @@ enum plink_state {
-  * @rx_fragments: number of received MPDUs
-  * @rx_dropped: number of dropped MPDUs from this STA
-  * @last_signal: signal of last received frame from this STA
-+ * @avg_signal: moving average of signal of received frames from this STA
-  * @last_seq_ctrl: last received seq/frag number from this STA (per RX queue)
-  * @tx_filtered_count: number of frames the hardware filtered for this STA
-  * @tx_retry_failed: number of frames that failed retry
-@@ -291,6 +293,7 @@ struct sta_info {
- 	unsigned long rx_fragments;
- 	unsigned long rx_dropped;
- 	int last_signal;
-+	struct ewma avg_signal;
- 	__le16 last_seq_ctrl[NUM_RX_DATA_QUEUES];
- 
- 	/* Updated from TX status path only, no locking requirements */
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index 960be4e..45fe06d 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -1874,6 +1874,9 @@ static int nl80211_send_station(struct sk_buff *msg, u32 pid, u32 seq,
- 	if (sinfo->filled & STATION_INFO_SIGNAL)
- 		NLA_PUT_U8(msg, NL80211_STA_INFO_SIGNAL,
- 			   sinfo->signal);
-+	if (sinfo->filled & STATION_INFO_SIGNAL_AVG)
-+		NLA_PUT_U8(msg, NL80211_STA_INFO_SIGNAL_AVG,
-+			   sinfo->signal_avg);
- 	if (sinfo->filled & STATION_INFO_TX_BITRATE) {
- 		txrate = nla_nest_start(msg, NL80211_STA_INFO_TX_BITRATE);
- 		if (!txrate)
+> and at the wrong place as well...
 
+I'll fix thanks.
+
+
+>> @@ -1121,6 +1121,7 @@ void ieee80211_stop_device(struct ieee80211_local *local)
+>>
+>>       flush_workqueue(local->workqueue);
+>>       drv_stop(local);
+>> +     ieee80211_recalc_idle_force(local);
+>
+> That one definitely can't be after drv_stop().
+
+OK why though?
+
+ Luis
