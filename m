@@ -1,62 +1,97 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mailout-de.gmx.net ([213.165.64.22]:52651 "HELO mail.gmx.net"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with SMTP
-	id S1757723Ab0LBOYw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 2 Dec 2010 09:24:52 -0500
-Message-ID: <4CF7AC31.2020206@gmx.net>
-Date: Thu, 02 Dec 2010 15:24:49 +0100
-From: Wolfgang Breyha <wbreyha@gmx.net>
+Received: from mail.candelatech.com ([208.74.158.172]:50066 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752796Ab0LGSrk (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 7 Dec 2010 13:47:40 -0500
+Received: from [192.168.100.195] (firewall.candelatech.com [70.89.124.249])
+	(authenticated bits=0)
+	by ns3.lanforge.com (8.14.2/8.14.2) with ESMTP id oB7IldYd000600
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
+	for <linux-wireless@vger.kernel.org>; Tue, 7 Dec 2010 10:47:39 -0800
+Message-ID: <4CFE814B.7030203@candelatech.com>
+Date: Tue, 07 Dec 2010 10:47:39 -0800
+From: Ben Greear <greearb@candelatech.com>
 MIME-Version: 1.0
 To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: EAP Identity Response dropped on 5GHz
-References: <4CF66912.8050302@gmx.net>
-In-Reply-To: <4CF66912.8050302@gmx.net>
-Content-Type: text/plain; charset=us-ascii
+Subject: Crash when deleting lots of VIFS, wireless-testing.
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Wolfgang Breyha wrote, on 01.12.2010 16:26:
-> In the same moments I see
->> Dec  1 15:53:18 hpwb kernel: [15439.900071] wlan0: dropped frame to 00:26:cb:xx:xx:xx (unauthorized port)
->> Dec  1 15:53:19 hpwb kernel: [15440.894484] wlan0: dropped frame to 00:26:cb:xx:xx:xx (unauthorized port)
->> Dec  1 15:53:20 hpwb kernel: [15441.893895] wlan0: dropped frame to 00:26:cb:xx:xx:xx (unauthorized port)
+I think this started happening in the last few days.  I see all sorts
+of corruptions, often in timers and lists.  I'm using ath9k on these
+systems, but not sure that matters.  Might have something to do with
+deleting interfaces while scanning.
 
-These are IPv6 discovery packets of ethertype 0x86DD. So that's correct.
+I'll be digging more..but if anyone has ideas, they are welcome!
 
-But introducing a usleep(100000) in
-wpa_supplicant/src/eap_peer/eap.c:136, or in other words....
-> wpa_supplicant logs:
-> 
->> 1291215721.998646: Process pending EAPOL frame that was received just before association notification
->> 1291215721.998677: RX EAPOL from 00:26:cb:xx:xx:xx
->> 1291215721.998713: Setting authentication timeout: 70 sec 0 usec
->> 1291215721.998747: EAPOL: Received EAP-Packet frame
->> 1291215721.998778: EAPOL: SUPP_PAE entering state RESTART
->> 1291215721.998806: EAP: EAP entering state INITIALIZE
-............ HERE ................
->> 1291215721.998835: EAP: EAP entering state IDLE
->> 1291215721.998865: EAPOL: SUPP_PAE entering state AUTHENTICATING
->> 1291215721.998895: EAPOL: SUPP_BE entering state REQUEST
->> 1291215721.998924: EAPOL: getSuppRsp
->> 1291215721.998952: EAP: EAP entering state RECEIVED
->> 1291215721.998998: EAP: Received EAP-Request id=1 method=1 vendor=0 vendorMethod=0
->> 1291215721.999034: EAP: EAP entering state IDENTITY
->> 1291215721.999065: CTRL-EVENT-EAP-STARTED EAP authentication started
->> 1291215721.999087: EAP: EAP-Request Identity data - hexdump_ascii(len=40):
->> 1291215721.999159: EAP: using real identity - hexdump_ascii(len=15):
->> 1291215721.999198: EAP: EAP entering state SEND_RESPONSE
->> 1291215721.999220: EAP: EAP entering state IDLE
->> 1291215721.999267: EAPOL: SUPP_BE entering state RESPONSE
->> 1291215721.999290: EAPOL: txSuppRsp
->> 1291215721.999318: TX EAPOL: dst=00:26:cb:xx:xx:xx
-.... lets path this packet through to the AP over air.
+------------[ cut here ]------------
+WARNING: at /home/greearb/git/linux.wireless-testing/lib/list_debug.c:30 __list_add+0x6c/0x7f()
+Hardware name: PDSBM
+list_add corruption. prev->next should be next (78a3c434), but was 6b6b6b6b. (prev=e27c39a4).
+Modules linked in: aes_i586 aes_generic 8021q garp stp llc michael_mic fuse macvlan pktgen nfs lockd fscache nfs_acl auth_rpcgss sunrpc ipv6 uinput ar]
+Pid: 9567, comm: kworker/u:2 Tainted: P            2.6.37-rc4-wl+ #57
+Call Trace:
+  [<78436fbd>] warn_slowpath_common+0x77/0x8c
+  [<785a5bb1>] ? __list_add+0x6c/0x7f
+  [<785a5bb1>] ? __list_add+0x6c/0x7f
+  [<7843704e>] warn_slowpath_fmt+0x2e/0x30
+  [<785a5bb1>] __list_add+0x6c/0x7f
+  [<784402fb>] internal_add_timer+0x8e/0x92
+  [<784407c5>] __mod_timer+0xed/0x101
+  [<78440d36>] mod_timer+0x70/0x76
+  [<f919dd6e>] ieee80211_sta_reset_conn_monitor+0x2e/0x3b [mac80211]
+  [<f919a146>] ieee80211_offchannel_return+0xce/0x16e [mac80211]
+  [<f919931e>] __ieee80211_scan_completed_finish+0x50/0x93 [mac80211]
+  [<f919a066>] ieee80211_scan_work+0x3e5/0x3f7 [mac80211]
+  [<78446f63>] ? process_one_work+0x13e/0x2bf
+  [<78446fd4>] process_one_work+0x1af/0x2bf
+  [<78446f63>] ? process_one_work+0x13e/0x2bf
+  [<f9199c81>] ? ieee80211_scan_work+0x0/0x3f7 [mac80211]
+  [<78448722>] worker_thread+0xf9/0x1bf
+  [<78448629>] ? worker_thread+0x0/0x1bf
+  [<7844b252>] kthread+0x62/0x67
+  [<7844b1f0>] ? kthread+0x0/0x67
+  [<784036c6>] kernel_thread_helper+0x6/0x1a
+---[ end trace 4a96cef9c907ea7c ]---
+start_sw_scan: running-other-vifs: 0  running-station-vifs: 69, associated-stations: 68 scanning current channel: 2437 MHz
+BUG: unable to handle kernel paging request at df47b9a4
+IP: [<78440843>] try_to_del_timer_sync+0x28/0x65
+*pde = 01397067 *pte = 6747b160
+Oops: 0002 [#1] SMP DEBUG_PAGEALLOC
+last sysfs file: /sys/devices/pci0000:00/0000:00:1e.0/0000:08:01.0/class
+Modules linked in: aes_i586 aes_generic 8021q garp stp llc michael_mic fuse macvlan pktgen nfs lockd fscache nfs_acl auth_rpcgss sunrpc ipv6 uinput ar]
 
-I haven't found the source of this race condition which causes this. The
-reason why it only happens on 5GHz channels is unknown as well.
+Pid: 38, comm: kworker/u:1 Tainted: P        W   2.6.37-rc4-wl+ #57 PDSBM/PDSBM
+EIP: 0060:[<78440843>] EFLAGS: 00010086 CPU: 0
+EIP is at try_to_del_timer_sync+0x28/0x65
+EAX: 78a3b980 EBX: f2c49944 ECX: df47b9a4 EDX: f4abea24
+ESI: 00000000 EDI: 00000286 EBP: f39f7e98 ESP: f39f7e8c
+  DS: 007b ES: 007b FS: 00d8 GS: 0000 SS: 0068
+Process kworker/u:1 (pid: 38, ti=f39f6000 task=f3a00a70 task.ti=f39f6000)
+Stack:
+  00000282 f2c49960 f2c49944 f39f7ebc 78440c47 00000000 00000002 00000000
+  78440bc0 f2c49540 f4214460 f4214c3c f39f7ed4 f919a35c f4214c34 f4214460
+  e26c0240 00000064 f39f7f2c f9199fbb f39f7f68 f39f7f10 00000046 00000000
+Call Trace:
+  [<78440c47>] ? del_timer_sync+0x87/0x97
+  [<78440bc0>] ? del_timer_sync+0x0/0x97
+  [<f919a35c>] ? ieee80211_offchannel_stop_station+0x96/0xfa [mac80211]
+  [<f9199fbb>] ? ieee80211_scan_work+0x33a/0x3f7 [mac80211]
+  [<78446fd4>] ? process_one_work+0x1af/0x2bf
+  [<78446f63>] ? process_one_work+0x13e/0x2bf
+  [<f9199c81>] ? ieee80211_scan_work+0x0/0x3f7 [mac80211]
+  [<78448722>] ? worker_thread+0xf9/0x1bf
+  [<78448629>] ? worker_thread+0x0/0x1bf
+  [<7844b252>] ? kthread+0x62/0x67
+  [<7844b1f0>] ? kthread+0x0/0x67
+  [<784036c6>] ? kernel_thread_helper+0x6/0x1a
+Code: ff c9 c3 55 89 e5 56 83 ce ff 53 89 c3 83 ec 04 8d 55 f4 e8 68 fe ff ff 39 58 20 74 3c 8b 13 31 f6 85 d2 74 34 8b 4b 04 89 4a 04 <89> 11 8b 53 0
+EIP: [<78440843>] try_to_del_timer_sync+0x28/0x65 SS:ESP 0068:f39f7e8c
+CR2: 00000000df47b9a4
 
-With kind regards,
-Wolfgang Breyha
 -- 
-Wolfgang Breyha <wbreyha@gmx.net> | http://www.blafasel.at/
-Vienna University Computer Center | Austria
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
 
