@@ -1,51 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from external1.orbit-lab.org ([128.6.192.131]:32839 "HELO
-	external1.orbit-lab.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1755766Ab0LSUC6 (ORCPT
+Received: from mail-qy0-f181.google.com ([209.85.216.181]:49006 "EHLO
+	mail-qy0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751561Ab0LGVzj (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 19 Dec 2010 15:02:58 -0500
-Received: from repository3.orbit-lab.org (repository3.orbit-lab.org [10.50.0.41])
-	by external1.orbit-lab.org (Postfix) with ESMTP id 855094061C
-	for <linux-wireless@vger.kernel.org>; Sun, 19 Dec 2010 15:03:09 -0500 (EST)
-Subject: Compat-wireless release for 2010-12-19 is baked
-To: <linux-wireless@vger.kernel.org>
-Message-Id: <20101219200257.3848340F97@repository3.orbit-lab.org>
-Date: Sun, 19 Dec 2010 15:02:57 -0500 (EST)
-From: compat@orbit-lab.org (Compat-wireless cronjob account)
+	Tue, 7 Dec 2010 16:55:39 -0500
+MIME-Version: 1.0
+Reply-To: sedat.dilek@gmail.com
+Date: Tue, 7 Dec 2010 22:55:38 +0100
+Message-ID: <AANLkTimhXLc-YkgPg9So71eOeOtDupnkGyZCEzvK6si3@mail.gmail.com>
+Subject: [PATCH] ath5k: Fix modinfo does not list alias -> pci-id lines
+From: Sedat Dilek <sedat.dilek@googlemail.com>
+To: wireless <linux-wireless@vger.kernel.org>,
+	John Linville <linville@tuxdriver.com>,
+	Nick Kossifidis <mickflemm@gmail.com>
+Cc: LKML <linux-kernel@vger.kernel.org>,
+	ath5k-devel <ath5k-devel@lists.ath5k.org>,
+	Bruno Randolf <br1@einfach.org>
+Content-Type: multipart/mixed; boundary=0016363b7f62acd7150496d9102c
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
->From git://git.kernel.org/pub/scm/linux/kernel/git/mcgrof/compat-wireless-2.6
-   880bb0b..dd8c5e7  master     -> origin/master
- * [new tag]         compat-wireless-2010-12-17 -> compat-wireless-2010-12-17
->From git://git.kernel.org/pub/scm/linux/kernel/git/mcgrof/compat
-   3547391..64bcd1b  master     -> origin/master
-cat: /var/opt/compat/compat-wireless-2.6/compat_version: No such file or directory
-cat: compat_base_tree: No such file or directory
-cat: compat_base_tree_version: No such file or directory
-cat: compat_version: No such file or directory
-cat: /var/opt/compat/compat-wireless-2.6/compat_version: No such file or directory
-scripts/Makefile.clean:17: /var/opt/compat/compat-wireless-2.6/drivers/net/wireless/hostap/Makefile: No such file or directory
-make[4]: *** No rule to make target `/var/opt/compat/compat-wireless-2.6/drivers/net/wireless/hostap/Makefile'.  Stop.
-make[3]: *** [/var/opt/compat/compat-wireless-2.6/drivers/net/wireless/hostap] Error 2
-make[2]: *** [/var/opt/compat/compat-wireless-2.6/drivers/net/wireless] Error 2
-make[1]: *** [_clean_/var/opt/compat/compat-wireless-2.6] Error 2
-make: *** [clean] Error 2
+--0016363b7f62acd7150496d9102c
+Content-Type: text/plain; charset=UTF-8
 
-compat-wireless code metrics
+This patch fixes an issue in wirless-next-2.6 / linux-next
+(next-20101207) with ath5k and wrong modinfo output.
 
-    777009 - Total upstream lines of code being pulled
-      2223 - backport code changes
-      1946 - backport code additions
-       277 - backport code deletions
-      6669 - backport from compat module
-      8892 - total backport code
-    1.1444 - % of code consists of backport work
-      1532 - Crap changes not yet posted
-      1489 - Crap additions not yet posted
-        43 - Crap deletions not yet posted
-    0.1972 - % of crap code
+- Sedat -
 
-Base tree: linux-next.git
-Base tree version: next-20101217
-compat-wireless release: compat-wireless-2010-12-17-pc
+--0016363b7f62acd7150496d9102c
+Content-Type: text/x-diff; charset=US-ASCII;
+	name="0001-ath5k-Fix-modinfo-does-not-list-alias-pci-id-lines.patch"
+Content-Disposition: attachment;
+	filename="0001-ath5k-Fix-modinfo-does-not-list-alias-pci-id-lines.patch"
+Content-Transfer-Encoding: base64
+X-Attachment-Id: f_ghfbup610
+
+RnJvbSAzOTRjM2NhNGZkYzBlOGU5MmQ4MTE3YzFkYTJlZmRjOTE3MzYyYzUyIE1vbiBTZXAgMTcg
+MDA6MDA6MDAgMjAwMQpGcm9tOiBTZWRhdCBEaWxlayA8c2VkYXQuZGlsZWtAZ21haWwuY29tPgpE
+YXRlOiBUdWUsIDcgRGVjIDIwMTAgMjI6MzU6NTAgKzAxMDAKU3ViamVjdDogW1BBVENIXSBhdGg1
+azogRml4IG1vZGluZm8gZG9lcyBub3QgbGlzdCBhbGlhcyAtPiBwY2ktaWQgbGluZXMKClRoZSBB
+SEIgYnVzIHN1cHBvcnQgcGF0Y2hzZXQgbW92ZWQgdGhlIHRhYmxlICJLbm93biBQQ0kgaWRzIiBm
+cm9tIGJhc2UuYwp0byBwY2kuYyAtIHVuZm9ydHVuYXRlbHksIE1PRFVMRV9ERVZJQ0VfVEFCTEUo
+KSB3YXMgbm90IHRyYW5zZmVycmVkLgpXaXRoIHRoaXMgZml4ICdtb2RpbmZvIGF0aDVrJyBsaXN0
+cyB0aGUgYWxpYXMgLT4gcGNpLWlkIGxpbmVzLCBhZ2Fpbi4KClRoZSBpc3N1ZSB3YXMgaW50cm9k
+dWNlZCBieToKICAgY29tbWl0IGU1YjA0NmQ4NmZhYzYwOWY2MzZkMTI3YTM4ZGU5NGExNzVjN2U4
+M2IKICAgImF0aDVrOiBNb3ZlIFBDSSBidXMgZnVuY3Rpb25zIHRvIHNlcGFyYXRlIGZpbGUuIgot
+LS0KIGRyaXZlcnMvbmV0L3dpcmVsZXNzL2F0aC9hdGg1ay9wY2kuYyB8ICAgIDEgKwogMSBmaWxl
+cyBjaGFuZ2VkLCAxIGluc2VydGlvbnMoKyksIDAgZGVsZXRpb25zKC0pCgpkaWZmIC0tZ2l0IGEv
+ZHJpdmVycy9uZXQvd2lyZWxlc3MvYXRoL2F0aDVrL3BjaS5jIGIvZHJpdmVycy9uZXQvd2lyZWxl
+c3MvYXRoL2F0aDVrL3BjaS5jCmluZGV4IDM5ZjAzMzEuLjdmOGM1YjAgMTAwNjQ0Ci0tLSBhL2Ry
+aXZlcnMvbmV0L3dpcmVsZXNzL2F0aC9hdGg1ay9wY2kuYworKysgYi9kcml2ZXJzL25ldC93aXJl
+bGVzcy9hdGgvYXRoNWsvcGNpLmMKQEAgLTQ1LDYgKzQ1LDcgQEAgc3RhdGljIERFRklORV9QQ0lf
+REVWSUNFX1RBQkxFKGF0aDVrX3BjaV9pZF90YWJsZSkgPSB7CiAJeyBQQ0lfVkRFVklDRShBVEhF
+Uk9TLCAweDAwMWQpIH0sIC8qIDI0MTcgTmFsYSAqLwogCXsgMCB9CiB9OworTU9EVUxFX0RFVklD
+RV9UQUJMRShwY2ksIGF0aDVrX3BjaV9pZF90YWJsZSk7CiAKIC8qIHJldHVybiBidXMgY2FjaGVz
+aXplIGluIDRCIHdvcmQgdW5pdHMgKi8KIHN0YXRpYyB2b2lkIGF0aDVrX3BjaV9yZWFkX2NhY2hl
+c2l6ZShzdHJ1Y3QgYXRoX2NvbW1vbiAqY29tbW9uLCBpbnQgKmNzeikKLS0gCjEuNy4yLjMKCg==
+--0016363b7f62acd7150496d9102c--
