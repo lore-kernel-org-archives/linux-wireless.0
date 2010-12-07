@@ -1,112 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wy0-f174.google.com ([74.125.82.174]:38767 "EHLO
-	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753873Ab0L0OIX (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:56376 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753403Ab0LGVpj (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 27 Dec 2010 09:08:23 -0500
-Received: by mail-wy0-f174.google.com with SMTP id 28so8482816wyb.19
-        for <linux-wireless@vger.kernel.org>; Mon, 27 Dec 2010 06:08:22 -0800 (PST)
-From: Ivo van Doorn <ivdoorn@gmail.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Subject: [PATCH 08/10] rt2x00: Simplify intf->delayed_flags locking
-Date: Mon, 27 Dec 2010 15:06:57 +0100
-Cc: linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com
-References: <201012271504.30848.IvDoorn@gmail.com> <201012271506.18101.IvDoorn@gmail.com> <201012271506.37080.IvDoorn@gmail.com>
-In-Reply-To: <201012271506.37080.IvDoorn@gmail.com>
-MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Message-Id: <201012271506.58485.IvDoorn@gmail.com>
+	Tue, 7 Dec 2010 16:45:39 -0500
+Subject: Re: [PATCH 1/2] cfg80211: add some element IDs in enum
+ ieee80211_eid
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Bing Zhao <bzhao@marvell.com>
+Cc: linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Amitkumar Karwar <akarwar@marvell.com>,
+	Kiran Divekar <dkiran@marvell.com>,
+	Frank Huang <frankh@marvell.com>
+In-Reply-To: <1291758184-649-1-git-send-email-bzhao@marvell.com>
+References: <1291758184-649-1-git-send-email-bzhao@marvell.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Tue, 07 Dec 2010 22:45:36 +0100
+Message-ID: <1291758336.3607.62.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Helmut Schaa <helmut.schaa@googlemail.com>
+On Tue, 2010-12-07 at 13:43 -0800, Bing Zhao wrote:
+> From: Amitkumar Karwar <akarwar@marvell.com>
+> 
+> 1)WLAN_EID_BSS_COEX_2040
+> 2)WLAN_EID_OVERLAP_BSS_SCAN_PARAM
+> 3)WLAN_EID_EXT_CAPABILITY
+> 
+> Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
 
-Instead of protecting delayed_flags with a spinlock use atomic bitops to
-make the code more readable.
+I believe this patch can go in regardless of mwifiex status.
 
-Signed-off-by: Helmut Schaa <helmut.schaa@googlemail.com>
-Acked-by: Gertjan van Wingerde <gwingerde@gmail.com>
-Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
----
- drivers/net/wireless/rt2x00/rt2x00.h    |    7 +++++--
- drivers/net/wireless/rt2x00/rt2x00dev.c |   15 +--------------
- drivers/net/wireless/rt2x00/rt2x00mac.c |    4 +---
- 3 files changed, 7 insertions(+), 19 deletions(-)
-
-diff --git a/drivers/net/wireless/rt2x00/rt2x00.h b/drivers/net/wireless/rt2x00/rt2x00.h
-index 755b723..b3f77d4 100644
---- a/drivers/net/wireless/rt2x00/rt2x00.h
-+++ b/drivers/net/wireless/rt2x00/rt2x00.h
-@@ -347,6 +347,10 @@ struct link {
- 	struct delayed_work watchdog_work;
- };
- 
-+enum rt2x00_delayed_flags {
-+	DELAYED_UPDATE_BEACON,
-+};
-+
- /*
-  * Interface structure
-  * Per interface configuration details, this structure
-@@ -374,8 +378,7 @@ struct rt2x00_intf {
- 	/*
- 	 * Actions that needed rescheduling.
- 	 */
--	unsigned int delayed_flags;
--#define DELAYED_UPDATE_BEACON		0x00000001
-+	unsigned long delayed_flags;
- 
- 	/*
- 	 * Software sequence counter, this is only required
-diff --git a/drivers/net/wireless/rt2x00/rt2x00dev.c b/drivers/net/wireless/rt2x00/rt2x00dev.c
-index 97a8911..9597a03 100644
---- a/drivers/net/wireless/rt2x00/rt2x00dev.c
-+++ b/drivers/net/wireless/rt2x00/rt2x00dev.c
-@@ -110,19 +110,6 @@ static void rt2x00lib_intf_scheduled_iter(void *data, u8 *mac,
- {
- 	struct rt2x00_dev *rt2x00dev = data;
- 	struct rt2x00_intf *intf = vif_to_intf(vif);
--	int delayed_flags;
--
--	/*
--	 * Copy all data we need during this action under the protection
--	 * of a spinlock. Otherwise race conditions might occur which results
--	 * into an invalid configuration.
--	 */
--	spin_lock(&intf->lock);
--
--	delayed_flags = intf->delayed_flags;
--	intf->delayed_flags = 0;
--
--	spin_unlock(&intf->lock);
- 
- 	/*
- 	 * It is possible the radio was disabled while the work had been
-@@ -133,7 +120,7 @@ static void rt2x00lib_intf_scheduled_iter(void *data, u8 *mac,
- 	if (!test_bit(DEVICE_STATE_ENABLED_RADIO, &rt2x00dev->flags))
- 		return;
- 
--	if (delayed_flags & DELAYED_UPDATE_BEACON)
-+	if (test_and_clear_bit(DELAYED_UPDATE_BEACON, &intf->delayed_flags))
- 		rt2x00queue_update_beacon(rt2x00dev, vif, true);
- }
- 
-diff --git a/drivers/net/wireless/rt2x00/rt2x00mac.c b/drivers/net/wireless/rt2x00/rt2x00mac.c
-index a2266c7..297d972 100644
---- a/drivers/net/wireless/rt2x00/rt2x00mac.c
-+++ b/drivers/net/wireless/rt2x00/rt2x00mac.c
-@@ -444,9 +444,7 @@ static void rt2x00mac_set_tim_iter(void *data, u8 *mac,
- 	    vif->type != NL80211_IFTYPE_WDS)
- 		return;
- 
--	spin_lock(&intf->lock);
--	intf->delayed_flags |= DELAYED_UPDATE_BEACON;
--	spin_unlock(&intf->lock);
-+	set_bit(DELAYED_UPDATE_BEACON, &intf->delayed_flags);
- }
- 
- int rt2x00mac_set_tim(struct ieee80211_hw *hw, struct ieee80211_sta *sta,
--- 
-1.7.2.3
+johannes
 
