@@ -1,57 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gy0-f174.google.com ([209.85.160.174]:44662 "EHLO
-	mail-gy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751582Ab0LWIL7 convert rfc822-to-8bit (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:37462 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750819Ab0LGRbw (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 23 Dec 2010 03:11:59 -0500
-Received: by gyb11 with SMTP id 11so2429026gyb.19
-        for <linux-wireless@vger.kernel.org>; Thu, 23 Dec 2010 00:11:59 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <1293053782.14423.51.camel@powerslave>
-References: <1293028057-6212-1-git-send-email-arik@wizery.com>
- <1293028057-6212-9-git-send-email-arik@wizery.com> <1293053782.14423.51.camel@powerslave>
-From: Arik Nemtsov <arik@wizery.com>
-Date: Thu, 23 Dec 2010 10:05:42 +0200
-Message-ID: <AANLkTi=M0i+7-sYV3Y8z7cFFZbtpejZh8sH_QyeCNWq6@mail.gmail.com>
-Subject: Re: [PATCH v2 08/18] wl1271: Add AP related definitions to HOST-FW interface
-To: Luciano Coelho <luciano.coelho@nokia.com>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+	Tue, 7 Dec 2010 12:31:52 -0500
+Subject: Re: [PATCH 5/5] mac80211: fix issuing idle calls when device open
+ count is 0
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Paul Stewart <pstew@google.com>
+Cc: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	amod.bodas@atheros.com, stable@kernel.org
+In-Reply-To: <AANLkTinXPOgOJB0ntHra4B_V0z9Qux2yrdiuqkyW7WuJ@mail.gmail.com>
+References: <1291690135-4535-1-git-send-email-lrodriguez@atheros.com>
+	 <1291690135-4535-6-git-send-email-lrodriguez@atheros.com>
+	 <1291714709.3607.2.camel@jlt3.sipsolutions.net>
+	 <AANLkTinZK_xMJUDaDWzOpW7FXUERUNS3Y0btx=WS9KR1@mail.gmail.com>
+	 <1291735415.3607.46.camel@jlt3.sipsolutions.net>
+	 <AANLkTinXPOgOJB0ntHra4B_V0z9Qux2yrdiuqkyW7WuJ@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Tue, 07 Dec 2010 18:31:38 +0100
+Message-ID: <1291743098.3607.49.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Dec 22, 2010 at 23:36, Luciano Coelho <luciano.coelho@nokia.com> wrote:
-> On Wed, 2010-12-22 at 16:27 +0200, ext Arik Nemtsov wrote:
->> Change structures in a non-destructive manner. This means no
->> changes in size or location of existing members used by STA.
->>
->> Signed-off-by: Arik Nemtsov <arik@wizery.com>
->> ---
->
-> [...]
->
->> diff --git a/drivers/net/wireless/wl12xx/rx.h b/drivers/net/wireless/wl12xx/rx.h
->> index 3abb26f..19fd591 100644
->> --- a/drivers/net/wireless/wl12xx/rx.h
->> +++ b/drivers/net/wireless/wl12xx/rx.h
->> @@ -86,10 +86,11 @@
->>  /*
->>   * RX Descriptor status
->>   *
->> - * Bits 0-2 - status
->> - * Bits 3-7 - reserved
->> + * Bits 0-2 - error code
->> + * Bits 3-5 - process_id tag (AP mode FW)
->> + * Bits 6-7 - reserved
->>   */
->> -#define WL1271_RX_DESC_STATUS_MASK      0x07
->> +#define WL1271_RX_DESC_STATUS_MASK      0x03
->
-> What happened with bit 2?
+On Tue, 2010-12-07 at 09:28 -0800, Paul Stewart wrote:
 
-You're right. Actually ported over a bug from the original TI driver.
-Since only errors 1-3 are defined this still works. But its a bug
-anyway. Will revert.
+> > Actually I believe it happens _during_ ifdown, but when the running bit
+> > is already cleared, so I guess this is about right -- although it
+> > shouldn't matter since the recalc_idle in do_stop should catch it later.
+> 
+> So the scenario is as follows.  If you down an interface
+> ieee80211_do_stop() first decrements local->open_count, then later
+> calls __ieee80211_recalc_idle, et al.  This means that later in this
+> call graph if ieee80211_hw_config() finally gets called, open_count is
+> already 0 and therefore drv_config is never called.  Luis' reference
+> to scan_completed() above is probable in reference to older versions
+> of compat where ieee80211_stop() called ieee80211_scan_cancel()
+> directly.  My admittedly casual look at wireless-testing seems to
+> imply that path may not exist in current compat, although my tests
+> seem to indicate the same class of problem still exists.
 
-Regards,
-Arik
+Yeah I can see how a problem like this happens -- but I think the change
+in scan_finished() is pointless because it'll be handled during
+do_stop() anyway.
+
+johannes
+
