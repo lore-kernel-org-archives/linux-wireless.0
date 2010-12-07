@@ -1,39 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iy0-f194.google.com ([209.85.210.194]:43698 "EHLO
-	mail-iy0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751076Ab0LVTkR (ORCPT
+Received: from mail-gx0-f180.google.com ([209.85.161.180]:36139 "EHLO
+	mail-gx0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750698Ab0LGFN6 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 22 Dec 2010 14:40:17 -0500
-Received: by iyf40 with SMTP id 40so2421225iyf.1
-        for <linux-wireless@vger.kernel.org>; Wed, 22 Dec 2010 11:40:17 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <AANLkTi=GUN7=AQAAvmgADgwHtcquNiZbWEtgCoJpC4Fv@mail.gmail.com>
-References: <AANLkTi=GUN7=AQAAvmgADgwHtcquNiZbWEtgCoJpC4Fv@mail.gmail.com>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Wed, 22 Dec 2010 14:39:56 -0500
-Message-ID: <AANLkTikGzNSWGKfFpV0CPLg8dQbjd3YN8T_ebQbfmP_r@mail.gmail.com>
-Subject: Re: [ath9k] skbuff alloc of size 3872 failed
-To: Matt Turner <mattst88@gmail.com>
-Cc: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
-	Michael Guntsche <mike@it-loops.com>,
-	Eric Dumazet <eric.dumazet@gmail.com>
-Content-Type: text/plain; charset=UTF-8
+	Tue, 7 Dec 2010 00:13:58 -0500
+Received: by gxk19 with SMTP id 19so7264653gxk.11
+        for <linux-wireless@vger.kernel.org>; Mon, 06 Dec 2010 21:13:58 -0800 (PST)
+From: greearb@gmail.com
+To: linux-wireless@vger.kernel.org
+Cc: ath9k-devel@venema.h4ckr.net, Ben Greear <greearb@candelatech.com>
+Subject: [PATCH] ath9k:  Check for NULL sta in ath_tx_start
+Date: Mon,  6 Dec 2010 21:13:49 -0800
+Message-Id: <1291698829-22765-1-git-send-email-greearb@candelatech.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Dec 22, 2010 at 2:22 PM, Matt Turner <mattst88@gmail.com> wrote:
-> With the ath9k driver, I get "skbuff alloc of size 3872 failed"
->
-> I hit this again today after not using wireless for quite sometime. It
-> looks like it was originally reported against 2.6.35-rc1. Eric Dumazet
-> provided a patch which fixed the issue, but apparently it's still not
-> upstream. Why is this?
->
-> If it is suitable for upstream inclusion, please take my Tested-by:
-> Matt Turner <mattst88@gmail.com>
->
-> https://patchwork.kernel.org/patch/104271/
+From: Ben Greear <greearb@candelatech.com>
 
-Never saw this patch, can this be posted to linux-wireless with a proper SOB?
+It can be NULL according to docs, and logging showed it
+to be NULL in practice.
 
- Luis
+Signed-off-by: Ben Greear <greearb@candelatech.com>
+---
+:100644 100644 8b0b076... 5ddca08... M	drivers/net/wireless/ath/ath9k/xmit.c
+ drivers/net/wireless/ath/ath9k/xmit.c |    5 ++++-
+ 1 files changed, 4 insertions(+), 1 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath9k/xmit.c b/drivers/net/wireless/ath/ath9k/xmit.c
+index 8b0b076..5ddca08 100644
+--- a/drivers/net/wireless/ath/ath9k/xmit.c
++++ b/drivers/net/wireless/ath/ath9k/xmit.c
+@@ -1764,7 +1764,10 @@ int ath_tx_start(struct ieee80211_hw *hw, struct sk_buff *skb,
+ 	int frmlen = skb->len + FCS_LEN;
+ 	int q;
+ 
+-	txctl->an = (struct ath_node *)sta->drv_priv;
++	/* NOTE:  sta can be NULL according to net/mac80211.h */
++	if (sta)
++		txctl->an = (struct ath_node *)sta->drv_priv;
++
+ 	if (info->control.hw_key)
+ 		frmlen += info->control.hw_key->icv_len;
+ 
+-- 
+1.7.2.3
+
