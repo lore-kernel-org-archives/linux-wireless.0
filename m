@@ -1,112 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:59008 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757327Ab0LIWXN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 9 Dec 2010 17:23:13 -0500
-From: Hauke Mehrtens <hauke@hauke-m.de>
-To: lrodriguez@atheros.com
-Cc: linux-wireless@vger.kernel.org, mcgrof@infradead.org,
-	Hauke Mehrtens <hauke@hauke-m.de>
-Subject: [PATCH] compat-wireless: make patch apply again
-Date: Thu,  9 Dec 2010 23:23:05 +0100
-Message-Id: <1291933385-18217-1-git-send-email-hauke@hauke-m.de>
+Received: from mail-iw0-f172.google.com ([209.85.214.172]:36494 "EHLO
+	mail-iw0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754843Ab0LGUzb convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 7 Dec 2010 15:55:31 -0500
+Received: by iwn40 with SMTP id 40so368066iwn.3
+        for <linux-wireless@vger.kernel.org>; Tue, 07 Dec 2010 12:55:31 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <1291745567.3607.52.camel@jlt3.sipsolutions.net>
+References: <1291690135-4535-1-git-send-email-lrodriguez@atheros.com>
+ <1291690135-4535-6-git-send-email-lrodriguez@atheros.com> <1291714709.3607.2.camel@jlt3.sipsolutions.net>
+ <AANLkTikrLweKeSR-=XziaJ5rqDRf_Ny=mg1OD=jC4nqA@mail.gmail.com>
+ <1291736887.3607.47.camel@jlt3.sipsolutions.net> <AANLkTimiw074uXxe3nPTNZ0j+NtZbHJU1bwiGsFUXMJ4@mail.gmail.com>
+ <1291737298.3607.48.camel@jlt3.sipsolutions.net> <20101207155916.GA1855@tux>
+ <1291743121.3607.50.camel@jlt3.sipsolutions.net> <AANLkTi=Sj7YpKzFHQtf2MdUcRDTzfXszbK7gGg_yup1Y@mail.gmail.com>
+ <1291745567.3607.52.camel@jlt3.sipsolutions.net>
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Date: Tue, 7 Dec 2010 12:49:44 -0800
+Message-ID: <AANLkTimfLGj1=BnRGvJVkP_Ge6KYAtCLcDpBsVoj9o_T@mail.gmail.com>
+Subject: Re: [PATCH 5/5] mac80211: fix issuing idle calls when device open
+ count is 0
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Luis Rodriguez <Luis.Rodriguez@atheros.com>,
+	"linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Amod Bodas <Amod.Bodas@atheros.com>,
+	"pstew@google.com" <pstew@google.com>,
+	"stable@kernel.org" <stable@kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Tue, Dec 7, 2010 at 10:12 AM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
+> On Tue, 2010-12-07 at 10:04 -0800, Luis R. Rodriguez wrote:
+>> On Tue, Dec 7, 2010 at 9:32 AM, Johannes Berg <johannes@sipsolutions.net> wrote:
+>> > On Tue, 2010-12-07 at 07:59 -0800, Luis R. Rodriguez wrote:
+>> >
+>> >> @@ -301,7 +301,7 @@ static void __ieee80211_scan_completed_finish(struct ieee80211_hw *hw,
+>> >>       }
+>> >>
+>> >>       mutex_lock(&local->mtx);
+>> >> -     ieee80211_recalc_idle(local);
+>> >> +     ieee80211_recalc_idle_force(local);
+>> >>       mutex_unlock(&local->mtx);
+>> >
+>> > This is the change that I don't think is necessary.
+>>
+>> Without this resume fails.
+>
+> In what situation? When you just suspend while things are up&running, or
+> if you suspend with interfaces down?
 
-Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
----
- patches/24-pcmcia.patch |   50 ++++++++++++++++++++++++----------------------
- 1 files changed, 26 insertions(+), 24 deletions(-)
+I believe Paul was suspending when the interface is up and running.
 
-diff --git a/patches/24-pcmcia.patch b/patches/24-pcmcia.patch
-index 9614d78..775c969 100644
---- a/patches/24-pcmcia.patch
-+++ b/patches/24-pcmcia.patch
-@@ -1134,21 +1134,10 @@
-  	ret = pcmcia_loop_config(link, orinoco_cs_config_check, NULL);
-  	if (ret) {
-  		if (!ignore_cis_vcc)
--@@ -151,15 +260,23 @@ orinoco_cs_config(struct pcmcia_device *
-+@@ -151,8 +260,12 @@ orinoco_cs_config(struct pcmcia_device *
-  		goto failed;
-  	}
-  
--+#if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,35))
-- 	ret = pcmcia_request_irq(link, orinoco_interrupt);
--+#else
--+	ret = pcmcia_request_irq(link, &link->irq);
--+#endif
-- 	if (ret)
-- 		goto failed;
-- 
-- 	/* We initialize the hermes structure before completing PCMCIA
-- 	 * configuration just in case the interrupt handler gets
-- 	 * called. */
- +#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,36)
-  	mem = ioport_map(link->resource[0]->start,
-  			resource_size(link->resource[0]));
-@@ -1158,6 +1147,18 @@
-  	if (!mem)
-  		goto failed;
-  
-+@@ -161,7 +274,11 @@ orinoco_cs_config(struct pcmcia_device *
-+ 	 * called. */
-+ 	hermes_struct_init(hw, mem, HERMES_16BIT_REGSPACING);
-+ 
-++#if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,35))
-+ 	ret = pcmcia_request_irq(link, orinoco_interrupt);
-++#else
-++	ret = pcmcia_request_irq(link, &link->irq);
-++#endif
-+ 	if (ret)
-+ 		goto failed;
-+ 
- @@ -176,8 +293,16 @@ orinoco_cs_config(struct pcmcia_device *
-  	}
-  
-@@ -1328,21 +1329,10 @@
-  	ret = pcmcia_loop_config(link, spectrum_cs_config_check, NULL);
-  	if (ret) {
-  		if (!ignore_cis_vcc)
--@@ -214,15 +319,23 @@ spectrum_cs_config(struct pcmcia_device
-+@@ -214,8 +319,12 @@ spectrum_cs_config(struct pcmcia_device
-  		goto failed;
-  	}
-  
--+#if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,35))
-- 	ret = pcmcia_request_irq(link, orinoco_interrupt);
--+#else
--+	ret = pcmcia_request_irq(link, &link->irq);
--+#endif
-- 	if (ret)
-- 		goto failed;
-- 
-- 	/* We initialize the hermes structure before completing PCMCIA
-- 	 * configuration just in case the interrupt handler gets
-- 	 * called. */
- +#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,36)
-  	mem = ioport_map(link->resource[0]->start,
-  			resource_size(link->resource[0]));
-@@ -1352,6 +1342,18 @@
-  	if (!mem)
-  		goto failed;
-  
-+@@ -225,7 +334,11 @@ spectrum_cs_config(struct pcmcia_device
-+ 	hermes_struct_init(hw, mem, HERMES_16BIT_REGSPACING);
-+ 	hw->eeprom_pda = true;
-+ 
-++#if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,35))
-+ 	ret = pcmcia_request_irq(link, orinoco_interrupt);
-++#else
-++	ret = pcmcia_request_irq(link, &link->irq);
-++#endif
-+ 	if (ret)
-+ 		goto failed;
-+ 
- @@ -244,8 +357,16 @@ spectrum_cs_config(struct pcmcia_device
-  	}
-  
--- 
-1.7.1
+> It doesn't make sense anyway, so
+> something's going on in the rest of the scan code -- we should be
+> canceling scans properly when going down and when suspending, well
+> before any of this becomes relevant.
 
+The issue might be we race to stop the device prior to canceling a
+scan. Do you see that being possible?
+
+  Luis
