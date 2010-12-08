@@ -1,42 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:53629 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753480Ab0LIVVf (ORCPT
+Received: from mail-pw0-f46.google.com ([209.85.160.46]:59704 "EHLO
+	mail-pw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754982Ab0LHROD (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 9 Dec 2010 16:21:35 -0500
-Subject: Re: [PATCH RFC] mac80211 default tx_last_beacon false (congestion)
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Tim Harvey <harvey.tim@gmail.com>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <1291929345-8066-1-git-send-email-harvey.tim@gmail.com>
-References: <1291929345-8066-1-git-send-email-harvey.tim@gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Thu, 09 Dec 2010 22:21:34 +0100
-Message-ID: <1291929694.3540.39.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+	Wed, 8 Dec 2010 12:14:03 -0500
+Received: by mail-pw0-f46.google.com with SMTP id 3so322374pwj.19
+        for <linux-wireless@vger.kernel.org>; Wed, 08 Dec 2010 09:14:03 -0800 (PST)
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, chaoming_li@realsil.com.cn,
+	Larry Finger <Larry.Finger@lwfinger.net>
+Subject: [PATCH 11/22] rtl8192ce: Add files to rtlwifi - Part 11: Kconfig and Makefile
+Date: Wed,  8 Dec 2010 11:12:41 -0600
+Message-Id: <1291828372-25159-12-git-send-email-Larry.Finger@lwfinger.net>
+In-Reply-To: <1291828372-25159-1-git-send-email-Larry.Finger@lwfinger.net>
+References: <1291828372-25159-1-git-send-email-Larry.Finger@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2010-12-09 at 13:15 -0800, Tim Harvey wrote:
-> The 802.11 spec states that the STA that generated the last Beacon frame shall
-> be the STA that response to a probe request.  This is important for congestion
-> reduction when a probe request is received - only 1 node in an adhoc BSS
-> will transmit a response.  While mac80211 drivers should provide the
-> tx_last_beacon function to report if they transmitted the last beacon many
-> do not.  As an attempt to reduce probe response congestion default this
-> to 0 such that a node not implementing this capability does not contribute
-> to unnecessary congestion.
-> 
-> In a modern medium sized office environment I see upwards of 100 probe
-> requests per second received at a given node from various hardware/OS/drivers
-> doing zeroconf 'active probing' as opposed to passively listening for beacons.
-> With a modest 10-node adhoc network consisting of drivers that do not implement
-> this tx_last_beacon feature, I have seen this result in the simultaneous xmit
-> of probe responses accumulating to 500 probe responses per second because of
-> collisions which brings the adhoc network to its knees as well as causes
-> needless congestion.
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+---
+ drivers/net/wireless/rtlwifi/Kconfig  |   16 ++++++++++++++++
+ drivers/net/wireless/rtlwifi/Makefile |   13 +++++++++++++
+ 2 files changed, 29 insertions(+), 0 deletions(-)
+ create mode 100644 drivers/net/wireless/rtlwifi/Kconfig
+ create mode 100644 drivers/net/wireless/rtlwifi/Makefile
 
-FWIW, I'm OK with this. It shouldn't really have much adverse effect.
-
-johannes
+diff --git a/drivers/net/wireless/rtlwifi/Kconfig b/drivers/net/wireless/rtlwifi/Kconfig
+new file mode 100644
+index 0000000..9ff3081
+--- /dev/null
++++ b/drivers/net/wireless/rtlwifi/Kconfig
+@@ -0,0 +1,16 @@
++config RTL8192CE
++	tristate "Realtek RTL8192CE/RTL8188SE Wireless Network Adapter"
++	depends on MAC80211 && EXPERIMENTAL
++	select FW_LOADER
++	select RTLWIFI
++	---help---
++	This is the driver for Realtek RTL8192CE/RTL8188CE 802.11n PCIe
++	wireless network adapters.
++
++	If you choose to build it as a module, it will be calledrtl8192ce.
++
++config RTLWIFI
++	tristate
++	depends on RTL8192CE
++	default m
++
+diff --git a/drivers/net/wireless/rtlwifi/Makefile b/drivers/net/wireless/rtlwifi/Makefile
+new file mode 100644
+index 0000000..cd2fb60
+--- /dev/null
++++ b/drivers/net/wireless/rtlwifi/Makefile
+@@ -0,0 +1,13 @@
++obj-$(CONFIG_RTLWIFI) 		+= rtlwifi.o
++rtlwifi-objs	:=		\
++		base.o		\
++		cam.o		\
++		core.o		\
++		debug.o		\
++		efuse.o		\
++		pci.o		\
++		ps.o		\
++		rc.o		\
++		regd.o
++
++obj-$(CONFIG_RTL8192CE)		+= rtl8192c/
+-- 
+1.7.1
 
