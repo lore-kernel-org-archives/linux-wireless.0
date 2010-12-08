@@ -1,53 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([147.243.1.48]:60771 "EHLO mgw-sa02.nokia.com"
+Received: from mail.atheros.com ([12.19.149.2]:27187 "EHLO mail.atheros.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752000Ab0LVVgY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 22 Dec 2010 16:36:24 -0500
-Subject: Re: [PATCH v2 08/18] wl1271: Add AP related definitions to HOST-FW
- interface
-From: Luciano Coelho <luciano.coelho@nokia.com>
-To: ext Arik Nemtsov <arik@wizery.com>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <1293028057-6212-9-git-send-email-arik@wizery.com>
-References: <1293028057-6212-1-git-send-email-arik@wizery.com>
-	 <1293028057-6212-9-git-send-email-arik@wizery.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Wed, 22 Dec 2010 23:36:22 +0200
-Message-ID: <1293053782.14423.51.camel@powerslave>
-Mime-Version: 1.0
+	id S1754396Ab0LHObg (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 8 Dec 2010 09:31:36 -0500
+Received: from mail.atheros.com ([10.10.20.105])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Wed, 08 Dec 2010 06:31:21 -0800
+From: Rajkumar Manoharan <rmanoharan@atheros.com>
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>,
+	Rajkumar Manoharan <rmanoharan@atheros.com>,
+	<stable@kernel.org>
+Subject: [PATCH] ath: Missed to clear key4 of micentry
+Date: Wed, 8 Dec 2010 20:01:05 +0530
+Message-ID: <1291818665-6660-1-git-send-email-rmanoharan@atheros.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2010-12-22 at 16:27 +0200, ext Arik Nemtsov wrote:
-> Change structures in a non-destructive manner. This means no
-> changes in size or location of existing members used by STA.
-> 
-> Signed-off-by: Arik Nemtsov <arik@wizery.com>
-> ---
+key4 of micentry is used, if ATH_CRYPT_CAP_MIC_COMBINED is set.
+But is not cleared on key cache reset.
 
-[...]
+Cc: stable@kernel.org
+Signed-off-by: Rajkumar Manoharan <rmanoharan@atheros.com>
+---
+ drivers/net/wireless/ath/key.c |    2 ++
+ 1 files changed, 2 insertions(+), 0 deletions(-)
 
-> diff --git a/drivers/net/wireless/wl12xx/rx.h b/drivers/net/wireless/wl12xx/rx.h
-> index 3abb26f..19fd591 100644
-> --- a/drivers/net/wireless/wl12xx/rx.h
-> +++ b/drivers/net/wireless/wl12xx/rx.h
-> @@ -86,10 +86,11 @@
->  /*
->   * RX Descriptor status
->   *
-> - * Bits 0-2 - status
-> - * Bits 3-7 - reserved
-> + * Bits 0-2 - error code
-> + * Bits 3-5 - process_id tag (AP mode FW)
-> + * Bits 6-7 - reserved
->   */
-> -#define WL1271_RX_DESC_STATUS_MASK      0x07
-> +#define WL1271_RX_DESC_STATUS_MASK      0x03
-
-What happened with bit 2?
-
-
+diff --git a/drivers/net/wireless/ath/key.c b/drivers/net/wireless/ath/key.c
+index 29a2961..5d465e5 100644
+--- a/drivers/net/wireless/ath/key.c
++++ b/drivers/net/wireless/ath/key.c
+@@ -58,6 +58,8 @@ bool ath_hw_keyreset(struct ath_common *common, u16 entry)
+ 		REG_WRITE(ah, AR_KEYTABLE_KEY1(micentry), 0);
+ 		REG_WRITE(ah, AR_KEYTABLE_KEY2(micentry), 0);
+ 		REG_WRITE(ah, AR_KEYTABLE_KEY3(micentry), 0);
++		if (common->crypt_caps & ATH_CRYPT_CAP_MIC_COMBINED)
++			REG_WRITE(ah, AR_KEYTABLE_KEY4(micentry), 0);
+ 
+ 	}
+ 
 -- 
-Cheers,
-Luca.
+1.7.3.3
 
