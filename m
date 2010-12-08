@@ -1,237 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pw0-f46.google.com ([209.85.160.46]:45643 "EHLO
-	mail-pw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755225Ab0L3TX5 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 30 Dec 2010 14:23:57 -0500
-Received: by mail-pw0-f46.google.com with SMTP id 3so1343698pwj.19
-        for <linux-wireless@vger.kernel.org>; Thu, 30 Dec 2010 11:23:56 -0800 (PST)
-From: Thomas Pedersen <thomas@cozybit.com>
-To: linux-wireless@vger.kernel.org
-Cc: buytenh@wantstofly.org, mwl8k-devel@cozybit.com,
-	Nishant Sarmukadam <nishants@marvell.com>,
-	yogesh powar <yogeshp@marvell.com>,
-	Thomas Pedersen <thomas@cozybit.com>
-Subject: [PATCH 3/4 V2] mwl8k: Set mac80211 rx status flags appropriately when hw crypto is enabled
-Date: Thu, 30 Dec 2010 11:23:33 -0800
-Message-Id: <1293737014-11718-3-git-send-email-thomas@cozybit.com>
-In-Reply-To: <1293737014-11718-1-git-send-email-thomas@cozybit.com>
-References: <1293737014-11718-1-git-send-email-thomas@cozybit.com>
+Received: from mga09.intel.com ([134.134.136.24]:35656 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751232Ab0LHXeS (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 8 Dec 2010 18:34:18 -0500
+Subject: Re: [PATCH 2/3] iwlagn: implement layout-agnostic EEPROM reading
+From: "Guy, Wey-Yi" <wey-yi.w.guy@intel.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"ipw3945-devel@lists.sourceforge.net"
+	<ipw3945-devel@lists.sourceforge.net>,
+	"Berg, Johannes" <johannes.berg@intel.com>
+In-Reply-To: <20101208201926.GF2423@tuxdriver.com>
+References: <1291743428-19642-1-git-send-email-wey-yi.w.guy@intel.com>
+	 <1291743428-19642-3-git-send-email-wey-yi.w.guy@intel.com>
+	 <20101207192806.GF2700@tuxdriver.com>
+	 <1291751118.20668.8.camel@wwguy-ubuntu>
+	 <20101208201926.GF2423@tuxdriver.com>
+Content-Type: text/plain
+Date: Wed, 08 Dec 2010 15:33:11 -0800
+Message-Id: <1291851191.10280.174.camel@wwguy-ubuntu>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Nishant Sarmukadam <nishants@marvell.com>
+Hi John,
 
-When hw crypto is enabled, set rx status flags appropriately depending on
-whether hw crypto is enabled for a particular bss.
-Also report MIC errors to mac80211, so that counter measures can be
-initiated
+On Wed, 2010-12-08 at 12:19 -0800, John W. Linville wrote:
+> On Tue, Dec 07, 2010 at 11:45:18AM -0800, Guy, Wey-Yi wrote:
+> > Hi John,
+> > 
+> > On Tue, 2010-12-07 at 11:28 -0800, John W. Linville wrote:
+> > > On Tue, Dec 07, 2010 at 09:37:07AM -0800, Wey-Yi Guy wrote:
+> > > > From: Johannes Berg <johannes.berg@intel.com>
+> > > > 
+> > > > The current EEPROM reading code has some layout
+> > > > assumptions that now turned out to be false with
+> > > > some newer versions of the EEPROM. Luckily, we
+> > > > can avoid all such assumptions by using data in
+> > > > the EEPROM itself, so implement using that.
+> > > > 
+> > > > Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+> > > > Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+> > > 
+> > > Is rewriting the EEPROM code really necessary for 2.6.37?  This seems
+> > > like a lot of code to potentially get wrong...
+> > > 
+> > 
+> > I agree it is a lot of changes. It is necessary for 6005 and 6030
+> > devices. I understand the Hardware is not out yet; but both devices is
+> > already supported by .37; without this changes, the regulatory will have
+> > issues.
+> > 
+> > Yes, you are correct, this changes will also impact the older devices
+> > (6000, 6050, 1000). 
+> > 
+> > So it is really judgment call, we plan to release both 6005 and 6030
+> > uCode in the next few weeks and hardware should be on the market early
+> > next year. If by the time when hardware become available, distro already
+> > move to .38, then I am ok with it. What you think?
+> 
+> What about a patch to disable those devices in 2.6.37, and leave the
+> existing EEPROM code alone for that release?
+> 
 
-V2:
-- formatting and make patch cleanly apply
+I don't think it is an option to disable all the new devices for .37
+since we commit to support them in .37 kernel, 
 
-Signed-off-by: Nishant Sarmukadam <nishants@marvell.com>
-Signed-off-by: yogesh powar <yogeshp@marvell.com>
-Signed-off-by: Thomas Pedersen <thomas@cozybit.com>
----
- drivers/net/wireless/mwl8k.c |  101 ++++++++++++++++++++++++++++++++++++++++-
- 1 files changed, 98 insertions(+), 3 deletions(-)
+How about re-work the patch to keep the orig. EEPROM reading method for
+older devices, but using new EEPROM method for the newer devices
+(6005/6030/...). it that work for .37 kernel?
 
-diff --git a/drivers/net/wireless/mwl8k.c b/drivers/net/wireless/mwl8k.c
-index 95bbdca..2b76bbc 100644
---- a/drivers/net/wireless/mwl8k.c
-+++ b/drivers/net/wireless/mwl8k.c
-@@ -251,6 +251,12 @@ struct mwl8k_vif {
- 		u8 enabled;
- 		u8 key[sizeof(struct ieee80211_key_conf) + MAX_WEP_KEY_LEN];
- 	} wep_key_conf[NUM_WEP_KEYS];
-+
-+	/* BSSID */
-+	u8 bssid[ETH_ALEN];
-+
-+	/* A flag to indicate is HW crypto is enabled for this bssid */
-+	bool is_hw_crypto_enabled;
- };
- #define MWL8K_VIF(_vif) ((struct mwl8k_vif *)&((_vif)->drv_priv))
- 
-@@ -834,6 +840,13 @@ struct mwl8k_rxd_8366_ap {
- 
- #define MWL8K_8366_AP_RX_CTRL_OWNED_BY_HOST	0x80
- 
-+/* 8366 AP rx_status bits */
-+#define MWL8K_8366_AP_RXSTAT_DECRYPT_ERR_MASK		0x80
-+#define MWL8K_8366_AP_RXSTAT_GENERAL_DECRYPT_ERR	0xFF
-+#define MWL8K_8366_AP_RXSTAT_TKIP_DECRYPT_MIC_ERR	0x02
-+#define MWL8K_8366_AP_RXSTAT_WEP_DECRYPT_ICV_ERR	0x04
-+#define MWL8K_8366_AP_RXSTAT_TKIP_DECRYPT_ICV_ERR	0x08
-+
- static void mwl8k_rxd_8366_ap_init(void *_rxd, dma_addr_t next_dma_addr)
- {
- 	struct mwl8k_rxd_8366_ap *rxd = _rxd;
-@@ -894,6 +907,11 @@ mwl8k_rxd_8366_ap_process(void *_rxd, struct ieee80211_rx_status *status,
- 
- 	*qos = rxd->qos_control;
- 
-+	if ((rxd->rx_status != MWL8K_8366_AP_RXSTAT_GENERAL_DECRYPT_ERR) &&
-+	    (rxd->rx_status & MWL8K_8366_AP_RXSTAT_DECRYPT_ERR_MASK) &&
-+	    (rxd->rx_status & MWL8K_8366_AP_RXSTAT_TKIP_DECRYPT_MIC_ERR))
-+		status->flag |= RX_FLAG_MMIC_ERROR;
-+
- 	return le16_to_cpu(rxd->pkt_len);
- }
- 
-@@ -932,6 +950,11 @@ struct mwl8k_rxd_sta {
- #define MWL8K_STA_RATE_INFO_MCS_FORMAT		0x0001
- 
- #define MWL8K_STA_RX_CTRL_OWNED_BY_HOST		0x02
-+#define MWL8K_STA_RX_CTRL_DECRYPT_ERROR		0x04
-+/* ICV=0 or MIC=1 */
-+#define MWL8K_STA_RX_CTRL_DEC_ERR_TYPE		0x08
-+/* Key is uploaded only in failure case */
-+#define MWL8K_STA_RX_CTRL_KEY_INDEX			0x30
- 
- static void mwl8k_rxd_sta_init(void *_rxd, dma_addr_t next_dma_addr)
- {
-@@ -990,6 +1013,9 @@ mwl8k_rxd_sta_process(void *_rxd, struct ieee80211_rx_status *status,
- 	status->freq = ieee80211_channel_to_frequency(rxd->channel);
- 
- 	*qos = rxd->qos_control;
-+	if ((rxd->rx_ctrl & MWL8K_STA_RX_CTRL_DECRYPT_ERROR) &&
-+	    (rxd->rx_ctrl & MWL8K_STA_RX_CTRL_DEC_ERR_TYPE))
-+		status->flag |= RX_FLAG_MMIC_ERROR;
- 
- 	return le16_to_cpu(rxd->pkt_len);
- }
-@@ -1148,9 +1174,25 @@ static inline void mwl8k_save_beacon(struct ieee80211_hw *hw,
- 		ieee80211_queue_work(hw, &priv->finalize_join_worker);
- }
- 
-+static inline struct mwl8k_vif *mwl8k_find_vif_bss(struct list_head *vif_list,
-+						   u8 *bssid)
-+{
-+	struct mwl8k_vif *mwl8k_vif;
-+
-+	list_for_each_entry(mwl8k_vif,
-+			    vif_list, list) {
-+		if (memcmp(bssid, mwl8k_vif->bssid,
-+			   ETH_ALEN) == 0)
-+			return mwl8k_vif;
-+	}
-+
-+	return NULL;
-+}
-+
- static int rxq_process(struct ieee80211_hw *hw, int index, int limit)
- {
- 	struct mwl8k_priv *priv = hw->priv;
-+	struct mwl8k_vif *mwl8k_vif = NULL;
- 	struct mwl8k_rx_queue *rxq = priv->rxq + index;
- 	int processed;
- 
-@@ -1160,6 +1202,7 @@ static int rxq_process(struct ieee80211_hw *hw, int index, int limit)
- 		void *rxd;
- 		int pkt_len;
- 		struct ieee80211_rx_status status;
-+		struct ieee80211_hdr *wh;
- 		__le16 qos;
- 
- 		skb = rxq->buf[rxq->head].skb;
-@@ -1186,8 +1229,7 @@ static int rxq_process(struct ieee80211_hw *hw, int index, int limit)
- 
- 		rxq->rxd_count--;
- 
--		skb_put(skb, pkt_len);
--		mwl8k_remove_dma_header(skb, qos);
-+		wh = &((struct mwl8k_dma_data *)skb->data)->wh;
- 
- 		/*
- 		 * Check for a pending join operation.  Save a
-@@ -1197,6 +1239,46 @@ static int rxq_process(struct ieee80211_hw *hw, int index, int limit)
- 		if (mwl8k_capture_bssid(priv, (void *)skb->data))
- 			mwl8k_save_beacon(hw, skb);
- 
-+		if (ieee80211_has_protected(wh->frame_control)) {
-+
-+			/* Check if hw crypto has been enabled for
-+			 * this bss. If yes, set the status flags
-+			 * accordingly
-+			 */
-+			mwl8k_vif = mwl8k_find_vif_bss(&priv->vif_list,
-+								wh->addr1);
-+
-+			if (mwl8k_vif != NULL &&
-+			    mwl8k_vif->is_hw_crypto_enabled == true) {
-+				/*
-+				 * When MMIC ERROR is encountered
-+				 * by the firmware, payload is
-+				 * dropped and only 32 bytes of
-+				 * mwl8k Firmware header is sent
-+				 * to the host.
-+				 *
-+				 * We need to add four bytes of
-+				 * key information.  In it
-+				 * MAC80211 expects keyidx set to
-+				 * 0 for triggering Counter
-+				 * Measure of MMIC failure.
-+				 */
-+				if (status.flag & RX_FLAG_MMIC_ERROR) {
-+					struct mwl8k_dma_data *tr;
-+					tr = (struct mwl8k_dma_data *)skb->data;
-+					memset((void *)&(tr->data), 0, 4);
-+					pkt_len += 4;
-+				}
-+
-+				if (!ieee80211_is_auth(wh->frame_control))
-+					status.flag |= RX_FLAG_IV_STRIPPED |
-+						       RX_FLAG_DECRYPTED |
-+						       RX_FLAG_MMIC_STRIPPED;
-+			}
-+		}
-+
-+		skb_put(skb, pkt_len);
-+		mwl8k_remove_dma_header(skb, qos);
- 		memcpy(IEEE80211_SKB_RXCB(skb), &status, sizeof(status));
- 		ieee80211_rx_irqsafe(hw, skb);
- 
-@@ -1499,7 +1581,11 @@ mwl8k_txq_xmit(struct ieee80211_hw *hw, int index, struct sk_buff *skb)
- 	else
- 		qos = 0;
- 
--	mwl8k_encapsulate_tx_frame(skb);
-+	if (priv->ap_fw)
-+		mwl8k_encapsulate_tx_frame(skb);
-+	else
-+		mwl8k_add_dma_header(skb, 0);
-+
- 	wh = &((struct mwl8k_dma_data *)skb->data)->wh;
- 
- 	tx_info = IEEE80211_SKB_CB(skb);
-@@ -3525,6 +3611,8 @@ static int mwl8k_add_interface(struct ieee80211_hw *hw,
- 	mwl8k_vif->vif = vif;
- 	mwl8k_vif->macid = macid;
- 	mwl8k_vif->seqno = 0;
-+	memcpy(mwl8k_vif->bssid, vif->addr, ETH_ALEN);
-+	mwl8k_vif->is_hw_crypto_enabled = false;
- 
- 	/* Set the mac address.  */
- 	mwl8k_cmd_set_mac_addr(hw, vif, vif->addr);
-@@ -3930,9 +4018,16 @@ static int mwl8k_sta_add(struct ieee80211_hw *hw,
- 			return 0;
- 		}
- 
-+	} else {
-+		ret = mwl8k_cmd_set_new_stn_add(hw, vif, sta);
- 		return ret;
- 	}
- 
-+	for (i = 0; i < NUM_WEP_KEYS; i++) {
-+		key = IEEE80211_KEY_CONF(mwl8k_vif->wep_key_conf[i].key);
-+		if (mwl8k_vif->wep_key_conf[i].enabled)
-+			mwl8k_set_key(hw, SET_KEY, vif, sta, key);
-+	}
- 	return mwl8k_cmd_set_new_stn_add(hw, vif, sta);
- }
- 
--- 
-1.7.0.4
+Regards
+Wey
 
