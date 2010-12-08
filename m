@@ -1,37 +1,387 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from moutng.kundenserver.de ([212.227.126.171]:62268 "EHLO
-	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932744Ab0LTTxF (ORCPT
+Received: from mail-pv0-f174.google.com ([74.125.83.174]:46959 "EHLO
+	mail-pv0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754805Ab0LHRNi (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 20 Dec 2010 14:53:05 -0500
-Received: from [192.168.178.92] (p5B319A8D.dip0.t-ipconnect.de [91.49.154.141])
-	(using TLSv1 with cipher DHE-RSA-AES256-SHA (256/256 bits))
-	(No client certificate requested)
-	by v216570639.yourvserver.net (Postfix) with ESMTPSA id C70D2DFA942
-	for <linux-wireless@vger.kernel.org>; Mon, 20 Dec 2010 20:53:01 +0100 (CET)
-Message-ID: <4D0FB427.9090901@lophus.org>
-Date: Mon, 20 Dec 2010 20:53:11 +0100
-From: "Jonas H." <jonas@lophus.org>
-MIME-Version: 1.0
-To: linux-wireless@vger.kernel.org
-Subject: Re: Recent suspend/resume fix for which devices?
-References: <4D0E19EB.3070802@lophus.org> <20101220141531.GB10104@tuxdriver.com>
-In-Reply-To: <20101220141531.GB10104@tuxdriver.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+	Wed, 8 Dec 2010 12:13:38 -0500
+Received: by pva4 with SMTP id 4so304207pva.19
+        for <linux-wireless@vger.kernel.org>; Wed, 08 Dec 2010 09:13:37 -0800 (PST)
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, chaoming_li@realsil.com.cn,
+	Larry Finger <Larry.Finger@lwfinger.net>
+Subject: [PATCH 03/22] rtl8192ce: Add files to rtlwifi - Part 3: cam.{c,h}
+Date: Wed,  8 Dec 2010 11:12:33 -0600
+Message-Id: <1291828372-25159-4-git-send-email-Larry.Finger@lwfinger.net>
+In-Reply-To: <1291828372-25159-1-git-send-email-Larry.Finger@lwfinger.net>
+References: <1291828372-25159-1-git-send-email-Larry.Finger@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 12/20/2010 03:15 PM, John W. Linville wrote:
->> My question is: Does that fix also apply to my card? I realize the
->> patch only applies to ath9k_htc but I couldn't figure what "htc"
->> stands for in this context.
->
-> Probably not.  Did you try reverting it?
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+---
+ drivers/net/wireless/rtlwifi/cam.c |  291 ++++++++++++++++++++++++++++++++++++
+ drivers/net/wireless/rtlwifi/cam.h |   53 +++++++
+ 2 files changed, 344 insertions(+), 0 deletions(-)
+ create mode 100644 drivers/net/wireless/rtlwifi/cam.c
+ create mode 100644 drivers/net/wireless/rtlwifi/cam.h
 
-I didn't, because I dislike compilation on netbooks. ;)
+diff --git a/drivers/net/wireless/rtlwifi/cam.c b/drivers/net/wireless/rtlwifi/cam.c
+new file mode 100644
+index 0000000..52c9c13
+--- /dev/null
++++ b/drivers/net/wireless/rtlwifi/cam.c
+@@ -0,0 +1,291 @@
++/******************************************************************************
++ *
++ * Copyright(c) 2009-2010  Realtek Corporation.
++ *
++ * This program is free software; you can redistribute it and/or modify it
++ * under the terms of version 2 of the GNU General Public License as
++ * published by the Free Software Foundation.
++ *
++ * This program is distributed in the hope that it will be useful, but WITHOUT
++ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
++ * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
++ * more details.
++ *
++ * You should have received a copy of the GNU General Public License along with
++ * this program; if not, write to the Free Software Foundation, Inc.,
++ * 51 Franklin Street, Fifth Floor, Boston, MA 02110, USA
++ *
++ * The full GNU General Public License is included in this distribution in the
++ * file called LICENSE.
++ *
++ * Contact Information:
++ * wlanfae <wlanfae@realtek.com>
++ * Realtek Corporation, No. 2, Innovation Road II, Hsinchu Science Park,
++ * Hsinchu 300, Taiwan.
++ *
++ *****************************************************************************/
++
++#include "wifi.h"
++#include "cam.h"
++
++void rtl_cam_reset_sec_info(struct ieee80211_hw *hw)
++{
++	struct rtl_priv *rtlpriv = rtl_priv(hw);
++
++	rtlpriv->sec.use_defaultkey = false;
++	rtlpriv->sec.pairwise_enc_algorithm = NO_ENCRYPTION;
++	rtlpriv->sec.group_enc_algorithm = NO_ENCRYPTION;
++	memset(rtlpriv->sec.key_buf, 0, KEY_BUF_SIZE * MAX_KEY_LEN);
++	memset(rtlpriv->sec.key_len, 0, KEY_BUF_SIZE);
++	rtlpriv->sec.pairwise_key = NULL;
++}
++
++static void rtl_cam_program_entry(struct ieee80211_hw *hw, u32 entry_no,
++			   u8 *mac_addr, u8 *key_cont_128, u16 us_config)
++{
++	struct rtl_priv *rtlpriv = rtl_priv(hw);
++
++	u32 target_command;
++	u32 target_content = 0;
++	u8 entry_i;
++
++	RT_TRACE(rtlpriv, COMP_SEC, DBG_DMESG,
++		 ("key_cont_128:\n %x:%x:%x:%x:%x:%x\n",
++		  key_cont_128[0], key_cont_128[1],
++		  key_cont_128[2], key_cont_128[3],
++		  key_cont_128[4], key_cont_128[5]));
++
++	for (entry_i = 0; entry_i < CAM_CONTENT_COUNT; entry_i++) {
++		target_command = entry_i + CAM_CONTENT_COUNT * entry_no;
++		target_command = target_command | BIT(31) | BIT(16);
++
++		if (entry_i == 0) {
++			target_content = (u32) (*(mac_addr + 0)) << 16 |
++			    (u32) (*(mac_addr + 1)) << 24 | (u32) us_config;
++
++			rtl_write_dword(rtlpriv, rtlpriv->cfg->maps[WCAMI],
++					target_content);
++			rtl_write_dword(rtlpriv, rtlpriv->cfg->maps[RWCAM],
++					target_command);
++
++			RT_TRACE(rtlpriv, COMP_SEC, DBG_DMESG,
++				 ("rtl_cam_program_entry(): "
++				  "WRITE %x: %x\n",
++				  rtlpriv->cfg->maps[WCAMI], target_content));
++			RT_TRACE(rtlpriv, COMP_SEC, DBG_DMESG,
++				 ("The Key ID is %d\n", entry_no));
++			RT_TRACE(rtlpriv, COMP_SEC, DBG_DMESG,
++				 ("rtl_cam_program_entry(): "
++				  "WRITE %x: %x\n",
++				  rtlpriv->cfg->maps[RWCAM], target_command));
++
++		} else if (entry_i == 1) {
++
++			target_content = (u32) (*(mac_addr + 5)) << 24 |
++			    (u32) (*(mac_addr + 4)) << 16 |
++			    (u32) (*(mac_addr + 3)) << 8 |
++			    (u32) (*(mac_addr + 2));
++
++			rtl_write_dword(rtlpriv, rtlpriv->cfg->maps[WCAMI],
++					target_content);
++			rtl_write_dword(rtlpriv, rtlpriv->cfg->maps[RWCAM],
++					target_command);
++
++			RT_TRACE(rtlpriv, COMP_SEC, DBG_DMESG,
++				 ("rtl_cam_program_entry(): WRITE A4: %x\n",
++				  target_content));
++			RT_TRACE(rtlpriv, COMP_SEC, DBG_DMESG,
++				 ("rtl_cam_program_entry(): WRITE A0: %x\n",
++				  target_command));
++
++		} else {
++
++			target_content =
++			    (u32) (*(key_cont_128 + (entry_i * 4 - 8) + 3)) <<
++			    24 | (u32) (*(key_cont_128 + (entry_i * 4 - 8) + 2))
++			    << 16 |
++			    (u32) (*(key_cont_128 + (entry_i * 4 - 8) + 1)) << 8
++			    | (u32) (*(key_cont_128 + (entry_i * 4 - 8) + 0));
++
++			rtl_write_dword(rtlpriv, rtlpriv->cfg->maps[WCAMI],
++					target_content);
++			rtl_write_dword(rtlpriv, rtlpriv->cfg->maps[RWCAM],
++					target_command);
++			udelay(100);
++
++			RT_TRACE(rtlpriv, COMP_SEC, DBG_DMESG,
++				 ("rtl_cam_program_entry(): WRITE A4: %x\n",
++				  target_content));
++			RT_TRACE(rtlpriv, COMP_SEC, DBG_DMESG,
++				 ("rtl_cam_program_entry(): WRITE A0: %x\n",
++				  target_command));
++		}
++	}
++
++	RT_TRACE(rtlpriv, COMP_SEC, DBG_DMESG,
++		 ("after set key, usconfig:%x\n", us_config));
++}
++
++u8 rtl_cam_add_one_entry(struct ieee80211_hw *hw, u8 *mac_addr,
++			 u32 ul_key_id, u32 ul_entry_idx, u32 ul_enc_alg,
++			 u32 ul_default_key, u8 *key_content)
++{
++	u32 us_config;
++	struct rtl_priv *rtlpriv = rtl_priv(hw);
++
++	RT_TRACE(rtlpriv, COMP_SEC, DBG_DMESG,
++		 ("EntryNo:%x, ulKeyId=%x, ulEncAlg=%x, "
++		  "ulUseDK=%x MacAddr" MAC_FMT "\n",
++		  ul_entry_idx, ul_key_id, ul_enc_alg,
++		  ul_default_key, MAC_ARG(mac_addr)));
++
++	if (ul_key_id == TOTAL_CAM_ENTRY) {
++		RT_TRACE(rtlpriv, COMP_ERR, DBG_WARNING,
++			 ("<=== ulKeyId exceed!\n"));
++		return 0;
++	}
++
++	if (ul_default_key == 1) {
++		us_config = CFG_VALID | ((u16) (ul_enc_alg) << 2);
++	} else {
++		us_config = CFG_VALID | ((ul_enc_alg) << 2) | ul_key_id;
++	}
++
++	rtl_cam_program_entry(hw, ul_entry_idx, mac_addr,
++			      (u8 *) key_content, us_config);
++
++	RT_TRACE(rtlpriv, COMP_SEC, DBG_DMESG, ("<===\n"));
++
++	return 1;
++
++}
++EXPORT_SYMBOL(rtl_cam_add_one_entry);
++
++int rtl_cam_delete_one_entry(struct ieee80211_hw *hw,
++			     u8 *mac_addr, u32 ul_key_id)
++{
++	u32 ul_command;
++	struct rtl_priv *rtlpriv = rtl_priv(hw);
++
++	RT_TRACE(rtlpriv, COMP_SEC, DBG_DMESG, ("key_idx:%d\n", ul_key_id));
++
++	ul_command = ul_key_id * CAM_CONTENT_COUNT;
++	ul_command = ul_command | BIT(31) | BIT(16);
++
++	rtl_write_dword(rtlpriv, rtlpriv->cfg->maps[WCAMI], 0);
++	rtl_write_dword(rtlpriv, rtlpriv->cfg->maps[RWCAM], ul_command);
++
++	RT_TRACE(rtlpriv, COMP_SEC, DBG_DMESG,
++		 ("rtl_cam_delete_one_entry(): WRITE A4: %x\n", 0));
++	RT_TRACE(rtlpriv, COMP_SEC, DBG_DMESG,
++		 ("rtl_cam_delete_one_entry(): WRITE A0: %x\n", ul_command));
++
++	return 0;
++
++}
++EXPORT_SYMBOL(rtl_cam_delete_one_entry);
++
++void rtl_cam_reset_all_entry(struct ieee80211_hw *hw)
++{
++	u32 ul_command;
++	struct rtl_priv *rtlpriv = rtl_priv(hw);
++
++	ul_command = BIT(31) | BIT(30);
++	rtl_write_dword(rtlpriv, rtlpriv->cfg->maps[RWCAM], ul_command);
++}
++EXPORT_SYMBOL(rtl_cam_reset_all_entry);
++
++void rtl_cam_mark_invalid(struct ieee80211_hw *hw, u8 uc_index)
++{
++	struct rtl_priv *rtlpriv = rtl_priv(hw);
++
++	u32 ul_command;
++	u32 ul_content;
++	u32 ul_enc_algo = rtlpriv->cfg->maps[SEC_CAM_AES];
++
++	switch (rtlpriv->sec.pairwise_enc_algorithm) {
++	case WEP40_ENCRYPTION:
++		ul_enc_algo = rtlpriv->cfg->maps[SEC_CAM_WEP40];
++		break;
++	case WEP104_ENCRYPTION:
++		ul_enc_algo = rtlpriv->cfg->maps[SEC_CAM_WEP104];
++		break;
++	case TKIP_ENCRYPTION:
++		ul_enc_algo = rtlpriv->cfg->maps[SEC_CAM_TKIP];
++		break;
++	case AESCCMP_ENCRYPTION:
++		ul_enc_algo = rtlpriv->cfg->maps[SEC_CAM_AES];
++		break;
++	default:
++		ul_enc_algo = rtlpriv->cfg->maps[SEC_CAM_AES];
++	}
++
++	ul_content = (uc_index & 3) | ((u16) (ul_enc_algo) << 2);
++
++	ul_content |= BIT(15);
++	ul_command = CAM_CONTENT_COUNT * uc_index;
++	ul_command = ul_command | BIT(31) | BIT(16);
++
++	rtl_write_dword(rtlpriv, rtlpriv->cfg->maps[WCAMI], ul_content);
++	rtl_write_dword(rtlpriv, rtlpriv->cfg->maps[RWCAM], ul_command);
++
++	RT_TRACE(rtlpriv, COMP_SEC, DBG_DMESG,
++		 ("rtl_cam_mark_invalid(): WRITE A4: %x\n", ul_content));
++	RT_TRACE(rtlpriv, COMP_SEC, DBG_DMESG,
++		 ("rtl_cam_mark_invalid(): WRITE A0: %x\n", ul_command));
++}
++EXPORT_SYMBOL(rtl_cam_mark_invalid);
++
++void rtl_cam_empty_entry(struct ieee80211_hw *hw, u8 uc_index)
++{
++	struct rtl_priv *rtlpriv = rtl_priv(hw);
++
++	u32 ul_command;
++	u32 ul_content;
++	u32 ul_encalgo = rtlpriv->cfg->maps[SEC_CAM_AES];
++	u8 entry_i;
++
++	switch (rtlpriv->sec.pairwise_enc_algorithm) {
++	case WEP40_ENCRYPTION:
++		ul_encalgo = rtlpriv->cfg->maps[SEC_CAM_WEP40];
++		break;
++	case WEP104_ENCRYPTION:
++		ul_encalgo = rtlpriv->cfg->maps[SEC_CAM_WEP104];
++		break;
++	case TKIP_ENCRYPTION:
++		ul_encalgo = rtlpriv->cfg->maps[SEC_CAM_TKIP];
++		break;
++	case AESCCMP_ENCRYPTION:
++		ul_encalgo = rtlpriv->cfg->maps[SEC_CAM_AES];
++		break;
++	default:
++		ul_encalgo = rtlpriv->cfg->maps[SEC_CAM_AES];
++	}
++
++	for (entry_i = 0; entry_i < CAM_CONTENT_COUNT; entry_i++) {
++
++		if (entry_i == 0) {
++			ul_content =
++			    (uc_index & 0x03) | ((u16) (ul_encalgo) << 2);
++			ul_content |= BIT(15);
++
++		} else {
++			ul_content = 0;
++		}
++
++		ul_command = CAM_CONTENT_COUNT * uc_index + entry_i;
++		ul_command = ul_command | BIT(31) | BIT(16);
++
++		rtl_write_dword(rtlpriv, rtlpriv->cfg->maps[WCAMI], ul_content);
++		rtl_write_dword(rtlpriv, rtlpriv->cfg->maps[RWCAM], ul_command);
++
++		RT_TRACE(rtlpriv, COMP_SEC, DBG_LOUD,
++			 ("rtl_cam_empty_entry(): WRITE A4: %x\n",
++			  ul_content));
++		RT_TRACE(rtlpriv, COMP_SEC, DBG_LOUD,
++			 ("rtl_cam_empty_entry(): WRITE A0: %x\n",
++			  ul_command));
++	}
++
++}
++EXPORT_SYMBOL(rtl_cam_empty_entry);
+diff --git a/drivers/net/wireless/rtlwifi/cam.h b/drivers/net/wireless/rtlwifi/cam.h
+new file mode 100644
+index 0000000..dd82f05
+--- /dev/null
++++ b/drivers/net/wireless/rtlwifi/cam.h
+@@ -0,0 +1,53 @@
++/******************************************************************************
++ *
++ * Copyright(c) 2009-2010  Realtek Corporation.
++ *
++ * This program is free software; you can redistribute it and/or modify it
++ * under the terms of version 2 of the GNU General Public License as
++ * published by the Free Software Foundation.
++ *
++ * This program is distributed in the hope that it will be useful, but WITHOUT
++ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
++ * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
++ * more details.
++ *
++ * You should have received a copy of the GNU General Public License along with
++ * this program; if not, write to the Free Software Foundation, Inc.,
++ * 51 Franklin Street, Fifth Floor, Boston, MA 02110, USA
++ *
++ * The full GNU General Public License is included in this distribution in the
++ * file called LICENSE.
++ *
++ * Contact Information:
++ * wlanfae <wlanfae@realtek.com>
++ * Realtek Corporation, No. 2, Innovation Road II, Hsinchu Science Park,
++ * Hsinchu 300, Taiwan.
++ *
++ *****************************************************************************/
++
++#ifndef __RTL_CAM_H_
++#define __RTL_CAM_H_
++
++#define TOTAL_CAM_ENTRY					32
++#define CAM_CONTENT_COUNT				8
++
++#define CFG_DEFAULT_KEY					BIT(5)
++#define CFG_VALID					BIT(15)
++
++#define PAIRWISE_KEYIDX					0
++#define CAM_PAIRWISE_KEY_POSITION		4
++
++#define	CAM_CONFIG_USEDK				1
++#define	CAM_CONFIG_NO_USEDK				0
++
++extern void rtl_cam_reset_all_entry(struct ieee80211_hw *hw);
++extern u8 rtl_cam_add_one_entry(struct ieee80211_hw *hw, u8 *mac_addr,
++			u32 ul_key_id, u32 ul_entry_idx, u32 ul_enc_alg,
++			u32 ul_default_key, u8 *key_content);
++int rtl_cam_delete_one_entry(struct ieee80211_hw *hw, u8 *mac_addr,
++			u32 ul_key_id);
++void rtl_cam_mark_invalid(struct ieee80211_hw *hw, u8 uc_index);
++void rtl_cam_empty_entry(struct ieee80211_hw *hw, u8 uc_index);
++void rtl_cam_reset_sec_info(struct ieee80211_hw *hw);
++
++#endif
+-- 
+1.7.1
 
->> If it doesn't, does this mailing list also function as a bug tracker?
->
-> Sorta, but not really.  There is a bugzilla instance at bugzilla.kernel.org.
-
-Thanks, filed a bug there: https://bugzilla.kernel.org/show_bug.cgi?id=25342
