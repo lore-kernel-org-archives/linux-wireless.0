@@ -1,44 +1,305 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([147.243.128.26]:30622 "EHLO mgw-da02.nokia.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753791Ab0LOOcD (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 15 Dec 2010 09:32:03 -0500
-Received: from nokia.com (localhost [127.0.0.1])
-	by mgw-da02.nokia.com (Switch-3.4.3/Switch-3.4.3) with ESMTP id oBFEW2ZS023579
-	for <linux-wireless@vger.kernel.org>; Wed, 15 Dec 2010 16:32:02 +0200
-Subject: Re: [PATCH v2] wl12xx_sdio_test: rename files to match current
- style
-From: Luciano Coelho <luciano.coelho@nokia.com>
-To: linux-wireless@vger.kernel.org
-Cc: Roger Quadros <roger.quadros@nokia.com>
-In-Reply-To: <1292423499-5667-1-git-send-email-luciano.coelho@nokia.com>
-References: <1292423499-5667-1-git-send-email-luciano.coelho@nokia.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Wed, 15 Dec 2010 16:33:53 +0200
-Message-ID: <1292423633.32385.9.camel@chilepepper>
-Mime-Version: 1.0
+Received: from mail-pw0-f46.google.com ([209.85.160.46]:59704 "EHLO
+	mail-pw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754805Ab0LHRNn (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 8 Dec 2010 12:13:43 -0500
+Received: by mail-pw0-f46.google.com with SMTP id 3so322374pwj.19
+        for <linux-wireless@vger.kernel.org>; Wed, 08 Dec 2010 09:13:43 -0800 (PST)
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, chaoming_li@realsil.com.cn,
+	Larry Finger <Larry.Finger@lwfinger.net>
+Subject: [PATCH 04/22] rtl8192ce: Add files to rtlwifi - Part 4: debug.{c,h}
+Date: Wed,  8 Dec 2010 11:12:34 -0600
+Message-Id: <1291828372-25159-5-git-send-email-Larry.Finger@lwfinger.net>
+In-Reply-To: <1291828372-25159-1-git-send-email-Larry.Finger@lwfinger.net>
+References: <1291828372-25159-1-git-send-email-Larry.Finger@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2010-12-15 at 16:31 +0200, luciano.coelho@nokia.com wrote:
-> From: Luciano Coelho <luciano.coelho@nokia.com>
-> 
-> Change some file names and Kconfig settings so that this new module matches
-> the new way of using wl12xx instead of wl1271.
-> 
-> Also fix SDIO power enabling and disabling to match the latest way of doing
-> it.
-> 
-> Cc: Roger Quadros <roger.quadros@nokia.com>
-> Signed-off-by: Luciano Coelho <luciano.coelho@nokia.com>
-> ---
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+---
+ drivers/net/wireless/rtlwifi/debug.c |   50 ++++++++
+ drivers/net/wireless/rtlwifi/debug.h |  212 ++++++++++++++++++++++++++++++++++
+ 2 files changed, 262 insertions(+), 0 deletions(-)
+ create mode 100644 drivers/net/wireless/rtlwifi/debug.c
+ create mode 100644 drivers/net/wireless/rtlwifi/debug.h
 
-In v2 I used the -M flag (to detect renames, which I stupidly forgot
-before) and removed the file names from the header of the sdio_test.c
-file, since it's a bad idea to have it there (thanks Johannes for the
-comments).
-
+diff --git a/drivers/net/wireless/rtlwifi/debug.c b/drivers/net/wireless/rtlwifi/debug.c
+new file mode 100644
+index 0000000..5fa7385
+--- /dev/null
++++ b/drivers/net/wireless/rtlwifi/debug.c
+@@ -0,0 +1,50 @@
++/******************************************************************************
++ *
++ * Copyright(c) 2009-2010  Realtek Corporation.
++ *
++ * Tmis program is free software; you can redistribute it and/or modify it
++ * under the terms of version 2 of the GNU General Public License as
++ * published by the Free Software Foundation.
++ *
++ * Tmis program is distributed in the hope that it will be useful, but WITHOUT
++ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
++ * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
++ * more details.
++ *
++ * You should have received a copy of the GNU General Public License along with
++ * tmis program; if not, write to the Free Software Foundation, Inc.,
++ * 51 Franklin Street, Fifth Floor, Boston, MA 02110, USA
++ *
++ * Tme full GNU General Public License is included in this distribution in the
++ * file called LICENSE.
++ *
++ * Contact Information:
++ * wlanfae <wlanfae@realtek.com>
++ * Realtek Corporation, No. 2, Innovation Road II, Hsinchu Science Park,
++ * Hsinchu 300, Taiwan.
++ *
++ * Larry Finger <Larry.Finger@lwfinger.net>
++ *****************************************************************************/
++
++#include "wifi.h"
++
++void rtl_dbgp_flag_init(struct ieee80211_hw *hw)
++{
++	struct rtl_priv *rtlpriv = rtl_priv(hw);
++	u8 i;
++
++	rtlpriv->dbg.global_debuglevel = DBG_EMERG;
++
++	rtlpriv->dbg.global_debugcomponents =
++	    COMP_ERR | COMP_FW | COMP_INIT | COMP_RECV | COMP_SEND |
++	    COMP_MLME | COMP_SCAN | COMP_INTR | COMP_LED | COMP_SEC |
++	    COMP_BEACON | COMP_RATE | COMP_RXDESC | COMP_DIG | COMP_TXAGC |
++	    COMP_POWER | COMP_POWER_TRACKING | COMP_BB_POWERSAVING | COMP_SWAS |
++	    COMP_RF | COMP_TURBO | COMP_RATR | COMP_CMD |
++	    COMP_EFUSE | COMP_QOS | COMP_MAC80211 | COMP_REGD | COMP_CHAN;
++
++	for (i = 0; i < DBGP_TYPE_MAX; i++)
++		rtlpriv->dbg.dbgp_type[i] = 0;
++
++	/*Init Debug flag enable condition */
++}
+diff --git a/drivers/net/wireless/rtlwifi/debug.h b/drivers/net/wireless/rtlwifi/debug.h
+new file mode 100644
+index 0000000..08bdec2
+--- /dev/null
++++ b/drivers/net/wireless/rtlwifi/debug.h
+@@ -0,0 +1,212 @@
++/******************************************************************************
++ *
++ * Copyright(c) 2009-2010  Realtek Corporation.
++ *
++ * Tmis program is free software; you can redistribute it and/or modify it
++ * under the terms of version 2 of the GNU General Public License as
++ * published by the Free Software Foundation.
++ *
++ * Tmis program is distributed in the hope that it will be useful, but WITHOUT
++ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
++ * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
++ * more details.
++ *
++ * You should have received a copy of the GNU General Public License along with
++ * tmis program; if not, write to the Free Software Foundation, Inc.,
++ * 51 Franklin Street, Fifth Floor, Boston, MA 02110, USA
++ *
++ * Tme full GNU General Public License is included in this distribution in the
++ * file called LICENSE.
++ *
++ * Contact Information:
++ * wlanfae <wlanfae@realtek.com>
++ * Realtek Corporation, No. 2, Innovation Road II, Hsinchu Science Park,
++ * Hsinchu 300, Taiwan.
++ *
++ * Larry Finger <Larry.Finger@lwfinger.net>
++ *****************************************************************************/
++
++#ifndef __RTL_DEBUG_H__
++#define __RTL_DEBUG_H__
++
++/*--------------------------------------------------------------
++			Debug level
++--------------------------------------------------------------*/
++/*
++ *Fatal bug.
++ *For example, Tx/Rx/IO locked up,
++ *memory access violation,
++ *resource allocation failed,
++ *unexpected HW behavior, HW BUG
++ *and so on.
++ */
++#define DBG_EMERG			0
++
++/*
++ *Abnormal, rare, or unexpeted cases.
++ *For example, Packet/IO Ctl canceled,
++ *device suprisely unremoved and so on.
++ */
++#define	DBG_WARNING			2
++
++/*
++ *Normal case driver developer should
++ *open, we can see link status like
++ *assoc/AddBA/DHCP/adapter start and
++ *so on basic and useful infromations.
++ */
++#define DBG_DMESG			3
++
++/*
++ *Normal case with useful information
++ *about current SW or HW state.
++ *For example, Tx/Rx descriptor to fill,
++ *Tx/Rx descriptor completed status,
++ *SW protocol state change, dynamic
++ *mechanism state change and so on.
++ */
++#define DBG_LOUD			4
++
++/*
++ *Normal case with detail execution
++ *flow or information.
++ */
++#define	DBG_TRACE			5
++
++/*--------------------------------------------------------------
++		Define the rt_trace components
++--------------------------------------------------------------*/
++#define COMP_ERR			BIT(0)
++#define COMP_FW				BIT(1)
++#define COMP_INIT			BIT(2)	/*For init/deinit */
++#define COMP_RECV			BIT(3)	/*For Rx. */
++#define COMP_SEND			BIT(4)	/*For Tx. */
++#define COMP_MLME			BIT(5)	/*For MLME. */
++#define COMP_SCAN			BIT(6)	/*For Scan. */
++#define COMP_INTR			BIT(7)	/*For interrupt Related. */
++#define COMP_LED			BIT(8)	/*For LED. */
++#define COMP_SEC			BIT(9)	/*For sec. */
++#define COMP_BEACON			BIT(10)	/*For beacon. */
++#define COMP_RATE			BIT(11)	/*For rate. */
++#define COMP_RXDESC			BIT(12)	/*For rx desc. */
++#define COMP_DIG			BIT(13)	/*For DIG */
++#define COMP_TXAGC			BIT(14)	/*For Tx power */
++#define COMP_HIPWR			BIT(15)	/*For High Power Mechanism */
++#define COMP_POWER			BIT(16)	/*For lps/ips/aspm. */
++#define COMP_POWER_TRACKING	BIT(17)	/*For TX POWER TRACKING */
++#define COMP_BB_POWERSAVING	BIT(18)
++#define COMP_SWAS			BIT(19)	/*For SW Antenna Switch */
++#define COMP_RF				BIT(20)	/*For RF. */
++#define COMP_TURBO			BIT(21)	/*For EDCA TURBO. */
++#define COMP_RATR			BIT(22)
++#define COMP_CMD			BIT(23)
++#define COMP_EFUSE			BIT(24)
++#define COMP_QOS			BIT(25)
++#define COMP_MAC80211		BIT(26)
++#define COMP_REGD			BIT(27)
++#define COMP_CHAN			BIT(28)
++
++/*--------------------------------------------------------------
++		Define the rt_print components
++--------------------------------------------------------------*/
++/* Define EEPROM and EFUSE  check module bit*/
++#define EEPROM_W			BIT(0)
++#define EFUSE_PG			BIT(1)
++#define EFUSE_READ_ALL		BIT(2)
++
++/* Define init check for module bit*/
++#define	INIT_EEPROM			BIT(0)
++#define	INIT_TxPower		BIT(1)
++#define	INIT_IQK			BIT(2)
++#define	INIT_RF				BIT(3)
++
++/* Define PHY-BB/RF/MAC check module bit */
++#define	PHY_BBR				BIT(0)
++#define	PHY_BBW				BIT(1)
++#define	PHY_RFR				BIT(2)
++#define	PHY_RFW				BIT(3)
++#define	PHY_MACR			BIT(4)
++#define	PHY_MACW			BIT(5)
++#define	PHY_ALLR			BIT(6)
++#define	PHY_ALLW			BIT(7)
++#define	PHY_TXPWR			BIT(8)
++#define	PHY_PWRDIFF			BIT(9)
++
++enum dbgp_flag_e {
++	FQOS = 0,
++	FTX = 1,
++	FRX = 2,
++	FSEC = 3,
++	FMGNT = 4,
++	FMLME = 5,
++	FRESOURCE = 6,
++	FBEACON = 7,
++	FISR = 8,
++	FPHY = 9,
++	FMP = 10,
++	FEEPROM = 11,
++	FPWR = 12,
++	FDM = 13,
++	FDBGCtrl = 14,
++	FC2H = 15,
++	FBT = 16,
++	FINIT = 17,
++	FIOCTL = 18,
++	DBGP_TYPE_MAX
++};
++
++#define RT_ASSERT(_exp, fmt)				\
++	do {						\
++		if (!(_exp)) {			\
++			printk(KERN_DEBUG "%s:%s(): ", KBUILD_MODNAME, \
++			__func__);			\
++			printk fmt;			\
++		} \
++	} while (0);
++
++#define RT_TRACE(rtlpriv, comp, level, fmt)\
++	do { \
++		if (unlikely(((comp) & rtlpriv->dbg.global_debugcomponents) && \
++			((level) <= rtlpriv->dbg.global_debuglevel))) {\
++			printk(KERN_DEBUG "%s:%s():<%lx-%x> ", KBUILD_MODNAME, \
++			__func__, in_interrupt(), in_atomic());	\
++			printk fmt;				\
++		} \
++	} while (0);
++
++#define RTPRINT(rtlpriv, dbgtype, dbgflag, printstr)	\
++	do {						\
++		if (unlikely(rtlpriv->dbg.dbgp_type[dbgtype] & dbgflag)) { \
++			printk(KERN_DEBUG "%s: ", KBUILD_MODNAME);	\
++			printk printstr;		\
++		}					\
++	} while (0);
++
++#define RT_PRINT_DATA(rtlpriv, _comp, _level, _titlestring, _hexdata, \
++		_hexdatalen) \
++	do {\
++		if (unlikely(((_comp) & rtlpriv->dbg.global_debugcomponents) &&\
++			(_level <= rtlpriv->dbg.global_debuglevel)))	{ \
++			int __i;					\
++			u8*	ptr = (u8 *)_hexdata;			\
++			printk(KERN_DEBUG "%s: ", KBUILD_MODNAME);	\
++			printk("In process \"%s\" (pid %i):", current->comm,\
++					current->pid); \
++			printk(_titlestring);		\
++			for (__i = 0; __i < (int)_hexdatalen; __i++) {	\
++				printk("%02X%s", ptr[__i], (((__i + 1) % 4)\
++							== 0) ? "  " : " ");\
++				if (((__i + 1) % 16) == 0)		\
++					printk("\n");			\
++			}				\
++			printk(KERN_DEBUG "\n");			\
++		} \
++	} while (0);
++
++#define MAC_FMT "%02x:%02x:%02x:%02x:%02x:%02x"
++#define MAC_ARG(x) \
++	((u8 *)(x))[0], ((u8 *)(x))[1], ((u8 *)(x))[2],\
++	((u8 *)(x))[3], ((u8 *)(x))[4], ((u8 *)(x))[5]
++
++void rtl_dbgp_flag_init(struct ieee80211_hw *hw);
++#endif
 -- 
-Cheers,
-Luca.
+1.7.1
 
