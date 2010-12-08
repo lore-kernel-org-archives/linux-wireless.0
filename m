@@ -1,41 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from dakia2.marvell.com ([65.219.4.35]:46839 "EHLO
-	dakia2.marvell.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751363Ab0LJCYo (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 9 Dec 2010 21:24:44 -0500
-From: Bing Zhao <bzhao@marvell.com>
-To: linux-wireless@vger.kernel.org
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Amitkumar Karwar <akarwar@marvell.com>,
-	Kiran Divekar <dkiran@marvell.com>,
-	Frank Huang <frankh@marvell.com>, Bing Zhao <bzhao@marvell.com>
-Subject: [PATCH 1/2] ieee80211: add Parameter Set Count bitmask
-Date: Thu,  9 Dec 2010 18:24:41 -0800
-Message-Id: <1291947882-9124-1-git-send-email-bzhao@marvell.com>
+Received: from mail.atheros.com ([12.19.149.2]:16702 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751632Ab0LHFSK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 8 Dec 2010 00:18:10 -0500
+Received: from mail.atheros.com ([10.10.20.105])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Tue, 07 Dec 2010 21:17:55 -0800
+Date: Wed, 8 Dec 2010 10:47:45 +0530
+From: Vasanthakumar Thiagarajan <vasanth@atheros.com>
+To: Ben Greear <greearb@candelatech.com>
+CC: Vasanth Thiagarajan <Vasanth.Thiagarajan@Atheros.com>,
+	"Luis R. Rodriguez" <mcgrof@gmail.com>,
+	"greearb@gmail.com" <greearb@gmail.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"ath9k-devel@venema.h4ckr.net" <ath9k-devel@venema.h4ckr.net>
+Subject: Re: [PATCH] ath9k: Check for NULL sta in ath_tx_start
+Message-ID: <20101208051745.GA24465@vasanth-laptop>
+References: <1291698829-22765-1-git-send-email-greearb@candelatech.com> <AANLkTik20SkL0Y5gK_ysYpW46gvb73m4h3SDcGb+d_LA@mail.gmail.com> <4CFDC7D8.3080100@candelatech.com> <20101207074237.GA2179@vasanth-laptop> <4CFDE702.3020301@candelatech.com> <20101207083147.GA19720@vasanth-laptop> <4CFE6B42.8000806@candelatech.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <4CFE6B42.8000806@candelatech.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-WMM IE QoS Info field lower 4 bits: Parameter Set Count
+On Tue, Dec 07, 2010 at 10:43:38PM +0530, Ben Greear wrote:
+> On 12/07/2010 12:31 AM, Vasanthakumar Thiagarajan wrote:
+> > On Tue, Dec 07, 2010 at 01:19:22PM +0530, Ben Greear wrote:
+> >> On 12/06/2010 11:42 PM, Vasanthakumar Thiagarajan wrote:
+> >>> On Tue, Dec 07, 2010 at 11:06:24AM +0530, Ben Greear wrote:
+> >>>> On 12/06/2010 09:21 PM, Luis R. Rodriguez wrote:
+> >>>>> On Mon, Dec 6, 2010 at 9:13 PM,<greearb@gmail.com>    wrote:
+> >>>>>> From: Ben Greear<greearb@candelatech.com>
+> >>>>>>
+> >>>>>> It can be NULL according to docs, and logging showed it
+> >>>>>> to be NULL in practice.
+> >>>>>>
+> >>>>>> Signed-off-by: Ben Greear<greearb@candelatech.com>
+> >>>>>
+> >>>>> Does this fix an oops? If so can you explain and provide the trace and
+> >>>>> resubmit and cc stable in the commit log?
+> >>>>
+> >>>> I think it fixes the TID corruption I posted about earlier.  It seems
+> >>>> so obvious though, that I'm curious why no one else sees problems,
+> >>>> and why I didn't see more crashes in my setup.
+> >>>>
+> >>>> (The paprd code appears to send with null STA, for instance, and my
+> >>>> printks showed lots of NULL stas in my 16-sta test setup, though I
+> >>>> don't think I'm using the paprd code path.)
+> >>>
+> >>> paprd is used only with>= AR9003.
+> >>
+> >> Whoever coded it up hopefully had that hardware...so why didn't
+> >> they see lots of crashes?
+> >
+> > I myself tested it lot of times, but did not see any crash, weird.
+> 
+> Looks like the offending change when in recently (11/4/10, one of Felix's
+> patches).
+> 
+> That is probably why no one else is hitting this yet, and it
+> isn't needed for stable I'm guessing....
 
-Signed-off-by: Bing Zhao <bzhao@marvell.com>
----
- include/linux/ieee80211.h |    1 +
- 1 files changed, 1 insertions(+), 0 deletions(-)
+Nice, care to send a patch?. Yeah, it is not needed for stable.
 
-diff --git a/include/linux/ieee80211.h b/include/linux/ieee80211.h
-index 351c0ab..7f23545 100644
---- a/include/linux/ieee80211.h
-+++ b/include/linux/ieee80211.h
-@@ -122,6 +122,7 @@
- 
- /* U-APSD queue for WMM IEs sent by AP */
- #define IEEE80211_WMM_IE_AP_QOSINFO_UAPSD	(1<<7)
-+#define IEEE80211_WMM_IE_AP_QOSINFO_PARAM_SET_CNT_MASK	0x0f
- 
- /* U-APSD queues for WMM IEs sent by STA */
- #define IEEE80211_WMM_IE_STA_QOSINFO_AC_VO	(1<<0)
--- 
-1.7.0.2
-
+Vasanth
