@@ -1,51 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qw0-f46.google.com ([209.85.216.46]:42968 "EHLO
-	mail-qw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752351Ab0LNGlo convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 14 Dec 2010 01:41:44 -0500
+Received: from mms2.broadcom.com ([216.31.210.18]:2558 "EHLO mms2.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756685Ab0LHVSS (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 8 Dec 2010 16:18:18 -0500
+From: "Henry Ptasinski" <henryp@broadcom.com>
+To: gregkh@suse.de
+cc: devel@linuxdriverproject.org, linux-wireless@vger.kernel.org,
+	"Henry Ptasinski" <henryp@broadcom.com>
+Subject: [PATCH] staging: brcm80211: fix documentation on installing
+ firmware
+Date: Wed, 8 Dec 2010 13:18:04 -0800
+Message-ID: <1291843084-9789-1-git-send-email-henryp@broadcom.com>
 MIME-Version: 1.0
-Reply-To: sedat.dilek@gmail.com
-In-Reply-To: <AANLkTin9qsjtc8J=Z_wxiKAn3o5kTcEVrOzkoBRT+=ih@mail.gmail.com>
-References: <AANLkTinXD4_LtL=hqJg2nLosiqU=ManvryN1RiSEHWUU@mail.gmail.com>
-	<AANLkTin9qsjtc8J=Z_wxiKAn3o5kTcEVrOzkoBRT+=ih@mail.gmail.com>
-Date: Tue, 14 Dec 2010 07:41:43 +0100
-Message-ID: <AANLkTikpKY7NyUkkzRwgLWrTc4bTgv-=dOFADQABgS_1@mail.gmail.com>
-Subject: Re: Agenda items for DFS IRC Meeting #linux-wireless on freenode 2010-12-14
-From: Sedat Dilek <sedat.dilek@googlemail.com>
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Kathy Giori <Kathy.Giori@atheros.com>,
-	Jouni Malinen <Jouni.Malinen@atheros.com>,
-	Felix Fietkau <nbd@openwrt.org>, linux-kernel@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Dec 14, 2010 at 7:28 AM, Sedat Dilek <sedat.dilek@googlemail.com> wrote:
-> On Mon, Dec 13, 2010 at 11:39 PM, Luis R. Rodriguez <mcgrof@gmail.com> wrote:
->> As noted we have an IRC meeting tomorrow scheduled at 9am PST time to
->> start upstreaming DFS discussions.
->
-> Arrrgh, PST?
-> (If you ask me right now, I would not know how to look up PST-time.)
-> Can you please give such date-releated infos as UTC next time, please.
->
-> $ LC_ALL=C date --utc
-> Tue Dec 14 06:26:53 UTC 2010
->
+Fix the documentation to have the current firmware filenames and use the
+correct path.
 
-According to [1]:
+Signed-off-by: Henry Ptasinski <henryp@broadcom.com>
+---
+ drivers/staging/brcm80211/README          |   10 ++--------
+ drivers/staging/brcm80211/brcmfmac/README |    5 +++--
+ 2 files changed, 5 insertions(+), 10 deletions(-)
 
-PST – Pacific Standard Time
-Time zone offset: UTC - 8 hours
-PST is 8 hours behind of Coordinated Universal Time (UTC)
+diff --git a/drivers/staging/brcm80211/README b/drivers/staging/brcm80211/README
+index de65f9d..8e335b8 100644
+--- a/drivers/staging/brcm80211/README
++++ b/drivers/staging/brcm80211/README
+@@ -43,14 +43,8 @@ Firmware is available from the Linux firmware repository at:
+ 	http://git.kernel.org/?p=linux/kernel/git/dwmw2/linux-firmware.git
+ 	https://git.kernel.org/?p=linux/kernel/git/dwmw2/linux-firmware.git
+ 
+-For all chips, copy brcm/bcm43xx-0-610-809-0.fw and
+-brcm/bcm43xx_hdr-0-610-809-0.fw to /lib/firmware/brcm (or wherever firmware is
+-normally installed on the system).  In the /lib/firmware/brcm directory, then
+-create the following symlinks:
+-
+-	ln -s bcm43xx-0-610-809-0.fw bcm43xx-0.fw
+-	ln -s bcm43xx_hdr-0-610-809-0.fw bcm43xx_hdr-0.fw
+-
++For all chips, copy brcm/bcm43xx-0.fw and brcm/bcm43xx_hdr-0.fw to
++/lib/firmware/brcm (or wherever firmware is normally installed on your system).
+ 
+ Currently supported chips
+ ==============
+diff --git a/drivers/staging/brcm80211/brcmfmac/README b/drivers/staging/brcm80211/brcmfmac/README
+index 43601fa..be29e42 100644
+--- a/drivers/staging/brcm80211/brcmfmac/README
++++ b/drivers/staging/brcm80211/brcmfmac/README
+@@ -25,8 +25,9 @@ Firmware is available from the Linux firmware repository at:
+ 	http://git.kernel.org/?p=linux/kernel/git/dwmw2/linux-firmware.git
+ 	https://git.kernel.org/?p=linux/kernel/git/dwmw2/linux-firmware.git
+ 
+-For 4329 chip, copy brcm/bcm4329-fullmac-4-218-248-5.bin and
+-bcm4329-fullmac-4-218-248-5.txt to /lib/firmware/brcm
++For 4329 chip, copy brcm/bcm4329-fullmac-4.bin and brcm/bcm4329-fullmac-4.txt
++to /lib/firmware/brcm (or wherever firmware is normally installed on your
++system).
+ 
+ Contact Info:
+ =============
+-- 
+1.7.1
 
-Current time in Los Angeles
-Monday, December 13, 2010 at 10:41:00 PM PST
 
-Looks like I can join the discussion :-).
-
-- Sedat -
-
-[1] http://timeanddate.com/library/abbreviations/timezones/na/pst.html
