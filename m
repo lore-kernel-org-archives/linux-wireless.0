@@ -1,70 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f46.google.com ([209.85.161.46]:39049 "EHLO
-	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751134Ab0LDMBj (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:46406 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752851Ab0LHOaK (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 4 Dec 2010 07:01:39 -0500
-Received: by fxm20 with SMTP id 20so2982909fxm.19
-        for <linux-wireless@vger.kernel.org>; Sat, 04 Dec 2010 04:01:38 -0800 (PST)
+	Wed, 8 Dec 2010 09:30:10 -0500
+Date: Wed, 8 Dec 2010 09:23:31 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Cc: "greearb@gmail.com" <greearb@gmail.com>,
+	"ath9k-devel@venema.h4ckr.net" <ath9k-devel@venema.h4ckr.net>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [ath9k-devel] [PATCH] ath9k: Make DMA warning in ath_stoprecv
+ WARN_ON_ONCE.
+Message-ID: <20101208142331.GB2423@tuxdriver.com>
+References: <1291669987-23434-1-git-send-email-greearb@candelatech.com>
+ <20101206215958.GJ21442@tux>
+ <AANLkTikDW6d+rTagHzXD_nFA1K7L1sVxEcFGXtrKhHXs@mail.gmail.com>
+ <AANLkTi=pXQ1D7Pxc3c==pxHH662dKogscfGjHrACxAvS@mail.gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <20101204033646.GA22662@monopoli.naic.edu>
-References: <AANLkTim=P+QejCObCH1=5cPBDR6BpEXxuqHGZj3JBKbE@mail.gmail.com>
-	<20101130021911.GA18971@monopoli.naic.edu>
-	<AANLkTi=1PXk4u37mPd6=F6mjYWLqo=wg7trVmmpfV_WV@mail.gmail.com>
-	<20101202002234.GA30670@monopoli.naic.edu>
-	<AANLkTi=YT1V-kr-tAmNfSBPPEGk39H37RoNkx5txhnD7@mail.gmail.com>
-	<20101203001052.GA16808@monopoli.naic.edu>
-	<AANLkTinLaa+dOiq67DAt+KYfnxUEkNgWEiE2x1NtT9RE@mail.gmail.com>
-	<AANLkTim-hexpFnV_DfKGM53vWo1-5W6fbK4e+jLnb5fB@mail.gmail.com>
-	<20101203202321.GA21937@monopoli.naic.edu>
-	<AANLkTi=qvZ-Uj1T=9Xc8LyyxKvgNw4CKV8Zx2fDfo4uH@mail.gmail.com>
-	<20101204033646.GA22662@monopoli.naic.edu>
-Date: Sat, 4 Dec 2010 12:01:34 +0000
-Message-ID: <AANLkTik=nbdNUU7gzO9V17fHWZibc2LjuXDgpeRDztoM@mail.gmail.com>
-Subject: Re: orinoco_cs module and WPA not working
-From: Dave Kilroy <kilroyd@googlemail.com>
-To: Giacomo Comes <comes@naic.edu>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=iso-8859-1
+In-Reply-To: <AANLkTi=pXQ1D7Pxc3c==pxHH662dKogscfGjHrACxAvS@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
->> I'm at a loss. I've looked at the wpa_supplicant code, and had another
->> look at the driver. The scan should be a plain wildcard scan - which
->> you've identified works.
->>
->> Does setting scan_ssid=1 in the wpa_supplicant network block change
->> the behaviour? That's usually only necessary for hidden SSIDs - but
->> I'd like to know if the scan succeeds in this case.
->
-> No It doesn't work.
-> But I have more informations for you.
->
-> I have been testing different versions of wpa_supplicant
-> and I have found that if a use wpa_supplicant 0.7.0 or earlier,
-> it works. With 0.7.1 or newer it fails.
-> wpa_supplicant 0.7.0 works even without applying your patch.
+On Tue, Dec 07, 2010 at 03:05:46PM -0800, Luis R. Rodriguez wrote:
+> On Mon, Dec 6, 2010 at 2:02 PM, Luis R. Rodriguez
+> <lrodriguez@atheros.com> wrote:
+> > On Mon, Dec 6, 2010 at 1:59 PM, Luis R. Rodriguez
+> > <lrodriguez@atheros.com> wrote:
+> >> On Mon, Dec 06, 2010 at 01:13:07PM -0800, greearb@gmail.com wrote:
+> >>> From: Ben Greear <greearb@candelatech.com>
+> >>>
+> >>> This decreases spammage in the log.  A single line message
+> >>> will still be printed, so users can be aware that problem
+> >>> exists.
+> >>>
+> >>> Signed-off-by: Ben Greear <greearb@candelatech.com>
+> >>
+> >> Acked-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+> >
+> > You forgot to address linville, and no need to send to ath9k-devel if
+> > you already know the patch is good.
+> 
+> Ben, your patch did not get merged in today's pick of patches by John
+> but I like it and want to resuse the same definition in my new patches
+> so I will resubmit in my new series. Thanks.
 
-I've set myself up so I can test with orinoco_usb. I can reproduce the
-issue (or something that looks the same).
+Put down the crack pipe... :-)
 
-After much confusion, I suspect the initial scan is being triggered
-before the hardware is ready. Internally, wpa_supplicant will do an
-'ifconfig eth1 up' followed by an 'iwlist eth1 scan', and it seems the
-driver/hardware wants more time between them.
+commit d7fd1b50a51be3fe6554fbab8953fa8a3ff4009b
+Author: Ben Greear <greearb@candelatech.com>
+Date:   Mon Dec 6 13:13:07 2010 -0800
 
-Try the following (either in two command prompts, or with
-wpa_supplicant in the background):
+    ath9k: Make DMA warning in ath_stoprecv WARN_ON_ONCE.
+    
+    This decreases spammage in the log.  A single line message
+    will still be printed, so users can be aware that problem
+    exists.
+    
+    Signed-off-by: Ben Greear <greearb@candelatech.com>
+    Acked-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+    Signed-off-by: John W. Linville <linville@tuxdriver.com>
 
-prompt1$ wpa_supplicant -dd -ieth1 ....
-
-prompt2$ ifconfig eth1 down
-prompt2$ ifconfig eth1 up
-
-and see what wpa_supplicant is doing. If it has got scan results then
-you're probably seeing what I am.
-
-I need to have a think about how this needs to be fixed in the driver.
-
-
-Dave.
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
