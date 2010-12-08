@@ -1,59 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qy0-f181.google.com ([209.85.216.181]:51670 "EHLO
-	mail-qy0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752205Ab0LGHiZ convert rfc822-to-8bit (ORCPT
+Received: from mail.candelatech.com ([208.74.158.172]:49562 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752696Ab0LHPgk (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 7 Dec 2010 02:38:25 -0500
-Received: by qyk12 with SMTP id 12so15496370qyk.19
-        for <linux-wireless@vger.kernel.org>; Mon, 06 Dec 2010 23:38:25 -0800 (PST)
+	Wed, 8 Dec 2010 10:36:40 -0500
+Message-ID: <4CFFA604.90802@candelatech.com>
+Date: Wed, 08 Dec 2010 07:36:36 -0800
+From: Ben Greear <greearb@candelatech.com>
 MIME-Version: 1.0
-In-Reply-To: <4CFD1620.5070708@hs-owl.de>
-References: <4CFD1620.5070708@hs-owl.de>
-From: Jonathan Guerin <jonathan@guerin.id.au>
-Date: Tue, 7 Dec 2010 17:38:10 +1000
-Message-ID: <AANLkTimRmWibiy9QhfZGkeP0u58e2bYdrd1xXn-3igGX@mail.gmail.com>
-Subject: Re: How to get medium (carrier-sense) information from Atheros chipsets?
-To: "Stefan Schwalowsky (inIT)" <stefan.schwalowsky@hs-owl.de>
-Cc: linux-wireless@vger.kernel.org,
-	ath5k-devel list <ath5k-devel@lists.ath5k.org>
-Content-Type: text/plain; charset=ISO-8859-1
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] wireless: Remove spurious warning in mlme.c
+References: <1291759599-14698-1-git-send-email-greearb@candelatech.com> <1291795903.3562.5.camel@jlt3.sipsolutions.net>
+In-Reply-To: <1291795903.3562.5.camel@jlt3.sipsolutions.net>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Have a look at the ANI file in
-/sys/kernel/debug/ieee80211/phyx/ath5k/ani
-
-You will need to enable debugfs & debug entries for ath5k in your kernel config.
-
-Alternatively, you can look at the patches Bruno Randolf added:
-[PATCH 2/2] ath5k: Add channel time to survey data
-
-Cheers,
-
---
-Jonathan Guerin
-
-
-
-On Tue, Dec 7, 2010 at 2:58 AM, Stefan Schwalowsky (inIT)
-<stefan.schwalowsky@hs-owl.de> wrote:
-> Hello,
-> I'm working on a research project dealing with real-time capabilities of
-> WLAN. Currently I'm analyzing the ATH5K driver and trying to find a way to
-> get information about the medium state (carrier-sense state) . I want to
-> check whether the medium is currently occupied by other stations or not. Is
-> there a way to get the carrier sense information from the hardware through a
-> status-register or so? (Currently we have a AR5413 Chip, but any other would
-> also be OK)  The only information i found was about the profile count
-> registers, which doesn't really meet our requirements.
+On 12/08/2010 12:11 AM, Johannes Berg wrote:
+> On Tue, 2010-12-07 at 14:06 -0800, greearb@candelatech.com wrote:
+>> From: Ben Greear<greearb@candelatech.com>
+>>
+>> Seems that we should not be warning if all of the
+>> authtry_bsses are already NULL.
 >
-> I greatly appreciate your help
+> Do you keep running into the warning? I'd really like to understand how
+> it happens -- it seems to point to a mac80211 bug.
 >
-> Kind regards
-> Stefan Schwalowsky
+> So don't really like this patch.
+
+Yes, it's easily repeatable in my setup when using wpa_supplicant
+for non-encrypted VIFS.  I was using around 80 VIFS for most of this testing.
+
+I posted the backtrace to no comment several weeks ago:
+
+http://www.spinics.net/lists/linux-wireless/msg59525.html
+
+Thanks,
+Ben
+
 >
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
+> johannes
+
+
+-- 
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
