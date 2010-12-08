@@ -1,44 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:44698 "EHLO nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932097Ab0LRSbN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 18 Dec 2010 13:31:13 -0500
-From: Felix Fietkau <nbd@openwrt.org>
-To: linux-wireless@vger.kernel.org
-Cc: linville@tuxdriver.com, johannes@sipsolutions.net,
-	Felix Fietkau <nbd@openwrt.org>
-Subject: [PATCH 2/3] mac80211: skip unnecessary pskb_expand_head calls
-Date: Sat, 18 Dec 2010 19:30:49 +0100
-Message-Id: <1292697050-25741-2-git-send-email-nbd@openwrt.org>
-In-Reply-To: <1292697050-25741-1-git-send-email-nbd@openwrt.org>
-References: <1292697050-25741-1-git-send-email-nbd@openwrt.org>
+Received: from mail-vw0-f46.google.com ([209.85.212.46]:40867 "EHLO
+	mail-vw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755257Ab0LHRuU convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 8 Dec 2010 12:50:20 -0500
+Received: by vws16 with SMTP id 16so1243257vws.19
+        for <linux-wireless@vger.kernel.org>; Wed, 08 Dec 2010 09:50:19 -0800 (PST)
+MIME-Version: 1.0
+Reply-To: sedat.dilek@gmail.com
+In-Reply-To: <AANLkTi=5a=LBTUcjyi0je3XYNG+=xsbA_MjtDU_dZat_@mail.gmail.com>
+References: <AANLkTimDF3kofO=kiuOsz+WrTGROdOL8-3eNvKd5NrD3@mail.gmail.com>
+	<201012061714.15863.br1@einfach.org>
+	<AANLkTi=+bZbsZXR2v1AUKLEEAWGLpq-uNJXQ13t-Bf+D@mail.gmail.com>
+	<AANLkTi=95mO085Y1PJ3brMMpHa=QvkxSB3SUpQysvKr+@mail.gmail.com>
+	<20101208165607.GE2423@tuxdriver.com>
+	<AANLkTikmZZuD1h45RkX3QE2xAQLfoZzwSecDXvojSw5=@mail.gmail.com>
+	<AANLkTi=5a=LBTUcjyi0je3XYNG+=xsbA_MjtDU_dZat_@mail.gmail.com>
+Date: Wed, 8 Dec 2010 18:50:18 +0100
+Message-ID: <AANLkTim2RMaqh-7sYhGLwWV8OK-RH74H3YGm_TV6pVKs@mail.gmail.com>
+Subject: Re: ath5k: Weird Retransmission Behaviour
+From: Sedat Dilek <sedat.dilek@googlemail.com>
+To: Bob Copeland <me@bobcopeland.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	Bruno Randolf <br1@einfach.org>,
+	Jonathan Guerin <jonathan@guerin.id.au>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	ath5k-devel <ath5k-devel@venema.h4ckr.net>, nbd@openwrt.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-If the skb is not cloned and we don't need any extra headroom, there
-is no point in reallocating the skb head.
+On Wed, Dec 8, 2010 at 6:11 PM, Bob Copeland <me@bobcopeland.com> wrote:
+> On Wed, Dec 8, 2010 at 12:06 PM, Bob Copeland <me@bobcopeland.com> wrote:
+>> On Wed, Dec 8, 2010 at 11:56 AM, John W. Linville
+>> <linville@tuxdriver.com> wrote:
+>>>> Found the patch:
+>>>>
+>>>> https://patchwork.kernel.org/patch/359722/
+>>>
+>>> Are you posting that for merging?  Or just for testing?
+>>
+>> Testing -- I only compile tested it but it seemed relevant
+>> to this thread.
+>
+> Also, I should note that the retry limits are fixed at
+> minstrel initialization time; I don't know if that's the
+> right time to take the config parameters into account
+> or if it should be done later (and if later, how that fits in
+> with minstrel's MRR strategy).
+>
+> --
+> Bob Copeland %% www.bobcopeland.com
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
 
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
----
- net/mac80211/tx.c |    4 +++-
- 1 files changed, 3 insertions(+), 1 deletions(-)
+I have applied, compiled and loaded new mac80211 kernel-module.
+What could be a good test-case?
 
-diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
-index 7d78aca..56ae175 100644
---- a/net/mac80211/tx.c
-+++ b/net/mac80211/tx.c
-@@ -1549,8 +1549,10 @@ static int ieee80211_skb_resize(struct ieee80211_local *local,
- 
- 	if (skb_header_cloned(skb))
- 		I802_DEBUG_INC(local->tx_expand_skb_head_cloned);
--	else
-+	else if (head_need || tail_need)
- 		I802_DEBUG_INC(local->tx_expand_skb_head);
-+	else
-+		return 0;
- 
- 	if (pskb_expand_head(skb, head_need, tail_need, GFP_ATOMIC)) {
- 		wiphy_debug(local->hw.wiphy,
--- 
-1.7.3.2
-
+- Sedat -
