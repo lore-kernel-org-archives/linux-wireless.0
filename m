@@ -1,55 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from foo.stuge.se ([213.88.146.6]:40286 "HELO foo.stuge.se"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
-	id S1751680Ab0LBFa6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 2 Dec 2010 00:30:58 -0500
-Message-ID: <20101202053055.19479.qmail@stuge.se>
-Date: Thu, 2 Dec 2010 06:30:54 +0100
-From: Peter Stuge <peter@stuge.se>
-To: Joe Perches <joe@perches.com>
-Cc: Jiri Slaby <jirislaby@gmail.com>,
-	Nick Kossifidis <mickflemm@gmail.com>,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	Bob Copeland <me@bobcopeland.com>,
-	Jouni Malinen <jmalinen@atheros.com>,
-	Vasanthakumar Thiagarajan <vasanth@atheros.com>,
-	Senthil Balasubramanian <senthilkumar@atheros.com>,
-	netdev@vger.kernel.org, ath5k-devel@lists.ath5k.org,
-	linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-kernel@vger.kernel.org, ath9k-devel@lists.ath9k.org
-Subject: Re: [ath9k-devel] [PATCH 2/2] ath: Fix logging message typos
-References: <276469c602c402565b49f99521ea19757429e81e.1291266731.git.joe@perches.com> <a345e995a816576a4c2c39aec43716c18011475b.1291266731.git.joe@perches.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <a345e995a816576a4c2c39aec43716c18011475b.1291266731.git.joe@perches.com>
+Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:50688
+	"EHLO sunset.davemloft.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1756713Ab0LHVYo (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 8 Dec 2010 16:24:44 -0500
+Date: Wed, 08 Dec 2010 13:25:10 -0800 (PST)
+Message-Id: <20101208.132510.258115664.davem@davemloft.net>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Subject: Re: pull request: wireless-next-2.6 2010-12-08
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <20101208210432.GH2423@tuxdriver.com>
+References: <20101208210432.GH2423@tuxdriver.com>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Joe Perches wrote:
-> +++ b/drivers/net/wireless/ath/ath9k/ar9002_calib.c
-..
-> @@ -734,7 +734,7 @@ static bool ar9285_hw_cl_cal(struct ath_hw *ah, struct ath9k_channel *chan)
->  	if (!ath9k_hw_wait(ah, AR_PHY_AGC_CONTROL, AR_PHY_AGC_CONTROL_CAL,
->  			  0, AH_WAIT_TIMEOUT)) {
->  		ath_dbg(common, ATH_DBG_CALIBRATE,
-> -			"offset calibration failed to complete in 1ms; noisy ??\n");
-> +			"offset calibration failed to complete in 1ms; noisy enfironment?\n");
+From: "John W. Linville" <linville@tuxdriver.com>
+Date: Wed, 8 Dec 2010 16:04:32 -0500
 
-enfironment? :)
+> Here is the latest batch of updates intended for 2.6.38.  It also
+> includes my last wireless-2.6 pull request that you just added
+> to net-2.6.
+> 
+> This includes the usual batch of drivers updates, with ath9k and
+> iwlwifi as the usual standouts.  This also includes some mac80211
+> documentation updates from Johannes, and a flurry of ath5k updates
+> from Nick.  This also includes a collection of bluetooth updates by
+> way of Gustavo, a couple of libertas updates, some more work on b43
+> N-phy support, and a variety of other patches.
+> 
+> Please let me know if there are problems!
 
-
-> +++ b/drivers/net/wireless/ath/ath9k/eeprom_4k.c
-..
-> @@ -1178,7 +1178,7 @@ static u16 ath9k_hw_4k_get_spur_channel(struct ath_hw *ah, u16 i, bool is2GHz)
->  	u16 spur_val = AR_NO_SPUR;
->  
->  	ath_dbg(common, ATH_DBG_ANI,
-> -		"Getting spur idx %d is2Ghz. %d val %x\n",
-> +		"Getting spur idx:%d is2Ghz:%d val:%x\n",
->  		i, is2GHz, ah->config.spurchans[i][is2GHz]);
-
-Is this short for "spurious" ?
-
-
-//Peter
+Ok, I'll suck this in later tonight, thanks John.  I'm working
+on the net-2.6 --> net-next-2.6 merge at the moment.
