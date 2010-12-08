@@ -1,49 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iy0-f174.google.com ([209.85.210.174]:46933 "EHLO
-	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752541Ab0LVO1N convert rfc822-to-8bit (ORCPT
+Received: from mail-pw0-f46.google.com ([209.85.160.46]:54241 "EHLO
+	mail-pw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754119Ab0LHRVa (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 22 Dec 2010 09:27:13 -0500
-Received: by iyi12 with SMTP id 12so4096613iyi.19
-        for <linux-wireless@vger.kernel.org>; Wed, 22 Dec 2010 06:27:13 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <1293026617.3531.23.camel@jlt3.sipsolutions.net>
-References: <1292864555-28661-1-git-send-email-lrodriguez@atheros.com>
- <1292864555-28661-4-git-send-email-lrodriguez@atheros.com> <1293026617.3531.23.camel@jlt3.sipsolutions.net>
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Date: Wed, 22 Dec 2010 09:26:52 -0500
-Message-ID: <AANLkTinrn=2oiSQbxV0MnR2WGtjhb6zB6aM159VjRxSL@mail.gmail.com>
-Subject: Re: [PATCH 2/2] cfg80211: pass DFS region to drivers through reg_notifier()
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linville@tuxdriver.com, kathy.giori@atheros.com,
-	amod.bodas@atheros.com, david.quan@atheros.com,
-	michael.green@atheros.com, linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+	Wed, 8 Dec 2010 12:21:30 -0500
+Received: by pwj3 with SMTP id 3so324162pwj.19
+        for <linux-wireless@vger.kernel.org>; Wed, 08 Dec 2010 09:21:29 -0800 (PST)
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, chaoming_li@realsil.com.cn,
+	Larry Finger <Larry.Finger@lwfinger.net>
+Subject: [PATCH 00/22] rtl8192ce: Initial upload of driver
+Date: Wed,  8 Dec 2010 11:12:30 -0600
+Message-Id: <1291828372-25159-1-git-send-email-Larry.Finger@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Dec 22, 2010 at 9:03 AM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
-> On Mon, 2010-12-20 at 12:02 -0500, Luis R. Rodriguez wrote:
->
->> +     u8 dfs_region;
->
-> u8, when the real value is a u16?
+This patch bomb contains a driver for Realtek RTL8192CE and RTL8188CE PCIe
+devices. The firmware for this driver will be sent to linux-firmware.
 
-Ah see the field is actually a country flag, but here we just extract
-the DFS region.
+[PATCH 01/22] rtl8192ce: Add files to rtlwifi - Part 1: core.{c,h}
+[PATCH 02/22] rtl8192ce: Add files to rtlwifi - Part 2: base.{c,h}
+[PATCH 03/22] rtl8192ce: Add files to rtlwifi - Part 3: cam.{c,h}
+[PATCH 04/22] rtl8192ce: Add files to rtlwifi - Part 4: debug.{c,h}
+[PATCH 05/22] rtl8192ce: Add files to rtlwifi - Part 5: efuse.{c,h}
+[PATCH 06/22] rtl8192ce: Add files to rtlwifi - Part 6: pci.{c,h}
+[PATCH 07/22] rtl8192ce: Add files to rtlwifi - Part 7: ps.{c,h}
+[PATCH 08/22] rtl8192ce: Add files to rtlwifi - Part 8: rc.{c,h}
+[PATCH 09/22] rtl8192ce: Add files to rtlwifi - Part 9: regd.{c,h}
+[PATCH 10/22] rtl8192ce: Add files to rtlwifi - Part 10: wifi.h
+[PATCH 11/22] rtl8192ce: Add files to rtlwifi - Part 11: Kconfig and Makefile
+[PATCH 12/22] rtl8192ce: Add files to rtlwifi/rtl8192ce - Part 12: rtl8192c-dm.{c,h}
+[PATCH 13/22] rtl8192ce: Add files to rtlwifi/rtl8192ce - Part 13: rtl8192c-fw.{c,h}
+[PATCH 14/22] rtl8192ce: Add files to rtlwifi/rtl8192ce - Part 14: rtl8192c-hw.{c,h}
+[PATCH 15/22] rtl8192ce: Add files to rtlwifi/rtl8192ce - Part 15: rtl8192c-led.{c,h}
+[PATCH 16/22] rtl8192ce: Add files to rtlwifi/rtl8192ce - Part 16: rtl8192c-phy.{c,h}
+[PATCH 17/22] rtl8192ce: Add files to rtlwifi/rtl8192ce - Part 17: rtl8192c-sw.{c,h}
+[PATCH 18/22] rtl8192ce: Add files to rtlwifi/rtl8192ce - Part 18: rtl8192c-rf.{c,h}
+[PATCH 19/22] rtl8192ce: Add files to rtlwifi/rtl8192ce - Part 19: rtl8192c-table.{c,h}
+[PATCH 20/22] rtl8192ce: Add files to rtlwifi/rtl8192ce - Part 20: rtl8192c-trx.{c,h}
+[PATCH 21/22] rtl8192ce: Add files to rtlwifi/rtl8192ce - Part 21: rtl8192c-def.h,
+[PATCH 22/22] rtl8192ce: Part 22: Update drivers/net/wireless/Kconfig and Makefile
 
->> +     last_request->dfs_region = (cfg80211_regdomain->flags &
->> +                                 NL80211_CFLAG_ALL_DFS_FLAGS);
->
-> Also -- "regions", not "region" since it's still a bitmask of values. If
-> you think it should be a single region, then you should have an enum
-> instead.
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+---
 
-You're right, for now we can enforce this to be just one region and if
-we later want to change it for whatever reason we can allow for one
-country to fall into multiple regions, if that makes sense. I hope to
-get a better idea from Michael today if this might make sense today.
-I'll reply to this thread once I do.
+John,
 
-  Luis
+This driver is intended for wireless-testing and kernel 2.6.38. You can pull it
+from git://git.kernel.org/pub/scm/linux/kernel/git/lwfinger/rtl8192ce.git.
+
+Thanks,
+
+Larry
+
