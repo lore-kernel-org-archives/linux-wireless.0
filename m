@@ -1,90 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 80-190-117-144.ip-home.de ([80.190.117.144]:53898 "EHLO
-	bu3sch.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752421Ab0LIO2V (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 9 Dec 2010 09:28:21 -0500
-Subject: Re: [PATCH 2/4] b43: set TMS to work with current band width for
- N-PHY
-From: Michael =?ISO-8859-1?Q?B=FCsch?= <mb@bu3sch.de>
-To: =?UTF-8?Q?Rafa=C5=82_Mi=C5=82ecki?= <zajec5@gmail.com>
-Cc: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>,
-	b43-dev@lists.infradead.org
-In-Reply-To: <AANLkTinJUsKzNO6vO8F9KupxF0uc1h97wffhAgBas1Pe@mail.gmail.com> (sfid-20101209_152344_283295_FFFFFFFFF86E6A27)
-References: <1291755360-21570-1-git-send-email-zajec5@gmail.com>
-	 <1291755360-21570-3-git-send-email-zajec5@gmail.com>
-	 <1291756117.27497.101.camel@maggie>
-	 <AANLkTinN_12RwWiugzxn5dB1he3b6h_y7K3C=8vFPyXO@mail.gmail.com>
-	 <AANLkTin14p=3=SA_4oVj24z+8NuS_y6hWqQmEEiXaSqr@mail.gmail.com>
-	 <1291904384.2905.2.camel@maggie>
-	 <AANLkTinJUsKzNO6vO8F9KupxF0uc1h97wffhAgBas1Pe@mail.gmail.com>
-	 (sfid-20101209_152344_283295_FFFFFFFFF86E6A27)
-Content-Type: text/plain; charset="UTF-8"
-Date: Thu, 09 Dec 2010 15:28:17 +0100
-Message-ID: <1291904897.2905.5.camel@maggie>
-Mime-Version: 1.0
+Received: from mail-pw0-f46.google.com ([209.85.160.46]:35992 "EHLO
+	mail-pw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753335Ab0LHIMs convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 8 Dec 2010 03:12:48 -0500
+Received: by pwj3 with SMTP id 3so215593pwj.19
+        for <linux-wireless@vger.kernel.org>; Wed, 08 Dec 2010 00:12:48 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <201012081706.54459.br1@einfach.org>
+References: <AANLkTimDF3kofO=kiuOsz+WrTGROdOL8-3eNvKd5NrD3@mail.gmail.com>
+ <AANLkTiky-Q6DLxXSKf-+UU6avpaVikRgtt5078+Ui7Uh@mail.gmail.com>
+ <AANLkTimS03cqqG8TCN1MTGF0DRQ51hrFkSPrbah2Z4gO@mail.gmail.com> <201012081706.54459.br1@einfach.org>
+From: Jonathan Guerin <jonathan@guerin.id.au>
+Date: Wed, 8 Dec 2010 18:12:33 +1000
+Message-ID: <AANLkTim+pOE1pCszaRWvzNmZ9e7RtdVbY7jPquby5OHV@mail.gmail.com>
+Subject: Re: [ath5k-devel] ath5k: Weird Retransmission Behaviour
+To: Bruno Randolf <br1@einfach.org>
+Cc: Nick Kossifidis <mickflemm@gmail.com>,
+	ath5k-devel <ath5k-devel@lists.ath5k.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	bjorn.smedman@venatech.se, nbd@openwrt.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2010-12-09 at 15:23 +0100, Rafa≈Ç Mi≈Çecki wrote: 
-> W dniu 9 grudnia 2010 15:19 u≈ºytkownik Michael B√ºsch <mb@bu3sch.de> napisa≈Ç:
-> > On Thu, 2010-12-09 at 15:13 +0100, Rafa≈Ç Mi≈Çecki wrote:
-> >> W dniu 9 grudnia 2010 15:12 u≈ºytkownik Rafa≈Ç Mi≈Çecki <zajec5@gmail.com> napisa≈Ç:
-> >> > W dniu 7 grudnia 2010 22:08 u≈ºytkownik Michael B√ºsch <mb@bu3sch.de> napisa≈Ç:
-> >> >> On Tue, 2010-12-07 at 21:55 +0100, Rafa≈Ç Mi≈Çecki wrote:
-> >> >>> Signed-off-by: Rafa≈Ç Mi≈Çecki <zajec5@gmail.com>
-> >> >>> ---
-> >> >>>  drivers/net/wireless/b43/main.c       |    6 ++++++
-> >> >>>  drivers/net/wireless/b43/phy_common.c |    7 +++++++
-> >> >>>  drivers/net/wireless/b43/phy_common.h |    2 ++
-> >> >>>  drivers/net/wireless/b43/phy_n.c      |    7 -------
-> >> >>>  4 files changed, 15 insertions(+), 7 deletions(-)
-> >> >>>
-> >> >>> diff --git a/drivers/net/wireless/b43/main.c b/drivers/net/wireless/b43/main.c
-> >> >>> index fa48803..670fd7b 100644
-> >> >>> --- a/drivers/net/wireless/b43/main.c
-> >> >>> +++ b/drivers/net/wireless/b43/main.c
-> >> >>> @@ -1150,6 +1150,12 @@ void b43_wireless_core_reset(struct b43_wldev *dev, u32 flags)
-> >> >>>
-> >> >>>       flags |= B43_TMSLOW_PHYCLKEN;
-> >> >>>       flags |= B43_TMSLOW_PHYRESET;
-> >> >>> +     if (dev->phy.type == B43_PHYTYPE_N) {
-> >> >>> +             if (b43_channel_type_is_40mhz(dev->phy.channel_type))
-> >> >>
-> >> >> Is channel_type already set at this time?
-> >> >
-> >> > Yeah, that core switching seems to be a little tricky. I didn't figure
-> >> > it out completely yet. We may need to fix that, or fix calls to this
-> >> > function.
-> >> >
-> >> > Thanks for reviewing!
-> >>
-> >> In other words: it will work for now, but we need to fix that in
-> >> future if we want to get 40 MHz channels working.
-> >
-> > That's exactly what I was saying. ;)
-> > To answer my original question: No, channel_type is not set, but the
-> > code will work for non-40mhz.
-> >
-> > This seems a bit tricky to fix, though. Maybe we should reset the
-> > wireless core twice. Once initially and once again after the
-> > configuration was set. The first reset would just be to be able
-> > to access the PHY and wireless core at all to probe it.
-> 
-> Even more tricky is that we already reset code twice... At least in
-> b43_wireless_core_attach. Will have to redesign that a little.
+On Wed, Dec 8, 2010 at 6:06 PM, Bruno Randolf <br1@einfach.org> wrote:
+>> > When ath5k doesn't get retry limits from above it uses the following
+>> > defaults on dcu.
+>> > For now i don't think we use local->hw.conf.short_frame_max_tx_count
+>> > for that so the
+>> > default is ah_limit_tx_retries (AR5K_INIT_TX_RETRY) but seems it's
+>> > wrong and we should
+>> > fix it...
+>> >
+>> > /* Tx retry limits */
+>> > #define AR5K_INIT_SH_RETRY † † † † † † † † † † †10
+>> > #define AR5K_INIT_LG_RETRY † † † † † † † † † † †AR5K_INIT_SH_RETRY
+>> > /* For station mode */
+>> > #define AR5K_INIT_SSH_RETRY † † † † † † † † † † 32
+>> > #define AR5K_INIT_SLG_RETRY † † † † † † † † † † AR5K_INIT_SSH_RETRY
+>> > #define AR5K_INIT_TX_RETRY † † † † † † † † † † †10
+>
+> I just sent a patch cleaning up this mess. Could you please check it?
+> Unfortunately i didn't find way to really test re-transmissions, yet.
+> Jonathan, could you give it a try in your test setup with my patch, and play
+> with the numbers (just hardcode them in ath5k_hw_set_tx_retry_limits) to see
+> if they actually have an effect?
 
-I don't think so.
-We will have to live with at least two resets.
-The first is to make the device accessible, so that we can fetch
-the device type and revision numbers (phy type, rev, radio type,....)
-After that is done, the device is shut down completely and reinitialized
-when the interface comes up with the correct parameters.
-It is important that no device setup is done whatsoever at attach stage.
-Doing so would also break suspend/resume.
+Added to my todo for tomorrow - I'll try to do it if I have some spare time!
 
-I do not think a redesign of the init code is required.
+Cheers,
 
--- 
-Greetings Michael.
+Jonathan
 
+>
+> As noted in my patch, this does not change the high number of retries we get
+> from the rate control. That's a separate issue.
+>
+> bruno
+>
