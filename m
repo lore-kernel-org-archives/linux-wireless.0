@@ -1,60 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:13247 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752662Ab0LBQ5x (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 2 Dec 2010 11:57:53 -0500
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:57647
+	"EHLO sunset.davemloft.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1750761Ab0LHQOD (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 8 Dec 2010 11:14:03 -0500
+Date: Wed, 08 Dec 2010 08:14:29 -0800 (PST)
+Message-Id: <20101208.081429.193694468.davem@davemloft.net>
 To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Subject: [PATCH 4/5] iwlwifi: check for STATUS_EXIT_PENDING when send RXON command
-Date: Thu,  2 Dec 2010 08:51:23 -0800
-Message-Id: <1291308684-3279-5-git-send-email-wey-yi.w.guy@intel.com>
-In-Reply-To: <1291308684-3279-1-git-send-email-wey-yi.w.guy@intel.com>
-References: <1291308684-3279-1-git-send-email-wey-yi.w.guy@intel.com>
+Cc: linux-kernel@vger.kernel.org, netdev@vger.kernel.org,
+	linux-wireless@vger.kernel.org
+Subject: Re: pull request: wireless-2.6 2010-12-03
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <20101203201602.GE2348@tuxdriver.com>
+References: <20101203201602.GE2348@tuxdriver.com>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+From: "John W. Linville" <linville@tuxdriver.com>
+Date: Fri, 3 Dec 2010 15:16:02 -0500
 
-If driver is on the way down, there is no need to send
-RXON to uCode, check the condition before continuous the process.
+> This is a batch of fixes intended for 2.6.37.  There are a number of
+> small fixes that speak for themselves.  Also included are a small patch
+> for ar9170 to advertise Wi-Fi Peer-to-peer capability -- not truly a
+> fix, but helpful for those developing the related userland bits and
+> harmless to everyone else.  There are also some endian related patches
+> for ath9k from Felix that are a bit large, but they mostly just refactor
+> some tables in order to fix an endian problem that can result in invalid
+> regulatory settings on some boxes.
+> 
+> Also includes are some Bluetooth patches via Gustavo Padovan:
+> 
+> "Here goes 3 simple patches intended to 2.6.37. First one is from myself
+> and fix some trivial return values. Then we also have a fix from Stefan
+> Seyfried on btusb to avoid emitting an err when we USB is autosupended.
+> Last, a patch from Bala Shanmugam that fix the firmware loading process
+> for the ath3k driver."
+> 
+> Please let me know if there are problems!
 
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-3945.c     |    3 +++
- drivers/net/wireless/iwlwifi/iwl-agn-rxon.c |    3 +++
- 2 files changed, 6 insertions(+), 0 deletions(-)
-
-diff --git a/drivers/net/wireless/iwlwifi/iwl-3945.c b/drivers/net/wireless/iwlwifi/iwl-3945.c
-index d39f449..cac9647 100644
---- a/drivers/net/wireless/iwlwifi/iwl-3945.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-3945.c
-@@ -1784,6 +1784,9 @@ int iwl3945_commit_rxon(struct iwl_priv *priv, struct iwl_rxon_context *ctx)
- 	int rc = 0;
- 	bool new_assoc = !!(staging_rxon->filter_flags & RXON_FILTER_ASSOC_MSK);
- 
-+	if (test_bit(STATUS_EXIT_PENDING, &priv->status))
-+		return -EINVAL;
-+
- 	if (!iwl_is_alive(priv))
- 		return -1;
- 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-rxon.c b/drivers/net/wireless/iwlwifi/iwl-agn-rxon.c
-index 203ee60..4865b82 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn-rxon.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn-rxon.c
-@@ -130,6 +130,9 @@ int iwlagn_commit_rxon(struct iwl_priv *priv, struct iwl_rxon_context *ctx)
- 
- 	lockdep_assert_held(&priv->mutex);
- 
-+	if (test_bit(STATUS_EXIT_PENDING, &priv->status))
-+		return -EINVAL;
-+
- 	if (!iwl_is_alive(priv))
- 		return -EBUSY;
- 
--- 
-1.7.0.4
-
+Pulled, thanks John.
