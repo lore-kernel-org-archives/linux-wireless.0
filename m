@@ -1,268 +1,1114 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ogre.sisk.pl ([217.79.144.158]:49864 "EHLO ogre.sisk.pl"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757178Ab0LBXfg convert rfc822-to-8bit (ORCPT
+Received: from mail-pw0-f46.google.com ([209.85.160.46]:59704 "EHLO
+	mail-pw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751676Ab0LHRN3 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 2 Dec 2010 18:35:36 -0500
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
-To: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
-Subject: 2.6.37-rc4-git1: Reported regressions from 2.6.36
-Cc: Maciej Rutecki <maciej.rutecki@gmail.com>,
-	Florian Mickler <florian@mickler.org>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	Kernel Testers List <kernel-testers@vger.kernel.org>,
-	Network Development <netdev@vger.kernel.org>,
-	Linux ACPI <linux-acpi@vger.kernel.org>,
-	Linux PM List <linux-pm@lists.linux-foundation.org>,
-	Linux SCSI List <linux-scsi@vger.kernel.org>,
-	Linux Wireless List <linux-wireless@vger.kernel.org>,
-	DRI <dri-devel@lists.freedesktop.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Message-ID: <1OMp3vU_qjP.A.JXG.uxC-MB@chimera>
-Date: Fri,  3 Dec 2010 00:35:49 +0100 (CET)
+	Wed, 8 Dec 2010 12:13:29 -0500
+Received: by pwj3 with SMTP id 3so322374pwj.19
+        for <linux-wireless@vger.kernel.org>; Wed, 08 Dec 2010 09:13:28 -0800 (PST)
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, chaoming_li@realsil.com.cn,
+	Larry Finger <Larry.Finger@lwfinger.net>
+Subject: [PATCH 01/22] rtl8192ce: Add files to rtlwifi - Part 1: core.{c,h}
+Date: Wed,  8 Dec 2010 11:12:31 -0600
+Message-Id: <1291828372-25159-2-git-send-email-Larry.Finger@lwfinger.net>
+In-Reply-To: <1291828372-25159-1-git-send-email-Larry.Finger@lwfinger.net>
+References: <1291828372-25159-1-git-send-email-Larry.Finger@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This message contains a list of some regressions from 2.6.36,
-for which there are no fixes in the mainline known to the tracking team.
-If any of them have been fixed already, please let us know.
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+---
+ drivers/net/wireless/rtlwifi/core.c | 1029 +++++++++++++++++++++++++++++++++++
+ drivers/net/wireless/rtlwifi/core.h |   42 ++
+ 2 files changed, 1071 insertions(+), 0 deletions(-)
+ create mode 100644 drivers/net/wireless/rtlwifi/core.c
+ create mode 100644 drivers/net/wireless/rtlwifi/core.h
 
-If you know of any other unresolved regressions from 2.6.36, please let us
-know either and we'll add them to the list.  Also, please let us know
-if any of the entries below are invalid.
-
-Each entry from the list will be sent additionally in an automatic reply
-to this message with CCs to the people involved in reporting and handling
-the issue.
-
-
-Listed regressions statistics:
-
-  Date          Total  Pending  Unresolved
-  ----------------------------------------
-  2010-12-03       55       25          19
-  2010-11-19       39       29          25
-
-
-Unresolved regressions
-----------------------
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=24142
-Subject		: No more bt848 driver in 2.6.37-rc*
-Submitter	: Christian Casteyde <casteyde.christian@free.fr>
-Date		: 2010-11-30 20:50 (3 days old)
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=23902
-Subject		: [BUG] 2.6.37-rc3 massive interactivity regression on ARM
-Submitter	: Mikael Pettersson <mikpe@it.uu.se>
-Date		: 2010-11-27 15:16 (6 days old)
-Message-ID	: <19697.8378.717761.236202@pilspetsen.it.uu.se>
-References	: http://marc.info/?l=linux-kernel&m=129087098911837&w=2
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=23762
-Subject		: kernel 2.6.37-rc2 breaks i915 graphics
-Submitter	: Chris Vine <chris@cvine.freeserve.co.uk>
-Date		: 2010-11-21 10:23 (12 days old)
-Message-ID	: <20101121102344.7c590b99@laptop.homenet>
-References	: http://marc.info/?l=linux-kernel&m=129033505414671&w=2
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=23542
-Subject		: HP 2530p accelerated graphics causes spontaneous power off/on
-Submitter	: Bjorn Helgaas <bjorn.helgaas@hp.com>
-Date		: 2010-11-22 17:12 (11 days old)
-References	: https://patchwork.kernel.org/patch/365092/
-Handled-By	: Bjorn Helgaas <bjorn.helgaas@hp.com>
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=23462
-Subject		: DVI/EDID broken with Intel i945 graphics and 2.6.37-rc2
-Submitter	: Tino Keitel <tino.keitel@tikei.de>
-Date		: 2010-11-16 18:49 (17 days old)
-Message-ID	: <20101116184914.GA15794@mac.home>
-References	: http://marc.info/?l=linux-kernel&m=128993389113001&w=2
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=23432
-Subject		: resume from suspend hangs on everex stepnote sa2053
-Submitter	: tomas m <tmezzadra@gmail.com>
-Date		: 2010-11-21 13:32 (12 days old)
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=23332
-Subject		: Boot failure on HP nx6325
-Submitter	: Rafael J. Wysocki <rjw@sisk.pl>
-Date		: 2010-11-20 00:57 (13 days old)
-First-Bad-Commit: http://git.kernel.org/linus/1af3c2e45e7a641e774bbb84fa428f2f0bf2d9c9
-Handled-By	: Bjorn Helgaas <bjorn.helgaas@hp.com>
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=23142
-Subject		: autofs4 hang in 2.6.37-rc1
-Submitter	: Avi Kivity <avi@redhat.com>
-Date		: 2010-11-14 12:55 (19 days old)
-Message-ID	: <4CDFDC2B.6040205@redhat.com>
-References	: http://marc.info/?l=linux-kernel&m=128973936026185&w=2
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=23102
-Subject		: [bisected] i915 regression in post 2.6.36 kernels
-Submitter	: Johannes Hirte <johannes.hirte@fem.tu-ilmenau.de>
-Date		: 2010-11-10 7:02 (23 days old)
-Message-ID	: <201011100802.20332.johannes.hirte@fem.tu-ilmenau.de>
-References	: http://marc.info/?l=linux-kernel&m=128937310017057&w=2
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=22942
-Subject		: [2.6.37-rc1, OOM] virtblk: OOM in do_virtblk_request()
-Submitter	: Dave Chinner <david@fromorbit.com>
-Date		: 2010-11-05 1:30 (28 days old)
-Message-ID	: <20101105013003.GE13830@dastard>
-References	: http://marc.info/?l=linux-kernel&m=128892062917641&w=2
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=22912
-Subject		: spi_lm70llp module crash on unload (2.6.37-rc1)
-Submitter	: Randy Dunlap <randy.dunlap@oracle.com>
-Date		: 2010-11-05 0:16 (28 days old)
-Message-ID	: <20101104171620.00d8c95d.randy.dunlap@oracle.com>
-References	: http://marc.info/?l=linux-kernel&m=128891627913647&w=2
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=22882
-Subject		: (2.6.37-rc1) amd64-agp module crashed on second load
-Submitter	: Randy Dunlap <randy.dunlap@oracle.com>
-Date		: 2010-11-05 0:13 (28 days old)
-Message-ID	: <20101104171333.fea1f498.randy.dunlap@oracle.com>
-References	: http://marc.info/?l=linux-kernel&m=128891605213447&w=2
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=22812
-Subject		: kernel oops on 2.6.37-rc1
-Submitter	: Andrew <atswartz@gmail.com>
-Date		: 2010-11-12 16:05 (21 days old)
-First-Bad-Commit: http://git.kernel.org/linus/a68c439b1966c91f0ef474e2bf275d6792312726
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=22672
-Subject		: Regression in 2.6.37-rc1 for Intel 945 Graphics Adapter - bisected to commit e9e331a
-Submitter	: Larry Finger <Larry.Finger@lwfinger.net>
-Date		: 2010-11-11 01:56 (22 days old)
-References	: https://bugs.freedesktop.org/show_bug.cgi?id=31803
-		  http://marc.info/?l=linux-kernel&m=128944001311444&w=2
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=22642
-Subject		: 2.6.37-rc1: Disk takes 10 seconds to resume - MacBook2,1
-Submitter	: Tobias <devnull@plzk.org>
-Date		: 2010-11-10 19:33 (23 days old)
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=22562
-Subject		: Regression in 2.6.37-rc1 - logs spammed with "unable to enumerate USB port" - bisected to commit 3df7169e
-Submitter	: Larry Finger <Larry.Finger@lwfinger.net>
-Date		: 2010-11-02 22:32 (31 days old)
-First-Bad-Commit: http://git.kernel.org/linus/3df7169e73fc1d71a39cffeacc969f6840cdf52b
-Message-ID	: <4CD09166.4060202@lwfinger.net>
-References	: http://marc.info/?l=linux-kernel&m=128873713207906&w=2
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=22542
-Subject		: [2.6.37-rc1] drm:i195 errors
-Submitter	: Paul Rolland <rol@witbe.net>
-Date		: 2010-11-02 14:58 (31 days old)
-Message-ID	: <20101102155813.09cb2c6e@tux.DEF.witbe.net>
-References	: http://marc.info/?l=linux-kernel&m=128870991628970&w=2
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=22532
-Subject		: 2.6.37-rc1: BUG: scheduling while atomic (kvm_init)
-Submitter	: Thomas Meyer <thomas@m3y3r.de>
-Date		: 2010-11-02 19:06 (31 days old)
-Message-ID	: <50AA24C585B14210A44AB599605C7CBD@hugo>
-References	: http://marc.info/?l=linux-kernel&m=128872479921559&w=2
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=22472
-Subject		: vga_switcheroo fails to switch from intel to ati
-Submitter	: Radu Andries <admiral0@tuxfamily.org>
-Date		: 2010-11-08 16:46 (25 days old)
-
-
-Regressions with patches
-------------------------
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=24012
-Subject		: Commit g18733b0 hangs my LVM+raid10 system
-Submitter	: Giacomo Catenazzi <cate@cateee.net>
-Date		: 2010-11-29 19:48 (4 days old)
-Handled-By	: Neil Brown <neilb@suse.de>
-Patch		: https://bugzilla.kernel.org/show_bug.cgi?id=24012#c16
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=23452
-Subject		: 5ada28bf76752 causes compilation error if !CONFIG_LEDS_CLASS
-Submitter	: Michal Hocko <mhocko@suse.cz>
-Date		: 2010-11-16 14:20 (17 days old)
-Message-ID	: <20101116142027.GC19247@tiehlicka.suse.cz>
-References	: http://marc.info/?l=linux-kernel&m=128991726220668&w=2
-Handled-By	: Johannes Berg <johannes.berg@intel.com>
-Patch		: https://patchwork.kernel.org/patch/365582/
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=23012
-Subject		: ftdi_sio /dev/ttyUSB error:  "Resource Temporarily Unavailable"
-Submitter	: Kevin Smith <thirdwiggin@gmail.com>
-Date		: 2010-11-16 06:25 (17 days old)
-Handled-By	: Alan Stern <stern@rowland.harvard.edu>
-Patch		: https://bugzilla.kernel.org/attachment.cgi?id=38372
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=22932
-Subject		: [REGRESSION] [2.6.37-rc1] Fan noise after suspend to ram/disk
-Submitter	: Maciej Rutecki <maciej.rutecki@gmail.com>
-Date		: 2010-11-04 16:06 (29 days old)
-First-Bad-Commit: http://git.kernel.org/linus/3e384ee6c687cb397581ee8f9440fc8220cfac80
-Message-ID	: <201011041706.59046.maciej.rutecki@gmail.com>
-References	: http://marc.info/?l=linux-kernel&m=128888684308982&w=2
-Handled-By	: Rafael J. Wysocki <rjw@sisk.pl>
-Patch		: https://patchwork.kernel.org/patch/354682/
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=22662
-Subject		: divide error in select_task_rq_fair()
-Submitter	: Myron Stowe <myron.stowe@hp.com>
-Date		: 2010-11-10 23:58 (23 days old)
-Patch		: http://lkml.org/lkml/2010/11/13/176
-		  http://lkml.org/lkml/2010/11/13/181
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=22572
-Subject		: Linux 2.6.37-rc1 (acpi_video)
-Submitter	: Randy Dunlap <randy.dunlap@oracle.com>
-Date		: 2010-11-02 18:51 (31 days old)
-Message-ID	: <20101102115106.bac57d21.randy.dunlap@oracle.com>
-References	: http://marc.info/?l=linux-kernel&m=128872403920449&w=2
-		  http://marc.info/?l=linux-acpi&m=128874714517914&w=2
-Handled-By	: Zhang Rui <rui.zhang@intel.com>
-Patch		: https://bugzilla.kernel.org/attachment.cgi?id=36992
-
-
-For details, please visit the bug entries and follow the links given in
-references.
-
-As you can see, there is a Bugzilla entry for each of the listed regressions.
-There also is a Bugzilla entry used for tracking the regressions from 2.6.36,
-unresolved as well as resolved, at:
-
-http://bugzilla.kernel.org/show_bug.cgi?id=21782
-
-Please let the tracking team know if there are any Bugzilla entries that
-should be added to the list in there.
-
-Thanks!
+diff --git a/drivers/net/wireless/rtlwifi/core.c b/drivers/net/wireless/rtlwifi/core.c
+new file mode 100644
+index 0000000..81b290f
+--- /dev/null
++++ b/drivers/net/wireless/rtlwifi/core.c
+@@ -0,0 +1,1029 @@
++/******************************************************************************
++ *
++ * Copyright(c) 2009-2010  Realtek Corporation.
++ *
++ * This program is free software; you can redistribute it and/or modify it
++ * under the terms of version 2 of the GNU General Public License as
++ * published by the Free Software Foundation.
++ *
++ * This program is distributed in the hope that it will be useful, but WITHOUT
++ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
++ * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
++ * more details.
++ *
++ * You should have received a copy of the GNU General Public License along with
++ * this program; if not, write to the Free Software Foundation, Inc.,
++ * 51 Franklin Street, Fifth Floor, Boston, MA 02110, USA
++ *
++ * The full GNU General Public License is included in this distribution in the
++ * file called LICENSE.
++ *
++ * Contact Information:
++ * wlanfae <wlanfae@realtek.com>
++ * Realtek Corporation, No. 2, Innovation Road II, Hsinchu Science Park,
++ * Hsinchu 300, Taiwan.
++ *
++ * Larry Finger <Larry.Finger@lwfinger.net>
++ *****************************************************************************/
++
++#include "wifi.h"
++#include "core.h"
++#include "cam.h"
++#include "base.h"
++#include "ps.h"
++
++/*mutex for start & stop is must here. */
++static int rtl_op_start(struct ieee80211_hw *hw)
++{
++	int err = 0;
++	struct rtl_priv *rtlpriv = rtl_priv(hw);
++	struct rtl_hal *rtlhal = rtl_hal(rtl_priv(hw));
++
++	if (!is_hal_stop(rtlhal))
++		return 0;
++	if (!test_bit(RTL_STATUS_INTERFACE_START, &rtlpriv->status))
++		return 0;
++	down(&rtlpriv->locks.conf_sem);
++	err = rtlpriv->intf_ops->adapter_start(hw);
++	if (err)
++		goto out;
++	rtl_watch_dog_timer_callback((unsigned long)hw);
++out:
++	up(&rtlpriv->locks.conf_sem);
++	return err;
++}
++
++static void rtl_op_stop(struct ieee80211_hw *hw)
++{
++	struct rtl_priv *rtlpriv = rtl_priv(hw);
++	struct rtl_mac *mac = rtl_mac(rtl_priv(hw));
++	struct rtl_hal *rtlhal = rtl_hal(rtl_priv(hw));
++	struct rtl_ps_ctl *ppsc = rtl_psc(rtl_priv(hw));
++
++	if (is_hal_stop(rtlhal))
++		return;
++
++	if (unlikely(ppsc->rfpwr_state == ERFOFF)) {
++		rtl_ips_nic_on(hw);
++		mdelay(1);
++	}
++
++	down(&rtlpriv->locks.conf_sem);
++
++	mac->link_state = MAC80211_NOLINK;
++	memset(mac->bssid, 0, 6);
++
++	/*reset sec info */
++	rtl_cam_reset_sec_info(hw);
++
++	rtl_deinit_deferred_work(hw);
++	rtlpriv->intf_ops->adapter_stop(hw);
++
++	up(&rtlpriv->locks.conf_sem);
++}
++
++static int rtl_op_tx(struct ieee80211_hw *hw, struct sk_buff *skb)
++{
++	struct rtl_priv *rtlpriv = rtl_priv(hw);
++	struct rtl_hal *rtlhal = rtl_hal(rtl_priv(hw));
++	struct rtl_ps_ctl *ppsc = rtl_psc(rtl_priv(hw));
++
++	if (unlikely(is_hal_stop(rtlhal) || ppsc->rfpwr_state != ERFON))
++		goto err_free;
++
++	if (!test_bit(RTL_STATUS_INTERFACE_START, &rtlpriv->status))
++		goto err_free;
++
++
++	rtlpriv->intf_ops->adapter_tx(hw, skb);
++
++	return NETDEV_TX_OK;
++
++err_free:
++	dev_kfree_skb_any(skb);
++	return NETDEV_TX_OK;
++}
++
++static int rtl_op_add_interface(struct ieee80211_hw *hw,
++		struct ieee80211_vif *vif)
++{
++	struct rtl_priv *rtlpriv = rtl_priv(hw);
++	struct rtl_mac *mac = rtl_mac(rtl_priv(hw));
++	int err = 0;
++
++	if (mac->vif) {
++		RT_TRACE(rtlpriv, COMP_ERR, DBG_WARNING,
++			 ("vif has been set!! mac->vif = 0x%p\n", mac->vif));
++		return -EOPNOTSUPP;
++	}
++
++	rtl_ips_nic_on(hw);
++
++	down(&rtlpriv->locks.conf_sem);
++	switch (vif->type) {
++	case NL80211_IFTYPE_STATION:
++		if (mac->beacon_enabled == 1) {
++			RT_TRACE(rtlpriv, COMP_MAC80211, DBG_LOUD,
++				 ("NL80211_IFTYPE_STATION\n"));
++			mac->beacon_enabled = 0;
++			rtlpriv->cfg->ops->update_interrupt_mask(hw, 0,
++					rtlpriv->cfg->maps
++					[RTL_IBSS_INT_MASKS]);
++		}
++		break;
++	case NL80211_IFTYPE_ADHOC:
++		RT_TRACE(rtlpriv, COMP_MAC80211, DBG_LOUD,
++			 ("NL80211_IFTYPE_ADHOC\n"));
++
++		mac->link_state = MAC80211_LINKED;
++		rtlpriv->cfg->ops->set_bcn_reg(hw);
++		break;
++	case NL80211_IFTYPE_AP:
++		RT_TRACE(rtlpriv, COMP_MAC80211, DBG_LOUD,
++			 ("NL80211_IFTYPE_AP\n"));
++		break;
++	default:
++		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
++			 ("operation mode %d is not support!\n", vif->type));
++		err = -EOPNOTSUPP;
++		goto out;
++	}
++
++	mac->vif = vif;
++	mac->opmode = vif->type;
++	rtlpriv->cfg->ops->set_network_type(hw, vif->type);
++	memcpy(mac->mac_addr, vif->addr, ETH_ALEN);
++	rtlpriv->cfg->ops->set_hw_reg(hw, HW_VAR_ETHER_ADDR, mac->mac_addr);
++
++out:
++	up(&rtlpriv->locks.conf_sem);
++	return err;
++}
++
++static void rtl_op_remove_interface(struct ieee80211_hw *hw,
++		struct ieee80211_vif *vif)
++{
++	struct rtl_priv *rtlpriv = rtl_priv(hw);
++	struct rtl_mac *mac = rtl_mac(rtl_priv(hw));
++
++	down(&rtlpriv->locks.conf_sem);
++
++	/* Free beacon resources */
++	if ((mac->opmode == NL80211_IFTYPE_AP) ||
++	    (mac->opmode == NL80211_IFTYPE_ADHOC) ||
++	    (mac->opmode == NL80211_IFTYPE_MESH_POINT)) {
++		if (mac->beacon_enabled == 1) {
++			mac->beacon_enabled = 0;
++			rtlpriv->cfg->ops->update_interrupt_mask(hw, 0,
++					rtlpriv->cfg->maps
++					[RTL_IBSS_INT_MASKS]);
++		}
++	}
++
++	/*
++	 *Note: We assume NL80211_IFTYPE_UNSPECIFIED as
++	 *NO LINK for our hardware.
++	 */
++	mac->vif = NULL;
++	mac->link_state = MAC80211_NOLINK;
++	memset(mac->bssid, 0, 6);
++	mac->opmode = NL80211_IFTYPE_UNSPECIFIED;
++	rtlpriv->cfg->ops->set_network_type(hw, mac->opmode);
++
++	up(&rtlpriv->locks.conf_sem);
++}
++
++
++static int rtl_op_config(struct ieee80211_hw *hw, u32 changed)
++{
++	struct rtl_priv *rtlpriv = rtl_priv(hw);
++	struct rtl_phy *rtlphy = &(rtlpriv->phy);
++	struct rtl_mac *mac = rtl_mac(rtl_priv(hw));
++	struct rtl_ps_ctl *ppsc = rtl_psc(rtl_priv(hw));
++	struct ieee80211_conf *conf = &hw->conf;
++
++	down(&rtlpriv->locks.conf_sem);
++	if (changed & IEEE80211_CONF_CHANGE_LISTEN_INTERVAL) {	/*BIT(2)*/
++		RT_TRACE(rtlpriv, COMP_MAC80211, DBG_LOUD,
++			 ("IEEE80211_CONF_CHANGE_LISTEN_INTERVAL\n"));
++	}
++
++	/*For IPS */
++	if (changed & IEEE80211_CONF_CHANGE_IDLE) {
++		if (hw->conf.flags & IEEE80211_CONF_IDLE)
++			rtl_ips_nic_off(hw);
++		else
++			rtl_ips_nic_on(hw);
++	} else {
++		/*
++		 *although rfoff may not cause by ips, but we will
++		 *check the reason in set_rf_power_state function
++		 */
++		if (unlikely(ppsc->rfpwr_state == ERFOFF))
++			rtl_ips_nic_on(hw);
++	}
++
++	/*For LPS */
++	if (changed & IEEE80211_CONF_CHANGE_PS) {
++		if (conf->flags & IEEE80211_CONF_PS)
++			rtl_lps_enter(hw);
++		else
++			rtl_lps_leave(hw);
++	}
++
++	if (changed & IEEE80211_CONF_CHANGE_RETRY_LIMITS) {
++		RT_TRACE(rtlpriv, COMP_MAC80211, DBG_LOUD,
++			 ("IEEE80211_CONF_CHANGE_RETRY_LIMITS %x\n",
++			  hw->conf.long_frame_max_tx_count));
++		mac->retry_long = hw->conf.long_frame_max_tx_count;
++		mac->retry_short = hw->conf.long_frame_max_tx_count;
++		rtlpriv->cfg->ops->set_hw_reg(hw, HW_VAR_RETRY_LIMIT,
++					      (u8 *) (&hw->conf.
++						      long_frame_max_tx_count));
++	}
++
++	if (changed & IEEE80211_CONF_CHANGE_CHANNEL) {
++		struct ieee80211_channel *channel = hw->conf.channel;
++		u8 wide_chan = (u8) channel->hw_value;
++
++		/*
++		 *because we should back channel to
++		 *current_network.chan in in scanning,
++		 *So if set_chan == current_network.chan
++		 *we should set it.
++		 *because mac80211 tell us wrong bw40
++		 *info for cisco1253 bw20, so we modify
++		 *it here based on UPPER & LOWER
++		 */
++		switch (hw->conf.channel_type) {
++		case NL80211_CHAN_HT20:
++		case NL80211_CHAN_NO_HT:
++			/* SC */
++			mac->cur_40_prime_sc =
++			    PRIME_CHNL_OFFSET_DONT_CARE;
++			rtlphy->current_chan_bw = HT_CHANNEL_WIDTH_20;
++			mac->bw_40 = false;
++			break;
++		case NL80211_CHAN_HT40MINUS:
++			/* SC */
++			mac->cur_40_prime_sc = PRIME_CHNL_OFFSET_UPPER;
++			rtlphy->current_chan_bw =
++			    HT_CHANNEL_WIDTH_20_40;
++			mac->bw_40 = true;
++
++			/*wide channel */
++			wide_chan -= 2;
++
++			break;
++		case NL80211_CHAN_HT40PLUS:
++			/* SC */
++			mac->cur_40_prime_sc = PRIME_CHNL_OFFSET_LOWER;
++			rtlphy->current_chan_bw =
++			    HT_CHANNEL_WIDTH_20_40;
++			mac->bw_40 = true;
++
++			/*wide channel */
++			wide_chan += 2;
++
++			break;
++		default:
++			mac->bw_40 = false;
++			RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
++				 ("switch case not processed\n"));
++			break;
++		}
++
++		if (wide_chan <= 0)
++			wide_chan = 1;
++		rtlphy->current_channel = wide_chan;
++
++		rtlpriv->cfg->ops->set_channel_access(hw);
++		rtlpriv->cfg->ops->switch_channel(hw);
++		rtlpriv->cfg->ops->set_bw_mode(hw,
++					       hw->conf.channel_type);
++	}
++
++	up(&rtlpriv->locks.conf_sem);
++
++	return 0;
++}
++
++static void rtl_op_configure_filter(struct ieee80211_hw *hw,
++			     unsigned int changed_flags,
++			     unsigned int *new_flags, u64 multicast)
++{
++	struct rtl_priv *rtlpriv = rtl_priv(hw);
++	struct rtl_mac *mac = rtl_mac(rtl_priv(hw));
++
++	*new_flags &= RTL_SUPPORTED_FILTERS;
++	if (!changed_flags)
++		return;
++
++	/*TODO: we disable broadcase now, so enable here */
++	if (changed_flags & FIF_ALLMULTI) {
++		if (*new_flags & FIF_ALLMULTI) {
++			mac->rx_conf |= rtlpriv->cfg->maps[MAC_RCR_AM] |
++			    rtlpriv->cfg->maps[MAC_RCR_AB];
++			RT_TRACE(rtlpriv, COMP_MAC80211, DBG_LOUD,
++				 ("Enable receive multicast frame.\n"));
++		} else {
++			mac->rx_conf &= ~(rtlpriv->cfg->maps[MAC_RCR_AM] |
++					  rtlpriv->cfg->maps[MAC_RCR_AB]);
++			RT_TRACE(rtlpriv, COMP_MAC80211, DBG_LOUD,
++				 ("Disable receive multicast frame.\n"));
++		}
++	}
++
++	if (changed_flags & FIF_FCSFAIL) {
++		if (*new_flags & FIF_FCSFAIL) {
++			mac->rx_conf |= rtlpriv->cfg->maps[MAC_RCR_ACRC32];
++			RT_TRACE(rtlpriv, COMP_MAC80211, DBG_LOUD,
++				 ("Enable receive FCS error frame.\n"));
++		} else {
++			mac->rx_conf &= ~rtlpriv->cfg->maps[MAC_RCR_ACRC32];
++			RT_TRACE(rtlpriv, COMP_MAC80211, DBG_LOUD,
++				 ("Disable receive FCS error frame.\n"));
++		}
++	}
++
++	if (changed_flags & FIF_BCN_PRBRESP_PROMISC) {
++		/*
++		 *TODO: BIT(5) is probe response BIT(8) is beacon
++		 *TODO: Use define for BIT(5) and BIT(8)
++		 */
++		if (*new_flags & FIF_BCN_PRBRESP_PROMISC)
++			mac->rx_mgt_filter |= (BIT(5) | BIT(8));
++		else
++			mac->rx_mgt_filter &= ~(BIT(5) | BIT(8));
++	}
++
++	if (changed_flags & FIF_CONTROL) {
++		if (*new_flags & FIF_CONTROL) {
++			mac->rx_conf |= rtlpriv->cfg->maps[MAC_RCR_ACF];
++			mac->rx_ctrl_filter |= RTL_SUPPORTED_CTRL_FILTER;
++
++			RT_TRACE(rtlpriv, COMP_MAC80211, DBG_LOUD,
++				 ("Enable receive control frame.\n"));
++		} else {
++			mac->rx_conf &= ~rtlpriv->cfg->maps[MAC_RCR_ACF];
++			mac->rx_ctrl_filter &= ~RTL_SUPPORTED_CTRL_FILTER;
++			RT_TRACE(rtlpriv, COMP_MAC80211, DBG_LOUD,
++				 ("Disable receive control frame.\n"));
++		}
++	}
++
++	if (changed_flags & FIF_OTHER_BSS) {
++		if (*new_flags & FIF_OTHER_BSS) {
++			mac->rx_conf |= rtlpriv->cfg->maps[MAC_RCR_AAP];
++			RT_TRACE(rtlpriv, COMP_MAC80211, DBG_LOUD,
++				 ("Enable receive other BSS's frame.\n"));
++		} else {
++			mac->rx_conf &= ~rtlpriv->cfg->maps[MAC_RCR_AAP];
++			RT_TRACE(rtlpriv, COMP_MAC80211, DBG_LOUD,
++				 ("Disable receive other BSS's frame.\n"));
++		}
++	}
++
++	rtlpriv->cfg->ops->set_hw_reg(hw, HW_VAR_RCR, (u8 *) (&mac->rx_conf));
++	rtlpriv->cfg->ops->set_hw_reg(hw, HW_VAR_MGT_FILTER,
++				      (u8 *) (&mac->rx_mgt_filter));
++	rtlpriv->cfg->ops->set_hw_reg(hw, HW_VAR_CTRL_FILTER,
++				      (u8 *) (&mac->rx_ctrl_filter));
++}
++
++static int _rtl_get_hal_qnum(u16 queue)
++{
++	int qnum;
++
++	switch (queue) {
++	case 0:
++		qnum = AC3_VO;
++		break;
++	case 1:
++		qnum = AC2_VI;
++		break;
++	case 2:
++		qnum = AC0_BE;
++		break;
++	case 3:
++		qnum = AC1_BK;
++		break;
++	default:
++		qnum = AC0_BE;
++		break;
++	}
++	return qnum;
++}
++
++/*
++ *for mac80211 VO=0, VI=1, BE=2, BK=3
++ *for rtl819x  BE=0, BK=1, VI=2, VO=3
++ */
++static int rtl_op_conf_tx(struct ieee80211_hw *hw, u16 queue,
++		   const struct ieee80211_tx_queue_params *param)
++{
++	struct rtl_priv *rtlpriv = rtl_priv(hw);
++	struct rtl_mac *mac = rtl_mac(rtl_priv(hw));
++	int aci;
++
++	if (queue >= AC_MAX) {
++		RT_TRACE(rtlpriv, COMP_ERR, DBG_WARNING,
++			 ("queue number %d is incorrect!\n", queue));
++		return -EINVAL;
++	}
++
++	aci = _rtl_get_hal_qnum(queue);
++	mac->ac[aci].aifs = param->aifs;
++	mac->ac[aci].cw_min = param->cw_min;
++	mac->ac[aci].cw_max = param->cw_max;
++	mac->ac[aci].tx_op = param->txop;
++	memcpy(&mac->edca_param[aci], param, sizeof(*param));
++	rtlpriv->cfg->ops->set_qos(hw, aci);
++	return 0;
++}
++
++static void rtl_op_bss_info_changed(struct ieee80211_hw *hw,
++			     struct ieee80211_vif *vif,
++			     struct ieee80211_bss_conf *bss_conf, u32 changed)
++{
++	struct rtl_priv *rtlpriv = rtl_priv(hw);
++	struct rtl_mac *mac = rtl_mac(rtl_priv(hw));
++	struct rtl_ps_ctl *ppsc = rtl_psc(rtl_priv(hw));
++
++	down(&rtlpriv->locks.conf_sem);
++
++	if ((vif->type == NL80211_IFTYPE_ADHOC) ||
++	    (vif->type == NL80211_IFTYPE_AP) ||
++	    (vif->type == NL80211_IFTYPE_MESH_POINT)) {
++
++		if ((changed & BSS_CHANGED_BEACON) ||
++		    (changed & BSS_CHANGED_BEACON_ENABLED &&
++		     bss_conf->enable_beacon)) {
++
++			if (mac->beacon_enabled == 0) {
++				RT_TRACE(rtlpriv, COMP_MAC80211, DBG_DMESG,
++					 ("BSS_CHANGED_BEACON_ENABLED\n"));
++
++				/*start hw beacon interrupt. */
++				/*rtlpriv->cfg->ops->set_bcn_reg(hw); */
++				mac->beacon_enabled = 1;
++				rtlpriv->cfg->ops->update_interrupt_mask(hw,
++						rtlpriv->cfg->maps
++						[RTL_IBSS_INT_MASKS],
++						0);
++			}
++		} else {
++			if (mac->beacon_enabled == 1) {
++				RT_TRACE(rtlpriv, COMP_MAC80211, DBG_DMESG,
++					 ("ADHOC DISABLE BEACON\n"));
++
++				mac->beacon_enabled = 0;
++				rtlpriv->cfg->ops->update_interrupt_mask(hw, 0,
++						rtlpriv->cfg->maps
++						[RTL_IBSS_INT_MASKS]);
++			}
++		}
++
++		if (changed & BSS_CHANGED_BEACON_INT) {
++			RT_TRACE(rtlpriv, COMP_BEACON, DBG_TRACE,
++				 ("BSS_CHANGED_BEACON_INT\n"));
++			mac->beacon_interval = bss_conf->beacon_int;
++			rtlpriv->cfg->ops->set_bcn_intv(hw);
++		}
++	}
++
++	/*TODO: reference to enum ieee80211_bss_change */
++	if (changed & BSS_CHANGED_ASSOC) {
++		if (bss_conf->assoc) {
++			mac->link_state = MAC80211_LINKED;
++			mac->cnt_after_linked = 0;
++			mac->assoc_id = bss_conf->aid;
++			memcpy(mac->bssid, bss_conf->bssid, 6);
++
++			RT_TRACE(rtlpriv, COMP_MAC80211, DBG_DMESG,
++				 ("BSS_CHANGED_ASSOC\n"));
++		} else {
++			if (mac->link_state == MAC80211_LINKED)
++				rtl_lps_leave(hw);
++
++			mac->link_state = MAC80211_NOLINK;
++			memset(mac->bssid, 0, 6);
++
++			/* reset sec info */
++			rtl_cam_reset_sec_info(hw);
++
++			RT_TRACE(rtlpriv, COMP_MAC80211, DBG_DMESG,
++				 ("BSS_CHANGED_UN_ASSOC\n"));
++		}
++	}
++
++	if (changed & BSS_CHANGED_ERP_CTS_PROT) {
++		RT_TRACE(rtlpriv, COMP_MAC80211, DBG_TRACE,
++			 ("BSS_CHANGED_ERP_CTS_PROT\n"));
++		mac->use_cts_protect = bss_conf->use_cts_prot;
++	}
++
++	if (changed & BSS_CHANGED_ERP_PREAMBLE) {
++		RT_TRACE(rtlpriv, COMP_MAC80211, DBG_LOUD,
++			 ("BSS_CHANGED_ERP_PREAMBLE use short preamble:%x\n",
++			  bss_conf->use_short_preamble));
++
++		mac->short_preamble = bss_conf->use_short_preamble;
++		rtlpriv->cfg->ops->set_hw_reg(hw, HW_VAR_ACK_PREAMBLE,
++					      (u8 *) (&mac->short_preamble));
++	}
++
++	if (changed & BSS_CHANGED_ERP_SLOT) {
++		RT_TRACE(rtlpriv, COMP_MAC80211, DBG_TRACE,
++			 ("BSS_CHANGED_ERP_SLOT\n"));
++
++		if (bss_conf->use_short_slot)
++			mac->slot_time = RTL_SLOT_TIME_9;
++		else
++			mac->slot_time = RTL_SLOT_TIME_20;
++
++		rtlpriv->cfg->ops->set_hw_reg(hw, HW_VAR_SLOT_TIME,
++					      (u8 *) (&mac->slot_time));
++	}
++
++	if (changed & BSS_CHANGED_HT) {
++		struct ieee80211_sta *sta = NULL;
++
++		RT_TRACE(rtlpriv, COMP_MAC80211, DBG_TRACE,
++			 ("BSS_CHANGED_HT\n"));
++
++		sta = ieee80211_find_sta(mac->vif, mac->bssid);
++
++		if (sta) {
++			if (sta->ht_cap.ampdu_density >
++			    mac->current_ampdu_density)
++				mac->current_ampdu_density =
++				    sta->ht_cap.ampdu_density;
++			if (sta->ht_cap.ampdu_factor <
++			    mac->current_ampdu_factor)
++				mac->current_ampdu_factor =
++				    sta->ht_cap.ampdu_factor;
++		}
++
++		rtlpriv->cfg->ops->set_hw_reg(hw, HW_VAR_SHORTGI_DENSITY,
++					      (u8 *) (&mac->max_mss_density));
++		rtlpriv->cfg->ops->set_hw_reg(hw, HW_VAR_AMPDU_FACTOR,
++					      &mac->current_ampdu_factor);
++		rtlpriv->cfg->ops->set_hw_reg(hw, HW_VAR_AMPDU_MIN_SPACE,
++					      &mac->current_ampdu_density);
++	}
++
++	if (changed & BSS_CHANGED_BSSID) {
++		struct ieee80211_sta *sta = NULL;
++		u32 basic_rates;
++		u8 i;
++
++		rtlpriv->cfg->ops->set_hw_reg(hw, HW_VAR_BSSID,
++					      (u8 *) bss_conf->bssid);
++
++		RT_TRACE(rtlpriv, COMP_MAC80211, DBG_DMESG,
++			 (MAC_FMT "\n", MAC_ARG(bss_conf->bssid)));
++
++		memcpy(mac->bssid, bss_conf->bssid, 6);
++		if (is_valid_ether_addr(bss_conf->bssid)) {
++			switch (vif->type) {
++			case NL80211_IFTYPE_UNSPECIFIED:
++				break;
++			case NL80211_IFTYPE_ADHOC:
++				break;
++			case NL80211_IFTYPE_STATION:
++				break;
++			case NL80211_IFTYPE_AP:
++				break;
++			default:
++				RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
++					 ("switch case not process\n"));
++				break;
++			}
++			rtlpriv->cfg->ops->set_network_type(hw, vif->type);
++		} else
++			rtlpriv->cfg->ops->set_network_type(hw,
++					NL80211_IFTYPE_UNSPECIFIED);
++
++		memset(mac->mcs, 0, 16);
++		mac->ht_enable = false;
++		mac->sgi_40 = false;
++		mac->sgi_20 = false;
++
++		if (!bss_conf->use_short_slot)
++			mac->mode = WIRELESS_MODE_B;
++		else
++			mac->mode = WIRELESS_MODE_G;
++
++		sta = ieee80211_find_sta(mac->vif, mac->bssid);
++
++		if (sta) {
++			if (sta->ht_cap.ht_supported) {
++				mac->mode = WIRELESS_MODE_N_24G;
++				mac->ht_enable = true;
++			}
++
++			if (mac->ht_enable) {
++				u16 ht_cap = sta->ht_cap.cap;
++				memcpy(mac->mcs, (u8 *) (&sta->ht_cap.mcs), 16);
++
++				for (i = 0; i < 16; i++)
++					RT_TRACE(rtlpriv, COMP_MAC80211,
++						 DBG_LOUD, ("%x ",
++							    mac->mcs[i]));
++				RT_TRACE(rtlpriv, COMP_MAC80211, DBG_LOUD,
++					 ("\n"));
++
++				if (ht_cap & IEEE80211_HT_CAP_SGI_40)
++					mac->sgi_40 = true;
++
++				if (ht_cap & IEEE80211_HT_CAP_SGI_20)
++					mac->sgi_20 = true;
++
++				/*
++				 * for cisco 1252 bw20 it's wrong
++				 * if (ht_cap &
++				 *     IEEE80211_HT_CAP_SUP_WIDTH_20_40) {
++				 *	mac->bw_40 = true;
++				 * }
++				 */
++			}
++		}
++
++		/*mac80211 just give us CCK rates any time
++		 *So we add G rate in basic rates when
++		 not in B mode*/
++		if (changed & BSS_CHANGED_BASIC_RATES) {
++			if (mac->mode == WIRELESS_MODE_B)
++				basic_rates = bss_conf->basic_rates | 0x00f;
++			else
++				basic_rates = bss_conf->basic_rates | 0xff0;
++
++			if (!vif)
++				goto out;
++
++			mac->basic_rates = basic_rates;
++			rtlpriv->cfg->ops->set_hw_reg(hw, HW_VAR_BASIC_RATE,
++					(u8 *) (&basic_rates));
++
++			if (rtlpriv->dm.b_useramask)
++				rtlpriv->cfg->ops->update_rate_mask(hw, 0);
++			else
++				rtlpriv->cfg->ops->update_rate_table(hw);
++
++		}
++	}
++
++	/*
++	 * For FW LPS:
++	 * To tell firmware we have connected
++	 * to an AP. For 92SE/CE power save v2.
++	 */
++	if (changed & BSS_CHANGED_ASSOC) {
++		if (bss_conf->assoc) {
++			if (ppsc->b_fwctrl_lps) {
++				u8 mstatus = RT_MEDIA_CONNECT;
++				rtlpriv->cfg->ops->set_hw_reg(hw,
++						      HW_VAR_H2C_FW_JOINBSSRPT,
++						      (u8 *) (&mstatus));
++				ppsc->report_linked = true;
++			}
++		} else {
++			if (ppsc->b_fwctrl_lps) {
++				u8 mstatus = RT_MEDIA_DISCONNECT;
++				rtlpriv->cfg->ops->set_hw_reg(hw,
++						      HW_VAR_H2C_FW_JOINBSSRPT,
++						      (u8 *)(&mstatus));
++				ppsc->report_linked = false;
++			}
++		}
++	}
++
++out:
++	up(&rtlpriv->locks.conf_sem);
++}
++
++static u64 rtl_op_get_tsf(struct ieee80211_hw *hw)
++{
++	struct rtl_priv *rtlpriv = rtl_priv(hw);
++	u64 tsf;
++
++	rtlpriv->cfg->ops->get_hw_reg(hw, HW_VAR_CORRECT_TSF, (u8 *) (&tsf));
++	return tsf;
++}
++
++static void rtl_op_set_tsf(struct ieee80211_hw *hw, u64 tsf)
++{
++	struct rtl_priv *rtlpriv = rtl_priv(hw);
++	struct rtl_mac *mac = rtl_mac(rtl_priv(hw));
++	u8 bibss = (mac->opmode == NL80211_IFTYPE_ADHOC) ? 1 : 0;;
++
++	mac->tsf = tsf;
++	rtlpriv->cfg->ops->set_hw_reg(hw, HW_VAR_CORRECT_TSF, (u8 *) (&bibss));
++}
++
++static void rtl_op_reset_tsf(struct ieee80211_hw *hw)
++{
++	struct rtl_priv *rtlpriv = rtl_priv(hw);
++	u8 tmp = 0;
++
++	rtlpriv->cfg->ops->set_hw_reg(hw, HW_VAR_DUAL_TSF_RST, (u8 *) (&tmp));
++}
++
++static void rtl_op_sta_notify(struct ieee80211_hw *hw,
++			      struct ieee80211_vif *vif,
++			      enum sta_notify_cmd cmd,
++			      struct ieee80211_sta *sta)
++{
++	switch (cmd) {
++	case STA_NOTIFY_SLEEP:
++		break;
++	case STA_NOTIFY_AWAKE:
++		break;
++	default:
++		break;
++	}
++}
++
++static int rtl_op_ampdu_action(struct ieee80211_hw *hw,
++			       struct ieee80211_vif *vif,
++			       enum ieee80211_ampdu_mlme_action action,
++			       struct ieee80211_sta *sta, u16 tid, u16 * ssn)
++{
++	struct rtl_priv *rtlpriv = rtl_priv(hw);
++
++	switch (action) {
++	case IEEE80211_AMPDU_TX_START:
++		RT_TRACE(rtlpriv, COMP_MAC80211, DBG_TRACE,
++			 ("IEEE80211_AMPDU_TX_START: TID:%d\n", tid));
++		return rtl_tx_agg_start(hw, sta->addr, tid, ssn);
++		break;
++	case IEEE80211_AMPDU_TX_STOP:
++		RT_TRACE(rtlpriv, COMP_MAC80211, DBG_TRACE,
++			 ("IEEE80211_AMPDU_TX_STOP: TID:%d\n", tid));
++		return rtl_tx_agg_stop(hw, sta->addr, tid);
++		break;
++	case IEEE80211_AMPDU_TX_OPERATIONAL:
++		RT_TRACE(rtlpriv, COMP_MAC80211, DBG_TRACE,
++			 ("IEEE80211_AMPDU_TX_OPERATIONAL:TID:%d\n", tid));
++		break;
++	case IEEE80211_AMPDU_RX_START:
++		RT_TRACE(rtlpriv, COMP_MAC80211, DBG_TRACE,
++			 ("IEEE80211_AMPDU_RX_START:TID:%d\n", tid));
++		break;
++	case IEEE80211_AMPDU_RX_STOP:
++		RT_TRACE(rtlpriv, COMP_MAC80211, DBG_TRACE,
++			 ("IEEE80211_AMPDU_RX_STOP:TID:%d\n", tid));
++		break;
++	default:
++		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
++			 ("IEEE80211_AMPDU_ERR!!!!:\n"));
++		return -EOPNOTSUPP;
++	}
++	return 0;
++}
++
++static void rtl_op_sw_scan_start(struct ieee80211_hw *hw)
++{
++	struct rtl_priv *rtlpriv = rtl_priv(hw);
++	struct rtl_mac *mac = rtl_mac(rtl_priv(hw));
++
++	mac->act_scanning = true;
++
++	RT_TRACE(rtlpriv, COMP_MAC80211, DBG_LOUD, ("\n"));
++
++	if (mac->link_state == MAC80211_LINKED) {
++		rtl_lps_leave(hw);
++		mac->link_state = MAC80211_LINKED_SCANNING;
++	} else
++		rtl_ips_nic_on(hw);
++
++	rtlpriv->cfg->ops->led_control(hw, LED_CTL_SITE_SURVEY);
++	rtlpriv->cfg->ops->scan_operation_backup(hw, SCAN_OPT_BACKUP);
++}
++
++static void rtl_op_sw_scan_complete(struct ieee80211_hw *hw)
++{
++	struct rtl_priv *rtlpriv = rtl_priv(hw);
++	struct rtl_mac *mac = rtl_mac(rtl_priv(hw));
++
++	RT_TRACE(rtlpriv, COMP_MAC80211, DBG_LOUD, ("\n"));
++
++	rtlpriv->cfg->ops->scan_operation_backup(hw, SCAN_OPT_RESTORE);
++	mac->act_scanning = false;
++	if (mac->link_state == MAC80211_LINKED_SCANNING) {
++		mac->link_state = MAC80211_LINKED;
++
++		/* fix fwlps issue */
++		rtlpriv->cfg->ops->set_network_type(hw, mac->opmode);
++
++		if (rtlpriv->dm.b_useramask)
++			rtlpriv->cfg->ops->update_rate_mask(hw, 0);
++		else
++			rtlpriv->cfg->ops->update_rate_table(hw);
++
++	}
++
++}
++
++static int rtl_op_set_key(struct ieee80211_hw *hw, enum set_key_cmd cmd,
++			  struct ieee80211_vif *vif, struct ieee80211_sta *sta,
++			  struct ieee80211_key_conf *key)
++{
++	struct rtl_priv *rtlpriv = rtl_priv(hw);
++	struct rtl_mac *mac = rtl_mac(rtl_priv(hw));
++	u8 key_type = NO_ENCRYPTION;
++	u8 key_idx;
++	bool group_key = false;
++	bool wep_only = false;
++	int err = 0;
++	u8 mac_addr[ETH_ALEN];
++	u8 bcast_addr[ETH_ALEN] = { 0xff, 0xff, 0xff, 0xff, 0xff, 0xff };
++	u8 zero_addr[ETH_ALEN] = { 0 };
++
++	if (rtlpriv->cfg->mod_params->sw_crypto || rtlpriv->sec.use_sw_sec) {
++		RT_TRACE(rtlpriv, COMP_ERR, DBG_WARNING,
++			 ("not open hw encryption\n"));
++		return -ENOSPC;	/*User disabled HW-crypto */
++	}
++	RT_TRACE(rtlpriv, COMP_SEC, DBG_DMESG,
++		 ("%s hardware based encryption for keyidx: %d, mac: %pM\n",
++		  cmd == SET_KEY ? "Using" : "Disabling", key->keyidx,
++		  sta ? sta->addr : bcast_addr));
++	rtlpriv->sec.being_setkey = true;
++	rtl_ips_nic_on(hw);
++	down(&rtlpriv->locks.conf_sem);
++	/* <1> get encryption alg */
++	switch (key->cipher) {
++	case WLAN_CIPHER_SUITE_WEP40:
++		key_type = WEP40_ENCRYPTION;
++		RT_TRACE(rtlpriv, COMP_SEC, DBG_DMESG, ("alg:WEP40\n"));
++		rtlpriv->sec.use_defaultkey = true;
++		break;
++	case WLAN_CIPHER_SUITE_WEP104:
++		RT_TRACE(rtlpriv, COMP_SEC, DBG_DMESG,
++			 ("alg:WEP104\n"));
++		key_type = WEP104_ENCRYPTION;
++		rtlpriv->sec.use_defaultkey = true;
++		break;
++	case WLAN_CIPHER_SUITE_TKIP:
++		key_type = TKIP_ENCRYPTION;
++		RT_TRACE(rtlpriv, COMP_SEC, DBG_DMESG, ("alg:TKIP\n"));
++		if (mac->opmode == NL80211_IFTYPE_ADHOC)
++			rtlpriv->sec.use_defaultkey = true;
++		break;
++	case WLAN_CIPHER_SUITE_CCMP:
++		key_type = AESCCMP_ENCRYPTION;
++		RT_TRACE(rtlpriv, COMP_SEC, DBG_DMESG, ("alg:CCMP\n"));
++		if (mac->opmode == NL80211_IFTYPE_ADHOC)
++			rtlpriv->sec.use_defaultkey = true;
++		break;
++	default:
++		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
++			 ("alg_err:%x!!!!:\n", key->cipher));
++		goto out_unlock;
++	}
++	/* <2> get key_idx */
++	key_idx = (u8) (key->keyidx);
++	if (key_idx > 3)
++		goto out_unlock;
++	/* <3> if pairwise key enable_hw_sec */
++	group_key = !(key->flags & IEEE80211_KEY_FLAG_PAIRWISE);
++	if ((!group_key) || (mac->opmode == NL80211_IFTYPE_ADHOC) ||
++	    rtlpriv->sec.pairwise_enc_algorithm == NO_ENCRYPTION) {
++		if (rtlpriv->sec.pairwise_enc_algorithm == NO_ENCRYPTION &&
++		    (key_type == WEP40_ENCRYPTION ||
++		     key_type == WEP104_ENCRYPTION))
++			wep_only = true;
++		rtlpriv->sec.pairwise_enc_algorithm = key_type;
++		rtlpriv->cfg->ops->enable_hw_sec(hw);
++	}
++	/* <4> set key based on cmd */
++	switch (cmd) {
++	case SET_KEY:
++		if (wep_only) {
++			RT_TRACE(rtlpriv, COMP_SEC, DBG_DMESG,
++				 ("set WEP(group/pairwise) key\n"));
++			/* Pairwise key with an assigned MAC address. */
++			rtlpriv->sec.pairwise_enc_algorithm = key_type;
++			rtlpriv->sec.group_enc_algorithm = key_type;
++			/*set local buf about wep key. */
++			memcpy(rtlpriv->sec.key_buf[key_idx],
++			       key->key, key->keylen);
++			rtlpriv->sec.key_len[key_idx] = key->keylen;
++			memcpy(mac_addr, zero_addr, ETH_ALEN);
++		} else if (group_key) {	/* group key */
++			RT_TRACE(rtlpriv, COMP_SEC, DBG_DMESG,
++				 ("set group key\n"));
++			/* group key */
++			rtlpriv->sec.group_enc_algorithm = key_type;
++			/*set local buf about group key. */
++			memcpy(rtlpriv->sec.key_buf[key_idx],
++			       key->key, key->keylen);
++			rtlpriv->sec.key_len[key_idx] = key->keylen;
++			memcpy(mac_addr, bcast_addr, ETH_ALEN);
++		} else {	/* pairwise key */
++			RT_TRACE(rtlpriv, COMP_SEC, DBG_DMESG,
++				 ("set pairwise key\n"));
++			if (!sta) {
++				RT_ASSERT(false, ("pairwise key withnot"
++						  "mac_addr\n"));
++				err = -EOPNOTSUPP;
++				goto out_unlock;
++			}
++			/* Pairwise key with an assigned MAC address. */
++			rtlpriv->sec.pairwise_enc_algorithm = key_type;
++			/*set local buf about pairwise key. */
++			memcpy(rtlpriv->sec.key_buf[PAIRWISE_KEYIDX],
++			       key->key, key->keylen);
++			rtlpriv->sec.key_len[PAIRWISE_KEYIDX] = key->keylen;
++			rtlpriv->sec.pairwise_key =
++			    rtlpriv->sec.key_buf[PAIRWISE_KEYIDX];
++			memcpy(mac_addr, sta->addr, ETH_ALEN);
++		}
++		rtlpriv->cfg->ops->set_key(hw, key_idx, mac_addr,
++					   group_key, key_type, wep_only,
++					   false);
++		/* <5> tell mac80211 do something: */
++		/*must use sw generate IV, or can not work !!!!. */
++		key->flags |= IEEE80211_KEY_FLAG_GENERATE_IV;
++		key->hw_key_idx = key_idx;
++		if (key_type == TKIP_ENCRYPTION)
++			key->flags |= IEEE80211_KEY_FLAG_GENERATE_MMIC;
++		break;
++	case DISABLE_KEY:
++		RT_TRACE(rtlpriv, COMP_SEC, DBG_DMESG,
++			 ("disable key delete one entry\n"));
++		/*set local buf about wep key. */
++		memset(rtlpriv->sec.key_buf[key_idx], 0, key->keylen);
++		rtlpriv->sec.key_len[key_idx] = 0;
++		memcpy(mac_addr, zero_addr, ETH_ALEN);
++		/*
++		 *mac80211 will delete entrys one by one,
++		 *so don't use rtl_cam_reset_all_entry
++		 *or clear all entry here.
++		 */
++		rtl_cam_delete_one_entry(hw, mac_addr, key_idx);
++		break;
++	default:
++		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
++			 ("cmd_err:%x!!!!:\n", cmd));
++	}
++out_unlock:
++	up(&rtlpriv->locks.conf_sem);
++	rtlpriv->sec.being_setkey = false;
++	return err;
++}
++
++static void rtl_op_rfkill_poll(struct ieee80211_hw *hw)
++{
++	struct rtl_priv *rtlpriv = rtl_priv(hw);
++
++	bool radio_state;
++	bool blocked;
++	u8 valid = 0;
++
++	if (!test_bit(RTL_STATUS_INTERFACE_START, &rtlpriv->status))
++		return;
++
++	down(&rtlpriv->locks.conf_sem);
++
++	/*if Radio On return true here */
++	radio_state = rtlpriv->cfg->ops->radio_onoff_checking(hw, &valid);
++
++	if (valid) {
++		if (unlikely(radio_state != rtlpriv->rfkill.rfkill_state)) {
++			rtlpriv->rfkill.rfkill_state = radio_state;
++
++			RT_TRACE(rtlpriv, COMP_RF, DBG_DMESG,
++				 (KERN_INFO "wireless radio switch turned %s\n",
++				  radio_state ? "on" : "off"));
++
++			blocked = (rtlpriv->rfkill.rfkill_state == 1) ? 0 : 1;
++			wiphy_rfkill_set_hw_state(hw->wiphy, blocked);
++		}
++	}
++
++	up(&rtlpriv->locks.conf_sem);
++}
++
++const struct ieee80211_ops rtl_ops = {
++	.start = rtl_op_start,
++	.stop = rtl_op_stop,
++	.tx = rtl_op_tx,
++	.add_interface = rtl_op_add_interface,
++	.remove_interface = rtl_op_remove_interface,
++	.config = rtl_op_config,
++	.configure_filter = rtl_op_configure_filter,
++	.set_key = rtl_op_set_key,
++	.conf_tx = rtl_op_conf_tx,
++	.bss_info_changed = rtl_op_bss_info_changed,
++	.get_tsf = rtl_op_get_tsf,
++	.set_tsf = rtl_op_set_tsf,
++	.reset_tsf = rtl_op_reset_tsf,
++	.sta_notify = rtl_op_sta_notify,
++	.ampdu_action = rtl_op_ampdu_action,
++	.sw_scan_start = rtl_op_sw_scan_start,
++	.sw_scan_complete = rtl_op_sw_scan_complete,
++	.rfkill_poll = rtl_op_rfkill_poll,
++};
+diff --git a/drivers/net/wireless/rtlwifi/core.h b/drivers/net/wireless/rtlwifi/core.h
+new file mode 100644
+index 0000000..0ef31c3
+--- /dev/null
++++ b/drivers/net/wireless/rtlwifi/core.h
+@@ -0,0 +1,42 @@
++/******************************************************************************
++ *
++ * Copyright(c) 2009-2010  Realtek Corporation.
++ *
++ * Tmis program is free software; you can redistribute it and/or modify it
++ * under the terms of version 2 of the GNU General Public License as
++ * published by the Free Software Foundation.
++ *
++ * Tmis program is distributed in the hope that it will be useful, but WITHOUT
++ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
++ * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
++ * more details.
++ *
++ * You should have received a copy of the GNU General Public License along with
++ * tmis program; if not, write to the Free Software Foundation, Inc.,
++ * 51 Franklin Street, Fifth Floor, Boston, MA 02110, USA
++ *
++ * Tme full GNU General Public License is included in this distribution in the
++ * file called LICENSE.
++ *
++ * Contact Information:
++ * wlanfae <wlanfae@realtek.com>
++ * Realtek Corporation, No. 2, Innovation Road II, Hsinchu Science Park,
++ * Hsinchu 300, Taiwan.
++ *
++ * Larry Finger <Larry.Finger@lwfinger.net>
++ *****************************************************************************/
++
++#ifndef __RTL_CORE_H__
++#define __RTL_CORE_H__
++
++#define RTL_SUPPORTED_FILTERS		\
++	(FIF_PROMISC_IN_BSS | \
++	FIF_ALLMULTI | FIF_CONTROL | \
++	FIF_OTHER_BSS | \
++	FIF_FCSFAIL | \
++	FIF_BCN_PRBRESP_PROMISC)
++
++#define RTL_SUPPORTED_CTRL_FILTER	0xFF
++
++extern const struct ieee80211_ops rtl_ops;
++#endif
+-- 
+1.7.1
 
