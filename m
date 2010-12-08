@@ -1,40 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp07.smtpout.orange.fr ([80.12.242.129]:34306 "EHLO
-	smtp.smtpout.orange.fr" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752050Ab0LAMmC (ORCPT
+Received: from mail30f.wh2.ocn.ne.jp ([220.111.41.203]:11303 "HELO
+	mail30f.wh2.ocn.ne.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1757407Ab0LHBNg (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 1 Dec 2010 07:42:02 -0500
-Date: Wed, 1 Dec 2010 13:42:16 +0100
-From: David Chosrova <david.chosrova@libertysurf.fr>
-To: gregkh@suse.de
-Cc: devel@driverdev.osuosl.org, error27@gmail.com,
-	andreamrl@tiscali.it, linux-wireless@vger.kernel.org,
-	kernel-janitors@vger.kernel.org
-Subject: [PATCH] Staging: rtl8192u: check return code kmalloc.
-Message-ID: <20101201124216.GA28979@debian.home>
+	Tue, 7 Dec 2010 20:13:36 -0500
+Received: from vs3014.wh2.ocn.ne.jp (125.206.180.187)
+	by mail30f.wh2.ocn.ne.jp (RS ver 1.0.95vs) with SMTP id 2-052648812
+	for <linux-wireless@vger.kernel.org>; Wed,  8 Dec 2010 10:13:34 +0900 (JST)
+From: Bruno Randolf <br1@einfach.org>
+To: "John W. Linville" <linville@tuxdriver.com>
+Subject: Re: [PATCH] ath5k: Use capabilities information for the number of TX queues
+Date: Wed, 8 Dec 2010 10:13:06 +0900
+Cc: ath5k-devel@venema.h4ckr.net, linux-wireless@vger.kernel.org
+References: <20101207020812.17506.40803.stgit@localhost6.localdomain6> <20101207140120.GA2700@tuxdriver.com>
+In-Reply-To: <20101207140120.GA2700@tuxdriver.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Message-Id: <201012081013.06034.br1@einfach.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch checks the return code of  kmalloc when trying to allocate memory for priv->rx_urb in rtl8192_usb_initendpoints(), return -ENOMEM when failed.
+On Tue December 7 2010 23:01:21 John W. Linville wrote:
+> On Tue, Dec 07, 2010 at 11:08:12AM +0900, Bruno Randolf wrote:
+> > One thing I missed in my WME series: Older hardware does not have enough
+> > hardware queues to support WME. In this case we just set up one data
+> > queue. Use the capability information to decide how many queues to set
+> > up.
+> > 
+> > Signed-off-by: Bruno Randolf <br1@einfach.org>
+> > 
+> > --
+> > 
+> > resend, seems like it got lost somewhere in a queue ;)
+> 
+> Did you originally post with a different subject?  The MARC archive
+> doesn't seem to see any prior posting.
 
+Sorry, I accidentially posted only to the ath5k lists before. My fault.
 
-Signed-off-by: David Chosrova <david.chosrova@libertysurf.fr>
-
----
-Compiled
-
-diff --git a/drivers/staging/rtl8192u/r8192U_core.c b/drivers/staging/rtl8192u/r8192U_core.c
-index 494f180..67ba8f7 100644
---- a/drivers/staging/rtl8192u/r8192U_core.c
-+++ b/drivers/staging/rtl8192u/r8192U_core.c
-@@ -2203,6 +2203,8 @@ short rtl8192_usb_initendpoints(struct net_device *dev)
- 
- 	priv->rx_urb = kmalloc(sizeof(struct urb *) * (MAX_RX_URB+1),
- 				GFP_KERNEL);
-+	if (priv->rx_urb == NULL)
-+		return -ENOMEM;
- 
- #ifndef JACKSON_NEW_RX
- 	for(i=0;i<(MAX_RX_URB+1);i++){
+bruno
