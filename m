@@ -1,54 +1,228 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ey0-f171.google.com ([209.85.215.171]:45263 "EHLO
-	mail-ey0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755219Ab0LMLkj (ORCPT
+Received: from mail-pw0-f46.google.com ([209.85.160.46]:59704 "EHLO
+	mail-pw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755074Ab0LHROQ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 13 Dec 2010 06:40:39 -0500
-Received: by mail-ey0-f171.google.com with SMTP id 5so4064715eyg.2
-        for <linux-wireless@vger.kernel.org>; Mon, 13 Dec 2010 03:40:38 -0800 (PST)
-From: Ivo van Doorn <ivdoorn@gmail.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Subject: [PATCH 17/17] rt2x00: Fix firmware loading regression on x86_64.
-Date: Mon, 13 Dec 2010 12:39:39 +0100
-Cc: linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com
-References: <201012131231.28313.IvDoorn@gmail.com> <201012131238.50510.IvDoorn@gmail.com> <201012131239.13818.IvDoorn@gmail.com>
-In-Reply-To: <201012131239.13818.IvDoorn@gmail.com>
-MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Message-Id: <201012131239.40933.IvDoorn@gmail.com>
+	Wed, 8 Dec 2010 12:14:16 -0500
+Received: by mail-pw0-f46.google.com with SMTP id 3so322374pwj.19
+        for <linux-wireless@vger.kernel.org>; Wed, 08 Dec 2010 09:14:16 -0800 (PST)
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, chaoming_li@realsil.com.cn,
+	Larry Finger <Larry.Finger@lwfinger.net>
+Subject: [PATCH 15/22] rtl8192ce: Add files to rtlwifi/rtl8192ce - Part 15: rtl8192c-led.{c,h}
+Date: Wed,  8 Dec 2010 11:12:45 -0600
+Message-Id: <1291828372-25159-16-git-send-email-Larry.Finger@lwfinger.net>
+In-Reply-To: <1291828372-25159-1-git-send-email-Larry.Finger@lwfinger.net>
+References: <1291828372-25159-1-git-send-email-Larry.Finger@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Wolfgang Kufner <wolfgang.kufner@gmail.com>
-
-Commit 6175ddf06b6172046a329e3abfd9c901a43efd2e changes the way
-memcpy_toio() works for x86_64, causing firmware loading to fail for
-some Ralink WLAN devices with the rt2800pci driver since linux 2.6.34.
-This causes the log message: "phy0 -> rt2800pci_load_firmware: Error -
-PBF system register not ready.".
-
-Fix this by using __iowrite32_copy instead of memcpy_toio().
-
-Signed-off-by: Wolfgang Kufner <wolfgang.kufner@gmail.com>
-Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
 ---
- drivers/net/wireless/rt2x00/rt2x00pci.h |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+ .../net/wireless/rtlwifi/rtl8192ce/rtl8192c-led.c  |  144 ++++++++++++++++++++
+ .../net/wireless/rtlwifi/rtl8192ce/rtl8192c-led.h  |   41 ++++++
+ 2 files changed, 185 insertions(+), 0 deletions(-)
+ create mode 100644 drivers/net/wireless/rtlwifi/rtl8192ce/rtl8192c-led.c
+ create mode 100644 drivers/net/wireless/rtlwifi/rtl8192ce/rtl8192c-led.h
 
-diff --git a/drivers/net/wireless/rt2x00/rt2x00pci.h b/drivers/net/wireless/rt2x00/rt2x00pci.h
-index b854d62..746ce8f 100644
---- a/drivers/net/wireless/rt2x00/rt2x00pci.h
-+++ b/drivers/net/wireless/rt2x00/rt2x00pci.h
-@@ -64,7 +64,7 @@ static inline void rt2x00pci_register_multiwrite(struct rt2x00_dev *rt2x00dev,
- 						 const void *value,
- 						 const u32 length)
- {
--	memcpy_toio(rt2x00dev->csr.base + offset, value, length);
-+	__iowrite32_copy(rt2x00dev->csr.base + offset, value, length >> 2);
- }
- 
- /**
+diff --git a/drivers/net/wireless/rtlwifi/rtl8192ce/rtl8192c-led.c b/drivers/net/wireless/rtlwifi/rtl8192ce/rtl8192c-led.c
+new file mode 100644
+index 0000000..6091084
+--- /dev/null
++++ b/drivers/net/wireless/rtlwifi/rtl8192ce/rtl8192c-led.c
+@@ -0,0 +1,144 @@
++/******************************************************************************
++ *
++ * Copyright(c) 2009-2010  Realtek Corporation.
++ *
++ * This program is free software; you can redistribute it and/or modify it
++ * under the terms of version 2 of the GNU General Public License as
++ * published by the Free Software Foundation.
++ *
++ * This program is distributed in the hope that it will be useful, but WITHOUT
++ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
++ * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
++ * more details.
++ *
++ * You should have received a copy of the GNU General Public License along with
++ * this program; if not, write to the Free Software Foundation, Inc.,
++ * 51 Franklin Street, Fifth Floor, Boston, MA 02110, USA
++ *
++ * The full GNU General Public License is included in this distribution in the
++ * file called LICENSE.
++ *
++ * Contact Information:
++ * wlanfae <wlanfae@realtek.com>
++ * Realtek Corporation, No. 2, Innovation Road II, Hsinchu Science Park,
++ * Hsinchu 300, Taiwan.
++ *
++ * Larry Finger <Larry.Finger@lwfinger.net>
++ *
++ *****************************************************************************/
++
++#include "../wifi.h"
++#include "../pci.h"
++#include "rtl8192c-reg.h"
++#include "rtl8192c-led.h"
++
++void rtl92ce_sw_led_on(struct ieee80211_hw *hw, struct rtl_led *pled)
++{
++	u8 ledcfg;
++	struct rtl_priv *rtlpriv = rtl_priv(hw);
++
++	RT_TRACE(rtlpriv, COMP_LED, DBG_LOUD,
++		 ("LedAddr:%X ledpin=%d\n", REG_LEDCFG2, pled->ledpin));
++
++	ledcfg = rtl_read_byte(rtlpriv, REG_LEDCFG2);
++
++	switch (pled->ledpin) {
++	case LED_PIN_GPIO0:
++		break;
++	case LED_PIN_LED0:
++		rtl_write_byte(rtlpriv,
++			       REG_LEDCFG2, (ledcfg & 0xf0) | BIT(5) | BIT(6));
++		break;
++	case LED_PIN_LED1:
++		rtl_write_byte(rtlpriv, REG_LEDCFG2, (ledcfg & 0x0f) | BIT(5));
++		break;
++	default:
++		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
++			 ("switch case not process\n"));
++		break;
++	}
++	pled->b_ledon = true;
++}
++
++void rtl92ce_sw_led_off(struct ieee80211_hw *hw, struct rtl_led *pled)
++{
++	struct rtl_priv *rtlpriv = rtl_priv(hw);
++	struct rtl_pci_priv *pcipriv = rtl_pcipriv(hw);
++	u8 ledcfg;
++
++	RT_TRACE(rtlpriv, COMP_LED, DBG_LOUD,
++		 ("LedAddr:%X ledpin=%d\n", REG_LEDCFG2, pled->ledpin));
++
++	ledcfg = rtl_read_byte(rtlpriv, REG_LEDCFG2);
++
++	switch (pled->ledpin) {
++	case LED_PIN_GPIO0:
++		break;
++	case LED_PIN_LED0:
++		ledcfg &= 0xf0;
++		if (pcipriv->ledctl.bled_opendrain == true)
++			rtl_write_byte(rtlpriv, REG_LEDCFG2,
++				       (ledcfg | BIT(1) | BIT(5) | BIT(6)));
++		else
++			rtl_write_byte(rtlpriv, REG_LEDCFG2,
++				       (ledcfg | BIT(3) | BIT(5) | BIT(6)));
++		break;
++	case LED_PIN_LED1:
++		ledcfg &= 0x0f;
++		rtl_write_byte(rtlpriv, REG_LEDCFG2, (ledcfg | BIT(3)));
++		break;
++	default:
++		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
++			 ("switch case not process\n"));
++		break;
++	}
++	pled->b_ledon = false;
++}
++
++void rtl92ce_init_sw_leds(struct ieee80211_hw *hw)
++{
++}
++
++void rtl92ce_deinit_sw_leds(struct ieee80211_hw *hw)
++{
++}
++
++void _rtl92ce_sw_led_control(struct ieee80211_hw *hw,
++				    enum led_ctl_mode ledaction)
++{
++	struct rtl_pci_priv *pcipriv = rtl_pcipriv(hw);
++	struct rtl_led *pLed0 = &(pcipriv->ledctl.sw_led0);
++	switch (ledaction) {
++	case LED_CTL_POWER_ON:
++	case LED_CTL_LINK:
++	case LED_CTL_NO_LINK:
++		rtl92ce_sw_led_on(hw, pLed0);
++		break;
++	case LED_CTL_POWER_OFF:
++		rtl92ce_sw_led_off(hw, pLed0);
++		break;
++	default:
++		break;
++	}
++}
++
++void rtl92ce_led_control(struct ieee80211_hw *hw,
++			enum led_ctl_mode ledaction)
++{
++	struct rtl_priv *rtlpriv = rtl_priv(hw);
++	struct rtl_ps_ctl *ppsc = rtl_psc(rtl_priv(hw));
++
++	if ((ppsc->rfoff_reason > RF_CHANGE_BY_PS) &&
++	    (ledaction == LED_CTL_TX ||
++	     ledaction == LED_CTL_RX ||
++	     ledaction == LED_CTL_SITE_SURVEY ||
++	     ledaction == LED_CTL_LINK ||
++	     ledaction == LED_CTL_NO_LINK ||
++	     ledaction == LED_CTL_START_TO_LINK ||
++	     ledaction == LED_CTL_POWER_ON)) {
++		return;
++	}
++	RT_TRACE(rtlpriv, COMP_LED, DBG_LOUD, ("ledaction %d,\n",
++				ledaction));
++	_rtl92ce_sw_led_control(hw, ledaction);
++}
+diff --git a/drivers/net/wireless/rtlwifi/rtl8192ce/rtl8192c-led.h b/drivers/net/wireless/rtlwifi/rtl8192ce/rtl8192c-led.h
+new file mode 100644
+index 0000000..10da301
+--- /dev/null
++++ b/drivers/net/wireless/rtlwifi/rtl8192ce/rtl8192c-led.h
+@@ -0,0 +1,41 @@
++/******************************************************************************
++ *
++ * Copyright(c) 2009-2010  Realtek Corporation.
++ *
++ * This program is free software; you can redistribute it and/or modify it
++ * under the terms of version 2 of the GNU General Public License as
++ * published by the Free Software Foundation.
++ *
++ * This program is distributed in the hope that it will be useful, but WITHOUT
++ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
++ * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
++ * more details.
++ *
++ * You should have received a copy of the GNU General Public License along with
++ * this program; if not, write to the Free Software Foundation, Inc.,
++ * 51 Franklin Street, Fifth Floor, Boston, MA 02110, USA
++ *
++ * The full GNU General Public License is included in this distribution in the
++ * file called LICENSE.
++ *
++ * Contact Information:
++ * wlanfae <wlanfae@realtek.com>
++ * Realtek Corporation, No. 2, Innovation Road II, Hsinchu Science Park,
++ * Hsinchu 300, Taiwan.
++ *
++ * Larry Finger <Larry.Finger@lwfinger.net>
++ *
++ *****************************************************************************/
++
++#ifndef __RTL92CE_LED_H__
++#define __RTL92CE_LED_H__
++
++void rtl92ce_init_sw_leds(struct ieee80211_hw *hw);
++void rtl92ce_deinit_sw_leds(struct ieee80211_hw *hw);
++void rtl92ce_sw_led_on(struct ieee80211_hw *hw, struct rtl_led *pled);
++void rtl92ce_sw_led_off(struct ieee80211_hw *hw, struct rtl_led *pled);
++void rtl92ce_led_control(struct ieee80211_hw *hw, enum led_ctl_mode ledaction);
++void _rtl92ce_sw_led_control(struct ieee80211_hw *hw,
++				    enum led_ctl_mode ledaction);
++
++#endif
 -- 
-1.7.2.3
+1.7.1
 
