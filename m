@@ -1,34 +1,32 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:35071 "EHLO nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932085Ab0LBP1K (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 2 Dec 2010 10:27:10 -0500
-Message-ID: <4CF7BAC9.4060900@openwrt.org>
-Date: Thu, 02 Dec 2010 16:27:05 +0100
-From: Felix Fietkau <nbd@openwrt.org>
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:35833 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755339Ab0LHOpJ (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 8 Dec 2010 09:45:09 -0500
+Date: Wed, 8 Dec 2010 09:33:41 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Rajkumar Manoharan <rmanoharan@atheros.com>
+Cc: linux-wireless@vger.kernel.org, stable@kernel.org
+Subject: Re: [PATCH] ath: Missed to clear key4 of micentry
+Message-ID: <20101208143341.GD2423@tuxdriver.com>
+References: <1291818665-6660-1-git-send-email-rmanoharan@atheros.com>
 MIME-Version: 1.0
-To: Walter Goldens <goldenstranger@yahoo.com>
-CC: linux-wireless@vger.kernel.org, lrodriguez@atheros.com
-Subject: Re: [PATCH] compat: backport LED class software blinking
-References: <400806.62671.qm@web56803.mail.re3.yahoo.com>
-In-Reply-To: <400806.62671.qm@web56803.mail.re3.yahoo.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1291818665-6660-1-git-send-email-rmanoharan@atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2010-12-02 2:14 PM, Walter Goldens wrote:
->> Signed-off-by: Felix Fietkau <nbd@openwrt.org>
->> ---
+On Wed, Dec 08, 2010 at 08:01:05PM +0530, Rajkumar Manoharan wrote:
+> key4 of micentry is used, if ATH_CRYPT_CAP_MIC_COMBINED is set.
+> But is not cleared on key cache reset.
 > 
->> +}
->> +EXPORT_SYMBOL(compat_led_brightness_set);
->> +
->> +void compat_led_classdev_unregister(struct led_classdev
->> *led_cdev)
->> +{
-> 
-> I think this patch is causing problems in compat-wireless. It compiles fine, but some drivers fail to load:
-I think this was fixed in Hauke's patch
-'compat: fix build with CONFIG_LEDS_CLASS=m'
+> Cc: stable@kernel.org
+> Signed-off-by: Rajkumar Manoharan <rmanoharan@atheros.com>
 
-- Felix
+Which results in...?
+
+John
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
