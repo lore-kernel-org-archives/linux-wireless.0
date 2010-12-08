@@ -1,163 +1,504 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.19.149.2]:12740 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753730Ab0LFTgG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 6 Dec 2010 14:36:06 -0500
-Received: from mail.atheros.com ([10.10.20.105])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Mon, 06 Dec 2010 11:35:52 -0800
-Date: Mon, 6 Dec 2010 11:36:00 -0800
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: Ben Greear <greearb@candelatech.com>
-CC: Felix Fietkau <nbd@openwrt.org>,
-	Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
-	"ath9k-devel@lists.ath9k.org" <ath9k-devel@venema.h4ckr.net>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [ath9k-devel] Script to crash ath9k with DMA errors.
-Message-ID: <20101206193600.GC21442@tux>
-References: <4CF44543.9070605@candelatech.com>
- <20101130004424.GC1901@tux>
- <4CF6D8C8.2000308@candelatech.com>
- <4CF8A6DE.4020804@candelatech.com>
- <4CFAFBE1.3080505@openwrt.org>
- <4CFB20BA.5090300@candelatech.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <4CFB20BA.5090300@candelatech.com>
+Received: from mail-pv0-f174.google.com ([74.125.83.174]:46959 "EHLO
+	mail-pv0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754935Ab0LHRN5 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 8 Dec 2010 12:13:57 -0500
+Received: by mail-pv0-f174.google.com with SMTP id 4so304207pva.19
+        for <linux-wireless@vger.kernel.org>; Wed, 08 Dec 2010 09:13:57 -0800 (PST)
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, chaoming_li@realsil.com.cn,
+	Larry Finger <Larry.Finger@lwfinger.net>
+Subject: [PATCH 09/22] rtl8192ce: Add files to rtlwifi - Part 9: regd.{c,h}
+Date: Wed,  8 Dec 2010 11:12:39 -0600
+Message-Id: <1291828372-25159-10-git-send-email-Larry.Finger@lwfinger.net>
+In-Reply-To: <1291828372-25159-1-git-send-email-Larry.Finger@lwfinger.net>
+References: <1291828372-25159-1-git-send-email-Larry.Finger@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, Dec 04, 2010 at 09:18:50PM -0800, Ben Greear wrote:
-> On 12/04/2010 06:41 PM, Felix Fietkau wrote:
-> > On 2010-12-03 9:14 AM, Ben Greear wrote:
-> >> On 12/01/2010 03:22 PM, Ben Greear wrote:
-> >>> On 11/29/2010 04:44 PM, Luis R. Rodriguez wrote:
-> >>>> On Mon, Nov 29, 2010 at 04:28:51PM -0800, Ben Greear wrote:
-> >>>
-> >>>>> BUG: unable to handle kernel NULL pointer dereference at 00000040
-> >>>>> IP: [<f933470a>] ath_tx_start+0x461/0x5ef [ath9k]
-> >>>>> *pde = 00000000
-> >>>>> Oops: 0000 [#1] SMP DEBUG_PAGEALLOC
-> >>>>> last sysfs file: /sys/devices/pci0000:00/0000:00:1e.0/0000:08:01.0/irq
-> >>>>> Modules linked in: aes_i586 aes_generic fuse nfs lockd fscache nfs_acl auth_rpcgss sunrpc ipv6 uinput arc4 ecb ath9k mac80211 ath9k_common ath9k_hw mi]
-> >>>>>
-> >>>>> Pid: 38, comm: kworker/u:1 Tainted: G        W   2.6.37-rc3-wl+ #53 PDSBM/PDSBM
-> >>>>> EIP: 0060:[<f933470a>] EFLAGS: 00010246 CPU: 1
-> >>>>> EIP is at ath_tx_start+0x461/0x5ef [ath9k]
-> >>>>
-> >>>> Please use
-> >>>>
-> >>>> gdb drivers/net/wireless/ath/ath9k/
-> >>>> l *(ath_tx_start+0x461)
-> >>>>
-> >>>>      Luis
-> >>>
-> >>> I managed to hit that ath_tx_start crash again, and this time there were no obvious
-> >>> DMA or irq errors immediately preceding it.  So, it might be a real bug
-> >>> after all.  I'll add some extra checks to see if tid->ac is NULL.
-> >>
-> >> I've made some small progress on this general issue.
-> >>
-> >> First, I added all sorts of debugging to try to figure out ath_tx_start crash.
-> >> As best as I can tell, 'tid' is not NULL, but also is not a valid pointer,
-> >> and probably something close to 0x0.  I've added yet more debugging, but haven't
-> >> hit the problem again.
-> >>
-> >> I also tried stopping DMA in a loop up to 5 times if it failed to stop
-> >> previously in the loop.  This did not appear to help at all.
-> >>
-> >> I also managed to make both the ath_tx_start crash and the DMA errors very hard to reproduce
-> >> (I dare not say fixed, yet).
-> >>
-> >> It appears that this small patch (and possibly, the fact that I set debugging to 0x600
-> >> instead of 0x400) makes the problems go away.  This makes me wonder if a root cause is
-> >> something to do with repeatedly resetting the hardware too fast, as setting channels rapidly
-> >> would tend to do that, and channels are set on association by supplicant, it appears.
-> > Please try this patch while leaving the unnecessary resets in place.
-> > I found that when ath_drain_all_txq finds tx dma not stopped, it will
-> > issue a reset at a point in time where it is both useless (since it's
-> > right before a reset anyway) and dangerous (since the rx dma engine
-> > isn't even disabled yet), so IMHO the right thing to do is to drop
-> > this extra reset.
-> >
-> > --- a/drivers/net/wireless/ath/ath9k/xmit.c
-> > +++ b/drivers/net/wireless/ath/ath9k/xmit.c
-> > @@ -1194,18 +1194,8 @@ void ath_drain_all_txq(struct ath_softc
-> >   		}
-> >   	}
-> >
-> > -	if (npend) {
-> > -		int r;
-> > -
-> > -		ath_print(common, ATH_DBG_FATAL,
-> > -			  "Failed to stop TX DMA. Resetting hardware!\n");
-> > -
-> > -		r = ath9k_hw_reset(ah, sc->sc_ah->curchan, ah->caldata, false);
-> > -		if (r)
-> > -			ath_print(common, ATH_DBG_FATAL,
-> > -				  "Unable to reset hardware; reset status %d\n",
-> > -				  r);
-> > -	}
-> > +	if (npend)
-> > +		ath_print(common, ATH_DBG_FATAL,  "Failed to stop TX DMA!\n");
-> >
-> >   	for (i = 0; i<  ATH9K_NUM_TX_QUEUES; i++) {
-> >   		if (ATH_TXQ_SETUP(sc, i))
-> 
-> 
-> I applied this on top of all my patches, and on top of the 4 that Luis recently
-> posted.
-> 
-> I'm trying this on a different system than normal..happens to be configured
-> with 115 stations.  It was getting this fail-to-stop-RX warning even with my
-> channel-change mitigation patch, so I left it in.  I can still test w/it removed
-> if you want.
-> 
-> None of my interfaces are using WPA (or supplicant)..just un-encrypted
-> association to an AP 3 feet away.
-> 
-> The recent success I had on Friday was on a different system entirely,
-> with only 84 STAs, and using wpa-supplicant with 30 or so stations
-> using WPA and the other 55 on a different AP un-encrypted (still using
-> wpa_supplicant for all of these).
-> 
-> So, can't compare my previous reports directly with this one.
-> 
-> I'm going to re-configure this one to have smaller numbers of
-> stations and use wpa_supplicant..will see how that goes.
-> 
-> Even with all these warnings in the logs..system is basically stable and
-> a few interfaces are able to associate, at least for a short time.
->
-> 
-> WARNING: at /home/greearb/git/linux.wireless-testing/drivers/net/wireless/ath/ath9k/recv.c:538 ath_stoprecv+0xcd/0xd7 [ath9k]()
-> Hardware name: 945GM
-> Could not stop RX, we could be confusing the DMA engine when we start RX up
-> Modules linked in: 8021q garp stp llc michael_mic macvlan pktgen iscsi_tcp libiscsi_tcp libiscsi scsi_transport_iscsi nfs lockd fscache nfs_acl auth_rpcgss 
-> sunrpc p4_clockmod ipv6 uinput arc4 ecb ath9k mac80211 snd_intel8x0 snd_ac97_codec ath9k_common ac97_bus snd_seq snd_seq_device ath9k_hw ath snd_pcm pcspkr 
-> i2c_i801 serio_raw cfg80211 iTCO_wdt iTCO_vendor_support microcode snd_timer snd soundcore e1000e snd_page_alloc yenta_socket floppy i915 drm_kms_helper drm 
-> i2c_algo_bit i2c_core video output [last unloaded: ipt_addrtype]
-> Pid: 5, comm: kworker/u:0 Tainted: G        W   2.6.37-rc4-wl+ #16
-> Call Trace:
->   [<78436fbd>] warn_slowpath_common+0x77/0x8c
->   [<f946028f>] ? ath_stoprecv+0xcd/0xd7 [ath9k]
->   [<f946028f>] ? ath_stoprecv+0xcd/0xd7 [ath9k]
->   [<7843704e>] warn_slowpath_fmt+0x2e/0x30
->   [<f946028f>] ath_stoprecv+0xcd/0xd7 [ath9k]
->   [<f945e4bb>] ath_reset+0x55/0x163 [ath9k]
->   [<7845a68d>] ? trace_hardirqs_on+0xb/0xd
->   [<f9462830>] ath_tx_complete_poll_work+0x90/0xdf [ath9k]
->   [<78446fd4>] process_one_work+0x1af/0x2bf
->   [<78446f63>] ? process_one_work+0x13e/0x2bf
->   [<f94627a0>] ? ath_tx_complete_poll_work+0x0/0xdf [ath9k]
->   [<78448722>] worker_thread+0xf9/0x1bf
->   [<78448629>] ? worker_thread+0x0/0x1bf
->   [<7844b252>] kthread+0x62/0x67
->   [<7844b1f0>] ? kthread+0x0/0x67
->   [<784036c6>] kernel_thread_helper+0x6/0x1a
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+---
+ drivers/net/wireless/rtlwifi/regd.c |  400 +++++++++++++++++++++++++++++++++++
+ drivers/net/wireless/rtlwifi/regd.h |   61 ++++++
+ 2 files changed, 461 insertions(+), 0 deletions(-)
+ create mode 100644 drivers/net/wireless/rtlwifi/regd.c
+ create mode 100644 drivers/net/wireless/rtlwifi/regd.h
 
-Can you clarify the status of this issue. It remains unclear to me from
-your above description how things are going. As I read it some things
-look OK now but you still get a warning.
+diff --git a/drivers/net/wireless/rtlwifi/regd.c b/drivers/net/wireless/rtlwifi/regd.c
+new file mode 100644
+index 0000000..3336ca9
+--- /dev/null
++++ b/drivers/net/wireless/rtlwifi/regd.c
+@@ -0,0 +1,400 @@
++/******************************************************************************
++ *
++ * Copyright(c) 2009-2010  Realtek Corporation.
++ *
++ * This program is free software; you can redistribute it and/or modify it
++ * under the terms of version 2 of the GNU General Public License as
++ * published by the Free Software Foundation.
++ *
++ * This program is distributed in the hope that it will be useful, but WITHOUT
++ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
++ * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
++ * more details.
++ *
++ * You should have received a copy of the GNU General Public License along with
++ * this program; if not, write to the Free Software Foundation, Inc.,
++ * 51 Franklin Street, Fifth Floor, Boston, MA 02110, USA
++ *
++ * The full GNU General Public License is included in this distribution in the
++ * file called LICENSE.
++ *
++ * Contact Information:
++ * wlanfae <wlanfae@realtek.com>
++ * Realtek Corporation, No. 2, Innovation Road II, Hsinchu Science Park,
++ * Hsinchu 300, Taiwan.
++ *
++ * Larry Finger <Larry.Finger@lwfinger.net>
++ *
++ *****************************************************************************/
++
++#include "wifi.h"
++#include "regd.h"
++
++static struct country_code_to_enum_rd allCountries[] = {
++	{COUNTRY_CODE_FCC, "US"},
++	{COUNTRY_CODE_IC, "US"},
++	{COUNTRY_CODE_ETSI, "EC"},
++	{COUNTRY_CODE_SPAIN, "EC"},
++	{COUNTRY_CODE_FRANCE, "EC"},
++	{COUNTRY_CODE_MKK, "JP"},
++	{COUNTRY_CODE_MKK1, "JP"},
++	{COUNTRY_CODE_ISRAEL, "EC"},
++	{COUNTRY_CODE_TELEC, "JP"},
++	{COUNTRY_CODE_MIC, "JP"},
++	{COUNTRY_CODE_GLOBAL_DOMAIN, "JP"},
++	{COUNTRY_CODE_WORLD_WIDE_13, "EC"},
++	{COUNTRY_CODE_TELEC_NETGEAR, "EC"},
++};
++
++/*
++ *Only these channels all allow active
++ *scan on all world regulatory domains
++ */
++#define RTL819x_2GHZ_CH01_11	\
++	REG_RULE(2412-10, 2462+10, 40, 0, 20, 0)
++
++/*
++ *We enable active scan on these a case
++ *by case basis by regulatory domain
++ */
++#define RTL819x_2GHZ_CH12_13	\
++	REG_RULE(2467-10, 2472+10, 40, 0, 20,\
++	NL80211_RRF_PASSIVE_SCAN)
++
++#define RTL819x_2GHZ_CH14	\
++	REG_RULE(2484-10, 2484+10, 40, 0, 20, \
++	NL80211_RRF_PASSIVE_SCAN | \
++	NL80211_RRF_NO_OFDM)
++
++static const struct ieee80211_regdomain rtl_regdom_11 = {
++	.n_reg_rules = 1,
++	.alpha2 = "99",
++	.reg_rules = {
++		      RTL819x_2GHZ_CH01_11,
++	}
++};
++
++static const struct ieee80211_regdomain rtl_regdom_global = {
++	.n_reg_rules = 3,
++	.alpha2 = "99",
++	.reg_rules = {
++		      RTL819x_2GHZ_CH01_11,
++		      RTL819x_2GHZ_CH12_13,
++		      RTL819x_2GHZ_CH14,
++	}
++};
++
++static const struct ieee80211_regdomain rtl_regdom_world = {
++	.n_reg_rules = 2,
++	.alpha2 = "99",
++	.reg_rules = {
++		      RTL819x_2GHZ_CH01_11,
++		      RTL819x_2GHZ_CH12_13,
++	}
++};
++
++static bool _rtl_is_radar_freq(u16 center_freq)
++{
++	return (center_freq >= 5260 && center_freq <= 5700);
++}
++
++static void _rtl_reg_apply_beaconing_flags(struct wiphy *wiphy,
++					   enum nl80211_reg_initiator initiator)
++{
++	enum ieee80211_band band;
++	struct ieee80211_supported_band *sband;
++	const struct ieee80211_reg_rule *reg_rule;
++	struct ieee80211_channel *ch;
++	unsigned int i;
++	u32 bandwidth = 0;
++	int r;
++
++	for (band = 0; band < IEEE80211_NUM_BANDS; band++) {
++
++		if (!wiphy->bands[band])
++			continue;
++
++		sband = wiphy->bands[band];
++
++		for (i = 0; i < sband->n_channels; i++) {
++			ch = &sband->channels[i];
++			if (_rtl_is_radar_freq(ch->center_freq) ||
++			    (ch->flags & IEEE80211_CHAN_RADAR))
++				continue;
++			if (initiator == NL80211_REGDOM_SET_BY_COUNTRY_IE) {
++				r = freq_reg_info(wiphy, ch->center_freq,
++						  bandwidth, &reg_rule);
++				if (r)
++					continue;
++
++				/*
++				 *If 11d had a rule for this channel ensure
++				 *we enable adhoc/beaconing if it allows us to
++				 *use it. Note that we would have disabled it
++				 *by applying our static world regdomain by
++				 *default during init, prior to calling our
++				 *regulatory_hint().
++				 */
++
++				if (!(reg_rule->flags & NL80211_RRF_NO_IBSS))
++					ch->flags &= ~IEEE80211_CHAN_NO_IBSS;
++				if (!(reg_rule->
++				     flags & NL80211_RRF_PASSIVE_SCAN))
++					ch->flags &=
++					    ~IEEE80211_CHAN_PASSIVE_SCAN;
++			} else {
++				if (ch->beacon_found)
++					ch->flags &= ~(IEEE80211_CHAN_NO_IBSS |
++						  IEEE80211_CHAN_PASSIVE_SCAN);
++			}
++		}
++	}
++}
++
++/* Allows active scan scan on Ch 12 and 13 */
++static void _rtl_reg_apply_active_scan_flags(struct wiphy *wiphy,
++					     enum nl80211_reg_initiator
++					     initiator)
++{
++	struct ieee80211_supported_band *sband;
++	struct ieee80211_channel *ch;
++	const struct ieee80211_reg_rule *reg_rule;
++	u32 bandwidth = 0;
++	int r;
++
++	sband = wiphy->bands[IEEE80211_BAND_2GHZ];
++
++	/*
++	 *If no country IE has been received always enable active scan
++	 *on these channels. This is only done for specific regulatory SKUs
++	 */
++	if (initiator != NL80211_REGDOM_SET_BY_COUNTRY_IE) {
++		ch = &sband->channels[11];	/* CH 12 */
++		if (ch->flags & IEEE80211_CHAN_PASSIVE_SCAN)
++			ch->flags &= ~IEEE80211_CHAN_PASSIVE_SCAN;
++		ch = &sband->channels[12];	/* CH 13 */
++		if (ch->flags & IEEE80211_CHAN_PASSIVE_SCAN)
++			ch->flags &= ~IEEE80211_CHAN_PASSIVE_SCAN;
++		return;
++	}
++
++	/*
++	 *If a country IE has been recieved check its rule for this
++	 *channel first before enabling active scan. The passive scan
++	 *would have been enforced by the initial processing of our
++	 *custom regulatory domain.
++	 */
++
++	ch = &sband->channels[11];	/* CH 12 */
++	r = freq_reg_info(wiphy, ch->center_freq, bandwidth, &reg_rule);
++	if (!r) {
++		if (!(reg_rule->flags & NL80211_RRF_PASSIVE_SCAN))
++			if (ch->flags & IEEE80211_CHAN_PASSIVE_SCAN)
++				ch->flags &= ~IEEE80211_CHAN_PASSIVE_SCAN;
++	}
++
++	ch = &sband->channels[12];	/* CH 13 */
++	r = freq_reg_info(wiphy, ch->center_freq, bandwidth, &reg_rule);
++	if (!r) {
++		if (!(reg_rule->flags & NL80211_RRF_PASSIVE_SCAN))
++			if (ch->flags & IEEE80211_CHAN_PASSIVE_SCAN)
++				ch->flags &= ~IEEE80211_CHAN_PASSIVE_SCAN;
++	}
++}
++
++/*
++ *Always apply Radar/DFS rules on
++ *freq range 5260 MHz - 5700 MHz
++ */
++static void _rtl_reg_apply_radar_flags(struct wiphy *wiphy)
++{
++	struct ieee80211_supported_band *sband;
++	struct ieee80211_channel *ch;
++	unsigned int i;
++
++	if (!wiphy->bands[IEEE80211_BAND_5GHZ])
++		return;
++
++	sband = wiphy->bands[IEEE80211_BAND_5GHZ];
++
++	for (i = 0; i < sband->n_channels; i++) {
++		ch = &sband->channels[i];
++		if (!_rtl_is_radar_freq(ch->center_freq))
++			continue;
++
++		/*
++		 *We always enable radar detection/DFS on this
++		 *frequency range. Additionally we also apply on
++		 *this frequency range:
++		 *- If STA mode does not yet have DFS supports disable
++		 * active scanning
++		 *- If adhoc mode does not support DFS yet then disable
++		 * adhoc in the frequency.
++		 *- If AP mode does not yet support radar detection/DFS
++		 *do not allow AP mode
++		 */
++		if (!(ch->flags & IEEE80211_CHAN_DISABLED))
++			ch->flags |= IEEE80211_CHAN_RADAR |
++			    IEEE80211_CHAN_NO_IBSS |
++			    IEEE80211_CHAN_PASSIVE_SCAN;
++	}
++}
++
++static void _rtl_reg_apply_world_flags(struct wiphy *wiphy,
++				       enum nl80211_reg_initiator initiator,
++				       struct rtl_regulatory *reg)
++{
++	_rtl_reg_apply_beaconing_flags(wiphy, initiator);
++	_rtl_reg_apply_active_scan_flags(wiphy, initiator);
++	return;
++}
++
++static void _rtl_dump_channel_map(struct wiphy *wiphy)
++{
++	enum ieee80211_band band;
++	struct ieee80211_supported_band *sband;
++	struct ieee80211_channel *ch;
++	unsigned int i;
++
++	for (band = 0; band < IEEE80211_NUM_BANDS; band++) {
++		if (!wiphy->bands[band])
++			continue;
++		sband = wiphy->bands[band];
++		for (i = 0; i < sband->n_channels; i++)
++			ch = &sband->channels[i];
++	}
++}
++
++static int _rtl_reg_notifier_apply(struct wiphy *wiphy,
++				   struct regulatory_request *request,
++				   struct rtl_regulatory *reg)
++{
++	/* We always apply this */
++	_rtl_reg_apply_radar_flags(wiphy);
++
++	switch (request->initiator) {
++	case NL80211_REGDOM_SET_BY_DRIVER:
++	case NL80211_REGDOM_SET_BY_CORE:
++	case NL80211_REGDOM_SET_BY_USER:
++		break;
++	case NL80211_REGDOM_SET_BY_COUNTRY_IE:
++		_rtl_reg_apply_world_flags(wiphy, request->initiator, reg);
++		break;
++	}
++
++	_rtl_dump_channel_map(wiphy);
++
++	return 0;
++}
++
++static const struct ieee80211_regdomain *_rtl_regdomain_select(
++					       struct rtl_regulatory *reg)
++{
++	switch (reg->country_code) {
++	case COUNTRY_CODE_FCC:
++	case COUNTRY_CODE_IC:
++		return &rtl_regdom_11;
++	case COUNTRY_CODE_ETSI:
++	case COUNTRY_CODE_SPAIN:
++	case COUNTRY_CODE_FRANCE:
++	case COUNTRY_CODE_ISRAEL:
++	case COUNTRY_CODE_TELEC_NETGEAR:
++		return &rtl_regdom_world;
++	case COUNTRY_CODE_MKK:
++	case COUNTRY_CODE_MKK1:
++	case COUNTRY_CODE_TELEC:
++	case COUNTRY_CODE_MIC:
++		return &rtl_regdom_global;
++	case COUNTRY_CODE_GLOBAL_DOMAIN:
++		return &rtl_regdom_global;
++	case COUNTRY_CODE_WORLD_WIDE_13:
++		return &rtl_regdom_world;
++	default:
++		return &rtl_regdom_world;
++	}
++}
++
++static int _rtl_regd_init_wiphy(struct rtl_regulatory *reg,
++				struct wiphy *wiphy,
++				int (*reg_notifier) (struct wiphy *wiphy,
++						     struct regulatory_request *
++						     request))
++{
++	const struct ieee80211_regdomain *regd;
++
++	wiphy->reg_notifier = reg_notifier;
++	wiphy->flags |= WIPHY_FLAG_CUSTOM_REGULATORY;
++	wiphy->flags &= ~WIPHY_FLAG_STRICT_REGULATORY;
++	wiphy->flags &= ~WIPHY_FLAG_DISABLE_BEACON_HINTS;
++	regd = _rtl_regdomain_select(reg);
++	wiphy_apply_custom_regulatory(wiphy, regd);
++	_rtl_reg_apply_radar_flags(wiphy);
++	_rtl_reg_apply_world_flags(wiphy, NL80211_REGDOM_SET_BY_DRIVER, reg);
++	return 0;
++}
++
++static struct country_code_to_enum_rd *_rtl_regd_find_country(u16 countrycode)
++{
++	int i;
++
++	for (i = 0; i < ARRAY_SIZE(allCountries); i++) {
++		if (allCountries[i].countrycode == countrycode)
++			return &allCountries[i];
++	}
++	return NULL;
++}
++
++int rtl_regd_init(struct ieee80211_hw *hw,
++		  int (*reg_notifier) (struct wiphy *wiphy,
++				       struct regulatory_request *request))
++{
++	struct rtl_priv *rtlpriv = rtl_priv(hw);
++	struct wiphy *wiphy = hw->wiphy;
++	struct country_code_to_enum_rd *country = NULL;
++
++	if (wiphy == NULL || &rtlpriv->regd == NULL)
++		return -EINVAL;
++
++	/* force the channel plan to world wide 13 */
++	rtlpriv->regd.country_code = COUNTRY_CODE_WORLD_WIDE_13;
++
++	RT_TRACE(rtlpriv, COMP_REGD, DBG_TRACE,
++		 (KERN_DEBUG "rtl: EEPROM regdomain: 0x%0x\n",
++		  rtlpriv->regd.country_code));
++
++	if (rtlpriv->regd.country_code >= COUNTRY_CODE_MAX) {
++		RT_TRACE(rtlpriv, COMP_REGD, DBG_DMESG,
++			 (KERN_DEBUG "rtl: EEPROM indicates invalid contry code"
++			  "world wide 13 should be used\n"));
++
++		rtlpriv->regd.country_code = COUNTRY_CODE_WORLD_WIDE_13;
++	}
++
++	country = _rtl_regd_find_country(rtlpriv->regd.country_code);
++
++	if (country) {
++		rtlpriv->regd.alpha2[0] = country->isoName[0];
++		rtlpriv->regd.alpha2[1] = country->isoName[1];
++	} else {
++		rtlpriv->regd.alpha2[0] = '0';
++		rtlpriv->regd.alpha2[1] = '0';
++	}
++
++	RT_TRACE(rtlpriv, COMP_REGD, DBG_TRACE,
++		 (KERN_DEBUG "rtl: Country alpha2 being used: %c%c\n",
++		  rtlpriv->regd.alpha2[0], rtlpriv->regd.alpha2[1]));
++
++	_rtl_regd_init_wiphy(&rtlpriv->regd, wiphy, reg_notifier);
++
++	return 0;
++}
++
++int rtl_reg_notifier(struct wiphy *wiphy, struct regulatory_request *request)
++{
++	struct ieee80211_hw *hw = wiphy_to_ieee80211_hw(wiphy);
++	struct rtl_priv *rtlpriv = rtl_priv(hw);
++
++	RT_TRACE(rtlpriv, COMP_REGD, DBG_LOUD, ("\n"));
++
++	return _rtl_reg_notifier_apply(wiphy, request, &rtlpriv->regd);
++}
+diff --git a/drivers/net/wireless/rtlwifi/regd.h b/drivers/net/wireless/rtlwifi/regd.h
+new file mode 100644
+index 0000000..4cdbc4a
+--- /dev/null
++++ b/drivers/net/wireless/rtlwifi/regd.h
+@@ -0,0 +1,61 @@
++/******************************************************************************
++ *
++ * Copyright(c) 2009-2010  Realtek Corporation.
++ *
++ * This program is free software; you can redistribute it and/or modify it
++ * under the terms of version 2 of the GNU General Public License as
++ * published by the Free Software Foundation.
++ *
++ * This program is distributed in the hope that it will be useful, but WITHOUT
++ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
++ * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
++ * more details.
++ *
++ * You should have received a copy of the GNU General Public License along with
++ * this program; if not, write to the Free Software Foundation, Inc.,
++ * 51 Franklin Street, Fifth Floor, Boston, MA 02110, USA
++ *
++ * The full GNU General Public License is included in this distribution in the
++ * file called LICENSE.
++ *
++ * Contact Information:
++ * wlanfae <wlanfae@realtek.com>
++ * Realtek Corporation, No. 2, Innovation Road II, Hsinchu Science Park,
++ * Hsinchu 300, Taiwan.
++ *
++ * Larry Finger <Larry.Finger@lwfinger.net>
++ *
++ *****************************************************************************/
++
++#ifndef __RTL_REGD_H__
++#define __RTL_REGD_H__
++
++struct country_code_to_enum_rd {
++	u16 countrycode;
++	const char *isoName;
++};
++
++enum country_code_type_t {
++	COUNTRY_CODE_FCC = 0,
++	COUNTRY_CODE_IC = 1,
++	COUNTRY_CODE_ETSI = 2,
++	COUNTRY_CODE_SPAIN = 3,
++	COUNTRY_CODE_FRANCE = 4,
++	COUNTRY_CODE_MKK = 5,
++	COUNTRY_CODE_MKK1 = 6,
++	COUNTRY_CODE_ISRAEL = 7,
++	COUNTRY_CODE_TELEC = 8,
++	COUNTRY_CODE_MIC = 9,
++	COUNTRY_CODE_GLOBAL_DOMAIN = 10,
++	COUNTRY_CODE_WORLD_WIDE_13 = 11,
++	COUNTRY_CODE_TELEC_NETGEAR = 12,
++
++	/*add new channel plan above this line */
++	COUNTRY_CODE_MAX
++};
++
++int rtl_regd_init(struct ieee80211_hw *hw,
++		  int (*reg_notifier) (struct wiphy *wiphy,
++				       struct regulatory_request *request));
++int rtl_reg_notifier(struct wiphy *wiphy, struct regulatory_request *request);
++#endif
+-- 
+1.7.1
 
-  Luis
