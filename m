@@ -1,127 +1,86 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f43.google.com ([209.85.161.43]:43170 "EHLO
-	mail-fx0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751917Ab0LLKPd (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 12 Dec 2010 05:15:33 -0500
-Received: by fxm18 with SMTP id 18so5298820fxm.2
-        for <linux-wireless@vger.kernel.org>; Sun, 12 Dec 2010 02:15:32 -0800 (PST)
-From: Eliad Peller <eliad@wizery.com>
-To: Luciano Coelho <luciano.coelho@nokia.com>
-Cc: <linux-wireless@vger.kernel.org>
-Subject: [PATCH] wl12xx: allow runtime changing of debug_level
-Date: Sun, 12 Dec 2010 12:15:35 +0200
-Message-Id: <1292148935-8709-1-git-send-email-eliad@wizery.com>
+Received: from mms2.broadcom.com ([216.31.210.18]:1768 "EHLO mms2.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752464Ab0LHUuQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 8 Dec 2010 15:50:16 -0500
+Date: Wed, 8 Dec 2010 12:50:00 -0800
+From: "Henry Ptasinski" <henryp@broadcom.com>
+To: "David Woodhouse" <dwmw2@infradead.org>
+cc: "devel@linuxdriverproject.org" <devel@linuxdriverproject.org>,
+	"Brett Rudley" <brudley@broadcom.com>,
+	"grundler@google.com" <grundler@google.com>,
+	"greg@kroah.com" <greg@kroah.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	henryp@broadcom.com, rvossen@broadcom.com, dowan@broadcom.com,
+	arend@broadcom.com
+Subject: [PATCH v2] linux-firmware: brcm: Removed codeversion from
+ firmware filenames.
+Message-ID: <20101208205000.GA30861@broadcom.com>
+References: <4CBE23F4.4020104@broadcom.com>
+ <20101019233520.GA12510@kroah.com>
+ <FD96C117992C584DBC47231B1EB6F5568206D859DC@SJEXCHCCR02.corp.ad.broadcom.com>
+ <20101020004743.GB31965@kroah.com>
+ <20101020005546.GL10832@broadcom.com> <20101020010320.GA370@kroah.com>
+ <20101021170810.GA15357@broadcom.com>
+ <1288621739.26983.32.camel@macbook.infradead.org>
+MIME-Version: 1.0
+In-Reply-To: <1288621739.26983.32.camel@macbook.infradead.org>
+Content-Type: text/plain;
+ charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Currently, the debug level is set in compilation time (by the DEBUG_LEVEL
-const). This method has the advantage of compiling only the relevant
-messages, while optimizing out the unused ones.
+Second attempt at cleaning up firmware filenames.
 
-In order to allow runtime control over the debug_level, while optimizing
-out messages when debug messages are not needed, we combine some methods:
-1. use dynamic_debug (pr_debug) rather then printk.
-2. add debug_level module param in order to set debug level during insmod.
-3. add debug_level sysfs file in order to allow dynamic control over the
-   debug level.
+The basename-apiversion-codeversion construction for firmware filenames is not
+used by most other firmware files, adds complexity, and is not providing any
+value.  Renamed the firmware files using just basename-apiversion.  Also, fixed
+WHENCE to have correct path to brcmfmac files.
 
-Since patches for pr_debug_hex_dump() implementation haven't been applied yet,
-we are still temporarly using print_hex_dump().
-
-Signed-off-by: Eliad Peller <eliad@wizery.com>
+Signed-off-by: Henry Ptasinski <henryp@broadcom.com>
 ---
- drivers/net/wireless/wl12xx/debugfs.c |    5 +++++
- drivers/net/wireless/wl12xx/main.c    |    5 +++++
- drivers/net/wireless/wl12xx/wl12xx.h  |   19 ++++++++++---------
- 3 files changed, 20 insertions(+), 9 deletions(-)
+ WHENCE                                             |    8 ++++----
+ ...llmac-4-218-248-5.bin => bcm4329-fullmac-4.bin} |  Bin 269595 -> 269595 bytes
+ ...llmac-4-218-248-5.txt => bcm4329-fullmac-4.txt} |    0
+ brcm/{bcm43xx-0-610-809-0.fw => bcm43xx-0.fw}      |  Bin 97376 -> 97376 bytes
+ ...bcm43xx_hdr-0-610-809-0.fw => bcm43xx_hdr-0.fw} |  Bin 180 -> 180 bytes
+ 5 files changed, 4 insertions(+), 4 deletions(-)
+ rename brcm/{bcm4329-fullmac-4-218-248-5.bin => bcm4329-fullmac-4.bin} (100%)
+ rename brcm/{bcm4329-fullmac-4-218-248-5.txt => bcm4329-fullmac-4.txt} (100%)
+ rename brcm/{bcm43xx-0-610-809-0.fw => bcm43xx-0.fw} (100%)
+ rename brcm/{bcm43xx_hdr-0-610-809-0.fw => bcm43xx_hdr-0.fw} (100%)
 
-diff --git a/drivers/net/wireless/wl12xx/debugfs.c b/drivers/net/wireless/wl12xx/debugfs.c
-index 8106a6c..c2cd580 100644
---- a/drivers/net/wireless/wl12xx/debugfs.c
-+++ b/drivers/net/wireless/wl12xx/debugfs.c
-@@ -401,6 +401,11 @@ static int wl1271_debugfs_add_files(struct wl1271 *wl)
+diff --git a/WHENCE b/WHENCE
+index 9fad4fa..5451b3f 100644
+--- a/WHENCE
++++ b/WHENCE
+@@ -1392,8 +1392,8 @@ Licence:
  
- 	DEBUGFS_ADD(gpio_power, wl->rootdir);
+ Driver: brcm80211 - Broadcom 802.11n wireless LAN driver.
  
-+	entry = debugfs_create_x32("debug_level", 0600, wl->rootdir,
-+				   &wl12xx_debug_level);
-+	if (!entry || IS_ERR(entry))
-+		goto err;
-+
- 	return 0;
+-File: brcm/bcm43xx-0-610-809-0.fw
+-File: brcm/bcm43xx_hdr-0-610-809-0.fw
++File: brcm/bcm43xx-0.fw
++File: brcm/bcm43xx_hdr-0.fw
  
- err:
-diff --git a/drivers/net/wireless/wl12xx/main.c b/drivers/net/wireless/wl12xx/main.c
-index dc3a093..3428c45 100644
---- a/drivers/net/wireless/wl12xx/main.c
-+++ b/drivers/net/wireless/wl12xx/main.c
-@@ -2806,6 +2806,11 @@ int wl1271_free_hw(struct wl1271 *wl)
- }
- EXPORT_SYMBOL_GPL(wl1271_free_hw);
+ Licence: Redistributable. See LICENCE.broadcom_bcm43xx for details.
  
-+u32 wl12xx_debug_level;
-+EXPORT_SYMBOL_GPL(wl12xx_debug_level);
-+module_param_named(debug_level, wl12xx_debug_level, uint, DEBUG_NONE);
-+MODULE_PARM_DESC(debug_level, "wl12xx debugging level");
-+
- MODULE_LICENSE("GPL");
- MODULE_AUTHOR("Luciano Coelho <luciano.coelho@nokia.com>");
- MODULE_AUTHOR("Juuso Oikarinen <juuso.oikarinen@nokia.com>");
-diff --git a/drivers/net/wireless/wl12xx/wl12xx.h b/drivers/net/wireless/wl12xx/wl12xx.h
-index e904c72..07c2297 100644
---- a/drivers/net/wireless/wl12xx/wl12xx.h
-+++ b/drivers/net/wireless/wl12xx/wl12xx.h
-@@ -60,31 +60,32 @@ enum {
- 	DEBUG_ALL	= ~0,
- };
+@@ -1401,8 +1401,8 @@ Licence: Redistributable. See LICENCE.broadcom_bcm43xx for details.
  
--#define DEBUG_LEVEL (DEBUG_NONE)
-+extern u32 wl12xx_debug_level;
+ Driver: brcm80211 - Broadcom 802.11n wireless LAN driver.
  
- #define DEBUG_DUMP_LIMIT 1024
+-File: bcm4329-fullmac-4-218-248-5.bin
+-File: bcm4329-fullmac-4-218-248-5.txt
++File: brcm/bcm4329-fullmac-4.bin
++File: brcm/bcm4329-fullmac-4.txt
  
- #define wl1271_error(fmt, arg...) \
--	printk(KERN_ERR DRIVER_PREFIX "ERROR " fmt "\n", ##arg)
-+	pr_err(DRIVER_PREFIX "ERROR " fmt "\n", ##arg)
+ Licence: Redistributable. See LICENCE.broadcom_bcm43xx for details.
  
- #define wl1271_warning(fmt, arg...) \
--	printk(KERN_WARNING DRIVER_PREFIX "WARNING " fmt "\n", ##arg)
-+	pr_warning(DRIVER_PREFIX "WARNING " fmt "\n", ##arg)
- 
- #define wl1271_notice(fmt, arg...) \
--	printk(KERN_INFO DRIVER_PREFIX fmt "\n", ##arg)
-+	pr_info(DRIVER_PREFIX fmt "\n", ##arg)
- 
- #define wl1271_info(fmt, arg...) \
--	printk(KERN_DEBUG DRIVER_PREFIX fmt "\n", ##arg)
-+	pr_info(DRIVER_PREFIX fmt "\n", ##arg)
- 
- #define wl1271_debug(level, fmt, arg...) \
- 	do { \
--		if (level & DEBUG_LEVEL) \
--			printk(KERN_DEBUG DRIVER_PREFIX fmt "\n", ##arg); \
-+		if (level & wl12xx_debug_level) \
-+			pr_debug(DRIVER_PREFIX fmt "\n", ##arg); \
- 	} while (0)
- 
-+/* TODO: use pr_debug_hex_dump when it will be available */
- #define wl1271_dump(level, prefix, buf, len)	\
- 	do { \
--		if (level & DEBUG_LEVEL) \
-+		if (level & wl12xx_debug_level) \
- 			print_hex_dump(KERN_DEBUG, DRIVER_PREFIX prefix, \
- 				       DUMP_PREFIX_OFFSET, 16, 1,	\
- 				       buf,				\
-@@ -94,7 +95,7 @@ enum {
- 
- #define wl1271_dump_ascii(level, prefix, buf, len)	\
- 	do { \
--		if (level & DEBUG_LEVEL) \
-+		if (level & wl12xx_debug_level) \
- 			print_hex_dump(KERN_DEBUG, DRIVER_PREFIX prefix, \
- 				       DUMP_PREFIX_OFFSET, 16, 1,	\
- 				       buf,				\
+diff --git a/brcm/bcm4329-fullmac-4-218-248-5.txt b/brcm/bcm4329-fullmac-4.txt
+similarity index 100%
+rename from brcm/bcm4329-fullmac-4-218-248-5.txt
+rename to brcm/bcm4329-fullmac-4.txt
 -- 
-1.7.0.4
+1.7.1
+
 
