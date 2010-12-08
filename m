@@ -1,68 +1,103 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ey0-f174.google.com ([209.85.215.174]:57549 "EHLO
-	mail-ey0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754286Ab0L2XcT (ORCPT
+Received: from mail30s.wh2.ocn.ne.jp ([125.206.180.198]:9561 "HELO
+	mail30s.wh2.ocn.ne.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1753572Ab0LHDpA (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 29 Dec 2010 18:32:19 -0500
-Received: by eye27 with SMTP id 27so4753430eye.19
-        for <linux-wireless@vger.kernel.org>; Wed, 29 Dec 2010 15:32:18 -0800 (PST)
-From: Arik Nemtsov <arik@wizery.com>
-To: <linux-wireless@vger.kernel.org>
-Cc: Luciano Coelho <luciano.coelho@nokia.com>,
-	Arik Nemtsov <arik@wizery.com>
-Subject: [PATCH v4 00/18] AP mode support for wl12xx
-Date: Thu, 30 Dec 2010 01:31:55 +0200
-Message-Id: <1293665533-7599-1-git-send-email-arik@wizery.com>
+	Tue, 7 Dec 2010 22:45:00 -0500
+Received: from vs3002.wh2.ocn.ne.jp (125.206.180.165)
+	by mail30s.wh2.ocn.ne.jp (RS ver 1.0.95vs) with SMTP id 3-0327619897
+	for <linux-wireless@vger.kernel.org>; Wed,  8 Dec 2010 12:44:58 +0900 (JST)
+Subject: [PATCH v2] cfg80211: Add antenna availability information
+To: johannes@sipsolutions.net, linville@tuxdriver.com
+From: Bruno Randolf <br1@einfach.org>
+Cc: linux-wireless@vger.kernel.org
+Date: Wed, 08 Dec 2010 12:44:29 +0900
+Message-ID: <20101208034429.24218.50707.stgit@localhost6.localdomain6>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-These patches add access point mode support to the wl12xx driver.
-This mode uses a separate firmware and has a different initialization
-sequence.
+Add a field to wiphy for the hardware to report the availble antennas for
+configuration. Only if this is set to something bigger than zero, will the
+anntenna configuration ops be executed.
 
-In all instances, the flow has been split according to the operating
-mode of the driver (AP/STA), so as not to affect STA mode functionality.
+Allthough this could be a simple number of antennas, I defined it as a bitmap
+of antennas which are available for configuration, since it's more consistent
+with the rest of the antenna API and there could be cases where the
+hardware allows only configuration of certain antennas. As it does not make
+much of a difference in size or normal usage, I think it's better to be able to
+support this, in case the need arises.
 
-v1->2: rebased on latest wl12xx tree
-v2->3: refactoring
-v3->4: cross-patch fix
+The antenna configuration is now also checked against the availabe antennas and
+rejected if it does not match.
 
-Arik Nemtsov (18):
-  wl1271: Add AP related configuration to conf_drv_settings
-  wl1271: AP mode - AP specific CMD_CONFIGURE sub-commands
-  wl1271: AP mode - add AP specific event
-  wl1271: AP-mode high level commands
-  wl1271: AP mode - workaround for FW bug on station remove
-  wl1271: AP mode - init sequence
-  wl1271: AP specific RX filter configuration
-  wl1271: Add AP related definitions to HOST-FW interface
-  wl1271: Configure AP on BSS info change
-  wl1271: AP mode config in ieee80211_ops.config
-  wl1271: AP mode - change filter config
-  wl1271: AP mode - add STA add/remove ops
-  wl1271: AP mode - changes in TX path
-  wl1271: AP mode - record TX configuration settings
-  wl1271: AP mode - encryption support
-  wl1271: AP mode - fetch appropriate firmware for AP
-  wl1271: Read MAC address from NVS file on HW startup
-  wl1271: Enable AP-mode
+Signed-off-by: Bruno Randolf <br1@einfach.org>
 
- drivers/net/wireless/wl12xx/acx.c          |   62 ++-
- drivers/net/wireless/wl12xx/acx.h          |   29 +-
- drivers/net/wireless/wl12xx/boot.c         |   11 +-
- drivers/net/wireless/wl12xx/cmd.c          |  300 +++++++++-
- drivers/net/wireless/wl12xx/cmd.h          |  147 ++++-
- drivers/net/wireless/wl12xx/conf.h         |   52 ++-
- drivers/net/wireless/wl12xx/event.c        |    7 +-
- drivers/net/wireless/wl12xx/event.h        |    8 +-
- drivers/net/wireless/wl12xx/init.c         |  352 ++++++++---
- drivers/net/wireless/wl12xx/init.h         |    2 +-
- drivers/net/wireless/wl12xx/main.c         |  955 +++++++++++++++++++++-------
- drivers/net/wireless/wl12xx/rx.c           |   11 +
- drivers/net/wireless/wl12xx/rx.h           |   11 +-
- drivers/net/wireless/wl12xx/tx.c           |  105 +++-
- drivers/net/wireless/wl12xx/tx.h           |   10 +-
- drivers/net/wireless/wl12xx/wl12xx.h       |   68 ++-
- drivers/net/wireless/wl12xx/wl12xx_80211.h |    5 +
- 17 files changed, 1770 insertions(+), 365 deletions(-)
+v2:	reject antenna configurations which don't match the available antennas
+---
+ include/net/cfg80211.h |    5 +++++
+ net/wireless/nl80211.c |   12 ++++++++++--
+ 2 files changed, 15 insertions(+), 2 deletions(-)
+
+diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+index 8764c9a..ef6f15d 100644
+--- a/include/net/cfg80211.h
++++ b/include/net/cfg80211.h
+@@ -1465,6 +1465,9 @@ struct ieee80211_txrx_stypes {
+  * @mgmt_stypes: bitmasks of frame subtypes that can be subscribed to or
+  *	transmitted through nl80211, points to an array indexed by interface
+  *	type
++ *
++ * @available_antennas: bitmap of antennas which are available to configure.
++ *	antenna configuration commands will be rejected unless this is set.
+  */
+ struct wiphy {
+ 	/* assign these fields before you register the wiphy */
+@@ -1504,6 +1507,8 @@ struct wiphy {
+ 
+ 	u8 max_num_pmkids;
+ 
++	u32 available_antennas;
++
+ 	/* If multiple wiphys are registered and you're handed e.g.
+ 	 * a regular netdev with assigned ieee80211_ptr, you won't
+ 	 * know whether it points to a wiphy your driver has registered
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index 2cf0333..4f6ff31 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -547,7 +547,7 @@ static int nl80211_send_wiphy(struct sk_buff *msg, u32 pid, u32 seq, int flags,
+ 	if (dev->wiphy.flags & WIPHY_FLAG_CONTROL_PORT_PROTOCOL)
+ 		NLA_PUT_FLAG(msg, NL80211_ATTR_CONTROL_PORT_ETHERTYPE);
+ 
+-	if (dev->ops->get_antenna) {
++	if (dev->wiphy.available_antennas && dev->ops->get_antenna) {
+ 		u32 tx_ant = 0, rx_ant = 0;
+ 		int res;
+ 		res = dev->ops->get_antenna(&dev->wiphy, &tx_ant, &rx_ant);
+@@ -1045,7 +1045,7 @@ static int nl80211_set_wiphy(struct sk_buff *skb, struct genl_info *info)
+ 	if (info->attrs[NL80211_ATTR_WIPHY_ANTENNA_TX] &&
+ 	    info->attrs[NL80211_ATTR_WIPHY_ANTENNA_RX]) {
+ 		u32 tx_ant, rx_ant;
+-		if (!rdev->ops->set_antenna) {
++		if (!rdev->wiphy.available_antennas || !rdev->ops->set_antenna) {
+ 			result = -EOPNOTSUPP;
+ 			goto bad_res;
+ 		}
+@@ -1053,6 +1053,14 @@ static int nl80211_set_wiphy(struct sk_buff *skb, struct genl_info *info)
+ 		tx_ant = nla_get_u32(info->attrs[NL80211_ATTR_WIPHY_ANTENNA_TX]);
+ 		rx_ant = nla_get_u32(info->attrs[NL80211_ATTR_WIPHY_ANTENNA_RX]);
+ 
++		/* reject antenna configurations which don't match the
++		 * available antenna mask, except for the "all" mask */
++		if ((~tx_ant && (tx_ant & ~rdev->wiphy.available_antennas)) ||
++		    (~rx_ant && (rx_ant & ~rdev->wiphy.available_antennas))) {
++			result = -EINVAL;
++			goto bad_res;
++		}
++
+ 		result = rdev->ops->set_antenna(&rdev->wiphy, tx_ant, rx_ant);
+ 		if (result)
+ 			goto bad_res;
 
