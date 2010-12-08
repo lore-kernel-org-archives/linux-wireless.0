@@ -1,281 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:51979 "EHLO nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753307Ab0LMHlL (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 13 Dec 2010 02:41:11 -0500
-From: Felix Fietkau <nbd@openwrt.org>
-To: linux-wireless@vger.kernel.org
-Cc: linville@tuxdriver.com, lrodriguez@atheros.com,
-	vasanth@atheros.com, Felix Fietkau <nbd@openwrt.org>
-Subject: [PATCH v2 5/7] ath9k_hw: fix PA predistortion training power selection
-Date: Mon, 13 Dec 2010 08:40:54 +0100
-Message-Id: <1292226056-56008-5-git-send-email-nbd@openwrt.org>
-In-Reply-To: <1292226056-56008-4-git-send-email-nbd@openwrt.org>
-References: <1292226056-56008-1-git-send-email-nbd@openwrt.org>
- <1292226056-56008-2-git-send-email-nbd@openwrt.org>
- <1292226056-56008-3-git-send-email-nbd@openwrt.org>
- <1292226056-56008-4-git-send-email-nbd@openwrt.org>
+Received: from mail-ew0-f45.google.com ([209.85.215.45]:46218 "EHLO
+	mail-ew0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756095Ab0LHU72 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 8 Dec 2010 15:59:28 -0500
+Received: by ewy10 with SMTP id 10so1245494ewy.4
+        for <linux-wireless@vger.kernel.org>; Wed, 08 Dec 2010 12:59:26 -0800 (PST)
+From: Christian Lamparter <chunkeey@googlemail.com>
+To: Chris Pechard <chrispechard@yahoo.com>
+Subject: Re: carl9170fw: custom build incompatibility issue
+Date: Wed, 8 Dec 2010 21:59:09 +0100
+Cc: linux-wireless@vger.kernel.org
+References: <368544.4876.qm@web120203.mail.ne1.yahoo.com> <201012082052.51358.chunkeey@googlemail.com> <326185.97637.qm@web120219.mail.ne1.yahoo.com>
+In-Reply-To: <326185.97637.qm@web120219.mail.ne1.yahoo.com>
+MIME-Version: 1.0
+Content-Type: Text/Plain;
+  charset="iso-8859-15"
+Message-Id: <201012082159.09406.chunkeey@googlemail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The EEPROM contains scale factors for the tx power, which define
-the range of allowable difference between target power and training
-power. If the difference is too big, PA predistortion cannot be used.
-For 2.4 GHz there is only one scale factor, for 5 GHz there are
-three, depending on the specific frequency range.
+On Wednesday 08 December 2010 21:33:43 Chris Pechard wrote:
+> Hi Christian,
+> 
+> this is the info you requested. 
 
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
----
- drivers/net/wireless/ath/ath9k/ar9003_eeprom.c |   13 +++
- drivers/net/wireless/ath/ath9k/ar9003_paprd.c  |  102 ++++++++++++++++++++----
- drivers/net/wireless/ath/ath9k/ar9003_phy.h    |    8 ++
- drivers/net/wireless/ath/ath9k/hw.h            |    2 +
- drivers/net/wireless/ath/ath9k/main.c          |    4 +-
- 5 files changed, 112 insertions(+), 17 deletions(-)
+The only thing wrong is the lack of fw metadata (which is kind of
+obvious since the the firmware is somewhat customizable).
 
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
-index 5ad37d0..4149ffb 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
-@@ -4798,6 +4798,19 @@ static void ath9k_hw_ar9300_set_txpower(struct ath_hw *ah,
- 	/* Write target power array to registers */
- 	ar9003_hw_tx_power_regwrite(ah, targetPowerValT2);
- 	ar9003_hw_calibration_apply(ah, chan->channel);
-+
-+	if (IS_CHAN_2GHZ(chan)) {
-+		if (IS_CHAN_HT40(chan))
-+			i = ALL_TARGET_HT40_0_8_16;
-+		else
-+			i = ALL_TARGET_HT20_0_8_16;
-+	} else {
-+		if (IS_CHAN_HT40(chan))
-+			i = ALL_TARGET_HT40_7;
-+		else
-+			i = ALL_TARGET_HT20_7;
-+	}
-+	ah->paprd_target_power = targetPowerValT2[i];
- }
- 
- static u16 ath9k_hw_ar9300_get_spur_channel(struct ath_hw *ah,
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_paprd.c b/drivers/net/wireless/ath/ath9k/ar9003_paprd.c
-index cdca4c3..69f7792 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_paprd.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_paprd.c
-@@ -30,9 +30,69 @@ void ar9003_paprd_enable(struct ath_hw *ah, bool val)
- }
- EXPORT_SYMBOL(ar9003_paprd_enable);
- 
--static void ar9003_paprd_setup_single_table(struct ath_hw *ah)
-+static int ar9003_get_training_power_2g(struct ath_hw *ah)
- {
- 	struct ar9300_eeprom *eep = &ah->eeprom.ar9300_eep;
-+	struct ar9300_modal_eep_header *hdr = &eep->modalHeader2G;
-+	unsigned int power, scale, delta;
-+
-+	scale = MS(le32_to_cpu(hdr->papdRateMaskHt20), AR9300_PAPRD_SCALE_1);
-+	power = REG_READ_FIELD(ah, AR_PHY_POWERTX_RATE5,
-+			       AR_PHY_POWERTX_RATE5_POWERTXHT20_0);
-+
-+	delta = abs((int) ah->paprd_target_power - (int) power);
-+	if (delta > scale)
-+		return -1;
-+
-+	if (delta < 4)
-+		power -= 4 - delta;
-+
-+	return power;
-+}
-+
-+static int get_streams(int mask)
-+{
-+	return !!(mask & BIT(0)) + !!(mask & BIT(1)) + !!(mask & BIT(2));
-+}
-+
-+static int ar9003_get_training_power_5g(struct ath_hw *ah)
-+{
-+	struct ath_common *common = ath9k_hw_common(ah);
-+	struct ar9300_eeprom *eep = &ah->eeprom.ar9300_eep;
-+	struct ar9300_modal_eep_header *hdr = &eep->modalHeader5G;
-+	struct ath9k_channel *chan = ah->curchan;
-+	unsigned int power, scale, delta;
-+
-+	if (chan->channel >= 5700)
-+		scale = MS(le32_to_cpu(hdr->papdRateMaskHt20),
-+			   AR9300_PAPRD_SCALE_1);
-+	else if (chan->channel >= 5400)
-+		scale = MS(le32_to_cpu(hdr->papdRateMaskHt40),
-+			   AR9300_PAPRD_SCALE_2);
-+	else
-+		scale = MS(le32_to_cpu(hdr->papdRateMaskHt40),
-+			   AR9300_PAPRD_SCALE_1);
-+
-+	if (IS_CHAN_HT40(chan))
-+		power = REG_READ_FIELD(ah, AR_PHY_POWERTX_RATE8,
-+			AR_PHY_POWERTX_RATE8_POWERTXHT40_5);
-+	else
-+		power = REG_READ_FIELD(ah, AR_PHY_POWERTX_RATE6,
-+			AR_PHY_POWERTX_RATE6_POWERTXHT20_5);
-+
-+	power += scale;
-+	delta = abs((int) ah->paprd_target_power - (int) power);
-+	if (delta > scale)
-+		return -1;
-+
-+	power += 2 * get_streams(common->tx_chainmask);
-+	return power;
-+}
-+
-+static int ar9003_paprd_setup_single_table(struct ath_hw *ah)
-+{
-+	struct ath_common *common = ath9k_hw_common(ah);
-+	struct ar9300_eeprom *eep = &ah->eeprom.ar9300_eep;
- 	struct ar9300_modal_eep_header *hdr;
- 	static const u32 ctrl0[3] = {
- 		AR_PHY_PAPRD_CTRL0_B0,
-@@ -45,6 +105,7 @@ static void ar9003_paprd_setup_single_table(struct ath_hw *ah)
- 		AR_PHY_PAPRD_CTRL1_B2
- 	};
- 	u32 am_mask, ht40_mask;
-+	int training_power;
- 	int i;
- 
- 	if (ah->curchan && IS_CHAN_5GHZ(ah->curchan))
-@@ -55,11 +116,25 @@ static void ar9003_paprd_setup_single_table(struct ath_hw *ah)
- 	am_mask = le32_to_cpu(hdr->papdRateMaskHt20) & AR9300_PAPRD_RATE_MASK;
- 	ht40_mask = le32_to_cpu(hdr->papdRateMaskHt40) & AR9300_PAPRD_RATE_MASK;
- 
-+	if (IS_CHAN_2GHZ(ah->curchan))
-+		training_power = ar9003_get_training_power_2g(ah);
-+	else
-+		training_power = ar9003_get_training_power_5g(ah);
-+
-+	if (training_power < 0) {
-+		ath_dbg(common, ATH_DBG_CALIBRATE,
-+			"PAPRD target power delta out of range");
-+		return -ERANGE;
-+	}
-+	ah->paprd_training_power = training_power;
-+	ath_dbg(common, ATH_DBG_CALIBRATE,
-+		"Training power: %d, Target power: %d\n",
-+		ah->paprd_training_power, ah->paprd_target_power);
-+
- 	REG_RMW_FIELD(ah, AR_PHY_PAPRD_AM2AM, AR_PHY_PAPRD_AM2AM_MASK, am_mask);
- 	REG_RMW_FIELD(ah, AR_PHY_PAPRD_AM2PM, AR_PHY_PAPRD_AM2PM_MASK, am_mask);
- 	REG_RMW_FIELD(ah, AR_PHY_PAPRD_HT40, AR_PHY_PAPRD_HT40_MASK, ht40_mask);
- 
--
- 	for (i = 0; i < ah->caps.max_txchains; i++) {
- 		REG_RMW_FIELD(ah, ctrl0[i],
- 			      AR_PHY_PAPRD_CTRL0_USE_SINGLE_TABLE_MASK, 1);
-@@ -141,6 +216,7 @@ static void ar9003_paprd_setup_single_table(struct ath_hw *ah)
- 		      AR_PHY_PAPRD_PRE_POST_SCALING, 185706);
- 	REG_RMW_FIELD(ah, AR_PHY_PAPRD_PRE_POST_SCALE_7_B0,
- 		      AR_PHY_PAPRD_PRE_POST_SCALING, 175487);
-+	return 0;
- }
- 
- static void ar9003_paprd_get_gain_table(struct ath_hw *ah)
-@@ -595,15 +671,10 @@ void ar9003_paprd_populate_single_table(struct ath_hw *ah,
- {
- 	u32 *paprd_table_val = caldata->pa_table[chain];
- 	u32 small_signal_gain = caldata->small_signal_gain[chain];
--	u32 training_power;
-+	u32 training_power = ah->paprd_training_power;
- 	u32 reg = 0;
- 	int i;
- 
--	training_power =
--	    REG_READ_FIELD(ah, AR_PHY_POWERTX_RATE5,
--			   AR_PHY_POWERTX_RATE5_POWERTXHT20_0);
--	training_power -= 4;
--
- 	if (chain == 0)
- 		reg = AR_PHY_PAPRD_MEM_TAB_B0;
- 	else if (chain == 1)
-@@ -643,14 +714,8 @@ EXPORT_SYMBOL(ar9003_paprd_populate_single_table);
- 
- int ar9003_paprd_setup_gain_table(struct ath_hw *ah, int chain)
- {
--
- 	unsigned int i, desired_gain, gain_index;
--	unsigned int train_power;
--
--	train_power = REG_READ_FIELD(ah, AR_PHY_POWERTX_RATE5,
--				     AR_PHY_POWERTX_RATE5_POWERTXHT20_0);
--
--	train_power = train_power - 4;
-+	unsigned int train_power = ah->paprd_training_power;
- 
- 	desired_gain = ar9003_get_desired_gain(ah, chain, train_power);
- 
-@@ -716,7 +781,12 @@ EXPORT_SYMBOL(ar9003_paprd_create_curve);
- 
- int ar9003_paprd_init_table(struct ath_hw *ah)
- {
--	ar9003_paprd_setup_single_table(ah);
-+	int ret;
-+
-+	ret = ar9003_paprd_setup_single_table(ah);
-+	if (ret < 0)
-+	    return ret;
-+
- 	ar9003_paprd_get_gain_table(ah);
- 	return 0;
- }
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_phy.h b/drivers/net/wireless/ath/ath9k/ar9003_phy.h
-index 6f811c7..59bab6b 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_phy.h
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_phy.h
-@@ -1090,6 +1090,14 @@
- #define AR_PHY_POWERTX_RATE5_POWERTXHT20_0	0x3F
- #define AR_PHY_POWERTX_RATE5_POWERTXHT20_0_S	0
- 
-+#define AR_PHY_POWERTX_RATE6			(AR_SM_BASE + 0x1d4)
-+#define AR_PHY_POWERTX_RATE6_POWERTXHT20_5	0x3F00
-+#define AR_PHY_POWERTX_RATE6_POWERTXHT20_5_S	8
-+
-+#define AR_PHY_POWERTX_RATE8			(AR_SM_BASE + 0x1dc)
-+#define AR_PHY_POWERTX_RATE8_POWERTXHT40_5	0x3F00
-+#define AR_PHY_POWERTX_RATE8_POWERTXHT40_5_S	8
-+
- void ar9003_hw_set_chain_masks(struct ath_hw *ah, u8 rx, u8 tx);
- 
- #endif  /* AR9003_PHY_H */
-diff --git a/drivers/net/wireless/ath/ath9k/hw.h b/drivers/net/wireless/ath/ath9k/hw.h
-index c20e047..97f22c4 100644
---- a/drivers/net/wireless/ath/ath9k/hw.h
-+++ b/drivers/net/wireless/ath/ath9k/hw.h
-@@ -833,6 +833,8 @@ struct ath_hw {
- 	u32 bb_watchdog_last_status;
- 	u32 bb_watchdog_timeout_ms; /* in ms, 0 to disable */
- 
-+	unsigned int paprd_target_power;
-+	unsigned int paprd_training_power;
- 	u32 paprd_gain_table_entries[PAPRD_GAIN_TABLE_ENTRIES];
- 	u8 paprd_gain_table_index[PAPRD_GAIN_TABLE_ENTRIES];
- 	/*
-diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
-index bcadf9c..378485b 100644
---- a/drivers/net/wireless/ath/ath9k/main.c
-+++ b/drivers/net/wireless/ath/ath9k/main.c
-@@ -373,6 +373,9 @@ void ath_paprd_calibrate(struct work_struct *work)
- 	if (!caldata)
- 		return;
- 
-+	if (ar9003_paprd_init_table(ah) < 0)
-+		return;
-+
- 	skb = alloc_skb(len, GFP_KERNEL);
- 	if (!skb)
- 		return;
-@@ -388,7 +391,6 @@ void ath_paprd_calibrate(struct work_struct *work)
- 	memcpy(hdr->addr3, hw->wiphy->perm_addr, ETH_ALEN);
- 
- 	ath9k_ps_wakeup(sc);
--	ar9003_paprd_init_table(ah);
- 	for (chain = 0; chain < AR9300_MAX_CHAINS; chain++) {
- 		if (!(common->tx_chainmask & BIT(chain)))
- 			continue;
--- 
-1.7.3.2
 
+You have two options:
+
+ - either concat carl9170.fw and carl9170.dsc into carl9170-1.fw
+   (by hand).
+
+ - autogen.sh install [also adds miniboot + fw checksum]
+   (since CONFIG_CARL9170FW_MAKE_RELEASE is y,
+	and CONFIG_CARL9170FW_RELEASE_VERSION=1)
+
+Best Regards,
+	Christian 
