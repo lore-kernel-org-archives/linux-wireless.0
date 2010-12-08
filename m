@@ -1,71 +1,360 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:60694 "EHLO nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752942Ab0LAQpe (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 1 Dec 2010 11:45:34 -0500
-Message-ID: <4CF67BAB.60504@openwrt.org>
-Date: Wed, 01 Dec 2010 17:45:31 +0100
-From: Felix Fietkau <nbd@openwrt.org>
-MIME-Version: 1.0
-To: Vasanthakumar Thiagarajan <vasanth@atheros.com>
-CC: linville@tuxdriver.com, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 11/26] ath9k_hw: Find chansel of AR_PHY_65NM_CH0_SYNTH7
- from an array for AR9485
-References: <1291188775-13707-1-git-send-email-vasanth@atheros.com> <1291188775-13707-12-git-send-email-vasanth@atheros.com>
-In-Reply-To: <1291188775-13707-12-git-send-email-vasanth@atheros.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from mail-pw0-f46.google.com ([209.85.160.46]:59704 "EHLO
+	mail-pw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754284Ab0LHROX (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 8 Dec 2010 12:14:23 -0500
+Received: by mail-pw0-f46.google.com with SMTP id 3so322374pwj.19
+        for <linux-wireless@vger.kernel.org>; Wed, 08 Dec 2010 09:14:23 -0800 (PST)
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, chaoming_li@realsil.com.cn,
+	Larry Finger <Larry.Finger@lwfinger.net>
+Subject: [PATCH 17/22] rtl8192ce: Add files to rtlwifi/rtl8192ce - Part 17: rtl8192c-sw.{c,h}
+Date: Wed,  8 Dec 2010 11:12:47 -0600
+Message-Id: <1291828372-25159-18-git-send-email-Larry.Finger@lwfinger.net>
+In-Reply-To: <1291828372-25159-1-git-send-email-Larry.Finger@lwfinger.net>
+References: <1291828372-25159-1-git-send-email-Larry.Finger@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2010-12-01 8:32 AM, Vasanthakumar Thiagarajan wrote:
-> Signed-off-by: Vasanthakumar Thiagarajan <vasanth@atheros.com>
-> ---
->  drivers/net/wireless/ath/ath9k/ar9003_phy.c |   25 ++++++++++++++++++++++++-
->  1 files changed, 24 insertions(+), 1 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/ath/ath9k/ar9003_phy.c b/drivers/net/wireless/ath/ath9k/ar9003_phy.c
-> index 4e35bda..4739af1 100644
-> --- a/drivers/net/wireless/ath/ath9k/ar9003_phy.c
-> +++ b/drivers/net/wireless/ath/ath9k/ar9003_phy.c
-> @@ -25,6 +25,24 @@ static const int cycpwrThr1_table[] =
->  /* level:  0   1   2   3   4   5   6   7   8  */
->  	{ -6, -4, -2,  0,  2,  4,  6,  8 };     /* lvl 0-7, default 3 */
->  
-> +/* Chansel table used by ar9485 */
-> +static const u32 ar9003_chansel_xtal_40M[] = {
-> +	0xa0ccbe,
-> +	0xa12213,
-> +	0xa17769,
-> +	0xa1ccbe,
-> +	0xa22213,
-> +	0xa27769,
-> +	0xa2ccbe,
-> +	0xa32213,
-> +	0xa37769,
-> +	0xa3ccbe,
-> +	0xa42213,
-> +	0xa47769,
-> +	0xa4ccbe,
-> +	0xa5998b,
-> +};
-> +
->  /*
->   * register values to turn OFDM weak signal detection OFF
->   */
-> @@ -75,7 +93,12 @@ static int ar9003_hw_set_channel(struct ath_hw *ah, struct ath9k_channel *chan)
->  	freq = centers.synth_center;
->  
->  	if (freq < 4800) {     /* 2 GHz, fractional mode */
-> -		channelSel = CHANSEL_2G(freq);
-> +		if (AR_SREV_9485(ah)) {
-> +			int ichan = ieee80211_frequency_to_channel(freq);
-> +
-> +			channelSel = ar9003_chansel_xtal_40M[ichan - 1];
-> +		} else
-> +			channelSel = CHANSEL_2G(freq);
-I looked at the values of this table, this is exactly the same as what
-CHANSEL_2G() returns except that the table has an offset of -14.
-Please use CHANSEL_2G(freq) - 14 for AR9485 and drop the table to avoid
-adding more unnecessary hardcoded values.
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+---
+ .../net/wireless/rtlwifi/rtl8192ce/rtl8192c-sw.c   |  280 ++++++++++++++++++++
+ .../net/wireless/rtlwifi/rtl8192ce/rtl8192c-sw.h   |   37 +++
+ 2 files changed, 317 insertions(+), 0 deletions(-)
+ create mode 100644 drivers/net/wireless/rtlwifi/rtl8192ce/rtl8192c-sw.c
+ create mode 100644 drivers/net/wireless/rtlwifi/rtl8192ce/rtl8192c-sw.h
 
-- Felix
+diff --git a/drivers/net/wireless/rtlwifi/rtl8192ce/rtl8192c-sw.c b/drivers/net/wireless/rtlwifi/rtl8192ce/rtl8192c-sw.c
+new file mode 100644
+index 0000000..3cdca00
+--- /dev/null
++++ b/drivers/net/wireless/rtlwifi/rtl8192ce/rtl8192c-sw.c
+@@ -0,0 +1,280 @@
++/******************************************************************************
++ *
++ * Copyright(c) 2009-2010  Realtek Corporation.
++ *
++ * This program is free software; you can redistribute it and/or modify it
++ * under the terms of version 2 of the GNU General Public License as
++ * published by the Free Software Foundation.
++ *
++ * This program is distributed in the hope that it will be useful, but WITHOUT
++ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
++ * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
++ * more details.
++ *
++ * You should have received a copy of the GNU General Public License along with
++ * this program; if not, write to the Free Software Foundation, Inc.,
++ * 51 Franklin Street, Fifth Floor, Boston, MA 02110, USA
++ *
++ * The full GNU General Public License is included in this distribution in the
++ * file called LICENSE.
++ *
++ * Contact Information:
++ * wlanfae <wlanfae@realtek.com>
++ * Realtek Corporation, No. 2, Innovation Road II, Hsinchu Science Park,
++ * Hsinchu 300, Taiwan.
++ *
++ * Larry Finger <Larry.Finger@lwfinger.net>
++ *
++ *****************************************************************************/
++
++#include "../wifi.h"
++#include "../core.h"
++#include "../pci.h"
++#include "rtl8192c-reg.h"
++#include "rtl8192c-def.h"
++#include "rtl8192c-phy.h"
++#include "rtl8192c-dm.h"
++#include "rtl8192c-hw.h"
++#include "rtl8192c-sw.h"
++#include "rtl8192c-trx.h"
++#include "rtl8192c-led.h"
++
++int rtl92c_init_sw_vars(struct ieee80211_hw *hw)
++{
++	struct rtl_priv *rtlpriv = rtl_priv(hw);
++	struct rtl_pci *rtlpci = rtl_pcidev(rtl_pcipriv(hw));
++
++	rtlpriv->dm.b_dm_initialgain_enable = 1;
++	rtlpriv->dm.dm_flag = 0;
++	rtlpriv->dm.b_disable_framebursting = 0;;
++	rtlpriv->dm.thermalvalue = 0;
++	rtlpci->transmit_config = CFENDFORM | BIT(12) | BIT(13);
++
++	rtlpci->receive_config = (RCR_APPFCS |
++				  RCR_AMF |
++				  RCR_ADF |
++				  RCR_APP_MIC |
++				  RCR_APP_ICV |
++				  RCR_AICV |
++				  RCR_ACRC32 |
++				  RCR_AB |
++				  RCR_AM |
++				  RCR_APM |
++				  RCR_APP_PHYST_RXFF | RCR_HTC_LOC_CTRL | 0);
++
++	rtlpci->irq_mask[0] =
++	    (u32) (IMR_ROK |
++		   IMR_VODOK |
++		   IMR_VIDOK |
++		   IMR_BEDOK |
++		   IMR_BKDOK |
++		   IMR_MGNTDOK |
++		   IMR_HIGHDOK | IMR_BDOK | IMR_RDU | IMR_RXFOVW | 0);
++
++	rtlpci->irq_mask[1] = (u32) (IMR_CPWM | IMR_C2HCMD | 0);
++
++	rtlpriv->rtlhal.pfirmware = (u8 *) vmalloc(0x4000);
++	if (!rtlpriv->rtlhal.pfirmware) {
++		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
++			 ("Can't alloc buffer for fw.\n"));
++		return 1;
++	}
++
++	return 0;
++}
++
++void rtl92c_deinit_sw_vars(struct ieee80211_hw *hw)
++{
++	struct rtl_priv *rtlpriv = rtl_priv(hw);
++
++	if (rtlpriv->rtlhal.pfirmware) {
++		vfree(rtlpriv->rtlhal.pfirmware);
++		rtlpriv->rtlhal.pfirmware = NULL;
++	}
++}
++
++static struct rtl_hal_ops rtl8192ce_hal_ops = {
++	.init_sw_vars = rtl92c_init_sw_vars,
++	.deinit_sw_vars = rtl92c_deinit_sw_vars,
++	.read_eeprom_info = rtl92ce_read_eeprom_info,
++	.interrupt_recognized = rtl92ce_interrupt_recognized,
++	.hw_init = rtl92ce_hw_init,
++	.hw_disable = rtl92ce_card_disable,
++	.enable_interrupt = rtl92ce_enable_interrupt,
++	.disable_interrupt = rtl92ce_disable_interrupt,
++	.set_network_type = rtl92ce_set_network_type,
++	.set_qos = rtl92ce_set_qos,
++	.set_bcn_reg = rtl92ce_set_beacon_related_registers,
++	.set_bcn_intv = rtl92ce_set_beacon_interval,
++	.update_interrupt_mask = rtl92ce_update_interrupt_mask,
++	.get_hw_reg = rtl92ce_get_hw_reg,
++	.set_hw_reg = rtl92ce_set_hw_reg,
++	.update_rate_table = rtl92ce_update_hal_rate_table,
++	.update_rate_mask = rtl92ce_update_hal_rate_mask,
++	.fill_tx_desc = rtl92ce_tx_fill_desc,
++	.fill_tx_cmddesc = rtl92ce_tx_fill_cmddesc,
++	.query_rx_desc = rtl92ce_rx_query_desc,
++	.set_channel_access = rtl92ce_update_channel_access_setting,
++	.radio_onoff_checking = rtl92ce_gpio_radio_on_off_checking,
++	.set_bw_mode = rtl92c_phy_set_bw_mode,
++	.switch_channel = rtl92c_phy_sw_chnl,
++	.dm_watchdog = rtl92c_dm_watchdog,
++	.scan_operation_backup = rtl92c_phy_scan_operation_backup,
++	.set_rf_power_state = rtl92c_phy_set_rf_power_state,
++	.led_control = rtl92ce_led_control,
++	.set_desc = rtl92ce_set_desc,
++	.get_desc = rtl92ce_get_desc,
++	.tx_polling = rtl92ce_tx_polling,
++	.enable_hw_sec = rtl92ce_enable_hw_security_config,
++	.set_key = rtl92ce_set_key,
++	.init_sw_leds = rtl92ce_init_sw_leds,
++	.deinit_sw_leds = rtl92ce_deinit_sw_leds,
++	.get_bbreg = rtl92c_phy_query_bb_reg,
++	.set_bbreg = rtl92c_phy_set_bb_reg,
++	.get_rfreg = rtl92c_phy_query_rf_reg,
++	.set_rfreg = rtl92c_phy_set_rf_reg,
++};
++
++static struct rtl_mod_params rtl92ce_mod_params = {
++	.sw_crypto = 0,
++};
++
++static struct rtl_hal_cfg rtl92ce_hal_cfg = {
++	.name = "rtl92c_pci",
++	.fw_name = "rtlwifi/rtl8192cfw.bin",
++	.ops = &rtl8192ce_hal_ops,
++	.mod_params = &rtl92ce_mod_params,
++
++	.maps[SYS_ISO_CTRL] = REG_SYS_ISO_CTRL,
++	.maps[SYS_FUNC_EN] = REG_SYS_FUNC_EN,
++	.maps[SYS_CLK] = REG_SYS_CLKR,
++	.maps[MAC_RCR_AM] = AM,
++	.maps[MAC_RCR_AB] = AB,
++	.maps[MAC_RCR_ACRC32] = ACRC32,
++	.maps[MAC_RCR_ACF] = ACF,
++	.maps[MAC_RCR_AAP] = AAP,
++
++	.maps[EFUSE_TEST] = REG_EFUSE_TEST,
++	.maps[EFUSE_CTRL] = REG_EFUSE_CTRL,
++	.maps[EFUSE_CLK] = 0,
++	.maps[EFUSE_CLK_CTRL] = REG_EFUSE_CTRL,
++	.maps[EFUSE_PWC_EV12V] = PWC_EV12V,
++	.maps[EFUSE_FEN_ELDR] = FEN_ELDR,
++	.maps[EFUSE_LOADER_CLK_EN] = LOADER_CLK_EN,
++	.maps[EFUSE_ANA8M] = EFUSE_ANA8M,
++	.maps[EFUSE_HWSET_MAX_SIZE] = HWSET_MAX_SIZE,
++
++	.maps[RWCAM] = REG_CAMCMD,
++	.maps[WCAMI] = REG_CAMWRITE,
++	.maps[RCAMO] = REG_CAMREAD,
++	.maps[CAMDBG] = REG_CAMDBG,
++	.maps[SECR] = REG_SECCFG,
++	.maps[SEC_CAM_NONE] = CAM_NONE,
++	.maps[SEC_CAM_WEP40] = CAM_WEP40,
++	.maps[SEC_CAM_TKIP] = CAM_TKIP,
++	.maps[SEC_CAM_AES] = CAM_AES,
++	.maps[SEC_CAM_WEP104] = CAM_WEP104,
++
++	.maps[RTL_IMR_BCNDMAINT6] = IMR_BCNDMAINT6,
++	.maps[RTL_IMR_BCNDMAINT5] = IMR_BCNDMAINT5,
++	.maps[RTL_IMR_BCNDMAINT4] = IMR_BCNDMAINT4,
++	.maps[RTL_IMR_BCNDMAINT3] = IMR_BCNDMAINT3,
++	.maps[RTL_IMR_BCNDMAINT2] = IMR_BCNDMAINT2,
++	.maps[RTL_IMR_BCNDMAINT1] = IMR_BCNDMAINT1,
++	.maps[RTL_IMR_BCNDOK8] = IMR_BCNDOK8,
++	.maps[RTL_IMR_BCNDOK7] = IMR_BCNDOK7,
++	.maps[RTL_IMR_BCNDOK6] = IMR_BCNDOK6,
++	.maps[RTL_IMR_BCNDOK5] = IMR_BCNDOK5,
++	.maps[RTL_IMR_BCNDOK4] = IMR_BCNDOK4,
++	.maps[RTL_IMR_BCNDOK3] = IMR_BCNDOK3,
++	.maps[RTL_IMR_BCNDOK2] = IMR_BCNDOK2,
++	.maps[RTL_IMR_BCNDOK1] = IMR_BCNDOK1,
++	.maps[RTL_IMR_TIMEOUT2] = IMR_TIMEOUT2,
++	.maps[RTL_IMR_TIMEOUT1] = IMR_TIMEOUT1,
++
++	.maps[RTL_IMR_TXFOVW] = IMR_TXFOVW,
++	.maps[RTL_IMR_PSTIMEOUT] = IMR_PSTIMEOUT,
++	.maps[RTL_IMR_BcnInt] = IMR_BCNINT,
++	.maps[RTL_IMR_RXFOVW] = IMR_RXFOVW,
++	.maps[RTL_IMR_RDU] = IMR_RDU,
++	.maps[RTL_IMR_ATIMEND] = IMR_ATIMEND,
++	.maps[RTL_IMR_BDOK] = IMR_BDOK,
++	.maps[RTL_IMR_MGNTDOK] = IMR_MGNTDOK,
++	.maps[RTL_IMR_TBDER] = IMR_TBDER,
++	.maps[RTL_IMR_HIGHDOK] = IMR_HIGHDOK,
++	.maps[RTL_IMR_TBDOK] = IMR_TBDOK,
++	.maps[RTL_IMR_BKDOK] = IMR_BKDOK,
++	.maps[RTL_IMR_BEDOK] = IMR_BEDOK,
++	.maps[RTL_IMR_VIDOK] = IMR_VIDOK,
++	.maps[RTL_IMR_VODOK] = IMR_VODOK,
++	.maps[RTL_IMR_ROK] = IMR_ROK,
++	.maps[RTL_IBSS_INT_MASKS] = (IMR_BCNINT | IMR_TBDOK | IMR_TBDER),
++
++	.maps[RTL_RC_CCK_RATE1M] = DESC92C_RATE1M,
++	.maps[RTL_RC_CCK_RATE2M] = DESC92C_RATE2M,
++	.maps[RTL_RC_CCK_RATE5_5M] = DESC92C_RATE5_5M,
++	.maps[RTL_RC_CCK_RATE11M] = DESC92C_RATE11M,
++	.maps[RTL_RC_OFDM_RATE6M] = DESC92C_RATE6M,
++	.maps[RTL_RC_OFDM_RATE9M] = DESC92C_RATE9M,
++	.maps[RTL_RC_OFDM_RATE12M] = DESC92C_RATE12M,
++	.maps[RTL_RC_OFDM_RATE18M] = DESC92C_RATE18M,
++	.maps[RTL_RC_OFDM_RATE24M] = DESC92C_RATE24M,
++	.maps[RTL_RC_OFDM_RATE36M] = DESC92C_RATE36M,
++	.maps[RTL_RC_OFDM_RATE48M] = DESC92C_RATE48M,
++	.maps[RTL_RC_OFDM_RATE54M] = DESC92C_RATE54M,
++
++	.maps[RTL_RC_HT_RATEMCS7] = DESC92C_RATEMCS7,
++	.maps[RTL_RC_HT_RATEMCS15] = DESC92C_RATEMCS15,
++};
++
++static struct pci_device_id rtl92ce_pci_ids[] __devinitdata = {
++	{RTL_PCI_DEVICE(PCI_VENDOR_ID_REALTEK, 0x8191, rtl92ce_hal_cfg)},
++	{RTL_PCI_DEVICE(PCI_VENDOR_ID_REALTEK, 0x8178, rtl92ce_hal_cfg)},
++	{RTL_PCI_DEVICE(PCI_VENDOR_ID_REALTEK, 0x8177, rtl92ce_hal_cfg)},
++	{RTL_PCI_DEVICE(PCI_VENDOR_ID_REALTEK, 0x8176, rtl92ce_hal_cfg)},
++	{},
++};
++
++MODULE_DEVICE_TABLE(pci, rtl92ce_pci_ids);
++
++MODULE_AUTHOR("lizhaoming	<chaoming_li@realsil.com.cn>");
++MODULE_AUTHOR("Realtek WlanFAE	<wlanfae@realtek.com>");
++MODULE_AUTHOR("Larry Finger	<Larry.Finger@lwfinger.net>");
++MODULE_LICENSE("GPL");
++MODULE_DESCRIPTION("Realtek 8192C/8188C 802.11n PCI wireless");
++MODULE_FIRMWARE("rtlwifi/rtl8192cfw.bin");
++
++module_param_named(swenc, rtl92ce_mod_params.sw_crypto, bool, 0444);
++MODULE_PARM_DESC(swenc, "using hardware crypto (default 0 [hardware])\n");
++
++static struct pci_driver rtl92ce_driver = {
++	.name = KBUILD_MODNAME,
++	.id_table = rtl92ce_pci_ids,
++	.probe = rtl_pci_probe,
++	.remove = rtl_pci_disconnect,
++
++#ifdef CONFIG_PM
++	.suspend = rtl_pci_suspend,
++	.resume = rtl_pci_resume,
++#endif
++
++};
++
++static int __init rtl92ce_module_init(void)
++{
++	int ret;
++
++	ret = pci_register_driver(&rtl92ce_driver);
++	if (ret)
++		RT_ASSERT(false, (": No device found\n"));
++
++	return ret;
++}
++
++static void __exit rtl92ce_module_exit(void)
++{
++	pci_unregister_driver(&rtl92ce_driver);
++}
++
++module_init(rtl92ce_module_init);
++module_exit(rtl92ce_module_exit);
+diff --git a/drivers/net/wireless/rtlwifi/rtl8192ce/rtl8192c-sw.h b/drivers/net/wireless/rtlwifi/rtl8192ce/rtl8192c-sw.h
+new file mode 100644
+index 0000000..de1198c
+--- /dev/null
++++ b/drivers/net/wireless/rtlwifi/rtl8192ce/rtl8192c-sw.h
+@@ -0,0 +1,37 @@
++/******************************************************************************
++ *
++ * Copyright(c) 2009-2010  Realtek Corporation.
++ *
++ * This program is free software; you can redistribute it and/or modify it
++ * under the terms of version 2 of the GNU General Public License as
++ * published by the Free Software Foundation.
++ *
++ * This program is distributed in the hope that it will be useful, but WITHOUT
++ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
++ * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
++ * more details.
++ *
++ * You should have received a copy of the GNU General Public License along with
++ * this program; if not, write to the Free Software Foundation, Inc.,
++ * 51 Franklin Street, Fifth Floor, Boston, MA 02110, USA
++ *
++ * The full GNU General Public License is included in this distribution in the
++ * file called LICENSE.
++ *
++ * Contact Information:
++ * wlanfae <wlanfae@realtek.com>
++ * Realtek Corporation, No. 2, Innovation Road II, Hsinchu Science Park,
++ * Hsinchu 300, Taiwan.
++ *
++ * Larry Finger <Larry.Finger@lwfinger.net>
++ *
++ *****************************************************************************/
++
++#ifndef __RTL92CE_SW_H__
++#define __RTL92CE_SW_H__
++
++int rtl92c_init_sw_vars(struct ieee80211_hw *hw);
++void rtl92c_deinit_sw_vars(struct ieee80211_hw *hw);
++void rtl92c_init_var_map(struct ieee80211_hw *hw);
++
++#endif
+-- 
+1.7.1
+
