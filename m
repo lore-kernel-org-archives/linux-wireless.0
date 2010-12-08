@@ -1,199 +1,90 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.19.149.2]:47813 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753464Ab0LRISC (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 18 Dec 2010 03:18:02 -0500
-Received: from mail.atheros.com ([10.10.20.105])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Sat, 18 Dec 2010 00:17:47 -0800
-From: Rajkumar Manoharan <rmanoharan@atheros.com>
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>,
-	Rajkumar Manoharan <rmanoharan@atheros.com>
-Subject: [PATCH 1/2] ath9k: Fix warnings on card removal
-Date: Sat, 18 Dec 2010 13:47:37 +0530
-Message-ID: <1292660258-4063-1-git-send-email-rmanoharan@atheros.com>
+Received: from mail.candelatech.com ([208.74.158.172]:57259 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755257Ab0LHRg2 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 8 Dec 2010 12:36:28 -0500
+Message-ID: <4CFFC214.6000608@candelatech.com>
+Date: Wed, 08 Dec 2010 09:36:20 -0800
+From: Ben Greear <greearb@candelatech.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+CC: Johannes Berg <johannes@sipsolutions.net>,
+	Tejun Heo <tj@kernel.org>, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] mac80211: Fix deadlock in ieee80211_do_stop.
+References: <1289592426-5367-1-git-send-email-greearb@candelatech.com> <1289594998.3736.11.camel@jlt3.sipsolutions.net> <4CDDAA3B.9090007@candelatech.com> <1289596096.3736.13.camel@jlt3.sipsolutions.net> <4CDE699B.70401@kernel.org> <4CE1A344.7040201@candelatech.com> <4CE292F7.4090200@kernel.org> <1289929258.3673.1.camel@jlt3.sipsolutions.net> <4CE396A9.1050908@kernel.org> <1290020005.3777.6.camel@jlt3.sipsolutions.net> <4CE4C8DD.6010806@kernel.org> <51f5dd53c39a77fff4efc1a99b189725@localhost> <4CE4D41F.1080005@kernel.org> <1290099585.3801.1.camel@jlt3.sipsolutions.net> <4CE68AF4.8060507@kernel.org> <1290189452.3768.3.camel@jlt3.sipsolutions.net> <4CE6E430.6080804@candelatech.com> <AANLkTimf9D-HP8i99ReVrTqcDHrWchT=HSeTywe_=as0@mail.gmail.com>
+In-Reply-To: <AANLkTimf9D-HP8i99ReVrTqcDHrWchT=HSeTywe_=as0@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-There is no point in doing register read/write operations
-when is hardware is not present. This leads to unnecessary
-warnings on log. This patch resolves the following
-warnings on card removal.
+On 11/19/2010 02:27 PM, Luis R. Rodriguez wrote:
+> On Fri, Nov 19, 2010 at 12:55 PM, Ben Greear<greearb@candelatech.com>  wrote:
+>> On 11/19/2010 09:57 AM, Johannes Berg wrote:
+>>>
+>>> On Fri, 2010-11-19 at 15:34 +0100, Tejun Heo wrote:
+>>>
+>>>> Awesome.  :-)
+>>>>
+>>>> Ben, if you have trouble generating full trace, please let me know if
+>>>> there's something I can buy which isn't too expensive to reproduce the
+>>>> problem.  I would be happy to track it down myself.
+>>>
+>>> Maybe you can try Ben's setup in kvm (or directly on your box if you
+>>> like) with mac80211_hwsim. From a mac80211 POV it should be almost
+>>> equivalent, although it'll do different memory allocation patterns etc.
+>>
+>> I tried manually backing out my patch, and now I can no longer reproduce
+>> the problem.  Maybe something in -rc2 fixed it, or maybe some changes
+>> to my environment just made it harder to hit.
+>>
+>> If you see no logical reason why calling flush_work with RTNL held
+>> would cause trouble, then I guess we can just leave the code as is
+>> for now.
+>>
+>> If you do want to play with this yourself, I think any ath5k type adapter
+>> with 64+ virtual stations configured would be a valid test case.  My
+>> application calls ifdown/ifup on them a few times after being created
+>> and then generates traffic (and gathers stats, calls 'iwconfig', etc).
+>> As configured in the original scenario that reproduced the problem,
+>> the STAs had no encryption and were all associating with a single AP.
+>> wpa_supplicant was not being used.
+>
+> FWIW, I had to do similar tests before and Ben offered up a perl
+> script to do something similar to what his proprietary app does upon
+> device bring up. I've modified it just a bit and you can find it here:
+>
+> http://www.kernel.org/pub/linux/kernel/people/mcgrof/scripts/poo.pl
 
-ath: Failed to wakeup in 500us
-------------[ cut here ]------------
-WARNING: at drivers/net/wireless/ath/ath9k/hw.c:1618
-ath9k_hw_setpower+0x61f/0x630 [ath9k_hw]()
-Hardware name: 64756D6
-Pid: 540, comm: kworker/u:3 Not tainted 2.6.37-rc6-wl #37
-Call Trace:
- [<ffffffff810501aa>] warn_slowpath_common+0x7a/0xb0
- [<ffffffffa056e280>] ? ath9k_iowrite32+0x0/0x90 [ath9k]
- [<ffffffff810501f5>] warn_slowpath_null+0x15/0x20
- [<ffffffffa05226ef>] ath9k_hw_setpower+0x61f/0x630 [ath9k_hw]
- [<ffffffffa05700e5>] ath9k_ps_wakeup+0x85/0xd0 [ath9k]
- [<ffffffffa0570685>] ath9k_configure_filter+0x25/0x80 [ath9k]
- [<ffffffffa04dde43>] ieee80211_configure_filter+0x133/0x190 [mac80211]
- [<ffffffffa04ee502>] ieee80211_do_stop+0x132/0x540 [mac80211]
- [<ffffffff813466ff>] ? _raw_spin_unlock_bh+0x1f/0x30
- [<ffffffff812b6923>] ? dev_deactivate+0x1c3/0x1e0
- [<ffffffffa04ee925>] ieee80211_stop+0x15/0x20 [mac80211]
- [<ffffffff8129d1b6>] __dev_close+0x56/0x90
- [<ffffffff8129d20a>] dev_close+0x1a/0x50
- [<ffffffff8129d57a>] rollback_registered_many+0x6a/0x250
- [<ffffffff8129d776>] unregister_netdevice_many+0x16/0x80
- [<ffffffffa04ee0f4>] ieee80211_remove_interfaces+0xb4/0xf0 [mac80211]
- [<ffffffffa04dd0be>] ieee80211_unregister_hw+0x4e/0x110 [mac80211]
- [<ffffffffa056f467>] ath9k_deinit_device+0x87/0xd0 [ath9k]
- [<ffffffffa057d029>] ath_pci_remove+0x49/0x90 [ath9k]
+Well, I backed out my work-around patch yesterday, and then let
+the system run overnight.  This morning it is mostly dead, spewing
+OOM errors and with a bunch of 'sh' processes using maximum amount
+of CPU, blocked on trying to acquire rtnl.
 
-ath: Could not stop RX, we could be confusing the DMA engine when we
-start RX up
-------------[ cut here ]------------
-WARNING: at drivers/net/wireless/ath/ath9k/recv.c:535
-ath_stoprecv+0xdc/0xf0 [ath9k]()
-Hardware name: 64756D6
-Pid: 5493, comm: kworker/u:0 Tainted: G        W   2.6.37-rc5-wl+ #34
-Call Trace:
- [<ffffffff8105018a>] warn_slowpath_common+0x7a/0xb0
- [<ffffffff810501d5>] warn_slowpath_null+0x15/0x20
- [<ffffffffa030806c>] ath_stoprecv+0xdc/0xf0 [ath9k]
- [<ffffffffa0306891>] ath9k_stop+0x221/0x260 [ath9k]
- [<ffffffffa052e387>] ieee80211_stop_device+0x57/0x90 [mac80211]
- [<ffffffffa051f63f>] ieee80211_do_stop+0x26f/0x540 [mac80211]
- [<ffffffff8134678f>] ? _raw_spin_unlock_bh+0x1f/0x30
- [<ffffffff812b6983>] ? dev_deactivate+0x1c3/0x1e0
- [<ffffffffa051f925>] ieee80211_stop+0x15/0x20 [mac80211]
- [<ffffffff8129d226>] __dev_close+0x56/0x90
- [<ffffffff8129d27a>] dev_close+0x1a/0x50
+There is one 'ip' process that appears to hold rtnl and is trying
+to call  ieee80211_do_stop, which is probably blocked down in
+the work-queue logic just like last time.  Lots of worker processes
+attempting to grab rtnl (and many other processes as well.)
 
-Signed-off-by: Rajkumar Manoharan <rmanoharan@atheros.com>
----
- drivers/net/wireless/ath/ath9k/eeprom.h |    3 ++-
- drivers/net/wireless/ath/ath9k/gpio.c   |    3 ++-
- drivers/net/wireless/ath/ath9k/init.c   |    5 +++--
- drivers/net/wireless/ath/ath9k/main.c   |   20 ++++++++++++++++++++
- drivers/net/wireless/ath/ath9k/pci.c    |    1 +
- 5 files changed, 28 insertions(+), 4 deletions(-)
+Lockdep was disabled because a proprietary module of mine was attempted
+to be loaded, but it doesn't actual load due to symbol mismatch
+(it's compiled against a non-debug kernel).
 
-diff --git a/drivers/net/wireless/ath/ath9k/eeprom.h b/drivers/net/wireless/ath/ath9k/eeprom.h
-index f6f09d1..c0942f7 100644
---- a/drivers/net/wireless/ath/ath9k/eeprom.h
-+++ b/drivers/net/wireless/ath/ath9k/eeprom.h
-@@ -23,7 +23,8 @@
- #include <net/cfg80211.h>
- #include "ar9003_eeprom.h"
- 
--#define AH_USE_EEPROM   0x1
-+#define AH_USE_EEPROM   0x00000001
-+#define AH_UNPLUGGED    0x00000002
- 
- #ifdef __BIG_ENDIAN
- #define AR5416_EEPROM_MAGIC 0x5aa5
-diff --git a/drivers/net/wireless/ath/ath9k/gpio.c b/drivers/net/wireless/ath/ath9k/gpio.c
-index 1337640..978a223 100644
---- a/drivers/net/wireless/ath/ath9k/gpio.c
-+++ b/drivers/net/wireless/ath/ath9k/gpio.c
-@@ -125,7 +125,8 @@ void ath_deinit_leds(struct ath_softc *sc)
- 	ath_unregister_led(&sc->tx_led);
- 	ath_unregister_led(&sc->rx_led);
- 	ath_unregister_led(&sc->radio_led);
--	ath9k_hw_set_gpio(sc->sc_ah, sc->sc_ah->led_pin, 1);
-+	if (!(sc->sc_ah->ah_flags & AH_UNPLUGGED))
-+		ath9k_hw_set_gpio(sc->sc_ah, sc->sc_ah->led_pin, 1);
- }
- 
- void ath_init_leds(struct ath_softc *sc)
-diff --git a/drivers/net/wireless/ath/ath9k/init.c b/drivers/net/wireless/ath/ath9k/init.c
-index 1238795..8cf2414 100644
---- a/drivers/net/wireless/ath/ath9k/init.c
-+++ b/drivers/net/wireless/ath/ath9k/init.c
-@@ -542,6 +542,7 @@ static int ath9k_init_softc(u16 devid, struct ath_softc *sc, u16 subsysid,
- 	if (!sc->dev->platform_data)
- 		ah->ah_flags |= AH_USE_EEPROM;
- 
-+	sc->sc_ah->ah_flags &= ~AH_UNPLUGGED;
- 	common = ath9k_hw_common(ah);
- 	common->ops = &ath9k_common_ops;
- 	common->bus_ops = bus_ops;
-@@ -818,8 +819,8 @@ void ath9k_deinit_device(struct ath_softc *sc)
- 	struct ieee80211_hw *hw = sc->hw;
- 	int i = 0;
- 
--	ath9k_ps_wakeup(sc);
--
-+	if (!(sc->sc_ah->ah_flags & AH_UNPLUGGED))
-+		ath9k_ps_wakeup(sc);
- 	wiphy_rfkill_stop_polling(sc->hw->wiphy);
- 	ath_deinit_leds(sc);
- 
-diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
-index cb53fbb..e06a44e 100644
---- a/drivers/net/wireless/ath/ath9k/main.c
-+++ b/drivers/net/wireless/ath/ath9k/main.c
-@@ -1220,6 +1220,12 @@ static int ath9k_tx(struct ieee80211_hw *hw,
- 	struct ath_tx_control txctl;
- 	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *) skb->data;
- 
-+	if (sc->sc_ah->ah_flags & AH_UNPLUGGED) {
-+		ath_dbg(common, ATH_DBG_ANY,
-+			"Device not present, can not xmit\n");
-+		goto exit;
-+	}
-+
- 	if (aphy->state != ATH_WIPHY_ACTIVE && aphy->state != ATH_WIPHY_SCAN) {
- 		ath_dbg(common, ATH_DBG_XMIT,
- 			"ath9k: %s: TX in unexpected wiphy state %d\n",
-@@ -1318,6 +1324,12 @@ static void ath9k_stop(struct ieee80211_hw *hw)
- 		return;
- 	}
- 
-+	if (ah->ah_flags & AH_UNPLUGGED) {
-+		ath_dbg(common, ATH_DBG_ANY, "Device not present\n");
-+		mutex_unlock(&sc->mutex);
-+		return;
-+	}
-+
- 	if (ath9k_wiphy_started(sc)) {
- 		mutex_unlock(&sc->mutex);
- 		return; /* another wiphy still in use */
-@@ -1585,6 +1597,11 @@ static int ath9k_config(struct ieee80211_hw *hw, u32 changed)
- 
- 	mutex_lock(&sc->mutex);
- 
-+	if (ah->ah_flags & AH_UNPLUGGED) {
-+		mutex_unlock(&sc->mutex);
-+		return 0;
-+	}
-+
- 	/*
- 	 * Leave this as the first check because we need to turn on the
- 	 * radio if it was disabled before prior to processing the rest
-@@ -1765,6 +1782,9 @@ static void ath9k_configure_filter(struct ieee80211_hw *hw,
- 	changed_flags &= SUPPORTED_FILTERS;
- 	*total_flags &= SUPPORTED_FILTERS;
- 
-+	if (sc->sc_ah->ah_flags & AH_UNPLUGGED)
-+		return;
-+
- 	sc->rx.rxfilter = *total_flags;
- 	ath9k_ps_wakeup(sc);
- 	rfilt = ath_calcrxfilter(sc);
-diff --git a/drivers/net/wireless/ath/ath9k/pci.c b/drivers/net/wireless/ath/ath9k/pci.c
-index 7ca8499..96c6005 100644
---- a/drivers/net/wireless/ath/ath9k/pci.c
-+++ b/drivers/net/wireless/ath/ath9k/pci.c
-@@ -264,6 +264,7 @@ static void ath_pci_remove(struct pci_dev *pdev)
- 	struct ath_softc *sc = aphy->sc;
- 	void __iomem *mem = sc->mem;
- 
-+	sc->sc_ah->ah_flags |= AH_UNPLUGGED;
- 	ath9k_deinit_device(sc);
- 	free_irq(sc->irq, sc);
- 	ieee80211_free_hw(sc->hw);
+If the lockdep info is critical, I can attempt to reproduce with
+my module completed removed from the file system so it cannot attempt
+to load, but it seems like last time the 'sysrq t' was of more interest
+anyway.
+
+I have uploaded what I believe is a full 'sysrq t' output, interspersed
+with OOM warnings that are constantly spewing to the console,
+here:
+
+http://www.candelatech.com/~greearb/minicom_ath9k_log.txt
+
+Thanks,
+Ben
+
 -- 
-1.7.3.3
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
 
