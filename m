@@ -1,36 +1,118 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iy0-f174.google.com ([209.85.210.174]:36507 "EHLO
-	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751090Ab0LYICb convert rfc822-to-8bit (ORCPT
+Received: from mail30f.wh2.ocn.ne.jp ([220.111.41.203]:12304 "HELO
+	mail30f.wh2.ocn.ne.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1751438Ab0LHEtu (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 25 Dec 2010 03:02:31 -0500
-Received: by iyi12 with SMTP id 12so6258642iyi.19
-        for <linux-wireless@vger.kernel.org>; Sat, 25 Dec 2010 00:02:31 -0800 (PST)
+	Tue, 7 Dec 2010 23:49:50 -0500
+Received: from vs3012.wh2.ocn.ne.jp (125.206.180.183)
+	by mail30f.wh2.ocn.ne.jp (RS ver 1.0.95vs) with SMTP id 4-0734833786
+	for <linux-wireless@vger.kernel.org>; Wed,  8 Dec 2010 13:49:49 +0900 (JST)
+From: Bruno Randolf <br1@einfach.org>
+To: johannes@sipsolutions.net
+Subject: Re: [PATCH v2] cfg80211: Add antenna availability information
+Date: Wed, 8 Dec 2010 13:49:17 +0900
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
+References: <20101208034429.24218.50707.stgit@localhost6.localdomain6>
+In-Reply-To: <20101208034429.24218.50707.stgit@localhost6.localdomain6>
 MIME-Version: 1.0
-In-Reply-To: <15BE8E73-27A7-4415-9196-B4BD56D72338@mac.com>
-References: <1CA1EE34-CB3D-404D-ADEE-612C8783BFCF@mac.com> <AANLkTin8RZwVrWAdNn_Q+_bX8BAHgKreyHiVjznZtMxU@mail.gmail.com>
- <1A56906E-D786-45E6-9C77-C9D600B508B0@mac.com> <AANLkTikhLKuw56BhDkBUMU-nf8ZYF1v5Berj-+qupAtO@mail.gmail.com>
- <E90F18E9-6332-4A7C-97DA-01169E5BB5E1@mac.com> <AANLkTik6m0rabY3ZCseoch7fwxhMksMD83A-ygtN4cVu@mail.gmail.com>
- <F4DFEC94-D5AC-4C12-890D-8F242E757071@mac.com> <AANLkTi=owvDyO3qfahUwRv4MxJrvMK9hjh5NOwRHQuO+@mail.gmail.com>
- <7F14B85B-566C-45A9-BF8B-FE9DED7944D0@mac.com> <AANLkTik7jvW9pA3deanBRXxJh6tLeO7WQgqrkN3xa9LG@mail.gmail.com>
- <4D122B8F.5090302@hauke-m.de> <1813D0B1-5391-48DB-9882-A6586DAB180C@mac.com>
- <AANLkTimMWH63yG2tdu7OHemHs=6OOy_i5fpeEDhhh6O9@mail.gmail.com>
- <4D123FBB.1050801@hauke-m.de> <C7700580-CCBB-498D-9EA5-73E2BF748C68@mac.com>
- <A7C7741B-634A-4C4B-A6F1-EBEA5F2EEED5@mac.com> <4D125B9F.7090503@hauke-m.de>
- <A8ED3E8F-FA2A-46B9-95C6-F2C175581539@mac.com> <4D1266FA.7080305@hauke-m.de> <15BE8E73-27A7-4415-9196-B4BD56D72338@mac.com>
-From: Ohad Ben-Cohen <ohad@wizery.com>
-Date: Sat, 25 Dec 2010 10:02:10 +0200
-Message-ID: <AANLkTimeL9D2pg+mHeZdapBN_3de1DDG0MBv3FfUoLpw@mail.gmail.com>
-Subject: Re: Backporting wl1271 driver to kernel-2.6.32 using compat-wireless
-To: Elvis Dowson <elvis.dowson@mac.com>
-Cc: Hauke Mehrtens <hauke@hauke-m.de>,
-	Linux Wireless Mailing List <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: Text/Plain;
+  charset="utf-8"
+Message-Id: <201012081349.17449.br1@einfach.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Dec 24, 2010 at 7:17 AM, Elvis Dowson <elvis.dowson@mac.com> wrote:
->       When working with the wl1271 backport to 2.6.32 kernel, is CONFIG_MMC_EMBEDDED_SDIO=y required?
+Ah, please ignore this one and wait for v3...
 
-Nope. wl1271 doesn't need it - the device is dynamically probed,
-identified and configured.
+bruno
+
+On Wed December 8 2010 12:44:29 Bruno Randolf wrote:
+> Add a field to wiphy for the hardware to report the availble antennas for
+> configuration. Only if this is set to something bigger than zero, will the
+> anntenna configuration ops be executed.
+> 
+> Allthough this could be a simple number of antennas, I defined it as a
+> bitmap of antennas which are available for configuration, since it's more
+> consistent with the rest of the antenna API and there could be cases where
+> the hardware allows only configuration of certain antennas. As it does not
+> make much of a difference in size or normal usage, I think it's better to
+> be able to support this, in case the need arises.
+> 
+> The antenna configuration is now also checked against the availabe antennas
+> and rejected if it does not match.
+> 
+> Signed-off-by: Bruno Randolf <br1@einfach.org>
+> 
+> v2:	reject antenna configurations which don't match the available antennas
+> ---
+>  include/net/cfg80211.h |    5 +++++
+>  net/wireless/nl80211.c |   12 ++++++++++--
+>  2 files changed, 15 insertions(+), 2 deletions(-)
+> 
+> diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+> index 8764c9a..ef6f15d 100644
+> --- a/include/net/cfg80211.h
+> +++ b/include/net/cfg80211.h
+> @@ -1465,6 +1465,9 @@ struct ieee80211_txrx_stypes {
+>   * @mgmt_stypes: bitmasks of frame subtypes that can be subscribed to or
+>   *	transmitted through nl80211, points to an array indexed by interface
+>   *	type
+> + *
+> + * @available_antennas: bitmap of antennas which are available to
+> configure. + *	antenna configuration commands will be rejected unless 
+this
+> is set. */
+>  struct wiphy {
+>  	/* assign these fields before you register the wiphy */
+> @@ -1504,6 +1507,8 @@ struct wiphy {
+> 
+>  	u8 max_num_pmkids;
+> 
+> +	u32 available_antennas;
+> +
+>  	/* If multiple wiphys are registered and you're handed e.g.
+>  	 * a regular netdev with assigned ieee80211_ptr, you won't
+>  	 * know whether it points to a wiphy your driver has registered
+> diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+> index 2cf0333..4f6ff31 100644
+> --- a/net/wireless/nl80211.c
+> +++ b/net/wireless/nl80211.c
+> @@ -547,7 +547,7 @@ static int nl80211_send_wiphy(struct sk_buff *msg, u32
+> pid, u32 seq, int flags, if (dev->wiphy.flags &
+> WIPHY_FLAG_CONTROL_PORT_PROTOCOL)
+>  		NLA_PUT_FLAG(msg, NL80211_ATTR_CONTROL_PORT_ETHERTYPE);
+> 
+> -	if (dev->ops->get_antenna) {
+> +	if (dev->wiphy.available_antennas && dev->ops->get_antenna) {
+>  		u32 tx_ant = 0, rx_ant = 0;
+>  		int res;
+>  		res = dev->ops->get_antenna(&dev->wiphy, &tx_ant, &rx_ant);
+> @@ -1045,7 +1045,7 @@ static int nl80211_set_wiphy(struct sk_buff *skb,
+> struct genl_info *info) if (info->attrs[NL80211_ATTR_WIPHY_ANTENNA_TX] &&
+>  	    info->attrs[NL80211_ATTR_WIPHY_ANTENNA_RX]) {
+>  		u32 tx_ant, rx_ant;
+> -		if (!rdev->ops->set_antenna) {
+> +		if (!rdev->wiphy.available_antennas || !rdev->ops->set_antenna) {
+>  			result = -EOPNOTSUPP;
+>  			goto bad_res;
+>  		}
+> @@ -1053,6 +1053,14 @@ static int nl80211_set_wiphy(struct sk_buff *skb,
+> struct genl_info *info) tx_ant =
+> nla_get_u32(info->attrs[NL80211_ATTR_WIPHY_ANTENNA_TX]); rx_ant =
+> nla_get_u32(info->attrs[NL80211_ATTR_WIPHY_ANTENNA_RX]);
+> 
+> +		/* reject antenna configurations which don't match the
+> +		 * available antenna mask, except for the "all" mask */
+> +		if ((~tx_ant && (tx_ant & ~rdev->wiphy.available_antennas)) ||
+> +		    (~rx_ant && (rx_ant & ~rdev->wiphy.available_antennas))) {
+> +			result = -EINVAL;
+> +			goto bad_res;
+> +		}
+> +
+>  		result = rdev->ops->set_antenna(&rdev->wiphy, tx_ant, rx_ant);
+>  		if (result)
+>  			goto bad_res;
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless"
+> in the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
