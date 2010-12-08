@@ -1,921 +1,362 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qw0-f46.google.com ([209.85.216.46]:52085 "EHLO
-	mail-qw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752829Ab0LBUJf convert rfc822-to-8bit (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:44564 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755994Ab0LHVPH (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 2 Dec 2010 15:09:35 -0500
-Received: by mail-qw0-f46.google.com with SMTP id 7so8770859qwb.19
-        for <linux-wireless@vger.kernel.org>; Thu, 02 Dec 2010 12:09:34 -0800 (PST)
+	Wed, 8 Dec 2010 16:15:07 -0500
+Date: Wed, 8 Dec 2010 16:04:32 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: davem@davemloft.net
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Subject: pull request: wireless-next-2.6 2010-12-08
+Message-ID: <20101208210432.GH2423@tuxdriver.com>
 MIME-Version: 1.0
-In-Reply-To: <1291279510.3481.17.camel@jlt3.sipsolutions.net>
-References: <20101201205939.009530439@sipsolutions.net> <20101201210226.159495600@sipsolutions.net>
- <1291279510.3481.17.camel@jlt3.sipsolutions.net>
-From: Javier Cardona <javier@cozybit.com>
-Date: Thu, 2 Dec 2010 12:09:14 -0800
-Message-ID: <AANLkTik_C90v-313Pq_dPY7fE1OFG2X0uv8Ys+uGQFRt@mail.gmail.com>
-Subject: Re: [RFC 5/5 v2] cfg80211/mac80211: add mesh join/leave commands
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org, Steve Derosier <steve@cozybit.com>,
-	devel@lists.open80211s.org
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Johannes,
+Dave,
 
-Looks good from this end, including the new iw commands.  The only
-issue that we observed is that now that we can leave and join a new
-mesh, we need to do some more state cleanup on stop_mesh.  Otherwise
-we could move to a new mesh and still talk to the previous peers.  I
-think this would be sufficient:
+Here is the latest batch of updates intended for 2.6.38.  It also
+includes my last wireless-2.6 pull request that you just added
+to net-2.6.
 
-diff --git a/net/mac80211/main.c b/net/mac80211/main.c
-index 107a0cb..b1242b6 100644
---- a/net/mac80211/main.c
-+++ b/net/mac80211/main.c
-@@ -246,7 +246,6 @@ void ieee80211_bss_info_change_notify(struct
-ieee80211_sub_if_data *sdata,
-                                        !!sdata->u.ibss.presp;
-                                break;
-                        case NL80211_IFTYPE_MESH_POINT:
--                               sdata->vif.bss_conf.enable_beacon = true;
-                                break;
-                        default:
-                                /* not reached */
-diff --git a/net/mac80211/mesh.c b/net/mac80211/mesh.c
-index d814fab..cc458dd 100644
---- a/net/mac80211/mesh.c
-+++ b/net/mac80211/mesh.c
-@@ -522,6 +522,7 @@ void ieee80211_start_mesh(struct
-ieee80211_sub_if_data *sdata)
-        ieee80211_mesh_root_setup(ifmsh);
-        ieee80211_queue_work(&local->hw, &sdata->work);
-        sdata->vif.bss_conf.beacon_int = MESH_DEFAULT_BEACON_INTERVAL;
-+       sdata->vif.bss_conf.enable_beacon = true;
-        ieee80211_bss_info_change_notify(sdata, BSS_CHANGED_BEACON |
-                                                BSS_CHANGED_BEACON_ENABLED |
-                                                BSS_CHANGED_BEACON_INT);
-@@ -530,6 +531,13 @@ void ieee80211_start_mesh(struct
-ieee80211_sub_if_data *sdata)
- void ieee80211_stop_mesh(struct ieee80211_sub_if_data *sdata)
- {
-        struct ieee80211_local *local = sdata->local;
-+       struct ieee80211_if_mesh *ifmsh = &sdata->u.mesh;
-+
-+       ifmsh->mesh_id_len = 0;
-+       memset(ifmsh->mesh_id, 0, IEEE80211_MAX_MESH_ID_LEN);
-+       sdata->vif.bss_conf.enable_beacon = false;
-+       ieee80211_bss_info_change_notify(sdata, BSS_CHANGED_BEACON_ENABLED);
-+       sta_info_flush(local, NULL);
+This includes the usual batch of drivers updates, with ath9k and
+iwlwifi as the usual standouts.  This also includes some mac80211
+documentation updates from Johannes, and a flurry of ath5k updates
+from Nick.  This also includes a collection of bluetooth updates by
+way of Gustavo, a couple of libertas updates, some more work on b43
+N-phy support, and a variety of other patches.
 
-        del_timer_sync(&sdata->u.mesh.housekeeping_timer);
-        del_timer_sync(&sdata->u.mesh.mesh_path_root_timer);
+Please let me know if there are problems!
 
-Cheers,
+Thanks,
 
-Javier
+John
 
-On Thu, Dec 2, 2010 at 12:45 AM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
-> From: Johannes Berg <johannes.berg@intel.com>
->
-> Instead of tying mesh activity to interface up,
-> add join and leave commands for mesh. Since we
-> must be backward compatible, let cfg80211 handle
-> joining a mesh if a mesh ID was pre-configured
-> when the device goes up.
->
-> Note that this therefore must modify mac80211 as
-> well since mac80211 needs to lose the logic to
-> start the mesh on interface up.
->
-> We now allow querying mesh parameters before the
-> mesh is connected, which simply returns defaults.
-> Setting them (internally renamed to "update") is
-> only allowed while connected. Specify them with
-> the new mesh join command instead where needed.
->
-> Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-> ---
-> v2: - fix join on netdev up (pointed out by Javier)
-> † †- only require mesh ID (pointed out by Javier)
-> † †- more sanity checking around get/set_mesh_params
-> † †- rename set_mesh_params to update_mesh_params,
-> † † †disallow calling it before connected to mesh
-> † †- add some mesh interface type checks
-> † †- introduce mesh_setup struct for static config
->
-> I have lightly tested this. You can find a new
-> test branch of iw that includes support for the
-> new commands here:
->
-> http://git.sipsolutions.net/?p=iw.git;a=shortlog;h=refs/heads/mesh
->
->
-> I think this is about ready, maybe with some
-> minor issues still. I'd appreciate if you could
-> review and test it, and then we can add the IE
-> and path selection protocols to the mesh_setup
-> struct and the iw mesh join command.
->
->
-> †include/linux/nl80211.h † †| † †8 ++
-> †include/net/cfg80211.h † † | † 38 +++++++++---
-> †net/mac80211/cfg.c † † † † | † 39 +++++++++---
-> †net/mac80211/ieee80211_i.h | † 13 ----
-> †net/mac80211/iface.c † † † | † 14 ----
-> †net/mac80211/mesh.c † † † †| † 20 ------
-> †net/mac80211/mesh.h † † † †| † 23 -------
-> †net/wireless/Makefile † † †| † †2
-> †net/wireless/core.c † † † †| † 15 ++++
-> †net/wireless/core.h † † † †| † 13 ++++
-> †net/wireless/mesh.c † † † †| †134 ++++++++++++++++++++++++++++++++++++++++++++
-> †net/wireless/nl80211.c † † | †137 ++++++++++++++++++++++++++++++++++++++-------
-> †net/wireless/util.c † † † †| † †1
-> †13 files changed, 346 insertions(+), 111 deletions(-)
->
-> --- wireless-testing.orig/include/linux/nl80211.h † † † 2010-12-02 09:32:13.000000000 +0100
-> +++ wireless-testing/include/linux/nl80211.h † †2010-12-02 09:38:22.000000000 +0100
-> @@ -394,6 +394,11 @@
-> †*
-> †* @NL80211_CMD_SET_WDS_PEER: Set the MAC address of the peer on a WDS interface.
-> †*
-> + * @NL80211_CMD_JOIN_MESH: Join a mesh. The mesh ID must be given, and initial
-> + * † † mesh config parameters may be given.
-> + * @NL80211_CMD_LEAVE_MESH: Leave the mesh network -- no special arguments, the
-> + * † † network is determined by the network interface.
-> + *
-> †* @NL80211_CMD_MAX: highest used command number
-> †* @__NL80211_CMD_AFTER_LAST: internal use
-> †*/
-> @@ -500,6 +505,9 @@ enum nl80211_commands {
->
-> † † † †NL80211_CMD_FRAME_WAIT_CANCEL,
->
-> + † † † NL80211_CMD_JOIN_MESH,
-> + † † † NL80211_CMD_LEAVE_MESH,
-> +
-> † † † †/* add new commands above here */
->
-> † † † †/* used to define NL80211_CMD_MAX below */
-> --- wireless-testing.orig/include/net/cfg80211.h † † † †2010-12-02 09:32:13.000000000 +0100
-> +++ wireless-testing/include/net/cfg80211.h † † 2010-12-02 09:38:22.000000000 +0100
-> @@ -258,13 +258,9 @@ struct ieee80211_supported_band {
->
-> †/**
-> †* struct vif_params - describes virtual interface parameters
-> - * @mesh_id: mesh ID to use
-> - * @mesh_id_len: length of the mesh ID
-> †* @use_4addr: use 4-address frames
-> †*/
-> †struct vif_params {
-> - † † † u8 *mesh_id;
-> - † † † int mesh_id_len;
-> † † † †int use_4addr;
-> †};
->
-> @@ -615,6 +611,11 @@ struct bss_parameters {
-> † † † †int ap_isolate;
-> †};
->
-> +/*
-> + * struct mesh_config - 802.11s mesh configuration
-> + *
-> + * These parameters can be changed while the mesh is active.
-> + */
-> †struct mesh_config {
-> † † † †/* Timeouts in ms */
-> † † † †/* Mesh plink management parameters */
-> @@ -636,6 +637,18 @@ struct mesh_config {
-> †};
->
-> †/**
-> + * struct mesh_setup - 802.11s mesh setup configuration
-> + * @mesh_id: the mesh ID
-> + * @mesh_id_len: length of the mesh ID, at least 1 and at most 32 bytes
-> + *
-> + * These parameters are fixed when the mesh is created.
-> + */
-> +struct mesh_setup {
-> + † † † const u8 *mesh_id;
-> + † † † u8 mesh_id_len;
-> +};
-> +
-> +/**
-> †* struct ieee80211_txq_params - TX queue parameters
-> †* @queue: TX queue identifier (NL80211_TXQ_Q_*)
-> †* @txop: Maximum burst time in units of 32 usecs, 0 meaning disabled
-> @@ -1076,7 +1089,7 @@ struct cfg80211_pmksa {
-> †*
-> †* @get_mesh_params: Put the current mesh parameters into *params
-> †*
-> - * @set_mesh_params: Set mesh parameters.
-> + * @update_mesh_params: Update mesh parameters on a running mesh.
-> †* † † The mask is a bitfield which tells us which parameters to
-> †* † † set, and which to leave alone.
-> †*
-> @@ -1220,9 +1233,14 @@ struct cfg80211_ops {
-> † † † †int † † (*get_mesh_params)(struct wiphy *wiphy,
-> † † † † † † † † † † † † † † † †struct net_device *dev,
-> † † † † † † † † † † † † † † † †struct mesh_config *conf);
-> - † † † int † † (*set_mesh_params)(struct wiphy *wiphy,
-> - † † † † † † † † † † † † † † † struct net_device *dev,
-> - † † † † † † † † † † † † † † † const struct mesh_config *nconf, u32 mask);
-> + † † † int † † (*update_mesh_params)(struct wiphy *wiphy,
-> + † † † † † † † † † † † † † † † † † † struct net_device *dev, u32 mask,
-> + † † † † † † † † † † † † † † † † † † const struct mesh_config *nconf);
-> + † † † int † † (*join_mesh)(struct wiphy *wiphy, struct net_device *dev,
-> + † † † † † † † † † † † † † †const struct mesh_config *conf,
-> + † † † † † † † † † † † † † †const struct mesh_setup *setup);
-> + † † † int † † (*leave_mesh)(struct wiphy *wiphy, struct net_device *dev);
-> +
-> † † † †int † † (*change_bss)(struct wiphy *wiphy, struct net_device *dev,
-> † † † † † † † † † † † † † † †struct bss_parameters *params);
->
-> @@ -1638,6 +1656,8 @@ struct cfg80211_cached_keys;
-> †* @bssid: (private) Used by the internal configuration code
-> †* @ssid: (private) Used by the internal configuration code
-> †* @ssid_len: (private) Used by the internal configuration code
-> + * @mesh_id_len: (private) Used by the internal configuration code
-> + * @mesh_id_up_len: (private) Used by the internal configuration code
-> †* @wext: (private) Used by the internal wireless extensions compat code
-> †* @use_4addr: indicates 4addr mode is used on this interface, must be
-> †* † † set by driver (if supported) on add_interface BEFORE registering the
-> @@ -1667,7 +1687,7 @@ struct wireless_dev {
->
-> † † † †/* currently used for IBSS and SME - might be rearranged later */
-> † † † †u8 ssid[IEEE80211_MAX_SSID_LEN];
-> - † † † u8 ssid_len;
-> + † † † u8 ssid_len, mesh_id_len, mesh_id_up_len;
-> † † † †enum {
-> † † † † † † † †CFG80211_SME_IDLE,
-> † † † † † † † †CFG80211_SME_CONNECTING,
-> --- wireless-testing.orig/net/wireless/Makefile 2010-12-02 09:32:13.000000000 +0100
-> +++ wireless-testing/net/wireless/Makefile † † †2010-12-02 09:38:22.000000000 +0100
-> @@ -10,7 +10,7 @@ obj-$(CONFIG_WEXT_SPY) += wext-spy.o
-> †obj-$(CONFIG_WEXT_PRIV) += wext-priv.o
->
-> †cfg80211-y += core.o sysfs.o radiotap.o util.o reg.o scan.o nl80211.o
-> -cfg80211-y += mlme.o ibss.o sme.o chan.o ethtool.o
-> +cfg80211-y += mlme.o ibss.o sme.o chan.o ethtool.o mesh.o
-> †cfg80211-$(CONFIG_CFG80211_DEBUGFS) += debugfs.o
-> †cfg80211-$(CONFIG_CFG80211_WEXT) += wext-compat.o wext-sme.o
-> †cfg80211-$(CONFIG_CFG80211_INTERNAL_REGDB) += regdb.o
-> --- wireless-testing.orig/net/wireless/core.h † 2010-12-02 09:32:13.000000000 +0100
-> +++ wireless-testing/net/wireless/core.h † † † †2010-12-02 09:38:22.000000000 +0100
-> @@ -285,6 +285,19 @@ void __cfg80211_ibss_joined(struct net_d
-> †int cfg80211_ibss_wext_join(struct cfg80211_registered_device *rdev,
-> † † † † † † † † † † † † † †struct wireless_dev *wdev);
->
-> +/* mesh */
-> +extern const struct mesh_config default_mesh_config;
-> +int __cfg80211_join_mesh(struct cfg80211_registered_device *rdev,
-> + † † † † † † † † † † † †struct net_device *dev,
-> + † † † † † † † † † † † †const u8 *mesh_id, u8 mesh_id_len,
-> + † † † † † † † † † † † †const struct mesh_config *conf);
-> +int cfg80211_join_mesh(struct cfg80211_registered_device *rdev,
-> + † † † † † † † † † † †struct net_device *dev,
-> + † † † † † † † † † † †const u8 *mesh_id, u8 mesh_id_len,
-> + † † † † † † † † † † †const struct mesh_config *conf);
-> +int cfg80211_leave_mesh(struct cfg80211_registered_device *rdev,
-> + † † † † † † † † † † † struct net_device *dev);
-> +
-> †/* MLME */
-> †int __cfg80211_mlme_auth(struct cfg80211_registered_device *rdev,
-> † † † † † † † † † † † † struct net_device *dev,
-> --- /dev/null † 1970-01-01 00:00:00.000000000 +0000
-> +++ wireless-testing/net/wireless/mesh.c † † † †2010-12-02 09:38:22.000000000 +0100
-> @@ -0,0 +1,134 @@
-> +#include <linux/ieee80211.h>
-> +#include <net/cfg80211.h>
-> +#include "core.h"
-> +
-> +/* Default values, timeouts in ms */
-> +#define MESH_TTL † † † † † † † 31
-> +#define MESH_MAX_RETR † † † † †3
-> +#define MESH_RET_T † † † † † † 100
-> +#define MESH_CONF_T † † † † † †100
-> +#define MESH_HOLD_T † † † † † †100
-> +
-> +#define MESH_PATH_TIMEOUT † † †5000
-> +/* Minimum interval between two consecutive PREQs originated by the same
-> + * interface
-> + */
-> +#define MESH_PREQ_MIN_INT † † †10
-> +#define MESH_DIAM_TRAVERSAL_TIME 50
-> +/* A path will be refreshed if it is used PATH_REFRESH_TIME milliseconds before
-> + * timing out. †This way it will remain ACTIVE and no data frames will be
-> + * unnecesarily held in the pending queue.
-> + */
-> +#define MESH_PATH_REFRESH_TIME † † † † † † † † 1000
-> +#define MESH_MIN_DISCOVERY_TIMEOUT (2 * MESH_DIAM_TRAVERSAL_TIME)
-> +
-> +/* Default maximum number of established plinks per interface */
-> +#define MESH_MAX_ESTAB_PLINKS †32
-> +
-> +#define MESH_MAX_PREQ_RETRIES 4
-> +
-> +
-> +const struct mesh_config default_mesh_config = {
-> + † † † .dot11MeshRetryTimeout = MESH_RET_T,
-> + † † † .dot11MeshConfirmTimeout = MESH_CONF_T,
-> + † † † .dot11MeshHoldingTimeout = MESH_HOLD_T,
-> + † † † .dot11MeshMaxRetries = MESH_MAX_RETR,
-> + † † † .dot11MeshTTL = MESH_TTL,
-> + † † † .auto_open_plinks = true,
-> + † † † .dot11MeshMaxPeerLinks = MESH_MAX_ESTAB_PLINKS,
-> + † † † .dot11MeshHWMPactivePathTimeout = MESH_PATH_TIMEOUT,
-> + † † † .dot11MeshHWMPpreqMinInterval = MESH_PREQ_MIN_INT,
-> + † † † .dot11MeshHWMPnetDiameterTraversalTime = MESH_DIAM_TRAVERSAL_TIME,
-> + † † † .dot11MeshHWMPmaxPREQretries = MESH_MAX_PREQ_RETRIES,
-> + † † † .path_refresh_time = MESH_PATH_REFRESH_TIME,
-> + † † † .min_discovery_timeout = MESH_MIN_DISCOVERY_TIMEOUT,
-> +};
-> +
-> +
-> +int __cfg80211_join_mesh(struct cfg80211_registered_device *rdev,
-> + † † † † † † † † † † † †struct net_device *dev,
-> + † † † † † † † † † † † †const u8 *mesh_id, u8 mesh_id_len,
-> + † † † † † † † † † † † †const struct mesh_config *conf)
-> +{
-> + † † † struct wireless_dev *wdev = dev->ieee80211_ptr;
-> + † † † struct mesh_setup setup = {
-> + † † † † † † † .mesh_id = mesh_id,
-> + † † † † † † † .mesh_id_len = mesh_id_len,
-> + † † † };
-> + † † † int err;
-> +
-> + † † † BUILD_BUG_ON(IEEE80211_MAX_SSID_LEN != IEEE80211_MAX_MESH_ID_LEN);
-> +
-> + † † † ASSERT_WDEV_LOCK(wdev);
-> +
-> + † † † if (dev->ieee80211_ptr->iftype != NL80211_IFTYPE_MESH_POINT)
-> + † † † † † † † return -EOPNOTSUPP;
-> +
-> + † † † if (wdev->mesh_id_len)
-> + † † † † † † † return -EALREADY;
-> +
-> + † † † if (!mesh_id_len)
-> + † † † † † † † return -EINVAL;
-> +
-> + † † † if (!rdev->ops->join_mesh)
-> + † † † † † † † return -EOPNOTSUPP;
-> +
-> + † † † err = rdev->ops->join_mesh(&rdev->wiphy, dev, conf, &setup);
-> + † † † if (!err) {
-> + † † † † † † † memcpy(wdev->ssid, mesh_id, mesh_id_len);
-> + † † † † † † † wdev->mesh_id_len = mesh_id_len;
-> + † † † }
-> +
-> + † † † return err;
-> +}
-> +
-> +int cfg80211_join_mesh(struct cfg80211_registered_device *rdev,
-> + † † † † † † † † † † †struct net_device *dev,
-> + † † † † † † † † † † †const u8 *mesh_id, u8 mesh_id_len,
-> + † † † † † † † † † † †const struct mesh_config *conf)
-> +{
-> + † † † struct wireless_dev *wdev = dev->ieee80211_ptr;
-> + † † † int err;
-> +
-> + † † † wdev_lock(wdev);
-> + † † † err = __cfg80211_join_mesh(rdev, dev, mesh_id, mesh_id_len, conf);
-> + † † † wdev_unlock(wdev);
-> +
-> + † † † return err;
-> +}
-> +
-> +static int __cfg80211_leave_mesh(struct cfg80211_registered_device *rdev,
-> + † † † † † † † † † † † † † † † †struct net_device *dev)
-> +{
-> + † † † struct wireless_dev *wdev = dev->ieee80211_ptr;
-> + † † † int err;
-> +
-> + † † † ASSERT_WDEV_LOCK(wdev);
-> +
-> + † † † if (dev->ieee80211_ptr->iftype != NL80211_IFTYPE_MESH_POINT)
-> + † † † † † † † return -EOPNOTSUPP;
-> +
-> + † † † if (!rdev->ops->leave_mesh)
-> + † † † † † † † return -EOPNOTSUPP;
-> +
-> + † † † if (!wdev->mesh_id_len)
-> + † † † † † † † return -ENOTCONN;
-> +
-> + † † † err = rdev->ops->leave_mesh(&rdev->wiphy, dev);
-> + † † † if (!err)
-> + † † † † † † † wdev->mesh_id_len = 0;
-> + † † † return err;
-> +}
-> +
-> +int cfg80211_leave_mesh(struct cfg80211_registered_device *rdev,
-> + † † † † † † † † † † † struct net_device *dev)
-> +{
-> + † † † struct wireless_dev *wdev = dev->ieee80211_ptr;
-> + † † † int err;
-> +
-> + † † † wdev_lock(wdev);
-> + † † † err = __cfg80211_leave_mesh(rdev, dev);
-> + † † † wdev_unlock(wdev);
-> +
-> + † † † return err;
-> +}
-> --- wireless-testing.orig/net/wireless/nl80211.c † † † †2010-12-02 09:38:20.000000000 +0100
-> +++ wireless-testing/net/wireless/nl80211.c † † 2010-12-02 09:38:31.000000000 +0100
-> @@ -661,13 +661,14 @@ static int nl80211_send_wiphy(struct sk_
-> † † † †CMD(add_beacon, NEW_BEACON);
-> † † † †CMD(add_station, NEW_STATION);
-> † † † †CMD(add_mpath, NEW_MPATH);
-> - † † † CMD(set_mesh_params, SET_MESH_PARAMS);
-> + † † † CMD(update_mesh_params, SET_MESH_PARAMS);
-> † † † †CMD(change_bss, SET_BSS);
-> † † † †CMD(auth, AUTHENTICATE);
-> † † † †CMD(assoc, ASSOCIATE);
-> † † † †CMD(deauth, DEAUTHENTICATE);
-> † † † †CMD(disassoc, DISASSOCIATE);
-> † † † †CMD(join_ibss, JOIN_IBSS);
-> + † † † CMD(join_mesh, JOIN_MESH);
-> † † † †CMD(set_pmksa, SET_PMKSA);
-> † † † †CMD(del_pmksa, DEL_PMKSA);
-> † † † †CMD(flush_pmksa, FLUSH_PMKSA);
-> @@ -1324,11 +1325,21 @@ static int nl80211_set_interface(struct
-> † † † †}
->
-> † † † †if (info->attrs[NL80211_ATTR_MESH_ID]) {
-> + † † † † † † † struct wireless_dev *wdev = dev->ieee80211_ptr;
-> +
-> † † † † † † † †if (ntype != NL80211_IFTYPE_MESH_POINT)
-> † † † † † † † † † † † †return -EINVAL;
-> - † † † † † † † params.mesh_id = nla_data(info->attrs[NL80211_ATTR_MESH_ID]);
-> - † † † † † † † params.mesh_id_len = nla_len(info->attrs[NL80211_ATTR_MESH_ID]);
-> - † † † † † † † change = true;
-> + † † † † † † † if (netif_running(dev))
-> + † † † † † † † † † † † return -EBUSY;
-> +
-> + † † † † † † † wdev_lock(wdev);
-> + † † † † † † † BUILD_BUG_ON(IEEE80211_MAX_SSID_LEN !=
-> + † † † † † † † † † † † † † †IEEE80211_MAX_MESH_ID_LEN);
-> + † † † † † † † wdev->mesh_id_up_len =
-> + † † † † † † † † † † † nla_len(info->attrs[NL80211_ATTR_MESH_ID]);
-> + † † † † † † † memcpy(wdev->ssid, nla_data(info->attrs[NL80211_ATTR_MESH_ID]),
-> + † † † † † † † † † † †wdev->mesh_id_up_len);
-> + † † † † † † † wdev_unlock(wdev);
-> † † † †}
->
-> † † † †if (info->attrs[NL80211_ATTR_4ADDR]) {
-> @@ -1388,12 +1399,6 @@ static int nl80211_new_interface(struct
-> † † † † † †!(rdev->wiphy.interface_modes & (1 << type)))
-> † † † † † † † †return -EOPNOTSUPP;
->
-> - † † † if (type == NL80211_IFTYPE_MESH_POINT &&
-> - † † † † † info->attrs[NL80211_ATTR_MESH_ID]) {
-> - † † † † † † † params.mesh_id = nla_data(info->attrs[NL80211_ATTR_MESH_ID]);
-> - † † † † † † † params.mesh_id_len = nla_len(info->attrs[NL80211_ATTR_MESH_ID]);
-> - † † † }
-> -
-> † † † †if (info->attrs[NL80211_ATTR_4ADDR]) {
-> † † † † † † † †params.use_4addr = !!nla_get_u8(info->attrs[NL80211_ATTR_4ADDR]);
-> † † † † † † † †err = nl80211_valid_4addr(rdev, NULL, params.use_4addr, type);
-> @@ -1410,6 +1415,20 @@ static int nl80211_new_interface(struct
-> † † † †if (IS_ERR(dev))
-> † † † † † † † †return PTR_ERR(dev);
->
-> + † † † if (type == NL80211_IFTYPE_MESH_POINT &&
-> + † † † † † info->attrs[NL80211_ATTR_MESH_ID]) {
-> + † † † † † † † struct wireless_dev *wdev = dev->ieee80211_ptr;
-> +
-> + † † † † † † † wdev_lock(wdev);
-> + † † † † † † † BUILD_BUG_ON(IEEE80211_MAX_SSID_LEN !=
-> + † † † † † † † † † † † † † †IEEE80211_MAX_MESH_ID_LEN);
-> + † † † † † † † wdev->mesh_id_up_len =
-> + † † † † † † † † † † † nla_len(info->attrs[NL80211_ATTR_MESH_ID]);
-> + † † † † † † † memcpy(wdev->ssid, nla_data(info->attrs[NL80211_ATTR_MESH_ID]),
-> + † † † † † † † † † † †wdev->mesh_id_up_len);
-> + † † † † † † † wdev_unlock(wdev);
-> + † † † }
-> +
-> † † † †return 0;
-> †}
->
-> @@ -2543,21 +2562,32 @@ static int nl80211_req_set_reg(struct sk
-> †}
->
-> †static int nl80211_get_mesh_params(struct sk_buff *skb,
-> - † † † struct genl_info *info)
-> + † † † † † † † † † † † † † † † † †struct genl_info *info)
-> †{
-> † † † †struct cfg80211_registered_device *rdev = info->user_ptr[0];
-> - † † † struct mesh_config cur_params;
-> - † † † int err;
-> † † † †struct net_device *dev = info->user_ptr[1];
-> + † † † struct wireless_dev *wdev = dev->ieee80211_ptr;
-> + † † † struct mesh_config cur_params;
-> + † † † int err = 0;
-> † † † †void *hdr;
-> † † † †struct nlattr *pinfoattr;
-> † † † †struct sk_buff *msg;
->
-> + † † † if (wdev->iftype != NL80211_IFTYPE_MESH_POINT)
-> + † † † † † † † return -EOPNOTSUPP;
-> +
-> † † † †if (!rdev->ops->get_mesh_params)
-> † † † † † † † †return -EOPNOTSUPP;
->
-> - † † † /* Get the mesh params */
-> - † † † err = rdev->ops->get_mesh_params(&rdev->wiphy, dev, &cur_params);
-> + † † † wdev_lock(wdev);
-> + † † † /* If not connected, get default parameters */
-> + † † † if (!wdev->mesh_id_len)
-> + † † † † † † † memcpy(&cur_params, &default_mesh_config, sizeof(cur_params));
-> + † † † else
-> + † † † † † † † err = rdev->ops->get_mesh_params(&rdev->wiphy, dev,
-> + † † † † † † † † † † † † † † † † † † † † † † † †&cur_params);
-> + † † † wdev_unlock(wdev);
-> +
-> † † † †if (err)
-> † † † † † † † †return err;
->
-> @@ -2700,23 +2730,37 @@ do {\
-> †#undef FILL_IN_MESH_PARAM_IF_SET
-> †}
->
-> -static int nl80211_set_mesh_params(struct sk_buff *skb, struct genl_info *info)
-> +static int nl80211_update_mesh_params(struct sk_buff *skb,
-> + † † † † † † † † † † † † † † † † † † struct genl_info *info)
-> †{
-> † † † †struct cfg80211_registered_device *rdev = info->user_ptr[0];
-> † † † †struct net_device *dev = info->user_ptr[1];
-> + † † † struct wireless_dev *wdev = dev->ieee80211_ptr;
-> † † † †struct mesh_config cfg;
-> † † † †u32 mask;
-> † † † †int err;
->
-> - † † † if (!rdev->ops->set_mesh_params)
-> + † † † if (wdev->iftype != NL80211_IFTYPE_MESH_POINT)
-> + † † † † † † † return -EOPNOTSUPP;
-> +
-> + † † † if (!rdev->ops->update_mesh_params)
-> † † † † † † † †return -EOPNOTSUPP;
->
-> † † † †err = nl80211_parse_mesh_params(info, &cfg, &mask);
-> † † † †if (err)
-> † † † † † † † †return err;
->
-> - † † † /* Apply changes */
-> - † † † return rdev->ops->set_mesh_params(&rdev->wiphy, dev, &cfg, mask);
-> + † † † wdev_lock(wdev);
-> + † † † if (!wdev->mesh_id_len)
-> + † † † † † † † err = -ENOLINK;
-> +
-> + † † † if (!err)
-> + † † † † † † † err = rdev->ops->update_mesh_params(&rdev->wiphy, dev,
-> + † † † † † † † † † † † † † † † † † † † † † † † † † mask, &cfg);
-> +
-> + † † † wdev_unlock(wdev);
-> +
-> + † † † return err;
-> †}
->
-> †static int nl80211_get_reg(struct sk_buff *skb, struct genl_info *info)
-> @@ -4500,6 +4544,41 @@ out:
-> † † † †return err;
-> †}
->
-> +static int nl80211_join_mesh(struct sk_buff *skb, struct genl_info *info)
-> +{
-> + † † † struct cfg80211_registered_device *rdev = info->user_ptr[0];
-> + † † † struct net_device *dev = info->user_ptr[1];
-> + † † † struct mesh_config cfg;
-> + † † † int err;
-> +
-> + † † † /* start with default */
-> + † † † memcpy(&cfg, &default_mesh_config, sizeof(cfg));
-> +
-> + † † † if (info->attrs[NL80211_ATTR_MESH_PARAMS]) {
-> + † † † † † † † /* and parse parameters if given */
-> + † † † † † † † err = nl80211_parse_mesh_params(info, &cfg, NULL);
-> + † † † † † † † if (err)
-> + † † † † † † † † † † † return err;
-> + † † † }
-> +
-> + † † † if (!info->attrs[NL80211_ATTR_MESH_ID] ||
-> + † † † † † !nla_len(info->attrs[NL80211_ATTR_MESH_ID]))
-> + † † † † † † † return -EINVAL;
-> +
-> + † † † return cfg80211_join_mesh(rdev, dev,
-> + † † † † † † † † † † † † † † † † nla_data(info->attrs[NL80211_ATTR_MESH_ID]),
-> + † † † † † † † † † † † † † † † † nla_len(info->attrs[NL80211_ATTR_MESH_ID]),
-> + † † † † † † † † † † † † † † † † &cfg);
-> +}
-> +
-> +static int nl80211_leave_mesh(struct sk_buff *skb, struct genl_info *info)
-> +{
-> + † † † struct cfg80211_registered_device *rdev = info->user_ptr[0];
-> + † † † struct net_device *dev = info->user_ptr[1];
-> +
-> + † † † return cfg80211_leave_mesh(rdev, dev);
-> +}
-> +
-> †#define NL80211_FLAG_NEED_WIPHY † † † † † † † †0x01
-> †#define NL80211_FLAG_NEED_NETDEV † † † 0x02
-> †#define NL80211_FLAG_NEED_RTNL † † † † 0x04
-> @@ -4764,10 +4843,10 @@ static struct genl_ops nl80211_ops[] = {
-> † † † †},
-> † † † †{
-> † † † † † † † †.cmd = NL80211_CMD_SET_MESH_PARAMS,
-> - † † † † † † † .doit = nl80211_set_mesh_params,
-> + † † † † † † † .doit = nl80211_update_mesh_params,
-> † † † † † † † †.policy = nl80211_policy,
-> † † † † † † † †.flags = GENL_ADMIN_PERM,
-> - † † † † † † † .internal_flags = NL80211_FLAG_NEED_NETDEV |
-> + † † † † † † † .internal_flags = NL80211_FLAG_NEED_NETDEV_UP |
-> † † † † † † † † † † † † † † † † †NL80211_FLAG_NEED_RTNL,
-> † † † †},
-> † † † †{
-> @@ -4982,6 +5061,22 @@ static struct genl_ops nl80211_ops[] = {
-> † † † † † † † †.internal_flags = NL80211_FLAG_NEED_NETDEV |
-> † † † † † † † † † † † † † † † † †NL80211_FLAG_NEED_RTNL,
-> † † † †},
-> + † † † {
-> + † † † † † † † .cmd = NL80211_CMD_JOIN_MESH,
-> + † † † † † † † .doit = nl80211_join_mesh,
-> + † † † † † † † .policy = nl80211_policy,
-> + † † † † † † † .flags = GENL_ADMIN_PERM,
-> + † † † † † † † .internal_flags = NL80211_FLAG_NEED_NETDEV_UP |
-> + † † † † † † † † † † † † † † † † NL80211_FLAG_NEED_RTNL,
-> + † † † },
-> + † † † {
-> + † † † † † † † .cmd = NL80211_CMD_LEAVE_MESH,
-> + † † † † † † † .doit = nl80211_leave_mesh,
-> + † † † † † † † .policy = nl80211_policy,
-> + † † † † † † † .flags = GENL_ADMIN_PERM,
-> + † † † † † † † .internal_flags = NL80211_FLAG_NEED_NETDEV_UP |
-> + † † † † † † † † † † † † † † † † NL80211_FLAG_NEED_RTNL,
-> + † † † },
-> †};
->
-> †static struct genl_multicast_group nl80211_mlme_mcgrp = {
-> --- wireless-testing.orig/net/wireless/core.c † 2010-12-02 09:32:13.000000000 +0100
-> +++ wireless-testing/net/wireless/core.c † † † †2010-12-02 09:38:22.000000000 +0100
-> @@ -332,6 +332,7 @@ struct wiphy *wiphy_new(const struct cfg
-> † † † †WARN_ON(ops->add_virtual_intf && !ops->del_virtual_intf);
-> † † † †WARN_ON(ops->add_station && !ops->del_station);
-> † † † †WARN_ON(ops->add_mpath && !ops->del_mpath);
-> + † † † WARN_ON(ops->join_mesh && !ops->leave_mesh);
->
-> † † † †alloc_size = sizeof(*rdev) + sizeof_priv;
->
-> @@ -752,6 +753,9 @@ static int cfg80211_netdev_notifier_call
-> † † † † † † † † † † † †cfg80211_mlme_down(rdev, dev);
-> † † † † † † † † † † † †wdev_unlock(wdev);
-> † † † † † † † † † † † †break;
-> + † † † † † † † case NL80211_IFTYPE_MESH_POINT:
-> + † † † † † † † † † † † cfg80211_leave_mesh(rdev, dev);
-> + † † † † † † † † † † † break;
-> † † † † † † † †default:
-> † † † † † † † † † † † †break;
-> † † † † † † † †}
-> @@ -775,20 +779,27 @@ static int cfg80211_netdev_notifier_call
-> † † † † † † † †}
-> † † † † † † † †cfg80211_lock_rdev(rdev);
-> † † † † † † † †mutex_lock(&rdev->devlist_mtx);
-> -#ifdef CONFIG_CFG80211_WEXT
-> † † † † † † † †wdev_lock(wdev);
-> † † † † † † † †switch (wdev->iftype) {
-> +#ifdef CONFIG_CFG80211_WEXT
-> † † † † † † † †case NL80211_IFTYPE_ADHOC:
-> † † † † † † † † † † † †cfg80211_ibss_wext_join(rdev, wdev);
-> † † † † † † † † † † † †break;
-> † † † † † † † †case NL80211_IFTYPE_STATION:
-> † † † † † † † † † † † †cfg80211_mgd_wext_connect(rdev, wdev);
-> † † † † † † † † † † † †break;
-> +#endif
-> + † † † † † † † case NL80211_IFTYPE_MESH_POINT:
-> + † † † † † † † † † † † /* backward compat code ... */
-> + † † † † † † † † † † † if (wdev->mesh_id_up_len)
-> + † † † † † † † † † † † † † † † __cfg80211_join_mesh(rdev, dev, wdev->ssid,
-> + † † † † † † † † † † † † † † † † † † † † † † † † † †wdev->mesh_id_up_len,
-> + † † † † † † † † † † † † † † † † † † † † † † † † † †&default_mesh_config);
-> + † † † † † † † † † † † break;
-> † † † † † † † †default:
-> † † † † † † † † † † † †break;
-> † † † † † † † †}
-> † † † † † † † †wdev_unlock(wdev);
-> -#endif
-> † † † † † † † †rdev->opencount++;
-> † † † † † † † †mutex_unlock(&rdev->devlist_mtx);
-> † † † † † † † †cfg80211_unlock_rdev(rdev);
-> --- wireless-testing.orig/net/mac80211/cfg.c † †2010-12-02 09:32:13.000000000 +0100
-> +++ wireless-testing/net/mac80211/cfg.c 2010-12-02 09:38:22.000000000 +0100
-> @@ -60,11 +60,6 @@ static int ieee80211_change_iface(struct
-> † † † †if (ret)
-> † † † † † † † †return ret;
->
-> - † † † if (ieee80211_vif_is_mesh(&sdata->vif) && params->mesh_id_len)
-> - † † † † † † † ieee80211_sdata_set_mesh_id(sdata,
-> - † † † † † † † † † † † † † † † † † † † † † params->mesh_id_len,
-> - † † † † † † † † † † † † † † † † † † † † † params->mesh_id);
-> -
-> † † † †if (type == NL80211_IFTYPE_AP_VLAN &&
-> † † † † † †params && params->use_4addr == 0)
-> † † † † † † † †rcu_assign_pointer(sdata->u.vlan.sta, NULL);
-> @@ -1003,9 +998,9 @@ static inline bool _chg_mesh_attr(enum n
-> † † † †return (mask >> (parm-1)) & 0x1;
-> †}
->
-> -static int ieee80211_set_mesh_params(struct wiphy *wiphy,
-> - † † † † † † † † † † † † † † † struct net_device *dev,
-> - † † † † † † † † † † † † † † † const struct mesh_config *nconf, u32 mask)
-> +static int ieee80211_update_mesh_params(struct wiphy *wiphy,
-> + † † † † † † † † † † † † † † † † † † † struct net_device *dev, u32 mask,
-> + † † † † † † † † † † † † † † † † † † † const struct mesh_config *nconf)
-> †{
-> † † † †struct mesh_config *conf;
-> † † † †struct ieee80211_sub_if_data *sdata;
-> @@ -1054,6 +1049,30 @@ static int ieee80211_set_mesh_params(str
-> † † † †return 0;
-> †}
->
-> +static int ieee80211_join_mesh(struct wiphy *wiphy, struct net_device *dev,
-> + † † † † † † † † † † † † † † †const struct mesh_config *conf,
-> + † † † † † † † † † † † † † † †const struct mesh_setup *setup)
-> +{
-> + † † † struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
-> + † † † struct ieee80211_if_mesh *ifmsh = &sdata->u.mesh;
-> +
-> + † † † memcpy(&sdata->u.mesh.mshcfg, conf, sizeof(struct mesh_config));
-> + † † † ifmsh->mesh_id_len = setup->mesh_id_len;
-> + † † † memcpy(ifmsh->mesh_id, setup->mesh_id, ifmsh->mesh_id_len);
-> +
-> + † † † ieee80211_start_mesh(sdata);
-> +
-> + † † † return 0;
-> +}
-> +
-> +static int ieee80211_leave_mesh(struct wiphy *wiphy, struct net_device *dev)
-> +{
-> + † † † struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
-> +
-> + † † † ieee80211_stop_mesh(sdata);
-> +
-> + † † † return 0;
-> +}
-> †#endif
->
-> †static int ieee80211_change_bss(struct wiphy *wiphy,
-> @@ -1758,8 +1777,10 @@ struct cfg80211_ops mac80211_config_ops
-> † † † †.change_mpath = ieee80211_change_mpath,
-> † † † †.get_mpath = ieee80211_get_mpath,
-> † † † †.dump_mpath = ieee80211_dump_mpath,
-> - † † † .set_mesh_params = ieee80211_set_mesh_params,
-> + † † † .update_mesh_params = ieee80211_update_mesh_params,
-> † † † †.get_mesh_params = ieee80211_get_mesh_params,
-> + † † † .join_mesh = ieee80211_join_mesh,
-> + † † † .leave_mesh = ieee80211_leave_mesh,
-> †#endif
-> † † † †.change_bss = ieee80211_change_bss,
-> † † † †.set_txq_params = ieee80211_set_txq_params,
-> --- wireless-testing.orig/net/mac80211/ieee80211_i.h † †2010-12-02 09:32:13.000000000 +0100
-> +++ wireless-testing/net/mac80211/ieee80211_i.h 2010-12-02 09:38:22.000000000 +0100
-> @@ -608,19 +608,6 @@ struct ieee80211_sub_if_data *vif_to_sda
-> † † † †return container_of(p, struct ieee80211_sub_if_data, vif);
-> †}
->
-> -static inline void
-> -ieee80211_sdata_set_mesh_id(struct ieee80211_sub_if_data *sdata,
-> - † † † † † † † † † † † † † u8 mesh_id_len, u8 *mesh_id)
-> -{
-> -#ifdef CONFIG_MAC80211_MESH
-> - † † † struct ieee80211_if_mesh *ifmsh = &sdata->u.mesh;
-> - † † † ifmsh->mesh_id_len = mesh_id_len;
-> - † † † memcpy(ifmsh->mesh_id, mesh_id, mesh_id_len);
-> -#else
-> - † † † WARN_ON(1);
-> -#endif
-> -}
-> -
-> †enum sdata_queue_type {
-> † † † †IEEE80211_SDATA_QUEUE_TYPE_FRAME † † † †= 0,
-> † † † †IEEE80211_SDATA_QUEUE_AGG_START † † † † = 1,
-> --- wireless-testing.orig/net/mac80211/iface.c †2010-12-02 09:32:13.000000000 +0100
-> +++ wireless-testing/net/mac80211/iface.c † † † 2010-12-02 09:38:22.000000000 +0100
-> @@ -268,9 +268,7 @@ static int ieee80211_do_open(struct net_
-> † † † † † † † † † † † † † † † †goto err_stop;
-> † † † † † † † †}
->
-> - † † † † † † † if (ieee80211_vif_is_mesh(&sdata->vif)) {
-> - † † † † † † † † † † † ieee80211_start_mesh(sdata);
-> - † † † † † † † } else if (sdata->vif.type == NL80211_IFTYPE_AP) {
-> + † † † † † † † if (sdata->vif.type == NL80211_IFTYPE_AP) {
-> † † † † † † † † † † † †local->fif_pspoll++;
-> † † † † † † † † † † † †local->fif_probe_req++;
->
-> @@ -495,10 +493,6 @@ static void ieee80211_do_stop(struct iee
-> † † † † † † † †ieee80211_adjust_monitor_flags(sdata, -1);
-> † † † † † † † †ieee80211_configure_filter(local);
-> † † † † † † † †break;
-> - † † † case NL80211_IFTYPE_MESH_POINT:
-> - † † † † † † † if (ieee80211_vif_is_mesh(&sdata->vif))
-> - † † † † † † † † † † † ieee80211_stop_mesh(sdata);
-> - † † † † † † † /* fall through */
-> † † † †default:
-> † † † † † † † †flush_work(&sdata->work);
-> † † † † † † † †/*
-> @@ -1188,12 +1182,6 @@ int ieee80211_if_add(struct ieee80211_lo
-> † † † †if (ret)
-> † † † † † † † †goto fail;
->
-> - † † † if (ieee80211_vif_is_mesh(&sdata->vif) &&
-> - † † † † † params && params->mesh_id_len)
-> - † † † † † † † ieee80211_sdata_set_mesh_id(sdata,
-> - † † † † † † † † † † † † † † † † † † † † † params->mesh_id_len,
-> - † † † † † † † † † † † † † † † † † † † † † params->mesh_id);
-> -
-> † † † †mutex_lock(&local->iflist_mtx);
-> † † † †list_add_tail_rcu(&sdata->list, &local->interfaces);
-> † † † †mutex_unlock(&local->iflist_mtx);
-> --- wireless-testing.orig/net/mac80211/mesh.c † 2010-12-02 09:32:13.000000000 +0100
-> +++ wireless-testing/net/mac80211/mesh.c † † † †2010-12-02 09:38:22.000000000 +0100
-> @@ -674,26 +674,6 @@ void ieee80211_mesh_init_sdata(struct ie
-> † † † † † † † † † †ieee80211_mesh_housekeeping_timer,
-> † † † † † † † † † †(unsigned long) sdata);
->
-> - † † † ifmsh->mshcfg.dot11MeshRetryTimeout = MESH_RET_T;
-> - † † † ifmsh->mshcfg.dot11MeshConfirmTimeout = MESH_CONF_T;
-> - † † † ifmsh->mshcfg.dot11MeshHoldingTimeout = MESH_HOLD_T;
-> - † † † ifmsh->mshcfg.dot11MeshMaxRetries = MESH_MAX_RETR;
-> - † † † ifmsh->mshcfg.dot11MeshTTL = MESH_TTL;
-> - † † † ifmsh->mshcfg.auto_open_plinks = true;
-> - † † † ifmsh->mshcfg.dot11MeshMaxPeerLinks =
-> - † † † † † † † MESH_MAX_ESTAB_PLINKS;
-> - † † † ifmsh->mshcfg.dot11MeshHWMPactivePathTimeout =
-> - † † † † † † † MESH_PATH_TIMEOUT;
-> - † † † ifmsh->mshcfg.dot11MeshHWMPpreqMinInterval =
-> - † † † † † † † MESH_PREQ_MIN_INT;
-> - † † † ifmsh->mshcfg.dot11MeshHWMPnetDiameterTraversalTime =
-> - † † † † † † † MESH_DIAM_TRAVERSAL_TIME;
-> - † † † ifmsh->mshcfg.dot11MeshHWMPmaxPREQretries =
-> - † † † † † † † MESH_MAX_PREQ_RETRIES;
-> - † † † ifmsh->mshcfg.path_refresh_time =
-> - † † † † † † † MESH_PATH_REFRESH_TIME;
-> - † † † ifmsh->mshcfg.min_discovery_timeout =
-> - † † † † † † † MESH_MIN_DISCOVERY_TIMEOUT;
-> † † † †ifmsh->accepting_plinks = true;
-> † † † †ifmsh->preq_id = 0;
-> † † † †ifmsh->sn = 0;
-> --- wireless-testing.orig/net/mac80211/mesh.h † 2010-12-02 09:32:13.000000000 +0100
-> +++ wireless-testing/net/mac80211/mesh.h † † † †2010-12-02 09:38:22.000000000 +0100
-> @@ -175,33 +175,10 @@ struct mesh_rmc {
-> †*/
-> †#define MESH_CFG_CMP_LEN † † † (IEEE80211_MESH_CONFIG_LEN - 2)
->
-> -/* Default values, timeouts in ms */
-> -#define MESH_TTL † † † † † † † 31
-> -#define MESH_MAX_RETR † † † † †3
-> -#define MESH_RET_T † † † † † † 100
-> -#define MESH_CONF_T † † † † † †100
-> -#define MESH_HOLD_T † † † † † †100
-> -
-> -#define MESH_PATH_TIMEOUT † † †5000
-> -/* Minimum interval between two consecutive PREQs originated by the same
-> - * interface
-> - */
-> -#define MESH_PREQ_MIN_INT † † †10
-> -#define MESH_DIAM_TRAVERSAL_TIME 50
-> -/* A path will be refreshed if it is used PATH_REFRESH_TIME milliseconds before
-> - * timing out. †This way it will remain ACTIVE and no data frames will be
-> - * unnecesarily held in the pending queue.
-> - */
-> -#define MESH_PATH_REFRESH_TIME † † † † † † † † 1000
-> -#define MESH_MIN_DISCOVERY_TIMEOUT (2 * MESH_DIAM_TRAVERSAL_TIME)
-> †#define MESH_DEFAULT_BEACON_INTERVAL † † † † † 1000 † †/* in 1024 us units */
->
-> -#define MESH_MAX_PREQ_RETRIES 4
-> †#define MESH_PATH_EXPIRE (600 * HZ)
->
-> -/* Default maximum number of established plinks per interface */
-> -#define MESH_MAX_ESTAB_PLINKS †32
-> -
-> †/* Default maximum number of plinks per interface */
-> †#define MESH_MAX_PLINKS † † † † † † † †256
->
-> --- wireless-testing.orig/net/wireless/util.c † 2010-12-02 09:32:13.000000000 +0100
-> +++ wireless-testing/net/wireless/util.c † † † †2010-12-02 09:38:22.000000000 +0100
-> @@ -792,6 +792,7 @@ int cfg80211_change_iface(struct cfg8021
->
-> † † † †if (ntype != otype) {
-> † † † † † † † †dev->ieee80211_ptr->use_4addr = false;
-> + † † † † † † † dev->ieee80211_ptr->mesh_id_up_len = 0;
->
-> † † † † † † † †switch (otype) {
-> † † † † † † † †case NL80211_IFTYPE_ADHOC:
->
->
->
+---
 
+The following changes since commit cfa969e385a23e4c85f50e0ed5de25a2e18bf9d4:
 
+  Revert "ehea: Use the standard logging functions" (2010-12-06 20:45:28 -0800)
+
+are available in the git repository at:
+  git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-next-2.6.git for-davem
+
+Anderson Lizardo (1):
+      Bluetooth: Fix error handling for l2cap_init()
+
+Andrei Emeltchenko (8):
+      Bluetooth: Check sk is not owned before freeing l2cap_conn
+      Bluetooth: timer check sk is not owned before freeing
+      Bluetooth: do not use assignment in if condition
+      Bluetooth: clean up sco code
+      Bluetooth: clean up rfcomm code
+      Bluetooth: clean up l2cap code
+      Bluetooth: clean up hci code
+      Bluetooth: clean up legal text
+
+Andy Shevchenko (1):
+      wireless: ray_cs: use '%pm' format option to print MAC
+
+Bala Shanmugam (1):
+      Bluetooth: Add new PID for Atheros 3011
+
+Ben Greear (1):
+      ath9k: Move debugfs under ieee80211/[phyname]/ath9k/
+
+Bruno Randolf (1):
+      cfg80211: Add documentation for antenna ops
+
+Christian Lamparter (2):
+      carl9170: fix carl9170_tx_prepare typo
+      mac80211: ignore non-bcast mcast deauth/disassoc franes
+
+Daniel Drake (1):
+      libertas: fix memory corruption in lbs_remove_card()
+
+David Kilroy (1):
+      orinoco: abort scan on interface down
+
+Felix Fietkau (12):
+      ath9k: fix software retry counter tracking
+      ath9k_hw: fix endian issues with CTLs on AR9003
+      ath9k_hw: fix more bitfield related endian issues
+      ath5k: Use Generic DMA for later support of AHB bus.
+      ath5k: Introduce ath5k_init_softc function as in ath9k
+      ath5k: Move PCI bus functions to separate file.
+      ath5k: Use generic eeprom read from common ath_bus_opts struct.
+      ath5k: Check if pci pdev struct is initialized in common functions.
+      ath5k: Add a function to read chipset's MAC revision
+      ath5k: Add initial registers values for radio RF2317 chip.
+      ath5k: Add AHB bus support.
+      ath5k: Fix reset and interrupts for AHB type of devices.
+
+Gabor Juhos (1):
+      ath9k: use per-device struct for pm_qos_* operations
+
+Gustavo F. Padovan (4):
+      Bluetooth: Fix not returning proper error in SCO
+      Merge git://git.kernel.org/.../padovan/bluetooth-2.6 into test
+      Bluetooth: Get rid of __l2cap_get_sock_by_psm()
+      Bluetooth: Get rid of __rfcomm_get_sock_by_channel()
+
+Hauke Mehrtens (1):
+      ssb: Add sysfs attributes to ssb devices
+
+Helmut Schaa (1):
+      mac80211: Minor optimization in ieee80211_rx_h_data
+
+Joe Perches (2):
+      ath9k: hif_usb: Reduce indent 1 column
+      wireless: Remove unnecessary casts of usb_get_intfdata
+
+Johan Hedberg (3):
+      Bluetooth: Simplify remote features callback function logic
+      Bluetooth: Create a unified authentication request function
+      Bluetooth: Automate remote name requests
+
+Johannes Berg (17):
+      iwlagn: remove powersave warning
+      iwlagn: fix station powersave accounting for aggregation
+      iwlagn: advertise reliable TX status
+      iwlwifi: use mac80211 AC defines
+      ath9k/carl9170: advertise P2P
+      nl80211/cfg80211: extend mgmt-tx API for off-channel
+      mac80211: implement off-channel mgmt TX
+      mac80211: fix RX aggregation locking
+      cfg80211: include CQM packet loss docs
+      mac80211: document workqueue
+      mac80211: publish docs for _ni functions
+      mac80211: publish some misc docs
+      mac80211: publish some rate control docs
+      mac80211: document aggregation
+      mac80211: publish interface iteration docs
+      mac80211: document station handling
+      mac80211: publish SMPS docs
+
+Johannes Stezenbach (1):
+      mac80211/rt2x00: add ieee80211_tx_status_ni()
+
+John W. Linville (5):
+      Merge branch 'master' of git://git.kernel.org/.../padovan/bluetooth-2.6
+      Revert "ath9k: Fix STA disconnect issue due to received MIC failed bcast frames"
+      Merge branch 'master' of git://git.kernel.org/.../padovan/bluetooth-next-2.6
+      Merge branch 'master' of git://git.kernel.org/.../linville/wireless-2.6
+      Merge branch 'master' of git://git.kernel.org/.../linville/wireless-next-2.6 into for-davem
+
+Jouni Malinen (1):
+      mac80211: Fix frame injection using non-AP vif
+
+Mohammed Shafi Shajakhan (1):
+      ath9k: Add support for Adaptive Power Management
+
+Nick Kossifidis (30):
+      ath5k: Reset cleanup and generic cleanup
+      ath5k: Add new function to stop rx/tx DMA
+      ath5k: Stop PCU on reset
+      ath5k: Use new dma_stop function on base.c
+      ath5k: Debug DMA timeouts
+      ath5k: Use DCU early termination correctly
+      ath5k: Check RXE when setting RXDP
+      ath5k: Use new function to stop beacon queue
+      ath5k: Add new field on ath5k_hw to track bandwidth modes
+      ath5k: Put core clock initialization on a new function
+      ath5k: Small cleanup on tweak_initvals
+      ath5k: Increase PHY settling parameters for turo mode
+      ath5k: Move tx retries setting outside reset_tx_queue
+      ath5k: Extend get_default_sifs/slot_time
+      ath5k: Extend rate_duration
+      ath5k: Set all IFS intervals, not just slot time
+      ath5k: Use turbo flag on DCU
+      ath5k: Always set IFS intervals on reset
+      ath5k: Tweak power detector delays on RF5111/RF5112
+      ath5k: Update spur mitigation filter for turbo/half/quarter
+      ath5k: Update PLL programming for turbo/half/quarter
+      ath5k: Skip powertable setting when we are on the same channel
+      ath5k: Support synth-only channel change for AR2413/AR5413
+      ath5k: No need to save/restore staid flags on reset
+      ath5k: Tweak phy activate to rx start delay based on bwmode
+      ath5k: Skip tx power setting on AR5210 for now
+      ath5k: Use correct clock when setting ofdm timings
+      ath5k: Cleanup turbo channel flags
+      ath5k: Clean up turbo mode initvals/rfregs
+      ath5k: Set turbo bit on rf bank 2
+
+Rafa≈Ç Mi≈Çecki (8):
+      ssb: extract indexes for power tables
+      b43: N-PHY: swap values for radio registers 0x3b and 0x3c
+      b43: N-PHY: implement very basic TX power control management
+      b43: N-PHY: initialize perical variable, add missing call to CCA reset
+      b43: N-PHY: fix RSSI calibration
+      b43: N-PHY: fix RSSI selection
+      b43: N-PHY: use defines for RSSI types
+      b43: N-PHY: fix code path on PHY init
+
+Rajkumar Manoharan (2):
+      ath9k: Disable SWBA interrupt on remove_interface
+      Revert "ath9k_htc: Handle monitor mode properly for HTC devices"
+
+Senthil Balasubramanian (2):
+      mac80211: Fix STA disconnect due to MIC failure
+      ath9k: Fix STA disconnect issue due to received MIC failed bcast frames
+
+Stanislaw Gruszka (1):
+      iwlagn: fix microcode error on 4965
+
+Stefan Seyfried (1):
+      Bluetooth: Fix log spamming in btusb due to autosuspend
+
+Sujith Manoharan (1):
+      ath9k_htc: Remove unused structures
+
+Sven Neumann (1):
+      libertas: fix invalid access
+
+Vasanthakumar Thiagarajan (3):
+      ath9k: Reintroduce modparam to enable btcoex
+      ath9k: Remove code which enables btcoex based on subsys id
+      ath9k: Fix bug in reading input gpio state for ar9003
+
+Vasiliy Kulikov (3):
+      Bluetooth: bnep: fix information leak to userland
+      Bluetooth: cmtp: fix information leak to userland
+      Bluetooth: hidp: fix information leak to userland
+
+Wey-Yi Guy (8):
+      iwlwifi: remove unused define
+      iwlwifi: use antenna information in EEPROM
+      iwlagn: Offical name for 6050g2 device
+      iwlagn: Offical name for 6000g2a device
+      iwlagn: Offical name for 6000g2b device
+      iwlagn: Offical name for 100/130 device
+      iwlagn: use different kill mask when SCO active
+      iwlagn: minor change in bt coex normal LUT
+
+ Documentation/DocBook/80211.tmpl               |   70 ++-
+ drivers/bluetooth/ath3k.c                      |    4 +
+ drivers/bluetooth/btusb.c                      |   12 +-
+ drivers/net/wireless/ath/ar9170/usb.c          |    6 +-
+ drivers/net/wireless/ath/ath.h                 |    2 +
+ drivers/net/wireless/ath/ath5k/Kconfig         |   17 +-
+ drivers/net/wireless/ath/ath5k/Makefile        |    2 +
+ drivers/net/wireless/ath/ath5k/ahb.c           |  219 +++++
+ drivers/net/wireless/ath/ath5k/ani.c           |    6 +-
+ drivers/net/wireless/ath/ath5k/ath5k.h         |  260 ++++--
+ drivers/net/wireless/ath/ath5k/attach.c        |   28 +-
+ drivers/net/wireless/ath/ath5k/base.c          |  753 ++++++----------
+ drivers/net/wireless/ath/ath5k/base.h          |    5 +-
+ drivers/net/wireless/ath/ath5k/caps.c          |    6 -
+ drivers/net/wireless/ath/ath5k/debug.c         |    1 +
+ drivers/net/wireless/ath/ath5k/debug.h         |    2 +
+ drivers/net/wireless/ath/ath5k/desc.c          |   24 +-
+ drivers/net/wireless/ath/ath5k/dma.c           |  180 ++++-
+ drivers/net/wireless/ath/ath5k/eeprom.c        |  127 ++--
+ drivers/net/wireless/ath/ath5k/eeprom.h        |    2 +-
+ drivers/net/wireless/ath/ath5k/initvals.c      |  409 ++++----
+ drivers/net/wireless/ath/ath5k/led.c           |   11 +-
+ drivers/net/wireless/ath/ath5k/pci.c           |  326 +++++++
+ drivers/net/wireless/ath/ath5k/pcu.c           |  571 ++++++++----
+ drivers/net/wireless/ath/ath5k/phy.c           |  641 ++++++++++---
+ drivers/net/wireless/ath/ath5k/qcu.c           |  692 ++++++++------
+ drivers/net/wireless/ath/ath5k/reg.h           |   31 +-
+ drivers/net/wireless/ath/ath5k/reset.c         | 1221 +++++++++++-------------
+ drivers/net/wireless/ath/ath5k/rfbuffer.h      | 1169 ++++++++---------------
+ drivers/net/wireless/ath/ath5k/sysfs.c         |    4 +-
+ drivers/net/wireless/ath/ath9k/ar9003_eeprom.c |  317 ++++---
+ drivers/net/wireless/ath/ath9k/ar9003_eeprom.h |    9 +-
+ drivers/net/wireless/ath/ath9k/ar9003_phy.c    |    6 +-
+ drivers/net/wireless/ath/ath9k/ath9k.h         |    7 +-
+ drivers/net/wireless/ath/ath9k/beacon.c        |    3 +-
+ drivers/net/wireless/ath/ath9k/btcoex.c        |   23 -
+ drivers/net/wireless/ath/ath9k/btcoex.h        |    1 -
+ drivers/net/wireless/ath/ath9k/debug.c         |   35 +-
+ drivers/net/wireless/ath/ath9k/debug.h         |   16 -
+ drivers/net/wireless/ath/ath9k/eeprom.c        |    6 +-
+ drivers/net/wireless/ath/ath9k/eeprom.h        |   28 +-
+ drivers/net/wireless/ath/ath9k/eeprom_def.c    |   11 +-
+ drivers/net/wireless/ath/ath9k/hif_usb.c       |  119 ++--
+ drivers/net/wireless/ath/ath9k/htc_drv_main.c  |   64 ++-
+ drivers/net/wireless/ath/ath9k/htc_hst.h       |   19 -
+ drivers/net/wireless/ath/ath9k/hw.c            |   12 +-
+ drivers/net/wireless/ath/ath9k/hw.h            |    1 +
+ drivers/net/wireless/ath/ath9k/init.c          |   44 +-
+ drivers/net/wireless/ath/ath9k/main.c          |   21 +-
+ drivers/net/wireless/ath/ath9k/reg.h           |    6 +-
+ drivers/net/wireless/ath/ath9k/xmit.c          |   27 +-
+ drivers/net/wireless/ath/carl9170/fw.c         |    3 +-
+ drivers/net/wireless/ath/carl9170/main.c       |    3 +-
+ drivers/net/wireless/ath/carl9170/tx.c         |    2 +-
+ drivers/net/wireless/ath/carl9170/usb.c        |    3 +-
+ drivers/net/wireless/b43/phy_n.c               |  305 +++++--
+ drivers/net/wireless/b43/phy_n.h               |    2 +-
+ drivers/net/wireless/b43/radio_2055.c          |  246 +++---
+ drivers/net/wireless/iwlwifi/iwl-1000.c        |   12 +-
+ drivers/net/wireless/iwlwifi/iwl-5000.c        |   20 +-
+ drivers/net/wireless/iwlwifi/iwl-6000.c        |   66 +-
+ drivers/net/wireless/iwlwifi/iwl-agn-eeprom.c  |   20 +
+ drivers/net/wireless/iwlwifi/iwl-agn-lib.c     |   34 +-
+ drivers/net/wireless/iwlwifi/iwl-agn-tx.c      |   45 +-
+ drivers/net/wireless/iwlwifi/iwl-agn-ucode.c   |   24 +-
+ drivers/net/wireless/iwlwifi/iwl-agn.c         |    3 +-
+ drivers/net/wireless/iwlwifi/iwl-commands.h    |    1 +
+ drivers/net/wireless/iwlwifi/iwl-eeprom.h      |    1 -
+ drivers/net/wireless/libertas/if_sdio.c        |    1 -
+ drivers/net/wireless/libertas/if_spi.c         |    1 -
+ drivers/net/wireless/libertas/main.c           |    2 -
+ drivers/net/wireless/orinoco/main.c            |   12 +-
+ drivers/net/wireless/orinoco/scan.c            |    8 +
+ drivers/net/wireless/orinoco/scan.h            |    1 +
+ drivers/net/wireless/p54/p54usb.c              |    2 +-
+ drivers/net/wireless/ray_cs.c                  |   14 +-
+ drivers/net/wireless/rt2x00/rt2800pci.c        |    1 +
+ drivers/net/wireless/rt2x00/rt2x00.h           |    1 +
+ drivers/net/wireless/rt2x00/rt2x00dev.c        |    9 +-
+ drivers/net/wireless/zd1201.c                  |    2 +-
+ drivers/ssb/main.c                             |   30 +
+ drivers/ssb/pci.c                              |   44 +
+ include/linux/nl80211.h                        |   25 +-
+ include/linux/ssb/ssb.h                        |    4 +
+ include/linux/ssb/ssb_regs.h                   |   40 +
+ include/net/bluetooth/hci.h                    |   16 +-
+ include/net/bluetooth/hci_core.h               |   14 +-
+ include/net/bluetooth/l2cap.h                  |   22 +-
+ include/net/bluetooth/rfcomm.h                 |   18 +-
+ include/net/bluetooth/sco.h                    |   20 +-
+ include/net/cfg80211.h                         |   18 +-
+ include/net/mac80211.h                         |   28 +-
+ net/bluetooth/bnep/core.c                      |    1 +
+ net/bluetooth/cmtp/core.c                      |    1 +
+ net/bluetooth/hci_conn.c                       |   23 +-
+ net/bluetooth/hci_core.c                       |   66 +-
+ net/bluetooth/hci_event.c                      |  177 +++-
+ net/bluetooth/hci_sock.c                       |   17 +-
+ net/bluetooth/hidp/core.c                      |    2 +-
+ net/bluetooth/l2cap.c                          |   94 ++-
+ net/bluetooth/rfcomm/core.c                    |    8 +-
+ net/bluetooth/rfcomm/sock.c                    |   24 +-
+ net/bluetooth/rfcomm/tty.c                     |   28 +-
+ net/bluetooth/sco.c                            |   28 +-
+ net/mac80211/agg-rx.c                          |    8 +-
+ net/mac80211/cfg.c                             |   94 ++-
+ net/mac80211/debugfs_sta.c                     |   29 +-
+ net/mac80211/ieee80211_i.h                     |    5 +
+ net/mac80211/rx.c                              |   28 +-
+ net/mac80211/sta_info.h                        |   29 +-
+ net/mac80211/status.c                          |   15 +-
+ net/mac80211/tx.c                              |    7 +-
+ net/mac80211/work.c                            |   22 +
+ net/wireless/core.h                            |    4 +-
+ net/wireless/mlme.c                            |    9 +-
+ net/wireless/nl80211.c                         |   57 +-
+ 116 files changed, 5566 insertions(+), 3909 deletions(-)
+ create mode 100644 drivers/net/wireless/ath/ath5k/ahb.c
+ create mode 100644 drivers/net/wireless/ath/ath5k/pci.c
+
+Omnibus patch is available here:
+
+	http://www.kernel.org/pub/linux/kernel/people/linville/wireless-next-2.6-2010-12-08.patch.bz2
 
 -- 
-Javier Cardona
-cozybit Inc.
-http://www.cozybit.com
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
