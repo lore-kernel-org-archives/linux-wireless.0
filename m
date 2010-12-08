@@ -1,49 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:34979 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752241Ab0LNHsZ (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:60505 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752755Ab0LHUaH (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 14 Dec 2010 02:48:25 -0500
-Subject: Re: [PATCH] nl80211: Add notification for dropped Deauth/Disassoc
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Jouni Malinen <j@w1.fi>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <20101214074653.GA28072@jm.kir.nu>
-References: <20101213220048.GA24752@jm.kir.nu>
-	 <1292310907.3569.1.camel@jlt3.sipsolutions.net>
-	 <20101214074653.GA28072@jm.kir.nu>
-Content-Type: text/plain; charset="UTF-8"
-Date: Tue, 14 Dec 2010 08:48:22 +0100
-Message-ID: <1292312902.3569.6.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+	Wed, 8 Dec 2010 15:30:07 -0500
+Date: Wed, 8 Dec 2010 15:27:38 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Felix Fietkau <nbd@openwrt.org>
+Cc: Mohammed Shafi <shafi.wireless@gmail.com>,
+	johannes@sipsolutions.net, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 4/4] mac80211: reduce the probe response timeout after
+ beacon loss
+Message-ID: <20101208202738.GG2423@tuxdriver.com>
+References: <1290203740-57124-1-git-send-email-nbd@openwrt.org>
+ <1290203740-57124-2-git-send-email-nbd@openwrt.org>
+ <1290203740-57124-3-git-send-email-nbd@openwrt.org>
+ <1290203740-57124-4-git-send-email-nbd@openwrt.org>
+ <4CE734D9.90103@openwrt.org>
+ <AANLkTikCn2GjLxfQZLw9Tj8cyH_bgGpEDiGpKVg0faht@mail.gmail.com>
+ <4CEA8113.9070806@openwrt.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <4CEA8113.9070806@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2010-12-14 at 09:46 +0200, Jouni Malinen wrote:
-> On Tue, Dec 14, 2010 at 08:15:07AM +0100, Johannes Berg wrote:
-> > On Tue, 2010-12-14 at 00:00 +0200, Jouni Malinen wrote:
-> > > + * @NL80211_CMD_UNPROT_DEAUTHENTICATE: Unprotected deauthentication frame
-> > > + * @NL80211_CMD_UNPROT_DISASSOCIATE: Unprotected disassociation frame
+On Mon, Nov 22, 2010 at 03:41:23PM +0100, Felix Fietkau wrote:
+> On 2010-11-22 7:49 AM, Mohammed Shafi wrote:
+> > On Sat, Nov 20, 2010 at 8:09 AM, Felix Fietkau <nbd@openwrt.org> wrote:
+> >> On 2010-11-19 10:55 PM, Felix Fietkau wrote:
+> >>> Waiting for 500 ms after sending a probe request seems a bit excessive,
+> >>> especially when doing 5 attempts. If the connection is bad enough to make
+> >>> multiple requests time out, then user space should try to quickly find a
+> >>> new AP.
+> > This might improve fail over roaming to a small extent but  as per the
+> > commit id d1c5091f23fed5195271e2849f89017d3a126521 it was mentioned
+> > this might affect robustness against 'slow AP's'
 > > 
-> > I don't mind, but if we add the frame body should we really have two
-> > commands? Or should we have just one? Are we likely to need similar
-> > functionality for other frames? The only ones I can think of are class 3
-> > frames from unassociated stations, but that seems like it should be
-> > separate anyway.
-> 
-> This one followed the existing example of NL80211_CMD_DEAUTH/DISASSOC,
-> but well, those are for both notification and requests, so I can see the
-> difference there.. For these notification-only ones, I would be fine
-> having a single command if that is desirable. Though, I would probably
-> not go as far as merging any other frames to this list since
-> deauth/disassoc are special case for the AP starting to send these as
-> replies to any Class 2 or 3 frame.
+> >> Hmm, don't merge this patch yet, it can cause background scans to
+> >> trigger reconnects.
+> >>
+> > I am not sure  how this affects background scan.bgscan will be enabled
+> > even before the beacon loss and it is based on RSSI(please correct me
+> > if I am wrong).
+> I'm not sure either, this showed up in my tests. I'm pretty sure that
+> this change is not the root cause, but I don't want to see it merged
+> until the cause is figured out. My guess is that it's related to the
+> issues with the nullfunc probe request patch that Paul pointed out.
+> I'll do some more testing after I've fixed that one.
 
-Ok. I don't think we really need to go to a single command, and this may
-be more helpful for drivers that might not be able to give us the frame
-at all due to firmware implementation, so maybe it's better to keep it
-as is and not rely on the frame in wpa_s.
+I'm dropping this from my queue -- please repost if you decide it
+is warranted.
 
-johannes
-
+John
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
