@@ -1,148 +1,104 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:36134 "EHLO nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752790Ab0LPX5S (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 16 Dec 2010 18:57:18 -0500
-From: Felix Fietkau <nbd@openwrt.org>
+Received: from mail-fx0-f43.google.com ([209.85.161.43]:60887 "EHLO
+	mail-fx0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751210Ab0LIO57 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 9 Dec 2010 09:57:59 -0500
+Received: by fxm18 with SMTP id 18so2484006fxm.2
+        for <linux-wireless@vger.kernel.org>; Thu, 09 Dec 2010 06:57:57 -0800 (PST)
+From: Guy Eilam <guy@wizery.com>
 To: linux-wireless@vger.kernel.org
-Cc: linville@tuxdriver.com, lrodriguez@atheros.com,
-	Felix Fietkau <nbd@openwrt.org>
-Subject: [PATCH 2/2] ath9k_hw: remove baseband rfsilent support
-Date: Fri, 17 Dec 2010 00:57:01 +0100
-Message-Id: <1292543821-95686-2-git-send-email-nbd@openwrt.org>
-In-Reply-To: <1292543821-95686-1-git-send-email-nbd@openwrt.org>
-References: <1292543821-95686-1-git-send-email-nbd@openwrt.org>
+Cc: luciano.coelho@nokia.com
+Subject: [PATCH] wl1271: fixed problem with WPS IEs in probe requests
+Date: Thu,  9 Dec 2010 16:54:59 +0200
+Message-Id: <1291906499-21141-1-git-send-email-guy@wizery.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-When rfkill is enabled, ath9k_hw unnecessarily configured the baseband to
-turn off based on GPIO input, however that code was hardcoded to GPIO 0
-instead of ah->rfkill_gpio.
-Since ath9k uses software rfkill anyway, this code is completely unnecessary
-and should be removed in case anything else ever uses GPIO 0.
+Inclusion of a WPS IE in probe requests caused a problem
+in the driver due to the maximum size of the probe request
+template and the max_scan_ie_len values at initialization.
 
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+Increased the size of probe request template
+to the maximum size allowed by the firmware.
+Struct wl12xx_probe_req_template, which was only used
+for calculating the max size of the probe request template,
+is no longer used and needed.
+
+max_scan_ie_len is used for validating the size of
+additional IEs in scan requests.
+Initialized the max_scan_ie_len field to the maximum size
+of the probe request template minus the ieee80211 header size.
+
+Signed-off-by: Guy Eilam <guy@wizery.com>
 ---
- drivers/net/wireless/ath/ath9k/ar5008_phy.c |   13 -------------
- drivers/net/wireless/ath/ath9k/ar9003_phy.c |   23 -----------------------
- drivers/net/wireless/ath/ath9k/hw-ops.h     |    5 -----
- drivers/net/wireless/ath/ath9k/hw.c         |    2 +-
- drivers/net/wireless/ath/ath9k/hw.h         |    1 -
- 5 files changed, 1 insertions(+), 43 deletions(-)
+ drivers/net/wireless/wl12xx/init.c         |    6 ++----
+ drivers/net/wireless/wl12xx/main.c         |    7 +++++++
+ drivers/net/wireless/wl12xx/wl12xx_80211.h |    8 --------
+ 3 files changed, 9 insertions(+), 12 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/ar5008_phy.c b/drivers/net/wireless/ath/ath9k/ar5008_phy.c
-index 059330a..ffcf44a 100644
---- a/drivers/net/wireless/ath/ath9k/ar5008_phy.c
-+++ b/drivers/net/wireless/ath/ath9k/ar5008_phy.c
-@@ -961,18 +961,6 @@ static void ar5008_hw_rfbus_done(struct ath_hw *ah)
- 	REG_WRITE(ah, AR_PHY_RFBUS_REQ, 0);
- }
- 
--static void ar5008_hw_enable_rfkill(struct ath_hw *ah)
--{
--	REG_SET_BIT(ah, AR_GPIO_INPUT_EN_VAL,
--		    AR_GPIO_INPUT_EN_VAL_RFSILENT_BB);
--
--	REG_CLR_BIT(ah, AR_GPIO_INPUT_MUX2,
--		    AR_GPIO_INPUT_MUX2_RFSILENT);
--
--	ath9k_hw_cfg_gpio_input(ah, ah->rfkill_gpio);
--	REG_SET_BIT(ah, AR_PHY_TEST, RFSILENT_BB);
--}
--
- static void ar5008_restore_chainmask(struct ath_hw *ah)
+diff --git a/drivers/net/wireless/wl12xx/init.c b/drivers/net/wireless/wl12xx/init.c
+index 8a4e80d..68db4da 100644
+--- a/drivers/net/wireless/wl12xx/init.c
++++ b/drivers/net/wireless/wl12xx/init.c
+@@ -53,18 +53,16 @@ static int wl1271_init_hwenc_config(struct wl1271 *wl)
+ int wl1271_init_templates_config(struct wl1271 *wl)
  {
- 	int rx_chainmask = ah->rxchainmask;
-@@ -1629,7 +1617,6 @@ void ar5008_hw_attach_phy_ops(struct ath_hw *ah)
- 	priv_ops->set_delta_slope = ar5008_hw_set_delta_slope;
- 	priv_ops->rfbus_req = ar5008_hw_rfbus_req;
- 	priv_ops->rfbus_done = ar5008_hw_rfbus_done;
--	priv_ops->enable_rfkill = ar5008_hw_enable_rfkill;
- 	priv_ops->restore_chainmask = ar5008_restore_chainmask;
- 	priv_ops->set_diversity = ar5008_set_diversity;
- 	priv_ops->do_getnf = ar5008_hw_do_getnf;
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_phy.c b/drivers/net/wireless/ath/ath9k/ar9003_phy.c
-index da4a571..cdf46c1 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_phy.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_phy.c
-@@ -748,28 +748,6 @@ static void ar9003_hw_rfbus_done(struct ath_hw *ah)
- 	REG_WRITE(ah, AR_PHY_RFBUS_REQ, 0);
- }
+ 	int ret, i;
+-	size_t size;
  
--/*
-- * Set the interrupt and GPIO values so the ISR can disable RF
-- * on a switch signal.  Assumes GPIO port and interrupt polarity
-- * are set prior to call.
-- */
--static void ar9003_hw_enable_rfkill(struct ath_hw *ah)
--{
--	/* Connect rfsilent_bb_l to baseband */
--	REG_SET_BIT(ah, AR_GPIO_INPUT_EN_VAL,
--		    AR_GPIO_INPUT_EN_VAL_RFSILENT_BB);
--	/* Set input mux for rfsilent_bb_l to GPIO #0 */
--	REG_CLR_BIT(ah, AR_GPIO_INPUT_MUX2,
--		    AR_GPIO_INPUT_MUX2_RFSILENT);
+ 	/* send empty templates for fw memory reservation */
+ 	ret = wl1271_cmd_template_set(wl, CMD_TEMPL_CFG_PROBE_REQ_2_4, NULL,
+-				      sizeof(struct wl12xx_probe_req_template),
++				      WL1271_CMD_TEMPL_MAX_SIZE,
+ 				      0, WL1271_RATE_AUTOMATIC);
+ 	if (ret < 0)
+ 		return ret;
+ 
+-	size = sizeof(struct wl12xx_probe_req_template);
+ 	ret = wl1271_cmd_template_set(wl, CMD_TEMPL_CFG_PROBE_REQ_5,
+-				      NULL, size, 0,
++				      NULL, WL1271_CMD_TEMPL_MAX_SIZE, 0,
+ 				      WL1271_RATE_AUTOMATIC);
+ 	if (ret < 0)
+ 		return ret;
+diff --git a/drivers/net/wireless/wl12xx/main.c b/drivers/net/wireless/wl12xx/main.c
+index 7fecefe..81c8d66 100644
+--- a/drivers/net/wireless/wl12xx/main.c
++++ b/drivers/net/wireless/wl12xx/main.c
+@@ -2654,6 +2654,13 @@ int wl1271_init_ieee80211(struct wl1271 *wl)
+ 	wl->hw->wiphy->interface_modes = BIT(NL80211_IFTYPE_STATION) |
+ 		BIT(NL80211_IFTYPE_ADHOC);
+ 	wl->hw->wiphy->max_scan_ssids = 1;
++	/*
++	 * Maximum length of elements in scanning probe request templates
++	 * should be the maximum length possible for a template, without
++	 * the IEEE80211 header of the template
++	 */
++	wl->hw->wiphy->max_scan_ie_len = WL1271_CMD_TEMPL_MAX_SIZE -
++			sizeof(struct ieee80211_header);
+ 	wl->hw->wiphy->bands[IEEE80211_BAND_2GHZ] = &wl1271_band_2ghz;
+ 	wl->hw->wiphy->bands[IEEE80211_BAND_5GHZ] = &wl1271_band_5ghz;
+ 
+diff --git a/drivers/net/wireless/wl12xx/wl12xx_80211.h b/drivers/net/wireless/wl12xx/wl12xx_80211.h
+index 1846280..00c9627 100644
+--- a/drivers/net/wireless/wl12xx/wl12xx_80211.h
++++ b/drivers/net/wireless/wl12xx/wl12xx_80211.h
+@@ -133,14 +133,6 @@ struct wl12xx_qos_null_data_template {
+ 	__le16 qos_ctl;
+ } __packed;
+ 
+-struct wl12xx_probe_req_template {
+-	struct ieee80211_header header;
+-	struct wl12xx_ie_ssid ssid;
+-	struct wl12xx_ie_rates rates;
+-	struct wl12xx_ie_rates ext_rates;
+-} __packed;
 -
--	/*
--	 * Configure the desired GPIO port for input and
--	 * enable baseband rf silence.
--	 */
--	ath9k_hw_cfg_gpio_input(ah, ah->rfkill_gpio);
--	REG_SET_BIT(ah, AR_PHY_TEST, RFSILENT_BB);
--}
 -
- static void ar9003_hw_set_diversity(struct ath_hw *ah, bool value)
- {
- 	u32 v = REG_READ(ah, AR_PHY_CCK_DETECT);
-@@ -1206,7 +1184,6 @@ void ar9003_hw_attach_phy_ops(struct ath_hw *ah)
- 	priv_ops->set_delta_slope = ar9003_hw_set_delta_slope;
- 	priv_ops->rfbus_req = ar9003_hw_rfbus_req;
- 	priv_ops->rfbus_done = ar9003_hw_rfbus_done;
--	priv_ops->enable_rfkill = ar9003_hw_enable_rfkill;
- 	priv_ops->set_diversity = ar9003_hw_set_diversity;
- 	priv_ops->ani_control = ar9003_hw_ani_control;
- 	priv_ops->do_getnf = ar9003_hw_do_getnf;
-diff --git a/drivers/net/wireless/ath/ath9k/hw-ops.h b/drivers/net/wireless/ath/ath9k/hw-ops.h
-index 0a4ad34..c8f254f 100644
---- a/drivers/net/wireless/ath/ath9k/hw-ops.h
-+++ b/drivers/net/wireless/ath/ath9k/hw-ops.h
-@@ -223,11 +223,6 @@ static inline void ath9k_hw_rfbus_done(struct ath_hw *ah)
- 	return ath9k_hw_private_ops(ah)->rfbus_done(ah);
- }
- 
--static inline void ath9k_enable_rfkill(struct ath_hw *ah)
--{
--	return ath9k_hw_private_ops(ah)->enable_rfkill(ah);
--}
--
- static inline void ath9k_hw_restore_chainmask(struct ath_hw *ah)
- {
- 	if (!ath9k_hw_private_ops(ah)->restore_chainmask)
-diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
-index 0f373be..beb513d 100644
---- a/drivers/net/wireless/ath/ath9k/hw.c
-+++ b/drivers/net/wireless/ath/ath9k/hw.c
-@@ -1383,7 +1383,7 @@ int ath9k_hw_reset(struct ath_hw *ah, struct ath9k_channel *chan,
- 	ath9k_hw_init_qos(ah);
- 
- 	if (ah->caps.hw_caps & ATH9K_HW_CAP_RFSILENT)
--		ath9k_enable_rfkill(ah);
-+		ath9k_hw_cfg_gpio_input(ah, ah->rfkill_gpio);
- 
- 	ath9k_hw_init_global_settings(ah);
- 
-diff --git a/drivers/net/wireless/ath/ath9k/hw.h b/drivers/net/wireless/ath/ath9k/hw.h
-index 97f22c4..a461e67 100644
---- a/drivers/net/wireless/ath/ath9k/hw.h
-+++ b/drivers/net/wireless/ath/ath9k/hw.h
-@@ -576,7 +576,6 @@ struct ath_hw_private_ops {
- 	void (*set_delta_slope)(struct ath_hw *ah, struct ath9k_channel *chan);
- 	bool (*rfbus_req)(struct ath_hw *ah);
- 	void (*rfbus_done)(struct ath_hw *ah);
--	void (*enable_rfkill)(struct ath_hw *ah);
- 	void (*restore_chainmask)(struct ath_hw *ah);
- 	void (*set_diversity)(struct ath_hw *ah, bool value);
- 	u32 (*compute_pll_control)(struct ath_hw *ah,
+ struct wl12xx_probe_resp_template {
+ 	struct ieee80211_header header;
+ 	__le32 time_stamp[2];
 -- 
-1.7.3.2
+1.7.1
 
