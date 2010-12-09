@@ -1,160 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:50817 "EHLO nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753150Ab0LLNeq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 12 Dec 2010 08:34:46 -0500
-From: Felix Fietkau <nbd@openwrt.org>
-To: linux-wireless@vger.kernel.org
-Cc: linville@tuxdriver.com, lrodriguez@atheros.com,
-	Felix Fietkau <nbd@openwrt.org>
-Subject: [PATCH 3/7] ath9k: fix PA predistortion thermal measurement handling
-Date: Sun, 12 Dec 2010 14:34:33 +0100
-Message-Id: <1292160877-50618-3-git-send-email-nbd@openwrt.org>
-In-Reply-To: <1292160877-50618-2-git-send-email-nbd@openwrt.org>
-References: <1292160877-50618-1-git-send-email-nbd@openwrt.org>
- <1292160877-50618-2-git-send-email-nbd@openwrt.org>
+Received: from he.sipsolutions.net ([78.46.109.217]:49964 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754026Ab0LITXw (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 9 Dec 2010 14:23:52 -0500
+Subject: Re: [PATCH v3] mac80211: Fix NULL-pointer deference on ibss merge
+ when not ready
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Tim Harvey <harvey.tim@gmail.com>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <1291920193-28228-1-git-send-email-harvey.tim@gmail.com>
+References: <1291920193-28228-1-git-send-email-harvey.tim@gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Thu, 09 Dec 2010 20:23:49 +0100
+Message-ID: <1291922629.3540.38.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-To be able to measure the thermal values correctly for PAPRD, we need
-to send training frames before setting up the gain table for the measurement,
-and then again afterwards for the actual training.
+On Thu, 2010-12-09 at 10:43 -0800, Tim Harvey wrote:
+> dev_open will eventually call ieee80211_ibss_join which sets up the
+> skb used for beacons/probe-responses however it is possible to
+> receive beacons that attempt to merge before this occurs causing
+> a null pointer dereference.  Check ssid_len as that is the last
+> thing set in ieee80211_ibss_join.
+> 
+> This occurs quite easily in the presence of adhoc nodes with hidden SSID's
+> 
+> revised previous patch to check further up based on irc feedback
+> 
+> Signed-off-by: Tim Harvey <harvey.tim@gmail.com>
 
-For further improvement, send training frames at MCS0 instead of 54 MBit/s
-legacy. That way we can use the No-ACK flag for the transmission, which
-speeds up PAPRD training in general, as the hardware won't have to
-retransmit and wait for ACK timeout (was previously set to 4 * 6
-transmission attempts).
+This seems sensible. I wonder if we should be doing a similar thing for
+mesh/station modes...
 
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
----
- drivers/net/wireless/ath/ath9k/main.c |   74 +++++++++++++++++++-------------
- 1 files changed, 44 insertions(+), 30 deletions(-)
+Reviewed-by: Johannes Berg <johannes@sipsolutions.net>
 
-diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
-index daa3c9f..bcadf9c 100644
---- a/drivers/net/wireless/ath/ath9k/main.c
-+++ b/drivers/net/wireless/ath/ath9k/main.c
-@@ -320,6 +320,42 @@ static void ath_paprd_activate(struct ath_softc *sc)
- 	ath9k_ps_restore(sc);
- }
- 
-+static bool ath_paprd_send_frame(struct ath_softc *sc, struct sk_buff *skb, int chain)
-+{
-+	struct ieee80211_hw *hw = sc->hw;
-+	struct ieee80211_tx_info *tx_info = IEEE80211_SKB_CB(skb);
-+	struct ath_tx_control txctl;
-+	int time_left;
-+
-+	memset(&txctl, 0, sizeof(txctl));
-+	txctl.txq = sc->tx.txq_map[WME_AC_BE];
-+
-+	memset(tx_info, 0, sizeof(*tx_info));
-+	tx_info->band = hw->conf.channel->band;
-+	tx_info->flags |= IEEE80211_TX_CTL_NO_ACK;
-+	tx_info->control.rates[0].idx = 0;
-+	tx_info->control.rates[0].count = 1;
-+	tx_info->control.rates[0].flags = IEEE80211_TX_RC_MCS;
-+	tx_info->control.rates[1].idx = -1;
-+
-+	init_completion(&sc->paprd_complete);
-+	sc->paprd_pending = true;
-+	txctl.paprd = BIT(chain);
-+	if (ath_tx_start(hw, skb, &txctl) != 0)
-+		return false;
-+
-+	time_left = wait_for_completion_timeout(&sc->paprd_complete,
-+			msecs_to_jiffies(ATH_PAPRD_TIMEOUT));
-+	sc->paprd_pending = false;
-+
-+	if (!time_left)
-+		ath_dbg(ath9k_hw_common(sc->sc_ah), ATH_DBG_CALIBRATE,
-+			"Timeout waiting for paprd training on TX chain %d\n",
-+			chain);
-+
-+	return !!time_left;
-+}
-+
- void ath_paprd_calibrate(struct work_struct *work)
- {
- 	struct ath_softc *sc = container_of(work, struct ath_softc, paprd_work);
-@@ -327,18 +363,12 @@ void ath_paprd_calibrate(struct work_struct *work)
- 	struct ath_hw *ah = sc->sc_ah;
- 	struct ieee80211_hdr *hdr;
- 	struct sk_buff *skb = NULL;
--	struct ieee80211_tx_info *tx_info;
--	int band = hw->conf.channel->band;
--	struct ieee80211_supported_band *sband = &sc->sbands[band];
--	struct ath_tx_control txctl;
- 	struct ath9k_hw_cal_data *caldata = ah->caldata;
- 	struct ath_common *common = ath9k_hw_common(ah);
- 	int ftype;
- 	int chain_ok = 0;
- 	int chain;
- 	int len = 1800;
--	int time_left;
--	int i;
- 
- 	if (!caldata)
- 		return;
-@@ -347,8 +377,6 @@ void ath_paprd_calibrate(struct work_struct *work)
- 	if (!skb)
- 		return;
- 
--	tx_info = IEEE80211_SKB_CB(skb);
--
- 	skb_put(skb, len);
- 	memset(skb->data, 0, len);
- 	hdr = (struct ieee80211_hdr *)skb->data;
-@@ -359,9 +387,6 @@ void ath_paprd_calibrate(struct work_struct *work)
- 	memcpy(hdr->addr2, hw->wiphy->perm_addr, ETH_ALEN);
- 	memcpy(hdr->addr3, hw->wiphy->perm_addr, ETH_ALEN);
- 
--	memset(&txctl, 0, sizeof(txctl));
--	txctl.txq = sc->tx.txq_map[WME_AC_BE];
--
- 	ath9k_ps_wakeup(sc);
- 	ar9003_paprd_init_table(ah);
- 	for (chain = 0; chain < AR9300_MAX_CHAINS; chain++) {
-@@ -369,30 +394,19 @@ void ath_paprd_calibrate(struct work_struct *work)
- 			continue;
- 
- 		chain_ok = 0;
--		memset(tx_info, 0, sizeof(*tx_info));
--		tx_info->band = band;
- 
--		for (i = 0; i < 4; i++) {
--			tx_info->control.rates[i].idx = sband->n_bitrates - 1;
--			tx_info->control.rates[i].count = 6;
--		}
-+		ath_dbg(common, ATH_DBG_CALIBRATE,
-+			"Sending PAPRD frame for thermal measurement "
-+			"on chain %d\n", chain);
-+		if (!ath_paprd_send_frame(sc, skb, chain))
-+			goto fail_paprd;
- 
--		init_completion(&sc->paprd_complete);
--		sc->paprd_pending = true;
- 		ar9003_paprd_setup_gain_table(ah, chain);
--		txctl.paprd = BIT(chain);
--		if (ath_tx_start(hw, skb, &txctl) != 0)
--			break;
- 
--		time_left = wait_for_completion_timeout(&sc->paprd_complete,
--				msecs_to_jiffies(ATH_PAPRD_TIMEOUT));
--		sc->paprd_pending = false;
--		if (!time_left) {
--			ath_dbg(ath9k_hw_common(ah), ATH_DBG_CALIBRATE,
--				"Timeout waiting for paprd training on TX chain %d\n",
--				chain);
-+		ath_dbg(common, ATH_DBG_CALIBRATE,
-+			"Sending PAPRD training frame on chain %d\n", chain);
-+		if (!ath_paprd_send_frame(sc, skb, chain))
- 			goto fail_paprd;
--		}
- 
- 		if (!ar9003_paprd_is_done(ah))
- 			break;
--- 
-1.7.3.2
+> ---
+>  net/mac80211/ibss.c |    4 ++++
+>  1 files changed, 4 insertions(+), 0 deletions(-)
+> 
+> diff --git a/net/mac80211/ibss.c b/net/mac80211/ibss.c
+> index 410d104..53c7077 100644
+> --- a/net/mac80211/ibss.c
+> +++ b/net/mac80211/ibss.c
+> @@ -780,6 +780,9 @@ void ieee80211_ibss_rx_queued_mgmt(struct ieee80211_sub_if_data *sdata,
+>  
+>  	mutex_lock(&sdata->u.ibss.mtx);
+>  
+> +	if (!sdata->u.ibss.ssid_len)
+> +		goto mgmt_out; /* not ready to merge yet */
+> +
+>  	switch (fc & IEEE80211_FCTL_STYPE) {
+>  	case IEEE80211_STYPE_PROBE_REQ:
+>  		ieee80211_rx_mgmt_probe_req(sdata, mgmt, skb->len);
+> @@ -797,6 +800,7 @@ void ieee80211_ibss_rx_queued_mgmt(struct ieee80211_sub_if_data *sdata,
+>  		break;
+>  	}
+>  
+> + mgmt_out:
+>  	mutex_unlock(&sdata->u.ibss.mtx);
+>  }
+>  
+
 
