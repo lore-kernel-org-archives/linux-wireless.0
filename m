@@ -1,104 +1,106 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:38576 "EHLO nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752652Ab0LRXcK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 18 Dec 2010 18:32:10 -0500
-From: Felix Fietkau <nbd@openwrt.org>
-To: linux-wireless@vger.kernel.org
-Cc: linville@tuxdriver.com, lrodriguez@atheros.com,
-	Felix Fietkau <nbd@openwrt.org>,
-	Vasanthakumar Thiagarajan <vasanth@atheros.com>
-Subject: [PATCH 1/2] ath9k_hw: fix PA predistortion HT40 mask
-Date: Sun, 19 Dec 2010 00:31:54 +0100
-Message-Id: <1292715115-36506-1-git-send-email-nbd@openwrt.org>
+Received: from vwp2514.webpack.hosteurope.de ([87.230.42.24]:43527 "EHLO
+	vwp2514.webpack.hosteurope.de" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1755978Ab0LINRY (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 9 Dec 2010 08:17:24 -0500
+Subject: Re: [PATCH] cfg80211: update information elements in cached BSS
+ struct
+From: Sven Neumann <s.neumann@raumfeld.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <1291898876.3540.4.camel@jlt3.sipsolutions.net>
+References: <1291891690-26118-1-git-send-email-s.neumann@raumfeld.com>
+	 <1291898876.3540.4.camel@jlt3.sipsolutions.net>
+Content-Type: text/plain; charset="UTF-8"
+Date: Thu, 09 Dec 2010 14:17:20 +0100
+Message-ID: <1291900640.1924.33.camel@sven>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The commit 'ath9k_hw: Disable PAPRD for rates with low Tx power' changed
-the code that sets the PAPRD rate masks to use only either the HT20 mask
-or the HT40 mask. This is wrong, as the hardware can still use HT20 rates
-even when configured for HT40, and the operating channel mode does not
-affect PAPRD operation.
-The register for the HT40 rate mask is applied as a mask on top of the
-other registers to selectively disable PAPRD for specific rates on HT40
-packets only.
-This patch changes the code back to the old behavior which matches the
-intended use of these registers. While with current cards this should not
-make any practical difference (according to Atheros, the HT20 and HT40
-mask should always be equal), it is more correct that way, and maybe
-the HT40 mask will be used for some rare corner cases in the future.
+Hi,
 
-Cc: Vasanthakumar Thiagarajan <vasanth@atheros.com>
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
----
- drivers/net/wireless/ath/ath9k/ar9003_eeprom.c |   19 +++++++++++--------
- drivers/net/wireless/ath/ath9k/ar9003_paprd.c  |    2 +-
- drivers/net/wireless/ath/ath9k/hw.h            |    1 +
- 3 files changed, 13 insertions(+), 9 deletions(-)
+On Thu, 2010-12-09 at 13:47 +0100, Johannes Berg wrote:
+> On Thu, 2010-12-09 at 11:48 +0100, Sven Neumann wrote:
+> > When a cached BSS struct is updated because a new beacon was received,
+> > the code replaces the cached information elements by the IEs from the
+> > new beacon. However it did not update the pub.information_elements
+> > and pub.len_information_elements fields leaving them either pointing
+> > to the old beacon IEs or in an inconsistent state where the data is
+> > replaced by the new beacon IEs but len_information_elements still has
+> > its value from the first beacon.
+> > 
+> > Fix this by updating the information elements fields if they are
+> > pointing to beacon IEs.
+> 
+> Err, no, this is intentional -- we want data from probe responses to
+> "win" and be displayed preferentially. If you look at the code that
+> dumps them out, that's what will happen.
 
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
-index f80ec74..d7deae8 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
-@@ -4762,6 +4762,7 @@ static void ath9k_hw_ar9300_set_txpower(struct ath_hw *ah,
- 	struct ath_regulatory *regulatory = ath9k_hw_regulatory(ah);
- 	struct ath_common *common = ath9k_hw_common(ah);
- 	struct ar9300_eeprom *eep = &ah->eeprom.ar9300_eep;
-+	struct ar9300_modal_eep_header *modal_hdr;
- 	u8 targetPowerValT2[ar9300RateSize];
- 	u8 target_power_val_t2_eep[ar9300RateSize];
- 	unsigned int i = 0, paprd_scale_factor = 0;
-@@ -4771,15 +4772,17 @@ static void ath9k_hw_ar9300_set_txpower(struct ath_hw *ah,
- 
- 	if (ah->eep_ops->get_eeprom(ah, EEP_PAPRD)) {
- 		if (IS_CHAN_2GHZ(chan))
--			ah->paprd_ratemask = (IS_CHAN_HT40(chan) ?
--				le32_to_cpu(eep->modalHeader2G.papdRateMaskHt40) :
--				le32_to_cpu(eep->modalHeader2G.papdRateMaskHt20))
--				& AR9300_PAPRD_RATE_MASK;
-+			modal_hdr = &eep->modalHeader2G;
- 		else
--			ah->paprd_ratemask = (IS_CHAN_HT40(chan) ?
--				le32_to_cpu(eep->modalHeader5G.papdRateMaskHt40) :
--				le32_to_cpu(eep->modalHeader5G.papdRateMaskHt20))
--				& AR9300_PAPRD_RATE_MASK;
-+			modal_hdr = &eep->modalHeader5G;
-+
-+		ah->paprd_ratemask =
-+			le32_to_cpu(modal_hdr->papdRateMaskHt20) &
-+			AR9300_PAPRD_RATE_MASK;
-+
-+		ah->paprd_ratemask_ht40 =
-+			le32_to_cpu(modal_hdr->papdRateMaskHt40) &
-+			AR9300_PAPRD_RATE_MASK;
- 
- 		paprd_scale_factor = ar9003_get_paprd_scale_factor(ah, chan);
- 		min_pwridx = IS_CHAN_HT40(chan) ? ALL_TARGET_HT40_0_8_16 :
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_paprd.c b/drivers/net/wireless/ath/ath9k/ar9003_paprd.c
-index 79554c5..356d2fd7 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_paprd.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_paprd.c
-@@ -134,7 +134,7 @@ static int ar9003_paprd_setup_single_table(struct ath_hw *ah)
- 	REG_RMW_FIELD(ah, AR_PHY_PAPRD_AM2PM, AR_PHY_PAPRD_AM2PM_MASK,
- 		      ah->paprd_ratemask);
- 	REG_RMW_FIELD(ah, AR_PHY_PAPRD_HT40, AR_PHY_PAPRD_HT40_MASK,
--		      AR_PHY_PAPRD_HT40_MASK);
-+		      ah->paprd_ratemask_ht40);
- 
- 	for (i = 0; i < ah->caps.max_txchains; i++) {
- 		REG_RMW_FIELD(ah, ctrl0[i],
-diff --git a/drivers/net/wireless/ath/ath9k/hw.h b/drivers/net/wireless/ath/ath9k/hw.h
-index b98053f..b8ffaa5 100644
---- a/drivers/net/wireless/ath/ath9k/hw.h
-+++ b/drivers/net/wireless/ath/ath9k/hw.h
-@@ -835,6 +835,7 @@ struct ath_hw {
- 	unsigned int paprd_target_power;
- 	unsigned int paprd_training_power;
- 	unsigned int paprd_ratemask;
-+	unsigned int paprd_ratemask_ht40;
- 	bool paprd_table_write_done;
- 	u32 paprd_gain_table_entries[PAPRD_GAIN_TABLE_ENTRIES];
- 	u8 paprd_gain_table_index[PAPRD_GAIN_TABLE_ENTRIES];
+As far as I can see my patch does not break this behavior. The
+information elements fields are only updated if they are currently
+pointing to beacon IEs. If there's ever a probe response frame, then it
+will win and the information elements fields won't be changed for
+beacons arriving later.
+
+> If you need the most up-to-date beacon IEs, use (the equivalent of) "iw
+> wlan0 scan dump -b".
+
+What my patch is fixing are the following situations (and yes, this
+happened in real life, it is reproducable and it is reproducably fixed
+by the patch that I've submitted):
+
+ AP sends a beacon without RSN IE. This is the first beacon received
+ and the station with IEs is added to the BSS cache.
+ pub.information_elements now points to pub.beacon_ies and
+ pub.len_information_elements has the value of pub.len_beacon_ies.
+
+ AP sends another beacon, this time it includes RSN IE. As there's
+ not enough place for the larger IEs, memory is allocated for it
+ and the pub.beacon_ies pointer is changed to point to this newly
+ allocated memory. Now pub.information_elements still points to
+ the old value.
+
+ User-space asks for scan results and will receive the IEs from the
+ first beacon because even though the data from subsequent beacons
+ has been added to the cache, pub.information_elements still points
+ to the old data.
+
+ As a result user-space looking for a WPA enabled access-point will
+ skip the AP and never associate with it. This situation will only
+ ever fix itself if you are lucky enough that so few beacons are
+ arriving that the cached RSS expires at some point.
+
+And there are even worse scenarios:
+
+ If the second beacon is smaller than the first or only slightly larger
+ (so that it fits into the allocated memory which has some padding),
+ then no new memory will be allocated for the IEs. Instead the data
+ in pub.beacon_ies will be changed and pub.len_beacon_ies will be
+ updated. Now pub.information_elements points to the new data
+ but pub.len_information_elements still holds the old value. Data
+ and length have become inconsistent. As a result invalid IEs are
+ returned to user-space when it asks for scan results.
+
+As you can see this is all without any probe response frames. Our driver
+(libertas) doesn't do any active scanning and thus there are no probe
+response frames received. I still tried to write the patch in a way that
+should not break things if probe response frames are received.
+
+Please review this patch again. I am pretty sure that there's something
+broken. Perhaps my fix is not totally correct, but it fixes a
+reproducable association problem for us.
+
+
+Regards,
+Sven
+
+
 -- 
-1.7.3.2
+Sven Neumann
+Head of Software Development
+
+RAUMFELD GmbH | Reichenberger Str. 124 | 10999 Berlin | Germany
+Tel: +49.30.340.60.98.0 | Fax: +49.30.340.60.98.99 | s.neumann@raumfeld.com
 
