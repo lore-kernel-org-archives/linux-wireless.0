@@ -1,32 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:58114 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753335Ab0LHILq (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 8 Dec 2010 03:11:46 -0500
-Subject: Re: [PATCH] wireless: Remove spurious warning in mlme.c
-From: Johannes Berg <johannes@sipsolutions.net>
-To: greearb@candelatech.com
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <1291759599-14698-1-git-send-email-greearb@candelatech.com>
-References: <1291759599-14698-1-git-send-email-greearb@candelatech.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Wed, 08 Dec 2010 09:11:43 +0100
-Message-ID: <1291795903.3562.5.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+Received: from mga09.intel.com ([134.134.136.24]:34479 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756930Ab0LIS0t (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 9 Dec 2010 13:26:49 -0500
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Subject: [PATCH 0/2] iwlwifi fix for 2.6.37
+Date: Thu,  9 Dec 2010 10:19:38 -0800
+Message-Id: <1291918780-10882-1-git-send-email-wey-yi.w.guy@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2010-12-07 at 14:06 -0800, greearb@candelatech.com wrote:
-> From: Ben Greear <greearb@candelatech.com>
-> 
-> Seems that we should not be warning if all of the
-> authtry_bsses are already NULL.
+The original method used to parsing EEPROM Tx Power Table was hardcode and
+not forward compatible with newer devices. Fix it here to be layout agnostic
 
-Do you keep running into the warning? I'd really like to understand how
-it happens -- it seems to point to a mac80211 bug.
+John, we split EEPROM reading patches to two stage, for .37 release,
+the existing devices will not change, only the newer devices will use
+the new EEPROM reading method; we will remove the old EEPROM reading method
+all together in separated patch for .38 release. Please let me know if this
+is ok
 
-So don't really like this patch.
+Johannes Berg (1):
+  iwlagn: rename enhanced txpower fields
 
-johannes
+Wey-Yi Guy (1):
+  iwlagn: implement layout-agnostic EEPROM reading
+
+these patches are also available from wireless-2.6 branch on
+ git://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi-2.6.git
+
+ drivers/net/wireless/iwlwifi/iwl-1000.c       |    2 +
+ drivers/net/wireless/iwlwifi/iwl-6000.c       |   12 ++++
+ drivers/net/wireless/iwlwifi/iwl-agn-eeprom.c |   88 ++++++++++++++++++++++++-
+ drivers/net/wireless/iwlwifi/iwl-agn-lib.c    |    6 ++
+ drivers/net/wireless/iwlwifi/iwl-core.h       |    1 +
+ drivers/net/wireless/iwlwifi/iwl-eeprom.h     |   25 ++++++-
+ 6 files changed, 128 insertions(+), 6 deletions(-)
 
