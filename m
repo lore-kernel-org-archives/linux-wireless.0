@@ -1,107 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail30f.wh2.ocn.ne.jp ([220.111.41.203]:7434 "HELO
-	mail30f.wh2.ocn.ne.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1755148Ab0LPC3m (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:53264 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756854Ab0LIOHJ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 15 Dec 2010 21:29:42 -0500
-Received: from vs3004.wh2.ocn.ne.jp (125.206.180.167)
-	by mail30f.wh2.ocn.ne.jp (RS ver 1.0.95vs) with SMTP id 3-0696256579
-	for <linux-wireless@vger.kernel.org>; Thu, 16 Dec 2010 11:29:40 +0900 (JST)
-Subject: [PATCH 1/3] cfg80211: Separate available antennas for RX and TX
-To: johannes@sipsolutions.net, linville@tuxdriver.com
-From: Bruno Randolf <br1@einfach.org>
-Cc: dhalperi@cs.washington.edu, linux-wireless@vger.kernel.org
-Date: Thu, 16 Dec 2010 11:30:22 +0900
-Message-ID: <20101216023022.24356.22416.stgit@localhost6.localdomain6>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+	Thu, 9 Dec 2010 09:07:09 -0500
+Subject: Re: [PATCH] cfg80211: update information elements in cached BSS
+ struct
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Sven Neumann <s.neumann@raumfeld.com>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <1291903524-8000-1-git-send-email-s.neumann@raumfeld.com>
+References: <1291902830.3540.8.camel@jlt3.sipsolutions.net>
+	 <1291903524-8000-1-git-send-email-s.neumann@raumfeld.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Thu, 09 Dec 2010 15:07:07 +0100
+Message-ID: <1291903627.3540.9.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-As has been pointed out by Daniel Halperin some devices (e.g. Intel IWL5100)
-can only TX from a subset of RX antennas, so use separate availability masks
-for RX and TX.
+On Thu, 2010-12-09 at 15:05 +0100, Sven Neumann wrote:
+> When a cached BSS struct is updated because a new beacon was received,
+> the code replaces the cached information elements by the IEs from the
+> new beacon. However it did not update the pub.information_elements
+> and pub.len_information_elements fields leaving them either pointing
+> to the old beacon IEs or in an inconsistent state where the data is
+> replaced by the new beacon IEs but len_information_elements still has
+> its value from the first beacon.
+> 
+> Fix this by updating the information elements fields if they are
+> pointing to beacon IEs.
+> 
+> Signed-off-by: Sven Neumann <s.neumann@raumfeld.com>
 
-Signed-off-by: Bruno Randolf <br1@einfach.org>
----
- include/net/cfg80211.h |   12 +++++++++---
- net/wireless/nl80211.c |   17 ++++++++++-------
- 2 files changed, 19 insertions(+), 10 deletions(-)
+Reviewed-by: Johannes Berg <johannes@sipsolutions.net>
 
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index f45e15f..4d410f3 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -1472,8 +1472,13 @@ struct ieee80211_txrx_stypes {
-  *	transmitted through nl80211, points to an array indexed by interface
-  *	type
-  *
-- * @available_antennas: bitmap of antennas which are available to configure.
-- *	antenna configuration commands will be rejected unless this is set.
-+ * @available_antennas_tx: bitmap of antennas which are available to be
-+ *	configured as TX antennas. Antenna configuration commands will be
-+ *	rejected unless this or @available_antennas_rx is set.
-+ *
-+ * @available_antennas_rx: bitmap of antennas which are available to be
-+ *	configured as RX antennas. Antenna configuration commands will be
-+ *	rejected unless this or @available_antennas_tx is set.
-  *
-  * @max_remain_on_channel_duration: Maximum time a remain-on-channel operation
-  *	may request, if implemented.
-@@ -1518,7 +1523,8 @@ struct wiphy {
- 
- 	u8 max_num_pmkids;
- 
--	u32 available_antennas;
-+	u32 available_antennas_tx;
-+	u32 available_antennas_rx;
- 
- 	/* If multiple wiphys are registered and you're handed e.g.
- 	 * a regular netdev with assigned ieee80211_ptr, you won't
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index 594a6ac..087397b 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -605,7 +605,8 @@ static int nl80211_send_wiphy(struct sk_buff *msg, u32 pid, u32 seq, int flags,
- 	if (dev->wiphy.flags & WIPHY_FLAG_CONTROL_PORT_PROTOCOL)
- 		NLA_PUT_FLAG(msg, NL80211_ATTR_CONTROL_PORT_ETHERTYPE);
- 
--	if (dev->wiphy.available_antennas && dev->ops->get_antenna) {
-+	if ((dev->wiphy.available_antennas_tx ||
-+	     dev->wiphy.available_antennas_rx) && dev->ops->get_antenna) {
- 		u32 tx_ant = 0, rx_ant = 0;
- 		int res;
- 		res = dev->ops->get_antenna(&dev->wiphy, &tx_ant, &rx_ant);
-@@ -1107,7 +1108,9 @@ static int nl80211_set_wiphy(struct sk_buff *skb, struct genl_info *info)
- 	if (info->attrs[NL80211_ATTR_WIPHY_ANTENNA_TX] &&
- 	    info->attrs[NL80211_ATTR_WIPHY_ANTENNA_RX]) {
- 		u32 tx_ant, rx_ant;
--		if (!rdev->wiphy.available_antennas || !rdev->ops->set_antenna) {
-+		if ((!rdev->wiphy.available_antennas_tx &&
-+		     !rdev->wiphy.available_antennas_rx) ||
-+		    !rdev->ops->set_antenna) {
- 			result = -EOPNOTSUPP;
- 			goto bad_res;
- 		}
-@@ -1116,15 +1119,15 @@ static int nl80211_set_wiphy(struct sk_buff *skb, struct genl_info *info)
- 		rx_ant = nla_get_u32(info->attrs[NL80211_ATTR_WIPHY_ANTENNA_RX]);
- 
- 		/* reject antenna configurations which don't match the
--		 * available antenna mask, except for the "all" mask */
--		if ((~tx_ant && (tx_ant & ~rdev->wiphy.available_antennas)) ||
--		    (~rx_ant && (rx_ant & ~rdev->wiphy.available_antennas))) {
-+		 * available antenna masks, except for the "all" mask */
-+		if ((~tx_ant && (tx_ant & ~rdev->wiphy.available_antennas_tx)) ||
-+		    (~rx_ant && (rx_ant & ~rdev->wiphy.available_antennas_rx))) {
- 			result = -EINVAL;
- 			goto bad_res;
- 		}
- 
--		tx_ant = tx_ant & rdev->wiphy.available_antennas;
--		rx_ant = rx_ant & rdev->wiphy.available_antennas;
-+		tx_ant = tx_ant & rdev->wiphy.available_antennas_tx;
-+		rx_ant = rx_ant & rdev->wiphy.available_antennas_rx;
- 
- 		result = rdev->ops->set_antenna(&rdev->wiphy, tx_ant, rx_ant);
- 		if (result)
+> ---
+>  net/wireless/scan.c |   11 +++++++++++
+>  1 files changed, 11 insertions(+), 0 deletions(-)
+> 
+> diff --git a/net/wireless/scan.c b/net/wireless/scan.c
+> index 503ebb8..ea427f4 100644
+> --- a/net/wireless/scan.c
+> +++ b/net/wireless/scan.c
+> @@ -464,6 +464,9 @@ cfg80211_bss_update(struct cfg80211_registered_device *dev,
+>  		if (res->pub.beacon_ies) {
+>  			size_t used = dev->wiphy.bss_priv_size + sizeof(*res);
+>  			size_t ielen = res->pub.len_beacon_ies;
+> +			bool information_elements_is_beacon_ies =
+> +				(found->pub.information_elements ==
+> +				 found->pub.beacon_ies);
+>  
+>  			if (found->pub.beacon_ies &&
+>  			    !found->beacon_ies_allocated &&
+> @@ -487,6 +490,14 @@ cfg80211_bss_update(struct cfg80211_registered_device *dev,
+>  					found->pub.len_beacon_ies = ielen;
+>  				}
+>  			}
+> +
+> +			/* Override IEs if they were from a beacon before */
+> +			if (information_elements_is_beacon_ies) {
+> +				found->pub.information_elements =
+> +					found->pub.beacon_ies;
+> +				found->pub.len_information_elements =
+> +					found->pub.len_beacon_ies;
+> +			}
+>  		}
+>  
+>  		kref_put(&res->ref, bss_release);
+
 
