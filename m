@@ -1,56 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from netrider.rowland.org ([192.131.102.5]:59893 "HELO
-	netrider.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1751669Ab0L3EaW (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:50429 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753844Ab0LINxw (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 29 Dec 2010 23:30:22 -0500
-Date: Wed, 29 Dec 2010 23:30:21 -0500 (EST)
-From: Alan Stern <stern@rowland.harvard.edu>
-To: Ohad Ben-Cohen <ohad@wizery.com>
-cc: "Rafael J. Wysocki" <rjw@sisk.pl>,
-	<linux-pm@lists.linux-foundation.org>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	<linux-wireless@vger.kernel.org>, <linux-mmc@vger.kernel.org>,
-	Ido Yariv <ido@wizery.com>,
-	Kevin Hilman <khilman@deeprootsystems.com>
-Subject: Re: [linux-pm] subtle pm_runtime_put_sync race and sdio functions
-In-Reply-To: <AANLkTi=QT1thWxy94=imJhbbcXQ1CD36=PnkAyaaA6Hj@mail.gmail.com>
-Message-ID: <Pine.LNX.4.44L0.1012292326220.13580-100000@netrider.rowland.org>
-MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=ISO-8859-1
+	Thu, 9 Dec 2010 08:53:52 -0500
+Subject: Re: [PATCH] cfg80211: update information elements in cached BSS
+ struct
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Sven Neumann <s.neumann@raumfeld.com>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <1291900640.1924.33.camel@sven>
+References: <1291891690-26118-1-git-send-email-s.neumann@raumfeld.com>
+	 <1291898876.3540.4.camel@jlt3.sipsolutions.net>
+	 <1291900640.1924.33.camel@sven>
+Content-Type: text/plain; charset="UTF-8"
+Date: Thu, 09 Dec 2010 14:53:50 +0100
+Message-ID: <1291902830.3540.8.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 29 Dec 2010, Ohad Ben-Cohen wrote:
+On Thu, 2010-12-09 at 14:17 +0100, Sven Neumann wrote:
+[snip
 
-> On Tue, Dec 28, 2010 at 11:46 PM, Alan Stern <stern@rowland.harvard.edu> wrote:
-> > Similarly, during system suspend mmc_suspend_host() should be
-> > responsible for doing all the necessary power-down operations.  Runtime
-> > PM is completely out of the picture at this time.  And this should be
-> > independent of mac80211 -- in fact, the card should be powered down
-> > appropriately even if the kernel doesn't have a mac80211 layer.
-> 
-> And it is.
-> 
-> But in order to boot the firmware on resume, we need to reset the
-> device. And if system suspend has been cancelled before
-> mmc_power_off() was invoked, we will not be able to. So, in this case
-> too, the driver will have to power the device off.
+> Please review this patch again. I am pretty sure that there's something
+> broken. Perhaps my fix is not totally correct, but it fixes a
+> reproducable association problem for us.
 
-If the suspend transition was cancelled before mmc_power_off(), why do 
-you need to boot the firmware on resume?  Since the device hasn't 
-actually been powered off, can't it continue using the same firmware as 
-before?
+You're right, the if catches that.
 
-What routine is responsible for deciding to boot the firmware, and what 
-is its call path?
+Can you please make the variable a bool, remove the blank line before
+it? And your line length was way above 80. A comment would also be good
+about why this is done, maybe a one-liner like the probe resp one, just
+saying "Override IEs if they were from a beacon before".
 
-> It all really boils down to the same solution - we will always have to
-> bypass runtime PM and directly control the power of the device.
+Thanks!
 
-While this is probably true, I'm not at all convinced that the current 
-design is layered correctly.  Fixing the design might reduce the amount 
-of bypassing required.
-
-Alan Stern
+johannes
 
