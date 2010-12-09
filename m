@@ -1,160 +1,90 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qw0-f46.google.com ([209.85.216.46]:38931 "EHLO
-	mail-qw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757995Ab0LBVYv convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 2 Dec 2010 16:24:51 -0500
-Received: by qwb7 with SMTP id 7so8842887qwb.19
-        for <linux-wireless@vger.kernel.org>; Thu, 02 Dec 2010 13:24:51 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <1291320849.3481.55.camel@jlt3.sipsolutions.net>
-References: <20101201205939.009530439@sipsolutions.net> <20101201210226.159495600@sipsolutions.net>
- <1291279510.3481.17.camel@jlt3.sipsolutions.net> <AANLkTik_C90v-313Pq_dPY7fE1OFG2X0uv8Ys+uGQFRt@mail.gmail.com>
- <1291320849.3481.55.camel@jlt3.sipsolutions.net>
-From: Javier Cardona <javier@cozybit.com>
-Date: Thu, 2 Dec 2010 13:24:30 -0800
-Message-ID: <AANLkTi=8yikvhvbUS86FZabM5qXbZ1LNHeT+2JQGU+QS@mail.gmail.com>
-Subject: Re: [RFC 5/5 v2] cfg80211/mac80211: add mesh join/leave commands
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org, Steve Derosier <steve@cozybit.com>,
-	devel@lists.open80211s.org
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from 80-190-117-144.ip-home.de ([80.190.117.144]:53898 "EHLO
+	bu3sch.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752421Ab0LIO2V (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 9 Dec 2010 09:28:21 -0500
+Subject: Re: [PATCH 2/4] b43: set TMS to work with current band width for
+ N-PHY
+From: Michael =?ISO-8859-1?Q?B=FCsch?= <mb@bu3sch.de>
+To: =?UTF-8?Q?Rafa=C5=82_Mi=C5=82ecki?= <zajec5@gmail.com>
+Cc: linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>,
+	b43-dev@lists.infradead.org
+In-Reply-To: <AANLkTinJUsKzNO6vO8F9KupxF0uc1h97wffhAgBas1Pe@mail.gmail.com> (sfid-20101209_152344_283295_FFFFFFFFF86E6A27)
+References: <1291755360-21570-1-git-send-email-zajec5@gmail.com>
+	 <1291755360-21570-3-git-send-email-zajec5@gmail.com>
+	 <1291756117.27497.101.camel@maggie>
+	 <AANLkTinN_12RwWiugzxn5dB1he3b6h_y7K3C=8vFPyXO@mail.gmail.com>
+	 <AANLkTin14p=3=SA_4oVj24z+8NuS_y6hWqQmEEiXaSqr@mail.gmail.com>
+	 <1291904384.2905.2.camel@maggie>
+	 <AANLkTinJUsKzNO6vO8F9KupxF0uc1h97wffhAgBas1Pe@mail.gmail.com>
+	 (sfid-20101209_152344_283295_FFFFFFFFF86E6A27)
+Content-Type: text/plain; charset="UTF-8"
+Date: Thu, 09 Dec 2010 15:28:17 +0100
+Message-ID: <1291904897.2905.5.camel@maggie>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Johannes,
+On Thu, 2010-12-09 at 15:23 +0100, Rafa≈Ç Mi≈Çecki wrote: 
+> W dniu 9 grudnia 2010 15:19 u≈ºytkownik Michael B√ºsch <mb@bu3sch.de> napisa≈Ç:
+> > On Thu, 2010-12-09 at 15:13 +0100, Rafa≈Ç Mi≈Çecki wrote:
+> >> W dniu 9 grudnia 2010 15:12 u≈ºytkownik Rafa≈Ç Mi≈Çecki <zajec5@gmail.com> napisa≈Ç:
+> >> > W dniu 7 grudnia 2010 22:08 u≈ºytkownik Michael B√ºsch <mb@bu3sch.de> napisa≈Ç:
+> >> >> On Tue, 2010-12-07 at 21:55 +0100, Rafa≈Ç Mi≈Çecki wrote:
+> >> >>> Signed-off-by: Rafa≈Ç Mi≈Çecki <zajec5@gmail.com>
+> >> >>> ---
+> >> >>>  drivers/net/wireless/b43/main.c       |    6 ++++++
+> >> >>>  drivers/net/wireless/b43/phy_common.c |    7 +++++++
+> >> >>>  drivers/net/wireless/b43/phy_common.h |    2 ++
+> >> >>>  drivers/net/wireless/b43/phy_n.c      |    7 -------
+> >> >>>  4 files changed, 15 insertions(+), 7 deletions(-)
+> >> >>>
+> >> >>> diff --git a/drivers/net/wireless/b43/main.c b/drivers/net/wireless/b43/main.c
+> >> >>> index fa48803..670fd7b 100644
+> >> >>> --- a/drivers/net/wireless/b43/main.c
+> >> >>> +++ b/drivers/net/wireless/b43/main.c
+> >> >>> @@ -1150,6 +1150,12 @@ void b43_wireless_core_reset(struct b43_wldev *dev, u32 flags)
+> >> >>>
+> >> >>>       flags |= B43_TMSLOW_PHYCLKEN;
+> >> >>>       flags |= B43_TMSLOW_PHYRESET;
+> >> >>> +     if (dev->phy.type == B43_PHYTYPE_N) {
+> >> >>> +             if (b43_channel_type_is_40mhz(dev->phy.channel_type))
+> >> >>
+> >> >> Is channel_type already set at this time?
+> >> >
+> >> > Yeah, that core switching seems to be a little tricky. I didn't figure
+> >> > it out completely yet. We may need to fix that, or fix calls to this
+> >> > function.
+> >> >
+> >> > Thanks for reviewing!
+> >>
+> >> In other words: it will work for now, but we need to fix that in
+> >> future if we want to get 40 MHz channels working.
+> >
+> > That's exactly what I was saying. ;)
+> > To answer my original question: No, channel_type is not set, but the
+> > code will work for non-40mhz.
+> >
+> > This seems a bit tricky to fix, though. Maybe we should reset the
+> > wireless core twice. Once initially and once again after the
+> > configuration was set. The first reset would just be to be able
+> > to access the PHY and wireless core at all to probe it.
+> 
+> Even more tricky is that we already reset code twice... At least in
+> b43_wireless_core_attach. Will have to redesign that a little.
 
-Thanks for reviewing.  You were right: scanning did stop beaconing
-forever and your suggested fix resolved that.  So the patch is now:
+I don't think so.
+We will have to live with at least two resets.
+The first is to make the device accessible, so that we can fetch
+the device type and revision numbers (phy type, rev, radio type,....)
+After that is done, the device is shut down completely and reinitialized
+when the interface comes up with the correct parameters.
+It is important that no device setup is done whatsoever at attach stage.
+Doing so would also break suspend/resume.
 
-diff --git a/net/mac80211/main.c b/net/mac80211/main.c
-index 107a0cb..2de6976 100644
---- a/net/mac80211/main.c
-+++ b/net/mac80211/main.c
-@@ -246,7 +246,8 @@ void ieee80211_bss_info_change_notify(struct
-ieee80211_sub_if_data *sdata,
-                                        !!sdata->u.ibss.presp;
-                                break;
-                        case NL80211_IFTYPE_MESH_POINT:
--                               sdata->vif.bss_conf.enable_beacon = true;
-+                               sdata->vif.bss_conf.enable_beacon =
-+                                       !!sdata->u.mesh.mesh_id_len;
-                                break;
-                        default:
-                                /* not reached */
-diff --git a/net/mac80211/mesh.c b/net/mac80211/mesh.c
-index d814fab..63e1188 100644
---- a/net/mac80211/mesh.c
-+++ b/net/mac80211/mesh.c
-@@ -530,6 +530,11 @@ void ieee80211_start_mesh(struct
-ieee80211_sub_if_data *sdata)
- void ieee80211_stop_mesh(struct ieee80211_sub_if_data *sdata)
- {
-        struct ieee80211_local *local = sdata->local;
-+       struct ieee80211_if_mesh *ifmsh = &sdata->u.mesh;
-+
-+       ifmsh->mesh_id_len = 0;
-+       ieee80211_bss_info_change_notify(sdata, BSS_CHANGED_BEACON_ENABLED);
-+       sta_info_flush(local, NULL);
-
-        del_timer_sync(&sdata->u.mesh.housekeeping_timer);
-        del_timer_sync(&sdata->u.mesh.mesh_path_root_timer);
-
-We have not run our full suite but we tested legacy interface mesh up,
-joining, leaving and rejoining different meshes and all seems to work.
- Feel free to add my tested-by or signoff tags.
-
-Thanks!
-
-Javier
-
-
-On Thu, Dec 2, 2010 at 12:14 PM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
-> Javier,
->
->> Looks good from this end, including the new iw commands.
->
-> Thanks!
->
->> The only
->> issue that we observed is that now that we can leave and join a new
->> mesh, we need to do some more state cleanup on stop_mesh. †Otherwise
->> we could move to a new mesh and still talk to the previous peers. †I
->> think this would be sufficient:
->>
->> diff --git a/net/mac80211/main.c b/net/mac80211/main.c
->> index 107a0cb..b1242b6 100644
->> --- a/net/mac80211/main.c
->> +++ b/net/mac80211/main.c
->> @@ -246,7 +246,6 @@ void ieee80211_bss_info_change_notify(struct
->> ieee80211_sub_if_data *sdata,
->> † † † † † † † † † † † † † † † † † † † † !!sdata->u.ibss.presp;
->> † † † † † † † † † † † † † † † † break;
->> † † † † † † † † † † † † case NL80211_IFTYPE_MESH_POINT:
->> - † † † † † † † † † † † † † † † sdata->vif.bss_conf.enable_beacon = true;
->> † † † † † † † † † † † † † † † † break;
->> † † † † † † † † † † † † default:
->
-> Oh, indeed. I think this should be
-> † † † †sdata->vif.bss_conf.enable_beacon = !!mesh_id_len;
->
-> though.
->
->> diff --git a/net/mac80211/mesh.c b/net/mac80211/mesh.c
->> index d814fab..cc458dd 100644
->> --- a/net/mac80211/mesh.c
->> +++ b/net/mac80211/mesh.c
->> @@ -522,6 +522,7 @@ void ieee80211_start_mesh(struct
->> ieee80211_sub_if_data *sdata)
->> † † † † ieee80211_mesh_root_setup(ifmsh);
->> † † † † ieee80211_queue_work(&local->hw, &sdata->work);
->> † † † † sdata->vif.bss_conf.beacon_int = MESH_DEFAULT_BEACON_INTERVAL;
->> + † † † sdata->vif.bss_conf.enable_beacon = true;
->
-> Because otherwise, if you just do this, scanning will stop beaconing
-> forever...
->
->> † † † † ieee80211_bss_info_change_notify(sdata, BSS_CHANGED_BEACON |
->> † † † † † † † † † † † † † † † † † † † † † † † † BSS_CHANGED_BEACON_ENABLED |
->> † † † † † † † † † † † † † † † † † † † † † † † † BSS_CHANGED_BEACON_INT);
->> @@ -530,6 +531,13 @@ void ieee80211_start_mesh(struct
->> ieee80211_sub_if_data *sdata)
->> †void ieee80211_stop_mesh(struct ieee80211_sub_if_data *sdata)
->> †{
->> † † † † struct ieee80211_local *local = sdata->local;
->> + † † † struct ieee80211_if_mesh *ifmsh = &sdata->u.mesh;
->> +
->> + † † † ifmsh->mesh_id_len = 0;
->
-> Yeah good catch.
->
->> + † † † memset(ifmsh->mesh_id, 0, IEEE80211_MAX_MESH_ID_LEN);
->
-> That shouldn't really be necessary.
->
->> + † † † sdata->vif.bss_conf.enable_beacon = false;
->
-> Nor would that with the change I proposed, I think.
->
->> + † † † ieee80211_bss_info_change_notify(sdata, BSS_CHANGED_BEACON_ENABLED);
->> + † † † sta_info_flush(local, NULL);
->
-> Yup, good changes.
->
-> Would you mind briefly testing the beacon change I proposed above?
->
-> johannes
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at †http://vger.kernel.org/majordomo-info.html
->
-
-
+I do not think a redesign of the init code is required.
 
 -- 
-Javier Cardona
-cozybit Inc.
-http://www.cozybit.com
+Greetings Michael.
+
