@@ -1,76 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gx0-f174.google.com ([209.85.161.174]:59254 "EHLO
-	mail-gx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750967Ab0L3XI6 (ORCPT
+Received: from mailserver.naic.edu ([192.65.176.45]:60182 "EHLO
+	mailserver.naic.edu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751523Ab0LIC6M (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 30 Dec 2010 18:08:58 -0500
-From: "Justin P. Mattock" <justinmattock@gmail.com>
-To: trivial@kernel.org
-Cc: linux-m68k@lists.linux-m68k.org, linux-kernel@vger.kernel.org,
-	netdev@vger.kernel.org, ivtv-devel@ivtvdriver.org,
-	linux-media@vger.kernel.org, linux-wireless@vger.kernel.org,
-	linux-scsi@vger.kernel.org,
-	spi-devel-general@lists.sourceforge.net,
-	devel@driverdev.osuosl.org, linux-usb@vger.kernel.org,
-	"Justin P. Mattock" <justinmattock@gmail.com>
-Subject: [PATCH 15/15]drivers:spi:dw_spi.c Typo change diable to disable.
-Date: Thu, 30 Dec 2010 15:08:04 -0800
-Message-Id: <1293750484-1161-15-git-send-email-justinmattock@gmail.com>
-In-Reply-To: <1293750484-1161-14-git-send-email-justinmattock@gmail.com>
-References: <1293750484-1161-1-git-send-email-justinmattock@gmail.com>
- <1293750484-1161-2-git-send-email-justinmattock@gmail.com>
- <1293750484-1161-3-git-send-email-justinmattock@gmail.com>
- <1293750484-1161-4-git-send-email-justinmattock@gmail.com>
- <1293750484-1161-5-git-send-email-justinmattock@gmail.com>
- <1293750484-1161-6-git-send-email-justinmattock@gmail.com>
- <1293750484-1161-7-git-send-email-justinmattock@gmail.com>
- <1293750484-1161-8-git-send-email-justinmattock@gmail.com>
- <1293750484-1161-9-git-send-email-justinmattock@gmail.com>
- <1293750484-1161-10-git-send-email-justinmattock@gmail.com>
- <1293750484-1161-11-git-send-email-justinmattock@gmail.com>
- <1293750484-1161-12-git-send-email-justinmattock@gmail.com>
- <1293750484-1161-13-git-send-email-justinmattock@gmail.com>
- <1293750484-1161-14-git-send-email-justinmattock@gmail.com>
+	Wed, 8 Dec 2010 21:58:12 -0500
+Date: Wed, 8 Dec 2010 22:58:09 -0400
+From: Giacomo Comes <comes@naic.edu>
+To: Dave Kilroy <kilroyd@googlemail.com>
+Cc: Giacomo Comes <comes@naic.edu>, linux-wireless@vger.kernel.org
+Subject: Re: orinoco_cs module and WPA not working
+Message-ID: <20101209025809.GA7960@monopoli.naic.edu>
+References: <20101203202321.GA21937@monopoli.naic.edu> <AANLkTi=qvZ-Uj1T=9Xc8LyyxKvgNw4CKV8Zx2fDfo4uH@mail.gmail.com> <20101204033646.GA22662@monopoli.naic.edu> <AANLkTik=nbdNUU7gzO9V17fHWZibc2LjuXDgpeRDztoM@mail.gmail.com> <20101204134732.GA24216@monopoli.naic.edu> <AANLkTinU+Xv+gNSTJnEz_tYPhcXRf=kEfkyyeuN0QPFt@mail.gmail.com> <20101206042812.GB28134@monopoli.naic.edu> <AANLkTimC4NkPhpmOUWHvWpCZGvXjM1GkZCUja=Qhr=9N@mail.gmail.com> <20101206212502.GA31434@monopoli.naic.edu> <AANLkTi=YawLwmnJeKX+dFe4mW1vbGbQnD2z4qQV0_3q3@mail.gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <AANLkTi=YawLwmnJeKX+dFe4mW1vbGbQnD2z4qQV0_3q3@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The below patch fixes a typo "diable" to "disable". Please let me know if this
-is correct or not.
+On Wed, Dec 08, 2010 at 07:24:47PM +0000, Dave Kilroy wrote:
+> On Mon, Dec 6, 2010 at 9:25 PM, Giacomo Comes <comes@naic.edu> wrote:
+> > On Mon, Dec 06, 2010 at 06:43:04PM +0000, Dave Kilroy wrote:
+> >> > The only issue still not fixed is the suspend/resume timeout.
+> >> > Can you help also with that?
+> >>
+> >> Absolutely. With the latest patches, please just do a suspend resume,
+> >> and post the dmesg output. Also let me know what the value of
+> >> CONFIG_HERMES_CACHE_FW_ON_INIT is.
+> >
+> > CONFIG_HERMES_CACHE_FW_ON_INIT=y
+> >
+> > Attached is the outpur of dmesg after suspend/resume
+> >
+> > As you can see, the driver is unable to load the firmware,
+> > therefore WPA is not available after resume:
+> 
+> I've had a look at the log. Things aren't working as I'd expect.
+> orinoco_init is being called on resume, which I don't think used to
+> happen. That is what is causing the request for firmware, and the
+> delay on resume.
+> 
+> Instead I only expected orinoco_up to get called. I'll dig around to
+> see whether that's a change in the kernel. It might be distro specific
+> though. Do you know if suse works differently on suspend/resume? i.e
+> explicitly 'modprobe -r'ing drivers
+> 
+> Dave.
 
-Signed-off-by: Justin P. Mattock <justinmattock@gmail.com>
+After more investigation, I have found that
+suspend/resume works if I suspend the system from the console
+with the command s2disk even if the orinoco module is loaded.
 
----
- drivers/spi/dw_spi.c |    6 +++---
- 1 files changed, 3 insertions(+), 3 deletions(-)
+When I suspend the system from the desktop calling pm-hibernate
+then there is the delay. Remember, the delay happens on suspend
+AND on resume.
+pm-hibernate will run a set of scripts in /usr/lib/pm-utils/sleep.d
+One of these scripts (45pcmcia) executes:
+"/sbin/pccardctl eject" on suspend and
+"/sbin/pccardctl insert" on resume.
 
-diff --git a/drivers/spi/dw_spi.c b/drivers/spi/dw_spi.c
-index 7c3cf21..a3a065f 100644
---- a/drivers/spi/dw_spi.c
-+++ b/drivers/spi/dw_spi.c
-@@ -910,12 +910,12 @@ int __devinit dw_spi_add_host(struct dw_spi *dws)
- 	ret = init_queue(dws);
- 	if (ret) {
- 		dev_err(&master->dev, "problem initializing queue\n");
--		goto err_diable_hw;
-+		goto err_disable_hw;
- 	}
- 	ret = start_queue(dws);
- 	if (ret) {
- 		dev_err(&master->dev, "problem starting queue\n");
--		goto err_diable_hw;
-+		goto err_disable_hw;
- 	}
- 
- 	spi_master_set_devdata(master, dws);
-@@ -930,7 +930,7 @@ int __devinit dw_spi_add_host(struct dw_spi *dws)
- 
- err_queue_alloc:
- 	destroy_queue(dws);
--err_diable_hw:
-+err_disable_hw:
- 	spi_enable_chip(dws, 0);
- 	free_irq(dws->irq, dws);
- err_free_master:
--- 
-1.6.5.2.180.gc5b3e
+If I disable this script, then suspend/resume works properly.
 
+I wonder if there are other pcmcia wireles cards that suffer
+the same problem?
+
+What is, in your opinion, the proper way to proceed?
+To change something in the orinoco driver? Modify pm-utils?
+Something else?
+
+Giacomo
