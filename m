@@ -1,81 +1,88 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([147.243.128.26]:36994 "EHLO mgw-da02.nokia.com"
+Received: from mx1.redhat.com ([209.132.183.28]:1027 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751753Ab0LPJCE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 16 Dec 2010 04:02:04 -0500
-Received: from nokia.com (localhost [127.0.0.1])
-	by mgw-da02.nokia.com (Switch-3.4.3/Switch-3.4.3) with ESMTP id oBG90Xcl024561
-	for <linux-wireless@vger.kernel.org>; Thu, 16 Dec 2010 11:02:03 +0200
-Subject: Re: [PATCH v2] wl12xx_sdio_test: rename files to match current
- style
-From: Luciano Coelho <luciano.coelho@nokia.com>
-To: Roger Quadros <roger.quadros@nokia.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <4D08DBDC.5070908@nokia.com>
-References: <1292423499-5667-1-git-send-email-luciano.coelho@nokia.com>
-	 <1292423633.32385.9.camel@chilepepper>
-	 <1292424501.32385.10.camel@chilepepper>  <4D08DBDC.5070908@nokia.com>
+	id S1751872Ab0LIAOG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 8 Dec 2010 19:14:06 -0500
+Subject: Re: Re-distributable 88w8335 Firmware?
+From: Dan Williams <dcbw@redhat.com>
+To: Julian Calaby <julian.calaby@gmail.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	David.Woodhouse@intel.com, Greg KH <greg@kroah.com>,
+	linux-kernel@vger.kernel.org,
+	Lennert Buytenhek <buytenh@wantstofly.org>,
+	Holger Schurig <holgerschurig@googlemail.com>,
+	Markus Becker <mab@comnets.uni-bremen.de>,
+	andreamrl@tiscali.it, Denis Kirjanov <kirjanov@gmail.com>,
+	dwmw2@infradead.org
+Date: Wed, 08 Dec 2010 18:13:33 -0600
+In-Reply-To: <AANLkTiks65oAvVEu0Df4yeHNJm=cVnSfFeo=enxt-gpn@mail.gmail.com>
+References: <AANLkTim0=ds3EhQOEfHdrKt2dSnEqUgf5CLOPHNyW=jE@mail.gmail.com>
+	 <1290569516.3074.41.camel@dcbw.foobar.com>
+	 <AANLkTi=ioGgpAQ-rx_abCHcOmOezXwJFfbKWc7=tGAJ5@mail.gmail.com>
+	 <1290571986.3074.64.camel@dcbw.foobar.com>
+	 <AANLkTi=0ocvsR185Qib3VoT43ziTUa_3oRDnmU65pYjv@mail.gmail.com>
+	 <1290575460.18917.3.camel@dcbw.foobar.com>
+	 <AANLkTiks65oAvVEu0Df4yeHNJm=cVnSfFeo=enxt-gpn@mail.gmail.com>
 Content-Type: text/plain; charset="UTF-8"
-Date: Thu, 16 Dec 2010 11:04:07 +0200
-Message-ID: <1292490247.11205.14.camel@chilepepper>
+Message-ID: <1291853616.16839.10.camel@dcbw.foobar.com>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Roger,
-
-On Wed, 2010-12-15 at 17:16 +0200, Roger Quadros wrote:
-> On 12/15/2010 04:48 PM, Luciano Coelho wrote:
-> > On Wed, 2010-12-15 at 16:33 +0200, ext Luciano Coelho wrote:
-> >> On Wed, 2010-12-15 at 16:31 +0200, luciano.coelho@nokia.com wrote:
-> >>> From: Luciano Coelho<luciano.coelho@nokia.com>
-> >>>
-> >>> Change some file names and Kconfig settings so that this new module matches
-> >>> the new way of using wl12xx instead of wl1271.
-> >>>
-> >>> Also fix SDIO power enabling and disabling to match the latest way of doing
-> >>> it.
-> >>>
-> >>> Cc: Roger Quadros<roger.quadros@nokia.com>
-> >>> Signed-off-by: Luciano Coelho<luciano.coelho@nokia.com>
-> >>> ---
+On Wed, 2010-11-24 at 16:26 +1100, Julian Calaby wrote:
+> On Wed, Nov 24, 2010 at 16:10, Dan Williams <dcbw@redhat.com> wrote:
+> > On Wed, 2010-11-24 at 15:48 +1100, Julian Calaby wrote:
+> >> On Wed, Nov 24, 2010 at 15:13, Dan Williams <dcbw@redhat.com> wrote:
+> >> > Malo supports the PCMCIA/CF variant of the 8385; not a PCI variant
+> >> > AFAICT.  I know of no PCI variant for the 8385, just CF, SDIO, and GSPI.
+> >> > But I find it curious that malo supports 8335+8385, given that the
+> >> > firmware interface of the 8385 and the 8335 are so different.  Unless
+> >> > they have special firmware, the 8385 is a fullmac device, while the 8335
+> >> > is a softmac device.  Enough differences exist that I'd expect them to
+> >> > be driven by separate drivers, otherwise the code would be quite ugly.
+> >> > Which is why we didn't try to shoehorn the 8335 or TopDog stuff into
+> >> > libertas.
 > >>
-> >> In v2 I used the -M flag (to detect renames, which I stupidly forgot
-> >> before) and removed the file names from the header of the sdio_test.c
-> >> file, since it's a bad idea to have it there (thanks Johannes for the
-> >> comments).
+> >> You clearly know a hell of a lot more about the ins and outs of Marvel
+> >> chipsets that I do. =)
 > >
-> > Roger, I have just compile-tested this module in upstream.  Could you
-> > run at least some basic tests with it to make sure it works?
-> >
-> >
+> > Eh, *some* of the chipsets :)  Others (Lennert) know a lot more about
+> > later versions than I do.  But I never know everything or even enough of
+> > anything :)
 > 
-> Luca,
+> I know exactly how you feel. =)
 > 
-> I don't have a ready setup with me which boots mainline kernel and has wl1271 on 
-> sdio.
+> >> I stand corrected.
+> >>
+> >> So, to amend my previous request: We're after firmware for the softmac
+> >> 88w8335 chipset *only*.
+> >>
+> >> Though it may be nicer if Marvell were to bless Malo's firmware
+> >> package (linked above) as this contains firmware for the PCI 88w8335,
+> >> USB 88w8338 and a file which claims to be for the PCMCIA/CF 88w8385.
+> >
+> > Yeah, though honestly I'd rather have the duplex firmware from MSSII for
+> > the 8335, since it can do AP mode too.  That does leave the 8338 (USB?)
+> 
+> Me too - and it'd mean that we don't have to do AP-mode firmware
+> loading tricks like in mw8k. But if we can't get that then some
+> firmware is better than none.
+> 
+> > of course but we can probably get clarification on that too.  As with
+> > the 8335, I only have access to a 8335 Windows driver, but if we had a
+> > firmware extractor tool, I believe the Marvell Extranet firmware license
+> > covers embedded firmware from Windows .sys files too.
+> 
+> I think I may have a simple firmware extractor at home that I pulled
+> from *somewhere* when I was working on this last time. We can see if
+> it does anything with those files. I believe I have at least two
+> different Windows drivers at home - IIRC, one of them is *just* the
+> files needed for this extractor.
 
-I have a tree prepared with the latest wl12xx.git plus some patches that
-add support for our development platform (RX-71).
+I've converted the cb35 duplex firmware to binary and uploaded it to
+linux-firmware after receiving permission from Marvell to do so.  Now
+lets get a driver :)
 
+Dan
 
-> The only way to verify it is to load the module with the parameters rx=1 and 
-> tx=1 and see if the "testing started" message appears.
-
-I tried it now, but I'm always getting this when loading the module:
-
-[  114.883514] wl12xx_sdio_test mmc2:0001:2: could not wake up chip
-[  114.889587] wl12xx_sdio_test: probe of mmc2:0001:2 failed with error 1
-
-Any clue what this is about?
-
-
-> what platform do you use to verify with mainline kernel & sdio wl1271 ?
-
-I use both our RX-71 and a Beagleboard.  I have trees which work on
-both, let me know if you want to clone them from my local git.
-
--- 
-Cheers,
-Luca.
 
