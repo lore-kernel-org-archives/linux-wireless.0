@@ -1,59 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:36935 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754765Ab0LGVAM (ORCPT
+Received: from mail-qw0-f66.google.com ([209.85.216.66]:64147 "EHLO
+	mail-qw0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750933Ab0LIQKX convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 7 Dec 2010 16:00:12 -0500
-Date: Tue, 7 Dec 2010 15:58:30 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Javier Cardona <javier@cozybit.com>
-Cc: Steve Derosier <steve@cozybit.com>, devel@lists.open80211s.org,
-	linux-wireless@vger.kernel.org, Jiri Slaby <jirislaby@gmail.com>,
-	Nick Kossifidis <mickflemm@gmail.com>,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	Bob Copeland <me@bobcopeland.com>
-Subject: Re: [PATCH 2/3] ath5k: Prevent mesh interfaces from being counted as
- ad-hoc
-Message-ID: <20101207205829.GL2700@tuxdriver.com>
-References: <1291169919-3867-1-git-send-email-javier@cozybit.com>
- <1291169919-3867-3-git-send-email-javier@cozybit.com>
+	Thu, 9 Dec 2010 11:10:23 -0500
+Received: by qwk3 with SMTP id 3so1020427qwk.1
+        for <linux-wireless@vger.kernel.org>; Thu, 09 Dec 2010 08:10:22 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1291169919-3867-3-git-send-email-javier@cozybit.com>
+In-Reply-To: <4D00F3C3.6040801@lwfinger.net>
+References: <1291755360-21570-1-git-send-email-zajec5@gmail.com>
+	<AANLkTikp9ErFopLZVmXMjN3tXF2L62SwEEcujKeOBLYC@mail.gmail.com>
+	<4CFEFD8D.1080808@lwfinger.net>
+	<AANLkTi=mDh9wkp+u3ebuXqF8Q-rTW_YCtee3CmCBdWTh@mail.gmail.com>
+	<4D00F3C3.6040801@lwfinger.net>
+Date: Thu, 9 Dec 2010 17:10:21 +0100
+Message-ID: <AANLkTinfcVZ8X=r0w+digSJ6RoZeOCA8jEW=J6hcb7o9@mail.gmail.com>
+Subject: Re: [PATCH 0/4] Make N-PHY support experimental
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: =?UTF-8?Q?G=C3=A1bor_Stefanik?= <netrolller.3d@gmail.com>,
+	linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>,
+	b43-dev@lists.infradead.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Missing Signed-off-by...
+2010/12/9 Larry Finger <Larry.Finger@lwfinger.net>:
+> I am willing to buy a higher PHY rev device for testing. Any idea what is in a
+> 4324A-BRCM1036? See
+> http://cgi.ebay.com/Broadcom-Mini-PCI-e-802-11-a-b-g-n-Wireless-Card-/190477425068?pt=LH_DefaultDomain_0&hash=item2c5956d9ac.
 
-On Tue, Nov 30, 2010 at 06:18:38PM -0800, Javier Cardona wrote:
-> This results in an erroneus num_adhoc_vifs count, as the this counter
-> was incremented but not decremented for mesh interfaces.
-> ---
->  drivers/net/wireless/ath/ath5k/base.c |    2 +-
->  1 files changed, 1 insertions(+), 1 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/ath/ath5k/base.c b/drivers/net/wireless/ath/ath5k/base.c
-> index 73c7118..44f3050 100644
-> --- a/drivers/net/wireless/ath/ath5k/base.c
-> +++ b/drivers/net/wireless/ath/ath5k/base.c
-> @@ -2847,7 +2847,7 @@ static int ath5k_add_interface(struct ieee80211_hw *hw,
->  		sc->bslot[avf->bslot] = vif;
->  		if (avf->opmode == NL80211_IFTYPE_AP)
->  			sc->num_ap_vifs++;
-> -		else
-> +		else if (avf->opmode == NL80211_IFTYPE_ADHOC)
->  			sc->num_adhoc_vifs++;
->  	}
->  
-> -- 
-> 1.7.1
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
+Shipping to: United States
+
+:(
 
 -- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+Rafał
