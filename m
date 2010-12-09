@@ -1,46 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iw0-f172.google.com ([209.85.214.172]:57140 "EHLO
-	mail-iw0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751321Ab0LIFqe (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 9 Dec 2010 00:46:34 -0500
-Received: by iwn40 with SMTP id 40so2860505iwn.3
-        for <linux-wireless@vger.kernel.org>; Wed, 08 Dec 2010 21:46:34 -0800 (PST)
-Message-ID: <4D006D31.4000604@gmail.com>
-Date: Thu, 09 Dec 2010 16:46:25 +1100
-From: Wade Fitzpatrick <wade.fitzpatrick@gmail.com>
-MIME-Version: 1.0
-To: Christian Lamparter <chunkeey@googlemail.com>
-CC: linux-wireless@vger.kernel.org
-Subject: Re: carl9170 connect/disconnect loop
-References: <AANLkTingL2eooC2+jH6nQVADKZBFemE=6eTQ_Vhx_Swx@mail.gmail.com> <201012070032.23135.chunkeey@googlemail.com>
-In-Reply-To: <201012070032.23135.chunkeey@googlemail.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Received: from www.sr71.net ([198.145.64.142]:55721 "EHLO blackbird.sr71.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757103Ab0LIVyk (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 9 Dec 2010 16:54:40 -0500
+Subject: Re: brcm80211 hangs when disabling wireless
+From: Dave Hansen <dave@sr71.net>
+To: Greg KH <gregkh@suse.de>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Brett Rudley <brudley@broadcom.com>,
+	Henry Ptasinski <henryp@broadcom.com>,
+	Nohee Ko <noheek@broadcom.com>,
+	Jason Cooper <jason@lakedaemon.net>,
+	Mike Rapoport <mike.rapoport@gmail.com>,
+	Andy Shevchenko <andy.shevchenko@gmail.com>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	devel@driverdev.osuosl.org,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+In-Reply-To: <20101209214347.GA15172@suse.de>
+References: <1291930010.7960.30.camel@nimitz>
+	 <20101209214347.GA15172@suse.de>
+Content-Type: text/plain; charset="ANSI_X3.4-1968"
+Date: Thu, 09 Dec 2010 13:54:38 -0800
+Message-ID: <1291931678.7960.32.camel@nimitz>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Thu, 2010-12-09 at 13:43 -0800, Greg KH wrote:
+> On Thu, Dec 09, 2010 at 01:26:50PM -0800, Dave Hansen wrote:
+> > I've been getting hard hangs when I toggle the wireless on a Lenovo
+> > S10-3.  It happens both with the physical switch and the Fn-F5 key
+> > combo.  It's quite repeatable.  The system is quite stable when I'm not
+> > trying to disable the wireless, though.
+> 
+> What kernel version is this?
+> 
+> Linus's latest tree has a known bug when the wireless is suspended and
+> then resumed.  Broadcom is working on it but no patch is forthcoming
+> yet.  Perhaps this is the same issue.
 
-On 07/12/10 10:32, Christian Lamparter wrote:
-> mac80211 comes with some powerful debug tools.
-> Since you get the disconnects fairly quickly, you should
-> setup a wlan monitor.
->
-> <http://linuxwireless.org/en/users/Documentation/iw#Adding_interfaces_with_iw>
->   iw dev wlan1 interface add mon type monitor flags otherbss control
->   ifconfig mon up
->
-I'm getting a kernel panic just after bringing up the interface with 
-ifconfig. It mentions this info:
+Yeah, it's 2.6.37-rc5 plus a pull from:
 
-skb_under_panic ...
-kernel BUG at net/core/skbuff.c:146!
-Call Trace:
-<IRQ>
-   skb_defer_rx_timestamp
-   netif_receive_skb
+	http://kernel.ubuntu.com/git?p=ikepanhc/ideapad-laptop.git;a=summary
 
+That could easily be it.  Thanks, Greg.
 
-$ uname -vmpir
-2.6.36-ARCH #1 SMP PREEMPT Wed Nov 24 00:39:57 CET 2010 x86_64 AMD 
-Phenom(tm) II X4 955 Processor AuthenticAMD
+-- Dave
 
