@@ -1,72 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ey0-f174.google.com ([209.85.215.174]:53087 "EHLO
-	mail-ey0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754488Ab0L1Rhp (ORCPT
+Received: from mail-pv0-f174.google.com ([74.125.83.174]:60476 "EHLO
+	mail-pv0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755581Ab0LISLk (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 28 Dec 2010 12:37:45 -0500
-Received: by mail-ey0-f174.google.com with SMTP id 27so4306524eye.19
-        for <linux-wireless@vger.kernel.org>; Tue, 28 Dec 2010 09:37:44 -0800 (PST)
-From: Arik Nemtsov <arik@wizery.com>
-To: <linux-wireless@vger.kernel.org>
-Cc: Luciano Coelho <luciano.coelho@nokia.com>,
-	Arik Nemtsov <arik@wizery.com>
-Subject: [PATCH v3 18/18] wl1271: Enable AP-mode
-Date: Tue, 28 Dec 2010 19:36:48 +0200
-Message-Id: <1293557808-27068-19-git-send-email-arik@wizery.com>
-In-Reply-To: <1293557808-27068-1-git-send-email-arik@wizery.com>
-References: <1293557808-27068-1-git-send-email-arik@wizery.com>
+	Thu, 9 Dec 2010 13:11:40 -0500
+Received: by pva4 with SMTP id 4so575078pva.19
+        for <linux-wireless@vger.kernel.org>; Thu, 09 Dec 2010 10:11:40 -0800 (PST)
+From: Tim Harvey <harvey.tim@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: Tim Harvey <harvey.tim@gmail.com>
+Subject: [PATCH v2] mac80211: Fix NULL-pointer deference on ibss merge when not ready
+Date: Thu,  9 Dec 2010 10:11:21 -0800
+Message-Id: <1291918281-17965-1-git-send-email-harvey.tim@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Indicate support for the NL80211_IFTYPE_AP interface mode to enable AP
-mode operation.
+dev_open will eventually call ieee80211_ibss_join which sets up the
+skb used for beacons/probe-responses however it is possible to
+receive beacons that attempt to merge before this occurs causing
+a null pointer dereference.  Check ssid_len as that is the last
+thing set in ieee80211_ibss_join.
 
-Disable 11a when operating in AP-mode (unsupported for now).
+This occurs quite easily in the presence of adhoc nodes with hidden SSID's
 
-Signed-off-by: Arik Nemtsov <arik@wizery.com>
+Signed-off-by: Tim Harvey <harvey.tim@gmail.com>
 ---
- drivers/net/wireless/wl12xx/boot.c |    4 +++-
- drivers/net/wireless/wl12xx/main.c |    5 ++++-
- 2 files changed, 7 insertions(+), 2 deletions(-)
+ net/mac80211/ibss.c |    2 ++
+ 1 files changed, 2 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/net/wireless/wl12xx/boot.c b/drivers/net/wireless/wl12xx/boot.c
-index b2f0f64..f2a3513 100644
---- a/drivers/net/wireless/wl12xx/boot.c
-+++ b/drivers/net/wireless/wl12xx/boot.c
-@@ -233,7 +233,9 @@ static int wl1271_boot_upload_nvs(struct wl1271 *wl)
- 	 */
- 	if (wl->nvs_len == sizeof(struct wl1271_nvs_file) ||
- 	    wl->nvs_len == WL1271_INI_LEGACY_NVS_FILE_SIZE) {
--		if (wl->nvs->general_params.dual_mode_select)
-+		/* for now 11a is unsupported in AP mode */
-+		if (wl->bss_type != BSS_TYPE_AP_BSS &&
-+		    wl->nvs->general_params.dual_mode_select)
- 			wl->enable_11a = true;
- 	}
+diff --git a/net/mac80211/ibss.c b/net/mac80211/ibss.c
+index 410d104..93926c0 100644
+--- a/net/mac80211/ibss.c
++++ b/net/mac80211/ibss.c
+@@ -85,6 +85,8 @@ static void __ieee80211_sta_join_ibss(struct ieee80211_sub_if_data *sdata,
+ 	/* Reset own TSF to allow time synchronization work. */
+ 	drv_reset_tsf(local);
  
-diff --git a/drivers/net/wireless/wl12xx/main.c b/drivers/net/wireless/wl12xx/main.c
-index ed06aee..5bd6879 100644
---- a/drivers/net/wireless/wl12xx/main.c
-+++ b/drivers/net/wireless/wl12xx/main.c
-@@ -1073,6 +1073,9 @@ static int wl1271_op_add_interface(struct ieee80211_hw *hw,
- 		wl->bss_type = BSS_TYPE_IBSS;
- 		wl->set_bss_type = BSS_TYPE_STA_BSS;
- 		break;
-+	case NL80211_IFTYPE_AP:
-+		wl->bss_type = BSS_TYPE_AP_BSS;
-+		break;
- 	default:
- 		ret = -EOPNOTSUPP;
- 		goto out;
-@@ -3136,7 +3139,7 @@ int wl1271_init_ieee80211(struct wl1271 *wl)
- 	wl->hw->wiphy->n_cipher_suites = ARRAY_SIZE(cipher_suites);
- 
- 	wl->hw->wiphy->interface_modes = BIT(NL80211_IFTYPE_STATION) |
--		BIT(NL80211_IFTYPE_ADHOC);
-+		BIT(NL80211_IFTYPE_ADHOC) | BIT(NL80211_IFTYPE_AP);
- 	wl->hw->wiphy->max_scan_ssids = 1;
- 	/*
- 	 * Maximum length of elements in scanning probe request templates
++	if (!ifibss->ssid_len)
++		return; /* not ready to merge yet */
+ 	skb = ifibss->skb;
+ 	rcu_assign_pointer(ifibss->presp, NULL);
+ 	synchronize_rcu();
 -- 
-1.7.1
+1.7.0.4
 
